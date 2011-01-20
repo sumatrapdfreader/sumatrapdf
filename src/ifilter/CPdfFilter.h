@@ -3,18 +3,22 @@
 
 #include "FilterBase.h"
 
+#define FILTER_TIMEOUT_IN_MS  1000
+
+typedef struct {
+    HANDLE produce, consume;
+    char *data;
+    size_t len;
+} UpdateThreadData;
+
 class CPdfFilter : public CFilterBase
 {
 public:
-    CPdfFilter(long *plRefCount) : m_lRef(1), m_pData(NULL),
-        m_plModuleRef(plRefCount), m_hMap(NULL),
-        m_hProcess(NULL), m_hProduce(NULL), m_hConsume(NULL),
-        m_bDone(false)
-#ifdef IFILTER_BUILTIN_MUPDF
-        , m_pUniqueName(NULL)
-#endif
+    CPdfFilter(long *plRefCount) : m_lRef(1), m_plModuleRef(plRefCount),
+        m_hThread(NULL), m_bDone(false)
     {
         InterlockedIncrement(m_plModuleRef);
+        ZeroMemory(&m_utd, sizeof(m_utd));
     }
 
     ~CPdfFilter()
@@ -56,50 +60,32 @@ public:
     HRESULT GetNextChunkValue(CChunkValue &chunkValue);
 
     VOID CleanUp() {
-        if (m_hProduce) {
-            CloseHandle(m_hProduce);
-            m_hProduce = NULL;
+        if (m_utd.produce) {
+            CloseHandle(m_utd.produce);
+            m_utd.produce = NULL;
         }
-        if (m_hConsume) {
-            CloseHandle(m_hConsume);
-            m_hConsume = NULL;
+        if (m_utd.consume) {
+            CloseHandle(m_utd.consume);
+            m_utd.consume = NULL;
         }
-        if (m_hProcess) {
-            if (WaitForSingleObject(m_hProcess, FILTER_TIMEOUT_IN_MS * 2) != WAIT_OBJECT_0) {
-#ifndef IFILTER_BUILTIN_MUPDF
-                // don't let a stuck SumatraPDF.exe hang around
-                TerminateProcess(m_hProcess, 99);
-#else
-                TerminateThread(m_hProcess, 99);
-#endif
+        if (m_hThread) {
+            if (WaitForSingleObject(m_hThread, FILTER_TIMEOUT_IN_MS * 2) != WAIT_OBJECT_0) {
+                TerminateThread(m_hThread, 99);
             }
-            CloseHandle(m_hProcess);
-            m_hProcess = NULL;
+            CloseHandle(m_hThread);
+            m_hThread = NULL;
         }
-        if (m_pData) {
-            UnmapViewOfFile(m_pData);
-            m_pData = NULL;
+        if (m_utd.data) {
+            UnmapViewOfFile(m_utd.data);
+            m_utd.data = NULL;
         }
-        if (m_hMap) {
-            CloseHandle(m_hMap);
-            m_hMap = NULL;
-        }
-#ifdef IFILTER_BUILTIN_MUPDF
-        if (m_pUniqueName) {
-            free(m_pUniqueName);
-            m_pUniqueName = NULL;
-        }
-#endif
         m_bDone = false;
     };
 
 private:
     long m_lRef, * m_plModuleRef;
 
-    HANDLE m_hProcess, m_hMap, m_hProduce, m_hConsume;
-    char * m_pData;
+    UpdateThreadData m_utd;
+    HANDLE m_hThread;
     bool m_bDone;
-#ifdef IFILTER_BUILTIN_MUPDF
-    VOID * m_pUniqueName;
-#endif
 };

@@ -6887,8 +6887,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         if (i.showConsole)
             system("pause");
     }
-    if (i.IFilterMMap)
-        UpdateMMapForIndexing(i.IFilterMMap);
     if (i.exitImmediately)
         goto Exit;
 

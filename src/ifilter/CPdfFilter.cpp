@@ -8,22 +8,16 @@
 #include <inttypes.h>
 #include "tstr_util.h"
 #include "CPdfFilter.h"
-
-#ifdef IFILTER_BUILTIN_MUPDF
 #include "PdfEngine.h"
-#include "ExtHelpers.h"
+
+extern HINSTANCE g_hInstance;
 
 TCHAR *GetPasswordForFile(WindowInfo *win, const TCHAR *fileName, pdf_xref *xref, unsigned char *decryptionKey, bool *saveKey)
 {
     return NULL;
 }
-#endif
 
-#ifdef _MSC_VER
-#pragma warning(disable: 4995)
-#endif
-
-extern HINSTANCE g_hInstance;
+static DWORD WINAPI UpdateDataForIndexing(LPVOID IFilterMMap);
 
 HRESULT CPdfFilter::OnInit()
 {
@@ -33,80 +27,24 @@ HRESULT CPdfFilter::OnInit()
     HRESULT res = m_pStream->Stat(&stat, STATFLAG_NONAME);
     if (FAILED(res))
         return res;
-    ULONG size = stat.cbSize.LowPart;
 
-    GUID unique;
-    UuidCreate(&unique);
-#ifdef UNICODE
-    RPC_WSTR uniqueStr;
-#else
-    RPC_CSTR uniqueStr;
-#endif
-    UuidToString(&unique, &uniqueStr);
-    TCHAR *uniqueName = tstr_printf(_T("SumatraPDF-%ul-%s"), size, uniqueStr);
-    RpcStringFree(&uniqueStr);
+    m_utd.len = stat.cbSize.LowPart;
+    m_utd.data = (char *)malloc(m_utd.len + 1);
 
-    // allow all access to the Local System (and for debugging also to any authenticated user)
-    // to the global objects we share with the UpdateMMapForIndexing thread
-    SECURITY_ATTRIBUTES sa = { 0 };
-    sa.nLength = sizeof(sa);
-    if (!ConvertStringSecurityDescriptorToSecurityDescriptor(_T("D:P(A;OICI;GA;;;SY)(A;OICI;GA;;;AU)"),
-        SDDL_REVISION_1, &sa.lpSecurityDescriptor, NULL))
+    m_utd.produce = CreateEvent(NULL, FALSE, TRUE, NULL);
+    m_utd.consume = CreateEvent(NULL, FALSE, FALSE, NULL);
+    if (!m_utd.data || !m_utd.produce || !m_utd.consume)
         return E_FAIL;
-
-    m_hMap = CreateFileMapping(INVALID_HANDLE_VALUE, &sa, PAGE_READWRITE, 0, size, uniqueName);
-    if (m_hMap)
-        m_pData = (char *)MapViewOfFile(m_hMap, FILE_MAP_ALL_ACCESS, 0, 0, size);
-    if (!m_pData)
-        goto ErrorFail;
-
-    TCHAR eventName[EVENT_NAME_SIZE_MAX];
-    tstr_printf_s(eventName, EVENT_NAME_SIZE_MAX, _T("Produce-%s"), uniqueName);
-    m_hProduce = CreateEvent(&sa, FALSE, TRUE, eventName);
-    tstr_printf_s(eventName, EVENT_NAME_SIZE_MAX, _T("Consume-%s"), uniqueName);
-    m_hConsume = CreateEvent(&sa, FALSE, FALSE, eventName);
-    if (!m_hProduce || !m_hConsume)
-        goto ErrorFail;
 
     LARGE_INTEGER zero;
     zero.QuadPart = 0;
     m_pStream->Seek(zero, STREAM_SEEK_SET, NULL);
-    res = m_pStream->Read(m_pData, size, NULL);
+    res = m_pStream->Read(m_utd.data, m_utd.len, NULL);
     if (FAILED(res))
-        goto ErrorFail;
+        return res;
 
-#ifndef IFILTER_BUILTIN_MUPDF
-    TCHAR exePath[MAX_PATH];
-    GetModuleFileName(g_hInstance, exePath, MAX_PATH);
-    *PathFindFileName(exePath) = '\0';
-    tstr_cat_s(exePath, MAX_PATH, _T("SumatraPDF.exe"));
-    if (!PathFileExists(exePath))
-        goto ErrorFail;
-
-    TCHAR cmdline[MAX_PATH * 2];
-    tstr_printf_s(cmdline, MAX_PATH * 2, _T("\"%s\" -ifiltermmap %s"), exePath, uniqueName);
-    PROCESS_INFORMATION pi;
-    STARTUPINFO si;
-    ZeroMemory(&si, sizeof(si));
-    si.cb = sizeof(si);
-    // TODO: This might not be possible at all, as SearchFilterHost.exe runs in a
-    //       low-privilege environment which might prevent the creation of new threads.
-    //       Currently, it fails with ERROR_NOT_ENOUGH_QUOTA.
-    if (!CreateProcess(NULL, cmdline, &sa, &sa, FALSE, 0, NULL, NULL, &si, &pi))
-        goto ErrorFail;
-    CloseHandle(pi.hThread);
-    LocalFree(sa.lpSecurityDescriptor);
-    m_hProcess = pi.hProcess;
-#else
-    m_pUniqueName = tstr_dup(uniqueName);
-    m_hProcess = CreateThread(NULL, 0, UpdateMMapForIndexing, m_pUniqueName, 0, NULL);
-#endif
-
+    m_hThread = CreateThread(NULL, 0, UpdateDataForIndexing, &m_utd, 0, NULL);
     return S_OK;
-
-ErrorFail:
-    LocalFree(sa.lpSecurityDescriptor);
-    return E_FAIL;
 }
 
 // adapted from SumatraProperties.cpp
@@ -127,57 +65,139 @@ HRESULT CPdfFilter::GetNextChunkValue(CChunkValue &chunkValue)
 
     if (m_bDone)
         return FILTER_E_END_OF_CHUNKS;
-    if (WaitForSingleObject(m_hConsume, FILTER_TIMEOUT_IN_MS) != WAIT_OBJECT_0)
+    if (WaitForSingleObject(m_utd.consume, FILTER_TIMEOUT_IN_MS) != WAIT_OBJECT_0)
         m_bDone = true;
-    if (!*m_pData)
+    if (!*m_utd.data)
         m_bDone = true;
     if (m_bDone)
         return FILTER_E_END_OF_CHUNKS;
 
-    if (str_startswith(m_pData, "Type:") && m_pData[5]) {
-        WCHAR *type = utf8_to_wstr(m_pData + 5);
+    if (str_startswith(m_utd.data, "Type:") && m_utd.data[5]) {
+        WCHAR *type = utf8_to_wstr(m_utd.data + 5);
         chunkValue.SetTextValue(PKEY_PerceivedType, type);
         free(type);
         goto Success;
     }
 
-    if (str_startswith(m_pData, "Author:") && m_pData[7]) {
-        WCHAR *author = utf8_to_wstr(m_pData + 7);
+    if (str_startswith(m_utd.data, "Author:") && m_utd.data[7]) {
+        WCHAR *author = utf8_to_wstr(m_utd.data + 7);
         chunkValue.SetTextValue(PKEY_Author, author);
         free(author);
         goto Success;
     }
 
-    if (str_startswith(m_pData, "Title:") && m_pData[6]) {
-        WCHAR *title = utf8_to_wstr(m_pData + 6);
+    if (str_startswith(m_utd.data, "Title:") && m_utd.data[6]) {
+        WCHAR *title = utf8_to_wstr(m_utd.data + 6);
         chunkValue.SetTextValue(PKEY_Title, title);
         free(title);
         goto Success;
     }
 
-    if (str_startswith(m_pData, "Date:") && PdfDateParse(m_pData + 5, &systime)) {
+    if (str_startswith(m_utd.data, "Date:") && PdfDateParse(m_utd.data + 5, &systime)) {
         FILETIME filetime;
         SystemTimeToFileTime(&systime, &filetime);
         chunkValue.SetFileTimeValue(PKEY_ItemDate, filetime);
         goto Success;
     }
 
-    if (str_startswith(m_pData, "Content:")) {
-        WCHAR *content = utf8_to_wstr(m_pData + 8);
+    if (str_startswith(m_utd.data, "Content:")) {
+        WCHAR *content = utf8_to_wstr(m_utd.data + 8);
         chunkValue.SetTextValue(PKEY_Search_Contents, content, CHUNK_TEXT);
         free(content);
         goto Success;
     }
 
-    // if (!str_endswith(m_pData, ":"))
-    //     fprintf(stderr, "Unexpected data: %s\n", m_pData);
+    // if (!str_endswith(m_utd.data, ":"))
+    //     fprintf(stderr, "Unexpected data: %s\n", m_utd.data);
 
-    *m_pData = '\0';
-    SetEvent(m_hProduce);
+    *m_utd.data = '\0';
+    SetEvent(m_utd.produce);
     return GetNextChunkValue(chunkValue);
 
 Success:
-    *m_pData = '\0';
-    SetEvent(m_hProduce);
+    *m_utd.data = '\0';
+    SetEvent(m_utd.produce);
     return S_OK;
+}
+
+static DWORD WINAPI UpdateDataForIndexing(LPVOID ThreadData)
+{
+    UpdateThreadData *utd = (UpdateThreadData *)ThreadData;
+    PdfEngine engine;
+    fz_buffer *filedata = NULL;
+
+    filedata = fz_newbuffer(utd->len);
+    filedata->len = utd->len;
+    memcpy(filedata->data, utd->data, utd->len);
+
+    fz_stream *stm = fz_openbuffer(filedata);
+    bool success = engine.load(stm);
+    fz_close(stm);
+    if (!success)
+        goto Error;
+    fz_obj *info = engine.getPdfInfo();
+
+    if (WaitForSingleObject(utd->produce, FILTER_TIMEOUT_IN_MS) != WAIT_OBJECT_0)
+        goto Error;
+    str_printf_s(utd->data, utd->len, "Type:document");
+    SetEvent(utd->consume);
+
+    if (WaitForSingleObject(utd->produce, FILTER_TIMEOUT_IN_MS) != WAIT_OBJECT_0)
+        goto Error;
+    char *author = pdf_toutf8(fz_dictgets(info, "Author"));
+    str_printf_s(utd->data, utd->len, "Author:%s", author);
+    free(author);
+    SetEvent(utd->consume);
+
+    if (WaitForSingleObject(utd->produce, FILTER_TIMEOUT_IN_MS) != WAIT_OBJECT_0)
+        goto Error;
+    char *title = pdf_toutf8(fz_dictgets(info, "Title"));
+    if (str_empty(title)) {
+        free(title);
+        title = pdf_toutf8(fz_dictgets(info, "Subject"));
+    }
+    str_printf_s(utd->data, utd->len, "Title:%s", title);
+    free(title);
+    SetEvent(utd->consume);
+
+    if (WaitForSingleObject(utd->produce, FILTER_TIMEOUT_IN_MS) != WAIT_OBJECT_0)
+        goto Error;
+    char *date = pdf_toutf8(fz_dictgets(info, "ModDate"));
+    if (str_empty(date)) {
+        free(date);
+        date = pdf_toutf8(fz_dictgets(info, "CreationDate"));
+    }
+    str_printf_s(utd->data, utd->len, "Date:%s", date);
+    free(date);
+    SetEvent(utd->consume);
+
+    for (int pageNo = 1; pageNo <= engine.pageCount(); pageNo++) {
+        TCHAR *content = engine.ExtractPageText(pageNo);
+        char *contentUTF8 = tstr_to_utf8(content);
+        if (WaitForSingleObject(utd->produce, FILTER_TIMEOUT_IN_MS) != WAIT_OBJECT_0) {
+            free(content);
+            free(contentUTF8);
+            goto Error;
+        }
+        str_printf_s(utd->data, utd->len, "Content:%s", contentUTF8);
+        SetEvent(utd->consume);
+        free(contentUTF8);
+        free(content);
+    }
+
+    if (WaitForSingleObject(utd->produce, FILTER_TIMEOUT_IN_MS) != WAIT_OBJECT_0)
+        goto Error;
+    *utd->data = '\0';
+    SetEvent(utd->consume);
+
+    fz_dropbuffer(filedata);
+
+    return 0;
+
+Error:
+    *utd->data = '\0';
+    SetEvent(utd->consume);
+    if (filedata)
+        fz_dropbuffer(filedata);
+    return 1;
 }
