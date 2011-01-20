@@ -22,7 +22,6 @@
 #include "CrashHandler.h"
 #include "ParseCommandLine.h"
 #include "Benchmark.h"
-#include "ExtHelpers.h"
 
 #include "LangMenuDef.h"
 #include "translations.h"
