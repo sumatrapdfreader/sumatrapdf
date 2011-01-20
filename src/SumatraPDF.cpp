@@ -2576,15 +2576,14 @@ static void OnMouseLeftButtonDown(WindowInfo *win, int x, int y, int key)
 
     SetFocus(win->hwndFrame);
 
-    // If not in restricted mode:
-    // - select text when either over text or the user presses Ctrl+Shift
-    // - make a rectangular selection when not over text and the user presses Ctrl
-    // drag otherwise (i.e. when either in restricted mode, not over text or
-    // when the user presses Ctrl)
-    if (!gRestrictedUse && win->dm->isOverText(x, y) != ((key & MK_CONTROL) != 0))
-        OnSelectionStart(win, x, y);
-    else
+    // In restricted mode we don't allow text selection, so always drag.
+    // Otherwise we do text selection if cursor is over text or dragging if
+    // it's not.
+    // If Ctrl is pressed, it forces drag.
+    if (gRestrictedUse || WasKeyDown(VK_CONTROL) || !win->dm->isOverText(x,y))
         OnDraggingStart(win, x, y);
+    else
+        OnSelectionStart(win, x, y);
 }
 
 static void OnMouseLeftButtonUp(WindowInfo *win, int x, int y, int key)
