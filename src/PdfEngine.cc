@@ -203,10 +203,10 @@ void pdf_streamfingerprint(fz_stream *file, unsigned char *digest)
     fz_dropbuffer(buffer);
 }
 
-bool fz_isptinrect(fz_rect rect, double x, double y)
+bool fz_isptinrect(fz_rect rect, fz_point pt)
 {
-    return MIN(rect.x0, rect.x1) <= x && MAX(rect.x0, rect.x1) >= x &&
-           MIN(rect.y0, rect.y1) <= y && MAX(rect.y0, rect.y1) >= y;
+    return MIN(rect.x0, rect.x1) <= pt.x && pt.x < MAX(rect.x0, rect.x1) &&
+           MIN(rect.y0, rect.y1) <= pt.y && pt.y < MAX(rect.y0, rect.y1);
 }
 
 #define fz_sizeofrect(rect) (((rect).x1 - (rect).x0) * ((rect).y1 - (rect).y0))
@@ -796,9 +796,11 @@ pdf_link *PdfEngine::getLinkAtPosition(int pageNo, double x, double y)
     if (!page)
         return NULL;
 
-    for (pdf_link *link = page->links; link; link = link->next)
-        if (fz_isptinrect(link->rect, x, y))
+    for (pdf_link *link = page->links; link; link = link->next) {
+        fz_point pt = { x, y };
+        if (fz_isptinrect(link->rect, pt))
             return link;
+    }
 
     return NULL;
 }

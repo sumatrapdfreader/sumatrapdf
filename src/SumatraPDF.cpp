@@ -2613,6 +2613,12 @@ static void CopySelectionToClipboard(WindowInfo *win)
                 SeeLastError();
         }
         free(selText);
+
+        if (win->dm->textSelection->result.len > 0) {
+            // don't also copy the first line of a text selection as an image
+            CloseClipboard();
+            return;
+        }
     }
     else
         WindowInfo_ShowMessage_Asynch(win, _TR("Copying text was denied (copying as image only)"), true);

@@ -37,6 +37,9 @@ void PdfSelection::Reset()
     result.rects = NULL;
 }
 
+// returns the index of the glyph closest to the right of the given coordinates
+// (i.e. when over the right half of a glyph, the returned index will be for the
+// glyph following it, which will be the first glyph (not) to be selected)
 int PdfSelection::FindClosestGlyph(int pageNo, double x, double y)
 {
     assert(1 <= pageNo && pageNo <= engine->pageCount());
@@ -107,13 +110,22 @@ void PdfSelection::FillResultRects(int pageNo, int glyph, int length, TCHAR *tex
     }
 }
 
+bool fz_isptinbbox(fz_bbox bbox, fz_point pt)
+{
+    return MIN(bbox.x0, bbox.x1) <= pt.x && pt.x < MAX(bbox.x0, bbox.x1) &&
+           MIN(bbox.y0, bbox.y1) <= pt.y && pt.y < MAX(bbox.y0, bbox.y1);
+}
+
 bool PdfSelection::IsOverGlyph(int pageNo, double x, double y)
 {
     int glyphIx = FindClosestGlyph(pageNo, x, y);
+    fz_point pt = { x, y };
     fz_bbox *_coords = coords[pageNo - 1];
-    bool isPtInRect = _coords[glyphIx].x0 <= x && x < _coords[glyphIx].x1 &&
-                      _coords[glyphIx].y0 <= y && y < _coords[glyphIx].y1;
-    return isPtInRect;
+    // when over the right half of a glyph, FindClosestGlyph returns the
+    // index of the next glyph, in which case glyphIx must be decremented
+    if (glyphIx == lens[pageNo - 1] || !fz_isptinbbox(_coords[glyphIx], pt))
+        glyphIx--;
+    return fz_isptinbbox(_coords[glyphIx], pt);
 }
 
 void PdfSelection::StartAt(int pageNo, int glyphIx)
