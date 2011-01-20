@@ -9,6 +9,7 @@
 #include "AppPrefs.h"
 #include "win_util.h"
 #include "WinUtil.hpp"
+#include "AppTools.h"
 
 #define ABOUT_LINE_OUTER_SIZE       2
 #define ABOUT_LINE_SEP_SIZE         1
@@ -40,6 +41,10 @@
   #define VERSION_SUB_TXT       _T("Adapted by RM")
  #endif
 #endif
+
+extern HCURSOR gCursorHand;
+extern bool gRestrictedUse;
+extern HINSTANCE ghinst;
 
 static HWND gHwndAbout;
 

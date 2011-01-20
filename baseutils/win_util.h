@@ -84,6 +84,8 @@ int     regkey_set_dword(HKEY key_class, TCHAR *key_path, TCHAR *key_name, DWORD
 int     regkey_set_str(HKEY key_class, TCHAR *key_path, TCHAR *key_name, TCHAR *key_value);
 
 void    paint_round_rect_around_hwnd(HDC hdc, HWND hwnd_edit_parent, HWND hwnd_edit, COLORREF col);
+void    paint_rect(HDC hdc, RECT * rect);
+void    draw_centered_text(HDC hdc, RECT *r, const TCHAR *txt);
 
 #ifdef __cplusplus
 }

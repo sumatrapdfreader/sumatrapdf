@@ -18,11 +18,4 @@
 
 #define COL_BLUE_LINK           RGB(0,0x20,0xa0)
 
-HFONT Win32_Font_GetSimple(HDC hdc, TCHAR *fontName, int fontSize);
-void Win32_Font_Delete(HFONT font);
-
-extern HCURSOR gCursorHand;
-extern bool gRestrictedUse;
-extern HINSTANCE ghinst;
-
 #endif

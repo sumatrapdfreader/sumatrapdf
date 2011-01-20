@@ -138,5 +138,7 @@ bool WriteRegDWORD(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, DWOR
 void EnableNx();
 void RedirectIOToConsole();
 TCHAR *ResolveLnk(TCHAR * path);
+IDataObject* GetDataObjectForFile(LPCTSTR pszPath, HWND hwnd=NULL);
+DWORD GetFileVersion(TCHAR *path);
 
 #endif

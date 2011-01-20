@@ -9,11 +9,14 @@
 #include "translations.h"
 #include "win_util.h"
 #include "WinUtil.hpp"
+#include "AppTools.h"
 
 #define PROPERTIES_LEFT_RIGHT_SPACE_DX 8
 #define PROPERTIES_RECT_PADDING     8
 #define PROPERTIES_TXT_DY_PADDING 2
 #define PROPERTIES_WIN_TITLE    _TR("Document Properties")
+
+extern HINSTANCE ghinst;
 
 static uint64_t WinFileSizeGet(const TCHAR *file_path)
 {

@@ -15,6 +15,7 @@
 #include "SumatraProperties.h"
 #include "SumatraAbout.h"
 #include "FileHistory.h"
+#include "AppTools.h"
 
 #include "win_util.h"
 #include "WinUtil.hpp"
@@ -268,26 +269,6 @@ static bool CanViewWithAcrobat(WindowInfo *win=NULL);
 static bool ViewWithAcrobat(WindowInfo *win, TCHAR *args=NULL);
 static bool CanSendAsEmailAttachment(WindowInfo *win=NULL);
 
-static const char *GuessLanguage()
-{
-    LANGID langId = GetUserDefaultUILanguage();
-    LANGID langIdNoSublang = MAKELANGID(PRIMARYLANGID(langId), SUBLANG_NEUTRAL);
-    const char *langName = NULL;
-
-    // Either find the exact primary/sub lang id match, or a neutral sublang if it exists
-    // (don't return any sublang for a given language, it might be too different)
-    for (int i = 0; i < LANGS_COUNT; i++) {
-        if (langId == g_langs[i]._langId)
-            return g_langs[i]._langName;
-
-        if (langIdNoSublang == g_langs[i]._langId)
-            langName = g_langs[i]._langName;
-        // continue searching after finding a match with a neutral sublanguage
-    }
-
-    return langName;
-}
-
 static int LangGetIndex(const char *name)
 {
     for (int i = 0; i < LANGS_COUNT; i++) {
@@ -310,29 +291,16 @@ bool CurrLangNameSet(const char* langName)
     return ok;
 }
 
-/* Convert FILETIME to a string.
-   Caller needs to free() the result. */
-char *FileTimeToStr(FILETIME* ft)
-{
-    return mem_to_hexstr((unsigned char*)ft, sizeof(*ft));
-}
-
-/* Reverse of FileTimeToStr: convert string <s> to <ft>. */
-void StrToFileTime(char *s, FILETIME* ft)
-{
-    hexstr_to_mem(s, (unsigned char*)ft, sizeof(*ft));
-}
-
 /* Get current UTS cystem time as string.
    Caller needs to free() the result. */
 char *GetSystemTimeAsStr()
 {
     FILETIME ft;
     GetSystemTimeAsFileTime(&ft);
-    return FileTimeToStr(&ft);
+    return _mem_to_hexstr(&ft);
 }
 
-static void FileTimeToLargeInteger(FILETIME *ft, LARGE_INTEGER *lt)
+static void FileTimeToLargeInteger(FILETIME *ft, ULARGE_INTEGER *lt)
 {
     lt->LowPart = ft->dwLowDateTime;
     lt->HighPart = ft->dwHighDateTime;
@@ -341,8 +309,8 @@ static void FileTimeToLargeInteger(FILETIME *ft, LARGE_INTEGER *lt)
 /* Return <ft1> - <ft2> in seconds */
 DWORD FileTimeDiffInSecs(FILETIME *ft1, FILETIME *ft2)
 {
-    LARGE_INTEGER t1;
-    LARGE_INTEGER t2;
+    ULARGE_INTEGER t1;
+    ULARGE_INTEGER t2;
     FileTimeToLargeInteger(ft1, &t1);
     FileTimeToLargeInteger(ft2, &t2);
     // diff is in 100 nanoseconds
@@ -388,7 +356,7 @@ void DownloadSumatraUpdateInfo(WindowInfo *win, bool autoCheck)
     /* For auto-check, only check if at least a day passed since last check */
     if (autoCheck && gGlobalPrefs.m_lastUpdateTime) {
         FILETIME lastUpdateTimeFt;
-        StrToFileTime(gGlobalPrefs.m_lastUpdateTime, &lastUpdateTimeFt);
+        _hexstr_to_mem(gGlobalPrefs.m_lastUpdateTime, &lastUpdateTimeFt);
         FILETIME currentTimeFt;
         GetSystemTimeAsFileTime(&currentTimeFt);
         int secs = FileTimeDiffInSecs(&currentTimeFt, &lastUpdateTimeFt);
@@ -403,135 +371,6 @@ void DownloadSumatraUpdateInfo(WindowInfo *win, bool autoCheck)
 
     free(gGlobalPrefs.m_lastUpdateTime);
     gGlobalPrefs.m_lastUpdateTime = GetSystemTimeAsStr();
-}
-
-// List of rules used to detect TeX editors.
-
-// type of path information retrieved from the registy
-typedef enum
-{
-    BinaryPath,         // full path to the editor's binary file
-    BinaryDir,          // directory containing the editor's binary file
-    SiblingPath,        // full path to a sibling file of the editor's binary file    
-} EditorPathType;
-typedef struct 
-{
-    PTSTR          Name;                // Editor name
-    EditorPathType Type;                // Type of the path information obtained from the registry
-    HKEY           RegRoot;             // Root of the regkey
-    PTSTR          RegKey;              // Registry key path
-    PTSTR          RegValue;            // Registry value name
-    PTSTR          BinaryFilename;      // Editor's binary file name
-    PTSTR          InverseSearchArgs;   // Parameters to be passed to the editor;
-                                        // use placeholder '%f' for path to source file and '%l' for line number.
-} EditorDetectionRules;
-static EditorDetectionRules editor_rules[] =
-{
-    _T("WinEdt"),             BinaryPath, HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\WinEdt.exe"), NULL,
-                              _T("WinEdt.exe"), _T("\"[Open(|%f|);SelPar(%l,8)]\""),
-
-    _T("WinEdt"),             BinaryDir, HKEY_CURRENT_USER, _T("Software\\WinEdt"), _T("Install Root"),
-                              _T("WinEdt.exe"), _T("\"[Open(|%f|);SelPar(%l,8)]\""),
-
-    _T("Notepad++"),          BinaryPath, HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\notepad++.exe"), NULL,
-                              _T("WinEdt.exe"), _T("-n%l \"%f\""),
-
-    _T("Notepad++"),          BinaryDir, HKEY_LOCAL_MACHINE, _T("Software\\Notepad++"), NULL,
-                              _T("notepad++.exe"), _T("-n%l \"%f\""),
-
-    _T("Notepad++"),          BinaryPath, HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Notepad++"), _T("DisplayIcon"),
-                              _T("notepad++.exe"), _T("-n%l \"%f\""),
-
-    _T("TeXnicCenter Alpha"), BinaryDir, HKEY_LOCAL_MACHINE, _T("Software\\ToolsCenter\\TeXnicCenterNT"), _T("AppPath"),
-                              _T("TeXnicCenter.exe"), _T("/ddecmd \"[goto('%f', '%l')]\""),
-
-    _T("TeXnicCenter Alpha"), BinaryDir, HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\TeXnicCenter Alpha_is1"), _T("InstallLocation"),
-                              _T("TeXnicCenter.exe"), _T("/ddecmd \"[goto('%f', '%l')]\""),
-
-    _T("TeXnicCenter"),       BinaryDir, HKEY_LOCAL_MACHINE, _T("Software\\ToolsCenter\\TeXnicCenter"), _T("AppPath"),
-                              _T("TEXCNTR.exe"), _T("/ddecmd \"[goto('%f', '%l')]\""),
-
-    _T("TeXnicCenter"),       BinaryDir, HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\TeXnicCenter_is1"), _T("InstallLocation"),
-                              _T("TEXCNTR.exe"), _T("/ddecmd \"[goto('%f', '%l')]\""),
-
-    _T("WinShell"),           BinaryDir, HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\WinShell_is1"), _T("InstallLocation"),
-                              _T("WinShell.exe"), _T("-c \"%f\" -l %l"),
-
-    _T("Gvim"),               BinaryPath, HKEY_LOCAL_MACHINE, _T("Software\\Vim\\Gvim"), _T("path"),
-                              _T("gvim.exe"), _T("\"%f\" +%l"),
-    
-    // TODO: add this rule only if the latex-suite for ViM is installed (http://vim-latex.sourceforge.net/documentation/latex-suite.txt)
-    _T("Gvim+latex-suite"),   BinaryPath, HKEY_LOCAL_MACHINE, _T("Software\\Vim\\Gvim"), _T("path"),
-                             _T("gvim.exe"), _T("-c \":RemoteOpen +%l %f\""),
-                              
-    _T("Texmaker"),           SiblingPath, HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Texmaker"), _T("UninstallString"),
-                              _T("texmaker.exe"), _T("\"%f\" -line %l"),
-
-    // TODO: find a way to detect where emacs is installed
-    //_T("ntEmacs"),            BinaryPath, HKEY_LOCAL_MACHINE, _T("???"), _T("???"),
-    //                          _T("emacsclientw.exe"), _T("+%l \"%f\""),
-};
-
-// Detect TeX editors installed on the system and construct the
-// corresponding inverse search commands.
-//
-// Parameters:
-//      hwndCombo   -- (optional) handle to a combo list that will be filled with the list of possible inverse search commands.
-// Returns:
-//      the inverse search command of the first detected editor (the caller needs to free() the result).
-LPTSTR AutoDetectInverseSearchCommands(HWND hwndCombo)
-{
-    LPTSTR firstEditor = NULL;
-    TCHAR path[MAX_PATH];
-
-    for (int i = 0; i < dimof(editor_rules); i++)
-    {
-        if (!ReadRegStr(editor_rules[i].RegRoot, editor_rules[i].RegKey, editor_rules[i].RegValue, path, dimof(path)))
-        {
-            continue;
-        }
-
-        PTSTR cmd;
-        if (editor_rules[i].Type == SiblingPath)
-        {
-            // remove file part
-            PTSTR dir = FilePath_GetDir(path);
-            cmd = tstr_printf(_T("\"%s\\%s\" %s"), dir, editor_rules[i].BinaryFilename, editor_rules[i].InverseSearchArgs);
-            free(dir);
-        }
-        else if (editor_rules[i].Type == BinaryDir)
-        {
-            // remove trailing path separator (TODO: move to function in file_util.c)
-            size_t len = tstr_len(path);
-            if (*path && char_is_dir_sep(path[len-1]))
-                path[len-1] = 0;
-            cmd = tstr_printf(_T("\"%s\\%s\" %s"), path, editor_rules[i].BinaryFilename, editor_rules[i].InverseSearchArgs);
-        }
-        else // if (editor_rules[i].Type == BinaryPath)
-        {
-            cmd = tstr_printf(_T("\"%s\" %s"), path, editor_rules[i].InverseSearchArgs);
-        }
-
-        if (!firstEditor)
-            firstEditor = tstr_dup(cmd);
-        if (!hwndCombo)
-        {
-            // no need to fill a combo box: return immeditately after finding an editor.
-            free(cmd);
-            return firstEditor;
-        }
-
-        SendMessage(hwndCombo, CB_ADDSTRING, 0, (LPARAM)cmd);
-        free(cmd);
-
-        // skip the remaining rules for this editor
-        while (i + 1 < dimof(editor_rules) && tstr_eq(editor_rules[i].Name, editor_rules[i+1].Name))
-            i++;
-    }
-
-    // Fall back to notepad as a default handler
-    if (!firstEditor) firstEditor = tstr_dup(_T("notepad %f"));
-    return firstEditor;
 }
 
 static void SerializableGlobalPrefs_Init() {
@@ -596,13 +435,6 @@ static void SwitchToDisplayMode(WindowInfo *win, DisplayMode displayMode, bool k
     win->prevCanvasBR.x = win->prevCanvasBR.y = -1;
     win->dm->changeDisplayMode(displayMode);
     MenuUpdateDisplayMode(win);
-}
-
-static UINT AllocNewMenuId(void)
-{
-    static UINT id = 1000;
-    ++id;
-    return id;
 }
 
 #define SEP_ITEM "-----"
@@ -710,6 +542,8 @@ MenuDef menuDefHelp[] = {
 
 static void AddFileMenuItem(HMENU menuFile, FileHistoryList *node, UINT index)
 {
+static UINT nextMenuId = 1000;
+
     assert(node);
     if (!node) return;
     assert(menuFile);
@@ -718,7 +552,7 @@ static void AddFileMenuItem(HMENU menuFile, FileHistoryList *node, UINT index)
     TCHAR menuString[MAX_PATH + 4];
     wsprintf(menuString, _T("&%d) %s"), (index + 1) % 10, FilePath_GetBaseName(node->state.filePath));
     if (INVALID_MENU_ID == node->menuId)
-        node->menuId = AllocNewMenuId();
+        node->menuId = ++nextMenuId;
     InsertMenu(menuFile, IDM_EXIT, MF_BYCOMMAND | MF_ENABLED | MF_STRING, node->menuId, menuString);
 }
 
@@ -730,22 +564,21 @@ static HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuItems)
 
     for (int i=0; i < menuItems; i++) {
         MenuDef md = menuDefs[i];
-        if (!gRestrictedUse || ~md.m_flags & MF_NOT_IN_RESTRICTED) {
-            const char *title = md.m_title;
-            if (!title)
-                continue; // the menu item was dynamically removed
-            if (str_eq(title, SEP_ITEM)) {
-                AppendMenu(m, MF_SEPARATOR, 0, NULL);
-                continue;
-            }
-            if (MF_NO_TRANSLATE == (md.m_flags & MF_NO_TRANSLATE)) {
-                TCHAR *tmp = utf8_to_tstr(title);
-                AppendMenu(m, MF_STRING, (UINT_PTR)md.m_id, tmp);
-                free(tmp);
-            } else {
-                const TCHAR *tmp =  Translations_GetTranslation(title);
-                AppendMenu(m, MF_STRING, (UINT_PTR)md.m_id, tmp);
-            }
+        const char *title = md.m_title;
+        if (gRestrictedUse && (md.m_flags & MF_NOT_IN_RESTRICTED))
+            continue;
+        if (!title)
+            continue; // the menu item was dynamically removed
+
+        if (str_eq(title, SEP_ITEM)) {
+            AppendMenu(m, MF_SEPARATOR, 0, NULL);
+        } else if (MF_NO_TRANSLATE == (md.m_flags & MF_NO_TRANSLATE)) {
+            TCHAR *tmp = utf8_to_tstr(title);
+            AppendMenu(m, MF_STRING, (UINT_PTR)md.m_id, tmp);
+            free(tmp);
+        } else {
+            const TCHAR *tmp =  Translations_GetTranslation(title);
+            AppendMenu(m, MF_STRING, (UINT_PTR)md.m_id, tmp);
         }
     }
     return m;
@@ -780,7 +613,7 @@ static void WindowInfo_RebuildMenu(WindowInfo *win)
         DestroyMenu(win->hMenu);
         win->hMenu = NULL;
     }
-    
+
     HMENU mainMenu = CreateMenu();
     // Don't display the Acrobat and email options, if the program couldn't be found
     bool noAcrobat = !CanViewWithAcrobat(), noEmail = !CanSendAsEmailAttachment();
@@ -811,16 +644,6 @@ static void WindowInfo_RebuildMenu(WindowInfo *win)
     tmp = BuildMenuFromMenuDef(menuDefHelp, dimof(menuDefHelp));
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)tmp, _TR("&Help"));
     win->hMenu = mainMenu;
-}
-
-/* Return the full exe path of my own executable.
-   Caller needs to free() the result. */
-static TCHAR *ExePathGet(void)
-{
-    TCHAR buf[MAX_PATH];
-    buf[0] = 0;
-    GetModuleFileName(NULL, buf, dimof(buf));
-    return FilePath_Normalize(buf, FALSE);
 }
 
 static void AddFileToHistory(const TCHAR *filePath)
@@ -864,72 +687,6 @@ TCHAR *GetPasswordForFile(WindowInfo *win, const TCHAR *fileName,
     *saveKey = false;
     fileName = FilePath_GetBaseName(fileName);
     return Dialog_GetPassword(win, fileName, gGlobalPrefs.m_rememberOpenedFiles ? saveKey : NULL);
-}
-
-/* Return false if this program has been started from "Program Files" directory
-   (which is an indicator that it has been installed) */
-bool IsRunningInPortableMode(void)
-{
-    TCHAR programFilesDir[MAX_PATH];
-    BOOL fOk = SHGetSpecialFolderPath(NULL, programFilesDir, CSIDL_PROGRAM_FILES, FALSE);
-    TCHAR *exePath = ExePathGet();
-    // if we can't get either path, assume we're not running from "Program Files"
-    bool portableMode = true;
-    if (fOk && exePath) {
-        // check if one of the exePath's parent directories is "Program Files"
-        // (or a junction to it)
-        TCHAR *baseName;
-        while ((baseName = (TCHAR *)FilePath_GetBaseName(exePath)) > exePath) {
-            baseName[-1] = '\0';
-            if (FilePath_IsSameFile(programFilesDir, exePath))
-                portableMode = false;
-        }
-    }
-    free(exePath);
-    return portableMode;
-}
-
-/* Caller needs to free() the result. */
-static TCHAR *AppGetAppDir(void)
-{
-    TCHAR dir[MAX_PATH];
-    TCHAR * appDir;
-
-    SHGetSpecialFolderPath(NULL, dir, CSIDL_APPDATA, TRUE);
-    appDir = tstr_cat3(dir, _T(DIR_SEP_STR), APP_NAME_STR);
-    if (appDir)
-        _tmkdir(appDir);
-
-    return appDir;
-}
-
-/* Generate the full path for a filename used by the app in the userdata path. */
-/* Caller needs to free() the result. */
-static TCHAR *AppGenDataFilename(TCHAR *pFilename)
-{
-    assert(pFilename);
-    if (!pFilename) return NULL;
-
-    TCHAR * path = NULL;
-    if (IsRunningInPortableMode()) {
-        /* Use the same path as the binary */
-        TCHAR *exePath = ExePathGet();
-        if (exePath) {
-            assert(exePath[0]);
-            path = FilePath_GetDir(exePath);
-            free(exePath);
-        }
-    } else {
-        path = AppGetAppDir();
-    }
-    if (!path)
-        return NULL;
-
-    bool needsSep = !char_is_dir_sep(path[lstrlen(path) - 1]) && !char_is_dir_sep(pFilename[0]);
-    TCHAR * filename = tstr_printf(_T("%s%s%s"), path, needsSep ? _T(DIR_SEP_STR) : _T(""), pFilename);
-    free(path);
-
-    return filename;
 }
 
 /* Caller needs to free() the result. */
@@ -986,30 +743,44 @@ static bool Prefs_Load(void)
     return ok;
 }
 
-unsigned short gItemId[] = {
-    IDM_ZOOM_6400, IDM_ZOOM_3200, IDM_ZOOM_1600, IDM_ZOOM_800, IDM_ZOOM_400,
-    IDM_ZOOM_200, IDM_ZOOM_150, IDM_ZOOM_125, IDM_ZOOM_100, IDM_ZOOM_50,
-    IDM_ZOOM_25, IDM_ZOOM_12_5, IDM_ZOOM_8_33, IDM_ZOOM_FIT_PAGE, 
-    IDM_ZOOM_FIT_WIDTH, IDM_ZOOM_FIT_CONTENT, IDM_ZOOM_ACTUAL_SIZE, IDM_ZOOM_CUSTOM };
-
-double gItemZoom[] = { 6400.0, 3200.0, 1600.0, 800.0, 400.0, 200.0, 150.0, 
-    125.0, 100.0, 50.0, 25.0, 12.5, 8.33, ZOOM_FIT_PAGE, ZOOM_FIT_WIDTH, ZOOM_FIT_CONTENT,
-    ZOOM_ACTUAL_SIZE, 0 };
+static struct {
+    unsigned short itemId;
+    double zoom;
+} gZoomMenuIds[] = {
+    { IDM_ZOOM_6400,    6400.0 },
+    { IDM_ZOOM_3200,    3200.0 },
+    { IDM_ZOOM_1600,    1600.0 },
+    { IDM_ZOOM_800,     800.0  },
+    { IDM_ZOOM_400,     400.0  },
+    { IDM_ZOOM_200,     200.0  },
+    { IDM_ZOOM_150,     150.0  },
+    { IDM_ZOOM_125,     125.0  },
+    { IDM_ZOOM_100,     100.0  },
+    { IDM_ZOOM_50,      50.0   },
+    { IDM_ZOOM_25,      25.0   },
+    { IDM_ZOOM_12_5,    12.5   },
+    { IDM_ZOOM_8_33,    8.33   },
+    { IDM_ZOOM_CUSTOM,  0      },
+    { IDM_ZOOM_FIT_PAGE,    ZOOM_FIT_PAGE    },
+    { IDM_ZOOM_FIT_WIDTH,   ZOOM_FIT_WIDTH   },
+    { IDM_ZOOM_FIT_CONTENT, ZOOM_FIT_CONTENT },
+    { IDM_ZOOM_ACTUAL_SIZE, ZOOM_ACTUAL_SIZE },
+};
 
 static UINT MenuIdFromVirtualZoom(double virtualZoom)
 {
-    for (int i = 0; i < dimof(gItemZoom); i++) {
-        if (virtualZoom == gItemZoom[i])
-            return gItemId[i];
+    for (int i = 0; i < dimof(gZoomMenuIds); i++) {
+        if (virtualZoom == gZoomMenuIds[i].zoom)
+            return gZoomMenuIds[i].itemId;
     }
     return IDM_ZOOM_CUSTOM;
 }
 
 static double ZoomMenuItemToZoom(UINT menuItemId)
 {
-    for (int i = 0; i < dimof(gItemId); i++) {
-        if (menuItemId == gItemId[i])
-            return gItemZoom[i];
+    for (int i = 0; i < dimof(gZoomMenuIds); i++) {
+        if (menuItemId == gZoomMenuIds[i].itemId)
+            return gZoomMenuIds[i].zoom;
     }
     assert(0);
     return 100.0;
@@ -1019,8 +790,8 @@ static void ZoomMenuItemCheck(HMENU hmenu, UINT menuItemId, BOOL canZoom)
 {
     assert(IDM_ZOOM_FIRST <= menuItemId && menuItemId <= IDM_ZOOM_LAST);
 
-    for (int i = 0; i < dimof(gItemId); i++)
-        EnableMenuItem(hmenu, gItemId[i], MF_BYCOMMAND | (canZoom ? MF_ENABLED : MF_GRAYED));
+    for (int i = 0; i < dimof(gZoomMenuIds); i++)
+        EnableMenuItem(hmenu, gZoomMenuIds[i].itemId, MF_BYCOMMAND | (canZoom ? MF_ENABLED : MF_GRAYED));
 
     if (IDM_ZOOM_100 == menuItemId)
         menuItemId = IDM_ZOOM_ACTUAL_SIZE;
@@ -1750,38 +1521,6 @@ static void CheckPositionAndSize(DisplayState* ds)
     EnsureWindowVisibility(&ds->windowX, &ds->windowY, &ds->windowDx, &ds->windowDy);
 }
 
-static void AdjustRemovableDriveLetter(TCHAR *path)
-{
-    TCHAR szDrive[] = _T("?:\\"), origDrive;
-    UINT driveType;
-    DWORD driveMask;
-
-    // Don't bother if the file path is still valid
-    if (file_exists(path))
-        return;
-
-    // Don't bother for invalid and non-removable drives
-    szDrive[0] = toupper(path[0]);
-    if (szDrive[0] < 'A' || szDrive[0] > 'Z')
-        return;
-    driveType = GetDriveType(szDrive);
-    if (DRIVE_REMOVABLE != driveType && DRIVE_UNKNOWN != driveType && DRIVE_NO_ROOT_DIR != driveType)
-        return;
-
-    // Iterate through all (other) removable drives and try to find the file there
-    szDrive[0] = 'A';
-    origDrive = path[0];
-    for (driveMask = GetLogicalDrives(); driveMask; driveMask >>= 1) {
-        if ((driveMask & 1) && szDrive[0] != origDrive && GetDriveType(szDrive) == DRIVE_REMOVABLE) {
-            path[0] = szDrive[0];
-            if (file_exists(path))
-                return;
-        }
-        szDrive[0]++;
-    }
-    path[0] = origDrive;
-}
-
 WindowInfo* LoadPdf(const TCHAR *fileName, WindowInfo *win, bool showWin, TCHAR *windowTitle)
 {
     assert(fileName);
@@ -1841,36 +1580,6 @@ WindowInfo* LoadPdf(const TCHAR *fileName, WindowInfo *win, bool showWin, TCHAR 
 exit:
     free(fullpath);
     return win;
-}
-
-HFONT Win32_Font_GetSimple(HDC hdc, TCHAR *fontName, int fontSize)
-{
-    HFONT       font_dc;
-    HFONT       font;
-    LOGFONT     lf = {0};
-
-    font_dc = (HFONT)GetStockObject(SYSTEM_FONT);
-    if (!GetObject(font_dc, sizeof(LOGFONT), &lf))
-        return NULL;
-
-    lf.lfWidth = 0;
-    lf.lfHeight = -MulDiv(fontSize, GetDeviceCaps(hdc, LOGPIXELSY), USER_DEFAULT_SCREEN_DPI);
-    lf.lfItalic = FALSE;
-    lf.lfUnderline = FALSE;
-    lf.lfStrikeOut = FALSE;
-    lf.lfCharSet = DEFAULT_CHARSET;
-    lf.lfOutPrecision = OUT_TT_PRECIS;
-    lf.lfQuality = DEFAULT_QUALITY;
-    lf.lfPitchAndFamily = DEFAULT_PITCH;    
-    lstrcpyn(lf.lfFaceName, fontName, LF_FACESIZE);
-    lf.lfWeight = FW_DONTCARE;
-    font = CreateFontIndirect(&lf);
-    return font;
-}
-
-void Win32_Font_Delete(HFONT font)
-{
-    DeleteObject(font);
 }
 
 // The current page edit box is updated with the current page number
@@ -2004,110 +1713,6 @@ void DisplayModel::setScrollbarsState(void)
     SetScrollInfo(win->hwndCanvas, SB_VERT, &si, TRUE);
 }
 
-/*
-Structure of registry entries for associating Sumatra with PDF files.
-
-The following paths exist under both HKEY_LOCAL_MACHINE and HKEY_CURRENT_USER.
-HKCU has precedence over HKLM.
-
-Software\Classes\.pdf default key is name of reg entry describing the app
-  handling opening PDF files. In our case it's SumatraPDF
-
-Software\Classes\SumatraPDF\DefaultIcon = $exePath,1
-  1 means the second icon resource within the executable
-Software\Classes\SumatraPDF\shell\open\command = "$exePath" "%1"
-  tells how to call sumatra to open PDF file. %1 is replaced by PDF file path
-Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.pdf\Progid
-  should be SumatraPDF (FoxIt takes it over); only needed for HKEY_CURRENT_USER
-
-HKEY_CLASSES_ROOT\.pdf\OpenWithList
-  list of all apps that can be used to open PDF files. We don't touch that.
-
-HKEY_CLASSES_ROOT\.pdf default comes from either HKCU\Software\Classes\.pdf or
-HKLM\Software\Classes\.pdf (HKCU has priority over HKLM)
-
-Note: When making changes below, please also adjust the installer.nsi script
-and UnregisterFromBeingDefaultViewer() in Installer.cpp.
-*/
-static void DoAssociateExeWithPdfExtension(HKEY hkey)
-{
-    TCHAR cmdPath[MAX_PATH * 2 + 64];
-    TCHAR previousPdfHandler[MAX_PATH + 8];
-    TCHAR *exePath = ExePathGet();
-    if (!exePath)
-        return;
-
-    // Remember the previous default app for the Uninstaller
-    bool ok = ReadRegStr(hkey, _T("Software\\Classes\\.pdf"), NULL, previousPdfHandler, dimof(previousPdfHandler));
-    if (ok && !tstr_eq(previousPdfHandler, APP_NAME_STR)) {
-        WriteRegStr(hkey, _T("Software\\Classes\\") APP_NAME_STR, _T("previous.pdf"), previousPdfHandler);
-    }
-
-    WriteRegStr(hkey, _T("Software\\Classes\\") APP_NAME_STR, NULL, _TR("PDF Document"));
-    TCHAR *icon_path = tstr_cat(exePath, _T(",1"));
-    WriteRegStr(hkey, _T("Software\\Classes\\") APP_NAME_STR _T("\\DefaultIcon"), NULL, icon_path);
-    free(icon_path);
-
-    WriteRegStr(hkey, _T("Software\\Classes\\") APP_NAME_STR _T("\\shell"), NULL, _T("open"));
-
-    tstr_printf_s(cmdPath, dimof(cmdPath), _T("\"%s\" \"%%1\""), exePath); // "${exePath}" "%1"
-    ok = WriteRegStr(hkey, _T("Software\\Classes\\") APP_NAME_STR _T("\\shell\\open\\command"), NULL, cmdPath);
-
-    // also register for printing
-    tstr_printf_s(cmdPath, dimof(cmdPath), _T("\"%s\" -print-to-default -exit-on-print \"%%1\""), exePath); // "${exePath}" -print-to-default -exit-on-print "%1"
-    WriteRegStr(hkey, _T("Software\\Classes\\") APP_NAME_STR _T("\\shell\\print\\command"), NULL, cmdPath);
-
-    // Only change the association if we're confident, that we've registered ourselves well enough
-    if (ok) {
-        WriteRegStr(hkey, _T("Software\\Classes\\.pdf"), NULL, APP_NAME_STR);
-        if (hkey == HKEY_CURRENT_USER) {
-            WriteRegStr(hkey, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\.pdf"), _T("Progid"), APP_NAME_STR);
-        }
-    }
-
-    free(exePath);
-}
-
-// verify that all registry entries that need to be set in order to associate
-// Sumatra with .pdf files exist and have the right values
-bool IsExeAssociatedWithPdfExtension(void)
-{
-    TCHAR tmp[MAX_PATH + 8];
-    bool ok;
-
-    // this one doesn't have to exist but if it does, it must be APP_NAME_STR
-    ok = ReadRegStr(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\.pdf"), _T("Progid"), tmp, dimof(tmp));
-    if (ok && !tstr_eq(tmp, APP_NAME_STR))
-        return false;
-
-    // HKEY_CLASSES_ROOT\.pdf default key must exist and be equal to APP_NAME_STR
-    ok = ReadRegStr(HKEY_CLASSES_ROOT, _T(".pdf"), NULL, tmp, dimof(tmp));
-    if (!ok || !tstr_eq(tmp, APP_NAME_STR))
-        return false;
-
-    // HKEY_CLASSES_ROOT\SumatraPDF\shell\open default key must be: open
-    ok = ReadRegStr(HKEY_CLASSES_ROOT, _T("SumatraPDF\\shell"), NULL, tmp, dimof(tmp));
-    if (!ok || !tstr_ieq(tmp, _T("open")))
-        return false;
-
-    // HKEY_CLASSES_ROOT\SumatraPDF\shell\open\command default key must be: "${exe_path}" "%1"
-    ok = ReadRegStr(HKEY_CLASSES_ROOT, _T("SumatraPDF\\shell\\open\\command"), NULL, tmp, dimof(tmp));
-    if (!ok || '"' != tmp[0])
-        return false;
-
-    TCHAR *exePathEnd = tstr_find_char(tmp + 1, '"');
-    if (!exePathEnd || !tstr_eq(exePathEnd, _T("\" \"%1\"")))
-        return false;
-    *exePathEnd = '\0';
-    TCHAR *exePath = ExePathGet();
-    if (!exePath)
-        return false;
-
-    bool same = !!FilePath_IsSameFile(exePath, tmp + 1);
-    free(exePath);
-    return same;
-}
-
 void AssociateExeWithPdfExtension(void)
 {
     DoAssociateExeWithPdfExtension(HKEY_CURRENT_USER);
@@ -2174,15 +1779,6 @@ static void OnDropFiles(WindowInfo *win, HDROP hDrop)
         win->RedrawAll();
 }
 
-static void PaintRectangle(HDC hdc, RECT * rect)
-{
-    MoveToEx(hdc, rect->left, rect->top, NULL);
-    LineTo(hdc, rect->right - 1, rect->top);
-    LineTo(hdc, rect->right - 1, rect->bottom - 1);
-    LineTo(hdc, rect->left, rect->bottom - 1);
-    LineTo(hdc, rect->left, rect->top);
-}
-
 bool WindowInfo::DoubleBuffer_New()
 {
     this->DoubleBuffer_Delete();
@@ -2211,50 +1807,6 @@ bool WindowInfo::DoubleBuffer_New()
     this->hdcToDraw = this->hdcDoubleBuffer;
 #endif
 
-    return true;
-}
-
-// extract the next (positive) number from the string *txt
-static int ExtractNextNumber(TCHAR **txt)
-{
-    int val = 0;
-    // skip non numeric characters (should only be dots)
-    for (; **txt && !_istdigit(**txt); (*txt)++);
-    for (; **txt && _istdigit(**txt); (*txt)++)
-        val = val * 10 + (**txt - '0');
-
-    return val;
-}
-
-// compare two version string. Return 0 if they are the same,
-// > 0 if the first is greater than the second and < 0 otherwise.
-// e.g. 
-//   0.9.3.900 is greater than 0.9.3
-//   1.09.300 is greater than 1.09.3 which is greater than 1.9.1
-//   1.2.0 is the same as 1.2
-static int CompareVersion(TCHAR *txt1, TCHAR *txt2)
-{
-    while (*txt1 || *txt2) {
-        int v1 = ExtractNextNumber(&txt1);
-        int v2 = ExtractNextNumber(&txt2);
-        if (v1 != v2)
-            return v1 - v2;
-    }
-
-    return 0;
-}
-
-// the only valid chars are 0-9, . and newlines.
-// Return false if it contains anything else.
-static bool ValidProgramVersion(char *txt)
-{
-    for (; *txt; txt++) {
-        if (isdigit(*txt))
-            continue;
-        if (*txt == '.' || *txt == '\r' || *txt == '\n')
-            continue;
-        return false;
-    }
     return true;
 }
 
@@ -2317,12 +1869,6 @@ static void OnUrlDownloaded(WindowInfo *win, HttpReqCtx *ctx)
 Exit:
     free(txt);
     delete ctx;
-}
-
-static void DrawCenteredText(HDC hdc, RECT *r, const TCHAR *txt)
-{    
-    SetBkMode(hdc, TRANSPARENT);
-    DrawText(hdc, txt, lstrlen(txt), r, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 }
 
 static void PaintTransparentRectangle(WindowInfo *win, HDC hdc, RectI *rect, COLORREF selectionColor, BYTE alpha = 0x5f, int margin = 1) {
@@ -2515,11 +2061,11 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
                 if (renderDelay < REPAINT_MESSAGE_DELAY_IN_MS)
                     triggerRepaintDisplay(win, REPAINT_MESSAGE_DELAY_IN_MS / 4);
                 else
-                    DrawCenteredText(hdc, &bounds, _TR("Please wait - rendering..."));
+                    draw_centered_text(hdc, &bounds, _TR("Please wait - rendering..."));
                 DBG_OUT("drawing empty %d ", pageNo);
                 rendering = true;
             } else {
-                DrawCenteredText(hdc, &bounds, _TR("Couldn't render the page"));
+                draw_centered_text(hdc, &bounds, _TR("Couldn't render the page"));
                 DBG_OUT("   missing bitmap on visible page %d\n", pageNo);
             }
             SelectObject(hdc, origFont);
@@ -2570,7 +2116,7 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
                     continue;
 
                 RECT rectScreen = { isect.x0, isect.y0, isect.x1, isect.y1 };
-                PaintRectangle(hdc, &rectScreen);
+                paint_rect(hdc, &rectScreen);
             }
             free(links);
         }
@@ -3874,37 +3420,6 @@ static void OnHScroll(WindowInfo *win, WPARAM wParam)
         win->dm->scrollXTo(si.nPos);
 }
 
-static bool GetAcrobatPath(TCHAR *buffer=NULL, int bufSize=0)
-{
-    TCHAR path[MAX_PATH];
-
-    // Try Adobe Acrobat as a fall-back, if the Reader isn't installed
-    bool foundAcrobat = ReadRegStr(HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\AcroRd32.exe"), NULL, path, dimof(path)) || ReadRegStr(HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\Acrobat.exe"), NULL, path, dimof(path));
-    if (foundAcrobat && buffer)
-        lstrcpyn(buffer, path, bufSize);
-
-    return foundAcrobat && file_exists(path);
-}
-
-// The result value contains major and minor version in the high resp. the low WORD
-static DWORD GetFileVersion(TCHAR *path)
-{
-    DWORD fileVersion = 0;
-    DWORD handle;
-    DWORD size = GetFileVersionInfoSize(path, &handle);
-    LPVOID versionInfo = malloc(size);
-
-    if (GetFileVersionInfo(path, handle, size, versionInfo)) {
-        VS_FIXEDFILEINFO *fileInfo;
-        UINT len;
-        if (VerQueryValue(versionInfo, _T("\\"), (LPVOID *)&fileInfo, &len))
-            fileVersion = fileInfo->dwFileVersionMS;
-    }
-
-    free(versionInfo);
-    return fileVersion;
-}
-
 static bool CanViewWithAcrobat(WindowInfo *win)
 {
     // Requirements: a valid filename and a valid path to Adobe Reader
@@ -3942,34 +3457,6 @@ static bool ViewWithAcrobat(WindowInfo *win, TCHAR *args)
     free(params);
 
     return true;
-}
-
-/* adapted from http://blogs.msdn.com/oldnewthing/archive/2004/09/20/231739.aspx */
-static IDataObject* GetDataObjectForFile(LPCTSTR pszPath, HWND hwnd=NULL)
-{
-    IDataObject* pDataObject = NULL;
-    IShellFolder *pDesktopFolder;
-    HRESULT hr = SHGetDesktopFolder(&pDesktopFolder);
-    if (FAILED(hr))
-        return NULL;
-
-    LPWSTR lpWPath = tstr_to_wstr(pszPath);
-    LPITEMIDLIST pidl;
-    hr = pDesktopFolder->ParseDisplayName(NULL, NULL, lpWPath, NULL, &pidl, NULL);
-    if (SUCCEEDED(hr)) {
-        IShellFolder *pShellFolder;
-        LPCITEMIDLIST pidlChild;
-        hr = SHBindToParent(pidl, IID_IShellFolder, (void**)&pShellFolder, &pidlChild);
-        if (SUCCEEDED(hr)) {
-            pShellFolder->GetUIObjectOf(hwnd, 1, &pidlChild, IID_IDataObject, NULL, (void **)&pDataObject);
-            pShellFolder->Release();
-        }
-        CoTaskMemFree(pidl);
-    }
-    pDesktopFolder->Release();
-
-    free(lpWPath);
-    return pDataObject;
 }
 
 #define DEFINE_GUID_STATIC(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) \
@@ -5092,7 +4579,7 @@ static LRESULT CALLBACK WndProcFindStatus(HWND hwnd, UINT message, WPARAM wParam
         rect.top += MulDiv(20, win->dpi, USER_DEFAULT_SCREEN_DPI);
         rect.bottom = rect.top + FIND_STATUS_PROGRESS_HEIGHT;
         rect.right = rect.left + width;
-        PaintRectangle(hdc, &rect);
+        paint_rect(hdc, &rect);
         
         int percent = win->findPercent;
         if (percent > 100)
@@ -6770,7 +6257,7 @@ HDDEDATA CALLBACK DdeCallback(UINT uType,
     ULONG_PTR dwData1,
     ULONG_PTR dwData2)
 {
-  return 0;
+    return 0;
 }
 
 void DDEExecute(LPCTSTR server, LPCTSTR topic, LPCTSTR command)

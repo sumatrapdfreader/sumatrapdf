@@ -40,9 +40,6 @@ typedef struct {
 HPROPSHEETPAGE CreatePrintAdvancedPropSheet(HINSTANCE hInst, Print_Advanced_Data *data);
 
 // in SumatraPDF.cpp
-bool IsRunningInPortableMode(void);
-bool IsExeAssociatedWithPdfExtension(void);
 void AssociateExeWithPdfExtension();
-LPTSTR AutoDetectInverseSearchCommands(HWND hwndCombo=NULL);
 
 #endif

@@ -312,3 +312,49 @@ Exit:
     return resolvedPath;
 }
 
+/* adapted from http://blogs.msdn.com/oldnewthing/archive/2004/09/20/231739.aspx */
+IDataObject* GetDataObjectForFile(LPCTSTR pszPath, HWND hwnd)
+{
+    IDataObject* pDataObject = NULL;
+    IShellFolder *pDesktopFolder;
+    HRESULT hr = SHGetDesktopFolder(&pDesktopFolder);
+    if (FAILED(hr))
+        return NULL;
+
+    LPWSTR lpWPath = tstr_to_wstr(pszPath);
+    LPITEMIDLIST pidl;
+    hr = pDesktopFolder->ParseDisplayName(NULL, NULL, lpWPath, NULL, &pidl, NULL);
+    if (SUCCEEDED(hr)) {
+        IShellFolder *pShellFolder;
+        LPCITEMIDLIST pidlChild;
+        hr = SHBindToParent(pidl, IID_IShellFolder, (void**)&pShellFolder, &pidlChild);
+        if (SUCCEEDED(hr)) {
+            pShellFolder->GetUIObjectOf(hwnd, 1, &pidlChild, IID_IDataObject, NULL, (void **)&pDataObject);
+            pShellFolder->Release();
+        }
+        CoTaskMemFree(pidl);
+    }
+    pDesktopFolder->Release();
+
+    free(lpWPath);
+    return pDataObject;
+}
+
+// The result value contains major and minor version in the high resp. the low WORD
+DWORD GetFileVersion(TCHAR *path)
+{
+    DWORD fileVersion = 0;
+    DWORD handle;
+    DWORD size = GetFileVersionInfoSize(path, &handle);
+    LPVOID versionInfo = malloc(size);
+
+    if (GetFileVersionInfo(path, handle, size, versionInfo)) {
+        VS_FIXEDFILEINFO *fileInfo;
+        UINT len;
+        if (VerQueryValue(versionInfo, _T("\\"), (LPVOID *)&fileInfo, &len))
+            fileVersion = fileInfo->dwFileVersionMS;
+    }
+
+    free(versionInfo);
+    return fileVersion;
+}

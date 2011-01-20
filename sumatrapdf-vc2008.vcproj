@@ -74,6 +74,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\AppTools.cc"
+				>
+			</File>
+			<File
+				RelativePath=".\src\AppTools.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\Benchmark.cpp"
 				>
 			</File>

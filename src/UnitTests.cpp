@@ -3,10 +3,9 @@
 #include "MemSegment.h"
 #include "geom_util.h"
 #include "ParseCommandLine.h"
+#include "AppTools.h"
 
 #ifdef DEBUG
-extern void StrToFileTime(char *s, FILETIME* ft);
-extern char *FileTimeToStr(FILETIME* ft);
 extern DWORD FileTimeDiffInSecs(FILETIME *ft1, FILETIME *ft2);
 
 static void hexstrTest()
@@ -22,8 +21,8 @@ static void hexstrTest()
 
     FILETIME ft1, ft2;
     GetSystemTimeAsFileTime(&ft1);
-    s = FileTimeToStr(&ft1);
-    StrToFileTime(s, &ft2);
+    s = _mem_to_hexstr(&ft1);
+    _hexstr_to_mem(s, &ft2);
     DWORD diff = FileTimeDiffInSecs(&ft1, &ft2);
     assert(0 == diff);
     assert(ft1.dwLowDateTime == ft2.dwLowDateTime);
@@ -216,6 +215,24 @@ static void tstr_test()
 #undef TEST_STRING
 }
 
+static void versioncheck_test()
+{
+    assert(ValidProgramVersion("1"));
+    assert(ValidProgramVersion("1.1"));
+    assert(ValidProgramVersion("1.1.1\r\n"));
+    assert(ValidProgramVersion("2662"));
+
+    assert(!ValidProgramVersion("1.1b"));
+    assert(!ValidProgramVersion("1..1"));
+    assert(!ValidProgramVersion("1.1\r\n.1"));
+
+    assert(CompareVersion(_T("0.9.3.900"), _T("0.9.3")) > 0);
+    assert(CompareVersion(_T("1.09.300"), _T("1.09.3")) > 0);
+    assert(CompareVersion(_T("1.9.1"), _T("1.09.3")) < 0);
+    assert(CompareVersion(_T("1.2.0"), _T("1.2")) == 0);
+    assert(CompareVersion(_T("1.3.0"), _T("2662")) < 0);
+}
+
 void u_DoAllTests(void)
 {
     DBG_OUT("Running tests\n");
@@ -224,5 +241,6 @@ void u_DoAllTests(void)
     hexstrTest();
     ParseCommandLineTest();
     tstr_test();
+    versioncheck_test();
 }
 #endif

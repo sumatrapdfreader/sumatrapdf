@@ -446,3 +446,17 @@ void paint_round_rect_around_hwnd(HDC hdc, HWND hwnd_edit_parent, HWND hwnd_edit
     DeleteObject(br);
 }
 
+void paint_rect(HDC hdc, RECT * rect)
+{
+    MoveToEx(hdc, rect->left, rect->top, NULL);
+    LineTo(hdc, rect->right - 1, rect->top);
+    LineTo(hdc, rect->right - 1, rect->bottom - 1);
+    LineTo(hdc, rect->left, rect->bottom - 1);
+    LineTo(hdc, rect->left, rect->top);
+}
+
+void draw_centered_text(HDC hdc, RECT *r, const TCHAR *txt)
+{    
+    SetBkMode(hdc, TRANSPARENT);
+    DrawText(hdc, txt, lstrlen(txt), r, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+}
