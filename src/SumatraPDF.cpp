@@ -1092,6 +1092,18 @@ static void MenuUpdatePrintItem(WindowInfo *win) {
         EnableMenuItem(hmenu, IDM_PRINT, MF_BYCOMMAND | MF_GRAYED);
 }
 
+static void MenuUpdateCopyItem(WindowInfo *win) {
+    HMENU hmenu = win->hMenu;
+    if (win->showSelection)
+        EnableMenuItem(hmenu, IDM_COPY_SELECTION, MF_BYCOMMAND | MF_ENABLED);
+    else
+        EnableMenuItem(hmenu, IDM_COPY_SELECTION, MF_BYCOMMAND | MF_GRAYED);
+}
+
+// TODO: there's a windows message sent right before opening a menu
+// We should call this function in response to that instead of inserting
+// the calls to MenuUpdateStateForWindow() or MenuUpdateCopyItem()
+// in every place that changes a state that dictates state of menu items
 static void MenuUpdateStateForWindow(WindowInfo *win) {
     static UINT menusToDisableIfNoPdf[] = {
         IDM_VIEW_ROTATE_LEFT, IDM_VIEW_ROTATE_RIGHT, IDM_GOTO_NEXT_PAGE, IDM_GOTO_PREV_PAGE,
@@ -1125,6 +1137,8 @@ static void MenuUpdateStateForWindow(WindowInfo *win) {
         else
             EnableMenuItem(hmenu, menuId, MF_BYCOMMAND | MF_GRAYED);
     }
+
+    MenuUpdateCopyItem(win);
 
     if (WS_SHOWING_PDF == win->state) {
         if (!CanSendAsEmailAttachment(win))
@@ -1927,6 +1941,7 @@ static void UpdateTextSelection(WindowInfo *win, bool select=true)
         win->selectionOnPage = selOnPage;
     }
     win->showSelection = true;
+    MenuUpdateCopyItem(win);
 }
 
 static void PaintSelection (WindowInfo *win, HDC hdc) {
@@ -2191,6 +2206,7 @@ static void DeleteOldSelectionInfo (WindowInfo *win) {
     }
     win->selectionOnPage = NULL;
     win->showSelection = false;
+    MenuUpdateCopyItem(win);
 }
 
 static void ConvertSelectionRectToSelectionOnPage (WindowInfo *win) {
@@ -2247,6 +2263,7 @@ static void OnSelectAll(WindowInfo *win, bool textOnly=false)
     }
 
     win->showSelection = true;
+    MenuUpdateCopyItem(win);
     triggerRepaintDisplay(win);
 }
 
@@ -2496,61 +2513,73 @@ static void OnMouseMove(WindowInfo *win, int x, int y, WPARAM flags)
     win->dragPrevPosY = y;
 }
 
+static bool CanStartSelection(WindowInfo *win)
+{
+    return WS_SHOWING_PDF == win->state && win->mouseAction == MA_IDLE;
+}
+
 static void OnSelectionStart(WindowInfo *win, int x, int y)
 {
-    if (WS_SHOWING_PDF == win->state && win->mouseAction == MA_IDLE) {
-        DeleteOldSelectionInfo (win);
+    if (!CanStartSelection(win))
+        return;
 
-        win->selectionRect.x = x;
-        win->selectionRect.y = y;
-        win->selectionRect.dx = 0;
-        win->selectionRect.dy = 0;
-        win->showSelection = true;
-        win->mouseAction = MA_SELECTING;
+    DeleteOldSelectionInfo (win);
 
-        // Ctrl+Shift+drag always initiates text selection
-        if (win->dm->isOverText(x, y) || WasKeyDown(VK_CONTROL) && WasKeyDown(VK_SHIFT)) {
-            int pageNo;
-            double dX = x, dY = y;
-            if (win->dm->cvtScreenToUser(&pageNo, &dX, &dY)) {
-                win->dm->textSelection->StartAt(pageNo, dX, dY);
-                win->mouseAction = MA_SELECTING_TEXT;
-            }
+    win->selectionRect.x = x;
+    win->selectionRect.y = y;
+    win->selectionRect.dx = 0;
+    win->selectionRect.dy = 0;
+    win->showSelection = true;
+    win->mouseAction = MA_SELECTING;
+
+    // Ctrl+Shift+drag always initiates text selection
+    if (win->dm->isOverText(x, y) || WasKeyDown(VK_CONTROL) && WasKeyDown(VK_SHIFT)) {
+        int pageNo;
+        double dX = x, dY = y;
+        if (win->dm->cvtScreenToUser(&pageNo, &dX, &dY)) {
+            win->dm->textSelection->StartAt(pageNo, dX, dY);
+            win->mouseAction = MA_SELECTING_TEXT;
         }
-
-        SetCapture(win->hwndCanvas);
-        SetTimer(win->hwndCanvas, SMOOTHSCROLL_TIMER_ID, SMOOTHSCROLL_DELAY_IN_MS, NULL);
-
-        triggerRepaintDisplay(win);
     }
+
+    SetCapture(win->hwndCanvas);
+    SetTimer(win->hwndCanvas, SMOOTHSCROLL_TIMER_ID, SMOOTHSCROLL_DELAY_IN_MS, NULL);
+
+    triggerRepaintDisplay(win);
+}
+
+static bool IsSelectingText(WindowInfo *win)
+{
+    return (WS_SHOWING_PDF == win->state) && (win->mouseAction == MA_SELECTING || win->mouseAction == MA_SELECTING_TEXT);
 }
 
 static void OnSelectionStop(WindowInfo *win, int x, int y)
 {
-    if (WS_SHOWING_PDF == win->state && (win->mouseAction == MA_SELECTING || win->mouseAction == MA_SELECTING_TEXT)) {
-        assert (win->dm);
-        if (!win->dm) return;
+    if (!IsSelectingText(win))
+        return;
 
-        // update the text selection before changing the selectionRect
-        if (MA_SELECTING_TEXT == win->mouseAction)
-            UpdateTextSelection(win);
+    assert (win->dm);
+    if (!win->dm) return;
 
-        win->selectionRect.dx = abs (x - win->selectionRect.x);
-        win->selectionRect.dy = abs (y - win->selectionRect.y);
-        win->selectionRect.x = min (win->selectionRect.x, x);
-        win->selectionRect.y = min (win->selectionRect.y, y);
+    // update the text selection before changing the selectionRect
+    if (MA_SELECTING_TEXT == win->mouseAction)
+        UpdateTextSelection(win);
 
-        if (GetCapture() == win->hwndCanvas)
-            ReleaseCapture();
-        KillTimer(win->hwndCanvas, SMOOTHSCROLL_TIMER_ID);
+    win->selectionRect.dx = abs (x - win->selectionRect.x);
+    win->selectionRect.dy = abs (y - win->selectionRect.y);
+    win->selectionRect.x = min (win->selectionRect.x, x);
+    win->selectionRect.y = min (win->selectionRect.y, y);
 
-        if (win->selectionRect.dx == 0 || win->selectionRect.dy == 0) {
-            DeleteOldSelectionInfo(win);
-        } else if (win->mouseAction == MA_SELECTING) {
-            ConvertSelectionRectToSelectionOnPage (win);
-        }
-        triggerRepaintDisplay(win);
+    if (GetCapture() == win->hwndCanvas)
+        ReleaseCapture();
+    KillTimer(win->hwndCanvas, SMOOTHSCROLL_TIMER_ID);
+
+    if (win->selectionRect.dx == 0 || win->selectionRect.dy == 0) {
+        DeleteOldSelectionInfo(win);
+    } else if (win->mouseAction == MA_SELECTING) {
+        ConvertSelectionRectToSelectionOnPage (win);
     }
+    triggerRepaintDisplay(win);
 }
 
 static void OnMouseLeftButtonDblClk(WindowInfo *win, int x, int y, int key)
