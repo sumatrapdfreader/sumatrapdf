@@ -1,4 +1,4 @@
-/* (Minimal) SumatraPDF Browser Plugin - Copyright (C) 2010  Simon Bünzli */
+/* (Minimal) SumatraPDF Browser Plugin - Copyright (C) 2010-2011  Simon Bünzli */
 
 #include <windows.h>
 #include <shellapi.h>
@@ -123,6 +123,7 @@ DLLEXPORT STDAPI DllRegisterServer(VOID)
 
 DLLEXPORT STDAPI DllUnregisterServer(VOID)
 {
+	SHDeleteKeyW(HKEY_LOCAL_MACHINE, g_lpRegKey);
 	if (SHDeleteKeyW(HKEY_CURRENT_USER, g_lpRegKey) != ERROR_SUCCESS)
 	{
 		return E_UNEXPECTED;
