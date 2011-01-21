@@ -223,7 +223,7 @@ static FileList *FileList_New(char *dir)
         return NULL;
     fl->dirName = str_dup(dir);
     if (!fl->dirName) {
-        free((void*)fl);
+        free(fl);
         return NULL;
     }
     return fl;
@@ -438,8 +438,8 @@ void FileList_Delete(FileList *fl)
         FileInfo_Delete(fi);
         fi = fi_next;
     }
-    free((void*)fl->dirName);
-    free((void*)fl);
+    free(fl->dirName);
+    free(fl);
 }
 
 int FileList_Len(FileList *fl)
@@ -489,7 +489,7 @@ uint64_t file_size_get(const TCHAR *file_path)
     if (NULL == file_path)
         return INVALID_FILE_SIZE;
 
-    ok = GetFileAttributesEx(file_path, GetFileExInfoStandard, (void*)&fileInfo);
+    ok = GetFileAttributesEx(file_path, GetFileExInfoStandard, &fileInfo);
     if (!ok)
         return (uint64_t)INVALID_FILE_SIZE;
 
@@ -504,14 +504,12 @@ uint64_t file_size_get(const char *file_path)
 {
     struct stat stat_buf;
     int         res;
-    unsigned long size;
     if (NULL == file_path)
         return INVALID_FILE_SIZE;
     res = stat(file_path, &stat_buf);
     if (0 != res)
         return INVALID_FILE_SIZE;
-    size = (uint64_t)stat_buf.st_size;
-    return size;
+    return stat_buf.st_size;
 }
 #endif
 
@@ -535,7 +533,7 @@ char *file_read_all(const TCHAR *file_path, size_t *file_size_out)
     /* allocate one byte more and 0-terminate just in case it's a text
        file we'll want to treat as C string. Doesn't hurt for binary
        files */
-    data = (char*)malloc(size + 1);
+    data = malloc(size + 1);
     if (!data)
         goto Exit;
     data[size] = 0;
@@ -545,13 +543,13 @@ char *file_read_all(const TCHAR *file_path, size_t *file_size_out)
         free(data);
         data = NULL;
     }
-    *file_size_out = (size_t)size;
+    *file_size_out = size;
 Exit:
     CloseHandle(h);
     return data;
 }
 #else
-char *file_read_all(const char *file_path, uint64_t *file_size_out)
+char *file_read_all(const char *file_path, size_t *file_size_out)
 {
     FILE *fp = NULL;
     char *data = NULL;
@@ -561,7 +559,7 @@ char *file_read_all(const char *file_path, uint64_t *file_size_out)
     if (INVALID_FILE_SIZE == file_size)
         return NULL;
 
-    data = (char*)malloc(file_size + 1);
+    data = malloc(file_size + 1);
     if (!data)
         goto Exit;
     data[file_size] = 0;
@@ -570,7 +568,7 @@ char *file_read_all(const char *file_path, uint64_t *file_size_out)
     if (!fp)
         goto Error;
 
-    read = fread((void*)data, 1, file_size, fp);
+    read = fread(data, 1, file_size, fp);
     if (ferror(fp))
         goto Error;
     assert(read == file_size);
@@ -581,7 +579,7 @@ char *file_read_all(const char *file_path, uint64_t *file_size_out)
 Error:
     if (fp)
         fclose(fp);
-    free((void*)data);
+    free(data);
     return NULL;
 }
 #endif
@@ -598,8 +596,8 @@ BOOL write_to_file(const TCHAR *file_path, void *data, size_t data_len)
     if (h == INVALID_HANDLE_VALUE)
         return FALSE;
 
-    f_ok = WriteFile(h, data, (DWORD)data_len, &size, NULL);
-    assert(!f_ok || ((DWORD)data_len == size));
+    f_ok = WriteFile(h, data, data_len, &size, NULL);
+    assert(!f_ok || (data_len == size));
     CloseHandle(h);
     return f_ok;
 }

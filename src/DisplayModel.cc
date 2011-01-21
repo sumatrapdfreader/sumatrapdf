@@ -378,7 +378,7 @@ float DisplayModel::zoomRealFromVirtualForPage(float zoomVirtual, int pageNo)
     // TODO: this doesn't really work for ZOOM_FIT_CONTENT
     int areaForPageDxInt = (int)(areaForPageDx / columns);
     areaForPageDx = (float)areaForPageDxInt;
-    int areaForPageDy = (int)drawAreaSize.dy() - _padding->pageBorderTop - _padding->pageBorderBottom;
+    int areaForPageDy = (int)(drawAreaSize.dy() - _padding->pageBorderTop - _padding->pageBorderBottom);
     if (areaForPageDx <= 0 || areaForPageDy <= 0)
         return 0;
 
@@ -706,15 +706,15 @@ void DisplayModel::recalcVisibleParts(void)
             pageInfo->screenY = (int)(intersect.y - areaOffset.y);
             assert(pageInfo->screenX >= 0);
             assert(pageInfo->screenY <= drawAreaSize.dy());
-/*            DBG_OUT("                                  visible page = %d, (x=%3d,y=%3d,dx=%4d,dy=%4d) at (x=%d,y=%d)\n",
+/*          DBG_OUT("                                  visible page = %d, (x=%3d,y=%3d,dx=%4d,dy=%4d) at (x=%d,y=%d)\n",
                 pageNo, pageInfo->bitmap.x, pageInfo->bitmap.y,
                           pageInfo->bitmap.dx, pageInfo->bitmap.dy,
                           pageInfo->screenX, pageInfo->screenY); */
         }
 
         pageInfo->pageOnScreen = pageRect;
-        pageInfo->pageOnScreen.x -= (int)areaOffset.x;
-        pageInfo->pageOnScreen.y -= (int)areaOffset.y;
+        pageInfo->pageOnScreen.x = (int)(pageInfo->pageOnScreen.x - areaOffset.x);
+        pageInfo->pageOnScreen.y = (int)(pageInfo->pageOnScreen.y - areaOffset.y);
         assert(max(pageInfo->pageOnScreen.x, 0) == pageInfo->screenX || !pageInfo->visible);
         assert(max(pageInfo->pageOnScreen.y, 0) == pageInfo->screenY || !pageInfo->visible);
     }
@@ -1592,14 +1592,14 @@ BOOL DisplayModel::ShowResultRectToScreen(PdfSel *res)
     }
     // scroll down to make top side of selection visible
     else if (extremes.y >= drawAreaSize.dy()) {
-        sy = extremes.y - (int)drawAreaSize.dy() + 5;
+        sy = (int)(extremes.y - drawAreaSize.dy() + 5);
     }
 
     // scroll up to make bottom side of selection visible
     // (if selection height fits in visible area)
     if (extremes.y + extremes.dy > drawAreaSize.dy()
         && extremes.dy <= drawAreaSize.dy() + 5) {
-        sy = extremes.y + extremes.dy - (int)drawAreaSize.dy() + 5;
+        sy = (int)(extremes.y + extremes.dy - drawAreaSize.dy() + 5);
     }
 
     //
@@ -1614,13 +1614,13 @@ BOOL DisplayModel::ShowResultRectToScreen(PdfSel *res)
     }
     // scroll right to make left side of selection visible
     else if (extremes.x >= drawAreaSize.dx()) {
-        sx = extremes.x - (int)drawAreaSize.dx() + 5;
+        sx = (int)(extremes.x - drawAreaSize.dx() + 5);
     }
     // scroll left to make right side of selection visible
     // (if selection width fits in visible area)
     if (extremes.x + extremes.dx > drawAreaSize.dx()
         && extremes.dx <= drawAreaSize.dx() - 5) {
-        sx = extremes.x + extremes.dx - (int)drawAreaSize.dx() + 5;
+        sx = (int)(extremes.x + extremes.dx - drawAreaSize.dx() + 5);
     }
 
     if (sx != 0)
