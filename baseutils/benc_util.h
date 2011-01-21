@@ -93,6 +93,7 @@ benc_obj*   benc_dict_find2(benc_dict* dict, const char* key);
 BOOL        dict_get_bool(benc_dict* dict, const char* key, BOOL* valOut);
 BOOL        dict_get_int(benc_dict* dict, const char* key, int* valOut);
 const char* dict_get_str(benc_dict* dict, const char* key);
+BOOL        dict_get_float_from_str(benc_dict* dict, const char* key, float* valOut);
 BOOL        dict_get_double_from_str(benc_dict* dict, const char* key, double* valOut);
 
 

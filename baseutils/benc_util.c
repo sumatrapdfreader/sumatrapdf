@@ -508,11 +508,18 @@ const char* dict_get_str(benc_dict* dict, const char* key)
     return (const char*)val->m_str;
 }
 
+BOOL dict_get_float_from_str(benc_dict* dict, const char* key, float* valOut)
+{
+    const char *str = dict_get_str(dict, key);
+    if (!str) return FALSE;
+    return sscanf(str, "%f", valOut) == 1;
+}
+
 BOOL dict_get_double_from_str(benc_dict* dict, const char* key, double* valOut)
 {
     const char *str = dict_get_str(dict, key);
     if (!str) return FALSE;
-    return str_to_double(str, valOut);
+    return sscanf(str, "%lf", valOut) == 1;
 }
 
 static benc_array * _parse_array(const char** dataInOut, size_t* lenInOut)

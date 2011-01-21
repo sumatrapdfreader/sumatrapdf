@@ -86,7 +86,6 @@ void    str_strip_right(char *txt, const char *to_strip);
 void    str_strip_ws_right(char *txt);
 void    str_strip_both(char *txt, const char *to_strip);
 void    str_strip_ws_both(char *txt);
-BOOL    str_to_double(const char *txt, double *resOut);
 
 char *  mem_to_hexstr(const unsigned char *buf, int len);
 BOOL    hexstr_to_mem(const char *s, unsigned char *buf, int bufLen);

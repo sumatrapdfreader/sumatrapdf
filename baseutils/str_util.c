@@ -519,19 +519,6 @@ void win32_dbg_out_hex(const char *dsc, const unsigned char *data, int dataLen)
 }
 #endif
 
-BOOL str_to_double(const char *txt, double *resOut)
-{
-    int res;
-
-    assert(txt);
-    if (!txt) return FALSE;
-
-    res = sscanf(txt, "%lf", resOut);
-    if (1 != res)
-        return FALSE;
-    return TRUE;
-}
-
 /* Return the number of digits needed to represents a given number in base 10
    string representation.
 */

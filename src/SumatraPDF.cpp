@@ -202,7 +202,7 @@ SerializableGlobalPrefs             gGlobalPrefs = {
     NULL, // TCHAR *m_versionToSkip
     NULL, // char *m_lastUpdateTime
     DEFAULT_DISPLAY_MODE, // DisplayMode m_defaultDisplayMode
-    DEFAULT_ZOOM, // double m_defaultZoom
+    DEFAULT_ZOOM, // float m_defaultZoom
     WIN_STATE_NORMAL, // int  m_windowState
     DEFAULT_WIN_POS, // int  m_windowPosX
     DEFAULT_WIN_POS, // int  m_windowPosY
@@ -767,7 +767,7 @@ static struct {
     { IDM_ZOOM_ACTUAL_SIZE, ZOOM_ACTUAL_SIZE },
 };
 
-static UINT MenuIdFromVirtualZoom(double virtualZoom)
+static UINT MenuIdFromVirtualZoom(float virtualZoom)
 {
     for (int i = 0; i < dimof(gZoomMenuIds); i++) {
         if (virtualZoom == gZoomMenuIds[i].zoom)
@@ -802,7 +802,7 @@ static void ZoomMenuItemCheck(HMENU hmenu, UINT menuItemId, BOOL canZoom)
 
 static void MenuUpdateZoom(WindowInfo* win)
 {
-    double zoomVirtual = gGlobalPrefs.m_defaultZoom;
+    float zoomVirtual = gGlobalPrefs.m_defaultZoom;
     if (win->dm)
         zoomVirtual = win->dm->zoomVirtual();
     UINT menuId = MenuIdFromVirtualZoom(zoomVirtual);
@@ -1355,7 +1355,7 @@ static bool LoadPdfIntoWindow(
 
     win->dm->setAppData((void*)win);
 
-    float zoomVirtual = (float)gGlobalPrefs.m_defaultZoom;
+    float zoomVirtual = gGlobalPrefs.m_defaultZoom;
     int rotation = DEFAULT_ROTATION;
 
     win->state = WS_SHOWING_PDF;
@@ -1370,7 +1370,7 @@ static bool LoadPdfIntoWindow(
         }
         else if (startPage > win->dm->pageCount())
             ss.page = win->dm->pageCount();
-        zoomVirtual = (float)state->zoomVirtual;
+        zoomVirtual = state->zoomVirtual;
         rotation = state->rotation;
         win->dm->_showToc = state->showToc;
     }
@@ -3660,7 +3660,7 @@ static void OnMenuViewContinuous(WindowInfo *win)
     SwitchToDisplayMode(win, newMode, false);
 }
 
-static void ToogleToolbarViewButton(WindowInfo *win, double newZoom, bool pagesContinuously)
+static void ToogleToolbarViewButton(WindowInfo *win, float newZoom, bool pagesContinuously)
 {
     assert(win && win->dm);
     if (!win || !win->dm) return;

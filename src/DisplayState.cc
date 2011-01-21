@@ -21,7 +21,7 @@ BOOL validRotation(int rotation)
     return FALSE;
 }
 
-BOOL ValidZoomVirtual(double zoomVirtual)
+BOOL ValidZoomVirtual(float zoomVirtual)
 {
     if ((ZOOM_FIT_PAGE == zoomVirtual) || (ZOOM_FIT_WIDTH == zoomVirtual) ||
         (ZOOM_FIT_CONTENT == zoomVirtual) || (ZOOM_ACTUAL_SIZE == zoomVirtual))

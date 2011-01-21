@@ -52,7 +52,7 @@ typedef struct {
     /* TODO: I would also like to remember a monitor, but that seems a bit complicated */
     DisplayMode m_defaultDisplayMode;
 
-    double m_defaultZoom;
+    float m_defaultZoom;
     int  m_windowState;
     int  m_windowPosX;
     int  m_windowPosY;

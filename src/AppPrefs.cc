@@ -132,7 +132,7 @@ static bool DisplayState_Deserialize(benc_dict* dict, DisplayState *ds)
     dict_get_int(dict, WINDOW_DY_STR, &ds->windowDy);
     dict_get_bool(dict, SHOW_TOC_STR, &ds->showToc);
     dict_get_int(dict, TOC_DX_STR, &ds->tocDx);
-    dict_get_double_from_str(dict, ZOOM_VIRTUAL_STR, &ds->zoomVirtual);
+    dict_get_float_from_str(dict, ZOOM_VIRTUAL_STR, &ds->zoomVirtual);
     dict_get_bool(dict, USE_GLOBAL_VALUES_STR, &ds->useGlobalValues);
     return true;
 }
@@ -319,7 +319,7 @@ static void ParseKeyValue(char *key, char *value, DisplayState *dsOut)
     }
 
     if (str_eq(ZOOM_VIRTUAL_STR, key)) {
-        fOk = str_to_double(value, &dsOut->zoomVirtual);
+        fOk = value && sscanf(value, "%f", &dsOut->zoomVirtual) == 1;
         assert(fOk);
         if (!fOk || !ValidZoomVirtual(dsOut->zoomVirtual))
             dsOut->zoomVirtual = 100.0;
@@ -447,7 +447,7 @@ bool Prefs_Deserialize(const char *prefsTxt, size_t prefsTxtLen, FileHistoryList
     const char* txt = dict_get_str(global, DISPLAY_MODE_STR);
     if (txt)
         DisplayModeEnumFromName(txt, &gGlobalPrefs.m_defaultDisplayMode);
-    dict_get_double_from_str(global, ZOOM_VIRTUAL_STR, &gGlobalPrefs.m_defaultZoom);
+    dict_get_float_from_str(global, ZOOM_VIRTUAL_STR, &gGlobalPrefs.m_defaultZoom);
     dict_get_int(global, WINDOW_STATE_STR, &gGlobalPrefs.m_windowState);
 
     dict_get_int(global, WINDOW_X_STR, &gGlobalPrefs.m_windowPosX);

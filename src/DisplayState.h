@@ -21,7 +21,7 @@ enum DisplayMode {
 #define ZOOM_FIT_PAGE       -1
 #define ZOOM_FIT_WIDTH      -2
 #define ZOOM_FIT_CONTENT    -3
-#define ZOOM_ACTUAL_SIZE    100.0
+#define ZOOM_ACTUAL_SIZE    100.0f
 #define ZOOM_MAX            6400.1f /* max zoom in % */
 #define ZOOM_MIN            8.0f    /* min zoom in % */
 
@@ -80,7 +80,7 @@ typedef struct DisplayState {
     int                 scrollX;
     int                 scrollY;
     int                 pageNo;
-    double              zoomVirtual;
+    float               zoomVirtual;
     int                 rotation;
     int                 windowState;
     int                 windowX;
@@ -93,7 +93,7 @@ typedef struct DisplayState {
 
 void    normalizeRotation(int *rotation);
 BOOL    validRotation(int rotation);
-BOOL    ValidZoomVirtual(double zoomVirtual);
+BOOL    ValidZoomVirtual(float zoomVirtual);
 
 const char *      DisplayModeNameFromEnum(DisplayMode var);
 bool              DisplayModeEnumFromName(const char *txt, DisplayMode *resOut);
