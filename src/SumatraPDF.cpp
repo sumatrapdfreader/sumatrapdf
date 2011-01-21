@@ -2113,7 +2113,7 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
         /* debug code to visualize links (can block while rendering) */
         fz_bbox drawAreaRect = { 0, 0, dm->drawAreaSize.dxI(), dm->drawAreaSize.dyI() };
         HPEN pen = CreatePen(PS_SOLID, 1, RGB(0x00, 0xff, 0xff));
-        SelectObject(hdc, pen);
+        HGDIOBJ oldPen = SelectObject(hdc, pen);
 
         for (int pageNo = win->dm->pageCount(); pageNo >= 1; --pageNo) {
             PdfPageInfo *pageInfo = win->dm->getPageInfo(pageNo);
@@ -2132,7 +2132,29 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
             }
             free(links);
         }
-        DeletePen(pen);
+
+        DeletePen(SelectObject(hdc, oldPen));
+
+        if (dm->zoomVirtual() == ZOOM_FIT_CONTENT) {
+            // also display the content box when fitting content
+            pen = CreatePen(PS_SOLID, 1, RGB(0xff, 0x00, 0xff));
+            oldPen = SelectObject(hdc, pen);
+
+            for (int pageNo = win->dm->pageCount(); pageNo >= 1; --pageNo) {
+                PdfPageInfo *pageInfo = win->dm->getPageInfo(pageNo);
+                if (!pageInfo->shown || !pageInfo->visible)
+                    continue;
+
+                fz_bbox cbox = dm->pdfEngine->pageContentBox(pageNo);
+                double x0 = cbox.x0, x1 = cbox.x1, y0 = cbox.y0, y1 = cbox.y1;
+                if (dm->cvtUserToScreen(pageNo, &x0, &y0) && dm->cvtUserToScreen(pageNo, &x1, &y1)) {
+                    RECT rectScreen = { (LONG)x0, (LONG)y0, (LONG)x1, (LONG)y1 };
+                    paint_rect(hdc, &rectScreen);
+                }
+            }
+
+            DeletePen(SelectObject(hdc, oldPen));
+        }
     }
 }
 
