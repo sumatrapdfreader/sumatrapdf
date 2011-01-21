@@ -6,8 +6,7 @@ Next version:
 * improved text selection and copying. We now mimic the way a browser
   or Adobe Reader works: just select text with mouse and use Ctrl-C
   to copy it to a clipboard
-* Ctrl-Left Mouse now scrolls the document (used to select text for
-  copying)
+* Shift-Left Mouse now scrolls the document
 * 'c' shortcut toggles continuous mode
 * '+' / '*' on the numeric keyboard now do zoom and rotation
 * added toolbar icons for Fit Page and Fit Width and updated

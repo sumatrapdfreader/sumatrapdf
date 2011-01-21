@@ -491,6 +491,45 @@
     <ClCompile Include="mupdf\fitz\filt_basic.c">
       <Filter>mupdf\fitz</Filter>
     </ClCompile>
+    <ClCompile Include="mupdf\fitz\res_pixmap.c">
+      <Filter>mupdf\fitz</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\fitz\base_geometry.c">
+      <Filter>mupdf\fitz</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\fitz\base_getopt.c">
+      <Filter>mupdf\fitz</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\fitz\base_time.c">
+      <Filter>mupdf\fitz</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\fitz\dev_bbox.c">
+      <Filter>mupdf\fitz</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\fitz\dev_draw.c">
+      <Filter>mupdf\fitz</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\fitz\dev_gdiplus.cpp">
+      <Filter>mupdf\fitz</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\fitz\dev_list.c">
+      <Filter>mupdf\fitz</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\fitz\dev_null.c">
+      <Filter>mupdf\fitz</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\fitz\dev_text.c">
+      <Filter>mupdf\fitz</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\fitz\dev_trace.c">
+      <Filter>mupdf\fitz</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\fitz\res_path.c">
+      <Filter>mupdf\fitz</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf\fitz\res_text.c">
+      <Filter>mupdf\fitz</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="baseutils\base_util.h">
