@@ -130,6 +130,11 @@ PDFFILTER_OBJS = \
 BROWSER_PLUGIN_OBJS = \
 	$(O)\npPdfViewer.obj $(BROWSER_PLUGIN_RES)
 
+!if "$(BUILD_TEX_IFILTER)"!=""
+PDFFILTER_OBJS = $(PDFFILTER_OBJS) $(O)\CTeXFilter.obj
+PDFFILTER_CFLAGS = $(PDFFILTER_CFLAGS) /D "BUILD_TEX_IFILTER"
+!endif
+
 ##### SumatraPDF-specific build rules #####
 
 rebuild: clean SumatraPDF
@@ -219,6 +224,9 @@ $(O)\CPdfFilter.obj: src\ifilter\PdfFilter.h src\PdfEngine.h
 $(O)\CrashHandler.obj: baseutils\base_util.h baseutils\str_util.h baseutils\tstr_util.h
 $(O)\CrashHandler.obj: baseutils\WinUtil.hpp baseutils\wstr_util.h src\CrashHandler.h
 $(O)\CrashHandler.obj: src\translations.h
+$(O)\CTeXFilter.obj: baseutils\base_util.h baseutils\str_util.h baseutils\tstr_util.h
+$(O)\CTeXFilter.obj: baseutils\wstr_util.h src\ifilter\CTeXFilter.h src\ifilter\FilterBase.h
+$(O)\CTeXFilter.obj: src\ifilter\PdfFilter.h
 $(O)\DisplayModel.obj: baseutils\base_util.h baseutils\file_util.h baseutils\geom_util.h
 $(O)\DisplayModel.obj: baseutils\str_util.h baseutils\tstr_util.h baseutils\vstrlist.h
 $(O)\DisplayModel.obj: baseutils\win_util.h baseutils\wstr_util.h mupdf\fitz\fitz.h
@@ -253,7 +261,8 @@ $(O)\ParseCommandLine.obj: src\PdfSelection.h src\SumatraPDF.h src\WindowInfo.h
 $(O)\PdfEngine.obj: baseutils\base_util.h baseutils\geom_util.h baseutils\str_util.h
 $(O)\PdfEngine.obj: baseutils\tstr_util.h baseutils\wstr_util.h mupdf\fitz\fitz.h
 $(O)\PdfEngine.obj: mupdf\mupdf\mupdf.h src\PdfEngine.h
-$(O)\PdfFilterDll.obj: src\ifilter\CPdfFilter.h src\ifilter\FilterBase.h src\ifilter\PdfFilter.h
+$(O)\PdfFilterDll.obj: src\ifilter\CPdfFilter.h src\ifilter\CTeXFilter.h src\ifilter\FilterBase.h
+$(O)\PdfFilterDll.obj: src\ifilter\PdfFilter.h
 $(O)\PdfSearch.obj: baseutils\base_util.h baseutils\geom_util.h baseutils\str_util.h
 $(O)\PdfSearch.obj: baseutils\tstr_util.h baseutils\wstr_util.h mupdf\fitz\fitz.h
 $(O)\PdfSearch.obj: mupdf\mupdf\mupdf.h src\PdfEngine.h src\PdfSearch.h

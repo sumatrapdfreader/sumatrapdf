@@ -6,6 +6,9 @@
 #include <shlwapi.h>
 #include <tchar.h>
 #include "CPdfFilter.h"
+#ifdef BUILD_TEX_IFILTER
+#include "CTeXFilter.h"
+#endif
 
 HINSTANCE g_hInstance = NULL;
 long g_lRefCount = 0;
@@ -52,12 +55,17 @@ public:
         if (punkOuter)
             return CLASS_E_NOAGGREGATION;
         
+        IFilter *pFilter = NULL;
+        
         CLSID clsid;
-        if (!SUCCEEDED(CLSIDFromString(SZ_PDF_FILTER_CLSID, &clsid)) ||
-            !IsEqualCLSID(m_clsid, clsid))
+        if (SUCCEEDED(CLSIDFromString(SZ_PDF_FILTER_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid))
+            pFilter = new (std::nothrow) CPdfFilter(&g_lRefCount);
+#ifdef BUILD_TEX_IFILTER
+        else if (SUCCEEDED(CLSIDFromString(SZ_TEX_FILTER_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid))
+            pFilter = new (std::nothrow) CTeXFilter(&g_lRefCount);
+#endif
+        else
             return CLASS_E_CLASSNOTAVAILABLE;
-            
-        IFilter *pFilter = new (std::nothrow) CPdfFilter(&g_lRefCount);
         if (!pFilter)
             return E_OUTOFMEMORY;
         
@@ -150,6 +158,15 @@ STDAPI DllRegisterServer()
         { L"Software\\Classes\\CLSID\\" SZ_PDF_FILTER_HANDLER L"\\PersistentAddinsRegistered",   NULL,               L""},
         { L"Software\\Classes\\CLSID\\" SZ_PDF_FILTER_HANDLER L"\\PersistentAddinsRegistered\\{89BCB740-6119-101A-BCB7-00DD010655AF}", NULL, SZ_PDF_FILTER_CLSID},
         { L"Software\\Classes\\.pdf\\PersistentHandler",                                         NULL,               SZ_PDF_FILTER_HANDLER},
+#ifdef BUILD_TEX_IFILTER
+        { L"Software\\Classes\\CLSID\\" SZ_TEX_FILTER_CLSID,                                     NULL,               L"SumatraPDF IFilter"},
+        { L"Software\\Classes\\CLSID\\" SZ_TEX_FILTER_CLSID L"\\InProcServer32",                 NULL,               szModuleName},
+        { L"Software\\Classes\\CLSID\\" SZ_TEX_FILTER_CLSID L"\\InProcServer32",                 L"ThreadingModel",  L"Both"},
+        { L"Software\\Classes\\CLSID\\" SZ_TEX_FILTER_HANDLER,                                   NULL,               L"SumatraPDF LaTeX IFilter Persistent Handler"},
+        { L"Software\\Classes\\CLSID\\" SZ_TEX_FILTER_HANDLER L"\\PersistentAddinsRegistered",   NULL,               L""},
+        { L"Software\\Classes\\CLSID\\" SZ_TEX_FILTER_HANDLER L"\\PersistentAddinsRegistered\\{89BCB740-6119-101A-BCB7-00DD010655AF}", NULL, SZ_TEX_FILTER_CLSID},
+        { L"Software\\Classes\\.tex\\PersistentHandler",                                         NULL,               SZ_TEX_FILTER_HANDLER},
+#endif
     };
 
     hr = S_OK;
@@ -170,7 +187,12 @@ STDAPI DllUnregisterServer()
     const LPWSTR rgpszKeys[] = {
         L"Software\\Classes\\CLSID\\" SZ_PDF_FILTER_CLSID,
         L"Software\\Classes\\CLSID\\" SZ_PDF_FILTER_HANDLER,
-        L"Software\\Classes\\.pdf\\PersistentHandler"
+        L"Software\\Classes\\.pdf\\PersistentHandler",
+#ifdef BUILD_TEX_IFILTER
+        L"Software\\Classes\\CLSID\\" SZ_TEX_FILTER_CLSID,
+        L"Software\\Classes\\CLSID\\" SZ_TEX_FILTER_HANDLER,
+        L"Software\\Classes\\.tex\\PersistentHandler",
+#endif
     };
 
     for (int i = 0; i < ARRAYSIZE(rgpszKeys) && SUCCEEDED(hr); i++) {

@@ -1,12 +1,8 @@
 /* Copyright 2011 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include <windows.h>
-#include <shlwapi.h>
-#include <sddl.h>
-#include <tchar.h>
-#include <inttypes.h>
-#include "tstr_util.h"
+#include "base_util.h"
+#include "wstr_util.h"
 #include "CPdfFilter.h"
 #include "PdfEngine.h"
 
@@ -17,7 +13,14 @@ TCHAR *GetPasswordForFile(WindowInfo *win, const TCHAR *fileName, pdf_xref *xref
     return NULL;
 }
 
-static DWORD WINAPI UpdateDataForIndexing(LPVOID IFilterMMap);
+VOID CPdfFilter::CleanUp()
+{
+    if (m_pdfEngine) {
+        delete m_pdfEngine;
+        m_pdfEngine = NULL;
+    }
+    m_state = STATE_PDF_END;
+}
 
 HRESULT CPdfFilter::OnInit()
 {
@@ -28,32 +31,41 @@ HRESULT CPdfFilter::OnInit()
     if (FAILED(res))
         return res;
 
-    m_utd.len = stat.cbSize.LowPart;
-    m_utd.data = (char *)malloc(m_utd.len + 1);
-
-    m_utd.produce = CreateEvent(NULL, FALSE, TRUE, NULL);
-    m_utd.consume = CreateEvent(NULL, FALSE, FALSE, NULL);
-    if (!m_utd.data || !m_utd.produce || !m_utd.consume)
-        return E_FAIL;
+    DWORD size = stat.cbSize.LowPart;
+    fz_buffer *filedata = fz_newbuffer(size);
+    filedata->len = size;
 
     LARGE_INTEGER zero;
     zero.QuadPart = 0;
     m_pStream->Seek(zero, STREAM_SEEK_SET, NULL);
-    res = m_pStream->Read(m_utd.data, m_utd.len, NULL);
-    if (FAILED(res))
+    res = m_pStream->Read(filedata->data, filedata->len, NULL);
+    if (FAILED(res)) {
+        fz_dropbuffer(filedata);
         return res;
+    }
 
-    m_hThread = CreateThread(NULL, 0, UpdateDataForIndexing, &m_utd, 0, NULL);
+    fz_stream *stm = fz_openbuffer(filedata);
+    fz_dropbuffer(filedata);
+
+    m_pdfEngine = new PdfEngine();
+    bool success = m_pdfEngine->load(stm);
+    fz_close(stm);
+
+    if (!success)
+        return E_FAIL;
+
+    m_state = STATE_PDF_START;
+    m_iPageNo = 0;
     return S_OK;
 }
 
 // adapted from SumatraProperties.cpp
-static bool PdfDateParse(char *pdfDate, SYSTEMTIME *timeOut) {
+static bool PdfDateParse(WCHAR *pdfDate, SYSTEMTIME *timeOut) {
     ZeroMemory(timeOut, sizeof(SYSTEMTIME));
     // "D:" at the beginning is optional
-    if (str_startswith(pdfDate, "D:"))
+    if (wstr_startswith(pdfDate, L"D:"))
         pdfDate += 2;
-    return 6 == sscanf(pdfDate, "%4d%2d%2d" "%2d%2d%2d",
+    return 6 == swscanf(pdfDate, L"%4d%2d%2d" L"%2d%2d%2d",
         &timeOut->wYear, &timeOut->wMonth, &timeOut->wDay,
         &timeOut->wHour, &timeOut->wMinute, &timeOut->wSecond);
     // don't bother about the day of week, we won't display it anyway
@@ -61,143 +73,74 @@ static bool PdfDateParse(char *pdfDate, SYSTEMTIME *timeOut) {
 
 HRESULT CPdfFilter::GetNextChunkValue(CChunkValue &chunkValue)
 {
-    SYSTEMTIME systime;
+    fz_obj *info;
+    WCHAR *str;
 
-    if (m_bDone)
-        return FILTER_E_END_OF_CHUNKS;
-    if (WaitForSingleObject(m_utd.consume, FILTER_TIMEOUT_IN_MS) != WAIT_OBJECT_0)
-        m_bDone = true;
-    if (!*m_utd.data)
-        m_bDone = true;
-    if (m_bDone)
-        return FILTER_E_END_OF_CHUNKS;
+    switch (m_state) {
+    case STATE_PDF_START:
+        m_state = STATE_PDF_AUTHOR;
+        chunkValue.SetTextValue(PKEY_PerceivedType, L"document");
+        return S_OK;
 
-    if (str_startswith(m_utd.data, "Type:") && m_utd.data[5]) {
-        WCHAR *type = utf8_to_wstr(m_utd.data + 5);
-        chunkValue.SetTextValue(PKEY_PerceivedType, type);
-        free(type);
-        goto Success;
-    }
-
-    if (str_startswith(m_utd.data, "Author:") && m_utd.data[7]) {
-        WCHAR *author = utf8_to_wstr(m_utd.data + 7);
-        chunkValue.SetTextValue(PKEY_Author, author);
-        free(author);
-        goto Success;
-    }
-
-    if (str_startswith(m_utd.data, "Title:") && m_utd.data[6]) {
-        WCHAR *title = utf8_to_wstr(m_utd.data + 6);
-        chunkValue.SetTextValue(PKEY_Title, title);
-        free(title);
-        goto Success;
-    }
-
-    if (str_startswith(m_utd.data, "Date:") && PdfDateParse(m_utd.data + 5, &systime)) {
-        FILETIME filetime;
-        SystemTimeToFileTime(&systime, &filetime);
-        chunkValue.SetFileTimeValue(PKEY_ItemDate, filetime);
-        goto Success;
-    }
-
-    if (str_startswith(m_utd.data, "Content:")) {
-        WCHAR *content = utf8_to_wstr(m_utd.data + 8);
-        chunkValue.SetTextValue(PKEY_Search_Contents, content, CHUNK_TEXT);
-        free(content);
-        goto Success;
-    }
-
-    // if (!str_endswith(m_utd.data, ":"))
-    //     fprintf(stderr, "Unexpected data: %s\n", m_utd.data);
-
-    *m_utd.data = '\0';
-    SetEvent(m_utd.produce);
-    return GetNextChunkValue(chunkValue);
-
-Success:
-    *m_utd.data = '\0';
-    SetEvent(m_utd.produce);
-    return S_OK;
-}
-
-static DWORD WINAPI UpdateDataForIndexing(LPVOID ThreadData)
-{
-    UpdateThreadData *utd = (UpdateThreadData *)ThreadData;
-    PdfEngine engine;
-    fz_buffer *filedata = NULL;
-
-    filedata = fz_newbuffer(utd->len);
-    filedata->len = utd->len;
-    memcpy(filedata->data, utd->data, utd->len);
-
-    fz_stream *stm = fz_openbuffer(filedata);
-    bool success = engine.load(stm);
-    fz_close(stm);
-    if (!success)
-        goto Error;
-    fz_obj *info = engine.getPdfInfo();
-
-    if (WaitForSingleObject(utd->produce, FILTER_TIMEOUT_IN_MS) != WAIT_OBJECT_0)
-        goto Error;
-    str_printf_s(utd->data, utd->len, "Type:document");
-    SetEvent(utd->consume);
-
-    if (WaitForSingleObject(utd->produce, FILTER_TIMEOUT_IN_MS) != WAIT_OBJECT_0)
-        goto Error;
-    char *author = pdf_toutf8(fz_dictgets(info, "Author"));
-    str_printf_s(utd->data, utd->len, "Author:%s", author);
-    free(author);
-    SetEvent(utd->consume);
-
-    if (WaitForSingleObject(utd->produce, FILTER_TIMEOUT_IN_MS) != WAIT_OBJECT_0)
-        goto Error;
-    char *title = pdf_toutf8(fz_dictgets(info, "Title"));
-    if (str_empty(title)) {
-        free(title);
-        title = pdf_toutf8(fz_dictgets(info, "Subject"));
-    }
-    str_printf_s(utd->data, utd->len, "Title:%s", title);
-    free(title);
-    SetEvent(utd->consume);
-
-    if (WaitForSingleObject(utd->produce, FILTER_TIMEOUT_IN_MS) != WAIT_OBJECT_0)
-        goto Error;
-    char *date = pdf_toutf8(fz_dictgets(info, "ModDate"));
-    if (str_empty(date)) {
-        free(date);
-        date = pdf_toutf8(fz_dictgets(info, "CreationDate"));
-    }
-    str_printf_s(utd->data, utd->len, "Date:%s", date);
-    free(date);
-    SetEvent(utd->consume);
-
-    for (int pageNo = 1; pageNo <= engine.pageCount(); pageNo++) {
-        TCHAR *content = engine.ExtractPageText(pageNo);
-        char *contentUTF8 = tstr_to_utf8(content);
-        if (WaitForSingleObject(utd->produce, FILTER_TIMEOUT_IN_MS) != WAIT_OBJECT_0) {
-            free(content);
-            free(contentUTF8);
-            goto Error;
+    case STATE_PDF_AUTHOR:
+        m_state = STATE_PDF_TITLE;
+        info = m_pdfEngine->getPdfInfo();
+        str = (WCHAR *)pdf_toucs2(fz_dictgets(info, "Author"));
+        if (!wstr_empty(str)) {
+            chunkValue.SetTextValue(PKEY_Author, str);
+            fz_free(str);
+            return S_OK;
         }
-        str_printf_s(utd->data, utd->len, "Content:%s", contentUTF8);
-        SetEvent(utd->consume);
-        free(contentUTF8);
-        free(content);
+        fz_free(str);
+        // fall through
+
+    case STATE_PDF_TITLE:
+        m_state = STATE_PDF_DATE;
+        info = m_pdfEngine->getPdfInfo();
+        str = (WCHAR *)pdf_toucs2(fz_dictgetsa(info, "Title", "Subject"));
+        if (!wstr_empty(str)) {
+            chunkValue.SetTextValue(PKEY_Title, str);
+            fz_free(str);
+            return S_OK;
+        }
+        fz_free(str);
+        // fall through
+
+    case STATE_PDF_DATE:
+        m_state = STATE_PDF_CONTENT;
+        info = m_pdfEngine->getPdfInfo();
+        str = (WCHAR *)pdf_toucs2(fz_dictgetsa(info, "ModDate", "CreationDate"));
+        if (!wstr_empty(str)) {
+            SYSTEMTIME systime;
+            if (PdfDateParse(str, &systime)) {
+                FILETIME filetime;
+                SystemTimeToFileTime(&systime, &filetime);
+                chunkValue.SetFileTimeValue(PKEY_ItemDate, filetime);
+                fz_free(str);
+                return S_OK;
+            }
+        }
+        fz_free(str);
+        // fall through
+
+    case STATE_PDF_CONTENT:
+        if (++m_iPageNo <= m_pdfEngine->pageCount()) {
+#ifdef UNICODE
+            str = m_pdfEngine->ExtractPageText(m_iPageNo);
+#else
+            TCHAR *tstr = m_pdfEngine->ExtractPageText(m_iPageNo);
+            str = tstr_to_wstr(tstr);
+            free(tstr);
+#endif
+            chunkValue.SetTextValue(PKEY_Search_Contents, str, CHUNK_TEXT);
+            free(str);
+            return S_OK;
+        }
+        m_state = STATE_PDF_END;
+        // fall through
+
+    case STATE_PDF_END:
+    default:
+        return FILTER_E_END_OF_CHUNKS;
     }
-
-    if (WaitForSingleObject(utd->produce, FILTER_TIMEOUT_IN_MS) != WAIT_OBJECT_0)
-        goto Error;
-    *utd->data = '\0';
-    SetEvent(utd->consume);
-
-    fz_dropbuffer(filedata);
-
-    return 0;
-
-Error:
-    *utd->data = '\0';
-    SetEvent(utd->consume);
-    if (filedata)
-        fz_dropbuffer(filedata);
-    return 1;
 }

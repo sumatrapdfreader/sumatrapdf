@@ -5,6 +5,9 @@
 //
 // Copyright (c) Microsoft Corporation. All rights reserved
 
+#ifndef __FILTERBASE_H__
+#define __FILTERBASE_H__
+
 #include <strsafe.h>
 #include <shlwapi.h>
 #include <propkey.h>
@@ -291,3 +294,5 @@ private:
 
     CChunkValue                 m_currentChunk;
 };
+
+#endif

@@ -804,6 +804,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\ifilter\CTeXFilter.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\ifilter\CTeXFilter.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\ifilter\FilterBase.h"
 				>
 			</File>

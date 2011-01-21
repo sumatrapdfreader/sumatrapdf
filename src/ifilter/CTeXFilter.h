@@ -3,20 +3,17 @@
 
 #include "FilterBase.h"
 
-enum PDF_FILTER_STATE { STATE_PDF_START, STATE_PDF_AUTHOR, STATE_PDF_TITLE, STATE_PDF_DATE, STATE_PDF_CONTENT, STATE_PDF_END };
+enum TEX_FILTER_STATE { STATE_TEX_START, STATE_TEX_PREAMBLE, STATE_TEX_CONTENT, STATE_TEX_END };
 
-class PdfEngine;
-
-class CPdfFilter : public CFilterBase
+class CTeXFilter : public CFilterBase
 {
 public:
-    CPdfFilter(long *plRefCount) : m_lRef(1), m_plModuleRef(plRefCount),
-        m_state(STATE_PDF_END), m_iPageNo(-1), m_pdfEngine(NULL)
+    CTeXFilter(long *plRefCount) : m_lRef(1), m_plModuleRef(plRefCount), m_state(STATE_TEX_END), m_pData(NULL)
     {
         InterlockedIncrement(m_plModuleRef);
     }
 
-    ~CPdfFilter()
+    ~CTeXFilter()
     {
         CleanUp();
         InterlockedDecrement(m_plModuleRef);
@@ -26,10 +23,10 @@ public:
     IFACEMETHODIMP QueryInterface(REFIID riid, void **ppv)
     {
         static const QITAB qit[] = {
-            QITABENT(CPdfFilter, IPersistStream),
-            QITABENT(CPdfFilter, IPersistFile),
-            QITABENT(CPdfFilter, IInitializeWithStream),
-            QITABENT(CPdfFilter, IFilter),
+            QITABENT(CTeXFilter, IPersistStream),
+            QITABENT(CTeXFilter, IPersistFile),
+            QITABENT(CTeXFilter, IInitializeWithStream),
+            QITABENT(CTeXFilter, IFilter),
             { 0 }
         };
         return QISearch(this, qit, riid, ppv);
@@ -51,11 +48,24 @@ public:
     HRESULT OnInit();
     HRESULT GetNextChunkValue(CChunkValue &chunkValue);
 
-    VOID CleanUp();
+    VOID CleanUp()
+    {
+        if (m_pData)
+        {
+            free(m_pData);
+            m_pData = NULL;
+        }
+        if (m_pBuffer)
+        {
+            free(m_pBuffer);
+            m_pBuffer = NULL;
+        }
+    }
+    char *ExtractBracedBlock();
 
 private:
     long m_lRef, * m_plModuleRef;
-	PDF_FILTER_STATE m_state;
-    int m_iPageNo;
-    PdfEngine *m_pdfEngine;
+    TEX_FILTER_STATE m_state;
+    char *m_pData, *m_pPtr, *m_pBuffer;
+    int m_iDepth;
 };
