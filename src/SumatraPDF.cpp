@@ -3202,8 +3202,12 @@ static void OnMenuSaveAs(WindowInfo *win)
     // Recreate inexistant PDF files from memory...
     else if (!file_exists(srcFileName)) {
         fz_buffer *data = win->dm->pdfEngine->getStreamData();
-        write_to_file(realDstFileName, data->data, data->len);
-        fz_dropbuffer(data);
+        if (data) {
+            write_to_file(realDstFileName, data->data, data->len);
+            fz_dropbuffer(data);
+        } else {
+            MessageBox(win->hwndFrame, _TR("Failed to save a file"), _TR("Warning"), MB_OK | MB_ICONEXCLAMATION);
+        }
     }
     // ... else just copy the file
     else {

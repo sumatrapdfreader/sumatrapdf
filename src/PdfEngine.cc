@@ -1062,19 +1062,22 @@ fz_buffer *PdfEngine::getStreamData(int num, int gen)
     fz_stream *stream = NULL;
     fz_buffer *data = NULL;
 
-    if (num)
-        pdf_openstream(&stream, _xref, num, gen);
-    else
-        stream = fz_keepstream(_xref->file);
-
-    if (stream) {
-        fz_seek(stream, 0, 2);
-        int len = fz_tell(stream);
-        fz_seek(stream, 0, 0);
-        if (len > 0 && fz_tell(stream) == 0)
-            fz_readall(&data, stream, len);
-        fz_close(stream);
+    if (num) {
+        fz_error error = pdf_loadstream(&data, _xref, num, gen);
+        if (error != fz_okay)
+            return NULL;
+        return data;
     }
+
+    stream = fz_keepstream(_xref->file);
+    if (!stream)
+        return NULL;
+
+    fz_seek(stream, 0, 2);
+    int len = fz_tell(stream);
+    fz_seek(stream, 0, 0);
+    fz_readall(&data, stream, len);
+    fz_close(stream);
 
     return data;
 }

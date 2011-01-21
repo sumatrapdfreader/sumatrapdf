@@ -1413,8 +1413,10 @@ void DisplayModel::goToTocLink(pdf_link* link)
         } else {
             // offer to save other attachments to a file
             fz_buffer *data = pdfEngine->getStreamData(fz_tonum(embedded), fz_togen(embedded));
-            saveStreamAs(data, path);
-            fz_dropbuffer(data);
+            if (data) {
+                saveStreamAs(data, path);
+                fz_dropbuffer(data);
+            }
         }
         free(path);
     }

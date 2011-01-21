@@ -428,12 +428,16 @@ void OnMenuProperties(WindowInfo *win)
     uint64_t fileSize = WinFileSizeGet(win->dm->fileName());
     if (fileSize == INVALID_FILE_SIZE) {
         fz_buffer *data = win->dm->pdfEngine->getStreamData();
-        fileSize = data->len;
-        fz_dropbuffer(data);
+        if (data) {
+            fileSize = data->len;
+            fz_dropbuffer(data);
+        }
     }
-    str = FormatPdfSize(fileSize);
-    AddPdfProperty(layoutData, _TR("File Size:"), str);
-    free(str);
+    if (fileSize != INVALID_FILE_SIZE) {
+        str = FormatPdfSize(fileSize);
+        AddPdfProperty(layoutData, _TR("File Size:"), str);
+        free(str);
+    }
 
     str = tstr_printf(_T("%d"), dm->pageCount());
     AddPdfProperty(layoutData, _TR("Number of Pages:"), str);
