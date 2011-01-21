@@ -330,7 +330,8 @@ def main():
   #run_cmd_throw("upx", compression_type, "--compress-icons=0", "SumatraPDF-%s.exe" % ver)
 
   shutil.copy("SumatraPDF-%s.exe" % ver, "SumatraPDF.exe")
-  run_cmd_throw("zip", "-0", "SumatraPDF-%s.zip" % ver, "SumatraPDF.exe")
+  zip = os.path.join(SCRIPT_DIR, "bin", "zip")
+  run_cmd_throw(zip, "-0", "SumatraPDF-%s.zip" % ver, "SumatraPDF.exe")
 
   local_zip = os.path.join(builds_dir, "SumatraPDF-%s.zip" % ver)
   ensure_path_exists(local_zip)
