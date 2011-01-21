@@ -12,7 +12,7 @@ GOTO HAS_VC
 
 :HAS_VC
 rem add nasm.exe to the path and verify it exists
-set PATH=%PATH%;%CD%\bin
+set PATH=%CD%\bin;%PATH%
 nasm -v >nul
 IF ERRORLEVEL 1 goto NASM_NEEDED
 
