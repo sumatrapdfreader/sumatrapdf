@@ -1093,14 +1093,11 @@ static void MenuUpdatePrintItem(WindowInfo *win) {
 }
 
 static void MenuUpdateCopyItem(WindowInfo *win) {
-    HMENU hmenu = win->hMenu;
-    if (win->showSelection)
-        EnableMenuItem(hmenu, IDM_COPY_SELECTION, MF_BYCOMMAND | MF_ENABLED);
-    else
-        EnableMenuItem(hmenu, IDM_COPY_SELECTION, MF_BYCOMMAND | MF_GRAYED);
+    // always enable the "Copy Selection" menu entry to make
+    // rectangular selections through Ctrl+mouse more discoverable
 }
 
-// TODO: there's a windows message sent right before opening a menu
+// TODO: there's a windows message sent right before opening a menu (WM_INITMENUPOPUP)
 // We should call this function in response to that instead of inserting
 // the calls to MenuUpdateStateForWindow() or MenuUpdateCopyItem()
 // in every place that changes a state that dictates state of menu items
@@ -2353,78 +2350,31 @@ static void ChangePresentationMode(WindowInfo *win, PresentationMode mode)
 
 static void OnDraggingStart(WindowInfo *win, int x, int y)
 {
-    assert(win);
-    if (!win) return;
-    bool startDragging = (WS_SHOWING_PDF == win->state) && (win->mouseAction == MA_IDLE);
-    if (!startDragging)
-        return;
-
-    assert(win->dm);
-    if (!win->dm) return;
-
     SetCapture(win->hwndCanvas);
-    win->mouseAction = MA_MAYBEDRAGGING;
-    win->dragStartX = win->dragPrevPosX = x;
-    win->dragStartY = win->dragPrevPosY = y;
-    win->linkOnLastButtonDown = win->dm->getLinkAtPosition(x, y);
+    win->mouseAction = MA_DRAGGING;
+    win->dragPrevPosX = x;
+    win->dragPrevPosY = y;
     if (GetCursor())
         SetCursor(gCursorDrag);
     DBG_OUT(" dragging start, x=%d, y=%d\n", x, y);
 }
 
-static void OnDraggingStop(WindowInfo *win, int x, int y)
+static void OnDraggingStop(WindowInfo *win, int x, int y, bool aborted)
 {
-    assert(win);
-    if (!win) return;
-
-    if (WS_SHOWING_PDF != win->state)
+    if (GetCapture() != win->hwndCanvas)
         return;
 
-    assert(win->dm);
-    if (!win->dm) return;
-
-    if (MA_MAYBEDRAGGING != win->mouseAction && MA_DRAGGING != win->mouseAction)
-        return;
-
-    bool didDragMouse = MA_DRAGGING == win->mouseAction ||
-        abs(x - win->dragStartX) > GetSystemMetrics(SM_CXDRAG) ||
-        abs(y - win->dragStartY) > GetSystemMetrics(SM_CYDRAG);
-
-    if (GetCapture() == win->hwndCanvas) {
-        if (didDragMouse) {
-            int  dragDx, dragDy;
-            win->linkOnLastButtonDown = NULL;
-            dragDx = x - win->dragPrevPosX;
-            dragDy = y - win->dragPrevPosY;
-            DBG_OUT(" dragging ends, x=%d, y=%d, dx=%d, dy=%d\n", x, y, dragDx, dragDy);
-            win->MoveDocBy(dragDx, -dragDy*2);
-            win->dragPrevPosX = x;
-            win->dragPrevPosY = y;
-        }
-        if (GetCursor())
-            SetCursor(gCursorArrow);
-        ReleaseCapture();
-    }
-
-    if (win->linkOnLastButtonDown && win->dm->getLinkAtPosition(x, y) == win->linkOnLastButtonDown) {
-        win->dm->goToTocLink(win->linkOnLastButtonDown);
+    if (GetCursor())
         SetCursor(gCursorArrow);
-    }
-    else if (didDragMouse)
-        /* pass */;
-    /* if we had a selection and this was just a click, hide selection */
-    else if (win->showSelection)
-        ClearSearch(win);
-    else if (win->fullScreen || PM_ENABLED == win->presentation) {
-        if (WasKeyDown(VK_SHIFT))
-            win->dm->goToPrevPage(0);
-        else
-            win->dm->goToNextPage(0);
-    }
-    else if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation)
-        ChangePresentationMode(win, PM_ENABLED);
+    ReleaseCapture();
 
-    win->linkOnLastButtonDown = NULL;
+    if (aborted)
+        return;
+
+    int dragDx = x - win->dragPrevPosX;
+    int dragDy = y - win->dragPrevPosY;
+    DBG_OUT(" dragging ends, x=%d, y=%d, dx=%d, dy=%d\n", x, y, dragDx, dragDy);
+    win->MoveDocBy(dragDx, -dragDy*2);
 }
 
 #define SELECT_AUTOSCROLL_AREA_WIDTH 15
@@ -2463,7 +2413,6 @@ static void OnMouseMove(WindowInfo *win, int x, int y, WPARAM flags)
     assert(win);
     if (!win || WS_SHOWING_PDF != win->state)
         return;
-
     assert(win->dm);
     if (!win->dm) return;
 
@@ -2476,6 +2425,16 @@ static void OnMouseMove(WindowInfo *win, int x, int y, WPARAM flags)
                 SendMessage(win->hwndCanvas, WM_SETCURSOR, 0, 0);
             SetTimer(win->hwndCanvas, HIDE_CURSOR_TIMER_ID, HIDE_CURSOR_DELAY_IN_MS, NULL);
         }
+    }
+
+    if (win->dragStartPending) {
+        // have we already started a proper drag?
+        if (abs(x - win->dragStartX) <= GetSystemMetrics(SM_CXDRAG) &&
+            abs(y - win->dragStartY) <= GetSystemMetrics(SM_CYDRAG)) {
+            return;
+        }
+        win->dragStartPending = false;
+        win->linkOnLastButtonDown = NULL;
     }
 
     switch (win->mouseAction) {
@@ -2493,14 +2452,6 @@ static void OnMouseMove(WindowInfo *win, int x, int y, WPARAM flags)
         triggerRepaintDisplay(win);
         OnSelectionEdgeAutoscroll(win, x, y);
         break;
-    case MA_MAYBEDRAGGING:
-        // have we already started a proper drag?
-        if (abs(x - win->dragStartX) <= GetSystemMetrics(SM_CXDRAG) &&
-            abs(y - win->dragStartY) <= GetSystemMetrics(SM_CYDRAG))
-            break;
-        win->mouseAction = MA_DRAGGING;
-        win->linkOnLastButtonDown = NULL;
-        // fall through
     case MA_DRAGGING:
         dragDx = win->dragPrevPosX - x;
         dragDy = win->dragPrevPosY - y;
@@ -2513,16 +2464,8 @@ static void OnMouseMove(WindowInfo *win, int x, int y, WPARAM flags)
     win->dragPrevPosY = y;
 }
 
-static bool CanStartSelection(WindowInfo *win)
-{
-    return WS_SHOWING_PDF == win->state && win->mouseAction == MA_IDLE;
-}
-
 static void OnSelectionStart(WindowInfo *win, int x, int y)
 {
-    if (!CanStartSelection(win))
-        return;
-
     DeleteOldSelectionInfo (win);
 
     win->selectionRect.x = x;
@@ -2532,8 +2475,8 @@ static void OnSelectionStart(WindowInfo *win, int x, int y)
     win->showSelection = true;
     win->mouseAction = MA_SELECTING;
 
-    // Ctrl+Shift+drag always initiates text selection
-    if (win->dm->isOverText(x, y) || WasKeyDown(VK_CONTROL) && WasKeyDown(VK_SHIFT)) {
+    // Ctrl+drag forces a rectangular selection
+    if (!(WasKeyDown(VK_CONTROL) && !WasKeyDown(VK_SHIFT))) {
         int pageNo;
         double dX = x, dY = y;
         if (win->dm->cvtScreenToUser(&pageNo, &dX, &dY)) {
@@ -2548,31 +2491,23 @@ static void OnSelectionStart(WindowInfo *win, int x, int y)
     triggerRepaintDisplay(win);
 }
 
-static bool IsSelectingText(WindowInfo *win)
+static void OnSelectionStop(WindowInfo *win, int x, int y, bool aborted)
 {
-    return (WS_SHOWING_PDF == win->state) && (win->mouseAction == MA_SELECTING || win->mouseAction == MA_SELECTING_TEXT);
-}
+    if (GetCapture() == win->hwndCanvas)
+        ReleaseCapture();
+    KillTimer(win->hwndCanvas, SMOOTHSCROLL_TIMER_ID);
 
-static void OnSelectionStop(WindowInfo *win, int x, int y)
-{
-    if (!IsSelectingText(win))
+    if (aborted)
         return;
-
-    assert (win->dm);
-    if (!win->dm) return;
 
     // update the text selection before changing the selectionRect
     if (MA_SELECTING_TEXT == win->mouseAction)
         UpdateTextSelection(win);
 
-    win->selectionRect.dx = abs (x - win->selectionRect.x);
-    win->selectionRect.dy = abs (y - win->selectionRect.y);
-    win->selectionRect.x = min (win->selectionRect.x, x);
-    win->selectionRect.y = min (win->selectionRect.y, y);
-
-    if (GetCapture() == win->hwndCanvas)
-        ReleaseCapture();
-    KillTimer(win->hwndCanvas, SMOOTHSCROLL_TIMER_ID);
+    win->selectionRect.dx = abs(x - win->selectionRect.x);
+    win->selectionRect.dy = abs(y - win->selectionRect.y);
+    win->selectionRect.x = min(win->selectionRect.x, x);
+    win->selectionRect.y = min(win->selectionRect.y, y);
 
     if (win->selectionRect.dx == 0 || win->selectionRect.dy == 0) {
         DeleteOldSelectionInfo(win);
@@ -2602,14 +2537,30 @@ static void OnMouseLeftButtonDown(WindowInfo *win, int x, int y, int key)
         win->url = AboutGetLink(win, x, y);
         return;
     }
+    if (WS_SHOWING_PDF != win->state)
+        return;
+
+    if (MA_SCROLLING == win->mouseAction) {
+        win->mouseAction = MA_IDLE;
+        return;
+    }
+    assert(win->mouseAction == MA_IDLE);
+    assert(win->dm);
 
     SetFocus(win->hwndFrame);
 
-    // In restricted mode we don't allow text selection, so always drag.
-    // Otherwise we do text selection if cursor is over text or dragging if
-    // it's not.
-    // If Ctrl is pressed, it forces drag.
-    if (gRestrictedUse || WasKeyDown(VK_CONTROL) || !win->dm->isOverText(x,y))
+    win->linkOnLastButtonDown = win->dm->getLinkAtPosition(x, y);
+    win->dragStartPending = true;
+    win->dragStartX = x;
+    win->dragStartY = y;
+
+    // - without modifiers, clicking on text starts a text selection
+    //   and clicking somewhere else starts a drag
+    // - pressing Shift forces dragging
+    // - pressing Ctrl forces a rectangular selection
+    // - pressing Ctrl+Shift forces text selection
+    // - in restricted mode, selections aren't allowed
+    if (gRestrictedUse || (WasKeyDown(VK_SHIFT) || !win->dm->isOverText(x,y)) && !WasKeyDown(VK_CONTROL))
         OnDraggingStart(win, x, y);
     else
         OnSelectionStart(win, x, y);
@@ -2627,13 +2578,44 @@ static void OnMouseLeftButtonUp(WindowInfo *win, int x, int y, int key)
         win->url = NULL;
         return;
     }
+    if (WS_SHOWING_PDF != win->state)
+        return;
 
-    if (MA_SELECTING == win->mouseAction || MA_SELECTING_TEXT == win->mouseAction)
-        OnSelectionStop(win, x, y);
+    assert(win->dm);
+    if (MA_IDLE == win->mouseAction)
+        return;
+    assert(MA_SELECTING == win->mouseAction || MA_SELECTING_TEXT == win->mouseAction || MA_DRAGGING == win->mouseAction);
+
+    bool didDragMouse = !win->dragStartPending ||
+        abs(x - win->dragStartX) > GetSystemMetrics(SM_CXDRAG) ||
+        abs(y - win->dragStartY) > GetSystemMetrics(SM_CYDRAG);
+    if (MA_DRAGGING == win->mouseAction)
+        OnDraggingStop(win, x, y, !didDragMouse);
     else
-        OnDraggingStop(win, x, y);
+        OnSelectionStop(win, x, y, !didDragMouse);
+
+    if (didDragMouse)
+        /* pass */;
+    else if (win->linkOnLastButtonDown && win->dm->getLinkAtPosition(x, y) == win->linkOnLastButtonDown) {
+        win->dm->goToTocLink(win->linkOnLastButtonDown);
+        SetCursor(gCursorArrow);
+    }
+    /* if we had a selection and this was just a click, hide the selection */
+    else if (win->showSelection)
+        ClearSearch(win);
+    /* in presentation mode, change pages on left/right-clicks */
+    else if (win->fullScreen || PM_ENABLED == win->presentation) {
+        if (WasKeyDown(VK_SHIFT))
+            win->dm->goToPrevPage(0);
+        else
+            win->dm->goToNextPage(0);
+    }
+    /* return from white/black screens in presentation mode */
+    else if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation)
+        ChangePresentationMode(win, PM_ENABLED);
 
     win->mouseAction = MA_IDLE;
+    win->linkOnLastButtonDown = NULL;
 }
 
 static void OnMouseMiddleButtonDown(WindowInfo *win, int x, int y, int key)
@@ -5537,7 +5519,7 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
                         return TRUE;
                     }
                 }
-            } else if (win && (MA_DRAGGING == win->mouseAction || MA_MAYBEDRAGGING == win->mouseAction && !win->presentation)) {
+            } else if (win && MA_DRAGGING == win->mouseAction) {
                 SetCursor(gCursorDrag);
                 return TRUE;
             } else if (win && MA_SCROLLING == win->mouseAction) {

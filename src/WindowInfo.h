@@ -27,7 +27,6 @@ enum WinState {
 /* Describes actions which can be performed by mouse */
 enum MouseAction {
     MA_IDLE = 0,
-    MA_MAYBEDRAGGING,
     MA_DRAGGING,
     MA_SELECTING,
     MA_SCROLLING,
@@ -112,6 +111,7 @@ public:
     const TCHAR *   url;
 
     MouseAction     mouseAction;
+    bool            dragStartPending;
 
     /* when dragging the document around, this is previous position of the
        cursor. A delta between previous and current is by how much we

@@ -696,14 +696,14 @@ void DisplayModel::recalcVisibleParts(void)
             pageInfo->visible = 1.0 * intersect.dx * intersect.dy / (pageInfo->currPos.dx * pageInfo->currPos.dy);
             
             pageInfo->bitmap = intersect;
-            pageInfo->bitmap.x = intersect.x - (int)pageInfo->currPos.x;
+            pageInfo->bitmap.x = (int)(intersect.x - pageInfo->currPos.x);
             assert(pageInfo->bitmap.x >= 0);
-            pageInfo->bitmap.y = intersect.y - (int)pageInfo->currPos.y;
+            pageInfo->bitmap.y = (int)(intersect.y - pageInfo->currPos.y);
             assert(pageInfo->bitmap.y >= 0);
-            pageInfo->screenX = intersect.x - (int)areaOffset.x;
+            pageInfo->screenX = (int)(intersect.x - areaOffset.x);
             assert(pageInfo->screenX >= 0);
             assert(pageInfo->screenX <= drawAreaSize.dx());
-            pageInfo->screenY = intersect.y - (int)areaOffset.y;
+            pageInfo->screenY = (int)(intersect.y - areaOffset.y);
             assert(pageInfo->screenX >= 0);
             assert(pageInfo->screenY <= drawAreaSize.dy());
 /*            DBG_OUT("                                  visible page = %d, (x=%3d,y=%3d,dx=%4d,dy=%4d) at (x=%d,y=%d)\n",
