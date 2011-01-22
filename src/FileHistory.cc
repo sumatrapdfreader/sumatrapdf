@@ -37,7 +37,7 @@ etc...
 FileHistoryList *FileHistoryList_Node_Create(void)
 {
     FileHistoryList *node;
-    node = (FileHistoryList*)zmalloc(sizeof(FileHistoryList));
+    node = SAZ(FileHistoryList);
     if (!node)
         return NULL;
 

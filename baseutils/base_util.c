@@ -21,14 +21,6 @@ void memzero(void *data, size_t len)
     memset(data, 0, len);
 }
 
-void *zmalloc(size_t len)
-{
-    void *data = malloc(len);
-    if (data)
-        memzero(data, len);
-    return data;
-}
-
 void *memdup(void *data, size_t len)
 {
     void *dup = malloc(len);

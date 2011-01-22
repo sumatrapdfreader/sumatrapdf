@@ -70,7 +70,7 @@ static const char* Translations_GetTranslationAndIndex(const char* txt, int& idx
 const TCHAR* Translations_GetTranslation(const char* txt)
 {
     if (!g_translations) {
-        g_translations = (const TCHAR **)zmalloc(sizeof(TCHAR*) * g_transTranslationsCount * g_transLangsCount);
+        g_translations = SAZA(const TCHAR *, g_transTranslationsCount * g_transLangsCount);
         if (!g_translations)
             return NULL;
     }

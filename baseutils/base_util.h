@@ -87,8 +87,8 @@
    SAZ = Struct Allocate and Zero memory
    SAZA = Struct Allocate and Zero memory for Array */
 #define SA(struct_name) (struct_name *)malloc(sizeof(struct_name))
-#define SAZ(struct_name) (struct_name *)zmalloc(sizeof(struct_name))
-#define SAZA(struct_name, n) (struct_name *)zmalloc(sizeof(struct_name) * (n))
+#define SAZA(struct_name, n) (struct_name *)calloc((n), sizeof(struct_name))
+#define SAZ(struct_name) SAZA(struct_name, 1)
 
 #define dimof(X)    (sizeof(X)/sizeof((X)[0]))
 
@@ -112,7 +112,6 @@ void        swap_int(int *one, int *two);
 void        swap_double(double *one, double *two);
 
 void        memzero(void *data, size_t len);
-void *      zmalloc(size_t size);
 void *      memdup(void *data, size_t len);
 #define     _memdup(ptr) memdup(ptr, sizeof(*(ptr)))
 

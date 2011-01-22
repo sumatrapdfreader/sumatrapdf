@@ -167,7 +167,7 @@ BOOL ReadData(HANDLE h, LPVOID data, DWORD size, TCHAR *errMsg)
     DWORD bytesRead;
     BOOL ok = ReadFile(h, data, size, &bytesRead, NULL);
     TCHAR *msg;
-    if (!ok || (bytesRead != size)) {        
+    if (!ok || (bytesRead != size) || (size == (DWORD)-1)) {        
         if (!ok) {
             msg = tstr_printf(_T("%s: ok=%d"), errMsg, ok);
         } else {
@@ -426,9 +426,10 @@ ReadNextPart:
         if (SEEK_FAILED == SeekBackwards(h, 4 + nameLen, _T("Couldn't seek to file name")))
             goto Error;
 
-        char *fileNameUTF8 = (char*)zmalloc(nameLen+1);
+        char *fileNameUTF8 = (char*)malloc(nameLen+1);
         if (!ReadData(h, (LPVOID)fileNameUTF8, nameLen, _T("Couldn't read file name")))
             goto Error;
+        fileNameUTF8[nameLen] = '\0';
         if (SEEK_FAILED == SeekBackwards(h, 4 + nameLen, _T("Couldn't seek to file size")))
             goto Error;
         part->fileName = utf8_to_tstr(fileNameUTF8);

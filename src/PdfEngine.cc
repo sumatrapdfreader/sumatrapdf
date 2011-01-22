@@ -92,7 +92,7 @@ HBITMAP fz_pixtobitmap(HDC hDC, fz_pixmap *pixmap, BOOL paletted)
     
     assert(pixmap->n == 4);
     
-    bmi = (BITMAPINFO *)zmalloc(sizeof(BITMAPINFOHEADER) + 256 * sizeof(RGBQUAD));
+    bmi = (BITMAPINFO *)calloc(1, sizeof(BITMAPINFOHEADER) + 256 * sizeof(RGBQUAD));
     
     if (paletted)
     {
@@ -159,7 +159,7 @@ pdf_outline *pdf_loadattachments(pdf_xref *xref)
 
     pdf_outline root = { 0 }, *node = &root;
     for (int i = 0; i < fz_dictlen(dict); i++) {
-        node = node->next = (pdf_outline *)zmalloc(sizeof(pdf_outline));
+        node = node->next = SAZ(pdf_outline);
 
         fz_obj *name = fz_dictgetkey(dict, i);
         fz_obj *dest = fz_dictgetval(dict, i);
@@ -167,7 +167,7 @@ pdf_outline *pdf_loadattachments(pdf_xref *xref)
 
         node->title = strdup(fz_toname(name));
         if (fz_isname(type) && str_eq(fz_toname(type), "Filespec")) {
-            node->link = (pdf_link *)zmalloc(sizeof(pdf_link));
+            node->link = SAZ(pdf_link);
             node->link->kind = PDF_LLAUNCH;
             node->link->dest = fz_keepobj(dest);
         }
@@ -867,7 +867,7 @@ static TCHAR *parseMultilineLink(pdf_page *page, TCHAR *pageText, TCHAR *start, 
         free(uri);
         uri = newUri;
 
-        pdf_link *link = (pdf_link *)zmalloc(sizeof(pdf_link));
+        pdf_link *link = SAZ(pdf_link);
         link->kind = PDF_LURI;
         link->rect = bbox;
         link->next = page->links;
@@ -940,7 +940,7 @@ void PdfEngine::linkifyPageText(pdf_page *page)
             char *uri = tstr_to_utf8(start);
             char *httpUri = str_startswith(uri, "http") ? uri : str_cat("http://", uri);
             fz_obj *dest = fz_newstring(httpUri, (int)strlen(httpUri));
-            pdf_link *link = (pdf_link *)zmalloc(sizeof(pdf_link));
+            pdf_link *link = SAZ(pdf_link);
             link->kind = PDF_LURI;
             link->rect = bbox;
             link->dest = dest;
