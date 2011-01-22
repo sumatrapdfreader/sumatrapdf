@@ -1,5 +1,7 @@
 /* (Minimal) SumatraPDF Browser Plugin - Copyright (C) 2010-2011  Simon Bünzli */
 
+// TODO: Firefox never even loads this DLL, if it finds nppdf32.dll in its own plugins directory
+
 #include <windows.h>
 #include <shellapi.h>
 #include <shlwapi.h>
@@ -23,6 +25,10 @@
 #pragma comment(linker, "/EXPORT:NP_Shutdown=_NP_Shutdown@0,PRIVATE")
 #pragma comment(linker, "/EXPORT:DllRegisterServer=_DllRegisterServer@0,PRIVATE")
 #pragma comment(linker, "/EXPORT:DllUnregisterServer=_DllUnregisterServer@0,PRIVATE")
+#endif
+
+#ifndef CP_UTF8
+#define CP_UTF8 65001
 #endif
 
 NPNetscapeFuncs gNPNFuncs;
@@ -56,6 +62,8 @@ DLLEXPORT NPError WINAPI NP_GetEntryPoints(NPPluginFuncs *pFuncs)
 	pFuncs->newstream = NPP_NewStream;
 	pFuncs->destroystream = NPP_DestroyStream;
 	pFuncs->asfile = NPP_StreamAsFile;
+	pFuncs->writeready = NPP_WriteReady;
+	pFuncs->write = NPP_Write;
 	pFuncs->print = NPP_Print;
 	
 	return NPERR_NO_ERROR;
@@ -170,7 +178,10 @@ typedef struct {
 	LPWSTR filepath;
 	HANDLE hProcess;
 	WCHAR exepath[MAX_PATH + 2];
+	FLOAT progress;
 } InstanceData;
+
+#define COL_WINDOW_BG RGB(0xcc, 0xcc, 0xcc)
 
 LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -182,12 +193,48 @@ LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lPar
 		RECT rcClient;
 		
 		HDC hDC = BeginPaint(hWnd, &ps);
-		GetClientRect(hWnd, &rcClient);
-		FillRect(hDC, &rcClient, GetStockObject(GRAY_BRUSH));
-		DrawTextW(hDC, data->message, -1, &rcClient, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
-		EndPaint(hWnd, &ps);
+		HBRUSH brushBg = CreateSolidBrush(COL_WINDOW_BG);
+		HFONT hFont = CreateFontW(-MulDiv(14, GetDeviceCaps(hDC, LOGPIXELSY), 96), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, L"MS Shell Dlg");
+		HDC hDCBuffer = CreateCompatibleDC(hDC);
+		HBITMAP hDoubleBuffer;
 		
-		return 0;
+		// set up double buffering
+		GetClientRect(hWnd, &rcClient);
+		hDoubleBuffer = CreateCompatibleBitmap(hDC, rcClient.right - rcClient.left, rcClient.bottom - rcClient.top);
+		SelectObject(hDCBuffer, hDoubleBuffer);
+		
+		// display message centered in the window
+		FillRect(hDCBuffer, &rcClient, brushBg);
+		hFont = (HFONT)SelectObject(hDCBuffer, hFont);
+		SetTextColor(hDCBuffer, RGB(0, 0, 0));
+		SetBkMode(hDCBuffer, TRANSPARENT);
+		DrawTextW(hDCBuffer, data->message, -1, &rcClient, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
+		
+		// draw a progress bar, if a download is in progress
+		if (0 < data->progress && data->progress < 1)
+		{
+			SIZE msgSize;
+			RECT rcProgress = rcClient;
+			HBRUSH brushProgress = CreateSolidBrush(RGB(0x80, 0x80, 0xff));
+			
+			GetTextExtentPoint32W(hDCBuffer, data->message, lstrlenW(data->message), &msgSize);
+			InflateRect(&rcProgress, -(rcProgress.right - rcProgress.left - msgSize.cx) / 2, -(rcProgress.bottom - rcProgress.top - msgSize.cy) / 2);
+			OffsetRect(&rcProgress, 0, msgSize.cy + 4);
+			FillRect(hDCBuffer, &rcProgress, GetStockObject(WHITE_BRUSH));
+			rcProgress.right = (LONG)(rcProgress.left + data->progress * (rcProgress.right - rcProgress.left));
+			FillRect(hDCBuffer, &rcProgress, brushProgress);
+			
+			DeleteObject(brushProgress);
+		}
+		
+		// draw the buffer on screen
+		BitBlt(hDC, 0, 0, rcClient.right - rcClient.left, rcClient.bottom - rcClient.top, hDCBuffer, 0, 0, SRCCOPY);
+		
+		DeleteObject(SelectObject(hDCBuffer, hFont));
+		DeleteObject(brushBg);
+		DeleteObject(hDoubleBuffer);
+		DeleteDC(hDCBuffer);
+		EndPaint(hWnd, &ps);
 	}
 	
 	return DefWindowProc(hWnd, uiMsg, wParam, lParam);
@@ -219,7 +266,7 @@ NPError NP_LOADDS NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, in
 	UNREFERENCED_PARAMETER(saved);
 }
 
-NPError NPP_SetWindow(NPP instance, NPWindow *npwin)
+NPError NP_LOADDS NPP_SetWindow(NPP instance, NPWindow *npwin)
 {
 	InstanceData *data = instance->pdata;
 	
@@ -252,7 +299,7 @@ NPError NPP_SetWindow(NPP instance, NPWindow *npwin)
 	return NPERR_NO_ERROR;
 }
 
-NPError NPP_NewStream(NPP instance, NPMIMEType type, NPStream* stream, NPBool seekable, uint16_t* stype)
+NPError NP_LOADDS NPP_NewStream(NPP instance, NPMIMEType type, NPStream* stream, NPBool seekable, uint16_t* stype)
 {
 	InstanceData *data = instance->pdata;
 	
@@ -261,23 +308,60 @@ NPError NPP_NewStream(NPP instance, NPMIMEType type, NPStream* stream, NPBool se
 		return NPERR_FILE_NOT_FOUND;
 	}
 	
-	*stype = NP_ASFILEONLY;
+	*stype = NP_ASFILE;
+	
+	data->progress = 0.01f;
+	if (data->npwin)
+	{
+		InvalidateRect((HWND)data->npwin->window, NULL, FALSE);
+		UpdateWindow((HWND)data->npwin->window);
+	}
 	
 	return NPERR_NO_ERROR;
 	
-	UNREFERENCED_PARAMETER(instance);
 	UNREFERENCED_PARAMETER(type);
 	UNREFERENCED_PARAMETER(stream);
 	UNREFERENCED_PARAMETER(seekable);
 }
 
-void NPP_StreamAsFile(NPP instance, NPStream* stream, const char* fname)
+int32_t NP_LOADDS NPP_WriteReady(NPP instance, NPStream* stream)
+{
+	return 4096;
+	
+	UNREFERENCED_PARAMETER(instance);
+	UNREFERENCED_PARAMETER(stream);
+}
+
+int32_t NP_LOADDS NPP_Write(NPP instance, NPStream* stream, int32_t offset, int32_t len, void* buffer)
+{
+	InstanceData *data = instance->pdata;
+	
+	data->progress = 1.0f * (offset + len) / stream->end;
+	if (data->npwin)
+	{
+		InvalidateRect((HWND)data->npwin->window, NULL, FALSE);
+		UpdateWindow((HWND)data->npwin->window);
+	}
+	
+	return len;
+	
+	UNREFERENCED_PARAMETER(buffer);
+}
+
+void NP_LOADDS NPP_StreamAsFile(NPP instance, NPStream* stream, const char* fname)
 {
 	InstanceData *data = instance->pdata;
 	
 	WCHAR cmdLine[MAX_PATH * 3];
 	PROCESS_INFORMATION pi = { 0 };
 	STARTUPINFOW si = { 0 };
+	
+	data->progress = 1.0f;
+	if (data->npwin)
+	{
+		InvalidateRect((HWND)data->npwin->window, NULL, FALSE);
+		UpdateWindow((HWND)data->npwin->window);
+	}
 	
 	if (!fname)
 	{
@@ -303,6 +387,11 @@ void NPP_StreamAsFile(NPP instance, NPStream* stream, const char* fname)
 	else
 	{
 		data->message = L"Error: Couldn't run SumatraPDF!";
+	}
+	if (data->npwin)
+	{
+		InvalidateRect((HWND)data->npwin->window, NULL, FALSE);
+		UpdateWindow((HWND)data->npwin->window);
 	}
 	
 	UNREFERENCED_PARAMETER(stream);
@@ -336,16 +425,15 @@ NPError NP_LOADDS NPP_Destroy(NPP instance, NPSavedData** save)
 	return NPERR_NO_ERROR;
 }
 
-// TODO: NPP_Print seems to never be called
+// TODO: NPP_Print seems to never be called by Google Chrome
 
 #define IDM_PRINT 403
 
 void NP_LOADDS NPP_Print(NPP instance, NPPrint* platformPrint)
 {
-	InstanceData *data = instance->pdata;
-	
 	if (platformPrint->mode == NP_FULL)
 	{
+		InstanceData *data = instance->pdata;
 		HWND hWnd = data->npwin->window;
 		HWND hChild = FindWindowEx(hWnd, NULL, NULL, NULL);
 		
