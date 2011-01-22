@@ -3,8 +3,8 @@
 
 PdfSelection::PdfSelection(PdfEngine *engine) : engine(engine)
 {
-    coords = (fz_bbox **)calloc(engine->pageCount(), sizeof(fz_bbox *));
-    lens = (int *)calloc(engine->pageCount(), sizeof(int));
+    coords = SAZA(fz_bbox *, engine->pageCount());
+    lens = SAZA(int, engine->pageCount());
 
     result.len = 0;
     result.pages = NULL;

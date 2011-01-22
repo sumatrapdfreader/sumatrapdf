@@ -26,7 +26,7 @@ void win_set_text(HWND hwnd, const TCHAR *txt)
 TCHAR *win_get_text(HWND hwnd)
 {
     int     cchTxtLen = win_get_text_len(hwnd);
-    TCHAR * txt = (TCHAR*)malloc((cchTxtLen+1)*sizeof(TCHAR));
+    TCHAR * txt = (TCHAR*)calloc((size_t)cchTxtLen + 1, sizeof(TCHAR));
 
     if (NULL == txt)
         return NULL;

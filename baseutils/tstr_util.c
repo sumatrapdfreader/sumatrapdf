@@ -44,6 +44,9 @@ tchar_t *tstr_url_encode(const tchar_t *str)
     int             res_len = 0;
     const tchar_t * tmp;
 
+    if (tstr_len(str) >= INT_MAX / 3)
+        return NULL;
+
     /* calc the size of the string after url encoding */
     for (tmp = str; *tmp; tmp++) {
         if (tchar_needs_url_encode(*tmp))

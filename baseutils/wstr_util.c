@@ -247,7 +247,7 @@ char *wstr_to_utf8(const WCHAR *txt)
 WCHAR *multibyte_to_wstr(const char *src, UINT CodePage)
 {
     int requiredBufSize = MultiByteToWideChar(CodePage, 0, src, -1, NULL, 0);
-    WCHAR *res = malloc(requiredBufSize * sizeof(WCHAR));
+    WCHAR *res = calloc(requiredBufSize, sizeof(WCHAR));
     if (!res)
         return NULL;
     MultiByteToWideChar(CodePage, 0, src, -1, res, requiredBufSize);

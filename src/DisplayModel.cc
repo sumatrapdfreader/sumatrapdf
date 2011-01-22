@@ -202,7 +202,7 @@ DisplayModel::DisplayModel(DisplayMode displayMode, int dpi)
     _pdfSearch = NULL;
     _pagesInfo = NULL;
 
-    _navHistory = (ScrollState *)malloc(NAV_HISTORY_LEN * sizeof(ScrollState));
+    _navHistory = SAZA(ScrollState, NAV_HISTORY_LEN);
     _navHistoryIx = 0;
     _navHistoryEnd = 0;
     
@@ -273,7 +273,7 @@ bool DisplayModel::buildPagesInfo(void)
     assert(!_pagesInfo);
     int _pageCount = pageCount();
 
-    _pagesInfo = (PdfPageInfo*)calloc(1, _pageCount * sizeof(PdfPageInfo));
+    _pagesInfo = SAZA(PdfPageInfo, _pageCount);
     if (!_pagesInfo)
         return false;
 
@@ -525,7 +525,7 @@ void DisplayModel::relayout(float zoomVirtual, int rotation)
        rotation, columns parameters. You can think of it as a simple
        table layout i.e. rows with a fixed number of columns. */
     columns = columnsFromDisplayMode(displayMode());
-    columnOffsets = (int *)calloc(columns, sizeof(int));
+    columnOffsets = SAZA(int, columns);
     pageInARow = 0;
     rowMaxPageDy = 0;
     for (pageNo = 1; pageNo <= pageCount(); ++pageNo) {
@@ -1522,7 +1522,7 @@ TCHAR *DisplayModel::getTextInRegion(int pageNo, RectD *region)
 
     RectI regionI, isect;
     RectI_FromRectD(&regionI, region);
-    TCHAR *result = (TCHAR *)malloc((lstrlen(pageText) + 1) * sizeof(TCHAR)), *dest = result;
+    TCHAR *result = SAZA(TCHAR, tstr_len(pageText) + 1), *dest = result;
     for (TCHAR *src = pageText; *src; src++) {
         if (*src != '\n') {
             fz_bbox *bbox = &coords[src - pageText];

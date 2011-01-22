@@ -219,7 +219,7 @@ static void AddPdfProperty(PdfPropertiesLayout *layoutData, const TCHAR *left, c
     if (!right)
         return;
 
-    PdfPropertyEl *el = (PdfPropertyEl *)malloc(sizeof(PdfPropertyEl));
+    PdfPropertyEl *el = SA(PdfPropertyEl);
     el->leftTxt = left;
     el->rightTxt = tstr_dup(right);
     el->next = NULL;
@@ -382,7 +382,7 @@ void OnMenuProperties(WindowInfo *win)
     if (!dm || !dm->pdfEngine) {
         return;
     }
-    PdfPropertiesLayout *layoutData = (PdfPropertiesLayout *)malloc(sizeof(PdfPropertiesLayout));
+    PdfPropertiesLayout *layoutData = SA(PdfPropertiesLayout);
     if (!layoutData)
         return;
     layoutData->first = layoutData->last = NULL;
@@ -542,7 +542,7 @@ void CopyPropertiesToClipboard(HWND hwnd)
     }
 
     if (OpenClipboard(NULL)) {
-        HGLOBAL handle = GlobalAlloc(GMEM_MOVEABLE, (lstrlen(result) + 1) * sizeof(TCHAR));
+        HGLOBAL handle = GlobalAlloc(GMEM_MOVEABLE, (tstr_len(result) + 1) * sizeof(TCHAR));
         if (handle) {
             TCHAR *selText = (TCHAR *)GlobalLock(handle);
             lstrcpy(selText, result);

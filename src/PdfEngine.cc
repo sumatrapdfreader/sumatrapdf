@@ -58,6 +58,8 @@ fz_error pdf_runpagefortarget(pdf_xref *xref, pdf_page *page, fz_device *dev, fz
 fz_pixmap *fz_newpixmap_nullonoom(fz_colorspace *colorspace, int x, int y, int w, int h)
 {
     // allocate the memory needed for the pixmap ourselves, as MuPDF just aborts on OOM
+    if (INT_MAX / w / (colorspace->n + 1) <= h)
+        return NULL;
     unsigned char *samples = (unsigned char *)malloc(w * h * (colorspace->n + 1));
     if (!samples)
         return NULL;
@@ -441,7 +443,7 @@ bool PdfEngine::finishLoading(void)
         _info = fz_copydict(_info);
     LeaveCriticalSection(&_xrefAccess);
 
-    _pages = (pdf_page **)calloc(_pageCount, sizeof(pdf_page *));
+    _pages = SAZA(pdf_page *, _pageCount);
     return _pageCount > 0;
 }
 
@@ -807,7 +809,7 @@ int PdfEngine::getPdfLinks(int pageNo, pdf_link **links)
     for (pdf_link *link = page->links; link; link = link->next)
         count++;
 
-    pdf_link *linkPtr = *links = (pdf_link *)calloc(count, sizeof(pdf_link));
+    pdf_link *linkPtr = *links = SAZA(pdf_link, count);
     for (pdf_link *link = page->links; link; link = link->next)
         *linkPtr++ = *link;
 
@@ -976,16 +978,18 @@ TCHAR *PdfEngine::ExtractPageText(pdf_page *page, TCHAR *lineSep, fz_bbox **coor
     }
 
     int lineSepLen = lstrlen(lineSep);
-    int textLen = 0;
+    size_t textLen = 0;
     for (fz_textspan *span = text; span; span = span->next)
         textLen += span->len + lineSepLen;
 
     WCHAR *content = (WCHAR *)malloc((textLen + 1) * sizeof(WCHAR)), *dest = content;
-    if (!content)
+    if (!content) {
+        fz_freetextspan(text);
         return NULL;
+    }
     fz_bbox *destRect = NULL;
     if (coords_out)
-        destRect = *coords_out = (fz_bbox *)malloc(textLen * sizeof(fz_bbox));
+        destRect = *coords_out = SAZA(fz_bbox, textLen);
 
     for (fz_textspan *span = text; span; span = span->next) {
         for (int i = 0; i < span->len; i++) {

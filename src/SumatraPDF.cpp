@@ -1931,7 +1931,7 @@ static void UpdateTextSelection(WindowInfo *win, bool select=true)
 
     PdfSel *result = &win->dm->textSelection->result;
     for (int i = result->len - 1; i >= 0; i--) {
-        SelectionOnPage *selOnPage = (SelectionOnPage *)malloc(sizeof(SelectionOnPage));
+        SelectionOnPage *selOnPage = SA(SelectionOnPage);
         RectD_FromRectI(&selOnPage->selectionPage, &result->rects[i]);
         selOnPage->pageNo = result->pages[i];
         selOnPage->next = win->selectionOnPage;
@@ -2178,7 +2178,7 @@ static void CopySelectionToClipboard(WindowInfo *win)
             selText = selections.join();
         }
 
-        HGLOBAL handle = GlobalAlloc(GMEM_MOVEABLE, (lstrlen(selText) + 1) * sizeof(TCHAR));
+        HGLOBAL handle = GlobalAlloc(GMEM_MOVEABLE, (tstr_len(selText) + 1) * sizeof(TCHAR));
         if (handle) {
             TCHAR *globalText = (TCHAR *)GlobalLock(handle);
             lstrcpy(globalText, selText);
@@ -3093,7 +3093,7 @@ static void OnMenuPrint(WindowInfo *win)
     /* by default print all pages */
     pd.nPageRanges =1;
     pd.nMaxPageRanges = MAXPAGERANGES;
-    ppr = (LPPRINTPAGERANGE)malloc(MAXPAGERANGES*sizeof(PRINTPAGERANGE));
+    ppr = SAZA(PRINTPAGERANGE, MAXPAGERANGES);
     pd.lpPageRanges = ppr;
     ppr->nFromPage = 1;
     ppr->nToPage = dm->pageCount();

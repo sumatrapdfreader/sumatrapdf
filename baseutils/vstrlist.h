@@ -34,7 +34,9 @@ public:
     {
         if (m_size>=m_allocsize) {
             m_allocsize += ALLOC_INCREMENT;
-            m_data = (_Ty *)realloc(m_data, sizeof(_Ty) * m_allocsize); 
+            if (INT_MAX / sizeof(_Ty) >= m_allocsize) abort();
+            m_data = (_Ty *)realloc(m_data, sizeof(_Ty) * m_allocsize);
+            if (!m_data) abort();
         }
         m_data[m_size] = v;
         m_size++;
@@ -43,7 +45,9 @@ public:
     {
         if (s>m_allocsize) {
             m_allocsize = s+ALLOC_INCREMENT-s%ALLOC_INCREMENT;
-            m_data = (_Ty *)realloc(m_data, sizeof(_Ty) * m_allocsize); 
+            if (INT_MAX / sizeof(_Ty) >= m_allocsize) abort();
+            m_data = (_Ty *)realloc(m_data, sizeof(_Ty) * m_allocsize);
+            if (!m_data) abort();
         }
         m_size = s;
     }
@@ -62,7 +66,7 @@ public:
     {
         m_allocsize = ALLOC_INCREMENT;
         m_size = 0;
-        m_data = (_Ty *)malloc(sizeof(_Ty) * m_allocsize); 
+        m_data = (_Ty *)malloc(sizeof(_Ty) * m_allocsize);
     }
     ~vector()
     {
@@ -109,7 +113,7 @@ public:
         if (len <= 0)
             return (tchar_t *)calloc(1, sizeof(tchar_t));
 
-        result = (tchar_t *)malloc((len + 1) * sizeof(tchar_t));
+        result = (tchar_t *)calloc((size_t)len + 1, sizeof(tchar_t));
         if (!result)
             return NULL;
 

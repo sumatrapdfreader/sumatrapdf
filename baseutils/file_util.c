@@ -527,7 +527,7 @@ char *file_read_all(const TCHAR *file_path, size_t *file_size_out)
         return NULL;
 
     size = GetFileSize(h, NULL);
-    if (-1 == size)
+    if (INVALID_FILE_SIZE == size)
         goto Exit;
 
     /* allocate one byte more and 0-terminate just in case it's a text

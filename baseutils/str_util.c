@@ -245,7 +245,7 @@ char *str_normalize_newline(const char *txt, const char *replace)
             ++result_len;
     }
 
-    if (0 == result_len)
+    if (0 == result_len || (size_t)-1 == result_len)
         return NULL;
 
     result = (char*)malloc(result_len+1);
@@ -357,7 +357,7 @@ char *mem_to_hexstr(const unsigned char *buf, int len)
 {
     int i;
     /* 2 hex chars per byte, +1 for terminating 0 */
-    char *ret = malloc(len * 2 + 1);
+    char *ret = calloc((size_t)len + 1, 2);
     if (!ret)
         return NULL;
     for (i = 0; i < len; i++) {
@@ -386,7 +386,7 @@ static char *multibyte_to_multibyte(const char *src, UINT CodePage1, UINT CodePa
     char *res = NULL;
     WCHAR *tmp;
     int requiredBufSize = MultiByteToWideChar(CodePage1, 0, src, -1, NULL, 0);
-    tmp = malloc(requiredBufSize * sizeof(WCHAR));
+    tmp = calloc(requiredBufSize, sizeof(WCHAR));
     if (!tmp)
         return NULL;
     MultiByteToWideChar(CodePage1, 0, src, -1, tmp, requiredBufSize);

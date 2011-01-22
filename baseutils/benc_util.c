@@ -914,6 +914,8 @@ char * benc_obj_to_data(benc_obj *bobj, size_t* lenOut)
         return NULL;
     len = _benc_obj_to_data(bobj, PHASE_CALC_LEN, NULL);
     assert(len > 0);
+    if (IVALID_LEN == len)
+        return NULL;
     data = (char*)malloc(len+1);
     if (!data)
         return NULL;

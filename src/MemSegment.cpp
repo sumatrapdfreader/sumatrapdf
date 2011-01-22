@@ -22,6 +22,9 @@ char *MemSegment::getData(DWORD *sizeOut)
 
 bool MemSegment::add(const void *buf, DWORD size)
 {
+    if (totalSize + size + 1 < totalSize)
+        return false;
+
     void *data = malloc(size);
     if (!data)
         return false;
