@@ -317,7 +317,7 @@ bool PdfEngine::load(const TCHAR *fileName, WindowInfo *win)
 
     if (embedMarks)
         *embedMarks = '\0';
-    int fd = _topen(_fileName, O_BINARY | O_RDONLY);
+    int fd = _topen(_fileName, O_BINARY | O_RDONLY, 0);
     if (embedMarks)
         *embedMarks = ':';
 
