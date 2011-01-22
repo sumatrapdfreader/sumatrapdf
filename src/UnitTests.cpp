@@ -1,4 +1,4 @@
-#include "base_util.h"
+ï»¿#include "base_util.h"
 #include "tstr_util.h"
 #include "MemSegment.h"
 #include "geom_util.h"
@@ -205,7 +205,7 @@ static void tstr_test()
     assert(!tstr_copy_skip_until(&pos, buf, dimof(buf), '"'));
     assert(!*pos && !*buf);
 
-#define TEST_STRING "a'ü 1€"
+#define TEST_STRING "a'Ã¼ 1â‚¬"
     char *strA = tstr_to_ansi(_T(TEST_STRING));
     assert(str_eq(strA, TEST_STRING));
     str = ansi_to_tstr(strA);
