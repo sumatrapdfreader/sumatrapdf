@@ -5194,9 +5194,11 @@ static void CreateTocBox(WindowInfo *win, HINSTANCE hInst)
     assert(win->hwndTocTree);
     if (!win->hwndTocTree)
         SeeLastError();
+#ifdef UNICODE
     else
         TreeView_SetUnicodeFormat(win->hwndTocTree, true);
-        
+#endif
+
     if (NULL == DefWndProcTocTree)
         DefWndProcTocTree = (WNDPROC)GetWindowLongPtr(win->hwndTocTree, GWLP_WNDPROC);
     SetWindowLongPtr(win->hwndTocTree, GWLP_WNDPROC, (LONG_PTR)WndProcTocTree);

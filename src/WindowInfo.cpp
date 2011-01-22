@@ -113,7 +113,7 @@ HTREEITEM WindowInfo::TreeItemForPageNo(HTREEITEM hItem, int pageNo)
         // return if this item is on the specified page (or on a latter page)
         if (item.lParam && PDF_LGOTO == ((pdf_link *)item.lParam)->kind) {
             int page = this->dm->pdfEngine->findPageNo(((pdf_link *)item.lParam)->dest);
-            if (page <= pageNo)
+            if (1 <= page && page <= pageNo)
                 hCurrItem = hItem;
             if (page >= pageNo)
                 break;
