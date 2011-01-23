@@ -7,6 +7,7 @@
 #include <shlwapi.h>
 #include <stdbool.h>
 #include <wchar.h>
+#include <limits.h>
 
 #ifndef _WINDOWS
 #define _WINDOWS
@@ -310,7 +311,7 @@ NPError NP_LOADDS NPP_NewStream(NPP instance, NPMIMEType type, NPStream* stream,
 	
 	*stype = NP_ASFILE;
 	
-	data->progress = 0.01f;
+	data->progress = stream->end > 0 ? 0.01f : 0;
 	if (data->npwin)
 	{
 		InvalidateRect((HWND)data->npwin->window, NULL, FALSE);
@@ -320,13 +321,12 @@ NPError NP_LOADDS NPP_NewStream(NPP instance, NPMIMEType type, NPStream* stream,
 	return NPERR_NO_ERROR;
 	
 	UNREFERENCED_PARAMETER(type);
-	UNREFERENCED_PARAMETER(stream);
 	UNREFERENCED_PARAMETER(seekable);
 }
 
 int32_t NP_LOADDS NPP_WriteReady(NPP instance, NPStream* stream)
 {
-	return 4096;
+	return stream->end > 0 ? stream->end : INT_MAX;
 	
 	UNREFERENCED_PARAMETER(instance);
 	UNREFERENCED_PARAMETER(stream);
@@ -336,7 +336,7 @@ int32_t NP_LOADDS NPP_Write(NPP instance, NPStream* stream, int32_t offset, int3
 {
 	InstanceData *data = instance->pdata;
 	
-	data->progress = 1.0f * (offset + len) / stream->end;
+	data->progress = stream->end > 0 ? 1.0f * (offset + len) / stream->end : 0;
 	if (data->npwin)
 	{
 		InvalidateRect((HWND)data->npwin->window, NULL, FALSE);
