@@ -61,11 +61,11 @@ public:
             m_pBuffer = NULL;
         }
     }
-    char *ExtractBracedBlock();
+    WCHAR *ExtractBracedBlock();
 
 private:
     long m_lRef, * m_plModuleRef;
     TEX_FILTER_STATE m_state;
-    char *m_pData, *m_pPtr, *m_pBuffer;
+    WCHAR *m_pData, *m_pPtr, *m_pBuffer;
     int m_iDepth;
 };

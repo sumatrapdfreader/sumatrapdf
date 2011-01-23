@@ -224,9 +224,8 @@ $(O)\CPdfFilter.obj: src\ifilter\PdfFilter.h src\PdfEngine.h
 $(O)\CrashHandler.obj: baseutils\base_util.h baseutils\str_util.h baseutils\tstr_util.h
 $(O)\CrashHandler.obj: baseutils\WinUtil.hpp baseutils\wstr_util.h src\CrashHandler.h
 $(O)\CrashHandler.obj: src\translations.h
-$(O)\CTeXFilter.obj: baseutils\base_util.h baseutils\str_util.h baseutils\tstr_util.h
-$(O)\CTeXFilter.obj: baseutils\wstr_util.h src\ifilter\CTeXFilter.h src\ifilter\FilterBase.h
-$(O)\CTeXFilter.obj: src\ifilter\PdfFilter.h
+$(O)\CTeXFilter.obj: baseutils\base_util.h baseutils\wstr_util.h src\ifilter\CTeXFilter.h
+$(O)\CTeXFilter.obj: src\ifilter\FilterBase.h src\ifilter\PdfFilter.h
 $(O)\DisplayModel.obj: baseutils\base_util.h baseutils\file_util.h baseutils\geom_util.h
 $(O)\DisplayModel.obj: baseutils\str_util.h baseutils\tstr_util.h baseutils\vstrlist.h
 $(O)\DisplayModel.obj: baseutils\win_util.h baseutils\wstr_util.h mupdf\fitz\fitz.h

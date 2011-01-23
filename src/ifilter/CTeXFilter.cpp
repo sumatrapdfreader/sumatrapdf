@@ -1,5 +1,8 @@
+ï»¿/* Copyright 2011 the SumatraPDF project authors (see AUTHORS file).
+   License: GPLv3 */
+
 #include "base_util.h"
-#include "tstr_util.h"
+#include "wstr_util.h"
 #include "CTeXFilter.h"
 
 HRESULT CTeXFilter::OnInit()
@@ -10,24 +13,31 @@ HRESULT CTeXFilter::OnInit()
         HRESULT res = m_pStream->Stat(&stat, STATFLAG_NONAME);
         if (FAILED(res))
             return res;
-
-        m_pData = (char *)malloc(stat.cbSize.LowPart + 1);
-        m_pBuffer = (char *)malloc(stat.cbSize.LowPart + 1);
-        if (!m_pData || !m_pBuffer) {
-            CleanUp();
+        if (stat.cbSize.QuadPart >= UINT_MAX)
             return E_OUTOFMEMORY;
-        }
+
+        char *data = (char *)malloc(stat.cbSize.LowPart + 1);
+        if (!data)
+            return E_OUTOFMEMORY;
 
         ULONG read;
         LARGE_INTEGER zero = { 0 };
         m_pStream->Seek(zero, STREAM_SEEK_SET, NULL);
-        res = m_pStream->Read(m_pData, stat.cbSize.LowPart, &read);
+        res = m_pStream->Read(data, stat.cbSize.LowPart, &read);
         if (FAILED(res)) {
-            CleanUp();
+            free(data);
             return res;
         }
+        data[min(stat.cbSize.LowPart, read)] = '\0';
 
-        m_pData[min(stat.cbSize.LowPart, read)] = '\0';
+        m_pData = multibyte_to_wstr(data, CP_ACP);
+        m_pBuffer = SAZA(WCHAR, stat.cbSize.LowPart + 1);
+        free(data);
+
+        if (!m_pData || !m_pBuffer) {
+            CleanUp();
+            return E_OUTOFMEMORY;
+        }
     }
 
     m_state = STATE_TEX_START;
@@ -37,18 +47,18 @@ HRESULT CTeXFilter::OnInit()
     return S_OK;
 }
 
-#define iscmdchar(c) (isalnum(c) || (c) == '_')
-#define skipspace(pc) for (; isspace(*(pc)) && *(pc) != '\n'; (pc)++)
+#define iscmdchar(c) (iswalnum(c) || (c) == '_')
+#define skipspace(pc) for (; iswspace(*(pc)) && *(pc) != '\n'; (pc)++)
 
 // appends a new line, if the last character isn't one already
-static inline void addsingleNL(char *base, char **cur)
+static inline void addsingleNL(WCHAR *base, WCHAR **cur)
 {
     if (*cur > base && *(*cur - 1) != '\n')
         *(*cur)++ = '\n';
 }
 
 // appends a space, if the last character isn't one already
-static inline void addsinglespace(char *base, char **cur)
+static inline void addsinglespace(WCHAR *base, WCHAR **cur)
 {
     if (*cur > base && !isspace(*(*cur - 1)))
         *(*cur)++ = ' ';
@@ -56,12 +66,12 @@ static inline void addsinglespace(char *base, char **cur)
 
 // extracts a text block contained within a pair of braces
 // (may contain nested braces)
-char *CTeXFilter::ExtractBracedBlock()
+WCHAR *CTeXFilter::ExtractBracedBlock()
 {
     m_iDepth++;
 
-    char *result = m_pBuffer + (m_pPtr - m_pData);
-    char *rptr = result;
+    WCHAR *result = m_pBuffer + (m_pPtr - m_pData);
+    WCHAR *rptr = result;
 
     int currDepth = m_iDepth;
 
@@ -71,14 +81,14 @@ char *CTeXFilter::ExtractBracedBlock()
             // skip all LaTeX/TeX commands
             if (iscmdchar(*m_pPtr)) {
                 // ignore the content of \begin{...} and \end{...}
-                if (str_startswith(m_pPtr, "begin{") || str_startswith(m_pPtr, "end{")) {
-                    m_pPtr = strchr(m_pPtr, '{') + 1;
+                if (wstr_startswith(m_pPtr, L"begin{") || wstr_startswith(m_pPtr, L"end{")) {
+                    m_pPtr = wcschr(m_pPtr, '{') + 1;
                     ExtractBracedBlock();
                     addsingleNL(result, &rptr);
                     break;
                 }
                 // convert \item to a single dash
-                if (str_startswith(m_pPtr, "item") && !iscmdchar(*(m_pPtr + 4))) {
+                if (wstr_startswith(m_pPtr, L"item") && !iscmdchar(*(m_pPtr + 4))) {
                     m_pPtr += 4;
                     addsingleNL(result, &rptr);
                     *rptr++ = '-';
@@ -87,8 +97,8 @@ char *CTeXFilter::ExtractBracedBlock()
                 for (; iscmdchar(*m_pPtr); m_pPtr++);
                 skipspace(m_pPtr);
                 // ignore command parameters in brackets
-                if (*m_pPtr == '[' && strchr(m_pPtr, ']')) {
-                    m_pPtr = strchr(m_pPtr, ']') + 1;
+                if (*m_pPtr == '[' && wcschr(m_pPtr, ']')) {
+                    m_pPtr = wcschr(m_pPtr, ']') + 1;
                 }
                 break;
             }
@@ -97,9 +107,9 @@ char *CTeXFilter::ExtractBracedBlock()
             if (*m_pPtr == ',')  { addsinglespace(result, &rptr); m_pPtr++; break; }
             if (*m_pPtr == '>')  { *rptr++ = '\t'; m_pPtr++; break; }
             // TODO: handle more international characters
-            if (str_startswith(m_pPtr, "'e")) { *rptr++ = 'é'; m_pPtr += 2; break; }
-            if (str_startswith(m_pPtr, "`e")) { *rptr++ = 'è'; m_pPtr += 2; break; }
-            if (str_startswith(m_pPtr, "`a")) { *rptr++ = 'à'; m_pPtr += 2; break; }
+            if (wstr_startswith(m_pPtr, L"'e")) { *rptr++ = L'Ã©'; m_pPtr += 2; break; }
+            if (wstr_startswith(m_pPtr, L"`e")) { *rptr++ = L'Ã¨'; m_pPtr += 2; break; }
+            if (wstr_startswith(m_pPtr, L"`a")) { *rptr++ = L'Ã '; m_pPtr += 2; break; }
             if (*m_pPtr != '"')
                 break;
             m_pPtr++;
@@ -107,12 +117,12 @@ char *CTeXFilter::ExtractBracedBlock()
         case '"':
             // TODO: handle more international characters
             switch (*m_pPtr++) {
-            case 'a': *rptr++ = 'ä'; break;
-            case 'A': *rptr++ = 'Ä'; break;
-            case 'o': *rptr++ = 'ö'; break;
-            case 'O': *rptr++ = 'Ö'; break;
-            case 'u': *rptr++ = 'ü'; break;
-            case 'U': *rptr++ = 'Ü'; break;
+            case 'a': *rptr++ = L'Ã¤'; break;
+            case 'A': *rptr++ = L'Ã„'; break;
+            case 'o': *rptr++ = L'Ã¶'; break;
+            case 'O': *rptr++ = L'Ã–'; break;
+            case 'u': *rptr++ = L'Ã¼'; break;
+            case 'U': *rptr++ = L'Ãœ'; break;
             case '`': case '\'': *rptr++ = '"'; break;
             default: *rptr++ = *(m_pPtr - 1); break;
             }
@@ -127,12 +137,12 @@ char *CTeXFilter::ExtractBracedBlock()
             break;
         case '[':
             // ignore command parameters in brackets
-            if (strchr(m_pPtr, ']') && strchr(m_pPtr, ']') < strchr(m_pPtr, '\n'))
-                m_pPtr = strchr(m_pPtr, ']') + 1;
+            if (wcschr(m_pPtr, ']') && wcschr(m_pPtr, ']') < wcschr(m_pPtr, '\n'))
+                m_pPtr = wcschr(m_pPtr, ']') + 1;
             break;
         case '%':
             // ignore comments until the end of line
-            m_pPtr = strchr(m_pPtr, '\n') ? strchr(m_pPtr, '\n') + 1 : m_pPtr + strlen(m_pPtr);
+            m_pPtr = wcschr(m_pPtr, '\n') ? wcschr(m_pPtr, '\n') + 1 : m_pPtr + wstr_len(m_pPtr);
             break;
         case '&':
             *rptr++ = '\t';
@@ -167,7 +177,7 @@ char *CTeXFilter::ExtractBracedBlock()
 
 HRESULT CTeXFilter::GetNextChunkValue(CChunkValue &chunkValue)
 {
-    char *start, *end;
+    WCHAR *start, *end;
 
 ContinueParsing:
     if (!*m_pPtr && m_state == STATE_TEX_PREAMBLE) {
@@ -213,23 +223,17 @@ ContinueParsing:
             goto ContinueParsing;
         m_pPtr++;
 
-        if (!strncmp(start, "author", end - start) || !strncmp(start, "title", end - start)) {
-            WCHAR *value = multibyte_to_wstr(ExtractBracedBlock(), CP_ACP);
-            chunkValue.SetTextValue(*start == 'a' ? PKEY_Author : PKEY_Title, value);
-            free(value);
+        if (!wcsncmp(start, L"author", end - start) || !wcsncmp(start, L"title", end - start)) {
+            chunkValue.SetTextValue(*start == 'a' ? PKEY_Author : PKEY_Title, ExtractBracedBlock());
             return S_OK;
         }
 
-        if (!strncmp(start, "begin", end - start) && str_eq(ExtractBracedBlock(), "document"))
+        if (!wcsncmp(start, L"begin", end - start) && wstr_eq(ExtractBracedBlock(), L"document"))
             m_state = STATE_TEX_CONTENT;
         goto ContinueParsing;
     case STATE_TEX_CONTENT:
-        {
-            WCHAR *content = multibyte_to_wstr(ExtractBracedBlock(), CP_ACP);
-            chunkValue.SetTextValue(PKEY_Search_Contents, content, CHUNK_TEXT);
-            free(content);
-            return S_OK;
-        }
+        chunkValue.SetTextValue(PKEY_Search_Contents, ExtractBracedBlock(), CHUNK_TEXT);
+        return S_OK;
     default:
         return FILTER_E_END_OF_CHUNKS;
     }
