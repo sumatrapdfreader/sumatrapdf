@@ -34,7 +34,7 @@ public:
     {
         if (m_size>=m_allocsize) {
             m_allocsize += ALLOC_INCREMENT;
-            if (INT_MAX / sizeof(_Ty) >= m_allocsize) abort();
+            if (m_allocsize >= INT_MAX / sizeof(_Ty)) abort();
             m_data = (_Ty *)realloc(m_data, sizeof(_Ty) * m_allocsize);
             if (!m_data) abort();
         }
@@ -45,7 +45,7 @@ public:
     {
         if (s>m_allocsize) {
             m_allocsize = s+ALLOC_INCREMENT-s%ALLOC_INCREMENT;
-            if (INT_MAX / sizeof(_Ty) >= m_allocsize) abort();
+            if (m_allocsize >= INT_MAX / sizeof(_Ty)) abort();
             m_data = (_Ty *)realloc(m_data, sizeof(_Ty) * m_allocsize);
             if (!m_data) abort();
         }
