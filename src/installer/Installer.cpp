@@ -1054,6 +1054,7 @@ void OnButtonStartSumatra()
     HANDLE h = CreateProcessHelper(s);
     CloseHandle(h);
     free(s);
+    SendMessage(gHwndFrame, WM_CLOSE, 0, 0);
 }
 
 typedef struct {

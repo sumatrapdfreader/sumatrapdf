@@ -243,6 +243,14 @@ def build_installer_for_testing():
   fo.close()
   return installer_exe
 
+def verify_started_in_right_directory():
+  p1 = os.path.join("scripts", "build-release.py")
+  srcdir = os.getcwd()
+  p2 = os.path.join(srcdir, "scripts", "build-release.py")
+  if not (os.path.exists(p1) and os.path.exists(p2)):
+    print("This script must be run from top of the source tree")
+    sys.exit(1)
+
 def main():
   log("Starting build-release.py")
 
@@ -257,6 +265,7 @@ def main():
     usage()
 
   srcdir = os.getcwd()
+  verify_started_in_right_directory()
 
   if build_test_installer:
     build_installer_for_testing()
