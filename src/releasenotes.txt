@@ -3,10 +3,12 @@ the release notes, as we make them, to make the release process easier.
 
 Next version:
 
+* improved zoom performance (zooming to 6400% no longer crashes)
 * improved text selection and copying. We now mimic the way a browser
   or Adobe Reader works: just select text with mouse and use Ctrl-C
   to copy it to a clipboard
-* Shift-Left Mouse now scrolls the document
+* Shift+Left Mouse now scrolls the document, Ctrl+Left mouse still
+  creates a rectangular selection (for copying images)
 * 'c' shortcut toggles continuous mode
 * '+' / '*' on the numeric keyboard now do zoom and rotation
 * added toolbar icons for Fit Page and Fit Width and updated
@@ -19,17 +21,17 @@ Next version:
   full screen mode, to make it more discoverable.
 * text find uses less memory
 * a new, improved installer
-* it's now possible to open multiple files at once
 * further printing improvements
 * translation updates
 * updated to latest mupdf for misc bugfixes and improvements
 * use libjpeg-turbo library instead of libjpeg, for faster decoding
   of some PDFs
-* updated openjpeg library to version 1.4
-* updated freetype library to version 2.4.4
-* (?) added IFilter for PDFs to support searching PDFs in Windows Search.
-  It's not included with Sumatra but is available as a separate download.
+* updated openjpeg library to version 1.4 and freetype to version 2.4.4
 
+* new IFilter for PDF and LaTeX to support searching document contents with
+  Windows Search (not included with SumatraPDF but available as a separate download(?))
+* new browser plugin for Mozilla Firefox, Google Chrome and Opera for displaying
+  PDF documents with SumatraPDF inside the browser (not yet included in the installer)
 
 1.2 (2010-11-26):
 

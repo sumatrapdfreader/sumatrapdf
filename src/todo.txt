@@ -9,8 +9,6 @@ Long term todo:
 * intelligent resizing so that the window takes as much space as possible on the
   screen (kind of like maximize, but doesn't actually maximizes the window but
   takes max dx or dy space available and proportional amount of the other axis)
-* find improvements:
-  * better/different buttons for next/prev find
 * move DisplayState into DisplayModel and use it directly, instead of 
   duplicating the fields in DisplayModel. Rename to SerializedState.
 
