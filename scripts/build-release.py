@@ -54,9 +54,7 @@ if upload or upload_tmp:
     print "awscreds.py file needed with access and secret globals for aws access"
     sys.exit(1)
 
-TESTING = False
-
-SCRIPT_DIR = os.path.dirname(__file__)
+SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 if SCRIPT_DIR:
   SCRIPT_DIR = os.path.split(SCRIPT_DIR)[0]
 else:
@@ -279,7 +277,7 @@ def main():
     ensure_s3_doesnt_exist(remote_installer_exe)
 
   objdir = "obj-rel"
-  if not TESTING and os.path.exists(objdir):
+  if not testing and os.path.exists(objdir):
     shutil.rmtree(objdir, ignore_errors=True)
 
   #run_cmd_throw("nmake", "-f", "makefile.msvc", "CFG=rel", "cleanall")
@@ -313,10 +311,6 @@ def main():
   local_installer = os.path.join(builds_dir, "Installer.exe")
   local_installer_pdb = os.path.join(builds_dir, "Installer.pdb")
 
-  stripreloc = os.path.join(SCRIPT_DIR, "bin", "StripReloc")
-  builds_dir_rel = os.path.join("src", "builds", ver)
-  run_cmd_throw(stripreloc, os.path.join(builds_dir_rel, "Installer.exe"))
-
   shutil.copy(tmp_exe, local_exe)
   shutil.copy(tmp_exe, local_exe_uncompr)
   shutil.copy(tmp_pdb, local_pdb)
@@ -324,6 +318,9 @@ def main():
   shutil.copy(tmp_installer_pdb, local_installer_pdb)
 
   os.chdir(builds_dir)
+
+  stripreloc = os.path.join(SCRIPT_DIR, "bin", "StripReloc")
+  run_cmd_throw(stripreloc, "Installer.exe")
 
   mpress = os.path.join(SCRIPT_DIR, "bin", "mpress")
   run_cmd_throw(mpress, "-s", "-r", "SumatraPDF-%s.exe" % ver)
