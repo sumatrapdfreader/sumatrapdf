@@ -345,11 +345,11 @@ fixuptextspan(fz_textspan *head)
 			switch (span->text[i].c)
 			{
 			/* recombine characters and their accents */
-			case 0x00A8: /* Â¨ */
-			case 0x00B4: /* Â´ */
+			case 0x00A8: /* ¨ */
+			case 0x00B4: /* ´ */
 			case 0x0060: /* ` */
 			case 0x005E: /* ^ */
-			case 0x02DA: /* Â° */
+			case 0x02DA: /* ° */
 				if (span->next && span->next->len > 0 && (i + 1 == span->len || i + 2 == span->len && span->text[i + 1].c == 32))
 				{
 					mergetwospans(span);

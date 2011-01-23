@@ -78,6 +78,7 @@ SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "UNICODE" /D "_UNICODE"
 INSTALLER_CFLAGS = $(INSTALLER_CFLAGS) /D "UNICODE" /D "_UNICODE"
 !endif
 
+BROWSER_PLUGIN_CFLAGS = $(SUMATRA_CFLAGS) /wd4819
 PDFFILTER_CFLAGS = $(SUMATRA_CFLAGS)
 
 LDFLAGS = $(LDFLAGS) 
@@ -192,7 +193,7 @@ $(BROWSER_PLUGIN): $(BROWSER_PLUGIN_OBJS)
 
 # browserplugin directory
 {src\browserplugin}.c{$(O)}.obj::
-	$(CC) /TC $(PDFFILTER_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
+	$(CC) /TC $(BROWSER_PLUGIN_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
 
 # IFilter directory
 {src\ifilter}.cpp{$(O)}.obj::

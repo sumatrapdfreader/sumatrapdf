@@ -1,4 +1,4 @@
-/* (Minimal) SumatraPDF Browser Plugin - Copyright (C) 2010-2011  Simon BÃ¼nzli */
+/* (Minimal) SumatraPDF Browser Plugin - Copyright (C) 2010-2011  Simon Bünzli */
 
 // TODO: Firefox never even loads this DLL, if it finds nppdf32.dll in its own plugins directory
 

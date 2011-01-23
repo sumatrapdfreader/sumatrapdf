@@ -2928,14 +2928,14 @@ static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode,
 
             SizeD pSize = pdfEngine->pageSize(pageNo);
             int rotation = pdfEngine->pageRotation(pageNo);
-            // Turn the document by 90Â° if it isn't in portrait mode
+            // Turn the document by 90° if it isn't in portrait mode
             if (pSize.dx() > pSize.dy()) {
                 rotation += 90;
                 pSize = SizeD(pSize.dy(), pSize.dx());
             }
             // make sure not to print upside-down
             rotation = (rotation % 180) == 0 ? 0 : 270;
-            // finally turn the page by (another) 90Â° in landscape mode
+            // finally turn the page by (another) 90° in landscape mode
             if (!bPrintPortrait) {
                 rotation = (rotation + 90) % 360;
                 pSize = SizeD(pSize.dy(), pSize.dx());
