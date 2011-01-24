@@ -6081,7 +6081,10 @@ InitMouseWheelInfo:
             break;
 
         case WM_APP_FIND_END:
-            if (wParam) {
+            if (!win->dm) {
+                // the document was closed while finding
+                WindowInfo_ShowMessage_Asynch(win, NULL, false);
+            } else if (wParam) {
                 bool wasModified = !!lParam;
                 WindowInfo_ShowSearchResult(win, (PdfSel *)wParam, wasModified);
                 WindowInfo_HideFindStatus(win);
