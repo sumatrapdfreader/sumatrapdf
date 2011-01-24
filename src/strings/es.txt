@@ -10,6 +10,7 @@ Contributor: Jose Virgili
 Contributor: LinoSP [http://reactos.wordpress.com]
 Contributor: pragmart [http://putolinux.wordpress.com]
 Contributor: Pedro Sanchez
+Contributor: Carlos Luna
 
 &About
 &Acerca de...
@@ -299,6 +300,12 @@ Ajustar Página
 Fit Width
 Ancho de Página
 
+Fit Width and Show Pages Continuously
+Ajustar el ancho de página y mostrar las páginas de forma continua
+
+Fit a Single Page
+Ajustar a una sola página
+
 Found text at page %d
 Se encontró el texto en la página %d
 
@@ -392,8 +399,14 @@ Escalado de página
 Page:
 Página:
 
+Please include the following file in your crash report:
+Por favor incluya el siguiente archivo en su reporte de error:
+
 Please wait - rendering...
 Renderizando - Espere por favor...
+
+Pr&esentation\tCtrl-L
+Pr&esentación\tCtrl-L
 
 Previous Page
 Página anterior
@@ -445,6 +458,12 @@ Tema:
 
 SumatraPDF Options
 Opciones de SumatraPDF
+
+SumatraPDF Update
+Actualizar SumatraPDF
+
+SumatraPDF crashed
+SumatraPDF falló
 
 SumatraPDF is your main PDF reader
 SumatraPDF es el lector PDF predeterminado
@@ -499,12 +518,4 @@ copiado de texto
 
 printing document
 impresión de documento
-
-# Untranslated:
-#Fit Width and Show Pages Continuously
-#Fit a Single Page
-#Please include the following file in your crash report:
-#Pr&esentation\tCtrl-L
-#SumatraPDF Update
-#SumatraPDF crashed
 
