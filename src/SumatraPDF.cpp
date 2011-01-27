@@ -1841,13 +1841,12 @@ static void OnUrlDownloaded(WindowInfo *win, HttpReqCtx *ctx)
         return;
     }
 
-    // see http://code.google.com/p/sumatrapdf/issues/detail?id=725
-    // if a user configures os-wide proxy that is not regular ie proxy
+    // See http://code.google.com/p/sumatrapdf/issues/detail?id=725
+    // If a user configures os-wide proxy that is not regular ie proxy
     // (which we pick up) we might get complete garbage in response to
-    // our query and in might accidentally contain number which might
-    // be bigger than our version number which will make program ask
-    // to upgrade every time
-    // to fix that, we reject text that doesn't look like comes from us
+    // our query and it might accidentally contain a number bigger than
+    // our version number which will make us ask to upgrade every time.
+    // To fix that, we reject text that doesn't look like a valid version number.
     char *txt = (char*)ctx->data.getData();
     if (!ValidProgramVersion(txt)) {
         // notify the user about the error during a manual update check
