@@ -4,6 +4,7 @@
 #include "SumatraPDF.h"
 #include <shlobj.h>
 #include <windowsx.h>
+#include <wininet.h>
 
 #include "WindowInfo.h"
 #include "RenderCache.h"
@@ -1849,6 +1850,9 @@ static void OnUrlDownloaded(WindowInfo *win, HttpReqCtx *ctx)
     // to fix that, we reject text that doesn't look like comes from us
     char *txt = (char*)ctx->data.getData();
     if (!ValidProgramVersion(txt)) {
+        // notify the user about the error during a manual update check
+        if (!ctx->silent)
+            PostMessage(ctx->hwndToNotify, ctx->msg, 0, ERROR_INTERNET_INVALID_URL);
         goto Exit;
     }
 
