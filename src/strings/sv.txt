@@ -11,6 +11,7 @@ Contributor: Cecilia B
 Contributor: Sebastian Rasmussen
 Contributor: Simon B.
 Contributor: Tommy G.
+Contributor: Mattias D.
 
 &About
 &Om
@@ -300,6 +301,12 @@ Anpassa efter helsida
 Fit Width
 Anpassa efter bredd
 
+Fit Width and Show Pages Continuously
+Anpassa bredd och visa sidor fortlöpande
+
+Fit a Single Page
+Anpassa till helsida
+
 Found text at page %d
 Hittade text på sidan %d
 
@@ -393,8 +400,14 @@ Skala om vid utskrift
 Page:
 Sida:
 
+Please include the following file in your crash report:
+Vid felrapportering bifoga följande fil:
+
 Please wait - rendering...
 Ett ögonblick - förbereder...
+
+Pr&esentation\tCtrl-L
+Pr&esentation\tCtrl-L
 
 Previous Page
 Föregående sida
@@ -446,6 +459,12 @@ Subject:
 
 SumatraPDF Options
 SumatraPDF Inställningar
+
+SumatraPDF Update
+SumatraPDF Uppdatering
+
+SumatraPDF crashed
+SumatraPDF avslutades oväntat
 
 SumatraPDF is your main PDF reader
 SumatraPDF är din valda PDF-läsare
@@ -500,12 +519,4 @@ kopierar text
 
 printing document
 skriver ut dokumentet
-
-# Untranslated:
-#Fit Width and Show Pages Continuously
-#Fit a Single Page
-#Please include the following file in your crash report:
-#Pr&esentation\tCtrl-L
-#SumatraPDF Update
-#SumatraPDF crashed
 
