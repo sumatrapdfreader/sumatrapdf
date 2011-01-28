@@ -1108,7 +1108,10 @@ fz_smoothscalepixmap(fz_pixmap *src, float x, float y, float w, float h)
 
 		temp_span = contrib_cols->count * src->n;
 		temp_rows = contrib_rows->max_len;
-		temp = fz_malloc(sizeof(int)*temp_span*temp_rows);
+		/* SumatraPDF: guard against integer overflows */
+		if (temp_span <= 0 || temp_rows > INT_MAX / temp_span)
+			goto cleanup;
+		temp = fz_calloc(temp_span*temp_rows, sizeof(int));
 		if (temp == NULL)
 			goto cleanup;
 		switch (src->n)

@@ -349,7 +349,7 @@ resizecode(pdf_function *func, int newsize)
 	if (newsize >= func->u.p.cap)
 	{
 		func->u.p.cap = func->u.p.cap + 64;
-		func->u.p.code = fz_realloc(func->u.p.code, func->u.p.cap * sizeof(psobj));
+		func->u.p.code = fz_realloc(func->u.p.code, func->u.p.cap, sizeof(psobj));
 	}
 }
 
@@ -1046,7 +1046,7 @@ loadsamplefunc(pdf_function *func, pdf_xref *xref, fz_obj *dict, int num, int ge
 
 	pdf_logrsrc("samplecount %d\n", samplecount);
 
-	func->u.sa.samples = fz_malloc(samplecount * sizeof(float));
+	func->u.sa.samples = fz_calloc(samplecount, sizeof(float));
 
 	error = pdf_openstream(&stream, xref, num, gen);
 	if (error)
@@ -1322,11 +1322,12 @@ loadstitchingfunc(pdf_function *func, pdf_xref *xref, fz_obj *dict)
 
 		pdf_logrsrc("k %d\n", func->u.st.k);
 
-		func->u.st.funcs = fz_malloc(func->u.st.k * sizeof (pdf_function*));
-		func->u.st.bounds = fz_malloc((func->u.st.k - 1) * sizeof (float));
-		func->u.st.encode = fz_malloc(func->u.st.k * 2 * sizeof (float));
+		func->u.st.funcs = fz_calloc(func->u.st.k, sizeof(pdf_function*));
+		func->u.st.bounds = fz_calloc(func->u.st.k - 1, sizeof(float));
+		func->u.st.encode = fz_calloc(func->u.st.k * 2, sizeof(float));
 		funcs = func->u.st.funcs;
 
+		func->u.st.k = 0; /* SumatraPDF: don't crash on an error */
 		for (i = 0; i < k; ++i)
 		{
 			sub = fz_arrayget(obj, i);
@@ -1335,6 +1336,7 @@ loadstitchingfunc(pdf_function *func, pdf_xref *xref, fz_obj *dict)
 				return fz_rethrow(error, "cannot load sub function %d (%d %d R)", i, fz_tonum(sub), fz_togen(sub));
 			if (funcs[i]->m != 1 || funcs[i]->n != funcs[0]->n)
 				return fz_throw("sub function %d /Domain or /Range mismatch", i);
+			func->u.st.k++; /* SumatraPDF: don't crash on an error */
 		}
 
 		if (!func->n)

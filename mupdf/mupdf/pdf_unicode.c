@@ -70,7 +70,7 @@ pdf_loadtounicode(pdf_fontdesc *font, pdf_xref *xref,
 		/* TODO one-to-many mappings */
 
 		font->ncidtoucs = 256;
-		font->cidtoucs = fz_malloc(256 * sizeof(unsigned short));
+		font->cidtoucs = fz_calloc(256, sizeof(unsigned short));
 
 		for (i = 0; i < 256; i++)
 		{

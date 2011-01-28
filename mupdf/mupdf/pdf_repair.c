@@ -217,7 +217,7 @@ pdf_repairxref(pdf_xref *xref, char *buf, int bufsize)
 
 	listlen = 0;
 	listcap = 1024;
-	list = fz_malloc(listcap * sizeof(struct entry));
+	list = fz_calloc(listcap, sizeof(struct entry));
 
 	/* look for '%PDF' version marker within first kilobyte of file */
 	n = fz_read(xref->file, (unsigned char *)buf, MAX(bufsize, 1024));
@@ -276,7 +276,7 @@ pdf_repairxref(pdf_xref *xref, char *buf, int bufsize)
 			if (listlen + 1 == listcap)
 			{
 				listcap = (listcap * 3) / 2;
-				list = fz_realloc(list, listcap * sizeof(struct entry));
+				list = fz_realloc(list, listcap, sizeof(struct entry));
 			}
 
 			list[listlen].num = num;

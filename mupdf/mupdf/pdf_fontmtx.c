@@ -26,7 +26,7 @@ pdf_addhmtx(pdf_fontdesc *font, int lo, int hi, int w)
 	if (font->nhmtx + 1 >= font->hmtxcap)
 	{
 		font->hmtxcap = font->hmtxcap + 16;
-		font->hmtx = fz_realloc(font->hmtx, sizeof(pdf_hmtx) * font->hmtxcap);
+		font->hmtx = fz_realloc(font->hmtx, font->hmtxcap, sizeof(pdf_hmtx));
 	}
 
 	font->hmtx[font->nhmtx].lo = lo;
@@ -41,7 +41,7 @@ pdf_addvmtx(pdf_fontdesc *font, int lo, int hi, int x, int y, int w)
 	if (font->nvmtx + 1 >= font->vmtxcap)
 	{
 		font->vmtxcap = font->vmtxcap + 16;
-		font->vmtx = fz_realloc(font->vmtx, sizeof(pdf_vmtx) * font->vmtxcap);
+		font->vmtx = fz_realloc(font->vmtx, font->vmtxcap, sizeof(pdf_vmtx));
 	}
 
 	font->vmtx[font->nvmtx].lo = lo;

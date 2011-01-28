@@ -6,14 +6,14 @@ fz_newarray(int initialcap)
 	fz_obj *obj;
 	int i;
 
-	obj = fz_malloc(sizeof (fz_obj));
+	obj = fz_malloc(sizeof(fz_obj));
 	obj->refs = 1;
 	obj->kind = FZ_ARRAY;
 
 	obj->u.a.len = 0;
 	obj->u.a.cap = initialcap > 1 ? initialcap : 6;
 
-	obj->u.a.items = fz_malloc(sizeof (fz_obj*) * obj->u.a.cap);
+	obj->u.a.items = fz_calloc(obj->u.a.cap, sizeof(fz_obj*));
 	for (i = 0; i < obj->u.a.cap; i++)
 		obj->u.a.items[i] = nil;
 
@@ -94,7 +94,7 @@ fz_arraypush(fz_obj *obj, fz_obj *item)
 		{
 			int i;
 			obj->u.a.cap = (obj->u.a.cap * 3) / 2;
-			obj->u.a.items = fz_realloc(obj->u.a.items, sizeof (fz_obj*) * obj->u.a.cap);
+			obj->u.a.items = fz_realloc(obj->u.a.items, obj->u.a.cap, sizeof(fz_obj*));
 			for (i = obj->u.a.len ; i < obj->u.a.cap; i++)
 				obj->u.a.items[i] = nil;
 		}
@@ -116,7 +116,7 @@ fz_arrayinsert(fz_obj *obj, fz_obj *item)
 		{
 			int i;
 			obj->u.a.cap = (obj->u.a.cap * 3) / 2;
-			obj->u.a.items = fz_realloc(obj->u.a.items, sizeof (fz_obj*) * obj->u.a.cap);
+			obj->u.a.items = fz_realloc(obj->u.a.items, obj->u.a.cap, sizeof(fz_obj*));
 			for (i = obj->u.a.len ; i < obj->u.a.cap; i++)
 				obj->u.a.items[i] = nil;
 		}

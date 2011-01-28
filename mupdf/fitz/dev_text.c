@@ -70,7 +70,7 @@ fz_addtextcharimp(fz_textspan *span, int c, fz_bbox bbox)
 	if (span->len + 1 >= span->cap)
 	{
 		span->cap = span->cap > 1 ? (span->cap * 3) / 2 : 80;
-		span->text = fz_realloc(span->text, sizeof(fz_textchar) * span->cap);
+		span->text = fz_realloc(span->text, span->cap, sizeof(fz_textchar));
 	}
 	span->text[span->len].c = c;
 	span->text[span->len].bbox = bbox;
@@ -237,7 +237,7 @@ ensurespanlength(fz_textspan *span, int mincap)
 	if (span->cap < mincap)
 	{
 		span->cap = mincap * 3 / 2;
-		span->text = fz_realloc(span->text, span->cap * sizeof(fz_textchar));
+		span->text = fz_realloc(span->text, span->cap, sizeof(fz_textchar));
 	}
 }
 

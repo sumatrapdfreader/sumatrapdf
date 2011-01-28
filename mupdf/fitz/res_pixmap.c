@@ -28,7 +28,9 @@ fz_newpixmapwithdata(fz_colorspace *colorspace, int x, int y, int w, int h, unsi
 	}
 	else
 	{
-		pix->samples = fz_malloc(pix->w * pix->h * pix->n);
+		/* SumatraPDF: abort on integer overflow */
+		if (pix->h > 0 && pix->w > INT_MAX / pix->h) abort();
+		pix->samples = fz_calloc(pix->w * pix->h, pix->n);
 		pix->freesamples = 1;
 	}
 

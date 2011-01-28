@@ -36,7 +36,7 @@ fz_dropbuffer(fz_buffer *buf)
 void
 fz_resizebuffer(fz_buffer *buf, int size)
 {
-	buf->data = fz_realloc(buf->data, size);
+	buf->data = fz_realloc(buf->data, size, 1);
 	buf->cap = size;
 	if (buf->len > buf->cap)
 		buf->len = buf->cap;

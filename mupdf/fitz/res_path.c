@@ -23,7 +23,7 @@ fz_clonepath(fz_path *old)
 
 	path->len = old->len;
 	path->cap = path->len;
-	path->els = fz_malloc(path->cap * sizeof(fz_pathel));
+	path->els = fz_calloc(path->cap, sizeof(fz_pathel));
 	memcpy(path->els, old->els, sizeof(fz_pathel) * path->len);
 
 	return path;
@@ -43,7 +43,7 @@ growpath(fz_path *path, int n)
 		return;
 	while (path->len + n > path->cap)
 		path->cap = path->cap + 36;
-	path->els = fz_realloc(path->els, sizeof (fz_pathel) * path->cap);
+	path->els = fz_realloc(path->els, path->cap, sizeof(fz_pathel));
 }
 
 void

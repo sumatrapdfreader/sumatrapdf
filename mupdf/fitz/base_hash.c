@@ -52,7 +52,7 @@ fz_newhash(int initialsize, int keylen)
 	table->keylen = keylen;
 	table->size = initialsize;
 	table->load = 0;
-	table->ents = fz_malloc(sizeof(fz_hashentry) * table->size);
+	table->ents = fz_calloc(table->size, sizeof(fz_hashentry));
 	memset(table->ents, 0, sizeof(fz_hashentry) * table->size);
 
 	return table;
@@ -104,7 +104,7 @@ fz_resizehash(fz_hashtable *table, int newsize)
 		return;
 	}
 
-	table->ents = fz_malloc(sizeof(fz_hashentry) * newsize);
+	table->ents = fz_calloc(newsize, sizeof(fz_hashentry));
 	memset(table->ents, 0, sizeof(fz_hashentry) * newsize);
 	table->size = newsize;
 	table->load = 0;

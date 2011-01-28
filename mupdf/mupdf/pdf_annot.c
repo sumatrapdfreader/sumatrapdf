@@ -231,7 +231,7 @@ pdf_loadannots(pdf_annot **headp, pdf_xref *xref, fz_obj *annots)
 					continue;
 				}
 
-				annot = fz_malloc(sizeof (pdf_annot));
+				annot = fz_malloc(sizeof(pdf_annot));
 				annot->obj = fz_keepobj(obj);
 				annot->rect = pdf_torect(rect);
 				annot->ap = form;

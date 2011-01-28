@@ -223,11 +223,11 @@ gatherdimensions(int page, fz_obj *pageref, fz_obj *pageobj)
 
 	dims++;
 
-	dim = fz_realloc(dim, dims * sizeof (struct info));
+	dim = fz_realloc(dim, dims, sizeof(struct info));
 	dim[dims - 1].page = page;
 	dim[dims - 1].pageref = pageref;
 	dim[dims - 1].pageobj = pageobj;
-	dim[dims - 1].u.dim.bbox = fz_malloc(sizeof (fz_rect));
+	dim[dims - 1].u.dim.bbox = fz_malloc(sizeof(fz_rect));
 	memcpy(dim[dims - 1].u.dim.bbox, &bbox, sizeof (fz_rect));
 
 	return;
@@ -267,7 +267,7 @@ gatherfonts(int page, fz_obj *pageref, fz_obj *pageobj, fz_obj *dict)
 
 		fonts++;
 
-		font = fz_realloc(font, fonts * sizeof (struct info));
+		font = fz_realloc(font, fonts, sizeof(struct info));
 		font[fonts - 1].page = page;
 		font[fonts - 1].pageref = pageref;
 		font[fonts - 1].pageobj = pageobj;
@@ -335,7 +335,7 @@ gatherimages(int page, fz_obj *pageref, fz_obj *pageobj, fz_obj *dict)
 
 		images++;
 
-		image = fz_realloc(image, images * sizeof (struct info));
+		image = fz_realloc(image, images, sizeof(struct info));
 		image[images - 1].page = page;
 		image[images - 1].pageref = pageref;
 		image[images - 1].pageobj = pageobj;
@@ -392,7 +392,7 @@ gatherforms(int page, fz_obj *pageref, fz_obj *pageobj, fz_obj *dict)
 
 		forms++;
 
-		form = fz_realloc(form, forms * sizeof (struct info));
+		form = fz_realloc(form, forms, sizeof(struct info));
 		form[forms - 1].page = page;
 		form[forms - 1].pageref = pageref;
 		form[forms - 1].pageobj = pageobj;
@@ -436,7 +436,7 @@ gatherpsobjs(int page, fz_obj *pageref, fz_obj *pageobj, fz_obj *dict)
 
 		psobjs++;
 
-		psobj = fz_realloc(psobj, psobjs * sizeof (struct info));
+		psobj = fz_realloc(psobj, psobjs, sizeof(struct info));
 		psobj[psobjs - 1].page = page;
 		psobj[psobjs - 1].pageref = pageref;
 		psobj[psobjs - 1].pageobj = pageobj;
@@ -478,7 +478,7 @@ gathershadings(int page, fz_obj *pageref, fz_obj *pageobj, fz_obj *dict)
 
 		shadings++;
 
-		shading = fz_realloc(shading, shadings * sizeof (struct info));
+		shading = fz_realloc(shading, shadings, sizeof(struct info));
 		shading[shadings - 1].page = page;
 		shading[shadings - 1].pageref = pageref;
 		shading[shadings - 1].pageobj = pageobj;
@@ -545,7 +545,7 @@ gatherpatterns(int page, fz_obj *pageref, fz_obj *pageobj, fz_obj *dict)
 
 		patterns++;
 
-		pattern = fz_realloc(pattern, patterns * sizeof (struct info));
+		pattern = fz_realloc(pattern, patterns, sizeof(struct info));
 		pattern[patterns - 1].page = page;
 		pattern[patterns - 1].pageref = pageref;
 		pattern[patterns - 1].pageobj = pageobj;

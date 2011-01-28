@@ -82,14 +82,14 @@ pdf_toucs2(fz_obj *src)
 
 	if (srclen > 2 && srcptr[0] == 254 && srcptr[1] == 255)
 	{
-		dstptr = dst = fz_malloc(((srclen - 2) / 2 + 1) * sizeof(short));
+		dstptr = dst = fz_calloc((srclen - 2) / 2 + 1, sizeof(short));
 		for (i = 2; i < srclen; i += 2)
 			*dstptr++ = (srcptr[i] << 8) | srcptr[i+1];
 	}
 
 	else
 	{
-		dstptr = dst = fz_malloc((srclen + 1) * sizeof(short));
+		dstptr = dst = fz_calloc(srclen + 1, sizeof(short));
 		for (i = 0; i < srclen; i++)
 			*dstptr++ = pdf_docencoding[srcptr[i]];
 	}

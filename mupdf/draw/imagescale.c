@@ -238,7 +238,7 @@ fz_scalepixmap(fz_pixmap *src, int xdenom, int ydenom)
 	oh = (src->h + ydenom - 1) / ydenom;
 	n = src->n;
 
-	buf = fz_malloc(ow * n * ydenom);
+	buf = fz_calloc(ow, n * ydenom);
 
 	dst = fz_newpixmap(src->colorspace, 0, 0, ow, oh);
 

@@ -12,7 +12,7 @@ struct fz_flate_s
 
 static void *zmalloc(void *opaque, unsigned int items, unsigned int size)
 {
-	return fz_malloc(items * size);
+	return fz_calloc(items, size);
 }
 
 static void zfree(void *opaque, void *ptr)

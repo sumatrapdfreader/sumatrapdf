@@ -236,7 +236,7 @@ pdf_newfontdesc(void)
 {
 	pdf_fontdesc *fontdesc;
 
-	fontdesc = fz_malloc(sizeof (pdf_fontdesc));
+	fontdesc = fz_malloc(sizeof(pdf_fontdesc));
 	fontdesc->refs = 1;
 
 	fontdesc->font = nil;
@@ -384,7 +384,7 @@ loadsimplefont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict)
 	else
 		fz_warn("freetype could not find any cmaps");
 
-	etable = fz_malloc(sizeof(unsigned short) * 256);
+	etable = fz_calloc(256, sizeof(unsigned short));
 	for (i = 0; i < 256; i++)
 	{
 		estrings[i] = nil;
@@ -734,7 +734,7 @@ loadcidfont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj *enco
 				goto cleanup;
 
 			fontdesc->ncidtogid = (buf->len) / 2;
-			fontdesc->cidtogid = fz_malloc(fontdesc->ncidtogid * sizeof(unsigned short));
+			fontdesc->cidtogid = fz_calloc(fontdesc->ncidtogid, sizeof(unsigned short));
 			for (i = 0; i < fontdesc->ncidtogid; i++)
 				fontdesc->cidtogid[i] = (buf->data[i * 2] << 8) + buf->data[i * 2 + 1];
 
@@ -1007,7 +1007,7 @@ pdf_makewidthtable(pdf_fontdesc *fontdesc)
 	}
 	font->widthcount ++;
 
-	font->widthtable = fz_malloc(sizeof(int) * font->widthcount);
+	font->widthtable = fz_calloc(font->widthcount, sizeof(int));
 	memset(font->widthtable, 0, sizeof(int) * font->widthcount);
 
 	for (i = 0; i < fontdesc->nhmtx; i++)

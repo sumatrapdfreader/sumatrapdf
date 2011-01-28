@@ -24,7 +24,7 @@ pdf_growmesh(fz_shade *shade, int amount)
 	while (shade->meshlen + amount > shade->meshcap)
 		shade->meshcap = (shade->meshcap * 3) / 2;
 
-	shade->mesh = fz_realloc(shade->mesh, sizeof(float) * shade->meshcap);
+	shade->mesh = fz_realloc(shade->mesh, shade->meshcap, sizeof(float));
 }
 
 static void
@@ -758,8 +758,8 @@ pdf_loadtype5shade(fz_shade *shade, pdf_xref *xref, fz_obj *dict,
 	else
 		ncomp = shade->cs->n;
 
-	ref = fz_malloc(p.vprow * sizeof(struct vertex));
-	buf = fz_malloc(p.vprow * sizeof(struct vertex));
+	ref = fz_calloc(p.vprow, sizeof(struct vertex));
+	buf = fz_calloc(p.vprow, sizeof(struct vertex));
 	first = 1;
 
 	while (fz_peekbyte(stream) != EOF)

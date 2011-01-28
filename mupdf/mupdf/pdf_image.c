@@ -128,7 +128,7 @@ pdf_loadimageimp(fz_pixmap **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict, fz
 	}
 
 	stride = (w * n * bpc + 7) / 8;
-	samples = fz_malloc(h * stride);
+	samples = fz_calloc(h, stride);
 
 	if (cstm)
 	{

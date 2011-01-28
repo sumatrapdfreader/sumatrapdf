@@ -311,7 +311,7 @@ growfontlist(pdf_fontlistMS *fl)
 	else
 		newcap = fl->cap * 2;
 
-	newitems = fz_realloc(fl->fontmap, sizeof(pdf_fontmapMS) * newcap);
+	newitems = fz_realloc(fl->fontmap, newcap, sizeof(pdf_fontmapMS));
 	if (!newitems)
 		return fz_rethrow(-1, "out of memory");;
 
@@ -507,7 +507,7 @@ parseTTCs(char *path)
 	}
 
 	numFonts = SWAPLONG(fontcollection.NumFonts);
-	offsettable = fz_malloc(numFonts * sizeof(ULONG));
+	offsettable = fz_calloc(numFonts, sizeof(ULONG));
 	if (offsettable == nil)
 	{
 		err = fz_throw("out of memory");

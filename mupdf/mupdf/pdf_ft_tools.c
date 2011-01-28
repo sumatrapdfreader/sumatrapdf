@@ -98,15 +98,15 @@ static void scan_Coverage(struct ft2vert_st *ret, const FT_Bytes top)
 	{
 	case 1: 
 		t->GlyphCount = BYTE2(s);
-		t->GlyphArray = fz_malloc(sizeof(t->GlyphArray[0]) * t->GlyphCount);
-		memset(t->GlyphArray, 0, sizeof(t->GlyphArray[0]) * t->GlyphCount);
+		t->GlyphArray = fz_calloc(t->GlyphCount, sizeof(t->GlyphArray[0]));
+		memset(t->GlyphArray, 0, t->GlyphCount * sizeof(t->GlyphArray[0]));
 		for (i = 0; i < t->GlyphCount; i++)
 			t->GlyphArray[i] = BYTE2(s);
 		break;
 	case 2:
 		t->RangeCount = BYTE2(s);
-		t->RangeRecord = fz_malloc(sizeof(t->RangeRecord[0]) * t->RangeCount);
-		memset(t->RangeRecord, 0, sizeof(t->RangeRecord[0]) * t->RangeCount);
+		t->RangeRecord = fz_calloc(t->RangeCount, sizeof(t->RangeRecord[0]));
+		memset(t->RangeRecord, 0, t->RangeCount * sizeof(t->RangeRecord[0]));
 		for (i = 0; i < t->RangeCount; i++)
 		{
 			t->RangeRecord[i].Start = BYTE2(s);
@@ -139,8 +139,8 @@ static void scan_SubTable(struct ft2vert_st *ret, const FT_Bytes top)
 		break;
 	case 2: /* SingleSubstFormat2 */
 		t->GlyphCount   = BYTE2(s);
-		t->Substitute = fz_malloc(sizeof(t->Substitute[0]) * t->GlyphCount);
-		memset(t->Substitute, 0, sizeof(t->Substitute[0]) * t->GlyphCount);
+		t->Substitute = fz_calloc(t->GlyphCount, sizeof(t->Substitute[0]));
+		memset(t->Substitute, 0, t->GlyphCount * sizeof(t->Substitute[0]));
 		for (i = 0; i < t->GlyphCount; i++)
 			t->Substitute[i] = BYTE2(s);
 		break;
@@ -163,8 +163,8 @@ static void scan_Lookup(struct ft2vert_st *ret, const FT_Bytes top)
 	SubTableCount = BYTE2(s);
 	SubTable      = BYTE2(s);
 
-	ret->SubTable = fz_malloc(sizeof(ret->SubTable[0]) * SubTableCount);
-	memset(ret->SubTable, 0, sizeof(ret->SubTable[0]) * SubTableCount);
+	ret->SubTable = fz_calloc(SubTableCount, sizeof(ret->SubTable[0]));
+	memset(ret->SubTable, 0, SubTableCount * sizeof(ret->SubTable[0]));
 	for (i = 0; i < SubTableCount; i++)
 		scan_SubTable(ret, top + SubTable);
 

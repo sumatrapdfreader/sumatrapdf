@@ -27,7 +27,7 @@ fz_newgel(void)
 	gel = fz_malloc(sizeof(fz_gel));
 	gel->cap = 512;
 	gel->len = 0;
-	gel->edges = fz_malloc(sizeof(fz_edge) * gel->cap);
+	gel->edges = fz_calloc(gel->cap, sizeof(fz_edge));
 
 	gel->clip.x0 = gel->clip.y0 = BBOX_MAX;
 	gel->clip.x1 = gel->clip.y1 = BBOX_MIN;
@@ -138,7 +138,7 @@ fz_insertgelraw(fz_gel *gel, int x0, int y0, int x1, int y1)
 
 	if (gel->len + 1 == gel->cap) {
 		gel->cap = gel->cap + 512;
-		gel->edges = fz_realloc(gel->edges, sizeof(fz_edge) * gel->cap);
+		gel->edges = fz_realloc(gel->edges, gel->cap, sizeof(fz_edge));
 	}
 
 	edge = &gel->edges[gel->len++];
@@ -295,7 +295,7 @@ fz_newael(void)
 	ael = fz_malloc(sizeof(fz_ael));
 	ael->cap = 64;
 	ael->len = 0;
-	ael->edges = fz_malloc(sizeof(fz_edge*) * ael->cap);
+	ael->edges = fz_calloc(ael->cap, sizeof(fz_edge*));
 	return ael;
 }
 
@@ -346,7 +346,7 @@ insertael(fz_ael *ael, fz_gel *gel, int y, int *e)
 	while (*e < gel->len && gel->edges[*e].y == y) {
 		if (ael->len + 1 == ael->cap) {
 			int newcap = ael->cap + 64;
-			fz_edge **newedges = fz_realloc(ael->edges, sizeof(fz_edge*) * newcap);
+			fz_edge **newedges = fz_realloc(ael->edges, newcap, sizeof(fz_edge*));
 			ael->edges = newedges;
 			ael->cap = newcap;
 		}

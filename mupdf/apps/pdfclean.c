@@ -241,7 +241,7 @@ static void renumberobjs(void)
 
 	/* Create new table for the reordered, compacted xref */
 	oldxref = xref->table;
-	xref->table = fz_malloc(xref->len * sizeof (pdf_xrefentry));
+	xref->table = fz_calloc(xref->len, sizeof(pdf_xrefentry));
 	xref->table[0] = oldxref[0];
 
 	/* Move used objects into the new compacted xref */
@@ -721,10 +721,10 @@ int main(int argc, char **argv)
 	fprintf(out, "%%PDF-%d.%d\n", xref->version / 10, xref->version % 10);
 	fprintf(out, "%%\316\274\341\277\246\n\n");
 
-	uselist = fz_malloc(sizeof (char) * (xref->len + 1));
-	ofslist = fz_malloc(sizeof (int) * (xref->len + 1));
-	genlist = fz_malloc(sizeof (int) * (xref->len + 1));
-	renumbermap = fz_malloc(sizeof (int) * (xref->len + 1));
+	uselist = fz_calloc(xref->len + 1, sizeof(char));
+	ofslist = fz_calloc(xref->len + 1, sizeof(int));
+	genlist = fz_calloc(xref->len + 1, sizeof(int));
+	renumbermap = fz_calloc(xref->len + 1, sizeof(int));
 
 	for (num = 0; num < xref->len; num++)
 	{

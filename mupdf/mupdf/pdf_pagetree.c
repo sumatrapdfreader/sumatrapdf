@@ -102,8 +102,8 @@ pdf_loadpagetreenode(pdf_xref *xref, fz_obj *node, struct info info)
 		{
 			fz_warn("found more pages than expected");
 			xref->pagecap ++;
-			xref->pagerefs = fz_realloc(xref->pagerefs, sizeof(fz_obj*) * xref->pagecap);
-			xref->pageobjs = fz_realloc(xref->pageobjs, sizeof(fz_obj*) * xref->pagecap);
+			xref->pagerefs = fz_realloc(xref->pagerefs, xref->pagecap, sizeof(fz_obj*));
+			xref->pageobjs = fz_realloc(xref->pageobjs, xref->pagecap, sizeof(fz_obj*));
 		}
 
 		xref->pagerefs[xref->pagelen] = fz_keepobj(node);
@@ -127,8 +127,8 @@ pdf_loadpagetree(pdf_xref *xref)
 
 	xref->pagecap = fz_toint(count);
 	xref->pagelen = 0;
-	xref->pagerefs = fz_malloc(sizeof(fz_obj*) * xref->pagecap);
-	xref->pageobjs = fz_malloc(sizeof(fz_obj*) * xref->pagecap);
+	xref->pagerefs = fz_calloc(xref->pagecap, sizeof(fz_obj*));
+	xref->pageobjs = fz_calloc(xref->pagecap, sizeof(fz_obj*));
 
 	info.resources = nil;
 	info.mediabox = nil;

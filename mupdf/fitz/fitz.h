@@ -139,8 +139,9 @@ void fz_catchimpx(fz_error cause, char *fmt, ...) __printflike(2, 3);
 #define CLAMP(x,a,b) ( (x) > (b) ? (b) : ( (x) < (a) ? (a) : (x) ) )
 
 /* memory allocation */
-void *fz_malloc(int n);
-void *fz_realloc(void *p, int n);
+void *fz_malloc(int size);
+void *fz_calloc(int count, int size);
+void *fz_realloc(void *p, int count, int size);
 void fz_free(void *p);
 char *fz_strdup(char *s);
 
