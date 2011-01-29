@@ -8,6 +8,7 @@ Lang: gr Greek (Ελληνικά)
 
 Contributor: Giorgos Dimopoulos (geodimo1985@gmail.com)
 Contributor: George Georgiou (geonetor@yahoo.gr)
+Contributor: Dimitris Mytilinaios
 
 &About
 &Σχετικά...
@@ -297,6 +298,12 @@ Fit Page
 Fit Width
 Πλάτος παραθύρου
 
+Fit Width and Show Pages Continuously
+Προσαρμογή Πλάτους και Εμφάνιση Σελίδων Συνεχόμενα
+
+Fit a Single Page
+Προσαρμογή μιας Σελίδας
+
 Found text at page %d
 Το κείμενο βρέθηκε στη σελίδα %d
 
@@ -390,8 +397,14 @@ Page scaling
 Page:
 Σελίδα:
 
+Please include the following file in your crash report:
+Παρακαλώ να συμπεριληφθεί το ακόλουθο αρχείο στην αναφορά κατάρευσης
+
 Please wait - rendering...
 Φόρτωση, παρακαλώ περιμένετε...
+
+Pr&esentation\tCtrl-L
+Πλ&ήρης Οθόνη\tCtrl-L
 
 Previous Page
 Προηγούμενη σελίδα
@@ -443,6 +456,12 @@ Subject:
 
 SumatraPDF Options
 Επιλογές SumatraPDF
+
+SumatraPDF Update
+Ενημέρωση SumatraPDF
+
+SumatraPDF crashed
+Κατάρευση SumatraPDF
 
 SumatraPDF is your main PDF reader
 Το SumatraPDF είναι το προεπιλεγμένο πρόγραμμα PDF
@@ -497,12 +516,4 @@ copying text
 
 printing document
 εκτύπωση εγγράφου
-
-# Untranslated:
-#Fit Width and Show Pages Continuously
-#Fit a Single Page
-#Please include the following file in your crash report:
-#Pr&esentation\tCtrl-L
-#SumatraPDF Update
-#SumatraPDF crashed
 
