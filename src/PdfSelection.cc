@@ -45,8 +45,10 @@ int PdfSelection::FindClosestGlyph(int pageNo, double x, double y)
     assert(1 <= pageNo && pageNo <= engine->pageCount());
     if (!coords[pageNo - 1]) {
         TCHAR *text = engine->ExtractPageText(pageNo, _T("\1"), &coords[pageNo - 1]);
-        if (!text)
-            return -1;
+        if (!text) {
+            lens[pageNo - 1] = 0;
+            return 0;
+        }
         lens[pageNo - 1] = lstrlen(text);
         free(text);
     }
