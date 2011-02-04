@@ -1,1 +1,1 @@
-@cd .. & call build-release.bat -upload
+@call ./scripts/build-release.bat -upload
