@@ -3,7 +3,13 @@ the release notes, as we make them, to make the release process easier.
 
 Next version:
 
-* improved zoom performance (zooming to 6400% no longer crashes)
+* new IFilter for PDF and LaTeX to support searching document contents with
+  Windows Search (not included with SumatraPDF but available as a separate download(?))
+* new browser plugin for Mozilla Firefox, Google Chrome and Opera for displaying
+  PDF documents with SumatraPDF inside the browser (not yet included in the installer)
+
+1.3 (2010-02-04)
+
 * improved text selection and copying. We now mimic the way a browser
   or Adobe Reader works: just select text with mouse and use Ctrl-C
   to copy it to a clipboard
@@ -19,19 +25,16 @@ Next version:
   discoverable. We've added View/Presentation menu item for
   new full screen mode and View/Fullscreen menu item for the old
   full screen mode, to make it more discoverable.
+* new, improved installer
+* improved zoom performance (zooming to 6400% no longer crashes)
 * text find uses less memory
-* a new, improved installer
 * further printing improvements
 * translation updates
 * updated to latest mupdf for misc bugfixes and improvements
 * use libjpeg-turbo library instead of libjpeg, for faster decoding
   of some PDFs
 * updated openjpeg library to version 1.4 and freetype to version 2.4.4
-
-* new IFilter for PDF and LaTeX to support searching document contents with
-  Windows Search (not included with SumatraPDF but available as a separate download(?))
-* new browser plugin for Mozilla Firefox, Google Chrome and Opera for displaying
-  PDF documents with SumatraPDF inside the browser (not yet included in the installer)
+* fixed 2 integer overflows reported by Stefan Cornelius from Secunia Research
 
 1.2 (2010-11-26):
 
@@ -45,18 +48,18 @@ Next version:
 
 1.1 (2010-05-20):
 
-* added book view (“View/Book View” menu item) option. It’s known as “Show Cover Page During Two-Up” in Adobe Reader
-* added “File/Properties” menu item, showing basic information about PDF file
-* added “File/Send by email” menu
-* added export as text. When doing “File/Save As”, change “Save As types” from “PDF documents” to “Text documents”. Don’t expect miracles, though. Conversion to text is not very good in most cases.
+* added book view (ï¿½View/Book Viewï¿½ menu item) option. Itï¿½s known as ï¿½Show Cover Page During Two-Upï¿½ in Adobe Reader
+* added ï¿½File/Propertiesï¿½ menu item, showing basic information about PDF file
+* added ï¿½File/Send by emailï¿½ menu
+* added export as text. When doing ï¿½File/Save Asï¿½, change ï¿½Save As typesï¿½ from ï¿½PDF documentsï¿½ to ï¿½Text documentsï¿½. Donï¿½t expect miracles, though. Conversion to text is not very good in most cases.
 * auto-detect commonly used TeX editors for inverse-search command
 * bug fixes to PDF handling (more PDFs are shown correctly)
 * misc bug fixes and small improvements in UI
-* add Ctrl + and Ctrl – as shortcuts for zooming (matches Adobe Reader)
+* add Ctrl + and Ctrl ï¿½ as shortcuts for zooming (matches Adobe Reader)
 
 1.0.1 (2009-11-27):
 
-* many memory leaks fixed (Simon Bünzli)
+* many memory leaks fixed (Simon Bï¿½nzli)
 * potential crash due to stack corruption (pointed out by Christophe Devine)
 * making Sumatra default PDF reader no longer asks for admin priviledges on Vista/Windows 7
 * translation updates
@@ -68,7 +71,7 @@ Next version:
 0.9.4 (2009-07-19):
 
 * improved PDF compatibility (more types of documents can be rendered)
-* added settings dialog (contributed by Simon Bünzli)
+* added settings dialog (contributed by Simon Bï¿½nzli)
 * improvements in handling unicode
 * changed default view from single page to continuous
 * SyncTex improvements (contributed by William Blum)
