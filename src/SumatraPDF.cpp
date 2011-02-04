@@ -4132,12 +4132,14 @@ static void WindowInfo_HideFindStatus(WindowInfo *win, bool canceled=false)
 
 static void OnMenuFindNext(WindowInfo *win)
 {
-    Find(win, FIND_FORWARD);
+    if (SendMessage(win->hwndToolbar, TB_ISBUTTONENABLED, IDM_FIND_NEXT, 0))
+        Find(win, FIND_FORWARD);
 }
 
 static void OnMenuFindPrev(WindowInfo *win)
 {
-    Find(win, FIND_BACKWARD);
+    if (SendMessage(win->hwndToolbar, TB_ISBUTTONENABLED, IDM_FIND_PREV, 0))
+        Find(win, FIND_BACKWARD);
 }
 
 static void OnMenuFindMatchCase(WindowInfo *win)
