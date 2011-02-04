@@ -45,10 +45,12 @@ static bool ParseDisplayMode(const char *txt, DisplayMode *resOut)
                 goto Error; \
         }
 
-#define DICT_ADD_DICT(doname,name,val) \
+#define DICT_ADD_BENC_OBJ(doname,name,val) \
         ok = benc_dict_insert2(doname,name,(benc_obj*)val); \
-        if (!ok) \
-            goto Error;
+        if (!ok) { \
+            benc_obj_delete((benc_obj*)val); \
+            goto Error; \
+        }
 
 benc_dict* Prefs_SerializeGlobal(void)
 {
@@ -98,8 +100,6 @@ Error:
 
 static bool DisplayState_Deserialize(benc_dict* dict, DisplayState *ds)
 {
-    DisplayState_Init(ds);
-
     const char *filePath = dict_get_str(dict, FILE_STR);
     if (filePath)
         ds->filePath = utf8_to_tstr(filePath);
@@ -127,6 +127,18 @@ static bool DisplayState_Deserialize(benc_dict* dict, DisplayState *ds)
     dict_get_int(dict, TOC_DX_STR, &ds->tocDx);
     dict_get_float_from_str(dict, ZOOM_VIRTUAL_STR, &ds->zoomVirtual);
     dict_get_bool(dict, USE_GLOBAL_VALUES_STR, &ds->useGlobalValues);
+
+    benc_array *tocState = benc_obj_as_array(benc_dict_find2(dict, TOC_STATE_STR));
+    if (tocState) {
+        size_t len = benc_array_len(tocState);
+        ds->tocState = SAZA(int, len + 1);
+        if (ds->tocState) {
+            ds->tocState[0] = (int)len;
+            for (size_t i = 0; i < len; i++)
+                benc_array_get_int(tocState, i, &ds->tocState[i + 1]);
+        }
+    }
+
     return true;
 }
 
@@ -168,18 +180,19 @@ static benc_dict* DisplayState_Serialize(DisplayState *ds)
         free((void*)txt);
     }
 
+    if (ds->tocState && ds->tocState[0] > 0) {
+        benc_array *tocState = benc_array_new();
+        if (tocState) {
+            for (int i = 1; i <= ds->tocState[0]; i++)
+                benc_array_append(tocState, (benc_obj *)benc_int64_new(ds->tocState[i]));
+            DICT_ADD_BENC_OBJ(prefs, TOC_STATE_STR, tocState);
+        }
+    }
+
     return prefs;
 Error:
     benc_obj_delete((benc_obj*)prefs);
     return NULL;
-}
-
-static benc_dict* FileHistoryList_Node_Serialize2(FileHistoryList *node)
-{
-    assert(node);
-    if (!node) return NULL;
-
-    return DisplayState_Serialize(&(node->state));
 }
 
 benc_array* FileHistoryList_Serialize(FileHistoryList **root)
@@ -196,10 +209,10 @@ benc_array* FileHistoryList_Serialize(FileHistoryList **root)
     int restCount = gGlobalPrefs.m_globalPrefsOnly ? MAX_RECENT_FILES_IN_MENU : INT_MAX;
     FileHistoryList *curr = *root;
     while (curr && restCount > 0) {
-        benc_obj* bobj = (benc_obj*) FileHistoryList_Node_Serialize2(curr);
+        benc_dict* bobj = DisplayState_Serialize(curr->state);
         if (!bobj)
             goto Error;
-        ok = benc_array_append(arr, bobj);
+        ok = benc_array_append(arr, (benc_obj *)bobj);
         if (!ok)
             goto Error;
         curr = curr->next;
@@ -222,11 +235,11 @@ const char *Prefs_Serialize(FileHistoryList **root, size_t* lenOut)
     benc_dict* global = Prefs_SerializeGlobal();
     if (!global)
         goto Error;
-    DICT_ADD_DICT(prefs, GLOBAL_PREFS_STR, global);
+    DICT_ADD_BENC_OBJ(prefs, GLOBAL_PREFS_STR, global);
     benc_array *fileHistory = FileHistoryList_Serialize(root);
     if (!fileHistory)
         goto Error;
-    DICT_ADD_DICT(prefs, FILE_HISTORY_STR, fileHistory);
+    DICT_ADD_BENC_OBJ(prefs, FILE_HISTORY_STR, fileHistory);
 
     data = benc_obj_to_data((benc_obj*)prefs, lenOut);
 Error:
@@ -247,8 +260,7 @@ void FileHistory_Add(FileHistoryList **fileHistoryRoot, DisplayState *state)
         return;
     }
 #endif
-    fileHistoryNode = FileHistoryList_Node_Create();
-    fileHistoryNode->state = *state;
+    fileHistoryNode = FileHistoryList_Node_Create(state);
     FileHistoryList_Node_Append(fileHistoryRoot, fileHistoryNode);
     fileHistoryNode = NULL;
 }
@@ -321,21 +333,21 @@ bool Prefs_Deserialize(const char *prefsTxt, size_t prefsTxtLen, FileHistoryList
     dict_get_int(global, FWDSEARCH_COLOR, &gGlobalPrefs.m_fwdsearchColor);
     dict_get_int(global, FWDSEARCH_WIDTH, &gGlobalPrefs.m_fwdsearchWidth);
     dict_get_int(global, FWDSEARCH_PERMANENT, &gGlobalPrefs.m_fwdsearchPermanent);
-    
 
     benc_array* fileHistory = benc_obj_as_array(benc_dict_find2(prefs, FILE_HISTORY_STR));
     if (!fileHistory)
         goto Error;
     size_t dlen = benc_array_len(fileHistory);
     for (size_t i = 0; i < dlen; i++) {
-        DisplayState state;
         benc_dict *dict = benc_obj_as_dict(benc_array_get(fileHistory, i));
         assert(dict);
         if (!dict) continue;
-        DisplayState_Deserialize(dict, &state);
-        if (state.filePath) {
-            FileHistory_Add(fileHistoryRoot, &state);
-        }
+        DisplayState *state = new DisplayState();
+        DisplayState_Deserialize(dict, state);
+        if (state->filePath)
+            FileHistory_Add(fileHistoryRoot, state);
+        else
+            delete state;
     }
     benc_obj_delete(bobj);
     return true;

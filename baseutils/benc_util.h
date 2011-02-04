@@ -80,6 +80,7 @@ size_t      benc_array_len(benc_array *);
 BOOL        benc_array_append(benc_array* arr, benc_obj* bobj);
 void        benc_array_delete(benc_array *);
 benc_obj *  benc_array_get(benc_array *bobj, size_t idx);
+BOOL        benc_array_get_int(benc_array *bobj, size_t idx, int *valOut);
 
 size_t      benc_dict_len(benc_dict *bobj);
 BOOL        benc_dict_insert(benc_dict* dict, const char* key, size_t keyLen, benc_obj* val);

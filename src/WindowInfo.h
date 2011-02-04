@@ -148,11 +148,17 @@ public:
     FileWatcher     watcher;
     
     // synchronizer based on .pdfsync file
-    Synchronizer    *pdfsync;
+    Synchronizer *  pdfsync;
 
     bool            tocLoaded;
+    bool            tocShow;
+    // tocState is an array of ids for ToC items that have been expanded/collapsed
+    // by the user (tocState[0] is the length of the list)
+    int *           tocState;
+    PdfTocItem *    tocRoot;
+
     bool            fullScreen;
-    BOOL            _tocBeforeFullScreen;
+    bool            _tocBeforeFullScreen;
     PresentationMode presentation;
     BOOL            _tocBeforePresentation;
     int             _windowStateBeforePresentation;
@@ -193,6 +199,8 @@ public:
     bool PdfLoaded() const { return this->dm != NULL; }
     HTREEITEM TreeItemForPageNo(HTREEITEM hItem, int pageNo);
     void UpdateTocSelection(int currPageNo);
+    void UpdateToCExpansionState(HTREEITEM hItem);
+    void DisplayStateFromToC(DisplayState *ds);
     void UpdateToolbarState();
 
     void ResizeIfNeeded(bool resizeWindow=true);

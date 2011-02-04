@@ -101,14 +101,17 @@ bool rotationFlipped(int rotation)
 bool DisplayModel::displayStateFromModel(DisplayState *ds)
 {
     bool presMode = getPresentationMode();
-    ds->filePath = tstr_dup(fileName());
-    if (!ds->filePath)
-        return false;
+
+    if (!ds->filePath || !tstr_eq(ds->filePath, fileName())) {
+        free((void *)ds->filePath);
+        ds->filePath = tstr_dup(fileName());
+        if (!ds->filePath)
+            return false;
+    }
 
     ds->displayMode = presMode ? _presDisplayMode : displayMode();
     ds->rotation = _rotation;
     ds->zoomVirtual = presMode ? _presZoomVirtual : _zoomVirtual;
-    ds->showToc = _showToc;
 
     ScrollState ss;
     getScrollState(&ss);
@@ -194,7 +197,6 @@ DisplayModel::DisplayModel(DisplayMode displayMode, int dpi)
     _presentationMode = false;
     _zoomReal = INVALID_ZOOM;
     _dpiFactor = dpi / PDF_FILE_DPI;
-    _showToc = TRUE;
     _startPage = INVALID_PAGE_NO;
     _appData = NULL;
     pdfEngine = NULL;

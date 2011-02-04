@@ -34,14 +34,18 @@ etc...
     quits.
 */
 
-FileHistoryList *FileHistoryList_Node_Create(void)
+FileHistoryList *FileHistoryList_Node_Create(DisplayState *ds)
 {
     FileHistoryList *node;
     node = SAZ(FileHistoryList);
     if (!node)
         return NULL;
 
-    DisplayState_Init(&(node->state));
+    if (ds)
+        node->state = ds;
+    else
+        node->state = new DisplayState();
+
     node->menuId = INVALID_MENU_ID;
     return node;
 }
@@ -55,8 +59,8 @@ FileHistoryList *FileHistoryList_Node_CreateFromFilePath(const TCHAR *filePath)
     if (!node)
         return NULL;
 
-    node->state.filePath = (const TCHAR*)tstr_dup(filePath);
-    if (!node->state.filePath)
+    node->state->filePath = (const TCHAR*)tstr_dup(filePath);
+    if (!node->state->filePath)
         goto Error;
     return node;
 
@@ -69,8 +73,8 @@ void FileHistoryList_Node_Free(FileHistoryList *node)
 {
     assert(node);
     if (!node) return;
-    DisplayState_Free(&(node->state));
-    free((void*)node);
+    delete node->state;
+    free(node);
 }
 
 void FileHistoryList_Free(FileHistoryList **root)
@@ -126,8 +130,8 @@ FileHistoryList *FileHistoryList_Node_FindByFilePath(FileHistoryList **root, con
 
     curr = *root;
     while (curr) {
-        assert(curr->state.filePath);
-        if (tstr_ieq(filePath, curr->state.filePath))
+        assert(curr->state->filePath);
+        if (tstr_ieq(filePath, curr->state->filePath))
             return curr;
         curr = curr->next;
     }

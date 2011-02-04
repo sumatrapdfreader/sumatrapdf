@@ -44,12 +44,13 @@ public:
     pdf_link *link;
     bool open;
     int pageNo;
+    int id;
 
     PdfTocItem *child;
     PdfTocItem *next;
 
     PdfTocItem(TCHAR *title, pdf_link *link) :
-        title(title), link(link), open(true), pageNo(0), child(NULL), next(NULL) { }
+        title(title), link(link), open(true), pageNo(0), id(0), child(NULL), next(NULL) { }
 
     ~PdfTocItem()
     {
@@ -176,7 +177,7 @@ protected:
                             bool cacheRun=true);
     void            dropPageRun(PdfPageRun *run, bool forceRemove=false);
 
-    PdfTocItem    * buildTocTree(pdf_outline *entry);
+    PdfTocItem    * buildTocTree(pdf_outline *entry, int *idCounter);
     void            linkifyPageText(pdf_page *page);
 
     pdf_outline   * _outline;

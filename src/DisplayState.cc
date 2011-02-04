@@ -67,20 +67,3 @@ bool DisplayModeEnumFromName(const char *txt, DisplayMode *resOut)
     assert(0);
     return false;
 }
-
-void DisplayState_Init(DisplayState *ds)
-{
-    ZeroMemory(ds, sizeof(DisplayState));
-    ds->displayMode = DM_AUTOMATIC;
-    ds->pageNo = 1;
-    ds->zoomVirtual = 100.0;
-    ds->rotation = 0;
-    ds->showToc = TRUE;
-}
-
-void DisplayState_Free(DisplayState *ds)
-{
-    free((void*)ds->filePath);
-    free((void*)ds->decryptionKey);
-    DisplayState_Init(ds);
-}

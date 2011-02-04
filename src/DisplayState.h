@@ -53,6 +53,7 @@ enum DisplayMode {
 #define UI_LANGUAGE_STR             "UILanguage"
 #define SHOW_TOC_STR                "ShowToc"
 #define TOC_DX_STR                  "Toc DX"
+#define TOC_STATE_STR               "TocToggles"
 #define BG_COLOR_STR                "BgColor"
 #define ESC_TO_EXIT_STR             "EscToExit"
 #define INVERSE_SEARCH_COMMANDLINE  "InverseSearchCommandLine"
@@ -71,7 +72,21 @@ enum DisplayMode {
 #define FWDSEARCH_PERMANENT         "ForwardSearch_HighlightPermanent"
 
 
-typedef struct DisplayState {
+class DisplayState {
+public:
+    DisplayState() :
+        filePath(NULL), decryptionKey(NULL), useGlobalValues(FALSE),
+        displayMode(DM_AUTOMATIC), scrollX(0), scrollY(0), pageNo(1),
+        zoomVirtual(100.0), rotation(0), windowState(0), windowX(0),
+        windowY(0), windowDx(0), windowDy(0), showToc(TRUE), tocDx(0),
+        tocState(NULL) { }
+
+    ~DisplayState() {
+        free((void *)filePath);
+        free((void *)decryptionKey);
+        free(tocState);
+    }
+
     const TCHAR *       filePath;
     const char *        decryptionKey; // hex encoded MD5 fingerprint of file content (32 chars) followed by crypt key (64 chars)
     BOOL                useGlobalValues;
@@ -89,7 +104,8 @@ typedef struct DisplayState {
     int                 windowDy;
     BOOL                showToc;
     int                 tocDx;
-} DisplayState;
+    int *               tocState;
+};
 
 void    normalizeRotation(int *rotation);
 BOOL    validRotation(int rotation);
@@ -98,8 +114,4 @@ BOOL    ValidZoomVirtual(float zoomVirtual);
 const char *      DisplayModeNameFromEnum(DisplayMode var);
 bool              DisplayModeEnumFromName(const char *txt, DisplayMode *resOut);
 
-void    DisplayState_Init(DisplayState *ds);
-void    DisplayState_Free(DisplayState *ds);
-
 #endif
-

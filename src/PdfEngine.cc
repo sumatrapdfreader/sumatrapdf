@@ -494,18 +494,19 @@ bool PdfEngine::finishLoading(void)
     return _pageCount > 0;
 }
 
-PdfTocItem *PdfEngine::buildTocTree(pdf_outline *entry)
+PdfTocItem *PdfEngine::buildTocTree(pdf_outline *entry, int *idCounter)
 {
     TCHAR *name = entry->title ? utf8_to_tstr(entry->title) : tstr_dup(_T(""));
     PdfTocItem *node = new PdfTocItem(name, entry->link);
     node->open = entry->count >= 0;
+    node->id = ++(*idCounter);
 
     if (entry->link && PDF_LGOTO == entry->link->kind)
         node->pageNo = findPageNo(entry->link->dest);
     if (entry->child)
-        node->child = buildTocTree(entry->child);
+        node->child = buildTocTree(entry->child, idCounter);
     if (entry->next)
-        node->next = buildTocTree(entry->next);
+        node->next = buildTocTree(entry->next, idCounter);
 
     return node;
 }
@@ -513,14 +514,15 @@ PdfTocItem *PdfEngine::buildTocTree(pdf_outline *entry)
 PdfTocItem *PdfEngine::getTocTree()
 {
     PdfTocItem *node = NULL;
+    int idCounter = 0;
 
     if (_outline) {
-        node = buildTocTree(_outline);
+        node = buildTocTree(_outline, &idCounter);
         if (_attachments)
-            node->AddSibling(buildTocTree(_attachments));
+            node->AddSibling(buildTocTree(_attachments, &idCounter));
     }
     else if (_attachments)
-        node = buildTocTree(_attachments);
+        node = buildTocTree(_attachments, &idCounter);
 
     return node;
 }

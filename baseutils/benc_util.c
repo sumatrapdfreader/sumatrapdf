@@ -951,6 +951,15 @@ benc_obj *benc_array_get(benc_array *bobj, size_t idx)
     return NULL;
 }
 
+BOOL benc_array_get_int(benc_array *bobj, size_t idx, int *valOut)
+{
+    benc_obj *obj = benc_array_get(bobj, idx);
+    benc_int64 *val = benc_obj_as_int64(obj);
+    if (!val) return FALSE;
+    *valOut = (int) val->m_val;
+    return TRUE;
+}
+
 benc_int64* benc_obj_as_int64(benc_obj *bobj)
 {
     if (!bobj)

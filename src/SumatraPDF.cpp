@@ -552,7 +552,7 @@ static UINT nextMenuId = 1000;
     if (!menuFile) return;
 
     TCHAR menuString[MAX_PATH + 4];
-    wsprintf(menuString, _T("&%d) %s"), (index + 1) % 10, FilePath_GetBaseName(node->state.filePath));
+    wsprintf(menuString, _T("&%d) %s"), (index + 1) % 10, FilePath_GetBaseName(node->state->filePath));
     if (INVALID_MENU_ID == node->menuId)
         node->menuId = ++nextMenuId;
     InsertMenu(menuFile, IDM_EXIT, MF_BYCOMMAND | MF_ENABLED | MF_STRING, node->menuId, menuString);
@@ -594,8 +594,8 @@ static void AppendRecentFilesToMenu(HMENU m)
     int itemsAdded = 0;
     FileHistoryList *curr = gFileHistoryRoot;
     while (curr && itemsAdded < MAX_RECENT_FILES_IN_MENU) {
-        assert(curr->state.filePath);
-        if (curr->state.filePath) {
+        assert(curr->state->filePath);
+        if (curr->state->filePath) {
             AddFileMenuItem(m, curr, itemsAdded);
             assert(curr->menuId != INVALID_MENU_ID);
             ++itemsAdded;
@@ -677,8 +677,8 @@ TCHAR *GetPasswordForFile(WindowInfo *win, const TCHAR *fileName,
                           pdf_xref *xref, unsigned char *decryptionKey, bool *saveKey)
 {
     FileHistoryList *fileFromHistory = FileHistoryList_Node_FindByFilePath(&gFileHistoryRoot, fileName);
-    if (fileFromHistory && fileFromHistory->state.decryptionKey) {
-        DisplayState *ds = &fileFromHistory->state;
+    if (fileFromHistory && fileFromHistory->state->decryptionKey) {
+        DisplayState *ds = fileFromHistory->state;
         char *fingerprint = mem_to_hexstr(decryptionKey, 16);
         *saveKey = memcmp(fingerprint, ds->decryptionKey, str_len(fingerprint)) == 0;
         free(fingerprint);
@@ -874,16 +874,12 @@ static void UpdateCurrentFileDisplayStateForWin(WindowInfo *win)
     if (!node)
         return;
 
-    DisplayState ds;
-    DisplayState_Init(&ds);
-    ds.useGlobalValues = gGlobalPrefs.m_globalPrefsOnly;
-    UpdateDisplayStateWindowRect(win, &ds, false);
-
-    if (!win->dm->displayStateFromModel(&ds))
+    DisplayState *ds = node->state;
+    if (!win->dm->displayStateFromModel(ds))
         return;
-
-    DisplayState_Free(&(node->state));
-    node->state = ds;
+    ds->useGlobalValues = gGlobalPrefs.m_globalPrefsOnly;
+    UpdateDisplayStateWindowRect(win, ds, false);
+    win->DisplayStateFromToC(ds);
 }
 
 static BOOL Prefs_Save(void)
@@ -922,7 +918,6 @@ static void WindowInfo_Refresh(WindowInfo* win, bool autorefresh) {
     if (win->pdfsync)
         win->pdfsync->discard_index();
     DisplayState ds;
-    DisplayState_Init(&ds);
     ds.useGlobalValues = gGlobalPrefs.m_globalPrefsOnly;
     if (!win->dm || !win->dm->displayStateFromModel(&ds)) {
         if (!autorefresh && !win->dm && win->loadedFilePath)
@@ -930,6 +925,7 @@ static void WindowInfo_Refresh(WindowInfo* win, bool autorefresh) {
         return;
     }
     UpdateDisplayStateWindowRect(win, &ds);
+    win->DisplayStateFromToC(&ds);
     // Set the windows state based on the actual window's placement
     ds.windowState =  win->fullScreen ? WIN_STATE_FULLSCREEN
                     : IsZoomed(win->hwndFrame) ? WIN_STATE_MAXIMIZED 
@@ -942,7 +938,6 @@ static void WindowInfo_Refresh(WindowInfo* win, bool autorefresh) {
     // we postpone the reload until the next autorefresh event
     bool tryrepair = !autorefresh;
     LoadPdfIntoWindow(win->watcher.filepath(), win, &ds, false, tryrepair, true, false);
-    DisplayState_Free(&ds);
 }
 
 static void WindowInfo_Delete(WindowInfo *win)
@@ -953,12 +948,6 @@ static void WindowInfo_Delete(WindowInfo *win)
     if (win->hwndPdfProperties) {
         DestroyWindow(win->hwndPdfProperties);
         assert(NULL == win->hwndPdfProperties);
-    }
-    // make sure that all data associated with ToC entries is freed
-    if (win->tocLoaded) {
-        if (win->dm && win->dm->_showToc)
-            win->HideTocBox();
-        win->ClearTocBox();
     }
     gWindowList.remove(win);
 
@@ -1059,7 +1048,7 @@ static void MenuUpdateBookmarksStateForWindow(WindowInfo *win) {
     BOOL documentSpecific = win->PdfLoaded();
     BOOL enabled = WS_SHOWING_PDF == win->state && win->dm && win->dm->hasTocTree();
 
-    if (documentSpecific ? win->dm->_showToc : gGlobalPrefs.m_showToc)
+    if (documentSpecific ? win->tocShow : gGlobalPrefs.m_showToc)
         CheckMenuItem(hmenu, IDM_VIEW_BOOKMARKS, MF_BYCOMMAND | MF_CHECKED);
     else
         CheckMenuItem(hmenu, IDM_VIEW_BOOKMARKS, MF_BYCOMMAND | MF_UNCHECKED);
@@ -1391,16 +1380,22 @@ static bool LoadPdfIntoWindow(
             ss.page = win->dm->pageCount();
         zoomVirtual = state->zoomVirtual;
         rotation = state->rotation;
-        win->dm->_showToc = state->showToc;
+
+        win->tocShow = !!state->showToc;
+        free(win->tocState);
+        if (state->tocState)
+            win->tocState = (int *)memdup(state->tocState, (state->tocState[0] + 1) * sizeof(int));
+        else
+            win->tocState = NULL;
     }
     else {
-        win->dm->_showToc = gGlobalPrefs.m_showToc;
+        win->tocShow = !!gGlobalPrefs.m_showToc;
     }
     UpdateTocWidth(win, state);
 
     // Review needed: Is the following block really necessary?
     /*
-    // The WM_SIZE message must be sent *after* updating win->dm->_showToc
+    // The WM_SIZE message must be sent *after* updating win->showToc
     // otherwise the bookmark window reappear even if state->showToc=false.
     RECT rect;
     GetClientRect(win->hwndFrame, &rect);
@@ -1474,7 +1469,7 @@ Error:
         win->ClearTocBox();
     if (win->dm)
         win->dm->setScrollState(&ss);
-    if (win->dm && win->dm->_showToc) {
+    if (win->PdfLoaded() && win->tocShow) {
         if (win->dm->hasTocTree()) {
             win->ShowTocBox();
         } else {
@@ -1568,7 +1563,7 @@ WindowInfo* LoadPdf(const TCHAR *fileName, WindowInfo *win, bool showWin, TCHAR 
     FileHistoryList *fileFromHistory = FileHistoryList_Node_FindByFilePath(&gFileHistoryRoot, fullpath);
     DisplayState *ds = NULL;
     if (fileFromHistory) {
-        ds = &fileFromHistory->state;
+        ds = fileFromHistory->state;
         AdjustRemovableDriveLetter(fullpath);
     }
 
@@ -2763,7 +2758,7 @@ static void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose=false)
 
     if (lastWindow && !quitIfLast) {
         /* last window - don't delete it */
-        if (win->dm && win->dm->_showToc) {
+        if (win->tocShow) {
             win->HideTocBox();
             MenuUpdateBookmarksStateForWindow(win);
         }
@@ -3605,7 +3600,7 @@ static void OnSize(WindowInfo *win, int dx, int dy)
         rebBarDy = gReBarDy + gReBarDyFrame;
     }
     
-    if (win->tocLoaded && win->dm->_showToc)
+    if (win->tocLoaded && win->tocShow)
         win->ShowTocBox();
     else
         SetWindowPos(win->hwndCanvas, NULL, 0, rebBarDy, dx, dy-rebBarDy, SWP_NOZORDER);
@@ -3877,17 +3872,17 @@ static void WindowInfo_EnterFullscreen(WindowInfo *win, bool presentation)
         else
             win->_windowStateBeforePresentation = WIN_STATE_NORMAL;
         win->presentation = PM_ENABLED;
-        win->_tocBeforePresentation = win->dm->_showToc;
+        win->_tocBeforePresentation = win->tocShow;
 
         SetTimer(win->hwndCanvas, HIDE_CURSOR_TIMER_ID, HIDE_CURSOR_DELAY_IN_MS, NULL);
     }
     else {
         win->fullScreen = true;
-        win->_tocBeforeFullScreen = win->dm ? win->dm->_showToc : FALSE;
+        win->_tocBeforeFullScreen = win->PdfLoaded() ? win->tocShow : false;
     }
 
     // Remove TOC from full screen, add back later on exit fullscreen
-    if (win->dm && win->dm->_showToc)
+    if (win->tocShow)
         win->HideTocBox();
 
     int x, y, w, h;
@@ -4173,7 +4168,7 @@ static void AdvanceFocus(WindowInfo *win)
 
     bool reversed = WasKeyDown(VK_SHIFT);
     bool hasToolbar = !win->fullScreen && !win->presentation && gGlobalPrefs.m_showToolbar;
-    bool hasToC = win->dm && win->dm->_showToc;
+    bool hasToC = win->tocLoaded && win->tocShow;
 
     HWND current = GetFocus();
     HWND next = win->hwndFrame;
@@ -4409,7 +4404,7 @@ static void OnChar(WindowInfo *win, int key)
 static const TCHAR *RecentFileNameFromMenuItemId(UINT  menuId) {
     for (FileHistoryList* curr = gFileHistoryRoot; curr; curr = curr->next) {
         if (curr->menuId == menuId)
-            return tstr_dup(curr->state.filePath);
+            return tstr_dup(curr->state->filePath);
     }
     return NULL;
 }
@@ -5231,13 +5226,13 @@ static void CreateTocBox(WindowInfo *win, HINSTANCE hInst)
     SetWindowLongPtr(win->hwndTocBox, GWLP_WNDPROC, (LONG_PTR)WndProcTocBox);
 }
 
-static HTREEITEM AddTocItemToView(HWND hwnd, PdfTocItem *entry, HTREEITEM parent)
+static HTREEITEM AddTocItemToView(HWND hwnd, PdfTocItem *entry, HTREEITEM parent, bool toggleItem)
 {
     TV_INSERTSTRUCT tvinsert;
     tvinsert.hParent = parent;
     tvinsert.hInsertAfter = TVI_LAST;
     tvinsert.itemex.mask = TVIF_TEXT | TVIF_PARAM | TVIF_STATE;
-    tvinsert.itemex.state = entry->open ? TVIS_EXPANDED : 0;
+    tvinsert.itemex.state = entry->open != toggleItem ? TVIS_EXPANDED : 0;
     tvinsert.itemex.stateMask = TVIS_EXPANDED;
     tvinsert.itemex.lParam = (LPARAM)entry;
     // Replace unprintable whitespace with regular spaces
@@ -5245,23 +5240,34 @@ static HTREEITEM AddTocItemToView(HWND hwnd, PdfTocItem *entry, HTREEITEM parent
     tvinsert.itemex.pszText = entry->title;
 
 #ifdef DISPLAY_TOC_PAGE_NUMBERS
-    if (!entry->pageNo)
-        return TreeView_InsertItem(hwnd, &tvinsert);
-
-    tvinsert.itemex.pszText = tstr_printf(_T("%s  %d"), entry->title, entry->pageNo);
-    HTREEITEM hItem = TreeView_InsertItem(hwnd, &tvinsert);
-    free(tvinsert.itemex.pszText);
-    return hItem;
-#else
-    return TreeView_InsertItem(hwnd, &tvinsert);
+    if (entry->pageNo) {
+        tvinsert.itemex.pszText = tstr_printf(_T("%s  %d"), entry->title, entry->pageNo);
+        HTREEITEM hItem = TreeView_InsertItem(hwnd, &tvinsert);
+        free(tvinsert.itemex.pszText);
+        return hItem;
+    }
 #endif
+    return TreeView_InsertItem(hwnd, &tvinsert);
 }
 
-static void PopulateTocTreeView(HWND hwnd, PdfTocItem *entry, HTREEITEM parent = NULL)
+static bool WasItemToggled(PdfTocItem *entry, int *tocState)
+{
+    if (!tocState || tocState[0] <= 0)
+        return false;
+
+    for (int i = 1; i <= tocState[0]; i++)
+        if (tocState[i] == entry->id)
+            return true;
+
+    return false;
+}
+
+static void PopulateTocTreeView(HWND hwnd, PdfTocItem *entry, int *tocState, HTREEITEM parent = NULL)
 {
     for (; entry; entry = entry->next) {
-        HTREEITEM node = AddTocItemToView(hwnd, entry, parent);
-        PopulateTocTreeView(hwnd, entry->child, node);
+        bool toggleItem = WasItemToggled(entry, tocState);
+        HTREEITEM node = AddTocItemToView(hwnd, entry, parent, toggleItem);
+        PopulateTocTreeView(hwnd, entry->child, tocState, node);
     }
 }
 
@@ -5336,18 +5342,18 @@ void WindowInfo::LoadTocTree()
     if (tocLoaded)
         return;
 
-    PdfTocItem *toc = dm->getTocTree();
-    if (toc)
-        PopulateTocTreeView(hwndTocTree, toc);
+    tocRoot = dm->getTocTree();
+    if (tocRoot)
+        PopulateTocTreeView(hwndTocTree, tocRoot, tocState);
 
     tocLoaded = true;
 }
 
 void WindowInfo::ToggleTocBox()
 {
-    if (!dm)
+    if (!PdfLoaded())
         return;
-    if (!dm->_showToc) {
+    if (!tocShow) {
         ShowTocBox();
         SetFocus(hwndTocTree);
     } else {
@@ -5359,7 +5365,7 @@ void WindowInfo::ToggleTocBox()
 void WindowInfo::ShowTocBox()
 {
     if (!dm->hasTocTree()) {
-        dm->_showToc = TRUE;
+        tocShow = true;
         return;
     }
 
@@ -5395,7 +5401,7 @@ void WindowInfo::ShowTocBox()
     SetWindowPos(hwndSpliter, NULL, cx, cy, SPLITTER_DX, ch, SWP_NOZORDER|SWP_SHOWWINDOW);
     SetWindowPos(hwndCanvas, NULL, cx + SPLITTER_DX, cy, cw, ch, SWP_NOZORDER|SWP_SHOWWINDOW);
 
-    dm->_showToc = TRUE;
+    tocShow = true;
     this->UpdateTocSelection(dm->currentPageNo());
 }
 
@@ -5417,24 +5423,16 @@ void WindowInfo::HideTocBox()
     ShowWindow(hwndTocBox, SW_HIDE);
     ShowWindow(hwndSpliter, SW_HIDE);
 
-    dm->_showToc = FALSE;
+    tocShow = false;
 }
 
 void WindowInfo::ClearTocBox()
 {
     if (!tocLoaded) return;
 
-    TVITEM root;
-    root.hItem = TreeView_GetRoot(hwndTocTree);
-    if (root.hItem) {
-        root.mask = TVIF_PARAM;
-        TreeView_GetItem(hwndTocTree, &root);
-
-        assert(root.lParam);
-        delete (PdfTocItem *)root.lParam;
-
-        TreeView_DeleteAllItems(hwndTocTree);
-    }
+    TreeView_DeleteAllItems(hwndTocTree);
+    delete tocRoot;
+    tocRoot = NULL;
 
     tocLoaded = false;
     currPageNo = 0;
@@ -5932,7 +5930,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                 case IDM_MOVE_FRAME_FOCUS:
                     if (win->hwndFrame != GetFocus())
                         SetFocus(win->hwndFrame);
-                    else if (win->dm && win->dm->_showToc)
+                    else if (win->tocShow)
                         SetFocus(win->hwndTocTree);
                     break;
 

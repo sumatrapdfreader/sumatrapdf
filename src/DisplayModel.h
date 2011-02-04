@@ -259,8 +259,6 @@ public:
     int             lastFoundPage(void) const { return _pdfSearch->findPage; }
     BOOL            bFoundText;
 
-    BOOL            _showToc;
-
     int             getPageNoByPoint(int x, int y);
 
     BOOL            ShowResultRectToScreen(PdfSel *res);

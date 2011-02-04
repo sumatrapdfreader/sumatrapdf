@@ -10,10 +10,10 @@
 typedef struct FileHistoryList {
     struct FileHistoryList *next;
     unsigned int            menuId;
-    DisplayState            state;
+    DisplayState *          state;
 } FileHistoryList;
 
-FileHistoryList * FileHistoryList_Node_Create(void);
+FileHistoryList * FileHistoryList_Node_Create(DisplayState *ds=NULL);
 FileHistoryList * FileHistoryList_Node_CreateFromFilePath(const TCHAR *filePath);
 
 void              FileHistoryList_Node_Free(FileHistoryList *node);

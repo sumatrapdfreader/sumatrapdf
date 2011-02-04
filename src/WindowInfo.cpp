@@ -12,7 +12,8 @@
 WindowInfo::WindowInfo(HWND hwnd) :
     dm(NULL), state(WS_ABOUT), hwndFrame(hwnd),
     linkOnLastButtonDown(NULL), url(NULL), selectionOnPage(NULL),
-    tocLoaded(false), fullScreen(false), presentation(PM_DISABLED),
+    tocLoaded(false), tocShow(false), tocState(NULL), tocRoot(NULL),
+    fullScreen(false), presentation(PM_DISABLED),
     hwndCanvas(NULL), hwndToolbar(NULL), hwndReBar(NULL),
     hwndFindText(NULL), hwndFindBox(NULL), hwndFindBg(NULL),
     hwndPageText(NULL), hwndPageBox(NULL), hwndPageBg(NULL), hwndPageTotal(NULL),
@@ -60,6 +61,9 @@ WindowInfo::~WindowInfo() {
 
     free(this->title);
     free(this->loadedFilePath);
+
+    delete this->tocRoot;
+    free(this->tocState);
 }
 
 void WindowInfo::DoubleBuffer_Show(HDC hdc)
@@ -134,7 +138,7 @@ HTREEITEM WindowInfo::TreeItemForPageNo(HTREEITEM hItem, int pageNo)
 
 void WindowInfo::UpdateTocSelection(int currPageNo)
 {
-    if (!this->dm || !this->dm->_showToc || !this->tocLoaded)
+    if (!this->tocLoaded || !this->tocShow)
         return;
     if (GetFocus() == this->hwndTocTree)
         return;
@@ -145,6 +149,52 @@ void WindowInfo::UpdateTocSelection(int currPageNo)
     HTREEITEM hCurrItem = this->TreeItemForPageNo(hRoot, currPageNo);
     if (hCurrItem)
         TreeView_SelectItem(this->hwndTocTree, hCurrItem);
+}
+
+void WindowInfo::UpdateToCExpansionState(HTREEITEM hItem)
+{
+    while (hItem) {
+        TVITEM item;
+        item.hItem = hItem;
+        item.mask = TVIF_PARAM | TVIF_STATE;
+        item.stateMask = TVIS_EXPANDED;
+        TreeView_GetItem(this->hwndTocTree, &item);
+
+        // add the ids of toggled items to tocState
+        PdfTocItem *tocItem = item.lParam ? (PdfTocItem *)item.lParam : NULL;
+        bool wasToggled = tocItem && !(item.state & TVIS_EXPANDED) == tocItem->open;
+        if (wasToggled) {
+            int *newState = (int *)realloc(this->tocState, (++this->tocState[0] + 1) * sizeof(int));
+            if (newState) {
+                this->tocState = newState;
+                this->tocState[this->tocState[0]] = tocItem->id;
+            }
+        }
+
+        if (tocItem && tocItem->child)
+            this->UpdateToCExpansionState(TreeView_GetChild(this->hwndTocTree, hItem));
+        hItem = TreeView_GetNextSibling(this->hwndTocTree, hItem);
+    }
+}
+
+void WindowInfo::DisplayStateFromToC(DisplayState *ds)
+{
+    ds->showToc = this->tocShow;
+
+    if (this->tocLoaded) {
+        free(this->tocState);
+        this->tocState = SAZ(int);
+        HTREEITEM hRoot = TreeView_GetRoot(this->hwndTocTree);
+        if (this->tocState && hRoot)
+            this->UpdateToCExpansionState(hRoot);
+    }
+
+    if (ds->tocState) {
+        free(ds->tocState);
+        ds->tocState = NULL;
+    }
+    if (this->tocState)
+        ds->tocState = (int *)memdup(this->tocState, (this->tocState[0] + 1) * sizeof(int));
 }
 
 void WindowInfo::ResizeIfNeeded(bool resizeWindow)
