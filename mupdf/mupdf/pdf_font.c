@@ -1,22 +1,9 @@
 #include "fitz.h"
 #include "mupdf.h"
 
-#ifndef WIN32
-/* TODO: should build freetype from sources in unix/mac build as well */
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include FT_XFREE86_H
-#else
-/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=687 */
-/* get access to the internal Type 1 specific structures (for extracting the embedded encoding table) */
-#define FT2_BUILD_LIBRARY
-#include <ft2build.h>
-#include FT_FREETYPE_H
-#include FT_XFREE86_H
-
-#include FT_INTERNAL_INTERNAL_H
-#include FT_INTERNAL_TYPE1_TYPES_H
-#endif
 
 static char *basefontnames[14][7] =
 {
@@ -104,44 +91,6 @@ static int ftcharindex(FT_Face face, int cid)
 	if (gid == 0)
 		gid = FT_Get_Char_Index(face, 0xf000 + cid);
 	return gid;
-}
-
-/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=687 */
-/* extract the Type 1 font's embedded encoding table */
-static int ftloadt1encoding(FT_Face face, char **estrings)
-{
-#ifdef WIN32
-	T1_Encoding encoding;
-	T1_Font font;
-	int i;
-
-	/* not (yet) implemented for CFF and CID fonts */
-	if (strcmp(FT_Get_X11_Font_Format(face), "Type 1") != 0)
-		return 0;
-
-	font = &((T1_Face)face)->type1;
-	switch (font->encoding_type)
-	{
-	case T1_ENCODING_TYPE_STANDARD:
-		pdf_loadencoding(estrings, "StandardEncoding");
-		return 1;
-	case T1_ENCODING_TYPE_ISOLATIN1:
-		pdf_loadencoding(estrings, "WinAnsiEncoding");
-		return 1;
-	case T1_ENCODING_TYPE_EXPERT:
-		pdf_loadencoding(estrings, "MacExpertEncoding");
-		return 1;
-	case T1_ENCODING_TYPE_ARRAY:
-		encoding = &font->encoding;
-		if (encoding->code_first == encoding->code_last)
-			break;
-		assert(encoding->code_first < encoding->code_last && encoding->code_last <= 256);
-		for (i = encoding->code_first; i < encoding->code_last; i++)
-			estrings[i] = encoding->char_name[i];
-		return 1;
-	}
-#endif
-	return 0;
 }
 
 static inline int ftcidtogid(pdf_fontdesc *fontdesc, int cid)
@@ -402,11 +351,6 @@ loadsimplefont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict)
 			if (fz_isname(base))
 				pdf_loadencoding(estrings, fz_toname(base));
 			else if (!fontdesc->isembedded && !symbolic)
-				pdf_loadencoding(estrings, "StandardEncoding");
-			/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=690615 and http://code.google.com/p/sumatrapdf/issues/detail?id=687 */
-			/* try to extract an encoding from the font or synthesize a likely one */
-			/* note: FT_Get_Name_Index fails for symbolic CFF fonts, so let them be encoded by index */
-			else if (!fontdesc->encoding && !ftloadt1encoding(face, estrings) && !(symbolic && !strcmp(FT_Get_X11_Font_Format(face), "CFF")))
 				pdf_loadencoding(estrings, "StandardEncoding");
 
 			diff = fz_dictgets(encoding, "Differences");
