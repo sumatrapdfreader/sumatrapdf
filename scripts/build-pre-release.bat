@@ -1,15 +1,12 @@
-@rem assumes we're being run from top-level directory as:
-@rem scripts\build-pre-release.bat
-@call scripts\vc9.bat
-IF ERRORLEVEL 1 GOTO VC9_NEEDED
-GOTO BUILD
+@ECHO OFF
 
-:BUILD
-c:\Python26\python -u scripts\build-pre-release.py
-GOTO END
+REM assumes we're being run from top-level directory as:
+REM scripts\build-pre-release.bat
 
-:VC9_NEEDED
-@echo Visual Studio 2008 doesn't seem to be installed
-GOTO END
+REM Here you can add the path to your Python installation if it's not already in PATH
+REM SET PATH=%PATH%;C:\Python
 
-:END
+CALL scripts\vc.bat
+IF ERRORLEVEL 1 EXIT /B 1
+
+python -u scripts\build-pre-release.py

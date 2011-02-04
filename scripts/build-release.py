@@ -25,11 +25,9 @@ import time
 import zlib
 
 def test_for_flag(args, arg):
-  try:
-    pos = args.index(arg)
-  except:
+  if arg not in args:
     return False
-  del args[pos]
+  args.remove(arg)
   return True
 
 args = sys.argv
@@ -139,14 +137,6 @@ def direxists(path):
     #print("%s path exists but is not a dir" % path)
     return False
 
-def build_installer_nsis(builds_dir, ver):
-  os.chdir(SCRIPT_DIR)
-  run_cmd_throw("makensis", "/DSUMVER=%s" % ver, "scripts/installer")
-  local_installer_exe = os.path.join(builds_dir, "SumatraPDF-%s-install-nsis.exe" % ver)
-  shutil.move("SumatraPDF-%s-install.exe" % ver, local_installer_exe)
-  ensure_path_exists(local_installer_exe)
-  return local_installer_exe
-
 def write_no_size(fo, data):
   log("Writing %d bytes at %d '%s'" % (len(data), fo.tell(), data))
   fo.write(data)
@@ -209,8 +199,12 @@ def mark_installer_end(fo):
 # and data starts)
 def build_installer_native(builds_dir, ver):
   installer_template_exe = os.path.join(builds_dir, "Installer.exe")
-  installer_exe = os.path.join(builds_dir, "SumatraPDF-%s-install.exe" % ver)
-  exe = os.path.join(builds_dir, "SumatraPDF-%s.exe" % ver)
+  if ver is not None:
+    installer_exe = os.path.join(builds_dir, "SumatraPDF-%s-install.exe" % ver)
+    exe = os.path.join(builds_dir, "SumatraPDF-%s.exe" % ver)
+  else:
+    installer_exe = os.path.join(builds_dir, "SumatraPDF-install.exe")
+    exe = os.path.join(builds_dir, "SumatraPDF.exe")
 
   shutil.copy(installer_template_exe, installer_exe)
 
@@ -224,29 +218,9 @@ def build_installer_native(builds_dir, ver):
   fo.close()
   return installer_exe
 
-def build_installer_for_testing():
-  (out, err) = run_cmd_throw("nmake", "-f", "makefile.msvc", "CFG=dbg")
-  #print(out); print(err)
-  objdir = os.path.join(os.getcwd(), "obj-dbg")
-  installer_template_exe = os.path.join(objdir, "Installer.exe")
-  installer_exe = os.path.join(objdir, "SumatraPDF-installer.exe")
-  shutil.copy(installer_template_exe, installer_exe)
-
-  exe = os.path.join(objdir, "SumatraPDF.exe")
-  fo = open(installer_exe, "ab")
-  # append installer data to installer exe
-  mark_installer_end(fo) # this are read backwards so end marker is written first
-  append_installer_file(fo, exe, "SumatraPDF.exe")
-  font_name =  "DroidSansFallback.ttf"
-  font_path = os.path.join(os.getcwd(), "mupdf", "fonts", "droid", font_name)
-  append_installer_file_zlib(fo, font_path, font_name)
-  fo.close()
-  return installer_exe
-
 def verify_started_in_right_directory():
   p1 = os.path.join("scripts", "build-release.py")
-  srcdir = os.getcwd()
-  p2 = os.path.join(srcdir, "scripts", "build-release.py")
+  p2 = os.path.join(os.getcwd(), "scripts", "build-release.py")
   if not (os.path.exists(p1) and os.path.exists(p2)):
     print("This script must be run from top of the source tree")
     sys.exit(1)
@@ -268,7 +242,9 @@ def main():
   verify_started_in_right_directory()
 
   if build_test_installer:
-    build_installer_for_testing()
+    run_cmd_throw("nmake", "-f", "makefile.msvc", "CFG=dbg")
+    objdir = os.path.join(SCRIPT_DIR, "obj-dbg")
+    build_installer_native(objdir, None)
     sys.exit(0)
 
   ver = extract_sumatra_version(os.path.join("src", "Version.h"))
@@ -342,8 +318,12 @@ def main():
 
   local_zip = os.path.join(builds_dir, "SumatraPDF-%s.zip" % ver)
   ensure_path_exists(local_zip)
-  #local_installer_exe = build_installer_nsis(builds_dir, ver)
   local_installer_native_exe = build_installer_native(builds_dir, ver)
+
+  #os.remove("SumatraPDF.exe")
+  #os.remove("SumatraPDF-%s.exe", ver)
+  #os.remove("Installer.exe")
+  #os.remove("Installer.exe.bak")
 
   if upload or upload_tmp:
     s3UploadFilePublic(local_exe_uncompr, remote_exe)
