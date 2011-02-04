@@ -58,9 +58,9 @@ typedef struct PdfPageInfo {
     /* position and size within total area after applying zoom and rotation.
        Represents display rectangle for a given page.
        Calculated in DisplayModel_relayout() */
-    RectD           currPos;
+    RectI           currPos;
     /* data that changes due to scrolling. Calculated in DisplayModel_RecalcVisibleParts() */
-    double          visible; /* visible ratio of the page (0 = invisible, 1 = fully visible) */
+    float           visible; /* visible ratio of the page (0 = invisible, 1 = fully visible) */
     /* part of the image that should be shown */
     RectI           bitmap;
     /* where it should be blitted on the screen */
@@ -192,10 +192,10 @@ public:
        areaOffset.x is offset of total area rect inside draw area, otherwise
        an offset of draw area inside total area.
        The same for areaOff.y, except it's for dy */
-    PointD          areaOffset;
+    PointI          areaOffset;
 
     /* size of draw area (excluding scrollbars) */
-    SizeD           drawAreaSize;
+    SizeI           drawAreaSize;
 
     SearchStateData searchState;
 
@@ -203,12 +203,12 @@ public:
     RectD           searchHitRectPage;
     RectI           searchHitRectCanvas;
 
-    void            setTotalDrawAreaSize(SizeD size) { drawAreaSize = size; }
+    void            setTotalDrawAreaSize(SizeI size) { drawAreaSize = size; }
     
-    bool            needHScroll() { return drawAreaSize.dxI() < _canvasSize.dxI(); }
-    bool            needVScroll() { return drawAreaSize.dyI() < _canvasSize.dyI(); }
+    bool            needHScroll() { return drawAreaSize.dx < _canvasSize.dx; }
+    bool            needVScroll() { return drawAreaSize.dy < _canvasSize.dy; }
 
-    void            changeTotalDrawAreaSize(SizeD totalDrawAreaSize);
+    void            changeTotalDrawAreaSize(SizeI totalDrawAreaSize);
 
     bool            pageShown(int pageNo);
     bool            pageVisible(int pageNo);
@@ -261,7 +261,7 @@ public:
 
     BOOL            _showToc;
 
-    int             getPageNoByPoint(double x, double y);
+    int             getPageNoByPoint(int x, int y);
 
     BOOL            ShowResultRectToScreen(PdfSel *res);
 
@@ -312,9 +312,8 @@ protected:
     int             _startPage;
     void *          _appData;
 
-    /* size of virtual canvas containing all rendered pages.
-       TODO: re-consider, 32 signed number should be large enough for everything. */
-    SizeD           _canvasSize;
+    /* size of virtual canvas containing all rendered pages. */
+    SizeI           _canvasSize;
     DisplaySettings * _padding;
 
     /* real zoom value calculated from zoomVirtual. Same as zoomVirtual * 0.01 except
@@ -350,7 +349,7 @@ int                 columnsFromDisplayMode(DisplayMode displayMode);
 
 DisplayModel *DisplayModel_CreateFromFileName(
   const TCHAR *fileName,
-  SizeD totalDrawAreaSize,
+  SizeI totalDrawAreaSize,
   DisplayMode displayMode, int startPage,
   WindowInfo *win);
 

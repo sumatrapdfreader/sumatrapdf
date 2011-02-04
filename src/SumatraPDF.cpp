@@ -1663,10 +1663,10 @@ void DisplayModel::setScrollbarsState(void)
     si.cbSize = sizeof(si);
     si.fMask = SIF_ALL;
 
-    int canvasDx = _canvasSize.dxI();
-    int canvasDy = _canvasSize.dyI();
-    int drawAreaDx = drawAreaSize.dxI();
-    int drawAreaDy = drawAreaSize.dyI();
+    int canvasDx = _canvasSize.dx;
+    int canvasDy = _canvasSize.dy;
+    int drawAreaDx = drawAreaSize.dx;
+    int drawAreaDy = drawAreaSize.dy;
 
     // When hiding the scroll bars and fitting content, it could be that we'd have to
     // display the scroll bars right again for the new zoom. Make sure we haven't just done
@@ -2121,7 +2121,7 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
 
     if (gDebugShowLinks && !rendering) {
         /* debug code to visualize links (can block while rendering) */
-        fz_bbox drawAreaRect = { 0, 0, dm->drawAreaSize.dxI(), dm->drawAreaSize.dyI() };
+        fz_bbox drawAreaRect = { 0, 0, dm->drawAreaSize.dx, dm->drawAreaSize.dy };
         HPEN pen = CreatePen(PS_SOLID, 1, RGB(0x00, 0xff, 0xff));
         HGDIOBJ oldPen = SelectObject(hdc, pen);
 

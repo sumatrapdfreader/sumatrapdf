@@ -165,7 +165,7 @@ static bool IsTileVisible(DisplayModel *dm, int pageNo, int rotation, float zoom
     tileOnScreen.dx = (int)(tileOnScreen.dx * (fuzz + 1));
     tileOnScreen.y -= (int)(tileOnScreen.dy * fuzz * 0.5);
     tileOnScreen.dy = (int)(tileOnScreen.dy * (fuzz + 1));
-    RectI screen = { 0, 0, dm->drawAreaSize.dxI(), dm->drawAreaSize.dyI() };
+    RectI screen = { 0, 0, dm->drawAreaSize.dx, dm->drawAreaSize.dy };
     return RectI_Intersect(&tileOnScreen, &screen, NULL) != 0;
 }
 
