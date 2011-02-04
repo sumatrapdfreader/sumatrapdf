@@ -34,153 +34,73 @@ etc...
     quits.
 */
 
-FileHistoryList *FileHistoryList_Node_Create(DisplayState *ds)
+FileHistoryNode::FileHistoryNode(const TCHAR *filePath) :
+    next(NULL), prev(NULL), menuId(INVALID_MENU_ID)
 {
-    FileHistoryList *node;
-    node = SAZ(FileHistoryList);
-    if (!node)
-        return NULL;
-
-    if (ds)
-        node->state = ds;
-    else
-        node->state = new DisplayState();
-
-    node->menuId = INVALID_MENU_ID;
-    return node;
-}
-
-FileHistoryList *FileHistoryList_Node_CreateFromFilePath(const TCHAR *filePath)
-{
-    FileHistoryList *node;
-
-    DBG_OUT_T("FileHistoryList_Node_CreateFromFilePath() file='%s'\n", filePath);
-    node = FileHistoryList_Node_Create();
-    if (!node)
-        return NULL;
-
-    node->state->filePath = (const TCHAR*)tstr_dup(filePath);
-    if (!node->state->filePath)
-        goto Error;
-    return node;
-
-Error:
-    FileHistoryList_Node_Free(node);
-    return NULL;
-}
-
-void FileHistoryList_Node_Free(FileHistoryList *node)
-{
-    assert(node);
-    if (!node) return;
-    delete node->state;
-    free(node);
-}
-
-void FileHistoryList_Free(FileHistoryList **root)
-{
-    FileHistoryList *curr, *next;
-    assert(root);
-    if (!root) return;
-
-    curr = *root;
-    while (curr) {
-        next = curr->next;
-        FileHistoryList_Node_Free(curr);
-        curr = next;
+    if (filePath) {
+        DBG_OUT_T("FileHistoryNode(filePath='%s')\n", filePath);
+        this->state.filePath = (const TCHAR*)tstr_dup(filePath);
     }
-
-    *root = NULL;
 }
 
-void FileHistoryList_Node_InsertHead(FileHistoryList **root, FileHistoryList *node)
+void FileHistoryList::Prepend(FileHistoryNode *node)
 {
-    assert(root);
-    if (!root) return;
-    node->next = *root;
-    *root = node;
-}
-
-void FileHistoryList_Node_Append(FileHistoryList **root, FileHistoryList *node)
-{
-    FileHistoryList *curr;
-    assert(root);
-    if (!root) return;
-    assert(node);
+    assert(node && !node->next && !node->prev);
     if (!node) return;
-    assert(!node->next);
-    curr = *root;
-    if (!curr) {
-        *root = node;
+    node->next = first;
+    if (node->next)
+        node->next->prev = node;
+    first = node;
+}
+
+void FileHistoryList::Append(FileHistoryNode *node)
+{
+    assert(node && !node->next && !node->prev);
+
+    if (!first) {
+        first = node;
         return;
     }
-    while (curr->next)
-        curr = curr->next;
-    curr->next = node;
+
+    FileHistoryNode *last = first;
+    for (; last->next; last = last->next);
+    last->next = node;
+    node->prev = last;
 }
 
-FileHistoryList *FileHistoryList_Node_FindByFilePath(FileHistoryList **root, const TCHAR *filePath)
+FileHistoryNode *FileHistoryList::Find(const TCHAR *filePath)
 {
-    FileHistoryList *curr;
-
-    assert(root);
-    if (!root) return NULL;
-    assert(filePath);
-    if (!filePath) return NULL;
-
-    curr = *root;
-    while (curr) {
-        assert(curr->state->filePath);
-        if (tstr_ieq(filePath, curr->state->filePath))
-            return curr;
-        curr = curr->next;
-    }
-
+    for (FileHistoryNode *node = first; node; node = node->next)
+        if (tstr_ieq(node->state.filePath, filePath))
+            return node;
     return NULL;
 }
 
-BOOL FileHistoryList_Node_RemoveByFilePath(FileHistoryList **root, const TCHAR *filePath)
+FileHistoryNode *FileHistoryList::Find(unsigned int menuId)
 {
-    FileHistoryList *node;
-
-    assert(root);
-    if (!root) return FALSE;
-    assert(filePath);
-    if (!filePath) return FALSE;
-
-    /* traversing the list twice, but it's small so we don't care */
-    node = FileHistoryList_Node_FindByFilePath(root, filePath);
-    if (!node)
-        return FALSE;
-
-    return FileHistoryList_Node_RemoveAndFree(root, node);
+    for (FileHistoryNode *node = first; node; node = node->next)
+        if (node->menuId == menuId)
+            return node;
+    return NULL;
 }
 
-BOOL FileHistoryList_Node_RemoveAndFree(FileHistoryList **root, FileHistoryList *node)
+void FileHistoryList::Remove(FileHistoryNode *node)
 {
-    FileHistoryList **prev;
+    if (node->next)
+        node->next->prev = node->prev;
 
-    assert(root);
-    if (!root) return FALSE;
+    if (first == node)
+        first = node->next;
+    else
+        node->prev->next = node->next;
 
-    if (node == *root) {
-        *root = node->next;
-        goto Free;
-    }
-
-    prev = root;
-    while (*prev) {
-        if ((*prev)->next == node) {
-            (*prev)->next = node->next;
-            goto Free;
-        }
-        prev = &((*prev)->next);
-    }
-
-    /* TODO: should I free it anyway? */
-    return FALSE;
-Free:
-    FileHistoryList_Node_Free(node);
-    return TRUE;
+    node->next = NULL;
+    delete node;
 }
 
+void FileHistoryList::Remove(const TCHAR *filePath)
+{
+    FileHistoryNode *node = Find(filePath);
+    if (node)
+        Remove(node);
+}

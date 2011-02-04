@@ -155,7 +155,7 @@ static bool             gUseGdiRenderer = false;
 #define WS_REBAR (WS_CHILD | WS_CLIPCHILDREN | WS_BORDER | RBS_VARHEIGHT | \
                   RBS_BANDBORDERS | CCS_NODIVIDER | CCS_NOPARENTALIGN)
 
-static FileHistoryList *            gFileHistoryRoot = NULL;
+static FileHistoryList              gFileHistoryRoot;
 
        HINSTANCE                    ghinst = NULL;
 static TCHAR                        gWindowTitle[MAX_LOADSTRING];
@@ -542,7 +542,7 @@ MenuDef menuDefHelp[] = {
 #endif
 };
 
-static void AddFileMenuItem(HMENU menuFile, FileHistoryList *node, UINT index)
+static void AddFileMenuItem(HMENU menuFile, FileHistoryNode *node, UINT index)
 {
 static UINT nextMenuId = 1000;
 
@@ -552,7 +552,7 @@ static UINT nextMenuId = 1000;
     if (!menuFile) return;
 
     TCHAR menuString[MAX_PATH + 4];
-    wsprintf(menuString, _T("&%d) %s"), (index + 1) % 10, FilePath_GetBaseName(node->state->filePath));
+    wsprintf(menuString, _T("&%d) %s"), (index + 1) % 10, FilePath_GetBaseName(node->state.filePath));
     if (INVALID_MENU_ID == node->menuId)
         node->menuId = ++nextMenuId;
     InsertMenu(menuFile, IDM_EXIT, MF_BYCOMMAND | MF_ENABLED | MF_STRING, node->menuId, menuString);
@@ -589,13 +589,13 @@ static HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuItems)
 static void AppendRecentFilesToMenu(HMENU m)
 {
     if (gRestrictedUse) return;
-    if (!gFileHistoryRoot) return;
+    if (!gFileHistoryRoot.first) return;
 
     int itemsAdded = 0;
-    FileHistoryList *curr = gFileHistoryRoot;
+    FileHistoryNode *curr = gFileHistoryRoot.first;
     while (curr && itemsAdded < MAX_RECENT_FILES_IN_MENU) {
-        assert(curr->state->filePath);
-        if (curr->state->filePath) {
+        assert(curr->state.filePath);
+        if (curr->state.filePath) {
             AddFileMenuItem(m, curr, itemsAdded);
             assert(curr->menuId != INVALID_MENU_ID);
             ++itemsAdded;
@@ -650,7 +650,7 @@ static void WindowInfo_RebuildMenu(WindowInfo *win)
 
 static void AddFileToHistory(const TCHAR *filePath)
 {
-    FileHistoryList *   node;
+    FileHistoryNode *   node;
     uint32_t            oldMenuId = INVALID_MENU_ID;
 
     assert(filePath);
@@ -658,16 +658,16 @@ static void AddFileToHistory(const TCHAR *filePath)
 
     /* if a history entry with the same name already exists, then delete it.
        That way we don't have duplicates and the file moves to the front of the list */
-    node = FileHistoryList_Node_FindByFilePath(&gFileHistoryRoot, filePath);
+    node = gFileHistoryRoot.Find(filePath);
     if (node) {
         oldMenuId = node->menuId;
-        FileHistoryList_Node_RemoveAndFree(&gFileHistoryRoot, node);
+        gFileHistoryRoot.Remove(node);
     }
-    node = FileHistoryList_Node_CreateFromFilePath(filePath);
+    node = new FileHistoryNode(filePath);
     if (!node)
         return;
     node->menuId = oldMenuId;
-    FileHistoryList_Node_InsertHead(&gFileHistoryRoot, node);
+    gFileHistoryRoot.Prepend(node);
 }
 
 /* Get password for a given 'fileName', can be NULL if user cancelled the
@@ -676,9 +676,9 @@ static void AddFileToHistory(const TCHAR *filePath)
 TCHAR *GetPasswordForFile(WindowInfo *win, const TCHAR *fileName,
                           pdf_xref *xref, unsigned char *decryptionKey, bool *saveKey)
 {
-    FileHistoryList *fileFromHistory = FileHistoryList_Node_FindByFilePath(&gFileHistoryRoot, fileName);
-    if (fileFromHistory && fileFromHistory->state->decryptionKey) {
-        DisplayState *ds = fileFromHistory->state;
+    FileHistoryNode *fileFromHistory = gFileHistoryRoot.Find(fileName);
+    if (fileFromHistory && fileFromHistory->state.decryptionKey) {
+        DisplayState *ds = &fileFromHistory->state;
         char *fingerprint = mem_to_hexstr(decryptionKey, 16);
         *saveKey = memcmp(fingerprint, ds->decryptionKey, str_len(fingerprint)) == 0;
         free(fingerprint);
@@ -739,6 +739,22 @@ static bool Prefs_Load(void)
         ok = Prefs_Deserialize(prefsTxt, prefsFileLen, &gFileHistoryRoot);
         assert(ok);
     }
+
+    // TODO: add a check if a file exists, to filter out deleted files
+    // but only if a file is on a non-network drive (because
+    // accessing network drives can be slow and unnecessarily spin
+    // the drives).
+#if 0
+    FileHistoryNode *node = gFileHistoryRoot.first;
+    while (node) {
+        FileHistoryNode *next = node->next;
+        if (!file_exists(node->state->filePath)) {
+            DBG_OUT_T("Prefs_Load() file '%s' doesn't exist anymore\n", node->state->filePath);
+            gFileHistoryRoot.Remove(node);
+        }
+        node = next;
+    }
+#endif
 
     free(prefsFilename);
     free(prefsTxt);
@@ -869,12 +885,12 @@ static void UpdateCurrentFileDisplayStateForWin(WindowInfo *win)
     if (!fileName)
         return;
 
-    FileHistoryList* node = FileHistoryList_Node_FindByFilePath(&gFileHistoryRoot, fileName);
+    FileHistoryNode *node = gFileHistoryRoot.Find(fileName);
     assert(node || !gGlobalPrefs.m_rememberOpenedFiles);
     if (!node)
         return;
 
-    DisplayState *ds = node->state;
+    DisplayState *ds = &node->state;
     if (!win->dm->displayStateFromModel(ds))
         return;
     ds->useGlobalValues = gGlobalPrefs.m_globalPrefsOnly;
@@ -1560,10 +1576,10 @@ WindowInfo* LoadPdf(const TCHAR *fileName, WindowInfo *win, bool showWin, TCHAR 
     if (!fullpath)
         goto exit;
 
-    FileHistoryList *fileFromHistory = FileHistoryList_Node_FindByFilePath(&gFileHistoryRoot, fullpath);
+    FileHistoryNode *fileFromHistory = gFileHistoryRoot.Find(fullpath);
     DisplayState *ds = NULL;
     if (fileFromHistory) {
-        ds = fileFromHistory->state;
+        ds = &fileFromHistory->state;
         AdjustRemovableDriveLetter(fullpath);
     }
 
@@ -3675,8 +3691,10 @@ static void OnMenuSettings(WindowInfo *win)
     if (DIALOG_OK_PRESSED != Dialog_Settings(win->hwndFrame, &gGlobalPrefs))
         return;
 
-    if (!gGlobalPrefs.m_rememberOpenedFiles)
-        FileHistoryList_Free(&gFileHistoryRoot);
+    if (!gGlobalPrefs.m_rememberOpenedFiles) {
+        delete gFileHistoryRoot.first;
+        gFileHistoryRoot.first = NULL;
+    }
 
     for (size_t i = 0; i < gWindowList.size(); i++) {
         WindowInfo *win = gWindowList[i];
@@ -4393,20 +4411,6 @@ static void OnChar(WindowInfo *win, int key)
         break;
 #endif
     }
-}
-
-/* Find a file in a file history list that has a given 'menuId'.
-   Return a copy of filename or NULL if couldn't be found.
-   It's used to figure out if a menu item selected by the user
-   is one of the "recent files" menu items in File menu.
-   Caller needs to free() the memory.
-   */
-static const TCHAR *RecentFileNameFromMenuItemId(UINT  menuId) {
-    for (FileHistoryList* curr = gFileHistoryRoot; curr; curr = curr->next) {
-        if (curr->menuId == menuId)
-            return tstr_dup(curr->state->filePath);
-    }
-    return NULL;
 }
 
 static void GoToTocLinkForTVItem(WindowInfo *win, HWND hTV, HTREEITEM hItem=NULL, bool allowExternal=true)
@@ -5697,7 +5701,6 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
     int             wmId, current;
     WindowInfo *    win;
     ULONG           ulScrollLines;                   // for mouse wheel logic
-    const TCHAR *   fileName;
     HttpReqCtx *    ctx;
 
     win = gWindowList.Find(hwnd);
@@ -5729,11 +5732,14 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
         case WM_COMMAND:
             wmId    = LOWORD(wParam);
 
-            fileName = RecentFileNameFromMenuItemId(wmId);
-            if (fileName) {
-                LoadPdf(fileName, win);
-                free((void*)fileName);
-                break;
+            // check if the menuId belongs to an entry in the list of
+            // recently opened files and load the referenced file if it does
+            {
+                FileHistoryNode *node = gFileHistoryRoot.Find(wmId);
+                if (node) {
+                    LoadPdf(node->state.filePath, win);
+                    break;
+                }
             }
 
             switch (wmId)
@@ -6536,7 +6542,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 Exit:
     while (gWindowList.size() > 0)
         WindowInfo_Delete(gWindowList[0]);
-    FileHistoryList_Free(&gFileHistoryRoot);
     DeleteObject(gBrushBg);
     DeleteObject(gBrushWhite);
     DeleteObject(gBrushBlack);

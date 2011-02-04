@@ -7,24 +7,30 @@
 
 #define INVALID_MENU_ID (unsigned int)-1
 
-typedef struct FileHistoryList {
-    struct FileHistoryList *next;
-    unsigned int            menuId;
-    DisplayState *          state;
-} FileHistoryList;
+class FileHistoryNode {
+public:
+    FileHistoryNode(const TCHAR *filePath=NULL);
+    ~FileHistoryNode() { delete next; }
 
-FileHistoryList * FileHistoryList_Node_Create(DisplayState *ds=NULL);
-FileHistoryList * FileHistoryList_Node_CreateFromFilePath(const TCHAR *filePath);
+    FileHistoryNode *   next;
+    FileHistoryNode *   prev;
+    unsigned int        menuId;
+    DisplayState        state;
+};
 
-void              FileHistoryList_Node_Free(FileHistoryList *node);
-void              FileHistoryList_Free(FileHistoryList **root);
+class FileHistoryList {
+public:
+    FileHistoryList() : first(NULL) { }
+    ~FileHistoryList() { delete first; }
 
-void              FileHistoryList_Node_InsertHead(FileHistoryList **root, FileHistoryList *node);
-void              FileHistoryList_Node_Append(FileHistoryList **root, FileHistoryList *node);
+    void                Prepend(FileHistoryNode *node);
+    void                Append(FileHistoryNode *node);
+    FileHistoryNode *   Find(const TCHAR *filePath);
+    FileHistoryNode *   Find(unsigned int menuId);
+    void                Remove(FileHistoryNode *node);
+    void                Remove(const TCHAR *filePath);
 
-FileHistoryList * FileHistoryList_Node_FindByFilePath(FileHistoryList **root, const TCHAR *filePath);
-BOOL              FileHistoryList_Node_RemoveAndFree(FileHistoryList **root, FileHistoryList *node);
-
-BOOL              FileHistoryList_Node_RemoveByFilePath(FileHistoryList **root, const TCHAR *filePath);
+    FileHistoryNode *   first;
+};
 
 #endif

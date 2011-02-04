@@ -195,7 +195,7 @@ Error:
     return NULL;
 }
 
-benc_array* FileHistoryList_Serialize(FileHistoryList **root)
+static benc_array *FileHistoryList_Serialize(FileHistoryList *root)
 {
     BOOL ok;
     assert(root);
@@ -207,9 +207,9 @@ benc_array* FileHistoryList_Serialize(FileHistoryList **root)
 
     // Don't save more file entries than will be useful
     int restCount = gGlobalPrefs.m_globalPrefsOnly ? MAX_RECENT_FILES_IN_MENU : INT_MAX;
-    FileHistoryList *curr = *root;
+    FileHistoryNode *curr = root->first;
     while (curr && restCount > 0) {
-        benc_dict* bobj = DisplayState_Serialize(curr->state);
+        benc_dict* bobj = DisplayState_Serialize(&curr->state);
         if (!bobj)
             goto Error;
         ok = benc_array_append(arr, (benc_obj *)bobj);
@@ -225,7 +225,7 @@ Error:
     return NULL;      
 }
 
-const char *Prefs_Serialize(FileHistoryList **root, size_t* lenOut)
+const char *Prefs_Serialize(FileHistoryList *root, size_t* lenOut)
 {
     BOOL        ok;
     char *      data = NULL;
@@ -247,24 +247,6 @@ Error:
     return (const char*)data;
 }
 
-void FileHistory_Add(FileHistoryList **fileHistoryRoot, DisplayState *state)
-{
-    FileHistoryList *   fileHistoryNode = NULL;
-    // TODO: add a check if a file exists, to filter out deleted files
-    // but only if a file is on a non-network drive (because
-    // accessing network drives can be slow and unnecessarily spin
-    // the drives).
-#if 0
-    if (!file_exists(state->filePath)) {
-        DBG_OUT_T("FileHistory_Add() file '%s' doesn't exist anymore\n", state->filePath);
-        return;
-    }
-#endif
-    fileHistoryNode = FileHistoryList_Node_Create(state);
-    FileHistoryList_Node_Append(fileHistoryRoot, fileHistoryNode);
-    fileHistoryNode = NULL;
-}
-
 static void dict_get_str_helper(benc_dict *d, const char *key, char **val)
 {
     const char *txt = dict_get_str(d, key);
@@ -284,7 +266,7 @@ static void dict_get_tstr_helper(benc_dict *d, const char *key, TCHAR **val)
     }
 }
 
-bool Prefs_Deserialize(const char *prefsTxt, size_t prefsTxtLen, FileHistoryList **fileHistoryRoot)
+bool Prefs_Deserialize(const char *prefsTxt, size_t prefsTxtLen, FileHistoryList *fileHistoryRoot)
 {
     benc_obj * bobj;
     benc_str * bstr;
@@ -342,12 +324,12 @@ bool Prefs_Deserialize(const char *prefsTxt, size_t prefsTxtLen, FileHistoryList
         benc_dict *dict = benc_obj_as_dict(benc_array_get(fileHistory, i));
         assert(dict);
         if (!dict) continue;
-        DisplayState *state = new DisplayState();
-        DisplayState_Deserialize(dict, state);
-        if (state->filePath)
-            FileHistory_Add(fileHistoryRoot, state);
+        FileHistoryNode *node = new FileHistoryNode();
+        DisplayState_Deserialize(dict, &node->state);
+        if (node->state.filePath)
+            fileHistoryRoot->Append(node);
         else
-            delete state;
+            delete node;
     }
     benc_obj_delete(bobj);
     return true;

@@ -103,10 +103,12 @@ bool DisplayModel::displayStateFromModel(DisplayState *ds)
     bool presMode = getPresentationMode();
 
     if (!ds->filePath || !tstr_eq(ds->filePath, fileName())) {
-        free((void *)ds->filePath);
-        ds->filePath = tstr_dup(fileName());
-        if (!ds->filePath)
+        TCHAR *filePath = tstr_dup(fileName());
+        if (!filePath)
             return false;
+
+        free((void *)ds->filePath);
+        ds->filePath = filePath;
     }
 
     ds->displayMode = presMode ? _presDisplayMode : displayMode();
