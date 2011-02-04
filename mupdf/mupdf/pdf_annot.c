@@ -85,21 +85,18 @@ pdf_loadlink(pdf_xref *xref, fz_obj *dict)
 			dest = fz_dictgets(action, "URI");
 			pdf_logpage("action uri %s\n", fz_tostrbuf(dest));
 		}
-		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=726 */
 		else if (fz_isname(obj) && !strcmp(fz_toname(obj), "Launch"))
 		{
 			kind = PDF_LLAUNCH;
 			dest = fz_dictgets(action, "F");
 			pdf_logpage("action %s (%d %d R)\n", fz_toname(obj), fz_tonum(dest), fz_togen(dest));
 		}
-		/* SumatraPDF: add support for named actions */
 		else if (fz_isname(obj) && !strcmp(fz_toname(obj), "Named"))
 		{
 			kind = PDF_LNAMED;
 			dest = fz_dictgets(action, "N");
 			pdf_logpage("action %s (%d %d R)\n", fz_toname(obj), fz_tonum(dest), fz_togen(dest));
 		}
-		/* SumatraPDF: add support for more complex actions */
 		else if (fz_isname(obj) && (!strcmp(fz_toname(obj), "GoToR")))
 		{
 			kind = PDF_LACTION;
@@ -131,8 +128,7 @@ pdf_loadlink(pdf_xref *xref, fz_obj *dict)
 void
 pdf_loadlinks(pdf_link **linkp, pdf_xref *xref, fz_obj *annots)
 {
-	pdf_link *link;
-	fz_obj *subtype;
+	pdf_link *link, *temp;
 	fz_obj *obj;
 	int i;
 
@@ -143,17 +139,11 @@ pdf_loadlinks(pdf_link **linkp, pdf_xref *xref, fz_obj *annots)
 	for (i = 0; i < fz_arraylen(annots); i++)
 	{
 		obj = fz_arrayget(annots, i);
-
-		subtype = fz_dictgets(obj, "Subtype");
-		// SumatraPDF: all annotations can act as links
-		// if (fz_isname(subtype) && !strcmp(fz_toname(subtype), "Link"))
+		temp = pdf_loadlink(xref, obj);
+		if (temp)
 		{
-			pdf_link *temp = pdf_loadlink(xref, obj);
-			if (temp)
-			{
-				temp->next = link;
-				link = temp;
-			}
+			temp->next = link;
+			link = temp;
 		}
 	}
 

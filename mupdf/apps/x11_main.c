@@ -722,7 +722,7 @@ int main(int argc, char **argv)
 				break;
 
 			case ClientMessage:
-				if (xevt.xclient.format == 33 && xevt.xclient.data.l[0] == WM_DELETE_WINDOW)
+				if (xevt.xclient.format == 32 && xevt.xclient.data.l[0] == WM_DELETE_WINDOW)
 					closing = 1;
 				break;
 			}

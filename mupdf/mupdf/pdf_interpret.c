@@ -126,7 +126,6 @@ pdf_freecsi(pdf_csi *csi)
 	pdf_dropmaterial(&csi->gstate[0].stroke);
 	if (csi->gstate[0].font)
 		pdf_dropfont(csi->gstate[0].font);
-	/* SumatraPDF: fix memory leak */
 	if (csi->gstate[0].softmask)
 		pdf_dropxobject(csi->gstate[0].softmask);
 
@@ -194,7 +193,6 @@ pdf_runxobject(pdf_csi *csi, fz_obj *resources, pdf_xobject *xobj)
 		if (gstate->softmask)
 		{
 			pdf_xobject *softmask = gstate->softmask;
-			/* SumatraPDF: xobj->bbox seems to be correcter than softmask->bbox */
 			fz_rect bbox = fz_transformrect(gstate->ctm, xobj->bbox);
 
 			gstate->softmask = nil;
@@ -409,7 +407,6 @@ pdf_runextgstate(pdf_csi *csi, pdf_gstate *gstate, fz_obj *rdb, fz_obj *extgstat
 				else
 					gstate->luminosity = 0;
 			}
-			/* SumatraPDF: clear softmask when explicitly asked to */
 			else if (fz_isname(val) && !strcmp(fz_toname(val), "None"))
 			{
 				if (gstate->softmask)
@@ -1431,18 +1428,19 @@ pdf_runcsifile(pdf_csi *csi, fz_obj *rdb, fz_stream *file, char *buf, int buflen
 				fz_arraypush(csi->array, obj);
 				fz_dropobj(obj);
 			}
+			else if (tok == PDF_TKEYWORD)
+			{
+				/* some producers try to put Tw and Tc commands in the TJ array */
+				fz_warn("ignoring keyword '%s' inside array", buf);
+				if (!strcmp(buf, "Tw") || !strcmp(buf, "Tc"))
+				{
+					if (fz_arraylen(csi->array) > 0)
+						fz_arraydrop(csi->array);
+				}
+			}
 			else if (tok == PDF_TEOF)
 			{
 				return fz_okay;
-			}
-			else if (tok == PDF_TKEYWORD && (!strcmp(buf, "Tc") || !strcmp(buf, "Tw")) && fz_arraylen(csi->array) > 0)
-			{
-				/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=916  */
-				/* According to the PDF reference, only strings and numbers are  */
-				/* allowed inside TJ array arguments; nonetheless some producers */
-				/* seem to include Tc and Tw commands inside them. Ignore these  */
-				/* for now (and consider respecting them for later).             */
-				fz_dropobj(csi->array->u.a.items[--csi->array->u.a.len]);
 			}
 			else
 			{
@@ -1528,8 +1526,7 @@ pdf_runcsifile(pdf_csi *csi, fz_obj *rdb, fz_stream *file, char *buf, int buflen
 			{
 				error = pdf_runkeyword(csi, rdb, buf);
 				if (error)
-					/* SumatraPDF: is this too lenient? */
-					fz_catch(error, "couldn't run keyword '%s', continuing anyway", buf);
+					fz_catch(error, "cannot run keyword '%s'", buf);
 				pdf_clearstack(csi);
 			}
 			break;

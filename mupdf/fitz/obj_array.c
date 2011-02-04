@@ -101,6 +101,22 @@ fz_arraypush(fz_obj *obj, fz_obj *item)
 }
 
 void
+fz_arraydrop(fz_obj *obj)
+{
+	obj = fz_resolveindirect(obj);
+
+	if (!fz_isarray(obj))
+		fz_warn("assert: not an array (%s)", fz_objkindstr(obj));
+	else
+	{
+		if (obj->u.a.len > 0)
+		{
+			fz_dropobj(obj->u.a.items[--obj->u.a.len]);
+		}
+	}
+}
+
+void
 fz_arrayinsert(fz_obj *obj, fz_obj *item)
 {
 	obj = fz_resolveindirect(obj);

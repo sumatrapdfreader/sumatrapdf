@@ -66,6 +66,10 @@ pdf_loadimageimp(fz_pixmap **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict, fz
 		return fz_throw("image height is zero");
 	if (bpc == 0)
 		return fz_throw("image depth is zero");
+	if (w > (1 << 16))
+		return fz_throw("image is too wide");
+	if (h > (1 << 16))
+		return fz_throw("image is too high");
 
 	obj = fz_dictgetsa(dict, "ColorSpace", "CS");
 	if (obj && !imagemask && !forcemask)

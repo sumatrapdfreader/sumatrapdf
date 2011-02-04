@@ -530,30 +530,6 @@ loadsimplefont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict)
 		}
 	}
 
-	/* Prevent encoding Differences from being overwritten by reloading them */
-	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=115 */
-	if (fz_isdict(encoding))
-	{
-		fz_obj *diff, *item;
-
-		diff = fz_dictgets(encoding, "Differences");
-		if (fz_isarray(diff))
-		{
-			n = fz_arraylen(diff);
-			k = 0;
-			for (i = 0; i < n; i++)
-			{
-				item = fz_arrayget(diff, i);
-				if (fz_isint(item))
-					k = fz_toint(item);
-				if (fz_isname(item))
-					estrings[k++] = fz_toname(item);
-				if (k < 0) k = 0;
-				if (k > 255) k = 255;
-			}
-		}
-	}
-
 	fontdesc->encoding = pdf_newidentitycmap(0, 1);
 	fontdesc->ncidtogid = 256;
 	fontdesc->cidtogid = etable;
@@ -923,7 +899,6 @@ pdf_loadfontdescriptor(pdf_fontdesc *fontdesc, pdf_xref *xref, fz_obj *dict, cha
 
 	pdf_logfont("load fontdescriptor {\n");
 
-	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1014 */
 	if (!strchr(basefont, ',') || strchr(basefont, '+'))
 		origname = fz_toname(fz_dictgets(dict, "FontName"));
 	else

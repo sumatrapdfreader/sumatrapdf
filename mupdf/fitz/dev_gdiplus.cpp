@@ -1,3 +1,8 @@
+// GDI+ rendering device for MuPDF
+// Copyright (C) 2010 - 2011  Simon Bünzli
+
+// This file is licensed under GPLv3 (see ../COPYING)
+
 #include <windows.h>
 #include <gdiplus.h>
 extern "C" {
