@@ -954,6 +954,12 @@ static void WindowInfo_Delete(WindowInfo *win)
         DestroyWindow(win->hwndPdfProperties);
         assert(NULL == win->hwndPdfProperties);
     }
+    // make sure that all data associated with ToC entries is freed
+    if (win->tocLoaded) {
+        if (win->dm && win->dm->_showToc)
+            win->HideTocBox();
+        win->ClearTocBox();
+    }
     gWindowList.remove(win);
 
     DragAcceptFiles(win->hwndCanvas, FALSE);
@@ -4406,7 +4412,7 @@ static void GoToTocLinkForTVItem(WindowInfo *win, HWND hTV, HTREEITEM hItem=NULL
     item.hItem = hItem;
     item.mask = TVIF_PARAM;
     TreeView_GetItem(hTV, &item);
-    if (win->dm && item.lParam && (allowExternal || PDF_LGOTO == ((pdf_link *)item.lParam)->kind))
+    if (win->dm && item.lParam && (allowExternal || PDF_LGOTO == ((PdfTocItem *)item.lParam)->link->kind))
         PostMessage(win->hwndFrame, WM_APP_GOTO_TOC_LINK, 0, item.lParam);
 }
 
@@ -5222,7 +5228,7 @@ static HTREEITEM AddTocItemToView(HWND hwnd, PdfTocItem *entry, HTREEITEM parent
     tvinsert.itemex.mask = TVIF_TEXT | TVIF_PARAM | TVIF_STATE;
     tvinsert.itemex.state = entry->open ? TVIS_EXPANDED : 0;
     tvinsert.itemex.stateMask = TVIS_EXPANDED;
-    tvinsert.itemex.lParam = (LPARAM)entry->link;
+    tvinsert.itemex.lParam = (LPARAM)entry;
     // Replace unprintable whitespace with regular spaces
     tstr_trans_chars(entry->title, _T("\t\n\v\f\r"), _T("     "));
     tvinsert.itemex.pszText = entry->title;
@@ -5320,10 +5326,9 @@ void WindowInfo::LoadTocTree()
         return;
 
     PdfTocItem *toc = dm->getTocTree();
-    if (toc) {
+    if (toc)
         PopulateTocTreeView(hwndTocTree, toc);
-        delete toc;
-    }
+
     tocLoaded = true;
 }
 
@@ -5407,7 +5412,19 @@ void WindowInfo::HideTocBox()
 void WindowInfo::ClearTocBox()
 {
     if (!tocLoaded) return;
-    TreeView_DeleteAllItems(hwndTocTree);
+
+    TVITEM root;
+    root.hItem = TreeView_GetRoot(hwndTocTree);
+    if (root.hItem) {
+        root.mask = TVIF_PARAM;
+        TreeView_GetItem(hwndTocTree, &root);
+
+        assert(root.lParam);
+        delete (PdfTocItem *)root.lParam;
+
+        TreeView_DeleteAllItems(hwndTocTree);
+    }
+
     tocLoaded = false;
     currPageNo = 0;
 }
@@ -6103,7 +6120,7 @@ InitMouseWheelInfo:
 
         case WM_APP_GOTO_TOC_LINK:
             if (win && win->dm && lParam)
-                win->dm->goToTocLink((pdf_link *)lParam);
+                win->dm->goToTocLink(((PdfTocItem *)lParam)->link);
             break;
 
         case WM_APP_AUTO_RELOAD:

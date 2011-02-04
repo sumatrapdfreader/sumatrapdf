@@ -111,8 +111,8 @@ HTREEITEM WindowInfo::TreeItemForPageNo(HTREEITEM hItem, int pageNo)
         TreeView_GetItem(this->hwndTocTree, &item);
 
         // return if this item is on the specified page (or on a latter page)
-        if (item.lParam && PDF_LGOTO == ((pdf_link *)item.lParam)->kind) {
-            int page = this->dm->pdfEngine->findPageNo(((pdf_link *)item.lParam)->dest);
+        if (item.lParam) {
+            int page = ((PdfTocItem *)item.lParam)->pageNo;
             if (1 <= page && page <= pageNo)
                 hCurrItem = hItem;
             if (page >= pageNo)
