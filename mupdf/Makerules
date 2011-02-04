@@ -11,6 +11,11 @@ ifeq "$(build)" "debug"
 CFLAGS += -pipe -g
 endif
 
+ifeq "$(build)" "profile"
+CFLAGS += -pipe -O2 -DNDEBUG -pg
+LDFLAGS += -pg
+endif
+
 ifeq "$(build)" "release"
 CFLAGS += -pipe -O2 -DNDEBUG -fomit-frame-pointer
 endif

@@ -72,7 +72,7 @@ lexcomment(fz_stream *f)
 }
 
 static int
-lexnumber(fz_stream *f, char *s, int n, pdf_token_e *tok)
+lexnumber(fz_stream *f, char *s, int n, int *tok)
 {
 	char *buf = s;
 	*tok = PDF_TINT;
@@ -350,7 +350,7 @@ end:
 	return s - buf;
 }
 
-static pdf_token_e
+static int
 pdf_tokenfromkeyword(char *key)
 {
 	switch (*key)
@@ -390,7 +390,7 @@ pdf_tokenfromkeyword(char *key)
 }
 
 fz_error
-pdf_lex(pdf_token_e *tok, fz_stream *f, char *buf, int n, int *sl)
+pdf_lex(int *tok, fz_stream *f, char *buf, int n, int *sl)
 {
 	while (1)
 	{

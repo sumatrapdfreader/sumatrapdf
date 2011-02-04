@@ -359,7 +359,7 @@ parsecode(pdf_function *func, fz_stream *stream, int *codeptr)
 	fz_error error;
 	char buf[64];
 	int len;
-	pdf_token_e tok;
+	int tok;
 	int opptr, elseptr, ifptr;
 	int a, b, mid, cmp;
 
@@ -502,7 +502,7 @@ loadpostscriptfunc(pdf_function *func, pdf_xref *xref, fz_obj *dict, int num, in
 	fz_stream *stream;
 	int codeptr;
 	char buf[64];
-	pdf_token_e tok;
+	int tok;
 	int len;
 
 	pdf_logrsrc("load postscript function (%d %d R)\n", num, gen);

@@ -10,6 +10,8 @@
 # define _XOPEN_SOURCE 1
 #endif
 
+#define noSHOWINFO
+
 #include "fitz.h"
 
 #include <X11/Xlib.h>
@@ -49,6 +51,7 @@ enum {
 	UNKNOWN
 };
 
+#ifdef SHOWINFO
 static char *modename[] = {
 	"ARGB8888",
 	"BGRA8888",
@@ -63,6 +66,7 @@ static char *modename[] = {
 	"BGR233",
 	"UNKNOWN"
 };
+#endif
 
 extern ximage_convert_func_t ximage_convert_funcs[];
 
@@ -95,7 +99,10 @@ createximage(Display *dpy, Visual *vis, XShmSegmentInfo *xsi, int depth, int w, 
 	XImage *img;
 	Status status;
 
-	if (!XShmQueryExtension(dpy)) goto fallback;
+	if (!XShmQueryExtension(dpy))
+		goto fallback;
+	if (!info.useshm)
+		goto fallback;
 
 	img = XShmCreateImage(dpy, vis, depth, ZPixmap, nil, xsi, w, h);
 	if (!img)
@@ -218,12 +225,14 @@ select_mode(void)
 	gs = ffs(gm) - 1;
 	bs = ffs(bm) - 1;
 
+#ifdef SHOWINFO
 	printf("ximage: mode %d/%d %08lx %08lx %08lx (%ld,%ld,%ld) %s%s\n",
 		info.visual.depth,
 		info.bitsperpixel,
 		rm, gm, bm, rs, gs, bs,
 		byteorder == MSBFirst ? "msb" : "lsb",
 		byterev ? " <swap>":"");
+#endif
 
 	info.mode = UNKNOWN;
 	if (info.bitsperpixel == 8) {
@@ -253,7 +262,9 @@ select_mode(void)
 			info.mode = byteorder == MSBFirst ? RGBA8888 : ABGR8888;
 	}
 
+#ifdef SHOWINFO
 	printf("ximage: RGBA8888 to %s\n", modename[info.mode]);
+#endif
 
 	/* select conversion function */
 	info.convert_func = ximage_convert_funcs[info.mode];
@@ -303,7 +314,7 @@ ximage_error_handler(Display *display, XErrorEvent *event)
 	{
 		char buf[80];
 		XGetErrorText(display, event->error_code, buf, sizeof buf);
-		printf("ximage: disabling shared memory extension: %s\n", buf);
+		fprintf(stderr, "ximage: disabling shared memory extension: %s\n", buf);
 		info.useshm = 0;
 		return 0;
 	}
@@ -375,7 +386,9 @@ ximage_init(Display *display, int screen, Visual *visual)
 	if (!ok)
 		return 0;
 
+#ifdef SHOWINFO
 	printf("ximage: %sPutImage\n", info.useshm ? "XShm" : "X");
+#endif
 
 	return 1;
 }

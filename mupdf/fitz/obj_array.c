@@ -26,15 +26,12 @@ fz_copyarray(fz_obj *obj)
 	fz_obj *new;
 	int i;
 
-	if (!fz_isarray(obj))
+	if (fz_isindirect(obj) || !fz_isarray(obj))
 		fz_warn("assert: not an array (%s)", fz_objkindstr(obj));
 
 	new = fz_newarray(fz_arraylen(obj));
-
 	for (i = 0; i < fz_arraylen(obj); i++)
-	{
 		fz_arraypush(new, fz_arrayget(obj, i));
-	}
 
 	return new;
 }

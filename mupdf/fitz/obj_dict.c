@@ -48,7 +48,7 @@ fz_copydict(fz_obj *obj)
 	fz_obj *new;
 	int i;
 
-	if (!fz_isdict(obj))
+	if (fz_isindirect(obj) || !fz_isdict(obj))
 		fz_throw("assert: not a dict (%s)", fz_objkindstr(obj));
 
 	new = fz_newdict(fz_dictlen(obj));

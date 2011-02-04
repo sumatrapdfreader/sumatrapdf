@@ -18,6 +18,12 @@
 #include "fitz.h"
 #include "mupdf.h"
 
+/* Macros for accessing the combined extentflags field */
+#define pdf_range_high(r) ((r)->low + ((r)->extentflags >> 2))
+#define pdf_range_flags(r) ((r)->extentflags & 3)
+#define pdf_range_set_high(r, h) ((r)->extentflags = (((r)->extentflags & 3) | ((h - (r)->low) << 2)))
+#define pdf_range_set_flags(r, f) ((r)->extentflags = (((r)->extentflags & ~3) | f))
+
 /*
  * Allocate, destroy and simple parameters.
  */
@@ -125,15 +131,15 @@ pdf_debugcmap(pdf_cmap *cmap)
 	for (i = 0; i < cmap->rlen; i++)
 	{
 		pdf_range *r = &cmap->ranges[i];
-		printf("\t\t<%04x> <%04x> ", r->low, r->high);
-		if (r->flag == PDF_CMAP_TABLE)
+		printf("\t\t<%04x> <%04x> ", r->low, pdf_range_high(r));
+		if (pdf_range_flags(r) == PDF_CMAP_TABLE)
 		{
 			printf("[ ");
-			for (k = 0; k < r->high - r->low + 1; k++)
+			for (k = 0; k < pdf_range_high(r) - r->low + 1; k++)
 				printf("%d ", cmap->table[r->offset + k]);
 			printf("]\n");
 		}
-		else if (r->flag == PDF_CMAP_MULTI)
+		else if (pdf_range_flags(r) == PDF_CMAP_MULTI)
 		{
 			printf("< ");
 			n = cmap->table[r->offset];
@@ -187,14 +193,21 @@ addtable(pdf_cmap *cmap, int value)
 static void
 addrange(pdf_cmap *cmap, int low, int high, int flag, int offset)
 {
+	/* If the range is too large to be represented, split it */
+	if (high - low > 0x3fff)
+	{
+		addrange(cmap, low, low+0x3fff, flag, offset);
+		addrange(cmap, low+0x3fff, high, flag, offset+0x3fff);
+		return;
+	}
 	if (cmap->rlen + 1 > cmap->rcap)
 	{
 		cmap->rcap = cmap->rcap > 1 ? (cmap->rcap * 3) / 2 : 256;
 		cmap->ranges = fz_realloc(cmap->ranges, cmap->rcap, sizeof(pdf_range));
 	}
 	cmap->ranges[cmap->rlen].low = low;
-	cmap->ranges[cmap->rlen].high = high;
-	cmap->ranges[cmap->rlen].flag = flag;
+	pdf_range_set_high(&cmap->ranges[cmap->rlen], high);
+	pdf_range_set_flags(&cmap->ranges[cmap->rlen], flag);
 	cmap->ranges[cmap->rlen].offset = offset;
 	cmap->rlen ++;
 }
@@ -277,33 +290,33 @@ pdf_sortcmap(pdf_cmap *cmap)
 	while (b < cmap->ranges + cmap->rlen)
 	{
 		/* ignore one-to-many mappings */
-		if (b->flag == PDF_CMAP_MULTI)
+		if (pdf_range_flags(b) == PDF_CMAP_MULTI)
 		{
 			*(++a) = *b;
 		}
 
 		/* input contiguous */
-		else if (a->high + 1 == b->low)
+		else if (pdf_range_high(a) + 1 == b->low)
 		{
 			/* output contiguous */
-			if (a->high - a->low + a->offset + 1 == b->offset)
+			if (pdf_range_high(a) - a->low + a->offset + 1 == b->offset)
 			{
 				/* SR -> R and SS -> R and RR -> R and RS -> R */
-				if (a->flag == PDF_CMAP_SINGLE || a->flag == PDF_CMAP_RANGE)
+				if (pdf_range_flags(a) == PDF_CMAP_SINGLE || pdf_range_flags(a) == PDF_CMAP_RANGE)
 				{
-					a->flag = PDF_CMAP_RANGE;
-					a->high = b->high;
+					pdf_range_set_flags(a, PDF_CMAP_RANGE);
+					pdf_range_set_high(a, pdf_range_high(b));
 				}
 
 				/* LS -> L */
-				else if (a->flag == PDF_CMAP_TABLE && b->flag == PDF_CMAP_SINGLE)
+				else if (pdf_range_flags(a) == PDF_CMAP_TABLE && pdf_range_flags(b) == PDF_CMAP_SINGLE)
 				{
-					a->high = b->high;
+					pdf_range_set_high(a, pdf_range_high(b));
 					addtable(cmap, b->offset);
 				}
 
 				/* LR -> LR */
-				else if (a->flag == PDF_CMAP_TABLE && b->flag == PDF_CMAP_RANGE)
+				else if (pdf_range_flags(a) == PDF_CMAP_TABLE && pdf_range_flags(b) == PDF_CMAP_RANGE)
 				{
 					*(++a) = *b;
 				}
@@ -319,19 +332,19 @@ pdf_sortcmap(pdf_cmap *cmap)
 			else
 			{
 				/* SS -> L */
-				if (a->flag == PDF_CMAP_SINGLE && b->flag == PDF_CMAP_SINGLE)
+				if (pdf_range_flags(a) == PDF_CMAP_SINGLE && pdf_range_flags(b) == PDF_CMAP_SINGLE)
 				{
-					a->flag = PDF_CMAP_TABLE;
-					a->high = b->high;
+					pdf_range_set_flags(a, PDF_CMAP_TABLE);
+					pdf_range_set_high(a, pdf_range_high(b));
 					addtable(cmap, a->offset);
 					addtable(cmap, b->offset);
 					a->offset = cmap->tlen - 2;
 				}
 
 				/* LS -> L */
-				else if (a->flag == PDF_CMAP_TABLE && b->flag == PDF_CMAP_SINGLE)
+				else if (pdf_range_flags(a) == PDF_CMAP_TABLE && pdf_range_flags(b) == PDF_CMAP_SINGLE)
 				{
-					a->high = b->high;
+					pdf_range_set_high(a, pdf_range_high(b));
 					addtable(cmap, b->offset);
 				}
 
@@ -368,14 +381,14 @@ pdf_lookupcmap(pdf_cmap *cmap, int cpt)
 		m = (l + r) >> 1;
 		if (cpt < cmap->ranges[m].low)
 			r = m - 1;
-		else if (cpt > cmap->ranges[m].high)
+		else if (cpt > pdf_range_high(&cmap->ranges[m]))
 			l = m + 1;
 		else
 		{
 			int i = cpt - cmap->ranges[m].low + cmap->ranges[m].offset;
-			if (cmap->ranges[m].flag == PDF_CMAP_TABLE)
+			if (pdf_range_flags(&cmap->ranges[m]) == PDF_CMAP_TABLE)
 				return cmap->table[i];
-			if (cmap->ranges[m].flag == PDF_CMAP_MULTI)
+			if (pdf_range_flags(&cmap->ranges[m]) == PDF_CMAP_MULTI)
 				return cmap->table[cmap->ranges[m].offset + 1]; /* first char */
 			return i;
 		}
@@ -400,17 +413,17 @@ pdf_lookupcmapfull(pdf_cmap *cmap, int cpt, int *out)
 		m = (l + r) >> 1;
 		if (cpt < cmap->ranges[m].low)
 			r = m - 1;
-		else if (cpt > cmap->ranges[m].high)
+		else if (cpt > pdf_range_high(&cmap->ranges[m]))
 			l = m + 1;
 		else
 		{
 			k = cpt - cmap->ranges[m].low + cmap->ranges[m].offset;
-			if (cmap->ranges[m].flag == PDF_CMAP_TABLE)
+			if (pdf_range_flags(&cmap->ranges[m]) == PDF_CMAP_TABLE)
 			{
 				out[0] = cmap->table[k];
 				return 1;
 			}
-			else if (cmap->ranges[m].flag == PDF_CMAP_MULTI)
+			else if (pdf_range_flags(&cmap->ranges[m]) == PDF_CMAP_MULTI)
 			{
 				n = cmap->ranges[m].offset;
 				for (i = 0; i < cmap->table[n]; i++)

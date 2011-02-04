@@ -21,7 +21,7 @@ enum
 	TENDCMAP
 };
 
-static pdf_token_e
+static int
 pdf_cmaptokenfromkeyword(char *key)
 {
 	if (!strcmp(key, "usecmap")) return TUSECMAP;
@@ -49,7 +49,7 @@ pdf_codefromstring(char *buf, int len)
 }
 
 static fz_error
-pdf_lexcmap(pdf_token_e *tok, fz_stream *file, char *buf, int n, int *sl)
+pdf_lexcmap(int *tok, fz_stream *file, char *buf, int n, int *sl)
 {
 	fz_error error;
 
@@ -68,7 +68,7 @@ pdf_parsecmapname(pdf_cmap *cmap, fz_stream *file)
 {
 	fz_error error;
 	char buf[256];
-	pdf_token_e tok;
+	int tok;
 	int len;
 
 	error = pdf_lexcmap(&tok, file, buf, sizeof buf, &len);
@@ -88,7 +88,7 @@ pdf_parsewmode(pdf_cmap *cmap, fz_stream *file)
 {
 	fz_error error;
 	char buf[256];
-	pdf_token_e tok;
+	int tok;
 	int len;
 
 	error = pdf_lexcmap(&tok, file, buf, sizeof buf, &len);
@@ -108,7 +108,7 @@ pdf_parsecodespacerange(pdf_cmap *cmap, fz_stream *file)
 {
 	fz_error error;
 	char buf[256];
-	pdf_token_e tok;
+	int tok;
 	int len;
 	int lo, hi;
 
@@ -146,7 +146,7 @@ pdf_parsecidrange(pdf_cmap *cmap, fz_stream *file)
 {
 	fz_error error;
 	char buf[256];
-	pdf_token_e tok;
+	int tok;
 	int len;
 	int lo, hi, dst;
 
@@ -189,7 +189,7 @@ pdf_parsecidchar(pdf_cmap *cmap, fz_stream *file)
 {
 	fz_error error;
 	char buf[256];
-	pdf_token_e tok;
+	int tok;
 	int len;
 	int src, dst;
 
@@ -224,7 +224,7 @@ pdf_parsebfrangearray(pdf_cmap *cmap, fz_stream *file, int lo, int hi)
 {
 	fz_error error;
 	char buf[256];
-	pdf_token_e tok;
+	int tok;
 	int len;
 	int dst[256];
 	int i;
@@ -259,7 +259,7 @@ pdf_parsebfrange(pdf_cmap *cmap, fz_stream *file)
 {
 	fz_error error;
 	char buf[256];
-	pdf_token_e tok;
+	int tok;
 	int len;
 	int lo, hi, dst;
 
@@ -335,7 +335,7 @@ pdf_parsebfchar(pdf_cmap *cmap, fz_stream *file)
 {
 	fz_error error;
 	char buf[256];
-	pdf_token_e tok;
+	int tok;
 	int len;
 	int dst[256];
 	int src;
@@ -378,7 +378,7 @@ pdf_parsecmap(pdf_cmap **cmapp, fz_stream *file)
 	pdf_cmap *cmap;
 	char key[64];
 	char buf[256];
-	pdf_token_e tok;
+	int tok;
 	int len;
 
 	cmap = pdf_newcmap();

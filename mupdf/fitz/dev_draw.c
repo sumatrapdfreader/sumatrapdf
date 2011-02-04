@@ -28,7 +28,6 @@ struct fz_drawdevice_s
 		int luminosity;
 		float alpha;
 	} stack[STACKSIZE];
-	int accumulated; /* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1174 */
 };
 
 static void
@@ -367,7 +366,6 @@ fz_drawcliptext(void *user, fz_text *text, fz_matrix ctm, int accumulate)
 	else
 	{
 		mask = dev->stack[dev->top-1].mask;
-		dev->accumulated++; /* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1174 */
 	}
 
 	if (!fz_isemptyrect(bbox))
@@ -762,10 +760,6 @@ fz_drawpopclip(void *user)
 {
 	fz_drawdevice *dev = user;
 	fz_pixmap *mask, *dest;
-	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1174 */
-	if (dev->accumulated)
-		dev->accumulated--;
-	else
 	if (dev->top > 0)
 	{
 		dev->top--;
@@ -937,7 +931,6 @@ fz_newdrawdevice(fz_glyphcache *cache, fz_pixmap *dest)
 	ddev->ael = fz_newael();
 	ddev->dest = dest;
 	ddev->top = 0;
-	ddev->accumulated = 0; /* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1174 */
 
 	ddev->scissor.x0 = dest->x;
 	ddev->scissor.y0 = dest->y;

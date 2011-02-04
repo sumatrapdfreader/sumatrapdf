@@ -476,7 +476,8 @@ pdf_flushtext(pdf_csi *csi)
 
 	if (doclip)
 	{
-		gstate->clipdepth++;
+		if (csi->accumulate < 2)
+			gstate->clipdepth++;
 		csi->dev->cliptext(csi->dev->user, text, gstate->ctm, csi->accumulate);
 		csi->accumulate = 2;
 	}
@@ -697,8 +698,4 @@ pdf_showtext(pdf_csi *csi, fz_obj *text)
 				pdf_showspace(csi, gstate->wordspace);
 		}
 	}
-
-	/* SumatraPDF: make sure that the text is drawn with the correct ExtGState */
-	if (!fz_isstring(text) || fz_tostrlen(text) > 1)
-		pdf_flushtext(csi);
 }

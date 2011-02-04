@@ -377,8 +377,12 @@ clean:
 nuke:
 	rm -rf build
 
+BINDIR ?= $(prefix)/bin
+LIBDIR ?= $(prefix)/lib
+INCDIR ?= $(prefix)/include
+
 install: $(OBJDIR) $(GENDIR) $(MUPDF_LIB) $(APPS)
-	install -d $(prefix)/bin $(prefix)/lib $(prefix)/include
-	install $(APPS) $(prefix)/bin
-	install $(MUPDF_LIB) $(prefix)/lib
-	install $(MUPDF_HDR) $(prefix)/include
+	install -d $(BINDIR) $(LIBDIR) $(INCDIR)
+	install $(APPS) $(BINDIR)
+	install $(MUPDF_LIB) $(LIBDIR)
+	install $(MUPDF_HDR) $(INCDIR)

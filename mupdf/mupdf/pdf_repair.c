@@ -13,10 +13,10 @@ struct entry
 };
 
 static fz_error
-fz_repairobj(fz_stream *file, char *buf, int cap, int *stmofsp, int *stmlenp, fz_obj **encrypt, fz_obj **id, fz_obj **info)
+fz_repairobj(fz_stream *file, char *buf, int cap, int *stmofsp, int *stmlenp, fz_obj **encrypt, fz_obj **id)
 {
 	fz_error error;
-	pdf_token_e tok;
+	int tok;
 	int stmlen;
 	int len;
 	int n;
@@ -55,15 +55,6 @@ fz_repairobj(fz_stream *file, char *buf, int cap, int *stmofsp, int *stmlenp, fz
 				if (*id)
 					fz_dropobj(*id);
 				*id = fz_keepobj(obj);
-			}
-
-			/* SumatraPDF: also repair document /Info */
-			obj = fz_dictgets(dict, "Info");
-			if (obj)
-			{
-				if (*info)
-					fz_dropobj(*info);
-				*info = fz_keepobj(obj);
 			}
 		}
 
@@ -140,7 +131,7 @@ pdf_repairobjstm(pdf_xref *xref, int num, int gen)
 	fz_error error;
 	fz_obj *obj;
 	fz_stream *stm;
-	pdf_token_e tok;
+	int tok;
 	int i, n, count;
 	char buf[256];
 
@@ -196,7 +187,8 @@ pdf_repairxref(pdf_xref *xref, char *buf, int bufsize)
 
 	fz_obj *encrypt = nil;
 	fz_obj *id = nil;
-	fz_obj *info = nil; /* SumatraPDF: also repair document /Info */
+	fz_obj *root = nil;
+	fz_obj *info = nil;
 
 	struct entry *list = nil;
 	int listlen;
@@ -207,7 +199,7 @@ pdf_repairxref(pdf_xref *xref, char *buf, int bufsize)
 	int gen = 0;
 	int tmpofs, numofs = 0, genofs = 0;
 	int stmlen, stmofs = 0;
-	pdf_token_e tok;
+	int tok;
 	int next;
 	int i, n;
 
@@ -223,7 +215,6 @@ pdf_repairxref(pdf_xref *xref, char *buf, int bufsize)
 	n = fz_read(xref->file, (unsigned char *)buf, MAX(bufsize, 1024));
 	if (n < 0)
 	{
-		/* SumatraPDF: fix memory leak */
 		error = fz_rethrow(n, "cannot read from file");
 		goto cleanup;
 	}
@@ -264,7 +255,7 @@ pdf_repairxref(pdf_xref *xref, char *buf, int bufsize)
 
 		if (tok == PDF_TOBJ)
 		{
-			error = fz_repairobj(xref->file, buf, bufsize, &stmofs, &stmlen, &encrypt, &id, &info);
+			error = fz_repairobj(xref->file, buf, bufsize, &stmofs, &stmlen, &encrypt, &id);
 			if (error)
 			{
 				error = fz_rethrow(error, "cannot parse object (%d %d R)", num, gen);
@@ -296,7 +287,6 @@ pdf_repairxref(pdf_xref *xref, char *buf, int bufsize)
 			error = pdf_parsedict(&dict, xref, xref->file, buf, bufsize);
 			if (error)
 			{
-				/* SumatraPDF: fix memory leak */
 				error = fz_rethrow(error, "cannot parse object");
 				goto cleanup;
 			}
@@ -317,7 +307,14 @@ pdf_repairxref(pdf_xref *xref, char *buf, int bufsize)
 				id = fz_keepobj(obj);
 			}
 
-			/* SumatraPDF: also repair document /Info */
+			obj = fz_dictgets(dict, "Root");
+			if (obj)
+			{
+				if (root)
+					fz_dropobj(root);
+				root = fz_keepobj(obj);
+			}
+
 			obj = fz_dictgets(dict, "Info");
 			if (obj)
 			{
@@ -390,11 +387,22 @@ pdf_repairxref(pdf_xref *xref, char *buf, int bufsize)
 
 	/* create a repaired trailer, Root will be added later */
 
-	xref->trailer = fz_newdict(4);
+	xref->trailer = fz_newdict(5);
 
 	obj = fz_newint(maxnum + 1);
 	fz_dictputs(xref->trailer, "Size", obj);
 	fz_dropobj(obj);
+
+	if (root)
+	{
+		fz_dictputs(xref->trailer, "Root", root);
+		fz_dropobj(root);
+	}
+	if (info)
+	{
+		fz_dictputs(xref->trailer, "Info", info);
+		fz_dropobj(info);
+	}
 
 	if (encrypt)
 	{
@@ -422,24 +430,14 @@ pdf_repairxref(pdf_xref *xref, char *buf, int bufsize)
 		fz_dropobj(id);
 	}
 
-	/* SumatraPDF: also repair document /Info */
-	if (info)
-	{
-		if (fz_isindirect(info))
-		{
-			/* create new reference with non-nil xref pointer */
-			obj = fz_newindirect(fz_tonum(info), fz_togen(info), xref);
-			fz_dropobj(info);
-			info = obj;
-		}
-		fz_dictputs(xref->trailer, "Info", info);
-		fz_dropobj(info);
-	}
-
 	fz_free(list);
 	return fz_okay;
 
 cleanup:
+	if (encrypt) fz_dropobj(encrypt);
+	if (id) fz_dropobj(id);
+	if (root) fz_dropobj(root);
+	if (info) fz_dropobj(info);
 	fz_free(list);
 	return error; /* already rethrown */
 }

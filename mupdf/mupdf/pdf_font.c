@@ -215,8 +215,6 @@ pdf_dropfont(pdf_fontdesc *fontdesc)
 		pdf_ft_free_vsubst(fontdesc);
 		if (fontdesc->font)
 			fz_dropfont(fontdesc->font);
-		if (fontdesc->buffer)
-			fz_free(fontdesc->buffer);
 		if (fontdesc->encoding)
 			pdf_dropcmap(fontdesc->encoding);
 		if (fontdesc->tottfcmap)
@@ -240,7 +238,6 @@ pdf_newfontdesc(void)
 	fontdesc->refs = 1;
 
 	fontdesc->font = nil;
-	fontdesc->buffer = nil;
 
 	fontdesc->flags = 0;
 	fontdesc->italicangle = 0;
@@ -1016,8 +1013,8 @@ pdf_makewidthtable(pdf_fontdesc *fontdesc)
 		{
 			cid = pdf_lookupcmap(fontdesc->encoding, k);
 			gid = pdf_fontcidtogid(fontdesc, cid);
-			if (gid >= 0) /* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1164 */
-			font->widthtable[gid] = fontdesc->hmtx[i].w;
+			if (gid >= 0 && gid < font->widthcount)
+				font->widthtable[gid] = fontdesc->hmtx[i].w;
 		}
 	}
 }

@@ -276,14 +276,14 @@ setbits(unsigned char *line, int x0, int x1)
 
 typedef struct fz_faxd_s fz_faxd;
 
-typedef enum fax_stage_e
+enum
 {
 	SNORMAL,	/* neutral state, waiting for any code */
 	SMAKEUP,	/* got a 1d makeup code, waiting for terminating code */
 	SEOL,		/* at eol, needs output buffer space */
 	SH1, SH2,	/* in H part 1 and 2 (both makeup and terminating codes) */
 	SDONE		/* all done */
-} fax_stage_e;
+};
 
 struct fz_faxd_s
 {
@@ -303,7 +303,7 @@ struct fz_faxd_s
 	int bidx;
 	unsigned int word;
 
-	fax_stage_e stage;
+	int stage;
 
 	int a, c, dim, eolc;
 	unsigned char *ref;

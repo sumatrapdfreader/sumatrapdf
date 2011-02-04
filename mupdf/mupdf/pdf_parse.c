@@ -114,7 +114,7 @@ pdf_parsearray(fz_obj **op, pdf_xref *xref, fz_stream *file, char *buf, int cap)
 	fz_obj *ary = nil;
 	fz_obj *obj = nil;
 	int a = 0, b = 0, n = 0;
-	pdf_token_e tok;
+	int tok;
 	int len;
 
 	ary = fz_newarray(4);
@@ -247,7 +247,7 @@ pdf_parsedict(fz_obj **op, pdf_xref *xref, fz_stream *file, char *buf, int cap)
 	fz_obj *dict = nil;
 	fz_obj *key = nil;
 	fz_obj *val = nil;
-	pdf_token_e tok;
+	int tok;
 	int len;
 	int a, b;
 
@@ -287,7 +287,7 @@ skip:
 		error = pdf_lex(&tok, file, buf, cap, &len);
 		if (error)
 		{
-			fz_dropobj(key); /* SumatraPDF: fix memory leak */
+			fz_dropobj(key);
 			fz_dropobj(dict);
 			return fz_rethrow(error, "cannot parse dict");
 		}
@@ -361,7 +361,6 @@ skip:
 			return fz_throw("invalid indirect reference in dict");
 
 		default:
-			/* SumatraPDF: fix memory leak */
 			fz_dropobj(key);
 			fz_dropobj(dict);
 			return fz_throw("unknown token in dict");
@@ -377,7 +376,7 @@ fz_error
 pdf_parsestmobj(fz_obj **op, pdf_xref *xref, fz_stream *file, char *buf, int cap)
 {
 	fz_error error;
-	pdf_token_e tok;
+	int tok;
 	int len;
 
 	error = pdf_lex(&tok, file, buf, cap, &len);
@@ -417,7 +416,7 @@ pdf_parseindobj(fz_obj **op, pdf_xref *xref,
 	fz_error error = fz_okay;
 	fz_obj *obj = nil;
 	int num = 0, gen = 0, stmofs;
-	pdf_token_e tok;
+	int tok;
 	int len;
 	int a, b;
 

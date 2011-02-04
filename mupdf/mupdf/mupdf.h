@@ -18,7 +18,7 @@ void pdf_logpage(char *fmt, ...);
  * tokenizer and low-level object parser
  */
 
-typedef enum pdf_token_e
+enum
 {
 	PDF_TERROR, PDF_TEOF,
 	PDF_TOARRAY, PDF_TCARRAY,
@@ -30,10 +30,10 @@ typedef enum pdf_token_e
 	PDF_TSTREAM, PDF_TENDSTREAM,
 	PDF_TXREF, PDF_TTRAILER, PDF_TSTARTXREF,
 	PDF_NTOKENS
-} pdf_token_e;
+};
 
 /* lex.c */
-fz_error pdf_lex(pdf_token_e *tok, fz_stream *f, char *buf, int n, int *len);
+fz_error pdf_lex(int *tok, fz_stream *f, char *buf, int n, int *len);
 
 /* parse.c */
 fz_error pdf_parsearray(fz_obj **op, pdf_xref *xref, fz_stream *f, char *buf, int cap);
@@ -65,17 +65,17 @@ fz_obj *pdf_toutf8name(fz_obj *src);
 typedef struct pdf_crypt_s pdf_crypt;
 typedef struct pdf_cryptfilter_s pdf_cryptfilter;
 
-typedef enum pdf_cryptmethod_e
+enum
 {
 	PDF_CRYPT_NONE,
 	PDF_CRYPT_RC4,
 	PDF_CRYPT_AESV2,
 	PDF_CRYPT_UNKNOWN,
-} pdf_cryptmethod;
+};
 
 struct pdf_cryptfilter_s
 {
-	pdf_cryptmethod method;
+	int method;
 	int length;
 	unsigned char key[16];
 };
@@ -276,8 +276,10 @@ enum { PDF_CMAP_SINGLE, PDF_CMAP_RANGE, PDF_CMAP_TABLE, PDF_CMAP_MULTI };
 struct pdf_range_s
 {
 	unsigned short low;
-	unsigned short high;
-	unsigned short flag;	/* single, range, table, multi */
+	/* Next, we pack 2 fields into the same unsigned short. Top 14 bits
+	 * are the extent, bottom 2 bits are flags: single, range, table,
+	 * multi */
+	unsigned short extentflags;
 	unsigned short offset;	/* range-delta or table-index */
 };
 
@@ -374,7 +376,6 @@ struct pdf_fontdesc_s
 	int refs;
 
 	fz_font *font;
-	unsigned char *buffer; /* contains allocated memory that should be freed */
 
 	/* FontDescriptor */
 	int flags;

@@ -111,14 +111,12 @@ main(int argc, char **argv)
 		if (cmap->rlen == 0)
 		{
 			fprintf(fo, "\t/* dummy entry for non-c99 compilers */\n");
-			fprintf(fo, "\t{ 0x0, 0x0, PDF_CMAP_RANGE, 0 }\n");
+			fprintf(fo, "\t{ 0x0, %d, 0 }\n", PDF_CMAP_RANGE);
 		}
 		for (k = 0; k < cmap->rlen; k++)
 		{
-			fprintf(fo, "\t{ 0x%04x, 0x%04x, %s %d },\n",
-				cmap->ranges[k].low, cmap->ranges[k].high,
-				flagtoname(cmap->ranges[k].flag),
-				cmap->ranges[k].offset);
+			fprintf(fo, "\t{ 0x%04x, 0x%04x, %d },\n",
+				cmap->ranges[k].low, cmap->ranges[k].extentflags, cmap->ranges[k].offset);
 		}
 		fprintf(fo, "};\n\n");
 

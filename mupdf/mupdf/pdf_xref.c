@@ -75,7 +75,7 @@ pdf_readoldtrailer(pdf_xref *xref, char *buf, int cap)
 	char *s;
 	int n;
 	int t;
-	pdf_token_e tok;
+	int tok;
 	int c;
 
 	pdf_logxref("load old xref format trailer\n");
@@ -199,7 +199,7 @@ pdf_readoldxref(fz_obj **trailerp, pdf_xref *xref, char *buf, int cap)
 	int ofs, len;
 	char *s;
 	int n;
-	pdf_token_e tok;
+	int tok;
 	int i;
 	int c;
 
@@ -553,7 +553,6 @@ pdf_openxrefwithstream(pdf_xref **xrefp, fz_stream *file, char *password)
 			xref->table = nil;
 			xref->len = 0;
 		}
-		/* SumatraPDF: fix memory leak */
 		if (xref->trailer)
 		{
 			fz_dropobj(xref->trailer);
@@ -596,12 +595,17 @@ pdf_openxrefwithstream(pdf_xref **xrefp, fz_stream *file, char *password)
 
 	if (repaired)
 	{
+		int hasroot, hasinfo;
+
 		error = pdf_repairobjstms(xref);
 		if (error)
 		{
 			pdf_freexref(xref);
 			return fz_rethrow(error, "cannot repair document");
 		}
+
+		hasroot = fz_dictgets(xref->trailer, "Root") != nil;
+		hasinfo = fz_dictgets(xref->trailer, "Info") != nil;
 
 		for (i = 1; i < xref->len; i++)
 		{
@@ -612,14 +616,27 @@ pdf_openxrefwithstream(pdf_xref **xrefp, fz_stream *file, char *password)
 			if (error)
 				return fz_rethrow(error, "cannot repair document");
 
-			obj = fz_dictgets(dict, "Type");
-			if (fz_isname(obj) && !strcmp(fz_toname(obj), "Catalog"))
+			if (!hasroot)
 			{
-				pdf_logxref("found catalog: (%d %d R)\n", i, 0);
+				obj = fz_dictgets(dict, "Type");
+				if (fz_isname(obj) && !strcmp(fz_toname(obj), "Catalog"))
+				{
+					pdf_logxref("found catalog: (%d %d R)\n", i, 0);
+					obj = fz_newindirect(i, 0, xref);
+					fz_dictputs(xref->trailer, "Root", obj);
+					fz_dropobj(obj);
+				}
+			}
 
-				obj = fz_newindirect(i, 0, xref);
-				fz_dictputs(xref->trailer, "Root", obj);
-				fz_dropobj(obj);
+			if (!hasinfo)
+			{
+				if (fz_dictgets(dict, "Creator") || fz_dictgets(dict, "Producer"))
+				{
+					pdf_logxref("found info: (%d %d R)\n", i, 0);
+					obj = fz_newindirect(i, 0, xref);
+					fz_dictputs(xref->trailer, "Info", obj);
+					fz_dropobj(obj);
+				}
 			}
 
 			fz_dropobj(dict);
@@ -710,7 +727,7 @@ pdf_loadobjstm(pdf_xref *xref, int num, int gen, char *buf, int cap)
 	int first;
 	int count;
 	int i, n;
-	pdf_token_e tok;
+	int tok;
 
 	pdf_logxref("loadobjstm (%d %d R)\n", num, gen);
 

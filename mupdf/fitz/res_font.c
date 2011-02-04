@@ -18,6 +18,7 @@ fz_newfont(void)
 	font->ftface = nil;
 	font->ftsubstitute = 0;
 	font->fthint = 0;
+	font->ftdata = nil;
 
 	font->t3matrix = fz_identity;
 	font->t3resources = nil;
@@ -73,6 +74,9 @@ fz_dropfont(fz_font *font)
 				fz_warn("freetype finalizing face: %s", ft_errorstring(fterr));
 			fz_finalizefreetype();
 		}
+
+		if (font->ftdata)
+			fz_free(font->ftdata);
 
 		if (font->widthtable)
 			fz_free(font->widthtable);
@@ -211,13 +215,12 @@ fz_newfontfrombuffer(fz_font **fontp, unsigned char *data, int len, int index)
 
 	font = fz_newfont();
 
-	/* SumatraPDF: give rendering device access to raw font data (also make */
-	/* sure that the buffer isn't prematurely freed with the font descriptor) */
+	/* SumatraPDF: give rendering device consistent access to raw font data */
 	font->_data = fz_malloc(len);
 	memcpy((void *)font->_data, data, len);
 	font->_data_len = len;
 
-	fterr = FT_New_Memory_Face(fz_ftlib, font->_data, len, index, (FT_Face*)&font->ftface);
+	fterr = FT_New_Memory_Face(fz_ftlib, data, len, index, (FT_Face*)&font->ftface);
 	if (fterr)
 	{
 		fz_free((void *)font->_data);
