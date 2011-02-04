@@ -206,6 +206,39 @@ bool fz_isptinrect(fz_rect rect, fz_point pt)
 
 #define fz_sizeofrect(rect) (((rect).x1 - (rect).x0) * ((rect).y1 - (rect).y0))
 
+char *tstr_to_pdfdoc(TCHAR *tstr)
+{
+    WCHAR *wstr = tstr_to_wstr(tstr);
+    int len = wstr_len(wstr);
+    char *docstr = SAZA(char, len + 1);
+
+    for (int i = 0; i < len; i++) {
+        // shortcut: check if the character has the same code point in both encodings
+        if (0 < wstr[i] && wstr[i] < 256 && pdf_docencoding[wstr[i]] == wstr[i]) {
+            docstr[i] = (char)wstr[i];
+            continue;
+        }
+
+        // search through pdf_docencoding for the character's code point
+        for (int j = 0; j < 256; j++) {
+            if (pdf_docencoding[j] == wstr[i]) {
+                docstr[i] = (char)j;
+                break;
+            }
+        }
+
+        // fail, if a character can't be encoded
+        if (!docstr[i]) {
+            free(docstr);
+            docstr = NULL;
+            break;
+        }
+    }
+    free(wstr);
+
+    return docstr;
+}
+
 RenderedBitmap::RenderedBitmap(fz_pixmap *pixmap, HDC hDC) :
     _hbmp(fz_pixtobitmap(hDC, pixmap, TRUE)),
     _width(pixmap->w), _height(pixmap->h), outOfDate(false) { }
@@ -351,16 +384,22 @@ OpenEmbeddedFile:
                 break;
             }
 
-            char *pwd_utf8 = tstr_to_utf8(pwd);
-            char *pwd_ansi = tstr_to_ansi(pwd);
-            if (pwd_utf8)
-                okay = !!pdf_authenticatepassword(_xref, pwd_utf8);
-            // for some documents, only the ANSI-encoded password works
-            if (!okay && pwd_ansi)
-                okay = !!pdf_authenticatepassword(_xref, pwd_ansi);
+            char *pwd_doc = tstr_to_pdfdoc(pwd);
+            okay = pwd_doc && !!pdf_authenticatepassword(_xref, pwd_doc);
+            free(pwd_doc);
+            // try the UTF-8 password, if the PDFDocEncoding one doesn't work
+            if (!okay) {
+                char *pwd_utf8 = tstr_to_utf8(pwd);
+                okay = pwd_utf8 && !!pdf_authenticatepassword(_xref, pwd_utf8);
+                free(pwd_utf8);
+            }
+            // fall back to an ANSI-encoded password as a last measure
+            if (!okay) {
+                char *pwd_ansi = tstr_to_ansi(pwd);
+                okay = pwd_ansi && !!pdf_authenticatepassword(_xref, pwd_ansi);
+                free(pwd_ansi);
+            }
 
-            free(pwd_utf8);
-            free(pwd_ansi);
             free(pwd);
         }
         if (!okay)
@@ -406,14 +445,21 @@ bool PdfEngine::load(fz_stream *stm, TCHAR *password)
         if (!password)
             return false;
 
-        char *pwd_utf8 = tstr_to_utf8(password);
-        char *pwd_ansi = tstr_to_ansi(password);
-        bool okay = pwd_utf8 && !!pdf_authenticatepassword(_xref, pwd_utf8);
-        // for some documents, only the ANSI-encoded password works
-        if (!okay && pwd_ansi)
-            okay = !!pdf_authenticatepassword(_xref, pwd_ansi);
-        free(pwd_utf8);
-        free(pwd_ansi);
+        char *pwd_doc = tstr_to_pdfdoc(password);
+        bool okay = pwd_doc && !!pdf_authenticatepassword(_xref, pwd_doc);
+        free(pwd_doc);
+        // try the UTF-8 password, if the PDFDocEncoding one doesn't work
+        if (!okay) {
+            char *pwd_utf8 = tstr_to_utf8(password);
+            okay = pwd_utf8 && !!pdf_authenticatepassword(_xref, pwd_utf8);
+            free(pwd_utf8);
+        }
+        // fall back to an ANSI-encoded password as a last measure
+        if (!okay) {
+            char *pwd_ansi = tstr_to_ansi(password);
+            okay = pwd_ansi && !!pdf_authenticatepassword(_xref, pwd_ansi);
+            free(pwd_ansi);
+        }
 
         if (!okay)
             return false;
