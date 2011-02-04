@@ -1318,25 +1318,23 @@ loadstitchingfunc(pdf_function *func, pdf_xref *xref, fz_obj *dict)
 		return fz_throw("stitching function has no input functions");
 	{
 		k = fz_arraylen(obj);
-		func->u.st.k = k;
 
-		pdf_logrsrc("k %d\n", func->u.st.k);
+		pdf_logrsrc("k %d\n", k);
 
-		func->u.st.funcs = fz_calloc(func->u.st.k, sizeof(pdf_function*));
-		func->u.st.bounds = fz_calloc(func->u.st.k - 1, sizeof(float));
-		func->u.st.encode = fz_calloc(func->u.st.k * 2, sizeof(float));
+		func->u.st.funcs = fz_calloc(k, sizeof(pdf_function*));
+		func->u.st.bounds = fz_calloc(k - 1, sizeof(float));
+		func->u.st.encode = fz_calloc(k * 2, sizeof(float));
 		funcs = func->u.st.funcs;
 
-		func->u.st.k = 0; /* SumatraPDF: don't crash on an error */
 		for (i = 0; i < k; ++i)
 		{
 			sub = fz_arrayget(obj, i);
-			error = pdf_loadfunction(&func->u.st.funcs[i], xref, sub);
+			error = pdf_loadfunction(&funcs[i], xref, sub);
 			if (error)
 				return fz_rethrow(error, "cannot load sub function %d (%d %d R)", i, fz_tonum(sub), fz_togen(sub));
 			if (funcs[i]->m != 1 || funcs[i]->n != funcs[0]->n)
 				return fz_throw("sub function %d /Domain or /Range mismatch", i);
-			func->u.st.k++; /* SumatraPDF: don't crash on an error */
+			func->u.st.k ++;
 		}
 
 		if (!func->n)

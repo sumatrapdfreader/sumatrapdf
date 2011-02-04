@@ -143,12 +143,10 @@ fz_bbox
 fz_roundrect(fz_rect f)
 {
 	fz_bbox i;
-	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=271 */
-#define ROUND_EPSILON 0.001f
-	i.x0 = floorf(f.x0 + ROUND_EPSILON);
-	i.y0 = floorf(f.y0 + ROUND_EPSILON);
-	i.x1 = ceilf(f.x1 - ROUND_EPSILON);
-	i.y1 = ceilf(f.y1 - ROUND_EPSILON);
+	i.x0 = floorf(f.x0 + 0.001f); /* adjust by 0.001 to compensate for precision errors */
+	i.y0 = floorf(f.y0 + 0.001f);
+	i.x1 = ceilf(f.x1 - 0.001f);
+	i.y1 = ceilf(f.y1 - 0.001f);
 	return i;
 }
 

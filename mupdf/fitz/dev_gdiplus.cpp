@@ -567,7 +567,7 @@ gdiplusgetpen(Brush *brush, fz_matrix ctm, fz_strokestate *stroke)
 static Font *
 gdiplusgetfont(userData *user, fz_font *font, float height, float *out_ascent)
 {
-	if (!font->_data || font->_data_len < 0)
+	if (!font->ftdata && !font->ftfile)
 		return NULL;
 	
 	if (!user->fontCollections)
@@ -580,25 +580,22 @@ gdiplusgetfont(userData *user, fz_font *font, float height, float *out_ascent)
 		assert(collection->GetFamilyCount() == 0);
 		
 		/* TODO: memory fonts seem to get substituted in release builds * /
-		if (font->_data_len > 0)
+		if (font->ftdata)
 		{
-			collection->AddMemoryFont(font->_data, font->_data_len);
+			collection->AddMemoryFont(font->ftdata, font->ftsize);
 		}
-		else */ if (font->_data_len == 0)
+		else */ if (font->ftfile)
 		{
 			WCHAR fontPath[MAX_PATH];
-			MultiByteToWideChar(CP_ACP, 0, font->_data, -1, fontPath, nelem(fontPath));
+			MultiByteToWideChar(CP_ACP, 0, font->ftfile, -1, fontPath, nelem(fontPath));
 			collection->AddFontFile(fontPath);
-		}
-		if (collection->GetFamilyCount() == 0)
-		{
-			font->_data_len = -1;
-			delete collection;
-			return NULL;
 		}
 		
 		fz_hashinsert(user->fontCollections, font->name, collection);
 	}
+	
+	if (collection->GetFamilyCount() == 0)
+		return NULL;
 	
 	FontFamily family;
 	int found = 0;

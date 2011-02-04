@@ -602,7 +602,7 @@ pdf_createfontlistMS()
 #endif
 			if (!isNonAnsiPath)
 				insertmapping(&fontlistMS, "DroidSansFallback", szPathAnsi, 0);
-            else
+			else
 				fz_warn("ignoring font with non-ANSI filename: %s", szPathAnsi);
 			CloseHandle(hFile);
 		}
@@ -680,6 +680,8 @@ loadwindowsfont(pdf_fontdesc *font, char *fontname)
 	error = fz_newfontfromfile(&font->font, found->fontpath, found->index);
 	if (error)
 		return fz_rethrow(error, "cannot load freetype font from a file %s", found->fontpath);
+
+	font->font->ftfile = fz_strdup(found->fontpath);
 
 	pdf_logfont("win32: load font from `%s'\n", found->fontpath);
 
@@ -967,7 +969,9 @@ pdf_loadembeddedfont(pdf_fontdesc *fontdesc, pdf_xref *xref, fz_obj *stmref)
 		return fz_rethrow(error, "cannot load embedded font (%d %d R)", fz_tonum(stmref), fz_togen(stmref));
 	}
 
-	fontdesc->font->ftdata = buf->data; /* save the buffer so we can free it later */
+	/* save the buffer so we can free it later */
+	fontdesc->font->ftdata = buf->data;
+	fontdesc->font->ftsize = buf->len;
 	fz_free(buf); /* only free the fz_buffer struct, not the contained data */
 
 	fontdesc->isembedded = 1;

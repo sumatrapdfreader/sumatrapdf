@@ -669,7 +669,11 @@ struct fz_font_s
 	void *ftface; /* has an FT_Face if used */
 	int ftsubstitute; /* ... substitute metrics */
 	int fthint; /* ... force hinting for DynaLab fonts */
+
+	/* origin of font data */
+	char *ftfile;
 	unsigned char *ftdata;
+	int ftsize;
 
 	fz_matrix t3matrix;
 	fz_obj *t3resources;
@@ -684,10 +688,6 @@ struct fz_font_s
 	/* substitute metrics */
 	int widthcount;
 	int *widthtable;
-
-	/* SumatraPDF: allow access to raw font data from a rendering device  */
-	const char *_data; /* font file content or file path                  */
-	int _data_len;     /* 0 for file paths, -1 for "not needed by device" */
 };
 
 fz_font *fz_newtype3font(char *name, fz_matrix matrix);

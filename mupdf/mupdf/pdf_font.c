@@ -480,7 +480,7 @@ loadsimplefont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict)
 
 	error = pdf_loadtounicode(fontdesc, xref, estrings, nil, fz_dictgets(dict, "ToUnicode"));
 	if (error)
-		goto cleanup;
+		fz_catch(error, "cannot load tounicode");
 
 	/* Widths */
 
@@ -695,7 +695,7 @@ loadcidfont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj *enco
 
 	error = pdf_loadtounicode(fontdesc, xref, nil, collection, tounicode);
 	if (error)
-		goto cleanup;
+		fz_catch(error, "cannot load tounicode");
 
 	/* Horizontal */
 

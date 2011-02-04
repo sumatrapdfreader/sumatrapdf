@@ -47,7 +47,7 @@ fz_fillbuffer(fz_stream *stm)
 	n = fz_read(stm, stm->bp, stm->ep - stm->bp);
 	if (n < 0)
 		fz_catch(n, "read error; treating as end of file");
-	else if (n > 0) /* SumatraPDF: don't accidentally reset a memory stream's wp */
+	else if (n > 0)
 	{
 		stm->rp = stm->bp;
 		stm->wp = stm->bp + n;
@@ -70,7 +70,7 @@ fz_readall(fz_buffer **bufp, fz_stream *stm, int initial)
 		if (buf->len == buf->cap)
 			fz_growbuffer(buf);
 
-		if (buf->len > initial * 200) /* SumatraPDF: don't pick too high a limit */
+		if (buf->len > initial * 200)
 		{
 			fz_dropbuffer(buf);
 			return fz_throw("compression bomb detected");

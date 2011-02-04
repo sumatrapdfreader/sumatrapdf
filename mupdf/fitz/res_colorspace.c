@@ -83,84 +83,59 @@ static void xyztobgr(fz_colorspace *cs, float *xyz, float *bgr)
 	bgr[2] = xyz[0];
 }
 
-#if 1
-/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=756 */
-/* function adapted from Poppler's GfxState_helpers.h
-   Poppler is licensed under GPL, see http://poppler.freedesktop.org/ */
-static inline void cmyktoxyz(fz_colorspace *cs, float *sv, float *dv)
+static void cmyktoxyz(fz_colorspace *cs, float *cmyk, float *xyz)
 {
-	float c = sv[0], m = sv[1], y = sv[2], k = sv[3];
+#ifdef SLOWCMYK /* from poppler */
+	float c = cmyk[0], m = cmyk[1], y = cmyk[2], k = cmyk[3];
 	float c1 = 1 - c, m1 = 1 - m, y1 = 1 - y, k1 = 1 - k;
 	float r, g, b, x;
 
-	// this is a matrix multiplication, unrolled for performance
-	//                        C M Y K
-	x = c1 * m1 * y1 * k1; // 0 0 0 0
+	/* this is a matrix multiplication, unrolled for performance */
+	x = c1 * m1 * y1 * k1;	/* 0 0 0 0 */
 	r = g = b = x;
-	x = c1 * m1 * y1 * k;  // 0 0 0 1
+	x = c1 * m1 * y1 * k;	/* 0 0 0 1 */
 	r += 0.1373 * x;
 	g += 0.1216 * x;
 	b += 0.1255 * x;
-	x = c1 * m1 * y  * k1; // 0 0 1 0
+	x = c1 * m1 * y * k1;	/* 0 0 1 0 */
 	r += x;
 	g += 0.9490 * x;
-	x = c1 * m1 * y  * k;  // 0 0 1 1
+	x = c1 * m1 * y * k;	/* 0 0 1 1 */
 	r += 0.1098 * x;
 	g += 0.1020 * x;
-	x = c1 * m  * y1 * k1; // 0 1 0 0
+	x = c1 * m * y1 * k1;	/* 0 1 0 0 */
 	r += 0.9255 * x;
 	b += 0.5490 * x;
-	x = c1 * m  * y1 * k;  // 0 1 0 1
+	x = c1 * m * y1 * k;	/* 0 1 0 1 */
 	r += 0.1412 * x;
-	x = c1 * m  * y  * k1; // 0 1 1 0
+	x = c1 * m * y * k1;	/* 0 1 1 0 */
 	r += 0.9294 * x;
 	g += 0.1098 * x;
 	b += 0.1412 * x;
-	x = c1 * m  * y  * k;  // 0 1 1 1
+	x = c1 * m * y * k;	/* 0 1 1 1 */
 	r += 0.1333 * x;
-	x = c  * m1 * y1 * k1; // 1 0 0 0
+	x = c * m1 * y1 * k1;	/* 1 0 0 0 */
 	g += 0.6784 * x;
 	b += 0.9373 * x;
-	x = c  * m1 * y1 * k;  // 1 0 0 1
+	x = c * m1 * y1 * k;	/* 1 0 0 1 */
 	g += 0.0588 * x;
 	b += 0.1412 * x;
-	x = c  * m1 * y  * k1; // 1 0 1 0
+	x = c * m1 * y * k1;	/* 1 0 1 0 */
 	g += 0.6510 * x;
 	b += 0.3137 * x;
-	x = c  * m1 * y  * k;  // 1 0 1 1
+	x = c * m1 * y * k;	/* 1 0 1 1 */
 	g += 0.0745 * x;
-	x = c  * m  * y1 * k1; // 1 1 0 0
+	x = c * m * y1 * k1;	/* 1 1 0 0 */
 	r += 0.1804 * x;
 	g += 0.1922 * x;
 	b += 0.5725 * x;
-	x = c  * m  * y1 * k;  // 1 1 0 1
+	x = c * m * y1 * k;	/* 1 1 0 1 */
 	b += 0.0078 * x;
-	x = c  * m  * y  * k1; // 1 1 1 0
+	x = c * m * y * k1;	/* 1 1 1 0 */
 	r += 0.2118 * x;
 	g += 0.2119 * x;
 	b += 0.2235 * x;
 
-	dv[0] = MIN(MAX(r, 0), 1);
-	dv[1] = MIN(MAX(g, 0), 1);
-	dv[2] = MIN(MAX(b, 0), 1);
-}
-#else
-static void cmyktoxyz(fz_colorspace *cs, float *cmyk, float *xyz)
-{
-#ifdef SLOWCMYK /* from xpdf */
-	float c = CLAMP(cmyk[0] + cmyk[3], 0, 1);
-	float m = CLAMP(cmyk[1] + cmyk[3], 0, 1);
-	float y = CLAMP(cmyk[2] + cmyk[3], 0, 1);
-	float aw = (1-c) * (1-m) * (1-y);
-	float ac = c * (1-m) * (1-y);
-	float am = (1-c) * m * (1-y);
-	float ay = (1-c) * (1-m) * y;
-	float ar = (1-c) * m * y;
-	float ag = c * (1-m) * y;
-	float ab = c * m * (1-y);
-	float r = aw + 0.9137*am + 0.9961*ay + 0.9882*ar;
-	float g = aw + 0.6196*ac + ay + 0.5176*ag;
-	float b = aw + 0.7804*ac + 0.5412*am + 0.0667*ar + 0.2118*ag + 0.4863*ab;
 	xyz[0] = CLAMP(r, 0, 1);
 	xyz[1] = CLAMP(g, 0, 1);
 	xyz[2] = CLAMP(b, 0, 1);
@@ -170,7 +145,6 @@ static void cmyktoxyz(fz_colorspace *cs, float *cmyk, float *xyz)
 	xyz[2] = 1 - MIN(1, cmyk[2] + cmyk[3]);
 #endif
 }
-#endif
 
 static void xyztocmyk(fz_colorspace *cs, float *xyz, float *cmyk)
 {
