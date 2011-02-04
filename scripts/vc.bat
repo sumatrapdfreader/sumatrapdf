@@ -1,15 +1,12 @@
 @ECHO OFF
 
-REM Allow to explicitly specify the desired maximun Visual Studio version
+REM Allow to explicitly specify the desired Visual Studio version
 IF /I "%1" == "vc10" GOTO TRY_VS10
 IF /I "%1" == "vc9" GOTO TRY_VS9
 IF /I "%1" == "vc8" GOTO TRY_VS8
 
-REM Try the latest Visual Studio version first, falling successively back to older versions
-
-:TRY_VS10
-"%ProgramFiles%\Microsoft Visual Studio 10.0\Common7\Tools\vsvars32.bat" 2>NUL
-IF NOT ERRORLEVEL 1 EXIT /B
+REM Try Visual Studio 2008 first, as it still supports Windows 2000,
+REM otherwise fall back to VS 2005 or use any later version
 
 :TRY_VS9
 REM "%VS90COMNTOOLS%vsvars32.bat"
@@ -23,6 +20,12 @@ IF NOT ERRORLEVEL 1 EXIT /B
 :TRY_VS8
 REM "%VS80COMNTOOLS%vsvars32.bat"
 "%ProgramFiles%\Microsoft Visual Studio 8\Common7\Tools\vsvars32.bat" 2>NUL
+IF NOT ERRORLEVEL 1 EXIT /B
+
+REM Note: Visual Studio 2010 doesn't support Windows 2000
+
+:TRY_VS10
+"%ProgramFiles%\Microsoft Visual Studio 10.0\Common7\Tools\vsvars32.bat" 2>NUL
 IF NOT ERRORLEVEL 1 EXIT /B
 
 REM Fail, if no Visual Studio installation has been found
