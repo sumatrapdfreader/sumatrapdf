@@ -31,7 +31,7 @@ ZLIB_DIR=$(EXTLIBSDIR)\zlib-1.2.5
 FREETYPE_DIR=$(EXTLIBSDIR)\freetype2
 
 # if JPEG_TURBO_DIR is defined, we use libjpeg-turbo, otherwise we use libpjeg
-#JPEG_DIR=$(EXTLIBSDIR)\jpeg-8b
+#JPEG_DIR=$(EXTLIBSDIR)\libjpeg
 JPEG_TURBO_DIR=$(EXTLIBSDIR)\libjpeg-turbo
 
 !if "$(JPEG_DIR)" != ""
