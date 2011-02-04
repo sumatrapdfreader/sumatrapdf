@@ -519,3 +519,6 @@ copiado de texto
 printing document
 impresión de documento
 
+# Untranslated:
+#Select &All\tCtrl-A
+

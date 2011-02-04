@@ -515,3 +515,6 @@ copying text
 printing document
 印刷するドキュメント
 
+# Untranslated:
+#Select &All\tCtrl-A
+

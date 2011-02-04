@@ -516,3 +516,6 @@ copying text
 printing document
 đang in tập tin
 
+# Untranslated:
+#Select &All\tCtrl-A
+

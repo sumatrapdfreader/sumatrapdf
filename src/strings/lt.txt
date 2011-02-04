@@ -501,6 +501,7 @@ spausdinamas dokumentas
 #Fit a Single Page
 #Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L
+#Select &All\tCtrl-A
 #SumatraPDF Update
 #SumatraPDF crashed
 

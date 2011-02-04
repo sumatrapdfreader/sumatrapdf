@@ -461,6 +461,7 @@ printing document
 #Pr&esentation\tCtrl-L
 #Print range
 #Searching %d of %d...
+#Select &All\tCtrl-A
 #SumatraPDF Update
 #SumatraPDF crashed
 

@@ -517,3 +517,6 @@ copiando texto
 printing document
 imprimindo documento
 
+# Untranslated:
+#Select &All\tCtrl-A
+

@@ -471,6 +471,7 @@ tulostetaan asiakirjaa
 #Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L
 #Print range
+#Select &All\tCtrl-A
 #SumatraPDF Update
 #SumatraPDF crashed
 

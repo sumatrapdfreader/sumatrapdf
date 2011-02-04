@@ -520,3 +520,6 @@ kopierar text
 printing document
 skriver ut dokumentet
 
+# Untranslated:
+#Select &All\tCtrl-A
+

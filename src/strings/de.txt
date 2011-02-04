@@ -428,6 +428,9 @@ Drehung &rechts\tStrg+Umschalt++
 Searching %d of %d...
 Suche auf Seite %d von %d…
 
+Select &All\tCtrl-A
+Alles &markieren\tStrg+A
+
 Select content with Ctrl+left mouse button
 Inhalte mit Strg+linker Maustaste auswählen
 

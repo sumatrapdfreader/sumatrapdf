@@ -516,3 +516,6 @@ kinokopya ang mensahe
 printing document
 ipini-print ang dokumento
 
+# Untranslated:
+#Select &All\tCtrl-A
+

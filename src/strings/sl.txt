@@ -517,3 +517,6 @@ kopiranje besedila
 printing document
 tiskanje dokumenta
 
+# Untranslated:
+#Select &All\tCtrl-A
+

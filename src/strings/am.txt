@@ -515,3 +515,6 @@ copying text
 printing document
 փաստաթուղթը տպվում է
 
+# Untranslated:
+#Select &All\tCtrl-A
+

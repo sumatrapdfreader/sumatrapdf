@@ -517,3 +517,6 @@ copying text
 printing document
 εκτύπωση εγγράφου
 
+# Untranslated:
+#Select &All\tCtrl-A
+

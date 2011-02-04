@@ -402,6 +402,7 @@ Pagina numero %u inesistente
 #Rotate &Left\tCtrl-Shift--
 #Rotate &Right\tCtrl-Shift-+
 #Searching %d of %d...
+#Select &All\tCtrl-A
 #Select content with Ctrl+left mouse button
 #Send by &E-mail...
 #Set inverse search command-line

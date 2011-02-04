@@ -516,3 +516,6 @@ se copiază text
 printing document
 se imprimă documentul
 
+# Untranslated:
+#Select &All\tCtrl-A
+

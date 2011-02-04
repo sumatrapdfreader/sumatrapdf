@@ -520,3 +520,6 @@ copier le text
 printing document
 imprimer le document
 
+# Untranslated:
+#Select &All\tCtrl-A
+

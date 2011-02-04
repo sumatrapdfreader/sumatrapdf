@@ -517,3 +517,6 @@ copying text
 printing document
 печатается документ
 
+# Untranslated:
+#Select &All\tCtrl-A
+

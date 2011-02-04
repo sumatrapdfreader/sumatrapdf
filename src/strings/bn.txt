@@ -292,6 +292,7 @@ Zoom Out
 #Print range
 #Remember &opened files
 #Searching %d of %d...
+#Select &All\tCtrl-A
 #Select content with Ctrl+left mouse button
 #Send by &E-mail...
 #Show &pages continuously

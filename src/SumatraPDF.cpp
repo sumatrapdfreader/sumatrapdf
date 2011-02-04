@@ -480,6 +480,7 @@ MenuDef menuDefView[] = {
     { _TRN("Book&marks\tF12"),              IDM_VIEW_BOOKMARKS,         0  },
     { _TRN("Show &Toolbar"),                IDM_VIEW_SHOW_HIDE_TOOLBAR, 0  },
     { SEP_ITEM, 0, 0  },
+    { _TRN("Select &All\tCtrl-A"),          IDM_SELECT_ALL,             0  },
     { _TRN("&Copy Selection\tCtrl-C"),      IDM_COPY_SELECTION,         0  },
 };
 
@@ -1107,7 +1108,7 @@ static void MenuUpdateStateForWindow(WindowInfo *win) {
         IDM_VIEW_ROTATE_LEFT, IDM_VIEW_ROTATE_RIGHT, IDM_GOTO_NEXT_PAGE, IDM_GOTO_PREV_PAGE,
         IDM_GOTO_FIRST_PAGE, IDM_GOTO_LAST_PAGE, IDM_GOTO_NAV_BACK, IDM_GOTO_NAV_FORWARD,
         IDM_GOTO_PAGE, IDM_FIND_FIRST, IDM_SAVEAS, IDM_SEND_BY_EMAIL,
-        IDM_COPY_SELECTION, IDM_PROPERTIES, IDM_VIEW_PRESENTATION_MODE };
+        IDM_SELECT_ALL, IDM_COPY_SELECTION, IDM_PROPERTIES, IDM_VIEW_PRESENTATION_MODE };
 
     bool fileCloseEnabled = FileCloseMenuEnabled();
     assert(!fileCloseEnabled == !win->loadedFilePath);

@@ -521,3 +521,6 @@ tekst kopieren
 printing document
 bestand afdrukken
 
+# Untranslated:
+#Select &All\tCtrl-A
+

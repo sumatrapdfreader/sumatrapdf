@@ -456,6 +456,7 @@ prebieha tlač dokumentu
 #Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L
 #Print range
+#Select &All\tCtrl-A
 #Source file %s has no synchronization point
 #SumatraPDF Update
 #SumatraPDF crashed
