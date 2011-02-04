@@ -212,8 +212,8 @@ $(O)\AppTools.obj: baseutils\base_util.h baseutils\file_util.h baseutils\str_uti
 $(O)\AppTools.obj: baseutils\tstr_util.h baseutils\WinUtil.hpp baseutils\wstr_util.h
 $(O)\AppTools.obj: src\LangMenuDef.h src\SumatraPDF.h src\translations.h
 $(O)\base_util.obj: baseutils\base_util.h
-$(O)\benc_util.obj: baseutils\base_util.h baseutils\benc_util.h baseutils\str_util.h
-$(O)\benc_util.obj: baseutils\tstr_util.h baseutils\wstr_util.h
+$(O)\benc_util.obj: baseutils\base_util.h baseutils\benc_util.h baseutils\file_util.h
+$(O)\benc_util.obj: baseutils\str_util.h baseutils\tstr_util.h baseutils\wstr_util.h
 $(O)\Benchmark.obj: baseutils\base_util.h baseutils\file_util.h baseutils\geom_util.h
 $(O)\Benchmark.obj: baseutils\str_util.h baseutils\tstr_util.h baseutils\vstrlist.h
 $(O)\Benchmark.obj: baseutils\WinUtil.hpp baseutils\wstr_util.h mupdf\fitz\fitz.h
@@ -326,9 +326,10 @@ $(O)\translations.obj: baseutils\base_util.h baseutils\str_util.h baseutils\tstr
 $(O)\translations.obj: baseutils\wstr_util.h src\translations.h src\translations_txt.h
 $(O)\tstr_util.obj: baseutils\base_util.h baseutils\str_util.h baseutils\tstr_util.h
 $(O)\tstr_util.obj: baseutils\wstr_util.h
-$(O)\UnitTests.obj: baseutils\base_util.h baseutils\geom_util.h baseutils\str_util.h
-$(O)\UnitTests.obj: baseutils\tstr_util.h baseutils\vstrlist.h baseutils\wstr_util.h
-$(O)\UnitTests.obj: src\AppTools.h src\MemSegment.h src\ParseCommandLine.h
+$(O)\UnitTests.obj: baseutils\base_util.h baseutils\benc_util.h baseutils\geom_util.h
+$(O)\UnitTests.obj: baseutils\str_util.h baseutils\tstr_util.h baseutils\vstrlist.h
+$(O)\UnitTests.obj: baseutils\wstr_util.h src\AppTools.h src\MemSegment.h
+$(O)\UnitTests.obj: src\ParseCommandLine.h
 $(O)\win_util.obj: baseutils\base_util.h baseutils\str_util.h baseutils\tstr_util.h
 $(O)\win_util.obj: baseutils\win_util.h baseutils\wstr_util.h
 $(O)\WindowInfo.obj: baseutils\base_util.h baseutils\file_util.h baseutils\geom_util.h

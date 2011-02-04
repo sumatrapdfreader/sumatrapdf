@@ -2,6 +2,7 @@
 #include "tstr_util.h"
 #include "MemSegment.h"
 #include "geom_util.h"
+#include "benc_util.h"
 #include "ParseCommandLine.h"
 #include "AppTools.h"
 
@@ -239,6 +240,7 @@ void u_DoAllTests(void)
 {
     DBG_OUT("Running tests\n");
     u_RectI_Intersect();
+    u_benc_all();
     MemSegmentTest();
     hexstrTest();
     ParseCommandLineTest();

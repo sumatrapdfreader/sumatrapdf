@@ -100,9 +100,6 @@ bool              DisplayModeEnumFromName(const char *txt, DisplayMode *resOut);
 
 void    DisplayState_Init(DisplayState *ds);
 void    DisplayState_Free(DisplayState *ds);
-#if 0
-bool    DisplayState_Serialize(DisplayState *ds, DString *strOut);
-#endif
 
 #endif
 

@@ -13,11 +13,6 @@ INCLUDE_DIRS = DIRS + [pjoin("mupdf", "mupdf"), pjoin("mupdf", "fitz")]
 MAKEFILE = "makefile.msvc"
 DEPENDENCIES_PER_LINE = 3
 
-EXCLUDE_FILES = ["log_util.c", "ms_ui_helper.c", "netstr.c", "netstr_ut.c",
-	"pdiff.cc", "prefs_util.c", "strlist_util.c", "str_util_test.c",
-	"test_benc.cpp", "test_file_util.cpp", "unit_tests_all.c", "utf_util.c",
-	"win_dib.cpp", "win_image.cpp"]
-
 def memoize(func):
 	memory = {}
 	def __decorated(*args):
@@ -71,9 +66,8 @@ def createDependencyList():
 
 def flattenDependencyList(dependencies):
 	flatlist = []
-	exclude = prependPath(EXCLUDE_FILES)
 	for file in dependencies.keys():
-		if dependencies[file] and file not in exclude:
+		if dependencies[file]:
 			filename = os.path.splitext(os.path.split(file)[1])[0]
 			deplist = sorted(dependencies[file], key=str.lower)
 			for depgroup in group(deplist, DEPENDENCIES_PER_LINE):

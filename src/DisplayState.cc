@@ -84,31 +84,3 @@ void DisplayState_Free(DisplayState *ds)
     free((void*)ds->decryptionKey);
     DisplayState_Init(ds);
 }
-
-#if 0
-bool DisplayState_Serialize(DisplayState *ds, DString *strOut)
-{
-    const char *        displayModeName = NULL;
-
-    DStringSprintf(strOut, "  %s: %s\n", FILE_STR, ds->filePath);
-
-    displayModeName = DisplayModeNameFromEnum(ds->displayMode);
-    if (displayModeName)
-        DStringSprintf(strOut, "  %s: %s\n", DISPLAY_MODE_STR, displayModeName);
-    else
-        DStringSprintf(strOut, "  %s: %s\n", DISPLAY_MODE_STR, DisplayModeNameFromEnum(DM_AUTOMATIC));
-
-    DStringSprintf(strOut, "  %s: %d\n",   PAGE_NO_STR, ds->pageNo);
-    DStringSprintf(strOut, "  %s: %.4f\n", ZOOM_VIRTUAL_STR, ds->zoomVirtual);
-    DStringSprintf(strOut, "  %s: %d\n",   ROTATION_STR, ds->rotation);
-
-    DStringSprintf(strOut, "  %s: %d\n",   SCROLL_X_STR, ds->scrollX);
-    DStringSprintf(strOut, "  %s: %d\n",   SCROLL_Y_STR, ds->scrollY);
-
-    DStringSprintf(strOut, "  %s: %d\n",   WINDOW_X_STR, ds->windowX);
-    DStringSprintf(strOut, "  %s: %d\n",   WINDOW_Y_STR, ds->windowY);
-    DStringSprintf(strOut, "  %s: %d\n",   WINDOW_DX_STR, ds->windowDx);
-    DStringSprintf(strOut, "  %s: %d\n",   WINDOW_DY_STR, ds->windowDy);
-    return TRUE;
-}
-#endif
