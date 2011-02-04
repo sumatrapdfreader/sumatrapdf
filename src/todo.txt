@@ -1,4 +1,4 @@
-Maybe for 1.3:
+Maybe for 1.4:
 * add menu option to create a crashdump on crash and submit it to a website
   with a note about what happened. This is meant to make it easier to get
   callstacks for the crashes from people who experience crashes I can't
