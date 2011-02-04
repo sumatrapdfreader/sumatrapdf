@@ -3341,7 +3341,7 @@ static void OnMenuOpen(WindowInfo *win)
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = win->hwndFrame;
     ofn.nMaxFile = MAX_PATH / 2;
-    ofn.lpstrFile = (LPTSTR)malloc(ofn.nMaxFile * sizeof(TCHAR));;
+    ofn.lpstrFile = SAZA(TCHAR, ofn.nMaxFile);
 
     // Set lpstrFile[0] to '\0' so that GetOpenFileName does not
     // use the contents of szFile to initialize itself.
@@ -3353,9 +3353,20 @@ static void OnMenuOpen(WindowInfo *win)
     ofn.lpstrInitialDir = NULL;
     ofn.lpfnHook = FileOpenHook;
     ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY |
-                OFN_ALLOWMULTISELECT | OFN_EXPLORER | OFN_ENABLEHOOK ;
+                OFN_ALLOWMULTISELECT | OFN_EXPLORER | OFN_ENABLEHOOK;
 
-    if (FALSE != GetOpenFileName(&ofn)) {
+    if (WindowsVerVistaOrGreater()) {
+        // OFN_ENABLEHOOK disables the new Open File dialog under Windows Vista
+        // and later, so don't use it and just allocate enough memory to contain
+        // several dozen file paths and hope that this is enough
+        // TODO: Use IFileOpenDialog instead (requires a Vista SDK, though)
+        ofn.Flags &= ~OFN_ENABLEHOOK;
+        ofn.nMaxFile = MAX_PATH * 100;
+        free(ofn.lpstrFile);
+        ofn.lpstrFile = SAZA(TCHAR, ofn.nMaxFile);
+    }
+
+    if (GetOpenFileName(&ofn)) {
         TCHAR *fileName = ofn.lpstrFile + ofn.nFileOffset;
         if (*(fileName - 1)) {
             // special case: single filename without NULL separator
