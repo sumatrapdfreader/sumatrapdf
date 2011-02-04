@@ -8,7 +8,7 @@ Next version:
 * new browser plugin for Mozilla Firefox, Google Chrome and Opera for displaying
   PDF documents with SumatraPDF inside the browser (not yet included in the installer)
 
-1.3 (2010-02-04)
+1.3 (2011-02-04)
 
 * improved text selection and copying. We now mimic the way a browser
   or Adobe Reader works: just select text with mouse and use Ctrl-C
@@ -24,7 +24,7 @@ Next version:
   full screen mode. Old mode was still available but not easily
   discoverable. We've added View/Presentation menu item for
   new full screen mode and View/Fullscreen menu item for the old
-  full screen mode, to make it more discoverable.
+  full screen mode, to make it more discoverable
 * new, improved installer
 * improved zoom performance (zooming to 6400% no longer crashes)
 * text find uses less memory
