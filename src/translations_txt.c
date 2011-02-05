@@ -4798,7 +4798,7 @@ const char *g_transTranslations[] = {
   "Quay tr\303\241i\tCtrl-Shift--",
   "Quay ph\341\272\243i\tCtrl-Shift-+",
   "\304\220ang t\303\254m %d tr\303\252n %d",
-  NULL,
+  "Ch\341\273\215n h\341\272\277t\tCtrl-A",
   "\304\220\303\241nh d\341\272\245u n\341\273\231i dung b\341\272\261ng Ctrl+ph\303\255m chu\341\273\231t tr\303\241i",
   "G\341\273\255i qua &email...",
   "\304\220\341\272\267t d\303\262ng l\341\273\207nh t\303\254m ki\341\272\277m ng\306\260\341\273\243c",

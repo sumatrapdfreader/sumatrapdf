@@ -426,6 +426,9 @@ Quay phải\tCtrl-Shift-+
 Searching %d of %d...
 Đang tìm %d trên %d
 
+Select &All\tCtrl-A
+Chọn hết\tCtrl-A
+
 Select content with Ctrl+left mouse button
 Đánh dấu nội dung bằng Ctrl+phím chuột trái
 
@@ -515,7 +518,4 @@ copying text
 
 printing document
 đang in tập tin
-
-# Untranslated:
-#Select &All\tCtrl-A
 
