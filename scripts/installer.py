@@ -1,5 +1,6 @@
 import os.path
 import struct
+import zipfile
 import zlib
 
 INSTALLER_HEADER_FILE      = "kifi"
@@ -51,3 +52,11 @@ def append_file_zlib(fo, path, name_in_installer):
 
 def mark_end(fo):
   write_no_size(fo, INSTALLER_HEADER_END)
+
+# doesn't really belong here, but have no better place
+def zip_file(dst_zip_file, src, src_name=None):
+    zf = zipfile.ZipFile(dst_zip_file, "w", zipfile.ZIP_DEFLATED)
+    if not src_name:
+        src_name = os.path.basename(src)
+    zf.write(src, src_name)
+    zf.close()

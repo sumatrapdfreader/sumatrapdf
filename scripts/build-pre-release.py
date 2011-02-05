@@ -10,7 +10,13 @@
 #       sumatrapdf/sumatralatest.js
 #       sumatrapdf/sumpdf-prerelease-latest.txt
 
-import sys, os, os.path, subprocess, time, shutil, zipfile, zlib
+import installer
+import os
+import os.path
+import shutil
+import subprocess
+import sys
+import time
 try:
     import boto.s3
     from boto.s3.key import Key
@@ -25,6 +31,12 @@ try:
 except:
   print "awscreds.py file needed with access and secret globals for aws access"
   sys.exit(1)
+
+SCRIPT_DIR = os.path.dirname(__file__)
+if SCRIPT_DIR:
+  SCRIPT_DIR = os.path.split(SCRIPT_DIR)[0]
+else:
+  SCRIPT_DIR = os.getcwd()
 
 S3_BUCKET = "kjkpub"
 g_s3conn = None
@@ -92,14 +104,8 @@ def usage():
 
 def direxists(path):
   if not os.path.exists(path):
-    #print("%s path doesn't exist" % path)
     return False
-  if os.path.isdir(path):
-    #print("%s path exists and is a dir" % path)
-    return True
-  else:
-    #print("%s path exists but is not a dir" % path)
-    return False
+  return os.path.isdir(path)
 
 def get_src_dir():
   srcdir = os.path.realpath(".")
@@ -108,27 +114,12 @@ def get_src_dir():
     sys.exit(1)
   return srcdir
 
-def get_src_dir2():
-  srcdir = os.path.realpath(os.path.join(os.path.dirname(__file__), ".."))
-  if not direxists(srcdir):
-    print("%s dir doesn't exists" % srcdir)
-    sys.exit(1)
-  print("srcdir: %s" % srcdir)
-  return srcdir
-
 def test_upload():
   srcdir = get_src_dir()
   exe = os.path.join(srcdir, "obj-rel", "SumatraPDF.exe")
   remote = "sumatrapdf2/SumatraPDF-prerelease-333.txt"
   print("Uploading '%s' as '%s" % (exe, remote))
   s3UploadFilePublic(exe, remote)
-
-def zip_file(dst_zip_file, src, src_name=None):
-    zf = zipfile.ZipFile(dst_zip_file, "w", zipfile.ZIP_DEFLATED)
-    if not src_name:
-        src_name = os.path.basename(src)
-    zf.write(src, src_name)
-    zf.close()
 
 def main():
   if len(sys.argv) > 2:
@@ -143,14 +134,14 @@ def main():
   #run_cmd_throw("nmake", "-f", "makefile.msvc", "CFG=rel", "cleanall")
   run_cmd_throw("nmake", "-f", "makefile.msvc", "CFG=rel", "EXTCFLAGS=-DSVN_PRE_RELEASE_VER=%d" % rev)
 
-  mpress = os.path.join(srcdir, "bin", "mpress")
-  exe = os.path.join(srcdir, objdir, "SumatraPDF.exe")
+  mpress = os.path.join(SCRIPT_DIR, "bin", "mpress")
+  exe = os.path.join(objdir, "SumatraPDF.exe")
   run_cmd_throw(mpress, "-s", "-r", exe)
   remote = "sumatrapdf/SumatraPDF-prerelease-%d.exe" % rev
 
   pdb = os.path.join(srcdir, objdir, "SumatraPDF.pdb")
   pdb_zip = pdb + ".zip"
-  zip_file(pdb_zip, pdb, "SumatraPDF-prerelease-%d.pdb" % rev)
+  installer.zip_file(pdb_zip, pdb, "SumatraPDF-prerelease-%d.pdb" % rev)
   remote_pdb = "sumatrapdf/SumatraPDF-prerelease-%d.pdb.zip" % rev
 
   print("Uploading '%s' as '%s" % (exe, remote))
@@ -163,7 +154,7 @@ def main():
   if os.path.exists(objdir): shutil.rmtree(objdir, ignore_errors=True)
   run_cmd_throw("nmake", "-f", "makefile.msvc", "CFG=dbg", "EXTCFLAGS=-DSVN_PRE_RELEASE_VER=%d" % rev)
 
-  exe = os.path.join(srcdir, objdir, "SumatraPDF.exe")
+  exe = os.path.join(objdir, "SumatraPDF.exe")
   run_cmd_throw(mpress, "-s", "-r", exe)
   remote_dbg = "sumatrapdf/SumatraPDF-prerelease-%d-dbg.exe" % rev
 

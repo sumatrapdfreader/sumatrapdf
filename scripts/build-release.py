@@ -127,14 +127,8 @@ def usage():
 
 def direxists(path):
   if not os.path.exists(path):
-    #print("%s path doesn't exist" % path)
     return False
-  if os.path.isdir(path):
-    #print("%s path exists and is a dir" % path)
-    return True
-  else:
-    #print("%s path exists but is not a dir" % path)
-    return False
+  return os.path.isdir(path)
 
 # construct a full installer by appending data at the end of installer executable.
 # appended data is in the format:
@@ -263,7 +257,7 @@ def main():
 
   shutil.copy("SumatraPDF-%s.exe" % ver, "SumatraPDF.exe")
   zip = os.path.join(SCRIPT_DIR, "bin", "zip")
-  run_cmd_throw(zip, "-0", "SumatraPDF-%s.zip" % ver, "SumatraPDF.exe")
+  installer.zip_file(zip, "SumatraPDF-%s.zip" % ver, "SumatraPDF.exe")
 
   local_zip = os.path.join(builds_dir, "SumatraPDF-%s.zip" % ver)
   ensure_path_exists(local_zip)
