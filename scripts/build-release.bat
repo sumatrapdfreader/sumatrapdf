@@ -4,7 +4,7 @@ REM assumes we're being run from top-level directory as:
 REM scripts\build-release.bat
 
 REM Here you can add the path to your Python installation if it's not already in PATH
-REM SET PATH=%PATH%;C:\Python
+REM SET PATH=C:\Python;%PATH%
 
 CALL scripts\vc.bat
 IF ERRORLEVEL 1 EXIT /B 1

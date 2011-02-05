@@ -296,15 +296,15 @@ def main():
   local_installer = os.path.join(builds_dir, "Installer.exe")
   local_installer_pdb = os.path.join(builds_dir, "Installer.pdb")
 
-  stripreloc = os.path.join(SCRIPT_DIR, "bin", "StripReloc")
-  builds_dir_rel = os.path.join("src", "builds", ver)
-  run_cmd_throw(stripreloc, os.path.join(builds_dir_rel, "Installer.exe"))
-
   shutil.copy(tmp_exe, local_exe)
   shutil.copy(tmp_exe, local_exe_uncompr)
   shutil.copy(tmp_pdb, local_pdb)
   shutil.copy(tmp_installer, local_installer)
   shutil.copy(tmp_installer_pdb, local_installer_pdb)
+
+  stripreloc = os.path.join(SCRIPT_DIR, "bin", "StripReloc")
+  builds_dir_rel = os.path.join("builds", ver)
+  run_cmd_throw(stripreloc, os.path.join(builds_dir_rel, "Installer.exe"))
 
   os.chdir(builds_dir)
 
