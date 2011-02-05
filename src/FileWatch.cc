@@ -39,10 +39,8 @@ void SimultaneousSynchronousAbort(int nfw, FileWatcher **fw){
     // wait for the two threads to end
     WaitForMultipleObjects(k, hp, TRUE, INFINITE);
     for (int i=0; i<nfw;i++) {
-        if (fw[i]->hWatchingThread) {
-            CloseHandle(fw[i]->hWatchingThread);
-            fw[i]->hWatchingThread = NULL;
-        }
+        CloseHandle(fw[i]->hWatchingThread);
+        fw[i]->hWatchingThread = NULL;
     }
     delete [] hp;
 }
@@ -85,14 +83,10 @@ void FileWatcher::RestartThread()
 
 void FileWatcher::Clean()
 {
-    if (overl.hEvent) {
-        CloseHandle(overl.hEvent); 
-        overl.hEvent = NULL;
-    }
-    if (hDir) {
-        CloseHandle(hDir);
-        hDir = NULL;
-    }
+    CloseHandle(overl.hEvent); 
+    overl.hEvent = NULL;
+    CloseHandle(hDir);
+    hDir = NULL;
 }
 
 void FileWatcher::Init(LPCTSTR filefullpath)
@@ -251,8 +245,7 @@ bool FileWatcher::ReadDir()
                     if (f == INVALID_HANDLE_VALUE && (dw==ERROR_SHARING_VIOLATION || dw==ERROR_LOCK_VIOLATION))
                         return false;
 
-                    if (f != INVALID_HANDLE_VALUE)
-                        CloseHandle(f);
+                    CloseHandle(f);
                     
                     // reread the time stamp
                     //_tstat(szFilepath, &timestamp);

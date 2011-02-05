@@ -137,10 +137,8 @@ BOOL FilePath_IsSameFile(const TCHAR *path1, const TCHAR *path2)
         }
     }
 
-    if (handle1 != INVALID_HANDLE_VALUE)
-        CloseHandle(handle1);
-    if (handle2 != INVALID_HANDLE_VALUE)
-        CloseHandle(handle2);
+    CloseHandle(handle1);
+    CloseHandle(handle2);
 
     if (needFallback)
         return FilePath_Compare(path1, path2) == 1;

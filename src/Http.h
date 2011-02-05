@@ -28,8 +28,7 @@ public:
     }
     ~HttpReqCtx() {
         free(url);
-        if (hThread)
-            CloseHandle(hThread);
+        CloseHandle(hThread);
     }
 };
 

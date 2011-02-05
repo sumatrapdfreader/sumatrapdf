@@ -17,10 +17,8 @@ PdfSearch::~PdfSearch()
 
 void PdfSearch::Reset()
 {
-    if (pageText) {
-        free(pageText);
-        pageText = NULL;
-    }
+    free(pageText);
+    pageText = NULL;
     PdfSelection::Reset();
 }
 

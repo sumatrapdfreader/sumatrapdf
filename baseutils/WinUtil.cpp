@@ -106,13 +106,8 @@ WinProcess * WinProcess::Create(const TCHAR *cmd, TCHAR *args)
     return wp;
 
 Error:
-    if (INVALID_HANDLE_VALUE != stdOut) {
-        CloseHandle(stdOut);
-    }
-
-    if (INVALID_HANDLE_VALUE != stdErr) {
-        CloseHandle(stdErr);
-    }
+    CloseHandle(stdOut);
+    CloseHandle(stdErr);
 
     if (stdoutTempName[0]) {
         // TODO: delete stdoutTempName

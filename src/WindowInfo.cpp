@@ -45,18 +45,11 @@ WindowInfo::WindowInfo(HWND hwnd) :
 WindowInfo::~WindowInfo() {
     this->AbortFinding();
     delete this->dm;
-    this->dm = NULL;
     delete this->pdfsync;
-    this->pdfsync = NULL;
 
-    if (this->stopFindStatusThreadEvent) {
-        CloseHandle(this->stopFindStatusThreadEvent);
-        this->stopFindStatusThreadEvent = NULL;
-    }
-    if (this->findStatusThread) {
-        CloseHandle(this->findStatusThread);
-        this->findStatusThread = NULL;
-    }
+    CloseHandle(this->stopFindStatusThreadEvent);
+    CloseHandle(this->findStatusThread);
+
     this->DoubleBuffer_Delete();
 
     free(this->title);
@@ -189,10 +182,8 @@ void WindowInfo::DisplayStateFromToC(DisplayState *ds)
             this->UpdateToCExpansionState(hRoot);
     }
 
-    if (ds->tocState) {
-        free(ds->tocState);
-        ds->tocState = NULL;
-    }
+    free(ds->tocState);
+    ds->tocState = NULL;
     if (this->tocState)
         ds->tocState = (int *)memdup(this->tocState, (this->tocState[0] + 1) * sizeof(int));
 }

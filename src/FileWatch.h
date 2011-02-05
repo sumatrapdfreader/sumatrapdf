@@ -41,11 +41,7 @@ public:
         else
             Clean();
 
-        if (hEvtStopWatching)
-        {
-            CloseHandle(hEvtStopWatching);
-            hEvtStopWatching = NULL;
-        }
+        CloseHandle(hEvtStopWatching);
     }
 
 private:

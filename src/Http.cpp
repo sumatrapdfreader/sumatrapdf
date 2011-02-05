@@ -43,10 +43,8 @@ static DWORD WINAPI HttpDownloadThread(LPVOID data)
     return 0;
 
 DownloadError:
-    if (hFile)
-        InternetCloseHandle(hFile);
-    if (hInet)
-        InternetCloseHandle(hInet);
+    InternetCloseHandle(hFile);
+    InternetCloseHandle(hInet);
 
     if (!ctx->silent)
         PostMessage(ctx->hwndToNotify, ctx->msg, 0, dwError);

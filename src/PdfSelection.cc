@@ -24,10 +24,8 @@ PdfSelection::~PdfSelection()
 void PdfSelection::Reset()
 {
     for (int i = 0; i < engine->pageCount(); i++) {
-        if (coords[i]) {
-            free(coords[i]);
-            coords[i] = NULL;
-        }
+        free(coords[i]);
+        coords[i] = NULL;
     }
 
     result.len = 0;

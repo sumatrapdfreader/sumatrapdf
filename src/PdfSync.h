@@ -89,7 +89,7 @@ public:
         this->coordsys = BottomLeft; // by default set the internal coordinate system to bottom-left
         this->dir = FilePath_GetDir(_syncfilepath);
         tstr_copy(this->syncfilepath, dimof(this->syncfilepath), _syncfilepath);
-		_tstat(_syncfilepath, &syncfileTimestamp);
+        _tstat(_syncfilepath, &syncfileTimestamp);
     }
     virtual ~Synchronizer() {
         free(dir);
