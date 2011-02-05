@@ -161,7 +161,7 @@ def main():
 
   objdir = "obj-dbg"
   if os.path.exists(objdir): shutil.rmtree(objdir, ignore_errors=True)
-  run_cmd_throw("nmake", "-f", "makefile.msvc", "CFG=dbg", "NASM=bin\\nasm.exe", "EXTCFLAGS=-DSVN_PRE_RELEASE_VER=%d" % rev)
+  run_cmd_throw("nmake", "-f", "makefile.msvc", "CFG=dbg", "EXTCFLAGS=-DSVN_PRE_RELEASE_VER=%d" % rev)
 
   exe = os.path.join(srcdir, objdir, "SumatraPDF.exe")
   run_cmd_throw(mpress, "-s", "-r", exe)
