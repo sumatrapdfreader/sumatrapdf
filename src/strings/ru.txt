@@ -427,6 +427,9 @@ Rotate &Right\tCtrl-Shift-+
 Searching %d of %d...
 Обработка страницы %d из %d...
 
+Select &All\tCtrl-A
+Выделить все\tCtrl-A
+
 Select content with Ctrl+left mouse button
 Выберите содержимое, нажав Ctrl и левую кнопку мыши
 
@@ -516,7 +519,4 @@ copying text
 
 printing document
 печатается документ
-
-# Untranslated:
-#Select &All\tCtrl-A
 
