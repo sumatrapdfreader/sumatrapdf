@@ -1,7 +1,7 @@
 #ifndef HTTP_H__
 #define HTTP_H__
 
-/* Copyright Krzysztof Kowalczyk 2006-2009
+/* Copyright Krzysztof Kowalczyk 2006-2011
    License: GPLv3 */
 
 #include "MemSegment.h"

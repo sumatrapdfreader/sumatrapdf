@@ -1,4 +1,4 @@
-/* Copyright Krzysztof Kowalczyk 2006-2009
+/* Copyright Krzysztof Kowalczyk 2006-2011
    License: GPLv3 */
 
 #include "base_util.h"

@@ -1,4 +1,4 @@
-/* Copyright Krzysztof Kowalczyk 2006-2009
+/* Copyright Krzysztof Kowalczyk 2006-2011
    License: GPLv3 */
 #ifndef DISPLAY_STATE_H_
 #define DISPLAY_STATE_H_

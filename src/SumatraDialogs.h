@@ -1,4 +1,4 @@
-/* Copyright 2006-2010 the SumatraPDF project authors (see AUTHORS file).
+/* Copyright 2006-2011 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
 #ifndef SUMATRA_PDF_DIALOGS_H_
