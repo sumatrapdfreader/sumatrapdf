@@ -1,11 +1,16 @@
 import os.path
 import struct
+import sys
 import zipfile
 import zlib
 
 INSTALLER_HEADER_FILE      = "kifi"
 INSTALLER_HEADER_FILE_ZLIB = "kifz"
 INSTALLER_HEADER_END       = "kien"
+
+def log(s):
+  print(s)
+  sys.stdout.flush()
 
 def write_no_size(fo, data):
   log("Writing %d bytes at %d '%s'" % (len(data), fo.tell(), data))
@@ -55,8 +60,8 @@ def mark_end(fo):
 
 # doesn't really belong here, but have no better place
 def zip_file(dst_zip_file, src, src_name=None):
-    zf = zipfile.ZipFile(dst_zip_file, "w", zipfile.ZIP_DEFLATED)
-    if not src_name:
-        src_name = os.path.basename(src)
-    zf.write(src, src_name)
-    zf.close()
+  zf = zipfile.ZipFile(dst_zip_file, "w", zipfile.ZIP_DEFLATED)
+  if not src_name:
+    src_name = os.path.basename(src)
+  zf.write(src, src_name)
+  zf.close()

@@ -249,24 +249,26 @@ def main():
   builds_dir_rel = os.path.join("builds", ver)
   run_cmd_throw(stripreloc, os.path.join(builds_dir_rel, "Installer.exe"))
 
+  # mpress and zip expect to be run from inside builds_dir
+  cwd = os.getcwd()
   os.chdir(builds_dir)
 
   mpress = os.path.join(SCRIPT_DIR, "bin", "mpress")
+  if not os.path.isfile(mpress): mpress = "mpress"
   run_cmd_throw(mpress, "-s", "-r", "SumatraPDF-%s.exe" % ver)
   #run_cmd_throw("upx", compression_type, "--compress-icons=0", "SumatraPDF-%s.exe" % ver)
 
-  shutil.copy("SumatraPDF-%s.exe" % ver, "SumatraPDF.exe")
-  zip = os.path.join(SCRIPT_DIR, "bin", "zip")
-  installer.zip_file(zip, "SumatraPDF-%s.zip" % ver, "SumatraPDF.exe")
+  installer.zip_file("SumatraPDF-%s.zip" % ver, "SumatraPDF-%s.exe" % ver, "SumatraPDF.exe")
+
+  os.chdir(cwd)
 
   local_zip = os.path.join(builds_dir, "SumatraPDF-%s.zip" % ver)
   ensure_path_exists(local_zip)
   local_installer_native_exe = build_installer_native(builds_dir, ver)
 
-  #os.remove("SumatraPDF.exe")
-  #os.remove("SumatraPDF-%s.exe", ver)
-  #os.remove("Installer.exe")
-  #os.remove("Installer.exe.bak")
+  os.remove(local_exe)
+  os.remove(local_installer)
+  os.remove(local_installer + ".bak")
 
   if upload or upload_tmp:
     s3UploadFilePublic(local_exe_uncompr, remote_exe)
