@@ -426,6 +426,9 @@ Girar à direita\tCtrl-Shift-+
 Searching %d of %d...
 Localizando %d de %d...
 
+Select &All\tCtrl-A
+Selecion&ar Tudo\tCtrl-A
+
 Select content with Ctrl+left mouse button
 Selecionar com Ctrl+Botão esquerdo do mouse
 
@@ -515,7 +518,4 @@ copiando texto
 
 printing document
 imprimindo documento
-
-# Untranslated:
-#Select &All\tCtrl-A
 

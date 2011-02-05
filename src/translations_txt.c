@@ -842,7 +842,7 @@ const char *g_transTranslations[] = {
   "Girar \303\240 esquerda\tCtrl-Shift--",
   "Girar \303\240 direita\tCtrl-Shift-+",
   "Localizando %d de %d...",
-  NULL,
+  "Selecion&ar Tudo\tCtrl-A",
   "Selecionar com Ctrl+Bot\303\243o esquerdo do mouse",
   "Enviar por email...",
   "Configurar pesquisa inversa",
