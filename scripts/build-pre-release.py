@@ -102,11 +102,6 @@ def usage():
   print("sumatra-build-pre-release.py [sumatra-source-dir]")
   sys.exit(1)
 
-def direxists(path):
-  if not os.path.exists(path):
-    return False
-  return os.path.isdir(path)
-
 def get_src_dir():
   srcdir = os.path.realpath(".")
   if not os.path.exists(os.path.join(srcdir, "src")):

@@ -125,11 +125,6 @@ def usage():
   print("sumatra-build-release.py [-upload] [sumatra-source-dir]")
   sys.exit(1)
 
-def direxists(path):
-  if not os.path.exists(path):
-    return False
-  return os.path.isdir(path)
-
 # construct a full installer by appending data at the end of installer executable.
 # appended data is in the format:
 #  $data - data as binary. In our case it's Sumatra's binary
