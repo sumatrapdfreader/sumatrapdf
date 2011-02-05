@@ -14,15 +14,14 @@
 #   * file sumatrapdf/sumpdf-latest.txt must be manually updated
 
 import bz2
+import installer
 import os
 import os.path
 import re
 import shutil
 import subprocess
 import sys
-import struct
 import time
-import zlib
 
 def test_for_flag(args, arg):
   if arg not in args:
@@ -137,56 +136,6 @@ def direxists(path):
     #print("%s path exists but is not a dir" % path)
     return False
 
-def write_no_size(fo, data):
-  log("Writing %d bytes at %d '%s'" % (len(data), fo.tell(), data))
-  fo.write(data)
-  
-def write_with_size(fo, data, name=None):
-  if name:
-    log("Writing %d bytes at %d (data of name %s)" % (len(data), fo.tell(), name))
-  else:
-    log("Writing %d bytes at %d (data)" % (len(data), fo.tell()))
-  fo.write(data)
-  tmp = struct.pack("<I", len(data))
-  log("Writing %d bytes at %d (data size)" % (len(tmp), fo.tell()))
-  fo.write(tmp)
-
-INSTALLER_HEADER_FILE      = "kifi"
-INSTALLER_HEADER_FILE_ZLIB = "kifz"
-INSTALLER_HEADER_END       = "kien"
-
-def append_installer_file(fo, path, name_in_installer):
-  fi = open(path, "rb")
-  data = fi.read()
-  fi.close()
-  assert len(data) == os.path.getsize(path)
-  write_with_size(fo, data, name_in_installer)
-  write_with_size(fo, name_in_installer)
-  write_no_size(fo, INSTALLER_HEADER_FILE)
-
-def append_installer_file_zlib(fo, path, name_in_installer):
-  fi = open(path, "rb")
-  data = fi.read()
-  fi.close()
-  assert len(data) == os.path.getsize(path)
-  data2 = zlib.compress(data, 9)
-  assert len(data2) < os.path.getsize(path)
-  write_with_size(fo, data2, name_in_installer)
-  write_with_size(fo, name_in_installer)
-  write_no_size(fo, INSTALLER_HEADER_FILE_ZLIB)
-  
-  """
-  data3 = bz2.compress(data, 9)  
-  print("")
-  print("uncompressed: %d" % len(data))
-  print("zlib        : %d" % len(data2))
-  print("bz2         : %d" % len(data3))
-  print("")
-  """
-
-def mark_installer_end(fo):
-  write_no_size(fo, INSTALLER_HEADER_END)
-
 # construct a full installer by appending data at the end of installer executable.
 # appended data is in the format:
 #  $data - data as binary. In our case it's Sumatra's binary
@@ -210,11 +159,11 @@ def build_installer_native(builds_dir, ver):
 
   fo = open(installer_exe, "ab")
   # append installer data to installer exe
-  mark_installer_end(fo) # this are read backwards so end marker is written first
-  append_installer_file(fo, exe, "SumatraPDF.exe")
+  installer.mark_end(fo) # this are read backwards so end marker is written first
+  installer.append_file(fo, exe, "SumatraPDF.exe")
   font_name =  "DroidSansFallback.ttf"
   font_path = os.path.join(SCRIPT_DIR, "mupdf", "fonts", "droid", font_name)
-  append_installer_file_zlib(fo, font_path, font_name)
+  installer.append_file_zlib(fo, font_path, font_name)
   fo.close()
   return installer_exe
 

@@ -141,7 +141,7 @@ def main():
   (out,err) = run_cmd_throw("svn", "info")
   rev = parse_svninfo_out(out)
   #run_cmd_throw("nmake", "-f", "makefile.msvc", "CFG=rel", "cleanall")
-  run_cmd_throw("nmake", "-f", "makefile.msvc", "CFG=rel", "NASM=bin\\nasm.exe", "EXTCFLAGS=-DSVN_PRE_RELEASE_VER=%d" % rev)
+  run_cmd_throw("nmake", "-f", "makefile.msvc", "CFG=rel", "EXTCFLAGS=-DSVN_PRE_RELEASE_VER=%d" % rev)
 
   mpress = os.path.join(srcdir, "bin", "mpress")
   exe = os.path.join(srcdir, objdir, "SumatraPDF.exe")
