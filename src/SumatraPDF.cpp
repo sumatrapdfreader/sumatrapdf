@@ -5067,6 +5067,11 @@ static LRESULT CALLBACK WndProcTocTree(HWND hwnd, UINT message, WPARAM wParam, L
                 break;
             TreeView_EnsureVisible(hwnd, TreeView_GetSelection(hwnd));
             return 0;
+        case WM_MOUSEWHEEL:
+            // scroll the canvas if the cursor isn't over the ToC tree
+            if (win && !IsCursorOverWindow(win->hwndTocTree))
+                return SendMessage(win->hwndCanvas, message, wParam, lParam);
+            break;
 #ifdef DISPLAY_TOC_PAGE_NUMBERS
         case WM_SIZE:
         case WM_HSCROLL:
@@ -5508,11 +5513,14 @@ static void CreateInfotipForPdfLink(WindowInfo *win, int pageNo, void *linkObj)
     win->infotipVisible = false;
 }
 
-static int      gDeltaPerLine;      // for mouse wheel logic
+static int  gDeltaPerLine = 0;         // for mouse wheel logic
+static bool gWheelMsgRedirect = false; // set when WM_MOUSEWHEEL has been passed on (to prevent recursion)
 
 static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
+    int          current;
     WindowInfo * win = gWindowList.Find(hwnd);
+
     switch (message)
     {
         case WM_APP_REPAINT_CANVAS:
@@ -5690,6 +5698,58 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
             }
             break;
 
+        case WM_MOUSEWHEEL:
+            if (!win || !win->dm)
+                break;
+
+            // Scroll the ToC sidebar, if it's visible and the cursor is in it
+            if (win->tocShow && IsCursorOverWindow(win->hwndTocTree) && !gWheelMsgRedirect) {
+                // Note: hwndTocTree's window procedure doesn't always handle
+                //       WM_MOUSEWHEEL and when it's bubbling up, we'd return
+                //       here recursively - prevent that
+                gWheelMsgRedirect = true;
+                LRESULT res = SendMessage(win->hwndTocTree, message, wParam, lParam);
+                gWheelMsgRedirect = false;
+                return res;
+            }
+
+            // Note: not all mouse drivers correctly report the Ctrl key's state
+            if ((LOWORD(wParam) & MK_CONTROL) || WasKeyDown(VK_CONTROL)) {
+                POINT pt;
+                GetCursorPos(&pt);
+                ScreenToClient(win->hwndCanvas, &pt);
+
+                short delta = GET_WHEEL_DELTA_WPARAM(wParam);
+                float factor = delta < 0 ? ZOOM_OUT_FACTOR : ZOOM_IN_FACTOR;
+                win->dm->zoomBy(factor, &pt);
+                win->UpdateToolbarState();
+                return 0;
+            }
+
+            if (gDeltaPerLine == 0)
+               break;
+
+            win->wheelAccumDelta += GET_WHEEL_DELTA_WPARAM(wParam);     // 120 or -120
+            current = GetScrollPos(win->hwndCanvas, SB_VERT);
+
+            while (win->wheelAccumDelta >= gDeltaPerLine) {
+                SendMessage(win->hwndCanvas, WM_VSCROLL, SB_LINEUP, 0);
+                win->wheelAccumDelta -= gDeltaPerLine;
+            }
+            while (win->wheelAccumDelta <= -gDeltaPerLine) {
+                SendMessage(win->hwndCanvas, WM_VSCROLL, SB_LINEDOWN, 0);
+                win->wheelAccumDelta += gDeltaPerLine;
+            }
+
+            if (!displayModeContinuous(win->dm->displayMode()) &&
+                GetScrollPos(win->hwndCanvas, SB_VERT) == current) {
+                if (GET_WHEEL_DELTA_WPARAM(wParam) > 0)
+                    win->dm->goToPrevPage(-1);
+                else
+                    win->dm->goToNextPage(0);
+            }
+            return 0;
+
         default:
             return DefWindowProc(hwnd, message, wParam, lParam);
     }
@@ -5698,7 +5758,7 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
 
 static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    int             wmId, current;
+    int             wmId;
     WindowInfo *    win;
     ULONG           ulScrollLines;                   // for mouse wheel logic
     HttpReqCtx *    ctx;
@@ -6033,48 +6093,11 @@ InitMouseWheelInfo:
                 gDeltaPerLine = 0;
             return 0;
 
-        // TODO: I don't understand why WndProcCanvas() doesn't receive this message
         case WM_MOUSEWHEEL:
-            if (!win || !win->dm)
-                break;
-
-            // Note: not all mouse drivers correctly report the Ctrl key's state
-            if ((LOWORD(wParam) & MK_CONTROL) || WasKeyDown(VK_CONTROL))
-            {
-                POINT pt;
-                GetCursorPos(&pt);
-                ScreenToClient(win->hwndCanvas, &pt);
-
-                short delta = GET_WHEEL_DELTA_WPARAM(wParam);
-                float factor = delta < 0 ? ZOOM_OUT_FACTOR : ZOOM_IN_FACTOR;
-                win->dm->zoomBy(factor, &pt);
-                win->UpdateToolbarState();
-                return 0;
-            }
-
-            if (gDeltaPerLine == 0)
-               break;
-
-            win->wheelAccumDelta += GET_WHEEL_DELTA_WPARAM(wParam);     // 120 or -120
-            current = GetScrollPos(win->hwndCanvas, SB_VERT);
-
-            while (win->wheelAccumDelta >= gDeltaPerLine) {
-                SendMessage(win->hwndCanvas, WM_VSCROLL, SB_LINEUP, 0);
-                win->wheelAccumDelta -= gDeltaPerLine;
-            }
-            while (win->wheelAccumDelta <= -gDeltaPerLine) {
-                SendMessage(win->hwndCanvas, WM_VSCROLL, SB_LINEDOWN, 0);
-                win->wheelAccumDelta += gDeltaPerLine;
-            }
-
-            if (!displayModeContinuous(win->dm->displayMode()) &&
-                GetScrollPos(win->hwndCanvas, SB_VERT) == current) {
-                if (GET_WHEEL_DELTA_WPARAM(wParam) > 0)
-                    win->dm->goToPrevPage(-1);
-                else
-                    win->dm->goToNextPage(0);
-            }
-            return 0;
+            // Pass the message to the canvas' window procedure
+            // (required since the canvas itself never has the focus and thus
+            // never receives WM_MOUSEWHEEL messages)
+            return SendMessage(win->hwndCanvas, message, wParam, lParam);
 
         case WM_DESTROY:
             /* WM_DESTROY might be sent as a result of File\Close, in which case CloseWindow() has already been called */

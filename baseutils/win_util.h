@@ -87,6 +87,8 @@ void    paint_round_rect_around_hwnd(HDC hdc, HWND hwnd_edit_parent, HWND hwnd_e
 void    paint_rect(HDC hdc, RECT * rect);
 void    draw_centered_text(HDC hdc, RECT *r, const TCHAR *txt);
 
+BOOL    IsCursorOverWindow(HWND hwnd);
+
 #ifdef __cplusplus
 }
 #endif

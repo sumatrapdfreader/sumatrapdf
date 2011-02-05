@@ -460,3 +460,12 @@ void draw_centered_text(HDC hdc, RECT *r, const TCHAR *txt)
     SetBkMode(hdc, TRANSPARENT);
     DrawText(hdc, txt, lstrlen(txt), r, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 }
+
+BOOL IsCursorOverWindow(HWND hwnd)
+{
+    POINT pt;
+    RECT rcWnd;
+    GetCursorPos(&pt);
+    GetWindowRect(hwnd, &rcWnd);
+    return PtInRect(&rcWnd, pt);
+}
