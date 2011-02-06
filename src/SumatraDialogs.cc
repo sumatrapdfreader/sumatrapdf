@@ -498,12 +498,10 @@ static void SetupZoomComboBox(HWND hDlg, UINT idComboBox, float currZoom)
     SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)_TR("Fit Width"));
     SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)_TR("Fit Content"));
     SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)_T("-"));
-#ifndef BUILD_RM_VERSION
     SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)_T("6400%"));
     SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)_T("3200%"));
     SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)_T("1600%"));
     SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)_T("800%"));
-#endif
     SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)_T("400%"));
     SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)_T("200%"));
     SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)_T("150%"));

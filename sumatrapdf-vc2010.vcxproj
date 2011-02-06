@@ -355,7 +355,6 @@
     <None Include="src\PdfDoc.ico" />
     <None Include="src\SumatraPDF.ico" />
     <None Include="src\toolbar_8.bmp" />
-    <None Include="src\todo.txt" />
   </ItemGroup>
   <ItemGroup>
     <Manifest Include="src\installer\Installer.exe.manifest" />

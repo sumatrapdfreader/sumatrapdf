@@ -214,11 +214,6 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
             this->filesToBenchmark.push_back(s);
             this->exitImmediately = true;
         }
-#ifdef BUILD_RM_VERSION
-        else if (is_arg("-delete-these-on-close")) {
-            this->deleteFilesOnClose = true;
-        }
-#endif
 #ifdef DEBUG
         else if (is_arg("-enum-printers")) {
             EnumeratePrinters();

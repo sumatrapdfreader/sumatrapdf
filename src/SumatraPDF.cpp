@@ -75,7 +75,6 @@ static bool             gUseGdiRenderer = false;
 
 /* default UI settings */
 
-// Note: Only make changes to these values #ifndef BUILD_RM_VERSION
 #define DEFAULT_DISPLAY_MODE    DM_AUTOMATIC
 #define DEFAULT_ZOOM            ZOOM_FIT_PAGE
 #define DEFAULT_ROTATION        0
@@ -191,11 +190,7 @@ SerializableGlobalPrefs             gGlobalPrefs = {
     TRUE, // BOOL m_showToolbar
     FALSE, // BOOL m_pdfAssociateDontAskAgain
     FALSE, // BOOL m_pdfAssociateShouldAssociate
-#ifndef BUILD_RM_VERSION
     TRUE, // BOOL m_enableAutoUpdate
-#else
-    FALSE,
-#endif
     TRUE, // BOOL m_rememberOpenedFiles
     ABOUT_BG_COLOR, // int  m_bgColor
     FALSE, // BOOL m_escToExit
@@ -504,12 +499,10 @@ MenuDef menuDefZoom[] = {
     { _TRN("Fit &Content\tCtrl-3"),         IDM_ZOOM_FIT_CONTENT,       0  },
     { _TRN("Custom &Zoom...\tCtrl-Y"),      IDM_ZOOM_CUSTOM,            0  },
     { SEP_ITEM },
-#ifndef BUILD_RM_VERSION
     { "6400%",                              IDM_ZOOM_6400,              MF_NO_TRANSLATE  },
     { "3200%",                              IDM_ZOOM_3200,              MF_NO_TRANSLATE  },
     { "1600%",                              IDM_ZOOM_1600,              MF_NO_TRANSLATE  },
     { "800%",                               IDM_ZOOM_800,               MF_NO_TRANSLATE  },
-#endif
     { "400%",                               IDM_ZOOM_400,               MF_NO_TRANSLATE  },
     { "200%",                               IDM_ZOOM_200,               MF_NO_TRANSLATE  },
     { "150%",                               IDM_ZOOM_150,               MF_NO_TRANSLATE  },
@@ -6377,10 +6370,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     fz_accelerate();
 
     SerializableGlobalPrefs_Init();
-#ifndef BUILD_RM_VERSION
-    prefsLoaded = Prefs_Load();
-#endif
-    if (!prefsLoaded) {
+    if (!Prefs_Load()) {
         // assume that this is because prefs file didn't exist i.e. this is
         // the first time Sumatra is launched.
         const char *lang = GuessLanguage();
@@ -6574,26 +6564,6 @@ Exit:
 
     Translations_FreeData();
     SerializableGlobalPrefs_Deinit();
-
-#ifdef BUILD_RM_VERSION
-    if (i.deleteFilesOnClose)
-    {
-        // Delete the files which where passed to the command line.
-        // This only really makes sense if we are in restricted use.
-        for (size_t i = 0; i < fileNames.size(); i++)
-        {
-            TCHAR fullpath[MAX_PATH];
-            GetFullPathName(fileNames[i], dimof(fullpath), fullpath, NULL);
-
-            // Sumatra holds the lock on the file (open stream), it should have lost it by the time
-            // we reach here, but sometimes it's a little slow, so loop around till we can do it.
-            do {
-                if (DeleteFile(fullpath) == 0)
-                    break;
-            } while (GetLastError() == 32);
-        }
-    }
-#endif // BUILD_RM_VERSION
 
     return msg.wParam;
 }

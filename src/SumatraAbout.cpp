@@ -35,10 +35,10 @@
 #ifdef SVN_PRE_RELEASE_VER
  #define VERSION_SUB_TXT        _T("Pre-release")
 #else
- #if defined(DEBUG) || !defined(BUILD_RM_VERSION)
-  #define VERSION_SUB_TXT       _T("")
+ #if defined(DEBUG)
+  #define VERSION_SUB_TXT       _T("Debug")
  #else
-  #define VERSION_SUB_TXT       _T("Adapted by RM")
+  #define VERSION_SUB_TXT       _T("")
  #endif
 #endif
 

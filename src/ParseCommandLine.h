@@ -32,10 +32,6 @@ public:
     bool        showConsole;
     HWND        hwndPluginParent;
     bool        exitImmediately;
-#ifdef BUILD_RM_VERSION
-    // Delete the files which were passed into the program by command line.
-    bool        deleteFilesOnClose;
-#endif
 
     CommandLineInfo() : makeDefault(false), exitOnPrint(false), printDialog(false),
         printerName(NULL), bgColor(-1), inverseSearchCmdLine(NULL),
@@ -45,9 +41,6 @@ public:
         restrictedUse(false), newWindowTitle(NULL), invertColors(FALSE),
         enterPresentation(false), hwndPluginParent(NULL),
         showConsole(false), exitImmediately(false)
-#ifdef BUILD_RM_VERSION
-        , deleteFilesOnClose(false)
-#endif
     { }
 
     ~CommandLineInfo() {

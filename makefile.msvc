@@ -3,7 +3,6 @@
 # CFG=dbg|rel (default: dbg)
 # EXTLIBSDIR=<directory where zlib/freetype/jpeg lib live> (default: ext)
 #  e.g. ..\sumatrapdf\ext
-# EXB=rm (default: no setting) This is an EXternal Build, i.e. not base SumatraPDF.
 # EXTCFLAGS=$CFLAGS
 # MUPDF_DIR=mupdf
 
@@ -13,11 +12,7 @@ CFG=dbg
 !endif
 
 # O is directory where object and binary files go
-!if "$(EXB)"!=""
-O = obj-$(EXB)-$(CFG)
-!else
 O = obj-$(CFG)
-!endif
 
 !if "$(MUPDF_DIR)"==""
 MUPDF_DIR=mupdf
@@ -40,11 +35,6 @@ SumatraPDF: $(O) $(SUMATRA_APP) $(INSTALLER_APP) $(PDFFILTER_DLL) $(BROWSER_PLUG
 !INCLUDE $(MUPDF_DIR)\makefile.msvc
 
 ##### add configuration changes that should NOT affect MuPDF after this line #####
-
-# external build settings not part of core SumatraPDF
-!if "$(EXB)"=="rm"
-CFLAGS = $(CFLAGS) /D "BUILD_RM_VERSION"
-!endif
 
 # Modify the following defines if you have to target a platform prior to the ones specified below.
 # Their meaning: http://msdn.microsoft.com/en-us/library/aa383745(VS.85).aspx
@@ -92,11 +82,6 @@ LIBS_BROWSER_PLUGIN = user32.lib gdi32.lib advapi32.lib shlwapi.lib
 !if "$(CFG)"=="dbg"
 SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "DEBUG" /D "_DEBUG"
 INSTALLER_CFLAGS = $(INSTALLER_CFLAGS) /D "DEBUG" /D "_DEBUG"
-!endif
-
-!if "$(CFG)"=="rel" && "$(EXB)"=="rm"
-SUMATRA_CFLAGS   = $(SUMATRA_CFLAGS) /GL /MT /O2
-INSTALLER_CFLAGS = $(INSTALLER_CFLAGS) /GL /MT /O2
 !endif
 
 SUMATRA_RES = $(O)\sumatrapdf.res

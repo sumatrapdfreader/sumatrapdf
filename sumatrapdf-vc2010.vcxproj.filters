@@ -735,7 +735,6 @@
     <None Include="src\SumatraPDF.ico">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="src\todo.txt" />
     <None Include="src\toolbar_8.bmp">
       <Filter>Resource Files</Filter>
     </None>
