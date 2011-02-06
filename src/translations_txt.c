@@ -5486,7 +5486,7 @@ const char *g_transTranslations[] = {
   "Rotation antihoraire\tCtrl-Shift--",
   "Rotation horaire\tCtrl-Shift-+",
   "Recherche de %d \303\240 %d...",
-  NULL,
+  "Tout s\303\251lectionner\tCtrl-A",
   "S\303\251lectionner avec Ctrl+bouton gauche de la souris",
   "Envoyer par &courriel...",
   "Configurer la recherche inverse",
@@ -5515,8 +5515,8 @@ const char *g_transTranslations[] = {
   "Zoom arri\303\250re",
   "Facteur de zoom",
   "[Modifications d\303\251tect\303\251es; actualisation] %s",
-  "copier le text",
-  "imprimer le document",
+  "copie du texte",
+  "impression du document",
 
   /* Translations for language ru */
   "\320\236 \320\277\321\200\320\276\320\263\321\200\320\260\320\274\320\274\320\265...",

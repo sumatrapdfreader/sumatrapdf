@@ -430,6 +430,9 @@ Rotation horaire\tCtrl-Shift-+
 Searching %d of %d...
 Recherche de %d à %d...
 
+Select &All\tCtrl-A
+Tout sélectionner\tCtrl-A
+
 Select content with Ctrl+left mouse button
 Sélectionner avec Ctrl+bouton gauche de la souris
 
@@ -515,11 +518,8 @@ Facteur de zoom
 [Modifications détectées; actualisation] %s
 
 copying text
-copier le text
+copie du texte
 
 printing document
-imprimer le document
-
-# Untranslated:
-#Select &All\tCtrl-A
+impression du document
 
