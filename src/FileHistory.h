@@ -28,7 +28,6 @@ public:
     FileHistoryNode *   Find(const TCHAR *filePath);
     FileHistoryNode *   Find(unsigned int menuId);
     void                Remove(FileHistoryNode *node);
-    void                Remove(const TCHAR *filePath);
 
     FileHistoryNode *   first;
 };

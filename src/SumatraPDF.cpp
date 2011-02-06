@@ -643,23 +643,19 @@ static void WindowInfo_RebuildMenu(WindowInfo *win)
 
 static void AddFileToHistory(const TCHAR *filePath)
 {
-    FileHistoryNode *   node;
-    uint32_t            oldMenuId = INVALID_MENU_ID;
-
     assert(filePath);
     if (!filePath) return;
 
-    /* if a history entry with the same name already exists, then delete it.
+    /* if a history entry with the same name already exists, then reuse it.
        That way we don't have duplicates and the file moves to the front of the list */
-    node = gFileHistoryRoot.Find(filePath);
-    if (node) {
-        oldMenuId = node->menuId;
+    FileHistoryNode *node = gFileHistoryRoot.Find(filePath);
+    if (node)
         gFileHistoryRoot.Remove(node);
+    else {
+        node = new FileHistoryNode(filePath);
+        if (!node)
+            return;
     }
-    node = new FileHistoryNode(filePath);
-    if (!node)
-        return;
-    node->menuId = oldMenuId;
     gFileHistoryRoot.Prepend(node);
 }
 
@@ -675,7 +671,7 @@ TCHAR *GetPasswordForFile(WindowInfo *win, const TCHAR *fileName,
         char *fingerprint = mem_to_hexstr(decryptionKey, 16);
         *saveKey = memcmp(fingerprint, ds->decryptionKey, str_len(fingerprint)) == 0;
         free(fingerprint);
-        if (*saveKey && hexstr_to_mem(ds->decryptionKey + 32, xref->crypt->key, sizeof(xref->crypt->key)))
+        if (*saveKey && _hexstr_to_mem(ds->decryptionKey + 32, &xref->crypt->key))
             return NULL;
     }
 
@@ -744,6 +740,7 @@ static bool Prefs_Load(void)
         if (!file_exists(node->state->filePath)) {
             DBG_OUT_T("Prefs_Load() file '%s' doesn't exist anymore\n", node->state->filePath);
             gFileHistoryRoot.Remove(node);
+            delete node;
         }
         node = next;
     }
@@ -947,6 +944,18 @@ static void WindowInfo_Refresh(WindowInfo* win, bool autorefresh) {
     // we postpone the reload until the next autorefresh event
     bool tryrepair = !autorefresh;
     LoadPdfIntoWindow(win->watcher.filepath(), win, &ds, false, tryrepair, true, false);
+
+    if (win->dm) {
+        // save a newly remembered password into file history so that
+        // we don't ask again at the next refresh
+        FileHistoryNode *node = gFileHistoryRoot.Find(ds.filePath);
+        const char *decryptionKey = win->dm->pdfEngine->getDecryptionKey();
+        if (node && !str_eq(node->state.decryptionKey, decryptionKey)) {
+            if (node->state.decryptionKey)
+                free((void *)node->state.decryptionKey);
+            node->state.decryptionKey = decryptionKey ? str_dup(decryptionKey) : NULL;
+        }
+    }
 }
 
 static void WindowInfo_Delete(WindowInfo *win)
@@ -6341,11 +6350,7 @@ Exit:
 
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
-    MSG                 msg = {0};
-    HACCEL              hAccelTable;
-    WindowInfo*         win;
-    bool                firstDocLoaded = false;
-    bool                prefsLoaded = false;
+    MSG msg = { 0 };
 
 #ifdef DEBUG
     // Memory leak detection
@@ -6428,7 +6433,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     if (!InstanceInit(hInstance, nCmdShow))
         goto Exit;
 
-    hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_SUMATRAPDF));
+    HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_SUMATRAPDF));
 
     gRenderCache.invertColors = &gGlobalPrefs.m_invertColors;
     gRenderCache.useGdiRenderer = &gUseGdiRenderer;
@@ -6442,6 +6447,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         // always display the toolbar when embedded (as there's no menubar in that case)
         gGlobalPrefs.m_showToolbar = TRUE;
     }
+
+    WindowInfo *win = NULL;
+    bool firstDocLoaded = false;
 
     for (size_t n = 0; n < i.fileNames.size(); n++) {
         if (i.reuseInstance) {

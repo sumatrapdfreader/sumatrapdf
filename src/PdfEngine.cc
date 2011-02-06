@@ -407,7 +407,7 @@ OpenEmbeddedFile:
 
         if (saveKey) {
             memcpy(digest + 16, _xref->crypt->key, 32);
-            _decryptionKey = mem_to_hexstr(digest, sizeof(digest));
+            _decryptionKey = _mem_to_hexstr(&digest);
         }
     }
 

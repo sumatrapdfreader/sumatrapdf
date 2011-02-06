@@ -121,6 +121,8 @@ bool DisplayModel::displayStateFromModel(DisplayState *ds)
     ds->scrollX = presMode ? 0 : (int)floor(ss.x + 0.5);
     ds->scrollY = presMode ? 0 : (int)floor(ss.y + 0.5);
 
+    if (ds->decryptionKey)
+        free((void *)ds->decryptionKey);
     ds->decryptionKey = pdfEngine->getDecryptionKey();
 
     return true;

@@ -94,13 +94,6 @@ void FileHistoryList::Remove(FileHistoryNode *node)
     else
         node->prev->next = node->next;
 
-    node->next = NULL;
-    delete node;
-}
-
-void FileHistoryList::Remove(const TCHAR *filePath)
-{
-    FileHistoryNode *node = Find(filePath);
-    if (node)
-        Remove(node);
+    node->next = node->prev = NULL;
+    // note: the caller must delete the node, if it's no longer needed
 }

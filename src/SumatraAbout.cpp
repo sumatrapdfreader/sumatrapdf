@@ -35,11 +35,7 @@
 #ifdef SVN_PRE_RELEASE_VER
  #define VERSION_SUB_TXT        _T("Pre-release")
 #else
- #if defined(DEBUG)
-  #define VERSION_SUB_TXT       _T("Debug")
- #else
-  #define VERSION_SUB_TXT       _T("")
- #endif
+ #define VERSION_SUB_TXT        _T("")
 #endif
 
 extern HCURSOR gCursorHand;
