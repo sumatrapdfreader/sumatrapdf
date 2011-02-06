@@ -7,10 +7,11 @@ import sys
 import zipfile
 import zlib
 
-def ensure_boto():
+def import_boto():
+  global Key, S3Connection, awscreds
   try:
-    import boto.s3
     from boto.s3.key import Key
+    from boto.s3.connection import S3Connection
   except:
     print("You need boto library (http://code.google.com/p/boto/)")
     print("svn checkout http://boto.googlecode.com/svn/trunk/ boto")
@@ -39,8 +40,8 @@ g_s3conn = None
 def s3connection():
   global g_s3conn
   if g_s3conn is None:
-    ensure_boto()
-    g_s3conn = boto.s3.connection.S3Connection(awscreds.access, awscreds.secret, True)
+    import_boto()
+    g_s3conn = S3Connection(awscreds.access, awscreds.secret, True)
   return g_s3conn
 
 def s3PubBucket(): return s3connection().get_bucket(S3_BUCKET)
@@ -49,6 +50,7 @@ def ul_cb(sofar, total):
   print("So far: %d, total: %d" % (sofar , total))
 
 def s3UploadFilePublic(local_file_name, remote_file_name):
+  log("s3 upload '%s' as '%s'" % (local_file_name, remote_file_name))
   bucket = s3PubBucket()
   k = Key(bucket)
   k.key = remote_file_name
@@ -56,6 +58,7 @@ def s3UploadFilePublic(local_file_name, remote_file_name):
   k.make_public()
 
 def s3UploadDataPublic(data, remote_file_name):
+  log("s3 upload data as '%s'" % remote_file_name)
   bucket = s3PubBucket()
   k = Key(bucket)
   k.key = remote_file_name
@@ -191,21 +194,22 @@ def zip_file(dst_zip_file, src, src_name=None):
 # this format is designed to be read backwards (because it's easier for the installer to
 # seek to the end of itself than parse pe header to figure out where the executable ends
 # and data starts)
-def build_installer_native(dir, ver):
+def build_installer_native(dir, nameprefix):
   installer_template_exe = os.path.join(dir, "Installer.exe")
-  if ver is not None:
-    installer_exe = os.path.join(dir, "SumatraPDF-%s-install.exe" % ver)
-    exe = os.path.join(dir, "SumatraPDF-%s.exe" % ver)
+  if nameprefix is not None:
+    installer_exe = os.path.join(dir, "%s-install.exe" % nameprefix)
+    exe = os.path.join(dir, "%s.exe" % nameprefix)
   else:
     installer_exe = os.path.join(dir, "SumatraPDF-install.exe")
     exe = os.path.join(dir, "SumatraPDF.exe")
-
+  plugin = os.path.join(dir, "npPdfViewer.dll")
   shutil.copy(installer_template_exe, installer_exe)
 
   fo = open(installer_exe, "ab")
   # append installer data to installer exe
   installer_mark_end(fo) # this are read backwards so end marker is written first
   installer_append_file(fo, exe, "SumatraPDF.exe")
+  installer_append_file(fo, plugin, "npPdfViewer.dll")
   font_name =  "DroidSansFallback.ttf"
   font_path = os.path.join("mupdf", "fonts", "droid", font_name)
   installer_append_file_zlib(fo, font_path, font_name)

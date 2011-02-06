@@ -5,8 +5,11 @@
 #   * build with nmake, sending svn version as argument
 #   * compress with mpress
 #   * upload to s3 kjkpub bucket. Uploaded files:
-#       sumatrapdf/SumatraPDF-prerelase-<svnrev>.exe
-#       sumatrapdf/SumatraPDF-prerelease-<svnrev>.pdb.zip
+#       sumatrapdf/prerel/SumatraPDF-prerelease-<svnrev>.exe
+#       sumatrapdf/prerel/SumatraPDF-prerelease-<svnrev>.pdb.zip
+#       sumatrapdf/prerel/SumatraPDF-prerelease-<svnrev>-dbg.exe
+#       sumatrapdf/prerel/SumatraPDF-prerelease-<svnrev>-dbg.pdb.zip
+#       sumatrapdf/prerel/SumatraPDF-prerelease-<svnrev>-install.exe
 #       sumatrapdf/sumatralatest.js
 #       sumatrapdf/sumpdf-prerelease-latest.txt
 
@@ -16,87 +19,96 @@ import shutil
 import sys
 import time
 
-from util import run_cmd_throw, s3UploadFilePublic, s3UploadDataPublic, parse_svninfo_out, zip_file, verify_started_in_right_directory
+from util import log, run_cmd_throw, s3UploadFilePublic, s3UploadDataPublic, parse_svninfo_out, zip_file, verify_started_in_right_directory, ensure_s3_doesnt_exist, build_installer_native
 
 def usage():
   print("sumatra-build-pre-release.py [sumatra-source-dir]")
   sys.exit(1)
 
-def get_src_dir():
-  srcdir = os.path.realpath(".")
-  if not os.path.exists(os.path.join(srcdirb, "src")):
-    print("%s is not a source dir" % srcdir)
-    sys.exit(1)
-  return srcdir
-
-def test_upload():
-  srcdir = get_src_dir()
-  exe = os.path.join(srcdir, "obj-rel", "SumatraPDF.exe")
-  remote = "sumatrapdf2/SumatraPDF-prerelease-333.txt"
-  print("Uploading '%s' as '%s" % (exe, remote))
-  s3UploadFilePublic(exe, remote)
-
 def main():
   if len(sys.argv) > 2:
     usage()
-
   verify_started_in_right_directory()
-  srcdir = get_src_dir()
-  os.chdir(srcdir)
-  objdir = "obj-rel"
-  if os.path.exists(objdir): shutil.rmtree(objdir, ignore_errors=True)
+
+  s3dir = "sumatrapdf/prerel"
+
   run_cmd_throw("svn", "update")
   (out,err) = run_cmd_throw("svn", "info")
-  rev = parse_svninfo_out(out)
-  #run_cmd_throw("nmake", "-f", "makefile.msvc", "CFG=rel", "cleanall")
-  run_cmd_throw("nmake", "-f", "makefile.msvc", "CFG=rel", "EXTCFLAGS=-DSVN_PRE_RELEASE_VER=%d" % rev)
+  ver = str(parse_svninfo_out(out))
+  log("Version: '%s'" % ver)
 
-  mpress = os.path.join(SCRIPT_DIR, "bin", "mpress")
-  exe = os.path.join(objdir, "SumatraPDF.exe")
-  run_cmd_throw(mpress, "-s", "-r", exe)
-  remote = "sumatrapdf/SumatraPDF-prerelease-%d.exe" % rev
+  tmp = "%s/SumatraPDF-prerelease-%s" % (s3dir, ver)
+  remote_exe           = "%s.exe" % tmp
+  remote_pdb_zip       = "%s.pdb.zip" % tmp
+  remote_exe_dbg       = "%s-dbg.exe" % tmp
+  remote_pdb_dbg_zip   = "%s-dbg.pdb.zip" % tmp
+  remote_installer_exe = "%s-install.exe" % tmp
 
-  pdb = os.path.join(srcdir, objdir, "SumatraPDF.pdb")
-  pdb_zip = pdb + ".zip"
-  zip_file(pdb_zip, pdb, "SumatraPDF-prerelease-%d.pdb" % rev)
-  remote_pdb = "sumatrapdf/SumatraPDF-prerelease-%d.pdb.zip" % rev
+  map(ensure_s3_doesnt_exist, [remote_exe, remote_pdb_zip, remote_exe_dbg, remote_pdb_dbg_zip, remote_installer_exe])
 
-  print("Uploading '%s' as '%s" % (exe, remote))
-  s3UploadFilePublic(exe, remote)
+  builds_dir = os.path.join("builds", ver)
+  shutil.rmtree(builds_dir, ignore_errors=True)
+  os.makedirs(builds_dir)
 
-  print("Uploading '%s' as '%s" % (pdb_zip, remote_pdb))
-  s3UploadFilePublic(pdb_zip, remote_pdb)
+  shutil.rmtree("obj-rel", ignore_errors=True)
+  shutil.rmtree("obj-dbg", ignore_errors=True)
+  extcflags = "EXTCFLAGS=-DSVN_PRE_RELEASE_VER=%s" % ver
+  run_cmd_throw("nmake", "-f", "makefile.msvc", "CFG=rel", extcflags)
+  run_cmd_throw("nmake", "-f", "makefile.msvc", "CFG=dbg", extcflags)
 
-  objdir = "obj-dbg"
-  if os.path.exists(objdir): shutil.rmtree(objdir, ignore_errors=True)
-  run_cmd_throw("nmake", "-f", "makefile.msvc", "CFG=dbg", "EXTCFLAGS=-DSVN_PRE_RELEASE_VER=%d" % rev)
+  files = ["SumatraPDF.exe", "SumatraPDF.pdb", "npPdfViewer.dll", "Installer.exe"]
+  [tmp_exe, tmp_pdb, tmp_plugin, tmp_installer] = [os.path.join("obj-rel", t) for t in files]
+  [tmp_exe_dbg, tmp_pdb_dbg] = [os.path.join("obj-dbg", t) for t in files[0:2]]
 
-  exe = os.path.join(objdir, "SumatraPDF.exe")
-  run_cmd_throw(mpress, "-s", "-r", exe)
-  remote_dbg = "sumatrapdf/SumatraPDF-prerelease-%d-dbg.exe" % rev
+  local_exe = os.path.join(builds_dir, "SumatraPDF-prerelease-%s.exe" % ver)
+  local_exe_uncompr = os.path.join(builds_dir, "SumatraPDF-uncompr.exe")
+  local_exe_dbg = os.path.join(builds_dir, "SumatraPDF-prerelease-%s-dbg.exe" % ver)
+  local_pdb = os.path.join(builds_dir, "SumatraPDF-prerelease-%s.pdb" % ver)
+  local_pdb_zip = os.path.join(builds_dir, "SumatraPDF-prerelease-%s.pdb.zip" % ver)
+  local_pdb_dbg = os.path.join(builds_dir, "SumatraPDF-prerelease-%s-dbg.pdb" % ver)
+  local_pdb_dbg_zip = os.path.join(builds_dir, "SumatraPDF-prerelease-%s-dbg.pdb.zip" % ver)
+  local_plugin = os.path.join(builds_dir, "npPdfViewer.dll")
+  local_installer = os.path.join(builds_dir, "Installer.exe")
 
-  pdb = os.path.join(srcdir, objdir, "SumatraPDF.pdb")
-  pdb_zip = pdb + ".zip"
-  zip_file(pdb_zip, pdb, "SumatraPDF-prerelease-%d-dbg.pdb" % rev)
-  remote_dbg_pdb = "sumatrapdf/SumatraPDF-prerelease-%d-dbg.pdb.zip" % rev
+  shutil.copy(tmp_exe, local_exe)
+  shutil.copy(tmp_exe, local_exe_uncompr)
+  shutil.copy(tmp_exe_dbg, local_exe_dbg)
+  shutil.copy(tmp_plugin, local_plugin)
+  shutil.copy(tmp_pdb, local_pdb)
+  shutil.copy(tmp_pdb_dbg, local_pdb_dbg)
+  shutil.copy(tmp_installer, local_installer)
 
-  print("Uploading '%s' as '%s" % (exe, remote_dbg))
-  s3UploadFilePublic(exe, remote_dbg)
+  # run mpress and StripReloc from inside builds_dir for better
+  # compat across python version
+  prevdir = os.getcwd(); os.chdir(builds_dir)
+  run_cmd_throw("StripReloc", "Installer.exe")
+  run_cmd_throw("mpress", "-s", "-r", "SumatraPDF-prerelease-%s.exe" % ver)
+  os.chdir(prevdir)
 
-  print("Uploading '%s' as '%s" % (pdb_zip, remote_dbg_pdb))
-  s3UploadFilePublic(pdb_zip, remote_dbg_pdb)
+  nameprefix = "SumatraPDF-prerelease-%s" % ver
+  local_installer_native_exe = build_installer_native(builds_dir, nameprefix)
 
-  jstxt  = 'var sumLatestRev = %d;\n' % rev
+  zip_file(local_pdb_zip, local_pdb, "SumatraPDF-prerelease-%s.pdb" % ver)
+  zip_file(local_pdb_dbg_zip, local_pdb_dbg, "SumatraPDF-prerelease-%s.pdb" % ver)
+
+  s3UploadFilePublic(local_exe, remote_exe)
+  s3UploadFilePublic(local_exe_dbg, remote_exe_dbg)
+  s3UploadFilePublic(local_pdb_zip, remote_pdb_zip)
+  s3UploadFilePublic(local_pdb_dbg_zip, remote_pdb_dbg_zip)
+  s3UploadFilePublic(local_installer_native_exe, remote_installer_exe)
+  map(os.remove, [local_installer, local_installer + ".bak"])
+
+  jstxt  = 'var sumLatestVer = %s;\n' % ver
   jstxt  = 'var sumBuiltOn = "%s";\n' % time.strftime("%Y-%m-%d")
-  jstxt += 'var sumLatestName = "%s";\n' % remote.split("/")[1]
-  jstxt += 'var sumLatestUrl = "http://kjkpub.s3.amazonaws.com/%s";\n' % remote
-  jstxt += 'var sumLatestUrlPdb = "http://kjkpub.s3.amazonaws.com/%s";\n' % remote_pdb
-  jstxt += 'var sumLatestDbgUrl = "http://kjkpub.s3.amazonaws.com/%s";\n' % remote_dbg
-  jstxt += 'var sumLatestDbgUrlPdb = "http://kjkpub.s3.amazonaws.com/%s";\n' % remote_dbg_pdb
+  jstxt += 'var sumLatestName = "%s";\n' % remote_exe.split("/")[-1]
+  jstxt += 'var sumLatestExe = "http://kjkpub.s3.amazonaws.com/%s";\n' % remote_exe
+  jstxt += 'var sumLatestExeDbg = "http://kjkpub.s3.amazonaws.com/%s";\n' % remote_exe_dbg
+  jstxt += 'var sumLatestPdb = "http://kjkpub.s3.amazonaws.com/%s";\n' % remote_pdb_zip
+  jstxt += 'var sumLatestPdbDbg = "http://kjkpub.s3.amazonaws.com/%s";\n' % remote_pdb_dbg_zip
+  jstxt += 'var sumLatestInstaller = "http://kjkpub.s3.amazonaws.com/%s";\n' % remote_installer_exe
   s3UploadDataPublic(jstxt, "sumatrapdf/sumatralatest.js")
-  txt = "%d\n" % rev
+  txt = "%s\n" % ver
   s3UploadDataPublic(txt, "sumatrapdf/sumpdf-prerelease-latest.txt")
 
 if __name__ == "__main__":
   main()
-  #test_upload()
