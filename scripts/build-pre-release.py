@@ -10,27 +10,13 @@
 #       sumatrapdf/sumatralatest.js
 #       sumatrapdf/sumpdf-prerelease-latest.txt
 
-import installer
 import os
 import os.path
 import shutil
-import subprocess
 import sys
 import time
-try:
-    import boto.s3
-    from boto.s3.key import Key
-except:
-    print("You need boto library (http://code.google.com/p/boto/)")
-    print("svn checkout http://boto.googlecode.com/svn/trunk/ boto")
-    print("cd boto; python setup.py install")
-    raise
 
-try:
-  import awscreds
-except:
-  print "awscreds.py file needed with access and secret globals for aws access"
-  sys.exit(1)
+from util import run_cmd_throw, s3UploadFilePublic, s3UploadDataPublic, parse_svninfo_out, zip_file
 
 SCRIPT_DIR = os.path.dirname(__file__)
 if SCRIPT_DIR:
@@ -38,73 +24,13 @@ if SCRIPT_DIR:
 else:
   SCRIPT_DIR = os.getcwd()
 
-S3_BUCKET = "kjkpub"
-g_s3conn = None
-
-def s3connection():
-  global g_s3conn
-  if g_s3conn is None:
-    g_s3conn = boto.s3.connection.S3Connection(awscreds.access, awscreds.secret, True)
-  return g_s3conn
-
-def s3PubBucket(): return s3connection().get_bucket(S3_BUCKET)
-
-def ul_cb(sofar, total):
-  print("So far: %d, total: %d" % (sofar , total))
-
-def s3UploadFilePublic(local_file_name, remote_file_name):
-  bucket = s3PubBucket()
-  k = Key(bucket)
-  k.key = remote_file_name
-  k.set_contents_from_filename(local_file_name, cb=ul_cb)
-  k.make_public()
-
-def s3UploadDataPublic(data, remote_file_name):
-  bucket = s3PubBucket()
-  k = Key(bucket)
-  k.key = remote_file_name
-  k.set_contents_from_string(data)
-  k.make_public()
-
-# like cmdrun() but throws an exception on failure
-def run_cmd_throw(*args):
-  cmd = " ".join(args)
-  print("\nrun_cmd_throw: '%s'" % cmd)
-  cmdproc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-  res = cmdproc.communicate()
-  errcode = cmdproc.returncode
-  if 0 != errcode:
-    print("Failed with error code %d" % errcode)
-    print("Stdout:")
-    print(res[0])
-    print("Stderr:")
-    print(res[1])
-    raise Exception("'%s' failed with error code %d" % (cmd, errcode))
-  return (res[0], res[1])
-
-# Parse output of svn info and return revision number indicated by
-# "Last Changed Rev" field or, if that doesn't exist, by "Revision" field
-def parse_svninfo_out(txt):
-  revision_num = None
-  for l in txt.split("\n"):
-    l = l.strip()
-    if 0 == len(l): continue
-    (name, val) = l.split(": ")
-    if name == "Last Changed Rev":
-      return int(val)
-    if name == "Revision":
-      revision_num = int(val)
-  if revision_num is not None:
-    return revision_num
-  raise Exception("parse_svn_info_out() failed to parse '%s'" % txt)
-
 def usage():
   print("sumatra-build-pre-release.py [sumatra-source-dir]")
   sys.exit(1)
 
 def get_src_dir():
   srcdir = os.path.realpath(".")
-  if not os.path.exists(os.path.join(srcdir, "src")):
+  if not os.path.exists(os.path.join(srcdirb, "src")):
     print("%s is not a source dir" % srcdir)
     sys.exit(1)
   return srcdir
@@ -136,7 +62,7 @@ def main():
 
   pdb = os.path.join(srcdir, objdir, "SumatraPDF.pdb")
   pdb_zip = pdb + ".zip"
-  installer.zip_file(pdb_zip, pdb, "SumatraPDF-prerelease-%d.pdb" % rev)
+  zip_file(pdb_zip, pdb, "SumatraPDF-prerelease-%d.pdb" % rev)
   remote_pdb = "sumatrapdf/SumatraPDF-prerelease-%d.pdb.zip" % rev
 
   print("Uploading '%s' as '%s" % (exe, remote))

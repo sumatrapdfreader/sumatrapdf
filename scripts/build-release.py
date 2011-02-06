@@ -13,21 +13,13 @@
 #
 #   * file sumatrapdf/sumpdf-latest.txt must be manually updated
 
-import bz2
-import installer
 import os
 import os.path
-import re
 import shutil
-import subprocess
 import sys
 import time
 
-def test_for_flag(args, arg):
-  if arg not in args:
-    return False
-  args.remove(arg)
-  return True
+from util import log, run_cmd_throw, test_for_flag, s3UploadFilePublic, s3UploadDataPublic, ensure_s3_doesnt_exist, ensure_path_exists, installer_mark_end, installer_append_file, installer_append_file_zlib, zip_file, extract_sumatra_version
 
 args = sys.argv
 upload = test_for_flag(args, "-upload")
@@ -35,91 +27,11 @@ upload_tmp = test_for_flag(args, "-uploadtmp")
 testing = test_for_flag(args, "-test") or test_for_flag(args, "-testing")
 build_test_installer = test_for_flag(args, "-testinst") or test_for_flag(args, "-testinstaller")
 
-if upload or upload_tmp:
-  try:
-    import boto.s3
-    from boto.s3.key import Key
-  except:
-    print("You need boto library (http://code.google.com/p/boto/)")
-    print("svn checkout http://boto.googlecode.com/svn/trunk/ boto")
-    print("cd boto; python setup.py install")
-    raise
-
-  try:
-    import awscreds
-  except:
-    print "awscreds.py file needed with access and secret globals for aws access"
-    sys.exit(1)
-
 SCRIPT_DIR = os.path.dirname(__file__)
 if SCRIPT_DIR:
   SCRIPT_DIR = os.path.split(SCRIPT_DIR)[0]
 else:
   SCRIPT_DIR = os.getcwd()
-
-S3_BUCKET = "kjkpub"
-g_s3conn = None
-
-def log(s):
-  print(s)
-  sys.stdout.flush()
-
-def s3connection():
-  global g_s3conn
-  if g_s3conn is None:
-    g_s3conn = boto.s3.connection.S3Connection(awscreds.access, awscreds.secret, True)
-  return g_s3conn
-
-def s3PubBucket(): return s3connection().get_bucket(S3_BUCKET)
-
-def ul_cb(sofar, total):
-  log("So far: %d, total: %d" % (sofar , total))
-
-def s3UploadFilePublic(local_file_name, remote_file_name):
-  log("Uploading %s as %s" % (local_file_name, remote_file_name))
-  bucket = s3PubBucket()
-  k = Key(bucket)
-  k.key = remote_file_name
-  k.set_contents_from_filename(local_file_name, cb=ul_cb)
-  k.make_public()
-
-def ensure_s3_doesnt_exist(remote_file_path):
-  bucket = s3PubBucket()
-  if not bucket.get_key(remote_file_path):
-    return
-  print("'%s' already exists on s3" % remote_file_path)
-  sys.exit(1)
-
-def ensure_path_exists(path):
-  if not os.path.exists(path):
-    print("path '%s' doesn't exist" % path)
-    sys.exit(1)
-
-# version line is in the format:
-# #define CURR_VERSION 1.1
-def extract_sumatra_version(file_path):
-  fo = open(file_path, "r")
-  d = fo.read()
-  fo.close()
-  m = re.search('CURR_VERSION (\\d+(?:\\.\\d+)*)', d)
-  ver = m.group(1)
-  return ver
-
-# like cmdrun() but throws an exception on failure
-def run_cmd_throw(*args):
-  cmd = " ".join(args)
-  log("\nrun_cmd_throw: '%s'" % cmd)
-  cmdproc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-  res = cmdproc.communicate()
-  errcode = cmdproc.returncode
-  if 0 != errcode:
-    print("Failed with error code %d" % errcode)
-    print("Stdout:")
-    print(res[0])
-    print("Stderr:")
-    print(res[1])
-    raise Exception("'%s' failed with error code %d" % (cmd, errcode))
-  return (res[0], res[1])
 
 def usage():
   print("sumatra-build-release.py [-upload] [sumatra-source-dir]")
@@ -148,11 +60,11 @@ def build_installer_native(builds_dir, ver):
 
   fo = open(installer_exe, "ab")
   # append installer data to installer exe
-  installer.mark_end(fo) # this are read backwards so end marker is written first
-  installer.append_file(fo, exe, "SumatraPDF.exe")
+  installer_mark_end(fo) # this are read backwards so end marker is written first
+  installer_append_file(fo, exe, "SumatraPDF.exe")
   font_name =  "DroidSansFallback.ttf"
   font_path = os.path.join(SCRIPT_DIR, "mupdf", "fonts", "droid", font_name)
-  installer.append_file_zlib(fo, font_path, font_name)
+  installer_append_file_zlib(fo, font_path, font_name)
   fo.close()
   return installer_exe
 
@@ -194,10 +106,8 @@ def main():
   remote_installer_exe = "sumatrapdf/%s/SumatraPDF-%s-install.exe" % (s3dir, ver)
 
   if upload:
-    ensure_s3_doesnt_exist(remote_exe)
-    ensure_s3_doesnt_exist(remote_pdb)
-    ensure_s3_doesnt_exist(remote_zip)
-    ensure_s3_doesnt_exist(remote_installer_exe)
+    for t in [remote_exe, remote_pdb, remote_zip, remote_installer_exe]:
+      ensure_s3_doesnt_exist(t)
 
   objdir = "obj-rel"
   if not testing and os.path.exists(objdir):
@@ -211,10 +121,8 @@ def main():
   tmp_installer = os.path.join(srcdir, objdir, "Installer.exe")
   tmp_installer_pdb = os.path.join(srcdir, objdir, "Installer.pdb")
 
-  ensure_path_exists(tmp_exe)
-  ensure_path_exists(tmp_pdb)
-  ensure_path_exists(tmp_installer)
-  ensure_path_exists(tmp_installer_pdb)
+  for t in [tmp_exe, tmp_pdb, tmp_installer, tmp_installer_pdb]:
+    ensure_path_exists(t)
 
   builds_dir = os.path.join(SCRIPT_DIR, "builds", ver)
 
@@ -253,7 +161,7 @@ def main():
   run_cmd_throw(mpress, "-s", "-r", "SumatraPDF-%s.exe" % ver)
   #run_cmd_throw("upx", compression_type, "--compress-icons=0", "SumatraPDF-%s.exe" % ver)
 
-  installer.zip_file("SumatraPDF-%s.zip" % ver, "SumatraPDF-%s.exe" % ver, "SumatraPDF.exe")
+  zip_file("SumatraPDF-%s.zip" % ver, "SumatraPDF-%s.exe" % ver, "SumatraPDF.exe")
 
   os.chdir(cwd)
 
