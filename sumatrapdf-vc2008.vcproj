@@ -238,22 +238,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\synctex_parser.c"
-				>
-			</File>
-			<File
-				RelativePath=".\src\synctex_parser.h"
-				>
-			</File>
-			<File
-				RelativePath=".\src\synctex_parser_utils.c"
-				>
-			</File>
-			<File
-				RelativePath=".\src\synctex_parser_utils.h"
-				>
-			</File>
-			<File
 				RelativePath=".\src\translations.cpp"
 				>
 			</File>

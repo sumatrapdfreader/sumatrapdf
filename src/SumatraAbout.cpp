@@ -50,9 +50,6 @@ static AboutLayoutInfoEl gAboutLayoutInfo[] = {
     { _T("programming"),    _T("Krzysztof Kowalczyk"),  _T("http://blog.kowalczyk.info"), 0 },
     { _T("programming"),    _T("Simon B\xFCnzli"),      _T("http://www.zeniko.ch/#SumatraPDF"), 0 },
     { _T("programming"),    _T("William Blum"),         _T("http://william.famille-blum.org/"), 0 },
-#ifdef _TEX_ENHANCEMENT
-    { _T("note"),           _T("TeX build"),            _T("http://william.famille-blum.org/software/sumatra/index.html"), 0 },
-#endif 
 #ifdef SVN_PRE_RELEASE_VER
     { _T("a note"),         _T("Pre-release version, for testing only!"), NULL, 0 },
 #endif
@@ -64,9 +61,8 @@ static AboutLayoutInfoEl gAboutLayoutInfo[] = {
     { _T("toolbar icons"),  _T("Yusuke Kamiyamane"),    _T("http://p.yusukekamiyamane.com/"), 0 },
     { _T("translators"),    _T("The Translators"),      _T("http://blog.kowalczyk.info/software/sumatrapdf/translators.html"), 0 },
     { _T("translations"),   _T("Contribute translation"), _T("http://blog.kowalczyk.info/software/sumatrapdf/translations.html"), 0 },
-#ifdef _TEX_ENHANCEMENT
-    { _T("SyncTeX"),        _T("J\xE9rome Laurens"),    _T("http://itexmac.sourceforge.net/SyncTeX.html"), 0 },
-#endif 
+    // Note: Must be on the last line, as it's dynamically hidden based on m_enableTeXEnhancements
+    { _T("synctex"),        _T("J\xE9rome Laurens"),    _T("http://itexmac.sourceforge.net/SyncTeX.html"), 0 },
     { NULL, NULL, NULL, 0 }
 };
 
@@ -110,6 +106,7 @@ void DrawAbout(HWND hwnd, HDC hdc, RECT *rect)
     int             offX, offY;
     int             x, y;
     int             boxDy;
+    int             bottomY;
 
     HBRUSH brushBg = CreateSolidBrush(gGlobalPrefs.m_bgColor);
 
@@ -177,12 +174,14 @@ void DrawAbout(HWND hwnd, HDC hdc, RECT *rect)
     }
 
     /* render text on the right */
+    bottomY = 0;
     SelectObject(hdc, fontRightTxt);
     for (AboutLayoutInfoEl *el = gAboutLayoutInfo; el->leftTxt; el++) {
         bool hasUrl = !gRestrictedUse && el->url;
         SetTextColor(hdc, hasUrl ? COL_BLUE_LINK : ABOUT_BORDER_COL);
 
         TextOut(hdc, el->rightPos.x, el->rightPos.y, el->rightTxt, lstrlen(el->rightTxt));
+        bottomY = el->rightPos.y + el->rightPos.dy + ABOUT_TXT_DY;
 
         if (!hasUrl)
             continue;
@@ -195,7 +194,7 @@ void DrawAbout(HWND hwnd, HDC hdc, RECT *rect)
 
     linePosX = ABOUT_LINE_OUTER_SIZE + ABOUT_MARGIN_DX + leftLargestDx + ABOUT_LEFT_RIGHT_SPACE_DX;
     linePosY = 4;
-    lineDy = (dimof(gAboutLayoutInfo)-1) * (gAboutLayoutInfo[0].rightPos.dy + ABOUT_TXT_DY);
+    lineDy = bottomY - gAboutLayoutInfo[0].rightPos.y;
 
     SelectObject(hdc, penDivideLine);
     MoveToEx(hdc, linePosX + offX, linePosY + offY, NULL);
@@ -229,6 +228,13 @@ void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, RECT * rect)
     HFONT fontLeftTxt = Win32_Font_GetSimple(hdc, LEFT_TXT_FONT, LEFT_TXT_FONT_SIZE);
     HFONT fontRightTxt = Win32_Font_GetSimple(hdc, RIGHT_TXT_FONT, RIGHT_TXT_FONT_SIZE);
     HGDIOBJ origFont = SelectObject(hdc, fontSumatraTxt);
+
+    /* show/hide the SyncTeX attribution line */
+    assert(!gAboutLayoutInfo[dimof(gAboutLayoutInfo) - 2].leftTxt || tstr_eq(gAboutLayoutInfo[dimof(gAboutLayoutInfo) - 2].leftTxt, _T("synctex")));
+    if (gGlobalPrefs.m_enableTeXEnhancements)
+        gAboutLayoutInfo[dimof(gAboutLayoutInfo) - 2].leftTxt = _T("synctex");
+    else
+        gAboutLayoutInfo[dimof(gAboutLayoutInfo) - 2].leftTxt = NULL;
 
     /* calculate minimal top box size */
     const TCHAR *txt = SUMATRA_TXT;
@@ -289,7 +295,8 @@ void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, RECT * rect)
 
     totalDy  = boxDy;
     totalDy += ABOUT_LINE_OUTER_SIZE;
-    totalDy += (dimof(gAboutLayoutInfo)-1) * (rightDy + ABOUT_TXT_DY);
+    for (AboutLayoutInfoEl *el = gAboutLayoutInfo; el->leftTxt; el++)
+        totalDy += rightDy + ABOUT_TXT_DY;
     totalDy += ABOUT_LINE_OUTER_SIZE + 4;
 
     RECT rc;

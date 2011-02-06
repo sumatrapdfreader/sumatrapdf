@@ -46,21 +46,11 @@ CFLAGS = $(CFLAGS) /D "WINVER=0x0500" /D "_WIN32_WINNT=0x0500"
 
 SUMATRA_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
 	/Ibaseutils /Ibaseutils/msvc /I$(MUPDF_DIR)\fitz /I$(MUPDF_DIR)\mupdf \
-	/I$(ZLIB_DIR) /Isrc /IDialogSizer 
+	/I$(ZLIB_DIR) /Isrc /IDialogSizer /I$(EXTLIBSDIR)/synctex \
+	/D "SYNCTEX_FEATURE"
 
 INSTALLER_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
 	/Ibaseutils /Ibaseutils/msvc /Isrc /Isrc/installer /I$(ZLIB_DIR)
-
-# Flag for TeX enhancements
-SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "SYNCTEX_FEATURE"
-!if "$(TEXBUILD)"!=""
-SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "_TEX_ENHANCEMENT" /D \
-	"SUMATRA_UPDATE_INFO_URL=_T(\"http://william.famille-blum.org/software/sumatra/sumpdftex-latest.txt\")" \
-	/D "SVN_UPDATE_LINK=_T(\"http://william.famille-blum.org/software/sumatra/\")"
-!if "$(VERSION)"!=""
-SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "CURR_VERSION=$(VERSION)"
-!endif
-!endif
 
 # Make it easy to compile as ANSI or UNICODE application
 !if "$(_ANSI)"==""
@@ -166,6 +156,9 @@ $(BROWSER_PLUGIN): $(BROWSER_PLUGIN_OBJS)
 {DialogSizer}.cpp{$(O)}.obj::
 	$(CC) $(SUMATRA_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
 
+{$(EXTLIBSDIR)\synctex}.c{$(O)}.obj::
+	$(CC) /TC $(SUMATRA_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
+
 # SumatraPDF app directory
 {src}.cc{$(O)}.obj::
 	$(CC) $(SUMATRA_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
@@ -261,8 +254,7 @@ $(O)\PdfSync.obj: baseutils\str_util.h baseutils\tstr_util.h baseutils\vstrlist.
 $(O)\PdfSync.obj: baseutils\wstr_util.h mupdf\fitz\fitz.h mupdf\mupdf\mupdf.h
 $(O)\PdfSync.obj: src\DisplayModel.h src\DisplayState.h src\FileWatch.h
 $(O)\PdfSync.obj: src\PdfEngine.h src\PdfSearch.h src\PdfSelection.h
-$(O)\PdfSync.obj: src\PdfSync.h src\Resource.h src\synctex_parser.h
-$(O)\PdfSync.obj: src\WindowInfo.h
+$(O)\PdfSync.obj: src\PdfSync.h src\Resource.h src\WindowInfo.h
 $(O)\RenderCache.obj: baseutils\base_util.h baseutils\geom_util.h baseutils\str_util.h
 $(O)\RenderCache.obj: baseutils\tstr_util.h baseutils\wstr_util.h mupdf\fitz\fitz.h
 $(O)\RenderCache.obj: mupdf\mupdf\mupdf.h src\DisplayModel.h src\DisplayState.h
@@ -305,8 +297,6 @@ $(O)\SumatraProperties.obj: src\DisplayModel.h src\DisplayState.h src\FileWatch.
 $(O)\SumatraProperties.obj: src\PdfEngine.h src\PdfSearch.h src\PdfSelection.h
 $(O)\SumatraProperties.obj: src\SumatraPDF.h src\SumatraProperties.h src\translations.h
 $(O)\SumatraProperties.obj: src\WindowInfo.h
-$(O)\synctex_parser.obj: src\synctex_parser.h src\synctex_parser_utils.h
-$(O)\synctex_parser_utils.obj: src\synctex_parser_utils.h
 $(O)\translations.obj: baseutils\base_util.h baseutils\str_util.h baseutils\tstr_util.h
 $(O)\translations.obj: baseutils\wstr_util.h src\translations.h src\translations_txt.h
 $(O)\tstr_util.obj: baseutils\base_util.h baseutils\str_util.h baseutils\tstr_util.h

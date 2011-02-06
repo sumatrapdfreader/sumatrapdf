@@ -307,14 +307,13 @@ bool GetAcrobatPath(TCHAR *buffer=NULL, int bufSize=0)
 // List of rules used to detect TeX editors.
 
 // type of path information retrieved from the registy
-typedef enum
-{
+typedef enum {
     BinaryPath,         // full path to the editor's binary file
     BinaryDir,          // directory containing the editor's binary file
     SiblingPath,        // full path to a sibling file of the editor's binary file    
 } EditorPathType;
-typedef struct 
-{
+
+static struct {
     PTSTR          Name;                // Editor name
     EditorPathType Type;                // Type of the path information obtained from the registry
     HKEY           RegRoot;             // Root of the regkey
@@ -323,9 +322,7 @@ typedef struct
     PTSTR          BinaryFilename;      // Editor's binary file name
     PTSTR          InverseSearchArgs;   // Parameters to be passed to the editor;
                                         // use placeholder '%f' for path to source file and '%l' for line number.
-} EditorDetectionRules;
-static EditorDetectionRules editor_rules[] =
-{
+} editor_rules[] = {
     _T("WinEdt"),             BinaryPath, HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\WinEdt.exe"), NULL,
                               _T("WinEdt.exe"), _T("\"[Open(|%f|);SelPar(%l,8)]\""),
 
@@ -429,7 +426,11 @@ LPTSTR AutoDetectInverseSearchCommands(HWND hwndCombo)
     }
 
     // Fall back to notepad as a default handler
-    if (!firstEditor) firstEditor = tstr_dup(_T("notepad %f"));
+    if (!firstEditor) {
+        firstEditor = tstr_dup(_T("notepad %f"));
+        if (hwndCombo)
+            SendMessage(hwndCombo, CB_ADDSTRING, 0, (LPARAM)firstEditor);
+    }
     return firstEditor;
 }
 

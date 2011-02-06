@@ -57,6 +57,7 @@ enum DisplayMode {
 #define BG_COLOR_STR                "BgColor"
 #define ESC_TO_EXIT_STR             "EscToExit"
 #define INVERSE_SEARCH_COMMANDLINE  "InverseSearchCommandLine"
+#define ENABLE_TEX_ENHANCEMENTS_STR "ExposeInverseSearch"
 #define VERSION_TO_SKIP_STR         "VersionToSkip"
 #define LAST_UPDATE_STR             "LastUpdate"
 #define ENABLE_AUTO_UPDATE_STR      "EnableAutoUpdate"

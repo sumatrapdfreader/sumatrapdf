@@ -195,6 +195,7 @@ SerializableGlobalPrefs             gGlobalPrefs = {
     ABOUT_BG_COLOR, // int  m_bgColor
     FALSE, // BOOL m_escToExit
     NULL, // TCHAR *m_inverseSearchCmdLine
+    FALSE, // BOOL m_enableTeXEnhancements
     NULL, // TCHAR *m_versionToSkip
     NULL, // char *m_lastUpdateTime
     DEFAULT_DISPLAY_MODE, // DisplayMode m_defaultDisplayMode
@@ -1598,7 +1599,12 @@ WindowInfo* LoadPdf(const TCHAR *fileName, WindowInfo *win, bool showWin, TCHAR 
     win->watcher.Init(fullpath);
 #endif
 
-    CreateSynchronizer(fullpath, &win->pdfsync);
+    if (!gRestrictedUse) {
+        UINT res = CreateSynchronizer(fullpath, &win->pdfsync);
+        // expose SyncTeX in the UI
+        if (PDFSYNCERR_SUCCESS == res)
+            gGlobalPrefs.m_enableTeXEnhancements;
+    }
 
     if (gGlobalPrefs.m_rememberOpenedFiles) {
         AddFileToHistory(fullpath);
@@ -2313,27 +2319,26 @@ static void OnInverseSearch(WindowInfo *win, UINT x, UINT y)
 {
     assert(win);
     if (!win || !win->dm) return;
+    if (gRestrictedUse) return;
 
     // Clear the last forward-search result
     win->fwdsearchmarkRects.clear();
     InvalidateRect(win->hwndCanvas, NULL, FALSE);
 
+    // TODO: this comment or the code following it is wrong - which?
     // On double-clicking no error message will be shown to the user if the PDF does not have a synchronization file
     if (!win->pdfsync) {
         UINT err = CreateSynchronizer(win->watcher.filepath(), &win->pdfsync);
 
-        if (err == PDFSYNCERR_SYNCFILE_NOTFOUND )
-        {
-            // In the official build to avoid confusion for non-LaTeX users
-            // we do not show any error message if no synchronization file is present.
+        if (err == PDFSYNCERR_SYNCFILE_NOTFOUND) {
+            // In order to avoid confusion for non-LaTeX users, we do not show
+            // any error message if the SyncTeX enhancements are hidden from UI
             DBG_OUT("Pdfsync: Sync file not found!\n");
-#ifdef _TEX_ENHANCEMENT
-            WindowInfo_ShowMessage_Asynch(win, _TR("No synchronization file found"), true);
-#endif
+            if (gGlobalPrefs.m_enableTeXEnhancements)
+                WindowInfo_ShowMessage_Asynch(win, _TR("No synchronization file found"), true);
             return;
         }
-        else if (err != PDFSYNCERR_SUCCESS || !win->pdfsync)
-        {
+        else if (err != PDFSYNCERR_SUCCESS || !win->pdfsync) {
             DBG_OUT("Pdfsync: Sync file cannot be loaded!\n");
             WindowInfo_ShowMessage_Asynch(win, _TR("Synchronization file cannot be opened"), true);
             return;
@@ -2378,10 +2383,8 @@ static void OnInverseSearch(WindowInfo *win, UINT x, UINT y)
             WindowInfo_ShowMessage_Asynch(win, _TR("Cannot start inverse search command. Please check the command line in the settings."), true);
         }
     }
-#ifdef _TEX_ENHANCEMENT
-    else
+    else if (gGlobalPrefs.m_enableTeXEnhancements)
         WindowInfo_ShowMessage_Asynch(win, _TR("Cannot start inverse search command. Please check the command line in the settings."), true);
-#endif
 
     if (inverseSearch != gGlobalPrefs.m_inverseSearchCmdLine)
         free(inverseSearch);
@@ -5549,12 +5552,10 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
 
         case WM_LBUTTONDBLCLK:
             if (win) {
-#ifndef _TEX_ENHANCEMENT
-                if (win->fullScreen || win->presentation)
+                if ((win->fullScreen || win->presentation) && !gGlobalPrefs.m_enableTeXEnhancements)
                     OnMouseLeftButtonDown(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
                 else
-#endif
-                OnMouseLeftButtonDblClk(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
+                    OnMouseLeftButtonDblClk(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
             }
             break;
 
@@ -6420,6 +6421,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         free(gGlobalPrefs.m_inverseSearchCmdLine);
         gGlobalPrefs.m_inverseSearchCmdLine = i.inverseSearchCmdLine;
         i.inverseSearchCmdLine = NULL;
+        gGlobalPrefs.m_enableTeXEnhancements = TRUE;
     }
     if (i.lang)
         CurrLangNameSet(i.lang);

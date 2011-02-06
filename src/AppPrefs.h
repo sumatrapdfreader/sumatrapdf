@@ -40,6 +40,8 @@ typedef struct {
 
     /* pattern used to launch the editor when doing inverse search */
     TCHAR *m_inverseSearchCmdLine;
+    /* whether to expose the SyncTeX enhancements to the user */
+    BOOL m_enableTeXEnhancements;
 
     /* When we show 'new version available', user has an option to check
        'skip this version'. This remembers which version is to be skipped.

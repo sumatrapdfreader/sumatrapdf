@@ -633,7 +633,7 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT message, WPARAM wPa
         SetDlgItemText(hDlg, IDOK, _TR("OK"));
         SetDlgItemText(hDlg, IDCANCEL, _TR("Cancel"));
 
-#ifdef _TEX_ENHANCEMENT
+        if (prefs->m_enableTeXEnhancements)
         {
             // Fit the additional section into the dialog
             // (this should rather happen in SumatraPDF.rc, but the resource
@@ -674,11 +674,12 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT message, WPARAM wPa
                 prefs->m_inverseSearchCmdLine = NULL;
             free(inverseSearch);
         }
-#else
-        ShowWindow(GetDlgItem(hDlg, IDC_SECTION_INVERSESEARCH), SW_HIDE);
-        ShowWindow(GetDlgItem(hDlg, IDC_CMDLINE_LABEL), SW_HIDE);
-        ShowWindow(GetDlgItem(hDlg, IDC_CMDLINE), SW_HIDE);
-#endif
+        else
+        {
+            ShowWindow(GetDlgItem(hDlg, IDC_SECTION_INVERSESEARCH), SW_HIDE);
+            ShowWindow(GetDlgItem(hDlg, IDC_CMDLINE_LABEL), SW_HIDE);
+            ShowWindow(GetDlgItem(hDlg, IDC_CMDLINE), SW_HIDE);
+        }
 
         CenterDialog(hDlg);
         SetFocus(GetDlgItem(hDlg, IDC_DEFAULT_LAYOUT));
@@ -696,10 +697,10 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT message, WPARAM wPa
             prefs->m_globalPrefsOnly = (BST_CHECKED != IsDlgButtonChecked(hDlg, IDC_GLOBAL_PREFS_ONLY));
             prefs->m_enableAutoUpdate = (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_AUTO_UPDATE_CHECKS));
             prefs->m_rememberOpenedFiles = (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_REMEMBER_OPENED_FILES));
-#ifdef _TEX_ENHANCEMENT
-            free(prefs->m_inverseSearchCmdLine);
-            prefs->m_inverseSearchCmdLine = win_get_text(GetDlgItem(hDlg, IDC_CMDLINE));
-#endif
+            if (prefs->m_enableTeXEnhancements) {
+                free(prefs->m_inverseSearchCmdLine);
+                prefs->m_inverseSearchCmdLine = win_get_text(GetDlgItem(hDlg, IDC_CMDLINE));
+            }
             EndDialog(hDlg, DIALOG_OK_PRESSED);
             return TRUE;
 

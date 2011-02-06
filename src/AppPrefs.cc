@@ -85,6 +85,7 @@ benc_dict* Prefs_SerializeGlobal(void)
     DICT_ADD_INT64(prefs, WINDOW_DY_STR, gGlobalPrefs.m_windowDy);
 
     DICT_ADD_TSTR(prefs, INVERSE_SEARCH_COMMANDLINE, gGlobalPrefs.m_inverseSearchCmdLine);
+    DICT_ADD_INT64(prefs, ENABLE_TEX_ENHANCEMENTS_STR, gGlobalPrefs.m_enableTeXEnhancements);
     DICT_ADD_TSTR(prefs, VERSION_TO_SKIP_STR, gGlobalPrefs.m_versionToSkip);
     DICT_ADD_STR(prefs, LAST_UPDATE_STR, gGlobalPrefs.m_lastUpdateTime);
     DICT_ADD_STR(prefs, UI_LANGUAGE_STR, gGlobalPrefs.m_currentLanguage);
@@ -304,6 +305,7 @@ bool Prefs_Deserialize(const char *prefsTxt, size_t prefsTxtLen, FileHistoryList
     dict_get_int(global, WINDOW_DY_STR, &gGlobalPrefs.m_windowDy);
 
     dict_get_tstr_helper(global, INVERSE_SEARCH_COMMANDLINE, &gGlobalPrefs.m_inverseSearchCmdLine);
+    dict_get_int(global, ENABLE_TEX_ENHANCEMENTS_STR, &gGlobalPrefs.m_enableTeXEnhancements);
     dict_get_tstr_helper(global, VERSION_TO_SKIP_STR, &gGlobalPrefs.m_versionToSkip);
     dict_get_str_helper(global, LAST_UPDATE_STR, &gGlobalPrefs.m_lastUpdateTime);
 
