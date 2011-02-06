@@ -5,8 +5,10 @@ Next version:
 
 * new IFilter for PDF and LaTeX to support searching document contents with
   Windows Search (not included with SumatraPDF but available as a separate download(?))
-* new browser plugin for Mozilla Firefox, Google Chrome and Opera for displaying
-  PDF documents with SumatraPDF inside the browser (not yet included in the installer)
+
+* browser plugin for Mozilla Firefox, Google Chrome and Opera for displaying
+  PDF documents with SumatraPDF inside the browser (does it work under ie?)
+* add support for AES-256 encrypted documents
 
 1.3 (2011-02-04)
 
