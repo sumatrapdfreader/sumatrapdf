@@ -16,13 +16,7 @@ import shutil
 import sys
 import time
 
-from util import run_cmd_throw, s3UploadFilePublic, s3UploadDataPublic, parse_svninfo_out, zip_file
-
-SCRIPT_DIR = os.path.dirname(__file__)
-if SCRIPT_DIR:
-  SCRIPT_DIR = os.path.split(SCRIPT_DIR)[0]
-else:
-  SCRIPT_DIR = os.getcwd()
+from util import run_cmd_throw, s3UploadFilePublic, s3UploadDataPublic, parse_svninfo_out, zip_file, verify_started_in_right_directory
 
 def usage():
   print("sumatra-build-pre-release.py [sumatra-source-dir]")
@@ -45,6 +39,8 @@ def test_upload():
 def main():
   if len(sys.argv) > 2:
     usage()
+
+  verify_started_in_right_directory()
   srcdir = get_src_dir()
   os.chdir(srcdir)
   objdir = "obj-rel"

@@ -12,5 +12,4 @@ IF ERRORLEVEL 1 EXIT /B 1
 REM add our nasm.exe to the path
 SET PATH=%CD%\bin;%PATH%
 
-python -u scripts\build-pre-release.py
-IF ERRORLEVEL 1 EXIT /B 1
+python -u -B scripts\build-pre-release.py
