@@ -1,6 +1,8 @@
 #include "fitz.h"
 #include "mupdf.h"
 
+/* SumatraPDF: add support for AES-256 encryption (revision 5) */
+
 /*
  * Create crypt object for decrypting strings and streams
  * given the Encryption and ID objects.
@@ -35,7 +37,7 @@ pdf_newcrypt(pdf_crypt **cryptp, fz_obj *dict, fz_obj *id)
 	obj = fz_dictgets(dict, "V");
 	if (fz_isint(obj))
 		crypt->v = fz_toint(obj);
-	if (crypt->v != 1 && crypt->v != 2 && crypt->v != 4)
+	if (crypt->v != 1 && crypt->v != 2 && crypt->v != 4 && crypt->v != 5)
 	{
 		pdf_freecrypt(crypt);
 		return fz_throw("unknown encryption version");
@@ -64,6 +66,9 @@ pdf_newcrypt(pdf_crypt **cryptp, fz_obj *dict, fz_obj *id)
 		}
 	}
 
+	if (crypt->v == 5)
+		crypt->length = 256;
+
 	if (crypt->v == 1 || crypt->v == 2)
 	{
 		crypt->stmf.method = PDF_CRYPT_RC4;
@@ -73,7 +78,7 @@ pdf_newcrypt(pdf_crypt **cryptp, fz_obj *dict, fz_obj *id)
 		crypt->strf.length = crypt->length;
 	}
 
-	if (crypt->v == 4)
+	if (crypt->v == 4 || crypt->v == 5)
 	{
 		crypt->stmf.method = PDF_CRYPT_NONE;
 		crypt->stmf.length = crypt->length;
@@ -134,6 +139,9 @@ pdf_newcrypt(pdf_crypt **cryptp, fz_obj *dict, fz_obj *id)
 	obj = fz_dictgets(dict, "O");
 	if (fz_isstring(obj) && fz_tostrlen(obj) == 32)
 		memcpy(crypt->o, fz_tostrbuf(obj), 32);
+	/* /O and /U are supposed to be 48 bytes long for revision 5, they're often longer, though */
+	else if (crypt->r == 5 && fz_isstring(obj) && fz_tostrlen(obj) >= 48)
+		memcpy(crypt->o, fz_tostrbuf(obj), 48);
 	else
 	{
 		pdf_freecrypt(crypt);
@@ -143,6 +151,8 @@ pdf_newcrypt(pdf_crypt **cryptp, fz_obj *dict, fz_obj *id)
 	obj = fz_dictgets(dict, "U");
 	if (fz_isstring(obj) && fz_tostrlen(obj) == 32)
 		memcpy(crypt->u, fz_tostrbuf(obj), 32);
+	else if (fz_isstring(obj) && fz_tostrlen(obj) >= 48 && crypt->r == 5)
+		memcpy(crypt->u, fz_tostrbuf(obj), 48);
 	else
 	{
 		pdf_freecrypt(crypt);
@@ -156,6 +166,27 @@ pdf_newcrypt(pdf_crypt **cryptp, fz_obj *dict, fz_obj *id)
 	{
 		pdf_freecrypt(crypt);
 		return fz_throw("encryption dictionary missing permissions value");
+	}
+
+	if (crypt->r == 5)
+	{
+		obj = fz_dictgets(dict, "OE");
+		if (!fz_isstring(obj) || fz_tostrlen(obj) != 32)
+		{
+			pdf_freecrypt(crypt);
+			return fz_throw("encryption dictionary missing owner encryption key");
+		}
+		memcpy(crypt->oe, fz_tostrbuf(obj), 32);
+
+		obj = fz_dictgets(dict, "UE");
+		if (!fz_isstring(obj) || fz_tostrlen(obj) != 32)
+		{
+			pdf_freecrypt(crypt);
+			return fz_throw("encryption dictionary missing user encryption key");
+		}
+		memcpy(crypt->ue, fz_tostrbuf(obj), 32);
+
+		// TODO: verify /Perms against /P
 	}
 
 	crypt->encryptmetadata = 1;
@@ -214,6 +245,8 @@ pdf_parsecryptfilter(pdf_cryptfilter *cf, fz_obj *dict, int defaultlength)
 			cf->method = PDF_CRYPT_RC4;
 		else if (!strcmp(fz_toname(obj), "AESV2"))
 			cf->method = PDF_CRYPT_AESV2;
+		else if (!strcmp(fz_toname(obj), "AESV3"))
+			cf->method = PDF_CRYPT_AESV3;
 		else
 			fz_throw("unknown encryption method: %s", fz_toname(obj));
 	}
@@ -306,6 +339,51 @@ pdf_computeencryptionkey(pdf_crypt *crypt, unsigned char *password, int pwlen, u
 }
 
 /*
+ * Compute an encryption key (PDF 1.7 ExtensionLevel 3 algorithm 3.2a)
+ */
+
+static void
+pdf_computeencryptionkey_r5(pdf_crypt *crypt, unsigned char *password, int pwlen, int ownerkey, unsigned char *validationkey)
+{
+	unsigned char buffer[128 + 8 + 48];
+	fz_sha256 sha256;
+	fz_aes aes;
+
+	/* Step 2 - truncate UTF-8 password to 127 characters */
+
+	if (pwlen > 127)
+		pwlen = 127;
+
+	/* Step 3/4 - test password against owner/user key and compute encryption key */
+
+	memcpy(buffer, password, pwlen);
+	if (ownerkey)
+	{
+		memcpy(buffer + pwlen, crypt->o + 32, 8);
+		memcpy(buffer + pwlen + 8, crypt->u, 48);
+	}
+	else
+		memcpy(buffer + pwlen, crypt->u + 32, 8);
+
+	fz_sha256init(&sha256);
+	fz_sha256update(&sha256, buffer, pwlen + 8 + (ownerkey ? 48 : 0));
+	fz_sha256final(&sha256, validationkey);
+
+	/* Step 3.5/4.5 - compute file encryption key from OE/UE */
+
+	memcpy(buffer + pwlen, crypt->u + 40, 8);
+
+	fz_sha256init(&sha256);
+	fz_sha256update(&sha256, buffer, pwlen + 8);
+	fz_sha256final(&sha256, buffer);
+
+	// clear password buffer and use it as iv
+	memset(buffer + 32, 0, sizeof(buffer) - 32);
+	aes_setkey_dec(&aes, buffer, crypt->length);
+	aes_crypt_cbc(&aes, AES_DECRYPT, 32, buffer + 32, ownerkey ? crypt->oe : crypt->ue, crypt->key);
+}
+
+/*
  * Computing the user password (PDF 1.7 algorithm 3.4 and 3.5)
  * Also save the generated key for decrypting objects and streams in crypt->key.
  */
@@ -322,7 +400,7 @@ pdf_computeuserpassword(pdf_crypt *crypt, unsigned char *password, int pwlen, un
 		fz_arc4encrypt(&arc4, output, padding, 32);
 	}
 
-	if (crypt->r >= 3)
+	if (crypt->r == 3 || crypt->r == 4)
 	{
 		unsigned char xor[32];
 		unsigned char digest[16];
@@ -352,10 +430,16 @@ pdf_computeuserpassword(pdf_crypt *crypt, unsigned char *password, int pwlen, un
 
 		memcpy(output + 16, padding, 16);
 	}
+
+	if (crypt->r == 5)
+	{
+		pdf_computeencryptionkey_r5(crypt, password, pwlen, 0, output);
+	}
 }
 
 /*
- * Authenticating the user password (PDF 1.7 algorithm 3.6)
+ * Authenticating the user password (PDF 1.7 algorithm 3.6
+ * and ExtensionLevel 3 algorithm 3.11)
  * This also has the side effect of saving a key generated
  * from the password for decrypting objects and streams.
  */
@@ -365,15 +449,16 @@ pdf_authenticateuserpassword(pdf_crypt *crypt, unsigned char *password, int pwle
 {
 	unsigned char output[32];
 	pdf_computeuserpassword(crypt, password, pwlen, output);
-	if (crypt->r == 2)
+	if (crypt->r == 2 || crypt->r == 5)
 		return memcmp(output, crypt->u, 32) == 0;
-	if (crypt->r >= 3)
+	if (crypt->r == 3 || crypt->r == 4)
 		return memcmp(output, crypt->u, 16) == 0;
 	return 0;
 }
 
 /*
- * Authenticating the owner password (PDF 1.7 algorithm 3.7)
+ * Authenticating the owner password (PDF 1.7 algorithm 3.7
+ * and ExtensionLevel 3 algorithm 3.12)
  * Generates the user password from the owner password
  * and calls pdf_authenticateuserpassword.
  */
@@ -388,6 +473,15 @@ pdf_authenticateownerpassword(pdf_crypt *crypt, unsigned char *ownerpass, int pw
 	int i, n, x;
 	fz_md5 md5;
 	fz_arc4 arc4;
+
+	if (crypt->r == 5)
+	{
+		/* PDF 1.7 ExtensionLevel 3 algorithm 3.12 */
+
+		pdf_computeencryptionkey_r5(crypt, ownerpass, pwlen, 1, key);
+
+		return !memcmp(key, crypt->o, 32);
+	}
 
 	n = crypt->length / 8;
 
@@ -463,7 +557,7 @@ pdf_needspassword(pdf_xref *xref)
 }
 
 /*
- * PDF 1.7 algorithm 3.1
+ * PDF 1.7 algorithm 3.1 and ExtensionLevel 3 algorithm 3.1a
  *
  * Using the global encryption key that was generated from the
  * password, create a new key that is used to decrypt indivual
@@ -476,6 +570,12 @@ pdf_computeobjectkey(pdf_crypt *crypt, pdf_cryptfilter *cf, int num, int gen, un
 {
 	fz_md5 md5;
 	unsigned char message[5];
+
+	if (cf->method == PDF_CRYPT_AESV3)
+	{
+		memcpy(key, crypt->key, crypt->length / 8);
+		return crypt->length / 8;
+	}
 
 	fz_md5init(&md5);
 	fz_md5update(&md5, crypt->key, crypt->length / 8);
@@ -497,7 +597,7 @@ pdf_computeobjectkey(pdf_crypt *crypt, pdf_cryptfilter *cf, int num, int gen, un
 }
 
 /*
- * PDF 1.7 algorithm 3.1
+ * PDF 1.7 algorithm 3.1 and ExtensionLevel 3 algorithm 3.1a
  *
  * Decrypt all strings in obj modifying the data in-place.
  * Recurse through arrays and dictionaries, but do not follow
@@ -525,7 +625,7 @@ pdf_cryptobjimp(pdf_crypt *crypt, fz_obj *obj, unsigned char *key, int keylen)
 			fz_arc4encrypt(&arc4, s, s, n);
 		}
 
-		if (crypt->strf.method == PDF_CRYPT_AESV2)
+		if (crypt->strf.method == PDF_CRYPT_AESV2 || crypt->strf.method == PDF_CRYPT_AESV3)
 		{
 			if (n >= 32)
 			{
@@ -562,7 +662,7 @@ pdf_cryptobjimp(pdf_crypt *crypt, fz_obj *obj, unsigned char *key, int keylen)
 void
 pdf_cryptobj(pdf_crypt *crypt, fz_obj *obj, int num, int gen)
 {
-	unsigned char key[16];
+	unsigned char key[32];
 	int len;
 
 	len = pdf_computeobjectkey(crypt, &crypt->strf, num, gen, key);
@@ -571,14 +671,14 @@ pdf_cryptobj(pdf_crypt *crypt, fz_obj *obj, int num, int gen)
 }
 
 /*
- * PDF 1.7 algorithm 3.1
+ * PDF 1.7 algorithm 3.1 and ExtensionLevel 3 algorithm 3.1a
  *
  * Create filter suitable for de/encrypting a stream.
  */
 fz_stream *
 pdf_opencrypt(fz_stream *chain, pdf_crypt *crypt, pdf_cryptfilter *stmf, int num, int gen)
 {
-	unsigned char key[16];
+	unsigned char key[32];
 	int len;
 
 	len = pdf_computeobjectkey(crypt, stmf, num, gen, key);
@@ -586,7 +686,7 @@ pdf_opencrypt(fz_stream *chain, pdf_crypt *crypt, pdf_cryptfilter *stmf, int num
 	if (stmf->method == PDF_CRYPT_RC4)
 		return fz_openarc4(chain, key, len);
 
-	if (stmf->method == PDF_CRYPT_AESV2)
+	if (stmf->method == PDF_CRYPT_AESV2 || stmf->method == PDF_CRYPT_AESV3)
 		return fz_openaesd(chain, key, len);
 
 	return fz_opencopy(chain);

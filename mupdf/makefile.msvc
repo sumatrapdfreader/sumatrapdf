@@ -201,7 +201,7 @@ FITZ_OBJS = \
 	$(O)\res_path.obj $(O)\res_pixmap.obj $(O)\res_text.obj \
 	$(O)\res_colorspace.obj $(O)\res_font.obj $(O)\res_shade.obj \
 	$(O)\stm_buffer.obj $(O)\stm_open.obj $(O)\stm_read.obj \
-	$(O)\filt_dctd.obj $(O)\dev_gdiplus.obj
+	$(O)\filt_dctd.obj $(O)\crypt_sha2.obj $(O)\dev_gdiplus.obj
 
 MUPDF_OBJS = \
 	$(O)\pdf_annot.obj $(O)\pdf_build.obj $(O)\pdf_cmap.obj \

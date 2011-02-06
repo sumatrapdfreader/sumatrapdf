@@ -70,6 +70,7 @@ enum
 	PDF_CRYPT_NONE,
 	PDF_CRYPT_RC4,
 	PDF_CRYPT_AESV2,
+	PDF_CRYPT_AESV3,
 	PDF_CRYPT_UNKNOWN,
 };
 
@@ -77,7 +78,7 @@ struct pdf_cryptfilter_s
 {
 	int method;
 	int length;
-	unsigned char key[16];
+	/* unsigned char key[16]; /* SumatraPDF: unused */
 };
 
 struct pdf_crypt_s
@@ -92,8 +93,11 @@ struct pdf_crypt_s
 	pdf_cryptfilter strf;
 
 	int r;
-	unsigned char o[32];
-	unsigned char u[32];
+	/* SumatraPDF: add support for AES-256 encryption (revision 5) */
+	unsigned char o[48];
+	unsigned char u[48];
+	unsigned char oe[32];
+	unsigned char ue[32];
 	int p;
 	int encryptmetadata;
 

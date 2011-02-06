@@ -1091,6 +1091,20 @@ TCHAR *PdfEngine::ExtractPageText(int pageNo, TCHAR *lineSep, fz_bbox **coords_o
     return text;
 };
 
+// returns the version in the format Mmmee (Major, minor, extensionlevel)
+int PdfEngine::getPdfVersion(void) const
+{
+    if (!_xref)
+        return -1;
+
+    int version = (_xref->version / 10) * 10000 + (_xref->version % 10) * 100;
+    // Crypt version 5 indicates PDF 1.7 Adobe Extension Level 3
+    if (10700 == version && _xref->crypt && 5 == _xref->crypt->v)
+        version += 3;
+
+    return version;
+}
+
 char *PdfEngine::getPageLayoutName(void)
 {
     EnterCriticalSection(&_xrefAccess);

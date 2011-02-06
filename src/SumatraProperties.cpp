@@ -421,9 +421,14 @@ void OnMenuProperties(WindowInfo *win)
     free(str);
 
     int version = win->dm->pdfEngine->getPdfVersion();
-    str = tstr_printf(_T("%d.%d"), version / 10, version % 10);
-    AddPdfProperty(layoutData, _TR("PDF Version:"), str);
-    free(str);
+    if (version >= 10000) {
+        if (version % 100 > 0)
+            str = tstr_printf(_T("%d.%d Adobe Extension Level %d"), version / 10000, (version / 100) % 100, version % 100);
+        else
+            str = tstr_printf(_T("%d.%d"), version / 10000, (version / 100) % 100);
+        AddPdfProperty(layoutData, _TR("PDF Version:"), str);
+        free(str);
+    }
 
     uint64_t fileSize = WinFileSizeGet(win->dm->fileName());
     if (fileSize == INVALID_FILE_SIZE) {

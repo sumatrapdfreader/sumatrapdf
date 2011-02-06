@@ -291,6 +291,24 @@ void fz_md5init(fz_md5 *state);
 void fz_md5update(fz_md5 *state, const unsigned char *input, const unsigned inlen);
 void fz_md5final(fz_md5 *state, unsigned char digest[16]);
 
+/* SumatraPDF: sha-256 digests */
+
+typedef struct fz_sha256_s fz_sha256;
+
+struct fz_sha256_s
+{
+	unsigned int state[8];
+	unsigned int count[2];
+	union {
+		unsigned char u8[64];
+		unsigned int u32[16];
+	} buffer;
+};
+
+void fz_sha256init(fz_sha256 *state);
+void fz_sha256update(fz_sha256 *state, const unsigned char *input, unsigned int inlen);
+void fz_sha256final(fz_sha256 *state, unsigned char digest[32]);
+
 /* arc4 crypto */
 
 typedef struct fz_arc4_s fz_arc4;
