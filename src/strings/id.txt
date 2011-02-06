@@ -6,6 +6,7 @@
 
 Lang: id Indonesian (Bahasa Indonesia)
 
+Contributor: M. Ridwan Hakim (http://rescenin.blogspot.com)
 Contributor: Yudi Wibisono (http://yudiwbs.wordpress.com)
 Contributor: Ricki Yani Setiawan
 Contributor: Tri R.A. Wibowo
@@ -16,6 +17,9 @@ Contributor: Tri R.A. Wibowo
 &Actual Size\tCtrl-1
 &Ukuran Sebenarnya\tCtrl-1
 
+&All selected pages
+&Semua halaman yang dipilih
+
 &Back\tAlt+Left Arrow
 Kembali\tAlt+<-
 
@@ -23,19 +27,25 @@ Kembali\tAlt+<-
 &Tutup\tCtrl-W
 
 &Copy Selection\tCtrl-C
-Gandakan hasil seleksi\tCtrl-C
+Salin Hasil Seleksi\tCtrl-C
 
 &Don't ask me again
 &Jangan ulangi pertanyaan ini
+
+&Even pages only
+Hanya halaman gena&p
 
 &File
 &Berkas
 
 &Find what:
-&Cari :
+&Cari:
 
 &First Page\tHome
 Halaman Pertama\tHome
+
+&Fit pages to printable area
+&Sesuaikan halaman ke area yang bisa dicetak
 
 &Go To
 &Pergi ke
@@ -67,6 +77,9 @@ Halaman Berikutnya\t->
 &No, thanks
 &Tidak, terima kasih
 
+&Odd pages only
+Hanya halaman ganji&l
+
 &Open\tCtrl-O
 &Buka\tCtrl-O
 
@@ -85,8 +98,11 @@ Halaman Sebelumnya\t<-
 &Print... (denied)
 &Cetak... (ditolak)
 
+&Remember the password for this document
+&Ingat kata sandi untuk dokumen ini
+
 &Remember these settings for each document
-&Ingat pengaturan ini untuk tiap dokumen
+&Ingat pengaturan ini untuk setiap dokumen
 
 &Save As...\tCtrl-S
 &Simpan sebagai\tCtrl-S
@@ -94,8 +110,14 @@ Halaman Sebelumnya\t<-
 &Settings
 &Pengaturan
 
+&Shrink pages to printable area (if necessary)
+&Perkecil halaman ke area yang bisa dicetak (jika dibutuhkan)
+
 &Skip this version
 &Lewatkan versi ini
+
+&Use original page sizes
+&Gunakan ukuran halaman yang sebenarnya
 
 &View
 &Lihat
@@ -113,7 +135,7 @@ About SumatraPDF
 Tentang SumatraPDF
 
 Advanced
-Tingkat lanjut
+Lanjutan
 
 All files
 Semua berkas
@@ -123,6 +145,9 @@ Aplikasi
 
 Associate with PDF files?
 Asosiasikan dengan berkas PDF?
+
+Attachment: %s
+Lampiran
 
 Author:
 Pengarang:
@@ -137,37 +162,46 @@ Book View
 Tampilan buku
 
 Book&marks\tF12
-Kutipan\tF12
+Markah\tF12
+
+Bookmarks
+Markah
 
 Bytes
 Bytes
+
+Can't connect to the Internet (error %#x).
+Tidak bisa menghubungi Internet (kesalahan %#x).
 
 Cancel
-Batal
+Batalkan
 
 Cannot print this file
 Tidak dapat mencetak berkas ini
 
 Cannot start inverse search command. Please check the command line in the settings.
-Tidak dapat memulai perintah pencarian mundur. Harap periksa baris perintah di bagian pengaturan.
+Tidak dapat memulai perintah pencarian terbalik. Harap periksa baris perintah di bagian pengaturan.
 
 Change Language
 Ubah bahasa (Change Language)
 
 Check for &Updates
-&Periksa versi baru
+&Periksa versi terbaru
 
 Continuous
-Bersambung
+Berkelanjutan
 
 Continuous book view
-Tampilan buku secara kontinu
+Tampilan buku secara berkelanjutan
 
 Continuous facing
-Dua Halaman Bersambung
+Dua halaman berkelanjutan
 
 Contribute Translation
 Membantu alihbahasa
+
+Copying text was denied (copying as image only)
+Menyalin teks ditolak (menyalin sebagai gambar saja)
 
 Could not open Printer
 Tidak dapat membuka printer
@@ -182,7 +216,7 @@ Created:
 Dibuat:
 
 Custom &Zoom...\tCtrl-Y
-&Pembesaran khusus\tCtrl-Y
+&Pembesaran buatan\tCtrl-Y
 
 Default &Layout:
 Tampilan &Standar
@@ -207,6 +241,9 @@ Masukkan kata kunci
 
 Enter password for %s
 Masukkan kata kunci untuk %s
+
+Enter the command-line to invoke when you double-click on the PDF document:
+Masukkan baris perintah untuk dijalankan ketika Anda mengklik dua kali di dokumen PDF:
 
 Error loading PDF file.
 Kesalahan dalam memanggil berkas PDF.
@@ -244,17 +281,29 @@ Temukan Sebelum
 Find:
 Temukan:
 
+Fit &Content\tCtrl-3
+Sesuaikan &Konten\tCtrl-3 
+
 Fit &Page\tCtrl-0
 &Sesuaikan\tCtrl-0
 
 Fit &Width\tCtrl-2
 Sesuaikan dengan &Lebar\tCtrl-2
 
+Fit Content
+Sesuaikan Konten
+
 Fit Page
 Sesuaikan
 
 Fit Width
 Sesuaikan dengan Lebar
+
+Fit Width and Show Pages Continuously
+Sesuaikan Lebar dan Tampilkan Halaman secara Berkelanjutan
+
+Fit a Single Page
+Sesuaikan Halaman Tunggal
 
 Found text at page %d
 Teks ditemukan pada halaman %d
@@ -343,20 +392,32 @@ Ukuran Halaman:
 Page number %u inexistant
 Halaman %u tidak tersedia
 
+Page scaling
+Mengukur halaman
+
 Page:
 Halaman:
 
+Please include the following file in your crash report:
+Harap menyertakan berkas berikut ini di laporan crash Anda:
+
 Please wait - rendering...
-Harap tunggu - sedang dalam proses...
+Harap tunggu - sedang proses rendering...
+
+Pr&esentation\tCtrl-L
+Presentasi\tCtrl-L
 
 Previous Page
 Halaman Sebelumnya
 
+Print range
+Kisaran cetakan
+
 Printing problem.
-Masalahan Pencetakkan.
+Masalah pencetakan.
 
 Remember &opened files
-Ingat &berkas yang pernah terbuka
+Ingat &berkas yang pernah dibuka
 
 Rotate &Left\tCtrl-Shift--
 Putar ke kiri\tCtrl-Shift--
@@ -367,26 +428,29 @@ Putar ke Kanan\tCtrl-Shift-+
 Searching %d of %d...
 Sedang mencari %d dari %d
 
+Select &All\tCtrl-A
+Pilih Semu&a\tCtrl-A
+
 Select content with Ctrl+left mouse button
 Pilih konten dengan tombol Ctrl+left pada mouse
 
 Send by &E-mail...
-Kirim dengan &email
+Kirim via &Email
 
 Set inverse search command-line
-Tetapkan perintah pencarian mundur
+Tetapkan baris perintah pencarian terbalik
 
 Show &Toolbar
-Perlihatkan toolbar
+Perlihatkan &Toolbar
 
 Show &pages continuously
-Tampilkan halaman secara kontinu
+Tampilkan halaman secara berkelanjutan
 
 Show the &bookmarks sidebar when available
-Tampilkan kolom &kutipan jika tersedia
+Tampilkan kolom &markah jika tersedia
 
 Single Page
-Satu Halaman
+Halaman Tunggal
 
 Source file %s has no synchronization point
 Berkas asal %s tidak mempunyai titik sinkronisasi
@@ -397,11 +461,17 @@ Perihal:
 SumatraPDF Options
 Pilihan-pilihan di SumatraPDF
 
+SumatraPDF Update
+Pemutakhiran SumatraPDF
+
+SumatraPDF crashed
+SumatraPDF berhenti berfungsi
+
 SumatraPDF is your main PDF reader
-SumatraPDF ada pembaca berkas PDF utama anda
+SumatraPDF adalah pembaca berkas PDF utama Anda
 
 SumatraPDF should now be your main PDF reader
-SumatraPDF sekarang telah menjadi pembaca berkas PDF utama anda
+SumatraPDF sekarang telah menjadi pembaca berkas PDF utama Anda
 
 Synchronization file cannot be opened
 Berkas sinkronisasi tidak dapat dibuka
@@ -450,29 +520,4 @@ menyalin teks
 
 printing document
 mencetak dokumen
-
-# Untranslated:
-#&All selected pages
-#&Even pages only
-#&Fit pages to printable area
-#&Odd pages only
-#&Remember the password for this document
-#&Shrink pages to printable area (if necessary)
-#&Use original page sizes
-#Attachment: %s
-#Bookmarks
-#Can't connect to the Internet (error %#x).
-#Copying text was denied (copying as image only)
-#Enter the command-line to invoke when you double-click on the PDF document:
-#Fit &Content\tCtrl-3
-#Fit Content
-#Fit Width and Show Pages Continuously
-#Fit a Single Page
-#Page scaling
-#Please include the following file in your crash report:
-#Pr&esentation\tCtrl-L
-#Print range
-#Select &All\tCtrl-A
-#SumatraPDF Update
-#SumatraPDF crashed
 
