@@ -83,6 +83,7 @@ def main():
   prevdir = os.getcwd(); os.chdir(builds_dir)
   run_cmd_throw("StripReloc", "Installer.exe")
   run_cmd_throw("mpress", "-s", "-r", "SumatraPDF-prerelease-%s.exe" % ver)
+  run_cmd_throw("mpress", "-s", "-r", "SumatraPDF-prerelease-%s-dbg.exe" % ver)
   os.chdir(prevdir)
 
   nameprefix = "SumatraPDF-prerelease-%s" % ver
