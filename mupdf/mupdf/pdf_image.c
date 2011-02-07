@@ -308,12 +308,25 @@ pdf_loadjpximage(fz_pixmap **imgp, pdf_xref *xref, fz_obj *dict)
 	obj = fz_dictgets(dict, "ColorSpace");
 	if (obj)
 	{
-		fz_dropcolorspace(img->colorspace);
-		img->colorspace = nil;
+		/* SumatraPDF: ignore incompatible colorspaces */
+		fz_colorspace *origCS = img->colorspace;
 
 		error = pdf_loadcolorspace(&img->colorspace, xref, obj);
 		if (error)
+		{
+			fz_dropcolorspace(origCS);
 			return fz_rethrow(error, "cannot load image colorspace");
+		}
+
+		/* SumatraPDF: ignore incompatible colorspaces */
+		if (img->colorspace->n != origCS->n)
+		{
+			fz_warn("incompatible color spaces %s and %s", origCS->name, img->colorspace->name);
+			fz_dropcolorspace(img->colorspace);
+			img->colorspace = origCS;
+		}
+		else
+			fz_dropcolorspace(origCS);
 
 		if (!strcmp(img->colorspace->name, "Indexed"))
 		{
