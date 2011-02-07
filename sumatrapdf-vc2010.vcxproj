@@ -132,7 +132,6 @@
     <ClCompile Include="src\FileHistory.cc" />
     <ClCompile Include="src\FileWatch.cc" />
     <ClCompile Include="src\Http.cpp" />
-    <ClCompile Include="src\installer\Installer.cpp" />
     <ClCompile Include="src\LangMenuDef.cpp" />
     <ClCompile Include="src\PdfEngine.cc" />
     <ClCompile Include="src\PdfSearch.cc" />
@@ -357,7 +356,6 @@
     <None Include="src\toolbar_8.bmp" />
   </ItemGroup>
   <ItemGroup>
-    <Manifest Include="src\installer\Installer.exe.manifest" />
     <Manifest Include="src\SumatraPDF.exe.manifest" />
   </ItemGroup>
   <ItemGroup>

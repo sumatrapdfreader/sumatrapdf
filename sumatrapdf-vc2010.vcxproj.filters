@@ -27,9 +27,6 @@
     <Filter Include="jpeg">
       <UniqueIdentifier>{066558ef-98f1-4e63-b5d4-b5aaebd0d65e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Installer">
-      <UniqueIdentifier>{c0a9a095-16c2-43c4-b02c-af2aee779407}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="baseutils\base_util.c">
@@ -485,9 +482,6 @@
     <ClCompile Include="ext\libjpeg-turbo\jsimd_none.c">
       <Filter>jpeg</Filter>
     </ClCompile>
-    <ClCompile Include="src\installer\Installer.cpp">
-      <Filter>Installer</Filter>
-    </ClCompile>
     <ClCompile Include="mupdf\fitz\filt_basic.c">
       <Filter>mupdf\fitz</Filter>
     </ClCompile>
@@ -921,9 +915,6 @@
   <ItemGroup>
     <Manifest Include="src\SumatraPDF.exe.manifest">
       <Filter>Source Files</Filter>
-    </Manifest>
-    <Manifest Include="src\installer\Installer.exe.manifest">
-      <Filter>Installer</Filter>
     </Manifest>
   </ItemGroup>
 </Project>
