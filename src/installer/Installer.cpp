@@ -288,6 +288,11 @@ TCHAR *GetInstalledExePath()
     return tstr_cat(GetInstallationDir(), _T("\\") EXENAME);
 }
 
+TCHAR *GetBrowserPluginPath()
+{
+    return tstr_cat(GetInstallationDir(), _T("\\") _T("npPdfViewer.dll"));
+}
+
 TCHAR *GetStartMenuProgramsPath()
 {
     static TCHAR dir[MAX_PATH];
@@ -761,6 +766,26 @@ HANDLE CreateProcessHelper(TCHAR *exe, TCHAR *args=NULL)
     return pi.hProcess;
 }
 
+// cf. http://support.microsoft.com/default.aspx?scid=kb;en-us;207132
+BOOL RegisterServerDLL(TCHAR *dllPath, BOOL unregister=FALSE)
+{
+    if (FAILED(OleInitialize(NULL)))
+        return FALSE;
+
+    BOOL success = FALSE;
+    HMODULE lib = LoadLibrary(dllPath);
+    if (lib) {
+        FARPROC CallDLL = GetProcAddress(lib, unregister ? "DllUnregisterServer" : "DllRegisterServer");
+        if (CallDLL)
+            success = SUCCEEDED(CallDLL());
+        FreeLibrary(lib);
+    }
+
+    OleUninitialize();
+
+    return success;
+}
+
 // Note: doesn't recurse and the size might overflow, but it's good enough for
 // our purpose
 DWORD GetDirSize(TCHAR *dir)
@@ -878,7 +903,9 @@ void UnregisterFromBeingDefaultViewer()
 
 void UninstallBrowserPlugin()
 {
-    // TODO: write me
+    TCHAR *dllPath = GetBrowserPluginPath();
+    RegisterServerDLL(dllPath, TRUE);
+    free(dllPath);
 }
 
 /* Caller needs to free() the result. */
@@ -1114,7 +1141,9 @@ static DWORD WINAPI InstallerThread(LPVOID data)
     }
 
     if (td->installBrowserPlugin) {
-        // TODO: register browser plugin
+        TCHAR *dllPath = GetBrowserPluginPath();
+        RegisterServerDLL(dllPath);
+        free(dllPath);
     }
 
 Exit:
