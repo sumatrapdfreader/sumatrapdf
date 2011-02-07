@@ -29,8 +29,6 @@
 #include "translations.h"
 #include "Version.h"
 
-#define DRAW_SHADOW 0
-
 // those are defined here instead of resource.h to avoid
 // having them overwritten by dialog editor
 #define IDM_VIEW_LAYOUT_FIRST           IDM_VIEW_SINGLE_PAGE
@@ -2024,7 +2022,7 @@ static void PaintForwardSearchMark(WindowInfo *win, HDC hdc) {
     }
 }
 
-#if DRAW_SHADOW
+#ifdef DRAW_PAGE_SHADOWS
 #define BORDER_SIZE   1
 #define SHADOW_OFFSET 4
 static void PaintPageFrameAndShadow(HDC hdc, PdfPageInfo * pageInfo, bool presentation, RECT * bounds)
@@ -2082,10 +2080,10 @@ static void PaintPageFrameAndShadow(HDC hdc, PdfPageInfo *pageInfo, bool present
     int fx = xDest - BORDER_SIZE, fy = yDest - BORDER_SIZE;
     int fw = bmpDx + 2 * BORDER_SIZE, fh = bmpDy + 2 * BORDER_SIZE;
 
-    HPEN pe = CreatePen(PS_SOLID, 1, TRANSPARENT);
+    HPEN pe = CreatePen(PS_NULL, 0, 0);
     SelectObject(hdc, pe);
     SelectObject(hdc, gGlobalPrefs.m_invertColors ? gBrushBlack : gBrushWhite);
-    Rectangle(hdc, fx, fy, fx + fw, fy + fh);
+    Rectangle(hdc, fx, fy, fx + fw + 1, fy + fh + 1);
     DeletePen(pe);
 }
 #endif

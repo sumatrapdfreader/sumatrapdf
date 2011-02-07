@@ -12,6 +12,9 @@
 #define USER_DEFAULT_SCREEN_DPI 96
 #endif
 
+// define the following if you want shadows drawn around the pages
+// #define DRAW_PAGE_SHADOWS
+
 #define INVALID_ZOOM        -99
 #define INVALID_BIG_ZOOM    999999.0   /* arbitrary but big */
 
@@ -25,10 +28,17 @@ typedef struct DisplaySettings {
 } DisplaySettings;
 
 /* the default distance between a page and window border edges, in pixels */
+#ifdef DRAW_PAGE_SHADOWS
 #define PADDING_PAGE_BORDER_TOP_DEF      5
 #define PADDING_PAGE_BORDER_BOTTOM_DEF   7
 #define PADDING_PAGE_BORDER_LEFT_DEF     5
 #define PADDING_PAGE_BORDER_RIGHT_DEF    7
+#else
+#define PADDING_PAGE_BORDER_TOP_DEF      4
+#define PADDING_PAGE_BORDER_BOTTOM_DEF   4
+#define PADDING_PAGE_BORDER_LEFT_DEF     4
+#define PADDING_PAGE_BORDER_RIGHT_DEF    4
+#endif
 /* the distance between pages in x axis, in pixels. Only applicable if
    columns > 1 */
 #define PADDING_BETWEEN_PAGES_X_DEF      8
