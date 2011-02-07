@@ -43,8 +43,9 @@ using namespace Gdiplus;
 #define ID_BUTTON_INSTALL             11
 #define ID_BUTTON_UNINSTALL           12
 #define ID_CHECKBOX_MAKE_DEFAULT      13
-#define ID_BUTTON_START_SUMATRA       14
-#define ID_BUTTON_EXIT                15
+#define ID_CHECKBOX_BROWSER_PLUGIN    14
+#define ID_BUTTON_START_SUMATRA       15
+#define ID_BUTTON_EXIT                16
 
 #define WM_APP_INSTALLATION_FINISHED        (WM_APP + 1)
 
@@ -54,7 +55,7 @@ using namespace Gdiplus;
 // * top part, where we display nice graphics
 // * bottom part, with install/uninstall button
 // This is the height of the lower part
-#define BOTTOM_PART_DY 38
+#define BOTTOM_PART_DY 46
 
 static HINSTANCE        ghinst;
 static HWND             gHwndFrame;
@@ -62,6 +63,7 @@ static HWND             gHwndButtonInstall = NULL;
 static HWND             gHwndButtonExit = NULL;
 static HWND             gHwndButtonRunSumatra = NULL;
 static HWND             gHwndCheckboxRegisterDefault = NULL;
+static HWND             gHwndCheckboxRegisterBrowserPlugin = NULL;
 static HWND             gHwndButtonUninstall = NULL;
 static HFONT            gFontDefault;
 
@@ -874,6 +876,11 @@ void UnregisterFromBeingDefaultViewer()
     UnregisterExplorerFileExts();
 }
 
+void UninstallBrowserPlugin()
+{
+    // TODO: write me
+}
+
 /* Caller needs to free() the result. */
 TCHAR *GetDefaultPdfViewer()
 {
@@ -1060,6 +1067,7 @@ void OnButtonStartSumatra()
 typedef struct {
     // arguments
     BOOL    registerAsDefault;
+    BOOL    installBrowserPlugin;
     HWND    hwndToNotify;
     HANDLE  hThread;
 
@@ -1105,6 +1113,10 @@ static DWORD WINAPI InstallerThread(LPVOID data)
         free(installedExePath);
     }
 
+    if (td->installBrowserPlugin) {
+        // TODO: register browser plugin
+    }
+
 Exit:
     PostMessage(td->hwndToNotify, WM_APP_INSTALLATION_FINISHED, (WPARAM)td, (LPARAM)0);
     return 0;
@@ -1118,6 +1130,7 @@ void OnButtonInstall()
     InstallerThreadData *td = SA(InstallerThreadData);
     td->hwndToNotify = gHwndFrame;
     td->registerAsDefault = GetCheckboxState(gHwndCheckboxRegisterDefault);
+    td->installBrowserPlugin = GetCheckboxState(gHwndCheckboxRegisterBrowserPlugin);
 
     // disable the install button and remove checkbox during installation
     DestroyWindow(gHwndCheckboxRegisterDefault);
@@ -1168,6 +1181,7 @@ void OnButtonUninstall()
     RemoveUninstallerRegistryInfo();
     RemoveShortcut();
     UnregisterFromBeingDefaultViewer();
+    UninstallBrowserPlugin();
     RemoveInstallationDirectory();
 
     DestroyWindow(gHwndButtonUninstall);
@@ -1567,6 +1581,7 @@ void OnCreateInstaller(HWND hwnd)
                         (HMENU)ID_BUTTON_INSTALL, ghinst, NULL);
     SetFont(gHwndButtonInstall, gFontDefault);
 
+    y = RectDy(&r) - buttonDy - 4;
     gHwndCheckboxRegisterDefault = CreateWindow(
         WC_BUTTON, _T("Use as &default PDF Reader"),
         WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX | WS_TABSTOP,
@@ -1581,6 +1596,14 @@ void OnCreateInstaller(HWND hwnd)
     if (defaultViewer && !hasOtherViewer)
         EnableWindow(gHwndCheckboxRegisterDefault, FALSE);
     free(defaultViewer);
+
+    y -= 18;
+    gHwndCheckboxRegisterBrowserPlugin = CreateWindow(
+        WC_BUTTON, _T("Install &browser plugin "),
+        WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX | WS_TABSTOP,
+        8, y, 160, 22, hwnd, (HMENU)ID_CHECKBOX_BROWSER_PLUGIN, ghinst, NULL);
+    SetFont(gHwndCheckboxRegisterBrowserPlugin, gFontDefault);
+    SetCheckboxState(gHwndCheckboxRegisterBrowserPlugin, FALSE);
 
     SetFocus(gHwndButtonInstall);
 }
@@ -1689,7 +1712,7 @@ static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
 
     if (IsUninstaller()) {
         gHwndFrame = CreateWindow(
-                INSTALLER_FRAME_CLASS_NAME, TAPP _T(" ") CURR_VERSION_STR _T(" Uninstaller"),
+                INSTALLER_FRAME_CLASS_NAME, TAPP _T(" ") CURR_VERSION_STR _T(" uninstaller"),
                 //WS_OVERLAPPEDWINDOW,
                 WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
                 CW_USEDEFAULT, CW_USEDEFAULT, 
@@ -1700,7 +1723,7 @@ static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
         gMsgColor = COLOR_MSG_WELCOME;
     } else {
         gHwndFrame = CreateWindow(
-                INSTALLER_FRAME_CLASS_NAME, TAPP _T(" ") CURR_VERSION_STR _T(" Installer"),
+                INSTALLER_FRAME_CLASS_NAME, TAPP _T(" ") CURR_VERSION_STR _T(" installer"),
                 //WS_OVERLAPPEDWINDOW,
                 WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
                 CW_USEDEFAULT, CW_USEDEFAULT,                
