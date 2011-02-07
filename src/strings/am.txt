@@ -9,7 +9,7 @@ Lang: am Armenian (Հայերեն)
 Contributor: Hrant Ohanyan »»» http://haysoft.org (hrantohanyan@mail.am)
 
 &About
-&Մասին
+&Ծրագրի մասին
 
 &Actual Size\tCtrl-1
 Իրական &չափը\tCtrl-1
@@ -425,6 +425,9 @@ Rotate &Right\tCtrl-Shift-+
 Searching %d of %d...
 Փնտրվում է %d-ից %d
 
+Select &All\tCtrl-A
+Ընտրել &բոլորը\tCtrl-A
+
 Select content with Ctrl+left mouse button
 Նշել ընտրվածը Ctrl+մկնիկի ձախ կոճակով
 
@@ -514,7 +517,4 @@ copying text
 
 printing document
 փաստաթուղթը տպվում է
-
-# Untranslated:
-#Select &All\tCtrl-A
 
