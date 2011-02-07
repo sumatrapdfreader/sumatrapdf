@@ -9,19 +9,19 @@ Lang: cz Czech (Čeština)
 Contributor: Kristian Vrhel
 Contributor: Jiri Saneistr
 Contributor: Pavel Zampach
-Contributor: Martin Ruzicka
+Contributor: Martin Ruzicka (martin.ruzicka.cz(at)gmail(dot)com)
 
 &About
 &O programu
 
 &Actual Size\tCtrl-1
-Skutečná velikost\tCtrl+1
+Skutečná &velikost\tCtrl+1
 
 &All selected pages
 Vše&chny vybrané stránky
 
 &Back\tAlt+Left Arrow
-Zpět\tAlt+Šipka vlevo
+Z&pět\tAlt+Šipka vlevo
 
 &Close\tCtrl-W
 &Zavřít\tCtrl+W
@@ -42,7 +42,7 @@ Pouz&e sudé stránky
 &Najít:
 
 &First Page\tHome
-První stránka\tHome
+První &stránka\tHome
 
 &Fit pages to printable area
 Přizpůsobit &stránky na tisknutelnou plochu
@@ -57,7 +57,7 @@ Přizpůsobit &stránky na tisknutelnou plochu
 Náp&ověda
 
 &Last Page\tEnd
-Poslední stránka\tEnd
+Pos&lední stránka\tEnd
 
 &Magnification:
 &Zvětšení:
@@ -69,7 +69,7 @@ Poslední stránka\tEnd
 &Rozlišovat velikost písmen
 
 &Next Page\tRight Arrow
-Další stránka\tŠipka vpravo
+Další strá&nka\tŠipka vpravo
 
 &No
 &Ne
@@ -99,7 +99,7 @@ Další stránka\tŠipka vpravo
 &Tisk... (odepřen)
 
 &Remember the password for this document
-&Pamatovat si heslo tohoto dokumentu
+P&amatovat si heslo tohoto dokumentu
 
 &Remember these settings for each document
 &Pamatovat si tato nastavení pro každý dokument
@@ -115,6 +115,9 @@ Další stránka\tŠipka vpravo
 
 &Skip this version
 &Přeskočit tuto verzi
+
+&Use original page sizes
+Po&užít původní velikost stránky
 
 &View
 &Zobrazit
@@ -159,13 +162,16 @@ Book View
 Kniha
 
 Book&marks\tF12
-Záložky\tF12
+Zál&ožky\tF12
 
 Bookmarks
 Záložky
 
 Bytes
 bajtů
+
+Can't connect to the Internet (error %#x).
+Nelze se připojit k Internetu (chyba %#x).
 
 Cancel
 Storno
@@ -177,7 +183,7 @@ Cannot start inverse search command. Please check the command line in the settin
 Příkaz inverzní hledání nelze spustit. Zkontrolujte nastavení příkazového řádku.
 
 Change Language
-&Změnit jazyk (Change Language)
+Změnit jazyk (Change Language)
 
 Check for &Updates
 &Zkontrolovat aktualizace
@@ -236,14 +242,17 @@ Zadejte heslo
 Enter password for %s
 Zadejte heslo pro %s
 
+Enter the command-line to invoke when you double-click on the PDF document:
+Dvojité kliknutí na PDF dokument vykoná zadaný příkazový řádek:
+
 Error loading PDF file.
 Při načítání PDF souboru došlo k chybě.
 
 F&orward\tAlt+Right Arrow
-Vpřed\tAlt+Šipka vpravo
+V&před\tAlt+Šipka vpravo
 
 F&ullscreen\tCtrl-Shift-L
-Celá obrazovka\tCtrl+Shift+L
+Celá obrazo&vka\tCtrl+Shift+L
 
 Facing
 Dvojstránky
@@ -258,7 +267,7 @@ File:
 Soubor:
 
 Fin&d...\tCtrl-F
-Najít...\tCtrl+F
+Nají&t...\tCtrl+F
 
 Find
 Najít
@@ -289,6 +298,12 @@ Podle stránky
 
 Fit Width
 Podle šířky
+
+Fit Width and Show Pages Continuously
+Přizpůsobit šířce okna a zobrazit stránky průběžně
+
+Fit a Single Page
+Přizpůsobit pro jednu celou stránku v okně
 
 Found text at page %d
 Položka nalezena na stránce %d
@@ -369,7 +384,7 @@ PDF documents
 PDF dokumenty
 
 Pa&ge...\tCtrl-G
-Stránka...\tCtrl+G
+Strán&ka...\tCtrl+G
 
 Page Size:
 Velikost stránky:
@@ -383,8 +398,14 @@ Měřítko stránky
 Page:
 Stránka:
 
+Please include the following file in your crash report:
+Zahrňte následující soubor do zprávy o chybě:
+
 Please wait - rendering...
 Prosím čekejte, probíhá vykreslování...
+
+Pr&esentation\tCtrl-L
+Pr&ezentace\tCtrl+L
 
 Previous Page
 Předchozí stránka
@@ -399,13 +420,16 @@ Remember &opened files
 Pamatovat si &otevřené soubory
 
 Rotate &Left\tCtrl-Shift--
-Otočit doleva\tCtrl+Shift+Num-
+Otočit do&leva\tCtrl+Shift+Num-
 
 Rotate &Right\tCtrl-Shift-+
-Otočit doprava\tCtrl+Shift+Num+
+Otočit dop&rava\tCtrl+Shift+Num+
 
 Searching %d of %d...
 Prohledává se %d z %d...
+
+Select &All\tCtrl-A
+Vybrat &vše\tCtrl+A
 
 Select content with Ctrl+left mouse button
 Vybrat obsah klávesou Ctrl a levým tlačítkem myši
@@ -417,10 +441,10 @@ Set inverse search command-line
 Nastavit inverzní vyhledávání z příkazového řádku
 
 Show &Toolbar
-Zobrazit panel nástrojů
+Zobrazit panel nás&trojů
 
 Show &pages continuously
-Zobrazit stránky průběžně
+Zobrazit stránky &průběžně
 
 Show the &bookmarks sidebar when available
 Zo&brazit záložky v postranním panelu, jsou-li dostupné
@@ -436,6 +460,12 @@ Předmět:
 
 SumatraPDF Options
 Možnosti programu SumatraPDF
+
+SumatraPDF Update
+SumatraPDF - Aktualizace
+
+SumatraPDF crashed
+SumatraPDF - Selhání
 
 SumatraPDF is your main PDF reader
 SumatraPDF je výchozím PDF prohlížečem
@@ -459,7 +489,7 @@ View
 Zobrazení
 
 Visit &Website
-&Navštívit webovou stránku
+Navštívit &webovou stránku
 
 Warning
 Upozornění
@@ -490,16 +520,4 @@ kopírování textu
 
 printing document
 tisk dokumentu
-
-# Untranslated:
-#&Use original page sizes
-#Can't connect to the Internet (error %#x).
-#Enter the command-line to invoke when you double-click on the PDF document:
-#Fit Width and Show Pages Continuously
-#Fit a Single Page
-#Please include the following file in your crash report:
-#Pr&esentation\tCtrl-L
-#Select &All\tCtrl-A
-#SumatraPDF Update
-#SumatraPDF crashed
 
