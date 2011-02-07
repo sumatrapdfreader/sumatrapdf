@@ -227,6 +227,9 @@ pdf_expandindexedpixmap(fz_pixmap *src)
 		}
 	}
 
+	if (src->mask)
+		dst->mask = fz_keeppixmap(src->mask);
+
 	return dst;
 }
 
