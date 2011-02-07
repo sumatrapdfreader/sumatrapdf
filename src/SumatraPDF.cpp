@@ -5549,6 +5549,7 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
 {
     int          current;
     WindowInfo * win = gWindowList.Find(hwnd);
+    POINT        pt;
 
     switch (message)
     {
@@ -5608,8 +5609,11 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
             break;
 
         case WM_SETCURSOR:
-            if (win && WS_ABOUT == win->state) {
-                POINT pt;
+            if (!win)
+                return DefWindowProc(hwnd, message, wParam, lParam);
+
+            switch (win->state) {
+            case WS_ABOUT:
                 if (GetCursorPos(&pt) && ScreenToClient(hwnd, &pt)) {
                     AboutLayoutInfoEl *aboutEl;
                     if (AboutGetLink(win, pt.x, pt.y, &aboutEl)) {
@@ -5618,38 +5622,51 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
                         return TRUE;
                     }
                 }
-            } else if (win && MA_DRAGGING == win->mouseAction) {
-                SetCursor(gCursorDrag);
-                return TRUE;
-            } else if (win && MA_SCROLLING == win->mouseAction) {
-                SetCursor(gCursorScroll);
-                return TRUE;
-            } else if (win && MA_SELECTING_TEXT == win->mouseAction) {
-                SetCursor(gCursorIBeam);
-                return TRUE;
-            } else if (win && WS_SHOWING_PDF == win->state) {
-                POINT pt;
-                if (GetCursorPos(&pt) && ScreenToClient(hwnd, &pt)) {
-                    pdf_link *link = win->dm->getLinkAtPosition(pt.x, pt.y);
-                    if (link) {
-                        int pageNo = win->dm->getPageNoByPoint(pt.x, pt.y);
-                        CreateInfotipForPdfLink(win, pageNo, link);
-                        SetCursor(gCursorHand);
+                CreateInfotipForPdfLink(win, 0, NULL);
+                break;
+
+            case WS_SHOWING_PDF:
+                if (win->mouseAction != MA_IDLE)
+                    CreateInfotipForPdfLink(win, 0, NULL);
+
+                switch (win->mouseAction) {
+                case MA_DRAGGING:
+                    SetCursor(gCursorDrag);
+                    return TRUE;
+                case MA_SCROLLING:
+                    SetCursor(gCursorScroll);
+                    return TRUE;
+                case MA_SELECTING_TEXT:
+                    SetCursor(gCursorIBeam);
+                    return TRUE;
+                case MA_SELECTING:
+                    break;
+                case MA_IDLE:
+                    if (GetCursor() && GetCursorPos(&pt) && ScreenToClient(hwnd, &pt)) {
+                        pdf_link *link = win->dm->getLinkAtPosition(pt.x, pt.y);
+                        if (link) {
+                            int pageNo = win->dm->getPageNoByPoint(pt.x, pt.y);
+                            CreateInfotipForPdfLink(win, pageNo, link);
+                            SetCursor(gCursorHand);
+                            return TRUE;
+                        }
+                        CreateInfotipForPdfLink(win, 0, NULL);
+                        if (win->dm->isOverText(pt.x, pt.y))
+                            SetCursor(gCursorIBeam);
+                        else
+                            SetCursor(gCursorArrow);
                         return TRUE;
                     }
-                    else if (GetCursor() && win->dm->isOverText(pt.x, pt.y)) {
-                        SetCursor(gCursorIBeam);
-                        return TRUE;
-                    }
-                    else if (GetCursor()) {
-                        SetCursor(gCursorArrow);
-                        return TRUE;
-                    }
+                    CreateInfotipForPdfLink(win, 0, NULL);
                 }
+                if (win->presentation)
+                    return TRUE;
+                break;
+
+            default:
+                CreateInfotipForPdfLink(win, 0, NULL);
+                break;
             }
-            CreateInfotipForPdfLink(win, 0, NULL);
-            if (win && win->presentation)
-                return TRUE;
             return DefWindowProc(hwnd, message, wParam, lParam);
 
         case WM_TIMER:
