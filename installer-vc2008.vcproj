@@ -29,8 +29,8 @@
 				ReBuildCommandLine=".\scripts\build-release.bat -testinst"
 				CleanCommandLine="del /s obj-dbg"
 				Output="obj-dbg\SumatraPDF-install.exe"
-				PreprocessorDefinitions="WIN32;_DEBUG"
-				IncludeSearchPath=""
+				PreprocessorDefinitions="WIN32;_DEBUG;UNICODE;_UNICODE"
+				IncludeSearchPath="baseutils"
 				ForcedIncludes=""
 				AssemblySearchPath=""
 				ForcedUsingAssemblies=""
@@ -50,8 +50,8 @@
 				ReBuildCommandLine=".\scripts\build-release.bat -testinst"
 				CleanCommandLine="del /s obj-dbg"
 				Output="obj-rel\SumatraPDF-install.exe"
-				PreprocessorDefinitions="WIN32;NDEBUG"
-				IncludeSearchPath=""
+				PreprocessorDefinitions="WIN32;NDEBUG;UNICODE;_UNICODE"
+				IncludeSearchPath="baseutils"
 				ForcedIncludes=""
 				AssemblySearchPath=""
 				ForcedUsingAssemblies=""
@@ -62,6 +62,86 @@
 	<References>
 	</References>
 	<Files>
+		<Filter
+			Name="baseutils"
+			>
+			<File
+				RelativePath=".\baseutils\base_util.c"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\base_util.h"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\benc_util.c"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\benc_util.h"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\file_util.c"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\file_util.h"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\geom_util.c"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\geom_util.h"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\str_util.c"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\str_util.h"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\tstr_util.c"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\tstr_util.h"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\vstrlist.h"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\win_util.c"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\win_util.h"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\WinUtil.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\WinUtil.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\wstr_util.c"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\wstr_util.h"
+				>
+			</File>
+		</Filter>
 		<Filter
 			Name="Source Files"
 			Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
@@ -75,16 +155,6 @@
 				RelativePath=".\src\installer\Resource.h"
 				>
 			</File>
-			<File
-				RelativePath=".\src\installer\Version.h"
-				>
-			</File>
-		</Filter>
-		<Filter
-			Name="Header Files"
-			Filter="h;hpp;hxx;hm;inl;inc;xsd"
-			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
-			>
 		</Filter>
 		<Filter
 			Name="Resource Files"

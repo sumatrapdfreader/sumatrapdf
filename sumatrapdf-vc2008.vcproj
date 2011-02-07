@@ -21,6 +21,7 @@
 			OutputDirectory="$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="0"
+			BuildLogFile="obj-dbg\BuildLog.htm"
 			>
 			<Tool
 				Name="VCNMakeTool"
@@ -41,6 +42,7 @@
 			OutputDirectory="$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="0"
+			BuildLogFile="obj-rel\BuildLog.htm"
 			>
 			<Tool
 				Name="VCNMakeTool"
@@ -759,26 +761,6 @@
 					>
 				</File>
 			</Filter>
-		</Filter>
-		<Filter
-			Name="installer"
-			>
-			<File
-				RelativePath=".\src\installer\Installer.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\installer\Installer.exe.manifest"
-				>
-			</File>
-			<File
-				RelativePath=".\src\installer\Installer.rc"
-				>
-			</File>
-			<File
-				RelativePath=".\src\installer\Resource.h"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="IFilter DLL"
