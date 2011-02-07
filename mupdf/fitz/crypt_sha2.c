@@ -9,17 +9,25 @@ You can do whatever you want with this file.
 
 #include "fitz.h"
 
-#ifndef WORDS_BIGENDIAN
-#define bswap32(num) \
-	( (((unsigned int)(num) << 24)             ) \
-	| (((unsigned int)(num) <<  8) & 0x00FF0000) \
-	| (((unsigned int)(num) >>  8) & 0x0000FF00) \
-	| (((unsigned int)(num) >> 24)             ) )
-#else
-#define bswap32(num) (num)
-#endif
+static inline int isbigendian(void)
+{
+	static const int one = 1;
+	return *(char*)&one == 0;
+}
 
-// At least on x86, GCC is able to optimize this to a rotate instruction.
+static inline unsigned int bswap32(unsigned int num)
+{
+	if (!isbigendian())
+	{
+		return	( (((num) << 24))
+			| (((num) << 8) & 0x00FF0000)
+			| (((num) >> 8) & 0x0000FF00)
+			| (((num) >> 24)) );
+	}
+	return num;
+}
+
+/* At least on x86, GCC is able to optimize this to a rotate instruction. */
 #define rotr_32(num, amount) ((num) >> (amount) | (num) << (32 - (amount)))
 
 #define blk0(i) (W[i] = data[i])
@@ -76,14 +84,14 @@ transform(unsigned int state[8], const unsigned int data_xe[16])
 	unsigned int T[8];
 	unsigned int j;
 
-	// ensure big-endian integers
+	/* ensure big-endian integers */
 	for (j = 0; j < 16; j++)
 		data[j] = bswap32(data_xe[j]);
 
-	// Copy state[] to working vars.
+	/* Copy state[] to working vars. */
 	memcpy(T, state, sizeof(T));
 
-	// 64 operations, partially loop unrolled
+	/* 64 operations, partially loop unrolled */
 	for (j = 0; j < 64; j += 16) {
 		R( 0); R( 1); R( 2); R( 3);
 		R( 4); R( 5); R( 6); R( 7);
@@ -91,7 +99,7 @@ transform(unsigned int state[8], const unsigned int data_xe[16])
 		R(12); R(13); R(14); R(15);
 	}
 
-	// Add the working vars back into state[].
+	/* Add the working vars back into state[]. */
 	state[0] += a(0);
 	state[1] += b(0);
 	state[2] += c(0);
@@ -118,10 +126,10 @@ void fz_sha256init(fz_sha256 *context)
 
 void fz_sha256update(fz_sha256 *context, const unsigned char *input, unsigned int inlen)
 {
-	// Copy the input data into a properly aligned temporary buffer.
-	// This way we can be called with arbitrarily sized buffers
-	// (no need to be multiple of 64 bytes), and the code works also
-	// on architectures that don't allow unaligned memory access.
+	/* Copy the input data into a properly aligned temporary buffer.
+	 * This way we can be called with arbitrarily sized buffers
+	 * (no need to be multiple of 64 bytes), and the code works also
+	 * on architectures that don't allow unaligned memory access. */
 	while (inlen > 0)
 	{
 		const unsigned int copy_start = context->count[0] & 0x3F;
@@ -134,7 +142,7 @@ void fz_sha256update(fz_sha256 *context, const unsigned char *input, unsigned in
 		input += copy_size;
 		inlen -= copy_size;
 		context->count[0] += copy_size;
-		// carry overflow from low to high
+		/* carry overflow from low to high */
 		if (context->count[0] < copy_size)
 			context->count[1]++;
 
@@ -145,8 +153,8 @@ void fz_sha256update(fz_sha256 *context, const unsigned char *input, unsigned in
 
 void fz_sha256final(fz_sha256 *context, unsigned char digest[32])
 {
-	// Add padding as described in RFC 3174 (it describes SHA-1 but
-	// the same padding style is used for SHA-256 too).
+	/* Add padding as described in RFC 3174 (it describes SHA-1 but
+	 * the same padding style is used for SHA-256 too). */
 	unsigned int j = context->count[0] & 0x3F;
 	context->buffer.u8[j++] = 0x80;
 
@@ -160,7 +168,7 @@ void fz_sha256final(fz_sha256 *context, unsigned char digest[32])
 		context->buffer.u8[j++] = 0x00;
 	}
 
-	// Convert the message size from bytes to bits.
+	/* Convert the message size from bytes to bits. */
 	context->count[1] = (context->count[1] << 3) + (context->count[0] >> 29);
 	context->count[0] = context->count[0] << 3;
 

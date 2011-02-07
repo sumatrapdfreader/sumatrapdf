@@ -194,14 +194,14 @@ FITZ_OBJS = \
 	$(O)\base_error.obj $(O)\base_geometry.obj $(O)\base_getopt.obj $(O)\base_hash.obj \
 	$(O)\base_memory.obj $(O)\base_string.obj $(O)\base_time.obj \
 	$(O)\dev_draw.obj $(O)\dev_bbox.obj $(O)\dev_list.obj $(O)\dev_null.obj $(O)\dev_text.obj \
-	$(O)\dev_trace.obj $(O)\crypt_aes.obj $(O)\crypt_arc4.obj $(O)\crypt_md5.obj \
+	$(O)\dev_trace.obj $(O)\crypt_aes.obj $(O)\crypt_arc4.obj $(O)\crypt_md5.obj $(O)\crypt_sha2.obj \
 	$(O)\filt_basic.obj $(O)\filt_faxd.obj $(O)\filt_flate.obj $(O)\filt_jbig2d.obj \
 	$(O)\filt_jpxd.obj $(O)\filt_lzwd.obj $(O)\filt_predict.obj \
 	$(O)\obj_array.obj $(O)\obj_dict.obj $(O)\obj_print.obj $(O)\obj_simple.obj \
 	$(O)\res_path.obj $(O)\res_pixmap.obj $(O)\res_text.obj \
 	$(O)\res_colorspace.obj $(O)\res_font.obj $(O)\res_shade.obj \
 	$(O)\stm_buffer.obj $(O)\stm_open.obj $(O)\stm_read.obj \
-	$(O)\filt_dctd.obj $(O)\crypt_sha2.obj $(O)\dev_gdiplus.obj
+	$(O)\filt_dctd.obj $(O)\dev_gdiplus.obj
 
 MUPDF_OBJS = \
 	$(O)\pdf_annot.obj $(O)\pdf_build.obj $(O)\pdf_cmap.obj \

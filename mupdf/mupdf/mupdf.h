@@ -78,7 +78,6 @@ struct pdf_cryptfilter_s
 {
 	int method;
 	int length;
-	/* unsigned char key[16]; /* SumatraPDF: unused */
 };
 
 struct pdf_crypt_s
@@ -93,7 +92,6 @@ struct pdf_crypt_s
 	pdf_cryptfilter strf;
 
 	int r;
-	/* SumatraPDF: add support for AES-256 encryption (revision 5) */
 	unsigned char o[48];
 	unsigned char u[48];
 	unsigned char oe[32];

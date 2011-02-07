@@ -1,8 +1,6 @@
 #include "fitz.h"
 #include "mupdf.h"
 
-/* SumatraPDF: add support for AES-256 encryption (revision 5) */
-
 /*
  * Create crypt object for decrypting strings and streams
  * given the Encryption and ID objects.
@@ -185,8 +183,6 @@ pdf_newcrypt(pdf_crypt **cryptp, fz_obj *dict, fz_obj *id)
 			return fz_throw("encryption dictionary missing user encryption key");
 		}
 		memcpy(crypt->ue, fz_tostrbuf(obj), 32);
-
-		// TODO: verify /Perms against /P
 	}
 
 	crypt->encryptmetadata = 1;

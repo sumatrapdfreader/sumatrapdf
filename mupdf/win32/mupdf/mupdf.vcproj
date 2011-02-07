@@ -325,6 +325,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\fitz\crypt_sha2.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\fitz\dev_bbox.c"
 				>
 			</File>

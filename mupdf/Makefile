@@ -85,6 +85,7 @@ FITZ_SRC := \
 	fitz/crypt_aes.c \
 	fitz/crypt_arc4.c \
 	fitz/crypt_md5.c \
+	fitz/crypt_sha2.c \
 	fitz/dev_bbox.c \
 	fitz/dev_draw.c \
 	fitz/dev_list.c \
