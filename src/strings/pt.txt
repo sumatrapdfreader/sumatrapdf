@@ -365,7 +365,7 @@ Open
 Abrir
 
 Open in &Adobe Reader
-Abrir no &Adobe Reader
+Abrir no Adobe &Reader
 
 P&roperties\tCtrl-D
 &Propriedades...\tCtrl-D
@@ -426,6 +426,9 @@ Rodar à &direita\tCtrl-Shift-+
 
 Searching %d of %d...
 Pesquisando %d de %d...
+
+Select &All\tCtrl-A
+Selecionar t&udo\tCtrl-A
 
 Select content with Ctrl+left mouse button
 Selecione o conteúdo com Ctrl+botão esquerdo do rato
@@ -516,7 +519,4 @@ copiando texto
 
 printing document
 imprimindo documento
-
-# Untranslated:
-#Select &All\tCtrl-A
 
