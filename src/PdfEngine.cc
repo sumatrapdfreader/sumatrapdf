@@ -487,7 +487,7 @@ bool PdfEngine::finishLoading(void)
     // displaying document properties
     _info = fz_dictgets(_xref->trailer, "Info");
     if (_info)
-        _info = fz_copydict(_info);
+        _info = fz_copydict(fz_resolveindirect(_info));
     LeaveCriticalSection(&_xrefAccess);
 
     _pages = SAZA(pdf_page *, _pageCount);

@@ -1558,6 +1558,7 @@ pdf_runpage(pdf_xref *xref, pdf_page *page, fz_device *dev, fz_matrix ctm)
 	fz_error error;
 	pdf_annot *annot;
 	int flags;
+	fz_matrix apmatrix; /* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1213 */
 
 	if (page->transparency)
 		dev->begingroup(dev->user,
@@ -1590,7 +1591,11 @@ pdf_runpage(pdf_xref *xref, pdf_page *page, fz_device *dev, fz_matrix ctm)
 			continue;
 
 		csi = pdf_newcsi(xref, dev, ctm);
+		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1213 */
+		apmatrix = annot->ap->matrix;
+		annot->ap->matrix = annot->matrix;
 		error = pdf_runxobject(csi, page->resources, annot->ap);
+		annot->ap->matrix = apmatrix;
 		pdf_freecsi(csi);
 		if (error)
 			return fz_rethrow(error, "cannot parse annotation appearance stream");

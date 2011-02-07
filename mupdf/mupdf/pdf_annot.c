@@ -181,7 +181,7 @@ pdf_transformannot(pdf_annot *annot)
 	a = fz_concat(fz_scale(w, h), fz_translate(x, y));
 	aa = fz_concat(a, matrix);
 
-	annot->ap->matrix = aa;
+	annot->matrix = aa; /* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1213 */
 }
 
 void

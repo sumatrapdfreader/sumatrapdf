@@ -482,6 +482,7 @@ struct pdf_annot_s
 	fz_obj *obj;
 	fz_rect rect;
 	pdf_xobject *ap;
+	fz_matrix matrix; /* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1213 */
 	pdf_annot *next;
 };
 
