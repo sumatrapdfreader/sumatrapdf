@@ -6084,7 +6084,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                 SendMessage(hwnd, WM_COMMAND, IDM_VIEW_BOOKMARKS, 0);
                 return TRUE;
             }
-            break;
+            return DefWindowProc(hwnd, message, wParam, lParam);
 
         case WM_CHAR:
             OnChar(win, wParam);
