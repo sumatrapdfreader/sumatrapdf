@@ -289,12 +289,15 @@ fz_paintimageimp(fz_pixmap *dst, fz_bbox scissor, fz_pixmap *img, fz_matrix ctm,
 
 	/* turn on interpolation for upscaled and non-rectilinear transforms */
 	dolerp = 0;
-	if (!fz_isrectilinear(ctm))
-		dolerp = 1;
-	if (sqrtf(ctm.a * ctm.a + ctm.b * ctm.b) > img->w)
-		dolerp = 1;
-	if (sqrtf(ctm.c * ctm.c + ctm.d * ctm.d) > img->h)
-		dolerp = 1;
+	if (img->interpolate)
+	{
+		if (!fz_isrectilinear(ctm))
+			dolerp = 1;
+		if (sqrtf(ctm.a * ctm.a + ctm.b * ctm.b) > img->w)
+			dolerp = 1;
+		if (sqrtf(ctm.c * ctm.c + ctm.d * ctm.d) > img->h)
+			dolerp = 1;
+	}
 
 	bbox = fz_roundrect(fz_transformrect(ctm, fz_unitrect));
 	bbox = fz_intersectbbox(bbox, scissor);

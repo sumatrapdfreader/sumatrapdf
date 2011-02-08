@@ -171,17 +171,13 @@ pdf_transformannot(pdf_annot *annot)
 	fz_rect bbox = annot->ap->bbox;
 	fz_rect rect = annot->rect;
 	float w, h, x, y;
-	fz_matrix a, aa;
 
 	bbox = fz_transformrect(matrix, bbox);
 	w = (rect.x1 - rect.x0) / (bbox.x1 - bbox.x0);
 	h = (rect.y1 - rect.y0) / (bbox.y1 - bbox.y0);
 	x = rect.x0 - bbox.x0;
 	y = rect.y0 - bbox.y0;
-	a = fz_concat(fz_scale(w, h), fz_translate(x, y));
-	aa = fz_concat(a, matrix);
-
-	annot->matrix = aa; /* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1213 */
+	annot->matrix = fz_concat(fz_scale(w, h), fz_translate(x, y));
 }
 
 void

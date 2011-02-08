@@ -246,7 +246,7 @@ pdf_begingroup(pdf_csi *csi, fz_rect bbox)
 
 		csi->dev->beginmask(csi->dev->user, bbox, gstate->luminosity,
 			softmask->colorspace, gstate->softmaskbc);
-		error = pdf_runxobject(csi, nil, softmask);
+		error = pdf_runxobject(csi, nil, softmask, fz_identity);
 		if (error)
 			fz_catch(error, "cannot run softmask");
 		csi->dev->endmask(csi->dev->user);

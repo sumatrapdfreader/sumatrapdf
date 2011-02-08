@@ -265,7 +265,17 @@ public:
 		_setDrawAttributes(&imgAttrs, alpha);
 		
 		float scale = 2.0 * fz_matrixexpansion(ctm) / sqrtf(image->w * image->w + image->h * image->h);
-		if (scale < 1.0 && MIN(image->w, image->h) > 10)
+		bool downscale = sqrtf(ctm.a * ctm.a + ctm.b * ctm.b) < image->w &&
+			sqrtf(ctm.c * ctm.c + ctm.d * ctm.d) < image->h;
+		
+		if (!image->interpolate && !downscale && graphics == this->graphics)
+		{
+			GraphicsState state = graphics->Save();
+			graphics->SetInterpolationMode(InterpolationModeNearestNeighbor);
+			graphics->DrawImage(&PixmapBitmap(image), corners, 3, 0., 0., image->w, image->h, UnitPixel, &imgAttrs);
+			graphics->Restore(state);
+		}
+		else if (scale < 1.0 && MIN(image->w, image->h) > 10)
 		{
 			int w = ceilf(image->w * scale);
 			int h = ceilf(image->h * scale);

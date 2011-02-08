@@ -482,7 +482,7 @@ struct pdf_annot_s
 	fz_obj *obj;
 	fz_rect rect;
 	pdf_xobject *ap;
-	fz_matrix matrix; /* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1213 */
+	fz_matrix matrix;
 	pdf_annot *next;
 };
 
@@ -646,7 +646,7 @@ void pdf_showshade(pdf_csi*, fz_shade *shade);
 void pdf_gsave(pdf_csi *csi);
 void pdf_grestore(pdf_csi *csi);
 fz_error pdf_runcsibuffer(pdf_csi *csi, fz_obj *rdb, fz_buffer *contents);
-fz_error pdf_runxobject(pdf_csi *csi, fz_obj *resources, pdf_xobject *xobj);
+fz_error pdf_runxobject(pdf_csi *csi, fz_obj *resources, pdf_xobject *xobj, fz_matrix transform);
 fz_error pdf_runpage(pdf_xref *xref, pdf_page *page, fz_device *dev, fz_matrix ctm);
 fz_error pdf_runglyph(pdf_xref *xref, fz_obj *resources, fz_buffer *contents, fz_device *dev, fz_matrix ctm);
 

@@ -233,6 +233,7 @@ pdf_loadimageimp(fz_pixmap **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict, fz
 		fz_dropcolorspace(colorspace);
 
 	tile->mask = mask;
+	tile->interpolate = interpolate;
 
 	fz_free(samples);
 

@@ -22,17 +22,8 @@ MUPDF_DIR=mupdf
 EXTLIBSDIR=ext
 !endif
 
-SUMATRA_APP = $(O)\SumatraPDF.exe
-INSTALLER_APP = $(O)\Installer.exe
-PDFFILTER_DLL = $(O)\PdfFilter.dll
-BROWSER_PLUGIN = $(O)\npPdfViewer.dll
-
 # default target
-all: $(O) $(SUMATRA_APP) $(INSTALLER_APP) $(PDFFILTER_DLL) $(BROWSER_PLUGIN)
-
-SumatraPDF: $(O) $(SUMATRA_APP)
-
-Installer: $(O) $(INSTALLER_APP)
+all_sumatrapdf: SumatraPDF Installer PDFFilter BrowserPlugin
 
 ##### add configuration changes that should also affect MuPDF before this line #####
 
@@ -62,29 +53,28 @@ SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "UNICODE" /D "_UNICODE"
 INSTALLER_CFLAGS = $(INSTALLER_CFLAGS) /D "UNICODE" /D "_UNICODE"
 !endif
 
-BROWSER_PLUGIN_CFLAGS = $(SUMATRA_CFLAGS) /wd4819
-PDFFILTER_CFLAGS = $(SUMATRA_CFLAGS)
-
-LDFLAGS = $(LDFLAGS) 
-
-LIBS = $(LIBS) comctl32.lib Msimg32.lib Winspool.lib wininet.lib ole32.lib shlwapi.lib version.lib
-
-LIBS_INSTALLER = $(LIBS) psapi.lib
-
-LIBS_BROWSER_PLUGIN = user32.lib gdi32.lib advapi32.lib shlwapi.lib
-
 !if "$(CFG)"=="dbg"
 SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "DEBUG" /D "_DEBUG"
 INSTALLER_CFLAGS = $(INSTALLER_CFLAGS) /D "DEBUG" /D "_DEBUG"
 !endif
 
+LIBS = $(LIBS) comctl32.lib Msimg32.lib Winspool.lib wininet.lib ole32.lib shlwapi.lib version.lib
+
+SUMATRA_APP = $(O)\SumatraPDF.exe
 SUMATRA_RES = $(O)\sumatrapdf.res
 
+INSTALLER_APP = $(O)\Installer.exe
 INSTALLER_RES = $(O)\Installer.res
+LIBS_INSTALLER = $(LIBS) psapi.lib
 
+PDFFILTER_DLL = $(O)\PdfFilter.dll
 PDFFILTER_RES = $(O)\PdfFilter.res
+PDFFILTER_CFLAGS = $(SUMATRA_CFLAGS)
 
+BROWSER_PLUGIN = $(O)\npPdfViewer.dll
 BROWSER_PLUGIN_RES = $(O)\npPdfViewer.res
+BROWSER_PLUGIN_CFLAGS = $(SUMATRA_CFLAGS) /wd4819
+LIBS_BROWSER_PLUGIN = user32.lib gdi32.lib advapi32.lib shlwapi.lib
 
 BASEUTILS_OBJS = \
 	$(O)\base_util.obj $(O)\benc_util.obj $(O)\file_util.obj $(O)\geom_util.obj \
@@ -125,6 +115,11 @@ cleanmupdf: force
 ## Note: the following command does not work on Windows
 cleanall: force
 	-rmdir /S /Q obj-*
+
+SumatraPDF:    $(O) $(SUMATRA_APP)
+Installer:     $(O) $(INSTALLER_APP)
+PDFFilter:     $(O) $(PDFFILTER_DLL)
+BrowserPlugin: $(O) $(BROWSER_PLUGIN)
 
 $(SUMATRA_RES): src\SumatraPDF.rc src\Resource.h src\Version.h
 	rc /r /fo$@ $(EXTCFLAGS) src\SumatraPDF.rc

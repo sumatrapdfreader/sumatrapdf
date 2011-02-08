@@ -497,6 +497,10 @@ fz_convertpixmap(fz_pixmap *sp, fz_pixmap *dp)
 
 	assert(ss && ds);
 
+	if (sp->mask)
+		dp->mask = fz_keeppixmap(sp->mask);
+	dp->interpolate = sp->interpolate;
+
 	if (ss == fz_devicegray)
 	{
 		if (ds == fz_devicergb) fastgraytorgb(sp, dp);
