@@ -15,9 +15,11 @@ CFG=dbg
 O = obj-$(CFG)-win
 !endif
 
-OZ = $(O)\zlib
+OZ  = $(O)\zlib
 OBZ = $(O)\bzip2
 OFT = $(O)\freetype
+OJ  = $(O)\jpeg
+OT  = $(O)\jpegturbo
 
 # To over-ride location of fitz/mupdf sources, define MUPDF_DIR
 # e.g.:
@@ -147,36 +149,36 @@ BZIP2_OBJS = \
 
 !if "$(JPEG_TURBO_DIR)"==""
 JPEG_OBJS = \
-	$(O)\jaricom.obj $(O)\jcomapi.obj $(O)\jutils.obj $(O)\jerror.obj $(O)\jmemmgr.obj \
-	$(O)\jcapimin.obj $(O)\jcapistd.obj $(O)\jcarith.obj $(O)\jctrans.obj $(O)\jcparam.obj \
-	$(O)\jdatadst.obj $(O)\jcinit.obj $(O)\jcmaster.obj $(O)\jcmarker.obj $(O)\jcmainct.obj \
-	$(O)\jcprepct.obj $(O)\jccoefct.obj $(O)\jccolor.obj $(O)\jcsample.obj $(O)\jchuff.obj \
-	$(O)\jcdctmgr.obj $(O)\jfdctfst.obj $(O)\jfdctflt.obj $(O)\jfdctint.obj \
-	$(O)\jdapimin.obj $(O)\jdapistd.obj $(O)\jdarith.obj $(O)\jdtrans.obj $(O)\jdatasrc.obj \
-	$(O)\jdmaster.obj $(O)\jdinput.obj $(O)\jdmarker.obj $(O)\jdhuff.obj $(O)\jdmainct.obj \
-	$(O)\jdcoefct.obj $(O)\jdpostct.obj $(O)\jddctmgr.obj $(O)\jidctfst.obj $(O)\jidctflt.obj \
-	$(O)\jidctint.obj $(O)\jdsample.obj $(O)\jdcolor.obj $(O)\jquant1.obj $(O)\jquant2.obj \
-	$(O)\jdmerge.obj $(O)\jmemnobs.obj # should I use jmemansi.obj or jmemname.obj ?
+	$(OJ)\jaricom.obj $(OJ)\jcomapi.obj $(OJ)\jutils.obj $(OJ)\jerror.obj $(OJ)\jmemmgr.obj \
+	$(OJ)\jcapimin.obj $(OJ)\jcapistd.obj $(OJ)\jcarith.obj $(OJ)\jctrans.obj $(OJ)\jcparam.obj \
+	$(OJ)\jdatadst.obj $(OJ)\jcinit.obj $(OJ)\jcmaster.obj $(OJ)\jcmarker.obj $(OJ)\jcmainct.obj \
+	$(OJ)\jcprepct.obj $(OJ)\jccoefct.obj $(OJ)\jccolor.obj $(OJ)\jcsample.obj $(OJ)\jchuff.obj \
+	$(OJ)\jcdctmgr.obj $(OJ)\jfdctfst.obj $(OJ)\jfdctflt.obj $(OJ)\jfdctint.obj \
+	$(OJ)\jdapimin.obj $(OJ)\jdapistd.obj $(OJ)\jdarith.obj $(OJ)\jdtrans.obj $(OJ)\jdatasrc.obj \
+	$(OJ)\jdmaster.obj $(OJ)\jdinput.obj $(OJ)\jdmarker.obj $(OJ)\jdhuff.obj $(OJ)\jdmainct.obj \
+	$(OJ)\jdcoefct.obj $(OJ)\jdpostct.obj $(OJ)\jddctmgr.obj $(OJ)\jidctfst.obj $(OJ)\jidctflt.obj \
+	$(OJ)\jidctint.obj $(OJ)\jdsample.obj $(OJ)\jdcolor.obj $(OJ)\jquant1.obj $(OJ)\jquant2.obj \
+	$(OJ)\jdmerge.obj $(OJ)\jmemnobs.obj # should I use jmemansi.obj or jmemname.obj ?
 !else
 JPEG_TURBO_OBJS = \
-	$(O)\jsimdcpu.obj $(O)\jccolmmx.obj $(O)\jdcolmmx.obj $(O)\jcsammmx.obj \
-	$(O)\jdsammmx.obj $(O)\jdmermmx.obj $(O)\jcqntmmx.obj $(O)\jfmmxfst.obj $(O)\jfmmxint.obj \
-	$(O)\jimmxred.obj $(O)\jimmxint.obj $(O)\jimmxfst.obj $(O)\jcqnt3dn.obj $(O)\jf3dnflt.obj \
-	$(O)\ji3dnflt.obj $(O)\jcqntsse.obj $(O)\jfsseflt.obj $(O)\jisseflt.obj $(O)\jccolss2.obj \
-	$(O)\jdcolss2.obj $(O)\jcsamss2.obj $(O)\jdsamss2.obj $(O)\jdmerss2.obj $(O)\jcqnts2i.obj \
-	$(O)\jfss2fst.obj $(O)\jfss2int.obj $(O)\jiss2red.obj $(O)\jiss2int.obj $(O)\jiss2fst.obj \
-	$(O)\jcqnts2f.obj $(O)\jiss2flt.obj \
-	$(O)\jsimd_i386.obj $(O)\jcapimin.obj $(O)\jcapistd.obj $(O)\jccoefct.obj $(O)\jccolor.obj \
-	$(O)\jcdctmgr.obj $(O)\jchuff.obj $(O)\jcinit.obj $(O)\jcmainct.obj $(O)\jcmarker.obj \
-	$(O)\jcmaster.obj $(O)\jcomapi.obj $(O)\jcparam.obj \
-	$(O)\jcprepct.obj $(O)\jcsample.obj $(O)\jctrans.obj $(O)\jdapimin.obj $(O)\jdapistd.obj \
-	$(O)\jdatadst.obj $(O)\jdatasrc.obj $(O)\jdcoefct.obj $(O)\jdcolor.obj $(O)\jddctmgr.obj \
-	$(O)\jdhuff.obj $(O)\jdinput.obj $(O)\jdmainct.obj $(O)\jdmarker.obj $(O)\jdmaster.obj \
-	$(O)\jdmerge.obj $(O)\jdpostct.obj $(O)\jdsample.obj $(O)\jdtrans.obj $(O)\jerror.obj \
-	$(O)\jfdctflt.obj $(O)\jfdctint.obj $(O)\jidctflt.obj $(O)\jidctfst.obj $(O)\jidctint.obj \
-	$(O)\jquant1.obj $(O)\jquant2.obj $(O)\jutils.obj $(O)\jmemmgr.obj $(O)\jmemnobs.obj \
-	$(O)\jaricom.obj $(O)\jcarith.obj $(O)\jdarith.obj $(O)\jfdctfst.obj \
-	$(O)\jidctred.obj $(O)\jdphuff.obj $(O)\jcphuff.obj
+	$(OT)\jsimdcpu.obj $(OT)\jccolmmx.obj $(OT)\jdcolmmx.obj $(OT)\jcsammmx.obj \
+	$(OT)\jdsammmx.obj $(OT)\jdmermmx.obj $(OT)\jcqntmmx.obj $(OT)\jfmmxfst.obj $(OT)\jfmmxint.obj \
+	$(OT)\jimmxred.obj $(OT)\jimmxint.obj $(OT)\jimmxfst.obj $(OT)\jcqnt3dn.obj $(OT)\jf3dnflt.obj \
+	$(OT)\ji3dnflt.obj $(OT)\jcqntsse.obj $(OT)\jfsseflt.obj $(OT)\jisseflt.obj $(OT)\jccolss2.obj \
+	$(OT)\jdcolss2.obj $(OT)\jcsamss2.obj $(OT)\jdsamss2.obj $(OT)\jdmerss2.obj $(OT)\jcqnts2i.obj \
+	$(OT)\jfss2fst.obj $(OT)\jfss2int.obj $(OT)\jiss2red.obj $(OT)\jiss2int.obj $(OT)\jiss2fst.obj \
+	$(OT)\jcqnts2f.obj $(OT)\jiss2flt.obj \
+	$(OT)\jsimd_i386.obj $(OT)\jcapimin.obj $(OT)\jcapistd.obj $(OT)\jccoefct.obj $(OT)\jccolor.obj \
+	$(OT)\jcdctmgr.obj $(OT)\jchuff.obj $(OT)\jcinit.obj $(OT)\jcmainct.obj $(OT)\jcmarker.obj \
+	$(OT)\jcmaster.obj $(OT)\jcomapi.obj $(OT)\jcparam.obj \
+	$(OT)\jcprepct.obj $(OT)\jcsample.obj $(OT)\jctrans.obj $(OT)\jdapimin.obj $(OT)\jdapistd.obj \
+	$(OT)\jdatadst.obj $(OT)\jdatasrc.obj $(OT)\jdcoefct.obj $(OT)\jdcolor.obj $(OT)\jddctmgr.obj \
+	$(OT)\jdhuff.obj $(OT)\jdinput.obj $(OT)\jdmainct.obj $(OT)\jdmarker.obj $(OT)\jdmaster.obj \
+	$(OT)\jdmerge.obj $(OT)\jdpostct.obj $(OT)\jdsample.obj $(OT)\jdtrans.obj $(OT)\jerror.obj \
+	$(OT)\jfdctflt.obj $(OT)\jfdctint.obj $(OT)\jidctflt.obj $(OT)\jidctfst.obj $(OT)\jidctint.obj \
+	$(OT)\jquant1.obj $(OT)\jquant2.obj $(OT)\jutils.obj $(OT)\jmemmgr.obj $(OT)\jmemnobs.obj \
+	$(OT)\jaricom.obj $(OT)\jcarith.obj $(OT)\jdarith.obj $(OT)\jfdctfst.obj \
+	$(OT)\jidctred.obj $(OT)\jdphuff.obj $(OT)\jcphuff.obj
 
 #TODO: do I need those? They show up in mac compilation log but don't seem to be necessary
 !endif
@@ -308,6 +310,8 @@ $(O): force
 	@if not exist $(OBZ) mkdir $(OBZ)
 	@if not exist $(OZ) mkdir $(OZ)
 	@if not exist $(OFT) mkdir $(OFT)
+	@if not exist $(OJ) mkdir $(OJ)
+	@if not exist $(OT) mkdir $(OT)
 
 $(PDFAPP_RES): $(MUPDF_DIR)\apps\win_res.rc
 	rc /r /fo$@ $(MUPDF_DIR)\apps\win_res.rc
@@ -627,18 +631,16 @@ $(PDFEXTRACT_APP): $(PDFEXTRACT_OBJS)
 	$(CC) $(BZIP2_CFLAGS) /Fo$(OBZ)\ /Fd$(O)\vc80.pdb $<
 
 !if "$(JPEG_TURBO_OBJS)"==""
-# libjpeg directories
-{$(JPEG_DIR)}.c{$(O)}.obj::
-	$(CC) $(JPEG_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
+{$(JPEG_DIR)}.c{$(OJ)}.obj::
+	$(CC) $(JPEG_CFLAGS) /Fo$(OJ)\ /Fd$(O)\vc80.pdb $<
 !else
-# jpeg-turbo directories
-{$(JPEG_TURBO_DIR)}.c{$(O)}.obj::
-	$(CC) $(JPEG_TURBO_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
+{$(JPEG_TURBO_DIR)}.c{$(OT)}.obj::
+	$(CC) $(JPEG_TURBO_CFLAGS) /Fo$(OT)\ /Fd$(O)\vc80.pdb $<
 
-{$(JPEG_TURBO_DIR)\simd}.c{$(O)}.obj::
-	$(CC) $(JPEG_TURBO_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
+{$(JPEG_TURBO_DIR)\simd}.c{$(OT)}.obj::
+	$(CC) $(JPEG_TURBO_CFLAGS) /Fo$(OT)\ /Fd$(O)\vc80.pdb $<
 
-{$(JPEG_TURBO_DIR)\simd}.asm{$(O)}.obj:
+{$(JPEG_TURBO_DIR)\simd}.asm{$(OT)}.obj:
 	$(NASM) $(JPEG_TURBO_NASM_FLAGS) -o $@ $< 
 !endif
 
