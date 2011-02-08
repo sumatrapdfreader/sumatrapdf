@@ -34,8 +34,11 @@ typedef struct DisplaySettings {
 #define PADDING_PAGE_BORDER_LEFT_DEF     5
 #define PADDING_PAGE_BORDER_RIGHT_DEF    7
 #else
-#define PADDING_PAGE_BORDER_TOP_DEF      4
-#define PADDING_PAGE_BORDER_BOTTOM_DEF   4
+// TODO: those should probably be more modular so that we can control space
+// before first page, after last page and between pages (currently
+// betwen pages = first page + last page (i.e. top + bottom)
+#define PADDING_PAGE_BORDER_TOP_DEF      2
+#define PADDING_PAGE_BORDER_BOTTOM_DEF   2
 #define PADDING_PAGE_BORDER_LEFT_DEF     4
 #define PADDING_PAGE_BORDER_RIGHT_DEF    4
 #endif
