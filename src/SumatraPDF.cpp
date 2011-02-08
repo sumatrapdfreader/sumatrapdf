@@ -2420,10 +2420,10 @@ static void ChangePresentationMode(WindowInfo *win, PresentationMode mode)
     win->RedrawAll();
 }
 
-static void OnDraggingStart(WindowInfo *win, int x, int y)
+static void OnDraggingStart(WindowInfo *win, int x, int y, bool right=false)
 {
     SetCapture(win->hwndCanvas);
-    win->mouseAction = MA_DRAGGING;
+    win->mouseAction = right ? MA_DRAGGING_RIGHT : MA_DRAGGING;
     win->dragPrevPosX = x;
     win->dragPrevPosY = y;
     if (GetCursor())
@@ -2525,6 +2525,7 @@ static void OnMouseMove(WindowInfo *win, int x, int y, WPARAM flags)
         OnSelectionEdgeAutoscroll(win, x, y);
         break;
     case MA_DRAGGING:
+    case MA_DRAGGING_RIGHT:
         dragDx = win->dragPrevPosX - x;
         dragDy = win->dragPrevPosY - y;
         DBG_OUT(" drag move, x=%d, y=%d, dx=%d, dy=%d\n", x, y, dragDx, dragDy);
@@ -2591,7 +2592,7 @@ static void OnSelectionStop(WindowInfo *win, int x, int y, bool aborted)
 
 static void OnMouseLeftButtonDblClk(WindowInfo *win, int x, int y, int key)
 {
-    //DBG_OUT("Right button clicked on %d %d\n", x, y);
+    //DBG_OUT("Left button clicked on %d %d\n", x, y);
     assert (win);
     if (!win) return;
     OnInverseSearch(win, x, y);
@@ -2599,7 +2600,7 @@ static void OnMouseLeftButtonDblClk(WindowInfo *win, int x, int y, int key)
 
 static void OnMouseLeftButtonDown(WindowInfo *win, int x, int y, int key)
 {
-    //DBG_OUT("Right button clicked on %d %d\n", x, y);
+    //DBG_OUT("Left button clicked on %d %d\n", x, y);
     assert (win);
     if (!win) return;
 
@@ -2610,6 +2611,8 @@ static void OnMouseLeftButtonDown(WindowInfo *win, int x, int y, int key)
         return;
     }
     if (WS_SHOWING_PDF != win->state)
+        return;
+    if (MA_DRAGGING_RIGHT == win->mouseAction)
         return;
 
     if (MA_SCROLLING == win->mouseAction) {
@@ -2654,7 +2657,7 @@ static void OnMouseLeftButtonUp(WindowInfo *win, int x, int y, int key)
         return;
 
     assert(win->dm);
-    if (MA_IDLE == win->mouseAction)
+    if (MA_IDLE == win->mouseAction || MA_DRAGGING_RIGHT == win->mouseAction)
         return;
     assert(MA_SELECTING == win->mouseAction || MA_SELECTING_TEXT == win->mouseAction || MA_DRAGGING == win->mouseAction);
 
@@ -2697,7 +2700,8 @@ static void OnMouseMiddleButtonDown(WindowInfo *win, int x, int y, int key)
 
     // Handle message by recording placement then moving document as mouse moves.
 
-    if (win->mouseAction == MA_IDLE) {
+    switch (win->mouseAction) {
+    case MA_IDLE:
         win->mouseAction = MA_SCROLLING;
 
         // record current mouse position, distance mouse moves
@@ -2705,15 +2709,68 @@ static void OnMouseMiddleButtonDown(WindowInfo *win, int x, int y, int key)
         win->dragStartX = x;
         win->dragStartY = y; 
         SetCursor(gCursorScroll);
-    } else {
+        break;
+
+    case MA_SCROLLING:
         win->mouseAction = MA_IDLE;
+        break;
     }
 }
 
-static void OnMouseRightButtonClick(WindowInfo *win, int x, int y, int key)
+static void OnMouseRightButtonDown(WindowInfo *win, int x, int y, int key)
 {
-    if ((win->fullScreen || PM_ENABLED == win->presentation) && win->dm)
-        win->dm->goToPrevPage(0);
+    //DBG_OUT("Right button clicked on %d %d\n", x, y);
+    assert (win);
+    if (!win) return;
+
+    if (WS_SHOWING_PDF != win->state)
+        return;
+
+    if (MA_SCROLLING == win->mouseAction)
+        win->mouseAction = MA_IDLE;
+    else if (win->mouseAction != MA_IDLE)
+        return;
+    assert(win->dm);
+
+    SetFocus(win->hwndFrame);
+
+    win->dragStartPending = true;
+    win->dragStartX = x;
+    win->dragStartY = y;
+
+    OnDraggingStart(win, x, y, true);
+}
+
+static void OnMouseRightButtonUp(WindowInfo *win, int x, int y, int key)
+{
+    assert (win);
+    if (!win) return;
+
+    if (WS_SHOWING_PDF != win->state)
+        return;
+
+    assert(win->dm);
+    if (MA_DRAGGING_RIGHT != win->mouseAction)
+        return;
+
+    bool didDragMouse = !win->dragStartPending ||
+        abs(x - win->dragStartX) > GetSystemMetrics(SM_CXDRAG) ||
+        abs(y - win->dragStartY) > GetSystemMetrics(SM_CYDRAG);
+    OnDraggingStop(win, x, y, !didDragMouse);
+
+    if (didDragMouse)
+        /* pass */;
+    else if (win->fullScreen || PM_ENABLED == win->presentation) {
+        if (WasKeyDown(VK_SHIFT))
+            win->dm->goToNextPage(0);
+        else
+            win->dm->goToPrevPage(0);
+    }
+    /* return from white/black screens in presentation mode */
+    else if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation)
+        ChangePresentationMode(win, PM_ENABLED);
+
+    win->mouseAction = MA_IDLE;
 }
 
 static void OnPaint(WindowInfo *win)
@@ -5603,9 +5660,14 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
             }
             return 0;
 
+        case WM_RBUTTONDOWN:
+            if (win)
+                OnMouseRightButtonDown(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
+            break;
+
         case WM_RBUTTONUP:
             if (win)
-                OnMouseRightButtonClick(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
+                OnMouseRightButtonUp(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
             break;
 
         case WM_SETCURSOR:
@@ -5631,6 +5693,7 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
 
                 switch (win->mouseAction) {
                 case MA_DRAGGING:
+                case MA_DRAGGING_RIGHT:
                     SetCursor(gCursorDrag);
                     return TRUE;
                 case MA_SCROLLING:
@@ -5682,7 +5745,6 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
                     if (MA_SCROLLING == win->mouseAction)
                         win->MoveDocBy(win->xScrollSpeed, win->yScrollSpeed);
                     else if (MA_SELECTING == win->mouseAction || MA_SELECTING_TEXT == win->mouseAction) {
-                        POINT pt;
                         GetCursorPos(&pt);
                         ScreenToClient(win->hwndCanvas, &pt);
                         OnMouseMove(win, pt.x, pt.y, MK_CONTROL);
@@ -5758,8 +5820,7 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
             }
 
             // Note: not all mouse drivers correctly report the Ctrl key's state
-            if ((LOWORD(wParam) & MK_CONTROL) || WasKeyDown(VK_CONTROL)) {
-                POINT pt;
+            if ((LOWORD(wParam) & MK_CONTROL) || WasKeyDown(VK_CONTROL) || (LOWORD(wParam) & MK_RBUTTON)) {
                 GetCursorPos(&pt);
                 ScreenToClient(win->hwndCanvas, &pt);
 

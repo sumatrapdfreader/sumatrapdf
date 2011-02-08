@@ -798,6 +798,10 @@
 				>
 			</File>
 		</Filter>
+		<File
+			RelativePath=".\src\releasenotes.txt"
+			>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>
