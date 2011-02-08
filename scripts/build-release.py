@@ -124,7 +124,7 @@ def main():
   [tmp_exe, tmp_pdb, tmp_plugin, tmp_installer] = [os.path.join("obj-rel", t) for t in files]
 
   local_exe = os.path.join(builds_dir, "%s.exe" % filename_base)
-  local_exe_uncompr = os.path.join(builds_dir, "SumatraPDF-uncompr.exe")
+  local_exe_uncompr = os.path.join(builds_dir, "%s-uncompr.exe" % filename_base)
   local_pdb = os.path.join(builds_dir, "%s.pdb" % filename_base)
   local_plugin = os.path.join(builds_dir, "npPdfViewer.dll")
   local_installer = os.path.join(builds_dir, "Installer.exe")

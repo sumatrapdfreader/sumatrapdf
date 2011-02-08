@@ -198,7 +198,7 @@ def build_installer_native(dir, nameprefix):
   installer_template_exe = os.path.join(dir, "Installer.exe")
   if nameprefix is not None:
     installer_exe = os.path.join(dir, "%s-install.exe" % nameprefix)
-    exe = os.path.join(dir, "%s.exe" % nameprefix)
+    exe = os.path.join(dir, "%s-uncompr.exe" % nameprefix)
   else:
     installer_exe = os.path.join(dir, "SumatraPDF-install.exe")
     exe = os.path.join(dir, "SumatraPDF.exe")
@@ -208,8 +208,8 @@ def build_installer_native(dir, nameprefix):
   fo = open(installer_exe, "ab")
   # append installer data to installer exe
   installer_mark_end(fo) # this are read backwards so end marker is written first
-  installer_append_file(fo, exe, "SumatraPDF.exe")
-  installer_append_file(fo, plugin, "npPdfViewer.dll")
+  installer_append_file_zlib(fo, exe, "SumatraPDF.exe")
+  installer_append_file_zlib(fo, plugin, "npPdfViewer.dll")
   font_name =  "DroidSansFallback.ttf"
   font_path = os.path.join("mupdf", "fonts", "droid", font_name)
   installer_append_file_zlib(fo, font_path, font_name)
