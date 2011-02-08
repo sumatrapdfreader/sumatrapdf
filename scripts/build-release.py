@@ -9,7 +9,7 @@ import shutil
 import sys
 import time
 
-from util import log, run_cmd_throw, test_for_flag, s3UploadFilePublic, s3UploadDataPublic, ensure_s3_doesnt_exist, ensure_path_exists, installer_mark_end, installer_append_file, installer_append_file_zlib, zip_file, extract_sumatra_version, verify_started_in_right_directory, build_installer_native, parse_svninfo_out
+from util import log, run_cmd_throw, test_for_flag, s3UploadFilePublic, s3UploadDataPublic, ensure_s3_doesnt_exist, ensure_path_exists, zip_file, extract_sumatra_version, verify_started_in_right_directory, build_installer_native, parse_svninfo_out
 
 args = sys.argv
 upload               = test_for_flag(args, "-upload")
@@ -158,7 +158,7 @@ def main():
 
   local_installer_native_exe = build_installer_native(builds_dir, filename_base)
   if not build_prerelease:
-    zip_file(local_zip, local_exe, "SumatraPDF.exe")
+    zip_file(local_zip, local_exe, "SumatraPDF.exe", False)
     ensure_path_exists(local_zip)
 
   if upload and build_prerelease:

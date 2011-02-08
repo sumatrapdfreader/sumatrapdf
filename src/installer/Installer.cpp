@@ -19,7 +19,7 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include <Shlwapi.h>
 #include <objidl.h>
 
-#include <zlib.h>
+#include <bzlib.h>
 
 #include "Resource.h"
 #include "base_util.h"
@@ -119,14 +119,14 @@ static Color            COLOR_MSG_FAILED(gCol1);
 #define URL_INFO_ABOUT _T("UrlInfoAbout")
 
 #define INSTALLER_PART_FILE         "kifi"
-#define INSTALLER_PART_FILE_ZLIB    "kifz"
+#define INSTALLER_PART_FILE_BZIP2   "kifb"
 #define INSTALLER_PART_END          "kien"
 #define INSTALLER_PART_UNINSTALLER  "kiun"
 
 struct EmbeddedPart {
     EmbeddedPart *  next;
     char            type[5];     // we only use 4, 5th is for 0-termination
-    // fields valid if type is INSTALLER_PART_FILE or INSTALLER_PART_FILE_ZLIB
+    // fields valid if type is INSTALLER_PART_FILE or INSTALLER_PART_FILE_BZIP2
     uint32_t        fileSize;    // size of the file
     uint32_t        fileOffset;  // offset in the executable of the file start
     TCHAR *         fileName;    // name of the file (UTF-8 encoded in file)
@@ -423,7 +423,7 @@ ReadNextPart:
     }
 
     if (str_eqn(part->type, INSTALLER_PART_FILE, 4) ||
-        str_eqn(part->type, INSTALLER_PART_FILE_ZLIB, 4)) {
+        str_eqn(part->type, INSTALLER_PART_FILE_BZIP2, 4)) {
         uint32_t nameLen;
         if (SEEK_FAILED == SeekBackwards(h, 8, _T("Couldn't seek to file name size")))
             goto Error;
@@ -508,20 +508,31 @@ Error:
     return FALSE;
 }
 
-BOOL CopyFileDataZipped(HANDLE hSrc, HANDLE hDst, DWORD size)
+#ifdef __cplusplus
+extern "C" {
+#endif
+// needed because we compile bzip2 with #define BZ_NO_STDIO
+void bz_internal_error(int errcode)
+{
+    MessageBox(gHwndFrame, _T("fatal error: bz_internal_error()"), _T("Installer failed"),  MB_ICONEXCLAMATION | MB_OK);   
+}
+#ifdef __cplusplus
+}
+#endif
+
+BOOL CopyFileDataBzip2(HANDLE hSrc, HANDLE hDst, DWORD size)
 {
     BOOL                ok;
     DWORD               bytesTransferred;
-    unsigned char       in[1024*8];
-    unsigned char       out[1024*16];
+    char                in[1024*8];
+    char                out[1024*16];
     int                 ret;
     DWORD               left = size;
+    bz_stream           strm = {0};
 
-    z_stream    strm = {0};
-
-    ret = inflateInit(&strm);
-    if (ret != Z_OK) {
-        NotifyFailed(_T("inflateInit() failed"));
+    ret = BZ2_bzDecompressInit(&strm, 0, 0);
+    if (ret != BZ_OK) {
+        NotifyFailed(_T("BZ2_bzDecompress() failed"));
         return FALSE;
     }
 
@@ -542,12 +553,13 @@ BOOL CopyFileDataZipped(HANDLE hSrc, HANDLE hDst, DWORD size)
         do {
             strm.avail_out = sizeof(out);
             strm.next_out = out;
-            ret = inflate(&strm, Z_NO_FLUSH);
+            ret = BZ2_bzDecompress(&strm);
 
             switch (ret) {
-                case Z_NEED_DICT:
-                case Z_DATA_ERROR:
-                case Z_MEM_ERROR:
+                case BZ_PARAM_ERROR:
+                case BZ_DATA_ERROR:
+                case BZ_DATA_ERROR_MAGIC:
+                case BZ_MEM_ERROR:
                     goto Error;
             }
 
@@ -562,12 +574,12 @@ BOOL CopyFileDataZipped(HANDLE hSrc, HANDLE hDst, DWORD size)
 
         left -= toRead;
     }
-    if (ret == Z_STREAM_END)
-        ret = Z_OK;
-    ret = inflateEnd(&strm);
-    return ret == Z_OK;
+    if (ret == BZ_STREAM_END)
+        ret = BZ_OK;
+    ret = BZ2_bzCompressEnd(&strm);
+    return ret == BZ_OK;
 Error:
-    inflateEnd(&strm);
+    BZ2_bzCompressEnd(&strm);
     return FALSE;
 }
 
@@ -618,8 +630,8 @@ BOOL ExtractPartFile(TCHAR *dir, EmbeddedPart *p)
 
     if (str_eqn(p->type, INSTALLER_PART_FILE, 4))
         ok = CopyFileData(hSrc, hDst, p->fileSize);
-    else if (str_eqn(p->type, INSTALLER_PART_FILE_ZLIB, 4))
-        ok = CopyFileDataZipped(hSrc, hDst, p->fileSize);
+    else if (str_eqn(p->type, INSTALLER_PART_FILE_BZIP2, 4))
+        ok = CopyFileDataBzip2(hSrc, hDst, p->fileSize);
 
 Error:
     CloseHandle(hDst); CloseHandle(hSrc);
@@ -634,7 +646,7 @@ BOOL InstallCopyFiles(EmbeddedPart *root)
     while (p) {
         EmbeddedPart *next = p->next;
         if (str_eqn(p->type, INSTALLER_PART_FILE, 4) ||
-            str_eqn(p->type, INSTALLER_PART_FILE_ZLIB, 4)) {
+            str_eqn(p->type, INSTALLER_PART_FILE_BZIP2, 4)) {
             if (!ExtractPartFile(installDir, p))
                 return FALSE;
         }

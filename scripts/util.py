@@ -5,7 +5,7 @@ import struct
 import subprocess
 import sys
 import zipfile
-import zlib
+import bz2
 
 def import_boto():
   global Key, S3Connection, awscreds
@@ -140,9 +140,9 @@ def write_with_size(fo, data, name=None):
   log("Writing %d bytes at %d (data size)" % (len(tmp), fo.tell()))
   fo.write(tmp)
 
-INSTALLER_HEADER_FILE      = "kifi"
-INSTALLER_HEADER_FILE_ZLIB = "kifz"
-INSTALLER_HEADER_END       = "kien"
+INSTALLER_HEADER_FILE       = "kifi"
+INSTALLER_HEADER_FILE_BZIP2 = "kifb"
+INSTALLER_HEADER_END        = "kien"
 
 def installer_append_file(fo, path, name_in_installer):
   fi = open(path, "rb")
@@ -153,32 +153,26 @@ def installer_append_file(fo, path, name_in_installer):
   write_with_size(fo, name_in_installer)
   write_no_size(fo, INSTALLER_HEADER_FILE)
 
-def installer_append_file_zlib(fo, path, name_in_installer):
+def installer_append_file_bzip2(fo, path, name_in_installer):
   fi = open(path, "rb")
   data = fi.read()
   fi.close()
   assert len(data) == os.path.getsize(path)
-  data2 = zlib.compress(data, 9)
+  data2 = bz2.compress(data, 9)  
   assert len(data2) < os.path.getsize(path)
   write_with_size(fo, data2, name_in_installer)
   write_with_size(fo, name_in_installer)
-  write_no_size(fo, INSTALLER_HEADER_FILE_ZLIB)
-  
-  """
-  data3 = bz2.compress(data, 9)  
-  print("")
-  print("uncompressed: %d" % len(data))
-  print("zlib        : %d" % len(data2))
-  print("bz2         : %d" % len(data3))
-  print("")
-  """
+  write_no_size(fo, INSTALLER_HEADER_FILE_BZIP2)
 
 def installer_mark_end(fo):
   write_no_size(fo, INSTALLER_HEADER_END)
 
 # doesn't really belong here, but have no better place
-def zip_file(dst_zip_file, src, src_name=None):
-  zf = zipfile.ZipFile(dst_zip_file, "w", zipfile.ZIP_DEFLATED)
+def zip_file(dst_zip_file, src, src_name=None, compress=True):
+  if compress:
+    zf = zipfile.ZipFile(dst_zip_file, "w", zipfile.ZIP_DEFLATED)
+  else:
+    zf = zipfile.ZipFile(dst_zip_file, "w", zipfile.ZIP_STORED)
   if not src_name:
     src_name = os.path.basename(src)
   zf.write(src, src_name)
@@ -208,10 +202,10 @@ def build_installer_native(dir, nameprefix):
   fo = open(installer_exe, "ab")
   # append installer data to installer exe
   installer_mark_end(fo) # this are read backwards so end marker is written first
-  installer_append_file_zlib(fo, exe, "SumatraPDF.exe")
-  installer_append_file_zlib(fo, plugin, "npPdfViewer.dll")
+  installer_append_file_bzip2(fo, exe, "SumatraPDF.exe")
+  installer_append_file_bzip2(fo, plugin, "npPdfViewer.dll")
   font_name =  "DroidSansFallback.ttf"
   font_path = os.path.join("mupdf", "fonts", "droid", font_name)
-  installer_append_file_zlib(fo, font_path, font_name)
+  installer_append_file_bzip2(fo, font_path, font_name)
   fo.close()
   return installer_exe

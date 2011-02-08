@@ -28,7 +28,11 @@ PDFFILTER_DLL = $(O)\PdfFilter.dll
 BROWSER_PLUGIN = $(O)\npPdfViewer.dll
 
 # default target
-SumatraPDF: $(O) $(SUMATRA_APP) $(INSTALLER_APP) $(PDFFILTER_DLL) $(BROWSER_PLUGIN)
+all: $(O) $(SUMATRA_APP) $(INSTALLER_APP) $(PDFFILTER_DLL) $(BROWSER_PLUGIN)
+
+SumatraPDF: $(O) $(SUMATRA_APP)
+
+Installer: $(O) $(INSTALLER_APP)
 
 ##### add configuration changes that should also affect MuPDF before this line #####
 
@@ -50,7 +54,7 @@ SUMATRA_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
 	/D "SYNCTEX_FEATURE"
 
 INSTALLER_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
-	/Ibaseutils /Ibaseutils/msvc /Isrc /Isrc/installer /I$(ZLIB_DIR)
+	/Ibaseutils /Ibaseutils/msvc /Isrc /Isrc/installer /I$(BZIP2_DIR)
 
 # Make it easy to compile as ANSI or UNICODE application
 !if "$(_ANSI)"==""
@@ -131,7 +135,7 @@ $(SUMATRA_APP): $(LIBS_OBJS) $(BASEUTILS_OBJS) $(SUMATRA_OBJS)
 $(INSTALLER_RES): src\installer\Installer.rc src\installer\Resource.h src\Version.h
 	rc /r /fo$@ $(EXTCFLAGS) src\installer\Installer.rc
 
-$(INSTALLER_APP): $(ZLIB_OBJS) $(BASEUTILS_OBJS) $(INSTALLER_OBJS)
+$(INSTALLER_APP): $(BZIP2_OBJS) $(BASEUTILS_OBJS) $(INSTALLER_OBJS)
 	$(LD) $(LDFLAGS) $** $(LIBS_INSTALLER) /PDB:$*.pdb /OUT:$@
 
 $(PDFFILTER_RES): src\ifilter\PdfFilter.rc src\Version.h
