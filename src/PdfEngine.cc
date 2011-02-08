@@ -865,6 +865,15 @@ int PdfEngine::getPdfLinks(int pageNo, pdf_link **links)
     return count;
 }
 
+static pdf_link *getLastLink(pdf_link *head)
+{
+    if (head)
+        while (head->next)
+            head = head->next;
+
+    return head;
+}
+
 static bool isMultilineLink(TCHAR *pageText, TCHAR *pos, fz_bbox *coords)
 {
     // multiline links end in a non-alphanumeric character and continue on a line
@@ -895,7 +904,7 @@ static TCHAR *findLinkEnd(TCHAR *start)
 
 static TCHAR *parseMultilineLink(pdf_page *page, TCHAR *pageText, TCHAR *start, fz_bbox *coords)
 {
-    pdf_link *firstLink = page->links;
+    pdf_link *firstLink = getLastLink(page->links);
     char *uri = str_dup(fz_tostrbuf(firstLink->dest));
     TCHAR *end = start;
     bool multiline = false;
@@ -906,12 +915,7 @@ static TCHAR *parseMultilineLink(pdf_page *page, TCHAR *pageText, TCHAR *start, 
         *end = 0;
 
         // add a new link for this line
-        fz_rect bbox;
-        bbox.x0 = (float)coords[start - pageText].x0;
-        bbox.y0 = (float)coords[start - pageText].y0;
-        bbox.x1 = (float)coords[end - pageText - 1].x1;
-        bbox.y1 = (float)coords[end - pageText - 1].y1;
-
+        fz_bbox bbox = fz_unionbbox(coords[start - pageText], coords[end - pageText - 1]);
         char *uriPart = tstr_to_utf8(start);
         char *newUri = str_cat(uri, uriPart);
         free(uriPart);
@@ -920,9 +924,8 @@ static TCHAR *parseMultilineLink(pdf_page *page, TCHAR *pageText, TCHAR *start, 
 
         pdf_link *link = SAZ(pdf_link);
         link->kind = PDF_LURI;
-        link->rect = bbox;
-        link->next = page->links;
-        page->links = link;
+        link->rect = fz_bboxtorect(bbox);
+        getLastLink(firstLink)->next = link;
 
         start = end + 1;
     } while (multiline);
@@ -930,7 +933,7 @@ static TCHAR *parseMultilineLink(pdf_page *page, TCHAR *pageText, TCHAR *start, 
     // update the link URL for all partial links
     fz_dropobj(firstLink->dest);
     firstLink->dest = fz_newstring(uri, (int)strlen(uri));
-    for (pdf_link *link = page->links; link != firstLink; link = link->next)
+    for (pdf_link *link = firstLink->next; link; link = link->next)
         link->dest = fz_keepobj(firstLink->dest);
     free(uri);
 
@@ -975,13 +978,9 @@ void PdfEngine::linkifyPageText(pdf_page *page)
         *end = 0;
 
         // make sure that no other link is associated with this area
-        fz_rect bbox;
-        bbox.x0 = (float)coords[start - pageText].x0;
-        bbox.y0 = (float)coords[start - pageText].y0;
-        bbox.x1 = (float)coords[end - pageText - 1].x1;
-        bbox.y1 = (float)coords[end - pageText - 1].y1;
+        fz_bbox bbox = fz_unionbbox(coords[start - pageText], coords[end - pageText - 1]);
         for (pdf_link *link = firstLink; link && *start; link = link->next) {
-            fz_bbox isect = fz_intersectbbox(fz_roundrect(bbox), fz_roundrect(link->rect));
+            fz_bbox isect = fz_intersectbbox(bbox, fz_roundrect(link->rect));
             if (!fz_isemptybbox(isect) && fz_sizeofrect(isect) >= 0.25 * fz_sizeofrect(link->rect))
                 start = end;
         }
@@ -993,10 +992,12 @@ void PdfEngine::linkifyPageText(pdf_page *page)
             fz_obj *dest = fz_newstring(httpUri, (int)strlen(httpUri));
             pdf_link *link = SAZ(pdf_link);
             link->kind = PDF_LURI;
-            link->rect = bbox;
+            link->rect = fz_bboxtorect(bbox);
             link->dest = dest;
-            link->next = page->links;
-            page->links = link;
+            if (page->links)
+                getLastLink(page->links)->next = link;
+            else
+                page->links = link;
             if (httpUri != uri)
                 free(httpUri);
             free(uri);

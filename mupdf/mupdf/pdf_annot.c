@@ -128,10 +128,11 @@ pdf_loadlink(pdf_xref *xref, fz_obj *dict)
 void
 pdf_loadlinks(pdf_link **linkp, pdf_xref *xref, fz_obj *annots)
 {
-	pdf_link *link, *temp;
+	pdf_link *link, *head, *tail;
 	fz_obj *obj;
 	int i;
 
+	head = tail = nil;
 	link = nil;
 
 	pdf_logpage("load link annotations {\n");
@@ -139,17 +140,22 @@ pdf_loadlinks(pdf_link **linkp, pdf_xref *xref, fz_obj *annots)
 	for (i = 0; i < fz_arraylen(annots); i++)
 	{
 		obj = fz_arrayget(annots, i);
-		temp = pdf_loadlink(xref, obj);
-		if (temp)
+		link = pdf_loadlink(xref, obj);
+		if (link)
 		{
-			temp->next = link;
-			link = temp;
+			if (!head)
+				head = tail = link;
+			else
+			{
+				tail->next = link;
+				tail = link;
+			}
 		}
 	}
 
 	pdf_logpage("}\n");
 
-	*linkp = link;
+	*linkp = head;
 }
 
 void
@@ -181,15 +187,16 @@ pdf_transformannot(pdf_annot *annot)
 }
 
 void
-pdf_loadannots(pdf_annot **headp, pdf_xref *xref, fz_obj *annots)
+pdf_loadannots(pdf_annot **annotp, pdf_xref *xref, fz_obj *annots)
 {
-	pdf_annot *head, *annot;
+	pdf_annot *annot, *head, *tail;
 	fz_obj *obj, *ap, *as, *n, *rect;
 	pdf_xobject *form;
 	fz_error error;
 	int i;
 
-	head = nil;
+	head = tail = nil;
+	annot = nil;
 
 	pdf_logpage("load appearance annotations {\n");
 
@@ -221,30 +228,25 @@ pdf_loadannots(pdf_annot **headp, pdf_xref *xref, fz_obj *annots)
 				annot->obj = fz_keepobj(obj);
 				annot->rect = pdf_torect(rect);
 				annot->ap = form;
-				annot->next = head;
+				annot->next = nil;
 
 				pdf_transformannot(annot);
 
-				head = annot;
+				if (annot)
+				{
+					if (!head)
+						head = tail = annot;
+					else
+					{
+						tail->next = annot;
+						tail = annot;
+					}
+				}
 			}
 		}
 	}
 
 	pdf_logpage("}\n");
 
-	/* SumatraPDF: reverse order back to ascending */
-	if (head)
-	{
-		pdf_annot *newHead = nil;
-		while (head)
-		{
-			annot = head->next;
-			head->next = newHead;
-			newHead = head;
-			head = annot;
-		}
-		head = newHead;
-	}
-
-	*headp = head;
+	*annotp = head;
 }

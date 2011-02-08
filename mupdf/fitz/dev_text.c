@@ -523,25 +523,19 @@ fz_textextractspan(fz_textspan **last, fz_text *text, fz_matrix ctm, fz_point *p
 		{
 			FT_Fixed ftadv = 0;
 			int mask = FT_LOAD_NO_BITMAP | FT_LOAD_NO_HINTING | FT_LOAD_IGNORE_TRANSFORM;
-			if (text->wmode)
-				mask |= FT_LOAD_VERTICAL_LAYOUT;
+
+			/* TODO: freetype returns broken vertical metrics */
+			/* if (text->wmode) mask |= FT_LOAD_VERTICAL_LAYOUT; */
+
 			FT_Get_Advance(font->ftface, text->els[i].gid, mask, &ftadv);
 			adv = ftadv / 65536.0f;
-			if (text->wmode)
-			{
-				adv = -1; /* TODO: freetype returns broken vertical metrics */
-				rect.x0 = 0;
-				rect.y0 = descender;
-				rect.x1 = ftadv / 65536.0f;
-				rect.y1 = ascender;
-			}
-			else
-			{
-				rect.x0 = 0;
-				rect.y0 = descender;
-				rect.x1 = adv;
-				rect.y1 = ascender;
-			}
+
+			rect.x0 = 0;
+			rect.y0 = descender;
+			rect.x1 = adv;
+			rect.y1 = ascender;
+
+			// if (text->wmode) adv = -1;
 		}
 		else
 		{

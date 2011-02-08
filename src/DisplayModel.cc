@@ -908,7 +908,7 @@ fz_rect DisplayModel::getContentBox(int pageNo, fz_matrix ctm, RenderTarget targ
     else
         cbox = pdfEngine->pageContentBox(pageNo, target);
 
-    fz_rect rect = { (float)cbox.x0, (float)cbox.y0, (float)cbox.x1, (float)cbox.y1 };
+    fz_rect rect = fz_bboxtorect(cbox);
     return fz_transformrect(ctm, rect);
 }
 

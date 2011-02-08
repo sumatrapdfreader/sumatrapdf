@@ -762,13 +762,12 @@ loadcidfont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj *enco
 				obj = fz_arrayget(widths, i + 1);
 				if (fz_isarray(obj))
 				{
-					for (k = 0; k < fz_arraylen(obj); k += 3)
+					for (k = 0; k * 3 < fz_arraylen(obj); k ++)
 					{
-						w = fz_toint(fz_arrayget(obj, k + 0));
-						x = fz_toint(fz_arrayget(obj, k + 1));
-						y = fz_toint(fz_arrayget(obj, k + 2));
-						/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1222 */
-						pdf_addvmtx(fontdesc, c0 + k / 3, c0 + k / 3, x, y, w);
+						w = fz_toint(fz_arrayget(obj, k * 3 + 0));
+						x = fz_toint(fz_arrayget(obj, k * 3 + 1));
+						y = fz_toint(fz_arrayget(obj, k * 3 + 2));
+						pdf_addvmtx(fontdesc, c0 + k, c0 + k, x, y, w);
 					}
 					i += 2;
 				}

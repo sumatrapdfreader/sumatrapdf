@@ -139,10 +139,7 @@ static fz_rect GetTileRect(PdfEngine *engine, int pageNo, int rotation, float zo
     fz_matrix ctm = engine->viewctm(pageNo, zoom, rotation);
     fz_bbox pixelbox = fz_roundrect(fz_transformrect(ctm, mediabox));
 
-    mediabox.x0 = (float)pixelbox.x0; mediabox.x1 = (float)pixelbox.x1;
-    mediabox.y0 = (float)pixelbox.y0; mediabox.y1 = (float)pixelbox.y1;
-    mediabox = fz_transformrect(fz_invertmatrix(ctm), mediabox);
-
+    mediabox = fz_transformrect(fz_invertmatrix(ctm), fz_bboxtorect(pixelbox));
     return mediabox;
 }
 

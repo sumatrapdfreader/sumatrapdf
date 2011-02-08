@@ -194,4 +194,10 @@ static inline TCHAR *pdf_to_tstr(fz_obj *obj)
     return tstr;
 }
 
+static inline fz_rect fz_bboxtorect(fz_bbox bbox)
+{
+    fz_rect result = { (float)bbox.x0, (float)bbox.y0, (float)bbox.x1, (float)bbox.y1 };
+    return result;
+}
+
 #endif
