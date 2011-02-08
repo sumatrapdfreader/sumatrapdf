@@ -222,6 +222,9 @@ Default &Layout:
 Default &Zoom:
 זום ברירת ברירת מחדל:
 
+Default PDF reader can't be changed in portable mode
+PDF לא ניתן לשנות במצב נייד את קורא ה
+
 Denied Permissions:
 הרשאות חסרות:
 
@@ -312,13 +315,10 @@ KB
 MB
 MB
 
-Main PDF reader can't be changed in portable mode
-PDF לא ניתן לשנות במצב נייד את קורא ה
-
 Make SumatraPDF default application for PDF files?
 ?SumatraPDF האם לקבוע כברירת מחדל את
 
-Make SumatraPDF my main PDF reader
+Make SumatraPDF my default PDF reader
 PDF הפוך את סומטרה לברירת מחדל עבור קבצי
 
 Match Case
@@ -444,10 +444,10 @@ SumatraPDF אפשרויות
 SumatraPDF Update
 SumatraPDF עדכון
 
-SumatraPDF is your main PDF reader
+SumatraPDF is your default PDF reader
 SumatraPDF ראשי הינו PDF קורא
 
-SumatraPDF should now be your main PDF reader
+SumatraPDF should now be your default PDF reader
 SumatraPDF ראשי אמור להיות עכשיו PDF קורא
 
 Synchronization file cannot be opened

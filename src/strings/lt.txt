@@ -222,6 +222,9 @@ Numatytasis &išdėstymas:
 Default &Zoom:
 Numatytasis &mastelis
 
+Default PDF reader can't be changed in portable mode
+Naudojant portatyvią programą negalima pakeisti numatytosios PDF skaityklės
+
 Denied Permissions:
 Neprieinami leidimai:
 
@@ -312,13 +315,10 @@ KB
 MB
 MB
 
-Main PDF reader can't be changed in portable mode
-Naudojant portatyvią programą negalima pakeisti numatytosios PDF skaityklės
-
 Make SumatraPDF default application for PDF files?
 Nustatyti SumatraPDF kaip numatytąją PDF skaityklę?
 
-Make SumatraPDF my main PDF reader
+Make SumatraPDF my default PDF reader
 Nustatyti SumatraPDF kaip numatytąją PDF skaityklę
 
 Match Case
@@ -441,10 +441,10 @@ Tema:
 SumatraPDF Options
 SumatraPDF nuostatos
 
-SumatraPDF is your main PDF reader
+SumatraPDF is your default PDF reader
 SumatraPDF yra numatytoji PDF skaityklė
 
-SumatraPDF should now be your main PDF reader
+SumatraPDF should now be your default PDF reader
 Dabar SumatraPDF bus numatytoji PDF skaityklė
 
 Synchronization file cannot be opened

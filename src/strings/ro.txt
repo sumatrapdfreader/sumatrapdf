@@ -222,6 +222,9 @@ Design implicit:
 Default &Zoom:
 Factor de mărire implicit:
 
+Default PDF reader can't be changed in portable mode
+Cititorul PDF principal nu poate fi schimbat în modul portabil
+
 Denied Permissions:
 Permisiuni interzise:
 
@@ -321,13 +324,10 @@ KB
 MB
 MB
 
-Main PDF reader can't be changed in portable mode
-Cititorul PDF principal nu poate fi schimbat în modul portabil
-
 Make SumatraPDF default application for PDF files?
 Faceţi SumatraPDF programul implicit pentru fişiere PDF?
 
-Make SumatraPDF my main PDF reader
+Make SumatraPDF my default PDF reader
 Faceţi SumatraPDF cititorul implicit de PDF
 
 Match Case
@@ -462,10 +462,10 @@ Versiune nouă SumatraPDF
 SumatraPDF crashed
 SumatraPDF s-a terminat incorect
 
-SumatraPDF is your main PDF reader
+SumatraPDF is your default PDF reader
 SumatraPDF este cititorul PDF implicit
 
-SumatraPDF should now be your main PDF reader
+SumatraPDF should now be your default PDF reader
 SumatraPDF ar trebui să fie acum cititorul PDF implicit
 
 Synchronization file cannot be opened

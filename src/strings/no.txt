@@ -187,6 +187,9 @@ Standard sideoppsett:
 Default &Zoom:
 Standard&zoom:
 
+Default PDF reader can't be changed in portable mode
+Standard pdf-leser kan ikke endres i flyttbar modus
+
 Document Properties
 Dokumentegenskaper
 
@@ -268,13 +271,10 @@ KB
 MB
 MB
 
-Main PDF reader can't be changed in portable mode
-Standard pdf-leser kan ikke endres i flyttbar modus
-
 Make SumatraPDF default application for PDF files?
 Gjør SumatraPDF standard åpningsprogram for PDF filer?
 
-Make SumatraPDF my main PDF reader
+Make SumatraPDF my default PDF reader
 Bruk SumatraPDF som standard PDF-leser
 
 Match Case
@@ -388,10 +388,10 @@ Kildefilen %s har ingen synkroniserings punkt
 SumatraPDF Options
 Innstillinger
 
-SumatraPDF is your main PDF reader
+SumatraPDF is your default PDF reader
 SumatraPDF er din standard PDF-leser
 
-SumatraPDF should now be your main PDF reader
+SumatraPDF should now be your default PDF reader
 SumatraPDF burde være din standard pdf-leser
 
 Synchronization file cannot be opened

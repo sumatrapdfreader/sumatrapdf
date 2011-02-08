@@ -186,6 +186,9 @@ Domyślny &układ:
 Default &Zoom:
 Domyślne &powiększenie:
 
+Default PDF reader can't be changed in portable mode
+Główny czytnik PDF nie może zostać zmieniony na tryb przenośny
+
 Denied Permissions:
 Dostęp zablokowany:
 
@@ -270,13 +273,10 @@ KB
 MB
 MB
 
-Main PDF reader can't be changed in portable mode
-Główny czytnik PDF nie może zostać zmieniony na tryb przenośny
-
 Make SumatraPDF default application for PDF files?
 Ustawić SumatraPDF jako domyślną aplikację dla plików PDF?
 
-Make SumatraPDF my main PDF reader
+Make SumatraPDF my default PDF reader
 Ustaw SumatraPDF jako domyślny czytnik PDF
 
 Match Case
@@ -393,10 +393,10 @@ Temat:
 SumatraPDF Options
 Opcje SumatraPDF
 
-SumatraPDF is your main PDF reader
+SumatraPDF is your default PDF reader
 SumatraPDF jest twoim domyślnym czytnikiem PDF
 
-SumatraPDF should now be your main PDF reader
+SumatraPDF should now be your default PDF reader
 SumatraPDF jest teraz twoim domyślnym czytnikiem PDF
 
 Synchronization file cannot be opened

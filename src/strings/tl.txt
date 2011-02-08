@@ -222,6 +222,9 @@ Default na Ayos:
 Default &Zoom:
 Default na Laki:
 
+Default PDF reader can't be changed in portable mode
+Hindi maaaring palitan ang default na PDF reader sa portable na mode
+
 Denied Permissions:
 Mga hindi maaaring gawin:
 
@@ -321,13 +324,10 @@ KB
 MB
 MB
 
-Main PDF reader can't be changed in portable mode
-Hindi maaaring palitan ang default na PDF reader sa portable na mode
-
 Make SumatraPDF default application for PDF files?
 Gawin ang SumatraPDF bilang default na pambukas ng mga PDF files?
 
-Make SumatraPDF my main PDF reader
+Make SumatraPDF my default PDF reader
 Gawin ang SumatraPDF bilang default na pambukas ng mga PDF files
 
 Match Case
@@ -462,10 +462,10 @@ Update sa SumatraPDF
 SumatraPDF crashed
 Nag-crash ang SumatraPDF
 
-SumatraPDF is your main PDF reader
+SumatraPDF is your default PDF reader
 SumatraPDF ang iyong default na pambasa ng mga PDF file
 
-SumatraPDF should now be your main PDF reader
+SumatraPDF should now be your default PDF reader
 SumatraPDF na dapat ang iyong default na pambasa ng mga PDF file
 
 Synchronization file cannot be opened

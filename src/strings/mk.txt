@@ -221,6 +221,9 @@ Default &Layout:
 Default &Zoom:
 Основно &зумирање:
 
+Default PDF reader can't be changed in portable mode
+Основниот PDF читач не може да се промени во мобилен режим на работа
+
 Denied Permissions:
 Одбиени привилегии:
 
@@ -314,13 +317,10 @@ KB
 MB
 MB
 
-Main PDF reader can't be changed in portable mode
-Основниот PDF читач не може да се промени во мобилен режим на работа
-
 Make SumatraPDF default application for PDF files?
 Дали да ја направам SumatraPDF основна апликација за PDF датотеки?
 
-Make SumatraPDF my main PDF reader
+Make SumatraPDF my default PDF reader
 Направи ја SumatraPDF основен PDF читач
 
 Match Case
@@ -443,10 +443,10 @@ Subject:
 SumatraPDF Options
 Поставувања на SumatraPDF
 
-SumatraPDF is your main PDF reader
+SumatraPDF is your default PDF reader
 SumatraPDF е Ваш основен PDF читач
 
-SumatraPDF should now be your main PDF reader
+SumatraPDF should now be your default PDF reader
 Сега SumatraPDF би требало да е Ваш основен PDF читач
 
 Synchronization file cannot be opened

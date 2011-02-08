@@ -189,6 +189,9 @@ Oletus&tyyli:
 Default &Zoom:
 Oletus&lähennys:
 
+Default PDF reader can't be changed in portable mode
+Pää-PDF-lukijaa ei voida muuttaa kannettavassa tilassa
+
 Denied Permissions:
 Kielletyt oikeudet:
 
@@ -273,13 +276,10 @@ Kt
 MB
 Mt
 
-Main PDF reader can't be changed in portable mode
-Pää-PDF-lukijaa ei voida muuttaa kannettavassa tilassa
-
 Make SumatraPDF default application for PDF files?
 Tee SumatraPDF:stä PDF-tiedostojen oletuslukuohjelma?
 
-Make SumatraPDF my main PDF reader
+Make SumatraPDF my default PDF reader
 Tee SumatraPDF:stä PDF-tiedostojen oletuslukuohjelma
 
 Match Case
@@ -396,10 +396,10 @@ Otsikko:
 SumatraPDF Options
 SumatraPDF:n asetukset
 
-SumatraPDF is your main PDF reader
+SumatraPDF is your default PDF reader
 SumatraPDF on pää-PDF-lukijasi
 
-SumatraPDF should now be your main PDF reader
+SumatraPDF should now be your default PDF reader
 SumatraPDF:n pitäisi nyt olla pää-PDF-lukijasi
 
 Synchronization file cannot be opened

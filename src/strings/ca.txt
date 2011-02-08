@@ -186,6 +186,9 @@ Vista per defecte:
 Default &Zoom:
 &Zoom per defecte
 
+Default PDF reader can't be changed in portable mode
+No es pot canviar el lector de PDF per defecte en mode portable.
+
 Document Properties
 Propietats del document
 
@@ -267,13 +270,10 @@ KB
 MB
 MB
 
-Main PDF reader can't be changed in portable mode
-No es pot canviar el lector de PDF per defecte en mode portable.
-
 Make SumatraPDF default application for PDF files?
 Voleu que el SumatraPDF sigui el visor predeterminat de fitxers PDF?
 
-Make SumatraPDF my main PDF reader
+Make SumatraPDF my default PDF reader
 Fes el SumatraPDF el lector de PDF predeterminat
 
 Match Case
@@ -387,10 +387,10 @@ El fitxer d'origen %s no te un punt de sincronització vàlid
 SumatraPDF Options
 Opcions del SumatraPDF
 
-SumatraPDF is your main PDF reader
+SumatraPDF is your default PDF reader
 El SumatraPDF es el seu lector PDF per defecte
 
-SumatraPDF should now be your main PDF reader
+SumatraPDF should now be your default PDF reader
 El SumatraPDF hauria d'esser ara mateix el seu lector PDF per defecte
 
 Synchronization file cannot be opened

@@ -221,6 +221,9 @@ Default &Layout:
 Default &Zoom:
 Մեծությունը &Լռելայն
 
+Default PDF reader can't be changed in portable mode
+Շարժական վիճակում հնարավոր չէ փոխել PDF կարդալու հիմնական ծրագիրը
+
 Denied Permissions:
 Լիազորությունները մերժված են.
 
@@ -320,13 +323,10 @@ KB
 MB
 ՄԲ
 
-Main PDF reader can't be changed in portable mode
-Շարժական վիճակում հնարավոր չէ փոխել PDF կարդալու հիմնական ծրագիրը
-
 Make SumatraPDF default application for PDF files?
 Դարձնե՞լ SumatraPDF-ն PDF ֆայլերը բացող հիմնական ծրագիր։
 
-Make SumatraPDF my main PDF reader
+Make SumatraPDF my default PDF reader
 Ասոցացնել PDF ֆայլերը SumatraPDF-ի հետ
 
 Match Case
@@ -464,10 +464,10 @@ SumatraPDF-ի թարմացումները
 SumatraPDF crashed
 SumatraPDF-ն ձախողվեց
 
-SumatraPDF is your main PDF reader
+SumatraPDF is your default PDF reader
 PDF ֆայլերը ասոցիացվել են SumatraPDF-ի հետ
 
-SumatraPDF should now be your main PDF reader
+SumatraPDF should now be your default PDF reader
 PDF ֆայլերը ասոցիացվեցին SumatraPDF-ի հետ
 
 Synchronization file cannot be opened

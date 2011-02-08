@@ -181,6 +181,9 @@ Predvolené umiestnenie:
 Default &Zoom:
 Predvolená veľkosť
 
+Default PDF reader can't be changed in portable mode
+Hlavný prehliadač PDF dokumentov nemôže byť zmenený, pokiaľ nie je nainštalovaný
+
 Denied Permissions:
 Odmietnuté povolenia:
 
@@ -265,13 +268,10 @@ KB
 MB
 MB
 
-Main PDF reader can't be changed in portable mode
-Hlavný prehliadač PDF dokumentov nemôže byť zmenený, pokiaľ nie je nainštalovaný
-
 Make SumatraPDF default application for PDF files?
 Nastaviť SumatraPDF ako predvolený prehliadač PDF súborov?
 
-Make SumatraPDF my main PDF reader
+Make SumatraPDF my default PDF reader
 Nastaviť SumatraPDF ako predvolený PDF prehliadač
 
 Match Case
@@ -379,10 +379,10 @@ Predmet:
 SumatraPDF Options
 Nastavenia SumatraPDF
 
-SumatraPDF is your main PDF reader
+SumatraPDF is your default PDF reader
 SumatraPDF je váš predvolený prehliadač PDF súborov
 
-SumatraPDF should now be your main PDF reader
+SumatraPDF should now be your default PDF reader
 SumatraPDF by teraz mala byť vaším predvolený prehliadačom PDF súborov
 
 Text documents

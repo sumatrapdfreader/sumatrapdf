@@ -227,6 +227,9 @@ Standaard opmaak:
 Default &Zoom:
 Standaard &Zoom:
 
+Default PDF reader can't be changed in portable mode
+Standaard PDF-lezer kan niet worden aangepast in portable modus
+
 Denied Permissions:
 Niet toegestaan:
 
@@ -326,13 +329,10 @@ KB
 MB
 MB
 
-Main PDF reader can't be changed in portable mode
-Standaard PDF-lezer kan niet worden aangepast in portable modus
-
 Make SumatraPDF default application for PDF files?
 SumatraPDF als standaardlezer van PDF-bestanden instellen?
 
-Make SumatraPDF my main PDF reader
+Make SumatraPDF my default PDF reader
 SumatraPDF als standaard PDF-lezer instellen
 
 Match Case
@@ -467,10 +467,10 @@ SumatraPDF Update
 SumatraPDF crashed
 SumatraPDF is vastgelopen
 
-SumatraPDF is your main PDF reader
+SumatraPDF is your default PDF reader
 SumatraPDF is de standaard PDF-lezer
 
-SumatraPDF should now be your main PDF reader
+SumatraPDF should now be your default PDF reader
 SumatraPDF zou nu de standaard PDF-lezer moeten zijn
 
 Synchronization file cannot be opened

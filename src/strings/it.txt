@@ -227,6 +227,9 @@ Default &Layout:
 Default &Zoom:
 &Ingrandimento predefinito
 
+Default PDF reader can't be changed in portable mode
+Il lettore PDF predefinito non è modificabile in modalità "portable"
+
 Denied Permissions:
 Permessi rifiutati
 
@@ -317,13 +320,10 @@ KB
 MB
 MB
 
-Main PDF reader can't be changed in portable mode
-Il lettore PDF predefinito non è modificabile in modalità "portable"
-
 Make SumatraPDF default application for PDF files?
 Impostare SumatraPDF come programma predefinito per i file PDF?
 
-Make SumatraPDF my main PDF reader
+Make SumatraPDF my default PDF reader
 Imposta SumatraPDF come lettore PDF predefinito
 
 Match Case
@@ -415,8 +415,8 @@ Pagina numero %u inesistente
 #SumatraPDF Options
 #SumatraPDF Update
 #SumatraPDF crashed
-#SumatraPDF is your main PDF reader
-#SumatraPDF should now be your main PDF reader
+#SumatraPDF is your default PDF reader
+#SumatraPDF should now be your default PDF reader
 #Synchronization file cannot be opened
 #Text documents
 #Title:

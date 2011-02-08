@@ -223,6 +223,9 @@ Standard &Layout:
 Default &Zoom:
 Standard &Zoom
 
+Default PDF reader can't be changed in portable mode
+Standard PDF-læser kan ikke ændres i mobil tilstand
+
 Denied Permissions:
 Nægtede tilladelser:
 
@@ -316,13 +319,10 @@ KB
 MB
 MB
 
-Main PDF reader can't be changed in portable mode
-Standard PDF-læser kan ikke ændres i mobil tilstand
-
 Make SumatraPDF default application for PDF files?
 Gør SumatraPDF standardprogram for PDF-filer
 
-Make SumatraPDF my main PDF reader
+Make SumatraPDF my default PDF reader
 Gør SumatraPDF til min standard PDF-læser
 
 Match Case
@@ -445,10 +445,10 @@ Emne:
 SumatraPDF Options
 SumatraPDF valgmuligheder
 
-SumatraPDF is your main PDF reader
+SumatraPDF is your default PDF reader
 SumatraPDF er din standard PDF-læser
 
-SumatraPDF should now be your main PDF reader
+SumatraPDF should now be your default PDF reader
 SumatraPDF skulle nu være din standard PDF-læser
 
 Synchronization file cannot be opened

@@ -186,6 +186,9 @@ Default &Layout:
 Default &Zoom:
 கோட நிலை உரு அளவு
 
+Default PDF reader can't be changed in portable mode
+முதன்மை PDF படிப்பியை மாற்ற முடியவில்லை
+
 Denied Permissions:
 அனுமதி மருக்கப்பட்டது
 
@@ -270,13 +273,10 @@ KB
 MB
 MB
 
-Main PDF reader can't be changed in portable mode
-முதன்மை PDF படிப்பியை மாற்ற முடியவில்லை
-
 Make SumatraPDF default application for PDF files?
 SumatraPDFயை கோட நிலை PDF படிப்பியாக மாற்றவா?
 
-Make SumatraPDF my main PDF reader
+Make SumatraPDF my default PDF reader
 SumatraPDFயை முன்னிருப்பு PDF படிப்பியாக பதிவு செய்
 
 Match Case
@@ -390,10 +390,10 @@ Subject:
 SumatraPDF Options
 SumatraPDFஇன் விருப்பப பேரம்
 
-SumatraPDF is your main PDF reader
+SumatraPDF is your default PDF reader
 SumatraPDF உங்களின் முதன்மை PDF படிப்பி
 
-SumatraPDF should now be your main PDF reader
+SumatraPDF should now be your default PDF reader
 SumatraPDF இப்பொழுது உங்களின் முதன்மை PDF படிப்பி
 
 Synchronization file cannot be opened

@@ -190,6 +190,9 @@ Default &Layout:
 Default &Zoom:
 :ابعاد نمایش
 
+Default PDF reader can't be changed in portable mode
+باشد PDF نسخه همراه برنامه نمی‌تواند مجری استاندارد فایلهای
+
 Denied Permissions:
 :دسترسی ممنوع
 
@@ -274,13 +277,10 @@ KB
 MB
 MB
 
-Main PDF reader can't be changed in portable mode
-باشد PDF نسخه همراه برنامه نمی‌تواند مجری استاندارد فایلهای
-
 Make SumatraPDF default application for PDF files?
 قرار بدهیم؟ PDF ایا این برنامه را مجری استاندارد فایل های
 
-Make SumatraPDF my main PDF reader
+Make SumatraPDF my default PDF reader
 PDF بعنوان مرورگر اصلی‌ اسناد SumatraPDF انتخاب
 
 Match Case
@@ -385,10 +385,10 @@ Subject:
 SumatraPDF Options
 SumatraPDF گزینه ها
 
-SumatraPDF is your main PDF reader
+SumatraPDF is your default PDF reader
 شماست PDF مرورگر اصلی SumatraPDF
 
-SumatraPDF should now be your main PDF reader
+SumatraPDF should now be your default PDF reader
 شماست PDF اکنون مرورگر اصلی SumatraPDF
 
 Synchronization file cannot be opened

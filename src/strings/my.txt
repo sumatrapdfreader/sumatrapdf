@@ -165,6 +165,9 @@ Menyumbangkan alihbahasa
 Could not open Printer
 Pencetak tidak dapat dibuka
 
+Default PDF reader can't be changed in portable mode
+Pembaca utama PDF tidak boleh ditukar ketika mod mudah alih
+
 Download
 Muat turun
 
@@ -234,10 +237,7 @@ KB
 MB
 MB
 
-Main PDF reader can't be changed in portable mode
-Pembaca utama PDF tidak boleh ditukar ketika mod mudah alih
-
-Make SumatraPDF my main PDF reader
+Make SumatraPDF my default PDF reader
 Jadikan SumatraPDF pembaca utama PDF
 
 Match Case
@@ -303,7 +303,7 @@ Subjek
 SumatraPDF Options
 Tetapan-tetapan SumatraPDF
 
-SumatraPDF is your main PDF reader
+SumatraPDF is your default PDF reader
 SumatraPDF ialah pembaca PDF utama anda 
 
 Title:
@@ -385,7 +385,7 @@ mencetak dokumen
 #Source file %s has no synchronization point
 #SumatraPDF Update
 #SumatraPDF crashed
-#SumatraPDF should now be your main PDF reader
+#SumatraPDF should now be your default PDF reader
 #Synchronization file cannot be opened
 #Text documents
 #Unknown source file (%s)

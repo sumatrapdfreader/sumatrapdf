@@ -224,6 +224,9 @@ Oldalmegjelenítési mód:
 Default &Zoom:
 Alap nagyítás:
 
+Default PDF reader can't be changed in portable mode
+Nem tehető alapértelmezett PDF-olvasóvá hordozható módban
+
 Denied Permissions:
 Tiltott műveletek:
 
@@ -323,13 +326,10 @@ Kb
 MB
 Mb
 
-Main PDF reader can't be changed in portable mode
-Nem tehető alapértelmezett PDF-olvasóvá hordozható módban
-
 Make SumatraPDF default application for PDF files?
 Legyen a SumatraPDF az alapértelmezett PDF-megnyitó program?
 
-Make SumatraPDF my main PDF reader
+Make SumatraPDF my default PDF reader
 SumatraPDF mint alapértelmezett PDF olvasó
 
 Match Case
@@ -464,10 +464,10 @@ SumatraPDF: programfrissítés keresése
 SumatraPDF crashed
 SumatraPDF működése leállt
 
-SumatraPDF is your main PDF reader
+SumatraPDF is your default PDF reader
 A Sumatra az alapértelmezett PDF-olvasója
 
-SumatraPDF should now be your main PDF reader
+SumatraPDF should now be your default PDF reader
 Mostantól a Sumatra az alapértelmezett PDF-olvasója
 
 Synchronization file cannot be opened

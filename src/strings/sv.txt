@@ -226,6 +226,9 @@ Förvalt &utseende
 Default &Zoom:
 Förvalt &zoomläge
 
+Default PDF reader can't be changed in portable mode
+SumatraPDF kan ej göras förvald i portabelt läge
+
 Denied Permissions:
 Saknade Tillstånd:
 
@@ -325,13 +328,10 @@ KB
 MB
 MB
 
-Main PDF reader can't be changed in portable mode
-SumatraPDF kan ej göras förvald i portabelt läge
-
 Make SumatraPDF default application for PDF files?
 Ställa in SumatraPDF som standardprogram för PDF-filer?
 
-Make SumatraPDF my main PDF reader
+Make SumatraPDF my default PDF reader
 Använd SumatraPDF som standardläsare för PDF
 
 Match Case
@@ -466,10 +466,10 @@ SumatraPDF Uppdatering
 SumatraPDF crashed
 SumatraPDF avslutades oväntat
 
-SumatraPDF is your main PDF reader
+SumatraPDF is your default PDF reader
 SumatraPDF är din valda PDF-läsare
 
-SumatraPDF should now be your main PDF reader
+SumatraPDF should now be your default PDF reader
 SumatraPDF ska nu vara din valda PDF-läsare
 
 Synchronization file cannot be opened

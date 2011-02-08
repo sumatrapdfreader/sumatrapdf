@@ -224,6 +224,9 @@ Tampilan &Standar
 Default &Zoom:
 Pembesaran &Standar
 
+Default PDF reader can't be changed in portable mode
+Pembaca PDF utama tidak dapat diubah dalam mode portabel
+
 Denied Permissions:
 Izin yang ditolak:
 
@@ -323,13 +326,10 @@ KB
 MB
 MB
 
-Main PDF reader can't be changed in portable mode
-Pembaca PDF utama tidak dapat diubah dalam mode portabel
-
 Make SumatraPDF default application for PDF files?
 Jadikan SumatraPDF sebagai aplikasi standar untuk membuka berkas PDF?
 
-Make SumatraPDF my main PDF reader
+Make SumatraPDF my default PDF reader
 Jadikan SumatraPDF sebagai pembaca-PDF utama
 
 Match Case
@@ -467,10 +467,10 @@ Pemutakhiran SumatraPDF
 SumatraPDF crashed
 SumatraPDF berhenti berfungsi
 
-SumatraPDF is your main PDF reader
+SumatraPDF is your default PDF reader
 SumatraPDF adalah pembaca berkas PDF utama Anda
 
-SumatraPDF should now be your main PDF reader
+SumatraPDF should now be your default PDF reader
 SumatraPDF sekarang telah menjadi pembaca berkas PDF utama Anda
 
 Synchronization file cannot be opened

@@ -295,7 +295,7 @@ MB
 Make SumatraPDF default application for PDF files?
 SumatraPDF를 기본 PDF 뷰어로 설정할까요?
 
-Make SumatraPDF my main PDF reader
+Make SumatraPDF my default PDF reader
 SumatraPDF를 기본 PDF 뷰어로 설정
 
 Match Case
@@ -394,7 +394,7 @@ Subject:
 SumatraPDF Options
 SumatraPDF 옵션
 
-SumatraPDF is your main PDF reader
+SumatraPDF is your default PDF reader
 SumatraPDF가 현재 기본 PDF 뷰어입니다
 
 Text documents
@@ -446,6 +446,7 @@ printing document
 #&Use original page sizes
 #Cannot start inverse search command. Please check the command line in the settings.
 #Continuous book view
+#Default PDF reader can't be changed in portable mode
 #Denied Permissions:
 #Enter the command-line to invoke when you double-click on the PDF document:
 #F&orward\tAlt+Right Arrow
@@ -453,7 +454,6 @@ printing document
 #Fit Content
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
-#Main PDF reader can't be changed in portable mode
 #No matches were found
 #No result found around line %u in file %s
 #No synchronization file found
@@ -467,6 +467,6 @@ printing document
 #Source file %s has no synchronization point
 #SumatraPDF Update
 #SumatraPDF crashed
-#SumatraPDF should now be your main PDF reader
+#SumatraPDF should now be your default PDF reader
 #Synchronization file cannot be opened
 

@@ -223,6 +223,9 @@ Default &Layout:
 Default &Zoom:
 التقريب الافتراضي
 
+Default PDF reader can't be changed in portable mode
+لايمكن تغيير قاريء ملفات البي دي إف في وضح النسخة المحمولة
+
 Denied Permissions:
 لاتوجد امتيازات
 
@@ -316,13 +319,10 @@ KB
 MB
 م.ب
 
-Main PDF reader can't be changed in portable mode
-لايمكن تغيير قاريء ملفات البي دي إف في وضح النسخة المحمولة
-
 Make SumatraPDF default application for PDF files?
 هل تريد جعل قاريء سومطره للبي دي إف ، التطبيق الافتراضي؟
 
-Make SumatraPDF my main PDF reader
+Make SumatraPDF my default PDF reader
 PDF جعل هذا البرنامج القارىء الرئيسي لملفات
 
 Match Case
@@ -445,10 +445,10 @@ Subject:
 SumatraPDF Options
 خيارات قارئ سومطره للبي دي إف
 
-SumatraPDF is your main PDF reader
+SumatraPDF is your default PDF reader
 قارئ SumatraPDF هو الافتراضي
 
-SumatraPDF should now be your main PDF reader
+SumatraPDF should now be your default PDF reader
 قارئ SumatraPDF يجب أن يكون القارئ الافتراضي
 
 Synchronization file cannot be opened

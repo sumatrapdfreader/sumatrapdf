@@ -224,6 +224,9 @@ Výchozí &uspořádání:
 Default &Zoom:
 Výchozí &zvětšení:
 
+Default PDF reader can't be changed in portable mode
+V přenosném režimu nelze měnit výchozí PDF prohlížeč
+
 Denied Permissions:
 Odepřená oprávnění:
 
@@ -323,13 +326,10 @@ KB
 MB
 MB
 
-Main PDF reader can't be changed in portable mode
-V přenosném režimu nelze měnit výchozí PDF prohlížeč
-
 Make SumatraPDF default application for PDF files?
 Nastavit SumatraPDF jako výchozí prohlížeč PDF souborů?
 
-Make SumatraPDF my main PDF reader
+Make SumatraPDF my default PDF reader
 Nastavit SumatraPDF jako výchozí PDF prohlížeč
 
 Match Case
@@ -467,10 +467,10 @@ SumatraPDF - Aktualizace
 SumatraPDF crashed
 SumatraPDF - Selhání
 
-SumatraPDF is your main PDF reader
+SumatraPDF is your default PDF reader
 SumatraPDF je výchozím PDF prohlížečem
 
-SumatraPDF should now be your main PDF reader
+SumatraPDF should now be your default PDF reader
 SumatraPDF by měl být výchozím PDF prohlížečem
 
 Synchronization file cannot be opened

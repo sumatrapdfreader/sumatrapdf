@@ -188,6 +188,9 @@ Pretpostavljeni &izgled:
 Default &Zoom:
 Pretpostavljeno &uvećanje:
 
+Default PDF reader can't be changed in portable mode
+Glavni preglednik PDF datoteka se ne može mijenjati u prenosivom načinu
+
 Denied Permissions:
 Dozvole ograničenja:
 
@@ -272,13 +275,10 @@ KiB
 MB
 MiB
 
-Main PDF reader can't be changed in portable mode
-Glavni preglednik PDF datoteka se ne može mijenjati u prenosivom načinu
-
 Make SumatraPDF default application for PDF files?
 Postaviti SumatruPDF pretpostavljenim preglednikom PDF datoteka?
 
-Make SumatraPDF my main PDF reader
+Make SumatraPDF my default PDF reader
 Neka SumatraPDF bude pretpostavljeni preglednik PDF datoteka
 
 Match Case
@@ -395,10 +395,10 @@ Tema:
 SumatraPDF Options
 Mogućnosti programa
 
-SumatraPDF is your main PDF reader
+SumatraPDF is your default PDF reader
 SumatraPDF je vaš glavni glavni preglednik PDF datoteka
 
-SumatraPDF should now be your main PDF reader
+SumatraPDF should now be your default PDF reader
 SumatraPDF bi sad trebao biti vaš glavni preglednik PDF datoteka
 
 Synchronization file cannot be opened

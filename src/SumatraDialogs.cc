@@ -612,13 +612,13 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT message, WPARAM wPa
         CheckDlgButton(hDlg, IDC_AUTO_UPDATE_CHECKS, prefs->m_enableAutoUpdate ? BST_CHECKED : BST_UNCHECKED);
         CheckDlgButton(hDlg, IDC_REMEMBER_OPENED_FILES, prefs->m_rememberOpenedFiles ? BST_CHECKED : BST_UNCHECKED);
         if (IsExeAssociatedWithPdfExtension()) {
-            SetDlgItemText(hDlg, IDC_SET_DEFAULT_READER, _TR("SumatraPDF is your main PDF reader"));
+            SetDlgItemText(hDlg, IDC_SET_DEFAULT_READER, _TR("SumatraPDF is your default PDF reader"));
             EnableWindow(GetDlgItem(hDlg, IDC_SET_DEFAULT_READER), FALSE);
         } else if (IsRunningInPortableMode()) {
-            SetDlgItemText(hDlg, IDC_SET_DEFAULT_READER, _TR("Main PDF reader can't be changed in portable mode"));
+            SetDlgItemText(hDlg, IDC_SET_DEFAULT_READER, _TR("Default PDF reader can't be changed in portable mode"));
             EnableWindow(GetDlgItem(hDlg, IDC_SET_DEFAULT_READER), FALSE);
         } else {
-            SetDlgItemText(hDlg, IDC_SET_DEFAULT_READER, _TR("Make SumatraPDF my main PDF reader"));
+            SetDlgItemText(hDlg, IDC_SET_DEFAULT_READER, _TR("Make SumatraPDF my default PDF reader"));
         }
 
         win_set_text(hDlg, _TR("SumatraPDF Options"));
@@ -723,12 +723,12 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT message, WPARAM wPa
         case IDC_SET_DEFAULT_READER:
             AssociateExeWithPdfExtension();
             if (IsExeAssociatedWithPdfExtension()) {
-                SetDlgItemText(hDlg, IDC_SET_DEFAULT_READER, _TR("SumatraPDF is your main PDF reader"));
+                SetDlgItemText(hDlg, IDC_SET_DEFAULT_READER, _TR("SumatraPDF is your default PDF reader"));
                 EnableWindow(GetDlgItem(hDlg, IDC_SET_DEFAULT_READER), FALSE);
                 SendMessage(hDlg, WM_NEXTDLGCTL, (WPARAM)GetDlgItem(hDlg, IDOK), TRUE);
             }
             else {
-                SetDlgItemText(hDlg, IDC_SET_DEFAULT_READER, _TR("SumatraPDF should now be your main PDF reader"));
+                SetDlgItemText(hDlg, IDC_SET_DEFAULT_READER, _TR("SumatraPDF should now be your default PDF reader"));
             }
             return TRUE;
         }

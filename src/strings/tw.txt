@@ -180,6 +180,9 @@ Default &Layout:
 Default &Zoom:
 預設比例：(Z)
 
+Default PDF reader can't be changed in portable mode
+不能在便攜模式更改預設 PDF 閱讀器
+
 Denied Permissions:
 權限不足：
 
@@ -264,13 +267,10 @@ KB
 MB
 MB
 
-Main PDF reader can't be changed in portable mode
-不能在便攜模式更改預設 PDF 閱讀器
-
 Make SumatraPDF default application for PDF files?
 把 SumatraPDF 作為預設的PDF閱讀器?
 
-Make SumatraPDF my main PDF reader
+Make SumatraPDF my default PDF reader
 把 SumatraPDF 作為預設的PDF閱讀工具
 
 Match Case
@@ -381,10 +381,10 @@ Subject:
 SumatraPDF Options
 SumatraPDF 選項
 
-SumatraPDF is your main PDF reader
+SumatraPDF is your default PDF reader
 SumatraPDF 已是你的預設 PDF 閱讀器
 
-SumatraPDF should now be your main PDF reader
+SumatraPDF should now be your default PDF reader
 SumatraPDF 已成為你的預設 PDF 閱讀器
 
 Synchronization file cannot be opened

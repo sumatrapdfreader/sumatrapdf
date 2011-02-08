@@ -146,7 +146,7 @@ MB
 Make SumatraPDF default application for PDF files?
 SumatraPDF ကို PDF ဖိုင်များဖွင့်ရန် အဖြစ်ပြုလုပ်လိုပါသလား။
 
-Make SumatraPDF my main PDF reader
+Make SumatraPDF my default PDF reader
 စူမာတရာ PDF ကြည့်ရာကို အဓိကအဖြစ် အသုံးပြုရန်
 
 Match Case
@@ -252,6 +252,7 @@ Zoom Out
 #Custom &Zoom...\tCtrl-Y
 #Default &Layout:
 #Default &Zoom:
+#Default PDF reader can't be changed in portable mode
 #Denied Permissions:
 #Document Properties
 #Download
@@ -266,7 +267,6 @@ Zoom Out
 #Fit a Single Page
 #Found text at page %d
 #Hint: Use the F3 key for finding again
-#Main PDF reader can't be changed in portable mode
 #Modified:
 #No matches were found
 #No result found around line %u in file %s
@@ -299,8 +299,8 @@ Zoom Out
 #SumatraPDF Options
 #SumatraPDF Update
 #SumatraPDF crashed
-#SumatraPDF is your main PDF reader
-#SumatraPDF should now be your main PDF reader
+#SumatraPDF is your default PDF reader
+#SumatraPDF should now be your default PDF reader
 #Synchronization file cannot be opened
 #Text documents
 #Title:

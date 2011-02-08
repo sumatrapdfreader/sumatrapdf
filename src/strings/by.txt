@@ -144,6 +144,9 @@ Default &Layout:
 Default &Zoom:
 &Маштаб па змаўчанні
 
+Default PDF reader can't be changed in portable mode
+У мабільным рэжыме змяніць PDF-в'юер нельга
+
 Download
 Загрузка
 
@@ -210,13 +213,10 @@ KB
 MB
 MB
 
-Main PDF reader can't be changed in portable mode
-У мабільным рэжыме змяніць PDF-в'юер нельга
-
 Make SumatraPDF default application for PDF files?
 Зрабіць SumatraPDF стандартнай праграмай прагляду PDF-файлаў?
 
-Make SumatraPDF my main PDF reader
+Make SumatraPDF my default PDF reader
 Зрабіць SumatraPDF чытальнікам PDF па-змаўчанні
 
 Match Case
@@ -300,10 +300,10 @@ Source file %s has no synchronization point
 SumatraPDF Options
 Параметры SumatraPDF
 
-SumatraPDF is your main PDF reader
+SumatraPDF is your default PDF reader
 SumatraPDF асацыявана з файламі PDF
 
-SumatraPDF should now be your main PDF reader
+SumatraPDF should now be your default PDF reader
 Зараз SumatraPDF асацыявана з файламі PDF
 
 Synchronization file cannot be opened

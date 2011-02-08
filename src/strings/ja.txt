@@ -221,6 +221,9 @@ Default &Layout:
 Default &Zoom:
 既定の拡大率(&Z):
 
+Default PDF reader can't be changed in portable mode
+メイン PDF リーダーはポータブル モードでは変更できません
+
 Denied Permissions:
 拒否された権限:
 
@@ -320,13 +323,10 @@ KB
 MB
 MB
 
-Main PDF reader can't be changed in portable mode
-メイン PDF リーダーはポータブル モードでは変更できません
-
 Make SumatraPDF default application for PDF files?
 SumatraPDF を PDF ファイルの既定のアプリケーションにしますか?
 
-Make SumatraPDF my main PDF reader
+Make SumatraPDF my default PDF reader
 SumatraPDF をメイン PDF リーダーにする
 
 Match Case
@@ -461,10 +461,10 @@ SumatraPDF の更新
 SumatraPDF crashed
 SumatraPDF がクラッシュしました
 
-SumatraPDF is your main PDF reader
+SumatraPDF is your default PDF reader
 SumatraPDF はメイン PDF リーダーです
 
-SumatraPDF should now be your main PDF reader
+SumatraPDF should now be your default PDF reader
 SumatraPDF はメイン PDF リーダーになりました
 
 Synchronization file cannot be opened

@@ -223,6 +223,9 @@ Default &Layout:
 Default &Zoom:
 &Масштаб по умолчанию
 
+Default PDF reader can't be changed in portable mode
+В мобильном режиме ассоциирование невозможно
+
 Denied Permissions:
 Запрещенные права:
 
@@ -322,13 +325,10 @@ KB
 MB
 Мб
 
-Main PDF reader can't be changed in portable mode
-В мобильном режиме ассоциирование невозможно
-
 Make SumatraPDF default application for PDF files?
 Сделать SumatraPDF стандартной программой просмотра PDF-файлов?
 
-Make SumatraPDF my main PDF reader
+Make SumatraPDF my default PDF reader
 Ассоциировать SumatraPDF с файлами PDF
 
 Match Case
@@ -466,10 +466,10 @@ SumatraPDF Update
 SumatraPDF crashed
 Аварийное завершение работы SumatraPDF
 
-SumatraPDF is your main PDF reader
+SumatraPDF is your default PDF reader
 SumatraPDF ассоциирована с файлами PDF
 
-SumatraPDF should now be your main PDF reader
+SumatraPDF should now be your default PDF reader
 Теперь SumatraPDF ассоциирована с файлами PDF
 
 Synchronization file cannot be opened

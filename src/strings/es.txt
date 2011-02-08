@@ -225,6 +225,9 @@ Default &Layout:
 Default &Zoom:
 &Zoom Predeterminado:
 
+Default PDF reader can't be changed in portable mode
+No se puede cambiar el lector PDF por defecto en modo portátil
+
 Denied Permissions:
 Permisos Denegados
 
@@ -324,13 +327,10 @@ KB
 MB
 MB
 
-Main PDF reader can't be changed in portable mode
-No se puede cambiar el lector PDF por defecto en modo portátil
-
 Make SumatraPDF default application for PDF files?
 ¿Convertir SumatraPDF en la aplicación por defecto para archivos PDF?
 
-Make SumatraPDF my main PDF reader
+Make SumatraPDF my default PDF reader
 Hacer SumatraPDF el lector PDF por defecto
 
 Match Case
@@ -465,10 +465,10 @@ Actualizar SumatraPDF
 SumatraPDF crashed
 SumatraPDF falló
 
-SumatraPDF is your main PDF reader
+SumatraPDF is your default PDF reader
 SumatraPDF es el lector PDF predeterminado
 
-SumatraPDF should now be your main PDF reader
+SumatraPDF should now be your default PDF reader
 SumatraPDF debería ser ahora tu lector PDF por defecto
 
 Synchronization file cannot be opened

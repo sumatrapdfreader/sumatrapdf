@@ -175,6 +175,9 @@ Default &Layout:
 Default &Zoom:
 &Zoum savonek:
 
+Default PDF reader can't be changed in portable mode
+Ny yll an pennredyer PDF bos chanjyes yn modh porthadow
+
 Download
 Iskarga
 
@@ -247,13 +250,10 @@ KB
 MB
 MB
 
-Main PDF reader can't be changed in portable mode
-Ny yll an pennredyer PDF bos chanjyes yn modh porthadow
-
 Make SumatraPDF default application for PDF files?
 Gul SumatraPDF towlen savonek rag restrennow PDF?
 
-Make SumatraPDF my main PDF reader
+Make SumatraPDF my default PDF reader
 Gwra SumatraPDF ow fennredyer PDF
 
 Match Case
@@ -349,10 +349,10 @@ Nyns eus poynt kettermynegi vyth y'n restren %s
 SumatraPDF Options
 Etholyow SumatraPDF
 
-SumatraPDF is your main PDF reader
+SumatraPDF is your default PDF reader
 SumatraPDF yw dha bennredyer PDF
 
-SumatraPDF should now be your main PDF reader
+SumatraPDF should now be your default PDF reader
 Alemma rag y fydh SumatraPDF dha bennredyer PDF
 
 Synchronization file cannot be opened

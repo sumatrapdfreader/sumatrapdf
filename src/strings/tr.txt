@@ -119,7 +119,7 @@ KB
 MB
 MB
 
-Make SumatraPDF my main PDF reader
+Make SumatraPDF my default PDF reader
 &Varsayılan PDF okuyucusu yap
 
 Match Case
@@ -218,6 +218,7 @@ Uzaklaştır
 #Custom &Zoom...\tCtrl-Y
 #Default &Layout:
 #Default &Zoom:
+#Default PDF reader can't be changed in portable mode
 #Denied Permissions:
 #Document Properties
 #Download
@@ -235,7 +236,6 @@ Uzaklaştır
 #Found text at page %d
 #Go to page
 #Hint: Use the F3 key for finding again
-#Main PDF reader can't be changed in portable mode
 #Make SumatraPDF default application for PDF files?
 #Modified:
 #New version %s is available. Download new version?
@@ -271,8 +271,8 @@ Uzaklaştır
 #SumatraPDF Options
 #SumatraPDF Update
 #SumatraPDF crashed
-#SumatraPDF is your main PDF reader
-#SumatraPDF should now be your main PDF reader
+#SumatraPDF is your default PDF reader
+#SumatraPDF should now be your default PDF reader
 #Synchronization file cannot be opened
 #Text documents
 #Title:

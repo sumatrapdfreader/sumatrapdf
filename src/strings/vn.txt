@@ -222,6 +222,9 @@ Khung nhìn mặc định
 Default &Zoom:
 Kích thước mặc định
 
+Default PDF reader can't be changed in portable mode
+Không thay đổi được trình đọc PDF chính ở chế độ di động
+
 Denied Permissions:
 Các quyền bị từ chối
 
@@ -321,13 +324,10 @@ KB
 MB
 MB
 
-Main PDF reader can't be changed in portable mode
-Không thay đổi được trình đọc PDF chính ở chế độ di động
-
 Make SumatraPDF default application for PDF files?
 Đặt SumatraPDF làm trình đọc PDF mặc định?
 
-Make SumatraPDF my main PDF reader
+Make SumatraPDF my default PDF reader
 Đặt SumatraPDF làm trình đọc PDF chính
 
 Match Case
@@ -465,10 +465,10 @@ Cập nhật SumatraPDF
 SumatraPDF crashed
 SumatraPDF đã ngưng hoạt đọng
 
-SumatraPDF is your main PDF reader
+SumatraPDF is your default PDF reader
 SumatraPDF là trình đọc PDF chính của bạn
 
-SumatraPDF should now be your main PDF reader
+SumatraPDF should now be your default PDF reader
 SumatraPDF giờ là trình đọc PDF chính của bạn
 
 Synchronization file cannot be opened
