@@ -221,9 +221,9 @@ $(O)\geom_util.obj: baseutils\base_util.h baseutils\geom_util.h
 $(O)\Http.obj: baseutils\base_util.h baseutils\str_util.h baseutils\tstr_util.h
 $(O)\Http.obj: baseutils\vstrlist.h baseutils\wstr_util.h src\Http.h
 $(O)\Http.obj: src\MemSegment.h src\SumatraPDF.h src\Version.h
-$(O)\Installer.obj: baseutils\base_util.h baseutils\str_util.h baseutils\tstr_util.h
-$(O)\Installer.obj: baseutils\win_util.h baseutils\WinUtil.hpp baseutils\wstr_util.h
-$(O)\Installer.obj: src\installer\Resource.h src\Version.h
+$(O)\Installer.obj: baseutils\base_util.h baseutils\file_util.h baseutils\str_util.h
+$(O)\Installer.obj: baseutils\tstr_util.h baseutils\win_util.h baseutils\WinUtil.hpp
+$(O)\Installer.obj: baseutils\wstr_util.h src\installer\Resource.h src\Version.h
 $(O)\LangMenuDef.obj: src\LangMenuDef.h
 $(O)\MemSegment.obj: baseutils\str_util.h baseutils\tstr_util.h baseutils\vstrlist.h
 $(O)\MemSegment.obj: baseutils\wstr_util.h src\MemSegment.h

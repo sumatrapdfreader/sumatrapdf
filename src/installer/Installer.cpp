@@ -3,6 +3,9 @@
 
 /*
 The installer is good enough for production but it doesn't mean it couldn't be improved:
+ * thank the user for downloading and installing SumatraPDF (cf. Skype installer)
+ * allow to change the installation directory
+
  * some more fanciful animations e.g.:
  * letters could drop down and back up when cursor is over it
  * messages could scroll-in
@@ -24,6 +27,7 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include "Resource.h"
 #include "base_util.h"
 #include "tstr_util.h"
+#include "file_util.h"
 #include "win_util.h"
 #include "WinUtil.hpp"
 #include "Version.h"
@@ -117,6 +121,10 @@ static Color            COLOR_MSG_FAILED(gCol1);
 #define UNINSTALL_STRING _T("UninstallString")
 // REG_SZ, e.g. "http://blog.kowalczyk/info/software/sumatrapdf/"
 #define URL_INFO_ABOUT _T("UrlInfoAbout")
+
+// Installation directory (set in HKLM REG_PATH_SOFTWARE
+// for compatibility with the old NSIS installer)
+#define INSTALL_DIR _T("Install_Dir")
 
 #define INSTALLER_PART_FILE         "kifi"
 #define INSTALLER_PART_FILE_BZIP2   "kifb"
@@ -271,7 +279,18 @@ TCHAR *GetExePath()
 TCHAR *GetInstallationDir()
 {
     static TCHAR dir[MAX_PATH];
-    BOOL ok = SHGetSpecialFolderPath(NULL, dir, CSIDL_PROGRAM_FILES, FALSE);
+
+    // try the previous installation directory first
+    bool ok = ReadRegStr(HKEY_LOCAL_MACHINE, REG_PATH_SOFTWARE, INSTALL_DIR, dir, dimof(dir));
+    if (ok) {
+        if (tstr_endswithi(dir, _T(".exe")))
+            *(TCHAR *)FilePath_GetBaseName(dir) = '\0';
+        if (*dir && dir_exists(dir))
+            return dir;
+    }
+
+    // fall back to %ProgramFiles%
+    ok = !!SHGetSpecialFolderPath(NULL, dir, CSIDL_PROGRAM_FILES, FALSE);
     if (!ok)
         return NULL;
     tstr_cat_s(dir, dimof(dir), _T("\\") TAPP);
@@ -844,6 +863,10 @@ void WriteUninstallerRegistryInfo()
     WriteRegStr(hkey,   REG_PATH_UNINST, PUBLISHER, _T("Krzysztof Kowalczyk"));
     WriteRegStr(hkey,   REG_PATH_UNINST, UNINSTALL_STRING, uninstallerPath);
     WriteRegStr(hkey,   REG_PATH_UNINST, URL_INFO_ABOUT, _T("http://blog.kowalczyk/info/software/sumatrapdf/"));
+    TCHAR *installDir = FilePath_GetDir(installedExePath);
+    WriteRegStr(hkey,   REG_PATH_SOFTWARE, INSTALL_DIR, installDir);
+
+    free(installDir);
     free(uninstallerPath);
     free(installedExePath);
 }

@@ -174,7 +174,7 @@ bool ReadRegStr(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, const T
         RegCloseKey(keyTmp);
     }
 
-    if (ERROR_SUCCESS != res)
+    if (ERROR_SUCCESS != res && ERROR_FILE_NOT_FOUND != res)
         SeeLastError(res);
     return ERROR_SUCCESS == res;
 }

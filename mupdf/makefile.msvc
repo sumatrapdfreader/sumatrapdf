@@ -296,7 +296,7 @@ CMAPDUMP_APP = $(O)\cmapdump.exe
 FONTDUMP_OBJS = $(O)\fontdump.obj
 FONTDUMP_APP = $(O)\fontdump.exe
 
-all: $(O) $(OBZ) $(PDFDRAW_APP) $(PDFSHOW_APP) $(PDFCLEAN_APP) $(PDFINFO_APP) $(PDFEXTRACT_APP) $(PDFBENCH_APP) $(PDFAPP_APP)
+all: $(O) $(PDFDRAW_APP) $(PDFSHOW_APP) $(PDFCLEAN_APP) $(PDFINFO_APP) $(PDFEXTRACT_APP) $(PDFBENCH_APP) $(PDFAPP_APP)
 
 clean: force
 	-rmdir /S /Q $(O)

@@ -94,15 +94,29 @@ TCHAR *ExePathGet()
 }
 
 /* Return false if this program has been started from "Program Files" directory
-   (which is an indicator that it has been installed) */
+   (which is an indicator that it has been installed) or from the last known
+   location of a SumatraPDF installation (HKLM\Software\SumatraPDF\Install_Dir) */
 bool IsRunningInPortableMode()
 {
     TCHAR programFilesDir[MAX_PATH];
-    BOOL fOk = SHGetSpecialFolderPath(NULL, programFilesDir, CSIDL_PROGRAM_FILES, FALSE);
     TCHAR *exePath = ExePathGet();
-    // if we can't get either path, assume we're not running from "Program Files"
+    // if we can't get a path, assume we're not running from "Program Files"
     bool portableMode = true;
-    if (fOk && exePath) {
+
+    bool ok = ReadRegStr(HKEY_LOCAL_MACHINE, _T("Software\\") APP_NAME_STR, _T("Install_Dir"), programFilesDir, dimof(programFilesDir));
+    if (ok && exePath) {
+        if (!tstr_endswithi(programFilesDir, _T(".exe"))) {
+            tstr_cat_s(programFilesDir, dimof(programFilesDir), _T("\\"));
+            tstr_cat_s(programFilesDir, dimof(programFilesDir), FilePath_GetBaseName(exePath));
+        }
+        if (FilePath_IsSameFile(programFilesDir, exePath)) {
+            portableMode = false;
+            goto Done;
+        }
+    }
+
+    ok = !!SHGetSpecialFolderPath(NULL, programFilesDir, CSIDL_PROGRAM_FILES, FALSE);
+    if (ok && exePath) {
         // check if one of the exePath's parent directories is "Program Files"
         // (or a junction to it)
         TCHAR *baseName;
@@ -112,6 +126,8 @@ bool IsRunningInPortableMode()
                 portableMode = false;
         }
     }
+
+Done:
     free(exePath);
     return portableMode;
 }

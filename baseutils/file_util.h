@@ -16,6 +16,7 @@ int             FilePath_Compare(const TCHAR *lhs, const TCHAR *rhs);
 BOOL            FilePath_IsSameFile(const TCHAR *path1, const TCHAR *path2);
 
 BOOL            file_exists(const TCHAR *file_path);
+BOOL            dir_exists(const TCHAR *dir_path);
 
 #ifdef _WIN32
 char *          file_read_all(const TCHAR *file_path, size_t *file_size_out);

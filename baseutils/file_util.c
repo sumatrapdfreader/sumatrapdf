@@ -158,6 +158,19 @@ BOOL file_exists(const TCHAR *file_path)
     return TRUE;
 }
 
+BOOL dir_exists(const TCHAR *dir_path)
+{
+    struct _stat buf;
+    int          res;
+
+    res = _tstat(dir_path, &buf);
+    if (0 != res)
+        return FALSE;
+    if (!(buf.st_mode & _S_IFDIR))
+        return FALSE;
+    return TRUE;
+}
+
 
 #ifdef _WIN32
 uint64_t file_size_get(const TCHAR *file_path)
