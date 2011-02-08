@@ -232,5 +232,19 @@ pdf_loadannots(pdf_annot **headp, pdf_xref *xref, fz_obj *annots)
 
 	pdf_logpage("}\n");
 
+	/* SumatraPDF: reverse order back to ascending */
+	if (head)
+	{
+		pdf_annot *newHead = nil;
+		while (head)
+		{
+			annot = head->next;
+			head->next = newHead;
+			newHead = head;
+			head = annot;
+		}
+		head = newHead;
+	}
+
 	*headp = head;
 }
