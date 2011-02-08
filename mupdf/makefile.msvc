@@ -15,7 +15,9 @@ CFG=dbg
 O = obj-$(CFG)-win
 !endif
 
+OZ = $(O)\zlib
 OBZ = $(O)\bzip2
+OFT = $(O)\freetype
 
 # To over-ride location of fitz/mupdf sources, define MUPDF_DIR
 # e.g.:
@@ -128,16 +130,16 @@ LD = link.exe
 LDFLAGS = $(LDFLAGS) /nologo /DEBUG /RELEASE /opt:ref /opt:icf
 
 FT_OBJS = \
-	$(O)\ftdebug.obj $(O)\ftsystem.obj $(O)\ftglyph.obj $(O)\ftbitmap.obj $(O)\ftinit.obj $(O)\ftxf86.obj \
-	$(O)\autofit.obj $(O)\ftbase.obj $(O)\bdf.obj $(O)\ftcache.obj $(O)\cff.obj $(O)\cffparse.obj \
-	$(O)\type1cid.obj $(O)\otvalid.obj $(O)\ftotval.obj $(O)\pcf.obj $(O)\pfr.obj $(O)\pfrsbit.obj \
-	$(O)\psaux.obj $(O)\pshinter.obj $(O)\psnames.obj $(O)\raster.obj $(O)\sfnt.obj \
-	$(O)\smooth.obj $(O)\truetype.obj $(O)\type1.obj $(O)\type42.obj $(O)\winfnt.obj $(O)\ftstroke.obj
+	$(OFT)\ftdebug.obj $(OFT)\ftsystem.obj $(OFT)\ftglyph.obj $(OFT)\ftbitmap.obj $(OFT)\ftinit.obj $(OFT)\ftxf86.obj \
+	$(OFT)\autofit.obj $(OFT)\ftbase.obj $(OFT)\bdf.obj $(OFT)\ftcache.obj $(OFT)\cff.obj $(OFT)\cffparse.obj \
+	$(OFT)\type1cid.obj $(OFT)\otvalid.obj $(OFT)\ftotval.obj $(OFT)\pcf.obj $(OFT)\pfr.obj $(OFT)\pfrsbit.obj \
+	$(OFT)\psaux.obj $(OFT)\pshinter.obj $(OFT)\psnames.obj $(OFT)\raster.obj $(OFT)\sfnt.obj \
+	$(OFT)\smooth.obj $(OFT)\truetype.obj $(OFT)\type1.obj $(OFT)\type42.obj $(OFT)\winfnt.obj $(OFT)\ftstroke.obj
 
 ZLIB_OBJS = \
-	$(O)\adler32.obj $(O)\crc32.obj $(O)\inflate.obj $(O)\zutil.obj \
-	$(O)\inffast.obj $(O)\inftrees.obj $(O)\deflate.obj $(O)\compress.obj \
-	$(O)\trees.obj $(O)\gzlib.obj $(O)\gzread.obj $(O)\gzwrite.obj $(O)\gzclose.obj
+	$(OZ)\adler32.obj $(OZ)\crc32.obj $(OZ)\inflate.obj $(OZ)\zutil.obj \
+	$(OZ)\inffast.obj $(OZ)\inftrees.obj $(OZ)\deflate.obj $(OZ)\compress.obj \
+	$(OZ)\trees.obj $(OZ)\gzlib.obj $(OZ)\gzread.obj $(OZ)\gzwrite.obj $(OZ)\gzclose.obj
 
 BZIP2_OBJS = \
 	$(OBZ)\blocksort.obj $(OBZ)\bzlib.obj $(OBZ)\compress.obj $(OBZ)\crctable.obj \
@@ -304,6 +306,8 @@ cleanall: force
 $(O): force
 	@if not exist $(O) mkdir $(O)
 	@if not exist $(OBZ) mkdir $(OBZ)
+	@if not exist $(OZ) mkdir $(OZ)
+	@if not exist $(OFT) mkdir $(OFT)
 
 $(PDFAPP_RES): $(MUPDF_DIR)\apps\win_res.rc
 	rc /r /fo$@ $(MUPDF_DIR)\apps\win_res.rc
@@ -544,80 +548,80 @@ $(PDFEXTRACT_APP): $(PDFEXTRACT_OBJS)
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ /SUBSYSTEM:CONSOLE
 
 # freetype directories
-{$(FREETYPE_DIR)\builds\win32}.c{$(O)}.obj::
-	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
+{$(FREETYPE_DIR)\builds\win32}.c{$(OFT)}.obj::
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(OFT)\ /Fd$(O)\vc80.pdb $<
 
-{$(FREETYPE_DIR)\builds\unix}.c{$(O)}.obj::
-	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
+{$(FREETYPE_DIR)\builds\unix}.c{$(OFT)}.obj::
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(OFT)\ /Fd$(O)\vc80.pdb $<
 
-{$(FREETYPE_DIR)\src\autofit}.c{$(O)}.obj::
-	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
+{$(FREETYPE_DIR)\src\autofit}.c{$(OFT)}.obj::
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(OFT)\ /Fd$(O)\vc80.pdb $<
 
-{$(FREETYPE_DIR)\src\base}.c{$(O)}.obj::
-	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
+{$(FREETYPE_DIR)\src\base}.c{$(OFT)}.obj::
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(OFT)\ /Fd$(O)\vc80.pdb $<
 
-{$(FREETYPE_DIR)\src\bdf}.c{$(O)}.obj::
-	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
+{$(FREETYPE_DIR)\src\bdf}.c{$(OFT)}.obj::
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(OFT)\ /Fd$(O)\vc80.pdb $<
 
-{$(FREETYPE_DIR)\src\cache}.c{$(O)}.obj::
-	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
+{$(FREETYPE_DIR)\src\cache}.c{$(OFT)}.obj::
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(OFT)\ /Fd$(O)\vc80.pdb $<
 
-{$(FREETYPE_DIR)\src\cff}.c{$(O)}.obj::
-	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
+{$(FREETYPE_DIR)\src\cff}.c{$(OFT)}.obj::
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(OFT)\ /Fd$(O)\vc80.pdb $<
 
-{$(FREETYPE_DIR)\src\cid}.c{$(O)}.obj::
-	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
+{$(FREETYPE_DIR)\src\cid}.c{$(OFT)}.obj::
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(OFT)\ /Fd$(O)\vc80.pdb $<
 
-{$(FREETYPE_DIR)\src\gxvalid}.c{$(O)}.obj::
-	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
+{$(FREETYPE_DIR)\src\gxvalid}.c{$(OFT)}.obj::
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(OFT)\ /Fd$(O)\vc80.pdb $<
 
-{$(FREETYPE_DIR)\src\gzip}.c{$(O)}.obj::
-	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
+{$(FREETYPE_DIR)\src\gzip}.c{$(OFT)}.obj::
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(OFT)\ /Fd$(O)\vc80.pdb $<
 
-{$(FREETYPE_DIR)\src\lzw}.c{$(O)}.obj::
-	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
+{$(FREETYPE_DIR)\src\lzw}.c{$(OFT)}.obj::
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(OFT)\ /Fd$(O)\vc80.pdb $<
 
-{$(FREETYPE_DIR)\src\otvalid}.c{$(O)}.obj::
-	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
+{$(FREETYPE_DIR)\src\otvalid}.c{$(OFT)}.obj::
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(OFT)\ /Fd$(O)\vc80.pdb $<
 
-{$(FREETYPE_DIR)\src\pcf}.c{$(O)}.obj::
-	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
+{$(FREETYPE_DIR)\src\pcf}.c{$(OFT)}.obj::
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(OFT)\ /Fd$(O)\vc80.pdb $<
 
-{$(FREETYPE_DIR)\src\pfr}.c{$(O)}.obj::
-	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
+{$(FREETYPE_DIR)\src\pfr}.c{$(OFT)}.obj::
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(OFT)\ /Fd$(O)\vc80.pdb $<
 
-{$(FREETYPE_DIR)\src\psaux}.c{$(O)}.obj::
-	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
+{$(FREETYPE_DIR)\src\psaux}.c{$(OFT)}.obj::
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(OFT)\ /Fd$(O)\vc80.pdb $<
 
-{$(FREETYPE_DIR)\src\pshinter}.c{$(O)}.obj::
-	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
+{$(FREETYPE_DIR)\src\pshinter}.c{$(OFT)}.obj::
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(OFT)\ /Fd$(O)\vc80.pdb $<
 
-{$(FREETYPE_DIR)\src\psnames}.c{$(O)}.obj::
-	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
+{$(FREETYPE_DIR)\src\psnames}.c{$(OFT)}.obj::
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(OFT)\ /Fd$(O)\vc80.pdb $<
 
-{$(FREETYPE_DIR)\src\raster}.c{$(O)}.obj::
-	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
+{$(FREETYPE_DIR)\src\raster}.c{$(OFT)}.obj::
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(OFT)\ /Fd$(O)\vc80.pdb $<
 
-{$(FREETYPE_DIR)\src\sfnt}.c{$(O)}.obj::
-	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
+{$(FREETYPE_DIR)\src\sfnt}.c{$(OFT)}.obj::
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(OFT)\ /Fd$(O)\vc80.pdb $<
 
-{$(FREETYPE_DIR)\src\smooth}.c{$(O)}.obj::
-	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
+{$(FREETYPE_DIR)\src\smooth}.c{$(OFT)}.obj::
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(OFT)\ /Fd$(O)\vc80.pdb $<
 
-{$(FREETYPE_DIR)\src\truetype}.c{$(O)}.obj::
-	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
+{$(FREETYPE_DIR)\src\truetype}.c{$(OFT)}.obj::
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(OFT)\ /Fd$(O)\vc80.pdb $<
 
-{$(FREETYPE_DIR)\src\type1}.c{$(O)}.obj::
-	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
+{$(FREETYPE_DIR)\src\type1}.c{$(OFT)}.obj::
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(OFT)\ /Fd$(O)\vc80.pdb $<
 
-{$(FREETYPE_DIR)\src\type42}.c{$(O)}.obj::
-	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
+{$(FREETYPE_DIR)\src\type42}.c{$(OFT)}.obj::
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(OFT)\ /Fd$(O)\vc80.pdb $<
 
-{$(FREETYPE_DIR)\src\winfonts}.c{$(O)}.obj::
-	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
+{$(FREETYPE_DIR)\src\winfonts}.c{$(OFT)}.obj::
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(OFT)\ /Fd$(O)\vc80.pdb $<
 
-{$(ZLIB_DIR)}.c{$(O)}.obj::
-	$(CC) $(ZLIB_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
+{$(ZLIB_DIR)}.c{$(OZ)}.obj::
+	$(CC) $(ZLIB_CFLAGS) /Fo$(OZ)\ /Fd$(O)\vc80.pdb $<
 
 {$(BZIP2_DIR)}.c{$(OBZ)}.obj::
 	$(CC) $(BZIP2_CFLAGS) /Fo$(OBZ)\ /Fd$(O)\vc80.pdb $<
