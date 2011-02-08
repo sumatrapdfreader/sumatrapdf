@@ -308,12 +308,6 @@
     <ClCompile Include="src\SumatraPDF.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\synctex_parser.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\synctex_parser_utils.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\translations.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -524,6 +518,9 @@
     <ClCompile Include="mupdf\fitz\res_text.c">
       <Filter>mupdf\fitz</Filter>
     </ClCompile>
+    <ClCompile Include="src\WindowInfo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="baseutils\base_util.h">
@@ -649,12 +646,6 @@
     <ClInclude Include="src\SumatraPDF.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\synctex_parser.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\synctex_parser_utils.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\translations.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -713,6 +704,9 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="src\installer\Resource.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\WindowInfo.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

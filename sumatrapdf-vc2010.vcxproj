@@ -140,8 +140,6 @@
     <ClCompile Include="src\SumatraDialogs.cc" />
     <ClCompile Include="src\SumatraPDF.cpp" />
     <ClCompile Include="src\SumatraProperties.cpp" />
-    <ClCompile Include="src\synctex_parser.c" />
-    <ClCompile Include="src\synctex_parser_utils.c" />
     <ClCompile Include="src\translations.cpp" />
     <ClCompile Include="src\translations_txt.c" />
     <ClCompile Include="baseutils\base_util.c" />
@@ -226,6 +224,7 @@
     <ClCompile Include="ext\jbig2dec\jbig2_segment.c" />
     <ClCompile Include="ext\jbig2dec\jbig2_symbol_dict.c" />
     <ClCompile Include="ext\jbig2dec\jbig2_text.c" />
+    <ClCompile Include="src\WindowInfo.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ext\libjpeg-turbo\jchuff.h" />
@@ -258,8 +257,6 @@
     <ClInclude Include="src\Resource.h" />
     <ClInclude Include="src\SumatraDialogs.h" />
     <ClInclude Include="src\SumatraPDF.h" />
-    <ClInclude Include="src\synctex_parser.h" />
-    <ClInclude Include="src\synctex_parser_utils.h" />
     <ClInclude Include="src\translations.h" />
     <ClInclude Include="src\translations_txt.h" />
     <ClInclude Include="src\Version.h" />
@@ -291,6 +288,7 @@
     <ClInclude Include="ext\jbig2dec\jbig2_symbol_dict.h" />
     <ClInclude Include="ext\jbig2dec\jbig2_text.h" />
     <ClInclude Include="ext\jbig2dec\os_types.h" />
+    <ClInclude Include="src\WindowInfo.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ext\libjpeg-turbo\simd\jcclrmmx.asm" />

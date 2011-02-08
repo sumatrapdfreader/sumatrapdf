@@ -6601,7 +6601,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
             ShowWindow(win->hwndFrame, SW_HIDE);
 
         if (i.printerName) {
-            // note: this prints all of PDF files. Another option would be to
+            // note: this prints all PDF files. Another option would be to
             // print only the first one
             PrintFile(win, i.printerName);
         } else if (i.printDialog) {

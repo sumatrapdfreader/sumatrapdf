@@ -1164,6 +1164,8 @@ void OnButtonInstall()
     // disable the install button and remove checkbox during installation
     DestroyWindow(gHwndCheckboxRegisterDefault);
     gHwndCheckboxRegisterDefault = NULL;
+    DestroyWindow(gHwndCheckboxRegisterBrowserPlugin);
+    gHwndCheckboxRegisterBrowserPlugin = NULL;
     EnableWindow(gHwndButtonInstall, FALSE);
 
     gMsg = _T("Installation in progress...");
@@ -1610,25 +1612,29 @@ void OnCreateInstaller(HWND hwnd)
                         (HMENU)ID_BUTTON_INSTALL, ghinst, NULL);
     SetFont(gHwndButtonInstall, gFontDefault);
 
-    y = RectDy(&r) - buttonDy - 4;
-    gHwndCheckboxRegisterDefault = CreateWindow(
-        WC_BUTTON, _T("Use as &default PDF Reader"),
-        WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX | WS_TABSTOP,
-        8, y, 160, 22, hwnd, (HMENU)ID_CHECKBOX_MAKE_DEFAULT, ghinst, NULL);
-    SetFont(gHwndCheckboxRegisterDefault, gFontDefault);
-    // only check the "Use as default" checkbox when no other PDF viewer
-    // is currently selected (not going to intrude)
+    y = RectDy(&r) - buttonDy - 5;
+
     TCHAR *defaultViewer = GetDefaultPdfViewer();
     BOOL hasOtherViewer = defaultViewer && !tstr_ieq(defaultViewer, TAPP);
-    SetCheckboxState(gHwndCheckboxRegisterDefault, !hasOtherViewer);
-    // disable the checkbox, if we're already the default PDF viewer
-    if (defaultViewer && !hasOtherViewer)
-        EnableWindow(gHwndCheckboxRegisterDefault, FALSE);
-    free(defaultViewer);
+    BOOL isSumatraDefaultViewer = defaultViewer && !hasOtherViewer;
 
-    y -= 18;
+    // only show the checbox if Sumatra is not already a default viewer.
+    // the alternative (disabling the checkbox) is more confusing
+    if (!isSumatraDefaultViewer) {
+        gHwndCheckboxRegisterDefault = CreateWindow(
+            WC_BUTTON, _T("Use as &default PDF reader"),
+            WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX | WS_TABSTOP,
+            8, y, 160, 22, hwnd, (HMENU)ID_CHECKBOX_MAKE_DEFAULT, ghinst, NULL);
+        SetFont(gHwndCheckboxRegisterDefault, gFontDefault);
+        // only check the "Use as default" checkbox when no other PDF viewer
+        // is currently selected (not going to intrude)
+        SetCheckboxState(gHwndCheckboxRegisterDefault, !hasOtherViewer);
+        free(defaultViewer);
+        y -= 18;
+    }
+
     gHwndCheckboxRegisterBrowserPlugin = CreateWindow(
-        WC_BUTTON, _T("Install &browser plugin "),
+        WC_BUTTON, _T("Install web browser plugin"),
         WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX | WS_TABSTOP,
         8, y, 160, 22, hwnd, (HMENU)ID_CHECKBOX_BROWSER_PLUGIN, ghinst, NULL);
     SetFont(gHwndCheckboxRegisterBrowserPlugin, gFontDefault);
