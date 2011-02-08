@@ -6519,6 +6519,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     gGlobalPrefs.m_invertColors = i.invertColors;
     gRestrictedUse = i.restrictedUse;
 
+    gRenderCache.invertColors = &gGlobalPrefs.m_invertColors;
+    gRenderCache.useGdiRenderer = &gUseGdiRenderer;
+
     if (i.inverseSearchCmdLine) {
         free(gGlobalPrefs.m_inverseSearchCmdLine);
         gGlobalPrefs.m_inverseSearchCmdLine = i.inverseSearchCmdLine;
@@ -6537,16 +6540,13 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     if (!InstanceInit(hInstance, nCmdShow))
         goto Exit;
 
-    HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_SUMATRAPDF));
-
-    gRenderCache.invertColors = &gGlobalPrefs.m_invertColors;
-    gRenderCache.useGdiRenderer = &gUseGdiRenderer;
-
-    if (i.hwndPluginParent && !IsWindow(i.hwndPluginParent))
-        i.hwndPluginParent = NULL;
     if (i.hwndPluginParent) {
+        if (!IsWindow(i.hwndPluginParent) || i.fileNames.size() == 0)
+            goto Exit;
+
         gPluginMode = true;
         assert(i.fileNames.size() == 1);
+        i.fileNames.resize(1);
         i.reuseInstance = i.exitOnPrint = false;
         // always display the toolbar when embedded (as there's no menubar in that case)
         gGlobalPrefs.m_showToolbar = TRUE;
@@ -6572,7 +6572,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
             }
         }
         else {
-            bool showWin = !i.exitOnPrint;
+            bool showWin = !i.exitOnPrint && !gPluginMode;
             win = LoadPdf(i.fileNames[n], NULL, showWin, i.newWindowTitle);
             if (!win)
                 goto Exit;
@@ -6641,6 +6641,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     if (gGlobalPrefs.m_enableAutoUpdate)
         DownloadSumatraUpdateInfo(gWindowList[0], true);
 
+    HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_SUMATRAPDF));
 #ifndef THREAD_BASED_FILEWATCH
     const UINT_PTR timerID = SetTimer(NULL, -1, FILEWATCH_DELAY_IN_MS, NULL);
 #endif

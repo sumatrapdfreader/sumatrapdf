@@ -24,6 +24,8 @@ void MakePluginWindow(WindowInfo *win, HWND hwndParent)
     SetParent(win->hwndFrame, hwndParent);
     GetClientRect(hwndParent, &rc);
     MoveWindow(win->hwndFrame, 0, 0, RectDx(&rc), RectDy(&rc), FALSE);
+    ShowWindow(win->hwndFrame, SW_SHOW);
+
     // from here on, we depend on the plugin's host to resize us
     SetFocus(win->hwndFrame);
 }

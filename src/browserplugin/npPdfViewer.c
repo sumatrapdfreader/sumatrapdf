@@ -382,7 +382,6 @@ void NP_LOADDS NPP_StreamAsFile(NPP instance, NPStream* stream, const char* fnam
 	{
 		CloseHandle(pi.hThread);
 		data->hProcess = pi.hProcess;
-		data->message = L"";
 	}
 	else
 	{
@@ -412,6 +411,7 @@ NPError NP_LOADDS NPP_Destroy(NPP instance, NPSavedData** save)
 	if (data->hProcess)
 	{
 		TerminateProcess(data->hProcess, 99);
+		WaitForSingleObject(data->hProcess, INFINITE);
 		CloseHandle(data->hProcess);
 	}
 	if (data->filepath)
