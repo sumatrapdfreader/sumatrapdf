@@ -20,6 +20,8 @@ OBZ = $(O)\bzip2
 OFT = $(O)\freetype
 OJ  = $(O)\jpeg
 OT  = $(O)\jpegturbo
+OOJ = $(O)\openjpeg
+OJB = $(O)\jbig2
 
 # To over-ride location of fitz/mupdf sources, define MUPDF_DIR
 # e.g.:
@@ -180,22 +182,20 @@ JPEG_TURBO_OBJS = \
 	$(OT)\jaricom.obj $(OT)\jcarith.obj $(OT)\jdarith.obj $(OT)\jfdctfst.obj \
 	$(OT)\jidctred.obj $(OT)\jdphuff.obj $(OT)\jcphuff.obj
 
-#TODO: do I need those? They show up in mac compilation log but don't seem to be necessary
 !endif
 
 JBIG2_OBJS = \
-	$(O)\jbig2.obj $(O)\jbig2_arith.obj \
-	$(O)\jbig2_arith_iaid.obj $(O)\jbig2_arith_int.obj $(O)\jbig2_huffman.obj \
-	$(O)\jbig2_generic.obj $(O)\jbig2_refinement.obj $(O)\jbig2_image.obj \
-	$(O)\jbig2_segment.obj $(O)\jbig2_symbol_dict.obj $(O)\jbig2_text.obj \
-	$(O)\jbig2_mmr.obj $(O)\jbig2_page.obj $(O)\jbig2_metadata.obj
-# jbig2_image_pbm$(OBJ) jbig2dec$(OBJ) sha1$(OBJ)
+	$(OJB)\jbig2.obj $(OJB)\jbig2_arith.obj \
+	$(OJB)\jbig2_arith_iaid.obj $(OJB)\jbig2_arith_int.obj $(OJB)\jbig2_huffman.obj \
+	$(OJB)\jbig2_generic.obj $(OJB)\jbig2_refinement.obj $(OJB)\jbig2_image.obj \
+	$(OJB)\jbig2_segment.obj $(OJB)\jbig2_symbol_dict.obj $(OJB)\jbig2_text.obj \
+	$(OJB)\jbig2_mmr.obj $(OJB)\jbig2_page.obj $(OJB)\jbig2_metadata.obj
 
 OPENJPEG_OBJS = \
-	$(O)\bio.obj $(O)\cio.obj $(O)\dwt.obj $(O)\event.obj $(O)\image.obj \
-	$(O)\j2k.obj $(O)\j2k_lib.obj $(O)\jp2.obj $(O)\jpt.obj $(O)\mct.obj \
-	$(O)\mqc.obj $(O)\openjpeg.obj $(O)\pi.obj $(O)\raw.obj $(O)\t1.obj \
-	$(O)\t2.obj $(O)\tcd.obj $(O)\tgt.obj
+	$(OOJ)\bio.obj $(OOJ)\cio.obj $(OOJ)\dwt.obj $(OOJ)\event.obj $(OOJ)\image.obj \
+	$(OOJ)\j2k.obj $(OOJ)\j2k_lib.obj $(OOJ)\jp2.obj $(OOJ)\jpt.obj $(OOJ)\mct.obj \
+	$(OOJ)\mqc.obj $(OOJ)\openjpeg.obj $(OOJ)\pi.obj $(OOJ)\raw.obj $(OOJ)\t1.obj \
+	$(OOJ)\t2.obj $(OOJ)\tcd.obj $(OOJ)\tgt.obj
 
 FITZ_DRAW_OBJS = \
 	$(O)\archport.obj $(O)\blendmodes.obj $(O)\imagescale.obj $(O)\imagesmooth.obj $(O)\pathfill.obj \
@@ -312,6 +312,8 @@ $(O): force
 	@if not exist $(OFT) mkdir $(OFT)
 	@if not exist $(OJ) mkdir $(OJ)
 	@if not exist $(OT) mkdir $(OT)
+	@if not exist $(OOJ) mkdir $(OOJ)
+	@if not exist $(OJB) mkdir $(OJB)
 
 $(PDFAPP_RES): $(MUPDF_DIR)\apps\win_res.rc
 	rc /r /fo$@ $(MUPDF_DIR)\apps\win_res.rc
@@ -644,11 +646,11 @@ $(PDFEXTRACT_APP): $(PDFEXTRACT_OBJS)
 	$(NASM) $(JPEG_TURBO_NASM_FLAGS) -o $@ $< 
 !endif
 
-{$(OPENJPEG_DIR)}.c{$(O)}.obj::
-	$(CC) $(OPENJPEG_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
+{$(OPENJPEG_DIR)}.c{$(OOJ)}.obj::
+	$(CC) $(OPENJPEG_CFLAGS) /Fo$(OOJ)\ /Fd$(O)\vc80.pdb $<
 
-{$(JBIG2_DIR)}.c{$(O)}.obj::
-	$(CC) $(JBIG2_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
+{$(JBIG2_DIR)}.c{$(OJB)}.obj::
+	$(CC) $(JBIG2_CFLAGS) /Fo$(OJB)\ /Fd$(O)\vc80.pdb $<
 
 {$(MUPDF_DIR)\apps}.c{$(O)}.obj::
 	$(CC) /TC $(MUPDF_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
