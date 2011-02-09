@@ -4,7 +4,7 @@ import shutil
 import struct
 import subprocess
 import sys
-import zipfile
+import zipfile2 as zipfile
 import bz2
 
 def import_boto():
@@ -44,7 +44,8 @@ def s3connection():
     g_s3conn = S3Connection(awscreds.access, awscreds.secret, True)
   return g_s3conn
 
-def s3PubBucket(): return s3connection().get_bucket(S3_BUCKET)
+def s3PubBucket():
+  return s3connection().get_bucket(S3_BUCKET)
 
 def ul_cb(sofar, total):
   print("So far: %d, total: %d" % (sofar , total))
@@ -119,53 +120,9 @@ def parse_svninfo_out(txt):
 # version line is in the format:
 # #define CURR_VERSION 1.1
 def extract_sumatra_version(file_path):
-  fo = open(file_path, "r")
-  d = fo.read()
-  fo.close()
-  m = re.search('CURR_VERSION (\\d+(?:\\.\\d+)*)', d)
-  ver = m.group(1)
+  content = open(file_path).read()
+  ver = re.findall(r'CURR_VERSION (\d+(?:\.\d+)*)', content)[0]
   return ver
-
-def write_no_size(fo, data):
-  log("Writing %d bytes at %d '%s'" % (len(data), fo.tell(), data))
-  fo.write(data)
-  
-def write_with_size(fo, data, name=None):
-  if name:
-    log("Writing %d bytes at %d (data of name %s)" % (len(data), fo.tell(), name))
-  else:
-    log("Writing %d bytes at %d (data)" % (len(data), fo.tell()))
-  fo.write(data)
-  tmp = struct.pack("<I", len(data))
-  log("Writing %d bytes at %d (data size)" % (len(tmp), fo.tell()))
-  fo.write(tmp)
-
-INSTALLER_HEADER_FILE       = "kifi"
-INSTALLER_HEADER_FILE_BZIP2 = "kifb"
-INSTALLER_HEADER_END        = "kien"
-
-def installer_append_file(fo, path, name_in_installer):
-  fi = open(path, "rb")
-  data = fi.read()
-  fi.close()
-  assert len(data) == os.path.getsize(path)
-  write_with_size(fo, data, name_in_installer)
-  write_with_size(fo, name_in_installer)
-  write_no_size(fo, INSTALLER_HEADER_FILE)
-
-def installer_append_file_bzip2(fo, path, name_in_installer):
-  fi = open(path, "rb")
-  data = fi.read()
-  fi.close()
-  assert len(data) == os.path.getsize(path)
-  data2 = bz2.compress(data, 9)  
-  assert len(data2) < os.path.getsize(path)
-  write_with_size(fo, data2, name_in_installer)
-  write_with_size(fo, name_in_installer)
-  write_no_size(fo, INSTALLER_HEADER_FILE_BZIP2)
-
-def installer_mark_end(fo):
-  write_no_size(fo, INSTALLER_HEADER_END)
 
 # doesn't really belong here, but have no better place
 def zip_file(dst_zip_file, src, src_name=None, compress=True):
@@ -173,21 +130,13 @@ def zip_file(dst_zip_file, src, src_name=None, compress=True):
     zf = zipfile.ZipFile(dst_zip_file, "w", zipfile.ZIP_DEFLATED)
   else:
     zf = zipfile.ZipFile(dst_zip_file, "w", zipfile.ZIP_STORED)
-  if not src_name:
+  if src_name is None:
     src_name = os.path.basename(src)
   zf.write(src, src_name)
   zf.close()
 
-# construct a full installer by appending data at the end of installer executable.
-# appended data is in the format:
-#  $data - data as binary. In our case it's Sumatra's binary
-#  $data_size - as 32-bit integer
-#  $data-name - name of the data. In our case it's name of the file to be written out
-#  $data-name-len - length of $data-name, as 32-bit integer
-#  $header - 4 byte, unique header of this section ('kifi' - kjk installer file info)
-# this format is designed to be read backwards (because it's easier for the installer to
-# seek to the end of itself than parse pe header to figure out where the executable ends
-# and data starts)
+# construct a full installer by appending data at the end of installer executable
+# in ZIP format with BZIP2 compression
 def build_installer_native(dir, nameprefix):
   installer_template_exe = os.path.join(dir, "Installer.exe")
   if nameprefix is not None:
@@ -196,16 +145,24 @@ def build_installer_native(dir, nameprefix):
   else:
     installer_exe = os.path.join(dir, "SumatraPDF-install.exe")
     exe = os.path.join(dir, "SumatraPDF.exe")
-  plugin = os.path.join(dir, "npPdfViewer.dll")
-  shutil.copy(installer_template_exe, installer_exe)
 
-  fo = open(installer_exe, "ab")
-  # append installer data to installer exe
-  installer_mark_end(fo) # this are read backwards so end marker is written first
-  installer_append_file_bzip2(fo, exe, "SumatraPDF.exe")
-  installer_append_file_bzip2(fo, plugin, "npPdfViewer.dll")
+  plugin = os.path.join(dir, "npPdfViewer.dll")
   font_name =  "DroidSansFallback.ttf"
   font_path = os.path.join("mupdf", "fonts", "droid", font_name)
-  installer_append_file_bzip2(fo, font_path, font_name)
+
+  shutil.copy(installer_template_exe, installer_exe)
+
+  # write the marker where the (un)installer ends and the ZIP file begins
+  fo = open(installer_exe, "ab")
+  fo.write("!uninst_end!")
   fo.close()
+
+  zf = zipfile.ZipFile(installer_exe, "a", zipfile.ZIP_BZIP2)
+  zf.write(exe, "SumatraPDF.exe")
+  zf.write(plugin, "npPdfViewer.dll")
+  zf.write(font_path, font_name)
+  zf.close()
+
+  print("Built installer at " + installer_exe)
+
   return installer_exe

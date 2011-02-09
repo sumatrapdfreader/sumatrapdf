@@ -99,6 +99,7 @@ CFLAGS = $(CFLAGS) /MTd /EHs-c-
 
 ZLIB_CFLAGS = $(CFLAGS)
 BZIP2_CFLAGS = $(CFLAGS) /D "BZ_NO_STDIO" /D "BZ_DEBUG=0"
+MINIZIP_CFLAGS = $(ZLIB_CFLAGS) /D "HAVE_BZIP2" /I$(ZLIB_DIR) /I$(BZIP2_DIR)
 
 FREETYPE_CFLAGS = $(CFLAGS) /TC /I$(FREETYPE_DIR)/config /I$(FREETYPE_DIR)/include \
 	/D "FT2_BUILD_LIBRARY" /D "FT_OPTION_AUTOFIT2"
@@ -148,6 +149,9 @@ ZLIB_OBJS = \
 BZIP2_OBJS = \
 	$(OBZ)\blocksort.obj $(OBZ)\bzlib.obj $(OBZ)\compress.obj $(OBZ)\crctable.obj \
 	$(OBZ)\decompress.obj $(OBZ)\huffman.obj $(OBZ)\randtable.obj
+
+MINIZIP_OBJS = \
+	$(OZ)\unzip.obj $(OZ)\ioapi.obj $(OZ)\iowin32.obj
 
 !if "$(JPEG_TURBO_DIR)"==""
 JPEG_OBJS = \
@@ -631,6 +635,9 @@ $(PDFEXTRACT_APP): $(PDFEXTRACT_OBJS)
 
 {$(BZIP2_DIR)}.c{$(OBZ)}.obj::
 	$(CC) $(BZIP2_CFLAGS) /Fo$(OBZ)\ /Fd$(O)\vc80.pdb $<
+
+{$(ZLIB_DIR)\minizip}.c{$(OZ)}.obj::
+	$(CC) $(MINIZIP_CFLAGS) /Fo$(OZ)\ /Fd$(O)\vc80.pdb $<
 
 !if "$(JPEG_TURBO_OBJS)"==""
 {$(JPEG_DIR)}.c{$(OJ)}.obj::

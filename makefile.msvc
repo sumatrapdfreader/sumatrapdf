@@ -45,7 +45,7 @@ SUMATRA_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
 	/D "SYNCTEX_FEATURE"
 
 INSTALLER_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
-	/Ibaseutils /Ibaseutils/msvc /Isrc /Isrc/installer /I$(BZIP2_DIR)
+	/Ibaseutils /Ibaseutils/msvc /Isrc /Isrc/installer /I$(ZLIB_DIR) /I$(ZLIB_DIR)/minizip
 
 # Make it easy to compile as ANSI or UNICODE application
 !if "$(_ANSI)"==""
@@ -91,7 +91,7 @@ SUMATRA_OBJS = \
 	$(O)\Benchmark.obj $(O)\UnitTests.obj $(O)\AppTools.obj $(SUMATRA_RES)
 
 INSTALLER_OBJS = \
-	$(O)\Installer.obj $(INSTALLER_RES)
+	$(O)\Installer.obj $(INSTALLER_RES) $(ZLIB_OBJS) $(MINIZIP_OBJS)
 
 PDFFILTER_OBJS = \
 	$(O)\PdfFilterDll.obj $(O)\CPdfFilter.obj $(PDFFILTER_RES) \

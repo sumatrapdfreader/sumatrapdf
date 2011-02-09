@@ -22,7 +22,9 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include <Shlwapi.h>
 #include <objidl.h>
 
-#include <bzlib.h>
+#include <ioapi.h>
+#include <iowin32.h>
+#include <unzip.h>
 
 #include "Resource.h"
 #include "base_util.h"
@@ -52,8 +54,6 @@ using namespace Gdiplus;
 #define ID_BUTTON_EXIT                16
 
 #define WM_APP_INSTALLATION_FINISHED        (WM_APP + 1)
-
-#define INVALID_SIZE                  DWORD(-1)
 
 // The window is divided in two parts:
 // * top part, where we display nice graphics
@@ -126,32 +126,15 @@ static Color            COLOR_MSG_FAILED(gCol1);
 // for compatibility with the old NSIS installer)
 #define INSTALL_DIR _T("Install_Dir")
 
-#define INSTALLER_PART_FILE         "kifi"
-#define INSTALLER_PART_FILE_BZIP2   "kifb"
-#define INSTALLER_PART_END          "kien"
-#define INSTALLER_PART_UNINSTALLER  "kiun"
+// Note: make sure that this mark is never contained as a single-byte
+//       sequence in the executable, as we cut at the first occurrence
+//       for the uninstaller
+#define UN_INST_MARK L"!uninst_end!"
+static char *gUnInstMark = NULL; // wstr_to_utf8(UN_INST_MARK)
 
-struct EmbeddedPart {
-    EmbeddedPart *  next;
-    char            type[5];     // we only use 4, 5th is for 0-termination
-    // fields valid if type is INSTALLER_PART_FILE or INSTALLER_PART_FILE_BZIP2
-    uint32_t        fileSize;    // size of the file
-    uint32_t        fileOffset;  // offset in the executable of the file start
-    TCHAR *         fileName;    // name of the file (UTF-8 encoded in file)
-};
-
-static EmbeddedPart *   gEmbeddedParts;
-
-void FreeEmbeddedParts(EmbeddedPart *root)
+void NotifyFailed(TCHAR *msg)
 {
-    EmbeddedPart *p = root;
-
-    while (p) {
-        EmbeddedPart *next = p->next;
-        free(p->fileName);
-        free(p);
-        p = next;
-    }
+    MessageBox(gHwndFrame, msg, _T("Installation failed"),  MB_ICONEXCLAMATION | MB_OK);
 }
 
 void ShowLastError(TCHAR *msg)
@@ -163,46 +146,8 @@ void ShowLastError(TCHAR *msg)
     } else {
         errorMsg = tstr_printf(_T("%s\n\nError %d"), msg, (int)GetLastError());
     }
-    MessageBox(gHwndFrame, errorMsg, _T("Installer failed"), MB_OK | MB_ICONEXCLAMATION);
+    NotifyFailed(errorMsg);
     free(errorMsg);
-}
-
-void NotifyFailed(TCHAR *msg)
-{
-    MessageBox(gHwndFrame, msg, _T("Installer failed"),  MB_ICONEXCLAMATION | MB_OK);
-}
-
-BOOL ReadData(HANDLE h, LPVOID data, DWORD size, TCHAR *errMsg)
-{
-    DWORD bytesRead;
-    BOOL ok = ReadFile(h, data, size, &bytesRead, NULL);
-    TCHAR *msg;
-    if (!ok || (bytesRead != size) || (size == (DWORD)-1)) {        
-        if (!ok) {
-            msg = tstr_printf(_T("%s: ok=%d"), errMsg, ok);
-        } else {
-            msg = tstr_printf(_T("%s: bytesRead=%d, wanted=%d"), errMsg, (int)bytesRead, (int)size);
-        }
-        ShowLastError(msg);
-        return FALSE;
-    }
-    return TRUE;        
-}
-
-#define SEEK_FAILED INVALID_SET_FILE_POINTER
-
-DWORD SeekBackwards(HANDLE h, LONG distance, TCHAR *errMsg)
-{
-    DWORD res = SetFilePointer(h, -distance, NULL, FILE_CURRENT);
-    if (INVALID_SET_FILE_POINTER == res) {
-        ShowLastError(errMsg);
-    }
-    return res;
-}
-
-DWORD GetFilePos(HANDLE h)
-{
-    return SeekBackwards(h, 0, _T(""));
 }
 
 #define TEN_SECONDS_IN_MS 10*1000
@@ -327,11 +272,6 @@ TCHAR *GetShortcutPath()
     return tstr_cat(GetStartMenuProgramsPath(), _T("\\") TAPP _T(".lnk"));
 }
 
-DWORD GetFilePointer(HANDLE h)
-{
-    return SetFilePointer(h, 0, NULL, FILE_CURRENT);
-}
-
 class FrameTimeoutCalculator {
 
     LARGE_INTEGER   timeStart;
@@ -376,154 +316,125 @@ public:
     }
 };
 
-/* Load information about parts embedded in the installer.
-   The format of the data is:
-
-   For a part that is a file:
-     $fileData      - blob
-     $fileDataLen   - length of $data, 32-bit unsigned integer, little-endian
-     $fileName      - UTF-8 string, name of the file (without terminating zero!)
-     $fileNameLen   - length of $fileName, 32-bit unsigned integer, little-endian
-     'kifi'         - 4 byte unique header
-
-   For a part that signifies end of parts:
-     'kien'         - 4 byte unique header
-
-   Data is laid out so that it can be read sequentially from the end, because
-   it's easier for the installer to seek to the end of itself than parse
-   PE header to figure out where the data starts. */
-EmbeddedPart *GetEmbeddedPartsInfo() {
-    EmbeddedPart *  root = NULL;
-    EmbeddedPart *  part;
-    DWORD           res;
-    TCHAR *         msg;
-
-    if (gEmbeddedParts)
-        return gEmbeddedParts;
-
-    TCHAR *exePath = GetExePath();
-    HANDLE h = CreateFile(exePath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-    if (h == INVALID_HANDLE_VALUE)
-    {
-        NotifyFailed(_T("Couldn't open myself for reading"));
-        goto Error;
-    }
-
-    // position at the header of the last part
-    res = SetFilePointer(h, -4, NULL, FILE_END);
-    if (INVALID_SET_FILE_POINTER == res) {
-        NotifyFailed(_T("Couldn't seek to end"));
-        goto Error;
-    }
-
-ReadNextPart:
-    part = SAZ(EmbeddedPart);
-    part->next = root;
-    root = part;
-
-    res = GetFilePos(h);
-#if 0
-    msg = tstr_printf(_T("Curr pos: %d"), (int)res);
-    MessageBox(gHwndFrame, msg, _T("Info"), MB_ICONINFORMATION | MB_OK);
-    free(msg);
+BOOL IsValidInstaller(void)
+{
+    zlib_filefunc64_def ffunc;
+#ifdef UNICODE
+    fill_win32_filefunc64W(&ffunc);
+#else
+    fill_win32_filefunc64A(&ffunc);
 #endif
+    unzFile uf = unzOpen2_64(GetExePath(), &ffunc);
+    if (!uf)
+        return FALSE;
 
-    // at this point we have to be positioned in the file at the beginning of the header
-    if (!ReadData(h, (LPVOID)part->type, 4, _T("Couldn't read the header")))
-        goto Error;
+    unz_global_info64 ginfo;
+    int err = unzGetGlobalInfo64(uf, &ginfo);
+    unzClose(uf);
 
-    if (str_eqn(part->type, INSTALLER_PART_END, 4)) {
-        part->fileSize = GetFilePointer(h);
-        goto Exit;
-    }
-
-    if (str_eqn(part->type, INSTALLER_PART_UNINSTALLER, 4)) {
-        goto Exit;
-    }
-
-    if (str_eqn(part->type, INSTALLER_PART_FILE, 4) ||
-        str_eqn(part->type, INSTALLER_PART_FILE_BZIP2, 4)) {
-        uint32_t nameLen;
-        if (SEEK_FAILED == SeekBackwards(h, 8, _T("Couldn't seek to file name size")))
-            goto Error;
-
-        if (!ReadData(h, (LPVOID)&nameLen, 4, _T("Couldn't read file name size")))
-            goto Error;
-        if (SEEK_FAILED == SeekBackwards(h, 4 + nameLen, _T("Couldn't seek to file name")))
-            goto Error;
-
-        char *fileNameUTF8 = (char*)malloc(nameLen+1);
-        if (!ReadData(h, (LPVOID)fileNameUTF8, nameLen, _T("Couldn't read file name")))
-            goto Error;
-        fileNameUTF8[nameLen] = '\0';
-        if (SEEK_FAILED == SeekBackwards(h, 4 + nameLen, _T("Couldn't seek to file size")))
-            goto Error;
-        part->fileName = utf8_to_tstr(fileNameUTF8);
-        free(fileNameUTF8);
-
-        if (!ReadData(h, (LPVOID)&part->fileSize, 4, _T("Couldn't read file size")))
-            goto Error;
-        res = SeekBackwards(h, 4 + part->fileSize + 4,  _T("Couldn't seek to header"));
-        if (SEEK_FAILED == res)
-            goto Error;
-
-        part->fileOffset = res + 4;
-#if 0
-        msg = tstr_printf(_T("Found file '%s' of size %d at offset %d"), part->fileName, part->fileSize, part->fileOffset);
-        MessageBox(gHwndFrame, msg, _T("Installer"), MB_ICONINFORMATION | MB_OK);
-        free(msg);
-#endif
-        goto ReadNextPart;
-    }
-
-    if (str_empty(part->type)) {
-        goto Error;
-    }
-
-    TCHAR *ttype = utf8_to_tstr(part->type);
-    msg = tstr_printf(_T("Unknown part: %s"), ttype);
-    NotifyFailed(msg);
-    free(msg); free(ttype);
-    goto Error;
-
-Error:
-    FreeEmbeddedParts(root);
-    root = NULL;
-
-Exit:
-    CloseHandle(h);
-    gEmbeddedParts = root;
-    return root;
+    return err == UNZ_OK && ginfo.number_entry > 0;
 }
 
-BOOL CopyFileData(HANDLE hSrc, HANDLE hDst, DWORD size)
+BOOL InstallCopyFiles(void)
 {
-    BOOL    ok;
-    DWORD   bytesTransferred;
-    char    buf[1024*8];
-    DWORD   left = size;
+    zlib_filefunc64_def ffunc;
+#ifdef UNICODE
+    fill_win32_filefunc64W(&ffunc);
+#else
+    fill_win32_filefunc64A(&ffunc);
+#endif
+    unzFile uf = unzOpen2_64(GetExePath(), &ffunc);
+    if (!uf) {
+        NotifyFailed(_T("Invalid payload format"));
+        goto Error;
+    }
 
-    while (0 != left) {
-        DWORD toRead = dimof(buf);
-        if (toRead > left)
-            toRead = left;
+    unz_global_info64 ginfo;
+    int err = unzGetGlobalInfo64(uf, &ginfo);
+    if (err != UNZ_OK) {
+        NotifyFailed(_T("Broken payload format (couldn't get global info)"));
+        goto Error;
+    }
 
-        ok = ReadFile(hSrc, (LPVOID)buf, toRead, &bytesTransferred, NULL);
-        if (!ok || (toRead != bytesTransferred)) {
-            NotifyFailed(_T("Failed to read from file part"));
+    // extract all contained files one by one
+    int count;
+    for (count = 0; count < ginfo.number_entry; count++) {
+        BOOL success = FALSE;
+
+        char filename[MAX_PATH];
+        unz_file_info64 finfo;
+        err = unzGetCurrentFileInfo64(uf, &finfo, filename, dimof(filename), NULL, 0, NULL, 0);
+        if (err != UNZ_OK) {
+            NotifyFailed(_T("Broken payload format (couldn't get file info)"));
             goto Error;
         }
 
-        ok = WriteFile(hDst, (LPVOID)buf, toRead, &bytesTransferred, NULL);
-        if (!ok || (toRead != bytesTransferred)) {
-            NotifyFailed(_T("Failed to write to hDst"));
+        err = unzOpenCurrentFilePassword(uf, NULL);
+        if (err != UNZ_OK) {
+            NotifyFailed(_T("Can't access payload data"));
             goto Error;
         }
 
-        left -= toRead;
-    }       
-    return TRUE;
+        // TODO: extract block by block instead of everything at once
+        char *data = SAZA(char, (size_t)finfo.uncompressed_size);
+        if (!data) {
+            NotifyFailed(_T("Not enough memory to extract all files"));
+            goto Error;
+        }
+
+        err = unzReadCurrentFile(uf, data, (unsigned int)finfo.uncompressed_size);
+        if (err != (int)finfo.uncompressed_size) {
+            NotifyFailed(_T("Payload data was damaged (parts missing)"));
+            free(data);
+            goto Error;
+        }
+
+        TCHAR *inpath = ansi_to_tstr(filename);
+        TCHAR *instdir = GetInstallationDir();
+        TCHAR *extpath = tstr_cat3(instdir, _T("\\"), FilePath_GetBaseName(inpath));
+
+        BOOL ok = write_to_file(extpath, data, (size_t)finfo.uncompressed_size);
+        if (ok) {
+            // set modification time to original value
+            HANDLE hFile = CreateFile(extpath, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
+            if (hFile != INVALID_HANDLE_VALUE) {
+                FILETIME ftModified, ftLocal;
+                DosDateTimeToFileTime(HIWORD(finfo.dosDate), LOWORD(finfo.dosDate), &ftLocal);
+                LocalFileTimeToFileTime(&ftLocal, &ftModified);
+                SetFileTime(hFile, NULL, NULL, &ftModified);
+                CloseHandle(hFile);
+            }
+            success = TRUE;
+        }
+        else {
+            NotifyFailed(_T("Couldn't write extracted file to disk"));
+            success = FALSE;
+        }
+
+        free(inpath);
+        free(instdir);
+        free(extpath);
+        free(data);
+
+        err = unzCloseCurrentFile(uf);
+        if (err != UNZ_OK) {
+            NotifyFailed(_T("Payload data was damaged (CRC failed)"));
+            goto Error;
+        }
+
+        err = unzGoToNextFile(uf);
+        if (err != UNZ_OK || !success)
+            break;
+    }
+
+    unzClose(uf);
+    return count == ginfo.number_entry;
+
 Error:
+    if (uf) {
+        unzCloseCurrentFile(uf);
+        unzClose(uf);
+    }
     return FALSE;
 }
 
@@ -533,194 +444,54 @@ extern "C" {
 // needed because we compile bzip2 with #define BZ_NO_STDIO
 void bz_internal_error(int errcode)
 {
-    MessageBox(gHwndFrame, _T("fatal error: bz_internal_error()"), _T("Installer failed"),  MB_ICONEXCLAMATION | MB_OK);   
+    NotifyFailed(_T("fatal error: bz_internal_error()"));
 }
 #ifdef __cplusplus
 }
 #endif
 
-BOOL CopyFileDataBzip2(HANDLE hSrc, HANDLE hDst, DWORD size)
+BOOL CreateUninstaller(void)
 {
-    BOOL                ok;
-    DWORD               bytesTransferred;
-    char                in[1024*8];
-    char                out[1024*16];
-    int                 ret;
-    DWORD               left = size;
-    bz_stream           strm = {0};
-
-    ret = BZ2_bzDecompressInit(&strm, 0, 0);
-    if (ret != BZ_OK) {
-        NotifyFailed(_T("BZ2_bzDecompress() failed"));
+    size_t installerSize;
+    char *installerData = file_read_all(GetExePath(), &installerSize);
+    if (!installerData) {
+        NotifyFailed(_T("Couldn't access installer for uninstaller extraction"));
         return FALSE;
     }
 
-    while (0 != left) {
-        DWORD toRead = dimof(in);
-        if (toRead > left)
-            toRead = left;
+    if (!gUnInstMark)
+        gUnInstMark = wstr_to_utf8(UN_INST_MARK);
+    int markSize = str_len(gUnInstMark);
 
-        ok = ReadFile(hSrc, (LPVOID)in, toRead, &bytesTransferred, NULL);
-        if (!ok || (toRead != bytesTransferred)) {
-            NotifyFailed(_T("Failed to read from file part"));
-            goto Error;
+    // find the end of the (un)installer
+    char *end = (char *)memchr(installerData, *gUnInstMark, installerSize);
+    while (end && !memcmp(end, gUnInstMark, markSize))
+        end = (char *)memchr(end + 1, *gUnInstMark, installerSize - (end - installerData) - 1);
+
+    // if it's not found, append a new uninstaller marker to the end of the executable
+    if (!end) {
+        char *extData = (char *)realloc(installerData, installerSize + markSize);
+        if (!extData) {
+            NotifyFailed(_T("Couldn't write uninstaller to disk"));
+            free(installerData);
+            return FALSE;
         }
-
-        strm.avail_in = bytesTransferred;
-        strm.next_in = in;
-
-        do {
-            strm.avail_out = sizeof(out);
-            strm.next_out = out;
-            ret = BZ2_bzDecompress(&strm);
-
-            switch (ret) {
-                case BZ_PARAM_ERROR:
-                case BZ_DATA_ERROR:
-                case BZ_DATA_ERROR_MAGIC:
-                case BZ_MEM_ERROR:
-                    goto Error;
-            }
-
-            DWORD toWrite = sizeof(out) - strm.avail_out;
-
-            ok = WriteFile(hDst, (LPVOID)out, toWrite, &bytesTransferred, NULL);
-            if (!ok || (toWrite != bytesTransferred)) {
-                NotifyFailed(_T("Failed to write to hDst"));
-                goto Error;
-            }
-        } while (strm.avail_out == 0);
-
-        left -= toRead;
+        memcpy(installerData + installerSize, gUnInstMark, markSize);
+        installerSize += markSize;
     }
-    if (ret == BZ_STREAM_END)
-        ret = BZ_OK;
-    ret = BZ2_bzCompressEnd(&strm);
-    return ret == BZ_OK;
-Error:
-    BZ2_bzCompressEnd(&strm);
-    return FALSE;
-}
-
-BOOL OpenFileForReading(TCHAR *s, HANDLE *hOut)
-{
-    *hOut = CreateFile(s, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-    if (*hOut == INVALID_HANDLE_VALUE) {
-        TCHAR *msg = tstr_printf(_T("Couldn't open %s for reading"), s);
-        NotifyFailed(msg);
-        free(msg);
-        return FALSE;
-    }
-    return TRUE;
-}
-
-BOOL OpenFileForWriting(TCHAR *s, HANDLE *hOut)
-{
-    *hOut = CreateFile(s, GENERIC_WRITE, FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-    if (*hOut == INVALID_HANDLE_VALUE) {
-        TCHAR *msg = tstr_printf(_T("Couldn't open %s for writing"), s);
-        ShowLastError(msg);
-        free(msg);
-        return FALSE;
-    }
-    return TRUE;
-}
-
-BOOL ExtractPartFile(TCHAR *dir, EmbeddedPart *p)
-{
-    TCHAR * dstName = NULL, *dstPath = NULL;
-    HANDLE  hDst = INVALID_HANDLE_VALUE, hSrc = INVALID_HANDLE_VALUE;
-    BOOL    ok = FALSE;
-
-    dstPath = tstr_cat3(dir, _T("\\"), p->fileName);
-    TCHAR *exePath = GetExePath();
-
-    if (!OpenFileForReading(exePath, &hSrc))
-        goto Error;
-
-    DWORD res = SetFilePointer(hSrc, p->fileOffset, NULL, FILE_BEGIN);
-    if (INVALID_SET_FILE_POINTER == res) {
-        ShowLastError(_T("Couldn't seek to file part"));
-        goto Error;
+    else {
+        installerSize = end - installerData;
     }
 
-    if (!OpenFileForWriting(dstPath, &hDst))
-        goto Error;
-
-    if (str_eqn(p->type, INSTALLER_PART_FILE, 4))
-        ok = CopyFileData(hSrc, hDst, p->fileSize);
-    else if (str_eqn(p->type, INSTALLER_PART_FILE_BZIP2, 4))
-        ok = CopyFileDataBzip2(hSrc, hDst, p->fileSize);
-
-Error:
-    CloseHandle(hDst); CloseHandle(hSrc);
-    free(dstPath);
-    return ok;
-}
-
-BOOL InstallCopyFiles(EmbeddedPart *root)
-{
-    TCHAR *installDir = GetInstallationDir();
-    EmbeddedPart *p = root;
-    while (p) {
-        EmbeddedPart *next = p->next;
-        if (str_eqn(p->type, INSTALLER_PART_FILE, 4) ||
-            str_eqn(p->type, INSTALLER_PART_FILE_BZIP2, 4)) {
-            if (!ExtractPartFile(installDir, p))
-                return FALSE;
-        }
-        p = next;
-    }
-    return TRUE;
-}
-
-DWORD GetInstallerTemplateSize(EmbeddedPart *parts)
-{
-    EmbeddedPart *p = parts;
-    while (p) {
-        EmbeddedPart *next = p->next;
-        if (str_eqn(p->type, INSTALLER_PART_END, 4))
-            return p->fileSize;
-        p = next;
-    }
-    return INVALID_SIZE;
-}
-
-BOOL CreateUninstaller(EmbeddedPart *parts)
-{
     TCHAR *uninstallerPath = GetUninstallerPath();
-    HANDLE hSrc = INVALID_HANDLE_VALUE, hDst = INVALID_HANDLE_VALUE;
-    BOOL ok = FALSE;
-    DWORD bytesTransferred;
-
-    TCHAR *exePath = GetExePath();
-    DWORD installerTemplateSize = GetInstallerTemplateSize(parts);
-    if (INVALID_SIZE == installerTemplateSize)
-        goto Error;
-
-    if (!OpenFileForReading(exePath, &hSrc))
-        goto Error;
-
-    if (!OpenFileForWriting(uninstallerPath, &hDst))
-        goto Error;
-
-    ok = CopyFileData(hSrc, hDst, installerTemplateSize);
-    if (!ok)
-        goto Error;
-
-    ok = WriteFile(hDst, (LPVOID)INSTALLER_PART_UNINSTALLER, 4, &bytesTransferred, NULL);
-    if (!ok || (4 != bytesTransferred)) {
-        NotifyFailed(_T("Failed to write to hDst"));
-        goto Error;
-    }
-
-Exit:
+    BOOL ok = write_to_file(uninstallerPath, installerData, installerSize);
     free(uninstallerPath);
-    CloseHandle(hSrc); CloseHandle(hDst);
+    free(installerData);
+
+    if (!ok)
+        NotifyFailed(_T("Couldn't write uninstaller to disk"));
+
     return ok;
-Error:
-    ok = FALSE;
-    goto Exit;
 }
 
 BOOL IsUninstaller()
@@ -728,13 +499,45 @@ BOOL IsUninstaller()
 #if FORCE_TO_BE_UNINSTALLER
     return TRUE;
 #else
-    EmbeddedPart *p = GetEmbeddedPartsInfo();
-    while (p) {
-        EmbeddedPart *next = p->next;
-        if (str_eqn(p->type, INSTALLER_PART_UNINSTALLER, 4))
-            return TRUE;
-        p = next;
+    static int isUninstaller = -1;
+    if (isUninstaller >= 0)
+        return isUninstaller;
+
+    char *data = NULL;
+    if (!gUnInstMark)
+        gUnInstMark = wstr_to_utf8(UN_INST_MARK);
+    int markSize = str_len(gUnInstMark);
+
+    TCHAR *exePath = GetExePath();
+    HANDLE h = CreateFile(exePath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (h == INVALID_HANDLE_VALUE) {
+        NotifyFailed(_T("Couldn't open myself for reading"));
+        goto Error;
     }
+    DWORD res = SetFilePointer(h, -markSize, NULL, FILE_END);
+    if (INVALID_SET_FILE_POINTER == res) {
+        NotifyFailed(_T("Couldn't seek to end"));
+        goto Error;
+    }
+
+    data = SAZA(char, markSize);
+    DWORD bytesRead;
+    BOOL ok = ReadFile(h, data, markSize, &bytesRead, NULL);
+    if (!ok || bytesRead != markSize) {
+        NotifyFailed(_T("Couldn't read marker at end of file"));
+        goto Error;
+    }
+
+    CloseHandle(h);
+    isUninstaller = !memcmp(data, gUnInstMark, markSize);
+    free(data);
+
+    return isUninstaller;
+
+Error:
+    free(data);
+    CloseHandle(h);
+    isUninstaller = FALSE;
     return FALSE;
 #endif
 }
@@ -1144,22 +947,16 @@ static DWORD WINAPI InstallerThread(LPVOID data)
     td->ok = TRUE;
     td->msg = NULL;
 
-    EmbeddedPart *parts = GetEmbeddedPartsInfo();
-    if (NULL == parts) {
-        td->msg = _T("Didn't find embedded parts");
-        goto Error;
-    }
-
     /* if the app is running, we have to kill it so that we can over-write the executable */
     KillProcess(EXENAME, TRUE);
 
     if (!CreateInstallationDirectory())
         goto Error;
 
-    if (!InstallCopyFiles(parts))
+    if (!InstallCopyFiles())
         goto Error;
 
-    if (!CreateUninstaller(parts))
+    if (!CreateUninstaller())
         goto Error;
 
     WriteUninstallerRegistryInfo();
@@ -1686,7 +1483,13 @@ static LRESULT CALLBACK InstallerWndProcFrame(HWND hwnd, UINT message, WPARAM wP
     switch (message)
     {
         case WM_CREATE:
-            OnCreateInstaller(hwnd);
+            if (IsValidInstaller()) {
+                OnCreateInstaller(hwnd);
+            }
+            else {
+                NotifyFailed(_T("The installer has been corrupted. Please download it again.\nSorry for the inconvenience!"));
+                PostQuitMessage(0);
+            }
             break;
 
         case WM_DESTROY:
@@ -1941,7 +1744,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     ret = RunApp();
 
 Exit:
-    FreeEmbeddedParts(gEmbeddedParts);
+    free(gUnInstMark);
     CoUninitialize();
 
     return ret;

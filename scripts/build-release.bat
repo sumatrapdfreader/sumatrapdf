@@ -1,4 +1,5 @@
 @ECHO OFF
+SETLOCAL
 
 REM assumes we're being run from top-level directory as:
 REM scripts\build-release.bat
