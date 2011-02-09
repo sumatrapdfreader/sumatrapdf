@@ -91,7 +91,7 @@ SUMATRA_OBJS = \
 	$(O)\Benchmark.obj $(O)\UnitTests.obj $(O)\AppTools.obj $(SUMATRA_RES)
 
 INSTALLER_OBJS = \
-	$(O)\Installer.obj $(INSTALLER_RES) $(ZLIB_OBJS) $(MINIZIP_OBJS)
+	$(O)\Installer.obj $(INSTALLER_RES)
 
 PDFFILTER_OBJS = \
 	$(O)\PdfFilterDll.obj $(O)\CPdfFilter.obj $(PDFFILTER_RES) \
@@ -130,7 +130,7 @@ $(SUMATRA_APP): $(LIBS_OBJS) $(BASEUTILS_OBJS) $(SUMATRA_OBJS)
 $(INSTALLER_RES): src\installer\Installer.rc src\installer\Resource.h src\Version.h
 	rc /r /fo$@ $(EXTCFLAGS) src\installer\Installer.rc
 
-$(INSTALLER_APP): $(BZIP2_OBJS) $(BASEUTILS_OBJS) $(INSTALLER_OBJS)
+$(INSTALLER_APP): $(ZLIB_OBJS) $(MINIZIP_OBJS) $(BZIP2_OBJS) $(BASEUTILS_OBJS) $(INSTALLER_OBJS)
 	$(LD) $(LDFLAGS) $** $(LIBS_INSTALLER) /PDB:$*.pdb /OUT:$@
 
 $(PDFFILTER_RES): src\ifilter\PdfFilter.rc src\Version.h

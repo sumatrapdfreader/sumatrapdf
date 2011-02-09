@@ -1502,8 +1502,10 @@ void DisplayModel::goToPdfDest(fz_obj *dest)
                 scrollY = MAX(scrollY, 0); // Adobe Reader never shows the previous page
             }
         }
-        else if (str_eq(fz_toname(obj), "Fit"))
+        else if (str_eq(fz_toname(obj), "Fit")) {
             zoomTo(ZOOM_FIT_PAGE);
+            ((WindowInfo *)this->appData())->UpdateToolbarState();
+        }
         goToPage(pageNo, (int)scrollY, true, (int)scrollX);
     }
 }
