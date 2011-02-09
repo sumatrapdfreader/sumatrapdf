@@ -429,6 +429,9 @@ Girar a la derecha\tCtrl-Shift-+
 Searching %d of %d...
 Buscando %d de %d…
 
+Select &All\tCtrl-A
+Seleccionar &todo\tCtrl-A
+
 Select content with Ctrl+left mouse button
 Seleccionar con Ctrl+Click
 
@@ -518,7 +521,4 @@ copiado de texto
 
 printing document
 impresión de documento
-
-# Untranslated:
-#Select &All\tCtrl-A
 

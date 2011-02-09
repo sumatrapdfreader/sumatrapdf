@@ -6002,7 +6002,7 @@ const char *g_transTranslations[] = {
   "Girar a la izquierda\tCtrl-Shift--",
   "Girar a la derecha\tCtrl-Shift-+",
   "Buscando %d de %d\342\200\246",
-  NULL,
+  "Seleccionar &todo\tCtrl-A",
   "Seleccionar con Ctrl+Click",
   "Enviar por correo electr\303\263nico",
   "Establecer b\303\272squeda inversa",
