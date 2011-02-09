@@ -257,21 +257,23 @@ USHORT RenderCache::GetTileRes(DisplayModel *dm, int pageNo)
     fz_matrix ctm = dm->pdfEngine->viewctm(pageNo, dm->zoomReal(), dm->rotation());
     fz_rect pixelbox = fz_transformrect(ctm, mediabox);
 
-    double factorW = (pixelbox.x1 - pixelbox.x0) / (maxTileSize.dx + 1);
-    double factorH = (pixelbox.y1 - pixelbox.y0) / (maxTileSize.dy + 1);
+    float factorW = (pixelbox.x1 - pixelbox.x0) / (maxTileSize.dx + 1);
+    float factorH = (pixelbox.y1 - pixelbox.y0) / (maxTileSize.dy + 1);
+    float factorMax = max(factorW, factorH);
 
-    // use larger tiles when fitting page or width or when rendering pages
+    // use larger tiles when fitting page or width or when a page is smaller
+    // than the visible canvas width/height or when rendering pages
     // containing a single image (MuPDF isn't that much faster for rendering
     // individual tiles than for rendering the whole image in a single pass)
     if (dm->zoomVirtual() == ZOOM_FIT_PAGE || dm->zoomVirtual() == ZOOM_FIT_WIDTH ||
+        pixelbox.x1 - pixelbox.x0 <= dm->drawAreaSize.dx || pixelbox.y1 - pixelbox.y0 < dm->drawAreaSize.dy ||
         dm->pdfEngine->isImagePage(pageNo)) {
-        factorW /= 3.0;
-        factorH /= 3.0;
+        factorMax /= 2.0;
     }
 
     USHORT res = 0;
-    if (factorW > 1 || factorH > 1)
-        res = (USHORT)ceill(log(max(factorW, factorH)) / log(2.0));
+    if (factorMax > 1.5)
+        res = (USHORT)ceilf(log(factorMax) / log(2.0f));
     return res;
 }
 
