@@ -3,7 +3,6 @@
 
 /*
 The installer is good enough for production but it doesn't mean it couldn't be improved:
- * thank the user for downloading and installing SumatraPDF (cf. Skype installer)
  * allow to change the installation directory
 
  * some more fanciful animations e.g.:
@@ -36,9 +35,11 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 
 using namespace Gdiplus;
 
-// define as true when testing as uninstaller (has the same effect as
-// running the installer with the /u command line argument)
-#define FORCE_TO_BE_UNINSTALLER false
+// define for testing the uninstaller
+// #define TEST_UNINSTALLER
+
+// define for a shadow effect
+#define DRAW_TEXT_SHADOW
 
 #define INSTALLER_FRAME_CLASS_NAME    _T("SUMATRA_PDF_INSTALLER_FRAME")
 
@@ -75,7 +76,6 @@ static HFONT            gFontDefault;
 static TCHAR *          gMsg;
 static TCHAR *          gMsgError = NULL;
 static Color            gMsgColor;
-static bool             gMsgDrawShadow = true;
 
 Color gCol1(196, 64, 50); Color gCol1Shadow(134, 48, 39);
 Color gCol2(227, 107, 35); Color gCol2Shadow(155, 77, 31);
@@ -145,7 +145,7 @@ struct {
     HANDLE hThread;
     bool success;
 } gGlobalData = {
-    FORCE_TO_BE_UNINSTALLER, /* bool uninstall */
+    false, /* bool uninstall */
     false,  /* bool silent */
     NULL,   /* TCHAR *installDir */
     false,  /* bool registerAsDefault */
@@ -1227,23 +1227,31 @@ void CalcLettersLayout(Graphics& g, Font *f, int dx)
     didLayout = TRUE;
 }
 
-void DrawMessage(Graphics &g, TCHAR *msg, REAL y, REAL dx)
+REAL DrawMessage(Graphics &g, TCHAR *msg, REAL y, REAL dx, Color color)
 {
     WCHAR *s = tstr_to_wstr(msg);
 
     Font f(L"Impact", 16, FontStyleRegular);
-    StringFormat sfmt;
+    RectF maxbox(0, y, dx, 0);
     RectF bbox;
-    g.MeasureString(s, -1, &f, PointF(0,0), &sfmt, &bbox);
+    g.MeasureString(s, -1, &f, maxbox, &bbox);
 
-    REAL x = (dx - bbox.Width) / 2.f;
-    if (gMsgDrawShadow) {
+    bbox.X += (dx - bbox.Width) / 2.f;
+    StringFormat sft;
+    sft.SetAlignment(StringAlignmentCenter);
+#ifdef DRAW_TEXT_SHADOW
+    {
+        bbox.X--; bbox.Y++;
         SolidBrush b(Color(255,255,255));
-        g.DrawString(s, -1, &f, PointF(x-1,y+1), &b);
+        g.DrawString(s, -1, &f, bbox, &sft, &b);
+        bbox.X++; bbox.Y--;
     }
-    SolidBrush b(gMsgColor);
-    g.DrawString(s, -1, &f, PointF(x,y), &b);
+#endif
+    SolidBrush b(color);
+    g.DrawString(s, -1, &f, bbox, &sft, &b);
     free(s);
+
+    return bbox.Height;
 }
 
 void DrawSumatraLetters(Graphics &g, Font *f, Font *fVer, REAL y)
@@ -1257,10 +1265,12 @@ void DrawSumatraLetters(Graphics &g, Font *f, Font *fVer, REAL y)
             return;
 
         g.RotateTransform(li->rotation, MatrixOrderAppend);
+#ifdef DRAW_TEXT_SHADOW
         // draw shadow first
         SolidBrush b2(li->colShadow);
         PointF o2(li->x - 3.f, y + 4.f + li->dyOff);
         g.DrawString(s, 1, f, o2, &b2);
+#endif
 
         SolidBrush b1(li->col);
         PointF o1(li->x, y + li->dyOff);
@@ -1274,10 +1284,12 @@ void DrawSumatraLetters(Graphics &g, Font *f, Font *fVer, REAL y)
     g.TranslateTransform(x, y);
     g.RotateTransform(45.f);
     REAL x2 = 15; REAL y2 = -34;
-    SolidBrush b1(Color(0,0,0));
 
     WCHAR *ver_s = tstr_to_wstr(_T("v") CURR_VERSION_STR);
+#ifdef DRAW_TEXT_SHADOW
+    SolidBrush b1(Color(0,0,0));
     g.DrawString(ver_s, -1, fVer, PointF(x2-2,y2-1), &b1);
+#endif
     SolidBrush b2(Color(255,255,255));
     g.DrawString(ver_s, -1, fVer, PointF(x2,y2), &b2);
     g.ResetTransform();
@@ -1302,9 +1314,9 @@ void DrawFrame2(Graphics &g, RECT *r)
 
     REAL msgY = (REAL)(RectDy(r) / 2);
     if (gMsg)
-        DrawMessage(g, gMsg, msgY, (REAL)RectDx(r));
+        msgY += DrawMessage(g, gMsg, msgY, (REAL)RectDx(r), gMsgColor) + 5;
     if (gMsgError)
-        DrawMessage(g, gMsgError, msgY + 50, (REAL)RectDx(r));
+        DrawMessage(g, gMsgError, msgY, (REAL)RectDx(r), COLOR_MSG_FAILED);
 }
 
 void DrawFrame(HWND hwnd, HDC dc, PAINTSTRUCT *ps)
@@ -1582,29 +1594,29 @@ static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
 
     if (gGlobalData.uninstall) {
         gHwndFrame = CreateWindow(
-                INSTALLER_FRAME_CLASS_NAME, TAPP _T(" ") CURR_VERSION_STR _T(" uninstaller"),
-                //WS_OVERLAPPEDWINDOW,
+                INSTALLER_FRAME_CLASS_NAME, TAPP _T(" ") CURR_VERSION_STR _T(" Uninstaller"),
                 WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
                 CW_USEDEFAULT, CW_USEDEFAULT, 
                 UNINSTALLER_WIN_DX, UNINSTALLER_WIN_DY,
                 NULL, NULL,
                 ghinst, NULL);
-        gMsg = _T("Welcome to ") TAPP _T(" uninstaller");
+        gMsg = _T("Are you sure that you want to uninstall ") TAPP _T("?");
         gMsgColor = COLOR_MSG_WELCOME;
     } else {
         gHwndFrame = CreateWindow(
-                INSTALLER_FRAME_CLASS_NAME, TAPP _T(" ") CURR_VERSION_STR _T(" installer"),
-                //WS_OVERLAPPEDWINDOW,
+                INSTALLER_FRAME_CLASS_NAME, TAPP _T(" ") CURR_VERSION_STR _T(" Installer"),
                 WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
                 CW_USEDEFAULT, CW_USEDEFAULT,                
                 INSTALLER_WIN_DX, INSTALLER_WIN_DY,
                 NULL, NULL,
                 ghinst, NULL);
-        gMsg = _T("Welcome to ") TAPP _T(" installer!");
+        gMsg = _T("Thank you for downloading ") TAPP _T("!");
         gMsgColor = COLOR_MSG_WELCOME;
     }
     if (!gHwndFrame)
         return FALSE;
+
+    CenterDialog(gHwndFrame);
     ShowWindow(gHwndFrame, SW_SHOW);
 
     return TRUE;
@@ -1639,25 +1651,27 @@ TCHAR *GetValidTempDir()
 // from installation directory and remove installation directory
 // If returns TRUE, this is an installer and we sublaunched ourselves,
 // so the caller needs to exit
-BOOL ExecuteFromTempIfUninstaller()
+BOOL ExecuteUninstallerFromTempDir()
 {
-    if (!gGlobalData.uninstall)
-        return FALSE;
-
-    TCHAR *tempDir = GetValidTempDir();
-    if (!tempDir)
-        return FALSE;
-
-    // already running from temp directory?
-    //if (tstr_startswith(GetExePath(), tempDir))
-    //    return FALSE;
+    BOOL ok = FALSE;
 
     // only need to sublaunch if running from installation dir
-    if (!tstr_startswith(GetExePath(), gGlobalData.installDir)) {
+    TCHAR *ownDir = FilePath_GetDir(GetExePath());
+    TCHAR *tempDir = GetValidTempDir();
+
+    if (!tempDir)
+        goto KeepRunning;
+
+    // not running from the installation directory?
+    if (!FilePath_IsSameFile(ownDir, gGlobalData.installDir)) {
         // TODO: use MoveFileEx() to mark this file as 'delete on reboot'
         // with MOVEFILE_DELAY_UNTIL_REBOOT flag?
-        return FALSE;
+        goto KeepRunning;
     }
+
+    // already running from temp directory?
+    if (FilePath_IsSameFile(ownDir, tempDir))
+        goto KeepRunning;
 
     // Using fixed (unlikely) name instead of GetTempFileName()
     // so that we don't litter temp dir with copies of ourselves
@@ -1667,16 +1681,19 @@ BOOL ExecuteFromTempIfUninstaller()
     if (!CopyFile(GetExePath(), tempPath, FALSE)) {
         NotifyFailed(_T("Failed to copy uninstaller to temp directory"));
         free(tempPath);
-        return FALSE;
+        goto KeepRunning;
     }
 
     TCHAR *args = tstr_printf(_T("/u /d \"%s\" %s"), gGlobalData.installDir, gGlobalData.silent ? _T("/s") : _T(""));
     HANDLE h = CreateProcessHelper(tempPath, args);
-    BOOL ok = h != NULL;
+    ok = h != NULL;
     CloseHandle(h);
     free(args);
     free(tempPath);
 
+KeepRunning:
+    free(ownDir);
+    free(tempDir);
     return ok;
 }
 
@@ -1756,8 +1773,12 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     if (!gGlobalData.installDir)
         gGlobalData.installDir = GetInstallationDir(gGlobalData.uninstall);
 
-    if (ExecuteFromTempIfUninstaller())
+#ifndef TEST_UNINSTALLER
+    if (gGlobalData.uninstall && ExecuteUninstallerFromTempDir())
         return 0;
+#else
+    gGlobalData.uninstall = true;
+#endif
 
     ComScope comScope;
     InitAllCommonControls();

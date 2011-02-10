@@ -88,6 +88,7 @@ void    paint_rect(HDC hdc, RECT * rect);
 void    draw_centered_text(HDC hdc, RECT *r, const TCHAR *txt);
 
 BOOL    IsCursorOverWindow(HWND hwnd);
+void    CenterDialog(HWND hDlg);
 
 #ifdef __cplusplus
 }

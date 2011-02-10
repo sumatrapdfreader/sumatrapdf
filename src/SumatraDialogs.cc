@@ -14,25 +14,6 @@
 #include "LangMenuDef.h"
 #include "translations.h"
 
-static void CenterDialog(HWND hDlg)
-{
-    RECT rcDialog, rcOwner, rcRect;
-    HWND hParent = GetParent(hDlg);
-
-    GetWindowRect(hDlg, &rcDialog);
-    OffsetRect(&rcDialog, -rcDialog.left, -rcDialog.top);
-    GetWindowRect(hParent ? hParent : GetDesktopWindow(), &rcOwner);
-    CopyRect(&rcRect, &rcOwner);
-    OffsetRect(&rcRect, -rcRect.left, -rcRect.top);
-
-    // center dialog on its parent window
-    OffsetRect(&rcDialog, rcOwner.left + (rcRect.right - rcDialog.right) / 2, rcOwner.top + (rcRect.bottom - rcDialog.bottom) / 2);
-    // ensure that the dialog is fully visible on one monitor
-    rect_shift_to_work_area(&rcDialog, true);
-
-    SetWindowPos(hDlg, 0, rcDialog.left, rcDialog.top, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
-}
-
 /* For passing data to/from GetPassword dialog */
 typedef struct {
     const TCHAR *  fileName;   /* name of the file for which we need the password */
