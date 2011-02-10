@@ -9,12 +9,16 @@ Lang: no Norwegian (Norsk)
 Contributor: Jon Ivar F. Omland
 Contributor: Kjell A. A. Holm
 Contributor: BJ Hill
+Contributor: Tommy M. Stephansen
 
 &About
 &Om
 
 &Actual Size\tCtrl-1
 Fak&tisk størrelse\tCtrl+1
+
+&All selected pages
+&Alle valgte sider
 
 &Back\tAlt+Left Arrow
 Tilbake\tAlt+Pil venstre
@@ -28,6 +32,9 @@ Kopier merket tekst\tCtrl+C
 &Don't ask me again
 &Ikke spør meg igjen.
 
+&Even pages only
+Bare &partallssider
+
 &File
 &Fil
 
@@ -36,6 +43,9 @@ Kopier merket tekst\tCtrl+C
 
 &First Page\tHome
 Første side\tHome
+
+&Fit pages to printable area
+&Tilpass sider til utskriftsområde
 
 &Go To
 &Gå til
@@ -67,6 +77,9 @@ Neste side\tPil høyre
 &No, thanks
 &Nei, takk
 
+&Odd pages only
+Bare &oddetallssider
+
 &Open\tCtrl-O
 &Åpne...\tCtrl+O
 
@@ -82,6 +95,12 @@ Forrige side\tPil venstre
 &Print...\tCtrl-P
 &Skriv ut...\tCtrl+P
 
+&Print... (denied)
+&Skriv ut... (ikke tillatt)
+
+&Remember the password for this document
+&Husk passordet for dette dokumentet
+
 &Remember these settings for each document
 &Husk disse innstillingene for hvert dokument
 
@@ -91,8 +110,14 @@ Lagre &som...\tCtrl+S
 &Settings
 &Alternativer
 
+&Shrink pages to printable area (if necessary)
+&Krymp sider til utskriftsområde (om nødvendig)
+
 &Skip this version
 &Ignorer denne versjonen
+
+&Use original page sizes
+&Benytt opprinnelige sidestørrelser
 
 &View
 &Vis
@@ -119,7 +144,10 @@ Application:
 Program:
 
 Associate with PDF files?
-Tilknytt til PDF filer?
+Tilknytt til PDF-filer?
+
+Attachment: %s
+Vedlegg: %s
 
 Author:
 Forfatter:
@@ -136,8 +164,14 @@ Bokvisning
 Book&marks\tF12
 Bokmerker\tF12
 
+Bookmarks
+Bokmerker
+
 Bytes
 bytes
+
+Can't connect to the Internet (error %#x).
+Kan ikke koble til Internett (feilmelding %#x). 
 
 Cancel
 Avbryt
@@ -166,6 +200,9 @@ Kontinuerlig - motst&ående
 Contribute Translation
 Bidra med oversetting
 
+Copying text was denied (copying as image only)
+Mangler tillatelse til kopiering av tekst (kopierer kun som bilde)
+
 Could not open Printer
 Kunne ikke åpne skriveren.
 
@@ -188,7 +225,10 @@ Default &Zoom:
 Standard&zoom:
 
 Default PDF reader can't be changed in portable mode
-Standard pdf-leser kan ikke endres i flyttbar modus
+Standard PDF-leser kan ikke endres i flyttbar modus
+
+Denied Permissions:
+Manglende tillatelser:
 
 Document Properties
 Dokumentegenskaper
@@ -205,8 +245,11 @@ Skriv inn passord
 Enter password for %s
 Skriv inn passord for %s
 
+Enter the command-line to invoke when you double-click on the PDF document:
+Skriv inn kommandolinjen som skal kjøres når du dobbeltklikker på PDF-dokumentet:
+
 Error loading PDF file.
-Feil ved åpning av PDF fil.
+Feil ved åpning av PDF-fil.
 
 F&orward\tAlt+Right Arrow
 Fremover\tAlt+Pil høyre
@@ -241,17 +284,29 @@ Forrige
 Find:
 Søk etter:
 
+Fit &Content\tCtrl-3
+Tilpass &innhold\tCtrl-3
+
 Fit &Page\tCtrl-0
 Tilpass &side\tCtrl+0
 
 Fit &Width\tCtrl-2
 Tilpass til bredd&e\tCtrl+2
 
+Fit Content
+Tilpass innhold
+
 Fit Page
 Tilpass side
 
 Fit Width
 Tilpass til bredde
+
+Fit Width and Show Pages Continuously
+Tilpass bredde og vis sider kontinuerlig
+
+Fit a Single Page
+Tilpass til enkeltside
 
 Found text at page %d
 Fant tekst på side &d
@@ -272,7 +327,7 @@ MB
 MB
 
 Make SumatraPDF default application for PDF files?
-Gjør SumatraPDF standard åpningsprogram for PDF filer?
+Gjøre SumatraPDF til standard åpningsprogram for PDF-filer?
 
 Make SumatraPDF my default PDF reader
 Bruk SumatraPDF som standard PDF-leser
@@ -284,7 +339,7 @@ Modified:
 Endret:
 
 New version %s is available. Download new version?
-Ny versjon %s er tilgjenglig. Vil du laste ned ny versjon?
+En ny versjon %s er tilgjenglig. Vil du laste den ned nå?
 
 Next Page
 Neste side
@@ -317,7 +372,7 @@ P&roperties\tCtrl-D
 E&genskaper...\tCtrl-D
 
 PDF Document
-PDF Dokument
+PDF-dokument
 
 PDF Producer:
 PDF-produsent:
@@ -326,7 +381,7 @@ PDF Version:
 PDF-versjon:
 
 PDF documents
-PDF dokumenter (*.pdf)
+PDF-dokumenter (*.pdf)
 
 Pa&ge...\tCtrl-G
 Side...\tCtrl+G
@@ -337,14 +392,26 @@ Sidestørrelse:
 Page number %u inexistant
 Sidetallet '%u' finnes ikke i dokumentet.
 
+Page scaling
+Sideskalering
+
 Page:
 Side:
+
+Please include the following file in your crash report:
+Vennligst legg ved følgende fil i krasjrapporten:
 
 Please wait - rendering...
 Vennligst vent - arbeider...
 
+Pr&esentation\tCtrl-L
+Pr&esentasjon\tCtrl-L
+
 Previous Page
 Forrige side
+
+Print range
+Utskriftsområde
 
 Printing problem.
 Problem med utskrift.
@@ -359,7 +426,10 @@ Rotate &Right\tCtrl-Shift-+
 Roter med klokken\tCtrl+Shift+Pluss
 
 Searching %d of %d...
-Søker &d av &d...
+Søker %d av %d...
+
+Select &All\tCtrl-A
+Merk &alle\tCtrl-A
 
 Select content with Ctrl+left mouse button
 Velg innhold med Ctrl+Venstre museknapp
@@ -368,7 +438,7 @@ Send by &E-mail...
 Send med e-post...
 
 Set inverse search command-line
-Sett invertert søke kommandolinje
+Sett invers kommandolinje for søk 
 
 Show &Toolbar
 Vis verktøylinje
@@ -377,22 +447,31 @@ Show &pages continuously
 Vis sider kontinuerlig
 
 Show the &bookmarks sidebar when available
-Vis &bookmerker-fanen når tilgjengelig
+Vis &bokmerker-fanen når tilgjengelig
 
 Single Page
 Enkeltside
 
 Source file %s has no synchronization point
-Kildefilen %s har ingen synkroniserings punkt
+Kildefilen %s har ingen synkroniseringspunkt
+
+Subject:
+Emne:
 
 SumatraPDF Options
 Innstillinger
+
+SumatraPDF Update
+SumatraPDF Oppdatering
+
+SumatraPDF crashed
+SumatraPDF krasjet
 
 SumatraPDF is your default PDF reader
 SumatraPDF er din standard PDF-leser
 
 SumatraPDF should now be your default PDF reader
-SumatraPDF burde være din standard pdf-leser
+SumatraPDF burde nå være din standard PDF-leser
 
 Synchronization file cannot be opened
 Synkroniserende fil kan ikke åpnes
@@ -436,33 +515,9 @@ Zoom til
 [Changes detected; refreshing] %s
 [Endringer oppdaget; oppdaterer] %s
 
-# Untranslated:
-#&All selected pages
-#&Even pages only
-#&Fit pages to printable area
-#&Odd pages only
-#&Print... (denied)
-#&Remember the password for this document
-#&Shrink pages to printable area (if necessary)
-#&Use original page sizes
-#Attachment: %s
-#Bookmarks
-#Can't connect to the Internet (error %#x).
-#Copying text was denied (copying as image only)
-#Denied Permissions:
-#Enter the command-line to invoke when you double-click on the PDF document:
-#Fit &Content\tCtrl-3
-#Fit Content
-#Fit Width and Show Pages Continuously
-#Fit a Single Page
-#Page scaling
-#Please include the following file in your crash report:
-#Pr&esentation\tCtrl-L
-#Print range
-#Select &All\tCtrl-A
-#Subject:
-#SumatraPDF Update
-#SumatraPDF crashed
-#copying text
-#printing document
+copying text
+kopierer tekst
+
+printing document
+skriver ut dokument
 
