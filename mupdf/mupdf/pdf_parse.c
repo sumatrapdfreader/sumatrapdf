@@ -424,21 +424,21 @@ pdf_parseindobj(fz_obj **op, pdf_xref *xref,
 	if (error)
 		return fz_rethrow(error, "cannot parse indirect object (%d %d R)", num, gen);
 	if (tok != PDF_TINT)
-		return fz_throw("cannot parse indirect object (%d %d R)", num, gen);
+		return fz_throw("expected object number (%d %d R)", num, gen);
 	num = atoi(buf);
 
 	error = pdf_lex(&tok, file, buf, cap, &len);
 	if (error)
 		return fz_rethrow(error, "cannot parse indirect object (%d %d R)", num, gen);
 	if (tok != PDF_TINT)
-		return fz_throw("cannot parse indirect object (%d %d R)", num, gen);
+		return fz_throw("expected generation number (%d %d R)", num, gen);
 	gen = atoi(buf);
 
 	error = pdf_lex(&tok, file, buf, cap, &len);
 	if (error)
 		return fz_rethrow(error, "cannot parse indirect object (%d %d R)", num, gen);
 	if (tok != PDF_TOBJ)
-		return fz_throw("cannot parse indirect object (%d %d R)", num, gen);
+		return fz_throw("expected 'obj' keyword (%d %d R)", num, gen);
 
 	error = pdf_lex(&tok, file, buf, cap, &len);
 	if (error)
@@ -487,14 +487,14 @@ pdf_parseindobj(fz_obj **op, pdf_xref *xref,
 				break;
 			}
 		}
-		return fz_throw("cannot parse indirect object (%d %d R)", num, gen);
+		return fz_throw("expected 'R' keyword (%d %d R)", num, gen);
 
 	case PDF_TENDOBJ:
 		obj = fz_newnull();
 		goto skip;
 
 	default:
-		return fz_throw("cannot parse indirect object (%d %d R)", num, gen);
+		return fz_throw("syntax error in object (%d %d R)", num, gen);
 	}
 
 	error = pdf_lex(&tok, file, buf, cap, &len);
@@ -526,7 +526,7 @@ skip:
 	}
 	else
 	{
-		fz_warn("expected endobj or stream keyword (%d %d R)", num, gen);
+		fz_warn("expected 'endobj' or 'stream' keyword (%d %d R)", num, gen);
 		stmofs = 0;
 	}
 

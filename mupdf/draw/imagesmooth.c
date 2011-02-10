@@ -1037,14 +1037,23 @@ fz_smoothscalepixmap(fz_pixmap *src, float x, float y, float w, float h)
 		dst_w_int = (int)ceilf(x + w);
 	}
 	flip_y = (h < 0);
+	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1231 */
 	if (flip_y)
 	{
+		float tmp;
 		h = -h;
-		y -= h;
+		dst_y_int = floor(y-h);
+		tmp = ceilf(y);
+		dst_h_int = (int)tmp;
+		y = tmp - y;
+		dst_h_int -= dst_y_int;
 	}
-	dst_y_int = floor(y);
-	y -= (float)dst_y_int;
-	dst_h_int = (int)ceilf(y + h);
+	else
+	{
+		dst_y_int = floor(y);
+		y -= (float)dst_y_int;
+		dst_h_int = (int)ceilf(y + h);
+	}
 
 	DBUG(("Result image: (%d,%d) at (%d,%d) (subpix=%g,%g)\n", dst_w_int, dst_h_int, dst_x_int, dst_y_int, x, y));
 
