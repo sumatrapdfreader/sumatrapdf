@@ -243,6 +243,8 @@ TCHAR *GetInstallationDir(bool forUninstallation=false)
 
     // try the previous installation directory first
     bool ok = ReadRegStr(HKEY_LOCAL_MACHINE, REG_PATH_SOFTWARE, INSTALL_DIR, dir, dimof(dir));
+    if (!ok)
+        ok = ReadRegStr(HKEY_CURRENT_USER, REG_PATH_SOFTWARE, INSTALL_DIR, dir, dimof(dir));
     if (ok) {
         if (tstr_endswithi(dir, _T(".exe")))
             *(TCHAR *)FilePath_GetBaseName(dir) = '\0';
@@ -622,10 +624,17 @@ bool WriteUninstallerRegistryInfo(bool allUsers)
     return success;
 }
 
+BOOL IsUninstallerNeeded()
+{
+    TCHAR *exePath = GetInstalledExePath();
+    BOOL isNeeded = file_exists(exePath);
+    free(exePath);
+    return isNeeded;
+}
+
 BOOL RegDelKeyRecurse(HKEY hkey, TCHAR *path)
 {
-    LSTATUS res;
-    res = SHDeleteKey(hkey, path);
+    LSTATUS res = SHDeleteKey(hkey, path);
     if ((ERROR_SUCCESS != res) && (res != ERROR_FILE_NOT_FOUND)) {
         SeeLastError(res);
         return FALSE;
@@ -1413,6 +1422,11 @@ static LRESULT CALLBACK UninstallerWndProcFrame(HWND hwnd, UINT message, WPARAM 
     switch (message)
     {
         case WM_CREATE:
+            if (!IsUninstallerNeeded()) {
+                MessageBox(NULL, _T("No installation has been found. Please install ") TAPP _T(" first before uninstalling it..."), _T("Uninstallation failed"),  MB_ICONEXCLAMATION | MB_OK);
+                PostQuitMessage(0);
+                return -1;
+            }
             OnCreateUninstaller(hwnd);
             break;
 
@@ -1528,13 +1542,12 @@ static LRESULT CALLBACK InstallerWndProcFrame(HWND hwnd, UINT message, WPARAM wP
     switch (message)
     {
         case WM_CREATE:
-            if (IsValidInstaller()) {
-                OnCreateInstaller(hwnd);
-            }
-            else {
+            if (!IsValidInstaller()) {
                 MessageBox(NULL, _T("The installer has been corrupted. Please download it again.\nSorry for the inconvenience!"), _T("Installation failed"),  MB_ICONEXCLAMATION | MB_OK);
                 PostQuitMessage(0);
+                return -1;
             }
+            OnCreateInstaller(hwnd);
             break;
 
         case WM_DESTROY:
