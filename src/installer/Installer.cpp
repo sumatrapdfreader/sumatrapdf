@@ -103,6 +103,9 @@ static Color            COLOR_MSG_FAILED(gCol1);
 #define REG_EXPLORER_PDF_EXT  _T("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\.pdf")
 #define PROG_ID               _T("ProgId")
 
+#define REG_PATH_PLUGIN     _T("Software\\MozillaPlugins\\@mozilla.zeniko.ch/SumatraPDF_Browser_Plugin")
+#define PLUGIN_PATH         _T("Path")
+
 // Keys we'll set in REG_PATH_UNINST path
 
 // REG_SZ, a path to installed executable (or "$path,0" to force the first icon)
@@ -601,16 +604,16 @@ bool WriteUninstallerRegistryInfo(bool allUsers)
     TCHAR *uninstallerPath = GetUninstallerPath();
     TCHAR *installedExePath = GetInstalledExePath();
     success |= WriteRegStr(hkey,   REG_PATH_UNINST, DISPLAY_ICON, installedExePath);
-    WriteRegStr(hkey,   REG_PATH_UNINST, DISPLAY_NAME, TAPP);
-    WriteRegStr(hkey,   REG_PATH_UNINST, DISPLAY_VERSION, CURR_VERSION_STR);
-    WriteRegDWORD(hkey, REG_PATH_UNINST, ESTIMATED_SIZE, GetDirSize(gGlobalData.installDir));
-    WriteRegDWORD(hkey, REG_PATH_UNINST, NO_MODIFY, 1);
-    WriteRegDWORD(hkey, REG_PATH_UNINST, NO_REPAIR, 1);
-    WriteRegStr(hkey,   REG_PATH_UNINST, PUBLISHER, _T("Krzysztof Kowalczyk"));
-    WriteRegStr(hkey,   REG_PATH_UNINST, UNINSTALL_STRING, uninstallerPath);
-    WriteRegStr(hkey,   REG_PATH_UNINST, URL_INFO_ABOUT, _T("http://blog.kowalczyk/info/software/sumatrapdf/"));
+    success |= WriteRegStr(hkey,   REG_PATH_UNINST, DISPLAY_NAME, TAPP);
+    success |= WriteRegStr(hkey,   REG_PATH_UNINST, DISPLAY_VERSION, CURR_VERSION_STR);
+    success |= WriteRegDWORD(hkey, REG_PATH_UNINST, ESTIMATED_SIZE, GetDirSize(gGlobalData.installDir) / 1024);
+    success |= WriteRegDWORD(hkey, REG_PATH_UNINST, NO_MODIFY, 1);
+    success |= WriteRegDWORD(hkey, REG_PATH_UNINST, NO_REPAIR, 1);
+    success |= WriteRegStr(hkey,   REG_PATH_UNINST, PUBLISHER, _T("Krzysztof Kowalczyk"));
+    success |= WriteRegStr(hkey,   REG_PATH_UNINST, UNINSTALL_STRING, uninstallerPath);
+    success |= WriteRegStr(hkey,   REG_PATH_UNINST, URL_INFO_ABOUT, _T("http://blog.kowalczyk/info/software/sumatrapdf/"));
     TCHAR *installDir = FilePath_GetDir(installedExePath);
-    WriteRegStr(hkey,   REG_PATH_SOFTWARE, INSTALL_DIR, installDir);
+    success |= WriteRegStr(hkey,   REG_PATH_SOFTWARE, INSTALL_DIR, installDir);
 
     free(installDir);
     free(uninstallerPath);
@@ -669,6 +672,17 @@ void RemoveOwnRegistryKeys()
         if (res != ERROR_SUCCESS)
             SeeLastError(res);
     }
+}
+
+bool IsBrowserPluginInstalled()
+{
+    TCHAR buf[MAX_PATH];
+    bool ok = ReadRegStr(HKEY_LOCAL_MACHINE, REG_PATH_PLUGIN, PLUGIN_PATH, buf, dimof(buf));
+    if (!ok)
+        ok = ReadRegStr(HKEY_CURRENT_USER, REG_PATH_PLUGIN, PLUGIN_PATH, buf, dimof(buf));
+    if (!ok)
+        return FALSE;
+    return !!file_exists(buf);
 }
 
 void UninstallBrowserPlugin()
@@ -919,8 +933,12 @@ Error:
 
 void OnButtonInstall()
 {
-    gGlobalData.registerAsDefault = !!GetCheckboxState(gHwndCheckboxRegisterDefault);
-    gGlobalData.installBrowserPlugin = !!GetCheckboxState(gHwndCheckboxRegisterBrowserPlugin);
+    // note: checkboxes aren't created if the features are already installed
+    //       (in which case we're just going to re-register them automatically)
+    gGlobalData.registerAsDefault = gHwndCheckboxRegisterDefault == NULL ||
+                                    GetCheckboxState(gHwndCheckboxRegisterDefault);
+    gGlobalData.installBrowserPlugin = gHwndCheckboxRegisterBrowserPlugin == NULL ||
+                                       GetCheckboxState(gHwndCheckboxRegisterBrowserPlugin);
 
     // disable the install button and remove checkbox during installation
     DestroyWindow(gHwndCheckboxRegisterDefault);
@@ -1474,6 +1492,7 @@ void OnCreateInstaller(HWND hwnd)
     TCHAR *defaultViewer = GetDefaultPdfViewer();
     BOOL hasOtherViewer = !tstr_ieq(defaultViewer, TAPP);
     BOOL isSumatraDefaultViewer = defaultViewer && !hasOtherViewer;
+    free(defaultViewer);
 
     // only show the checbox if Sumatra is not already a default viewer.
     // the alternative (disabling the checkbox) is more confusing
@@ -1486,16 +1505,17 @@ void OnCreateInstaller(HWND hwnd)
         // only check the "Use as default" checkbox when no other PDF viewer
         // is currently selected (not going to intrude)
         SetCheckboxState(gHwndCheckboxRegisterDefault, !hasOtherViewer || gGlobalData.registerAsDefault);
-        free(defaultViewer);
         y -= 18;
     }
 
-    gHwndCheckboxRegisterBrowserPlugin = CreateWindow(
-        WC_BUTTON, _T("Install web browser plugin"),
-        WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX | WS_TABSTOP,
-        8, y, 160, 22, hwnd, (HMENU)ID_CHECKBOX_BROWSER_PLUGIN, ghinst, NULL);
-    SetFont(gHwndCheckboxRegisterBrowserPlugin, gFontDefault);
-    SetCheckboxState(gHwndCheckboxRegisterBrowserPlugin, gGlobalData.installBrowserPlugin);
+    if (!IsBrowserPluginInstalled()) {
+        gHwndCheckboxRegisterBrowserPlugin = CreateWindow(
+            WC_BUTTON, _T("Install web browser plugin"),
+            WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX | WS_TABSTOP,
+            8, y, 160, 22, hwnd, (HMENU)ID_CHECKBOX_BROWSER_PLUGIN, ghinst, NULL);
+        SetFont(gHwndCheckboxRegisterBrowserPlugin, gFontDefault);
+        SetCheckboxState(gHwndCheckboxRegisterBrowserPlugin, gGlobalData.installBrowserPlugin);
+    }
 
     SetFocus(gHwndButtonInstall);
 }
