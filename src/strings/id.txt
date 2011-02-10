@@ -45,7 +45,7 @@ Hanya halaman gena&p
 Halaman Pertama\tHome
 
 &Fit pages to printable area
-&Sesuaikan halaman ke area yang bisa dicetak
+&Sesuaikan halaman ke area cetakan
 
 &Go To
 &Pergi ke
@@ -87,13 +87,13 @@ Hanya halaman ganji&l
 &Pilihan...
 
 &Password:
-&Kata kunci"
+&Kata kunci:
 
 &Previous Page\tLeft Arrow
 Halaman Sebelumnya\t<-
 
 &Print...\tCtrl-P
-&Cetak\tCtrl-P
+&Cetak...\tCtrl-P
 
 &Print... (denied)
 &Cetak... (ditolak)
@@ -105,19 +105,19 @@ Halaman Sebelumnya\t<-
 &Ingat pengaturan ini untuk setiap dokumen
 
 &Save As...\tCtrl-S
-&Simpan sebagai\tCtrl-S
+&Simpan Sebagai\tCtrl-S
 
 &Settings
 &Pengaturan
 
 &Shrink pages to printable area (if necessary)
-&Perkecil halaman ke area yang bisa dicetak (jika dibutuhkan)
+&Perkecil halaman ke area cetakan (jika dibutuhkan)
 
 &Skip this version
 &Lewatkan versi ini
 
 &Use original page sizes
-&Gunakan ukuran halaman yang sebenarnya
+&Gunakan ukuran halaman sebenarnya
 
 &View
 &Lihat
@@ -147,7 +147,7 @@ Associate with PDF files?
 Asosiasikan dengan berkas PDF?
 
 Attachment: %s
-Lampiran
+Lampiran: %s
 
 Author:
 Pengarang:
@@ -156,13 +156,13 @@ Automatic
 Otomatis
 
 Automatically check for &updates
-Periksa &pemutakhiran secara otomatis
+Periksa &pembaruan secara otomatis
 
 Book View
 Tampilan buku
 
 Book&marks\tF12
-Markah\tF12
+&Markah\tF12
 
 Bookmarks
 Markah
@@ -189,13 +189,13 @@ Check for &Updates
 &Periksa versi terbaru
 
 Continuous
-Berkelanjutan
+Kontinu
 
 Continuous book view
-Tampilan buku secara berkelanjutan
+Tampilan buku secara kontinu
 
 Continuous facing
-Dua halaman berkelanjutan
+Dua halaman kontinu
 
 Contribute Translation
 Membantu alihbahasa
@@ -216,7 +216,7 @@ Created:
 Dibuat:
 
 Custom &Zoom...\tCtrl-Y
-&Pembesaran buatan\tCtrl-Y
+&Pembesaran Buatan\tCtrl-Y
 
 Default &Layout:
 Tampilan &Standar
@@ -291,7 +291,7 @@ Fit &Page\tCtrl-0
 &Sesuaikan\tCtrl-0
 
 Fit &Width\tCtrl-2
-Sesuaikan dengan &Lebar\tCtrl-2
+Sesuaikan Dengan &Lebar\tCtrl-2
 
 Fit Content
 Sesuaikan Konten
@@ -300,10 +300,10 @@ Fit Page
 Sesuaikan
 
 Fit Width
-Sesuaikan dengan Lebar
+Sesuaikan Dengan Lebar
 
 Fit Width and Show Pages Continuously
-Sesuaikan Lebar dan Tampilkan Halaman secara Berkelanjutan
+Sesuaikan Lebar dan Tampilkan Halaman Secara Kontinu
 
 Fit a Single Page
 Sesuaikan Halaman Tunggal
@@ -330,7 +330,7 @@ Make SumatraPDF default application for PDF files?
 Jadikan SumatraPDF sebagai aplikasi standar untuk membuka berkas PDF?
 
 Make SumatraPDF my default PDF reader
-Jadikan SumatraPDF sebagai pembaca-PDF utama
+Jadikan SumatraPDF sebagai pembaca PDF utama
 
 Match Case
 Cocokkan Huruf Besar-Kecilnya
@@ -345,7 +345,7 @@ Next Page
 Halaman Berikutnya
 
 No matches were found
-Tidak ada persamaan ditemukan
+Tidak ada kesamaan ditemukan
 
 No result found around line %u in file %s
 Tidak ada hasil ditemukan pada baris %u di dalam berkas %s
@@ -357,7 +357,7 @@ No synchronization info at this position
 Tidak ada informasi sinkronisasi pada lokasi ini
 
 Number of Pages:
-Jumlah halaman:
+Jumlah Halaman:
 
 OK
 OK
@@ -369,10 +369,10 @@ Open in &Adobe Reader
 Buka di &Adobe Reader
 
 P&roperties\tCtrl-D
-P&roperti...\tCtrl-D
+P&roperti\tCtrl-D
 
 PDF Document
-Berkas PDF
+Dokumen PDF
 
 PDF Producer:
 Produser PDF:
@@ -420,7 +420,7 @@ Remember &opened files
 Ingat &berkas yang pernah dibuka
 
 Rotate &Left\tCtrl-Shift--
-Putar ke kiri\tCtrl-Shift--
+Putar ke Kiri\tCtrl-Shift--
 
 Rotate &Right\tCtrl-Shift-+
 Putar ke Kanan\tCtrl-Shift-+
@@ -435,7 +435,7 @@ Select content with Ctrl+left mouse button
 Pilih konten dengan tombol Ctrl+left pada mouse
 
 Send by &E-mail...
-Kirim via &Email
+Kirim via &Email...
 
 Set inverse search command-line
 Tetapkan baris perintah pencarian terbalik
@@ -444,7 +444,7 @@ Show &Toolbar
 Perlihatkan &Toolbar
 
 Show &pages continuously
-Tampilkan halaman secara berkelanjutan
+Tampilkan halaman secara kontinu
 
 Show the &bookmarks sidebar when available
 Tampilkan kolom &markah jika tersedia
@@ -462,7 +462,7 @@ SumatraPDF Options
 Pilihan-pilihan di SumatraPDF
 
 SumatraPDF Update
-Pemutakhiran SumatraPDF
+Pembaruan SumatraPDF
 
 SumatraPDF crashed
 SumatraPDF berhenti berfungsi
