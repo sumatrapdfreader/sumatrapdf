@@ -121,7 +121,7 @@ static Color            COLOR_MSG_FAILED(gCol1);
 #define PUBLISHER _T("Publisher")
 // REG_SZ, path to uninstaller exe
 #define UNINSTALL_STRING _T("UninstallString")
-// REG_SZ, e.g. "http://blog.kowalczyk/info/software/sumatrapdf/"
+// REG_SZ, e.g. "http://blog.kowalczyk.info/software/sumatrapdf/"
 #define URL_INFO_ABOUT _T("UrlInfoAbout")
 
 // Installation directory (set in HKLM REG_PATH_SOFTWARE
@@ -137,6 +137,7 @@ static char *gUnInstMark = NULL; // wstr_to_utf8(UN_INST_MARK)
 struct {
     bool uninstall;
     bool silent;
+    bool showUsageAndQuit;
     TCHAR *installDir;
     bool registerAsDefault;
     bool installBrowserPlugin;
@@ -147,6 +148,7 @@ struct {
 } gGlobalData = {
     false, /* bool uninstall */
     false,  /* bool silent */
+    false, /* bool showUsageAndQuit */
     NULL,   /* TCHAR *installDir */
     false,  /* bool registerAsDefault */
     false,  /* bool installBrowserPlugin */
@@ -1734,6 +1736,16 @@ public:
     ~GdiPlusScope() { GdiplusShutdown(token); }
 };
 
+void ShowUsage()
+{
+    MessageBox(NULL, TAPP _T("-install.exe [/s][/d <path>][/default][/u]\n\
+    \n\
+    /s\tinstalls ") TAPP _T(" silently (without user interaction).\n\
+    /d\tchanges the directory where ") TAPP _T(" will be installed.\n\
+    /default\tinstalls ") TAPP _T(" as the default PDF viewer.\n\
+    /u\tturns the installer into an uninstaller."), TAPP _T(" Installer Usage"), MB_OK | MB_ICONINFORMATION);
+}
+
 void ParseCommandLine(TCHAR *cmdLine)
 {
     // skip the first arg (exe path)
@@ -1758,6 +1770,8 @@ void ParseCommandLine(TCHAR *cmdLine)
         }
         else if (is_arg("register"))
             gGlobalData.registerAsDefault = true;
+        else if (is_arg("h") || is_arg("help") || is_arg("?"))
+            gGlobalData.showUsageAndQuit = true;
     }
 }
 
@@ -1767,7 +1781,19 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
     SetErrorMode(SEM_NOOPENFILEERRORBOX | SEM_FAILCRITICALERRORS);
 
+    ComScope comScope;
+    InitAllCommonControls();
+    GdiPlusScope gdiScope;
+
     ParseCommandLine(GetCommandLine());
+    if (gGlobalData.showUsageAndQuit) {
+        ShowUsage();
+        ret = 0;
+        goto Exit;
+    }
+#ifdef TEST_UNINSTALLER
+    gGlobalData.uninstall = true;
+#endif
     if (!gGlobalData.uninstall)
         gGlobalData.uninstall = IsUninstaller();
     if (!gGlobalData.installDir)
@@ -1776,13 +1802,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 #ifndef TEST_UNINSTALLER
     if (gGlobalData.uninstall && ExecuteUninstallerFromTempDir())
         return 0;
-#else
-    gGlobalData.uninstall = true;
 #endif
-
-    ComScope comScope;
-    InitAllCommonControls();
-    GdiPlusScope gdiScope;
 
     if (gGlobalData.silent) {
         if (gGlobalData.uninstall)

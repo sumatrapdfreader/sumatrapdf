@@ -200,7 +200,7 @@ bool WriteRegDWORD(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, DWOR
     LONG res = RegCreateKeyEx(keySub, keyName, 0, NULL, 0, KEY_WRITE, NULL, &keyTmp, NULL);
 
     if (ERROR_SUCCESS == res) {
-        res = RegSetValueEx(keyTmp, valName, 0, REG_DWORD, (const BYTE*)value, sizeof(DWORD));
+        res = RegSetValueEx(keyTmp, valName, 0, REG_DWORD, (const BYTE*)&value, sizeof(DWORD));
         RegCloseKey(keyTmp);
     }
 
