@@ -100,15 +100,11 @@ TCHAR *FilePath_Normalize(const TCHAR *f, BOOL bLowerCase)
 //         -1 if an error occured
 int FilePath_Compare(const TCHAR *lhs, const TCHAR *rhs)
 {
-    LPTSTR nl = NULL, nr = NULL;
-    int ret = 0;
+    int ret = -1;
 
-    nl = FilePath_Normalize(lhs, TRUE);
-    if (!nl)
-        goto CleanUp;
-
-    nr = FilePath_Normalize(rhs, TRUE);
-    if (!nr)
+    TCHAR *nl = FilePath_Normalize(lhs, TRUE);
+    TCHAR *nr = FilePath_Normalize(rhs, TRUE);
+    if (!nl || !nr)
         goto CleanUp;
 
     ret = tstr_eq(nl, nr) ? 0 : 1;
@@ -141,7 +137,7 @@ BOOL FilePath_IsSameFile(const TCHAR *path1, const TCHAR *path2)
     CloseHandle(handle2);
 
     if (needFallback)
-        return FilePath_Compare(path1, path2) == 1;
+        return FilePath_Compare(path1, path2) == 0;
     return isSame;
 }
 

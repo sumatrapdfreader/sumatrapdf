@@ -18,7 +18,7 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include <GdiPlus.h>
 #include <tchar.h>
 #include <shlobj.h>
-#include <psapi.h>
+#include <Tlhelp32.h>
 #include <Shlwapi.h>
 #include <objidl.h>
 
@@ -138,7 +138,7 @@ struct {
     bool uninstall;
     bool silent;
     TCHAR *installDir;
-    bool registerDefault;
+    bool registerAsDefault;
     bool installBrowserPlugin;
 
     TCHAR *firstError;
@@ -148,7 +148,7 @@ struct {
     FORCE_TO_BE_UNINSTALLER, /* bool uninstall */
     false,  /* bool silent */
     NULL,   /* TCHAR *installDir */
-    false,  /* bool registerDefault */
+    false,  /* bool registerAsDefault */
     false,  /* bool installBrowserPlugin */
 
     NULL,   /* TCHAR *firstError */
@@ -165,29 +165,23 @@ void NotifyFailed(TCHAR *msg)
 
 #define TEN_SECONDS_IN_MS 10*1000
 
-// Kill a process with given <processId> if it's named <processName>.
+// Kill a process with given <processId> if it's loaded from <processPath>.
 // If <waitUntilTerminated> is TRUE, will wait until process is fully killed.
 // Returns TRUE if killed a process
-BOOL KillProcIdWithName(DWORD processId, TCHAR *processName, BOOL waitUntilTerminated)
+BOOL KillProcIdWithName(DWORD processId, TCHAR *processPath, BOOL waitUntilTerminated)
 {
-    HANDLE      hProcess = NULL;
-    TCHAR       currentProcessName[1024];
-    HMODULE     modulesArray[1024];
-    DWORD       modulesCount;
-    BOOL        killed = FALSE;
+    BOOL killed = FALSE;
 
-    hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ | PROCESS_TERMINATE, FALSE, processId);
-    if (!hProcess)
-        return FALSE;
-
-    BOOL ok = EnumProcessModules(hProcess, modulesArray, sizeof(HMODULE)*1024, &modulesCount);
-    if (!ok)
+    HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ | PROCESS_TERMINATE, FALSE, processId);
+    HANDLE hModSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, processId);
+    if (!hProcess || INVALID_HANDLE_VALUE == hModSnapshot)
         goto Exit;
 
-    if (0 == GetModuleBaseName(hProcess, modulesArray[0], currentProcessName, 1024))
+    MODULEENTRY32 me32;
+    me32.dwSize = sizeof(me32);
+    if (!Module32First(hModSnapshot, &me32))
         goto Exit;
-
-    if (!tstr_ieq(currentProcessName, processName))
+    if (!FilePath_IsSameFile(processPath, me32.szExePath))
         goto Exit;
 
     killed = TerminateProcess(hProcess, 0);
@@ -201,30 +195,34 @@ BOOL KillProcIdWithName(DWORD processId, TCHAR *processName, BOOL waitUntilTermi
     UpdateWindow(GetDesktopWindow());
 
 Exit:
+    CloseHandle(hModSnapshot);
     CloseHandle(hProcess);
     return killed;
 }
 
 #define MAX_PROCESSES 1024
 
-static int KillProcess(TCHAR *processName, BOOL waitUntilTerminated)
+static int KillProcess(TCHAR *processPath, BOOL waitUntilTerminated)
 {
-    DWORD  pidsArray[MAX_PROCESSES];
-    DWORD  cbPidsArraySize;
-    int    killedCount = 0;
+    int killCount = 0;
 
-    if (!EnumProcesses(pidsArray, MAX_PROCESSES, &cbPidsArraySize))
-        return FALSE;
+    HANDLE hProcSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if (INVALID_HANDLE_VALUE == hProcSnapshot)
+        goto Error;
 
-    int processesCount = cbPidsArraySize / sizeof(DWORD);
+    PROCESSENTRY32 pe32;
+    pe32.dwSize = sizeof(pe32);
+    if (!Process32First(hProcSnapshot, &pe32))
+        goto Error;
 
-    for (int i = 0; i < processesCount; i++)
-    {
-        if (KillProcIdWithName(pidsArray[i], processName, waitUntilTerminated)) 
-            killedCount++;
-    }
+    do {
+        if (KillProcIdWithName(pe32.th32ProcessID, processPath, waitUntilTerminated))
+            killCount++;
+    } while (Process32Next(hProcSnapshot, &pe32));
 
-    return killedCount;
+Error:
+    CloseHandle(hProcSnapshot);
+    return killCount;
 }
 
 TCHAR *GetExePath()
@@ -234,7 +232,7 @@ TCHAR *GetExePath()
     return exePath;
 }
 
-TCHAR *GetInstallationDir()
+TCHAR *GetInstallationDir(bool forUninstallation=false)
 {
     TCHAR dir[MAX_PATH];
 
@@ -245,6 +243,11 @@ TCHAR *GetInstallationDir()
             *(TCHAR *)FilePath_GetBaseName(dir) = '\0';
         if (*dir && dir_exists(dir))
             return tstr_dup(dir);
+    }
+
+    if (forUninstallation) {
+        // fall back to the uninstaller's path
+        return FilePath_GetDir(GetExePath());
     }
 
     // fall back to %ProgramFiles%
@@ -283,50 +286,6 @@ TCHAR *GetShortcutPath(bool allUsers)
 {
     return tstr_cat(GetStartMenuProgramsPath(allUsers), _T("\\") TAPP _T(".lnk"));
 }
-
-class FrameTimeoutCalculator {
-
-    LARGE_INTEGER   timeStart;
-    LARGE_INTEGER   timeLast;
-    LONGLONG        ticksPerFrame;
-    LONGLONG        ticsPerMs;
-    LARGE_INTEGER   timeFreq;
-
-public:
-    FrameTimeoutCalculator(int framesPerSecond) {
-        QueryPerformanceFrequency(&timeFreq); // number of ticks per second
-        ticsPerMs = timeFreq.QuadPart / 1000;
-        ticksPerFrame = timeFreq.QuadPart / framesPerSecond;
-        QueryPerformanceCounter(&timeStart);
-        timeLast = timeStart;
-    }
-
-    // in seconds, as a double
-    double ElapsedTotal() {
-        LARGE_INTEGER timeCurr;
-        QueryPerformanceCounter(&timeCurr);
-        LONGLONG elapsedTicks =  timeCurr.QuadPart - timeStart.QuadPart;
-        double res = (double)elapsedTicks / (double)timeFreq.QuadPart;
-        return res;
-    }
-
-    DWORD GetTimeoutInMilliseconds() {
-        LARGE_INTEGER timeCurr;
-        LONGLONG elapsedTicks;
-        QueryPerformanceCounter(&timeCurr);
-        elapsedTicks = timeCurr.QuadPart - timeLast.QuadPart;
-        if (elapsedTicks > ticksPerFrame) {
-            return 0;
-        } else {
-            LONGLONG timeoutMs = (ticksPerFrame - elapsedTicks) / ticsPerMs;
-            return (DWORD)timeoutMs;
-        }
-    }
-
-    void Step() {
-        timeLast.QuadPart += ticksPerFrame;
-    }
-};
 
 BOOL IsValidInstaller(void)
 {
@@ -511,8 +470,7 @@ bool IsUninstaller()
         gUnInstMark = wstr_to_utf8(UN_INST_MARK);
     int markSize = str_len(gUnInstMark);
 
-    TCHAR *exePath = GetExePath();
-    HANDLE h = CreateFile(exePath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    HANDLE h = CreateFile(GetExePath(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (h == INVALID_HANDLE_VALUE) {
         NotifyFailed(_T("Couldn't open myself for reading"));
         goto Error;
@@ -541,23 +499,6 @@ Error:
     free(data);
     CloseHandle(h);
     return FALSE;
-}
-
-// Process all messages currently in a message queue.
-// Required when a change of state done during message processing is followed
-// by a lengthy process done on gui thread and we want the change to be
-// visually shown (e.g. when disabling a button)
-// Note: in a very unlikely scenario probably can swallow WM_QUIT. Wonder what
-// would happen then.
-void ProcessMessageLoop(HWND hwnd)
-{
-    MSG msg;
-    while (PeekMessage(&msg, hwnd,  0, 0, PM_REMOVE)) {
-        if (!IsDialogMessage(hwnd, &msg)) {
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
-        }
-    }
 }
 
 static HFONT CreateDefaultGuiFont()
@@ -621,11 +562,9 @@ BOOL RegisterServerDLL(TCHAR *dllPath, BOOL unregister=FALSE)
     return success;
 }
 
-// Note: doesn't recurse and the size might overflow, but it's good enough for
-// our purpose
+// Note: doesn't handle (total) sizes above 4GB
 DWORD GetDirSize(TCHAR *dir)
 {
-    LARGE_INTEGER size;
     DWORD totalSize = 0;
     WIN32_FIND_DATA findData;
 
@@ -637,9 +576,12 @@ DWORD GetDirSize(TCHAR *dir)
 
     do {
         if (!(findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
-            size.LowPart  = findData.nFileSizeLow;
-            size.HighPart = findData.nFileSizeHigh;
-            totalSize += (DWORD)size.QuadPart;
+            totalSize += findData.nFileSizeLow;
+        }
+        else if (!tstr_eq(findData.cFileName, _T(".")) && !tstr_eq(findData.cFileName, _T(".."))) {
+            TCHAR *subdir = tstr_cat3(dir, _T("\\"), findData.cFileName);
+            totalSize += GetDirSize(subdir);
+            free(subdir);
         }
     } while (FindNextFile(h, &findData) != 0);
     FindClose(h);
@@ -681,17 +623,11 @@ BOOL RegDelKeyRecurse(HKEY hkey, TCHAR *path)
     return TRUE;
 }
 
-void RemoveUninstallerRegistryInfo()
+BOOL RemoveUninstallerRegistryInfo()
 {
     BOOL ok1 = RegDelKeyRecurse(HKEY_LOCAL_MACHINE, REG_PATH_UNINST);
-    // Note: we delete this key because the old nsis installer was setting it
-    // but we're not setting or using it (I assume it's used by nsis to remember
-    // installation directory to better support the case when they allow
-    // changing it, but we don't so it's not needed).
     BOOL ok2 = RegDelKeyRecurse(HKEY_LOCAL_MACHINE, REG_PATH_SOFTWARE);
-
-    if (!ok1 || !ok2)
-        NotifyFailed(_T("Failed to delete uninstaller registry keys"));
+    return ok1 && ok2;
 }
 
 /* Undo what DoAssociateExeWithPdfExtension() in SumatraPDF.cpp did */
@@ -752,10 +688,10 @@ TCHAR *GetDefaultPdfViewer()
     return tstr_dup(buf);
 }
 
-// Note: doesn't recurse, but it's good enough for us
-void RemoveDirectoryWithFiles(TCHAR *dir)
+BOOL RemoveDirectoryWithFiles(TCHAR *dir)
 {
     WIN32_FIND_DATA findData;
+    BOOL success = TRUE;
 
     TCHAR *dirPattern = tstr_cat(dir, _T("\\*"));
     HANDLE h = FindFirstFile(dirPattern, &findData);
@@ -775,6 +711,9 @@ void RemoveDirectoryWithFiles(TCHAR *dir)
                 }
                 DeleteFile(path);
             }
+            else if (!tstr_eq(findData.cFileName, _T(".")) && !tstr_eq(findData.cFileName, _T(".."))) {
+                success &= RemoveDirectoryWithFiles(path);
+            }
             free(path);
         } while (FindNextFile(h, &findData) != 0);
         FindClose(h);
@@ -783,15 +722,17 @@ void RemoveDirectoryWithFiles(TCHAR *dir)
     if (!RemoveDirectory(dir)) {
         if (ERROR_FILE_NOT_FOUND != GetLastError()) {
             SeeLastError();
-            NotifyFailed(_T("Couldn't remove installation directory"));
+            success = FALSE;
         }
     }
     free(dirPattern);
+
+    return success;
 }
 
-void RemoveInstallationDirectory()
+BOOL RemoveInstallationDirectory()
 {
-    RemoveDirectoryWithFiles(gGlobalData.installDir);
+    return RemoveDirectoryWithFiles(gGlobalData.installDir);
 }
 
 BOOL CreateShortcut(TCHAR *shortcutPath, TCHAR *exePath, TCHAR *workingDir, TCHAR *description)
@@ -829,9 +770,9 @@ BOOL CreateShortcut(TCHAR *shortcutPath, TCHAR *exePath, TCHAR *workingDir, TCHA
 
 Exit:
     if (pf)
-      pf->Release();
+        pf->Release();
     if (sl)
-      sl->Release();
+        sl->Release();
 
     if (FAILED(hr)) {
         ok = FALSE;
@@ -850,15 +791,16 @@ BOOL CreateAppShortcut(bool allUsers)
     return ok;
 }
 
-void RemoveShortcut(bool allUsers)
+BOOL RemoveShortcut(bool allUsers)
 {
     TCHAR *p = GetShortcutPath(allUsers);
     BOOL ok = DeleteFile(p);
-    if (!ok && (ERROR_FILE_NOT_FOUND != GetLastError())) {
+    if (!ok && (ERROR_FILE_NOT_FOUND != GetLastError()))
         SeeLastError();
-        NotifyFailed(_T("Couldn't remove the shortcut"));
-    }
+    else
+        ok = TRUE;
     free(p);
+    return ok;
 }
 
 BOOL CreateInstallationDirectory()
@@ -927,7 +869,9 @@ static DWORD WINAPI InstallerThread(LPVOID data)
     gGlobalData.success = false;
 
     /* if the app is running, we have to kill it so that we can over-write the executable */
-    KillProcess(EXENAME, TRUE);
+    TCHAR *exePath = GetInstalledExePath();
+    KillProcess(exePath, TRUE);
+    free(exePath);
 
     if (!CreateInstallationDirectory())
         goto Error;
@@ -935,7 +879,7 @@ static DWORD WINAPI InstallerThread(LPVOID data)
     if (!InstallCopyFiles())
         goto Error;
 
-    if (gGlobalData.registerDefault) {
+    if (gGlobalData.registerAsDefault) {
         // need to sublaunch SumatraPDF.exe instead of replicating the code
         // because registration uses translated strings
         TCHAR *installedExePath = GetInstalledExePath();
@@ -969,7 +913,7 @@ Error:
 
 void OnButtonInstall()
 {
-    gGlobalData.registerDefault = !!GetCheckboxState(gHwndCheckboxRegisterDefault);
+    gGlobalData.registerAsDefault = !!GetCheckboxState(gHwndCheckboxRegisterDefault);
     gGlobalData.installBrowserPlugin = !!GetCheckboxState(gHwndCheckboxRegisterBrowserPlugin);
 
     // disable the install button and remove checkbox during installation
@@ -1008,19 +952,24 @@ void OnInstallationFinished()
 
 static DWORD WINAPI UninstallerThread(LPVOID data)
 {
-    gGlobalData.success = false;
-
     /* if the app is running, we have to kill it to delete the files */
-    KillProcess(EXENAME, TRUE);
+    TCHAR *exePath = GetInstalledExePath();
+    KillProcess(exePath, TRUE);
+    free(exePath);
 
-    // TODO: add error handling
-    RemoveUninstallerRegistryInfo();
-    RemoveShortcut(true);
-    RemoveShortcut(false);
+    if (!RemoveUninstallerRegistryInfo())
+        NotifyFailed(_T("Failed to delete uninstaller registry keys"));
+
+    if (!RemoveShortcut(true) && !RemoveShortcut(false))
+        NotifyFailed(_T("Couldn't remove the shortcut"));
+
     UnregisterFromBeingDefaultViewer();
     UninstallBrowserPlugin();
-    RemoveInstallationDirectory();
 
+    if (!RemoveInstallationDirectory())
+        NotifyFailed(_T("Couldn't remove installation directory"));
+
+    // always succeed, even for partial uninstallations
     gGlobalData.success = true;
 
     if (!gGlobalData.silent)
@@ -1035,7 +984,6 @@ void OnButtonUninstall()
     gMsg = _T("Uninstallation in progress...");
     gMsgColor = COLOR_MSG_INSTALLATION;
     InvalidateFrame();
-    ProcessMessageLoop(gHwndFrame);
 
     gGlobalData.hThread = CreateThread(NULL, 0, UninstallerThread, NULL, 0, 0);
 }
@@ -1046,8 +994,11 @@ void OnUninstallationFinished()
     gHwndButtonUninstall = NULL;
     CreateButtonExit(gHwndFrame);
     gMsg = TAPP _T(" has been uninstalled.");
-    gMsgColor = COLOR_MSG_OK;
     gMsgError = gGlobalData.firstError;
+    if (!gMsgError)
+        gMsgColor = COLOR_MSG_OK;
+    else
+        gMsgColor = COLOR_MSG_FAILED;
     InvalidateFrame();
 
     CloseHandle(gGlobalData.hThread);
@@ -1119,6 +1070,50 @@ void SetLettersSumatra()
 {
     SetLettersSumatraUpTo(SUMATRA_LETTERS_COUNT);
 }
+
+class FrameTimeoutCalculator {
+
+    LARGE_INTEGER   timeStart;
+    LARGE_INTEGER   timeLast;
+    LONGLONG        ticksPerFrame;
+    LONGLONG        ticsPerMs;
+    LARGE_INTEGER   timeFreq;
+
+public:
+    FrameTimeoutCalculator(int framesPerSecond) {
+        QueryPerformanceFrequency(&timeFreq); // number of ticks per second
+        ticsPerMs = timeFreq.QuadPart / 1000;
+        ticksPerFrame = timeFreq.QuadPart / framesPerSecond;
+        QueryPerformanceCounter(&timeStart);
+        timeLast = timeStart;
+    }
+
+    // in seconds, as a double
+    double ElapsedTotal() {
+        LARGE_INTEGER timeCurr;
+        QueryPerformanceCounter(&timeCurr);
+        LONGLONG elapsedTicks =  timeCurr.QuadPart - timeStart.QuadPart;
+        double res = (double)elapsedTicks / (double)timeFreq.QuadPart;
+        return res;
+    }
+
+    DWORD GetTimeoutInMilliseconds() {
+        LARGE_INTEGER timeCurr;
+        LONGLONG elapsedTicks;
+        QueryPerformanceCounter(&timeCurr);
+        elapsedTicks = timeCurr.QuadPart - timeLast.QuadPart;
+        if (elapsedTicks > ticksPerFrame) {
+            return 0;
+        } else {
+            LONGLONG timeoutMs = (ticksPerFrame - elapsedTicks) / ticsPerMs;
+            return (DWORD)timeoutMs;
+        }
+    }
+
+    void Step() {
+        timeLast.QuadPart += ticksPerFrame;
+    }
+};
 
 // an animation that 'rotates' random letters 
 static FrameTimeoutCalculator *gRotatingLettersAnim = NULL;
@@ -1465,7 +1460,7 @@ void OnCreateInstaller(HWND hwnd)
         SetFont(gHwndCheckboxRegisterDefault, gFontDefault);
         // only check the "Use as default" checkbox when no other PDF viewer
         // is currently selected (not going to intrude)
-        SetCheckboxState(gHwndCheckboxRegisterDefault, !hasOtherViewer || gGlobalData.registerDefault);
+        SetCheckboxState(gHwndCheckboxRegisterDefault, !hasOtherViewer || gGlobalData.registerAsDefault);
         free(defaultViewer);
         y -= 18;
     }
@@ -1724,19 +1719,16 @@ public:
 
 void ParseCommandLine(TCHAR *cmdLine)
 {
-    TCHAR *arg = tstr_parse_possibly_quoted(&cmdLine);
-    TCHAR *nextArg = tstr_parse_possibly_quoted(&cmdLine);
-
     // skip the first arg (exe path)
-    while (nextArg) {
-        free(arg);
-        arg = nextArg;
-        nextArg = tstr_parse_possibly_quoted(&cmdLine);
+    TCHAR *arg = tstr_parse_possibly_quoted(&cmdLine);
+    free(arg);
 
+#define get_next_arg() tstr_parse_possibly_quoted(&cmdLine)
+#define is_arg(param) tstr_ieq(arg + 1, _T(param))
+
+    for (; (arg = get_next_arg()); free(arg)) {
         if ('-' != *arg && '/' != *arg)
             continue;
-
-#define is_arg(param) tstr_ieq(arg + 1, _T(param))
 
         if (is_arg("u"))
             gGlobalData.uninstall = true;
@@ -1745,14 +1737,11 @@ void ParseCommandLine(TCHAR *cmdLine)
         else if (is_arg("d")) {
             if (gGlobalData.installDir)
                 free(gGlobalData.installDir);
-            gGlobalData.installDir = nextArg;
-            nextArg = tstr_dup(_T("")); // skip it
+            gGlobalData.installDir = get_next_arg();
         }
         else if (is_arg("register"))
-            gGlobalData.registerDefault = true;
+            gGlobalData.registerAsDefault = true;
     }
-
-    free(arg);
 }
 
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
@@ -1762,10 +1751,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     SetErrorMode(SEM_NOOPENFILEERRORBOX | SEM_FAILCRITICALERRORS);
 
     ParseCommandLine(GetCommandLine());
-    if (!gGlobalData.installDir)
-        gGlobalData.installDir = GetInstallationDir();
     if (!gGlobalData.uninstall)
         gGlobalData.uninstall = IsUninstaller();
+    if (!gGlobalData.installDir)
+        gGlobalData.installDir = GetInstallationDir(gGlobalData.uninstall);
 
     if (ExecuteFromTempIfUninstaller())
         return 0;
