@@ -592,12 +592,15 @@ Exit:
     return totalSize;
 }
 
-void WriteUninstallerRegistryInfo()
+bool WriteUninstallerRegistryInfo(bool allUsers)
 {
+    bool success = true;
     HKEY hkey = HKEY_LOCAL_MACHINE;
+    if (!allUsers)
+        hkey = HKEY_CURRENT_USER;
     TCHAR *uninstallerPath = GetUninstallerPath();
     TCHAR *installedExePath = GetInstalledExePath();
-    WriteRegStr(hkey,   REG_PATH_UNINST, DISPLAY_ICON, installedExePath);
+    success |= WriteRegStr(hkey,   REG_PATH_UNINST, DISPLAY_ICON, installedExePath);
     WriteRegStr(hkey,   REG_PATH_UNINST, DISPLAY_NAME, TAPP);
     WriteRegStr(hkey,   REG_PATH_UNINST, DISPLAY_VERSION, CURR_VERSION_STR);
     WriteRegDWORD(hkey, REG_PATH_UNINST, ESTIMATED_SIZE, GetDirSize(gGlobalData.installDir));
@@ -612,6 +615,8 @@ void WriteUninstallerRegistryInfo()
     free(installDir);
     free(uninstallerPath);
     free(installedExePath);
+
+    return success;
 }
 
 BOOL RegDelKeyRecurse(HKEY hkey, TCHAR *path)
@@ -625,16 +630,22 @@ BOOL RegDelKeyRecurse(HKEY hkey, TCHAR *path)
     return TRUE;
 }
 
-BOOL RemoveUninstallerRegistryInfo()
+BOOL RemoveUninstallerRegistryInfo(bool allUsers)
 {
-    BOOL ok1 = RegDelKeyRecurse(HKEY_LOCAL_MACHINE, REG_PATH_UNINST);
-    BOOL ok2 = RegDelKeyRecurse(HKEY_LOCAL_MACHINE, REG_PATH_SOFTWARE);
+    HKEY hkey = HKEY_LOCAL_MACHINE;
+    if (!allUsers)
+        hkey = HKEY_CURRENT_USER;
+    BOOL ok1 = RegDelKeyRecurse(hkey, REG_PATH_UNINST);
+    BOOL ok2 = RegDelKeyRecurse(hkey, REG_PATH_SOFTWARE);
     return ok1 && ok2;
 }
 
 /* Undo what DoAssociateExeWithPdfExtension() in SumatraPDF.cpp did */
-void UnregisterFromBeingDefaultViewer(HKEY hkey)
+void UnregisterFromBeingDefaultViewer(bool allUsers)
 {
+    HKEY hkey = HKEY_LOCAL_MACHINE;
+    if (!allUsers)
+        hkey = HKEY_CURRENT_USER;
     TCHAR buf[MAX_PATH + 8];
     bool ok = ReadRegStr(hkey, REG_CLASSES_APP, _T("previous.pdf"), buf, dimof(buf));
     if (ok) {
@@ -644,33 +655,20 @@ void UnregisterFromBeingDefaultViewer(HKEY hkey)
         if (ok && tstr_eq(TAPP, buf))
             RegDelKeyRecurse(hkey, REG_CLASSES_PDF);
     }
-    RegDelKeyRecurse(hkey, REG_CLASSES_APP);
 }
 
-void UnregisterExplorerFileExts()
+void RemoveOwnRegistryKeys()
 {
+    RegDelKeyRecurse(HKEY_LOCAL_MACHINE, REG_CLASSES_APP);
+    RegDelKeyRecurse(HKEY_CURRENT_USER, REG_CLASSES_APP);
+
     TCHAR buf[MAX_PATH + 8];
     bool ok = ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT, PROG_ID, buf, dimof(buf));
-    if (!ok || !tstr_eq(buf, TAPP))
-        return;
-
-    HKEY hk;
-    LONG res = RegOpenKeyEx(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT, 0, KEY_SET_VALUE, &hk);
-    if (ERROR_SUCCESS != res)
-        return;
-
-    res = RegDeleteValue(hk, PROG_ID);
-    if (res != ERROR_SUCCESS) {
-        SeeLastError(res);
+    if (ok && tstr_eq(buf, TAPP)) {
+        LONG res = SHDeleteValue(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT, PROG_ID);
+        if (res != ERROR_SUCCESS)
+            SeeLastError(res);
     }
-    RegCloseKey(hk);
-}
-
-void UnregisterFromBeingDefaultViewer()
-{
-    UnregisterFromBeingDefaultViewer(HKEY_LOCAL_MACHINE);
-    UnregisterFromBeingDefaultViewer(HKEY_CURRENT_USER);
-    UnregisterExplorerFileExts();
 }
 
 void UninstallBrowserPlugin()
@@ -896,16 +894,22 @@ static DWORD WINAPI InstallerThread(LPVOID data)
         free(dllPath);
     }
 
-    if (!CreateUninstaller())
-        goto Error;
-
-    WriteUninstallerRegistryInfo();
     if (!CreateAppShortcut(true) && !CreateAppShortcut(false)) {
         NotifyFailed(_T("Failed to create a shortcut"));
         goto Error;
     }
 
+    // consider installation a success from here on
+    // (still warn, if we've failed to create the uninstaller, though)
     gGlobalData.success = true;
+
+    if (!CreateUninstaller())
+        goto Error;
+
+    if (!WriteUninstallerRegistryInfo(true) && !WriteUninstallerRegistryInfo(false)) {
+        NotifyFailed(_T("Failed to write the uninstallation information to the registry"));
+    }
+
 Error:
     // TODO: roll back installation on failure (restore previous installation!)
     if (!gGlobalData.silent)
@@ -959,13 +963,20 @@ static DWORD WINAPI UninstallerThread(LPVOID data)
     KillProcess(exePath, TRUE);
     free(exePath);
 
-    if (!RemoveUninstallerRegistryInfo())
+    if (!RemoveUninstallerRegistryInfo(true) && !RemoveUninstallerRegistryInfo(false))
         NotifyFailed(_T("Failed to delete uninstaller registry keys"));
 
     if (!RemoveShortcut(true) && !RemoveShortcut(false))
         NotifyFailed(_T("Couldn't remove the shortcut"));
 
-    UnregisterFromBeingDefaultViewer();
+    TCHAR *defaultViewer = GetDefaultPdfViewer();
+    if (tstr_ieq(defaultViewer, TAPP)) {
+        UnregisterFromBeingDefaultViewer(true);
+        UnregisterFromBeingDefaultViewer(false);
+    }
+    free(defaultViewer);
+
+    RemoveOwnRegistryKeys();
     UninstallBrowserPlugin();
 
     if (!RemoveInstallationDirectory())
@@ -1461,7 +1472,7 @@ void OnCreateInstaller(HWND hwnd)
     y = RectDy(&r) - buttonDy - 5;
 
     TCHAR *defaultViewer = GetDefaultPdfViewer();
-    BOOL hasOtherViewer = defaultViewer && !tstr_ieq(defaultViewer, TAPP);
+    BOOL hasOtherViewer = !tstr_ieq(defaultViewer, TAPP);
     BOOL isSumatraDefaultViewer = defaultViewer && !hasOtherViewer;
 
     // only show the checbox if Sumatra is not already a default viewer.

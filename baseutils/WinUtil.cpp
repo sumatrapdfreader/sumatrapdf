@@ -165,15 +165,7 @@ void SeeLastError(DWORD err) {
 
 bool ReadRegStr(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, const TCHAR *buffer, DWORD bufLen)
 {
-    HKEY keyTmp = NULL;
-    LONG res = RegOpenKeyEx(keySub, keyName, 0, KEY_READ, &keyTmp);
-
-    if (ERROR_SUCCESS == res) {
-        bufLen *= sizeof(TCHAR); // we need the buffer size in bytes not TCHARs
-        res = RegQueryValueEx(keyTmp, valName, NULL, NULL, (BYTE *)buffer, &bufLen);
-        RegCloseKey(keyTmp);
-    }
-
+    LONG res = SHGetValue(keySub, keyName, valName, NULL, (VOID *)buffer, &bufLen);
     if (ERROR_SUCCESS != res && ERROR_FILE_NOT_FOUND != res)
         SeeLastError(res);
     return ERROR_SUCCESS == res;
@@ -181,14 +173,7 @@ bool ReadRegStr(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, const T
 
 bool WriteRegStr(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, const TCHAR *value)
 {
-    HKEY keyTmp = NULL;
-    LONG res = RegCreateKeyEx(keySub, keyName, 0, NULL, 0, KEY_WRITE, NULL, &keyTmp, NULL);
-
-    if (ERROR_SUCCESS == res) {
-        res = RegSetValueEx(keyTmp, valName, 0, REG_SZ, (const BYTE*)value, (lstrlen(value)+1) * sizeof(TCHAR));
-        RegCloseKey(keyTmp);
-    }
-
+    LONG res = SHSetValue(keySub, keyName, valName, REG_SZ, (const VOID *)value, (tstr_len(value) + 1) * sizeof(TCHAR));
     if (ERROR_SUCCESS != res)
         SeeLastError(res);
     return ERROR_SUCCESS == res;
@@ -196,14 +181,7 @@ bool WriteRegStr(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, const 
 
 bool WriteRegDWORD(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, DWORD value)
 {
-    HKEY keyTmp = NULL;
-    LONG res = RegCreateKeyEx(keySub, keyName, 0, NULL, 0, KEY_WRITE, NULL, &keyTmp, NULL);
-
-    if (ERROR_SUCCESS == res) {
-        res = RegSetValueEx(keyTmp, valName, 0, REG_DWORD, (const BYTE*)&value, sizeof(DWORD));
-        RegCloseKey(keyTmp);
-    }
-
+    LONG res = SHSetValue(keySub, keyName, valName, REG_DWORD, (const VOID *)&value, sizeof(DWORD));
     if (ERROR_SUCCESS != res)
         SeeLastError(res);
     return ERROR_SUCCESS == res;
