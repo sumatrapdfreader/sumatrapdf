@@ -356,11 +356,13 @@ BOOL InstallCopyFiles(void)
         goto Error;
     }
 
+    TCHAR *instdir = GetInstallationDir();
+
     // extract all contained files one by one
     int count;
+    int filesCopied = 0;
     for (count = 0; count < ginfo.number_entry; count++) {
         BOOL success = FALSE;
-
         char filename[MAX_PATH];
         unz_file_info64 finfo;
         err = unzGetCurrentFileInfo64(uf, &finfo, filename, dimof(filename), NULL, 0, NULL, 0);
@@ -390,7 +392,6 @@ BOOL InstallCopyFiles(void)
         }
 
         TCHAR *inpath = ansi_to_tstr(filename);
-        TCHAR *instdir = GetInstallationDir();
         TCHAR *extpath = tstr_cat3(instdir, _T("\\"), FilePath_GetBaseName(inpath));
 
         BOOL ok = write_to_file(extpath, data, (size_t)finfo.uncompressed_size);
@@ -405,6 +406,7 @@ BOOL InstallCopyFiles(void)
                 CloseHandle(hFile);
             }
             success = TRUE;
+            filesCopied++;
         }
         else {
             NotifyFailed(_T("Couldn't write extracted file to disk"));
@@ -412,7 +414,6 @@ BOOL InstallCopyFiles(void)
         }
 
         free(inpath);
-        free(instdir);
         free(extpath);
         free(data);
 
@@ -428,7 +429,7 @@ BOOL InstallCopyFiles(void)
     }
 
     unzClose(uf);
-    return count == ginfo.number_entry;
+    return filesCopied == ginfo.number_entry;
 
 Error:
     if (uf) {
