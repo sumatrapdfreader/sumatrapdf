@@ -756,6 +756,9 @@ BOOL RemoveDirectoryWithFiles(TCHAR *dir)
 
 BOOL RemoveInstallationDirectory()
 {
+    // TODO: consider either removing only known files or at least
+    //       warning when installing into a non-empty directory
+    //       (i.e. containing files other than of a previous installation)
     return RemoveDirectoryWithFiles(gGlobalData.installDir);
 }
 
@@ -1722,7 +1725,6 @@ BOOL ExecuteUninstallerFromTempDir()
 
     // Using fixed (unlikely) name instead of GetTempFileName()
     // so that we don't litter temp dir with copies of ourselves
-    // Not sure how to ensure that we get deleted after we're done
     TCHAR *tempPath = tstr_cat(tempDir, _T("sum~inst.exe"));
 
     if (!CopyFile(GetExePath(), tempPath, FALSE)) {
@@ -1731,11 +1733,14 @@ BOOL ExecuteUninstallerFromTempDir()
         goto KeepRunning;
     }
 
-    TCHAR *args = tstr_printf(_T("/u /d \"%s\" %s"), gGlobalData.installDir, gGlobalData.silent ? _T("/s") : _T(""));
+    TCHAR *args = tstr_printf(_T("/d \"%s\" %s"), gGlobalData.installDir, gGlobalData.silent ? _T("/s") : _T(""));
     HANDLE h = CreateProcessHelper(tempPath, args);
     ok = h != NULL;
     CloseHandle(h);
     free(args);
+
+    // mark the uninstaller for removal at shutdown (note: works only for administrators)
+    MoveFileEx(tempPath, NULL, MOVEFILE_DELAY_UNTIL_REBOOT);
     free(tempPath);
 
 KeepRunning:
@@ -1781,11 +1786,9 @@ public:
     ~GdiPlusScope() { GdiplusShutdown(token); }
 };
 
-// TODO: wouldn't it make more sense to print this to a console since
-// presumably it was invoked from cmd-line.
 void ShowUsage()
 {
-    MessageBox(NULL, TAPP _T("-install.exe [/s][/d <path>][/default][/u]\n\
+    MessageBox(NULL, TAPP _T("-install.exe [/s][/d <path>][/default]\n\
     \n\
     /s\tinstalls ") TAPP _T(" silently (without user interaction).\n\
     /d\tchanges the directory where ") TAPP _T(" will be installed.\n\
@@ -1805,9 +1808,7 @@ void ParseCommandLine(TCHAR *cmdLine)
         if ('-' != *arg && '/' != *arg)
             continue;
 
-        if (is_arg("u"))
-            gGlobalData.uninstall = true;
-        else if (is_arg("s"))
+        if (is_arg("s"))
             gGlobalData.silent = true;
         else if (is_arg("d")) {
             if (gGlobalData.installDir)
