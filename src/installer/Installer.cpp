@@ -1780,14 +1780,15 @@ public:
     ~GdiPlusScope() { GdiplusShutdown(token); }
 };
 
+// TODO: wouldn't it make more sense to print this to a console since
+// presumably it was invoked from cmd-line.
 void ShowUsage()
 {
     MessageBox(NULL, TAPP _T("-install.exe [/s][/d <path>][/default][/u]\n\
     \n\
     /s\tinstalls ") TAPP _T(" silently (without user interaction).\n\
     /d\tchanges the directory where ") TAPP _T(" will be installed.\n\
-    /default\tinstalls ") TAPP _T(" as the default PDF viewer.\n\
-    /u\tturns the installer into an uninstaller."), TAPP _T(" Installer Usage"), MB_OK | MB_ICONINFORMATION);
+    /default\tinstalls ") TAPP _T(" as the default PDF viewer."), TAPP _T(" Installer Usage"), MB_OK | MB_ICONINFORMATION);
 }
 
 void ParseCommandLine(TCHAR *cmdLine)
