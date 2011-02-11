@@ -131,9 +131,10 @@ static Color            COLOR_MSG_FAILED(gCol1);
 // for compatibility with the old NSIS installer)
 #define INSTALL_DIR _T("Install_Dir")
 
-// Note: make sure that this mark is never contained as a single-byte
-//       sequence in the executable, as we cut at the first occurrence
-//       for the uninstaller
+// Note: UN_INST_MARK is converted from unicode to ascii at runtime to make sure
+//       that this sequence of bytes (i.e. ascii version) is not present in 
+//       the executable, since it's appended to the end of executable to mark
+//       it as uninstaller. An alternative would be search for it from the end.
 #define UN_INST_MARK L"!uninst_end!"
 static char *gUnInstMark = NULL; // wstr_to_utf8(UN_INST_MARK)
 
