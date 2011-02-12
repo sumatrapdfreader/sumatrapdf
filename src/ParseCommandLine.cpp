@@ -198,6 +198,9 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
         else if (is_arg("-presentation")) {
             this->enterPresentation = true;
         }
+        else if (is_arg("-fullscreen")) {
+            this->enterFullscreen = true;
+        }
         else if (is_arg("-console")) {
             this->showConsole = true;
         }

@@ -29,6 +29,7 @@ public:
     TCHAR *     newWindowTitle;
     BOOL        invertColors;
     bool        enterPresentation;
+    bool        enterFullscreen;
     bool        showConsole;
     HWND        hwndPluginParent;
     bool        exitImmediately;
@@ -39,7 +40,7 @@ public:
         fwdsearchPermanent(FALSE), escToExit(FALSE),
         reuseInstance(false), lang(NULL), destName(NULL), pageNumber(-1),
         restrictedUse(false), newWindowTitle(NULL), invertColors(FALSE),
-        enterPresentation(false), hwndPluginParent(NULL),
+        enterPresentation(false), enterFullscreen(false), hwndPluginParent(NULL),
         showConsole(false), exitImmediately(false)
     { }
 

@@ -6593,8 +6593,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
             }
             if (i.hwndPluginParent)
                 MakePluginWindow(win, i.hwndPluginParent);
-            if (WS_SHOWING_PDF == win->state && i.enterPresentation && !firstDocLoaded)
-                WindowInfo_EnterFullscreen(win, true);
+            if (WS_SHOWING_PDF == win->state && !firstDocLoaded && (i.enterPresentation || i.enterFullscreen))
+                WindowInfo_EnterFullscreen(win, i.enterPresentation);
         }
 
         if (i.exitOnPrint)
