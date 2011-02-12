@@ -10,6 +10,7 @@ pdf_loadpagecontentsarray(fz_buffer **bigbufp, pdf_xref *xref, fz_obj *list)
 	fz_buffer *big;
 	fz_buffer *one;
 	int i;
+	int loadCount = 0; /* http://code.google.com/p/sumatrapdf/issues/detail?id=1239 */
 
 	pdf_logpage("multiple content streams: %d\n", fz_arraylen(list));
 
@@ -21,11 +22,13 @@ pdf_loadpagecontentsarray(fz_buffer **bigbufp, pdf_xref *xref, fz_obj *list)
 	{
 		fz_obj *stm = fz_arrayget(list, i);
 		error = pdf_loadstream(&one, xref, fz_tonum(stm), fz_togen(stm));
+		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1239 */
 		if (error)
 		{
-			fz_dropbuffer(big);
-			return fz_rethrow(error, "cannot load content stream part %d/%d (%d %d R)", i + 1, fz_arraylen(list), fz_tonum(stm), fz_togen(stm));
+			fz_catch(error, "cannot load content stream part %d/%d (%d %d R)", i + 1, fz_arraylen(list), fz_tonum(stm), fz_togen(stm));
+			continue;
 		}
+		loadCount ++;
 
 		if (big->len + one->len + 1 > big->cap)
 			fz_resizebuffer(big, big->len + one->len + 1);
@@ -34,6 +37,13 @@ pdf_loadpagecontentsarray(fz_buffer **bigbufp, pdf_xref *xref, fz_obj *list)
 		big->len += one->len + 1;
 
 		fz_dropbuffer(one);
+	}
+
+	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1239 */
+	if (loadCount == 0)
+	{
+		fz_dropbuffer(big);
+		return fz_throw("couldn't load any content stream");
 	}
 
 	*bigbufp = big;

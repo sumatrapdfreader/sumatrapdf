@@ -213,6 +213,7 @@ jbig2_complete_page (Jbig2Ctx *ctx)
         ctx->segment_index++;
       }
     }
+    if (ctx->pages[ctx->current_page].image) /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=691958 */
     ctx->pages[ctx->current_page].state = JBIG2_PAGE_COMPLETE;
 
     return 0;
