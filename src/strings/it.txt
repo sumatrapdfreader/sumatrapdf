@@ -254,6 +254,9 @@ Inserire la linea di comando da eseguire quando fai doppio clic su un documento 
 Error loading PDF file.
 Errore durante l'apertura del file.
 
+F&orward\tAlt+Right Arrow
+A&vanti\tAlt+Freccia Destra
+
 F&ullscreen\tCtrl-Shift-L
 Schermo intero\tCtrl-Shift-L
 
@@ -301,6 +304,12 @@ Pagina intera
 
 Fit Width
 Larghezza pagina
+
+Fit Width and Show Pages Continuously
+Adatta la larghezza e visualizza le pagine in modo continuo
+
+Fit a Single Page
+Adatta una pagina singola
 
 Found text at page %d
 Testo trovato a pagina %d
@@ -386,51 +395,132 @@ Dimensione pagina:
 Page number %u inexistant
 Pagina numero %u inesistente
 
+Page scaling
+Gradazione pagina
+
+Page:
+Pagina:
+
+Please include the following file in your crash report:
+Includi questo file nella segnalazione del crash
+
+Please wait - rendering...
+Rendering in corso - attendere prego
+
+Pr&esentation\tCtrl-L
+Pr&esentazione\tCtrl-L
+
+Previous Page
+Pagina precedente
+
+Print range
+Stampa serie
+
+Remember &opened files
+Ricorda file &aperti
+
+Rotate &Left\tCtrl-Shift--
+Ruota a &Sinistra\tCtrl-Shift--
+
+Rotate &Right\tCtrl-Shift-+
+Ruota a &Destra\tCtrl-Shift-+
+
+Searching %d of %d...
+Cercando: %d di %d...
+
+Select &All\tCtrl-A
+Seleziona &tutto\tCtrl-A
+
+Select content with Ctrl+left mouse button
+Seleziona contenuti con Ctrl+freccia sinistra
+
+Send by &E-mail...
+Invia via &mail...
+
+Set inverse search command-line
+Imposta la ricerca inversa via riga di comando
+
+Show &Toolbar
+Visualizza la &toolbar
+
+Show &pages continuously
+Visualizza le &pagine in modo continuo
+
+Show the &bookmarks sidebar when available
+Visualizza la sidebar dei &segnalibri quando disponibile
+
+Single Page
+Pagina singola
+
+Source file %s has no synchronization point
+Il file sorgente non ha nessun punto di sincronizzazione
+
+Subject:
+Oggetto:
+
+SumatraPDF Options
+Opzioni di SumatraPDF
+
+SumatraPDF Update
+Aggiornamento di SumatraPDF
+
+SumatraPDF crashed
+SumatraPDF ha crashato
+
+SumatraPDF is your default PDF reader
+SumatraPDF è il tuo lettore PDF predefinito
+
+SumatraPDF should now be your default PDF reader
+Ora SumatraPDF dovrebbe essere il tuo lettore PDF predefinito
+
+Synchronization file cannot be opened
+Il file di sincronizzazione non può essere aperto
+
+Text documents
+Documenti di testo
+
+Title:
+Titolo
+
+Unknown source file (%s)
+File sorgente sconosciuto (%s)
+
+View
+Interfaccia
+
+Visit &Website
+Visita il &sito web
+
+Warning
+Attenzione
+
+You have the latest version.
+Hai l'ultima versione
+
+You have version %s
+Hai la versione %s
+
+Zoom
+Zoom
+
+Zoom In
+Zoom In
+
+Zoom Out
+Zoom Out
+
+Zoom factor
+Fattore di Zoom
+
+[Changes detected; refreshing] %s
+[Individuati cambiamenti; aggiornando] %s
+
+copying text
+copiano il testo
+
+printing document
+stampando il documento
+
 # Untranslated:
-#F&orward\tAlt+Right Arrow
-#Fit Width and Show Pages Continuously
-#Fit a Single Page
-#Page scaling
-#Page:
-#Please include the following file in your crash report:
-#Please wait - rendering...
-#Pr&esentation\tCtrl-L
-#Previous Page
-#Print range
 #Printing problem.
-#Remember &opened files
-#Rotate &Left\tCtrl-Shift--
-#Rotate &Right\tCtrl-Shift-+
-#Searching %d of %d...
-#Select &All\tCtrl-A
-#Select content with Ctrl+left mouse button
-#Send by &E-mail...
-#Set inverse search command-line
-#Show &Toolbar
-#Show &pages continuously
-#Show the &bookmarks sidebar when available
-#Single Page
-#Source file %s has no synchronization point
-#Subject:
-#SumatraPDF Options
-#SumatraPDF Update
-#SumatraPDF crashed
-#SumatraPDF is your default PDF reader
-#SumatraPDF should now be your default PDF reader
-#Synchronization file cannot be opened
-#Text documents
-#Title:
-#Unknown source file (%s)
-#View
-#Visit &Website
-#Warning
-#You have the latest version.
-#You have version %s
-#Zoom
-#Zoom In
-#Zoom Out
-#Zoom factor
-#[Changes detected; refreshing] %s
-#copying text
-#printing document
 
