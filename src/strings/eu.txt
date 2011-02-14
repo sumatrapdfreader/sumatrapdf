@@ -152,7 +152,7 @@ Bertsio berriagorik ba ote den begiratu
 Continuous
 Jarraian
 
-Continuous facing
+Continuous Facing
 Bi aldetatik jarraian
 
 Contribute Translation
@@ -390,7 +390,7 @@ dokumentua imprimatzen
 #Advanced
 #Bookmarks
 #Cannot start inverse search command. Please check the command line in the settings.
-#Continuous book view
+#Continuous Book View
 #Copying text was denied (copying as image only)
 #Couldn't initialize printer
 #Couldn't render the page

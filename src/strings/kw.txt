@@ -148,10 +148,10 @@ Check for &Updates
 Continuous
 Heb aswa
 
-Continuous book view
+Continuous Book View
 Gwel-lyver heb aswa
 
-Continuous facing
+Continuous Facing
 A-dal heb aswa
 
 Contribute Translation

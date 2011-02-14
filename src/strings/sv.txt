@@ -193,10 +193,10 @@ Check for &Updates
 Continuous
 Fortlöpande
 
-Continuous book view
+Continuous Book View
 Fortlöpande bokuppslag
 
-Continuous facing
+Continuous Facing
 Fortlöpande uppslag
 
 Contribute Translation

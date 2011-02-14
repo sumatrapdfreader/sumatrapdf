@@ -191,10 +191,10 @@ Check for &Updates
 Continuous
 Kontinuerlig
 
-Continuous book view
+Continuous Book View
 Kontinuerlig bokvisning
 
-Continuous facing
+Continuous Facing
 Kontinuerlig - motst&ående
 
 Contribute Translation

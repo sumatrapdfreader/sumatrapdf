@@ -126,7 +126,7 @@ Check for &Updates
 Continuous
 Працягла
 
-Continuous facing
+Continuous Facing
 Працягла дзьве старонкі
 
 Contribute Translation
@@ -358,7 +358,7 @@ Zoom Out
 #Bytes
 #Can't connect to the Internet (error %#x).
 #Cannot start inverse search command. Please check the command line in the settings.
-#Continuous book view
+#Continuous Book View
 #Copying text was denied (copying as image only)
 #Couldn't initialize printer
 #Created:

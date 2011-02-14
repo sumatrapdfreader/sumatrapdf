@@ -154,10 +154,10 @@ Check for &Updates
 Continuous
 Priebežne
 
-Continuous book view
+Continuous Book View
 Prebiežný knižný pohľad
 
-Continuous facing
+Continuous Facing
 Dve strany priebežne
 
 Contribute Translation

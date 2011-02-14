@@ -191,10 +191,10 @@ Check for &Updates
 Continuous
 Kontinu
 
-Continuous book view
+Continuous Book View
 Tampilan buku secara kontinu
 
-Continuous facing
+Continuous Facing
 Dua halaman kontinu
 
 Contribute Translation

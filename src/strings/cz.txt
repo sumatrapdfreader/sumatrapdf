@@ -191,10 +191,10 @@ Check for &Updates
 Continuous
 Jedna stránka průběžně
 
-Continuous book view
+Continuous Book View
 Kniha průběžně
 
-Continuous facing
+Continuous Facing
 Dvojstránky průběžně
 
 Contribute Translation

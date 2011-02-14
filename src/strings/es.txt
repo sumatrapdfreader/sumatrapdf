@@ -192,10 +192,10 @@ Check for &Updates
 Continuous
 Continua
 
-Continuous book view
+Continuous Book View
 Vista continua de libro
 
-Continuous facing
+Continuous Facing
 Página doble continua
 
 Contribute Translation

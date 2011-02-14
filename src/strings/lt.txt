@@ -189,10 +189,10 @@ Tikrinti, ar yra na&ujinimų
 Continuous
 Nenutrūkstama
 
-Continuous book view
+Continuous Book View
 Nenutrūkstama knygos peržiūra
 
-Continuous facing
+Continuous Facing
 Nenutrūkstama dviejų puslapių
 
 Contribute Translation

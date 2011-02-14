@@ -160,10 +160,10 @@ Check for &Updates
 Continuous
 نمايش پيوسته
 
-Continuous book view
+Continuous Book View
 نمایش کتابی‌ پیوسته
 
-Continuous facing
+Continuous Facing
 نمایش دو صفحه‌ای پیوسته
 
 Contribute Translation

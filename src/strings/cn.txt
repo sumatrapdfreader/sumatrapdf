@@ -188,10 +188,10 @@ Check for &Updates
 Continuous
 连续页面
 
-Continuous book view
+Continuous Book View
 连续书籍视图
 
-Continuous facing
+Continuous Facing
 连续平铺页面
 
 Contribute Translation

@@ -155,10 +155,10 @@ Check for &Updates
 Continuous
 Trochrinnend
 
-Continuous book view
+Continuous Book View
 Fierder mei boekbyld
 
-Continuous facing
+Continuous Facing
 Dûbele side trochrinnend
 
 Contribute Translation

@@ -184,7 +184,7 @@ Check for &Updates
 Continuous
 한 장씩 연속
 
-Continuous facing
+Continuous Facing
 여러 장씩 연속
 
 Contribute Translation
@@ -445,7 +445,7 @@ printing document
 # Untranslated:
 #&Use original page sizes
 #Cannot start inverse search command. Please check the command line in the settings.
-#Continuous book view
+#Continuous Book View
 #Default PDF reader can't be changed in portable mode
 #Denied Permissions:
 #Enter the command-line to invoke when you double-click on the PDF document:

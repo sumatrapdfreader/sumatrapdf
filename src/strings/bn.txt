@@ -81,7 +81,7 @@ Check for &Updates
 Continuous
 ক্রমাগত...
 
-Continuous facing
+Continuous Facing
 ক্রমাগত দুটি পৃষ্ঠায়
 
 Contribute Translation
@@ -247,7 +247,7 @@ Zoom Out
 #Cancel
 #Cannot print this file
 #Cannot start inverse search command. Please check the command line in the settings.
-#Continuous book view
+#Continuous Book View
 #Copying text was denied (copying as image only)
 #Couldn't initialize printer
 #Couldn't render the page

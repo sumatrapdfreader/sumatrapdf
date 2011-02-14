@@ -189,10 +189,10 @@ Verifică apariţia unei versiuni noi
 Continuous
 Continuu
 
-Continuous book view
+Continuous Book View
 Vedere în format carte, continuu
 
-Continuous facing
+Continuous Facing
 Pagină dublă continuu
 
 Contribute Translation

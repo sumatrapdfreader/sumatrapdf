@@ -153,10 +153,10 @@ Tukar bahasa (Change Language)
 Continuous
 Bersambung
 
-Continuous book view
+Continuous Book View
 Paparan buku berterusan
 
-Continuous facing
+Continuous Facing
 Dua belah mukasurat bersambung
 
 Contribute Translation

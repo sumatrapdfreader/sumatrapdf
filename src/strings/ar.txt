@@ -190,10 +190,10 @@ Check for &Updates
 Continuous
 صفحات متتالية
 
-Continuous book view
+Continuous Book View
 عرض الكتاب باستمرار
 
-Continuous facing
+Continuous Facing
 صفحات متقابلة متتالية
 
 Contribute Translation

@@ -159,10 +159,10 @@ Tarkista, onko päivityksiä saatavilla
 Continuous
 Peräkkäin
 
-Continuous book view
+Continuous Book View
 Jatkuva kirjanäkymä
 
-Continuous facing
+Continuous Facing
 Peräkkäin ja rinnakkain
 
 Contribute Translation

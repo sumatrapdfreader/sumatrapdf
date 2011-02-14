@@ -80,7 +80,7 @@ Check for &Updates
 Continuous
 ဆက်တိုက်
 
-Continuous facing
+Continuous Facing
 ဆက်တိုက် မျက်နှာ
 
 Could not open Printer
@@ -243,7 +243,7 @@ Zoom Out
 #Cancel
 #Cannot print this file
 #Cannot start inverse search command. Please check the command line in the settings.
-#Continuous book view
+#Continuous Book View
 #Contribute Translation
 #Copying text was denied (copying as image only)
 #Couldn't initialize printer

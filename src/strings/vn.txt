@@ -189,10 +189,10 @@ Kiểm tra có phiên bản mới
 Continuous
 Liên tiếp
 
-Continuous book view
+Continuous Book View
 Xem sách liên tiếp
 
-Continuous facing
+Continuous Facing
 Trang kép liên tiếp
 
 Contribute Translation

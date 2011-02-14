@@ -141,7 +141,7 @@ Check for &Updates
 Continuous
 Непрекидно
 
-Continuous facing
+Continuous Facing
 Непрекидно, две стране
 
 Contribute Translation
@@ -395,7 +395,7 @@ Zoom factor
 #Bookmarks
 #Bytes
 #Can't connect to the Internet (error %#x).
-#Continuous book view
+#Continuous Book View
 #Copying text was denied (copying as image only)
 #Created:
 #Denied Permissions:

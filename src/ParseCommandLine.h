@@ -1,6 +1,8 @@
 #ifndef _PARSE_COMMAND_LINE_H__
 #define _PARSE_COMMAND_LINE_H__
 
+#include "DisplayState.h"
+
 class CommandLineInfo {
 public:
     VStrList    fileNames;
@@ -30,6 +32,8 @@ public:
     BOOL        invertColors;
     bool        enterPresentation;
     bool        enterFullscreen;
+    DisplayMode startView;
+    float       startZoom;
     bool        showConsole;
     HWND        hwndPluginParent;
     bool        exitImmediately;
@@ -41,6 +45,7 @@ public:
         reuseInstance(false), lang(NULL), destName(NULL), pageNumber(-1),
         restrictedUse(false), newWindowTitle(NULL), invertColors(FALSE),
         enterPresentation(false), enterFullscreen(false), hwndPluginParent(NULL),
+        startView(DM_AUTOMATIC), startZoom(INVALID_ZOOM),
         showConsole(false), exitImmediately(false)
     { }
 

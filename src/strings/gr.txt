@@ -190,10 +190,10 @@ Check for &Updates
 Continuous
 Μια σελίδα, συνεχόμενα
 
-Continuous book view
+Continuous Book View
 Συνεχόμενη προβολή βιβλίου
 
-Continuous facing
+Continuous Facing
 Δύο σελίδες, συνεχόμενα
 
 Contribute Translation

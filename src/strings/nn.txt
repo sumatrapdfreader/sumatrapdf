@@ -77,7 +77,7 @@ Check for &Updates
 Continuous
 Kontinuerleg
 
-Continuous facing
+Continuous Facing
 Kontunuerleg motståande
 
 Contribute Translation
@@ -244,7 +244,7 @@ Zoom ut
 #Cancel
 #Cannot print this file
 #Cannot start inverse search command. Please check the command line in the settings.
-#Continuous book view
+#Continuous Book View
 #Copying text was denied (copying as image only)
 #Couldn't initialize printer
 #Couldn't render the page

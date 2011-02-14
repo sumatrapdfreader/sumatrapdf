@@ -77,7 +77,7 @@ Check for &Updates
 Continuous
 Continuous
 
-Continuous facing
+Continuous Facing
 Facing iriContinous
 
 Contribute Translation
@@ -238,7 +238,7 @@ Duputsa
 #Cancel
 #Cannot print this file
 #Cannot start inverse search command. Please check the command line in the settings.
-#Continuous book view
+#Continuous Book View
 #Copying text was denied (copying as image only)
 #Couldn't initialize printer
 #Couldn't render the page

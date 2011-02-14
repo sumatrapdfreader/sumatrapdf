@@ -802,6 +802,7 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
         TCHAR dump[MAX_PATH];
         UINT line, col, newwindow = 0, setfocus = 0, forcerefresh = 0, page = 0;
         const TCHAR *pos, *curCommand;
+        float zoom;
         
         curCommand = pos = pwCommand;
         while (*pos) {
@@ -921,6 +922,30 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
                             ShowWindow(win->hwndFrame, SW_RESTORE);
                         SetFocus(win->hwndFrame);
                     }
+                }
+            }
+            // Set view mode and zoom level
+            // format is [<DDECOMMAND_SETVIEW>("<pdffilepath>", "<view mode>", <zoom level>)]
+            else if ( (pos = curCommand) &&
+                tstr_skip(&pos, _T("[") DDECOMMAND_SETVIEW _T("(\"")) &&
+                tstr_copy_skip_until(&pos, pdffile, dimof(pdffile), _T('"')) &&
+                (tstr_skip(&pos, _T(",\"")) || tstr_skip(&pos, _T(", \""))) &&
+                tstr_copy_skip_until(&pos, destname, dimof(destname), _T('"')) &&
+                1 == _stscanf(pos, _T(",%f)]"), &zoom)
+                )
+            {
+               // check if the PDF is already opened
+                WindowInfo *win = WindowInfoList::Find(pdffile);
+                if (win && WS_ERROR_LOADING_PDF == win->state)
+                    SendMessage(win->hwndFrame, WM_COMMAND, IDM_REFRESH, FALSE);
+                if (win && WS_SHOWING_PDF == win->state) {
+                    char *viewMode = tstr_to_utf8(destname);
+                    DisplayMode mode;
+                    if (DisplayModeEnumFromName(viewMode, &mode))
+                        win->SwitchToDisplayMode(mode);
+                    free(viewMode);
+                    if (zoom != INVALID_ZOOM)
+                        win->ZoomToSelection(zoom, false);
                 }
             }
             else

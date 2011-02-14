@@ -188,10 +188,10 @@ Check for &Updates
 Continuous
 Անդադար
 
-Continuous book view
+Continuous Book View
 Շարունակել գրքի տեսքով
 
-Continuous facing
+Continuous Facing
 Անդադար երկու էջով
 
 Contribute Translation

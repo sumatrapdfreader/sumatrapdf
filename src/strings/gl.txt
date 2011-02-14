@@ -80,7 +80,7 @@ Check for &Updates
 Continuous
 Contínuo
 
-Continuous facing
+Continuous Facing
 Páxina dobre continua
 
 Contribute Translation
@@ -246,7 +246,7 @@ Afastar zoom
 #Cancel
 #Cannot print this file
 #Cannot start inverse search command. Please check the command line in the settings.
-#Continuous book view
+#Continuous Book View
 #Copying text was denied (copying as image only)
 #Couldn't initialize printer
 #Couldn't render the page

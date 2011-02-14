@@ -150,10 +150,10 @@ Check for &Updates
 Continuous
 連續頁面
 
-Continuous book view
+Continuous Book View
 連續書本模式
 
-Continuous facing
+Continuous Facing
 連續雙頁模式
 
 Contribute Translation

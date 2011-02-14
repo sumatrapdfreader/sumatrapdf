@@ -416,12 +416,12 @@ static void MenuUpdateDisplayMode(WindowInfo *win)
     win->UpdateToolbarState();
 }
 
-static void SwitchToDisplayMode(WindowInfo *win, DisplayMode displayMode, bool keepContinuous)
+void WindowInfo::SwitchToDisplayMode(DisplayMode displayMode, bool keepContinuous)
 {
-    if (!win->dm)
+    if (!this->dm)
         return;
 
-    if (keepContinuous && displayModeContinuous(win->dm->displayMode())) {
+    if (keepContinuous && displayModeContinuous(this->dm->displayMode())) {
         switch (displayMode) {
             case DM_SINGLE_PAGE: displayMode = DM_CONTINUOUS; break;
             case DM_FACING: displayMode = DM_CONTINUOUS_FACING; break;
@@ -429,9 +429,9 @@ static void SwitchToDisplayMode(WindowInfo *win, DisplayMode displayMode, bool k
         }
     }
 
-    win->prevCanvasBR.x = win->prevCanvasBR.y = -1;
-    win->dm->changeDisplayMode(displayMode);
-    MenuUpdateDisplayMode(win);
+    this->prevCanvasBR.x = this->prevCanvasBR.y = -1;
+    this->dm->changeDisplayMode(displayMode);
+    MenuUpdateDisplayMode(this);
 }
 
 #define SEP_ITEM "-----"
@@ -3658,21 +3658,21 @@ static void OnMenuViewSinglePage(WindowInfo *win)
 {
     assert(win);
     if (!win) return;
-    SwitchToDisplayMode(win, DM_SINGLE_PAGE, true);
+    win->SwitchToDisplayMode(DM_SINGLE_PAGE, true);
 }
 
 static void OnMenuViewFacing(WindowInfo *win)
 {
     assert(win);
     if (!win) return;
-    SwitchToDisplayMode(win, DM_FACING, true);
+    win->SwitchToDisplayMode(DM_FACING, true);
 }
 
 static void OnMenuViewBook(WindowInfo *win)
 {
     assert(win);
     if (!win) return;
-    SwitchToDisplayMode(win, DM_BOOK_VIEW, true);
+    win->SwitchToDisplayMode(DM_BOOK_VIEW, true);
 }
 
 static void AdjustWindowEdge(WindowInfo *win)
@@ -3814,7 +3814,7 @@ static void OnMenuViewContinuous(WindowInfo *win)
             newMode = displayModeContinuous(newMode) ? DM_BOOK_VIEW : DM_CONTINUOUS_BOOK_VIEW;
             break;
     }
-    SwitchToDisplayMode(win, newMode, false);
+    win->SwitchToDisplayMode(newMode);
 }
 
 static void ToogleToolbarViewButton(WindowInfo *win, float newZoom, bool pagesContinuously)
@@ -3846,7 +3846,7 @@ static void ToogleToolbarViewButton(WindowInfo *win, float newZoom, bool pagesCo
     }
     else if (win->prevZoomVirtual != INVALID_ZOOM) {
         float prevZoom = win->prevZoomVirtual;
-        SwitchToDisplayMode(win, win->prevDisplayMode, false);
+        win->SwitchToDisplayMode(win->prevDisplayMode);
         win->ZoomToSelection(prevZoom, false);
     }
 }
@@ -4460,7 +4460,7 @@ static void OnChar(WindowInfo *win, int key)
                 newMode = DM_FACING;
             if (displayModeContinuous(win->dm->displayMode()))
                 newMode = DM_BOOK_VIEW == newMode ? DM_CONTINUOUS_BOOK_VIEW : DM_CONTINUOUS_FACING;
-            SwitchToDisplayMode(win, newMode, false);
+            win->SwitchToDisplayMode(newMode);
 
             if (!alreadyFacing)
                 ; // don't do anything further
@@ -6570,6 +6570,12 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
                 wsprintf(command, _T("[") DDECOMMAND_PAGE _T("(\"%s\", %d)]"), fullpath, i.pageNumber);
                 DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, command);
             }
+            if ((i.startView != DM_AUTOMATIC || i.startZoom != INVALID_ZOOM) && !firstDocLoaded) {
+                TCHAR *viewMode = utf8_to_tstr(DisplayModeNameFromEnum(i.startView));
+                tstr_printf_s(command, sizeof(command), _T("[") DDECOMMAND_SETVIEW _T("(\"%s\", \"%s\", %.2f)]"), fullpath, viewMode, i.startZoom);
+                free(viewMode);
+                DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, command);
+            }
         }
         else {
             bool showWin = !i.exitOnPrint && !gPluginMode;
@@ -6595,6 +6601,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
                 MakePluginWindow(win, i.hwndPluginParent);
             if (WS_SHOWING_PDF == win->state && !firstDocLoaded && (i.enterPresentation || i.enterFullscreen))
                 WindowInfo_EnterFullscreen(win, i.enterPresentation);
+            if (i.startView != DM_AUTOMATIC && !firstDocLoaded)
+                win->SwitchToDisplayMode(i.startView);
+            if (i.startZoom != INVALID_ZOOM && !firstDocLoaded)
+                OnMenuZoom(win, MenuIdFromVirtualZoom(i.startZoom));
         }
 
         if (i.exitOnPrint)

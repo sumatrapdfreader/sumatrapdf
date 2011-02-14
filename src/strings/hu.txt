@@ -191,10 +191,10 @@ Check for &Updates
 Continuous
 Folyamatos
 
-Continuous book view
+Continuous Book View
 Folyamatos könyv
 
-Continuous facing
+Continuous Facing
 Folyamatos oldalpár
 
 Contribute Translation

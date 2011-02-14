@@ -92,6 +92,56 @@ static void ParseColor(int *destColor, const TCHAR* txt)
         *destColor = RGB(r, g, b);
 }
 
+// compares two strings ignoring case and whitespace
+static bool tstr_ieqs(const TCHAR *s1, const TCHAR *s2)
+{
+    while (*s1 && *s2) {
+        // skip whitespace
+        for (; _istspace(*s1); s1++);
+        for (; _istspace(*s2); s2++);
+
+        if (_totlower(*s1) != _totlower(*s2))
+            return false;
+        if (*s1) { s1++; s2++; }
+    }
+
+    return !*s1 && !*s2;
+}
+
+#define IS_STR_ENUM(enumName) \
+    if (tstr_ieqs(txt, _T(enumName##_STR))) { \
+        *mode = enumName; \
+        return; \
+    }
+
+// -view [continuous][singlepage|facing|bookview]
+static void ParseViewMode(DisplayMode *mode, const TCHAR *txt)
+{
+    IS_STR_ENUM(DM_SINGLE_PAGE);
+    IS_STR_ENUM(DM_CONTINUOUS);
+    IS_STR_ENUM(DM_FACING);
+    IS_STR_ENUM(DM_CONTINUOUS_FACING);
+    IS_STR_ENUM(DM_BOOK_VIEW);
+    IS_STR_ENUM(DM_CONTINUOUS_BOOK_VIEW);
+    if (tstr_ieqs(txt, _T("continuous single page"))) {
+        *mode = DM_CONTINUOUS;
+        return;
+    }
+}
+
+// -zoom [fitwidth|fitpage|fitcontent|100%] (with 100% meaning actual size)
+static void ParseZoomValue(float *zoom, const TCHAR *txt)
+{
+    if (tstr_ieqs(txt, _T("fit page")))
+        *zoom = ZOOM_FIT_PAGE;
+    else if (tstr_ieqs(txt, _T("fit width")))
+        *zoom = ZOOM_FIT_WIDTH;
+    else if (tstr_ieqs(txt, _T("fit content")))
+        *zoom = ZOOM_FIT_CONTENT;
+    else
+        _stscanf(txt, _T("%f"), zoom);
+}
+
 static void VStrList_FromCmdLine(VStrList *strList, TCHAR *cmdLine)
 {
     assert(strList && cmdLine);
@@ -200,6 +250,12 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
         }
         else if (is_arg("-fullscreen")) {
             this->enterFullscreen = true;
+        }
+        else if (is_arg_with_param("-view")) {
+            ParseViewMode(&this->startView, argList[++n]);
+        }
+        else if (is_arg_with_param("-zoom")) {
+            ParseZoomValue(&this->startZoom, argList[++n]);
         }
         else if (is_arg("-console")) {
             this->showConsole = true;

@@ -156,10 +156,10 @@ Check for &Updates
 Continuous
 தொடர்
 
-Continuous book view
+Continuous Book View
 தொடர் ஏடு வடிவ நோக்கு
 
-Continuous facing
+Continuous Facing
 தொடர் முகப்பு
 
 Contribute Translation

@@ -225,7 +225,7 @@ UINT CreateSynchronizer(LPCTSTR pdffilename, Synchronizer **sync);
 //  format: [Open("<pdffilepath>"[,<newwindow>,<setfocus>,<forcerefresh>])]
 //    if newwindow = 1 then a new window is created even if the file is already open
 //    if focus = 1 then the focus is set to the window
-//  eg: [Open("c:\file.pdf", 1, 1)]
+//  eg: [Open("c:\file.pdf", 1, 1, 0)]
 #define DDECOMMAND_OPEN       _T("Open")
 
 // jump to named destination command
@@ -237,6 +237,12 @@ UINT CreateSynchronizer(LPCTSTR pdffilename, Synchronizer **sync);
 //  format: [GoToPage("<pdffilepath>",<page number>)]
 //  eg: [GoToPage("c:\file.pdf", 37)]. pdf file must be already opened
 #define DDECOMMAND_PAGE       _T("GotoPage")
+
+// set view mode and zoom level
+//  format: [SetView("<pdffilepath>", "<view mode>", <zoom level>)]
+//  eg: [SetView("c:\file.pdf", "book view", -2)]
+//  note: use -1 for ZOOM_FIT_PAGE, -2 for ZOOM_FIT_WIDTH and -3 for ZOOM_FIT_CONTENT
+#define DDECOMMAND_SETVIEW    _T("SetView")
 
 LRESULT OnDDEInitiate(HWND hwnd, WPARAM wparam, LPARAM lparam);
 LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam);

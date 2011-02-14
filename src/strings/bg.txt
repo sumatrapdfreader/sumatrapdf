@@ -146,10 +146,10 @@ Check for &Updates
 Continuous
 Непрекъснати
 
-Continuous book view
+Continuous Book View
 Като книга - непрекъснати
 
-Continuous facing
+Continuous Facing
 Две непрекъснати
 
 Contribute Translation

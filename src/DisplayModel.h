@@ -15,9 +15,6 @@
 // define the following if you want shadows drawn around the pages
 // #define DRAW_PAGE_SHADOWS
 
-#define INVALID_ZOOM        -99
-#define INVALID_BIG_ZOOM    999999.0   /* arbitrary but big */
-
 typedef struct DisplaySettings {
     int     pageBorderTop;
     int     pageBorderBottom;

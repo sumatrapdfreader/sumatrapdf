@@ -190,10 +190,10 @@ Check for &Updates
 Continuous
 Разрешить прокрутку
 
-Continuous book view
+Continuous Book View
 Прокуртка в разворот
 
-Continuous facing
+Continuous Facing
 Прокрутка по две страницы
 
 Contribute Translation

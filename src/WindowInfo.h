@@ -207,6 +207,7 @@ public:
     void ResizeIfNeeded(bool resizeWindow=true);
     void ToggleZoom();
     void ZoomToSelection(float factor, bool relative);
+    void SwitchToDisplayMode(DisplayMode displayMode, bool keepContinuous=false);
     void MoveDocBy(int dx, int dy);
 };
 

@@ -194,10 +194,10 @@ Check for &Updates
 Continuous
 Pagina continua
 
-Continuous book view
+Continuous Book View
 Vista libro continua
 
-Continuous facing
+Continuous Facing
 Pagine affiancate continue
 
 Contribute Translation

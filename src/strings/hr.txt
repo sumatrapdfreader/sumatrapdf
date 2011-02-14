@@ -158,10 +158,10 @@ Provjeri dostupnost nove inačice
 Continuous
 Slijedno
 
-Continuous book view
+Continuous Book View
 Slijedni knjiški pogled
 
-Continuous facing
+Continuous Facing
 Dvije stranice slijedno
 
 Contribute Translation

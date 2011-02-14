@@ -156,10 +156,10 @@ Check for &Updates
 Continuous
 Ciągły
 
-Continuous book view
+Continuous Book View
 Kontynuuj widok książki
 
-Continuous facing
+Continuous Facing
 Ciągły na przeciwko
 
 Contribute Translation

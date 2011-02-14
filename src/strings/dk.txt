@@ -190,10 +190,10 @@ Tjek for ny &version
 Continuous
 Fortløbende
 
-Continuous book view
+Continuous Book View
 Fortløbende bog-visning
 
-Continuous facing
+Continuous Facing
 Fortløbende modstående
 
 Contribute Translation

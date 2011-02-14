@@ -141,7 +141,7 @@ Proveri postojanje novije verzije
 Continuous
 Neprekidno
 
-Continuous facing
+Continuous Facing
 Neprekidno, dve strane
 
 Contribute Translation
@@ -395,7 +395,7 @@ Faktor uvećanja
 #Bookmarks
 #Bytes
 #Can't connect to the Internet (error %#x).
-#Continuous book view
+#Continuous Book View
 #Copying text was denied (copying as image only)
 #Created:
 #Denied Permissions:

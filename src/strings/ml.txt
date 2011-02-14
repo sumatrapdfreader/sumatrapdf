@@ -59,7 +59,7 @@ About SumatraPDF
 Continuous
 തുടര്‍ച്ച
 
-Continuous facing
+Continuous Facing
 തുടര്‍ച്ചയായി കാണിക്കുക
 
 Contribute Translation
@@ -202,7 +202,7 @@ Zoom Out
 #Cannot start inverse search command. Please check the command line in the settings.
 #Change Language
 #Check for &Updates
-#Continuous book view
+#Continuous Book View
 #Copying text was denied (copying as image only)
 #Couldn't initialize printer
 #Couldn't render the page

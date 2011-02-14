@@ -449,7 +449,7 @@ void DisplayModel::setZoomVirtual(float zoomVirtual)
         /* we want the same zoom for all pages, so use the smallest zoom
            across the pages so that the largest page fits. In most PDFs all
            pages are the same size anyway */
-        float minZoom = INVALID_BIG_ZOOM;
+        float minZoom = (float)HUGE_VAL;
         for (int pageNo = 1; pageNo <= pageCount(); pageNo++) {
             if (pageShown(pageNo)) {
                 float thisPageZoom = zoomRealFromVirtualForPage(zoomVirtual, pageNo);
@@ -457,7 +457,7 @@ void DisplayModel::setZoomVirtual(float zoomVirtual)
                     minZoom = thisPageZoom;
             }
         }
-        assert(minZoom != INVALID_BIG_ZOOM);
+        assert(minZoom != (float)HUGE_VAL);
         this->_zoomReal = minZoom;
     } else if (ZOOM_FIT_CONTENT == zoomVirtual) {
         float newZoom = zoomRealFromVirtualForPage(zoomVirtual, currentPageNo());

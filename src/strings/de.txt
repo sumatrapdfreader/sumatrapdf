@@ -191,10 +191,10 @@ Nach &neuer Version suchen
 Continuous
 Fortlaufend
 
-Continuous book view
+Continuous Book View
 Fortlaufende Buchansicht
 
-Continuous facing
+Continuous Facing
 Fortlaufende Doppelseiten
 
 Contribute Translation

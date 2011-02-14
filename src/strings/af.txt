@@ -80,7 +80,7 @@ Kyk Vir Nuwe Uitgawe
 Continuous
 Aanmekaar
 
-Continuous facing
+Continuous Facing
 Vertoon Aanmekaar
 
 Contribute Translation
@@ -246,7 +246,7 @@ Zoem Uit
 #Cancel
 #Cannot print this file
 #Cannot start inverse search command. Please check the command line in the settings.
-#Continuous book view
+#Continuous Book View
 #Copying text was denied (copying as image only)
 #Couldn't initialize printer
 #Couldn't render the page

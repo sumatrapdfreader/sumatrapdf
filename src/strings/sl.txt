@@ -190,10 +190,10 @@ Check for &Updates
 Continuous
 Nepretrgano
 
-Continuous book view
+Continuous Book View
 Nepretrgan knjižni pogled
 
-Continuous facing
+Continuous Facing
 Nepretrgano dvostransko
 
 Contribute Translation

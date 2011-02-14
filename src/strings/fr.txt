@@ -193,10 +193,10 @@ Vérifier les mises à jour
 Continuous
 Vue continue
 
-Continuous book view
+Continuous Book View
 Vue continue, comme un livre
 
-Continuous facing
+Continuous Facing
 Vue continue, page double
 
 Contribute Translation

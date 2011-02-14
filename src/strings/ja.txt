@@ -188,10 +188,10 @@ Check for &Updates
 Continuous
 連続
 
-Continuous book view
+Continuous Book View
 連続ブック ビュー
 
-Continuous facing
+Continuous Facing
 連続見返し
 
 Contribute Translation

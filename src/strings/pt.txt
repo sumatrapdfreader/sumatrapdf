@@ -190,10 +190,10 @@ Verificar at&ualizações
 Continuous
 Página única contínua
 
-Continuous book view
+Continuous Book View
 Livro contínuo
 
-Continuous facing
+Continuous Facing
 Página dupla contínua
 
 Contribute Translation

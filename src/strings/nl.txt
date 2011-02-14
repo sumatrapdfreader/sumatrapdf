@@ -194,10 +194,10 @@ Controleren op &Updates
 Continuous
 Doorlopend
 
-Continuous book view
+Continuous Book View
 Doorlopend boekaanzicht
 
-Continuous facing
+Continuous Facing
 Dubbele pagina doorlopend
 
 Contribute Translation

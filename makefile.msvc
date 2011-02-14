@@ -301,8 +301,8 @@ $(O)\tstr_util.obj: baseutils\base_util.h baseutils\str_util.h baseutils\tstr_ut
 $(O)\tstr_util.obj: baseutils\wstr_util.h
 $(O)\UnitTests.obj: baseutils\base_util.h baseutils\benc_util.h baseutils\geom_util.h
 $(O)\UnitTests.obj: baseutils\str_util.h baseutils\tstr_util.h baseutils\vstrlist.h
-$(O)\UnitTests.obj: baseutils\wstr_util.h src\AppTools.h src\MemSegment.h
-$(O)\UnitTests.obj: src\ParseCommandLine.h
+$(O)\UnitTests.obj: baseutils\wstr_util.h src\AppTools.h src\DisplayState.h
+$(O)\UnitTests.obj: src\MemSegment.h src\ParseCommandLine.h
 $(O)\win_util.obj: baseutils\base_util.h baseutils\str_util.h baseutils\tstr_util.h
 $(O)\win_util.obj: baseutils\win_util.h baseutils\wstr_util.h
 $(O)\WindowInfo.obj: baseutils\base_util.h baseutils\file_util.h baseutils\geom_util.h

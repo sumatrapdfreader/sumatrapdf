@@ -159,10 +159,10 @@ Check for &Updates
 Continuous
 Didor
 
-Continuous book view
+Continuous Book View
 Golwg llyfr didor
 
-Continuous facing
+Continuous Facing
 Gwynebu'n Ddidor
 
 Contribute Translation

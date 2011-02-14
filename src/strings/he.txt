@@ -189,10 +189,10 @@ Check for &Updates
 Continuous
 רציף
 
-Continuous book view
+Continuous Book View
 תצוגת ספר רציפה
 
-Continuous facing
+Continuous Facing
 המשך תצוגה רציפה
 
 Contribute Translation

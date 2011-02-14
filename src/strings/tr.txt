@@ -62,7 +62,7 @@ Yer imleri\tF12
 Continuous
 Devamlı
 
-Continuous facing
+Continuous Facing
 Devamlı çift sayfa
 
 Contribute Translation
@@ -210,7 +210,7 @@ Uzaklaştır
 #Cannot start inverse search command. Please check the command line in the settings.
 #Change Language
 #Check for &Updates
-#Continuous book view
+#Continuous Book View
 #Copying text was denied (copying as image only)
 #Couldn't initialize printer
 #Couldn't render the page

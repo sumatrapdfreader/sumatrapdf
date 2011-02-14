@@ -156,10 +156,10 @@ Check for &Updates
 Continuous
 Contínua
 
-Continuous book view
+Continuous Book View
 Vista contínua de llibre
 
-Continuous facing
+Continuous Facing
 Pàgina doble contínua
 
 Contribute Translation
