@@ -23,7 +23,7 @@ public:
     ~PdfSearch();
 
     void SetText(TCHAR *text);
-    void SetSensitive(bool sensitive) { caseSensitive = sensitive; }
+    void SetSensitive(bool sensitive);
     void SetDirection(bool forward);
     bool FindFirst(int page, TCHAR *text);
     bool FindNext();
@@ -50,6 +50,8 @@ protected:
         text = NULL;
         free(anchor);
         anchor = NULL;
+        free(lastText);
+        lastText = NULL;
         Reset();
     }
     void Reset();
@@ -65,6 +67,9 @@ protected:
 private:
     TCHAR *pageText;
     int findIndex;
+
+    TCHAR *lastText;
+    BYTE *findCache;
 };
 
 #endif // _PDF_SEARCH_H

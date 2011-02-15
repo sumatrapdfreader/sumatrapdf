@@ -1,6 +1,8 @@
 #include "PdfSearch.h"
 #include <shlwapi.h>
 
+enum { SEARCH_PAGE, SKIP_PAGE };
+
 #define SkipWhitespace(c) for (; _istspace(*(c)); (c)++)
 #define islatinalnum(c) (_istalnum(c) && (unsigned short)(c) < 256)
 #define iswordchar(c) _istalnum(c)
@@ -8,11 +10,15 @@
 PdfSearch::PdfSearch(PdfEngine *engine, PdfSearchTracker *tracker) : PdfSelection(engine),
     tracker(tracker), text(NULL), anchor(NULL), pageText(NULL),
     caseSensitive(false), wholeWords(false), forward(true),
-    findPage(0), findIndex(0) { }
+    findPage(0), findIndex(0), lastText(NULL)
+{
+    findCache = SAZA(BYTE, this->engine->pageCount());
+}
 
 PdfSearch::~PdfSearch()
 {
     Clear();
+    free(findCache);
 }
 
 void PdfSearch::Reset()
@@ -24,11 +30,16 @@ void PdfSearch::Reset()
 
 void PdfSearch::SetText(TCHAR *text)
 {
-    this->Clear();
-
     // all whitespace characters before the first word will be ignored
     // (we're similarly fuzzy about whitespace as Adobe Reader in this regard)
     SkipWhitespace(text);
+
+    // don't reset anything if the search text hasn't changed at all
+    if (tstr_eq(this->lastText, text))
+        return;
+
+    this->Clear();
+    this->lastText = tstr_dup(text);
     this->text = tstr_dup(text);
 
     // extract anchor string (the first word or the first symbol) for faster searching
@@ -48,6 +59,17 @@ void PdfSearch::SetText(TCHAR *text)
         this->wholeWords = !tstr_endswith(text, _T("  "));
         this->text[tstr_len(this->text) - 1] = '\0';
     }
+
+    memset(this->findCache, SEARCH_PAGE, this->engine->pageCount());
+}
+
+void PdfSearch::SetSensitive(bool sensitive)
+{
+    if (caseSensitive == sensitive)
+        return;
+    this->caseSensitive = sensitive;
+
+    memset(this->findCache, SEARCH_PAGE, this->engine->pageCount());
 }
 
 void PdfSearch::SetDirection(bool forward)
@@ -127,14 +149,22 @@ bool PdfSearch::FindStartingAtPage(int pageNo)
 
     int total = engine->pageCount();
     while (1 <= pageNo && pageNo <= total && UpdateTracker(pageNo, total)) {
+        if (SKIP_PAGE == findCache[pageNo - 1]) {
+            pageNo += forward ? 1 : -1;
+            continue;
+        }
+
         Reset();
 
         fz_bbox **pcoords = !coords[pageNo - 1] ? &coords[pageNo - 1] : NULL;
         pageText = engine->ExtractPageText(pageNo, _T(" "), pcoords);
         findIndex = forward ? 0 : lstrlen(pageText);
 
-        if (pageText && FindTextInPage(pageNo))
-            return true;
+        if (pageText) {
+            if (FindTextInPage(pageNo))
+                return true;
+            findCache[pageNo - 1] = SKIP_PAGE;
+        }
 
         pageNo += forward ? 1 : -1;
     }
