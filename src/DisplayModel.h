@@ -79,48 +79,6 @@ typedef struct PdfPageInfo {
     RectI           pageOnScreen;
 } PdfPageInfo;
 
-/* When searching, we can be in one of those states. The state determines what
-   will happen after searching for next or previous term.
-   */
-enum SearchState { 
-    /* Search hasn't started yet. 'Next' will start searching from the top
-       of current page, searching forward. 'Previous' will start searching from
-       the top of current page, searching backward. */
-    eSsNone,
-    /* We searched the whole document and didn't find the search term at all. 'Next'
-       and 'prev' do nothing. */
-    eSsNotFound,
-    /* Previous 'next' search found the term, without wrapping. 'Next' will
-       continue searching forward from the current position. 'Previous' will
-       search backward from the current position.*/
-    eSsFoundNext, 
-    /* Like eSsFoundNext but we wrapped past last page. In that case we show
-       a message about being wrapped and continuing from top. */
-    eSsFoundNextWrapped,
-    /* Previous 'prev' search found the term, without wrapping. 'Next' will
-       search forward from the current position. 'Prev' will continue searching
-       backward */
-    eSsFoundPrev,
-    /* Like eSsFoundPrev, but wrapped around first page. */
-    eSsFoundPrevWrapped,
-/*   TODO: add eSsFoundOnlyOne as optimization i.e. if the hit is the same
-   as previous hit, 'next' and 'previous' will do nothing, to avoid (possibly
-   long) no-op search.
-    eSsFoundOnlyOne */
-};
-
-/* The current state of searching */
-typedef struct SearchStateData {
-    /* The page on which we started the search */
-    int             startPage;
-    /* did we wrap (crossed last page when searching forward or first page
-       when searching backwards) */
-    BOOL            wrapped;
-    SearchState     searchState;
-    BOOL            caseSensitive;
-    int             currPage; /* page for the last hit */
-} SearchStateData;
-
 /* The current scroll state (needed for saving/restoring the scroll position) */
 typedef struct ScrollState {
     int page;
@@ -207,12 +165,6 @@ public:
     /* size of draw area (excluding scrollbars) */
     SizeI           drawAreaSize;
 
-    SearchStateData searchState;
-
-    int             searchHitPageNo;
-    RectD           searchHitRectPage;
-    RectI           searchHitRectCanvas;
-
     void            setTotalDrawAreaSize(SizeI size) { drawAreaSize = size; }
     
     bool            needHScroll() { return drawAreaSize.dx < _canvasSize.dx; }
@@ -245,9 +197,6 @@ public:
 
     TCHAR *         getTextInRegion(int pageNo, RectD *region);
     TCHAR *         extractAllText(RenderTarget target=Target_View);
-
-    void            clearSearchHit(void);
-    void            setSearchHit(int pageNo, RectD *hitRect);
 
     pdf_link *      getLinkAtPosition(int x, int y);
     int             getPdfLinks(int pageNo, pdf_link **links);
@@ -297,7 +246,6 @@ protected:
     void            getContentStart(int pageNo, int *x, int *y);
     void            setZoomVirtual(float zoomVirtual);
     void            recalcVisibleParts(void);
-    void            recalcSearchHitCanvasPos(void);
     void            renderVisibleParts(void);
     /* Those need to be implemented somewhere else by the GUI */
     void            setScrollbarsState(void);

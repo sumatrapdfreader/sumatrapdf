@@ -3927,7 +3927,7 @@ static void OnMenuFind(WindowInfo *win)
     const TCHAR * previousFind = win_get_text(win->hwndFindBox);
     DWORD state = SendMessage(win->hwndToolbar, TB_GETSTATE, IDM_FIND_MATCH, 0);
     bool matchCase = (state & TBSTATE_CHECKED) != 0;
-    
+
     TCHAR * findString = Dialog_Find(win->hwndFrame, previousFind, &matchCase);
     if (findString) {
         win_set_text(win->hwndFindBox, findString);
@@ -4565,6 +4565,42 @@ static void UpdateToolbarToolText(void)
     }        
 }
 
+#define UWM_DELAYED_SET_FOCUS (WM_APP + 1)
+
+// selects all text in an edit box if it's selected either
+// through a keyboard shortcut or a non-selecting mouse click
+static bool FocusUnselectedWndProc(HWND hwnd, UINT message)
+{
+    static bool delayFocus = false;
+
+    switch (message) {
+    case WM_LBUTTONDOWN:
+        delayFocus = GetFocus() != hwnd;
+        return true;
+
+    case WM_LBUTTONUP:
+        if (delayFocus) {
+            DWORD sel = Edit_GetSel(hwnd);
+            if (LOWORD(sel) == HIWORD(sel))
+                PostMessage(hwnd, UWM_DELAYED_SET_FOCUS, 0, 0);
+            delayFocus = false;
+        }
+        return true;
+
+    case WM_SETFOCUS:
+        if (!delayFocus)
+            PostMessage(hwnd, UWM_DELAYED_SET_FOCUS, 0, 0);
+        return true;
+
+    case UWM_DELAYED_SET_FOCUS:
+        Edit_SetSel(hwnd, 0, -1);
+        return true;
+
+    default:
+        return false;
+    }
+}
+
 static WNDPROC DefWndProcFindBox = NULL;
 static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -4572,7 +4608,9 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, L
     if (!win || !win->dm)
         return DefWindowProc(hwnd, message, wParam, lParam);
 
-    if (WM_CHAR == message) {
+    if (FocusUnselectedWndProc(hwnd, message)) {
+        // select the whole find box on a non-selecting click
+    } else if (WM_CHAR == message) {
         if (VK_ESCAPE == wParam)
         {
             if (win->findThread)
@@ -4825,7 +4863,6 @@ static void CreateFindBox(WindowInfo *win, HINSTANCE hInst)
     UpdateToolbarFindText(win);
 }
 
-#define UWM_PAGE_SET_FOCUS (WM_APP + 1)
 static WNDPROC DefWndProcPageBox = NULL;
 static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -4833,7 +4870,9 @@ static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT message, WPARAM wParam, L
     if (!win || !win->dm)
         return DefWindowProc(hwnd, message, wParam, lParam);
 
-    if (WM_CHAR == message) {
+    if (FocusUnselectedWndProc(hwnd, message)) {
+        // select the whole page box on a non-selecting click
+    } else if (WM_CHAR == message) {
         if (VK_RETURN == wParam) {
             TCHAR *buf = win_get_text(win->hwndPageBox);
             int newPageNo;
@@ -4863,10 +4902,6 @@ static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT message, WPARAM wParam, L
             r.right -= 2;
             Edit_SetRectNoPaint(hwnd, &r);
         }
-    } else if (WM_SETFOCUS == message) {
-        PostMessage(hwnd, UWM_PAGE_SET_FOCUS, 0, 0);
-    } else if (UWM_PAGE_SET_FOCUS == message) {
-        Edit_SetSel(hwnd, 0, -1);
     } else if (WM_KEYDOWN == message) {
         if (OnKeydown(win, wParam, lParam, true))
             return 0;
@@ -5100,8 +5135,10 @@ static LRESULT CALLBACK WndProcSpliter(HWND hwnd, UINT message, WPARAM wParam, L
 
 void WindowInfo::FindStart()
 {
-    SendMessage(hwndFindBox, EM_SETSEL, 0, -1);
-    SetFocus(hwndFindBox);
+    if (GetFocus() == hwndFindBox)
+        SendMessage(hwndFindBox, WM_SETFOCUS, 0, 0);
+    else
+        SetFocus(hwndFindBox);
 }
 
 bool WindowInfo::FindUpdateStatus(int current, int total)

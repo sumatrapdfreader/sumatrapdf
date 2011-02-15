@@ -212,9 +212,6 @@ DisplayModel::DisplayModel(DisplayMode displayMode, int dpi)
     _navHistoryIx = 0;
     _navHistoryEnd = 0;
     
-    searchHitPageNo = INVALID_PAGE_NO;
-    searchState.searchState = eSsNone;
-
     _dontRenderFlag = false;
 }
 
@@ -784,32 +781,6 @@ int DisplayModel::getPageNoByPoint(int x, int y)
             return pageNo;
     }
     return POINT_OUT_OF_PAGE;
-}
-
-void DisplayModel::recalcSearchHitCanvasPos(void)
-{
-    int             pageNo;
-    RectD           rect;
-
-    pageNo = searchHitPageNo;
-    if (INVALID_PAGE_NO == pageNo) return;
-    rect = searchHitRectPage;
-    rectCvtUserToScreen(pageNo, &rect);
-    RectI_FromRectD(&searchHitRectCanvas, &rect);
-}
-
-void DisplayModel::clearSearchHit(void)
-{
-    DBG_OUT("DisplayModel::clearSearchHit()\n");
-    searchHitPageNo = INVALID_PAGE_NO;
-}
-
-void DisplayModel::setSearchHit(int pageNo, RectD *hitRect)
-{
-    //DBG_OUT("DisplayModel::setSearchHit() page=%d at pos (%.2f, %.2f)-(%.2f,%.2f)\n", pageNo, xs, ys, xe, ye);
-    searchHitPageNo = pageNo;
-    searchHitRectPage = *hitRect;
-    recalcSearchHitCanvasPos();
 }
 
 /* Given position 'x'/'y' in the draw area, returns a structure describing
