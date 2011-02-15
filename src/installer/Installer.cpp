@@ -146,6 +146,22 @@ static Color            COLOR_MSG_FAILED(gCol1);
 #define UN_INST_MARK L"!uninst_end!"
 static char *gUnInstMark = NULL; // wstr_to_utf8(UN_INST_MARK)
 
+// The following list is used to verify that all the required files have been
+// installed (install flag set) and to know what files are to be removed at
+// uninstallation (all listed files that actually exist).
+// When a file is no longer shipped, just disable the install flag so that the
+// file is still correctly removed when SumatraPDF is eventually uninstalled.
+struct {
+    char *filepath;
+    bool install;
+} gPayloadData[] = {
+    { "SumatraPDF.exe",         true    },
+    { "sumatrapdfprefs.dat",    false   },
+    { "DroidSansFallback.ttf",  true    },
+    { "npPdfViewer.dll",        true    },
+    { "uninstall.exe",          false   },
+};
+
 struct {
     bool uninstall;
     bool silent;
@@ -159,15 +175,15 @@ struct {
     bool success;
 } gGlobalData = {
     false, /* bool uninstall */
-    false,  /* bool silent */
+    false, /* bool silent */
     false, /* bool showUsageAndQuit */
-    NULL,   /* TCHAR *installDir */
-    false,  /* bool registerAsDefault */
-    false,  /* bool installBrowserPlugin */
+    NULL,  /* TCHAR *installDir */
+    false, /* bool registerAsDefault */
+    false, /* bool installBrowserPlugin */
 
-    NULL,   /* TCHAR *firstError */
-    NULL,   /* HANDLE hThread */
-    false,  /* bool success */
+    NULL,  /* TCHAR *firstError */
+    NULL,  /* HANDLE hThread */
+    false, /* bool success */
 };
 
 void NotifyFailed(TCHAR *msg)
@@ -239,7 +255,7 @@ Error:
     return killCount;
 }
 
-TCHAR *GetExePath()
+TCHAR *GetOwnPath()
 {
     static TCHAR exePath[MAX_PATH];
     GetModuleFileName(NULL, exePath, dimof(exePath));
@@ -263,7 +279,7 @@ TCHAR *GetInstallationDir(bool forUninstallation=false)
 
     if (forUninstallation) {
         // fall back to the uninstaller's path
-        return FilePath_GetDir(GetExePath());
+        return FilePath_GetDir(GetOwnPath());
     }
 
     // fall back to %ProgramFiles%
@@ -273,9 +289,43 @@ TCHAR *GetInstallationDir(bool forUninstallation=false)
     return tstr_cat(dir, _T("\\") TAPP);
 }
 
+// Try harder getting temporary directory
+// Caller needs to free() the result.
+// Returns NULL if fails for any reason.
+TCHAR *GetValidTempDir()
+{
+    TCHAR d[MAX_PATH];
+    DWORD res = GetTempPath(dimof(d), d);
+    if ((0 == res) || (res >= MAX_PATH)) {
+        NotifyFailed(_T("Couldn't obtain temporary directory"));
+        return NULL;
+    }
+    BOOL success = CreateDirectory(d, NULL);
+    if (!success && (ERROR_ALREADY_EXISTS != GetLastError())) {
+        SeeLastError();
+        NotifyFailed(_T("Couldn't create temporary directory"));
+        return NULL;
+    }
+    return tstr_dup(d);
+}
+
 TCHAR *GetUninstallerPath()
 {
     return tstr_cat(gGlobalData.installDir, _T("\\") _T("uninstall.exe"));
+}
+
+TCHAR *GetTempUninstallerPath()
+{
+    TCHAR *tempDir = GetValidTempDir();
+    if (!tempDir)
+        return NULL;
+
+    // Using fixed (unlikely) name instead of GetTempFileName()
+    // so that we don't litter temp dir with copies of ourselves
+    TCHAR *tempPath = tstr_cat(tempDir, _T("\\") _T("sum~inst.exe"));
+    free(tempDir);
+
+    return tempPath;
 }
 
 TCHAR *GetInstalledExePath()
@@ -311,7 +361,7 @@ BOOL IsValidInstaller(void)
 #else
     fill_win32_filefunc64A(&ffunc);
 #endif
-    unzFile uf = unzOpen2_64(GetExePath(), &ffunc);
+    unzFile uf = unzOpen2_64(GetOwnPath(), &ffunc);
     if (!uf)
         return FALSE;
 
@@ -330,7 +380,7 @@ BOOL InstallCopyFiles(void)
 #else
     fill_win32_filefunc64A(&ffunc);
 #endif
-    unzFile uf = unzOpen2_64(GetExePath(), &ffunc);
+    unzFile uf = unzOpen2_64(GetOwnPath(), &ffunc);
     if (!uf) {
         NotifyFailed(_T("Invalid payload format"));
         goto Error;
@@ -344,7 +394,6 @@ BOOL InstallCopyFiles(void)
     }
 
     // extract all contained files one by one
-    int filesCopied = 0;
     for (int count = 0; count < ginfo.number_entry; count++) {
         BOOL success = FALSE;
         char filename[MAX_PATH];
@@ -390,7 +439,6 @@ BOOL InstallCopyFiles(void)
                 CloseHandle(hFile);
             }
             success = TRUE;
-            filesCopied++;
         }
         else {
             NotifyFailed(_T("Couldn't write extracted file to disk"));
@@ -407,13 +455,27 @@ BOOL InstallCopyFiles(void)
             goto Error;
         }
 
+        for (int i = 0; i < dimof(gPayloadData); i++) {
+            if (success && gPayloadData[i].install && str_ieq(filename, gPayloadData[i].filepath)) {
+                gPayloadData[i].install = false;
+                break;
+            }
+        }
+
         err = unzGoToNextFile(uf);
         if (err != UNZ_OK || !success)
             break;
     }
 
     unzClose(uf);
-    return filesCopied == ginfo.number_entry;
+
+    for (int i = 0; i < dimof(gPayloadData); i++) {
+        if (gPayloadData[i].install) {
+            NotifyFailed(_T("Some files to be installed are missing"));
+            return FALSE;
+        }
+    }
+    return TRUE;
 
 Error:
     if (uf) {
@@ -438,7 +500,7 @@ void bz_internal_error(int errcode)
 BOOL CreateUninstaller(void)
 {
     size_t installerSize;
-    char *installerData = file_read_all(GetExePath(), &installerSize);
+    char *installerData = file_read_all(GetOwnPath(), &installerSize);
     if (!installerData) {
         NotifyFailed(_T("Couldn't access installer for uninstaller extraction"));
         return FALSE;
@@ -481,40 +543,29 @@ BOOL CreateUninstaller(void)
 
 bool IsUninstaller()
 {
+    TCHAR *tempUninstaller = GetTempUninstallerPath();
+    BOOL isTempUninstaller = FilePath_IsSameFile(GetOwnPath(), tempUninstaller);
+    free(tempUninstaller);
+    if (isTempUninstaller)
+        return true;
+
     char *data = NULL;
     if (!gUnInstMark)
         gUnInstMark = wstr_to_utf8(UN_INST_MARK);
-    int markSize = str_len(gUnInstMark);
+    size_t markSize = str_len(gUnInstMark);
 
-    HANDLE h = CreateFile(GetExePath(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-    if (h == INVALID_HANDLE_VALUE) {
+    size_t uninstallerSize;
+    char *uninstallerData = file_read_all(GetOwnPath(), &uninstallerSize);
+    if (!uninstallerData) {
         NotifyFailed(_T("Couldn't open myself for reading"));
-        goto Error;
-    }
-    DWORD res = SetFilePointer(h, -markSize, NULL, FILE_END);
-    if (INVALID_SET_FILE_POINTER == res) {
-        NotifyFailed(_T("Couldn't seek to end"));
-        goto Error;
+        return false;
     }
 
-    data = SAZA(char, markSize);
-    DWORD bytesRead;
-    BOOL ok = ReadFile(h, data, markSize, &bytesRead, NULL);
-    if (!ok || bytesRead != markSize) {
-        NotifyFailed(_T("Couldn't read marker at end of file"));
-        goto Error;
-    }
-
-    CloseHandle(h);
-    bool isUninstaller = !memcmp(data, gUnInstMark, markSize);
-    free(data);
+    bool isUninstaller = uninstallerSize > markSize &&
+                         !memcmp(uninstallerData + uninstallerSize - markSize, gUnInstMark, markSize);
+    free(uninstallerData);
 
     return isUninstaller;
-
-Error:
-    free(data);
-    CloseHandle(h);
-    return FALSE;
 }
 
 static HFONT CreateDefaultGuiFont()
@@ -544,15 +595,10 @@ HANDLE CreateProcessHelper(TCHAR *exe, TCHAR *args=NULL)
     PROCESS_INFORMATION pi;
     STARTUPINFO si = {0};
     si.cb = sizeof(si);
-    TCHAR *cmd;
     // per msdn, cmd has to be writeable
-    if (args) {
-        // Note: doesn't quote the args if but it's good enough for us
-        cmd = tstr_cat3(exe, _T(" "), args);
-    }
-    else
-        cmd = tstr_dup(exe);
+    TCHAR *cmd = tstr_cat3(exe, _T(" "), args);
     if (!CreateProcess(NULL, cmd, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
+        SeeLastError();
         free(cmd);
         return NULL;
     }
@@ -617,17 +663,17 @@ bool WriteUninstallerRegistryInfo(bool allUsers)
         hkey = HKEY_CURRENT_USER;
     TCHAR *uninstallerPath = GetUninstallerPath();
     TCHAR *installedExePath = GetInstalledExePath();
-    success |= WriteRegStr(hkey,   REG_PATH_UNINST, DISPLAY_ICON, installedExePath);
-    success |= WriteRegStr(hkey,   REG_PATH_UNINST, DISPLAY_NAME, TAPP);
-    success |= WriteRegStr(hkey,   REG_PATH_UNINST, DISPLAY_VERSION, CURR_VERSION_STR);
-    success |= WriteRegDWORD(hkey, REG_PATH_UNINST, ESTIMATED_SIZE, GetDirSize(gGlobalData.installDir) / 1024);
-    success |= WriteRegDWORD(hkey, REG_PATH_UNINST, NO_MODIFY, 1);
-    success |= WriteRegDWORD(hkey, REG_PATH_UNINST, NO_REPAIR, 1);
-    success |= WriteRegStr(hkey,   REG_PATH_UNINST, PUBLISHER, _T("Krzysztof Kowalczyk"));
-    success |= WriteRegStr(hkey,   REG_PATH_UNINST, UNINSTALL_STRING, uninstallerPath);
-    success |= WriteRegStr(hkey,   REG_PATH_UNINST, URL_INFO_ABOUT, _T("http://blog.kowalczyk/info/software/sumatrapdf/"));
+    success &= WriteRegStr(hkey,   REG_PATH_UNINST, DISPLAY_ICON, installedExePath);
+    success &= WriteRegStr(hkey,   REG_PATH_UNINST, DISPLAY_NAME, TAPP);
+    success &= WriteRegStr(hkey,   REG_PATH_UNINST, DISPLAY_VERSION, CURR_VERSION_STR);
+    success &= WriteRegDWORD(hkey, REG_PATH_UNINST, ESTIMATED_SIZE, GetDirSize(gGlobalData.installDir) / 1024);
+    success &= WriteRegDWORD(hkey, REG_PATH_UNINST, NO_MODIFY, 1);
+    success &= WriteRegDWORD(hkey, REG_PATH_UNINST, NO_REPAIR, 1);
+    success &= WriteRegStr(hkey,   REG_PATH_UNINST, PUBLISHER, _T("Krzysztof Kowalczyk"));
+    success &= WriteRegStr(hkey,   REG_PATH_UNINST, UNINSTALL_STRING, uninstallerPath);
+    success &= WriteRegStr(hkey,   REG_PATH_UNINST, URL_INFO_ABOUT, _T("http://blog.kowalczyk/info/software/sumatrapdf/"));
     TCHAR *installDir = FilePath_GetDir(installedExePath);
-    success |= WriteRegStr(hkey,   REG_PATH_SOFTWARE, INSTALL_DIR, installDir);
+    success &= WriteRegStr(hkey,   REG_PATH_SOFTWARE, INSTALL_DIR, installDir);
 
     free(installDir);
     free(uninstallerPath);
@@ -723,7 +769,7 @@ TCHAR *GetDefaultPdfViewer()
     return tstr_dup(buf);
 }
 
-BOOL RemoveDirectoryWithFiles(TCHAR *dir)
+BOOL RemoveEmptyDirectory(TCHAR *dir)
 {
     WIN32_FIND_DATA findData;
     BOOL success = TRUE;
@@ -737,17 +783,10 @@ BOOL RemoveDirectoryWithFiles(TCHAR *dir)
             DWORD attrs = findData.dwFileAttributes;
             // filter out directories. Even though there shouldn't be any
             // subdirectories, it also filters out the standard "." and ".."
-            if (!(attrs & FILE_ATTRIBUTE_DIRECTORY)) {
-                // per http://msdn.microsoft.com/en-us/library/aa363915(v=VS.85).aspx
-                // have to remove read-only attribute for DeleteFile() to work
-                if (attrs & FILE_ATTRIBUTE_READONLY) {
-                    attrs = attrs & ~FILE_ATTRIBUTE_READONLY;
-                    SetFileAttributes(path, attrs);
-                }
-                DeleteFile(path);
-            }
-            else if (!tstr_eq(findData.cFileName, _T(".")) && !tstr_eq(findData.cFileName, _T(".."))) {
-                success &= RemoveDirectoryWithFiles(path);
+            if ((attrs & FILE_ATTRIBUTE_DIRECTORY) &&
+                !tstr_eq(findData.cFileName, _T(".")) &&
+                !tstr_eq(findData.cFileName, _T(".."))) {
+                success &= RemoveEmptyDirectory(path);
             }
             free(path);
         } while (FindNextFile(h, &findData) != 0);
@@ -755,8 +794,9 @@ BOOL RemoveDirectoryWithFiles(TCHAR *dir)
     }
 
     if (!RemoveDirectory(dir)) {
-        if (ERROR_FILE_NOT_FOUND != GetLastError()) {
-            SeeLastError();
+        DWORD lastError = GetLastError();
+        if (ERROR_DIR_NOT_EMPTY != lastError && ERROR_FILE_NOT_FOUND != lastError) {
+            SeeLastError(lastError);
             success = FALSE;
         }
     }
@@ -765,12 +805,22 @@ BOOL RemoveDirectoryWithFiles(TCHAR *dir)
     return success;
 }
 
-BOOL RemoveInstallationDirectory()
+BOOL RemoveInstalledFiles()
 {
-    // TODO: consider either removing only known files or at least
-    //       warning when installing into a non-empty directory
-    //       (i.e. containing files other than of a previous installation)
-    return RemoveDirectoryWithFiles(gGlobalData.installDir);
+    BOOL success = TRUE;
+
+    for (int i = 0; i < dimof(gPayloadData); i++) {
+        TCHAR path[MAX_PATH];
+        TCHAR *relPath = utf8_to_tstr(gPayloadData[i].filepath);
+        tstr_printf_s(path, dimof(path), _T("%s\\%s"), gGlobalData.installDir, relPath);
+        free(relPath);
+
+        if (file_exists(path))
+            success &= DeleteFile(path);
+    }
+
+    RemoveEmptyDirectory(gGlobalData.installDir);
+    return success;
 }
 
 BOOL CreateShortcut(TCHAR *shortcutPath, TCHAR *exePath, TCHAR *workingDir, TCHAR *description)
@@ -891,15 +941,6 @@ void CreateButtonRunSumatra(HWND hwndParent)
                         (HMENU)ID_BUTTON_START_SUMATRA,
                         ghinst, NULL);
     SetFont(gHwndButtonRunSumatra, gFontDefault);
-}
-
-void OnButtonStartSumatra()
-{
-    TCHAR *s = GetInstalledExePath();
-    HANDLE h = CreateProcessHelper(s);
-    CloseHandle(h);
-    free(s);
-    SendMessage(gHwndFrame, WM_CLOSE, 0, 0);
 }
 
 static DWORD WINAPI InstallerThread(LPVOID data)
@@ -1027,10 +1068,17 @@ static DWORD WINAPI UninstallerThread(LPVOID data)
     KillProcess(exePath, TRUE);
     free(exePath);
 
-    if (!RemoveUninstallerRegistryInfo(true) && !RemoveUninstallerRegistryInfo(false))
+    // also kill any the original uninstaller, if it's just spawned
+    // a DELETE_ON_CLOSE copy from the temp directory
+    exePath = GetUninstallerPath();
+    if (!FilePath_IsSameFile(exePath, GetOwnPath()))
+        KillProcess(exePath, TRUE);
+    free(exePath);
+
+    if (!RemoveUninstallerRegistryInfo(true) || !RemoveUninstallerRegistryInfo(false))
         NotifyFailed(_T("Failed to delete uninstaller registry keys"));
 
-    if (!RemoveShortcut(true) && !RemoveShortcut(false))
+    if (!RemoveShortcut(true) || !RemoveShortcut(false))
         NotifyFailed(_T("Couldn't remove the shortcut"));
 
     TCHAR *defaultViewer = GetDefaultPdfViewer();
@@ -1043,7 +1091,7 @@ static DWORD WINAPI UninstallerThread(LPVOID data)
     RemoveOwnRegistryKeys();
     UninstallBrowserPlugin();
 
-    if (!RemoveInstallationDirectory())
+    if (!RemoveInstalledFiles())
         NotifyFailed(_T("Couldn't remove installation directory"));
 
     // always succeed, even for partial uninstallations
@@ -1084,6 +1132,16 @@ void OnUninstallationFinished()
 void OnButtonExit()
 {
     SendMessage(gHwndFrame, WM_CLOSE, 0, 0);
+}
+
+void OnButtonStartSumatra()
+{
+    TCHAR *exePath = GetInstalledExePath();
+    HANDLE h = CreateProcessHelper(exePath);
+    CloseHandle(h);
+    free(exePath);
+
+    OnButtonExit();
 }
 
 void OnButtonOptions()
@@ -1172,7 +1230,10 @@ void OnButtonBrowse()
     }
 
     if (BrowseForFolder(gHwndFrame, installDir, _T("Select the folder into which ") TAPP _T(" should be installed:"), path, dimof(path))) {
-        tstr_cat_s(path, dimof(path), _T("\\") TAPP);
+        // force paths that aren't entered manually to end in ...\SumatraPDF
+        // to prevent unintended installations into e.g. %ProgramFiles% itself
+        if (!tstr_endswithi(path, _T("\\") TAPP))
+            tstr_cat_s(path, dimof(path), _T("\\") TAPP);
         win_set_text(gHwndTextboxInstDir, path);
         Edit_SetSel(gHwndTextboxInstDir, 0, -1);
         SetFocus(gHwndTextboxInstDir);
@@ -1844,29 +1905,6 @@ static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
     return TRUE;
 }
 
-// Try harder getting temporary directory
-// Ensures that name ends with \, to make life easier on callers.
-// Caller needs to free() the result.
-// Returns NULL if fails for any reason.
-TCHAR *GetValidTempDir()
-{
-    TCHAR d[MAX_PATH];
-    DWORD res = GetTempPath(dimof(d), d);
-    if ((0 == res) || (res >= MAX_PATH)) {
-        NotifyFailed(_T("Couldn't obtain temporary directory"));
-        return NULL;
-    }
-    if (!tstr_endswithi(d, _T("\\")))
-        tstr_cat_s(d, dimof(d), _T("\\"));
-    res = CreateDirectory(d, NULL);
-    if ((res == 0) && (ERROR_ALREADY_EXISTS != GetLastError())) {
-        SeeLastError();
-        NotifyFailed(_T("Couldn't create temporary directory"));
-        return NULL;
-    }
-    return tstr_dup(d);
-}
-
 // If this is uninstaller and we're running from installation directory,
 // copy uninstaller to temp directory and execute from there, exiting
 // ourselves. This is needed so that uninstaller can delete itself
@@ -1878,30 +1916,24 @@ BOOL ExecuteUninstallerFromTempDir()
     BOOL ok = FALSE;
 
     // only need to sublaunch if running from installation dir
-    TCHAR *ownDir = FilePath_GetDir(GetExePath());
-    TCHAR *tempDir = GetValidTempDir();
+    TCHAR *ownDir = FilePath_GetDir(GetOwnPath());
+    TCHAR *tempPath = GetTempUninstallerPath();
 
-    if (!tempDir)
+    // no temp directory available?
+    if (!tempPath)
         goto KeepRunning;
 
     // not running from the installation directory?
-    if (!FilePath_IsSameFile(ownDir, gGlobalData.installDir)) {
-        // TODO: use MoveFileEx() to mark this file as 'delete on reboot'
-        // with MOVEFILE_DELAY_UNTIL_REBOOT flag?
+    // (likely a test uninstaller that shouldn't be removed anyway)
+    if (!FilePath_IsSameFile(ownDir, gGlobalData.installDir))
         goto KeepRunning;
-    }
 
     // already running from temp directory?
-    if (FilePath_IsSameFile(ownDir, tempDir))
+    if (FilePath_IsSameFile(GetOwnPath(), tempPath))
         goto KeepRunning;
 
-    // Using fixed (unlikely) name instead of GetTempFileName()
-    // so that we don't litter temp dir with copies of ourselves
-    TCHAR *tempPath = tstr_cat(tempDir, _T("sum~inst.exe"));
-
-    if (!CopyFile(GetExePath(), tempPath, FALSE)) {
+    if (!CopyFile(GetOwnPath(), tempPath, FALSE)) {
         NotifyFailed(_T("Failed to copy uninstaller to temp directory"));
-        free(tempPath);
         goto KeepRunning;
     }
 
@@ -1913,11 +1945,10 @@ BOOL ExecuteUninstallerFromTempDir()
 
     // mark the uninstaller for removal at shutdown (note: works only for administrators)
     MoveFileEx(tempPath, NULL, MOVEFILE_DELAY_UNTIL_REBOOT);
-    free(tempPath);
 
 KeepRunning:
     free(ownDir);
-    free(tempDir);
+    free(tempPath);
     return ok;
 }
 

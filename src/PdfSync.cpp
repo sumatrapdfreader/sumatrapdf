@@ -941,7 +941,7 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
                 if (win && WS_SHOWING_PDF == win->state) {
                     char *viewMode = tstr_to_utf8(destname);
                     DisplayMode mode;
-                    if (DisplayModeEnumFromName(viewMode, &mode))
+                    if (DisplayModeEnumFromName(viewMode, &mode) && mode != DM_AUTOMATIC)
                         win->SwitchToDisplayMode(mode);
                     free(viewMode);
                     if (zoom != INVALID_ZOOM)
