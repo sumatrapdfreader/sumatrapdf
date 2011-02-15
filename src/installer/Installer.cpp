@@ -664,7 +664,7 @@ BOOL RemoveUninstallerRegistryInfo(bool allUsers)
     return ok1 && ok2;
 }
 
-/* Undo what DoAssociateExeWithPdfExtension() in SumatraPDF.cpp did */
+/* Undo what DoAssociateExeWithPdfExtension() in AppTools.cpp did */
 void UnregisterFromBeingDefaultViewer(bool allUsers)
 {
     HKEY hkey = HKEY_LOCAL_MACHINE;

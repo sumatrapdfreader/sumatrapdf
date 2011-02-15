@@ -226,8 +226,8 @@ HKEY_CLASSES_ROOT\.pdf\OpenWithList
 HKEY_CLASSES_ROOT\.pdf default comes from either HKCU\Software\Classes\.pdf or
 HKLM\Software\Classes\.pdf (HKCU has priority over HKLM)
 
-Note: When making changes below, please also adjust the installer.nsi script
-and UnregisterFromBeingDefaultViewer() in Installer.cpp.
+Note: When making changes below, please also adjust
+UnregisterFromBeingDefaultViewer() in Installer.cpp.
 */
 void DoAssociateExeWithPdfExtension(HKEY hkey)
 {
@@ -256,6 +256,10 @@ void DoAssociateExeWithPdfExtension(HKEY hkey)
     // also register for printing
     tstr_printf_s(cmdPath, dimof(cmdPath), _T("\"%s\" -print-to-default -exit-on-print \"%%1\""), exePath); // "${exePath}" -print-to-default -exit-on-print "%1"
     WriteRegStr(hkey, _T("Software\\Classes\\") APP_NAME_STR _T("\\shell\\print\\command"), NULL, cmdPath);
+
+    // also register for printing to specific printer
+    tstr_printf_s(cmdPath, dimof(cmdPath), _T("\"%s\" -print-to \"%%2\" -exit-on-print \"%%1\""), exePath); // "${exePath}" -print-to "%2" -exit-on-print "%1"
+    WriteRegStr(hkey, _T("Software\\Classes\\") APP_NAME_STR _T("\\shell\\printto\\command"), NULL, cmdPath);
 
     // Only change the association if we're confident, that we've registered ourselves well enough
     if (ok) {
@@ -292,19 +296,18 @@ bool IsExeAssociatedWithPdfExtension()
 
     // HKEY_CLASSES_ROOT\SumatraPDF\shell\open\command default key must be: "${exe_path}" "%1"
     ok = ReadRegStr(HKEY_CLASSES_ROOT, _T("SumatraPDF\\shell\\open\\command"), NULL, tmp, dimof(tmp));
-    if (!ok || '"' != tmp[0])
+    if (!ok)
         return false;
 
-    TCHAR *exePathEnd = tstr_find_char(tmp + 1, '"');
-    if (!exePathEnd || !tstr_eq(exePathEnd, _T("\" \"%1\"")))
-        return false;
-    *exePathEnd = '\0';
+    bool same = false;
+    TCHAR *openCommand = tmp;
+    TCHAR *exePathReg = tstr_parse_possibly_quoted(&openCommand);
     TCHAR *exePath = ExePathGet();
-    if (!exePath)
-        return false;
-
-    bool same = !!FilePath_IsSameFile(exePath, tmp + 1);
+    if (exePath && exePathReg && _tcsstr(openCommand, _T("\"%1\"")))
+        same = !!FilePath_IsSameFile(exePath, exePathReg);
     free(exePath);
+    free(exePathReg);
+
     return same;
 }
 
