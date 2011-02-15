@@ -3,8 +3,6 @@
 
 /*
 The installer is good enough for production but it doesn't mean it couldn't be improved:
- * allow to change the installation directory
-
  * some more fanciful animations e.g.:
  * letters could drop down and back up when cursor is over it
  * messages could scroll-in
@@ -54,24 +52,34 @@ using namespace Gdiplus;
 #define ID_CHECKBOX_BROWSER_PLUGIN    14
 #define ID_BUTTON_START_SUMATRA       15
 #define ID_BUTTON_EXIT                16
+#define ID_BUTTON_OPTIONS             17
+#define ID_BUTTON_BROWSE              18
 
 #define WM_APP_INSTALLATION_FINISHED        (WM_APP + 1)
 
-// The window is divided in two parts:
+// The window is divided in three parts:
 // * top part, where we display nice graphics
+// * middle part, where we either display messages or advanced options
 // * bottom part, with install/uninstall button
+// This is the height of the top part
+#define TITLE_PART_DY  110
 // This is the height of the lower part
-#define BOTTOM_PART_DY 46
+#define BOTTOM_PART_DY 40
 
 static HINSTANCE        ghinst;
 static HWND             gHwndFrame = NULL;
 static HWND             gHwndButtonInstall = NULL;
+static HWND             gHwndButtonOptions = NULL;
 static HWND             gHwndButtonExit = NULL;
 static HWND             gHwndButtonRunSumatra = NULL;
+static HWND             gHwndStaticInstDir = NULL;
+static HWND             gHwndTextboxInstDir = NULL;
+static HWND             gHwndButtonBrowseDir = NULL;
 static HWND             gHwndCheckboxRegisterDefault = NULL;
 static HWND             gHwndCheckboxRegisterBrowserPlugin = NULL;
 static HWND             gHwndButtonUninstall = NULL;
 static HFONT            gFontDefault;
+static bool             gShowOptions = false;
 
 static TCHAR *          gMsg;
 static TCHAR *          gMsgError = NULL;
@@ -524,7 +532,10 @@ void InvalidateFrame()
 {
     RECT rc;
     GetClientRect(gHwndFrame, &rc);
-    rc.bottom -= BOTTOM_PART_DY;
+    if (gShowOptions)
+        rc.bottom = TITLE_PART_DY;
+    else
+        rc.bottom -= BOTTOM_PART_DY;
     InvalidateRect(gHwndFrame, &rc, FALSE);
 }
 
@@ -944,8 +955,18 @@ Error:
     return 0;
 }
 
+void OnButtonOptions();
+
 void OnButtonInstall()
 {
+    TCHAR *userInstallDir = win_get_text(gHwndTextboxInstDir);
+    if (!tstr_empty(userInstallDir)) {
+        free(gGlobalData.installDir);
+        gGlobalData.installDir = userInstallDir;
+    }
+    else
+        free(userInstallDir);
+
     // note: checkboxes aren't created if the features are already installed
     //       (in which case we're just going to re-register them automatically)
     gGlobalData.registerAsDefault = gHwndCheckboxRegisterDefault == NULL ||
@@ -953,11 +974,23 @@ void OnButtonInstall()
     gGlobalData.installBrowserPlugin = gHwndCheckboxRegisterBrowserPlugin == NULL ||
                                        GetCheckboxState(gHwndCheckboxRegisterBrowserPlugin);
 
-    // disable the install button and remove checkbox during installation
+    if (gShowOptions)
+        OnButtonOptions();
+
+    // disable the install button and remove all the installation options
+    DestroyWindow(gHwndStaticInstDir);
+    gHwndStaticInstDir = NULL;
+    DestroyWindow(gHwndTextboxInstDir);
+    gHwndTextboxInstDir = NULL;
+    DestroyWindow(gHwndButtonBrowseDir);
+    gHwndButtonBrowseDir = NULL;
     DestroyWindow(gHwndCheckboxRegisterDefault);
     gHwndCheckboxRegisterDefault = NULL;
     DestroyWindow(gHwndCheckboxRegisterBrowserPlugin);
     gHwndCheckboxRegisterBrowserPlugin = NULL;
+    DestroyWindow(gHwndButtonOptions);
+    gHwndButtonOptions = NULL;
+
     EnableWindow(gHwndButtonInstall, FALSE);
 
     gMsg = _T("Installation in progress...");
@@ -1051,6 +1084,103 @@ void OnUninstallationFinished()
 void OnButtonExit()
 {
     SendMessage(gHwndFrame, WM_CLOSE, 0, 0);
+}
+
+void OnButtonOptions()
+{
+    gShowOptions = !gShowOptions;
+
+    int nCmdShow = gShowOptions ? SW_SHOW : SW_HIDE;
+    ShowWindow(gHwndStaticInstDir, nCmdShow);
+    ShowWindow(gHwndTextboxInstDir, nCmdShow);
+    ShowWindow(gHwndButtonBrowseDir, nCmdShow);
+    ShowWindow(gHwndCheckboxRegisterDefault, nCmdShow);
+    ShowWindow(gHwndCheckboxRegisterBrowserPlugin, nCmdShow);
+
+    win_set_text(gHwndButtonOptions, gShowOptions ? _T("Hide &Options") : _T("Show &Options"));
+
+    RECT rc;
+    GetClientRect(gHwndFrame, &rc);
+    rc.bottom -= BOTTOM_PART_DY;
+    InvalidateRect(gHwndFrame, &rc, FALSE);
+
+    SetFocus(gHwndButtonOptions);
+}
+
+static int CALLBACK BrowseCallbackProc(HWND hwnd, UINT msg, LPARAM lParam, LPARAM lpData)
+{
+    switch (msg) {
+    case BFFM_INITIALIZED:
+        if (!tstr_empty((TCHAR *)lpData))
+            SendMessage(hwnd, BFFM_SETSELECTION, TRUE, lpData);
+        break;
+
+    // disable the OK button for non-filesystem and inaccessible folders (and shortcuts to folders)
+    case BFFM_SELCHANGED:
+        {
+            TCHAR szDir[MAX_PATH];
+            if (SHGetPathFromIDList((LPITEMIDLIST)lParam, szDir) && _taccess(szDir, 00) == 0) {
+                SHFILEINFO sfi;
+                SHGetFileInfo((LPCTSTR)lParam, 0, &sfi, sizeof(sfi), SHGFI_PIDL | SHGFI_ATTRIBUTES);
+                if (!(sfi.dwAttributes & SFGAO_LINK))
+                    break;
+            }
+            EnableWindow(GetDlgItem(hwnd, IDOK), FALSE);
+        }
+        break;
+    }
+
+    return 0;
+}
+
+BOOL BrowseForFolder(HWND hwnd, LPCTSTR lpszInitialFolder, LPCTSTR lpszCaption, LPTSTR lpszBuf, DWORD dwBufSize)
+{
+    if (lpszBuf == NULL || dwBufSize < MAX_PATH)
+        return FALSE;
+
+    BROWSEINFO bi = { 0 };
+    bi.hwndOwner = hwnd;
+    bi.ulFlags   = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
+    bi.lpszTitle = lpszCaption;
+    bi.lpfn      = BrowseCallbackProc;
+    bi.lParam    = (LPARAM)lpszInitialFolder;
+
+    BOOL success = FALSE;
+    LPITEMIDLIST pidlFolder = SHBrowseForFolder(&bi);
+    if (pidlFolder) {
+        success = SHGetPathFromIDList(pidlFolder, lpszBuf);
+
+        IMalloc *pMalloc = NULL; 
+        if (SUCCEEDED(SHGetMalloc(&pMalloc)) && pMalloc) {
+            pMalloc->Free(pidlFolder);  
+            pMalloc->Release(); 
+        }
+    }
+
+    return success;
+}
+
+void OnButtonBrowse()
+{
+    TCHAR path[MAX_PATH];
+
+    TCHAR *installDir = win_get_text(gHwndTextboxInstDir);
+    if (!dir_exists(installDir)) {
+        TCHAR *parentDir = FilePath_GetDir(installDir);
+        free(installDir);
+        installDir = parentDir;
+    }
+
+    if (BrowseForFolder(gHwndFrame, installDir, _T("Select the folder into which ") TAPP _T(" should be installed:"), path, dimof(path))) {
+        tstr_cat_s(path, dimof(path), _T("\\") TAPP);
+        win_set_text(gHwndTextboxInstDir, path);
+        Edit_SetSel(gHwndTextboxInstDir, 0, -1);
+        SetFocus(gHwndTextboxInstDir);
+    }
+    else
+        SetFocus(gHwndButtonBrowseDir);
+
+    free(installDir);
 }
 
 // This display is inspired by http://letteringjs.com/
@@ -1356,6 +1486,9 @@ void DrawFrame2(Graphics &g, RECT *r)
     Font f2(L"Impact", 16, FontStyleRegular);
     DrawSumatraLetters(g, &f, &f2, 18.f);
 
+    if (gShowOptions)
+        return;
+
     REAL msgY = (REAL)(RectDy(r) / 2);
     if (gMsg)
         msgY += DrawMessage(g, gMsg, msgY, (REAL)RectDx(r), gMsgColor) + 5;
@@ -1367,7 +1500,10 @@ void DrawFrame(HWND hwnd, HDC dc, PAINTSTRUCT *ps)
 {
     RECT rc;
     GetClientRect(hwnd, &rc);
-    rc.top = rc.bottom - BOTTOM_PART_DY;
+    if (gShowOptions)
+        rc.top = TITLE_PART_DY;
+    else
+        rc.top = rc.bottom - BOTTOM_PART_DY;
     RECT rcTmp;
     if (IntersectRect(&rcTmp, &rc, &ps->rcPaint)) {
         HBRUSH brushNativeBg = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
@@ -1378,7 +1514,10 @@ void DrawFrame(HWND hwnd, HDC dc, PAINTSTRUCT *ps)
     // TODO: cache bmp object?
     Graphics g(dc);
     GetClientRect(hwnd, &rc);
-    rc.bottom -= BOTTOM_PART_DY;
+    if (gShowOptions)
+        rc.bottom = TITLE_PART_DY;
+    else
+        rc.bottom -= BOTTOM_PART_DY;
     int dx = RectDx(&rc); int dy = RectDy(&rc);
     Bitmap bmp(dx, dy, &g);
     Graphics g2((Image*)&bmp);
@@ -1505,7 +1644,29 @@ void OnCreateInstaller(HWND hwnd)
                         (HMENU)ID_BUTTON_INSTALL, ghinst, NULL);
     SetFont(gHwndButtonInstall, gFontDefault);
 
-    y = RectDy(&r) - buttonDy - 5;
+    x = 8;
+    gHwndButtonOptions = CreateWindow(WC_BUTTON, _T("Show &Options"),
+                        BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
+                        x, y, buttonDx, buttonDy, hwnd, 
+                        (HMENU)ID_BUTTON_OPTIONS, ghinst, NULL);
+    SetFont(gHwndButtonOptions, gFontDefault);
+
+    y = TITLE_PART_DY + x;
+    gHwndStaticInstDir = CreateWindow(WC_STATIC, _T("Install ") TAPP _T(" into the following &folder:"),
+                                      WS_CHILD,
+                                      x, y, RectDx(&r) - 2 * x, 20, hwnd, 0, ghinst, NULL);
+    SetFont(gHwndStaticInstDir, gFontDefault);
+    y += 20;
+
+    gHwndTextboxInstDir = CreateWindow(WC_EDIT, gGlobalData.installDir,
+                                       WS_CHILD | WS_TABSTOP | WS_BORDER | ES_LEFT | ES_AUTOHSCROLL,
+                                       x, y, RectDx(&r) - 3 * x - 20, 20, hwnd, 0, ghinst, NULL);
+    SetFont(gHwndTextboxInstDir, gFontDefault);
+    gHwndButtonBrowseDir = CreateWindow(WC_BUTTON, _T("&..."),
+                                        BS_PUSHBUTTON | WS_CHILD | WS_TABSTOP,
+                                        RectDx(&r) - x - 20, y, 20, 20, hwnd, (HMENU)ID_BUTTON_BROWSE, ghinst, NULL);
+    SetFont(gHwndButtonBrowseDir, gFontDefault);
+    y += 40;
 
     TCHAR *defaultViewer = GetDefaultPdfViewer();
     BOOL hasOtherViewer = !tstr_ieq(defaultViewer, TAPP);
@@ -1516,24 +1677,27 @@ void OnCreateInstaller(HWND hwnd)
     // the alternative (disabling the checkbox) is more confusing
     if (!isSumatraDefaultViewer) {
         gHwndCheckboxRegisterDefault = CreateWindow(
-            WC_BUTTON, _T("Use as &default PDF reader"),
-            WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX | WS_TABSTOP,
-            8, y, 160, 22, hwnd, (HMENU)ID_CHECKBOX_MAKE_DEFAULT, ghinst, NULL);
+            WC_BUTTON, _T("Use ") TAPP _T(" as the &default PDF reader"),
+            WS_CHILD | BS_AUTOCHECKBOX | WS_TABSTOP,
+            x, y, RectDx(&r) - 2 * x, 22, hwnd, (HMENU)ID_CHECKBOX_MAKE_DEFAULT, ghinst, NULL);
         SetFont(gHwndCheckboxRegisterDefault, gFontDefault);
         // only check the "Use as default" checkbox when no other PDF viewer
         // is currently selected (not going to intrude)
         SetCheckboxState(gHwndCheckboxRegisterDefault, !hasOtherViewer || gGlobalData.registerAsDefault);
-        y -= 18;
+        y += 22;
     }
 
     if (!IsBrowserPluginInstalled()) {
         gHwndCheckboxRegisterBrowserPlugin = CreateWindow(
-            WC_BUTTON, _T("Install web browser plugin"),
-            WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX | WS_TABSTOP,
-            8, y, 160, 22, hwnd, (HMENU)ID_CHECKBOX_BROWSER_PLUGIN, ghinst, NULL);
+            WC_BUTTON, _T("Install a PDF &browser plugin for Mozilla Firefox and Google Chrome"),
+            WS_CHILD | BS_AUTOCHECKBOX | WS_TABSTOP,
+            x, y, RectDx(&r) - 2 * x, 22, hwnd, (HMENU)ID_CHECKBOX_BROWSER_PLUGIN, ghinst, NULL);
         SetFont(gHwndCheckboxRegisterBrowserPlugin, gFontDefault);
         SetCheckboxState(gHwndCheckboxRegisterBrowserPlugin, gGlobalData.installBrowserPlugin);
     }
+
+    gShowOptions = !gShowOptions;
+    OnButtonOptions();
 
     SetFocus(gHwndButtonInstall);
 }
@@ -1589,6 +1753,14 @@ static LRESULT CALLBACK InstallerWndProcFrame(HWND hwnd, UINT message, WPARAM wP
                 case ID_BUTTON_EXIT:
                 case IDCANCEL:
                     OnButtonExit();
+                    break;
+
+                case ID_BUTTON_OPTIONS:
+                    OnButtonOptions();
+                    break;
+
+                case ID_BUTTON_BROWSE:
+                    OnButtonBrowse();
                     break;
 
                 default:
