@@ -176,7 +176,7 @@ bool GetExePath(LPWSTR lpPath, int len)
 typedef struct {
 	NPWindow *npwin;
 	LPCWSTR message;
-	LPWSTR filepath;
+	WCHAR filepath[MAX_PATH];
 	HANDLE hProcess;
 	WCHAR exepath[MAX_PATH + 2];
 	FLOAT progress;
@@ -369,7 +369,6 @@ void NP_LOADDS NPP_StreamAsFile(NPP instance, NPStream* stream, const char* fnam
 		return;
 	}
 	
-	data->filepath = malloc(MAX_PATH * sizeof(WCHAR));
 	if (!MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, fname, -1, data->filepath, MAX_PATH))
 	{
 		MultiByteToWideChar(CP_ACP, 0, fname, -1, data->filepath, MAX_PATH);
@@ -414,10 +413,14 @@ NPError NP_LOADDS NPP_Destroy(NPP instance, NPSavedData** save)
 		WaitForSingleObject(data->hProcess, INFINITE);
 		CloseHandle(data->hProcess);
 	}
-	if (data->filepath)
+	if (*data->filepath)
 	{
-		DeleteFileW(data->filepath);
-		free(data->filepath);
+		WCHAR tempDir[MAX_PATH];
+		DWORD len = GetTempPathW(MAX_PATH, tempDir);
+		if (0 < len && len < MAX_PATH && !wcsncmp(data->filepath, tempDir, len))
+		{
+			DeleteFileW(data->filepath);
+		}
 	}
 	free(data);
 	*save = NULL;
