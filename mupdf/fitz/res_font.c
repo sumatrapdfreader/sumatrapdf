@@ -354,6 +354,34 @@ fz_renderftstrokedglyph(fz_font *font, int gid, fz_matrix trm, fz_matrix ctm, fz
 	fz_pixmap *pix;
 	int y;
 
+	/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=691980 */
+	/* Fudge the font matrix to stretch the glyph if we've substituted the font. */
+	if (font->ftsubstitute && gid < font->widthcount)
+	{
+		int subw;
+		int realw;
+		float scale;
+
+		/* TODO: use FT_Get_Advance */
+		fterr = FT_Set_Char_Size(face, 1000, 1000, 72, 72);
+		if (fterr)
+			fz_warn("freetype setting character size: %s", ft_errorstring(fterr));
+
+		fterr = FT_Load_Glyph(font->ftface, gid,
+			FT_LOAD_NO_HINTING | FT_LOAD_NO_BITMAP | FT_LOAD_IGNORE_TRANSFORM);
+		if (fterr)
+			fz_warn("freetype failed to load glyph: %s", ft_errorstring(fterr));
+
+		realw = ((FT_Face)font->ftface)->glyph->metrics.horiAdvance;
+		subw = font->widthtable[gid];
+		if (realw)
+			scale = (float) subw / realw;
+		else
+			scale = 1;
+
+		trm = fz_concat(fz_scale(scale, 1), trm);
+	}
+
 	m.xx = trm.a * 64; /* should be 65536 */
 	m.yx = trm.b * 64;
 	m.xy = trm.c * 64;
