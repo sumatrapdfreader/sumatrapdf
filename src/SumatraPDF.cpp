@@ -6572,6 +6572,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     InstallCrashHandler(crashDumpPath);
     free(crashDumpPath);
 
+    msg.wParam = 1; // set an error code, in case we prematurely have to goto Exit
     if (!RegisterWinClass(hInstance))
         goto Exit;
     if (!InstanceInit(hInstance, nCmdShow))
@@ -6591,6 +6592,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
     WindowInfo *win = NULL;
     bool firstDocLoaded = false;
+    msg.wParam = 0;
 
     for (size_t n = 0; n < i.fileNames.size(); n++) {
         if (i.reuseInstance) {
@@ -6617,20 +6619,16 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         else {
             bool showWin = !i.exitOnPrint && !gPluginMode;
             win = LoadPdf(i.fileNames[n], NULL, showWin, i.newWindowTitle);
+            if (!win || win->state != WS_SHOWING_PDF)
+                msg.wParam++; // set an error code for the next goto Exit
             if (!win)
                 goto Exit;
-            if (WS_SHOWING_PDF != win->state) {
-                // cancel printing, if there was a load error
-                i.exitOnPrint = i.printDialog = FALSE;
-                free(i.printerName);
-                i.printerName = NULL;
-           }
-            else if (i.destName && !firstDocLoaded) {
+            if (WS_SHOWING_PDF == win->state && i.destName && !firstDocLoaded) {
                 char * tmp = tstr_to_utf8(i.destName);
                 win->dm->goToNamedDest(tmp);
                 free(tmp);
             }
-            else if (i.pageNumber > 0 && !firstDocLoaded) {
+            else if (WS_SHOWING_PDF == win->state && i.pageNumber > 0 && !firstDocLoaded) {
                 if (win->dm->validPageNo(i.pageNumber))
                     win->dm->goToPage(i.pageNumber, 0);
             }
@@ -6644,10 +6642,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
                 OnMenuZoom(win, MenuIdFromVirtualZoom(i.startZoom));
         }
 
-        if (i.exitOnPrint)
-            ShowWindow(win->hwndFrame, SW_HIDE);
-
-        if (i.printerName) {
+        if (i.printerName && win && WS_SHOWING_PDF == win->state) {
             // note: this prints all PDF files. Another option would be to
             // print only the first one
             PrintFile(win, i.printerName);
@@ -6663,8 +6658,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     if (!firstDocLoaded) {
         bool enterFullscreen = (WIN_STATE_FULLSCREEN == gGlobalPrefs.m_windowState);
         win = WindowInfo_CreateEmpty();
-        if (!win)
+        if (!win) {
+            msg.wParam = 1;
             goto Exit;
+        }
 
         if (WIN_STATE_FULLSCREEN == gGlobalPrefs.m_windowState ||
             WIN_STATE_MAXIMIZED == gGlobalPrefs.m_windowState)
