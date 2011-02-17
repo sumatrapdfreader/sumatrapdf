@@ -276,6 +276,24 @@ loadsimplefont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict)
 	if (error)
 		goto cleanup;
 
+	/* SumatraPDF: work around chinese documents wrongly considering WinAnsiEncoding to be codepage 936 */
+	if (!*fontdesc->font->name && !fz_dictgets(dict, "ToUnicode") &&
+		!strcmp(fz_toname(fz_dictgets(dict, "Encoding")), "WinAnsiEncoding") &&
+		fz_toint(fz_dictgets(descriptor, "Flags")) == 4 &&
+		(!strcmp(basefont, "\xBA\xDA\xCC\xE5") || !strcmp(basefont, "\xCB\xCE\xCC\xE5") ||
+		 !strcmp(basefont, "\xBF\xAC\xCC\xE5_GB2312") || !strcmp(basefont, "\xB7\xC2\xCB\xCE_GB2312")))
+	{
+		fz_warn("loading SimSun for %s, even though ANSI doesn't mean CP936", basefont);
+		pdf_dropfont(fontdesc);
+		fontdesc = pdf_newfontdesc();
+		error = pdf_loadfontdescriptor(fontdesc, xref, descriptor, "Adobe-GB1", "SimSun,Regular");
+		error |= pdf_loadsystemcmap(&fontdesc->encoding, "GBK-EUC-H");
+		error |= pdf_loadsystemcmap(&fontdesc->tounicode, "Adobe-GB1-UCS2");
+		error |= pdf_loadsystemcmap(&fontdesc->tottfcmap, "Adobe-GB1-UCS2");
+		if (!error)
+			goto LoadWidths;
+	}
+
 	face = fontdesc->font->ftface;
 	kind = ftkind(face);
 
@@ -483,6 +501,7 @@ loadsimplefont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict)
 		fz_catch(error, "cannot load tounicode");
 
 	/* Widths */
+LoadWidths:
 
 	pdf_setdefaulthmtx(fontdesc, fontdesc->missingwidth);
 
