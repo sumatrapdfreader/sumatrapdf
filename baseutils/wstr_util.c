@@ -97,7 +97,7 @@ int wstr_ieq(const WCHAR *str1, const WCHAR *str2)
     return FALSE;
 }
 
-int wstr_eqn(const WCHAR *str1, const WCHAR *str2, int len)
+int wstr_eqn(const WCHAR *str1, const WCHAR *str2, size_t len)
 {
     if (!str1 && !str2)
         return TRUE;
@@ -273,7 +273,6 @@ BOOL wstr_dup_replace(WCHAR **dst, const WCHAR *src)
     return TRUE;
 }
 
-#ifdef _WIN32
 void win32_dbg_outW(const WCHAR *format, ...)
 {
     WCHAR   buf[4096];
@@ -285,4 +284,3 @@ void win32_dbg_outW(const WCHAR *format, ...)
     OutputDebugStringW(buf);
     va_end(args);
 }
-#endif

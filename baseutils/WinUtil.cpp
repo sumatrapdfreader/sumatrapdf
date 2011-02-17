@@ -33,115 +33,16 @@ HMODULE WinLibrary::_LoadSystemLibrary(const TCHAR *libName) {
     return LoadLibrary(dllPath);
 }
 
-// Given name of the command to exececute 'cmd', and its arguments 'args'
-// return WinProcess object that makes it easier to handle the process
-// Returns NULL if failed to create the process. Caller can use GetLastError()
-// for detailed error information.
-WinProcess * WinProcess::Create(const TCHAR *cmd, TCHAR *args)
-{
-    UINT                res;
-    HANDLE              stdOut = INVALID_HANDLE_VALUE;
-    HANDLE              stdErr = INVALID_HANDLE_VALUE;
-    STARTUPINFO         siStartupInfo;
-    PROCESS_INFORMATION piProcessInfo;
-    SECURITY_ATTRIBUTES sa;
-
-    sa.nLength = sizeof(sa);
-    sa.lpSecurityDescriptor = 0;
-    sa.bInheritHandle = 1;
-
-    memzero(&siStartupInfo, sizeof(siStartupInfo));
-    memzero(&piProcessInfo, sizeof(piProcessInfo));
-    siStartupInfo.cb = sizeof(siStartupInfo);
-
-    TCHAR stdoutTempName[MAX_PATH] = {0};
-    TCHAR stderrTempName[MAX_PATH] = {0};
-    TCHAR *stdoutTempNameCopy = NULL;
-    TCHAR *stderrTempNameCopy = NULL;
-
-    TCHAR buf[MAX_PATH] = {0};
-    DWORD len = GetTempPath(sizeof(buf), buf);
-    assert(len < sizeof(buf));
-    // create temporary files for capturing stdout and stderr or the command
-    res = GetTempFileName(buf, _T("stdout"), 0, stdoutTempName);
-    if (0 == res)
-        goto Error;
-
-    res = GetTempFileName(buf, _T("stderr"), 0, stderrTempName);
-    if (0 == res)
-        goto Error;
-
-    stdoutTempNameCopy = tstr_dup(stdoutTempName);
-    stderrTempNameCopy = tstr_dup(stderrTempName);
-
-    stdOut = CreateFile(stdoutTempNameCopy,
-        GENERIC_READ|GENERIC_WRITE,
-        FILE_SHARE_WRITE|FILE_SHARE_READ,
-        &sa, CREATE_ALWAYS,
-        FILE_ATTRIBUTE_NORMAL, 0);
-    if (INVALID_HANDLE_VALUE == stdOut)
-        goto Error;
-
-    stdErr = CreateFile(stderrTempNameCopy,
-        GENERIC_READ|GENERIC_WRITE,
-        FILE_SHARE_WRITE|FILE_SHARE_READ,
-        &sa, CREATE_ALWAYS,
-        FILE_ATTRIBUTE_NORMAL, 0);
-    if (INVALID_HANDLE_VALUE == stdErr)
-        goto Error;
-
-    siStartupInfo.hStdOutput = stdOut;
-    siStartupInfo.hStdError = stdErr;
-
-    BOOL ok = CreateProcess(cmd, args, NULL, NULL, DONT_INHERIT_HANDLES,
-        CREATE_DEFAULT_ERROR_MODE, NULL /*env*/, NULL /*curr dir*/,
-        &siStartupInfo, &piProcessInfo);
-
-    if (!ok)
-        goto Error;
-
-    // TODO: pass stdoutTempNameCopy and stderrTempNameCopy so upon
-    // WinProcess destruction the files can be deleted and their memory freed
-    WinProcess *wp = new WinProcess(&piProcessInfo);
-    return wp;
-
-Error:
-    CloseHandle(stdOut);
-    CloseHandle(stdErr);
-
-    if (stdoutTempName[0]) {
-        // TODO: delete stdoutTempName
-    }
-    if (stderrTempName[0]) {
-        // TODO: delete stderrTempName
-    }
-    free(stdoutTempNameCopy);
-    free(stderrTempNameCopy);
-    return NULL;
-}
-
-WinProcess::WinProcess(PROCESS_INFORMATION *pi)
-{
-    memcpy(&m_processInfo, pi, sizeof(PROCESS_INFORMATION));
-}
-
 static int WindowsVerMajor()
 {
     DWORD version = GetVersion();
-    return (int)(version & 0xFF);
+    return LOBYTE(version);
 }
 
 static int WindowsVerMinor()
 {
     DWORD version = GetVersion();
-    return (int)((version & 0xFF00) >> 8);    
-}
-
-bool WindowsVer2000OrGreater()
-{
-    if (WindowsVerMajor() >= 5)
-        return true;
-    return false;
+    return HIBYTE(version);
 }
 
 bool WindowsVerVistaOrGreater()
@@ -173,7 +74,7 @@ bool ReadRegStr(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, const T
 
 bool WriteRegStr(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, const TCHAR *value)
 {
-    LONG res = SHSetValue(keySub, keyName, valName, REG_SZ, (const VOID *)value, (tstr_len(value) + 1) * sizeof(TCHAR));
+    LONG res = SHSetValue(keySub, keyName, valName, REG_SZ, (const VOID *)value, (DWORD)(tstr_len(value) + 1) * sizeof(TCHAR));
     if (ERROR_SUCCESS != res)
         SeeLastError(res);
     return ERROR_SUCCESS == res;

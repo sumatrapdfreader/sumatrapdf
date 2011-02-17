@@ -102,18 +102,18 @@ public:
 
     tchar_t *join(tchar_t *joint=NULL)
     {
-        int len = 0;
-        int jointLen = joint ? tstr_len(joint) : 0;
+        size_t len = 0;
+        size_t jointLen = joint ? tstr_len(joint) : 0;
         tchar_t *result, *tmp;
 
         size_t n = size();
         for (size_t i = n; i > 0; i--)
             len += tstr_len(at(i - 1)) + jointLen;
-        len -= jointLen;
-        if (len <= 0)
+        if (len <= jointLen)
             return (tchar_t *)calloc(1, sizeof(tchar_t));
+        len -= jointLen;
 
-        result = (tchar_t *)calloc((size_t)len + 1, sizeof(tchar_t));
+        result = (tchar_t *)calloc(len + 1, sizeof(tchar_t));
         if (!result)
             return NULL;
 

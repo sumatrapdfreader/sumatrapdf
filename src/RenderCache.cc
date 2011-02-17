@@ -453,7 +453,7 @@ void RenderCache::CancelRendering(DisplayModel *dm)
         LeaveCriticalSection(&_requestAccess);
 
         /* TODO: busy loop is not good, but I don't have a better idea */
-        sleep_milliseconds(50);
+        Sleep(50);
     }
 }
 

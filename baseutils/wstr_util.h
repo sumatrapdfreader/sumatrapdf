@@ -18,7 +18,7 @@ extern "C"
 
 int     wstr_eq(const WCHAR *str1, const WCHAR *str2);
 int     wstr_ieq(const WCHAR *str1, const WCHAR *str2);
-int     wstr_eqn(const WCHAR *str1, const WCHAR *str2, int len);
+int     wstr_eqn(const WCHAR *str1, const WCHAR *str2, size_t len);
 int     wstr_startswith(const WCHAR *str, const WCHAR *txt);
 int     wstr_startswithi(const WCHAR *str, const WCHAR *txt);
 int     wstr_endswith(const WCHAR *str, const WCHAR *end);
@@ -41,15 +41,9 @@ char *  wstr_to_utf8(const WCHAR *txt);
 WCHAR * multibyte_to_wstr(const char *src, UINT CodePage);
 WCHAR * utf8_to_wstr(const char *utf8);
 
-#ifdef _WIN32
 void win32_dbg_outW(const WCHAR *format, ...);
-#endif
 #ifdef DEBUG
-  #ifdef _WIN32
-    #define DBG_OUT_W(format, ...) win32_dbg_outW(L##format, __VA_ARGS__)
-  #else
-    #define DBG_OUT_W(format, ...) wprintf(L##format, __VA_ARGS__)
-  #endif
+  #define DBG_OUT_W(format, ...) win32_dbg_outW(L##format, __VA_ARGS__)
   void wstr_util_test(void);
 #else
   #define DBG_OUT_W(format, ...) ((void)0)

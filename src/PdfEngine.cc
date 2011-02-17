@@ -209,10 +209,10 @@ bool fz_isptinrect(fz_rect rect, fz_point pt)
 char *tstr_to_pdfdoc(TCHAR *tstr)
 {
     WCHAR *wstr = tstr_to_wstr(tstr);
-    int len = wstr_len(wstr);
+    size_t len = wstr_len(wstr);
     char *docstr = SAZA(char, len + 1);
 
-    for (int i = 0; i < len; i++) {
+    for (size_t i = 0; i < len; i++) {
         // shortcut: check if the character has the same code point in both encodings
         if (0 < wstr[i] && wstr[i] < 256 && pdf_docencoding[wstr[i]] == wstr[i]) {
             docstr[i] = (char)wstr[i];

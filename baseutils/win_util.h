@@ -3,6 +3,7 @@
 #ifndef WIN_UTIL_H_
 #define WIN_UTIL_H_
 #include <commctrl.h>
+#include <windowsx.h>
 
 /* Utilities to help in common windows programming tasks */
 
@@ -11,7 +12,7 @@ extern "C"
 {
 #endif
 
- /* constant to make it easier to return proper LRESULT values when handling
+/* constant to make it easier to return proper LRESULT values when handling
    various windows messages */
 #define WM_KILLFOCUS_HANDLED 0
 #define WM_SETFOCUS_HANDLED 0
@@ -26,8 +27,11 @@ extern "C"
 #define LVN_ITEMACTIVATE_HANDLED 0
 #define WM_VKEYTOITEM_HANDLED_FULLY -2
 #define WM_VKEYTOITEM_NOT_HANDLED -1
-#define WM_CREATE_OK 0
+#define WM_NCPAINT_HANDLED 0
+#define WM_VSCROLL_HANDLED 0
+#define WM_HSCROLL_HANDLED 0
 #define WM_CREATE_FAILED -1
+#define WM_CREATE_OK 0
 
 #define WIN_COL_RED     RGB(255,0,0)
 #define WIN_COL_WHITE   RGB(255,255,255)
@@ -36,52 +40,26 @@ extern "C"
 #define WIN_COL_GREEN   RGB(0,255,0)
 #define WIN_COL_GRAY    RGB(215,215,215)
 
+#define DRAGQUERY_NUMFILES 0xFFFFFFFF
+
 int     win_get_text_len(HWND hwnd);
 TCHAR * win_get_text(HWND hwnd);
 void    win_set_text(HWND hwnd, const TCHAR *txt);
 
-void win_edit_set_selection(HWND hwnd, DWORD selStart, DWORD selEnd);
-void win_edit_select_all(HWND hwnd);
+#define Edit_SelectAll(hwnd) Edit_SetSel(hwnd, 0, -1)
+#define ListBox_AppendString_NoSort(hwnd, txt) ListBox_InsertString(hwnd, -1, txt)
+#define Window_SetFont(hwnd, font) SetWindowFont(hwnd, font, TRUE)
 
-LRESULT lv_delete_all_items(HWND hwnd);
-void lv_set_items_count(HWND hwnd, int items_count);
-int     lv_get_items_count(HWND hwnd);
-LRESULT lv_insert_column(HWND hwnd, int col, LVCOLUMN *lvc);
-LRESULT lv_set_column(HWND hwnd, int col, LVCOLUMN *lvc);
-LRESULT lv_set_column_dx(HWND hwnd, int col, int dx);
-LRESULT lv_insert_item(HWND hwnd, int row, LVITEM *lvi);
-LRESULT lv_insert_item_text(HWND hwnd, int row, const TCHAR *txt);
-int     lv_get_selection_pos(HWND hwnd);
-LRESULT lb_delete_all_items(HWND hwnd);
-#if 0 /* doesn't seem to be supported under wince */
-LRESULT lb_set_items_count(HWND hwnd, int items_count);
-#endif
-LRESULT lb_insert_item_text(HWND hwnd, int row, const TCHAR *txt);
-LRESULT lb_append_string_no_sort(HWND hwnd, const TCHAR *txt);
-LRESULT lb_get_items_count(HWND hwnd);
-LRESULT lb_set_selection(HWND hwnd, int item);
-LRESULT lb_get_selection(HWND hwnd);
-
-int     font_get_dy(HWND hwnd, HFONT font);
-int     font_get_dy_from_dc(HDC hdc, HFONT font);
-
-void    screen_get_dx_dy(int *dx_out, int *dy_out);
 int     screen_get_dx(void);
 int     screen_get_dy(void);
 int     screen_get_menu_dy(void);
 int     screen_get_caption_dy(void);
-void rect_shift_to_work_area(RECT *rect, BOOL bFully);
+void    rect_shift_to_work_area(RECT *rect, BOOL bFully);
 
 void    launch_url(const TCHAR *url);
 void    exec_with_params(const TCHAR *exe, const TCHAR *params, BOOL hidden);
 
 TCHAR * get_app_data_folder_path(BOOL f_create);
-
-TCHAR * load_string_dup(int str_id);
-const TCHAR *load_string(int str_id);
-
-int     regkey_set_dword(HKEY key_class, TCHAR *key_path, TCHAR *key_name, DWORD key_value);
-int     regkey_set_str(HKEY key_class, TCHAR *key_path, TCHAR *key_name, TCHAR *key_value);
 
 void    paint_round_rect_around_hwnd(HDC hdc, HWND hwnd_edit_parent, HWND hwnd_edit, COLORREF col);
 void    paint_rect(HDC hdc, RECT * rect);

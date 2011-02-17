@@ -127,7 +127,7 @@ static INT_PTR CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT message, WPARAM wPa
         free(newPageNoTxt);
 
         editPageNo = GetDlgItem(hDlg, IDC_GOTO_PAGE_EDIT);
-        win_edit_select_all(editPageNo);
+        Edit_SelectAll(editPageNo);
         SetDlgItemText(hDlg, IDC_STATIC, _TR("&Go to page:"));
         SetDlgItemText(hDlg, IDOK, _TR("Go to page"));
         SetDlgItemText(hDlg, IDCANCEL, _TR("Cancel"));
@@ -211,7 +211,7 @@ static INT_PTR CALLBACK Dialog_Find_Proc(HWND hDlg, UINT message, WPARAM wParam,
         if (data->searchTerm)
             SetDlgItemText(hDlg, IDC_FIND_EDIT, data->searchTerm);
         CheckDlgButton(hDlg, IDC_MATCH_CASE, data->matchCase ? BST_CHECKED : BST_UNCHECKED);
-        win_edit_select_all(GetDlgItem(hDlg, IDC_FIND_EDIT));
+        Edit_SelectAll(GetDlgItem(hDlg, IDC_FIND_EDIT));
 
         CenterDialog(hDlg);
         SetFocus(GetDlgItem(hDlg, IDC_FIND_EDIT));
@@ -350,10 +350,10 @@ static INT_PTR CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT message, WPAR
         langList = GetDlgItem(hDlg, IDC_CHANGE_LANG_LANG_LIST);
         for (int i = 0; i < LANGS_COUNT; i++) {
             TCHAR *langName = utf8_to_tstr(g_langs[i]._langMenuTitle);
-            lb_append_string_no_sort(langList, langName);
+            ListBox_AppendString_NoSort(langList, langName);
             free(langName);
         }
-        lb_set_selection(langList, data->langId);
+        ListBox_SetCurSel(langList, data->langId);
         SetDlgItemText(hDlg, IDOK, _TR("OK"));
         SetDlgItemText(hDlg, IDCANCEL, _TR("Cancel"));
 
@@ -371,7 +371,7 @@ static INT_PTR CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT message, WPAR
                 assert(IDC_CHANGE_LANG_LANG_LIST == LOWORD(wParam));
                 langList = GetDlgItem(hDlg, IDC_CHANGE_LANG_LANG_LIST);
                 assert(langList == (HWND)lParam);
-                data->langId = lb_get_selection(langList);
+                data->langId = ListBox_GetCurSel(langList);
                 EndDialog(hDlg, DIALOG_OK_PRESSED);
                 return FALSE;
             }
@@ -379,7 +379,7 @@ static INT_PTR CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT message, WPAR
             {
                 case IDOK:
                     langList = GetDlgItem(hDlg, IDC_CHANGE_LANG_LANG_LIST);
-                    data->langId = lb_get_selection(langList);
+                    data->langId = ListBox_GetCurSel(langList);
                     EndDialog(hDlg, DIALOG_OK_PRESSED);
                     return TRUE;
 
@@ -506,7 +506,7 @@ static float GetZoomComboBoxValue(HWND hDlg, UINT idComboBox, float defaultZoom)
 {
     float newZoom = defaultZoom;
 
-    int ix = SendDlgItemMessage(hDlg, idComboBox, CB_GETCURSEL, 0, 0);
+    int ix = ComboBox_GetCurSel(GetDlgItem(hDlg, idComboBox));
     if (ix == -1) {
         TCHAR *customZoom = win_get_text(GetDlgItem(hDlg, idComboBox));
         float zoom = (float)_tstof(customZoom);

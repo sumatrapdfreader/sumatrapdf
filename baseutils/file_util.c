@@ -167,8 +167,6 @@ BOOL dir_exists(const TCHAR *dir_path)
     return TRUE;
 }
 
-
-#ifdef _WIN32
 uint64_t file_size_get(const TCHAR *file_path)
 {
     int                         ok;
@@ -187,22 +185,7 @@ uint64_t file_size_get(const TCHAR *file_path)
 
     return res;
 }
-#else
-/* TODO: I think sth. must be done to get 64-bit size */
-uint64_t file_size_get(const char *file_path)
-{
-    struct stat stat_buf;
-    int         res;
-    if (NULL == file_path)
-        return INVALID_FILE_SIZE;
-    res = stat(file_path, &stat_buf);
-    if (0 != res)
-        return INVALID_FILE_SIZE;
-    return stat_buf.st_size;
-}
-#endif
 
-#ifdef _WIN32
 char *file_read_all(const TCHAR *file_path, size_t *file_size_out)
 {
     DWORD       size, size_read;
@@ -237,43 +220,7 @@ Exit:
     CloseHandle(h);
     return data;
 }
-#else
-char *file_read_all(const char *file_path, size_t *file_size_out)
-{
-    FILE *fp = NULL;
-    char *data = NULL;
-    size_t read;
 
-    size_t file_size = file_size_get(file_path);
-    if (INVALID_FILE_SIZE == file_size)
-        return NULL;
-
-    data = malloc(file_size + 1);
-    if (!data)
-        goto Exit;
-    data[file_size] = 0;
-
-    fp = fopen(file_path, "rb");
-    if (!fp)
-        goto Error;
-
-    read = fread(data, 1, file_size, fp);
-    if (ferror(fp))
-        goto Error;
-    assert(read == file_size);
-    if (read != file_size)
-        goto Error;
-    fclose(fp);
-    return data;
-Error:
-    if (fp)
-        fclose(fp);
-    free(data);
-    return NULL;
-}
-#endif
-
-#ifdef _WIN32
 BOOL write_to_file(const TCHAR *file_path, void *data, size_t data_len)
 {
     DWORD       size;
@@ -285,11 +232,8 @@ BOOL write_to_file(const TCHAR *file_path, void *data, size_t data_len)
     if (h == INVALID_HANDLE_VALUE)
         return FALSE;
 
-    f_ok = WriteFile(h, data, data_len, &size, NULL);
+    f_ok = WriteFile(h, data, (DWORD)data_len, &size, NULL);
     assert(!f_ok || (data_len == size));
     CloseHandle(h);
     return f_ok;
 }
-#else
-// not supported
-#endif

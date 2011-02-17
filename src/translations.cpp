@@ -57,7 +57,7 @@ static const char* Translations_GetTranslationAndIndex(const char* txt, int& idx
         return txt;
     }
 
-    idx = res - g_transTranslations;
+    idx = (int)(res - g_transTranslations);
     const char *translation = g_transTranslations[(currLangIdx * g_transTranslationsCount) + idx];
     return translation ? translation : txt;
 }

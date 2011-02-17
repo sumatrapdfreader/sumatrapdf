@@ -11,7 +11,6 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 */
 
 #include <windows.h>
-#include <windowsx.h>
 #include <GdiPlus.h>
 #include <tchar.h>
 #include <shlobj.h>
@@ -920,7 +919,7 @@ void CreateButtonExit(HWND hwndParent)
                         x, y, buttonDx, buttonDy, hwndParent, 
                         (HMENU)ID_BUTTON_EXIT,
                         ghinst, NULL);
-    SetFont(gHwndButtonExit, gFontDefault);
+    Window_SetFont(gHwndButtonExit, gFontDefault);
 }
 
 void CreateButtonRunSumatra(HWND hwndParent)
@@ -940,7 +939,7 @@ void CreateButtonRunSumatra(HWND hwndParent)
                         x, y, buttonDx, buttonDy, hwndParent, 
                         (HMENU)ID_BUTTON_START_SUMATRA,
                         ghinst, NULL);
-    SetFont(gHwndButtonRunSumatra, gFontDefault);
+    Window_SetFont(gHwndButtonRunSumatra, gFontDefault);
 }
 
 static DWORD WINAPI InstallerThread(LPVOID data)
@@ -1011,9 +1010,9 @@ void OnButtonInstall()
     // note: checkboxes aren't created if the features are already installed
     //       (in which case we're just going to re-register them automatically)
     gGlobalData.registerAsDefault = gHwndCheckboxRegisterDefault == NULL ||
-                                    GetCheckboxState(gHwndCheckboxRegisterDefault);
+                                    Button_GetState(gHwndCheckboxRegisterDefault);
     gGlobalData.installBrowserPlugin = gHwndCheckboxRegisterBrowserPlugin == NULL ||
-                                       GetCheckboxState(gHwndCheckboxRegisterBrowserPlugin);
+                                       Button_GetState(gHwndCheckboxRegisterBrowserPlugin);
 
     if (gShowOptions)
         OnButtonOptions();
@@ -1615,7 +1614,7 @@ void OnCreateUninstaller(HWND hwnd)
                         BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
                         x, y, buttonDx, buttonDy, hwnd,
                         (HMENU)ID_BUTTON_UNINSTALL, ghinst, NULL);
-    SetFont(gHwndButtonUninstall, gFontDefault);
+    Window_SetFont(gHwndButtonUninstall, gFontDefault);
 }
 
 static LRESULT CALLBACK UninstallerWndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -1703,30 +1702,30 @@ void OnCreateInstaller(HWND hwnd)
                         BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
                         x, y, buttonDx, buttonDy, hwnd, 
                         (HMENU)ID_BUTTON_INSTALL, ghinst, NULL);
-    SetFont(gHwndButtonInstall, gFontDefault);
+    Window_SetFont(gHwndButtonInstall, gFontDefault);
 
     x = 8;
     gHwndButtonOptions = CreateWindow(WC_BUTTON, _T("Show &Options"),
                         BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
                         x, y, buttonDx, buttonDy, hwnd, 
                         (HMENU)ID_BUTTON_OPTIONS, ghinst, NULL);
-    SetFont(gHwndButtonOptions, gFontDefault);
+    Window_SetFont(gHwndButtonOptions, gFontDefault);
 
     y = TITLE_PART_DY + x;
     gHwndStaticInstDir = CreateWindow(WC_STATIC, _T("Install ") TAPP _T(" into the following &folder:"),
                                       WS_CHILD,
                                       x, y, RectDx(&r) - 2 * x, 20, hwnd, 0, ghinst, NULL);
-    SetFont(gHwndStaticInstDir, gFontDefault);
+    Window_SetFont(gHwndStaticInstDir, gFontDefault);
     y += 20;
 
     gHwndTextboxInstDir = CreateWindow(WC_EDIT, gGlobalData.installDir,
                                        WS_CHILD | WS_TABSTOP | WS_BORDER | ES_LEFT | ES_AUTOHSCROLL,
                                        x, y, RectDx(&r) - 3 * x - 20, 20, hwnd, 0, ghinst, NULL);
-    SetFont(gHwndTextboxInstDir, gFontDefault);
+    Window_SetFont(gHwndTextboxInstDir, gFontDefault);
     gHwndButtonBrowseDir = CreateWindow(WC_BUTTON, _T("&..."),
                                         BS_PUSHBUTTON | WS_CHILD | WS_TABSTOP,
                                         RectDx(&r) - x - 20, y, 20, 20, hwnd, (HMENU)ID_BUTTON_BROWSE, ghinst, NULL);
-    SetFont(gHwndButtonBrowseDir, gFontDefault);
+    Window_SetFont(gHwndButtonBrowseDir, gFontDefault);
     y += 40;
 
     TCHAR *defaultViewer = GetDefaultPdfViewer();
@@ -1741,10 +1740,10 @@ void OnCreateInstaller(HWND hwnd)
             WC_BUTTON, _T("Use ") TAPP _T(" as the &default PDF reader"),
             WS_CHILD | BS_AUTOCHECKBOX | WS_TABSTOP,
             x, y, RectDx(&r) - 2 * x, 22, hwnd, (HMENU)ID_CHECKBOX_MAKE_DEFAULT, ghinst, NULL);
-        SetFont(gHwndCheckboxRegisterDefault, gFontDefault);
+        Window_SetFont(gHwndCheckboxRegisterDefault, gFontDefault);
         // only check the "Use as default" checkbox when no other PDF viewer
         // is currently selected (not going to intrude)
-        SetCheckboxState(gHwndCheckboxRegisterDefault, !hasOtherViewer || gGlobalData.registerAsDefault);
+        Button_SetCheck(gHwndCheckboxRegisterDefault, !hasOtherViewer || gGlobalData.registerAsDefault);
         y += 22;
     }
 
@@ -1753,8 +1752,8 @@ void OnCreateInstaller(HWND hwnd)
             WC_BUTTON, _T("Install a PDF &browser plugin for Mozilla Firefox and Google Chrome"),
             WS_CHILD | BS_AUTOCHECKBOX | WS_TABSTOP,
             x, y, RectDx(&r) - 2 * x, 22, hwnd, (HMENU)ID_CHECKBOX_BROWSER_PLUGIN, ghinst, NULL);
-        SetFont(gHwndCheckboxRegisterBrowserPlugin, gFontDefault);
-        SetCheckboxState(gHwndCheckboxRegisterBrowserPlugin, gGlobalData.installBrowserPlugin);
+        Window_SetFont(gHwndCheckboxRegisterBrowserPlugin, gFontDefault);
+        Button_SetCheck(gHwndCheckboxRegisterBrowserPlugin, gGlobalData.installBrowserPlugin);
     }
 
     gShowOptions = !gShowOptions;

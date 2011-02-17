@@ -3,7 +3,6 @@
 
 #include "SumatraPDF.h"
 #include <shlobj.h>
-#include <windowsx.h>
 #include <wininet.h>
 
 #include "WindowInfo.h"
@@ -78,18 +77,7 @@ static bool             gUseGdiRenderer = false;
 #define DEFAULT_DISPLAY_MODE    DM_AUTOMATIC
 #define DEFAULT_ZOOM            ZOOM_FIT_PAGE
 #define DEFAULT_ROTATION        0
-
-#define DEFAULT_LANGUAGE "en"
-
-#define DRAGQUERY_NUMFILES 0xFFFFFFFF
-
-#define MAX_LOADSTRING 100
-
-#define WM_CREATE_FAILED -1
-#define WM_CREATE_OK 0
-#define WM_NCPAINT_HANDLED 0
-#define WM_VSCROLL_HANDLED 0
-#define WM_HSCROLL_HANDLED 0
+#define DEFAULT_LANGUAGE        "en"
 
 #define WM_APP_REPAINT_CANVAS  (WM_APP + 11)
 #define WM_APP_URL_DOWNLOADED  (WM_APP + 12)
@@ -154,10 +142,7 @@ static bool             gUseGdiRenderer = false;
 #define WS_REBAR (WS_CHILD | WS_CLIPCHILDREN | WS_BORDER | RBS_VARHEIGHT | \
                   RBS_BANDBORDERS | CCS_NODIVIDER | CCS_NOPARENTALIGN)
 
-static FileHistoryList              gFileHistoryRoot;
-
        HINSTANCE                    ghinst = NULL;
-static TCHAR                        gWindowTitle[MAX_LOADSTRING];
 
 static HCURSOR                      gCursorArrow;
        HCURSOR                      gCursorHand;
@@ -175,6 +160,7 @@ static HBITMAP                      gBitmapReloadingCue;
 
 static RenderCache                  gRenderCache;
 static WindowInfoList               gWindowList;
+static FileHistoryList              gFileHistoryRoot;
 
 static int                          gReBarDy;
 static int                          gReBarDyFrame;
@@ -2537,7 +2523,7 @@ static void OnMouseMove(WindowInfo *win, int x, int y, WPARAM flags)
     win->dragPrevPosY = y;
 }
 
-static void OnSelectionStart(WindowInfo *win, int x, int y)
+static void OnSelectionStart(WindowInfo *win, int x, int y, WPARAM key)
 {
     DeleteOldSelectionInfo (win);
 
@@ -2549,7 +2535,7 @@ static void OnSelectionStart(WindowInfo *win, int x, int y)
     win->mouseAction = MA_SELECTING;
 
     // Ctrl+drag forces a rectangular selection
-    if (!(WasKeyDown(VK_CONTROL) && !WasKeyDown(VK_SHIFT))) {
+    if (!(key & MK_CONTROL) || (key & MK_SHIFT)) {
         int pageNo;
         double dX = x, dY = y;
         if (win->dm->cvtScreenToUser(&pageNo, &dX, &dY)) {
@@ -2590,7 +2576,7 @@ static void OnSelectionStop(WindowInfo *win, int x, int y, bool aborted)
     triggerRepaintDisplay(win);
 }
 
-static void OnMouseLeftButtonDblClk(WindowInfo *win, int x, int y, int key)
+static void OnMouseLeftButtonDblClk(WindowInfo *win, int x, int y, WPARAM key)
 {
     //DBG_OUT("Left button clicked on %d %d\n", x, y);
     assert (win);
@@ -2598,7 +2584,7 @@ static void OnMouseLeftButtonDblClk(WindowInfo *win, int x, int y, int key)
     OnInverseSearch(win, x, y);
 }
 
-static void OnMouseLeftButtonDown(WindowInfo *win, int x, int y, int key)
+static void OnMouseLeftButtonDown(WindowInfo *win, int x, int y, WPARAM key)
 {
     //DBG_OUT("Left button clicked on %d %d\n", x, y);
     assert (win);
@@ -2635,13 +2621,13 @@ static void OnMouseLeftButtonDown(WindowInfo *win, int x, int y, int key)
     // - pressing Ctrl forces a rectangular selection
     // - pressing Ctrl+Shift forces text selection
     // - in restricted mode, selections aren't allowed
-    if (gRestrictedUse || (WasKeyDown(VK_SHIFT) || !win->dm->isOverText(x,y)) && !WasKeyDown(VK_CONTROL))
+    if (gRestrictedUse || ((key & MK_SHIFT) || !win->dm->isOverText(x,y)) && !(key & MK_CONTROL))
         OnDraggingStart(win, x, y);
     else
-        OnSelectionStart(win, x, y);
+        OnSelectionStart(win, x, y, key);
 }
 
-static void OnMouseLeftButtonUp(WindowInfo *win, int x, int y, int key)
+static void OnMouseLeftButtonUp(WindowInfo *win, int x, int y, WPARAM key)
 {
     assert (win);
     if (!win) return;
@@ -2680,7 +2666,7 @@ static void OnMouseLeftButtonUp(WindowInfo *win, int x, int y, int key)
         ClearSearch(win);
     /* in presentation mode, change pages on left/right-clicks */
     else if (win->fullScreen || PM_ENABLED == win->presentation) {
-        if (WasKeyDown(VK_SHIFT))
+        if ((key & MK_SHIFT))
             win->dm->goToPrevPage(0);
         else
             win->dm->goToNextPage(0);
@@ -2741,7 +2727,7 @@ static void OnMouseRightButtonDown(WindowInfo *win, int x, int y, int key)
     OnDraggingStart(win, x, y, true);
 }
 
-static void OnMouseRightButtonUp(WindowInfo *win, int x, int y, int key)
+static void OnMouseRightButtonUp(WindowInfo *win, int x, int y, WPARAM key)
 {
     assert (win);
     if (!win) return;
@@ -2761,7 +2747,7 @@ static void OnMouseRightButtonUp(WindowInfo *win, int x, int y, int key)
     if (didDragMouse)
         /* pass */;
     else if (win->fullScreen || PM_ENABLED == win->presentation) {
-        if (WasKeyDown(VK_SHIFT))
+        if ((key & MK_SHIFT))
             win->dm->goToNextPage(0);
         else
             win->dm->goToPrevPage(0);
@@ -3925,7 +3911,7 @@ static void OnMenuFind(WindowInfo *win)
     }
 
     const TCHAR * previousFind = win_get_text(win->hwndFindBox);
-    DWORD state = SendMessage(win->hwndToolbar, TB_GETSTATE, IDM_FIND_MATCH, 0);
+    WORD state = (WORD)SendMessage(win->hwndToolbar, TB_GETSTATE, IDM_FIND_MATCH, 0);
     bool matchCase = (state & TBSTATE_CHECKED) != 0;
 
     TCHAR * findString = Dialog_Find(win->hwndFrame, previousFind, &matchCase);
@@ -4261,7 +4247,7 @@ static void OnMenuFindPrev(WindowInfo *win)
 
 static void OnMenuFindMatchCase(WindowInfo *win)
 {
-    DWORD state = SendMessage(win->hwndToolbar, TB_GETSTATE, IDM_FIND_MATCH, 0);
+    WORD state = (WORD)SendMessage(win->hwndToolbar, TB_GETSTATE, IDM_FIND_MATCH, 0);
     win->dm->SetFindMatchCase((state & TBSTATE_CHECKED) != 0);
     Edit_SetModify(win->hwndFindBox, TRUE);
 }
@@ -4300,7 +4286,7 @@ static void AdvanceFocus(WindowInfo *win)
     SetFocus(next);
 }
 
-static bool OnKeydown(WindowInfo *win, int key, LPARAM lparam, bool inTextfield=false)
+static bool OnKeydown(WindowInfo *win, WPARAM key, LPARAM lparam, bool inTextfield=false)
 {
     if (!win || !win->dm)
         return false;
@@ -4363,7 +4349,7 @@ static void ClearSearch(WindowInfo *win)
     triggerRepaintDisplay(win);
 }
 
-static void OnChar(WindowInfo *win, int key)
+static void OnChar(WindowInfo *win, WPARAM key)
 {
 //    DBG_OUT("char=%d,%c\n", key, (char)key);
 
@@ -4593,7 +4579,7 @@ static bool FocusUnselectedWndProc(HWND hwnd, UINT message)
         return true;
 
     case UWM_DELAYED_SET_FOCUS:
-        Edit_SetSel(hwnd, 0, -1);
+        Edit_SelectAll(hwnd);
         return true;
 
     default:
@@ -4648,13 +4634,13 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, L
             return 0;
     }
 
-    int ret = CallWindowProc(DefWndProcFindBox, hwnd, message, wParam, lParam);
+    LRESULT ret = CallWindowProc(DefWndProcFindBox, hwnd, message, wParam, lParam);
 
     if (WM_CHAR  == message ||
         WM_PASTE == message ||
         WM_CUT   == message ||
         WM_CLEAR == message ||
-        WM_UNDO  == message     ) {
+        WM_UNDO  == message) {
         ToolbarUpdateStateForWindow(win);
     }
 
@@ -6722,5 +6708,5 @@ Exit:
     Translations_FreeData();
     SerializableGlobalPrefs_Deinit();
 
-    return msg.wParam;
+    return (int)msg.wParam;
 }

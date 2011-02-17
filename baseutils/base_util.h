@@ -36,12 +36,8 @@
 #define new DEBUG_NEW
 #endif
 
-#ifdef _WIN32
 #include <windows.h>
 #include <tchar.h>
-#else
-#include <sys/time.h> // for timeval
-#endif
 
 /* Few most common includes for C stdlib */
 #include <assert.h>
@@ -67,14 +63,8 @@
 #define FALSE (0)
 #endif
 
-#ifdef _WIN32
-  #ifndef _T
-    #define _T TEXT
-  #endif
-#else
-  #define _T(x) x
-  /* TODO: if _UNICODE, it should be different */
-  #define TEXT(x) x
+#ifndef _T
+#define _T TEXT
 #endif
 
 /* compile-time assert */
@@ -97,44 +87,15 @@ extern "C"
 {
 #endif
 
-typedef struct ms_timer {
-#ifdef _WIN32
-    LARGE_INTEGER   start;
-    LARGE_INTEGER   end;
-#else
-    struct timeval  start;
-    struct timeval  end;
-#endif
-} ms_timer;
-
-/* TODO: consider using standard C macros for SWAP and MIN */
+/* TODO: consider using standard C macros for SWAP */
 void        swap_int(int *one, int *two);
 void        swap_double(double *one, double *two);
 
-void        memzero(void *data, size_t len);
 void *      memdup(void *data, size_t len);
 #define     _memdup(ptr) memdup(ptr, sizeof(*(ptr)))
 
-void        sleep_milliseconds(int milliseconds);
-
-void        ms_timer_start(ms_timer *timer);
-void        ms_timer_stop(ms_timer *timer);
-double      ms_timer_time_in_ms(ms_timer *timer);
-
 #ifdef __cplusplus
 }
-#endif
-
-#ifdef __cplusplus
-class MsTimer {
-public:
-    MsTimer() { ms_timer_start(&timer); }
-    void start(void) { ms_timer_start(&timer); }
-    void stop(void) { ms_timer_stop(&timer); }
-    double timeInMs(void) { return ms_timer_time_in_ms(&timer); }
-private:
-    ms_timer timer;
-};
 #endif
 
 #endif

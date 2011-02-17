@@ -123,7 +123,7 @@ static void BenchFile(TCHAR *filePath, TCHAR *pagesSpec)
 
 void Bench(VStrList& filesToBench)
 {
-    int n = filesToBench.size() / 2;
-    for (int i = 0; i < n; i++)
+    size_t n = filesToBench.size() / 2;
+    for (size_t i = 0; i < n; i++)
         BenchFile(filesToBench[2*i], filesToBench[2*i + 1]);
 }

@@ -14,13 +14,11 @@ extern "C"
 {
 #endif
 
-#ifdef WIN32
 #define DIR_SEP_TSTR _T(DIR_SEP_STR)
 #ifdef UNICODE
 #define CF_T_TEXT CF_UNICODETEXT
 #else
 #define CF_T_TEXT CF_TEXT
-#endif
 #endif
 
 #ifdef _UNICODE

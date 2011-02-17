@@ -20,30 +20,18 @@ extern "C"
 #define UNIX_NEWLINE "\x0a"
 #define UNIX_NEWLINE_C 0xa
 
-#ifdef _WIN32
-  #define DIR_SEP_CHAR '\\'
-  #define DIR_SEP_STR  "\\"
-  /* Warning: ordinary forward slashes (/) are often valid on Windows too */
-#else
-  #define DIR_SEP_CHAR '/'
-  #define DIR_SEP_STR  "/"
-#endif
+#define DIR_SEP_CHAR '\\'
+#define DIR_SEP_STR  "\\"
+/* Warning: ordinary forward slashes (/) are often valid on Windows too */
 
 #define no_op() ((void)0)
 
-#ifdef _WIN32
-  void    win32_dbg_out(const char *format, ...);
-  void    win32_dbg_out_hex(const char *dsc, const unsigned char *data, int dataLen);
-#endif
+void    win32_dbg_out(const char *format, ...);
+void    win32_dbg_out_hex(const char *dsc, const unsigned char *data, int dataLen);
 
 #ifdef DEBUG
-  #ifdef _WIN32
   #define DBG_OUT win32_dbg_out
   #define DBG_OUT_HEX win32_dbg_out_hex
-  #else
-  #define DBG_OUT printf
-  #define DBG_OUT_HEX(...) no_op()
-  #endif
 #else
   #define DBG_OUT(...) no_op()
   #define DBG_OUT_HEX(...) no_op()
@@ -59,7 +47,7 @@ int char_is_dir_sep(char c);
 
 int     str_eq(const char *str1, const char *str2);
 int     str_ieq(const char *str1, const char *str2);
-int     str_eqn(const char *str1, const char *str2, int len);
+int     str_eqn(const char *str1, const char *str2, size_t len);
 int     str_startswith(const char *str, const char *txt);
 int     str_startswithi(const char *str, const char *txt);
 int     str_endswith(const char *str, const char *end);
@@ -102,30 +90,6 @@ size_t  digits_for_number(int64_t num);
 #ifdef DEBUG
 void str_util_test(void);
 #endif
-
-typedef struct str_item str_item;
-typedef struct str_array str_array;
-
-struct str_item {
-    void *  opaque;   /* opaque data that the user can use */
-    char    str[1];
-};
-
-struct str_array {
-    int          items_allocated;
-    int          items_count;
-    str_item **  items;
-};
-
-void      str_array_init(str_array *str_arr);
-void      str_array_free(str_array *str_arr);
-void      str_array_delete(str_array *str_arr);
-str_item *str_array_set(str_array *str_arr, int index, const char *str);
-str_item *str_array_add(str_array *str_arr, const char *str);
-str_item *str_array_get(str_array *str_arr, int index);
-int       str_array_get_count(str_array *str_arr);
-int       str_array_exists_no_case(str_array *str_arr, const char *str);
-str_item *str_array_add_no_dups(str_array *str_arr, const char *str);
 
 #ifdef __cplusplus
 }

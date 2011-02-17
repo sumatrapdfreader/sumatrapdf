@@ -27,16 +27,9 @@ char * str_catn_s(char *dst, size_t dst_cch_size, const char *src, size_t src_cc
 
 int char_is_dir_sep(char c)
 {
-#ifdef _WIN32
-    if ('/' == c || '\\' == c) {
-#else
-    if (DIR_SEP_CHAR == c) {
-#endif
+    if ('/' == c || '\\' == c)
         return TRUE;
-    }
-    else {
-        return FALSE;
-    }
+    return FALSE;
 }
 
 /* Concatenate 3 strings. Any string can be NULL.
@@ -111,7 +104,7 @@ int str_ieq(const char *str1, const char *str2)
     return FALSE;
 }
 
-int str_eqn(const char *str1, const char *str2, int len)
+int str_eqn(const char *str1, const char *str2, size_t len)
 {
     if (!str1 && !str2)
         return TRUE;
@@ -495,7 +488,6 @@ int str_printf_s(char *out, size_t out_cch_size, const char *format, ...)
     return count;
 }
 
-#ifdef _WIN32
 void win32_dbg_out(const char *format, ...)
 {
     char        buf[4096];
@@ -517,7 +509,6 @@ void win32_dbg_out_hex(const char *dsc, const unsigned char *data, int dataLen)
     win32_dbg_out("%s%s\n", dsc ? dsc : "", hexStr);
     free(hexStr);
 }
-#endif
 
 /* Return the number of digits needed to represents a given number in base 10
    string representation.
@@ -537,129 +528,4 @@ size_t digits_for_number(int64_t num)
         num = num / 10;
     }
     return digits;
-}
-
-void  str_array_init(str_array *str_arr)
-{
-    assert(str_arr);
-    if (!str_arr) return;
-    memzero(str_arr, sizeof(str_array));
-}
-
-void str_array_free(str_array *str_arr)
-{
-    int i;
-
-    assert(str_arr);
-    if (!str_arr) return;
-
-    for (i = 0; i < str_arr->items_count; i++)
-        free(str_arr->items[i]);
-    free(str_arr->items);
-    str_array_init(str_arr);
-}
-
-void str_array_delete(str_array *str_arr)
-{
-    assert(str_arr);
-    if (!str_arr) return;
-    str_array_free(str_arr);
-    free((void*)str_arr);
-}
-
-str_item *str_array_get(str_array *str_arr, int index)
-{
-    assert(str_arr);
-    if (!str_arr) return NULL;
-    assert(index >= 0);
-    assert(index < str_arr->items_count);
-    if ((index < 0) || (index >= str_arr->items_count))
-        return NULL;
-    return str_arr->items[index];
-}
-
-int str_array_get_count(str_array *str_arr)
-{
-    assert(str_arr);
-    if (!str_arr) return 0;
-    return str_arr->items_count;
-}
-
-/* Set one string at position 'index' in 'str_arr'. Space for the item
-   must already be allocated. */
-str_item *str_array_set(str_array *str_arr, int index, const char *str)
-{
-    str_item *  new_item;
-    size_t      str_len_cch;
-
-    assert(str_arr);
-    if (!str_arr) return NULL;
-
-    if (index >= str_arr->items_count)
-        return NULL;
-
-    str_len_cch = str_len(str);
-    new_item = (str_item*)malloc(sizeof(str_item) + str_len_cch*sizeof(char));
-    if (!new_item)
-        return NULL;
-    str_copy(new_item->str, str_len_cch+1, str);
-    if (str_arr->items[index])
-        free(str_arr->items[index]);
-    str_arr->items[index] = new_item;
-    return new_item;
-}
-
-#define STR_ARR_GROW_VALUE 32
-
-/* make a generic array alloc */
-str_item *str_array_add(str_array *str_arr, const char *str)
-{
-    str_item ** tmp;
-    str_item *  new_item;
-    void *      data;
-
-    if (str_arr->items_count >= str_arr->items_allocated) {
-        /* increase memory for items if necessary */
-        int n = str_arr->items_allocated + STR_ARR_GROW_VALUE;
-        tmp = (str_item**)realloc(str_arr->items, n * sizeof(str_item *));
-        if (!tmp)
-            return NULL;
-        str_arr->items = tmp;
-        data = &(str_arr->items[str_arr->items_count]);
-        memzero(data, STR_ARR_GROW_VALUE * sizeof(str_item *));
-        str_arr->items_allocated = n;
-    }
-    str_arr->items_count++;
-    new_item = str_array_set(str_arr, str_arr->items_count - 1, str);
-    if (!new_item)
-        --str_arr->items_count;
-    return new_item;
-}
-
-int str_array_exists_no_case(str_array *str_arr, const char *str)
-{
-    int         count, i;
-    str_item *  item;
-    char *      item_str;
-
-    if (!str_arr || !str)
-        return FALSE;
-
-    count = str_arr->items_count;
-    for (i = 0; i < count; i++)
-    {
-        item = str_arr->items[i];
-        item_str = item->str;
-        if (str_ieq(str, item_str))
-            return TRUE;
-    }
-    return FALSE;
-}
-
-str_item *str_array_add_no_dups(str_array *str_arr, const char *str)
-{
-    if (str_array_exists_no_case(str_arr, str))
-        return NULL;
-
-    return str_array_add(str_arr, str);
 }

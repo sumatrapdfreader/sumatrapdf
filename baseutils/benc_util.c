@@ -1099,7 +1099,7 @@ Exit:
 
 static benc_obj* benc_obj_from_txt(const char *txt)
 {
-    int txtLen = 0;
+    size_t txtLen = 0;
     if (txt)
         txtLen = strlen(txt);
     return benc_obj_from_data(txt, txtLen);
@@ -1216,9 +1216,9 @@ static void test_parse_str()
     }
 }
 
-static void _test_parse_array_ok(const char *txt, int expectedLen)
+static void _test_parse_array_ok(const char *txt, size_t expectedLen)
 {
-    int realLen;
+    size_t realLen;
     benc_obj * bobj = benc_obj_from_txt(txt);
     assert(bobj);
     assert(BOT_ARRAY == bobj->m_type);
@@ -1245,9 +1245,9 @@ static void test_parse_array()
     _test_parse_array_ok("li35ei-23e2:abe", 3);
 }
 
-static void _test_parse_dict_ok(const char *txt, int expectedLen)
+static void _test_parse_dict_ok(const char *txt, size_t expectedLen)
 {
-    int realLen;
+    size_t realLen;
     benc_obj * bobj = benc_obj_from_txt(txt);
     assert(bobj);
     assert(BOT_DICT == bobj->m_type);
@@ -1280,8 +1280,8 @@ static void test_parse_dict()
 
 static void test_array_append()
 {
-    int i;
-    int arrLen;
+    size_t i;
+    size_t arrLen;
     benc_array* arr = benc_array_new();
     for (i = 1; i <= ITERATION_COUNT; i++) {
         benc_obj* obj = (benc_obj*)benc_int64_new((int64_t)i);
@@ -1290,7 +1290,7 @@ static void test_array_append()
         assert(i == arrLen);
     }
     for (i = 1; i <= ITERATION_COUNT; i++) {
-        benc_obj* obj = benc_array_get(arr, i-1);
+        benc_obj* obj = benc_array_get(arr, i - 1);
         benc_int64* objInt = (benc_int64*)obj;
         assert(BOT_INT64 == obj->m_type);
         assert((int64_t)i == objInt->m_val);

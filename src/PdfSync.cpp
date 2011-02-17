@@ -111,9 +111,7 @@ UINT Synchronizer::prepare_commandline(LPCTSTR pattern, LPCTSTR filename, UINT l
     LPTSTR out = cmdline;
     size_t cchOut = cchCmdline;
     while (perc = tstr_find_char(pattern, '%')) {
-        int u = perc-pattern;
-        
-        tstr_copyn(out, cchOut, pattern, u);
+        tstr_copyn(out, cchOut, pattern, perc - pattern);
         len = tstr_len(out);
         out += len;
         cchOut -= len;
@@ -129,7 +127,7 @@ UINT Synchronizer::prepare_commandline(LPCTSTR pattern, LPCTSTR filename, UINT l
             tstr_printf_s(out, cchOut, _T("%d"), col);
         }
         else {
-            tstr_copyn(out, cchOut, perc-1, 2);
+            tstr_copyn(out, cchOut, perc - 1, 2);
         }
         len = tstr_len(out);
         out += len;
@@ -146,22 +144,22 @@ UINT Synchronizer::prepare_commandline(LPCTSTR pattern, LPCTSTR filename, UINT l
 // PDFSYNC synchronizer
 int Pdfsync::get_record_section(int record_index)
 {
-    size_t leftsection = 0, rightsection = record_sections.size();
+    int leftsection = 0, rightsection = (int)record_sections.size();
     if (rightsection == 0)
         return -1; // no section in the table
     rightsection--;
     while (1) {
-        int n = (int)(rightsection - leftsection + 1);
+        int n = rightsection - leftsection + 1;
         // a single section?
         if (n == 1)
             return leftsection;
         else {
-            int split = leftsection + (n>>1);
+            int split = leftsection + (n >> 1);
             int splitvalue = record_sections[split].firstrecord;
             if (record_index >= splitvalue)
-                leftsection=split;
+                leftsection = split;
             else
-                rightsection = split-1;
+                rightsection = split - 1;
         }
     }
     assert(0);

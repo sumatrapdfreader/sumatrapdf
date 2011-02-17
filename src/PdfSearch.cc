@@ -106,7 +106,7 @@ int PdfSearch::MatchLen(TCHAR *start)
     if (wholeWords && end > pageText && iswordchar(end[-1]) && iswordchar(end[0]))
         return -1;
 
-    return end - start;
+    return (int)(end - start);
 }
 
 // TODO: use Boyer-Moore algorithm here (if it proves to be faster)
@@ -127,13 +127,14 @@ bool PdfSearch::FindTextInPage(int pageNo)
             found = StrRStrI(pageText, pageText + findIndex, anchor);
         if (!found)
             return false;
-        findIndex = found - pageText + (forward ? 1 : 0);
+        findIndex = (int)(found - pageText) + (forward ? 1 : 0);
         length = MatchLen(found);
     } while (length <= 0);
 
-    StartAt(pageNo, found - pageText);
-    SelectUpTo(pageNo, found - pageText + length);
-    findIndex = found - pageText + (forward ? length : 0);
+    int offset = (int)(found - pageText);
+    StartAt(pageNo, offset);
+    SelectUpTo(pageNo, offset + length);
+    findIndex = offset + (forward ? length : 0);
 
     // try again if the found text is completely outside the page's mediabox
     if (result.len == 0)

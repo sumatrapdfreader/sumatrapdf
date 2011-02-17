@@ -258,7 +258,7 @@ void WindowInfo::UpdateToolbarState()
     if (!this->dm)
         return;
 
-    DWORD state = SendMessage(this->hwndToolbar, TB_GETSTATE, IDT_VIEW_FIT_WIDTH, 0);
+    WORD state = (WORD)SendMessage(this->hwndToolbar, TB_GETSTATE, IDT_VIEW_FIT_WIDTH, 0);
     if (this->dm->displayMode() == DM_CONTINUOUS && this->dm->zoomVirtual() == ZOOM_FIT_WIDTH)
         state |= TBSTATE_CHECKED;
     else
@@ -267,7 +267,7 @@ void WindowInfo::UpdateToolbarState()
 
     bool isChecked = (state & TBSTATE_CHECKED);
 
-    state = SendMessage(this->hwndToolbar, TB_GETSTATE, IDT_VIEW_FIT_PAGE, 0);
+    state = (WORD)SendMessage(this->hwndToolbar, TB_GETSTATE, IDT_VIEW_FIT_PAGE, 0);
     if (this->dm->displayMode() == DM_SINGLE_PAGE && this->dm->zoomVirtual() == ZOOM_FIT_PAGE)
         state |= TBSTATE_CHECKED;
     else
