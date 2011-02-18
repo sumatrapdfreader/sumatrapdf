@@ -423,9 +423,10 @@ NPError NP_LOADDS NPP_Destroy(NPP instance, NPSavedData** save)
 		}
 	}
 	free(data);
-	*save = NULL;
 	
 	return NPERR_NO_ERROR;
+	
+	UNREFERENCED_PARAMETER(save);
 }
 
 // TODO: NPP_Print seems to never be called by Google Chrome
