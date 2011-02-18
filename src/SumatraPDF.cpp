@@ -3264,8 +3264,9 @@ static void OnMenuSaveAs(WindowInfo *win)
     if (!win->dm->pdfEngine->hasPermission(PDF_PERM_COPY))
         hasCopyPerm = false;
 
-    // Prepare the file filters (slightly hacky because
-    // translations can't contain the \0 character)
+    // Prepare the file filters (use \1 instead of \0 so that the
+    // double-zero terminated string isn't cut by the string handling
+    // methods too early on)
     TCHAR fileFilter[256];
     tstr_printf_s(fileFilter, dimof(fileFilter), _T("%s\1*.pdf\1"), _TR("PDF documents"));
     if (hasCopyPerm) {
@@ -3358,8 +3359,9 @@ bool DisplayModel::saveStreamAs(fz_buffer *data, const TCHAR *fileName)
     if (fileName)
         tstr_copy(dstFileName, dimof(dstFileName), fileName);
 
-    // Prepare the file filters (slightly hacky because
-    // translations can't contain the \0 character)
+    // Prepare the file filters (use \1 instead of \0 so that the
+    // double-zero terminated string isn't cut by the string handling
+    // methods too early on)
     TCHAR fileFilter[256];
     tstr_printf_s(fileFilter, dimof(fileFilter), _T("%s\1*.*\1"), _TR("All files"));
     tstr_trans_chars(fileFilter, _T("\1"), _T("\0"));
@@ -3413,9 +3415,13 @@ static void OnMenuOpen(WindowInfo *win)
     if (win->pluginParent)
         return;
 
+    // Prepare the file filters (use \1 instead of \0 so that the
+    // double-zero terminated string isn't cut by the string handling
+    // methods too early on)
     TCHAR fileFilter[256];
-    tstr_printf_s(fileFilter, dimof(fileFilter), _T("%s\0*.pdf\0%s\0*.*\0"),
+    tstr_printf_s(fileFilter, dimof(fileFilter), _T("%s\1*.pdf\1%s\1*.*\1"),
         _TR("PDF documents"), _TR("All files"));
+    tstr_trans_chars(fileFilter, _T("\1"), _T("\0"));
 
     OPENFILENAME ofn = {0};
     ofn.lStructSize = sizeof(ofn);

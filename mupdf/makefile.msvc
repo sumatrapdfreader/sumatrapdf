@@ -97,6 +97,11 @@ CFLAGS = $(CFLAGS) /Od /RTCs /RTCu
 CFLAGS = $(CFLAGS) /MTd /EHs-c-
 !endif
 
+# Make it easy to compile as ANSI or UNICODE application
+!if "$(_ANSI)"==""
+CFLAGS = $(CFLAGS) /D "UNICODE" /D "_UNICODE"
+!endif
+
 ZLIB_CFLAGS = $(CFLAGS)
 BZIP2_CFLAGS = $(CFLAGS) /D "BZ_NO_STDIO" /D "BZ_DEBUG=0"
 MINIZIP_CFLAGS = $(ZLIB_CFLAGS) /D "HAVE_BZIP2" /I$(ZLIB_DIR) /I$(BZIP2_DIR)
@@ -241,11 +246,6 @@ FONT_OBJS = \
 MUPDF_CFLAGS = $(MUPDF_CFLAGS) /D "NOCJKFONT"
 !else
 FONT_OBJS = $(FONT_OBJS) $(O)\font_cjk.obj
-!endif
-
-# Make it easy to compile as ANSI or UNICODE application
-!if "$(_ANSI)"==""
-MUPDF_CFLAGS = $(MUPDF_CFLAGS) /D "UNICODE" /D "_UNICODE"
 !endif
 
 CMAP_OBJS = \

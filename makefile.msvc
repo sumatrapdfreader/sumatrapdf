@@ -47,12 +47,6 @@ SUMATRA_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
 INSTALLER_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
 	/Ibaseutils /Ibaseutils/msvc /Isrc /Isrc/installer /I$(ZLIB_DIR) /I$(ZLIB_DIR)/minizip
 
-# Make it easy to compile as ANSI or UNICODE application
-!if "$(_ANSI)"==""
-SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "UNICODE" /D "_UNICODE"
-INSTALLER_CFLAGS = $(INSTALLER_CFLAGS) /D "UNICODE" /D "_UNICODE"
-!endif
-
 !if "$(CFG)"=="dbg"
 SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "DEBUG" /D "_DEBUG"
 INSTALLER_CFLAGS = $(INSTALLER_CFLAGS) /D "DEBUG" /D "_DEBUG"

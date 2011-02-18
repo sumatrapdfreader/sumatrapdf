@@ -355,11 +355,7 @@ TCHAR *GetShortcutPath(bool allUsers)
 BOOL IsValidInstaller(void)
 {
     zlib_filefunc64_def ffunc;
-#ifdef UNICODE
-    fill_win32_filefunc64W(&ffunc);
-#else
-    fill_win32_filefunc64A(&ffunc);
-#endif
+    fill_win32_filefunc64(&ffunc);
     unzFile uf = unzOpen2_64(GetOwnPath(), &ffunc);
     if (!uf)
         return FALSE;
@@ -374,11 +370,7 @@ BOOL IsValidInstaller(void)
 BOOL InstallCopyFiles(void)
 {
     zlib_filefunc64_def ffunc;
-#ifdef UNICODE
-    fill_win32_filefunc64W(&ffunc);
-#else
-    fill_win32_filefunc64A(&ffunc);
-#endif
+    fill_win32_filefunc64(&ffunc);
     unzFile uf = unzOpen2_64(GetOwnPath(), &ffunc);
     if (!uf) {
         NotifyFailed(_T("Invalid payload format"));
@@ -484,17 +476,13 @@ Error:
     return FALSE;
 }
 
-#ifdef __cplusplus
 extern "C" {
-#endif
 // needed because we compile bzip2 with #define BZ_NO_STDIO
 void bz_internal_error(int errcode)
 {
     NotifyFailed(_T("fatal error: bz_internal_error()"));
 }
-#ifdef __cplusplus
 }
-#endif
 
 BOOL CreateUninstaller(void)
 {
