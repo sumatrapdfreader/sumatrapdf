@@ -3413,12 +3413,9 @@ static void OnMenuOpen(WindowInfo *win)
     if (win->pluginParent)
         return;
 
-    // Prepare the file filters (slightly hacky because
-    // translations can't contain the \0 character)
     TCHAR fileFilter[256];
-    tstr_printf_s(fileFilter, dimof(fileFilter), _T("%s\1*.pdf\1%s\1*.*\1"),
+    tstr_printf_s(fileFilter, dimof(fileFilter), _T("%s\0*.pdf\0%s\0*.*\0"),
         _TR("PDF documents"), _TR("All files"));
-    tstr_trans_chars(fileFilter, _T("\1"), _T("\0"));
 
     OPENFILENAME ofn = {0};
     ofn.lStructSize = sizeof(ofn);
