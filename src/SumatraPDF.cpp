@@ -2217,14 +2217,17 @@ static void CopySelectionToClipboard(WindowInfo *win)
             selText = selections.join();
         }
 
-        HGLOBAL handle = GlobalAlloc(GMEM_MOVEABLE, (tstr_len(selText) + 1) * sizeof(TCHAR));
-        if (handle) {
-            TCHAR *globalText = (TCHAR *)GlobalLock(handle);
-            lstrcpy(globalText, selText);
-            GlobalUnlock(handle);
+        // don't copy empty text
+        if (!tstr_empty(selText)) {
+            HGLOBAL handle = GlobalAlloc(GMEM_MOVEABLE, (tstr_len(selText) + 1) * sizeof(TCHAR));
+            if (handle) {
+                TCHAR *globalText = (TCHAR *)GlobalLock(handle);
+                lstrcpy(globalText, selText);
+                GlobalUnlock(handle);
 
-            if (!SetClipboardData(CF_T_TEXT, handle))
-                SeeLastError();
+                if (!SetClipboardData(CF_T_TEXT, handle))
+                    SeeLastError();
+            }
         }
         free(selText);
 
