@@ -331,7 +331,7 @@ static bool WasKeyDown(int virtKey)
 
 void DownloadSumatraUpdateInfo(WindowInfo *win, bool autoCheck)
 {
-    if (gRestrictedUse)
+    if (gRestrictedUse || gPluginMode)
         return;
     assert(win);
     HWND hwndToNotify = win->hwndFrame;
@@ -2329,14 +2329,14 @@ static void OnInverseSearch(WindowInfo *win, UINT x, UINT y)
 {
     assert(win);
     if (!win || !win->dm) return;
-    if (gRestrictedUse) return;
+    if (gRestrictedUse || gPluginMode) return;
 
     // Clear the last forward-search result
     win->fwdsearchmarkRects.clear();
     InvalidateRect(win->hwndCanvas, NULL, FALSE);
 
-    // TODO: this comment or the code following it is wrong - which?
-    // On double-clicking no error message will be shown to the user if the PDF does not have a synchronization file
+    // On double-clicking error message will be shown to the user
+    // if the PDF does not have a synchronization file
     if (!win->pdfsync) {
         UINT err = CreateSynchronizer(win->watcher.filepath(), &win->pdfsync);
 
