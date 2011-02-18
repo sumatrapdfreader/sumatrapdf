@@ -5,6 +5,9 @@
 #  e.g. ..\sumatrapdf\ext
 # EXTCFLAGS=$CFLAGS
 # MUPDF_DIR=mupdf
+# PLATFORM=X86
+#   the PLATFORM var is usually set in the x64 and x64 cross tools Visual Studio command prompt
+#   note: building on X64 isn't officially supported and might unintentionally be broken
 
 # Set default configuration
 !if "$(CFG)"==""
@@ -13,6 +16,11 @@ CFG=dbg
 
 # O is directory where object and binary files go
 O = obj-$(CFG)
+
+# for x86 : obj-dbg and obj-rel ; for x64 : obj-dbg64 and obj-rel64
+!if "$(PLATFORM)"=="X64"
+O = $(O)64
+!endif
 
 !if "$(MUPDF_DIR)"==""
 MUPDF_DIR=mupdf
@@ -41,8 +49,7 @@ CFLAGS = $(CFLAGS) /D "WINVER=0x0500" /D "_WIN32_WINNT=0x0500"
 
 SUMATRA_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
 	/Ibaseutils /Ibaseutils/msvc /I$(MUPDF_DIR)\fitz /I$(MUPDF_DIR)\mupdf \
-	/I$(ZLIB_DIR) /Isrc /IDialogSizer /I$(EXTLIBSDIR)/synctex \
-	/D "SYNCTEX_FEATURE"
+	/Isrc /IDialogSizer /I$(EXTLIBSDIR)/synctex /D "SYNCTEX_FEATURE"
 
 INSTALLER_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
 	/Ibaseutils /Ibaseutils/msvc /Isrc /Isrc/installer /I$(ZLIB_DIR) /I$(ZLIB_DIR)/minizip
@@ -50,6 +57,11 @@ INSTALLER_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
 !if "$(CFG)"=="dbg"
 SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "DEBUG" /D "_DEBUG"
 INSTALLER_CFLAGS = $(INSTALLER_CFLAGS) /D "DEBUG" /D "_DEBUG"
+!endif
+
+SYNCTEX_CFLAGS = $(CFLAGS) /I$(EXTLIBSDIR)/synctex /I$(ZLIB_DIR)
+!if "$(PLATFORM)"=="X64"
+SYNCTEX_CFLAGS = $(SYNCTEX_CFLAGS) /wd4244
 !endif
 
 LIBS = $(LIBS) comctl32.lib Msimg32.lib Winspool.lib wininet.lib ole32.lib shlwapi.lib version.lib
@@ -66,7 +78,7 @@ PDFFILTER_CFLAGS = $(SUMATRA_CFLAGS)
 
 BROWSER_PLUGIN = $(O)\npPdfViewer.dll
 BROWSER_PLUGIN_RES = $(O)\npPdfViewer.res
-BROWSER_PLUGIN_CFLAGS = $(SUMATRA_CFLAGS) /wd4819
+BROWSER_PLUGIN_CFLAGS = $(CFLAGS) /Ibaseutils/msvc /wd4819
 LIBS_BROWSER_PLUGIN = user32.lib gdi32.lib advapi32.lib shlwapi.lib
 
 BASEUTILS_OBJS = \
@@ -149,7 +161,7 @@ $(BROWSER_PLUGIN): $(BROWSER_PLUGIN_OBJS)
 	$(CC) $(SUMATRA_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
 
 {$(EXTLIBSDIR)\synctex}.c{$(O)}.obj::
-	$(CC) /TC $(SUMATRA_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
+	$(CC) /TC $(SYNCTEX_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
 
 # SumatraPDF app directory
 {src}.cc{$(O)}.obj::

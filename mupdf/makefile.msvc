@@ -4,6 +4,9 @@
 # EXTLIBSDIR=<directory where zlib/freetype/jpeg lib live> (default: ..\ext)
 #  e.g. ..\sumatrapdf\ext
 # NASM=<path to nasm.exe> (default: nasm.exe)
+# PLATFORM=X86
+#   the PLATFORM var is usually set in the x64 and x64 cross tools Visual Studio command prompt
+#   note: building on X64 isn't officially supported and might unintentionally be broken
 
 # Set default configuration
 !if "$(CFG)"==""
@@ -13,6 +16,9 @@ CFG=dbg
 # O is directory where object and binary files go
 !if "$(O)"==""
 O = obj-$(CFG)-win
+!if "$(PLATFORM)"=="X64"
+O = $(O)64
+!endif
 !endif
 
 OZ  = $(O)\zlib
@@ -64,7 +70,11 @@ CC = cl.exe
 
 CFLAGS = $(CFLAGS) /nologo /c
 # standard windows defines
+!if "$(PLATFORM)"=="X64"
+CFLAGS = $(CFLAGS) /D "WIN64" /D "_WIN64"
+!else
 CFLAGS = $(CFLAGS) /D "WIN32" /D "_WIN32"
+!endif
 # suppress warning C4996: 'function': was declared deprecated
 CFLAGS = $(CFLAGS) /wd4996
 
@@ -118,7 +128,12 @@ JPEG_CFLAGS = $(CFLAGS) /I$(JPEG_DIR)
 !else
 JPEG_TURBO_CFLAGS = $(CFLAGS) /I$(JPEG_TURBO_DIR) /I$(JPEG_TURBO_DIR)\simd
 JPEG_TURBO_CFLAGS = $(JPEG_TURBO_CFLAGS) /wd4101 /wd4018
-JPEG_TURBO_NASM_FLAGS = -I $(JPEG_TURBO_DIR)\simd\ -I $(JPEG_TURBO_DIR)\win\ -f win32
+JPEG_TURBO_NASM_FLAGS = -I $(JPEG_TURBO_DIR)\simd\ -I $(JPEG_TURBO_DIR)\win\ 
+!if "$(PLATFORM)"=="X64"
+JPEG_TURBO_NASM_FLAGS = $(JPEG_TURBO_NASM_FLAGS) -f win64 -D__x86_64__ -DWIN64 -DMSVC
+!else
+JPEG_TURBO_NASM_FLAGS = $(JPEG_TURBO_NASM_FLAGS) -f win32
+!endif
 !endif
 
 MUPDF_CFLAGS = $(CFLAGS) /D "NEED_MATH" /D "NEED_GETTIMEOFDAY" /D "HAVE_JBIG2DEC" /D "USE_HINTING"
@@ -132,6 +147,13 @@ MUPDF_CFLAGS = $(MUPDF_CFLAGS) /I$(MUPDF_DIR)/fitz /I$(MUPDF_DIR)/mupdf /I$(MUPD
 MUPDF_CFLAGS = $(MUPDF_CFLAGS) /I$(JPEG_DIR)
 !else
 MUPDF_CFLAGS = $(MUPDF_CFLAGS) /I$(JPEG_TURBO_DIR)
+!endif
+
+# disable warning C4244: conversion from 'type1' to 'type2', possible loss of data
+!if "$(PLATFORM)"=="X64"
+FREETYPE_CFLAGS = $(FREETYPE_CFLAGS) /wd4244
+JBIG2_CFLAGS = $(JBIG2_CFLAGS) /wd4244
+OPENJPEG_CFLAGS = $(OPENJPEG_CFLAGS) /wd4244
 !endif
 
 LIBS = $(LIBS) advapi32.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib shell32.lib gdiplus.lib
@@ -159,6 +181,7 @@ MINIZIP_OBJS = \
 	$(OZ)\unzip.obj $(OZ)\ioapi.obj $(OZ)\iowin32.obj
 
 !if "$(JPEG_TURBO_DIR)"==""
+
 JPEG_OBJS = \
 	$(OJ)\jaricom.obj $(OJ)\jcomapi.obj $(OJ)\jutils.obj $(OJ)\jerror.obj $(OJ)\jmemmgr.obj \
 	$(OJ)\jcapimin.obj $(OJ)\jcapistd.obj $(OJ)\jcarith.obj $(OJ)\jctrans.obj $(OJ)\jcparam.obj \
@@ -170,16 +193,11 @@ JPEG_OBJS = \
 	$(OJ)\jdcoefct.obj $(OJ)\jdpostct.obj $(OJ)\jddctmgr.obj $(OJ)\jidctfst.obj $(OJ)\jidctflt.obj \
 	$(OJ)\jidctint.obj $(OJ)\jdsample.obj $(OJ)\jdcolor.obj $(OJ)\jquant1.obj $(OJ)\jquant2.obj \
 	$(OJ)\jdmerge.obj $(OJ)\jmemnobs.obj # should I use jmemansi.obj or jmemname.obj ?
+
 !else
+
 JPEG_TURBO_OBJS = \
-	$(OT)\jsimdcpu.obj $(OT)\jccolmmx.obj $(OT)\jdcolmmx.obj $(OT)\jcsammmx.obj \
-	$(OT)\jdsammmx.obj $(OT)\jdmermmx.obj $(OT)\jcqntmmx.obj $(OT)\jfmmxfst.obj $(OT)\jfmmxint.obj \
-	$(OT)\jimmxred.obj $(OT)\jimmxint.obj $(OT)\jimmxfst.obj $(OT)\jcqnt3dn.obj $(OT)\jf3dnflt.obj \
-	$(OT)\ji3dnflt.obj $(OT)\jcqntsse.obj $(OT)\jfsseflt.obj $(OT)\jisseflt.obj $(OT)\jccolss2.obj \
-	$(OT)\jdcolss2.obj $(OT)\jcsamss2.obj $(OT)\jdsamss2.obj $(OT)\jdmerss2.obj $(OT)\jcqnts2i.obj \
-	$(OT)\jfss2fst.obj $(OT)\jfss2int.obj $(OT)\jiss2red.obj $(OT)\jiss2int.obj $(OT)\jiss2fst.obj \
-	$(OT)\jcqnts2f.obj $(OT)\jiss2flt.obj \
-	$(OT)\jsimd_i386.obj $(OT)\jcapimin.obj $(OT)\jcapistd.obj $(OT)\jccoefct.obj $(OT)\jccolor.obj \
+	$(OT)\jcapimin.obj $(OT)\jcapistd.obj $(OT)\jccoefct.obj $(OT)\jccolor.obj \
 	$(OT)\jcdctmgr.obj $(OT)\jchuff.obj $(OT)\jcinit.obj $(OT)\jcmainct.obj $(OT)\jcmarker.obj \
 	$(OT)\jcmaster.obj $(OT)\jcomapi.obj $(OT)\jcparam.obj \
 	$(OT)\jcprepct.obj $(OT)\jcsample.obj $(OT)\jctrans.obj $(OT)\jdapimin.obj $(OT)\jdapistd.obj \
@@ -190,6 +208,23 @@ JPEG_TURBO_OBJS = \
 	$(OT)\jquant1.obj $(OT)\jquant2.obj $(OT)\jutils.obj $(OT)\jmemmgr.obj $(OT)\jmemnobs.obj \
 	$(OT)\jaricom.obj $(OT)\jcarith.obj $(OT)\jdarith.obj $(OT)\jfdctfst.obj \
 	$(OT)\jidctred.obj $(OT)\jdphuff.obj $(OT)\jcphuff.obj
+
+!if "$(PLATFORM)"=="X64"
+JPEG_TURBO_OBJS = $(JPEG_TURBO_OBJS) \
+	$(OT)\jfsseflt-64.obj $(OT)\jccolss2-64.obj $(OT)\jdcolss2-64.obj $(OT)\jcsamss2-64.obj \
+	$(OT)\jdsamss2-64.obj $(OT)\jdmerss2-64.obj $(OT)\jcqnts2i-64.obj $(OT)\jfss2fst-64.obj \
+	$(OT)\jfss2int-64.obj $(OT)\jiss2red-64.obj $(OT)\jiss2int-64.obj $(OT)\jiss2fst-64.obj \
+	$(OT)\jcqnts2f-64.obj $(OT)\jiss2flt-64.obj $(OT)\jsimd_x86_64.obj
+!else
+JPEG_TURBO_OBJS = $(JPEG_TURBO_OBJS) \
+	$(OT)\jsimdcpu.obj $(OT)\jccolmmx.obj $(OT)\jdcolmmx.obj $(OT)\jcsammmx.obj \
+	$(OT)\jdsammmx.obj $(OT)\jdmermmx.obj $(OT)\jcqntmmx.obj $(OT)\jfmmxfst.obj $(OT)\jfmmxint.obj \
+	$(OT)\jimmxred.obj $(OT)\jimmxint.obj $(OT)\jimmxfst.obj $(OT)\jcqnt3dn.obj $(OT)\jf3dnflt.obj \
+	$(OT)\ji3dnflt.obj $(OT)\jcqntsse.obj $(OT)\jfsseflt.obj $(OT)\jisseflt.obj $(OT)\jccolss2.obj \
+	$(OT)\jdcolss2.obj $(OT)\jcsamss2.obj $(OT)\jdsamss2.obj $(OT)\jdmerss2.obj $(OT)\jcqnts2i.obj \
+	$(OT)\jfss2fst.obj $(OT)\jfss2int.obj $(OT)\jiss2red.obj $(OT)\jiss2int.obj $(OT)\jiss2fst.obj \
+	$(OT)\jcqnts2f.obj $(OT)\jiss2flt.obj $(OT)\jsimd_i386.obj
+!endif
 
 !endif
 
