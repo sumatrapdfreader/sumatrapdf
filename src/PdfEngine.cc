@@ -74,38 +74,32 @@ fz_pixmap *fz_newpixmap_nullonoom(fz_colorspace *colorspace, int x, int y, int w
 
 HBITMAP fz_pixtobitmap(HDC hDC, fz_pixmap *pixmap, BOOL paletted)
 {
-    int w, h, rows8;
     int paletteSize = 0;
     BOOL hasPalette = FALSE;
-    int i, j, k;
-    BITMAPINFO *bmi;
-    HBITMAP hbmp = NULL;
-    unsigned char *bmpData = NULL, *source, *dest;
-    fz_pixmap *bgrPixmap;
+    unsigned char *bmpData = NULL;
     
-    w = pixmap->w;
-    h = pixmap->h;
+    int w = pixmap->w;
+    int h = pixmap->h;
+    int rows8 = ((w + 3) / 4) * 4;
     
     /* abgr is a GDI compatible format */
-    bgrPixmap = fz_newpixmap_nullonoom(fz_devicebgr, pixmap->x, pixmap->y, w, h);
+    fz_pixmap *bgrPixmap = fz_newpixmap_nullonoom(fz_devicebgr, pixmap->x, pixmap->y, w, h);
     if (!bgrPixmap)
         return NULL;
     fz_convertpixmap(pixmap, bgrPixmap);
-    pixmap = bgrPixmap;
     
-    assert(pixmap->n == 4);
+    assert(bgrPixmap->n == 4);
     
-    bmi = (BITMAPINFO *)calloc(1, sizeof(BITMAPINFOHEADER) + 256 * sizeof(RGBQUAD));
+    BITMAPINFO *bmi = (BITMAPINFO *)calloc(1, sizeof(BITMAPINFOHEADER) + 256 * sizeof(RGBQUAD));
     
     if (paletted)
     {
-        rows8 = ((w + 3) / 4) * 4;
-        dest = bmpData = (unsigned char *)malloc(rows8 * h);
-        source = pixmap->samples;
+        unsigned char *dest = bmpData = (unsigned char *)calloc(rows8, h);
+        unsigned char *source = bgrPixmap->samples;
         
-        for (j = 0; j < h; j++)
+        for (int j = 0; j < h; j++)
         {
-            for (i = 0; i < w; i++)
+            for (int i = 0; i < w; i++)
             {
                 RGBQUAD c = { 0 };
                 
@@ -115,6 +109,7 @@ HBITMAP fz_pixtobitmap(HDC hDC, fz_pixmap *pixmap, BOOL paletted)
                 source++;
                 
                 /* find this color in the palette */
+                int k;
                 for (k = 0; k < paletteSize; k++)
                     if (*(int *)&bmi->bmiColors[k] == *(int *)&c)
                         break;
@@ -144,8 +139,8 @@ ProducingPaletteDone:
     bmi->bmiHeader.biSizeImage = h * (hasPalette ? rows8 : w * 4);
     bmi->bmiHeader.biClrUsed = hasPalette ? paletteSize : 0;
     
-    hbmp = CreateDIBitmap(hDC, &bmi->bmiHeader, CBM_INIT,
-        hasPalette ? bmpData : pixmap->samples, bmi, DIB_RGB_COLORS);
+    HBITMAP hbmp = CreateDIBitmap(hDC, &bmi->bmiHeader, CBM_INIT,
+        hasPalette ? bmpData : bgrPixmap->samples, bmi, DIB_RGB_COLORS);
     
     fz_droppixmap(bgrPixmap);
     free(bmi);
@@ -594,18 +589,19 @@ PdfPageRun *PdfEngine::getPageRun(pdf_page *page, bool tryOnly)
         }
 
         fz_displaylist *list = fz_newdisplaylist();
+
         fz_device *dev = fz_newlistdevice(list);
         EnterCriticalSection(&_xrefAccess);
         fz_error error = pdf_runpagefortarget(_xref, page, dev, fz_identity, Target_View);
-        LeaveCriticalSection(&_xrefAccess);
         fz_freedevice(dev);
+        if (error)
+            fz_freedisplaylist(list);
+        LeaveCriticalSection(&_xrefAccess);
 
-        if (fz_okay == error) {
+        if (!error) {
             PdfPageRun newRun = { page, list, 1 };
             result = _runCache[i] = (PdfPageRun *)_memdup(&newRun);
         }
-        else
-            fz_freedisplaylist(list);
     }
     else {
         // keep the list Least Recently Used first
@@ -655,7 +651,9 @@ void PdfEngine::dropPageRun(PdfPageRun *run, bool forceRemove)
             _runCache[MAX_PAGE_RUN_CACHE-1] = NULL;
         }
         if (0 == run->refs) {
+            EnterCriticalSection(&_xrefAccess);
             fz_freedisplaylist(run->list);
+            LeaveCriticalSection(&_xrefAccess);
             free(run);
         }
     }
@@ -1017,30 +1015,29 @@ TCHAR *PdfEngine::ExtractPageText(pdf_page *page, TCHAR *lineSep, fz_bbox **coor
     if (!page)
         return NULL;
 
+    WCHAR *content = NULL;
+
     fz_textspan *text = fz_newtextspan();
     // use an infinite rectangle as bounds (instead of page->mediabox) to ensure that
     // the extracted text is consistent between cached runs using a list device and
     // fresh runs (otherwise the list device omits text outside the mediabox bounds)
     fz_error error = runPage(page, fz_newtextdevice(text), fz_identity, target, fz_infiniterect, cacheRun);
-    if (fz_okay != error) {
-        fz_freetextspan(text);
-        return NULL;
-    }
+    if (fz_okay != error)
+        goto CleanUp;
 
     int lineSepLen = lstrlen(lineSep);
     size_t textLen = 0;
     for (fz_textspan *span = text; span; span = span->next)
         textLen += span->len + lineSepLen;
 
-    WCHAR *content = (WCHAR *)malloc((textLen + 1) * sizeof(WCHAR)), *dest = content;
-    if (!content) {
-        fz_freetextspan(text);
-        return NULL;
-    }
+    content = SAZA(WCHAR, textLen + 1);
+    if (!content)
+        goto CleanUp;
     fz_bbox *destRect = NULL;
     if (coords_out)
         destRect = *coords_out = SAZA(fz_bbox, textLen);
 
+    WCHAR *dest = content;
     for (fz_textspan *span = text; span; span = span->next) {
         for (int i = 0; i < span->len; i++) {
             *dest = span->text[i].c;
@@ -1064,11 +1061,16 @@ TCHAR *PdfEngine::ExtractPageText(pdf_page *page, TCHAR *lineSep, fz_bbox **coor
         }
     }
 
+CleanUp:
+    EnterCriticalSection(&_xrefAccess);
     fz_freetextspan(text);
+    LeaveCriticalSection(&_xrefAccess);
 
 #ifdef UNICODE
     return content;
 #else
+    if (!content)
+        return NULL;
     TCHAR *contentT = wstr_to_tstr(content);
     free(content);
     return contentT;
