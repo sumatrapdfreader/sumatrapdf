@@ -66,8 +66,56 @@ DLLEXPORT NPError WINAPI NP_GetEntryPoints(NPPluginFuncs *pFuncs)
 	pFuncs->writeready = NPP_WriteReady;
 	pFuncs->write = NPP_Write;
 	pFuncs->print = NPP_Print;
+
+	pFuncs->event = NPP_HandleEvent;
+	pFuncs->urlnotify = NPP_URLNotify;
+	pFuncs->getvalue = NPP_GetValue;
+	pFuncs->setvalue = NPP_SetValue;
+	pFuncs->javaClass = NULL;
 	
 	return NPERR_NO_ERROR;
+}
+
+int16_t NPP_HandleEvent(NPP instance, void* event)
+{
+	UNREFERENCED_PARAMETER(instance);
+	UNREFERENCED_PARAMETER(event);
+	return 0;
+}
+
+void NPP_URLNotify(NPP instance, const char* url, NPReason reason, void* notify_data)
+{
+	UNREFERENCED_PARAMETER(instance);
+	UNREFERENCED_PARAMETER(url);
+	UNREFERENCED_PARAMETER(reason);
+	UNREFERENCED_PARAMETER(notify_data);
+}
+
+NPError NPP_SetValue(NPP instance, NPNVariable variable, void* value) 
+{
+	return gNPNFuncs.setvalue(instance, variable, value);
+}
+
+NPError NPP_GetValue(NPP instance, NPPVariable variable, void* value)
+{
+	NPError rv = NPERR_NO_ERROR;
+	if (instance == NULL)
+		return NPERR_INVALID_INSTANCE_ERROR;
+
+	switch (variable) {
+		case NPPVpluginNameString:
+			*((char**)value) = "SumatraPDF";
+			break;
+
+		case NPPVpluginDescriptionString:
+			*((char**)value) = "SumatraPDF browser plugin";
+			break;
+
+		default:
+			rv = gNPNFuncs.getvalue(instance, variable, value);
+			break;
+		}
+	return rv;
 }
 
 DLLEXPORT NPError WINAPI NP_Initialize(NPNetscapeFuncs *pFuncs)
@@ -245,7 +293,11 @@ LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lPar
 
 NPError NP_LOADDS NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* argn[], char* argv[], NPSavedData* saved)
 {
-	InstanceData *data = instance->pdata = calloc(1, sizeof(InstanceData));
+	InstanceData *data;
+	if (instance == NULL)
+		return NPERR_INVALID_INSTANCE_ERROR;
+
+	data = instance->pdata = calloc(1, sizeof(InstanceData));
 	gNPNFuncs.setvalue(instance, NPPVpluginWindowBool, (void *)true);
 	
 	if (GetExePath(data->exepath, MAX_PATH + 2))
@@ -269,7 +321,12 @@ NPError NP_LOADDS NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, in
 
 NPError NP_LOADDS NPP_SetWindow(NPP instance, NPWindow *npwin)
 {
-	InstanceData *data = instance->pdata;
+	InstanceData *data;
+
+	if (instance == NULL)
+		return NPERR_INVALID_INSTANCE_ERROR;
+
+	data = instance->pdata;
 	
 	if (!npwin)
 	{
