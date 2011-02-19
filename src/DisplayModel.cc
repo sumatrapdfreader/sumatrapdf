@@ -1473,6 +1473,21 @@ void DisplayModel::goToPdfDest(fz_obj *dest)
                 scrollY = MAX(scrollY, 0); // Adobe Reader never shows the previous page
             }
         }
+        else if (str_eq(fz_toname(obj), "FitR")) {
+            scrollX = fz_toreal(fz_arrayget(dest, 2)); // left
+            scrollY = fz_toreal(fz_arrayget(dest, 5)); // top
+            cvtUserToScreen(pageNo, &scrollX, &scrollY);
+            // TODO: adjust zoom so that the bottom right corner is also visible?
+
+            // goToPage needs scrolling info relative to the page's top border
+            // and the page line's left margin
+            PdfPageInfo * pageInfo = getPageInfo(pageNo);
+            // TODO: These values are not up-to-date, if the page has not been shown yet
+            if (pageInfo->shown) {
+                scrollX -= pageInfo->pageOnScreen.x;
+                scrollY -= pageInfo->pageOnScreen.y;
+            }
+        }
         /* // ignore author-set zoom settings (at least as long as there's no way to overrule them)
         else if (str_eq(fz_toname(obj), "Fit")) {
             zoomTo(ZOOM_FIT_PAGE);

@@ -4500,7 +4500,8 @@ static void GoToTocLinkForTVItem(WindowInfo *win, HWND hTV, HTREEITEM hItem=NULL
     item.hItem = hItem;
     item.mask = TVIF_PARAM;
     TreeView_GetItem(hTV, &item);
-    if (win->dm && item.lParam && (allowExternal || PDF_LGOTO == ((PdfTocItem *)item.lParam)->link->kind))
+    PdfTocItem *tocItem = (PdfTocItem *)item.lParam;
+    if (win->dm && tocItem && (allowExternal || tocItem->link && PDF_LGOTO == tocItem->link->kind))
         PostMessage(win->hwndFrame, WM_APP_GOTO_TOC_LINK, 0, item.lParam);
 }
 
