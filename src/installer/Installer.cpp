@@ -728,8 +728,12 @@ void RemoveOwnRegistryKeys()
     }
 }
 
+// TODO: while in development always detect the plugin as not installed to make
+// sure we re-register it when we make changes to the code (not sure if that's
+// necessary)
 bool IsBrowserPluginInstalled()
 {
+#if 0
     TCHAR buf[MAX_PATH];
     bool ok = ReadRegStr(HKEY_LOCAL_MACHINE, REG_PATH_PLUGIN, PLUGIN_PATH, buf, dimof(buf));
     if (!ok)
@@ -737,6 +741,9 @@ bool IsBrowserPluginInstalled()
     if (!ok)
         return FALSE;
     return !!file_exists(buf);
+#else
+    return false;
+#endif
 }
 
 void UninstallBrowserPlugin()
