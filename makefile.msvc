@@ -100,7 +100,8 @@ INSTALLER_OBJS = \
 
 PDFFILTER_OBJS = \
 	$(O)\PdfFilterDll.obj $(O)\CPdfFilter.obj $(PDFFILTER_RES) \
-	$(O)\base_util.obj $(O)\wstr_util.obj $(O)\str_util.obj $(LIBS_OBJS) $(O)\PdfEngine.obj
+	$(O)\base_util.obj $(O)\wstr_util.obj $(O)\str_util.obj $(O)\file_util.obj \
+	$(LIBS_OBJS) $(O)\PdfEngine.obj
 
 BROWSER_PLUGIN_OBJS = \
 	$(O)\npPdfViewer.obj $(BROWSER_PLUGIN_RES)
@@ -240,9 +241,9 @@ $(O)\ParseCommandLine.obj: baseutils\wstr_util.h mupdf\fitz\fitz.h mupdf\mupdf\m
 $(O)\ParseCommandLine.obj: src\Benchmark.h src\DisplayState.h src\FileWatch.h
 $(O)\ParseCommandLine.obj: src\ParseCommandLine.h src\PdfEngine.h src\PdfSearch.h
 $(O)\ParseCommandLine.obj: src\PdfSelection.h src\SumatraPDF.h src\WindowInfo.h
-$(O)\PdfEngine.obj: baseutils\base_util.h baseutils\geom_util.h baseutils\str_util.h
-$(O)\PdfEngine.obj: baseutils\tstr_util.h baseutils\wstr_util.h mupdf\fitz\fitz.h
-$(O)\PdfEngine.obj: mupdf\mupdf\mupdf.h src\PdfEngine.h
+$(O)\PdfEngine.obj: baseutils\base_util.h baseutils\file_util.h baseutils\geom_util.h
+$(O)\PdfEngine.obj: baseutils\str_util.h baseutils\tstr_util.h baseutils\wstr_util.h
+$(O)\PdfEngine.obj: mupdf\fitz\fitz.h mupdf\mupdf\mupdf.h src\PdfEngine.h
 $(O)\PdfFilterDll.obj: src\ifilter\CPdfFilter.h src\ifilter\CTeXFilter.h src\ifilter\FilterBase.h
 $(O)\PdfFilterDll.obj: src\ifilter\PdfFilter.h
 $(O)\PdfSearch.obj: baseutils\base_util.h baseutils\geom_util.h baseutils\str_util.h

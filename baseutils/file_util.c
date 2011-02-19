@@ -167,21 +167,27 @@ BOOL dir_exists(const TCHAR *dir_path)
     return TRUE;
 }
 
-uint64_t file_size_get(const TCHAR *file_path)
+size_t file_size_get(const TCHAR *file_path)
 {
-    int                         ok;
+    BOOL                        ok;
     WIN32_FILE_ATTRIBUTE_DATA   fileInfo;
-    uint64_t                    res;
+    size_t                      res;
 
     if (NULL == file_path)
         return INVALID_FILE_SIZE;
 
     ok = GetFileAttributesEx(file_path, GetFileExInfoStandard, &fileInfo);
     if (!ok)
-        return (uint64_t)INVALID_FILE_SIZE;
+        return (size_t)-1;
 
+#ifdef _WIN64
     res = fileInfo.nFileSizeHigh;
     res = (res << 32) + fileInfo.nFileSizeLow;
+#else
+    if (fileInfo.nFileSizeHigh > 0)
+        return (size_t)-1;
+    res = fileInfo.nFileSizeLow;
+#endif
 
     return res;
 }
@@ -191,7 +197,7 @@ char *file_read_all(const TCHAR *file_path, size_t *file_size_out)
     DWORD       size, size_read;
     HANDLE      h;
     char *      data = NULL;
-    int         f_ok;
+    BOOL        f_ok;
 
     h = CreateFile(file_path, GENERIC_READ, FILE_SHARE_READ, NULL,  
             OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL,  NULL); 
@@ -215,7 +221,8 @@ char *file_read_all(const TCHAR *file_path, size_t *file_size_out)
         free(data);
         data = NULL;
     }
-    *file_size_out = size;
+    else if (file_size_out)
+        *file_size_out = size;
 Exit:
     CloseHandle(h);
     return data;

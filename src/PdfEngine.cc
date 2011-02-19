@@ -1,6 +1,12 @@
 /* Copyright 2006-2011 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 #include "PdfEngine.h"
+#include "file_util.h"
+
+// maximum size of a file that's entirely loaded into memory before parsed
+// and displayed; larger files will be kept open while they're displayed
+// so that their content can be loaded on demand in order to preserve memory
+#define MAX_MEMORY_FILE_SIZE (10 * 1024 * 1024)
 
 // in SumatraPDF.cpp
 TCHAR *GetPasswordForFile(WindowInfo *win, const TCHAR *fileName, pdf_xref *xref, unsigned char *decryptionKey, bool *saveKey);
@@ -346,15 +352,35 @@ bool PdfEngine::load(const TCHAR *fileName, WindowInfo *win)
             embedMarks = c;
     }
 
+    char *fileData = NULL;
+    int fd = -1;
+
     if (embedMarks)
         *embedMarks = '\0';
-    int fd = _topen(_fileName, O_BINARY | O_RDONLY, 0);
+    size_t fileSize = file_size_get(fileName);
+    // load small files entirely into memory so that they can be
+    // overwritten even by programs that don't open files with FILE_SHARE_READ
+    if (fileSize < MAX_MEMORY_FILE_SIZE)
+        fileData = file_read_all(fileName, &fileSize);
+    if (!fileData)
+        fd = _topen(fileName, O_BINARY | O_RDONLY, 0);
     if (embedMarks)
         *embedMarks = ':';
 
-    if (-1 == fd)
+    if (!fileData && -1 == fd)
         return false;
-    fz_stream *file = fz_openfile(fd);
+
+    fz_stream *file;
+    if (fileData) {
+        fz_buffer *data = fz_newbuffer((int)fileSize);
+        memcpy(data->data, fileData, data->len = (int)fileSize);
+        file = fz_openbuffer(data);
+        fz_dropbuffer(data);
+        free(fileData);
+    }
+    else {
+        file = fz_openfile(fd);
+    }
 OpenEmbeddedFile:
     // don't pass in a password so that _xref isn't thrown away if it was wrong
     fz_error error = pdf_openxrefwithstream(&_xref, file, NULL);

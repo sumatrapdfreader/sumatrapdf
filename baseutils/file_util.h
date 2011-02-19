@@ -20,7 +20,7 @@ BOOL            dir_exists(const TCHAR *dir_path);
 
 char *          file_read_all(const TCHAR *file_path, size_t *file_size_out);
 BOOL            write_to_file(const TCHAR *file_path, void *data, size_t data_len);
-uint64_t        file_size_get(const TCHAR *file_path);
+size_t          file_size_get(const TCHAR *file_path);
 
 #ifdef __cplusplus
 }
