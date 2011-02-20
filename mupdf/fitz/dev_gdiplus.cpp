@@ -64,11 +64,13 @@ struct userDataStackItem
 	bool luminosity;
 	fz_blendmode blendmode;
 	bool isolated;
+	bool knockout;
 	userDataStackItem *prev;
 
 	userDataStackItem(float _alpha=1.0, userDataStackItem *_prev=NULL) :
 		alpha(_alpha), prev(_prev), saveG(NULL), layer(NULL), mask(NULL),
-		luminosity(false), blendmode(FZ_BNORMAL), isolated(false), layerAlpha(1.0) { }
+		luminosity(false), blendmode(FZ_BNORMAL), isolated(false), knockout(false),
+		layerAlpha(1.0) { }
 };
 
 static PointF
@@ -117,15 +119,9 @@ public:
 		}
 	}
 
-	void pushClip(Region *clipRegion, float alpha=1.0, bool accumulate=false)
+	void pushClip(Region *clipRegion, float alpha=1.0)
 	{
 		assert(clipRegion);
-		
-		if (accumulate)
-		{
-			graphics->SetClip(clipRegion, CombineModeUnion);
-			return;
-		}
 		
 		stack = new userDataStackItem(stack->alpha * alpha, stack);
 		graphics->GetClip(&stack->clip);
@@ -134,7 +130,10 @@ public:
 
 	void pushClip(GraphicsPath *gpath, float alpha=1.0, bool accumulate=false)
 	{
-		pushClip(&Region(gpath), alpha, accumulate);
+		if (accumulate)
+			graphics->SetClip(&Region(gpath), CombineModeUnion);
+		else
+			pushClip(&Region(gpath), alpha);
 	}
 
 	void pushClipMask(fz_pixmap *mask, fz_matrix ctm)
@@ -178,12 +177,13 @@ public:
 		stack->luminosity = luminosity;
 	}
 
-	void pushClipBlend(fz_rect rect, fz_blendmode blendmode, float alpha, bool isolated)
+	void pushClipBlend(fz_rect rect, fz_blendmode blendmode, float alpha, bool isolated, bool knockout)
 	{
 		recordClipMask(rect, false, NULL);
 		stack->layerAlpha *= alpha;
 		stack->blendmode = blendmode;
 		stack->isolated = isolated;
+		stack->knockout = knockout;
 	}
 
 	void applyClipMask()
@@ -380,6 +380,9 @@ protected:
 		
 		if (!bgStack || group->isolated)
 		{
+			if (group->knockout)
+				return new Bitmap(clipBounds.Width, clipBounds.Height, PixelFormat32bppARGB);
+			
 			clipBounds.Offset(-group->bounds.X, -group->bounds.Y);
 			return group->layer->Clone(clipBounds, PixelFormat32bppARGB);
 		}
@@ -390,6 +393,8 @@ protected:
 		bounds.Offset(-group->bounds.X, -group->bounds.Y);
 		clipBounds.Offset(-clipBounds.X, -clipBounds.Y);
 		
+		if (group->knockout)
+			fz_warn("non-isolated knockout groups not implemented for GDI+");
 		_compositeWithBackground(group->layer, bounds, backdrop, clipBounds, group->blendmode, true);
 		
 		return backdrop;
@@ -1112,8 +1117,7 @@ extern "C" static void
 fz_gdiplusbegingroup(void *user, fz_rect rect, int isolated, int knockout,
 	fz_blendmode blendmode, float alpha)
 {
-	// TODO: support knockout groups
-	((userData *)user)->pushClipBlend(rect, blendmode, alpha, !!isolated);
+	((userData *)user)->pushClipBlend(rect, blendmode, alpha, !!isolated, !!knockout);
 }
 
 extern "C" static void
