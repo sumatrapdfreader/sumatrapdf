@@ -146,6 +146,9 @@ void PdfSelection::StartAt(int pageNo, int glyphIx)
 
 void PdfSelection::SelectUpTo(int pageNo, int glyphIx)
 {
+    if (startPage == -1 || startGlyph == -1)
+        return;
+
     endPage = pageNo;
     endGlyph = glyphIx;
     if (glyphIx < 0) {
