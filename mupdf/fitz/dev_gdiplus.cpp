@@ -63,11 +63,12 @@ struct userDataStackItem
 	Rect bounds;
 	bool luminosity;
 	fz_blendmode blendmode;
+	bool isolated;
 	userDataStackItem *prev;
 
 	userDataStackItem(float _alpha=1.0, userDataStackItem *_prev=NULL) :
 		alpha(_alpha), prev(_prev), saveG(NULL), layer(NULL), mask(NULL),
-		luminosity(false), blendmode(FZ_BNORMAL), layerAlpha(1.0) { }
+		luminosity(false), blendmode(FZ_BNORMAL), isolated(false), layerAlpha(1.0) { }
 };
 
 static PointF
@@ -177,11 +178,12 @@ public:
 		stack->luminosity = luminosity;
 	}
 
-	void pushClipBlend(fz_rect rect, fz_blendmode blendmode, float alpha)
+	void pushClipBlend(fz_rect rect, fz_blendmode blendmode, float alpha, bool isolated)
 	{
 		recordClipMask(rect, false, NULL);
 		stack->layerAlpha *= alpha;
 		stack->blendmode = blendmode;
+		stack->isolated = isolated;
 	}
 
 	void applyClipMask()
@@ -211,7 +213,7 @@ public:
 				_applyMask(stack->layer, stack->mask, stack->luminosity);
 				delete stack->mask;
 			}
-			if (stack->blendmode != FZ_BNORMAL)
+			if (stack->blendmode != FZ_BNORMAL && !stack->isolated)
 				_applyBlend(stack->layer, stack->bounds, stack->blendmode);
 			
 			ImageAttributes imgAttrs;
@@ -354,6 +356,47 @@ protected:
 			return;
 		}
 		
+		Rect boundsBg(clipBounds);
+		for (userDataStackItem *si = bgStack; si; si = si->prev)
+			if (si->layer)
+				boundsBg.Intersect(si->bounds);
+		
+		Bitmap *backdrop = _flattenBlendBackdrop(bgStack, boundsBg);
+		
+		Rect bounds(boundsBg);
+		bounds.Offset(-clipBounds.X, -clipBounds.Y);
+		boundsBg.Offset(-boundsBg.X, -boundsBg.Y);
+		
+		_compositeWithBackground(bitmap, bounds, backdrop, boundsBg, blendmode, false);
+		
+		delete backdrop;
+	}
+
+	Bitmap *_flattenBlendBackdrop(userDataStackItem *group, Rect clipBounds)
+	{
+		userDataStackItem *bgStack = group->prev;
+		while (bgStack && !bgStack->layer)
+			bgStack = bgStack->prev;
+		
+		if (!bgStack || group->isolated)
+		{
+			clipBounds.Offset(-group->bounds.X, -group->bounds.Y);
+			return group->layer->Clone(clipBounds, PixelFormat32bppARGB);
+		}
+		
+		Bitmap *backdrop = _flattenBlendBackdrop(bgStack, clipBounds);
+		
+		Rect bounds(clipBounds);
+		bounds.Offset(-group->bounds.X, -group->bounds.Y);
+		clipBounds.Offset(-clipBounds.X, -clipBounds.Y);
+		
+		_compositeWithBackground(group->layer, bounds, backdrop, clipBounds, group->blendmode, true);
+		
+		return backdrop;
+	}
+
+	void _compositeWithBackground(Bitmap *bitmap, Rect bounds, Bitmap *backdrop, Rect boundsBg, fz_blendmode blendmode, bool modifyBackdrop)
+	{
 		seperableBlend funcs[] = {
 			BlendNormal,
 			BlendMultiply,
@@ -373,21 +416,17 @@ protected:
 		if (blendmode >= nelem(funcs) || !funcs[blendmode])
 		{
 			fz_warn("blend mode %d not implemented for GDI+", blendmode);
-			return;
+			blendmode = FZ_BNORMAL;
 		}
 		
-		Rect bounds(0, 0, bitmap->GetWidth(), bitmap->GetHeight());
-		assert(bounds.Width == clipBounds.Width && bounds.Height == clipBounds.Height);
-		bounds.Offset(clipBounds.X, clipBounds.Y);
-		bounds.Intersect(bgStack->bounds);
-		Rect *boundsBg = bounds.Clone();
-		bounds.Offset(-clipBounds.X, -clipBounds.Y);
-		boundsBg->Offset(-bgStack->bounds.X, -bgStack->bounds.Y);
+		assert(bounds.X >= 0 && bounds.Y >= 0);
+		assert(boundsBg.X == 0 && boundsBg.Y == 0);
+		assert(bounds.Width == boundsBg.Width && bounds.Height == boundsBg.Height);
+		assert(boundsBg.Width == backdrop->GetWidth() && boundsBg.Height == backdrop->GetHeight());
 		
 		BitmapData data, dataBg;
-		bitmap->LockBits(&bounds, ImageLockModeRead | ImageLockModeWrite, PixelFormat32bppARGB, &data);
-		bgStack->layer->LockBits(boundsBg, ImageLockModeRead, PixelFormat32bppARGB, &dataBg);
-		delete boundsBg;
+		bitmap->LockBits(&bounds, ImageLockModeRead | (modifyBackdrop ? 0 : ImageLockModeWrite), PixelFormat32bppARGB, &data);
+		backdrop->LockBits(&boundsBg, ImageLockModeRead | (modifyBackdrop ? ImageLockModeWrite : 0), PixelFormat32bppARGB, &dataBg);
 		
 		LPBYTE Scan0 = (LPBYTE)data.Scan0, bgScan0 = (LPBYTE)dataBg.Scan0;
 		for (int row = 0; row < bounds.Height; row++)
@@ -398,6 +437,7 @@ protected:
 				{
 					BYTE alpha = Scan0[row * data.Stride + col * 4 + 3];
 					BYTE bgAlpha = bgScan0[row * dataBg.Stride + col * 4 + 3];
+					// if (isolated) bgAlpha = 0;
 					BYTE newAlpha = BlendScreen(alpha, bgAlpha);
 					
 					for (int i = 0; i < 3; i++)
@@ -407,14 +447,20 @@ protected:
 						// basic compositing formula
 						BYTE newColor = (1 - 1.0 * alpha / newAlpha) * bgColor + 1.0 * alpha / newAlpha * ((255 - bgAlpha) * color + bgAlpha * funcs[blendmode](color, bgColor)) / 255;
 						
-						Scan0[row * data.Stride + col * 4 + i] = newColor;
+						if (modifyBackdrop)
+							bgScan0[row * dataBg.Stride + col * 4 + i] = newColor;
+						else
+							Scan0[row * data.Stride + col * 4 + i] = newColor;
 					}
-					Scan0[row * data.Stride + col * 4 + 3] = newAlpha;
+					if (modifyBackdrop)
+						bgScan0[row * dataBg.Stride + col * 4 + 3] = newAlpha;
+					else
+						Scan0[row * data.Stride + col * 4 + 3] = newAlpha;
 				}
 			}
 		}
 		
-		bgStack->layer->UnlockBits(&dataBg);
+		backdrop->UnlockBits(&dataBg);
 		bitmap->UnlockBits(&data);
 	}
 
@@ -1066,7 +1112,8 @@ extern "C" static void
 fz_gdiplusbegingroup(void *user, fz_rect rect, int isolated, int knockout,
 	fz_blendmode blendmode, float alpha)
 {
-	((userData *)user)->pushClipBlend(rect, blendmode, alpha);
+	// TODO: support knockout groups
+	((userData *)user)->pushClipBlend(rect, blendmode, alpha, !!isolated);
 }
 
 extern "C" static void

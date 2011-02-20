@@ -236,6 +236,15 @@ pdf_loadpage(pdf_page **pagep, pdf_xref *xref, fz_obj *dict)
 	if (page->resources && pdf_resourcesuseblending(page->resources))
 		page->transparency = 1;
 
+	/* SumatraPDF: dev_gdiplus needs a page group for transparent annotations */
+	if (page->annots)
+	{
+		pdf_annot *annot;
+		for (annot = page->annots; annot && !page->transparency; annot = annot->next)
+			if (pdf_resourcesuseblending(annot->ap->resources))
+				page->transparency = 1;
+	}
+
 	pdf_logpage("} %p\n", page);
 
 	*pagep = page;

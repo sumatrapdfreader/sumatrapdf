@@ -1571,9 +1571,6 @@ pdf_runpage(pdf_xref *xref, pdf_page *page, fz_device *dev, fz_matrix ctm)
 	if (error)
 		return fz_rethrow(error, "cannot parse page content stream");
 
-	if (page->transparency)
-		dev->endgroup(dev->user);
-
 	for (annot = page->annots; annot; annot = annot->next)
 	{
 		flags = fz_toint(fz_dictgets(annot->obj, "F"));
@@ -1596,6 +1593,10 @@ pdf_runpage(pdf_xref *xref, pdf_page *page, fz_device *dev, fz_matrix ctm)
 		if (error)
 			return fz_rethrow(error, "cannot parse annotation appearance stream");
 	}
+
+	/* SumatraPDF: dev_gdiplus needs a page group for transparent annotations */
+	if (page->transparency)
+		dev->endgroup(dev->user);
 
 	return fz_okay;
 }
