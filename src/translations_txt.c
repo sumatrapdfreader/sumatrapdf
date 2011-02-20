@@ -4454,7 +4454,7 @@ const char *g_transTranslations[] = {
   "Rote\305\237te spre st\303\242nga\tCtrl-Shift--",
   "Rote\305\237te spre dreapta\tCtrl-Shift-+",
   "Caut %d din %d...",
-  NULL,
+  "Selecteaz\304\203 to&ate\tCtrl-A",
   "Selecta\305\243i con\305\243inut cu Ctrl+buton st\303\242nga maus",
   "Trimite pe &E-mail...",
   "Seta\305\243i comand\304\203 pentru c\304\203utare invers\304\203",

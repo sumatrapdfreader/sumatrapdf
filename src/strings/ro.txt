@@ -426,6 +426,9 @@ Roteşte spre dreapta\tCtrl-Shift-+
 Searching %d of %d...
 Caut %d din %d...
 
+Select &All\tCtrl-A
+Selectează to&ate\tCtrl-A
+
 Select content with Ctrl+left mouse button
 Selectaţi conţinut cu Ctrl+buton stânga maus
 
@@ -515,7 +518,4 @@ se copiază text
 
 printing document
 se imprimă documentul
-
-# Untranslated:
-#Select &All\tCtrl-A
 
