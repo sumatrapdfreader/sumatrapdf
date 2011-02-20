@@ -430,6 +430,9 @@ Rotera åt höger\tCtrl-Shift-+
 Searching %d of %d...
 Söker %d av %d...
 
+Select &All\tCtrl-A
+Välj &Allt\tCtrl-A
+
 Select content with Ctrl+left mouse button
 Markera med Ctrl + vänster musknapp
 
@@ -519,7 +522,4 @@ kopierar text
 
 printing document
 skriver ut dokumentet
-
-# Untranslated:
-#Select &All\tCtrl-A
 

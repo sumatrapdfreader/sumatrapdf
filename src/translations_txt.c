@@ -8754,7 +8754,7 @@ const char *g_transTranslations[] = {
   "Rotera \303\245t v\303\244nster\tCtrl-Shift--",
   "Rotera \303\245t h\303\266ger\tCtrl-Shift-+",
   "S\303\266ker %d av %d...",
-  NULL,
+  "V\303\244lj &Allt\tCtrl-A",
   "Markera med Ctrl + v\303\244nster musknapp",
   "S&kicka som epost...",
   "S\303\244tt motsatt s\303\266k-kommandorad",
