@@ -35,6 +35,19 @@ static char *basefontnames[14][7] =
 	{ "ZapfDingbats", nil }
 };
 
+static int isdynalab(char *name)
+{
+	if (strstr(name, "HuaTian"))
+		return 1;
+	if (strstr(name, "MingLi"))
+		return 1;
+	if ((strstr(name, "DF") == name) || strstr(name, "+DF"))
+		return 1;
+	if ((strstr(name, "DLC") == name) || strstr(name, "+DLC"))
+		return 1;
+	return 0;
+}
+
 static int strcmpignorespace(char *a, char *b)
 {
 	while (1)
@@ -629,16 +642,10 @@ loadcidfont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj *enco
 	/* Check for DynaLab fonts that must use hinting */
 	if (kind == TRUETYPE)
 	{
-		if (FT_IS_TRICKY(face))
-			fontdesc->font->fthint = 1;
-		/* SumatraPDF: enable hinting for a few more fonts (should be added to FreeType) */
-		else if (strstr(collection, "Adobe-"))
+		if (FT_IS_TRICKY(face) || isdynalab(fontdesc->font->name))
 		{
-			char *fontname = basefont;
-			if (strchr(fontname, '+') == fontname + 6)
-				fontname = strchr(fontname, '+') + 1;
-			if (!strcmp(fontname, "DLCRoundBold"))
-				fontdesc->font->fthint = 1;
+			fontdesc->font->fthint = 1;
+			pdf_logfont("forced hinting for dynalab font\n");
 		}
 	}
 

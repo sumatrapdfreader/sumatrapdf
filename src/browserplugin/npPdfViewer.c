@@ -67,12 +67,6 @@ DLLEXPORT NPError WINAPI NP_GetEntryPoints(NPPluginFuncs *pFuncs)
 	pFuncs->write = NPP_Write;
 	pFuncs->print = NPP_Print;
 
-	pFuncs->event = NPP_HandleEvent;
-	pFuncs->urlnotify = NPP_URLNotify;
-	pFuncs->getvalue = NPP_GetValue;
-	pFuncs->setvalue = NPP_SetValue;
-	pFuncs->javaClass = NULL;
-	
 	return NPERR_NO_ERROR;
 }
 
@@ -218,7 +212,7 @@ LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lPar
 		DrawTextW(hDCBuffer, data->message, -1, &rcClient, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
 		
 		// draw a progress bar, if a download is in progress
-		if (0 < data->progress && data->progress < 1)
+		if (0 < data->progress && data->progress <= 1)
 		{
 			SIZE msgSize;
 			RECT rcProgress = rcClient;
@@ -254,7 +248,9 @@ NPError NP_LOADDS NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, in
 	InstanceData *data;
 	
 	if (!instance)
+	{
 		return NPERR_INVALID_INSTANCE_ERROR;
+	}
 	
 	data = instance->pdata = calloc(1, sizeof(InstanceData));
 	gNPNFuncs.setvalue(instance, NPPVpluginWindowBool, (void *)true);
@@ -283,7 +279,9 @@ NPError NP_LOADDS NPP_SetWindow(NPP instance, NPWindow *npwin)
 	InstanceData *data;
 	
 	if (!instance)
+	{
 		return NPERR_INVALID_INSTANCE_ERROR;
+	}
 	
 	data = instance->pdata;
 	if (!npwin)
@@ -421,7 +419,14 @@ NPError NP_LOADDS NPP_DestroyStream(NPP instance, NPStream* stream, NPReason rea
 
 NPError NP_LOADDS NPP_Destroy(NPP instance, NPSavedData** save)
 {
-	InstanceData *data = instance->pdata;
+	InstanceData *data;
+	
+	if (!instance)
+	{
+		return NPERR_INVALID_INSTANCE_ERROR;
+	}
+	
+	data = instance->pdata;
 	if (data->hProcess)
 	{
 		TerminateProcess(data->hProcess, 99);
@@ -450,7 +455,7 @@ NPError NP_LOADDS NPP_Destroy(NPP instance, NPSavedData** save)
 
 void NP_LOADDS NPP_Print(NPP instance, NPPrint* platformPrint)
 {
-	if (platformPrint->mode == NP_FULL)
+	if (platformPrint && platformPrint->mode == NP_FULL)
 	{
 		InstanceData *data = instance->pdata;
 		HWND hWnd = data->npwin->window;
@@ -461,44 +466,5 @@ void NP_LOADDS NPP_Print(NPP instance, NPPrint* platformPrint)
 			PostMessage(hChild, WM_COMMAND, IDM_PRINT, 0);
 			platformPrint->print.fullPrint.pluginPrinted = true;
 		}
-	}
-}
-
-int16_t NP_LOADDS NPP_HandleEvent(NPP instance, void* event)
-{
-	return FALSE;
-	
-	UNREFERENCED_PARAMETER(instance);
-	UNREFERENCED_PARAMETER(event);
-}
-
-void NP_LOADDS NPP_URLNotify(NPP instance, const char* url, NPReason reason, void* notify_data)
-{
-	UNREFERENCED_PARAMETER(instance);
-	UNREFERENCED_PARAMETER(url);
-	UNREFERENCED_PARAMETER(reason);
-	UNREFERENCED_PARAMETER(notify_data);
-}
-
-NPError NP_LOADDS NPP_SetValue(NPP instance, NPNVariable variable, void* value) 
-{
-	return gNPNFuncs.setvalue(instance, variable, value);
-}
-
-NPError NP_LOADDS NPP_GetValue(NPP instance, NPPVariable variable, void* value)
-{
-	if (!instance)
-		return NPERR_INVALID_INSTANCE_ERROR;
-	
-	switch (variable)
-	{
-	case NPPVpluginNameString:
-		*((char**)value) = "SumatraPDF";
-		return NPERR_NO_ERROR;
-	case NPPVpluginDescriptionString:
-		*((char**)value) = "SumatraPDF browser plugin";
-		return NPERR_NO_ERROR;
-	default:
-		return gNPNFuncs.getvalue(instance, variable, value);
 	}
 }
