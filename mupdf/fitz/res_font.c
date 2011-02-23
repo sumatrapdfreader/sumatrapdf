@@ -17,6 +17,7 @@ fz_newfont(void)
 
 	font->ftface = nil;
 	font->ftsubstitute = 0;
+	font->fthint = 0;
 
 	font->ftfile = nil;
 	font->ftdata = nil;
@@ -286,32 +287,43 @@ fz_renderftglyph(fz_font *font, int gid, fz_matrix trm)
 		fz_warn("freetype setting character size: %s", ft_errorstring(fterr));
 	FT_Set_Transform(face, &m, &v);
 
-#ifdef GRIDFIT
-	/* If you really want grid fitting, enable this code. */
-	float scale = fz_matrixexpansion(trm);
-	m.xx = trm.a * 65536 / scale;
-	m.xy = trm.b * 65536 / scale;
-	m.yx = trm.c * 65536 / scale;
-	m.yy = trm.d * 65536 / scale;
-	v.x = 0;
-	v.y = 0;
-
-	fterr = FT_Set_Char_Size(face, 64 * scale, 64 * scale, 72, 72);
-	if (fterr)
-		fz_warn("freetype setting character size: %s", ft_errorstring(fterr));
-	FT_Set_Transform(face, &m, &v);
-
-	fterr = FT_Load_Glyph(face, gid, FT_LOAD_NO_BITMAP);
-	if (fterr)
-		fz_warn("freetype load glyph (gid %d): %s", gid, ft_errorstring(fterr));
-#else
-	fterr = FT_Load_Glyph(face, gid, FT_LOAD_NO_BITMAP | FT_LOAD_NO_HINTING);
-	if (fterr)
+	if (font->fthint)
 	{
-		fz_warn("freetype load glyph (gid %d): %s", gid, ft_errorstring(fterr));
-		return nil;
-	}
+		/*
+		Enable hinting, but keep the huge char size so that
+		it is hinted for a character. This will in effect nullify
+		the effect of grid fitting. This form of hinting should
+		only be used for DynaLab and similar tricky TrueType fonts,
+		so that we get the correct outline shape.
+		*/
+#ifdef GRIDFIT
+		/* If you really want grid fitting, enable this code. */
+		float scale = fz_matrixexpansion(trm);
+		m.xx = trm.a * 65536 / scale;
+		m.xy = trm.b * 65536 / scale;
+		m.yx = trm.c * 65536 / scale;
+		m.yy = trm.d * 65536 / scale;
+		v.x = 0;
+		v.y = 0;
+
+		fterr = FT_Set_Char_Size(face, 64 * scale, 64 * scale, 72, 72);
+		if (fterr)
+			fz_warn("freetype setting character size: %s", ft_errorstring(fterr));
+		FT_Set_Transform(face, &m, &v);
 #endif
+		fterr = FT_Load_Glyph(face, gid, FT_LOAD_NO_BITMAP);
+		if (fterr)
+			fz_warn("freetype load glyph (gid %d): %s", gid, ft_errorstring(fterr));
+	}
+	else
+	{
+		fterr = FT_Load_Glyph(face, gid, FT_LOAD_NO_BITMAP | FT_LOAD_NO_HINTING);
+		if (fterr)
+		{
+			fz_warn("freetype load glyph (gid %d): %s", gid, ft_errorstring(fterr));
+			return nil;
+		}
+	}
 
 	fterr = FT_Render_Glyph(face->glyph, ft_render_mode_normal);
 	if (fterr)

@@ -773,7 +773,7 @@ ftgetwidthscale(fz_font *font, int gid)
 	if (font->ftsubstitute && gid < font->widthcount)
 	{
 		FT_Fixed advance = 0;
-		FT_Get_Advance((FT_Face)font->ftface, gid, FT_LOAD_NO_BITMAP | FT_LOAD_NO_HINTING, &advance);
+		FT_Get_Advance((FT_Face)font->ftface, gid, FT_LOAD_NO_BITMAP | (font->fthint ? 0 : FT_LOAD_NO_HINTING), &advance);
 		if (advance)
 			return 1024.0 * font->widthtable[gid] / advance;
 	}
@@ -815,7 +815,7 @@ ftrenderglyph(fz_font *font, int gid, fz_hashtable *outlines)
 	if (glyph)
 		return glyph;
 	
-	FT_Error fterr = FT_Load_Glyph(face, gid, FT_LOAD_NO_BITMAP | FT_LOAD_NO_HINTING);
+	FT_Error fterr = FT_Load_Glyph(face, gid, FT_LOAD_NO_BITMAP | (font->fthint ? 0 : FT_LOAD_NO_HINTING));
 	if (fterr)
 		return NULL;
 	

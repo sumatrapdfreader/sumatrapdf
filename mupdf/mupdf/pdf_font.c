@@ -626,6 +626,22 @@ loadcidfont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj *enco
 	else
 		fz_setfontbbox(fontdesc->font, bbox.x0, bbox.y0, bbox.x1, bbox.y1);
 
+	/* Check for DynaLab fonts that must use hinting */
+	if (kind == TRUETYPE)
+	{
+		if (FT_IS_TRICKY(face))
+			fontdesc->font->fthint = 1;
+		/* SumatraPDF: enable hinting for a few more fonts (should be added to FreeType) */
+		else if (strstr(collection, "Adobe-"))
+		{
+			char *fontname = basefont;
+			if (strchr(fontname, '+') == fontname + 6)
+				fontname = strchr(fontname, '+') + 1;
+			if (!strcmp(fontname, "DLCRoundBold"))
+				fontdesc->font->fthint = 1;
+		}
+	}
+
 	/* Encoding */
 
 	error = fz_okay;
