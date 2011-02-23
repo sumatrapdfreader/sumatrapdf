@@ -5,28 +5,7 @@
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
-
-#if ((FREETYPE_MAJOR == 2) && (FREETYPE_MINOR == 1)) || \
-	((FREETYPE_MAJOR == 2) && (FREETYPE_MINOR == 2)) || \
-	((FREETYPE_MAJOR == 2) && (FREETYPE_MINOR == 3) && (FREETYPE_PATCH < 8))
-
-int
-FT_Get_Advance(FT_Face face, int gid, int masks, FT_Fixed *out)
-{
-	int err;
-	err = FT_Load_Glyph(face, gid, masks);
-	if (err)
-		return err;
-	if (masks & FT_LOAD_VERTICAL_LAYOUT)
-		*out = face->glyph->metrics.vertAdvance << 10;
-	else
-		*out = face->glyph->metrics.horiAdvance << 10;
-	return 0;
-}
-
-#else
 #include FT_ADVANCES_H
-#endif
 
 typedef struct fz_textdevice_s fz_textdevice;
 
@@ -190,7 +169,7 @@ fz_debugtextspanxml(fz_textspan *span)
 			for (k = 0; k < n; k++)
 				putchar(buf[k]);
 		}
-		printf("\" bbox=\"[%d %d %d %d]\">\n",
+		printf("\" bbox=\"%d %d %d %d\" />\n",
 			span->text[i].bbox.x0,
 			span->text[i].bbox.y0,
 			span->text[i].bbox.x1,

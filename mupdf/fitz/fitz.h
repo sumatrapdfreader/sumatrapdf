@@ -687,7 +687,6 @@ struct fz_font_s
 
 	void *ftface; /* has an FT_Face if used */
 	int ftsubstitute; /* ... substitute metrics */
-	int fthint; /* ... force hinting for DynaLab fonts */
 
 	/* origin of font data */
 	char *ftfile;
