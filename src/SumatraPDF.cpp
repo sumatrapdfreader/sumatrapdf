@@ -385,7 +385,7 @@ void LaunchBrowser(const TCHAR *url)
     launch_url(url);
 }
 
-static void MenuUpdateDisplayMode(WindowInfo *win)
+static void MenuUpdateDisplayMode(WindowInfoBase *win)
 {
     DisplayMode displayMode = gGlobalPrefs.m_defaultDisplayMode;
 
@@ -415,7 +415,7 @@ static void MenuUpdateDisplayMode(WindowInfo *win)
     win->UpdateToolbarState();
 }
 
-void WindowInfo::SwitchToDisplayMode(DisplayMode displayMode, bool keepContinuous)
+void WindowInfoBase::SwitchToDisplayMode(DisplayMode displayMode, bool keepContinuous)
 {
     if (!this->dm)
         return;
@@ -1061,7 +1061,7 @@ static void ToolbarUpdateStateForWindow(WindowInfo *win) {
     }
 }
 
-static void MenuUpdateBookmarksStateForWindow(WindowInfo *win) {
+static void MenuUpdateBookmarksStateForWindow(WindowInfoBase *win) {
     HMENU hmenu = win->hMenu;
     BOOL documentSpecific = win->PdfLoaded();
     BOOL enabled = WS_SHOWING_PDF == win->state && win->dm && win->dm->hasTocTree();
@@ -1272,7 +1272,7 @@ static WindowInfo* WindowInfo_CreateEmpty(void) {
     return win;
 }
 
-static void UpdateTocWidth(WindowInfo *win, const DisplayState *ds=NULL, int defaultDx=0)
+static void UpdateTocWidth(WindowInfoBase *win, const DisplayState *ds=NULL, int defaultDx=0)
 {
     RECT rc;
     if (!GetWindowRect(win->hwndTocBox, &rc))
@@ -1606,7 +1606,6 @@ WindowInfo* LoadComicBook(const TCHAR *fileName, WindowInfo *win, bool showWin, 
     // extract all contained files one by one
     int pngCount = 0, jpegCount = 0;
     for (int n = 0; n < ginfo.number_entry; n++) {
-        BOOL success = FALSE;
         char filename[MAX_PATH];
         unz_file_info64 finfo;
         err = unzGetCurrentFileInfo64(uf, &finfo, filename, dimof(filename), NULL, 0, NULL, 0);
@@ -1630,7 +1629,7 @@ WindowInfo* LoadComicBook(const TCHAR *fileName, WindowInfo *win, bool showWin, 
         }
 
         err = unzGoToNextFile(uf);
-        if (err != UNZ_OK || !success)
+        if (err != UNZ_OK)
             break;
     }
 
@@ -1908,7 +1907,7 @@ static void OnDropFiles(WindowInfo *win, HDROP hDrop)
         win->RedrawAll();
 }
 
-bool WindowInfo::DoubleBuffer_New()
+bool WindowInfoBase::DoubleBuffer_New()
 {
     this->DoubleBuffer_Delete();
 
@@ -3981,7 +3980,7 @@ static void OnMenuGoToFirstPage(WindowInfo *win)
     win->dm->goToFirstPage();
 }
 
-void WindowInfo::FocusPageNoEdit()
+void WindowInfoBase::FocusPageNoEdit()
 {
     if (GetFocus() == hwndPageBox)
         SendMessage(hwndPageBox, WM_SETFOCUS, 0, 0);
@@ -5226,7 +5225,7 @@ static LRESULT CALLBACK WndProcSpliter(HWND hwnd, UINT message, WPARAM wParam, L
     return DefWindowProc(hwnd, message, wParam, lParam);
 }
 
-void WindowInfo::FindStart()
+void WindowInfoBase::FindStart()
 {
     if (GetFocus() == hwndFindBox)
         SendMessage(hwndFindBox, WM_SETFOCUS, 0, 0);
@@ -5562,7 +5561,7 @@ static void RelayoutTocItem(LPNMTVCUSTOMDRAW ntvcd)
 }
 #endif
 
-void WindowInfo::LoadTocTree()
+void WindowInfoBase::LoadTocTree()
 {
     if (tocLoaded)
         return;
@@ -5574,7 +5573,7 @@ void WindowInfo::LoadTocTree()
     tocLoaded = true;
 }
 
-void WindowInfo::ToggleTocBox()
+void WindowInfoBase::ToggleTocBox()
 {
     if (!PdfLoaded())
         return;
@@ -5587,7 +5586,7 @@ void WindowInfo::ToggleTocBox()
     MenuUpdateBookmarksStateForWindow(this);
 }
 
-void WindowInfo::ShowTocBox()
+void WindowInfoBase::ShowTocBox()
 {
     if (!dm->hasTocTree()) {
         tocShow = true;
@@ -5630,7 +5629,7 @@ void WindowInfo::ShowTocBox()
     this->UpdateTocSelection(dm->currentPageNo());
 }
 
-void WindowInfo::HideTocBox()
+void WindowInfoBase::HideTocBox()
 {
     RECT r;
     GetClientRect(hwndFrame, &r);
@@ -5651,7 +5650,7 @@ void WindowInfo::HideTocBox()
     tocShow = false;
 }
 
-void WindowInfo::ClearTocBox()
+void WindowInfoBase::ClearTocBox()
 {
     if (!tocLoaded) return;
 

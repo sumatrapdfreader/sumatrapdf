@@ -11,6 +11,17 @@
 #include "PdfSearch.h"
 #include "vstrlist.h"
 
+// TODO: the final division is meant to be:
+// WindowInfoBase
+// WindowInfoAbout : WindowInfoBase
+// WindowInfoPdf : WindowInfoBase
+// WindowInfoComic : WindowInfoBase
+// WindowInfoError : WindowInfoBase
+// (eventually I would prefer to show 'error opening a file' and other
+// similar messages as Growl-style, dismissable notifications
+// in the lower right corner of the window, which would be a solution
+// to issue 1214)
+
 class DisplayModel;
 class Synchronizer;
 
@@ -52,11 +63,11 @@ typedef struct SelectionOnPage {
 
 /* Describes information related to one window with (optional) pdf document
    on the screen */
-class WindowInfo : public PdfSearchTracker
+class WindowInfoBase
 {
 public:
-    WindowInfo(HWND hwnd);
-    ~WindowInfo();
+    WindowInfoBase(HWND hwnd);
+    ~WindowInfoBase();
     
     void GetCanvasSize() { 
         GetClientRect(hwndCanvas, &canvasRc);
@@ -188,7 +199,6 @@ public:
     void ToggleTocBox();
 
     void FindStart();
-    virtual bool FindUpdateStatus(int count, int total);
     void AbortFinding();
     void FocusPageNoEdit();
 
@@ -209,6 +219,16 @@ public:
     void ZoomToSelection(float factor, bool relative);
     void SwitchToDisplayMode(DisplayMode displayMode, bool keepContinuous=false);
     void MoveDocBy(int dx, int dy);
+};
+
+class WindowInfo : public WindowInfoBase, public PdfSearchTracker
+{
+public:
+    WindowInfo(HWND hwnd) : WindowInfoBase(hwnd) {
+    }
+    ~WindowInfo() {
+    }
+    virtual bool FindUpdateStatus(int count, int total);
 };
 
 class WindowInfoList : public vector<WindowInfo *>

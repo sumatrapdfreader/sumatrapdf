@@ -9,7 +9,7 @@
 #include "tstr_util.h"
 #include "WinUtil.hpp"
 
-WindowInfo::WindowInfo(HWND hwnd) :
+WindowInfoBase::WindowInfoBase(HWND hwnd) :
     dm(NULL), state(WS_ABOUT), hwndFrame(hwnd),
     linkOnLastButtonDown(NULL), url(NULL), selectionOnPage(NULL),
     tocLoaded(false), tocShow(false), tocState(NULL), tocRoot(NULL),
@@ -42,7 +42,7 @@ WindowInfo::WindowInfo(HWND hwnd) :
     ReleaseDC(hwndFrame, hdcFrame);
 }
 
-WindowInfo::~WindowInfo() {
+WindowInfoBase::~WindowInfoBase() {
     this->AbortFinding();
     delete this->dm;
     delete this->pdfsync;
@@ -59,7 +59,7 @@ WindowInfo::~WindowInfo() {
     free(this->tocState);
 }
 
-void WindowInfo::DoubleBuffer_Show(HDC hdc)
+void WindowInfoBase::DoubleBuffer_Show(HDC hdc)
 {
     if (this->hdc != this->hdcToDraw) {
         assert(this->hdcToDraw == this->hdcDoubleBuffer);
@@ -67,7 +67,7 @@ void WindowInfo::DoubleBuffer_Show(HDC hdc)
     }
 }
 
-void WindowInfo::DoubleBuffer_Delete() {
+void WindowInfoBase::DoubleBuffer_Delete() {
     if (this->bmpDoubleBuffer) {
         DeleteObject(this->bmpDoubleBuffer);
         this->bmpDoubleBuffer = NULL;
@@ -80,7 +80,7 @@ void WindowInfo::DoubleBuffer_Delete() {
     this->hdcToDraw = NULL;
 }
 
-void WindowInfo::AbortFinding()
+void WindowInfoBase::AbortFinding()
 {
     if (this->findThread) {
         this->findCanceled = true;
@@ -89,14 +89,14 @@ void WindowInfo::AbortFinding()
     this->findCanceled = false;
 }
 
-void WindowInfo::RedrawAll(bool update)
+void WindowInfoBase::RedrawAll(bool update)
 {
     InvalidateRect(this->hwndCanvas, NULL, false);
     if (update)
         UpdateWindow(this->hwndCanvas);
 }
 
-HTREEITEM WindowInfo::TreeItemForPageNo(HTREEITEM hItem, int pageNo)
+HTREEITEM WindowInfoBase::TreeItemForPageNo(HTREEITEM hItem, int pageNo)
 {
     HTREEITEM hCurrItem = NULL;
 
@@ -129,7 +129,7 @@ HTREEITEM WindowInfo::TreeItemForPageNo(HTREEITEM hItem, int pageNo)
     return hCurrItem;
 }
 
-void WindowInfo::UpdateTocSelection(int currPageNo)
+void WindowInfoBase::UpdateTocSelection(int currPageNo)
 {
     if (!this->tocLoaded || !this->tocShow)
         return;
@@ -144,7 +144,7 @@ void WindowInfo::UpdateTocSelection(int currPageNo)
         TreeView_SelectItem(this->hwndTocTree, hCurrItem);
 }
 
-void WindowInfo::UpdateToCExpansionState(HTREEITEM hItem)
+void WindowInfoBase::UpdateToCExpansionState(HTREEITEM hItem)
 {
     while (hItem) {
         TVITEM item;
@@ -170,7 +170,7 @@ void WindowInfo::UpdateToCExpansionState(HTREEITEM hItem)
     }
 }
 
-void WindowInfo::DisplayStateFromToC(DisplayState *ds)
+void WindowInfoBase::DisplayStateFromToC(DisplayState *ds)
 {
     ds->showToc = this->tocShow;
 
@@ -188,7 +188,7 @@ void WindowInfo::DisplayStateFromToC(DisplayState *ds)
         ds->tocState = (int *)memdup(this->tocState, (this->tocState[0] + 1) * sizeof(int));
 }
 
-void WindowInfo::ResizeIfNeeded(bool resizeWindow)
+void WindowInfoBase::ResizeIfNeeded(bool resizeWindow)
 {
     RECT rc;
     GetClientRect(this->hwndCanvas, &rc);
@@ -203,7 +203,7 @@ void WindowInfo::ResizeIfNeeded(bool resizeWindow)
     }
 }
 
-void WindowInfo::ToggleZoom()
+void WindowInfoBase::ToggleZoom()
 {
     assert(this->dm);
     if (!this->dm) return;
@@ -217,7 +217,7 @@ void WindowInfo::ToggleZoom()
         this->dm->zoomTo(ZOOM_FIT_PAGE);
 }
 
-void WindowInfo::ZoomToSelection(float factor, bool relative)
+void WindowInfoBase::ZoomToSelection(float factor, bool relative)
 {
     assert(this->dm);
     if (!this->dm) return;
@@ -253,7 +253,7 @@ void WindowInfo::ZoomToSelection(float factor, bool relative)
     this->UpdateToolbarState();
 }
 
-void WindowInfo::UpdateToolbarState()
+void WindowInfoBase::UpdateToolbarState()
 {
     if (!this->dm)
         return;
@@ -279,7 +279,7 @@ void WindowInfo::UpdateToolbarState()
         prevZoomVirtual = INVALID_ZOOM;
 }
 
-void WindowInfo::MoveDocBy(int dx, int dy)
+void WindowInfoBase::MoveDocBy(int dx, int dy)
 {
     assert (WS_SHOWING_PDF == this->state);
     if (WS_SHOWING_PDF != this->state) return;
