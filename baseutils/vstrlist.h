@@ -95,31 +95,31 @@ public:
 
 #endif
 
-class VStrList : public vector<tchar_t *>
+class VStrList : public vector<TCHAR *>
 {
 public:
     ~VStrList() { clearFree(); }
 
-    tchar_t *join(tchar_t *joint=NULL)
+    TCHAR *join(TCHAR *joint=NULL)
     {
         size_t len = 0;
         size_t jointLen = joint ? tstr_len(joint) : 0;
-        tchar_t *result, *tmp;
+        TCHAR *result, *tmp;
 
         size_t n = size();
         for (size_t i = n; i > 0; i--)
             len += tstr_len(at(i - 1)) + jointLen;
         if (len <= jointLen)
-            return (tchar_t *)calloc(1, sizeof(tchar_t));
+            return (TCHAR *)calloc(1, sizeof(TCHAR));
         len -= jointLen;
 
-        result = (tchar_t *)calloc(len + 1, sizeof(tchar_t));
+        result = (TCHAR *)calloc(len + 1, sizeof(TCHAR));
         if (!result)
             return NULL;
 
         assert(size() == n);
         tmp = result;
-        tchar_t *end = result + len + 1;
+        TCHAR *end = result + len + 1;
         for (size_t i = 0; i < n; i++) {
             if (jointLen > 0 && i > 0) {
                 tstr_copy(tmp, end - tmp, joint);
@@ -132,11 +132,11 @@ public:
         return result;
     }
 
-    int find(tchar_t *string)
+    int find(TCHAR *string)
     {
         size_t n = size();
         for (size_t i = 0; i < n; i++) {
-            tchar_t *item = at(i);
+            TCHAR *item = at(i);
             if (tstr_eq(string, item))
                 return (int)i;
         }

@@ -159,7 +159,7 @@ bool GetExePath(LPWSTR lpPath, int len)
 	// Try to get the path from the registry (set e.g. when making the default PDF viewer)
 	if (SHRegGetUSValueW(L"Software\\Classes\\SumatraPDF\\Shell\\Open\\Command", NULL, NULL, lpPath, &dwSize, FALSE, NULL, 0) == ERROR_SUCCESS)
 	{
-		wchar_t *args = wcsstr(lpPath, L"\"%1\"");
+		WCHAR *args = wcsstr(lpPath, L"\"%1\"");
 		if (args)
 		{
 			*args = '\0';

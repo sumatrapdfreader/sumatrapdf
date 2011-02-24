@@ -136,8 +136,8 @@ static void ParseCommandLineTest()
 
 static void tstr_test()
 {
-    tchar_t buf[32];
-    tchar_t *str = _T("a string");
+    TCHAR buf[32];
+    TCHAR *str = _T("a string");
     assert(tstr_len(str) == 8);
     assert(tstr_eq(str, _T("a string")) && tstr_eq(str, str));
     assert(!tstr_eq(str, NULL) && !tstr_eq(str, _T("A String")));
@@ -192,11 +192,11 @@ static void tstr_test()
     tstr_trans_chars(buf, _T("\1"), _T("\0"));
     assert(tstr_eq(buf, _T("AbC")) && tstr_eq(buf + 4, _T("Efg")));
 
-    tchar_t *url = tstr_url_encode(_T("key=value&key2=more data! (even \"\xFCmlauts\")'\b"));
+    TCHAR *url = tstr_url_encode(_T("key=value&key2=more data! (even \"\xFCmlauts\")'\b"));
     assert(tstr_eq(url, _T("key%3dvalue%26key2%3dmore+data!+(even+%22%fcmlauts%22)'%08")));
     free(url);
 
-    const tchar_t *pos = _T("[Open(\"filename.pdf\",0,1,0)]");
+    const TCHAR *pos = _T("[Open(\"filename.pdf\",0,1,0)]");
     assert(tstr_skip(&pos, _T("[Open(\"")));
     assert(tstr_copy_skip_until(&pos, buf, dimof(buf), '"'));
     assert(tstr_eq(buf, _T("filename.pdf")));
