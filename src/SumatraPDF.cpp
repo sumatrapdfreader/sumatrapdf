@@ -164,7 +164,7 @@ static HFONT                        gDefaultGuiFont;
 static HBITMAP                      gBitmapReloadingCue;
 
 static RenderCache                  gRenderCache;
-static WindowInfoList               gWindowList;
+static WindowInfoList               gWindows;
 static FileHistoryList              gFileHistoryRoot;
 
 static int                          gReBarDy;
@@ -899,8 +899,8 @@ static BOOL Prefs_Save(void)
         return FALSE;
 
     /* mark currently shown files as visible */
-    for (size_t i = 0; i < gWindowList.size(); i++)
-        UpdateCurrentFileDisplayStateForWin(gWindowList[i]);
+    for (size_t i = 0; i < gWindows.size(); i++)
+        UpdateCurrentFileDisplayStateForWin(gWindows[i]);
 
     const char *data = Prefs_Serialize(&gFileHistoryRoot, &dataLen);
     if (!data)
@@ -967,7 +967,7 @@ static void WindowInfo_Delete(WindowInfo *win)
         DestroyWindow(win->hwndPdfProperties);
         assert(NULL == win->hwndPdfProperties);
     }
-    gWindowList.remove(win);
+    gWindows.remove(win);
 
     DragAcceptFiles(win->hwndCanvas, FALSE);
     DeleteOldSelectionInfo(win);
@@ -1001,8 +1001,8 @@ static void WindowInfo_UpdateFindbox(WindowInfo *win) {
 }
 
 static bool FileCloseMenuEnabled(void) {
-    for (size_t i = 0; i < gWindowList.size(); i++)
-        if (gWindowList[i]->state != WS_ABOUT)
+    for (size_t i = 0; i < gWindows.size(); i++)
+        if (gWindows[i]->state != WS_ABOUT)
             return true;
     return false;
 }
@@ -1166,9 +1166,9 @@ static void MenuUpdateStateForWindow(WindowInfo *win) {
 /* Disable/enable menu items and toolbar buttons depending on wheter a
    given window shows a PDF file or not. */
 static void MenuToolbarUpdateStateForAllWindows(void) {
-    for (size_t i = 0; i < gWindowList.size(); i++) {
-        MenuUpdateStateForWindow(gWindowList[i]);
-        ToolbarUpdateStateForWindow(gWindowList[i]);
+    for (size_t i = 0; i < gWindows.size(); i++) {
+        MenuUpdateStateForWindow(gWindows[i]);
+        ToolbarUpdateStateForWindow(gWindows[i]);
     }
 }
 
@@ -1234,7 +1234,7 @@ static WindowInfo* WindowInfo_CreateEmpty(void) {
     if (!hwndFrame)
         return NULL;
 
-    assert(NULL == gWindowList.Find(hwndFrame));
+    assert(NULL == gWindows.Find(hwndFrame));
     win = new WindowInfo(hwndFrame);
 
     hwndCanvas = CreateWindowEx(
@@ -1268,7 +1268,7 @@ static WindowInfo* WindowInfo_CreateEmpty(void) {
     DragAcceptFiles(win->hwndCanvas, TRUE);
 
     win->stopFindStatusThreadEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
-    gWindowList.push_back(win);
+    gWindows.push_back(win);
     return win;
 }
 
@@ -1520,18 +1520,18 @@ static void OnFileChange(const TCHAR * filename, LPARAM param)
 
 WindowInfo* WindowInfoList::Find(HWND hwnd)
 {
-    return gWindowList.find(hwnd);
+    return gWindows.find(hwnd);
 }
 
 WindowInfo* WindowInfoList::Find(LPTSTR file)
 {
-    return gWindowList.find(file);
+    return gWindows.find(file);
 }
 
 #ifndef THREAD_BASED_FILEWATCH
 static void WindowInfoList_RefreshUpdatedFiles(void) {
-    for (size_t i = 0; i < gWindowList.size(); i++) {
-        WindowInfo *win = gWindowList[i];
+    for (size_t i = 0; i < gWindows.size(); i++) {
+        WindowInfo *win = gWindows[i];
         if (win->watcher.HasChanged())
             OnFileChange(win->watcher.filepath(), (LPARAM)win);
     }
@@ -1650,8 +1650,8 @@ WindowInfo* LoadPdf(const TCHAR *fileName, WindowInfo *win, bool showWin, TCHAR 
     if (!fileName) return NULL;
 
     bool isNewWindow = false;
-    if (!win && 1 == gWindowList.size() && WS_ABOUT == gWindowList[0]->state) {
-        win = gWindowList[0];
+    if (!win && 1 == gWindows.size() && WS_ABOUT == gWindows[0]->state) {
+        win = gWindows[0];
     }
     else if (!win || WS_SHOWING_PDF == win->state) {
         isNewWindow = true;
@@ -2933,7 +2933,7 @@ static void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose=false)
         WindowInfo_ExitFullscreen(win);
 
     bool lastWindow = false;
-    if (1 == gWindowList.size())
+    if (1 == gWindows.size())
         lastWindow = true;
 
     if (lastWindow)
@@ -2978,7 +2978,7 @@ static void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose=false)
     }
 
     if (lastWindow && quitIfLast) {
-        assert(0 == gWindowList.size());
+        assert(0 == gWindows.size());
         PostQuitMessage(0);
     } else {
         MenuToolbarUpdateStateForAllWindows();
@@ -3802,8 +3802,8 @@ static void OnSize(WindowInfo *win, int dx, int dy)
 
 static void RebuildProgramMenus(void)
 {
-    for (size_t i = 0; i < gWindowList.size(); i++) {
-        WindowInfo *win = gWindowList[i];
+    for (size_t i = 0; i < gWindows.size(); i++) {
+        WindowInfo *win = gWindows[i];
         WindowInfo_RebuildMenu(win);
         // Setting the menu for a full screen window messes things up
         if (!win->fullScreen && PM_DISABLED == win->presentation)
@@ -3846,8 +3846,8 @@ static void OnMenuViewShowHideToolbar(WindowInfo *win)
     if (win->hwndFindBox == GetFocus() || win->hwndPageBox == GetFocus())
         SetFocus(win->hwndFrame);
 
-    for (size_t i = 0; i < gWindowList.size(); i++) {
-        WindowInfo *win = gWindowList[i];
+    for (size_t i = 0; i < gWindows.size(); i++) {
+        WindowInfo *win = gWindows[i];
         if (gGlobalPrefs.m_showToolbar)
             ShowWindow(win->hwndReBar, SW_SHOW);
         else
@@ -3871,8 +3871,8 @@ static void OnMenuSettings(WindowInfo *win)
         gFileHistoryRoot.first = NULL;
     }
 
-    for (size_t i = 0; i < gWindowList.size(); i++) {
-        WindowInfo *win = gWindowList[i];
+    for (size_t i = 0; i < gWindows.size(); i++) {
+        WindowInfo *win = gWindows[i];
         RebuildProgramMenus();
         MenuUpdateBookmarksStateForWindow(win);
         MenuUpdateDisplayMode(win);
@@ -4646,8 +4646,8 @@ static void UpdateToolbarButtonsToolTipsForWindow(WindowInfo* win)
 
 static void UpdateToolbarToolText(void)
 {
-    for (size_t i = 0; i < gWindowList.size(); i++) {
-        WindowInfo *win = gWindowList[i];
+    for (size_t i = 0; i < gWindows.size(); i++) {
+        WindowInfo *win = gWindows[i];
         UpdateToolbarPageText(win, -1);
         UpdateToolbarFindText(win);
         UpdateToolbarButtonsToolTipsForWindow(win);
@@ -4694,7 +4694,7 @@ static bool FocusUnselectedWndProc(HWND hwnd, UINT message)
 static WNDPROC DefWndProcFindBox = NULL;
 static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    WindowInfo *win = gWindowList.Find(hwnd);
+    WindowInfo *win = gWindows.Find(hwnd);
     if (!win || !win->dm)
         return DefWindowProc(hwnd, message, wParam, lParam);
 
@@ -4819,7 +4819,7 @@ static LRESULT CALLBACK WndProcToolbar(HWND hwnd, UINT message, WPARAM wParam, L
 
 static LRESULT CALLBACK WndProcFindStatus(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    WindowInfo *win = gWindowList.Find(hwnd);
+    WindowInfo *win = gWindows.Find(hwnd);
     if (!win)
         return DefWindowProc(hwnd, message, wParam, lParam);
 
@@ -4956,7 +4956,7 @@ static void CreateFindBox(WindowInfo *win, HINSTANCE hInst)
 static WNDPROC DefWndProcPageBox = NULL;
 static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    WindowInfo *win = gWindowList.Find(hwnd);
+    WindowInfo *win = gWindows.Find(hwnd);
     if (!win || !win->dm)
         return DefWindowProc(hwnd, message, wParam, lParam);
 
@@ -5172,7 +5172,7 @@ static void CreateToolbar(WindowInfo *win, HINSTANCE hInst) {
 
 static LRESULT CALLBACK WndProcSpliter(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    WindowInfo *win = gWindowList.Find(hwnd);
+    WindowInfo *win = gWindows.Find(hwnd);
 
     switch (message)
     {
@@ -5256,7 +5256,7 @@ static void TreeView_ExpandRecursively(HWND hTree, HTREEITEM hItem, UINT flag, b
 static WNDPROC DefWndProcTocTree = NULL;
 static LRESULT CALLBACK WndProcTocTree(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    WindowInfo *win = gWindowList.Find(hwnd);
+    WindowInfo *win = gWindows.Find(hwnd);
     switch (message) {
         case WM_CHAR:
             if (VK_ESCAPE == wParam && gGlobalPrefs.m_escToExit)
@@ -5308,7 +5308,7 @@ static void RelayoutTocItem(LPNMTVCUSTOMDRAW ntvcd);
 static WNDPROC DefWndProcTocBox = NULL;
 static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    WindowInfo *win = gWindowList.Find(hwnd);
+    WindowInfo *win = gWindows.Find(hwnd);
     switch (message) {
     case WM_SIZE: {
         RECT rc;
@@ -5732,7 +5732,7 @@ static bool gWheelMsgRedirect = false; // set when WM_MOUSEWHEEL has been passed
 static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     int          current;
-    WindowInfo * win = gWindowList.Find(hwnd);
+    WindowInfo * win = gWindows.Find(hwnd);
     POINT        pt;
 
     switch (message)
@@ -5995,7 +5995,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
     ULONG           ulScrollLines;                   // for mouse wheel logic
     HttpReqCtx *    ctx;
 
-    win = gWindowList.Find(hwnd);
+    win = gWindows.Find(hwnd);
 
     switch (message)
     {
@@ -6773,7 +6773,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         RegisterForPdfExtentions(win->hwndFrame);
 
     if (gGlobalPrefs.m_enableAutoUpdate)
-        DownloadSumatraUpdateInfo(gWindowList[0], true);
+        DownloadSumatraUpdateInfo(gWindows[0], true);
 
     HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_SUMATRAPDF));
 #ifndef THREAD_BASED_FILEWATCH
@@ -6788,7 +6788,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         }
 #endif
         // Make sure to dispatch the accelerator to the correct window
-        win = gWindowList.Find(msg.hwnd);
+        win = gWindows.Find(msg.hwnd);
         if (!TranslateAccelerator(win ? win->hwndFrame : msg.hwnd, hAccelTable, &msg)) {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
@@ -6800,8 +6800,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 #endif
     
 Exit:
-    while (gWindowList.size() > 0)
-        WindowInfo_Delete(gWindowList[0]);
+    while (gWindows.size() > 0)
+        WindowInfo_Delete(gWindows[0]);
     DeleteObject(gBrushBg);
     DeleteObject(gBrushWhite);
     DeleteObject(gBrushBlack);
