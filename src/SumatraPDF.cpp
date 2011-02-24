@@ -5,6 +5,11 @@
 #include <shlobj.h>
 #include <wininet.h>
 
+// minizip
+#include <ioapi.h>
+#include <iowin32.h>
+#include <unzip.h>
+
 #include "WindowInfo.h"
 #include "RenderCache.h"
 #include "PdfSync.h"
@@ -251,6 +256,14 @@ static void WindowInfo_ExitFullscreen(WindowInfo *win);
 static bool CanViewWithAcrobat(WindowInfo *win=NULL);
 static bool ViewWithAcrobat(WindowInfo *win, TCHAR *args=NULL);
 static bool CanSendAsEmailAttachment(WindowInfo *win=NULL);
+
+extern "C" {
+// needed because we compile bzip2 with #define BZ_NO_STDIO
+void bz_internal_error(int errcode)
+{
+    // do nothing
+}
+}
 
 static int LangGetIndex(const char *name)
 {
@@ -1540,6 +1553,98 @@ static void CheckPositionAndSize(DisplayState* ds)
     EnsureWindowVisibility(&ds->windowX, &ds->windowY, &ds->windowDx, &ds->windowDy);
 }
 
+bool IsComicBook(const TCHAR *fileName)
+{
+    if (tstr_endswithi(fileName, _T(".cbz")))
+        return true;
+#if 0 // not yet
+    if (tstr_endswithi(fileName, _T(".cbr")))
+        return true;
+#endif
+    return false;
+}
+
+WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin, TCHAR *windowTitle)
+{
+    if (IsComicBook(fileName))
+        return LoadComicBook(fileName, win, showWin, windowTitle);
+    return LoadPdf(fileName, win, showWin, windowTitle);
+}
+
+bool IsPngFile(const char *fileName)
+{
+    return !!str_endswithi(fileName, ".png");
+}
+
+bool IsJpegFile(const char *fileName)
+{
+    if (str_endswithi(fileName, ".jpeg"))
+        return true;
+    if (str_endswithi(fileName,".jpg"))
+        return true;
+    return false;
+}
+
+// Load *.cbz / *.cbr file
+// TODO: far from being done
+WindowInfo* LoadComicBook(const TCHAR *fileName, WindowInfo *win, bool showWin, TCHAR *windowTitle)
+{    
+    zlib_filefunc64_def ffunc;
+    unzFile uf;
+    fill_win32_filefunc64(&ffunc);
+
+    uf = unzOpen2_64(fileName, &ffunc);
+    if (!uf) {
+        goto Error;
+    }
+    unz_global_info64 ginfo;
+    int err = unzGetGlobalInfo64(uf, &ginfo);
+    if (err != UNZ_OK) {
+        goto Error;
+    }
+
+    // extract all contained files one by one
+    int pngCount = 0, jpegCount = 0;
+    for (int n = 0; n < ginfo.number_entry; n++) {
+        BOOL success = FALSE;
+        char filename[MAX_PATH];
+        unz_file_info64 finfo;
+        err = unzGetCurrentFileInfo64(uf, &finfo, filename, dimof(filename), NULL, 0, NULL, 0);
+        if (err != UNZ_OK) {
+            goto Error;
+        }
+
+        err = unzOpenCurrentFilePassword(uf, NULL);
+        if (err != UNZ_OK) {
+            goto Error;
+        }
+
+        if (IsPngFile(filename))
+            pngCount++;
+        else if (IsJpegFile(filename))
+            jpegCount++;
+
+        err = unzCloseCurrentFile(uf);
+        if (err != UNZ_OK) {
+            goto Error;
+        }
+
+        err = unzGoToNextFile(uf);
+        if (err != UNZ_OK || !success)
+            break;
+    }
+
+    unzClose(uf);
+
+    // TODO: if (pngCount + jpegCount > 0) => treat it as a valid comic book file
+    return NULL;
+Error:
+    if (uf)
+        unzClose(uf);
+    return NULL;
+    
+}
+
 WindowInfo* LoadPdf(const TCHAR *fileName, WindowInfo *win, bool showWin, TCHAR *windowTitle)
 {
     assert(fileName);
@@ -1795,7 +1900,7 @@ static void OnDropFiles(WindowInfo *win, HDROP hDrop)
             }
         }
         // The first dropped document may override the current window
-        LoadPdf(filename, i == 0 ? win : NULL);
+        LoadDocument(filename, i == 0 ? win : NULL);
     }
     DragFinish(hDrop);
 
@@ -3454,13 +3559,13 @@ static void OnMenuOpen(WindowInfo *win)
         TCHAR *fileName = ofn.lpstrFile + ofn.nFileOffset;
         if (*(fileName - 1)) {
             // special case: single filename without NULL separator
-            LoadPdf(ofn.lpstrFile, win);
+            LoadDocument(ofn.lpstrFile, win);
         }
         else {
             while (*fileName) {
                 TCHAR *filePath = tstr_cat3(ofn.lpstrFile, DIR_SEP_TSTR, fileName);
                 if (filePath) {
-                    LoadPdf(filePath, win);
+                    LoadDocument(filePath, win);
                     free(filePath);
                 }
                 fileName += lstrlen(fileName) + 1;
@@ -5927,7 +6032,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
             {
                 FileHistoryNode *node = gFileHistoryRoot.Find(wmId);
                 if (node) {
-                    LoadPdf(node->state.filePath, win);
+                    LoadDocument(node->state.filePath, win);
                     break;
                 }
             }
@@ -6606,7 +6711,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         }
         else {
             bool showWin = !i.exitOnPrint && !gPluginMode;
-            win = LoadPdf(i.fileNames[n], NULL, showWin, i.newWindowTitle);
+            win = LoadDocument(i.fileNames[n], NULL, showWin, i.newWindowTitle);
             if (!win || win->state != WS_SHOWING_PDF)
                 msg.wParam++; // set an error code for the next goto Exit
             if (!win)
