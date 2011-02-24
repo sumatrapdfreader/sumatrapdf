@@ -244,9 +244,9 @@ static void UpdateToolbarPageText(WindowInfo *win, int pageCount);
 static void UpdateToolbarToolText(void);
 static void OnMenuFindMatchCase(WindowInfo *win);
 static bool LoadPdfIntoWindow(const TCHAR *fileName, WindowInfo *win, 
-    const DisplayState *state, bool is_new_window, bool tryrepair, 
+    const DisplayState *state, bool isNewWindow, bool tryRepair, 
     bool showWin, bool placeWindow);
-static void WindowInfo_ShowMessage_Asynch(WindowInfo *win, const TCHAR *message, bool resize);
+static void WindowInfo_ShowMessage_Async(WindowInfo *win, const TCHAR *message, bool resize);
 
 static void Find(WindowInfo *win, PdfSearchDirection direction = FIND_FORWARD);
 static void DeleteOldSelectionInfo(WindowInfo *win);
@@ -942,8 +942,8 @@ static void WindowInfo_Refresh(WindowInfo* win, bool autorefresh) {
     // a refresh event can occur before the file is finished being written,
     // in which case the repair could fail. Instead, if the file is broken, 
     // we postpone the reload until the next autorefresh event
-    bool tryrepair = !autorefresh;
-    LoadPdfIntoWindow(win->watcher.filepath(), win, &ds, false, tryrepair, true, false);
+    bool tryRepair = !autorefresh;
+    LoadPdfIntoWindow(win->watcher.filepath(), win, &ds, false, tryRepair, true, false);
 
     if (win->dm) {
         // save a newly remembered password into file history so that
@@ -1317,10 +1317,10 @@ static bool LoadPdfIntoWindow(
     const TCHAR *fileName, // path to the PDF
     WindowInfo *win,       // destination window
     const DisplayState *state,   // state
-    bool is_new_window,    // if true then 'win' refers to a newly created window that needs to be resized and placed
-    bool tryrepair,        // if true then try to repair the PDF if it is broken
+    bool isNewWindow,    // if true then 'win' refers to a newly created window that needs to be resized and placed
+    bool tryRepair,        // if true then try to repair the PDF if it is broken
     bool showWin,          // window visible or not
-    bool placeWindow)      // if true then the Window will be moved/sized according to the 'state' information even if the window was already placed before (is_new_window=false)
+    bool placeWindow)      // if true then the Window will be moved/sized according to the 'state' information even if the window was already placed before (isNewWindow=false)
 {
     // Never load settings from a preexisting state if the user doesn't wish to
     // (unless we're just refreshing the document, i.e. only if placeWindow == true)
@@ -1363,7 +1363,7 @@ static bool LoadPdfIntoWindow(
         win->needrefresh = true;
         // if there is an error while reading the pdf and pdfrepair is not requested
         // then fallback to the previous state
-        if (!tryrepair) {
+        if (!tryRepair) {
             win->dm = previousmodel;
         } else {
             delete previousmodel;
@@ -1429,7 +1429,7 @@ static bool LoadPdfIntoWindow(
     //  a while for longer documents)
     // win->dm->setScrollState(&ss);
 
-    if (!is_new_window) {
+    if (!isNewWindow) {
         win->RedrawAll();
         OnMenuFindMatchCase(win);
     }
@@ -1456,9 +1456,9 @@ static bool LoadPdfIntoWindow(
             win_set_text(win->hwndFrame, title);
     }
 Error:
-    if (is_new_window || placeWindow && state) {
+    if (isNewWindow || placeWindow && state) {
         assert(win);
-        if (is_new_window && state && 0 != state->windowDx && 0 != state->windowDy) {
+        if (isNewWindow && state && 0 != state->windowDx && 0 != state->windowDy) {
             RECT rect;
             rect.top = state->windowY;
             rect.left = state->windowX;
@@ -1502,9 +1502,9 @@ Error:
         return false;
     }
     // This should only happen after everything else is ready
-    if ((is_new_window || placeWindow) && showWin && showAsFullScreen)
+    if ((isNewWindow || placeWindow) && showWin && showAsFullScreen)
         WindowInfo_EnterFullscreen(win);
-    if (!is_new_window && win->presentation && win->dm)
+    if (!isNewWindow && win->presentation && win->dm)
         win->dm->setPresentationMode(true);
 
     return true;
@@ -1649,12 +1649,12 @@ WindowInfo* LoadPdf(const TCHAR *fileName, WindowInfo *win, bool showWin, TCHAR 
     assert(fileName);
     if (!fileName) return NULL;
 
-    bool is_new_window = false;
+    bool isNewWindow = false;
     if (!win && 1 == gWindowList.size() && WS_ABOUT == gWindowList[0]->state) {
         win = gWindowList[0];
     }
     else if (!win || WS_SHOWING_PDF == win->state) {
-        is_new_window = true;
+        isNewWindow = true;
         win = WindowInfo_CreateEmpty();
         if (!win)
             return NULL;
@@ -1662,9 +1662,7 @@ WindowInfo* LoadPdf(const TCHAR *fileName, WindowInfo *win, bool showWin, TCHAR 
 
     if (windowTitle)
         win->title = windowTitle;
-
-    // TODO: fileName might not exist.
-    // Normalize the file path    
+ 
     TCHAR *fullpath = FilePath_Normalize(fileName, FALSE);
     if (!fullpath)
         goto exit;
@@ -1677,7 +1675,7 @@ WindowInfo* LoadPdf(const TCHAR *fileName, WindowInfo *win, bool showWin, TCHAR 
     }
 
     CheckPositionAndSize(ds);
-    if (!LoadPdfIntoWindow(fullpath, win, ds, is_new_window, true, showWin, true)) {
+    if (!LoadPdfIntoWindow(fullpath, win, ds, isNewWindow, true, showWin, true)) {
         /* failed to open */
         goto exit;
     }
@@ -2342,7 +2340,7 @@ static void CopySelectionToClipboard(WindowInfo *win)
         }
     }
     else
-        WindowInfo_ShowMessage_Asynch(win, _TR("Copying text was denied (copying as image only)"), true);
+        WindowInfo_ShowMessage_Async(win, _TR("Copying text was denied (copying as image only)"), true);
 
     /* also copy a screenshot of the current selection to the clipboard */
     SelectionOnPage *selOnPage = win->selectionOnPage;
@@ -2452,12 +2450,12 @@ static void OnInverseSearch(WindowInfo *win, UINT x, UINT y)
             // any error message if the SyncTeX enhancements are hidden from UI
             DBG_OUT("Pdfsync: Sync file not found!\n");
             if (gGlobalPrefs.m_enableTeXEnhancements)
-                WindowInfo_ShowMessage_Asynch(win, _TR("No synchronization file found"), true);
+                WindowInfo_ShowMessage_Async(win, _TR("No synchronization file found"), true);
             return;
         }
         else if (err != PDFSYNCERR_SUCCESS || !win->pdfsync) {
             DBG_OUT("Pdfsync: Sync file cannot be loaded!\n");
-            WindowInfo_ShowMessage_Asynch(win, _TR("Synchronization file cannot be opened"), true);
+            WindowInfo_ShowMessage_Async(win, _TR("Synchronization file cannot be opened"), true);
             return;
         }
     }
@@ -2476,7 +2474,7 @@ static void OnInverseSearch(WindowInfo *win, UINT x, UINT y)
     UINT err = win->pdfsync->pdf_to_source(pageNo, x, y, srcfilepath, dimof(srcfilepath),&line,&col); // record 101
     if (err != PDFSYNCERR_SUCCESS) {
         DBG_OUT("cannot sync from pdf to source!\n");
-        WindowInfo_ShowMessage_Asynch(win, _TR("No synchronization info at this position"), true);
+        WindowInfo_ShowMessage_Async(win, _TR("No synchronization info at this position"), true);
         return;
     }
 
@@ -2497,11 +2495,11 @@ static void OnInverseSearch(WindowInfo *win, UINT x, UINT y)
             CloseHandle(pi.hThread);
         } else {
             DBG_OUT_T("CreateProcess failed (%d): '%s'.\n", GetLastError(), cmdline);
-            WindowInfo_ShowMessage_Asynch(win, _TR("Cannot start inverse search command. Please check the command line in the settings."), true);
+            WindowInfo_ShowMessage_Async(win, _TR("Cannot start inverse search command. Please check the command line in the settings."), true);
         }
     }
     else if (gGlobalPrefs.m_enableTeXEnhancements)
-        WindowInfo_ShowMessage_Asynch(win, _TR("Cannot start inverse search command. Please check the command line in the settings."), true);
+        WindowInfo_ShowMessage_Async(win, _TR("Cannot start inverse search command. Please check the command line in the settings."), true);
 
     if (inverseSearch != gGlobalPrefs.m_inverseSearchCmdLine)
         free(inverseSearch);
@@ -4199,7 +4197,7 @@ static DWORD WINAPI ShowMessageThread(LPVOID data)
 
 // Display the message 'message' asynchronously
 // If resize = true then the window width is adjusted to the length of the text
-static void WindowInfo_ShowMessage_Asynch(WindowInfo *win, const TCHAR *message, bool resize)
+static void WindowInfo_ShowMessage_Async(WindowInfo *win, const TCHAR *message, bool resize)
 {
     if (message)
         win_set_text(win->hwndFindStatus, message);
@@ -4301,7 +4299,7 @@ void WindowInfo_ShowForwardSearchResult(WindowInfo *win, LPCTSTR srcfilename, UI
     else if (ret == PDFSYNCERR_NOSYNCPOINT_FOR_LINERECORD)
         tstr_printf_s(buf, dimof(buf), _TR("No result found around line %u in file %s"), line, srcfilename);
 
-    WindowInfo_ShowMessage_Asynch(win, buf, true);
+    WindowInfo_ShowMessage_Async(win, buf, true);
 }
 
 static void WindowInfo_ShowFindStatus(WindowInfo *win)
@@ -4328,13 +4326,13 @@ static void WindowInfo_HideFindStatus(WindowInfo *win, bool canceled=false)
     // resize the window, in case another message has been displayed in the meantime
     MoveWindow(win->hwndFindStatus, FIND_STATUS_MARGIN, FIND_STATUS_MARGIN, MulDiv(FIND_STATUS_WIDTH, win->dpi, USER_DEFAULT_SCREEN_DPI), MulDiv(23, win->dpi, USER_DEFAULT_SCREEN_DPI) + FIND_STATUS_PROGRESS_HEIGHT + 8, false);
     if (canceled)
-        WindowInfo_ShowMessage_Asynch(win, NULL, false);
+        WindowInfo_ShowMessage_Async(win, NULL, false);
     else if (!win->dm->bFoundText)
-        WindowInfo_ShowMessage_Asynch(win, _TR("No matches were found"), false);
+        WindowInfo_ShowMessage_Async(win, _TR("No matches were found"), false);
     else {
         TCHAR buf[256];
         wsprintf(buf, _TR("Found text at page %d"), win->dm->currentPageNo());
-        WindowInfo_ShowMessage_Asynch(win, buf, false);
+        WindowInfo_ShowMessage_Async(win, buf, false);
     }    
 }
 
@@ -4577,7 +4575,7 @@ static void OnChar(WindowInfo *win, WPARAM key)
         if (!gGlobalPrefs.m_showToolbar || win->fullScreen || PM_ENABLED == win->presentation) {
             int current = win->dm->currentPageNo(), total = win->dm->pageCount();
             TCHAR *pageInfo = tstr_printf(_T("%s %d / %d"), _TR("Page:"), current, total);
-            WindowInfo_ShowMessage_Asynch(win, pageInfo, true);
+            WindowInfo_ShowMessage_Async(win, pageInfo, true);
             free(pageInfo);
         }
         break;
@@ -6253,7 +6251,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                     else if (win->selectionOnPage)
                         CopySelectionToClipboard(win);
                     else
-                        WindowInfo_ShowMessage_Asynch(win, _TR("Select content with Ctrl+left mouse button"), true);
+                        WindowInfo_ShowMessage_Async(win, _TR("Select content with Ctrl+left mouse button"), true);
                     break;
 
                 case IDM_SELECT_ALL:
@@ -6378,7 +6376,7 @@ InitMouseWheelInfo:
         case WM_APP_FIND_END:
             if (!win->dm) {
                 // the document was closed while finding
-                WindowInfo_ShowMessage_Asynch(win, NULL, false);
+                WindowInfo_ShowMessage_Async(win, NULL, false);
             } else if (wParam) {
                 bool wasModified = !!lParam;
                 WindowInfo_ShowSearchResult(win, (PdfSel *)wParam, wasModified);

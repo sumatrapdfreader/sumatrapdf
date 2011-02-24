@@ -35,6 +35,15 @@ enum WinState {
     WS_ABOUT
 };
 
+// TODO: WindowInfoType is meant to replace WinState
+enum WindowInfoType {
+    WitInvalid = 0,
+    WitAbout,       // WindowInfoAbout
+    WitError,       // WindowInfoError
+    WitPdf,         // WindowInfoPdf
+    WitComic        // WindowInfoComic
+};
+
 /* Describes actions which can be performed by mouse */
 enum MouseAction {
     MA_IDLE = 0,
@@ -230,6 +239,46 @@ public:
     }
     virtual bool FindUpdateStatus(int count, int total);
 };
+
+#if 0 // TODO: not used yet
+class WindowInfoPdf : public WindowInfoBase, public PdfSearchTracker
+{
+public:
+    WindowInfoPdf(HWND hwnd) : WindowInfoBase(hwnd) {
+        type = WitPdf;
+    }
+    ~WindowInfoPdf() {
+    }
+    virtual bool FindUpdateStatus(int count, int total);
+};
+
+class WindowInfoAbout : public WindowInfoBase
+{
+    WindowInfoAbout(HWND hwnd) : WindowInfoBase(hwnd) {
+        type = WitAbout;
+    }
+    ~WindowInfoAbout() {
+    }
+};
+
+class WindowInfoError : public WindowInfoBase
+{
+    WindowInfoError(HWND hwnd) : WindowInfoBase(hwnd) {
+        type = WitError;
+    }
+    ~WindowInfoError() {
+    }
+};
+
+class WindowInfoComic : public WindowInfoBase
+{
+    WindowInfoComic(HWND hwnd) : WindowInfoBase(hwnd) {
+        type = WitComic;
+    }
+    ~WindowInfoComic() {
+    }
+};
+#endif
 
 class WindowInfoList : public vector<WindowInfo *>
 {
