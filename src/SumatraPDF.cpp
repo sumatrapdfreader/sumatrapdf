@@ -3163,10 +3163,14 @@ static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode,
                 if (PrintScaleShrink == scaleAdv && dpiFactor < zoom)
                     zoom = dpiFactor;
                 // make sure that no content lies in the non-printable paper margins
-                if (leftMargin > cbox.x0 * zoom || rightMargin > (pSize.dx() - cbox.x1) * zoom)
-                    horizOffset = (int)(0.5 * (cbox.x0 - (pSize.dx() - cbox.x1)) * zoom);
-                if (topMargin > cbox.y0 * zoom || bottomMargin > (pSize.dy() - cbox.y1) * zoom)
-                    vertOffset = (int)(0.5 * (cbox.y0 - (pSize.dy() - cbox.y1)) * zoom);
+                if (leftMargin > cbox.x0 * zoom)
+                    horizOffset = (int)(horizOffset - leftMargin + cbox.x0 * zoom);
+                else if (rightMargin > (pSize.dx() - cbox.x1) * zoom)
+                    horizOffset = (int)(horizOffset + rightMargin - (pSize.dx() - cbox.x1) * zoom);
+                if (topMargin > cbox.y0 * zoom)
+                    vertOffset = (int)(vertOffset - topMargin + cbox.y0 * zoom);
+                else if (bottomMargin > (pSize.dy() - cbox.y1) * zoom)
+                    vertOffset = (int)(vertOffset + bottomMargin - (pSize.dy() - cbox.y1) * zoom);
             }
 
 #ifdef USE_GDI_FOR_PRINTING
