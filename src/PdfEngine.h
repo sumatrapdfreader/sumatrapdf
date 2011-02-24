@@ -95,6 +95,8 @@ class PdfEngine {
 public:
     PdfEngine();
     ~PdfEngine();
+    PdfEngine *clone(void);
+
     const TCHAR *fileName(void) const { return _fileName; };
     int pageCount(void) const { return _pageCount; }
 
@@ -104,18 +106,13 @@ public:
         return false;
     }
 
-    bool load(const TCHAR *fileName, WindowInfo *windowInfo);
-    bool load(fz_stream *stm, TCHAR *password=NULL);
     int pageRotation(int pageNo);
     SizeD pageSize(int pageNo);
     fz_rect pageMediabox(int pageNo);
     fz_bbox pageContentBox(int pageNo, RenderTarget target=Target_View);
     RenderedBitmap *renderBitmap(int pageNo, float zoom, int rotation,
-                         fz_rect *pageRect, /* if NULL: defaults to the page's mediabox */
-                         BOOL (*abortCheckCbkA)(void *data),
-                         void *abortCheckCbkDataA,
-                         RenderTarget target=Target_View,
-                         bool useGdi=false);
+                         fz_rect *pageRect=NULL, /* if NULL: defaults to the page's mediabox */
+                         RenderTarget target=Target_View, bool useGdi=false);
     bool PdfEngine::renderPage(HDC hDC, int pageNo, RECT *screenRect,
                          fz_matrix *ctm=NULL, float zoom=0, int rotation=0,
                          fz_rect *pageRect=NULL, RenderTarget target=Target_View) {
@@ -160,6 +157,8 @@ protected:
     CRITICAL_SECTION _pagesAccess;
     pdf_page **     _pages;
 
+    bool            load(const TCHAR *fileName, WindowInfo *windowInfo);
+    bool            load(fz_stream *stm, TCHAR *password=NULL);
     bool            finishLoading(void);
     pdf_page      * getPdfPage(int pageNo, bool failIfBusy=false);
     fz_matrix       viewctm(pdf_page *page, float zoom, int rotate);
@@ -184,6 +183,10 @@ protected:
     pdf_outline   * _attachments;
     fz_obj        * _info;
     fz_glyphcache * _drawcache;
+
+public:
+    static PdfEngine *CreateFromFileName(const TCHAR *fileName, WindowInfo *windowInfo);
+    static PdfEngine *CreateFromStream(fz_stream *stm, TCHAR *password=NULL);
 };
 
 static inline TCHAR *pdf_to_tstr(fz_obj *obj)

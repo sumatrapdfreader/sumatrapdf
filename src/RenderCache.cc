@@ -476,14 +476,6 @@ void RenderCache::ClearQueueForDisplayModel(DisplayModel *dm, int pageNo, TilePo
     LeaveCriticalSection(&_requestAccess);
 }
 
-static BOOL pageRenderAbortCb(LPVOID data)
-{
-    PageRenderRequest *req = (PageRenderRequest *)data;
-    if (req->abort)
-        DBG_OUT("Rendering of page %d aborted\n", req->pageNo);
-    return req->abort;
-}
-
 static DWORD WINAPI PageRenderThread(LPVOID data)
 {
     RenderCache *cache = (RenderCache *)data;
@@ -516,8 +508,7 @@ static DWORD WINAPI PageRenderThread(LPVOID data)
 
         fz_rect pageRect = GetTileRect(req.dm->pdfEngine, req.pageNo, req.rotation, req.zoom, req.tile);
         bmp = req.dm->renderBitmap(req.pageNo, req.zoom, req.rotation, &pageRect,
-                                   pageRenderAbortCb, (void*)&req, Target_View,
-                                   cache->useGdiRenderer && *cache->useGdiRenderer);
+                                   Target_View, cache->useGdiRenderer && *cache->useGdiRenderer);
         if (req.abort) {
             delete bmp;
             continue;

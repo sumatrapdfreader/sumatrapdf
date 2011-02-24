@@ -240,12 +240,9 @@ PdfPageInfo *DisplayModel::getPageInfo(int pageNo) const
 bool DisplayModel::load(const TCHAR *fileName, int startPage, WindowInfo *win)
 { 
     assert(fileName);
-    PdfEngine *engine = new PdfEngine();
-    if (!engine->load(fileName, win)) {
-        delete engine;
+    pdfEngine = PdfEngine::CreateFromFileName(fileName, win);
+    if (!pdfEngine)
         return false;
-    }
-    pdfEngine = engine;
 
     if (validPageNo(startPage))
         _startPage = startPage;
@@ -1260,31 +1257,6 @@ PdfSel *DisplayModel::Find(PdfSearchDirection direction, TCHAR *text, UINT fromP
     return NULL;
 }
 
-DisplayModel *DisplayModel_CreateFromFileName(
-  const TCHAR *fileName,
-  SizeI totalDrawAreaSize,
-  DisplayMode displayMode, int startPage,
-  WindowInfo *win)
-{
-    DisplayModel *    dm = NULL;
-
-    dm = new DisplayModel(displayMode, win->dpi);
-    if (!dm)
-        goto Error;
-
-    if (!dm->load(fileName, startPage, win))
-        goto Error;
-
-    dm->setTotalDrawAreaSize(totalDrawAreaSize);
-
-//    DBG_OUT("DisplayModel_CreateFromPageTree() pageCount = %d, startPage=%d, displayMode=%d\n",
-//        dm->pageCount(), dm->startPage, (int)displayMode);
-    return dm;
-Error:
-    delete dm;
-    return NULL;
-}
-
 bool DisplayModel::cvtUserToScreen(int pageNo, double *x, double *y)
 {
     PdfPageInfo *pageInfo = getPageInfo(pageNo);
@@ -1707,4 +1679,20 @@ void DisplayModel::navigate(int dir)
     _navHistoryIx += dir - 1; // -1 because adding a nav point increases the index
     if (dir != 0 && _navHistory[_navHistoryIx].page != 0)
         setScrollState(&_navHistory[_navHistoryIx]);
+}
+
+DisplayModel *DisplayModel::CreateFromFileName(WindowInfo *win,
+    const TCHAR *fileName, DisplayMode displayMode, int startPage)
+{
+    DisplayModel *dm = new DisplayModel(displayMode, win->dpi);
+    if (!dm || !dm->load(fileName, startPage, win)) {
+        delete dm;
+        return NULL;
+    }
+
+    dm->setTotalDrawAreaSize(win->winSize());
+
+//    DBG_OUT("DisplayModel_CreateFromPageTree() pageCount = %d, startPage=%d, displayMode=%d\n",
+//        dm->pageCount(), dm->startPage, (int)displayMode);
+    return dm;
 }

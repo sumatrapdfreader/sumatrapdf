@@ -1355,8 +1355,7 @@ static bool LoadPdfIntoWindow(
 
     free(win->loadedFilePath);
     win->loadedFilePath = tstr_dup(fileName);
-    win->dm = DisplayModel_CreateFromFileName(fileName, win->winSize(),
-        displayMode, startPage, win);
+    win->dm = DisplayModel::CreateFromFileName(win, fileName, displayMode, startPage);
 
     if (!win->dm) {
         DBG_OUT_T("failed to load file %s\n", fileName);
@@ -2350,7 +2349,7 @@ static void CopySelectionToClipboard(WindowInfo *win)
     clipRegion.y0 = (float)r->y; clipRegion.y1 = (float)(r->y + r->dy);
 
     RenderedBitmap * bmp = win->dm->renderBitmap(selOnPage->pageNo, win->dm->zoomReal(),
-        win->dm->rotation(), &clipRegion, NULL, NULL, Target_Export, gUseGdiRenderer);
+        win->dm->rotation(), &clipRegion, Target_Export, gUseGdiRenderer);
     if (bmp) {
         if (!SetClipboardData(CF_BITMAP, bmp->getBitmap()))
             SeeLastError();
@@ -3030,19 +3029,19 @@ static bool CheckPrinterStretchDibSupport(HWND hwndForMsgBox, HDC hdc)
 }
 
 // TODO: make it run in a background thread
-static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode,
+static void PrintToDevice(PdfEngine *pdfEngine, HDC hdc, LPDEVMODE devMode,
                           int nPageRanges, LPPRINTPAGERANGE pr,
+                          int dm_rotation=0,
                           enum PrintRangeAdv rangeAdv=PrintRangeAll,
                           enum PrintScaleAdv scaleAdv=PrintScaleShrink,
                           SelectionOnPage *sel=NULL) {
 
-    assert(dm);
-    if (!dm) return;
+    assert(pdfEngine);
+    if (!pdfEngine) return;
 
-    PdfEngine *pdfEngine = dm->pdfEngine;
     DOCINFO di = {0};
     di.cbSize = sizeof (DOCINFO);
-    di.lpszDocName = dm->fileName();
+    di.lpszDocName = pdfEngine->fileName();
 
     if (StartDoc(hdc, &di) <= 0)
         return;
@@ -3077,7 +3076,7 @@ static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode,
                 clipRegion.x0 = (float)r->x; clipRegion.x1 = (float)(r->x + r->dx);
                 clipRegion.y0 = (float)r->y; clipRegion.y1 = (float)(r->y + r->dy);
 
-                int rotation = pdfEngine->pageRotation(sel->pageNo) + dm->rotation();
+                int rotation = pdfEngine->pageRotation(sel->pageNo) + dm_rotation;
                 // Swap width and height for rotated documents
                 SizeD sSize = (rotation % 180) == 0 ? SizeD(r->dx, r->dy) : SizeD(r->dy, r->dx);
 
@@ -3095,9 +3094,9 @@ static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode,
                 rc.top = (LONG)(printableHeight - sSize.dy() * zoom) / 2;
                 rc.right = printableWidth - rc.left;
                 rc.bottom = printableHeight - rc.top;
-                dm->renderPage(hdc, sel->pageNo, &rc, zoom, dm->rotation(), &clipRegion, Target_Print);
+                pdfEngine->renderPage(hdc, sel->pageNo, &rc, NULL, zoom, dm_rotation, &clipRegion, Target_Print);
 #else
-                RenderedBitmap *bmp = dm->renderBitmap(sel->pageNo, zoom, dm->rotation(), &clipRegion, NULL, NULL, Target_Print, gUseGdiRenderer);
+                RenderedBitmap *bmp = pdfEngine->renderBitmap(sel->pageNo, zoom, dm_rotation, &clipRegion, Target_Print, gUseGdiRenderer);
                 if (bmp) {
                     bmp->stretchDIBits(hdc, (printableWidth - bmp->dx()) / 2,
                         (printableHeight - bmp->dy()) / 2, bmp->dx(), bmp->dy());
@@ -3153,7 +3152,8 @@ static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode,
             if (scaleAdv != PrintScaleNone) {
                 // make sure to fit all content into the printable area when scaling
                 // and the whole document page on the physical paper
-                fz_rect cbox = dm->getContentBox(pageNo, pdfEngine->viewctm(pageNo, 1.0, rotation), Target_Print);
+                fz_rect rect = fz_bboxtorect(pdfEngine->pageContentBox(pageNo, Target_Print));
+                fz_rect cbox = fz_transformrect(pdfEngine->viewctm(pageNo, 1.0, rotation), rect);
                 zoom = (float)min((double)printableWidth / (cbox.x1 - cbox.x0),
                               min((double)printableHeight / (cbox.y1 - cbox.y0),
                               min((double)paperWidth / pSize.dx(),
@@ -3180,9 +3180,9 @@ static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode,
             rc.right = printableWidth - rc.left;
             rc.bottom = printableHeight - rc.top;
             OffsetRect(&rc, -horizOffset, -vertOffset);
-            dm->renderPage(hdc, pageNo, &rc, zoom, rotation, NULL, Target_Print);
+            pdfEngine->renderPage(hdc, pageNo, &rc, NULL, zoom, rotation, NULL, Target_Print);
 #else
-            RenderedBitmap *bmp = dm->renderBitmap(pageNo, zoom, rotation, NULL, NULL, NULL, Target_Print, gUseGdiRenderer);
+            RenderedBitmap *bmp = pdfEngine->renderBitmap(pageNo, zoom, rotation, NULL, Target_Print, gUseGdiRenderer);
             if (bmp) {
                 bmp->stretchDIBits(hdc, (printableWidth - bmp->dx()) / 2 - horizOffset,
                     (printableHeight - bmp->dy()) / 2 - vertOffset, bmp->dx(), bmp->dy());
@@ -3327,8 +3327,8 @@ static void OnMenuPrint(WindowInfo *win)
                     pd.lpPageRanges->nToPage  =dm->pageCount();
                 }
                 LPDEVMODE devMode = (LPDEVMODE)GlobalLock(pd.hDevMode);
-                PrintToDevice(dm, pd.hDC, devMode, pd.nPageRanges, pd.lpPageRanges,
-                              advanced.range, advanced.scale, win->selectionOnPage);
+                PrintToDevice(dm->pdfEngine, pd.hDC, devMode, pd.nPageRanges, pd.lpPageRanges,
+                              dm->rotation(), advanced.range, advanced.scale, win->selectionOnPage);
                 if (devMode)
                     GlobalUnlock(pd.hDevMode);
             }
@@ -6575,7 +6575,7 @@ static void PrintFile(WindowInfo *win, const TCHAR *printerName)
     }
     if (CheckPrinterStretchDibSupport(win->hwndFrame, hdcPrint)) {
         PRINTPAGERANGE pr = { 1, win->dm->pageCount() };
-        PrintToDevice(win->dm, hdcPrint, devMode, 1, &pr);
+        PrintToDevice(win->dm->pdfEngine, hdcPrint, devMode, 1, &pr, win->dm->rotation());
     }
 Exit:
     free(devMode);

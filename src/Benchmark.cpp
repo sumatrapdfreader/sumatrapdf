@@ -23,7 +23,7 @@ static void BenchLoadRender(PdfEngine *engine, int pagenum)
     logbench("pageload   %3d: %.2f ms\n", pagenum, timems);
 
     t.Start();
-    RenderedBitmap *rendered = engine->renderBitmap(pagenum, 1.0, 0, NULL, NULL, NULL);
+    RenderedBitmap *rendered = engine->renderBitmap(pagenum, 1.0, 0);
     t.Stop();
 
     if (!rendered) {
@@ -79,15 +79,14 @@ static void BenchFile(TCHAR *filePath, TCHAR *pagesSpec)
     MillisecondTimer total;
     total.Start();
 
-    PdfEngine *engine = new PdfEngine();
     logbench("Starting: %s\n", filePath);
 
     MillisecondTimer t;
     t.Start();
-    bool success = engine->load(filePath, NULL);
+    PdfEngine *engine = PdfEngine::CreateFromFileName(filePath, NULL);
     t.Stop();
 
-    if (!success) {
+    if (!engine) {
         logbench("Error: failed to load %s\n", filePath);
         return;
     }

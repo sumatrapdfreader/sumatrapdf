@@ -47,11 +47,8 @@ HRESULT CPdfFilter::OnInit()
     fz_stream *stm = fz_openbuffer(filedata);
     fz_dropbuffer(filedata);
 
-    m_pdfEngine = new PdfEngine();
-    bool success = m_pdfEngine->load(stm);
-    fz_close(stm);
-
-    if (!success)
+    m_pdfEngine = PdfEngine::CreateFromStream(stm);
+    if (!m_pdfEngine)
         return E_FAIL;
 
     m_state = STATE_PDF_START;

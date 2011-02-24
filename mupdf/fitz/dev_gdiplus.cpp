@@ -41,7 +41,7 @@ public:
 	}
 };
 
-typedef BYTE (* seperableBlend)(BYTE s, BYTE bg);
+typedef BYTE (* separableBlend)(BYTE s, BYTE bg);
 static BYTE BlendNormal(BYTE s, BYTE bg)     { return s; }
 static BYTE BlendMultiply(BYTE s, BYTE bg)   { return s / 255.0 * bg; }
 static BYTE BlendScreen(BYTE s, BYTE bg)     { return 255 - (255 - s) / 255.0 * (255 - bg); }
@@ -402,7 +402,7 @@ protected:
 
 	void _compositeWithBackground(Bitmap *bitmap, Rect bounds, Bitmap *backdrop, Rect boundsBg, fz_blendmode blendmode, bool modifyBackdrop)
 	{
-		seperableBlend funcs[] = {
+		separableBlend funcs[] = {
 			BlendNormal,
 			BlendMultiply,
 			BlendScreen,

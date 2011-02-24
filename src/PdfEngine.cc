@@ -310,6 +310,24 @@ PdfEngine::~PdfEngine()
     DeleteCriticalSection(&_pagesAccess);
 }
 
+PdfEngine *PdfEngine::clone()
+{
+    // use this document's encryption key (if any) to load the clone
+    char *key = NULL;
+    if (_xref->crypt)
+        key = _mem_to_hexstr(&_xref->crypt->key);
+    TCHAR *password = key ? ansi_to_tstr(key) : NULL;
+    free(key);
+
+    PdfEngine *clone = PdfEngine::CreateFromStream(_xref->file, password);
+    free(password);
+
+    if (clone && _fileName)
+        clone->_fileName = tstr_dup(_fileName);
+
+    return clone;
+}
+
 bool PdfEngine::load(const TCHAR *fileName, WindowInfo *win)
 {
     assert(!_fileName && !_xref);
@@ -456,6 +474,12 @@ bool PdfEngine::load(fz_stream *stm, TCHAR *password)
             char *pwd_ansi = tstr_to_ansi(password);
             okay = pwd_ansi && !!pdf_authenticatepassword(_xref, pwd_ansi);
             free(pwd_ansi);
+        }
+        // finally, try using the password as hex-encoded encryption key
+        if (!okay && tstr_len(password) == 64) {
+            char *pwd_hex = tstr_to_ansi(password);
+            okay = !!_hexstr_to_mem(pwd_hex, &_xref->crypt->key);
+            free(pwd_hex);
         }
 
         if (!okay)
@@ -774,10 +798,7 @@ bool PdfEngine::renderPage(HDC hDC, pdf_page *page, RECT *screenRect, fz_matrix 
 
 RenderedBitmap *PdfEngine::renderBitmap(
                            int pageNo, float zoom, int rotation,
-                           fz_rect *pageRect,
-                           BOOL (*abortCheckCbkA)(void *data),
-                           void *abortCheckCbkDataA,
-                           RenderTarget target,
+                           fz_rect *pageRect, RenderTarget target,
                            bool useGdi)
 {
     pdf_page* page = getPdfPage(pageNo);
@@ -1180,4 +1201,24 @@ void PdfEngine::ageStore()
     if (_xref && _xref->store)
         pdf_agestore(_xref->store, 3);
     LeaveCriticalSection(&_xrefAccess);
+}
+
+PdfEngine *PdfEngine::CreateFromFileName(const TCHAR *fileName, WindowInfo *win)
+{
+    PdfEngine *engine = new PdfEngine();
+    if (!engine || !engine->load(fileName, win)) {
+        delete engine;
+        return NULL;
+    }
+    return engine;
+}
+
+PdfEngine *PdfEngine::CreateFromStream(fz_stream *stm, TCHAR *password)
+{
+    PdfEngine *engine = new PdfEngine();
+    if (!engine || !engine->load(stm, password)) {
+        delete engine;
+        return NULL;
+    }
+    return engine;
 }

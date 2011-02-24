@@ -97,14 +97,10 @@ public:
     ~DisplayModel();
 
     RenderedBitmap *renderBitmap(int pageNo, float zoom, int rotation,
-                         fz_rect *pageRect, /* if NULL: defaults to the page's mediabox */
-                         BOOL (*abortCheckCbkA)(void *data),
-                         void *abortCheckCbkDataA,
-                         RenderTarget target=Target_View,
-                         bool useGdi=false) {
+                         fz_rect *pageRect=NULL, /* if NULL: defaults to the page's mediabox */
+                         RenderTarget target=Target_View, bool useGdi=false) {
         if (!pdfEngine) return NULL;
-        return pdfEngine->renderBitmap(pageNo, zoom, rotation, pageRect,
-            abortCheckCbkA, abortCheckCbkDataA, target, useGdi);
+        return pdfEngine->renderBitmap(pageNo, zoom, rotation, pageRect, target, useGdi);
     }
     bool renderPage(HDC hDC, int pageNo, RECT *screenRect, float zoom=0, int rotation=0, fz_rect *pageRect=NULL, RenderTarget target=Target_View) {
         if (!pdfEngine) return false;
@@ -113,7 +109,6 @@ public:
 
     /* number of pages in PDF document */
     int  pageCount() const { return pdfEngine->pageCount(); }
-    bool load(const TCHAR *fileName, int startPage, WindowInfo *win);
     bool validPageNo(int pageNo) const { return pdfEngine->validPageNo(pageNo); }
     bool hasTocTree() { return pdfEngine->hasTocTree(); }
     PdfTocItem *getTocTree() { return pdfEngine->getTocTree(); }
@@ -237,6 +232,7 @@ public:
 
 protected:
 
+    bool            load(const TCHAR *fileName, int startPage, WindowInfo *win);
     void            startRenderingPage(int pageNo);
 
     bool            buildPagesInfo(void);
@@ -296,17 +292,14 @@ protected:
 public:
     /* allow resizing a window without triggering a new rendering (needed for window destruction) */
     bool            _dontRenderFlag;
+
+    static DisplayModel *CreateFromFileName(WindowInfo *win, const TCHAR *fileName,
+                                            DisplayMode displayMode, int startPage);
 };
 
 bool                displayModeContinuous(DisplayMode displayMode);
 bool                displayModeFacing(DisplayMode displayMode);
 bool                displayModeShowCover(DisplayMode displayMode);
 int                 columnsFromDisplayMode(DisplayMode displayMode);
-
-DisplayModel *DisplayModel_CreateFromFileName(
-  const TCHAR *fileName,
-  SizeI totalDrawAreaSize,
-  DisplayMode displayMode, int startPage,
-  WindowInfo *win);
 
 #endif
