@@ -46,6 +46,8 @@ fz_matrix pdf_tomatrix(fz_obj *array);
 char *pdf_toutf8(fz_obj *src);
 unsigned short *pdf_toucs2(fz_obj *src);
 fz_obj *pdf_toutf8name(fz_obj *src);
+/* SumatraPDF: encode UCS-2 string in PdfDocEncoding for authentication */
+char *pdf_fromucs2(unsigned short *src);
 
 /*
  * Encryption

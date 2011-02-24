@@ -68,6 +68,7 @@ SYNCTEX_CFLAGS = $(SYNCTEX_CFLAGS) /wd4244
 LIBS = $(LIBS) comctl32.lib Msimg32.lib Winspool.lib wininet.lib ole32.lib shlwapi.lib version.lib
 
 SUMATRA_APP = $(O)\SumatraPDF.exe
+SUMATRA_APP_NO_MUPDF = $(O)\SumatraPDF-no-MuPDF.exe
 SUMATRA_RES = $(O)\sumatrapdf.res
 
 INSTALLER_APP = $(O)\Installer.exe
@@ -102,7 +103,7 @@ INSTALLER_OBJS = \
 PDFFILTER_OBJS = \
 	$(O)\PdfFilterDll.obj $(O)\CPdfFilter.obj $(PDFFILTER_RES) \
 	$(O)\base_util.obj $(O)\wstr_util.obj $(O)\str_util.obj $(O)\file_util.obj \
-	$(LIBS_OBJS) $(O)\PdfEngine.obj
+	$(LIBMUPDF_LIB) $(O)\MuPDF_Exports.obj $(O)\PdfEngine.obj
 
 BROWSER_PLUGIN_OBJS = \
 	$(O)\npPdfViewer.obj $(BROWSER_PLUGIN_RES)
@@ -123,16 +124,19 @@ cleanmupdf: force
 cleanall: force
 	-rmdir /S /Q obj-*
 
-SumatraPDF:    $(O) $(SUMATRA_APP)
+SumatraPDF:    $(O) $(LIBMUPDF_DLL) $(SUMATRA_APP) $(SUMATRA_APP_NO_MUPDF)
 Installer:     $(O) $(INSTALLER_APP)
-PDFFilter:     $(O) $(PDFFILTER_DLL)
+PDFFilter:     $(O) $(LIBMUPDF_DLL) $(PDFFILTER_DLL)
 BrowserPlugin: $(O) $(BROWSER_PLUGIN)
 
 $(SUMATRA_RES): src\SumatraPDF.rc src\Resource.h src\Version.h
 	rc /r /fo$@ $(EXTCFLAGS) src\SumatraPDF.rc
 
 $(SUMATRA_APP): $(LIBS_OBJS) $(BZIP2_OBJS) $(MINIZIP_OBJS) $(BASEUTILS_OBJS) $(SUMATRA_OBJS)
-	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ 
+	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@
+
+$(SUMATRA_APP_NO_MUPDF): $(BZIP2_OBJS) $(MINIZIP_OBJS) $(BASEUTILS_OBJS) $(SUMATRA_OBJS) $(O)\MuPDF_Exports.obj
+	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ $(LIBMUPDF_LIB)
 
 $(INSTALLER_RES): src\installer\Installer.rc src\installer\Resource.h src\Version.h
 	rc /r /fo$@ $(EXTCFLAGS) src\installer\Installer.rc
@@ -230,10 +234,12 @@ $(O)\Http.obj: baseutils\vstrlist.h baseutils\wstr_util.h src\Http.h
 $(O)\Http.obj: src\MemSegment.h src\SumatraPDF.h src\Version.h
 $(O)\Installer.obj: baseutils\base_util.h baseutils\file_util.h baseutils\str_util.h
 $(O)\Installer.obj: baseutils\tstr_util.h baseutils\win_util.h baseutils\WinUtil.hpp
-$(O)\Installer.obj: baseutils\wstr_util.h src\installer\Resource.h src\Version.h
+$(O)\Installer.obj: baseutils\wstr_util.h src\installer\..\ifilter\PdfFilter.h src\installer\Resource.h
+$(O)\Installer.obj: src\Version.h
 $(O)\LangMenuDef.obj: src\LangMenuDef.h
 $(O)\MemSegment.obj: baseutils\str_util.h baseutils\tstr_util.h baseutils\vstrlist.h
 $(O)\MemSegment.obj: baseutils\wstr_util.h src\MemSegment.h
+$(O)\MuPDF_Exports.obj: mupdf\fitz\fitz.h
 $(O)\npPdfViewer.obj: src\browserplugin\npapi\npapi.h src\browserplugin\npapi\npfunctions.h src\browserplugin\npapi\npruntime.h
 $(O)\npPdfViewer.obj: src\browserplugin\npapi\nptypes.h
 $(O)\ParseCommandLine.obj: baseutils\base_util.h baseutils\geom_util.h baseutils\str_util.h

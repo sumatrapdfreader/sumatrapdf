@@ -65,9 +65,9 @@ fz_pixmap *fz_newpixmap_nullonoom(fz_colorspace *colorspace, int x, int y, int w
 {
     // allocate the memory needed for the pixmap ourselves, as MuPDF just aborts on OOM
     assert(w > 0 && h > 0 && colorspace && colorspace->n > 0);
-    if (w <= 0 || h < 0 || INT_MAX / w / (colorspace->n + 1) <= h)
+    if (w <= 0 || h < 0 || INT_MAX / (colorspace->n + 1) <= h)
         return NULL;
-    unsigned char *samples = (unsigned char *)malloc(w * h * (colorspace->n + 1));
+    unsigned char *samples = (unsigned char *)fz_calloc(w, h * (colorspace->n + 1));
     if (!samples)
         return NULL;
 
@@ -89,7 +89,7 @@ HBITMAP fz_pixtobitmap(HDC hDC, fz_pixmap *pixmap, BOOL paletted)
     int rows8 = ((w + 3) / 4) * 4;
     
     /* abgr is a GDI compatible format */
-    fz_pixmap *bgrPixmap = fz_newpixmap_nullonoom(fz_devicebgr, pixmap->x, pixmap->y, w, h);
+    fz_pixmap *bgrPixmap = fz_newpixmap_nullonoom(fz_getstaticcolorspace("DeviceBGR"), pixmap->x, pixmap->y, w, h);
     if (!bgrPixmap)
         return NULL;
     fz_convertpixmap(pixmap, bgrPixmap);
@@ -210,31 +210,7 @@ bool fz_isptinrect(fz_rect rect, fz_point pt)
 char *tstr_to_pdfdoc(TCHAR *tstr)
 {
     WCHAR *wstr = tstr_to_wstr(tstr);
-    size_t len = wstr_len(wstr);
-    char *docstr = SAZA(char, len + 1);
-
-    for (size_t i = 0; i < len; i++) {
-        // shortcut: check if the character has the same code point in both encodings
-        if (0 < wstr[i] && wstr[i] < 256 && pdf_docencoding[wstr[i]] == wstr[i]) {
-            docstr[i] = (char)wstr[i];
-            continue;
-        }
-
-        // search through pdf_docencoding for the character's code point
-        for (int j = 0; j < 256; j++) {
-            if (pdf_docencoding[j] == wstr[i]) {
-                docstr[i] = (char)j;
-                break;
-            }
-        }
-
-        // fail, if a character can't be encoded
-        if (!docstr[i]) {
-            free(docstr);
-            docstr = NULL;
-            break;
-        }
-    }
+    char *docstr = pdf_fromucs2((unsigned short *)wstr);
     free(wstr);
 
     return docstr;
@@ -837,7 +813,7 @@ RenderedBitmap *PdfEngine::renderBitmap(
         return new RenderedBitmap(hbmp, w, h);
     }
 
-    fz_pixmap *image = fz_newpixmap_nullonoom(fz_devicergb,
+    fz_pixmap *image = fz_newpixmap_nullonoom(fz_getstaticcolorspace("DeviceRGB"),
         bbox.x0, bbox.y0, bbox.x1 - bbox.x0, bbox.y1 - bbox.y0);
     if (!image)
         return NULL;

@@ -665,6 +665,8 @@ struct fz_colorspace_s
 fz_colorspace *fz_newcolorspace(char *name, int n);
 fz_colorspace *fz_keepcolorspace(fz_colorspace *cs);
 void fz_dropcolorspace(fz_colorspace *cs);
+/* SumatraPDF: easy access to static color spaces when compiling MuPDF as a library */
+fz_colorspace *fz_getstaticcolorspace(char *name);
 
 void fz_convertcolor(fz_colorspace *srcs, float *srcv, fz_colorspace *dsts, float *dstv);
 void fz_convertpixmap(fz_pixmap *src, fz_pixmap *dst);

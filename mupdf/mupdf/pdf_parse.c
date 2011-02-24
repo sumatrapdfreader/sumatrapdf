@@ -98,6 +98,39 @@ pdf_toucs2(fz_obj *src)
 	return dst;
 }
 
+/* SumatraPDF: encode UCS-2 string in PdfDocEncoding for authentication */
+char *
+pdf_fromucs2(unsigned short *src)
+{
+	int i, j;
+	int len = wcslen(src);
+	char *docstr = fz_malloc(len + 1);
+
+	for (i = 0; i < len; i++)
+	{
+		/* shortcut: check if the character has the same code point in both encodings */
+		if (0 < src[i] && src[i] < 256 && pdf_docencoding[src[i]] == src[i]) {
+			docstr[i] = src[i];
+			continue;
+		}
+
+		/* search through pdf_docencoding for the character's code point */
+		for (j = 0; j < 256; j++)
+			if (pdf_docencoding[j] == src[i])
+				break;
+		docstr[i] = j;
+
+		/* fail, if a character can't be encoded */
+		if (!docstr[i])
+		{
+			fz_free(docstr);
+			return nil;
+		}
+	}
+
+	return docstr;
+}
+
 fz_obj *
 pdf_toutf8name(fz_obj *src)
 {

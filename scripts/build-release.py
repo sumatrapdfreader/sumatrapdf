@@ -120,20 +120,23 @@ def main():
   else:
     run_cmd_throw("nmake", "-f", "makefile.msvc", "CFG=rel")
 
-  files = ["SumatraPDF.exe", "SumatraPDF.pdb", "npPdfViewer.dll", "Installer.exe"]
-  [tmp_exe, tmp_pdb, tmp_plugin, tmp_installer] = [os.path.join("obj-rel", t) for t in files]
+  files = ["SumatraPDF.exe", "SumatraPDF.pdb", "npPdfViewer.dll", "Installer.exe",
+           "SumatraPDF-no-MuPDF.exe", "libmupdf.dll", "PdfFilter.dll"]
+  [tmp_exe, tmp_pdb, tmp_plugin, tmp_installer, tmp_exe2, tmp_lib, tmp_filter] = [os.path.join("obj-rel", t) for t in files]
 
   local_exe = os.path.join(builds_dir, "%s.exe" % filename_base)
   local_exe_uncompr = os.path.join(builds_dir, "%s-uncompr.exe" % filename_base)
   local_pdb = os.path.join(builds_dir, "%s.pdb" % filename_base)
-  local_plugin = os.path.join(builds_dir, "npPdfViewer.dll")
-  local_installer = os.path.join(builds_dir, "Installer.exe")
   local_zip = os.path.join(builds_dir, "%s.zip" % filename_base)
+  [_, _, local_plugin, local_installer, local_exe2, local_lib, local_filter] = [os.path.join(builds_dir, t) for t in files]
 
   shutil.copy(tmp_exe, local_exe)
   shutil.copy(tmp_exe, local_exe_uncompr)
+  shutil.copy(tmp_exe2, local_exe2)
+  shutil.copy(tmp_lib, local_lib)
   shutil.copy(tmp_pdb, local_pdb)
   shutil.copy(tmp_plugin, local_plugin)
+  shutil.copy(tmp_filter, local_filter)
   shutil.copy(tmp_installer, local_installer)
 
   if build_prerelease:
@@ -188,7 +191,7 @@ def main():
     txt = "%s\n" % ver
     # s3UploadDataPublic(txt, "sumatrapdf/sumpdf-latest.txt")
 
-  files = [local_installer, local_installer + ".bak", local_plugin]
+  files = [local_installer, local_installer + ".bak", local_plugin, local_exe2, local_lib, local_filter]
   if build_prerelease:
     files += [local_pdb]
   else:

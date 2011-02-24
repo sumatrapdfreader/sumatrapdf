@@ -29,6 +29,7 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include "win_util.h"
 #include "WinUtil.hpp"
 #include "Version.h"
+#include "../ifilter/PdfFilter.h"
 
 using namespace Gdiplus;
 
@@ -53,6 +54,7 @@ using namespace Gdiplus;
 #define ID_BUTTON_EXIT                16
 #define ID_BUTTON_OPTIONS             17
 #define ID_BUTTON_BROWSE              18
+#define ID_CHECKBOX_PDF_FILTER        19
 
 #define WM_APP_INSTALLATION_FINISHED        (WM_APP + 1)
 
@@ -76,6 +78,7 @@ static HWND             gHwndTextboxInstDir = NULL;
 static HWND             gHwndButtonBrowseDir = NULL;
 static HWND             gHwndCheckboxRegisterDefault = NULL;
 static HWND             gHwndCheckboxRegisterBrowserPlugin = NULL;
+static HWND             gHwndCheckboxRegisterPdfFilter = NULL;
 static HWND             gHwndButtonUninstall = NULL;
 static HWND             gHwndProgressBar = NULL;
 static HFONT            gFontDefault;
@@ -156,9 +159,11 @@ struct {
     bool install;
 } gPayloadData[] = {
     { "SumatraPDF.exe",         true    },
+    { "libmupdf.dll",           true    },
     { "sumatrapdfprefs.dat",    false   },
     { "DroidSansFallback.ttf",  true    },
     { "npPdfViewer.dll",        true    },
+    { "PdfFilter.dll",          true    },
     { "uninstall.exe",          false   },
 };
 
@@ -169,6 +174,7 @@ struct {
     TCHAR *installDir;
     bool registerAsDefault;
     bool installBrowserPlugin;
+    bool installPdfFilter;
 
     TCHAR *firstError;
     HANDLE hThread;
@@ -180,6 +186,7 @@ struct {
     NULL,  /* TCHAR *installDir */
     false, /* bool registerAsDefault */
     false, /* bool installBrowserPlugin */
+    false, /* bool installPdfFilter */
 
     NULL,  /* TCHAR *firstError */
     NULL,  /* HANDLE hThread */
@@ -336,6 +343,11 @@ TCHAR *GetInstalledExePath()
 TCHAR *GetBrowserPluginPath()
 {
     return tstr_cat(gGlobalData.installDir, _T("\\") _T("npPdfViewer.dll"));
+}
+
+TCHAR *GetPdfFilterPath()
+{
+    return tstr_cat(gGlobalData.installDir, _T("\\") _T("PdfFilter.dll"));
 }
 
 TCHAR *GetStartMenuProgramsPath(bool allUsers)
@@ -755,27 +767,39 @@ void RemoveOwnRegistryKeys()
     }
 }
 
-// TODO: while in development always detect the plugin as not installed to make
-// sure we re-register it when we make changes to the code (not sure if that's
-// necessary)
 bool IsBrowserPluginInstalled()
 {
-#if 0
     TCHAR buf[MAX_PATH];
     bool ok = ReadRegStr(HKEY_LOCAL_MACHINE, REG_PATH_PLUGIN, PLUGIN_PATH, buf, dimof(buf));
     if (!ok)
         ok = ReadRegStr(HKEY_CURRENT_USER, REG_PATH_PLUGIN, PLUGIN_PATH, buf, dimof(buf));
     if (!ok)
-        return FALSE;
+        return false;
     return !!file_exists(buf);
-#else
-    return false;
-#endif
+}
+
+bool IsPdfFilterInstalled()
+{
+    TCHAR buf[MAX_PATH];
+    bool ok = ReadRegStr(HKEY_CLASSES_ROOT, _T(".pdf\\PersistentHandler"), NULL, buf, dimof(buf));
+    if (!ok)
+        return false;
+    WCHAR *handler_iid = tstr_to_wstr(buf);
+    bool isInstalled = !!wstr_ieq(handler_iid, SZ_PDF_FILTER_HANDLER);
+    free(handler_iid);
+    return isInstalled;
 }
 
 void UninstallBrowserPlugin()
 {
     TCHAR *dllPath = GetBrowserPluginPath();
+    RegisterServerDLL(dllPath, TRUE);
+    free(dllPath);
+}
+
+void UninstallPdfFilter()
+{
+    TCHAR *dllPath = GetPdfFilterPath();
     RegisterServerDLL(dllPath, TRUE);
     free(dllPath);
 }
@@ -995,6 +1019,12 @@ static DWORD WINAPI InstallerThread(LPVOID data)
         free(dllPath);
     }
 
+    if (gGlobalData.installPdfFilter) {
+        TCHAR *dllPath = GetPdfFilterPath();
+        RegisterServerDLL(dllPath);
+        free(dllPath);
+    }
+
     if (!CreateAppShortcut(true) && !CreateAppShortcut(false)) {
         NotifyFailed(_T("Failed to create a shortcut"));
         goto Error;
@@ -1039,6 +1069,8 @@ void OnButtonInstall()
                                     Button_GetState(gHwndCheckboxRegisterDefault);
     gGlobalData.installBrowserPlugin = gHwndCheckboxRegisterBrowserPlugin == NULL ||
                                        Button_GetState(gHwndCheckboxRegisterBrowserPlugin);
+    gGlobalData.installPdfFilter = gHwndCheckboxRegisterPdfFilter == NULL ||
+                                   Button_GetState(gHwndCheckboxRegisterPdfFilter);
 
     if (gShowOptions)
         OnButtonOptions();
@@ -1063,6 +1095,8 @@ void OnButtonInstall()
     gHwndCheckboxRegisterDefault = NULL;
     DestroyWindow(gHwndCheckboxRegisterBrowserPlugin);
     gHwndCheckboxRegisterBrowserPlugin = NULL;
+    DestroyWindow(gHwndCheckboxRegisterPdfFilter);
+    gHwndCheckboxRegisterPdfFilter = NULL;
     DestroyWindow(gHwndButtonOptions);
     gHwndButtonOptions = NULL;
 
@@ -1126,6 +1160,7 @@ static DWORD WINAPI UninstallerThread(LPVOID data)
 
     RemoveOwnRegistryKeys();
     UninstallBrowserPlugin();
+    UninstallPdfFilter();
 
     if (!RemoveInstalledFiles())
         NotifyFailed(_T("Couldn't remove installation directory"));
@@ -1190,6 +1225,7 @@ void OnButtonOptions()
     ShowWindow(gHwndButtonBrowseDir, nCmdShow);
     ShowWindow(gHwndCheckboxRegisterDefault, nCmdShow);
     ShowWindow(gHwndCheckboxRegisterBrowserPlugin, nCmdShow);
+    ShowWindow(gHwndCheckboxRegisterPdfFilter, nCmdShow);
 
     win_set_text(gHwndButtonOptions, gShowOptions ? _T("Back") : _T("&Options"));
 
@@ -1791,6 +1827,16 @@ void OnCreateInstaller(HWND hwnd)
             x, y, RectDx(&r) - 2 * x, 22, hwnd, (HMENU)ID_CHECKBOX_BROWSER_PLUGIN, ghinst, NULL);
         Window_SetFont(gHwndCheckboxRegisterBrowserPlugin, gFontDefault);
         Button_SetCheck(gHwndCheckboxRegisterBrowserPlugin, gGlobalData.installBrowserPlugin);
+        y += 22;
+    }
+
+    if (!IsPdfFilterInstalled()) {
+        gHwndCheckboxRegisterPdfFilter = CreateWindow(
+            WC_BUTTON, _T("Let Windows Desktop Search &search the contents of PDF documents"),
+            WS_CHILD | BS_AUTOCHECKBOX | WS_TABSTOP,
+            x, y, RectDx(&r) - 2 * x, 22, hwnd, (HMENU)ID_CHECKBOX_PDF_FILTER, ghinst, NULL);
+        Window_SetFont(gHwndCheckboxRegisterPdfFilter, gFontDefault);
+        Button_SetCheck(gHwndCheckboxRegisterPdfFilter, gGlobalData.installPdfFilter);
     }
 
     gShowOptions = !gShowOptions;
