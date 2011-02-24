@@ -54,7 +54,7 @@ DLLEXPORT NPError WINAPI NP_GetEntryPoints(NPPluginFuncs *pFuncs)
 	{
 		return NPERR_INVALID_FUNCTABLE_ERROR;
 	}
-
+	
 	pFuncs->size = sizeof(NPPluginFuncs);
 	pFuncs->version = (NP_VERSION_MAJOR << 8) | NP_VERSION_MINOR;
 	pFuncs->newp = NPP_New;
@@ -70,8 +70,8 @@ DLLEXPORT NPError WINAPI NP_GetEntryPoints(NPPluginFuncs *pFuncs)
 	pFuncs->urlnotify = NULL;
 	pFuncs->javaClass = NULL;
 	pFuncs->getvalue = NULL;
-	pFuncs->setvalue = NULL;    
-
+	pFuncs->setvalue = NULL;
+	
 	return NPERR_NO_ERROR;
 }
 

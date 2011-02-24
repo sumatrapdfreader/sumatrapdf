@@ -77,6 +77,7 @@ static HWND             gHwndButtonBrowseDir = NULL;
 static HWND             gHwndCheckboxRegisterDefault = NULL;
 static HWND             gHwndCheckboxRegisterBrowserPlugin = NULL;
 static HWND             gHwndButtonUninstall = NULL;
+static HWND             gHwndProgressBar = NULL;
 static HFONT            gFontDefault;
 static bool             gShowOptions = false;
 
@@ -352,6 +353,31 @@ TCHAR *GetShortcutPath(bool allUsers)
     return tstr_cat(GetStartMenuProgramsPath(allUsers), _T("\\") TAPP _T(".lnk"));
 }
 
+int GetInstallationStepCount()
+{
+    /* Installation steps
+     * - Create directory
+     * - One per file to be copied (count extracted from gPayloadData)
+     * - Optional registration (default viewer, browser plugin),
+     *   Shortcut and Uninstaller
+     * 
+     * Most time is taken by file extraction/copying, so we just add
+     * one step before - so that we start with some initial progress
+     * - and one step afterwards.
+     */
+    int count = 2;
+    for (int i = 0; i < dimof(gPayloadData); i++)
+        if (gPayloadData[i].install)
+            count++;
+    return count;
+}
+
+static inline void ProgressStep()
+{
+    if (gHwndProgressBar)
+        PostMessage(gHwndProgressBar, PBM_STEPIT, 0, 0);
+}
+
 BOOL IsValidInstaller(void)
 {
     zlib_filefunc64_def ffunc;
@@ -452,6 +478,7 @@ BOOL InstallCopyFiles(void)
                 break;
             }
         }
+        ProgressStep();
 
         err = unzGoToNextFile(uf);
         if (err != UNZ_OK || !success)
@@ -948,6 +975,7 @@ static DWORD WINAPI InstallerThread(LPVOID data)
 
     if (!CreateInstallationDirectory())
         goto Error;
+    ProgressStep();
 
     if (!InstallCopyFiles())
         goto Error;
@@ -982,11 +1010,14 @@ static DWORD WINAPI InstallerThread(LPVOID data)
     if (!WriteUninstallerRegistryInfo(true) && !WriteUninstallerRegistryInfo(false)) {
         NotifyFailed(_T("Failed to write the uninstallation information to the registry"));
     }
+    ProgressStep();
 
 Error:
     // TODO: roll back installation on failure (restore previous installation!)
-    if (!gGlobalData.silent)
+    if (gHwndFrame && !gGlobalData.silent) {
+        Sleep(500); // allow a glimpse of the completed progress bar before hiding it
         PostMessage(gHwndFrame, WM_APP_INSTALLATION_FINISHED, 0, 0);
+    }
     return 0;
 }
 
@@ -1011,6 +1042,15 @@ void OnButtonInstall()
 
     if (gShowOptions)
         OnButtonOptions();
+
+    // create a progress bar in place of the Options button
+    RECT rc = { 0, 0, INSTALLER_WIN_DX / 2, 22 };
+    MapWindowRect(gHwndButtonOptions, gHwndFrame, &rc);
+    gHwndProgressBar = CreateWindow(PROGRESS_CLASS, NULL, WS_CHILD | WS_VISIBLE,
+                                    rc.left, rc.top, RectDx(&rc), RectDy(&rc),
+                                    gHwndFrame, 0, ghinst, NULL);
+    SendMessage(gHwndProgressBar, PBM_SETRANGE32, 0, GetInstallationStepCount());
+    SendMessage(gHwndProgressBar, PBM_SETSTEP, 1, 0);
 
     // disable the install button and remove all the installation options
     DestroyWindow(gHwndStaticInstDir);
@@ -1039,6 +1079,8 @@ void OnInstallationFinished()
 {
     DestroyWindow(gHwndButtonInstall);
     gHwndButtonInstall = NULL;
+    DestroyWindow(gHwndProgressBar);
+    gHwndProgressBar = NULL;
 
     if (gGlobalData.success) {
         CreateButtonRunSumatra(gHwndFrame);
@@ -1149,7 +1191,7 @@ void OnButtonOptions()
     ShowWindow(gHwndCheckboxRegisterDefault, nCmdShow);
     ShowWindow(gHwndCheckboxRegisterBrowserPlugin, nCmdShow);
 
-    win_set_text(gHwndButtonOptions, gShowOptions ? _T("Hide &Options") : _T("Show &Options"));
+    win_set_text(gHwndButtonOptions, gShowOptions ? _T("Back") : _T("&Options"));
 
     RECT rc;
     GetClientRect(gHwndFrame, &rc);
@@ -1700,9 +1742,9 @@ void OnCreateInstaller(HWND hwnd)
     Window_SetFont(gHwndButtonInstall, gFontDefault);
 
     x = 8;
-    gHwndButtonOptions = CreateWindow(WC_BUTTON, _T("Show &Options"),
+    gHwndButtonOptions = CreateWindow(WC_BUTTON, _T("&Options"),
                         BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
-                        x, y, buttonDx, buttonDy, hwnd, 
+                        x, y, 80, buttonDy, hwnd, 
                         (HMENU)ID_BUTTON_OPTIONS, ghinst, NULL);
     Window_SetFont(gHwndButtonOptions, gFontDefault);
 
