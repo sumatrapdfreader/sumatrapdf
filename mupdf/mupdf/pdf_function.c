@@ -1055,6 +1055,7 @@ loadsamplefunc(pdf_function *func, pdf_xref *xref, fz_obj *dict, int num, int ge
 	/* read samples */
 	for (i = 0; i < samplecount; ++i)
 	{
+		unsigned int x;
 		float s;
 
 		if (fz_peekbyte(stream) == EOF)
@@ -1063,47 +1064,32 @@ loadsamplefunc(pdf_function *func, pdf_xref *xref, fz_obj *dict, int num, int ge
 			return fz_throw("truncated sample stream");
 		}
 
-		if (bps == 1) {
-			int x = fz_peekbyte(stream);
-			s = (x >> ( 7 - (i & 7) ) ) & 1;
-			if ((i & 0x07) == 7)
-				fz_readbyte(stream);
-		}
-		else if (bps == 2) {
-			int x = fz_peekbyte(stream);
-			s = ((x >> ( ( 3 - (i & 3) ) << 1 ) ) & 3 ) / 3.0f;
-			if ((i & 0x3) == 3)
-				fz_readbyte(stream);
-		}
-		else if (bps == 4) {
-			int x = fz_peekbyte(stream);
-			s = ((x >> ( ( 1 - (i & 1) ) << 2 ) ) & 15 ) / 15.0f;
-			if ((i & 0x1) == 1)
-				fz_readbyte(stream);
-		}
-		else if (bps == 8) {
-			s = fz_readbyte(stream) / 255.0f;
-		}
-		/* 12 bit sampled function not supported yet */
-		else if (bps == 16) {
-			int x = fz_readbyte(stream);
-			x = (x << 8) + fz_readbyte(stream);
+		switch (bps)
+		{
+		case 1: s = fz_readbits(stream, 1); break;
+		case 2: s = fz_readbits(stream, 2) / 3.0f; break;
+		case 4: s = fz_readbits(stream, 4) / 15.0f; break;
+		case 8: s = fz_readbyte(stream) / 255.0f; break;
+		case 12: s = fz_readbits(stream, 12) / 4095.0f; break;
+		case 16:
+			x = fz_readbyte(stream) << 8;
+			x |= fz_readbyte(stream);
 			s = x / 65535.0f;
-		}
-		else if (bps == 24) {
-			unsigned int x = fz_readbyte(stream);
-			x = (x << 8) + fz_readbyte(stream);
-			x = (x << 8) + fz_readbyte(stream);
+			break;
+		case 24:
+			x = fz_readbyte(stream) << 16;
+			x |= fz_readbyte(stream) << 8;
+			x |= fz_readbyte(stream);
 			s = x / 16777215.0f;
-		}
-		else if (bps == 32) {
-			unsigned int x = fz_readbyte(stream);
-			x = (x << 8) + fz_readbyte(stream);
-			x = (x << 8) + fz_readbyte(stream);
-			x = (x << 8) + fz_readbyte(stream);
+			break;
+		case 32:
+			x = fz_readbyte(stream) << 24;
+			x |= fz_readbyte(stream) << 16;
+			x |= fz_readbyte(stream) << 8;
+			x |= fz_readbyte(stream);
 			s = x / 4294967295.0f;
-		}
-		else {
+			break;
+		default:
 			fz_close(stream);
 			return fz_throw("sample stream bit depth %d unsupported", bps);
 		}

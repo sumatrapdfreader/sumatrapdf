@@ -3,11 +3,10 @@ the release notes, as we make them, to make the release process easier.
 
 Next version:
 
-* new IFilter for PDF and LaTeX to support searching document contents with
-  Windows Search (not included with SumatraPDF but available as a separate download(?))
-
 * browser plugin for Mozilla Firefox, Google Chrome and Opera for displaying
   PDF documents with SumatraPDF inside the browser (does NOT work under MSIE)
+* IFilter for PDF (and LaTeX(?)) to support searching document contents with
+  Windows Desktop Search (full text search from Windows Vista/7's Start Menu)
 * add support for AES-256 encrypted documents
 * Right Mouse now drags the document (same as Shift+Left),
   Right+Scroll zooms it (same as Ctrl+Scroll)

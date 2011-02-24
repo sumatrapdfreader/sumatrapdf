@@ -505,6 +505,8 @@ struct fz_stream_s
 	int refs;
 	int dead;
 	int pos;
+	int avail;
+	int bits;
 	unsigned char *bp, *rp, *wp, *ep;
 	void *state;
 	int (*read)(fz_stream *stm, unsigned char *buf, int len);
@@ -552,6 +554,38 @@ static inline void fz_unreadbyte(fz_stream *stm)
 {
 	if (stm->rp > stm->bp)
 		stm->rp--;
+}
+
+static inline unsigned int fz_readbits(fz_stream *stm, int n)
+{
+	unsigned int x;
+
+	if (n <= stm->avail)
+	{
+		stm->avail -= n;
+		x = (stm->bits >> stm->avail) & ((1 << n) - 1);
+	}
+	else
+	{
+		x = stm->bits & ((1 << stm->avail) - 1);
+		n -= stm->avail;
+		stm->avail = 0;
+
+		while (n > 8)
+		{
+			x = (x << 8) | fz_readbyte(stm);
+			n -= 8;
+		}
+
+		if (n > 0)
+		{
+			stm->bits = fz_readbyte(stm);
+			stm->avail = 8 - n;
+			x = (x << n) | (stm->bits >> stm->avail);
+		}
+	}
+
+	return x;
 }
 
 /*

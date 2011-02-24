@@ -575,29 +575,12 @@ pdf_loadradialshading(fz_shade *shade, pdf_xref *xref, fz_obj *dict, int funcs, 
 
 /* Type 4-7 -- Triangle and patch mesh shadings */
 
-static inline unsigned int
-readbits(fz_stream *stream, int bits)
-{
-	unsigned int v = 0;
-	int c, n;
-
-	for (n = 0; n < bits; n += 8)
-	{
-		c = fz_readbyte(stream);
-		if (c == EOF)
-			break;
-		v = (v << 8) | c;
-	}
-
-	return v;
-}
-
 static inline float
 readsample(fz_stream *stream, int bits, float min, float max)
 {
 	/* we use pow(2,x) because (1<<x) would overflow the math on 32-bit samples */
 	float bitscale = 1 / (powf(2, bits) - 1);
-	return min + readbits(stream, bits) * (max - min) * bitscale;
+	return min + fz_readbits(stream, bits) * (max - min) * bitscale;
 }
 
 struct meshparams
@@ -689,7 +672,7 @@ pdf_loadtype4shade(fz_shade *shade, pdf_xref *xref, fz_obj *dict,
 
 	while (fz_peekbyte(stream) != EOF)
 	{
-		flag = readbits(stream, p.bpflag);
+		flag = fz_readbits(stream, p.bpflag);
 		vd.x = readsample(stream, p.bpcoord, p.x0, p.x1);
 		vd.y = readsample(stream, p.bpcoord, p.y0, p.y1);
 		for (i = 0; i < ncomp; i++)
@@ -700,13 +683,13 @@ pdf_loadtype4shade(fz_shade *shade, pdf_xref *xref, fz_obj *dict,
 		case 0: /* start new triangle */
 			va = vd;
 
-			readbits(stream, p.bpflag);
+			fz_readbits(stream, p.bpflag);
 			vb.x = readsample(stream, p.bpcoord, p.x0, p.x1);
 			vb.y = readsample(stream, p.bpcoord, p.y0, p.y1);
 			for (i = 0; i < ncomp; i++)
 				vb.c[i] = readsample(stream, p.bpcomp, p.c0[i], p.c1[i]);
 
-			readbits(stream, p.bpflag);
+			fz_readbits(stream, p.bpflag);
 			vc.x = readsample(stream, p.bpcoord, p.x0, p.x1);
 			vc.y = readsample(stream, p.bpcoord, p.y0, p.y1);
 			for (i = 0; i < ncomp; i++)
@@ -825,7 +808,7 @@ pdf_loadtype6shade(fz_shade *shade, pdf_xref *xref, fz_obj *dict,
 		int startpt;
 		int flag;
 
-		flag = readbits(stream, p.bpflag);
+		flag = fz_readbits(stream, p.bpflag);
 
 		if (flag == 0)
 		{
@@ -950,7 +933,7 @@ pdf_loadtype7shade(fz_shade *shade, pdf_xref *xref, fz_obj *dict,
 		int startpt;
 		int flag;
 
-		flag = readbits(stream, p.bpflag);
+		flag = fz_readbits(stream, p.bpflag);
 
 		if (flag == 0)
 		{

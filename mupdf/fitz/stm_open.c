@@ -13,6 +13,9 @@ fz_newstream(void *state,
 	stm->dead = 0;
 	stm->pos = 0;
 
+	stm->bits = 0;
+	stm->avail = 0;
+
 	stm->bp = stm->buf;
 	stm->rp = stm->bp;
 	stm->wp = stm->bp;
