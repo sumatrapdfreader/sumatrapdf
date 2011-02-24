@@ -9110,7 +9110,7 @@ const char *g_transTranslations[] = {
   "Emne:",
   "SumatraPDF valgmuligheder",
   "SumatraPDF Opdatering",
-  NULL,
+  "Der opstod en kritisk fejl, programmet lukkes.",
   "SumatraPDF er din standard PDF-l\303\246ser",
   "SumatraPDF skulle nu v\303\246re din standard PDF-l\303\246ser",
   "Symkroniseringsfil kan ikke \303\245bnes",

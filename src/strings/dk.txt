@@ -9,6 +9,7 @@ Lang: dk Danish (Dansk)
 Contributor: Lars J. Helbo
 Contributor: Jakob Wadsager
 Contributor: Mikkel Vestergaard
+Contributor: Brian S. Vangsgaard
 
 &About
 &Om
@@ -463,6 +464,9 @@ SumatraPDF valgmuligheder
 SumatraPDF Update
 SumatraPDF Opdatering
 
+SumatraPDF crashed
+Der opstod en kritisk fejl, programmet lukkes.
+
 SumatraPDF is your default PDF reader
 SumatraPDF er din standard PDF-læser
 
@@ -516,7 +520,4 @@ kopierer tekst
 
 printing document
 printer dokument
-
-# Untranslated:
-#SumatraPDF crashed
 
