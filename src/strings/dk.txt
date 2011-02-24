@@ -301,6 +301,12 @@ Tilpas side
 Fit Width
 Tilpas bredde
 
+Fit Width and Show Pages Continuously
+Tilpas bredde og vis sider løbende
+
+Fit a Single Page
+Vis en side ad gangen
+
 Found text at page %d
 Fandt tekst på side %d
 
@@ -391,8 +397,14 @@ Sideskalering
 Page:
 Side:
 
+Please include the following file in your crash report:
+Du bedes venligst inkludere følgende fil i din fejlrapport:
+
 Please wait - rendering...
 Vent venligst - renderer...
+
+Pr&esentation\tCtrl-L
+Fuldskærmstilstand
 
 Previous Page
 Forrige side
@@ -414,6 +426,9 @@ Roter mod &højre\tCtrl-Shift-+
 
 Searching %d of %d...
 Søgning %d af %d...
+
+Select &All\tCtrl-A
+Vælg &Alle\tCtrl-A
 
 Select content with Ctrl+left mouse button
 Vælg indhold med Ctrl+venstre museknap
@@ -444,6 +459,9 @@ Emne:
 
 SumatraPDF Options
 SumatraPDF valgmuligheder
+
+SumatraPDF Update
+SumatraPDF Opdatering
 
 SumatraPDF is your default PDF reader
 SumatraPDF er din standard PDF-læser
@@ -500,11 +518,5 @@ printing document
 printer dokument
 
 # Untranslated:
-#Fit Width and Show Pages Continuously
-#Fit a Single Page
-#Please include the following file in your crash report:
-#Pr&esentation\tCtrl-L
-#Select &All\tCtrl-A
-#SumatraPDF Update
 #SumatraPDF crashed
 
