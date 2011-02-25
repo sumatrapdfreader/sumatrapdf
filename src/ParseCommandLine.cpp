@@ -237,9 +237,6 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
         else if (is_arg("-restrict")) {
             this->restrictedUse = true;
         }
-        else if (is_arg_with_param("-title")) {
-            this->SetNewWindowTitle(argList[++n]);
-        }
         else if (is_arg("-invertcolors") || is_arg("-invert-colors")) {
             // -invertcolors is for backwards compat (was used pre-1.3)
             // -invert-colors is for consitency

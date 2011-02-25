@@ -1367,7 +1367,9 @@ static bool LoadPdfIntoWindow(
         } else {
             delete previousmodel;
             win->state = WS_ERROR_LOADING_PDF;
-            win_set_text(win->hwndFrame, FilePath_GetBaseName(fileName));
+            TCHAR *title = tstr_printf(_T("%s - %s"), FilePath_GetBaseName(fileName), SUMATRA_WINDOW_TITLE);
+            win_set_text(win->hwndFrame, title);
+            free(title);
             goto Error;
         }
     } else {
@@ -1433,25 +1435,21 @@ static bool LoadPdfIntoWindow(
     WindowInfo_UpdateFindbox(win);
 
     int pageCount = win->dm->pageCount();
-    const TCHAR *baseName = FilePath_GetBaseName(win->dm->fileName());
-    if (pageCount <= 0)
-        win_set_text(win->hwndFrame, baseName);
-    else {
+    if (pageCount > 0) {
         UpdateToolbarPageText(win, pageCount);
         UpdateToolbarFindText(win);
-
-        const TCHAR *title = baseName;
-        if (win->title)
-            title = win->title;
-
-        if (win->needrefresh) {
-            TCHAR *msg = tstr_printf(_TR("[Changes detected; refreshing] %s"), title);
-            win_set_text(win->hwndFrame, msg);
-            free(msg);
-        }
-        else
-            win_set_text(win->hwndFrame, title);
     }
+
+    const TCHAR *baseName = FilePath_GetBaseName(win->dm->fileName());
+    TCHAR *title = tstr_printf(_T("%s - %s"), baseName, SUMATRA_WINDOW_TITLE);
+    if (win->needrefresh) {
+        TCHAR *msg = tstr_printf(_TR("[Changes detected; refreshing] %s"), title);
+        free(title);
+        title = msg;
+    }
+    win_set_text(win->hwndFrame, title);
+    free(title);
+
 Error:
     if (isNewWindow || placeWindow && state) {
         assert(win);
@@ -1561,11 +1559,11 @@ bool IsComicBook(const TCHAR *fileName)
     return false;
 }
 
-WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin, TCHAR *windowTitle)
+WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin)
 {
     if (IsComicBook(fileName))
-        return LoadComicBook(fileName, win, showWin, windowTitle);
-    return LoadPdf(fileName, win, showWin, windowTitle);
+        return LoadComicBook(fileName, win, showWin);
+    return LoadPdf(fileName, win, showWin);
 }
 
 bool IsPngFile(const char *fileName)
@@ -1584,7 +1582,7 @@ bool IsJpegFile(const char *fileName)
 
 // Load *.cbz / *.cbr file
 // TODO: far from being done
-WindowInfo* LoadComicBook(const TCHAR *fileName, WindowInfo *win, bool showWin, TCHAR *windowTitle)
+WindowInfo* LoadComicBook(const TCHAR *fileName, WindowInfo *win, bool showWin)
 {    
     zlib_filefunc64_def ffunc;
     unzFile uf;
@@ -1641,7 +1639,7 @@ Error:
     
 }
 
-WindowInfo* LoadPdf(const TCHAR *fileName, WindowInfo *win, bool showWin, TCHAR *windowTitle)
+WindowInfo* LoadPdf(const TCHAR *fileName, WindowInfo *win, bool showWin)
 {
     assert(fileName);
     if (!fileName) return NULL;
@@ -1657,9 +1655,6 @@ WindowInfo* LoadPdf(const TCHAR *fileName, WindowInfo *win, bool showWin, TCHAR 
             return NULL;
     }
 
-    if (windowTitle)
-        win->title = windowTitle;
- 
     TCHAR *fullpath = FilePath_Normalize(fileName, FALSE);
     if (!fullpath)
         goto exit;
@@ -6727,7 +6722,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         }
         else {
             bool showWin = !i.exitOnPrint && !gPluginMode;
-            win = LoadDocument(i.fileNames[n], NULL, showWin, i.newWindowTitle);
+            win = LoadDocument(i.fileNames[n], NULL, showWin);
             if (!win || win->state != WS_SHOWING_PDF)
                 msg.wParam++; // set an error code for the next goto Exit
             if (!win)

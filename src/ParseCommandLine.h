@@ -28,7 +28,6 @@ public:
     TCHAR *     destName;
     int         pageNumber;
     bool        restrictedUse;
-    TCHAR *     newWindowTitle;
     BOOL        invertColors;
     bool        enterPresentation;
     bool        enterFullscreen;
@@ -43,7 +42,7 @@ public:
         fwdsearchOffset(-1), fwdsearchWidth(-1), fwdsearchColor(-1),
         fwdsearchPermanent(FALSE), escToExit(FALSE),
         reuseInstance(false), lang(NULL), destName(NULL), pageNumber(-1),
-        restrictedUse(false), newWindowTitle(NULL), invertColors(FALSE),
+        restrictedUse(false), invertColors(FALSE),
         enterPresentation(false), enterFullscreen(false), hwndPluginParent(NULL),
         startView(DM_AUTOMATIC), startZoom(INVALID_ZOOM),
         showConsole(false), exitImmediately(false)
@@ -54,7 +53,6 @@ public:
         free(inverseSearchCmdLine);
         free(lang);
         free(destName);
-        free(newWindowTitle);
     }
 
     void ParseCommandLine(TCHAR *cmdLine);
@@ -78,11 +76,6 @@ protected:
     void SetDestName(TCHAR *s) {
         free(destName);
         destName = tstr_dup(s);
-    }
-
-    void SetNewWindowTitle(TCHAR *s) {
-        free(newWindowTitle);
-        newWindowTitle = tstr_dup(s);
     }
 };
 

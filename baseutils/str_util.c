@@ -463,7 +463,7 @@ char *str_printf_args(const char *format, va_list args)
             bufCchSize += bufCchSize;
         else
             bufCchSize += 1024;
-        buf = (char *)malloc(bufCchSize);
+        buf = SAZA(char, bufCchSize);
         if (!buf)
             break;
     }

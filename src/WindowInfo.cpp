@@ -26,7 +26,7 @@ WindowInfoBase::WindowInfoBase(HWND hwnd) :
     mouseAction(MA_IDLE), needrefresh(false),
     hdcToDraw(NULL), hdcDoubleBuffer(NULL), bmpDoubleBuffer(NULL),
     prevZoomVirtual(INVALID_ZOOM), prevDisplayMode(DM_AUTOMATIC),
-    title(NULL), loadedFilePath(NULL), currPageNo(0),
+    loadedFilePath(NULL), currPageNo(0),
     xScrollSpeed(0), yScrollSpeed(0), wheelAccumDelta(0),
     delayedRepaintTimer(0), resizingTocBox(false),
     pdfsync(NULL), pluginParent(NULL)
@@ -52,7 +52,6 @@ WindowInfoBase::~WindowInfoBase() {
 
     this->DoubleBuffer_Delete();
 
-    free(this->title);
     free(this->loadedFilePath);
 
     delete this->tocRoot;
