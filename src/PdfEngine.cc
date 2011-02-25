@@ -155,6 +155,17 @@ ProducingPaletteDone:
     return hbmp;
 }
 
+pdf_link *pdf_newlink(fz_obj *dest, pdf_linkkind kind)
+{
+    pdf_link *link = (pdf_link *)fz_malloc(sizeof(pdf_link));
+
+    ZeroMemory(link, sizeof(pdf_link));
+    link->dest = dest;
+    link->kind = kind;
+
+    return link;
+}
+
 pdf_outline *pdf_loadattachments(pdf_xref *xref)
 {
     fz_obj *dict = pdf_loadnametree(xref, "EmbeddedFiles");
@@ -163,18 +174,16 @@ pdf_outline *pdf_loadattachments(pdf_xref *xref)
 
     pdf_outline root = { 0 }, *node = &root;
     for (int i = 0; i < fz_dictlen(dict); i++) {
-        node = node->next = SAZ(pdf_outline);
+        node = node->next = (pdf_outline *)fz_malloc(sizeof(pdf_outline));
+        ZeroMemory(node, sizeof(pdf_outline));
 
         fz_obj *name = fz_dictgetkey(dict, i);
         fz_obj *dest = fz_dictgetval(dict, i);
         fz_obj *type = fz_dictgets(dest, "Type");
 
-        node->title = strdup(fz_toname(name));
-        if (fz_isname(type) && str_eq(fz_toname(type), "Filespec")) {
-            node->link = SAZ(pdf_link);
-            node->link->kind = PDF_LLAUNCH;
-            node->link->dest = fz_keepobj(dest);
-        }
+        node->title = fz_strdup(fz_toname(name));
+        if (fz_isname(type) && str_eq(fz_toname(type), "Filespec"))
+            node->link = pdf_newlink(fz_keepobj(dest), PDF_LLAUNCH);
     }
     fz_dropobj(dict);
 
@@ -207,7 +216,8 @@ bool fz_isptinrect(fz_rect rect, fz_point pt)
 
 #define fz_sizeofrect(rect) (((rect).x1 - (rect).x0) * ((rect).y1 - (rect).y0))
 
-char *tstr_to_pdfdoc(TCHAR *tstr)
+// Caller needs to fz_free the result
+static char *tstr_to_pdfdoc(TCHAR *tstr)
 {
     WCHAR *wstr = tstr_to_wstr(tstr);
     char *docstr = pdf_fromucs2((unsigned short *)wstr);
@@ -400,7 +410,7 @@ OpenEmbeddedFile:
 
             char *pwd_doc = tstr_to_pdfdoc(pwd);
             okay = pwd_doc && !!pdf_authenticatepassword(_xref, pwd_doc);
-            free(pwd_doc);
+            fz_free(pwd_doc);
             // try the UTF-8 password, if the PDFDocEncoding one doesn't work
             if (!okay) {
                 char *pwd_utf8 = tstr_to_utf8(pwd);
@@ -461,7 +471,7 @@ bool PdfEngine::load(fz_stream *stm, TCHAR *password)
 
         char *pwd_doc = tstr_to_pdfdoc(password);
         bool okay = pwd_doc && !!pdf_authenticatepassword(_xref, pwd_doc);
-        free(pwd_doc);
+        fz_free(pwd_doc);
         // try the UTF-8 password, if the PDFDocEncoding one doesn't work
         if (!okay) {
             char *pwd_utf8 = tstr_to_utf8(password);
@@ -942,8 +952,7 @@ static TCHAR *parseMultilineLink(pdf_page *page, TCHAR *pageText, TCHAR *start, 
         free(uri);
         uri = newUri;
 
-        pdf_link *link = SAZ(pdf_link);
-        link->kind = PDF_LURI;
+        pdf_link *link = pdf_newlink(NULL, PDF_LURI);
         link->rect = fz_bboxtorect(bbox);
         getLastLink(firstLink)->next = link;
 
@@ -1010,10 +1019,8 @@ void PdfEngine::linkifyPageText(pdf_page *page)
             char *uri = tstr_to_utf8(start);
             char *httpUri = str_startswith(uri, "http") ? uri : str_cat("http://", uri);
             fz_obj *dest = fz_newstring(httpUri, (int)strlen(httpUri));
-            pdf_link *link = SAZ(pdf_link);
-            link->kind = PDF_LURI;
+            pdf_link *link = pdf_newlink(dest, PDF_LURI);
             link->rect = fz_bboxtorect(bbox);
-            link->dest = dest;
             if (page->links)
                 getLastLink(page->links)->next = link;
             else
