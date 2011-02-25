@@ -352,7 +352,7 @@ Printing problem.
 Problem z drukowaniem.
 
 Remember &opened files
-Zapmiętaj &otwarte pliki
+Zapamiętaj &otwarte pliki
 
 Rotate &Left\tCtrl-Shift--
 Obróć w lewo\tCtrl-Shift--

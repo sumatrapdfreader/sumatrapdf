@@ -8922,7 +8922,7 @@ const char *g_transTranslations[] = {
   "Poprzednia strona",
   NULL,
   "Problem z drukowaniem.",
-  "Zapmi\304\231taj &otwarte pliki",
+  "Zapami\304\231taj &otwarte pliki",
   "Obr\303\263\304\207 w lewo\tCtrl-Shift--",
   "Obr\303\263\304\207 w prawo\tCtrl-Shift-+",
   "Szukanie %d z %d...",
