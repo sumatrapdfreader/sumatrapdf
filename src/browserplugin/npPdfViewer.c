@@ -1,6 +1,4 @@
-/* (Minimal) SumatraPDF Browser Plugin - Copyright (C) 2010-2011  Simon Bünzli */
-
-// TODO: Firefox never even loads this DLL, if it finds nppdf32.dll in its own plugins directory
+/* (Minimal) SumatraPDF Browser Plugin - Copyright © 2010-2011  Simon Bünzli */
 
 #include <windows.h>
 #include <shellapi.h>
@@ -132,11 +130,34 @@ DLLEXPORT STDAPI DllRegisterServer(VOID)
 		RegCloseKey(hKey);
 	}
 	
+	// Work around Mozilla bug https://bugzilla.mozilla.org/show_bug.cgi?id=581848 which
+	// makes Firefox up to version 3.6.* ignore all but the first plugin for a given MIME type
+	// (per http://code.google.com/p/sumatrapdf/issues/detail?id=1254#c12 Foxit does the same)
+	*PathFindFileNameW(szPath) = L'\0';
+	if (SHGetValueW(HKEY_CURRENT_USER, L"Environment", L"MOZ_PLUGIN_PATH", NULL, NULL, NULL) == ERROR_FILE_NOT_FOUND)
+	{
+		SHSetValueW(HKEY_CURRENT_USER, L"Environment", L"MOZ_PLUGIN_PATH", REG_SZ, szPath, (lstrlenW(szPath) + 1) * sizeof(WCHAR));
+		SendMessageTimeoutW(HWND_BROADCAST, WM_SETTINGCHANGE, 0, (LPARAM)L"Environment", SMTO_ABORTIFHUNG, 5000, NULL);
+	}
+	
 	return S_OK;
 }
 
 DLLEXPORT STDAPI DllUnregisterServer(VOID)
 {
+	WCHAR szPluginPath[MAX_PATH];
+	DWORD dwSize = MAX_PATH * sizeof(WCHAR);
+	
+	if (SHGetValueW(HKEY_CURRENT_USER, L"Environment", L"MOZ_PLUGIN_PATH", NULL, szPluginPath, &dwSize) == ERROR_SUCCESS)
+	{
+		WCHAR szModulePath[MAX_PATH];
+		GetModuleFileNameW(g_hInstance, szModulePath, MAX_PATH);
+		if (!wcsncmp(szPluginPath, szModulePath, lstrlenW(szPluginPath)))
+		{
+			SHDeleteValueW(HKEY_CURRENT_USER, L"Environment", L"MOZ_PLUGIN_PATH");
+		}
+	}
+	
 	SHDeleteKeyW(HKEY_LOCAL_MACHINE, g_lpRegKey);
 	if (SHDeleteKeyW(HKEY_CURRENT_USER, g_lpRegKey) != ERROR_SUCCESS)
 	{
@@ -167,12 +188,12 @@ bool GetExePath(LPWSTR lpPath, int len)
 		WCHAR *args = wcsstr(lpPath, L"\"%1\"");
 		if (args)
 		{
-			*args = '\0';
+			*args = L'\0';
 		}
 		return true;
 	}
 	
-	*lpPath = '\0';
+	*lpPath = L'\0';
 	return false;
 }
 
