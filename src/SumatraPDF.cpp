@@ -662,7 +662,7 @@ static void AddFileToHistory(const TCHAR *filePath)
 /* Get password for a given 'fileName', can be NULL if user cancelled the
    dialog box or if the encryption key has been filled in instead.
    Caller needs to free() the result. */
-TCHAR *GetPasswordForFile(WindowInfo *win, const TCHAR *fileName,
+TCHAR *GetPasswordForFile(HWND hwnd, const TCHAR *fileName,
                           pdf_xref *xref, unsigned char *decryptionKey, bool *saveKey)
 {
     FileHistoryNode *fileFromHistory = gFileHistoryRoot.Find(fileName);
@@ -677,7 +677,7 @@ TCHAR *GetPasswordForFile(WindowInfo *win, const TCHAR *fileName,
 
     *saveKey = false;
     fileName = FilePath_GetBaseName(fileName);
-    return Dialog_GetPassword(win, fileName, gGlobalPrefs.m_rememberOpenedFiles ? saveKey : NULL);
+    return Dialog_GetPassword(hwnd, fileName, gGlobalPrefs.m_rememberOpenedFiles ? saveKey : NULL);
 }
 
 /* Caller needs to free() the result. */
@@ -6496,16 +6496,21 @@ static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
     return TRUE;
 }
 
-static void PrintFile(WindowInfo *win, const TCHAR *printerName)
+static bool PrintFile(const TCHAR *fileName, const TCHAR *printerName)
 {
     TCHAR       devstring[256];      // array for WIN.INI data 
     HANDLE      printer;
     LPDEVMODE   devMode = NULL;
     DWORD       structSize, returnCode;
+    bool        success = false;
 
-    if (!win->dm->pdfEngine->hasPermission(PDF_PERM_PRINT)) {
-        MessageBox(win->hwndFrame, _TR("Cannot print this file"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK);
-        return;
+    fileName = FilePath_Normalize(fileName, FALSE);
+    PdfEngine *pdfEngine = PdfEngine::CreateFromFileName(fileName);
+    free((void *)fileName);
+
+    if (!pdfEngine || !pdfEngine->hasPermission(PDF_PERM_PRINT)) {
+        MessageBox(NULL, _TR("Cannot print this file"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK);
+        return false;
     }
 
     // Retrieve the printer, printer driver, and 
@@ -6519,14 +6524,14 @@ static void PrintFile(WindowInfo *win, const TCHAR *printerName)
     TCHAR *port = _tcstok((TCHAR *) NULL, (const TCHAR *)_T(","));
 
     if (!driver || !port) {
-        MessageBox(win->hwndFrame, _T("Printer with given name doesn't exist"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK);
-        return;
+        MessageBox(NULL, _T("Printer with given name doesn't exist"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK);
+        return false;
     }
     
     BOOL fOk = OpenPrinter((LPTSTR)printerName, &printer, NULL);
     if (!fOk) {
-        MessageBox(win->hwndFrame, _TR("Could not open Printer"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK);
-        return;
+        MessageBox(NULL, _TR("Could not open Printer"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK);
+        return false;
     }
 
     HDC  hdcPrint = NULL;
@@ -6535,7 +6540,7 @@ static void PrintFile(WindowInfo *win, const TCHAR *printerName)
         (LPTSTR)printerName,    /* Name of the printer. */ 
         NULL,                   /* Asking for size, so */ 
         NULL,                   /* these are not used. */ 
-        0);                     /* Zero returns buffer size. */ 
+        0);                     /* Zero returns buffer size. */
     devMode = (LPDEVMODE)malloc(structSize);
     if (!devMode) goto Exit;
 
@@ -6549,7 +6554,7 @@ static void PrintFile(WindowInfo *win, const TCHAR *printerName)
 
     if (IDOK != returnCode) {
         // If failure, inform the user, cleanup and return failure.
-        MessageBox(win->hwndFrame, _T("Could not obtain Printer properties"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK);
+        MessageBox(NULL, _T("Could not obtain Printer properties"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK);
         goto Exit;
     }
 
@@ -6570,16 +6575,18 @@ static void PrintFile(WindowInfo *win, const TCHAR *printerName)
 
     hdcPrint = CreateDC(driver, printerName, port, devMode); 
     if (!hdcPrint) {
-        MessageBox(win->hwndFrame, _TR("Couldn't initialize printer"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK);
+        MessageBox(NULL, _TR("Couldn't initialize printer"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK);
         goto Exit;
     }
-    if (CheckPrinterStretchDibSupport(win->hwndFrame, hdcPrint)) {
-        PRINTPAGERANGE pr = { 1, win->dm->pageCount() };
-        PrintToDevice(win->dm->pdfEngine, hdcPrint, devMode, 1, &pr, win->dm->rotation());
+    if (CheckPrinterStretchDibSupport(NULL, hdcPrint)) {
+        PRINTPAGERANGE pr = { 1, pdfEngine->pageCount() };
+        PrintToDevice(pdfEngine, hdcPrint, devMode, 1, &pr);
+        success = true;
     }
 Exit:
     free(devMode);
     DeleteDC(hdcPrint);
+    return success;
 }
 
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
@@ -6688,8 +6695,19 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     bool firstDocLoaded = false;
     msg.wParam = 0;
 
+    if (i.printerName) {
+        // note: this prints all PDF files. Another option would be to
+        // print only the first one
+        for (size_t n = 0; n < i.fileNames.size(); n++) {
+            bool ok = PrintFile(i.fileNames[n], i.printerName);
+            if (!ok)
+                msg.wParam++;
+        }
+        goto Exit;
+    }
+
     for (size_t n = 0; n < i.fileNames.size(); n++) {
-        if (i.reuseInstance) {
+        if (i.reuseInstance && !i.printDialog) {
             // delegate file opening to a previously running instance by sending a DDE message 
             TCHAR fullpath[MAX_PATH], command[2 * MAX_PATH + 20];
             GetFullPathName(i.fileNames[n], dimof(fullpath), fullpath, NULL);
@@ -6736,17 +6754,12 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
                 OnMenuZoom(win, MenuIdFromVirtualZoom(i.startZoom));
         }
 
-        if (i.printerName && win && WS_SHOWING_PDF == win->state) {
-            // note: this prints all PDF files. Another option would be to
-            // print only the first one
-            PrintFile(win, i.printerName);
-        } else if (i.printDialog) {
+        if (i.printDialog)
             OnMenuPrint(win);
-        }
         firstDocLoaded = true;
     }
 
-    if (i.reuseInstance || ((i.printerName || i.printDialog) && i.exitOnPrint))
+    if (i.reuseInstance || i.printDialog && i.exitOnPrint)
         goto Exit;
  
     if (!firstDocLoaded) {

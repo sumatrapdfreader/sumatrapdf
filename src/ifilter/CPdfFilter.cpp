@@ -8,7 +8,7 @@
 
 extern HINSTANCE g_hInstance;
 
-TCHAR *GetPasswordForFile(WindowInfo *win, const TCHAR *fileName, pdf_xref *xref, unsigned char *decryptionKey, bool *saveKey)
+TCHAR *GetPasswordForFile(HWND hwnd, const TCHAR *fileName, pdf_xref *xref, unsigned char *decryptionKey, bool *saveKey)
 {
     return NULL;
 }

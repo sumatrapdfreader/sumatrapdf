@@ -83,7 +83,7 @@ static void BenchFile(TCHAR *filePath, TCHAR *pagesSpec)
 
     MillisecondTimer t;
     t.Start();
-    PdfEngine *engine = PdfEngine::CreateFromFileName(filePath, NULL);
+    PdfEngine *engine = PdfEngine::CreateFromFileName(filePath);
     t.Stop();
 
     if (!engine) {

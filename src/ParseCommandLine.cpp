@@ -176,9 +176,6 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
             this->exitImmediately = true;
             return;
         }
-        else if (is_arg("-exit-on-print")) {
-            this->exitOnPrint = true;
-        }
         else if (is_arg("-print-to-default")) {
             TCHAR *printerName = GetDefaultPrinterName();
             if (printerName) {
@@ -188,6 +185,9 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
         }
         else if (is_arg_with_param("-print-to")) {
             this->SetPrinterName(argList[++n]);
+        }
+        else if (is_arg("-exit-on-print")) {
+            this->exitOnPrint = true;
         }
         else if (is_arg("-print-dialog")) {
             this->printDialog = true;

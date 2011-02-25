@@ -78,7 +78,7 @@ static INT_PTR CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT message, WPARAM 
    NULL if user cancelled the dialog or there was an error.
    Caller needs to free() the result.
 */
-TCHAR *Dialog_GetPassword(WindowInfo *win, const TCHAR *fileName, bool *rememberPassword)
+TCHAR *Dialog_GetPassword(HWND hwndParent, const TCHAR *fileName, bool *rememberPassword)
 {
     Dialog_GetPassword_Data data = { 0 };
     
@@ -88,7 +88,7 @@ TCHAR *Dialog_GetPassword(WindowInfo *win, const TCHAR *fileName, bool *remember
     data.fileName = fileName;
     data.remember = rememberPassword;
 
-    INT_PTR dialogResult = DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_DIALOG_GET_PASSWORD), win->hwndFrame, Dialog_GetPassword_Proc, (LPARAM)&data);
+    INT_PTR dialogResult = DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_DIALOG_GET_PASSWORD), hwndParent, Dialog_GetPassword_Proc, (LPARAM)&data);
     if (DIALOG_OK_PRESSED != dialogResult) {
         free((void*)data.pwdOut);
         return NULL;

@@ -20,8 +20,6 @@ __pragma(warning(pop))
 #include "geom_util.h"
 #include "tstr_util.h"
 
-class WindowInfo;
-
 #define INVALID_PAGE_NO     -1
 #define INVALID_ROTATION    -1
 /* one PDF user space unit equals 1/72 inch */
@@ -157,7 +155,7 @@ protected:
     CRITICAL_SECTION _pagesAccess;
     pdf_page **     _pages;
 
-    bool            load(const TCHAR *fileName, WindowInfo *windowInfo);
+    bool            load(const TCHAR *fileName, HWND hwndParent=NULL);
     bool            load(fz_stream *stm, TCHAR *password=NULL);
     bool            finishLoading(void);
     pdf_page      * getPdfPage(int pageNo, bool failIfBusy=false);
@@ -185,7 +183,7 @@ protected:
     fz_glyphcache * _drawcache;
 
 public:
-    static PdfEngine *CreateFromFileName(const TCHAR *fileName, WindowInfo *windowInfo);
+    static PdfEngine *CreateFromFileName(const TCHAR *fileName, HWND hwndParent=NULL);
     static PdfEngine *CreateFromStream(fz_stream *stm, TCHAR *password=NULL);
 };
 

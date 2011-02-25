@@ -9,7 +9,7 @@
 #define MAX_MEMORY_FILE_SIZE (10 * 1024 * 1024)
 
 // in SumatraPDF.cpp
-TCHAR *GetPasswordForFile(WindowInfo *win, const TCHAR *fileName, pdf_xref *xref, unsigned char *decryptionKey, bool *saveKey);
+TCHAR *GetPasswordForFile(HWND hwnd, const TCHAR *fileName, pdf_xref *xref, unsigned char *decryptionKey, bool *saveKey);
 
 // adapted from pdf_page.c's pdf_loadpageinfo
 fz_error pdf_getmediabox(fz_rect *mediabox, fz_obj *page)
@@ -328,7 +328,7 @@ PdfEngine *PdfEngine::clone()
     return clone;
 }
 
-bool PdfEngine::load(const TCHAR *fileName, WindowInfo *win)
+bool PdfEngine::load(const TCHAR *fileName, HWND hwndParent)
 {
     assert(!_fileName && !_xref);
     _fileName = tstr_dup(fileName);
@@ -383,16 +383,12 @@ OpenEmbeddedFile:
         return false;
 
     if (pdf_needspassword(_xref)) {
-        assert(win);
-        if (!win)
-            return false;
-
         unsigned char digest[16 + 32] = { 0 };
         pdf_streamfingerprint(_xref->file, digest);
 
         bool okay = false, saveKey = false;
         for (int i = 0; !okay && i < 3; i++) {
-            TCHAR *pwd = GetPasswordForFile(win, _fileName, _xref, digest, &saveKey);
+            TCHAR *pwd = GetPasswordForFile(hwndParent, _fileName, _xref, digest, &saveKey);
             if (!pwd) {
                 // password not given or encryption key has been remembered
                 okay = saveKey;
@@ -1203,10 +1199,10 @@ void PdfEngine::ageStore()
     LeaveCriticalSection(&_xrefAccess);
 }
 
-PdfEngine *PdfEngine::CreateFromFileName(const TCHAR *fileName, WindowInfo *win)
+PdfEngine *PdfEngine::CreateFromFileName(const TCHAR *fileName, HWND hwndParent)
 {
     PdfEngine *engine = new PdfEngine();
-    if (!engine || !engine->load(fileName, win)) {
+    if (!engine || !fileName || !engine->load(fileName, hwndParent)) {
         delete engine;
         return NULL;
     }
@@ -1216,7 +1212,7 @@ PdfEngine *PdfEngine::CreateFromFileName(const TCHAR *fileName, WindowInfo *win)
 PdfEngine *PdfEngine::CreateFromStream(fz_stream *stm, TCHAR *password)
 {
     PdfEngine *engine = new PdfEngine();
-    if (!engine || !engine->load(stm, password)) {
+    if (!engine || !stm || !engine->load(stm, password)) {
         delete engine;
         return NULL;
     }

@@ -240,7 +240,7 @@ PdfPageInfo *DisplayModel::getPageInfo(int pageNo) const
 bool DisplayModel::load(const TCHAR *fileName, int startPage, WindowInfo *win)
 { 
     assert(fileName);
-    pdfEngine = PdfEngine::CreateFromFileName(fileName, win);
+    pdfEngine = PdfEngine::CreateFromFileName(fileName, win->hwndFrame);
     if (!pdfEngine)
         return false;
 

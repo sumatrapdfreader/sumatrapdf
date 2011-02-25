@@ -15,6 +15,8 @@
 // define the following if you want shadows drawn around the pages
 // #define DRAW_PAGE_SHADOWS
 
+class WindowInfo;
+
 typedef struct DisplaySettings {
     int     pageBorderTop;
     int     pageBorderBottom;

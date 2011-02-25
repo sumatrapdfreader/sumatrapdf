@@ -254,11 +254,11 @@ void DoAssociateExeWithPdfExtension(HKEY hkey)
     ok = WriteRegStr(hkey, _T("Software\\Classes\\") APP_NAME_STR _T("\\shell\\open\\command"), NULL, cmdPath);
 
     // also register for printing
-    tstr_printf_s(cmdPath, dimof(cmdPath), _T("\"%s\" -print-to-default -exit-on-print \"%%1\""), exePath); // "${exePath}" -print-to-default -exit-on-print "%1"
+    tstr_printf_s(cmdPath, dimof(cmdPath), _T("\"%s\" -print-to-default \"%%1\""), exePath); // "${exePath}" -print-to-default "%1"
     WriteRegStr(hkey, _T("Software\\Classes\\") APP_NAME_STR _T("\\shell\\print\\command"), NULL, cmdPath);
 
     // also register for printing to specific printer
-    tstr_printf_s(cmdPath, dimof(cmdPath), _T("\"%s\" -print-to \"%%2\" -exit-on-print \"%%1\""), exePath); // "${exePath}" -print-to "%2" -exit-on-print "%1"
+    tstr_printf_s(cmdPath, dimof(cmdPath), _T("\"%s\" -print-to \"%%2\" \"%%1\""), exePath); // "${exePath}" -print-to "%2" "%1"
     WriteRegStr(hkey, _T("Software\\Classes\\") APP_NAME_STR _T("\\shell\\printto\\command"), NULL, cmdPath);
 
     // Only change the association if we're confident, that we've registered ourselves well enough
