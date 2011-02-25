@@ -125,14 +125,14 @@ public:
     }
     void ageStore();
     PdfTocItem *getTocTree();
-    fz_matrix viewctm(int pageNo, float zoom, int rotate);
+    fz_matrix  viewctm(int pageNo, float zoom, int rotate);
 
     int        findPageNo(fz_obj *dest);
     fz_obj   * getNamedDest(const char *name);
     char     * getPageLayoutName(void);
     bool       isDocumentDirectionR2L(void);
     TCHAR    * ExtractPageText(int pageNo, TCHAR *lineSep=_T(DOS_NEWLINE), fz_bbox **coords_out=NULL, RenderTarget target=Target_View);
-    fz_obj   * getPdfInfo(void) { return _info; };
+    TCHAR    * getPdfInfo(char *key) const;
     int        getPdfVersion(void) const;
     char     * getDecryptionKey(void) const { return _decryptionKey ? str_dup(_decryptionKey) : NULL; }
     fz_buffer* getStreamData(int num=0, int gen=0);

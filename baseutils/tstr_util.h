@@ -49,9 +49,12 @@ extern "C"
 
   #define multibyte_to_tstr(src, CodePage)  multibyte_to_wstr((src), (CodePage))
   #define tstr_to_multibyte(src, CodePage)  wstr_to_multibyte((src), (CodePage))
-  #define wstr_to_tstr(src)                 wstr_dup((LPCWSTR)src);
-  #define tstr_to_wstr(src)                 wstr_dup((LPCWSTR)src);
+  #define wstr_to_tstr(src)                 wstr_dup((LPCWSTR)src)
+  #define tstr_to_wstr(src)                 wstr_dup((LPCWSTR)src)
   #define DBG_OUT_T     DBG_OUT_W
+
+  #define wstr_to_tstr_q(src)               (src)
+  #define tstr_to_wstr_q(src)               (src)
 #else
   #define tchar_is_ws       char_is_ws
   #define tstr_len          str_len
@@ -83,6 +86,21 @@ extern "C"
   #define wstr_to_tstr(src)                 wstr_to_multibyte((src), CP_ACP)
   #define tstr_to_wstr(src)                 multibyte_to_wstr((src), CP_ACP)
   #define DBG_OUT_T     DBG_OUT
+
+static inline wstr_to_tstr_q(WCHAR *src)
+{
+    if (!src) return NULL;
+    char *str = wstr_to_tstr(src);
+    free(src);
+    return str;
+}
+static inline tstr_to_wstr_q(char *src)
+{
+    if (!src) return NULL;
+    WCHAR *str = tstr_to_wstr(src);
+    free(src);
+    return str;
+}
 #endif
 
 #define   utf8_to_tstr(src) multibyte_to_tstr((src), CP_UTF8)

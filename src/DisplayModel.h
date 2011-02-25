@@ -141,12 +141,6 @@ public:
     PdfEngine *     pdfEngine;
     PdfSelection *  textSelection;
 
-    /* an arbitrary pointer that can be used by an app e.g. a multi-window GUI
-       could link this to a data describing window displaying  this document */
-    void * appData() const { return _appData; }
-
-    void setAppData(void *appData) { _appData = appData; }
-
     /* TODO: rename to pageInfo() */
     PdfPageInfo * getPageInfo(int pageNo) const;
 
@@ -226,7 +220,7 @@ public:
     bool            canNavigate(int dir) const;
     void            navigate(int dir);
 
-    bool            saveStreamAs(fz_buffer *data, const TCHAR *fileName);
+    bool            saveStreamAs(unsigned char *data, int dataLen, const TCHAR *fileName);
 
     bool            displayStateFromModel(DisplayState *ds);
 
@@ -264,7 +258,11 @@ protected:
        displaying.
        No meaning in continous mode. */
     int             _startPage;
-    void *          _appData;
+
+    /* an arbitrary pointer that can be used by an app e.g. a multi-window GUI
+       could link this to a data describing window displaying  this document */
+    // TODO: code depends on this being a WindowInfo in several places
+    WindowInfo *    _appData;
 
     /* size of virtual canvas containing all rendered pages. */
     SizeI           _canvasSize;
@@ -282,7 +280,7 @@ protected:
        this value is extracted from the PDF document */
     bool            _displayR2L;
 
-    /* if we're in presentation mode, _pres* contains the pre-presentation values */
+    /* when we're in presentation mode, _pres* contains the pre-presentation values */
     bool            _presentationMode;
     float           _presZoomVirtual;
     DisplayMode     _presDisplayMode;

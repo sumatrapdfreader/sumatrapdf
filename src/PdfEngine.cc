@@ -1095,15 +1095,7 @@ CleanUp:
     fz_freetextspan(text);
     LeaveCriticalSection(&_xrefAccess);
 
-#ifdef UNICODE
-    return content;
-#else
-    if (!content)
-        return NULL;
-    TCHAR *contentT = wstr_to_tstr(content);
-    free(content);
-    return contentT;
-#endif
+    return wstr_to_tstr_q(content);
 }
 
 TCHAR *PdfEngine::ExtractPageText(int pageNo, TCHAR *lineSep, fz_bbox **coords_out, RenderTarget target)
@@ -1121,6 +1113,19 @@ TCHAR *PdfEngine::ExtractPageText(int pageNo, TCHAR *lineSep, fz_bbox **coords_o
     TCHAR *text = ExtractPageText(page, lineSep, coords_out, target);
     pdf_freepage(page);
     return text;
+};
+
+TCHAR *PdfEngine::getPdfInfo(char *key) const
+{
+    fz_obj *obj = fz_dictgets(_info, key);
+    if (!obj)
+        return NULL;
+
+    WCHAR *ucs2 = (WCHAR *)pdf_toucs2(obj);
+    TCHAR *tstr = wstr_to_tstr(ucs2);
+    fz_free(ucs2);
+
+    return tstr;
 };
 
 // returns the version in the format Mmmee (Major, minor, extensionlevel)

@@ -1378,8 +1378,6 @@ static bool LoadPdfIntoWindow(
         win->prevCanvasBR.x = win->prevCanvasBR.y = -1;
     }
 
-    win->dm->setAppData((void*)win);
-
     float zoomVirtual = gGlobalPrefs.m_defaultZoom;
     int rotation = DEFAULT_ROTATION;
 
@@ -1710,7 +1708,7 @@ exit:
 // The current page edit box is updated with the current page number
 void DisplayModel::pageChanged()
 {
-    WindowInfo *win = (WindowInfo*)appData();
+    WindowInfo *win = _appData;
     assert(win);
     if (!win) return;
 
@@ -1743,8 +1741,7 @@ static void triggerRepaintDisplay(WindowInfo* win, UINT delay=0)
 
 void DisplayModel::repaintDisplay()
 {
-    WindowInfo* win = (WindowInfo *)appData();
-    triggerRepaintDisplay(win);
+    triggerRepaintDisplay(_appData);
 }
 
 /* Send the request to render a given page to a rendering thread */
@@ -1761,7 +1758,7 @@ void DisplayModel::clearAllRenderings(void)
 
 void DisplayModel::setScrollbarsState(void)
 {
-    WindowInfo *win = (WindowInfo*)this->appData();
+    WindowInfo *win = this->_appData;
     assert(win);
     if (!win) return;
 
@@ -3459,7 +3456,7 @@ static void OnMenuSaveAs(WindowInfo *win)
         free(realDstFileName);
 }
 
-bool DisplayModel::saveStreamAs(fz_buffer *data, const TCHAR *fileName)
+bool DisplayModel::saveStreamAs(unsigned char *data, int dataLen, const TCHAR *fileName)
 {
     if (gRestrictedUse)
         return false;
@@ -3486,7 +3483,7 @@ bool DisplayModel::saveStreamAs(fz_buffer *data, const TCHAR *fileName)
 
     if (FALSE == GetSaveFileName(&ofn))
         return false;
-    return !!write_to_file(dstFileName, data->data, data->len);
+    return !!write_to_file(dstFileName, data, dataLen);
 }
 
 // code adapted from http://support.microsoft.com/kb/131462/en-us

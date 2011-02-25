@@ -244,6 +244,9 @@ bool DisplayModel::load(const TCHAR *fileName, int startPage, WindowInfo *win)
     if (!pdfEngine)
         return false;
 
+    _appData = win;
+    setTotalDrawAreaSize(win->winSize());
+
     if (validPageNo(startPage))
         _startPage = startPage;
     else
@@ -264,7 +267,7 @@ bool DisplayModel::load(const TCHAR *fileName, int startPage, WindowInfo *win)
         return false;
 
     textSelection = new PdfSelection(pdfEngine);
-    _pdfSearch = new PdfSearch(pdfEngine, (PdfSearchTracker *)win);
+    _pdfSearch = new PdfSearch(pdfEngine, win);
     return true;
 }
 
@@ -836,6 +839,7 @@ void DisplayModel::renderVisibleParts(void)
     }
     
 #ifdef PREDICTIVE_RENDER
+    // TODO: prerender two pages in Facing and Book View modes?
     if (0 < lastVisible && lastVisible < pageCount())
         startRenderingPage(lastVisible+1);
     if (lastVisible > 1)
@@ -1359,7 +1363,7 @@ void DisplayModel::goToTocLink(pdf_link* link)
             // offer to save other attachments to a file
             fz_buffer *data = pdfEngine->getStreamData(fz_tonum(embedded), fz_togen(embedded));
             if (data) {
-                saveStreamAs(data, path);
+                saveStreamAs(data->data, data->len, path);
                 fz_dropbuffer(data);
             }
         }
@@ -1388,13 +1392,13 @@ void DisplayModel::goToTocLink(pdf_link* link)
             goToLastPage();
         // Adobe Reader extensions to the spec, cf. http://www.tug.org/applications/hyperref/manual.html
         else if (str_eq(name, "FullScreen"))
-            PostMessage(((WindowInfo *)appData())->hwndFrame, WM_COMMAND, IDM_VIEW_PRESENTATION_MODE, 0);
+            PostMessage(_appData->hwndFrame, WM_COMMAND, IDM_VIEW_PRESENTATION_MODE, 0);
         else if (str_eq(name, "GoBack"))
             navigate(-1);
         else if (str_eq(name, "GoForward"))
             navigate(1);
         else if (str_eq(name, "Print"))
-            PostMessage(((WindowInfo *)appData())->hwndFrame, WM_COMMAND, IDM_PRINT, 0);
+            PostMessage(_appData->hwndFrame, WM_COMMAND, IDM_PRINT, 0);
     }
     else if (PDF_LACTION == link->kind) {
         char *type = fz_toname(fz_dictgets(link->dest, "S"));
@@ -1463,7 +1467,7 @@ void DisplayModel::goToPdfDest(fz_obj *dest)
         /* // ignore author-set zoom settings (at least as long as there's no way to overrule them)
         else if (str_eq(fz_toname(obj), "Fit")) {
             zoomTo(ZOOM_FIT_PAGE);
-            ((WindowInfo *)this->appData())->UpdateToolbarState();
+            _appData->UpdateToolbarState();
         }
         // */
         goToPage(pageNo, (int)scrollY, true, (int)scrollX);
@@ -1689,8 +1693,6 @@ DisplayModel *DisplayModel::CreateFromFileName(WindowInfo *win,
         delete dm;
         return NULL;
     }
-
-    dm->setTotalDrawAreaSize(win->winSize());
 
 //    DBG_OUT("DisplayModel_CreateFromPageTree() pageCount = %d, startPage=%d, displayMode=%d\n",
 //        dm->pageCount(), dm->startPage, (int)displayMode);

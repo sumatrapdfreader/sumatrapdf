@@ -70,7 +70,6 @@ static bool PdfDateParse(WCHAR *pdfDate, SYSTEMTIME *timeOut) {
 
 HRESULT CPdfFilter::GetNextChunkValue(CChunkValue &chunkValue)
 {
-    fz_obj *info;
     WCHAR *str;
 
     switch (m_state) {
@@ -81,54 +80,47 @@ HRESULT CPdfFilter::GetNextChunkValue(CChunkValue &chunkValue)
 
     case STATE_PDF_AUTHOR:
         m_state = STATE_PDF_TITLE;
-        info = m_pdfEngine->getPdfInfo();
-        str = (WCHAR *)pdf_toucs2(fz_dictgets(info, "Author"));
+        str = tstr_to_wstr_q(m_pdfEngine->getPdfInfo("Author"));
         if (!wstr_empty(str)) {
             chunkValue.SetTextValue(PKEY_Author, str);
-            fz_free(str);
+            free(str);
             return S_OK;
         }
-        fz_free(str);
+        free(str);
         // fall through
 
     case STATE_PDF_TITLE:
         m_state = STATE_PDF_DATE;
-        info = m_pdfEngine->getPdfInfo();
-        str = (WCHAR *)pdf_toucs2(fz_dictgetsa(info, "Title", "Subject"));
+        str = tstr_to_wstr_q(m_pdfEngine->getPdfInfo("Title"));
+        if (!str) str = tstr_to_wstr_q(m_pdfEngine->getPdfInfo("Subject"));
         if (!wstr_empty(str)) {
             chunkValue.SetTextValue(PKEY_Title, str);
-            fz_free(str);
+            free(str);
             return S_OK;
         }
-        fz_free(str);
+        free(str);
         // fall through
 
     case STATE_PDF_DATE:
         m_state = STATE_PDF_CONTENT;
-        info = m_pdfEngine->getPdfInfo();
-        str = (WCHAR *)pdf_toucs2(fz_dictgetsa(info, "ModDate", "CreationDate"));
+        str = tstr_to_wstr_q(m_pdfEngine->getPdfInfo("ModDate"));
+        if (!str) str = tstr_to_wstr_q(m_pdfEngine->getPdfInfo("CreationDate"));
         if (!wstr_empty(str)) {
             SYSTEMTIME systime;
             if (PdfDateParse(str, &systime)) {
                 FILETIME filetime;
                 SystemTimeToFileTime(&systime, &filetime);
                 chunkValue.SetFileTimeValue(PKEY_ItemDate, filetime);
-                fz_free(str);
+                free(str);
                 return S_OK;
             }
         }
-        fz_free(str);
+        free(str);
         // fall through
 
     case STATE_PDF_CONTENT:
         if (++m_iPageNo <= m_pdfEngine->pageCount()) {
-#ifdef UNICODE
-            str = m_pdfEngine->ExtractPageText(m_iPageNo);
-#else
-            TCHAR *tstr = m_pdfEngine->ExtractPageText(m_iPageNo);
-            str = tstr_to_wstr(tstr);
-            free(tstr);
-#endif
+            str = tstr_to_wstr_q(m_pdfEngine->ExtractPageText(m_iPageNo));
             chunkValue.SetTextValue(PKEY_Search_Contents, str, CHUNK_TEXT);
             free(str);
             return S_OK;

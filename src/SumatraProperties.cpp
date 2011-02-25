@@ -37,13 +37,6 @@ static uint64_t WinFileSizeGet(const TCHAR *file_path)
     return res;
 }
 
-// Note: returns NULL instead of an empty string
-static TCHAR *PdfToString(fz_obj *obj) {
-    if (fz_tostrlen(obj) == 0)
-        return NULL;
-    return pdf_to_tstr(obj);
-}
-
 // See: http://www.verypdf.com/pdfinfoeditor/pdf-date-format.htm
 // Format:  "D:YYYYMMDDHHMMSSxxxxxxx"
 // Example: "D:20091222171933-05'00'"
@@ -61,37 +54,33 @@ static bool PdfDateParse(TCHAR *pdfDate, SYSTEMTIME *timeOut) {
 // Convert a date in PDF format, e.g. "D:20091222171933-05'00'" to a display
 // format e.g. "12/22/2009 5:19:33 PM"
 // See: http://www.verypdf.com/pdfinfoeditor/pdf-date-format.htm
-// Caller needs to free this string
-static TCHAR *PdfDateToDisplay(fz_obj *dateObj) {
+// The conversion happens in place
+static void PdfDateToDisplay(TCHAR **s) {
     SYSTEMTIME date;
 
     bool ok = false;
-    TCHAR *s = PdfToString(dateObj);
-    if (s) {
-        ok = PdfDateParse(s, &date);
-        free(s);
+    if (*s) {
+        ok = PdfDateParse(*s, &date);
+        free(*s);
     }
-    if (!ok) {
-        return NULL;
-    }
+    *s = NULL;
+    if (!ok)
+        return;
 
     TCHAR buf[512];
     int cchBufLen = dimof(buf);
     int ret = GetDateFormat(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &date, NULL, buf, cchBufLen);
-    if (0 == ret) {
-        // GetDateFormat() failed
-        return NULL;
-    }
+    if (0 == ret) // GetDateFormat() failed
+        ret = 1;
 
     TCHAR *tmp = buf + ret - 1;
     *tmp++ = _T(' ');
     cchBufLen -= ret;
     ret = GetTimeFormat(LOCALE_USER_DEFAULT, 0, &date, NULL, tmp, cchBufLen);
-    if (0 == ret) {
-        // GetTimeFormat() failed
-        return NULL;
-    }
-    return tstr_dup(buf);
+    if (0 == ret) // GetTimeFormat() failed
+        *tmp = '\0';
+
+    *s = tstr_dup(buf);
 }
 
 // format a number with a given thousand separator e.g. it turns 1234 into "1,234"
@@ -216,7 +205,7 @@ static TCHAR *FormatPdfPermissions(PdfEngine *pdfEngine) {
 
 static void AddPdfProperty(PdfPropertiesLayout *layoutData, const TCHAR *left, const TCHAR *right) {
     // don't display value-less properties
-    if (!right)
+    if (tstr_empty(right))
         return;
 
     PdfPropertyEl *el = SA(PdfPropertyEl);
@@ -387,36 +376,36 @@ void OnMenuProperties(WindowInfo *win)
         return;
     layoutData->first = layoutData->last = NULL;
 
-    fz_obj *info = dm->pdfEngine->getPdfInfo();
-
     TCHAR *str = (TCHAR *)win->dm->fileName();
     AddPdfProperty(layoutData, _TR("File:"), str);
 
-    str = PdfToString(fz_dictgets(info, "Title"));
+    str = dm->pdfEngine->getPdfInfo("Title");
     AddPdfProperty(layoutData, _TR("Title:"), str);
     free(str);
 
-    str = PdfToString(fz_dictgets(info, "Subject"));
+    str = dm->pdfEngine->getPdfInfo("Subject");
     AddPdfProperty(layoutData, _TR("Subject:"), str);
     free(str);
 
-    str = PdfToString(fz_dictgets(info, "Author"));
+    str = dm->pdfEngine->getPdfInfo("Author");
     AddPdfProperty(layoutData, _TR("Author:"), str);
     free(str);
 
-    str = PdfDateToDisplay(fz_dictgets(info, "CreationDate"));
+    str = dm->pdfEngine->getPdfInfo("CreationDate");
+    PdfDateToDisplay(&str);
     AddPdfProperty(layoutData, _TR("Created:"), str);
     free(str);
 
-    str = PdfDateToDisplay(fz_dictgets(info, "ModDate"));
+    str = dm->pdfEngine->getPdfInfo("ModDate");
+    PdfDateToDisplay(&str);
     AddPdfProperty(layoutData, _TR("Modified:"), str);
     free(str);
 
-    str = PdfToString(fz_dictgets(info, "Creator"));
+    str = dm->pdfEngine->getPdfInfo("Creator");
     AddPdfProperty(layoutData, _TR("Application:"), str);
     free(str);
 
-    str = PdfToString(fz_dictgets(info, "Producer"));
+    str = dm->pdfEngine->getPdfInfo("Producer");
     AddPdfProperty(layoutData, _TR("PDF Producer:"), str);
     free(str);
 
