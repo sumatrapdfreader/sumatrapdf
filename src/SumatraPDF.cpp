@@ -5663,8 +5663,8 @@ void WindowInfoBase::ClearTocBox()
 
 static void CustomizeToCInfoTip(WindowInfo *win, LPNMTVGETINFOTIP nmit)
 {
-    pdf_link *link = (pdf_link *)nmit->lParam;
-    TCHAR *path = win->dm->getLinkPath(link);
+    PdfTocItem *tocItem = (PdfTocItem *)nmit->lParam;
+    TCHAR *path = win->dm->getLinkPath(tocItem->link);
     if (!path)
         return;
 
@@ -5683,7 +5683,7 @@ static void CustomizeToCInfoTip(WindowInfo *win, LPNMTVGETINFOTIP nmit)
         tstr_cat_s(nmit->pszText, nmit->cchTextMax, _T("\r\n"));
     }
 
-    if (PDF_LLAUNCH == link->kind && fz_dictgets(link->dest, "EF")) {
+    if (PDF_LLAUNCH == tocItem->link->kind && fz_dictgets(tocItem->link->dest, "EF")) {
         TCHAR *comment = tstr_printf(_TR("Attachment: %s"), path);
         free(path);
         path = comment;

@@ -184,7 +184,7 @@ static TCHAR *FormatPdfPageSize(SizeD size) {
     return result;
 }
 
-// returns a list of permissions denied by this document (NULL if everything's permitted)
+// returns a list of permissions denied by this document
 // Caller needs to free the result
 static TCHAR *FormatPdfPermissions(PdfEngine *pdfEngine) {
     VStrList denials;
@@ -194,13 +194,7 @@ static TCHAR *FormatPdfPermissions(PdfEngine *pdfEngine) {
     if (!pdfEngine->hasPermission(PDF_PERM_COPY))
         denials.push_back(tstr_dup(_TR("copying text")));
 
-    TCHAR *denialList = denials.join(_T(", "));
-    if (tstr_empty(denialList)) {
-        free(denialList);
-        denialList = NULL;
-    }
-
-    return denialList;
+    return denials.join(_T(", "));
 }
 
 static void AddPdfProperty(PdfPropertiesLayout *layoutData, const TCHAR *left, const TCHAR *right) {
@@ -367,49 +361,48 @@ void OnMenuProperties(WindowInfo *win)
         return;
     }
 
-    DisplayModel *dm = win->dm;
-    if (!dm || !dm->pdfEngine) {
+    if (!win->dm || !win->dm->pdfEngine)
         return;
-    }
+    PdfEngine *pdfEngine = win->dm->pdfEngine;
+
     PdfPropertiesLayout *layoutData = SA(PdfPropertiesLayout);
     if (!layoutData)
         return;
     layoutData->first = layoutData->last = NULL;
 
-    TCHAR *str = (TCHAR *)win->dm->fileName();
-    AddPdfProperty(layoutData, _TR("File:"), str);
+    AddPdfProperty(layoutData, _TR("File:"), pdfEngine->fileName());
 
-    str = dm->pdfEngine->getPdfInfo("Title");
+    TCHAR *str = pdfEngine->getPdfInfo("Title");
     AddPdfProperty(layoutData, _TR("Title:"), str);
     free(str);
 
-    str = dm->pdfEngine->getPdfInfo("Subject");
+    str = pdfEngine->getPdfInfo("Subject");
     AddPdfProperty(layoutData, _TR("Subject:"), str);
     free(str);
 
-    str = dm->pdfEngine->getPdfInfo("Author");
+    str = pdfEngine->getPdfInfo("Author");
     AddPdfProperty(layoutData, _TR("Author:"), str);
     free(str);
 
-    str = dm->pdfEngine->getPdfInfo("CreationDate");
+    str = pdfEngine->getPdfInfo("CreationDate");
     PdfDateToDisplay(&str);
     AddPdfProperty(layoutData, _TR("Created:"), str);
     free(str);
 
-    str = dm->pdfEngine->getPdfInfo("ModDate");
+    str = pdfEngine->getPdfInfo("ModDate");
     PdfDateToDisplay(&str);
     AddPdfProperty(layoutData, _TR("Modified:"), str);
     free(str);
 
-    str = dm->pdfEngine->getPdfInfo("Creator");
+    str = pdfEngine->getPdfInfo("Creator");
     AddPdfProperty(layoutData, _TR("Application:"), str);
     free(str);
 
-    str = dm->pdfEngine->getPdfInfo("Producer");
+    str = pdfEngine->getPdfInfo("Producer");
     AddPdfProperty(layoutData, _TR("PDF Producer:"), str);
     free(str);
 
-    int version = win->dm->pdfEngine->getPdfVersion();
+    int version = pdfEngine->getPdfVersion();
     if (version >= 10000) {
         if (version % 100 > 0)
             str = tstr_printf(_T("%d.%d Adobe Extension Level %d"), version / 10000, (version / 100) % 100, version % 100);
@@ -419,9 +412,9 @@ void OnMenuProperties(WindowInfo *win)
         free(str);
     }
 
-    uint64_t fileSize = WinFileSizeGet(win->dm->fileName());
+    uint64_t fileSize = WinFileSizeGet(pdfEngine->fileName());
     if (fileSize == INVALID_FILE_SIZE) {
-        fz_buffer *data = win->dm->pdfEngine->getStreamData();
+        fz_buffer *data = pdfEngine->getStreamData();
         if (data) {
             fileSize = data->len;
             fz_dropbuffer(data);
@@ -433,15 +426,15 @@ void OnMenuProperties(WindowInfo *win)
         free(str);
     }
 
-    str = tstr_printf(_T("%d"), dm->pageCount());
+    str = tstr_printf(_T("%d"), pdfEngine->pageCount());
     AddPdfProperty(layoutData, _TR("Number of Pages:"), str);
     free(str);
 
-    str = FormatPdfPageSize(dm->getPageInfo(dm->currentPageNo())->page);
+    str = FormatPdfPageSize(pdfEngine->pageSize(win->dm->currentPageNo()));
     AddPdfProperty(layoutData, _TR("Page Size:"), str);
     free(str);
 
-    str = FormatPdfPermissions(dm->pdfEngine);
+    str = FormatPdfPermissions(pdfEngine);
     AddPdfProperty(layoutData, _TR("Denied Permissions:"), str);
     free(str);
 
