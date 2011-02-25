@@ -292,19 +292,32 @@ loadsimplefont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict)
 	/* SumatraPDF: work around chinese documents wrongly considering WinAnsiEncoding to be codepage 936 */
 	if (!*fontdesc->font->name && !fz_dictgets(dict, "ToUnicode") &&
 		!strcmp(fz_toname(fz_dictgets(dict, "Encoding")), "WinAnsiEncoding") &&
-		fz_toint(fz_dictgets(descriptor, "Flags")) == 4 &&
-		(!strcmp(basefont, "\xBA\xDA\xCC\xE5") || !strcmp(basefont, "\xCB\xCE\xCC\xE5") ||
-		 !strcmp(basefont, "\xBF\xAC\xCC\xE5_GB2312") || !strcmp(basefont, "\xB7\xC2\xCB\xCE_GB2312")))
+		fz_toint(fz_dictgets(descriptor, "Flags")) == 4)
 	{
-		fz_warn("loading SimSun for %s, even though ANSI doesn't mean CP936", basefont);
-		pdf_dropfont(fontdesc);
-		fontdesc = pdf_newfontdesc();
-		error = pdf_loadfontdescriptor(fontdesc, xref, descriptor, "Adobe-GB1", "SimSun,Regular");
-		error |= pdf_loadsystemcmap(&fontdesc->encoding, "GBK-EUC-H");
-		error |= pdf_loadsystemcmap(&fontdesc->tounicode, "Adobe-GB1-UCS2");
-		error |= pdf_loadsystemcmap(&fontdesc->tottfcmap, "Adobe-GB1-UCS2");
-		if (!error)
-			goto LoadWidths;
+		/* note: without the comma, pdf_loadfontdescriptor would prefer /FontName over /BaseFont */
+		char *cp936fonts[] = {
+			"\xCB\xCE\xCC\xE5", "SimSun,Regular",
+			"\xBA\xDA\xCC\xE5", "SimHei,Regular",
+			"\xBF\xAC\xCC\xE5_GB2312", "SimKai,Regular",
+			"\xB7\xC2\xCB\xCE_GB2312", "SimFang,Regular",
+			"\xC1\xA5\xCA\xE9", "SimLi,Regular",
+			NULL
+		};
+		for (i = 0; cp936fonts[i]; i += 2)
+			if (!strcmp(basefont, cp936fonts[i]))
+				break;
+		if (cp936fonts[i])
+		{
+			fz_warn("loading %s for %s, even though WinAnsiEncoding doesn't mean codepage 936", cp936fonts[i+1], basefont);
+			pdf_dropfont(fontdesc);
+			fontdesc = pdf_newfontdesc();
+			error = pdf_loadfontdescriptor(fontdesc, xref, descriptor, "Adobe-GB1", cp936fonts[i+1]);
+			error |= pdf_loadsystemcmap(&fontdesc->encoding, "GBK-EUC-H");
+			error |= pdf_loadsystemcmap(&fontdesc->tounicode, "Adobe-GB1-UCS2");
+			error |= pdf_loadsystemcmap(&fontdesc->tottfcmap, "Adobe-GB1-UCS2");
+			if (!error)
+				goto LoadWidths;
+		}
 	}
 
 	face = fontdesc->font->ftface;
