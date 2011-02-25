@@ -332,6 +332,9 @@ bool PdfEngine::load(const TCHAR *fileName, HWND hwndParent)
 {
     assert(!_fileName && !_xref);
     _fileName = tstr_dup(fileName);
+    if (!_fileName)
+        return false;
+    fileName = NULL; // use _fileName instead
 
     // File names ending in :<digits>:<digits> are interpreted as containing
     // embedded PDF documents (the digits are :<num>:<gen> of the embedded file stream)
@@ -351,13 +354,13 @@ bool PdfEngine::load(const TCHAR *fileName, HWND hwndParent)
 
     if (embedMarks)
         *embedMarks = '\0';
-    size_t fileSize = file_size_get(fileName);
+    size_t fileSize = file_size_get(_fileName);
     // load small files entirely into memory so that they can be
     // overwritten even by programs that don't open files with FILE_SHARE_READ
     if (fileSize < MAX_MEMORY_FILE_SIZE)
-        fileData = file_read_all(fileName, &fileSize);
+        fileData = file_read_all(_fileName, &fileSize);
     if (!fileData)
-        fd = _topen(fileName, O_BINARY | O_RDONLY, 0);
+        fd = _topen(_fileName, O_BINARY | O_RDONLY, 0);
     if (embedMarks)
         *embedMarks = ':';
 
