@@ -284,7 +284,7 @@ struct pdf_range_s
 	 * are the extent, bottom 2 bits are flags: single, range, table,
 	 * multi */
 	unsigned short extentflags;
-	unsigned short offset;	/* range-delta or table-index */
+	unsigned int offset;	/* range-delta or table-index */
 };
 
 struct pdf_cmap_s
