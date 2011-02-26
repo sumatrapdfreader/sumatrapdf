@@ -229,7 +229,7 @@ public:
     void MoveDocBy(int dx, int dy);
 };
 
-class WindowInfo : public WindowInfoBase, public PdfSearchTracker
+class WindowInfo : public WindowInfoBase, public PdfSearchTracker, public PasswordUI
 {
 public:
     WindowInfo(HWND hwnd) : WindowInfoBase(hwnd) {
@@ -237,6 +237,8 @@ public:
     ~WindowInfo() {
     }
     virtual bool FindUpdateStatus(int count, int total);
+    virtual TCHAR * GetPassword(const TCHAR *fileName, unsigned char *fileDigest,
+                                unsigned char decryptionKeyOut[32], bool *saveKey);
 };
 
 #if 0 // TODO: not used yet

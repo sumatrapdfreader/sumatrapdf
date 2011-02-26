@@ -8,11 +8,6 @@
 
 extern HINSTANCE g_hInstance;
 
-TCHAR *GetPasswordForFile(HWND hwnd, const TCHAR *fileName, pdf_xref *xref, unsigned char *decryptionKey, bool *saveKey)
-{
-    return NULL;
-}
-
 VOID CPdfFilter::CleanUp()
 {
     if (m_pdfEngine) {

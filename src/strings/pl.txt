@@ -148,7 +148,7 @@ Cannot start inverse search command. Please check the command line in the settin
 Nie można uruchomić polecenia odwrotnego wyszukiwania. Sprawdź z lini poleceń w ustawieniach.
 
 Change Language
-Zmien język (Change Language)
+Zmień język (Change Language)
 
 Check for &Updates
 &Sprawdź w poszukiwaniu nowej wersji

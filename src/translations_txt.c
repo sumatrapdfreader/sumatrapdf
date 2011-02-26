@@ -8844,7 +8844,7 @@ const char *g_transTranslations[] = {
   "Anuluj",
   "Nie mo\305\274na wydrukowa\304\207 tego pliku",
   "Nie mo\305\274na uruchomi\304\207 polecenia odwrotnego wyszukiwania. Sprawd\305\272 z lini polece\305\204 w ustawieniach.",
-  "Zmien j\304\231zyk (Change Language)",
+  "Zmie\305\204 j\304\231zyk (Change Language)",
   "&Sprawd\305\272 w poszukiwaniu nowej wersji",
   "Ci\304\205g\305\202y",
   "Kontynuuj widok ksi\304\205\305\274ki",

@@ -89,6 +89,12 @@ protected:
     int     _height;
 };
 
+class PasswordUI {
+public:
+    virtual TCHAR * GetPassword(const TCHAR *fileName, unsigned char *fileDigest,
+                                unsigned char decryptionKeyOut[32], bool *saveKey) = 0;
+};
+
 class PdfEngine {
 public:
     PdfEngine();
@@ -155,7 +161,7 @@ protected:
     CRITICAL_SECTION _pagesAccess;
     pdf_page **     _pages;
 
-    bool            load(const TCHAR *fileName, HWND hwndParent=NULL);
+    bool            load(const TCHAR *fileName, PasswordUI *pwdUI=NULL);
     bool            load(fz_stream *stm, TCHAR *password=NULL);
     bool            finishLoading(void);
     pdf_page      * getPdfPage(int pageNo, bool failIfBusy=false);
@@ -183,7 +189,7 @@ protected:
     fz_glyphcache * _drawcache;
 
 public:
-    static PdfEngine *CreateFromFileName(const TCHAR *fileName, HWND hwndParent=NULL);
+    static PdfEngine *CreateFromFileName(const TCHAR *fileName, PasswordUI *pwdUI=NULL);
     static PdfEngine *CreateFromStream(fz_stream *stm, TCHAR *password=NULL);
 };
 

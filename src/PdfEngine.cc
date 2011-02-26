@@ -8,9 +8,6 @@
 // so that their content can be loaded on demand in order to preserve memory
 #define MAX_MEMORY_FILE_SIZE (10 * 1024 * 1024)
 
-// in SumatraPDF.cpp
-TCHAR *GetPasswordForFile(HWND hwnd, const TCHAR *fileName, pdf_xref *xref, unsigned char *decryptionKey, bool *saveKey);
-
 // adapted from pdf_page.c's pdf_loadpageinfo
 fz_error pdf_getmediabox(fz_rect *mediabox, fz_obj *page)
 {
@@ -338,7 +335,7 @@ PdfEngine *PdfEngine::clone()
     return clone;
 }
 
-bool PdfEngine::load(const TCHAR *fileName, HWND hwndParent)
+bool PdfEngine::load(const TCHAR *fileName, PasswordUI *pwdUI)
 {
     assert(!_fileName && !_xref);
     _fileName = tstr_dup(fileName);
@@ -396,12 +393,15 @@ OpenEmbeddedFile:
         return false;
 
     if (pdf_needspassword(_xref)) {
+        if (!pwdUI)
+            return false;
+
         unsigned char digest[16 + 32] = { 0 };
         pdf_streamfingerprint(_xref->file, digest);
 
         bool okay = false, saveKey = false;
         for (int i = 0; !okay && i < 3; i++) {
-            TCHAR *pwd = GetPasswordForFile(hwndParent, _fileName, _xref, digest, &saveKey);
+            TCHAR *pwd = pwdUI->GetPassword(_fileName, digest, _xref->crypt->key, &saveKey);
             if (!pwd) {
                 // password not given or encryption key has been remembered
                 okay = saveKey;
@@ -1214,10 +1214,10 @@ void PdfEngine::ageStore()
     LeaveCriticalSection(&_xrefAccess);
 }
 
-PdfEngine *PdfEngine::CreateFromFileName(const TCHAR *fileName, HWND hwndParent)
+PdfEngine *PdfEngine::CreateFromFileName(const TCHAR *fileName, PasswordUI *pwdUI)
 {
     PdfEngine *engine = new PdfEngine();
-    if (!engine || !fileName || !engine->load(fileName, hwndParent)) {
+    if (!engine || !fileName || !engine->load(fileName, pwdUI)) {
         delete engine;
         return NULL;
     }

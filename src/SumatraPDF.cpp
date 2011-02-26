@@ -662,22 +662,21 @@ static void AddFileToHistory(const TCHAR *filePath)
 /* Get password for a given 'fileName', can be NULL if user cancelled the
    dialog box or if the encryption key has been filled in instead.
    Caller needs to free() the result. */
-TCHAR *GetPasswordForFile(HWND hwnd, const TCHAR *fileName,
-                          pdf_xref *xref, unsigned char *decryptionKey, bool *saveKey)
+TCHAR *WindowInfo::GetPassword(const TCHAR *fileName, unsigned char *fileDigest, unsigned char decryptionKeyOut[32], bool *saveKey)
 {
     FileHistoryNode *fileFromHistory = gFileHistoryRoot.Find(fileName);
     if (fileFromHistory && fileFromHistory->state.decryptionKey) {
         DisplayState *ds = &fileFromHistory->state;
-        char *fingerprint = mem_to_hexstr(decryptionKey, 16);
-        *saveKey = memcmp(fingerprint, ds->decryptionKey, str_len(fingerprint)) == 0;
+        char *fingerprint = mem_to_hexstr(fileDigest, 16);
+        *saveKey = !!str_startswith(ds->decryptionKey, fingerprint);
         free(fingerprint);
-        if (*saveKey && _hexstr_to_mem(ds->decryptionKey + 32, &xref->crypt->key))
+        if (*saveKey && hexstr_to_mem(ds->decryptionKey + 32, decryptionKeyOut, 32))
             return NULL;
     }
 
     *saveKey = false;
     fileName = FilePath_GetBaseName(fileName);
-    return Dialog_GetPassword(hwnd, fileName, gGlobalPrefs.m_rememberOpenedFiles ? saveKey : NULL);
+    return Dialog_GetPassword(this->hwndFrame, fileName, gGlobalPrefs.m_rememberOpenedFiles ? saveKey : NULL);
 }
 
 /* Caller needs to free() the result. */
@@ -951,10 +950,11 @@ static void WindowInfo_Refresh(WindowInfo* win, bool autorefresh) {
         FileHistoryNode *node = gFileHistoryRoot.Find(ds.filePath);
         const char *decryptionKey = win->dm->pdfEngine->getDecryptionKey();
         if (node && !str_eq(node->state.decryptionKey, decryptionKey)) {
-            if (node->state.decryptionKey)
-                free((void *)node->state.decryptionKey);
-            node->state.decryptionKey = decryptionKey ? str_dup(decryptionKey) : NULL;
+            free((void *)node->state.decryptionKey);
+            node->state.decryptionKey = decryptionKey;
         }
+        else
+            free((void *)decryptionKey);
     }
 }
 
