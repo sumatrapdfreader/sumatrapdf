@@ -35,7 +35,7 @@ Contributor: bernard
 &Ne plus me demander
 
 &Even pages only
-&Seulement les pages paires
+Seulement les pages &paires
 
 &File
 &Fichier
@@ -44,7 +44,7 @@ Contributor: bernard
 &Rechercher quoi :
 
 &First Page\tHome
-&Première page\tHome
+P&remière page\tHome
 
 &Fit pages to printable area
 &Ajuster les pages à la zone d'impression
@@ -71,7 +71,7 @@ Contributor: bernard
 &Respecter la casse
 
 &Next Page\tRight Arrow
-&Page suivante\t->
+Page &suivante\t->
 
 &No
 &Non
@@ -92,7 +92,7 @@ Seulement les pages &impaires
 &Mot de passe :
 
 &Previous Page\tLeft Arrow
-&Page précédente\t<-
+Page &précédente\t<-
 
 &Print...\tCtrl-P
 &Imprimer...\tCtrl-P
@@ -188,7 +188,7 @@ Change Language
 Changer de langue (Change Language)
 
 Check for &Updates
-Vérifier les mises à jour
+&Vérifier les mises à jour
 
 Continuous
 Vue continue
@@ -215,7 +215,7 @@ Couldn't render the page
 Impossible de générer la page
 
 Created:
-Créé :
+Créé le :
 
 Custom &Zoom...\tCtrl-Y
 &Zoom personnalisé...\tCtrl-Y
@@ -272,7 +272,7 @@ File:
 Fichier :
 
 Fin&d...\tCtrl-F
-Rec&hercher...\tCtrl-F
+&Rechercher...\tCtrl-F
 
 Find
 Rechercher
@@ -287,10 +287,10 @@ Find:
 Rechercher :
 
 Fit &Content\tCtrl-3
-Ajuster au &contenu\tCtrl-3
+&Ajuster au contenu\tCtrl-3
 
 Fit &Page\tCtrl-0
-Page e&ntière\tCtrl-0
+&Page entière\tCtrl-0
 
 Fit &Width\tCtrl-2
 Pleine &largeur
@@ -338,7 +338,7 @@ Match Case
 Respecter la casse
 
 Modified:
-Modifié :
+Modifié le :
 
 New version %s is available. Download new version?
 La version %s est disponible. Télécharger la nouvelle version ?
@@ -371,7 +371,7 @@ Open in &Adobe Reader
 Ouvrir dans &Adobe Reader
 
 P&roperties\tCtrl-D
-P&ropriétés\tCtrl-D
+&Propriétés\tCtrl-D
 
 PDF Document
 Document PDF
@@ -407,7 +407,7 @@ Please wait - rendering...
 Patientez s'il vous plaît (génération...)
 
 Pr&esentation\tCtrl-L
-Prés&entation\tCtrl-L
+P&résentation\tCtrl-L
 
 Previous Page
 Page précédente
@@ -446,7 +446,7 @@ Show &Toolbar
 Afficher la &barre d'outils
 
 Show &pages continuously
-Vue c&ontinue
+&Vue continue
 
 Show the &bookmarks sidebar when available
 Voir la barre latérale des &signets lorsqu'elle est disponible

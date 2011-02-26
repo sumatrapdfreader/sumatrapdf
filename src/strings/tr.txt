@@ -15,13 +15,13 @@ Contributor: Hakan ATAÇ
 Gerçek &Boyut\tCtrl-1
 
 &All selected pages
-&Tüm seçilen sayfalar
+Tüm seçilen &sayfalar
 
 &Back\tAlt+Left Arrow
 &Geri\tAlt+Sol Ok
 
 &Close\tCtrl-W
-Kapa&t\tCtrl-W
+&Kapat\tCtrl-W
 
 &Copy Selection\tCtrl-C
 Seçileni &kopyala\tCtrl-C
@@ -54,7 +54,7 @@ Sayfaya &git:
 &Yardım
 
 &Last Page\tEnd
-&Son Sayfa\tEnd
+So&n Sayfa\tEnd
 
 &Magnification:
 &Büyüteç:
@@ -66,7 +66,7 @@ Sayfaya &git:
 B&üyük/Küçük harf eşleştir
 
 &Next Page\tRight Arrow
-So&nraki Sayfa\t->
+S&onraki Sayfa\t->
 
 &No
 &Hayır
@@ -132,7 +132,7 @@ About SumatraPDF
 SumatraPDF hakkında
 
 Advanced
-İleri
+Gelişmiş
 
 All files
 Tüm dosyalar
@@ -159,7 +159,7 @@ Book View
 Kitap Gibi Görünüm
 
 Book&marks\tF12
-Yer i&mleri\tF12
+&Yer imleri\tF12
 
 Bookmarks
 Yer imleri
@@ -234,7 +234,7 @@ Download
 İndir
 
 E&xit\tCtrl-Q
-Çı&kış\tCtrl-O
+Ç&ık\tCtrl-O
 
 Enter password
 Şifrenizi giriniz
@@ -267,7 +267,7 @@ File:
 Dosya:
 
 Fin&d...\tCtrl-F
-B&ul...\tCtrl-F
+&Bul...\tCtrl-F
 
 Find
 Bul
@@ -282,7 +282,7 @@ Find:
 Bul:
 
 Fit &Content\tCtrl-3
-İçeri&ğe ölçekle\tCtrl-3
+&İçeriğe ölçekle\tCtrl-3
 
 Fit &Page\tCtrl-0
 &Sayfaya sığdır\tCtrl-0
@@ -426,7 +426,7 @@ Searching %d of %d...
 %d sayfa (toplam %d sayfa) taranıyor...
 
 Select &All\tCtrl-A
-&Tümünü Seç\tCtrl-A
+T&ümünü Seç\tCtrl-A
 
 Select content with Ctrl+left mouse button
 İçeriği Ctrl+sol fare butonu ile seç
@@ -438,7 +438,7 @@ Set inverse search command-line
 Sondan başa arama komut satırı
 
 Show &Toolbar
-Araç &çubuğunu göster
+&Araç çubuğunu göster
 
 Show &pages continuously
 &Sayfaları devamlı göster
@@ -483,7 +483,7 @@ Unknown source file (%s)
 Bilinmeyen kaynak dosyası (%s)
 
 View
-Göster
+Görünüm
 
 Visit &Website
 &Web sayfası
