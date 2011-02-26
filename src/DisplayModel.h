@@ -32,6 +32,9 @@ typedef struct DisplaySettings {
 #define PADDING_PAGE_BORDER_BOTTOM_DEF   7
 #define PADDING_PAGE_BORDER_LEFT_DEF     5
 #define PADDING_PAGE_BORDER_RIGHT_DEF    7
+/* the distance between pages in y axis, in pixels. Only applicable if
+   more than one page in y axis (continuous mode) */
+#define PADDING_BETWEEN_PAGES_Y_DEF      8
 #else
 // TODO: those should probably be more modular so that we can control space
 // before first page, after last page and between pages (currently
@@ -40,13 +43,13 @@ typedef struct DisplaySettings {
 #define PADDING_PAGE_BORDER_BOTTOM_DEF   2
 #define PADDING_PAGE_BORDER_LEFT_DEF     4
 #define PADDING_PAGE_BORDER_RIGHT_DEF    4
-#endif
-/* the distance between pages in x axis, in pixels. Only applicable if
-   columns > 1 */
-#define PADDING_BETWEEN_PAGES_X_DEF      8
 /* the distance between pages in y axis, in pixels. Only applicable if
    more than one page in y axis (continuous mode) */
 #define PADDING_BETWEEN_PAGES_Y_DEF      PADDING_PAGE_BORDER_TOP_DEF + PADDING_PAGE_BORDER_BOTTOM_DEF
+#endif
+/* the distance between pages in x axis, in pixels. Only applicable if
+   columns > 1 */
+#define PADDING_BETWEEN_PAGES_X_DEF      PADDING_BETWEEN_PAGES_Y_DEF
 
 #define POINT_OUT_OF_PAGE           0
 

@@ -316,16 +316,17 @@ bool DisplayModel::pageVisible(int pageNo)
     return pageInfo->visible > 0;
 }
 
-/* Return true if a page is visible or a page below or above is visible */
+/* Return true if a page is visible or a page in a row below or above is visible */
 bool DisplayModel::pageVisibleNearby(int pageNo)
 {
-    /* TODO: should it check 2 pages above and below in facing mode? */
-    if (pageVisible(pageNo))
-        return true;
-    if (validPageNo(pageNo-1) && pageVisible(pageNo-1))
-        return true;
-    if (validPageNo(pageNo+1) && pageVisible(pageNo+1))
-        return true;
+    DisplayMode mode = displayMode();
+    int columns = columnsFromDisplayMode(mode);
+
+    pageNo = FirstPageInARowNo(pageNo, columns, displayModeShowCover(mode));
+    for (int i = pageNo - columns; i < pageNo + 2 * columns - 1; i++)
+        if (validPageNo(i) && pageVisible(i))
+            return true;
+
     return false;
 }
 
@@ -365,27 +366,58 @@ float DisplayModel::zoomRealFromVirtualForPage(float zoomVirtual, int pageNo)
     if (zoomVirtual != ZOOM_FIT_WIDTH && zoomVirtual != ZOOM_FIT_PAGE && zoomVirtual != ZOOM_FIT_CONTENT)
         return zoomVirtual * 0.01f * this->_dpiFactor;
 
-    double pageDx, pageDy;
+    double rowDx, rowDy;
     PdfPageInfo *pageInfo = getPageInfo(pageNo);
-    bool fitToContent = (ZOOM_FIT_CONTENT == zoomVirtual);
-    if (fitToContent && fz_isemptybbox(pageInfo->contentBox))
-        pageInfo->contentBox = pdfEngine->pageContentBox(pageNo);
-    pageSizeAfterRotation(pageInfo, _rotation, &pageDx, &pageDy, fitToContent);
-
-    assert(0 != (int)pageDx);
-    assert(0 != (int)pageDy);
-
     int columns = columnsFromDisplayMode(displayMode());
-    int areaForPageDx = drawAreaSize.dx - _padding->pageBorderLeft - _padding->pageBorderRight;
-    areaForPageDx -= _padding->betweenPagesX * (columns - 1);
-    // TODO: this doesn't really work for ZOOM_FIT_CONTENT
-    areaForPageDx /= columns;
-    int areaForPageDy = drawAreaSize.dy - _padding->pageBorderTop - _padding->pageBorderBottom;
-    if (areaForPageDx <= 0 || areaForPageDy <= 0)
+
+    bool fitToContent = (ZOOM_FIT_CONTENT == zoomVirtual);
+    if (fitToContent && columns > 1) {
+        // Fit the content of all the pages in the same row into the visible area
+        // (i.e. don't crop inner margins but just the left-most, right-most, etc.)
+        rowDx = rowDy = 0;
+        int first = FirstPageInARowNo(pageNo, columns, displayModeShowCover(displayMode()));
+        int last = LastPageInARowNo(pageNo, columns, displayModeShowCover(displayMode()), pageCount());
+        for (int i = first; i <= last; i++) {
+            double pageDx, pageDy;
+            pageInfo = getPageInfo(i);
+            if (fz_isemptybbox(pageInfo->contentBox))
+                pageInfo->contentBox = pdfEngine->pageContentBox(i);
+            pageSizeAfterRotation(pageInfo, _rotation, &pageDx, &pageDy);
+            rowDx += pageDx;
+            if (i == first && !fz_isemptybbox(pageInfo->contentBox)) {
+                if (rotationFlipped(pageInfo->rotation + _rotation))
+                    rowDx -= pageInfo->contentBox.y0 - pdfEngine->pageMediabox(first).y0;
+                else
+                    rowDx -= pageInfo->contentBox.x0 - pdfEngine->pageMediabox(first).x0;
+            }
+            if (i == last && !fz_isemptybbox(pageInfo->contentBox)) {
+                if (rotationFlipped(pageInfo->rotation + _rotation))
+                    rowDx -= pdfEngine->pageMediabox(last).y1 - pageInfo->contentBox.y1;
+                else
+                    rowDx -= pdfEngine->pageMediabox(last).x1 - pageInfo->contentBox.x1;
+            }
+            pageSizeAfterRotation(pageInfo, _rotation, &pageDx, &pageDy, true);
+            if (rowDy < pageDy)
+                rowDy = pageDy;
+        }
+    }
+    else {
+        if (fitToContent && fz_isemptybbox(pageInfo->contentBox))
+            pageInfo->contentBox = pdfEngine->pageContentBox(pageNo);
+        pageSizeAfterRotation(pageInfo, _rotation, &rowDx, &rowDy, fitToContent);
+        rowDx *= columns;
+    }
+
+    assert(0 != (int)rowDx);
+    assert(0 != (int)rowDy);
+
+    int areaForPagesDx = drawAreaSize.dx - _padding->pageBorderLeft - _padding->pageBorderRight - _padding->betweenPagesX * (columns - 1);
+    int areaForPagesDy = drawAreaSize.dy - _padding->pageBorderTop - _padding->pageBorderBottom;
+    if (areaForPagesDx <= 0 || areaForPagesDy <= 0)
         return 0;
 
-    float zoomX = areaForPageDx / (float)pageDx;
-    float zoomY = areaForPageDy / (float)pageDy;
+    float zoomX = areaForPagesDx / (float)rowDx;
+    float zoomY = areaForPagesDy / (float)rowDy;
     if (zoomX < zoomY || ZOOM_FIT_WIDTH == zoomVirtual)
         return zoomX;
     return zoomY;
