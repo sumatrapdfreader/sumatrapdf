@@ -357,7 +357,7 @@ bool PdfEngine::load(const TCHAR *fileName, PasswordUI *pwdUI)
     }
 
     char *fileData = NULL;
-    int fd = -1;
+    fz_stream *file = NULL;
 
     if (embedMarks)
         *embedMarks = '\0';
@@ -366,25 +366,28 @@ bool PdfEngine::load(const TCHAR *fileName, PasswordUI *pwdUI)
     // overwritten even by programs that don't open files with FILE_SHARE_READ
     if (fileSize < MAX_MEMORY_FILE_SIZE)
         fileData = file_read_all(_fileName, &fileSize);
-    if (!fileData)
-        fd = _topen(_fileName, O_BINARY | O_RDONLY, 0);
-    if (embedMarks)
-        *embedMarks = ':';
-
-    if (!fileData && -1 == fd)
-        return false;
-
-    fz_stream *file;
     if (fileData) {
         fz_buffer *data = fz_newbuffer((int)fileSize);
-        memcpy(data->data, fileData, data->len = (int)fileSize);
-        file = fz_openbuffer(data);
-        fz_dropbuffer(data);
+        if (data) {
+            memcpy(data->data, fileData, data->len = (int)fileSize);
+            file = fz_openbuffer(data);
+            fz_dropbuffer(data);
+        }
         free(fileData);
     }
     else {
-        file = fz_openfile(fd);
+#ifdef UNICODE
+        file = fz_openfile2W(_fileName);
+#else
+        file = fz_openfile2(_fileName);
+#endif
     }
+    if (embedMarks)
+        *embedMarks = ':';
+
+    if (!file)
+        return false;
+
 OpenEmbeddedFile:
     // don't pass in a password so that _xref isn't thrown away if it was wrong
     fz_error error = pdf_openxrefwithstream(&_xref, file, NULL);

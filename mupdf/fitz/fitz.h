@@ -516,6 +516,9 @@ struct fz_stream_s
 };
 
 fz_stream *fz_openfile(int file);
+/* SumatraPDF: allow to open files when compiling MuPDF as a library */
+fz_stream *fz_openfile2(const char *name);
+fz_stream *fz_openfile2W(const wchar_t *name);
 fz_stream *fz_openbuffer(fz_buffer *buf);
 void fz_close(fz_stream *stm);
 

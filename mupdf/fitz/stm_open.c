@@ -91,6 +91,25 @@ fz_openfile(int fd)
 	return stm;
 }
 
+/* SumatraPDF: allow to open files when compiling MuPDF as a library */
+fz_stream *
+fz_openfile2(const char *name)
+{
+	int fd = _open(name, O_BINARY | O_RDONLY, 0);
+	if (fd == -1)
+		return nil;
+	return fz_openfile(fd);
+}
+
+fz_stream *
+fz_openfile2W(const wchar_t *name)
+{
+	int fd = _wopen(name, O_BINARY | O_RDONLY, 0);
+	if (fd == -1)
+		return nil;
+	return fz_openfile(fd);
+}
+
 /* Memory stream */
 
 static int readbuffer(fz_stream *stm, unsigned char *buf, int len)

@@ -469,7 +469,7 @@ static fz_error
 parseTTFs(char *path)
 {
 	fz_error err;
-	fz_stream *file = fz_openfile(open(path, O_BINARY | O_RDONLY));
+	fz_stream *file = fz_openfile2(path);
 	if (!file)
 		return fz_throw("fonterror : %s not found", path);
 
@@ -485,7 +485,7 @@ parseTTCs(char *path)
 	ULONG i, numFonts, *offsettable = nil;
 	fz_error err;
 
-	fz_stream *file = fz_openfile(open(path, O_BINARY | O_RDONLY));
+	fz_stream *file = fz_openfile2(path);
 	if (!file)
 	{
 		err = fz_throw("fonterror : %s not found", path);

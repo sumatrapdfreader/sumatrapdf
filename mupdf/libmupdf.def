@@ -113,6 +113,8 @@ EXPORTS
 	fz_resizebuffer
 	fz_growbuffer
 	fz_openfile
+	fz_openfile2
+	fz_openfile2W
 	fz_openbuffer
 	fz_close
 	fz_newstream
