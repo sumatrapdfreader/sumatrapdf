@@ -1,6 +1,6 @@
 // Copyright William Blum 2008 http://william.famille-blum.org/
 // PDF-source synchronizer based on .pdfsync file
-// License: GPLv2
+// License: GPLv3
 
 #ifndef _PDF_SYNC_H__
 #define _PDF_SYNC_H__
