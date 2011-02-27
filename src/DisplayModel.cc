@@ -596,6 +596,13 @@ void DisplayModel::relayout(float zoomVirtual, int rotation)
     if (pageInARow != 0)
         /* this is a partial row */
         currPosY += rowMaxPageDy + _padding->betweenPagesY;
+    if (columns == 2 && pageCount() == 1) {
+        /* don't center a single page over two columns */
+        if (displayModeShowCover(displayMode()))
+            columnOffsets[0] = columnOffsets[1];
+        else
+            columnOffsets[1] = columnOffsets[0];
+    }
     totalAreaDx = _padding->pageBorderLeft + columnOffsets[0] + (columns == 2 ? _padding->betweenPagesX + columnOffsets[1] : 0) + _padding->pageBorderRight;
 
     /* since pages can be smaller than the drawing area, center them in x axis */
