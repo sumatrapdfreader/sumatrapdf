@@ -728,6 +728,6 @@ $(LIBMUPDF_DLL): $(LIBMUPDF_OBJS) $(LIBMUPDF_DEF)
 	$(CC) /TC $(MUPDF_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
 
 $(FITZ_OBJS) $(FITZ_DRAW_OBJS): $(MUPDF_DIR)\fitz\fitz.h
-$(MUPDF_OBJS): $(MUPDF_DIR)\fitz\fitz.h $(MUPDF_DIR)\mupdf\mupdf.h
+$(MUPDF_OBJS) $(CMAP_OBJS): $(MUPDF_DIR)\fitz\fitz.h $(MUPDF_DIR)\mupdf\mupdf.h
 
 force: ;

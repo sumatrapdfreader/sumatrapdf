@@ -791,6 +791,7 @@ struct fz_path_s
 {
 	int len, cap;
 	fz_pathel *els;
+	int origin; /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692006 */
 };
 
 struct fz_strokestate_s

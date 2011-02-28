@@ -50,6 +50,7 @@ void
 fz_moveto(fz_path *path, float x, float y)
 {
 	growpath(path, 3);
+	path->origin = path->len; /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692006 */
 	path->els[path->len++].k = FZ_MOVETO;
 	path->els[path->len++].v = x;
 	path->els[path->len++].v = y;
@@ -105,6 +106,7 @@ fz_closepath(fz_path *path)
 		return;
 	growpath(path, 1);
 	path->els[path->len++].k = FZ_CLOSEPATH;
+	fz_moveto(path, path->els[path->origin + 1].v, path->els[path->origin + 2].v); /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692006 */
 }
 
 static inline fz_rect boundexpand(fz_rect r, fz_point p)
