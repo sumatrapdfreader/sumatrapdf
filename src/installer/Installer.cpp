@@ -1029,18 +1029,14 @@ static DWORD WINAPI InstallerThread(LPVOID data)
 
     if (gGlobalData.installBrowserPlugin) {
         InstallBrowserPlugin();
-    } else {
-        if (IsBrowserPluginInstalled()) {
-            UninstallBrowserPlugin();
-        }
+    } else if (IsBrowserPluginInstalled()) {
+        UninstallBrowserPlugin();
     }
 
     if (gGlobalData.installPdfFilter) {
         InstallPdfFilter();
-    } else {
-        if (IsPdfFilterInstalled()) {
-            UninstallPdfFilter();
-        }
+    } else if (IsPdfFilterInstalled()) {
+        UninstallPdfFilter();
     }
 
     if (!CreateAppShortcut(true) && !CreateAppShortcut(false)) {
@@ -1091,7 +1087,7 @@ void OnButtonInstall()
     gGlobalData.registerAsDefault = gHwndCheckboxRegisterDefault == NULL ||
                                     IsCheckboxChecked(gHwndCheckboxRegisterDefault);
 
-    gGlobalData.installBrowserPlugin = IsCheckboxChecked(gHwndCheckboxRegisterBrowserPlugin) & BST_CHECKED;
+    gGlobalData.installBrowserPlugin = IsCheckboxChecked(gHwndCheckboxRegisterBrowserPlugin);
     gGlobalData.installPdfFilter = IsCheckboxChecked(gHwndCheckboxRegisterPdfFilter);
 
     if (gShowOptions)
@@ -2155,10 +2151,14 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 #endif
 
     if (gGlobalData.silent) {
-        if (gGlobalData.uninstall)
+        if (gGlobalData.uninstall) {
             UninstallerThread(NULL);
-        else
+        } else {
+            // make sure not to uninstall the plugins during silent installation
+            gGlobalData.installBrowserPlugin = IsBrowserPluginInstalled();
+            gGlobalData.installPdfFilter = IsPdfFilterInstalled();
             InstallerThread(NULL);
+        }
         ret = gGlobalData.success ? 0 : 1;
         goto Exit;
     }
