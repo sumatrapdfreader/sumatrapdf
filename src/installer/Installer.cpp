@@ -1227,7 +1227,7 @@ void OnButtonOptions()
     ShowWindow(gHwndCheckboxRegisterBrowserPlugin, nCmdShow);
     ShowWindow(gHwndCheckboxRegisterPdfFilter, nCmdShow);
 
-    win_set_text(gHwndButtonOptions, gShowOptions ? _T("Back") : _T("&Options"));
+    win_set_text(gHwndButtonOptions, gShowOptions ? _T("Hide &Options") : _T("&Options"));
 
     RECT rc;
     GetClientRect(gHwndFrame, &rc);
@@ -1780,7 +1780,7 @@ void OnCreateInstaller(HWND hwnd)
     x = 8;
     gHwndButtonOptions = CreateWindow(WC_BUTTON, _T("&Options"),
                         BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
-                        x, y, 80, buttonDy, hwnd, 
+                        x, y, 96, buttonDy, hwnd, 
                         (HMENU)ID_BUTTON_OPTIONS, ghinst, NULL);
     Window_SetFont(gHwndButtonOptions, gFontDefault);
 
