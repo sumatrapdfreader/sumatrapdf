@@ -369,7 +369,7 @@ Open in &Adobe Reader
 Mit &Adobe Reader öffnen
 
 Open in &Foxit Reader
-Mit &Foxit Reader öffnen
+Mit F&oxit Reader öffnen
 
 Open in PDF-XChange
 Mit PDF-XChange öffnen

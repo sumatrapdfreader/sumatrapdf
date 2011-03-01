@@ -371,7 +371,7 @@ Open in &Adobe Reader
 Ouvrir dans &Adobe Reader
 
 Open in &Foxit Reader
-Ouvrir dans &Foxit Reader
+Ouvrir dans Fo&xit Reader
 
 Open in PDF-XChange
 Ouvrir dans PDF-XChange
