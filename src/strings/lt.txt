@@ -360,6 +360,9 @@ Atverti su &Adobe Reader
 Open in &Foxit Reader
 Atverti su &Foxit Reader
 
+Open in PDF-XChange
+Atverti su PDF-XChange
+
 P&roperties\tCtrl-D
 &Savybės
 
@@ -502,7 +505,6 @@ spausdinamas dokumentas
 #Fin&d...\tCtrl-F
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
-#Open in &PDF-XChange
 #Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L
 #Select &All\tCtrl-A

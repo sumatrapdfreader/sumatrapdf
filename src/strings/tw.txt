@@ -309,6 +309,9 @@ Open in &Adobe Reader
 Open in &Foxit Reader
 以 Foxit Reader 開啟(&A)
 
+Open in PDF-XChange
+以 PDF-XChange 開啟(&A)
+
 P&roperties\tCtrl-D
 屬性...(&R)\tCtrl-D
 
@@ -459,7 +462,6 @@ printing document
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
 #No result found around line %u in file %s
-#Open in &PDF-XChange
 #Page scaling
 #Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L

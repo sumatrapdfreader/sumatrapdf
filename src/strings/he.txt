@@ -360,6 +360,9 @@ Adobe פתח בקורא
 Open in &Foxit Reader
 Foxit פתח בקורא
 
+Open in PDF-XChange
+PDF-XChange פתח בקורא
+
 P&roperties\tCtrl-D
 תכונות...\tCtrl-D
 
@@ -505,7 +508,6 @@ printing document
 #Enter the command-line to invoke when you double-click on the PDF document:
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
-#Open in &PDF-XChange
 #Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L
 #Select &All\tCtrl-A

@@ -365,6 +365,12 @@ Open
 Open in &Adobe Reader
 Բացել &Adobe Reader-ում
 
+Open in &Foxit Reader
+Բացել &Foxit Reader-ում
+
+Open in PDF-XChange
+Բացել PDF-XChange-ում
+
 P&roperties\tCtrl-D
 Հ&ատկություններ...\tCtrl-D
 
@@ -517,8 +523,4 @@ copying text
 
 printing document
 փաստաթուղթը տպվում է
-
-# Untranslated:
-#Open in &Foxit Reader
-#Open in &PDF-XChange
 

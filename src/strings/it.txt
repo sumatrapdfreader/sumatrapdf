@@ -374,6 +374,9 @@ Apri con &Adobe Reader
 Open in &Foxit Reader
 Apri con &Foxit Reader
 
+Open in PDF-XChange
+Apri con PDF-XChange
+
 P&roperties\tCtrl-D
 P&roprietà\tCtrl-D
 
@@ -525,6 +528,5 @@ printing document
 stampando il documento
 
 # Untranslated:
-#Open in &PDF-XChange
 #Printing problem.
 

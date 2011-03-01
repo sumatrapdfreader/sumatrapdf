@@ -370,6 +370,9 @@ Open in &Adobe Reader
 Open in &Foxit Reader
 Άνοιγμα με &Foxit Reader
 
+Open in PDF-XChange
+Άνοιγμα με PDF-XChange
+
 P&roperties\tCtrl-D
 &Ιδιότητες...\tCtrl-D
 
@@ -521,6 +524,5 @@ printing document
 εκτύπωση εγγράφου
 
 # Untranslated:
-#Open in &PDF-XChange
 #Select &All\tCtrl-A
 

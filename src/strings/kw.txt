@@ -289,6 +289,9 @@ Ygeri yn &Adobe Reader
 Open in &Foxit Reader
 Ygeri yn &Foxit Reader
 
+Open in PDF-XChange
+Ygeri yn PDF-XChange
+
 PDF Document
 Restren PDF
 
@@ -425,7 +428,6 @@ Faktor-zoum
 #Fit a Single Page
 #Modified:
 #Number of Pages:
-#Open in &PDF-XChange
 #P&roperties\tCtrl-D
 #PDF Producer:
 #PDF Version:

@@ -374,6 +374,9 @@ Openen met &Adobe Reader
 Open in &Foxit Reader
 Openen met &Foxit Reader
 
+Open in PDF-XChange
+Openen met PDF-XChange
+
 P&roperties\tCtrl-D
 E&igenschappen...\tCtrl-D
 
@@ -525,6 +528,5 @@ printing document
 bestand afdrukken
 
 # Untranslated:
-#Open in &PDF-XChange
 #Select &All\tCtrl-A
 

@@ -368,6 +368,9 @@ Open in &Adobe Reader
 Open in &Foxit Reader
 &Adobe Foxit ile aç
 
+Open in PDF-XChange
+PDF-XChange ile aç
+
 P&roperties\tCtrl-D
 &Özellikleri\tCtrl-D
 
@@ -520,7 +523,4 @@ metin kopyalanıyor
 
 printing document
 belge baskılanyor
-
-# Untranslated:
-#Open in &PDF-XChange
 

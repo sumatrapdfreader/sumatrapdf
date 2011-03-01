@@ -369,6 +369,9 @@ Mở bằng Adobe Reader
 Open in &Foxit Reader
 Mở bằng Foxit Reader
 
+Open in PDF-XChange
+Mở bằng PDF-XChange
+
 P&roperties\tCtrl-D
 Thuộc tính
 
@@ -521,7 +524,4 @@ copying text
 
 printing document
 đang in tập tin
-
-# Untranslated:
-#Open in &PDF-XChange
 

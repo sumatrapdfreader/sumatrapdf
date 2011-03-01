@@ -371,6 +371,9 @@ Mit &Adobe Reader öffnen
 Open in &Foxit Reader
 Mit &Foxit Reader öffnen
 
+Open in PDF-XChange
+Mit PDF-XChange öffnen
+
 P&roperties\tCtrl-D
 Ei&genschaften\tStrg+D
 
@@ -523,7 +526,4 @@ Text kopieren verweigert
 
 printing document
 Dokument drucken verweigert
-
-# Untranslated:
-#Open in &PDF-XChange
 

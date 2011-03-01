@@ -265,7 +265,7 @@ Zoom Out
 #OK
 #Open in &Adobe Reader
 #Open in &Foxit Reader
-#Open in &PDF-XChange
+#Open in PDF-XChange
 #P&roperties\tCtrl-D
 #PDF Document
 #PDF Producer:

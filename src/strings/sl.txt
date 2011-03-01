@@ -370,6 +370,9 @@ Odpri s programom &Adobe Reader
 Open in &Foxit Reader
 Odpri s programom &Foxit Reader
 
+Open in PDF-XChange
+Odpri s programom PDF-XChange
+
 P&roperties\tCtrl-D
 Lastnosti\tCtrl-D
 
@@ -521,6 +524,5 @@ printing document
 tiskanje dokumenta
 
 # Untranslated:
-#Open in &PDF-XChange
 #Select &All\tCtrl-A
 

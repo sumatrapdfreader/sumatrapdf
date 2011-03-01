@@ -315,6 +315,9 @@ Obre amb Adobe Reader
 Open in &Foxit Reader
 Obre amb Foxit Reader
 
+Open in PDF-XChange
+Obre amb PDF-XChange
+
 P&roperties\tCtrl-D
 P&ropietats...\tCtrl-D
 
@@ -457,7 +460,6 @@ Factor de zoom
 #Fit Content
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
-#Open in &PDF-XChange
 #Page scaling
 #Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L

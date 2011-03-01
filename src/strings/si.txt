@@ -368,6 +368,9 @@ Open in &Adobe Reader
 Open in &Foxit Reader
 &Foxit කියවනය මගින් විවෘතකරන්න
 
+Open in PDF-XChange
+PDF-XChange කියවනය මගින් විවෘතකරන්න
+
 P&roperties\tCtrl-D
 වත්කම් (P)\tCtrl-D
 
@@ -498,7 +501,6 @@ printing document
 ලේඛනය මුද්‍රණය
 
 # Untranslated:
-#Open in &PDF-XChange
 #Page scaling
 #Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L

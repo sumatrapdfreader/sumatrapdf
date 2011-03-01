@@ -318,6 +318,9 @@ Open in &Adobe Reader
 Open in &Foxit Reader
 &Foxit Reader இல் திற
 
+Open in PDF-XChange
+PDF-XChange இல் திற
+
 P&roperties\tCtrl-D
 பண்புகள்...\tCtrl-D
 
@@ -465,7 +468,6 @@ printing document
 #Fit Content
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
-#Open in &PDF-XChange
 #Page scaling
 #Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L

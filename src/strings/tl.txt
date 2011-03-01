@@ -369,6 +369,9 @@ Buksan sa Adobe Reader
 Open in &Foxit Reader
 Buksan sa Foxit Reader
 
+Open in PDF-XChange
+Buksan sa PDF-XChange
+
 P&roperties\tCtrl-D
 Mga Katangian\tCtrl-D
 
@@ -520,6 +523,5 @@ printing document
 ipini-print ang dokumento
 
 # Untranslated:
-#Open in &PDF-XChange
 #Select &All\tCtrl-A
 

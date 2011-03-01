@@ -284,6 +284,9 @@ Open in &Adobe Reader
 Open in &Foxit Reader
 Отвори с &Foxit Reader
 
+Open in PDF-XChange
+Отвори с PDF-XChange
+
 PDF Document
 PDF документ
 
@@ -415,7 +418,6 @@ Zoom factor
 #Modified:
 #Number of Pages:
 #OK
-#Open in &PDF-XChange
 #P&roperties\tCtrl-D
 #PDF Producer:
 #PDF Version:

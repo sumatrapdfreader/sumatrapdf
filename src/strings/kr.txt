@@ -325,6 +325,9 @@ Open in &Adobe Reader
 Open in &Foxit Reader
 &Foxit Reader 에서 열기
 
+Open in PDF-XChange
+PDF-XChange 에서 열기
+
 P&roperties\tCtrl-D
 속성\tCtrl-D
 
@@ -461,7 +464,6 @@ printing document
 #No result found around line %u in file %s
 #No synchronization file found
 #No synchronization info at this position
-#Open in &PDF-XChange
 #Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L
 #Select &All\tCtrl-A

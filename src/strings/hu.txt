@@ -520,6 +520,6 @@ Nyomtatás
 
 # Untranslated:
 #Open in &Foxit Reader
-#Open in &PDF-XChange
+#Open in PDF-XChange
 #Select &All\tCtrl-A
 

@@ -373,6 +373,9 @@ Open in &Adobe Reader
 Open in &Foxit Reader
 Öppna i Foxit Reader
 
+Open in PDF-XChange
+Öppna i PDF-XChange
+
 P&roperties\tCtrl-D
 &Egenskaper...\tCtrl-D
 
@@ -525,7 +528,4 @@ kopierar text
 
 printing document
 skriver ut dokumentet
-
-# Untranslated:
-#Open in &PDF-XChange
 

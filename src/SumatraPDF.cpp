@@ -594,7 +594,7 @@ MenuDef menuDefFile[] = {
     { SEP_ITEM,                             0,                          MF_NOT_IN_RESTRICTED },
     { _TRN("Open in &Adobe Reader"),        IDM_VIEW_WITH_ACROBAT,      MF_NOT_IN_RESTRICTED },
     { _TRN("Open in &Foxit Reader"),        IDM_VIEW_WITH_FOXIT,        MF_NOT_IN_RESTRICTED },
-    { _TRN("Open in &PDF-XChange"),         IDM_VIEW_WITH_PDF_XCHANGE,  MF_NOT_IN_RESTRICTED },
+    { _TRN("Open in PDF-XChange"),          IDM_VIEW_WITH_PDF_XCHANGE,  MF_NOT_IN_RESTRICTED },
     { _TRN("Send by &E-mail..."),           IDM_SEND_BY_EMAIL,          MF_NOT_IN_RESTRICTED },
     { SEP_ITEM,                             0,                          MF_NOT_IN_RESTRICTED },
     { _TRN("P&roperties\tCtrl-D"),          IDM_PROPERTIES,             0 },

@@ -370,6 +370,9 @@ Open in &Adobe Reader
 Open in &Foxit Reader
 Открыть в &Foxit Reader
 
+Open in PDF-XChange
+Открыть в PDF-XChange
+
 P&roperties\tCtrl-D
 Свойства...\tCtrl-D
 
@@ -522,7 +525,4 @@ copying text
 
 printing document
 печатается документ
-
-# Untranslated:
-#Open in &PDF-XChange
 

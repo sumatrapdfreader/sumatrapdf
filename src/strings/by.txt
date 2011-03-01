@@ -249,6 +249,9 @@ Open in &Adobe Reader
 Open in &Foxit Reader
 Адкрыць у &Foxit Reader
 
+Open in PDF-XChange
+Адкрыць у PDF-XChange
+
 PDF Document
 PDF-дaкумент
 
@@ -380,7 +383,6 @@ Zoom Out
 #Modified:
 #No synchronization file found
 #Number of Pages:
-#Open in &PDF-XChange
 #P&roperties\tCtrl-D
 #PDF Producer:
 #PDF Version:

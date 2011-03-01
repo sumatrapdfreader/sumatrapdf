@@ -314,6 +314,9 @@ Iepenje mei &Adobe Reader
 Open in &Foxit Reader
 Iepenje mei &Foxit Reader
 
+Open in PDF-XChange
+Iepenje mei PDF-XChange
+
 P&roperties\tCtrl-D
 E&igenskippen...\tCtrl-D
 
@@ -456,7 +459,6 @@ Zoomfaktor
 #Fit Content
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
-#Open in &PDF-XChange
 #Page scaling
 #Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L

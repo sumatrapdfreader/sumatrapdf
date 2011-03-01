@@ -307,6 +307,9 @@ Otvoriť v programe Adobe Reader
 Open in &Foxit Reader
 Otvoriť v programe Foxit Reader
 
+Open in PDF-XChange
+Otvoriť v programe PDF-XChange
+
 P&roperties\tCtrl-D
 Vlastnosti...\tCtrl-D
 
@@ -455,7 +458,6 @@ prebieha tlač dokumentu
 #Fit a Single Page
 #No synchronization file found
 #No synchronization info at this position
-#Open in &PDF-XChange
 #Page scaling
 #Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L

@@ -362,6 +362,9 @@ Open in &Adobe Reader
 Open in &Foxit Reader
 Отвори со &Foxit Reader
 
+Open in PDF-XChange
+Отвори со PDF-XChange
+
 P&roperties\tCtrl-D
 С&војства...\tCtrl-D
 
@@ -503,7 +506,6 @@ printing document
 # Untranslated:
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
-#Open in &PDF-XChange
 #Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L
 #Select &All\tCtrl-A

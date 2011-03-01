@@ -321,6 +321,9 @@ Agor yn &Adobe Reader
 Open in &Foxit Reader
 Agor yn &Foxit Reader
 
+Open in PDF-XChange
+Agor yn PDF-XChange
+
 P&roperties\tCtrl-D
 P&riodweddau...\tCtrl-D
 
@@ -470,7 +473,6 @@ argraffu dogfen
 #Fit Content
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
-#Open in &PDF-XChange
 #Page scaling
 #Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L

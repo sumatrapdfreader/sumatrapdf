@@ -318,6 +318,9 @@ Otwórz w &Adobe Reader
 Open in &Foxit Reader
 Otwórz w &Foxit Reader
 
+Open in PDF-XChange
+Otwórz w PDF-XChange
+
 P&roperties\tCtrl-D
 Właściwości...\tCtrl-D
 
@@ -467,7 +470,6 @@ drukowanie dokumentu
 #Fit Content
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
-#Open in &PDF-XChange
 #Page scaling
 #Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L

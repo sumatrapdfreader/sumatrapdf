@@ -368,6 +368,9 @@ Adobe Reader で開く(&A)
 Open in &Foxit Reader
 Foxit Reader で開く(&A)
 
+Open in PDF-XChange
+PDF-XChange で開く(&A)
+
 P&roperties\tCtrl-D
 プロパティ(&R)\tCtrl-D
 
@@ -519,6 +522,5 @@ printing document
 印刷するドキュメント
 
 # Untranslated:
-#Open in &PDF-XChange
 #Select &All\tCtrl-A
 

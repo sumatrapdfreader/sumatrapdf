@@ -371,6 +371,9 @@ Buka di &Adobe Reader
 Open in &Foxit Reader
 Buka di &Foxit Reader
 
+Open in PDF-XChange
+Buka di PDF-XChange
+
 P&roperties\tCtrl-D
 P&roperti\tCtrl-D
 
@@ -523,7 +526,4 @@ menyalin teks
 
 printing document
 mencetak dokumen
-
-# Untranslated:
-#Open in &PDF-XChange
 

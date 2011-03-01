@@ -321,6 +321,9 @@ Avaa &Adobe Readerissa
 Open in &Foxit Reader
 Avaa &Foxit Readerissa
 
+Open in PDF-XChange
+Avaa PDF-XChange
+
 P&roperties\tCtrl-D
 O&minaisuudet...\tCtrl-D
 
@@ -470,7 +473,6 @@ tulostetaan asiakirjaa
 #Fit Content
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
-#Open in &PDF-XChange
 #Page scaling
 #Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L

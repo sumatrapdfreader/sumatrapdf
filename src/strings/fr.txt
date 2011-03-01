@@ -373,6 +373,9 @@ Ouvrir dans &Adobe Reader
 Open in &Foxit Reader
 Ouvrir dans &Foxit Reader
 
+Open in PDF-XChange
+Ouvrir dans PDF-XChange
+
 P&roperties\tCtrl-D
 &Propriétés\tCtrl-D
 
@@ -525,7 +528,4 @@ copie du texte
 
 printing document
 impression du document
-
-# Untranslated:
-#Open in &PDF-XChange
 
