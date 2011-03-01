@@ -31,10 +31,10 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include "Version.h"
 #include "../ifilter/PdfFilter.h"
 
-using namespace Gdiplus;
-
 // define for testing the uninstaller
 // #define TEST_UNINSTALLER
+
+using namespace Gdiplus;
 
 // define for a shadow effect
 #define DRAW_TEXT_SHADOW
@@ -790,6 +790,13 @@ bool IsPdfFilterInstalled()
     return isInstalled;
 }
 
+void InstallBrowserPlugin()
+{
+    TCHAR *dllPath = GetBrowserPluginPath();
+    RegisterServerDLL(dllPath);
+    free(dllPath);
+}
+
 void UninstallBrowserPlugin()
 {
     TCHAR *dllPath = GetBrowserPluginPath();
@@ -801,6 +808,13 @@ void UninstallPdfFilter()
 {
     TCHAR *dllPath = GetPdfFilterPath();
     RegisterServerDLL(dllPath, TRUE);
+    free(dllPath);
+}
+
+void InstallPdfFilter()
+{
+    TCHAR *dllPath = GetPdfFilterPath();
+    RegisterServerDLL(dllPath);
     free(dllPath);
 }
 
@@ -1014,15 +1028,19 @@ static DWORD WINAPI InstallerThread(LPVOID data)
     }
 
     if (gGlobalData.installBrowserPlugin) {
-        TCHAR *dllPath = GetBrowserPluginPath();
-        RegisterServerDLL(dllPath);
-        free(dllPath);
+        InstallBrowserPlugin();
+    } else {
+        if (IsBrowserPluginInstalled()) {
+            UninstallBrowserPlugin();
+        }
     }
 
     if (gGlobalData.installPdfFilter) {
-        TCHAR *dllPath = GetPdfFilterPath();
-        RegisterServerDLL(dllPath);
-        free(dllPath);
+        InstallPdfFilter();
+    } else {
+        if (IsPdfFilterInstalled()) {
+            UninstallPdfFilter();
+        }
     }
 
     if (!CreateAppShortcut(true) && !CreateAppShortcut(false)) {
@@ -1053,6 +1071,11 @@ Error:
 
 void OnButtonOptions();
 
+bool IsCheckboxChecked(HWND hwnd)
+{
+    return (Button_GetState(hwnd) & BST_CHECKED) == BST_CHECKED;
+}
+
 void OnButtonInstall()
 {
     TCHAR *userInstallDir = win_get_text(gHwndTextboxInstDir);
@@ -1063,14 +1086,13 @@ void OnButtonInstall()
     else
         free(userInstallDir);
 
-    // note: checkboxes aren't created if the features are already installed
-    //       (in which case we're just going to re-register them automatically)
+    // note: this checkbox isn't created if we're already registered as default
+    //       (in which case we're just going to re-register)
     gGlobalData.registerAsDefault = gHwndCheckboxRegisterDefault == NULL ||
-                                    Button_GetState(gHwndCheckboxRegisterDefault);
-    gGlobalData.installBrowserPlugin = gHwndCheckboxRegisterBrowserPlugin == NULL ||
-                                       Button_GetState(gHwndCheckboxRegisterBrowserPlugin);
-    gGlobalData.installPdfFilter = gHwndCheckboxRegisterPdfFilter == NULL ||
-                                   Button_GetState(gHwndCheckboxRegisterPdfFilter);
+                                    IsCheckboxChecked(gHwndCheckboxRegisterDefault);
+
+    gGlobalData.installBrowserPlugin = IsCheckboxChecked(gHwndCheckboxRegisterBrowserPlugin) & BST_CHECKED;
+    gGlobalData.installPdfFilter = IsCheckboxChecked(gHwndCheckboxRegisterPdfFilter);
 
     if (gShowOptions)
         OnButtonOptions();
@@ -1820,24 +1842,20 @@ void OnCreateInstaller(HWND hwnd)
         y += 22;
     }
 
-    if (!IsBrowserPluginInstalled()) {
-        gHwndCheckboxRegisterBrowserPlugin = CreateWindow(
-            WC_BUTTON, _T("Install a PDF &browser plugin for Mozilla Firefox and Google Chrome"),
-            WS_CHILD | BS_AUTOCHECKBOX | WS_TABSTOP,
-            x, y, RectDx(&r) - 2 * x, 22, hwnd, (HMENU)ID_CHECKBOX_BROWSER_PLUGIN, ghinst, NULL);
-        Window_SetFont(gHwndCheckboxRegisterBrowserPlugin, gFontDefault);
-        Button_SetCheck(gHwndCheckboxRegisterBrowserPlugin, gGlobalData.installBrowserPlugin);
-        y += 22;
-    }
+    gHwndCheckboxRegisterBrowserPlugin = CreateWindow(
+        WC_BUTTON, _T("Install PDF &browser plugin for Firefox, Chrome and Opera"),
+        WS_CHILD | BS_AUTOCHECKBOX | WS_TABSTOP,
+        x, y, RectDx(&r) - 2 * x, 22, hwnd, (HMENU)ID_CHECKBOX_BROWSER_PLUGIN, ghinst, NULL);
+    Window_SetFont(gHwndCheckboxRegisterBrowserPlugin, gFontDefault);
+    Button_SetCheck(gHwndCheckboxRegisterBrowserPlugin, gGlobalData.installBrowserPlugin || IsBrowserPluginInstalled());
+    y += 22;
 
-    if (!IsPdfFilterInstalled()) {
-        gHwndCheckboxRegisterPdfFilter = CreateWindow(
-            WC_BUTTON, _T("Let Windows Desktop Search &search the contents of PDF documents"),
-            WS_CHILD | BS_AUTOCHECKBOX | WS_TABSTOP,
-            x, y, RectDx(&r) - 2 * x, 22, hwnd, (HMENU)ID_CHECKBOX_PDF_FILTER, ghinst, NULL);
-        Window_SetFont(gHwndCheckboxRegisterPdfFilter, gFontDefault);
-        Button_SetCheck(gHwndCheckboxRegisterPdfFilter, gGlobalData.installPdfFilter);
-    }
+    gHwndCheckboxRegisterPdfFilter = CreateWindow(
+        WC_BUTTON, _T("Let Windows Desktop Search &search PDF documents"),
+        WS_CHILD | BS_AUTOCHECKBOX | WS_TABSTOP,
+        x, y, RectDx(&r) - 2 * x, 22, hwnd, (HMENU)ID_CHECKBOX_PDF_FILTER, ghinst, NULL);
+    Window_SetFont(gHwndCheckboxRegisterPdfFilter, gFontDefault);
+    Button_SetCheck(gHwndCheckboxRegisterPdfFilter, gGlobalData.installPdfFilter || IsPdfFilterInstalled());
 
     gShowOptions = !gShowOptions;
     OnButtonOptions();
