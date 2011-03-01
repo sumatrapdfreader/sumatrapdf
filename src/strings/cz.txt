@@ -524,3 +524,6 @@ kopírování textu
 printing document
 tisk dokumentu
 
+# Untranslated:
+#Open in &PDF-XChange
+

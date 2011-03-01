@@ -311,7 +311,7 @@ bool IsExeAssociatedWithPdfExtension()
     return same;
 }
 
-bool GetAcrobatPath(TCHAR *buffer=NULL, int bufSize=0)
+bool GetAcrobatPath(TCHAR *bufOut, int bufCchSize)
 {
     TCHAR path[MAX_PATH];
     // Try Adobe Acrobat as a fall-back, if the Reader isn't installed
@@ -319,22 +319,35 @@ bool GetAcrobatPath(TCHAR *buffer=NULL, int bufSize=0)
                  ReadRegStr(HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\Acrobat.exe"), NULL, path, dimof(path));
     if (found)
         found = !!file_exists(path);
-    if (found && buffer)
-        lstrcpyn(buffer, path, bufSize);
+    if (found && bufOut)
+        lstrcpyn(bufOut, path, bufCchSize);
     return found;
 }
 
-bool GetFoxitPath(TCHAR *buffer=NULL, int bufSize=0)
+bool GetFoxitPath(TCHAR *bufOut, int bufCchSize)
 {
     TCHAR path[MAX_PATH];
     bool found = ReadRegStr(HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Foxit Reader"), _T("DisplayIcon"), path, dimof(path));
     if (found)
         found = !!file_exists(path);
-    if (found && buffer)
-        lstrcpyn(buffer, path, bufSize);
+    if (found && bufOut)
+        lstrcpyn(bufOut, path, bufCchSize);
     return found;
 }
 
+bool GetPDFXChangePath(TCHAR *bufOut, int bufCchSize)
+{
+    TCHAR path[MAX_PATH];
+    bool found = ReadRegStr(HKEY_LOCAL_MACHINE, _T("Software\\Tracker Software\\PDFViewer"), _T("InstallPath"), path, dimof(path)) ||
+                 ReadRegStr(HKEY_CURRENT_USER,  _T("Software\\Tracker Software\\PDFViewer"), _T("InstallPath"), path, dimof(path));
+    if (!found)
+        return false;
+    tstr_cat_s(path, dimof(path), _T("PDFXCview.exe"));
+    found = !!file_exists(path);
+    if (found && bufOut)
+        lstrcpyn(bufOut, path, bufCchSize);
+    return found;
+}
 
 // List of rules used to detect TeX editors.
 

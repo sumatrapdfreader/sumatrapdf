@@ -524,3 +524,6 @@ kopierer tekst
 printing document
 skriver ut dokument
 
+# Untranslated:
+#Open in &PDF-XChange
+

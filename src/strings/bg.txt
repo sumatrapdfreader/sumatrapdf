@@ -415,6 +415,7 @@ Zoom factor
 #Modified:
 #Number of Pages:
 #OK
+#Open in &PDF-XChange
 #P&roperties\tCtrl-D
 #PDF Producer:
 #PDF Version:

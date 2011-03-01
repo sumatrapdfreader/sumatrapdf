@@ -380,6 +380,7 @@ Zoom Out
 #Modified:
 #No synchronization file found
 #Number of Pages:
+#Open in &PDF-XChange
 #P&roperties\tCtrl-D
 #PDF Producer:
 #PDF Version:

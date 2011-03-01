@@ -462,6 +462,7 @@ printing document
 #No matches were found
 #No result found around line %u in file %s
 #No synchronization info at this position
+#Open in &PDF-XChange
 #Page scaling
 #Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L

@@ -520,5 +520,6 @@ printing document
 ipini-print ang dokumento
 
 # Untranslated:
+#Open in &PDF-XChange
 #Select &All\tCtrl-A
 

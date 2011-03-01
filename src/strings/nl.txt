@@ -525,5 +525,6 @@ printing document
 bestand afdrukken
 
 # Untranslated:
+#Open in &PDF-XChange
 #Select &All\tCtrl-A
 

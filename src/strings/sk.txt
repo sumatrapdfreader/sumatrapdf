@@ -455,6 +455,7 @@ prebieha tlač dokumentu
 #Fit a Single Page
 #No synchronization file found
 #No synchronization info at this position
+#Open in &PDF-XChange
 #Page scaling
 #Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L

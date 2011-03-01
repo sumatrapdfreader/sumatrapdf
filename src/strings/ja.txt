@@ -519,5 +519,6 @@ printing document
 印刷するドキュメント
 
 # Untranslated:
+#Open in &PDF-XChange
 #Select &All\tCtrl-A
 

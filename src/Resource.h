@@ -73,6 +73,7 @@
 
 #define IDM_VIEW_WITH_ACROBAT           470
 #define IDM_VIEW_WITH_FOXIT             471
+#define IDM_VIEW_WITH_PDF_XCHANGE       472
 
 #define IDM_VISIT_WEBSITE               550
 #define IDM_ABOUT                       551

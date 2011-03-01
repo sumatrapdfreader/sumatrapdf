@@ -521,3 +521,6 @@ metin kopyalanıyor
 printing document
 belge baskılanyor
 
+# Untranslated:
+#Open in &PDF-XChange
+

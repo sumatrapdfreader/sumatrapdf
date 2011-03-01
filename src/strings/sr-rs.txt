@@ -413,6 +413,7 @@ Zoom factor
 #Fit a Single Page
 #Modified:
 #Number of Pages:
+#Open in &PDF-XChange
 #P&roperties\tCtrl-D
 #PDF Producer:
 #PDF Version:

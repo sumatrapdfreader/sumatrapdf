@@ -526,3 +526,6 @@ copie du texte
 printing document
 impression du document
 
+# Untranslated:
+#Open in &PDF-XChange
+

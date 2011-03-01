@@ -521,5 +521,6 @@ printing document
 tiskanje dokumenta
 
 # Untranslated:
+#Open in &PDF-XChange
 #Select &All\tCtrl-A
 

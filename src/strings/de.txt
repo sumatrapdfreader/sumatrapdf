@@ -524,3 +524,6 @@ Text kopieren verweigert
 printing document
 Dokument drucken verweigert
 
+# Untranslated:
+#Open in &PDF-XChange
+

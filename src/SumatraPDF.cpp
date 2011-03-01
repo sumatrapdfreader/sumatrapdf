@@ -417,6 +417,34 @@ static bool ViewWithFoxit(WindowInfo *win, TCHAR *args=NULL)
     return true;
 }
 
+static bool CanViewWithPDFXChange(WindowInfo *win)
+{
+    // Requirements: a valid filename and a valid path to Foxit
+    if (gRestrictedUse || !HasValidFileOrNoFile(win))
+        return false;
+    return GetPDFXChangePath();
+}
+
+static bool ViewWithPDFXChange(WindowInfo *win, TCHAR *args=NULL)
+{
+    if (!CanViewWithPDFXChange(win))
+        return false;
+
+    TCHAR exePath[MAX_PATH];
+    if (!GetPDFXChangePath(exePath, dimof(exePath)))
+        return false;
+    if (!args)
+        args = _T("");
+
+    // PDFXChange cmd-line format:
+    // [/A "param=value [&param2=value ..."] [PDF filename] 
+    // /A params: page=<page number>
+    TCHAR *params = tstr_printf(_T("%s /A \"page=%d\" \"%s\""), args, win->dm->currentPageNo(), win->loadedFilePath);
+    exec_with_params(exePath, params, FALSE);
+    free(params);
+    return true;
+}
+
 static bool CanViewWithAcrobat(WindowInfo *win)
 {
     // Requirements: a valid filename and a valid path to Adobe Reader
@@ -566,6 +594,7 @@ MenuDef menuDefFile[] = {
     { SEP_ITEM,                             0,                          MF_NOT_IN_RESTRICTED },
     { _TRN("Open in &Adobe Reader"),        IDM_VIEW_WITH_ACROBAT,      MF_NOT_IN_RESTRICTED },
     { _TRN("Open in &Foxit Reader"),        IDM_VIEW_WITH_FOXIT,        MF_NOT_IN_RESTRICTED },
+    { _TRN("Open in &PDF-XChange"),         IDM_VIEW_WITH_PDF_XCHANGE,  MF_NOT_IN_RESTRICTED },
     { _TRN("Send by &E-mail..."),           IDM_SEND_BY_EMAIL,          MF_NOT_IN_RESTRICTED },
     { SEP_ITEM,                             0,                          MF_NOT_IN_RESTRICTED },
     { _TRN("P&roperties\tCtrl-D"),          IDM_PROPERTIES,             0 },
@@ -716,38 +745,35 @@ static void AppendRecentFilesToMenu(HMENU m)
     InsertMenu(m, IDM_EXIT, MF_BYCOMMAND | MF_SEPARATOR, 0, NULL);
 }
 
+static void AddOrRemoveFileMenuAtPos(int n, bool add)
+{
+    if (add)
+        menuDefFile[n].m_flags &= ~MF_REMOVED;
+    else
+        menuDefFile[n].m_flags |= MF_REMOVED;
+}
+
 // Suppress menu items that depend on specific software being installed:
 // e-mail client, Adobe Reader, Foxit
 static void SetupProgramDependentMenus(WindowInfo *win)
 {
     bool acrobat = CanViewWithAcrobat(win);
     bool foxit = CanViewWithFoxit(win);
+    bool pdfexch = CanViewWithPDFXChange(win);
     bool email = CanSendAsEmailAttachment(win);
-    bool separator = email | acrobat | foxit;
+    bool separator = email | acrobat | foxit | pdfexch;
     for (int i = 0; i < dimof(menuDefFile); i++) {
         if (IDM_VIEW_WITH_ACROBAT == menuDefFile[i].m_id) {
-            if (acrobat)
-                menuDefFile[i].m_flags &= ~MF_REMOVED;
-            else
-                menuDefFile[i].m_flags |= MF_REMOVED;
-
-            if (separator)
-                menuDefFile[i-1].m_flags &= ~MF_REMOVED;
-            else
-                menuDefFile[i-1].m_flags |= MF_REMOVED;
+            AddOrRemoveFileMenuAtPos(i, acrobat);
+            AddOrRemoveFileMenuAtPos(i-1, separator);
         } else if (IDM_VIEW_WITH_FOXIT == menuDefFile[i].m_id) {
-            if (foxit)
-                menuDefFile[i].m_flags &= ~MF_REMOVED;
-            else
-                menuDefFile[i].m_flags |= MF_REMOVED;
+            AddOrRemoveFileMenuAtPos(i, foxit);
+        } else if (IDM_VIEW_WITH_PDF_XCHANGE ==  menuDefFile[i].m_id) {
+            AddOrRemoveFileMenuAtPos(i, pdfexch);
         } else if (IDM_SEND_BY_EMAIL == menuDefFile[i].m_id) {
-            if (email)
-                menuDefFile[i].m_flags &= ~MF_REMOVED;
-            else
-                menuDefFile[i].m_flags |= MF_REMOVED;
+            AddOrRemoveFileMenuAtPos(i, email);
         }
     }
-
 }
 
 static void WindowInfo_RebuildMenu(WindowInfo *win)
@@ -1246,8 +1272,8 @@ static void MenuUpdateStateForWindow(WindowInfo *win) {
     static UINT menusToDisableIfNoPdf[] = {
         IDM_VIEW_ROTATE_LEFT, IDM_VIEW_ROTATE_RIGHT, IDM_GOTO_NEXT_PAGE, IDM_GOTO_PREV_PAGE,
         IDM_GOTO_FIRST_PAGE, IDM_GOTO_LAST_PAGE, IDM_GOTO_NAV_BACK, IDM_GOTO_NAV_FORWARD,
-        IDM_GOTO_PAGE, IDM_FIND_FIRST, IDM_SAVEAS, 
-        IDM_VIEW_WITH_ACROBAT, IDM_VIEW_WITH_FOXIT, IDM_SEND_BY_EMAIL,
+        IDM_GOTO_PAGE, IDM_FIND_FIRST, IDM_SAVEAS, IDM_SEND_BY_EMAIL,
+        IDM_VIEW_WITH_ACROBAT, IDM_VIEW_WITH_FOXIT, IDM_VIEW_WITH_PDF_XCHANGE, 
         IDM_SELECT_ALL, IDM_COPY_SELECTION, IDM_PROPERTIES, IDM_VIEW_PRESENTATION_MODE };
 
     bool fileCloseEnabled = FileCloseMenuEnabled();
@@ -6244,6 +6270,10 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
 
                 case IDM_VIEW_WITH_FOXIT:
                     ViewWithFoxit(win);
+                    break;
+
+                case IDM_VIEW_WITH_PDF_XCHANGE:
+                    ViewWithPDFXChange(win);
                     break;
 
                 case IDM_SEND_BY_EMAIL:

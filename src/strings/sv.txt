@@ -526,3 +526,6 @@ kopierar text
 printing document
 skriver ut dokumentet
 
+# Untranslated:
+#Open in &PDF-XChange
+

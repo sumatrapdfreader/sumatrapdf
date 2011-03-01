@@ -522,3 +522,6 @@ se copiază text
 printing document
 se imprimă documentul
 
+# Untranslated:
+#Open in &PDF-XChange
+

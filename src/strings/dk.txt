@@ -524,3 +524,6 @@ kopierer tekst
 printing document
 printer dokument
 
+# Untranslated:
+#Open in &PDF-XChange
+

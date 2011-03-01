@@ -461,6 +461,7 @@ printing document
 #No result found around line %u in file %s
 #No synchronization file found
 #No synchronization info at this position
+#Open in &PDF-XChange
 #Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L
 #Select &All\tCtrl-A

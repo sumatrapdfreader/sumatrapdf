@@ -409,6 +409,7 @@ dokumentua imprimatzen
 #No result found around line %u in file %s
 #No synchronization file found
 #No synchronization info at this position
+#Open in &PDF-XChange
 #Page scaling
 #Please include the following file in your crash report:
 #Please wait - rendering...

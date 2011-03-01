@@ -525,3 +525,6 @@ copiado de texto
 printing document
 impresión de documento
 
+# Untranslated:
+#Open in &PDF-XChange
+

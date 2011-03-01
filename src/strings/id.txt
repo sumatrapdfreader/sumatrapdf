@@ -524,3 +524,6 @@ menyalin teks
 printing document
 mencetak dokumen
 
+# Untranslated:
+#Open in &PDF-XChange
+

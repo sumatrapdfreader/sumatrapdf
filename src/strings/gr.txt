@@ -521,5 +521,6 @@ printing document
 εκτύπωση εγγράφου
 
 # Untranslated:
+#Open in &PDF-XChange
 #Select &All\tCtrl-A
 

@@ -503,6 +503,7 @@ printing document
 # Untranslated:
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
+#Open in &PDF-XChange
 #Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L
 #Select &All\tCtrl-A

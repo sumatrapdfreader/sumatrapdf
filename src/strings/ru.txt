@@ -523,3 +523,6 @@ copying text
 printing document
 печатается документ
 
+# Untranslated:
+#Open in &PDF-XChange
+

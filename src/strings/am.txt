@@ -520,4 +520,5 @@ printing document
 
 # Untranslated:
 #Open in &Foxit Reader
+#Open in &PDF-XChange
 

@@ -525,5 +525,6 @@ printing document
 stampando il documento
 
 # Untranslated:
+#Open in &PDF-XChange
 #Printing problem.
 
