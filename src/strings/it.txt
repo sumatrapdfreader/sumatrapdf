@@ -13,15 +13,16 @@ Contributor: Alessandro Mariani
 Contributor: Massimiliano Beltrando
 Contributor: Mirco Scottà
 Contributor: Cosimo Prete Damiano
+Contributor: Antonio Colombo
 
 &About
 &Informazioni
 
 &Actual Size\tCtrl-1
-&Dimensioni reali\tCtrl-1
+Dimensioni re&ali\tCtrl-1
 
 &All selected pages
-&Tutte le pagine selezionate
+Tutte le p&agine selezionate
 
 &Back\tAlt+Left Arrow
 &Indietro\tAlt+Freccia sinistra
@@ -33,10 +34,10 @@ Contributor: Cosimo Prete Damiano
 &Copia Selezione\tCtrl-C
 
 &Don't ask me again
-&Non chiedermelo più
+Non chie&dermelo più
 
 &Even pages only
-&Solo pagine pari
+Solo pagin&e pari
 
 &File
 &File
@@ -48,7 +49,7 @@ Contributor: Cosimo Prete Damiano
 &Prima pagina\tHome
 
 &Fit pages to printable area
-&Adatta le pagine alla zona stampabile
+&Adatta pagine alla zona stampabile
 
 &Go To
 &Vai a
@@ -72,7 +73,7 @@ Contributor: Cosimo Prete Damiano
 &Maiuscole/minuscole
 
 &Next Page\tRight Arrow
-Pagina successiva\tFreccia destra
+Pagi&na successiva\tFreccia destra
 
 &No
 &No
@@ -81,7 +82,7 @@ Pagina successiva\tFreccia destra
 &No, grazie
 
 &Odd pages only
-&Solo pagine dispari
+S&olo pagine dispari
 
 &Open\tCtrl-O
 &Apri\tCtrl-O
@@ -93,34 +94,34 @@ Pagina successiva\tFreccia destra
 &Password:
 
 &Previous Page\tLeft Arrow
-&Pagina precedente\tFreccia destra
+&Pagina Precedente\tFreccia sinistra
 
 &Print...\tCtrl-P
-&Stampa\tCtrl-P
+Stam&pa\tCtrl-P
 
 &Print... (denied)
-&Stampa... (rifiutato)
+Stam&pa... (rifiutato)
 
 &Remember the password for this document
 &Ricorda la password per questo documento
 
 &Remember these settings for each document
-&Ricorda le impostazioni per ogni documento
+&Ricorda queste impostazioni per ogni documento
 
 &Save As...\tCtrl-S
-&Salva come...\tCtrl-S
+&Salva Con Nome...\tCtrl-S
 
 &Settings
-&Impostazioni
+Impo&stazioni
 
 &Shrink pages to printable area (if necessary)
-&Riduci le pagine alla zona stampabile (se necessario)
+Riduci pagine alla zona &stampabile (se necessario)
 
 &Skip this version
 &Salta questa versione
 
 &Use original page sizes
-&Usa la larghezza originale
+&Usa larghezza pagina originale
 
 &View
 &Visualizza
@@ -159,13 +160,13 @@ Automatic
 Automatico
 
 Automatically check for &updates
-Controlla &automaticamente aggiornamenti
+Controlla a&utomaticamente aggiornamenti
 
 Book View
 Vista libro
 
 Book&marks\tF12
-Segnalibri\tF12
+Segna&libri\tF12
 
 Bookmarks
 Segnalibri
@@ -180,16 +181,16 @@ Cancel
 Annulla
 
 Cannot print this file
-Impossibile stampare il file
+Impossibile stampare questo file
 
 Cannot start inverse search command. Please check the command line in the settings.
-Impossibile eseguire il comando di ricerca inversa. Controllare la riga di comando usata nelle impostazioni
+Impossibile eseguire il comando di ricerca inversa. Controllare la riga di comando usata nelle impostazioni.
 
 Change Language
 Cambia lingua (Change Language)
 
 Check for &Updates
-&Controlla aggiornamenti
+Controlla &Aggiornamenti
 
 Continuous
 Pagina continua
@@ -204,7 +205,7 @@ Contribute Translation
 Contribuisci alla traduzione
 
 Copying text was denied (copying as image only)
-Impossibile copiare il testo (copia solo come immagine)
+Impossibile copiare il testo (copio solo come immagine)
 
 Could not open Printer
 Stampante non accessibile
@@ -219,7 +220,7 @@ Created:
 Creato:
 
 Custom &Zoom...\tCtrl-Y
-&Ingrandimento personalizzato\tCtrl-Y
+Ingrandimento personali&zzato\tCtrl-Y
 
 Default &Layout:
 &Vista predefinita:
@@ -231,7 +232,7 @@ Default PDF reader can't be changed in portable mode
 Il lettore PDF predefinito non è modificabile in modalità "portable"
 
 Denied Permissions:
-Permessi rifiutati
+Permessi rifiutati:
 
 Document Properties
 Proprietà del documento
@@ -240,7 +241,7 @@ Download
 Scarica
 
 E&xit\tCtrl-Q
-&Esci\tCtrl-Q
+Es&ci\tCtrl-Q
 
 Enter password
 Inserisci password
@@ -252,28 +253,28 @@ Enter the command-line to invoke when you double-click on the PDF document:
 Inserire la linea di comando da eseguire quando fai doppio clic su un documento PDF:
 
 Error loading PDF file.
-Errore durante l'apertura del file.
+Errore durante il caricamento del file.
 
 F&orward\tAlt+Right Arrow
 A&vanti\tAlt+Freccia Destra
 
 F&ullscreen\tCtrl-Shift-L
-Schermo intero\tCtrl-Shift-L
+S&chermo intero\tCtrl-Shift-L
 
 Facing
 Pagine affiancate
 
 Failed to save a file
-Salvataggio del file fallito
+Salvataggio file non riuscito
 
 File Size:
-Dimensione del file
+Dimensione del file:
 
 File:
 File:
 
 Fin&d...\tCtrl-F
-Trova...\tCtrl-F
+Tro&va...\tCtrl-F
 
 Find
 Trova
@@ -309,7 +310,7 @@ Fit Width and Show Pages Continuously
 Adatta la larghezza e visualizza le pagine in modo continuo
 
 Fit a Single Page
-Adatta una pagina singola
+Visualizza una pagina singola
 
 Found text at page %d
 Testo trovato a pagina %d
@@ -342,10 +343,10 @@ Modified:
 Modificato:
 
 New version %s is available. Download new version?
-E' disponibile la versione %s. Scaricare la nuova versione?
+È disponibile la versione %s. Scaricare la nuova versione?
 
 Next Page
-Pagina successiva
+Pagina Successiva
 
 No matches were found
 Nessuna corrispondenza trovata
@@ -360,7 +361,7 @@ No synchronization info at this position
 Nessuna informazione di sincronizzazione in questa posizione
 
 Number of Pages:
-Numero di pagine:
+Numero di Pagine:
 
 OK
 OK
@@ -393,7 +394,7 @@ PDF documents
 Documenti PDF
 
 Pa&ge...\tCtrl-G
-Pagina...\tCtrl-G
+Pa&gina...\tCtrl-G
 
 Page Size:
 Dimensione pagina:
@@ -402,16 +403,16 @@ Page number %u inexistant
 Pagina numero %u inesistente
 
 Page scaling
-Gradazione pagina
+Dimensionamento pagina
 
 Page:
 Pagina:
 
 Please include the following file in your crash report:
-Includi questo file nella segnalazione del crash
+Includi questo file nella segnalazione del crash:
 
 Please wait - rendering...
-Rendering in corso - attendere prego
+Rendering in corso - attendere prego...
 
 Pr&esentation\tCtrl-L
 Pr&esentazione\tCtrl-L
@@ -422,8 +423,11 @@ Pagina precedente
 Print range
 Stampa serie
 
+Printing problem.
+Problemi di stampa.
+
 Remember &opened files
-Ricorda file &aperti
+Ric&orda file aperti
 
 Rotate &Left\tCtrl-Shift--
 Ruota a &Sinistra\tCtrl-Shift--
@@ -435,31 +439,31 @@ Searching %d of %d...
 Cercando: %d di %d...
 
 Select &All\tCtrl-A
-Seleziona &tutto\tCtrl-A
+Selezion&a Tutto\tCtrl-A
 
 Select content with Ctrl+left mouse button
-Seleziona contenuti con Ctrl+freccia sinistra
+Seleziona contenuti con Ctrl+pulsante sinistro del mouse
 
 Send by &E-mail...
-Invia via &mail...
+Invia via &E-mail...
 
 Set inverse search command-line
 Imposta la ricerca inversa via riga di comando
 
 Show &Toolbar
-Visualizza la &toolbar
+Visualizza la &Toolbar
 
 Show &pages continuously
 Visualizza le &pagine in modo continuo
 
 Show the &bookmarks sidebar when available
-Visualizza la sidebar dei &segnalibri quando disponibile
+Visualizza la side&bar dei segnalibri quando disponibile
 
 Single Page
 Pagina singola
 
 Source file %s has no synchronization point
-Il file sorgente non ha nessun punto di sincronizzazione
+Il file sorgente %s non ha nessun punto di sincronizzazione
 
 Subject:
 Oggetto:
@@ -471,7 +475,7 @@ SumatraPDF Update
 Aggiornamento di SumatraPDF
 
 SumatraPDF crashed
-SumatraPDF ha crashato
+SumatraPDF ha avuto un errore irreparabile
 
 SumatraPDF is your default PDF reader
 SumatraPDF è il tuo lettore PDF predefinito
@@ -486,22 +490,22 @@ Text documents
 Documenti di testo
 
 Title:
-Titolo
+Titolo:
 
 Unknown source file (%s)
 File sorgente sconosciuto (%s)
 
 View
-Interfaccia
+Vista
 
 Visit &Website
-Visita il &sito web
+Visita il sito &web
 
 Warning
 Attenzione
 
 You have the latest version.
-Hai l'ultima versione
+Hai l'ultima versione.
 
 You have version %s
 Hai la versione %s
@@ -522,11 +526,8 @@ Fattore di Zoom
 [Individuati cambiamenti; aggiornando] %s
 
 copying text
-copiano il testo
+sto copiando il testo
 
 printing document
-stampando il documento
-
-# Untranslated:
-#Printing problem.
+documento in stampa
 
