@@ -365,6 +365,9 @@ Open
 Open in &Adobe Reader
 &Adobe කියවනය මගින් විවෘතකරන්න
 
+Open in &Foxit Reader
+&Foxit කියවනය මගින් විවෘතකරන්න
+
 P&roperties\tCtrl-D
 වත්කම් (P)\tCtrl-D
 

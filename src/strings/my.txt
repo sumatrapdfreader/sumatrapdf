@@ -367,6 +367,7 @@ mencetak dokumen
 #No synchronization file found
 #No synchronization info at this position
 #Open in &Adobe Reader
+#Open in &Foxit Reader
 #P&roperties\tCtrl-D
 #PDF Producer:
 #Page number %u inexistant

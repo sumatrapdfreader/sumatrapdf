@@ -311,19 +311,30 @@ bool IsExeAssociatedWithPdfExtension()
     return same;
 }
 
-
 bool GetAcrobatPath(TCHAR *buffer=NULL, int bufSize=0)
 {
     TCHAR path[MAX_PATH];
-
     // Try Adobe Acrobat as a fall-back, if the Reader isn't installed
-    bool foundAcrobat = ReadRegStr(HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\AcroRd32.exe"), NULL, path, dimof(path)) ||
-                        ReadRegStr(HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\Acrobat.exe"), NULL, path, dimof(path));
-    if (foundAcrobat && buffer)
+    bool found = ReadRegStr(HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\AcroRd32.exe"), NULL, path, dimof(path)) ||
+                 ReadRegStr(HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\Acrobat.exe"), NULL, path, dimof(path));
+    if (found)
+        found = !!file_exists(path);
+    if (found && buffer)
         lstrcpyn(buffer, path, bufSize);
-
-    return foundAcrobat && file_exists(path);
+    return found;
 }
+
+bool GetFoxitPath(TCHAR *buffer=NULL, int bufSize=0)
+{
+    TCHAR path[MAX_PATH];
+    bool found = ReadRegStr(HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Foxit Reader"), _T("DisplayIcon"), path, dimof(path));
+    if (found)
+        found = !!file_exists(path);
+    if (found && buffer)
+        lstrcpyn(buffer, path, bufSize);
+    return found;
+}
+
 
 // List of rules used to detect TeX editors.
 

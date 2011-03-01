@@ -310,6 +310,9 @@ Open
 Open in &Adobe Reader
 Adobe Reader باز کردن در
 
+Open in &Foxit Reader
+Foxit Reader باز کردن در
+
 P&roperties\tCtrl-D
 ...ویزگیها\tCtrl-D
 

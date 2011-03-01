@@ -311,6 +311,9 @@ Iepenje
 Open in &Adobe Reader
 Iepenje mei &Adobe Reader
 
+Open in &Foxit Reader
+Iepenje mei &Foxit Reader
+
 P&roperties\tCtrl-D
 E&igenskippen...\tCtrl-D
 

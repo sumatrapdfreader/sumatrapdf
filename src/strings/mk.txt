@@ -359,6 +359,9 @@ Open
 Open in &Adobe Reader
 Отвори со &Adobe Reader
 
+Open in &Foxit Reader
+Отвори со &Foxit Reader
+
 P&roperties\tCtrl-D
 С&војства...\tCtrl-D
 

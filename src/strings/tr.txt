@@ -365,6 +365,9 @@ Open
 Open in &Adobe Reader
 &Adobe Reader ile aç
 
+Open in &Foxit Reader
+&Adobe Foxit ile aç
+
 P&roperties\tCtrl-D
 &Özellikleri\tCtrl-D
 

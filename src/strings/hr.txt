@@ -317,6 +317,9 @@ Otvori
 Open in &Adobe Reader
 Otvori u programu &Adobe Reader
 
+Open in &Foxit Reader
+Otvori u programu &Foxit Reader
+
 P&roperties\tCtrl-D
 S&vojstva...\tCtrl-D
 

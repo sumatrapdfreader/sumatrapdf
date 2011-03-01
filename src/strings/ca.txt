@@ -312,6 +312,9 @@ Obre
 Open in &Adobe Reader
 Obre amb Adobe Reader
 
+Open in &Foxit Reader
+Obre amb Foxit Reader
+
 P&roperties\tCtrl-D
 P&ropietats...\tCtrl-D
 

@@ -246,6 +246,9 @@ Open
 Open in &Adobe Reader
 Адкрыць у &Adobe Reader
 
+Open in &Foxit Reader
+Адкрыць у &Foxit Reader
+
 PDF Document
 PDF-дaкумент
 

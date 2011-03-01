@@ -281,6 +281,9 @@ Open
 Open in &Adobe Reader
 Отвори с &Adobe Reader
 
+Open in &Foxit Reader
+Отвори с &Foxit Reader
+
 PDF Document
 PDF документ
 

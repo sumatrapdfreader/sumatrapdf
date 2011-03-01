@@ -518,3 +518,6 @@ copying text
 printing document
 փաստաթուղթը տպվում է
 
+# Untranslated:
+#Open in &Foxit Reader
+

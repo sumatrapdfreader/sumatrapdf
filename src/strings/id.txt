@@ -368,6 +368,9 @@ Buka
 Open in &Adobe Reader
 Buka di &Adobe Reader
 
+Open in &Foxit Reader
+Buka di &Foxit Reader
+
 P&roperties\tCtrl-D
 P&roperti\tCtrl-D
 

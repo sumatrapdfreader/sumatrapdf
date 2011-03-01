@@ -318,6 +318,9 @@ Avaa
 Open in &Adobe Reader
 Avaa &Adobe Readerissa
 
+Open in &Foxit Reader
+Avaa &Foxit Readerissa
+
 P&roperties\tCtrl-D
 O&minaisuudet...\tCtrl-D
 

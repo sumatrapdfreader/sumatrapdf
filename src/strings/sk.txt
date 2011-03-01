@@ -304,6 +304,9 @@ Otvoriť
 Open in &Adobe Reader
 Otvoriť v programe Adobe Reader
 
+Open in &Foxit Reader
+Otvoriť v programe Foxit Reader
+
 P&roperties\tCtrl-D
 Vlastnosti...\tCtrl-D
 

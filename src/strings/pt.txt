@@ -367,6 +367,9 @@ Abrir
 Open in &Adobe Reader
 Abrir no Adobe &Reader
 
+Open in &Foxit Reader
+Abrir no Foxit Reader
+
 P&roperties\tCtrl-D
 &Propriedades...\tCtrl-D
 

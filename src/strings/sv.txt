@@ -370,6 +370,9 @@ Open
 Open in &Adobe Reader
 Öppna i Adobe &Reader
 
+Open in &Foxit Reader
+Öppna i Foxit Reader
+
 P&roperties\tCtrl-D
 &Egenskaper...\tCtrl-D
 

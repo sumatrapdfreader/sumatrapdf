@@ -367,6 +367,9 @@ Odpri
 Open in &Adobe Reader
 Odpri s programom &Adobe Reader
 
+Open in &Foxit Reader
+Odpri s programom &Foxit Reader
+
 P&roperties\tCtrl-D
 Lastnosti\tCtrl-D
 

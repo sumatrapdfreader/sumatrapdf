@@ -306,6 +306,9 @@ Open
 Open in &Adobe Reader
 以 Adobe Reader 開啟(&A)
 
+Open in &Foxit Reader
+以 Foxit Reader 開啟(&A)
+
 P&roperties\tCtrl-D
 屬性...(&R)\tCtrl-D
 

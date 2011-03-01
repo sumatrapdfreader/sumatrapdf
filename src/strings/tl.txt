@@ -366,6 +366,9 @@ Buksan
 Open in &Adobe Reader
 Buksan sa Adobe Reader
 
+Open in &Foxit Reader
+Buksan sa Foxit Reader
+
 P&roperties\tCtrl-D
 Mga Katangian\tCtrl-D
 

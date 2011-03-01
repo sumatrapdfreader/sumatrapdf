@@ -366,6 +366,9 @@ Mở tập tin
 Open in &Adobe Reader
 Mở bằng Adobe Reader
 
+Open in &Foxit Reader
+Mở bằng Foxit Reader
+
 P&roperties\tCtrl-D
 Thuộc tính
 

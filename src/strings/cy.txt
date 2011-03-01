@@ -318,6 +318,9 @@ Agor
 Open in &Adobe Reader
 Agor yn &Adobe Reader
 
+Open in &Foxit Reader
+Agor yn &Foxit Reader
+
 P&roperties\tCtrl-D
 P&riodweddau...\tCtrl-D
 

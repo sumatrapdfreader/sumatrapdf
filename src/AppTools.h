@@ -17,6 +17,7 @@ void DoAssociateExeWithPdfExtension(HKEY hkey);
 bool IsExeAssociatedWithPdfExtension();
 
 bool GetAcrobatPath(TCHAR *buffer=NULL, int bufSize=0);
+bool GetFoxitPath(TCHAR *buffer=NULL, int bufSize=0);
 LPTSTR AutoDetectInverseSearchCommands(HWND hwndCombo=NULL);
 void DDEExecute(LPCTSTR server, LPCTSTR topic, LPCTSTR command);
 

@@ -286,6 +286,9 @@ Ygeri
 Open in &Adobe Reader
 Ygeri yn &Adobe Reader
 
+Open in &Foxit Reader
+Ygeri yn &Foxit Reader
+
 PDF Document
 Restren PDF
 

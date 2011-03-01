@@ -366,6 +366,9 @@ Deschide
 Open in &Adobe Reader
 Deschide în &Adobe Reader
 
+Open in &Foxit Reader
+Deschide în &Foxit Reader
+
 P&roperties\tCtrl-D
 P&roprietăţi\tCtrl-D
 

@@ -371,6 +371,9 @@ Apri
 Open in &Adobe Reader
 Apri con &Adobe Reader
 
+Open in &Foxit Reader
+Apri con &Foxit Reader
+
 P&roperties\tCtrl-D
 P&roprietà\tCtrl-D
 

@@ -357,6 +357,9 @@ Atverti
 Open in &Adobe Reader
 Atverti su &Adobe Reader
 
+Open in &Foxit Reader
+Atverti su &Foxit Reader
+
 P&roperties\tCtrl-D
 &Savybės
 

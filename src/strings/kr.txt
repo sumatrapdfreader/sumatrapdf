@@ -322,6 +322,9 @@ Open
 Open in &Adobe Reader
 &Adobe Reader 에서 열기
 
+Open in &Foxit Reader
+&Foxit Reader 에서 열기
+
 P&roperties\tCtrl-D
 속성\tCtrl-D
 

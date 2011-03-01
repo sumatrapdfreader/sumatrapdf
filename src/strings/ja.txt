@@ -365,6 +365,9 @@ Open
 Open in &Adobe Reader
 Adobe Reader で開く(&A)
 
+Open in &Foxit Reader
+Foxit Reader で開く(&A)
+
 P&roperties\tCtrl-D
 プロパティ(&R)\tCtrl-D
 

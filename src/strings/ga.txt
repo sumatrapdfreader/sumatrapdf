@@ -275,6 +275,7 @@ Féithigh Amach
 #Number of Pages:
 #OK
 #Open in &Adobe Reader
+#Open in &Foxit Reader
 #P&roperties\tCtrl-D
 #PDF Document
 #PDF Producer:

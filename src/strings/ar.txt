@@ -361,6 +361,9 @@ Open
 Open in &Adobe Reader
 فتح الملف بـ Adobe Reader
 
+Open in &Foxit Reader
+فتح الملف بـ Foxit Reader
+
 P&roperties\tCtrl-D
 الخصائص...\tCtrl-D
 

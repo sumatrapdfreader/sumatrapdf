@@ -359,6 +359,9 @@ Open
 Open in &Adobe Reader
 在&Adobe Reader中打开
 
+Open in &Foxit Reader
+在&Foxit Reader中打开
+
 P&roperties\tCtrl-D
 属性(&R)\tCtrl-D
 

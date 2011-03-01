@@ -519,5 +519,6 @@ printing document
 Nyomtatás
 
 # Untranslated:
+#Open in &Foxit Reader
 #Select &All\tCtrl-A
 

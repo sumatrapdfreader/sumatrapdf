@@ -315,6 +315,9 @@ Otwórz
 Open in &Adobe Reader
 Otwórz w &Adobe Reader
 
+Open in &Foxit Reader
+Otwórz w &Foxit Reader
+
 P&roperties\tCtrl-D
 Właściwości...\tCtrl-D
 

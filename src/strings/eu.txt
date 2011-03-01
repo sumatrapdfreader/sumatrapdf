@@ -281,6 +281,9 @@ Ireki
 Open in &Adobe Reader
 Adobe Reader-ekin ireki
 
+Open in &Foxit Reader
+Foxit Reader-ekin ireki
+
 P&roperties\tCtrl-D
 Propietateak\tCtrl-D
 

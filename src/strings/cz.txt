@@ -368,6 +368,9 @@ Otevřít
 Open in &Adobe Reader
 Otevřít v programu &Adobe Reader
 
+Open in &Foxit Reader
+Otevřít v programu &Foxit Reader
+
 P&roperties\tCtrl-D
 &Vlastnosti...\tCtrl+D
 

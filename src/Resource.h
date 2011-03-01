@@ -21,7 +21,6 @@
 #define IDM_PRINT                       403
 #define IDM_EXIT                        405
 #define IDM_REFRESH                     406
-#define IDM_VIEW_WITH_ACROBAT           407
 #define IDM_SEND_BY_EMAIL               408
 #define IDM_PROPERTIES                  409
 
@@ -71,6 +70,9 @@
 #define IDM_ZOOM_CUSTOM                 457
 
 #define IDM_CONTRIBUTE_TRANSLATION      460
+
+#define IDM_VIEW_WITH_ACROBAT           470
+#define IDM_VIEW_WITH_FOXIT             471
 
 #define IDM_VISIT_WEBSITE               550
 #define IDM_ABOUT                       551

@@ -367,6 +367,9 @@ Open
 Open in &Adobe Reader
 Άνοιγμα με &Adobe Reader
 
+Open in &Foxit Reader
+Άνοιγμα με &Foxit Reader
+
 P&roperties\tCtrl-D
 &Ιδιότητες...\tCtrl-D
 

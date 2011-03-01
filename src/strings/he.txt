@@ -357,6 +357,9 @@ Open
 Open in &Adobe Reader
 Adobe פתח בקורא
 
+Open in &Foxit Reader
+Foxit פתח בקורא
+
 P&roperties\tCtrl-D
 תכונות...\tCtrl-D
 

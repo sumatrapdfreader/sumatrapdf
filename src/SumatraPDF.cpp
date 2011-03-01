@@ -253,9 +253,6 @@ static void DeleteOldSelectionInfo(WindowInfo *win);
 static void ClearSearch(WindowInfo *win);
 static void WindowInfo_EnterFullscreen(WindowInfo *win, bool presentation=false);
 static void WindowInfo_ExitFullscreen(WindowInfo *win);
-static bool CanViewWithAcrobat(WindowInfo *win=NULL);
-static bool ViewWithAcrobat(WindowInfo *win, TCHAR *args=NULL);
-static bool CanSendAsEmailAttachment(WindowInfo *win=NULL);
 
 extern "C" {
 // needed because we compile bzip2 with #define BZ_NO_STDIO
@@ -385,6 +382,120 @@ void LaunchBrowser(const TCHAR *url)
     launch_url(url);
 }
 
+static bool HasValidFileOrNoFile(WindowInfo *win)
+{
+    if (!win) return false;
+    if (!win->loadedFilePath) return true;
+    return !!file_exists(win->loadedFilePath);
+}
+
+static bool CanViewWithFoxit(WindowInfo *win)
+{
+    // Requirements: a valid filename and a valid path to Foxit
+    if (gRestrictedUse || !HasValidFileOrNoFile(win))
+        return false;
+    return GetFoxitPath();
+}
+
+static bool ViewWithFoxit(WindowInfo *win, TCHAR *args=NULL)
+{
+    if (!CanViewWithFoxit(win))
+        return false;
+
+    TCHAR exePath[MAX_PATH];
+    if (!GetFoxitPath(exePath, dimof(exePath)))
+        return false;
+    if (!args)
+        args = _T("");
+
+    // Foxit cmd-line format:
+    // [PDF filename] [-n <page number>] [-pwd <password>] [-z <zoom>]
+    // TODO: Foxit allows passing password and zoom
+    TCHAR *params = tstr_printf(_T("%s \"%s\" -n %d"), args, win->loadedFilePath, win->dm->currentPageNo());
+    exec_with_params(exePath, params, FALSE);
+    free(params);
+    return true;
+}
+
+static bool CanViewWithAcrobat(WindowInfo *win)
+{
+    // Requirements: a valid filename and a valid path to Adobe Reader
+    if (gRestrictedUse || !HasValidFileOrNoFile(win))
+        return false;
+    return GetAcrobatPath();
+}
+
+static bool ViewWithAcrobat(WindowInfo *win, TCHAR *args=NULL)
+{
+    if (!CanViewWithAcrobat(win))
+        return false;
+
+    TCHAR exePath[MAX_PATH];
+    if (!GetAcrobatPath(exePath, dimof(exePath)))
+        return false;
+    if (!args)
+        args = _T("");
+
+    TCHAR *params;
+    // Command line format for version 6 and later:
+    //   /A "page=%d&zoom=%.1f,%d,%d&..." <filename>
+    // see http://www.adobe.com/devnet/acrobat/pdfs/pdf_open_parameters.pdf
+    //   /P <filename>
+    // see http://www.adobe.com/devnet/acrobat/pdfs/Acrobat_SDK_developer_faq.pdf#page=24
+    // TODO: Also set zoom factor and scroll to current position?
+    if (win->dm && HIWORD(GetFileVersion(exePath)) >= 6)
+        params = tstr_printf(_T("/A \"page=%d\" %s \"%s\""), win->dm->currentPageNo(), args, win->dm->fileName());
+    else
+        params = tstr_printf(_T("%s \"%s\""), args, win->loadedFilePath);
+    exec_with_params(exePath, params, FALSE);
+    free(params);
+
+    return true;
+}
+
+#define DEFINE_GUID_STATIC(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) \
+    static const GUID name = { l, w1, w2, { b1, b2,  b3,  b4,  b5,  b6,  b7,  b8 } }
+DEFINE_GUID_STATIC(CLSID_SendMail, 0x9E56BE60, 0xC50F, 0x11CF, 0x9A, 0x2C, 0x00, 0xA0, 0xC9, 0x0A, 0x90, 0xCE); 
+
+static bool CanSendAsEmailAttachment(WindowInfo *win)
+{
+    // Requirements: a valid filename and access to SendMail's IDropTarget interface
+    if (gRestrictedUse || !HasValidFileOrNoFile(win))
+        return false;
+
+    IDropTarget *pDropTarget = NULL;
+    if (FAILED(CoCreateInstance(CLSID_SendMail, NULL, CLSCTX_ALL, IID_IDropTarget, (void **)&pDropTarget)))
+        return false;
+    pDropTarget->Release();
+    return true;
+}
+
+static bool SendAsEmailAttachment(WindowInfo *win)
+{
+    if (!CanSendAsEmailAttachment(win))
+        return false;
+
+    // We use the SendTo drop target provided by SendMail.dll, which should ship with all
+    // commonly used Windows versions, instead of MAPISendMail, which doesn't support
+    // Unicode paths and might not be set up on systems not having Microsoft Outlook installed.
+    IDataObject *pDataObject = GetDataObjectForFile(win->dm->fileName(), win->hwndFrame);
+    if (!pDataObject)
+        return false;
+
+    IDropTarget *pDropTarget = NULL;
+    HRESULT hr = CoCreateInstance(CLSID_SendMail, NULL, CLSCTX_ALL, IID_IDropTarget, (void **)&pDropTarget);
+    if (SUCCEEDED(hr)) {
+        POINTL pt = { 0, 0 };
+        DWORD dwEffect = 0;
+        pDropTarget->DragEnter(pDataObject, MK_LBUTTON, pt, &dwEffect);
+        hr = pDropTarget->Drop(pDataObject, MK_LBUTTON, pt, &dwEffect);
+        pDropTarget->Release();
+    }
+
+    pDataObject->Release();
+    return SUCCEEDED(hr);
+}
+
 static void MenuUpdateDisplayMode(WindowInfoBase *win)
 {
     DisplayMode displayMode = gGlobalPrefs.m_defaultDisplayMode;
@@ -437,7 +548,8 @@ void WindowInfoBase::SwitchToDisplayMode(DisplayMode displayMode, bool keepConti
 
 enum menuFlags {
     MF_NOT_IN_RESTRICTED = 0x1,
-    MF_NO_TRANSLATE      = 0x2
+    MF_NO_TRANSLATE      = 0x2,
+    MF_REMOVED           = 0x4
 };
 
 typedef struct MenuDef {
@@ -453,6 +565,7 @@ MenuDef menuDefFile[] = {
     { _TRN("&Print...\tCtrl-P"),            IDM_PRINT,                  MF_NOT_IN_RESTRICTED },
     { SEP_ITEM,                             0,                          MF_NOT_IN_RESTRICTED },
     { _TRN("Open in &Adobe Reader"),        IDM_VIEW_WITH_ACROBAT,      MF_NOT_IN_RESTRICTED },
+    { _TRN("Open in &Foxit Reader"),        IDM_VIEW_WITH_FOXIT,        MF_NOT_IN_RESTRICTED },
     { _TRN("Send by &E-mail..."),           IDM_SEND_BY_EMAIL,          MF_NOT_IN_RESTRICTED },
     { SEP_ITEM,                             0,                          MF_NOT_IN_RESTRICTED },
     { _TRN("P&roperties\tCtrl-D"),          IDM_PROPERTIES,             0 },
@@ -560,10 +673,11 @@ static HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuItems)
     for (int i=0; i < menuItems; i++) {
         MenuDef md = menuDefs[i];
         const char *title = md.m_title;
+        if (md.m_flags & MF_REMOVED)
+            continue;
+
         if (gRestrictedUse && (md.m_flags & MF_NOT_IN_RESTRICTED))
             continue;
-        if (!title)
-            continue; // the menu item was dynamically removed
 
         if (str_eq(title, SEP_ITEM)) {
             AppendMenu(m, MF_SEPARATOR, 0, NULL);
@@ -602,29 +716,44 @@ static void AppendRecentFilesToMenu(HMENU m)
     InsertMenu(m, IDM_EXIT, MF_BYCOMMAND | MF_SEPARATOR, 0, NULL);
 }
 
-static void WindowInfo_RebuildMenu(WindowInfo *win)
+// Suppress menu items that depend on specific software being installed:
+// e-mail client, Adobe Reader, Foxit
+static void SetupProgramDependentMenus(WindowInfo *win)
 {
-    if (win->hMenu) {
-        DestroyMenu(win->hMenu);
-        win->hMenu = NULL;
-    }
+    bool acrobat = CanViewWithAcrobat(win);
+    bool foxit = CanViewWithFoxit(win);
+    bool email = CanSendAsEmailAttachment(win);
+    bool separator = email | acrobat | foxit;
+    for (int i = 0; i < dimof(menuDefFile); i++) {
+        if (IDM_VIEW_WITH_ACROBAT == menuDefFile[i].m_id) {
+            if (acrobat)
+                menuDefFile[i].m_flags &= ~MF_REMOVED;
+            else
+                menuDefFile[i].m_flags |= MF_REMOVED;
 
-    HMENU mainMenu = CreateMenu();
-    // Don't display the Acrobat and email options, if the program couldn't be found
-    bool noAcrobat = !CanViewWithAcrobat(), noEmail = !CanSendAsEmailAttachment();
-    if (noAcrobat || noEmail) {
-        for (int i = 0; i < dimof(menuDefFile); i++) {
-            if (IDM_VIEW_WITH_ACROBAT == menuDefFile[i].m_id) {
-                if (noAcrobat)
-                    menuDefFile[i].m_title = NULL;
-                if (noEmail)
-                    menuDefFile[i + 1].m_title = NULL;
-                if (noAcrobat && noEmail)
-                    menuDefFile[i - 1].m_title = NULL;
-            }
+            if (separator)
+                menuDefFile[i-1].m_flags &= ~MF_REMOVED;
+            else
+                menuDefFile[i-1].m_flags |= MF_REMOVED;
+        } else if (IDM_VIEW_WITH_FOXIT == menuDefFile[i].m_id) {
+            if (foxit)
+                menuDefFile[i].m_flags &= ~MF_REMOVED;
+            else
+                menuDefFile[i].m_flags |= MF_REMOVED;
+        } else if (IDM_SEND_BY_EMAIL == menuDefFile[i].m_id) {
+            if (email)
+                menuDefFile[i].m_flags &= ~MF_REMOVED;
+            else
+                menuDefFile[i].m_flags |= MF_REMOVED;
         }
     }
 
+}
+
+static void WindowInfo_RebuildMenu(WindowInfo *win)
+{
+    SetupProgramDependentMenus(win);
+    HMENU mainMenu = CreateMenu();
     HMENU tmp = BuildMenuFromMenuDef(menuDefFile, dimof(menuDefFile));
     AppendRecentFilesToMenu(tmp);
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)tmp, _TR("&File"));
@@ -638,6 +767,8 @@ static void WindowInfo_RebuildMenu(WindowInfo *win)
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)tmp, _TR("&Settings"));
     tmp = BuildMenuFromMenuDef(menuDefHelp, dimof(menuDefHelp));
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)tmp, _TR("&Help"));
+
+    DestroyMenu(win->hMenu);
     win->hMenu = mainMenu;
 }
 
@@ -1107,20 +1238,16 @@ static void MenuUpdatePrintItem(WindowInfo *win) {
         EnableMenuItem(hmenu, IDM_PRINT, MF_BYCOMMAND | MF_GRAYED);
 }
 
-static void MenuUpdateCopyItem(WindowInfo *win) {
-    // always enable the "Copy Selection" menu entry to make
-    // rectangular selections through Ctrl+mouse more discoverable
-}
-
 // TODO: there's a windows message sent right before opening a menu (WM_INITMENUPOPUP)
 // We should call this function in response to that instead of inserting
-// the calls to MenuUpdateStateForWindow() or MenuUpdateCopyItem()
+// the calls to MenuUpdateStateForWindow()
 // in every place that changes a state that dictates state of menu items
 static void MenuUpdateStateForWindow(WindowInfo *win) {
     static UINT menusToDisableIfNoPdf[] = {
         IDM_VIEW_ROTATE_LEFT, IDM_VIEW_ROTATE_RIGHT, IDM_GOTO_NEXT_PAGE, IDM_GOTO_PREV_PAGE,
         IDM_GOTO_FIRST_PAGE, IDM_GOTO_LAST_PAGE, IDM_GOTO_NAV_BACK, IDM_GOTO_NAV_FORWARD,
-        IDM_GOTO_PAGE, IDM_FIND_FIRST, IDM_SAVEAS, IDM_SEND_BY_EMAIL,
+        IDM_GOTO_PAGE, IDM_FIND_FIRST, IDM_SAVEAS, 
+        IDM_VIEW_WITH_ACROBAT, IDM_VIEW_WITH_FOXIT, IDM_SEND_BY_EMAIL,
         IDM_SELECT_ALL, IDM_COPY_SELECTION, IDM_PROPERTIES, IDM_VIEW_PRESENTATION_MODE };
 
     bool fileCloseEnabled = FileCloseMenuEnabled();
@@ -1130,12 +1257,7 @@ static void MenuUpdateStateForWindow(WindowInfo *win) {
         EnableMenuItem(hmenu, IDM_CLOSE, MF_BYCOMMAND | MF_ENABLED);
     else
         EnableMenuItem(hmenu, IDM_CLOSE, MF_BYCOMMAND | MF_GRAYED);
-
-    if (CanViewWithAcrobat(win))
-        EnableMenuItem(hmenu, IDM_VIEW_WITH_ACROBAT, MF_BYCOMMAND | MF_ENABLED);
-    else
-        EnableMenuItem(hmenu, IDM_VIEW_WITH_ACROBAT, MF_BYCOMMAND | MF_GRAYED);
-
+        
     MenuUpdatePrintItem(win);
     MenuUpdateBookmarksStateForWindow(win);
     MenuUpdateShowToolbarStateForWindow(win);
@@ -1150,13 +1272,7 @@ static void MenuUpdateStateForWindow(WindowInfo *win) {
             EnableMenuItem(hmenu, menuId, MF_BYCOMMAND | MF_GRAYED);
     }
 
-    MenuUpdateCopyItem(win);
-
-    if (WS_SHOWING_PDF == win->state) {
-        if (!CanSendAsEmailAttachment(win))
-            EnableMenuItem(hmenu, IDM_SEND_BY_EMAIL, MF_BYCOMMAND | MF_GRAYED);
-    }
-    else {
+    if (WS_SHOWING_PDF != win->state) {
         ShowScrollBar(win->hwndCanvas, SB_BOTH, FALSE);
         if (WS_ABOUT == win->state)
             win_set_text(win->hwndFrame, SUMATRA_WINDOW_TITLE);
@@ -2046,7 +2162,6 @@ static void UpdateTextSelection(WindowInfo *win, bool select=true)
         win->selectionOnPage = selOnPage;
     }
     win->showSelection = true;
-    MenuUpdateCopyItem(win);
 }
 
 static void PaintSelection (WindowInfo *win, HDC hdc) {
@@ -2360,7 +2475,6 @@ static void DeleteOldSelectionInfo (WindowInfo *win) {
     }
     win->selectionOnPage = NULL;
     win->showSelection = false;
-    MenuUpdateCopyItem(win);
 }
 
 static void ConvertSelectionRectToSelectionOnPage (WindowInfo *win) {
@@ -2417,7 +2531,6 @@ static void OnSelectAll(WindowInfo *win, bool textOnly=false)
     }
 
     win->showSelection = true;
-    MenuUpdateCopyItem(win);
     triggerRepaintDisplay(win);
 }
 
@@ -3653,90 +3766,6 @@ static void OnHScroll(WindowInfo *win, WPARAM wParam)
     // If the position has changed, scroll the window and update it
     if (win->dm && (si.nPos != iVertPos))
         win->dm->scrollXTo(si.nPos);
-}
-
-static bool CanViewWithAcrobat(WindowInfo *win)
-{
-    // Requirements: a valid filename and a valid path to Adobe Reader
-    if (win && (!win->loadedFilePath || !file_exists(win->loadedFilePath)))
-        return false;
-    return GetAcrobatPath() != NULL;
-}
-
-static bool ViewWithAcrobat(WindowInfo *win, TCHAR *args)
-{
-    if (gRestrictedUse)
-        return false;
-
-    if (!win || !win->loadedFilePath)
-        return false;
-
-    TCHAR acrobatPath[MAX_PATH];
-    if (!GetAcrobatPath(acrobatPath, dimof(acrobatPath)))
-        return false;
-    if (!args)
-        args = _T("");
-
-    TCHAR *params;
-    // Command line format for version 6 and later:
-    //   /A "page=%d&zoom=%.1f,%d,%d&..." <filename>
-    // see http://www.adobe.com/devnet/acrobat/pdfs/pdf_open_parameters.pdf
-    //   /P <filename>
-    // see http://www.adobe.com/devnet/acrobat/pdfs/Acrobat_SDK_developer_faq.pdf#page=24
-    // TODO: Also set zoom factor and scroll to current position?
-    if (win->dm && HIWORD(GetFileVersion(acrobatPath)) >= 6)
-        params = tstr_printf(_T("/A \"page=%d\" %s \"%s\""), win->dm->currentPageNo(), args, win->dm->fileName());
-    else
-        params = tstr_printf(_T("%s \"%s\""), args, win->loadedFilePath);
-    exec_with_params(acrobatPath, params, FALSE);
-    free(params);
-
-    return true;
-}
-
-#define DEFINE_GUID_STATIC(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) \
-    static const GUID name = { l, w1, w2, { b1, b2,  b3,  b4,  b5,  b6,  b7,  b8 } }
-DEFINE_GUID_STATIC(CLSID_SendMail, 0x9E56BE60, 0xC50F, 0x11CF, 0x9A, 0x2C, 0x00, 0xA0, 0xC9, 0x0A, 0x90, 0xCE); 
-
-static bool CanSendAsEmailAttachment(WindowInfo *win)
-{
-    // Requirements: a valid filename and access to SendMail's IDropTarget interface
-    if (win && (!win->PdfLoaded() || !file_exists(win->dm->fileName())))
-        return false;
-
-    IDropTarget *pDropTarget = NULL;
-    if (FAILED(CoCreateInstance(CLSID_SendMail, NULL, CLSCTX_ALL, IID_IDropTarget, (void **)&pDropTarget)))
-        return false;
-    pDropTarget->Release();
-    return true;
-}
-
-static bool SendAsEmailAttachment(WindowInfo *win)
-{
-    if (gRestrictedUse) return false;
-
-    if (!CanSendAsEmailAttachment(win))
-        return false;
-
-    // We use the SendTo drop target provided by SendMail.dll, which should ship with all
-    // commonly used Windows versions, instead of MAPISendMail, which doesn't support
-    // Unicode paths and might not be set up on systems not having Microsoft Outlook installed.
-    IDataObject *pDataObject = GetDataObjectForFile(win->dm->fileName(), win->hwndFrame);
-    if (!pDataObject)
-        return false;
-
-    IDropTarget *pDropTarget = NULL;
-    HRESULT hr = CoCreateInstance(CLSID_SendMail, NULL, CLSCTX_ALL, IID_IDropTarget, (void **)&pDropTarget);
-    if (SUCCEEDED(hr)) {
-        POINTL pt = { 0, 0 };
-        DWORD dwEffect = 0;
-        pDropTarget->DragEnter(pDataObject, MK_LBUTTON, pt, &dwEffect);
-        hr = pDropTarget->Drop(pDataObject, MK_LBUTTON, pt, &dwEffect);
-        pDropTarget->Release();
-    }
-
-    pDataObject->Release();
-    return SUCCEEDED(hr);
 }
 
 static void OnMenuViewSinglePage(WindowInfo *win)
@@ -6211,6 +6240,10 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
 
                 case IDM_VIEW_WITH_ACROBAT:
                     ViewWithAcrobat(win);
+                    break;
+
+                case IDM_VIEW_WITH_FOXIT:
+                    ViewWithFoxit(win);
                     break;
 
                 case IDM_SEND_BY_EMAIL:
