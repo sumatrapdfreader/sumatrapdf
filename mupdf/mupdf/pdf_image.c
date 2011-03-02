@@ -298,6 +298,18 @@ pdf_loadjpximage(fz_pixmap **imgp, pdf_xref *xref, fz_obj *dict)
 	obj = fz_dictgetsa(dict, "SMask", "Mask");
 	if (fz_isdict(obj))
 	{
+		/* SumatraPDF: handle JPXEncoded masks */
+		if (pdf_isjpximage(obj))
+		{
+			error = pdf_loadjpximage(&img->mask, xref, obj);
+			if (!error && img->mask->n == 2)
+			{
+				fz_pixmap *mask = fz_alphafromgray(img->mask, 1);
+				fz_droppixmap(img->mask);
+				img->mask = mask;
+			}
+		}
+		else
 		error = pdf_loadimageimp(&img->mask, xref, nil, obj, nil, 1);
 		if (error)
 		{
