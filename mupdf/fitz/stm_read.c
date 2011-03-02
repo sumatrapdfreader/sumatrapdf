@@ -17,7 +17,6 @@ fz_read(fz_stream *stm, unsigned char *buf, int len)
 
 	assert(stm->rp == stm->wp);
 
-	do {
 	if (len - count < stm->ep - stm->bp)
 	{
 		n = stm->read(stm, stm->bp, stm->ep - stm->bp);
@@ -55,7 +54,6 @@ fz_read(fz_stream *stm, unsigned char *buf, int len)
 			count += n;
 		}
 	}
-	} while (len > count && n > 0); /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692011 */
 
 	return count;
 }
