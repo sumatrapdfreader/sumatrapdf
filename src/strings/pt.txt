@@ -8,7 +8,7 @@ Lang: pt Portuguese - Portugal (Português)
 
 Contributor: Ricardo Santos[bogas] (http://www.meta-morf.pt.vu)
 Contributor: Bruno Rodrigues
-Contributor: Sérgio Marques <smarquespt@gmail.com>, 2010
+Contributor: Sérgio Marques <smarquespt@gmail.com>, 2010-2011
 
 &About
 &Sobre
@@ -326,10 +326,10 @@ MB
 MB
 
 Make SumatraPDF default application for PDF files?
-Tornar SumatraPDF a aplicação omissa para PDFs?
+Tornar SumatraPDF a aplicação principal para PDFs?
 
 Make SumatraPDF my default PDF reader
-Tornar SumatraPDF o leitor de PDFs omisso
+Tornar SumatraPDF o leitor principal dos PDF
 
 Match Case
 Sensível a maiúsculas
@@ -368,7 +368,7 @@ Open in &Adobe Reader
 Abrir no Adobe &Reader
 
 Open in &Foxit Reader
-Abrir no Foxit Reader
+Abrir no &Foxit Reader
 
 Open in PDF-XChange
 Abrir no PDF-XChange
@@ -473,10 +473,10 @@ SumatraPDF crashed
 O SumatraPDF terminou
 
 SumatraPDF is your default PDF reader
-SumatraPDF é o leitor de PDFs omisso
+SumatraPDF é o leitor principal dos PDF
 
 SumatraPDF should now be your default PDF reader
-SumatraPDF deve agora ser o leitor de PDFs omisso
+SumatraPDF deve agora ser o leitor principal dos PDF
 
 Synchronization file cannot be opened
 Não foi possível abrir o ficheiro de sincronização
