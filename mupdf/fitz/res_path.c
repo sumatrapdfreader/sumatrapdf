@@ -19,10 +19,8 @@ fz_clonepath(fz_path *old)
 	fz_path *path;
 
 	path = fz_malloc(sizeof(fz_path));
-	memcpy(path, old, sizeof(fz_path));
-
 	path->len = old->len;
-	path->cap = path->len;
+	path->cap = old->len;
 	path->els = fz_calloc(path->cap, sizeof(fz_pathel));
 	memcpy(path->els, old->els, sizeof(fz_pathel) * path->len);
 
@@ -50,7 +48,6 @@ void
 fz_moveto(fz_path *path, float x, float y)
 {
 	growpath(path, 3);
-	path->origin = path->len; /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692006 */
 	path->els[path->len++].k = FZ_MOVETO;
 	path->els[path->len++].v = x;
 	path->els[path->len++].v = y;
@@ -106,7 +103,6 @@ fz_closepath(fz_path *path)
 		return;
 	growpath(path, 1);
 	path->els[path->len++].k = FZ_CLOSEPATH;
-	fz_moveto(path, path->els[path->origin + 1].v, path->els[path->origin + 2].v); /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692006 */
 }
 
 static inline fz_rect boundexpand(fz_rect r, fz_point p)
@@ -209,6 +205,7 @@ fz_debugpath(fz_path *path, int indent)
 			break;
 		case FZ_CLOSEPATH:
 			printf("h\n");
+			break;
 		}
 	}
 }

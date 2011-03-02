@@ -40,7 +40,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\thirdparty\freetype\include;..\..\thirdparty\jpeg;..\..\thirdparty\jbig2dec;..\..\thirdparty\openjpeg\libopenjpeg;..\..\thirdparty\zlib;..\..\mupdf;..\..\fitz"
+				AdditionalIncludeDirectories="..\..\thirdparty\freetype-2.4.4\include;..\..\thirdparty\jpeg-8c;..\..\thirdparty\jbig2dec;..\..\thirdparty\openjpeg-1.4\libopenjpeg;..\..\thirdparty\zlib-1.2.5;..\..\mupdf;..\..\fitz"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -106,7 +106,7 @@
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="true"
-				AdditionalIncludeDirectories="..\..\thirdparty\freetype\include;..\..\thirdparty\jpeg;..\..\thirdparty\jbig2dec;..\..\thirdparty\openjpeg\libopenjpeg;..\..\thirdparty\zlib;..\..\mupdf;..\..\fitz"
+				AdditionalIncludeDirectories="..\..\thirdparty\freetype-2.4.4\include;..\..\thirdparty\jpeg-8c;..\..\thirdparty\jbig2dec;..\..\thirdparty\openjpeg-1.4\libopenjpeg;..\..\thirdparty\zlib-1.2.5;..\..\mupdf;..\..\fitz"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"

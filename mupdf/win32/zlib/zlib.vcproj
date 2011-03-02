@@ -148,87 +148,87 @@
 			Name="zlib"
 			>
 			<File
-				RelativePath="..\..\thirdparty\zlib\adler32.c"
+				RelativePath="../../thirdparty/zlib-1.2.5/adler32.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\zlib\compress.c"
+				RelativePath="../../thirdparty/zlib-1.2.5/compress.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\zlib\crc32.c"
+				RelativePath="../../thirdparty/zlib-1.2.5/crc32.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\zlib\crc32.h"
+				RelativePath="../../thirdparty/zlib-1.2.5/crc32.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\zlib\deflate.c"
+				RelativePath="../../thirdparty/zlib-1.2.5/deflate.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\zlib\deflate.h"
+				RelativePath="../../thirdparty/zlib-1.2.5/deflate.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\zlib\infback.c"
+				RelativePath="../../thirdparty/zlib-1.2.5/infback.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\zlib\inffast.c"
+				RelativePath="../../thirdparty/zlib-1.2.5/inffast.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\zlib\inffast.h"
+				RelativePath="../../thirdparty/zlib-1.2.5/inffast.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\zlib\inffixed.h"
+				RelativePath="../../thirdparty/zlib-1.2.5/inffixed.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\zlib\inflate.c"
+				RelativePath="../../thirdparty/zlib-1.2.5/inflate.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\zlib\inflate.h"
+				RelativePath="../../thirdparty/zlib-1.2.5/inflate.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\zlib\inftrees.c"
+				RelativePath="../../thirdparty/zlib-1.2.5/inftrees.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\zlib\inftrees.h"
+				RelativePath="../../thirdparty/zlib-1.2.5/inftrees.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\zlib\trees.c"
+				RelativePath="../../thirdparty/zlib-1.2.5/trees.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\zlib\trees.h"
+				RelativePath="../../thirdparty/zlib-1.2.5/trees.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\zlib\uncompr.c"
+				RelativePath="../../thirdparty/zlib-1.2.5/uncompr.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\zlib\zconf.h"
+				RelativePath="../../thirdparty/zlib-1.2.5/zconf.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\zlib\zlib.h"
+				RelativePath="../../thirdparty/zlib-1.2.5/zlib.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\zlib\zutil.c"
+				RelativePath="../../thirdparty/zlib-1.2.5/zutil.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\zlib\zutil.h"
+				RelativePath="../../thirdparty/zlib-1.2.5/zutil.h"
 				>
 			</File>
 		</Filter>

@@ -24,6 +24,8 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
+				Description="Copying openjpeg config"
+				CommandLine="copy ..\..\thirdparty\openjpeg-1.4\opj_config.h.in.user ..\..\thirdparty\openjpeg-1.4\libopenjpeg\opj_config.h /Y"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -91,6 +93,8 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
+				Description="Copying openjpeg config"
+				CommandLine="copy ..\..\thirdparty\openjpeg-1.4\opj_config.h.in.user ..\..\thirdparty\openjpeg-1.4\libopenjpeg\opj_config.h /Y"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -152,167 +156,167 @@
 			Name="libopenjpeg"
 			>
 			<File
-				RelativePath="../../thirdparty/openjpeg/libopenjpeg\bio.c"
+				RelativePath="../../thirdparty/openjpeg-1.4/libopenjpeg/bio.c"
 				>
 			</File>
 			<File
-				RelativePath="../../thirdparty/openjpeg/libopenjpeg\bio.h"
+				RelativePath="../../thirdparty/openjpeg-1.4/libopenjpeg/bio.h"
 				>
 			</File>
 			<File
-				RelativePath="../../thirdparty/openjpeg/libopenjpeg\cio.c"
+				RelativePath="../../thirdparty/openjpeg-1.4/libopenjpeg/cio.c"
 				>
 			</File>
 			<File
-				RelativePath="../../thirdparty/openjpeg/libopenjpeg\cio.h"
+				RelativePath="../../thirdparty/openjpeg-1.4/libopenjpeg/cio.h"
 				>
 			</File>
 			<File
-				RelativePath="../../thirdparty/openjpeg/libopenjpeg\dwt.c"
+				RelativePath="../../thirdparty/openjpeg-1.4/libopenjpeg/dwt.c"
 				>
 			</File>
 			<File
-				RelativePath="../../thirdparty/openjpeg/libopenjpeg\dwt.h"
+				RelativePath="../../thirdparty/openjpeg-1.4/libopenjpeg/dwt.h"
 				>
 			</File>
 			<File
-				RelativePath="../../thirdparty/openjpeg/libopenjpeg\event.c"
+				RelativePath="../../thirdparty/openjpeg-1.4/libopenjpeg/event.c"
 				>
 			</File>
 			<File
-				RelativePath="../../thirdparty/openjpeg/libopenjpeg\event.h"
+				RelativePath="../../thirdparty/openjpeg-1.4/libopenjpeg/event.h"
 				>
 			</File>
 			<File
-				RelativePath="../../thirdparty/openjpeg/libopenjpeg\fix.h"
+				RelativePath="../../thirdparty/openjpeg-1.4/libopenjpeg/fix.h"
 				>
 			</File>
 			<File
-				RelativePath="../../thirdparty/openjpeg/libopenjpeg\image.c"
+				RelativePath="../../thirdparty/openjpeg-1.4/libopenjpeg/image.c"
 				>
 			</File>
 			<File
-				RelativePath="../../thirdparty/openjpeg/libopenjpeg\image.h"
+				RelativePath="../../thirdparty/openjpeg-1.4/libopenjpeg/image.h"
 				>
 			</File>
 			<File
-				RelativePath="../../thirdparty/openjpeg/libopenjpeg\int.h"
+				RelativePath="../../thirdparty/openjpeg-1.4/libopenjpeg/int.h"
 				>
 			</File>
 			<File
-				RelativePath="../../thirdparty/openjpeg/libopenjpeg\j2k.c"
+				RelativePath="../../thirdparty/openjpeg-1.4/libopenjpeg/j2k.c"
 				>
 			</File>
 			<File
-				RelativePath="../../thirdparty/openjpeg/libopenjpeg\j2k.h"
+				RelativePath="../../thirdparty/openjpeg-1.4/libopenjpeg/j2k.h"
 				>
 			</File>
 			<File
-				RelativePath="../../thirdparty/openjpeg/libopenjpeg\j2k_lib.c"
+				RelativePath="../../thirdparty/openjpeg-1.4/libopenjpeg/j2k_lib.c"
 				>
 			</File>
 			<File
-				RelativePath="../../thirdparty/openjpeg/libopenjpeg\j2k_lib.h"
+				RelativePath="../../thirdparty/openjpeg-1.4/libopenjpeg/j2k_lib.h"
 				>
 			</File>
 			<File
-				RelativePath="../../thirdparty/openjpeg/libopenjpeg\jp2.c"
+				RelativePath="../../thirdparty/openjpeg-1.4/libopenjpeg/jp2.c"
 				>
 			</File>
 			<File
-				RelativePath="../../thirdparty/openjpeg/libopenjpeg\jp2.h"
+				RelativePath="../../thirdparty/openjpeg-1.4/libopenjpeg/jp2.h"
 				>
 			</File>
 			<File
-				RelativePath="../../thirdparty/openjpeg/libopenjpeg\jpt.c"
+				RelativePath="../../thirdparty/openjpeg-1.4/libopenjpeg/jpt.c"
 				>
 			</File>
 			<File
-				RelativePath="../../thirdparty/openjpeg/libopenjpeg\jpt.h"
+				RelativePath="../../thirdparty/openjpeg-1.4/libopenjpeg/jpt.h"
 				>
 			</File>
 			<File
-				RelativePath="../../thirdparty/openjpeg/libopenjpeg\mct.c"
+				RelativePath="../../thirdparty/openjpeg-1.4/libopenjpeg/mct.c"
 				>
 			</File>
 			<File
-				RelativePath="../../thirdparty/openjpeg/libopenjpeg\mct.h"
+				RelativePath="../../thirdparty/openjpeg-1.4/libopenjpeg/mct.h"
 				>
 			</File>
 			<File
-				RelativePath="../../thirdparty/openjpeg/libopenjpeg\mqc.c"
+				RelativePath="../../thirdparty/openjpeg-1.4/libopenjpeg/mqc.c"
 				>
 			</File>
 			<File
-				RelativePath="../../thirdparty/openjpeg/libopenjpeg\mqc.h"
+				RelativePath="../../thirdparty/openjpeg-1.4/libopenjpeg/mqc.h"
 				>
 			</File>
 			<File
-				RelativePath="../../thirdparty/openjpeg/libopenjpeg\openjpeg.c"
+				RelativePath="../../thirdparty/openjpeg-1.4/libopenjpeg/openjpeg.c"
 				>
 			</File>
 			<File
-				RelativePath="../../thirdparty/openjpeg/libopenjpeg\openjpeg.h"
+				RelativePath="../../thirdparty/openjpeg-1.4/libopenjpeg/openjpeg.h"
 				>
 			</File>
 			<File
-				RelativePath="../../thirdparty/openjpeg/libopenjpeg\opj_includes.h"
+				RelativePath="../../thirdparty/openjpeg-1.4/libopenjpeg/opj_includes.h"
 				>
 			</File>
 			<File
-				RelativePath="../../thirdparty/openjpeg/libopenjpeg\opj_malloc.h"
+				RelativePath="../../thirdparty/openjpeg-1.4/libopenjpeg/opj_malloc.h"
 				>
 			</File>
 			<File
-				RelativePath="../../thirdparty/openjpeg/libopenjpeg\pi.c"
+				RelativePath="../../thirdparty/openjpeg-1.4/libopenjpeg/pi.c"
 				>
 			</File>
 			<File
-				RelativePath="../../thirdparty/openjpeg/libopenjpeg\pi.h"
+				RelativePath="../../thirdparty/openjpeg-1.4/libopenjpeg/pi.h"
 				>
 			</File>
 			<File
-				RelativePath="../../thirdparty/openjpeg/libopenjpeg\raw.c"
+				RelativePath="../../thirdparty/openjpeg-1.4/libopenjpeg/raw.c"
 				>
 			</File>
 			<File
-				RelativePath="../../thirdparty/openjpeg/libopenjpeg\raw.h"
+				RelativePath="../../thirdparty/openjpeg-1.4/libopenjpeg/raw.h"
 				>
 			</File>
 			<File
-				RelativePath="../../thirdparty/openjpeg/libopenjpeg\t1.c"
+				RelativePath="../../thirdparty/openjpeg-1.4/libopenjpeg/t1.c"
 				>
 			</File>
 			<File
-				RelativePath="../../thirdparty/openjpeg/libopenjpeg\t1.h"
+				RelativePath="../../thirdparty/openjpeg-1.4/libopenjpeg/t1.h"
 				>
 			</File>
 			<File
-				RelativePath="../../thirdparty/openjpeg/libopenjpeg\t1_luts.h"
+				RelativePath="../../thirdparty/openjpeg-1.4/libopenjpeg/t1_luts.h"
 				>
 			</File>
 			<File
-				RelativePath="../../thirdparty/openjpeg/libopenjpeg\t2.c"
+				RelativePath="../../thirdparty/openjpeg-1.4/libopenjpeg/t2.c"
 				>
 			</File>
 			<File
-				RelativePath="../../thirdparty/openjpeg/libopenjpeg\t2.h"
+				RelativePath="../../thirdparty/openjpeg-1.4/libopenjpeg/t2.h"
 				>
 			</File>
 			<File
-				RelativePath="../../thirdparty/openjpeg/libopenjpeg\tcd.c"
+				RelativePath="../../thirdparty/openjpeg-1.4/libopenjpeg/tcd.c"
 				>
 			</File>
 			<File
-				RelativePath="../../thirdparty/openjpeg/libopenjpeg\tcd.h"
+				RelativePath="../../thirdparty/openjpeg-1.4/libopenjpeg/tcd.h"
 				>
 			</File>
 			<File
-				RelativePath="../../thirdparty/openjpeg/libopenjpeg\tgt.c"
+				RelativePath="../../thirdparty/openjpeg-1.4/libopenjpeg/tgt.c"
 				>
 			</File>
 			<File
-				RelativePath="../../thirdparty/openjpeg/libopenjpeg\tgt.h"
+				RelativePath="../../thirdparty/openjpeg-1.4/libopenjpeg/tgt.h"
 				>
 			</File>
 		</Filter>

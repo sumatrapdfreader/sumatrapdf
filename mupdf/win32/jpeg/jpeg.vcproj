@@ -25,7 +25,7 @@
 			<Tool
 				Name="VCPreBuildEventTool"
 				Description="Copying jpeg config"
-				CommandLine="copy ..\..\thirdparty\jpeg\jconfig.vc ..\..\thirdparty\jpeg\jconfig.h /Y"
+				CommandLine="copy ..\..\thirdparty\jpeg-8c\jconfig.vc ..\..\thirdparty\jpeg-8c\jconfig.h /Y"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -90,6 +90,8 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
+				Description="Copying jpeg config"
+				CommandLine="copy ..\..\thirdparty\jpeg-8c\jconfig.vc ..\..\thirdparty\jpeg-8c\jconfig.h /Y"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -152,223 +154,223 @@
 			Name="jpeg"
 			>
 			<File
-				RelativePath="..\..\thirdparty\jpeg\jaricom.c"
+				RelativePath="../../thirdparty/jpeg-8c/jaricom.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jpeg\jcapimin.c"
+				RelativePath="../../thirdparty/jpeg-8c/jcapimin.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jpeg\jcapistd.c"
+				RelativePath="../../thirdparty/jpeg-8c/jcapistd.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jpeg\jcarith.c"
+				RelativePath="../../thirdparty/jpeg-8c/jcarith.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jpeg\jccoefct.c"
+				RelativePath="../../thirdparty/jpeg-8c/jccoefct.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jpeg\jccolor.c"
+				RelativePath="../../thirdparty/jpeg-8c/jccolor.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jpeg\jcdctmgr.c"
+				RelativePath="../../thirdparty/jpeg-8c/jcdctmgr.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jpeg\jchuff.c"
+				RelativePath="../../thirdparty/jpeg-8c/jchuff.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jpeg\jcinit.c"
+				RelativePath="../../thirdparty/jpeg-8c/jcinit.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jpeg\jcmainct.c"
+				RelativePath="../../thirdparty/jpeg-8c/jcmainct.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jpeg\jcmarker.c"
+				RelativePath="../../thirdparty/jpeg-8c/jcmarker.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jpeg\jcmaster.c"
+				RelativePath="../../thirdparty/jpeg-8c/jcmaster.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jpeg\jcomapi.c"
+				RelativePath="../../thirdparty/jpeg-8c/jcomapi.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jpeg\jconfig.h"
+				RelativePath="../../thirdparty/jpeg-8c/jconfig.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jpeg\jcparam.c"
+				RelativePath="../../thirdparty/jpeg-8c/jcparam.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jpeg\jcprepct.c"
+				RelativePath="../../thirdparty/jpeg-8c/jcprepct.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jpeg\jcsample.c"
+				RelativePath="../../thirdparty/jpeg-8c/jcsample.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jpeg\jctrans.c"
+				RelativePath="../../thirdparty/jpeg-8c/jctrans.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jpeg\jdapimin.c"
+				RelativePath="../../thirdparty/jpeg-8c/jdapimin.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jpeg\jdapistd.c"
+				RelativePath="../../thirdparty/jpeg-8c/jdapistd.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jpeg\jdarith.c"
+				RelativePath="../../thirdparty/jpeg-8c/jdarith.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jpeg\jdatadst.c"
+				RelativePath="../../thirdparty/jpeg-8c/jdatadst.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jpeg\jdatasrc.c"
+				RelativePath="../../thirdparty/jpeg-8c/jdatasrc.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jpeg\jdcoefct.c"
+				RelativePath="../../thirdparty/jpeg-8c/jdcoefct.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jpeg\jdcolor.c"
+				RelativePath="../../thirdparty/jpeg-8c/jdcolor.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jpeg\jdct.h"
+				RelativePath="../../thirdparty/jpeg-8c/jdct.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jpeg\jddctmgr.c"
+				RelativePath="../../thirdparty/jpeg-8c/jddctmgr.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jpeg\jdhuff.c"
+				RelativePath="../../thirdparty/jpeg-8c/jdhuff.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jpeg\jdinput.c"
+				RelativePath="../../thirdparty/jpeg-8c/jdinput.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jpeg\jdmainct.c"
+				RelativePath="../../thirdparty/jpeg-8c/jdmainct.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jpeg\jdmarker.c"
+				RelativePath="../../thirdparty/jpeg-8c/jdmarker.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jpeg\jdmaster.c"
+				RelativePath="../../thirdparty/jpeg-8c/jdmaster.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jpeg\jdmerge.c"
+				RelativePath="../../thirdparty/jpeg-8c/jdmerge.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jpeg\jdpostct.c"
+				RelativePath="../../thirdparty/jpeg-8c/jdpostct.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jpeg\jdsample.c"
+				RelativePath="../../thirdparty/jpeg-8c/jdsample.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jpeg\jdtrans.c"
+				RelativePath="../../thirdparty/jpeg-8c/jdtrans.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jpeg\jerror.c"
+				RelativePath="../../thirdparty/jpeg-8c/jerror.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jpeg\jerror.h"
+				RelativePath="../../thirdparty/jpeg-8c/jerror.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jpeg\jfdctflt.c"
+				RelativePath="../../thirdparty/jpeg-8c/jfdctflt.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jpeg\jfdctfst.c"
+				RelativePath="../../thirdparty/jpeg-8c/jfdctfst.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jpeg\jfdctint.c"
+				RelativePath="../../thirdparty/jpeg-8c/jfdctint.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jpeg\jidctflt.c"
+				RelativePath="../../thirdparty/jpeg-8c/jidctflt.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jpeg\jidctfst.c"
+				RelativePath="../../thirdparty/jpeg-8c/jidctfst.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jpeg\jidctint.c"
+				RelativePath="../../thirdparty/jpeg-8c/jidctint.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jpeg\jinclude.h"
+				RelativePath="../../thirdparty/jpeg-8c/jinclude.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jpeg\jmemansi.c"
+				RelativePath="../../thirdparty/jpeg-8c/jmemansi.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jpeg\jmemmgr.c"
+				RelativePath="../../thirdparty/jpeg-8c/jmemmgr.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jpeg\jmemsys.h"
+				RelativePath="../../thirdparty/jpeg-8c/jmemsys.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jpeg\jmorecfg.h"
+				RelativePath="../../thirdparty/jpeg-8c/jmorecfg.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jpeg\jpegint.h"
+				RelativePath="../../thirdparty/jpeg-8c/jpegint.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jpeg\jpeglib.h"
+				RelativePath="../../thirdparty/jpeg-8c/jpeglib.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jpeg\jquant1.c"
+				RelativePath="../../thirdparty/jpeg-8c/jquant1.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jpeg\jquant2.c"
+				RelativePath="../../thirdparty/jpeg-8c/jquant2.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jpeg\jutils.c"
+				RelativePath="../../thirdparty/jpeg-8c/jutils.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jpeg\jversion.h"
+				RelativePath="../../thirdparty/jpeg-8c/jversion.h"
 				>
 			</File>
 		</Filter>

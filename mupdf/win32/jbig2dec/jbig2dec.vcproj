@@ -148,127 +148,127 @@
 			Name="jbig2dec"
 			>
 			<File
-				RelativePath="..\..\thirdparty\jbig2dec\config_win32.h"
+				RelativePath="../../thirdparty/jbig2dec/config_win32.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jbig2dec\jbig2.c"
+				RelativePath="../../thirdparty/jbig2dec/jbig2.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jbig2dec\jbig2.h"
+				RelativePath="../../thirdparty/jbig2dec/jbig2.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jbig2dec\jbig2_arith.c"
+				RelativePath="../../thirdparty/jbig2dec/jbig2_arith.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jbig2dec\jbig2_arith.h"
+				RelativePath="../../thirdparty/jbig2dec/jbig2_arith.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jbig2dec\jbig2_arith_iaid.c"
+				RelativePath="../../thirdparty/jbig2dec/jbig2_arith_iaid.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jbig2dec\jbig2_arith_iaid.h"
+				RelativePath="../../thirdparty/jbig2dec/jbig2_arith_iaid.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jbig2dec\jbig2_arith_int.c"
+				RelativePath="../../thirdparty/jbig2dec/jbig2_arith_int.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jbig2dec\jbig2_arith_int.h"
+				RelativePath="../../thirdparty/jbig2dec/jbig2_arith_int.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jbig2dec\jbig2_generic.c"
+				RelativePath="../../thirdparty/jbig2dec/jbig2_generic.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jbig2dec\jbig2_generic.h"
+				RelativePath="../../thirdparty/jbig2dec/jbig2_generic.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jbig2dec\jbig2_halftone.c"
+				RelativePath="../../thirdparty/jbig2dec/jbig2_halftone.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jbig2dec\jbig2_huffman.c"
+				RelativePath="../../thirdparty/jbig2dec/jbig2_huffman.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jbig2dec\jbig2_huffman.h"
+				RelativePath="../../thirdparty/jbig2dec/jbig2_huffman.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jbig2dec\jbig2_hufftab.h"
+				RelativePath="../../thirdparty/jbig2dec/jbig2_hufftab.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jbig2dec\jbig2_image.c"
+				RelativePath="../../thirdparty/jbig2dec/jbig2_image.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jbig2dec\jbig2_image.h"
+				RelativePath="../../thirdparty/jbig2dec/jbig2_image.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jbig2dec\jbig2_image_pbm.c"
+				RelativePath="../../thirdparty/jbig2dec/jbig2_image_pbm.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jbig2dec\jbig2_metadata.c"
+				RelativePath="../../thirdparty/jbig2dec/jbig2_metadata.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jbig2dec\jbig2_metadata.h"
+				RelativePath="../../thirdparty/jbig2dec/jbig2_metadata.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jbig2dec\jbig2_mmr.c"
+				RelativePath="../../thirdparty/jbig2dec/jbig2_mmr.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jbig2dec\jbig2_mmr.h"
+				RelativePath="../../thirdparty/jbig2dec/jbig2_mmr.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jbig2dec\jbig2_page.c"
+				RelativePath="../../thirdparty/jbig2dec/jbig2_page.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jbig2dec\jbig2_priv.h"
+				RelativePath="../../thirdparty/jbig2dec/jbig2_priv.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jbig2dec\jbig2_refinement.c"
+				RelativePath="../../thirdparty/jbig2dec/jbig2_refinement.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jbig2dec\jbig2_segment.c"
+				RelativePath="../../thirdparty/jbig2dec/jbig2_segment.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jbig2dec\jbig2_symbol_dict.c"
+				RelativePath="../../thirdparty/jbig2dec/jbig2_symbol_dict.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jbig2dec\jbig2_symbol_dict.h"
+				RelativePath="../../thirdparty/jbig2dec/jbig2_symbol_dict.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jbig2dec\jbig2_text.c"
+				RelativePath="../../thirdparty/jbig2dec/jbig2_text.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jbig2dec\jbig2_text.h"
+				RelativePath="../../thirdparty/jbig2dec/jbig2_text.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jbig2dec\os_types.h"
+				RelativePath="../../thirdparty/jbig2dec/os_types.h"
 				>
 			</File>
 		</Filter>

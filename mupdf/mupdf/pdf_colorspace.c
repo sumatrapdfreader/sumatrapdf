@@ -281,7 +281,6 @@ loadindexed(fz_colorspace **csp, pdf_xref *xref, fz_obj *array)
 
 		pdf_logrsrc("stream lookup\n");
 
-		/* TODO: openstream, read, close instead */
 		error = pdf_openstream(&file, xref, fz_tonum(lookup), fz_togen(lookup));
 		if (error)
 		{

@@ -46,6 +46,10 @@ THIRD_LIBS += $(OPENJPEG_LIB)
 THIRD_INCS += -I$(openjpeg_dir)
 LIBS := $(filter-out -lopenjpeg, $(LIBS))
 
+# opj_config.h does not exist in the pristine source
+$(OBJDIR)/opj_config.h:
+	cp $(openjpeg_dir)/../opj_config.h.in.user $@
+
 OPENJPEG_SRC=$(addprefix $(openjpeg_dir)/, \
 	bio.c \
 	cio.c \
@@ -67,10 +71,11 @@ OPENJPEG_SRC=$(addprefix $(openjpeg_dir)/, \
 	tgt.c )
 OPENJPEG_OBJ=$(OPENJPEG_SRC:$(openjpeg_dir)/%.c=$(OBJDIR)/opj_%.o)
 OPENJPEG_LIB=$(OBJDIR)/libopenjpeg.a
+$(OPENJPEG_OBJ): $(OBJDIR)/opj_config.h
 $(OPENJPEG_LIB): $(OPENJPEG_OBJ)
 	 $(AR_CMD)
 $(OBJDIR)/opj_%.o: $(openjpeg_dir)/%.c
-	$(CC_CMD) -DOPJ_STATIC
+	$(CC_CMD) -I$(OBJDIR) -DOPJ_STATIC
 
 endif
 
@@ -81,8 +86,8 @@ THIRD_INCS += -I$(jpeg_dir)
 LIBS := $(filter-out -ljpeg, $(LIBS))
 
 # jconfig.h does not exist in the pristine source
-$(jpeg_dir)/jconfig.h:
-	cp $(jpeg_dir)/jconfig.txt $(jpeg_dir)/jconfig.h
+$(OBJDIR)/jconfig.h:
+	cp $(jpeg_dir)/jconfig.txt $@
 
 JPEG_SRC=$(addprefix $(jpeg_dir)/, \
 	jaricom.c \
@@ -133,11 +138,11 @@ JPEG_SRC=$(addprefix $(jpeg_dir)/, \
 	jmemansi.c)
 JPEG_OBJ=$(JPEG_SRC:$(jpeg_dir)/%.c=$(OBJDIR)/jpeg_%.o)
 JPEG_LIB=$(OBJDIR)/libjpeg.a
-$(JPEG_OBJ): $(jpeg_dir)/jconfig.h
+$(JPEG_OBJ): $(OBJDIR)/jconfig.h
 $(JPEG_LIB): $(JPEG_OBJ)
 	 $(AR_CMD)
 $(OBJDIR)/jpeg_%.o: $(jpeg_dir)/%.c
-	$(CC_CMD)
+	$(CC_CMD) -I$(OBJDIR) -Dmain=xxxmain
 
 endif
 

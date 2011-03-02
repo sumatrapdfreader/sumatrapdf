@@ -3,36 +3,59 @@
 int
 fz_read(fz_stream *stm, unsigned char *buf, int len)
 {
-	int avail, count;
+	int count, n;
 
-	avail = stm->wp - stm->rp;
-	if (avail)
+	count = MIN(len, stm->wp - stm->rp);
+	if (count)
 	{
-		count = MIN(len, avail);
 		memcpy(buf, stm->rp, count);
 		stm->rp += count;
 	}
-	else
-	{
-		count = 0;
-	}
 
-	if (stm->dead)
+	if (count == len || stm->dead)
 		return count;
 
-	while (len > count)
+	assert(stm->rp == stm->wp);
+
+	do {
+	if (len - count < stm->ep - stm->bp)
 	{
-		int n = stm->read(stm, buf + count, len - count);
+		n = stm->read(stm, stm->bp, stm->ep - stm->bp);
 		if (n < 0)
 		{
 			stm->dead = 1;
 			return fz_rethrow(n, "read error");
 		}
-		if (n == 0)
-			break;
-		stm->pos += n;
-		count += n;
+		else if (n > 0)
+		{
+			stm->rp = stm->bp;
+			stm->wp = stm->bp + n;
+			stm->pos += n;
+		}
+
+		n = MIN(len - count, stm->wp - stm->rp);
+		if (n)
+		{
+			memcpy(buf + count, stm->rp, n);
+			stm->rp += n;
+			count += n;
+		}
 	}
+	else
+	{
+		n = stm->read(stm, buf + count, len - count);
+		if (n < 0)
+		{
+			stm->dead = 1;
+			return fz_rethrow(n, "read error");
+		}
+		else if (n > 0)
+		{
+			stm->pos += n;
+			count += n;
+		}
+	}
+	} while (len > count && n > 0); /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692011 */
 
 	return count;
 }
@@ -44,13 +67,20 @@ fz_fillbuffer(fz_stream *stm)
 
 	assert(stm->rp == stm->wp);
 
-	n = fz_read(stm, stm->bp, stm->ep - stm->bp);
+	if (stm->dead)
+		return;
+
+	n = stm->read(stm, stm->bp, stm->ep - stm->bp);
 	if (n < 0)
+	{
+		stm->dead = 1;
 		fz_catch(n, "read error; treating as end of file");
+	}
 	else if (n > 0)
 	{
 		stm->rp = stm->bp;
 		stm->wp = stm->bp + n;
+		stm->pos += n;
 	}
 }
 
