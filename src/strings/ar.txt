@@ -251,7 +251,7 @@ Error loading PDF file.
 هناك خطأ في تشغيل الملف
 
 F&orward\tAlt+Right Arrow
-لخلف\tAlt+السهم الأيمن
+الأمام\tAlt+السهم الأيمن
 
 F&ullscreen\tCtrl-Shift-L
 بحجم الشاشة\tCtrl-Shift-L
@@ -300,6 +300,12 @@ Fit Page
 
 Fit Width
 مناسب لعرض الشاشة
+
+Fit Width and Show Pages Continuously
+احتواء بالعرض وعرض الصفحات باستمرار
+
+Fit a Single Page
+احتواء صفحة مفردة
 
 Found text at page %d
 تم العثور على النص في صفحة %d
@@ -397,8 +403,14 @@ Page scaling
 Page:
 الصفحة
 
+Please include the following file in your crash report:
+يرجى تضمين (إرفاق) الملف التالي في تقرير المشكلة
+
 Please wait - rendering...
 الرجاء الانتظار ، جاري التجزئة
+
+Pr&esentation\tCtrl-L
+عرض ملء الشاشة \tCtrl-L
 
 Previous Page
 الصفحة السابقة
@@ -420,6 +432,9 @@ Rotate &Right\tCtrl-Shift-+
 
 Searching %d of %d...
 يتم البحث %d من %d...
+
+Select &All\tCtrl-A
+اختيار الكل &All\tCtrl-A
 
 Select content with Ctrl+left mouse button
 اختر المحتوى بالضغط على زر الفأرة الأيسر و Ctrl
@@ -450,6 +465,12 @@ Subject:
 
 SumatraPDF Options
 خيارات قارئ سومطره للبي دي إف
+
+SumatraPDF Update
+تحديث SumatraPDF
+
+SumatraPDF crashed
+مشكلة في SumatraPDF
 
 SumatraPDF is your default PDF reader
 قارئ SumatraPDF هو الافتراضي
@@ -504,13 +525,4 @@ copying text
 
 printing document
 تتم حالياً الطباعة
-
-# Untranslated:
-#Fit Width and Show Pages Continuously
-#Fit a Single Page
-#Please include the following file in your crash report:
-#Pr&esentation\tCtrl-L
-#Select &All\tCtrl-A
-#SumatraPDF Update
-#SumatraPDF crashed
 
