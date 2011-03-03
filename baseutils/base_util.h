@@ -98,4 +98,19 @@ void *      memdup(void *data, size_t len);
 }
 #endif
 
+#ifdef __cplusplus
+class CritSecScoped
+{
+    CRITICAL_SECTION *cs;
+public:
+    CritSecScoped(CRITICAL_SECTION *cs) {
+        this->cs = cs;
+        EnterCriticalSection(this->cs);
+    }
+    ~CritSecScoped() {
+        LeaveCriticalSection(this->cs);
+    }
+};
+#endif
+
 #endif

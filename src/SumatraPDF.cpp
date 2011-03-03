@@ -33,8 +33,6 @@
 #include "translations.h"
 #include "Version.h"
 
-#define SHOW_DEBUG_MENU_ITEMS 1
-
 // those are defined here instead of resource.h to avoid
 // having them overwritten by dialog editor
 #define IDM_VIEW_LAYOUT_FIRST           IDM_VIEW_SINGLE_PAGE
@@ -57,6 +55,10 @@
 
 /* Define THREAD_BASED_FILEWATCH to use the thread-based implementation of file change detection. */
 #define THREAD_BASED_FILEWATCH
+
+#ifdef DEBUG
+#define SHOW_DEBUG_MENU_ITEMS
+#endif
 
 #define ZOOM_IN_FACTOR      1.2f
 #define ZOOM_OUT_FACTOR     1.0f / ZOOM_IN_FACTOR
@@ -673,7 +675,7 @@ MenuDef menuDefHelp[] = {
     { _TRN("Check for &Updates"),           IDM_CHECK_UPDATE,           MF_NOT_IN_RESTRICTED },
     { SEP_ITEM,                             0,                          MF_NOT_IN_RESTRICTED },
     { _TRN("&About"),                       IDM_ABOUT,                  0  }
-#if SHOW_DEBUG_MENU_ITEMS
+#ifdef SHOW_DEBUG_MENU_ITEMS
     ,{ SEP_ITEM,                            0,                          MF_NOT_IN_RESTRICTED },
     { "Crash me",                           IDM_CRASH_ME,               MF_NO_TRANSLATE  },
     { "Stress test running",                IDM_THREAD_STRESS,          MF_NO_TRANSLATE  }
@@ -2566,8 +2568,10 @@ static void StartStressRenderingPage(WindowInfo *win, int pageNo)
     if (!win->threadStressRunning)
         return;
     if (pageNo > win->dm->pageCount()) {
+        gRenderCache.FreeForDisplayModel(win->dm);
         pageNo = 1;
     }
+    // TODO: this item occasionally gets lost and leaks
     UIThreadWorkItem *wi = new StressTestPageRenderedWorkItem(win->hwndCanvas, pageNo);
     win->dm->StartRenderingPage(pageNo, wi);
 }
@@ -6975,7 +6979,6 @@ Exit:
 
     Translations_FreeData();
     SerializableGlobalPrefs_Deinit();
-    DestroyUIThreadWorkItemQueue();
 
     return (int)msg.wParam;
 }

@@ -19,47 +19,36 @@ public:
     virtual void Execute() = 0;
 };
 
-class CritSecScoped
-{
-    CRITICAL_SECTION *cs;
-public:
-    CritSecScoped(CRITICAL_SECTION *cs) {
-        this->cs = cs;
-        EnterCriticalSection(this->cs);
-    }
-    ~CritSecScoped() {
-        LeaveCriticalSection(this->cs);
-    }
-};
-    
 class UIThreadWorkItemQueue
 {
-    Vec<UIThreadWorkItem*> * items;
+    Vec<UIThreadWorkItem *>  items;
     CRITICAL_SECTION         cs;
 
 public:
     UIThreadWorkItemQueue() {
         InitializeCriticalSection(&cs);
-        items = new Vec<UIThreadWorkItem*>();
     }
 
     ~UIThreadWorkItemQueue() {
         DeleteCriticalSection(&cs);
-        delete items;
+        while (items.Count() > 0) {
+            delete items[0];
+            items.RemoveAt(0);
+        }
     }
 
     void Push(UIThreadWorkItem *item) {
         CritSecScoped scope(&cs);
-        items->Push(item);
+        items.Push(item);
     }
 
     bool ExecuteNextAndRemove() {
         CritSecScoped scope(&cs);
-        if (items->Count() > 0) {
-            UIThreadWorkItem *item = items->At(0);
+        if (items.Count() > 0) {
+            UIThreadWorkItem *item = items[0];
             item->Execute();
             delete item;
-            items->RemoveAt(0);
+            items.RemoveAt(0);
             return true;
         }
         return false;
@@ -67,7 +56,6 @@ public:
 };
 
 void MarshallOnUIThread(UIThreadWorkItem *wi);
-void DestroyUIThreadWorkItemQueue();
 bool ExecuteAndRemoveNextUIThreadWorkItem();
 
 bool ValidProgramVersion(char *txt);

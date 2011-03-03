@@ -571,27 +571,15 @@ void Win32_Font_Delete(HFONT font)
     DeleteObject(font);
 }
 
-static UIThreadWorkItemQueue *gUIThreadWorkItemQueue;
+static UIThreadWorkItemQueue gUIThreadWorkItemQueue;
 
-static inline void EnsureUIThreadWorkItemQueue()
-{
-    if (NULL == gUIThreadWorkItemQueue)
-        gUIThreadWorkItemQueue = new UIThreadWorkItemQueue();
-}
 void MarshallOnUIThread(UIThreadWorkItem *wi) {
-    EnsureUIThreadWorkItemQueue();
-    gUIThreadWorkItemQueue->Push(wi);
+    gUIThreadWorkItemQueue.Push(wi);
     // trigger message loop (probably not necessary)
     PostMessage(wi->hwnd, WM_NULL, 0, 0);
 }
 
-void DestroyUIThreadWorkItemQueue() {
-    delete gUIThreadWorkItemQueue;
-}
-
 bool ExecuteAndRemoveNextUIThreadWorkItem()
 {
-    EnsureUIThreadWorkItemQueue();
-    return gUIThreadWorkItemQueue->ExecuteNextAndRemove();
+    return gUIThreadWorkItemQueue.ExecuteNextAndRemove();
 }
-
