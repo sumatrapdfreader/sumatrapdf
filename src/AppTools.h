@@ -4,6 +4,44 @@
 #ifndef APP_TOOLS_H_
 #define APP_TOOLS_H_
 
+// Class to encapsulate code that has to be executed on UI thread but can be
+// triggered from other threads. Instead of defining a new message for
+// each piece of code, derive from UIThreadWorkItem and implement
+// Execute() method
+class UIThreadWorkItem
+{
+    static UINT msg;
+    static void RegisterMsgIfNecessary()
+    {
+        if (0 == msg)
+            msg = RegisterWindowMessageA("SUMATRA_THREAD_WORK_ITEM_MSG");
+    }
+
+public:
+    HWND hwnd;
+
+    UIThreadWorkItem(HWND hwnd) : hwnd(hwnd) {
+        RegisterMsgIfNecessary();
+    }
+    virtual ~UIThreadWorkItem() {}
+
+    void MarshallOnUIThread() {
+        PostMessage(hwnd, UIThreadWorkItem::msg, (WPARAM)this, 0);
+    }
+
+    virtual void Execute() = 0;
+
+    static bool Process(MSG *msg) {
+        if (msg->message == UIThreadWorkItem::msg) {
+            UIThreadWorkItem *me = (UIThreadWorkItem*)msg->wParam;
+            me->Execute();
+            delete me;
+            return true;
+        }
+        return false;
+    }
+};
+
 bool ValidProgramVersion(char *txt);
 int CompareVersion(TCHAR *txt1, TCHAR *txt2);
 const char *GuessLanguage();

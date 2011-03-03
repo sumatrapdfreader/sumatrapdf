@@ -29,7 +29,7 @@ WindowInfoBase::WindowInfoBase(HWND hwnd) :
     loadedFilePath(NULL), currPageNo(0),
     xScrollSpeed(0), yScrollSpeed(0), wheelAccumDelta(0),
     delayedRepaintTimer(0), resizingTocBox(false),
-    pdfsync(NULL), pluginParent(NULL)
+    pdfsync(NULL), pluginParent(NULL), threadStressRunning(false)
 {
     ZeroMemory(&selectionRect, sizeof(selectionRect));
     prevCanvasBR.x = prevCanvasBR.y = -1;

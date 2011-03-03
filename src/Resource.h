@@ -85,6 +85,7 @@
 #define IDM_GOTO_NAV_BACK               558
 #define IDM_GOTO_NAV_FORWARD            559
 #define IDM_CRASH_ME                    560
+#define IDM_THREAD_STRESS               561
 #define IDC_SUMATRAPDF                  600
 #define IDI_SMALL                       601
 #define IDC_GOTO_PAGE_EDIT              1000

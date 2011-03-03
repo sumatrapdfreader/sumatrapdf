@@ -671,8 +671,8 @@ UINT SyncTex::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR srcfilepath, UINT 
             // undecorate the filepath: replace * by space and / by \ 
             TCHAR *p = srcfilename;
             while(*p) {
-                if(*p=='*') *p=' ';
-                else if(*p=='/') *p='\\';
+                if (*p=='*') *p=' ';
+                else if (*p=='/') *p='\\';
                 p++;
             }
 

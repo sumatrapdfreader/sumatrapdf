@@ -89,6 +89,7 @@ public:
     WinState        state;
     bool            needrefresh; // true if the view of the PDF is not synchronized with the content of the file on disk
     TCHAR *         loadedFilePath;
+    bool            threadStressRunning;
 
     DisplayModel *  dm;
     HWND            hwndFrame;

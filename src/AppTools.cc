@@ -7,6 +7,7 @@
 #include "WinUtil.hpp"
 #include "LangMenuDef.h"
 #include "translations.h"
+#include "AppTools.h"
 #include <shlobj.h>
 
 // the only valid chars are 0-9, . and newlines.
@@ -569,3 +570,6 @@ void Win32_Font_Delete(HFONT font)
 {
     DeleteObject(font);
 }
+
+UINT UIThreadWorkItem::msg = 0;
+

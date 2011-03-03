@@ -33,6 +33,8 @@
 #include "translations.h"
 #include "Version.h"
 
+#define SHOW_DEBUG_MENU_ITEMS 0
+
 // those are defined here instead of resource.h to avoid
 // having them overwritten by dialog editor
 #define IDM_VIEW_LAYOUT_FIRST           IDM_VIEW_SINGLE_PAGE
@@ -84,7 +86,6 @@ static bool             gUseGdiRenderer = false;
 #define DEFAULT_ROTATION        0
 #define DEFAULT_LANGUAGE        "en"
 
-#define WM_APP_REPAINT_CANVAS  (WM_APP + 11)
 #define WM_APP_URL_DOWNLOADED  (WM_APP + 12)
 #define WM_APP_FIND_UPDATE     (WM_APP + 13)
 #define WM_APP_FIND_END        (WM_APP + 14)
@@ -253,6 +254,7 @@ static void DeleteOldSelectionInfo(WindowInfo *win);
 static void ClearSearch(WindowInfo *win);
 static void WindowInfo_EnterFullscreen(WindowInfo *win, bool presentation=false);
 static void WindowInfo_ExitFullscreen(WindowInfo *win);
+static void MarshallRepaintCanvasOnUIThread(WindowInfo* win, UINT delay=0);
 
 extern "C" {
 // needed because we compile bzip2 with #define BZ_NO_STDIO
@@ -671,9 +673,10 @@ MenuDef menuDefHelp[] = {
     { _TRN("Check for &Updates"),           IDM_CHECK_UPDATE,           MF_NOT_IN_RESTRICTED },
     { SEP_ITEM,                             0,                          MF_NOT_IN_RESTRICTED },
     { _TRN("&About"),                       IDM_ABOUT,                  0  }
-#if 0
+#if SHOW_DEBUG_MENU_ITEMS
     ,{ SEP_ITEM,                            0,                          MF_NOT_IN_RESTRICTED },
     { "Crash me",                           IDM_CRASH_ME,               MF_NO_TRANSLATE  }
+    { "Thread stress test",                 IDM_THREAD_STRESS,          MF_NO_TRANSLATE  }
 #endif
 };
 
@@ -1132,7 +1135,6 @@ static void WindowInfo_Delete(WindowInfo *win)
     delete win;
 }
 
-
 static void UpdateToolbarBg(HWND hwnd, BOOL enabled)
 {
     DWORD newStyle = GetWindowLong(hwnd, GWL_STYLE);
@@ -1274,7 +1276,8 @@ static void MenuUpdateStateForWindow(WindowInfo *win) {
         IDM_GOTO_FIRST_PAGE, IDM_GOTO_LAST_PAGE, IDM_GOTO_NAV_BACK, IDM_GOTO_NAV_FORWARD,
         IDM_GOTO_PAGE, IDM_FIND_FIRST, IDM_SAVEAS, IDM_SEND_BY_EMAIL,
         IDM_VIEW_WITH_ACROBAT, IDM_VIEW_WITH_FOXIT, IDM_VIEW_WITH_PDF_XCHANGE, 
-        IDM_SELECT_ALL, IDM_COPY_SELECTION, IDM_PROPERTIES, IDM_VIEW_PRESENTATION_MODE };
+        IDM_SELECT_ALL, IDM_COPY_SELECTION, IDM_PROPERTIES, 
+        IDM_VIEW_PRESENTATION_MODE, IDM_THREAD_STRESS };
 
     bool fileCloseEnabled = FileCloseMenuEnabled();
     assert(!fileCloseEnabled == !win->loadedFilePath);
@@ -1868,17 +1871,9 @@ void DisplayModel::pageChanged()
     }
 }
 
-/* Call from non-UI thread to cause repainting of the display */
-static void triggerRepaintDisplay(WindowInfo* win, UINT delay=0)
-{
-    assert(win);
-    if (!win) return;
-    PostMessage(win->hwndCanvas, WM_APP_REPAINT_CANVAS, delay, 0);
-}
-
 void DisplayModel::repaintDisplay()
 {
-    triggerRepaintDisplay(_appData);
+    MarshallRepaintCanvasOnUIThread(_appData);
 }
 
 /* Send the request to render a given page to a rendering thread */
@@ -2344,7 +2339,7 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
             SetTextColor(hdc, gGlobalPrefs.m_invertColors ? WIN_COL_WHITE : WIN_COL_BLACK);
             if (renderDelay != RENDER_DELAY_FAILED) {
                 if (renderDelay < REPAINT_MESSAGE_DELAY_IN_MS)
-                    triggerRepaintDisplay(win, REPAINT_MESSAGE_DELAY_IN_MS / 4);
+                    MarshallRepaintCanvasOnUIThread(win, REPAINT_MESSAGE_DELAY_IN_MS / 4);
                 else
                     draw_centered_text(hdc, &bounds, _TR("Please wait - rendering..."));
                 DBG_OUT("drawing empty %d ", pageNo);
@@ -2536,6 +2531,18 @@ static void CrashMe()
     *p = 0;
 }
 
+static void ToggleThreadStress(WindowInfo *win)
+{
+    // TODO: stop if running
+    if (win->threadStressRunning)
+        return;
+    if (win->state != WS_SHOWING_PDF)
+        return;
+    if (!win->dm)
+        return;
+    //win->dm->startRenderingPage();
+}
+
 static void OnSelectAll(WindowInfo *win, bool textOnly=false)
 {
     assert(win && win->dm);
@@ -2557,7 +2564,7 @@ static void OnSelectAll(WindowInfo *win, bool textOnly=false)
     }
 
     win->showSelection = true;
-    triggerRepaintDisplay(win);
+    MarshallRepaintCanvasOnUIThread(win);
 }
 
 static void OnInverseSearch(WindowInfo *win, UINT x, UINT y)
@@ -2742,7 +2749,7 @@ static void OnMouseMove(WindowInfo *win, int x, int y, WPARAM flags)
     case MA_SELECTING:
         win->selectionRect.dx = x - win->selectionRect.x;
         win->selectionRect.dy = y - win->selectionRect.y;
-        triggerRepaintDisplay(win);
+        MarshallRepaintCanvasOnUIThread(win);
         OnSelectionEdgeAutoscroll(win, x, y);
         break;
     case MA_DRAGGING:
@@ -2782,7 +2789,7 @@ static void OnSelectionStart(WindowInfo *win, int x, int y, WPARAM key)
     SetCapture(win->hwndCanvas);
     SetTimer(win->hwndCanvas, SMOOTHSCROLL_TIMER_ID, SMOOTHSCROLL_DELAY_IN_MS, NULL);
 
-    triggerRepaintDisplay(win);
+    MarshallRepaintCanvasOnUIThread(win);
 }
 
 static void OnSelectionStop(WindowInfo *win, int x, int y, bool aborted)
@@ -2808,7 +2815,7 @@ static void OnSelectionStop(WindowInfo *win, int x, int y, bool aborted)
     } else if (win->mouseAction == MA_SELECTING) {
         ConvertSelectionRectToSelectionOnPage (win);
     }
-    triggerRepaintDisplay(win);
+    MarshallRepaintCanvasOnUIThread(win);
 }
 
 static void OnMouseLeftButtonDblClk(WindowInfo *win, int x, int y, WPARAM key)
@@ -4232,7 +4239,7 @@ static void WindowInfo_ShowSearchResult(WindowInfo *win, PdfSel *result, bool wa
 
     UpdateTextSelection(win, false);
     win->dm->ShowResultRectToScreen(result);
-    triggerRepaintDisplay(win);
+    MarshallRepaintCanvasOnUIThread(win);
 }
 
 // Show a message for 3000 millisecond at most
@@ -4325,7 +4332,7 @@ void WindowInfo_ShowForwardSearchResult(WindowInfo *win, LPCTSTR srcfilename, UI
             if (!win->dm->pageVisible(page))
                 win->dm->goToPage(page, 0, true);
             if (!win->dm->ShowResultRectToScreen(&res))
-                triggerRepaintDisplay(win);
+                MarshallRepaintCanvasOnUIThread(win);
             if (IsIconic(win->hwndFrame))
                 ShowWindowAsync(win->hwndFrame, SW_RESTORE);
             return;
@@ -4500,7 +4507,7 @@ static void ClearSearch(WindowInfo *win)
 {
     DeleteOldSelectionInfo(win);
     win->dm->textSelection->Reset();
-    triggerRepaintDisplay(win);
+    MarshallRepaintCanvasOnUIThread(win);
 }
 
 static void OnChar(WindowInfo *win, WPARAM key)
@@ -5788,15 +5795,6 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
 
     switch (message)
     {
-        case WM_APP_REPAINT_CANVAS:
-            if (win) {
-                if (!wParam)
-                    WndProcCanvas(hwnd, WM_TIMER, REPAINT_TIMER_ID, 0);
-                else if (!win->delayedRepaintTimer)
-                    win->delayedRepaintTimer = SetTimer(hwnd, REPAINT_TIMER_ID, (UINT)wParam, NULL);
-            }
-            break;
-
         case WM_VSCROLL:
             OnVScroll(win, wParam);
             return WM_VSCROLL_HANDLED;
@@ -5941,20 +5939,20 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
                 case HIDE_FWDSRCHMARK_TIMER_ID:
                     {
                         win->fwdsearchmarkHideStep++;
-                        if( win->fwdsearchmarkHideStep == 1 )
+                        if (win->fwdsearchmarkHideStep == 1 )
                         {
                             SetTimer(hwnd, HIDE_FWDSRCHMARK_TIMER_ID, HIDE_FWDSRCHMARK_DECAYINTERVAL_IN_MS, NULL);
                         }
-                        else if( win->fwdsearchmarkHideStep >= HIDE_FWDSRCHMARK_STEPS )
+                        else if (win->fwdsearchmarkHideStep >= HIDE_FWDSRCHMARK_STEPS )
                         {
                             KillTimer(hwnd, HIDE_FWDSRCHMARK_TIMER_ID);
                             win->showForwardSearchMark = false;
                             win->fwdsearchmarkHideStep = 0;
-                            triggerRepaintDisplay(win);
+                            MarshallRepaintCanvasOnUIThread(win);
                         }
                         else
                         {
-                            triggerRepaintDisplay(win);
+                            MarshallRepaintCanvasOnUIThread(win);
                         }
                     }
                     break;
@@ -6037,6 +6035,38 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
             return DefWindowProc(hwnd, message, wParam, lParam);
     }
     return 0;
+}
+
+class RepaintCanvasWorkItem : public UIThreadWorkItem
+{
+    UINT delay;
+
+public:
+    RepaintCanvasWorkItem(HWND hwnd, UINT delay) 
+        : UIThreadWorkItem(hwnd), delay(delay)
+    {}
+
+    virtual void Execute()
+    {
+        WindowInfo * win = gWindows.Find(hwnd);
+        if (!win)
+            return;
+        if (0 == delay) {
+            WndProcCanvas(hwnd, WM_TIMER, REPAINT_TIMER_ID, 0);
+            return;
+        }
+        if (!win->delayedRepaintTimer)
+            win->delayedRepaintTimer = SetTimer(hwnd, REPAINT_TIMER_ID, delay, NULL);
+    }
+};
+
+/* Call from non-UI thread to cause repainting of the display */
+static void MarshallRepaintCanvasOnUIThread(WindowInfo* win, UINT delay)
+{
+    assert(win);
+    if (!win) return;
+    UIThreadWorkItem *wi = new RepaintCanvasWorkItem(win->hwndCanvas, delay);
+    wi->MarshallOnUIThread();
 }
 
 static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -6320,6 +6350,10 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
 
                 case IDM_CRASH_ME:
                     CrashMe();
+                    break;
+
+                case IDM_THREAD_STRESS:
+                    ToggleThreadStress(win);
                     break;
 
                 default:
@@ -6861,10 +6895,17 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 #endif
         // Make sure to dispatch the accelerator to the correct window
         win = gWindows.Find(msg.hwnd);
-        if (!TranslateAccelerator(win ? win->hwndFrame : msg.hwnd, hAccelTable, &msg)) {
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
-        }
+        HWND accHwnd = win ? win->hwndFrame : msg.hwnd;
+        if (TranslateAccelerator(accHwnd, hAccelTable, &msg))
+            continue;
+
+        // process those messages here so that we don't have to add this
+        // handling to every WndProc that might receive those messages
+        if (UIThreadWorkItem::Process(&msg))
+            continue;
+
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
     }
 
 #ifndef THREAD_BASED_FILEWATCH
