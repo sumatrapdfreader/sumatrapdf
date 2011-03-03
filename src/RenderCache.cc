@@ -377,7 +377,7 @@ Exit:
     if (addRequest)
         SetEvent(startRendering);
     else if (finishedWorkItem)
-        finishedWorkItem->MarshallOnUIThread();
+        MarshallOnUIThread(finishedWorkItem);
     LeaveCriticalSection(&_requestAccess);
     return;
 }
@@ -528,7 +528,7 @@ static DWORD WINAPI RenderCacheThread(LPVOID data)
         cache->FreeNotVisible();
 #endif
         if (req.finishedWorkItem) {
-            req.finishedWorkItem->MarshallOnUIThread();
+            MarshallOnUIThread(req.finishedWorkItem);
             req.finishedWorkItem = (UIThreadWorkItem*)1; // will crash if accessed again, which should not happen
         }
         else

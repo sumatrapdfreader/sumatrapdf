@@ -5,6 +5,7 @@
 #include "benc_util.h"
 #include "ParseCommandLine.h"
 #include "AppTools.h"
+#include "Vec.h"
 
 #ifdef DEBUG
 extern DWORD FileTimeDiffInSecs(FILETIME *ft1, FILETIME *ft2);
@@ -236,6 +237,12 @@ static void versioncheck_test()
     assert(CompareVersion(_T("1.3.0"), _T("2662")) < 0);
 }
 
+static void VecTest()
+{
+    // TODO: write me
+
+}
+
 void u_DoAllTests(void)
 {
     DBG_OUT("Running tests\n");
@@ -246,5 +253,6 @@ void u_DoAllTests(void)
     ParseCommandLineTest();
     tstr_test();
     versioncheck_test();
+    VecTest();
 }
 #endif

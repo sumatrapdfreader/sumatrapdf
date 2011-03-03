@@ -5356,7 +5356,7 @@ public:
 bool WindowInfo::FindUpdateStatus(int current, int total)
 {
     UIThreadWorkItem *wi = new UpdateFindStatusWorkItem(hwndFrame, current, total);
-    wi->MarshallOnUIThread();
+    MarshallOnUIThread(wi);
     return !findCanceled;
 }
 
@@ -6128,7 +6128,7 @@ static void MarshallRepaintCanvasOnUIThread(WindowInfo* win, UINT delay)
     assert(win);
     if (!win) return;
     UIThreadWorkItem *wi = new RepaintCanvasWorkItem(win->hwndCanvas, delay);
-    wi->MarshallOnUIThread();
+    MarshallOnUIThread(wi);
 }
 
 static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -6937,32 +6937,26 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     const UINT_PTR timerID = SetTimer(NULL, -1, FILEWATCH_DELAY_IN_MS, NULL);
 #endif
 
-    while (GetMessage(&msg, NULL, 0, 0)) {
+    while (GetMessage(&msg, NULL, 0, 0) > 0) {
 #ifndef THREAD_BASED_FILEWATCH
         if (NULL == msg.hwnd && WM_TIMER == msg.message && timerID == msg.wParam) {
             WindowInfoList_RefreshUpdatedFiles();
             continue;
         }
 #endif
-        // Make sure to dispatch the accelerator to the correct window
+        // Dispatch the accelerator to the correct window
         win = gWindows.Find(msg.hwnd);
         HWND accHwnd = win ? win->hwndFrame : msg.hwnd;
         if (TranslateAccelerator(accHwnd, hAccelTable, &msg))
             continue;
 
-        // TODO: we loose the messages if the menu is being shown
-        // (and probably in other scenarios like dialogs where an internal
-        // message loop is used). Not sure how to fix that. In the worst case
-        // we can just queue the messages in a list instead of using PostMessage()
-        // and process queued messages until a queue is empty
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
 
         // process those messages here so that we don't have to add this
         // handling to every WndProc that might receive those messages
-        if (UIThreadWorkItem::Process(&msg))
-            continue;
-
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
+        // processing only one item at a time for no particular reason
+        ExecuteAndRemoveNextUIThreadWorkItem();
     }
 
 #ifndef THREAD_BASED_FILEWATCH
@@ -6981,6 +6975,7 @@ Exit:
 
     Translations_FreeData();
     SerializableGlobalPrefs_Deinit();
+    DestroyUIThreadWorkItemQueue();
 
     return (int)msg.wParam;
 }

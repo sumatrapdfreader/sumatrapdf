@@ -4,43 +4,71 @@
 #ifndef APP_TOOLS_H_
 #define APP_TOOLS_H_
 
+#include "Vec.h"
+
 // Class to encapsulate code that has to be executed on UI thread but can be
 // triggered from other threads. Instead of defining a new message for
 // each piece of code, derive from UIThreadWorkItem and implement
 // Execute() method
 class UIThreadWorkItem
 {
-    static UINT msg;
-    static void RegisterMsgIfNecessary()
-    {
-        if (0 == msg)
-            msg = RegisterWindowMessageA("SUMATRA_THREAD_WORK_ITEM_MSG");
-    }
-
 public:
     HWND hwnd;
-
-    UIThreadWorkItem(HWND hwnd) : hwnd(hwnd) {
-        RegisterMsgIfNecessary();
-    }
+    UIThreadWorkItem(HWND hwnd) : hwnd(hwnd) {}
     virtual ~UIThreadWorkItem() {}
+    virtual void Execute() = 0;
+};
 
-    void MarshallOnUIThread() {
-        PostMessage(hwnd, UIThreadWorkItem::msg, (WPARAM)this, 0);
+class CritSecScoped
+{
+    CRITICAL_SECTION *cs;
+public:
+    CritSecScoped(CRITICAL_SECTION *cs) {
+        this->cs = cs;
+        EnterCriticalSection(this->cs);
+    }
+    ~CritSecScoped() {
+        LeaveCriticalSection(this->cs);
+    }
+};
+    
+class UIThreadWorkItemQueue
+{
+    Vec<UIThreadWorkItem*> * items;
+    CRITICAL_SECTION         cs;
+
+public:
+    UIThreadWorkItemQueue() {
+        InitializeCriticalSection(&cs);
+        items = new Vec<UIThreadWorkItem*>();
     }
 
-    virtual void Execute() = 0;
+    ~UIThreadWorkItemQueue() {
+        DeleteCriticalSection(&cs);
+        delete items;
+    }
 
-    static bool Process(MSG *msg) {
-        if (msg->message == UIThreadWorkItem::msg) {
-            UIThreadWorkItem *me = (UIThreadWorkItem*)msg->wParam;
-            me->Execute();
-            delete me;
+    void Push(UIThreadWorkItem *item) {
+        CritSecScoped scope(&cs);
+        items->Push(item);
+    }
+
+    bool ExecuteNextAndRemove() {
+        CritSecScoped scope(&cs);
+        if (items->Count() > 0) {
+            UIThreadWorkItem *item = items->At(0);
+            item->Execute();
+            delete item;
+            items->RemoveAt(0);
             return true;
         }
         return false;
     }
 };
+
+void MarshallOnUIThread(UIThreadWorkItem *wi);
+void DestroyUIThreadWorkItemQueue();
+bool ExecuteAndRemoveNextUIThreadWorkItem();
 
 bool ValidProgramVersion(char *txt);
 int CompareVersion(TCHAR *txt1, TCHAR *txt2);
