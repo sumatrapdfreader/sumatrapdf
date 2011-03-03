@@ -231,7 +231,7 @@ void wintitle(pdfapp_t *app, char *s)
 
 void winhelp(pdfapp_t *app)
 {
-	fprintf(stderr, "%s", pdfapp_usage(app));
+	fprintf(stderr, "%s\n%s", pdfapp_version(app), pdfapp_usage(app));
 }
 
 void winresize(pdfapp_t *app, int w, int h)

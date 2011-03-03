@@ -30,6 +30,13 @@ static void pdfapp_error(pdfapp_t *app, fz_error error)
 	winerror(app, error);
 }
 
+char *pdfapp_version(pdfapp_t *app)
+{
+	return
+		"MuPDF 0.8\n"
+		"Copyright 2006-2011 Artifex Sofware, Inc.\n";
+}
+
 char *pdfapp_usage(pdfapp_t *app)
 {
 	return

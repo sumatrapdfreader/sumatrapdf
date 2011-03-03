@@ -79,6 +79,7 @@ void pdfapp_init(pdfapp_t *app);
 void pdfapp_open(pdfapp_t *app, char *filename, int fd);
 void pdfapp_close(pdfapp_t *app);
 
+char *pdfapp_version(pdfapp_t *app);
 char *pdfapp_usage(pdfapp_t *app);
 
 void pdfapp_onkey(pdfapp_t *app, int c);

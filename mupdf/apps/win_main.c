@@ -225,7 +225,7 @@ dlogaboutproc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 	switch(message)
 	{
 	case WM_INITDIALOG:
-		SetDlgItemTextA(hwnd, 2, "MuPDF is Copyright (C) 2006-2010 Artifex Software Inc.");
+		SetDlgItemTextA(hwnd, 2, pdfapp_version(&gapp));
 		SetDlgItemTextA(hwnd, 3, pdfapp_usage(&gapp));
 		return TRUE;
 	case WM_COMMAND:
