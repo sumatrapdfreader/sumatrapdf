@@ -23,6 +23,27 @@ pdf_maskcolorkey(fz_pixmap *pix, int n, int *colorkey)
 	}
 }
 
+/* SumatraPDF: handle JPXEncoded masks */
+static fz_error
+pdf_loadjpximage(fz_pixmap **imgp, pdf_xref *xref, fz_obj *dict);
+
+static fz_error
+pdf_loadjpxmask(fz_pixmap **maskp, pdf_xref *xref, fz_obj *dict)
+{
+	fz_pixmap *mask;
+	fz_error error = pdf_loadjpximage(&mask, xref, dict);
+	if (error)
+		return error;
+
+	if (mask->n == 2)
+		*maskp = fz_alphafromgray(mask, 1);
+	else
+		*maskp = fz_keeppixmap(mask);
+	fz_droppixmap(mask);
+
+	return fz_okay;
+}
+
 static fz_error
 pdf_loadimageimp(fz_pixmap **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict, fz_stream *cstm, int forcemask)
 {
@@ -115,6 +136,10 @@ pdf_loadimageimp(fz_pixmap **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict, fz
 		/* Not allowed for inline images */
 		if (!cstm)
 		{
+			/* SumatraPDF: handle JPXEncoded masks */
+			if (pdf_isjpximage(obj))
+				error = pdf_loadjpxmask(&mask, xref, obj);
+			else
 			error = pdf_loadimageimp(&mask, xref, rdb, obj, nil, 1);
 			if (error)
 			{
@@ -300,15 +325,7 @@ pdf_loadjpximage(fz_pixmap **imgp, pdf_xref *xref, fz_obj *dict)
 	{
 		/* SumatraPDF: handle JPXEncoded masks */
 		if (pdf_isjpximage(obj))
-		{
-			error = pdf_loadjpximage(&img->mask, xref, obj);
-			if (!error && img->mask->n == 2)
-			{
-				fz_pixmap *mask = fz_alphafromgray(img->mask, 1);
-				fz_droppixmap(img->mask);
-				img->mask = mask;
-			}
-		}
+			error = pdf_loadjpxmask(&img->mask, xref, obj);
 		else
 		error = pdf_loadimageimp(&img->mask, xref, nil, obj, nil, 1);
 		if (error)
