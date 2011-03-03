@@ -5289,12 +5289,31 @@ void WindowInfoBase::FindStart()
         SetFocus(hwndFindBox);
 }
 
+class UpdateFindStatusWorkItem : public UIThreadWorkItem
+{
+    int current;
+    int total;
+public:
+    UpdateFindStatusWorkItem(HWND hwnd, int current, int total)
+        : UIThreadWorkItem(hwnd), current(current), total(total)
+    {}
+
+    virtual void Execute() {
+        WindowInfo *win = gWindows.find(hwnd);
+        win->findPercent = current * 100 / total;
+        if (!win->findStatusVisible)
+            WindowInfo_ShowFindStatus(win);
+
+        TCHAR buf[256];
+        wsprintf(buf, _TR("Searching %d of %d..."), current, total);
+        win_set_text(win->hwndFindStatus, buf);
+    }
+};
+
 bool WindowInfo::FindUpdateStatus(int current, int total)
 {
-    PostMessage(hwndFrame, WM_APP_FIND_UPDATE, current, total);
-
-    findPercent = current * 100 / total;
-
+    UIThreadWorkItem *wi = new UpdateFindStatusWorkItem(hwndFrame, current, total);
+    wi->MarshallOnUIThread();
     return !findCanceled;
 }
 
@@ -6453,17 +6472,6 @@ InitMouseWheelInfo:
                 free(msg);
             } else if (ctx)
                 delete ctx;
-            break;
-
-        case WM_APP_FIND_UPDATE:
-            if (!win->findStatusVisible)
-                WindowInfo_ShowFindStatus(win);
-
-            {
-                TCHAR buf[256];
-                wsprintf(buf, _TR("Searching %d of %d..."), (int)wParam, (int)lParam);
-                win_set_text(win->hwndFindStatus, buf);
-            }
             break;
 
         case WM_APP_FIND_END:
