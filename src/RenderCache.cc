@@ -9,7 +9,7 @@
    due to insufficient (GDI) memory. */
 #define CONSERVE_MEMORY
 
-static DWORD WINAPI PageRenderThread(LPVOID data);
+static DWORD WINAPI RenderCacheThread(LPVOID data);
 
 RenderCache::RenderCache(void)
     : _cacheCount(0), _requestCount(0), invertColors(NULL), useGdiRenderer(NULL),
@@ -19,7 +19,7 @@ RenderCache::RenderCache(void)
     InitializeCriticalSection(&_requestAccess);
 
     startRendering = CreateEvent(NULL, FALSE, FALSE, NULL);
-    _renderThread = CreateThread(NULL, 0, PageRenderThread, this, 0, 0);
+    _renderThread = CreateThread(NULL, 0, RenderCacheThread, this, 0, 0);
     assert(NULL != _renderThread);
 }
 
@@ -277,10 +277,10 @@ USHORT RenderCache::GetTileRes(DisplayModel *dm, int pageNo)
     return res;
 }
 
-void RenderCache::Render(DisplayModel *dm, int pageNo)
+void RenderCache::Render(DisplayModel *dm, int pageNo, UIThreadWorkItem *finishedWorkItem)
 {
     TilePosition tile = { GetTileRes(dm, pageNo), 0, 0 };
-    Render(dm, pageNo, tile);
+    Render(dm, pageNo, tile, true, finishedWorkItem);
 
     // render both tiles of the first row when splitting a page in four
     // (which always happens on larger displays for Fit Width)
@@ -291,13 +291,15 @@ void RenderCache::Render(DisplayModel *dm, int pageNo)
 }
 
 /* Render a bitmap for page <pageNo> in <dm>. */
-void RenderCache::Render(DisplayModel *dm, int pageNo, TilePosition tile, bool clearQueue)
+void RenderCache::Render(DisplayModel *dm, int pageNo, TilePosition tile, bool clearQueue, UIThreadWorkItem *finishedWorkItem)
 {
     DBG_OUT("RenderQueue_Add(pageNo=%d)\n", pageNo);
     assert(dm);
-    if (!dm || dm->_dontRenderFlag) goto Exit;
+    bool addRequest = false;
 
     EnterCriticalSection(&_requestAccess);
+    if (!dm || dm->_dontRenderFlag) goto Exit;
+
     int rotation = dm->rotation();
     normalizeRotation(&rotation);
     float zoom = dm->zoomReal(pageNo);
@@ -311,7 +313,7 @@ void RenderCache::Render(DisplayModel *dm, int pageNo, TilePosition tile, bool c
         } else {
             /* we're already rendering exactly the same page */
             DBG_OUT("  already rendering this page\n");
-            goto LeaveCsAndExit;
+            goto Exit;
         }
     }
 
@@ -331,14 +333,15 @@ void RenderCache::Render(DisplayModel *dm, int pageNo, TilePosition tile, bool c
                 _requests[_requestCount-1] = *req;
                 *req = tmp;
                 DBG_OUT("  already queued\n");
-                goto LeaveCsAndExit;
+                goto Exit;
             } else {
                 /* There was a request queued for the same page but with different
                    zoom or rotation, so only replace this request */
                 DBG_OUT("Replacing request for page %d with new request\n", req->pageNo);
                 req->zoom = zoom;
                 req->rotation = rotation;
-                goto LeaveCsAndExit;
+                
+                goto Exit;
             }
         }
     }
@@ -346,7 +349,7 @@ void RenderCache::Render(DisplayModel *dm, int pageNo, TilePosition tile, bool c
     if (Exists(dm, pageNo, rotation, zoom, &tile)) {
         /* This page has already been rendered in the correct dimensions
            and isn't about to be rerendered in different dimensions */
-        goto LeaveCsAndExit;
+        goto Exit;
     }
 
     PageRenderRequest* newRequest;
@@ -367,14 +370,14 @@ void RenderCache::Render(DisplayModel *dm, int pageNo, TilePosition tile, bool c
     newRequest->tile = tile;
     newRequest->abort = FALSE;
     newRequest->timestamp = GetTickCount();
+    newRequest->finishedWorkItem = finishedWorkItem;
+    addRequest = true;
 
-    LeaveCriticalSection(&_requestAccess);
-
-    /* tell rendering thread there's a new request to render */
-    SetEvent(startRendering);
 Exit:
-    return;
-LeaveCsAndExit:
+    if (addRequest)
+        SetEvent(startRendering);
+    else if (finishedWorkItem)
+        finishedWorkItem->MarshallOnUIThread();
     LeaveCriticalSection(&_requestAccess);
     return;
 }
@@ -476,13 +479,13 @@ void RenderCache::ClearQueueForDisplayModel(DisplayModel *dm, int pageNo, TilePo
     LeaveCriticalSection(&_requestAccess);
 }
 
-static DWORD WINAPI PageRenderThread(LPVOID data)
+static DWORD WINAPI RenderCacheThread(LPVOID data)
 {
     RenderCache *cache = (RenderCache *)data;
     PageRenderRequest   req;
     RenderedBitmap *    bmp;
 
-    DBG_OUT("PageRenderThread() started\n");
+    DBG_OUT("RenderCacheThread() started\n");
     for (;;) {
         //DBG_OUT("Worker: wait\n");
         if (cache->ClearCurrentRequest()) {
@@ -496,13 +499,13 @@ static DWORD WINAPI PageRenderThread(LPVOID data)
 
         if (!cache->GetNextRequest(&req))
             continue;
-        DBG_OUT("PageRenderThread(): dequeued %d\n", req.pageNo);
-        if (!req.dm->pageVisibleNearby(req.pageNo)) {
-            DBG_OUT("PageRenderThread(): not rendering because not visible\n");
+        DBG_OUT("RenderCacheThread(): dequeued %d\n", req.pageNo);
+        if (!req.dm->pageVisibleNearby(req.pageNo) && req.finishedWorkItem == NULL) {
+            DBG_OUT("RenderCacheThread(): not rendering because not visible\n");
             continue;
         }
         if (req.dm->_dontRenderFlag) {
-            DBG_OUT("PageRenderThread(): not rendering because of _dontRenderFlag\n");
+            DBG_OUT("RenderCacheThread(): not rendering because of _dontRenderFlag\n");
             continue;
         }
 
@@ -517,21 +520,26 @@ static DWORD WINAPI PageRenderThread(LPVOID data)
         if (bmp && cache->invertColors && *cache->invertColors)
             bmp->invertColors();
         if (bmp)
-            DBG_OUT("PageRenderThread(): finished rendering %d\n", req.pageNo);
+            DBG_OUT("RenderCacheThread(): finished rendering %d\n", req.pageNo);
         else
             DBG_OUT("PageRenderThread(): failed to render a bitmap of page %d\n", req.pageNo);
         cache->Add(req.dm, req.pageNo, req.rotation, req.zoom, req.tile, bmp);
 #ifdef CONSERVE_MEMORY
         cache->FreeNotVisible();
 #endif
-        req.dm->repaintDisplay();
+        if (req.finishedWorkItem) {
+            req.finishedWorkItem->MarshallOnUIThread();
+            req.finishedWorkItem = (UIThreadWorkItem*)1; // will crash if accessed again, which should not happen
+        }
+        else
+            req.dm->RepaintDisplay();
     }
 
     DBG_OUT("PageRenderThread() finished\n");
     return 0;
 }
 
-
+// TODO: conceptually, RenderCache is not the right place for code that paints
 UINT RenderCache::PaintTile(HDC hdc, RectI *bounds, DisplayModel *dm, int pageNo,
                             TilePosition tile, RectI *tileOnScreen, bool renderMissing,
                             bool *renderOutOfDateCue, bool *renderedReplacement)

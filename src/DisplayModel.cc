@@ -871,7 +871,7 @@ void DisplayModel::renderVisibleParts(void)
         pageInfo = getPageInfo(pageNo);
         if (pageInfo->visible) {
             assert(pageInfo->shown);
-            startRenderingPage(pageNo);
+            StartRenderingPage(pageNo);
             lastVisible = pageNo;
         }
     }
@@ -879,9 +879,9 @@ void DisplayModel::renderVisibleParts(void)
 #ifdef PREDICTIVE_RENDER
     // TODO: prerender two pages in Facing and Book View modes?
     if (0 < lastVisible && lastVisible < pageCount())
-        startRenderingPage(lastVisible+1);
+        StartRenderingPage(lastVisible+1);
     if (lastVisible > 1)
-        startRenderingPage(lastVisible-1);
+        StartRenderingPage(lastVisible-1);
 #endif
 }
 
@@ -996,7 +996,7 @@ void DisplayModel::goToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
     renderVisibleParts();
     setScrollbarsState();
     pageChanged();
-    repaintDisplay();
+    RepaintDisplay();
 }
 
 void DisplayModel::changeDisplayMode(DisplayMode displayMode)
@@ -1139,7 +1139,7 @@ void DisplayModel::scrollXTo(int xOff)
     
     if (currentPageNo() != currPageNo)
         pageChanged();
-    repaintDisplay();
+    RepaintDisplay();
 }
 
 void DisplayModel::scrollXBy(int dx)
@@ -1163,7 +1163,7 @@ void DisplayModel::scrollYTo(int yOff)
     int newPageNo = currentPageNo();
     if (newPageNo != currPageNo)
         pageChanged();
-    repaintDisplay();
+    RepaintDisplay();
 }
 
 /* Scroll the doc in y-axis by 'dy'. If 'changePage' is TRUE, automatically
@@ -1218,7 +1218,7 @@ void DisplayModel::scrollYBy(int dy, bool changePage)
     newPageNo = currentPageNo();
     if (newPageNo != currPageNo)
         pageChanged();
-    repaintDisplay();
+    RepaintDisplay();
 }
 
 void DisplayModel::zoomTo(float zoomVirtual, POINT *fixPt)

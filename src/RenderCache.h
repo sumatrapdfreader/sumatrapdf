@@ -5,6 +5,7 @@
 #define _RENDER_CACHE_H_
 
 #include "DisplayModel.h"
+#include "AppTools.h"
 
 #define RENDER_DELAY_UNDEFINED ((UINT)-1)
 #define RENDER_DELAY_FAILED    ((UINT)-2)
@@ -20,28 +21,32 @@ typedef struct TilePosition {
     }
 } TilePosition;
 
+// TODO: BitmapCacheEntry and PageRenderRequest are almost identical - the
+// code would probably be simpler if they were combined into one object
+
 /* We keep a cache of rendered bitmaps. BitmapCacheEntry keeps data
    that uniquely identifies rendered page (dm, pageNo, rotation, zoom)
    and corresponding rendered bitmap.
 */
 typedef struct {
-    DisplayModel * dm;
-    int            pageNo;
-    int            rotation;
-    float          zoom;
-    RenderedBitmap *bitmap;
-    TilePosition   tile;
-    int            refs;
+    DisplayModel *   dm;
+    int              pageNo;
+    int              rotation;
+    float            zoom;
+    RenderedBitmap * bitmap;
+    TilePosition     tile;
+    int              refs;
 } BitmapCacheEntry;
 
 typedef struct {
-    DisplayModel *  dm;
-    int             pageNo;
-    int             rotation;
-    float          zoom;
-    TilePosition    tile;
-    BOOL            abort;
-    DWORD           timestamp;
+    DisplayModel *      dm;
+    int                 pageNo;
+    int                 rotation;
+    float               zoom;
+    TilePosition        tile;
+    BOOL                abort;
+    DWORD               timestamp;
+    UIThreadWorkItem *  finishedWorkItem;
 } PageRenderRequest;
 
 #define MAX_PAGE_REQUESTS 8
@@ -75,7 +80,7 @@ public:
     RenderCache(void);
     ~RenderCache(void);
 
-    void                Render(DisplayModel *dm, int pageNo);
+    void                Render(DisplayModel *dm, int pageNo, UIThreadWorkItem *finishedWorkItem);
     void                CancelRendering(DisplayModel *dm);
     bool                FreeForDisplayModel(DisplayModel *dm);
     void                KeepForDisplayModel(DisplayModel *oldDm, DisplayModel *newDm);
@@ -99,7 +104,7 @@ private:
                             return _requestCount == MAX_PAGE_REQUESTS;
                         }
     UINT                GetRenderDelay(DisplayModel *dm, int pageNo, TilePosition tile);
-    void                Render(DisplayModel *dm, int pageNo, TilePosition tile, bool clearQueue=true);
+    void                Render(DisplayModel *dm, int pageNo, TilePosition tile, bool clearQueue=true, UIThreadWorkItem *finishedWorkItem=NULL);
     void                ClearQueueForDisplayModel(DisplayModel *dm, int pageNo=INVALID_PAGE_NO,
                                                   TilePosition *tile=NULL);
 

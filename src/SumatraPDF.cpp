@@ -33,7 +33,7 @@
 #include "translations.h"
 #include "Version.h"
 
-#define SHOW_DEBUG_MENU_ITEMS 0
+#define SHOW_DEBUG_MENU_ITEMS 1
 
 // those are defined here instead of resource.h to avoid
 // having them overwritten by dialog editor
@@ -675,8 +675,8 @@ MenuDef menuDefHelp[] = {
     { _TRN("&About"),                       IDM_ABOUT,                  0  }
 #if SHOW_DEBUG_MENU_ITEMS
     ,{ SEP_ITEM,                            0,                          MF_NOT_IN_RESTRICTED },
-    { "Crash me",                           IDM_CRASH_ME,               MF_NO_TRANSLATE  }
-    { "Thread stress test",                 IDM_THREAD_STRESS,          MF_NO_TRANSLATE  }
+    { "Crash me",                           IDM_CRASH_ME,               MF_NO_TRANSLATE  },
+    { "Stress test running",                IDM_THREAD_STRESS,          MF_NO_TRANSLATE  }
 #endif
 };
 
@@ -967,7 +967,16 @@ static void ZoomMenuItemCheck(HMENU hmenu, UINT menuItemId, BOOL canZoom)
         CheckMenuRadioItem(hmenu, IDM_ZOOM_100, IDM_ZOOM_100, IDM_ZOOM_100, MF_BYCOMMAND);
 }
 
-static void MenuUpdateZoom(WindowInfo* win)
+static void MenuUpdateStressTestMenu(WindowInfo *win)
+{
+    HMENU m = win->hMenu;
+    if (win->threadStressRunning)
+        CheckMenuItem(m, IDM_THREAD_STRESS, MF_BYCOMMAND | MF_CHECKED);
+    else
+        CheckMenuItem(m, IDM_THREAD_STRESS, MF_BYCOMMAND | MF_UNCHECKED);
+}
+
+static void MenuUpdateZoom(WindowInfo *win)
 {
     float zoomVirtual = gGlobalPrefs.m_defaultZoom;
     if (win->dm)
@@ -1292,6 +1301,7 @@ static void MenuUpdateStateForWindow(WindowInfo *win) {
     MenuUpdateShowToolbarStateForWindow(win);
     MenuUpdateDisplayMode(win);
     MenuUpdateZoom(win);
+    MenuUpdateStressTestMenu(win);
 
     for (int i = 0; i < dimof(menusToDisableIfNoPdf); i++) {
         UINT menuId = menusToDisableIfNoPdf[i];
@@ -1871,15 +1881,15 @@ void DisplayModel::pageChanged()
     }
 }
 
-void DisplayModel::repaintDisplay()
+void DisplayModel::RepaintDisplay()
 {
     MarshallRepaintCanvasOnUIThread(_appData);
 }
 
 /* Send the request to render a given page to a rendering thread */
-void DisplayModel::startRenderingPage(int pageNo)
+void DisplayModel::StartRenderingPage(int pageNo, UIThreadWorkItem *finishedWorkItem)
 {
-    gRenderCache.Render(this, pageNo);
+    gRenderCache.Render(this, pageNo, finishedWorkItem);
 }
 
 void DisplayModel::clearAllRenderings(void)
@@ -2531,16 +2541,49 @@ static void CrashMe()
     *p = 0;
 }
 
+static void StartStressRenderingPage(WindowInfo *win, int pageNo);
+
+class StressTestPageRenderedWorkItem : public UIThreadWorkItem
+{
+    int pageNo;
+public:
+    StressTestPageRenderedWorkItem(HWND hwnd, int pageNo) :
+       UIThreadWorkItem(hwnd), pageNo(pageNo)
+       {}
+    virtual void Execute() {
+        WindowInfo *win = gWindows.find(hwnd);
+        StartStressRenderingPage(win, pageNo + 1);
+    }
+};
+
+static void StartStressRenderingPage(WindowInfo *win, int pageNo)
+{
+    if (win->state != WS_SHOWING_PDF || win->dm == NULL) {
+        win->threadStressRunning = false;
+        MenuUpdateStressTestMenu(win);
+    }
+
+    if (!win->threadStressRunning)
+        return;
+    if (pageNo > win->dm->pageCount()) {
+        pageNo = 1;
+    }
+    UIThreadWorkItem *wi = new StressTestPageRenderedWorkItem(win->hwndCanvas, pageNo);
+    win->dm->StartRenderingPage(pageNo, wi);
+}
+
+// TODO: start text search thread as well
 static void ToggleThreadStress(WindowInfo *win)
 {
-    // TODO: stop if running
-    if (win->threadStressRunning)
+    if (win->threadStressRunning) {
+        win->threadStressRunning = false;
+        MenuUpdateStressTestMenu(win);
         return;
-    if (win->state != WS_SHOWING_PDF)
-        return;
-    if (!win->dm)
-        return;
-    //win->dm->startRenderingPage();
+    }
+
+    win->threadStressRunning = true;
+    MenuUpdateStressTestMenu(win);
+    StartStressRenderingPage(win, 1);
 }
 
 static void OnSelectAll(WindowInfo *win, bool textOnly=false)
@@ -6906,6 +6949,12 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         HWND accHwnd = win ? win->hwndFrame : msg.hwnd;
         if (TranslateAccelerator(accHwnd, hAccelTable, &msg))
             continue;
+
+        // TODO: we loose the messages if the menu is being shown
+        // (and probably in other scenarios like dialogs where an internal
+        // message loop is used). Not sure how to fix that. In the worst case
+        // we can just queue the messages in a list instead of using PostMessage()
+        // and process queued messages until a queue is empty
 
         // process those messages here so that we don't have to add this
         // handling to every WndProc that might receive those messages
