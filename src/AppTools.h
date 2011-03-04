@@ -38,12 +38,12 @@ public:
     }
 
     void Push(UIThreadWorkItem *item) {
-        CritSecScoped scope(&cs);
+        ScopedCritSec scope(&cs);
         items.Push(item);
     }
 
     bool ExecuteNextAndRemove() {
-        CritSecScoped scope(&cs);
+        ScopedCritSec scope(&cs);
         if (items.Count() > 0) {
             UIThreadWorkItem *item = items[0];
             item->Execute();

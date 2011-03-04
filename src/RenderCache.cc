@@ -43,7 +43,7 @@ RenderCache::~RenderCache(void)
    no longer need a found entry. */
 BitmapCacheEntry *RenderCache::Find(DisplayModel *dm, int pageNo, int rotation, float zoom, TilePosition *tile)
 {
-    CritSecScoped scope(&_cacheAccess);
+    ScopedCritSec scope(&_cacheAccess);
     BitmapCacheEntry *entry;
     normalizeRotation(&rotation);
     for (int i = 0; i < _cacheCount; i++) {
@@ -67,7 +67,7 @@ bool RenderCache::Exists(DisplayModel *dm, int pageNo, int rotation, float zoom,
 
 void RenderCache::DropCacheEntry(BitmapCacheEntry *entry)
 {
-    CritSecScoped scope(&_cacheAccess);
+    ScopedCritSec scope(&_cacheAccess);
     assert(entry);
     if (!entry) return;
     if (0 == --entry->refs) {
@@ -78,7 +78,7 @@ void RenderCache::DropCacheEntry(BitmapCacheEntry *entry)
 
 void RenderCache::Add(DisplayModel *dm, int pageNo, int rotation, float zoom, TilePosition tile, RenderedBitmap *bitmap)
 {
-    CritSecScoped scope(&_cacheAccess);
+    ScopedCritSec scope(&_cacheAccess);
     assert(dm);
     assert(validRotation(rotation));
 
@@ -166,7 +166,7 @@ static bool IsTileVisible(DisplayModel *dm, int pageNo, int rotation, float zoom
    at least one item. */
 bool RenderCache::FreePage(DisplayModel *dm, int pageNo, TilePosition *tile)
 {
-    CritSecScoped scope(&_cacheAccess);
+    ScopedCritSec scope(&_cacheAccess);
     int cacheCount = _cacheCount;
     bool freedSomething = false;
     int curPos = 0;
@@ -216,7 +216,7 @@ bool RenderCache::FreePage(DisplayModel *dm, int pageNo, TilePosition *tile)
 
 void RenderCache::KeepForDisplayModel(DisplayModel *oldDm, DisplayModel *newDm)
 {
-    CritSecScoped scope(&_cacheAccess);
+    ScopedCritSec scope(&_cacheAccess);
     for (int i = 0; i < _cacheCount; i++) {
         // keep the cached bitmaps for visible pages to avoid flickering during a reload
         if (_cache[i]->dm == oldDm && oldDm->pageVisible(_cache[i]->pageNo) && _cache[i]->bitmap) {
@@ -290,7 +290,7 @@ void RenderCache::Render(DisplayModel *dm, int pageNo, TilePosition tile, bool c
     assert(dm);
     bool addRequest = false;
 
-    CritSecScoped scope(&_requestAccess);
+    ScopedCritSec scope(&_requestAccess);
     if (!dm || dm->_dontRenderFlag) goto Exit;
 
     int rotation = dm->rotation();
@@ -378,7 +378,7 @@ UINT RenderCache::GetRenderDelay(DisplayModel *dm, int pageNo, TilePosition tile
     bool foundReq = false;
     DWORD timestamp;
 
-    CritSecScoped scope(&_requestAccess);
+    ScopedCritSec scope(&_requestAccess);
     if (_curReq && _curReq->pageNo == pageNo && _curReq->dm == dm && _curReq->tile == tile) {
         timestamp = _curReq->timestamp;
         foundReq = true;
@@ -397,7 +397,7 @@ UINT RenderCache::GetRenderDelay(DisplayModel *dm, int pageNo, TilePosition tile
 
 bool RenderCache::GetNextRequest(PageRenderRequest *req)
 {
-    CritSecScoped scope(&_requestAccess);
+    ScopedCritSec scope(&_requestAccess);
 
     if (_requestCount == 0)
         return false;
@@ -415,7 +415,7 @@ bool RenderCache::GetNextRequest(PageRenderRequest *req)
 
 bool RenderCache::ClearCurrentRequest(void)
 {
-    CritSecScoped scope(&_requestAccess);
+    ScopedCritSec scope(&_requestAccess);
     _curReq = NULL;
 
     bool isQueueEmpty = _requestCount == 0;
@@ -449,7 +449,7 @@ void RenderCache::CancelRendering(DisplayModel *dm)
 
 void RenderCache::ClearQueueForDisplayModel(DisplayModel *dm, int pageNo, TilePosition *tile)
 {
-    CritSecScoped scope(&_requestAccess);
+    ScopedCritSec scope(&_requestAccess);
     int reqCount = _requestCount;
     int curPos = 0;
     for (int i = 0; i < reqCount; i++) {

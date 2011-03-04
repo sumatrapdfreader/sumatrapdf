@@ -99,17 +99,29 @@ void *      memdup(void *data, size_t len);
 #endif
 
 #ifdef __cplusplus
-class CritSecScoped
+class ScopedCritSec
 {
     CRITICAL_SECTION *cs;
 public:
-    CritSecScoped(CRITICAL_SECTION *cs) {
+    ScopedCritSec(CRITICAL_SECTION *cs) {
         this->cs = cs;
         EnterCriticalSection(this->cs);
     }
-    ~CritSecScoped() {
+    ~ScopedCritSec() {
         LeaveCriticalSection(this->cs);
     }
+};
+
+// auto-free memory for arbitrary malloc()ed memory of type T*
+template <typename T>
+class ScopedMem
+{
+    T *obj;
+public:
+    explicit ScopedMem(T* obj) : obj(obj) {}
+    ~ScopedMem() { free((void*)obj); }
+    T *Get() const { return obj; }
+    operator T*() const { return obj; }
 };
 #endif
 

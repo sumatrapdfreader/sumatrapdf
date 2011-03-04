@@ -6580,9 +6580,8 @@ static bool PrintFile(const TCHAR *fileName, const TCHAR *printerName)
     DWORD       structSize, returnCode;
     bool        success = false;
 
-    fileName = FilePath_Normalize(fileName, FALSE);
-    PdfEngine *pdfEngine = PdfEngine::CreateFromFileName(fileName);
-    free((void *)fileName);
+    ScopedMem<TCHAR> fileName2(FilePath_Normalize(fileName, FALSE));
+    PdfEngine *pdfEngine = PdfEngine::CreateFromFileName(fileName2);
 
     if (!pdfEngine || !pdfEngine->hasPermission(PDF_PERM_PRINT)) {
         MessageBox(NULL, _TR("Cannot print this file"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK);
@@ -6745,9 +6744,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     if (i.lang)
         CurrLangNameSet(i.lang);
 
-    TCHAR *crashDumpPath = GetUniqueCrashDumpPath();
-    InstallCrashHandler(crashDumpPath);
-    free(crashDumpPath);
+    {
+        ScopedMem<TCHAR> crashDumpPath(GetUniqueCrashDumpPath());
+        InstallCrashHandler(crashDumpPath);
+    }
 
     msg.wParam = 1; // set an error code, in case we prematurely have to goto Exit
     if (!RegisterWinClass(hInstance))
