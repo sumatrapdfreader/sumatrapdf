@@ -13,7 +13,7 @@ This coding style follows 2 main principles:
 * codify the style that is already used frequently in Sumatra
 * clean looking code (which is e.g. why I avoid "_" prefixes or postfixes in names)
 
-The best way for describing naming style is to use examples.
+The best way to describe naming style is via examples.
 
 struct ThisIsStruct
 {
