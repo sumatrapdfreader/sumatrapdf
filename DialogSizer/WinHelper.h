@@ -171,21 +171,6 @@ namespace WinHelper
 	#define countof( t )	(sizeof( (t) ) / sizeof( (t)[0] ) )
 	#define UNREF(P) UNREFERENCED_PARAMETER(P)
 
-	inline bool IsShiftPressed()
-	{
-		return GetKeyState(VK_SHIFT) & 0x8000 ? true : false;
-	}
-
-	inline bool IsAltPressed()
-	{
-		return GetKeyState(VK_MENU) & 0x8000 ? true : false;
-	}
-
-	inline bool IsControlPressed()
-	{
-		return GetKeyState(VK_CONTROL) & 0x8000 ? true : false;
-	}
-
 	//	Wrapper for the Begin, Defer and End WindowPos functions. Nothing glamorous.
 	class CDeferWindowPos
 	{

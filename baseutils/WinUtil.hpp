@@ -91,6 +91,14 @@ TCHAR *ResolveLnk(TCHAR * path);
 IDataObject* GetDataObjectForFile(LPCTSTR pszPath, HWND hwnd=NULL);
 DWORD GetFileVersion(TCHAR *path);
 
+inline bool IsKeyPressed(int key)
+{
+    return GetKeyState(key) & 0x8000 ? true : false;
+}
+inline bool IsShiftPressed() { return IsKeyPressed(VK_SHIFT); }
+inline bool IsAltPressed() { return IsKeyPressed(VK_MENU); }
+inline bool IsCtrlPressed() { return IsKeyPressed(VK_CONTROL); }
+
 namespace Win {
 namespace Menu {
 

@@ -315,15 +315,6 @@ DWORD FileTimeDiffInSecs(FILETIME *ft1, FILETIME *ft2)
     return (DWORD)diff;
 }
 
-#define KEY_PRESSED_MASK 0x8000
-static bool WasKeyDown(int virtKey)
-{
-    SHORT state = GetKeyState(virtKey);
-    if (KEY_PRESSED_MASK & state)
-        return true;
-    return false;
-}
-
 #ifndef SUMATRA_UPDATE_INFO_URL
 #ifdef SVN_PRE_RELEASE_VER
 #define SUMATRA_UPDATE_INFO_URL _T("http://kjkpub.s3.amazonaws.com/sumatrapdf/sumpdf-prerelease-latest.txt")
@@ -4409,7 +4400,7 @@ static void AdvanceFocus(WindowInfo *win)
 {
     // Tab order: Frame -> Page -> Find -> ToC -> Frame -> ...
 
-    bool reversed = WasKeyDown(VK_SHIFT);
+    bool reversed = IsShiftPressed();
     bool hasToolbar = !win->fullScreen && !win->presentation && gGlobalPrefs.m_showToolbar;
     bool hasToC = win->tocLoaded && win->tocShow;
 
@@ -4476,12 +4467,12 @@ static bool OnKeydown(WindowInfo *win, WPARAM key, LPARAM lparam, bool inTextfie
         return false;
     } else if (VK_LEFT == key) {
         if (win->dm->needHScroll())
-            SendMessage(win->hwndCanvas, WM_HSCROLL, WasKeyDown(VK_SHIFT) ? SB_PAGELEFT : SB_LINELEFT, 0);
+            SendMessage(win->hwndCanvas, WM_HSCROLL, IsShiftPressed() ? SB_PAGELEFT : SB_LINELEFT, 0);
         else
             win->dm->goToPrevPage(0);
     } else if (VK_RIGHT == key) {
         if (win->dm->needHScroll())
-            SendMessage(win->hwndCanvas, WM_HSCROLL, WasKeyDown(VK_SHIFT) ? SB_PAGERIGHT : SB_LINERIGHT, 0);
+            SendMessage(win->hwndCanvas, WM_HSCROLL, IsShiftPressed() ? SB_PAGERIGHT : SB_LINERIGHT, 0);
         else
             win->dm->goToNextPage(0);
     } else if (VK_HOME == key) {
@@ -4545,11 +4536,11 @@ static void OnChar(WindowInfo *win, WPARAM key)
         break;
     case VK_SPACE:
     case VK_RETURN:
-        OnKeydown(win, WasKeyDown(VK_SHIFT) ? VK_PRIOR : VK_NEXT, 0);
+        OnKeydown(win, IsShiftPressed() ? VK_PRIOR : VK_NEXT, 0);
         break;
     case VK_BACK:
         {
-            bool forward = WasKeyDown(VK_SHIFT);
+            bool forward = IsShiftPressed();
             win->dm->navigate(forward ? 1 : -1);
         }
         break;
@@ -4586,7 +4577,7 @@ static void OnChar(WindowInfo *win, WPARAM key)
     case 'b':
         {
             // experimental "e-book view": flip a single page
-            bool forward = !WasKeyDown(VK_SHIFT);
+            bool forward = !IsShiftPressed();
             bool alreadyFacing = displayModeFacing(win->dm->displayMode());
             int currPage = win->dm->currentPageNo();
 
@@ -5332,11 +5323,11 @@ static LRESULT CALLBACK WndProcTocTree(HWND hwnd, UINT message, WPARAM wParam, L
             break;
         case WM_KEYDOWN:
             // consistently expand/collapse whole (sub)trees
-            if (VK_MULTIPLY == wParam && WasKeyDown(VK_SHIFT))
+            if (VK_MULTIPLY == wParam && IsShiftPressed())
                 TreeView_ExpandRecursively(hwnd, TreeView_GetRoot(hwnd), TVE_EXPAND);
             else if (VK_MULTIPLY == wParam)
                 TreeView_ExpandRecursively(hwnd, TreeView_GetSelection(hwnd), TVE_EXPAND, true);
-            else if (VK_DIVIDE == wParam && WasKeyDown(VK_SHIFT)) {
+            else if (VK_DIVIDE == wParam && IsShiftPressed()) {
                 HTREEITEM root = TreeView_GetRoot(hwnd);
                 if (!TreeView_GetNextSibling(hwnd, root))
                     root = TreeView_GetChild(hwnd, root);
@@ -6005,7 +5996,7 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
             }
 
             // Note: not all mouse drivers correctly report the Ctrl key's state
-            if ((LOWORD(wParam) & MK_CONTROL) || WasKeyDown(VK_CONTROL) || (LOWORD(wParam) & MK_RBUTTON)) {
+            if ((LOWORD(wParam) & MK_CONTROL) || IsCtrlPressed() || (LOWORD(wParam) & MK_RBUTTON)) {
                 GetCursorPos(&pt);
                 ScreenToClient(win->hwndCanvas, &pt);
 
