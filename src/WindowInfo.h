@@ -111,7 +111,7 @@ public:
     HWND            hwndPdfProperties;
 
     bool            infotipVisible;
-    HMENU           hMenu;
+    HMENU           menu;
 
     HDC             hdc;
     int             dpi;

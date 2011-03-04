@@ -241,7 +241,6 @@ static ToolbarButtonInfo gToolbarButtons[] = {
 
 static void CreateToolbar(WindowInfo *win, HINSTANCE hInst);
 static void CreateTocBox(WindowInfo *win, HINSTANCE hInst);
-static void RebuildProgramMenus(void);
 static void UpdateToolbarFindText(WindowInfo *win);
 static void UpdateToolbarPageText(WindowInfo *win, int pageCount);
 static void UpdateToolbarToolText(void);
@@ -535,7 +534,7 @@ static void MenuUpdateDisplayMode(WindowInfoBase *win)
     if (win->dm)
         displayMode = win->dm->displayMode();
 
-    HMENU menuMain = win->hMenu;
+    HMENU menuMain = win->menu;
     UINT enableState = win->dm ? MF_ENABLED : MF_GRAYED;
     for (int id = IDM_VIEW_LAYOUT_FIRST; id <= IDM_VIEW_LAYOUT_LAST; id++)
         EnableMenuItem(menuMain, id, MF_BYCOMMAND | enableState);
@@ -554,8 +553,6 @@ static void MenuUpdateDisplayMode(WindowInfoBase *win)
     CheckMenuRadioItem(menuMain, IDM_VIEW_LAYOUT_FIRST, IDM_VIEW_LAYOUT_LAST, id, MF_BYCOMMAND);
     if (displayModeContinuous(displayMode))
         CheckMenuItem(menuMain, IDM_VIEW_CONTINUOUS, MF_BYCOMMAND | MF_CHECKED);
-
-    win->UpdateToolbarState();
 }
 
 void WindowInfoBase::SwitchToDisplayMode(DisplayMode displayMode, bool keepContinuous)
@@ -573,7 +570,7 @@ void WindowInfoBase::SwitchToDisplayMode(DisplayMode displayMode, bool keepConti
 
     this->prevCanvasBR.x = this->prevCanvasBR.y = -1;
     this->dm->changeDisplayMode(displayMode);
-    MenuUpdateDisplayMode(this);
+    UpdateToolbarState();
 }
 
 #define SEP_ITEM "-----"
@@ -698,13 +695,23 @@ static UINT nextMenuId = 1000;
     InsertMenu(menuFile, IDM_EXIT, MF_BYCOMMAND | MF_ENABLED | MF_STRING, node->menuId, menuString);
 }
 
-static HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuItems)
+static void EmptyMenu(HMENU m)
 {
-    HMENU m = CreateMenu();
-    if (NULL == m) 
-        return NULL;
+    for (;;) {
+        BOOL ok = RemoveMenu(m, 0, MF_BYPOSITION);
+        if (!ok)
+            return;
+    }
+}
 
-    for (int i=0; i < menuItems; i++) {
+static HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int n, HMENU m=NULL)
+{
+    if (m)
+        EmptyMenu(m);
+    else
+        m = CreateMenu();
+
+    for (int i=0; i < n; i++) {
         MenuDef md = menuDefs[i];
         const char *title = md.m_title;
         if (md.m_flags & MF_REMOVED)
@@ -781,26 +788,32 @@ static void SetupProgramDependentMenus(WindowInfo *win)
     }
 }
 
-static void WindowInfo_RebuildMenu(WindowInfo *win)
+static HMENU RebuildFileMenu(WindowInfo *win, HMENU menu)
 {
     SetupProgramDependentMenus(win);
-    HMENU mainMenu = CreateMenu();
-    HMENU tmp = BuildMenuFromMenuDef(menuDefFile, dimof(menuDefFile));
-    AppendRecentFilesToMenu(tmp);
-    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)tmp, _TR("&File"));
-    tmp = BuildMenuFromMenuDef(menuDefView, dimof(menuDefView));
-    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)tmp, _TR("&View"));
-    tmp = BuildMenuFromMenuDef(menuDefGoTo, dimof(menuDefGoTo));
-    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)tmp, _TR("&Go To"));
-    tmp = BuildMenuFromMenuDef(menuDefZoom, dimof(menuDefZoom));
-    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)tmp, _TR("&Zoom"));
-    tmp = BuildMenuFromMenuDef(menuDefLang, dimof(menuDefLang));
-    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)tmp, _TR("&Settings"));
-    tmp = BuildMenuFromMenuDef(menuDefHelp, dimof(menuDefHelp));
-    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)tmp, _TR("&Help"));
+    menu = BuildMenuFromMenuDef(menuDefFile, dimof(menuDefFile), menu);
+    AppendRecentFilesToMenu(menu);
+    return menu;
+}
 
-    DestroyMenu(win->hMenu);
-    win->hMenu = mainMenu;
+static void BuildMenu(WindowInfo *win)
+{
+    assert(NULL == win->menu);
+
+    HMENU mainMenu = CreateMenu();
+    HMENU m = RebuildFileMenu(win, NULL);
+    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&File"));
+    m = BuildMenuFromMenuDef(menuDefView, dimof(menuDefView));
+    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&View"));
+    m = BuildMenuFromMenuDef(menuDefGoTo, dimof(menuDefGoTo));
+    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Go To"));
+    m = BuildMenuFromMenuDef(menuDefZoom, dimof(menuDefZoom));
+    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Zoom"));
+    m = BuildMenuFromMenuDef(menuDefLang, dimof(menuDefLang));
+    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Settings"));
+    m = BuildMenuFromMenuDef(menuDefHelp, dimof(menuDefHelp));
+    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Help"));
+    win->menu = mainMenu;
 }
 
 static void AddFileToHistory(const TCHAR *filePath)
@@ -969,14 +982,16 @@ static void ZoomMenuItemCheck(HMENU hmenu, UINT menuItemId, BOOL canZoom)
         CheckMenuRadioItem(hmenu, IDM_ZOOM_100, IDM_ZOOM_100, IDM_ZOOM_100, MF_BYCOMMAND);
 }
 
-static void MenuUpdateStressTestMenu(WindowInfo *win)
+// TODO: move this to more propriate file
+namespace Win {
+namespace Menu {
+void Check(HMENU m, UINT id, bool check)
 {
-    HMENU m = win->hMenu;
-    if (win->threadStressRunning)
-        CheckMenuItem(m, IDM_THREAD_STRESS, MF_BYCOMMAND | MF_CHECKED);
-    else
-        CheckMenuItem(m, IDM_THREAD_STRESS, MF_BYCOMMAND | MF_UNCHECKED);
+    CheckMenuItem(m, id, MF_BYCOMMAND | (check ? MF_CHECKED : MF_UNCHECKED));
 }
+
+} // namespace Menu
+} // namespace Win
 
 static void MenuUpdateZoom(WindowInfo *win)
 {
@@ -984,7 +999,7 @@ static void MenuUpdateZoom(WindowInfo *win)
     if (win->dm)
         zoomVirtual = win->dm->zoomVirtual();
     UINT menuId = MenuIdFromVirtualZoom(zoomVirtual);
-    ZoomMenuItemCheck(win->hMenu, menuId, NULL != win->dm);
+    ZoomMenuItemCheck(win->menu, menuId, NULL != win->dm);
 }
 
 static void RememberWindowPosition(WindowInfo *win)
@@ -1232,30 +1247,30 @@ static void ToolbarUpdateStateForWindow(WindowInfo *win) {
 }
 
 static void MenuUpdateBookmarksStateForWindow(WindowInfoBase *win) {
-    HMENU hmenu = win->hMenu;
+    HMENU m = win->menu;
     BOOL documentSpecific = win->PdfLoaded();
     BOOL enabled = WS_SHOWING_PDF == win->state && win->dm && win->dm->hasTocTree();
 
     if (documentSpecific ? win->tocShow : gGlobalPrefs.m_showToc)
-        CheckMenuItem(hmenu, IDM_VIEW_BOOKMARKS, MF_BYCOMMAND | MF_CHECKED);
+        CheckMenuItem(m, IDM_VIEW_BOOKMARKS, MF_BYCOMMAND | MF_CHECKED);
     else
-        CheckMenuItem(hmenu, IDM_VIEW_BOOKMARKS, MF_BYCOMMAND | MF_UNCHECKED);
+        CheckMenuItem(m, IDM_VIEW_BOOKMARKS, MF_BYCOMMAND | MF_UNCHECKED);
     
     if (enabled)
-        EnableMenuItem(hmenu, IDM_VIEW_BOOKMARKS, MF_BYCOMMAND | MF_ENABLED);
+        EnableMenuItem(m, IDM_VIEW_BOOKMARKS, MF_BYCOMMAND | MF_ENABLED);
     else
-        EnableMenuItem(hmenu, IDM_VIEW_BOOKMARKS, MF_BYCOMMAND | MF_GRAYED);
+        EnableMenuItem(m, IDM_VIEW_BOOKMARKS, MF_BYCOMMAND | MF_GRAYED);
 }
 
 static void MenuUpdateShowToolbarStateForWindow(WindowInfo *win) {
     if (gGlobalPrefs.m_showToolbar)
-        CheckMenuItem(win->hMenu, IDM_VIEW_SHOW_HIDE_TOOLBAR, MF_BYCOMMAND | MF_CHECKED);
+        CheckMenuItem(win->menu, IDM_VIEW_SHOW_HIDE_TOOLBAR, MF_BYCOMMAND | MF_CHECKED);
     else
-        CheckMenuItem(win->hMenu, IDM_VIEW_SHOW_HIDE_TOOLBAR, MF_BYCOMMAND | MF_UNCHECKED);
+        CheckMenuItem(win->menu, IDM_VIEW_SHOW_HIDE_TOOLBAR, MF_BYCOMMAND | MF_UNCHECKED);
 }
 
 static void MenuUpdatePrintItem(WindowInfo *win) {
-    HMENU hmenu = win->hMenu;
+    HMENU m = win->menu;
     bool filePrintEnabled = false;
     if (win->dm && win->dm->pdfEngine)
         filePrintEnabled = true;
@@ -1268,19 +1283,15 @@ static void MenuUpdatePrintItem(WindowInfo *win) {
         const TCHAR *printItem = Translations_GetTranslation(menuDefFile[ix].m_title);
         if (!filePrintAllowed)
             printItem = _TR("&Print... (denied)");
-        ModifyMenu(hmenu, IDM_PRINT, MF_BYCOMMAND | MF_STRING, IDM_PRINT, printItem);
+        ModifyMenu(m, IDM_PRINT, MF_BYCOMMAND | MF_STRING, IDM_PRINT, printItem);
     }
 
     if (filePrintEnabled && filePrintAllowed)
-        EnableMenuItem(hmenu, IDM_PRINT, MF_BYCOMMAND | MF_ENABLED);
+        EnableMenuItem(m, IDM_PRINT, MF_BYCOMMAND | MF_ENABLED);
     else
-        EnableMenuItem(hmenu, IDM_PRINT, MF_BYCOMMAND | MF_GRAYED);
+        EnableMenuItem(m, IDM_PRINT, MF_BYCOMMAND | MF_GRAYED);
 }
 
-// TODO: there's a windows message sent right before opening a menu (WM_INITMENUPOPUP)
-// We should call this function in response to that instead of inserting
-// the calls to MenuUpdateStateForWindow()
-// in every place that changes a state that dictates state of menu items
 static void MenuUpdateStateForWindow(WindowInfo *win) {
     static UINT menusToDisableIfNoPdf[] = {
         IDM_VIEW_ROTATE_LEFT, IDM_VIEW_ROTATE_RIGHT, IDM_GOTO_NEXT_PAGE, IDM_GOTO_PREV_PAGE,
@@ -1292,25 +1303,32 @@ static void MenuUpdateStateForWindow(WindowInfo *win) {
 
     bool fileCloseEnabled = FileCloseMenuEnabled();
     assert(!fileCloseEnabled == !win->loadedFilePath);
-    HMENU hmenu = win->hMenu;
+    HMENU m = win->menu;
     if (fileCloseEnabled)
-        EnableMenuItem(hmenu, IDM_CLOSE, MF_BYCOMMAND | MF_ENABLED);
+        EnableMenuItem(m, IDM_CLOSE, MF_BYCOMMAND | MF_ENABLED);
     else
-        EnableMenuItem(hmenu, IDM_CLOSE, MF_BYCOMMAND | MF_GRAYED);
+        EnableMenuItem(m, IDM_CLOSE, MF_BYCOMMAND | MF_GRAYED);
         
     MenuUpdatePrintItem(win);
     MenuUpdateBookmarksStateForWindow(win);
     MenuUpdateShowToolbarStateForWindow(win);
     MenuUpdateDisplayMode(win);
     MenuUpdateZoom(win);
-    MenuUpdateStressTestMenu(win);
+    Win::Menu::Check(win->menu, IDM_THREAD_STRESS, win->threadStressRunning);
+
+    if (WS_SHOWING_PDF == win->state) {
+        EnableMenuItem(m, IDM_GOTO_NAV_BACK,
+            MF_BYCOMMAND | (win->dm && win->dm->canNavigate(-1) ? MF_ENABLED : MF_GRAYED));
+        EnableMenuItem(m, IDM_GOTO_NAV_FORWARD,
+            MF_BYCOMMAND | (win->dm && win->dm->canNavigate(1) ? MF_ENABLED : MF_GRAYED));
+    }
 
     for (int i = 0; i < dimof(menusToDisableIfNoPdf); i++) {
         UINT menuId = menusToDisableIfNoPdf[i];
         if (WS_SHOWING_PDF == win->state)
-            EnableMenuItem(hmenu, menuId, MF_BYCOMMAND | MF_ENABLED);
+            EnableMenuItem(m, menuId, MF_BYCOMMAND | MF_ENABLED);
         else
-            EnableMenuItem(hmenu, menuId, MF_BYCOMMAND | MF_GRAYED);
+            EnableMenuItem(m, menuId, MF_BYCOMMAND | MF_GRAYED);
     }
 
     if (WS_SHOWING_PDF != win->state) {
@@ -1324,7 +1342,6 @@ static void MenuUpdateStateForWindow(WindowInfo *win) {
    given window shows a PDF file or not. */
 static void MenuToolbarUpdateStateForAllWindows(void) {
     for (size_t i = 0; i < gWindows.size(); i++) {
-        MenuUpdateStateForWindow(gWindows[i]);
         ToolbarUpdateStateForWindow(gWindows[i]);
     }
 }
@@ -1405,10 +1422,8 @@ static WindowInfo* WindowInfo_CreateEmpty(void) {
         return NULL;
     // hide scrollbars to avoid showing/hiding on empty window
     ShowScrollBar(hwndCanvas, SB_BOTH, FALSE);
-    WindowInfo_RebuildMenu(win);
-    assert(win->hMenu);
-    BOOL ok = SetMenu(hwndFrame, win->hMenu);
-    assert(ok);
+    BuildMenu(win);
+    SetMenu(hwndFrame, win->menu);
 
     win->hwndCanvas = hwndCanvas;
     ShowWindow(win->hwndCanvas, SW_SHOW);
@@ -1575,9 +1590,6 @@ static bool LoadPdfIntoWindow(
     GetClientRect(win->hwndFrame, &rect);
     SendMessage(win->hwndFrame, WM_SIZE, 0, MAKELONG(RectDx(&rect),RectDy(&rect)));
     */
-
-    UINT menuId = MenuIdFromVirtualZoom(zoomVirtual);
-    ZoomMenuItemCheck(win->hMenu, menuId, TRUE);
 
     win->dm->relayout(zoomVirtual, rotation);
     // Only restore the scroll state when everything is visible
@@ -1845,7 +1857,6 @@ WindowInfo* LoadPdf(const TCHAR *fileName, WindowInfo *win, bool showWin)
 
     if (gGlobalPrefs.m_rememberOpenedFiles) {
         AddFileToHistory(fullpath);
-        RebuildProgramMenus();
     }
 
     // Add the file also to Windows' recently used documents (this doesn't
@@ -2562,7 +2573,6 @@ static void StartStressRenderingPage(WindowInfo *win, int pageNo)
 {
     if (win->state != WS_SHOWING_PDF || win->dm == NULL) {
         win->threadStressRunning = false;
-        MenuUpdateStressTestMenu(win);
     }
 
     if (!win->threadStressRunning)
@@ -2581,12 +2591,10 @@ static void ToggleThreadStress(WindowInfo *win)
 {
     if (win->threadStressRunning) {
         win->threadStressRunning = false;
-        MenuUpdateStressTestMenu(win);
         return;
     }
 
     win->threadStressRunning = true;
-    MenuUpdateStressTestMenu(win);
     StartStressRenderingPage(win, 1);
 }
 
@@ -3137,7 +3145,6 @@ static void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose=false)
         /* last window - don't delete it */
         if (win->tocShow) {
             win->HideTocBox();
-            MenuUpdateBookmarksStateForWindow(win);
         }
         win->ClearTocBox();
         win->AbortFinding();
@@ -3179,7 +3186,6 @@ static void OnMenuZoom(WindowInfo *win, UINT menuId)
 
     float zoom = ZoomMenuItemToZoom(menuId);
     win->ZoomToSelection(zoom, false);
-    ZoomMenuItemCheck(win->hMenu, menuId, TRUE);
 }
 
 static void OnMenuCustomZoom(WindowInfo *win)
@@ -3191,7 +3197,6 @@ static void OnMenuCustomZoom(WindowInfo *win)
     if (DIALOG_CANCEL_PRESSED == Dialog_CustomZoom(win->hwndFrame, &zoom))
         return;
     win->ZoomToSelection(zoom, false);
-    MenuUpdateZoom(win);
 }
 
 static bool CheckPrinterStretchDibSupport(HWND hwndForMsgBox, HDC hdc)
@@ -3905,18 +3910,6 @@ static void OnSize(WindowInfo *win, int dx, int dy)
         win->ResizeIfNeeded();
 }
 
-static void RebuildProgramMenus(void)
-{
-    for (size_t i = 0; i < gWindows.size(); i++) {
-        WindowInfo *win = gWindows[i];
-        WindowInfo_RebuildMenu(win);
-        // Setting the menu for a full screen window messes things up
-        if (!win->fullScreen && PM_DISABLED == win->presentation)
-            SetMenu(win->hwndFrame, win->hMenu);
-        MenuUpdateStateForWindow(win);
-    }
-}
-
 void OnMenuCheckUpdate(WindowInfo *win)
 {
     DownloadSumatraUpdateInfo(win, false);
@@ -3934,7 +3927,6 @@ static void OnMenuChangeLanguage(WindowInfo *win)
         const char *langName = g_langs[newLangId]._langName;
 
         CurrLangNameSet(langName);
-        RebuildProgramMenus();
         UpdateToolbarToolText();
     }
 }
@@ -3960,7 +3952,6 @@ static void OnMenuViewShowHideToolbar(WindowInfo *win)
         RECT rect;
         GetClientRect(win->hwndFrame, &rect);
         SendMessage(win->hwndFrame, WM_SIZE, 0, MAKELONG(RectDx(&rect),RectDy(&rect)));
-        MenuUpdateShowToolbarStateForWindow(win);
     }
 }
 
@@ -3976,13 +3967,6 @@ static void OnMenuSettings(WindowInfo *win)
         gFileHistoryRoot.first = NULL;
     }
 
-    for (size_t i = 0; i < gWindows.size(); i++) {
-        WindowInfo *win = gWindows[i];
-        RebuildProgramMenus();
-        MenuUpdateBookmarksStateForWindow(win);
-        MenuUpdateDisplayMode(win);
-        MenuUpdateZoom(win);
-    }
     Prefs_Save();
 }
 
@@ -4243,7 +4227,7 @@ static void WindowInfo_ExitFullscreen(WindowInfo *win)
 
     if (gGlobalPrefs.m_showToolbar)
         ShowWindow(win->hwndReBar, SW_SHOW);
-    SetMenu(win->hwndFrame, win->hMenu);
+    SetMenu(win->hwndFrame, win->menu);
     SetWindowLong(win->hwndFrame, GWL_STYLE, win->prevStyle);
     SetWindowPos(win->hwndFrame, HWND_NOTOPMOST,
                  win->frameRc.left, win->frameRc.top,
@@ -4756,7 +4740,6 @@ static void UpdateToolbarToolText(void)
         UpdateToolbarPageText(win, -1);
         UpdateToolbarFindText(win);
         UpdateToolbarButtonsToolTipsForWindow(win);
-        MenuUpdateStateForWindow(win);
     }        
 }
 
@@ -5705,7 +5688,6 @@ void WindowInfoBase::ToggleTocBox()
     } else {
         HideTocBox();
     }
-    MenuUpdateBookmarksStateForWindow(this);
 }
 
 void WindowInfoBase::ShowTocBox()
@@ -6135,6 +6117,48 @@ static void MarshallRepaintCanvasOnUIThread(WindowInfo* win, UINT delay)
     MarshallOnUIThread(wi);
 }
 
+static void UpdateFileMenu(WindowInfo *win)
+{
+    HMENU menuFile = GetSubMenu(win->menu, 0);
+    RebuildFileMenu(win, menuFile);
+    MenuUpdateStateForWindow(win);
+}
+
+static void UpdateViewMenu(WindowInfo *win)
+{
+    MenuUpdateStateForWindow(win);
+}
+
+static void UpdateGoToMenu(WindowInfo *win)
+{
+    MenuUpdateStateForWindow(win);
+}
+
+static void UpdateZoomMenu(WindowInfo *win)
+{
+    MenuUpdateStateForWindow(win);
+}
+
+static void UpdateHelpMenu(WindowInfo *win)
+{
+    MenuUpdateStateForWindow(win);
+}
+
+static void UpdateMenu(WindowInfo *win, HMENU m)
+{
+    UINT id = GetMenuItemID(m, 0);
+    if (id == menuDefFile[0].m_id)
+        UpdateFileMenu(win);
+    else if (id == menuDefView[0].m_id)
+        UpdateViewMenu(win);
+    else if (id == menuDefGoTo[0].m_id)
+        UpdateGoToMenu(win);
+    else if (id == menuDefZoom[0].m_id)
+        UpdateZoomMenu(win);
+    else if (id == menuDefHelp[0].m_id)
+        UpdateHelpMenu(win);
+}
+
 static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     int             wmId;
@@ -6166,6 +6190,10 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                 RememberWindowPosition(win);
                 AdjustWindowEdge(win);
             }
+            break;
+
+        case WM_INITMENUPOPUP:
+            UpdateMenu(win, (HMENU)wParam);
             break;
 
         case WM_COMMAND:
@@ -6456,21 +6484,6 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
 
         case WM_KEYDOWN:
             OnKeydown(win, wParam, lParam);
-            break;
-
-        case WM_INITMENUPOPUP:
-            if (GetMenuItemID((HMENU)wParam, 0) == menuDefZoom[0].m_id) {
-                if (win)
-                    MenuUpdateZoom(win);
-            }
-            else if (GetMenuItemID((HMENU)wParam, 0) == menuDefGoTo[0].m_id) {
-                if (win && WS_SHOWING_PDF == win->state) {
-                    EnableMenuItem((HMENU)wParam, IDM_GOTO_NAV_BACK,
-                        MF_BYCOMMAND | (win->dm && win->dm->canNavigate(-1) ? MF_ENABLED : MF_GRAYED));
-                    EnableMenuItem((HMENU)wParam, IDM_GOTO_NAV_FORWARD,
-                        MF_BYCOMMAND | (win->dm && win->dm->canNavigate(1) ? MF_ENABLED : MF_GRAYED));
-                }
-            }
             break;
 
         case WM_SETTINGCHANGE:

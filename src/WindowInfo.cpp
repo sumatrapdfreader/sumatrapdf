@@ -19,7 +19,7 @@ WindowInfoBase::WindowInfoBase(HWND hwnd) :
     hwndPageText(NULL), hwndPageBox(NULL), hwndPageBg(NULL), hwndPageTotal(NULL),
     hwndTocBox(NULL), hwndTocTree(NULL), hwndSpliter(NULL),
     hwndInfotip(NULL), infotipVisible(false), hwndPdfProperties(NULL),
-    hMenu(NULL), hdc(NULL),
+    menu(NULL), hdc(NULL),
     findThread(NULL), findCanceled(false), findPercent(0), findStatusVisible(false),
     findStatusThread(NULL), stopFindStatusThreadEvent(NULL),
     showSelection(false), showForwardSearchMark(false), fwdsearchmarkHideStep(0),
