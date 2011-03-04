@@ -32,7 +32,7 @@ public:
     PdfSearchTracker *tracker;
 
 protected:
-    TCHAR *text;
+    TCHAR *findText;
     TCHAR *anchor;
     bool forward;
     bool caseSensitive;
@@ -46,8 +46,8 @@ protected:
 
     void Clear()
     {
-        free(text);
-        text = NULL;
+        free(findText);
+        findText = NULL;
         free(anchor);
         anchor = NULL;
         free(lastText);

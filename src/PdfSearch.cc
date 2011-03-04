@@ -8,7 +8,7 @@ enum { SEARCH_PAGE, SKIP_PAGE };
 #define iswordchar(c) _istalnum(c)
 
 PdfSearch::PdfSearch(PdfEngine *engine, PdfSearchTracker *tracker) : PdfSelection(engine),
-    tracker(tracker), text(NULL), anchor(NULL), pageText(NULL),
+    tracker(tracker), findText(NULL), anchor(NULL), pageText(NULL),
     caseSensitive(false), wholeWords(false), forward(true),
     findPage(0), findIndex(0), lastText(NULL)
 {
@@ -23,7 +23,6 @@ PdfSearch::~PdfSearch()
 
 void PdfSearch::Reset()
 {
-    free(pageText);
     pageText = NULL;
     PdfSelection::Reset();
 }
@@ -40,7 +39,7 @@ void PdfSearch::SetText(TCHAR *text)
 
     this->Clear();
     this->lastText = tstr_dup(text);
-    this->text = tstr_dup(text);
+    this->findText = tstr_dup(text);
 
     // extract anchor string (the first word or the first symbol) for faster searching
     if (islatinalnum(*text)) {
@@ -57,7 +56,7 @@ void PdfSearch::SetText(TCHAR *text)
     this->wholeWords = false;
     if (tstr_endswith(text, _T(" "))) {
         this->wholeWords = !tstr_endswith(text, _T("  "));
-        this->text[tstr_len(this->text) - 1] = '\0';
+        this->findText[tstr_len(this->findText) - 1] = '\0';
     }
 
     memset(this->findCache, SEARCH_PAGE, this->engine->pageCount());
@@ -77,14 +76,14 @@ void PdfSearch::SetDirection(bool forward)
     if (forward == this->forward)
         return;
     this->forward = forward;
-    findIndex += lstrlen(text) * (forward ? 1 : -1);
+    findIndex += lstrlen(findText) * (forward ? 1 : -1);
 }
 
-// try to match "text" from "start" with whitespace tolerance
+// try to match "findText" from "start" with whitespace tolerance
 // (ignore all whitespace except after alphanumeric characters)
 int PdfSearch::MatchLen(TCHAR *start)
 {
-    TCHAR *match = text, *end = start;
+    TCHAR *match = findText, *end = start;
     assert(!_istspace(*end));
 
     if (wholeWords && start > pageText && iswordchar(start[-1]) && iswordchar(start[0]))
@@ -157,9 +156,12 @@ bool PdfSearch::FindStartingAtPage(int pageNo)
 
         Reset();
 
-        fz_bbox **pcoords = !coords[pageNo - 1] ? &coords[pageNo - 1] : NULL;
-        pageText = engine->ExtractPageText(pageNo, _T(" "), pcoords);
-        findIndex = forward ? 0 : lstrlen(pageText);
+        // make sure that the page text has been cached
+        if (!text[pageNo - 1])
+            FindClosestGlyph(pageNo, 0, 0);
+
+        pageText = text[pageNo - 1];
+        findIndex = forward ? 0 : lens[pageNo - 1];
 
         if (pageText) {
             if (FindTextInPage(pageNo))

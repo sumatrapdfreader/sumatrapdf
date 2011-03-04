@@ -4,6 +4,7 @@
 PdfSelection::PdfSelection(PdfEngine *engine) : engine(engine)
 {
     coords = SAZA(fz_bbox *, engine->pageCount());
+    text = SAZA(TCHAR *, engine->pageCount());
     lens = SAZA(int, engine->pageCount());
 
     result.len = 0;
@@ -17,17 +18,21 @@ PdfSelection::PdfSelection(PdfEngine *engine) : engine(engine)
 PdfSelection::~PdfSelection()
 {
     Reset();
+
+    for (int i = 0; i < engine->pageCount(); i++) {
+        free(coords[i]);
+        coords[i] = NULL;
+        free(text[i]);
+        text[i] = NULL;
+    }
+
     free(coords);
+    free(text);
     free(lens);
 }
 
 void PdfSelection::Reset()
 {
-    for (int i = 0; i < engine->pageCount(); i++) {
-        free(coords[i]);
-        coords[i] = NULL;
-    }
-
     result.len = 0;
     free(result.pages);
     result.pages = NULL;
@@ -41,14 +46,14 @@ void PdfSelection::Reset()
 int PdfSelection::FindClosestGlyph(int pageNo, double x, double y)
 {
     assert(1 <= pageNo && pageNo <= engine->pageCount());
-    if (!coords[pageNo - 1]) {
-        TCHAR *text = engine->ExtractPageText(pageNo, _T("\1"), &coords[pageNo - 1]);
-        if (!text) {
+    if (!text[pageNo - 1]) {
+        text[pageNo - 1] = engine->ExtractPageText(pageNo, _T("\1"), &coords[pageNo - 1]);
+        if (!text[pageNo - 1]) {
+            text[pageNo - 1] = tstr_dup(_T(""));
             lens[pageNo - 1] = 0;
             return 0;
         }
-        lens[pageNo - 1] = lstrlen(text);
-        free(text);
+        lens[pageNo - 1] = lstrlen(text[pageNo - 1]);
     }
 
     double maxDist = -1;
@@ -79,7 +84,7 @@ int PdfSelection::FindClosestGlyph(int pageNo, double x, double y)
     return result;
 }
 
-void PdfSelection::FillResultRects(int pageNo, int glyph, int length, TCHAR *text, VStrList *lines)
+void PdfSelection::FillResultRects(int pageNo, int glyph, int length, VStrList *lines)
 {
     fz_bbox mediabox = fz_roundrect(engine->pageMediabox(pageNo));
     fz_bbox *c = &coords[pageNo - 1][glyph], *end = c + length;
@@ -97,8 +102,8 @@ void PdfSelection::FillResultRects(int pageNo, int glyph, int length, TCHAR *tex
         if (fz_isemptybbox(bbox))
             continue;
 
-        if (text && lines) {
-            lines->Push(tstr_dupn(text + (c0p - coords[pageNo - 1]), c - c0p + 1));
+        if (lines) {
+            lines->Push(tstr_dupn(text[pageNo - 1] + (c0p - coords[pageNo - 1]), c - c0p + 1));
             continue;
         }
 
@@ -164,8 +169,8 @@ void PdfSelection::SelectUpTo(int pageNo, int glyphIx)
         swap_int(&fromGlyph, &toGlyph);
 
     for (int page = fromPage; page <= toPage; page++) {
-        // make sure that the glyph coordinates have been cached
-        if (!coords[page-1])
+        // make sure that glyph coordinates and page text have been cached
+        if (!coords[page - 1])
             FindClosestGlyph(page, 0, 0);
 
         int glyph = page == fromPage ? fromGlyph : 0;
@@ -188,11 +193,8 @@ TCHAR *PdfSelection::ExtractText(TCHAR *lineSep)
     for (int page = fromPage; page <= toPage; page++) {
         int glyph = page == fromPage ? fromGlyph : 0;
         int length = (page == toPage ? toGlyph : lens[page - 1]) - glyph;
-        if (length > 0) {
-            TCHAR *text = engine->ExtractPageText(page, _T("\1"));
-            FillResultRects(page, glyph, length, text, &lines);
-            free(text);
-        }
+        if (length > 0)
+            FillResultRects(page, glyph, length, &lines);
     }
 
     return lines.Join(lineSep);

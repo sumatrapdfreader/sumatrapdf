@@ -34,13 +34,14 @@ public:
 protected:
     PdfEngine * engine;
     fz_bbox  ** coords;
+    TCHAR    ** text;
     int       * lens;
 
     int         startPage, endPage;
     int         startGlyph, endGlyph;
 
     int FindClosestGlyph(int pageNo, double x, double y);
-    void FillResultRects(int pageNo, int glyph, int length, TCHAR *text=NULL, VStrList *lines=NULL);
+    void FillResultRects(int pageNo, int glyph, int length, VStrList *lines=NULL);
 };
 
 #endif // _PDF_SELECTION_H
