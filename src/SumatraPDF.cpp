@@ -1343,6 +1343,7 @@ static void MenuUpdateStateForWindow(WindowInfo *win) {
    given window shows a PDF file or not. */
 static void MenuToolbarUpdateStateForAllWindows(void) {
     for (size_t i = 0; i < gWindows.Count(); i++) {
+        MenuUpdateStateForWindow(gWindows[i]);
         ToolbarUpdateStateForWindow(gWindows[i]);
     }
 }
