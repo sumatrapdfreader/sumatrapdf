@@ -1,6 +1,6 @@
 #include <windows.h>
 #include <assert.h>
-#include "MemSegment.h"
+#include "MemChunked.h"
 
 DWORD MemChunked::TotalSize() const
 {

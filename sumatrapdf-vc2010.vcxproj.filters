@@ -521,6 +521,9 @@
     <ClCompile Include="src\WindowInfo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\MemChunked.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="baseutils\base_util.h">
@@ -707,6 +710,9 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="src\WindowInfo.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\MemChunked.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

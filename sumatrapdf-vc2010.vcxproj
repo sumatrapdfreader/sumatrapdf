@@ -133,6 +133,7 @@
     <ClCompile Include="src\FileWatch.cc" />
     <ClCompile Include="src\Http.cpp" />
     <ClCompile Include="src\LangMenuDef.cpp" />
+    <ClCompile Include="src\MemChunked.cpp" />
     <ClCompile Include="src\PdfEngine.cc" />
     <ClCompile Include="src\PdfSearch.cc" />
     <ClCompile Include="src\PdfSync.cpp" />
@@ -251,6 +252,7 @@
     <ClInclude Include="src\Http.h" />
     <ClInclude Include="src\installer\Resource.h" />
     <ClInclude Include="src\LangMenuDef.h" />
+    <ClInclude Include="src\MemChunked.h" />
     <ClInclude Include="src\PdfEngine.h" />
     <ClInclude Include="src\PdfSearch.h" />
     <ClInclude Include="src\PdfSync.h" />

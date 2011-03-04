@@ -1,7 +1,5 @@
-#ifndef MEM_SEGMENT_H__
-#define MEM_SEGMENT_H__
-
-// TODO: rename to MemChunked.h
+#ifndef MemChunked_h
+#define MemChunked_h
 
 #include "Vec.h"
 
@@ -13,15 +11,15 @@ class MemChunked
         DWORD   size;
     };
 
-    Vec<Chunk> chunks;
+    Vec<Chunk>  chunks;
 
-    void FreeChunks();
+    void        FreeChunks();
+    DWORD       TotalSize() const;
 
 public:
     MemChunked() { }
     ~MemChunked() { FreeChunks(); }
 
-    DWORD   TotalSize() const;
     bool    AddChunk(const void *buf, DWORD size);
     char *  GetData(DWORD *sizeOut=NULL) const;
 };

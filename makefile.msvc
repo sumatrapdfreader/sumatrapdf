@@ -91,7 +91,7 @@ BASEUTILS_OBJS = \
 
 SUMATRA_OBJS = \
 	$(O)\AppPrefs.obj $(O)\DisplayModel.obj $(O)\DisplayState.obj $(O)\Http.obj \
-	$(O)\CrashHandler.obj $(O)\MemSegment.obj $(O)\FileHistory.obj $(O)\PdfEngine.obj \
+	$(O)\CrashHandler.obj $(O)\MemChunked.obj $(O)\FileHistory.obj $(O)\PdfEngine.obj \
 	$(O)\PdfSearch.obj $(O)\SumatraAbout.obj $(O)\SumatraDialogs.obj $(O)\SumatraProperties.obj \
 	$(O)\SumatraPDF.obj $(O)\translations.obj $(O)\translations_txt.obj $(O)\LangMenuDef.obj \
 	$(O)\FileWatch.obj $(O)\PdfSync.obj $(O)\synctex_parser.obj $(O)\synctex_parser_utils.obj \
@@ -234,13 +234,13 @@ $(O)\FileWatch.obj: baseutils/tstr_util.h baseutils/wstr_util.h src/FileWatch.h
 $(O)\geom_util.obj: baseutils/base_util.h baseutils/geom_util.h
 $(O)\Http.obj: baseutils/base_util.h baseutils/str_util.h baseutils/tstr_util.h
 $(O)\Http.obj: baseutils/Vec.h baseutils/wstr_util.h src/Http.h
-$(O)\Http.obj: src/MemSegment.h src/SumatraPDF.h src/Version.h
+$(O)\Http.obj: src/MemChunked.h src/SumatraPDF.h src/Version.h
 $(O)\Installer.obj: baseutils/base_util.h baseutils/file_util.h baseutils/str_util.h
 $(O)\Installer.obj: baseutils/tstr_util.h baseutils/win_util.h baseutils/WinUtil.hpp
 $(O)\Installer.obj: baseutils/wstr_util.h src/installer/../ifilter/PdfFilter.h src/installer/Resource.h
 $(O)\Installer.obj: src/Version.h
 $(O)\LangMenuDef.obj: src/LangMenuDef.h
-$(O)\MemSegment.obj: baseutils/Vec.h src/MemSegment.h
+$(O)\MemChunked.obj: baseutils/Vec.h src/MemChunked.h
 $(O)\MuPDF_Exports.obj: mupdf/fitz/fitz.h
 $(O)\npPdfViewer.obj: src/browserplugin/npapi/npapi.h src/browserplugin/npapi/npfunctions.h src/browserplugin/npapi/npruntime.h
 $(O)\npPdfViewer.obj: src/browserplugin/npapi/nptypes.h
@@ -299,7 +299,7 @@ $(O)\SumatraPDF.obj: baseutils/wstr_util.h mupdf/fitz/fitz.h mupdf/mupdf/mupdf.h
 $(O)\SumatraPDF.obj: src/AppPrefs.h src/AppTools.h src/Benchmark.h
 $(O)\SumatraPDF.obj: src/CrashHandler.h src/DisplayModel.h src/DisplayState.h
 $(O)\SumatraPDF.obj: src/FileHistory.h src/FileWatch.h src/Http.h
-$(O)\SumatraPDF.obj: src/LangMenuDef.h src/MemSegment.h src/ParseCommandLine.h
+$(O)\SumatraPDF.obj: src/LangMenuDef.h src/MemChunked.h src/ParseCommandLine.h
 $(O)\SumatraPDF.obj: src/PdfEngine.h src/PdfSearch.h src/PdfSelection.h
 $(O)\SumatraPDF.obj: src/PdfSync.h src/RenderCache.h src/Resource.h
 $(O)\SumatraPDF.obj: src/SumatraAbout.h src/SumatraDialogs.h src/SumatraPDF.h
@@ -320,7 +320,7 @@ $(O)\tstr_util.obj: baseutils/wstr_util.h
 $(O)\UnitTests.obj: baseutils/base_util.h baseutils/benc_util.h baseutils/geom_util.h
 $(O)\UnitTests.obj: baseutils/str_util.h baseutils/tstr_util.h baseutils/Vec.h
 $(O)\UnitTests.obj: baseutils/vstrlist.h baseutils/wstr_util.h src/AppTools.h
-$(O)\UnitTests.obj: src/DisplayState.h src/MemSegment.h src/ParseCommandLine.h
+$(O)\UnitTests.obj: src/DisplayState.h src/MemChunked.h src/ParseCommandLine.h
 $(O)\win_util.obj: baseutils/base_util.h baseutils/str_util.h baseutils/tstr_util.h
 $(O)\win_util.obj: baseutils/win_util.h baseutils/wstr_util.h
 $(O)\WindowInfo.obj: baseutils/base_util.h baseutils/file_util.h baseutils/geom_util.h
