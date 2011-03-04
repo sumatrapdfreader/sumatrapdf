@@ -6,6 +6,7 @@ store pointer types or POD types
 (http://stackoverflow.com/questions/146452/what-are-pod-types-in-c). */
 template <typename T>
 class Vec {
+private:
     static const size_t INTERNAL_BUF_CAP = 16;
     static const size_t EL_SIZE = sizeof(T);
     size_t  len;
@@ -16,20 +17,24 @@ class Vec {
     void EnsureCap(size_t needed) {
         if (this->cap >= needed)
             return;
+
         size_t newCap = this->cap * 2;
         if (this->cap > 1024)
             newCap = this->cap * 3 / 2;
-
         if (needed > newCap)
             newCap = needed;
 
-        // TODO: why not use realloc? (guard against integer overflows!)
-        T* newEls = (T*)calloc(newCap, EL_SIZE);
-        if (len > 0)
-            memcpy(newEls, els, len * EL_SIZE);
-        FreeEls();
-        els = newEls;
-        cap = newCap;
+        if (newCap >= INT_MAX / EL_SIZE) abort();
+        if (this->els != this->buf) {
+            this->els = (T*)realloc(this->els, newCap * EL_SIZE);
+        }
+        else {
+            this->els = (T*)malloc(newCap * EL_SIZE);
+            if (this->els)
+                memcpy(this->els, this->buf, this->len * EL_SIZE);
+        }
+        if (!this->els) abort();
+        this->cap = newCap;
     }
 
     T* MakeSpaceAt(size_t idx, size_t count=1) {
