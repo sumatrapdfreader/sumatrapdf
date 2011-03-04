@@ -120,6 +120,19 @@ public:
         return At(len - 1);
     }
 
+    int Find(T el) {
+        for (size_t i = 0; i < len; i++)
+            if (els[i] == el)
+                return (int)i;
+        return -1;
+    }
+
+    void Remove(T el) {
+        int i = Find(el);
+        if (i > -1)
+            RemoveAt(i);
+    }
+
     // for convenient iteration over all elements
     T* First() { 
         return els;

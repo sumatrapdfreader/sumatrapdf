@@ -826,16 +826,6 @@ static void AddFileToHistory(const TCHAR *filePath)
     gFileHistoryRoot.Prepend(node);
 }
 
-static void RemoveWindowInfo(WindowInfo *win)
-{
-    for (size_t i = 0; i < gWindows.Count(); i++) {
-        if (win == gWindows.At(i)) {
-            gWindows.RemoveAt(i);
-            return;
-        }
-    }
-}
-
 WindowInfo* FindWindowInfoByHwnd(HWND hwnd)
 {
     for (size_t i = 0; i < gWindows.Count(); i++) {
@@ -1185,7 +1175,7 @@ static void WindowInfo_Delete(WindowInfo *win)
         DestroyWindow(win->hwndPdfProperties);
         assert(NULL == win->hwndPdfProperties);
     }
-    RemoveWindowInfo(win);
+    gWindows.Remove(win);
 
     DragAcceptFiles(win->hwndCanvas, FALSE);
     DeleteOldSelectionInfo(win);
@@ -2557,7 +2547,7 @@ public:
     StressTestPageRenderedWorkItem(HWND hwnd, int pageNo) :
        UIThreadWorkItem(hwnd), pageNo(pageNo)
        {}
-    virtual void Execute() {
+    void Execute() {
         WindowInfo *win = FindWindowInfoByHwnd(hwnd);
         if (win)
             StartStressRenderingPage(win, pageNo + 1);
@@ -2569,7 +2559,7 @@ static void StartStressRenderingPage(WindowInfo *win, int pageNo)
     assert(win);
     if (!win) return;
 
-    if (win->state != WS_SHOWING_PDF || win->dm == NULL) {
+    if (win->state != WS_SHOWING_PDF || win->dm == NULL || win->dm->_dontRenderFlag) {
         win->threadStressRunning = false;
     }
 
@@ -5325,7 +5315,7 @@ public:
         : UIThreadWorkItem(hwnd), current(current), total(total)
     {}
 
-    virtual void Execute() {
+    void Execute() {
         WindowInfo *win = FindWindowInfoByHwnd(hwnd);
         win->findPercent = current * 100 / total;
         if (!win->findStatusVisible)
@@ -5339,8 +5329,8 @@ public:
 
 bool WindowInfo::FindUpdateStatus(int current, int total)
 {
-    UIThreadWorkItem *wi = new UpdateFindStatusWorkItem(hwndFrame, current, total);
-    MarshallOnUIThread(wi);
+    UIThreadWorkItem *wi = new UpdateFindStatusWorkItem(hwndCanvas, current, total);
+    wi->MarshallOnUIThread();
     return !findCanceled;
 }
 
@@ -6077,6 +6067,8 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
             return 0;
 
         default:
+            if (HandleNextUIThreadWorkItem(message, lParam))
+                return 0;
             return DefWindowProc(hwnd, message, wParam, lParam);
     }
     return 0;
@@ -6091,8 +6083,7 @@ public:
         : UIThreadWorkItem(hwnd), delay(delay)
     {}
 
-    virtual void Execute()
-    {
+    void Execute() {
         WindowInfo * win = FindWindowInfoByHwnd(hwnd);
         if (!win)
             return;
@@ -6111,7 +6102,7 @@ static void MarshallRepaintCanvasOnUIThread(WindowInfo* win, UINT delay)
     assert(win);
     if (!win) return;
     UIThreadWorkItem *wi = new RepaintCanvasWorkItem(win->hwndCanvas, delay);
-    MarshallOnUIThread(wi);
+    wi->MarshallOnUIThread();
 }
 
 static void UpdateMenu(WindowInfo *win, HMENU m)
@@ -6926,14 +6917,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
             continue;
         }
 #endif
-        if (msg.message == UIThreadWorkItemQueue::msgId) {
-            // process these messages here so that we don't have to add this
-            // handling to every WndProc that might receive those messages
-            // processing only one item at a time for no particular reason
-            ExecuteAndRemoveNextUIThreadWorkItem();
-            continue;
-        }
-
         // Dispatch the accelerator to the correct window
         win = FindWindowInfoByHwnd(msg.hwnd);
         HWND accHwnd = win ? win->hwndFrame : msg.hwnd;

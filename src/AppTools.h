@@ -12,54 +12,32 @@
 // Execute() method
 class UIThreadWorkItem
 {
-public:
+protected:
     HWND hwnd;
+
+public:
+    static UINT msgId;
+
     UIThreadWorkItem(HWND hwnd) : hwnd(hwnd) {}
     virtual ~UIThreadWorkItem() {}
     virtual void Execute() = 0;
+
+    void MarshallOnUIThread() {
+        PostMessage(hwnd, msgId, 0, (LPARAM)this);
+    }
 };
 
-class UIThreadWorkItemQueue
+static inline bool HandleNextUIThreadWorkItem(UINT message, LPARAM lParam)
 {
-    Vec<UIThreadWorkItem *>  items;
-    CRITICAL_SECTION         cs;
+    if (message != UIThreadWorkItem::msgId)
+        return false;
 
-public:
-    static UINT              msgId;
+    UIThreadWorkItem *wi = (UIThreadWorkItem *)lParam;
+    wi->Execute();
+    delete wi;
 
-    UIThreadWorkItemQueue() {
-        InitializeCriticalSection(&cs);
-    }
-
-    ~UIThreadWorkItemQueue() {
-        DeleteCriticalSection(&cs);
-        while (items.Count() > 0)
-            delete items.Pop();
-    }
-
-    void Push(UIThreadWorkItem *item) {
-        {
-            ScopedCritSec scope(&cs);
-            items.Push(item);
-        }
-        PostMessage(item->hwnd, msgId, 0, 0);
-    }
-
-    bool ExecuteNextAndRemove() {
-        ScopedCritSec scope(&cs);
-        if (items.Count() == 0)
-            return false;
-
-        UIThreadWorkItem *item = items[0];
-        items.RemoveAt(0);
-        item->Execute();
-        delete item;
-        return true;
-    }
-};
-
-void MarshallOnUIThread(UIThreadWorkItem *wi);
-bool ExecuteAndRemoveNextUIThreadWorkItem();
+    return true;
+}
 
 bool IsValidProgramVersion(char *txt);
 int CompareVersion(TCHAR *txt1, TCHAR *txt2);

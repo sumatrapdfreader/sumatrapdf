@@ -571,15 +571,4 @@ void Win32_Font_Delete(HFONT font)
     DeleteObject(font);
 }
 
-static UIThreadWorkItemQueue gUIThreadWorkItemQueue;
-UINT UIThreadWorkItemQueue::msgId = RegisterWindowMessage(_T("UIThreadWorkItemQueue::ExecuteNext"));
-
-void MarshallOnUIThread(UIThreadWorkItem *wi)
-{
-    gUIThreadWorkItemQueue.Push(wi);
-}
-
-bool ExecuteAndRemoveNextUIThreadWorkItem()
-{
-    return gUIThreadWorkItemQueue.ExecuteNextAndRemove();
-}
+UINT UIThreadWorkItem::msgId = RegisterWindowMessage(_T("UIThreadWorkItem::Execute"));
