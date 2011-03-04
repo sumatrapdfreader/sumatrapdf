@@ -527,17 +527,35 @@ static bool SendAsEmailAttachment(WindowInfo *win)
     return SUCCEEDED(hr);
 }
 
+
+// TODO: move to more  apropriate file
+namespace Win {
+namespace Menu {
+void Check(HMENU m, UINT id, bool check)
+{
+    CheckMenuItem(m, id, MF_BYCOMMAND | (check ? MF_CHECKED : MF_UNCHECKED));
+}
+
+void Enable(HMENU m, UINT id, bool enable)
+{
+    EnableMenuItem(m, id, MF_BYCOMMAND | (enable ? MF_ENABLED : MF_GRAYED));
+}
+
+} // namespace Menu
+} // namespace Win
+
 static void MenuUpdateDisplayMode(WindowInfoBase *win)
 {
+    bool enabled = false;
     DisplayMode displayMode = gGlobalPrefs.m_defaultDisplayMode;
-
-    if (win->dm)
+    if (win->dm) {
+        enabled = true;
         displayMode = win->dm->displayMode();
+    }
 
-    HMENU menuMain = win->menu;
-    UINT enableState = win->dm ? MF_ENABLED : MF_GRAYED;
-    for (int id = IDM_VIEW_LAYOUT_FIRST; id <= IDM_VIEW_LAYOUT_LAST; id++)
-        EnableMenuItem(menuMain, id, MF_BYCOMMAND | enableState);
+    for (int id = IDM_VIEW_LAYOUT_FIRST; id <= IDM_VIEW_LAYOUT_LAST; id++) {
+        Win::Menu::Enable(win->menu, id, enabled);
+    }
 
     UINT id = 0;
     switch (displayMode) {
@@ -550,9 +568,9 @@ static void MenuUpdateDisplayMode(WindowInfoBase *win)
         default: assert(!win->dm && DM_AUTOMATIC == displayMode); break;
     }
 
-    CheckMenuRadioItem(menuMain, IDM_VIEW_LAYOUT_FIRST, IDM_VIEW_LAYOUT_LAST, id, MF_BYCOMMAND);
+    CheckMenuRadioItem(win->menu, IDM_VIEW_LAYOUT_FIRST, IDM_VIEW_LAYOUT_LAST, id, MF_BYCOMMAND);
     if (displayModeContinuous(displayMode))
-        CheckMenuItem(menuMain, IDM_VIEW_CONTINUOUS, MF_BYCOMMAND | MF_CHECKED);
+        Win::Menu::Check(win->menu, IDM_VIEW_CONTINUOUS, true);
 }
 
 void WindowInfoBase::SwitchToDisplayMode(DisplayMode displayMode, bool keepContinuous)
@@ -968,30 +986,19 @@ static float ZoomMenuItemToZoom(UINT menuItemId)
     return 100.0;
 }
 
-static void ZoomMenuItemCheck(HMENU hmenu, UINT menuItemId, BOOL canZoom)
+static void ZoomMenuItemCheck(HMENU m, UINT menuItemId, bool canZoom)
 {
     assert(IDM_ZOOM_FIRST <= menuItemId && menuItemId <= IDM_ZOOM_LAST);
 
     for (int i = 0; i < dimof(gZoomMenuIds); i++)
-        EnableMenuItem(hmenu, gZoomMenuIds[i].itemId, MF_BYCOMMAND | (canZoom ? MF_ENABLED : MF_GRAYED));
+        Win::Menu::Enable(m, gZoomMenuIds[i].itemId, canZoom);
 
     if (IDM_ZOOM_100 == menuItemId)
         menuItemId = IDM_ZOOM_ACTUAL_SIZE;
-    CheckMenuRadioItem(hmenu, IDM_ZOOM_FIRST, IDM_ZOOM_LAST, menuItemId, MF_BYCOMMAND);
+    CheckMenuRadioItem(m, IDM_ZOOM_FIRST, IDM_ZOOM_LAST, menuItemId, MF_BYCOMMAND);
     if (IDM_ZOOM_ACTUAL_SIZE == menuItemId)
-        CheckMenuRadioItem(hmenu, IDM_ZOOM_100, IDM_ZOOM_100, IDM_ZOOM_100, MF_BYCOMMAND);
+        CheckMenuRadioItem(m, IDM_ZOOM_100, IDM_ZOOM_100, IDM_ZOOM_100, MF_BYCOMMAND);
 }
-
-// TODO: move this to more propriate file
-namespace Win {
-namespace Menu {
-void Check(HMENU m, UINT id, bool check)
-{
-    CheckMenuItem(m, id, MF_BYCOMMAND | (check ? MF_CHECKED : MF_UNCHECKED));
-}
-
-} // namespace Menu
-} // namespace Win
 
 static void MenuUpdateZoom(WindowInfo *win)
 {
@@ -1246,31 +1253,7 @@ static void ToolbarUpdateStateForWindow(WindowInfo *win) {
     }
 }
 
-static void MenuUpdateBookmarksStateForWindow(WindowInfoBase *win) {
-    HMENU m = win->menu;
-    BOOL documentSpecific = win->PdfLoaded();
-    BOOL enabled = WS_SHOWING_PDF == win->state && win->dm && win->dm->hasTocTree();
-
-    if (documentSpecific ? win->tocShow : gGlobalPrefs.m_showToc)
-        CheckMenuItem(m, IDM_VIEW_BOOKMARKS, MF_BYCOMMAND | MF_CHECKED);
-    else
-        CheckMenuItem(m, IDM_VIEW_BOOKMARKS, MF_BYCOMMAND | MF_UNCHECKED);
-    
-    if (enabled)
-        EnableMenuItem(m, IDM_VIEW_BOOKMARKS, MF_BYCOMMAND | MF_ENABLED);
-    else
-        EnableMenuItem(m, IDM_VIEW_BOOKMARKS, MF_BYCOMMAND | MF_GRAYED);
-}
-
-static void MenuUpdateShowToolbarStateForWindow(WindowInfo *win) {
-    if (gGlobalPrefs.m_showToolbar)
-        CheckMenuItem(win->menu, IDM_VIEW_SHOW_HIDE_TOOLBAR, MF_BYCOMMAND | MF_CHECKED);
-    else
-        CheckMenuItem(win->menu, IDM_VIEW_SHOW_HIDE_TOOLBAR, MF_BYCOMMAND | MF_UNCHECKED);
-}
-
 static void MenuUpdatePrintItem(WindowInfo *win) {
-    HMENU m = win->menu;
     bool filePrintEnabled = false;
     if (win->dm && win->dm->pdfEngine)
         filePrintEnabled = true;
@@ -1283,13 +1266,10 @@ static void MenuUpdatePrintItem(WindowInfo *win) {
         const TCHAR *printItem = Translations_GetTranslation(menuDefFile[ix].m_title);
         if (!filePrintAllowed)
             printItem = _TR("&Print... (denied)");
-        ModifyMenu(m, IDM_PRINT, MF_BYCOMMAND | MF_STRING, IDM_PRINT, printItem);
+        ModifyMenu(win->menu, IDM_PRINT, MF_BYCOMMAND | MF_STRING, IDM_PRINT, printItem);
     }
 
-    if (filePrintEnabled && filePrintAllowed)
-        EnableMenuItem(m, IDM_PRINT, MF_BYCOMMAND | MF_ENABLED);
-    else
-        EnableMenuItem(m, IDM_PRINT, MF_BYCOMMAND | MF_GRAYED);
+    Win::Menu::Enable(win->menu, IDM_PRINT, filePrintEnabled && filePrintAllowed);
 }
 
 static void MenuUpdateStateForWindow(WindowInfo *win) {
@@ -1301,36 +1281,34 @@ static void MenuUpdateStateForWindow(WindowInfo *win) {
         IDM_SELECT_ALL, IDM_COPY_SELECTION, IDM_PROPERTIES, 
         IDM_VIEW_PRESENTATION_MODE, IDM_THREAD_STRESS };
 
-    bool fileCloseEnabled = FileCloseMenuEnabled();
-    assert(!fileCloseEnabled == !win->loadedFilePath);
-    HMENU m = win->menu;
-    if (fileCloseEnabled)
-        EnableMenuItem(m, IDM_CLOSE, MF_BYCOMMAND | MF_ENABLED);
-    else
-        EnableMenuItem(m, IDM_CLOSE, MF_BYCOMMAND | MF_GRAYED);
+    assert(FileCloseMenuEnabled() == (win->loadedFilePath != NULL)); // TODO: ???
+    Win::Menu::Enable(win->menu, IDM_CLOSE, FileCloseMenuEnabled());
         
     MenuUpdatePrintItem(win);
-    MenuUpdateBookmarksStateForWindow(win);
-    MenuUpdateShowToolbarStateForWindow(win);
+
+    bool enabled = WS_SHOWING_PDF == win->state && win->dm && win->dm->hasTocTree();
+    Win::Menu::Enable(win->menu, IDM_VIEW_BOOKMARKS, enabled);
+
+    bool documentSpecific = win->PdfLoaded();
+    bool checked = documentSpecific ? win->tocShow : gGlobalPrefs.m_showToc;
+    Win::Menu::Check(win->menu, IDM_VIEW_BOOKMARKS, checked);
+
+    Win::Menu::Check(win->menu, IDM_VIEW_SHOW_HIDE_TOOLBAR, gGlobalPrefs.m_showToolbar);
     MenuUpdateDisplayMode(win);
     MenuUpdateZoom(win);
     Win::Menu::Check(win->menu, IDM_THREAD_STRESS, win->threadStressRunning);
 
     if (WS_SHOWING_PDF == win->state) {
-        EnableMenuItem(m, IDM_GOTO_NAV_BACK,
-            MF_BYCOMMAND | (win->dm && win->dm->canNavigate(-1) ? MF_ENABLED : MF_GRAYED));
-        EnableMenuItem(m, IDM_GOTO_NAV_FORWARD,
-            MF_BYCOMMAND | (win->dm && win->dm->canNavigate(1) ? MF_ENABLED : MF_GRAYED));
+        Win::Menu::Enable(win->menu, IDM_GOTO_NAV_BACK, win->dm->canNavigate(-1));
+        Win::Menu::Enable(win->menu, IDM_GOTO_NAV_FORWARD, win->dm->canNavigate(1));
     }
 
     for (int i = 0; i < dimof(menusToDisableIfNoPdf); i++) {
-        UINT menuId = menusToDisableIfNoPdf[i];
-        if (WS_SHOWING_PDF == win->state)
-            EnableMenuItem(m, menuId, MF_BYCOMMAND | MF_ENABLED);
-        else
-            EnableMenuItem(m, menuId, MF_BYCOMMAND | MF_GRAYED);
+        UINT id = menusToDisableIfNoPdf[i];
+        Win::Menu::Enable(win->menu, id, WS_SHOWING_PDF == win->state);
     }
 
+    // TODO: this belongs somewhere else
     if (WS_SHOWING_PDF != win->state) {
         ShowScrollBar(win->hwndCanvas, SB_BOTH, FALSE);
         if (WS_ABOUT == win->state)
@@ -6117,46 +6095,13 @@ static void MarshallRepaintCanvasOnUIThread(WindowInfo* win, UINT delay)
     MarshallOnUIThread(wi);
 }
 
-static void UpdateFileMenu(WindowInfo *win)
-{
-    HMENU menuFile = GetSubMenu(win->menu, 0);
-    RebuildFileMenu(win, menuFile);
-    MenuUpdateStateForWindow(win);
-}
-
-static void UpdateViewMenu(WindowInfo *win)
-{
-    MenuUpdateStateForWindow(win);
-}
-
-static void UpdateGoToMenu(WindowInfo *win)
-{
-    MenuUpdateStateForWindow(win);
-}
-
-static void UpdateZoomMenu(WindowInfo *win)
-{
-    MenuUpdateStateForWindow(win);
-}
-
-static void UpdateHelpMenu(WindowInfo *win)
-{
-    MenuUpdateStateForWindow(win);
-}
-
 static void UpdateMenu(WindowInfo *win, HMENU m)
 {
     UINT id = GetMenuItemID(m, 0);
-    if (id == menuDefFile[0].m_id)
-        UpdateFileMenu(win);
-    else if (id == menuDefView[0].m_id)
-        UpdateViewMenu(win);
-    else if (id == menuDefGoTo[0].m_id)
-        UpdateGoToMenu(win);
-    else if (id == menuDefZoom[0].m_id)
-        UpdateZoomMenu(win);
-    else if (id == menuDefHelp[0].m_id)
-        UpdateHelpMenu(win);
+    if (id == menuDefFile[0].m_id) {
+        RebuildFileMenu(win, GetSubMenu(win->menu, 0));
+    }
+    MenuUpdateStateForWindow(win);
 }
 
 static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)

@@ -48,6 +48,7 @@ CFLAGS = $(CFLAGS) /D "WINVER=0x0500" /D "_WIN32_WINNT=0x0500"
 # /D "_WIN32_WINDOWS=0x0500" /D "_WIN32_IE=0x0600"
 
 SUMATRA_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
+	/wd4800 \
 	/Ibaseutils /Ibaseutils/msvc /I$(MUPDF_DIR)\fitz /I$(MUPDF_DIR)\mupdf \
 	/I$(ZLIB_DIR) /I$(ZLIB_DIR)/minizip \
 	/Isrc /IDialogSizer /I$(EXTLIBSDIR)/synctex /D "SYNCTEX_FEATURE"
