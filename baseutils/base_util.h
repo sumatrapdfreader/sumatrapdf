@@ -103,7 +103,7 @@ class ScopedCritSec
 {
     CRITICAL_SECTION *cs;
 public:
-    ScopedCritSec(CRITICAL_SECTION *cs) {
+    explicit ScopedCritSec(CRITICAL_SECTION *cs) {
         this->cs = cs;
         EnterCriticalSection(this->cs);
     }
