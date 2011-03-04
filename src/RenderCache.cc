@@ -271,6 +271,32 @@ USHORT RenderCache::GetTileRes(DisplayModel *dm, int pageNo)
     return res;
 }
 
+// reduce the size of tiles in order to hopefully use less memory overall
+bool RenderCache::ReduceTileSize(void)
+{
+    if (maxTileSize.dx < 200 || maxTileSize.dy < 200)
+        return false;
+
+    ScopedCritSec scope1(&_requestAccess);
+    ScopedCritSec scope2(&_cacheAccess);
+
+    if (maxTileSize.dx > maxTileSize.dy)
+        (int)maxTileSize.dx /= 2;
+    else
+        (int)maxTileSize.dy /= 2;
+
+    // invalidate all rendered bitmaps and all requests
+    while (_cacheCount > 0)
+        FreeForDisplayModel(_cache[0]->dm);
+    while (_requestCount > 0)
+        ClearQueueForDisplayModel(_requests[0].dm);
+    if (_curReq)
+        _curReq->abort = true;
+
+    return true;
+}
+
+
 void RenderCache::Render(DisplayModel *dm, int pageNo, UIThreadWorkItem *finishedWorkItem)
 {
     TilePosition tile = { GetTileRes(dm, pageNo), 0, 0 };
@@ -303,7 +329,7 @@ void RenderCache::Render(DisplayModel *dm, int pageNo, TilePosition tile, bool c
             /* Currently rendered page is for the same page but with different zoom
             or rotation, so abort it */
             DBG_OUT("  aborting rendering\n");
-            _curReq->abort = TRUE;
+            _curReq->abort = true;
         } else {
             /* we're already rendering exactly the same page */
             DBG_OUT("  already rendering this page\n");
@@ -363,7 +389,7 @@ void RenderCache::Render(DisplayModel *dm, int pageNo, TilePosition tile, bool c
     newRequest->rotation = rotation;
     newRequest->zoom = zoom;
     newRequest->tile = tile;
-    newRequest->abort = FALSE;
+    newRequest->abort = false;
     newRequest->timestamp = GetTickCount();
     newRequest->finishedWorkItem = finishedWorkItem;
 
@@ -432,7 +458,7 @@ void RenderCache::CancelRendering(DisplayModel *dm)
             return;
         }
 
-        _curReq->abort = TRUE;
+        _curReq->abort = true;
         LeaveCriticalSection(&_requestAccess);
 
         /* TODO: busy loop is not good, but I don't have a better idea */
@@ -542,7 +568,7 @@ UINT RenderCache::PaintTile(HDC hdc, RectI *bounds, DisplayModel *dm, int pageNo
     HBITMAP hbmp = renderedBmp ? renderedBmp->getBitmap() : NULL;
 
     if (!hbmp) {
-        if (entry)
+        if (entry && !ReduceTileSize())
             renderDelay = RENDER_DELAY_FAILED;
         else if (0 == renderDelay)
             renderDelay = 1;

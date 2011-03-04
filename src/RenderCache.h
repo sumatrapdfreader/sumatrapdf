@@ -101,6 +101,7 @@ public:
 
 private:
     USHORT              GetTileRes(DisplayModel *dm, int pageNo);
+    bool                ReduceTileSize(void);
 
     bool                IsRenderQueueFull(void) const {
                             return _requestCount == MAX_PAGE_REQUESTS;
