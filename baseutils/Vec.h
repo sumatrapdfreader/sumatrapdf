@@ -1,6 +1,9 @@
-#ifndef VEC_H__
-#define VEC_H__
+#ifndef Vec_h
+#define Vec_h
 
+/* Simple but also optimized for small sizes vector/array class that can
+store pointer types or POD types
+(http://stackoverflow.com/questions/146452/what-are-pod-types-in-c). */
 template <typename T>
 class Vec {
     static const size_t INTERNAL_BUF_CAP = 16;
@@ -28,17 +31,17 @@ class Vec {
         cap = newCap;
     }
 
+    void FreeEls() {
+        if (els != buf)
+            free(els);
+    }
+
 public:
     Vec(size_t initCap=0) {
         len = 0;
         cap = INTERNAL_BUF_CAP;
         els = buf;
         EnsureCap(initCap);
-    }
-
-    void FreeEls() {
-        if (els != buf)
-            free(els);
     }
 
     ~Vec() {
@@ -85,16 +88,6 @@ public:
         InsertAt(len, el);
     }
 
-#if 0
-    int Find(T el) {
-        for (size_t i=0; i<len; i++) {
-            if (el == els[i])
-                return i;
-        }
-        return -1;
-    }
-#endif
-
     void RemoveAt(size_t idx, size_t count=1) {
         int tomove = len - idx - count;
         if (tomove > 0) {
@@ -112,6 +105,15 @@ public:
     void Pop() {
         if (len > 0)
             --len;
+    }
+
+    // for convenient iteration over all elements
+    T* First() { 
+        return els;
+    }
+
+    T* Sentinel() {
+        return els + len;
     }
 };
 

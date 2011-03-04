@@ -2,28 +2,25 @@
 #include <assert.h>
 #include "MemChunked.h"
 
-DWORD MemChunked::TotalSize() const
+DWORD MemChunked::TotalSize()
 {
     DWORD size = 0;
-    for (size_t i=0; i<chunks.Count(); i++)
-    {
-        Chunk c = chunks.At(i);
-        size += c.size;
+    for (Chunk *c = chunks.First(); c < chunks.Sentinel(); c++) {
+        size += c->size;
     }
     return size;
 }
 
-char *MemChunked::GetData(DWORD *sizeOut) const
+char *MemChunked::GetData(DWORD *sizeOut)
 {
     DWORD totalSize = TotalSize();
     char *buf = (char *)malloc(totalSize + 1); // +1 for 0 termination
     buf[totalSize] = 0;
 
     char *p = buf;
-    for (size_t i = 0; i < chunks.Count(); i++) {
-        Chunk c = chunks.At(i);
-        memcpy(p, c.data, c.size);
-        p += c.size;
+    for (Chunk *c = chunks.First(); c < chunks.Sentinel(); c++) {
+        memcpy(p, c->data, c->size);
+        p += c->size;
     }
 
     assert(p == buf + totalSize);
@@ -49,9 +46,8 @@ bool MemChunked::AddChunk(const void *buf, DWORD size)
 
 void MemChunked::FreeChunks()
 {
-    for (size_t i = 0; i < chunks.Count(); i++) {
-        Chunk c = chunks.At(i);
-        free(c.data);
+    for (Chunk *c = chunks.First(); c < chunks.Sentinel(); c++) {
+        free(c->data);
     }
 }
 

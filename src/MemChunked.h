@@ -14,14 +14,14 @@ class MemChunked
     Vec<Chunk>  chunks;
 
     void        FreeChunks();
-    DWORD       TotalSize() const;
+    DWORD       TotalSize();
 
 public:
     MemChunked() { }
     ~MemChunked() { FreeChunks(); }
 
     bool    AddChunk(const void *buf, DWORD size);
-    char *  GetData(DWORD *sizeOut=NULL) const;
+    char *  GetData(DWORD *sizeOut=NULL);
 };
 
 #endif
