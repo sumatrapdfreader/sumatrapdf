@@ -282,20 +282,12 @@ class WindowInfoComic : public WindowInfoBase
 };
 #endif
 
-class WindowInfoList : public vector<WindowInfo *>
-{
-public:
-    void remove(WindowInfo *win);
-    WindowInfo * find(HWND hwnd);
-    WindowInfo * find(TCHAR *filepath);
-
-    static WindowInfo * Find(HWND hwnd);
-    static WindowInfo * Find(TCHAR *filepath);
-};
+WindowInfo* FindWindowInfoByFile(TCHAR *file);
+WindowInfo* FindWindowInfoByHwnd(HWND hwnd);
 
 WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win=NULL, bool showWin=true);
 WindowInfo* LoadPdf(const TCHAR *fileName, WindowInfo *win=NULL, bool showWin=true);
 WindowInfo* LoadComicBook(const TCHAR *fileName, WindowInfo *win=NULL, bool showWin=true);
-void WindowInfo_ShowForwardSearchResult(WindowInfo *win, LPCTSTR srcfilename, UINT line, UINT col, UINT ret, UINT page, vector<RectI> &rects);
+void        WindowInfo_ShowForwardSearchResult(WindowInfo *win, LPCTSTR srcfilename, UINT line, UINT col, UINT ret, UINT page, vector<RectI> &rects);
 
 #endif

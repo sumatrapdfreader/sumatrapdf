@@ -815,10 +815,8 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
                 || 2 == _stscanf(pos, _T(",%u,%u)]"), &line, &col))
                 )
             {
-                // Execute the command.
-
                 // check if the PDF is already opened
-                WindowInfo *win = WindowInfoList::Find(pdffile);
+                WindowInfo *win = FindWindowInfoByFile(pdffile);
                 
                 // if not then open it
                 if (newwindow || !win)
@@ -853,7 +851,7 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
                 )
             {
                 // check if the PDF is already opened
-                WindowInfo *win = WindowInfoList::Find(pdffile);
+                WindowInfo *win = FindWindowInfoByFile(pdffile);
                 
                 // if not then open it
                 if (newwindow || !win)
@@ -885,7 +883,7 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
                 )
             {
                // check if the PDF is already opened
-                WindowInfo *win = WindowInfoList::Find(pdffile);
+                WindowInfo *win = FindWindowInfoByFile(pdffile);
                 if (win && WS_ERROR_LOADING_PDF == win->state)
                     SendMessage(win->hwndFrame, WM_COMMAND, IDM_REFRESH, FALSE);
                 if (win && WS_SHOWING_PDF == win->state) {
@@ -909,7 +907,7 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
                 )
             {
                // check if the PDF is already opened
-                WindowInfo *win = WindowInfoList::Find(pdffile);
+                WindowInfo *win = FindWindowInfoByFile(pdffile);
                 if (win && WS_ERROR_LOADING_PDF == win->state)
                     SendMessage(win->hwndFrame, WM_COMMAND, IDM_REFRESH, FALSE);
                 if (win && WS_SHOWING_PDF == win->state) {
@@ -933,7 +931,7 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
                 )
             {
                // check if the PDF is already opened
-                WindowInfo *win = WindowInfoList::Find(pdffile);
+                WindowInfo *win = FindWindowInfoByFile(pdffile);
                 if (win && WS_ERROR_LOADING_PDF == win->state)
                     SendMessage(win->hwndFrame, WM_COMMAND, IDM_REFRESH, FALSE);
                 if (win && WS_SHOWING_PDF == win->state) {

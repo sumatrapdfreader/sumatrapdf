@@ -234,7 +234,7 @@ static void UpdatePropertiesLayout(HWND hwnd, HDC hdc, RECT *rect) {
     SIZE            txtSize;
     int             totalDx, totalDy;
     int             leftMaxDx, rightMaxDx;
-    WindowInfo *    win = WindowInfoList::Find(hwnd);
+    WindowInfo *    win = FindWindowInfoByHwnd(hwnd);
 
     PdfPropertiesLayout *layoutData = (PdfPropertiesLayout *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
     HFONT fontLeftTxt = Win32_Font_GetSimple(hdc, LEFT_TXT_FONT, LEFT_TXT_FONT_SIZE);
@@ -453,7 +453,7 @@ void OnMenuProperties(WindowInfo *win)
 
 static void DrawProperties(HWND hwnd, HDC hdc, RECT *rect)
 {
-    WindowInfo * win = WindowInfoList::Find(hwnd);
+    WindowInfo * win = FindWindowInfoByHwnd(hwnd);
     PdfPropertiesLayout *layoutData = (PdfPropertiesLayout *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
     HBRUSH brushBg = CreateSolidBrush(gGlobalPrefs.m_bgColor);
 #if 0
@@ -546,7 +546,7 @@ void CopyPropertiesToClipboard(HWND hwnd)
 
 LRESULT CALLBACK WndProcProperties(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    WindowInfo * win = WindowInfoList::Find(hwnd);
+    WindowInfo * win = FindWindowInfoByHwnd(hwnd);
 
     switch (message)
     {

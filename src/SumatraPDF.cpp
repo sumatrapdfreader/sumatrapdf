@@ -167,7 +167,7 @@ static HFONT                        gDefaultGuiFont;
 static HBITMAP                      gBitmapReloadingCue;
 
 static RenderCache                  gRenderCache;
-static WindowInfoList               gWindows;
+static Vec<WindowInfo*>             gWindows;
 static FileHistoryList              gFileHistoryRoot;
 
 static int                          gReBarDy;
@@ -826,6 +826,57 @@ static void AddFileToHistory(const TCHAR *filePath)
     gFileHistoryRoot.Prepend(node);
 }
 
+static void RemoveWindowInfo(WindowInfo *win)
+{
+    for (size_t i = 0; i < gWindows.Count(); i++) {
+        if (win == gWindows.At(i)) {
+            gWindows.RemoveAt(i);
+            return;
+        }
+    }
+}
+
+WindowInfo* FindWindowInfoByHwnd(HWND hwnd)
+{
+    for (size_t i = 0; i < gWindows.Count(); i++) {
+        WindowInfo *win = gWindows.At(i);
+        if (hwnd == win->hwndFrame      ||
+            hwnd == win->hwndCanvas     ||
+            hwnd == win->hwndReBar      ||
+            hwnd == win->hwndFindBox    ||
+            hwnd == win->hwndFindStatus ||
+            hwnd == win->hwndPageBox    ||
+            hwnd == win->hwndTocBox     ||
+            hwnd == win->hwndTocTree    ||
+            hwnd == win->hwndSpliter    ||
+            hwnd == win->hwndPdfProperties)
+        {
+            return win;
+        }
+    }
+    return NULL;
+}
+
+// Find the first windows showing a given PDF file 
+WindowInfo* FindWindowInfoByFile(TCHAR * file)
+{
+    TCHAR * normFile = FilePath_Normalize(file, FALSE);
+    if (!normFile)
+        return NULL;
+
+    WindowInfo *found = NULL;
+    for (size_t i = 0; i < gWindows.Count(); i++) {
+        WindowInfo *win = gWindows.At(i);
+        if (win->loadedFilePath && FilePath_IsSameFile(win->loadedFilePath, normFile)) {
+            found = win;
+            break;
+        }
+    }
+
+    free(normFile);
+    return found;
+}
+
 /* Get password for a given 'fileName', can be NULL if user cancelled the
    dialog box or if the encryption key has been filled in instead.
    Caller needs to free() the result. */
@@ -1065,7 +1116,7 @@ static BOOL Prefs_Save(void)
         return FALSE;
 
     /* mark currently shown files as visible */
-    for (size_t i = 0; i < gWindows.size(); i++)
+    for (size_t i = 0; i < gWindows.Count(); i++)
         UpdateCurrentFileDisplayStateForWin(gWindows[i]);
 
     const char *data = Prefs_Serialize(&gFileHistoryRoot, &dataLen);
@@ -1134,7 +1185,7 @@ static void WindowInfo_Delete(WindowInfo *win)
         DestroyWindow(win->hwndPdfProperties);
         assert(NULL == win->hwndPdfProperties);
     }
-    gWindows.remove(win);
+    RemoveWindowInfo(win);
 
     DragAcceptFiles(win->hwndCanvas, FALSE);
     DeleteOldSelectionInfo(win);
@@ -1167,7 +1218,7 @@ static void WindowInfo_UpdateFindbox(WindowInfo *win) {
 }
 
 static bool FileCloseMenuEnabled(void) {
-    for (size_t i = 0; i < gWindows.size(); i++)
+    for (size_t i = 0; i < gWindows.Count(); i++)
         if (gWindows[i]->state != WS_ABOUT)
             return true;
     return false;
@@ -1293,7 +1344,7 @@ static void MenuUpdateStateForWindow(WindowInfo *win) {
 /* Disable/enable menu items and toolbar buttons depending on wheter a
    given window shows a PDF file or not. */
 static void MenuToolbarUpdateStateForAllWindows(void) {
-    for (size_t i = 0; i < gWindows.size(); i++) {
+    for (size_t i = 0; i < gWindows.Count(); i++) {
         ToolbarUpdateStateForWindow(gWindows[i]);
     }
 }
@@ -1360,7 +1411,7 @@ static WindowInfo* WindowInfo_CreateEmpty(void) {
     if (!hwndFrame)
         return NULL;
 
-    assert(NULL == gWindows.Find(hwndFrame));
+    assert(NULL == FindWindowInfoByHwnd(hwndFrame));
     win = new WindowInfo(hwndFrame);
 
     hwndCanvas = CreateWindowEx(
@@ -1392,7 +1443,7 @@ static WindowInfo* WindowInfo_CreateEmpty(void) {
     DragAcceptFiles(win->hwndCanvas, TRUE);
 
     win->stopFindStatusThreadEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
-    gWindows.push_back(win);
+    gWindows.Append(win);
     return win;
 }
 
@@ -1634,19 +1685,9 @@ static void OnFileChange(const TCHAR * filename, LPARAM param)
     PostMessage(((WindowInfo *)param)->hwndFrame, WM_APP_AUTO_RELOAD, 0, 0);
 }
 
-WindowInfo* WindowInfoList::Find(HWND hwnd)
-{
-    return gWindows.find(hwnd);
-}
-
-WindowInfo* WindowInfoList::Find(LPTSTR file)
-{
-    return gWindows.find(file);
-}
-
 #ifndef THREAD_BASED_FILEWATCH
-static void WindowInfoList_RefreshUpdatedFiles(void) {
-    for (size_t i = 0; i < gWindows.size(); i++) {
+static void RefreshUpdatedFiles(void) {
+    for (size_t i = 0; i < gWindows.Count(); i++) {
         WindowInfo *win = gWindows[i];
         if (win->watcher.HasChanged())
             OnFileChange(win->watcher.filepath(), (LPARAM)win);
@@ -1766,7 +1807,7 @@ WindowInfo* LoadPdf(const TCHAR *fileName, WindowInfo *win, bool showWin)
     if (!fileName) return NULL;
 
     bool isNewWindow = false;
-    if (!win && 1 == gWindows.size() && WS_ABOUT == gWindows[0]->state) {
+    if (!win && 1 == gWindows.Count() && WS_ABOUT == gWindows[0]->state) {
         win = gWindows[0];
     }
     else if (!win || WS_SHOWING_PDF == win->state) {
@@ -2516,7 +2557,7 @@ public:
        UIThreadWorkItem(hwnd), pageNo(pageNo)
        {}
     virtual void Execute() {
-        WindowInfo *win = gWindows.find(hwnd);
+        WindowInfo *win = FindWindowInfoByHwnd(hwnd);
         StartStressRenderingPage(win, pageNo + 1);
     }
 };
@@ -3077,7 +3118,7 @@ static void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose=false)
         WindowInfo_ExitFullscreen(win);
 
     bool lastWindow = false;
-    if (1 == gWindows.size())
+    if (1 == gWindows.Count())
         lastWindow = true;
 
     if (lastWindow)
@@ -3121,7 +3162,7 @@ static void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose=false)
     }
 
     if (lastWindow && quitIfLast) {
-        assert(0 == gWindows.size());
+        assert(0 == gWindows.Count());
         PostQuitMessage(0);
     } else {
         MenuToolbarUpdateStateForAllWindows();
@@ -3895,7 +3936,7 @@ static void OnMenuViewShowHideToolbar(WindowInfo *win)
     if (win->hwndFindBox == GetFocus() || win->hwndPageBox == GetFocus())
         SetFocus(win->hwndFrame);
 
-    for (size_t i = 0; i < gWindows.size(); i++) {
+    for (size_t i = 0; i < gWindows.Count(); i++) {
         WindowInfo *win = gWindows[i];
         if (gGlobalPrefs.m_showToolbar)
             ShowWindow(win->hwndReBar, SW_SHOW);
@@ -4687,7 +4728,7 @@ static void UpdateToolbarButtonsToolTipsForWindow(WindowInfo* win)
 
 static void UpdateToolbarToolText(void)
 {
-    for (size_t i = 0; i < gWindows.size(); i++) {
+    for (size_t i = 0; i < gWindows.Count(); i++) {
         WindowInfo *win = gWindows[i];
         UpdateToolbarPageText(win, -1);
         UpdateToolbarFindText(win);
@@ -4734,7 +4775,7 @@ static bool FocusUnselectedWndProc(HWND hwnd, UINT message)
 static WNDPROC DefWndProcFindBox = NULL;
 static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    WindowInfo *win = gWindows.Find(hwnd);
+    WindowInfo *win = FindWindowInfoByHwnd(hwnd);
     if (!win || !win->dm)
         return DefWindowProc(hwnd, message, wParam, lParam);
 
@@ -4859,7 +4900,7 @@ static LRESULT CALLBACK WndProcToolbar(HWND hwnd, UINT message, WPARAM wParam, L
 
 static LRESULT CALLBACK WndProcFindStatus(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    WindowInfo *win = gWindows.Find(hwnd);
+    WindowInfo *win = FindWindowInfoByHwnd(hwnd);
     if (!win)
         return DefWindowProc(hwnd, message, wParam, lParam);
 
@@ -4996,7 +5037,7 @@ static void CreateFindBox(WindowInfo *win, HINSTANCE hInst)
 static WNDPROC DefWndProcPageBox = NULL;
 static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    WindowInfo *win = gWindows.Find(hwnd);
+    WindowInfo *win = FindWindowInfoByHwnd(hwnd);
     if (!win || !win->dm)
         return DefWindowProc(hwnd, message, wParam, lParam);
 
@@ -5212,7 +5253,7 @@ static void CreateToolbar(WindowInfo *win, HINSTANCE hInst) {
 
 static LRESULT CALLBACK WndProcSpliter(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    WindowInfo *win = gWindows.Find(hwnd);
+    WindowInfo *win = FindWindowInfoByHwnd(hwnd);
 
     switch (message)
     {
@@ -5281,7 +5322,7 @@ public:
     {}
 
     virtual void Execute() {
-        WindowInfo *win = gWindows.find(hwnd);
+        WindowInfo *win = FindWindowInfoByHwnd(hwnd);
         win->findPercent = current * 100 / total;
         if (!win->findStatusVisible)
             WindowInfo_ShowFindStatus(win);
@@ -5315,7 +5356,7 @@ static void TreeView_ExpandRecursively(HWND hTree, HTREEITEM hItem, UINT flag, b
 static WNDPROC DefWndProcTocTree = NULL;
 static LRESULT CALLBACK WndProcTocTree(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    WindowInfo *win = gWindows.Find(hwnd);
+    WindowInfo *win = FindWindowInfoByHwnd(hwnd);
     switch (message) {
         case WM_CHAR:
             if (VK_ESCAPE == wParam && gGlobalPrefs.m_escToExit)
@@ -5367,7 +5408,7 @@ static void RelayoutTocItem(LPNMTVCUSTOMDRAW ntvcd);
 static WNDPROC DefWndProcTocBox = NULL;
 static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    WindowInfo *win = gWindows.Find(hwnd);
+    WindowInfo *win = FindWindowInfoByHwnd(hwnd);
     switch (message) {
     case WM_SIZE: {
         RECT rc;
@@ -5790,7 +5831,7 @@ static bool gWheelMsgRedirect = false; // set when WM_MOUSEWHEEL has been passed
 static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     int          current;
-    WindowInfo * win = gWindows.Find(hwnd);
+    WindowInfo * win = FindWindowInfoByHwnd(hwnd);
     POINT        pt;
 
     switch (message)
@@ -6048,7 +6089,7 @@ public:
 
     virtual void Execute()
     {
-        WindowInfo * win = gWindows.Find(hwnd);
+        WindowInfo * win = FindWindowInfoByHwnd(hwnd);
         if (!win)
             return;
         if (0 == delay) {
@@ -6085,7 +6126,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
     ULONG           ulScrollLines;                   // for mouse wheel logic
     HttpReqCtx *    ctx;
 
-    win = gWindows.Find(hwnd);
+    win = FindWindowInfoByHwnd(hwnd);
 
     switch (message)
     {
@@ -6876,12 +6917,12 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     while (GetMessage(&msg, NULL, 0, 0) > 0) {
 #ifndef THREAD_BASED_FILEWATCH
         if (NULL == msg.hwnd && WM_TIMER == msg.message && timerID == msg.wParam) {
-            WindowInfoList_RefreshUpdatedFiles();
+            RefreshUpdatedFiles();
             continue;
         }
 #endif
         // Dispatch the accelerator to the correct window
-        win = gWindows.Find(msg.hwnd);
+        win = FindWindowInfoByHwnd(msg.hwnd);
         HWND accHwnd = win ? win->hwndFrame : msg.hwnd;
         if (TranslateAccelerator(accHwnd, hAccelTable, &msg))
             continue;
@@ -6900,7 +6941,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 #endif
     
 Exit:
-    while (gWindows.size() > 0)
+    while (gWindows.Count() > 0)
         WindowInfo_Delete(gWindows[0]);
     DeleteObject(gBrushBg);
     DeleteObject(gBrushWhite);
