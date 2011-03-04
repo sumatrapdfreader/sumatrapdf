@@ -76,23 +76,23 @@ void RenderCache::DropCacheEntry(BitmapCacheEntry *entry)
     }
 }
 
-void RenderCache::Add(DisplayModel *dm, int pageNo, int rotation, float zoom, TilePosition tile, RenderedBitmap *bitmap)
+void RenderCache::Add(PageRenderRequest &req, RenderedBitmap *bitmap)
 {
     ScopedCritSec scope(&_cacheAccess);
-    assert(dm);
-    assert(validRotation(rotation));
+    assert(req.dm);
+    assert(validRotation(req.rotation));
 
-    normalizeRotation(&rotation);
-    DBG_OUT("BitmapCache_Add(pageNo=%d, rotation=%d, zoom=%.2f%%)\n", pageNo, rotation, zoom);
+    normalizeRotation(&req.rotation);
+    DBG_OUT("BitmapCache_Add(pageNo=%d, rotation=%d, zoom=%.2f%%)\n", req.pageNo, req.rotation, req.zoom);
     assert(_cacheCount <= MAX_BITMAPS_CACHED);
 
     /* It's possible there still is a cached bitmap with different zoom/rotation */
-    FreePage(dm, pageNo, &tile);
+    FreePage(req.dm, req.pageNo, &req.tile);
 
     if (_cacheCount >= MAX_BITMAPS_CACHED) {
         // free an invisible page of the same DisplayModel ...
         for (int i = 0; i < _cacheCount; i++) {
-            if (_cache[i]->dm == dm && !dm->pageVisibleNearby(_cache[i]->pageNo)) {
+            if (_cache[i]->dm == req.dm && !req.dm->pageVisibleNearby(_cache[i]->pageNo)) {
                 DropCacheEntry(_cache[i]);
                 _cacheCount--;
                 memmove(&_cache[i], &_cache[i + 1], (_cacheCount - i) * sizeof(_cache[0]));
@@ -107,14 +107,15 @@ void RenderCache::Add(DisplayModel *dm, int pageNo, int rotation, float zoom, Ti
         }
     }
 
-    BitmapCacheEntry entry = { dm, pageNo, rotation, zoom, bitmap, tile, 1 };
+    // Copy the PageRenderRequest as it will be reused
+    BitmapCacheEntry entry = { req.dm, req.pageNo, req.rotation, req.zoom, req.tile, bitmap, 1 };
     _cache[_cacheCount] = (BitmapCacheEntry *)_memdup(&entry);
     assert(_cache[_cacheCount]);
     if (!_cache[_cacheCount])
         delete bitmap;
     else
         _cacheCount++;
-    dm->ageStore();
+    req.dm->ageStore();
 }
 
 // get the (user) coordinates of a specific tile
@@ -288,7 +289,7 @@ void RenderCache::Render(DisplayModel *dm, int pageNo, TilePosition tile, bool c
 {
     DBG_OUT("RenderQueue_Add(pageNo=%d)\n", pageNo);
     assert(dm);
-    bool addRequest = false;
+    PageRenderRequest* newRequest = NULL;
 
     ScopedCritSec scope(&_requestAccess);
     if (!dm || dm->_dontRenderFlag) goto Exit;
@@ -345,11 +346,12 @@ void RenderCache::Render(DisplayModel *dm, int pageNo, TilePosition tile, bool c
         goto Exit;
     }
 
-    PageRenderRequest* newRequest;
     /* add request to the queue */
     if (_requestCount == MAX_PAGE_REQUESTS) {
         /* queue is full -> remove the oldest items on the queue */
-        memmove(&(_requests[0]), &(_requests[1]), sizeof(PageRenderRequest)*(MAX_PAGE_REQUESTS-1));
+        if (_requests[0].finishedWorkItem)
+            MarshallOnUIThread(_requests[0].finishedWorkItem);
+        memmove(&(_requests[0]), &(_requests[1]), sizeof(PageRenderRequest) * (MAX_PAGE_REQUESTS - 1));
         newRequest = &(_requests[MAX_PAGE_REQUESTS-1]);
     } else {
         newRequest = &(_requests[_requestCount]);
@@ -364,35 +366,26 @@ void RenderCache::Render(DisplayModel *dm, int pageNo, TilePosition tile, bool c
     newRequest->abort = FALSE;
     newRequest->timestamp = GetTickCount();
     newRequest->finishedWorkItem = finishedWorkItem;
-    addRequest = true;
+
+    SetEvent(startRendering);
 
 Exit:
-    if (addRequest)
-        SetEvent(startRendering);
-    else if (finishedWorkItem)
+    if (!newRequest && finishedWorkItem)
         MarshallOnUIThread(finishedWorkItem);
 }
 
 UINT RenderCache::GetRenderDelay(DisplayModel *dm, int pageNo, TilePosition tile)
 {
-    bool foundReq = false;
-    DWORD timestamp;
-
     ScopedCritSec scope(&_requestAccess);
-    if (_curReq && _curReq->pageNo == pageNo && _curReq->dm == dm && _curReq->tile == tile) {
-        timestamp = _curReq->timestamp;
-        foundReq = true;
-    }
-    for (int i = 0; !foundReq && i < _requestCount; i++) {
-        if (_requests[i].pageNo == pageNo && _requests[i].dm == dm && _requests[i].tile == tile) {
-            timestamp = _requests[i].timestamp;
-            foundReq = true;
-        }
-    }
 
-    if (!foundReq)
-        return RENDER_DELAY_UNDEFINED;
-    return GetTickCount() - timestamp;
+    if (_curReq && _curReq->pageNo == pageNo && _curReq->dm == dm && _curReq->tile == tile)
+        return GetTickCount() - _curReq->timestamp;
+
+    for (int i = 0; i < _requestCount; i++)
+        if (_requests[i].pageNo == pageNo && _requests[i].dm == dm && _requests[i].tile == tile)
+            return GetTickCount() - _requests[i].timestamp;
+
+    return RENDER_DELAY_UNDEFINED;
 }
 
 bool RenderCache::GetNextRequest(PageRenderRequest *req)
@@ -458,9 +451,11 @@ void RenderCache::ClearQueueForDisplayModel(DisplayModel *dm, int pageNo, TilePo
             (!tile || req->tile.res != tile->res || !IsTileVisible(dm, req->pageNo, req->rotation, req->zoom, *tile, 0.5));
         if (i != curPos)
             _requests[curPos] = _requests[i];
-        if (shouldRemove)
+        if (shouldRemove) {
+            if (req->finishedWorkItem)
+                MarshallOnUIThread(req->finishedWorkItem);
             _requestCount--;
-        else
+        } else
             curPos++;
     }
 }
@@ -500,6 +495,8 @@ static DWORD WINAPI RenderCacheThread(LPVOID data)
                                    Target_View, cache->useGdiRenderer && *cache->useGdiRenderer);
         if (req.abort) {
             delete bmp;
+            if (req.finishedWorkItem)
+                MarshallOnUIThread(req.finishedWorkItem);
             continue;
         }
 
@@ -509,7 +506,7 @@ static DWORD WINAPI RenderCacheThread(LPVOID data)
             DBG_OUT("RenderCacheThread(): finished rendering %d\n", req.pageNo);
         else
             DBG_OUT("PageRenderThread(): failed to render a bitmap of page %d\n", req.pageNo);
-        cache->Add(req.dm, req.pageNo, req.rotation, req.zoom, req.tile, bmp);
+        cache->Add(req, bmp);
 #ifdef CONSERVE_MEMORY
         cache->FreeNotVisible();
 #endif

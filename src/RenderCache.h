@@ -21,9 +21,6 @@ typedef struct TilePosition {
     }
 } TilePosition;
 
-// TODO: BitmapCacheEntry and PageRenderRequest are almost identical - the
-// code would probably be simpler if they were combined into one object
-
 /* We keep a cache of rendered bitmaps. BitmapCacheEntry keeps data
    that uniquely identifies rendered page (dm, pageNo, rotation, zoom)
    and corresponding rendered bitmap.
@@ -33,19 +30,25 @@ typedef struct {
     int              pageNo;
     int              rotation;
     float            zoom;
-    RenderedBitmap * bitmap;
     TilePosition     tile;
+
+    RenderedBitmap * bitmap;
     int              refs;
 } BitmapCacheEntry;
 
+/* Even though this looks a lot like a BitmapCacheEntry, we keep it
+   separate for clarity in the code (PageRenderRequests are reused,
+   while BitmapCacheEntries are ref-counted) */
 typedef struct {
     DisplayModel *      dm;
     int                 pageNo;
     int                 rotation;
     float               zoom;
     TilePosition        tile;
-    BOOL                abort;
+
+    bool                abort;
     DWORD               timestamp;
+    // owned by the PageRenderRequest (use it before reusing the request)
     UIThreadWorkItem *  finishedWorkItem;
 } PageRenderRequest;
 
@@ -93,8 +96,7 @@ public:
 
     bool                ClearCurrentRequest(void);
     bool                GetNextRequest(PageRenderRequest *req);
-    void                Add(DisplayModel *dm, int pageNo, int rotation, float zoom,
-                            TilePosition tile, RenderedBitmap *bitmap);
+    void                Add(PageRenderRequest &req, RenderedBitmap *bitmap);
     bool                FreeNotVisible(void);
 
 private:

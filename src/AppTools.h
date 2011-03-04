@@ -25,33 +25,36 @@ class UIThreadWorkItemQueue
     CRITICAL_SECTION         cs;
 
 public:
+    static UINT              msgId;
+
     UIThreadWorkItemQueue() {
         InitializeCriticalSection(&cs);
     }
 
     ~UIThreadWorkItemQueue() {
         DeleteCriticalSection(&cs);
-        while (items.Count() > 0) {
-            delete items[0];
-            items.RemoveAt(0);
-        }
+        while (items.Count() > 0)
+            delete items.Pop();
     }
 
     void Push(UIThreadWorkItem *item) {
-        ScopedCritSec scope(&cs);
-        items.Push(item);
+        {
+            ScopedCritSec scope(&cs);
+            items.Push(item);
+        }
+        PostMessage(item->hwnd, msgId, 0, 0);
     }
 
     bool ExecuteNextAndRemove() {
         ScopedCritSec scope(&cs);
-        if (items.Count() > 0) {
-            UIThreadWorkItem *item = items[0];
-            item->Execute();
-            delete item;
-            items.RemoveAt(0);
-            return true;
-        }
-        return false;
+        if (items.Count() == 0)
+            return false;
+
+        UIThreadWorkItem *item = items[0];
+        items.RemoveAt(0);
+        item->Execute();
+        delete item;
+        return true;
     }
 };
 

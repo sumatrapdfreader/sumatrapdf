@@ -5,6 +5,7 @@
 #include <shlobj.h>
 #include <wininet.h>
 
+// TODO: move all cbz/cbr related code into ComicEngine.cpp
 // minizip
 #include <ioapi.h>
 #include <iowin32.h>
@@ -56,7 +57,8 @@
 /* Define THREAD_BASED_FILEWATCH to use the thread-based implementation of file change detection. */
 #define THREAD_BASED_FILEWATCH
 
-#define noSHOW_DEBUG_MENU_ITEMS
+/* Define if you want to display additional debug helpers in the Help menu */
+// #define SHOW_DEBUG_MENU_ITEMS
 
 #define ZOOM_IN_FACTOR      1.2f
 #define ZOOM_OUT_FACTOR     1.0f / ZOOM_IN_FACTOR
@@ -2557,12 +2559,16 @@ public:
        {}
     virtual void Execute() {
         WindowInfo *win = FindWindowInfoByHwnd(hwnd);
-        StartStressRenderingPage(win, pageNo + 1);
+        if (win)
+            StartStressRenderingPage(win, pageNo + 1);
     }
 };
 
 static void StartStressRenderingPage(WindowInfo *win, int pageNo)
 {
+    assert(win);
+    if (!win) return;
+
     if (win->state != WS_SHOWING_PDF || win->dm == NULL) {
         win->threadStressRunning = false;
     }
@@ -2573,7 +2579,6 @@ static void StartStressRenderingPage(WindowInfo *win, int pageNo)
         gRenderCache.FreeForDisplayModel(win->dm);
         pageNo = 1;
     }
-    // TODO: this item occasionally gets lost and leaks
     UIThreadWorkItem *wi = new StressTestPageRenderedWorkItem(win->hwndCanvas, pageNo);
     win->dm->StartRenderingPage(pageNo, wi);
 }
@@ -6921,6 +6926,14 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
             continue;
         }
 #endif
+        if (msg.message == UIThreadWorkItemQueue::msgId) {
+            // process these messages here so that we don't have to add this
+            // handling to every WndProc that might receive those messages
+            // processing only one item at a time for no particular reason
+            ExecuteAndRemoveNextUIThreadWorkItem();
+            continue;
+        }
+
         // Dispatch the accelerator to the correct window
         win = FindWindowInfoByHwnd(msg.hwnd);
         HWND accHwnd = win ? win->hwndFrame : msg.hwnd;
@@ -6929,11 +6942,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
         TranslateMessage(&msg);
         DispatchMessage(&msg);
-
-        // process those messages here so that we don't have to add this
-        // handling to every WndProc that might receive those messages
-        // processing only one item at a time for no particular reason
-        ExecuteAndRemoveNextUIThreadWorkItem();
     }
 
 #ifndef THREAD_BASED_FILEWATCH
