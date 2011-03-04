@@ -15,7 +15,7 @@ public:
     UINT          msg;
 
     TCHAR *       url;
-    MemSegment    data;
+    MemChunked    data;
     /* true for automated check, false for check triggered from menu */
     bool          silent;
 

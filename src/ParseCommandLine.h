@@ -2,6 +2,7 @@
 #define _PARSE_COMMAND_LINE_H__
 
 #include "DisplayState.h"
+#include "vstrlist.h"
 
 class CommandLineInfo {
 public:

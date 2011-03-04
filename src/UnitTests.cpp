@@ -32,28 +32,27 @@ static void hexstrTest()
     free(s);
 }
 
-static void MemSegmentTest()
+static void MemChunkedTest()
 {
-    MemSegment *ms;
+    MemChunked *ms;
     DWORD size;
     char *data;
 
     char buf[2] = {'a', '\0'};
-    ms = new MemSegment();
+    ms = new MemChunked();
     for (int i=0; i<7; i++) {
-        ms->add(buf, 1);
+        ms->AddChunk(buf, 1);
         buf[0] = buf[0] + 1;
     }
-    data = (char*)ms->getData(&size);
+    data = (char*)ms->GetData(&size);
     delete ms;
     assert(str_eq("abcdefg", data));
     assert(7 == size);
     free(data);
 
-    ms = new MemSegment();
-    ms->add("a", 1);
-    data = (char*)ms->getData(&size);
-    ms->clearFree();
+    ms = new MemChunked();
+    ms->AddChunk("a", 1);
+    data = (char*)ms->GetData(&size);
     delete ms;
     assert(str_eq("a", data));
     assert(1 == size);
@@ -248,7 +247,7 @@ void u_DoAllTests(void)
     DBG_OUT("Running tests\n");
     u_RectI_Intersect();
     u_benc_all();
-    MemSegmentTest();
+    MemChunkedTest();
     hexstrTest();
     ParseCommandLineTest();
     tstr_test();

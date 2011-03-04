@@ -2,48 +2,56 @@
 #include <assert.h>
 #include "MemSegment.h"
 
-char *MemSegment::getData(DWORD *sizeOut)
+DWORD MemChunked::TotalSize() const
 {
+    DWORD size = 0;
+    for (size_t i=0; i<chunks.Count(); i++)
+    {
+        Chunk c = chunks.At(i);
+        size += c.size;
+    }
+    return size;
+}
+
+char *MemChunked::GetData(DWORD *sizeOut) const
+{
+    DWORD totalSize = TotalSize();
     char *buf = (char *)malloc(totalSize + 1); // +1 for 0 termination
     buf[totalSize] = 0;
 
-    char *end = buf;
-    for (size_t i = 0; i < this->size(); i++) {
-        DataSegment *seg = (*this)[i];
-        memcpy(end, seg->data, seg->len);
-        end += seg->len;
+    char *p = buf;
+    for (size_t i = 0; i < chunks.Count(); i++) {
+        Chunk c = chunks.At(i);
+        memcpy(p, c.data, c.size);
+        p += c.size;
     }
 
-    assert(end == buf + totalSize);
+    assert(p == buf + totalSize);
     if (sizeOut)
         *sizeOut = totalSize;
     return buf;
 }
 
-bool MemSegment::add(const void *buf, DWORD size)
+bool MemChunked::AddChunk(const void *buf, DWORD size)
 {
-    if (totalSize + size + 1 < totalSize)
+    if (TotalSize() + size + 1 < TotalSize())
         return false;
 
     void *data = malloc(size);
     if (!data)
         return false;
-
-    DataSegment *seg = new DataSegment;
-    seg->len = size;
-    seg->data = data;
-    memcpy(seg->data, buf, size);
-    totalSize += size;
-    this->push_back(seg);
+    memcpy(data, buf, size);
+    
+    Chunk c = { data, size };
+    chunks.Append(c);
     return true;
 }
 
-void MemSegment::clearFree()
+void MemChunked::FreeChunks()
 {
-    for (size_t i = 0; i < this->size(); i++) {
-        DataSegment *seg = (*this)[i];
-        free(seg->data);
-        delete seg;
+    for (size_t i = 0; i < chunks.Count(); i++) {
+        Chunk c = chunks.At(i);
+        free(c.data);
     }
-    this->clear();
 }
+

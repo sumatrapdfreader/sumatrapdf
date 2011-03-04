@@ -1,24 +1,29 @@
 #ifndef MEM_SEGMENT_H__
 #define MEM_SEGMENT_H__
 
-#include "vstrlist.h"
+// TODO: rename to MemChunked.h
 
-typedef struct {
-    DWORD len;
-    void *data;
-} DataSegment;
+#include "Vec.h"
 
-class MemSegment : public vector<DataSegment *> {
-private:
-    DWORD totalSize;
+class MemChunked
+{
+    struct Chunk
+    {
+        void *  data;
+        DWORD   size;
+    };
+
+    Vec<Chunk> chunks;
+
+    void FreeChunks();
 
 public:
-    MemSegment() : totalSize(0) { }
-    ~MemSegment() { clearFree(); }
+    MemChunked() { }
+    ~MemChunked() { FreeChunks(); }
 
-    bool add(const void *buf, DWORD size);
-    char *getData(DWORD *sizeOut=NULL);
-    void clearFree();
+    DWORD   TotalSize() const;
+    bool    AddChunk(const void *buf, DWORD size);
+    char *  GetData(DWORD *sizeOut=NULL) const;
 };
 
 #endif
