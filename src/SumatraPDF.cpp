@@ -56,9 +56,7 @@
 /* Define THREAD_BASED_FILEWATCH to use the thread-based implementation of file change detection. */
 #define THREAD_BASED_FILEWATCH
 
-#ifdef DEBUG
-#define SHOW_DEBUG_MENU_ITEMS
-#endif
+#define noSHOW_DEBUG_MENU_ITEMS
 
 #define ZOOM_IN_FACTOR      1.2f
 #define ZOOM_OUT_FACTOR     1.0f / ZOOM_IN_FACTOR
