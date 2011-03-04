@@ -266,9 +266,8 @@ public:
 		ImageAttributes imgAttrs;
 		_setDrawAttributes(&imgAttrs, alpha);
 		
-		float scale = 2.0 * fz_matrixexpansion(ctm) / sqrtf(image->w * image->w + image->h * image->h);
-		bool downscale = sqrtf(ctm.a * ctm.a + ctm.b * ctm.b) < image->w &&
-			sqrtf(ctm.c * ctm.c + ctm.d * ctm.d) < image->h;
+		float scale = _hypotf(_hypotf(ctm.a, ctm.b), _hypotf(ctm.c, ctm.d)) / _hypotf(image->w, image->h);
+		bool downscale = _hypotf(ctm.a, ctm.b) < image->w && _hypotf(ctm.c, ctm.d) < image->h;
 		
 		if (!image->interpolate && !downscale && graphics == this->graphics)
 		{
