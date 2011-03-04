@@ -58,7 +58,7 @@ public:
 void MarshallOnUIThread(UIThreadWorkItem *wi);
 bool ExecuteAndRemoveNextUIThreadWorkItem();
 
-bool ValidProgramVersion(char *txt);
+bool IsValidProgramVersion(char *txt);
 int CompareVersion(TCHAR *txt1, TCHAR *txt2);
 const char *GuessLanguage();
 

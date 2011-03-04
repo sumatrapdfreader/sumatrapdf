@@ -2065,7 +2065,7 @@ static void OnUrlDownloaded(WindowInfo *win, HttpReqCtx *ctx)
     // our version number which will make us ask to upgrade every time.
     // To fix that, we reject text that doesn't look like a valid version number.
     char *txt = (char*)ctx->data.GetData();
-    if (!ValidProgramVersion(txt)) {
+    if (!IsValidProgramVersion(txt)) {
         // notify the user about the error during a manual update check
         if (!ctx->silent)
             PostMessage(ctx->hwndToNotify, ctx->msg, 0, ERROR_INTERNET_INVALID_URL);

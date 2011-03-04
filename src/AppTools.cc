@@ -13,7 +13,7 @@
 // the only valid chars are 0-9, . and newlines.
 // a valid version has to match the regex /^\d+(\.\d+)*(\r?\n)?$/
 // Return false if it contains anything else.
-bool ValidProgramVersion(char *txt)
+bool IsValidProgramVersion(char *txt)
 {
     if (!isdigit(*txt))
         return false;

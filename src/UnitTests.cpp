@@ -220,14 +220,14 @@ static void tstr_test()
 
 static void versioncheck_test()
 {
-    assert(ValidProgramVersion("1"));
-    assert(ValidProgramVersion("1.1"));
-    assert(ValidProgramVersion("1.1.1\r\n"));
-    assert(ValidProgramVersion("2662"));
+    assert(IsValidProgramVersion("1"));
+    assert(IsValidProgramVersion("1.1"));
+    assert(IsValidProgramVersion("1.1.1\r\n"));
+    assert(IsValidProgramVersion("2662"));
 
-    assert(!ValidProgramVersion("1.1b"));
-    assert(!ValidProgramVersion("1..1"));
-    assert(!ValidProgramVersion("1.1\r\n.1"));
+    assert(!IsValidProgramVersion("1.1b"));
+    assert(!IsValidProgramVersion("1..1"));
+    assert(!IsValidProgramVersion("1.1\r\n.1"));
 
     assert(CompareVersion(_T("0.9.3.900"), _T("0.9.3")) > 0);
     assert(CompareVersion(_T("1.09.300"), _T("1.09.3")) > 0);
