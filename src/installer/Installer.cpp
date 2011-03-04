@@ -290,7 +290,7 @@ TCHAR *GetInstallationDir(bool forUninstallation=false)
     }
 
     // fall back to %ProgramFiles%
-    ok = !!SHGetSpecialFolderPath(NULL, dir, CSIDL_PROGRAM_FILES, FALSE);
+    ok = SHGetSpecialFolderPath(NULL, dir, CSIDL_PROGRAM_FILES, FALSE);
     if (!ok)
         return NULL;
     return tstr_cat(dir, _T("\\") TAPP);
@@ -775,7 +775,7 @@ bool IsBrowserPluginInstalled()
         ok = ReadRegStr(HKEY_CURRENT_USER, REG_PATH_PLUGIN, PLUGIN_PATH, buf, dimof(buf));
     if (!ok)
         return false;
-    return !!file_exists(buf);
+    return file_exists(buf);
 }
 
 bool IsPdfFilterInstalled()
@@ -785,7 +785,7 @@ bool IsPdfFilterInstalled()
     if (!ok)
         return false;
     WCHAR *handler_iid = tstr_to_wstr(buf);
-    bool isInstalled = !!wstr_ieq(handler_iid, SZ_PDF_FILTER_HANDLER);
+    bool isInstalled = wstr_ieq(handler_iid, SZ_PDF_FILTER_HANDLER);
     free(handler_iid);
     return isInstalled;
 }

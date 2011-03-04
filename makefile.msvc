@@ -53,7 +53,7 @@ SUMATRA_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
 	/I$(ZLIB_DIR) /I$(ZLIB_DIR)/minizip \
 	/Isrc /IDialogSizer /I$(EXTLIBSDIR)/synctex /D "SYNCTEX_FEATURE"
 
-INSTALLER_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
+INSTALLER_CFLAGS = $(CFLAGS) $(EXTCFLAGS) /wd4800 \
 	/Ibaseutils /Ibaseutils/msvc /Isrc /Isrc/installer /I$(ZLIB_DIR) /I$(ZLIB_DIR)/minizip
 
 !if "$(CFG)"=="dbg"

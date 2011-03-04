@@ -389,7 +389,7 @@ static bool HasValidFileOrNoFile(WindowInfo *win)
 {
     if (!win) return false;
     if (!win->loadedFilePath) return true;
-    return !!file_exists(win->loadedFilePath);
+    return file_exists(win->loadedFilePath);
 }
 
 static bool CanViewWithFoxit(WindowInfo *win)
@@ -861,7 +861,7 @@ TCHAR *WindowInfo::GetPassword(const TCHAR *fileName, unsigned char *fileDigest,
     if (fileFromHistory && fileFromHistory->state.decryptionKey) {
         DisplayState *ds = &fileFromHistory->state;
         char *fingerprint = mem_to_hexstr(fileDigest, 16);
-        *saveKey = !!str_startswith(ds->decryptionKey, fingerprint);
+        *saveKey = str_startswith(ds->decryptionKey, fingerprint);
         free(fingerprint);
         if (*saveKey && hexstr_to_mem(ds->decryptionKey + 32, decryptionKeyOut, 32))
             return NULL;
@@ -1168,7 +1168,7 @@ static void WindowInfo_Delete(WindowInfo *win)
     delete win;
 }
 
-static void UpdateToolbarBg(HWND hwnd, BOOL enabled)
+static void UpdateToolbarBg(HWND hwnd, bool enabled)
 {
     DWORD newStyle = GetWindowLong(hwnd, GWL_STYLE);
     if (enabled)
@@ -1179,8 +1179,8 @@ static void UpdateToolbarBg(HWND hwnd, BOOL enabled)
 }
 
 static void WindowInfo_UpdateFindbox(WindowInfo *win) {
-    UpdateToolbarBg(win->hwndFindBg, !!win->dm);
-    UpdateToolbarBg(win->hwndPageBg, !!win->dm);
+    UpdateToolbarBg(win->hwndFindBg, win->dm != NULL);
+    UpdateToolbarBg(win->hwndPageBg, win->dm != NULL);
 
     InvalidateRect(win->hwndToolbar, NULL, true);
     if (!win->dm) {  // Avoid focus on Find box
@@ -1548,7 +1548,7 @@ static bool LoadPdfIntoWindow(
         zoomVirtual = state->zoomVirtual;
         rotation = state->rotation;
 
-        win->tocShow = !!state->showToc;
+        win->tocShow = state->showToc;
         free(win->tocState);
         if (state->tocState)
             win->tocState = (int *)memdup(state->tocState, (state->tocState[0] + 1) * sizeof(int));
@@ -1556,7 +1556,7 @@ static bool LoadPdfIntoWindow(
             win->tocState = NULL;
     }
     else {
-        win->tocShow = !!gGlobalPrefs.m_showToc;
+        win->tocShow = gGlobalPrefs.m_showToc;
     }
     UpdateTocWidth(win, state);
 
@@ -1715,7 +1715,7 @@ WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin)
 
 bool IsPngFile(const char *fileName)
 {
-    return !!str_endswithi(fileName, ".png");
+    return str_endswithi(fileName, ".png");
 }
 
 bool IsJpegFile(const char *fileName)
@@ -3654,7 +3654,7 @@ bool DisplayModel::saveStreamAs(unsigned char *data, int dataLen, const TCHAR *f
 
     if (FALSE == GetSaveFileName(&ofn))
         return false;
-    return !!write_to_file(dstFileName, data, dataLen);
+    return write_to_file(dstFileName, data, dataLen);
 }
 
 // code adapted from http://support.microsoft.com/kb/131462/en-us
@@ -6181,7 +6181,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                 case IDM_REFRESH:
                     // for accelerators, lParam is 0 (FALSE), so
                     // make a value of 1 (TRUE) mean autorefresh
-                    WindowInfo_Refresh(win, !!lParam);
+                    WindowInfo_Refresh(win, lParam);
                     break;
 
                 case IDT_VIEW_FIT_WIDTH:
@@ -6484,11 +6484,11 @@ InitMouseWheelInfo:
                 // the document was closed while finding
                 WindowInfo_ShowMessage_Async(win, NULL, false);
             } else if (wParam) {
-                bool wasModified = !!lParam;
+                bool wasModified = lParam;
                 WindowInfo_ShowSearchResult(win, (PdfSel *)wParam, wasModified);
                 WindowInfo_HideFindStatus(win);
             } else {
-                bool wasCanceled = !!lParam;
+                bool wasCanceled = lParam;
                 ClearSearch(win);
                 WindowInfo_HideFindStatus(win, wasCanceled);
             }

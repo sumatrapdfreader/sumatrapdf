@@ -118,7 +118,7 @@ bool IsRunningInPortableMode()
         }
     }
 
-    ok = !!SHGetSpecialFolderPath(NULL, programFilesDir, CSIDL_PROGRAM_FILES, FALSE);
+    ok = SHGetSpecialFolderPath(NULL, programFilesDir, CSIDL_PROGRAM_FILES, FALSE);
     if (ok && exePath) {
         // check if one of the exePath's parent directories is "Program Files"
         // (or a junction to it)
@@ -305,7 +305,7 @@ bool IsExeAssociatedWithPdfExtension()
     TCHAR *exePathReg = tstr_parse_possibly_quoted(&openCommand);
     TCHAR *exePath = ExePathGet();
     if (exePath && exePathReg && _tcsstr(openCommand, _T("\"%1\"")))
-        same = !!FilePath_IsSameFile(exePath, exePathReg);
+        same = FilePath_IsSameFile(exePath, exePathReg);
     free(exePath);
     free(exePathReg);
 
@@ -319,7 +319,7 @@ bool GetAcrobatPath(TCHAR *bufOut, int bufCchSize)
     bool found = ReadRegStr(HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\AcroRd32.exe"), NULL, path, dimof(path)) ||
                  ReadRegStr(HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\Acrobat.exe"), NULL, path, dimof(path));
     if (found)
-        found = !!file_exists(path);
+        found = file_exists(path);
     if (found && bufOut)
         lstrcpyn(bufOut, path, bufCchSize);
     return found;
@@ -330,7 +330,7 @@ bool GetFoxitPath(TCHAR *bufOut, int bufCchSize)
     TCHAR path[MAX_PATH];
     bool found = ReadRegStr(HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Foxit Reader"), _T("DisplayIcon"), path, dimof(path));
     if (found)
-        found = !!file_exists(path);
+        found = file_exists(path);
     if (found && bufOut)
         lstrcpyn(bufOut, path, bufCchSize);
     return found;
@@ -344,7 +344,7 @@ bool GetPDFXChangePath(TCHAR *bufOut, int bufCchSize)
     if (!found)
         return false;
     tstr_cat_s(path, dimof(path), _T("PDFXCview.exe"));
-    found = !!file_exists(path);
+    found = file_exists(path);
     if (found && bufOut)
         lstrcpyn(bufOut, path, bufCchSize);
     return found;

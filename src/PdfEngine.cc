@@ -412,18 +412,18 @@ OpenEmbeddedFile:
             }
 
             char *pwd_doc = tstr_to_pdfdoc(pwd);
-            okay = pwd_doc && !!pdf_authenticatepassword(_xref, pwd_doc);
+            okay = pwd_doc && pdf_authenticatepassword(_xref, pwd_doc);
             fz_free(pwd_doc);
             // try the UTF-8 password, if the PDFDocEncoding one doesn't work
             if (!okay) {
                 char *pwd_utf8 = tstr_to_utf8(pwd);
-                okay = pwd_utf8 && !!pdf_authenticatepassword(_xref, pwd_utf8);
+                okay = pwd_utf8 && pdf_authenticatepassword(_xref, pwd_utf8);
                 free(pwd_utf8);
             }
             // fall back to an ANSI-encoded password as a last measure
             if (!okay) {
                 char *pwd_ansi = tstr_to_ansi(pwd);
-                okay = pwd_ansi && !!pdf_authenticatepassword(_xref, pwd_ansi);
+                okay = pwd_ansi && pdf_authenticatepassword(_xref, pwd_ansi);
                 free(pwd_ansi);
             }
 
@@ -473,24 +473,24 @@ bool PdfEngine::load(fz_stream *stm, TCHAR *password)
             return false;
 
         char *pwd_doc = tstr_to_pdfdoc(password);
-        bool okay = pwd_doc && !!pdf_authenticatepassword(_xref, pwd_doc);
+        bool okay = pwd_doc && pdf_authenticatepassword(_xref, pwd_doc);
         fz_free(pwd_doc);
         // try the UTF-8 password, if the PDFDocEncoding one doesn't work
         if (!okay) {
             char *pwd_utf8 = tstr_to_utf8(password);
-            okay = pwd_utf8 && !!pdf_authenticatepassword(_xref, pwd_utf8);
+            okay = pwd_utf8 && pdf_authenticatepassword(_xref, pwd_utf8);
             free(pwd_utf8);
         }
         // fall back to an ANSI-encoded password as a last measure
         if (!okay) {
             char *pwd_ansi = tstr_to_ansi(password);
-            okay = pwd_ansi && !!pdf_authenticatepassword(_xref, pwd_ansi);
+            okay = pwd_ansi && pdf_authenticatepassword(_xref, pwd_ansi);
             free(pwd_ansi);
         }
         // finally, try using the password as hex-encoded encryption key
         if (!okay && tstr_len(password) == 64) {
             char *pwd_hex = tstr_to_ansi(password);
-            okay = !!_hexstr_to_mem(pwd_hex, &_xref->crypt->key);
+            okay = _hexstr_to_mem(pwd_hex, &_xref->crypt->key);
             free(pwd_hex);
         }
 
@@ -1161,7 +1161,7 @@ bool PdfEngine::isDocumentDirectionR2L(void)
     fz_obj *prefs = fz_dictgets(root, "ViewerPreferences");
     char *direction = fz_toname(fz_dictgets(prefs, "Direction"));
     LeaveCriticalSection(&_xrefAccess);
-    return !!str_eq(direction, "R2L");
+    return str_eq(direction, "R2L");
 }
 
 fz_buffer *PdfEngine::getStreamData(int num, int gen)
