@@ -83,7 +83,7 @@ public:
     RenderCache(void);
     ~RenderCache(void);
 
-    void                Render(DisplayModel *dm, int pageNo, UIThreadWorkItem *finishedWorkItem);
+    void                Render(DisplayModel *dm, int pageNo, UIThreadWorkItem *finishedWorkItem=NULL);
     void                CancelRendering(DisplayModel *dm);
     bool                FreeForDisplayModel(DisplayModel *dm);
     void                KeepForDisplayModel(DisplayModel *oldDm, DisplayModel *newDm);

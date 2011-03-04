@@ -221,10 +221,10 @@ $(O)\CTeXFilter.obj: src\ifilter\FilterBase.h src\ifilter\PdfFilter.h
 $(O)\DisplayModel.obj: baseutils\base_util.h baseutils\file_util.h baseutils\geom_util.h
 $(O)\DisplayModel.obj: baseutils\str_util.h baseutils\tstr_util.h baseutils\Vec.h
 $(O)\DisplayModel.obj: baseutils\vstrlist.h baseutils\win_util.h baseutils\wstr_util.h
-$(O)\DisplayModel.obj: mupdf\fitz\fitz.h mupdf\mupdf\mupdf.h src\AppTools.h
-$(O)\DisplayModel.obj: src\DisplayModel.h src\DisplayState.h src\FileWatch.h
-$(O)\DisplayModel.obj: src\PdfEngine.h src\PdfSearch.h src\PdfSelection.h
-$(O)\DisplayModel.obj: src\Resource.h src\WindowInfo.h
+$(O)\DisplayModel.obj: mupdf\fitz\fitz.h mupdf\mupdf\mupdf.h src\DisplayModel.h
+$(O)\DisplayModel.obj: src\DisplayState.h src\FileWatch.h src\PdfEngine.h
+$(O)\DisplayModel.obj: src\PdfSearch.h src\PdfSelection.h src\Resource.h
+$(O)\DisplayModel.obj: src\WindowInfo.h
 $(O)\DisplayState.obj: baseutils\base_util.h baseutils\str_util.h src\DisplayState.h
 $(O)\file_util.obj: baseutils\base_util.h baseutils\file_util.h baseutils\str_util.h
 $(O)\file_util.obj: baseutils\tstr_util.h baseutils\wstr_util.h
@@ -268,10 +268,9 @@ $(O)\PdfSelection.obj: src\PdfEngine.h src\PdfSelection.h
 $(O)\PdfSync.obj: baseutils\base_util.h baseutils\file_util.h baseutils\geom_util.h
 $(O)\PdfSync.obj: baseutils\str_util.h baseutils\tstr_util.h baseutils\Vec.h
 $(O)\PdfSync.obj: baseutils\wstr_util.h mupdf\fitz\fitz.h mupdf\mupdf\mupdf.h
-$(O)\PdfSync.obj: src\AppTools.h src\DisplayModel.h src\DisplayState.h
-$(O)\PdfSync.obj: src\FileWatch.h src\PdfEngine.h src\PdfSearch.h
-$(O)\PdfSync.obj: src\PdfSelection.h src\PdfSync.h src\Resource.h
-$(O)\PdfSync.obj: src\WindowInfo.h
+$(O)\PdfSync.obj: src\DisplayModel.h src\DisplayState.h src\FileWatch.h
+$(O)\PdfSync.obj: src\PdfEngine.h src\PdfSearch.h src\PdfSelection.h
+$(O)\PdfSync.obj: src\PdfSync.h src\Resource.h src\WindowInfo.h
 $(O)\RenderCache.obj: baseutils\base_util.h baseutils\geom_util.h baseutils\str_util.h
 $(O)\RenderCache.obj: baseutils\tstr_util.h baseutils\Vec.h baseutils\wstr_util.h
 $(O)\RenderCache.obj: mupdf\fitz\fitz.h mupdf\mupdf\mupdf.h src\AppTools.h
@@ -328,10 +327,10 @@ $(O)\win_util.obj: baseutils\win_util.h baseutils\wstr_util.h
 $(O)\WindowInfo.obj: baseutils\base_util.h baseutils\file_util.h baseutils\geom_util.h
 $(O)\WindowInfo.obj: baseutils\str_util.h baseutils\tstr_util.h baseutils\Vec.h
 $(O)\WindowInfo.obj: baseutils\WinUtil.hpp baseutils\wstr_util.h mupdf\fitz\fitz.h
-$(O)\WindowInfo.obj: mupdf\mupdf\mupdf.h src\AppTools.h src\DisplayModel.h
-$(O)\WindowInfo.obj: src\DisplayState.h src\FileWatch.h src\PdfEngine.h
-$(O)\WindowInfo.obj: src\PdfSearch.h src\PdfSelection.h src\PdfSync.h
-$(O)\WindowInfo.obj: src\Resource.h src\WindowInfo.h
+$(O)\WindowInfo.obj: mupdf\mupdf\mupdf.h src\DisplayModel.h src\DisplayState.h
+$(O)\WindowInfo.obj: src\FileWatch.h src\PdfEngine.h src\PdfSearch.h
+$(O)\WindowInfo.obj: src\PdfSelection.h src\PdfSync.h src\Resource.h
+$(O)\WindowInfo.obj: src\WindowInfo.h
 $(O)\WinUtil.obj: baseutils\base_util.h baseutils\str_util.h baseutils\tstr_util.h
 $(O)\WinUtil.obj: baseutils\WinUtil.hpp baseutils\wstr_util.h
 $(O)\wstr_util.obj: baseutils\base_util.h baseutils\wstr_util.h

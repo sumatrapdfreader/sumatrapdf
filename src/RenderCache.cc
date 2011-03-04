@@ -513,6 +513,8 @@ static DWORD WINAPI RenderCacheThread(LPVOID data)
         }
         if (req.dm->_dontRenderFlag) {
             DBG_OUT("RenderCacheThread(): not rendering because of _dontRenderFlag\n");
+            if (req.finishedWorkItem)
+                req.finishedWorkItem->MarshallOnUIThread();
             continue;
         }
 

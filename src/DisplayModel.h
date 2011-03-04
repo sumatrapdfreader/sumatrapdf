@@ -6,7 +6,6 @@
 #include "PdfEngine.h"
 #include "DisplayState.h"
 #include "PdfSearch.h"
-#include "AppTools.h"
 
 #ifndef USER_DEFAULT_SCREEN_DPI
 // the following is only defined if _WIN32_WINNT >= 0x0600 and we use 0x0500
@@ -230,7 +229,7 @@ public:
 
     void            ageStore() const { pdfEngine->ageStore(); }
 
-    void            StartRenderingPage(int pageNo, UIThreadWorkItem *finishedWorkItem=NULL);
+    void            StartRenderingPage(int pageNo);
 
 protected:
 

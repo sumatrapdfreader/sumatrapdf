@@ -1175,6 +1175,7 @@ static void WindowInfo_Delete(WindowInfo *win)
         DestroyWindow(win->hwndPdfProperties);
         assert(NULL == win->hwndPdfProperties);
     }
+    win->AbortFinding();
     gWindows.Remove(win);
 
     DragAcceptFiles(win->hwndCanvas, FALSE);
@@ -1883,9 +1884,9 @@ void DisplayModel::RepaintDisplay()
 }
 
 /* Send the request to render a given page to a rendering thread */
-void DisplayModel::StartRenderingPage(int pageNo, UIThreadWorkItem *finishedWorkItem)
+void DisplayModel::StartRenderingPage(int pageNo)
 {
-    gRenderCache.Render(this, pageNo, finishedWorkItem);
+    gRenderCache.Render(this, pageNo);
 }
 
 void DisplayModel::clearAllRenderings(void)
@@ -2561,15 +2562,15 @@ static void StartStressRenderingPage(WindowInfo *win, int pageNo)
     if (win->state != WS_SHOWING_PDF || win->dm == NULL || win->dm->_dontRenderFlag) {
         win->threadStressRunning = false;
     }
-
     if (!win->threadStressRunning)
         return;
+
     if (pageNo > win->dm->pageCount()) {
         gRenderCache.FreeForDisplayModel(win->dm);
         pageNo = 1;
     }
     UIThreadWorkItem *wi = new StressTestPageRenderedWorkItem(win->hwndCanvas, pageNo);
-    win->dm->StartRenderingPage(pageNo, wi);
+    gRenderCache.Render(win->dm, pageNo, wi);
 }
 
 // TODO: start text search thread as well
@@ -3088,6 +3089,9 @@ static void OnMenuExit(void)
     if (gPluginMode)
         return;
 
+    for (size_t i = 0; i < gWindows.Count(); i++)
+        gWindows[i]->AbortFinding();
+
     Prefs_Save();
     PostQuitMessage(0);
 }
@@ -3129,9 +3133,8 @@ static void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose=false)
 
     if (lastWindow && !quitIfLast) {
         /* last window - don't delete it */
-        if (win->tocShow) {
+        if (win->tocShow)
             win->HideTocBox();
-        }
         win->ClearTocBox();
         win->AbortFinding();
         delete win->dm;
@@ -5328,9 +5331,12 @@ public:
 
 bool WindowInfo::FindUpdateStatus(int current, int total)
 {
+    if (findCanceled)
+        return false;
+
     UIThreadWorkItem *wi = new UpdateFindStatusWorkItem(hwndCanvas, current, total);
     wi->MarshallOnUIThread();
-    return !findCanceled;
+    return true;
 }
 
 static void TreeView_ExpandRecursively(HWND hTree, HTREEITEM hItem, UINT flag, bool subtree=false)
