@@ -233,15 +233,14 @@ $(O)\FileWatch.obj: baseutils/base_util.h baseutils/file_util.h baseutils/str_ut
 $(O)\FileWatch.obj: baseutils/tstr_util.h baseutils/wstr_util.h src/FileWatch.h
 $(O)\geom_util.obj: baseutils/base_util.h baseutils/geom_util.h
 $(O)\Http.obj: baseutils/base_util.h baseutils/str_util.h baseutils/tstr_util.h
-$(O)\Http.obj: baseutils/vstrlist.h baseutils/wstr_util.h src/Http.h
+$(O)\Http.obj: baseutils/Vec.h baseutils/wstr_util.h src/Http.h
 $(O)\Http.obj: src/MemSegment.h src/SumatraPDF.h src/Version.h
 $(O)\Installer.obj: baseutils/base_util.h baseutils/file_util.h baseutils/str_util.h
 $(O)\Installer.obj: baseutils/tstr_util.h baseutils/win_util.h baseutils/WinUtil.hpp
 $(O)\Installer.obj: baseutils/wstr_util.h src/installer/../ifilter/PdfFilter.h src/installer/Resource.h
 $(O)\Installer.obj: src/Version.h
 $(O)\LangMenuDef.obj: src/LangMenuDef.h
-$(O)\MemSegment.obj: baseutils/str_util.h baseutils/tstr_util.h baseutils/vstrlist.h
-$(O)\MemSegment.obj: baseutils/wstr_util.h src/MemSegment.h
+$(O)\MemSegment.obj: baseutils/Vec.h src/MemSegment.h
 $(O)\MuPDF_Exports.obj: mupdf/fitz/fitz.h
 $(O)\npPdfViewer.obj: src/browserplugin/npapi/npapi.h src/browserplugin/npapi/npfunctions.h src/browserplugin/npapi/npruntime.h
 $(O)\npPdfViewer.obj: src/browserplugin/npapi/nptypes.h
