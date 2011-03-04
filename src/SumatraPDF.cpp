@@ -1322,21 +1322,20 @@ static void MenuUpdateStateForWindow(WindowInfo *win) {
         UINT id = menusToDisableIfNoPdf[i];
         Win::Menu::Enable(win->menu, id, WS_SHOWING_PDF == win->state);
     }
-
-    // TODO: this belongs somewhere else
-    if (WS_SHOWING_PDF != win->state) {
-        ShowScrollBar(win->hwndCanvas, SB_BOTH, FALSE);
-        if (WS_ABOUT == win->state)
-            win_set_text(win->hwndFrame, SUMATRA_WINDOW_TITLE);
-    }
 }
 
-/* Disable/enable menu items and toolbar buttons depending on wheter a
-   given window shows a PDF file or not. */
-static void MenuToolbarUpdateStateForAllWindows(void) {
-    for (size_t i = 0; i < gWindows.Count(); i++) {
-        MenuUpdateStateForWindow(gWindows[i]);
-        ToolbarUpdateStateForWindow(gWindows[i]);
+static void UpdateToolbarAndScrollbarsForAllWindows(void) 
+{
+    for (size_t i = 0; i < gWindows.Count(); i++)
+    {
+        WindowInfo *win = gWindows[i];
+        ToolbarUpdateStateForWindow(win);
+
+        if (WS_SHOWING_PDF != win->state) {
+            ShowScrollBar(win->hwndCanvas, SB_BOTH, FALSE);
+            if (WS_ABOUT == win->state)
+                win_set_text(win->hwndFrame, SUMATRA_WINDOW_TITLE);
+        }
     }
 }
 
@@ -1654,7 +1653,7 @@ Error:
             win->RedrawAll(true);
         }
     }
-    MenuToolbarUpdateStateForAllWindows();
+    UpdateToolbarAndScrollbarsForAllWindows();
     if (win->state == WS_ERROR_LOADING_PDF) {
         win->RedrawAll();
         return false;
@@ -3159,7 +3158,7 @@ static void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose=false)
         assert(0 == gWindows.Count());
         PostQuitMessage(0);
     } else {
-        MenuToolbarUpdateStateForAllWindows();
+        UpdateToolbarAndScrollbarsForAllWindows();
     }
 }
 
@@ -6895,7 +6894,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     }
 
     if (!firstDocLoaded)
-        MenuToolbarUpdateStateForAllWindows();
+        UpdateToolbarAndScrollbarsForAllWindows();
 
     // Make sure that we're still registered as default,
     // if the user has explicitly told us to be
