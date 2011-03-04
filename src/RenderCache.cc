@@ -568,7 +568,7 @@ UINT RenderCache::PaintTile(HDC hdc, RectI *bounds, DisplayModel *dm, int pageNo
     HBITMAP hbmp = renderedBmp ? renderedBmp->getBitmap() : NULL;
 
     if (!hbmp) {
-        if (entry && !ReduceTileSize())
+        if (entry && !(renderedBmp && ReduceTileSize()))
             renderDelay = RENDER_DELAY_FAILED;
         else if (0 == renderDelay)
             renderDelay = 1;
