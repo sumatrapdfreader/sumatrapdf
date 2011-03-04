@@ -12,7 +12,7 @@
 #include "base_util.h"
 #include "tstr_util.h"
 #include "file_util.h"
-#include "vstrlist.h"
+#include "Vec.h"
 
 // size of the mark highlighting the location calculated by forward-search
 #define MARK_SIZE                            10 
@@ -131,7 +131,7 @@ public:
     // Forward-search:
     // The result is returned in (page,x,y). The coordinates x,y are specified in the internal 
     // coordinate system.
-    virtual UINT source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page, vector<RectI> &rects) = 0;
+    virtual UINT source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page, Vec<RectI> &rects) = 0;
 
     void discard_index() { this->index_discarded = true; }
     bool is_index_discarded() const
@@ -192,19 +192,19 @@ public:
 
     int rebuild_index();
     UINT pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR srcfilepath, UINT cchFilepath, UINT *line, UINT *col);
-    UINT source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page, vector<RectI> &rects);
+    UINT source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page, Vec<RectI> &rects);
 
 private:
     int get_record_section(int record_index);
     int scan_and_build_index(FILE *fp);
-    UINT source_to_record(FILE *fp, LPCTSTR srcfilename, UINT line, UINT col, vector<size_t> &records);
+    UINT source_to_record(FILE *fp, LPCTSTR srcfilename, UINT line, UINT col, Vec<size_t> &records);
     FILE *opensyncfile();
 
 private:
-    vector<size_t> pdfsheet_index; // pdfsheet_index[i] contains the index in pline_sections of the first pline section for that sheet
-    vector<plines_section> pline_sections;
-    vector<record_section> record_sections;
-    vector<src_file> srcfiles;
+    Vec<size_t> pdfsheet_index; // pdfsheet_index[i] contains the index in pline_sections of the first pline section for that sheet
+    Vec<plines_section> pline_sections;
+    Vec<record_section> record_sections;
+    Vec<src_file> srcfiles;
 };
 
 

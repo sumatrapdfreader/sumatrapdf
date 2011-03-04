@@ -98,7 +98,7 @@ void PdfSelection::FillResultRects(int pageNo, int glyph, int length, TCHAR *tex
             continue;
 
         if (text && lines) {
-            lines->push_back(tstr_dupn(text + (c0p - coords[pageNo - 1]), c - c0p + 1));
+            lines->Push(tstr_dupn(text + (c0p - coords[pageNo - 1]), c - c0p + 1));
             continue;
         }
 
@@ -195,5 +195,5 @@ TCHAR *PdfSelection::ExtractText(TCHAR *lineSep)
         }
     }
 
-    return lines.join(lineSep);
+    return lines.Join(lineSep);
 }

@@ -2234,7 +2234,7 @@ static void PaintForwardSearchMark(WindowInfo *win, HDC hdc) {
     RectI recI;
 
     // Draw the rectangles highlighting the forward search results
-    for (UINT i = 0; i < win->fwdsearchmarkRects.size(); i++)
+    for (UINT i = 0; i < win->fwdsearchmarkRects.Count(); i++)
     {
         RectD_FromRectI(&recD, &win->fwdsearchmarkRects[i]);
         win->dm->rectCvtUserToScreen(win->fwdsearchmarkPage, &recD);
@@ -2456,8 +2456,8 @@ static void CopySelectionToClipboard(WindowInfo *win)
         else {
             VStrList selections;
             for (SelectionOnPage *selOnPage = win->selectionOnPage; selOnPage; selOnPage = selOnPage->next)
-                selections.push_back(win->dm->getTextInRegion(selOnPage->pageNo, &selOnPage->selectionPage));
-            selText = selections.join();
+                selections.Push(win->dm->getTextInRegion(selOnPage->pageNo, &selOnPage->selectionPage));
+            selText = selections.Join();
         }
 
         // don't copy empty text
@@ -2620,7 +2620,7 @@ static void OnInverseSearch(WindowInfo *win, UINT x, UINT y)
     if (gRestrictedUse || gPluginMode) return;
 
     // Clear the last forward-search result
-    win->fwdsearchmarkRects.clear();
+    win->fwdsearchmarkRects.Clear();
     InvalidateRect(win->hwndCanvas, NULL, FALSE);
 
     // On double-clicking error message will be shown to the user
@@ -4319,10 +4319,10 @@ static void WindowInfo_HideMessage(WindowInfo *win)
 }
 
 // Show the result of a PDF forward-search synchronization (initiated by a DDE command)
-void WindowInfo_ShowForwardSearchResult(WindowInfo *win, LPCTSTR srcfilename, UINT line, UINT col, UINT ret, UINT page, vector<RectI> &rects)
+void WindowInfo_ShowForwardSearchResult(WindowInfo *win, LPCTSTR srcfilename, UINT line, UINT col, UINT ret, UINT page, Vec<RectI> &rects)
 {
-    win->fwdsearchmarkRects.clear();
-    if (ret == PDFSYNCERR_SUCCESS && rects.size()>0 ) {
+    win->fwdsearchmarkRects.Clear();
+    if (ret == PDFSYNCERR_SUCCESS && rects.Count() > 0 ) {
         // remember the position of the search result for drawing the rect later on
         const PdfPageInfo *pi = win->dm->getPageInfo(page);
         if (pi) {
@@ -4333,12 +4333,12 @@ void WindowInfo_ShowForwardSearchResult(WindowInfo *win, LPCTSTR srcfilename, UI
             win->pdfsync->convert_coord_from_internal(&rc, pi->page.dyI(), BottomLeft);
 
             overallrc = rc;
-            for (UINT i = 0; i <rects.size(); i++)
+            for (size_t i = 0; i < rects.Count(); i++)
             {
                 rc = rects[i];
                 win->pdfsync->convert_coord_from_internal(&rc, pi->page.dyI(), BottomLeft);
                 overallrc = RectI_Union(overallrc, rc);
-                win->fwdsearchmarkRects.push_back(rc);
+                win->fwdsearchmarkRects.Push(rc);
             }
             win->fwdsearchmarkPage = page;
             win->showForwardSearchMark = true;
@@ -6753,7 +6753,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         RedirectIOToConsole();
     if (i.makeDefault)
         AssociateExeWithPdfExtension();
-    if (i.filesToBenchmark.size() > 0) {
+    if (i.filesToBenchmark.Count() > 0) {
         Bench(i.filesToBenchmark);
         // TODO: allow to redirect stdout/stderr to file
         if (i.showConsole)
@@ -6795,12 +6795,13 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         goto Exit;
 
     if (i.hwndPluginParent) {
-        if (!IsWindow(i.hwndPluginParent) || i.fileNames.size() == 0)
+        if (!IsWindow(i.hwndPluginParent) || i.fileNames.Count() == 0)
             goto Exit;
 
         gPluginMode = true;
-        assert(i.fileNames.size() == 1);
-        i.fileNames.resize(1);
+        assert(i.fileNames.Count() == 1);
+        while (i.fileNames.Count() > 1)
+            free(i.fileNames.Pop());
         i.reuseInstance = i.exitOnPrint = false;
         // always display the toolbar when embedded (as there's no menubar in that case)
         gGlobalPrefs.m_showToolbar = TRUE;
@@ -6813,7 +6814,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     if (i.printerName) {
         // note: this prints all PDF files. Another option would be to
         // print only the first one
-        for (size_t n = 0; n < i.fileNames.size(); n++) {
+        for (size_t n = 0; n < i.fileNames.Count(); n++) {
             bool ok = PrintFile(i.fileNames[n], i.printerName);
             if (!ok)
                 msg.wParam++;
@@ -6821,7 +6822,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         goto Exit;
     }
 
-    for (size_t n = 0; n < i.fileNames.size(); n++) {
+    for (size_t n = 0; n < i.fileNames.Count(); n++) {
         if (i.reuseInstance && !i.printDialog) {
             // delegate file opening to a previously running instance by sending a DDE message 
             TCHAR fullpath[MAX_PATH], command[2 * MAX_PATH + 20];

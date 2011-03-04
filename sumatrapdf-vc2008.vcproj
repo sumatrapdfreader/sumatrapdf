@@ -148,11 +148,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\MemSegment.cpp"
+				RelativePath=".\src\MemChunked.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\src\MemSegment.h"
+				RelativePath=".\src\MemChunked.h"
 				>
 			</File>
 			<File
@@ -355,6 +355,10 @@
 			</File>
 			<File
 				RelativePath=".\baseutils\tstr_util.h"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\Vec.h"
 				>
 			</File>
 			<File
@@ -799,7 +803,7 @@
 			</File>
 		</Filter>
 		<File
-			RelativePath=".\src\releasenotes.txt"
+			RelativePath=".\docs\releasenotes.txt"
 			>
 		</File>
 	</Files>

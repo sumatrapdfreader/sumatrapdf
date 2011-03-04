@@ -64,45 +64,45 @@ static void ParseCommandLineTest()
     {
         CommandLineInfo i;
         i.ParseCommandLine(_T("SumatraPDF.exe -bench foo.pdf"));
-        assert(2 == i.filesToBenchmark.size());
-        assert(tstr_eq(_T("foo.pdf"), i.filesToBenchmark.at(0)));
-        assert(NULL == i.filesToBenchmark.at(1));
+        assert(2 == i.filesToBenchmark.Count());
+        assert(tstr_eq(_T("foo.pdf"), i.filesToBenchmark.At(0)));
+        assert(NULL == i.filesToBenchmark.At(1));
     }
 
     {
         CommandLineInfo i;
         i.ParseCommandLine(_T("SumatraPDF.exe -bench foo.pdf -fwdsearch-width 5"));
         assert(i.fwdsearchWidth == 5);
-        assert(2 == i.filesToBenchmark.size());
-        assert(tstr_eq(_T("foo.pdf"), i.filesToBenchmark.at(0)));
-        assert(NULL == i.filesToBenchmark.at(1));
+        assert(2 == i.filesToBenchmark.Count());
+        assert(tstr_eq(_T("foo.pdf"), i.filesToBenchmark.At(0)));
+        assert(NULL == i.filesToBenchmark.At(1));
     }
 
     {
         CommandLineInfo i;
         i.ParseCommandLine(_T("SumatraPDF.exe -bench bar.pdf loadonly"));
-        assert(2 == i.filesToBenchmark.size());
-        assert(tstr_eq(_T("bar.pdf"), i.filesToBenchmark.at(0)));
-        assert(tstr_eq(_T("loadonly"), i.filesToBenchmark.at(1)));
+        assert(2 == i.filesToBenchmark.Count());
+        assert(tstr_eq(_T("bar.pdf"), i.filesToBenchmark.At(0)));
+        assert(tstr_eq(_T("loadonly"), i.filesToBenchmark.At(1)));
     }
 
     {
         CommandLineInfo i;
         i.ParseCommandLine(_T("SumatraPDF.exe -bench bar.pdf 1 -invert-colors"));
         assert(TRUE == i.invertColors);
-        assert(2 == i.filesToBenchmark.size());
-        assert(tstr_eq(_T("bar.pdf"), i.filesToBenchmark.at(0)));
-        assert(tstr_eq(_T("1"), i.filesToBenchmark.at(1)));
+        assert(2 == i.filesToBenchmark.Count());
+        assert(tstr_eq(_T("bar.pdf"), i.filesToBenchmark.At(0)));
+        assert(tstr_eq(_T("1"), i.filesToBenchmark.At(1)));
     }
 
     {
         CommandLineInfo i;
         i.ParseCommandLine(_T("SumatraPDF.exe -bench bar.pdf 1-5,3   -bench some.pdf 1,3,8-34"));
-        assert(4 == i.filesToBenchmark.size());
-        assert(tstr_eq(_T("bar.pdf"), i.filesToBenchmark.at(0)));
-        assert(tstr_eq(_T("1-5,3"), i.filesToBenchmark.at(1)));
-        assert(tstr_eq(_T("some.pdf"), i.filesToBenchmark.at(2)));
-        assert(tstr_eq(_T("1,3,8-34"), i.filesToBenchmark.at(3)));
+        assert(4 == i.filesToBenchmark.Count());
+        assert(tstr_eq(_T("bar.pdf"), i.filesToBenchmark.At(0)));
+        assert(tstr_eq(_T("1-5,3"), i.filesToBenchmark.At(1)));
+        assert(tstr_eq(_T("some.pdf"), i.filesToBenchmark.At(2)));
+        assert(tstr_eq(_T("1,3,8-34"), i.filesToBenchmark.At(3)));
     }
 
     {
@@ -111,9 +111,9 @@ static void ParseCommandLineTest()
         assert(true == i.enterPresentation);
         assert(TRUE == i.invertColors);
         assert(1248426 == i.bgColor);
-        assert(2 == i.fileNames.size());
-        assert(0 == i.fileNames.find(_T("foo.pdf")));
-        assert(1 == i.fileNames.find(_T("bar.pdf")));
+        assert(2 == i.fileNames.Count());
+        assert(0 == i.fileNames.Find(_T("foo.pdf")));
+        assert(1 == i.fileNames.Find(_T("bar.pdf")));
     }
 
     {
@@ -121,16 +121,16 @@ static void ParseCommandLineTest()
         i.ParseCommandLine(_T("SumatraPDF.exe -bg-color 0xaa0c13 -invertcolors rosanna.pdf"));
         assert(TRUE == i.invertColors);
         assert(1248426 == i.bgColor);
-        assert(1 == i.fileNames.size());
-        assert(0 == i.fileNames.find(_T("rosanna.pdf")));
+        assert(1 == i.fileNames.Count());
+        assert(0 == i.fileNames.Find(_T("rosanna.pdf")));
     }
 
     {
         CommandLineInfo i;
         i.ParseCommandLine(_T("SumatraPDF.exe \"foo \\\" bar \\\\.pdf\" un\\\"quoted.pdf"));
-        assert(2 == i.fileNames.size());
-        assert(0 == i.fileNames.find(_T("foo \" bar \\\\.pdf")));
-        assert(1 == i.fileNames.find(_T("un\\\"quoted.pdf")));
+        assert(2 == i.fileNames.Count());
+        assert(0 == i.fileNames.Find(_T("foo \" bar \\\\.pdf")));
+        assert(1 == i.fileNames.Find(_T("un\\\"quoted.pdf")));
     }
 }
 
@@ -238,8 +238,27 @@ static void versioncheck_test()
 
 static void VecTest()
 {
-    // TODO: write me
+    // TODO: extend me
 
+    Vec<int> ints;
+    assert(ints.Count() == 0);
+    ints.Append(1);
+    ints.Push(2);
+    ints.InsertAt(0, -1);
+    assert(ints.Count() == 3);
+    assert(ints[0] == -1 && ints[1] == 1 && ints[2] == 2);
+    assert(ints[0] == ints.At(0) && ints[1] == ints.At(1) && ints[2] == ints.At(2));
+    assert(*ints.First() == -1 && ints.Last() == 2);
+    assert(ints.Sentinel() - ints.First() == ints.Count());
+    int last = ints.Pop();
+    assert(last == 2);
+    assert(ints.Count() == 2);
+    ints.Push(3);
+    ints.RemoveAt(0);
+    assert(ints.Count() == 2);
+    assert(ints[0] == 1 && ints[1] == 3);
+    ints.Clear();
+    assert(ints.Count() == 0);
 }
 
 void u_DoAllTests(void)

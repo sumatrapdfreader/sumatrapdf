@@ -152,7 +152,7 @@ static void VStrList_FromCmdLine(VStrList *strList, TCHAR *cmdLine)
         TCHAR *txt = tstr_parse_possibly_quoted(&cmdLine);
         if (!txt)
             break;
-        strList->push_back(txt);
+        strList->Push(txt);
     }
 }
 
@@ -161,7 +161,7 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
 {
     VStrList argList;
     VStrList_FromCmdLine(&argList, cmdLine);
-    size_t argCount = argList.size();
+    size_t argCount = argList.Count();
 
 #define is_arg(txt) tstr_ieq(_T(txt), argument)
 #define is_arg_with_param(txt) (is_arg(txt) && param != NULL)
@@ -265,11 +265,11 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
         }
         else if (is_arg_with_param("-bench")) {
             TCHAR *s = tstr_dup(argList[++n]);
-            this->filesToBenchmark.push_back(s);
+            this->filesToBenchmark.Push(s);
             s = NULL;
             if ((n + 1 < argCount) && IsBenchPagesInfo(argList[n+1]))
                 s = tstr_dup(argList[++n]);
-            this->filesToBenchmark.push_back(s);
+            this->filesToBenchmark.Push(s);
             this->exitImmediately = true;
         }
 #ifdef DEBUG
@@ -287,7 +287,7 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
                 filepath = ResolveLnk(argList[n]);
             if (!filepath)
                 filepath = tstr_dup(argList[n]);
-            this->fileNames.push_back(filepath);
+            this->fileNames.Push(filepath);
         }
     }
 #undef is_arg

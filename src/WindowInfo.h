@@ -9,7 +9,7 @@
 #include "DisplayState.h"
 #include "FileWatch.h"
 #include "PdfSearch.h"
-#include "vstrlist.h"
+#include "Vec.h"
 
 // TODO: the final division is meant to be:
 // WindowInfoBase
@@ -152,7 +152,7 @@ public:
      * rectangular marks in the document. These variables indicate the position of the markers
      * and whether they should be shown. */
     bool            showForwardSearchMark; // are the markers visible?
-    vector<RectI>   fwdsearchmarkRects;    // location of the markers in user coordinates
+    Vec<RectI>      fwdsearchmarkRects;    // location of the markers in user coordinates
     int             fwdsearchmarkPage;     // page 
     int             fwdsearchmarkHideStep; // value used to gradually hide the markers
 
@@ -288,6 +288,6 @@ WindowInfo* FindWindowInfoByHwnd(HWND hwnd);
 WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win=NULL, bool showWin=true);
 WindowInfo* LoadPdf(const TCHAR *fileName, WindowInfo *win=NULL, bool showWin=true);
 WindowInfo* LoadComicBook(const TCHAR *fileName, WindowInfo *win=NULL, bool showWin=true);
-void        WindowInfo_ShowForwardSearchResult(WindowInfo *win, LPCTSTR srcfilename, UINT line, UINT col, UINT ret, UINT page, vector<RectI> &rects);
+void        WindowInfo_ShowForwardSearchResult(WindowInfo *win, LPCTSTR srcfilename, UINT line, UINT col, UINT ret, UINT page, Vec<RectI> &rects);
 
 #endif

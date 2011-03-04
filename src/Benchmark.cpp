@@ -122,7 +122,7 @@ static void BenchFile(TCHAR *filePath, TCHAR *pagesSpec)
 
 void Bench(VStrList& filesToBench)
 {
-    size_t n = filesToBench.size() / 2;
+    size_t n = filesToBench.Count() / 2;
     for (size_t i = 0; i < n; i++)
         BenchFile(filesToBench[2*i], filesToBench[2*i + 1]);
 }

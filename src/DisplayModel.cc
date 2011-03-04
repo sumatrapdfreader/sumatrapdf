@@ -1558,9 +1558,9 @@ TCHAR *DisplayModel::extractAllText(RenderTarget target)
     VStrList pages;
 
     for (int pageNo = 1; pageNo <= pageCount(); pageNo++)
-        pages.push_back(pdfEngine->ExtractPageText(pageNo, _T(DOS_NEWLINE), NULL, target));
+        pages.Push(pdfEngine->ExtractPageText(pageNo, _T(DOS_NEWLINE), NULL, target));
 
-    return pages.join();
+    return pages.Join();
 }
 
 // returns true if it was necessary to scroll the display (horizontally or vertically)

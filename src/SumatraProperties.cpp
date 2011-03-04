@@ -10,6 +10,7 @@
 #include "win_util.h"
 #include "WinUtil.hpp"
 #include "AppTools.h"
+#include "vstrlist.h"
 
 #define PROPERTIES_LEFT_RIGHT_SPACE_DX 8
 #define PROPERTIES_RECT_PADDING     8
@@ -190,11 +191,11 @@ static TCHAR *FormatPdfPermissions(PdfEngine *pdfEngine) {
     VStrList denials;
 
     if (!pdfEngine->hasPermission(PDF_PERM_PRINT))
-        denials.push_back(tstr_dup(_TR("printing document")));
+        denials.Push(tstr_dup(_TR("printing document")));
     if (!pdfEngine->hasPermission(PDF_PERM_COPY))
-        denials.push_back(tstr_dup(_TR("copying text")));
+        denials.Push(tstr_dup(_TR("copying text")));
 
-    return denials.join(_T(", "));
+    return denials.Join(_T(", "));
 }
 
 static void AddPdfProperty(PdfPropertiesLayout *layoutData, const TCHAR *left, const TCHAR *right) {

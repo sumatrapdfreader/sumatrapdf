@@ -23,12 +23,26 @@ class Vec {
         if (needed > newCap)
             newCap = needed;
 
-        T * newEls = (T*)malloc(newCap * EL_SIZE);
+        // TODO: why not use realloc? (guard against integer overflows!)
+        T* newEls = (T*)calloc(newCap, EL_SIZE);
         if (len > 0)
             memcpy(newEls, els, len * EL_SIZE);
         FreeEls();
         els = newEls;
         cap = newCap;
+    }
+
+    T* MakeSpaceAt(size_t idx, size_t count=1) {
+        EnsureCap(len + count);
+        T* res = &(els[idx]);
+        int tomove = len - idx;
+        if (tomove > 0) {
+            T* src = els + idx;
+            T* dst = els + idx + count;
+            memmove(dst, src, tomove * EL_SIZE);
+        }
+        len += count;
+        return res;
     }
 
     void FreeEls() {
@@ -67,19 +81,6 @@ public:
         return len;
     }
 
-    T* MakeSpaceAt(size_t idx, size_t count=1) {
-        EnsureCap(len + count);
-        T* res = &(els[idx]);
-        int tomove = len - idx;
-        if (tomove > 0) {
-            T* src = els + idx;
-            T* dst = els + idx + count;
-            memmove(dst, src, tomove * EL_SIZE);
-        }
-        len += count;
-        return res;
-    }
-
     void InsertAt(size_t idx, const T& el) {
         MakeSpaceAt(idx, 1)[0] = el;
     }
@@ -102,9 +103,16 @@ public:
         Append(el);
     }
 
-    void Pop() {
+    T& Pop() {
+        assert(len > 0);
         if (len > 0)
-            --len;
+            len--;
+        return At(len);
+    }
+
+    T& Last() {
+        assert(len > 0);
+        return At(len - 1);
     }
 
     // for convenient iteration over all elements
