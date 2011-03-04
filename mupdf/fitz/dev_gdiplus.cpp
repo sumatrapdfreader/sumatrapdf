@@ -491,7 +491,7 @@ protected:
 		};
 		if (alpha != 1.0f)
 			imgAttrs->SetColorMatrix(&matrix, ColorMatrixFlagsDefault, ColorAdjustTypeBitmap);
-		// imgAttrs.SetWrapMode(WrapModeClamp);
+		// imgAttrs->SetWrapMode(WrapModeClamp);
 	}
 };
 
@@ -1084,6 +1084,7 @@ fz_gdiplusfillimagemask(void *user, fz_pixmap *image, fz_matrix ctm,
 		img2->samples[i * 4 + 2] = rgb[2] * 255;
 		img2->samples[i * 4 + 3] = image->samples[i];
 	}
+	img2->interpolate = image->interpolate;
 	
 	((userData *)user)->drawPixmap(img2, ctm, alpha);
 	
