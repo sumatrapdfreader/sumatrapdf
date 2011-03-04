@@ -527,23 +527,6 @@ static bool SendAsEmailAttachment(WindowInfo *win)
     return SUCCEEDED(hr);
 }
 
-
-// TODO: move to more  apropriate file
-namespace Win {
-namespace Menu {
-void Check(HMENU m, UINT id, bool check)
-{
-    CheckMenuItem(m, id, MF_BYCOMMAND | (check ? MF_CHECKED : MF_UNCHECKED));
-}
-
-void Enable(HMENU m, UINT id, bool enable)
-{
-    EnableMenuItem(m, id, MF_BYCOMMAND | (enable ? MF_ENABLED : MF_GRAYED));
-}
-
-} // namespace Menu
-} // namespace Win
-
 static void MenuUpdateDisplayMode(WindowInfoBase *win)
 {
     bool enabled = false;

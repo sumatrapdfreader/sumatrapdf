@@ -167,46 +167,6 @@ namespace WinHelper
 		HGDIOBJ m_hOld;
 	};
 
-	class CScrollInfo : public tagSCROLLINFO
-	{
-	public:
-		CScrollInfo( UINT fPassedMask ) { cbSize = sizeof( tagSCROLLINFO ); fMask = fPassedMask; }
-	};
-
-	//	Simple crtical section handler/wrapper
-	class CCriticalSection
-	{
-	public:
-		inline CCriticalSection()	{ ::InitializeCriticalSection(&m_sect); }
-		inline ~CCriticalSection() { ::DeleteCriticalSection(&m_sect); }
-
-		//	Blocking lock.
-		inline void Lock()			{ ::EnterCriticalSection(&m_sect); }
-		//	Unlock
-		inline void Unlock()		{ ::LeaveCriticalSection(&m_sect); }
-
-		//	Simple lock class for the critcal section
-		class CLock
-		{
-		public:
-			inline CLock( CCriticalSection &sect ) : m_sect( sect ) { m_sect.Lock(); }
-			inline ~CLock() { m_sect.Unlock(); }
-		private:
-			CCriticalSection &m_sect;
-
-			CLock();
-			CLock( const CLock &);
-			CLock& operator =( const CLock &);
-		};
-
-	private:
-		CRITICAL_SECTION m_sect;
-
-		CCriticalSection( const CCriticalSection & );
-		CCriticalSection& operator =( const CCriticalSection & );
-	};
-
-
 	#define ZeroStructure( t ) ZeroMemory( &t, sizeof( t ) )
 	#define countof( t )	(sizeof( (t) ) / sizeof( (t)[0] ) )
 	#define UNREF(P) UNREFERENCED_PARAMETER(P)
@@ -225,13 +185,6 @@ namespace WinHelper
 	{
 		return GetKeyState(VK_CONTROL) & 0x8000 ? true : false;
 	}
-
-	//	Load a 16x16 icon from the same resource as the other size icons.
-	inline HICON LoadIcon16x16( HINSTANCE hInst, UINT uID )
-	{
-		return reinterpret_cast<HICON>( ::LoadImage( hInst, MAKEINTRESOURCE( uID ), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR ) );
-	}
-
 
 	//	Wrapper for the Begin, Defer and End WindowPos functions. Nothing glamorous.
 	class CDeferWindowPos

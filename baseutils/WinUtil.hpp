@@ -91,4 +91,20 @@ TCHAR *ResolveLnk(TCHAR * path);
 IDataObject* GetDataObjectForFile(LPCTSTR pszPath, HWND hwnd=NULL);
 DWORD GetFileVersion(TCHAR *path);
 
+namespace Win {
+namespace Menu {
+
+inline void Check(HMENU m, UINT id, bool check)
+{
+    CheckMenuItem(m, id, MF_BYCOMMAND | (check ? MF_CHECKED : MF_UNCHECKED));
+}
+
+inline void Enable(HMENU m, UINT id, bool enable)
+{
+    EnableMenuItem(m, id, MF_BYCOMMAND | (enable ? MF_ENABLED : MF_GRAYED));
+}
+
+} // namespace Menu
+} // namespace Win
+
 #endif
