@@ -50,11 +50,12 @@ public:
             return;
 
         ScopedCritSec scope(&cs);
-        for (size_t i = 0; i < items.Count(); i++) {
-            UIThreadWorkItem *wi = items.At(i);
+        while (items.Count() > 0) {
+            UIThreadWorkItem *wi = items.At(0);
+            items.RemoveAt(0);
             wi->Execute();
+            delete wi;
         }
-        DeleteVecMembers(items);
     }
 };
 
