@@ -656,15 +656,14 @@ BOOL RegisterServerDLL(TCHAR *dllPath, BOOL unregister=FALSE)
 // Note: doesn't handle (total) sizes above 4GB
 DWORD GetDirSize(TCHAR *dir)
 {
-    DWORD totalSize = 0;
+    ScopedMem<TCHAR> dirPattern(tstr_cat(dir, _T("\\*")));
     WIN32_FIND_DATA findData;
-
-    TCHAR *dirPattern = tstr_cat(dir, _T("\\*"));
 
     HANDLE h = FindFirstFile(dirPattern, &findData);
     if (h == INVALID_HANDLE_VALUE)
-        goto Exit;
+        return 0;
 
+    DWORD totalSize = 0;
     do {
         if (!(findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
             totalSize += findData.nFileSizeLow;
@@ -676,8 +675,7 @@ DWORD GetDirSize(TCHAR *dir)
         }
     } while (FindNextFile(h, &findData) != 0);
     FindClose(h);
-Exit:
-    free(dirPattern);
+
     return totalSize;
 }
 
@@ -2007,45 +2005,38 @@ static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
 // from installation directory and remove installation directory
 // If returns TRUE, this is an installer and we sublaunched ourselves,
 // so the caller needs to exit
-BOOL ExecuteUninstallerFromTempDir()
+bool ExecuteUninstallerFromTempDir()
 {
-    BOOL ok = FALSE;
-
     // only need to sublaunch if running from installation dir
-    TCHAR *ownDir = FilePath_GetDir(GetOwnPath());
-    TCHAR *tempPath = GetTempUninstallerPath();
+    ScopedMem<TCHAR> ownDir(FilePath_GetDir(GetOwnPath()));
+    ScopedMem<TCHAR> tempPath( GetTempUninstallerPath());
 
     // no temp directory available?
     if (!tempPath)
-        goto KeepRunning;
+        return false;
 
     // not running from the installation directory?
     // (likely a test uninstaller that shouldn't be removed anyway)
     if (!FilePath_IsSameFile(ownDir, gGlobalData.installDir))
-        goto KeepRunning;
+        return false;
 
     // already running from temp directory?
     if (FilePath_IsSameFile(GetOwnPath(), tempPath))
-        goto KeepRunning;
+        return false;
 
     if (!CopyFile(GetOwnPath(), tempPath, FALSE)) {
         NotifyFailed(_T("Failed to copy uninstaller to temp directory"));
-        goto KeepRunning;
+        return false;
     }
 
-    TCHAR *args = tstr_printf(_T("/d \"%s\" %s"), gGlobalData.installDir, gGlobalData.silent ? _T("/s") : _T(""));
+    ScopedMem<TCHAR> args(tstr_printf(_T("/d \"%s\" %s"), gGlobalData.installDir, gGlobalData.silent ? _T("/s") : _T("")));
     HANDLE h = CreateProcessHelper(tempPath, args);
-    ok = h != NULL;
     CloseHandle(h);
-    free(args);
 
     // mark the uninstaller for removal at shutdown (note: works only for administrators)
     MoveFileEx(tempPath, NULL, MOVEFILE_DELAY_UNTIL_REBOOT);
 
-KeepRunning:
-    free(ownDir);
-    free(tempPath);
-    return ok;
+    return h != NULL;
 }
 
 // inspired by http://engineering.imvu.com/2010/11/24/how-to-write-an-interactive-60-hz-desktop-application/

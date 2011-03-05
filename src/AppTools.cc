@@ -100,9 +100,9 @@ TCHAR *ExePathGet()
 bool IsRunningInPortableMode()
 {
     TCHAR programFilesDir[MAX_PATH];
-    TCHAR *exePath = ExePathGet();
+    ScopedMem<TCHAR> exePath(ExePathGet());
+
     // if we can't get a path, assume we're not running from "Program Files"
-    bool portableMode = true;
 
     bool ok = ReadRegStr(HKEY_LOCAL_MACHINE, _T("Software\\") APP_NAME_STR, _T("Install_Dir"), programFilesDir, dimof(programFilesDir));
     if (!ok)
@@ -112,10 +112,8 @@ bool IsRunningInPortableMode()
             tstr_cat_s(programFilesDir, dimof(programFilesDir), _T("\\"));
             tstr_cat_s(programFilesDir, dimof(programFilesDir), FilePath_GetBaseName(exePath));
         }
-        if (FilePath_IsSameFile(programFilesDir, exePath)) {
-            portableMode = false;
-            goto Done;
-        }
+        if (FilePath_IsSameFile(programFilesDir, exePath))
+            return false;
     }
 
     ok = SHGetSpecialFolderPath(NULL, programFilesDir, CSIDL_PROGRAM_FILES, FALSE);
@@ -126,13 +124,11 @@ bool IsRunningInPortableMode()
         while ((baseName = (TCHAR *)FilePath_GetBaseName(exePath)) > exePath) {
             baseName[-1] = '\0';
             if (FilePath_IsSameFile(programFilesDir, exePath))
-                portableMode = false;
+                return false;
         }
     }
 
-Done:
-    free(exePath);
-    return portableMode;
+    return true;
 }
 
 /* Generate the full path for a filename used by the app in the userdata path. */

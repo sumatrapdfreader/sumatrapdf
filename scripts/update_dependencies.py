@@ -5,11 +5,11 @@ to the recompilation of all the files depending on this header.
 """
 
 import os, re, fnmatch
+from util import verify_started_in_right_directory
 
 def pjoin(*args):
 	return os.path.join(*args).replace("/", "\\")
 
-BASE_DIR = ".."
 DIRS = ["baseutils", "src", pjoin("src", "installer"), pjoin("src", "ifilter"), pjoin("src", "browserplugin")]
 INCLUDE_DIRS = DIRS + [pjoin("mupdf", "mupdf"), pjoin("mupdf", "fitz")]
 MAKEFILE = "makefile.msvc"
@@ -86,7 +86,10 @@ def injectDependencyList(flatlist):
 	open(MAKEFILE, "wb").write(content.replace("\n", "\r\n"))
 
 def main():
-	os.chdir(BASE_DIR)
+	if os.path.exists("update_dependencies.py"):
+		os.chdir("..")
+	verify_started_in_right_directory()
+	
 	injectDependencyList(flattenDependencyList(createDependencyList()))
 
 if __name__ == "__main__":

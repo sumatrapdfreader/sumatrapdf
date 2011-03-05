@@ -216,11 +216,8 @@ bool fz_isptinrect(fz_rect rect, fz_point pt)
 // Caller needs to fz_free the result
 static char *tstr_to_pdfdoc(TCHAR *tstr)
 {
-    WCHAR *wstr = tstr_to_wstr(tstr);
-    char *docstr = pdf_fromucs2((unsigned short *)wstr);
-    free(wstr);
-
-    return docstr;
+    ScopedMem<WCHAR> wstr(tstr_to_wstr(tstr));
+    return pdf_fromucs2((unsigned short *)wstr.Get());
 }
 
 RenderedBitmap::RenderedBitmap(fz_pixmap *pixmap, HDC hDC) :
@@ -404,7 +401,7 @@ OpenEmbeddedFile:
 
         bool okay = false, saveKey = false;
         for (int i = 0; !okay && i < 3; i++) {
-            TCHAR *pwd = pwdUI->GetPassword(_fileName, digest, _xref->crypt->key, &saveKey);
+            ScopedMem<TCHAR> pwd(pwdUI->GetPassword(_fileName, digest, _xref->crypt->key, &saveKey));
             if (!pwd) {
                 // password not given or encryption key has been remembered
                 okay = saveKey;
@@ -416,18 +413,14 @@ OpenEmbeddedFile:
             fz_free(pwd_doc);
             // try the UTF-8 password, if the PDFDocEncoding one doesn't work
             if (!okay) {
-                char *pwd_utf8 = tstr_to_utf8(pwd);
+                ScopedMem<char> pwd_utf8(tstr_to_utf8(pwd));
                 okay = pwd_utf8 && pdf_authenticatepassword(_xref, pwd_utf8);
-                free(pwd_utf8);
             }
             // fall back to an ANSI-encoded password as a last measure
             if (!okay) {
-                char *pwd_ansi = tstr_to_ansi(pwd);
+                ScopedMem<char> pwd_ansi(tstr_to_ansi(pwd));
                 okay = pwd_ansi && pdf_authenticatepassword(_xref, pwd_ansi);
-                free(pwd_ansi);
             }
-
-            free(pwd);
         }
         if (!okay)
             return false;
@@ -477,21 +470,18 @@ bool PdfEngine::load(fz_stream *stm, TCHAR *password)
         fz_free(pwd_doc);
         // try the UTF-8 password, if the PDFDocEncoding one doesn't work
         if (!okay) {
-            char *pwd_utf8 = tstr_to_utf8(password);
+            ScopedMem<char> pwd_utf8(tstr_to_utf8(password));
             okay = pwd_utf8 && pdf_authenticatepassword(_xref, pwd_utf8);
-            free(pwd_utf8);
         }
         // fall back to an ANSI-encoded password as a last measure
         if (!okay) {
-            char *pwd_ansi = tstr_to_ansi(password);
+            ScopedMem<char> pwd_ansi(tstr_to_ansi(password));
             okay = pwd_ansi && pdf_authenticatepassword(_xref, pwd_ansi);
-            free(pwd_ansi);
         }
         // finally, try using the password as hex-encoded encryption key
         if (!okay && tstr_len(password) == 64) {
-            char *pwd_hex = tstr_to_ansi(password);
+            ScopedMem<char> pwd_hex(tstr_to_ansi(password));
             okay = _hexstr_to_mem(pwd_hex, &_xref->crypt->key);
-            free(pwd_hex);
         }
 
         if (!okay)
@@ -949,9 +939,8 @@ static TCHAR *parseMultilineLink(pdf_page *page, TCHAR *pageText, TCHAR *start, 
 
         // add a new link for this line
         fz_bbox bbox = fz_unionbbox(coords[start - pageText], coords[end - pageText - 1]);
-        char *uriPart = tstr_to_utf8(start);
+        ScopedMem<char> uriPart(tstr_to_utf8(start));
         char *newUri = str_cat(uri, uriPart);
-        free(uriPart);
         free(uri);
         uri = newUri;
 

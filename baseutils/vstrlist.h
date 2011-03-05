@@ -18,7 +18,7 @@ public:
     {
         Vec<TCHAR> tmp(256, 1);
         size_t jointLen = joint ? tstr_len(joint) : 0;
-        for (size_t i=0; i<Count(); i++)
+        for (size_t i = 0; i < Count(); i++)
         {
             TCHAR *s = At(i);
             if (i > 0 && jointLen > 0)

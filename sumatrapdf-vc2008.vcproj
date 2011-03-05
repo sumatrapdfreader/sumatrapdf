@@ -148,14 +148,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\MemChunked.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\MemChunked.h"
-				>
-			</File>
-			<File
 				RelativePath=".\src\ParseCommandLine.cpp"
 				>
 			</File>

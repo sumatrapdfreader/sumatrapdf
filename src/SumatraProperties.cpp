@@ -112,7 +112,7 @@ static TCHAR *FormatFloatWithThousandSep(double number, const TCHAR *unit=NULL) 
     TCHAR buf[64];
     uint64_t num = (uint64_t)(number * 100);
 
-    TCHAR *tmp = FormatNumWithThousandSep(num / 100);
+    ScopedMem<TCHAR> tmp(FormatNumWithThousandSep(num / 100));
     TCHAR decimal[4];
     GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, decimal, dimof(decimal));
 
@@ -120,7 +120,6 @@ static TCHAR *FormatFloatWithThousandSep(double number, const TCHAR *unit=NULL) 
     wsprintf(buf, _T("%s%s%02d"), tmp, decimal, num % 100);
     if (buf[lstrlen(buf) - 1] == '0')
         buf[lstrlen(buf) - 1] = '\0';
-    free(tmp);
 
     return unit ? tstr_printf(_T("%s %s"), buf, unit) : tstr_dup(buf);
 }
@@ -150,16 +149,10 @@ static TCHAR *FormatSizeSuccint(uint64_t size) {
 // as "1.29 MB (1,348,258 Bytes)"
 // Caller needs to free the result
 static TCHAR *FormatPdfSize(uint64_t size) {
-    TCHAR *n1, *n2, *result;
+    ScopedMem<TCHAR> n1(FormatSizeSuccint(size));
+    ScopedMem<TCHAR> n2(FormatNumWithThousandSep(size));
 
-    n1 = FormatSizeSuccint(size);
-    n2 = FormatNumWithThousandSep(size);
-    result = tstr_printf(_T("%s (%s %s)"), n1, n2, _TR("Bytes"));
-
-    free(n1);
-    free(n2);
-
-    return result;
+    return tstr_printf(_T("%s (%s %s)"), n1, n2, _TR("Bytes"));
 }
 
 // format page size according to locale (e.g. "29.7 x 20.9 cm" or "11.69 x 8.23 in")
@@ -176,13 +169,10 @@ static TCHAR *FormatPdfPageSize(SizeD size) {
     if (((int)(height * 100)) % 100 == 99)
         height += 0.01;
 
-    TCHAR *strWidth = FormatFloatWithThousandSep(width);
-    TCHAR *strHeight = FormatFloatWithThousandSep(height, isMetric ? _T("cm") : _T("in"));
-    TCHAR *result = tstr_printf(_T("%s x %s"), strWidth, strHeight);
-    free(strWidth);
-    free(strHeight);
+    ScopedMem<TCHAR> strWidth(FormatFloatWithThousandSep(width));
+    ScopedMem<TCHAR> strHeight(FormatFloatWithThousandSep(height, isMetric ? _T("cm") : _T("in")));
 
-    return result;
+    return tstr_printf(_T("%s x %s"), strWidth, strHeight);
 }
 
 // returns a list of permissions denied by this document

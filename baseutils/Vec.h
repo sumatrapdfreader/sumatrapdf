@@ -33,7 +33,7 @@ private:
             newCap = needed;
 
         if (newCap + pad >= INT_MAX / sizeof(T)) abort();
-        T * newEls = (T*)calloc((newCap + pad), sizeof(T));
+        T * newEls = SAZA(T, newCap + pad);
         memcpy(newEls, els, len * sizeof(T));
         FreeEls();
         cap = newCap;

@@ -47,7 +47,6 @@
 #include "WindowInfo.h"
 #include "DisplayModel.h"
 #include "Resource.h"
-#include "vstrlist.h"
 #include "win_util.h"
 #include "file_util.h"
 
@@ -1394,9 +1393,8 @@ void DisplayModel::goToTocLink(pdf_link* link)
         path = getLinkPath(link);
         if (path && tstr_endswithi(path, _T(".pdf"))) {
             // open embedded PDF documents in a new window
-            TCHAR *combinedPath = tstr_printf(_T("%s:%d:%d"), fileName(), fz_tonum(embedded), fz_togen(embedded));
+            ScopedMem<TCHAR> combinedPath(tstr_printf(_T("%s:%d:%d"), fileName(), fz_tonum(embedded), fz_togen(embedded)));
             LoadPdf(combinedPath);
-            free(combinedPath);
         } else {
             // offer to save other attachments to a file
             fz_buffer *data = pdfEngine->getStreamData(fz_tonum(embedded), fz_togen(embedded));
@@ -1410,11 +1408,9 @@ void DisplayModel::goToTocLink(pdf_link* link)
     else if (PDF_LLAUNCH == link->kind && (path = getLinkPath(link))) {
         /* for safety, only handle relative PDF paths and only open them in SumatraPDF */
         if (!tstr_startswith(path, _T("\\")) && tstr_endswithi(path, _T(".pdf"))) {
-            TCHAR *basePath = FilePath_GetDir(fileName());
-            TCHAR *combinedPath = tstr_cat3(basePath, _T(DIR_SEP_STR), path);
+            ScopedMem<TCHAR> basePath(FilePath_GetDir(fileName()));
+            ScopedMem<TCHAR> combinedPath(tstr_cat3(basePath, _T(DIR_SEP_STR), path));
             LoadPdf(combinedPath);
-            free(combinedPath);
-            free(basePath);
         }
         free(path);
     }
@@ -1443,14 +1439,12 @@ void DisplayModel::goToTocLink(pdf_link* link)
         if (type && str_eq(type, "GoToR") && fz_dictgets(link->dest, "D") && (path = getLinkPath(link))) {
             /* for safety, only handle relative PDF paths and only open them in SumatraPDF */
             if (!tstr_startswith(path, _T("\\")) && tstr_endswithi(path, _T(".pdf"))) {
-                TCHAR *basePath = FilePath_GetDir(fileName());
-                TCHAR *combinedPath = tstr_cat3(basePath, _T(DIR_SEP_STR), path);
+                ScopedMem<TCHAR> basePath(FilePath_GetDir(fileName()));
+                ScopedMem<TCHAR> combinedPath(tstr_cat3(basePath, _T(DIR_SEP_STR), path));
                 // TODO: respect fz_tobool(fz_dictgets(link->dest, "NewWindow"))
                 WindowInfo *newWin = LoadPdf(combinedPath);
                 if (newWin && newWin->dm)
                     newWin->dm->goToPdfDest(fz_dictgets(link->dest, "D"));
-                free(combinedPath);
-                free(basePath);
             }
             free(path);
         }

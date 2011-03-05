@@ -405,9 +405,8 @@ static bool ViewWithFoxit(WindowInfo *win, TCHAR *args=NULL)
     // Foxit cmd-line format:
     // [PDF filename] [-n <page number>] [-pwd <password>] [-z <zoom>]
     // TODO: Foxit allows passing password and zoom
-    TCHAR *params = tstr_printf(_T("%s \"%s\" -n %d"), args, win->loadedFilePath, win->dm->currentPageNo());
+    ScopedMem<TCHAR> params(tstr_printf(_T("%s \"%s\" -n %d"), args, win->loadedFilePath, win->dm->currentPageNo()));
     exec_with_params(exePath, params, FALSE);
-    free(params);
     return true;
 }
 
@@ -433,9 +432,8 @@ static bool ViewWithPDFXChange(WindowInfo *win, TCHAR *args=NULL)
     // PDFXChange cmd-line format:
     // [/A "param=value [&param2=value ..."] [PDF filename] 
     // /A params: page=<page number>
-    TCHAR *params = tstr_printf(_T("%s /A \"page=%d\" \"%s\""), args, win->dm->currentPageNo(), win->loadedFilePath);
+    ScopedMem<TCHAR> params(tstr_printf(_T("%s /A \"page=%d\" \"%s\""), args, win->dm->currentPageNo(), win->loadedFilePath));
     exec_with_params(exePath, params, FALSE);
-    free(params);
     return true;
 }
 
@@ -715,9 +713,8 @@ static HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int n, HMENU m=NULL)
         if (str_eq(title, SEP_ITEM)) {
             AppendMenu(m, MF_SEPARATOR, 0, NULL);
         } else if (MF_NO_TRANSLATE == (md.m_flags & MF_NO_TRANSLATE)) {
-            TCHAR *tmp = utf8_to_tstr(title);
+            ScopedMem<TCHAR> tmp(utf8_to_tstr(title));
             AppendMenu(m, MF_STRING, (UINT_PTR)md.m_id, tmp);
-            free(tmp);
         } else {
             const TCHAR *tmp =  Translations_GetTranslation(title);
             AppendMenu(m, MF_STRING, (UINT_PTR)md.m_id, tmp);
@@ -850,21 +847,17 @@ WindowInfo* FindWindowInfoByHwnd(HWND hwnd)
 // Find the first windows showing a given PDF file 
 WindowInfo* FindWindowInfoByFile(TCHAR * file)
 {
-    TCHAR * normFile = FilePath_Normalize(file, FALSE);
+    ScopedMem<TCHAR> normFile(FilePath_Normalize(file, FALSE));
     if (!normFile)
         return NULL;
 
-    WindowInfo *found = NULL;
     for (size_t i = 0; i < gWindows.Count(); i++) {
         WindowInfo *win = gWindows.At(i);
-        if (win->loadedFilePath && FilePath_IsSameFile(win->loadedFilePath, normFile)) {
-            found = win;
-            break;
-        }
+        if (win->loadedFilePath && FilePath_IsSameFile(win->loadedFilePath, normFile))
+            return win;
     }
 
-    free(normFile);
-    return found;
+    return NULL;
 }
 
 /* Get password for a given 'fileName', can be NULL if user cancelled the
@@ -875,9 +868,8 @@ TCHAR *WindowInfo::GetPassword(const TCHAR *fileName, unsigned char *fileDigest,
     FileHistoryNode *fileFromHistory = gFileHistoryRoot.Find(fileName);
     if (fileFromHistory && fileFromHistory->state.decryptionKey) {
         DisplayState *ds = &fileFromHistory->state;
-        char *fingerprint = mem_to_hexstr(fileDigest, 16);
+        ScopedMem<char> fingerprint(mem_to_hexstr(fileDigest, 16));
         *saveKey = str_startswith(ds->decryptionKey, fingerprint);
-        free(fingerprint);
         if (*saveKey && hexstr_to_mem(ds->decryptionKey + 32, decryptionKeyOut, 32))
             return NULL;
     }
@@ -898,7 +890,7 @@ static TCHAR *GetUniqueCrashDumpPath()
 {
     TCHAR *path;
     TCHAR *fileName;
-    for (int n=0; n<=20; n++) {
+    for (int n = 0; n <= 20; n++) {
         if (n == 0) {
             fileName = tstr_dup(_T("SumatraPDF.dmp"));
         } else {
@@ -918,7 +910,6 @@ static TCHAR *GetUniqueCrashDumpPath()
 */
 static bool Prefs_Load(void)
 {
-    char *          prefsTxt;
     bool            ok = false;
 
 #ifdef DEBUG
@@ -927,10 +918,11 @@ static bool Prefs_Load(void)
     loaded = true;
 #endif
 
-    TCHAR * prefsFilename = Prefs_GetFileName();
+    ScopedMem<TCHAR> prefsFilename(Prefs_GetFileName());
     assert(prefsFilename);
+
     size_t prefsFileLen;
-    prefsTxt = file_read_all(prefsFilename, &prefsFileLen);
+    ScopedMem<char> prefsTxt(file_read_all(prefsFilename, &prefsFileLen));
     if (!str_empty(prefsTxt)) {
         ok = Prefs_Deserialize(prefsTxt, prefsFileLen, &gFileHistoryRoot);
         assert(ok);
@@ -953,8 +945,6 @@ static bool Prefs_Load(void)
     }
 #endif
 
-    free(prefsFilename);
-    free(prefsTxt);
     return ok;
 }
 
@@ -1095,12 +1085,8 @@ static void UpdateCurrentFileDisplayStateForWin(WindowInfo *win)
     win->DisplayStateFromToC(ds);
 }
 
-static BOOL Prefs_Save(void)
+static bool Prefs_Save(void)
 {
-    TCHAR *     path = NULL;
-    size_t      dataLen;
-    BOOL        ok = false;
-
     // don't save preferences for plugin windows
     if (gPluginMode)
         return FALSE;
@@ -1109,21 +1095,19 @@ static BOOL Prefs_Save(void)
     for (size_t i = 0; i < gWindows.Count(); i++)
         UpdateCurrentFileDisplayStateForWin(gWindows[i]);
 
-    const char *data = Prefs_Serialize(&gFileHistoryRoot, &dataLen);
+    size_t dataLen;
+    ScopedMem<const char> data(Prefs_Serialize(&gFileHistoryRoot, &dataLen));
     if (!data)
-        goto Exit;
+        return false;
 
     assert(dataLen > 0);
-    path = Prefs_GetFileName();
+    ScopedMem<TCHAR> path(Prefs_GetFileName());
     assert(path);
     /* TODO: consider 2-step process:
         * write to a temp file
         * rename temp file to final file */
-    ok = write_to_file(path, (void*)data, dataLen);
+    bool ok = write_to_file(path, (void*)data.Get(), dataLen);
 
-Exit:
-    free((void*)data);
-    free(path);
     return ok;
 }
 
@@ -1533,9 +1517,8 @@ static bool LoadPdfIntoWindow(
         } else {
             delete previousmodel;
             win->state = WS_ERROR_LOADING_PDF;
-            TCHAR *title = tstr_printf(_T("%s - %s"), FilePath_GetBaseName(fileName), SUMATRA_WINDOW_TITLE);
+            ScopedMem<TCHAR> title(tstr_printf(_T("%s - %s"), FilePath_GetBaseName(fileName), SUMATRA_WINDOW_TITLE));
             win_set_text(win->hwndFrame, title);
-            free(title);
             goto Error;
         }
     } else {
@@ -1797,6 +1780,10 @@ WindowInfo* LoadPdf(const TCHAR *fileName, WindowInfo *win, bool showWin)
     assert(fileName);
     if (!fileName) return NULL;
 
+    ScopedMem<TCHAR> fullpath(FilePath_Normalize(fileName, FALSE));
+    if (!fullpath)
+        return win;
+
     bool isNewWindow = false;
     if (!win && 1 == gWindows.Count() && WS_ABOUT == gWindows[0]->state) {
         win = gWindows[0];
@@ -1808,10 +1795,6 @@ WindowInfo* LoadPdf(const TCHAR *fileName, WindowInfo *win, bool showWin)
             return NULL;
     }
 
-    TCHAR *fullpath = FilePath_Normalize(fileName, FALSE);
-    if (!fullpath)
-        goto exit;
-
     FileHistoryNode *fileFromHistory = gFileHistoryRoot.Find(fullpath);
     DisplayState *ds = NULL;
     if (fileFromHistory) {
@@ -1822,7 +1805,7 @@ WindowInfo* LoadPdf(const TCHAR *fileName, WindowInfo *win, bool showWin)
     CheckPositionAndSize(ds);
     if (!LoadPdfIntoWindow(fullpath, win, ds, isNewWindow, true, showWin, true)) {
         /* failed to open */
-        goto exit;
+        return win;
     }
 
 #ifdef THREAD_BASED_FILEWATCH
@@ -1847,8 +1830,6 @@ WindowInfo* LoadPdf(const TCHAR *fileName, WindowInfo *win, bool showWin)
     // happen automatically on drag&drop, reopening from history, etc.)
     SHAddToRecentDocs(SHARD_PATH, fullpath);
 
-exit:
-    free(fullpath);
     return win;
 }
 
@@ -2025,11 +2006,9 @@ static void OnDropFiles(WindowInfo *win, HDROP hDrop)
     {
         DragQueryFile(hDrop, i, filename, MAX_PATH);
         if (tstr_endswithi(filename, _T(".lnk"))) {
-            TCHAR *resolved = ResolveLnk(filename);
-            if (resolved) {
+            ScopedMem<TCHAR> resolved(ResolveLnk(filename));
+            if (resolved)
                 lstrcpyn(filename, resolved, MAX_PATH);
-                free(resolved);
-            }
         }
         // The first dropped document may override the current window
         LoadDocument(filename, i == 0 ? win : NULL);
@@ -2086,9 +2065,10 @@ static BOOL ShowNewVersionDialog(WindowInfo *win, const TCHAR *newVersion)
 
 static void OnUrlDownloaded(WindowInfo *win, HttpReqCtx *ctx)
 {
-    if (!tstr_startswith(ctx->url, SUMATRA_UPDATE_INFO_URL)) {
+    ScopedObj<HttpReqCtx> scope(ctx);
+
+    if (!tstr_startswith(ctx->url, SUMATRA_UPDATE_INFO_URL))
         return;
-    }
 
     // See http://code.google.com/p/sumatrapdf/issues/detail?id=725
     // If a user configures os-wide proxy that is not regular ie proxy
@@ -2097,40 +2077,34 @@ static void OnUrlDownloaded(WindowInfo *win, HttpReqCtx *ctx)
     // our version number which will make us ask to upgrade every time.
     // To fix that, we reject text that doesn't look like a valid version number.
     ScopedMem<char> txt(ctx->data->StealData());
-    ScopedMem<TCHAR> verTxt(ansi_to_tstr(txt));
-
     if (!IsValidProgramVersion(txt)) {
         // notify the user about the error during a manual update check
         if (!ctx->silent)
             PostMessage(ctx->hwndToNotify, ctx->msg, 0, ERROR_INTERNET_INVALID_URL);
-        goto Exit;
+        return;
     }
 
+    ScopedMem<TCHAR> verTxt(ansi_to_tstr(txt));
     /* reduce the string to a single line (resp. drop the newline) */
     tstr_trans_chars(verTxt, _T("\r\n"), _T("\0\0"));
-    if (CompareVersion(verTxt, UPDATE_CHECK_VER) > 0) {
-        bool showDialog = true;
-        // if automated, respect gGlobalPrefs.m_versionToSkip
-        if (ctx->silent && gGlobalPrefs.m_versionToSkip) {
-            if (tstr_ieq(gGlobalPrefs.m_versionToSkip, verTxt)) {
-                showDialog = false;
-            }
-        }
-        if (showDialog) {
-            BOOL download = ShowNewVersionDialog(win, verTxt);
-            if (download) {
-                LaunchBrowser(SVN_UPDATE_LINK);
-            }
-        }
-    } else {
+    if (CompareVersion(verTxt, UPDATE_CHECK_VER) <= 0) {
         /* if automated => don't notify that there is no new version */
         if (!ctx->silent) {
             MessageBox(win->hwndFrame, _TR("You have the latest version."),
                        _TR("SumatraPDF Update"), MB_ICONINFORMATION | MB_OK);
         }
+        return;
     }
-Exit:
-    delete ctx;
+
+    // if automated, respect gGlobalPrefs.m_versionToSkip
+    if (ctx->silent && gGlobalPrefs.m_versionToSkip) {
+        if (tstr_ieq(gGlobalPrefs.m_versionToSkip, verTxt))
+            return;
+    }
+
+    bool download = ShowNewVersionDialog(win, verTxt);
+    if (download)
+        LaunchBrowser(SVN_UPDATE_LINK);
 }
 
 static void PaintTransparentRectangle(WindowInfo *win, HDC hdc, RectI *rect, COLORREF selectionColor, BYTE alpha = 0x5f, int margin = 1) {
@@ -2546,7 +2520,7 @@ public:
     StressTestPageRenderedWorkItem(HWND hwnd, int pageNo) :
        UIThreadWorkItem(hwnd), pageNo(pageNo)
        {}
-    void Execute() {
+    virtual void Execute() {
         WindowInfo *win = FindWindowInfoByHwnd(hwnd);
         if (win)
             StartStressRenderingPage(win, pageNo + 1);
@@ -3716,11 +3690,9 @@ static void OnMenuOpen(WindowInfo *win)
         }
         else {
             while (*fileName) {
-                TCHAR *filePath = tstr_cat3(ofn.lpstrFile, DIR_SEP_TSTR, fileName);
-                if (filePath) {
+                ScopedMem<TCHAR> filePath(tstr_cat3(ofn.lpstrFile, DIR_SEP_TSTR, fileName));
+                if (filePath)
                     LoadDocument(filePath, win);
-                    free(filePath);
-                }
                 fileName += lstrlen(fileName) + 1;
             }
         }
@@ -4064,29 +4036,28 @@ static void OnMenuFind(WindowInfo *win)
         return;
     }
 
-    const TCHAR * previousFind = win_get_text(win->hwndFindBox);
+    ScopedMem<TCHAR> previousFind(win_get_text(win->hwndFindBox));
     WORD state = (WORD)SendMessage(win->hwndToolbar, TB_GETSTATE, IDM_FIND_MATCH, 0);
     bool matchCase = (state & TBSTATE_CHECKED) != 0;
 
-    TCHAR * findString = Dialog_Find(win->hwndFrame, previousFind, &matchCase);
-    if (findString) {
-        win_set_text(win->hwndFindBox, findString);
-        Edit_SetModify(win->hwndFindBox, TRUE);
+    ScopedMem<TCHAR> findString(Dialog_Find(win->hwndFrame, previousFind, &matchCase));
+    if (!findString)
+        return;
 
-        bool matchCaseChanged = matchCase != (0 != (state & TBSTATE_CHECKED));
-        if (matchCaseChanged) {
-            if (matchCase)
-                state |= TBSTATE_CHECKED;
-            else
-                state &= ~TBSTATE_CHECKED;
-            SendMessage(win->hwndToolbar, TB_SETSTATE, IDM_FIND_MATCH, state);
-            win->dm->SetFindMatchCase(matchCase);
-        }
-        free(findString);
+    win_set_text(win->hwndFindBox, findString);
+    Edit_SetModify(win->hwndFindBox, TRUE);
 
-        Find(win, FIND_FORWARD);
+    bool matchCaseChanged = matchCase != (0 != (state & TBSTATE_CHECKED));
+    if (matchCaseChanged) {
+        if (matchCase)
+            state |= TBSTATE_CHECKED;
+        else
+            state &= ~TBSTATE_CHECKED;
+        SendMessage(win->hwndToolbar, TB_SETSTATE, IDM_FIND_MATCH, state);
+        win->dm->SetFindMatchCase(matchCase);
     }
-    free((void *)previousFind);
+
+    Find(win, FIND_FORWARD);
 }
 
 static void OnMenuViewRotateLeft(WindowInfo *win)
@@ -4625,9 +4596,8 @@ static void OnChar(WindowInfo *win, WPARAM key)
         // total pages count a one-key action (unless they're already visible)
         if (!gGlobalPrefs.m_showToolbar || win->fullScreen || PM_ENABLED == win->presentation) {
             int current = win->dm->currentPageNo(), total = win->dm->pageCount();
-            TCHAR *pageInfo = tstr_printf(_T("%s %d / %d"), _TR("Page:"), current, total);
+            ScopedMem<TCHAR> pageInfo(tstr_printf(_T("%s %d / %d"), _TR("Page:"), current, total));
             WindowInfo_ShowMessage_Async(win, pageInfo, true);
-            free(pageInfo);
         }
         break;
 #ifdef DEBUG
@@ -5014,14 +4984,13 @@ static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT message, WPARAM wParam, L
         // select the whole page box on a non-selecting click
     } else if (WM_CHAR == message) {
         if (VK_RETURN == wParam) {
-            TCHAR *buf = win_get_text(win->hwndPageBox);
+            ScopedMem<TCHAR> buf(win_get_text(win->hwndPageBox));
             int newPageNo;
             newPageNo = _ttoi(buf);
             if (win->dm->validPageNo(newPageNo)) {
                 win->dm->goToPage(newPageNo, 0, true);
                 SetFocus(win->hwndFrame);
             }
-            free(buf);
             return 1;
         }
         else if (VK_ESCAPE == wParam) {
@@ -5128,13 +5097,11 @@ static void CreatePageBox(WindowInfo *win, HINSTANCE hInst)
 
 static HBITMAP LoadExternalBitmap(HINSTANCE hInst, TCHAR * filename, INT resourceId)
 {
-    TCHAR * path = AppGenDataFilename(filename);
+    ScopedMem<TCHAR> path(AppGenDataFilename(filename));
     
     HBITMAP hBmp = (HBITMAP)LoadImage(NULL, path, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
     if (!hBmp)
         hBmp = LoadBitmap(hInst, MAKEINTRESOURCE(resourceId));
-
-    free(path);
     return hBmp;
 }
 
@@ -5290,7 +5257,7 @@ public:
         : UIThreadWorkItem(hwnd), current(current), total(total)
     {}
 
-    void Execute() {
+    virtual void Execute() {
         WindowInfo *win = FindWindowInfoByHwnd(hwnd);
         win->findPercent = current * 100 / total;
         if (!win->findStatusVisible)
@@ -5387,9 +5354,8 @@ static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT message, WPARAM wParam, LP
         GetWindowRect(hwnd, &rc);
 
         HWND titleLabel = GetDlgItem(hwnd, 0);
-        TCHAR *text = win_get_text(titleLabel);
+        ScopedMem<TCHAR> text(win_get_text(titleLabel));
         SIZE size = TextSizeInHwnd(titleLabel, text);
-        free(text);
 
         int offset = (int)(2 * win->uiDPIFactor);
         if (size.cy < 16) size.cy = 16;
@@ -6056,7 +6022,7 @@ public:
         : UIThreadWorkItem(hwnd), delay(delay)
     {}
 
-    void Execute() {
+    virtual void Execute() {
         WindowInfo * win = FindWindowInfoByHwnd(hwnd);
         if (!win)
             return;
@@ -6455,9 +6421,8 @@ InitMouseWheelInfo:
                 // OnUrlDownloaded always gives feedback for !ctx->silent,
                 // we only get here under that condition, so also give feedback
                 // so that the user knows that the requested operation has terminated
-                TCHAR *msg = tstr_printf(_TR("Can't connect to the Internet (error %#x)."), lParam);
+                ScopedMem<TCHAR> msg(tstr_printf(_TR("Can't connect to the Internet (error %#x)."), lParam));
                 MessageBox(win->hwndFrame, msg, _TR("SumatraPDF Update"), MB_ICONEXCLAMATION | MB_OK);
-                free(msg);
             } else if (ctx)
                 delete ctx;
             break;
@@ -6808,9 +6773,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
                 DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, command);
             }
             if ((i.startView != DM_AUTOMATIC || i.startZoom != INVALID_ZOOM) && !firstDocLoaded) {
-                TCHAR *viewMode = utf8_to_tstr(DisplayModeNameFromEnum(i.startView));
+                ScopedMem<TCHAR> viewMode(utf8_to_tstr(DisplayModeNameFromEnum(i.startView)));
                 tstr_printf_s(command, sizeof(command), _T("[") DDECOMMAND_SETVIEW _T("(\"%s\", \"%s\", %.2f)]"), fullpath, viewMode, i.startZoom);
-                free(viewMode);
                 DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, command);
             }
         }
@@ -6822,9 +6786,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
             if (!win)
                 goto Exit;
             if (WS_SHOWING_PDF == win->state && i.destName && !firstDocLoaded) {
-                char * tmp = tstr_to_utf8(i.destName);
+                ScopedMem<char> tmp(tstr_to_utf8(i.destName));
                 win->dm->goToNamedDest(tmp);
-                free(tmp);
             }
             else if (WS_SHOWING_PDF == win->state && i.pageNumber > 0 && !firstDocLoaded) {
                 if (win->dm->validPageNo(i.pageNumber))
