@@ -169,6 +169,7 @@ static HBITMAP                      gBitmapReloadingCue;
 static RenderCache                  gRenderCache;
 static Vec<WindowInfo*>             gWindows;
 static FileHistoryList              gFileHistoryRoot;
+static UIThreadWorkItemQueue        gThreadWorkQueue;
 
 static int                          gReBarDy;
 static int                          gReBarDyFrame;
@@ -2502,6 +2503,11 @@ static void ConvertSelectionRectToSelectionOnPage (WindowInfo *win) {
         selOnPage.next = win->selectionOnPage;
         win->selectionOnPage = (SelectionOnPage *)_memdup(&selOnPage);
     }
+}
+
+void UIThreadWorkItem::MarshallOnUIThread()
+{
+    gThreadWorkQueue.Queue(this);
 }
 
 // for testing only
@@ -6006,8 +6012,6 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
             return 0;
 
         default:
-            if (HandleNextUIThreadWorkItem(message, lParam))
-                return 0;
             return DefWindowProc(hwnd, message, wParam, lParam);
     }
     return 0;
@@ -6861,6 +6865,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
         TranslateMessage(&msg);
         DispatchMessage(&msg);
+
+        // process these messages here so that we don't have to add this
+        // handling to every WndProc that might receive those messages
+        gThreadWorkQueue.Execute();
     }
 
 #ifndef THREAD_BASED_FILEWATCH

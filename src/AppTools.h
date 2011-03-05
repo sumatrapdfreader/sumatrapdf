@@ -12,32 +12,50 @@
 // Execute() method
 class UIThreadWorkItem
 {
-protected:
-    HWND hwnd;
-
 public:
-    static UINT msgId;
+    HWND hwnd;
 
     UIThreadWorkItem(HWND hwnd) : hwnd(hwnd) {}
     virtual ~UIThreadWorkItem() {}
     virtual void Execute() = 0;
 
-    void MarshallOnUIThread() {
-        PostMessage(hwnd, msgId, 0, (LPARAM)this);
-    }
+    void MarshallOnUIThread();
 };
 
-static inline bool HandleNextUIThreadWorkItem(UINT message, LPARAM lParam)
+class UIThreadWorkItemQueue : Vec<UIThreadWorkItem *>
 {
-    if (message != UIThreadWorkItem::msgId)
-        return false;
+    CRITICAL_SECTION cs;
 
-    UIThreadWorkItem *wi = (UIThreadWorkItem *)lParam;
-    wi->Execute();
-    delete wi;
+public:
+    UIThreadWorkItemQueue() : Vec<UIThreadWorkItem *>() {
+        InitializeCriticalSection(&cs);
+    }
 
-    return true;
-}
+    ~UIThreadWorkItemQueue() {
+        DeleteCriticalSection(&cs);
+        DeleteVecMembers(*this);
+    }
+
+    void Queue(UIThreadWorkItem *item) {
+        ScopedCritSec scope(&cs);
+        Append(item);
+        // make sure to spin the message loop once
+        PostMessage(item->hwnd, WM_NULL, 0, 0);
+    }
+
+    void Execute() {
+        // no need to acquire a lock for this check
+        if (Count() == 0)
+            return;
+
+        ScopedCritSec scope(&cs);
+        for (size_t i = 0; i < Count(); i++) {
+            UIThreadWorkItem *wi = At(i);
+            wi->Execute();
+        }
+        DeleteVecMembers(*this);
+    }
+};
 
 bool IsValidProgramVersion(char *txt);
 int CompareVersion(TCHAR *txt1, TCHAR *txt2);

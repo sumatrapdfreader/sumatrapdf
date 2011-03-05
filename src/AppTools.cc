@@ -566,5 +566,3 @@ void Win32_Font_Delete(HFONT font)
 {
     DeleteObject(font);
 }
-
-UINT UIThreadWorkItem::msgId = RegisterWindowMessage(_T("UIThreadWorkItem::Execute"));
