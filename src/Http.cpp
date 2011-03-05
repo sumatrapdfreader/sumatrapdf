@@ -32,7 +32,7 @@ static DWORD WINAPI HttpDownloadThread(LPVOID data)
             dwError = GetLastError();
             goto DownloadError;
         }
-        ctx->data.AddChunk(buffer, dwRead);
+        ctx->data->Append(buffer, dwRead);
     } while (dwRead > 0);
 
     InternetCloseHandle(hFile);

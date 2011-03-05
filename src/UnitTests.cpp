@@ -1,6 +1,5 @@
 #include "base_util.h"
 #include "tstr_util.h"
-#include "MemChunked.h"
 #include "geom_util.h"
 #include "benc_util.h"
 #include "ParseCommandLine.h"
@@ -31,33 +30,6 @@ static void hexstrTest()
     assert(ft1.dwLowDateTime == ft2.dwLowDateTime);
     assert(ft1.dwHighDateTime == ft2.dwHighDateTime);
     free(s);
-}
-
-static void MemChunkedTest()
-{
-    MemChunked *ms;
-    DWORD size;
-    char *data;
-
-    char buf[2] = {'a', '\0'};
-    ms = new MemChunked();
-    for (int i=0; i<7; i++) {
-        ms->AddChunk(buf, 1);
-        buf[0] = buf[0] + 1;
-    }
-    data = (char*)ms->GetData(&size);
-    delete ms;
-    assert(str_eq("abcdefg", data));
-    assert(7 == size);
-    free(data);
-
-    ms = new MemChunked();
-    ms->AddChunk("a", 1);
-    data = (char*)ms->GetData(&size);
-    delete ms;
-    assert(str_eq("a", data));
-    assert(1 == size);
-    free(data);
 }
 
 static void ParseCommandLineTest()
@@ -350,7 +322,6 @@ void u_DoAllTests(void)
     DBG_OUT("Running tests\n");
     u_RectI_Intersect();
     u_benc_all();
-    MemChunkedTest();
     hexstrTest();
     ParseCommandLineTest();
     tstr_test();

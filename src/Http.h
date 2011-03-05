@@ -4,8 +4,8 @@
 /* Copyright Krzysztof Kowalczyk 2006-2011
    License: GPLv3 */
 
-#include "MemChunked.h"
 #include "tstr_util.h"
+#include "Vec.h"
 
 class HttpReqCtx {
 public:
@@ -15,19 +15,21 @@ public:
     UINT          msg;
 
     TCHAR *       url;
-    MemChunked    data;
+    Vec<char> *   data;
     /* true for automated check, false for check triggered from menu */
     bool          silent;
 
     HANDLE        hThread;
 
     HttpReqCtx(const TCHAR *url, HWND hwnd, UINT msg, bool silent=false)
-        : hwndToNotify(hwnd), msg(msg), url(NULL), silent(silent), hThread(NULL) {
+        : hwndToNotify(hwnd), msg(msg), silent(silent), hThread(NULL) {
         assert(url);
         this->url = tstr_dup(url);
+        data = new Vec<char>(256, 1);
     }
     ~HttpReqCtx() {
         free(url);
+        delete data;
         CloseHandle(hThread);
     }
 };

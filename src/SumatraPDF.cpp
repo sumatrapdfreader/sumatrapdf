@@ -2096,7 +2096,9 @@ static void OnUrlDownloaded(WindowInfo *win, HttpReqCtx *ctx)
     // our query and it might accidentally contain a number bigger than
     // our version number which will make us ask to upgrade every time.
     // To fix that, we reject text that doesn't look like a valid version number.
-    char *txt = (char*)ctx->data.GetData();
+    char *txt = ctx->data->StealData();
+    ScopedMem<char> scopedTxt(txt);
+
     if (!IsValidProgramVersion(txt)) {
         // notify the user about the error during a manual update check
         if (!ctx->silent)
@@ -2130,7 +2132,6 @@ static void OnUrlDownloaded(WindowInfo *win, HttpReqCtx *ctx)
     }
     free(verTxt);
 Exit:
-    free(txt);
     delete ctx;
 }
 
