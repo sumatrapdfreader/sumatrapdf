@@ -1555,12 +1555,15 @@ TCHAR *DisplayModel::getTextInRegion(int pageNo, RectD *region)
 /* extract all text from the document (caller needs to free() the result) */
 TCHAR *DisplayModel::extractAllText(RenderTarget target)
 {
-    VStrList pages;
+    Vec<TCHAR> txt(1024,1);
 
     for (int pageNo = 1; pageNo <= pageCount(); pageNo++)
-        pages.Push(pdfEngine->ExtractPageText(pageNo, _T(DOS_NEWLINE), NULL, target));
+    {
+        ScopedMem<TCHAR> s(pdfEngine->ExtractPageText(pageNo, _T(DOS_NEWLINE), NULL, target));
+        txt.Append(s, tstr_len(s));
+    }
 
-    return pages.Join();
+    return txt.StealData();
 }
 
 // returns true if it was necessary to scroll the display (horizontally or vertically)

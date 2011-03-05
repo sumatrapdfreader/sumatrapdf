@@ -3596,13 +3596,10 @@ static void OnMenuSaveAs(WindowInfo *win)
     }
     // Extract all text when saving as a plain text file
     if (hasCopyPerm && tstr_endswithi(realDstFileName, _T(".txt"))) {
-        TCHAR *text = win->dm->extractAllText(Target_Export);
-        char *textUTF8 = tstr_to_utf8(text);
-        char *textUTF8BOM = str_cat("\xEF\xBB\xBF", textUTF8);
-        free(textUTF8);
-        free(text);        
+        ScopedMem<TCHAR> text(win->dm->extractAllText(Target_Export));
+        ScopedMem<char> textUTF8(tstr_to_utf8(text));
+        ScopedMem<char> textUTF8BOM(str_cat("\xEF\xBB\xBF", textUTF8));
         write_to_file(realDstFileName, textUTF8BOM, str_len(textUTF8BOM));
-        free(textUTF8BOM);
     }
     // Recreate inexistant PDF files from memory...
     else if (!file_exists(srcFileName)) {
