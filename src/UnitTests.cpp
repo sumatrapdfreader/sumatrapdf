@@ -6,6 +6,7 @@
 #include "ParseCommandLine.h"
 #include "AppTools.h"
 #include "Vec.h"
+#include "vstrlist.h"
 
 #ifdef DEBUG
 extern DWORD FileTimeDiffInSecs(FILETIME *ft1, FILETIME *ft2);
@@ -236,6 +237,28 @@ static void versioncheck_test()
     assert(CompareVersion(_T("1.3.0"), _T("2662")) < 0);
 }
 
+static void VecStrTest()
+{
+    VStrList v;
+    v.Append(tstr_dup(_T("foo")));
+    v.Append(tstr_dup(_T("bar")));
+    TCHAR *s = v.Join();
+    assert(v.Count() == 2);
+    assert(tstr_eq(_T("foobar"), s));
+    free(s);
+
+    s = v.Join(_T(";"));
+    assert(v.Count() == 2);
+    assert(tstr_eq(_T("foo;bar"), s));
+    free(s);
+
+    v.Append(tstr_dup(_T("glee")));
+    s = v.Join(_T("_ _"));
+    assert(v.Count() == 3);
+    assert(tstr_eq(_T("foo_ _bar_ _glee"), s));
+    free(s);
+}
+
 static void VecTest()
 {
     // TODO: extend me
@@ -265,6 +288,61 @@ static void VecTest()
     assert(ints.Count() == 1000 && ints[500] == 500);
     ints.Remove(500);
     assert(ints.Count() == 999 && ints[500] == 501);
+
+    {
+        char buf[2] = {'a', '\0'};
+        Vec<char> v(0,1);
+        for (int i=0; i<7; i++) {
+            v.Append(buf, 1);
+            buf[0] = buf[0] + 1;
+        }
+        char *s = v.First();
+        assert(str_eq("abcdefg", s));
+        assert(7 == v.Count());
+    }
+
+    {
+        Vec<char> v(128,1);
+        v.Append("boo", 3);
+        assert(str_eq("boo", v.First()));
+        assert(v.Count() == 3);
+        v.Append("fop", 3);
+        assert(str_eq("boofop", v.First()));
+        assert(v.Count() == 6);
+        v.RemoveAt(2, 3);
+        assert(v.Count() == 3);
+        assert(str_eq("bop", v.First()));
+        char *s = v.StealData();
+        assert(str_eq("bop", s));
+        free(s);
+        assert(v.Count() == 0);
+    }
+
+    {
+        Vec<char> v(0,1);
+        for (int i=0; i<32; i++) {
+            assert(v.Count() == i * 6);
+            v.Append("lambd", 5);
+            if (i % 2 == 0)
+                v.Append('a');
+            else
+                v.Push('a');
+        }
+
+        for (int i=1; i<=16; i++) {
+            v.RemoveAt((16 - i) * 6, 6);
+            assert(v.Count() == (32 - i) * 6);
+        }
+
+        v.RemoveAt(0, 6 * 15);
+        assert(v.Count() == 6);
+        char *s = v.First();
+        assert(str_eq(s, "lambda"));
+        s = v.StealData();
+        assert(str_eq(s, "lambda"));
+        free(s);
+        assert(v.Count() == 0);
+    }
 }
 
 void u_DoAllTests(void)
@@ -277,6 +355,7 @@ void u_DoAllTests(void)
     ParseCommandLineTest();
     tstr_test();
     versioncheck_test();
+    VecStrTest();
     VecTest();
 }
 #endif

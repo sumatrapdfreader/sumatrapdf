@@ -225,6 +225,7 @@
     <ClCompile Include="ext\jbig2dec\jbig2_segment.c" />
     <ClCompile Include="ext\jbig2dec\jbig2_symbol_dict.c" />
     <ClCompile Include="ext\jbig2dec\jbig2_text.c" />
+    <ClCompile Include="src\UnitTests.cpp" />
     <ClCompile Include="src\WindowInfo.cpp" />
   </ItemGroup>
   <ItemGroup>

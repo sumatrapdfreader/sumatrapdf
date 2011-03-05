@@ -5,7 +5,6 @@
 #define _VSTRLIST_H_
 
 #include "Vec.h"
-#include "base_util.h"
 #include "tstr_util.h"
 
 class VStrList : public Vec<TCHAR *>
@@ -18,34 +17,16 @@ public:
 
     TCHAR *Join(TCHAR *joint=NULL)
     {
-        size_t len = 0;
+        Vec<TCHAR> tmp(256, 1);
         size_t jointLen = joint ? tstr_len(joint) : 0;
-        TCHAR *result, *tmp;
-
-        size_t n = Count();
-        for (size_t i = n; i > 0; i--)
-            len += tstr_len(At(i - 1)) + jointLen;
-        if (len <= jointLen)
-            return SAZ(TCHAR);
-        len -= jointLen;
-
-        result = SAZA(TCHAR, len + 1);
-        if (!result)
-            return NULL;
-
-        assert(Count() == n);
-        tmp = result;
-        TCHAR *end = result + len + 1;
-        for (size_t i = 0; i < n; i++) {
-            if (jointLen > 0 && i > 0) {
-                tstr_copy(tmp, end - tmp, joint);
-                tmp += jointLen;
-            }
-            tstr_copy(tmp, end - tmp, At(i));
-            tmp += tstr_len(At(i));
+        for (size_t i=0; i<Count(); i++)
+        {
+            TCHAR *s = At(i);
+            if (i > 0 && jointLen > 0)
+                tmp.Append(joint, jointLen);
+            tmp.Append(s, tstr_len(s));
         }
-
-        return result;
+        return tmp.StealData();
     }
 
     int Find(TCHAR *string)

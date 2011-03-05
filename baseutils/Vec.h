@@ -1,40 +1,42 @@
 #ifndef Vec_h
 #define Vec_h
 
+#include "base_util.h"
+
 /* Simple but also optimized for small sizes vector/array class that can
 store pointer types or POD types
-(http://stackoverflow.com/questions/146452/what-are-pod-types-in-c). */
+(http://stackoverflow.com/questions/146452/what-are-pod-types-in-c).
+
+When padding is used, we ensure there's always zeroed <pad> elements at the end.
+They're not counted as part of the vector, you can think of them as ensuring
+zero-termination generalized to n zero-terminating elements (because it's free).
+
+One use case: Vec<char> with padding=1 is C-compatible string buffer.
+*/
 template <typename T>
 class Vec {
 private:
-    static const size_t INTERNAL_BUF_CAP = 16;
-    static const size_t EL_SIZE = sizeof(T);
+    static const size_t INTERNAL_BUF_SIZE = 16;
+    size_t  pad;
     size_t  len;
     size_t  cap;
     T *     els;
-    T       buf[INTERNAL_BUF_CAP];
+    T       buf[INTERNAL_BUF_SIZE];
 
     void EnsureCap(size_t needed) {
-        if (this->cap >= needed)
+        if (cap >= needed)
             return;
 
-        size_t newCap = this->cap * 2;
-        if (this->cap > 1024)
-            newCap = this->cap * 3 / 2;
+        size_t newCap = cap * 2;
         if (needed > newCap)
             newCap = needed;
 
-        if (newCap >= INT_MAX / EL_SIZE) abort();
-        if (this->els != this->buf) {
-            this->els = (T*)realloc(this->els, newCap * EL_SIZE);
-        }
-        else {
-            this->els = (T*)malloc(newCap * EL_SIZE);
-            if (this->els)
-                memcpy(this->els, this->buf, this->len * EL_SIZE);
-        }
-        if (!this->els) abort();
-        this->cap = newCap;
+        if (newCap + pad >= INT_MAX / sizeof(T)) abort();
+        T * newEls = (T*)calloc((newCap + pad), sizeof(T));
+        memcpy(newEls, els, len * sizeof(T));
+        FreeEls();
+        cap = newCap;
+        els = newEls;
     }
 
     T* MakeSpaceAt(size_t idx, size_t count=1) {
@@ -44,7 +46,7 @@ private:
         if (tomove > 0) {
             T* src = els + idx;
             T* dst = els + idx + count;
-            memmove(dst, src, tomove * EL_SIZE);
+            memmove(dst, src, tomove * sizeof(T));
         }
         len += count;
         return res;
@@ -56,10 +58,10 @@ private:
     }
 
 public:
-    Vec(size_t initCap=0) {
-        len = 0;
-        cap = INTERNAL_BUF_CAP;
+    Vec(size_t initCap=0, size_t padding=0) {
+        pad = padding;
         els = buf;
+        Clear();
         EnsureCap(initCap);
     }
 
@@ -69,9 +71,10 @@ public:
 
     void Clear() {
         len = 0;
-        cap = INTERNAL_BUF_CAP;
+        cap = INTERNAL_BUF_SIZE - pad;
         FreeEls();
         els = buf;
+        memset(buf, 0, sizeof(buf));
     }
 
     T& operator[](size_t idx) const {
@@ -94,14 +97,20 @@ public:
         InsertAt(len, el);
     }
 
+    void Append(T* src, size_t count) {
+        T* dst = MakeSpaceAt(len, count);
+        memcpy(dst, src, count * sizeof(T));
+    }
+
     void RemoveAt(size_t idx, size_t count=1) {
         int tomove = len - idx - count;
         if (tomove > 0) {
             T *dst = els + idx;
             T *src = els + idx + count;
-            memmove(dst, src, tomove * EL_SIZE);
+            memmove(dst, src, tomove * sizeof(T));
         }
         len -= count;
+        memset(els + len, 0, count * sizeof(T));
     }
 
     void Push(T el) {
@@ -118,6 +127,19 @@ public:
     T& Last() {
         assert(len > 0);
         return At(len - 1);
+    }
+
+    // perf hack for using as a buffer: client can get accumulated data
+    // without duplicate allocation. Note: since Vec over-allocates, this
+    // is likely to use more memory than strictly necessary, but in most cases
+    // it doesn't matter
+    T *StealData() {
+        T* res = els;
+        if (els == buf)
+            res = (T*)memdup(buf, (len + pad) * sizeof(T));
+        els = buf;
+        Clear();
+        return res;
     }
 
     int Find(T el) {
