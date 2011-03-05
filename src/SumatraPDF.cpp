@@ -2096,8 +2096,8 @@ static void OnUrlDownloaded(WindowInfo *win, HttpReqCtx *ctx)
     // our query and it might accidentally contain a number bigger than
     // our version number which will make us ask to upgrade every time.
     // To fix that, we reject text that doesn't look like a valid version number.
-    char *txt = ctx->data->StealData();
-    ScopedMem<char> scopedTxt(txt);
+    ScopedMem<char> txt(ctx->data->StealData());
+    ScopedMem<TCHAR> verTxt(ansi_to_tstr(txt));
 
     if (!IsValidProgramVersion(txt)) {
         // notify the user about the error during a manual update check
@@ -2106,7 +2106,6 @@ static void OnUrlDownloaded(WindowInfo *win, HttpReqCtx *ctx)
         goto Exit;
     }
 
-    TCHAR *verTxt = ansi_to_tstr(txt);
     /* reduce the string to a single line (resp. drop the newline) */
     tstr_trans_chars(verTxt, _T("\r\n"), _T("\0\0"));
     if (CompareVersion(verTxt, UPDATE_CHECK_VER) > 0) {
@@ -2130,7 +2129,6 @@ static void OnUrlDownloaded(WindowInfo *win, HttpReqCtx *ctx)
                        _TR("SumatraPDF Update"), MB_ICONINFORMATION | MB_OK);
         }
     }
-    free(verTxt);
 Exit:
     delete ctx;
 }
