@@ -44,6 +44,17 @@ extern HINSTANCE ghinst;
 
 static HWND gHwndAbout;
 
+typedef struct AboutLayoutInfoEl {
+    /* static data, must be provided */
+    const TCHAR *   leftTxt;
+    const TCHAR *   rightTxt;
+    const TCHAR *   url;
+
+    /* data calculated by the layout */
+    RectI           leftPos;
+    RectI           rightPos;
+} AboutLayoutInfoEl;
+
 static AboutLayoutInfoEl gAboutLayoutInfo[] = {
     { _T("website"),        _T("SumatraPDF website"),   _T("http://blog.kowalczyk.info/software/sumatrapdf"), 0 },
     { _T("forums"),         _T("SumatraPDF forums"),    _T("http://blog.kowalczyk.info/forum_sumatra"), 0 },
@@ -96,7 +107,7 @@ void DrawSumatraPDF(HDC hdc, int x, int y)
 /* Draws the about screen a remember some state for hyperlinking.
    It transcribes the design I did in graphics software - hopeless
    to understand without seeing the design. */
-void DrawAbout(HWND hwnd, HDC hdc, RECT *rect)
+static void DrawAbout(HWND hwnd, HDC hdc, RECT *rect)
 {
     SIZE            txtSize;
     int             totalDx, totalDy;
@@ -212,7 +223,7 @@ void DrawAbout(HWND hwnd, HDC hdc, RECT *rect)
     DeleteObject(penLinkLine);
 }
 
-void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, RECT * rect)
+static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, RECT * rect)
 {
     SIZE            txtSize;
     int             totalDx, totalDy;
@@ -341,7 +352,7 @@ void OnPaintAbout(HWND hwnd)
     EndPaint(hwnd, &ps);
 }
 
-const TCHAR *AboutGetLink(WindowInfo *win, int x, int y, AboutLayoutInfoEl **el_out)
+static const TCHAR *AboutGetLink(WindowInfo *win, int x, int y, AboutLayoutInfoEl **el_out=NULL)
 {
     if (gRestrictedUse) return NULL;
 
@@ -456,3 +467,77 @@ LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
     }
     return 0;
 }
+
+static void OnPaint(WindowInfo *win)
+{
+    RECT rc;
+    GetClientRect(win->hwndCanvas, &rc);
+
+    PAINTSTRUCT ps;
+    HDC hdc = BeginPaint(win->hwndCanvas, &ps);
+    win->ResizeIfNeeded(false);
+    UpdateAboutLayoutInfo(win->hwndCanvas, win->hdcToDraw, &rc);
+    DrawAbout(win->hwndCanvas, win->hdcToDraw, &rc);
+    win->DoubleBuffer_Show(hdc);
+    EndPaint(win->hwndCanvas, &ps);
+}
+
+void CreateInfotipForAboutLink(WindowInfo *win, AboutLayoutInfoEl *aboutEl)
+{
+    TOOLINFO ti = { 0 };
+    FillToolInfo(ti, win);
+
+    if (aboutEl && aboutEl->url) {
+        ti.rect = RECT_FromRectI(&aboutEl->rightPos);
+        ti.lpszText = (TCHAR *)aboutEl->url;
+        SendMessage(win->hwndInfotip, win->infotipVisible ? TTM_NEWTOOLRECT : TTM_ADDTOOL, 0, (LPARAM)&ti);
+        win->infotipVisible = true;
+    } else
+        DeleteInfotip(win);
+}
+
+LRESULT HandleWindowAboutMsg(WindowInfo *win, HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, bool& handled)
+{
+    POINT        pt;
+
+    assert(win->state == WS_ABOUT);
+    handled = false;
+
+    switch (message)
+    {
+        case WM_PAINT:
+            OnPaint(win);
+            handled = true;
+            return 0;
+
+        case WM_SETCURSOR:
+            if (GetCursorPos(&pt) && ScreenToClient(hwnd, &pt)) {
+                AboutLayoutInfoEl *aboutEl;
+                if (AboutGetLink(win, pt.x, pt.y, &aboutEl)) {
+                    CreateInfotipForAboutLink(win, aboutEl);
+                    SetCursor(gCursorHand);
+                    handled = true;
+                    return TRUE;
+                }
+            }
+            break;
+
+        case WM_LBUTTONDOWN:
+            // remember a link under so that on mouse up we only activate
+            // link if mouse up is on the same link as mouse down
+            win->url = AboutGetLink(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+            handled = true;
+            break;
+
+        case WM_LBUTTONUP:
+            const TCHAR *url = AboutGetLink(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+            if (url && url == win->url)
+                LaunchBrowser(url);
+            win->url = NULL;
+            handled = true;
+            break;            
+    }
+
+    return 0;
+}
+

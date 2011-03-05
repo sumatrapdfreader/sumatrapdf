@@ -24,6 +24,7 @@ enum WinState {
     WS_ABOUT
 };
 
+#if 0
 // TODO: WindowInfoType is meant to replace WinState
 enum WindowInfoType {
     WitInvalid = 0,
@@ -32,6 +33,7 @@ enum WindowInfoType {
     WitPdf,         // WindowInfoPdf
     WitComic        // WindowInfoComic
 };
+#endif
 
 /* Describes actions which can be performed by mouse */
 enum MouseAction {
@@ -74,12 +76,12 @@ public:
     int winDx() const { return canvasRc.right - canvasRc.left; }
     int winDy() const { return canvasRc.bottom - canvasRc.top; }
     SizeI winSize() const { return SizeI(winDx(), winDy()); }
+    bool IsAboutWindow() const { return WS_ABOUT == state; }
 
     WinState        state;
     bool            needrefresh; // true if the view of the PDF is not synchronized with the content of the file on disk
     TCHAR *         loadedFilePath;
     bool            threadStressRunning;
-
     DisplayModel *  dm;
     HWND            hwndFrame;
     HWND            hwndCanvas;

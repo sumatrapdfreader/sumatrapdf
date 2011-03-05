@@ -6,24 +6,14 @@
 
 #define ABOUT_CLASS_NAME        _T("SUMATRA_PDF_ABOUT")
 
-typedef struct AboutLayoutInfoEl {
-    /* static data, must be provided */
-    const TCHAR *   leftTxt;
-    const TCHAR *   rightTxt;
-    const TCHAR *   url;
-
-    /* data calculated by the layout */
-    RectI           leftPos;
-    RectI           rightPos;
-} AboutLayoutInfoEl;
-
-void DrawAbout(HWND hwnd, HDC hdc, RECT *rect);
-void OnMenuAbout();
 LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
-const TCHAR *AboutGetLink(WindowInfo *win, int x, int y, AboutLayoutInfoEl **el_out=NULL);
-void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, RECT * rect);
+LRESULT          HandleWindowAboutMsg(WindowInfo *win, HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, bool& handled);
+
+void OnMenuAbout();
 
 // in SumatraPDF.cpp
 void LaunchBrowser(const TCHAR *url);
+void FillToolInfo(TOOLINFO& ti, WindowInfo *win);
+void DeleteInfotip(WindowInfo *win);
 
 #endif

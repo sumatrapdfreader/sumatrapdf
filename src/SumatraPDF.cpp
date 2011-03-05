@@ -2870,17 +2870,9 @@ static void OnMouseLeftButtonDblClk(WindowInfo *win, int x, int y, WPARAM key)
 static void OnMouseLeftButtonDown(WindowInfo *win, int x, int y, WPARAM key)
 {
     //DBG_OUT("Left button clicked on %d %d\n", x, y);
-    assert (win);
-    if (!win) return;
+    if (!win || (WS_SHOWING_PDF != win->state))
+        return;
 
-    if (WS_ABOUT == win->state) {
-        // remember a link under so that on mouse up we only activate
-        // link if mouse up is on the same link as mouse down
-        win->url = AboutGetLink(win, x, y);
-        return;
-    }
-    if (WS_SHOWING_PDF != win->state)
-        return;
     if (MA_DRAGGING_RIGHT == win->mouseAction)
         return;
 
@@ -2912,17 +2904,7 @@ static void OnMouseLeftButtonDown(WindowInfo *win, int x, int y, WPARAM key)
 
 static void OnMouseLeftButtonUp(WindowInfo *win, int x, int y, WPARAM key)
 {
-    assert (win);
-    if (!win) return;
-
-    if (WS_ABOUT == win->state) {
-        const TCHAR * url = AboutGetLink(win, x, y);
-        if (url && url == win->url)
-            LaunchBrowser(url);
-        win->url = NULL;
-        return;
-    }
-    if (WS_SHOWING_PDF != win->state)
+    if (!win || (WS_SHOWING_PDF != win->state))
         return;
 
     assert(win->dm);
@@ -3050,12 +3032,7 @@ static void OnPaint(WindowInfo *win)
     RECT rc;
     GetClientRect(win->hwndCanvas, &rc);
 
-    if (WS_ABOUT == win->state) {
-        win->ResizeIfNeeded(false);
-        UpdateAboutLayoutInfo(win->hwndCanvas, win->hdcToDraw, &rc);
-        DrawAbout(win->hwndCanvas, win->hdcToDraw, &rc);
-        win->DoubleBuffer_Show(hdc);
-    } else if (WS_ERROR_LOADING_PDF == win->state) {
+    if (WS_ERROR_LOADING_PDF == win->state) {
         HFONT fontRightTxt = Win32_Font_GetSimple(hdc, _T("MS Shell Dlg"), 14);
         HFONT origFont = (HFONT)SelectObject(hdc, fontRightTxt); /* Just to remember the orig font */
         SetBkMode(hdc, TRANSPARENT);
@@ -3303,14 +3280,14 @@ static void PrintToDevice(PdfEngine *pdfEngine, HDC hdc, LPDEVMODE devMode,
 
             SizeD pSize = pdfEngine->pageSize(pageNo);
             int rotation = pdfEngine->pageRotation(pageNo);
-            // Turn the document by 90° if it isn't in portrait mode
+            // Turn the document by 90 deg if it isn't in portrait mode
             if (pSize.dx() > pSize.dy()) {
                 rotation += 90;
                 pSize = SizeD(pSize.dy(), pSize.dx());
             }
             // make sure not to print upside-down
             rotation = (rotation % 180) == 0 ? 0 : 270;
-            // finally turn the page by (another) 90° in landscape mode
+            // finally turn the page by (another) 90 deg in landscape mode
             if (!bPrintPortrait) {
                 rotation = (rotation + 90) % 360;
                 pSize = SizeD(pSize.dy(), pSize.dx());
@@ -5786,38 +5763,39 @@ static void CustomizeToCInfoTip(WindowInfo *win, LPNMTVGETINFOTIP nmit)
     free(path);
 }
 
-static void CreateInfotipForPdfLink(WindowInfo *win, int pageNo, void *linkObj)
+void FillToolInfo(TOOLINFO& ti, WindowInfo *win)
 {
-    if (!linkObj && !win->infotipVisible)
-        return;
-
-    TOOLINFO ti = { 0 };
     ti.cbSize = sizeof(ti);
     ti.hwnd = win->hwndCanvas;
     ti.uFlags = TTF_SUBCLASS;
- 
-    pdf_link *link = (pdf_link *)linkObj;
-    if (pageNo > 0 && (ti.lpszText = win->dm->getLinkPath(link))) {
+}
+
+void DeleteInfotip(WindowInfo *win)
+{
+    if (!win->infotipVisible)
+        return;
+
+    TOOLINFO ti = { 0 };
+    FillToolInfo(ti, win);
+    SendMessage(win->hwndInfotip, TTM_DELTOOL, 0, (LPARAM)&ti);
+    win->infotipVisible = false;
+}
+
+static void CreateInfotipForPdfLink(WindowInfo *win, int pageNo, pdf_link *link)
+{
+    TOOLINFO ti = { 0 };
+    FillToolInfo(ti, win);
+
+    ti.lpszText = win->dm->getLinkPath(link);
+    if (ti.lpszText) {
         fz_rect rect = win->dm->rectCvtUserToScreen(pageNo, link->rect);
         SetRect(&ti.rect, (int)rect.x0, (int)rect.y0, (int)rect.x1, (int)rect.y1);
 
         SendMessage(win->hwndInfotip, win->infotipVisible ? TTM_NEWTOOLRECT : TTM_ADDTOOL, 0, (LPARAM)&ti);
         free(ti.lpszText);
         win->infotipVisible = true;
-        return;
-    }
-
-    AboutLayoutInfoEl *aboutEl = (AboutLayoutInfoEl *)linkObj;
-    if (-1 == pageNo && aboutEl->url) {
-        ti.rect = RECT_FromRectI(&aboutEl->rightPos);
-        ti.lpszText = (TCHAR *)aboutEl->url;
-        SendMessage(win->hwndInfotip, win->infotipVisible ? TTM_NEWTOOLRECT : TTM_ADDTOOL, 0, (LPARAM)&ti);
-        win->infotipVisible = true;
-        return;
-    }
-
-    SendMessage(win->hwndInfotip, TTM_DELTOOL, 0, (LPARAM)&ti);
-    win->infotipVisible = false;
+    } else
+        DeleteInfotip(win);
 }
 
 static int  gDeltaPerLine = 0;         // for mouse wheel logic
@@ -5825,9 +5803,17 @@ static bool gWheelMsgRedirect = false; // set when WM_MOUSEWHEEL has been passed
 
 static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    int          current;
-    WindowInfo * win = FindWindowInfoByHwnd(hwnd);
+    int          currentScrollPos;
+    LRESULT      res;
     POINT        pt;
+
+    WindowInfo * win = FindWindowInfoByHwnd(hwnd);
+    if (win && win->IsAboutWindow()) {
+        bool handled;
+        res = HandleWindowAboutMsg(win, hwnd, message, wParam, lParam, handled);
+        if (handled)
+            return res;
+    }
 
     switch (message)
     {
@@ -5854,13 +5840,11 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
             break;
 
         case WM_LBUTTONDOWN:
-            if (win)
-                OnMouseLeftButtonDown(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
+            OnMouseLeftButtonDown(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
             break;
 
         case WM_LBUTTONUP:
-            if (win)
-                OnMouseLeftButtonUp(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
+            OnMouseLeftButtonUp(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
             break;
 
         case WM_MBUTTONDOWN:
@@ -5887,21 +5871,9 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
                 return DefWindowProc(hwnd, message, wParam, lParam);
 
             switch (win->state) {
-            case WS_ABOUT:
-                if (GetCursorPos(&pt) && ScreenToClient(hwnd, &pt)) {
-                    AboutLayoutInfoEl *aboutEl;
-                    if (AboutGetLink(win, pt.x, pt.y, &aboutEl)) {
-                        CreateInfotipForPdfLink(win, -1, aboutEl);
-                        SetCursor(gCursorHand);
-                        return TRUE;
-                    }
-                }
-                CreateInfotipForPdfLink(win, 0, NULL);
-                break;
-
             case WS_SHOWING_PDF:
                 if (win->mouseAction != MA_IDLE)
-                    CreateInfotipForPdfLink(win, 0, NULL);
+                    DeleteInfotip(win);
 
                 switch (win->mouseAction) {
                 case MA_DRAGGING:
@@ -5925,21 +5897,21 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
                             SetCursor(gCursorHand);
                             return TRUE;
                         }
-                        CreateInfotipForPdfLink(win, 0, NULL);
+                        DeleteInfotip(win);
                         if (win->dm->isOverText(pt.x, pt.y))
                             SetCursor(gCursorIBeam);
                         else
                             SetCursor(gCursorArrow);
                         return TRUE;
                     }
-                    CreateInfotipForPdfLink(win, 0, NULL);
+                    DeleteInfotip(win);
                 }
                 if (win->presentation)
                     return TRUE;
                 break;
 
             default:
-                CreateInfotipForPdfLink(win, 0, NULL);
+                DeleteInfotip(win);
                 break;
             }
             return DefWindowProc(hwnd, message, wParam, lParam);
@@ -6047,7 +6019,7 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
                break;
 
             win->wheelAccumDelta += GET_WHEEL_DELTA_WPARAM(wParam);     // 120 or -120
-            current = GetScrollPos(win->hwndCanvas, SB_VERT);
+            currentScrollPos = GetScrollPos(win->hwndCanvas, SB_VERT);
 
             while (win->wheelAccumDelta >= gDeltaPerLine) {
                 SendMessage(win->hwndCanvas, WM_VSCROLL, SB_LINEUP, 0);
@@ -6059,7 +6031,7 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
             }
 
             if (!displayModeContinuous(win->dm->displayMode()) &&
-                GetScrollPos(win->hwndCanvas, SB_VERT) == current) {
+                GetScrollPos(win->hwndCanvas, SB_VERT) == currentScrollPos) {
                 if (GET_WHEEL_DELTA_WPARAM(wParam) > 0)
                     win->dm->goToPrevPage(-1);
                 else
