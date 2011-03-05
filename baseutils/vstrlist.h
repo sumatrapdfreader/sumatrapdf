@@ -11,8 +11,7 @@ class VStrList : public Vec<TCHAR *>
 {
 public:
     ~VStrList() {
-        for (size_t i = 0; i < Count(); i++)
-            free(At(i));
+        FreeVecMembers(*this);
     }
 
     TCHAR *Join(TCHAR *joint=NULL)

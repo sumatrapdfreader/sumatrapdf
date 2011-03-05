@@ -9,7 +9,8 @@ store pointer types or POD types
 
 When padding is used, we ensure there's always zeroed <pad> elements at the end.
 They're not counted as part of the vector, you can think of them as ensuring
-zero-termination generalized to n zero-terminating elements (because it's free).
+zero-termination generalized to n zero-terminating elements (because n is as
+simple to code as 1).
 
 One use case: Vec<char> with padding=1 is C-compatible string buffer.
 */
@@ -164,5 +165,25 @@ public:
         return els + len;
     }
 };
+
+// only suitable for T that are pointers that were malloc()ed
+template <typename T>
+inline void FreeVecMembers(Vec<T>& v)
+{
+    for (size_t i = 0; i < v.Count(); i++) {
+        free(v.At(i));
+    }
+    v.Reset();
+}
+
+// only suitable for T that are pointers to C++ objects
+template <typename T>
+inline void DeleteVecMembers(Vec<T>& v)
+{
+    for (size_t i = 0; i < v.Count(); i++) {
+        delete v.At(i);
+    }
+    v.Reset();
+}
 
 #endif

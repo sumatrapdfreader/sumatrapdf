@@ -1,3 +1,5 @@
+#include <time.h>
+
 #include "base_util.h"
 #include "tstr_util.h"
 #include "geom_util.h"
@@ -6,6 +8,13 @@
 #include "AppTools.h"
 #include "Vec.h"
 #include "vstrlist.h"
+
+class Foo {
+public:
+    int m;
+
+    Foo(int m=0) : m(m) { }
+};
 
 #ifdef DEBUG
 extern DWORD FileTimeDiffInSecs(FILETIME *ft1, FILETIME *ft2);
@@ -314,6 +323,23 @@ static void VecTest()
         assert(str_eq(s, "lambda"));
         free(s);
         assert(v.Count() == 0);
+    }
+
+    {
+        Vec<Foo*> v;
+        srand((unsigned int)time(NULL));
+        for (int i=0; i<128; i++) {
+            v.Append(new Foo(i));
+            size_t pos = rand() % v.Count();
+            v.InsertAt(pos, new Foo(i));
+        }
+        while (v.Count() > 64) {
+            size_t pos = rand() % v.Count();
+            Foo *f = v[pos];
+            v.RemoveAt(pos);
+            delete f;
+        }
+        DeleteVecMembers(v);
     }
 }
 
