@@ -33,7 +33,6 @@ WindowInfoBase::WindowInfoBase(HWND hwnd) :
 {
     ZeroMemory(&selectionRect, sizeof(selectionRect));
     prevCanvasBR.x = prevCanvasBR.y = -1;
-    fwdsearchmarkRects.Clear();
 
     HDC hdcFrame = GetDC(hwndFrame);
     dpi = GetDeviceCaps(hdcFrame, LOGPIXELSY);

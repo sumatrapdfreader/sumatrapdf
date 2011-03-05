@@ -61,7 +61,7 @@ public:
     Vec(size_t initCap=0, size_t padding=0) {
         pad = padding;
         els = buf;
-        Clear();
+        Reset();
         EnsureCap(initCap);
     }
 
@@ -69,7 +69,7 @@ public:
         FreeEls();
     }
 
-    void Clear() {
+    void Reset() {
         len = 0;
         cap = INTERNAL_BUF_SIZE - pad;
         FreeEls();
@@ -138,7 +138,7 @@ public:
         if (els == buf)
             res = (T*)memdup(buf, (len + pad) * sizeof(T));
         els = buf;
-        Clear();
+        Reset();
         return res;
     }
 

@@ -252,7 +252,7 @@ static void VecTest()
     ints.RemoveAt(0);
     assert(ints.Count() == 2);
     assert(ints[0] == 1 && ints[1] == 3);
-    ints.Clear();
+    ints.Reset();
     assert(ints.Count() == 0);
 
     for (int i = 0; i < 1000; i++)

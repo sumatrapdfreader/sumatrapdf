@@ -2617,7 +2617,7 @@ static void OnInverseSearch(WindowInfo *win, UINT x, UINT y)
     if (gRestrictedUse || gPluginMode) return;
 
     // Clear the last forward-search result
-    win->fwdsearchmarkRects.Clear();
+    win->fwdsearchmarkRects.Reset();
     InvalidateRect(win->hwndCanvas, NULL, FALSE);
 
     // On double-clicking error message will be shown to the user
@@ -4320,7 +4320,7 @@ static void WindowInfo_HideMessage(WindowInfo *win)
 // Show the result of a PDF forward-search synchronization (initiated by a DDE command)
 void WindowInfo_ShowForwardSearchResult(WindowInfo *win, LPCTSTR srcfilename, UINT line, UINT col, UINT ret, UINT page, Vec<RectI> &rects)
 {
-    win->fwdsearchmarkRects.Clear();
+    win->fwdsearchmarkRects.Reset();
     if (ret == PDFSYNCERR_SUCCESS && rects.Count() > 0 ) {
         // remember the position of the search result for drawing the rect later on
         const PdfPageInfo *pi = win->dm->getPageInfo(page);

@@ -208,7 +208,7 @@ int Pdfsync::scan_and_build_index(FILE *fp)
     else if (versionNumber != 1)
         return 2; // unknown version
 
-    srcfiles.Clear();
+    srcfiles.Reset();
 
     // add the initial tex file to the file stack
     src_file s;
@@ -227,9 +227,8 @@ int Pdfsync::scan_and_build_index(FILE *fp)
     UINT cur_sheetNumber = (UINT)-1;
     int cur_plinesec = -1; // index of the p-line-section currently being created.
     int cur_recordsec=-1; // l-line-section currenlty created
-    record_sections.Clear();
-    pdfsheet_index.Clear();
-
+    record_sections.Reset();
+    pdfsheet_index.Reset();
 
     CHAR buff[_MAX_PATH];
     fpos_t linepos;
@@ -602,7 +601,7 @@ UINT Pdfsync::source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page
                     fscanf(fp, "%u %u %u\n", &recordNumber, &xPosition, &yPosition);
                     if (recordNumber == record) {
                         *page = (UINT)sheet;
-                        rects.Clear();
+                        rects.Reset();
                         RectI rc;
                         rc.x = (UINT)SYNCCOORDINATE_TO_PDFCOORDINATE(xPosition);
                         rc.y = (UINT)SYNCCOORDINATE_TO_PDFCOORDINATE(yPosition);
@@ -716,7 +715,7 @@ UINT SyncTex::source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page
             synctex_node_t node;
             int firstpage = -1;
             RectI rc;
-            rects.Clear();
+            rects.Reset();
             while (node = synctex_next_result(this->scanner)) {
                 if (firstpage == -1)
                 {
