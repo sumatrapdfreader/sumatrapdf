@@ -888,7 +888,7 @@ BOOL CreateShortcut(TCHAR *shortcutPath, TCHAR *exePath, TCHAR *workingDir, TCHA
     IPersistFile* pf = NULL;
     BOOL ok = TRUE;
 
-    ComScope comScope;
+    ScopedCom com;
 
     HRESULT hr = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, IID_IShellLink, (void **)&sl);
     if (FAILED(hr)) 
@@ -2076,13 +2076,13 @@ int RunApp()
     }
 }
 
-class GdiPlusScope {
+class ScopedGdiPlus {
 protected:
     GdiplusStartupInput si;
     ULONG_PTR           token;
 public:
-    GdiPlusScope() { GdiplusStartup(&token, &si, NULL); }
-    ~GdiPlusScope() { GdiplusShutdown(token); }
+    ScopedGdiPlus() { GdiplusStartup(&token, &si, NULL); }
+    ~ScopedGdiPlus() { GdiplusShutdown(token); }
 };
 
 void ShowUsage()
@@ -2127,9 +2127,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
     SetErrorMode(SEM_NOOPENFILEERRORBOX | SEM_FAILCRITICALERRORS);
 
-    ComScope comScope;
+    ScopedCom com;
     InitAllCommonControls();
-    GdiPlusScope gdiScope;
+    ScopedGdiPlus gdi;
 
     ParseCommandLine(GetCommandLine());
     if (gGlobalData.showUsageAndQuit) {

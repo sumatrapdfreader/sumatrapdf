@@ -187,7 +187,7 @@ Exit:
 }
 
 /* adapted from http://blogs.msdn.com/oldnewthing/archive/2004/09/20/231739.aspx */
-IDataObject* GetDataObjectForFile(LPCTSTR pszPath, HWND hwnd)
+IDataObject* GetDataObjectForFile(LPCTSTR filePath, HWND hwnd)
 {
     IDataObject* pDataObject = NULL;
     IShellFolder *pDesktopFolder;
@@ -195,7 +195,7 @@ IDataObject* GetDataObjectForFile(LPCTSTR pszPath, HWND hwnd)
     if (FAILED(hr))
         return NULL;
 
-    LPWSTR lpWPath = tstr_to_wstr(pszPath);
+    LPWSTR lpWPath = tstr_to_wstr(filePath);
     LPITEMIDLIST pidl;
     hr = pDesktopFolder->ParseDisplayName(NULL, NULL, lpWPath, NULL, &pidl, NULL);
     if (SUCCEEDED(hr)) {

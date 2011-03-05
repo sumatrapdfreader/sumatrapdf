@@ -6723,7 +6723,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     // without a cd).
     SetErrorMode(SEM_NOOPENFILEERRORBOX | SEM_FAILCRITICALERRORS);
 
-    ComScope comScope;
+    ScopedCom com;
     InitAllCommonControls();
     fz_accelerate();
 

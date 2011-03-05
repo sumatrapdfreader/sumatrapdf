@@ -23,10 +23,10 @@ private:
     HMODULE _LoadSystemLibrary(const TCHAR *libName);
 };
 
-class ComScope {
+class ScopedCom {
 public:
-    ComScope() { CoInitialize(NULL); }
-    ~ComScope() { CoUninitialize(); }
+    ScopedCom() { CoInitialize(NULL); }
+    ~ScopedCom() { CoUninitialize(); }
 };
 
 class MillisecondTimer {
@@ -87,8 +87,8 @@ bool WriteRegDWORD(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, DWOR
 
 void EnableNx();
 void RedirectIOToConsole();
-TCHAR *ResolveLnk(TCHAR * path);
-IDataObject* GetDataObjectForFile(LPCTSTR pszPath, HWND hwnd=NULL);
+TCHAR *ResolveLnk(TCHAR *path);
+IDataObject* GetDataObjectForFile(LPCTSTR filePath, HWND hwnd=NULL);
 DWORD GetFileVersion(TCHAR *path);
 
 inline bool IsKeyPressed(int key)
