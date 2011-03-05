@@ -89,13 +89,9 @@ static bool             gUseGdiRenderer = false;
 #define DEFAULT_LANGUAGE        "en"
 
 #define WM_APP_URL_DOWNLOADED  (WM_APP + 12)
-#define WM_APP_FIND_UPDATE     (WM_APP + 13)
-#define WM_APP_FIND_END        (WM_APP + 14)
 #ifdef DISPLAY_TOC_PAGE_NUMBERS
 #define WM_APP_REPAINT_TOC     (WM_APP + 15)
 #endif
-#define WM_APP_GOTO_TOC_LINK   (WM_APP + 16)
-#define WM_APP_AUTO_RELOAD     (WM_APP + 17)
 
 #if defined(SVN_PRE_RELEASE_VER) && !defined(BLACK_ON_YELLOW)
 #define ABOUT_BG_COLOR          RGB(255,0,0)
@@ -1652,12 +1648,23 @@ Error:
     return true;
 }
 
+class FileChangeWorkItem : public UIThreadWorkItem
+{
+public:
+    FileChangeWorkItem(HWND hwnd) : UIThreadWorkItem(hwnd) {}
+    virtual void Execute() {
+        // delay the reload slightly, in case we get another request immediately ofter this one
+        SetTimer(hwnd, AUTO_RELOAD_TIMER_ID, AUTO_RELOAD_DELAY_IN_MS, NULL);
+    }
+};
+
 // This function is executed within the watching thread
 static void OnFileChange(const TCHAR * filename, LPARAM param)
 {
     // We cannot called WindowInfo_Refresh directly as it could cause race conditions between the watching thread and the main thread
     // Instead we just post a message to the main thread to trigger a reload
-    PostMessage(((WindowInfo *)param)->hwndFrame, WM_APP_AUTO_RELOAD, 0, 0);
+    UIThreadWorkItem *wi = new FileChangeWorkItem(((WindowInfo *)param)->hwndCanvas);
+    wi->MarshallOnUIThread();
 }
 
 #ifndef THREAD_BASED_FILEWATCH
@@ -4615,6 +4622,21 @@ static void OnChar(WindowInfo *win, WPARAM key)
     }
 }
 
+class GoToTocLinkWorkItem : public UIThreadWorkItem
+{
+    PdfTocItem *tocItem;
+
+public:
+    GoToTocLinkWorkItem(HWND hwnd, PdfTocItem *ti) :
+        UIThreadWorkItem(hwnd), tocItem(ti) {}
+
+    virtual void Execute() {
+        WindowInfo *win = FindWindowInfoByHwnd(hwnd);
+        if (win && win->dm)
+            win->dm->goToTocLink(tocItem->link);
+    }
+};
+
 static void GoToTocLinkForTVItem(WindowInfo *win, HWND hTV, HTREEITEM hItem=NULL, bool allowExternal=true)
 {
     if (!hItem)
@@ -4625,8 +4647,10 @@ static void GoToTocLinkForTVItem(WindowInfo *win, HWND hTV, HTREEITEM hItem=NULL
     item.mask = TVIF_PARAM;
     TreeView_GetItem(hTV, &item);
     PdfTocItem *tocItem = (PdfTocItem *)item.lParam;
-    if (win->dm && tocItem && (allowExternal || tocItem->link && PDF_LGOTO == tocItem->link->kind))
-        PostMessage(win->hwndFrame, WM_APP_GOTO_TOC_LINK, 0, item.lParam);
+    if (win->dm && tocItem && (allowExternal || tocItem->link && PDF_LGOTO == tocItem->link->kind)) {
+        UIThreadWorkItem *wi = new GoToTocLinkWorkItem(win->hwndCanvas, tocItem);
+        wi->MarshallOnUIThread();
+    }
 }
 
 static TBBUTTON TbButtonFromButtonInfo(int i) {
@@ -4777,6 +4801,32 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, L
     return ret;
 }
 
+class FindEndWorkItem : public UIThreadWorkItem
+{
+    PdfSel *pdfSel;
+    bool    wasModified;
+
+public:
+    FindEndWorkItem(HWND hwnd, PdfSel *pdfSel, bool wasModified=true) :
+        UIThreadWorkItem(hwnd), pdfSel(pdfSel), wasModified(wasModified) {}
+
+    virtual void Execute() {
+        WindowInfo *win = FindWindowInfoByHwnd(hwnd);
+        if (!win)
+            return;
+        if (!win->dm) {
+            // the document was closed while finding
+            WindowInfo_ShowMessage_Async(win, NULL, false);
+        } else if (pdfSel) {
+            WindowInfo_ShowSearchResult(win, pdfSel, wasModified);
+            WindowInfo_HideFindStatus(win);
+        } else {
+            ClearSearch(win);
+            WindowInfo_HideFindStatus(win, true);
+        }
+    }
+};
+
 typedef struct FindThreadData {
     WindowInfo *win;
     PdfSearchDirection direction;
@@ -4804,10 +4854,12 @@ static DWORD WINAPI FindThread(LPVOID data)
     }
     free(ftd);
 
+    UIThreadWorkItem *wi;
     if (win->findCanceled)
-        rect = NULL;
-    LPARAM lParam = rect ? ftd->wasModified : win->findCanceled;
-    PostMessage(win->hwndFrame, WM_APP_FIND_END, (WPARAM)rect, lParam);
+        wi = new FindEndWorkItem(win->hwndCanvas, NULL);
+    else
+        wi = new FindEndWorkItem(win->hwndCanvas, rect, ftd->wasModified);
+    wi->MarshallOnUIThread();
 
     HANDLE hThread = win->findThread;
     win->findThread = NULL;
@@ -6012,6 +6064,9 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
             return 0;
 
         default:
+            // process thread queue events happening during an inner message loop
+            // (else the scrolling position isn't updated until the scroll bar is released)
+            gThreadWorkQueue.Execute();
             return DefWindowProc(hwnd, message, wParam, lParam);
     }
     return 0;
@@ -6431,31 +6486,6 @@ InitMouseWheelInfo:
                 delete ctx;
             break;
 
-        case WM_APP_FIND_END:
-            if (!win->dm) {
-                // the document was closed while finding
-                WindowInfo_ShowMessage_Async(win, NULL, false);
-            } else if (wParam) {
-                bool wasModified = lParam;
-                WindowInfo_ShowSearchResult(win, (PdfSel *)wParam, wasModified);
-                WindowInfo_HideFindStatus(win);
-            } else {
-                bool wasCanceled = lParam;
-                ClearSearch(win);
-                WindowInfo_HideFindStatus(win, wasCanceled);
-            }
-            break;
-
-        case WM_APP_GOTO_TOC_LINK:
-            if (win && win->dm && lParam)
-                win->dm->goToTocLink(((PdfTocItem *)lParam)->link);
-            break;
-
-        case WM_APP_AUTO_RELOAD:
-            // delay the reload slightly, in case we get another request immediately ofter this one
-            SetTimer(win->hwndCanvas, AUTO_RELOAD_TIMER_ID, AUTO_RELOAD_DELAY_IN_MS, NULL);
-            break;
-
         default:
             return DefWindowProc(hwnd, message, wParam, lParam);
     }
@@ -6530,9 +6560,9 @@ static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
     gCursorArrow = LoadCursor(NULL, IDC_ARROW);
     gCursorIBeam = LoadCursor(NULL, IDC_IBEAM);
     gCursorHand  = LoadCursor(NULL, IDC_HAND); // apparently only available if WINVER >= 0x0500
-    gCursorScroll = LoadCursor(NULL, IDC_SIZEALL);
     if (!gCursorHand)
         gCursorHand = LoadCursor(ghinst, MAKEINTRESOURCE(IDC_CURSORDRAG));
+    gCursorScroll = LoadCursor(NULL, IDC_SIZEALL);
     gCursorDrag  = LoadCursor(ghinst, MAKEINTRESOURCE(IDC_CURSORDRAG));
     gCursorSizeWE = LoadCursor(NULL, IDC_SIZEWE);
     gCursorNo    = LoadCursor(NULL, IDC_NO);
@@ -6868,6 +6898,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
         // process these messages here so that we don't have to add this
         // handling to every WndProc that might receive those messages
+        // TODO: this isn't called during an inner message loop, so messages
+        //       will be delayed, unless Execute() is called from a WndProc as well
         gThreadWorkQueue.Execute();
     }
 

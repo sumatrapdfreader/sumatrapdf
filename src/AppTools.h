@@ -22,38 +22,39 @@ public:
     void MarshallOnUIThread();
 };
 
-class UIThreadWorkItemQueue : Vec<UIThreadWorkItem *>
+class UIThreadWorkItemQueue
 {
-    CRITICAL_SECTION cs;
+    CRITICAL_SECTION        cs;
+    Vec<UIThreadWorkItem *> items;
 
 public:
-    UIThreadWorkItemQueue() : Vec<UIThreadWorkItem *>() {
+    UIThreadWorkItemQueue() {
         InitializeCriticalSection(&cs);
     }
 
     ~UIThreadWorkItemQueue() {
         DeleteCriticalSection(&cs);
-        DeleteVecMembers(*this);
+        DeleteVecMembers(items);
     }
 
     void Queue(UIThreadWorkItem *item) {
         ScopedCritSec scope(&cs);
-        Append(item);
+        items.Append(item);
         // make sure to spin the message loop once
         PostMessage(item->hwnd, WM_NULL, 0, 0);
     }
 
     void Execute() {
         // no need to acquire a lock for this check
-        if (Count() == 0)
+        if (items.Count() == 0)
             return;
 
         ScopedCritSec scope(&cs);
-        for (size_t i = 0; i < Count(); i++) {
-            UIThreadWorkItem *wi = At(i);
+        for (size_t i = 0; i < items.Count(); i++) {
+            UIThreadWorkItem *wi = items.At(i);
             wi->Execute();
         }
-        DeleteVecMembers(*this);
+        DeleteVecMembers(items);
     }
 };
 
