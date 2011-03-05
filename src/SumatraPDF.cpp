@@ -4804,11 +4804,11 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, L
 class FindEndWorkItem : public UIThreadWorkItem
 {
     PdfSel *pdfSel;
-    bool    wasModified;
+    bool    wasModifiedCanceled;
 
 public:
-    FindEndWorkItem(HWND hwnd, PdfSel *pdfSel, bool wasModified=true) :
-        UIThreadWorkItem(hwnd), pdfSel(pdfSel), wasModified(wasModified) {}
+    FindEndWorkItem(HWND hwnd, PdfSel *pdfSel, bool wasModifiedCanceled) :
+        UIThreadWorkItem(hwnd), pdfSel(pdfSel), wasModifiedCanceled(wasModifiedCanceled) {}
 
     virtual void Execute() {
         WindowInfo *win = FindWindowInfoByHwnd(hwnd);
@@ -4818,11 +4818,12 @@ public:
             // the document was closed while finding
             WindowInfo_ShowMessage_Async(win, NULL, false);
         } else if (pdfSel) {
-            WindowInfo_ShowSearchResult(win, pdfSel, wasModified);
+            WindowInfo_ShowSearchResult(win, pdfSel, wasModifiedCanceled);
             WindowInfo_HideFindStatus(win);
         } else {
+            // nothing found or search canceled
             ClearSearch(win);
-            WindowInfo_HideFindStatus(win, true);
+            WindowInfo_HideFindStatus(win, wasModifiedCanceled);
         }
     }
 };
@@ -4852,14 +4853,15 @@ static DWORD WINAPI FindThread(LPVOID data)
         if (!ftd->wasModified || win->dm->currentPageNo() != startPage)
             rect = win->dm->Find(ftd->direction, ftd->text, startPage);
     }
-    free(ftd);
 
     UIThreadWorkItem *wi;
-    if (win->findCanceled)
-        wi = new FindEndWorkItem(win->hwndCanvas, NULL);
-    else
+    if (rect && !win->findCanceled)
         wi = new FindEndWorkItem(win->hwndCanvas, rect, ftd->wasModified);
+    else
+        wi = new FindEndWorkItem(win->hwndCanvas, NULL, win->findCanceled);
     wi->MarshallOnUIThread();
+
+    free(ftd);
 
     HANDLE hThread = win->findThread;
     win->findThread = NULL;
