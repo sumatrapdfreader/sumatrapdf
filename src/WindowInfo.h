@@ -11,17 +11,6 @@
 #include "PdfSearch.h"
 #include "Vec.h"
 
-// TODO: the final division is meant to be:
-// WindowInfoBase
-// WindowInfoAbout : WindowInfoBase
-// WindowInfoPdf : WindowInfoBase
-// WindowInfoComic : WindowInfoBase
-// WindowInfoError : WindowInfoBase
-// (eventually I would prefer to show 'error opening a file' and other
-// similar messages as Growl-style, dismissable notifications
-// in the lower right corner of the window, which would be a solution
-// to issue 1214)
-
 class DisplayModel;
 class Synchronizer;
 
@@ -72,12 +61,12 @@ typedef struct SelectionOnPage {
 
 /* Describes information related to one window with (optional) pdf document
    on the screen */
-class WindowInfoBase
+class WindowInfo : public PdfSearchTracker, public PasswordUI
 {
 public:
-    WindowInfoBase(HWND hwnd);
-    ~WindowInfoBase();
-    
+    WindowInfo(HWND hwnd);
+    ~WindowInfo();
+
     void GetCanvasSize() { 
         GetClientRect(hwndCanvas, &canvasRc);
     }
@@ -228,59 +217,12 @@ public:
     void ZoomToSelection(float factor, bool relative);
     void SwitchToDisplayMode(DisplayMode displayMode, bool keepContinuous=false);
     void MoveDocBy(int dx, int dy);
-};
 
-class WindowInfo : public WindowInfoBase, public PdfSearchTracker, public PasswordUI
-{
-public:
-    WindowInfo(HWND hwnd) : WindowInfoBase(hwnd) {
-    }
-    ~WindowInfo() {
-    }
     virtual bool FindUpdateStatus(int count, int total);
     virtual TCHAR * GetPassword(const TCHAR *fileName, unsigned char *fileDigest,
                                 unsigned char decryptionKeyOut[32], bool *saveKey);
-};
 
-#if 0 // TODO: not used yet
-class WindowInfoPdf : public WindowInfoBase, public PdfSearchTracker
-{
-public:
-    WindowInfoPdf(HWND hwnd) : WindowInfoBase(hwnd) {
-        type = WitPdf;
-    }
-    ~WindowInfoPdf() {
-    }
-    virtual bool FindUpdateStatus(int count, int total);
 };
-
-class WindowInfoAbout : public WindowInfoBase
-{
-    WindowInfoAbout(HWND hwnd) : WindowInfoBase(hwnd) {
-        type = WitAbout;
-    }
-    ~WindowInfoAbout() {
-    }
-};
-
-class WindowInfoError : public WindowInfoBase
-{
-    WindowInfoError(HWND hwnd) : WindowInfoBase(hwnd) {
-        type = WitError;
-    }
-    ~WindowInfoError() {
-    }
-};
-
-class WindowInfoComic : public WindowInfoBase
-{
-    WindowInfoComic(HWND hwnd) : WindowInfoBase(hwnd) {
-        type = WitComic;
-    }
-    ~WindowInfoComic() {
-    }
-};
-#endif
 
 WindowInfo* FindWindowInfoByFile(TCHAR *file);
 WindowInfo* FindWindowInfoByHwnd(HWND hwnd);

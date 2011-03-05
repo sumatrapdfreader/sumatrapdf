@@ -9,7 +9,7 @@
 #include "tstr_util.h"
 #include "WinUtil.hpp"
 
-WindowInfoBase::WindowInfoBase(HWND hwnd) :
+WindowInfo::WindowInfo(HWND hwnd) :
     dm(NULL), state(WS_ABOUT), hwndFrame(hwnd),
     linkOnLastButtonDown(NULL), url(NULL), selectionOnPage(NULL),
     tocLoaded(false), tocShow(false), tocState(NULL), tocRoot(NULL),
@@ -41,7 +41,7 @@ WindowInfoBase::WindowInfoBase(HWND hwnd) :
     ReleaseDC(hwndFrame, hdcFrame);
 }
 
-WindowInfoBase::~WindowInfoBase() {
+WindowInfo::~WindowInfo() {
     this->AbortFinding();
     delete this->dm;
     delete this->pdfsync;
@@ -57,7 +57,7 @@ WindowInfoBase::~WindowInfoBase() {
     free(this->tocState);
 }
 
-void WindowInfoBase::DoubleBuffer_Show(HDC hdc)
+void WindowInfo::DoubleBuffer_Show(HDC hdc)
 {
     if (this->hdc != this->hdcToDraw) {
         assert(this->hdcToDraw == this->hdcDoubleBuffer);
@@ -65,7 +65,7 @@ void WindowInfoBase::DoubleBuffer_Show(HDC hdc)
     }
 }
 
-void WindowInfoBase::DoubleBuffer_Delete() {
+void WindowInfo::DoubleBuffer_Delete() {
     if (this->bmpDoubleBuffer) {
         DeleteObject(this->bmpDoubleBuffer);
         this->bmpDoubleBuffer = NULL;
@@ -78,7 +78,7 @@ void WindowInfoBase::DoubleBuffer_Delete() {
     this->hdcToDraw = NULL;
 }
 
-void WindowInfoBase::AbortFinding()
+void WindowInfo::AbortFinding()
 {
     if (this->findThread) {
         this->findCanceled = true;
@@ -87,14 +87,14 @@ void WindowInfoBase::AbortFinding()
     this->findCanceled = false;
 }
 
-void WindowInfoBase::RedrawAll(bool update)
+void WindowInfo::RedrawAll(bool update)
 {
     InvalidateRect(this->hwndCanvas, NULL, false);
     if (update)
         UpdateWindow(this->hwndCanvas);
 }
 
-HTREEITEM WindowInfoBase::TreeItemForPageNo(HTREEITEM hItem, int pageNo)
+HTREEITEM WindowInfo::TreeItemForPageNo(HTREEITEM hItem, int pageNo)
 {
     HTREEITEM hCurrItem = NULL;
 
@@ -127,7 +127,7 @@ HTREEITEM WindowInfoBase::TreeItemForPageNo(HTREEITEM hItem, int pageNo)
     return hCurrItem;
 }
 
-void WindowInfoBase::UpdateTocSelection(int currPageNo)
+void WindowInfo::UpdateTocSelection(int currPageNo)
 {
     if (!this->tocLoaded || !this->tocShow)
         return;
@@ -142,7 +142,7 @@ void WindowInfoBase::UpdateTocSelection(int currPageNo)
         TreeView_SelectItem(this->hwndTocTree, hCurrItem);
 }
 
-void WindowInfoBase::UpdateToCExpansionState(HTREEITEM hItem)
+void WindowInfo::UpdateToCExpansionState(HTREEITEM hItem)
 {
     while (hItem) {
         TVITEM item;
@@ -168,7 +168,7 @@ void WindowInfoBase::UpdateToCExpansionState(HTREEITEM hItem)
     }
 }
 
-void WindowInfoBase::DisplayStateFromToC(DisplayState *ds)
+void WindowInfo::DisplayStateFromToC(DisplayState *ds)
 {
     ds->showToc = this->tocShow;
 
@@ -186,7 +186,7 @@ void WindowInfoBase::DisplayStateFromToC(DisplayState *ds)
         ds->tocState = (int *)memdup(this->tocState, (this->tocState[0] + 1) * sizeof(int));
 }
 
-void WindowInfoBase::ResizeIfNeeded(bool resizeWindow)
+void WindowInfo::ResizeIfNeeded(bool resizeWindow)
 {
     RECT rc;
     GetClientRect(this->hwndCanvas, &rc);
@@ -201,7 +201,7 @@ void WindowInfoBase::ResizeIfNeeded(bool resizeWindow)
     }
 }
 
-void WindowInfoBase::ToggleZoom()
+void WindowInfo::ToggleZoom()
 {
     assert(this->dm);
     if (!this->dm) return;
@@ -215,7 +215,7 @@ void WindowInfoBase::ToggleZoom()
         this->dm->zoomTo(ZOOM_FIT_PAGE);
 }
 
-void WindowInfoBase::ZoomToSelection(float factor, bool relative)
+void WindowInfo::ZoomToSelection(float factor, bool relative)
 {
     assert(this->dm);
     if (!this->dm) return;
@@ -251,7 +251,7 @@ void WindowInfoBase::ZoomToSelection(float factor, bool relative)
     this->UpdateToolbarState();
 }
 
-void WindowInfoBase::UpdateToolbarState()
+void WindowInfo::UpdateToolbarState()
 {
     if (!this->dm)
         return;
@@ -277,9 +277,9 @@ void WindowInfoBase::UpdateToolbarState()
         prevZoomVirtual = INVALID_ZOOM;
 }
 
-void WindowInfoBase::MoveDocBy(int dx, int dy)
+void WindowInfo::MoveDocBy(int dx, int dy)
 {
-    assert (WS_SHOWING_PDF == this->state);
+    assert(WS_SHOWING_PDF == this->state);
     if (WS_SHOWING_PDF != this->state) return;
     assert(this->dm);
     if (!this->dm) return;

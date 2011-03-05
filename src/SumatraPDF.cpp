@@ -518,7 +518,7 @@ static bool SendAsEmailAttachment(WindowInfo *win)
     return SUCCEEDED(hr);
 }
 
-static void MenuUpdateDisplayMode(WindowInfoBase *win)
+static void MenuUpdateDisplayMode(WindowInfo *win)
 {
     bool enabled = false;
     DisplayMode displayMode = gGlobalPrefs.m_defaultDisplayMode;
@@ -547,7 +547,7 @@ static void MenuUpdateDisplayMode(WindowInfoBase *win)
         Win::Menu::Check(win->menu, IDM_VIEW_CONTINUOUS, true);
 }
 
-void WindowInfoBase::SwitchToDisplayMode(DisplayMode displayMode, bool keepContinuous)
+void WindowInfo::SwitchToDisplayMode(DisplayMode displayMode, bool keepContinuous)
 {
     if (!this->dm)
         return;
@@ -1438,7 +1438,7 @@ static WindowInfo* WindowInfo_CreateEmpty(void) {
     return win;
 }
 
-static void UpdateTocWidth(WindowInfoBase *win, const DisplayState *ds=NULL, int defaultDx=0)
+static void UpdateTocWidth(WindowInfo *win, const DisplayState *ds=NULL, int defaultDx=0)
 {
     RECT rc;
     if (!GetWindowRect(win->hwndTocBox, &rc))
@@ -2040,7 +2040,7 @@ static void OnDropFiles(WindowInfo *win, HDROP hDrop)
         win->RedrawAll();
 }
 
-bool WindowInfoBase::DoubleBuffer_New()
+bool WindowInfo::DoubleBuffer_New()
 {
     this->DoubleBuffer_Delete();
 
@@ -4057,7 +4057,7 @@ static void OnMenuGoToFirstPage(WindowInfo *win)
     win->dm->goToFirstPage();
 }
 
-void WindowInfoBase::FocusPageNoEdit()
+void WindowInfo::FocusPageNoEdit()
 {
     if (GetFocus() == hwndPageBox)
         SendMessage(hwndPageBox, WM_SETFOCUS, 0, 0);
@@ -5301,7 +5301,7 @@ static LRESULT CALLBACK WndProcSpliter(HWND hwnd, UINT message, WPARAM wParam, L
     return DefWindowProc(hwnd, message, wParam, lParam);
 }
 
-void WindowInfoBase::FindStart()
+void WindowInfo::FindStart()
 {
     if (GetFocus() == hwndFindBox)
         SendMessage(hwndFindBox, WM_SETFOCUS, 0, 0);
@@ -5659,7 +5659,7 @@ static void RelayoutTocItem(LPNMTVCUSTOMDRAW ntvcd)
 }
 #endif
 
-void WindowInfoBase::LoadTocTree()
+void WindowInfo::LoadTocTree()
 {
     if (tocLoaded)
         return;
@@ -5671,7 +5671,7 @@ void WindowInfoBase::LoadTocTree()
     tocLoaded = true;
 }
 
-void WindowInfoBase::ToggleTocBox()
+void WindowInfo::ToggleTocBox()
 {
     if (!PdfLoaded())
         return;
@@ -5683,7 +5683,7 @@ void WindowInfoBase::ToggleTocBox()
     }
 }
 
-void WindowInfoBase::ShowTocBox()
+void WindowInfo::ShowTocBox()
 {
     if (!dm->hasTocTree()) {
         tocShow = true;
@@ -5726,7 +5726,7 @@ void WindowInfoBase::ShowTocBox()
     this->UpdateTocSelection(dm->currentPageNo());
 }
 
-void WindowInfoBase::HideTocBox()
+void WindowInfo::HideTocBox()
 {
     RECT r;
     GetClientRect(hwndFrame, &r);
@@ -5747,7 +5747,7 @@ void WindowInfoBase::HideTocBox()
     tocShow = false;
 }
 
-void WindowInfoBase::ClearTocBox()
+void WindowInfo::ClearTocBox()
 {
     if (!tocLoaded) return;
 
