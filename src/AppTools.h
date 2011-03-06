@@ -8,7 +8,7 @@
 #include "WindowInfo.h"
 
 // Base class for code that has to be executed on UI thread. Derive your class
-// from UIThreadWorkItem and call MarshalOnUIThread() to schedule execution
+// from UIThreadWorkItem and call gUIThreadMarshaller.Queue() to schedule execution
 // of its Execute() method on UI thread.
 class UIThreadWorkItem
 {
@@ -36,8 +36,17 @@ public:
     }
 
     void Queue(UIThreadWorkItem *item) {
+        if (!item)
+            return;
+
         ScopedCritSec scope(&cs);
         items.Append(item);
+
+        if (item->win) {
+            // hwndCanvas is less likely to enter internal message pump (during which
+            // the messages are not visible to our processing in top-level message pump)
+            PostMessage(item->win->hwndCanvas, WM_NULL, 0, 0);
+        }
     }
 
     void Execute() {
@@ -54,8 +63,6 @@ public:
         }
     }
 };
-
-void MarshallOnUIThread(UIThreadWorkItem *wi);
 
 bool IsValidProgramVersion(char *txt);
 int CompareVersion(TCHAR *txt1, TCHAR *txt2);

@@ -88,11 +88,6 @@ static bool             gUseGdiRenderer = false;
 #define DEFAULT_ROTATION        0
 #define DEFAULT_LANGUAGE        "en"
 
-#define WM_APP_URL_DOWNLOADED  (WM_APP + 12)
-#ifdef DISPLAY_TOC_PAGE_NUMBERS
-#define WM_APP_REPAINT_TOC     (WM_APP + 15)
-#endif
-
 #if defined(SVN_PRE_RELEASE_VER) && !defined(BLACK_ON_YELLOW)
 #define ABOUT_BG_COLOR          RGB(255,0,0)
 #else
@@ -165,7 +160,7 @@ static HBITMAP                      gBitmapReloadingCue;
 static RenderCache                  gRenderCache;
 static Vec<WindowInfo*>             gWindows;
 static FileHistoryList              gFileHistoryRoot;
-static UIThreadWorkItemQueue        gThreadWorkQueue;
+static UIThreadWorkItemQueue        gUIThreadMarshaller;
 
 static int                          gReBarDy;
 static int                          gReBarDyFrame;
@@ -252,7 +247,6 @@ static void DeleteOldSelectionInfo(WindowInfo *win);
 static void ClearSearch(WindowInfo *win);
 static void WindowInfo_EnterFullscreen(WindowInfo *win, bool presentation=false);
 static void WindowInfo_ExitFullscreen(WindowInfo *win);
-static void MarshallRepaintCanvasOnUIThread(WindowInfo* win, UINT delay=0);
 
 extern "C" {
 // needed because we compile bzip2 with #define BZ_NO_STDIO
@@ -329,33 +323,6 @@ DWORD FileTimeDiffInSecs(FILETIME *ft1, FILETIME *ft2)
 #endif
 
 #define SECS_IN_DAY 60*60*24
-
-void DownloadSumatraUpdateInfo(WindowInfo *win, bool autoCheck)
-{
-    if (gRestrictedUse || gPluginMode)
-        return;
-    assert(win);
-    HWND hwndToNotify = win->hwndFrame;
-
-    /* For auto-check, only check if at least a day passed since last check */
-    if (autoCheck && gGlobalPrefs.m_lastUpdateTime) {
-        FILETIME lastUpdateTimeFt;
-        _hexstr_to_mem(gGlobalPrefs.m_lastUpdateTime, &lastUpdateTimeFt);
-        FILETIME currentTimeFt;
-        GetSystemTimeAsFileTime(&currentTimeFt);
-        int secs = FileTimeDiffInSecs(&currentTimeFt, &lastUpdateTimeFt);
-        assert(secs >= 0);
-        // if secs < 0 => somethings wrong, so ignore that case
-        if ((secs > 0) && (secs < SECS_IN_DAY))
-            return;
-    }
-
-    const TCHAR *url = SUMATRA_UPDATE_INFO_URL _T("?v=") UPDATE_CHECK_VER;
-    StartHttpDownload(url, hwndToNotify, WM_APP_URL_DOWNLOADED, autoCheck);
-
-    free(gGlobalPrefs.m_lastUpdateTime);
-    gGlobalPrefs.m_lastUpdateTime = GetSystemTimeAsStr();
-}
 
 static void SerializableGlobalPrefs_Init() {
 }
@@ -1670,7 +1637,7 @@ static void OnFileChange(const TCHAR * filename, LPARAM param)
 {
     // We cannot called WindowInfo_Refresh directly as it could cause race conditions between the watching thread and the main thread
     // Instead we just post a message to the main thread to trigger a reload
-    MarshallOnUIThread(new FileChangeWorkItem((WindowInfo *)param));
+    gUIThreadMarshaller.Queue(new FileChangeWorkItem((WindowInfo *)param));
 }
 
 #ifndef THREAD_BASED_FILEWATCH
@@ -1873,11 +1840,6 @@ void DisplayModel::pageChanged()
     }
 }
 
-void DisplayModel::RepaintDisplay()
-{
-    MarshallRepaintCanvasOnUIThread(_appData);
-}
-
 /* Send the request to render a given page to a rendering thread */
 void DisplayModel::StartRenderingPage(int pageNo)
 {
@@ -2077,12 +2039,12 @@ static BOOL ShowNewVersionDialog(WindowInfo *win, const TCHAR *newVersion)
     return DIALOG_OK_PRESSED == res;
 }
 
-static void OnUrlDownloaded(WindowInfo *win, HttpReqCtx *ctx)
+static DWORD OnUrlDownloaded(WindowInfo *win, HttpReqCtx *ctx, bool silent)
 {
-    ScopedObj<HttpReqCtx> scope(ctx);
-
+    if (ctx->error)
+        return ctx->error;
     if (!tstr_startswith(ctx->url, SUMATRA_UPDATE_INFO_URL))
-        return;
+        return ERROR_INTERNET_INVALID_URL;
 
     // See http://code.google.com/p/sumatrapdf/issues/detail?id=725
     // If a user configures os-wide proxy that is not regular ie proxy
@@ -2091,34 +2053,84 @@ static void OnUrlDownloaded(WindowInfo *win, HttpReqCtx *ctx)
     // our version number which will make us ask to upgrade every time.
     // To fix that, we reject text that doesn't look like a valid version number.
     ScopedMem<char> txt(ctx->data->StealData());
-    if (!IsValidProgramVersion(txt)) {
-        // notify the user about the error during a manual update check
-        if (!ctx->silent)
-            PostMessage(ctx->hwndToNotify, ctx->msg, 0, ERROR_INTERNET_INVALID_URL);
-        return;
-    }
+    if (!IsValidProgramVersion(txt))
+        return ERROR_INTERNET_INVALID_URL;
 
     ScopedMem<TCHAR> verTxt(ansi_to_tstr(txt));
     /* reduce the string to a single line (resp. drop the newline) */
     tstr_trans_chars(verTxt, _T("\r\n"), _T("\0\0"));
     if (CompareVersion(verTxt, UPDATE_CHECK_VER) <= 0) {
         /* if automated => don't notify that there is no new version */
-        if (!ctx->silent) {
+        if (!silent) {
             MessageBox(win->hwndFrame, _TR("You have the latest version."),
                        _TR("SumatraPDF Update"), MB_ICONINFORMATION | MB_OK);
         }
-        return;
+        return 0;
     }
 
     // if automated, respect gGlobalPrefs.m_versionToSkip
-    if (ctx->silent && gGlobalPrefs.m_versionToSkip) {
-        if (tstr_ieq(gGlobalPrefs.m_versionToSkip, verTxt))
-            return;
-    }
+    if (silent && tstr_ieq(gGlobalPrefs.m_versionToSkip, verTxt))
+        return 0;
 
     bool download = ShowNewVersionDialog(win, verTxt);
     if (download)
         LaunchBrowser(SVN_UPDATE_LINK);
+
+    return 0;
+}
+
+class UpdateDownloadWorkItem : public UIThreadWorkItem, public CallbackFunc
+{
+    bool autoCheck;
+    HttpReqCtx *ctx;
+
+public:
+    UpdateDownloadWorkItem(WindowInfo *win, bool autoCheck) :
+        UIThreadWorkItem(win), autoCheck(autoCheck), ctx(NULL) { }
+
+    virtual void Callback(void *arg) {
+        ctx = (HttpReqCtx *)arg;
+        gUIThreadMarshaller.Queue(this);
+    }
+
+    virtual void Execute() {
+        if (WindowInfoStillValid(win) && ctx) {
+            DWORD error = OnUrlDownloaded(win, ctx, autoCheck);
+            if (error && !autoCheck) {
+                // notify the user about the error during a manual update check
+                ScopedMem<TCHAR> msg(tstr_printf(_TR("Can't connect to the Internet (error %#x)."), error));
+                MessageBox(win->hwndFrame, msg, _TR("SumatraPDF Update"), MB_ICONEXCLAMATION | MB_OK);
+            }
+        }
+        delete ctx;
+    }
+};
+
+void DownloadSumatraUpdateInfo(WindowInfo *win, bool autoCheck)
+{
+    if (gRestrictedUse || gPluginMode)
+        return;
+    assert(win);
+    HWND hwndToNotify = win->hwndFrame;
+
+    /* For auto-check, only check if at least a day passed since last check */
+    if (autoCheck && gGlobalPrefs.m_lastUpdateTime) {
+        FILETIME lastUpdateTimeFt;
+        _hexstr_to_mem(gGlobalPrefs.m_lastUpdateTime, &lastUpdateTimeFt);
+        FILETIME currentTimeFt;
+        GetSystemTimeAsFileTime(&currentTimeFt);
+        int secs = FileTimeDiffInSecs(&currentTimeFt, &lastUpdateTimeFt);
+        assert(secs >= 0);
+        // if secs < 0 => somethings wrong, so ignore that case
+        if ((secs > 0) && (secs < SECS_IN_DAY))
+            return;
+    }
+
+    const TCHAR *url = SUMATRA_UPDATE_INFO_URL _T("?v=") UPDATE_CHECK_VER;
+    new HttpReqCtx(url, new UpdateDownloadWorkItem(win, autoCheck));
+
+    free(gGlobalPrefs.m_lastUpdateTime);
+    gGlobalPrefs.m_lastUpdateTime = GetSystemTimeAsStr();
 }
 
 static void PaintTransparentRectangle(WindowInfo *win, HDC hdc, RectI *rect, COLORREF selectionColor, BYTE alpha = 0x5f, int margin = 1) {
@@ -2333,7 +2345,7 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
             SetTextColor(hdc, gGlobalPrefs.m_invertColors ? WIN_COL_WHITE : WIN_COL_BLACK);
             if (renderDelay != RENDER_DELAY_FAILED) {
                 if (renderDelay < REPAINT_MESSAGE_DELAY_IN_MS)
-                    MarshallRepaintCanvasOnUIThread(win, REPAINT_MESSAGE_DELAY_IN_MS / 4);
+                    win->RepaintAsync(REPAINT_MESSAGE_DELAY_IN_MS / 4);
                 else
                     draw_centered_text(hdc, &bounds, _TR("Please wait - rendering..."));
                 DBG_OUT("drawing empty %d ", pageNo);
@@ -2518,18 +2530,6 @@ static void ConvertSelectionRectToSelectionOnPage(WindowInfo *win) {
     }
 }
 
-void MarshallOnUIThread(UIThreadWorkItem *wi)
-{
-    if (!wi)
-        return;
-    gThreadWorkQueue.Queue(wi);
-    if (!wi->win)
-        return;
-    // hwndCanvas is less likely to enter internal message pump (during which
-    // the messages are not visible to our processing in top-level message pump)
-    PostMessage(wi->win->hwndCanvas, WM_NULL, 0, 0);
-}
-
 // for testing only
 static void CrashMe()
 {
@@ -2539,18 +2539,27 @@ static void CrashMe()
 
 static void StartStressRenderingPage(WindowInfo *win, int pageNo);
 
-class StressTestPageRenderedWorkItem : public UIThreadWorkItem
+class StressTestPageRenderedWorkItem : public UIThreadWorkItem, public CallbackFunc
 {
     int pageNo;
+    static int iterations;
+
 public:
     StressTestPageRenderedWorkItem(WindowInfo *win, int pageNo) :
-       UIThreadWorkItem(win), pageNo(pageNo)
-       {}
+        UIThreadWorkItem(win), pageNo(pageNo) { }
+    
+    virtual void Callback(void *arg) {
+        if ((bool)arg)
+            iterations++;
+        gUIThreadMarshaller.Queue(this);
+    }
+
     virtual void Execute() {
         if (WindowInfoStillValid(win))
             StartStressRenderingPage(win, pageNo + 1);
     }
 };
+int StressTestPageRenderedWorkItem::iterations = 0;
 
 static void StartStressRenderingPage(WindowInfo *win, int pageNo)
 {
@@ -2567,8 +2576,8 @@ static void StartStressRenderingPage(WindowInfo *win, int pageNo)
         gRenderCache.FreeForDisplayModel(win->dm);
         pageNo = 1;
     }
-    UIThreadWorkItem *wi = new StressTestPageRenderedWorkItem(win, pageNo);
-    gRenderCache.Render(win->dm, pageNo, wi);
+    CallbackFunc *callback = new StressTestPageRenderedWorkItem(win, pageNo);
+    gRenderCache.Render(win->dm, pageNo, callback);
 }
 
 // TODO: start text search thread as well
@@ -2604,7 +2613,7 @@ static void OnSelectAll(WindowInfo *win, bool textOnly=false)
     }
 
     win->showSelection = true;
-    MarshallRepaintCanvasOnUIThread(win);
+    win->RepaintAsync();
 }
 
 static void OnInverseSearch(WindowInfo *win, UINT x, UINT y)
@@ -2789,7 +2798,7 @@ static void OnMouseMove(WindowInfo *win, int x, int y, WPARAM flags)
     case MA_SELECTING:
         win->selectionRect.dx = x - win->selectionRect.x;
         win->selectionRect.dy = y - win->selectionRect.y;
-        MarshallRepaintCanvasOnUIThread(win);
+        win->RepaintAsync();
         OnSelectionEdgeAutoscroll(win, x, y);
         break;
     case MA_DRAGGING:
@@ -2829,7 +2838,7 @@ static void OnSelectionStart(WindowInfo *win, int x, int y, WPARAM key)
     SetCapture(win->hwndCanvas);
     SetTimer(win->hwndCanvas, SMOOTHSCROLL_TIMER_ID, SMOOTHSCROLL_DELAY_IN_MS, NULL);
 
-    MarshallRepaintCanvasOnUIThread(win);
+    win->RepaintAsync();
 }
 
 static void OnSelectionStop(WindowInfo *win, int x, int y, bool aborted)
@@ -2855,7 +2864,7 @@ static void OnSelectionStop(WindowInfo *win, int x, int y, bool aborted)
     } else if (win->mouseAction == MA_SELECTING) {
         ConvertSelectionRectToSelectionOnPage (win);
     }
-    MarshallRepaintCanvasOnUIThread(win);
+    win->RepaintAsync();
 }
 
 static void OnMouseLeftButtonDblClk(WindowInfo *win, int x, int y, WPARAM key)
@@ -4228,7 +4237,7 @@ static void WindowInfo_ShowSearchResult(WindowInfo *win, PdfSel *result, bool wa
 
     UpdateTextSelection(win, false);
     win->dm->ShowResultRectToScreen(result);
-    MarshallRepaintCanvasOnUIThread(win);
+    win->RepaintAsync();
 }
 
 // Show a message for 3000 millisecond at most
@@ -4321,7 +4330,7 @@ void WindowInfo_ShowForwardSearchResult(WindowInfo *win, LPCTSTR srcfilename, UI
             if (!win->dm->pageVisible(page))
                 win->dm->goToPage(page, 0, true);
             if (!win->dm->ShowResultRectToScreen(&res))
-                MarshallRepaintCanvasOnUIThread(win);
+                win->RepaintAsync();
             if (IsIconic(win->hwndFrame))
                 ShowWindowAsync(win->hwndFrame, SW_RESTORE);
             return;
@@ -4496,7 +4505,7 @@ static void ClearSearch(WindowInfo *win)
 {
     DeleteOldSelectionInfo(win);
     win->dm->textSelection->Reset();
-    MarshallRepaintCanvasOnUIThread(win);
+    win->RepaintAsync();
 }
 
 static void OnChar(WindowInfo *win, WPARAM key)
@@ -4659,7 +4668,7 @@ static void GoToTocLinkForTVItem(WindowInfo *win, HWND hTV, HTREEITEM hItem=NULL
     TreeView_GetItem(hTV, &item);
     PdfTocItem *tocItem = (PdfTocItem *)item.lParam;
     if (win->dm && tocItem && (allowExternal || tocItem->link && PDF_LGOTO == tocItem->link->kind)) {
-        MarshallOnUIThread(new GoToTocLinkWorkItem(win, tocItem));
+        gUIThreadMarshaller.Queue(new GoToTocLinkWorkItem(win, tocItem));
     }
 }
 
@@ -4864,9 +4873,9 @@ static DWORD WINAPI FindThread(LPVOID data)
     }
 
     if (rect && !win->findCanceled)
-        MarshallOnUIThread(new FindEndWorkItem(win, rect, ftd->wasModified));
+        gUIThreadMarshaller.Queue(new FindEndWorkItem(win, rect, ftd->wasModified));
     else
-        MarshallOnUIThread(new FindEndWorkItem(win, NULL, win->findCanceled));
+        gUIThreadMarshaller.Queue(new FindEndWorkItem(win, NULL, win->findCanceled));
 
     free(ftd);
 
@@ -5340,7 +5349,7 @@ public:
 bool WindowInfo::FindUpdateStatus(int current, int total)
 {
     if (!findCanceled)
-        MarshallOnUIThread(new UpdateFindStatusWorkItem(this, current, total));
+        gUIThreadMarshaller.Queue(new UpdateFindStatusWorkItem(this, current, total));
     return !findCanceled;
 }
 
@@ -5356,6 +5365,10 @@ static void TreeView_ExpandRecursively(HWND hTree, HTREEITEM hItem, UINT flag, b
         hItem = TreeView_GetNextSibling(hTree, hItem);
     }
 }
+
+#ifdef DISPLAY_TOC_PAGE_NUMBERS
+#define WM_APP_REPAINT_TOC     (WM_APP + 1)
+#endif
 
 static WNDPROC DefWndProcTocTree = NULL;
 static LRESULT CALLBACK WndProcTocTree(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -5987,11 +6000,11 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
                             KillTimer(hwnd, HIDE_FWDSRCHMARK_TIMER_ID);
                             win->showForwardSearchMark = false;
                             win->fwdsearchmarkHideStep = 0;
-                            MarshallRepaintCanvasOnUIThread(win);
+                            win->RepaintAsync();
                         }
                         else
                         {
-                            MarshallRepaintCanvasOnUIThread(win);
+                            win->RepaintAsync();
                         }
                     }
                     break;
@@ -6073,7 +6086,7 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
         default:
             // process thread queue events happening during an inner message loop
             // (else the scrolling position isn't updated until the scroll bar is released)
-            gThreadWorkQueue.Execute();
+            gUIThreadMarshaller.Execute();
             return DefWindowProc(hwnd, message, wParam, lParam);
     }
     return 0;
@@ -6091,19 +6104,19 @@ public:
     virtual void Execute() {
         if (!WindowInfoStillValid(win))
             return;
-        if (0 == delay) {
+        if (!delay)
             WndProcCanvas(win->hwndCanvas, WM_TIMER, REPAINT_TIMER_ID, 0);
-            return;
-        }
-        if (!win->delayedRepaintTimer)
+        else if (!win->delayedRepaintTimer)
             win->delayedRepaintTimer = SetTimer(win->hwndCanvas, REPAINT_TIMER_ID, delay, NULL);
     }
 };
 
-/* Call from non-UI thread to cause repainting of the display */
-static void MarshallRepaintCanvasOnUIThread(WindowInfo* win, UINT delay)
+void WindowInfo::RepaintAsync(UINT delay)
 {
-    MarshallOnUIThread(new RepaintCanvasWorkItem(win, delay));
+    // even though RepaintAsync is mostly called from the UI thread,
+    // we depend on the repaint message to happen asynchronously
+    // and let gUIThreadMarshaller.Queue call PostMessage for us
+    gUIThreadMarshaller.Queue(new RepaintCanvasWorkItem(this, delay));
 }
 
 static void UpdateMenu(WindowInfo *win, HMENU m)
@@ -6120,7 +6133,6 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
     int             wmId;
     WindowInfo *    win;
     ULONG           ulScrollLines;                   // for mouse wheel logic
-    HttpReqCtx *    ctx;
 
     win = FindWindowInfoByHwnd(hwnd);
 
@@ -6473,21 +6485,6 @@ InitMouseWheelInfo:
             return OnDDExecute(hwnd, wParam, lParam);
         case WM_DDE_TERMINATE:
             return OnDDETerminate(hwnd, wParam, lParam);
-
-        case WM_APP_URL_DOWNLOADED:
-            assert(win);
-            ctx = (HttpReqCtx*)wParam;
-            if (win && ctx)
-                OnUrlDownloaded(win, ctx);
-            else if (win) {
-                // OnUrlDownloaded always gives feedback for !ctx->silent,
-                // we only get here under that condition, so also give feedback
-                // so that the user knows that the requested operation has terminated
-                ScopedMem<TCHAR> msg(tstr_printf(_TR("Can't connect to the Internet (error %#x)."), lParam));
-                MessageBox(win->hwndFrame, msg, _TR("SumatraPDF Update"), MB_ICONEXCLAMATION | MB_OK);
-            } else if (ctx)
-                delete ctx;
-            break;
 
         default:
             return DefWindowProc(hwnd, message, wParam, lParam);
@@ -6901,9 +6898,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
         // process these messages here so that we don't have to add this
         // handling to every WndProc that might receive those messages
-        // TODO: this isn't called during an inner message loop, so messages
-        //       will be delayed, unless Execute() is called from a WndProc as well
-        gThreadWorkQueue.Execute();
+        // TODO: this isn't called during an inner message loop, so
+        //       Execute() also has to be called from a WndProc
+        gUIThreadMarshaller.Execute();
     }
 
 #ifndef THREAD_BASED_FILEWATCH

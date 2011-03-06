@@ -5,7 +5,6 @@
 #define _RENDER_CACHE_H_
 
 #include "DisplayModel.h"
-#include "AppTools.h"
 
 #define RENDER_DELAY_UNDEFINED ((UINT)-1)
 #define RENDER_DELAY_FAILED    ((UINT)-2)
@@ -49,7 +48,7 @@ typedef struct {
     bool                abort;
     DWORD               timestamp;
     // owned by the PageRenderRequest (use it before reusing the request)
-    UIThreadWorkItem *  finishedWorkItem;
+    CallbackFunc *      callback;
 } PageRenderRequest;
 
 #define MAX_PAGE_REQUESTS 8
@@ -83,7 +82,7 @@ public:
     RenderCache(void);
     ~RenderCache(void);
 
-    void                Render(DisplayModel *dm, int pageNo, UIThreadWorkItem *finishedWorkItem=NULL);
+    void                Render(DisplayModel *dm, int pageNo, CallbackFunc *callback=NULL);
     void                CancelRendering(DisplayModel *dm);
     bool                FreeForDisplayModel(DisplayModel *dm);
     void                KeepForDisplayModel(DisplayModel *oldDm, DisplayModel *newDm);
@@ -107,7 +106,8 @@ private:
                             return _requestCount == MAX_PAGE_REQUESTS;
                         }
     UINT                GetRenderDelay(DisplayModel *dm, int pageNo, TilePosition tile);
-    void                Render(DisplayModel *dm, int pageNo, TilePosition tile, bool clearQueue=true, UIThreadWorkItem *finishedWorkItem=NULL);
+    void                Render(DisplayModel *dm, int pageNo, TilePosition tile,
+                               bool clearQueue=true, CallbackFunc *callback=NULL);
     void                ClearQueueForDisplayModel(DisplayModel *dm, int pageNo=INVALID_PAGE_NO,
                                                   TilePosition *tile=NULL);
 

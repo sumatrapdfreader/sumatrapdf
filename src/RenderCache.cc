@@ -297,10 +297,10 @@ bool RenderCache::ReduceTileSize(void)
 }
 
 
-void RenderCache::Render(DisplayModel *dm, int pageNo, UIThreadWorkItem *finishedWorkItem)
+void RenderCache::Render(DisplayModel *dm, int pageNo, CallbackFunc *callback)
 {
     TilePosition tile = { GetTileRes(dm, pageNo), 0, 0 };
-    Render(dm, pageNo, tile, true, finishedWorkItem);
+    Render(dm, pageNo, tile, true, callback);
 
     // render both tiles of the first row when splitting a page in four
     // (which always happens on larger displays for Fit Width)
@@ -311,7 +311,7 @@ void RenderCache::Render(DisplayModel *dm, int pageNo, UIThreadWorkItem *finishe
 }
 
 /* Render a bitmap for page <pageNo> in <dm>. */
-void RenderCache::Render(DisplayModel *dm, int pageNo, TilePosition tile, bool clearQueue, UIThreadWorkItem *finishedWorkItem)
+void RenderCache::Render(DisplayModel *dm, int pageNo, TilePosition tile, bool clearQueue, CallbackFunc *callback)
 {
     DBG_OUT("RenderQueue_Add(pageNo=%d)\n", pageNo);
     assert(dm);
@@ -375,7 +375,8 @@ void RenderCache::Render(DisplayModel *dm, int pageNo, TilePosition tile, bool c
     /* add request to the queue */
     if (_requestCount == MAX_PAGE_REQUESTS) {
         /* queue is full -> remove the oldest items on the queue */
-        MarshallOnUIThread(_requests[0].finishedWorkItem);
+        if (_requests[0].callback)
+            _requests[0].callback->Callback();
         memmove(&(_requests[0]), &(_requests[1]), sizeof(PageRenderRequest) * (MAX_PAGE_REQUESTS - 1));
         newRequest = &(_requests[MAX_PAGE_REQUESTS-1]);
     } else {
@@ -390,13 +391,13 @@ void RenderCache::Render(DisplayModel *dm, int pageNo, TilePosition tile, bool c
     newRequest->tile = tile;
     newRequest->abort = false;
     newRequest->timestamp = GetTickCount();
-    newRequest->finishedWorkItem = finishedWorkItem;
+    newRequest->callback = callback;
 
     SetEvent(startRendering);
 
 Exit:
-    if (!newRequest)
-        MarshallOnUIThread(finishedWorkItem);
+    if (!newRequest && callback)
+        callback->Callback();
 }
 
 UINT RenderCache::GetRenderDelay(DisplayModel *dm, int pageNo, TilePosition tile)
@@ -477,7 +478,8 @@ void RenderCache::ClearQueueForDisplayModel(DisplayModel *dm, int pageNo, TilePo
         if (i != curPos)
             _requests[curPos] = _requests[i];
         if (shouldRemove) {
-            MarshallOnUIThread(req->finishedWorkItem);
+            if (req->callback)
+                req->callback->Callback();
             _requestCount--;
         } else
             curPos++;
@@ -505,13 +507,14 @@ static DWORD WINAPI RenderCacheThread(LPVOID data)
         if (!cache->GetNextRequest(&req))
             continue;
         DBG_OUT("RenderCacheThread(): dequeued %d\n", req.pageNo);
-        if (!req.dm->pageVisibleNearby(req.pageNo) && req.finishedWorkItem == NULL) {
+        if (!req.dm->pageVisibleNearby(req.pageNo) && !req.callback) {
             DBG_OUT("RenderCacheThread(): not rendering because not visible\n");
             continue;
         }
         if (req.dm->_dontRenderFlag) {
             DBG_OUT("RenderCacheThread(): not rendering because of _dontRenderFlag\n");
-            MarshallOnUIThread(req.finishedWorkItem);
+            if (req.callback)
+                req.callback->Callback();
             continue;
         }
 
@@ -520,7 +523,8 @@ static DWORD WINAPI RenderCacheThread(LPVOID data)
                                    Target_View, cache->useGdiRenderer && *cache->useGdiRenderer);
         if (req.abort) {
             delete bmp;
-            MarshallOnUIThread(req.finishedWorkItem);
+            if (req.callback)
+                req.callback->Callback();
             continue;
         }
 
@@ -534,9 +538,9 @@ static DWORD WINAPI RenderCacheThread(LPVOID data)
 #ifdef CONSERVE_MEMORY
         cache->FreeNotVisible();
 #endif
-        if (req.finishedWorkItem) {
-            MarshallOnUIThread(req.finishedWorkItem);
-            req.finishedWorkItem = (UIThreadWorkItem*)1; // will crash if accessed again, which should not happen
+        if (req.callback) {
+            req.callback->Callback((void *)true);
+            req.callback = (CallbackFunc *)1; // will crash if accessed again, which should not happen
         }
         else
             req.dm->RepaintDisplay();

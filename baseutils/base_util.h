@@ -124,15 +124,10 @@ public:
     operator T*() const { return obj; }
 };
 
-template <typename T>
-class ScopedObj
+class CallbackFunc
 {
-    T *obj;
 public:
-    explicit ScopedObj(T* obj) : obj(obj) {}
-    ~ScopedObj() { delete obj; }
-    T *Get() const { return obj; }
-    operator T*() const { return obj; }
+    virtual void Callback(void *arg=NULL) = 0;
 };
 
 #endif

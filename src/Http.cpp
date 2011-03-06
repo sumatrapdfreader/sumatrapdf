@@ -1,4 +1,4 @@
-/* Copyright Krzysztof Kowalczyk 2006-2011
+/* Copyright 2006-2011 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
 #include "SumatraPDF.h"
@@ -9,51 +9,46 @@
 static DWORD WINAPI HttpDownloadThread(LPVOID data)
 {
     HttpReqCtx *ctx = (HttpReqCtx *)data;
-    DWORD dwError = 0;
 
     HINTERNET hFile = NULL;
     HINTERNET hInet = InternetOpen(APP_NAME_STR _T("/") CURR_VERSION_STR,
         INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
-    if (!hInet) {
-        dwError = GetLastError();
+    if (!hInet)
         goto DownloadError;
-    }
 
     hFile = InternetOpenUrl(hInet, ctx->url, NULL, 0, 0, 0);
-    if (!hFile) {
-        dwError = GetLastError();
+    if (!hFile)
         goto DownloadError;
-    }
 
     char buffer[1024];
     DWORD dwRead;
     do {
-        if (!InternetReadFile(hFile, buffer, sizeof(buffer), &dwRead)) {
-            dwError = GetLastError();
+        if (!InternetReadFile(hFile, buffer, sizeof(buffer), &dwRead))
             goto DownloadError;
-        }
         ctx->data->Append(buffer, dwRead);
     } while (dwRead > 0);
 
+DownloadComplete:
     InternetCloseHandle(hFile);
     InternetCloseHandle(hInet);
 
-    PostMessage(ctx->hwndToNotify, ctx->msg, (WPARAM)ctx, 0);
+    if (ctx->callback)
+        ctx->callback->Callback(ctx);
 
     return 0;
 
 DownloadError:
-    InternetCloseHandle(hFile);
-    InternetCloseHandle(hInet);
-
-    if (!ctx->silent)
-        PostMessage(ctx->hwndToNotify, ctx->msg, 0, dwError);
-    delete ctx;
-    return 1;
+    ctx->error = GetLastError();
+    if (ctx->error == 0)
+        ctx->error = ERROR_GEN_FAILURE;
+    goto DownloadComplete;
 }
 
-void StartHttpDownload(const TCHAR *url, HWND hwndToNotify, UINT msg, bool silent)
+HttpReqCtx::HttpReqCtx(const TCHAR *url, CallbackFunc *callback)
+    : callback(callback), error(0)
 {
-    HttpReqCtx *ctx = new HttpReqCtx(url, hwndToNotify, msg, silent);
-    ctx->hThread = CreateThread(NULL, 0, HttpDownloadThread, ctx, 0, 0);
+    assert(url);
+    this->url = tstr_dup(url);
+    data = new Vec<char>(256, 1);
+    hThread = CreateThread(NULL, 0, HttpDownloadThread, this, 0, 0);
 }

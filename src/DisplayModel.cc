@@ -1284,6 +1284,11 @@ void DisplayModel::rotateBy(int newRotation)
     goToPage(currPageNo, 0);
 }
 
+void DisplayModel::RepaintDisplay()
+{
+    _appData->RepaintAsync();
+}
+
 PdfSel *DisplayModel::Find(PdfSearchDirection direction, TCHAR *text, UINT fromPage)
 {
     bool forward = (direction == FIND_FORWARD);
