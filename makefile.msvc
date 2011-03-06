@@ -171,9 +171,6 @@ $(BROWSER_PLUGIN): $(BROWSER_PLUGIN_OBJS)
 	$(CC) /TC $(SYNCTEX_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
 
 # SumatraPDF app directory
-{src}.cc{$(O)}.obj::
-	$(CC) $(SUMATRA_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
-
 {src}.cpp{$(O)}.obj::
 	$(CC) $(SUMATRA_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
 

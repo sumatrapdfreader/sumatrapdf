@@ -272,19 +272,19 @@
     <ClCompile Include="mupdf\mupdf\pdf_xref.c">
       <Filter>mupdf\mupdf</Filter>
     </ClCompile>
-    <ClCompile Include="src\AppPrefs.cc">
+    <ClCompile Include="src\AppPrefs.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\DisplayModel.cc">
+    <ClCompile Include="src\DisplayModel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\DisplayState.cc">
+    <ClCompile Include="src\DisplayState.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\FileHistory.cc">
+    <ClCompile Include="src\FileHistory.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\FileWatch.cc">
+    <ClCompile Include="src\FileWatch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Http.cpp">
@@ -293,16 +293,16 @@
     <ClCompile Include="src\LangMenuDef.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\PdfEngine.cc">
+    <ClCompile Include="src\PdfEngine.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\PdfSearch.cc">
+    <ClCompile Include="src\PdfSearch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\PdfSync.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\SumatraDialogs.cc">
+    <ClCompile Include="src\SumatraDialogs.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\SumatraPDF.cpp">

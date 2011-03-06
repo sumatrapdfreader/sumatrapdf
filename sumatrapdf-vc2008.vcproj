@@ -68,7 +68,7 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\src\AppPrefs.cc"
+				RelativePath=".\src\AppPrefs.cpp"
 				>
 			</File>
 			<File
@@ -76,7 +76,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\AppTools.cc"
+				RelativePath=".\src\AppTools.cpp"
 				>
 			</File>
 			<File
@@ -100,7 +100,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\DisplayModel.cc"
+				RelativePath=".\src\DisplayModel.cpp"
 				>
 			</File>
 			<File
@@ -108,7 +108,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\DisplayState.cc"
+				RelativePath=".\src\DisplayState.cpp"
 				>
 			</File>
 			<File
@@ -116,7 +116,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\FileHistory.cc"
+				RelativePath=".\src\FileHistory.cpp"
 				>
 			</File>
 			<File
@@ -124,7 +124,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\FileWatch.cc"
+				RelativePath=".\src\FileWatch.cpp"
 				>
 			</File>
 			<File
@@ -156,7 +156,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\PdfEngine.cc"
+				RelativePath=".\src\PdfEngine.cpp"
 				>
 			</File>
 			<File
@@ -164,7 +164,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\PdfSearch.cc"
+				RelativePath=".\src\PdfSearch.cpp"
 				>
 			</File>
 			<File
@@ -172,7 +172,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\PdfSelection.cc"
+				RelativePath=".\src\PdfSelection.cpp"
 				>
 			</File>
 			<File
@@ -188,7 +188,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\RenderCache.cc"
+				RelativePath=".\src\RenderCache.cpp"
 				>
 			</File>
 			<File
@@ -208,7 +208,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\SumatraDialogs.cc"
+				RelativePath=".\src\SumatraDialogs.cpp"
 				>
 			</File>
 			<File
