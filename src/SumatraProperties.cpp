@@ -18,6 +18,7 @@
 #define PROPERTIES_WIN_TITLE    _TR("Document Properties")
 
 extern HINSTANCE ghinst;
+extern SerializableGlobalPrefs gGlobalPrefs;
 
 static uint64_t WinFileSizeGet(const TCHAR *file_path)
 {

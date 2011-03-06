@@ -74,11 +74,13 @@ typedef struct {
     BOOL m_invertColors; /* invert all colors for accessibility reasons (experimental!) */
 } SerializableGlobalPrefs;
 
-extern SerializableGlobalPrefs gGlobalPrefs;
-
 class FileHistoryList;
 
-const char *Prefs_Serialize(FileHistoryList *root, size_t* lenOut);
-bool        Prefs_Deserialize(const char *prefsTxt, size_t prefsTxtLen, FileHistoryList *fileHistoryRoot);
+namespace Prefs {
+
+bool    Load(TCHAR *filepath, SerializableGlobalPrefs *globalPrefs, FileHistoryList *fileHistoryRoot);
+bool    Save(TCHAR *filepath, SerializableGlobalPrefs *globalPrefs, FileHistoryList *fileHistoryRoot);
+
+}
 
 #endif

@@ -236,6 +236,7 @@ static void CreateTocBox(WindowInfo *win, HINSTANCE hInst);
 static void UpdateToolbarFindText(WindowInfo *win);
 static void UpdateToolbarPageText(WindowInfo *win, int pageCount);
 static void UpdateToolbarToolText(void);
+static void RebuildMenuBar(void);
 static void OnMenuFindMatchCase(WindowInfo *win);
 static bool LoadPdfIntoWindow(const TCHAR *fileName, WindowInfo *win, 
     const DisplayState *state, bool isNewWindow, bool tryRepair, 
@@ -268,6 +269,9 @@ static int LangGetIndex(const char *name)
 
 bool CurrLangNameSet(const char* langName)
 {
+    if (!langName)
+        return false;
+
     int langIndex = LangGetIndex(langName);
     if (-1 == langIndex)
         return false;
@@ -766,7 +770,9 @@ static void BuildMenu(WindowInfo *win)
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Settings"));
     m = BuildMenuFromMenuDef(menuDefHelp, dimof(menuDefHelp));
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Help"));
+
     win->menu = mainMenu;
+    SetMenu(win->hwndFrame, win->menu);
 }
 
 static void AddFileToHistory(const TCHAR *filePath)
@@ -872,49 +878,6 @@ static TCHAR *GetUniqueCrashDumpPath()
         free(path);
     }
     return NULL;
-}
-
-/* Load preferences from the preferences file.
-   Returns true if preferences file was loaded, false if there was an error.
-*/
-static bool Prefs_Load(void)
-{
-    bool            ok = false;
-
-#ifdef DEBUG
-    static bool     loaded = false;
-    assert(!loaded);
-    loaded = true;
-#endif
-
-    ScopedMem<TCHAR> prefsFilename(Prefs_GetFileName());
-    assert(prefsFilename);
-
-    size_t prefsFileLen;
-    ScopedMem<char> prefsTxt(file_read_all(prefsFilename, &prefsFileLen));
-    if (!str_empty(prefsTxt)) {
-        ok = Prefs_Deserialize(prefsTxt, prefsFileLen, &gFileHistoryRoot);
-        assert(ok);
-    }
-
-    // TODO: add a check if a file exists, to filter out deleted files
-    // but only if a file is on a non-network drive (because
-    // accessing network drives can be slow and unnecessarily spin
-    // the drives).
-#if 0
-    FileHistoryNode *node = gFileHistoryRoot.first;
-    while (node) {
-        FileHistoryNode *next = node->next;
-        if (!file_exists(node->state->filePath)) {
-            DBG_OUT_T("Prefs_Load() file '%s' doesn't exist anymore\n", node->state->filePath);
-            gFileHistoryRoot.Remove(node);
-            delete node;
-        }
-        node = next;
-    }
-#endif
-
-    return ok;
 }
 
 static struct {
@@ -1064,20 +1027,8 @@ static bool Prefs_Save(void)
     for (size_t i = 0; i < gWindows.Count(); i++)
         UpdateCurrentFileDisplayStateForWin(gWindows[i]);
 
-    size_t dataLen;
-    ScopedMem<const char> data(Prefs_Serialize(&gFileHistoryRoot, &dataLen));
-    if (!data)
-        return false;
-
-    assert(dataLen > 0);
     ScopedMem<TCHAR> path(Prefs_GetFileName());
-    assert(path);
-    /* TODO: consider 2-step process:
-        * write to a temp file
-        * rename temp file to final file */
-    bool ok = write_to_file(path, (void*)data.Get(), dataLen);
-
-    return ok;
+    return Prefs::Save(path, &gGlobalPrefs, &gFileHistoryRoot);
 }
 
 static void WindowInfo_Refresh(WindowInfo* win, bool autorefresh) {
@@ -1370,7 +1321,6 @@ static WindowInfo* WindowInfo_CreateEmpty(void) {
     // hide scrollbars to avoid showing/hiding on empty window
     ShowScrollBar(hwndCanvas, SB_BOTH, FALSE);
     BuildMenu(win);
-    SetMenu(hwndFrame, win->menu);
 
     win->hwndCanvas = hwndCanvas;
     ShowWindow(win->hwndCanvas, SW_SHOW);
@@ -3895,6 +3845,7 @@ static void OnMenuChangeLanguage(WindowInfo *win)
         const char *langName = g_langs[newLangId]._langName;
 
         CurrLangNameSet(langName);
+        RebuildMenuBar();
         UpdateToolbarToolText();
     }
 }
@@ -4722,6 +4673,17 @@ static void UpdateToolbarToolText(void)
         UpdateToolbarFindText(win);
         UpdateToolbarButtonsToolTipsForWindow(win);
     }        
+}
+
+static void RebuildMenuBar(void)
+{
+    for (size_t i = 0; i < gWindows.Count(); i++) {
+        WindowInfo *win = gWindows[i];
+        HMENU oldMenu = win->menu;
+        win->menu = NULL;
+        BuildMenu(win);
+        DestroyMenu(oldMenu);
+    }
 }
 
 #define UWM_DELAYED_SET_FOCUS (WM_APP + 1)
@@ -6698,13 +6660,15 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     InitAllCommonControls();
     fz_accelerate();
 
-    SerializableGlobalPrefs_Init();
-    if (!Prefs_Load()) {
-        // assume that this is because prefs file didn't exist i.e. this is
-        // the first time Sumatra is launched.
-        const char *lang = GuessLanguage();
-        if (lang)
+    {
+        ScopedMem<TCHAR> prefsFilename(Prefs_GetFileName());
+        SerializableGlobalPrefs_Init();
+        if (!Prefs::Load(prefsFilename, &gGlobalPrefs, &gFileHistoryRoot)) {
+            // assume that this is because prefs file didn't exist
+            // i.e. this could be the first time Sumatra is launched.
+            const char *lang = GuessLanguage();
             CurrLangNameSet(lang);
+        }
     }
 
     CommandLineInfo i;
@@ -6749,8 +6713,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         i.inverseSearchCmdLine = NULL;
         gGlobalPrefs.m_enableTeXEnhancements = TRUE;
     }
-    if (i.lang)
-        CurrLangNameSet(i.lang);
+    CurrLangNameSet(i.lang);
 
     {
         ScopedMem<TCHAR> crashDumpPath(GetUniqueCrashDumpPath());
