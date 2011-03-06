@@ -119,6 +119,7 @@ int gettimeofday(struct timeval *tv, struct timezone *tz);
 typedef int fz_error;
 
 void fz_warn(char *fmt, ...) __printflike(1, 2);
+void fz_flushwarnings(void);
 
 fz_error fz_throwimp(const char *file, int line, const char *func, char *fmt, ...) __printflike(4, 5);
 fz_error fz_rethrowimp(const char *file, int line, const char *func, fz_error cause, char *fmt, ...) __printflike(5, 6);
@@ -129,6 +130,10 @@ fz_error fz_rethrowimpx(fz_error cause, char *fmt, ...) __printflike(2, 3);
 void fz_catchimpx(fz_error cause, char *fmt, ...) __printflike(2, 3);
 
 #define fz_okay ((fz_error)0)
+
+/* extract the last error stack trace */
+int fz_geterrorcount(void);
+char *fz_geterrorline(int n);
 
 /*
  * Basic runtime and utility functions
@@ -503,7 +508,8 @@ typedef struct fz_stream_s fz_stream;
 struct fz_stream_s
 {
 	int refs;
-	int dead;
+	int error;
+	int eof;
 	int pos;
 	int avail;
 	int bits;
@@ -559,6 +565,17 @@ static inline void fz_unreadbyte(fz_stream *stm)
 		stm->rp--;
 }
 
+static inline int fz_iseof(fz_stream *stm)
+{
+	if (stm->rp == stm->wp)
+	{
+		if (stm->eof)
+			return 1;
+		return fz_peekbyte(stm) == EOF;
+	}
+	return 0;
+}
+
 static inline unsigned int fz_readbits(fz_stream *stm, int n)
 {
 	unsigned int x;
@@ -589,6 +606,16 @@ static inline unsigned int fz_readbits(fz_stream *stm, int n)
 	}
 
 	return x;
+}
+
+static inline void fz_syncbits(fz_stream *stm)
+{
+	stm->avail = 0;
+}
+
+static inline int fz_iseofbits(fz_stream *stm)
+{
+	return fz_iseof(stm) && (stm->avail == 0 || stm->bits == EOF);
 }
 
 /*

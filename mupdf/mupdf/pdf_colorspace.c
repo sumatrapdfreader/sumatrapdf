@@ -85,19 +85,8 @@ static void
 separationtoxyz(fz_colorspace *cs, float *color, float *xyz)
 {
 	struct separation *sep = cs->data;
-	fz_error error;
 	float alt[FZ_MAXCOLORS];
-
-	error = pdf_evalfunction(sep->tint, color, cs->n, alt, sep->base->n);
-	if (error)
-	{
-		fz_catch(error, "cannot evaluate separation function");
-		xyz[0] = 0;
-		xyz[1] = 0;
-		xyz[2] = 0;
-		return;
-	}
-
+	pdf_evalfunction(sep->tint, color, cs->n, alt, sep->base->n);
 	sep->base->toxyz(sep->base, alt, xyz);
 }
 

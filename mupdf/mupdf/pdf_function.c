@@ -1,8 +1,6 @@
 #include "fitz.h"
 #include "mupdf.h"
 
-/* this mess is seokgyo's doing */
-
 enum
 {
 	MAXN = FZ_MAXCOLORS,
@@ -59,10 +57,6 @@ struct pdf_function_s
 	} u;
 };
 
-/*
- * PostScript calculator
- */
-
 #define RADIAN 57.2957795
 
 static inline float LERP(float x, float xmin, float xmax, float ymin, float ymax)
@@ -73,6 +67,10 @@ static inline float LERP(float x, float xmin, float xmax, float ymin, float ymax
 		return ymin;
 	return ymin + (x - xmin) * (ymax - ymin) / (xmax - xmin);
 }
+
+/*
+ * PostScript calculator
+ */
 
 enum { PSBOOL, PSINT, PSREAL, PSOPERATOR, PSBLOCK };
 
@@ -110,17 +108,11 @@ struct psobj_s
 	} u;
 };
 
-enum { PSSTACKSIZE = 100 };
-
-#define fz_stackoverflow fz_throw("stack overflow in calculator function")
-#define fz_stackunderflow fz_throw("stack underflow in calculator function")
-#define fz_stacktypemismatch fz_throw("type mismatch in calculator function")
-
 typedef struct psstack_s psstack;
 
 struct psstack_s
 {
-	psobj stack[PSSTACKSIZE];
+	psobj stack[100];
 	int sp;
 };
 
@@ -131,7 +123,7 @@ pdf_debugpsstack(psstack *st)
 
 	printf("stack: ");
 
-	for (i = PSSTACKSIZE - 1; i >= st->sp; i--)
+	for (i = 0; i < st->sp; i++)
 	{
 		switch (st->stack[i].type)
 		{
@@ -159,142 +151,118 @@ static void
 psinitstack(psstack *st)
 {
 	memset(st->stack, 0, sizeof(st->stack));
-	st->sp = PSSTACKSIZE;
+	st->sp = 0;
+}
+
+static inline int
+psoverflow(psstack *st, int n)
+{
+	return st->sp + n >= nelem(st->stack) || n < 0;
+}
+
+static inline int
+psunderflow(psstack *st, int n)
+{
+	return st->sp - n < 0 || n < 0;
+}
+
+static inline int
+psistype(psstack *st, int t)
+{
+	return !psunderflow(st, 1) && st->stack[st->sp - 1].type == t;
+}
+
+static inline int
+psistype2(psstack *st, int t)
+{
+	return !psunderflow(st, 2) && st->stack[st->sp - 1].type == t && st->stack[st->sp - 2].type == t;
+}
+
+static void
+pspushbool(psstack *st, int b)
+{
+	if (!psoverflow(st, 1))
+	{
+		st->stack[st->sp].type = PSBOOL;
+		st->stack[st->sp++].u.b = b;
+	}
+}
+
+static void
+pspushint(psstack *st, int n)
+{
+	if (!psoverflow(st, 1))
+	{
+		st->stack[st->sp].type = PSINT;
+		st->stack[st->sp++].u.i = n;
+	}
+}
+
+static void
+pspushreal(psstack *st, float n)
+{
+	if (!psoverflow(st, 1))
+	{
+		st->stack[st->sp].type = PSREAL;
+		st->stack[st->sp++].u.f = n;
+	}
 }
 
 static int
-pscheckoverflow(psstack *st, int n)
+pspopbool(psstack *st)
 {
-	return st->sp >= n;
+	if (!psunderflow(st, 1))
+	{
+		if (psistype(st, PSBOOL))
+			return st->stack[--st->sp].u.b;
+	}
+	return 0;
 }
 
 static int
-pscheckunderflow(psstack *st)
+pspopint(psstack *st)
 {
-	return st->sp != PSSTACKSIZE;
+	if (!psunderflow(st, 1))
+	{
+		if (psistype(st, PSINT))
+			return st->stack[--st->sp].u.i;
+		if (psistype(st, PSREAL))
+			return st->stack[--st->sp].u.f;
+	}
+	return 0;
 }
 
-static int
-pschecktype(psstack *st, unsigned short type)
+static float
+pspopreal(psstack *st)
 {
-	return st->stack[st->sp].type == type;
+	if (!psunderflow(st, 1))
+	{
+		if (psistype(st, PSINT))
+			return st->stack[--st->sp].u.i;
+		if (psistype(st, PSREAL))
+			return st->stack[--st->sp].u.f;
+	}
+	return 0;
 }
 
-static fz_error
-pspushbool(psstack *st, int booln)
-{
-	if (!pscheckoverflow(st, 1))
-		return fz_stackoverflow;
-	st->stack[--st->sp].type = PSBOOL;
-	st->stack[st->sp].u.b = booln;
-	return fz_okay;
-}
-
-static fz_error
-pspushint(psstack *st, int intg)
-{
-	if (!pscheckoverflow(st, 1))
-		return fz_stackoverflow;
-	st->stack[--st->sp].type = PSINT;
-	st->stack[st->sp].u.i = intg;
-	return fz_okay;
-}
-
-static fz_error
-pspushreal(psstack *st, float real)
-{
-	if (!pscheckoverflow(st, 1))
-		return fz_stackoverflow;
-	st->stack[--st->sp].type = PSREAL;
-	st->stack[st->sp].u.f = real;
-	return fz_okay;
-}
-
-static fz_error
-pspopbool(psstack *st, int *booln)
-{
-	if (!pscheckunderflow(st))
-		return fz_stackunderflow;
-	if (!pschecktype(st, PSBOOL))
-		return fz_stacktypemismatch;
-	*booln = st->stack[st->sp++].u.b;
-	return fz_okay;
-}
-
-static fz_error
-pspopint(psstack *st, int *intg)
-{
-	if (!pscheckunderflow(st))
-		return fz_stackunderflow;
-	if (!pschecktype(st, PSINT))
-		return fz_stacktypemismatch;
-	*intg = st->stack[st->sp++].u.i;
-	return fz_okay;
-}
-
-static fz_error
-pspopnum(psstack *st, float *real)
-{
-	if (!pscheckunderflow(st))
-		return fz_stackunderflow;
-	if (!pschecktype(st, PSINT) && !pschecktype(st, PSREAL))
-		return fz_stacktypemismatch;
-	*real = (st->stack[st->sp].type == PSINT) ?
-	st->stack[st->sp].u.i : st->stack[st->sp].u.f;
-	++st->sp;
-	return fz_okay;
-}
-
-static int
-pstopisint(psstack *st)
-{
-	return st->sp < PSSTACKSIZE && st->stack[st->sp].type == PSINT;
-}
-
-static int
-pstoptwoareints(psstack *st)
-{
-	return st->sp < PSSTACKSIZE - 1 &&
-		st->stack[st->sp].type == PSINT &&
-		st->stack[st->sp + 1].type == PSINT;
-}
-
-static int
-pstopisreal(psstack *st)
-{
-	return st->sp < PSSTACKSIZE && st->stack[st->sp].type == PSREAL;
-}
-
-static int
-pstoptwoarenums(psstack *st)
-{
-	return st->sp < PSSTACKSIZE - 1 &&
-		(st->stack[st->sp].type == PSINT || st->stack[st->sp].type == PSREAL) &&
-		(st->stack[st->sp + 1].type == PSINT || st->stack[st->sp + 1].type == PSREAL);
-}
-
-static fz_error
+static void
 pscopy(psstack *st, int n)
 {
-	int i;
-
-	if (!pscheckoverflow(st, n))
-		return fz_stackoverflow;
-
-	for (i = 0; i < n; i++)
+	if (!psunderflow(st, n) && !psoverflow(st, n))
 	{
-		st->stack[st->sp - n + i] = st->stack[st->sp + i];
+		memcpy(st->stack + st->sp, st->stack + st->sp - n, n * sizeof(psobj));
+		st->sp += n;
 	}
-	st->sp -= n;
-
-	return fz_okay;
 }
 
 static void
 psroll(psstack *st, int n, int j)
 {
-	psobj obj;
-	int i, k;
+	psobj tmp;
+	int i;
+
+	if (psunderflow(st, n) || j == 0 || n == 0)
+		return;
 
 	if (j >= 0)
 	{
@@ -304,43 +272,402 @@ psroll(psstack *st, int n, int j)
 	{
 		j = -j % n;
 		if (j != 0)
-		{
 			j = n - j;
-		}
 	}
-	if (n <= 0 || j == 0)
+
+	for (i = 0; i < j; i++)
 	{
-		return;
+		tmp = st->stack[st->sp - 1];
+		memmove(st->stack + st->sp - n + 1, st->stack + st->sp - n, n * sizeof(psobj));
+		st->stack[st->sp - n] = tmp;
 	}
-	for (i = 0; i < j; ++i)
+}
+
+static void
+psindex(psstack *st, int n)
+{
+	if (!psoverflow(st, 1) && !psunderflow(st, n))
 	{
-		/* FIXME check for underflow? */
-		obj = st->stack[st->sp];
-		for (k = st->sp; k < st->sp + n - 1; ++k)
+		st->stack[st->sp] = st->stack[st->sp - n - 1];
+		st->sp++;
+	}
+}
+
+static void
+psrun(psobj *code, psstack *st, int pc)
+{
+	int i1, i2;
+	float r1, r2;
+	int b1, b2;
+
+	while (1)
+	{
+		switch (code[pc].type)
 		{
-			st->stack[k] = st->stack[k + 1];
+		case PSINT:
+			pspushint(st, code[pc++].u.i);
+			break;
+
+		case PSREAL:
+			pspushreal(st, code[pc++].u.f);
+			break;
+
+		case PSOPERATOR:
+			switch (code[pc++].u.op)
+			{
+			case PSOABS:
+				if (psistype(st, PSINT))
+					pspushint(st, abs(pspopint(st)));
+				else
+					pspushreal(st, fabsf(pspopreal(st)));
+				break;
+
+			case PSOADD:
+				if (psistype2(st, PSINT)) {
+					i2 = pspopint(st);
+					i1 = pspopint(st);
+					pspushint(st, i1 + i2);
+				}
+				else {
+					r2 = pspopreal(st);
+					r1 = pspopreal(st);
+					pspushreal(st, r1 + r2);
+				}
+				break;
+
+			case PSOAND:
+				if (psistype2(st, PSINT)) {
+					i2 = pspopint(st);
+					i1 = pspopint(st);
+					pspushint(st, i1 & i2);
+				}
+				else {
+					b2 = pspopbool(st);
+					b1 = pspopbool(st);
+					pspushbool(st, b1 && b2);
+				}
+				break;
+
+			case PSOATAN:
+				r2 = pspopreal(st);
+				r1 = pspopreal(st);
+				r1 = atan2f(r1, r2) * RADIAN;
+				if (r1 < 0)
+					r1 += 360;
+				pspushreal(st, r1);
+				break;
+
+			case PSOBITSHIFT:
+				i2 = pspopint(st);
+				i1 = pspopint(st);
+				if (i2 > 0)
+					pspushint(st, i1 << i2);
+				else if (i2 < 0)
+					pspushint(st, (int)((unsigned int)i1 >> i2));
+				else
+					pspushint(st, i1);
+				break;
+
+			case PSOCEILING:
+				r1 = pspopreal(st);
+				pspushreal(st, ceilf(r1));
+				break;
+
+			case PSOCOPY:
+				pscopy(st, pspopint(st));
+				break;
+
+			case PSOCOS:
+				r1 = pspopreal(st);
+				pspushreal(st, cosf(r1/RADIAN));
+				break;
+
+			case PSOCVI:
+				pspushint(st, pspopint(st));
+				break;
+
+			case PSOCVR:
+				pspushreal(st, pspopreal(st));
+				break;
+
+			case PSODIV:
+				r2 = pspopreal(st);
+				r1 = pspopreal(st);
+				pspushreal(st, r1 / r2);
+				break;
+
+			case PSODUP:
+				pscopy(st, 1);
+				break;
+
+			case PSOEQ:
+				if (psistype2(st, PSBOOL)) {
+					b2 = pspopbool(st);
+					b1 = pspopbool(st);
+					pspushbool(st, b1 == b2);
+				}
+				else if (psistype2(st, PSINT)) {
+					i2 = pspopint(st);
+					i1 = pspopint(st);
+					pspushbool(st, i1 == i2);
+				}
+				else {
+					r2 = pspopreal(st);
+					r1 = pspopreal(st);
+					pspushbool(st, r1 == r2);
+				}
+				break;
+
+			case PSOEXCH:
+				psroll(st, 2, 1);
+				break;
+
+			case PSOEXP:
+				r2 = pspopreal(st);
+				r1 = pspopreal(st);
+				pspushreal(st, powf(r1, r2));
+				break;
+
+			case PSOFALSE:
+				pspushbool(st, 0);
+				break;
+
+			case PSOFLOOR:
+				r1 = pspopreal(st);
+				pspushreal(st, floorf(r1));
+				break;
+
+			case PSOGE:
+				if (psistype2(st, PSINT)) {
+					i2 = pspopint(st);
+					i1 = pspopint(st);
+					pspushbool(st, i1 >= i2);
+				}
+				else {
+					r2 = pspopreal(st);
+					r1 = pspopreal(st);
+					pspushbool(st, r1 >= r2);
+				}
+				break;
+
+			case PSOGT:
+				if (psistype2(st, PSINT)) {
+					i2 = pspopint(st);
+					i1 = pspopint(st);
+					pspushbool(st, i1 > i2);
+				}
+				else {
+					r2 = pspopreal(st);
+					r1 = pspopreal(st);
+					pspushbool(st, r1 > r2);
+				}
+				break;
+
+			case PSOIDIV:
+				i2 = pspopint(st);
+				i1 = pspopint(st);
+				pspushint(st, i1 / i2);
+				break;
+
+			case PSOINDEX:
+				psindex(st, pspopint(st));
+				break;
+
+			case PSOLE:
+				if (psistype2(st, PSINT)) {
+					i2 = pspopint(st);
+					i1 = pspopint(st);
+					pspushbool(st, i1 <= i2);
+				}
+				else {
+					r2 = pspopreal(st);
+					r1 = pspopreal(st);
+					pspushbool(st, r1 <= r2);
+				}
+				break;
+
+			case PSOLN:
+				r1 = pspopreal(st);
+				pspushreal(st, logf(r1));
+				break;
+
+			case PSOLOG:
+				r1 = pspopreal(st);
+				pspushreal(st, log10f(r1));
+				break;
+
+			case PSOLT:
+				if (psistype2(st, PSINT)) {
+					i2 = pspopint(st);
+					i1 = pspopint(st);
+					pspushbool(st, i1 < i2);
+				}
+				else {
+					r2 = pspopreal(st);
+					r1 = pspopreal(st);
+					pspushbool(st, r1 < r2);
+				}
+				break;
+
+			case PSOMOD:
+				i2 = pspopint(st);
+				i1 = pspopint(st);
+				pspushint(st, i1 % i2);
+				break;
+
+			case PSOMUL:
+				if (psistype2(st, PSINT)) {
+					i2 = pspopint(st);
+					i1 = pspopint(st);
+					pspushint(st, i1 * i2);
+				}
+				else {
+					r2 = pspopreal(st);
+					r1 = pspopreal(st);
+					pspushreal(st, r1 * r2);
+				}
+				break;
+
+			case PSONE:
+				if (psistype2(st, PSBOOL)) {
+					b2 = pspopbool(st);
+					b1 = pspopbool(st);
+					pspushbool(st, b1 != b2);
+				}
+				else if (psistype2(st, PSINT)) {
+					i2 = pspopint(st);
+					i1 = pspopint(st);
+					pspushbool(st, i1 != i2);
+				}
+				else {
+					r2 = pspopreal(st);
+					r1 = pspopreal(st);
+					pspushbool(st, r1 != r2);
+				}
+				break;
+
+			case PSONEG:
+				if (psistype(st, PSINT))
+					pspushint(st, -pspopint(st));
+				else
+					pspushreal(st, -pspopreal(st));
+				break;
+
+			case PSONOT:
+				if (psistype(st, PSBOOL))
+					pspushbool(st, !pspopbool(st));
+				else
+					pspushint(st, ~pspopint(st));
+				break;
+
+			case PSOOR:
+				if (psistype2(st, PSBOOL)) {
+					b2 = pspopbool(st);
+					b1 = pspopbool(st);
+					pspushbool(st, b1 || b2);
+				}
+				else {
+					i2 = pspopint(st);
+					i1 = pspopint(st);
+					pspushint(st, i1 | i2);
+				}
+				break;
+
+			case PSOPOP:
+				if (!psunderflow(st, 1))
+					st->sp--;
+				break;
+
+			case PSOROLL:
+				i2 = pspopint(st);
+				i1 = pspopint(st);
+				psroll(st, i1, i2);
+				break;
+
+			case PSOROUND:
+				if (!psistype(st, PSINT)) {
+					r1 = pspopreal(st);
+					pspushreal(st, (r1 >= 0) ? floorf(r1 + 0.5f) : ceilf(r1 - 0.5f));
+				}
+				break;
+
+			case PSOSIN:
+				r1 = pspopreal(st);
+				pspushreal(st, sinf(r1/RADIAN));
+				break;
+
+			case PSOSQRT:
+				r1 = pspopreal(st);
+				pspushreal(st, sqrtf(r1));
+				break;
+
+			case PSOSUB:
+				if (psistype2(st, PSINT)) {
+					i2 = pspopint(st);
+					i1 = pspopint(st);
+					pspushint(st, i1 - i2);
+				}
+				else {
+					r2 = pspopreal(st);
+					r1 = pspopreal(st);
+					pspushreal(st, r1 - r2);
+				}
+				break;
+
+			case PSOTRUE:
+				pspushbool(st, 1);
+				break;
+
+			case PSOTRUNCATE:
+				if (!psistype(st, PSINT)) {
+					r1 = pspopreal(st);
+					pspushreal(st, (r1 >= 0) ? floorf(r1) : ceilf(r1));
+				}
+				break;
+
+			case PSOXOR:
+				if (psistype2(st, PSBOOL)) {
+					b2 = pspopbool(st);
+					b1 = pspopbool(st);
+					pspushbool(st, b1 ^ b2);
+				}
+				else {
+					i2 = pspopint(st);
+					i1 = pspopint(st);
+					pspushint(st, i1 ^ i2);
+				}
+				break;
+
+			case PSOIF:
+				b1 = pspopbool(st);
+				if (b1)
+					psrun(code, st, code[pc + 1].u.block);
+				pc = code[pc + 2].u.block;
+				break;
+
+			case PSOIFELSE:
+				b1 = pspopbool(st);
+				if (b1)
+					psrun(code, st, code[pc + 1].u.block);
+				else
+					psrun(code, st, code[pc + 0].u.block);
+				pc = code[pc + 2].u.block;
+				break;
+
+			case PSORETURN:
+				return;
+
+			default:
+				fz_warn("foreign operator in calculator function");
+				return;
+			}
+			break;
+
+		default:
+			fz_warn("foreign object in calculator function");
+			return;
 		}
-		st->stack[st->sp + n - 1] = obj;
 	}
-}
-
-static fz_error
-psindex(psstack *st, int i)
-{
-	if (!pscheckoverflow(st, 1))
-		return fz_stackoverflow;
-	--st->sp;
-	st->stack[st->sp] = st->stack[st->sp + 1 + i];
-	return fz_okay;
-}
-
-static fz_error
-pspop(psstack *st)
-{
-	if (!pscheckoverflow(st, 1))
-		return fz_stackoverflow;
-	++st->sp;
-	return fz_okay;
 }
 
 static void
@@ -539,434 +866,33 @@ loadpostscriptfunc(pdf_function *func, pdf_xref *xref, fz_obj *dict, int num, in
 	return fz_okay;
 }
 
-#define SAFE_RETHROW		if (error) return fz_rethrow(error, "runtime error in calculator function")
-#define SAFE_PUSHINT(st, a)	{ error = pspushint(st, a); SAFE_RETHROW; }
-#define SAFE_PUSHREAL(st, a)	{ error = pspushreal(st, a); SAFE_RETHROW; }
-#define SAFE_PUSHBOOL(st, a)	{ error = pspushbool(st, a); SAFE_RETHROW; }
-#define SAFE_POPINT(st, a)	{ error = pspopint(st, a); SAFE_RETHROW; }
-#define SAFE_POPNUM(st, a)	{ error = pspopnum(st, a); SAFE_RETHROW; }
-#define SAFE_POPBOOL(st, a)	{ error = pspopbool(st, a); SAFE_RETHROW; }
-#define SAFE_POP(st)		{ error = pspop(st); SAFE_RETHROW; }
-#define SAFE_INDEX(st, i)	{ error = psindex(st, i); SAFE_RETHROW; }
-#define SAFE_COPY(st, n)	{ error = pscopy(st, n); SAFE_RETHROW; }
-
-static fz_error
-evalpostscriptfunc(pdf_function *func, psstack *st, int codeptr)
+static void
+evalpostscriptfunc(pdf_function *func, float *in, float *out)
 {
-	fz_error error;
-	int i1, i2;
-	float r1, r2;
-	int b1, b2;
+	psstack st;
+	float x;
+	int i;
 
-	while (1)
+	psinitstack(&st);
+
+	for (i = 0; i < func->m; i++)
 	{
-		switch (func->u.p.code[codeptr].type)
-		{
-		case PSINT:
-			SAFE_PUSHINT(st, func->u.p.code[codeptr++].u.i);
-			break;
+		x = CLAMP(in[i], func->domain[i][0], func->domain[i][1]);
+		pspushreal(&st, x);
+	}
 
-		case PSREAL:
-			SAFE_PUSHREAL(st, func->u.p.code[codeptr++].u.f);
-			break;
+	psrun(func->u.p.code, &st, 0);
 
-		case PSOPERATOR:
-			switch (func->u.p.code[codeptr++].u.op)
-			{
-			case PSOABS:
-				if (pstopisint(st)) {
-					SAFE_POPINT(st, &i1);
-					SAFE_PUSHINT(st, abs(i1));
-				}
-				else {
-					SAFE_POPNUM(st, &r1);
-					SAFE_PUSHREAL(st, fabsf(r1));
-				}
-				break;
-
-			case PSOADD:
-				if (pstoptwoareints(st)) {
-					SAFE_POPINT(st, &i2);
-					SAFE_POPINT(st, &i1);
-					SAFE_PUSHINT(st, i1 + i2);
-				}
-				else {
-					SAFE_POPNUM(st, &r2);
-					SAFE_POPNUM(st, &r1);
-					SAFE_PUSHREAL(st, r1 + r2);
-				}
-				break;
-
-			case PSOAND:
-				if (pstoptwoareints(st)) {
-					SAFE_POPINT(st, &i2);
-					SAFE_POPINT(st, &i1);
-					SAFE_PUSHINT(st, i1 & i2);
-				}
-				else {
-					SAFE_POPBOOL(st, &b2);
-					SAFE_POPBOOL(st, &b1);
-					SAFE_PUSHBOOL(st, b1 && b2);
-				}
-				break;
-
-			case PSOATAN:
-				SAFE_POPNUM(st, &r2);
-				SAFE_POPNUM(st, &r1);
-				r1 = atan2f(r1, r2) * RADIAN;
-				if (r1 < 0)
-					r1 += 360;
-				SAFE_PUSHREAL(st, r1);
-				break;
-
-			case PSOBITSHIFT:
-				SAFE_POPINT(st, &i2);
-				SAFE_POPINT(st, &i1);
-				if (i2 > 0) {
-					SAFE_PUSHINT(st, i1 << i2);
-				}
-				else if (i2 < 0) {
-					SAFE_PUSHINT(st, (int)((unsigned int)i1 >> i2));
-				}
-				else {
-					SAFE_PUSHINT(st, i1);
-				}
-				break;
-
-			case PSOCEILING:
-				if (!pstopisint(st)) {
-					SAFE_POPNUM(st, &r1);
-					SAFE_PUSHREAL(st, ceilf(r1));
-				}
-				break;
-
-			case PSOCOPY:
-				SAFE_POPINT(st, &i1);
-				SAFE_COPY(st, i1);
-				break;
-
-			case PSOCOS:
-				SAFE_POPNUM(st, &r1);
-				SAFE_PUSHREAL(st, cosf(r1/RADIAN));
-				break;
-
-			case PSOCVI:
-				if (!pstopisint(st)) {
-					SAFE_POPNUM(st, &r1);
-					SAFE_PUSHINT(st, (int)r1);
-				}
-				break;
-
-			case PSOCVR:
-				if (!pstopisreal(st)) {
-					SAFE_POPNUM(st, &r1);
-					SAFE_PUSHREAL(st, r1);
-				}
-				break;
-
-			case PSODIV:
-				SAFE_POPNUM(st, &r2);
-				SAFE_POPNUM(st, &r1);
-				SAFE_PUSHREAL(st, r1 / r2);
-				break;
-
-			case PSODUP:
-				SAFE_COPY(st, 1);
-				break;
-
-			case PSOEQ:
-				if (pstoptwoareints(st)) {
-					SAFE_POPINT(st, &i2);
-					SAFE_POPINT(st, &i1);
-					SAFE_PUSHBOOL(st, i1 == i2);
-				}
-				else if (pstoptwoarenums(st)) {
-					SAFE_POPNUM(st, &r2);
-					SAFE_POPNUM(st, &r1);
-					SAFE_PUSHBOOL(st, r1 == r2);
-				}
-				else {
-					SAFE_POPBOOL(st, &b2);
-					SAFE_POPBOOL(st, &b1);
-					SAFE_PUSHBOOL(st, b1 == b2);
-				}
-				break;
-
-			case PSOEXCH:
-				psroll(st, 2, 1);
-				break;
-
-			case PSOEXP:
-				SAFE_POPNUM(st, &r2);
-				SAFE_POPNUM(st, &r1);
-				SAFE_PUSHREAL(st, powf(r1, r2));
-				break;
-
-			case PSOFALSE:
-				SAFE_PUSHBOOL(st, 0);
-				break;
-
-			case PSOFLOOR:
-				if (!pstopisint(st)) {
-					SAFE_POPNUM(st, &r1);
-					SAFE_PUSHREAL(st, floorf(r1));
-				}
-				break;
-
-			case PSOGE:
-				if (pstoptwoareints(st)) {
-					SAFE_POPINT(st, &i2);
-					SAFE_POPINT(st, &i1);
-					SAFE_PUSHBOOL(st, i1 >= i2);
-				}
-				else {
-					SAFE_POPNUM(st, &r2);
-					SAFE_POPNUM(st, &r1);
-					SAFE_PUSHBOOL(st, r1 >= r2);
-				}
-				break;
-
-			case PSOGT:
-				if (pstoptwoareints(st)) {
-					SAFE_POPINT(st, &i2);
-					SAFE_POPINT(st, &i1);
-					SAFE_PUSHBOOL(st, i1 > i2);
-				}
-				else {
-					SAFE_POPNUM(st, &r2);
-					SAFE_POPNUM(st, &r1);
-					SAFE_PUSHBOOL(st, r1 > r2);
-				}
-				break;
-
-			case PSOIDIV:
-				SAFE_POPINT(st, &i2);
-				SAFE_POPINT(st, &i1);
-				SAFE_PUSHINT(st, i1 / i2);
-				break;
-
-			case PSOINDEX:
-				SAFE_POPINT(st, &i1);
-				SAFE_INDEX(st, i1);
-				break;
-
-			case PSOLE:
-				if (pstoptwoareints(st)) {
-					SAFE_POPINT(st, &i2);
-					SAFE_POPINT(st, &i1);
-					SAFE_PUSHBOOL(st, i1 <= i2);
-				}
-				else {
-					SAFE_POPNUM(st, &r2);
-					SAFE_POPNUM(st, &r1);
-					SAFE_PUSHBOOL(st, r1 <= r2);
-				}
-				break;
-
-			case PSOLN:
-				SAFE_POPNUM(st, &r1);
-				SAFE_PUSHREAL(st, logf(r1));
-				break;
-
-			case PSOLOG:
-				SAFE_POPNUM(st, &r1);
-				SAFE_PUSHREAL(st, log10f(r1));
-				break;
-
-			case PSOLT:
-				if (pstoptwoareints(st)) {
-					SAFE_POPINT(st, &i2);
-					SAFE_POPINT(st, &i1);
-					SAFE_PUSHBOOL(st, i1 < i2);
-				}
-				else {
-					SAFE_POPNUM(st, &r2);
-					SAFE_POPNUM(st, &r1);
-					SAFE_PUSHBOOL(st, r1 < r2);
-				}
-				break;
-
-			case PSOMOD:
-				SAFE_POPINT(st, &i2);
-				SAFE_POPINT(st, &i1);
-				SAFE_PUSHINT(st, i1 % i2);
-				break;
-
-			case PSOMUL:
-				if (pstoptwoareints(st)) {
-					SAFE_POPINT(st, &i2);
-					SAFE_POPINT(st, &i1);
-					/* FIXME should check for out-of-range, and push a real instead */
-					SAFE_PUSHINT(st, i1 * i2);
-				}
-				else {
-					SAFE_POPNUM(st, &r2);
-					SAFE_POPNUM(st, &r1);
-					SAFE_PUSHREAL(st, r1 * r2);
-				}
-				break;
-
-			case PSONE:
-				if (pstoptwoareints(st)) {
-					SAFE_POPINT(st, &i2);
-					SAFE_POPINT(st, &i1);
-					SAFE_PUSHBOOL(st, i1 != i2);
-				}
-				else if (pstoptwoarenums(st)) {
-					SAFE_POPNUM(st, &r2);
-					SAFE_POPNUM(st, &r1);
-					SAFE_PUSHBOOL(st, r1 != r2);
-				}
-				else {
-					SAFE_POPBOOL(st, &b2);
-					SAFE_POPBOOL(st, &b1);
-					SAFE_PUSHBOOL(st, b1 != b2);
-				}
-				break;
-
-			case PSONEG:
-				if (pstopisint(st)) {
-					SAFE_POPINT(st, &i1);
-					SAFE_PUSHINT(st, -i1);
-				}
-				else {
-					SAFE_POPNUM(st, &r1);
-					SAFE_PUSHREAL(st, -r1);
-				}
-				break;
-
-			case PSONOT:
-				if (pstopisint(st)) {
-					SAFE_POPINT(st, &i1);
-					SAFE_PUSHINT(st, ~i1);
-				}
-				else {
-					SAFE_POPBOOL(st, &b1);
-					SAFE_PUSHBOOL(st, !b1);
-				}
-				break;
-
-			case PSOOR:
-				if (pstoptwoareints(st)) {
-					SAFE_POPINT(st, &i2);
-					SAFE_POPINT(st, &i1);
-					SAFE_PUSHINT(st, i1 | i2);
-				}
-				else {
-					SAFE_POPBOOL(st, &b2);
-					SAFE_POPBOOL(st, &b1);
-					SAFE_PUSHBOOL(st, b1 || b2);
-				}
-				break;
-
-			case PSOPOP:
-				SAFE_POP(st);
-				break;
-
-			case PSOROLL:
-				SAFE_POPINT(st, &i2);
-				SAFE_POPINT(st, &i1);
-				psroll(st, i1, i2);
-				break;
-
-			case PSOROUND:
-				if (!pstopisint(st)) {
-					SAFE_POPNUM(st, &r1);
-					SAFE_PUSHREAL(st, (r1 >= 0) ? floorf(r1 + 0.5f) : ceilf(r1 - 0.5f));
-				}
-				break;
-
-			case PSOSIN:
-				SAFE_POPNUM(st, &r1);
-				SAFE_PUSHREAL(st, sinf(r1/RADIAN));
-				break;
-
-			case PSOSQRT:
-				SAFE_POPNUM(st, &r1);
-				SAFE_PUSHREAL(st, sqrtf(r1));
-				break;
-
-			case PSOSUB:
-				if (pstoptwoareints(st)) {
-					SAFE_POPINT(st, &i2);
-					SAFE_POPINT(st, &i1);
-					SAFE_PUSHINT(st, i1 - i2);
-				}
-				else {
-					SAFE_POPNUM(st, &r2);
-					SAFE_POPNUM(st, &r1);
-					SAFE_PUSHREAL(st, r1 - r2);
-				}
-				break;
-
-			case PSOTRUE:
-				SAFE_PUSHBOOL(st, 1);
-				break;
-
-			case PSOTRUNCATE:
-				if (!pstopisint(st)) {
-					SAFE_POPNUM(st, &r1);
-					SAFE_PUSHREAL(st, (r1 >= 0) ? floorf(r1) : ceilf(r1));
-				}
-				break;
-
-			case PSOXOR:
-				if (pstoptwoareints(st)) {
-					SAFE_POPINT(st, &i2);
-					SAFE_POPINT(st, &i1);
-					SAFE_PUSHINT(st, i1 ^ i2);
-				}
-				else {
-					SAFE_POPBOOL(st, &b2);
-					SAFE_POPBOOL(st, &b1);
-					SAFE_PUSHBOOL(st, b1 ^ b2);
-				}
-				break;
-
-			case PSOIF:
-				SAFE_POPBOOL(st, &b1);
-				if (b1) {
-					error = evalpostscriptfunc(func, st, func->u.p.code[codeptr + 1].u.block);
-					if (error)
-						return fz_rethrow(error, "runtime error in if-branch");
-				}
-				codeptr = func->u.p.code[codeptr + 2].u.block;
-				break;
-
-			case PSOIFELSE:
-				SAFE_POPBOOL(st, &b1);
-				if (b1) {
-					error = evalpostscriptfunc(func, st, func->u.p.code[codeptr + 1].u.block);
-					if (error)
-						return fz_rethrow(error, "runtime error in if-branch");
-				}
-				else {
-					error = evalpostscriptfunc(func, st, func->u.p.code[codeptr + 0].u.block);
-					if (error)
-						return fz_rethrow(error, "runtime error in else-branch");
-				}
-				codeptr = func->u.p.code[codeptr + 2].u.block;
-				break;
-
-			case PSORETURN:
-				return fz_okay;
-
-			default:
-				return fz_throw("foreign operator in calculator function");
-			}
-			break;
-
-		default:
-			return fz_throw("foreign object in calculator function");
-		}
+	for (i = func->n - 1; i >= 0; i--)
+	{
+		x = pspopreal(&st);
+		out[i] = CLAMP(x, func->range[i][0], func->range[i][1]);
 	}
 }
 
 /*
  * Sample function
  */
-
-static int bps_supported[] = { 1, 2, 4, 8, 12, 16, 24, 32 };
 
 static fz_error
 loadsamplefunc(pdf_function *func, pdf_xref *xref, fz_obj *dict, int num, int gen)
@@ -985,7 +911,7 @@ loadsamplefunc(pdf_function *func, pdf_xref *xref, fz_obj *dict, int num, int ge
 	obj = fz_dictgets(dict, "Size");
 	if (!fz_isarray(obj) || fz_arraylen(obj) != func->m)
 		return fz_throw("malformed /Size");
-	for (i = 0; i < func->m; ++i)
+	for (i = 0; i < func->m; i++)
 		func->u.sa.size[i] = fz_toint(fz_arrayget(obj, i));
 
 	obj = fz_dictgets(dict, "BitsPerSample");
@@ -995,18 +921,12 @@ loadsamplefunc(pdf_function *func, pdf_xref *xref, fz_obj *dict, int num, int ge
 
 	pdf_logrsrc("bps %d\n", bps);
 
-	for (i = 0; i < nelem(bps_supported); ++i)
-		if (bps == bps_supported[i])
-			break;
-	if (i == nelem(bps_supported))
-		return fz_throw("unsupported BitsPerSample (%d)", bps);
-
 	obj = fz_dictgets(dict, "Encode");
 	if (fz_isarray(obj))
 	{
 		if (fz_arraylen(obj) != func->m * 2)
 			return fz_throw("malformed /Encode");
-		for (i = 0; i < func->m; ++i)
+		for (i = 0; i < func->m; i++)
 		{
 			func->u.sa.encode[i][0] = fz_toreal(fz_arrayget(obj, i*2+0));
 			func->u.sa.encode[i][1] = fz_toreal(fz_arrayget(obj, i*2+1));
@@ -1014,7 +934,7 @@ loadsamplefunc(pdf_function *func, pdf_xref *xref, fz_obj *dict, int num, int ge
 	}
 	else
 	{
-		for (i = 0; i < func->m; ++i)
+		for (i = 0; i < func->m; i++)
 		{
 			func->u.sa.encode[i][0] = 0;
 			func->u.sa.encode[i][1] = func->u.sa.size[i] - 1;
@@ -1026,7 +946,7 @@ loadsamplefunc(pdf_function *func, pdf_xref *xref, fz_obj *dict, int num, int ge
 	{
 		if (fz_arraylen(obj) != func->n * 2)
 			return fz_throw("malformed /Decode");
-		for (i = 0; i < func->n; ++i)
+		for (i = 0; i < func->n; i++)
 		{
 			func->u.sa.decode[i][0] = fz_toreal(fz_arrayget(obj, i*2+0));
 			func->u.sa.decode[i][1] = fz_toreal(fz_arrayget(obj, i*2+1));
@@ -1034,14 +954,14 @@ loadsamplefunc(pdf_function *func, pdf_xref *xref, fz_obj *dict, int num, int ge
 	}
 	else
 	{
-		for (i = 0; i < func->n; ++i)
+		for (i = 0; i < func->n; i++)
 		{
 			func->u.sa.decode[i][0] = func->range[i][0];
 			func->u.sa.decode[i][1] = func->range[i][1];
 		}
 	}
 
-	for (i = 0, samplecount = func->n; i < func->m; ++i)
+	for (i = 0, samplecount = func->n; i < func->m; i++)
 		samplecount *= func->u.sa.size[i];
 
 	pdf_logrsrc("samplecount %d\n", samplecount);
@@ -1053,12 +973,12 @@ loadsamplefunc(pdf_function *func, pdf_xref *xref, fz_obj *dict, int num, int ge
 		return fz_rethrow(error, "cannot open samples stream (%d %d R)", num, gen);
 
 	/* read samples */
-	for (i = 0; i < samplecount; ++i)
+	for (i = 0; i < samplecount; i++)
 	{
 		unsigned int x;
 		float s;
 
-		if (fz_peekbyte(stream) == EOF)
+		if (fz_iseofbits(stream))
 		{
 			fz_close(stream);
 			return fz_throw("truncated sample stream");
@@ -1127,7 +1047,7 @@ interpolatesample(pdf_function *func, int *scale, int *e0, int *e1, float *efrac
 	return a + (b - a) * efrac[dim];
 }
 
-static fz_error
+static void
 evalsamplefunc(pdf_function *func, float *in, float *out)
 {
 	int e0[MAXM], e1[MAXM], scale[MAXM];
@@ -1169,10 +1089,10 @@ evalsamplefunc(pdf_function *func, float *in, float *out)
 			int s0 = func->n;
 			int s1 = s0 * func->u.sa.size[0];
 
-			float a = func->u.sa.samples[e0[0] * s0 +  e0[1] * s1 + i];
-			float b = func->u.sa.samples[e1[0] * s0 +  e0[1] * s1 + i];
-			float c = func->u.sa.samples[e0[0] * s0 +  e1[1] * s1 + i];
-			float d = func->u.sa.samples[e1[0] * s0 +  e1[1] * s1 + i];
+			float a = func->u.sa.samples[e0[0] * s0 + e0[1] * s1 + i];
+			float b = func->u.sa.samples[e1[0] * s0 + e0[1] * s1 + i];
+			float c = func->u.sa.samples[e0[0] * s0 + e1[1] * s1 + i];
+			float d = func->u.sa.samples[e1[0] * s0 + e1[1] * s1 + i];
 
 			float ab = a + (b - a) * efrac[0];
 			float cd = c + (d - c) * efrac[0];
@@ -1189,8 +1109,6 @@ evalsamplefunc(pdf_function *func, float *in, float *out)
 			out[i] = CLAMP(out[i], func->range[i][0], func->range[i][1]);
 		}
 	}
-
-	return fz_okay;
 }
 
 /*
@@ -1220,7 +1138,7 @@ loadexponentialfunc(pdf_function *func, fz_obj *dict)
 		func->n = fz_arraylen(obj);
 		if (func->n >= MAXN)
 			return fz_throw("exponential function result array out of range");
-		for (i = 0; i < func->n; ++i)
+		for (i = 0; i < func->n; i++)
 			func->u.e.c0[i] = fz_toreal(fz_arrayget(obj, i));
 		pdf_logrsrc("c0 %d\n", func->n);
 	}
@@ -1235,7 +1153,7 @@ loadexponentialfunc(pdf_function *func, fz_obj *dict)
 	{
 		if (fz_arraylen(obj) != func->n)
 			return fz_throw("/C1 must match /C0 length");
-		for (i = 0; i < func->n; ++i)
+		for (i = 0; i < func->n; i++)
 			func->u.e.c1[i] = fz_toreal(fz_arrayget(obj, i));
 		pdf_logrsrc("c1 %d\n", func->n);
 	}
@@ -1251,7 +1169,7 @@ loadexponentialfunc(pdf_function *func, fz_obj *dict)
 	return fz_okay;
 }
 
-static fz_error
+static void
 evalexponentialfunc(pdf_function *func, float in, float *out)
 {
 	float x = in;
@@ -1261,20 +1179,19 @@ evalexponentialfunc(pdf_function *func, float in, float *out)
 	x = CLAMP(x, func->domain[0][0], func->domain[0][1]);
 
 	/* constraint */
-	if (func->u.e.n != (int)func->u.e.n && x < 0)
-		return fz_throw("constraint error");
-	if (func->u.e.n < 0 && x == 0)
-		return fz_throw("constraint error");
+	if ((func->u.e.n != (int)func->u.e.n && x < 0) || (func->u.e.n < 0 && x == 0))
+	{
+		fz_warn("constraint error");
+		return;
+	}
 
 	tmp = powf(x, func->u.e.n);
-	for (i = 0; i < func->n; ++i)
+	for (i = 0; i < func->n; i++)
 	{
 		out[i] = func->u.e.c0[i] + tmp * (func->u.e.c1[i] - func->u.e.c0[i]);
 		if (func->hasrange)
 			out[i] = CLAMP(out[i], func->range[i][0], func->range[i][1]);
 	}
-
-	return fz_okay;
 }
 
 /*
@@ -1312,7 +1229,7 @@ loadstitchingfunc(pdf_function *func, pdf_xref *xref, fz_obj *dict)
 		func->u.st.encode = fz_calloc(k * 2, sizeof(float));
 		funcs = func->u.st.funcs;
 
-		for (i = 0; i < k; ++i)
+		for (i = 0; i < k; i++)
 		{
 			sub = fz_arrayget(obj, i);
 			error = pdf_loadfunction(&funcs[i], xref, sub);
@@ -1336,11 +1253,11 @@ loadstitchingfunc(pdf_function *func, pdf_xref *xref, fz_obj *dict)
 		if (!fz_isarray(obj) || fz_arraylen(obj) != k - 1)
 			return fz_throw("malformed /Bounds (not array or wrong length)");
 
-		for (i = 0; i < k-1; ++i)
+		for (i = 0; i < k-1; i++)
 		{
 			num = fz_arrayget(obj, i);
 			if (!fz_isint(num) && !fz_isreal(num))
-				return fz_throw("malformed /Bounds (item not number)");
+				return fz_throw("malformed /Bounds (item not real)");
 			func->u.st.bounds[i] = fz_toreal(num);
 			if (i && func->u.st.bounds[i-1] > func->u.st.bounds[i])
 				return fz_throw("malformed /Bounds (item not monotonic)");
@@ -1357,7 +1274,7 @@ loadstitchingfunc(pdf_function *func, pdf_xref *xref, fz_obj *dict)
 	{
 		if (!fz_isarray(obj) || fz_arraylen(obj) != k * 2)
 			return fz_throw("malformed /Encode");
-		for (i = 0; i < k; ++i)
+		for (i = 0; i < k; i++)
 		{
 			func->u.st.encode[i*2+0] = fz_toreal(fz_arrayget(obj, i*2+0));
 			func->u.st.encode[i*2+1] = fz_toreal(fz_arrayget(obj, i*2+1));
@@ -1369,10 +1286,9 @@ loadstitchingfunc(pdf_function *func, pdf_xref *xref, fz_obj *dict)
 	return fz_okay;
 }
 
-static fz_error
+static void
 evalstitchingfunc(pdf_function *func, float in, float *out)
 {
-	fz_error error;
 	float low, high;
 	int k = func->u.st.k;
 	float *bounds = func->u.st.bounds;
@@ -1380,7 +1296,7 @@ evalstitchingfunc(pdf_function *func, float in, float *out)
 
 	in = CLAMP(in, func->domain[0][0], func->domain[0][1]);
 
-	for (i = 0; i < k - 1; ++i)
+	for (i = 0; i < k - 1; i++)
 	{
 		if (in < bounds[i])
 			break;
@@ -1409,11 +1325,7 @@ evalstitchingfunc(pdf_function *func, float in, float *out)
 
 	in = LERP(in, low, high, func->u.st.encode[i*2+0], func->u.st.encode[i*2+1]);
 
-	error = pdf_evalfunction(func->u.st.funcs[i], &in, 1, out, func->n);
-	if (error)
-		return fz_rethrow(error, "cannot evaluate sub function %d", i);
-
-	return fz_okay;
+	pdf_evalfunction(func->u.st.funcs[i], &in, 1, out, func->n);
 }
 
 /*
@@ -1441,7 +1353,7 @@ pdf_dropfunction(pdf_function *func)
 		case EXPONENTIAL:
 			break;
 		case STITCHING:
-			for (i = 0; i < func->u.st.k; ++i)
+			for (i = 0; i < func->u.st.k; i++)
 				pdf_dropfunction(func->u.st.funcs[i]);
 			fz_free(func->u.st.funcs);
 			fz_free(func->u.st.bounds);
@@ -1566,68 +1478,34 @@ pdf_loadfunction(pdf_function **funcp, pdf_xref *xref, fz_obj *dict)
 	return fz_okay;
 }
 
-fz_error
+void
 pdf_evalfunction(pdf_function *func, float *in, int inlen, float *out, int outlen)
 {
-	fz_error error;
-	float r;
-	int i;
+	memset(out, 0, sizeof(float) * outlen);
 
-	if (inlen < func->m)
-		return fz_throw("not enough inputs to function");
-	if (func->n < outlen)
-		return fz_throw("too few outputs from function");
+	if (inlen != func->m)
+	{
+		fz_warn("tried to evaluate function with wrong number of inputs");
+		return;
+	}
+	if (func->n != outlen)
+	{
+		fz_warn("tried to evaluate function with wrong number of outputs");
+		return;
+	}
 
 	switch(func->type)
 	{
-	case SAMPLE:
-		error = evalsamplefunc(func, in, out);
-		if (error)
-			return fz_rethrow(error, "cannot evaluate sampled function");
-		break;
-
-	case EXPONENTIAL:
-		error = evalexponentialfunc(func, *in, out);
-		if (error)
-			return fz_rethrow(error, "cannot evaluate exponential function");
-		break;
-
-	case STITCHING:
-		error = evalstitchingfunc(func, *in, out);
-		if (error)
-			return fz_rethrow(error, "cannot evaluate stitching function");
-		break;
-
-	case POSTSCRIPT:
-		{
-			psstack st;
-			psinitstack(&st);
-
-			for (i = 0; i < func->m; ++i)
-			{
-				float x;
-				x = CLAMP(in[i], func->domain[i][0], func->domain[i][1]);
-				SAFE_PUSHREAL(&st, x);
-			}
-
-			error = evalpostscriptfunc(func, &st, 0);
-			if (error)
-				return fz_rethrow(error, "cannot evaluate calculator function");
-
-			for (i = func->n - 1; i >= 0; --i)
-			{
-				SAFE_POPNUM(&st, &r);
-				out[i] = CLAMP(r, func->range[i][0], func->range[i][1]);
-			}
-		}
-		break;
-
-	default:
-		return fz_throw("assert: unknown function type");
+	case SAMPLE: evalsamplefunc(func, in, out); break;
+	case EXPONENTIAL: evalexponentialfunc(func, *in, out); break;
+	case STITCHING: evalstitchingfunc(func, *in, out); break;
+	case POSTSCRIPT: evalpostscriptfunc(func, in, out); break;
 	}
-
-	return fz_okay;
 }
+
+/*
+ * Debugging prints
+ */
 
 static void
 pdf_debugindent(char *prefix, int level, char *suffix)

@@ -82,7 +82,7 @@ endif
 ifneq "$(jpeg_dir)" ""
 
 THIRD_LIBS += $(JPEG_LIB)
-THIRD_INCS += -I$(jpeg_dir)
+THIRD_INCS += -I$(jpeg_dir) -I$(OBJDIR)
 LIBS := $(filter-out -ljpeg, $(LIBS))
 
 # jconfig.h does not exist in the pristine source
@@ -91,22 +91,7 @@ $(OBJDIR)/jconfig.h:
 
 JPEG_SRC=$(addprefix $(jpeg_dir)/, \
 	jaricom.c \
-	jcapimin.c \
-	jcapistd.c \
-	jcarith.c \
-	jccoefct.c \
-	jccolor.c \
-	jcdctmgr.c \
-	jchuff.c \
-	jcinit.c \
-	jcmainct.c \
-	jcmarker.c \
-	jcmaster.c \
 	jcomapi.c \
-	jcparam.c \
-	jcprepct.c \
-	jcsample.c \
-	jctrans.c \
 	jdapimin.c \
 	jdapistd.c \
 	jdarith.c \
@@ -142,7 +127,7 @@ $(JPEG_OBJ): $(OBJDIR)/jconfig.h
 $(JPEG_LIB): $(JPEG_OBJ)
 	 $(AR_CMD)
 $(OBJDIR)/jpeg_%.o: $(jpeg_dir)/%.c
-	$(CC_CMD) -I$(OBJDIR) -Dmain=xxxmain
+	$(CC_CMD) -Dmain=xxxmain
 
 endif
 
@@ -157,11 +142,6 @@ ZLIB_SRC=$(addprefix $(zlib_dir)/, \
 	compress.c \
 	crc32.c \
 	deflate.c \
-	gzclose.c \
-	gzlib.c \
-	gzread.c \
-	gzwrite.c \
-	infback.c \
 	inffast.c \
 	inflate.c \
 	inftrees.c \
@@ -186,45 +166,28 @@ LIBS := $(filter-out -lfreetype, $(LIBS))
 SYS_FREETYPE_INC :=
 
 FREETYPE_OBJ=$(addprefix $(OBJDIR)/ft_, \
-	autofit.o ftbase.o ftbbox.o ftbdf.o ftbitmap.o ftdebug.o ftgasp.o \
-	ftglyph.o ftgxval.o ftinit.o ftlcdfil.o ftmm.o ftotval.o ftpfr.o \
-	ftstroke.o ftsynth.o ftsystem.o fttype1.o ftwinfnt.o ftxf86.o \
-	ftpatent.o bdf.o ftcache.o cff.o type1cid.o ftgzip.o ftlzw.o \
-	pcf.o pfr.o psaux.o pshinter.o psnames.o raster.o smooth.o sfnt.o \
-	truetype.o type1.o type42.o winfnt.o )
+	ftbase.o ftbbox.o ftbitmap.o ftgasp.o ftglyph.o ftinit.o \
+	ftstroke.o ftsynth.o ftsystem.o fttype1.o ftxf86.o \
+	cff.o type1cid.o psaux.o psnames.o smooth.o sfnt.o truetype.o type1.o )
 FREETYPE_LIB=$(OBJDIR)/libfreetype.a
 $(FREETYPE_LIB): $(FREETYPE_OBJ)
 	 $(AR_CMD)
 
-FTCC_CMD = $(CC_CMD) -DFT2_BUILD_LIBRARY -DDARWIN_NO_CARBON
+FTCC_CMD = $(CC_CMD) -DFT2_BUILD_LIBRARY -DDARWIN_NO_CARBON -Iwin32 \
+	'-DFT_CONFIG_MODULES_H="slimftmodules.h"' \
+	'-DFT_CONFIG_OPTIONS_H="slimftoptions.h"'
 
-$(OBJDIR)/ft_autofit.o: $(freetype_dir)/src/autofit/autofit.c
-	$(FTCC_CMD)
 $(OBJDIR)/ft_ftbase.o: $(freetype_dir)/src/base/ftbase.c
 	$(FTCC_CMD)
 $(OBJDIR)/ft_ftbbox.o: $(freetype_dir)/src/base/ftbbox.c
 	$(FTCC_CMD)
-$(OBJDIR)/ft_ftbdf.o: $(freetype_dir)/src/base/ftbdf.c
-	$(FTCC_CMD)
 $(OBJDIR)/ft_ftbitmap.o: $(freetype_dir)/src/base/ftbitmap.c
-	$(FTCC_CMD)
-$(OBJDIR)/ft_ftdebug.o: $(freetype_dir)/src/base/ftdebug.c
 	$(FTCC_CMD)
 $(OBJDIR)/ft_ftgasp.o: $(freetype_dir)/src/base/ftgasp.c
 	$(FTCC_CMD)
 $(OBJDIR)/ft_ftglyph.o: $(freetype_dir)/src/base/ftglyph.c
 	$(FTCC_CMD)
-$(OBJDIR)/ft_ftgxval.o: $(freetype_dir)/src/base/ftgxval.c
-	$(FTCC_CMD)
 $(OBJDIR)/ft_ftinit.o: $(freetype_dir)/src/base/ftinit.c
-	$(FTCC_CMD)
-$(OBJDIR)/ft_ftlcdfil.o: $(freetype_dir)/src/base/ftlcdfil.c
-	$(FTCC_CMD)
-$(OBJDIR)/ft_ftmm.o: $(freetype_dir)/src/base/ftmm.c
-	$(FTCC_CMD)
-$(OBJDIR)/ft_ftotval.o: $(freetype_dir)/src/base/ftotval.c
-	$(FTCC_CMD)
-$(OBJDIR)/ft_ftpfr.o: $(freetype_dir)/src/base/ftpfr.c
 	$(FTCC_CMD)
 $(OBJDIR)/ft_ftstroke.o: $(freetype_dir)/src/base/ftstroke.c
 	$(FTCC_CMD)
@@ -234,35 +197,15 @@ $(OBJDIR)/ft_ftsystem.o: $(freetype_dir)/src/base/ftsystem.c
 	$(FTCC_CMD)
 $(OBJDIR)/ft_fttype1.o: $(freetype_dir)/src/base/fttype1.c
 	$(FTCC_CMD)
-$(OBJDIR)/ft_ftwinfnt.o: $(freetype_dir)/src/base/ftwinfnt.c
-	$(FTCC_CMD)
 $(OBJDIR)/ft_ftxf86.o: $(freetype_dir)/src/base/ftxf86.c
-	$(FTCC_CMD)
-$(OBJDIR)/ft_ftpatent.o: $(freetype_dir)/src/base/ftpatent.c
-	$(FTCC_CMD)
-$(OBJDIR)/ft_bdf.o: $(freetype_dir)/src/bdf/bdf.c
-	$(FTCC_CMD)
-$(OBJDIR)/ft_ftcache.o: $(freetype_dir)/src/cache/ftcache.c
 	$(FTCC_CMD)
 $(OBJDIR)/ft_cff.o: $(freetype_dir)/src/cff/cff.c
 	$(FTCC_CMD)
 $(OBJDIR)/ft_type1cid.o: $(freetype_dir)/src/cid/type1cid.c
 	$(FTCC_CMD)
-$(OBJDIR)/ft_ftgzip.o: $(freetype_dir)/src/gzip/ftgzip.c
-	$(FTCC_CMD)
-$(OBJDIR)/ft_ftlzw.o: $(freetype_dir)/src/lzw/ftlzw.c
-	$(FTCC_CMD)
-$(OBJDIR)/ft_pcf.o: $(freetype_dir)/src/pcf/pcf.c
-	$(FTCC_CMD)
-$(OBJDIR)/ft_pfr.o: $(freetype_dir)/src/pfr/pfr.c
-	$(FTCC_CMD)
 $(OBJDIR)/ft_psaux.o: $(freetype_dir)/src/psaux/psaux.c
 	$(FTCC_CMD)
-$(OBJDIR)/ft_pshinter.o: $(freetype_dir)/src/pshinter/pshinter.c
-	$(FTCC_CMD)
 $(OBJDIR)/ft_psnames.o: $(freetype_dir)/src/psnames/psnames.c
-	$(FTCC_CMD)
-$(OBJDIR)/ft_raster.o: $(freetype_dir)/src/raster/raster.c
 	$(FTCC_CMD)
 $(OBJDIR)/ft_smooth.o: $(freetype_dir)/src/smooth/smooth.c
 	$(FTCC_CMD)
@@ -271,10 +214,6 @@ $(OBJDIR)/ft_sfnt.o: $(freetype_dir)/src/sfnt/sfnt.c
 $(OBJDIR)/ft_truetype.o: $(freetype_dir)/src/truetype/truetype.c
 	$(FTCC_CMD)
 $(OBJDIR)/ft_type1.o: $(freetype_dir)/src/type1/type1.c
-	$(FTCC_CMD)
-$(OBJDIR)/ft_type42.o: $(freetype_dir)/src/type42/type42.c
-	$(FTCC_CMD)
-$(OBJDIR)/ft_winfnt.o: $(freetype_dir)/src/winfonts/winfnt.c
 	$(FTCC_CMD)
 
 endif

@@ -12,7 +12,7 @@ fz_read(fz_stream *stm, unsigned char *buf, int len)
 		stm->rp += count;
 	}
 
-	if (count == len || stm->dead)
+	if (count == len || stm->error || stm->eof)
 		return count;
 
 	assert(stm->rp == stm->wp);
@@ -22,8 +22,12 @@ fz_read(fz_stream *stm, unsigned char *buf, int len)
 		n = stm->read(stm, stm->bp, stm->ep - stm->bp);
 		if (n < 0)
 		{
-			stm->dead = 1;
+			stm->error = 1;
 			return fz_rethrow(n, "read error");
+		}
+		else if (n == 0)
+		{
+			stm->eof = 1;
 		}
 		else if (n > 0)
 		{
@@ -45,8 +49,12 @@ fz_read(fz_stream *stm, unsigned char *buf, int len)
 		n = stm->read(stm, buf + count, len - count);
 		if (n < 0)
 		{
-			stm->dead = 1;
+			stm->error = 1;
 			return fz_rethrow(n, "read error");
+		}
+		else if (n == 0)
+		{
+			stm->eof = 1;
 		}
 		else if (n > 0)
 		{
@@ -65,14 +73,18 @@ fz_fillbuffer(fz_stream *stm)
 
 	assert(stm->rp == stm->wp);
 
-	if (stm->dead)
+	if (stm->error || stm->eof)
 		return;
 
 	n = stm->read(stm, stm->bp, stm->ep - stm->bp);
 	if (n < 0)
 	{
-		stm->dead = 1;
+		stm->error = 1;
 		fz_catch(n, "read error; treating as end of file");
+	}
+	else if (n == 0)
+	{
+		stm->eof = 1;
 	}
 	else if (n > 0)
 	{
@@ -161,8 +173,8 @@ fz_seek(fz_stream *stm, int offset, int whence)
 			offset = fz_tell(stm) + offset;
 			whence = 0;
 		}
-
 		stm->seek(stm, offset, whence);
+		stm->eof = 0;
 	}
 	else if (whence != 2)
 	{

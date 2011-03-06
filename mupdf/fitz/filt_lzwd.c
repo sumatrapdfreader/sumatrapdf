@@ -68,7 +68,7 @@ readlzwd(fz_stream *stm, unsigned char *buf, int len)
 
 		code = fz_readbits(lzw->chain, codebits);
 
-		if (fz_peekbyte(lzw->chain) == EOF)
+		if (fz_iseofbits(lzw->chain))
 		{
 			lzw->eod = 1;
 			break;

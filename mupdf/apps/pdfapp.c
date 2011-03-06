@@ -205,6 +205,8 @@ void pdfapp_close(pdfapp_t *app)
 		pdf_freexref(app->xref);
 		app->xref = nil;
 	}
+
+	fz_flushwarnings();
 }
 
 static fz_matrix pdfapp_viewctm(pdfapp_t *app)
@@ -339,6 +341,8 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repai
 
 		wincursor(app, ARROW);
 	}
+
+	fz_flushwarnings();
 }
 
 static void pdfapp_gotouri(pdfapp_t *app, fz_obj *uri)
@@ -987,7 +991,8 @@ void pdfapp_onmouse(pdfapp_t *app, int x, int y, int btn, int modifiers, int sta
 
 void pdfapp_oncopy(pdfapp_t *app, unsigned short *ucsbuf, int ucslen)
 {
-	int bx0, bx1, by0, by1;
+	fz_bbox hitbox;
+	fz_matrix ctm;
 	fz_textspan *span;
 	int c, i, p;
 	int seen;
@@ -997,6 +1002,8 @@ void pdfapp_oncopy(pdfapp_t *app, unsigned short *ucsbuf, int ucslen)
 	int y0 = app->selr.y0;
 	int y1 = app->selr.y1;
 
+	ctm = pdfapp_viewctm(app);
+
 	p = 0;
 	for (span = app->page->text; span; span = span->next)
 	{
@@ -1004,15 +1011,11 @@ void pdfapp_oncopy(pdfapp_t *app, unsigned short *ucsbuf, int ucslen)
 
 		for (i = 0; i < span->len; i++)
 		{
-			bx0 = span->text[i].bbox.x0;
-			bx1 = span->text[i].bbox.x1;
-			by0 = span->text[i].bbox.y0;
-			by1 = span->text[i].bbox.y1;
-
+			hitbox = fz_transformbbox(ctm, span->text[i].bbox);
 			c = span->text[i].c;
 			if (c < 32)
 				c = '?';
-			if (bx1 >= x0 && bx0 <= x1 && by1 >= y0 && by0 <= y1)
+			if (hitbox.x1 >= x0 && hitbox.x0 <= x1 && hitbox.y1 >= y0 && hitbox.y0 <= y1)
 			{
 				if (p < ucslen - 1)
 					ucsbuf[p++] = c;

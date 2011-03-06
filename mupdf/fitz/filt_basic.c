@@ -468,7 +468,7 @@ readaesd(fz_stream *stm, unsigned char *buf, int len)
 		state->wp = state->bp + 16;
 
 		/* strip padding at end of file */
-		if (fz_peekbyte(state->chain) == EOF)
+		if (fz_iseof(state->chain))
 		{
 			int pad = state->bp[15];
 			if (pad < 1 || pad > 16)

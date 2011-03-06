@@ -41,7 +41,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="..\win32;..\thirdparty\jbig2dec;..\thirdparty\jpeg-8c;..\thirdparty\openjpeg-1.4\libopenjpeg;..\thirdparty\zlib-1.2.5;..\thirdparty\freetype-2.4.4\include"
-				PreprocessorDefinitions="FT2_BUILD_LIBRARY;OPJ_STATIC"
+				PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS;FT2_BUILD_LIBRARY;OPJ_STATIC;FT_CONFIG_MODULES_H=\&quot;slimftmodules.h\&quot;;FT_CONFIG_OPTIONS_H=\&quot;slimftoptions.h\&quot;"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -104,7 +104,7 @@
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
 				AdditionalIncludeDirectories="..\win32;..\thirdparty\jbig2dec;..\thirdparty\jpeg-8c;..\thirdparty\openjpeg-1.4\libopenjpeg;..\thirdparty\zlib-1.2.5;..\thirdparty\freetype-2.4.4\include"
-				PreprocessorDefinitions="FT2_BUILD_LIBRARY;OPJ_STATIC"
+				PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS;FT2_BUILD_LIBRARY;OPJ_STATIC;FT_CONFIG_MODULES_H=\&quot;slimftmodules.h\&quot;;FT_CONFIG_OPTIONS_H=\&quot;slimftoptions.h\&quot;"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				WarningLevel="3"
@@ -150,67 +150,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\thirdparty\jpeg-8c\jcapimin.c"
-				>
-			</File>
-			<File
-				RelativePath="..\thirdparty\jpeg-8c\jcapistd.c"
-				>
-			</File>
-			<File
-				RelativePath="..\thirdparty\jpeg-8c\jcarith.c"
-				>
-			</File>
-			<File
-				RelativePath="..\thirdparty\jpeg-8c\jccoefct.c"
-				>
-			</File>
-			<File
-				RelativePath="..\thirdparty\jpeg-8c\jccolor.c"
-				>
-			</File>
-			<File
-				RelativePath="..\thirdparty\jpeg-8c\jcdctmgr.c"
-				>
-			</File>
-			<File
-				RelativePath="..\thirdparty\jpeg-8c\jchuff.c"
-				>
-			</File>
-			<File
-				RelativePath="..\thirdparty\jpeg-8c\jcinit.c"
-				>
-			</File>
-			<File
-				RelativePath="..\thirdparty\jpeg-8c\jcmainct.c"
-				>
-			</File>
-			<File
-				RelativePath="..\thirdparty\jpeg-8c\jcmarker.c"
-				>
-			</File>
-			<File
-				RelativePath="..\thirdparty\jpeg-8c\jcmaster.c"
-				>
-			</File>
-			<File
 				RelativePath="..\thirdparty\jpeg-8c\jcomapi.c"
-				>
-			</File>
-			<File
-				RelativePath="..\thirdparty\jpeg-8c\jcparam.c"
-				>
-			</File>
-			<File
-				RelativePath="..\thirdparty\jpeg-8c\jcprepct.c"
-				>
-			</File>
-			<File
-				RelativePath="..\thirdparty\jpeg-8c\jcsample.c"
-				>
-			</File>
-			<File
-				RelativePath="..\thirdparty\jpeg-8c\jctrans.c"
 				>
 			</File>
 			<File
@@ -410,10 +350,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\thirdparty\zlib-1.2.5\infback.c"
-				>
-			</File>
-			<File
 				RelativePath="..\thirdparty\zlib-1.2.5\inffast.c"
 				>
 			</File>
@@ -518,35 +454,7 @@
 			Name="libfreetype"
 			>
 			<File
-				RelativePath="..\thirdparty\freetype-2.4.4\src\autofit\autofit.c"
-				>
-			</File>
-			<File
-				RelativePath="..\thirdparty\freetype-2.4.4\src\bdf\bdf.c"
-				>
-			</File>
-			<File
 				RelativePath="..\thirdparty\freetype-2.4.4\src\cff\cff.c"
-				>
-			</File>
-			<File
-				RelativePath="..\thirdparty\freetype-2.4.4\src\cache\ftcache.c"
-				>
-			</File>
-			<File
-				RelativePath="..\thirdparty\freetype-2.4.4\src\gzip\ftgzip.c"
-				>
-			</File>
-			<File
-				RelativePath="..\thirdparty\freetype-2.4.4\src\lzw\ftlzw.c"
-				>
-			</File>
-			<File
-				RelativePath="..\thirdparty\freetype-2.4.4\src\pcf\pcf.c"
-				>
-			</File>
-			<File
-				RelativePath="..\thirdparty\freetype-2.4.4\src\pfr\pfr.c"
 				>
 			</File>
 			<File
@@ -554,15 +462,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\thirdparty\freetype-2.4.4\src\pshinter\pshinter.c"
-				>
-			</File>
-			<File
 				RelativePath="..\thirdparty\freetype-2.4.4\src\psnames\psnames.c"
-				>
-			</File>
-			<File
-				RelativePath="..\thirdparty\freetype-2.4.4\src\raster\raster.c"
 				>
 			</File>
 			<File
@@ -585,14 +485,6 @@
 				RelativePath="..\thirdparty\freetype-2.4.4\src\cid\type1cid.c"
 				>
 			</File>
-			<File
-				RelativePath="..\thirdparty\freetype-2.4.4\src\type42\type42.c"
-				>
-			</File>
-			<File
-				RelativePath="..\thirdparty\freetype-2.4.4\src\winfonts\winfnt.c"
-				>
-			</File>
 			<Filter
 				Name="base"
 				>
@@ -605,15 +497,7 @@
 					>
 				</File>
 				<File
-					RelativePath="..\thirdparty\freetype-2.4.4\src\base\ftbdf.c"
-					>
-				</File>
-				<File
 					RelativePath="..\thirdparty\freetype-2.4.4\src\base\ftbitmap.c"
-					>
-				</File>
-				<File
-					RelativePath="..\thirdparty\freetype-2.4.4\src\base\ftdebug.c"
 					>
 				</File>
 				<File
@@ -625,27 +509,7 @@
 					>
 				</File>
 				<File
-					RelativePath="..\thirdparty\freetype-2.4.4\src\base\ftgxval.c"
-					>
-				</File>
-				<File
 					RelativePath="..\thirdparty\freetype-2.4.4\src\base\ftinit.c"
-					>
-				</File>
-				<File
-					RelativePath="..\thirdparty\freetype-2.4.4\src\base\ftlcdfil.c"
-					>
-				</File>
-				<File
-					RelativePath="..\thirdparty\freetype-2.4.4\src\base\ftmm.c"
-					>
-				</File>
-				<File
-					RelativePath="..\thirdparty\freetype-2.4.4\src\base\ftotval.c"
-					>
-				</File>
-				<File
-					RelativePath="..\thirdparty\freetype-2.4.4\src\base\ftpfr.c"
 					>
 				</File>
 				<File
@@ -662,10 +526,6 @@
 				</File>
 				<File
 					RelativePath="..\thirdparty\freetype-2.4.4\src\base\fttype1.c"
-					>
-				</File>
-				<File
-					RelativePath="..\thirdparty\freetype-2.4.4\src\base\ftwinfnt.c"
 					>
 				</File>
 				<File

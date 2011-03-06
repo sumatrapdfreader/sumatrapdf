@@ -198,7 +198,7 @@ void pdf_agestore(pdf_store *store, int maxage);
 typedef struct pdf_function_s pdf_function;
 
 fz_error pdf_loadfunction(pdf_function **func, pdf_xref *xref, fz_obj *ref);
-fz_error pdf_evalfunction(pdf_function *func, float *in, int inlen, float *out, int outlen);
+void pdf_evalfunction(pdf_function *func, float *in, int inlen, float *out, int outlen);
 pdf_function *pdf_keepfunction(pdf_function *func);
 void pdf_dropfunction(pdf_function *func);
 

@@ -288,7 +288,7 @@ pdf_readnewxrefsection(pdf_xref *xref, fz_stream *stm, int i0, int i1, int w0, i
 		int b = 0;
 		int c = 0;
 
-		if (fz_peekbyte(stm) == EOF)
+		if (fz_iseof(stm))
 			return fz_throw("truncated xref stream");
 
 		for (n = 0; n < w0; n++)
