@@ -5,21 +5,19 @@
 #define APP_TOOLS_H_
 
 #include "Vec.h"
+#include "WindowInfo.h"
 
-// Class to encapsulate code that has to be executed on UI thread but can be
-// triggered from other threads. Instead of defining a new message for
-// each piece of code, derive from UIThreadWorkItem and implement
-// Execute() method
+// Base class for code that has to be executed on UI thread. Derive your class
+// from UIThreadWorkItem and call MarshalOnUIThread() to schedule execution
+// of its Execute() method on UI thread.
 class UIThreadWorkItem
 {
 public:
-    HWND hwnd;
+    WindowInfo *win;
 
-    UIThreadWorkItem(HWND hwnd) : hwnd(hwnd) {}
+    UIThreadWorkItem(WindowInfo *win) : win(win) {}
     virtual ~UIThreadWorkItem() {}
     virtual void Execute() = 0;
-
-    void MarshallOnUIThread();
 };
 
 class UIThreadWorkItemQueue
@@ -40,8 +38,6 @@ public:
     void Queue(UIThreadWorkItem *item) {
         ScopedCritSec scope(&cs);
         items.Append(item);
-        // make sure to spin the message loop once
-        PostMessage(item->hwnd, WM_NULL, 0, 0);
     }
 
     void Execute() {
@@ -58,6 +54,8 @@ public:
         }
     }
 };
+
+void MarshallOnUIThread(UIThreadWorkItem *wi);
 
 bool IsValidProgramVersion(char *txt);
 int CompareVersion(TCHAR *txt1, TCHAR *txt2);

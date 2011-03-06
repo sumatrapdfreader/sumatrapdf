@@ -226,6 +226,7 @@ public:
 
 };
 
+bool        WindowInfoStillValid(WindowInfo *win);
 WindowInfo* FindWindowInfoByFile(TCHAR *file);
 WindowInfo* FindWindowInfoByHwnd(HWND hwnd);
 

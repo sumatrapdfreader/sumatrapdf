@@ -841,8 +841,13 @@ WindowInfo* FindWindowInfoByHwnd(HWND hwnd)
     return NULL;
 }
 
+bool WindowInfoStillValid(WindowInfo *win)
+{
+    return gWindows.Find(win) != -1;
+}
+
 // Find the first windows showing a given PDF file 
-WindowInfo* FindWindowInfoByFile(TCHAR * file)
+WindowInfo* FindWindowInfoByFile(TCHAR *file)
 {
     ScopedMem<TCHAR> normFile(FilePath_Normalize(file, FALSE));
     if (!normFile)
@@ -1651,10 +1656,12 @@ Error:
 class FileChangeWorkItem : public UIThreadWorkItem
 {
 public:
-    FileChangeWorkItem(HWND hwnd) : UIThreadWorkItem(hwnd) {}
+    FileChangeWorkItem(WindowInfo *win) : UIThreadWorkItem(win) {}
     virtual void Execute() {
-        // delay the reload slightly, in case we get another request immediately ofter this one
-        SetTimer(hwnd, AUTO_RELOAD_TIMER_ID, AUTO_RELOAD_DELAY_IN_MS, NULL);
+        if (WindowInfoStillValid(win)) {
+            // delay the reload slightly, in case we get another request immediately ofter this one
+            SetTimer(win->hwndCanvas, AUTO_RELOAD_TIMER_ID, AUTO_RELOAD_DELAY_IN_MS, NULL);
+        }
     }
 };
 
@@ -1663,8 +1670,7 @@ static void OnFileChange(const TCHAR * filename, LPARAM param)
 {
     // We cannot called WindowInfo_Refresh directly as it could cause race conditions between the watching thread and the main thread
     // Instead we just post a message to the main thread to trigger a reload
-    UIThreadWorkItem *wi = new FileChangeWorkItem(((WindowInfo *)param)->hwndCanvas);
-    wi->MarshallOnUIThread();
+    MarshallOnUIThread(new FileChangeWorkItem((WindowInfo *)param));
 }
 
 #ifndef THREAD_BASED_FILEWATCH
@@ -2475,7 +2481,7 @@ static void CopySelectionToClipboard(WindowInfo *win)
     CloseClipboard();
 }
 
-static void DeleteOldSelectionInfo (WindowInfo *win) {
+static void DeleteOldSelectionInfo(WindowInfo *win) {
     SelectionOnPage *selOnPage = win->selectionOnPage;
     while (selOnPage != NULL) {
         SelectionOnPage *tmp = selOnPage->next;
@@ -2486,7 +2492,7 @@ static void DeleteOldSelectionInfo (WindowInfo *win) {
     win->showSelection = false;
 }
 
-static void ConvertSelectionRectToSelectionOnPage (WindowInfo *win) {
+static void ConvertSelectionRectToSelectionOnPage(WindowInfo *win) {
     win->dm->textSelection->Reset();
     for (int pageNo = win->dm->pageCount(); pageNo >= 1; --pageNo) {
         PdfPageInfo *pageInfo = win->dm->getPageInfo(pageNo);
@@ -2512,9 +2518,16 @@ static void ConvertSelectionRectToSelectionOnPage (WindowInfo *win) {
     }
 }
 
-void UIThreadWorkItem::MarshallOnUIThread()
+void MarshallOnUIThread(UIThreadWorkItem *wi)
 {
-    gThreadWorkQueue.Queue(this);
+    if (!wi)
+        return;
+    gThreadWorkQueue.Queue(wi);
+    if (!wi->win)
+        return;
+    // hwndCanvas is less likely to enter internal message pump (during which
+    // the messages are not visible to our processing in top-level message pump)
+    PostMessage(wi->win->hwndCanvas, WM_NULL, 0, 0);
 }
 
 // for testing only
@@ -2530,12 +2543,11 @@ class StressTestPageRenderedWorkItem : public UIThreadWorkItem
 {
     int pageNo;
 public:
-    StressTestPageRenderedWorkItem(HWND hwnd, int pageNo) :
-       UIThreadWorkItem(hwnd), pageNo(pageNo)
+    StressTestPageRenderedWorkItem(WindowInfo *win, int pageNo) :
+       UIThreadWorkItem(win), pageNo(pageNo)
        {}
     virtual void Execute() {
-        WindowInfo *win = FindWindowInfoByHwnd(hwnd);
-        if (win)
+        if (WindowInfoStillValid(win))
             StartStressRenderingPage(win, pageNo + 1);
     }
 };
@@ -2555,7 +2567,7 @@ static void StartStressRenderingPage(WindowInfo *win, int pageNo)
         gRenderCache.FreeForDisplayModel(win->dm);
         pageNo = 1;
     }
-    UIThreadWorkItem *wi = new StressTestPageRenderedWorkItem(win->hwndCanvas, pageNo);
+    UIThreadWorkItem *wi = new StressTestPageRenderedWorkItem(win, pageNo);
     gRenderCache.Render(win->dm, pageNo, wi);
 }
 
@@ -3693,25 +3705,25 @@ static void OnMenuOpen(WindowInfo *win)
         ofn.Flags &= ~OFN_ENABLEHOOK;
         ofn.nMaxFile = MAX_PATH * 100;
     }
-    ofn.lpstrFile = SAZA(TCHAR, ofn.nMaxFile);
+    ScopedMem<TCHAR> file(SAZA(TCHAR, ofn.nMaxFile));
+    ofn.lpstrFile = file;
 
-    if (GetOpenFileName(&ofn)) {
-        TCHAR *fileName = ofn.lpstrFile + ofn.nFileOffset;
-        if (*(fileName - 1)) {
-            // special case: single filename without NULL separator
-            LoadDocument(ofn.lpstrFile, win);
-        }
-        else {
-            while (*fileName) {
-                ScopedMem<TCHAR> filePath(tstr_cat3(ofn.lpstrFile, DIR_SEP_TSTR, fileName));
-                if (filePath)
-                    LoadDocument(filePath, win);
-                fileName += lstrlen(fileName) + 1;
-            }
-        }
+    if (!GetOpenFileName(&ofn))
+        return;
+
+    TCHAR *fileName = ofn.lpstrFile + ofn.nFileOffset;
+    if (*(fileName - 1)) {
+        // special case: single filename without NULL separator
+        LoadDocument(ofn.lpstrFile, win);
+        return;
     }
 
-    free(ofn.lpstrFile);
+    while (*fileName) {
+        ScopedMem<TCHAR> filePath(tstr_cat3(ofn.lpstrFile, DIR_SEP_TSTR, fileName));
+        if (filePath)
+            LoadDocument(filePath, win);
+        fileName += lstrlen(fileName) + 1;
+    }
 }
 
 static void RotateLeft(WindowInfo *win)
@@ -4627,12 +4639,11 @@ class GoToTocLinkWorkItem : public UIThreadWorkItem
     PdfTocItem *tocItem;
 
 public:
-    GoToTocLinkWorkItem(HWND hwnd, PdfTocItem *ti) :
-        UIThreadWorkItem(hwnd), tocItem(ti) {}
+    GoToTocLinkWorkItem(WindowInfo *win, PdfTocItem *ti) :
+        UIThreadWorkItem(win), tocItem(ti) {}
 
     virtual void Execute() {
-        WindowInfo *win = FindWindowInfoByHwnd(hwnd);
-        if (win && win->dm)
+        if (WindowInfoStillValid(win) && win->dm)
             win->dm->goToTocLink(tocItem->link);
     }
 };
@@ -4648,8 +4659,7 @@ static void GoToTocLinkForTVItem(WindowInfo *win, HWND hTV, HTREEITEM hItem=NULL
     TreeView_GetItem(hTV, &item);
     PdfTocItem *tocItem = (PdfTocItem *)item.lParam;
     if (win->dm && tocItem && (allowExternal || tocItem->link && PDF_LGOTO == tocItem->link->kind)) {
-        UIThreadWorkItem *wi = new GoToTocLinkWorkItem(win->hwndCanvas, tocItem);
-        wi->MarshallOnUIThread();
+        MarshallOnUIThread(new GoToTocLinkWorkItem(win, tocItem));
     }
 }
 
@@ -4807,12 +4817,11 @@ class FindEndWorkItem : public UIThreadWorkItem
     bool    wasModifiedCanceled;
 
 public:
-    FindEndWorkItem(HWND hwnd, PdfSel *pdfSel, bool wasModifiedCanceled) :
-        UIThreadWorkItem(hwnd), pdfSel(pdfSel), wasModifiedCanceled(wasModifiedCanceled) {}
+    FindEndWorkItem(WindowInfo *win, PdfSel *pdfSel, bool wasModifiedCanceled) :
+        UIThreadWorkItem(win), pdfSel(pdfSel), wasModifiedCanceled(wasModifiedCanceled) {}
 
     virtual void Execute() {
-        WindowInfo *win = FindWindowInfoByHwnd(hwnd);
-        if (!win)
+        if (!WindowInfoStillValid(win))
             return;
         if (!win->dm) {
             // the document was closed while finding
@@ -4854,12 +4863,10 @@ static DWORD WINAPI FindThread(LPVOID data)
             rect = win->dm->Find(ftd->direction, ftd->text, startPage);
     }
 
-    UIThreadWorkItem *wi;
     if (rect && !win->findCanceled)
-        wi = new FindEndWorkItem(win->hwndCanvas, rect, ftd->wasModified);
+        MarshallOnUIThread(new FindEndWorkItem(win, rect, ftd->wasModified));
     else
-        wi = new FindEndWorkItem(win->hwndCanvas, NULL, win->findCanceled);
-    wi->MarshallOnUIThread();
+        MarshallOnUIThread(new FindEndWorkItem(win, NULL, win->findCanceled));
 
     free(ftd);
 
@@ -5313,12 +5320,13 @@ class UpdateFindStatusWorkItem : public UIThreadWorkItem
     int current;
     int total;
 public:
-    UpdateFindStatusWorkItem(HWND hwnd, int current, int total)
-        : UIThreadWorkItem(hwnd), current(current), total(total)
+    UpdateFindStatusWorkItem(WindowInfo *win, int current, int total)
+        : UIThreadWorkItem(win), current(current), total(total)
     {}
 
     virtual void Execute() {
-        WindowInfo *win = FindWindowInfoByHwnd(hwnd);
+        if (!WindowInfoStillValid(win))
+            return;
         win->findPercent = current * 100 / total;
         if (!win->findStatusVisible)
             WindowInfo_ShowFindStatus(win);
@@ -5331,12 +5339,9 @@ public:
 
 bool WindowInfo::FindUpdateStatus(int current, int total)
 {
-    if (findCanceled)
-        return false;
-
-    UIThreadWorkItem *wi = new UpdateFindStatusWorkItem(hwndCanvas, current, total);
-    wi->MarshallOnUIThread();
-    return true;
+    if (!findCanceled)
+        MarshallOnUIThread(new UpdateFindStatusWorkItem(this, current, total));
+    return !findCanceled;
 }
 
 static void TreeView_ExpandRecursively(HWND hTree, HTREEITEM hItem, UINT flag, bool subtree=false)
@@ -6079,30 +6084,26 @@ class RepaintCanvasWorkItem : public UIThreadWorkItem
     UINT delay;
 
 public:
-    RepaintCanvasWorkItem(HWND hwnd, UINT delay) 
-        : UIThreadWorkItem(hwnd), delay(delay)
+    RepaintCanvasWorkItem(WindowInfo *win, UINT delay) 
+        : UIThreadWorkItem(win), delay(delay)
     {}
 
     virtual void Execute() {
-        WindowInfo * win = FindWindowInfoByHwnd(hwnd);
-        if (!win)
+        if (!WindowInfoStillValid(win))
             return;
         if (0 == delay) {
-            WndProcCanvas(hwnd, WM_TIMER, REPAINT_TIMER_ID, 0);
+            WndProcCanvas(win->hwndCanvas, WM_TIMER, REPAINT_TIMER_ID, 0);
             return;
         }
         if (!win->delayedRepaintTimer)
-            win->delayedRepaintTimer = SetTimer(hwnd, REPAINT_TIMER_ID, delay, NULL);
+            win->delayedRepaintTimer = SetTimer(win->hwndCanvas, REPAINT_TIMER_ID, delay, NULL);
     }
 };
 
 /* Call from non-UI thread to cause repainting of the display */
 static void MarshallRepaintCanvasOnUIThread(WindowInfo* win, UINT delay)
 {
-    assert(win);
-    if (!win) return;
-    UIThreadWorkItem *wi = new RepaintCanvasWorkItem(win->hwndCanvas, delay);
-    wi->MarshallOnUIThread();
+    MarshallOnUIThread(new RepaintCanvasWorkItem(win, delay));
 }
 
 static void UpdateMenu(WindowInfo *win, HMENU m)

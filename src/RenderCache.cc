@@ -375,8 +375,7 @@ void RenderCache::Render(DisplayModel *dm, int pageNo, TilePosition tile, bool c
     /* add request to the queue */
     if (_requestCount == MAX_PAGE_REQUESTS) {
         /* queue is full -> remove the oldest items on the queue */
-        if (_requests[0].finishedWorkItem)
-            _requests[0].finishedWorkItem->MarshallOnUIThread();
+        MarshallOnUIThread(_requests[0].finishedWorkItem);
         memmove(&(_requests[0]), &(_requests[1]), sizeof(PageRenderRequest) * (MAX_PAGE_REQUESTS - 1));
         newRequest = &(_requests[MAX_PAGE_REQUESTS-1]);
     } else {
@@ -396,8 +395,8 @@ void RenderCache::Render(DisplayModel *dm, int pageNo, TilePosition tile, bool c
     SetEvent(startRendering);
 
 Exit:
-    if (!newRequest && finishedWorkItem)
-        finishedWorkItem->MarshallOnUIThread();
+    if (!newRequest)
+        MarshallOnUIThread(finishedWorkItem);
 }
 
 UINT RenderCache::GetRenderDelay(DisplayModel *dm, int pageNo, TilePosition tile)
@@ -478,8 +477,7 @@ void RenderCache::ClearQueueForDisplayModel(DisplayModel *dm, int pageNo, TilePo
         if (i != curPos)
             _requests[curPos] = _requests[i];
         if (shouldRemove) {
-            if (req->finishedWorkItem)
-                req->finishedWorkItem->MarshallOnUIThread();
+            MarshallOnUIThread(req->finishedWorkItem);
             _requestCount--;
         } else
             curPos++;
@@ -513,8 +511,7 @@ static DWORD WINAPI RenderCacheThread(LPVOID data)
         }
         if (req.dm->_dontRenderFlag) {
             DBG_OUT("RenderCacheThread(): not rendering because of _dontRenderFlag\n");
-            if (req.finishedWorkItem)
-                req.finishedWorkItem->MarshallOnUIThread();
+            MarshallOnUIThread(req.finishedWorkItem);
             continue;
         }
 
@@ -523,8 +520,7 @@ static DWORD WINAPI RenderCacheThread(LPVOID data)
                                    Target_View, cache->useGdiRenderer && *cache->useGdiRenderer);
         if (req.abort) {
             delete bmp;
-            if (req.finishedWorkItem)
-                req.finishedWorkItem->MarshallOnUIThread();
+            MarshallOnUIThread(req.finishedWorkItem);
             continue;
         }
 
@@ -539,7 +535,7 @@ static DWORD WINAPI RenderCacheThread(LPVOID data)
         cache->FreeNotVisible();
 #endif
         if (req.finishedWorkItem) {
-            req.finishedWorkItem->MarshallOnUIThread();
+            MarshallOnUIThread(req.finishedWorkItem);
             req.finishedWorkItem = (UIThreadWorkItem*)1; // will crash if accessed again, which should not happen
         }
         else
