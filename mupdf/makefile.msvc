@@ -184,10 +184,7 @@ MINIZIP_OBJS = \
 
 JPEG_OBJS = \
 	$(OJ)\jaricom.obj $(OJ)\jcomapi.obj $(OJ)\jutils.obj $(OJ)\jerror.obj $(OJ)\jmemmgr.obj \
-	$(OJ)\jcapimin.obj $(OJ)\jcapistd.obj $(OJ)\jcarith.obj $(OJ)\jctrans.obj $(OJ)\jcparam.obj \
-	$(OJ)\jdatadst.obj $(OJ)\jcinit.obj $(OJ)\jcmaster.obj $(OJ)\jcmarker.obj $(OJ)\jcmainct.obj \
-	$(OJ)\jcprepct.obj $(OJ)\jccoefct.obj $(OJ)\jccolor.obj $(OJ)\jcsample.obj $(OJ)\jchuff.obj \
-	$(OJ)\jcdctmgr.obj $(OJ)\jfdctfst.obj $(OJ)\jfdctflt.obj $(OJ)\jfdctint.obj \
+	$(OJ)\jdatadst.obj $(OJ)\jfdctfst.obj $(OJ)\jfdctflt.obj $(OJ)\jfdctint.obj \
 	$(OJ)\jdapimin.obj $(OJ)\jdapistd.obj $(OJ)\jdarith.obj $(OJ)\jdtrans.obj $(OJ)\jdatasrc.obj \
 	$(OJ)\jdmaster.obj $(OJ)\jdinput.obj $(OJ)\jdmarker.obj $(OJ)\jdhuff.obj $(OJ)\jdmainct.obj \
 	$(OJ)\jdcoefct.obj $(OJ)\jdpostct.obj $(OJ)\jddctmgr.obj $(OJ)\jidctfst.obj $(OJ)\jidctflt.obj \
