@@ -170,9 +170,9 @@ void paint_round_rect_around_hwnd(HDC hdc, HWND hwnd_edit_parent, HWND hwnd_edit
 {
     RECT    r;
     HBRUSH  br;
-    HBRUSH  br_prev;
-    HPEN    pen;
-    HPEN    pen_prev;
+    HGDIOBJ br_prev;
+    HGDIOBJ pen;
+    HGDIOBJ pen_prev;
     GetClientRect(hwnd_edit, &r);
     br = CreateSolidBrush(col);
     if (!br) return;

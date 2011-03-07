@@ -3,11 +3,6 @@
 #ifndef FILE_UTILS_H_
 #define FILE_UTILS_H_
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-
 const TCHAR *   FilePath_GetBaseName(const TCHAR *path);
 TCHAR *         FilePath_GetDir(const TCHAR *path);
 
@@ -21,9 +16,5 @@ BOOL            dir_exists(const TCHAR *dir_path);
 char *          file_read_all(const TCHAR *file_path, size_t *file_size_out);
 BOOL            write_to_file(const TCHAR *file_path, void *data, size_t data_len);
 size_t          file_size_get(const TCHAR *file_path);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

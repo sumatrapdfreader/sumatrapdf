@@ -52,7 +52,7 @@ WCHAR *wstr_dupn(const WCHAR *str, size_t str_len_cch)
 
     if (!str)
         return NULL;
-    copy = memdup((void *)str, (str_len_cch + 1) * sizeof(WCHAR));
+    copy = (WCHAR *)memdup((void *)str, (str_len_cch + 1) * sizeof(WCHAR));
     if (copy)
         copy[str_len_cch] = 0;
     return copy;
@@ -230,7 +230,7 @@ int wstr_printf_s(WCHAR *out, size_t out_cch_size, const WCHAR *format, ...)
 char *wstr_to_multibyte(const WCHAR *txt,  UINT CodePage)
 {
     int requiredBufSize = WideCharToMultiByte(CodePage, 0, txt, -1, NULL, 0, NULL, NULL);
-    char *res = malloc(requiredBufSize);
+    char *res = SAZA(char, requiredBufSize);
     if (!res)
         return NULL;
     WideCharToMultiByte(CodePage, 0, txt, -1, res, requiredBufSize, NULL, NULL);

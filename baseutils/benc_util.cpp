@@ -281,7 +281,7 @@ size_t _dict_calc_new_size(size_t currSize)
          -1 if val1 < val2
    Compares raw bytes
 */
-int _compare_dict_keys(const unsigned char* val1, const unsigned char* val2, size_t val2Len)
+int _compare_dict_keys(const char* val1, const char* val2, size_t val2Len)
 {
     unsigned char c1;
     unsigned char c2;
@@ -319,7 +319,7 @@ _dict_get_insert_slot(benc_dict_data* curr, const char* key, size_t keyLen, size
 {
     size_t slotIdx, used;
     int cmp;
-    const unsigned char* currKey;
+    const char* currKey;
     assert(curr && key && slotIdxOut);
     assert(NULL == curr->m_next); /* not using segments yet */
 
@@ -354,7 +354,7 @@ _dict_get_insert_slot(benc_dict_data* curr, const char* key, size_t keyLen, size
     /* TODO: brain dead linear search. Replace with binary search */
     slotIdx = 0;
     while (slotIdx < used) {
-        currKey = (const unsigned char*)curr->m_values[slotIdx];
+        currKey = (const char*)curr->m_values[slotIdx];
         cmp = _compare_dict_keys(currKey, key, keyLen);
         if (0 == cmp) {
             /* same as existing key: insert at exactly this position */
@@ -466,7 +466,7 @@ benc_obj * benc_dict_find(benc_dict* dict, const char* key, size_t keyLen)
     /* TODO: brain dead linear search. Replace with binary search */
     slotIdx = 0;
     while (slotIdx < used) {
-        const unsigned char* currKey = (const unsigned char*)curr->m_keys[slotIdx];
+        const char* currKey = curr->m_keys[slotIdx];
         int cmp = _compare_dict_keys(currKey, key, keyLen);
         if (0 == cmp)
             return curr->m_values[slotIdx];
@@ -1069,7 +1069,6 @@ void benc_obj_delete(benc_obj *bobj)
 
 
 #ifndef NDEBUG
-#include <stdbool.h>
 #include "file_util.h"
 
 static void test_parse_torrent(const TCHAR *fileName)

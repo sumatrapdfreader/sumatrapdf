@@ -3,11 +3,6 @@
 #ifndef BENC_UTIL_H_
 #define BENC_UTIL_H_
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-
 typedef enum benc_type {
     BOT_INT64 = 1,
     BOT_STRING,
@@ -98,11 +93,6 @@ BOOL        dict_get_float_from_str(benc_dict* dict, const char* key, float* val
 BOOL        dict_get_double_from_str(benc_dict* dict, const char* key, double* valOut);
 
 void        u_benc_all(void);
-
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif
 

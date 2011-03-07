@@ -59,7 +59,7 @@ char *str_dupn(const char *str, size_t str_len_cch)
 
     if (!str)
         return NULL;
-    copy = memdup((void *)str, str_len_cch + 1);
+    copy = (char *)memdup((void *)str, str_len_cch + 1);
     if (copy)
         copy[str_len_cch] = 0;
     return copy;
@@ -350,7 +350,7 @@ char *mem_to_hexstr(const unsigned char *buf, int len)
 {
     int i;
     /* 2 hex chars per byte, +1 for terminating 0 */
-    char *ret = calloc((size_t)len + 1, 2);
+    char *ret = (char *)calloc((size_t)len + 1, 2);
     if (!ret)
         return NULL;
     for (i = 0; i < len; i++) {
@@ -379,13 +379,13 @@ static char *multibyte_to_multibyte(const char *src, UINT CodePage1, UINT CodePa
     char *res = NULL;
     WCHAR *tmp;
     int requiredBufSize = MultiByteToWideChar(CodePage1, 0, src, -1, NULL, 0);
-    tmp = calloc(requiredBufSize, sizeof(WCHAR));
+    tmp = SAZA(WCHAR, requiredBufSize);
     if (!tmp)
         return NULL;
     MultiByteToWideChar(CodePage1, 0, src, -1, tmp, requiredBufSize);
 
     requiredBufSize = WideCharToMultiByte(CodePage2, 0, tmp, -1, NULL, 0, NULL, NULL);
-    res = malloc(requiredBufSize);
+    res = SAZA(char, requiredBufSize);
     if (res)
         WideCharToMultiByte(CodePage2, 0, tmp, -1, res, requiredBufSize, NULL, NULL);
     free(tmp);

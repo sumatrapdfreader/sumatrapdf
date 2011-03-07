@@ -7,11 +7,6 @@
 
 /* Utilities to help in common windows programming tasks */
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-
 /* constant to make it easier to return proper LRESULT values when handling
    various windows messages */
 #define WM_KILLFOCUS_HANDLED 0
@@ -67,9 +62,5 @@ void    draw_centered_text(HDC hdc, RECT *r, const TCHAR *txt);
 
 BOOL    IsCursorOverWindow(HWND hwnd);
 void    CenterDialog(HWND hDlg);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

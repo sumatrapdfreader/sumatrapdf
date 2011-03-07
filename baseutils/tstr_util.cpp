@@ -55,7 +55,7 @@ TCHAR *tstr_url_encode(const TCHAR *str)
             ++res_len;
     }
 
-    result = malloc((res_len + 1) * sizeof(TCHAR));
+    result = SAZA(TCHAR, res_len + 1);
     if (!result)
         return NULL;
 
@@ -96,7 +96,7 @@ int tstr_skip(const TCHAR **strp, const TCHAR *expect)
 int tstr_copy_skip_until(const TCHAR **strp, TCHAR *dst, size_t dst_size, TCHAR stop)
 {
     const TCHAR *start = *strp;
-    TCHAR *end = tstr_find_char(start, stop);
+    const TCHAR *end = tstr_find_char(start, stop);
 
     if (!end) {
         size_t len = tstr_len(*strp);
@@ -143,7 +143,7 @@ static TCHAR *tstr_parse_quoted(TCHAR **txt)
             cur++;
     }
     len = cur - strStart;
-    token = malloc((len + 1) * sizeof(TCHAR));
+    token = SAZA(TCHAR, len + 1);
     if (!token)
         return NULL;
 

@@ -3,11 +3,6 @@
 #ifndef WSTR_UTIL_H_
 #define WSTR_UTIL_H_
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-
 #define wchar_is_ws iswspace
 #define wchar_is_digit iswdigit
 
@@ -49,7 +44,4 @@ void win32_dbg_outW(const WCHAR *format, ...);
   #define DBG_OUT_W(format, ...) ((void)0)
 #endif
 
-#ifdef __cplusplus
-}
-#endif
 #endif

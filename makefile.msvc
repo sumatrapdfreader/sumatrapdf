@@ -158,9 +158,6 @@ $(BROWSER_PLUGIN): $(BROWSER_PLUGIN_OBJS)
 	$(LD) /DLL $(LDFLAGS) $** $(LIBS_BROWSER_PLUGIN) /PDB:$*.pdb /OUT:$@
 
 # baseutils directory
-{baseutils}.c{$(O)}.obj::
-	$(CC) /TC $(SUMATRA_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
-
 {baseutils}.cpp{$(O)}.obj::
 	$(CC) $(SUMATRA_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
 
@@ -173,9 +170,6 @@ $(BROWSER_PLUGIN): $(BROWSER_PLUGIN_OBJS)
 # SumatraPDF app directory
 {src}.cpp{$(O)}.obj::
 	$(CC) $(SUMATRA_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
-
-{src}.c{$(O)}.obj::
-	$(CC) /TC $(SUMATRA_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
 
 # browserplugin directory
 {src\browserplugin}.c{$(O)}.obj::

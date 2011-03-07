@@ -29,31 +29,28 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="baseutils\base_util.c">
+    <ClCompile Include="baseutils\base_util.cpp">
       <Filter>baseutils</Filter>
     </ClCompile>
-    <ClCompile Include="baseutils\benc_util.c">
+    <ClCompile Include="baseutils\benc_util.cpp">
       <Filter>baseutils</Filter>
     </ClCompile>
-    <ClCompile Include="baseutils\file_util.c">
+    <ClCompile Include="baseutils\file_util.cpp">
       <Filter>baseutils</Filter>
     </ClCompile>
-    <ClCompile Include="baseutils\geom_util.c">
+    <ClCompile Include="baseutils\geom_util.cpp">
       <Filter>baseutils</Filter>
     </ClCompile>
-    <ClCompile Include="baseutils\strlist_util.c">
-      <Filter>baseutils</Filter>
-    </ClCompile>
-    <ClCompile Include="baseutils\str_util.c">
+    <ClCompile Include="baseutils\str_util.cpp">
       <Filter>baseutils</Filter>
     </ClCompile>
     <ClCompile Include="baseutils\WinUtil.cpp">
       <Filter>baseutils</Filter>
     </ClCompile>
-    <ClCompile Include="baseutils\win_util.c">
+    <ClCompile Include="baseutils\win_util.cpp">
       <Filter>baseutils</Filter>
     </ClCompile>
-    <ClCompile Include="baseutils\wstr_util.c">
+    <ClCompile Include="baseutils\wstr_util.cpp">
       <Filter>baseutils</Filter>
     </ClCompile>
     <ClCompile Include="ext\jbig2dec\jbig2.c">
@@ -311,7 +308,7 @@
     <ClCompile Include="src\translations.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\translations_txt.c">
+    <ClCompile Include="src\translations_txt.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\SumatraAbout.cpp">
@@ -550,7 +547,13 @@
     <ClInclude Include="baseutils\tstr_util.h">
       <Filter>baseutils</Filter>
     </ClInclude>
-    <ClInclude Include="baseutils\WinUtil.hpp">
+    <ClInclude Include="baseutils\Vec.h">
+      <Filter>baseutils</Filter>
+    </ClInclude>
+    <ClInclude Include="baseutils\vstrlist.h">
+      <Filter>baseutils</Filter>
+    </ClInclude>
+    <ClInclude Include="baseutils\WinUtil.h">
       <Filter>baseutils</Filter>
     </ClInclude>
     <ClInclude Include="baseutils\win_util.h">

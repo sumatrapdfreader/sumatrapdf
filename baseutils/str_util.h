@@ -7,11 +7,6 @@
 #include "stdint.h"
 #endif
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-
 /* DOS is 0xd 0xa */
 #define DOS_NEWLINE "\x0d\x0a"
 /* Mac is single 0xd */
@@ -91,7 +86,4 @@ size_t  digits_for_number(int64_t num);
 void str_util_test(void);
 #endif
 
-#ifdef __cplusplus
-}
-#endif
 #endif

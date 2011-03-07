@@ -9,11 +9,6 @@
 #include "str_util.h"
 #include "wstr_util.h"
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-
 #define DIR_SEP_TSTR _T(DIR_SEP_STR)
 #ifdef UNICODE
 #define CF_T_TEXT CF_UNICODETEXT
@@ -114,7 +109,4 @@ int       tstr_skip(const TCHAR **strp, const TCHAR *expect);
 int       tstr_copy_skip_until(const TCHAR **strp, TCHAR *dst, size_t dst_size, TCHAR stop);
 TCHAR *   tstr_parse_possibly_quoted(TCHAR **txt);
 
-#ifdef __cplusplus
-}
-#endif
 #endif

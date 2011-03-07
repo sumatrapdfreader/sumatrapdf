@@ -3,11 +3,6 @@
 #ifndef GEOM_UTIL_H_
 #define GEOM_UTIL_H_
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-
 typedef struct RectI {
     int x, y;
     int dx, dy;
@@ -30,12 +25,6 @@ RectI  RectI_FromRECT(RECT *rIn);
 int    RectD_Inside(RectD *r, double x, double y);
 void   u_RectI_Intersect(void);
 
-#ifdef __cplusplus
-}
-#endif
-
-/* allow using from both C and C++ code */
-#ifdef __cplusplus
 class PointI {
 public:
     PointI() { x = 0; y = 0; }
@@ -80,7 +69,5 @@ private:
     double m_dx;
     double m_dy;
 };
-
-#endif
 
 #endif

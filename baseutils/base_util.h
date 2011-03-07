@@ -82,11 +82,6 @@
 
 #define dimof(X)    (sizeof(X)/sizeof((X)[0]))
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-
 /* TODO: consider using standard C macros for SWAP */
 void        swap_int(int *one, int *two);
 void        swap_double(double *one, double *two);
@@ -94,11 +89,6 @@ void        swap_double(double *one, double *two);
 void *      memdup(void *data, size_t len);
 #define     _memdup(ptr) memdup(ptr, sizeof(*(ptr)))
 
-#ifdef __cplusplus
-}
-#endif
-
-#ifdef __cplusplus
 class ScopedCritSec
 {
     CRITICAL_SECTION *cs;
@@ -129,7 +119,5 @@ class CallbackFunc
 public:
     virtual void Callback(void *arg=NULL) = 0;
 };
-
-#endif
 
 #endif

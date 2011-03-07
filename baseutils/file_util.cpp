@@ -7,17 +7,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-char *FilePath_ConcatA(const char *path, const char *name)
-{
-    assert(path && name && *path);
-    if (!path || !name || !*path) return NULL;
-
-    if (char_is_dir_sep(path[str_len(path) - 1]))
-        return str_cat(path, name);
-    else
-        return str_cat3(path, DIR_SEP_STR, name);
-}
-
 const TCHAR *FilePath_GetBaseName(const TCHAR *path)
 {
     const TCHAR *fileBaseName = path + tstr_len(path);
@@ -69,7 +58,7 @@ TCHAR *FilePath_Normalize(const TCHAR *f, BOOL bLowerCase)
     cb = GetFullPathName(f, 0, NULL, NULL);
     if (!cb)
         return NULL;
-    path = malloc(sizeof(TCHAR) * cb);
+    path = SAZA(TCHAR, cb);
     if (!path)
         return NULL;
     GetFullPathName(f, cb, path, NULL);
@@ -78,7 +67,7 @@ TCHAR *FilePath_Normalize(const TCHAR *f, BOOL bLowerCase)
     cb = GetLongPathName(path, NULL, 0);
     if (!cb)
         return path;
-    tmp = realloc(path, sizeof(TCHAR) * cb);
+    tmp = (TCHAR *)realloc(path, sizeof(TCHAR) * cb);
     if (!tmp)
         return path;
     path = tmp;
@@ -211,7 +200,7 @@ char *file_read_all(const TCHAR *file_path, size_t *file_size_out)
     /* allocate one byte more and 0-terminate just in case it's a text
        file we'll want to treat as C string. Doesn't hurt for binary
        files */
-    data = malloc(size + 1);
+    data = SAZA(char, size + 1);
     if (!data)
         goto Exit;
     data[size] = 0;
