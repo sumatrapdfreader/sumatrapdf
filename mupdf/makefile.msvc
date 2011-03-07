@@ -194,17 +194,14 @@ JPEG_OBJS = \
 !else
 
 JPEG_TURBO_OBJS = \
-	$(OT)\jcapimin.obj $(OT)\jcapistd.obj $(OT)\jccoefct.obj $(OT)\jccolor.obj \
-	$(OT)\jcdctmgr.obj $(OT)\jchuff.obj $(OT)\jcinit.obj $(OT)\jcmainct.obj $(OT)\jcmarker.obj \
-	$(OT)\jcmaster.obj $(OT)\jcomapi.obj $(OT)\jcparam.obj \
-	$(OT)\jcprepct.obj $(OT)\jcsample.obj $(OT)\jctrans.obj $(OT)\jdapimin.obj $(OT)\jdapistd.obj \
+	$(OT)\jcomapi.obj $(OT)\jdapimin.obj $(OT)\jdapistd.obj \
 	$(OT)\jdatadst.obj $(OT)\jdatasrc.obj $(OT)\jdcoefct.obj $(OT)\jdcolor.obj $(OT)\jddctmgr.obj \
 	$(OT)\jdhuff.obj $(OT)\jdinput.obj $(OT)\jdmainct.obj $(OT)\jdmarker.obj $(OT)\jdmaster.obj \
 	$(OT)\jdmerge.obj $(OT)\jdpostct.obj $(OT)\jdsample.obj $(OT)\jdtrans.obj $(OT)\jerror.obj \
 	$(OT)\jfdctflt.obj $(OT)\jfdctint.obj $(OT)\jidctflt.obj $(OT)\jidctfst.obj $(OT)\jidctint.obj \
 	$(OT)\jquant1.obj $(OT)\jquant2.obj $(OT)\jutils.obj $(OT)\jmemmgr.obj $(OT)\jmemnobs.obj \
-	$(OT)\jaricom.obj $(OT)\jcarith.obj $(OT)\jdarith.obj $(OT)\jfdctfst.obj \
-	$(OT)\jidctred.obj $(OT)\jdphuff.obj $(OT)\jcphuff.obj
+	$(OT)\jaricom.obj $(OT)\jdarith.obj $(OT)\jfdctfst.obj \
+	$(OT)\jidctred.obj
 
 !if "$(PLATFORM)"=="X64"
 JPEG_TURBO_OBJS = $(JPEG_TURBO_OBJS) \
