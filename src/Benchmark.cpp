@@ -2,7 +2,7 @@
 #include <tchar.h>
 #include "Benchmark.h"
 #include "PdfEngine.h"
-#include "WinUtil.hpp"
+#include "WinUtil.h"
 #include "file_util.h"
 
 #define logbench(msg, ...) _ftprintf(stderr, _T(msg), __VA_ARGS__)

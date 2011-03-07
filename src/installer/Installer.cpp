@@ -27,7 +27,7 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include "tstr_util.h"
 #include "file_util.h"
 #include "win_util.h"
-#include "WinUtil.hpp"
+#include "WinUtil.h"
 #include "Version.h"
 #include "../ifilter/PdfFilter.h"
 

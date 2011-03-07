@@ -7,7 +7,7 @@
 #include "Resource.h"
 #include "file_util.h"
 #include "tstr_util.h"
-#include "WinUtil.hpp"
+#include "WinUtil.h"
 
 WindowInfo::WindowInfo(HWND hwnd) :
     dm(NULL), state(WS_ABOUT), hwndFrame(hwnd),

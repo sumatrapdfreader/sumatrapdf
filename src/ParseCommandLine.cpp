@@ -2,7 +2,7 @@
 #include "base_util.h"
 #include "tstr_util.h"
 #include "vstrlist.h"
-#include "WinUtil.hpp"
+#include "WinUtil.h"
 #include "ParseCommandLine.h"
 #include "Benchmark.h"
 #include "WindowInfo.h"

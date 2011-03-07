@@ -8,7 +8,7 @@
 #include "AppPrefs.h"
 #include "translations.h"
 #include "win_util.h"
-#include "WinUtil.hpp"
+#include "WinUtil.h"
 #include "AppTools.h"
 #include "vstrlist.h"
 

@@ -4,7 +4,7 @@
 
 #include "base_util.h"
 #include "tstr_util.h"
-#include "WinUtil.hpp"
+#include "WinUtil.h"
 #include "translations.h"
 
 typedef BOOL WINAPI MiniDumpWriteProc(

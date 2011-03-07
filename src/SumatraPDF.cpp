@@ -24,7 +24,7 @@
 #include "AppTools.h"
 
 #include "win_util.h"
-#include "WinUtil.hpp"
+#include "WinUtil.h"
 #include "Http.h"
 #include "CrashHandler.h"
 #include "ParseCommandLine.h"

@@ -8,7 +8,7 @@
 #include "Version.h"
 #include "AppPrefs.h"
 #include "win_util.h"
-#include "WinUtil.hpp"
+#include "WinUtil.h"
 #include "AppTools.h"
 
 #define ABOUT_LINE_OUTER_SIZE       2

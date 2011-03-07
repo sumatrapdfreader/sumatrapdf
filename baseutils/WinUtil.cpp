@@ -3,13 +3,14 @@
    Take all the code you want, we'll just write more.
 */
 
-#include "base_util.h"
-#include "WinUtil.hpp"
-#include "tstr_util.h"
 #include <shlwapi.h>
 #include <shlobj.h>
 #include <io.h>
 #include <fcntl.h>
+
+#include "base_util.h"
+#include "WinUtil.h"
+#include "tstr_util.h"
 
 #define DONT_INHERIT_HANDLES FALSE
 

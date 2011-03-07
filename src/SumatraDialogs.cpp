@@ -9,7 +9,7 @@
 #include "Resource.h"
 
 #include "win_util.h"
-#include "WinUtil.hpp"
+#include "WinUtil.h"
 #include "dialogsizer.h"
 #include "LangMenuDef.h"
 #include "translations.h"

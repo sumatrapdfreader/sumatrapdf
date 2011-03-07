@@ -4,7 +4,7 @@
 #include "SumatraPDF.h"
 #include "tstr_util.h"
 #include "file_util.h"
-#include "WinUtil.hpp"
+#include "WinUtil.h"
 #include "LangMenuDef.h"
 #include "translations.h"
 #include "AppTools.h"
