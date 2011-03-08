@@ -1,8 +1,8 @@
 #include <time.h>
 
 #include "BaseUtil.h"
-#include "tstr_util.h"
-#include "geom_util.h"
+#include "TStrUtil.h"
+#include "GeomUtil.h"
 #include "BencUtil.h"
 #include "ParseCommandLine.h"
 #include "AppTools.h"

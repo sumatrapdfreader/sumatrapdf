@@ -17,8 +17,8 @@ __pragma(warning(pop))
 }
 
 #include "BaseUtil.h"
-#include "geom_util.h"
-#include "tstr_util.h"
+#include "GeomUtil.h"
+#include "TStrUtil.h"
 
 #define INVALID_PAGE_NO     -1
 #define INVALID_ROTATION    -1

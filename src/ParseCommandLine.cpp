@@ -1,6 +1,6 @@
 #include "SumatraPDF.h"
 #include "BaseUtil.h"
-#include "tstr_util.h"
+#include "TStrUtil.h"
 #include "vstrlist.h"
 #include "WinUtil.h"
 #include "ParseCommandLine.h"

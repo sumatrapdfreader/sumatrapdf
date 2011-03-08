@@ -7,7 +7,7 @@
 #include <stdio.h>
 
 #include "FileHistory.h"
-#include "tstr_util.h"
+#include "TStrUtil.h"
 
 /* Handling of file history list.
 

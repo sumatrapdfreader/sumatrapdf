@@ -4,7 +4,7 @@
 #ifndef HTTP_H__
 #define HTTP_H__
 
-#include "tstr_util.h"
+#include "TStrUtil.h"
 #include "Vec.h"
 
 class HttpReqCtx {

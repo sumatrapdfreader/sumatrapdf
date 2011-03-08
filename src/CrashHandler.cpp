@@ -3,7 +3,7 @@
 #include "CrashHandler.h"
 
 #include "BaseUtil.h"
-#include "tstr_util.h"
+#include "TStrUtil.h"
 #include "WinUtil.h"
 #include "translations.h"
 

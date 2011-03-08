@@ -10,7 +10,7 @@
 #include <time.h>
 
 #include "BaseUtil.h"
-#include "tstr_util.h"
+#include "TStrUtil.h"
 #include "FileUtil.h"
 #include "Vec.h"
 

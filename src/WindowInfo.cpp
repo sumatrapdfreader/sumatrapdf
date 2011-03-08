@@ -6,7 +6,7 @@
 #include "PdfSync.h"
 #include "Resource.h"
 #include "FileUtil.h"
-#include "tstr_util.h"
+#include "TStrUtil.h"
 #include "WinUtil.h"
 
 WindowInfo::WindowInfo(HWND hwnd) :

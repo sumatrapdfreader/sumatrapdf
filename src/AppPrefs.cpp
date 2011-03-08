@@ -3,7 +3,7 @@
 
 #include "BaseUtil.h"
 #include "BencUtil.h"
-#include "tstr_util.h"
+#include "TStrUtil.h"
 #include "FileUtil.h"
 
 #include "AppPrefs.h"

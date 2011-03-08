@@ -2,7 +2,7 @@
    License: GPLv3 */
 
 #include "SumatraPDF.h"
-#include "tstr_util.h"
+#include "TStrUtil.h"
 #include "FileUtil.h"
 #include "WinUtil.h"
 #include "LangMenuDef.h"

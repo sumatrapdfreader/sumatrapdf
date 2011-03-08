@@ -5,7 +5,7 @@
 #define _WINDOWINFO_H_
 
 #include <shlobj.h>
-#include "geom_util.h"
+#include "GeomUtil.h"
 #include "DisplayState.h"
 #include "FileWatch.h"
 #include "PdfSearch.h"

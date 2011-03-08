@@ -1,6 +1,6 @@
 // By william blum, 2008
 #include "FileWatch.h"
-#include "tstr_util.h"
+#include "TStrUtil.h"
 #include "FileUtil.h"
 
 // Get the directory name from a full file path and copy it to pszDir
