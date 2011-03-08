@@ -4,7 +4,7 @@
 #ifndef SUMATRAPDF_H_
 #define SUMATRAPDF_H_
 
-#include "base_util.h"
+#include "BaseUtil.h"
 
 #define APP_NAME_STR            _T("SumatraPDF")
 #define FRAME_CLASS_NAME        _T("SUMATRA_PDF_FRAME")

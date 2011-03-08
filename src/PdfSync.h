@@ -9,9 +9,9 @@
 #include <assert.h>
 #include <time.h>
 
-#include "base_util.h"
+#include "BaseUtil.h"
 #include "tstr_util.h"
-#include "file_util.h"
+#include "FileUtil.h"
 #include "Vec.h"
 
 // size of the mark highlighting the location calculated by forward-search

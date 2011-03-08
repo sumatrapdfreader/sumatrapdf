@@ -1,6 +1,6 @@
 /* Written by Krzysztof Kowalczyk (http://blog.kowalczyk.info)
    The author disclaims copyright to this source code. */
-#include "base_util.h"
+#include "BaseUtil.h"
 #include "geom_util.h"
 
 /* Return true if 'r1' and 'r2' intersect and optionally

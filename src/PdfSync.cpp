@@ -1,7 +1,7 @@
 // Copyright William Blum 2008 http://william.famille-blum.org/
 // PDF-source synchronizer based on .pdfsync file
 // License: GPLv3
-#include "base_util.h"
+#include "BaseUtil.h"
 #include "WindowInfo.h"
 #include "DisplayModel.h"
 #include "Resource.h"

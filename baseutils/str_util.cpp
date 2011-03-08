@@ -2,7 +2,7 @@
    The author disclaims copyright to this source code. */
 
 /* The most basic things, including string handling functions */
-#include "base_util.h"
+#include "BaseUtil.h"
 #include "str_util.h"
 
 char * str_cat_s(char * dst, size_t dst_cch_size, const char * src)

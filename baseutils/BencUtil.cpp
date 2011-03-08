@@ -6,8 +6,8 @@
    http://en.wikipedia.org/wiki/Bencode or
    http://wiki.theory.org/BitTorrentSpecification
 */
-#include "base_util.h"
-#include "benc_util.h"
+#include "BaseUtil.h"
+#include "BencUtil.h"
 #include "tstr_util.h"
 
 #define IVALID_LEN (size_t)-1
@@ -1069,7 +1069,7 @@ void benc_obj_delete(benc_obj *bobj)
 
 
 #ifndef NDEBUG
-#include "file_util.h"
+#include "FileUtil.h"
 
 static void test_parse_torrent(const TCHAR *fileName)
 {

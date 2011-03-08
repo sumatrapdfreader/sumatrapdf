@@ -43,12 +43,12 @@
   those pages to a bitmap and display those bitmaps.
 */
 
-#include "base_util.h"
+#include "BaseUtil.h"
 #include "WindowInfo.h"
 #include "DisplayModel.h"
 #include "Resource.h"
 #include "win_util.h"
-#include "file_util.h"
+#include "FileUtil.h"
 
 #ifndef DEBUG
 #define PREDICTIVE_RENDER 1

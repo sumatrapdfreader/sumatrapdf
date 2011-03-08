@@ -3,7 +3,7 @@
 
 #include "SumatraPDF.h"
 #include "tstr_util.h"
-#include "file_util.h"
+#include "FileUtil.h"
 #include "WinUtil.h"
 #include "LangMenuDef.h"
 #include "translations.h"

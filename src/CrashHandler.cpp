@@ -2,7 +2,7 @@
 #include <dbghelp.h>
 #include "CrashHandler.h"
 
-#include "base_util.h"
+#include "BaseUtil.h"
 #include "tstr_util.h"
 #include "WinUtil.h"
 #include "translations.h"

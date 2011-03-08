@@ -1,7 +1,7 @@
 #ifndef Vec_h
 #define Vec_h
 
-#include "base_util.h"
+#include "BaseUtil.h"
 
 /* Simple but also optimized for small sizes vector/array class that can
 store pointer types or POD types

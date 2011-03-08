@@ -23,9 +23,9 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include <unzip.h>
 
 #include "Resource.h"
-#include "base_util.h"
+#include "BaseUtil.h"
 #include "tstr_util.h"
-#include "file_util.h"
+#include "FileUtil.h"
 #include "win_util.h"
 #include "WinUtil.h"
 #include "Version.h"

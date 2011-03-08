@@ -3,7 +3,7 @@
 #ifndef DISPLAY_STATE_H_
 #define DISPLAY_STATE_H_
 
-#include "base_util.h"
+#include "BaseUtil.h"
 
 enum DisplayMode {
     DM_FIRST = 0,

@@ -1,9 +1,9 @@
 #include <time.h>
 
-#include "base_util.h"
+#include "BaseUtil.h"
 #include "tstr_util.h"
 #include "geom_util.h"
-#include "benc_util.h"
+#include "BencUtil.h"
 #include "ParseCommandLine.h"
 #include "AppTools.h"
 #include "Vec.h"

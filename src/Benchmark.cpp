@@ -3,7 +3,7 @@
 #include "Benchmark.h"
 #include "PdfEngine.h"
 #include "WinUtil.h"
-#include "file_util.h"
+#include "FileUtil.h"
 
 #define logbench(msg, ...) _ftprintf(stderr, _T(msg), __VA_ARGS__)
 

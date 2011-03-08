@@ -2,7 +2,7 @@
    The author disclaims copyright to this source code. */
 
 /* The most basic things, including string handling functions */
-#include "base_util.h"
+#include "BaseUtil.h"
 #include "wstr_util.h"
 
 WCHAR * wstr_cat_s(WCHAR * dest, size_t dst_cch_size, const WCHAR * src)

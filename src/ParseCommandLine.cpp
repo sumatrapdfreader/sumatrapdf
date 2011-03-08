@@ -1,5 +1,5 @@
 #include "SumatraPDF.h"
-#include "base_util.h"
+#include "BaseUtil.h"
 #include "tstr_util.h"
 #include "vstrlist.h"
 #include "WinUtil.h"

@@ -2,7 +2,7 @@
    The author disclaims copyright to this source code. */
 
 /* The most basic things, including string handling functions */
-#include "base_util.h"
+#include "BaseUtil.h"
 #include "tstr_util.h"
 
 /* replace in <str> the chars from <oldChars> with their equivalents

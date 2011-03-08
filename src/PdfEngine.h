@@ -16,7 +16,7 @@ __pragma(warning(pop))
 #endif
 }
 
-#include "base_util.h"
+#include "BaseUtil.h"
 #include "geom_util.h"
 #include "tstr_util.h"
 

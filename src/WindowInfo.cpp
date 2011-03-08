@@ -5,7 +5,7 @@
 #include "WindowInfo.h"
 #include "PdfSync.h"
 #include "Resource.h"
-#include "file_util.h"
+#include "FileUtil.h"
 #include "tstr_util.h"
 #include "WinUtil.h"
 

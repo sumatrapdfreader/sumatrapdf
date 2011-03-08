@@ -1,7 +1,7 @@
 // By william blum, 2008
 #include "FileWatch.h"
 #include "tstr_util.h"
-#include "file_util.h"
+#include "FileUtil.h"
 
 // Get the directory name from a full file path and copy it to pszDir
 bool GetDirectory(LPCTSTR pszFile, PTSTR pszDir, size_t cchDir)
