@@ -8,7 +8,7 @@ TryExec=mupdf
 Icon=mupdf
 Terminal=false
 Type=Application
-MimeType=application/pdf;pplication/x-pdf;
+MimeType=application/pdf;application/x-pdf;
 Categories=Viewer;Graphics;
 
 [Desktop Action View]

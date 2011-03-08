@@ -157,13 +157,13 @@ psinitstack(psstack *st)
 static inline int
 psoverflow(psstack *st, int n)
 {
-	return st->sp + n >= nelem(st->stack) || n < 0;
+	return n < 0 || st->sp + n >= nelem(st->stack);
 }
 
 static inline int
 psunderflow(psstack *st, int n)
 {
-	return st->sp - n < 0 || n < 0;
+	return n < 0 || st->sp - n < 0;
 }
 
 static inline int
@@ -184,7 +184,8 @@ pspushbool(psstack *st, int b)
 	if (!psoverflow(st, 1))
 	{
 		st->stack[st->sp].type = PSBOOL;
-		st->stack[st->sp++].u.b = b;
+		st->stack[st->sp].u.b = b;
+		st->sp++;
 	}
 }
 
@@ -194,7 +195,8 @@ pspushint(psstack *st, int n)
 	if (!psoverflow(st, 1))
 	{
 		st->stack[st->sp].type = PSINT;
-		st->stack[st->sp++].u.i = n;
+		st->stack[st->sp].u.i = n;
+		st->sp++;
 	}
 }
 
@@ -204,7 +206,8 @@ pspushreal(psstack *st, float n)
 	if (!psoverflow(st, 1))
 	{
 		st->stack[st->sp].type = PSREAL;
-		st->stack[st->sp++].u.f = n;
+		st->stack[st->sp].u.f = n;
+		st->sp++;
 	}
 }
 
