@@ -61,6 +61,14 @@
   <ItemDefinitionGroup>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="baseutils\BaseUtil.cpp" />
+    <ClCompile Include="baseutils\BencUtil.cpp" />
+    <ClCompile Include="baseutils\FileUtil.cpp" />
+    <ClCompile Include="baseutils\GeomUtil.cpp" />
+    <ClCompile Include="baseutils\StrUtil.cpp" />
+    <ClCompile Include="baseutils\TStrUtil.cpp" />
+    <ClCompile Include="baseutils\WinUtil.cpp" />
+    <ClCompile Include="baseutils\WStrUtil.cpp" />
     <ClCompile Include="ext\libjpeg-turbo\jaricom.c" />
     <ClCompile Include="ext\libjpeg-turbo\jcapimin.c" />
     <ClCompile Include="ext\libjpeg-turbo\jcapistd.c" />
@@ -142,15 +150,7 @@
     <ClCompile Include="src\SumatraProperties.cpp" />
     <ClCompile Include="src\translations.cpp" />
     <ClCompile Include="src\translations_txt.cpp" />
-    <ClCompile Include="baseutils\base_util.cpp" />
-    <ClCompile Include="baseutils\benc_util.cpp" />
-    <ClCompile Include="baseutils\file_util.cpp" />
-    <ClCompile Include="baseutils\geom_util.cpp" />
-    <ClCompile Include="baseutils\str_util.cpp" />
     <ClCompile Include="baseutils\strlist_util.cpp" />
-    <ClCompile Include="baseutils\win_util.cpp" />
-    <ClCompile Include="baseutils\WinUtil.cpp" />
-    <ClCompile Include="baseutils\wstr_util.cpp" />
     <ClCompile Include="mupdf\fitz\base_error.c" />
     <ClCompile Include="mupdf\fitz\base_hash.c" />
     <ClCompile Include="mupdf\fitz\base_memory.c" />
@@ -228,6 +228,16 @@
     <ClCompile Include="src\WindowInfo.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="baseutils\BaseUtil.h" />
+    <ClInclude Include="baseutils\BencUtil.h" />
+    <ClInclude Include="baseutils\FileUtil.h" />
+    <ClInclude Include="baseutils\GeomUtil.h" />
+    <ClInclude Include="baseutils\StrUtil.h" />
+    <ClInclude Include="baseutils\TStrUtil.h" />
+    <ClInclude Include="baseutils\Vec.h" />
+    <ClInclude Include="baseutils\vstrlist.h" />
+    <ClInclude Include="baseutils\WinUtil.h" />
+    <ClInclude Include="baseutils\WStrUtil.h" />
     <ClInclude Include="ext\libjpeg-turbo\jchuff.h" />
     <ClInclude Include="ext\libjpeg-turbo\jconfig.h" />
     <ClInclude Include="ext\libjpeg-turbo\jdct.h" />
@@ -261,19 +271,7 @@
     <ClInclude Include="src\translations.h" />
     <ClInclude Include="src\translations_txt.h" />
     <ClInclude Include="src\Version.h" />
-    <ClInclude Include="baseutils\base_util.h" />
-    <ClInclude Include="baseutils\benc_util.h" />
-    <ClInclude Include="baseutils\file_util.h" />
-    <ClInclude Include="baseutils\geom_util.h" />
-    <ClInclude Include="baseutils\str_strsafe.h" />
-    <ClInclude Include="baseutils\str_util.h" />
-    <ClInclude Include="baseutils\strlist_util.h" />
-    <ClInclude Include="baseutils\tstr_util.h" />
-    <ClInclude Include="baseutils\Vec.h" />
-    <ClInclude Include="baseutils\vstrlist.h" />
-    <ClInclude Include="baseutils\win_util.h" />
     <ClInclude Include="baseutils\WinUtil.hpp" />
-    <ClInclude Include="baseutils\wstr_util.h" />
     <ClInclude Include="mupdf\fitz\fitz.h" />
     <ClInclude Include="mupdf\mupdf\mupdf.h" />
     <ClInclude Include="ext\jbig2dec\config_win32.h" />

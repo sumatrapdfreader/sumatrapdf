@@ -29,30 +29,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="baseutils\base_util.cpp">
-      <Filter>baseutils</Filter>
-    </ClCompile>
-    <ClCompile Include="baseutils\benc_util.cpp">
-      <Filter>baseutils</Filter>
-    </ClCompile>
-    <ClCompile Include="baseutils\file_util.cpp">
-      <Filter>baseutils</Filter>
-    </ClCompile>
-    <ClCompile Include="baseutils\geom_util.cpp">
-      <Filter>baseutils</Filter>
-    </ClCompile>
-    <ClCompile Include="baseutils\str_util.cpp">
-      <Filter>baseutils</Filter>
-    </ClCompile>
-    <ClCompile Include="baseutils\WinUtil.cpp">
-      <Filter>baseutils</Filter>
-    </ClCompile>
-    <ClCompile Include="baseutils\win_util.cpp">
-      <Filter>baseutils</Filter>
-    </ClCompile>
-    <ClCompile Include="baseutils\wstr_util.cpp">
-      <Filter>baseutils</Filter>
-    </ClCompile>
     <ClCompile Include="ext\jbig2dec\jbig2.c">
       <Filter>jbig2dec</Filter>
     </ClCompile>
@@ -521,47 +497,35 @@
     <ClCompile Include="src\UnitTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="baseutils\strlist_util.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="baseutils\BaseUtil.cpp">
+      <Filter>baseutils</Filter>
+    </ClCompile>
+    <ClCompile Include="baseutils\BencUtil.cpp">
+      <Filter>baseutils</Filter>
+    </ClCompile>
+    <ClCompile Include="baseutils\FileUtil.cpp">
+      <Filter>baseutils</Filter>
+    </ClCompile>
+    <ClCompile Include="baseutils\GeomUtil.cpp">
+      <Filter>baseutils</Filter>
+    </ClCompile>
+    <ClCompile Include="baseutils\StrUtil.cpp">
+      <Filter>baseutils</Filter>
+    </ClCompile>
+    <ClCompile Include="baseutils\TStrUtil.cpp">
+      <Filter>baseutils</Filter>
+    </ClCompile>
+    <ClCompile Include="baseutils\WinUtil.cpp">
+      <Filter>baseutils</Filter>
+    </ClCompile>
+    <ClCompile Include="baseutils\WStrUtil.cpp">
+      <Filter>baseutils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="baseutils\base_util.h">
-      <Filter>baseutils</Filter>
-    </ClInclude>
-    <ClInclude Include="baseutils\benc_util.h">
-      <Filter>baseutils</Filter>
-    </ClInclude>
-    <ClInclude Include="baseutils\file_util.h">
-      <Filter>baseutils</Filter>
-    </ClInclude>
-    <ClInclude Include="baseutils\geom_util.h">
-      <Filter>baseutils</Filter>
-    </ClInclude>
-    <ClInclude Include="baseutils\strlist_util.h">
-      <Filter>baseutils</Filter>
-    </ClInclude>
-    <ClInclude Include="baseutils\str_strsafe.h">
-      <Filter>baseutils</Filter>
-    </ClInclude>
-    <ClInclude Include="baseutils\str_util.h">
-      <Filter>baseutils</Filter>
-    </ClInclude>
-    <ClInclude Include="baseutils\tstr_util.h">
-      <Filter>baseutils</Filter>
-    </ClInclude>
-    <ClInclude Include="baseutils\Vec.h">
-      <Filter>baseutils</Filter>
-    </ClInclude>
-    <ClInclude Include="baseutils\vstrlist.h">
-      <Filter>baseutils</Filter>
-    </ClInclude>
-    <ClInclude Include="baseutils\WinUtil.h">
-      <Filter>baseutils</Filter>
-    </ClInclude>
-    <ClInclude Include="baseutils\win_util.h">
-      <Filter>baseutils</Filter>
-    </ClInclude>
-    <ClInclude Include="baseutils\wstr_util.h">
-      <Filter>baseutils</Filter>
-    </ClInclude>
     <ClInclude Include="ext\jbig2dec\config_win32.h">
       <Filter>jbig2dec</Filter>
     </ClInclude>
@@ -714,6 +678,37 @@
     </ClInclude>
     <ClInclude Include="src\WindowInfo.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="baseutils\WinUtil.hpp" />
+    <ClInclude Include="baseutils\BaseUtil.h">
+      <Filter>baseutils</Filter>
+    </ClInclude>
+    <ClInclude Include="baseutils\BencUtil.h">
+      <Filter>baseutils</Filter>
+    </ClInclude>
+    <ClInclude Include="baseutils\FileUtil.h">
+      <Filter>baseutils</Filter>
+    </ClInclude>
+    <ClInclude Include="baseutils\GeomUtil.h">
+      <Filter>baseutils</Filter>
+    </ClInclude>
+    <ClInclude Include="baseutils\StrUtil.h">
+      <Filter>baseutils</Filter>
+    </ClInclude>
+    <ClInclude Include="baseutils\TStrUtil.h">
+      <Filter>baseutils</Filter>
+    </ClInclude>
+    <ClInclude Include="baseutils\Vec.h">
+      <Filter>baseutils</Filter>
+    </ClInclude>
+    <ClInclude Include="baseutils\vstrlist.h">
+      <Filter>baseutils</Filter>
+    </ClInclude>
+    <ClInclude Include="baseutils\WinUtil.h">
+      <Filter>baseutils</Filter>
+    </ClInclude>
+    <ClInclude Include="baseutils\WStrUtil.h">
+      <Filter>baseutils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
