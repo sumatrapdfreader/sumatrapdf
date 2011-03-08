@@ -18,7 +18,6 @@
 
 #ifdef _UNICODE
   #define tchar_is_ws       wchar_is_ws
-  #define tstr_len          wstr_len
   #define tstr_dup          wstr_dup
   #define tstr_find_char    wstr_find_char
 
@@ -52,7 +51,6 @@
   #define tstr_to_wstr_q(src)               (src)
 #else
   #define tchar_is_ws       char_is_ws
-  #define tstr_len          str_len
   #define tstr_dup          str_dup
   #define tstr_find_char    str_find_char
 

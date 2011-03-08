@@ -533,7 +533,7 @@ BOOL CreateUninstaller(void)
 
     if (!gUnInstMark)
         gUnInstMark = wstr_to_utf8(UN_INST_MARK);
-    int markSize = str_len(gUnInstMark);
+    int markSize = StrLen(gUnInstMark);
 
     // find the end of the (un)installer
     char *end = (char *)memchr(installerData, *gUnInstMark, installerSize);
@@ -577,7 +577,7 @@ bool IsUninstaller()
     char *data = NULL;
     if (!gUnInstMark)
         gUnInstMark = wstr_to_utf8(UN_INST_MARK);
-    size_t markSize = str_len(gUnInstMark);
+    size_t markSize = StrLen(gUnInstMark);
 
     size_t uninstallerSize;
     char *uninstallerData = file_read_all(GetOwnPath(), &uninstallerSize);

@@ -75,7 +75,7 @@ bool ReadRegStr(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, const T
 
 bool WriteRegStr(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, const TCHAR *value)
 {
-    LONG res = SHSetValue(keySub, keyName, valName, REG_SZ, (const VOID *)value, (DWORD)(tstr_len(value) + 1) * sizeof(TCHAR));
+    LONG res = SHSetValue(keySub, keyName, valName, REG_SZ, (const VOID *)value, (DWORD)(StrLen(value) + 1) * sizeof(TCHAR));
     if (ERROR_SUCCESS != res)
         SeeLastError(res);
     return ERROR_SUCCESS == res;

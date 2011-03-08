@@ -344,7 +344,7 @@ bool PdfEngine::load(const TCHAR *fileName, PasswordUI *pwdUI)
     // embedded PDF documents (the digits are :<num>:<gen> of the embedded file stream)
     TCHAR *embedMarks = NULL;
     int colonCount = 0;
-    for (TCHAR *c = (TCHAR *)_fileName + tstr_len(_fileName); c > _fileName; c--) {
+    for (TCHAR *c = (TCHAR *)_fileName + StrLen(_fileName); c > _fileName; c--) {
         if (*c != ':')
             continue;
         if (!_istdigit(*(c + 1)))
@@ -479,7 +479,7 @@ bool PdfEngine::load(fz_stream *stm, TCHAR *password)
             okay = pwd_ansi && pdf_authenticatepassword(_xref, pwd_ansi);
         }
         // finally, try using the password as hex-encoded encryption key
-        if (!okay && tstr_len(password) == 64) {
+        if (!okay && StrLen(password) == 64) {
             ScopedMem<char> pwd_hex(tstr_to_ansi(password));
             okay = _hexstr_to_mem(pwd_hex, &_xref->crypt->key);
         }

@@ -56,7 +56,7 @@ void PdfSearch::SetText(TCHAR *text)
     this->wholeWords = false;
     if (tstr_endswith(text, _T(" "))) {
         this->wholeWords = !tstr_endswith(text, _T("  "));
-        this->findText[tstr_len(this->findText) - 1] = '\0';
+        this->findText[StrLen(this->findText) - 1] = '\0';
     }
 
     memset(this->findCache, SEARCH_PAGE, this->engine->pageCount());

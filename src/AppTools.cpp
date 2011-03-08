@@ -440,7 +440,7 @@ LPTSTR AutoDetectInverseSearchCommands(HWND hwndCombo)
         else if (editor_rules[i].Type == BinaryDir)
         {
             // remove trailing path separator (TODO: move to function in file_util.c)
-            size_t len = tstr_len(path);
+            size_t len = StrLen(path);
             if (*path && char_is_dir_sep((char)path[len-1]))
                 path[len-1] = 0;
             cmd = tstr_printf(_T("\"%s\\%s\" %s"), path, editor_rules[i].BinaryFilename, editor_rules[i].InverseSearchArgs);
@@ -516,7 +516,7 @@ void DDEExecute(LPCTSTR server, LPCTSTR topic, LPCTSTR command)
         DBG_OUT("DDE communication could not be initiated %u.", DdeGetLastError(inst));
         goto exit;
     }
-    hddedata = DdeCreateDataHandle(inst, (BYTE*)command, (DWORD)(tstr_len(command) + 1) * sizeof(TCHAR), 0, 0, CF_T_TEXT, 0);
+    hddedata = DdeCreateDataHandle(inst, (BYTE*)command, (DWORD)(StrLen(command) + 1) * sizeof(TCHAR), 0, 0, CF_T_TEXT, 0);
     if (hddedata == 0) {
         DBG_OUT("DDE communication could not be initiated %u.", DdeGetLastError(inst));
     }

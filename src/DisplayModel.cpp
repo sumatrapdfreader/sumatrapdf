@@ -1527,7 +1527,7 @@ TCHAR *DisplayModel::getTextInRegion(int pageNo, RectD *region)
 
     RectI regionI, isect;
     RectI_FromRectD(&regionI, region);
-    TCHAR *result = SAZA(TCHAR, tstr_len(pageText) + 1), *dest = result;
+    TCHAR *result = SAZA(TCHAR, StrLen(pageText) + 1), *dest = result;
     for (TCHAR *src = pageText; *src; src++) {
         if (*src != '\n') {
             fz_bbox *bbox = &coords[src - pageText];
@@ -1559,7 +1559,7 @@ TCHAR *DisplayModel::extractAllText(RenderTarget target)
     for (int pageNo = 1; pageNo <= pageCount(); pageNo++)
     {
         ScopedMem<TCHAR> s(pdfEngine->ExtractPageText(pageNo, _T(DOS_NEWLINE), NULL, target));
-        txt.Append(s, tstr_len(s));
+        txt.Append(s, StrLen(s));
     }
 
     return txt.StealData();

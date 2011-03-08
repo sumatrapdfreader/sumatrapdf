@@ -9,7 +9,7 @@
 
 const TCHAR *FilePath_GetBaseName(const TCHAR *path)
 {
-    const TCHAR *fileBaseName = path + tstr_len(path);
+    const TCHAR *fileBaseName = path + StrLen(path);
     while (fileBaseName > path) {
         if (char_is_dir_sep((char)fileBaseName[-1])) {
             return fileBaseName;

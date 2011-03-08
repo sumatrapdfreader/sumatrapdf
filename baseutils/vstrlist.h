@@ -17,13 +17,13 @@ public:
     TCHAR *Join(TCHAR *joint=NULL)
     {
         Vec<TCHAR> tmp(256, 1);
-        size_t jointLen = joint ? tstr_len(joint) : 0;
+        size_t jointLen = joint ? StrLen(joint) : 0;
         for (size_t i = 0; i < Count(); i++)
         {
             TCHAR *s = At(i);
             if (i > 0 && jointLen > 0)
                 tmp.Append(joint, jointLen);
-            tmp.Append(s, tstr_len(s));
+            tmp.Append(s, StrLen(s));
         }
         return tmp.StealData();
     }

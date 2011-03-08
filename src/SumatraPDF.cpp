@@ -2403,7 +2403,7 @@ static void CopySelectionToClipboard(WindowInfo *win)
 
         // don't copy empty text
         if (!tstr_empty(selText)) {
-            HGLOBAL handle = GlobalAlloc(GMEM_MOVEABLE, (tstr_len(selText) + 1) * sizeof(TCHAR));
+            HGLOBAL handle = GlobalAlloc(GMEM_MOVEABLE, (StrLen(selText) + 1) * sizeof(TCHAR));
             if (handle) {
                 TCHAR *globalText = (TCHAR *)GlobalLock(handle);
                 lstrcpy(globalText, selText);
@@ -3531,7 +3531,7 @@ static void OnMenuSaveAs(WindowInfo *win)
         ScopedMem<TCHAR> text(win->dm->extractAllText(Target_Export));
         ScopedMem<char> textUTF8(tstr_to_utf8(text));
         ScopedMem<char> textUTF8BOM(str_cat("\xEF\xBB\xBF", textUTF8));
-        write_to_file(realDstFileName, textUTF8BOM, str_len(textUTF8BOM));
+        write_to_file(realDstFileName, textUTF8BOM, StrLen(textUTF8BOM));
     }
     // Recreate inexistant PDF files from memory...
     else if (!file_exists(srcFileName)) {

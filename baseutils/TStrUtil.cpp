@@ -44,7 +44,7 @@ TCHAR *tstr_url_encode(const TCHAR *str)
     int             res_len = 0;
     const TCHAR *   tmp;
 
-    if (tstr_len(str) >= INT_MAX / 3)
+    if (StrLen(str) >= INT_MAX / 3)
         return NULL;
 
     /* calc the size of the string after url encoding */
@@ -80,7 +80,7 @@ TCHAR *tstr_url_encode(const TCHAR *str)
 int tstr_skip(const TCHAR **strp, const TCHAR *expect)
 {
     if (tstr_startswith(*strp, expect)) {
-        size_t len = tstr_len(expect);
+        size_t len = StrLen(expect);
         *strp += len;
         return TRUE;
     }
@@ -99,7 +99,7 @@ int tstr_copy_skip_until(const TCHAR **strp, TCHAR *dst, size_t dst_size, TCHAR 
     const TCHAR *end = tstr_find_char(start, stop);
 
     if (!end) {
-        size_t len = tstr_len(*strp);
+        size_t len = StrLen(*strp);
         *strp += len;
         return FALSE;
     }

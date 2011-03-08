@@ -120,7 +120,7 @@ static void tstr_test()
 {
     TCHAR buf[32];
     TCHAR *str = _T("a string");
-    assert(tstr_len(str) == 8);
+    assert(StrLen(str) == 8);
     assert(tstr_eq(str, _T("a string")) && tstr_eq(str, str));
     assert(!tstr_eq(str, NULL) && !tstr_eq(str, _T("A String")));
     assert(tstr_ieq(str, _T("A String")) && tstr_ieq(str, str));
@@ -152,7 +152,7 @@ static void tstr_test()
     assert(tstr_eq(str, buf));
     free(str);
     str = tstr_cat(buf, buf);
-    assert(tstr_len(str) == 2 * tstr_len(buf));
+    assert(StrLen(str) == 2 * StrLen(buf));
     free(str);
     str = tstr_cat3(_T("ab"), NULL, _T("ef"));
     assert(tstr_eq(str, _T("abef")));

@@ -520,7 +520,7 @@ void CopyPropertiesToClipboard(HWND hwnd)
     }
 
     if (OpenClipboard(NULL)) {
-        HGLOBAL handle = GlobalAlloc(GMEM_MOVEABLE, (tstr_len(result) + 1) * sizeof(TCHAR));
+        HGLOBAL handle = GlobalAlloc(GMEM_MOVEABLE, (StrLen(result) + 1) * sizeof(TCHAR));
         if (handle) {
             TCHAR *selText = (TCHAR *)GlobalLock(handle);
             lstrcpy(selText, result);

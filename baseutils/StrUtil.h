@@ -36,9 +36,22 @@ void    win32_dbg_out_hex(const char *dsc, const unsigned char *data, int dataLe
 #define char_is_digit isdigit
 int char_is_dir_sep(char c);
 
-#define str_len strlen
 #define str_dup _strdup
 #define str_find_char strchr
+
+/* Note: this demonstrates how eventually I would like to get rid of
+   tstr_* and wstr_* functions and instead rely on C++'s ability
+   to use overloaded functions and only have Str* functions */
+
+static inline size_t StrLen(const char *s)
+{
+    return strlen(s);
+}
+
+static inline size_t StrLen(const WCHAR *s)
+{
+    return wcslen(s);
+}
 
 int     str_eq(const char *str1, const char *str2);
 int     str_ieq(const char *str1, const char *str2);
