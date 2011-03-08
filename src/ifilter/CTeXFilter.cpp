@@ -2,7 +2,7 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
-#include "WStrUtil.h"
+#include "TStrUtil.h"
 #include "CTeXFilter.h"
 
 HRESULT CTeXFilter::OnInit()
