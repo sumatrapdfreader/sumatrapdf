@@ -1,5 +1,5 @@
-#ifndef translations_txt_h
-#define translations_txt_h
+#ifndef TRANSLATIONS_TXT_H__
+#define TRANSLATIONS_TXT_H__
 
 extern int g_transLangsCount;
 extern const char *g_transLangs[];

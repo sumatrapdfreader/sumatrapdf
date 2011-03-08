@@ -8,12 +8,19 @@ Lang: sr-rs Serbian (Cyrillic)
 
 Contributor: Горан Обрадовић
 Contributor: Slavko Majski (shobra@gmail.com)
+Contributor: Милан Гашић
 
 &About
 О програму
 
 &Actual Size\tCtrl-1
 Стварна величина\tCtrl-1
+
+&All selected pages
+Све одабране странице
+
+&Back\tAlt+Left Arrow
+Назад\tAlt+<-
 
 &Close\tCtrl-W
 Затвори\tCtrl-W
@@ -24,6 +31,9 @@ Contributor: Slavko Majski (shobra@gmail.com)
 &Don't ask me again
 Не питај ме поново
 
+&Even pages only
+Само лица страница
+
 &File
 Датотека
 
@@ -32,6 +42,9 @@ Contributor: Slavko Majski (shobra@gmail.com)
 
 &First Page\tHome
 Прва страна\tHome
+
+&Fit pages to printable area
+Подеси странице на област штампања
 
 &Go To
 Иди на
@@ -63,6 +76,9 @@ Contributor: Slavko Majski (shobra@gmail.com)
 &No, thanks
 Не, хвала
 
+&Odd pages only
+Само полеђине страница
+
 &Open\tCtrl-O
 Отвори\tCtrl-O
 
@@ -78,6 +94,12 @@ Contributor: Slavko Majski (shobra@gmail.com)
 &Print...\tCtrl-P
 Штампај\tCtrl-P
 
+&Print... (denied)
+Штампање... (одбијено)
+
+&Remember the password for this document
+Запамти лозинку за овај документ
+
 &Remember these settings for each document
 Запамти ова подешавања за сваки појединачни документ
 
@@ -87,8 +109,14 @@ Contributor: Slavko Majski (shobra@gmail.com)
 &Settings
 Подешавања
 
+&Shrink pages to printable area (if necessary)
+Скупи страницу на област штампања (уколико је неопходно)
+
 &Skip this version
 Прескочи ову верзију
+
+&Use original page sizes
+Употреби оригиналне величине страница
 
 &View
 Приказ
@@ -111,8 +139,17 @@ Advanced
 All files
 Све датотеке
 
+Application:
+Апликација:
+
 Associate with PDF files?
 Повезати са PDF датотекама?
+
+Attachment: %s
+Прилог : %s
+
+Author:
+Аутор:
 
 Automatic
 Аутоматски
@@ -120,8 +157,20 @@ Automatic
 Automatically check for &updates
 Аутоматски проверавај доступност нове верзије
 
+Book View
+Изглед књиге
+
 Book&marks\tF12
 Белешке\tF12
+
+Bookmarks
+Одабир
+
+Bytes
+Бајтова
+
+Can't connect to the Internet (error %#x).
+Повезивање на интернет није могуће (error %#x).
 
 Cancel
 Одустани
@@ -141,11 +190,17 @@ Check for &Updates
 Continuous
 Непрекидно
 
+Continuous Book View
+Нерекидни изглед књиге
+
 Continuous Facing
 Непрекидно, две стране
 
 Contribute Translation
 Помози у превођењу овог програма
+
+Copying text was denied (copying as image only)
+Копирање текста је одбијено (може се копирати само као слика)
 
 Could not open Printer
 Штампач није пронађен
@@ -155,6 +210,9 @@ Couldn't initialize printer
 
 Couldn't render the page
 Немогуће приказивање стране
+
+Created:
+Израђено:
 
 Custom &Zoom...\tCtrl-Y
 Изборно увећање...\tCtrl-Y
@@ -166,7 +224,13 @@ Default &Zoom:
 Подразумевано увећање
 
 Default PDF reader can't be changed in portable mode
-Главни PDF читач не може бити промењен у преносивном мôду
+Главни PDF читач не може бити промењен у преносивном м?ду
+
+Denied Permissions:
+Није допуштено:
+
+Document Properties
+Особине документа
 
 Download
 Преузми
@@ -180,8 +244,14 @@ Enter password
 Enter password for %s
 Унесите лозинку за %s
 
+Enter the command-line to invoke when you double-click on the PDF document:
+Искористи двоструки клик на документ као позив командне линије:
+
 Error loading PDF file.
 Грешка при учитавању PDF документа
+
+F&orward\tAlt+Right Arrow
+Напред\tAlt+->
 
 F&ullscreen\tCtrl-Shift-L
 Цео екран\tCtrl-Shift-L
@@ -191,6 +261,12 @@ Facing
 
 Failed to save a file
 Грешка при снимању PDF документа
+
+File Size:
+Величина датотеке:
+
+File:
+Датотека:
 
 Fin&d...\tCtrl-F
 Пронађи...\tCtrl-F
@@ -207,17 +283,29 @@ Find Previous
 Find:
 Пронађи:
 
+Fit &Content\tCtrl-3
+Прилагоди садржају\tCtrl-3
+
 Fit &Page\tCtrl-0
 Прилагоди страни\tCtrl-0
 
 Fit &Width\tCtrl-2
 Прилагоди ширини\tCtrl-2
 
+Fit Content
+Прилагоди садржају
+
 Fit Page
 Прилагоди страни
 
 Fit Width
 Прилагоди ширини
+
+Fit Width and Show Pages Continuously
+Прилагоди ширини и прикажи непрекинуте странице
+
+Fit a Single Page
+Прилагоди појединачној страници
 
 Found text at page %d
 Текст је пронађен на страни %d
@@ -246,6 +334,9 @@ Make SumatraPDF my default PDF reader
 Match Case
 Разликуј мала и велика слова
 
+Modified:
+Измењено:
+
 New version %s is available. Download new version?
 Доступна је верзија %s. Преузети нову верзију?
 
@@ -264,6 +355,9 @@ No synchronization file found
 No synchronization info at this position
 Нема података о усклађености на овој позицији
 
+Number of Pages:
+Број страница:
+
 OK
 У реду
 
@@ -279,8 +373,17 @@ Open in &Foxit Reader
 Open in PDF-XChange
 Отвори у програму PDF-XChange
 
+P&roperties\tCtrl-D
+Прибор\tCtrl-D
+
 PDF Document
 PDF документ
+
+PDF Producer:
+PDF израдио
+
+PDF Version:
+PDF верзија:
 
 PDF documents
 PDF документи
@@ -288,17 +391,32 @@ PDF документи
 Pa&ge...\tCtrl-G
 Страна...\tCtrl-G
 
+Page Size:
+Величина странице
+
 Page number %u inexistant
 Страна број %u не постоји
+
+Page scaling
+Размеравање странице
 
 Page:
 Страна:
 
+Please include the following file in your crash report:
+Молим укључи и следећу датотеку у извештај о паду програма:
+
 Please wait - rendering...
 Молимо сачекајте - спремам приказ...
 
+Pr&esentation\tCtrl-L
+Презентација\tCtrl-L
+
 Previous Page
 Претходна страна
+
+Print range
+Опсег штампања
 
 Printing problem.
 Проблем при штампању
@@ -315,8 +433,14 @@ Rotate &Right\tCtrl-Shift-+
 Searching %d of %d...
 Претражујем страну %d од %d...
 
+Select &All\tCtrl-A
+Изабери све\tCtrl-A
+
 Select content with Ctrl+left mouse button
 Да изаберете садржај, користите Ctrl и лево дугме миша
+
+Send by &E-mail...
+Пошаљи е-поштом...
 
 Set inverse search command-line
 Омогући инверзну претрагу
@@ -336,8 +460,17 @@ Single Page
 Source file %s has no synchronization point
 Изворна датотека нема тачку усклађивања
 
+Subject:
+Предмет:
+
 SumatraPDF Options
 Подешавања програма SumatraPDF
+
+SumatraPDF Update
+Ажурирање SumatraPDF
+
+SumatraPDF crashed
+SumatraPDF се срушила
 
 SumatraPDF is your default PDF reader
 SumatraPDF је ваш главни PDF читач
@@ -350,6 +483,9 @@ Synchronization file cannot be opened
 
 Text documents
 Текстуални документи
+
+Title:
+Наслов:
 
 Unknown source file (%s)
 Непозната изворна датотека (%s)
@@ -384,52 +520,9 @@ Zoom factor
 [Changes detected; refreshing] %s
 [Промене су примећене; освежавам] %s
 
-# Untranslated:
-#&All selected pages
-#&Back\tAlt+Left Arrow
-#&Even pages only
-#&Fit pages to printable area
-#&Odd pages only
-#&Print... (denied)
-#&Remember the password for this document
-#&Shrink pages to printable area (if necessary)
-#&Use original page sizes
-#Application:
-#Attachment: %s
-#Author:
-#Book View
-#Bookmarks
-#Bytes
-#Can't connect to the Internet (error %#x).
-#Continuous Book View
-#Copying text was denied (copying as image only)
-#Created:
-#Denied Permissions:
-#Document Properties
-#Enter the command-line to invoke when you double-click on the PDF document:
-#F&orward\tAlt+Right Arrow
-#File Size:
-#File:
-#Fit &Content\tCtrl-3
-#Fit Content
-#Fit Width and Show Pages Continuously
-#Fit a Single Page
-#Modified:
-#Number of Pages:
-#P&roperties\tCtrl-D
-#PDF Producer:
-#PDF Version:
-#Page Size:
-#Page scaling
-#Please include the following file in your crash report:
-#Pr&esentation\tCtrl-L
-#Print range
-#Select &All\tCtrl-A
-#Send by &E-mail...
-#Subject:
-#SumatraPDF Update
-#SumatraPDF crashed
-#Title:
-#copying text
-#printing document
+copying text
+копирање текста
+
+printing document
+штампање документа
 
