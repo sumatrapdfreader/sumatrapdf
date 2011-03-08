@@ -223,7 +223,7 @@ JPEG_TURBO_OBJS = $(JPEG_TURBO_OBJS) \
 	$(OT)\ji3dnflt.obj $(OT)\jcqntsse.obj $(OT)\jfsseflt.obj $(OT)\jisseflt.obj $(OT)\jccolss2.obj \
 	$(OT)\jdcolss2.obj $(OT)\jcsamss2.obj $(OT)\jdsamss2.obj $(OT)\jdmerss2.obj $(OT)\jcqnts2i.obj \
 	$(OT)\jfss2fst.obj $(OT)\jfss2int.obj $(OT)\jiss2red.obj $(OT)\jiss2int.obj $(OT)\jiss2fst.obj \
-	$(OT)\jcqnts2f.obj $(OT)\jiss2flt.obj $(OT)\jsimd_i386.obj
+	$(OT)\jcqnts2f.obj $(OT)\jiss2flt.obj $(OT)\jsimd_i386.obj $(OT)\jdphuff.obj
 !endif
 
 !endif

@@ -281,7 +281,7 @@ typedef int boolean;
 /* Decoder capability options: */
 
 #define D_MULTISCAN_FILES_SUPPORTED /* Multiple-scan JPEG files? */
-#undef D_PROGRESSIVE_SUPPORTED	    /* Progressive JPEG? (Requires MULTISCAN)*/
+#define D_PROGRESSIVE_SUPPORTED	    /* Progressive JPEG? (Requires MULTISCAN)*/
 #define SAVE_MARKERS_SUPPORTED	    /* jpeg_save_markers() needed? */
 #define BLOCK_SMOOTHING_SUPPORTED   /* Block smoothing? (Progressive only) */
 #define IDCT_SCALING_SUPPORTED	    /* Output rescaling via IDCT? */
