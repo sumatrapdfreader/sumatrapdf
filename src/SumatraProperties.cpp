@@ -7,7 +7,6 @@
 #include "SumatraProperties.h"
 #include "AppPrefs.h"
 #include "translations.h"
-#include "win_util.h"
 #include "WinUtil.h"
 #include "AppTools.h"
 #include "vstrlist.h"

@@ -47,7 +47,7 @@
 #include "WindowInfo.h"
 #include "DisplayModel.h"
 #include "Resource.h"
-#include "win_util.h"
+#include "WinUtil.h"
 #include "FileUtil.h"
 
 #ifndef DEBUG

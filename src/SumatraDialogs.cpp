@@ -8,7 +8,6 @@
 #include "AppTools.h"
 #include "Resource.h"
 
-#include "win_util.h"
 #include "WinUtil.h"
 #include "dialogsizer.h"
 #include "LangMenuDef.h"

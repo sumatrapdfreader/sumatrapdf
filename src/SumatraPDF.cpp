@@ -23,7 +23,6 @@
 #include "FileHistory.h"
 #include "AppTools.h"
 
-#include "win_util.h"
 #include "WinUtil.h"
 #include "Http.h"
 #include "CrashHandler.h"

@@ -7,7 +7,6 @@
 #include "translations.h"
 #include "Version.h"
 #include "AppPrefs.h"
-#include "win_util.h"
 #include "WinUtil.h"
 #include "AppTools.h"
 
