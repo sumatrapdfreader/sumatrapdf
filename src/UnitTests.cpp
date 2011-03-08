@@ -142,7 +142,7 @@ static void tstr_test()
     tstr_copy(buf, dimof(buf), str);
     assert(tstr_eq(buf, str));
 
-    str = tstr_dup(buf);
+    str = StrCopy(buf);
     assert(tstr_eq(str, buf));
     free(str);
     str = tstr_dupn(buf, 4);
@@ -221,8 +221,8 @@ static void versioncheck_test()
 static void VecStrTest()
 {
     VStrList v;
-    v.Append(tstr_dup(_T("foo")));
-    v.Append(tstr_dup(_T("bar")));
+    v.Append(StrCopy(_T("foo")));
+    v.Append(StrCopy(_T("bar")));
     TCHAR *s = v.Join();
     assert(v.Count() == 2);
     assert(tstr_eq(_T("foobar"), s));
@@ -233,7 +233,7 @@ static void VecStrTest()
     assert(tstr_eq(_T("foo;bar"), s));
     free(s);
 
-    v.Append(tstr_dup(_T("glee")));
+    v.Append(StrCopy(_T("glee")));
     s = v.Join(_T("_ _"));
     assert(v.Count() == 3);
     assert(tstr_eq(_T("foo_ _bar_ _glee"), s));

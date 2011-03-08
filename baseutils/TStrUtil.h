@@ -18,7 +18,6 @@
 
 #ifdef _UNICODE
   #define tchar_is_ws       wchar_is_ws
-  #define tstr_dup          wstr_dup
   #define tstr_find_char    wstr_find_char
 
   #define tstr_eq           wstr_eq
@@ -43,15 +42,14 @@
 
   #define multibyte_to_tstr(src, CodePage)  multibyte_to_wstr((src), (CodePage))
   #define tstr_to_multibyte(src, CodePage)  wstr_to_multibyte((src), (CodePage))
-  #define wstr_to_tstr(src)                 wstr_dup((LPCWSTR)src)
-  #define tstr_to_wstr(src)                 wstr_dup((LPCWSTR)src)
+  #define wstr_to_tstr(src)                 StrCopy((LPCWSTR)src)
+  #define tstr_to_wstr(src)                 StrCopy((LPCWSTR)src)
   #define DBG_OUT_T     DBG_OUT_W
 
   #define wstr_to_tstr_q(src)               (src)
   #define tstr_to_wstr_q(src)               (src)
 #else
   #define tchar_is_ws       char_is_ws
-  #define tstr_dup          str_dup
   #define tstr_find_char    str_find_char
 
   #define tstr_eq           str_eq

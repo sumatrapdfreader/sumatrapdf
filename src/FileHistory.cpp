@@ -39,7 +39,7 @@ FileHistoryNode::FileHistoryNode(const TCHAR *filePath) :
 {
     if (filePath) {
         DBG_OUT_T("FileHistoryNode(filePath='%s')\n", filePath);
-        this->state.filePath = (const TCHAR*)tstr_dup(filePath);
+        this->state.filePath = (const TCHAR*)StrCopy(filePath);
     }
 }
 

@@ -196,7 +196,7 @@ char *str_split_iter(char **txt, char c)
          result = str_dupn(tmp, (int)(pos-tmp));
          *txt = (char*)pos+1;
     } else {
-        result = str_dup(tmp);
+        result = StrCopy(tmp);
         *txt = NULL; /* next iteration will return NULL */
     }
     return result;
@@ -397,7 +397,7 @@ static char *multibyte_to_multibyte(const char *src, UINT CodePage1, UINT CodePa
 char *str_to_multibyte(const char *src, UINT CodePage)
 {
     if (CP_ACP == CodePage)
-        return str_dup(src);
+        return StrCopy(src);
 
     return multibyte_to_multibyte(src, CP_ACP, CodePage);
 }
@@ -406,7 +406,7 @@ char *str_to_multibyte(const char *src, UINT CodePage)
 char *multibyte_to_str(const char *src, UINT CodePage)
 {
     if (CP_ACP == CodePage)
-        return str_dup(src);
+        return StrCopy(src);
 
     return multibyte_to_multibyte(src, CodePage, CP_ACP);
 }
@@ -469,7 +469,7 @@ char *str_printf_args(const char *format, va_list args)
     }
 
     if (buf == message)
-        buf = str_dup(message);
+        buf = StrCopy(message);
 
     return buf;
 }

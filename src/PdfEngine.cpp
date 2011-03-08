@@ -327,7 +327,7 @@ PdfEngine *PdfEngine::clone()
     free(password);
 
     if (clone && _fileName)
-        clone->_fileName = tstr_dup(_fileName);
+        clone->_fileName = StrCopy(_fileName);
 
     return clone;
 }
@@ -335,7 +335,7 @@ PdfEngine *PdfEngine::clone()
 bool PdfEngine::load(const TCHAR *fileName, PasswordUI *pwdUI)
 {
     assert(!_fileName && !_xref);
-    _fileName = tstr_dup(fileName);
+    _fileName = StrCopy(fileName);
     if (!_fileName)
         return false;
     fileName = NULL; // use _fileName instead
@@ -519,7 +519,7 @@ bool PdfEngine::finishLoading(void)
 
 PdfTocItem *PdfEngine::buildTocTree(pdf_outline *entry, int *idCounter)
 {
-    TCHAR *name = entry->title ? utf8_to_tstr(entry->title) : tstr_dup(_T(""));
+    TCHAR *name = entry->title ? utf8_to_tstr(entry->title) : StrCopy(_T(""));
     PdfTocItem *node = new PdfTocItem(name, entry->link);
     node->open = entry->count >= 0;
     node->id = ++(*idCounter);
@@ -928,7 +928,7 @@ static TCHAR *findLinkEnd(TCHAR *start)
 static TCHAR *parseMultilineLink(pdf_page *page, TCHAR *pageText, TCHAR *start, fz_bbox *coords)
 {
     pdf_link *firstLink = getLastLink(page->links);
-    char *uri = str_dup(fz_tostrbuf(firstLink->dest));
+    char *uri = StrCopy(fz_tostrbuf(firstLink->dest));
     TCHAR *end = start;
     bool multiline = false;
 

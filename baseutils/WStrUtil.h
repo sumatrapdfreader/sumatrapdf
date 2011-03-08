@@ -6,9 +6,6 @@
 #define wchar_is_ws iswspace
 #define wchar_is_digit iswdigit
 
-#define wstr_len wcslen
-#define wstrlen wcslen
-#define wstr_dup _wcsdup
 #define wstr_find_char wcschr
 
 int     wstr_eq(const WCHAR *str1, const WCHAR *str2);

@@ -81,7 +81,7 @@ static void PdfDateToDisplay(TCHAR **s) {
     if (0 == ret) // GetTimeFormat() failed
         *tmp = '\0';
 
-    *s = tstr_dup(buf);
+    *s = StrCopy(buf);
 }
 
 // format a number with a given thousand separator e.g. it turns 1234 into "1,234"
@@ -103,7 +103,7 @@ static TCHAR *FormatNumWithThousandSep(uint64_t num) {
     }
     *dst = '\0';
 
-    return tstr_dup(buf2);
+    return StrCopy(buf2);
 }
 
 // Format a floating point number with at most two decimal after the point
@@ -121,7 +121,7 @@ static TCHAR *FormatFloatWithThousandSep(double number, const TCHAR *unit=NULL) 
     if (buf[lstrlen(buf) - 1] == '0')
         buf[lstrlen(buf) - 1] = '\0';
 
-    return unit ? tstr_printf(_T("%s %s"), buf, unit) : tstr_dup(buf);
+    return unit ? tstr_printf(_T("%s %s"), buf, unit) : StrCopy(buf);
 }
 
 // Format the file size in a short form that rounds to the largest size unit
@@ -181,9 +181,9 @@ static TCHAR *FormatPdfPermissions(PdfEngine *pdfEngine) {
     VStrList denials;
 
     if (!pdfEngine->hasPermission(PDF_PERM_PRINT))
-        denials.Push(tstr_dup(_TR("printing document")));
+        denials.Push(StrCopy(_TR("printing document")));
     if (!pdfEngine->hasPermission(PDF_PERM_COPY))
-        denials.Push(tstr_dup(_TR("copying text")));
+        denials.Push(StrCopy(_TR("copying text")));
 
     return denials.Join(_T(", "));
 }
@@ -195,7 +195,7 @@ static void AddPdfProperty(PdfPropertiesLayout *layoutData, const TCHAR *left, c
 
     PdfPropertyEl *el = SA(PdfPropertyEl);
     el->leftTxt = left;
-    el->rightTxt = tstr_dup(right);
+    el->rightTxt = StrCopy(right);
     el->next = NULL;
 
     if (!layoutData->last) {
@@ -507,7 +507,7 @@ static void OnPaintProperties(HWND hwnd)
 
 void CopyPropertiesToClipboard(HWND hwnd)
 {
-    TCHAR *result = tstr_dup(_T(""));
+    TCHAR *result = StrCopy(_T(""));
 
     // just concatenate all the properties into a multi-line string
     PdfPropertiesLayout *layoutData = (PdfPropertiesLayout *)GetWindowLongPtr(hwnd, GWLP_USERDATA);

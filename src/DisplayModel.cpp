@@ -102,7 +102,7 @@ bool DisplayModel::displayStateFromModel(DisplayState *ds)
     bool presMode = getPresentationMode();
 
     if (!ds->filePath || !tstr_eq(ds->filePath, fileName())) {
-        TCHAR *filePath = tstr_dup(fileName());
+        TCHAR *filePath = StrCopy(fileName());
         if (!filePath)
             return false;
 

@@ -22,7 +22,7 @@ const TCHAR *FilePath_GetBaseName(const TCHAR *path)
 TCHAR *FilePath_GetDir(const TCHAR *path)
 {
     TCHAR *baseName;
-    TCHAR *dir = tstr_dup(path);
+    TCHAR *dir = StrCopy(path);
     if (!dir) return NULL;
     baseName = (TCHAR *)FilePath_GetBaseName(dir);
     if (baseName > dir)

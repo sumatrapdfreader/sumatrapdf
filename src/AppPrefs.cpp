@@ -106,7 +106,7 @@ static bool DisplayState_Deserialize(benc_dict* dict, DisplayState *ds, bool glo
         ds->filePath = utf8_to_tstr(filePath);
     const char *decryptionKey = dict_get_str(dict, DECRYPTION_KEY_STR);
     if (decryptionKey)
-        ds->decryptionKey = str_dup(decryptionKey);
+        ds->decryptionKey = StrCopy(decryptionKey);
     if (globalPrefsOnly) {
         ds->useGlobalValues = TRUE;
         return true;

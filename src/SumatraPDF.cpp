@@ -866,7 +866,7 @@ static TCHAR *GetUniqueCrashDumpPath()
     TCHAR *fileName;
     for (int n = 0; n <= 20; n++) {
         if (n == 0) {
-            fileName = tstr_dup(_T("SumatraPDF.dmp"));
+            fileName = StrCopy(_T("SumatraPDF.dmp"));
         } else {
             fileName = tstr_printf(_T("SumatraPDF-%d.dmp"), n);
         }
@@ -1422,7 +1422,7 @@ static bool LoadPdfIntoWindow(
     win->AbortFinding();
 
     free(win->loadedFilePath);
-    win->loadedFilePath = tstr_dup(fileName);
+    win->loadedFilePath = StrCopy(fileName);
     win->dm = DisplayModel::CreateFromFileName(win, fileName, displayMode, startPage);
 
     if (!win->dm) {
@@ -3558,7 +3558,7 @@ static void OnMenuSaveAs(WindowInfo *win)
                 errorMsg = tstr_printf(_T("%s\n\n%s"), _TR("Failed to save a file"), msgBuf);
                 LocalFree(msgBuf);
             } else {
-                errorMsg = tstr_dup(_TR("Failed to save a file"));
+                errorMsg = StrCopy(_TR("Failed to save a file"));
             }
             MessageBox(win->hwndFrame, errorMsg, _TR("Warning"), MB_OK | MB_ICONEXCLAMATION);
             free(errorMsg);

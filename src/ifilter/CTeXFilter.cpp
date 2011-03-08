@@ -142,7 +142,7 @@ WCHAR *CTeXFilter::ExtractBracedBlock()
             break;
         case '%':
             // ignore comments until the end of line
-            m_pPtr = wcschr(m_pPtr, '\n') ? wcschr(m_pPtr, '\n') + 1 : m_pPtr + wstr_len(m_pPtr);
+            m_pPtr = wcschr(m_pPtr, '\n') ? wcschr(m_pPtr, '\n') + 1 : m_pPtr + StrLen(m_pPtr);
             break;
         case '&':
             *rptr++ = '\t';

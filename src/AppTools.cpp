@@ -451,7 +451,7 @@ LPTSTR AutoDetectInverseSearchCommands(HWND hwndCombo)
         }
 
         if (!firstEditor)
-            firstEditor = tstr_dup(cmd);
+            firstEditor = StrCopy(cmd);
         if (!hwndCombo)
         {
             // no need to fill a combo box: return immeditately after finding an editor.
@@ -469,7 +469,7 @@ LPTSTR AutoDetectInverseSearchCommands(HWND hwndCombo)
 
     // Fall back to notepad as a default handler
     if (!firstEditor) {
-        firstEditor = tstr_dup(_T("notepad %f"));
+        firstEditor = StrCopy(_T("notepad %f"));
         if (hwndCombo)
             SendMessage(hwndCombo, CB_ADDSTRING, 0, (LPARAM)firstEditor);
     }

@@ -195,7 +195,7 @@ struct {
 void NotifyFailed(TCHAR *msg)
 {
     if (!gGlobalData.firstError)
-        gGlobalData.firstError = tstr_dup(msg);
+        gGlobalData.firstError = StrCopy(msg);
     // MessageBox(gHwndFrame, msg, _T("Installation failed"),  MB_ICONEXCLAMATION | MB_OK);
 }
 
@@ -280,7 +280,7 @@ TCHAR *GetInstallationDir(bool forUninstallation=false)
         if (tstr_endswithi(dir, _T(".exe")))
             *(TCHAR *)FilePath_GetBaseName(dir) = '\0';
         if (*dir && dir_exists(dir))
-            return tstr_dup(dir);
+            return StrCopy(dir);
     }
 
     if (forUninstallation) {
@@ -312,7 +312,7 @@ TCHAR *GetValidTempDir()
         NotifyFailed(_T("Couldn't create temporary directory"));
         return NULL;
     }
-    return tstr_dup(d);
+    return StrCopy(d);
 }
 
 TCHAR *GetUninstallerPath()
@@ -822,7 +822,7 @@ TCHAR *GetDefaultPdfViewer()
     bool ok = ReadRegStr(HKEY_CLASSES_ROOT, _T(".pdf"), NULL, buf, dimof(buf));
     if (!ok)
         return NULL;
-    return tstr_dup(buf);
+    return StrCopy(buf);
 }
 
 BOOL RemoveEmptyDirectory(TCHAR *dir)

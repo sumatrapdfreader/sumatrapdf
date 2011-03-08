@@ -38,8 +38,8 @@ void PdfSearch::SetText(TCHAR *text)
         return;
 
     this->Clear();
-    this->lastText = tstr_dup(text);
-    this->findText = tstr_dup(text);
+    this->lastText = StrCopy(text);
+    this->findText = StrCopy(text);
 
     // extract anchor string (the first word or the first symbol) for faster searching
     if (islatinalnum(*text)) {

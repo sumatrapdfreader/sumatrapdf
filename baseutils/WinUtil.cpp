@@ -175,7 +175,7 @@ TCHAR *ResolveLnk(TCHAR * path)
     if (FAILED(hRes))
         goto Exit;
 
-    resolvedPath = tstr_dup(newPath);
+    resolvedPath = StrCopy(newPath);
 
 Exit:
     if (file)
@@ -307,12 +307,12 @@ TCHAR *get_app_data_folder_path(BOOL f_create)
 
     f_ok = SHGetSpecialFolderPath(NULL, path, SPECIAL_FOLDER_PATH, f_create);
     if (f_ok)
-        return tstr_dup(path);
+        return StrCopy(path);
     else
-        return tstr_dup(_T(""));
+        return StrCopy(_T(""));
 #else
     /* if all else fails, just use root ("\") directory */
-    return tstr_dup(_T(""));
+    return StrCopy(_T(""));
 #endif
 }
 
