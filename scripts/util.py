@@ -125,11 +125,13 @@ def extract_sumatra_version(file_path):
   return ver
 
 # doesn't really belong here, but have no better place
-def zip_file(dst_zip_file, src, src_name=None, compress=True):
+def zip_file(dst_zip_file, src, src_name=None, compress=True, append=False):
+  mode = "w"
+  if append: mode = "a"
   if compress:
-    zf = zipfile.ZipFile(dst_zip_file, "w", zipfile.ZIP_DEFLATED)
+    zf = zipfile.ZipFile(dst_zip_file, mode, zipfile.ZIP_DEFLATED)
   else:
-    zf = zipfile.ZipFile(dst_zip_file, "w", zipfile.ZIP_STORED)
+    zf = zipfile.ZipFile(dst_zip_file, mode, zipfile.ZIP_STORED)
   if src_name is None:
     src_name = os.path.basename(src)
   zf.write(src, src_name)

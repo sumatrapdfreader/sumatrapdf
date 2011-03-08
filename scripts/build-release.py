@@ -121,14 +121,14 @@ def main():
     run_cmd_throw("nmake", "-f", "makefile.msvc", "CFG=rel")
 
   files = ["SumatraPDF.exe", "SumatraPDF.pdb", "npPdfViewer.dll", "Installer.exe",
-           "SumatraPDF-no-MuPDF.exe", "libmupdf.dll", "PdfFilter.dll"]
-  [tmp_exe, tmp_pdb, tmp_plugin, tmp_installer, tmp_exe2, tmp_lib, tmp_filter] = [os.path.join("obj-rel", t) for t in files]
+           "SumatraPDF-no-MuPDF.exe", "SumatraPDF-no-MuPDF.pdb", "libmupdf.dll", "libmupdf.pdb", "PdfFilter.dll"]
+  [tmp_exe, tmp_pdb, tmp_plugin, tmp_installer, tmp_exe2, tmp_pdb2, tmp_lib, tmp_lib_pdb, tmp_filter] = [os.path.join("obj-rel", t) for t in files]
 
   local_exe = os.path.join(builds_dir, "%s.exe" % filename_base)
   local_exe_uncompr = os.path.join(builds_dir, "%s-uncompr.exe" % filename_base)
   local_pdb = os.path.join(builds_dir, "%s.pdb" % filename_base)
   local_zip = os.path.join(builds_dir, "%s.zip" % filename_base)
-  [_, _, local_plugin, local_installer, local_exe2, local_lib, local_filter] = [os.path.join(builds_dir, t) for t in files]
+  [_, _, local_plugin, local_installer, local_exe2, _, local_lib, _, local_filter] = [os.path.join(builds_dir, t) for t in files]
 
   shutil.copy(tmp_exe, local_exe)
   shutil.copy(tmp_exe, local_exe_uncompr)
@@ -144,11 +144,15 @@ def main():
     local_pdb_zip = local_pdb + ".zip"
     local_pdb_dbg_zip = os.path.join(builds_dir, "%s-dbg.pdb.zip" % filename_base)
 
-    [tmp_exe_dbg, tmp_pdb_dbg] = [os.path.join("obj-dbg", t) for t in files[0:2]]
+    [tmp_exe_dbg, tmp_pdb_dbg, _, _, _, tmp_pdb2_dbg, _, tmp_lib_pdb_dbg, _] = [os.path.join("obj-dbg", t) for t in files]
     shutil.copy(tmp_exe_dbg, local_exe_dbg)
 
     zip_file(local_pdb_zip, local_pdb)
+    zip_file(local_pdb_zip, tmp_pdb2, append=True)
+    zip_file(local_pdb_zip, tmp_lib_pdb, append=True)
     zip_file(local_pdb_dbg_zip, tmp_pdb_dbg, "%s.pdb" % filename_base)
+    zip_file(local_pdb_dbg_zip, tmp_pdb2_dbg, append=True)
+    zip_file(local_pdb_dbg_zip, tmp_lib_pdb_dbg, append=True)
 
   # run mpress and StripReloc from inside builds_dir for better
   # compat across python version
@@ -185,6 +189,7 @@ def main():
 
   elif upload or upload_tmp and not build_prerelease:
     s3UploadFilePublic(local_exe_uncompr, remote_exe)
+    # TODO: also upload PDBs for libmupdf.dll, SumatraPDF-no-mupdf.exe, npPdfViewer.dll, etc.?
     s3UploadFilePublic(local_pdb, remote_pdb)
     s3UploadFilePublic(local_zip, remote_zip)
     s3UploadFilePublic(local_installer_native_exe, remote_installer_exe)
