@@ -1,7 +1,7 @@
 /* Copyright Krzysztof Kowalczyk 2006-2011
    License: GPLv3 */
-#ifndef _DISPLAY_MODEL_H_
-#define _DISPLAY_MODEL_H_
+#ifndef DisplayModel_h
+#define DisplayModel_h
 
 #include "PdfEngine.h"
 #include "DisplayState.h"

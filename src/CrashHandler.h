@@ -1,5 +1,5 @@
-#ifndef CRASH_HANDLER_H__
-#define CRASH_HANDLER_H__
+#ifndef CrashHandler_h
+#define CrashHandler_h
 
 // #define CMD_ARG_SEND_CRASHDUMP  _T("/sendcrashdump")
 

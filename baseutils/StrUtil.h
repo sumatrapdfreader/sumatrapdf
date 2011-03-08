@@ -1,7 +1,7 @@
 /* Written by Krzysztof Kowalczyk (http://blog.kowalczyk.info)
    The author disclaims copyright to this source code. */
-#ifndef STR_UTIL_H_
-#define STR_UTIL_H_
+#ifndef StrUtil_h
+#define StrUtil_h
 
 #ifdef _MSC_VER
 #include "stdint.h"

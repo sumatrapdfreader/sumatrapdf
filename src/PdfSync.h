@@ -2,8 +2,8 @@
 // PDF-source synchronizer based on .pdfsync file
 // License: GPLv3
 
-#ifndef _PDF_SYNC_H__
-#define _PDF_SYNC_H__
+#ifndef PdfSync_h
+#define PdfSync_h
 
 #include <windows.h>
 #include <assert.h>

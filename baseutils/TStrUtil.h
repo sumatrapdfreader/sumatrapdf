@@ -1,7 +1,7 @@
 /* Written by Krzysztof Kowalczyk (http://blog.kowalczyk.info)
    The author disclaims copyright to this source code. */
-#ifndef TSTR_UTIL_H_
-#define TSTR_UTIL_H_
+#ifndef TStrUtil_h
+#define TStrUtil_h
 
 /* currently, we always need both of these:
  * - StrUtil.h for DBG_OUT and

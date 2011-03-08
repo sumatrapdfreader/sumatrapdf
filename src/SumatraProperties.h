@@ -1,8 +1,8 @@
 /* Copyright 2006-2011 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#ifndef SUMATRA_PDF_PROPERTIES_H_
-#define SUMATRA_PDF_PROPERTIES_H_
+#ifndef SumatraProperties_h
+#define SumatraProperties_h
 
 #define PROPERTIES_CLASS_NAME   _T("SUMATRA_PDF_PROPERTIES")
 

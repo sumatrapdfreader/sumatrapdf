@@ -1,5 +1,5 @@
-#ifndef VERSION_H__
-#define VERSION_H__
+#ifndef Version_h
+#define Version_h
 
 // CURR_VERSION can be over-written externally (via makefile)
 #ifndef CURR_VERSION

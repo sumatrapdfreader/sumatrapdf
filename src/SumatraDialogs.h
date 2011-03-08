@@ -1,8 +1,8 @@
 /* Copyright 2006-2011 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#ifndef SUMATRA_PDF_DIALOGS_H_
-#define SUMATRA_PDF_DIALOGS_H_
+#ifndef SumatraDialogs_h
+#define SumatraDialogs_h
 
 #define DIALOG_OK_PRESSED 1
 #define DIALOG_YES_PRESSED 1

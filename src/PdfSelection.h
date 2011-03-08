@@ -1,5 +1,5 @@
-#ifndef _PDF_SELECTION_H
-#define _PDF_SELECTION_H
+#ifndef PdfSelection_h
+#define PdfSelection_h
 
 #include "PdfEngine.h"
 
@@ -44,4 +44,4 @@ protected:
     void FillResultRects(int pageNo, int glyph, int length, VStrList *lines=NULL);
 };
 
-#endif // _PDF_SELECTION_H
+#endif

@@ -1,8 +1,8 @@
 /* Copyright 2006-2011 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#ifndef APP_TOOLS_H_
-#define APP_TOOLS_H_
+#ifndef AppTools_h
+#define AppTools_h
 
 #include "Vec.h"
 #include "WindowInfo.h"

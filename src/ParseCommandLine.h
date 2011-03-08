@@ -1,5 +1,5 @@
-#ifndef _PARSE_COMMAND_LINE_H__
-#define _PARSE_COMMAND_LINE_H__
+#ifndef ParseCommandLine_h
+#define ParseCommandLine_h
 
 #include "DisplayState.h"
 #include "vstrlist.h"

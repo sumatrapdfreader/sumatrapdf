@@ -1,7 +1,7 @@
 /* Written by Krzysztof Kowalczyk (http://blog.kowalczyk.info)
    The author disclaims copyright to this source code. */
-#ifndef BENC_UTIL_H_
-#define BENC_UTIL_H_
+#ifndef BencUtil_h
+#define BencUtil_h
 
 typedef enum benc_type {
     BOT_INT64 = 1,

@@ -1,7 +1,7 @@
 /* Written by Krzysztof Kowalczyk (http://blog.kowalczyk.info)
    The author disclaims copyright to this source code. */
-#ifndef WSTR_UTIL_H_
-#define WSTR_UTIL_H_
+#ifndef WStrUtil_h
+#define WStrUtil_h
 
 #define wchar_is_ws iswspace
 #define wchar_is_digit iswdigit

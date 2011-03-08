@@ -1,6 +1,6 @@
 // By william blum, 2008
-#ifndef _FILE_WATCH_H__
-#define _FILE_WATCH_H__
+#ifndef FileWatch_h
+#define FileWatch_h
 
 #include "BaseUtil.h"
 

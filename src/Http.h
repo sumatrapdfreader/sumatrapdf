@@ -1,8 +1,8 @@
 /* Copyright 2006-2011 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#ifndef HTTP_H__
-#define HTTP_H__
+#ifndef Http_h
+#define Http_h
 
 #include "TStrUtil.h"
 #include "Vec.h"

@@ -1,8 +1,8 @@
 /* Copyright 2006-2011 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#ifndef _VSTRLIST_H_
-#define _VSTRLIST_H_
+#ifndef vstrlist_h
+#define vstrlist_h
 
 #include "Vec.h"
 #include "TStrUtil.h"

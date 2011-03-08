@@ -1,7 +1,7 @@
 /* Written by Krzysztof Kowalczyk (http://blog.kowalczyk.info)
    The author disclaims copyright to this source code. */
-#ifndef GEOM_UTIL_H_
-#define GEOM_UTIL_H_
+#ifndef GeomUtil_h
+#define GeomUtil_h
 
 typedef struct RectI {
     int x, y;

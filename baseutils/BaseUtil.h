@@ -1,7 +1,7 @@
 /* Written by Krzysztof Kowalczyk (http://blog.kowalczyk.info)
    The author disclaims copyright to this source code. */
-#ifndef BASE_UTIL_H_
-#define BASE_UTIL_H_
+#ifndef BaseUtil_h
+#define BaseUtil_h
 
 #ifdef _UNICODE
 #ifndef UNICODE

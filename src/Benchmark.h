@@ -1,5 +1,5 @@
-#ifndef BENCHMARK_H__
-#define BENCHMARK_H__
+#ifndef Benchmark_h
+#define Benchmark_h
 
 #include "vstrlist.h"
 

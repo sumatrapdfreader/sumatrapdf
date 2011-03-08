@@ -1,7 +1,7 @@
 /* Copyright Krzysztof Kowalczyk 2006-2011
    License: GPLv3 */
-#ifndef _PDF_ENGINE_H_
-#define _PDF_ENGINE_H_
+#ifndef PdfEngine_h
+#define PdfEngine_h
 
 extern "C" {
 #ifdef _MSC_VER

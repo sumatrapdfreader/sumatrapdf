@@ -1,5 +1,5 @@
-#ifndef TRANSLATIONS_H__
-#define TRANSLATIONS_H__
+#ifndef Translations_h
+#define Translations_h
 
 bool         Translations_SetCurrentLanguage(const char* lang);
 const TCHAR* Translations_GetTranslation(const char* txt);

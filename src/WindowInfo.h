@@ -1,8 +1,8 @@
 /* Copyright 2006-2011 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#ifndef _WINDOWINFO_H_
-#define _WINDOWINFO_H_
+#ifndef WindowInfo_h
+#define WindowInfo_h
 
 #include <shlobj.h>
 #include "GeomUtil.h"

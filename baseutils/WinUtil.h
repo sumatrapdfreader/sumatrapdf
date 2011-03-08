@@ -2,8 +2,8 @@
    The author disclaims copyright to this source code. 
    Take all the code you want, we'll just write more.
 */
-#ifndef WINUTIL_HPP__
-#define WINUTIL_HPP__
+#ifndef WinUtil_h
+#define WinUtil_h
 
 #include <windows.h>
 #include <CommCtrl.h>

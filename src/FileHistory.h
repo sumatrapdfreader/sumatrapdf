@@ -1,7 +1,7 @@
 /* Copyright Krzysztof Kowalczyk 2006-2011
    License: GPLv3 */
-#ifndef FILE_HISTORY_H_
-#define FILE_HISTORY_H_
+#ifndef FileHistory_h
+#define FileHistory_h
 
 #include "DisplayState.h"
 

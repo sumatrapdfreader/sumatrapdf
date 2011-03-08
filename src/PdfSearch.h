@@ -1,5 +1,5 @@
-#ifndef _PDF_SEARCH_H
-#define _PDF_SEARCH_H
+#ifndef PdfSearch_h
+#define PdfSearch_h
 
 #include <windows.h>
 #include "PdfEngine.h"
@@ -72,4 +72,4 @@ private:
     BYTE *findCache;
 };
 
-#endif // _PDF_SEARCH_H
+#endif

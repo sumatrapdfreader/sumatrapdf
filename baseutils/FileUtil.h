@@ -1,7 +1,7 @@
 /* Written by Krzysztof Kowalczyk (http://blog.kowalczyk.info)
    The author disclaims copyright to this source code. */
-#ifndef FILE_UTILS_H_
-#define FILE_UTILS_H_
+#ifndef FileUtil_h
+#define FileUtil_h
 
 const TCHAR *   FilePath_GetBaseName(const TCHAR *path);
 TCHAR *         FilePath_GetDir(const TCHAR *path);
