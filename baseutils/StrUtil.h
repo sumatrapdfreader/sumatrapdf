@@ -52,16 +52,11 @@ static inline size_t StrLen(const WCHAR *s)
     return wcslen(s);
 }
 
-// work-around <shlwapi.h>: 
-#ifdef UNICODE
-
-#else
-
-#endif
-
 // Unfortunately can't use StrCopy() because <shlwapi.h> #defines it to
 // shlwapi's StrDupA() or StrDupW() and we want C++ function overloading
 // to pick up the right one
+// TODO: maybe those should be Str::* instead of Str* to avoid conflicts ?
+
 static inline char *StrCopy(const char *s)
 {
     return _strdup(s);
