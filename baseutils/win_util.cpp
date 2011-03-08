@@ -2,7 +2,7 @@
    The author disclaims copyright to this source code. */
 #include "BaseUtil.h"
 #include "win_util.h"
-#include "tstr_util.h"
+#include "TStrUtil.h"
 
 int win_get_text_len(HWND hwnd)
 {

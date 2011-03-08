@@ -83,7 +83,7 @@ char *  str_parse_possibly_quoted(char  **txt);
 size_t  digits_for_number(int64_t num);
 
 #ifdef DEBUG
-void str_util_test(void);
+void StrUtil_test(void);
 #endif
 
 #endif

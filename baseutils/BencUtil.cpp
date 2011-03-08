@@ -8,7 +8,7 @@
 */
 #include "BaseUtil.h"
 #include "BencUtil.h"
-#include "tstr_util.h"
+#include "TStrUtil.h"
 
 #define IVALID_LEN (size_t)-1
 
@@ -719,7 +719,7 @@ static void _str_reverse(char *start, char *end)
    TODO: should return the size of needed buffer.
    TODO: for simplicity of code, if buffer is not big enough, will not use
          the last byte of the buffer
-   TODO: move it to some other place like str_util.[h|c]?
+   TODO: move it to some other place like StrUtil.[h|c]?
 */
 BOOL int64_to_string(int64_t val, char* data, size_t dataLen)
 {

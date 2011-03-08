@@ -39,7 +39,7 @@ WCHAR * utf8_to_wstr(const char *utf8);
 void win32_dbg_outW(const WCHAR *format, ...);
 #ifdef DEBUG
   #define DBG_OUT_W(format, ...) win32_dbg_outW(L##format, __VA_ARGS__)
-  void wstr_util_test(void);
+  void WStrUtil_test(void);
 #else
   #define DBG_OUT_W(format, ...) ((void)0)
 #endif

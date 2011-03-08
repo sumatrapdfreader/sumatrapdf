@@ -1,7 +1,7 @@
 /* Written by Krzysztof Kowalczyk (http://blog.kowalczyk.info)
    The author disclaims copyright to this source code. */
 #include "BaseUtil.h"
-#include "tstr_util.h"
+#include "TStrUtil.h"
 #include "FileUtil.h"
 
 #include <sys/types.h>

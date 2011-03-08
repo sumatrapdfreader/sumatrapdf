@@ -3,7 +3,7 @@
 
 /* The most basic things, including string handling functions */
 #include "BaseUtil.h"
-#include "tstr_util.h"
+#include "TStrUtil.h"
 
 /* replace in <str> the chars from <oldChars> with their equivalents
    from <newChars> (similar to UNIX's tr command)

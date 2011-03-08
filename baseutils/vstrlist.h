@@ -5,7 +5,7 @@
 #define _VSTRLIST_H_
 
 #include "Vec.h"
-#include "tstr_util.h"
+#include "TStrUtil.h"
 
 class VStrList : public Vec<TCHAR *>
 {

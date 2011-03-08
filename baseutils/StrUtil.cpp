@@ -3,7 +3,7 @@
 
 /* The most basic things, including string handling functions */
 #include "BaseUtil.h"
-#include "str_util.h"
+#include "StrUtil.h"
 
 char * str_cat_s(char * dst, size_t dst_cch_size, const char * src)
 {

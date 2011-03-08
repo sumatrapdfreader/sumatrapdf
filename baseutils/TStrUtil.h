@@ -4,10 +4,10 @@
 #define TSTR_UTIL_H_
 
 /* currently, we always need both of these:
- * - str_util.h for DBG_OUT and
- * - wstr_util.h for multibyte_to_wstr and wstr_to_multibyte */
-#include "str_util.h"
-#include "wstr_util.h"
+ * - StrUtil.h for DBG_OUT and
+ * - WStrUtil.h for multibyte_to_wstr and wstr_to_multibyte */
+#include "StrUtil.h"
+#include "WStrUtil.h"
 
 #define DIR_SEP_TSTR _T(DIR_SEP_STR)
 #ifdef UNICODE

@@ -10,7 +10,7 @@
 
 #include "BaseUtil.h"
 #include "WinUtil.h"
-#include "tstr_util.h"
+#include "TStrUtil.h"
 
 #define DONT_INHERIT_HANDLES FALSE
 
