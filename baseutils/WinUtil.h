@@ -100,6 +100,31 @@ inline bool IsAltPressed() { return IsKeyPressed(VK_MENU); }
 inline bool IsCtrlPressed() { return IsKeyPressed(VK_CONTROL); }
 
 namespace Win {
+
+inline int GetTextLen(HWND hwnd)
+{
+    return (int)SendMessage(hwnd, WM_GETTEXTLENGTH, 0, 0);
+}
+
+/* return a text in edit control represented by hwnd
+   return NULL in case of error (couldn't allocate memory)
+   caller needs to free() the text */
+inline TCHAR *GetText(HWND hwnd)
+{
+    int     cchTxtLen = GetTextLen(hwnd);
+    TCHAR * txt = (TCHAR*)calloc((size_t)cchTxtLen + 1, sizeof(TCHAR));
+    if (NULL == txt)
+        return NULL;
+    SendMessage(hwnd, WM_GETTEXT, cchTxtLen + 1, (LPARAM)txt);
+    txt[cchTxtLen] = 0;
+    return txt;
+}
+
+inline void SetText(HWND hwnd, const TCHAR *txt)
+{
+    SendMessage(hwnd, WM_SETTEXT, (WPARAM)0, (LPARAM)txt);
+}
+
 namespace Menu {
 
 inline void Check(HMENU m, UINT id, bool check)
@@ -152,9 +177,6 @@ inline void Enable(HMENU m, UINT id, bool enable)
 
 #define DRAGQUERY_NUMFILES 0xFFFFFFFF
 
-int     win_get_text_len(HWND hwnd);
-TCHAR * win_get_text(HWND hwnd);
-void    win_set_text(HWND hwnd, const TCHAR *txt);
 
 #define Edit_SelectAll(hwnd) Edit_SetSel(hwnd, 0, -1)
 #define ListBox_AppendString_NoSort(hwnd, txt) ListBox_InsertString(hwnd, -1, txt)

@@ -31,7 +31,7 @@ static INT_PTR CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT message, WPARAM 
         assert(data->fileName);
         assert(!data->pwdOut);
 
-        win_set_text(hDlg, _TR("Enter password"));
+        Win::SetText(hDlg, _TR("Enter password"));
         SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
         EnableWindow(GetDlgItem(hDlg, IDC_REMEMBER_PASSWORD), data->remember != NULL);
 
@@ -57,7 +57,7 @@ static INT_PTR CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT message, WPARAM 
                 case IDOK:
                     data = (Dialog_GetPassword_Data*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
                     assert(data);
-                    data->pwdOut = win_get_text(GetDlgItem(hDlg, IDC_GET_PASSWORD_EDIT));
+                    data->pwdOut = Win::GetText(GetDlgItem(hDlg, IDC_GET_PASSWORD_EDIT));
                     if (data->remember)
                         *data->remember = BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_REMEMBER_PASSWORD);
                     EndDialog(hDlg, DIALOG_OK_PRESSED);
@@ -116,7 +116,7 @@ static INT_PTR CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT message, WPARAM wPa
         SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
         assert(INVALID_PAGE_NO != data->currPageNo);
         assert(data->pageCount >= 1);
-        win_set_text(hDlg, _TR("Go to page"));
+        Win::SetText(hDlg, _TR("Go to page"));
 
         newPageNoTxt = tstr_printf(_T("%d"), data->currPageNo);
         SetDlgItemText(hDlg, IDC_GOTO_PAGE_EDIT, newPageNoTxt);
@@ -146,7 +146,7 @@ static INT_PTR CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT message, WPARAM wPa
                     assert(data);
                     data->pageEnteredOut = INVALID_PAGE_NO;
                     editPageNo = GetDlgItem(hDlg, IDC_GOTO_PAGE_EDIT);
-                    newPageNoTxt = win_get_text(editPageNo);
+                    newPageNoTxt = Win::GetText(editPageNo);
                     if (newPageNoTxt) {
                         data->pageEnteredOut = _ttoi(newPageNoTxt);
                         free((void*)newPageNoTxt);
@@ -201,7 +201,7 @@ static INT_PTR CALLBACK Dialog_Find_Proc(HWND hDlg, UINT message, WPARAM wParam,
         assert(data);
         SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
 
-        win_set_text(hDlg, _TR("Find"));
+        Win::SetText(hDlg, _TR("Find"));
         SetDlgItemText(hDlg, IDC_STATIC, _TR("&Find what:"));
         SetDlgItemText(hDlg, IDC_MATCH_CASE, _TR("&Match case"));
         SetDlgItemText(hDlg, IDC_FIND_NEXT_HINT, _TR("Hint: Use the F3 key for finding again"));
@@ -221,7 +221,7 @@ static INT_PTR CALLBACK Dialog_Find_Proc(HWND hDlg, UINT message, WPARAM wParam,
         case IDOK:
             data = (Dialog_Find_Data*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
             assert(data);
-            data->searchTerm = win_get_text(GetDlgItem(hDlg, IDC_FIND_EDIT));
+            data->searchTerm = Win::GetText(GetDlgItem(hDlg, IDC_FIND_EDIT));
             data->matchCase = BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_MATCH_CASE);
             EndDialog(hDlg, DIALOG_OK_PRESSED);
             return TRUE;
@@ -267,7 +267,7 @@ static INT_PTR CALLBACK Dialog_PdfAssociate_Proc(HWND hDlg, UINT message, WPARAM
         data = (Dialog_PdfAssociate_Data*)lParam;
         assert(data);
         SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
-        win_set_text(hDlg, _TR("Associate with PDF files?"));
+        Win::SetText(hDlg, _TR("Associate with PDF files?"));
         SetDlgItemText(hDlg, IDC_STATIC, _TR("Make SumatraPDF default application for PDF files?"));
         SetDlgItemText(hDlg, IDC_DONT_ASK_ME_AGAIN, _TR("&Don't ask me again"));
         CheckDlgButton(hDlg, IDC_DONT_ASK_ME_AGAIN, BST_UNCHECKED);
@@ -345,7 +345,7 @@ static INT_PTR CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT message, WPAR
         SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
         // for non-latin languages this depends on the correct fonts being installed,
         // otherwise all the user will see are squares
-        win_set_text(hDlg, _TR("Change Language"));
+        Win::SetText(hDlg, _TR("Change Language"));
         langList = GetDlgItem(hDlg, IDC_CHANGE_LANG_LANG_LIST);
         for (int i = 0; i < LANGS_COUNT; i++) {
             TCHAR *langName = utf8_to_tstr(g_langs[i]._langMenuTitle);
@@ -415,7 +415,7 @@ static INT_PTR CALLBACK Dialog_NewVersion_Proc(HWND hDlg, UINT message, WPARAM w
         data = (Dialog_NewVersion_Data*)lParam;
         assert(NULL != data);
         SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
-        win_set_text(hDlg, _TR("SumatraPDF Update"));
+        Win::SetText(hDlg, _TR("SumatraPDF Update"));
 
         txt = tstr_printf(_TR("You have version %s"), data->currVersion);
         SetDlgItemText(hDlg, IDC_YOU_HAVE, txt);
@@ -507,7 +507,7 @@ static float GetZoomComboBoxValue(HWND hDlg, UINT idComboBox, float defaultZoom)
 
     int ix = ComboBox_GetCurSel(GetDlgItem(hDlg, idComboBox));
     if (ix == -1) {
-        TCHAR *customZoom = win_get_text(GetDlgItem(hDlg, idComboBox));
+        TCHAR *customZoom = Win::GetText(GetDlgItem(hDlg, idComboBox));
         float zoom = (float)_tstof(customZoom);
         if (zoom >= ZOOM_MIN && zoom <= ZOOM_MAX)
             newZoom = zoom;
@@ -531,7 +531,7 @@ static INT_PTR CALLBACK Dialog_CustomZoom_Proc(HWND hDlg, UINT message, WPARAM w
 
         SetupZoomComboBox(hDlg, IDC_DEFAULT_ZOOM, *currZoom);
 
-        win_set_text(hDlg, _TR("Zoom factor"));
+        Win::SetText(hDlg, _TR("Zoom factor"));
         SetDlgItemText(hDlg, IDC_STATIC, _TR("&Magnification:"));
         SetDlgItemText(hDlg, IDOK, _TR("Zoom"));
         SetDlgItemText(hDlg, IDCANCEL, _TR("Cancel"));
@@ -601,7 +601,7 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT message, WPARAM wPa
             SetDlgItemText(hDlg, IDC_SET_DEFAULT_READER, _TR("Make SumatraPDF my default PDF reader"));
         }
 
-        win_set_text(hDlg, _TR("SumatraPDF Options"));
+        Win::SetText(hDlg, _TR("SumatraPDF Options"));
         SetDlgItemText(hDlg, IDC_SECTION_VIEW, _TR("View"));
         SetDlgItemText(hDlg, IDC_DEFAULT_LAYOUT_LABEL, _TR("Default &Layout:"));
         SetDlgItemText(hDlg, IDC_DEFAULT_ZOOM_LABEL, _TR("Default &Zoom:"));
@@ -679,7 +679,7 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT message, WPARAM wPa
             prefs->m_rememberOpenedFiles = (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_REMEMBER_OPENED_FILES));
             if (prefs->m_enableTeXEnhancements) {
                 free(prefs->m_inverseSearchCmdLine);
-                prefs->m_inverseSearchCmdLine = win_get_text(GetDlgItem(hDlg, IDC_CMDLINE));
+                prefs->m_inverseSearchCmdLine = Win::GetText(GetDlgItem(hDlg, IDC_CMDLINE));
             }
             EndDialog(hDlg, DIALOG_OK_PRESSED);
             return TRUE;

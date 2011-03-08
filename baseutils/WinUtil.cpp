@@ -235,33 +235,6 @@ DWORD GetFileVersion(TCHAR *path)
 }
 
 // used to be in win_util.cpp
-
-int win_get_text_len(HWND hwnd)
-{
-    return (int)SendMessage(hwnd, WM_GETTEXTLENGTH, 0, 0);
-}
-
-void win_set_text(HWND hwnd, const TCHAR *txt)
-{
-    SendMessage(hwnd, WM_SETTEXT, (WPARAM)0, (LPARAM)txt);
-}
-
-/* return a text in edit control represented by hwnd
-   return NULL in case of error (couldn't allocate memory)
-   caller needs to free() the text */
-TCHAR *win_get_text(HWND hwnd)
-{
-    int     cchTxtLen = win_get_text_len(hwnd);
-    TCHAR * txt = (TCHAR*)calloc((size_t)cchTxtLen + 1, sizeof(TCHAR));
-
-    if (NULL == txt)
-        return NULL;
-
-    SendMessage(hwnd, WM_GETTEXT, cchTxtLen + 1, (LPARAM)txt);
-    txt[cchTxtLen] = 0;
-    return txt;
-}
-
 void launch_url(const TCHAR *url)
 {
     SHELLEXECUTEINFO sei;

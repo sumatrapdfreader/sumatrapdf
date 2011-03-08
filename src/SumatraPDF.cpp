@@ -1153,7 +1153,7 @@ static void ToolbarUpdateStateForWindow(WindowInfo *win) {
                 case IDM_FIND_NEXT:
                 case IDM_FIND_PREV: 
                     // TODO: Update on whether there's more to find, not just on whether there is text.
-                    if (win_get_text_len(win->hwndFindBox) == 0)
+                    if (Win::GetTextLen(win->hwndFindBox) == 0)
                         buttonState = disable;
                     break;
 
@@ -1238,7 +1238,7 @@ static void UpdateToolbarAndScrollbarsForAllWindows(void)
         if (WS_SHOWING_PDF != win->state) {
             ShowScrollBar(win->hwndCanvas, SB_BOTH, FALSE);
             if (WS_ABOUT == win->state)
-                win_set_text(win->hwndFrame, SUMATRA_WINDOW_TITLE);
+                Win::SetText(win->hwndFrame, SUMATRA_WINDOW_TITLE);
         }
     }
 }
@@ -1436,7 +1436,7 @@ static bool LoadPdfIntoWindow(
             delete previousmodel;
             win->state = WS_ERROR_LOADING_PDF;
             ScopedMem<TCHAR> title(tstr_printf(_T("%s - %s"), FilePath_GetBaseName(fileName), SUMATRA_WINDOW_TITLE));
-            win_set_text(win->hwndFrame, title);
+            Win::SetText(win->hwndFrame, title);
             goto Error;
         }
     } else {
@@ -1511,7 +1511,7 @@ static bool LoadPdfIntoWindow(
         free(title);
         title = msg;
     }
-    win_set_text(win->hwndFrame, title);
+    Win::SetText(win->hwndFrame, title);
     free(title);
 
 Error:
@@ -4020,7 +4020,7 @@ static void OnMenuFind(WindowInfo *win)
         return;
     }
 
-    ScopedMem<TCHAR> previousFind(win_get_text(win->hwndFindBox));
+    ScopedMem<TCHAR> previousFind(Win::GetText(win->hwndFindBox));
     WORD state = (WORD)SendMessage(win->hwndToolbar, TB_GETSTATE, IDM_FIND_MATCH, 0);
     bool matchCase = (state & TBSTATE_CHECKED) != 0;
 
@@ -4028,7 +4028,7 @@ static void OnMenuFind(WindowInfo *win)
     if (!findString)
         return;
 
-    win_set_text(win->hwndFindBox, findString);
+    Win::SetText(win->hwndFindBox, findString);
     Edit_SetModify(win->hwndFindBox, TRUE);
 
     bool matchCaseChanged = matchCase != (0 != (state & TBSTATE_CHECKED));
@@ -4206,7 +4206,7 @@ static DWORD WINAPI ShowMessageThread(LPVOID data)
 static void WindowInfo_ShowMessage_Async(WindowInfo *win, const TCHAR *message, bool resize)
 {
     if (message)
-        win_set_text(win->hwndFindStatus, message);
+        Win::SetText(win->hwndFindStatus, message);
     if (resize) {
         // compute the length of the message
         RECT rc = {0,0,FIND_STATUS_WIDTH,0};
@@ -4946,7 +4946,7 @@ SIZE TextSizeInHwnd(HWND hwnd, const TCHAR *txt)
 static void UpdateToolbarFindText(WindowInfo *win)
 {
     const TCHAR *text = _TR("Find:");
-    win_set_text(win->hwndFindText, text);
+    Win::SetText(win->hwndFindText, text);
 
     RECT findWndRect;
     GetWindowRect(win->hwndFindBg, &findWndRect);
@@ -5021,7 +5021,7 @@ static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT message, WPARAM wParam, L
         // select the whole page box on a non-selecting click
     } else if (WM_CHAR == message) {
         if (VK_RETURN == wParam) {
-            ScopedMem<TCHAR> buf(win_get_text(win->hwndPageBox));
+            ScopedMem<TCHAR> buf(Win::GetText(win->hwndPageBox));
             int newPageNo;
             newPageNo = _ttoi(buf);
             if (win->dm->validPageNo(newPageNo)) {
@@ -5060,7 +5060,7 @@ static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT message, WPARAM wParam, L
 static void UpdateToolbarPageText(WindowInfo *win, int pageCount)
 {
     const TCHAR *text = _TR("Page:");
-    win_set_text(win->hwndPageText, text);
+    Win::SetText(win->hwndPageText, text);
     SIZE size = TextSizeInHwnd(win->hwndPageText, text);
     size.cx += 6;
 
@@ -5082,7 +5082,7 @@ static void UpdateToolbarPageText(WindowInfo *win, int pageCount)
     } else {
         tstr_printf_s(buf, dimof(buf), _T(" / %d"), pageCount);
     }
-    win_set_text(win->hwndPageTotal, buf);
+    Win::SetText(win->hwndPageTotal, buf);
     SIZE size2 = TextSizeInHwnd(win->hwndPageTotal, buf);
     size2.cx += 6;
 
@@ -5303,7 +5303,7 @@ public:
 
         TCHAR buf[256];
         wsprintf(buf, _TR("Searching %d of %d..."), current, total);
-        win_set_text(win->hwndFindStatus, buf);
+        Win::SetText(win->hwndFindStatus, buf);
     }
 };
 
@@ -5393,7 +5393,7 @@ static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT message, WPARAM wParam, LP
         GetWindowRect(hwnd, &rc);
 
         HWND titleLabel = GetDlgItem(hwnd, 0);
-        ScopedMem<TCHAR> text(win_get_text(titleLabel));
+        ScopedMem<TCHAR> text(Win::GetText(titleLabel));
         SIZE size = TextSizeInHwnd(titleLabel, text);
 
         int offset = (int)(2 * win->uiDPIFactor);

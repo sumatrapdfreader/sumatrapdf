@@ -1071,7 +1071,7 @@ bool IsCheckboxChecked(HWND hwnd)
 
 void OnButtonInstall()
 {
-    TCHAR *userInstallDir = win_get_text(gHwndTextboxInstDir);
+    TCHAR *userInstallDir = Win::GetText(gHwndTextboxInstDir);
     if (!tstr_empty(userInstallDir)) {
         free(gGlobalData.installDir);
         gGlobalData.installDir = userInstallDir;
@@ -1242,7 +1242,7 @@ void OnButtonOptions()
     ShowWindow(gHwndCheckboxRegisterBrowserPlugin, nCmdShow);
     ShowWindow(gHwndCheckboxRegisterPdfFilter, nCmdShow);
 
-    win_set_text(gHwndButtonOptions, gShowOptions ? _T("Hide &Options") : _T("&Options"));
+    Win::SetText(gHwndButtonOptions, gShowOptions ? _T("Hide &Options") : _T("&Options"));
 
     RECT rc;
     GetClientRect(gHwndFrame, &rc);
@@ -1309,7 +1309,7 @@ void OnButtonBrowse()
 {
     TCHAR path[MAX_PATH];
 
-    TCHAR *installDir = win_get_text(gHwndTextboxInstDir);
+    TCHAR *installDir = Win::GetText(gHwndTextboxInstDir);
     if (!dir_exists(installDir)) {
         TCHAR *parentDir = FilePath_GetDir(installDir);
         free(installDir);
@@ -1321,7 +1321,7 @@ void OnButtonBrowse()
         // to prevent unintended installations into e.g. %ProgramFiles% itself
         if (!tstr_endswithi(path, _T("\\") TAPP))
             tstr_cat_s(path, dimof(path), _T("\\") TAPP);
-        win_set_text(gHwndTextboxInstDir, path);
+        Win::SetText(gHwndTextboxInstDir, path);
         Edit_SetSel(gHwndTextboxInstDir, 0, -1);
         SetFocus(gHwndTextboxInstDir);
     }
