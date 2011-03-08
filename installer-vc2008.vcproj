@@ -66,51 +66,51 @@
 			Name="baseutils"
 			>
 			<File
-				RelativePath=".\baseutils\base_util.cpp"
+				RelativePath=".\baseutils\BaseUtil.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\baseutils\base_util.h"
+				RelativePath=".\baseutils\BaseUtil.h"
 				>
 			</File>
 			<File
-				RelativePath=".\baseutils\benc_util.cpp"
+				RelativePath=".\baseutils\BencUtil.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\baseutils\benc_util.h"
+				RelativePath=".\baseutils\BencUtil.h"
 				>
 			</File>
 			<File
-				RelativePath=".\baseutils\file_util.cpp"
+				RelativePath=".\baseutils\FileUtil.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\baseutils\file_util.h"
+				RelativePath=".\baseutils\FileUtil.h"
 				>
 			</File>
 			<File
-				RelativePath=".\baseutils\geom_util.cpp"
+				RelativePath=".\baseutils\GeomUtil.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\baseutils\geom_util.h"
+				RelativePath=".\baseutils\GeomUtil.h"
 				>
 			</File>
 			<File
-				RelativePath=".\baseutils\str_util.cpp"
+				RelativePath=".\baseutils\StrUtil.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\baseutils\str_util.h"
+				RelativePath=".\baseutils\StrUtil.h"
 				>
 			</File>
 			<File
-				RelativePath=".\baseutils\tstr_util.cpp"
+				RelativePath=".\baseutils\TStrUtil.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\baseutils\tstr_util.h"
+				RelativePath=".\baseutils\TStrUtil.h"
 				>
 			</File>
 			<File
@@ -122,14 +122,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\baseutils\win_util.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\baseutils\win_util.h"
-				>
-			</File>
-			<File
 				RelativePath=".\baseutils\WinUtil.cpp"
 				>
 			</File>
@@ -138,11 +130,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\baseutils\wstr_util.cpp"
+				RelativePath=".\baseutils\WStrUtil.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\baseutils\wstr_util.h"
+				RelativePath=".\baseutils\WStrUtil.h"
 				>
 			</File>
 		</Filter>
