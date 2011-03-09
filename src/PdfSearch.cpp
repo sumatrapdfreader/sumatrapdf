@@ -4,8 +4,10 @@
 enum { SEARCH_PAGE, SKIP_PAGE };
 
 #define SkipWhitespace(c) for (; _istspace(*(c)); (c)++)
-#define islatinalnum(c) (_istalnum(c) && (unsigned short)(c) < 256)
-#define iswordchar(c) _istalnum(c)
+#define iswordchar(c) IsCharAlphaNumeric(c)
+// ignore spaces between CJK glyphs but not between Latin, Greek, Cyrillc, etc. letters
+// cf. http://code.google.com/p/sumatrapdf/issues/detail?id=959
+#define isnoncjkwordchar(c) (iswordchar(c) && (unsigned short)(c) < 0x2E80)
 
 PdfSearch::PdfSearch(PdfEngine *engine, PdfSearchTracker *tracker) : PdfSelection(engine),
     tracker(tracker), findText(NULL), anchor(NULL), pageText(NULL),
@@ -42,9 +44,9 @@ void PdfSearch::SetText(TCHAR *text)
     this->findText = StrCopy(text);
 
     // extract anchor string (the first word or the first symbol) for faster searching
-    if (islatinalnum(*text)) {
+    if (isnoncjkwordchar(*text)) {
         TCHAR *end;
-        for (end = text; islatinalnum(*end); end++);
+        for (end = text; isnoncjkwordchar(*end); end++);
         this->anchor = tstr_dupn(text, end - text);
     }
     else
@@ -92,11 +94,11 @@ int PdfSearch::MatchLen(TCHAR *start)
     while (*match) {
         if (!*end)
             return -1;
-        if (caseSensitive ? *match != *end : _totlower(*match) != _totlower(*end))
+        if (caseSensitive ? *match != *end : CharLower((LPTSTR)LOWORD(*match)) != CharLower((LPTSTR)LOWORD(*end)))
             return -1;
         match++;
         end++;
-        if (!islatinalnum(*(match - 1)) || _istspace(*(match - 1)) && _istspace(*(end - 1))) {
+        if (!isnoncjkwordchar(*(match - 1)) || _istspace(*(match - 1)) && _istspace(*(end - 1))) {
             SkipWhitespace(match);
             SkipWhitespace(end);
         }
