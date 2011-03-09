@@ -779,9 +779,14 @@ ftgetwidthscale(fz_font *font, int gid)
 	if (font->ftsubstitute && gid < font->widthcount)
 	{
 		FT_Fixed advance = 0;
-		FT_Get_Advance((FT_Face)font->ftface, gid, FT_LOAD_NO_BITMAP | (font->fthint ? 0 : FT_LOAD_NO_HINTING), &advance);
+		FT_Face face = (FT_Face)font->ftface;
+		FT_Get_Advance(face, gid, FT_LOAD_NO_BITMAP | (font->fthint ? 0 : FT_LOAD_NO_HINTING), &advance);
+		
 		if (advance)
-			return 1024.0 * font->widthtable[gid] / advance;
+		{
+			float charSize = (float)CLAMP(face->units_per_EM, 1000, 65536);
+			return charSize * font->widthtable[gid] / advance;
+		}
 	}
 	
 	return 1.0;
@@ -884,6 +889,11 @@ gdiplusruntext(userData *user, fz_text *text, fz_matrix ctm, Brush *brush)
 	}
 	
 	Graphics *graphics = user->graphics;
+	
+	FT_Face face = (FT_Face)text->font->ftface;
+	FT_UShort charSize = CLAMP(face->units_per_EM, 1000, 65536);
+	FT_Set_Char_Size(face, charSize, charSize, 72, 72);
+	FT_Set_Transform(face, NULL, NULL);
 	
 	const StringFormat *format = StringFormat::GenericTypographic();
 	fz_matrix rotate = fz_concat(text->trm, fz_scale(-1.0 / fontSize, -1.0 / fontSize));
