@@ -516,7 +516,6 @@ static void usage(void)
 	fprintf(stderr, "\t-p -\tpassword\n");
 	fprintf(stderr, "\t-r -\tresolution\n");
 	fprintf(stderr, "\t-A\tdisable accelerated functions\n");
-	fprintf(stderr, "usage: mupdf [options] file.pdf [page]\n");
 	exit(1);
 }
 

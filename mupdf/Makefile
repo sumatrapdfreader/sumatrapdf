@@ -304,6 +304,12 @@ $(MUPDF_LIB): $(FITZ_OBJ) $(DRAW_OBJ) $(MUPDF_OBJ) $(CMAP_OBJ) $(FONT_OBJ)
 
 APPS = $(PDFSHOW_EXE) $(PDFCLEAN_EXE) $(PDFDRAW_EXE) $(PDFEXTRACT_EXE) $(PDFINFO_EXE) $(PDFVIEW_EXE)
 
+APPS_MAN = \
+	apps/man/mupdf.1 \
+	apps/man/pdfclean.1 \
+	apps/man/pdfdraw.1 \
+	apps/man/pdfshow.1
+
 $(OBJDIR)/%.o: apps/%.c
 	$(CC_CMD)
 
@@ -381,9 +387,11 @@ nuke:
 BINDIR ?= $(prefix)/bin
 LIBDIR ?= $(prefix)/lib
 INCDIR ?= $(prefix)/include
+MANDIR ?= $(prefix)/share/man/man1
 
 install: $(OBJDIR) $(GENDIR) $(MUPDF_LIB) $(APPS)
-	install -d $(BINDIR) $(LIBDIR) $(INCDIR)
+	install -d $(BINDIR) $(LIBDIR) $(INCDIR) $(MANDIR)
 	install $(APPS) $(BINDIR)
+	install $(APPS_MAN) $(MANDIR)
 	install $(MUPDF_LIB) $(LIBDIR)
 	install $(MUPDF_HDR) $(INCDIR)

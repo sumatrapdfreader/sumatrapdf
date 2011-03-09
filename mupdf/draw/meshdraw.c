@@ -453,8 +453,6 @@ fz_paintradial(fz_shade *shade, fz_matrix ctm, fz_pixmap *dest, fz_bbox bbox)
 	p1.y = shade->mesh[4];
 	r1 = shade->mesh[5];
 
-	fz_paintannulus(ctm, p0, r0, 0, p1, r1, 255, dest, bbox);
-
 	if (shade->extend[0])
 	{
 		if (r0 < r1)
@@ -468,6 +466,8 @@ fz_paintradial(fz_shade *shade, fz_matrix ctm, fz_pixmap *dest, fz_bbox bbox)
 
 		fz_paintannulus(ctm, e, er, 0, p0, r0, 0, dest, bbox);
 	}
+
+	fz_paintannulus(ctm, p0, r0, 0, p1, r1, 255, dest, bbox);
 
 	if (shade->extend[1])
 	{

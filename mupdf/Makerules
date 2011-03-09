@@ -3,9 +3,11 @@
 OS ?= $(shell uname)
 OS := $(OS:MINGW%=MINGW)
 
-CC ?= cc
-CFLAGS := -Ifitz -Imupdf -Wall
-LDFLAGS :=
+CC ?=
+CFLAGS ?=
+LDFLAGS ?=
+
+CFLAGS += -Ifitz -Imupdf -Wall
 
 ifeq "$(build)" "debug"
 CFLAGS += -pipe -g
