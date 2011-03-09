@@ -1983,7 +1983,8 @@ static BOOL ShowNewVersionDialog(WindowInfo *win, const TCHAR *newVersion)
     data.skipThisVersion = FALSE;
     INT_PTR res = Dialog_NewVersionAvailable(win->hwndFrame, &data);
     if (data.skipThisVersion) {
-        tstr_dup_replace(&gGlobalPrefs.m_versionToSkip, newVersion);
+        free(gGlobalPrefs.m_versionToSkip);
+        gGlobalPrefs.m_versionToSkip = StrCopy(newVersion);
     }
     return DIALOG_OK_PRESSED == res;
 }
@@ -3506,7 +3507,7 @@ static void OnMenuSaveAs(WindowInfo *win)
     // TODO: fix saving embedded PDF documents
     tstr_trans_chars(dstFileName, _T(":"), _T("_"));
     if (tstr_endswithi(dstFileName, _T(".pdf")))
-        dstFileName[lstrlen(dstFileName) - 4] = 0;
+        dstFileName[StrLen(dstFileName) - 4] = 0;
 
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = win->hwndFrame;
@@ -3680,10 +3681,10 @@ static void OnMenuOpen(WindowInfo *win)
     }
 
     while (*fileName) {
-        ScopedMem<TCHAR> filePath(tstr_cat3(ofn.lpstrFile, DIR_SEP_TSTR, fileName));
+        ScopedMem<TCHAR> filePath(FilePath_Join(ofn.lpstrFile, fileName));
         if (filePath)
             LoadDocument(filePath, win);
-        fileName += lstrlen(fileName) + 1;
+        fileName += StrLen(fileName) + 1;
     }
 }
 
@@ -4861,7 +4862,7 @@ static void Find(WindowInfo *win, PdfSearchDirection direction)
     ftd.wasModified = Edit_GetModify(win->hwndFindBox);
     Edit_SetModify(win->hwndFindBox, FALSE);
 
-    bool hasText = lstrlen(ftd.text) > 0;
+    bool hasText = StrLen(ftd.text) > 0;
     if (hasText)
         win->findThread = CreateThread(NULL, 0, FindThread, _memdup(&ftd), 0, 0);
 }
@@ -4901,7 +4902,7 @@ static LRESULT CALLBACK WndProcFindStatus(HWND hwnd, UINT message, WPARAM wParam
         SetBkMode(hdc, TRANSPARENT);
         rect.left += 10;
         rect.top += 4;
-        DrawText(hdc, text, lstrlen(text), &rect, DT_LEFT);
+        DrawText(hdc, text, StrLen(text), &rect, DT_LEFT);
         
         int width = MulDiv(FIND_STATUS_WIDTH, win->dpi, USER_DEFAULT_SCREEN_DPI) - 20;
         rect.top += MulDiv(20, win->dpi, USER_DEFAULT_SCREEN_DPI);
@@ -4931,7 +4932,7 @@ static LRESULT CALLBACK WndProcFindStatus(HWND hwnd, UINT message, WPARAM wParam
 SIZE TextSizeInHwnd(HWND hwnd, const TCHAR *txt)
 {
     SIZE sz;
-    int txtLen = lstrlen(txt);
+    size_t txtLen = StrLen(txt);
     HDC dc = GetWindowDC(hwnd);
     /* GetWindowDC() returns dc with default state, so we have to first set
        window's current font into dc */
@@ -5605,14 +5606,14 @@ static void RelayoutTocItem(LPNMTVCUSTOMDRAW ntvcd)
     TreeView_GetItem(hTV, &item);
 
     // Draw the page number right-aligned (if there is one)
-    TCHAR *lpPageNo = item.pszText + lstrlen(item.pszText);
+    TCHAR *lpPageNo = item.pszText + StrLen(item.pszText);
     for (lpPageNo--; lpPageNo > item.pszText && _istdigit(*lpPageNo); lpPageNo--);
     if (lpPageNo > item.pszText && ' ' == *lpPageNo && *(lpPageNo + 1) && ' ' == *--lpPageNo) {
         RECT rcPageNo = rcFullWidth;
         InflateRect(&rcPageNo, -2, -1);
 
         SIZE txtSize;
-        GetTextExtentPoint32(ncd->hdc, lpPageNo, lstrlen(lpPageNo), &txtSize);
+        GetTextExtentPoint32(ncd->hdc, lpPageNo, StrLen(lpPageNo), &txtSize);
         rcPageNo.left = rcPageNo.right - txtSize.cx;
 
         SetTextColor(ncd->hdc, GetSysColor(COLOR_WINDOWTEXT));

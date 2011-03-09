@@ -130,7 +130,7 @@ static void tstr_test()
     assert(tstr_endswith(str, _T("ing")) && tstr_endswithi(str, _T("ING")));
     assert(!tstr_endswith(str, _T("ung")));
     assert(tstr_empty(NULL) && tstr_empty(_T("")) && !tstr_empty(str));
-    assert(tstr_contains(str, _T('s')) && !tstr_contains(str, _T('S')));
+    assert(tstr_find_char(str, _T('s')) && !tstr_find_char(str, _T('S')));
     int res = tstr_copyn(buf, dimof(buf), str, 4);
     assert(res && tstr_eq(buf, _T("a st")));
     res = tstr_copyn(buf, 4, str, 4);
@@ -154,8 +154,8 @@ static void tstr_test()
     str = tstr_cat(buf, buf);
     assert(StrLen(str) == 2 * StrLen(buf));
     free(str);
-    str = tstr_cat3(_T("ab"), NULL, _T("ef"));
-    assert(tstr_eq(str, _T("abef")));
+    str = tstr_cat(NULL, _T("ab"));
+    assert(tstr_eq(str, _T("ab")));
     free(str);
 
     tstr_copy(buf, 6, _T("abc"));

@@ -152,15 +152,14 @@ TCHAR *AppGenDataFilename(TCHAR *pFilename)
         TCHAR dir[MAX_PATH];
         *dir = '\0';
         SHGetSpecialFolderPath(NULL, dir, CSIDL_APPDATA, TRUE);
-        path = tstr_cat3(dir, _T(DIR_SEP_STR), APP_NAME_STR);
+        path = FilePath_Join(dir, APP_NAME_STR);
         if (path)
             _tmkdir(path);
     }
     if (!path)
         return NULL;
 
-    bool needsSep = !char_is_dir_sep((char)path[lstrlen(path) - 1]) && !char_is_dir_sep((char)pFilename[0]);
-    TCHAR * filename = tstr_printf(_T("%s%s%s"), path, needsSep ? _T(DIR_SEP_STR) : _T(""), pFilename);
+    TCHAR *filename = FilePath_Join(path, pFilename);
     free(path);
 
     return filename;
@@ -425,42 +424,30 @@ LPTSTR AutoDetectInverseSearchCommands(HWND hwndCombo)
     for (int i = 0; i < dimof(editor_rules); i++)
     {
         if (!ReadRegStr(editor_rules[i].RegRoot, editor_rules[i].RegKey, editor_rules[i].RegValue, path, dimof(path)))
-        {
             continue;
-        }
 
-        PTSTR cmd;
-        if (editor_rules[i].Type == SiblingPath)
-        {
+        TCHAR *exePath;
+        if (editor_rules[i].Type == SiblingPath) {
             // remove file part
-            PTSTR dir = FilePath_GetDir(path);
-            cmd = tstr_printf(_T("\"%s\\%s\" %s"), dir, editor_rules[i].BinaryFilename, editor_rules[i].InverseSearchArgs);
-            free(dir);
-        }
-        else if (editor_rules[i].Type == BinaryDir)
-        {
-            // remove trailing path separator (TODO: move to function in file_util.c)
-            size_t len = StrLen(path);
-            if (*path && char_is_dir_sep((char)path[len-1]))
-                path[len-1] = 0;
-            cmd = tstr_printf(_T("\"%s\\%s\" %s"), path, editor_rules[i].BinaryFilename, editor_rules[i].InverseSearchArgs);
-        }
+            ScopedMem<TCHAR> dir(FilePath_GetDir(path));
+            exePath = FilePath_Join(dir, editor_rules[i].BinaryFilename);
+        } else if (editor_rules[i].Type == BinaryDir)
+            exePath = FilePath_Join(path, editor_rules[i].BinaryFilename);
         else // if (editor_rules[i].Type == BinaryPath)
-        {
-            cmd = tstr_printf(_T("\"%s\" %s"), path, editor_rules[i].InverseSearchArgs);
+            exePath = StrCopy(path);
+
+        TCHAR *editorCmd = tstr_printf(_T("\"%s\" %s"), exePath, editor_rules[i].InverseSearchArgs);
+        free(exePath);
+
+        if (!hwndCombo) {
+            // no need to fill a combo box: return immeditately after finding an editor.
+            return editorCmd;
         }
 
         if (!firstEditor)
-            firstEditor = StrCopy(cmd);
-        if (!hwndCombo)
-        {
-            // no need to fill a combo box: return immeditately after finding an editor.
-            free(cmd);
-            return firstEditor;
-        }
-
-        SendMessage(hwndCombo, CB_ADDSTRING, 0, (LPARAM)cmd);
-        free(cmd);
+            firstEditor = StrCopy(editorCmd);
+        ComboBox_AddString(hwndCombo, editorCmd);
+        free(editorCmd);
 
         // skip the remaining rules for this editor
         while (i + 1 < dimof(editor_rules) && tstr_eq(editor_rules[i].Name, editor_rules[i+1].Name))
@@ -471,7 +458,7 @@ LPTSTR AutoDetectInverseSearchCommands(HWND hwndCombo)
     if (!firstEditor) {
         firstEditor = StrCopy(_T("notepad %f"));
         if (hwndCombo)
-            SendMessage(hwndCombo, CB_ADDSTRING, 0, (LPARAM)firstEditor);
+            ComboBox_AddString(hwndCombo, firstEditor);
     }
     return firstEditor;
 }

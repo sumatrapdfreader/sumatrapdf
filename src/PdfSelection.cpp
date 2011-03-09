@@ -53,7 +53,7 @@ int PdfSelection::FindClosestGlyph(int pageNo, double x, double y)
             lens[pageNo - 1] = 0;
             return 0;
         }
-        lens[pageNo - 1] = lstrlen(text[pageNo - 1]);
+        lens[pageNo - 1] = StrLen(text[pageNo - 1]);
     }
 
     double maxDist = -1;

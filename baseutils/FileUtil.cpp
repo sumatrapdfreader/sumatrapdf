@@ -7,15 +7,17 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+static inline bool FilePath_IsSep(TCHAR c)
+{
+    return '\\' == c || '//' == c;
+}
+
 const TCHAR *FilePath_GetBaseName(const TCHAR *path)
 {
     const TCHAR *fileBaseName = path + StrLen(path);
-    while (fileBaseName > path) {
-        if (char_is_dir_sep((char)fileBaseName[-1])) {
-            return fileBaseName;
-        }
-        --fileBaseName;
-    }
+    for (; fileBaseName > path; fileBaseName--)
+        if (FilePath_IsSep(fileBaseName[-1]))
+            break;
     return fileBaseName;
 }
 
@@ -28,6 +30,14 @@ TCHAR *FilePath_GetDir(const TCHAR *path)
     if (baseName > dir)
         baseName[-1] = '\0';
     return dir;
+}
+
+TCHAR *FilePath_Join(const TCHAR *path, const TCHAR *filename)
+{
+    bool needsSep = !FilePath_IsSep(path[StrLen(path) - 1]) && !FilePath_IsSep(filename[0]);
+    if (needsSep)
+        return tstr_printf(_T("%s\\%s"), path, filename);
+    return tstr_cat(path, filename);
 }
 
 // Normalize a file path.

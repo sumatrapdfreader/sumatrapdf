@@ -25,32 +25,16 @@ char * str_catn_s(char *dst, size_t dst_cch_size, const char *src, size_t src_cc
     return dst;
 }
 
-int char_is_dir_sep(char c)
-{
-    if ('/' == c || '\\' == c)
-        return TRUE;
-    return FALSE;
-}
-
-/* Concatenate 3 strings. Any string can be NULL.
+/* Concatenate 2 strings. Any string can be NULL.
    Caller needs to free() memory. */
-char *str_cat3(const char *str1, const char *str2, const char *str3)
+char *str_cat(const char *str1, const char *str2)
 {
     if (!str1)
         str1 = "";
     if (!str2)
         str2 = "";
-    if (!str3)
-        str3 = "";
 
-    return str_printf("%s%s%s", str1, str2, str3);
-}
-
-/* Concatenate 2 strings. Any string can be NULL.
-   Caller needs to free() memory. */
-char *str_cat(const char *str1, const char *str2)
-{
-    return str_cat3(str1, str2, NULL);
+    return str_printf("%s%s", str1, str2);
 }
 
 char *str_dupn(const char *str, size_t str_len_cch)
@@ -84,7 +68,7 @@ int str_copy(char *dst, size_t dst_cch_size, const char *src)
 
 int str_eq(const char *str1, const char *str2)
 {
-    if (!str1 && !str2)
+    if (str1 == str2)
         return TRUE;
     if (!str1 || !str2)
         return FALSE;
@@ -95,7 +79,7 @@ int str_eq(const char *str1, const char *str2)
 
 int str_ieq(const char *str1, const char *str2)
 {
-    if (!str1 && !str2)
+    if (str1 == str2)
         return TRUE;
     if (!str1 || !str2)
         return FALSE;
@@ -106,7 +90,7 @@ int str_ieq(const char *str1, const char *str2)
 
 int str_eqn(const char *str1, const char *str2, size_t len)
 {
-    if (!str1 && !str2)
+    if (str1 == str2)
         return TRUE;
     if (!str1 || !str2)
         return FALSE;
@@ -124,7 +108,7 @@ int str_startswith(const char *str, const char *txt)
 /* return true if 'str' starts with 'txt', NOT case-sensitive */
 int str_startswithi(const char *str, const char *txt)
 {
-    if (!str && !txt)
+    if (str == txt)
         return TRUE;
     if (!str || !txt)
         return FALSE;
@@ -177,174 +161,6 @@ int str_empty(const char *str)
     return FALSE;
 }
 
-/* split a string '*txt' at the border character 'c'. Something like python's
-   string.split() except called iteratively.
-   Returns a copy of the string (must be free()d by the caller).
-   Returns NULL to indicate there's no more items. */
-char *str_split_iter(char **txt, char c)
-{
-    const char *tmp;
-    const char *pos;
-    char *result;
-
-    tmp = (const char*)*txt;
-    if (!tmp)
-        return NULL;
-
-    pos = str_find_char(tmp, c);
-    if (pos) {
-         result = str_dupn(tmp, (int)(pos-tmp));
-         *txt = (char*)pos+1;
-    } else {
-        result = StrCopy(tmp);
-        *txt = NULL; /* next iteration will return NULL */
-    }
-    return result;
-}
-
-/* Replace all posible versions (Unix, Windows, Mac) of newline character
-   with 'replace'. Returns newly allocated string with normalized newlines
-   or NULL if error.
-   Caller needs to free() the result */
-char *str_normalize_newline(const char *txt, const char *replace)
-{
-    size_t          replace_len;
-    char            c;
-    char *          result;
-    const char *    tmp;
-    char *          tmp_out;
-    size_t          result_len = 0;
-
-    replace_len = strlen(replace);
-    tmp = txt;
-    for (;;) {
-        c = *tmp++;
-        if (!c)
-            break;
-        if (0xa == c) {
-            /* a single 0xa => Unix */
-            result_len += replace_len;
-        } else if (0xd == c) {
-            if (0xa == *tmp) {
-                /* 0xd 0xa => dos */
-                result_len += replace_len;
-                ++tmp;
-            }
-            else {
-                /* just 0xd => Mac */
-                result_len += replace_len;
-            }
-        } else
-            ++result_len;
-    }
-
-    if (0 == result_len || (size_t)-1 == result_len)
-        return NULL;
-
-    result = (char*)malloc(result_len+1);
-    if (!result)
-        return NULL;
-    tmp_out = result;
-    for (;;) {
-        c = *txt++;
-        if (!c)
-            break;
-        if (0xa == c) {
-            /* a single 0xa => Unix */
-            memcpy(tmp_out, replace, replace_len);
-            tmp_out += replace_len;
-        } else if (0xd == c) {
-            if (0xa == *txt) {
-                /* 0xd 0xa => dos */
-                memcpy(tmp_out, replace, replace_len);
-                tmp_out += replace_len;
-                ++txt;
-            }
-            else {
-                /* just 0xd => Mac */
-                memcpy(tmp_out, replace, replace_len);
-                tmp_out += replace_len;
-            }
-        } else
-            *tmp_out++ = c;
-    }
-
-    *tmp_out = 0;
-    return result;
-}
-
-#define WHITE_SPACE_CHARS " \n\t\r"
-
-/* Strip all 'to_strip' characters from the beginning of the string.
-   Does stripping in-place */
-void str_strip_left(char *txt, const char *to_strip)
-{
-    char *new_start = txt;
-    char c;
-    if (!txt || !to_strip)
-        return;
-    for (;;) {
-        c = *new_start;
-        if (0 == c)
-            break;
-        if (!str_contains(to_strip, c))
-            break;
-        ++new_start;
-    }
-
-    if (new_start != txt) {
-        memmove(txt, new_start, strlen(new_start)+1);
-    }
-}
-
-/* Strip white-space characters from the beginning of the string.
-   Does stripping in-place */
-void str_strip_ws_left(char *txt)
-{
-    str_strip_left(txt, WHITE_SPACE_CHARS);
-}
-
-void str_strip_right(char *txt, const char *to_strip)
-{
-    char * new_end;
-    char   c;
-    if (!txt || !to_strip)
-        return;
-    if (0 == *txt)
-        return;
-    /* point at the last character in the string */
-    new_end = txt + strlen(txt) - 1;
-    for (;;) {
-        c = *new_end;
-        if (!str_contains(to_strip, c))
-            break;
-        if (txt == new_end)
-            break;
-        --new_end;
-    }
-    if (str_contains(to_strip, *new_end))
-        new_end[0] = 0;
-    else
-        new_end[1] = 0;
-}
-
-void str_strip_ws_right(char *txt)
-{
-    str_strip_right(txt, WHITE_SPACE_CHARS);
-}
-
-void str_strip_both(char *txt, const char *to_strip)
-{
-    str_strip_left(txt, to_strip);
-    str_strip_right(txt, to_strip);
-}
-
-void str_strip_ws_both(char *txt)
-{
-    str_strip_ws_left(txt);
-    str_strip_ws_right(txt);
-}
-
 /* Convert binary data in <buf> of size <len> to a hex-encoded string */
 char *mem_to_hexstr(const unsigned char *buf, int len)
 {
@@ -358,19 +174,6 @@ char *mem_to_hexstr(const unsigned char *buf, int len)
     }
     ret[2 * len] = '\0';
     return ret;
-}
-
-/* replace a string pointed by <dst> with a copy of <src>
-   (i.e. free existing <dst>).
-   Returns FALSE if failed to replace (due to out of memory) */
-BOOL str_dup_replace(char **dst, const char *src)
-{
-    char *dup = (char*)strdup(src);
-    if (!dup)
-        return FALSE;
-    free(*dst);
-    *dst = dup;
-    return TRUE;
 }
 
 /* Caller needs to free() the result */
@@ -426,30 +229,14 @@ BOOL hexstr_to_mem(const char *s, unsigned char *buf, int bufLen)
     return *s == '\0';
 }
 
-int str_contains(const char *str, char c)
-{
-    const char *pos = str_find_char(str, c);
-    if (!pos)
-        return FALSE;
-    return TRUE;
-}
-
 char *str_printf(const char *format, ...)
 {
-    char *result;
-    va_list     args;
+    va_list args;
+    char    message[256];
+    size_t  bufCchSize = dimof(message);
+    char  * buf = message;
+
     va_start(args, format);
-    result = str_printf_args(format, args);
-    va_end(args);
-    return result;
-}
-
-char *str_printf_args(const char *format, va_list args)
-{
-    char   message[256];
-    size_t bufCchSize = dimof(message);
-    char * buf = message;
-
     for (;;)
     {
         int count = vsnprintf(buf, bufCchSize, format, args);
@@ -467,6 +254,7 @@ char *str_printf_args(const char *format, va_list args)
         if (!buf)
             break;
     }
+    va_end(args);
 
     if (buf == message)
         buf = StrCopy(message);

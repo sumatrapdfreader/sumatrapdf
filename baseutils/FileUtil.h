@@ -5,7 +5,7 @@
 
 const TCHAR *   FilePath_GetBaseName(const TCHAR *path);
 TCHAR *         FilePath_GetDir(const TCHAR *path);
-
+TCHAR *         FilePath_Join(const TCHAR *path, const TCHAR *filename);
 TCHAR *         FilePath_Normalize(const TCHAR *f, BOOL bLowerCase);
 int             FilePath_Compare(const TCHAR *lhs, const TCHAR *rhs);
 BOOL            FilePath_IsSameFile(const TCHAR *path1, const TCHAR *path2);

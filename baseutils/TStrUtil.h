@@ -9,7 +9,6 @@
 #include "StrUtil.h"
 #include "WStrUtil.h"
 
-#define DIR_SEP_TSTR _T(DIR_SEP_STR)
 #ifdef UNICODE
 #define CF_T_TEXT CF_UNICODETEXT
 #else
@@ -17,7 +16,7 @@
 #endif
 
 #ifdef _UNICODE
-  #define tchar_is_ws       wchar_is_ws
+  #define tchar_is_ws       iswspace
   #define tstr_find_char    wstr_find_char
 
   #define tstr_eq           wstr_eq
@@ -34,11 +33,8 @@
   #define tstr_cat_s        wstr_cat_s
   #define tstr_catn_s       wstr_catn_s
   #define tstr_cat          wstr_cat
-  #define tstr_cat3         wstr_cat3
-  #define tstr_contains     wstr_contains
   #define tstr_printf       wstr_printf
   #define tstr_printf_s     wstr_printf_s
-  #define tstr_dup_replace  wstr_dup_replace
 
   #define multibyte_to_tstr(src, CodePage)  multibyte_to_wstr((src), (CodePage))
   #define tstr_to_multibyte(src, CodePage)  wstr_to_multibyte((src), (CodePage))
@@ -49,7 +45,7 @@
   #define wstr_to_tstr_q(src)               (src)
   #define tstr_to_wstr_q(src)               (src)
 #else
-  #define tchar_is_ws       char_is_ws
+  #define tchar_is_ws       isspace
   #define tstr_find_char    str_find_char
 
   #define tstr_eq           str_eq
@@ -66,11 +62,8 @@
   #define tstr_cat_s        str_cat_s
   #define tstr_catn_s       str_catn_s
   #define tstr_cat          str_cat
-  #define tstr_cat3         str_cat3
-  #define tstr_contains     str_contains
   #define tstr_printf       str_printf
   #define tstr_printf_s     str_printf_s
-  #define tstr_dup_replace  str_dup_replace
 
   #define multibyte_to_tstr(src, CodePage)  multibyte_to_str((src), (CodePage))
   #define tstr_to_multibyte(src, CodePage)  str_to_multibyte((src), (CodePage))

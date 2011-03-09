@@ -26,25 +26,16 @@ WCHAR * wstr_catn_s(WCHAR *dst, size_t dst_cch_size, const WCHAR *src, size_t sr
     return dst;
 }
 
-/* Concatenate 3 strings. Any string can be NULL.
+/* Concatenate 2 strings. Any string can be NULL.
    Caller needs to free() memory. */
-WCHAR *wstr_cat3(const WCHAR *str1, const WCHAR *str2, const WCHAR *str3)
+WCHAR *wstr_cat(const WCHAR *str1, const WCHAR *str2)
 {
     if (!str1)
         str1 = L"";
     if (!str2)
         str2 = L"";
-    if (!str3)
-        str3 = L"";
 
-    return wstr_printf(L"%s%s%s", str1, str2, str3);
-}
-
-/* Concatenate 2 strings. Any string can be NULL.
-   Caller needs to free() memory. */
-WCHAR *wstr_cat(const WCHAR *str1, const WCHAR *str2)
-{
-    return wstr_cat3(str1, str2, NULL);
+    return wstr_printf(L"%s%s", str1, str2);
 }
 
 WCHAR *wstr_dupn(const WCHAR *str, size_t str_len_cch)
@@ -78,7 +69,7 @@ int wstr_copy(WCHAR *dst, size_t dst_cch_size, const WCHAR *src)
 
 int wstr_eq(const WCHAR *str1, const WCHAR *str2)
 {
-    if (!str1 && !str2)
+    if (str1 == str2)
         return TRUE;
     if (!str1 || !str2)
         return FALSE;
@@ -89,7 +80,7 @@ int wstr_eq(const WCHAR *str1, const WCHAR *str2)
 
 int wstr_ieq(const WCHAR *str1, const WCHAR *str2)
 {
-    if (!str1 && !str2)
+    if (str1 == str2)
         return TRUE;
     if (!str1 || !str2)
         return FALSE;
@@ -100,7 +91,7 @@ int wstr_ieq(const WCHAR *str1, const WCHAR *str2)
 
 int wstr_eqn(const WCHAR *str1, const WCHAR *str2, size_t len)
 {
-    if (!str1 && !str2)
+    if (str1 == str2)
         return TRUE;
     if (!str1 || !str2)
         return FALSE;
@@ -168,15 +159,6 @@ int wstr_empty(const WCHAR *str)
         return TRUE;
     if (0 == *str)
         return TRUE;
-    return FALSE;
-}
-
-int wstr_contains(const WCHAR *str, WCHAR c)
-{
-    while (*str) {
-        if (c == *str++)
-            return TRUE;
-    }
     return FALSE;
 }
 
@@ -259,19 +241,6 @@ WCHAR *multibyte_to_wstr(const char *src, UINT CodePage)
 WCHAR *utf8_to_wstr(const char *utf8)
 {
     return multibyte_to_wstr(utf8, CP_UTF8);
-}
-
-/* replace a string pointed by <dst> with a copy of <src>
-   (i.e. free existing <dst>).
-   Returns FALSE if failed to replace (due to out of memory) */
-BOOL wstr_dup_replace(WCHAR **dst, const WCHAR *src)
-{
-    WCHAR *dup = StrCopy(src);
-    if (!dup)
-        return FALSE;
-    free(*dst);
-    *dst = dup;
-    return TRUE;
 }
 
 void win32_dbg_outW(const WCHAR *format, ...)

@@ -78,7 +78,7 @@ void PdfSearch::SetDirection(bool forward)
     if (forward == this->forward)
         return;
     this->forward = forward;
-    findIndex += lstrlen(findText) * (forward ? 1 : -1);
+    findIndex += StrLen(findText) * (forward ? 1 : -1);
 }
 
 // try to match "findText" from "start" with whitespace tolerance

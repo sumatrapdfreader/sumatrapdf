@@ -210,8 +210,9 @@ $(O)\CPdfFilter.obj: src\ifilter\PdfFilter.h src\PdfEngine.h
 $(O)\CrashHandler.obj: baseutils\BaseUtil.h baseutils\StrUtil.h baseutils\TStrUtil.h
 $(O)\CrashHandler.obj: baseutils\WinUtil.h baseutils\WStrUtil.h src\CrashHandler.h
 $(O)\CrashHandler.obj: src\translations.h
-$(O)\CTeXFilter.obj: baseutils\BaseUtil.h baseutils\WStrUtil.h src\ifilter\CTeXFilter.h
-$(O)\CTeXFilter.obj: src\ifilter\FilterBase.h src\ifilter\PdfFilter.h
+$(O)\CTeXFilter.obj: baseutils\BaseUtil.h baseutils\StrUtil.h baseutils\TStrUtil.h
+$(O)\CTeXFilter.obj: baseutils\WStrUtil.h src\ifilter\CTeXFilter.h src\ifilter\FilterBase.h
+$(O)\CTeXFilter.obj: src\ifilter\PdfFilter.h
 $(O)\DisplayModel.obj: baseutils\BaseUtil.h baseutils\FileUtil.h baseutils\GeomUtil.h
 $(O)\DisplayModel.obj: baseutils\StrUtil.h baseutils\TStrUtil.h baseutils\Vec.h
 $(O)\DisplayModel.obj: baseutils\WinUtil.h baseutils\WStrUtil.h mupdf\fitz\fitz.h
@@ -322,4 +323,4 @@ $(O)\WindowInfo.obj: src\PdfSelection.h src\PdfSync.h src\Resource.h
 $(O)\WindowInfo.obj: src\WindowInfo.h
 $(O)\WinUtil.obj: baseutils\BaseUtil.h baseutils\StrUtil.h baseutils\TStrUtil.h
 $(O)\WinUtil.obj: baseutils\WinUtil.h baseutils\WStrUtil.h
-$(O)\WStrUtil.obj: baseutils\BaseUtil.h baseutils\WStrUtil.h
+$(O)\WStrUtil.obj: baseutils\BaseUtil.h baseutils\StrUtil.h baseutils\WStrUtil.h

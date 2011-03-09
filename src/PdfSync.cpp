@@ -66,7 +66,7 @@ UINT CreateSynchronizer(LPCTSTR pdffilename, Synchronizer **sync)
 
     TCHAR buffer[MAX_PATH];
     TCHAR *syncfile;
-    size_t n = lstrlen(pdffilename);
+    size_t n = StrLen(pdffilename);
     size_t u = dimof(PDF_EXTENSION)-1;
 
     // Check if a PDFSYNC file is present

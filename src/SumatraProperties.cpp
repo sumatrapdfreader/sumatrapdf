@@ -93,12 +93,12 @@ static TCHAR *FormatNumWithThousandSep(uint64_t num) {
     GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_STHOUSAND, thousandSep, dimof(thousandSep));
 
     TCHAR *src = buf, *dst = buf2;
-    int len = lstrlen(src);
+    size_t len = StrLen(src);
     while (*src) {
         *dst++ = *src++;
         if (*src && (len - (src - buf)) % 3 == 0) {
             lstrcpy(dst, thousandSep);
-            dst += lstrlen(thousandSep);
+            dst += StrLen(thousandSep);
         }
     }
     *dst = '\0';
@@ -118,8 +118,8 @@ static TCHAR *FormatFloatWithThousandSep(double number, const TCHAR *unit=NULL) 
 
     // always add between one and two decimals after the point
     wsprintf(buf, _T("%s%s%02d"), tmp, decimal, num % 100);
-    if (buf[lstrlen(buf) - 1] == '0')
-        buf[lstrlen(buf) - 1] = '\0';
+    if (buf[StrLen(buf) - 1] == '0')
+        buf[StrLen(buf) - 1] = '\0';
 
     return unit ? tstr_printf(_T("%s %s"), buf, unit) : StrCopy(buf);
 }
@@ -236,7 +236,7 @@ static void UpdatePropertiesLayout(HWND hwnd, HDC hdc, RECT *rect) {
     (HFONT)SelectObject(hdc, fontLeftTxt);
     leftMaxDx = 0;
     for (PdfPropertyEl *el = layoutData->first; el; el = el->next) {
-        GetTextExtentPoint32(hdc, el->leftTxt, lstrlen(el->leftTxt), &txtSize);
+        GetTextExtentPoint32(hdc, el->leftTxt, StrLen(el->leftTxt), &txtSize);
         el->leftPos.dx = txtSize.cx;
         el->leftPos.dy = txtSize.cy;
 
@@ -250,7 +250,7 @@ static void UpdatePropertiesLayout(HWND hwnd, HDC hdc, RECT *rect) {
     rightMaxDx = 0;
     int lineCount = 0;
     for (PdfPropertyEl *el = layoutData->first; el; el = el->next) {
-        GetTextExtentPoint32(hdc, el->rightTxt, lstrlen(el->rightTxt), &txtSize);
+        GetTextExtentPoint32(hdc, el->rightTxt, StrLen(el->rightTxt), &txtSize);
         el->rightPos.dx = txtSize.cx;
         el->rightPos.dy = txtSize.cy;
 

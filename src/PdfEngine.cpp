@@ -1046,7 +1046,7 @@ TCHAR *PdfEngine::ExtractPageText(pdf_page *page, TCHAR *lineSep, fz_bbox **coor
     if (fz_okay != error)
         goto CleanUp;
 
-    int lineSepLen = lstrlen(lineSep);
+    int lineSepLen = StrLen(lineSep);
     size_t textLen = 0;
     for (fz_textspan *span = text; span; span = span->next)
         textLen += span->len + lineSepLen;

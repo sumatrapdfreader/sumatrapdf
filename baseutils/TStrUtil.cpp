@@ -30,7 +30,7 @@ static int tchar_needs_url_encode(TCHAR c)
 {
     if (_istalnum(c) && _istascii(c))
         return FALSE;
-    if (tstr_contains(CHAR_URL_DONT_ENCODE, c))
+    if (tstr_find_char(CHAR_URL_DONT_ENCODE, c))
         return FALSE;
     return TRUE;
 }

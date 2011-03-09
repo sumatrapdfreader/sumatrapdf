@@ -89,11 +89,11 @@ void DrawSumatraPDF(HDC hdc, int x, int y)
 #ifdef BLACK_ON_YELLOW
     // simple black version
     SetTextColor(hdc, ABOUT_BORDER_COL);
-    TextOut(hdc, x, y, txt, lstrlen(txt));
+    TextOut(hdc, x, y, txt, StrLen(txt));
 #else
     // colorful version
     COLORREF cols[] = { COL1, COL2, COL3, COL4, COL5, COL5, COL4, COL3, COL2, COL1 };
-    for (int i = 0; i < lstrlen(txt); i++) {
+    for (size_t i = 0; i < StrLen(txt); i++) {
         SetTextColor(hdc, cols[i % dimof(cols)]);
         TextOut(hdc, x, y, txt + i, 1);
 
@@ -148,7 +148,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, RECT *rect)
 
     /* render title */
     const TCHAR *txt = SUMATRA_TXT;
-    GetTextExtentPoint32(hdc, txt, lstrlen(txt), &txtSize);
+    GetTextExtentPoint32(hdc, txt, StrLen(txt), &txtSize);
     sumatraPdfTxtDx = txtSize.cx;
     sumatraPdfTxtDy = txtSize.cy;
 
@@ -166,9 +166,9 @@ static void DrawAbout(HWND hwnd, HDC hdc, RECT *rect)
     x = offX + (totalDx - sumatraPdfTxtDx) / 2 + sumatraPdfTxtDx + 6;
     y = offY + (boxDy - sumatraPdfTxtDy) / 2;
     txt = VERSION_TXT;
-    TextOut(hdc, x, y, txt, lstrlen(txt));
+    TextOut(hdc, x, y, txt, StrLen(txt));
     txt = VERSION_SUB_TXT;
-    TextOut(hdc, x, y + 16, txt, lstrlen(txt));
+    TextOut(hdc, x, y + 16, txt, StrLen(txt));
 
     SetTextColor(hdc, ABOUT_BORDER_COL);
 
@@ -179,7 +179,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, RECT *rect)
     leftLargestDx = 0;
     SelectObject(hdc, fontLeftTxt);
     for (AboutLayoutInfoEl *el = gAboutLayoutInfo; el->leftTxt; el++) {
-        TextOut(hdc, el->leftPos.x, el->leftPos.y, el->leftTxt, lstrlen(el->leftTxt));
+        TextOut(hdc, el->leftPos.x, el->leftPos.y, el->leftTxt, StrLen(el->leftTxt));
         if (leftLargestDx < el->leftPos.dx)
             leftLargestDx = el->leftPos.dx;
     }
@@ -191,7 +191,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, RECT *rect)
         bool hasUrl = !gRestrictedUse && el->url;
         SetTextColor(hdc, hasUrl ? COL_BLUE_LINK : ABOUT_BORDER_COL);
 
-        TextOut(hdc, el->rightPos.x, el->rightPos.y, el->rightTxt, lstrlen(el->rightTxt));
+        TextOut(hdc, el->rightPos.x, el->rightPos.y, el->rightTxt, StrLen(el->rightTxt));
         bottomY = el->rightPos.y + el->rightPos.dy + ABOUT_TXT_DY;
 
         if (!hasUrl)
@@ -249,17 +249,17 @@ static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, RECT * rect)
 
     /* calculate minimal top box size */
     const TCHAR *txt = SUMATRA_TXT;
-    GetTextExtentPoint32(hdc, txt, lstrlen(txt), &txtSize);
+    GetTextExtentPoint32(hdc, txt, StrLen(txt), &txtSize);
     boxDy = txtSize.cy + ABOUT_BOX_MARGIN_DY * 2;
     titleLargestDx = txtSize.cx;
 
     /* consider version and version-sub strings */
     SelectObject(hdc, fontVersionTxt);
     txt = VERSION_TXT;
-    GetTextExtentPoint32(hdc, txt, lstrlen(txt), &txtSize);
+    GetTextExtentPoint32(hdc, txt, StrLen(txt), &txtSize);
     offX = txtSize.cx;
     txt = VERSION_SUB_TXT;
-    GetTextExtentPoint32(hdc, txt, lstrlen(txt), &txtSize);
+    GetTextExtentPoint32(hdc, txt, StrLen(txt), &txtSize);
     txtSize.cx = max(txtSize.cx, offX);
     titleLargestDx += 2 * (txtSize.cx + 6);
 
@@ -268,7 +268,7 @@ static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, RECT * rect)
     leftLargestDx = 0;
     leftDy = 0;
     for (AboutLayoutInfoEl *el = gAboutLayoutInfo; el->leftTxt; el++) {
-        GetTextExtentPoint32(hdc, el->leftTxt, lstrlen(el->leftTxt), &txtSize);
+        GetTextExtentPoint32(hdc, el->leftTxt, StrLen(el->leftTxt), &txtSize);
         el->leftPos.dx = txtSize.cx;
         el->leftPos.dy = txtSize.cy;
 
@@ -285,7 +285,7 @@ static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, RECT * rect)
     rightLargestDx = 0;
     rightDy = 0;
     for (AboutLayoutInfoEl *el = gAboutLayoutInfo; el->leftTxt; el++) {
-        GetTextExtentPoint32(hdc, el->rightTxt, lstrlen(el->rightTxt), &txtSize);
+        GetTextExtentPoint32(hdc, el->rightTxt, StrLen(el->rightTxt), &txtSize);
         el->rightPos.dx = txtSize.cx;
         el->rightPos.dy = txtSize.cy;
 

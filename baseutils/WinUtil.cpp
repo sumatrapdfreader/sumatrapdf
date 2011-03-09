@@ -410,7 +410,7 @@ void paint_rect(HDC hdc, RECT * rect)
 void draw_centered_text(HDC hdc, RECT *r, const TCHAR *txt)
 {    
     SetBkMode(hdc, TRANSPARENT);
-    DrawText(hdc, txt, lstrlen(txt), r, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+    DrawText(hdc, txt, StrLen(txt), r, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 }
 
 BOOL IsCursorOverWindow(HWND hwnd)

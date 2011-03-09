@@ -251,8 +251,13 @@ Error:
 static void dict_get_str_helper(benc_dict *d, const char *key, char **val)
 {
     const char *txt = dict_get_str(d, key);
-    if (txt)
-        str_dup_replace(val, txt);
+    if (txt) {
+        char *tmp = StrCopy(txt);
+        if (tmp) {
+            free(*val);
+            *val = tmp;
+        }
+    }
 }
 
 static void dict_get_tstr_helper(benc_dict *d, const char *key, TCHAR **val)
