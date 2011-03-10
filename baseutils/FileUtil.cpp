@@ -3,8 +3,6 @@
 #include "BaseUtil.h"
 #include "TStrUtil.h"
 #include "FileUtil.h"
-
-#include <sys/types.h>
 #include <sys/stat.h>
 
 static inline bool FilePath_IsSep(TCHAR c)
@@ -34,7 +32,9 @@ TCHAR *FilePath_GetDir(const TCHAR *path)
 
 TCHAR *FilePath_Join(const TCHAR *path, const TCHAR *filename)
 {
-    bool needsSep = !FilePath_IsSep(path[StrLen(path) - 1]) && !FilePath_IsSep(filename[0]);
+    if (FilePath_IsSep(*filename))
+        filename++;
+    bool needsSep = !FilePath_IsSep(path[StrLen(path) - 1]);
     if (needsSep)
         return tstr_printf(_T("%s\\%s"), path, filename);
     return tstr_cat(path, filename);
@@ -43,8 +43,7 @@ TCHAR *FilePath_Join(const TCHAR *path, const TCHAR *filename)
 // Normalize a file path.
 //  remove relative path component (..\ and .\),
 //  replace slashes by backslashes,
-//  conver to long form,
-//  convert to lowercase (if bLowerCase=TRUE).
+//  convert to long form.
 //
 // Returns a pointer to a memory allocated block containing the normalized string.
 //   The caller is responsible for freeing the block.
@@ -52,66 +51,50 @@ TCHAR *FilePath_Join(const TCHAR *path, const TCHAR *filename)
 //
 // Precondition: the file must exist on the file system.
 //
-// Note: if bLowerCase=FALSE then the case is changed as follows:
+// Note:
 //   - the case of the root component is preserved
 //   - the case of rest is set to the wayt it is stored on the file system
 //
 // e.g. suppose the a file "C:\foo\Bar.Pdf" exists on the file system then
 //    "c:\foo\bar.pdf" becomes "c:\foo\Bar.Pdf"
 //    "C:\foo\BAR.PDF" becomes "C:\foo\Bar.Pdf"
-TCHAR *FilePath_Normalize(const TCHAR *f, BOOL bLowerCase)
+TCHAR *FilePath_Normalize(const TCHAR *path)
 {
-    TCHAR *path, *tmp;
-    DWORD cb;
-
     // convert to absolute path, change slashes into backslashes
-    cb = GetFullPathName(f, 0, NULL, NULL);
+    DWORD cb = GetFullPathName(path, 0, NULL, NULL);
     if (!cb)
         return NULL;
-    path = SAZA(TCHAR, cb);
+    TCHAR *normpath = SAZA(TCHAR, cb);
     if (!path)
         return NULL;
-    GetFullPathName(f, cb, path, NULL);
+    GetFullPathName(path, cb, normpath, NULL);
 
     // convert to long form
-    cb = GetLongPathName(path, NULL, 0);
+    cb = GetLongPathName(normpath, NULL, 0);
     if (!cb)
-        return path;
-    tmp = (TCHAR *)realloc(path, sizeof(TCHAR) * cb);
+        return normpath;
+    TCHAR *tmp = (TCHAR *)realloc(normpath, cb * sizeof(TCHAR));
     if (!tmp)
-        return path;
-    path = tmp;
+        return normpath;
+    normpath = tmp;
 
-    GetLongPathName(path, path, cb);
-
-    // convert to lower case
-    if (bLowerCase) {
-        for (tmp = path; *tmp; tmp++)
-            *tmp = _totlower(*tmp);
-    }
-
-    return path;
+    GetLongPathName(normpath, normpath, cb);
+    return normpath;
 }
 
 // Compare two file path.
 // Returns 0 if the paths lhs and rhs point to the same file.
 //         1 if the paths point to different files
 //         -1 if an error occured
-int FilePath_Compare(const TCHAR *lhs, const TCHAR *rhs)
+static int FilePath_Compare(const TCHAR *lhs, const TCHAR *rhs)
 {
-    int ret = -1;
-
-    TCHAR *nl = FilePath_Normalize(lhs, TRUE);
-    TCHAR *nr = FilePath_Normalize(rhs, TRUE);
+    ScopedMem<TCHAR> nl(FilePath_Normalize(lhs));
+    ScopedMem<TCHAR> nr(FilePath_Normalize(rhs));
     if (!nl || !nr)
-        goto CleanUp;
-
-    ret = tstr_eq(nl, nr) ? 0 : 1;
-
-CleanUp:
-    free(nr);
-    free(nl);
-    return ret;
+        return -1;
+    if (!tstr_ieq(nl, nr))
+        return 1;
+    return 0;
 }
 
 // Code adapted from http://stackoverflow.com/questions/562701/best-way-to-determine-if-two-path-reference-to-same-file-in-c-c/562830#562830
@@ -149,19 +132,6 @@ BOOL file_exists(const TCHAR *file_path)
     if (0 != res)
         return FALSE;
     if ((buf.st_mode & _S_IFDIR))
-        return FALSE;
-    return TRUE;
-}
-
-BOOL dir_exists(const TCHAR *dir_path)
-{
-    struct _stat buf;
-    int          res;
-
-    res = _tstat(dir_path, &buf);
-    if (0 != res)
-        return FALSE;
-    if (!(buf.st_mode & _S_IFDIR))
         return FALSE;
     return TRUE;
 }
@@ -229,17 +199,15 @@ Exit:
 
 BOOL write_to_file(const TCHAR *file_path, void *data, size_t data_len)
 {
-    DWORD       size;
-    HANDLE      h;
-    BOOL        f_ok;
-
-    h = CreateFile(file_path, GENERIC_WRITE, FILE_SHARE_READ, NULL,  
-            CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL,  NULL); 
+    HANDLE h = CreateFile(file_path, GENERIC_WRITE, FILE_SHARE_READ, NULL,  
+                          CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL,  NULL); 
     if (h == INVALID_HANDLE_VALUE)
         return FALSE;
 
-    f_ok = WriteFile(h, data, (DWORD)data_len, &size, NULL);
+    DWORD       size;
+    BOOL f_ok = WriteFile(h, data, (DWORD)data_len, &size, NULL);
     assert(!f_ok || (data_len == size));
     CloseHandle(h);
-    return f_ok;
+
+    return f_ok && data_len == size;
 }

@@ -105,9 +105,9 @@ int RectD_FromXY(RectD *rOut, double xs, double xe, double ys, double ye)
     if (!rOut)
         return 0;
     if (xs > xe)
-        swap_double(&xs, &xe);
+        swap_double(xs, xe);
     if (ys > ye)
-        swap_double(&ys, &ye);
+        swap_double(ys, ye);
 
     rOut->x = xs;
     rOut->y = ys;

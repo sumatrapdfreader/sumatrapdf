@@ -147,8 +147,11 @@ static void pageSizeAfterRotation(PdfPageInfo *pageInfo, int rotation,
     }
 
     rotation += pageInfo->rotation;
-    if (rotationFlipped(rotation))
-        swap_double(pageDxOut, pageDyOut);
+    if (rotationFlipped(rotation)) {
+        double tmp = *pageDyOut;
+        *pageDyOut = *pageDxOut;
+        *pageDxOut = tmp;
+    }
 }
 
 int limitValue(int val, int min, int max)

@@ -91,7 +91,7 @@ TCHAR *ExePathGet()
     TCHAR buf[MAX_PATH];
     buf[0] = 0;
     GetModuleFileName(NULL, buf, dimof(buf));
-    return FilePath_Normalize(buf, FALSE);
+    return FilePath_Normalize(buf);
 }
 
 /* Return false if this program has been started from "Program Files" directory

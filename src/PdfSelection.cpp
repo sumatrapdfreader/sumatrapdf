@@ -169,7 +169,7 @@ void PdfSelection::SelectUpTo(int pageNo, int glyphIx)
     int fromGlyph = (fromPage == endPage ? endGlyph : startGlyph);
     int toGlyph = (fromPage == endPage ? startGlyph : endGlyph);
     if (fromPage == toPage && fromGlyph > toGlyph)
-        swap_int(&fromGlyph, &toGlyph);
+        swap_int(fromGlyph, toGlyph);
 
     for (int page = fromPage; page <= toPage; page++) {
         // make sure that glyph coordinates and page text have been cached
@@ -191,7 +191,7 @@ TCHAR *PdfSelection::ExtractText(TCHAR *lineSep)
     int fromGlyph = (fromPage == endPage ? endGlyph : startGlyph);
     int toGlyph = (fromPage == endPage ? startGlyph : endGlyph);
     if (fromPage == toPage && fromGlyph > toGlyph)
-        swap_int(&fromGlyph, &toGlyph);
+        swap_int(fromGlyph, toGlyph);
 
     for (int page = fromPage; page <= toPage; page++) {
         int glyph = page == fromPage ? fromGlyph : 0;

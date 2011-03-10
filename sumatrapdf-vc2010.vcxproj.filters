@@ -497,9 +497,6 @@
     <ClCompile Include="baseutils\strlist_util.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="baseutils\BaseUtil.cpp">
-      <Filter>baseutils</Filter>
-    </ClCompile>
     <ClCompile Include="baseutils\BencUtil.cpp">
       <Filter>baseutils</Filter>
     </ClCompile>

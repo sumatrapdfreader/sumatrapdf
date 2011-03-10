@@ -10,8 +10,6 @@
 /* DOS is 0xd 0xa */
 #define DOS_NEWLINE "\x0d\x0a"
 
-#define no_op() ((void)0)
-
 void    win32_dbg_out(const char *format, ...);
 void    win32_dbg_out_hex(const char *dsc, const unsigned char *data, int dataLen);
 
@@ -19,8 +17,8 @@ void    win32_dbg_out_hex(const char *dsc, const unsigned char *data, int dataLe
   #define DBG_OUT win32_dbg_out
   #define DBG_OUT_HEX win32_dbg_out_hex
 #else
-  #define DBG_OUT(...) no_op()
-  #define DBG_OUT_HEX(...) no_op()
+  #define DBG_OUT(...) NoOp()
+  #define DBG_OUT_HEX(...) NoOp()
 #endif
 
 #define str_find_char strchr

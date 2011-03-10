@@ -3,27 +3,11 @@
 #ifndef BaseUtil_h
 #define BaseUtil_h
 
-#ifdef _UNICODE
-#ifndef UNICODE
+#if defined(_UNICODE) && !defined(UNICODE)
 #define UNICODE
 #endif
-#endif
-
-#ifdef UNICODE
-#ifndef _UNICODE
+#if defined(UNICODE) && !defined(_UNICODE)
 #define _UNICODE
-#endif
-#endif
-
-/* It seems that Visual C defines WIN32 for Windows code but _WINDOWS for WINCE projects,
-   so I'll make sure to set WIN32 always*/
-#ifdef _WINDOWS
- #ifndef WIN32
-  #define WIN32
- #endif
- #ifndef _WIN32
-  #define _WIN32
- #endif
 #endif
 
 #ifdef DEBUG
@@ -50,28 +34,6 @@
 #include <wchar.h>
 #include <string.h>
 
-#include <stdlib.h>
-#include <malloc.h>
-#include <stdarg.h>
-#include <inttypes.h>
-
-#ifndef TRUE
-#define TRUE (1)
-#endif
-
-#ifndef FALSE
-#define FALSE (0)
-#endif
-
-#ifndef _T
-#define _T TEXT
-#endif
-
-/* compile-time assert */
-#ifndef CASSERT
-  #define CASSERT(exp, name) typedef int dummy##name [ (exp ) ? 1 : -1 ];
-#endif
-
 /* Ugly names but the whole point is to make things shorter.
    SA = Struct Allocate
    SAZ = Struct Allocate and Zero memory
@@ -81,13 +43,26 @@
 #define SAZ(struct_name) SAZA(struct_name, 1)
 
 #define dimof(X)    (sizeof(X)/sizeof((X)[0]))
+#define NoOp()      ((void)0)
 
 /* TODO: consider using standard C macros for SWAP */
-void        swap_int(int *one, int *two);
-void        swap_double(double *one, double *two);
+static inline void swap_int(int& one, int& two)
+{
+    int tmp = one; one = two; two = one;
+}
+static inline void swap_double(double& one, double& two)
+{
+    double tmp = one; one = two; two = one;
+}
 
-void *      memdup(void *data, size_t len);
-#define     _memdup(ptr) memdup(ptr, sizeof(*(ptr)))
+static inline void *memdup(void *data, size_t len)
+{
+    void *dup = malloc(len);
+    if (dup)
+        memcpy(dup, data, len);
+    return dup;
+}
+#define _memdup(ptr) memdup(ptr, sizeof(*(ptr)))
 
 class ScopedCritSec
 {

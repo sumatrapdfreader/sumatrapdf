@@ -279,7 +279,7 @@ TCHAR *GetInstallationDir(bool forUninstallation=false)
     if (ok) {
         if (tstr_endswithi(dir, _T(".exe")))
             *(TCHAR *)FilePath_GetBaseName(dir) = '\0';
-        if (*dir && dir_exists(dir))
+        if (*dir && PathIsDirectory(dir))
             return StrCopy(dir);
     }
 
@@ -1277,7 +1277,7 @@ void OnButtonBrowse()
     TCHAR path[MAX_PATH];
 
     TCHAR *installDir = Win::GetText(gHwndTextboxInstDir);
-    if (!dir_exists(installDir)) {
+    if (!PathIsDirectory(installDir)) {
         TCHAR *parentDir = FilePath_GetDir(installDir);
         free(installDir);
         installDir = parentDir;

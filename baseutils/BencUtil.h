@@ -3,6 +3,8 @@
 #ifndef BencUtil_h
 #define BencUtil_h
 
+#include <inttypes.h>
+
 typedef enum benc_type {
     BOT_INT64 = 1,
     BOT_STRING,

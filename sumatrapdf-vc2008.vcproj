@@ -298,10 +298,6 @@
 			Name="baseutils"
 			>
 			<File
-				RelativePath=".\baseutils\BaseUtil.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\baseutils\BaseUtil.h"
 				>
 			</File>

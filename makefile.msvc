@@ -85,7 +85,7 @@ BROWSER_PLUGIN_CFLAGS = $(CFLAGS) /Ibaseutils/msvc /wd4819
 LIBS_BROWSER_PLUGIN = user32.lib gdi32.lib advapi32.lib shlwapi.lib
 
 BASEUTILS_OBJS = \
-	$(O)\BaseUtil.obj $(O)\BencUtil.obj $(O)\FileUtil.obj $(O)\GeomUtil.obj \
+	$(O)\BencUtil.obj $(O)\FileUtil.obj $(O)\GeomUtil.obj \
 	$(O)\StrUtil.obj $(O)\TStrUtil.obj $(O)\WinUtil.obj \
 	$(O)\WStrUtil.obj $(O)\dialogsizer_set.obj
 
@@ -103,7 +103,7 @@ INSTALLER_OBJS = \
 
 PDFFILTER_OBJS = \
 	$(O)\PdfFilterDll.obj $(O)\CPdfFilter.obj $(PDFFILTER_RES) \
-	$(O)\BaseUtil.obj $(O)\WStrUtil.obj $(O)\StrUtil.obj $(O)\FileUtil.obj \
+	$(O)\WStrUtil.obj $(O)\StrUtil.obj $(O)\FileUtil.obj \
 	$(LIBMUPDF_LIB) $(O)\MuPDF_Exports.obj $(O)\PdfEngine.obj
 
 BROWSER_PLUGIN_OBJS = \
@@ -196,7 +196,6 @@ $(O)\AppTools.obj: mupdf\mupdf\mupdf.h src\AppTools.h src\DisplayState.h
 $(O)\AppTools.obj: src\FileWatch.h src\LangMenuDef.h src\PdfEngine.h
 $(O)\AppTools.obj: src\PdfSearch.h src\PdfSelection.h src\SumatraPDF.h
 $(O)\AppTools.obj: src\translations.h src\WindowInfo.h
-$(O)\BaseUtil.obj: baseutils\BaseUtil.h
 $(O)\Benchmark.obj: baseutils\BaseUtil.h baseutils\FileUtil.h baseutils\GeomUtil.h
 $(O)\Benchmark.obj: baseutils\StrUtil.h baseutils\TStrUtil.h baseutils\Vec.h
 $(O)\Benchmark.obj: baseutils\vstrlist.h baseutils\WinUtil.h baseutils\WStrUtil.h

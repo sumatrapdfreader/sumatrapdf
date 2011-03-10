@@ -61,7 +61,6 @@
   <ItemDefinitionGroup>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="baseutils\BaseUtil.cpp" />
     <ClCompile Include="baseutils\BencUtil.cpp" />
     <ClCompile Include="baseutils\FileUtil.cpp" />
     <ClCompile Include="baseutils\GeomUtil.cpp" />

@@ -828,7 +828,7 @@ bool WindowInfoStillValid(WindowInfo *win)
 // Find the first windows showing a given PDF file 
 WindowInfo* FindWindowInfoByFile(TCHAR *file)
 {
-    ScopedMem<TCHAR> normFile(FilePath_Normalize(file, FALSE));
+    ScopedMem<TCHAR> normFile(FilePath_Normalize(file));
     if (!normFile)
         return NULL;
 
@@ -1715,7 +1715,7 @@ WindowInfo* LoadPdf(const TCHAR *fileName, WindowInfo *win, bool showWin)
     assert(fileName);
     if (!fileName) return NULL;
 
-    ScopedMem<TCHAR> fullpath(FilePath_Normalize(fileName, FALSE));
+    ScopedMem<TCHAR> fullpath(FilePath_Normalize(fileName));
     if (!fullpath)
         return win;
 
@@ -6556,7 +6556,7 @@ static bool PrintFile(const TCHAR *fileName, const TCHAR *printerName)
     DWORD       structSize, returnCode;
     bool        success = false;
 
-    ScopedMem<TCHAR> fileName2(FilePath_Normalize(fileName, FALSE));
+    ScopedMem<TCHAR> fileName2(FilePath_Normalize(fileName));
     PdfEngine *pdfEngine = PdfEngine::CreateFromFileName(fileName2);
 
     if (!pdfEngine || !pdfEngine->hasPermission(PDF_PERM_PRINT)) {
