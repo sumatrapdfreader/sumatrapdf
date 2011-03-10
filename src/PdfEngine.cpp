@@ -306,7 +306,7 @@ PdfEngine::~PdfEngine()
         dropPageRun(_runCache[0], true);
     }
     free((void*)_fileName);
-    free((void*)_decryptionKey);
+    free(_decryptionKey);
 
     LeaveCriticalSection(&_xrefAccess);
     DeleteCriticalSection(&_xrefAccess);

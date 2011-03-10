@@ -106,7 +106,7 @@ bool DisplayModel::displayStateFromModel(DisplayState *ds)
         if (!filePath)
             return false;
 
-        free((void *)ds->filePath);
+        free(ds->filePath);
         ds->filePath = filePath;
     }
 
@@ -120,7 +120,7 @@ bool DisplayModel::displayStateFromModel(DisplayState *ds)
     ds->scrollX = presMode ? 0 : (int)floor(ss.x + 0.5);
     ds->scrollY = presMode ? 0 : (int)floor(ss.y + 0.5);
 
-    free((void *)ds->decryptionKey);
+    free(ds->decryptionKey);
     ds->decryptionKey = pdfEngine->getDecryptionKey();
 
     return true;

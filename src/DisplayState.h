@@ -90,8 +90,8 @@ public:
         free(tocState);
     }
 
-    const TCHAR *       filePath;
-    const char *        decryptionKey; // hex encoded MD5 fingerprint of file content (32 chars) followed by crypt key (64 chars)
+    TCHAR *             filePath;
+    char *              decryptionKey; // hex encoded MD5 fingerprint of file content (32 chars) followed by crypt key (64 chars)
     BOOL                useGlobalValues;
 
     enum DisplayMode    displayMode;

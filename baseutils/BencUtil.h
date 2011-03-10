@@ -1,100 +1,165 @@
-/* Written by Krzysztof Kowalczyk (http://blog.kowalczyk.info)
-   The author disclaims copyright to this source code. */
+/* Copyright 2006-2011 the SumatraPDF project authors (see AUTHORS file).
+   License: GPLv3 */
+
 #ifndef BencUtil_h
 #define BencUtil_h
 
+/* Handling of bencoded format. See:
+   http://www.bittorrent.org/protocol.html or 
+   http://en.wikipedia.org/wiki/Bencode or
+   http://wiki.theory.org/BitTorrentSpecification
+
+   Note: As an exception to the above specifications, this implementation
+         only handles zero-terminated strings (i.e. \0 may not appear within
+         strings) and considers all encoded strings to be UTF-8 encoded.
+*/
+
 #include <inttypes.h>
+#include "Vec.h"
 
-typedef enum benc_type {
-    BOT_INT64 = 1,
-    BOT_STRING,
-    BOT_ARRAY,
-    BOT_DICT
-} benc_type;
+typedef enum { BT_STRING, BT_INT, BT_ARRAY, BT_DICT } BencType;
 
-typedef struct benc_obj {
-    benc_type m_type;
-} benc_obj;
+class BencObj {
+    BencType type;
 
-typedef struct benc_int64 {
-    benc_type  m_type;
-    int64_t    m_val;
-} benc_int64;
+public:
+    BencObj(BencType type) : type(type) { }
+    virtual ~BencObj() { }
+    BencType Type() const { return type; }
 
-typedef struct benc_str {
-    benc_type  m_type;
-    size_t     m_len;
-    char *     m_str;
-} benc_str;
+    virtual char *Encode() = 0;
+    static BencObj *Decode(const char *bytes, size_t *len_out=NULL, bool topLevel=true);
+};
 
-/* Note: it's important that the layout of m_next and m_used is the same in
-   benc_array_data and benc_dict_data, as code relies on that */
-typedef struct benc_array_data {
-    struct benc_array_data * m_next;
-    size_t                   m_used;
-    size_t                   m_allocated;    
-    benc_obj **              m_data;
-} benc_array_data;
+class BencString : public BencObj {
+    char *value;
 
-typedef struct benc_dict_data {
-    struct benc_dict_data * m_next;
-    size_t                  m_used;
-    size_t                  m_allocated;
-    char **                 m_keys;
-    benc_obj **             m_values;
-} benc_dict_data;
+public:
+    BencString(const char *value);
+    BencString(const WCHAR *value);
+    ~BencString() { free(value); }
 
-typedef struct benc_array {
-    benc_type       m_type;
-    benc_array_data m_data;
-} benc_array;
+    TCHAR *Value() const;
+    char *RawValue() const { return value; }
 
-typedef struct benc_dict {
-    benc_type       m_type;
-    benc_dict_data  m_data;
-} benc_dict;
+    virtual char *Encode();
+    static BencString *Decode(const char *bytes, size_t *len_out=NULL);
+};
 
-BOOL        int64_to_string(int64_t val, char* data, size_t dataLen);
-BOOL        int64_to_string_zero_pad(int64_t val, size_t pad, char* data, size_t dataLen);
+class BencInt : public BencObj {
+    int64_t value;
 
-benc_int64* benc_int64_new(int64_t val);
-benc_str *  benc_str_new(const char* data, size_t len);
-benc_array* benc_array_new(void);
-benc_dict * benc_dict_new(void);
+public:
+    BencInt(int64_t value) : BencObj(BT_INT), value(value) { }
+    int64_t Value() const { return value; }
 
-benc_obj *  benc_obj_from_data(const char *data, size_t len);
-char *      benc_obj_to_data(benc_obj *bobj, size_t* lenOut);
-void        benc_obj_delete(benc_obj *);    
+    virtual char *Encode();
+    static BencInt *Decode(const char *bytes, size_t *len_out=NULL);
+};
 
-size_t      benc_obj_len(benc_obj* );
+class BencDict;
 
-benc_int64* benc_obj_as_int64(benc_obj *);
-benc_str*   benc_obj_as_str(benc_obj *);
-benc_array* benc_obj_as_array(benc_obj *);
-benc_dict * benc_obj_as_dict(benc_obj *);
+class BencArray : public BencObj {
+    Vec<BencObj *> value;
 
-size_t      benc_array_len(benc_array *);
-BOOL        benc_array_append(benc_array* arr, benc_obj* bobj);
-void        benc_array_delete(benc_array *);
-benc_obj *  benc_array_get(benc_array *bobj, size_t idx);
-BOOL        benc_array_get_int(benc_array *bobj, size_t idx, int *valOut);
+public:
+    BencArray() : BencObj(BT_ARRAY) { }
+    ~BencArray() { DeleteVecMembers(value); }
+    size_t Length() const { return value.Count(); }
 
-size_t      benc_dict_len(benc_dict *bobj);
-BOOL        benc_dict_insert(benc_dict* dict, const char* key, size_t keyLen, benc_obj* val);
-BOOL        benc_dict_insert2(benc_dict* dict, const char* key, benc_obj* val);
-BOOL        benc_dict_insert_str(benc_dict* dict, const char* key, const char *str);
-BOOL        benc_dict_insert_wstr(benc_dict* dict, const char* key, const WCHAR *str);
-BOOL        benc_dict_insert_tstr(benc_dict* dict, const char* key, const TCHAR *str);
-BOOL        benc_dict_insert_int64(benc_dict* dict, const char* key, int64_t val);
-benc_obj*   benc_dict_find(benc_dict* dict, const char* key, size_t keyLen);
-benc_obj*   benc_dict_find2(benc_dict* dict, const char* key);
-BOOL        dict_get_bool(benc_dict* dict, const char* key, BOOL* valOut);
-BOOL        dict_get_int(benc_dict* dict, const char* key, int* valOut);
-const char* dict_get_str(benc_dict* dict, const char* key);
-BOOL        dict_get_float_from_str(benc_dict* dict, const char* key, float* valOut);
-BOOL        dict_get_double_from_str(benc_dict* dict, const char* key, double* valOut);
+    void Add(BencObj *obj) { value.Append(obj); }
+    void Add(const char *string) { value.Append(new BencString(string)); }
+    void Add(const WCHAR *string) { value.Append(new BencString(string)); }
+    void Add(int64_t val) { value.Append(new BencInt(val)); }
 
-void        u_benc_all(void);
+    BencString *GetString(size_t index) const {
+        if (index < Length() && value[index]->Type() == BT_STRING)
+            return static_cast<BencString *>(value[index]);
+        return NULL;
+    }
+    BencInt *GetInt(size_t index) const {
+        if (index < Length() && value[index]->Type() == BT_INT)
+            return static_cast<BencInt *>(value[index]);
+        return NULL;
+    }
+    BencArray *GetArray(size_t index) const {
+        if (index < Length() && value[index]->Type() == BT_ARRAY)
+            return static_cast<BencArray *>(value[index]);
+        return NULL;
+    }
+    BencDict *GetDict(size_t index) const;
 
+    virtual char *Encode();
+    static BencArray *Decode(const char *bytes, size_t *len_out=NULL);
+};
+
+class BencDict : public BencObj {
+    Vec<char *> keys;
+    Vec<BencObj *> values;
+
+    BencObj *GetObj(const char *key) const {
+        // TODO: sort keys at insertion and do a binary search?
+        //       (would break inversibility of encoding/decoding)
+        for (size_t i = 0; i < Length(); i++)
+            if (!strcmp(key, keys[i]))
+                return values[i];
+        return NULL;
+    }
+
+public:
+    BencDict() : BencObj(BT_DICT) { }
+    ~BencDict() {
+        FreeVecMembers(keys);
+        DeleteVecMembers(values);
+    }
+    size_t Length() const { return values.Count(); }
+
+    void Add(const char *key, BencObj *obj) {
+        assert(!GetObj(key));
+        keys.Append(strdup(key));
+        values.Append(obj);
+    }
+    void Add(const char *key, const char *string) {
+        Add(key, new BencString(string));
+    }
+    void Add(const char *key, const WCHAR *string) {
+        Add(key, new BencString(string));
+    }
+    void Add(const char *key, int64_t val) {
+        Add(key, new BencInt(val));
+    }
+
+    BencString *GetString(const char *key) const {
+        BencObj *obj = GetObj(key);
+        if (obj && obj->Type() == BT_STRING)
+            return static_cast<BencString *>(obj);
+        return NULL;
+    }
+    BencInt *GetInt(const char *key) const {
+        BencObj *obj = GetObj(key);
+        if (obj && obj->Type() == BT_INT)
+            return static_cast<BencInt *>(obj);
+        return NULL;
+    }
+    BencArray *GetArray(const char *key) const {
+        BencObj *obj = GetObj(key);
+        if (obj && obj->Type() == BT_ARRAY)
+            return static_cast<BencArray *>(obj);
+        return NULL;
+    }
+    BencDict *GetDict(const char *key) const {
+        BencObj *obj = GetObj(key);
+        if (obj && obj->Type() == BT_DICT)
+            return static_cast<BencDict *>(obj);
+        return NULL;
+    }
+
+    virtual char *Encode();
+    static BencDict *Decode(const char *bytes, size_t *len_out=NULL);
+};
+
+#ifndef NDEBUG
+void u_benc_all(void);
 #endif
 
+#endif

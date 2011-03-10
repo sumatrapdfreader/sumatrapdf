@@ -274,7 +274,7 @@ bool CurrLangNameSet(const char* langName)
     int langIndex = LangGetIndex(langName);
     if (-1 == langIndex)
         return false;
-    gGlobalPrefs.m_currentLanguage = g_langs[langIndex]._langName;
+    gGlobalPrefs.m_currentLanguage = (char *)g_langs[langIndex]._langName;
 
     bool ok = Translations_SetCurrentLanguage(langName);
     assert(ok);
@@ -1064,13 +1064,13 @@ static void WindowInfo_Refresh(WindowInfo* win, bool autorefresh) {
         // save a newly remembered password into file history so that
         // we don't ask again at the next refresh
         DisplayState *state = gFileHistory.Find(ds.filePath);
-        const char *decryptionKey = win->dm->pdfEngine->getDecryptionKey();
+        char *decryptionKey = win->dm->pdfEngine->getDecryptionKey();
         if (state && !str_eq(state->decryptionKey, decryptionKey)) {
-            free((void *)state->decryptionKey);
+            free(state->decryptionKey);
             state->decryptionKey = decryptionKey;
         }
         else
-            free((void *)decryptionKey);
+            free(decryptionKey);
     }
 }
 

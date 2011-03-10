@@ -202,7 +202,8 @@ $(O)\Benchmark.obj: baseutils\vstrlist.h baseutils\WinUtil.h baseutils\WStrUtil.
 $(O)\Benchmark.obj: mupdf\fitz\fitz.h mupdf\mupdf\mupdf.h src\Benchmark.h
 $(O)\Benchmark.obj: src\PdfEngine.h
 $(O)\BencUtil.obj: baseutils\BaseUtil.h baseutils\BencUtil.h baseutils\FileUtil.h
-$(O)\BencUtil.obj: baseutils\StrUtil.h baseutils\TStrUtil.h baseutils\WStrUtil.h
+$(O)\BencUtil.obj: baseutils\StrUtil.h baseutils\TStrUtil.h baseutils\Vec.h
+$(O)\BencUtil.obj: baseutils\WStrUtil.h
 $(O)\CPdfFilter.obj: baseutils\BaseUtil.h baseutils\GeomUtil.h baseutils\StrUtil.h
 $(O)\CPdfFilter.obj: baseutils\TStrUtil.h baseutils\WStrUtil.h mupdf\fitz\fitz.h
 $(O)\CPdfFilter.obj: mupdf\mupdf\mupdf.h src\ifilter\CPdfFilter.h src\ifilter\FilterBase.h
