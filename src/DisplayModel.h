@@ -1,5 +1,6 @@
-/* Copyright Krzysztof Kowalczyk 2006-2011
+/* Copyright 2006-2011 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
+
 #ifndef DisplayModel_h
 #define DisplayModel_h
 

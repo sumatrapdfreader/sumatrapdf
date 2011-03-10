@@ -1,5 +1,5 @@
-/* Written by Krzysztof Kowalczyk (http://blog.kowalczyk.info)
-   The author disclaims copyright to this source code. */
+/* Copyright 2006-2011 the SumatraPDF project authors (see AUTHORS file).
+   License: GPLv3 */
 
 /* The most basic things, including string handling functions */
 #include "BaseUtil.h"
@@ -296,24 +296,4 @@ void win32_dbg_out_hex(const char *dsc, const unsigned char *data, int dataLen)
     hexStr = mem_to_hexstr(data, dataLen);
     win32_dbg_out("%s%s\n", dsc ? dsc : "", hexStr);
     free(hexStr);
-}
-
-/* Return the number of digits needed to represents a given number in base 10
-   string representation.
-*/
-size_t digits_for_number(int64_t num)
-{
-    size_t digits = 1;
-    /* negative numbers need '-' in front of them */
-    if (num < 0) {
-        ++digits;
-        num = -num;
-    }
-
-    while (num >= 10)
-    {
-        ++digits;
-        num = num / 10;
-    }
-    return digits;
 }
