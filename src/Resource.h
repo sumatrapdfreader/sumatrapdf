@@ -75,6 +75,9 @@
 #define IDM_VIEW_WITH_FOXIT             471
 #define IDM_VIEW_WITH_PDF_XCHANGE       472
 
+#define IDM_FILE_HISTORY_FIRST          510
+#define IDM_FILE_HISTORY_LAST           519
+
 #define IDM_VISIT_WEBSITE               550
 #define IDM_ABOUT                       551
 #define IDM_SETTINGS                    552
@@ -86,6 +89,7 @@
 #define IDM_GOTO_NAV_FORWARD            559
 #define IDM_CRASH_ME                    560
 #define IDM_THREAD_STRESS               561
+
 #define IDC_SUMATRAPDF                  600
 #define IDI_SMALL                       601
 #define IDC_GOTO_PAGE_EDIT              1000

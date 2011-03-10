@@ -254,9 +254,6 @@
     <ClCompile Include="src\DisplayState.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\FileHistory.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\FileWatch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

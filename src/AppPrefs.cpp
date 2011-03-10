@@ -1,4 +1,4 @@
-/* Copyright Krzysztof Kowalczyk 2006-2011
+/* Copyright 2006-2011 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
 #include "BaseUtil.h"
@@ -99,17 +99,23 @@ Error:
     return NULL;
 }
 
-static bool DisplayState_Deserialize(benc_dict* dict, DisplayState *ds, bool globalPrefsOnly)
+static DisplayState * DisplayState_Deserialize(benc_dict* dict, bool globalPrefsOnly)
 {
+    DisplayState *ds = new DisplayState();
     const char *filePath = dict_get_str(dict, FILE_STR);
     if (filePath)
         ds->filePath = utf8_to_tstr(filePath);
+    if (!ds->filePath) {
+        delete ds;
+        return NULL;
+    }
+
     const char *decryptionKey = dict_get_str(dict, DECRYPTION_KEY_STR);
     if (decryptionKey)
         ds->decryptionKey = StrCopy(decryptionKey);
     if (globalPrefsOnly) {
         ds->useGlobalValues = TRUE;
-        return true;
+        return ds;
     }
 
     const char* txt = dict_get_str(dict, DISPLAY_MODE_STR);
@@ -140,7 +146,7 @@ static bool DisplayState_Deserialize(benc_dict* dict, DisplayState *ds, bool glo
         }
     }
 
-    return true;
+    return ds;
 }
 
 static benc_dict* DisplayState_Serialize(DisplayState *ds, bool globalPrefsOnly)
@@ -196,28 +202,28 @@ Error:
     return NULL;
 }
 
-static benc_array *FileHistoryList_Serialize(FileHistoryList *root, bool globalPrefsOnly)
+static benc_array *FileHistoryList_Serialize(FileHistoryList *fileHistory, bool globalPrefsOnly)
 {
     BOOL ok;
-    assert(root);
-    if (!root) return NULL;
+    assert(fileHistory);
+    if (!fileHistory) return NULL;
 
     benc_array* arr = benc_array_new();
     if (!arr)
         goto Error;
 
     // Don't save more file entries than will be useful
-    int restCount = globalPrefsOnly ? MAX_RECENT_FILES_IN_MENU : INT_MAX;
-    FileHistoryNode *curr = root->first;
-    while (curr && restCount > 0) {
-        benc_dict* bobj = DisplayState_Serialize(&curr->state, globalPrefsOnly);
+    int maxRememberdItems = globalPrefsOnly ? MAX_RECENT_FILES_IN_MENU : INT_MAX;
+    for (int index = 0; index < maxRememberdItems; index++) {
+        DisplayState *state = fileHistory->Get(index);
+        if (!state)
+            break;
+        benc_dict* bobj = DisplayState_Serialize(state, globalPrefsOnly);
         if (!bobj)
             goto Error;
         ok = benc_array_append(arr, (benc_obj *)bobj);
         if (!ok)
             goto Error;
-        curr = curr->next;
-        restCount--;
     }
     return arr;
 Error:
@@ -272,7 +278,7 @@ static void dict_get_tstr_helper(benc_dict *d, const char *key, TCHAR **val)
     }
 }
 
-static bool Prefs_Deserialize(const char *prefsTxt, size_t prefsTxtLen, SerializableGlobalPrefs *globalPrefs, FileHistoryList *fileHistoryRoot)
+static bool Prefs_Deserialize(const char *prefsTxt, size_t prefsTxtLen, SerializableGlobalPrefs *globalPrefs, FileHistoryList *root)
 {
     benc_obj * bobj;
     benc_str * bstr;
@@ -330,12 +336,9 @@ static bool Prefs_Deserialize(const char *prefsTxt, size_t prefsTxtLen, Serializ
         benc_dict *dict = benc_obj_as_dict(benc_array_get(fileHistory, i));
         assert(dict);
         if (!dict) continue;
-        FileHistoryNode *node = new FileHistoryNode();
-        DisplayState_Deserialize(dict, &node->state, globalPrefs->m_globalPrefsOnly);
-        if (node->state.filePath)
-            fileHistoryRoot->Append(node);
-        else
-            delete node;
+        DisplayState *state = DisplayState_Deserialize(dict, globalPrefs->m_globalPrefsOnly);
+        if (state)
+            root->Append(state);
     }
     benc_obj_delete(bobj);
     return true;
@@ -349,7 +352,7 @@ namespace Prefs {
 /* Load preferences from the preferences file.
    Returns true if preferences file was loaded, false if there was an error.
 */
-bool Load(TCHAR *filepath, SerializableGlobalPrefs *globalPrefs, FileHistoryList *fileHistoryRoot)
+bool Load(TCHAR *filepath, SerializableGlobalPrefs *globalPrefs, FileHistoryList *fileHistory)
 {
     bool            ok = false;
 
@@ -366,7 +369,7 @@ bool Load(TCHAR *filepath, SerializableGlobalPrefs *globalPrefs, FileHistoryList
     size_t prefsFileLen;
     ScopedMem<char> prefsTxt(file_read_all(filepath, &prefsFileLen));
     if (!str_empty(prefsTxt)) {
-        ok = Prefs_Deserialize(prefsTxt, prefsFileLen, globalPrefs, fileHistoryRoot);
+        ok = Prefs_Deserialize(prefsTxt, prefsFileLen, globalPrefs, fileHistory);
         assert(ok);
     }
 
@@ -375,29 +378,27 @@ bool Load(TCHAR *filepath, SerializableGlobalPrefs *globalPrefs, FileHistoryList
     // accessing network drives can be slow and unnecessarily spin
     // the drives).
 #if 0
-    FileHistoryNode *node = fileHistoryRoot->first;
-    while (node) {
-        FileHistoryNode *next = node->next;
-        if (!file_exists(node->state.filePath)) {
-            DBG_OUT_T("Prefs_Load() file '%s' doesn't exist anymore\n", node->state.filePath);
-            fileHistoryRoot->Remove(node);
-            delete node;
+    for (int index = 0; fileHistory->Get(index); index++) {
+        DisplayState *state = fileHistory->Get(index);
+        if (!file_exists(state->filePath)) {
+            DBG_OUT_T("Prefs_Load() file '%s' doesn't exist anymore\n", state->filePath);
+            fileHistory->Remove(state);
+            delete state;
         }
-        node = next;
     }
 #endif
 
     return ok;
 }
 
-bool Save(TCHAR *filepath, SerializableGlobalPrefs *globalPrefs, FileHistoryList *fileHistoryRoot)
+bool Save(TCHAR *filepath, SerializableGlobalPrefs *globalPrefs, FileHistoryList *fileHistory)
 {
     assert(filepath);
     if (!filepath)
         return false;
 
     size_t dataLen;
-    ScopedMem<const char> data(Prefs_Serialize(globalPrefs, fileHistoryRoot, &dataLen));
+    ScopedMem<const char> data(Prefs_Serialize(globalPrefs, fileHistory, &dataLen));
     if (!data)
         return false;
 

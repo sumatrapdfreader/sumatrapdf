@@ -158,7 +158,7 @@ static HBITMAP                      gBitmapReloadingCue;
 
 static RenderCache                  gRenderCache;
 static Vec<WindowInfo*>             gWindows;
-static FileHistoryList              gFileHistoryRoot;
+static FileHistoryList              gFileHistory;
 static UIThreadWorkItemQueue        gUIThreadMarshaller;
 
 static int                          gReBarDy;
@@ -636,20 +636,15 @@ MenuDef menuDefHelp[] = {
 #endif
 };
 
-static void AddFileMenuItem(HMENU menuFile, FileHistoryNode *node, UINT index)
+static void AddFileMenuItem(HMENU menuFile, DisplayState *state, UINT index)
 {
-static UINT nextMenuId = 1000;
-
-    assert(node);
-    if (!node) return;
-    assert(menuFile);
-    if (!menuFile) return;
+    assert(state && menuFile);
+    if (!state || ! menuFile) return;
 
     TCHAR menuString[MAX_PATH + 4];
-    wsprintf(menuString, _T("&%d) %s"), (index + 1) % 10, FilePath_GetBaseName(node->state.filePath));
-    if (INVALID_MENU_ID == node->menuId)
-        node->menuId = ++nextMenuId;
-    InsertMenu(menuFile, IDM_EXIT, MF_BYCOMMAND | MF_ENABLED | MF_STRING, node->menuId, menuString);
+    wsprintf(menuString, _T("&%d) %s"), (index + 1) % 10, FilePath_GetBaseName(state->filePath));
+    UINT menuId = IDM_FILE_HISTORY_FIRST + index;
+    InsertMenu(menuFile, IDM_EXIT, MF_BYCOMMAND | MF_ENABLED | MF_STRING, menuId, menuString);
 }
 
 static void EmptyMenu(HMENU m)
@@ -693,21 +688,17 @@ static HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int n, HMENU m=NULL)
 static void AppendRecentFilesToMenu(HMENU m)
 {
     if (gRestrictedUse) return;
-    if (!gFileHistoryRoot.first) return;
+    if (gFileHistory.IsEmpty()) return;
 
-    int itemsAdded = 0;
-    FileHistoryNode *curr = gFileHistoryRoot.first;
-    while (curr && itemsAdded < MAX_RECENT_FILES_IN_MENU) {
-        assert(curr->state.filePath);
-        if (curr->state.filePath) {
-            AddFileMenuItem(m, curr, itemsAdded);
-            assert(curr->menuId != INVALID_MENU_ID);
-            ++itemsAdded;
-        }
-        curr = curr->next;
-    }
-    if (curr) {
-        DBG_OUT("  not adding, reached max %d items\n", MAX_RECENT_FILES_IN_MENU);
+    for (int index = 0; index < MAX_RECENT_FILES_IN_MENU; index++) {
+        DisplayState *state = gFileHistory.Get(index);
+        if (!state)
+            break;
+        assert(state->filePath);
+        if (state->filePath)
+            AddFileMenuItem(m, state, index);
+        if (MAX_RECENT_FILES_IN_MENU == index)
+            DBG_OUT("  not adding, reached max %d items\n", MAX_RECENT_FILES_IN_MENU);
     }
 
     InsertMenu(m, IDM_EXIT, MF_BYCOMMAND | MF_SEPARATOR, 0, NULL);
@@ -781,15 +772,31 @@ static void AddFileToHistory(const TCHAR *filePath)
 
     /* if a history entry with the same name already exists, then reuse it.
        That way we don't have duplicates and the file moves to the front of the list */
-    FileHistoryNode *node = gFileHistoryRoot.Find(filePath);
-    if (node)
-        gFileHistoryRoot.Remove(node);
-    else {
-        node = new FileHistoryNode(filePath);
-        if (!node)
+    DisplayState *state = gFileHistory.Find(filePath);
+    if (!state) {
+        state = new DisplayState();
+        if (!state)
             return;
+        state->filePath = StrCopy(filePath);
     }
-    gFileHistoryRoot.Prepend(node);
+    gFileHistory.Remove(state);
+    gFileHistory.Prepend(state);
+}
+
+static void RemoveInexistentFileFromHistory(const TCHAR *filePath)
+{
+    assert(filePath);
+    if (!filePath) return;
+
+    // move the file history entry to the very end of the list
+    // (if it exists at all), so that we don't completely forget
+    // the settings should the file reappear later on - but
+    // make space for other documents first
+    DisplayState *state = gFileHistory.Find(filePath);
+    if (!state)
+        return;
+    gFileHistory.Remove(state);
+    gFileHistory.Append(state);
 }
 
 WindowInfo* FindWindowInfoByHwnd(HWND hwnd)
@@ -839,12 +846,11 @@ WindowInfo* FindWindowInfoByFile(TCHAR *file)
    Caller needs to free() the result. */
 TCHAR *WindowInfo::GetPassword(const TCHAR *fileName, unsigned char *fileDigest, unsigned char decryptionKeyOut[32], bool *saveKey)
 {
-    FileHistoryNode *fileFromHistory = gFileHistoryRoot.Find(fileName);
-    if (fileFromHistory && fileFromHistory->state.decryptionKey) {
-        DisplayState *ds = &fileFromHistory->state;
+    DisplayState *fileFromHistory = gFileHistory.Find(fileName);
+    if (fileFromHistory && fileFromHistory->decryptionKey) {
         ScopedMem<char> fingerprint(mem_to_hexstr(fileDigest, 16));
-        *saveKey = str_startswith(ds->decryptionKey, fingerprint);
-        if (*saveKey && hexstr_to_mem(ds->decryptionKey + 32, decryptionKeyOut, 32))
+        *saveKey = str_startswith(fileFromHistory->decryptionKey, fingerprint);
+        if (*saveKey && hexstr_to_mem(fileFromHistory->decryptionKey + 32, decryptionKeyOut, 32))
             return NULL;
     }
 
@@ -1003,17 +1009,16 @@ static void UpdateCurrentFileDisplayStateForWin(WindowInfo *win)
     if (!fileName)
         return;
 
-    FileHistoryNode *node = gFileHistoryRoot.Find(fileName);
-    assert(node || !gGlobalPrefs.m_rememberOpenedFiles);
-    if (!node)
+    DisplayState *state = gFileHistory.Find(fileName);
+    assert(state || !gGlobalPrefs.m_rememberOpenedFiles);
+    if (!state)
         return;
 
-    DisplayState *ds = &node->state;
-    if (!win->dm->displayStateFromModel(ds))
+    if (!win->dm->displayStateFromModel(state))
         return;
-    ds->useGlobalValues = gGlobalPrefs.m_globalPrefsOnly;
-    UpdateDisplayStateWindowRect(win, ds, false);
-    win->DisplayStateFromToC(ds);
+    state->useGlobalValues = gGlobalPrefs.m_globalPrefsOnly;
+    UpdateDisplayStateWindowRect(win, state, false);
+    win->DisplayStateFromToC(state);
 }
 
 static bool Prefs_Save(void)
@@ -1027,7 +1032,7 @@ static bool Prefs_Save(void)
         UpdateCurrentFileDisplayStateForWin(gWindows[i]);
 
     ScopedMem<TCHAR> path(Prefs_GetFileName());
-    return Prefs::Save(path, &gGlobalPrefs, &gFileHistoryRoot);
+    return Prefs::Save(path, &gGlobalPrefs, &gFileHistory);
 }
 
 static void WindowInfo_Refresh(WindowInfo* win, bool autorefresh) {
@@ -1058,11 +1063,11 @@ static void WindowInfo_Refresh(WindowInfo* win, bool autorefresh) {
     if (win->dm) {
         // save a newly remembered password into file history so that
         // we don't ask again at the next refresh
-        FileHistoryNode *node = gFileHistoryRoot.Find(ds.filePath);
+        DisplayState *state = gFileHistory.Find(ds.filePath);
         const char *decryptionKey = win->dm->pdfEngine->getDecryptionKey();
-        if (node && !str_eq(node->state.decryptionKey, decryptionKey)) {
-            free((void *)node->state.decryptionKey);
-            node->state.decryptionKey = decryptionKey;
+        if (state && !str_eq(state->decryptionKey, decryptionKey)) {
+            free((void *)state->decryptionKey);
+            state->decryptionKey = decryptionKey;
         }
         else
             free((void *)decryptionKey);
@@ -1725,16 +1730,15 @@ WindowInfo* LoadPdf(const TCHAR *fileName, WindowInfo *win, bool showWin)
             return NULL;
     }
 
-    FileHistoryNode *fileFromHistory = gFileHistoryRoot.Find(fullpath);
-    DisplayState *ds = NULL;
-    if (fileFromHistory) {
-        ds = &fileFromHistory->state;
+    DisplayState *ds = gFileHistory.Find(fullpath);
+    if (ds) {
         AdjustRemovableDriveLetter(fullpath);
+        CheckPositionAndSize(ds);
     }
 
-    CheckPositionAndSize(ds);
     if (!LoadPdfIntoWindow(fullpath, win, ds, isNewWindow, true, showWin, true)) {
         /* failed to open */
+        RemoveInexistentFileFromHistory(fullpath);
         return win;
     }
 
@@ -3884,10 +3888,8 @@ static void OnMenuSettings(WindowInfo *win)
     if (DIALOG_OK_PRESSED != Dialog_Settings(win->hwndFrame, &gGlobalPrefs))
         return;
 
-    if (!gGlobalPrefs.m_rememberOpenedFiles) {
-        delete gFileHistoryRoot.first;
-        gFileHistoryRoot.first = NULL;
-    }
+    if (!gGlobalPrefs.m_rememberOpenedFiles)
+        gFileHistory.Clear();
 
     Prefs_Save();
 }
@@ -6130,14 +6132,15 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
             break;
 
         case WM_COMMAND:
-            wmId    = LOWORD(wParam);
+            wmId = LOWORD(wParam);
 
             // check if the menuId belongs to an entry in the list of
             // recently opened files and load the referenced file if it does
+            if (IDM_FILE_HISTORY_FIRST <= wmId && wmId <= IDM_FILE_HISTORY_LAST)
             {
-                FileHistoryNode *node = gFileHistoryRoot.Find(wmId);
-                if (node) {
-                    LoadDocument(node->state.filePath, win);
+                DisplayState *state = gFileHistory.Get(wmId - IDM_FILE_HISTORY_FIRST);
+                if (state) {
+                    LoadDocument(state->filePath, win);
                     break;
                 }
             }
@@ -6666,7 +6669,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     {
         ScopedMem<TCHAR> prefsFilename(Prefs_GetFileName());
         SerializableGlobalPrefs_Init();
-        if (!Prefs::Load(prefsFilename, &gGlobalPrefs, &gFileHistoryRoot)) {
+        if (!Prefs::Load(prefsFilename, &gGlobalPrefs, &gFileHistory)) {
             // assume that this is because prefs file didn't exist
             // i.e. this could be the first time Sumatra is launched.
             const char *lang = GuessLanguage();

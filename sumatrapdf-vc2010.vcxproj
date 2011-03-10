@@ -137,7 +137,6 @@
     <ClCompile Include="src\CrashHandler.cpp" />
     <ClCompile Include="src\DisplayModel.cpp" />
     <ClCompile Include="src\DisplayState.cpp" />
-    <ClCompile Include="src\FileHistory.cpp" />
     <ClCompile Include="src\FileWatch.cpp" />
     <ClCompile Include="src\Http.cpp" />
     <ClCompile Include="src\LangMenuDef.cpp" />
