@@ -65,6 +65,7 @@
     <ClCompile Include="baseutils\FileUtil.cpp" />
     <ClCompile Include="baseutils\StrUtil.cpp" />
     <ClCompile Include="baseutils\TStrUtil.cpp" />
+    <ClCompile Include="baseutils\UtilTests.cpp" />
     <ClCompile Include="baseutils\WinUtil.cpp" />
     <ClCompile Include="baseutils\WStrUtil.cpp" />
     <ClCompile Include="ext\libjpeg-turbo\jaricom.c" />

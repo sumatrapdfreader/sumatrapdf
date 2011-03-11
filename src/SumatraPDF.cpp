@@ -6650,8 +6650,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     EnableNx();
 
 #ifdef DEBUG
-    extern void u_DoAllTests(void);
-    u_DoAllTests();
+    extern void BaseUtils_UnitTests(void);
+    BaseUtils_UnitTests();
+    extern void SumatraPDF_UnitTests(void);
+    SumatraPDF_UnitTests();
 #endif
 
     // don't show system-provided dialog boxes when accessing files on drives

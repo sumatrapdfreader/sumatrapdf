@@ -4,6 +4,8 @@
 #ifndef GeomUtil_h
 #define GeomUtil_h
 
+#include <math.h>
+
 template <typename T>
 class Point
 {

@@ -167,8 +167,4 @@ public:
     static BencDict *Decode(const char *bytes, size_t *len_out);
 };
 
-#ifndef NDEBUG
-void u_benc_all(void);
-#endif
-
 #endif

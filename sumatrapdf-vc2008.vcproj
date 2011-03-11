@@ -338,6 +338,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\baseutils\UtilTests.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\baseutils\Vec.h"
 				>
 			</File>

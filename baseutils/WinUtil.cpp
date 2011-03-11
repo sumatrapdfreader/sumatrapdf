@@ -52,14 +52,14 @@ bool WindowsVerVistaOrGreater()
 }
 
 void SeeLastError(DWORD err) {
-    char *msgBuf = NULL;
+    TCHAR *msgBuf = NULL;
     if (err == 0)
         err = GetLastError();
-    FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+    FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
         NULL, err, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-        (LPSTR)&msgBuf, 0, NULL);
+        (LPTSTR)&msgBuf, 0, NULL);
     if (!msgBuf) return;
-    DBG_OUT("SeeLastError(): %s\n", msgBuf);
+    DBG_OUT_T("SeeLastError(): %s\n", msgBuf);
     LocalFree(msgBuf);
 }
 

@@ -107,6 +107,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\baseutils\UtilTests.h"
+				>
+			</File>
+			<File
 				RelativePath=".\baseutils\Vec.h"
 				>
 			</File>
