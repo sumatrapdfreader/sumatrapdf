@@ -1365,7 +1365,6 @@ static void UpdateTocWidth(WindowInfo *win, const DisplayState *ds=NULL, int def
 
 static void RecalcSelectionPosition (WindowInfo *win) {
     SelectionOnPage *   selOnPage = win->selectionOnPage;
-    RectD               selD;
     PdfPageInfo*        pageInfo;
 
     while (selOnPage != NULL) {
@@ -1378,9 +1377,9 @@ static void RecalcSelectionPosition (WindowInfo *win) {
             selOnPage->selectionCanvas.dx = 0;
             selOnPage->selectionCanvas.dy = 0;
         } else {
-            selD = selOnPage->selectionPage;
-            win->dm->rectCvtUserToScreen (selOnPage->pageNo, &selD);
-            RectI_FromRectD (&selOnPage->selectionCanvas, &selD);
+            RectD selD = selOnPage->selectionPage;
+            win->dm->rectCvtUserToScreen(selOnPage->pageNo, &selD);
+            selOnPage->selectionCanvas = selD.Convert<int>();
         }
         selOnPage = selOnPage->next;
     }
@@ -1844,7 +1843,7 @@ void DisplayModel::setScrollbarsState(void)
         si.nMax = 99;
         si.nPage = 100;
     } else {
-        si.nPos = (int)areaOffset.x;
+        si.nPos = areaOffset.x;
         si.nMin = 0;
         si.nMax = canvasDx-1;
         si.nPage = drawAreaDx;
@@ -1870,7 +1869,7 @@ void DisplayModel::setScrollbarsState(void)
         si.nMax = 99;
         si.nPage = 100;
     } else {
-        si.nPos = (int)areaOffset.y;
+        si.nPos = areaOffset.y;
         si.nMin = 0;
         si.nMax = canvasDy-1;
         si.nPage = drawAreaDy;
@@ -2089,9 +2088,9 @@ void DownloadSumatraUpdateInfo(WindowInfo *win, bool autoCheck)
 
 static void PaintTransparentRectangle(WindowInfo *win, HDC hdc, RectI *rect, COLORREF selectionColor, BYTE alpha = 0x5f, int margin = 1) {
     // don't draw selection parts not visible on screen
-    RectI screen = { -margin, -margin, win->winDx() + 2 * margin, win->winDy() + 2 * margin };
-    RectI isect;
-    if (!RectI_Intersect(rect, &screen, &isect) || isect.dx * isect.dy == 0)
+    RectI screen(-margin, -margin, win->winDx() + 2 * margin, win->winDy() + 2 * margin);
+    RectI isect = rect->Intersect(screen);
+    if (isect.IsEmpty())
         return;
     rect = &isect;
 
@@ -2136,9 +2135,9 @@ static void UpdateTextSelection(WindowInfo *win, bool select=true)
 
     PdfSel *result = &win->dm->textSelection->result;
     for (int i = result->len - 1; i >= 0; i--) {
-        SelectionOnPage *selOnPage = SA(SelectionOnPage);
-        RectD_FromRectI(&selOnPage->selectionPage, &result->rects[i]);
+        SelectionOnPage *selOnPage = new SelectionOnPage;
         selOnPage->pageNo = result->pages[i];
+        selOnPage->selectionPage = result->rects[i].Convert<double>();
         selOnPage->next = win->selectionOnPage;
         win->selectionOnPage = selOnPage;
     }
@@ -2176,22 +2175,18 @@ static void PaintForwardSearchMark(WindowInfo *win, HDC hdc) {
     if (!pageInfo->visible)
         return;
     
-    RectD recD;
-    RectI recI;
-
     // Draw the rectangles highlighting the forward search results
     for (UINT i = 0; i < win->fwdsearchmarkRects.Count(); i++)
     {
-        RectD_FromRectI(&recD, &win->fwdsearchmarkRects[i]);
+        RectD recD = win->fwdsearchmarkRects[i].Convert<double>();
         win->dm->rectCvtUserToScreen(win->fwdsearchmarkPage, &recD);
-        if (gGlobalPrefs.m_fwdsearchOffset > 0)
-        {
+        if (gGlobalPrefs.m_fwdsearchOffset > 0) {
             recD.x = pageInfo->screenX + (double)gGlobalPrefs.m_fwdsearchOffset * win->dm->zoomReal();
             recD.dx = (gGlobalPrefs.m_fwdsearchWidth > 0 ? (double)gGlobalPrefs.m_fwdsearchWidth : 15.0) * win->dm->zoomReal();
             recD.y -= 4;
             recD.dy += 8;
         }
-        RectI_FromRectD(&recI, &recD);
+        RectI recI = recD.Convert<int>();
         BYTE alpha = (BYTE)(0x5f * 1.0f * (HIDE_FWDSRCHMARK_STEPS - win->fwdsearchmarkHideStep) / HIDE_FWDSRCHMARK_STEPS);
         PaintTransparentRectangle(win, hdc, &recI, gGlobalPrefs.m_fwdsearchColor, alpha, 0);
     }
@@ -2434,7 +2429,7 @@ static void CopySelectionToClipboard(WindowInfo *win)
 
     /* also copy a screenshot of the current selection to the clipboard */
     SelectionOnPage *selOnPage = win->selectionOnPage;
-    RectD * r = &selOnPage->selectionPage;
+    RectD *r = &selOnPage->selectionPage;
     fz_rect clipRegion;
     clipRegion.x0 = (float)r->x; clipRegion.x1 = (float)(r->x + r->dx);
     clipRegion.y0 = (float)r->y; clipRegion.y1 = (float)(r->y + r->dy);
@@ -2454,7 +2449,7 @@ static void DeleteOldSelectionInfo(WindowInfo *win) {
     SelectionOnPage *selOnPage = win->selectionOnPage;
     while (selOnPage != NULL) {
         SelectionOnPage *tmp = selOnPage->next;
-        free(selOnPage);
+        delete selOnPage;
         selOnPage = tmp;
     }
     win->selectionOnPage = NULL;
@@ -2469,21 +2464,23 @@ static void ConvertSelectionRectToSelectionOnPage(WindowInfo *win) {
         if (!pageInfo->shown)
             continue;
 
-        RectI intersect;
-        if (!RectI_Intersect(&win->selectionRect, &pageInfo->pageOnScreen, &intersect))
+        RectI intersect = win->selectionRect.Intersect(pageInfo->pageOnScreen);
+        if (intersect.IsEmpty())
             continue;
 
         /* selection intersects with a page <pageNo> on the screen */
-        SelectionOnPage selOnPage = { 0 };
-        RectD_FromRectI(&selOnPage.selectionPage, &intersect);
-
-        if (!win->dm->rectCvtScreenToUser(&selOnPage.pageNo, &selOnPage.selectionPage))
+        int selPageNo;
+        RectD isectD = intersect.Convert<double>();
+        if (!win->dm->rectCvtScreenToUser(&selPageNo, &isectD))
             continue;
 
-        assert(pageNo == selOnPage.pageNo);
+        assert(pageNo == selPageNo);
 
-        selOnPage.next = win->selectionOnPage;
-        win->selectionOnPage = (SelectionOnPage *)_memdup(&selOnPage);
+        SelectionOnPage *selOnPage = new SelectionOnPage;
+        selOnPage->pageNo = selPageNo;
+        selOnPage->selectionPage = isectD;
+        selOnPage->next = win->selectionOnPage;
+        win->selectionOnPage = selOnPage;
     }
 }
 
@@ -2560,12 +2557,12 @@ static void OnSelectAll(WindowInfo *win, bool textOnly=false)
         win->dm->textSelection->StartAt(pageNo, 0);
         for (pageNo = win->dm->pageCount(); !win->dm->getPageInfo(pageNo)->shown; pageNo--);
         win->dm->textSelection->SelectUpTo(pageNo, -1);
-        RectI_FromXY(&win->selectionRect, INT_MIN / 2, INT_MAX, INT_MIN / 2, INT_MAX);
+        win->selectionRect = RectI::FromXY(INT_MIN / 2, INT_MIN / 2, INT_MAX, INT_MAX);
         UpdateTextSelection(win);
     }
     else {
         DeleteOldSelectionInfo(win);
-        RectI_FromXY(&win->selectionRect, INT_MIN / 2, INT_MAX, INT_MIN / 2, INT_MAX);
+        win->selectionRect = RectI::FromXY(INT_MIN / 2, INT_MIN / 2, INT_MAX, INT_MAX);
         ConvertSelectionRectToSelectionOnPage(win);
     }
 
@@ -2612,7 +2609,7 @@ static void OnInverseSearch(WindowInfo *win, UINT x, UINT y)
 
     const PdfPageInfo *pageInfo = win->dm->getPageInfo(pageNo);
     TCHAR srcfilepath[MAX_PATH];
-    win->pdfsync->convert_coord_to_internal(&x, &y, pageInfo->page.dyI(), BottomLeft);
+    win->pdfsync->convert_coord_to_internal(&x, &y, pageInfo->page.Convert<int>().dy, BottomLeft);
     UINT line, col;
     UINT err = win->pdfsync->pdf_to_source(pageNo, x, y, srcfilepath, dimof(srcfilepath),&line,&col); // record 101
     if (err != PDFSYNCERR_SUCCESS) {
@@ -2700,11 +2697,11 @@ static void OnSelectionEdgeAutoscroll(WindowInfo *win, int x, int y)
         dy = SELECT_AUTOSCROLL_STEP_LENGTH;
 
     if (dx != 0 || dy != 0) {
-        int oldX = (int)win->dm->areaOffset.x, oldY = (int)win->dm->areaOffset.y;
+        int oldX = win->dm->areaOffset.x, oldY = win->dm->areaOffset.y;
         win->MoveDocBy(dx, dy);
 
-        dx = (int)win->dm->areaOffset.x - oldX;
-        dy = (int)win->dm->areaOffset.y - oldY;
+        dx = win->dm->areaOffset.x - oldX;
+        dy = win->dm->areaOffset.y - oldY;
         win->selectionRect.x -= dx;
         win->selectionRect.y -= dy;
         win->selectionRect.dx += dx;
@@ -3191,7 +3188,7 @@ static void PrintToDevice(PdfEngine *pdfEngine, HDC hdc, LPDEVMODE devMode,
             for (; sel; sel = sel->next) {
                 StartPage(hdc);
 
-                RectD * r = &sel->selectionPage;
+                RectD *r = &sel->selectionPage;
                 fz_rect clipRegion;
                 clipRegion.x0 = (float)r->x; clipRegion.x1 = (float)(r->x + r->dx);
                 clipRegion.y0 = (float)r->y; clipRegion.y1 = (float)(r->y + r->dy);
@@ -3200,7 +3197,7 @@ static void PrintToDevice(PdfEngine *pdfEngine, HDC hdc, LPDEVMODE devMode,
                 // Swap width and height for rotated documents
                 SizeD sSize = (rotation % 180) == 0 ? SizeD(r->dx, r->dy) : SizeD(r->dy, r->dx);
 
-                float zoom = (float)min((double)printableWidth / sSize.dx(), (double)printableHeight / sSize.dy());
+                float zoom = (float)min((double)printableWidth / sSize.dx, (double)printableHeight / sSize.dy);
                 // use the correct zoom values, if the page fits otherwise
                 // and the user didn't ask for anything else (default setting)
                 if (PrintScaleShrink == scaleAdv)
@@ -3210,8 +3207,8 @@ static void PrintToDevice(PdfEngine *pdfEngine, HDC hdc, LPDEVMODE devMode,
 
 #ifdef USE_GDI_FOR_PRINTING
                 RECT rc;
-                rc.left = (LONG)(printableWidth - sSize.dx() * zoom) / 2;
-                rc.top = (LONG)(printableHeight - sSize.dy() * zoom) / 2;
+                rc.left = (LONG)(printableWidth - sSize.dx * zoom) / 2;
+                rc.top = (LONG)(printableHeight - sSize.dy * zoom) / 2;
                 rc.right = printableWidth - rc.left;
                 rc.bottom = printableHeight - rc.top;
                 pdfEngine->renderPage(hdc, sel->pageNo, &rc, NULL, zoom, dm_rotation, &clipRegion, Target_Print);
@@ -3246,16 +3243,16 @@ static void PrintToDevice(PdfEngine *pdfEngine, HDC hdc, LPDEVMODE devMode,
             SizeD pSize = pdfEngine->pageSize(pageNo);
             int rotation = pdfEngine->pageRotation(pageNo);
             // Turn the document by 90 deg if it isn't in portrait mode
-            if (pSize.dx() > pSize.dy()) {
+            if (pSize.dx > pSize.dy) {
                 rotation += 90;
-                pSize = SizeD(pSize.dy(), pSize.dx());
+                pSize = SizeD(pSize.dy, pSize.dx);
             }
             // make sure not to print upside-down
             rotation = (rotation % 180) == 0 ? 0 : 270;
             // finally turn the page by (another) 90 deg in landscape mode
             if (!bPrintPortrait) {
                 rotation = (rotation + 90) % 360;
-                pSize = SizeD(pSize.dy(), pSize.dx());
+                pSize = SizeD(pSize.dy, pSize.dx);
             }
 
             // dpiFactor means no physical zoom
@@ -3276,8 +3273,8 @@ static void PrintToDevice(PdfEngine *pdfEngine, HDC hdc, LPDEVMODE devMode,
                 fz_rect cbox = fz_transformrect(pdfEngine->viewctm(pageNo, 1.0, rotation), rect);
                 zoom = (float)min((double)printableWidth / (cbox.x1 - cbox.x0),
                               min((double)printableHeight / (cbox.y1 - cbox.y0),
-                              min((double)paperWidth / pSize.dx(),
-                                  (double)paperHeight / pSize.dy())));
+                              min((double)paperWidth / pSize.dx,
+                                  (double)paperHeight / pSize.dy)));
                 // use the correct zoom values, if the page fits otherwise
                 // and the user didn't ask for anything else (default setting)
                 if (PrintScaleShrink == scaleAdv && dpiFactor < zoom)
@@ -3285,18 +3282,18 @@ static void PrintToDevice(PdfEngine *pdfEngine, HDC hdc, LPDEVMODE devMode,
                 // make sure that no content lies in the non-printable paper margins
                 if (leftMargin > cbox.x0 * zoom)
                     horizOffset = (int)(horizOffset - leftMargin + cbox.x0 * zoom);
-                else if (rightMargin > (pSize.dx() - cbox.x1) * zoom)
-                    horizOffset = (int)(horizOffset + rightMargin - (pSize.dx() - cbox.x1) * zoom);
+                else if (rightMargin > (pSize.dx - cbox.x1) * zoom)
+                    horizOffset = (int)(horizOffset + rightMargin - (pSize.dx - cbox.x1) * zoom);
                 if (topMargin > cbox.y0 * zoom)
                     vertOffset = (int)(vertOffset - topMargin + cbox.y0 * zoom);
-                else if (bottomMargin > (pSize.dy() - cbox.y1) * zoom)
-                    vertOffset = (int)(vertOffset + bottomMargin - (pSize.dy() - cbox.y1) * zoom);
+                else if (bottomMargin > (pSize.dy - cbox.y1) * zoom)
+                    vertOffset = (int)(vertOffset + bottomMargin - (pSize.dy - cbox.y1) * zoom);
             }
 
 #ifdef USE_GDI_FOR_PRINTING
             RECT rc;
-            rc.left = (LONG)(printableWidth - pSize.dx() * zoom) / 2;
-            rc.top = (LONG)(printableHeight - pSize.dy() * zoom) / 2;
+            rc.left = (LONG)(printableWidth - pSize.dx * zoom) / 2;
+            rc.top = (LONG)(printableHeight - pSize.dy * zoom) / 2;
             rc.right = printableWidth - rc.left;
             rc.bottom = printableHeight - rc.top;
             OffsetRect(&rc, -horizOffset, -vertOffset);
@@ -4262,14 +4259,14 @@ void WindowInfo_ShowForwardSearchResult(WindowInfo *win, LPCTSTR srcfilename, UI
 
             RectI overallrc;
             RectI rc = rects[0];
-            win->pdfsync->convert_coord_from_internal(&rc, pi->page.dyI(), BottomLeft);
+            win->pdfsync->convert_coord_from_internal(&rc, pi->page.Convert<int>().dy, BottomLeft);
 
             overallrc = rc;
             for (size_t i = 0; i < rects.Count(); i++)
             {
                 rc = rects[i];
-                win->pdfsync->convert_coord_from_internal(&rc, pi->page.dyI(), BottomLeft);
-                overallrc = RectI_Union(overallrc, rc);
+                win->pdfsync->convert_coord_from_internal(&rc, pi->page.Convert<int>().dy, BottomLeft);
+                overallrc = overallrc.Union(rc);
                 win->fwdsearchmarkRects.Push(rc);
             }
             win->fwdsearchmarkPage = page;

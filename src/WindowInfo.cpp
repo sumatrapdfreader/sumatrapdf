@@ -226,7 +226,7 @@ void WindowInfo::ZoomToSelection(float factor, bool relative)
     if (zoomToPt) {
         RectI selRect = this->selectionOnPage->selectionCanvas;
         for (SelectionOnPage *sel = this->selectionOnPage->next; sel; sel = sel->next)
-            selRect = RectI_Union(selRect, sel->selectionCanvas);
+            selRect = selRect.Union(sel->selectionCanvas);
 
         RECT rc;
         GetClientRect(this->hwndCanvas, &rc);

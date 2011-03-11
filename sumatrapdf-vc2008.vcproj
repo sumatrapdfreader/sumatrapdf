@@ -318,10 +318,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\baseutils\GeomUtil.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\baseutils\GeomUtil.h"
 				>
 			</File>

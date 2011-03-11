@@ -142,8 +142,8 @@ static void pageSizeAfterRotation(PdfPageInfo *pageInfo, int rotation,
         *pageDxOut = pageInfo->contentBox.x1 - pageInfo->contentBox.x0;
         *pageDyOut = pageInfo->contentBox.y1 - pageInfo->contentBox.y0;
     } else {
-        *pageDxOut = pageInfo->page.dx();
-        *pageDyOut = pageInfo->page.dy();
+        *pageDxOut = pageInfo->page.dx;
+        *pageDyOut = pageInfo->page.dy;
     }
 
     rotation += pageInfo->rotation;
@@ -703,37 +703,29 @@ void DisplayModel::changeStartPage(int startPage)
    Needs to be recalucated after scrolling the view. */
 void DisplayModel::recalcVisibleParts(void)
 {
-    int             pageNo;
-    RectI           drawAreaRect;
-    RectI           pageRect;
-    RectI           intersect;
-    PdfPageInfo*    pageInfo;
-
     assert(_pagesInfo);
     if (!_pagesInfo)
         return;
 
-    drawAreaRect.x = areaOffset.x;
-    drawAreaRect.y = areaOffset.y;
-    drawAreaRect.dx = drawAreaSize.dx;
-    drawAreaRect.dy = drawAreaSize.dy;
+    RectI drawAreaRect(areaOffset, drawAreaSize);
 
 //    DBG_OUT("DisplayModel::recalcVisibleParts() draw area         (x=%3d,y=%3d,dx=%4d,dy=%4d)\n",
 //        drawAreaRect.x, drawAreaRect.y, drawAreaRect.dx, drawAreaRect.dy);
-    for (pageNo = 1; pageNo <= pageCount(); ++pageNo) {
-        pageInfo = getPageInfo(pageNo);
+    for (int pageNo = 1; pageNo <= pageCount(); ++pageNo) {
+        PdfPageInfo *pageInfo = getPageInfo(pageNo);
         if (!pageInfo->shown) {
             assert(!pageInfo->visible);
             continue;
         }
 
-        pageRect = pageInfo->currPos;
+        RectI pageRect = pageInfo->currPos;
         pageInfo->visible = 0;
 
-        if (pageRect.dx > 0 && pageRect.dy > 0 && RectI_Intersect(&pageRect, &drawAreaRect, &intersect)) {
+        RectI intersect = pageRect.Intersect(drawAreaRect);
+        if (pageRect.dx > 0 && pageRect.dy > 0 && !intersect.IsEmpty()) {
             // calculate with floating point precision to prevent an integer overflow
             pageInfo->visible = 1.0f * intersect.dx * intersect.dy / ((float)pageRect.dx * pageRect.dy);
-            
+
             pageInfo->bitmap = intersect;
             pageInfo->bitmap.x -= pageRect.x;
             assert(pageInfo->bitmap.x >= 0);
@@ -759,21 +751,17 @@ void DisplayModel::recalcVisibleParts(void)
     }
 }
 
-
 /* Map rectangle <r> on the page <pageNo> to point on the screen. */
 bool DisplayModel::rectCvtUserToScreen(int pageNo, RectD *r)
 {
-    double          sx, sy, ex, ey;
+    double sx = r->x, ex = r->x + r->dx;
+    double sy = r->y, ey = r->y + r->dy;
 
-    sx = r->x;
-    sy = r->y;
-    ex = r->x + r->dx;
-    ey = r->y + r->dy;
+    if (!cvtUserToScreen(pageNo, &sx, &sy) || !cvtUserToScreen(pageNo, &ex, &ey))
+        return false;
 
-    bool ok = cvtUserToScreen(pageNo, &sx, &sy);
-    ok = ok && cvtUserToScreen(pageNo, &ex, &ey);
-    ok = ok && RectD_FromXY(r, sx, ex, sy, ey);
-    return ok;
+    *r = RectD::FromXY(sx, sy, ex, ey);
+    return true;
 }
 
 fz_rect DisplayModel::rectCvtUserToScreen(int pageNo, fz_rect rect)
@@ -793,16 +781,14 @@ fz_rect DisplayModel::rectCvtUserToScreen(int pageNo, fz_rect rect)
 /* Map rectangle <r> on the page <pageNo> to point on the screen. */
 bool DisplayModel::rectCvtScreenToUser(int *pageNo, RectD *r)
 {
-    double          sx, sy, ex, ey;
+    double sx = r->x, ex = r->x + r->dx;
+    double sy = r->y, ey = r->y + r->dy;
 
-    sx = r->x;
-    sy = r->y;
-    ex = r->x + r->dx;
-    ey = r->y + r->dy;
+    if (!cvtScreenToUser(pageNo, &sx, &sy) || !cvtScreenToUser(pageNo, &ex, &ey))
+        return false;
 
-    return cvtScreenToUser(pageNo, &sx, &sy)
-        && cvtScreenToUser(pageNo, &ex, &ey)
-        && RectD_FromXY(r, sx, ex, sy, ey);
+    *r = RectD::FromXY(sx, sy, ex, ey);
+    return true;
 }
 
 int DisplayModel::getPageNoByPoint(int x, int y) 
@@ -817,7 +803,7 @@ int DisplayModel::getPageNoByPoint(int x, int y)
         if (!pageInfo->shown)
             continue;
 
-        if (RectI_Inside(&pageInfo->pageOnScreen, x, y))
+        if (pageInfo->pageOnScreen.Inside(PointI(x, y)))
             return pageNo;
     }
     return POINT_OUT_OF_PAGE;
@@ -864,20 +850,18 @@ bool DisplayModel::isOverText(int x, int y)
 
 void DisplayModel::renderVisibleParts(void)
 {
-    int             pageNo;
-    PdfPageInfo*    pageInfo;
-    int             lastVisible = 0;
+    int lastVisible = 0;
 
 //    DBG_OUT("DisplayModel::renderVisibleParts()\n");
-    for (pageNo = 1; pageNo <= pageCount(); ++pageNo) {
-        pageInfo = getPageInfo(pageNo);
+    for (int pageNo = 1; pageNo <= pageCount(); ++pageNo) {
+        PdfPageInfo *pageInfo = getPageInfo(pageNo);
         if (pageInfo->visible) {
             assert(pageInfo->shown);
             StartRenderingPage(pageNo);
             lastVisible = pageNo;
         }
     }
-    
+
 #ifdef PREDICTIVE_RENDER
     // TODO: prerender two pages in Facing and Book View modes?
     if (0 < lastVisible && lastVisible < pageCount())
@@ -1528,14 +1512,14 @@ TCHAR *DisplayModel::getTextInRegion(int pageNo, RectD *region)
     if (!pageText)
         return NULL;
 
-    RectI regionI, isect;
-    RectI_FromRectD(&regionI, region);
+    RectI regionI = region->Convert<int>();
     TCHAR *result = SAZA(TCHAR, StrLen(pageText) + 1), *dest = result;
     for (TCHAR *src = pageText; *src; src++) {
         if (*src != '\n') {
             fz_bbox *bbox = &coords[src - pageText];
-            RectI rect = { bbox->x0, bbox->y0, bbox->x1 - bbox->x0, bbox->y1 - bbox->y0 };
-            if (RectI_Intersect(&regionI, &rect, &isect) && 1.0 * isect.dx * isect.dy / (rect.dx * rect.dy) >= 0.3) {
+            RectI rect(bbox->x0, bbox->y0, bbox->x1 - bbox->x0, bbox->y1 - bbox->y0);
+            RectI isect = regionI.Intersect(rect);
+            if (!isect.IsEmpty() && 1.0 * isect.dx * isect.dy / (rect.dx * rect.dy) >= 0.3) {
                 *dest++ = *src;
                 //DBG_OUT("Char: %c : %d; ushort: %hu\n", (char)c, (int)c, (unsigned short)c);
                 //DBG_OUT("Found char: %c : %hu; real %c : %hu\n", c, (unsigned short)(unsigned char) c, ln->text[i].c, ln->text[i].c);
@@ -1574,19 +1558,13 @@ BOOL DisplayModel::ShowResultRectToScreen(PdfSel *res)
     if (!res->len)
         return false;
 
-    RectI extremes = { 0 };
+    RectI extremes;
     for (int i = 0; i < res->len; i++) {
-        RectI rect = res->rects[i];
-        RectD rectD;
-        RectD_FromRectI(&rectD, &rect);
+        RectD rectD = res->rects[i].Convert<double>();
         rectCvtUserToScreen(res->pages[i], &rectD);
-        RectI_FromXY(&rect, (int)floor(rectD.x), (int)ceil(rectD.x + rectD.dx),
-                            (int)floor(rectD.y), (int)ceil(rectD.y + rectD.dy));
-
-        if (0 == i)
-            extremes = rect;
-        else
-            extremes = RectI_Union(extremes, rect);
+        RectI rect = RectI::FromXY((int)floor(rectD.x), (int)floor(rectD.y), 
+                                   (int)ceil(rectD.x + rectD.dx), (int)ceil(rectD.y + rectD.dy));
+        extremes = extremes.Union(rect);
     }
 
     PdfPageInfo *pageInfo = getPageInfo(res->pages[0]);

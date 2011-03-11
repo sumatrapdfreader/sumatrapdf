@@ -143,8 +143,7 @@ static RectI GetTileOnScreen(PdfEngine *engine, int pageNo, int rotation, float 
 {
     fz_rect mediabox = GetTileRect(engine, pageNo, rotation, zoom, tile);
     fz_bbox bbox = fz_roundrect(fz_transformrect(ctm, mediabox));
-    RectI tileOnScreen = { bbox.x0, bbox.y0, bbox.x1 - bbox.x0, bbox.y1 - bbox.y0 };
-    return tileOnScreen;
+    return RectI::FromXY(bbox.x0, bbox.y0, bbox.x1, bbox.y1);
 }
 
 static bool IsTileVisible(DisplayModel *dm, int pageNo, int rotation, float zoom, TilePosition tile, float fuzz=0)
@@ -158,8 +157,8 @@ static bool IsTileVisible(DisplayModel *dm, int pageNo, int rotation, float zoom
     tileOnScreen.dx = (int)(tileOnScreen.dx * (fuzz + 1));
     tileOnScreen.y -= (int)(tileOnScreen.dy * fuzz * 0.5);
     tileOnScreen.dy = (int)(tileOnScreen.dy * (fuzz + 1));
-    RectI screen = { 0, 0, dm->drawAreaSize.dx, dm->drawAreaSize.dy };
-    return RectI_Intersect(&tileOnScreen, &screen, NULL) != 0;
+    RectI screen(0, 0, dm->drawAreaSize.dx, dm->drawAreaSize.dy);
+    return !tileOnScreen.Intersect(screen).IsEmpty();
 }
 
 /* Free all bitmaps in the cache that are of a specific page (or all pages
@@ -617,8 +616,7 @@ UINT RenderCache::PaintTiles(HDC hdc, RECT *bounds, DisplayModel *dm, int pageNo
     int tileCount = 1 << tileRes;
 
     TilePosition tile = { tileRes, 0, 0 };
-    RectI screen = RectI_FromRECT(bounds);
-    RectI isectPOS, isect;
+    RectI screen = RectI::FromXY(bounds->left, bounds->top, bounds->right, bounds->bottom);
 
     fz_matrix ctm = dm->pdfEngine->viewctm(pageNo, zoom, rotation);
     ctm = fz_concat(ctm, fz_translate((float)pageOnScreen->x, (float)pageOnScreen->y));
@@ -627,8 +625,9 @@ UINT RenderCache::PaintTiles(HDC hdc, RECT *bounds, DisplayModel *dm, int pageNo
     for (tile.row = 0; tile.row < tileCount; tile.row++) {
         for (tile.col = 0; tile.col < tileCount; tile.col++) {
             RectI tileOnScreen = GetTileOnScreen(dm->pdfEngine, pageNo, rotation, zoom, tile, ctm);
-            if (RectI_Intersect(&tileOnScreen, pageOnScreen, &isectPOS) &&
-                RectI_Intersect(&screen, &isectPOS, &isect)) {
+            RectI isectPOS = pageOnScreen->Intersect(tileOnScreen);
+            RectI isect = screen.Intersect(isectPOS);
+            if (!isect.IsEmpty()) {
                 UINT renderTime = PaintTile(hdc, &isect, dm, pageNo, tile, &isectPOS, renderMissing, renderOutOfDateCue, renderedReplacement);
                 renderTimeMin = min(renderTime, renderTimeMin);
             }

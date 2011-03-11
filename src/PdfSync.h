@@ -131,7 +131,7 @@ public:
     // Forward-search:
     // The result is returned in (page,x,y). The coordinates x,y are specified in the internal 
     // coordinate system.
-    virtual UINT source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page, Vec<RectI> &rects) = 0;
+    virtual UINT source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page, Vec<RectI>& rects) = 0;
 
     void discard_index() { this->index_discarded = true; }
     bool is_index_discarded() const
@@ -142,9 +142,8 @@ public:
 
         // has the synchronization file been changed on disk?
         struct _stat newstamp;
-        if (_tstat(syncfilepath, &newstamp) == 0
-            && difftime(newstamp.st_mtime, syncfileTimestamp.st_mtime) > 0
-            ) {
+        if (_tstat(syncfilepath, &newstamp) == 0 &&
+            difftime(newstamp.st_mtime, syncfileTimestamp.st_mtime) > 0) {
                 DBG_OUT_T("PdfSync:sync file has changed, rebuilding index: %s\n", syncfilepath);
 
                 // update time stamp
@@ -192,12 +191,12 @@ public:
 
     int rebuild_index();
     virtual UINT pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR srcfilepath, UINT cchFilepath, UINT *line, UINT *col);
-    virtual UINT source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page, Vec<RectI> &rects);
+    virtual UINT source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page, Vec<RectI>& rects);
 
 private:
     int get_record_section(int record_index);
     int scan_and_build_index(FILE *fp);
-    UINT source_to_record(FILE *fp, LPCTSTR srcfilename, UINT line, UINT col, Vec<size_t> &records);
+    UINT source_to_record(FILE *fp, LPCTSTR srcfilename, UINT line, UINT col, Vec<size_t>& records);
     FILE *opensyncfile();
 
 private:

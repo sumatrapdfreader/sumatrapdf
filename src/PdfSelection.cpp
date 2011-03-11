@@ -121,7 +121,7 @@ void PdfSelection::FillResultRects(int pageNo, int glyph, int length, VStrList *
         result.pages = (int *)realloc(result.pages, sizeof(int) * result.len);
         result.pages[result.len - 1] = pageNo;
         result.rects = (RectI *)realloc(result.rects, sizeof(RectI) * result.len);
-        RectI_FromXY(&result.rects[result.len - 1], bbox.x0, bbox.x1, bbox.y0, bbox.y1);
+        result.rects[result.len - 1] = RectI::FromXY(bbox.x0, bbox.y0, bbox.x1, bbox.y1);
     }
 }
 
@@ -172,7 +172,7 @@ void PdfSelection::SelectUpTo(int pageNo, int glyphIx)
     int fromGlyph = (fromPage == endPage ? endGlyph : startGlyph);
     int toGlyph = (fromPage == endPage ? startGlyph : endGlyph);
     if (fromPage == toPage && fromGlyph > toGlyph)
-        swap_int(fromGlyph, toGlyph);
+        swap(fromGlyph, toGlyph);
 
     for (int page = fromPage; page <= toPage; page++) {
         // make sure that glyph coordinates and page text have been cached
@@ -194,7 +194,7 @@ TCHAR *PdfSelection::ExtractText(TCHAR *lineSep)
     int fromGlyph = (fromPage == endPage ? endGlyph : startGlyph);
     int toGlyph = (fromPage == endPage ? startGlyph : endGlyph);
     if (fromPage == toPage && fromGlyph > toGlyph)
-        swap_int(fromGlyph, toGlyph);
+        swap(fromGlyph, toGlyph);
 
     for (int page = fromPage; page <= toPage; page++) {
         int glyph = page == fromPage ? fromGlyph : 0;

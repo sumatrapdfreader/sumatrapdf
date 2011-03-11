@@ -71,7 +71,7 @@ static void PdfDateToDisplay(TCHAR **s) {
 static TCHAR *FormatNumWithThousandSep(size_t num) {
     TCHAR buf[32], buf2[64], thousandSep[4];
 
-    tstr_printf_s(buf, dimof(buf), _T("%I64d"), num);
+    tstr_printf_s(buf, dimof(buf), _T("%Iu"), num);
     GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_STHOUSAND, thousandSep, dimof(thousandSep));
 
     TCHAR *src = buf, *dst = buf2;
@@ -144,8 +144,8 @@ static TCHAR *FormatPdfPageSize(SizeD size) {
     GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_IMEASURE, unitSystem, dimof(unitSystem));
     bool isMetric = unitSystem[0] == '0';
 
-    double width = size.dx() * (isMetric ? 2.54 : 1.0) / PDF_FILE_DPI;
-    double height = size.dy() * (isMetric ? 2.54 : 1.0) / PDF_FILE_DPI;
+    double width = size.dx * (isMetric ? 2.54 : 1.0) / PDF_FILE_DPI;
+    double height = size.dy * (isMetric ? 2.54 : 1.0) / PDF_FILE_DPI;
     if (((int)(width * 100)) % 100 == 99)
         width += 0.01;
     if (((int)(height * 100)) % 100 == 99)
@@ -454,14 +454,16 @@ static void DrawProperties(HWND hwnd, HDC hdc, RECT *rect)
     /* render text on the left*/
     (HFONT)SelectObject(hdc, fontLeftTxt);
     for (PdfPropertyEl *el = layoutData->first; el; el = el->next) {
-        RECT rc = RECT_FromRectI(&el->leftPos);
+        RECT rc;
+        SetRect(&rc, el->leftPos.x, el->leftPos.y, el->leftPos.x + el->leftPos.dx, el->leftPos.y + el->leftPos.dy);
         DrawText(hdc, el->leftTxt, -1, &rc, DT_RIGHT);
     }
 
     /* render text on the right */
     (HFONT)SelectObject(hdc, fontRightTxt);
     for (PdfPropertyEl *el = layoutData->first; el; el = el->next) {
-        RECT rc = RECT_FromRectI(&el->rightPos);
+        RECT rc;
+        SetRect(&rc, el->rightPos.x, el->rightPos.y, el->rightPos.x + el->rightPos.dx, el->rightPos.y + el->rightPos.dy);
         if (rc.right > rcClient.right - PROPERTIES_RECT_PADDING)
             rc.right = rcClient.right - PROPERTIES_RECT_PADDING;
         DrawText(hdc, el->rightTxt, -1, &rc, DT_LEFT | DT_PATH_ELLIPSIS);

@@ -85,9 +85,9 @@ BROWSER_PLUGIN_CFLAGS = $(CFLAGS) /Ibaseutils/msvc /wd4819
 LIBS_BROWSER_PLUGIN = user32.lib gdi32.lib advapi32.lib shlwapi.lib
 
 BASEUTILS_OBJS = \
-	$(O)\BencUtil.obj $(O)\FileUtil.obj $(O)\GeomUtil.obj \
-	$(O)\StrUtil.obj $(O)\TStrUtil.obj $(O)\WinUtil.obj \
-	$(O)\WStrUtil.obj $(O)\dialogsizer_set.obj
+	$(O)\BencUtil.obj $(O)\FileUtil.obj $(O)\WinUtil.obj \
+	$(O)\StrUtil.obj $(O)\TStrUtil.obj $(O)\WStrUtil.obj \
+	$(O)\dialogsizer_set.obj
 
 SUMATRA_OBJS = \
 	$(O)\AppPrefs.obj $(O)\DisplayModel.obj $(O)\DisplayState.obj $(O)\Http.obj \
@@ -225,7 +225,6 @@ $(O)\FileUtil.obj: baseutils\BaseUtil.h baseutils\FileUtil.h baseutils\StrUtil.h
 $(O)\FileUtil.obj: baseutils\TStrUtil.h baseutils\WStrUtil.h
 $(O)\FileWatch.obj: baseutils\BaseUtil.h baseutils\FileUtil.h baseutils\StrUtil.h
 $(O)\FileWatch.obj: baseutils\TStrUtil.h baseutils\WStrUtil.h src\FileWatch.h
-$(O)\GeomUtil.obj: baseutils\BaseUtil.h baseutils\GeomUtil.h
 $(O)\Http.obj: baseutils\BaseUtil.h baseutils\StrUtil.h baseutils\TStrUtil.h
 $(O)\Http.obj: baseutils\Vec.h baseutils\WStrUtil.h src\Http.h
 $(O)\Http.obj: src\SumatraPDF.h src\Version.h

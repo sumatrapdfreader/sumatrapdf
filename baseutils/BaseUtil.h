@@ -46,14 +46,10 @@
 #define dimof(X)    (sizeof(X)/sizeof((X)[0]))
 #define NoOp()      ((void)0)
 
-/* TODO: consider using standard C macros for SWAP */
-static inline void swap_int(int& one, int& two)
+template <typename T>
+static inline void swap(T& one, T&two)
 {
-    int tmp = one; one = two; two = one;
-}
-static inline void swap_double(double& one, double& two)
-{
-    double tmp = one; one = two; two = one;
+    T tmp = one; one = two; two = tmp;
 }
 
 static inline void *memdup(void *data, size_t len)

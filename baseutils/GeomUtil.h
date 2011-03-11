@@ -4,71 +4,134 @@
 #ifndef GeomUtil_h
 #define GeomUtil_h
 
-typedef struct RectI {
-    int x, y;
-    int dx, dy;
-} RectI;
-
-typedef struct RectD {
-    double x,y;
-    double dx,dy;
-} RectD;
-
-int    RectI_Intersect(RectI *r1, RectI *r2, RectI *rIntersectOut);
-void   RectI_FromXY(RectI *rOut, int xs, int xe, int ys, int ye);
-int    RectI_Inside(RectI *r, int x, int y);
-RectI  RectI_Union(RectI a, RectI b);
-int    RectD_FromXY(RectD *rOut, double xs, double xe,  double ys, double ye);
-void   RectD_FromRectI(RectD *rOut, const RectI *rIn);
-void   RectI_FromRectD(RectI *rOut, const RectD *rIn);
-RECT   RECT_FromRectI(RectI *rIn);
-RectI  RectI_FromRECT(RECT *rIn);
-int    RectD_Inside(RectD *r, double x, double y);
-void   u_RectI_Intersect(void);
-
-class PointI {
+template <typename T>
+class Point
+{
 public:
-    PointI() { x = 0; y = 0; }
-    PointI(int _x, int _y) { x = _x; y = _y; }
-    void set(int _x, int _y) { x = _x; y = _y; }
-    int x;
-    int y;
+    T x, y;
+
+    Point() : x(0), y(0) { }
+    Point(T x, T y) : x(x), y(y) { }
+
+    template <typename S>
+    Point<S> Convert() const {
+        return Point<S>((S)floor(x + 0.5), (S)floor(y + 0.5));
+    }
 };
 
-class PointD {
-public:
-    PointD() { x = 0; y = 0; }
-    PointD(double _x, double _y) { x = _x; y = _y; }
-    void set(double _x, double _y) { x = _x; y = _y; }
-    double x;
-    double y;
+typedef Point<int> PointI;
+typedef Point<double> PointD;
+
+template <typename T>
+class Size
+{
+public :
+    T dx, dy;
+
+    Size() : dx(0), dy(0) { }
+    Size(T dx, T dy) : dx(dx), dy(dy) { }
+
+    template <typename S>
+    Size<S> Convert() const {
+        return Size<S>((S)floor(dx + 0.5), (S)floor(dy + 0.5));
+    }
 };
 
-class SizeI {
+typedef Size<int> SizeI;
+typedef Size<double> SizeD;
+
+template <typename T>
+class Rect
+{
 public:
-    SizeI() { dx = 0; dy = 0; }
-    SizeI(int _dx, int _dy) { dx = _dx; dy = _dy; }
-    void set(int _dx, int _dy) { dx = _dx; dy = _dy; }
-    int dx;
-    int dy;
+    T x, y;
+    T dx, dy;
+
+    Rect() : x(0), y(0), dx(0), dy(0) { }
+    Rect(T x, T y, T dx, T dy) : x(x), y(y), dx(dx), dy(dy) { }
+    Rect(Point<T> pt, Size<T> size) : x(pt.x), y(pt.y), dx(size.dx), dy(size.dy) { }
+
+    static Rect FromXY(T xs, T ys, T xe, T ye) {
+        if (xs > xe)
+            swap(xs, xe);
+        if (ys > ye)
+            swap(ys, ye);
+        return Rect(xs, ys, xe - xs, ye - ys);
+    }
+
+    template <typename S>
+    Rect<S> Convert() const {
+        // Hack: round when converting from double to int but
+        //       don't change the value when converting from int to double
+        return Rect<S>((S)floor(x + 0.5), (S)floor(y + 0.5),
+                       (S)floor(dx + 0.5), (S)floor(dy + 0.5));
+    }
+
+    bool IsEmpty() const {
+        return dx == 0 || dy == 0;
+    }
+
+    bool Inside(Point<T> pt) const {
+        if (pt.x < this->x)
+            return false;
+        if (pt.x > this->x + this->dx)
+            return false;
+        if (pt.y < this->y)
+            return false;
+        if (pt.y > this->y + this->dy)
+            return false;
+        return true;
+    }
+
+    /* Returns an empty rectangle if there's no intersection (see IsEmpty). */
+    Rect Intersect(Rect other) const {
+        /* { } visualizes this and | | visualizes other */
+
+        /* case of non-overlapping rectangles i.e.:
+           { }   | | */
+        if (other.x > this->x + this->dx)
+            return Rect(0, 0, 0, 0);
+        /* | |   { } */
+        if (this->x > other.x + other.dx)
+            return Rect(0, 0, 0, 0);
+
+        /* the logic for y is the same */
+        if (other.y > this->y + this->dy)
+            return Rect(0, 0, 0, 0);
+        if (this->y > other.y + other.dy)
+            return Rect(0, 0, 0, 0);
+
+        /* partially overlapped i.e.:
+           {  |  } |   or   |  {  |  }
+           and one inside the other i.e.:
+           {  | |  }   or   |  {  }  |
+
+           In these cases, the intersection starts with the larger of the start
+           coordinates and ends with the smaller of the end coordinates */
+        T x = max(this->x, other.x);
+        T dx = min(this->x + this->dx, other.x + other.dx) - x;
+        T y = max(this->y, other.y);
+        T dy = min(this->y + this->dy, other.y + other.dy) - y;
+
+        return Rect(x, y, dx, dy);
+    }
+
+    Rect Union(Rect other) const {
+        if (this->dx <= 0 && this->dy <= 0)
+            return other;
+        if (other.dx <= 0 && other.dy <= 0)
+            return *this;
+
+        T x = min(this->x, other.x);
+        T y = min(this->y, other.y);
+        T dx = max(this->x + this->dx, other.x + other.dx) - x;
+        T dy = max(this->y + this->dy, other.y + other.dy) - y;
+
+        return Rect(x, y, dx, dy);
+    }
 };
 
-class SizeD {
-public:
-    SizeD(double dx, double dy) { m_dx = dx; m_dy = dy; }
-    SizeD(int dx, int dy) { m_dx = (double)dx; m_dy = (double)dy; }
-    SizeD(SizeI si) { m_dx = (double)si.dx; m_dy = (double)si.dy; }
-    SizeD() { m_dx = 0; m_dy = 0; }
-    int dxI() const { return (int)m_dx; }
-    int dyI() const { return (int)m_dy; }
-    double dx() const { return m_dx; }
-    double dy() const { return m_dy; }
-    void setDx(double dx) { m_dx = dx; }
-    void setDy(double dy) { m_dy = dy; }
-    SizeI size() { return SizeI((int)dx(), (int)dy()); }
-private:
-    double m_dx;
-    double m_dy;
-};
+typedef Rect<int> RectI;
+typedef Rect<double> RectD;
 
 #endif

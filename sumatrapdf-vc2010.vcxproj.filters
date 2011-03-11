@@ -503,9 +503,6 @@
     <ClCompile Include="baseutils\FileUtil.cpp">
       <Filter>baseutils</Filter>
     </ClCompile>
-    <ClCompile Include="baseutils\GeomUtil.cpp">
-      <Filter>baseutils</Filter>
-    </ClCompile>
     <ClCompile Include="baseutils\StrUtil.cpp">
       <Filter>baseutils</Filter>
     </ClCompile>

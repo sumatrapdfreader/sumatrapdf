@@ -56,25 +56,25 @@ typedef struct AboutLayoutInfoEl {
 } AboutLayoutInfoEl;
 
 static AboutLayoutInfoEl gAboutLayoutInfo[] = {
-    { _T("website"),        _T("SumatraPDF website"),   _T("http://blog.kowalczyk.info/software/sumatrapdf"), 0 },
-    { _T("forums"),         _T("SumatraPDF forums"),    _T("http://blog.kowalczyk.info/forum_sumatra"), 0 },
-    { _T("programming"),    _T("Krzysztof Kowalczyk"),  _T("http://blog.kowalczyk.info"), 0 },
-    { _T("programming"),    _T("Simon B\xFCnzli"),      _T("http://www.zeniko.ch/#SumatraPDF"), 0 },
-    { _T("programming"),    _T("William Blum"),         _T("http://william.famille-blum.org/"), 0 },
+    { _T("website"),        _T("SumatraPDF website"),   _T("http://blog.kowalczyk.info/software/sumatrapdf") },
+    { _T("forums"),         _T("SumatraPDF forums"),    _T("http://blog.kowalczyk.info/forum_sumatra") },
+    { _T("programming"),    _T("Krzysztof Kowalczyk"),  _T("http://blog.kowalczyk.info") },
+    { _T("programming"),    _T("Simon B\xFCnzli"),      _T("http://www.zeniko.ch/#SumatraPDF") },
+    { _T("programming"),    _T("William Blum"),         _T("http://william.famille-blum.org/") },
 #ifdef SVN_PRE_RELEASE_VER
-    { _T("a note"),         _T("Pre-release version, for testing only!"), NULL, 0 },
+    { _T("a note"),         _T("Pre-release version, for testing only!"), NULL },
 #endif
 #ifdef DEBUG
-    { _T("a note"),         _T("Debug version, for testing only!"), NULL, 0 },
+    { _T("a note"),         _T("Debug version, for testing only!"), NULL },
 #endif
-    { _T("pdf rendering"),  _T("MuPDF"),                _T("http://mupdf.com"), 0 },
-    { _T("program icon"),   _T("Zenon"),                _T("http://www.flashvidz.tk/"), 0 },
-    { _T("toolbar icons"),  _T("Yusuke Kamiyamane"),    _T("http://p.yusukekamiyamane.com/"), 0 },
-    { _T("translators"),    _T("The Translators"),      _T("http://blog.kowalczyk.info/software/sumatrapdf/translators.html"), 0 },
-    { _T("translations"),   _T("Contribute translation"), _T("http://blog.kowalczyk.info/software/sumatrapdf/translations.html"), 0 },
+    { _T("pdf rendering"),  _T("MuPDF"),                _T("http://mupdf.com") },
+    { _T("program icon"),   _T("Zenon"),                _T("http://www.flashvidz.tk/") },
+    { _T("toolbar icons"),  _T("Yusuke Kamiyamane"),    _T("http://p.yusukekamiyamane.com/") },
+    { _T("translators"),    _T("The Translators"),      _T("http://blog.kowalczyk.info/software/sumatrapdf/translators.html") },
+    { _T("translations"),   _T("Contribute translation"), _T("http://blog.kowalczyk.info/software/sumatrapdf/translations.html") },
     // Note: Must be on the last line, as it's dynamically hidden based on m_enableTeXEnhancements
-    { _T("synctex"),        _T("J\xE9rome Laurens"),    _T("http://itexmac.sourceforge.net/SyncTeX.html"), 0 },
-    { NULL, NULL, NULL, 0 }
+    { _T("synctex"),        _T("J\xE9rome Laurens"),    _T("http://itexmac.sourceforge.net/SyncTeX.html") },
+    { NULL, NULL, NULL }
 };
 
 #define COL1 RGB(196, 64, 50)
@@ -488,7 +488,7 @@ void CreateInfotipForAboutLink(WindowInfo *win, AboutLayoutInfoEl *aboutEl)
     FillToolInfo(ti, win);
 
     if (aboutEl && aboutEl->url) {
-        ti.rect = RECT_FromRectI(&aboutEl->rightPos);
+        SetRect(&ti.rect, aboutEl->rightPos.x, aboutEl->rightPos.y, aboutEl->rightPos.x + aboutEl->rightPos.dx, aboutEl->rightPos.y + aboutEl->rightPos.dy);
         ti.lpszText = (TCHAR *)aboutEl->url;
         SendMessage(win->hwndInfotip, win->infotipVisible ? TTM_NEWTOOLRECT : TTM_ADDTOOL, 0, (LPARAM)&ti);
         win->infotipVisible = true;
