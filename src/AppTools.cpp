@@ -15,13 +15,13 @@
 // Return false if it contains anything else.
 bool IsValidProgramVersion(char *txt)
 {
-    if (!isdigit(*txt))
+    if (!ChrIsDigit(*txt))
         return false;
 
     for (; *txt; txt++) {
-        if (isdigit(*txt))
+        if (ChrIsDigit(*txt))
             continue;
-        if (*txt == '.' && isdigit(*(txt + 1)))
+        if (*txt == '.' && ChrIsDigit(*(txt + 1)))
             continue;
         if (*txt == '\r'&& *(txt + 1) == '\n')
             continue;
@@ -38,8 +38,8 @@ static int ExtractNextNumber(TCHAR **txt)
 {
     int val = 0;
     // skip non numeric characters (should only be dots)
-    for (; **txt && !_istdigit(**txt); (*txt)++);
-    for (; **txt && _istdigit(**txt); (*txt)++)
+    for (; **txt && !ChrIsDigit(**txt); (*txt)++);
+    for (; **txt && ChrIsDigit(**txt); (*txt)++)
         val = val * 10 + (**txt - '0');
 
     return val;

@@ -28,7 +28,7 @@ public:
     BencType Type() const { return type; }
 
     virtual char *Encode() = 0;
-    static BencObj *Decode(const char *bytes, size_t *len_out=NULL, bool topLevel=true);
+    static BencObj *Decode(const char *bytes, size_t *len_out=NULL);
 };
 
 class BencString : public BencObj {
@@ -43,7 +43,7 @@ public:
     char *RawValue() const { return value; }
 
     virtual char *Encode();
-    static BencString *Decode(const char *bytes, size_t *len_out=NULL);
+    static BencString *Decode(const char *bytes, size_t *len_out);
 };
 
 class BencInt : public BencObj {
@@ -54,7 +54,7 @@ public:
     int64_t Value() const { return value; }
 
     virtual char *Encode();
-    static BencInt *Decode(const char *bytes, size_t *len_out=NULL);
+    static BencInt *Decode(const char *bytes, size_t *len_out);
 };
 
 class BencDict;
@@ -67,10 +67,19 @@ public:
     ~BencArray() { DeleteVecMembers(value); }
     size_t Length() const { return value.Count(); }
 
-    void Add(BencObj *obj) { value.Append(obj); }
-    void Add(const char *string) { value.Append(new BencString(string)); }
-    void Add(const WCHAR *string) { value.Append(new BencString(string)); }
-    void Add(int64_t val) { value.Append(new BencInt(val)); }
+    void Add(BencObj *obj) {
+        assert(obj && value.Find(obj) == -1);
+        value.Append(obj);
+    }
+    void Add(const char *string) {
+        Add(new BencString(string));
+    }
+    void Add(const WCHAR *string) {
+        Add(new BencString(string));
+    }
+    void Add(int64_t val) {
+        Add(new BencInt(val));
+    }
 
     BencString *GetString(size_t index) const {
         if (index < Length() && value[index]->Type() == BT_STRING)
@@ -90,7 +99,7 @@ public:
     BencDict *GetDict(size_t index) const;
 
     virtual char *Encode();
-    static BencArray *Decode(const char *bytes, size_t *len_out=NULL);
+    static BencArray *Decode(const char *bytes, size_t *len_out);
 };
 
 class BencDict : public BencObj {
@@ -115,7 +124,7 @@ public:
     size_t Length() const { return values.Count(); }
 
     void Add(const char *key, BencObj *obj) {
-        assert(!GetObj(key));
+        assert(key && obj && !GetObj(key) && values.Find(obj) == -1);
         keys.Append(strdup(key));
         values.Append(obj);
     }
@@ -155,7 +164,7 @@ public:
     }
 
     virtual char *Encode();
-    static BencDict *Decode(const char *bytes, size_t *len_out=NULL);
+    static BencDict *Decode(const char *bytes, size_t *len_out);
 };
 
 #ifndef NDEBUG

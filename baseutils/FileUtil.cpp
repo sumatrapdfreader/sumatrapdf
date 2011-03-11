@@ -139,24 +139,21 @@ BOOL file_exists(const TCHAR *file_path)
 
 size_t file_size_get(const TCHAR *file_path)
 {
-    BOOL                        ok;
     WIN32_FILE_ATTRIBUTE_DATA   fileInfo;
-    size_t                      res;
 
     if (NULL == file_path)
         return INVALID_FILE_SIZE;
 
-    ok = GetFileAttributesEx(file_path, GetFileExInfoStandard, &fileInfo);
+    BOOL ok = GetFileAttributesEx(file_path, GetFileExInfoStandard, &fileInfo);
     if (!ok)
-        return (size_t)-1;
+        return INVALID_FILE_SIZE;
 
+    size_t res = fileInfo.nFileSizeLow;;
 #ifdef _WIN64
-    res = fileInfo.nFileSizeHigh;
-    res = (res << 32) + fileInfo.nFileSizeLow;
+    res += fileInfo.nFileSizeHigh << 32;
 #else
     if (fileInfo.nFileSizeHigh > 0)
-        return (size_t)-1;
-    res = fileInfo.nFileSizeLow;
+        return INVALID_FILE_SIZE;
 #endif
 
     return res;
@@ -205,7 +202,7 @@ BOOL write_to_file(const TCHAR *file_path, void *data, size_t data_len)
     if (h == INVALID_HANDLE_VALUE)
         return FALSE;
 
-    DWORD       size;
+    DWORD size;
     BOOL f_ok = WriteFile(h, data, (DWORD)data_len, &size, NULL);
     assert(!f_ok || (data_len == size));
     CloseHandle(h);

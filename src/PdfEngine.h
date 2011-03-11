@@ -27,6 +27,7 @@ __pragma(warning(pop))
 #define PDF_FILE_DPI        72.0f
 // number of page content trees to cache for quicker rendering
 #define MAX_PAGE_RUN_CACHE  8
+#define DOS_NEWLINE _T("\r\n")
 
 /* certain OCGs will only be rendered for some of these (e.g. watermarks) */
 enum RenderTarget { Target_View, Target_Print, Target_Export };
@@ -138,7 +139,7 @@ public:
     fz_obj   * getNamedDest(const char *name);
     char     * getPageLayoutName(void);
     bool       isDocumentDirectionR2L(void);
-    TCHAR    * ExtractPageText(int pageNo, TCHAR *lineSep=_T(DOS_NEWLINE), fz_bbox **coords_out=NULL, RenderTarget target=Target_View);
+    TCHAR    * ExtractPageText(int pageNo, TCHAR *lineSep=DOS_NEWLINE, fz_bbox **coords_out=NULL, RenderTarget target=Target_View);
     TCHAR    * getPdfInfo(char *key) const;
     int        getPdfVersion(void) const;
     char     * getDecryptionKey(void) const { return _decryptionKey ? StrCopy(_decryptionKey) : NULL; }
@@ -170,7 +171,7 @@ protected:
     bool            renderPage(HDC hDC, pdf_page *page, RECT *screenRect,
                                fz_matrix *ctm=NULL, float zoom=0, int rotation=0,
                                fz_rect *pageRect=NULL, RenderTarget target=Target_View);
-    TCHAR         * ExtractPageText(pdf_page *page, TCHAR *lineSep=_T(DOS_NEWLINE),
+    TCHAR         * ExtractPageText(pdf_page *page, TCHAR *lineSep=DOS_NEWLINE,
                                     fz_bbox **coords_out=NULL, RenderTarget target=Target_View,
                                     bool cacheRun=false);
 

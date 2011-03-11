@@ -5609,7 +5609,7 @@ static void RelayoutTocItem(LPNMTVCUSTOMDRAW ntvcd)
 
     // Draw the page number right-aligned (if there is one)
     TCHAR *lpPageNo = item.pszText + StrLen(item.pszText);
-    for (lpPageNo--; lpPageNo > item.pszText && _istdigit(*lpPageNo); lpPageNo--);
+    for (lpPageNo--; lpPageNo > item.pszText && ChrIsDigit(*lpPageNo); lpPageNo--);
     if (lpPageNo > item.pszText && ' ' == *lpPageNo && *(lpPageNo + 1) && ' ' == *--lpPageNo) {
         RECT rcPageNo = rcFullWidth;
         InflateRect(&rcPageNo, -2, -1);

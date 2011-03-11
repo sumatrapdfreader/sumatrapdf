@@ -221,12 +221,6 @@ char *wstr_to_multibyte(const WCHAR *txt,  UINT CodePage)
 }
 
 /* Caller needs to free() the result */
-char *wstr_to_utf8(const WCHAR *txt)
-{
-    return wstr_to_multibyte(txt, CP_UTF8);
-}
-
-/* Caller needs to free() the result */
 WCHAR *multibyte_to_wstr(const char *src, UINT CodePage)
 {
     int requiredBufSize = MultiByteToWideChar(CodePage, 0, src, -1, NULL, 0);
@@ -235,12 +229,6 @@ WCHAR *multibyte_to_wstr(const char *src, UINT CodePage)
         return NULL;
     MultiByteToWideChar(CodePage, 0, src, -1, res, requiredBufSize);
     return res;
-}
-
-/* Caller needs to free() the result */
-WCHAR *utf8_to_wstr(const char *utf8)
-{
-    return multibyte_to_wstr(utf8, CP_UTF8);
 }
 
 void win32_dbg_outW(const WCHAR *format, ...)

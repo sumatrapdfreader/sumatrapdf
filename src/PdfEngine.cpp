@@ -348,7 +348,7 @@ bool PdfEngine::load(const TCHAR *fileName, PasswordUI *pwdUI)
     for (TCHAR *c = (TCHAR *)_fileName + StrLen(_fileName); c > _fileName; c--) {
         if (*c != ':')
             continue;
-        if (!_istdigit(*(c + 1)))
+        if (!ChrIsDigit(*(c + 1)))
             break;
         if (++colonCount % 2 == 0)
             embedMarks = c;

@@ -1561,7 +1561,7 @@ TCHAR *DisplayModel::extractAllText(RenderTarget target)
 
     for (int pageNo = 1; pageNo <= pageCount(); pageNo++)
     {
-        ScopedMem<TCHAR> s(pdfEngine->ExtractPageText(pageNo, _T(DOS_NEWLINE), NULL, target));
+        ScopedMem<TCHAR> s(pdfEngine->ExtractPageText(pageNo, DOS_NEWLINE, NULL, target));
         txt.Append(s, StrLen(s));
     }
 

@@ -23,10 +23,10 @@ WCHAR * wstr_cat(const WCHAR *str1, const WCHAR *str2);
 WCHAR * wstr_printf(const WCHAR *format, ...);
 int     wstr_printf_s(WCHAR *out, size_t out_cch_size, const WCHAR *format, ...);
 
-char *  wstr_to_multibyte(const WCHAR *txt,  UINT CodePage);
-char *  wstr_to_utf8(const WCHAR *txt);
+char *  wstr_to_multibyte(const WCHAR *txt, UINT CodePage);
 WCHAR * multibyte_to_wstr(const char *src, UINT CodePage);
-WCHAR * utf8_to_wstr(const char *utf8);
+#define wstr_to_utf8(src) wstr_to_multibyte((src), CP_UTF8)
+#define utf8_to_wstr(src) multibyte_to_wstr((src), CP_UTF8)
 
 void win32_dbg_outW(const WCHAR *format, ...);
 #ifdef DEBUG

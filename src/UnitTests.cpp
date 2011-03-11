@@ -201,6 +201,9 @@ static void tstr_test()
     assert(tstr_eq(str, _T(TEST_STRING)));
     free(str);
 #undef TEST_STRING
+
+    assert(ChrIsDigit('0') && ChrIsDigit(_T('5')) && ChrIsDigit(L'9'));
+    assert(iswdigit(L'\xB2') && !ChrIsDigit(L'\xB2'));
 }
 
 static void versioncheck_test()

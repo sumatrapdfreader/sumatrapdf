@@ -4,13 +4,6 @@
 #ifndef StrUtil_h
 #define StrUtil_h
 
-#ifdef _MSC_VER
-#include "stdint.h"
-#endif
-
-/* DOS is 0xd 0xa */
-#define DOS_NEWLINE "\x0d\x0a"
-
 void    win32_dbg_out(const char *format, ...);
 void    win32_dbg_out_hex(const char *dsc, const unsigned char *data, int dataLen);
 
@@ -53,6 +46,11 @@ static inline WCHAR *StrCopy(const WCHAR *s)
     return _wcsdup(s);
 }
 
+static inline bool ChrIsDigit(const WCHAR c)
+{
+    return '0' <= c && c <= '9';
+}
+
 // TODO: make these return bool instead of int
 int     str_eq(const char *str1, const char *str2);
 int     str_ieq(const char *str1, const char *str2);
@@ -78,6 +76,8 @@ BOOL    hexstr_to_mem(const char *s, unsigned char *buf, int bufLen);
 
 char *  str_to_multibyte(const char *src, UINT CodePage);
 char *  multibyte_to_str(const char *src, UINT CodePage);
+#define str_to_utf8(src) str_to_multibyte((src), CP_UTF8)
+#define utf8_to_str(src) multibyte_to_str((src), CP_UTF8)
 
 #ifdef DEBUG
 void StrUtil_test(void);

@@ -8,6 +8,7 @@
 #include "AppPrefs.h"
 #include "translations.h"
 #include "WinUtil.h"
+#include "FileUtil.h"
 #include "AppTools.h"
 #include "vstrlist.h"
 
@@ -18,25 +19,6 @@
 
 extern HINSTANCE ghinst;
 extern SerializableGlobalPrefs gGlobalPrefs;
-
-static uint64_t WinFileSizeGet(const TCHAR *file_path)
-{
-    int                         ok;
-    WIN32_FILE_ATTRIBUTE_DATA   fileInfo;
-    uint64_t                    res;
-
-    if (NULL == file_path)
-        return INVALID_FILE_SIZE;
-
-    ok = GetFileAttributesEx(file_path, GetFileExInfoStandard, (void*)&fileInfo);
-    if (!ok)
-        return (uint64_t)INVALID_FILE_SIZE;
-
-    res = fileInfo.nFileSizeHigh;
-    res = (res << 32) + fileInfo.nFileSizeLow;
-
-    return res;
-}
 
 // See: http://www.verypdf.com/pdfinfoeditor/pdf-date-format.htm
 // Format:  "D:YYYYMMDDHHMMSSxxxxxxx"
@@ -86,7 +68,7 @@ static void PdfDateToDisplay(TCHAR **s) {
 
 // format a number with a given thousand separator e.g. it turns 1234 into "1,234"
 // Caller needs to free() the result.
-static TCHAR *FormatNumWithThousandSep(uint64_t num) {
+static TCHAR *FormatNumWithThousandSep(size_t num) {
     TCHAR buf[32], buf2[64], thousandSep[4];
 
     tstr_printf_s(buf, dimof(buf), _T("%I64d"), num);
@@ -110,7 +92,7 @@ static TCHAR *FormatNumWithThousandSep(uint64_t num) {
 // Caller needs to free the result.
 static TCHAR *FormatFloatWithThousandSep(double number, const TCHAR *unit=NULL) {
     TCHAR buf[64];
-    uint64_t num = (uint64_t)(number * 100);
+    size_t num = (size_t)(number * 100);
 
     ScopedMem<TCHAR> tmp(FormatNumWithThousandSep(num / 100));
     TCHAR decimal[4];
@@ -127,7 +109,7 @@ static TCHAR *FormatFloatWithThousandSep(double number, const TCHAR *unit=NULL) 
 // Format the file size in a short form that rounds to the largest size unit
 // e.g. "3.48 GB", "12.38 MB", "23 KB"
 // Caller needs to free the result.
-static TCHAR *FormatSizeSuccint(uint64_t size) {
+static TCHAR *FormatSizeSuccint(size_t size) {
     const TCHAR *unit = NULL;
     double s = (double)size;
 
@@ -148,7 +130,7 @@ static TCHAR *FormatSizeSuccint(uint64_t size) {
 // format file size in a readable way e.g. 1348258 is shown
 // as "1.29 MB (1,348,258 Bytes)"
 // Caller needs to free the result
-static TCHAR *FormatPdfSize(uint64_t size) {
+static TCHAR *FormatPdfSize(size_t size) {
     ScopedMem<TCHAR> n1(FormatSizeSuccint(size));
     ScopedMem<TCHAR> n2(FormatNumWithThousandSep(size));
 
@@ -403,7 +385,7 @@ void OnMenuProperties(WindowInfo *win)
         free(str);
     }
 
-    uint64_t fileSize = WinFileSizeGet(pdfEngine->fileName());
+    size_t fileSize = file_size_get(pdfEngine->fileName());
     if (fileSize == INVALID_FILE_SIZE) {
         fz_buffer *data = pdfEngine->getStreamData();
         if (data) {
