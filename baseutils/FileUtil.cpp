@@ -1,5 +1,5 @@
-/* Copyright 2006-2011 the SumatraPDF project authors (see AUTHORS file).
-   License: GPLv3 */
+/* Copyright 2006-2011 the SumatraPDF project authors (see ../AUTHORS file).
+   License: FreeBSD (see ./COPYING) */
 
 #include "BaseUtil.h"
 #include "TStrUtil.h"
