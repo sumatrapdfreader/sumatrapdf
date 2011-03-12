@@ -1382,7 +1382,7 @@ void DisplayModel::goToTocLink(pdf_link* link)
         if (path && tstr_endswithi(path, _T(".pdf"))) {
             // open embedded PDF documents in a new window
             ScopedMem<TCHAR> combinedPath(tstr_printf(_T("%s:%d:%d"), fileName(), fz_tonum(embedded), fz_togen(embedded)));
-            LoadPdf(combinedPath);
+            LoadDocument(combinedPath);
         } else {
             // offer to save other attachments to a file
             fz_buffer *data = pdfEngine->getStreamData(fz_tonum(embedded), fz_togen(embedded));
@@ -1398,7 +1398,7 @@ void DisplayModel::goToTocLink(pdf_link* link)
         if (!tstr_startswith(path, _T("\\")) && tstr_endswithi(path, _T(".pdf"))) {
             ScopedMem<TCHAR> basePath(FilePath_GetDir(fileName()));
             ScopedMem<TCHAR> combinedPath(FilePath_Join(basePath, path));
-            LoadPdf(combinedPath);
+            LoadDocument(combinedPath);
         }
         free(path);
     }
@@ -1430,7 +1430,7 @@ void DisplayModel::goToTocLink(pdf_link* link)
                 ScopedMem<TCHAR> basePath(FilePath_GetDir(fileName()));
                 ScopedMem<TCHAR> combinedPath(FilePath_Join(basePath, path));
                 // TODO: respect fz_tobool(fz_dictgets(link->dest, "NewWindow"))
-                WindowInfo *newWin = LoadPdf(combinedPath);
+                WindowInfo *newWin = LoadDocument(combinedPath);
                 if (newWin && newWin->dm)
                     newWin->dm->goToPdfDest(fz_dictgets(link->dest, "D"));
             }

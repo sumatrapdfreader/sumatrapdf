@@ -35,13 +35,10 @@
 #include <wchar.h>
 #include <string.h>
 
-/* Ugly names but the whole point is to make things shorter.
-   SA = Struct Allocate
-   SAZ = Struct Allocate and Zero memory
-   SAZA = Struct Allocate and Zero memory for Array */
-#define SA(struct_name) (struct_name *)malloc(sizeof(struct_name))
+/* Ugly name, but the whole point is to make things shorter.
+   SAZA = Struct Allocate and Zero memory for Array
+   (note: use operator new for single structs/classes) */
 #define SAZA(struct_name, n) (struct_name *)calloc((n), sizeof(struct_name))
-#define SAZ(struct_name) SAZA(struct_name, 1)
 
 #define dimof(X)    (sizeof(X)/sizeof((X)[0]))
 #define NoOp()      ((void)0)

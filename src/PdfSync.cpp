@@ -819,7 +819,7 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
                 
                 // if not then open it
                 if (newwindow || !win)
-                    win = LoadPdf(pdffile, !newwindow ? win : NULL);
+                    win = LoadDocument(pdffile, !newwindow ? win : NULL);
                 else if (win && WS_ERROR_LOADING_PDF == win->state)
                     SendMessage(win->hwndFrame, WM_COMMAND, IDM_REFRESH, FALSE);
                 
@@ -854,7 +854,7 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
                 
                 // if not then open it
                 if (newwindow || !win)
-                    win = LoadPdf(pdffile, !newwindow ? win : NULL);
+                    win = LoadDocument(pdffile, !newwindow ? win : NULL);
                 else if (win && WS_ERROR_LOADING_PDF == win->state) {
                     SendMessage(win->hwndFrame, WM_COMMAND, IDM_REFRESH, FALSE);
                     forcerefresh = false;

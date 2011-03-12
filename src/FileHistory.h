@@ -55,6 +55,35 @@ public:
                                 return states[i];
                         return NULL;
                     }
+
+    void            MarkFileLoaded(const TCHAR *filePath) {
+                        assert(filePath);
+                        // if a history entry with the same name already exists,
+                        // then reuse it. That way we don't have duplicates and
+                        // the file moves to the front of the list
+                        DisplayState *state = Find(filePath);
+                        if (!state) {
+                            state = new DisplayState();
+                            if (!state)
+                                return;
+                            state->filePath = StrCopy(filePath);
+                        }
+                        else
+                            Remove(state);
+                        Prepend(state);
+                    }
+    void            MarkFileInexistent(const TCHAR *filePath) {
+                        assert(filePath);
+                        // move the file history entry to the very end of the list
+                        // (if it exists at all), so that we don't completely forget
+                        // the settings, should the file reappear later on - but
+                        // make space for other documents first
+                        DisplayState *state = Find(filePath);
+                        if (!state)
+                            return;
+                        Remove(state);
+                        Append(state);
+                    }
 };
 
 #endif

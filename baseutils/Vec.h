@@ -145,6 +145,9 @@ public:
         Reset();
         return res;
     }
+    T *LendData() {
+        return els;
+    }
 
     int Find(T el) {
         for (size_t i = 0; i < len; i++)
@@ -157,15 +160,6 @@ public:
         int i = Find(el);
         if (i > -1)
             RemoveAt(i);
-    }
-
-    // for convenient iteration over all elements
-    T* First() { 
-        return els;
-    }
-
-    T* Sentinel() {
-        return els + len;
     }
 };
 

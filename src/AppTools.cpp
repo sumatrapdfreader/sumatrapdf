@@ -526,13 +526,7 @@ exit:
 
 HFONT Win32_Font_GetSimple(HDC hdc, TCHAR *fontName, int fontSize)
 {
-    HFONT       font_dc;
-    HFONT       font;
-    LOGFONT     lf = {0};
-
-    font_dc = (HFONT)GetStockObject(SYSTEM_FONT);
-    if (!GetObject(font_dc, sizeof(LOGFONT), &lf))
-        return NULL;
+    LOGFONT lf = { 0 };
 
     lf.lfWidth = 0;
     lf.lfHeight = -MulDiv(fontSize, GetDeviceCaps(hdc, LOGPIXELSY), USER_DEFAULT_SCREEN_DPI);
@@ -543,10 +537,13 @@ HFONT Win32_Font_GetSimple(HDC hdc, TCHAR *fontName, int fontSize)
     lf.lfOutPrecision = OUT_TT_PRECIS;
     lf.lfQuality = DEFAULT_QUALITY;
     lf.lfPitchAndFamily = DEFAULT_PITCH;    
-    lstrcpyn(lf.lfFaceName, fontName, LF_FACESIZE);
+    tstr_copy(lf.lfFaceName, dimof(lf.lfFaceName), fontName);
     lf.lfWeight = FW_DONTCARE;
-    font = CreateFontIndirect(&lf);
-    return font;
+    lf.lfClipPrecision = CLIP_DEFAULT_PRECIS;
+    lf.lfEscapement = 0;
+    lf.lfOrientation = 0;
+
+    return CreateFontIndirect(&lf);
 }
 
 void Win32_Font_Delete(HFONT font)

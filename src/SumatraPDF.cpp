@@ -238,6 +238,7 @@ static void OnMenuFindMatchCase(WindowInfo *win);
 static bool LoadPdfIntoWindow(const TCHAR *fileName, WindowInfo *win, 
     const DisplayState *state, bool isNewWindow, bool tryRepair, 
     bool showWin, bool placeWindow);
+static WindowInfo* LoadPdf(const TCHAR *fileName, WindowInfo *win, bool showWin=true);
 static void WindowInfo_ShowMessage_Async(WindowInfo *win, const TCHAR *message, bool resize);
 
 static void Find(WindowInfo *win, PdfSearchDirection direction = FIND_FORWARD);
@@ -763,40 +764,6 @@ static void BuildMenu(WindowInfo *win)
     SetMenu(win->hwndFrame, win->menu);
 }
 
-static void AddFileToHistory(const TCHAR *filePath)
-{
-    assert(filePath);
-    if (!filePath) return;
-
-    /* if a history entry with the same name already exists, then reuse it.
-       That way we don't have duplicates and the file moves to the front of the list */
-    DisplayState *state = gFileHistory.Find(filePath);
-    if (!state) {
-        state = new DisplayState();
-        if (!state)
-            return;
-        state->filePath = StrCopy(filePath);
-    }
-    gFileHistory.Remove(state);
-    gFileHistory.Prepend(state);
-}
-
-static void RemoveInexistentFileFromHistory(const TCHAR *filePath)
-{
-    assert(filePath);
-    if (!filePath) return;
-
-    // move the file history entry to the very end of the list
-    // (if it exists at all), so that we don't completely forget
-    // the settings should the file reappear later on - but
-    // make space for other documents first
-    DisplayState *state = gFileHistory.Find(filePath);
-    if (!state)
-        return;
-    gFileHistory.Remove(state);
-    gFileHistory.Append(state);
-}
-
 WindowInfo* FindWindowInfoByHwnd(HWND hwnd)
 {
     for (size_t i = 0; i < gWindows.Count(); i++) {
@@ -818,7 +785,7 @@ WindowInfo* FindWindowInfoByHwnd(HWND hwnd)
     return NULL;
 }
 
-bool WindowInfoStillValid(WindowInfo *win)
+static bool WindowInfoStillValid(WindowInfo *win)
 {
     return gWindows.Find(win) != -1;
 }
@@ -1604,30 +1571,9 @@ bool IsComicBook(const TCHAR *fileName)
     return false;
 }
 
-WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin)
-{
-    if (IsComicBook(fileName))
-        return LoadComicBook(fileName, win, showWin);
-    return LoadPdf(fileName, win, showWin);
-}
-
-bool IsPngFile(const char *fileName)
-{
-    return str_endswithi(fileName, ".png");
-}
-
-bool IsJpegFile(const char *fileName)
-{
-    if (str_endswithi(fileName, ".jpeg"))
-        return true;
-    if (str_endswithi(fileName,".jpg"))
-        return true;
-    return false;
-}
-
 // Load *.cbz / *.cbr file
 // TODO: far from being done
-WindowInfo* LoadComicBook(const TCHAR *fileName, WindowInfo *win, bool showWin)
+static WindowInfo* LoadComicBook(const TCHAR *fileName, WindowInfo *win, bool showWin)
 {    
     zlib_filefunc64_def ffunc;
     unzFile uf;
@@ -1658,9 +1604,9 @@ WindowInfo* LoadComicBook(const TCHAR *fileName, WindowInfo *win, bool showWin)
             goto Error;
         }
 
-        if (IsPngFile(filename))
+        if (str_endswithi(filename, ".png"))
             pngCount++;
-        else if (IsJpegFile(filename))
+        else if (str_endswithi(filename, ".jpg") || str_endswithi(filename, ".jpeg"))
             jpegCount++;
 
         err = unzCloseCurrentFile(uf);
@@ -1677,14 +1623,14 @@ WindowInfo* LoadComicBook(const TCHAR *fileName, WindowInfo *win, bool showWin)
 
     // TODO: if (pngCount + jpegCount > 0) => treat it as a valid comic book file
     return NULL;
+
 Error:
     if (uf)
         unzClose(uf);
     return NULL;
-    
 }
 
-WindowInfo* LoadPdf(const TCHAR *fileName, WindowInfo *win, bool showWin)
+static WindowInfo* LoadPdf(const TCHAR *fileName, WindowInfo *win, bool showWin)
 {
     assert(fileName);
     if (!fileName) return NULL;
@@ -1712,7 +1658,7 @@ WindowInfo* LoadPdf(const TCHAR *fileName, WindowInfo *win, bool showWin)
 
     if (!LoadPdfIntoWindow(fullpath, win, ds, isNewWindow, true, showWin, true)) {
         /* failed to open */
-        RemoveInexistentFileFromHistory(fullpath);
+        gFileHistory.MarkFileInexistent(fullpath);
         return win;
     }
 
@@ -1730,15 +1676,23 @@ WindowInfo* LoadPdf(const TCHAR *fileName, WindowInfo *win, bool showWin)
             gGlobalPrefs.m_enableTeXEnhancements;
     }
 
-    if (gGlobalPrefs.m_rememberOpenedFiles) {
-        AddFileToHistory(fullpath);
-    }
+    if (gGlobalPrefs.m_rememberOpenedFiles)
+        gFileHistory.MarkFileLoaded(fullpath);
 
     // Add the file also to Windows' recently used documents (this doesn't
     // happen automatically on drag&drop, reopening from history, etc.)
     SHAddToRecentDocs(SHARD_PATH, fullpath);
 
     return win;
+}
+
+WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin)
+{
+#if 0 // not yet
+    if (IsComicBook(fileName))
+        return LoadComicBook(fileName, win, showWin);
+#endif
+    return LoadPdf(fileName, win, showWin);
 }
 
 // The current page edit box is updated with the current page number
@@ -2266,7 +2220,7 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
 
         if (renderDelay) {
             HFONT fontRightTxt = Win32_Font_GetSimple(hdc, _T("MS Shell Dlg"), 14);
-            HFONT origFont = (HFONT)SelectObject(hdc, fontRightTxt); /* Just to remember the orig font */
+            HGDIOBJ origFont = SelectObject(hdc, fontRightTxt); /* Just to remember the orig font */
             SetTextColor(hdc, gGlobalPrefs.m_invertColors ? WIN_COL_WHITE : WIN_COL_BLACK);
             if (renderDelay != RENDER_DELAY_FAILED) {
                 if (renderDelay < REPAINT_MESSAGE_DELAY_IN_MS)
@@ -2345,7 +2299,7 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
                     continue;
 
                 fz_bbox cbox = dm->pdfEngine->pageContentBox(pageNo);
-                RectD rect = RectD::FromXY(cbox.x0, cbox.y0, cbox.x1, cbox.y1);
+                RectD rect = RectI::FromXY(cbox.x0, cbox.y0, cbox.x1, cbox.y1).Convert<double>();
                 if (dm->rectCvtUserToScreen(pageNo, &rect))
                     paint_rect(hdc, &rect.ToRECT());
             }
@@ -5733,39 +5687,37 @@ static void CustomizeToCInfoTip(WindowInfo *win, LPNMTVGETINFOTIP nmit)
     free(path);
 }
 
-void FillToolInfo(TOOLINFO& ti, WindowInfo *win)
+TOOLINFO WindowInfo::CreateToolInfo(const TCHAR *text)
 {
+    TOOLINFO ti = { 0 };
     ti.cbSize = sizeof(ti);
-    ti.hwnd = win->hwndCanvas;
+    ti.hwnd = this->hwndCanvas;
     ti.uFlags = TTF_SUBCLASS;
+    ti.lpszText = (TCHAR *)text;
+    return ti;
 }
 
-void DeleteInfotip(WindowInfo *win)
+void WindowInfo::DeleteInfotip()
 {
-    if (!win->infotipVisible)
+    if (!this->infotipVisible)
         return;
 
-    TOOLINFO ti = { 0 };
-    FillToolInfo(ti, win);
-    SendMessage(win->hwndInfotip, TTM_DELTOOL, 0, (LPARAM)&ti);
-    win->infotipVisible = false;
+    SendMessage(this->hwndInfotip, TTM_DELTOOL, 0, (LPARAM)&this->CreateToolInfo());
+    this->infotipVisible = false;
 }
 
 static void CreateInfotipForPdfLink(WindowInfo *win, int pageNo, pdf_link *link)
 {
-    TOOLINFO ti = { 0 };
-    FillToolInfo(ti, win);
-
-    ti.lpszText = win->dm->getLinkPath(link);
-    if (ti.lpszText) {
+    ScopedMem<TCHAR> linkPath(win->dm->getLinkPath(link));
+    if (linkPath) {
+        TOOLINFO ti = win->CreateToolInfo(linkPath);
         fz_rect rect = win->dm->rectCvtUserToScreen(pageNo, link->rect);
-        SetRect(&ti.rect, (int)rect.x0, (int)rect.y0, (int)rect.x1, (int)rect.y1);
+        ti.rect = Rect<float>(rect.x0, rect.y0, rect.x1, rect.y1).ToRECT();
 
         SendMessage(win->hwndInfotip, win->infotipVisible ? TTM_NEWTOOLRECT : TTM_ADDTOOL, 0, (LPARAM)&ti);
-        free(ti.lpszText);
         win->infotipVisible = true;
     } else
-        DeleteInfotip(win);
+        win->DeleteInfotip();
 }
 
 static int  gDeltaPerLine = 0;         // for mouse wheel logic
@@ -5843,7 +5795,7 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
             switch (win->state) {
             case WS_SHOWING_PDF:
                 if (win->mouseAction != MA_IDLE)
-                    DeleteInfotip(win);
+                    win->DeleteInfotip();
 
                 switch (win->mouseAction) {
                 case MA_DRAGGING:
@@ -5867,21 +5819,21 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
                             SetCursor(gCursorHand);
                             return TRUE;
                         }
-                        DeleteInfotip(win);
+                        win->DeleteInfotip();
                         if (win->dm->isOverText(pt.x, pt.y))
                             SetCursor(gCursorIBeam);
                         else
                             SetCursor(gCursorArrow);
                         return TRUE;
                     }
-                    DeleteInfotip(win);
+                    win->DeleteInfotip();
                 }
                 if (win->presentation)
                     return TRUE;
                 break;
 
             default:
-                DeleteInfotip(win);
+                win->DeleteInfotip();
                 break;
             }
             return DefWindowProc(hwnd, message, wParam, lParam);

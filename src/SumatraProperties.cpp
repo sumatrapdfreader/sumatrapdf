@@ -100,7 +100,7 @@ static TCHAR *FormatFloatWithThousandSep(double number, const TCHAR *unit=NULL) 
 
     // always add between one and two decimals after the point
     wsprintf(buf, _T("%s%s%02d"), tmp, decimal, num % 100);
-    if (buf[StrLen(buf) - 1] == '0')
+    if (tstr_endswith(buf, _T("0")))
         buf[StrLen(buf) - 1] = '\0';
 
     return unit ? tstr_printf(_T("%s %s"), buf, unit) : StrCopy(buf);
@@ -170,37 +170,13 @@ static TCHAR *FormatPdfPermissions(PdfEngine *pdfEngine) {
     return denials.Join(_T(", "));
 }
 
-static void AddPdfProperty(PdfPropertiesLayout *layoutData, const TCHAR *left, const TCHAR *right) {
-    // don't display value-less properties
-    if (tstr_empty(right))
-        return;
-
-    PdfPropertyEl *el = SA(PdfPropertyEl);
-    el->leftTxt = left;
-    el->rightTxt = StrCopy(right);
-    el->next = NULL;
-
-    if (!layoutData->last) {
-        layoutData->first = layoutData->last = el;
-    }
-    else {
-        layoutData->last->next = el;
-        layoutData->last = layoutData->last->next;
-    }
-}
-
-static void FreePdfProperties(HWND hwnd)
+void PdfPropertiesLayout::AddProperty(const TCHAR *key, const TCHAR *value)
 {
-    // free the text on the right. Text on left is static, so doesn't need to be freed
-    PdfPropertiesLayout *layoutData = (PdfPropertiesLayout *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
-    assert(layoutData);
-    for (PdfPropertyEl *el = layoutData->first; el; ) {
-        PdfPropertyEl *tofree = el;
-        el = el->next;
-        free((void *)tofree->rightTxt);
-        free(tofree);
-    }
-    free(layoutData);
+    // don't display value-less properties
+    if (!tstr_empty(value))
+        Append(new PdfPropertyEl(key, value));
+    else
+        delete value;
 }
 
 static void UpdatePropertiesLayout(HWND hwnd, HDC hdc, RECT *rect) {
@@ -212,38 +188,40 @@ static void UpdatePropertiesLayout(HWND hwnd, HDC hdc, RECT *rect) {
     PdfPropertiesLayout *layoutData = (PdfPropertiesLayout *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
     HFONT fontLeftTxt = Win32_Font_GetSimple(hdc, LEFT_TXT_FONT, LEFT_TXT_FONT_SIZE);
     HFONT fontRightTxt = Win32_Font_GetSimple(hdc, RIGHT_TXT_FONT, RIGHT_TXT_FONT_SIZE);
-    HFONT origFont = (HFONT)SelectObject(hdc, fontLeftTxt);
+    HGDIOBJ origFont = SelectObject(hdc, fontLeftTxt);
 
     /* calculate text dimensions for the left side */
-    (HFONT)SelectObject(hdc, fontLeftTxt);
+    SelectObject(hdc, fontLeftTxt);
     leftMaxDx = 0;
-    for (PdfPropertyEl *el = layoutData->first; el; el = el->next) {
+    for (size_t i = 0; i < layoutData->Count(); i++) {
+        PdfPropertyEl *el = layoutData->At(i);
         GetTextExtentPoint32(hdc, el->leftTxt, StrLen(el->leftTxt), &txtSize);
         el->leftPos.dx = txtSize.cx;
         el->leftPos.dy = txtSize.cy;
 
-        assert(el->leftPos.dy == layoutData->first->leftPos.dy);
+        assert(el->leftPos.dy == layoutData->At(0)->leftPos.dy);
         if (el->leftPos.dx > leftMaxDx)
             leftMaxDx = el->leftPos.dx;
     }
 
     /* calculate text dimensions for the right side */
-    (HFONT)SelectObject(hdc, fontRightTxt);
+    SelectObject(hdc, fontRightTxt);
     rightMaxDx = 0;
     int lineCount = 0;
-    for (PdfPropertyEl *el = layoutData->first; el; el = el->next) {
+    for (size_t i = 0; i < layoutData->Count(); i++) {
+        PdfPropertyEl *el = layoutData->At(i);
         GetTextExtentPoint32(hdc, el->rightTxt, StrLen(el->rightTxt), &txtSize);
         el->rightPos.dx = txtSize.cx;
         el->rightPos.dy = txtSize.cy;
 
-        assert(el->rightPos.dy == layoutData->first->rightPos.dy);
+        assert(el->rightPos.dy == layoutData->At(0)->rightPos.dy);
         if (el->rightPos.dx > rightMaxDx)
             rightMaxDx = el->rightPos.dx;
         lineCount++;
     }
 
     assert(lineCount > 0);
-    int textDy = lineCount > 0 ? layoutData->first->rightPos.dy : 0;
+    int textDy = lineCount > 0 ? layoutData->At(0)->rightPos.dy : 0;
     totalDx = leftMaxDx + PROPERTIES_LEFT_RIGHT_SPACE_DX + rightMaxDx;
 
     totalDy = 4;
@@ -254,18 +232,13 @@ static void UpdatePropertiesLayout(HWND hwnd, HDC hdc, RECT *rect) {
     GetClientRect(hwnd, &rc);
 
     int offset = PROPERTIES_RECT_PADDING;
-    if (rect) {
-        rect->left = 0;
-        rect->top = 0;
-        rect->right = totalDx + 2 * offset;
-        rect->bottom = totalDy + offset;
-    }
+    if (rect)
+        *rect = RectI(0, 0, totalDx + 2 * offset, totalDy + offset).ToRECT();
 
     int currY = 0;
-    for (PdfPropertyEl *el = layoutData->first; el; el = el->next) {
-        el->leftPos.x = offset;
-        el->leftPos.dx = leftMaxDx;
-        el->leftPos.y = offset + currY;
+    for (size_t i = 0; i < layoutData->Count(); i++) {
+        PdfPropertyEl *el = layoutData->At(i);
+        el->leftPos = RectI(offset, offset + currY, leftMaxDx, el->leftPos.dy);
         el->rightPos.x = offset + leftMaxDx + PROPERTIES_LEFT_RIGHT_SPACE_DX;
         el->rightPos.y = offset + currY;
         currY += (textDy + PROPERTIES_TXT_DY_PADDING);
@@ -338,42 +311,35 @@ void OnMenuProperties(WindowInfo *win)
         return;
     PdfEngine *pdfEngine = win->dm->pdfEngine;
 
-    PdfPropertiesLayout *layoutData = SA(PdfPropertiesLayout);
+    PdfPropertiesLayout *layoutData = new PdfPropertiesLayout();
     if (!layoutData)
         return;
-    layoutData->first = layoutData->last = NULL;
 
-    AddPdfProperty(layoutData, _TR("File:"), pdfEngine->fileName());
+    TCHAR *str = StrCopy(pdfEngine->fileName());
+    layoutData->AddProperty(_TR("File:"), str);
 
-    TCHAR *str = pdfEngine->getPdfInfo("Title");
-    AddPdfProperty(layoutData, _TR("Title:"), str);
-    free(str);
+    str = pdfEngine->getPdfInfo("Title");
+    layoutData->AddProperty(_TR("Title:"), str);
 
     str = pdfEngine->getPdfInfo("Subject");
-    AddPdfProperty(layoutData, _TR("Subject:"), str);
-    free(str);
+    layoutData->AddProperty(_TR("Subject:"), str);
 
     str = pdfEngine->getPdfInfo("Author");
-    AddPdfProperty(layoutData, _TR("Author:"), str);
-    free(str);
+    layoutData->AddProperty(_TR("Author:"), str);
 
     str = pdfEngine->getPdfInfo("CreationDate");
     PdfDateToDisplay(&str);
-    AddPdfProperty(layoutData, _TR("Created:"), str);
-    free(str);
+    layoutData->AddProperty(_TR("Created:"), str);
 
     str = pdfEngine->getPdfInfo("ModDate");
     PdfDateToDisplay(&str);
-    AddPdfProperty(layoutData, _TR("Modified:"), str);
-    free(str);
+    layoutData->AddProperty(_TR("Modified:"), str);
 
     str = pdfEngine->getPdfInfo("Creator");
-    AddPdfProperty(layoutData, _TR("Application:"), str);
-    free(str);
+    layoutData->AddProperty(_TR("Application:"), str);
 
     str = pdfEngine->getPdfInfo("Producer");
-    AddPdfProperty(layoutData, _TR("PDF Producer:"), str);
-    free(str);
+    layoutData->AddProperty(_TR("PDF Producer:"), str);
 
     int version = pdfEngine->getPdfVersion();
     if (version >= 10000) {
@@ -381,8 +347,7 @@ void OnMenuProperties(WindowInfo *win)
             str = tstr_printf(_T("%d.%d Adobe Extension Level %d"), version / 10000, (version / 100) % 100, version % 100);
         else
             str = tstr_printf(_T("%d.%d"), version / 10000, (version / 100) % 100);
-        AddPdfProperty(layoutData, _TR("PDF Version:"), str);
-        free(str);
+        layoutData->AddProperty(_TR("PDF Version:"), str);
     }
 
     size_t fileSize = file_size_get(pdfEngine->fileName());
@@ -395,31 +360,27 @@ void OnMenuProperties(WindowInfo *win)
     }
     if (fileSize != INVALID_FILE_SIZE) {
         str = FormatPdfSize(fileSize);
-        AddPdfProperty(layoutData, _TR("File Size:"), str);
-        free(str);
+        layoutData->AddProperty(_TR("File Size:"), str);
     }
 
     str = tstr_printf(_T("%d"), pdfEngine->pageCount());
-    AddPdfProperty(layoutData, _TR("Number of Pages:"), str);
-    free(str);
+    layoutData->AddProperty(_TR("Number of Pages:"), str);
 
     str = FormatPdfPageSize(pdfEngine->pageSize(win->dm->currentPageNo()));
-    AddPdfProperty(layoutData, _TR("Page Size:"), str);
-    free(str);
+    layoutData->AddProperty(_TR("Page Size:"), str);
 
     str = FormatPdfPermissions(pdfEngine);
-    AddPdfProperty(layoutData, _TR("Denied Permissions:"), str);
-    free(str);
+    layoutData->AddProperty(_TR("Denied Permissions:"), str);
 
     // TODO: this is about linearlized PDF. Looks like mupdf would
     // have to be extended to detect linearlized PDF. The rules are described
     // in F3.3 of http://www.adobe.com/devnet/acrobat/pdfs/PDF32000_2008.pdf
-    //AddPdfProperty(layoutData, _T("Fast Web View:"), _T("No"));
+    // layoutData->AddProperty(_T("Fast Web View:"), StrCopy(_T("No")));
 
     // TODO: probably needs to extend mupdf to get this information.
     // Tagged PDF rules are described in 14.8.2 of
     // http://www.adobe.com/devnet/acrobat/pdfs/PDF32000_2008.pdf
-    //AddPdfProperty(layoutData, _T("Tagged PDF:"), _T("No"));
+    // layoutData->AddProperty(_T("Tagged PDF:"), StrCopy(_T("No")));
 
     CreatePropertiesWindow(win, layoutData);
 }
@@ -436,7 +397,7 @@ static void DrawProperties(HWND hwnd, HDC hdc, RECT *rect)
     HFONT fontLeftTxt = Win32_Font_GetSimple(hdc, LEFT_TXT_FONT, LEFT_TXT_FONT_SIZE);
     HFONT fontRightTxt = Win32_Font_GetSimple(hdc, RIGHT_TXT_FONT, RIGHT_TXT_FONT_SIZE);
 
-    HFONT origFont = (HFONT)SelectObject(hdc, fontLeftTxt); /* Just to remember the orig font */
+    HGDIOBJ origFont = SelectObject(hdc, fontLeftTxt); /* Just to remember the orig font */
 
     SetBkMode(hdc, TRANSPARENT);
 
@@ -452,18 +413,17 @@ static void DrawProperties(HWND hwnd, HDC hdc, RECT *rect)
     SetTextColor(hdc, WIN_COL_BLACK);
 
     /* render text on the left*/
-    (HFONT)SelectObject(hdc, fontLeftTxt);
-    for (PdfPropertyEl *el = layoutData->first; el; el = el->next) {
-        RECT rc;
-        SetRect(&rc, el->leftPos.x, el->leftPos.y, el->leftPos.x + el->leftPos.dx, el->leftPos.y + el->leftPos.dy);
-        DrawText(hdc, el->leftTxt, -1, &rc, DT_RIGHT);
+    SelectObject(hdc, fontLeftTxt);
+    for (size_t i = 0; i < layoutData->Count(); i++) {
+        PdfPropertyEl *el = layoutData->At(i);
+        DrawText(hdc, el->leftTxt, -1, &el->leftPos.ToRECT(), DT_RIGHT);
     }
 
     /* render text on the right */
-    (HFONT)SelectObject(hdc, fontRightTxt);
-    for (PdfPropertyEl *el = layoutData->first; el; el = el->next) {
-        RECT rc;
-        SetRect(&rc, el->rightPos.x, el->rightPos.y, el->rightPos.x + el->rightPos.dx, el->rightPos.y + el->rightPos.dy);
+    SelectObject(hdc, fontRightTxt);
+    for (size_t i = 0; i < layoutData->Count(); i++) {
+        PdfPropertyEl *el = layoutData->At(i);
+        RECT rc = el->rightPos.ToRECT();
         if (rc.right > rcClient.right - PROPERTIES_RECT_PADDING)
             rc.right = rcClient.right - PROPERTIES_RECT_PADDING;
         DrawText(hdc, el->rightTxt, -1, &rc, DT_LEFT | DT_PATH_ELLIPSIS);
@@ -491,32 +451,28 @@ static void OnPaintProperties(HWND hwnd)
 
 void CopyPropertiesToClipboard(HWND hwnd)
 {
-    TCHAR *result = StrCopy(_T(""));
+    if (!OpenClipboard(NULL))
+        return;
 
     // just concatenate all the properties into a multi-line string
     PdfPropertiesLayout *layoutData = (PdfPropertiesLayout *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
-    for (PdfPropertyEl *el = layoutData->first; el; el = el->next) {
-        TCHAR *newResult = tstr_printf(_T("%s%s %s\r\n"), result, el->leftTxt, el->rightTxt);
-        free(result);
-        if (!newResult)
-            return;
-        result = newResult;
+    VStrList lines;
+    for (size_t i = 0; i < layoutData->Count(); i++) {
+        PdfPropertyEl *el = layoutData->At(i);
+        lines.Append(tstr_printf(_T("%s %s\r\n"), el->leftTxt, el->rightTxt));
     }
+    ScopedMem<TCHAR> result(lines.Join());
 
-    if (OpenClipboard(NULL)) {
-        HGLOBAL handle = GlobalAlloc(GMEM_MOVEABLE, (StrLen(result) + 1) * sizeof(TCHAR));
-        if (handle) {
-            TCHAR *selText = (TCHAR *)GlobalLock(handle);
-            lstrcpy(selText, result);
-            GlobalUnlock(handle);
+    HGLOBAL handle = GlobalAlloc(GMEM_MOVEABLE, (StrLen(result) + 1) * sizeof(TCHAR));
+    if (handle) {
+        TCHAR *selText = (TCHAR *)GlobalLock(handle);
+        lstrcpy(selText, result);
+        GlobalUnlock(handle);
 
-            EmptyClipboard();
-            SetClipboardData(CF_T_TEXT, handle);
-        }
-        CloseClipboard();
+        EmptyClipboard();
+        SetClipboardData(CF_T_TEXT, handle);
     }
-
-    free(result);
+    CloseClipboard();
 }
 
 LRESULT CALLBACK WndProcProperties(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -542,7 +498,7 @@ LRESULT CALLBACK WndProcProperties(HWND hwnd, UINT message, WPARAM wParam, LPARA
             break;
 
         case WM_DESTROY:
-            FreePdfProperties(hwnd);
+            delete (PdfPropertiesLayout *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
             assert(win->hwndPdfProperties);
             win->hwndPdfProperties = NULL;
             break;

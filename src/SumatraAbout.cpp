@@ -484,16 +484,13 @@ static void OnPaint(WindowInfo *win)
 
 void CreateInfotipForAboutLink(WindowInfo *win, AboutLayoutInfoEl *aboutEl)
 {
-    TOOLINFO ti = { 0 };
-    FillToolInfo(ti, win);
-
     if (aboutEl && aboutEl->url) {
-        SetRect(&ti.rect, aboutEl->rightPos.x, aboutEl->rightPos.y, aboutEl->rightPos.x + aboutEl->rightPos.dx, aboutEl->rightPos.y + aboutEl->rightPos.dy);
-        ti.lpszText = (TCHAR *)aboutEl->url;
+        TOOLINFO ti = win->CreateToolInfo(aboutEl->url);
+        ti.rect = aboutEl->rightPos.ToRECT();
         SendMessage(win->hwndInfotip, win->infotipVisible ? TTM_NEWTOOLRECT : TTM_ADDTOOL, 0, (LPARAM)&ti);
         win->infotipVisible = true;
     } else
-        DeleteInfotip(win);
+        win->DeleteInfotip();
 }
 
 LRESULT HandleWindowAboutMsg(WindowInfo *win, HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, bool& handled)

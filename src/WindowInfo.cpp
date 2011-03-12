@@ -176,7 +176,7 @@ void WindowInfo::DisplayStateFromToC(DisplayState *ds)
 
     if (this->tocLoaded) {
         free(this->tocState);
-        this->tocState = SAZ(int);
+        this->tocState = SAZA(int, 1);
         HTREEITEM hRoot = TreeView_GetRoot(this->hwndTocTree);
         if (this->tocState && hRoot)
             this->UpdateToCExpansionState(hRoot);

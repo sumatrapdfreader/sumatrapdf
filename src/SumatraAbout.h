@@ -13,7 +13,5 @@ void OnMenuAbout();
 
 // in SumatraPDF.cpp
 void LaunchBrowser(const TCHAR *url);
-void FillToolInfo(TOOLINFO& ti, WindowInfo *win);
-void DeleteInfotip(WindowInfo *win);
 
 #endif

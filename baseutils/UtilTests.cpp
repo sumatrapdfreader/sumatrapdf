@@ -231,8 +231,7 @@ static void VecTest()
     assert(ints.Count() == 3);
     assert(ints[0] == -1 && ints[1] == 1 && ints[2] == 2);
     assert(ints[0] == ints.At(0) && ints[1] == ints.At(1) && ints[2] == ints.At(2));
-    assert(*ints.First() == -1 && ints.Last() == 2);
-    assert(ints.Sentinel() - ints.First() == ints.Count());
+    assert(ints.At(0) == -1 && ints.Last() == 2);
     int last = ints.Pop();
     assert(last == 2);
     assert(ints.Count() == 2);
@@ -256,7 +255,7 @@ static void VecTest()
             v.Append(buf, 1);
             buf[0] = buf[0] + 1;
         }
-        char *s = v.First();
+        char *s = v.LendData();
         assert(str_eq("abcdefg", s));
         assert(7 == v.Count());
     }
@@ -264,14 +263,14 @@ static void VecTest()
     {
         Vec<char> v(128,1);
         v.Append("boo", 3);
-        assert(str_eq("boo", v.First()));
+        assert(str_eq("boo", v.LendData()));
         assert(v.Count() == 3);
         v.Append("fop", 3);
-        assert(str_eq("boofop", v.First()));
+        assert(str_eq("boofop", v.LendData()));
         assert(v.Count() == 6);
         v.RemoveAt(2, 3);
         assert(v.Count() == 3);
-        assert(str_eq("bop", v.First()));
+        assert(str_eq("bop", v.LendData()));
         char *s = v.StealData();
         assert(str_eq("bop", s));
         free(s);
@@ -296,7 +295,7 @@ static void VecTest()
 
         v.RemoveAt(0, 6 * 15);
         assert(v.Count() == 6);
-        char *s = v.First();
+        char *s = v.LendData();
         assert(str_eq(s, "lambda"));
         s = v.StealData();
         assert(str_eq(s, "lambda"));
