@@ -173,7 +173,7 @@ public:
     bool            fullScreen;
     bool            _tocBeforeFullScreen;
     PresentationMode presentation;
-    BOOL            _tocBeforePresentation;
+    bool            _tocBeforePresentation;
     int             _windowStateBeforePresentation;
 
     long            prevStyle;

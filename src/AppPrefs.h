@@ -6,8 +6,6 @@
 
 #include "DisplayState.h"
 
-#define DEFAULT_WIN_POS (int)-1
-
 // TODO: Move this somewhere more appropriate?
 #define MAX_RECENT_FILES_IN_MENU 10
 
@@ -21,28 +19,28 @@ enum {
 
 /* Most of the global settings that we persist in preferences file. */
 typedef struct {
-    int  m_globalPrefsOnly;
+    bool m_globalPrefsOnly;
     char *m_currentLanguage;
 
-    BOOL m_showToolbar;
+    bool m_showToolbar;
     /* If false, we won't ask the user if he wants Sumatra to handle PDF files */
-    BOOL m_pdfAssociateDontAskAgain;
+    bool m_pdfAssociateDontAskAgain;
     /* If m_pdfAssociateDontAskAgain is TRUE, says whether we should 
        silently associate or not */
-    BOOL m_pdfAssociateShouldAssociate;
+    bool m_pdfAssociateShouldAssociate;
 
-    BOOL m_enableAutoUpdate;
+    bool m_enableAutoUpdate;
 
     /* if true, we remember which files we opened and their settings */
-    BOOL m_rememberOpenedFiles;
+    bool m_rememberOpenedFiles;
 
     int  m_bgColor;
-    BOOL m_escToExit;
+    bool m_escToExit;
 
     /* pattern used to launch the editor when doing inverse search */
     TCHAR *m_inverseSearchCmdLine;
     /* whether to expose the SyncTeX enhancements to the user */
-    BOOL m_enableTeXEnhancements;
+    bool m_enableTeXEnhancements;
 
     /* When we show 'new version available', user has an option to check
        'skip this version'. This remembers which version is to be skipped.
@@ -56,23 +54,20 @@ typedef struct {
     DisplayMode m_defaultDisplayMode;
 
     float m_defaultZoom;
-    int  m_windowState;
-    int  m_windowPosX;
-    int  m_windowPosY;
-    int  m_windowDx;
-    int  m_windowDy;
+    int   m_windowState;
+    RectI m_windowPos;
 
-    int  m_showToc;
+    bool m_showToc;
     int  m_tocDx;
 
     /* Forward search highlighting settings  */
     int  m_fwdsearchOffset;    /* if <=0 then use the standard (inline) highlighting style, otherwise use the margin highlight (i.e., coloured block on the left side of the page) */
     int  m_fwdsearchColor;     /* highlight color of the forward-search for both the standard and margin style*/
     int  m_fwdsearchWidth;     /* width of the coloured blocks for the margin style */
-    BOOL m_fwdsearchPermanent; /* if false then highlights are hidden automatically after a short period of time,
+    bool m_fwdsearchPermanent; /* if false then highlights are hidden automatically after a short period of time,
                                   if true then highlights remain until the next forward search */
 
-    BOOL m_invertColors; /* invert all colors for accessibility reasons (experimental!) */
+    bool m_invertColors; /* invert all colors for accessibility reasons (experimental!) */
 } SerializableGlobalPrefs;
 
 class FileHistoryList;

@@ -255,7 +255,7 @@ TCHAR * Dialog_Find(HWND hwnd, const TCHAR *previousSearch, bool *matchCase)
 
 /* For passing data to/from AssociateWithPdf dialog */
 typedef struct {
-    BOOL    dontAskAgain;
+    bool dontAskAgain;
 } Dialog_PdfAssociate_Data;
 
 static INT_PTR CALLBACK Dialog_PdfAssociate_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
@@ -284,18 +284,18 @@ static INT_PTR CALLBACK Dialog_PdfAssociate_Proc(HWND hDlg, UINT message, WPARAM
         case WM_COMMAND:
             data = (Dialog_PdfAssociate_Data*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
             assert(data);
-            data->dontAskAgain = FALSE;
+            data->dontAskAgain = false;
             switch (LOWORD(wParam))
             {
                 case IDOK:
                     if (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_DONT_ASK_ME_AGAIN))
-                        data->dontAskAgain = TRUE;
+                        data->dontAskAgain = true;
                     EndDialog(hDlg, DIALOG_OK_PRESSED);
                     return TRUE;
 
                 case IDCANCEL:
                     if (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_DONT_ASK_ME_AGAIN))
-                        data->dontAskAgain = TRUE;
+                        data->dontAskAgain = true;
                     EndDialog(hDlg, DIALOG_NO_PRESSED);
                     return TRUE;
 
@@ -311,7 +311,7 @@ static INT_PTR CALLBACK Dialog_PdfAssociate_Proc(HWND hDlg, UINT message, WPARAM
    Returns DIALOG_YES_PRESSED if "Yes" button was pressed or
    DIALOG_NO_PRESSED if "No" button was pressed.
    Returns the state of "don't ask me again" checkbox" in <dontAskAgain> */
-INT_PTR Dialog_PdfAssociate(HWND hwnd, BOOL *dontAskAgainOut)
+INT_PTR Dialog_PdfAssociate(HWND hwnd, bool *dontAskAgainOut)
 {
     assert(dontAskAgainOut);
 

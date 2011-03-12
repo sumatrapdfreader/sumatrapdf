@@ -607,7 +607,7 @@ UINT RenderCache::PaintTile(HDC hdc, RectI *bounds, DisplayModel *dm, int pageNo
     return 0;
 }
 
-UINT RenderCache::PaintTiles(HDC hdc, RECT *bounds, DisplayModel *dm, int pageNo,
+UINT RenderCache::PaintTiles(HDC hdc, RectI *bounds, DisplayModel *dm, int pageNo,
                              RectI *pageOnScreen, USHORT tileRes, bool renderMissing,
                              bool *renderOutOfDateCue, bool *renderedReplacement)
 {
@@ -616,8 +616,6 @@ UINT RenderCache::PaintTiles(HDC hdc, RECT *bounds, DisplayModel *dm, int pageNo
     int tileCount = 1 << tileRes;
 
     TilePosition tile = { tileRes, 0, 0 };
-    RectI screen = RectI::FromXY(bounds->left, bounds->top, bounds->right, bounds->bottom);
-
     fz_matrix ctm = dm->pdfEngine->viewctm(pageNo, zoom, rotation);
     ctm = fz_concat(ctm, fz_translate((float)pageOnScreen->x, (float)pageOnScreen->y));
 
@@ -626,7 +624,7 @@ UINT RenderCache::PaintTiles(HDC hdc, RECT *bounds, DisplayModel *dm, int pageNo
         for (tile.col = 0; tile.col < tileCount; tile.col++) {
             RectI tileOnScreen = GetTileOnScreen(dm->pdfEngine, pageNo, rotation, zoom, tile, ctm);
             RectI isectPOS = pageOnScreen->Intersect(tileOnScreen);
-            RectI isect = screen.Intersect(isectPOS);
+            RectI isect = bounds->Intersect(isectPOS);
             if (!isect.IsEmpty()) {
                 UINT renderTime = PaintTile(hdc, &isect, dm, pageNo, tile, &isectPOS, renderMissing, renderOutOfDateCue, renderedReplacement);
                 renderTimeMin = min(renderTime, renderTimeMin);
@@ -637,7 +635,7 @@ UINT RenderCache::PaintTiles(HDC hdc, RECT *bounds, DisplayModel *dm, int pageNo
     return renderTimeMin;
 }
 
-UINT RenderCache::Paint(HDC hdc, RECT *bounds, DisplayModel *dm, int pageNo,
+UINT RenderCache::Paint(HDC hdc, RectI *bounds, DisplayModel *dm, int pageNo,
                         PdfPageInfo *pageInfo, bool *renderOutOfDateCue)
 {
     assert(pageInfo->shown && pageInfo->visible);

@@ -4,6 +4,7 @@
 #ifndef GeomUtil_h
 #define GeomUtil_h
 
+#include "BaseUtil.h"
 #include <math.h>
 
 template <typename T>
@@ -87,34 +88,16 @@ public:
 
     /* Returns an empty rectangle if there's no intersection (see IsEmpty). */
     Rect Intersect(Rect other) const {
-        /* { } visualizes this and | | visualizes other */
-
-        /* case of non-overlapping rectangles i.e.:
-           { }   | | */
-        if (other.x > this->x + this->dx)
-            return Rect(0, 0, 0, 0);
-        /* | |   { } */
-        if (this->x > other.x + other.dx)
-            return Rect(0, 0, 0, 0);
-
-        /* the logic for y is the same */
-        if (other.y > this->y + this->dy)
-            return Rect(0, 0, 0, 0);
-        if (this->y > other.y + other.dy)
-            return Rect(0, 0, 0, 0);
-
-        /* partially overlapped i.e.:
-           {  |  } |   or   |  {  |  }
-           and one inside the other i.e.:
-           {  | |  }   or   |  {  }  |
-
-           In these cases, the intersection starts with the larger of the start
+        /* The intersection starts with the larger of the start
            coordinates and ends with the smaller of the end coordinates */
         T x = max(this->x, other.x);
         T dx = min(this->x + this->dx, other.x + other.dx) - x;
         T y = max(this->y, other.y);
         T dy = min(this->y + this->dy, other.y + other.dy) - y;
 
+        /* return an empty rectangle if the dimensions aren't positive */
+        if (dx <= 0 || dy <= 0)
+            return Rect();
         return Rect(x, y, dx, dy);
     }
 
@@ -130,6 +113,12 @@ public:
         T dy = max(this->y + this->dy, other.y + other.dy) - y;
 
         return Rect(x, y, dx, dy);
+    }
+
+    RECT ToRECT() const {
+        Rect<int> rectI(this->Convert<int>());
+        RECT result = { rectI.x, rectI.y, rectI.x + rectI.dx, rectI.y + rectI.dy };
+        return result;
     }
 };
 

@@ -235,12 +235,10 @@ DWORD GetFileVersion(TCHAR *path)
 // used to be in win_util.cpp
 void launch_url(const TCHAR *url)
 {
-    SHELLEXECUTEINFO sei;
-    BOOL             res;
-
-    if (NULL == url)
+    if (!url)
         return;
 
+    SHELLEXECUTEINFO sei;
     ZeroMemory(&sei, sizeof(sei));
     sei.cbSize  = sizeof(sei);
     sei.fMask   = SEE_MASK_FLAG_NO_UI;
@@ -248,18 +246,16 @@ void launch_url(const TCHAR *url)
     sei.lpFile  = url;
     sei.nShow   = SW_SHOWNORMAL;
 
-    res = ShellExecuteEx(&sei);
+    ShellExecuteEx(&sei);
     return;
 }
 
-void exec_with_params(const TCHAR *exe, const TCHAR *params, BOOL hidden)
+void exec_with_params(const TCHAR *exe, const TCHAR *params, bool hidden)
 {
-    SHELLEXECUTEINFO sei;
-    BOOL             res;
-
-    if (NULL == exe)
+    if (!exe)
         return;
 
+    SHELLEXECUTEINFO sei;
     ZeroMemory(&sei, sizeof(sei));
     sei.cbSize  = sizeof(sei);
     sei.fMask   = SEE_MASK_FLAG_NO_UI;
@@ -270,7 +266,7 @@ void exec_with_params(const TCHAR *exe, const TCHAR *params, BOOL hidden)
         sei.nShow = SW_HIDE;
     else
         sei.nShow   = SW_SHOWNORMAL;
-    res = ShellExecuteEx(&sei);
+    ShellExecuteEx(&sei);
 }
 
 /* On windows those are defined as:
@@ -297,31 +293,26 @@ void exec_with_params(const TCHAR *exe, const TCHAR *params, BOOL hidden)
    return false on failure, true if ok. Even if returns false, it'll return root ("\")
    directory so that clients can ignore failures from this function
 */
-TCHAR *get_app_data_folder_path(BOOL f_create)
+TCHAR *get_app_data_folder_path(bool f_create)
 {
 #ifdef SPECIAL_FOLDER_PATH
-    BOOL        f_ok;
-    TCHAR       path[MAX_PATH];
-
-    f_ok = SHGetSpecialFolderPath(NULL, path, SPECIAL_FOLDER_PATH, f_create);
+    TCHAR path[MAX_PATH];
+    bool f_ok = SHGetSpecialFolderPath(NULL, path, SPECIAL_FOLDER_PATH, f_create);
     if (f_ok)
         return StrCopy(path);
-    else
-        return StrCopy(_T(""));
-#else
+#endif
     /* if all else fails, just use root ("\") directory */
     return StrCopy(_T(""));
-#endif
 }
 
 int screen_get_dx(void)
 {
-    return (int)GetSystemMetrics(SM_CXSCREEN);
+    return GetSystemMetrics(SM_CXSCREEN);
 }
 
 int screen_get_dy(void)
 {
-    return (int)GetSystemMetrics(SM_CYSCREEN);
+    return GetSystemMetrics(SM_CYSCREEN);
 }
 
 int screen_get_menu_dy(void)
@@ -336,7 +327,7 @@ int screen_get_caption_dy(void)
 
 /* Ensure that the rectangle is at least partially in the work area on a
    monitor. The rectangle is shifted into the work area if necessary. */
-void rect_shift_to_work_area(RECT *rect, BOOL bFully)
+void rect_shift_to_work_area(RECT *rect, bool bFully)
 {
     MONITORINFO mi = { 0 };
     mi.cbSize = sizeof mi;
@@ -411,7 +402,7 @@ void draw_centered_text(HDC hdc, RECT *r, const TCHAR *txt)
     DrawText(hdc, txt, StrLen(txt), r, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 }
 
-BOOL IsCursorOverWindow(HWND hwnd)
+bool IsCursorOverWindow(HWND hwnd)
 {
     POINT pt;
     RECT rcWnd;

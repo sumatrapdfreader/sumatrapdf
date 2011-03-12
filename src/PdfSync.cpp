@@ -775,7 +775,7 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
     ack.reserved = 0;
     ack.fBusy = 0;
     
-    BOOL bUnicodeSender = IsWindowUnicode((HWND)wparam);
+    bool bUnicodeSender = IsWindowUnicode((HWND)wparam);
 
     LPVOID command = GlobalLock((HGLOBAL)hi);
     ack.fAck = 0;

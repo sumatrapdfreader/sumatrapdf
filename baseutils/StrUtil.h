@@ -70,7 +70,7 @@ char *  str_printf(const char *format, ...);
 int     str_printf_s(char *out, size_t out_cch_size, const char *format, ...);
 
 char *  mem_to_hexstr(const unsigned char *buf, int len);
-BOOL    hexstr_to_mem(const char *s, unsigned char *buf, int bufLen);
+bool    hexstr_to_mem(const char *s, unsigned char *buf, int bufLen);
 #define _mem_to_hexstr(ptr) mem_to_hexstr((const unsigned char *)ptr, sizeof(*ptr))
 #define _hexstr_to_mem(str, ptr) hexstr_to_mem(str, (unsigned char *)ptr, sizeof(*ptr))
 

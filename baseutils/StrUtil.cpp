@@ -217,12 +217,12 @@ char *multibyte_to_str(const char *src, UINT CodePage)
 /* Reverse of mem_to_hexstr. Convert a 0-terminatd hex-encoded string <s> to
    binary data pointed by <buf> of max sisze bufLen.
    Returns FALSE if size of <s> doesn't match <bufLen>. */
-BOOL hexstr_to_mem(const char *s, unsigned char *buf, int bufLen)
+bool hexstr_to_mem(const char *s, unsigned char *buf, int bufLen)
 {
     for (; bufLen > 0; bufLen--) {
         int c;
         if (1 != sscanf(s, "%02x", &c))
-            return FALSE;
+            return false;
         s += 2;
         *buf++ = (unsigned char)c;
     }
@@ -279,11 +279,10 @@ int str_printf_s(char *out, size_t out_cch_size, const char *format, ...)
 void win32_dbg_out(const char *format, ...)
 {
     char        buf[4096];
-    char *      p = buf;
     va_list     args;
 
     va_start(args, format);
-    _vsnprintf(p, sizeof(buf), format, args);
+    vsnprintf(buf, sizeof(buf), format, args);
     OutputDebugStringA(buf);
     va_end(args);
 }

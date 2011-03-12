@@ -76,10 +76,10 @@ fz_pixmap *fz_newpixmap_nullonoom(fz_colorspace *colorspace, int x, int y, int w
     return image;
 }
 
-HBITMAP fz_pixtobitmap(HDC hDC, fz_pixmap *pixmap, BOOL paletted)
+HBITMAP fz_pixtobitmap(HDC hDC, fz_pixmap *pixmap, bool paletted)
 {
     int paletteSize = 0;
-    BOOL hasPalette = FALSE;
+    bool hasPalette = false;
     unsigned char *bmpData = NULL;
     
     int w = pixmap->w;
@@ -771,7 +771,7 @@ fz_matrix PdfEngine::viewctm(int pageNo, float zoom, int rotate)
     return viewctm(&partialPage, zoom, rotate);
 }
 
-bool PdfEngine::renderPage(HDC hDC, pdf_page *page, RECT *screenRect, fz_matrix *ctm, float zoom, int rotation, fz_rect *pageRect, RenderTarget target)
+bool PdfEngine::renderPage(HDC hDC, pdf_page *page, RectI *screenRect, fz_matrix *ctm, float zoom, int rotation, fz_rect *pageRect, RenderTarget target)
 {
     if (!page)
         return false;
@@ -781,19 +781,19 @@ bool PdfEngine::renderPage(HDC hDC, pdf_page *page, RECT *screenRect, fz_matrix 
         pageRect = &page->mediabox;
     if (!ctm) {
         if (!zoom)
-            zoom = min(1.0f * (screenRect->right - screenRect->left) / (page->mediabox.x1 - page->mediabox.x0),
-                       1.0f * (screenRect->bottom - screenRect->top) / (page->mediabox.y1 - page->mediabox.y0));
+            zoom = min(1.0f * screenRect->dx / (page->mediabox.x1 - page->mediabox.x0),
+                       1.0f * screenRect->dy / (page->mediabox.y1 - page->mediabox.y0));
         ctm2 = viewctm(page, zoom, rotation);
         fz_bbox bbox = fz_roundrect(fz_transformrect(ctm2, *pageRect));
-        ctm2 = fz_concat(ctm2, fz_translate((float)screenRect->left - bbox.x0, (float)screenRect->top - bbox.y0));
+        ctm2 = fz_concat(ctm2, fz_translate((float)screenRect->x - bbox.x0, (float)screenRect->y - bbox.y0));
         ctm = &ctm2;
     }
 
     HBRUSH bgBrush = CreateSolidBrush(RGB(0xFF,0xFF,0xFF));
-    FillRect(hDC, screenRect, bgBrush); // initialize white background
+    FillRect(hDC, &screenRect->ToRECT(), bgBrush); // initialize white background
     DeleteObject(bgBrush);
 
-    fz_bbox clipBox = { screenRect->left, screenRect->top, screenRect->right, screenRect->bottom };
+    fz_bbox clipBox = { screenRect->x, screenRect->y, screenRect->x + screenRect->dx, screenRect->y + screenRect->dy };
     fz_error error = runPage(page, fz_newgdiplusdevice(hDC, clipBox), *ctm, target, *pageRect);
 
     return fz_okay == error;
@@ -826,7 +826,7 @@ RenderedBitmap *PdfEngine::renderBitmap(
         HBITMAP hbmp = CreateCompatibleBitmap(hDC, w, h);
         DeleteObject(SelectObject(hDCMem, hbmp));
 
-        RECT rc = { 0, 0, w, h };
+        RectI rc(0, 0, w, h);
         bool success = renderPage(hDCMem, page, &rc, &ctm, 0, 0, pageRect, target);
         DeleteDC(hDCMem);
         ReleaseDC(NULL, hDC);

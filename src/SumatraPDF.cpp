@@ -66,9 +66,9 @@
    the screen. Makes debugging code related to links easier.
    TODO: make a menu item in DEBUG build to turn it on/off. */
 #ifdef DEBUG
-static BOOL             gDebugShowLinks = TRUE;
+static bool             gDebugShowLinks = true;
 #else
-static BOOL             gDebugShowLinks = FALSE;
+static bool             gDebugShowLinks = false;
 #endif
 
 /* if true, we're rendering everything with the GDI+ back-end,
@@ -170,33 +170,30 @@ static int                          gReBarDyFrame;
        bool                         gRestrictedUse = false;
 
 SerializableGlobalPrefs             gGlobalPrefs = {
-    0, // int  m_globalPrefsOnly
+    false, // bool m_globalPrefsOnly
     DEFAULT_LANGUAGE, // const char *m_currentLanguage
-    TRUE, // BOOL m_showToolbar
-    FALSE, // BOOL m_pdfAssociateDontAskAgain
-    FALSE, // BOOL m_pdfAssociateShouldAssociate
-    TRUE, // BOOL m_enableAutoUpdate
-    TRUE, // BOOL m_rememberOpenedFiles
+    true, // bool m_showToolbar
+    false, // bool m_pdfAssociateDontAskAgain
+    false, // bool m_pdfAssociateShouldAssociate
+    true, // bool m_enableAutoUpdate
+    true, // bool m_rememberOpenedFiles
     ABOUT_BG_COLOR, // int  m_bgColor
-    FALSE, // BOOL m_escToExit
+    false, // bool m_escToExit
     NULL, // TCHAR *m_inverseSearchCmdLine
-    FALSE, // BOOL m_enableTeXEnhancements
+    false, // bool m_enableTeXEnhancements
     NULL, // TCHAR *m_versionToSkip
     NULL, // char *m_lastUpdateTime
     DEFAULT_DISPLAY_MODE, // DisplayMode m_defaultDisplayMode
     DEFAULT_ZOOM, // float m_defaultZoom
     WIN_STATE_NORMAL, // int  m_windowState
-    DEFAULT_WIN_POS, // int  m_windowPosX
-    DEFAULT_WIN_POS, // int  m_windowPosY
-    DEFAULT_WIN_POS, // int  m_windowDx
-    DEFAULT_WIN_POS, // int  m_windowDy
-    1, // int  m_showToc
+    RectI(), // RectI m_windowPos
+    true, // bool m_showToc
     0, // int  m_tocDx
     0, // int  m_fwdsearchOffset
     COL_FWDSEARCH_BG, // int  m_fwdsearchColor
     15, // int  m_fwdsearchWidth
     0, // bool m_fwdsearchPermanent
-    FALSE, // BOOL m_invertColors
+    false, // bool m_invertColors
 };
 
 typedef struct ToolbarButtonInfo {
@@ -650,7 +647,7 @@ static void AddFileMenuItem(HMENU menuFile, DisplayState *state, UINT index)
 static void EmptyMenu(HMENU m)
 {
     for (;;) {
-        BOOL ok = RemoveMenu(m, 0, MF_BYPOSITION);
+        bool ok = RemoveMenu(m, 0, MF_BYPOSITION);
         if (!ok)
             return;
     }
@@ -973,10 +970,7 @@ static void RememberWindowPosition(WindowInfo *win)
         // TODO: Use Get/SetWindowPlacement (otherwise we'd have to separately track
         //       the non-maximized dimensions for proper restoration)
         GetWindowRect(win->hwndFrame, &rc);
-        gGlobalPrefs.m_windowPosX = rc.left;
-        gGlobalPrefs.m_windowPosY = rc.top;
-        gGlobalPrefs.m_windowDx = RectDx(&rc);
-        gGlobalPrefs.m_windowDy = RectDy(&rc);
+        gGlobalPrefs.m_windowPos = RectI::FromXY(rc.left, rc.top, rc.right, rc.bottom);
     }
 }
 
@@ -986,10 +980,7 @@ static void UpdateDisplayStateWindowRect(WindowInfo *win, DisplayState *ds, bool
         RememberWindowPosition(win);
 
     ds->windowState = gGlobalPrefs.m_windowState;
-    ds->windowX = gGlobalPrefs.m_windowPosX;
-    ds->windowY = gGlobalPrefs.m_windowPosY;
-    ds->windowDx = gGlobalPrefs.m_windowDx;
-    ds->windowDy = gGlobalPrefs.m_windowDy;
+    ds->windowPos = gGlobalPrefs.m_windowPos;
     ds->tocDx = gGlobalPrefs.m_tocDx;
 }
 
@@ -1251,9 +1242,9 @@ static void UpdateToolbarAndScrollbarsForAllWindows(void)
 #define MIN_WIN_DX 50
 #define MIN_WIN_DY 50
 
-static void EnsureWindowVisibility(int *x, int *y, int *dx, int *dy)
+static void EnsureWindowVisibility(RectI *rect)
 {
-    RECT rc = { *x, *y, *x + *dy, *y + *dy };
+    RECT rc = rect->ToRECT();
 
     // adjust to the work-area of the current monitor (not necessarily the primary one)
     MONITORINFO mi = { 0 };
@@ -1262,10 +1253,10 @@ static void EnsureWindowVisibility(int *x, int *y, int *dx, int *dy)
         SystemParametersInfo(SPI_GETWORKAREA, 0, &mi.rcWork, 0);
 
     // make sure that the window is neither too small nor bigger than the monitor
-    if (*dx < MIN_WIN_DX || *dx > RectDx(&mi.rcWork))
-        *dx = (int)min(RectDy(&mi.rcWork) * DEF_PAGE_RATIO, RectDx(&mi.rcWork));
-    if (*dy < MIN_WIN_DY || *dy > RectDy(&mi.rcWork))
-        *dy = RectDy(&mi.rcWork);
+    if (rect->dx < MIN_WIN_DX || rect->dx > RectDx(&mi.rcWork))
+        rect->dx = (int)min(RectDy(&mi.rcWork) * DEF_PAGE_RATIO, RectDx(&mi.rcWork));
+    if (rect->dy < MIN_WIN_DY || rect->dy > RectDy(&mi.rcWork))
+        rect->dy = RectDy(&mi.rcWork);
 
     // check whether the lower half of the window's title bar is
     // inside a visible working area
@@ -1273,47 +1264,41 @@ static void EnsureWindowVisibility(int *x, int *y, int *dx, int *dy)
     rc.bottom = rc.top + captionDy;
     rc.top += captionDy / 2;
     if (!IntersectRect(&mi.rcMonitor, &mi.rcWork, &rc)) {
-        *x = mi.rcWork.left;
-        *y = mi.rcWork.top;
+        rect->x = mi.rcWork.left;
+        rect->y = mi.rcWork.top;
     }
 }
 
-static WindowInfo* WindowInfo_CreateEmpty(void) {
-    HWND        hwndFrame, hwndCanvas;
-    WindowInfo* win;
-    int         winX, winY, winDx, winDy;
-
-    if (DEFAULT_WIN_POS == gGlobalPrefs.m_windowPosX && DEFAULT_WIN_POS == gGlobalPrefs.m_windowDx) {
+static WindowInfo* WindowInfo_CreateEmpty(void)
+{
+    RectI windowPos;
+    if (gGlobalPrefs.m_windowPos.IsEmpty()) {
         // center the window on the primary monitor
         RECT workArea;
         SystemParametersInfo(SPI_GETWORKAREA, 0, &workArea, 0);
-        winY = workArea.top;
-        winDy = RectDy(&workArea);
-        winDx = (int)min(winDy * DEF_PAGE_RATIO, RectDx(&workArea));
-        winX = (RectDx(&workArea) - winDx) / 2;
+        windowPos.y = workArea.top;
+        windowPos.dy = RectDy(&workArea);
+        windowPos.dx = (int)min(windowPos.dy * DEF_PAGE_RATIO, RectDx(&workArea));
+        windowPos.x = (RectDx(&workArea) - windowPos.dx) / 2;
     }
     else {
-        winX = gGlobalPrefs.m_windowPosX;
-        winY = gGlobalPrefs.m_windowPosY;
-        winDx = gGlobalPrefs.m_windowDx;
-        winDy = gGlobalPrefs.m_windowDy;
-
-        EnsureWindowVisibility(&winX, &winY, &winDx, &winDy);
+        windowPos = gGlobalPrefs.m_windowPos;
+        EnsureWindowVisibility(&windowPos);
     }
 
-    hwndFrame = CreateWindow(
+    HWND hwndFrame = CreateWindow(
             FRAME_CLASS_NAME, SUMATRA_WINDOW_TITLE,
             WS_OVERLAPPEDWINDOW,
-            winX, winY, winDx, winDy,
+            windowPos.x, windowPos.y, windowPos.dx, windowPos.dy,
             NULL, NULL,
             ghinst, NULL);
     if (!hwndFrame)
         return NULL;
 
     assert(NULL == FindWindowInfoByHwnd(hwndFrame));
-    win = new WindowInfo(hwndFrame);
+    WindowInfo *win = new WindowInfo(hwndFrame);
 
-    hwndCanvas = CreateWindowEx(
+    HWND hwndCanvas = CreateWindowEx(
             WS_EX_STATICEDGE, 
             CANVAS_CLASS_NAME, NULL,
             WS_CHILD | WS_HSCROLL | WS_VSCROLL,
@@ -1459,8 +1444,8 @@ static bool LoadPdfIntoWindow(
         if (win->dm->validPageNo(startPage)) {
             ss.page = startPage;
             if (ZOOM_FIT_CONTENT != state->zoomVirtual) {
-                ss.x = state->scrollX;
-                ss.y = state->scrollY;
+                ss.x = state->scrollPos.x;
+                ss.y = state->scrollPos.y;
             }
             // else let win->dm->relayout scroll to fit the page (again)
         }
@@ -1521,20 +1506,13 @@ static bool LoadPdfIntoWindow(
 Error:
     if (isNewWindow || placeWindow && state) {
         assert(win);
-        if (isNewWindow && state && 0 != state->windowDx && 0 != state->windowDy) {
-            RECT rect;
-            rect.top = state->windowY;
-            rect.left = state->windowX;
-            rect.bottom = rect.top + state->windowDy;
-            rect.right = rect.left + state->windowDx;
-            
+        if (isNewWindow && state && !state->windowPos.IsEmpty()) {
+            RectI rect = state->windowPos;
             // Make sure it doesn't have a position like outside of the screen etc.
-            rect_shift_to_work_area(&rect, FALSE);
-            
+            rect_shift_to_work_area(&rect.ToRECT(), FALSE);
             // This shouldn't happen until win->state != WS_ABOUT, so that we don't
             // accidentally update gGlobalState with this window's dimensions
-            MoveWindow(win->hwndFrame,
-                rect.left, rect.top, RectDx(&rect), RectDy(&rect), TRUE);
+            MoveWindow(win->hwndFrame, rect.x, rect.y, rect.dx, rect.dy, TRUE);
         }
 #if 0 // not ready yet
         else {
@@ -1608,14 +1586,9 @@ static void CheckPositionAndSize(DisplayState* ds)
     if (!ds)
         return;
 
-    if (0 == ds->windowDx && 0 == ds->windowDy) {
-        ds->windowX = gGlobalPrefs.m_windowPosX;
-        ds->windowY = gGlobalPrefs.m_windowPosY;
-        ds->windowDx = gGlobalPrefs.m_windowDx;
-        ds->windowDy = gGlobalPrefs.m_windowDy;
-    }
-
-    EnsureWindowVisibility(&ds->windowX, &ds->windowY, &ds->windowDx, &ds->windowDy);
+    if (ds->windowPos.IsEmpty())
+        ds->windowPos = gGlobalPrefs.m_windowPos;
+    EnsureWindowVisibility(&ds->windowPos);
 }
 
 bool IsComicBook(const TCHAR *fileName)
@@ -1970,20 +1943,20 @@ bool WindowInfo::DoubleBuffer_New()
     }
     SelectObject(this->hdcDoubleBuffer, this->bmpDoubleBuffer);
     /* fill out everything with background color */
-    RECT r = { 0, 0, this->winDx(), this->winDy() };
-    FillRect(this->hdcDoubleBuffer, &r, this->presentation ? gBrushBlack : gBrushBg);
+    RectI r(PointI(0, 0), this->winSize());
+    FillRect(this->hdcDoubleBuffer, &r.ToRECT(), this->presentation ? gBrushBlack : gBrushBg);
     this->hdcToDraw = this->hdcDoubleBuffer;
 #endif
 
     return true;
 }
 
-static BOOL ShowNewVersionDialog(WindowInfo *win, const TCHAR *newVersion)
+static bool ShowNewVersionDialog(WindowInfo *win, const TCHAR *newVersion)
 {
     Dialog_NewVersion_Data data = {0};
     data.currVersion = UPDATE_CHECK_VER;
     data.newVersion = newVersion;
-    data.skipThisVersion = FALSE;
+    data.skipThisVersion = false;
     INT_PTR res = Dialog_NewVersionAvailable(win->hwndFrame, &data);
     if (data.skipThisVersion) {
         free(gGlobalPrefs.m_versionToSkip);
@@ -2101,7 +2074,8 @@ static void PaintTransparentRectangle(WindowInfo *win, HDC hdc, RectI *rect, COL
         DBG_OUT("    selection rectangle too big to be drawn\n");
 
     // draw selection border
-    RECT rc = { 0, 0, rect->dx, rect->dy };
+    RECT rc = rect->ToRECT();
+    OffsetRect(&rc, -rect->x, -rect->y);
     if (margin) {
         FillRect(rectDC, &rc, gBrushBlack);
         InflateRect(&rc, -margin, -margin);
@@ -2195,14 +2169,14 @@ static void PaintForwardSearchMark(WindowInfo *win, HDC hdc) {
 #ifdef DRAW_PAGE_SHADOWS
 #define BORDER_SIZE   1
 #define SHADOW_OFFSET 4
-static void PaintPageFrameAndShadow(HDC hdc, PdfPageInfo * pageInfo, bool presentation, RECT * bounds)
+static void PaintPageFrameAndShadow(HDC hdc, PdfPageInfo * pageInfo, bool presentation, RectI *bounds)
 {
     int xDest = pageInfo->screenX;
     int yDest = pageInfo->screenY;
     int bmpDx = pageInfo->bitmap.dx;
     int bmpDy = pageInfo->bitmap.dy;
 
-    SetRect(bounds, xDest, yDest, xDest + bmpDx, yDest + bmpDy);
+    *bounds = RectI(xDest, yDest, bmpDx, bmpDy);
 
     // Frame info
     int fx = xDest - BORDER_SIZE, fy = yDest - BORDER_SIZE;
@@ -2223,8 +2197,8 @@ static void PaintPageFrameAndShadow(HDC hdc, PdfPageInfo * pageInfo, bool presen
 
     // Draw shadow
     if (!presentation) {
-        RECT rc = { sx, sy, sx + sw, sy + sh };
-        FillRect(hdc, &rc, gBrushShadow);
+        RectI rc(sx, sy, sw, sh);
+        FillRect(hdc, &rc.ToRECT(), gBrushShadow);
     }
 
     // Draw frame
@@ -2237,14 +2211,14 @@ static void PaintPageFrameAndShadow(HDC hdc, PdfPageInfo * pageInfo, bool presen
 #else
 #define BORDER_SIZE   0
 #define SHADOW_OFFSET 0
-static void PaintPageFrameAndShadow(HDC hdc, PdfPageInfo *pageInfo, bool presentation, RECT *bounds)
+static void PaintPageFrameAndShadow(HDC hdc, PdfPageInfo *pageInfo, bool presentation, RectI *bounds)
 {
     int xDest = pageInfo->screenX;
     int yDest = pageInfo->screenY;
     int bmpDx = pageInfo->bitmap.dx;
     int bmpDy = pageInfo->bitmap.dy;
 
-    SetRect(bounds, xDest, yDest, xDest + bmpDx, yDest + bmpDy);
+    *bounds = RectI(xDest, yDest, bmpDx, bmpDy);
 
     // Frame info
     int fx = xDest - BORDER_SIZE, fy = yDest - BORDER_SIZE;
@@ -2260,7 +2234,7 @@ static void PaintPageFrameAndShadow(HDC hdc, PdfPageInfo *pageInfo, bool present
 
 static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
 {
-    RECT bounds;
+    RectI bounds;
     bool rendering = false;
 
     assert(win);
@@ -2296,11 +2270,11 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
                 if (renderDelay < REPAINT_MESSAGE_DELAY_IN_MS)
                     win->RepaintAsync(REPAINT_MESSAGE_DELAY_IN_MS / 4);
                 else
-                    draw_centered_text(hdc, &bounds, _TR("Please wait - rendering..."));
+                    draw_centered_text(hdc, &bounds.ToRECT(), _TR("Please wait - rendering..."));
                 DBG_OUT("drawing empty %d ", pageNo);
                 rendering = true;
             } else {
-                draw_centered_text(hdc, &bounds, _TR("Couldn't render the page"));
+                draw_centered_text(hdc, &bounds.ToRECT(), _TR("Couldn't render the page"));
                 DBG_OUT("   missing bitmap on visible page %d\n", pageNo);
             }
             SelectObject(hdc, origFont);
@@ -2315,9 +2289,9 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
         if (bmpDC) {
             SelectObject(bmpDC, gBitmapReloadingCue);
             int size = (int)(16 * win->uiDPIFactor);
-            int cx = min(RectDx(&bounds), 2 * size), cy = min(RectDy(&bounds), 2 * size);
-            StretchBlt(hdc, bounds.right - min((cx + size) / 2, cx),
-                bounds.top + max((cy - size) / 2, 0), min(cx, size), min(cy, size),
+            int cx = min(bounds.dx, 2 * size), cy = min(bounds.dy, 2 * size);
+            StretchBlt(hdc, bounds.x + bounds.dx - min((cx + size) / 2, cx),
+                bounds.y + max((cy - size) / 2, 0), min(cx, size), min(cy, size),
                 bmpDC, 0, 0, 16, 16, SRCCOPY);
 
             DeleteDC(bmpDC);
@@ -2350,8 +2324,8 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
                 if (fz_isemptybbox(isect))
                     continue;
 
-                RECT rectScreen = { isect.x0, isect.y0, isect.x1, isect.y1 };
-                paint_rect(hdc, &rectScreen);
+                RectI rectScreen = RectI::FromXY(isect.x0, isect.y0, isect.x1, isect.y1);
+                paint_rect(hdc, &rectScreen.ToRECT());
             }
             free(links);
         }
@@ -2369,11 +2343,9 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
                     continue;
 
                 fz_bbox cbox = dm->pdfEngine->pageContentBox(pageNo);
-                double x0 = cbox.x0, x1 = cbox.x1, y0 = cbox.y0, y1 = cbox.y1;
-                if (dm->cvtUserToScreen(pageNo, &x0, &y0) && dm->cvtUserToScreen(pageNo, &x1, &y1)) {
-                    RECT rectScreen = { (LONG)x0, (LONG)y0, (LONG)x1, (LONG)y1 };
-                    paint_rect(hdc, &rectScreen);
-                }
+                RectD rect = RectD::FromXY(cbox.x0, cbox.y0, cbox.x1, cbox.y1);
+                if (dm->rectCvtUserToScreen(pageNo, &rect))
+                    paint_rect(hdc, &rect.ToRECT());
             }
 
             DeletePen(SelectObject(hdc, oldPen));
@@ -2991,17 +2963,14 @@ static void OnPaint(WindowInfo *win)
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(win->hwndCanvas, &ps);
 
-    RECT rc;
-    GetClientRect(win->hwndCanvas, &rc);
-
     if (WS_ERROR_LOADING_PDF == win->state) {
         HFONT fontRightTxt = Win32_Font_GetSimple(hdc, _T("MS Shell Dlg"), 14);
-        HFONT origFont = (HFONT)SelectObject(hdc, fontRightTxt); /* Just to remember the orig font */
+        HGDIOBJ origFont = SelectObject(hdc, fontRightTxt); /* Just to remember the orig font */
         SetBkMode(hdc, TRANSPARENT);
         FillRect(hdc, &ps.rcPaint, gBrushBg);
-        DrawText(hdc, _TR("Error loading PDF file."), -1, &rc, DT_SINGLELINE | DT_CENTER | DT_VCENTER) ;
-        if (origFont)
-            SelectObject(hdc, origFont);
+        GetWindowRect(win->hwndCanvas, &ps.rcPaint);
+        DrawText(hdc, _TR("Error loading PDF file."), -1, &ps.rcPaint, DT_SINGLELINE | DT_CENTER | DT_VCENTER) ;
+        SelectObject(hdc, origFont);
         Win32_Font_Delete(fontRightTxt);
     } else if (WS_SHOWING_PDF == win->state) {
         switch (win->presentation) {
@@ -3206,11 +3175,9 @@ static void PrintToDevice(PdfEngine *pdfEngine, HDC hdc, LPDEVMODE devMode,
                     zoom = dpiFactor;
 
 #ifdef USE_GDI_FOR_PRINTING
-                RECT rc;
-                rc.left = (LONG)(printableWidth - sSize.dx * zoom) / 2;
-                rc.top = (LONG)(printableHeight - sSize.dy * zoom) / 2;
-                rc.right = printableWidth - rc.left;
-                rc.bottom = printableHeight - rc.top;
+                RectI rc((LONG)(printableWidth - sSize.dx * zoom) / 2,
+                         (LONG)(printableHeight - sSize.dy * zoom) / 2,
+                         printableWidth, printableHeight);
                 pdfEngine->renderPage(hdc, sel->pageNo, &rc, NULL, zoom, dm_rotation, &clipRegion, Target_Print);
 #else
                 RenderedBitmap *bmp = pdfEngine->renderBitmap(sel->pageNo, zoom, dm_rotation, &clipRegion, Target_Print, gUseGdiRenderer);
@@ -3291,12 +3258,9 @@ static void PrintToDevice(PdfEngine *pdfEngine, HDC hdc, LPDEVMODE devMode,
             }
 
 #ifdef USE_GDI_FOR_PRINTING
-            RECT rc;
-            rc.left = (LONG)(printableWidth - pSize.dx * zoom) / 2;
-            rc.top = (LONG)(printableHeight - pSize.dy * zoom) / 2;
-            rc.right = printableWidth - rc.left;
-            rc.bottom = printableHeight - rc.top;
-            OffsetRect(&rc, -horizOffset, -vertOffset);
+            RectI rc((LONG)(printableWidth - pSize.dx * zoom) / 2 - horizOffset,
+                     (LONG)(printableHeight - pSize.dy * zoom) / 2 - vertOffset,
+                     printableWidth, printableHeight);
             pdfEngine->renderPage(hdc, pageNo, &rc, NULL, zoom, rotation, NULL, Target_Print);
 #else
             RenderedBitmap *bmp = pdfEngine->renderBitmap(pageNo, zoom, rotation, NULL, Target_Print, gUseGdiRenderer);
@@ -3550,7 +3514,7 @@ static void OnMenuSaveAs(WindowInfo *win)
     }
     // ... else just copy the file
     else {
-        BOOL ok = CopyFileEx(srcFileName, realDstFileName, NULL, NULL, NULL, 0);
+        bool ok = CopyFileEx(srcFileName, realDstFileName, NULL, NULL, NULL, 0);
         if (ok) {
             // Make sure that the copy isn't write-locked or hidden
             const DWORD attributesToDrop = FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM;
@@ -4813,7 +4777,7 @@ public:
 typedef struct FindThreadData {
     WindowInfo *win;
     PdfSearchDirection direction;
-    BOOL wasModified;
+    bool wasModified;
     TCHAR text[256];
 } FindThreadData;
 
@@ -6457,7 +6421,7 @@ InitMouseWheelInfo:
     return 0;
 }
 
-static BOOL RegisterWinClass(HINSTANCE hInstance)
+static bool RegisterWinClass(HINSTANCE hInstance)
 {
     WNDCLASSEX  wcex;
     ATOM        atom;
@@ -6469,7 +6433,7 @@ static BOOL RegisterWinClass(HINSTANCE hInstance)
     wcex.hIconSm        = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
     atom = RegisterClassEx(&wcex);
     if (!atom)
-        return FALSE;
+        return false;
 
     FillWndClassEx(wcex, hInstance);
     wcex.style          = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
@@ -6478,7 +6442,7 @@ static BOOL RegisterWinClass(HINSTANCE hInstance)
     wcex.lpszClassName  = CANVAS_CLASS_NAME;
     atom = RegisterClassEx(&wcex);
     if (!atom)
-        return FALSE;
+        return false;
 
     FillWndClassEx(wcex, hInstance);
     wcex.lpfnWndProc    = WndProcAbout;
@@ -6486,7 +6450,7 @@ static BOOL RegisterWinClass(HINSTANCE hInstance)
     wcex.lpszClassName  = ABOUT_CLASS_NAME;
     atom = RegisterClassEx(&wcex);
     if (!atom)
-        return FALSE;
+        return false;
 
     FillWndClassEx(wcex, hInstance);
     wcex.lpfnWndProc    = WndProcProperties;
@@ -6494,7 +6458,7 @@ static BOOL RegisterWinClass(HINSTANCE hInstance)
     wcex.lpszClassName  = PROPERTIES_CLASS_NAME;
     atom = RegisterClassEx(&wcex);
     if (!atom)
-        return FALSE;
+        return false;
 
     FillWndClassEx(wcex, hInstance);
     wcex.lpfnWndProc    = WndProcSpliter;
@@ -6503,7 +6467,7 @@ static BOOL RegisterWinClass(HINSTANCE hInstance)
     wcex.lpszClassName  = SPLITER_CLASS_NAME;
     atom = RegisterClassEx(&wcex);
     if (!atom)
-        return FALSE;
+        return false;
 
     FillWndClassEx(wcex, hInstance);
     wcex.lpfnWndProc    = WndProcFindStatus;
@@ -6512,13 +6476,13 @@ static BOOL RegisterWinClass(HINSTANCE hInstance)
     wcex.lpszClassName  = FINDSTATUS_CLASS_NAME;
     atom = RegisterClassEx(&wcex);
     if (!atom)
-        return FALSE;
+        return false;
 
-    return TRUE;
+    return true;
 }
 
 #define IDC_HAND            MAKEINTRESOURCE(32649)
-static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
+static bool InstanceInit(HINSTANCE hInstance, int nCmdShow)
 {
     ghinst = hInstance;
 
@@ -6542,7 +6506,7 @@ static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
     gDefaultGuiFont = CreateFontIndirect(&ncm.lfMessageFont);
     gBitmapReloadingCue = LoadBitmap(ghinst, MAKEINTRESOURCE(IDB_RELOADING_CUE));
     
-    return TRUE;
+    return true;
 }
 
 static bool PrintFile(const TCHAR *fileName, const TCHAR *printerName)
@@ -6576,7 +6540,7 @@ static bool PrintFile(const TCHAR *fileName, const TCHAR *printerName)
         return false;
     }
     
-    BOOL fOk = OpenPrinter((LPTSTR)printerName, &printer, NULL);
+    bool fOk = OpenPrinter((LPTSTR)printerName, &printer, NULL);
     if (!fOk) {
         MessageBox(NULL, _TR("Could not open Printer"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK);
         return false;

@@ -13,25 +13,25 @@ void normalizeRotation(int *rotation)
         *rotation += 360;
 }
 
-BOOL validRotation(int rotation)
+bool validRotation(int rotation)
 {
     normalizeRotation(&rotation);
     if ((0 == rotation) || (90 == rotation) ||
         (180 == rotation) || (270 == rotation))
-        return TRUE;
-    return FALSE;
+        return true;
+    return false;
 }
 
-BOOL ValidZoomVirtual(float zoomVirtual)
+bool ValidZoomVirtual(float zoomVirtual)
 {
     if ((ZOOM_FIT_PAGE == zoomVirtual) || (ZOOM_FIT_WIDTH == zoomVirtual) ||
         (ZOOM_FIT_CONTENT == zoomVirtual) || (ZOOM_ACTUAL_SIZE == zoomVirtual))
-        return TRUE;
+        return true;
     if ((zoomVirtual < ZOOM_MIN) || (zoomVirtual > ZOOM_MAX)) {
         DBG_OUT("ValidZoomVirtual() invalid zoom: %.4f\n", zoomVirtual);
-        return FALSE;
+        return false;
     }
-    return TRUE;
+    return true;
 }
 
 #define STR_FROM_ENUM(val) \

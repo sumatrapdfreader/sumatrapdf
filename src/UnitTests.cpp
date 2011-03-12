@@ -16,7 +16,7 @@ static void hexstrTest()
     unsigned char buf2[6] = {0};
     char *s = _mem_to_hexstr(&buf);
     assert(str_eq(s, "010221ff0012"));
-    BOOL ok = _hexstr_to_mem(s, &buf2);
+    bool ok = _hexstr_to_mem(s, &buf2);
     assert(ok);
     assert(memcmp(buf, buf2, sizeof(buf)) == 0);
     free(s);

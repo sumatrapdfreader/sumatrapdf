@@ -100,9 +100,9 @@ static int FilePath_Compare(const TCHAR *lhs, const TCHAR *rhs)
 
 // Code adapted from http://stackoverflow.com/questions/562701/best-way-to-determine-if-two-path-reference-to-same-file-in-c-c/562830#562830
 // Determine if 2 paths point ot the same file...
-BOOL FilePath_IsSameFile(const TCHAR *path1, const TCHAR *path2)
+bool FilePath_IsSameFile(const TCHAR *path1, const TCHAR *path2)
 {
-    BOOL isSame = FALSE, needFallback = TRUE;
+    bool isSame = false, needFallback = true;
     HANDLE handle1 = CreateFile(path1, 0, 0, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
     HANDLE handle2 = CreateFile(path2, 0, 0, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
 
@@ -124,17 +124,17 @@ BOOL FilePath_IsSameFile(const TCHAR *path1, const TCHAR *path2)
     return isSame;
 }
 
-BOOL file_exists(const TCHAR *file_path)
+bool file_exists(const TCHAR *file_path)
 {
     struct _stat buf;
     int          res;
 
     res = _tstat(file_path, &buf);
     if (0 != res)
-        return FALSE;
+        return false;
     if ((buf.st_mode & _S_IFDIR))
-        return FALSE;
-    return TRUE;
+        return false;
+    return true;
 }
 
 size_t file_size_get(const TCHAR *file_path)
@@ -144,7 +144,7 @@ size_t file_size_get(const TCHAR *file_path)
     if (NULL == file_path)
         return INVALID_FILE_SIZE;
 
-    BOOL ok = GetFileAttributesEx(file_path, GetFileExInfoStandard, &fileInfo);
+    bool ok = GetFileAttributesEx(file_path, GetFileExInfoStandard, &fileInfo);
     if (!ok)
         return INVALID_FILE_SIZE;
 
@@ -161,17 +161,14 @@ size_t file_size_get(const TCHAR *file_path)
 
 char *file_read_all(const TCHAR *file_path, size_t *file_size_out)
 {
-    DWORD       size, size_read;
-    HANDLE      h;
-    char *      data = NULL;
-    BOOL        f_ok;
+    char *data = NULL;
 
-    h = CreateFile(file_path, GENERIC_READ, FILE_SHARE_READ, NULL,  
+    HANDLE h = CreateFile(file_path, GENERIC_READ, FILE_SHARE_READ, NULL,  
             OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL,  NULL); 
     if (h == INVALID_HANDLE_VALUE)
         return NULL;
 
-    size = GetFileSize(h, NULL);
+    DWORD size = GetFileSize(h, NULL);
     if (INVALID_FILE_SIZE == size)
         goto Exit;
 
@@ -183,8 +180,9 @@ char *file_read_all(const TCHAR *file_path, size_t *file_size_out)
         goto Exit;
     data[size] = 0;
 
-    f_ok = ReadFile(h, data, size, &size_read, NULL);
-    if (!f_ok) {
+    DWORD size_read;
+    bool f_ok = ReadFile(h, data, size, &size_read, NULL);
+    if (!f_ok || size_read != size) {
         free(data);
         data = NULL;
     }
@@ -195,7 +193,7 @@ Exit:
     return data;
 }
 
-BOOL write_to_file(const TCHAR *file_path, void *data, size_t data_len)
+bool write_to_file(const TCHAR *file_path, void *data, size_t data_len)
 {
     HANDLE h = CreateFile(file_path, GENERIC_WRITE, FILE_SHARE_READ, NULL,  
                           CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL,  NULL); 
@@ -203,7 +201,7 @@ BOOL write_to_file(const TCHAR *file_path, void *data, size_t data_len)
         return FALSE;
 
     DWORD size;
-    BOOL f_ok = WriteFile(h, data, (DWORD)data_len, &size, NULL);
+    bool f_ok = WriteFile(h, data, (DWORD)data_len, &size, NULL);
     assert(!f_ok || (data_len == size));
     CloseHandle(h);
 

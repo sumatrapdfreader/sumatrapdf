@@ -185,18 +185,18 @@ int     screen_get_dx(void);
 int     screen_get_dy(void);
 int     screen_get_menu_dy(void);
 int     screen_get_caption_dy(void);
-void    rect_shift_to_work_area(RECT *rect, BOOL bFully);
+void    rect_shift_to_work_area(RECT *rect, bool bFully);
 
 void    launch_url(const TCHAR *url);
-void    exec_with_params(const TCHAR *exe, const TCHAR *params, BOOL hidden);
+void    exec_with_params(const TCHAR *exe, const TCHAR *params, bool hidden);
 
-TCHAR * get_app_data_folder_path(BOOL f_create);
+TCHAR * get_app_data_folder_path(bool f_create);
 
 void    paint_round_rect_around_hwnd(HDC hdc, HWND hwnd_edit_parent, HWND hwnd_edit, COLORREF col);
 void    paint_rect(HDC hdc, RECT * rect);
 void    draw_centered_text(HDC hdc, RECT *r, const TCHAR *txt);
 
-BOOL    IsCursorOverWindow(HWND hwnd);
+bool    IsCursorOverWindow(HWND hwnd);
 void    CenterDialog(HWND hDlg);
 
 

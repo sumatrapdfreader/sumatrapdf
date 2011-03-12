@@ -76,7 +76,7 @@ private:
 
 public:
     /* point these to the actual preferences for live updates */
-    BOOL              * invertColors;
+    bool              * invertColors;
     bool              * useGdiRenderer;
 
     RenderCache(void);
@@ -86,7 +86,7 @@ public:
     void                CancelRendering(DisplayModel *dm);
     bool                FreeForDisplayModel(DisplayModel *dm);
     void                KeepForDisplayModel(DisplayModel *oldDm, DisplayModel *newDm);
-    UINT                Paint(HDC hdc, RECT *bounds, DisplayModel *dm, int pageNo,
+    UINT                Paint(HDC hdc, RectI *bounds, DisplayModel *dm, int pageNo,
                               PdfPageInfo *pageInfo, bool *renderOutOfDateCue);
 
 public:
@@ -121,7 +121,7 @@ private:
     UINT                PaintTile(HDC hdc, RectI *bounds, DisplayModel *dm, int pageNo,
                                   TilePosition tile, RectI *tileOnScreen, bool renderMissing,
                                   bool *renderOutOfDateCue, bool *renderedReplacement);
-    UINT                PaintTiles(HDC hdc, RECT *bounds, DisplayModel *dm, int pageNo,
+    UINT                PaintTiles(HDC hdc, RectI *bounds, DisplayModel *dm, int pageNo,
                                    RectI *pageOnScreen, USHORT tileRes, bool renderMissing,
                                    bool *renderOutOfDateCue, bool *renderedReplacement);
 };

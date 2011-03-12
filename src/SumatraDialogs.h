@@ -14,14 +14,14 @@ class WindowInfo;
 int     Dialog_GoToPage(WindowInfo *win);
 TCHAR * Dialog_Find(HWND hwnd, const TCHAR *previousSearch, bool *matchCase);
 TCHAR * Dialog_GetPassword(HWND hwnd, const TCHAR *fileName, bool *rememberPassword);
-INT_PTR Dialog_PdfAssociate(HWND hwnd, BOOL *dontAskAgainOut);
+INT_PTR Dialog_PdfAssociate(HWND hwnd, bool *dontAskAgainOut);
 int     Dialog_ChangeLanguge(HWND hwnd, int currLangId);
 
 /* For passing data to/from 'new version available' dialog */
 typedef struct {
     const TCHAR *currVersion;
     const TCHAR *newVersion;
-    BOOL skipThisVersion;
+    bool skipThisVersion;
 } Dialog_NewVersion_Data;
 
 INT_PTR Dialog_NewVersionAvailable(HWND hwnd, Dialog_NewVersion_Data *data);

@@ -5,6 +5,7 @@
 #define DisplayState_h
 
 #include "BaseUtil.h"
+#include "GeomUtil.h"
 
 enum DisplayMode {
     DM_FIRST = 0,
@@ -78,11 +79,9 @@ enum DisplayMode {
 class DisplayState {
 public:
     DisplayState() :
-        filePath(NULL), decryptionKey(NULL), useGlobalValues(FALSE),
-        displayMode(DM_AUTOMATIC), scrollX(0), scrollY(0), pageNo(1),
-        zoomVirtual(100.0), rotation(0), windowState(0), windowX(0),
-        windowY(0), windowDx(0), windowDy(0), showToc(TRUE), tocDx(0),
-        tocState(NULL) { }
+        filePath(NULL), decryptionKey(NULL), useGlobalValues(false),
+        displayMode(DM_AUTOMATIC), pageNo(1), zoomVirtual(100.0),
+        rotation(0), windowState(0), showToc(true), tocDx(0), tocState(NULL) { }
 
     ~DisplayState() {
         free((void *)filePath);
@@ -92,27 +91,23 @@ public:
 
     TCHAR *             filePath;
     char *              decryptionKey; // hex encoded MD5 fingerprint of file content (32 chars) followed by crypt key (64 chars)
-    BOOL                useGlobalValues;
+    bool                useGlobalValues;
 
     enum DisplayMode    displayMode;
-    int                 scrollX;
-    int                 scrollY;
+    PointI              scrollPos;
     int                 pageNo;
     float               zoomVirtual;
     int                 rotation;
     int                 windowState;
-    int                 windowX;
-    int                 windowY;
-    int                 windowDx;
-    int                 windowDy;
-    BOOL                showToc;
+    RectI               windowPos;
+    bool                showToc;
     int                 tocDx;
     int *               tocState;
 };
 
 void    normalizeRotation(int *rotation);
-BOOL    validRotation(int rotation);
-BOOL    ValidZoomVirtual(float zoomVirtual);
+bool    validRotation(int rotation);
+bool    ValidZoomVirtual(float zoomVirtual);
 
 const char *      DisplayModeNameFromEnum(DisplayMode var);
 bool              DisplayModeEnumFromName(const char *txt, DisplayMode *resOut);

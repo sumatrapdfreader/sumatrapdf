@@ -49,7 +49,7 @@ static void EnumeratePrinters()
 {
     PRINTER_INFO_5 *info5Arr = NULL;
     DWORD bufSize = 0, printersCount;
-    BOOL fOk = EnumPrinters(PRINTER_ENUM_LOCAL | PRINTER_ENUM_CONNECTIONS, NULL, 
+    bool fOk = EnumPrinters(PRINTER_ENUM_LOCAL | PRINTER_ENUM_CONNECTIONS, NULL, 
         5, (LPBYTE)info5Arr, bufSize, &bufSize, &printersCount);
     if (!fOk) {
         info5Arr = (PRINTER_INFO_5 *)malloc(bufSize);

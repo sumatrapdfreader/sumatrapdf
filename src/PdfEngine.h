@@ -119,7 +119,7 @@ public:
     RenderedBitmap *renderBitmap(int pageNo, float zoom, int rotation,
                          fz_rect *pageRect=NULL, /* if NULL: defaults to the page's mediabox */
                          RenderTarget target=Target_View, bool useGdi=false);
-    bool PdfEngine::renderPage(HDC hDC, int pageNo, RECT *screenRect,
+    bool PdfEngine::renderPage(HDC hDC, int pageNo, RectI *screenRect,
                          fz_matrix *ctm=NULL, float zoom=0, int rotation=0,
                          fz_rect *pageRect=NULL, RenderTarget target=Target_View) {
         return renderPage(hDC, getPdfPage(pageNo), screenRect, ctm, zoom, rotation, pageRect, target);
@@ -168,7 +168,7 @@ protected:
     bool            finishLoading(void);
     pdf_page      * getPdfPage(int pageNo, bool failIfBusy=false);
     fz_matrix       viewctm(pdf_page *page, float zoom, int rotate);
-    bool            renderPage(HDC hDC, pdf_page *page, RECT *screenRect,
+    bool            renderPage(HDC hDC, pdf_page *page, RectI *screenRect,
                                fz_matrix *ctm=NULL, float zoom=0, int rotation=0,
                                fz_rect *pageRect=NULL, RenderTarget target=Target_View);
     TCHAR         * ExtractPageText(pdf_page *page, TCHAR *lineSep=DOS_NEWLINE,

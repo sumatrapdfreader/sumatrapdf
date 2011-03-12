@@ -234,11 +234,10 @@ WCHAR *multibyte_to_wstr(const char *src, UINT CodePage)
 void win32_dbg_outW(const WCHAR *format, ...)
 {
     WCHAR   buf[4096];
-    WCHAR * p = buf;
     va_list args;
 
     va_start(args, format);
-    _vsnwprintf(p, dimof(buf), format, args);
+    _vsnwprintf(buf, dimof(buf), format, args);
     OutputDebugStringW(buf);
     va_end(args);
 }

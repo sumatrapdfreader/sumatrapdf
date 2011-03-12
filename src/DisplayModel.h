@@ -108,7 +108,7 @@ public:
         if (!pdfEngine) return NULL;
         return pdfEngine->renderBitmap(pageNo, zoom, rotation, pageRect, target, useGdi);
     }
-    bool renderPage(HDC hDC, int pageNo, RECT *screenRect, float zoom=0, int rotation=0, fz_rect *pageRect=NULL, RenderTarget target=Target_View) {
+    bool renderPage(HDC hDC, int pageNo, RectI *screenRect, float zoom=0, int rotation=0, fz_rect *pageRect=NULL, RenderTarget target=Target_View) {
         if (!pdfEngine) return false;
         return pdfEngine->renderPage(hDC, pageNo, screenRect, NULL, zoom, rotation, pageRect, target);
     }
@@ -211,11 +211,11 @@ public:
     PdfSel *        Find(PdfSearchDirection direction=FIND_FORWARD, TCHAR *text=NULL, UINT fromPage=0);
     // note: lastFoundPage might not be a valid page number!
     int             lastFoundPage(void) const { return _pdfSearch->findPage; }
-    BOOL            bFoundText;
+    bool            bFoundText;
 
     int             getPageNoByPoint(int x, int y);
 
-    BOOL            ShowResultRectToScreen(PdfSel *res);
+    bool            ShowResultRectToScreen(PdfSel *res);
 
     bool            getScrollState(ScrollState *state);
     void            setScrollState(ScrollState *state);

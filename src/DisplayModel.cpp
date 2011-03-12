@@ -117,8 +117,10 @@ bool DisplayModel::displayStateFromModel(DisplayState *ds)
     ScrollState ss;
     getScrollState(&ss);
     ds->pageNo = ss.page;
-    ds->scrollX = presMode ? 0 : (int)floor(ss.x + 0.5);
-    ds->scrollY = presMode ? 0 : (int)floor(ss.y + 0.5);
+    if (presMode)
+        ds->scrollPos = PointI();
+    else
+        ds->scrollPos = PointD(ss.x, ss.y).Convert<int>();
 
     free(ds->decryptionKey);
     ds->decryptionKey = pdfEngine->getDecryptionKey();
@@ -130,28 +132,23 @@ bool DisplayModel::displayStateFromModel(DisplayState *ds)
    pageDx, pageDy and rotation, return a page size after applying a global
    rotation */
 static void pageSizeAfterRotation(PdfPageInfo *pageInfo, int rotation,
-    double *pageDxOut, double *pageDyOut, bool fitToContent=false)
+    SizeD *pageSize, bool fitToContent=false)
 {
-    assert(pageInfo && pageDxOut && pageDyOut);
-    if (!pageInfo || !pageDxOut || !pageDyOut)
+    assert(pageInfo && pageSize);
+    if (!pageInfo || !pageSize)
         return;
 
     if (fitToContent) {
         if (fz_isemptybbox(pageInfo->contentBox))
-            return pageSizeAfterRotation(pageInfo, rotation, pageDxOut, pageDyOut);
-        *pageDxOut = pageInfo->contentBox.x1 - pageInfo->contentBox.x0;
-        *pageDyOut = pageInfo->contentBox.y1 - pageInfo->contentBox.y0;
-    } else {
-        *pageDxOut = pageInfo->page.dx;
-        *pageDyOut = pageInfo->page.dy;
-    }
+            return pageSizeAfterRotation(pageInfo, rotation, pageSize);
+        pageSize->dx = pageInfo->contentBox.x1 - pageInfo->contentBox.x0;
+        pageSize->dy = pageInfo->contentBox.y1 - pageInfo->contentBox.y0;
+    } else
+        *pageSize = pageInfo->page;
 
     rotation += pageInfo->rotation;
-    if (rotationFlipped(rotation)) {
-        double tmp = *pageDyOut;
-        *pageDyOut = *pageDxOut;
-        *pageDxOut = tmp;
-    }
+    if (rotationFlipped(rotation))
+        swap(pageSize->dx, pageSize->dy);
 }
 
 int limitValue(int val, int min, int max)
@@ -367,7 +364,7 @@ float DisplayModel::zoomRealFromVirtualForPage(float zoomVirtual, int pageNo)
     if (zoomVirtual != ZOOM_FIT_WIDTH && zoomVirtual != ZOOM_FIT_PAGE && zoomVirtual != ZOOM_FIT_CONTENT)
         return zoomVirtual * 0.01f * this->_dpiFactor;
 
-    double rowDx, rowDy;
+    SizeD row;
     PdfPageInfo *pageInfo = getPageInfo(pageNo);
     int columns = columnsFromDisplayMode(displayMode());
 
@@ -375,50 +372,49 @@ float DisplayModel::zoomRealFromVirtualForPage(float zoomVirtual, int pageNo)
     if (fitToContent && columns > 1) {
         // Fit the content of all the pages in the same row into the visible area
         // (i.e. don't crop inner margins but just the left-most, right-most, etc.)
-        rowDx = rowDy = 0;
         int first = FirstPageInARowNo(pageNo, columns, displayModeShowCover(displayMode()));
         int last = LastPageInARowNo(pageNo, columns, displayModeShowCover(displayMode()), pageCount());
         for (int i = first; i <= last; i++) {
-            double pageDx, pageDy;
+            SizeD pageSize;
             pageInfo = getPageInfo(i);
             if (fz_isemptybbox(pageInfo->contentBox))
                 pageInfo->contentBox = pdfEngine->pageContentBox(i);
-            pageSizeAfterRotation(pageInfo, _rotation, &pageDx, &pageDy);
-            rowDx += pageDx;
+            pageSizeAfterRotation(pageInfo, _rotation, &pageSize);
+            row.dx += pageSize.dx;
             if (i == first && !fz_isemptybbox(pageInfo->contentBox)) {
                 if (rotationFlipped(pageInfo->rotation + _rotation))
-                    rowDx -= pageInfo->contentBox.y0 - pdfEngine->pageMediabox(first).y0;
+                    row.dx -= pageInfo->contentBox.y0 - pdfEngine->pageMediabox(first).y0;
                 else
-                    rowDx -= pageInfo->contentBox.x0 - pdfEngine->pageMediabox(first).x0;
+                    row.dx -= pageInfo->contentBox.x0 - pdfEngine->pageMediabox(first).x0;
             }
             if (i == last && !fz_isemptybbox(pageInfo->contentBox)) {
                 if (rotationFlipped(pageInfo->rotation + _rotation))
-                    rowDx -= pdfEngine->pageMediabox(last).y1 - pageInfo->contentBox.y1;
+                    row.dx -= pdfEngine->pageMediabox(last).y1 - pageInfo->contentBox.y1;
                 else
-                    rowDx -= pdfEngine->pageMediabox(last).x1 - pageInfo->contentBox.x1;
+                    row.dx -= pdfEngine->pageMediabox(last).x1 - pageInfo->contentBox.x1;
             }
-            pageSizeAfterRotation(pageInfo, _rotation, &pageDx, &pageDy, true);
-            if (rowDy < pageDy)
-                rowDy = pageDy;
+            pageSizeAfterRotation(pageInfo, _rotation, &pageSize, true);
+            if (row.dy < pageSize.dy)
+                row.dy = pageSize.dy;
         }
     }
     else {
         if (fitToContent && fz_isemptybbox(pageInfo->contentBox))
             pageInfo->contentBox = pdfEngine->pageContentBox(pageNo);
-        pageSizeAfterRotation(pageInfo, _rotation, &rowDx, &rowDy, fitToContent);
-        rowDx *= columns;
+        pageSizeAfterRotation(pageInfo, _rotation, &row, fitToContent);
+        row.dx *= columns;
     }
 
-    assert(0 != (int)rowDx);
-    assert(0 != (int)rowDy);
+    assert(0 != (int)row.dx);
+    assert(0 != (int)row.dy);
 
     int areaForPagesDx = drawAreaSize.dx - _padding->pageBorderLeft - _padding->pageBorderRight - _padding->betweenPagesX * (columns - 1);
     int areaForPagesDy = drawAreaSize.dy - _padding->pageBorderTop - _padding->pageBorderBottom;
     if (areaForPagesDx <= 0 || areaForPagesDy <= 0)
         return 0;
 
-    float zoomX = areaForPagesDx / (float)rowDx;
-    float zoomY = areaForPagesDy / (float)rowDy;
+    float zoomX = areaForPagesDx / (float)row.dx;
+    float zoomY = areaForPagesDy / (float)row.dy;
     if (zoomX < zoomY || ZOOM_FIT_WIDTH == zoomVirtual)
         return zoomX;
     return zoomY;
@@ -525,7 +521,7 @@ void DisplayModel::relayout(float zoomVirtual, int rotation)
 {
     int         pageNo;
     PdfPageInfo*pageInfo = NULL;
-    double      pageDx=0, pageDy=0;
+    SizeD       pageSize;
     int         totalAreaDx, totalAreaDy;
     int         rowMaxPageDy;
     int         offX;
@@ -568,9 +564,9 @@ void DisplayModel::relayout(float zoomVirtual, int rotation)
             assert(!pageInfo->visible);
             continue;
         }
-        pageSizeAfterRotation(pageInfo, rotation, &pageDx, &pageDy);
-        pageInfo->currPos.dx = (int)(pageDx * _zoomReal + 0.5);
-        pageInfo->currPos.dy = (int)(pageDy * _zoomReal + 0.5);
+        pageSizeAfterRotation(pageInfo, rotation, &pageSize);
+        pageInfo->currPos.dx = (int)(pageSize.dx * _zoomReal + 0.5);
+        pageInfo->currPos.dy = (int)(pageSize.dy * _zoomReal + 0.5);
 
         if (rowMaxPageDy < pageInfo->currPos.dy)
             rowMaxPageDy = pageInfo->currPos.dy;
@@ -592,7 +588,7 @@ void DisplayModel::relayout(float zoomVirtual, int rotation)
 /*        DBG_OUT("  page = %3d, (x=%3d, y=%5d, dx=%4d, dy=%4d) orig=(dx=%d,dy=%d)\n",
             pageNo, pageInfo->currPos.x, pageInfo->currPos.y,
                     pageInfo->currPos.dx, pageInfo->currPos.dy,
-                    (int)pageDx, (int)pageDy); */
+                    (int)pageSize.dx, (int)pageSize.dy); */
     }
 
     if (pageInARow != 0)
@@ -667,7 +663,7 @@ void DisplayModel::relayout(float zoomVirtual, int rotation)
             DBG_OUT("  page = %3d, (x=%3d, y=%5d, dx=%4d, dy=%4d) orig=(dx=%d,dy=%d)\n",
                 pageNo, pageInfo->currPos.x, pageInfo->currPos.y,
                         pageInfo->currPos.dx, pageInfo->currPos.dy,
-                        (int)pageDx, (int)pageDy);
+                        (int)pageSize.dx, (int)pageSize.dy);
         }
     }
 
@@ -1553,7 +1549,7 @@ TCHAR *DisplayModel::extractAllText(RenderTarget target)
 }
 
 // returns true if it was necessary to scroll the display (horizontally or vertically)
-BOOL DisplayModel::ShowResultRectToScreen(PdfSel *res)
+bool DisplayModel::ShowResultRectToScreen(PdfSel *res)
 {
     if (!res->len)
         return false;

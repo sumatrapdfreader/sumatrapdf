@@ -47,10 +47,10 @@ static BencDict* Prefs_SerializeGlobal(SerializableGlobalPrefs *globalPrefs)
         free((void*)txt);
     }
     prefs->Add(WINDOW_STATE_STR, globalPrefs->m_windowState);
-    prefs->Add(WINDOW_X_STR, globalPrefs->m_windowPosX);
-    prefs->Add(WINDOW_Y_STR, globalPrefs->m_windowPosY);
-    prefs->Add(WINDOW_DX_STR, globalPrefs->m_windowDx);
-    prefs->Add(WINDOW_DY_STR, globalPrefs->m_windowDy);
+    prefs->Add(WINDOW_X_STR, globalPrefs->m_windowPos.x);
+    prefs->Add(WINDOW_Y_STR, globalPrefs->m_windowPos.y);
+    prefs->Add(WINDOW_DX_STR, globalPrefs->m_windowPos.dx);
+    prefs->Add(WINDOW_DY_STR, globalPrefs->m_windowPos.dy);
 
     if (globalPrefs->m_inverseSearchCmdLine)
         prefs->Add(INVERSE_SEARCH_COMMANDLINE, globalPrefs->m_inverseSearchCmdLine);
@@ -88,13 +88,13 @@ static BencDict *DisplayState_Serialize(DisplayState *ds, bool globalPrefsOnly)
         prefs->Add(DISPLAY_MODE_STR, txt);
     prefs->Add(PAGE_NO_STR, ds->pageNo);
     prefs->Add(ROTATION_STR, ds->rotation);
-    prefs->Add(SCROLL_X_STR, ds->scrollX);
-    prefs->Add(SCROLL_Y_STR, ds->scrollY);
+    prefs->Add(SCROLL_X_STR, ds->scrollPos.x);
+    prefs->Add(SCROLL_Y_STR, ds->scrollPos.y);
     prefs->Add(WINDOW_STATE_STR, ds->windowState);
-    prefs->Add(WINDOW_X_STR, ds->windowX);
-    prefs->Add(WINDOW_Y_STR, ds->windowY);
-    prefs->Add(WINDOW_DX_STR, ds->windowDx);
-    prefs->Add(WINDOW_DY_STR, ds->windowDy);
+    prefs->Add(WINDOW_X_STR, ds->windowPos.x);
+    prefs->Add(WINDOW_Y_STR, ds->windowPos.y);
+    prefs->Add(WINDOW_DX_STR, ds->windowPos.dx);
+    prefs->Add(WINDOW_DY_STR, ds->windowPos.dy);
 
     prefs->Add(SHOW_TOC_STR, ds->showToc);
     prefs->Add(TOC_DX_STR, ds->tocDx);
@@ -176,6 +176,13 @@ static void dict_get_int(BencDict *dict, const char *key, int& value)
         value = (int)intObj->Value();
 }
 
+static void dict_get_bool(BencDict *dict, const char *key, bool& value)
+{
+    BencInt *intObj = dict->GetInt(key);
+    if (intObj)
+        value = intObj->Value() != 0;
+}
+
 static char *dict_get_str(BencDict *dict, const char *key)
 {
     BencString *string = dict->GetString(key);
@@ -231,19 +238,19 @@ static DisplayState * DisplayState_Deserialize(BencDict *dict, bool globalPrefsO
         DisplayModeEnumFromName(txt, &ds->displayMode);
     dict_get_int(dict, PAGE_NO_STR, ds->pageNo);
     dict_get_int(dict, ROTATION_STR, ds->rotation);
-    dict_get_int(dict, SCROLL_X_STR, ds->scrollX);
-    dict_get_int(dict, SCROLL_Y_STR, ds->scrollY);
+    dict_get_int(dict, SCROLL_X_STR, ds->scrollPos.x);
+    dict_get_int(dict, SCROLL_Y_STR, ds->scrollPos.y);
     dict_get_int(dict, WINDOW_STATE_STR, ds->windowState);
-    dict_get_int(dict, WINDOW_X_STR, ds->windowX);
-    dict_get_int(dict, WINDOW_Y_STR, ds->windowY);
-    dict_get_int(dict, WINDOW_DX_STR, ds->windowDx);
-    dict_get_int(dict, WINDOW_DY_STR, ds->windowDy);
-    dict_get_int(dict, SHOW_TOC_STR, ds->showToc);
+    dict_get_int(dict, WINDOW_X_STR, ds->windowPos.x);
+    dict_get_int(dict, WINDOW_Y_STR, ds->windowPos.y);
+    dict_get_int(dict, WINDOW_DX_STR, ds->windowPos.dx);
+    dict_get_int(dict, WINDOW_DY_STR, ds->windowPos.dy);
+    dict_get_bool(dict, SHOW_TOC_STR, ds->showToc);
     dict_get_int(dict, TOC_DX_STR, ds->tocDx);
     txt = dict_get_str(dict, ZOOM_VIRTUAL_STR);
     if (txt)
         ds->zoomVirtual = (float)atof(txt);
-    dict_get_int(dict, USE_GLOBAL_VALUES_STR, ds->useGlobalValues);
+    dict_get_bool(dict, USE_GLOBAL_VALUES_STR, ds->useGlobalValues);
 
     BencArray *tocState = dict->GetArray(TOC_STATE_STR);
     if (tocState) {
@@ -272,16 +279,16 @@ static bool Prefs_Deserialize(const char *prefsTxt, SerializableGlobalPrefs *glo
     if (!global)
         goto Error;
 
-    dict_get_int(global, SHOW_TOOLBAR_STR, globalPrefs->m_showToolbar);
-    dict_get_int(global, SHOW_TOC_STR, globalPrefs->m_showToc);
+    dict_get_bool(global, SHOW_TOOLBAR_STR, globalPrefs->m_showToolbar);
+    dict_get_bool(global, SHOW_TOC_STR, globalPrefs->m_showToc);
     dict_get_int(global, TOC_DX_STR, globalPrefs->m_tocDx);
-    dict_get_int(global, PDF_ASSOCIATE_DONT_ASK_STR, globalPrefs->m_pdfAssociateDontAskAgain);
-    dict_get_int(global, PDF_ASSOCIATE_ASSOCIATE_STR, globalPrefs->m_pdfAssociateShouldAssociate);
-    dict_get_int(global, ESC_TO_EXIT_STR, globalPrefs->m_escToExit);
+    dict_get_bool(global, PDF_ASSOCIATE_DONT_ASK_STR, globalPrefs->m_pdfAssociateDontAskAgain);
+    dict_get_bool(global, PDF_ASSOCIATE_ASSOCIATE_STR, globalPrefs->m_pdfAssociateShouldAssociate);
+    dict_get_bool(global, ESC_TO_EXIT_STR, globalPrefs->m_escToExit);
     dict_get_int(global, BG_COLOR_STR, globalPrefs->m_bgColor);
-    dict_get_int(global, ENABLE_AUTO_UPDATE_STR, globalPrefs->m_enableAutoUpdate);
-    dict_get_int(global, REMEMBER_OPENED_FILES_STR, globalPrefs->m_rememberOpenedFiles);
-    dict_get_int(global, GLOBAL_PREFS_ONLY_STR, globalPrefs->m_globalPrefsOnly);
+    dict_get_bool(global, ENABLE_AUTO_UPDATE_STR, globalPrefs->m_enableAutoUpdate);
+    dict_get_bool(global, REMEMBER_OPENED_FILES_STR, globalPrefs->m_rememberOpenedFiles);
+    dict_get_bool(global, GLOBAL_PREFS_ONLY_STR, globalPrefs->m_globalPrefsOnly);
 
     const char* txt = dict_get_str(global, DISPLAY_MODE_STR);
     if (txt)
@@ -291,13 +298,13 @@ static bool Prefs_Deserialize(const char *prefsTxt, SerializableGlobalPrefs *glo
         globalPrefs->m_defaultZoom = (float)atof(txt);
     dict_get_int(global, WINDOW_STATE_STR, globalPrefs->m_windowState);
 
-    dict_get_int(global, WINDOW_X_STR, globalPrefs->m_windowPosX);
-    dict_get_int(global, WINDOW_Y_STR, globalPrefs->m_windowPosY);
-    dict_get_int(global, WINDOW_DX_STR, globalPrefs->m_windowDx);
-    dict_get_int(global, WINDOW_DY_STR, globalPrefs->m_windowDy);
+    dict_get_int(global, WINDOW_X_STR, globalPrefs->m_windowPos.x);
+    dict_get_int(global, WINDOW_Y_STR, globalPrefs->m_windowPos.y);
+    dict_get_int(global, WINDOW_DX_STR, globalPrefs->m_windowPos.dx);
+    dict_get_int(global, WINDOW_DY_STR, globalPrefs->m_windowPos.dy);
 
     dict_get_tstr(global, INVERSE_SEARCH_COMMANDLINE, globalPrefs->m_inverseSearchCmdLine);
-    dict_get_int(global, ENABLE_TEX_ENHANCEMENTS_STR, globalPrefs->m_enableTeXEnhancements);
+    dict_get_bool(global, ENABLE_TEX_ENHANCEMENTS_STR, globalPrefs->m_enableTeXEnhancements);
     dict_get_tstr(global, VERSION_TO_SKIP_STR, globalPrefs->m_versionToSkip);
     dict_get_str(global, LAST_UPDATE_STR, globalPrefs->m_lastUpdateTime);
 
@@ -307,7 +314,7 @@ static bool Prefs_Deserialize(const char *prefsTxt, SerializableGlobalPrefs *glo
     dict_get_int(global, FWDSEARCH_OFFSET, globalPrefs->m_fwdsearchOffset);
     dict_get_int(global, FWDSEARCH_COLOR, globalPrefs->m_fwdsearchColor);
     dict_get_int(global, FWDSEARCH_WIDTH, globalPrefs->m_fwdsearchWidth);
-    dict_get_int(global, FWDSEARCH_PERMANENT, globalPrefs->m_fwdsearchPermanent);
+    dict_get_bool(global, FWDSEARCH_PERMANENT, globalPrefs->m_fwdsearchPermanent);
 
     BencArray *fileHistory = prefs->GetArray(FILE_HISTORY_STR);
     if (!fileHistory)

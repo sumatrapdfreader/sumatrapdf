@@ -25,14 +25,14 @@ public:
     int         fwdsearchOffset;
     int         fwdsearchWidth;
     int         fwdsearchColor;
-    BOOL        fwdsearchPermanent;
-    BOOL        escToExit;
+    bool        fwdsearchPermanent;
+    bool        escToExit;
     bool        reuseInstance;
     char *      lang;
     TCHAR *     destName;
     int         pageNumber;
     bool        restrictedUse;
-    BOOL        invertColors;
+    bool        invertColors;
     bool        enterPresentation;
     bool        enterFullscreen;
     DisplayMode startView;
