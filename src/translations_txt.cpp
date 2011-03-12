@@ -2766,7 +2766,7 @@ const char *g_transTranslations[] = {
   "Linksom draaien\tCtrl-Shift--",
   "Rechtsom draaien\tCtrl-Shift-+",
   "Zoek %d van %d...",
-  NULL,
+  "Selecteer &Alles\tCtrl-A",
   "Selecteer inhoud met Ctrl+linker muisknop",
   "Verzend per &e-mail...",
   "Omgekeerde zoekrichting instellen",

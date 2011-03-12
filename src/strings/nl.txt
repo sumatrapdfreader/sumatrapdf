@@ -437,6 +437,9 @@ Rechtsom draaien\tCtrl-Shift-+
 Searching %d of %d...
 Zoek %d van %d...
 
+Select &All\tCtrl-A
+Selecteer &Alles\tCtrl-A
+
 Select content with Ctrl+left mouse button
 Selecteer inhoud met Ctrl+linker muisknop
 
@@ -526,7 +529,4 @@ tekst kopieren
 
 printing document
 bestand afdrukken
-
-# Untranslated:
-#Select &All\tCtrl-A
 
