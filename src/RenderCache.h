@@ -111,6 +111,8 @@ private:
     void                ClearQueueForDisplayModel(DisplayModel *dm, int pageNo=INVALID_PAGE_NO,
                                                   TilePosition *tile=NULL);
 
+    static DWORD WINAPI RenderCacheThread(LPVOID data);
+
     BitmapCacheEntry *  Find(DisplayModel *dm, int pageNo, int rotation,
                              float zoom=INVALID_ZOOM, TilePosition *tile=NULL);
     void                DropCacheEntry(BitmapCacheEntry *entry);

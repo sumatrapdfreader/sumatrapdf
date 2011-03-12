@@ -22,13 +22,15 @@ const TCHAR *FilePath_GetBaseName(const TCHAR *path)
 
 TCHAR *FilePath_GetDir(const TCHAR *path)
 {
-    TCHAR *baseName;
-    TCHAR *dir = StrCopy(path);
-    if (!dir) return NULL;
-    baseName = (TCHAR *)FilePath_GetBaseName(dir);
-    if (baseName > dir)
-        baseName[-1] = '\0';
-    return dir;
+    const TCHAR *baseName = FilePath_GetBaseName(path);
+    int dirLen;
+    if (baseName <= path + 1)
+        dirLen = StrLen(path);
+    else if (baseName[-2] == ':')
+        dirLen = baseName - path;
+    else
+        dirLen = baseName - path - 1;
+    return tstr_dupn(path, dirLen);
 }
 
 TCHAR *FilePath_Join(const TCHAR *path, const TCHAR *filename)

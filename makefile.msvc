@@ -193,9 +193,9 @@ $(O)\AppTools.obj: baseutils\BaseUtil.h baseutils\FileUtil.h baseutils\GeomUtil.
 $(O)\AppTools.obj: baseutils\StrUtil.h baseutils\TStrUtil.h baseutils\Vec.h
 $(O)\AppTools.obj: baseutils\WinUtil.h baseutils\WStrUtil.h mupdf\fitz\fitz.h
 $(O)\AppTools.obj: mupdf\mupdf\mupdf.h src\AppTools.h src\DisplayState.h
-$(O)\AppTools.obj: src\FileWatch.h src\LangMenuDef.h src\PdfEngine.h
-$(O)\AppTools.obj: src\PdfSearch.h src\PdfSelection.h src\SumatraPDF.h
-$(O)\AppTools.obj: src\translations.h src\WindowInfo.h
+$(O)\AppTools.obj: src\LangMenuDef.h src\PdfEngine.h src\PdfSearch.h
+$(O)\AppTools.obj: src\PdfSelection.h src\SumatraPDF.h src\translations.h
+$(O)\AppTools.obj: src\WindowInfo.h
 $(O)\Benchmark.obj: baseutils\BaseUtil.h baseutils\FileUtil.h baseutils\GeomUtil.h
 $(O)\Benchmark.obj: baseutils\StrUtil.h baseutils\TStrUtil.h baseutils\Vec.h
 $(O)\Benchmark.obj: baseutils\vstrlist.h baseutils\WinUtil.h baseutils\WStrUtil.h
@@ -217,8 +217,8 @@ $(O)\DisplayModel.obj: baseutils\BaseUtil.h baseutils\FileUtil.h baseutils\GeomU
 $(O)\DisplayModel.obj: baseutils\StrUtil.h baseutils\TStrUtil.h baseutils\Vec.h
 $(O)\DisplayModel.obj: baseutils\WinUtil.h baseutils\WStrUtil.h mupdf\fitz\fitz.h
 $(O)\DisplayModel.obj: mupdf\mupdf\mupdf.h src\DisplayModel.h src\DisplayState.h
-$(O)\DisplayModel.obj: src\FileWatch.h src\PdfEngine.h src\PdfSearch.h
-$(O)\DisplayModel.obj: src\PdfSelection.h src\Resource.h src\WindowInfo.h
+$(O)\DisplayModel.obj: src\PdfEngine.h src\PdfSearch.h src\PdfSelection.h
+$(O)\DisplayModel.obj: src\Resource.h src\WindowInfo.h
 $(O)\DisplayState.obj: baseutils\BaseUtil.h baseutils\GeomUtil.h baseutils\StrUtil.h
 $(O)\DisplayState.obj: src\DisplayState.h
 $(O)\FileUtil.obj: baseutils\BaseUtil.h baseutils\FileUtil.h baseutils\StrUtil.h
@@ -239,9 +239,8 @@ $(O)\ParseCommandLine.obj: baseutils\BaseUtil.h baseutils\GeomUtil.h baseutils\S
 $(O)\ParseCommandLine.obj: baseutils\TStrUtil.h baseutils\Vec.h baseutils\vstrlist.h
 $(O)\ParseCommandLine.obj: baseutils\WinUtil.h baseutils\WStrUtil.h mupdf\fitz\fitz.h
 $(O)\ParseCommandLine.obj: mupdf\mupdf\mupdf.h src\Benchmark.h src\DisplayState.h
-$(O)\ParseCommandLine.obj: src\FileWatch.h src\ParseCommandLine.h src\PdfEngine.h
-$(O)\ParseCommandLine.obj: src\PdfSearch.h src\PdfSelection.h src\SumatraPDF.h
-$(O)\ParseCommandLine.obj: src\WindowInfo.h
+$(O)\ParseCommandLine.obj: src\ParseCommandLine.h src\PdfEngine.h src\PdfSearch.h
+$(O)\ParseCommandLine.obj: src\PdfSelection.h src\SumatraPDF.h src\WindowInfo.h
 $(O)\PdfEngine.obj: baseutils\BaseUtil.h baseutils\FileUtil.h baseutils\GeomUtil.h
 $(O)\PdfEngine.obj: baseutils\StrUtil.h baseutils\TStrUtil.h baseutils\WStrUtil.h
 $(O)\PdfEngine.obj: mupdf\fitz\fitz.h mupdf\mupdf\mupdf.h src\PdfEngine.h
@@ -258,9 +257,9 @@ $(O)\PdfSelection.obj: src\PdfEngine.h src\PdfSelection.h
 $(O)\PdfSync.obj: baseutils\BaseUtil.h baseutils\FileUtil.h baseutils\GeomUtil.h
 $(O)\PdfSync.obj: baseutils\StrUtil.h baseutils\TStrUtil.h baseutils\Vec.h
 $(O)\PdfSync.obj: baseutils\WStrUtil.h mupdf\fitz\fitz.h mupdf\mupdf\mupdf.h
-$(O)\PdfSync.obj: src\DisplayModel.h src\DisplayState.h src\FileWatch.h
-$(O)\PdfSync.obj: src\PdfEngine.h src\PdfSearch.h src\PdfSelection.h
-$(O)\PdfSync.obj: src\PdfSync.h src\Resource.h src\WindowInfo.h
+$(O)\PdfSync.obj: src\DisplayModel.h src\DisplayState.h src\PdfEngine.h
+$(O)\PdfSync.obj: src\PdfSearch.h src\PdfSelection.h src\PdfSync.h
+$(O)\PdfSync.obj: src\Resource.h src\WindowInfo.h
 $(O)\RenderCache.obj: baseutils\BaseUtil.h baseutils\GeomUtil.h baseutils\StrUtil.h
 $(O)\RenderCache.obj: baseutils\TStrUtil.h baseutils\WStrUtil.h mupdf\fitz\fitz.h
 $(O)\RenderCache.obj: mupdf\mupdf\mupdf.h src\DisplayModel.h src\DisplayState.h
@@ -271,17 +270,16 @@ $(O)\SumatraAbout.obj: baseutils\BaseUtil.h baseutils\GeomUtil.h baseutils\StrUt
 $(O)\SumatraAbout.obj: baseutils\TStrUtil.h baseutils\Vec.h baseutils\WinUtil.h
 $(O)\SumatraAbout.obj: baseutils\WStrUtil.h mupdf\fitz\fitz.h mupdf\mupdf\mupdf.h
 $(O)\SumatraAbout.obj: src\AppPrefs.h src\AppTools.h src\DisplayState.h
-$(O)\SumatraAbout.obj: src\FileWatch.h src\PdfEngine.h src\PdfSearch.h
-$(O)\SumatraAbout.obj: src\PdfSelection.h src\SumatraAbout.h src\SumatraPDF.h
-$(O)\SumatraAbout.obj: src\translations.h src\Version.h src\WindowInfo.h
+$(O)\SumatraAbout.obj: src\PdfEngine.h src\PdfSearch.h src\PdfSelection.h
+$(O)\SumatraAbout.obj: src\SumatraAbout.h src\SumatraPDF.h src\translations.h
+$(O)\SumatraAbout.obj: src\Version.h src\WindowInfo.h
 $(O)\SumatraDialogs.obj: baseutils\BaseUtil.h baseutils\GeomUtil.h baseutils\StrUtil.h
 $(O)\SumatraDialogs.obj: baseutils\TStrUtil.h baseutils\Vec.h baseutils\WinUtil.h
 $(O)\SumatraDialogs.obj: baseutils\WStrUtil.h mupdf\fitz\fitz.h mupdf\mupdf\mupdf.h
 $(O)\SumatraDialogs.obj: src\AppPrefs.h src\AppTools.h src\DisplayModel.h
-$(O)\SumatraDialogs.obj: src\DisplayState.h src\FileWatch.h src\LangMenuDef.h
-$(O)\SumatraDialogs.obj: src\PdfEngine.h src\PdfSearch.h src\PdfSelection.h
-$(O)\SumatraDialogs.obj: src\Resource.h src\SumatraDialogs.h src\translations.h
-$(O)\SumatraDialogs.obj: src\WindowInfo.h
+$(O)\SumatraDialogs.obj: src\DisplayState.h src\LangMenuDef.h src\PdfEngine.h
+$(O)\SumatraDialogs.obj: src\PdfSearch.h src\PdfSelection.h src\Resource.h
+$(O)\SumatraDialogs.obj: src\SumatraDialogs.h src\translations.h src\WindowInfo.h
 $(O)\SumatraPDF.obj: baseutils\BaseUtil.h baseutils\FileUtil.h baseutils\GeomUtil.h
 $(O)\SumatraPDF.obj: baseutils\StrUtil.h baseutils\TStrUtil.h baseutils\Vec.h
 $(O)\SumatraPDF.obj: baseutils\vstrlist.h baseutils\WinUtil.h baseutils\WStrUtil.h
@@ -299,9 +297,9 @@ $(O)\SumatraProperties.obj: baseutils\StrUtil.h baseutils\TStrUtil.h baseutils\V
 $(O)\SumatraProperties.obj: baseutils\vstrlist.h baseutils\WinUtil.h baseutils\WStrUtil.h
 $(O)\SumatraProperties.obj: mupdf\fitz\fitz.h mupdf\mupdf\mupdf.h src\AppPrefs.h
 $(O)\SumatraProperties.obj: src\AppTools.h src\DisplayModel.h src\DisplayState.h
-$(O)\SumatraProperties.obj: src\FileWatch.h src\PdfEngine.h src\PdfSearch.h
-$(O)\SumatraProperties.obj: src\PdfSelection.h src\SumatraPDF.h src\SumatraProperties.h
-$(O)\SumatraProperties.obj: src\translations.h src\WindowInfo.h
+$(O)\SumatraProperties.obj: src\PdfEngine.h src\PdfSearch.h src\PdfSelection.h
+$(O)\SumatraProperties.obj: src\SumatraPDF.h src\SumatraProperties.h src\translations.h
+$(O)\SumatraProperties.obj: src\WindowInfo.h
 $(O)\translations.obj: baseutils\BaseUtil.h baseutils\StrUtil.h baseutils\TStrUtil.h
 $(O)\translations.obj: baseutils\WStrUtil.h src\translations.h src\translations_txt.h
 $(O)\TStrUtil.obj: baseutils\BaseUtil.h baseutils\StrUtil.h baseutils\TStrUtil.h
@@ -309,9 +307,9 @@ $(O)\TStrUtil.obj: baseutils\WStrUtil.h
 $(O)\UnitTests.obj: baseutils\BaseUtil.h baseutils\GeomUtil.h baseutils\StrUtil.h
 $(O)\UnitTests.obj: baseutils\TStrUtil.h baseutils\Vec.h baseutils\vstrlist.h
 $(O)\UnitTests.obj: baseutils\WStrUtil.h mupdf\fitz\fitz.h mupdf\mupdf\mupdf.h
-$(O)\UnitTests.obj: src\AppTools.h src\DisplayState.h src\FileWatch.h
-$(O)\UnitTests.obj: src\ParseCommandLine.h src\PdfEngine.h src\PdfSearch.h
-$(O)\UnitTests.obj: src\PdfSelection.h src\WindowInfo.h
+$(O)\UnitTests.obj: src\AppTools.h src\DisplayState.h src\ParseCommandLine.h
+$(O)\UnitTests.obj: src\PdfEngine.h src\PdfSearch.h src\PdfSelection.h
+$(O)\UnitTests.obj: src\WindowInfo.h
 $(O)\UtilTests.obj: baseutils\BaseUtil.h baseutils\BencUtil.h baseutils\FileUtil.h
 $(O)\UtilTests.obj: baseutils\GeomUtil.h baseutils\StrUtil.h baseutils\TStrUtil.h
 $(O)\UtilTests.obj: baseutils\Vec.h baseutils\vstrlist.h baseutils\WStrUtil.h

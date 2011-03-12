@@ -7,11 +7,11 @@
 #include <shlobj.h>
 #include "GeomUtil.h"
 #include "DisplayState.h"
-#include "FileWatch.h"
 #include "PdfSearch.h"
 #include "Vec.h"
 
 class DisplayModel;
+class FileWatcher;
 class Synchronizer;
 
 /* Current state of a window:
@@ -158,7 +158,7 @@ public:
     SelectionOnPage *selectionOnPage;
 
     // file change watcher
-    FileWatcher     watcher;
+    FileWatcher *   watcher;
     
     // synchronizer based on .pdfsync file
     Synchronizer *  pdfsync;

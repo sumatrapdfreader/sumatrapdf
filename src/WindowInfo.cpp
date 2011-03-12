@@ -8,6 +8,7 @@
 #include "FileUtil.h"
 #include "TStrUtil.h"
 #include "WinUtil.h"
+#include "FileWatch.h"
 
 WindowInfo::WindowInfo(HWND hwnd) :
     dm(NULL), state(WS_ABOUT), hwndFrame(hwnd),
@@ -28,7 +29,7 @@ WindowInfo::WindowInfo(HWND hwnd) :
     prevZoomVirtual(INVALID_ZOOM), prevDisplayMode(DM_AUTOMATIC),
     loadedFilePath(NULL), currPageNo(0),
     xScrollSpeed(0), yScrollSpeed(0), wheelAccumDelta(0),
-    delayedRepaintTimer(0), resizingTocBox(false),
+    delayedRepaintTimer(0), resizingTocBox(false), watcher(NULL),
     pdfsync(NULL), pluginParent(NULL), threadStressRunning(false)
 {
     ZeroMemory(&selectionRect, sizeof(selectionRect));
@@ -44,6 +45,7 @@ WindowInfo::WindowInfo(HWND hwnd) :
 WindowInfo::~WindowInfo() {
     this->AbortFinding();
     delete this->dm;
+    delete this->watcher;
     delete this->pdfsync;
 
     CloseHandle(this->stopFindStatusThreadEvent);

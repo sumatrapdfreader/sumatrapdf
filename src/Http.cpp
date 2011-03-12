@@ -6,7 +6,19 @@
 #include "Version.h"
 #include <Wininet.h>
 
-static DWORD WINAPI HttpDownloadThread(LPVOID data)
+HttpReqCtx::HttpReqCtx(const TCHAR *url, CallbackFunc *callback)
+    : callback(callback), error(0)
+{
+    assert(url);
+    this->url = StrCopy(url);
+    data = new Vec<char>(256, 1);
+    if (callback)
+        hThread = CreateThread(NULL, 0, HttpDownloadThread, this, 0, 0);
+    else
+        HttpDownloadThread(this);
+}
+
+DWORD WINAPI HttpReqCtx::HttpDownloadThread(LPVOID data)
 {
     HttpReqCtx *ctx = (HttpReqCtx *)data;
 
@@ -42,13 +54,4 @@ DownloadError:
     if (ctx->error == 0)
         ctx->error = ERROR_GEN_FAILURE;
     goto DownloadComplete;
-}
-
-HttpReqCtx::HttpReqCtx(const TCHAR *url, CallbackFunc *callback)
-    : callback(callback), error(0)
-{
-    assert(url);
-    this->url = StrCopy(url);
-    data = new Vec<char>(256, 1);
-    hThread = CreateThread(NULL, 0, HttpDownloadThread, this, 0, 0);
 }

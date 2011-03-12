@@ -9,6 +9,7 @@
 
 class HttpReqCtx {
     HANDLE          hThread;
+    static DWORD WINAPI HttpDownloadThread(LPVOID data);
 
 public:
     // the callback to execute when the download is complete
@@ -18,7 +19,7 @@ public:
     Vec<char> *     data;
     DWORD           error;
 
-    HttpReqCtx(const TCHAR *url, CallbackFunc *callback);
+    HttpReqCtx(const TCHAR *url, CallbackFunc *callback=NULL);
     ~HttpReqCtx() {
         free(url);
         delete data;

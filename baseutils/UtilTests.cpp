@@ -170,6 +170,35 @@ static void TStrTest()
     assert(iswdigit(L'\xB2') && !ChrIsDigit(L'\xB2'));
 }
 
+static void FileUtilTest()
+{
+    TCHAR *path1 = _T("C:\\Program Files\\SumatraPDF\\SumatraPDF.exe");
+
+    const TCHAR *baseName = FilePath_GetBaseName(path1);
+    assert(tstr_eq(baseName, _T("SumatraPDF.exe")));
+
+    TCHAR *dirName = FilePath_GetDir(path1);
+    assert(tstr_eq(dirName, _T("C:\\Program Files\\SumatraPDF")));
+    baseName = FilePath_GetBaseName(dirName);
+    assert(tstr_eq(baseName, _T("SumatraPDF")));
+    free(dirName);
+
+    path1 = _T("C:\\Program Files");
+    dirName = FilePath_GetDir(path1);
+    assert(tstr_eq(dirName, _T("C:\\")));
+    free(dirName);
+
+    TCHAR *path2 = FilePath_Join(_T("C:\\"), _T("Program Files"));
+    assert(tstr_eq(path1, path2));
+    free(path2);
+    path2 = FilePath_Join(path1, _T("SumatraPDF"));
+    assert(tstr_eq(path2, _T("C:\\Program Files\\SumatraPDF")));
+    free(path2);
+    path2 = FilePath_Join(_T("C:\\"), _T("\\Windows"));
+    assert(tstr_eq(path2, _T("C:\\Windows")));
+    free(path2);
+}
+
 static void VecStrTest()
 {
     VStrList v;
@@ -517,6 +546,7 @@ void BaseUtils_UnitTests(void)
     DBG_OUT("Running BaseUtils unit tests\n");
     GeomTest();
     TStrTest();
+    FileUtilTest();
     VecStrTest();
     VecTest();
     BencTestParseInt();

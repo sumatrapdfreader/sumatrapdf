@@ -9,8 +9,6 @@
    due to insufficient (GDI) memory. */
 #define CONSERVE_MEMORY
 
-static DWORD WINAPI RenderCacheThread(LPVOID data);
-
 RenderCache::RenderCache(void)
     : _cacheCount(0), _requestCount(0), invertColors(NULL), useGdiRenderer(NULL),
       maxTileSize(GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN))
@@ -485,7 +483,7 @@ void RenderCache::ClearQueueForDisplayModel(DisplayModel *dm, int pageNo, TilePo
     }
 }
 
-static DWORD WINAPI RenderCacheThread(LPVOID data)
+DWORD WINAPI RenderCache::RenderCacheThread(LPVOID data)
 {
     RenderCache *cache = (RenderCache *)data;
     PageRenderRequest   req;

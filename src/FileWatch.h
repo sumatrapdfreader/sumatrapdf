@@ -6,71 +6,50 @@
 
 #include "BaseUtil.h"
 
-typedef void (__cdecl *WATCHCALLBACK) (PCTSTR filename, LPARAM param);
-
 // information concerning a directory being watched
 class FileWatcher {
 public:
     // Watching file modifications using a loop
     void Init(LPCTSTR filefullpath);
-    bool HasChanged(DWORD waittime = 0);
-    void Clean();
+    bool CheckForChanges(DWORD waittime=0);
 
     // Watching file modification via a thread
-    void StartWatchThread(LPCTSTR filefullpath, WATCHCALLBACK cb, LPARAM param);
+    void StartWatchThread();
     bool IsThreadRunning();
     void SynchronousAbort();
 
-    LPCTSTR filepath() { return szFilepath; }
-
-    FileWatcher() {
-        hDir = NULL;
+    FileWatcher(CallbackFunc *callback) : hDir(NULL), curBuffer(0),
+        szFilepath(NULL), hWatchingThread(NULL), pCallback(callback) {
         ZeroMemory(&this->overl, sizeof(this->overl));
-        curBuffer = 0;
-        pszFilename = NULL;
-        hWatchingThread = NULL;
-        hEvtStopWatching = NULL;
         // create the event used to abort the "watching" thread
-        hEvtStopWatching = CreateEvent(NULL,TRUE,FALSE,NULL);
-        pCallback = NULL;
-        callbackparam = 0;
-        szFilepath[0]='0';
+        hEvtStopWatching = CreateEvent(NULL, TRUE, FALSE, NULL);
     }
 
     ~FileWatcher() {
-        if (IsThreadRunning())
-            SynchronousAbort();
-        else
-            Clean();
-
+        SynchronousAbort();
+        delete pCallback;
+        free(szFilepath);
         CloseHandle(hEvtStopWatching);
     }
 
 private:
-    bool ReadDir();
-    
-    static void WINAPI WatchingThread( void *param );
-    void RestartThread();
-
-public:
     HANDLE  hDir; // handle of the directory to watch
-    TCHAR   szFilepath[MAX_PATH]; // path to the file watched
-    const   TCHAR * pszFilename; // pointer in szFilepath to the file part of the path
-    TCHAR   szDir[MAX_PATH]; // path to the directory
-    OVERLAPPED overl; // object used for asynchronous API calls
-    BYTE buffer [2][512*sizeof(FILE_NOTIFY_INFORMATION )]; 
+    CallbackFunc *pCallback;// function called when a file change is detected
+    TCHAR * szFilepath; // path to the file watched
+
+    FILE_NOTIFY_INFORMATION buffer[2][512];
         // a double buffer where the Windows API ReadDirectory will store the list
         // of files that have been modified.
     int curBuffer; // current buffer used (alternate between 0 and 1)
-    
+
+    bool NotifyChange();
+    static DWORD WINAPI WatchingThread(void *param);
+
+public:
+    // fields for use by the WathingThread
+    OVERLAPPED overl; // object used for asynchronous API calls
     HANDLE hWatchingThread; // handle of the watching thread
-    
     HANDLE hEvtStopWatching; // this event is fired when the watching thread needs to be aborted
-
-    WATCHCALLBACK pCallback;// function called when a file change is detected
-    LPARAM callbackparam;   // parameter to pass to the callback function
-
-    struct _stat timestamp; // last modification time stamp of the file
 };
 
 #endif

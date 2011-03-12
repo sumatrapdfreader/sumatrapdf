@@ -21,6 +21,7 @@
 #include "SumatraProperties.h"
 #include "SumatraAbout.h"
 #include "FileHistory.h"
+#include "FileWatch.h"
 #include "AppTools.h"
 
 #include "WinUtil.h"
@@ -1049,7 +1050,8 @@ static void WindowInfo_Refresh(WindowInfo* win, bool autorefresh) {
     // in which case the repair could fail. Instead, if the file is broken, 
     // we postpone the reload until the next autorefresh event
     bool tryRepair = !autorefresh;
-    LoadPdfIntoWindow(win->watcher.filepath(), win, &ds, false, tryRepair, true, false);
+    ScopedMem<TCHAR> path(StrCopy(win->loadedFilePath));
+    LoadPdfIntoWindow(path, win, &ds, false, tryRepair, true, false);
 
     if (win->dm) {
         // save a newly remembered password into file history so that
@@ -1551,10 +1553,18 @@ Error:
     return true;
 }
 
-class FileChangeWorkItem : public UIThreadWorkItem
+class FileChangeCallback : public CallbackFunc, public UIThreadWorkItem
 {
 public:
-    FileChangeWorkItem(WindowInfo *win) : UIThreadWorkItem(win) {}
+    FileChangeCallback(WindowInfo *win) : UIThreadWorkItem(win) { }
+
+    virtual void Callback(void *arg) {
+        // We cannot call WindowInfo_Refresh directly as it could cause race conditions
+        // between the watching thread and the main thread (and only pass a copy of this
+        // callback to the UIThreadMarshaller, as the object will be deleted after use)
+        gUIThreadMarshaller.Queue(new FileChangeCallback(win));
+    }
+
     virtual void Execute() {
         if (WindowInfoStillValid(win)) {
             // delay the reload slightly, in case we get another request immediately ofter this one
@@ -1563,20 +1573,12 @@ public:
     }
 };
 
-// This function is executed within the watching thread
-static void OnFileChange(const TCHAR * filename, LPARAM param)
-{
-    // We cannot called WindowInfo_Refresh directly as it could cause race conditions between the watching thread and the main thread
-    // Instead we just post a message to the main thread to trigger a reload
-    gUIThreadMarshaller.Queue(new FileChangeWorkItem((WindowInfo *)param));
-}
-
 #ifndef THREAD_BASED_FILEWATCH
 static void RefreshUpdatedFiles(void) {
     for (size_t i = 0; i < gWindows.Count(); i++) {
         WindowInfo *win = gWindows[i];
-        if (win->watcher.HasChanged())
-            OnFileChange(win->watcher.filepath(), (LPARAM)win);
+        if (win->watcher)
+            win->watcher->CheckForChanges();
     }
 }
 #endif
@@ -1714,11 +1716,11 @@ WindowInfo* LoadPdf(const TCHAR *fileName, WindowInfo *win, bool showWin)
         return win;
     }
 
+    if (!win->watcher)
+        win->watcher = new FileWatcher(new FileChangeCallback(win));
+    win->watcher->Init(fullpath);
 #ifdef THREAD_BASED_FILEWATCH
-    if (!win->watcher.IsThreadRunning())
-        win->watcher.StartWatchThread(fullpath, &OnFileChange, (LPARAM)win);
-#else
-    win->watcher.Init(fullpath);
+    win->watcher->StartWatchThread();
 #endif
 
     if (!gRestrictedUse) {
@@ -2555,7 +2557,7 @@ static void OnInverseSearch(WindowInfo *win, UINT x, UINT y)
     // On double-clicking error message will be shown to the user
     // if the PDF does not have a synchronization file
     if (!win->pdfsync) {
-        UINT err = CreateSynchronizer(win->watcher.filepath(), &win->pdfsync);
+        UINT err = CreateSynchronizer(win->loadedFilePath, &win->pdfsync);
 
         if (err == PDFSYNCERR_SYNCFILE_NOTFOUND) {
             // In order to avoid confusion for non-LaTeX users, we do not show
@@ -3032,14 +3034,10 @@ static void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose=false)
 
     win->state = WS_ABOUT;
 
-#ifdef THREAD_BASED_FILEWATCH
-    win->watcher.SynchronousAbort();
-#else
-    win->watcher.Clean();
-#endif
-
     if (lastWindow && !quitIfLast) {
         /* last window - don't delete it */
+        delete win->watcher;
+        win->watcher = NULL;
         if (win->tocShow)
             win->HideTocBox();
         win->ClearTocBox();
