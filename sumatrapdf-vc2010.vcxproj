@@ -62,6 +62,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="baseutils\BencUtil.cpp" />
+    <ClCompile Include="baseutils\DialogSizer.cpp" />
     <ClCompile Include="baseutils\FileUtil.cpp" />
     <ClCompile Include="baseutils\StrUtil.cpp" />
     <ClCompile Include="baseutils\TStrUtil.cpp" />
@@ -228,6 +229,7 @@
   <ItemGroup>
     <ClInclude Include="baseutils\BaseUtil.h" />
     <ClInclude Include="baseutils\BencUtil.h" />
+    <ClInclude Include="baseutils\DialogSizer.h" />
     <ClInclude Include="baseutils\FileUtil.h" />
     <ClInclude Include="baseutils\GeomUtil.h" />
     <ClInclude Include="baseutils\StrUtil.h" />

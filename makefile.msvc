@@ -51,7 +51,7 @@ SUMATRA_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
 	/wd4800 \
 	/Ibaseutils /Ibaseutils/msvc /I$(MUPDF_DIR)\fitz /I$(MUPDF_DIR)\mupdf \
 	/I$(ZLIB_DIR) /I$(ZLIB_DIR)/minizip \
-	/Isrc /IDialogSizer /I$(EXTLIBSDIR)/synctex /D "SYNCTEX_FEATURE"
+	/Isrc /I$(EXTLIBSDIR)/synctex /D "SYNCTEX_FEATURE"
 
 INSTALLER_CFLAGS = $(CFLAGS) $(EXTCFLAGS) /wd4800 \
 	/Ibaseutils /Ibaseutils/msvc /Isrc /Isrc/installer /I$(ZLIB_DIR) /I$(ZLIB_DIR)/minizip
@@ -87,7 +87,7 @@ LIBS_BROWSER_PLUGIN = user32.lib gdi32.lib advapi32.lib shlwapi.lib
 BASEUTILS_OBJS = \
 	$(O)\BencUtil.obj $(O)\FileUtil.obj $(O)\WinUtil.obj \
 	$(O)\StrUtil.obj $(O)\TStrUtil.obj $(O)\WStrUtil.obj \
-	$(O)\UtilTests.obj $(O)\dialogsizer_set.obj
+	$(O)\UtilTests.obj $(O)\DialogSizer.obj
 
 SUMATRA_OBJS = \
 	$(O)\AppPrefs.obj $(O)\DisplayModel.obj $(O)\DisplayState.obj $(O)\Http.obj \
@@ -161,9 +161,6 @@ $(BROWSER_PLUGIN): $(BROWSER_PLUGIN_OBJS)
 {baseutils}.cpp{$(O)}.obj::
 	$(CC) $(SUMATRA_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
 
-{DialogSizer}.cpp{$(O)}.obj::
-	$(CC) $(SUMATRA_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
-
 {$(EXTLIBSDIR)\synctex}.c{$(O)}.obj::
 	$(CC) /TC $(SYNCTEX_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
 
@@ -213,6 +210,8 @@ $(O)\CrashHandler.obj: src\translations.h
 $(O)\CTeXFilter.obj: baseutils\BaseUtil.h baseutils\StrUtil.h baseutils\TStrUtil.h
 $(O)\CTeXFilter.obj: baseutils\WStrUtil.h src\ifilter\CTeXFilter.h src\ifilter\FilterBase.h
 $(O)\CTeXFilter.obj: src\ifilter\PdfFilter.h
+$(O)\DialogSizer.obj: baseutils\BaseUtil.h baseutils\DialogSizer.h baseutils\GeomUtil.h
+$(O)\DialogSizer.obj: baseutils\WinUtil.h
 $(O)\DisplayModel.obj: baseutils\BaseUtil.h baseutils\FileUtil.h baseutils\GeomUtil.h
 $(O)\DisplayModel.obj: baseutils\StrUtil.h baseutils\TStrUtil.h baseutils\Vec.h
 $(O)\DisplayModel.obj: baseutils\WinUtil.h baseutils\WStrUtil.h mupdf\fitz\fitz.h
@@ -273,13 +272,14 @@ $(O)\SumatraAbout.obj: src\AppPrefs.h src\AppTools.h src\DisplayState.h
 $(O)\SumatraAbout.obj: src\PdfEngine.h src\PdfSearch.h src\PdfSelection.h
 $(O)\SumatraAbout.obj: src\SumatraAbout.h src\SumatraPDF.h src\translations.h
 $(O)\SumatraAbout.obj: src\Version.h src\WindowInfo.h
-$(O)\SumatraDialogs.obj: baseutils\BaseUtil.h baseutils\GeomUtil.h baseutils\StrUtil.h
-$(O)\SumatraDialogs.obj: baseutils\TStrUtil.h baseutils\Vec.h baseutils\WinUtil.h
-$(O)\SumatraDialogs.obj: baseutils\WStrUtil.h mupdf\fitz\fitz.h mupdf\mupdf\mupdf.h
-$(O)\SumatraDialogs.obj: src\AppPrefs.h src\AppTools.h src\DisplayModel.h
-$(O)\SumatraDialogs.obj: src\DisplayState.h src\LangMenuDef.h src\PdfEngine.h
-$(O)\SumatraDialogs.obj: src\PdfSearch.h src\PdfSelection.h src\Resource.h
-$(O)\SumatraDialogs.obj: src\SumatraDialogs.h src\translations.h src\WindowInfo.h
+$(O)\SumatraDialogs.obj: baseutils\BaseUtil.h baseutils\DialogSizer.h baseutils\GeomUtil.h
+$(O)\SumatraDialogs.obj: baseutils\StrUtil.h baseutils\TStrUtil.h baseutils\Vec.h
+$(O)\SumatraDialogs.obj: baseutils\WinUtil.h baseutils\WStrUtil.h mupdf\fitz\fitz.h
+$(O)\SumatraDialogs.obj: mupdf\mupdf\mupdf.h src\AppPrefs.h src\AppTools.h
+$(O)\SumatraDialogs.obj: src\DisplayModel.h src\DisplayState.h src\LangMenuDef.h
+$(O)\SumatraDialogs.obj: src\PdfEngine.h src\PdfSearch.h src\PdfSelection.h
+$(O)\SumatraDialogs.obj: src\Resource.h src\SumatraDialogs.h src\translations.h
+$(O)\SumatraDialogs.obj: src\WindowInfo.h
 $(O)\SumatraPDF.obj: baseutils\BaseUtil.h baseutils\FileUtil.h baseutils\GeomUtil.h
 $(O)\SumatraPDF.obj: baseutils\StrUtil.h baseutils\TStrUtil.h baseutils\Vec.h
 $(O)\SumatraPDF.obj: baseutils\vstrlist.h baseutils\WinUtil.h baseutils\WStrUtil.h

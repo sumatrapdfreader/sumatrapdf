@@ -9,7 +9,7 @@
 #include "Resource.h"
 
 #include "WinUtil.h"
-#include "dialogsizer.h"
+#include "DialogSizer.h"
 #include "LangMenuDef.h"
 #include "translations.h"
 
@@ -339,7 +339,8 @@ static INT_PTR CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT message, WPAR
             DIALOG_SIZER_ENTRY(IDCANCEL, DS_MoveX | DS_MoveY)
             DIALOG_SIZER_ENTRY(IDC_CHANGE_LANG_LANG_LIST, DS_SizeY | DS_SizeX)
         DIALOG_SIZER_END()
-        DialogSizer_Set(hDlg, sz, TRUE, NULL);
+        DialogSizer_Set(hDlg, sz, TRUE);
+
         data = (Dialog_ChangeLanguage_Data*)lParam;
         assert(data);
         SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);

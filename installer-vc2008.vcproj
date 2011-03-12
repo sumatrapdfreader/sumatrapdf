@@ -79,6 +79,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\baseutils\DialogSizer.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\DialogSizer.h"
+				>
+			</File>
+			<File
 				RelativePath=".\baseutils\FileUtil.cpp"
 				>
 			</File>

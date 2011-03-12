@@ -66,12 +66,12 @@ static inline void FillWndClassEx(WNDCLASSEX &wcex, HINSTANCE hInstance)
     wcex.hIconSm        = 0;
 }
 
-static inline int RectDx(RECT *r)
+static inline int RectDx(const RECT *r)
 {
     return r->right - r->left;
 }
 
-static inline int RectDy(RECT *r)
+static inline int RectDy(const RECT *r)
 {
     return r->bottom - r->top;
 }

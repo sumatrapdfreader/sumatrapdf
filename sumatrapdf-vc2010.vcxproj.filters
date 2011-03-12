@@ -497,6 +497,9 @@
     <ClCompile Include="baseutils\BencUtil.cpp">
       <Filter>baseutils</Filter>
     </ClCompile>
+    <ClCompile Include="baseutils\DialogSizer.cpp">
+      <Filter>baseutils</Filter>
+    </ClCompile>
     <ClCompile Include="baseutils\FileUtil.cpp">
       <Filter>baseutils</Filter>
     </ClCompile>
@@ -675,6 +678,9 @@
       <Filter>baseutils</Filter>
     </ClInclude>
     <ClInclude Include="baseutils\BencUtil.h">
+      <Filter>baseutils</Filter>
+    </ClInclude>
+    <ClInclude Include="baseutils\DialogSizer.h">
       <Filter>baseutils</Filter>
     </ClInclude>
     <ClInclude Include="baseutils\FileUtil.h">

@@ -45,8 +45,8 @@ typedef struct DialogSizerSizingItem	//	sdi
 #define DIALOG_SIZER_ENTRY( controlID, flags )	{ controlID, flags },
 #define DIALOG_SIZER_END()	{ 0xFFFFFFFF, 0xFFFFFFFF } };
 
-//	Set a window as sizeable, passing the registry key and name to load/store the window
-//	position from and the sizing data for each control. hkRootSave and pcszName can both be NULL but the size/position won't then be saved.
-extern "C" BOOL DialogSizer_Set(HWND hwnd, const DialogSizerSizingItem *psd, BOOL bShowSizingGrip, SIZE *psizeMax);
+// SumatraPDF: removed the fourth argument and fixed the comment:
+//	Set a window as sizeable, passing the sizing data for each control.
+extern "C" BOOL DialogSizer_Set(HWND hwnd, const DialogSizerSizingItem *psd, BOOL bShowSizingGrip);
 
 #endif
