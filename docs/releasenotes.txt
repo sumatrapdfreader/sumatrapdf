@@ -16,6 +16,7 @@ Next version:
   Right+Scroll zooms it (same as Ctrl+Scroll)
 * add menu item to open with Foxit Reader and PDF-XChange Viewer (if installed)
 * add suport for custom installation directories in the installer
+* removed -title cmd-line option
 * we no longer compress binaries that come with installer with mpress to
   avoid anti-virus programs flagging us as a virus. The portable, .zip version
   is still compressed with mpress
