@@ -17,7 +17,7 @@ LangDef g_langs[LANGS_COUNT] = {
     { "bg", "Bulgarian (\320\221\321\212\320\273\320\263\320\260\321\200\321\201\320\272\320\270)", _LANGID(LANG_BULGARIAN) },
     { "mm", "Burmese (\341\200\227\341\200\231\341\200\254 \341\200\205\341\200\254)", -1 },
     { "ca", "Catalan (Catal\303\240)", _LANGID(LANG_CATALAN) },
-    { "ca-xv", "Catalan-Valencian (Catal\303\240-Valenci\303\240)", _LANGID(LANG_CATALAN VALENCIAN) },
+    { "ca-xv", "Catalan-Valencian (Catal\303\240-Valenci\303\240)", -1 },
     { "cn", "Chinese Simplified (\347\256\200\344\275\223\344\270\255\346\226\207)", MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED) },
     { "tw", "Chinese Traditional (\347\271\201\351\253\224\344\270\255\346\226\207)", MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL) },
     { "kw", "Cornish (Kernewek)", -1 },
