@@ -17,6 +17,7 @@ LangDef g_langs[LANGS_COUNT] = {
     { "bg", "Bulgarian (\320\221\321\212\320\273\320\263\320\260\321\200\321\201\320\272\320\270)", _LANGID(LANG_BULGARIAN) },
     { "mm", "Burmese (\341\200\227\341\200\231\341\200\254 \341\200\205\341\200\254)", -1 },
     { "ca", "Catalan (Catal\303\240)", _LANGID(LANG_CATALAN) },
+    { "ca-xv", "Catalan-Valencian (Catal\303\240-Valenci\303\240)", _LANGID(LANG_CATALAN VALENCIAN) },
     { "cn", "Chinese Simplified (\347\256\200\344\275\223\344\270\255\346\226\207)", MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED) },
     { "tw", "Chinese Traditional (\347\271\201\351\253\224\344\270\255\346\226\207)", MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL) },
     { "kw", "Cornish (Kernewek)", -1 },
@@ -64,7 +65,6 @@ LangDef g_langs[LANGS_COUNT] = {
     { "th", "Thai (\340\270\240\340\270\262\340\270\251\340\270\262\340\271\204\340\270\227\340\270\242)", _LANGID(LANG_THAI) },
     { "tr", "Turkish (T\303\274rk\303\247e)", _LANGID(LANG_TURKISH) },
     { "uk", "Ukrainian (\320\243\320\272\321\200\320\260\321\227\320\275\321\201\321\214\320\272\320\260)", _LANGID(LANG_UKRAINIAN) },
-    { "va", "Valencian (Valenci\303\240)", -1 },
     { "vn", "Vietnamese (Vi\341\273\207t Nam)", _LANGID(LANG_VIETNAMESE) },
     { "cy", "Welsh (Cymraeg)", _LANGID(LANG_WELSH) },
 };
