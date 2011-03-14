@@ -15,41 +15,50 @@ Contributor: Raúl Álvarez
 &Actual Size\tCtrl-1
 Mida &real\tCtrl-1
 
+&All selected pages
+&Totes les pàgines seleccionades
+
 &Back\tAlt+Left Arrow
-Enrera\tAlt+Left Arrow
+Enrere\tAlt+Left Arrow
 
 &Close\tCtrl-W
 &Tanca\tCtrl-W
 
 &Copy Selection\tCtrl-C
-Copia la selecció\tCtrl-C
+&Copia la selecció\tCtrl-C
 
 &Don't ask me again
-No ho tornis a preguntar
+&No ho tornis a preguntar
+
+&Even pages only
+Només les pàgines parelles
 
 &File
 &Fitxer
 
 &Find what:
-Text a trobar:
+&Text a trobar:
 
 &First Page\tHome
-Primera pàgina\tInici
+&Primera pàgina\tInici
+
+&Fit pages to printable area
+Ajusta les pàgines a l'àrea imprimible
 
 &Go To
 &Vés a
 
 &Go to page:
-Ves a la pàgina:
+&Vés a la pàgina:
 
 &Help
 &Ajuda
 
 &Last Page\tEnd
-Última pàgina\tFinal
+Ú&ltima pàgina\tFinal
 
 &Magnification:
-Nivell d'augment:
+&Nivell d'augment:
 
 &Manual
 &Manual
@@ -58,13 +67,16 @@ Nivell d'augment:
 Respecta les &MAJUSCULES i minuscules
 
 &Next Page\tRight Arrow
-Pàgina següent\t->
+Pàgina &següent\t->
 
 &No
 &No
 
 &No, thanks
-&No, gracies
+&No, gràcies
+
+&Odd pages only
+Només les pàgines senars
 
 &Open\tCtrl-O
 &Obre\tCtrl-O
@@ -73,31 +85,43 @@ Pàgina següent\t->
 &Opcions...
 
 &Password:
-&Paraula de pas:
+&Contrasenya:
 
 &Previous Page\tLeft Arrow
-Pàgina anterior\t<-
+Pàgina &anterior\t<-
 
 &Print...\tCtrl-P
 &Imprimeix...\tCtrl-P
 
+&Print... (denied)
+&Imprimeix... (denegat)
+
+&Remember the password for this document
+&Recorda la contrasenya per a aquest document
+
 &Remember these settings for each document
-Conserva aquestes p&referencies per a cada document
+Conserva aquestes &preferències per a cada document
 
 &Save As...\tCtrl-S
 Anomena i de&sa...\tCtrl-S
 
 &Settings
-Preferències
+&Preferències
+
+&Shrink pages to printable area (if necessary)
+&Reduïu les pàgines a l'àrea imprimible (si és necessari)
 
 &Skip this version
-Omet aquesta versió
+&Omet aquesta versió
+
+&Use original page sizes
+&Usa la mida de pàgina original
 
 &View
 &Visualitza
 
 &Yes
-Si
+&Sí
 
 &Zoom
 &Escalat
@@ -120,6 +144,9 @@ Programa:
 Associate with PDF files?
 Voleu associar-lo amb els fitxers PDF?
 
+Attachment: %s
+Adjunt: %s
+
 Author:
 Autor:
 
@@ -127,16 +154,22 @@ Automatic
 Automàtic
 
 Automatically check for &updates
-Comprova les act&ualitzacions automaticament
+&Comprova les actualitzacions automaticament
 
 Book View
 Vista de llibre
 
 Book&marks\tF12
-Punts d'interés\tF12
+&Punts d'interés\tF12
+
+Bookmarks
+Punts d'interès
 
 Bytes
-Bytes
+Octets
+
+Can't connect to the Internet (error %#x).
+No es pot connectar a internet (error %#x).
 
 Cancel
 Cancel·la
@@ -165,6 +198,9 @@ Pàgina doble contínua
 Contribute Translation
 Contribuïu en la traducció
 
+Copying text was denied (copying as image only)
+No es pot copiar el text (només es copia com a imatge)
+
 Could not open Printer
 No s'ha pogut accedir a la impressora.
 
@@ -181,7 +217,7 @@ Custom &Zoom...\tCtrl-Y
 Zoom per defe&cte...\tCtrl-Y
 
 Default &Layout:
-Vista per defecte:
+&Vista per defecte:
 
 Default &Zoom:
 &Zoom per defecte
@@ -189,11 +225,14 @@ Default &Zoom:
 Default PDF reader can't be changed in portable mode
 No es pot canviar el lector de PDF per defecte en mode portable.
 
+Denied Permissions:
+Permisos denegats:
+
 Document Properties
 Propietats del document
 
 Download
-Descarrega
+Baixa
 
 E&xit\tCtrl-Q
 S&urt\tCtrl-Q
@@ -204,14 +243,17 @@ Introduiu la contrasenya
 Enter password for %s
 Introduiu la constrasenya per a %s
 
+Enter the command-line to invoke when you double-click on the PDF document:
+Introduïu la línia d'ordres que voleu executar en fer doble clic al document PDF:
+
 Error loading PDF file.
 S'ha produït un error en carregar el fitxer.
 
 F&orward\tAlt+Right Arrow
-Endavant\tAlt+Right Arrow
+En&davant\tAlt+Right Arrow
 
 F&ullscreen\tCtrl-Shift-L
-Pantalla completa\tCtrl-Shift-L
+Pantalla &completa\tCtrl-Shift-L
 
 Facing
 Pàgina doble
@@ -226,7 +268,7 @@ File:
 Fitxer:
 
 Fin&d...\tCtrl-F
-Cerca...\tCtrl-F
+&Cerca...\tCtrl-F
 
 Find
 Cerca
@@ -240,17 +282,29 @@ Cerca anterior
 Find:
 Cerca:
 
+Fit &Content\tCtrl-3
+Ajusta el &contingut\tCtrl-3
+
 Fit &Page\tCtrl-0
-Ajusta a la pàgina\tCtrl-0
+Ajusta a la &pàgina\tCtrl-0
 
 Fit &Width\tCtrl-2
 Ajusta a l'am&plada\tCtrl-2
+
+Fit Content
+Ajusta el contingut
 
 Fit Page
 Ajusta a la pàgina
 
 Fit Width
 Ajusta a l'amplada
+
+Fit Width and Show Pages Continuously
+ajusta l'amplada i mostra les pàgines de forma contínua
+
+Fit a Single Page
+Ajusta una única pàgina
 
 Found text at page %d
 S'ha trobat el text a la pagina %d
@@ -283,7 +337,7 @@ Modified:
 Modificat:
 
 New version %s is available. Download new version?
-Hi ha disponible una versió nova. Voleu descarregar-la?
+Hi ha disponible una versió nova. Voleu baixar-la?
 
 Next Page
 Pàgina següent
@@ -292,16 +346,16 @@ No matches were found
 No s'han trobat coincidencies
 
 No result found around line %u in file %s
-No s'ha trobat un resultat de la cerca vàl·lid a la linia %u al fitxer %s
+No s'ha trobat un resultat de la cerca vàlid a la línia %u al fitxer %s
 
 No synchronization file found
 No s'ha trobat el fitxer de sincronització
 
 No synchronization info at this position
-No hi ha informacio de sincronització a aquesta posició
+No hi ha informació de sincronització a aquesta posició
 
 Number of Pages:
-Número de Pagines:
+Nombre de pàgines:
 
 OK
 D'acord
@@ -310,13 +364,13 @@ Open
 Obre
 
 Open in &Adobe Reader
-Obre amb Adobe Reader
+Obre amb l'&Adobe Reader
 
 Open in &Foxit Reader
-Obre amb Foxit Reader
+Obre amb el &Foxit Reader
 
 Open in PDF-XChange
-Obre amb PDF-XChange
+Obre amb el PDF-XChange
 
 P&roperties\tCtrl-D
 P&ropietats...\tCtrl-D
@@ -334,7 +388,7 @@ PDF documents
 Documents PDF
 
 Pa&ge...\tCtrl-G
-Pàgina...\tCtrl-G
+Pà&gina...\tCtrl-G
 
 Page Size:
 Mida de pàgina:
@@ -342,20 +396,32 @@ Mida de pàgina:
 Page number %u inexistant
 La pàgina %u no existeix
 
+Page scaling
+Escalat de la pàgina
+
 Page:
 Pàgina:
 
+Please include the following file in your crash report:
+Incloeu el fitxer següent a l'informe d'error:
+
 Please wait - rendering...
-Representant - un moment siusplau...
+S'està renderitzant...
+
+Pr&esentation\tCtrl-L
+Pr&esentació\tCtrl-L
 
 Previous Page
 Pàgina anterior
+
+Print range
+Interval d'impressió
 
 Printing problem.
 S'ha produït un problema en la impressió.
 
 Remember &opened files
-Recordar fitxers oberts
+Recorda els fitxers &oberts
 
 Rotate &Left\tCtrl-Shift--
 Gira a l'esquerra\tCtrl-Shift--
@@ -364,25 +430,28 @@ Rotate &Right\tCtrl-Shift-+
 Gira a la dreta\tCtrl-Shift-+
 
 Searching %d of %d...
-Cercant %d de %d...
+S'està cercant %d de %d...
+
+Select &All\tCtrl-A
+Seleccciona-ho &tot\tCtrl-A
 
 Select content with Ctrl+left mouse button
-Seleccionar contigut amb la combinació Ctrl+botó secundari del ratolí
+Seleccioneu contigut amb la combinació Ctrl+botó secundari del ratolí
 
 Send by &E-mail...
-Envia per correu-e...
+Envia per correu-&e...
 
 Set inverse search command-line
 Cerca cap enrere
 
 Show &Toolbar
-Mostra la barra d'eines
+Mostra la &barra d'eines
 
 Show &pages continuously
-Mostra les pàgines de forma contínua
+Mostra les &pàgines de forma contínua
 
 Show the &bookmarks sidebar when available
-Mostra la barra lateral de punts d'interes quan estigui disponible
+Mostra la &barra lateral de punts d'interes quan estigui disponible
 
 Single Page
 Pàgina única
@@ -390,14 +459,23 @@ Pàgina única
 Source file %s has no synchronization point
 El fitxer d'origen %s no te un punt de sincronització vàlid
 
+Subject:
+Assumpte:
+
 SumatraPDF Options
 Opcions del SumatraPDF
 
+SumatraPDF Update
+Actualització del SumatraPDF
+
+SumatraPDF crashed
+El SumatraPDF ha fallat
+
 SumatraPDF is your default PDF reader
-El SumatraPDF es el seu lector PDF per defecte
+El SumatraPDF és el seu lector PDF predeterminat
 
 SumatraPDF should now be your default PDF reader
-El SumatraPDF hauria d'esser ara mateix el seu lector PDF per defecte
+El SumatraPDF hauria d'esser ara mateix el vostre lector PDF predeterminat
 
 Synchronization file cannot be opened
 El fitxer de sincronització no es pot obrir
@@ -418,7 +496,7 @@ Visit &Website
 Visiteu el lloc &web
 
 Warning
-Atenció
+Avís
 
 You have the latest version.
 Teniu la darrera versió.
@@ -439,35 +517,11 @@ Zoom factor
 Factor de zoom
 
 [Changes detected; refreshing] %s
-[S'han detectat canvis; actualitzant] %s
+[S'han detectat canvis; s'està actualitzant] %s
 
-# Untranslated:
-#&All selected pages
-#&Even pages only
-#&Fit pages to printable area
-#&Odd pages only
-#&Print... (denied)
-#&Remember the password for this document
-#&Shrink pages to printable area (if necessary)
-#&Use original page sizes
-#Attachment: %s
-#Bookmarks
-#Can't connect to the Internet (error %#x).
-#Copying text was denied (copying as image only)
-#Denied Permissions:
-#Enter the command-line to invoke when you double-click on the PDF document:
-#Fit &Content\tCtrl-3
-#Fit Content
-#Fit Width and Show Pages Continuously
-#Fit a Single Page
-#Page scaling
-#Please include the following file in your crash report:
-#Pr&esentation\tCtrl-L
-#Print range
-#Select &All\tCtrl-A
-#Subject:
-#SumatraPDF Update
-#SumatraPDF crashed
-#copying text
-#printing document
+copying text
+s'està copiant text
+
+printing document
+s'està imprimint el document
 
