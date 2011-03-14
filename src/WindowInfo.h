@@ -69,13 +69,11 @@ public:
     WindowInfo(HWND hwnd);
     ~WindowInfo();
 
-    void GetCanvasSize() { 
-        GetClientRect(hwndCanvas, &canvasRc);
-    }
+    void GetCanvasSize();
 
-    int winDx() const { return canvasRc.right - canvasRc.left; }
-    int winDy() const { return canvasRc.bottom - canvasRc.top; }
-    SizeI winSize() const { return SizeI(winDx(), winDy()); }
+    int winDx() const { return canvasRc.dx; }
+    int winDy() const { return canvasRc.dy; }
+    SizeI winSize() const { return canvasRc.Size(); }
     bool IsAboutWindow() const { return WS_ABOUT == state; }
 
     WinState        state;
@@ -177,9 +175,9 @@ public:
     int             _windowStateBeforePresentation;
 
     long            prevStyle;
-    RECT            frameRc;
-    RECT            canvasRc;
-    POINT           prevCanvasBR;
+    RectI           frameRc;
+    RectI           canvasRc;
+    PointI          prevCanvasBR;
     float           prevZoomVirtual;
     DisplayMode     prevDisplayMode;
 

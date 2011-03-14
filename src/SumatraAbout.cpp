@@ -107,7 +107,7 @@ void DrawSumatraPDF(HDC hdc, int x, int y)
 /* Draws the about screen a remember some state for hyperlinking.
    It transcribes the design I did in graphics software - hopeless
    to understand without seeing the design. */
-static void DrawAbout(HWND hwnd, HDC hdc, RECT *rect)
+static void DrawAbout(HWND hwnd, HDC hdc, RectI rect)
 {
     SIZE            txtSize;
     int             totalDx, totalDy;
@@ -134,17 +134,16 @@ static void DrawAbout(HWND hwnd, HDC hdc, RECT *rect)
 
     SetBkMode(hdc, TRANSPARENT);
 
-    RECT rc;
-    GetClientRect(hwnd, &rc);
-    FillRect(hdc, &rc, brushBg);
+    ClientRect rc(hwnd);
+    FillRect(hdc, &rc.ToRECT(), brushBg);
 
     SelectObject(hdc, brushBg);
     SelectObject(hdc, penBorder);
 
-    offX = rect->left;
-    offY = rect->top;
-    totalDx = RectDx(rect);
-    totalDy = RectDy(rect);
+    offX = rect.x;
+    offY = rect.y;
+    totalDx = rect.dx;
+    totalDy = rect.dy;
 
     /* render title */
     const TCHAR *txt = SUMATRA_TXT;
@@ -223,7 +222,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, RECT *rect)
     DeleteObject(penLinkLine);
 }
 
-static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, RECT * rect)
+static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, RectI *rect)
 {
     SIZE            txtSize;
     int             totalDx, totalDy;
@@ -310,17 +309,12 @@ static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, RECT * rect)
         totalDy += rightDy + ABOUT_TXT_DY;
     totalDy += ABOUT_LINE_OUTER_SIZE + 4;
 
-    RECT rc;
-    GetClientRect(hwnd, &rc);
-    offX = (RectDx(&rc) - totalDx) / 2;
-    offY = (RectDy(&rc) - totalDy) / 2;
+    ClientRect rc(hwnd);
+    offX = (rc.dx - totalDx) / 2;
+    offY = (rc.dy - totalDy) / 2;
 
-    if (rect) {
-        rect->left = offX;
-        rect->top = offY;
-        rect->right = offX + totalDx;
-        rect->bottom = offY + totalDy;
-    }
+    if (rect)
+        *rect = RectI(offX, offY, totalDx, totalDy);
 
     /* calculate text positions */
     linePosX = ABOUT_LINE_OUTER_SIZE + ABOUT_MARGIN_DX + leftLargestDx + ABOUT_LEFT_RIGHT_SPACE_DX;
@@ -345,10 +339,10 @@ static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, RECT * rect)
 void OnPaintAbout(HWND hwnd)
 {
     PAINTSTRUCT ps;
-    RECT rc;
+    RectI rc;
     HDC hdc = BeginPaint(hwnd, &ps);
     UpdateAboutLayoutInfo(hwnd, hdc, &rc);
-    DrawAbout(hwnd, hdc, &rc);
+    DrawAbout(hwnd, hdc, rc);
     EndPaint(hwnd, &ps);
 }
 
@@ -394,20 +388,19 @@ void OnMenuAbout() {
         return;
 
     // get the dimensions required for the about box's content
-    RECT rc;
+    RectI rc;
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(gHwndAbout, &ps);
     UpdateAboutLayoutInfo(gHwndAbout, hdc, &rc);
     EndPaint(gHwndAbout, &ps);
-    InflateRect(&rc, ABOUT_RECT_PADDING, ABOUT_RECT_PADDING);
+    rc.Inflate(ABOUT_RECT_PADDING, ABOUT_RECT_PADDING);
 
     // resize the new window to just match these dimensions
-    RECT wRc, cRc;
-    GetWindowRect(gHwndAbout, &wRc);
-    GetClientRect(gHwndAbout, &cRc);
-    wRc.right += RectDx(&rc) - RectDx(&cRc);
-    wRc.bottom += RectDy(&rc) - RectDy(&cRc);
-    MoveWindow(gHwndAbout, wRc.left, wRc.top, RectDx(&wRc), RectDy(&wRc), FALSE);
+    WindowRect wRc(gHwndAbout);
+    ClientRect cRc(gHwndAbout);
+    wRc.dx += rc.dx - cRc.dx;
+    wRc.dy += rc.dy - cRc.dy;
+    MoveWindow(gHwndAbout, wRc.x, wRc.y, wRc.dx, wRc.dy, FALSE);
 
     ShowWindow(gHwndAbout, SW_SHOW);
 }
@@ -470,14 +463,13 @@ LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
 
 static void OnPaint(WindowInfo *win)
 {
-    RECT rc;
-    GetClientRect(win->hwndCanvas, &rc);
+    ClientRect rc(win->hwndCanvas);
 
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(win->hwndCanvas, &ps);
     win->ResizeIfNeeded(false);
     UpdateAboutLayoutInfo(win->hwndCanvas, win->hdcToDraw, &rc);
-    DrawAbout(win->hwndCanvas, win->hdcToDraw, &rc);
+    DrawAbout(win->hwndCanvas, win->hdcToDraw, rc);
     win->DoubleBuffer_Show(hdc);
     EndPaint(win->hwndCanvas, &ps);
 }

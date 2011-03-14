@@ -23,10 +23,9 @@ void MakePluginWindow(WindowInfo *win, HWND hwndParent)
     ws |= WS_CHILD;
     SetWindowLong(win->hwndFrame, GWL_STYLE, ws);
 
-    RECT rc;
     SetParent(win->hwndFrame, hwndParent);
-    GetClientRect(hwndParent, &rc);
-    MoveWindow(win->hwndFrame, 0, 0, RectDx(&rc), RectDy(&rc), FALSE);
+    ClientRect rc(hwndParent);
+    MoveWindow(win->hwndFrame, 0, 0, rc.dx, rc.dy, FALSE);
     ShowWindow(win->hwndFrame, SW_SHOW);
 
     // from here on, we depend on the plugin's host to resize us

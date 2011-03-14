@@ -6,6 +6,7 @@
 
 #include <windows.h>
 #include <CommCtrl.h>
+#include "GeomUtil.h"
 
 class WinLibrary {
 public:
@@ -41,6 +42,28 @@ public:
         QueryPerformanceFrequency(&freq);
         double timeInSecs = (double)(end.QuadPart-start.QuadPart)/(double)freq.QuadPart;
         return timeInSecs * 1000.0;
+    }
+};
+
+class ClientRect : public RectI {
+public:
+    ClientRect(HWND hwnd) {
+        RECT rc;
+        if (GetClientRect(hwnd, &rc)) {
+            x = rc.left; dx = rc.right - rc.left;
+            y = rc.top; dy = rc.bottom - rc.top;
+        }
+    }
+};
+
+class WindowRect : public RectI {
+public:
+    WindowRect(HWND hwnd) {
+        RECT rc;
+        if (GetWindowRect(hwnd, &rc)) {
+            x = rc.left; dx = rc.right - rc.left;
+            y = rc.top; dy = rc.bottom - rc.top;
+        }
     }
 };
 
@@ -194,7 +217,7 @@ TCHAR * get_app_data_folder_path(bool f_create);
 
 void    paint_round_rect_around_hwnd(HDC hdc, HWND hwnd_edit_parent, HWND hwnd_edit, COLORREF col);
 void    paint_rect(HDC hdc, RECT * rect);
-void    draw_centered_text(HDC hdc, RECT *r, const TCHAR *txt);
+void    draw_centered_text(HDC hdc, RectI r, const TCHAR *txt);
 
 bool    IsCursorOverWindow(HWND hwnd);
 void    CenterDialog(HWND hDlg);

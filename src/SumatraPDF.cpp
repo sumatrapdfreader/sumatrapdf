@@ -928,16 +928,14 @@ static void RememberWindowPosition(WindowInfo *win)
     else if (!IsIconic(win->hwndFrame))
         gGlobalPrefs.m_windowState = WIN_STATE_NORMAL;
 
-    RECT rc;
-    gGlobalPrefs.m_tocDx = GetWindowRect(win->hwndTocBox, &rc) ? RectDx(&rc) : 0;
+    gGlobalPrefs.m_tocDx = WindowRect(win->hwndTocBox).dx;
 
     /* don't update the window's dimensions if it is maximized, mimimized or fullscreened */
     if (WIN_STATE_NORMAL == gGlobalPrefs.m_windowState &&
         !IsIconic(win->hwndFrame) && !win->presentation) {
         // TODO: Use Get/SetWindowPlacement (otherwise we'd have to separately track
         //       the non-maximized dimensions for proper restoration)
-        GetWindowRect(win->hwndFrame, &rc);
-        gGlobalPrefs.m_windowPos = RectI::FromXY(rc.left, rc.top, rc.right, rc.bottom);
+        gGlobalPrefs.m_windowPos = WindowRect(win->hwndFrame);
     }
 }
 
@@ -1300,20 +1298,19 @@ static WindowInfo* WindowInfo_CreateEmpty(void)
 
 static void UpdateTocWidth(WindowInfo *win, const DisplayState *ds=NULL, int defaultDx=0)
 {
-    RECT rc;
-    if (!GetWindowRect(win->hwndTocBox, &rc))
+    WindowRect rc(win->hwndTocBox);
+    if (rc.IsEmpty())
         return;
 
-    int width = RectDx(&rc);
     if (ds && !gGlobalPrefs.m_globalPrefsOnly)
-        width = ds->tocDx;
+        rc.dx = ds->tocDx;
     else if (!defaultDx)
-        width = gGlobalPrefs.m_tocDx;
+        rc.dx = gGlobalPrefs.m_tocDx;
     // else assume the correct width has been set previously
-    if (!width) // first time
-        width = defaultDx;
+    if (!rc.dx) // first time
+        rc.dx = defaultDx;
 
-    SetWindowPos(win->hwndTocBox, NULL, rc.left, rc.top, width, RectDy(&rc), SWP_NOZORDER);
+    SetWindowPos(win->hwndTocBox, NULL, rc.x, rc.y, rc.dx, rc.dy, SWP_NOZORDER);
 }
 
 static void RecalcSelectionPosition (WindowInfo *win) {
@@ -1438,9 +1435,8 @@ static bool LoadPdfIntoWindow(
     /*
     // The WM_SIZE message must be sent *after* updating win->showToc
     // otherwise the bookmark window reappear even if state->showToc=false.
-    RECT rect;
-    GetClientRect(win->hwndFrame, &rect);
-    SendMessage(win->hwndFrame, WM_SIZE, 0, MAKELONG(RectDx(&rect),RectDy(&rect)));
+    ClientRect rect(win->hwndFrame);
+    SendMessage(win->hwndFrame, WM_SIZE, 0, MAKELONG(rect.dx, rect.dy));
     */
 
     win->dm->relayout(zoomVirtual, rotation);
@@ -2029,15 +2025,15 @@ static void PaintTransparentRectangle(WindowInfo *win, HDC hdc, RectI *rect, COL
         DBG_OUT("    selection rectangle too big to be drawn\n");
 
     // draw selection border
-    RECT rc = rect->ToRECT();
-    OffsetRect(&rc, -rect->x, -rect->y);
+    RectI rc = *rect;
+    rc.Offset(-rect->x, -rect->y);
     if (margin) {
-        FillRect(rectDC, &rc, gBrushBlack);
-        InflateRect(&rc, -margin, -margin);
+        FillRect(rectDC, &rc.ToRECT(), gBrushBlack);
+        rc.Inflate(-margin, -margin);
     }
     // fill selection
     HBRUSH brush = CreateSolidBrush(selectionColor);
-    FillRect(rectDC, &rc, brush);
+    FillRect(rectDC, &rc.ToRECT(), brush);
     DeleteObject(brush);
     // blend selection rectangle over content
     BLENDFUNCTION bf = { AC_SRC_OVER, 0, alpha, 0 };
@@ -2225,11 +2221,11 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
                 if (renderDelay < REPAINT_MESSAGE_DELAY_IN_MS)
                     win->RepaintAsync(REPAINT_MESSAGE_DELAY_IN_MS / 4);
                 else
-                    draw_centered_text(hdc, &bounds.ToRECT(), _TR("Please wait - rendering..."));
+                    draw_centered_text(hdc, bounds, _TR("Please wait - rendering..."));
                 DBG_OUT("drawing empty %d ", pageNo);
                 rendering = true;
             } else {
-                draw_centered_text(hdc, &bounds.ToRECT(), _TR("Couldn't render the page"));
+                draw_centered_text(hdc, bounds, _TR("Couldn't render the page"));
                 DBG_OUT("   missing bitmap on visible page %d\n", pageNo);
             }
             SelectObject(hdc, origFont);
@@ -2923,8 +2919,7 @@ static void OnPaint(WindowInfo *win)
         HGDIOBJ origFont = SelectObject(hdc, fontRightTxt); /* Just to remember the orig font */
         SetBkMode(hdc, TRANSPARENT);
         FillRect(hdc, &ps.rcPaint, gBrushBg);
-        GetClientRect(win->hwndCanvas, &ps.rcPaint);
-        draw_centered_text(hdc, &ps.rcPaint, _TR("Error loading PDF file."));
+        draw_centered_text(hdc, ClientRect(win->hwndCanvas), _TR("Error loading PDF file."));
         SelectObject(hdc, origFont);
         Win32_Font_Delete(fontRightTxt);
     } else if (WS_SHOWING_PDF == win->state) {
@@ -3787,9 +3782,8 @@ static void OnMenuViewShowHideToolbar(WindowInfo *win)
             ShowWindow(win->hwndReBar, SW_SHOW);
         else
             ShowWindow(win->hwndReBar, SW_HIDE);
-        RECT rect;
-        GetClientRect(win->hwndFrame, &rect);
-        SendMessage(win->hwndFrame, WM_SIZE, 0, MAKELONG(RectDx(&rect),RectDy(&rect)));
+        ClientRect rect(win->hwndFrame);
+        SendMessage(win->hwndFrame, WM_SIZE, 0, MAKELONG(rect.dx, rect.dy));
     }
 }
 
@@ -4024,7 +4018,7 @@ static void WindowInfo_EnterFullscreen(WindowInfo *win, bool presentation)
     ws &= ~(WS_BORDER|WS_CAPTION|WS_THICKFRAME);
     ws |= WS_MAXIMIZE;
 
-    GetWindowRect(win->hwndFrame, &win->frameRc);
+    win->frameRc = WindowRect(win->hwndFrame);
 
     SetMenu(win->hwndFrame, NULL);
     ShowWindow(win->hwndReBar, SW_HIDE);
@@ -4065,8 +4059,8 @@ static void WindowInfo_ExitFullscreen(WindowInfo *win)
     SetMenu(win->hwndFrame, win->menu);
     SetWindowLong(win->hwndFrame, GWL_STYLE, win->prevStyle);
     SetWindowPos(win->hwndFrame, HWND_NOTOPMOST,
-                 win->frameRc.left, win->frameRc.top,
-                 RectDx(&win->frameRc), RectDy(&win->frameRc),
+                 win->frameRc.x, win->frameRc.y,
+                 win->frameRc.dx, win->frameRc.dy,
                  SWP_FRAMECHANGED|SWP_NOZORDER);
 }
 
@@ -4127,7 +4121,7 @@ static void WindowInfo_ShowMessage_Async(WindowInfo *win, const TCHAR *message, 
         Win::SetText(win->hwndFindStatus, message);
     if (resize) {
         // compute the length of the message
-        RECT rc = {0,0,FIND_STATUS_WIDTH,0};
+        RECT rc = RectI(0, 0, FIND_STATUS_WIDTH, 0).ToRECT();
         HDC hdc = GetDC(win->hwndFindStatus);
         HGDIOBJ oldFont = SelectObject(hdc, gDefaultGuiFont);
         DrawText(hdc, message, -1, &rc, DT_CALCRECT | DT_SINGLELINE);
@@ -4798,39 +4792,37 @@ static LRESULT CALLBACK WndProcFindStatus(HWND hwnd, UINT message, WPARAM wParam
         return DefWindowProc(hwnd, message, wParam, lParam);
 
     if (WM_ERASEBKGND == message) {
-        RECT rect;
-        GetClientRect(hwnd, &rect);
-        DrawFrameControl((HDC)wParam, &rect, DFC_BUTTON, DFCS_BUTTONPUSH);
+        ClientRect rect(hwnd);
+        DrawFrameControl((HDC)wParam, &rect.ToRECT(), DFC_BUTTON, DFCS_BUTTONPUSH);
         return true;
     } else if (WM_PAINT == message) {
-        RECT rect;
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(hwnd, &ps);
         HFONT oldfnt = SelectFont(hdc, gDefaultGuiFont);
         TCHAR text[256];
 
-        GetClientRect(hwnd, &rect);
+        ClientRect rect(hwnd);
         GetWindowText(hwnd, text, 256);
 
         SetBkMode(hdc, TRANSPARENT);
-        rect.left += 10;
-        rect.top += 4;
-        DrawText(hdc, text, StrLen(text), &rect, DT_LEFT);
+        rect.x += 10; rect.dx -= 10;
+        rect.y += 4; rect.dy -= 4;
+        DrawText(hdc, text, StrLen(text), &rect.ToRECT(), DT_LEFT);
         
         int width = MulDiv(FIND_STATUS_WIDTH, win->dpi, USER_DEFAULT_SCREEN_DPI) - 20;
-        rect.top += MulDiv(20, win->dpi, USER_DEFAULT_SCREEN_DPI);
-        rect.bottom = rect.top + FIND_STATUS_PROGRESS_HEIGHT;
-        rect.right = rect.left + width;
-        paint_rect(hdc, &rect);
+        rect.dx = width;
+        rect.y += MulDiv(20, win->dpi, USER_DEFAULT_SCREEN_DPI);
+        rect.dy = FIND_STATUS_PROGRESS_HEIGHT;
+        paint_rect(hdc, &rect.ToRECT());
         
         int percent = win->findPercent;
         if (percent > 100)
             percent = 100;
-        rect.top += 2;
-        rect.left += 2;
-        rect.right = rect.left + width * percent / 100 - 3;
-        rect.bottom -= 1;
-        FillRect(hdc, &rect, gBrushShadow);
+        rect.x += 2;
+        rect.dx = width * percent / 100 - 3;
+        rect.y += 2;
+        rect.dy -= 3;
+        FillRect(hdc, &rect.ToRECT(), gBrushShadow);
 
         SelectFont(hdc, oldfnt);
         EndPaint(hwnd, &ps);
@@ -4865,10 +4857,9 @@ static void UpdateToolbarFindText(WindowInfo *win)
     const TCHAR *text = _TR("Find:");
     Win::SetText(win->hwndFindText, text);
 
-    RECT findWndRect;
-    GetWindowRect(win->hwndFindBg, &findWndRect);
-    int findWndDx = RectDx(&findWndRect);
-    int findWndDy = RectDy(&findWndRect);
+    WindowRect findWndRect(win->hwndFindBg);
+    int findWndDx = findWndRect.dx;
+    int findWndDy = findWndRect.dy;
 
     RECT r;
     SendMessage(win->hwndToolbar, TB_GETRECT, IDT_VIEW_ZOOMIN, (LPARAM)&r);
@@ -4981,10 +4972,9 @@ static void UpdateToolbarPageText(WindowInfo *win, int pageCount)
     SIZE size = TextSizeInHwnd(win->hwndPageText, text);
     size.cx += 6;
 
-    RECT pageWndRect;
-    GetWindowRect(win->hwndPageBg, &pageWndRect);
-    int pageWndDx = RectDx(&pageWndRect);
-    int pageWndDy = RectDy(&pageWndRect);
+    WindowRect pageWndRect(win->hwndPageBg);
+    int pageWndDx = pageWndRect.dx;
+    int pageWndDy = pageWndRect.dy;
 
     RECT r;
     SendMessage(win->hwndToolbar, TB_GETRECT, IDM_OPEN, (LPARAM)&r);
@@ -5130,8 +5120,7 @@ static void CreateToolbar(WindowInfo *win, HINSTANCE hInst) {
     lres = SendMessage(win->hwndReBar, RB_INSERTBAND, (WPARAM)-1, (LPARAM)&rbBand);
 
     SetWindowPos(win->hwndReBar, NULL, 0, 0, 0, 0, SWP_NOZORDER);
-    GetWindowRect(win->hwndReBar, &rc);
-    gReBarDy = RectDy(&rc);
+    gReBarDy = WindowRect(win->hwndReBar).dy;
     //TODO: this was inherited but doesn't seem to be right (makes toolbar
     // partially unpainted if using classic scheme on xp or vista
     //gReBarDyFrame = bIsAppThemed ? 0 : 2;
@@ -5154,13 +5143,12 @@ static LRESULT CALLBACK WndProcSpliter(HWND hwnd, UINT message, WPARAM wParam, L
                 ScreenToClient(win->hwndFrame, &pcur);
                 int tocWidth = pcur.x;
 
-                RECT r;
-                GetClientRect(win->hwndTocBox, &r);
-                int prevTocWidth = RectDx(&r);
-                GetClientRect(win->hwndFrame, &r);
-                int width = RectDx(&r) - tocWidth - SPLITTER_DX;
-                int prevCanvasWidth = RectDx(&r) - prevTocWidth - SPLITTER_DX;
-                int height = RectDy(&r);
+                ClientRect r(win->hwndTocBox);
+                int prevTocWidth = r.dx;
+                r = ClientRect(win->hwndFrame);
+                int width = r.dx - tocWidth - SPLITTER_DX;
+                int prevCanvasWidth = r.dx - prevTocWidth - SPLITTER_DX;
+                int height = r.dy;
 
                 // TODO: ensure that the window is always wide enough for both
                 if (tocWidth < min(SPLITTER_MIN_WIDTH, prevTocWidth) ||
@@ -5305,8 +5293,7 @@ static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT message, WPARAM wParam, LP
     WindowInfo *win = FindWindowInfoByHwnd(hwnd);
     switch (message) {
     case WM_SIZE: {
-        RECT rc;
-        GetWindowRect(hwnd, &rc);
+        WindowRect rc(hwnd);
 
         HWND titleLabel = GetDlgItem(hwnd, 0);
         ScopedMem<TCHAR> text(Win::GetText(titleLabel));
@@ -5317,9 +5304,9 @@ static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT message, WPARAM wParam, LP
         size.cy += 2 * offset;
 
         HWND closeIcon = GetDlgItem(hwnd, 1);
-        MoveWindow(titleLabel, offset, offset, RectDx(&rc) - 2 * offset, size.cy - 2 * offset, true);
-        MoveWindow(closeIcon, RectDx(&rc) - 16, (size.cy - 16) / 2, 16, 16, true);
-        MoveWindow(win->hwndTocTree, 0, size.cy, RectDx(&rc), RectDy(&rc) - size.cy, true);
+        MoveWindow(titleLabel, offset, offset, rc.dx - 2 * offset, size.cy - 2 * offset, true);
+        MoveWindow(closeIcon, rc.dx - 16, (size.cy - 16) / 2, 16, 16, true);
+        MoveWindow(win->hwndTocTree, 0, size.cy, rc.dx, rc.dy - size.cy, true);
         break;
     }
     case WM_DRAWITEM:
@@ -5588,28 +5575,26 @@ void WindowInfo::ShowTocBox()
 
     LoadTocTree();
 
-    RECT rtoc, rframe;
     int cw, ch, cx, cy;
 
-    GetClientRect(hwndFrame, &rframe);
-    UpdateTocWidth(this, NULL, RectDx(&rframe) / 4);
-    GetWindowRect(hwndTocBox, &rtoc);
+    ClientRect rframe(hwndFrame);
+    UpdateTocWidth(this, NULL, rframe.dx / 4);
 
     if (gGlobalPrefs.m_showToolbar && !fullScreen && !presentation)
         cy = gReBarDy + gReBarDyFrame;
     else
         cy = 0;
-    ch = RectDy(&rframe) - cy;
+    ch = rframe.dy - cy;
 
     // make sure that the sidebar is never too wide or too narrow
-    cx = RectDx(&rtoc);
-    if (RectDx(&rframe) <= 2 * SPLITTER_MIN_WIDTH)
-        cx = RectDx(&rframe) / 2;
-    else if (cx >= RectDx(&rframe) - SPLITTER_MIN_WIDTH)
-        cx = RectDx(&rframe) - SPLITTER_MIN_WIDTH;
+    cx = WindowRect(hwndTocBox).dx;
+    if (rframe.dx <= 2 * SPLITTER_MIN_WIDTH)
+        cx = rframe.dx / 2;
+    else if (cx >= rframe.dx - SPLITTER_MIN_WIDTH)
+        cx = rframe.dx - SPLITTER_MIN_WIDTH;
     else if (cx < SPLITTER_MIN_WIDTH)
         cx = SPLITTER_MIN_WIDTH;
-    cw = RectDx(&rframe) - cx - SPLITTER_DX;
+    cw = rframe.dx - cx - SPLITTER_DX;
 
     SetWindowPos(hwndTocBox, NULL, 0, cy, cx, ch, SWP_NOZORDER|SWP_SHOWWINDOW);
     SetWindowPos(hwndSpliter, NULL, cx, cy, SPLITTER_DX, ch, SWP_NOZORDER|SWP_SHOWWINDOW);
@@ -5621,19 +5606,15 @@ void WindowInfo::ShowTocBox()
 
 void WindowInfo::HideTocBox()
 {
-    RECT r;
-    GetClientRect(hwndFrame, &r);
-
     int cy = 0;
-    int cw = RectDx(&r), ch = RectDy(&r);
-
     if (gGlobalPrefs.m_showToolbar && !fullScreen && !presentation)
         cy = gReBarDy + gReBarDyFrame;
 
     if (GetFocus() == hwndTocTree)
         SetFocus(hwndFrame);
 
-    SetWindowPos(hwndCanvas, NULL, 0, cy, cw, ch - cy, SWP_NOZORDER);
+    ClientRect r(hwndFrame);
+    SetWindowPos(hwndCanvas, NULL, 0, cy, r.dx, r.dy - cy, SWP_NOZORDER);
     ShowWindow(hwndTocBox, SW_HIDE);
     ShowWindow(hwndSpliter, SW_HIDE);
 

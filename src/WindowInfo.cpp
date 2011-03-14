@@ -59,6 +59,11 @@ WindowInfo::~WindowInfo() {
     free(this->tocState);
 }
 
+void WindowInfo::GetCanvasSize()
+{
+    this->canvasRc = ClientRect(hwndCanvas);
+}
+
 void WindowInfo::DoubleBuffer_Show(HDC hdc)
 {
     if (this->hdc != this->hdcToDraw) {
@@ -190,10 +195,9 @@ void WindowInfo::DisplayStateFromToC(DisplayState *ds)
 
 void WindowInfo::ResizeIfNeeded(bool resizeWindow)
 {
-    RECT rc;
-    GetClientRect(this->hwndCanvas, &rc);
+    ClientRect rc(this->hwndCanvas);
 
-    if (!this->hdcToDraw || this->winDx() != RectDx(&rc) || this->winDy() != RectDy(&rc)) {
+    if (!this->hdcToDraw || this->winDx() != rc.dx || this->winDy() != rc.dy) {
         this->DoubleBuffer_New();
         if (resizeWindow) {
             assert(this->dm);
@@ -230,10 +234,9 @@ void WindowInfo::ZoomToSelection(float factor, bool relative)
         for (SelectionOnPage *sel = this->selectionOnPage->next; sel; sel = sel->next)
             selRect = selRect.Union(sel->selectionCanvas);
 
-        RECT rc;
-        GetClientRect(this->hwndCanvas, &rc);
-        pt.x = 2 * selRect.x + selRect.dx - RectDx(&rc) / 2;
-        pt.y = 2 * selRect.y + selRect.dy - RectDy(&rc) / 2;
+        ClientRect rc(this->hwndCanvas);
+        pt.x = 2 * selRect.x + selRect.dx - rc.dx / 2;
+        pt.y = 2 * selRect.y + selRect.dy - rc.dy / 2;
 
         pt.x = CLAMP(pt.x, selRect.x, selRect.x + selRect.dx);
         pt.y = CLAMP(pt.y, selRect.y, selRect.y + selRect.dy);

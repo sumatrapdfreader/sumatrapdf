@@ -115,6 +115,20 @@ public:
         return Rect(x, y, dx, dy);
     }
 
+    void Offset(T _x, T _y) {
+        x += _x;
+        y += _y;
+    }
+
+    void Inflate(T _x, T _y) {
+        x -= _x; dx += 2 * _x;
+        y -= _y; dy += 2 * _y;
+    }
+
+    Point<T> TL() const { return Point<T>(x, y); }
+    Point<T> BR() const { return Point<T>(x + dx, y + dy); }
+    Size<T> Size() const { return ::Size<T>(dx, dy); }
+
     RECT ToRECT() const {
         Rect<int> rectI(this->Convert<int>());
         RECT result = { rectI.x, rectI.y, rectI.x + rectI.dx, rectI.y + rectI.dy };

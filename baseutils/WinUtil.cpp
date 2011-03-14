@@ -396,19 +396,18 @@ void paint_rect(HDC hdc, RECT * rect)
     LineTo(hdc, rect->left, rect->top);
 }
 
-void draw_centered_text(HDC hdc, RECT *r, const TCHAR *txt)
+void draw_centered_text(HDC hdc, RectI r, const TCHAR *txt)
 {    
     SetBkMode(hdc, TRANSPARENT);
-    DrawText(hdc, txt, -1, r, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+    DrawText(hdc, txt, -1, &r.ToRECT(), DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 }
 
 bool IsCursorOverWindow(HWND hwnd)
 {
     POINT pt;
-    RECT rcWnd;
     GetCursorPos(&pt);
-    GetWindowRect(hwnd, &rcWnd);
-    return PtInRect(&rcWnd, pt);
+    WindowRect rcWnd(hwnd);
+    return rcWnd.Inside(PointI(pt.x, pt.y));
 }
 
 void CenterDialog(HWND hDlg)

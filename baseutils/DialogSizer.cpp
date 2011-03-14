@@ -28,13 +28,12 @@ public:
             nItemCount = 0;
 
         // Store some sizes etc. for later.
-        RECT rc;
-        GetWindowRect(hwnd, &rc);
-        ptSmallest.x = RectDx(&rc);
-        ptSmallest.y = RectDy(&rc);
+        WindowRect rectWnd(hwnd);
+        ptSmallest.x = rectWnd.dx;
+        ptSmallest.y = rectWnd.dy;
 
-        GetClientRect(hwnd, &rc);
-        sizeClient = SizeI(RectDx(&rc), RectDy(&rc));
+        ClientRect rectClient(hwnd);
+        sizeClient = rectClient.Size();
         UpdateGripperRect();
 
         // Because we have successfully created our data we need to subclass the control now, if not

@@ -77,7 +77,7 @@ static void GeomTest()
         assert(urect.x + urect.dx == curr->u_xe && urect.y + urect.dy == curr->u_ye);
 
         assert(!rx1.Inside(PointI(-2, -2)));
-        assert(rx1.Inside(PointI(rx1.x, rx1.y)));
+        assert(rx1.Inside(rx1.TL()));
         assert(!rx1.Inside(PointI(rx1.x, INT_MAX)));
         assert(!rx1.Inside(PointI(INT_MIN, rx1.y)));
     }

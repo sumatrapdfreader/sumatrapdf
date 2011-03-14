@@ -65,7 +65,6 @@
 		<Filter
 			Name="baseutils"
 			>
-			</File>
 			<File
 				RelativePath=".\baseutils\BaseUtil.h"
 				>

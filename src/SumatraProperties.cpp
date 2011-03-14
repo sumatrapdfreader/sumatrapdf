@@ -178,7 +178,7 @@ void PdfPropertiesLayout::AddProperty(const TCHAR *key, const TCHAR *value)
         delete value;
 }
 
-static void UpdatePropertiesLayout(HWND hwnd, HDC hdc, RECT *rect) {
+static void UpdatePropertiesLayout(HWND hwnd, HDC hdc, RectI *rect) {
     SIZE            txtSize;
     int             totalDx, totalDy;
     int             leftMaxDx, rightMaxDx;
@@ -227,12 +227,9 @@ static void UpdatePropertiesLayout(HWND hwnd, HDC hdc, RECT *rect) {
     totalDy += lineCount * (textDy + PROPERTIES_TXT_DY_PADDING);
     totalDy += 4;
 
-    RECT rc;
-    GetClientRect(hwnd, &rc);
-
     int offset = PROPERTIES_RECT_PADDING;
     if (rect)
-        *rect = RectI(0, 0, totalDx + 2 * offset, totalDy + offset).ToRECT();
+        *rect = RectI(0, 0, totalDx + 2 * offset, totalDy + offset);
 
     int currY = 0;
     for (size_t i = 0; i < layoutData->Count(); i++) {
@@ -263,19 +260,18 @@ static void CreatePropertiesWindow(WindowInfo *win, PdfPropertiesLayout *layoutD
     SetWindowLongPtr(win->hwndPdfProperties, GWLP_USERDATA, (LONG_PTR)layoutData);
 
     // get the dimensions required for the about box's content
-    RECT rc;
+    RectI rc;
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(win->hwndPdfProperties, &ps);
     UpdatePropertiesLayout(win->hwndPdfProperties, hdc, &rc);
     EndPaint(win->hwndPdfProperties, &ps);
 
     // resize the new window to just match these dimensions
-    RECT wRc, cRc;
-    GetWindowRect(win->hwndPdfProperties, &wRc);
-    GetClientRect(win->hwndPdfProperties, &cRc);
-    wRc.right += RectDx(&rc) - RectDx(&cRc);
-    wRc.bottom += RectDy(&rc) - RectDy(&cRc);
-    MoveWindow(win->hwndPdfProperties, wRc.left, wRc.top, RectDx(&wRc), RectDy(&wRc), FALSE);
+    WindowRect wRc(win->hwndPdfProperties);
+    ClientRect cRc(win->hwndPdfProperties);
+    wRc.dx += rc.dx - cRc.dx;
+    wRc.dy += rc.dy - cRc.dy;
+    MoveWindow(win->hwndPdfProperties, wRc.x, wRc.y, wRc.dx, wRc.dy, FALSE);
 
     ShowWindow(win->hwndPdfProperties, SW_SHOW);
 }
@@ -384,7 +380,7 @@ void OnMenuProperties(WindowInfo *win)
     CreatePropertiesWindow(win, layoutData);
 }
 
-static void DrawProperties(HWND hwnd, HDC hdc, RECT *rect)
+static void DrawProperties(HWND hwnd, HDC hdc)
 {
     WindowInfo * win = FindWindowInfoByHwnd(hwnd);
     PdfPropertiesLayout *layoutData = (PdfPropertiesLayout *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
@@ -400,9 +396,8 @@ static void DrawProperties(HWND hwnd, HDC hdc, RECT *rect)
 
     SetBkMode(hdc, TRANSPARENT);
 
-    RECT rcClient;
-    GetClientRect(hwnd, &rcClient);
-    FillRect(hdc, &rcClient, brushBg);
+    ClientRect rcClient(hwnd);
+    FillRect(hdc, &rcClient.ToRECT(), brushBg);
 
 #if 0
     SelectObject(hdc, brushBg);
@@ -422,10 +417,10 @@ static void DrawProperties(HWND hwnd, HDC hdc, RECT *rect)
     SelectObject(hdc, fontRightTxt);
     for (size_t i = 0; i < layoutData->Count(); i++) {
         PdfPropertyEl *el = layoutData->At(i);
-        RECT rc = el->rightPos.ToRECT();
-        if (rc.right > rcClient.right - PROPERTIES_RECT_PADDING)
-            rc.right = rcClient.right - PROPERTIES_RECT_PADDING;
-        DrawText(hdc, el->rightTxt, -1, &rc, DT_LEFT | DT_PATH_ELLIPSIS);
+        RectI rc = el->rightPos;
+        if (rc.x + rc.dx > rcClient.x + rcClient.dx - PROPERTIES_RECT_PADDING)
+            rc.dx = rcClient.x + rcClient.dx - PROPERTIES_RECT_PADDING - rc.x;
+        DrawText(hdc, el->rightTxt, -1, &rc.ToRECT(), DT_LEFT | DT_PATH_ELLIPSIS);
     }
 
     SelectObject(hdc, origFont);
@@ -441,10 +436,10 @@ static void DrawProperties(HWND hwnd, HDC hdc, RECT *rect)
 static void OnPaintProperties(HWND hwnd)
 {
     PAINTSTRUCT ps;
-    RECT rc;
+    RectI rc;
     HDC hdc = BeginPaint(hwnd, &ps);
     UpdatePropertiesLayout(hwnd, hdc, &rc);
-    DrawProperties(hwnd, hdc, &rc);
+    DrawProperties(hwnd, hdc);
     EndPaint(hwnd, &ps);
 }
 

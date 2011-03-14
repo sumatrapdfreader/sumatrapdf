@@ -204,9 +204,9 @@ $(O)\CPdfFilter.obj: baseutils\BaseUtil.h baseutils\GeomUtil.h baseutils\StrUtil
 $(O)\CPdfFilter.obj: baseutils\TStrUtil.h baseutils\WStrUtil.h mupdf\fitz\fitz.h
 $(O)\CPdfFilter.obj: mupdf\mupdf\mupdf.h src\ifilter\CPdfFilter.h src\ifilter\FilterBase.h
 $(O)\CPdfFilter.obj: src\ifilter\PdfFilter.h src\PdfEngine.h
-$(O)\CrashHandler.obj: baseutils\BaseUtil.h baseutils\StrUtil.h baseutils\TStrUtil.h
-$(O)\CrashHandler.obj: baseutils\WinUtil.h baseutils\WStrUtil.h src\CrashHandler.h
-$(O)\CrashHandler.obj: src\translations.h
+$(O)\CrashHandler.obj: baseutils\BaseUtil.h baseutils\GeomUtil.h baseutils\StrUtil.h
+$(O)\CrashHandler.obj: baseutils\TStrUtil.h baseutils\WinUtil.h baseutils\WStrUtil.h
+$(O)\CrashHandler.obj: src\CrashHandler.h src\translations.h
 $(O)\CTeXFilter.obj: baseutils\BaseUtil.h baseutils\StrUtil.h baseutils\TStrUtil.h
 $(O)\CTeXFilter.obj: baseutils\WStrUtil.h src\ifilter\CTeXFilter.h src\ifilter\FilterBase.h
 $(O)\CTeXFilter.obj: src\ifilter\PdfFilter.h
@@ -227,9 +227,10 @@ $(O)\FileWatch.obj: baseutils\TStrUtil.h baseutils\WStrUtil.h src\FileWatch.h
 $(O)\Http.obj: baseutils\BaseUtil.h baseutils\StrUtil.h baseutils\TStrUtil.h
 $(O)\Http.obj: baseutils\Vec.h baseutils\WStrUtil.h src\Http.h
 $(O)\Http.obj: src\SumatraPDF.h src\Version.h
-$(O)\Installer.obj: baseutils\BaseUtil.h baseutils\FileUtil.h baseutils\StrUtil.h
-$(O)\Installer.obj: baseutils\TStrUtil.h baseutils\WinUtil.h baseutils\WStrUtil.h
-$(O)\Installer.obj: src\installer\..\ifilter\PdfFilter.h src\installer\Resource.h src\Version.h
+$(O)\Installer.obj: baseutils\BaseUtil.h baseutils\FileUtil.h baseutils\GeomUtil.h
+$(O)\Installer.obj: baseutils\StrUtil.h baseutils\TStrUtil.h baseutils\WinUtil.h
+$(O)\Installer.obj: baseutils\WStrUtil.h src\installer\..\ifilter\PdfFilter.h src\installer\Resource.h
+$(O)\Installer.obj: src\Version.h
 $(O)\LangMenuDef.obj: src\LangMenuDef.h
 $(O)\MuPDF_Exports.obj: mupdf\fitz\fitz.h
 $(O)\npPdfViewer.obj: src\browserplugin\npapi\npapi.h src\browserplugin\npapi\npfunctions.h src\browserplugin\npapi\npruntime.h
@@ -320,6 +321,6 @@ $(O)\WindowInfo.obj: mupdf\mupdf\mupdf.h src\DisplayModel.h src\DisplayState.h
 $(O)\WindowInfo.obj: src\FileWatch.h src\PdfEngine.h src\PdfSearch.h
 $(O)\WindowInfo.obj: src\PdfSelection.h src\PdfSync.h src\Resource.h
 $(O)\WindowInfo.obj: src\WindowInfo.h
-$(O)\WinUtil.obj: baseutils\BaseUtil.h baseutils\StrUtil.h baseutils\TStrUtil.h
-$(O)\WinUtil.obj: baseutils\WinUtil.h baseutils\WStrUtil.h
+$(O)\WinUtil.obj: baseutils\BaseUtil.h baseutils\GeomUtil.h baseutils\StrUtil.h
+$(O)\WinUtil.obj: baseutils\TStrUtil.h baseutils\WinUtil.h baseutils\WStrUtil.h
 $(O)\WStrUtil.obj: baseutils\BaseUtil.h baseutils\StrUtil.h baseutils\WStrUtil.h
