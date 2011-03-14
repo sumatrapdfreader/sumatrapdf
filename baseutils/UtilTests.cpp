@@ -386,7 +386,7 @@ static void BencTestParseString()
 {
     struct {
         const char *    benc;
-        char *          value;
+        TCHAR *         value;
     } testData[] = {
         { NULL, NULL },
         { "", NULL },
@@ -400,11 +400,14 @@ static void BencTestParseString()
         { "-2:ab", NULL },
         { "2e:ab", NULL },
 
-        { "0:", "" },
-        { "1:a", "a" },
-        { "2::a", ":a" },
-        { "4:spam", "spam" },
-        { "4:i23e", "i23e" },
+        { "0:", _T("") },
+        { "1:a", _T("a") },
+        { "2::a", _T(":a") },
+        { "4:spam", _T("spam") },
+        { "4:i23e", _T("i23e") },
+#ifdef UNICODE
+        { "5:\xC3\xA4\xE2\x82\xAC", L"\u00E4\u20AC" },
+#endif
     };
 
     for (int i = 0; i < dimof(testData); i++) {
@@ -412,13 +415,18 @@ static void BencTestParseString()
         if (testData[i].value) {
             assert(obj);
             assert(obj->Type() == BT_STRING);
-            assert(str_eq(static_cast<BencString *>(obj)->RawValue(), testData[i].value));
+            ScopedMem<TCHAR> value(static_cast<BencString *>(obj)->Value());
+            assert(tstr_eq(value, testData[i].value));
             BencTestSerialization(obj, testData[i].benc);
             delete obj;
         } else {
             assert(!obj);
         }
     }
+
+    BencRawString raw("a\x82");
+    BencTestSerialization(&raw, "2:a\x82");
+    assert(str_eq(raw.RawValue(), "a\x82"));
 }
 
 static void BencTestParseArray(const char *benc, size_t expectedLen)

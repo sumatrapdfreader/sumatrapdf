@@ -179,6 +179,9 @@ char *mem_to_hexstr(const unsigned char *buf, int len)
 /* Caller needs to free() the result */
 static char *multibyte_to_multibyte(const char *src, UINT CodePage1, UINT CodePage2)
 {
+    assert(src);
+    if (!src) return NULL;
+
     char *res = NULL;
     WCHAR *tmp;
     int requiredBufSize = MultiByteToWideChar(CodePage1, 0, src, -1, NULL, 0);

@@ -91,7 +91,6 @@ static TCHAR *FormatNumWithThousandSep(size_t num) {
 // Format a floating point number with at most two decimal after the point
 // Caller needs to free the result.
 static TCHAR *FormatFloatWithThousandSep(double number, const TCHAR *unit=NULL) {
-    TCHAR buf[64];
     size_t num = (size_t)(number * 100);
 
     ScopedMem<TCHAR> tmp(FormatNumWithThousandSep(num / 100));
@@ -99,7 +98,7 @@ static TCHAR *FormatFloatWithThousandSep(double number, const TCHAR *unit=NULL) 
     GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, decimal, dimof(decimal));
 
     // always add between one and two decimals after the point
-    wsprintf(buf, _T("%s%s%02d"), tmp, decimal, num % 100);
+    ScopedMem<TCHAR> buf(tstr_printf(_T("%s%s%02d"), tmp, decimal, num % 100));
     if (tstr_endswith(buf, _T("0")))
         buf[StrLen(buf) - 1] = '\0';
 

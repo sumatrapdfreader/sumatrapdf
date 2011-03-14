@@ -11,7 +11,8 @@
 
    Note: As an exception to the above specifications, this implementation
          only handles zero-terminated strings (i.e. \0 may not appear within
-         strings) and considers all encoded strings to be UTF-8 encoded.
+         strings) and considers all encoded strings to be UTF-8 encoded
+         (unless handled as BencRawString and retrieved with RawValue()).
 */
 
 #include <inttypes.h>
@@ -34,16 +35,23 @@ public:
 class BencString : public BencObj {
     char *value;
 
+protected:
+    BencString(const char *rawValue, size_t len);
+
 public:
-    BencString(const char *value);
-    BencString(const WCHAR *value);
+    BencString(const TCHAR *value);
     ~BencString() { free(value); }
 
     TCHAR *Value() const;
-    char *RawValue() const { return value; }
+    const char *RawValue() const { return value; }
 
     virtual char *Encode();
     static BencString *Decode(const char *bytes, size_t *len_out);
+};
+
+class BencRawString : public BencString {
+public:
+    BencRawString(const char *value, size_t len=-1);
 };
 
 class BencInt : public BencObj {
@@ -71,10 +79,7 @@ public:
         assert(obj && value.Find(obj) == -1);
         value.Append(obj);
     }
-    void Add(const char *string) {
-        Add(new BencString(string));
-    }
-    void Add(const WCHAR *string) {
+    void Add(const TCHAR *string) {
         Add(new BencString(string));
     }
     void Add(int64_t val) {
@@ -125,13 +130,10 @@ public:
 
     void Add(const char *key, BencObj *obj) {
         assert(key && obj && !GetObj(key) && values.Find(obj) == -1);
-        keys.Append(strdup(key));
+        keys.Append(_strdup(key));
         values.Append(obj);
     }
-    void Add(const char *key, const char *string) {
-        Add(key, new BencString(string));
-    }
-    void Add(const char *key, const WCHAR *string) {
+    void Add(const char *key, const TCHAR *string) {
         Add(key, new BencString(string));
     }
     void Add(const char *key, int64_t val) {

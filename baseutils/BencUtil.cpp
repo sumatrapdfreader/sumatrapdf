@@ -47,14 +47,14 @@ static const char *ParseBencInt(const char *bytes, int64_t& value)
     return bytes;
 }
 
-BencString::BencString(const char *value) : BencObj(BT_STRING)
+BencString::BencString(const TCHAR *value) : BencObj(BT_STRING)
 {
-    this->value = str_to_utf8(value);
+    this->value = tstr_to_utf8(value);
 }
 
-BencString::BencString(const WCHAR *value) : BencObj(BT_STRING)
+BencString::BencString(const char *rawValue, size_t len) : BencObj(BT_STRING)
 {
-    this->value = wstr_to_utf8(value);
+    this->value = str_dupn(rawValue, len);
 }
 
 TCHAR *BencString::Value() const
@@ -83,9 +83,11 @@ BencString *BencString::Decode(const char *bytes, size_t *len_out)
 
     if (len_out)
         *len_out = (start - bytes) + (size_t)len;
-    ScopedMem<char> value(str_dupn(start, (size_t)len));
-    return new BencString(value);
+    return new BencRawString(start, (size_t)len);
 }
+
+BencRawString::BencRawString(const char *value, size_t len)
+    : BencString(value, len == (size_t)-1 ? StrLen(value) : len) { }
 
 char *BencInt::Encode()
 {

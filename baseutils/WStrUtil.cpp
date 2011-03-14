@@ -212,6 +212,9 @@ int wstr_printf_s(WCHAR *out, size_t out_cch_size, const WCHAR *format, ...)
 /* Caller needs to free() the result */
 char *wstr_to_multibyte(const WCHAR *txt,  UINT CodePage)
 {
+    assert(txt);
+    if (!txt) return NULL;
+
     int requiredBufSize = WideCharToMultiByte(CodePage, 0, txt, -1, NULL, 0, NULL, NULL);
     char *res = SAZA(char, requiredBufSize);
     if (!res)
@@ -223,6 +226,9 @@ char *wstr_to_multibyte(const WCHAR *txt,  UINT CodePage)
 /* Caller needs to free() the result */
 WCHAR *multibyte_to_wstr(const char *src, UINT CodePage)
 {
+    assert(src);
+    if (!src) return NULL;
+
     int requiredBufSize = MultiByteToWideChar(CodePage, 0, src, -1, NULL, 0);
     WCHAR *res = SAZA(WCHAR, requiredBufSize);
     if (!res)

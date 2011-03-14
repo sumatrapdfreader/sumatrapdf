@@ -640,8 +640,7 @@ static void AddFileMenuItem(HMENU menuFile, DisplayState *state, UINT index)
     assert(state && menuFile);
     if (!state || ! menuFile) return;
 
-    TCHAR menuString[MAX_PATH + 4];
-    wsprintf(menuString, _T("&%d) %s"), (index + 1) % 10, FilePath_GetBaseName(state->filePath));
+    ScopedMem<TCHAR> menuString(tstr_printf(_T("&%d) %s"), (index + 1) % 10, FilePath_GetBaseName(state->filePath)));
     UINT menuId = IDM_FILE_HISTORY_FIRST + index;
     InsertMenu(menuFile, IDM_EXIT, MF_BYCOMMAND | MF_ENABLED | MF_STRING, menuId, menuString);
 }
@@ -2924,8 +2923,8 @@ static void OnPaint(WindowInfo *win)
         HGDIOBJ origFont = SelectObject(hdc, fontRightTxt); /* Just to remember the orig font */
         SetBkMode(hdc, TRANSPARENT);
         FillRect(hdc, &ps.rcPaint, gBrushBg);
-        GetWindowRect(win->hwndCanvas, &ps.rcPaint);
-        DrawText(hdc, _TR("Error loading PDF file."), -1, &ps.rcPaint, DT_SINGLELINE | DT_CENTER | DT_VCENTER) ;
+        GetClientRect(win->hwndCanvas, &ps.rcPaint);
+        draw_centered_text(hdc, &ps.rcPaint, _TR("Error loading PDF file."));
         SelectObject(hdc, origFont);
         Win32_Font_Delete(fontRightTxt);
     } else if (WS_SHOWING_PDF == win->state) {
@@ -4255,8 +4254,7 @@ static void WindowInfo_HideFindStatus(WindowInfo *win, bool canceled=false)
     else if (!win->dm->bFoundText)
         WindowInfo_ShowMessage_Async(win, _TR("No matches were found"), false);
     else {
-        TCHAR buf[256];
-        wsprintf(buf, _TR("Found text at page %d"), win->dm->currentPageNo());
+        ScopedMem<TCHAR> buf(tstr_printf(_TR("Found text at page %d"), win->dm->currentPageNo()));
         WindowInfo_ShowMessage_Async(win, buf, false);
     }    
 }
@@ -5220,8 +5218,7 @@ public:
         if (!win->findStatusVisible)
             WindowInfo_ShowFindStatus(win);
 
-        TCHAR buf[256];
-        wsprintf(buf, _TR("Searching %d of %d..."), current, total);
+        ScopedMem<TCHAR> buf(tstr_printf(_TR("Searching %d of %d..."), current, total));
         Win::SetText(win->hwndFindStatus, buf);
     }
 };
@@ -6678,19 +6675,19 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
             // delegate file opening to a previously running instance by sending a DDE message 
             TCHAR fullpath[MAX_PATH], command[2 * MAX_PATH + 20];
             GetFullPathName(i.fileNames[n], dimof(fullpath), fullpath, NULL);
-            wsprintf(command, _T("[") DDECOMMAND_OPEN _T("(\"%s\", 0, 1, 0)]"), fullpath);
+            tstr_printf_s(command, dimof(command), _T("[") DDECOMMAND_OPEN _T("(\"%s\", 0, 1, 0)]"), fullpath);
             DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, command);
             if (i.destName && !firstDocLoaded) {
-                wsprintf(command, _T("[") DDECOMMAND_GOTO _T("(\"%s\", \"%s\")]"), fullpath, i.destName);
+                tstr_printf_s(command, dimof(command), _T("[") DDECOMMAND_GOTO _T("(\"%s\", \"%s\")]"), fullpath, i.destName);
                 DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, command);
             }
             else if (i.pageNumber > 0 && !firstDocLoaded) {
-                wsprintf(command, _T("[") DDECOMMAND_PAGE _T("(\"%s\", %d)]"), fullpath, i.pageNumber);
+                tstr_printf_s(command, dimof(command), _T("[") DDECOMMAND_PAGE _T("(\"%s\", %d)]"), fullpath, i.pageNumber);
                 DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, command);
             }
             if ((i.startView != DM_AUTOMATIC || i.startZoom != INVALID_ZOOM) && !firstDocLoaded) {
                 ScopedMem<TCHAR> viewMode(utf8_to_tstr(DisplayModeNameFromEnum(i.startView)));
-                tstr_printf_s(command, sizeof(command), _T("[") DDECOMMAND_SETVIEW _T("(\"%s\", \"%s\", %.2f)]"), fullpath, viewMode, i.startZoom);
+                tstr_printf_s(command, dimof(command), _T("[") DDECOMMAND_SETVIEW _T("(\"%s\", \"%s\", %.2f)]"), fullpath, viewMode, i.startZoom);
                 DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, command);
             }
         }
