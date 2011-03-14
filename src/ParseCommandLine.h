@@ -40,6 +40,7 @@ public:
     bool        showConsole;
     HWND        hwndPluginParent;
     bool        exitImmediately;
+    bool        silent;
 
     CommandLineInfo() : makeDefault(false), exitOnPrint(false), printDialog(false),
         printerName(NULL), bgColor(-1), inverseSearchCmdLine(NULL),
@@ -49,7 +50,7 @@ public:
         restrictedUse(false), invertColors(FALSE),
         enterPresentation(false), enterFullscreen(false), hwndPluginParent(NULL),
         startView(DM_AUTOMATIC), startZoom(INVALID_ZOOM),
-        showConsole(false), exitImmediately(false)
+        showConsole(false), exitImmediately(false), silent(false)
     { }
 
     ~CommandLineInfo() {

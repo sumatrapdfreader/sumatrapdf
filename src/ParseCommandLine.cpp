@@ -179,6 +179,10 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
             this->exitImmediately = true;
             return;
         }
+        else if (is_arg("-silent")) {
+            // silences errors happening during -print-to and -print-to-default
+            this->silent = true;
+        }
         else if (is_arg("-print-to-default")) {
             TCHAR *printerName = GetDefaultPrinterName();
             if (printerName) {
@@ -189,11 +193,13 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
         else if (is_arg_with_param("-print-to")) {
             this->SetPrinterName(argList[++n]);
         }
-        else if (is_arg("-exit-on-print")) {
-            this->exitOnPrint = true;
-        }
         else if (is_arg("-print-dialog")) {
             this->printDialog = true;
+        }
+        else if (is_arg("-exit-on-print")) {
+            // only affects -print-dialog (-print-to and -print-to-default
+            // always exit on print)
+            this->exitOnPrint = true;
         }
         else if (is_arg_with_param("-bgcolor") || is_arg_with_param("-bg-color")) {
             // -bgcolor is for backwards compat (was used pre-1.3)
@@ -216,7 +222,7 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
             this->fwdsearchPermanent = _ttoi(argList[++n]);
         }
         else if (is_arg("-esc-to-exit")) {
-            this->escToExit = TRUE;
+            this->escToExit = true;
         }
         else if (is_arg("-reuse-instance")) {
             // find the window handle of a running instance of SumatraPDF

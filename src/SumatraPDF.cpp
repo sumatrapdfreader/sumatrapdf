@@ -6456,7 +6456,7 @@ static bool InstanceInit(HINSTANCE hInstance, int nCmdShow)
     return true;
 }
 
-static bool PrintFile(const TCHAR *fileName, const TCHAR *printerName)
+static bool PrintFile(const TCHAR *fileName, const TCHAR *printerName, bool displayErrors=true)
 {
     TCHAR       devstring[256];      // array for WIN.INI data 
     HANDLE      printer;
@@ -6468,7 +6468,8 @@ static bool PrintFile(const TCHAR *fileName, const TCHAR *printerName)
     PdfEngine *pdfEngine = PdfEngine::CreateFromFileName(fileName2);
 
     if (!pdfEngine || !pdfEngine->hasPermission(PDF_PERM_PRINT)) {
-        MessageBox(NULL, _TR("Cannot print this file"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK);
+        if (displayErrors)
+            MessageBox(NULL, _TR("Cannot print this file"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK);
         return false;
     }
 
@@ -6483,13 +6484,15 @@ static bool PrintFile(const TCHAR *fileName, const TCHAR *printerName)
     TCHAR *port = _tcstok((TCHAR *) NULL, (const TCHAR *)_T(","));
 
     if (!driver || !port) {
-        MessageBox(NULL, _T("Printer with given name doesn't exist"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK);
+        if (displayErrors)
+            MessageBox(NULL, _T("Printer with given name doesn't exist"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK);
         return false;
     }
     
     bool fOk = OpenPrinter((LPTSTR)printerName, &printer, NULL);
     if (!fOk) {
-        MessageBox(NULL, _TR("Could not open Printer"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK);
+        if (displayErrors)
+            MessageBox(NULL, _TR("Could not open Printer"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK);
         return false;
     }
 
@@ -6513,7 +6516,8 @@ static bool PrintFile(const TCHAR *fileName, const TCHAR *printerName)
 
     if (IDOK != returnCode) {
         // If failure, inform the user, cleanup and return failure.
-        MessageBox(NULL, _T("Could not obtain Printer properties"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK);
+        if (displayErrors)
+            MessageBox(NULL, _T("Could not obtain Printer properties"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK);
         goto Exit;
     }
 
@@ -6522,7 +6526,7 @@ static bool PrintFile(const TCHAR *fileName, const TCHAR *printerName)
      * This gives the driver an opportunity to update any private
      * portions of the DevMode structure.
      */ 
-     DocumentProperties(NULL,
+    DocumentProperties(NULL,
         printer,
         (LPTSTR)printerName,
         devMode,        /* Reuse our buffer for output. */ 
@@ -6534,7 +6538,8 @@ static bool PrintFile(const TCHAR *fileName, const TCHAR *printerName)
 
     hdcPrint = CreateDC(driver, printerName, port, devMode); 
     if (!hdcPrint) {
-        MessageBox(NULL, _TR("Couldn't initialize printer"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK);
+        if (displayErrors)
+            MessageBox(NULL, _TR("Couldn't initialize printer"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK);
         goto Exit;
     }
     if (CheckPrinterStretchDibSupport(NULL, hdcPrint)) {
@@ -6663,7 +6668,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         // note: this prints all PDF files. Another option would be to
         // print only the first one
         for (size_t n = 0; n < i.fileNames.Count(); n++) {
-            bool ok = PrintFile(i.fileNames[n], i.printerName);
+            bool ok = PrintFile(i.fileNames[n], i.printerName, !i.silent);
             if (!ok)
                 msg.wParam++;
         }
@@ -6692,7 +6697,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
             }
         }
         else {
-            bool showWin = !i.exitOnPrint && !gPluginMode;
+            bool showWin = !(i.printDialog && i.exitOnPrint) && !gPluginMode;
             win = LoadDocument(i.fileNames[n], NULL, showWin);
             if (!win || win->state != WS_SHOWING_PDF)
                 msg.wParam++; // set an error code for the next goto Exit
