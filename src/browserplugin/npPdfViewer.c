@@ -224,6 +224,7 @@ LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lPar
 		HFONT hFont = CreateFontW(-MulDiv(14, GetDeviceCaps(hDC, LOGPIXELSY), 96), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, L"MS Shell Dlg");
 		HDC hDCBuffer = CreateCompatibleDC(hDC);
 		HBITMAP hDoubleBuffer;
+		HWND hChild;
 		
 		// set up double buffering
 		GetClientRect(hWnd, &rcClient);
@@ -262,6 +263,12 @@ LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lPar
 		DeleteObject(hDoubleBuffer);
 		DeleteDC(hDCBuffer);
 		EndPaint(hWnd, &ps);
+		
+		hChild = FindWindowEx(hWnd, NULL, NULL, NULL);
+		if (hChild)
+		{
+			InvalidateRect(hChild, NULL, FALSE);
+		}
 	}
 	
 	return DefWindowProc(hWnd, uiMsg, wParam, lParam);
