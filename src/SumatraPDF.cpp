@@ -4365,7 +4365,8 @@ static bool OnKeydown(WindowInfo *win, WPARAM key, LPARAM lparam, bool inTextfie
 static void ClearSearch(WindowInfo *win)
 {
     DeleteOldSelectionInfo(win);
-    win->dm->textSelection->Reset();
+    if (win->dm)
+        win->dm->textSelection->Reset();
     win->RepaintAsync();
 }
 
@@ -4392,7 +4393,7 @@ static void OnChar(WindowInfo *win, WPARAM key)
             CloseWindow(win, TRUE);
         else if (win->fullScreen)
             OnMenuViewFullscreen(win);
-        else
+        else if (win->showSelection)
             ClearSearch(win);
         return;
     case 'q':
