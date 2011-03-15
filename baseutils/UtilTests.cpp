@@ -484,8 +484,8 @@ static void BencTestParseDicts()
 
     BencTestParseDict("de", 0);
     BencTestParseDict("d2:hai35ee", 1);
-    BencTestParseDict("d3:rum1:a4:borg3:leee", 2);
-    BencTestParseDict("d3:keyi35e1:Zi-23e2:ablee", 3);
+    BencTestParseDict("d4:borg1:a3:rum3:leee", 2);
+    BencTestParseDict("d1:Zi-23e2:able3:keyi35ee", 3);
 }
 
 #define ITERATION_COUNT 128
@@ -545,7 +545,14 @@ static void BencTestDictAppend()
     assert(intObj && intObj->Value() == 123);
     delete dict;
 
-    /* TODO: test insertion in random order */
+    dict = new BencDict();
+    dict->Add("ab", 1);
+    dict->Add("KL", 2);
+    dict->Add("gh", 3);
+    dict->Add("YZ", 4);
+    dict->Add("ab", 5);
+    BencTestSerialization(dict, "d2:KLi2e2:YZi4e2:abi5e2:ghi3ee");
+    delete dict;
 }
 
 void BaseUtils_UnitTests(void)

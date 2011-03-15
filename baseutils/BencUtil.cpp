@@ -62,7 +62,7 @@ TCHAR *BencString::Value() const
     return utf8_to_tstr(value);
 }
 
-char *BencString::Encode()
+char *BencString::Encode() const
 {
     return str_printf("%" PRIuPTR ":%s", StrLen(value), value);
 }
@@ -89,7 +89,7 @@ BencString *BencString::Decode(const char *bytes, size_t *len_out)
 BencRawString::BencRawString(const char *value, size_t len)
     : BencString(value, len == (size_t)-1 ? StrLen(value) : len) { }
 
-char *BencInt::Encode()
+char *BencInt::Encode() const
 {
     return str_printf("i%" PRId64 "e", value);
 }
@@ -115,7 +115,7 @@ BencDict *BencArray::GetDict(size_t index) const {
     return NULL;
 }
 
-char *BencArray::Encode()
+char *BencArray::Encode() const
 {
     Vec<char> bytes(256, 1);
     bytes.Append("l", 1);
@@ -150,7 +150,48 @@ BencArray *BencArray::Decode(const char *bytes, size_t *len_out)
     return list;
 }
 
-char *BencDict::Encode()
+static int keycmp(const void *a, const void *b)
+{
+    return strcmp(*(char **)a, *(char **)b);
+}
+
+BencObj *BencDict::GetObj(const char *key) const
+{
+    char **found = (char **)bsearch(&key, keys.LendData(), keys.Count(), sizeof(key), keycmp);
+    if (found)
+        return values[found - keys.LendData()];
+    return NULL;
+}
+
+/* Per bencoding spec, keys must be ordered alphabetically when serialized,
+   so we insert them in sorted order. This might be expensive due to lots of
+   memory copying for lots of insertions in random order (more efficient would
+   probably be: append at the end and sort when insertions are done or use a
+   proper hash table instead of two parallel arrays). */
+void BencDict::Add(const char *key, BencObj *obj)
+{
+    assert(key && obj && values.Find(obj) == -1);
+
+    // determine the ordered insertion index
+    size_t oix = 0;
+    if (keys.Count() > 0 && strcmp(keys.Last(), key) < 0)
+        oix = keys.Count();
+    for (; oix < keys.Count(); oix++)
+        if (strcmp(keys[oix], key) >= 0)
+            break;
+
+    if (oix < keys.Count() && str_eq(keys[oix], key)) {
+        // overwrite a previous value
+        delete values[oix];
+        values[oix] = obj;
+    }
+    else {
+        keys.InsertAt(oix, StrCopy(key));
+        values.InsertAt(oix, obj);
+    }
+}
+
+char *BencDict::Encode() const
 {
     Vec<char> bytes(256, 1);
     bytes.Append("d", 1);

@@ -28,7 +28,7 @@ public:
     virtual ~BencObj() { }
     BencType Type() const { return type; }
 
-    virtual char *Encode() = 0;
+    virtual char *Encode() const = 0;
     static BencObj *Decode(const char *bytes, size_t *len_out=NULL);
 };
 
@@ -45,7 +45,7 @@ public:
     TCHAR *Value() const;
     const char *RawValue() const { return value; }
 
-    virtual char *Encode();
+    virtual char *Encode() const;
     static BencString *Decode(const char *bytes, size_t *len_out);
 };
 
@@ -61,7 +61,7 @@ public:
     BencInt(int64_t value) : BencObj(BT_INT), value(value) { }
     int64_t Value() const { return value; }
 
-    virtual char *Encode();
+    virtual char *Encode() const;
     static BencInt *Decode(const char *bytes, size_t *len_out);
 };
 
@@ -103,7 +103,7 @@ public:
     }
     BencDict *GetDict(size_t index) const;
 
-    virtual char *Encode();
+    virtual char *Encode() const;
     static BencArray *Decode(const char *bytes, size_t *len_out);
 };
 
@@ -111,14 +111,7 @@ class BencDict : public BencObj {
     Vec<char *> keys;
     Vec<BencObj *> values;
 
-    BencObj *GetObj(const char *key) const {
-        // TODO: sort keys at insertion and do a binary search?
-        //       (would break inversibility of encoding/decoding)
-        for (size_t i = 0; i < Length(); i++)
-            if (!strcmp(key, keys[i]))
-                return values[i];
-        return NULL;
-    }
+    BencObj *GetObj(const char *key) const;
 
 public:
     BencDict() : BencObj(BT_DICT) { }
@@ -128,11 +121,7 @@ public:
     }
     size_t Length() const { return values.Count(); }
 
-    void Add(const char *key, BencObj *obj) {
-        assert(key && obj && !GetObj(key) && values.Find(obj) == -1);
-        keys.Append(_strdup(key));
-        values.Append(obj);
-    }
+    void Add(const char *key, BencObj *obj);
     void Add(const char *key, const TCHAR *string) {
         Add(key, new BencString(string));
     }
@@ -165,7 +154,7 @@ public:
         return NULL;
     }
 
-    virtual char *Encode();
+    virtual char *Encode() const;
     static BencDict *Decode(const char *bytes, size_t *len_out);
 };
 

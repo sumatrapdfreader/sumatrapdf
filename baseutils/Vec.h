@@ -128,7 +128,7 @@ public:
         return At(len);
     }
 
-    T& Last() {
+    T& Last() const {
         assert(len > 0);
         return At(len - 1);
     }
@@ -145,11 +145,11 @@ public:
         Reset();
         return res;
     }
-    T *LendData() {
+    T *LendData() const {
         return els;
     }
 
-    int Find(T el) {
+    int Find(T el) const {
         for (size_t i = 0; i < len; i++)
             if (els[i] == el)
                 return (int)i;

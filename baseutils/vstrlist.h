@@ -14,12 +14,10 @@ public:
         FreeVecMembers(*this);
     }
 
-    TCHAR *Join(TCHAR *joint=NULL)
-    {
+    TCHAR *Join(TCHAR *joint=NULL) {
         Vec<TCHAR> tmp(256, 1);
         size_t jointLen = joint ? StrLen(joint) : 0;
-        for (size_t i = 0; i < Count(); i++)
-        {
+        for (size_t i = 0; i < Count(); i++) {
             TCHAR *s = At(i);
             if (i > 0 && jointLen > 0)
                 tmp.Append(joint, jointLen);
@@ -28,8 +26,7 @@ public:
         return tmp.StealData();
     }
 
-    int Find(TCHAR *string)
-    {
+    int Find(TCHAR *string) const {
         size_t n = Count();
         for (size_t i = 0; i < n; i++) {
             TCHAR *item = At(i);
