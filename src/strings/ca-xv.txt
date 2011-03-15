@@ -1,0 +1,526 @@
+﻿# Translations for Catalan-Valencian (Català-Valencià) (ca-xv) language
+
+# Lines at the beginning starting with # are comments
+# This file must be in utf-8 encoding. Make sure you use a proper
+# text editor (notepad++ or notepad2 will work) and set utf8 encoding.
+
+Lang: ca-xv Catalan-Valencian (Català-Valencià)
+
+Contributor: Joan Montané
+
+&About
+&Quant a...
+
+&Actual Size\tCtrl-1
+Mida &real\tCtrl-1
+
+&All selected pages
+&Totes les pàgines seleccionades
+
+&Back\tAlt+Left Arrow
+Arrere\tAlt+Left Arrow
+
+&Close\tCtrl-W
+&Tanca\tCtrl-W
+
+&Copy Selection\tCtrl-C
+&Copia la selecció\tCtrl-C
+
+&Don't ask me again
+&No ho tornes a preguntar
+
+&Even pages only
+Només les pàgines parelles
+
+&File
+&Fitxer
+
+&Find what:
+&Text a trobar:
+
+&First Page\tHome
+&Primera pàgina\tInici
+
+&Fit pages to printable area
+Ajusta les pàgines a l'àrea imprimible
+
+&Go To
+&Vés a
+
+&Go to page:
+&Vés a la pàgina:
+
+&Help
+&Ajuda
+
+&Last Page\tEnd
+Ú&ltima pàgina\tFinal
+
+&Magnification:
+&Nivell d'augment:
+
+&Manual
+&Manual
+
+&Match case
+Respecta les &MAJUSCULES i minuscules
+
+&Next Page\tRight Arrow
+Pàgina &següent\t->
+
+&No
+&No
+
+&No, thanks
+&No, gràcies
+
+&Odd pages only
+Només les pàgines senars
+
+&Open\tCtrl-O
+&Obri\tCtrl-O
+
+&Options...
+&Opcions...
+
+&Password:
+&Contrasenya:
+
+&Previous Page\tLeft Arrow
+Pàgina &anterior\t<-
+
+&Print...\tCtrl-P
+&Imprimeix...\tCtrl-P
+
+&Print... (denied)
+&Imprimeix... (denegat)
+
+&Remember the password for this document
+&Recorda la contrasenya per a este document
+
+&Remember these settings for each document
+Conserva estes &preferències per a cada document
+
+&Save As...\tCtrl-S
+Anomena i al&ça...\tCtrl-S
+
+&Settings
+&Preferències
+
+&Shrink pages to printable area (if necessary)
+&Reduïu les pàgines a l'àrea imprimible (si és necessari)
+
+&Skip this version
+&Omet esta versió
+
+&Use original page sizes
+&Usa la mida de pàgina original
+
+&View
+&Visualitza
+
+&Yes
+&Sí
+
+&Zoom
+&Escalat
+
+(of %d)
+(de %d)
+
+About SumatraPDF
+Quant al SumatraPDF
+
+Advanced
+Avançats
+
+All files
+Tots els fitxers
+
+Application:
+Programa:
+
+Associate with PDF files?
+Voleu associar-lo amb els fitxers PDF?
+
+Attachment: %s
+Adjunt: %s
+
+Author:
+Autor:
+
+Automatic
+Automàtic
+
+Automatically check for &updates
+&Comprova les actualitzacions automaticament
+
+Book View
+Vista de llibre
+
+Book&marks\tF12
+&Punts d'interés\tF12
+
+Bookmarks
+Punts d'interés
+
+Bytes
+Octets
+
+Can't connect to the Internet (error %#x).
+No es pot connectar a internet (error %#x).
+
+Cancel
+Cancel·la
+
+Cannot print this file
+No es pot imprimir el fitxer
+
+Cannot start inverse search command. Please check the command line in the settings.
+No es pot iniciar la cerca inversa. Comprovi la linia de comandes a les preferencies.
+
+Change Language
+Canvia la llengua (Change Language)
+
+Check for &Updates
+&Comprova si hi ha una versió nova
+
+Continuous
+Contínua
+
+Continuous Book View
+Vista contínua de llibre
+
+Continuous Facing
+Pàgina doble contínua
+
+Contribute Translation
+Contribuïu en la traducció
+
+Copying text was denied (copying as image only)
+No es pot copiar el text (només es copia com a imatge)
+
+Could not open Printer
+No s'ha pogut accedir a la impressora.
+
+Couldn't initialize printer
+No es pot inicialitzar l'impressora
+
+Couldn't render the page
+No es pot representar la pàgina
+
+Created:
+Creat:
+
+Custom &Zoom...\tCtrl-Y
+Zoom per defe&cte...\tCtrl-Y
+
+Default &Layout:
+&Vista per defecte:
+
+Default &Zoom:
+&Zoom per defecte
+
+Default PDF reader can't be changed in portable mode
+No es pot canviar el lector de PDF per defecte en mode portable.
+
+Denied Permissions:
+Permisos denegats:
+
+Document Properties
+Propietats del document
+
+Download
+Baixa
+
+E&xit\tCtrl-Q
+I&x\tCtrl-Q
+
+Enter password
+Introduiu la contrasenya
+
+Enter password for %s
+Introduiu la constrasenya per a %s
+
+Enter the command-line to invoke when you double-click on the PDF document:
+Introduïu la línia d'ordes que voleu executar en fer doble clic al document PDF:
+
+Error loading PDF file.
+S'ha produït un error en carregar el fitxer.
+
+F&orward\tAlt+Right Arrow
+Avan&t\tAlt+Right Arrow
+
+F&ullscreen\tCtrl-Shift-L
+Pantalla &completa\tCtrl-Shift-L
+
+Facing
+Pàgina doble
+
+Failed to save a file
+S'ha produït un error en alçar el fitxer.
+
+File Size:
+Mida del fitxer:
+
+File:
+Fitxer:
+
+Fin&d...\tCtrl-F
+&Cerca...\tCtrl-F
+
+Find
+Cerca
+
+Find Next
+Cerca següent
+
+Find Previous
+Cerca anterior
+
+Find:
+Cerca:
+
+Fit &Content\tCtrl-3
+Ajusta el &contingut\tCtrl-3
+
+Fit &Page\tCtrl-0
+Ajusta a la &pàgina\tCtrl-0
+
+Fit &Width\tCtrl-2
+Ajusta a l'am&plada\tCtrl-2
+
+Fit Content
+Ajusta el contingut
+
+Fit Page
+Ajusta a la pàgina
+
+Fit Width
+Ajusta a l'amplada
+
+Fit Width and Show Pages Continuously
+ajusta l'amplada i mostra les pàgines de forma contínua
+
+Fit a Single Page
+Ajusta una única pàgina
+
+Found text at page %d
+S'ha trobat el text a la pagina %d
+
+GB
+GB
+
+Go to page
+Vés a la pàgina
+
+Hint: Use the F3 key for finding again
+Suggeriment: Feu servir la tecla F3 per tornar a cercar
+
+KB
+KB
+
+MB
+MB
+
+Make SumatraPDF default application for PDF files?
+Voleu que el SumatraPDF siga el visor predeterminat de fitxers PDF?
+
+Make SumatraPDF my default PDF reader
+Fes el SumatraPDF el lector de PDF predeterminat
+
+Match Case
+Distigeix la caixa
+
+Modified:
+Modificat:
+
+New version %s is available. Download new version?
+Hi ha disponible una versió nova. Voleu baixar-la?
+
+Next Page
+Pàgina següent
+
+No matches were found
+No s'han trobat coincidencies
+
+No result found around line %u in file %s
+No s'ha trobat un resultat de la cerca vàlid a la línia %u al fitxer %s
+
+No synchronization file found
+No s'ha trobat el fitxer de sincronització
+
+No synchronization info at this position
+No hi ha informació de sincronització en esta posició
+
+Number of Pages:
+Nombre de pàgines:
+
+OK
+D'acord
+
+Open
+Obri
+
+Open in &Adobe Reader
+Obri amb l'&Adobe Reader
+
+Open in &Foxit Reader
+Obri amb el &Foxit Reader
+
+Open in PDF-XChange
+Obri amb el PDF-XChange
+
+P&roperties\tCtrl-D
+P&ropietats...\tCtrl-D
+
+PDF Document
+Document PDF
+
+PDF Producer:
+Productor PDF:
+
+PDF Version:
+Versió de PDF:
+
+PDF documents
+Documents PDF
+
+Pa&ge...\tCtrl-G
+Pà&gina...\tCtrl-G
+
+Page Size:
+Mida de la pàgina:
+
+Page number %u inexistant
+La pàgina %u no existeix
+
+Page scaling
+Escalat de la pàgina
+
+Page:
+Pàgina:
+
+Please include the following file in your crash report:
+Incloeu el fitxer següent a l'informe d'error:
+
+Please wait - rendering...
+S'està renderitzant...
+
+Pr&esentation\tCtrl-L
+Pr&esentació\tCtrl-L
+
+Previous Page
+Pàgina anterior
+
+Print range
+Interval d'impressió
+
+Printing problem.
+S'ha produït un problema en la impressió.
+
+Remember &opened files
+Recorda els fitxers &oberts
+
+Rotate &Left\tCtrl-Shift--
+Gira a l'esquerra\tCtrl-Shift--
+
+Rotate &Right\tCtrl-Shift-+
+Gira a la dreta\tCtrl-Shift-+
+
+Searching %d of %d...
+S'està cercant %d de %d...
+
+Select &All\tCtrl-A
+Seleccciona-ho &tot\tCtrl-A
+
+Select content with Ctrl+left mouse button
+Seleccioneu contigut amb la combinació Ctrl+botó secundari del ratolí
+
+Send by &E-mail...
+Envia per correu-&e...
+
+Set inverse search command-line
+Cerca cap arrere
+
+Show &Toolbar
+Mostra la &barra d'eines
+
+Show &pages continuously
+Mostra les &pàgines de forma contínua
+
+Show the &bookmarks sidebar when available
+Mostra la &barra lateral de punts d'interes quan estiga disponible
+
+Single Page
+Pàgina única
+
+Source file %s has no synchronization point
+El fitxer d'origen %s no te un punt de sincronització vàlid
+
+Subject:
+Assumpte:
+
+SumatraPDF Options
+Opcions del SumatraPDF
+
+SumatraPDF Update
+Actualització del SumatraPDF
+
+SumatraPDF crashed
+El SumatraPDF ha fallat
+
+SumatraPDF is your default PDF reader
+El SumatraPDF és el seu lector PDF predeterminat
+
+SumatraPDF should now be your default PDF reader
+El SumatraPDF hauria d'esser ara mateix el vostre lector PDF predeterminat
+
+Synchronization file cannot be opened
+El fitxer de sincronització no es pot obrir
+
+Text documents
+Documents de text
+
+Title:
+Títol:
+
+Unknown source file (%s)
+Fitxer origen desconegut (%s)
+
+View
+Visualitza
+
+Visit &Website
+Visiteu el lloc &web
+
+Warning
+Atenció
+
+You have the latest version.
+Teniu la darrera versió.
+
+You have version %s
+Teniu la versió %s
+
+Zoom
+Zoom
+
+Zoom In
+Apropa't
+
+Zoom Out
+Allunya't
+
+Zoom factor
+Factor de zoom
+
+[Changes detected; refreshing] %s
+[S'han detectat canvis; s'està actualitzant] %s
+
+copying text
+s'està copiant text
+
+printing document
+s'està imprimint el document
+
