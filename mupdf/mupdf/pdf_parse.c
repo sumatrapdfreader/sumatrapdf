@@ -127,6 +127,7 @@ pdf_fromucs2(unsigned short *src)
 			return nil;
 		}
 	}
+	docstr[len] = '\0';
 
 	return docstr;
 }
