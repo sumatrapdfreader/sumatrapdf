@@ -224,6 +224,10 @@ reada85d(fz_stream *stm, unsigned char *buf, int len)
 		else if (c == '~')
 		{
 			c = fz_readbyte(state->chain);
+			/* SumatraPDF: tolerate slightly broken ASCII85Decode streams */
+			if (c == EOF)
+				fz_warn("bad eod marker in a85d: ~ instead of ~>");
+			else
 			if (c != '>')
 				return fz_throw("bad eod marker in a85d");
 
