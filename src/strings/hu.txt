@@ -368,6 +368,12 @@ Megny&itás
 Open in &Adobe Reader
 Megnyitás &Adobe Acrobat-ban
 
+Open in &Foxit Reader
+Megnyitás &Foxit Readerben
+
+Open in PDF-XChange
+Megnyitás PDF-XChangeben
+
 P&roperties\tCtrl-D
 &Tulajdonságok\tCtrl-D
 
@@ -427,6 +433,9 @@ Forgatás jobbra\tCtrl-Shift-+
 
 Searching %d of %d...
 Keresés a(z) %d./%d oldalon
+
+Select &All\tCtrl-A
+Összes &kijelölése\tCtrl-A
 
 Select content with Ctrl+left mouse button
 Először jelölje ki a másolandó részt Ctrl+Bal egérgomb -bal
@@ -517,9 +526,4 @@ Szöveg vágólapra
 
 printing document
 Nyomtatás
-
-# Untranslated:
-#Open in &Foxit Reader
-#Open in PDF-XChange
-#Select &All\tCtrl-A
 
