@@ -17,7 +17,7 @@ Contributor: Dimitris Mytilinaios
 Πραγματικό μέγεθος\tCtrl-1
 
 &All selected pages
-'Ο&λες οι επιλεγμένες
+Ό&λες οι επιλεγμένες
 
 &Back\tAlt+Left Arrow
 Πίσω\tAlt+<-
@@ -32,7 +32,7 @@ Contributor: Dimitris Mytilinaios
 &Να μην ερωτηθώ ξανά
 
 &Even pages only
-&Μόνο οι μονές
+&Μόνο οι μονές σελίδες
 
 &File
 &Αρχείο
@@ -68,7 +68,7 @@ Contributor: Dimitris Mytilinaios
 Ταίριασμα πεζών/κεφαλαίων
 
 &Next Page\tRight Arrow
-Επόμενη σελίδα\t->
+Επό&μενη σελίδα\t->
 
 &No
 Ό&χι
@@ -95,7 +95,7 @@ Contributor: Dimitris Mytilinaios
 &Εκτύπωση\tCtrl-P
 
 &Print... (denied)
-&Εκτύπωση...(απαγορεύεται)
+&Εκτύπωση... (απαγορεύεται)
 
 &Remember the password for this document
 &Απομνημόνευση κωδικού για αυτό το έγγραφο
@@ -110,7 +110,7 @@ Contributor: Dimitris Mytilinaios
 &Ρυθμίσεις
 
 &Shrink pages to printable area (if necessary)
-Σμίκρυνση σελίδων σε &εκτυπώσιμη περιοχή (εάν χρειάζεται)
+Σμίκρυνση σελίδων σε &εκτυπώσιμη περιοχή (αν χρειάζεται)
 
 &Skip this version
 &Παράβλεψη αυτής της έκδοσης
@@ -161,7 +161,7 @@ Book View
 Προβολή βιβλίου
 
 Book&marks\tF12
-Σελιδοδείκτες\tF12
+&Σελιδοδείκτες\tF12
 
 Bookmarks
 Σελιδοδείκτες
@@ -176,16 +176,16 @@ Cancel
 Άκυρο
 
 Cannot print this file
-Δε μπορούσε να εκτυπωθεί το αρχείο
+Δεν είναι δυνατή η εκτύπωση αυτού του αρχείου
 
 Cannot start inverse search command. Please check the command line in the settings.
-Δεν είναι δυνατή η εκκίνηση αντίστροφης αναζήτησης. Παρακαλώ επιλέξτε τη γραμμή εντολών στις ρυθμίσεις.
+Δεν είναι δυνατή η εκκίνηση αντίστροφης αναζήτησης. Παρακαλώ ελέγξτε τη γραμμή εντολών στις ρυθμίσεις.
 
 Change Language
 Αλλαγή γλώσσας (Change Language)
 
 Check for &Updates
-&Έλεγχος για νέα έκδοση
+Έλεγχος για νέα έκ&δοση
 
 Continuous
 Μια σελίδα, συνεχόμενα
@@ -269,7 +269,7 @@ File:
 Αρχείο:
 
 Fin&d...\tCtrl-F
-Εύρεση...\tCtrl-F
+Εύ&ρεση...\tCtrl-F
 
 Find
 Εύρεση
@@ -305,7 +305,7 @@ Fit Width and Show Pages Continuously
 Προσαρμογή Πλάτους και Εμφάνιση Σελίδων Συνεχόμενα
 
 Fit a Single Page
-Προσαρμογή μιας Σελίδας
+Προσαρμογή μιας σελίδας
 
 Found text at page %d
 Το κείμενο βρέθηκε στη σελίδα %d
@@ -326,10 +326,10 @@ MB
 MB
 
 Make SumatraPDF default application for PDF files?
-Να γίνει το SumatraPDF το προεπιλεγμένο πρόγραμμα  αρχείων PDF;
+Να γίνει το SumatraPDF το προεπιλεγμένο πρόγραμμα αρχείων PDF;
 
 Make SumatraPDF my default PDF reader
-Συσχετισμός του SumatraPDF με αρχεία PDF
+Συσχετισμός του SumatraPDF με τα αρχεία PDF
 
 Match Case
 Αντιστοίχιση πεζών-κεφαλαίων
@@ -338,7 +338,7 @@ Modified:
 Τροποποιήθηκε:
 
 New version %s is available. Download new version?
-Νέα έκδοση %s είναι διαθέσιμη. Να γίνει λήψη;
+Η νέα έκδοση %s είναι διαθέσιμη. Να γίνει λήψη;
 
 Next Page
 Επόμενη σελίδα
@@ -374,7 +374,7 @@ Open in PDF-XChange
 Άνοιγμα με PDF-XChange
 
 P&roperties\tCtrl-D
-&Ιδιότητες...\tCtrl-D
+&Ιδιότητες\tCtrl-D
 
 PDF Document
 Αρχείο PDF
@@ -404,10 +404,10 @@ Page:
 Σελίδα:
 
 Please include the following file in your crash report:
-Παρακαλώ να συμπεριληφθεί το ακόλουθο αρχείο στην αναφορά κατάρευσης
+Παρακαλώ να συμπεριληφθεί το ακόλουθο αρχείο στην αναφορά κατάρρευσης
 
 Please wait - rendering...
-Φόρτωση, παρακαλώ περιμένετε...
+Παρακαλώ περιμένετε - φόρτωση...
 
 Pr&esentation\tCtrl-L
 Πλ&ήρης Οθόνη\tCtrl-L
@@ -422,7 +422,7 @@ Printing problem.
 Πρόβλημα εκτύπωσης
 
 Remember &opened files
-Απομνημόνευη πρόσφατων αρχείων
+Απομνημόνευση προσφάτων αρχείων
 
 Rotate &Left\tCtrl-Shift--
 Περιστροφή αριστερά\tCtrl-Shift--
@@ -432,6 +432,9 @@ Rotate &Right\tCtrl-Shift-+
 
 Searching %d of %d...
 Αναζήτηση %d από %d...
+
+Select &All\tCtrl-A
+Επιλογή όλων\tCtrl-A
 
 Select content with Ctrl+left mouse button
 Επιλέξτε περιεχόμενο με Ctrl+αριστερό πλήκτρο ποντικιού
@@ -467,7 +470,7 @@ SumatraPDF Update
 Ενημέρωση SumatraPDF
 
 SumatraPDF crashed
-Κατάρευση SumatraPDF
+Το SumatraPDF κατάρρευσε
 
 SumatraPDF is your default PDF reader
 Το SumatraPDF είναι το προεπιλεγμένο πρόγραμμα PDF
@@ -515,14 +518,11 @@ Zoom factor
 Ποσοστό μεγέθυνσης
 
 [Changes detected; refreshing] %s
-[Ανιχνέυτηκαν αλλαγές, ανανέωση…] %s
+[Ανιχνεύτηκαν αλλαγές, ανανέωση…] %s
 
 copying text
 αντιγραφή κειμένου
 
 printing document
 εκτύπωση εγγράφου
-
-# Untranslated:
-#Select &All\tCtrl-A
 
