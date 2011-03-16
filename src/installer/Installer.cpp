@@ -612,7 +612,7 @@ HANDLE CreateProcessHelper(TCHAR *exe, TCHAR *args=NULL)
     STARTUPINFO si = {0};
     si.cb = sizeof(si);
     // per msdn, cmd has to be writeable
-    ScopedMem<TCHAR> cmd(tstr_printf(_T("%s %s"), exe, args));
+    ScopedMem<TCHAR> cmd(tstr_printf(_T("%s %s"), exe, args ? args : _T("")));
     if (!CreateProcess(NULL, cmd, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
         SeeLastError();
         return NULL;
@@ -1961,7 +1961,7 @@ bool ExecuteUninstallerFromTempDir()
 {
     // only need to sublaunch if running from installation dir
     ScopedMem<TCHAR> ownDir(FilePath_GetDir(GetOwnPath()));
-    ScopedMem<TCHAR> tempPath( GetTempUninstallerPath());
+    ScopedMem<TCHAR> tempPath(GetTempUninstallerPath());
 
     // no temp directory available?
     if (!tempPath)
