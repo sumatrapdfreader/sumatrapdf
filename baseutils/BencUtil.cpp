@@ -118,12 +118,12 @@ BencDict *BencArray::GetDict(size_t index) const {
 char *BencArray::Encode() const
 {
     Str::Str<char> bytes(256);
-    bytes.Append("l", 1);
+    bytes.Append('l');
     for (size_t i = 0; i < Length(); i++) {
         ScopedMem<char> objBytes(value[i]->Encode());
-        bytes.Append(objBytes, Str::Len(objBytes));
+        bytes.Append(objBytes.Get());
     }
-    bytes.Append("e", 1);
+    bytes.Append('e');
     return bytes.StealData();
 }
 
@@ -194,14 +194,14 @@ void BencDict::Add(const char *key, BencObj *obj)
 char *BencDict::Encode() const
 {
     Str::Str<char> bytes(256);
-    bytes.Append("d", 1);
+    bytes.Append('d');
     for (size_t i = 0; i < Length(); i++) {
         ScopedMem<char> key(str_printf("%" PRIuPTR ":%s", Str::Len(keys[i]), keys[i]));
         bytes.Append(key, Str::Len(key));
         ScopedMem<char> objBytes(values[i]->Encode());
-        bytes.Append(objBytes, Str::Len(objBytes));
+        bytes.Append(objBytes.Get());
     }
-    bytes.Append("e", 1);
+    bytes.Append('e');
     return bytes.StealData();
 }
 

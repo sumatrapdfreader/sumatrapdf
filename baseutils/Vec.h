@@ -19,7 +19,7 @@ One use case: Vec<char> with padding=1 is C-compatible string buffer.
 */
 template <typename T>
 class Vec {
-private:
+protected:
     static const size_t INTERNAL_BUF_SIZE = 16;
     size_t  pad;
     size_t  len;
@@ -172,6 +172,25 @@ public:
     Str(size_t initCap=0) :
         Vec(initCap, 1)
     {
+    }
+
+    void Append(T c)
+    {
+        MakeSpaceAt(len, 1)[0] = c;
+    }
+
+    void Append(const T* src, size_t size=-1)
+    {
+        if (-1 == size)
+            size = Len(src);
+        T* dst = MakeSpaceAt(len, size);
+        memcpy(dst, src, size * sizeof(T));
+    }
+
+    void Set(const T* s)
+    {
+        Reset();
+        Append(s);
     }
 };
 

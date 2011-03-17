@@ -258,6 +258,9 @@ static void VecTest()
         char *s = v.LendData();
         assert(Str::Eq("abcdefg", s));
         assert(7 == v.Count());
+        v.Set("helo");
+        assert(4 == v.Count());
+        assert(Str::Eq("helo", v.LendData()));
     }
 
     {
@@ -265,14 +268,17 @@ static void VecTest()
         v.Append("boo", 3);
         assert(Str::Eq("boo", v.LendData()));
         assert(v.Count() == 3);
-        v.Append("fop", 3);
+        v.Append("fop");
         assert(Str::Eq("boofop", v.LendData()));
         assert(v.Count() == 6);
         v.RemoveAt(2, 3);
         assert(v.Count() == 3);
         assert(Str::Eq("bop", v.LendData()));
+        v.Append('a');
+        assert(v.Count() == 4);
+        assert(Str::Eq("bopa", v.LendData()));
         char *s = v.StealData();
-        assert(Str::Eq("bop", s));
+        assert(Str::Eq("bopa", s));
         free(s);
         assert(v.Count() == 0);
     }

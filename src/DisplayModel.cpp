@@ -1542,7 +1542,7 @@ TCHAR *DisplayModel::extractAllText(RenderTarget target)
     for (int pageNo = 1; pageNo <= pageCount(); pageNo++)
     {
         ScopedMem<TCHAR> s(pdfEngine->ExtractPageText(pageNo, DOS_NEWLINE, NULL, target));
-        txt.Append(s, Str::Len(s));
+        txt.Append(s.Get());
     }
 
     return txt.StealData();
