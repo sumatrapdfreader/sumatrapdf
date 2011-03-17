@@ -65,6 +65,9 @@ bool StartsWithI(const WCHAR *str, const WCHAR *txt)
 
 #undef EntryCheck
 
+// TODO: could those be done as
+// template <typename T> bool EndsWith(const T*, const T*) ?
+// (I tried by failed)
 bool EndsWith(const char *txt, const char *end)
 {
     if (!txt || !end)
