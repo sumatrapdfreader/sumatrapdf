@@ -11,7 +11,9 @@ a matter of opinion.
 
 This coding style follows 2 main principles:
 * codify the style that is already used frequently in Sumatra
-* clean looking code (which is e.g. why I avoid "_" prefixes or postfixes in names)
+* clean looking code (which is e.g. why we avoid "_" prefixes or postfixes in names)
+
+1. Naming classes, methods, functions, variables
 
 The best way to describe naming style is via examples.
 
@@ -39,6 +41,16 @@ bool ThisIsFunction(int inArgsGoFirst, int *outArgsGoLast)
 
 int gThisIsGlobalVariable;
 
-Also, we use spaces, not tabs, with 4 space indentation.
+2. Tabs vs. spaces
 
-And that's it.
+We use spaces, not tabs, with 4 space indentation.
+
+3. Naming of header guards
+
+We use Webkit's style:
+
+"#define, #ifdef "header guards" should be named exactly the same as the file (
+including case), replacing the '.' with a '_'."
+
+http://www.webkit.org/coding/coding-style.html
+
