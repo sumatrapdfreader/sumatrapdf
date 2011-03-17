@@ -117,7 +117,7 @@ static BencDict *DisplayState_Serialize(DisplayState *ds, bool globalPrefsOnly)
     return prefs;
 }
 
-static BencArray *FileHistoryList_Serialize(FileHistoryList *fileHistory, bool globalPrefsOnly)
+static BencArray *SerializeFileHistory(FileHistory *fileHistory, bool globalPrefsOnly)
 {
     assert(fileHistory);
     if (!fileHistory) return NULL;
@@ -144,7 +144,7 @@ Error:
     return NULL;      
 }
 
-static const char *Prefs_Serialize(SerializableGlobalPrefs *globalPrefs, FileHistoryList *root, size_t* lenOut)
+static const char *Prefs_Serialize(SerializableGlobalPrefs *globalPrefs, FileHistory *root, size_t* lenOut)
 {
     const char *data = NULL;
 
@@ -155,7 +155,7 @@ static const char *Prefs_Serialize(SerializableGlobalPrefs *globalPrefs, FileHis
     if (!global)
         goto Error;
     prefs->Add(GLOBAL_PREFS_STR, global);
-    BencArray *fileHistory = FileHistoryList_Serialize(root, globalPrefs->m_globalPrefsOnly);
+    BencArray *fileHistory = SerializeFileHistory(root, globalPrefs->m_globalPrefsOnly);
     if (!fileHistory)
         goto Error;
     prefs->Add(FILE_HISTORY_STR, fileHistory);
@@ -269,7 +269,7 @@ static DisplayState * DisplayState_Deserialize(BencDict *dict, bool globalPrefsO
     return ds;
 }
 
-static bool Prefs_Deserialize(const char *prefsTxt, SerializableGlobalPrefs *globalPrefs, FileHistoryList *root)
+static bool Prefs_Deserialize(const char *prefsTxt, SerializableGlobalPrefs *globalPrefs, FileHistory *fh)
 {
     BencObj *obj = BencObj::Decode(prefsTxt);
     if (!obj || obj->Type() != BT_DICT)
@@ -326,7 +326,7 @@ static bool Prefs_Deserialize(const char *prefsTxt, SerializableGlobalPrefs *glo
         if (!dict) continue;
         DisplayState *state = DisplayState_Deserialize(dict, globalPrefs->m_globalPrefsOnly);
         if (state)
-            root->Append(state);
+            fh->Append(state);
     }
     delete obj;
     return true;
@@ -341,7 +341,7 @@ namespace Prefs {
 /* Load preferences from the preferences file.
    Returns true if preferences file was loaded, false if there was an error.
 */
-bool Load(TCHAR *filepath, SerializableGlobalPrefs *globalPrefs, FileHistoryList *fileHistory)
+bool Load(TCHAR *filepath, SerializableGlobalPrefs *globalPrefs, FileHistory *fileHistory)
 {
     bool            ok = false;
 
@@ -380,7 +380,7 @@ bool Load(TCHAR *filepath, SerializableGlobalPrefs *globalPrefs, FileHistoryList
     return ok;
 }
 
-bool Save(TCHAR *filepath, SerializableGlobalPrefs *globalPrefs, FileHistoryList *fileHistory)
+bool Save(TCHAR *filepath, SerializableGlobalPrefs *globalPrefs, FileHistory *fileHistory)
 {
     assert(filepath);
     if (!filepath)

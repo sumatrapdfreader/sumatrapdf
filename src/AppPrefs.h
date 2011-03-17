@@ -70,12 +70,12 @@ typedef struct {
     bool m_invertColors; /* invert all colors for accessibility reasons (experimental!) */
 } SerializableGlobalPrefs;
 
-class FileHistoryList;
+class FileHistory;
 
 namespace Prefs {
 
-bool    Load(TCHAR *filepath, SerializableGlobalPrefs *globalPrefs, FileHistoryList *fileHistory);
-bool    Save(TCHAR *filepath, SerializableGlobalPrefs *globalPrefs, FileHistoryList *fileHistory);
+bool    Load(TCHAR *filepath, SerializableGlobalPrefs *globalPrefs, FileHistory *fileHistory);
+bool    Save(TCHAR *filepath, SerializableGlobalPrefs *globalPrefs, FileHistory *fileHistory);
 
 }
 

@@ -31,12 +31,12 @@ etc...
     quits.
 */
 
-class FileHistoryList {
+class FileHistory {
     Vec<DisplayState *> states;
 
 public:
-    FileHistoryList() { }
-    ~FileHistoryList() { Clear(); }
+    FileHistory() { }
+    ~FileHistory() { Clear(); }
     void            Clear(void) { DeleteVecMembers(states); }
 
     void            Prepend(DisplayState *state) { states.InsertAt(0, state); }

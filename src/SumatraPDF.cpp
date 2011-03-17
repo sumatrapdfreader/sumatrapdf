@@ -159,7 +159,7 @@ static HBITMAP                      gBitmapReloadingCue;
 
 static RenderCache                  gRenderCache;
 static Vec<WindowInfo*>             gWindows;
-static FileHistoryList              gFileHistory;
+static FileHistory                  gFileHistory;
 static UIThreadWorkItemQueue        gUIThreadMarshaller;
 
 static int                          gReBarDy;
