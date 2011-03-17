@@ -40,7 +40,7 @@ TCHAR *Join(const TCHAR *path, const TCHAR *filename)
         filename++;
     bool needsSep = !IsSep(path[Str::Len(path) - 1]);
     if (needsSep)
-        return tstr_printf(_T("%s\\%s"), path, filename);
+        return Str::Format(_T("%s\\%s"), path, filename);
     return Str::Join(path, filename);
 }
 

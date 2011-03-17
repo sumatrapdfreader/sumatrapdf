@@ -5,10 +5,6 @@
 #define StrUtil_h
 
 // TODO: temporary
-WCHAR * wstr_printf(const WCHAR *format, ...);
-int     wstr_copy(WCHAR *dst, size_t dst_cch_size, const WCHAR *src);
-WCHAR * wstr_cat_s(WCHAR *dst, size_t dst_cch_size, const WCHAR *src);
-
 void win32_dbg_outW(const WCHAR *format, ...);
 #ifdef DEBUG
   #define DBG_OUT_W(format, ...) win32_dbg_outW(L##format, __VA_ARGS__)
@@ -18,14 +14,11 @@ void win32_dbg_outW(const WCHAR *format, ...);
 
 
 void    win32_dbg_out(const char *format, ...);
-void    win32_dbg_out_hex(const char *dsc, const unsigned char *data, int dataLen);
 
 #ifdef DEBUG
   #define DBG_OUT win32_dbg_out
-  #define DBG_OUT_HEX win32_dbg_out_hex
 #else
   #define DBG_OUT(...) NoOp()
-  #define DBG_OUT_HEX(...) NoOp()
 #endif
 
 /* Note: this demonstrates how eventually I would like to get rid of
@@ -81,25 +74,23 @@ inline const WCHAR * FindChar(const WCHAR *str, const WCHAR c) {
     return wcschr(str, c);
 }
 
+char *  Format(const char *format, ...);
+WCHAR * Format(const WCHAR *format, ...);
+
+size_t  CopyTo(char *dst, size_t dstCchSize, const char *src);
+size_t  CopyTo(WCHAR *dst, size_t dstCchSize, const WCHAR *src);
+
+char *  MemToHex(const unsigned char *buf, int len);
+bool    HexToMem(const char *s, unsigned char *buf, int bufLen);
+
 }
 
-static inline bool ChrIsDigit(const WCHAR c)
+inline bool ChrIsDigit(const WCHAR c)
 {
     return '0' <= c && c <= '9';
 }
 
-// I would like to remove the usage of *str_copy* and *str_cat* completely,
-// using either Str class or Str::Join() etc.
-// Using fixed size buffers is a known receipt for buffer overruns
-int     str_copy(char *dst, size_t dst_cch_size, const char *src);
-char *  str_cat_s(char *dst, size_t dst_cch_size, const char *src);
-
-
-char *  str_printf(const char *format, ...);
-
-char *  mem_to_hexstr(const unsigned char *buf, int len);
-bool    hexstr_to_mem(const char *s, unsigned char *buf, int bufLen);
-#define _mem_to_hexstr(ptr) mem_to_hexstr((const unsigned char *)ptr, sizeof(*ptr))
-#define _hexstr_to_mem(str, ptr) hexstr_to_mem(str, (unsigned char *)ptr, sizeof(*ptr))
+#define _MemToHex(ptr) Str::MemToHex((const unsigned char *)(ptr), sizeof(*ptr))
+#define _HexToMem(str, ptr) Str::HexToMem(str, (unsigned char *)(ptr), sizeof(*ptr))
 
 #endif

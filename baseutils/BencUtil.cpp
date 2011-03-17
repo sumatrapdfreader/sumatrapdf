@@ -64,7 +64,7 @@ TCHAR *BencString::Value() const
 
 char *BencString::Encode() const
 {
-    return str_printf("%" PRIuPTR ":%s", Str::Len(value), value);
+    return Str::Format("%" PRIuPTR ":%s", Str::Len(value), value);
 }
 
 BencString *BencString::Decode(const char *bytes, size_t *lenOut)
@@ -91,7 +91,7 @@ BencRawString::BencRawString(const char *value, size_t len)
 
 char *BencInt::Encode() const
 {
-    return str_printf("i%" PRId64 "e", value);
+    return Str::Format("i%" PRId64 "e", value);
 }
 
 BencInt *BencInt::Decode(const char *bytes, size_t *lenOut)
@@ -196,7 +196,7 @@ char *BencDict::Encode() const
     Str::Str<char> bytes(256);
     bytes.Append('d');
     for (size_t i = 0; i < Length(); i++) {
-        bytes.AppendAndFree(str_printf("%" PRIuPTR ":%s", Str::Len(keys[i]), keys[i]));
+        bytes.AppendAndFree(Str::Format("%" PRIuPTR ":%s", Str::Len(keys[i]), keys[i]));
         bytes.AppendAndFree(values[i]->Encode());
     }
     bytes.Append('e');

@@ -98,8 +98,10 @@ static void TStrTest()
     assert(!Str::EndsWith(str, _T("ung")));
     assert(Str::IsEmpty((char*)NULL) && Str::IsEmpty((WCHAR*)NULL)&& Str::IsEmpty(_T("")) && !Str::IsEmpty(str));
     assert(Str::FindChar(str, _T('s')) && !Str::FindChar(str, _T('S')));
-    tstr_copy(buf, dimof(buf), str);
-    assert(Str::Eq(buf, str));
+    size_t len = Str::CopyTo(buf, dimof(buf), str);
+    assert(len == Str::Len(buf) + 1 && Str::Eq(buf, str));
+    len = Str::CopyTo(buf, 6, str);
+    assert(len == 6 && Str::Eq(buf, _T("a str")));
 
     str = Str::Dup(buf);
     assert(Str::Eq(str, buf));
@@ -107,7 +109,7 @@ static void TStrTest()
     str = Str::DupN(buf, 4);
     assert(Str::Eq(str, _T("a st")));
     free(str);
-    str = tstr_printf(_T("%s"), buf);
+    str = Str::Format(_T("%s"), buf);
     assert(Str::Eq(str, buf));
     free(str);
     str = Str::Join(buf, buf);
@@ -117,7 +119,7 @@ static void TStrTest()
     assert(Str::Eq(str, _T("ab")));
     free(str);
 
-    tstr_copy(buf, dimof(buf), _T("abc\1efg\1"));
+    Str::CopyTo(buf, dimof(buf), _T("abc\1efg\1"));
     tstr_trans_chars(buf, _T("ace"), _T("ACE"));
     assert(Str::Eq(buf, _T("AbC\1Efg\1")));
     tstr_trans_chars(buf, _T("\1"), _T("\0"));
@@ -504,7 +506,7 @@ static void BencTestDictAppend()
     /* test insertion in ascending order */
     BencDict *dict = new BencDict();
     for (size_t i = 1; i <= ITERATION_COUNT; i++) {
-        ScopedMem<char> key(str_printf("%04u", i));
+        ScopedMem<char> key(Str::Format("%04u", i));
         assert(Str::Len(key) == 4);
         dict->Add(key, i);
         assert(dict->Length() == i);
@@ -520,7 +522,7 @@ static void BencTestDictAppend()
     /* test insertion in descending order */
     dict = new BencDict();
     for (size_t i = ITERATION_COUNT; i > 0; i--) {
-        ScopedMem<char> key(str_printf("%04u", i));
+        ScopedMem<char> key(Str::Format("%04u", i));
         assert(Str::Len(key) == 4);
         BencObj *obj = new BencInt(i);
         dict->Add(key, obj);

@@ -35,9 +35,8 @@ static INT_PTR CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT message, WPARAM 
         SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
         EnableWindow(GetDlgItem(hDlg, IDC_REMEMBER_PASSWORD), data->remember != NULL);
 
-        TCHAR *txt = tstr_printf(_TR("Enter password for %s"), data->fileName);
+        ScopedMem<TCHAR> txt(Str::Format(_TR("Enter password for %s"), data->fileName));
         SetDlgItemText(hDlg, IDC_GET_PASSWORD_LABEL, txt);
-        free(txt);
         SetDlgItemText(hDlg, IDC_GET_PASSWORD_EDIT, _T(""));
         SetDlgItemText(hDlg, IDC_STATIC, _TR("&Password:"));
         SetDlgItemText(hDlg, IDC_REMEMBER_PASSWORD, _TR("&Remember the password for this document"));
@@ -118,10 +117,10 @@ static INT_PTR CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT message, WPARAM wPa
         assert(data->pageCount >= 1);
         Win::SetText(hDlg, _TR("Go to page"));
 
-        newPageNoTxt = tstr_printf(_T("%d"), data->currPageNo);
+        newPageNoTxt = Str::Format(_T("%d"), data->currPageNo);
         SetDlgItemText(hDlg, IDC_GOTO_PAGE_EDIT, newPageNoTxt);
         free(newPageNoTxt);
-        newPageNoTxt = tstr_printf(_TR("(of %d)"), data->pageCount);
+        newPageNoTxt = Str::Format(_TR("(of %d)"), data->pageCount);
         SetDlgItemText(hDlg, IDC_GOTO_PAGE_LABEL_OF, newPageNoTxt);
         free(newPageNoTxt);
 
@@ -418,11 +417,11 @@ static INT_PTR CALLBACK Dialog_NewVersion_Proc(HWND hDlg, UINT message, WPARAM w
         SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
         Win::SetText(hDlg, _TR("SumatraPDF Update"));
 
-        txt = tstr_printf(_TR("You have version %s"), data->currVersion);
+        txt = Str::Format(_TR("You have version %s"), data->currVersion);
         SetDlgItemText(hDlg, IDC_YOU_HAVE, txt);
         free((void*)txt);
 
-        txt = tstr_printf(_TR("New version %s is available. Download new version?"), data->newVersion);
+        txt = Str::Format(_TR("New version %s is available. Download new version?"), data->newVersion);
         SetDlgItemText(hDlg, IDC_NEW_AVAILABLE, txt);
         free(txt);
 
@@ -496,7 +495,7 @@ static void SetupZoomComboBox(HWND hDlg, UINT idComboBox, float currZoom)
         if (gItemZoom[i] == currZoom)
             SendDlgItemMessage(hDlg, idComboBox, CB_SETCURSEL, i, 0);
     if (SendDlgItemMessage(hDlg, idComboBox, CB_GETCURSEL, 0, 0) == -1) {
-        TCHAR *customZoom = tstr_printf(_T("%.0f%%"), currZoom);
+        TCHAR *customZoom = Str::Format(_T("%.0f%%"), currZoom);
         SetDlgItemText(hDlg, idComboBox, customZoom);
         free(customZoom);
     }

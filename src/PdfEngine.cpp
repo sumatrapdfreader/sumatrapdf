@@ -320,7 +320,7 @@ PdfEngine *PdfEngine::clone()
     // use this document's encryption key (if any) to load the clone
     char *key = NULL;
     if (_xref->crypt)
-        key = _mem_to_hexstr(&_xref->crypt->key);
+        key = _MemToHex(&_xref->crypt->key);
     TCHAR *password = key ? ansi_to_tstr(key) : NULL;
     free(key);
 
@@ -428,7 +428,7 @@ OpenEmbeddedFile:
 
         if (saveKey) {
             memcpy(digest + 16, _xref->crypt->key, 32);
-            _decryptionKey = _mem_to_hexstr(&digest);
+            _decryptionKey = _MemToHex(&digest);
         }
     }
 
@@ -482,7 +482,7 @@ bool PdfEngine::load(fz_stream *stm, TCHAR *password)
         // finally, try using the password as hex-encoded encryption key
         if (!okay && Str::Len(password) == 64) {
             ScopedMem<char> pwd_hex(tstr_to_ansi(password));
-            okay = _hexstr_to_mem(pwd_hex, &_xref->crypt->key);
+            okay = _HexToMem(pwd_hex, &_xref->crypt->key);
         }
 
         if (!okay)

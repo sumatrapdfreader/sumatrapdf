@@ -41,7 +41,7 @@ static BencDict* Prefs_SerializeGlobal(SerializableGlobalPrefs *globalPrefs)
     const char *txt = DisplayModeNameFromEnum(globalPrefs->m_defaultDisplayMode);
     prefs->Add(DISPLAY_MODE_STR, new BencRawString(txt));
 
-    txt = str_printf("%.4f", globalPrefs->m_defaultZoom);
+    txt = Str::Format("%.4f", globalPrefs->m_defaultZoom);
     if (txt) {
         prefs->Add(ZOOM_VIRTUAL_STR, new BencRawString(txt));
         free((void*)txt);
@@ -99,7 +99,7 @@ static BencDict *DisplayState_Serialize(DisplayState *ds, bool globalPrefsOnly)
     prefs->Add(SHOW_TOC_STR, ds->showToc);
     prefs->Add(TOC_DX_STR, ds->tocDx);
 
-    txt = str_printf("%.4f", ds->zoomVirtual);
+    txt = Str::Format("%.4f", ds->zoomVirtual);
     if (txt) {
         prefs->Add(ZOOM_VIRTUAL_STR, new BencRawString(txt));
         free((void*)txt);

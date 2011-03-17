@@ -246,15 +246,15 @@ void DoAssociateExeWithPdfExtension(HKEY hkey)
 
     WriteRegStr(hkey, _T("Software\\Classes\\") APP_NAME_STR _T("\\shell"), NULL, _T("open"));
 
-    ScopedMem<TCHAR> cmdPath(tstr_printf(_T("\"%s\" \"%%1\""), exePath)); // "${exePath}" "%1"
+    ScopedMem<TCHAR> cmdPath(Str::Format(_T("\"%s\" \"%%1\""), exePath)); // "${exePath}" "%1"
     ok = WriteRegStr(hkey, _T("Software\\Classes\\") APP_NAME_STR _T("\\shell\\open\\command"), NULL, cmdPath);
 
     // also register for printing
-    ScopedMem<TCHAR> printPath(tstr_printf(_T("\"%s\" -print-to-default \"%%1\""), exePath)); // "${exePath}" -print-to-default "%1"
+    ScopedMem<TCHAR> printPath(Str::Format(_T("\"%s\" -print-to-default \"%%1\""), exePath)); // "${exePath}" -print-to-default "%1"
     WriteRegStr(hkey, _T("Software\\Classes\\") APP_NAME_STR _T("\\shell\\print\\command"), NULL, printPath);
 
     // also register for printing to specific printer
-    ScopedMem<TCHAR> printToPath(tstr_printf(_T("\"%s\" -print-to \"%%2\" \"%%1\""), exePath)); // "${exePath}" -print-to "%2" "%1"
+    ScopedMem<TCHAR> printToPath(Str::Format(_T("\"%s\" -print-to \"%%2\" \"%%1\""), exePath)); // "${exePath}" -print-to "%2" "%1"
     WriteRegStr(hkey, _T("Software\\Classes\\") APP_NAME_STR _T("\\shell\\printto\\command"), NULL, printToPath);
 
     // Only change the association if we're confident, that we've registered ourselves well enough
@@ -316,7 +316,7 @@ bool GetAcrobatPath(TCHAR *bufOut, int bufCchSize)
     if (found)
         found = File::Exists(path);
     if (found && bufOut)
-        tstr_copy(bufOut, bufCchSize, path);
+        Str::CopyTo(bufOut, bufCchSize, path);
     return found;
 }
 
@@ -327,7 +327,7 @@ bool GetFoxitPath(TCHAR *bufOut, int bufCchSize)
     if (found)
         found = File::Exists(path);
     if (found && bufOut)
-        tstr_copy(bufOut, bufCchSize, path);
+        Str::CopyTo(bufOut, bufCchSize, path);
     return found;
 }
 
@@ -341,7 +341,7 @@ bool GetPDFXChangePath(TCHAR *bufOut, int bufCchSize)
     ScopedMem<TCHAR> exePath(Path::Join(path, _T("PDFXCview.exe")));
     found = File::Exists(exePath);
     if (found && bufOut)
-        tstr_copy(bufOut, bufCchSize, exePath);
+        Str::CopyTo(bufOut, bufCchSize, exePath);
     return found;
 }
 
@@ -436,7 +436,7 @@ LPTSTR AutoDetectInverseSearchCommands(HWND hwndCombo)
         else // if (editor_rules[i].Type == BinaryPath)
             exePath = Str::Dup(path);
 
-        TCHAR *editorCmd = tstr_printf(_T("\"%s\" %s"), exePath, editor_rules[i].InverseSearchArgs);
+        TCHAR *editorCmd = Str::Format(_T("\"%s\" %s"), exePath, editor_rules[i].InverseSearchArgs);
         free(exePath);
 
         if (!hwndCombo) {
@@ -537,7 +537,7 @@ HFONT Win32_Font_GetSimple(HDC hdc, TCHAR *fontName, int fontSize)
     lf.lfOutPrecision = OUT_TT_PRECIS;
     lf.lfQuality = DEFAULT_QUALITY;
     lf.lfPitchAndFamily = DEFAULT_PITCH;    
-    tstr_copy(lf.lfFaceName, dimof(lf.lfFaceName), fontName);
+    Str::CopyTo(lf.lfFaceName, dimof(lf.lfFaceName), fontName);
     lf.lfWeight = FW_DONTCARE;
     lf.lfClipPrecision = CLIP_DEFAULT_PRECIS;
     lf.lfEscapement = 0;

@@ -71,7 +71,7 @@ static void PdfDateToDisplay(TCHAR **s) {
 static TCHAR *FormatNumWithThousandSep(size_t num) {
     TCHAR thousandSep[4];
     GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_STHOUSAND, thousandSep, dimof(thousandSep));
-    ScopedMem<TCHAR> buf(tstr_printf(_T("%Iu"), num));
+    ScopedMem<TCHAR> buf(Str::Format(_T("%Iu"), num));
 
     Str::Str<TCHAR> res(32);
     int i = Str::Len(buf) % 3;
@@ -95,11 +95,11 @@ static TCHAR *FormatFloatWithThousandSep(double number, const TCHAR *unit=NULL) 
     GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, decimal, dimof(decimal));
 
     // always add between one and two decimals after the point
-    ScopedMem<TCHAR> buf(tstr_printf(_T("%s%s%02d"), tmp, decimal, num % 100));
+    ScopedMem<TCHAR> buf(Str::Format(_T("%s%s%02d"), tmp, decimal, num % 100));
     if (Str::EndsWith(buf, _T("0")))
         buf[Str::Len(buf) - 1] = '\0';
 
-    return unit ? tstr_printf(_T("%s %s"), buf, unit) : Str::Dup(buf);
+    return unit ? Str::Format(_T("%s %s"), buf, unit) : Str::Dup(buf);
 }
 
 // Format the file size in a short form that rounds to the largest size unit
@@ -130,7 +130,7 @@ static TCHAR *FormatPdfSize(size_t size) {
     ScopedMem<TCHAR> n1(FormatSizeSuccint(size));
     ScopedMem<TCHAR> n2(FormatNumWithThousandSep(size));
 
-    return tstr_printf(_T("%s (%s %s)"), n1, n2, _TR("Bytes"));
+    return Str::Format(_T("%s (%s %s)"), n1, n2, _TR("Bytes"));
 }
 
 // format page size according to locale (e.g. "29.7 x 20.9 cm" or "11.69 x 8.23 in")
@@ -150,7 +150,7 @@ static TCHAR *FormatPdfPageSize(SizeD size) {
     ScopedMem<TCHAR> strWidth(FormatFloatWithThousandSep(width));
     ScopedMem<TCHAR> strHeight(FormatFloatWithThousandSep(height, isMetric ? _T("cm") : _T("in")));
 
-    return tstr_printf(_T("%s x %s"), strWidth, strHeight);
+    return Str::Format(_T("%s x %s"), strWidth, strHeight);
 }
 
 // returns a list of permissions denied by this document
@@ -336,9 +336,9 @@ void OnMenuProperties(WindowInfo *win)
     int version = pdfEngine->getPdfVersion();
     if (version >= 10000) {
         if (version % 100 > 0)
-            str = tstr_printf(_T("%d.%d Adobe Extension Level %d"), version / 10000, (version / 100) % 100, version % 100);
+            str = Str::Format(_T("%d.%d Adobe Extension Level %d"), version / 10000, (version / 100) % 100, version % 100);
         else
-            str = tstr_printf(_T("%d.%d"), version / 10000, (version / 100) % 100);
+            str = Str::Format(_T("%d.%d"), version / 10000, (version / 100) % 100);
         layoutData->AddProperty(_TR("PDF Version:"), str);
     }
 
@@ -355,7 +355,7 @@ void OnMenuProperties(WindowInfo *win)
         layoutData->AddProperty(_TR("File Size:"), str);
     }
 
-    str = tstr_printf(_T("%d"), pdfEngine->pageCount());
+    str = Str::Format(_T("%d"), pdfEngine->pageCount());
     layoutData->AddProperty(_TR("Number of Pages:"), str);
 
     str = FormatPdfPageSize(pdfEngine->pageSize(win->dm->currentPageNo()));
@@ -450,7 +450,7 @@ void CopyPropertiesToClipboard(HWND hwnd)
     VStrList lines;
     for (size_t i = 0; i < layoutData->Count(); i++) {
         PdfPropertyEl *el = layoutData->At(i);
-        lines.Append(tstr_printf(_T("%s %s\r\n"), el->leftTxt, el->rightTxt));
+        lines.Append(Str::Format(_T("%s %s\r\n"), el->leftTxt, el->rightTxt));
     }
     ScopedMem<TCHAR> result(lines.Join());
 

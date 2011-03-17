@@ -1381,7 +1381,7 @@ void DisplayModel::goToTocLink(pdf_link* link)
         path = getLinkPath(link);
         if (path && Str::EndsWithI(path, _T(".pdf"))) {
             // open embedded PDF documents in a new window
-            ScopedMem<TCHAR> combinedPath(tstr_printf(_T("%s:%d:%d"), fileName(), fz_tonum(embedded), fz_togen(embedded)));
+            ScopedMem<TCHAR> combinedPath(Str::Format(_T("%s:%d:%d"), fileName(), fz_tonum(embedded), fz_togen(embedded)));
             LoadDocument(combinedPath);
         } else {
             // offer to save other attachments to a file

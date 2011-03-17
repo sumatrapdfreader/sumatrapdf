@@ -14,9 +14,6 @@
 #endif
 
 #ifdef _UNICODE
-  #define tstr_copy         wstr_copy
-  #define tstr_printf       wstr_printf
-
   #define utf8_to_tstr(src) Str::ToWideChar((src), CP_UTF8)
   #define tstr_to_utf8(src) Str::ToMultiByte((src), CP_UTF8)
   #define ansi_to_tstr(src) Str::ToWideChar((src), CP_ACP)
@@ -28,9 +25,6 @@
   #define wstr_to_tstr_q(src)   (src)
   #define tstr_to_wstr_q(src)   (src)
 #else
-  #define tstr_copy         str_copy
-  #define tstr_printf       str_printf
-
   #define utf8_to_tstr(src) Str::ToMultiByte((src), CP_UTF8, CP_ACP)
   #define tstr_to_utf8(src) Str::ToMultiByte((src), CP_ACP, CP_UTF8)
   #define ansi_to_tstr(src) Str::ToMultiByte((src), CP_ACP, CP_ACP)

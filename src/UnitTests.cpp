@@ -14,17 +14,17 @@ static void hexstrTest()
 {
     unsigned char buf[6] = {1, 2, 33, 255, 0, 18};
     unsigned char buf2[6] = {0};
-    char *s = _mem_to_hexstr(&buf);
+    char *s = _MemToHex(&buf);
     assert(Str::Eq(s, "010221ff0012"));
-    bool ok = _hexstr_to_mem(s, &buf2);
+    bool ok = _HexToMem(s, &buf2);
     assert(ok);
     assert(memcmp(buf, buf2, sizeof(buf)) == 0);
     free(s);
 
     FILETIME ft1, ft2;
     GetSystemTimeAsFileTime(&ft1);
-    s = _mem_to_hexstr(&ft1);
-    _hexstr_to_mem(s, &ft2);
+    s = _MemToHex(&ft1);
+    _HexToMem(s, &ft2);
     DWORD diff = FileTimeDiffInSecs(&ft1, &ft2);
     assert(0 == diff);
     assert(ft1.dwLowDateTime == ft2.dwLowDateTime);

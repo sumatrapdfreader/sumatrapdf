@@ -286,7 +286,7 @@ char *GetSystemTimeAsStr()
 {
     FILETIME ft;
     GetSystemTimeAsFileTime(&ft);
-    return _mem_to_hexstr(&ft);
+    return _MemToHex(&ft);
 }
 
 static void FileTimeToLargeInteger(FILETIME *ft, ULARGE_INTEGER *lt)
@@ -371,7 +371,7 @@ static bool ViewWithFoxit(WindowInfo *win, TCHAR *args=NULL)
     // Foxit cmd-line format:
     // [PDF filename] [-n <page number>] [-pwd <password>] [-z <zoom>]
     // TODO: Foxit allows passing password and zoom
-    ScopedMem<TCHAR> params(tstr_printf(_T("%s \"%s\" -n %d"), args, win->loadedFilePath, win->dm->currentPageNo()));
+    ScopedMem<TCHAR> params(Str::Format(_T("%s \"%s\" -n %d"), args, win->loadedFilePath, win->dm->currentPageNo()));
     exec_with_params(exePath, params, FALSE);
     return true;
 }
@@ -398,7 +398,7 @@ static bool ViewWithPDFXChange(WindowInfo *win, TCHAR *args=NULL)
     // PDFXChange cmd-line format:
     // [/A "param=value [&param2=value ..."] [PDF filename] 
     // /A params: page=<page number>
-    ScopedMem<TCHAR> params(tstr_printf(_T("%s /A \"page=%d\" \"%s\""), args, win->dm->currentPageNo(), win->loadedFilePath));
+    ScopedMem<TCHAR> params(Str::Format(_T("%s /A \"page=%d\" \"%s\""), args, win->dm->currentPageNo(), win->loadedFilePath));
     exec_with_params(exePath, params, FALSE);
     return true;
 }
@@ -430,9 +430,9 @@ static bool ViewWithAcrobat(WindowInfo *win, TCHAR *args=NULL)
     // see http://www.adobe.com/devnet/acrobat/pdfs/Acrobat_SDK_developer_faq.pdf#page=24
     // TODO: Also set zoom factor and scroll to current position?
     if (win->dm && HIWORD(GetFileVersion(exePath)) >= 6)
-        params = tstr_printf(_T("/A \"page=%d\" %s \"%s\""), win->dm->currentPageNo(), args, win->dm->fileName());
+        params = Str::Format(_T("/A \"page=%d\" %s \"%s\""), win->dm->currentPageNo(), args, win->dm->fileName());
     else
-        params = tstr_printf(_T("%s \"%s\""), args, win->loadedFilePath);
+        params = Str::Format(_T("%s \"%s\""), args, win->loadedFilePath);
     exec_with_params(exePath, params, FALSE);
     free(params);
 
@@ -640,7 +640,7 @@ static void AddFileMenuItem(HMENU menuFile, DisplayState *state, UINT index)
     assert(state && menuFile);
     if (!state || ! menuFile) return;
 
-    ScopedMem<TCHAR> menuString(tstr_printf(_T("&%d) %s"), (index + 1) % 10, Path::GetBaseName(state->filePath)));
+    ScopedMem<TCHAR> menuString(Str::Format(_T("&%d) %s"), (index + 1) % 10, Path::GetBaseName(state->filePath)));
     UINT menuId = IDM_FILE_HISTORY_FIRST + index;
     InsertMenu(menuFile, IDM_EXIT, MF_BYCOMMAND | MF_ENABLED | MF_STRING, menuId, menuString);
 }
@@ -812,9 +812,9 @@ TCHAR *WindowInfo::GetPassword(const TCHAR *fileName, unsigned char *fileDigest,
 {
     DisplayState *fileFromHistory = gFileHistory.Find(fileName);
     if (fileFromHistory && fileFromHistory->decryptionKey) {
-        ScopedMem<char> fingerprint(mem_to_hexstr(fileDigest, 16));
+        ScopedMem<char> fingerprint(Str::MemToHex(fileDigest, 16));
         *saveKey = Str::StartsWith(fileFromHistory->decryptionKey, fingerprint.Get());
-        if (*saveKey && hexstr_to_mem(fileFromHistory->decryptionKey + 32, decryptionKeyOut, 32))
+        if (*saveKey && Str::HexToMem(fileFromHistory->decryptionKey + 32, decryptionKeyOut, 32))
             return NULL;
     }
 
@@ -838,7 +838,7 @@ static TCHAR *GetUniqueCrashDumpPath()
         if (n == 0) {
             fileName = Str::Dup(_T("SumatraPDF.dmp"));
         } else {
-            fileName = tstr_printf(_T("SumatraPDF-%d.dmp"), n);
+            fileName = Str::Format(_T("SumatraPDF-%d.dmp"), n);
         }
         path = AppGenDataFilename(fileName);
         free(fileName);
@@ -1389,7 +1389,7 @@ static bool LoadPdfIntoWindow(
         } else {
             delete previousmodel;
             win->state = WS_ERROR_LOADING_PDF;
-            ScopedMem<TCHAR> title(tstr_printf(_T("%s - %s"), Path::GetBaseName(fileName), SUMATRA_WINDOW_TITLE));
+            ScopedMem<TCHAR> title(Str::Format(_T("%s - %s"), Path::GetBaseName(fileName), SUMATRA_WINDOW_TITLE));
             Win::SetText(win->hwndFrame, title);
             goto Error;
         }
@@ -1458,9 +1458,9 @@ static bool LoadPdfIntoWindow(
     }
 
     const TCHAR *baseName = Path::GetBaseName(win->dm->fileName());
-    TCHAR *title = tstr_printf(_T("%s - %s"), baseName, SUMATRA_WINDOW_TITLE);
+    TCHAR *title = Str::Format(_T("%s - %s"), baseName, SUMATRA_WINDOW_TITLE);
     if (win->needrefresh) {
-        TCHAR *msg = tstr_printf(_TR("[Changes detected; refreshing] %s"), title);
+        TCHAR *msg = Str::Format(_TR("[Changes detected; refreshing] %s"), title);
         free(title);
         title = msg;
     }
@@ -1701,7 +1701,7 @@ void DisplayModel::pageChanged()
     int pageCount = win->dm->pageCount();
     if (pageCount > 0) {
         if (INVALID_PAGE_NO != currPageNo) {
-            ScopedMem<TCHAR> buf(tstr_printf(_T("%d"), currPageNo));
+            ScopedMem<TCHAR> buf(Str::Format(_T("%d"), currPageNo));
             Win::SetText(win->hwndPageBox, buf);
             ToolbarUpdateStateForWindow(win);
         }
@@ -1859,7 +1859,7 @@ static void OnDropFiles(WindowInfo *win, HDROP hDrop)
         if (Str::EndsWithI(filename, _T(".lnk"))) {
             ScopedMem<TCHAR> resolved(ResolveLnk(filename));
             if (resolved)
-                tstr_copy(filename, MAX_PATH, resolved);
+                Str::CopyTo(filename, MAX_PATH, resolved);
         }
         // The first dropped document may override the current window
         LoadDocument(filename, i == 0 ? win : NULL);
@@ -1974,7 +1974,7 @@ public:
             DWORD error = OnUrlDownloaded(win, ctx, autoCheck);
             if (error && !autoCheck) {
                 // notify the user about the error during a manual update check
-                ScopedMem<TCHAR> msg(tstr_printf(_TR("Can't connect to the Internet (error %#x)."), error));
+                ScopedMem<TCHAR> msg(Str::Format(_TR("Can't connect to the Internet (error %#x)."), error));
                 MessageBox(win->hwndFrame, msg, _TR("SumatraPDF Update"), MB_ICONEXCLAMATION | MB_OK);
             }
         }
@@ -1992,7 +1992,7 @@ void DownloadSumatraUpdateInfo(WindowInfo *win, bool autoCheck)
     /* For auto-check, only check if at least a day passed since last check */
     if (autoCheck && gGlobalPrefs.m_lastUpdateTime) {
         FILETIME lastUpdateTimeFt;
-        _hexstr_to_mem(gGlobalPrefs.m_lastUpdateTime, &lastUpdateTimeFt);
+        _HexToMem(gGlobalPrefs.m_lastUpdateTime, &lastUpdateTimeFt);
         FILETIME currentTimeFt;
         GetSystemTimeAsFileTime(&currentTimeFt);
         int secs = FileTimeDiffInSecs(&currentTimeFt, &lastUpdateTimeFt);
@@ -3416,7 +3416,7 @@ static void OnMenuSaveAs(WindowInfo *win)
     tstr_trans_chars(fileFilter.Get(), _T("\1"), _T("\0"));
 
     // Remove the extension so that it can be re-added depending on the chosen filter
-    tstr_copy(dstFileName, dimof(dstFileName), Path::GetBaseName(srcFileName));
+    Str::CopyTo(dstFileName, dimof(dstFileName), Path::GetBaseName(srcFileName));
     // TODO: fix saving embedded PDF documents
     tstr_trans_chars(dstFileName, _T(":"), _T("_"));
     if (Str::EndsWithI(dstFileName, _T(".pdf")))
@@ -3441,7 +3441,7 @@ static void OnMenuSaveAs(WindowInfo *win)
     // Make sure that the file has a valid ending
     if (!Str::EndsWithI(dstFileName, _T(".pdf")) && !(hasCopyPerm && Str::EndsWithI(dstFileName, _T(".txt")))) {
         TCHAR *defaultExt = hasCopyPerm && 2 == ofn.nFilterIndex ? _T(".txt") : _T(".pdf");
-        realDstFileName = tstr_printf(_T("%s%s"), dstFileName, defaultExt);
+        realDstFileName = Str::Format(_T("%s%s"), dstFileName, defaultExt);
     }
     // Extract all text when saving as a plain text file
     if (hasCopyPerm && Str::EndsWithI(realDstFileName, _T(".txt"))) {
@@ -3472,7 +3472,7 @@ static void OnMenuSaveAs(WindowInfo *win)
         } else {
             TCHAR *msgBuf, *errorMsg;
             if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, GetLastError(), 0, (LPTSTR)&msgBuf, 0, NULL)) {
-                errorMsg = tstr_printf(_T("%s\n\n%s"), _TR("Failed to save a file"), msgBuf);
+                errorMsg = Str::Format(_T("%s\n\n%s"), _TR("Failed to save a file"), msgBuf);
                 LocalFree(msgBuf);
             } else {
                 errorMsg = Str::Dup(_TR("Failed to save a file"));
@@ -3492,12 +3492,12 @@ bool DisplayModel::saveStreamAs(unsigned char *data, int dataLen, const TCHAR *f
 
     TCHAR dstFileName[MAX_PATH] = { 0 };
     if (fileName)
-        tstr_copy(dstFileName, dimof(dstFileName), fileName);
+        Str::CopyTo(dstFileName, dimof(dstFileName), fileName);
 
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling
     // methods too early on)
-    ScopedMem<TCHAR> fileFilter(tstr_printf(_T("%s\1*.*\1"), _TR("All files")));
+    ScopedMem<TCHAR> fileFilter(Str::Format(_T("%s\1*.*\1"), _TR("All files")));
     tstr_trans_chars(fileFilter, _T("\1"), _T("\0"));
 
     OPENFILENAME ofn = { 0 };
@@ -3552,7 +3552,7 @@ static void OnMenuOpen(WindowInfo *win)
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling
     // methods too early on)
-    ScopedMem<TCHAR> fileFilter(tstr_printf(_T("%s\1*.pdf\1%s\1*.*\1"),
+    ScopedMem<TCHAR> fileFilter(Str::Format(_T("%s\1*.pdf\1%s\1*.*\1"),
         _TR("PDF documents"), _TR("All files")));
     tstr_trans_chars(fileFilter, _T("\1"), _T("\0"));
 
@@ -4205,17 +4205,17 @@ void WindowInfo_ShowForwardSearchResult(WindowInfo *win, LPCTSTR srcfilename, UI
     else if (ret == PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED)
         buf = Str::Dup(_TR("Synchronization file cannot be opened"));
     else if (ret == PDFSYNCERR_INVALID_PAGE_NUMBER)
-        buf = tstr_printf(_TR("Page number %u inexistant"), page);
+        buf = Str::Format(_TR("Page number %u inexistant"), page);
     else if (ret == PDFSYNCERR_NO_SYNC_AT_LOCATION)
         buf = Str::Dup(_TR("No synchronization info at this position"));
     else if (ret == PDFSYNCERR_UNKNOWN_SOURCEFILE)
-        buf = tstr_printf(_TR("Unknown source file (%s)"), srcfilename);
+        buf = Str::Format(_TR("Unknown source file (%s)"), srcfilename);
     else if (ret == PDFSYNCERR_NORECORD_IN_SOURCEFILE)
-        buf = tstr_printf(_TR("Source file %s has no synchronization point"), srcfilename);
+        buf = Str::Format(_TR("Source file %s has no synchronization point"), srcfilename);
     else if (ret == PDFSYNCERR_NORECORD_FOR_THATLINE)
-        buf = tstr_printf(_TR("No result found around line %u in file %s"), line, srcfilename);
+        buf = Str::Format(_TR("No result found around line %u in file %s"), line, srcfilename);
     else if (ret == PDFSYNCERR_NOSYNCPOINT_FOR_LINERECORD)
-        buf = tstr_printf(_TR("No result found around line %u in file %s"), line, srcfilename);
+        buf = Str::Format(_TR("No result found around line %u in file %s"), line, srcfilename);
 
     WindowInfo_ShowMessage_Async(win, buf, true);
     free(buf);
@@ -4249,7 +4249,7 @@ static void WindowInfo_HideFindStatus(WindowInfo *win, bool canceled=false)
     else if (!win->dm->bFoundText)
         WindowInfo_ShowMessage_Async(win, _TR("No matches were found"), false);
     else {
-        ScopedMem<TCHAR> buf(tstr_printf(_TR("Found text at page %d"), win->dm->currentPageNo()));
+        ScopedMem<TCHAR> buf(Str::Format(_TR("Found text at page %d"), win->dm->currentPageNo()));
         WindowInfo_ShowMessage_Async(win, buf, false);
     }    
 }
@@ -4493,7 +4493,7 @@ static void OnChar(WindowInfo *win, WPARAM key)
         // total pages count a one-key action (unless they're already visible)
         if (!gGlobalPrefs.m_showToolbar || win->fullScreen || PM_ENABLED == win->presentation) {
             int current = win->dm->currentPageNo(), total = win->dm->pageCount();
-            ScopedMem<TCHAR> pageInfo(tstr_printf(_T("%s %d / %d"), _TR("Page:"), current, total));
+            ScopedMem<TCHAR> pageInfo(Str::Format(_T("%s %d / %d"), _TR("Page:"), current, total));
             WindowInfo_ShowMessage_Async(win, pageInfo, true);
         }
         break;
@@ -4987,7 +4987,7 @@ static void UpdateToolbarPageText(WindowInfo *win, int pageCount)
     if (-1 == pageCount)
         buf = Win::GetText(win->hwndPageTotal);
     else if (0 != pageCount)
-        buf = tstr_printf(_T(" / %d"), pageCount);
+        buf = Str::Format(_T(" / %d"), pageCount);
     else
         buf = Str::Dup(_T(""));
 
@@ -5209,7 +5209,7 @@ public:
         if (!win->findStatusVisible)
             WindowInfo_ShowFindStatus(win);
 
-        ScopedMem<TCHAR> buf(tstr_printf(_TR("Searching %d of %d..."), current, total));
+        ScopedMem<TCHAR> buf(Str::Format(_TR("Searching %d of %d..."), current, total));
         Win::SetText(win->hwndFindStatus, buf);
     }
 };
@@ -5446,7 +5446,7 @@ static HTREEITEM AddTocItemToView(HWND hwnd, PdfTocItem *entry, HTREEITEM parent
 
 #ifdef DISPLAY_TOC_PAGE_NUMBERS
     if (entry->pageNo) {
-        tvinsert.itemex.pszText = tstr_printf(_T("%s  %d"), entry->title, entry->pageNo);
+        tvinsert.itemex.pszText = Str::Format(_T("%s  %d"), entry->title, entry->pageNo);
         HTREEITEM hItem = TreeView_InsertItem(hwnd, &tvinsert);
         free(tvinsert.itemex.pszText);
         return hItem;
@@ -5661,13 +5661,13 @@ static void CustomizeToCInfoTip(WindowInfo *win, LPNMTVGETINFOTIP nmit)
     }
 
     if (PDF_LLAUNCH == tocItem->link->kind && fz_dictgets(tocItem->link->dest, "EF")) {
-        TCHAR *comment = tstr_printf(_TR("Attachment: %s"), path);
+        TCHAR *comment = Str::Format(_TR("Attachment: %s"), path);
         free(path);
         path = comment;
     }
 
     infotip.Append(path);
-    tstr_copy(nmit->pszText, nmit->cchTextMax, infotip.Get());
+    Str::CopyTo(nmit->pszText, nmit->cchTextMax, infotip.Get());
     free(path);
 }
 
@@ -6667,19 +6667,19 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
             // delegate file opening to a previously running instance by sending a DDE message 
             TCHAR fullpath[MAX_PATH];
             GetFullPathName(i.fileNames[n], dimof(fullpath), fullpath, NULL);
-            ScopedMem<TCHAR> command(tstr_printf(_T("[") DDECOMMAND_OPEN _T("(\"%s\", 0, 1, 0)]"), fullpath));
+            ScopedMem<TCHAR> command(Str::Format(_T("[") DDECOMMAND_OPEN _T("(\"%s\", 0, 1, 0)]"), fullpath));
             DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, command);
             if (i.destName && !firstDocLoaded) {
-                ScopedMem<TCHAR> command(tstr_printf(_T("[") DDECOMMAND_GOTO _T("(\"%s\", \"%s\")]"), fullpath, i.destName));
+                ScopedMem<TCHAR> command(Str::Format(_T("[") DDECOMMAND_GOTO _T("(\"%s\", \"%s\")]"), fullpath, i.destName));
                 DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, command);
             }
             else if (i.pageNumber > 0 && !firstDocLoaded) {
-                ScopedMem<TCHAR> command(tstr_printf(_T("[") DDECOMMAND_PAGE _T("(\"%s\", %d)]"), fullpath, i.pageNumber));
+                ScopedMem<TCHAR> command(Str::Format(_T("[") DDECOMMAND_PAGE _T("(\"%s\", %d)]"), fullpath, i.pageNumber));
                 DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, command);
             }
             if ((i.startView != DM_AUTOMATIC || i.startZoom != INVALID_ZOOM) && !firstDocLoaded) {
                 ScopedMem<TCHAR> viewMode(utf8_to_tstr(DisplayModeNameFromEnum(i.startView)));
-                ScopedMem<TCHAR> command(tstr_printf(_T("[") DDECOMMAND_SETVIEW _T("(\"%s\", \"%s\", %.2f)]"), fullpath, viewMode, i.startZoom));
+                ScopedMem<TCHAR> command(Str::Format(_T("[") DDECOMMAND_SETVIEW _T("(\"%s\", \"%s\", %.2f)]"), fullpath, viewMode, i.startZoom));
                 DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, command);
             }
         }

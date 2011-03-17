@@ -106,7 +106,7 @@ int tstr_copy_skip_until(const TCHAR **strp, TCHAR *dst, size_t dst_size, TCHAR 
 
     *strp = end + 1;
     size_t len = min(dst_size, (size_t)(end - start) + 1);
-    tstr_copy(dst, len, start);
+    Str::CopyTo(dst, len, start);
 
     return len <= dst_size;
 }

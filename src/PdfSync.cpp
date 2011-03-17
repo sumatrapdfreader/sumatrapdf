@@ -109,11 +109,11 @@ TCHAR * Synchronizer::prepare_commandline(LPCTSTR pattern, LPCTSTR filename, UIN
         if (*perc == 'f')
             cmdline.Append(filename);
         else if (*perc == 'l') {
-            ScopedMem<TCHAR> lineNo(tstr_printf(_T("%u"), line));
+            ScopedMem<TCHAR> lineNo(Str::Format(_T("%u"), line));
             cmdline.Append(lineNo);
         }
         else if (*perc == 'c') {
-            ScopedMem<TCHAR> colNo(tstr_printf(_T("%u"), col));
+            ScopedMem<TCHAR> colNo(Str::Format(_T("%u"), col));
             cmdline.Append(colNo);
         }
         else if (*perc == '%')
@@ -197,7 +197,7 @@ int Pdfsync::scan_and_build_index(FILE *fp)
     src_file s;
     s.first_recordsection = (size_t)-1;
     s.last_recordsection = (size_t)-1;
-    str_copy(s.filename, dimof(s.filename), jobname);
+    Str::CopyTo(s.filename, dimof(s.filename), jobname);
 #ifndef NDEBUG    
     s.closeline_pos = -1;
     fgetpos(fp, &s.openline_pos);
@@ -430,7 +430,7 @@ UINT Pdfsync::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR srcfilepath, UINT 
         free(srcFilename);
         srcFilename = srcFilename2;
     }
-    tstr_copy(srcfilepath, cchFilepath, srcFilename);
+    Str::CopyTo(srcfilepath, cchFilepath, srcFilename);
     free(srcFilename);
 
     // find the record declaration in the section
@@ -661,7 +661,7 @@ UINT SyncTex::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR srcfilepath, UINT 
             free(srcfilename);
             srcfilename = srcfilename2;
         }
-        tstr_copy(srcfilepath, cchFilepath, srcfilename);
+        Str::CopyTo(srcfilepath, cchFilepath, srcfilename);
         free(srcfilename);
 
         return PDFSYNCERR_SUCCESS;

@@ -120,7 +120,7 @@ char *Join(const char *s1, const char *s2, const char *s3)
     if (!s2) s2 = "";
     if (!s3) s3 = "";
 
-    return str_printf("%s%s%s", s1, s2, s3);
+    return Format("%s%s%s", s1, s2, s3);
 }
 
 /* Concatenate 2 strings. Any string can be NULL.
@@ -131,7 +131,7 @@ WCHAR *Join(const WCHAR *s1, const WCHAR *s2, const WCHAR *s3)
     if (!s2) s2 = L"";
     if (!s3) s3 = L"";
 
-    return wstr_printf(L"%s%s%s", s1, s2, s3);
+    return Format(L"%s%s%s", s1, s2, s3);
 }
 
 char *DupN(const char *s, size_t lenCch)
@@ -198,64 +198,7 @@ WCHAR *ToWideChar(const char *src, UINT CodePage)
     return res;
 }
 
-}
-
-char * str_cat_s(char * dst, size_t dst_cch_size, const char * src)
-{
-    size_t dstLen = Str::Len(dst);
-    if (dst_cch_size <= dstLen)
-        return NULL;
-
-    int ok = str_copy(dst + dstLen, dst_cch_size - dstLen, src);
-    if (!ok)
-        return NULL;
-    return dst;
-}
-
-int str_copy(char *dst, size_t dst_cch_size, const char *src)
-{
-    size_t src_cch_size = Str::Len(src);
-    size_t len = min(src_cch_size + 1, dst_cch_size);
-    
-    strncpy(dst, src, len);
-    dst[len - 1] = '\0';
-    
-    if (src_cch_size >= dst_cch_size)
-        return FALSE;
-    return TRUE;
-}
-
-/* Convert binary data in <buf> of size <len> to a hex-encoded string */
-char *mem_to_hexstr(const unsigned char *buf, int len)
-{
-    int i;
-    /* 2 hex chars per byte, +1 for terminating 0 */
-    char *ret = (char *)calloc((size_t)len + 1, 2);
-    if (!ret)
-        return NULL;
-    for (i = 0; i < len; i++) {
-        sprintf(ret + 2 * i, "%02x", *buf++);
-    }
-    ret[2 * len] = '\0';
-    return ret;
-}
-
-/* Reverse of mem_to_hexstr. Convert a 0-terminatd hex-encoded string <s> to
-   binary data pointed by <buf> of max sisze bufLen.
-   Returns FALSE if size of <s> doesn't match <bufLen>. */
-bool hexstr_to_mem(const char *s, unsigned char *buf, int bufLen)
-{
-    for (; bufLen > 0; bufLen--) {
-        int c;
-        if (1 != sscanf(s, "%02x", &c))
-            return false;
-        s += 2;
-        *buf++ = (unsigned char)c;
-    }
-    return *s == '\0';
-}
-
-char *str_printf(const char *format, ...)
+char *Format(const char *format, ...)
 {
     va_list args;
     char    message[256];
@@ -288,55 +231,7 @@ char *str_printf(const char *format, ...)
     return buf;
 }
 
-void win32_dbg_out(const char *format, ...)
-{
-    char        buf[4096];
-    va_list     args;
-
-    va_start(args, format);
-    vsnprintf(buf, sizeof(buf), format, args);
-    OutputDebugStringA(buf);
-    va_end(args);
-}
-
-void win32_dbg_out_hex(const char *dsc, const unsigned char *data, int dataLen)
-{
-    char *hexStr;
-    if (!data) dataLen = 0;
-
-    hexStr = mem_to_hexstr(data, dataLen);
-    win32_dbg_out("%s%s\n", dsc ? dsc : "", hexStr);
-    free(hexStr);
-}
-
-
-// TODO: temporary
-WCHAR * wstr_cat_s(WCHAR * dst, size_t dst_cch_size, const WCHAR * src)
-{
-    size_t dstLen = Str::Len(dst);
-    if (dst_cch_size <= dstLen)
-        return NULL;
-
-    int ok = wstr_copy(dst + dstLen, dst_cch_size - dstLen, src);
-    if (!ok)
-        return NULL;
-    return dst;
-}
-
-int wstr_copy(WCHAR *dst, size_t dst_cch_size, const WCHAR *src)
-{
-    size_t src_cch_size = Str::Len(src);
-    size_t len = min(src_cch_size + 1, dst_cch_size);
-    
-    wcsncpy(dst, src, len);
-    dst[len - 1] = L'\0';
-    
-    if (src_cch_size >= dst_cch_size)
-        return FALSE;
-    return TRUE;
-}
-
-WCHAR *wstr_printf(const WCHAR *format, ...)
+WCHAR *Format(const WCHAR *format, ...)
 {
     va_list args;
     WCHAR   message[256];
@@ -369,6 +264,73 @@ WCHAR *wstr_printf(const WCHAR *format, ...)
     return buf;
 }
 
+size_t CopyTo(char *dst, size_t dstCchSize, const char *src)
+{
+    size_t srcCchSize = Str::Len(src);
+    size_t size = min(dstCchSize, srcCchSize + 1);
+
+    strncpy(dst, src, size);
+    if (size > 0)
+        dst[size - 1] = '\0';
+
+    return size;
+}
+
+size_t CopyTo(WCHAR *dst, size_t dstCchSize, const WCHAR *src)
+{
+    size_t srcCchSize = Str::Len(src);
+    size_t size = min(dstCchSize, srcCchSize + 1);
+
+    wcsncpy(dst, src, size);
+    if (size > 0)
+        dst[size - 1] = '\0';
+
+    return size;
+}
+
+/* Convert binary data in <buf> of size <len> to a hex-encoded string */
+char *MemToHex(const unsigned char *buf, int len)
+{
+    /* 2 hex chars per byte, +1 for terminating 0 */
+    char *ret = SAZA(char, 2 * (size_t)len + 1);
+    if (!ret)
+        return NULL;
+    for (int i = 0; i < len; i++)
+        sprintf(ret + 2 * i, "%02x", *buf++);
+    ret[2 * len] = '\0';
+    return ret;
+}
+
+/* Reverse of MemToHex. Convert a 0-terminatd hex-encoded string <s> to
+   binary data pointed by <buf> of max sisze bufLen.
+   Returns false if size of <s> doesn't match <bufLen>. */
+bool HexToMem(const char *s, unsigned char *buf, int bufLen)
+{
+    for (; bufLen > 0; bufLen--) {
+        int c;
+        if (1 != sscanf(s, "%02x", &c))
+            return false;
+        s += 2;
+        *buf++ = (unsigned char)c;
+    }
+    return *s == '\0';
+}
+
+}
+
+void win32_dbg_out(const char *format, ...)
+{
+    char        buf[4096];
+    va_list     args;
+
+    va_start(args, format);
+    vsnprintf(buf, sizeof(buf), format, args);
+    OutputDebugStringA(buf);
+    va_end(args);
+}
+
+
+// TODO: temporary
 void win32_dbg_outW(const WCHAR *format, ...)
 {
     WCHAR   buf[4096];
