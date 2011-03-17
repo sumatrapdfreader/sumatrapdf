@@ -66,40 +66,6 @@ int str_copy(char *dst, size_t dst_cch_size, const char *src)
     return str_copyn(dst, dst_cch_size, src, Str::Len(src));
 }
 
-int str_endswith(const char *txt, const char *end)
-{
-    size_t end_len;
-    size_t txt_len;
-
-    if (!txt || !end)
-        return FALSE;
-
-    txt_len = strlen(txt);
-    end_len = strlen(end);
-    if (end_len > txt_len)
-        return FALSE;
-    if (Str::Eq(txt+txt_len-end_len, end))
-        return TRUE;
-    return FALSE;
-}
-
-int str_endswithi(const char *txt, const char *end)
-{
-    size_t end_len;
-    size_t txt_len;
-
-    if (!txt || !end)
-        return FALSE;
-
-    txt_len = strlen(txt);
-    end_len = strlen(end);
-    if (end_len > txt_len)
-        return FALSE;
-    if (Str::EqI(txt+txt_len-end_len, end))
-        return TRUE;
-    return FALSE;
-}
-
 int str_empty(const char *str)
 {
     if (!str)

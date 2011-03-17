@@ -94,8 +94,8 @@ static void TStrTest()
     assert(!Str::EqI(str, NULL) && Str::EqI((char*)NULL, (char*)NULL));
     assert(Str::StartsWith(str, _T("a s")) && Str::StartsWithI(str, _T("A Str")));
     assert(!Str::StartsWith(str, _T("Astr")));
-    assert(tstr_endswith(str, _T("ing")) && tstr_endswithi(str, _T("ING")));
-    assert(!tstr_endswith(str, _T("ung")));
+    assert(Str::EndsWith(str, _T("ing")) && Str::EndsWithI(str, _T("ING")));
+    assert(!Str::EndsWith(str, _T("ung")));
     assert(tstr_empty(NULL) && tstr_empty(_T("")) && !tstr_empty(str));
     assert(tstr_find_char(str, _T('s')) && !tstr_find_char(str, _T('S')));
     int res = tstr_copyn(buf, dimof(buf), str, 4);
@@ -105,7 +105,7 @@ static void TStrTest()
     res = tstr_printf_s(buf, 4, _T("%s"), str);
     assert(Str::Eq(buf, _T("a s")) && res < 0);
     res = tstr_printf_s(buf, dimof(buf), _T("%s!!"), str);
-    assert(Str::StartsWith(buf, str) && tstr_endswith(buf, _T("!!")) && res == 10);
+    assert(Str::StartsWith(buf, str) && Str::EndsWith(buf, _T("!!")) && res == 10);
     tstr_copy(buf, dimof(buf), str);
     assert(Str::Eq(buf, str));
 

@@ -185,7 +185,7 @@ class Pdfsync : public Synchronizer
 public:
     Pdfsync(LPCTSTR _syncfilename) : Synchronizer(_syncfilename)
     {
-        assert(tstr_endswithi(_syncfilename, PDFSYNC_EXTENSION));
+        assert(Str::EndsWithI(_syncfilename, PDFSYNC_EXTENSION));
         this->coordsys = BottomLeft;
     }
 

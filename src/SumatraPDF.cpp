@@ -1557,10 +1557,10 @@ static void CheckPositionAndSize(DisplayState* ds)
 
 bool IsComicBook(const TCHAR *fileName)
 {
-    if (tstr_endswithi(fileName, _T(".cbz")))
+    if (Str::EndsWithI(fileName, _T(".cbz")))
         return true;
 #if 0 // not yet
-    if (tstr_endswithi(fileName, _T(".cbr")))
+    if (Str::EndsWithI(fileName, _T(".cbr")))
         return true;
 #endif
     return false;
@@ -1599,9 +1599,9 @@ static WindowInfo* LoadComicBook(const TCHAR *fileName, WindowInfo *win, bool sh
             goto Error;
         }
 
-        if (str_endswithi(filename, ".png"))
+        if (Str::EndsWithI(filename, ".png"))
             pngCount++;
-        else if (str_endswithi(filename, ".jpg") || str_endswithi(filename, ".jpeg"))
+        else if (Str::EndsWithI(filename, ".jpg") || Str::EndsWithI(filename, ".jpeg"))
             jpegCount++;
 
         err = unzCloseCurrentFile(uf);
@@ -1857,7 +1857,7 @@ static void OnDropFiles(WindowInfo *win, HDROP hDrop)
     for (i = 0; i < files_count; i++)
     {
         DragQueryFile(hDrop, i, filename, MAX_PATH);
-        if (tstr_endswithi(filename, _T(".lnk"))) {
+        if (Str::EndsWithI(filename, _T(".lnk"))) {
             ScopedMem<TCHAR> resolved(ResolveLnk(filename));
             if (resolved)
                 lstrcpyn(filename, resolved, MAX_PATH);
@@ -3417,7 +3417,7 @@ static void OnMenuSaveAs(WindowInfo *win)
     tstr_copy(dstFileName, dimof(dstFileName), Path::GetBaseName(srcFileName));
     // TODO: fix saving embedded PDF documents
     tstr_trans_chars(dstFileName, _T(":"), _T("_"));
-    if (tstr_endswithi(dstFileName, _T(".pdf")))
+    if (Str::EndsWithI(dstFileName, _T(".pdf")))
         dstFileName[Str::Len(dstFileName) - 4] = 0;
 
     ofn.lStructSize = sizeof(ofn);
@@ -3437,12 +3437,12 @@ static void OnMenuSaveAs(WindowInfo *win)
 
     TCHAR * realDstFileName = dstFileName;
     // Make sure that the file has a valid ending
-    if (!tstr_endswithi(dstFileName, _T(".pdf")) && !(hasCopyPerm && tstr_endswithi(dstFileName, _T(".txt")))) {
+    if (!Str::EndsWithI(dstFileName, _T(".pdf")) && !(hasCopyPerm && Str::EndsWithI(dstFileName, _T(".txt")))) {
         TCHAR *defaultExt = hasCopyPerm && 2 == ofn.nFilterIndex ? _T(".txt") : _T(".pdf");
         realDstFileName = tstr_cat_s(dstFileName, dimof(dstFileName), defaultExt);
     }
     // Extract all text when saving as a plain text file
-    if (hasCopyPerm && tstr_endswithi(realDstFileName, _T(".txt"))) {
+    if (hasCopyPerm && Str::EndsWithI(realDstFileName, _T(".txt"))) {
         ScopedMem<TCHAR> text(win->dm->extractAllText(Target_Export));
         ScopedMem<char> textUTF8(tstr_to_utf8(text));
         ScopedMem<char> textUTF8BOM(str_cat("\xEF\xBB\xBF", textUTF8));

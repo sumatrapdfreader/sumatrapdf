@@ -59,8 +59,8 @@ void PdfSearch::SetText(TCHAR *text)
     // (that behavior already "kind of" exists without special treatment, but
     // usually is not quite what a user expects, so let's try to be cleverer)
     this->wholeWords = false;
-    if (tstr_endswith(text, _T(" "))) {
-        this->wholeWords = !tstr_endswith(text, _T("  "));
+    if (Str::EndsWith(text, _T(" "))) {
+        this->wholeWords = !Str::EndsWith(text, _T("  "));
         this->findText[Str::Len(this->findText) - 1] = '\0';
     }
 

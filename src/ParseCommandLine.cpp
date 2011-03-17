@@ -291,7 +291,7 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
         else {
             // Remember this argument as a filename to open
             TCHAR *filepath = NULL;
-            if (tstr_endswithi(argList[n], _T(".lnk")))
+            if (Str::EndsWithI(argList[n], _T(".lnk")))
                 filepath = ResolveLnk(argList[n]);
             if (!filepath)
                 filepath = Str::Dup(argList[n]);

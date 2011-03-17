@@ -99,7 +99,7 @@ static TCHAR *FormatFloatWithThousandSep(double number, const TCHAR *unit=NULL) 
 
     // always add between one and two decimals after the point
     ScopedMem<TCHAR> buf(tstr_printf(_T("%s%s%02d"), tmp, decimal, num % 100));
-    if (tstr_endswith(buf, _T("0")))
+    if (Str::EndsWith(buf, _T("0")))
         buf[Str::Len(buf) - 1] = '\0';
 
     return unit ? tstr_printf(_T("%s %s"), buf, unit) : Str::Dup(buf);

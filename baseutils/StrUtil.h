@@ -87,7 +87,7 @@ static inline bool EqI(const WCHAR *str1, const WCHAR *str2)
     return false;
 }
 
-static bool EqN(const char *str1, const char *str2, size_t len)
+static inline bool EqN(const char *str1, const char *str2, size_t len)
 {
     if (str1 == str2)
         return true;
@@ -98,7 +98,7 @@ static bool EqN(const char *str1, const char *str2, size_t len)
     return false;
 }
 
-static bool EqN(const WCHAR *str1, const WCHAR *str2, size_t len)
+static inline bool EqN(const WCHAR *str1, const WCHAR *str2, size_t len)
 {
     if (str1 == str2)
         return true;
@@ -110,18 +110,18 @@ static bool EqN(const WCHAR *str1, const WCHAR *str2, size_t len)
 }
 
 /* return true if 'str' starts with 'txt', case-sensitive */
-static bool StartsWith(const char *str, const char *txt)
+static inline bool StartsWith(const char *str, const char *txt)
 {
     return Str::EqN(str, txt, Str::Len(txt));
 }
 
-static bool StartsWith(const WCHAR *str, const WCHAR *txt)
+static inline bool StartsWith(const WCHAR *str, const WCHAR *txt)
 {
     return Str::EqN(str, txt, Str::Len(txt));
 }
 
 /* return true if 'str' starts with 'txt', NOT case-sensitive */
-static bool StartsWithI(const char *str, const char *txt)
+static inline bool StartsWithI(const char *str, const char *txt)
 {
     if (str == txt)
         return true;
@@ -134,7 +134,7 @@ static bool StartsWithI(const char *str, const char *txt)
 }
 
 /* return true if 'str' starts with 'txt', NOT case-sensitive */
-static bool StartsWithI(const WCHAR *str, const WCHAR *txt)
+static inline bool StartsWithI(const WCHAR *str, const WCHAR *txt)
 {
     if (!str && !txt)
         return true;
@@ -146,6 +146,64 @@ static bool StartsWithI(const WCHAR *str, const WCHAR *txt)
     return false;
 }
 
+static inline bool EndsWith(const char *txt, const char *end)
+{
+    size_t end_len;
+    size_t txt_len;
+
+    if (!txt || !end)
+        return FALSE;
+
+    txt_len = Str::Len(txt);
+    end_len = Str::Len(end);
+    if (end_len > txt_len)
+        return false;
+    return Str::Eq(txt+txt_len-end_len, end);
+}
+
+static inline bool EndsWithI(const char *txt, const char *end)
+{
+    size_t end_len;
+    size_t txt_len;
+
+    if (!txt || !end)
+        return false;
+
+    txt_len = Str::Len(txt);
+    end_len = Str::Len(end);
+    if (end_len > txt_len)
+        return false;
+    return Str::EqI(txt+txt_len-end_len, end);
+}
+
+static inline bool EndsWith(const WCHAR *txt, const WCHAR *end)
+{
+    size_t end_len;
+    size_t txt_len;
+    if (!txt || !end)
+        return false;
+    txt_len = Str::Len(txt);
+    end_len = Str::Len(end);
+    if (end_len > txt_len)
+        return false;
+    return Str::Eq(txt+txt_len-end_len, end);
+}
+
+static inline bool EndsWithI(const WCHAR *txt, const WCHAR *end)
+{
+    size_t end_len;
+    size_t txt_len;
+
+    if (!txt || !end)
+        return false;
+
+    txt_len = Str::Len(txt);
+    end_len = Str::Len(end);
+    if (end_len > txt_len)
+        return false;
+    return Str::EqI(txt+txt_len-end_len, end);
+}
+
 }
 
 static inline bool ChrIsDigit(const WCHAR c)
@@ -154,8 +212,6 @@ static inline bool ChrIsDigit(const WCHAR c)
 }
 
 // TODO: make these return bool instead of int
-int     str_endswith(const char *str, const char *end);
-int     str_endswithi(const char *str, const char *end);
 int     str_empty(const char *str);
 int     str_copy(char *dst, size_t dst_cch_size, const char *src);
 int     str_copyn(char *dst, size_t dst_cch_size, const char *src, size_t src_cch_size);

@@ -67,38 +67,6 @@ int wstr_copy(WCHAR *dst, size_t dst_cch_size, const WCHAR *src)
     return wstr_copyn(dst, dst_cch_size, src, Str::Len(src));
 }
 
-int wstr_endswith(const WCHAR *txt, const WCHAR *end)
-{
-    size_t end_len;
-    size_t txt_len;
-    if (!txt || !end)
-        return FALSE;
-    txt_len = Str::Len(txt);
-    end_len = Str::Len(end);
-    if (end_len > txt_len)
-        return FALSE;
-    if (Str::Eq(txt+txt_len-end_len, end))
-        return TRUE;
-    return FALSE;
-}
-
-int wstr_endswithi(const WCHAR *txt, const WCHAR *end)
-{
-    size_t end_len;
-    size_t txt_len;
-
-    if (!txt || !end)
-        return FALSE;
-
-    txt_len = Str::Len(txt);
-    end_len = Str::Len(end);
-    if (end_len > txt_len)
-        return FALSE;
-    if (Str::EqI(txt+txt_len-end_len, end))
-        return TRUE;
-    return FALSE;
-}
-
 int wstr_empty(const WCHAR *str)
 {
     if (!str)

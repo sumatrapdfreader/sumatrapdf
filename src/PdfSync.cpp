@@ -21,8 +21,8 @@ class SyncTex : public Synchronizer
 public:
     SyncTex(LPCTSTR _syncfilename) : Synchronizer(_syncfilename)
     {
-        assert(tstr_endswithi(_syncfilename, SYNCTEX_EXTENSION) ||
-               tstr_endswithi(_syncfilename, SYNCTEXGZ_EXTENSION));
+        assert(Str::EndsWithI(_syncfilename, SYNCTEX_EXTENSION) ||
+               Str::EndsWithI(_syncfilename, SYNCTEXGZ_EXTENSION));
         
         this->scanner = NULL;
         this->coordsys = TopLeft;
@@ -60,7 +60,7 @@ UINT CreateSynchronizer(LPCTSTR pdffilename, Synchronizer **sync)
     if (!sync)
         return PDFSYNCERR_INVALID_ARGUMENT;
 
-    if (!tstr_endswithi(pdffilename, PDF_EXTENSION)) {
+    if (!Str::EndsWithI(pdffilename, PDF_EXTENSION)) {
         DBG_OUT_T("Bad PDF filename! (%s)\n", pdffilename);
         return PDFSYNCERR_INVALID_ARGUMENT;
     }
@@ -256,7 +256,7 @@ int Pdfsync::scan_and_build_index(FILE *fp)
                 PSTR pfilename = buff;
                 size_t len = Str::Len(buff);
                 // if the filename contains quotes then remove them
-                if (Str::StartsWith(buff, "\"") && str_endswith(buff, "\"")) {
+                if (Str::StartsWith(buff, "\"") && Str::EndsWith(buff, "\"")) {
                     pfilename++;
                     len-=2;
                 }

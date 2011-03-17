@@ -277,7 +277,7 @@ TCHAR *GetInstallationDir(bool forUninstallation=false)
     if (!ok)
         ok = ReadRegStr(HKEY_CURRENT_USER, REG_PATH_SOFTWARE, INSTALL_DIR, dir, dimof(dir));
     if (ok) {
-        if (tstr_endswithi(dir, _T(".exe")))
+        if (Str::EndsWithI(dir, _T(".exe")))
             *(TCHAR *)Path::GetBaseName(dir) = '\0';
         if (*dir && PathIsDirectory(dir))
             return Str::Dup(dir);
@@ -1280,7 +1280,7 @@ void OnButtonBrowse()
     if (BrowseForFolder(gHwndFrame, installDir, _T("Select the folder into which ") TAPP _T(" should be installed:"), path, dimof(path))) {
         // force paths that aren't entered manually to end in ...\SumatraPDF
         // to prevent unintended installations into e.g. %ProgramFiles% itself
-        if (!tstr_endswithi(path, _T("\\") TAPP))
+        if (!Str::EndsWithI(path, _T("\\") TAPP))
             tstr_cat_s(path, dimof(path), _T("\\") TAPP);
         Win::SetText(gHwndTextboxInstDir, path);
         Edit_SetSel(gHwndTextboxInstDir, 0, -1);

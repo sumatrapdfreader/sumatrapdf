@@ -6,8 +6,6 @@
 
 #define wstr_find_char wcschr
 
-int     wstr_endswith(const WCHAR *str, const WCHAR *end);
-int     wstr_endswithi(const WCHAR *str, const WCHAR *end);
 int     wstr_empty(const WCHAR *str);
 int     wstr_copy(WCHAR *dst, size_t dst_cch_size, const WCHAR *src);
 int     wstr_copyn(WCHAR *dst, size_t dst_cch_size, const WCHAR *src, size_t src_cch_size);

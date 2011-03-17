@@ -108,7 +108,7 @@ bool IsRunningInPortableMode()
     if (!ok)
         ok = ReadRegStr(HKEY_CURRENT_USER, _T("Software\\") APP_NAME_STR, _T("Install_Dir"), programFilesDir, dimof(programFilesDir));
     if (ok && exePath) {
-        if (!tstr_endswithi(programFilesDir, _T(".exe"))) {
+        if (!Str::EndsWithI(programFilesDir, _T(".exe"))) {
             tstr_cat_s(programFilesDir, dimof(programFilesDir), _T("\\"));
             tstr_cat_s(programFilesDir, dimof(programFilesDir), Path::GetBaseName(exePath));
         }

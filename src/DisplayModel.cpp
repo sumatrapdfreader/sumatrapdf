@@ -252,7 +252,7 @@ bool DisplayModel::load(const TCHAR *fileName, int startPage, WindowInfo *win)
 
     const char *pageLayoutName = pdfEngine->getPageLayoutName();
     if (DM_AUTOMATIC == _displayMode) {
-        if (str_endswith(pageLayoutName, "Right"))
+        if (Str::EndsWith(pageLayoutName, "Right"))
             _displayMode = DM_CONTINUOUS_BOOK_VIEW;
         else if (Str::StartsWith(pageLayoutName, "Two"))
             _displayMode = DM_CONTINUOUS_FACING;
@@ -1379,7 +1379,7 @@ void DisplayModel::goToTocLink(pdf_link* link)
         if (!embedded)
             embedded = fz_dictgets(embeddedList, "F");
         path = getLinkPath(link);
-        if (path && tstr_endswithi(path, _T(".pdf"))) {
+        if (path && Str::EndsWithI(path, _T(".pdf"))) {
             // open embedded PDF documents in a new window
             ScopedMem<TCHAR> combinedPath(tstr_printf(_T("%s:%d:%d"), fileName(), fz_tonum(embedded), fz_togen(embedded)));
             LoadDocument(combinedPath);
@@ -1395,7 +1395,7 @@ void DisplayModel::goToTocLink(pdf_link* link)
     }
     else if (PDF_LLAUNCH == link->kind && (path = getLinkPath(link))) {
         /* for safety, only handle relative PDF paths and only open them in SumatraPDF */
-        if (!Str::StartsWith(path, _T("\\")) && tstr_endswithi(path, _T(".pdf"))) {
+        if (!Str::StartsWith(path, _T("\\")) && Str::EndsWithI(path, _T(".pdf"))) {
             ScopedMem<TCHAR> basePath(Path::GetDir(fileName()));
             ScopedMem<TCHAR> combinedPath(Path::Join(basePath, path));
             LoadDocument(combinedPath);
@@ -1426,7 +1426,7 @@ void DisplayModel::goToTocLink(pdf_link* link)
         char *type = fz_toname(fz_dictgets(link->dest, "S"));
         if (type && Str::Eq(type, "GoToR") && fz_dictgets(link->dest, "D") && (path = getLinkPath(link))) {
             /* for safety, only handle relative PDF paths and only open them in SumatraPDF */
-            if (!Str::StartsWith(path, _T("\\")) && tstr_endswithi(path, _T(".pdf"))) {
+            if (!Str::StartsWith(path, _T("\\")) && Str::EndsWithI(path, _T(".pdf"))) {
                 ScopedMem<TCHAR> basePath(Path::GetDir(fileName()));
                 ScopedMem<TCHAR> combinedPath(Path::Join(basePath, path));
                 // TODO: respect fz_tobool(fz_dictgets(link->dest, "NewWindow"))
