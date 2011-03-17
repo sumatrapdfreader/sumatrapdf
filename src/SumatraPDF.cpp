@@ -538,9 +538,9 @@ enum menuFlags {
 };
 
 typedef struct MenuDef {
-    const char *m_title;
-    int         m_id;
-    int         m_flags;
+    const char *title;
+    int         id;
+    int         flags;
 } MenuDef;
 
 MenuDef menuDefFile[] = {
@@ -663,21 +663,21 @@ static HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int n, HMENU m=NULL)
 
     for (int i=0; i < n; i++) {
         MenuDef md = menuDefs[i];
-        const char *title = md.m_title;
-        if (md.m_flags & MF_REMOVED)
+        const char *title = md.title;
+        if (md.flags & MF_REMOVED)
             continue;
 
-        if (gRestrictedUse && (md.m_flags & MF_NOT_IN_RESTRICTED))
+        if (gRestrictedUse && (md.flags & MF_NOT_IN_RESTRICTED))
             continue;
 
         if (str_eq(title, SEP_ITEM)) {
             AppendMenu(m, MF_SEPARATOR, 0, NULL);
-        } else if (MF_NO_TRANSLATE == (md.m_flags & MF_NO_TRANSLATE)) {
+        } else if (MF_NO_TRANSLATE == (md.flags & MF_NO_TRANSLATE)) {
             ScopedMem<TCHAR> tmp(utf8_to_tstr(title));
-            AppendMenu(m, MF_STRING, (UINT_PTR)md.m_id, tmp);
+            AppendMenu(m, MF_STRING, (UINT_PTR)md.id, tmp);
         } else {
             const TCHAR *tmp =  Translations_GetTranslation(title);
-            AppendMenu(m, MF_STRING, (UINT_PTR)md.m_id, tmp);
+            AppendMenu(m, MF_STRING, (UINT_PTR)md.id, tmp);
         }
     }
     return m;
@@ -705,9 +705,9 @@ static void AppendRecentFilesToMenu(HMENU m)
 static void AddOrRemoveFileMenuAtPos(int n, bool add)
 {
     if (add)
-        menuDefFile[n].m_flags &= ~MF_REMOVED;
+        menuDefFile[n].flags &= ~MF_REMOVED;
     else
-        menuDefFile[n].m_flags |= MF_REMOVED;
+        menuDefFile[n].flags |= MF_REMOVED;
 }
 
 // Suppress menu items that depend on specific software being installed:
@@ -720,14 +720,14 @@ static void SetupProgramDependentMenus(WindowInfo *win)
     bool email = CanSendAsEmailAttachment(win);
     bool separator = email | acrobat | foxit | pdfexch;
     for (int i = 0; i < dimof(menuDefFile); i++) {
-        if (IDM_VIEW_WITH_ACROBAT == menuDefFile[i].m_id) {
+        if (IDM_VIEW_WITH_ACROBAT == menuDefFile[i].id) {
             AddOrRemoveFileMenuAtPos(i, acrobat);
             AddOrRemoveFileMenuAtPos(i-1, separator);
-        } else if (IDM_VIEW_WITH_FOXIT == menuDefFile[i].m_id) {
+        } else if (IDM_VIEW_WITH_FOXIT == menuDefFile[i].id) {
             AddOrRemoveFileMenuAtPos(i, foxit);
-        } else if (IDM_VIEW_WITH_PDF_XCHANGE ==  menuDefFile[i].m_id) {
+        } else if (IDM_VIEW_WITH_PDF_XCHANGE ==  menuDefFile[i].id) {
             AddOrRemoveFileMenuAtPos(i, pdfexch);
-        } else if (IDM_SEND_BY_EMAIL == menuDefFile[i].m_id) {
+        } else if (IDM_SEND_BY_EMAIL == menuDefFile[i].id) {
             AddOrRemoveFileMenuAtPos(i, email);
         }
     }
@@ -1141,10 +1141,10 @@ static void MenuUpdatePrintItem(WindowInfo *win) {
     bool filePrintAllowed = !filePrintEnabled || win->dm->pdfEngine->hasPermission(PDF_PERM_PRINT);
 
     int ix;
-    for (ix = 0; ix < dimof(menuDefFile) && menuDefFile[ix].m_id != IDM_PRINT; ix++);
+    for (ix = 0; ix < dimof(menuDefFile) && menuDefFile[ix].id != IDM_PRINT; ix++);
     assert(ix < dimof(menuDefFile));
     if (ix < dimof(menuDefFile)) {
-        const TCHAR *printItem = Translations_GetTranslation(menuDefFile[ix].m_title);
+        const TCHAR *printItem = Translations_GetTranslation(menuDefFile[ix].title);
         if (!filePrintAllowed)
             printItem = _TR("&Print... (denied)");
         ModifyMenu(win->menu, IDM_PRINT, MF_BYCOMMAND | MF_STRING, IDM_PRINT, printItem);
@@ -5979,7 +5979,7 @@ void WindowInfo::RepaintAsync(UINT delay)
 static void UpdateMenu(WindowInfo *win, HMENU m)
 {
     UINT id = GetMenuItemID(m, 0);
-    if (id == menuDefFile[0].m_id) {
+    if (id == menuDefFile[0].id) {
         RebuildFileMenu(win, GetSubMenu(win->menu, 0));
     }
     MenuUpdateStateForWindow(win);
