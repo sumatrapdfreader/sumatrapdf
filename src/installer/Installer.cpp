@@ -278,7 +278,7 @@ TCHAR *GetInstallationDir(bool forUninstallation=false)
         ok = ReadRegStr(HKEY_CURRENT_USER, REG_PATH_SOFTWARE, INSTALL_DIR, dir, dimof(dir));
     if (ok) {
         if (tstr_endswithi(dir, _T(".exe")))
-            *(TCHAR *)FilePath_GetBaseName(dir) = '\0';
+            *(TCHAR *)Path::GetBaseName(dir) = '\0';
         if (*dir && PathIsDirectory(dir))
             return StrCopy(dir);
     }
@@ -449,7 +449,7 @@ BOOL InstallCopyFiles(void)
         }
 
         TCHAR *inpath = ansi_to_tstr(filename);
-        TCHAR *extpath = FilePath_Join(gGlobalData.installDir, FilePath_GetBaseName(inpath));
+        TCHAR *extpath = FilePath_Join(gGlobalData.installDir, Path::GetBaseName(inpath));
 
         BOOL ok = write_to_file(extpath, data, (size_t)finfo.uncompressed_size);
         if (ok) {

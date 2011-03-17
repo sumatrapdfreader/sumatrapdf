@@ -11,7 +11,9 @@ static inline bool FilePath_IsSep(TCHAR c)
     return '\\' == c || '//' == c;
 }
 
-const TCHAR *FilePath_GetBaseName(const TCHAR *path)
+namespace Path {
+
+const TCHAR *GetBaseName(const TCHAR *path)
 {
     const TCHAR *fileBaseName = path + StrLen(path);
     for (; fileBaseName > path; fileBaseName--)
@@ -20,9 +22,11 @@ const TCHAR *FilePath_GetBaseName(const TCHAR *path)
     return fileBaseName;
 }
 
+}
+
 TCHAR *FilePath_GetDir(const TCHAR *path)
 {
-    const TCHAR *baseName = FilePath_GetBaseName(path);
+    const TCHAR *baseName = Path::GetBaseName(path);
     int dirLen;
     if (baseName <= path + 1)
         dirLen = StrLen(path);

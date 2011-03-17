@@ -174,12 +174,12 @@ static void FileUtilTest()
 {
     TCHAR *path1 = _T("C:\\Program Files\\SumatraPDF\\SumatraPDF.exe");
 
-    const TCHAR *baseName = FilePath_GetBaseName(path1);
+    const TCHAR *baseName = Path::GetBaseName(path1);
     assert(tstr_eq(baseName, _T("SumatraPDF.exe")));
 
     TCHAR *dirName = FilePath_GetDir(path1);
     assert(tstr_eq(dirName, _T("C:\\Program Files\\SumatraPDF")));
-    baseName = FilePath_GetBaseName(dirName);
+    baseName = Path::GetBaseName(dirName);
     assert(tstr_eq(baseName, _T("SumatraPDF")));
     free(dirName);
 

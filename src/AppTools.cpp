@@ -110,7 +110,7 @@ bool IsRunningInPortableMode()
     if (ok && exePath) {
         if (!tstr_endswithi(programFilesDir, _T(".exe"))) {
             tstr_cat_s(programFilesDir, dimof(programFilesDir), _T("\\"));
-            tstr_cat_s(programFilesDir, dimof(programFilesDir), FilePath_GetBaseName(exePath));
+            tstr_cat_s(programFilesDir, dimof(programFilesDir), Path::GetBaseName(exePath));
         }
         if (FilePath_IsSameFile(programFilesDir, exePath))
             return false;
@@ -121,7 +121,7 @@ bool IsRunningInPortableMode()
         // check if one of the exePath's parent directories is "Program Files"
         // (or a junction to it)
         TCHAR *baseName;
-        while ((baseName = (TCHAR *)FilePath_GetBaseName(exePath)) > exePath) {
+        while ((baseName = (TCHAR*)Path::GetBaseName(exePath)) > exePath) {
             baseName[-1] = '\0';
             if (FilePath_IsSameFile(programFilesDir, exePath))
                 return false;

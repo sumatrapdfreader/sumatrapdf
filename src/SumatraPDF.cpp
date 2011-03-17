@@ -640,7 +640,7 @@ static void AddFileMenuItem(HMENU menuFile, DisplayState *state, UINT index)
     assert(state && menuFile);
     if (!state || ! menuFile) return;
 
-    ScopedMem<TCHAR> menuString(tstr_printf(_T("&%d) %s"), (index + 1) % 10, FilePath_GetBaseName(state->filePath)));
+    ScopedMem<TCHAR> menuString(tstr_printf(_T("&%d) %s"), (index + 1) % 10, Path::GetBaseName(state->filePath)));
     UINT menuId = IDM_FILE_HISTORY_FIRST + index;
     InsertMenu(menuFile, IDM_EXIT, MF_BYCOMMAND | MF_ENABLED | MF_STRING, menuId, menuString);
 }
@@ -819,7 +819,7 @@ TCHAR *WindowInfo::GetPassword(const TCHAR *fileName, unsigned char *fileDigest,
     }
 
     *saveKey = false;
-    fileName = FilePath_GetBaseName(fileName);
+    fileName = Path::GetBaseName(fileName);
     return Dialog_GetPassword(this->hwndFrame, fileName, gGlobalPrefs.m_rememberOpenedFiles ? saveKey : NULL);
 }
 
@@ -1389,7 +1389,7 @@ static bool LoadPdfIntoWindow(
         } else {
             delete previousmodel;
             win->state = WS_ERROR_LOADING_PDF;
-            ScopedMem<TCHAR> title(tstr_printf(_T("%s - %s"), FilePath_GetBaseName(fileName), SUMATRA_WINDOW_TITLE));
+            ScopedMem<TCHAR> title(tstr_printf(_T("%s - %s"), Path::GetBaseName(fileName), SUMATRA_WINDOW_TITLE));
             Win::SetText(win->hwndFrame, title);
             goto Error;
         }
@@ -1457,7 +1457,7 @@ static bool LoadPdfIntoWindow(
         UpdateToolbarFindText(win);
     }
 
-    const TCHAR *baseName = FilePath_GetBaseName(win->dm->fileName());
+    const TCHAR *baseName = Path::GetBaseName(win->dm->fileName());
     TCHAR *title = tstr_printf(_T("%s - %s"), baseName, SUMATRA_WINDOW_TITLE);
     if (win->needrefresh) {
         TCHAR *msg = tstr_printf(_TR("[Changes detected; refreshing] %s"), title);
@@ -3414,7 +3414,7 @@ static void OnMenuSaveAs(WindowInfo *win)
     tstr_trans_chars(fileFilter, _T("\1"), _T("\0"));
 
     // Remove the extension so that it can be re-added depending on the chosen filter
-    tstr_copy(dstFileName, dimof(dstFileName), FilePath_GetBaseName(srcFileName));
+    tstr_copy(dstFileName, dimof(dstFileName), Path::GetBaseName(srcFileName));
     // TODO: fix saving embedded PDF documents
     tstr_trans_chars(dstFileName, _T(":"), _T("_"));
     if (tstr_endswithi(dstFileName, _T(".pdf")))
