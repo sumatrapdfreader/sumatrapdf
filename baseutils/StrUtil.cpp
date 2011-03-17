@@ -198,17 +198,14 @@ WCHAR *ToWideChar(const char *src, UINT CodePage)
     return res;
 }
 
-char *Format(const char *format, ...)
+char *FmtV(const char *fmt, va_list args)
 {
-    va_list args;
     char    message[256];
     size_t  bufCchSize = dimof(message);
     char  * buf = message;
-
-    va_start(args, format);
     for (;;)
     {
-        int count = vsnprintf(buf, bufCchSize, format, args);
+        int count = vsnprintf(buf, bufCchSize, fmt, args);
         if (0 <= count && (size_t)count < bufCchSize)
             break;
         /* we have to make the buffer bigger. The algorithm used to calculate
@@ -223,7 +220,6 @@ char *Format(const char *format, ...)
         if (!buf)
             break;
     }
-    va_end(args);
 
     if (buf == message)
         buf = Str::Dup(message);
@@ -231,17 +227,23 @@ char *Format(const char *format, ...)
     return buf;
 }
 
-WCHAR *Format(const WCHAR *format, ...)
+char *Format(const char *fmt, ...)
 {
     va_list args;
+    va_start(args, fmt);
+    char *res = FmtV(fmt, args);
+    va_end(args);
+    return res;
+}
+
+WCHAR *FmtV(const WCHAR *fmt, va_list args)
+{
     WCHAR   message[256];
     size_t  bufCchSize = dimof(message);
     WCHAR * buf = message;
-
-    va_start(args, format);
     for (;;)
     {
-        int count = _vsnwprintf(buf, bufCchSize, format, args);
+        int count = _vsnwprintf(buf, bufCchSize, fmt, args);
         if (0 <= count && (size_t)count < bufCchSize)
             break;
         /* we have to make the buffer bigger. The algorithm used to calculate
@@ -256,12 +258,19 @@ WCHAR *Format(const WCHAR *format, ...)
         if (!buf)
             break;
     }
-    va_end(args);
-
     if (buf == message)
         buf = Str::Dup(message);
 
     return buf;
+}
+
+WCHAR *Format(const WCHAR *fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    WCHAR *res = FmtV(fmt, args);    
+    va_end(args);
+    return res;
 }
 
 /* replace in <str> the chars from <oldChars> with their equivalents

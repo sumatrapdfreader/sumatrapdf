@@ -38,10 +38,10 @@ TCHAR *Join(const TCHAR *path, const TCHAR *filename)
 {
     if (IsSep(*filename))
         filename++;
-    bool needsSep = !IsSep(path[Str::Len(path) - 1]);
-    if (needsSep)
-        return Str::Format(_T("%s\\%s"), path, filename);
-    return Str::Join(path, filename);
+    TCHAR *sep = NULL;
+    if (!IsSep(path[Str::Len(path) - 1]))
+        sep = _T("\\");
+    return Str::Join(path, sep, filename);
 }
 
 // Normalize a file path.

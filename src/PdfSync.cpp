@@ -109,12 +109,10 @@ TCHAR * Synchronizer::prepare_commandline(LPCTSTR pattern, LPCTSTR filename, UIN
         if (*perc == 'f')
             cmdline.Append(filename);
         else if (*perc == 'l') {
-            ScopedMem<TCHAR> lineNo(Str::Format(_T("%u"), line));
-            cmdline.Append(lineNo);
+            cmdline.AppendFmt(_T("%u"), line);
         }
         else if (*perc == 'c') {
-            ScopedMem<TCHAR> colNo(Str::Format(_T("%u"), col));
-            cmdline.Append(colNo);
+            cmdline.AppendFmt(_T("%u"), col);
         }
         else if (*perc == '%')
             cmdline.Append('%');

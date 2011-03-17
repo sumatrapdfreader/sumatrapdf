@@ -53,8 +53,10 @@ inline const WCHAR * FindChar(const WCHAR *str, const WCHAR c) {
     return wcschr(str, c);
 }
 
-char *  Format(const char *format, ...);
-WCHAR * Format(const WCHAR *format, ...);
+char *  FmtV(const char *fmt, va_list args);
+char *  Format(const char *fmt, ...);
+WCHAR * FmtV(const WCHAR *fmt, va_list args);
+WCHAR * Format(const WCHAR *fmt, ...);
 
 size_t  TransChars(TCHAR *str, const TCHAR *oldChars, const TCHAR *newChars);
 

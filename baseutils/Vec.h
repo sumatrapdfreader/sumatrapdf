@@ -5,6 +5,7 @@
 #define Vec_h
 
 #include "BaseUtil.h"
+#include "StrUtil.h"
 
 /* Simple but also optimized for small sizes vector/array class that can
 store pointer types or POD types
@@ -185,6 +186,15 @@ public:
             size = Len(src);
         T* dst = MakeSpaceAt(len, size);
         memcpy(dst, src, size * sizeof(T));
+    }
+
+    void AppendFmt(const T* fmt, ...)
+    {
+        va_list args;
+        va_start(args, fmt);
+        T *res = FmtV(fmt, args);
+        va_end(args);
+        AppendAndFree(res);
     }
 
     void AppendAndFree(const T* s)
