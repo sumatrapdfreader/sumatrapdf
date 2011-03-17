@@ -515,9 +515,6 @@
     <ClCompile Include="baseutils\WinUtil.cpp">
       <Filter>baseutils</Filter>
     </ClCompile>
-    <ClCompile Include="baseutils\WStrUtil.cpp">
-      <Filter>baseutils</Filter>
-    </ClCompile>
     <ClCompile Include="baseutils\strlist_util.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -704,9 +701,6 @@
       <Filter>baseutils</Filter>
     </ClInclude>
     <ClInclude Include="baseutils\WinUtil.h">
-      <Filter>baseutils</Filter>
-    </ClInclude>
-    <ClInclude Include="baseutils\WStrUtil.h">
       <Filter>baseutils</Filter>
     </ClInclude>
   </ItemGroup>

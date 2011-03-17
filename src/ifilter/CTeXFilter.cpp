@@ -30,7 +30,7 @@ HRESULT CTeXFilter::OnInit()
         }
         data[min(stat.cbSize.LowPart, read)] = '\0';
 
-        m_pData = multibyte_to_wstr(data, CP_ACP);
+        m_pData = Str::ToWideChar(data, CP_ACP);
         m_pBuffer = SAZA(WCHAR, stat.cbSize.LowPart + 1);
         free(data);
 
@@ -81,7 +81,7 @@ WCHAR *CTeXFilter::ExtractBracedBlock()
             // skip all LaTeX/TeX commands
             if (iscmdchar(*m_pPtr)) {
                 // ignore the content of \begin{...} and \end{...}
-                if (Str::StartsWith(m_pPtr, L"begin{") || wstr_startswith(m_pPtr, L"end{")) {
+                if (Str::StartsWith(m_pPtr, L"begin{") || Str::StartsWith(m_pPtr, L"end{")) {
                     m_pPtr = wcschr(m_pPtr, '{') + 1;
                     ExtractBracedBlock();
                     addsingleNL(result, &rptr);

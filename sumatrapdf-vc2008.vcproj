@@ -365,14 +365,6 @@
 				RelativePath=".\baseutils\WinUtil.h"
 				>
 			</File>
-			<File
-				RelativePath=".\baseutils\WStrUtil.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\baseutils\WStrUtil.h"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="mupdf"

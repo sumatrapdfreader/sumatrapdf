@@ -146,7 +146,7 @@ static Color            COLOR_MSG_FAILED(gCol1);
 //       the executable, since it's appended to the end of executable to mark
 //       it as uninstaller. An alternative would be search for it from the end.
 #define UN_INST_MARK L"!uninst_end!"
-static char *gUnInstMark = NULL; // wstr_to_utf8(UN_INST_MARK)
+static char *gUnInstMark = NULL; // Str::ToMultiByte(UN_INST_MARK, CP_UTF8)
 
 // The following list is used to verify that all the required files have been
 // installed (install flag set) and to know what files are to be removed at
@@ -528,7 +528,7 @@ BOOL CreateUninstaller(void)
     }
 
     if (!gUnInstMark)
-        gUnInstMark = wstr_to_utf8(UN_INST_MARK);
+        gUnInstMark = Str::ToMultiByte(UN_INST_MARK, CP_UTF8);
     int markSize = Str::Len(gUnInstMark);
 
     // find the end of the (un)installer
@@ -570,7 +570,7 @@ bool IsUninstaller()
 
     char *data = NULL;
     if (!gUnInstMark)
-        gUnInstMark = wstr_to_utf8(UN_INST_MARK);
+        gUnInstMark = Str::ToMultiByte(UN_INST_MARK, CP_UTF8);
     size_t markSize = Str::Len(gUnInstMark);
 
     size_t uninstallerSize;

@@ -6,6 +6,17 @@
 
 // TODO: temporary
 WCHAR * wstr_printf(const WCHAR *format, ...);
+int     wstr_copy(WCHAR *dst, size_t dst_cch_size, const WCHAR *src);
+WCHAR * wstr_cat_s(WCHAR *dst, size_t dst_cch_size, const WCHAR *src);
+int     wstr_printf_s(WCHAR *out, size_t out_cch_size, const WCHAR *format, ...);
+
+void win32_dbg_outW(const WCHAR *format, ...);
+#ifdef DEBUG
+  #define DBG_OUT_W(format, ...) win32_dbg_outW(L##format, __VA_ARGS__)
+#else
+  #define DBG_OUT_W(format, ...) NoOp()
+#endif
+
 
 void    win32_dbg_out(const char *format, ...);
 void    win32_dbg_out_hex(const char *dsc, const unsigned char *data, int dataLen);
@@ -60,6 +71,10 @@ bool EndsWithI(const WCHAR *txt, const WCHAR *end);
 char *  DupN(const char *s, size_t lenCch);
 WCHAR * DupN(const WCHAR *s, size_t lenCch);
 
+char *  ToMultiByte(const WCHAR *txt, UINT CodePage);
+char *  ToMultiByte(const char *src, UINT CodePageSrc, UINT CodePageDest);
+WCHAR * ToWideChar(const char *src, UINT CodePage);
+
 inline const char * FindChar(const char *str, const char c) {
     return strchr(str, c);
 }
@@ -88,14 +103,5 @@ char *  mem_to_hexstr(const unsigned char *buf, int len);
 bool    hexstr_to_mem(const char *s, unsigned char *buf, int bufLen);
 #define _mem_to_hexstr(ptr) mem_to_hexstr((const unsigned char *)ptr, sizeof(*ptr))
 #define _hexstr_to_mem(str, ptr) hexstr_to_mem(str, (unsigned char *)ptr, sizeof(*ptr))
-
-char *  str_to_multibyte(const char *src, UINT CodePage);
-char *  multibyte_to_str(const char *src, UINT CodePage);
-#define str_to_utf8(src) str_to_multibyte((src), CP_UTF8)
-#define utf8_to_str(src) multibyte_to_str((src), CP_UTF8)
-
-#ifdef DEBUG
-void StrUtil_test(void);
-#endif
 
 #endif

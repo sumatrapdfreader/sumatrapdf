@@ -68,7 +68,6 @@
     <ClCompile Include="baseutils\TStrUtil.cpp" />
     <ClCompile Include="baseutils\UtilTests.cpp" />
     <ClCompile Include="baseutils\WinUtil.cpp" />
-    <ClCompile Include="baseutils\WStrUtil.cpp" />
     <ClCompile Include="ext\libjpeg-turbo\jaricom.c" />
     <ClCompile Include="ext\libjpeg-turbo\jcapimin.c" />
     <ClCompile Include="ext\libjpeg-turbo\jcapistd.c" />
@@ -237,7 +236,6 @@
     <ClInclude Include="baseutils\Vec.h" />
     <ClInclude Include="baseutils\vstrlist.h" />
     <ClInclude Include="baseutils\WinUtil.h" />
-    <ClInclude Include="baseutils\WStrUtil.h" />
     <ClInclude Include="ext\libjpeg-turbo\jchuff.h" />
     <ClInclude Include="ext\libjpeg-turbo\jconfig.h" />
     <ClInclude Include="ext\libjpeg-turbo\jdct.h" />

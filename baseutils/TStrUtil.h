@@ -4,11 +4,8 @@
 #ifndef TStrUtil_h
 #define TStrUtil_h
 
-/* currently, we always need both of these:
- * - StrUtil.h for DBG_OUT and
- * - WStrUtil.h for multibyte_to_wstr and wstr_to_multibyte */
+// TODO: integrate TStrUtil into StrUtil
 #include "StrUtil.h"
-#include "WStrUtil.h"
 
 #ifdef UNICODE
 #define CF_T_TEXT CF_UNICODETEXT
@@ -22,25 +19,29 @@
   #define tstr_printf       wstr_printf
   #define tstr_printf_s     wstr_printf_s
 
-  #define multibyte_to_tstr(src, CodePage)  multibyte_to_wstr((src), (CodePage))
-  #define tstr_to_multibyte(src, CodePage)  wstr_to_multibyte((src), (CodePage))
-  #define wstr_to_tstr(src)                 Str::Dup((LPCWSTR)src)
-  #define tstr_to_wstr(src)                 Str::Dup((LPCWSTR)src)
-  #define DBG_OUT_T     DBG_OUT_W
+  #define utf8_to_tstr(src) Str::ToWideChar((src), CP_UTF8)
+  #define tstr_to_utf8(src) Str::ToMultiByte((src), CP_UTF8)
+  #define ansi_to_tstr(src) Str::ToWideChar((src), CP_ACP)
+  #define tstr_to_ansi(src) Str::ToMultiByte((src), CP_ACP)
+  #define wstr_to_tstr(src) Str::Dup(src)
+  #define tstr_to_wstr(src) Str::Dup(src)
+  #define DBG_OUT_T         DBG_OUT_W
 
-  #define wstr_to_tstr_q(src)               (src)
-  #define tstr_to_wstr_q(src)               (src)
+  #define wstr_to_tstr_q(src)   (src)
+  #define tstr_to_wstr_q(src)   (src)
 #else
   #define tstr_copy         str_copy
   #define tstr_cat_s        str_cat_s
   #define tstr_printf       str_printf
   #define tstr_printf_s     str_printf_s
 
-  #define multibyte_to_tstr(src, CodePage)  multibyte_to_str((src), (CodePage))
-  #define tstr_to_multibyte(src, CodePage)  str_to_multibyte((src), (CodePage))
-  #define wstr_to_tstr(src)                 wstr_to_multibyte((src), CP_ACP)
-  #define tstr_to_wstr(src)                 multibyte_to_wstr((src), CP_ACP)
-  #define DBG_OUT_T     DBG_OUT
+  #define utf8_to_tstr(src) Str::ToMultiByte((src), CP_UTF8, CP_ACP)
+  #define tstr_to_utf8(src) Str::ToMultiByte((src), CP_ACP, CP_UTF8)
+  #define ansi_to_tstr(src) Str::ToMultiByte((src), CP_ACP, CP_ACP)
+  #define tstr_to_ansi(src) Str::ToMultiByte((src), CP_ACP, CP_ACP)
+  #define wstr_to_tstr(src) Str::ToMultiByte((src), CP_ACP)
+  #define tstr_to_wstr(src) Str::ToWideChar((src), CP_ACP)
+  #define DBG_OUT_T         DBG_OUT
 
 static inline char *wstr_to_tstr_q(WCHAR *src)
 {
@@ -57,11 +58,6 @@ static inline WCHAR *tstr_to_wstr_q(char *src)
     return str;
 }
 #endif
-
-#define   utf8_to_tstr(src) multibyte_to_tstr((src), CP_UTF8)
-#define   tstr_to_utf8(src) tstr_to_multibyte((src), CP_UTF8)
-#define   ansi_to_tstr(src) multibyte_to_tstr((src), CP_ACP)
-#define   tstr_to_ansi(src) tstr_to_multibyte((src), CP_ACP)
 
 int       tstr_trans_chars(TCHAR *str, const TCHAR *oldChars, const TCHAR *newChars);
 TCHAR *   tstr_url_encode(const TCHAR *str);
