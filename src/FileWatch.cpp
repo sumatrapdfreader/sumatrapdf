@@ -52,7 +52,7 @@ void FileWatcher::Init(LPCTSTR filefullpath)
         SynchronousAbort();
 
     free(szFilepath);
-    szFilepath = StrCopy(filefullpath);
+    szFilepath = Str::Dup(filefullpath);
     TCHAR *dirPath = Path::GetDir(szFilepath);
     
     hDir = CreateFile(

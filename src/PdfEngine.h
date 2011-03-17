@@ -142,7 +142,7 @@ public:
     TCHAR    * ExtractPageText(int pageNo, TCHAR *lineSep=DOS_NEWLINE, fz_bbox **coords_out=NULL, RenderTarget target=Target_View);
     TCHAR    * getPdfInfo(char *key) const;
     int        getPdfVersion(void) const;
-    char     * getDecryptionKey(void) const { return _decryptionKey ? StrCopy(_decryptionKey) : NULL; }
+    char     * getDecryptionKey(void) const { return _decryptionKey ? Str::Dup(_decryptionKey) : NULL; }
     fz_buffer* getStreamData(int num=0, int gen=0);
     bool       isImagePage(int pageNo);
 

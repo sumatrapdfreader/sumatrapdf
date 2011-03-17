@@ -67,7 +67,7 @@ UINT CreateSynchronizer(LPCTSTR pdffilename, Synchronizer **sync)
 
     TCHAR buffer[MAX_PATH];
     TCHAR *syncfile;
-    size_t n = StrLen(pdffilename);
+    size_t n = Str::Len(pdffilename);
     size_t u = dimof(PDF_EXTENSION)-1;
 
     // Check if a PDFSYNC file is present
@@ -113,7 +113,7 @@ UINT Synchronizer::prepare_commandline(LPCTSTR pattern, LPCTSTR filename, UINT l
     size_t cchOut = cchCmdline;
     while (perc = tstr_find_char(pattern, '%')) {
         tstr_copyn(out, cchOut, pattern, perc - pattern);
-        len = StrLen(out);
+        len = Str::Len(out);
         out += len;
         cchOut -= len;
 
@@ -130,7 +130,7 @@ UINT Synchronizer::prepare_commandline(LPCTSTR pattern, LPCTSTR filename, UINT l
         else {
             tstr_copyn(out, cchOut, perc - 1, 2);
         }
-        len = StrLen(out);
+        len = Str::Len(out);
         out += len;
         cchOut -= len;
 
@@ -184,7 +184,7 @@ LPSTR fgetline(LPSTR dst, size_t cchDst, FILE *fp)
     if (!fgets(dst, (int)cchDst, fp))
         return NULL;
 
-    LPSTR end =  dst+StrLen(dst)-1;
+    LPSTR end =  dst+Str::Len(dst)-1;
     while (*end == '\n' || *end == '\r')
         *(end--) = 0;
     return dst;
@@ -254,7 +254,7 @@ int Pdfsync::scan_and_build_index(FILE *fp)
                 // read the filename
                 fgetline(buff, dimof(buff), fp);
                 PSTR pfilename = buff;
-                size_t len = StrLen(buff);
+                size_t len = Str::Len(buff);
                 // if the filename contains quotes then remove them
                 if (str_startswith(buff, "\"") && str_endswith(buff, "\"")) {
                     pfilename++;

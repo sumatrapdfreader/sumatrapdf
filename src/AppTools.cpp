@@ -434,7 +434,7 @@ LPTSTR AutoDetectInverseSearchCommands(HWND hwndCombo)
         } else if (editor_rules[i].Type == BinaryDir)
             exePath = Path::Join(path, editor_rules[i].BinaryFilename);
         else // if (editor_rules[i].Type == BinaryPath)
-            exePath = StrCopy(path);
+            exePath = Str::Dup(path);
 
         TCHAR *editorCmd = tstr_printf(_T("\"%s\" %s"), exePath, editor_rules[i].InverseSearchArgs);
         free(exePath);
@@ -445,7 +445,7 @@ LPTSTR AutoDetectInverseSearchCommands(HWND hwndCombo)
         }
 
         if (!firstEditor)
-            firstEditor = StrCopy(editorCmd);
+            firstEditor = Str::Dup(editorCmd);
         ComboBox_AddString(hwndCombo, editorCmd);
         free(editorCmd);
 
@@ -456,7 +456,7 @@ LPTSTR AutoDetectInverseSearchCommands(HWND hwndCombo)
 
     // Fall back to notepad as a default handler
     if (!firstEditor) {
-        firstEditor = StrCopy(_T("notepad %f"));
+        firstEditor = Str::Dup(_T("notepad %f"));
         if (hwndCombo)
             ComboBox_AddString(hwndCombo, firstEditor);
     }
@@ -503,7 +503,7 @@ void DDEExecute(LPCTSTR server, LPCTSTR topic, LPCTSTR command)
         DBG_OUT("DDE communication could not be initiated %u.", DdeGetLastError(inst));
         goto exit;
     }
-    hddedata = DdeCreateDataHandle(inst, (BYTE*)command, (DWORD)(StrLen(command) + 1) * sizeof(TCHAR), 0, 0, CF_T_TEXT, 0);
+    hddedata = DdeCreateDataHandle(inst, (BYTE*)command, (DWORD)(Str::Len(command) + 1) * sizeof(TCHAR), 0, 0, CF_T_TEXT, 0);
     if (hddedata == 0) {
         DBG_OUT("DDE communication could not be initiated %u.", DdeGetLastError(inst));
     }

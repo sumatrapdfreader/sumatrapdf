@@ -15,7 +15,7 @@ static inline bool IsSep(TCHAR c)
 
 const TCHAR *GetBaseName(const TCHAR *path)
 {
-    const TCHAR *fileBaseName = path + StrLen(path);
+    const TCHAR *fileBaseName = path + Str::Len(path);
     for (; fileBaseName > path; fileBaseName--)
         if (IsSep(fileBaseName[-1]))
             break;
@@ -27,7 +27,7 @@ TCHAR *GetDir(const TCHAR *path)
     const TCHAR *baseName = GetBaseName(path);
     int dirLen;
     if (baseName <= path + 1)
-        dirLen = StrLen(path);
+        dirLen = Str::Len(path);
     else if (baseName[-2] == ':')
         dirLen = baseName - path;
     else
@@ -39,7 +39,7 @@ TCHAR *Join(const TCHAR *path, const TCHAR *filename)
 {
     if (IsSep(*filename))
         filename++;
-    bool needsSep = !IsSep(path[StrLen(path) - 1]);
+    bool needsSep = !IsSep(path[Str::Len(path) - 1]);
     if (needsSep)
         return tstr_printf(_T("%s\\%s"), path, filename);
     return tstr_cat(path, filename);

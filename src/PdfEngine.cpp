@@ -328,7 +328,7 @@ PdfEngine *PdfEngine::clone()
     free(password);
 
     if (clone && _fileName)
-        clone->_fileName = StrCopy(_fileName);
+        clone->_fileName = Str::Dup(_fileName);
 
     return clone;
 }
@@ -336,7 +336,7 @@ PdfEngine *PdfEngine::clone()
 bool PdfEngine::load(const TCHAR *fileName, PasswordUI *pwdUI)
 {
     assert(!_fileName && !_xref);
-    _fileName = StrCopy(fileName);
+    _fileName = Str::Dup(fileName);
     if (!_fileName)
         return false;
     fileName = NULL; // use _fileName instead
@@ -345,7 +345,7 @@ bool PdfEngine::load(const TCHAR *fileName, PasswordUI *pwdUI)
     // embedded PDF documents (the digits are :<num>:<gen> of the embedded file stream)
     TCHAR *embedMarks = NULL;
     int colonCount = 0;
-    for (TCHAR *c = (TCHAR *)_fileName + StrLen(_fileName); c > _fileName; c--) {
+    for (TCHAR *c = (TCHAR *)_fileName + Str::Len(_fileName); c > _fileName; c--) {
         if (*c != ':')
             continue;
         if (!ChrIsDigit(*(c + 1)))
@@ -480,7 +480,7 @@ bool PdfEngine::load(fz_stream *stm, TCHAR *password)
             okay = pwd_ansi && pdf_authenticatepassword(_xref, pwd_ansi);
         }
         // finally, try using the password as hex-encoded encryption key
-        if (!okay && StrLen(password) == 64) {
+        if (!okay && Str::Len(password) == 64) {
             ScopedMem<char> pwd_hex(tstr_to_ansi(password));
             okay = _hexstr_to_mem(pwd_hex, &_xref->crypt->key);
         }
@@ -520,7 +520,7 @@ bool PdfEngine::finishLoading(void)
 
 PdfTocItem *PdfEngine::buildTocTree(pdf_outline *entry, int *idCounter)
 {
-    TCHAR *name = entry->title ? utf8_to_tstr(entry->title) : StrCopy(_T(""));
+    TCHAR *name = entry->title ? utf8_to_tstr(entry->title) : Str::Dup(_T(""));
     PdfTocItem *node = new PdfTocItem(name, entry->link);
     node->open = entry->count >= 0;
     node->id = ++(*idCounter);
@@ -929,7 +929,7 @@ static TCHAR *findLinkEnd(TCHAR *start)
 static TCHAR *parseMultilineLink(pdf_page *page, TCHAR *pageText, TCHAR *start, fz_bbox *coords)
 {
     pdf_link *firstLink = getLastLink(page->links);
-    char *uri = StrCopy(fz_tostrbuf(firstLink->dest));
+    char *uri = Str::Dup(fz_tostrbuf(firstLink->dest));
     TCHAR *end = start;
     bool multiline = false;
 
@@ -1047,7 +1047,7 @@ TCHAR *PdfEngine::ExtractPageText(pdf_page *page, TCHAR *lineSep, fz_bbox **coor
     if (fz_okay != error)
         goto CleanUp;
 
-    int lineSepLen = StrLen(lineSep);
+    int lineSepLen = Str::Len(lineSep);
     size_t textLen = 0;
     for (fz_textspan *span = text; span; span = span->next)
         textLen += span->len + lineSepLen;

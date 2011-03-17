@@ -203,7 +203,7 @@ static char *multibyte_to_multibyte(const char *src, UINT CodePage1, UINT CodePa
 char *str_to_multibyte(const char *src, UINT CodePage)
 {
     if (CP_ACP == CodePage)
-        return StrCopy(src);
+        return Str::Dup(src);
 
     return multibyte_to_multibyte(src, CP_ACP, CodePage);
 }
@@ -212,7 +212,7 @@ char *str_to_multibyte(const char *src, UINT CodePage)
 char *multibyte_to_str(const char *src, UINT CodePage)
 {
     if (CP_ACP == CodePage)
-        return StrCopy(src);
+        return Str::Dup(src);
 
     return multibyte_to_multibyte(src, CodePage, CP_ACP);
 }
@@ -260,7 +260,7 @@ char *str_printf(const char *format, ...)
     va_end(args);
 
     if (buf == message)
-        buf = StrCopy(message);
+        buf = Str::Dup(message);
 
     return buf;
 }

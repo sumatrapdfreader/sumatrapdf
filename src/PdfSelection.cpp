@@ -52,11 +52,11 @@ int PdfSelection::FindClosestGlyph(int pageNo, double x, double y)
     if (!text[pageNo - 1]) {
         text[pageNo - 1] = engine->ExtractPageText(pageNo, _T("\n"), &coords[pageNo - 1]);
         if (!text[pageNo - 1]) {
-            text[pageNo - 1] = StrCopy(_T(""));
+            text[pageNo - 1] = Str::Dup(_T(""));
             lens[pageNo - 1] = 0;
             return 0;
         }
-        lens[pageNo - 1] = StrLen(text[pageNo - 1]);
+        lens[pageNo - 1] = Str::Len(text[pageNo - 1]);
     }
 
     double maxDist = -1;

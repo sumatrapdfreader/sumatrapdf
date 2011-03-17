@@ -195,7 +195,7 @@ struct {
 void NotifyFailed(TCHAR *msg)
 {
     if (!gGlobalData.firstError)
-        gGlobalData.firstError = StrCopy(msg);
+        gGlobalData.firstError = Str::Dup(msg);
     // MessageBox(gHwndFrame, msg, _T("Installation failed"),  MB_ICONEXCLAMATION | MB_OK);
 }
 
@@ -280,7 +280,7 @@ TCHAR *GetInstallationDir(bool forUninstallation=false)
         if (tstr_endswithi(dir, _T(".exe")))
             *(TCHAR *)Path::GetBaseName(dir) = '\0';
         if (*dir && PathIsDirectory(dir))
-            return StrCopy(dir);
+            return Str::Dup(dir);
     }
 
     if (forUninstallation) {
@@ -312,7 +312,7 @@ TCHAR *GetValidTempDir()
         NotifyFailed(_T("Couldn't create temporary directory"));
         return NULL;
     }
-    return StrCopy(d);
+    return Str::Dup(d);
 }
 
 TCHAR *GetUninstallerPath()
@@ -529,7 +529,7 @@ BOOL CreateUninstaller(void)
 
     if (!gUnInstMark)
         gUnInstMark = wstr_to_utf8(UN_INST_MARK);
-    int markSize = StrLen(gUnInstMark);
+    int markSize = Str::Len(gUnInstMark);
 
     // find the end of the (un)installer
     char *end = (char *)memchr(installerData, *gUnInstMark, installerSize);
@@ -571,7 +571,7 @@ bool IsUninstaller()
     char *data = NULL;
     if (!gUnInstMark)
         gUnInstMark = wstr_to_utf8(UN_INST_MARK);
-    size_t markSize = StrLen(gUnInstMark);
+    size_t markSize = Str::Len(gUnInstMark);
 
     size_t uninstallerSize;
     ScopedMem<char> uninstallerData(File::ReadAll(GetOwnPath(), &uninstallerSize));
@@ -800,7 +800,7 @@ TCHAR *GetDefaultPdfViewer()
     bool ok = ReadRegStr(HKEY_CLASSES_ROOT, _T(".pdf"), NULL, buf, dimof(buf));
     if (!ok)
         return NULL;
-    return StrCopy(buf);
+    return Str::Dup(buf);
 }
 
 BOOL RemoveEmptyDirectory(TCHAR *dir)

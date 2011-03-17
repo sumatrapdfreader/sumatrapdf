@@ -8,12 +8,12 @@
 
 WCHAR * wstr_cat_s(WCHAR * dest, size_t dst_cch_size, const WCHAR * src)
 {
-    return wstr_catn_s(dest, dst_cch_size, src, StrLen(src));
+    return wstr_catn_s(dest, dst_cch_size, src, Str::Len(src));
 }
 
 WCHAR * wstr_catn_s(WCHAR *dst, size_t dst_cch_size, const WCHAR *src, size_t src_cch_size)
 {
-    WCHAR *dstEnd = dst + StrLen(dst);
+    WCHAR *dstEnd = dst + Str::Len(dst);
     size_t len = min(src_cch_size + 1, dst_cch_size - (dstEnd - dst));
     if (dst_cch_size <= (size_t)(dstEnd - dst))
         return NULL;
@@ -64,7 +64,7 @@ int wstr_copyn(WCHAR *dst, size_t dst_cch_size, const WCHAR *src, size_t src_cch
 
 int wstr_copy(WCHAR *dst, size_t dst_cch_size, const WCHAR *src)
 {
-    return wstr_copyn(dst, dst_cch_size, src, StrLen(src));
+    return wstr_copyn(dst, dst_cch_size, src, Str::Len(src));
 }
 
 int wstr_eq(const WCHAR *str1, const WCHAR *str2)
@@ -114,8 +114,8 @@ int wstr_endswith(const WCHAR *txt, const WCHAR *end)
     if (!txt || !end)
         return FALSE;
 
-    txt_len = StrLen(txt);
-    end_len = StrLen(end);
+    txt_len = Str::Len(txt);
+    end_len = Str::Len(end);
     if (end_len > txt_len)
         return FALSE;
     if (wstr_eq(txt+txt_len-end_len, end))
@@ -131,8 +131,8 @@ int wstr_endswithi(const WCHAR *txt, const WCHAR *end)
     if (!txt || !end)
         return FALSE;
 
-    txt_len = StrLen(txt);
-    end_len = StrLen(end);
+    txt_len = Str::Len(txt);
+    end_len = Str::Len(end);
     if (end_len > txt_len)
         return FALSE;
     if (wstr_ieq(txt+txt_len-end_len, end))
@@ -190,7 +190,7 @@ WCHAR *wstr_printf(const WCHAR *format, ...)
     va_end(args);
 
     if (buf == message)
-        buf = StrCopy(message);
+        buf = Str::Dup(message);
 
     return buf;
 }

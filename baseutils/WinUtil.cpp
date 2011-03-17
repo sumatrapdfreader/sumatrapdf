@@ -73,7 +73,7 @@ bool ReadRegStr(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, const T
 
 bool WriteRegStr(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, const TCHAR *value)
 {
-    LONG res = SHSetValue(keySub, keyName, valName, REG_SZ, (const VOID *)value, (DWORD)(StrLen(value) + 1) * sizeof(TCHAR));
+    LONG res = SHSetValue(keySub, keyName, valName, REG_SZ, (const VOID *)value, (DWORD)(Str::Len(value) + 1) * sizeof(TCHAR));
     if (ERROR_SUCCESS != res)
         SeeLastError(res);
     return ERROR_SUCCESS == res;
@@ -173,7 +173,7 @@ TCHAR *ResolveLnk(TCHAR * path)
     if (FAILED(hRes))
         goto Exit;
 
-    resolvedPath = StrCopy(newPath);
+    resolvedPath = Str::Dup(newPath);
 
 Exit:
     if (file)
@@ -299,10 +299,10 @@ TCHAR *get_app_data_folder_path(bool f_create)
     TCHAR path[MAX_PATH];
     bool f_ok = SHGetSpecialFolderPath(NULL, path, SPECIAL_FOLDER_PATH, f_create);
     if (f_ok)
-        return StrCopy(path);
+        return Str::Dup(path);
 #endif
     /* if all else fails, just use root ("\") directory */
-    return StrCopy(_T(""));
+    return Str::Dup(_T(""));
 }
 
 int screen_get_dx(void)

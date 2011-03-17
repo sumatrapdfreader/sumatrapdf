@@ -21,29 +21,28 @@ void    win32_dbg_out_hex(const char *dsc, const unsigned char *data, int dataLe
    tstr_* and wstr_* functions and instead rely on C++'s ability
    to use overloaded functions and only have Str* functions */
 
-static inline size_t StrLen(const char *s)
+namespace Str {
+
+static inline size_t Len(const char *s)
 {
     return strlen(s);
 }
 
-static inline size_t StrLen(const WCHAR *s)
+static inline size_t Len(const WCHAR *s)
 {
     return wcslen(s);
 }
 
-// Unfortunately can't use StrCopy() because <shlwapi.h> #defines it to
-// shlwapi's StrDupA() or StrDupW() and we want C++ function overloading
-// to pick up the right one
-// TODO: maybe those should be Str::* instead of Str* to avoid conflicts ?
-
-static inline char *StrCopy(const char *s)
+static inline char *Dup(const char *s)
 {
     return _strdup(s);
 }
 
-static inline WCHAR *StrCopy(const WCHAR *s)
+static inline WCHAR *Dup(const WCHAR *s)
 {
     return _wcsdup(s);
+}
+
 }
 
 static inline bool ChrIsDigit(const WCHAR c)

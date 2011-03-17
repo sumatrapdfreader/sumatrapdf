@@ -66,7 +66,7 @@ public:
                             state = new DisplayState();
                             if (!state)
                                 return;
-                            state->filePath = StrCopy(filePath);
+                            state->filePath = Str::Dup(filePath);
                         }
                         else
                             Remove(state);

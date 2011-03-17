@@ -161,7 +161,7 @@ static const char *Prefs_Serialize(SerializableGlobalPrefs *globalPrefs, FileHis
     prefs->Add(FILE_HISTORY_STR, fileHistory);
 
     data = prefs->Encode();
-    *lenOut = StrLen(data);
+    *lenOut = Str::Len(data);
 
 Error:
     delete prefs;
@@ -195,7 +195,7 @@ static void RetrieveRaw(BencDict *dict, const char *key, char *& value)
 {
     const char *string = GetRawString(dict, key);
     if (string) {
-        char *str = StrCopy(string);
+        char *str = Str::Dup(string);
         if (str) {
             free(value);
             value = str;

@@ -87,7 +87,7 @@ static void TStrTest()
 {
     TCHAR buf[32];
     TCHAR *str = _T("a string");
-    assert(StrLen(str) == 8);
+    assert(Str::Len(str) == 8);
     assert(tstr_eq(str, _T("a string")) && tstr_eq(str, str));
     assert(!tstr_eq(str, NULL) && !tstr_eq(str, _T("A String")));
     assert(tstr_ieq(str, _T("A String")) && tstr_ieq(str, str));
@@ -109,7 +109,7 @@ static void TStrTest()
     tstr_copy(buf, dimof(buf), str);
     assert(tstr_eq(buf, str));
 
-    str = StrCopy(buf);
+    str = Str::Dup(buf);
     assert(tstr_eq(str, buf));
     free(str);
     str = tstr_dupn(buf, 4);
@@ -119,7 +119,7 @@ static void TStrTest()
     assert(tstr_eq(str, buf));
     free(str);
     str = tstr_cat(buf, buf);
-    assert(StrLen(str) == 2 * StrLen(buf));
+    assert(Str::Len(str) == 2 * Str::Len(buf));
     free(str);
     str = tstr_cat(NULL, _T("ab"));
     assert(tstr_eq(str, _T("ab")));
@@ -202,8 +202,8 @@ static void FileUtilTest()
 static void VecStrTest()
 {
     VStrList v;
-    v.Append(StrCopy(_T("foo")));
-    v.Append(StrCopy(_T("bar")));
+    v.Append(Str::Dup(_T("foo")));
+    v.Append(Str::Dup(_T("bar")));
     TCHAR *s = v.Join();
     assert(v.Count() == 2);
     assert(tstr_eq(_T("foobar"), s));
@@ -214,7 +214,7 @@ static void VecStrTest()
     assert(tstr_eq(_T("foo;bar"), s));
     free(s);
 
-    v.Append(StrCopy(_T("glee")));
+    v.Append(Str::Dup(_T("glee")));
     s = v.Join(_T("_ _"));
     assert(v.Count() == 3);
     assert(tstr_eq(_T("foo_ _bar_ _glee"), s));
@@ -519,7 +519,7 @@ static void BencTestDictAppend()
     BencDict *dict = new BencDict();
     for (size_t i = 1; i <= ITERATION_COUNT; i++) {
         str_printf_s(key, dimof(key), "%04u", i);
-        assert(StrLen(key) == 4);
+        assert(Str::Len(key) == 4);
         dict->Add(key, i);
         assert(dict->Length() == i);
         assert(dict->GetInt(key));
@@ -536,7 +536,7 @@ static void BencTestDictAppend()
     for (size_t i = ITERATION_COUNT; i > 0; i--) {
         BencObj *obj = new BencInt(i);
         str_printf_s(key, dimof(key), "%04u", i);
-        assert(StrLen(key) == 4);
+        assert(Str::Len(key) == 4);
         dict->Add(key, obj);
         assert(dict->Length() == ITERATION_COUNT + 1 - i);
         assert(dict->GetInt(key));

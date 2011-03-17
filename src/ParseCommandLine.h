@@ -65,12 +65,12 @@ public:
 protected:
     void SetPrinterName(TCHAR *s) {
         free(printerName);
-        printerName = StrCopy(s);
+        printerName = Str::Dup(s);
     }
 
     void SetInverseSearchCmdLine(TCHAR *s) {
         free(inverseSearchCmdLine);
-        inverseSearchCmdLine = StrCopy(s);
+        inverseSearchCmdLine = Str::Dup(s);
     }
 
     void SetLang(TCHAR *s) {
@@ -80,7 +80,7 @@ protected:
     
     void SetDestName(TCHAR *s) {
         free(destName);
-        destName = StrCopy(s);
+        destName = Str::Dup(s);
     }
 };
 

@@ -836,7 +836,7 @@ static TCHAR *GetUniqueCrashDumpPath()
     TCHAR *fileName;
     for (int n = 0; n <= 20; n++) {
         if (n == 0) {
-            fileName = StrCopy(_T("SumatraPDF.dmp"));
+            fileName = Str::Dup(_T("SumatraPDF.dmp"));
         } else {
             fileName = tstr_printf(_T("SumatraPDF-%d.dmp"), n);
         }
@@ -1014,7 +1014,7 @@ static void WindowInfo_Refresh(WindowInfo* win, bool autorefresh) {
     // in which case the repair could fail. Instead, if the file is broken, 
     // we postpone the reload until the next autorefresh event
     bool tryRepair = !autorefresh;
-    ScopedMem<TCHAR> path(StrCopy(win->loadedFilePath));
+    ScopedMem<TCHAR> path(Str::Dup(win->loadedFilePath));
     LoadPdfIntoWindow(path, win, &ds, false, tryRepair, true, false);
 
     if (win->dm) {
@@ -1376,7 +1376,7 @@ static bool LoadPdfIntoWindow(
     win->AbortFinding();
 
     free(win->loadedFilePath);
-    win->loadedFilePath = StrCopy(fileName);
+    win->loadedFilePath = Str::Dup(fileName);
     win->dm = DisplayModel::CreateFromFileName(win, fileName, displayMode, startPage);
 
     if (!win->dm) {
@@ -1911,7 +1911,7 @@ static bool ShowNewVersionDialog(WindowInfo *win, const TCHAR *newVersion)
     INT_PTR res = Dialog_NewVersionAvailable(win->hwndFrame, &data);
     if (data.skipThisVersion) {
         free(gGlobalPrefs.m_versionToSkip);
-        gGlobalPrefs.m_versionToSkip = StrCopy(newVersion);
+        gGlobalPrefs.m_versionToSkip = Str::Dup(newVersion);
     }
     return DIALOG_OK_PRESSED == res;
 }
@@ -2329,7 +2329,7 @@ static void CopySelectionToClipboard(WindowInfo *win)
 
         // don't copy empty text
         if (!tstr_empty(selText)) {
-            HGLOBAL handle = GlobalAlloc(GMEM_MOVEABLE, (StrLen(selText) + 1) * sizeof(TCHAR));
+            HGLOBAL handle = GlobalAlloc(GMEM_MOVEABLE, (Str::Len(selText) + 1) * sizeof(TCHAR));
             if (handle) {
                 TCHAR *globalText = (TCHAR *)GlobalLock(handle);
                 lstrcpy(globalText, selText);
@@ -3418,7 +3418,7 @@ static void OnMenuSaveAs(WindowInfo *win)
     // TODO: fix saving embedded PDF documents
     tstr_trans_chars(dstFileName, _T(":"), _T("_"));
     if (tstr_endswithi(dstFileName, _T(".pdf")))
-        dstFileName[StrLen(dstFileName) - 4] = 0;
+        dstFileName[Str::Len(dstFileName) - 4] = 0;
 
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = win->hwndFrame;
@@ -3446,7 +3446,7 @@ static void OnMenuSaveAs(WindowInfo *win)
         ScopedMem<TCHAR> text(win->dm->extractAllText(Target_Export));
         ScopedMem<char> textUTF8(tstr_to_utf8(text));
         ScopedMem<char> textUTF8BOM(str_cat("\xEF\xBB\xBF", textUTF8));
-        File::WriteAll(realDstFileName, textUTF8BOM, StrLen(textUTF8BOM));
+        File::WriteAll(realDstFileName, textUTF8BOM, Str::Len(textUTF8BOM));
     }
     // Recreate inexistant PDF files from memory...
     else if (!File::Exists(srcFileName)) {
@@ -3473,7 +3473,7 @@ static void OnMenuSaveAs(WindowInfo *win)
                 errorMsg = tstr_printf(_T("%s\n\n%s"), _TR("Failed to save a file"), msgBuf);
                 LocalFree(msgBuf);
             } else {
-                errorMsg = StrCopy(_TR("Failed to save a file"));
+                errorMsg = Str::Dup(_TR("Failed to save a file"));
             }
             MessageBox(win->hwndFrame, errorMsg, _TR("Warning"), MB_OK | MB_ICONEXCLAMATION);
             free(errorMsg);
@@ -3595,7 +3595,7 @@ static void OnMenuOpen(WindowInfo *win)
         ScopedMem<TCHAR> filePath(Path::Join(ofn.lpstrFile, fileName));
         if (filePath)
             LoadDocument(filePath, win);
-        fileName += StrLen(fileName) + 1;
+        fileName += Str::Len(fileName) + 1;
     }
 }
 
@@ -4770,7 +4770,7 @@ static void Find(WindowInfo *win, PdfSearchDirection direction)
     ftd.wasModified = Edit_GetModify(win->hwndFindBox);
     Edit_SetModify(win->hwndFindBox, FALSE);
 
-    bool hasText = StrLen(ftd.text) > 0;
+    bool hasText = Str::Len(ftd.text) > 0;
     if (hasText)
         win->findThread = CreateThread(NULL, 0, FindThread, _memdup(&ftd), 0, 0);
 }
@@ -4808,7 +4808,7 @@ static LRESULT CALLBACK WndProcFindStatus(HWND hwnd, UINT message, WPARAM wParam
         SetBkMode(hdc, TRANSPARENT);
         rect.x += 10; rect.dx -= 10;
         rect.y += 4; rect.dy -= 4;
-        DrawText(hdc, text, StrLen(text), &rect.ToRECT(), DT_LEFT);
+        DrawText(hdc, text, Str::Len(text), &rect.ToRECT(), DT_LEFT);
         
         int width = MulDiv(FIND_STATUS_WIDTH, win->dpi, USER_DEFAULT_SCREEN_DPI) - 20;
         rect.dx = width;
@@ -4838,7 +4838,7 @@ static LRESULT CALLBACK WndProcFindStatus(HWND hwnd, UINT message, WPARAM wParam
 SIZE TextSizeInHwnd(HWND hwnd, const TCHAR *txt)
 {
     SIZE sz;
-    size_t txtLen = StrLen(txt);
+    size_t txtLen = Str::Len(txt);
     HDC dc = GetWindowDC(hwnd);
     /* GetWindowDC() returns dc with default state, so we have to first set
        window's current font into dc */
@@ -5506,14 +5506,14 @@ static void RelayoutTocItem(LPNMTVCUSTOMDRAW ntvcd)
     TreeView_GetItem(hTV, &item);
 
     // Draw the page number right-aligned (if there is one)
-    TCHAR *lpPageNo = item.pszText + StrLen(item.pszText);
+    TCHAR *lpPageNo = item.pszText + Str::Len(item.pszText);
     for (lpPageNo--; lpPageNo > item.pszText && ChrIsDigit(*lpPageNo); lpPageNo--);
     if (lpPageNo > item.pszText && ' ' == *lpPageNo && *(lpPageNo + 1) && ' ' == *--lpPageNo) {
         RECT rcPageNo = rcFullWidth;
         InflateRect(&rcPageNo, -2, -1);
 
         SIZE txtSize;
-        GetTextExtentPoint32(ncd->hdc, lpPageNo, StrLen(lpPageNo), &txtSize);
+        GetTextExtentPoint32(ncd->hdc, lpPageNo, Str::Len(lpPageNo), &txtSize);
         rcPageNo.left = rcPageNo.right - txtSize.cx;
 
         SetTextColor(ncd->hdc, GetSysColor(COLOR_WINDOWTEXT));

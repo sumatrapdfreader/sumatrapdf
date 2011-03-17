@@ -39,8 +39,8 @@
 
   #define multibyte_to_tstr(src, CodePage)  multibyte_to_wstr((src), (CodePage))
   #define tstr_to_multibyte(src, CodePage)  wstr_to_multibyte((src), (CodePage))
-  #define wstr_to_tstr(src)                 StrCopy((LPCWSTR)src)
-  #define tstr_to_wstr(src)                 StrCopy((LPCWSTR)src)
+  #define wstr_to_tstr(src)                 Str::Dup((LPCWSTR)src)
+  #define tstr_to_wstr(src)                 Str::Dup((LPCWSTR)src)
   #define DBG_OUT_T     DBG_OUT_W
 
   #define wstr_to_tstr_q(src)               (src)

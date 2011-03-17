@@ -39,7 +39,7 @@ static TCHAR *GetDefaultPrinterName()
     TCHAR buf[512];
     DWORD bufSize = dimof(buf);
     if (GetDefaultPrinter(buf, &bufSize))
-        return StrCopy(buf);
+        return Str::Dup(buf);
     return NULL;
 }
 
@@ -272,11 +272,11 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
             this->hwndPluginParent = (HWND)_ttol(argList[++n]);
         }
         else if (is_arg_with_param("-bench")) {
-            TCHAR *s = StrCopy(argList[++n]);
+            TCHAR *s = Str::Dup(argList[++n]);
             this->filesToBenchmark.Push(s);
             s = NULL;
             if ((n + 1 < argCount) && IsBenchPagesInfo(argList[n+1]))
-                s = StrCopy(argList[++n]);
+                s = Str::Dup(argList[++n]);
             this->filesToBenchmark.Push(s);
             this->exitImmediately = true;
         }
@@ -294,7 +294,7 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
             if (tstr_endswithi(argList[n], _T(".lnk")))
                 filepath = ResolveLnk(argList[n]);
             if (!filepath)
-                filepath = StrCopy(argList[n]);
+                filepath = Str::Dup(argList[n]);
             this->fileNames.Push(filepath);
         }
     }

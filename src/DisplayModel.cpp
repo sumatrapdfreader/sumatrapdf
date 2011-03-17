@@ -102,7 +102,7 @@ bool DisplayModel::displayStateFromModel(DisplayState *ds)
     bool presMode = getPresentationMode();
 
     if (!ds->filePath || !tstr_eq(ds->filePath, fileName())) {
-        TCHAR *filePath = StrCopy(fileName());
+        TCHAR *filePath = Str::Dup(fileName());
         if (!filePath)
             return false;
 
@@ -1509,7 +1509,7 @@ TCHAR *DisplayModel::getTextInRegion(int pageNo, RectD *region)
         return NULL;
 
     RectI regionI = region->Convert<int>();
-    TCHAR *result = SAZA(TCHAR, StrLen(pageText) + 1), *dest = result;
+    TCHAR *result = SAZA(TCHAR, Str::Len(pageText) + 1), *dest = result;
     for (TCHAR *src = pageText; *src; src++) {
         if (*src != '\n') {
             fz_bbox *bbox = &coords[src - pageText];
@@ -1542,7 +1542,7 @@ TCHAR *DisplayModel::extractAllText(RenderTarget target)
     for (int pageNo = 1; pageNo <= pageCount(); pageNo++)
     {
         ScopedMem<TCHAR> s(pdfEngine->ExtractPageText(pageNo, DOS_NEWLINE, NULL, target));
-        txt.Append(s, StrLen(s));
+        txt.Append(s, Str::Len(s));
     }
 
     return txt.StealData();

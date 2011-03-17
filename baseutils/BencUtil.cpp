@@ -64,7 +64,7 @@ TCHAR *BencString::Value() const
 
 char *BencString::Encode() const
 {
-    return str_printf("%" PRIuPTR ":%s", StrLen(value), value);
+    return str_printf("%" PRIuPTR ":%s", Str::Len(value), value);
 }
 
 BencString *BencString::Decode(const char *bytes, size_t *lenOut)
@@ -78,7 +78,7 @@ BencString *BencString::Decode(const char *bytes, size_t *lenOut)
         return NULL;
 
     start++;
-    if (StrLen(start) < len)
+    if (Str::Len(start) < len)
         return NULL;
 
     if (lenOut)
@@ -87,7 +87,7 @@ BencString *BencString::Decode(const char *bytes, size_t *lenOut)
 }
 
 BencRawString::BencRawString(const char *value, size_t len)
-    : BencString(value, len == (size_t)-1 ? StrLen(value) : len) { }
+    : BencString(value, len == (size_t)-1 ? Str::Len(value) : len) { }
 
 char *BencInt::Encode() const
 {
@@ -121,7 +121,7 @@ char *BencArray::Encode() const
     bytes.Append("l", 1);
     for (size_t i = 0; i < Length(); i++) {
         ScopedMem<char> objBytes(value[i]->Encode());
-        bytes.Append(objBytes, StrLen(objBytes));
+        bytes.Append(objBytes, Str::Len(objBytes));
     }
     bytes.Append("e", 1);
     return bytes.StealData();
@@ -186,7 +186,7 @@ void BencDict::Add(const char *key, BencObj *obj)
         values[oix] = obj;
     }
     else {
-        keys.InsertAt(oix, StrCopy(key));
+        keys.InsertAt(oix, Str::Dup(key));
         values.InsertAt(oix, obj);
     }
 }
@@ -196,10 +196,10 @@ char *BencDict::Encode() const
     Vec<char> bytes(256, 1);
     bytes.Append("d", 1);
     for (size_t i = 0; i < Length(); i++) {
-        ScopedMem<char> key(str_printf("%" PRIuPTR ":%s", StrLen(keys[i]), keys[i]));
-        bytes.Append(key, StrLen(key));
+        ScopedMem<char> key(str_printf("%" PRIuPTR ":%s", Str::Len(keys[i]), keys[i]));
+        bytes.Append(key, Str::Len(key));
         ScopedMem<char> objBytes(values[i]->Encode());
-        bytes.Append(objBytes, StrLen(objBytes));
+        bytes.Append(objBytes, Str::Len(objBytes));
     }
     bytes.Append("e", 1);
     return bytes.StealData();

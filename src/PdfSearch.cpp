@@ -43,8 +43,8 @@ void PdfSearch::SetText(TCHAR *text)
         return;
 
     this->Clear();
-    this->lastText = StrCopy(text);
-    this->findText = StrCopy(text);
+    this->lastText = Str::Dup(text);
+    this->findText = Str::Dup(text);
 
     // extract anchor string (the first word or the first symbol) for faster searching
     if (isnoncjkwordchar(*text)) {
@@ -61,7 +61,7 @@ void PdfSearch::SetText(TCHAR *text)
     this->wholeWords = false;
     if (tstr_endswith(text, _T(" "))) {
         this->wholeWords = !tstr_endswith(text, _T("  "));
-        this->findText[StrLen(this->findText) - 1] = '\0';
+        this->findText[Str::Len(this->findText) - 1] = '\0';
     }
 
     memset(this->findCache, SEARCH_PAGE, this->engine->pageCount());
@@ -81,7 +81,7 @@ void PdfSearch::SetDirection(bool forward)
     if (forward == this->forward)
         return;
     this->forward = forward;
-    findIndex += StrLen(findText) * (forward ? 1 : -1);
+    findIndex += Str::Len(findText) * (forward ? 1 : -1);
 }
 
 // try to match "findText" from "start" with whitespace tolerance

@@ -63,7 +63,7 @@ static void PdfDateToDisplay(TCHAR **s) {
     if (0 == ret) // GetTimeFormat() failed
         *tmp = '\0';
 
-    *s = StrCopy(buf);
+    *s = Str::Dup(buf);
 }
 
 // format a number with a given thousand separator e.g. it turns 1234 into "1,234"
@@ -75,17 +75,17 @@ static TCHAR *FormatNumWithThousandSep(size_t num) {
     GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_STHOUSAND, thousandSep, dimof(thousandSep));
 
     TCHAR *src = buf, *dst = buf2;
-    size_t len = StrLen(src);
+    size_t len = Str::Len(src);
     while (*src) {
         *dst++ = *src++;
         if (*src && (len - (src - buf)) % 3 == 0) {
             lstrcpy(dst, thousandSep);
-            dst += StrLen(thousandSep);
+            dst += Str::Len(thousandSep);
         }
     }
     *dst = '\0';
 
-    return StrCopy(buf2);
+    return Str::Dup(buf2);
 }
 
 // Format a floating point number with at most two decimal after the point
@@ -100,9 +100,9 @@ static TCHAR *FormatFloatWithThousandSep(double number, const TCHAR *unit=NULL) 
     // always add between one and two decimals after the point
     ScopedMem<TCHAR> buf(tstr_printf(_T("%s%s%02d"), tmp, decimal, num % 100));
     if (tstr_endswith(buf, _T("0")))
-        buf[StrLen(buf) - 1] = '\0';
+        buf[Str::Len(buf) - 1] = '\0';
 
-    return unit ? tstr_printf(_T("%s %s"), buf, unit) : StrCopy(buf);
+    return unit ? tstr_printf(_T("%s %s"), buf, unit) : Str::Dup(buf);
 }
 
 // Format the file size in a short form that rounds to the largest size unit
@@ -162,9 +162,9 @@ static TCHAR *FormatPdfPermissions(PdfEngine *pdfEngine) {
     VStrList denials;
 
     if (!pdfEngine->hasPermission(PDF_PERM_PRINT))
-        denials.Push(StrCopy(_TR("printing document")));
+        denials.Push(Str::Dup(_TR("printing document")));
     if (!pdfEngine->hasPermission(PDF_PERM_COPY))
-        denials.Push(StrCopy(_TR("copying text")));
+        denials.Push(Str::Dup(_TR("copying text")));
 
     return denials.Join(_T(", "));
 }
@@ -194,7 +194,7 @@ static void UpdatePropertiesLayout(HWND hwnd, HDC hdc, RectI *rect) {
     leftMaxDx = 0;
     for (size_t i = 0; i < layoutData->Count(); i++) {
         PdfPropertyEl *el = layoutData->At(i);
-        GetTextExtentPoint32(hdc, el->leftTxt, StrLen(el->leftTxt), &txtSize);
+        GetTextExtentPoint32(hdc, el->leftTxt, Str::Len(el->leftTxt), &txtSize);
         el->leftPos.dx = txtSize.cx;
         el->leftPos.dy = txtSize.cy;
 
@@ -209,7 +209,7 @@ static void UpdatePropertiesLayout(HWND hwnd, HDC hdc, RectI *rect) {
     int lineCount = 0;
     for (size_t i = 0; i < layoutData->Count(); i++) {
         PdfPropertyEl *el = layoutData->At(i);
-        GetTextExtentPoint32(hdc, el->rightTxt, StrLen(el->rightTxt), &txtSize);
+        GetTextExtentPoint32(hdc, el->rightTxt, Str::Len(el->rightTxt), &txtSize);
         el->rightPos.dx = txtSize.cx;
         el->rightPos.dy = txtSize.cy;
 
@@ -310,7 +310,7 @@ void OnMenuProperties(WindowInfo *win)
     if (!layoutData)
         return;
 
-    TCHAR *str = StrCopy(pdfEngine->fileName());
+    TCHAR *str = Str::Dup(pdfEngine->fileName());
     layoutData->AddProperty(_TR("File:"), str);
 
     str = pdfEngine->getPdfInfo("Title");
@@ -370,12 +370,12 @@ void OnMenuProperties(WindowInfo *win)
     // TODO: this is about linearlized PDF. Looks like mupdf would
     // have to be extended to detect linearlized PDF. The rules are described
     // in F3.3 of http://www.adobe.com/devnet/acrobat/pdfs/PDF32000_2008.pdf
-    // layoutData->AddProperty(_T("Fast Web View:"), StrCopy(_T("No")));
+    // layoutData->AddProperty(_T("Fast Web View:"), Str::Dup(_T("No")));
 
     // TODO: probably needs to extend mupdf to get this information.
     // Tagged PDF rules are described in 14.8.2 of
     // http://www.adobe.com/devnet/acrobat/pdfs/PDF32000_2008.pdf
-    // layoutData->AddProperty(_T("Tagged PDF:"), StrCopy(_T("No")));
+    // layoutData->AddProperty(_T("Tagged PDF:"), Str::Dup(_T("No")));
 
     CreatePropertiesWindow(win, layoutData);
 }
@@ -457,7 +457,7 @@ void CopyPropertiesToClipboard(HWND hwnd)
     }
     ScopedMem<TCHAR> result(lines.Join());
 
-    HGLOBAL handle = GlobalAlloc(GMEM_MOVEABLE, (StrLen(result) + 1) * sizeof(TCHAR));
+    HGLOBAL handle = GlobalAlloc(GMEM_MOVEABLE, (Str::Len(result) + 1) * sizeof(TCHAR));
     if (handle) {
         TCHAR *selText = (TCHAR *)GlobalLock(handle);
         lstrcpy(selText, result);
