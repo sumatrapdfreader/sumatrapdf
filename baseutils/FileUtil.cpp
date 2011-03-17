@@ -132,12 +132,12 @@ bool IsSame(const TCHAR *path1, const TCHAR *path2)
 
 namespace File {
 
-bool Exists(const TCHAR *file_path)
+bool Exists(const TCHAR *filePath)
 {
     struct _stat buf;
     int          res;
 
-    res = _tstat(file_path, &buf);
+    res = _tstat(filePath, &buf);
     if (0 != res)
         return false;
     if ((buf.st_mode & _S_IFDIR))
@@ -145,14 +145,14 @@ bool Exists(const TCHAR *file_path)
     return true;
 }
 
-size_t GetSize(const TCHAR *file_path)
+size_t GetSize(const TCHAR *filePath)
 {
     WIN32_FILE_ATTRIBUTE_DATA   fileInfo;
 
-    if (NULL == file_path)
+    if (NULL == filePath)
         return INVALID_FILE_SIZE;
 
-    bool ok = GetFileAttributesEx(file_path, GetFileExInfoStandard, &fileInfo);
+    bool ok = GetFileAttributesEx(filePath, GetFileExInfoStandard, &fileInfo);
     if (!ok)
         return INVALID_FILE_SIZE;
 
@@ -167,11 +167,11 @@ size_t GetSize(const TCHAR *file_path)
     return res;
 }
 
-char *ReadAll(const TCHAR *file_path, size_t *file_size_out)
+char *ReadAll(const TCHAR *filePath, size_t *fileSizeOut)
 {
     char *data = NULL;
 
-    HANDLE h = CreateFile(file_path, GENERIC_READ, FILE_SHARE_READ, NULL,  
+    HANDLE h = CreateFile(filePath, GENERIC_READ, FILE_SHARE_READ, NULL,  
             OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL,  NULL); 
     if (h == INVALID_HANDLE_VALUE)
         return NULL;
@@ -188,32 +188,32 @@ char *ReadAll(const TCHAR *file_path, size_t *file_size_out)
         goto Exit;
     data[size] = 0;
 
-    DWORD size_read;
-    bool f_ok = ReadFile(h, data, size, &size_read, NULL);
-    if (!f_ok || size_read != size) {
+    DWORD sizeRead;
+    bool f_ok = ReadFile(h, data, size, &sizeRead, NULL);
+    if (!f_ok || sizeRead != size) {
         free(data);
         data = NULL;
     }
-    else if (file_size_out)
-        *file_size_out = size;
+    else if (fileSizeOut)
+        *fileSizeOut = size;
 Exit:
     CloseHandle(h);
     return data;
 }
 
-bool WriteAll(const TCHAR *file_path, void *data, size_t data_len)
+bool WriteAll(const TCHAR *filePath, void *data, size_t dataLen)
 {
-    HANDLE h = CreateFile(file_path, GENERIC_WRITE, FILE_SHARE_READ, NULL,  
+    HANDLE h = CreateFile(filePath, GENERIC_WRITE, FILE_SHARE_READ, NULL,  
                           CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL,  NULL); 
     if (h == INVALID_HANDLE_VALUE)
         return FALSE;
 
     DWORD size;
-    bool f_ok = WriteFile(h, data, (DWORD)data_len, &size, NULL);
-    assert(!f_ok || (data_len == size));
+    bool f_ok = WriteFile(h, data, (DWORD)dataLen, &size, NULL);
+    assert(!f_ok || (dataLen == size));
     CloseHandle(h);
 
-    return f_ok && data_len == size;
+    return f_ok && dataLen == size;
 }
 
 }

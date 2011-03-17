@@ -119,7 +119,7 @@ def parse_svninfo_out(txt):
 
 # version line is in the format:
 # #define CURR_VERSION 1.1
-def extract_sumatra_version(file_path):
+def extract_sumatra_version(filePath):
   content = open(file_path).read()
   ver = re.findall(r'CURR_VERSION (\d+(?:\.\d+)*)', content)[0]
   return ver

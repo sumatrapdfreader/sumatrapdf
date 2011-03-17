@@ -16,10 +16,10 @@ bool         IsSame(const TCHAR *path1, const TCHAR *path2);
 
 namespace File {
 
-bool         Exists(const TCHAR *file_path);
-char *       ReadAll(const TCHAR *file_path, size_t *file_size_out);
-bool         WriteAll(const TCHAR *file_path, void *data, size_t data_len);
-size_t       GetSize(const TCHAR *file_path);
+bool         Exists(const TCHAR *filePath);
+char *       ReadAll(const TCHAR *filePath, size_t *fileSizeOut);
+bool         WriteAll(const TCHAR *filePath, void *data, size_t dataLen);
+size_t       GetSize(const TCHAR *filePath);
 
 }
 
