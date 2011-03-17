@@ -65,36 +65,28 @@ UINT CreateSynchronizer(LPCTSTR pdffilename, Synchronizer **sync)
         return PDFSYNCERR_INVALID_ARGUMENT;
     }
 
-    TCHAR buffer[MAX_PATH];
-    TCHAR *syncfile;
-    size_t n = Str::Len(pdffilename);
-    size_t u = dimof(PDF_EXTENSION)-1;
+    size_t baseLen = Str::Len(pdffilename) - Str::Len(PDF_EXTENSION);
+    ScopedMem<TCHAR> baseName(tstr_dupn(pdffilename, baseLen));
 
     // Check if a PDFSYNC file is present
-    tstr_copyn(buffer, dimof(buffer), pdffilename, n-u);
-    syncfile = tstr_cat_s(buffer, dimof(buffer), PDFSYNC_EXTENSION);
-    if (File::Exists(syncfile)) 
+    ScopedMem<TCHAR> syncFile(Str::Join(baseName, PDFSYNC_EXTENSION));
+    if (File::Exists(syncFile.Get())) 
     {
-        *sync = new Pdfsync(syncfile);
+        *sync = new Pdfsync(syncFile.Get());
         return PDFSYNCERR_SUCCESS;
     }
 
 #ifdef SYNCTEX_FEATURE
-    // check if a compressed SYNCTEX file is present
-    tstr_copyn(buffer, dimof(buffer), pdffilename, n-u);
-    syncfile = tstr_cat_s(buffer, dimof(buffer), SYNCTEXGZ_EXTENSION);
-    bool exist = File::Exists(syncfile);
+    // check if SYNCTEX or compressed SYNCTEX file is present
+    ScopedMem<TCHAR> texGzFile(Str::Join(baseName, SYNCTEXGZ_EXTENSION));
+    ScopedMem<TCHAR> texFile(Str::Join(baseName, SYNCTEX_EXTENSION));
 
-    // check if a SYNCTEX file is present
-    tstr_copyn(buffer, dimof(buffer), pdffilename, n-u);
-    syncfile = tstr_cat_s(buffer, dimof(buffer), SYNCTEX_EXTENSION);
-    exist |= File::Exists(syncfile);
-
-    if (exist)
+    if (File::Exists(texGzFile.Get()) ||
+        File::Exists(texFile.Get())) 
     {
         // due to a bug with synctex_parser.c, this must always be 
         // the path to the .synctex file (even if a .synctex.gz file is used instead)
-        *sync = new SyncTex(syncfile);
+        *sync = new SyncTex(texFile.Get());
         return PDFSYNCERR_SUCCESS;
     }
 #endif

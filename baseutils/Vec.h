@@ -199,6 +199,11 @@ public:
         Reset();
         Append(s);
     }
+
+    T *Get() const
+    {
+        return els;
+    }
 };
 
 }
