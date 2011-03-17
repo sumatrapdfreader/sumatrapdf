@@ -518,6 +518,9 @@
     <ClCompile Include="baseutils\WStrUtil.cpp">
       <Filter>baseutils</Filter>
     </ClCompile>
+    <ClCompile Include="baseutils\strlist_util.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ext\jbig2dec\config_win32.h">
@@ -673,7 +676,6 @@
     <ClInclude Include="src\WindowInfo.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="baseutils\WinUtil.hpp" />
     <ClInclude Include="baseutils\BaseUtil.h">
       <Filter>baseutils</Filter>
     </ClInclude>

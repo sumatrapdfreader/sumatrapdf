@@ -271,7 +271,6 @@
     <ClInclude Include="src\translations.h" />
     <ClInclude Include="src\translations_txt.h" />
     <ClInclude Include="src\Version.h" />
-    <ClInclude Include="baseutils\WinUtil.hpp" />
     <ClInclude Include="mupdf\fitz\fitz.h" />
     <ClInclude Include="mupdf\mupdf\mupdf.h" />
     <ClInclude Include="ext\jbig2dec\config_win32.h" />
