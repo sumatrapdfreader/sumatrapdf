@@ -73,7 +73,7 @@ UINT CreateSynchronizer(LPCTSTR pdffilename, Synchronizer **sync)
     // Check if a PDFSYNC file is present
     tstr_copyn(buffer, dimof(buffer), pdffilename, n-u);
     syncfile = tstr_cat_s(buffer, dimof(buffer), PDFSYNC_EXTENSION);
-    if (syncfile && File::Exists(syncfile)) 
+    if (File::Exists(syncfile)) 
     {
         *sync = new Pdfsync(syncfile);
         return PDFSYNCERR_SUCCESS;
@@ -83,12 +83,12 @@ UINT CreateSynchronizer(LPCTSTR pdffilename, Synchronizer **sync)
     // check if a compressed SYNCTEX file is present
     tstr_copyn(buffer, dimof(buffer), pdffilename, n-u);
     syncfile = tstr_cat_s(buffer, dimof(buffer), SYNCTEXGZ_EXTENSION);
-    bool exist = syncfile && File::Exists(syncfile);
+    bool exist = File::Exists(syncfile);
 
     // check if a SYNCTEX file is present
     tstr_copyn(buffer, dimof(buffer), pdffilename, n-u);
     syncfile = tstr_cat_s(buffer, dimof(buffer), SYNCTEX_EXTENSION);
-    exist |= syncfile && File::Exists(syncfile);
+    exist |= File::Exists(syncfile);
 
     if (exist)
     {

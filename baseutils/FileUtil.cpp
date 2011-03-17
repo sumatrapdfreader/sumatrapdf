@@ -4,7 +4,6 @@
 #include "BaseUtil.h"
 #include "TStrUtil.h"
 #include "FileUtil.h"
-#include <sys/stat.h>
 
 namespace Path {
 
@@ -134,13 +133,16 @@ namespace File {
 
 bool Exists(const TCHAR *filePath)
 {
-    struct _stat buf;
-    int          res;
+    WIN32_FILE_ATTRIBUTE_DATA   fileInfo;
 
-    res = _tstat(filePath, &buf);
-    if (0 != res)
+    if (NULL == filePath)
         return false;
-    if ((buf.st_mode & _S_IFDIR))
+
+    BOOL res = GetFileAttributesEx(filePath, GetFileExInfoStandard, &fileInfo);
+    if (0 == res)
+        return false;
+
+    if (fileInfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
         return false;
     return true;
 }
@@ -152,19 +154,19 @@ size_t GetSize(const TCHAR *filePath)
     if (NULL == filePath)
         return INVALID_FILE_SIZE;
 
-    bool ok = GetFileAttributesEx(filePath, GetFileExInfoStandard, &fileInfo);
-    if (!ok)
+    BOOL res = GetFileAttributesEx(filePath, GetFileExInfoStandard, &fileInfo);
+    if (0 == res)
         return INVALID_FILE_SIZE;
 
-    size_t res = fileInfo.nFileSizeLow;;
+    size_t size = fileInfo.nFileSizeLow;;
 #ifdef _WIN64
-    res += fileInfo.nFileSizeHigh << 32;
+    size += fileInfo.nFileSizeHigh << 32;
 #else
     if (fileInfo.nFileSizeHigh > 0)
         return INVALID_FILE_SIZE;
 #endif
 
-    return res;
+    return size;
 }
 
 char *ReadAll(const TCHAR *filePath, size_t *fileSizeOut)
