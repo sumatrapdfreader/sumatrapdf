@@ -357,7 +357,7 @@ bool Load(TCHAR *filepath, SerializableGlobalPrefs *globalPrefs, FileHistoryList
 
     size_t prefsFileLen;
     ScopedMem<char> prefsTxt(File::ReadAll(filepath, &prefsFileLen));
-    if (!Str::IsEmpty(prefsTxt)) {
+    if (!Str::IsEmpty(prefsTxt.Get())) {
         ok = Prefs_Deserialize(prefsTxt, globalPrefs, fileHistory);
         assert(ok);
     }

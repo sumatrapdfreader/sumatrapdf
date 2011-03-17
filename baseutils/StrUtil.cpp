@@ -7,14 +7,6 @@
 
 namespace Str {
 
-bool IsEmpty(const char *s) {
-    return !s || (0 == *s);
-}
-
-bool IsEmpty(const WCHAR *s) {
-    return !s || (0 == *s);
-}
-
 #define EntryCheck(arg1, arg2) \
     if (arg1 == arg2) \
         return true; \

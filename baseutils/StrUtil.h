@@ -27,14 +27,17 @@ inline size_t Len(const char *s) { return strlen(s); }
 inline size_t Len(const WCHAR *s) { return wcslen(s); }
 inline char *Dup(const char *s) { return _strdup(s); }
 inline WCHAR *Dup(const WCHAR *s) { return _wcsdup(s); }
-bool IsEmpty(const char *s);
-bool IsEmpty(const WCHAR *s);
 bool Eq(const char *s1, const char *s2);
 bool Eq(const WCHAR *s1, const WCHAR *s2);
 bool EqI(const char *s1, const char *s2);
 bool EqI(const WCHAR *s1, const WCHAR *s2);
 bool EqN(const char *s1, const char *s2, size_t len);
 bool EqN(const WCHAR *s1, const WCHAR *s2, size_t len);
+
+template <typename T>
+inline bool IsEmpty(T *s) {
+    return !s || (0 == *s);
+}
 
 template <typename T>
 inline bool StartsWith(const T* str, const T* txt) {

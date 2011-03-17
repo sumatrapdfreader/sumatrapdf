@@ -813,7 +813,7 @@ TCHAR *WindowInfo::GetPassword(const TCHAR *fileName, unsigned char *fileDigest,
     DisplayState *fileFromHistory = gFileHistory.Find(fileName);
     if (fileFromHistory && fileFromHistory->decryptionKey) {
         ScopedMem<char> fingerprint(mem_to_hexstr(fileDigest, 16));
-        *saveKey = Str::StartsWith(fileFromHistory->decryptionKey, (const char*)fingerprint);
+        *saveKey = Str::StartsWith(fileFromHistory->decryptionKey, fingerprint.Get());
         if (*saveKey && hexstr_to_mem(fileFromHistory->decryptionKey + 32, decryptionKeyOut, 32))
             return NULL;
     }

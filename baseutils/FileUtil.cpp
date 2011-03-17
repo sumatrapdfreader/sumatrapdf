@@ -186,15 +186,13 @@ char *ReadAll(const TCHAR *filePath, size_t *fileSizeOut)
     data = SAZA(char, size + 1);
     if (!data)
         goto Exit;
-    data[size] = 0;
 
     DWORD sizeRead;
-    bool f_ok = ReadFile(h, data, size, &sizeRead, NULL);
-    if (!f_ok || sizeRead != size) {
+    bool ok = ReadFile(h, data, size, &sizeRead, NULL);
+    if (!ok || sizeRead != size) {
         free(data);
         data = NULL;
-    }
-    else if (fileSizeOut)
+    } else if (fileSizeOut)
         *fileSizeOut = size;
 Exit:
     CloseHandle(h);
