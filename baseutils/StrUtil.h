@@ -87,6 +87,28 @@ static inline bool EqI(const WCHAR *str1, const WCHAR *str2)
     return false;
 }
 
+static bool EqN(const char *str1, const char *str2, size_t len)
+{
+    if (str1 == str2)
+        return true;
+    if (!str1 || !str2)
+        return false;
+    if (0 == strncmp(str1, str2, len))
+        return true;
+    return false;
+}
+
+static bool EqN(const WCHAR *str1, const WCHAR *str2, size_t len)
+{
+    if (str1 == str2)
+        return true;
+    if (!str1 || !str2)
+        return false;
+    if (0 == wcsncmp(str1, str2, len))
+        return true;
+    return false;
+}
+
 }
 
 static inline bool ChrIsDigit(const WCHAR c)
@@ -95,7 +117,6 @@ static inline bool ChrIsDigit(const WCHAR c)
 }
 
 // TODO: make these return bool instead of int
-int     str_eqn(const char *str1, const char *str2, size_t len);
 int     str_startswith(const char *str, const char *txt);
 int     str_startswithi(const char *str, const char *txt);
 int     str_endswith(const char *str, const char *end);

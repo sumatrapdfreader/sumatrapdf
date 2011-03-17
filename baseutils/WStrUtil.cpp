@@ -67,21 +67,10 @@ int wstr_copy(WCHAR *dst, size_t dst_cch_size, const WCHAR *src)
     return wstr_copyn(dst, dst_cch_size, src, Str::Len(src));
 }
 
-int wstr_eqn(const WCHAR *str1, const WCHAR *str2, size_t len)
-{
-    if (str1 == str2)
-        return TRUE;
-    if (!str1 || !str2)
-        return FALSE;
-    if (0 == wcsncmp(str1, str2, len))
-        return TRUE;
-    return FALSE;
-}
-
 /* return true if 'str' starts with 'txt', case-sensitive */
 int wstr_startswith(const WCHAR *str, const WCHAR *txt)
 {
-    return wstr_eqn(str, txt, wcslen(txt));
+    return Str::EqN(str, txt, wcslen(txt));
 }
 
 int wstr_endswith(const WCHAR *txt, const WCHAR *end)

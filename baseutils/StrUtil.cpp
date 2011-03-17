@@ -63,24 +63,13 @@ int str_copyn(char *dst, size_t dst_cch_size, const char *src, size_t src_cch_si
 
 int str_copy(char *dst, size_t dst_cch_size, const char *src)
 {
-    return str_copyn(dst, dst_cch_size, src, strlen(src));
-}
-
-int str_eqn(const char *str1, const char *str2, size_t len)
-{
-    if (str1 == str2)
-        return TRUE;
-    if (!str1 || !str2)
-        return FALSE;
-    if (0 == strncmp(str1, str2, len))
-        return TRUE;
-    return FALSE;
+    return str_copyn(dst, dst_cch_size, src, Str::Len(src));
 }
 
 /* return true if 'str' starts with 'txt', case-sensitive */
 int str_startswith(const char *str, const char *txt)
 {
-    return str_eqn(str, txt, strlen(txt));
+    return Str::EqN(str, txt, Str::Len(txt));
 }
 
 /* return true if 'str' starts with 'txt', NOT case-sensitive */
@@ -91,7 +80,7 @@ int str_startswithi(const char *str, const char *txt)
     if (!str || !txt)
         return FALSE;
 
-    if (0 == _strnicmp(str, txt, strlen(txt)))
+    if (0 == _strnicmp(str, txt, Str::Len(txt)))
         return TRUE;
     return FALSE;
 }
