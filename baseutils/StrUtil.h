@@ -29,11 +29,11 @@ namespace Str {
 inline size_t Len(const char *s) { return strlen(s); }
 inline size_t Len(const WCHAR *s) { return wcslen(s); }
 
-inline char *Dup(const char *s) { return _strdup(s); }
-inline WCHAR *Dup(const WCHAR *s) { return _wcsdup(s); }
+inline char *  Dup(const char *s) { return _strdup(s); }
+inline WCHAR * Dup(const WCHAR *s) { return _wcsdup(s); }
 
-char *Join(const char *s1, const char *s2);
-WCHAR *Join(const WCHAR *s1, const WCHAR *s2);
+char *  Join(const char *s1, const char *s2, const char *s3=NULL);
+WCHAR * Join(const WCHAR *s1, const WCHAR *s2, const WCHAR *s3=NULL);
 
 bool Eq(const char *s1, const char *s2);
 bool Eq(const WCHAR *s1, const WCHAR *s2);
@@ -66,12 +66,17 @@ static inline bool ChrIsDigit(const WCHAR c)
     return '0' <= c && c <= '9';
 }
 
-// TODO: make these return bool instead of int
+char *  str_dupn(const char *str, size_t len);
+
+// I would like to remove the usage of *str_copy* and *str_cat* completely,
+// using either Str class or Str::Join() etc.
+// Using fixed size buffers is a known receipt for buffer overruns
 int     str_copy(char *dst, size_t dst_cch_size, const char *src);
 int     str_copyn(char *dst, size_t dst_cch_size, const char *src, size_t src_cch_size);
-char *  str_dupn(const char *str, size_t len);
 char *  str_cat_s(char *dst, size_t dst_cch_size, const char *src);
 char *  str_catn_s(char *dst, size_t dst_cch_size, const char *src, size_t src_cch_size);
+
+
 char *  str_printf(const char *format, ...);
 int     str_printf_s(char *out, size_t out_cch_size, const char *format, ...);
 

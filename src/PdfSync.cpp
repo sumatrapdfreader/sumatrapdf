@@ -687,14 +687,15 @@ UINT SyncTex::source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page
         if (rebuild_index())
             return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
 
-    // convert the source file to an absolute path
-    TCHAR srcfilepath[MAX_PATH];
-    if (PathIsRelative(srcfilename))
-        tstr_printf_s(srcfilepath, dimof(srcfilepath), _T("%s\\%s"), this->dir, srcfilename);
-    else
-        tstr_copy(srcfilepath, dimof(srcfilepath), srcfilename);
+    ScopedMem<TCHAR> srcfilepath(NULL);
 
-    char *mb_srcfilepath = tstr_to_ansi(srcfilepath);
+    // convert the source file to an absolute path
+    if (PathIsRelative(srcfilename))
+        srcfilepath.Set(Path::Join(dir, srcfilename));
+    else
+        srcfilepath.Set(Str::Dup(srcfilename));
+
+    char *mb_srcfilepath = tstr_to_ansi(srcfilepath.Get());
     if (!mb_srcfilepath)
         return PDFSYNCERR_OUTOFMEMORY;
     int ret = synctex_display_query(this->scanner,mb_srcfilepath,line,col);

@@ -111,26 +111,24 @@ bool EndsWithI(const WCHAR *txt, const WCHAR *end)
 
 /* Concatenate 2 strings. Any string can be NULL.
    Caller needs to free() memory. */
-char *Join(const char *s1, const char *s2)
+char *Join(const char *s1, const char *s2, const char *s3)
 {
-    if (!s1)
-        s1= "";
-    if (!s2)
-        s2 = "";
+    if (!s1) s1= "";
+    if (!s2) s2 = "";
+    if (!s3) s3 = "";
 
-    return str_printf("%s%s", s1, s2);
+    return str_printf("%s%s%s", s1, s2, s3);
 }
 
 /* Concatenate 2 strings. Any string can be NULL.
    Caller needs to free() memory. */
-WCHAR *Join(const WCHAR *s1, const WCHAR *s2)
+WCHAR *Join(const WCHAR *s1, const WCHAR *s2, const WCHAR *s3)
 {
-    if (!s1)
-        s1 = L"";
-    if (!s2)
-        s2 = L"";
+    if (!s1) s1 = L"";
+    if (!s2) s2 = L"";
+    if (!s3) s3 = L"";
 
-    return wstr_printf(L"%s%s", s1, s2);
+    return wstr_printf(L"%s%s%s", s1, s2, s3);
 }
 
 }

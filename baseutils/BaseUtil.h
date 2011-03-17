@@ -79,6 +79,10 @@ class ScopedMem
 public:
     explicit ScopedMem(T* obj) : obj(obj) {}
     ~ScopedMem() { free((void*)obj); }
+    void Set(T *o) {
+        free((void*)obj);
+        obj = o;
+    }
     T *Get() const { return obj; }
     operator T*() const { return obj; }
 };
