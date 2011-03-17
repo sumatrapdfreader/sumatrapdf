@@ -218,8 +218,8 @@ $(O)\FileWatch.obj: src\FileWatch.h
 $(O)\Http.obj: baseutils\BaseUtil.h baseutils\StrUtil.h baseutils\Vec.h
 $(O)\Http.obj: src\Http.h src\SumatraPDF.h src\Version.h
 $(O)\Installer.obj: baseutils\BaseUtil.h baseutils\FileUtil.h baseutils\GeomUtil.h
-$(O)\Installer.obj: baseutils\StrUtil.h baseutils\WinUtil.h src\installer\..\ifilter\PdfFilter.h
-$(O)\Installer.obj: src\installer\Resource.h src\Version.h
+$(O)\Installer.obj: baseutils\StrUtil.h baseutils\Vec.h baseutils\WinUtil.h
+$(O)\Installer.obj: src\installer\..\ifilter\PdfFilter.h src\installer\Resource.h src\Version.h
 $(O)\LangMenuDef.obj: src\LangMenuDef.h
 $(O)\MuPDF_Exports.obj: mupdf\fitz\fitz.h
 $(O)\npPdfViewer.obj: src\browserplugin\npapi\npapi.h src\browserplugin\npapi\npfunctions.h src\browserplugin\npapi\npruntime.h
