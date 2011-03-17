@@ -27,14 +27,14 @@ inline size_t Len(const char *s) { return strlen(s); }
 inline size_t Len(const WCHAR *s) { return wcslen(s); }
 inline char *Dup(const char *s) { return _strdup(s); }
 inline WCHAR *Dup(const WCHAR *s) { return _wcsdup(s); }
-bool IsEmpty(const char *str);
-bool IsEmpty(const WCHAR *str);
-bool Eq(const char *str1, const char *str2);
-bool Eq(const WCHAR *str1, const WCHAR *str2);
-bool EqI(const char *str1, const char *str2);
-bool EqI(const WCHAR *str1, const WCHAR *str2);
-bool EqN(const char *str1, const char *str2, size_t len);
-bool EqN(const WCHAR *str1, const WCHAR *str2, size_t len);
+bool IsEmpty(const char *s);
+bool IsEmpty(const WCHAR *s);
+bool Eq(const char *s1, const char *s2);
+bool Eq(const WCHAR *s1, const WCHAR *s2);
+bool EqI(const char *s1, const char *s2);
+bool EqI(const WCHAR *s1, const WCHAR *s2);
+bool EqN(const char *s1, const char *s2, size_t len);
+bool EqN(const WCHAR *s1, const WCHAR *s2, size_t len);
 
 template <typename T>
 inline bool StartsWith(const T* str, const T* txt) {
@@ -44,8 +44,8 @@ inline bool StartsWith(const T* str, const T* txt) {
 bool StartsWithI(const char *str, const char *txt);
 bool StartsWithI(const WCHAR *str, const WCHAR *txt);
 bool EndsWith(const char *txt, const char *end);
-bool EndsWithI(const char *txt, const char *end);
 bool EndsWith(const WCHAR *txt, const WCHAR *end);
+bool EndsWithI(const char *txt, const char *end);
 bool EndsWithI(const WCHAR *txt, const WCHAR *end);
 
 }

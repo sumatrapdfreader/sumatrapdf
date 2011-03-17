@@ -7,172 +7,114 @@
 
 namespace Str {
 
-bool IsEmpty(const char *str)
-{
-    if (!str)
-        return true;
-    if (0 == *str)
-        return true;
-    return false;
+bool IsEmpty(const char *s) {
+    return !s || (0 == *s);
 }
 
-bool IsEmpty(const WCHAR *str)
-{
-    if (!str)
-        return true;
-    if (0 == *str)
-        return true;
-    return false;
+bool IsEmpty(const WCHAR *s) {
+    return !s || (0 == *s);
 }
 
-bool Eq(const char *str1, const char *str2)
+#define EntryCheck(arg1, arg2) \
+    if (arg1 == arg2) \
+        return true; \
+    if (!arg1 || !arg2) \
+        return false
+
+bool Eq(const char *s1, const char *s2)
 {
-    if (str1 == str2)
-        return true;
-    if (!str1 || !str2)
-        return false;
-    if (0 == strcmp(str1, str2))
-        return true;
-    return false;
+    EntryCheck(s1, s2);
+    return 0 == strcmp(s1, s2);
 }
 
-bool Eq(const WCHAR *str1, const WCHAR *str2)
+bool Eq(const WCHAR *s1, const WCHAR *s2)
 {
-    if (str1 == str2)
-        return true;
-    if (!str1 || !str2)
-        return false;
-    if (0 == wcscmp(str1, str2))
-        return true;
-    return false;
+    EntryCheck(s1, s2);
+    return 0 == wcscmp(s1, s2);
 }
 
-bool EqI(const char *str1, const char *str2)
+bool EqI(const char *s1, const char *s2)
 {
-    if (str1 == str2)
-        return true;
-    if (!str1 || !str2)
-        return false;
-    if (0 == _stricmp(str1, str2))
-        return true;
-    return false;
+    EntryCheck(s1, s2);
+    return 0 == _stricmp(s1, s2);
 }
 
-bool EqI(const WCHAR *str1, const WCHAR *str2)
+bool EqI(const WCHAR *s1, const WCHAR *s2)
 {
-    if (str1 == str2)
-        return true;
-    if (!str1 || !str2)
-        return false;
-    if (0 == _wcsicmp(str1, str2))
-        return true;
-    return false;
+    EntryCheck(s1, s2);
+    return 0 == _wcsicmp(s1, s2);
 }
 
-bool EqN(const char *str1, const char *str2, size_t len)
+bool EqN(const char *s1, const char *s2, size_t len)
 {
-    if (str1 == str2)
-        return true;
-    if (!str1 || !str2)
-        return false;
-    if (0 == strncmp(str1, str2, len))
-        return true;
-    return false;
+    EntryCheck(s1, s2);
+    return 0 == strncmp(s1, s2, len);
 }
 
-bool EqN(const WCHAR *str1, const WCHAR *str2, size_t len)
+bool EqN(const WCHAR *s1, const WCHAR *s2, size_t len)
 {
-    if (str1 == str2)
-        return true;
-    if (!str1 || !str2)
-        return false;
-    if (0 == wcsncmp(str1, str2, len))
-        return true;
-    return false;
+    EntryCheck(s1, s2);
+    return 0 == wcsncmp(s1, s2, len);
 }
 
 /* return true if 'str' starts with 'txt', NOT case-sensitive */
 bool StartsWithI(const char *str, const char *txt)
 {
-    if (str == txt)
-        return true;
-    if (!str || !txt)
-        return false;
-
-    if (0 == _strnicmp(str, txt, Str::Len(txt)))
-        return true;
-    return false;
+    EntryCheck(str, txt);
+    return 0 == _strnicmp(str, txt, Str::Len(txt));
 }
 
 /* return true if 'str' starts with 'txt', NOT case-sensitive */
 bool StartsWithI(const WCHAR *str, const WCHAR *txt)
 {
-    if (!str && !txt)
-        return true;
-    if (!str || !txt)
-        return false;
-
-    if (0 == _wcsnicmp(str, txt, Str::Len(txt)))
-        return true;
-    return false;
+    EntryCheck(str, txt);
+    return 0 == _wcsnicmp(str, txt, Str::Len(txt));
 }
+
+#undef EntryCheck
 
 bool EndsWith(const char *txt, const char *end)
 {
-    size_t end_len;
-    size_t txt_len;
-
-    if (!txt || !end)
-        return FALSE;
-
-    txt_len = Str::Len(txt);
-    end_len = Str::Len(end);
-    if (end_len > txt_len)
-        return false;
-    return Str::Eq(txt+txt_len-end_len, end);
-}
-
-bool EndsWithI(const char *txt, const char *end)
-{
-    size_t end_len;
-    size_t txt_len;
-
     if (!txt || !end)
         return false;
-
-    txt_len = Str::Len(txt);
-    end_len = Str::Len(end);
-    if (end_len > txt_len)
+    size_t txtLen = Str::Len(txt);
+    size_t endLen = Str::Len(end);
+    if (endLen > txtLen)
         return false;
-    return Str::EqI(txt+txt_len-end_len, end);
+    return Str::Eq(txt + txtLen - endLen, end);
 }
 
 bool EndsWith(const WCHAR *txt, const WCHAR *end)
 {
-    size_t end_len;
-    size_t txt_len;
     if (!txt || !end)
         return false;
-    txt_len = Str::Len(txt);
-    end_len = Str::Len(end);
-    if (end_len > txt_len)
+    size_t txtLen = Str::Len(txt);
+    size_t endLen = Str::Len(end);
+    if (endLen > txtLen)
         return false;
-    return Str::Eq(txt+txt_len-end_len, end);
+    return Str::Eq(txt + txtLen - endLen, end);
+}
+
+bool EndsWithI(const char *txt, const char *end)
+{
+    if (!txt || !end)
+        return false;
+    size_t txtLen = Str::Len(txt);
+    size_t endLen = Str::Len(end);
+    if (endLen > txtLen)
+        return false;
+    return Str::EqI(txt + txtLen - endLen, end);
 }
 
 bool EndsWithI(const WCHAR *txt, const WCHAR *end)
 {
-    size_t end_len;
-    size_t txt_len;
-
     if (!txt || !end)
         return false;
-
-    txt_len = Str::Len(txt);
-    end_len = Str::Len(end);
-    if (end_len > txt_len)
+    size_t txtLen = Str::Len(txt);
+    size_t endLen = Str::Len(end);
+    if (endLen > txtLen)
         return false;
-    return Str::EqI(txt+txt_len-end_len, end);
+    return Str::EqI(txt + txtLen - endLen, end);
 }
 
 }
