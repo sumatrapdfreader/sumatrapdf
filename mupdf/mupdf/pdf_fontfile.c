@@ -222,11 +222,11 @@ lookupcompare(const void *elem1, const void *elem2)
 	if (len1 != len2)
 	{
 		char *rest = len1 > len2 ? val1 + len2 : val2 + len1;
-		if (',' == *rest || !stricmp(rest, "-roman"))
-			return strnicmp(val1, val2, MIN(len1, len2));
+		if (',' == *rest || !_stricmp(rest, "-roman"))
+			return _strnicmp(val1, val2, MIN(len1, len2));
 	}
 
-	return stricmp(val1, val2);
+	return _stricmp(val1, val2);
 }
 
 static void
@@ -438,6 +438,11 @@ parseTTF(fz_stream *file, int offset, int index, char *path)
 		if (err) fz_catch(err, "ignoring face name decoding fonterror");
 	}
 
+	// TODO: is there a better way to distinguish Arial Caps from Arial proper?
+	// cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1290
+	if (!strcmp(szPSName, "ArialMT") && (strstr(path, "caps") || strstr(path, "Caps")))
+		return fz_throw("ignore %s, as it can't be distinguished from Arial,Regular");
+
 	if (szPSName[0])
 	{
 		err = insertmapping(&fontlistMS, szPSName, path, index);
@@ -449,7 +454,7 @@ parseTTF(fz_stream *file, int offset, int index, char *path)
 		// included PostScript name; cf. http://code.google.com/p/sumatrapdf/issues/detail?id=376
 
 		// append the font's subfamily, unless it's a Regular font
-		if (szStyle[0] && stricmp(szStyle, "Regular") != 0)
+		if (szStyle[0] && _stricmp(szStyle, "Regular") != 0)
 		{
 			fz_strlcat(szTTName, "-", MAX_FACENAME);
 			fz_strlcat(szTTName, szStyle, MAX_FACENAME);
@@ -570,9 +575,9 @@ pdf_createfontlistMS()
 			fileExt = szPathAnsi + strlen(szPathAnsi) - 4;
 			if (isNonAnsiPath)
 				fz_warn("ignoring font with non-ANSI filename: %s", szFile);
-			else if (!stricmp(fileExt, ".ttc"))
+			else if (!_stricmp(fileExt, ".ttc"))
 				parseTTCs(szPathAnsi);
-			else if (!stricmp(fileExt, ".ttf") || !stricmp(fileExt, ".otf"))
+			else if (!_stricmp(fileExt, ".ttf") || !_stricmp(fileExt, ".otf"))
 				parseTTFs(szPathAnsi);
 			// ignore errors occurring while parsing a given font file
 		}
@@ -610,7 +615,7 @@ pdf_createfontlistMS()
 #endif
 
 	// sort the font list, so that it can be searched binarily
-	qsort(fontlistMS.fontmap, fontlistMS.len, sizeof(pdf_fontmapMS), stricmp);
+	qsort(fontlistMS.fontmap, fontlistMS.len, sizeof(pdf_fontmapMS), _stricmp);
 	// TODO: make "TimesNewRomanPSMT" default substitute font?
 
 	return fz_okay;
