@@ -26,18 +26,6 @@ WCHAR * wstr_catn_s(WCHAR *dst, size_t dst_cch_size, const WCHAR *src, size_t sr
     return dst;
 }
 
-/* Concatenate 2 strings. Any string can be NULL.
-   Caller needs to free() memory. */
-WCHAR *wstr_cat(const WCHAR *str1, const WCHAR *str2)
-{
-    if (!str1)
-        str1 = L"";
-    if (!str2)
-        str2 = L"";
-
-    return wstr_printf(L"%s%s", str1, str2);
-}
-
 WCHAR *wstr_dupn(const WCHAR *str, size_t str_len_cch)
 {
     WCHAR *copy;

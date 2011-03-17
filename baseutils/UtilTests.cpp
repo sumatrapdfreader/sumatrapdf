@@ -118,10 +118,10 @@ static void TStrTest()
     str = tstr_printf(_T("%s"), buf);
     assert(Str::Eq(str, buf));
     free(str);
-    str = tstr_cat(buf, buf);
+    str = Str::Join(buf, buf);
     assert(Str::Len(str) == 2 * Str::Len(buf));
     free(str);
-    str = tstr_cat(NULL, _T("ab"));
+    str = Str::Join(NULL, _T("ab"));
     assert(Str::Eq(str, _T("ab")));
     free(str);
 

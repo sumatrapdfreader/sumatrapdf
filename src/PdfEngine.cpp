@@ -941,7 +941,7 @@ static TCHAR *parseMultilineLink(pdf_page *page, TCHAR *pageText, TCHAR *start, 
         // add a new link for this line
         fz_bbox bbox = fz_unionbbox(coords[start - pageText], coords[end - pageText - 1]);
         ScopedMem<char> uriPart(tstr_to_utf8(start));
-        char *newUri = str_cat(uri, uriPart);
+        char *newUri = Str::Join(uri, uriPart);
         free(uri);
         uri = newUri;
 
@@ -1010,7 +1010,7 @@ void PdfEngine::linkifyPageText(pdf_page *page)
         // add the link, if it's a new one (ignoring www. links without a toplevel domain)
         if (*start && (Str::StartsWith(start, _T("http")) || _tcschr(start + 5, '.') != NULL)) {
             char *uri = tstr_to_utf8(start);
-            char *httpUri = Str::StartsWith(uri, "http") ? uri : str_cat("http://", uri);
+            char *httpUri = Str::StartsWith(uri, "http") ? uri : Str::Join("http://", uri);
             fz_obj *dest = fz_newstring(httpUri, (int)strlen(httpUri));
             pdf_link *link = pdf_newlink(dest, PDF_LURI);
             link->rect = fz_bboxtorect(bbox);

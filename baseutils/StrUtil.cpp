@@ -109,6 +109,30 @@ bool EndsWithI(const WCHAR *txt, const WCHAR *end)
     return Str::EqI(txt + txtLen - endLen, end);
 }
 
+/* Concatenate 2 strings. Any string can be NULL.
+   Caller needs to free() memory. */
+char *Join(const char *s1, const char *s2)
+{
+    if (!s1)
+        s1= "";
+    if (!s2)
+        s2 = "";
+
+    return str_printf("%s%s", s1, s2);
+}
+
+/* Concatenate 2 strings. Any string can be NULL.
+   Caller needs to free() memory. */
+WCHAR *Join(const WCHAR *s1, const WCHAR *s2)
+{
+    if (!s1)
+        s1 = L"";
+    if (!s2)
+        s2 = L"";
+
+    return wstr_printf(L"%s%s", s1, s2);
+}
+
 }
 
 char * str_cat_s(char * dst, size_t dst_cch_size, const char * src)
@@ -129,18 +153,6 @@ char * str_catn_s(char *dst, size_t dst_cch_size, const char *src, size_t src_cc
     if (src_cch_size >= len)
         return NULL;
     return dst;
-}
-
-/* Concatenate 2 strings. Any string can be NULL.
-   Caller needs to free() memory. */
-char *str_cat(const char *str1, const char *str2)
-{
-    if (!str1)
-        str1 = "";
-    if (!str2)
-        str2 = "";
-
-    return str_printf("%s%s", str1, str2);
 }
 
 char *str_dupn(const char *str, size_t str_len_cch)

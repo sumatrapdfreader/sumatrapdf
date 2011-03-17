@@ -4,6 +4,9 @@
 #ifndef StrUtil_h
 #define StrUtil_h
 
+// TODO: temporary
+WCHAR * wstr_printf(const WCHAR *format, ...);
+
 void    win32_dbg_out(const char *format, ...);
 void    win32_dbg_out_hex(const char *dsc, const unsigned char *data, int dataLen);
 
@@ -25,8 +28,13 @@ namespace Str {
 
 inline size_t Len(const char *s) { return strlen(s); }
 inline size_t Len(const WCHAR *s) { return wcslen(s); }
+
 inline char *Dup(const char *s) { return _strdup(s); }
 inline WCHAR *Dup(const WCHAR *s) { return _wcsdup(s); }
+
+char *Join(const char *s1, const char *s2);
+WCHAR *Join(const WCHAR *s1, const WCHAR *s2);
+
 bool Eq(const char *s1, const char *s2);
 bool Eq(const WCHAR *s1, const WCHAR *s2);
 bool EqI(const char *s1, const char *s2);
@@ -64,7 +72,6 @@ int     str_copyn(char *dst, size_t dst_cch_size, const char *src, size_t src_cc
 char *  str_dupn(const char *str, size_t len);
 char *  str_cat_s(char *dst, size_t dst_cch_size, const char *src);
 char *  str_catn_s(char *dst, size_t dst_cch_size, const char *src, size_t src_cch_size);
-char *  str_cat(const char *str1, const char *str2);
 char *  str_printf(const char *format, ...);
 int     str_printf_s(char *out, size_t out_cch_size, const char *format, ...);
 

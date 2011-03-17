@@ -240,7 +240,7 @@ void DoAssociateExeWithPdfExtension(HKEY hkey)
     }
 
     WriteRegStr(hkey, _T("Software\\Classes\\") APP_NAME_STR, NULL, _TR("PDF Document"));
-    TCHAR *icon_path = tstr_cat(exePath, _T(",1"));
+    TCHAR *icon_path = Str::Join(exePath, _T(",1"));
     WriteRegStr(hkey, _T("Software\\Classes\\") APP_NAME_STR _T("\\DefaultIcon"), NULL, icon_path);
     free(icon_path);
 

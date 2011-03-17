@@ -3445,7 +3445,7 @@ static void OnMenuSaveAs(WindowInfo *win)
     if (hasCopyPerm && Str::EndsWithI(realDstFileName, _T(".txt"))) {
         ScopedMem<TCHAR> text(win->dm->extractAllText(Target_Export));
         ScopedMem<char> textUTF8(tstr_to_utf8(text));
-        ScopedMem<char> textUTF8BOM(str_cat("\xEF\xBB\xBF", textUTF8));
+        ScopedMem<char> textUTF8BOM(Str::Join("\xEF\xBB\xBF", textUTF8));
         File::WriteAll(realDstFileName, textUTF8BOM, Str::Len(textUTF8BOM));
     }
     // Recreate inexistant PDF files from memory...

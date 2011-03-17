@@ -25,7 +25,6 @@
   #define tstr_dupn         wstr_dupn
   #define tstr_cat_s        wstr_cat_s
   #define tstr_catn_s       wstr_catn_s
-  #define tstr_cat          wstr_cat
   #define tstr_printf       wstr_printf
   #define tstr_printf_s     wstr_printf_s
 
@@ -46,7 +45,6 @@
   #define tstr_dupn         str_dupn
   #define tstr_cat_s        str_cat_s
   #define tstr_catn_s       str_catn_s
-  #define tstr_cat          str_cat
   #define tstr_printf       str_printf
   #define tstr_printf_s     str_printf_s
 
