@@ -109,10 +109,11 @@ bool IsRunningInPortableMode()
         ok = ReadRegStr(HKEY_CURRENT_USER, _T("Software\\") APP_NAME_STR, _T("Install_Dir"), programFilesDir, dimof(programFilesDir));
     if (ok && exePath) {
         if (!Str::EndsWithI(programFilesDir, _T(".exe"))) {
-            tstr_cat_s(programFilesDir, dimof(programFilesDir), _T("\\"));
-            tstr_cat_s(programFilesDir, dimof(programFilesDir), Path::GetBaseName(exePath));
+            ScopedMem<TCHAR> installedPath(Path::Join(programFilesDir, Path::GetBaseName(exePath)));
+            if (Path::IsSame(installedPath, exePath))
+                return false;
         }
-        if (Path::IsSame(programFilesDir, exePath))
+        else if (Path::IsSame(programFilesDir, exePath))
             return false;
     }
 
@@ -315,7 +316,7 @@ bool GetAcrobatPath(TCHAR *bufOut, int bufCchSize)
     if (found)
         found = File::Exists(path);
     if (found && bufOut)
-        lstrcpyn(bufOut, path, bufCchSize);
+        tstr_copy(bufOut, bufCchSize, path);
     return found;
 }
 
@@ -326,7 +327,7 @@ bool GetFoxitPath(TCHAR *bufOut, int bufCchSize)
     if (found)
         found = File::Exists(path);
     if (found && bufOut)
-        lstrcpyn(bufOut, path, bufCchSize);
+        tstr_copy(bufOut, bufCchSize, path);
     return found;
 }
 
@@ -337,10 +338,10 @@ bool GetPDFXChangePath(TCHAR *bufOut, int bufCchSize)
                  ReadRegStr(HKEY_CURRENT_USER,  _T("Software\\Tracker Software\\PDFViewer"), _T("InstallPath"), path, dimof(path));
     if (!found)
         return false;
-    tstr_cat_s(path, dimof(path), _T("PDFXCview.exe"));
-    found = File::Exists(path);
+    ScopedMem<TCHAR> exePath(Path::Join(path, _T("PDFXCview.exe")));
+    found = File::Exists(exePath);
     if (found && bufOut)
-        lstrcpyn(bufOut, path, bufCchSize);
+        tstr_copy(bufOut, bufCchSize, exePath);
     return found;
 }
 

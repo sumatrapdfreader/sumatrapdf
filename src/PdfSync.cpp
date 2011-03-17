@@ -178,19 +178,17 @@ int Pdfsync::scan_and_build_index(FILE *fp)
 {
     char jobname[_MAX_PATH];
     
-    fgetline(jobname, dimof(jobname), fp); // get the job name from the first line
+    fgetline(jobname, dimof(jobname) - 4, fp); // get the job name from the first line
     // replace star by spaces (somehow tex replaces spaces by stars in the jobname)
-    for (PSTR rep = jobname; *rep; rep++) {
-        if (*rep==_T('*'))
-            *rep=_T(' ');
-    }
-    str_cat_s(jobname, dimof(jobname), ".tex");
+    for (LPSTR rep = jobname; (rep = (LPSTR)Str::FindChar(rep, '*')); rep++)
+        *rep = _T(' ');
+    strcat(jobname, ".tex");
 
     UINT versionNumber = 0;
     int ret = fscanf(fp, "version %u\n", &versionNumber);
-    if (ret==EOF)
+    if (ret == EOF)
         return 1; // bad line format
-    else if (versionNumber != 1)
+    if (versionNumber != 1)
         return 2; // unknown version
 
     srcfiles.Reset();
@@ -211,7 +209,7 @@ int Pdfsync::scan_and_build_index(FILE *fp)
 
     UINT cur_sheetNumber = (UINT)-1;
     int cur_plinesec = -1; // index of the p-line-section currently being created.
-    int cur_recordsec=-1; // l-line-section currenlty created
+    int cur_recordsec= -1; // l-line-section currenlty created
     record_sections.Reset();
     pdfsheet_index.Reset();
 

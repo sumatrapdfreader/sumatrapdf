@@ -117,14 +117,6 @@ static void TStrTest()
     assert(Str::Eq(str, _T("ab")));
     free(str);
 
-    tstr_copy(buf, 6, _T("abc"));
-    str = tstr_cat_s(buf, 6, _T("def"));
-    assert(Str::Eq(buf, _T("abcde")) && !str);
-    str = tstr_cat_s(buf, 6, _T("ghi"));
-    assert(Str::Eq(buf, _T("abcde")) && !str);
-    str = tstr_cat_s(buf, dimof(buf), _T("jkl"));
-    assert(buf == str && Str::Eq(buf, _T("abcdejkl")));
-
     tstr_copy(buf, dimof(buf), _T("abc\1efg\1"));
     tstr_trans_chars(buf, _T("ace"), _T("ACE"));
     assert(Str::Eq(buf, _T("AbC\1Efg\1")));

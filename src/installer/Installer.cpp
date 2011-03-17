@@ -1268,8 +1268,6 @@ BOOL BrowseForFolder(HWND hwnd, LPCTSTR lpszInitialFolder, LPCTSTR lpszCaption, 
 
 void OnButtonBrowse()
 {
-    TCHAR path[MAX_PATH];
-
     TCHAR *installDir = Win::GetText(gHwndTextboxInstDir);
     if (!PathIsDirectory(installDir)) {
         TCHAR *parentDir = Path::GetDir(installDir);
@@ -1277,14 +1275,18 @@ void OnButtonBrowse()
         installDir = parentDir;
     }
 
+    TCHAR path[MAX_PATH];
     if (BrowseForFolder(gHwndFrame, installDir, _T("Select the folder into which ") TAPP _T(" should be installed:"), path, dimof(path))) {
+        TCHAR *installPath = path;
         // force paths that aren't entered manually to end in ...\SumatraPDF
         // to prevent unintended installations into e.g. %ProgramFiles% itself
         if (!Str::EndsWithI(path, _T("\\") TAPP))
-            tstr_cat_s(path, dimof(path), _T("\\") TAPP);
-        Win::SetText(gHwndTextboxInstDir, path);
+            installPath = Path::Join(path, TAPP);
+        Win::SetText(gHwndTextboxInstDir, installPath);
         Edit_SetSel(gHwndTextboxInstDir, 0, -1);
         SetFocus(gHwndTextboxInstDir);
+        if (installPath != path)
+            free(installPath);
     }
     else
         SetFocus(gHwndButtonBrowseDir);

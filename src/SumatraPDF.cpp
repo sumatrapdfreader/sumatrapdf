@@ -1859,7 +1859,7 @@ static void OnDropFiles(WindowInfo *win, HDROP hDrop)
         if (Str::EndsWithI(filename, _T(".lnk"))) {
             ScopedMem<TCHAR> resolved(ResolveLnk(filename));
             if (resolved)
-                lstrcpyn(filename, resolved, MAX_PATH);
+                tstr_copy(filename, MAX_PATH, resolved);
         }
         // The first dropped document may override the current window
         LoadDocument(filename, i == 0 ? win : NULL);
@@ -3441,7 +3441,7 @@ static void OnMenuSaveAs(WindowInfo *win)
     // Make sure that the file has a valid ending
     if (!Str::EndsWithI(dstFileName, _T(".pdf")) && !(hasCopyPerm && Str::EndsWithI(dstFileName, _T(".txt")))) {
         TCHAR *defaultExt = hasCopyPerm && 2 == ofn.nFilterIndex ? _T(".txt") : _T(".pdf");
-        realDstFileName = tstr_cat_s(dstFileName, dimof(dstFileName), defaultExt);
+        realDstFileName = tstr_printf(_T("%s%s"), dstFileName, defaultExt);
     }
     // Extract all text when saving as a plain text file
     if (hasCopyPerm && Str::EndsWithI(realDstFileName, _T(".txt"))) {
@@ -5643,6 +5643,8 @@ static void CustomizeToCInfoTip(WindowInfo *win, LPNMTVGETINFOTIP nmit)
     if (!path)
         return;
 
+    Str::Str<TCHAR> infotip(INFOTIPSIZE);
+
     RECT rcLine, rcLabel;
     HWND hTV = nmit->hdr.hwndFrom;
     // Display the item's full label, if it's overlong
@@ -5652,10 +5654,10 @@ static void CustomizeToCInfoTip(WindowInfo *win, LPNMTVGETINFOTIP nmit)
         TVITEM item;
         item.hItem = nmit->hItem;
         item.mask = TVIF_TEXT;
-        item.pszText = nmit->pszText;
-        item.cchTextMax = nmit->cchTextMax;
+        item.pszText = infotip.Get();
+        item.cchTextMax = INFOTIPSIZE;
         TreeView_GetItem(hTV, &item);
-        tstr_cat_s(nmit->pszText, nmit->cchTextMax, _T("\r\n"));
+        infotip.Append(_T("\r\n"));
     }
 
     if (PDF_LLAUNCH == tocItem->link->kind && fz_dictgets(tocItem->link->dest, "EF")) {
@@ -5664,7 +5666,8 @@ static void CustomizeToCInfoTip(WindowInfo *win, LPNMTVGETINFOTIP nmit)
         path = comment;
     }
 
-    tstr_cat_s(nmit->pszText, nmit->cchTextMax, path);
+    infotip.Append(path);
+    tstr_copy(nmit->pszText, nmit->cchTextMax, infotip.Get());
     free(path);
 }
 
