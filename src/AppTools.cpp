@@ -227,7 +227,6 @@ UnregisterFromBeingDefaultViewer() in Installer.cpp.
 */
 void DoAssociateExeWithPdfExtension(HKEY hkey)
 {
-    TCHAR cmdPath[MAX_PATH * 2 + 64];
     TCHAR previousPdfHandler[MAX_PATH + 8];
     TCHAR *exePath = ExePathGet();
     if (!exePath)
@@ -246,16 +245,16 @@ void DoAssociateExeWithPdfExtension(HKEY hkey)
 
     WriteRegStr(hkey, _T("Software\\Classes\\") APP_NAME_STR _T("\\shell"), NULL, _T("open"));
 
-    tstr_printf_s(cmdPath, dimof(cmdPath), _T("\"%s\" \"%%1\""), exePath); // "${exePath}" "%1"
+    ScopedMem<TCHAR> cmdPath(tstr_printf(_T("\"%s\" \"%%1\""), exePath)); // "${exePath}" "%1"
     ok = WriteRegStr(hkey, _T("Software\\Classes\\") APP_NAME_STR _T("\\shell\\open\\command"), NULL, cmdPath);
 
     // also register for printing
-    tstr_printf_s(cmdPath, dimof(cmdPath), _T("\"%s\" -print-to-default \"%%1\""), exePath); // "${exePath}" -print-to-default "%1"
-    WriteRegStr(hkey, _T("Software\\Classes\\") APP_NAME_STR _T("\\shell\\print\\command"), NULL, cmdPath);
+    ScopedMem<TCHAR> printPath(tstr_printf(_T("\"%s\" -print-to-default \"%%1\""), exePath)); // "${exePath}" -print-to-default "%1"
+    WriteRegStr(hkey, _T("Software\\Classes\\") APP_NAME_STR _T("\\shell\\print\\command"), NULL, printPath);
 
     // also register for printing to specific printer
-    tstr_printf_s(cmdPath, dimof(cmdPath), _T("\"%s\" -print-to \"%%2\" \"%%1\""), exePath); // "${exePath}" -print-to "%2" "%1"
-    WriteRegStr(hkey, _T("Software\\Classes\\") APP_NAME_STR _T("\\shell\\printto\\command"), NULL, cmdPath);
+    ScopedMem<TCHAR> printToPath(tstr_printf(_T("\"%s\" -print-to \"%%2\" \"%%1\""), exePath)); // "${exePath}" -print-to "%2" "%1"
+    WriteRegStr(hkey, _T("Software\\Classes\\") APP_NAME_STR _T("\\shell\\printto\\command"), NULL, printToPath);
 
     // Only change the association if we're confident, that we've registered ourselves well enough
     if (ok) {

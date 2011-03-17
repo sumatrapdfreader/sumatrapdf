@@ -426,12 +426,13 @@ UINT Pdfsync::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR srcfilepath, UINT 
     // get the file name from the record section
     PSTR srcFilenameA = this->srcfiles[record_sections[sec].srcfile].filename;
     PTSTR srcFilename = ansi_to_tstr(srcFilenameA);
-
     // Convert the source filepath to an absolute path
-    if (PathIsRelative(srcFilename))
-        tstr_printf_s(srcfilepath, cchFilepath, _T("%s\\%s"), this->dir, srcFilename);
-    else
-        tstr_printf_s(srcfilepath, cchFilepath, _T("%s"), srcFilename);
+    if (PathIsRelative(srcFilename)) {
+        PTSTR srcFilename2 = Path::Join(this->dir, srcFilename);
+        free(srcFilename);
+        srcFilename = srcFilename2;
+    }
+    tstr_copy(srcfilepath, cchFilepath, srcFilename);
     free(srcFilename);
 
     // find the record declaration in the section
@@ -645,7 +646,7 @@ UINT SyncTex::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR srcfilepath, UINT 
         *col = synctex_node_column(node);
         const char *name = synctex_scanner_get_name(this->scanner,synctex_node_tag(node));
         TCHAR *srcfilename = ansi_to_tstr(name);
-        if (srcfilename==NULL)
+        if (!srcfilename)
             return PDFSYNCERR_OUTOFMEMORY;
 
         // undecorate the filepath: replace * by space and / by \ 
@@ -657,11 +658,12 @@ UINT SyncTex::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR srcfilepath, UINT 
         }
 
         // Convert the source filepath to an absolute path
-        if (PathIsRelative(srcfilename))
-            tstr_printf_s(srcfilepath, cchFilepath, _T("%s\\%s"), this->dir, srcfilename);
-        else
-            tstr_copy(srcfilepath, cchFilepath, srcfilename);
-
+        if (PathIsRelative(srcfilename)) {
+            TCHAR *srcfilename2 = Path::Join(this->dir, srcfilename);
+            free(srcfilename);
+            srcfilename = srcfilename2;
+        }
+        tstr_copy(srcfilepath, cchFilepath, srcfilename);
         free(srcfilename);
 
         return PDFSYNCERR_SUCCESS;

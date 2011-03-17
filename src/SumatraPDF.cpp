@@ -1701,9 +1701,8 @@ void DisplayModel::pageChanged()
     int pageCount = win->dm->pageCount();
     if (pageCount > 0) {
         if (INVALID_PAGE_NO != currPageNo) {
-            TCHAR buf[64];
-            tstr_printf_s(buf, dimof(buf), _T("%d"), currPageNo);
-            SetWindowText(win->hwndPageBox, buf);
+            ScopedMem<TCHAR> buf(tstr_printf(_T("%d"), currPageNo));
+            Win::SetText(win->hwndPageBox, buf);
             ToolbarUpdateStateForWindow(win);
         }
         if (currPageNo != win->currPageNo) {
@@ -3405,15 +3404,16 @@ static void OnMenuSaveAs(WindowInfo *win)
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling
     // methods too early on)
-    TCHAR fileFilter[256];
-    tstr_printf_s(fileFilter, dimof(fileFilter), _T("%s\1*.pdf\1"), _TR("PDF documents"));
+    Str::Str<TCHAR> fileFilter(256);
+    fileFilter.Append(_TR("PDF documents"));
+    fileFilter.Append(_T("\1*.pdf\1"));
     if (hasCopyPerm) {
-        tstr_cat_s(fileFilter, dimof(fileFilter), _TR("Text documents"));
-        tstr_cat_s(fileFilter, dimof(fileFilter), _T("\1*.txt\1"));
+        fileFilter.Append(_TR("Text documents"));
+        fileFilter.Append(_T("\1*.txt\1"));
     }
-    tstr_cat_s(fileFilter, dimof(fileFilter), _TR("All files"));
-    tstr_cat_s(fileFilter, dimof(fileFilter), _T("\1*.*\1"));
-    tstr_trans_chars(fileFilter, _T("\1"), _T("\0"));
+    fileFilter.Append(_TR("All files"));
+    fileFilter.Append(_T("\1*.*\1"));
+    tstr_trans_chars(fileFilter.Get(), _T("\1"), _T("\0"));
 
     // Remove the extension so that it can be re-added depending on the chosen filter
     tstr_copy(dstFileName, dimof(dstFileName), Path::GetBaseName(srcFileName));
@@ -3426,7 +3426,7 @@ static void OnMenuSaveAs(WindowInfo *win)
     ofn.hwndOwner = win->hwndFrame;
     ofn.lpstrFile = dstFileName;
     ofn.nMaxFile = dimof(dstFileName);
-    ofn.lpstrFilter = fileFilter;
+    ofn.lpstrFilter = fileFilter.Get();
     ofn.nFilterIndex = 1;
     ofn.lpstrFileTitle = NULL;
     ofn.nMaxFileTitle = 0;
@@ -3497,8 +3497,7 @@ bool DisplayModel::saveStreamAs(unsigned char *data, int dataLen, const TCHAR *f
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling
     // methods too early on)
-    TCHAR fileFilter[256];
-    tstr_printf_s(fileFilter, dimof(fileFilter), _T("%s\1*.*\1"), _TR("All files"));
+    ScopedMem<TCHAR> fileFilter(tstr_printf(_T("%s\1*.*\1"), _TR("All files")));
     tstr_trans_chars(fileFilter, _T("\1"), _T("\0"));
 
     OPENFILENAME ofn = { 0 };
@@ -3553,9 +3552,8 @@ static void OnMenuOpen(WindowInfo *win)
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling
     // methods too early on)
-    TCHAR fileFilter[256];
-    tstr_printf_s(fileFilter, dimof(fileFilter), _T("%s\1*.pdf\1%s\1*.*\1"),
-        _TR("PDF documents"), _TR("All files"));
+    ScopedMem<TCHAR> fileFilter(tstr_printf(_T("%s\1*.pdf\1%s\1*.*\1"),
+        _TR("PDF documents"), _TR("All files")));
     tstr_trans_chars(fileFilter, _T("\1"), _T("\0"));
 
     OPENFILENAME ofn = {0};
@@ -4201,25 +4199,26 @@ void WindowInfo_ShowForwardSearchResult(WindowInfo *win, LPCTSTR srcfilename, UI
         }
     }
 
-    TCHAR buf[MAX_PATH];    
+    TCHAR *buf = NULL;    
     if (ret == PDFSYNCERR_SYNCFILE_NOTFOUND )
-        tstr_printf_s(buf, dimof(buf), _TR("No synchronization file found"));
+        buf = Str::Dup(_TR("No synchronization file found"));
     else if (ret == PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED)
-        tstr_printf_s(buf, dimof(buf), _TR("Synchronization file cannot be opened"));
+        buf = Str::Dup(_TR("Synchronization file cannot be opened"));
     else if (ret == PDFSYNCERR_INVALID_PAGE_NUMBER)
-        tstr_printf_s(buf, dimof(buf), _TR("Page number %u inexistant"), page);
+        buf = tstr_printf(_TR("Page number %u inexistant"), page);
     else if (ret == PDFSYNCERR_NO_SYNC_AT_LOCATION)
-        tstr_printf_s(buf, dimof(buf), _TR("No synchronization info at this position"));
+        buf = Str::Dup(_TR("No synchronization info at this position"));
     else if (ret == PDFSYNCERR_UNKNOWN_SOURCEFILE)
-        tstr_printf_s(buf, dimof(buf), _TR("Unknown source file (%s)"), srcfilename);
+        buf = tstr_printf(_TR("Unknown source file (%s)"), srcfilename);
     else if (ret == PDFSYNCERR_NORECORD_IN_SOURCEFILE)
-        tstr_printf_s(buf, dimof(buf), _TR("Source file %s has no synchronization point"), srcfilename);
+        buf = tstr_printf(_TR("Source file %s has no synchronization point"), srcfilename);
     else if (ret == PDFSYNCERR_NORECORD_FOR_THATLINE)
-        tstr_printf_s(buf, dimof(buf), _TR("No result found around line %u in file %s"), line, srcfilename);
+        buf = tstr_printf(_TR("No result found around line %u in file %s"), line, srcfilename);
     else if (ret == PDFSYNCERR_NOSYNCPOINT_FOR_LINERECORD)
-        tstr_printf_s(buf, dimof(buf), _TR("No result found around line %u in file %s"), line, srcfilename);
+        buf = tstr_printf(_TR("No result found around line %u in file %s"), line, srcfilename);
 
     WindowInfo_ShowMessage_Async(win, buf, true);
+    free(buf);
 }
 
 static void WindowInfo_ShowFindStatus(WindowInfo *win)
@@ -4984,17 +4983,18 @@ static void UpdateToolbarPageText(WindowInfo *win, int pageCount)
     int pos_x = r.right + 10;
     int pos_y = (r.bottom - pageWndDy) / 2;
 
-    TCHAR buf[64];
-    if (0 == pageCount) {
-        buf[0] = 0;
-    } else if (-1 == pageCount) {
-        GetWindowText(win->hwndPageTotal, buf, sizeof(buf));
-    } else {
-        tstr_printf_s(buf, dimof(buf), _T(" / %d"), pageCount);
-    }
+    TCHAR *buf;
+    if (-1 == pageCount)
+        buf = Win::GetText(win->hwndPageTotal);
+    else if (0 != pageCount)
+        buf = tstr_printf(_T(" / %d"), pageCount);
+    else
+        buf = Str::Dup(_T(""));
+
     Win::SetText(win->hwndPageTotal, buf);
     SIZE size2 = TextSizeInHwnd(win->hwndPageTotal, buf);
     size2.cx += 6;
+    free(buf);
 
     int padding = GetSystemMetrics(SM_CXEDGE);
     MoveWindow(win->hwndPageText, pos_x, (pageWndDy - size.cy + 1) / 2 + pos_y, size.cx, size.cy, true);
@@ -6662,21 +6662,21 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     for (size_t n = 0; n < i.fileNames.Count(); n++) {
         if (i.reuseInstance && !i.printDialog) {
             // delegate file opening to a previously running instance by sending a DDE message 
-            TCHAR fullpath[MAX_PATH], command[2 * MAX_PATH + 20];
+            TCHAR fullpath[MAX_PATH];
             GetFullPathName(i.fileNames[n], dimof(fullpath), fullpath, NULL);
-            tstr_printf_s(command, dimof(command), _T("[") DDECOMMAND_OPEN _T("(\"%s\", 0, 1, 0)]"), fullpath);
+            ScopedMem<TCHAR> command(tstr_printf(_T("[") DDECOMMAND_OPEN _T("(\"%s\", 0, 1, 0)]"), fullpath));
             DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, command);
             if (i.destName && !firstDocLoaded) {
-                tstr_printf_s(command, dimof(command), _T("[") DDECOMMAND_GOTO _T("(\"%s\", \"%s\")]"), fullpath, i.destName);
+                ScopedMem<TCHAR> command(tstr_printf(_T("[") DDECOMMAND_GOTO _T("(\"%s\", \"%s\")]"), fullpath, i.destName));
                 DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, command);
             }
             else if (i.pageNumber > 0 && !firstDocLoaded) {
-                tstr_printf_s(command, dimof(command), _T("[") DDECOMMAND_PAGE _T("(\"%s\", %d)]"), fullpath, i.pageNumber);
+                ScopedMem<TCHAR> command(tstr_printf(_T("[") DDECOMMAND_PAGE _T("(\"%s\", %d)]"), fullpath, i.pageNumber));
                 DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, command);
             }
             if ((i.startView != DM_AUTOMATIC || i.startZoom != INVALID_ZOOM) && !firstDocLoaded) {
                 ScopedMem<TCHAR> viewMode(utf8_to_tstr(DisplayModeNameFromEnum(i.startView)));
-                tstr_printf_s(command, dimof(command), _T("[") DDECOMMAND_SETVIEW _T("(\"%s\", \"%s\", %.2f)]"), fullpath, viewMode, i.startZoom);
+                ScopedMem<TCHAR> command(tstr_printf(_T("[") DDECOMMAND_SETVIEW _T("(\"%s\", \"%s\", %.2f)]"), fullpath, viewMode, i.startZoom));
                 DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, command);
             }
         }

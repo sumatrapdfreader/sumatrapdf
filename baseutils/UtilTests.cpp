@@ -98,10 +98,6 @@ static void TStrTest()
     assert(!Str::EndsWith(str, _T("ung")));
     assert(Str::IsEmpty((char*)NULL) && Str::IsEmpty((WCHAR*)NULL)&& Str::IsEmpty(_T("")) && !Str::IsEmpty(str));
     assert(Str::FindChar(str, _T('s')) && !Str::FindChar(str, _T('S')));
-    int res = tstr_printf_s(buf, 4, _T("%s"), str);
-    assert(Str::Eq(buf, _T("a s")) && res < 0);
-    res = tstr_printf_s(buf, dimof(buf), _T("%s!!"), str);
-    assert(Str::StartsWith(buf, str) && Str::EndsWith(buf, _T("!!")) && res == 10);
     tstr_copy(buf, dimof(buf), str);
     assert(Str::Eq(buf, str));
 
@@ -513,12 +509,10 @@ static void BencTestArrayAppend()
 
 static void BencTestDictAppend()
 {
-    char key[8];
-
     /* test insertion in ascending order */
     BencDict *dict = new BencDict();
     for (size_t i = 1; i <= ITERATION_COUNT; i++) {
-        str_printf_s(key, dimof(key), "%04u", i);
+        ScopedMem<char> key(str_printf("%04u", i));
         assert(Str::Len(key) == 4);
         dict->Add(key, i);
         assert(dict->Length() == i);
@@ -534,9 +528,9 @@ static void BencTestDictAppend()
     /* test insertion in descending order */
     dict = new BencDict();
     for (size_t i = ITERATION_COUNT; i > 0; i--) {
-        BencObj *obj = new BencInt(i);
-        str_printf_s(key, dimof(key), "%04u", i);
+        ScopedMem<char> key(str_printf("%04u", i));
         assert(Str::Len(key) == 4);
+        BencObj *obj = new BencInt(i);
         dict->Add(key, obj);
         assert(dict->Length() == ITERATION_COUNT + 1 - i);
         assert(dict->GetInt(key));

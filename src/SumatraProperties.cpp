@@ -69,23 +69,20 @@ static void PdfDateToDisplay(TCHAR **s) {
 // format a number with a given thousand separator e.g. it turns 1234 into "1,234"
 // Caller needs to free() the result.
 static TCHAR *FormatNumWithThousandSep(size_t num) {
-    TCHAR buf[32], buf2[64], thousandSep[4];
-
-    tstr_printf_s(buf, dimof(buf), _T("%Iu"), num);
+    TCHAR thousandSep[4];
     GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_STHOUSAND, thousandSep, dimof(thousandSep));
+    ScopedMem<TCHAR> buf(tstr_printf(_T("%Iu"), num));
 
-    TCHAR *src = buf, *dst = buf2;
-    size_t len = Str::Len(src);
-    while (*src) {
-        *dst++ = *src++;
-        if (*src && (len - (src - buf)) % 3 == 0) {
-            lstrcpy(dst, thousandSep);
-            dst += Str::Len(thousandSep);
-        }
+    Str::Str<TCHAR> res(32);
+    int i = Str::Len(buf) % 3;
+    for (TCHAR *src = buf.Get(); *src; src++) {
+        res.Append(*src);
+        if (*(src + 1) && i == 2)
+            res.Append(thousandSep);
+        i = (i + 1) % 3;
     }
-    *dst = '\0';
 
-    return Str::Dup(buf2);
+    return res.StealData();
 }
 
 // Format a floating point number with at most two decimal after the point

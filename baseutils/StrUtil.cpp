@@ -288,20 +288,6 @@ char *str_printf(const char *format, ...)
     return buf;
 }
 
-int str_printf_s(char *out, size_t out_cch_size, const char *format, ...)
-{
-    va_list args;
-    int count;
-
-    va_start(args, format);
-    count = vsnprintf(out, out_cch_size, format, args);
-    if (count < 0 || (size_t)count >= out_cch_size)
-        out[out_cch_size - 1] = '\0';
-    va_end(args);
-
-    return count;
-}
-
 void win32_dbg_out(const char *format, ...)
 {
     char        buf[4096];
@@ -381,20 +367,6 @@ WCHAR *wstr_printf(const WCHAR *format, ...)
         buf = Str::Dup(message);
 
     return buf;
-}
-
-int wstr_printf_s(WCHAR *out, size_t out_cch_size, const WCHAR *format, ...)
-{
-    va_list args;
-    int count;
-
-    va_start(args, format);
-    count = _vsnwprintf(out, out_cch_size, format, args);
-    if (count < 0 || (size_t)count >= out_cch_size)
-        out[out_cch_size - 1] = '\0';
-    va_end(args);
-
-    return count;
 }
 
 void win32_dbg_outW(const WCHAR *format, ...)

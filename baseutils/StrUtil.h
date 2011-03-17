@@ -8,7 +8,6 @@
 WCHAR * wstr_printf(const WCHAR *format, ...);
 int     wstr_copy(WCHAR *dst, size_t dst_cch_size, const WCHAR *src);
 WCHAR * wstr_cat_s(WCHAR *dst, size_t dst_cch_size, const WCHAR *src);
-int     wstr_printf_s(WCHAR *out, size_t out_cch_size, const WCHAR *format, ...);
 
 void win32_dbg_outW(const WCHAR *format, ...);
 #ifdef DEBUG
@@ -97,7 +96,6 @@ char *  str_cat_s(char *dst, size_t dst_cch_size, const char *src);
 
 
 char *  str_printf(const char *format, ...);
-int     str_printf_s(char *out, size_t out_cch_size, const char *format, ...);
 
 char *  mem_to_hexstr(const unsigned char *buf, int len);
 bool    hexstr_to_mem(const char *s, unsigned char *buf, int bufLen);

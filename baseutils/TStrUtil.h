@@ -17,7 +17,6 @@
   #define tstr_copy         wstr_copy
   #define tstr_cat_s        wstr_cat_s
   #define tstr_printf       wstr_printf
-  #define tstr_printf_s     wstr_printf_s
 
   #define utf8_to_tstr(src) Str::ToWideChar((src), CP_UTF8)
   #define tstr_to_utf8(src) Str::ToMultiByte((src), CP_UTF8)
@@ -33,7 +32,6 @@
   #define tstr_copy         str_copy
   #define tstr_cat_s        str_cat_s
   #define tstr_printf       str_printf
-  #define tstr_printf_s     str_printf_s
 
   #define utf8_to_tstr(src) Str::ToMultiByte((src), CP_UTF8, CP_ACP)
   #define tstr_to_utf8(src) Str::ToMultiByte((src), CP_ACP, CP_UTF8)
