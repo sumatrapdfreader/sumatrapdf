@@ -649,34 +649,36 @@ UINT SyncTex::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR srcfilepath, UINT 
     if (this->is_index_discarded())
         if (rebuild_index())
             return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
-    if (synctex_edit_query(this->scanner, sheet, (float)x, (float)y) > 0) {
-        synctex_node_t node;
-        while (node = synctex_next_result(this->scanner)) {
-            *line = synctex_node_line(node);
-            *col = synctex_node_column(node);
-            const char *name = synctex_scanner_get_name(this->scanner,synctex_node_tag(node));
-            TCHAR *srcfilename = ansi_to_tstr(name);
-            if (srcfilename==NULL)
-                return PDFSYNCERR_OUTOFMEMORY;
 
-            // undecorate the filepath: replace * by space and / by \ 
-            TCHAR *p = srcfilename;
-            while(*p) {
-                if (*p=='*') *p=' ';
-                else if (*p=='/') *p='\\';
-                p++;
-            }
+    if (synctex_edit_query(this->scanner, sheet, (float)x, (float)y) < 0)
+        return PDFSYNCERR_NO_SYNC_AT_LOCATION;
+        
+    synctex_node_t node;
+    while (node = synctex_next_result(this->scanner)) {
+        *line = synctex_node_line(node);
+        *col = synctex_node_column(node);
+        const char *name = synctex_scanner_get_name(this->scanner,synctex_node_tag(node));
+        TCHAR *srcfilename = ansi_to_tstr(name);
+        if (srcfilename==NULL)
+            return PDFSYNCERR_OUTOFMEMORY;
 
-            // Convert the source filepath to an absolute path
-            if (PathIsRelative(srcfilename))
-                tstr_printf_s(srcfilepath, cchFilepath, _T("%s\\%s"), this->dir, srcfilename);
-            else
-                tstr_copy(srcfilepath, cchFilepath, srcfilename);
-
-            free(srcfilename);
-
-            return PDFSYNCERR_SUCCESS;
+        // undecorate the filepath: replace * by space and / by \ 
+        TCHAR *p = srcfilename;
+        while(*p) {
+            if (*p=='*') *p=' ';
+            else if (*p=='/') *p='\\';
+            p++;
         }
+
+        // Convert the source filepath to an absolute path
+        if (PathIsRelative(srcfilename))
+            tstr_printf_s(srcfilepath, cchFilepath, _T("%s\\%s"), this->dir, srcfilename);
+        else
+            tstr_copy(srcfilepath, cchFilepath, srcfilename);
+
+        free(srcfilename);
+
+        return PDFSYNCERR_SUCCESS;
     }
     return PDFSYNCERR_NO_SYNC_AT_LOCATION;
 }
