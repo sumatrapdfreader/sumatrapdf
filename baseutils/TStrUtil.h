@@ -62,14 +62,14 @@
   #define tstr_to_wstr(src)                 multibyte_to_wstr((src), CP_ACP)
   #define DBG_OUT_T     DBG_OUT
 
-static inline wstr_to_tstr_q(WCHAR *src)
+static inline char *wstr_to_tstr_q(WCHAR *src)
 {
     if (!src) return NULL;
     char *str = wstr_to_tstr(src);
     free(src);
     return str;
 }
-static inline tstr_to_wstr_q(char *src)
+static inline WCHAR *tstr_to_wstr_q(char *src)
 {
     if (!src) return NULL;
     WCHAR *str = tstr_to_wstr(src);
