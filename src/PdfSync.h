@@ -10,7 +10,7 @@
 #include <time.h>
 
 #include "BaseUtil.h"
-#include "TStrUtil.h"
+#include "StrUtil.h"
 #include "FileUtil.h"
 #include "Vec.h"
 
@@ -144,7 +144,7 @@ public:
         struct _stat newstamp;
         if (_tstat(syncfilepath, &newstamp) == 0 &&
             difftime(newstamp.st_mtime, syncfileTimestamp.st_mtime) > 0) {
-                DBG_OUT_T("PdfSync:sync file has changed, rebuilding index: %s\n", syncfilepath);
+                DBG_OUT("PdfSync:sync file has changed, rebuilding index: %s\n", syncfilepath);
 
                 // update time stamp
                 memcpy((void *)&syncfileTimestamp, &newstamp, sizeof(syncfileTimestamp));

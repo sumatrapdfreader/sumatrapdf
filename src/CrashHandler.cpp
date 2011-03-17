@@ -6,7 +6,7 @@
 #include "CrashHandler.h"
 
 #include "BaseUtil.h"
-#include "TStrUtil.h"
+#include "StrUtil.h"
 #include "WinUtil.h"
 #include "translations.h"
 

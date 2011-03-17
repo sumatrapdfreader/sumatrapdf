@@ -4,27 +4,6 @@
 #ifndef StrUtil_h
 #define StrUtil_h
 
-// TODO: temporary
-void win32_dbg_outW(const WCHAR *format, ...);
-#ifdef DEBUG
-  #define DBG_OUT_W(format, ...) win32_dbg_outW(L##format, __VA_ARGS__)
-#else
-  #define DBG_OUT_W(format, ...) NoOp()
-#endif
-
-
-void    win32_dbg_out(const char *format, ...);
-
-#ifdef DEBUG
-  #define DBG_OUT win32_dbg_out
-#else
-  #define DBG_OUT(...) NoOp()
-#endif
-
-/* Note: this demonstrates how eventually I would like to get rid of
-   tstr_* and wstr_* functions and instead rely on C++'s ability
-   to use overloaded functions and only have Str::* functions */
-
 namespace Str {
 
 inline size_t Len(const char *s) { return strlen(s); }
@@ -77,11 +56,17 @@ inline const WCHAR * FindChar(const WCHAR *str, const WCHAR c) {
 char *  Format(const char *format, ...);
 WCHAR * Format(const WCHAR *format, ...);
 
+size_t  TransChars(TCHAR *str, const TCHAR *oldChars, const TCHAR *newChars);
+
 size_t  CopyTo(char *dst, size_t dstCchSize, const char *src);
 size_t  CopyTo(WCHAR *dst, size_t dstCchSize, const WCHAR *src);
 
 char *  MemToHex(const unsigned char *buf, int len);
 bool    HexToMem(const char *s, unsigned char *buf, int bufLen);
+
+#ifdef DEBUG
+void    DbgOut(const TCHAR *format, ...);
+#endif
 
 }
 
@@ -92,5 +77,55 @@ inline bool ChrIsDigit(const WCHAR c)
 
 #define _MemToHex(ptr) Str::MemToHex((const unsigned char *)(ptr), sizeof(*ptr))
 #define _HexToMem(str, ptr) Str::HexToMem(str, (unsigned char *)(ptr), sizeof(*ptr))
+
+#ifndef DEBUG
+  #define DBG_OUT(format, ...) NoOp()
+#elif UNICODE
+  #define DBG_OUT(format, ...) Str::DbgOut(L##format, __VA_ARGS__)
+#else
+  #define DBG_OUT(format, ...) Str::DbgOut(format, __VA_ARGS__)
+#endif
+
+#ifdef _UNICODE
+  #define CF_T_TEXT CF_UNICODETEXT
+
+  #define utf8_to_tstr(src) Str::ToWideChar((src), CP_UTF8)
+  #define tstr_to_utf8(src) Str::ToMultiByte((src), CP_UTF8)
+  #define ansi_to_tstr(src) Str::ToWideChar((src), CP_ACP)
+  #define tstr_to_ansi(src) Str::ToMultiByte((src), CP_ACP)
+  #define wstr_to_tstr(src) Str::Dup(src)
+  #define tstr_to_wstr(src) Str::Dup(src)
+
+  #define wstr_to_tstr_q(src)   (src)
+  #define tstr_to_wstr_q(src)   (src)
+#else
+  #define CF_T_TEXT CF_TEXT
+
+  #define utf8_to_tstr(src) Str::ToMultiByte((src), CP_UTF8, CP_ACP)
+  #define tstr_to_utf8(src) Str::ToMultiByte((src), CP_ACP, CP_UTF8)
+  #define ansi_to_tstr(src) Str::ToMultiByte((src), CP_ACP, CP_ACP)
+  #define tstr_to_ansi(src) Str::ToMultiByte((src), CP_ACP, CP_ACP)
+  #define wstr_to_tstr(src) Str::ToMultiByte((src), CP_ACP)
+  #define tstr_to_wstr(src) Str::ToWideChar((src), CP_ACP)
+
+inline char *wstr_to_tstr_q(WCHAR *src)
+{
+    if (!src) return NULL;
+    char *str = wstr_to_tstr(src);
+    free(src);
+    return str;
+}
+inline WCHAR *tstr_to_wstr_q(char *src)
+{
+    if (!src) return NULL;
+    WCHAR *str = tstr_to_wstr(src);
+    free(src);
+    return str;
+}
+#endif
+
+int       tstr_skip(const TCHAR **strp, const TCHAR *expect);
+int       tstr_copy_skip_until(const TCHAR **strp, TCHAR *dst, size_t dst_size, TCHAR stop);
+TCHAR *   tstr_parse_possibly_quoted(TCHAR **txt);
 
 #endif

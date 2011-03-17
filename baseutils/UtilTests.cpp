@@ -7,7 +7,7 @@
 #include "BencUtil.h"
 #include "FileUtil.h"
 #include "GeomUtil.h"
-#include "TStrUtil.h"
+#include "StrUtil.h"
 #include "Vec.h"
 #include "vstrlist.h"
 #include <time.h>
@@ -120,14 +120,12 @@ static void TStrTest()
     free(str);
 
     Str::CopyTo(buf, dimof(buf), _T("abc\1efg\1"));
-    tstr_trans_chars(buf, _T("ace"), _T("ACE"));
-    assert(Str::Eq(buf, _T("AbC\1Efg\1")));
-    tstr_trans_chars(buf, _T("\1"), _T("\0"));
-    assert(Str::Eq(buf, _T("AbC")) && Str::Eq(buf + 4, _T("Efg")));
-
-    TCHAR *url = tstr_url_encode(_T("key=value&key2=more data! (even \"\xFCmlauts\")'\b"));
-    assert(Str::Eq(url, _T("key%3dvalue%26key2%3dmore+data!+(even+%22%fcmlauts%22)'%08")));
-    free(url);
+    size_t count = Str::TransChars(buf, _T("ace"), _T("ACE"));
+    assert(Str::Eq(buf, _T("AbC\1Efg\1")) && count == 3);
+    count = Str::TransChars(buf, _T("\1"), _T("\0"));
+    assert(Str::Eq(buf, _T("AbC")) && Str::Eq(buf + 4, _T("Efg")) && count == 2);
+    count = Str::TransChars(buf, _T(""), _T("X"));
+    assert(Str::Eq(buf, _T("AbC")) && count == 0);
 
     const TCHAR *pos = _T("[Open(\"filename.pdf\",0,1,0)]");
     assert(tstr_skip(&pos, _T("[Open(\"")));

@@ -4,7 +4,7 @@
 #ifdef DEBUG
 
 #include "BaseUtil.h"
-#include "TStrUtil.h"
+#include "StrUtil.h"
 #include "ParseCommandLine.h"
 #include "AppTools.h"
 

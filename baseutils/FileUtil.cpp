@@ -2,7 +2,7 @@
    License: FreeBSD (see ./COPYING) */
 
 #include "BaseUtil.h"
-#include "TStrUtil.h"
+#include "StrUtil.h"
 #include "FileUtil.h"
 
 namespace Path {

@@ -2,7 +2,7 @@
    License: FreeBSD (see ./COPYING) */
 
 #include "BencUtil.h"
-#include "TStrUtil.h"
+#include "StrUtil.h"
 
 BencObj *BencObj::Decode(const char *bytes, size_t *lenOut)
 {

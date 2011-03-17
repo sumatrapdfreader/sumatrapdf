@@ -4,7 +4,7 @@
 #include "BaseUtil.h"
 #include "translations.h"
 #include "translations_txt.h"
-#include "TStrUtil.h"
+#include "StrUtil.h"
 
 /*
 This code relies on the following variables that must be defined in a 

@@ -8,7 +8,7 @@
 
 #include "BaseUtil.h"
 #include "WinUtil.h"
-#include "TStrUtil.h"
+#include "StrUtil.h"
 
 #define DONT_INHERIT_HANDLES FALSE
 
@@ -59,7 +59,7 @@ void SeeLastError(DWORD err) {
         NULL, err, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
         (LPTSTR)&msgBuf, 0, NULL);
     if (!msgBuf) return;
-    DBG_OUT_T("SeeLastError(): %s\n", msgBuf);
+    DBG_OUT("SeeLastError(): %s\n", msgBuf);
     LocalFree(msgBuf);
 }
 

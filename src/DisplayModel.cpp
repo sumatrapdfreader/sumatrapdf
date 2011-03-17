@@ -1339,7 +1339,7 @@ TCHAR *DisplayModel::getLinkPath(pdf_link *link)
 
             if (fz_isstring(obj)) {
                 path = pdf_to_tstr(obj);
-                tstr_trans_chars(path, _T("/"), _T("\\"));
+                Str::TransChars(path, _T("/"), _T("\\"));
             }
             break;
         case PDF_LACTION:
@@ -1350,7 +1350,7 @@ TCHAR *DisplayModel::getLinkPath(pdf_link *link)
                 obj = fz_dictgets(link->dest, "F");
                 if (fz_isstring(obj)) {
                     path = pdf_to_tstr(obj);
-                    tstr_trans_chars(path, _T("/"), _T("\\"));
+                    Str::TransChars(path, _T("/"), _T("\\"));
                 }
             }
             break;

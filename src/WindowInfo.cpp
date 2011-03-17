@@ -6,7 +6,7 @@
 #include "PdfSync.h"
 #include "Resource.h"
 #include "FileUtil.h"
-#include "TStrUtil.h"
+#include "StrUtil.h"
 #include "WinUtil.h"
 #include "FileWatch.h"
 

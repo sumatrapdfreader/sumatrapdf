@@ -3,7 +3,7 @@
 
 #include "SumatraPDF.h"
 #include "BaseUtil.h"
-#include "TStrUtil.h"
+#include "StrUtil.h"
 #include "vstrlist.h"
 #include "WinUtil.h"
 #include "ParseCommandLine.h"

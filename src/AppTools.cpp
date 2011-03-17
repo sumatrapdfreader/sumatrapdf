@@ -2,7 +2,7 @@
    License: GPLv3 */
 
 #include "SumatraPDF.h"
-#include "TStrUtil.h"
+#include "StrUtil.h"
 #include "FileUtil.h"
 #include "WinUtil.h"
 #include "LangMenuDef.h"
@@ -477,7 +477,7 @@ static HDDEDATA CALLBACK DdeCallback(UINT uType,
 
 void DDEExecute(LPCTSTR server, LPCTSTR topic, LPCTSTR command)
 {
-    DBG_OUT_T("DDEExecute(\"%s\",\"%s\",\"%s\")", server, topic, command);
+    DBG_OUT("DDEExecute(\"%s\",\"%s\",\"%s\")", server, topic, command);
     unsigned long inst = 0;
     HSZ hszServer = NULL, hszTopic = NULL;
     HCONV hconv = NULL;

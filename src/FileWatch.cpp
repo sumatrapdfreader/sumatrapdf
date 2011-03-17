@@ -2,7 +2,7 @@
    License: GPLv3 */
 
 #include "FileWatch.h"
-#include "TStrUtil.h"
+#include "StrUtil.h"
 #include "FileUtil.h"
 
 bool FileWatcher::IsThreadRunning()
@@ -153,7 +153,7 @@ bool FileWatcher::NotifyChange()
             // because the time granularity is so big that this can cause genuine
             // file notifications to be ignored. (This happens for instance for
             // PDF files produced by pdftex from small.tex document)
-            DBG_OUT_T("FileWatch: change detected in %s\n", szFilepath);
+            DBG_OUT("FileWatch: change detected in %s\n", szFilepath);
             if (pCallback)
                 pCallback->Callback(szFilepath);
             return true;

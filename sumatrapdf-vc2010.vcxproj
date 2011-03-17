@@ -65,7 +65,6 @@
     <ClCompile Include="baseutils\DialogSizer.cpp" />
     <ClCompile Include="baseutils\FileUtil.cpp" />
     <ClCompile Include="baseutils\StrUtil.cpp" />
-    <ClCompile Include="baseutils\TStrUtil.cpp" />
     <ClCompile Include="baseutils\UtilTests.cpp" />
     <ClCompile Include="baseutils\WinUtil.cpp" />
     <ClCompile Include="ext\libjpeg-turbo\jaricom.c" />
@@ -232,7 +231,6 @@
     <ClInclude Include="baseutils\FileUtil.h" />
     <ClInclude Include="baseutils\GeomUtil.h" />
     <ClInclude Include="baseutils\StrUtil.h" />
-    <ClInclude Include="baseutils\TStrUtil.h" />
     <ClInclude Include="baseutils\Vec.h" />
     <ClInclude Include="baseutils\vstrlist.h" />
     <ClInclude Include="baseutils\WinUtil.h" />

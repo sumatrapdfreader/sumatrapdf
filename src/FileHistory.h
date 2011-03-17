@@ -5,7 +5,7 @@
 #define FileHistory_h
 
 #include "DisplayState.h"
-#include "TStrUtil.h"
+#include "StrUtil.h"
 #include "Vec.h"
 
 /* Handling of file history list.

@@ -264,6 +264,24 @@ WCHAR *Format(const WCHAR *format, ...)
     return buf;
 }
 
+/* replace in <str> the chars from <oldChars> with their equivalents
+   from <newChars> (similar to UNIX's tr command)
+   Returns the number of replaced characters. */
+size_t TransChars(TCHAR *str, const TCHAR *oldChars, const TCHAR *newChars)
+{
+    size_t findCount = 0;
+
+    for (TCHAR *c = str; *c; c++) {
+        const TCHAR *found = Str::FindChar(oldChars, *c);
+        if (found) {
+            *c = newChars[found - oldChars];
+            findCount++;
+        }
+    }
+
+    return findCount;
+}
+
 size_t CopyTo(char *dst, size_t dstCchSize, const char *src)
 {
     size_t srcCchSize = Str::Len(src);
@@ -316,28 +334,146 @@ bool HexToMem(const char *s, unsigned char *buf, int bufLen)
     return *s == '\0';
 }
 
-}
-
-void win32_dbg_out(const char *format, ...)
+void DbgOut(const TCHAR *format, ...)
 {
-    char        buf[4096];
-    va_list     args;
-
-    va_start(args, format);
-    vsnprintf(buf, sizeof(buf), format, args);
-    OutputDebugStringA(buf);
-    va_end(args);
-}
-
-
-// TODO: temporary
-void win32_dbg_outW(const WCHAR *format, ...)
-{
-    WCHAR   buf[4096];
+    TCHAR   buf[4096];
     va_list args;
 
     va_start(args, format);
-    _vsnwprintf(buf, dimof(buf), format, args);
-    OutputDebugStringW(buf);
+    _vsntprintf(buf, dimof(buf), format, args);
+    OutputDebugString(buf);
     va_end(args);
+}
+
+}
+
+/* If the string at <*strp> starts with string at <expect>, skip <*strp> past
+   it and return TRUE; otherwise return FALSE. */
+int tstr_skip(const TCHAR **strp, const TCHAR *expect)
+{
+    if (Str::StartsWith(*strp, expect)) {
+        size_t len = Str::Len(expect);
+        *strp += len;
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+/* Copy the string from <*strp> into <dst> until <stop> is found, and point
+    <*strp> at the end (after <stop>). Returns TRUE unless <dst_size> isn't
+    big enough, in which case <*strp> is still updated, but FALSE is returned
+    and <dst> is truncated. If <delim> is not found, <*strp> will point to
+    the end of the string and FALSE is returned. */
+int tstr_copy_skip_until(const TCHAR **strp, TCHAR *dst, size_t dst_size, TCHAR stop)
+{
+    const TCHAR *start = *strp;
+    const TCHAR *end = Str::FindChar(start, stop);
+
+    if (!end) {
+        size_t len = Str::Len(*strp);
+        *strp += len;
+        return FALSE;
+    }
+
+    *strp = end + 1;
+    size_t len = min(dst_size, (size_t)(end - start) + 1);
+    Str::CopyTo(dst, len, start);
+
+    return len <= dst_size;
+}
+
+/* Given a pointer to a string in '*txt', skip past whitespace in the string
+   and put the result in '*txt' */
+static void tstr_skip_ws(TCHAR **txt)
+{
+    assert(txt && *txt);
+    while (_istspace(**txt))
+        (*txt)++;
+}
+
+/* returns the next character in '*txt' that isn't a backslash */
+static TCHAR tstr_skip_backslashs(TCHAR *txt)
+{
+    assert(txt && '\\' == *txt);
+    while ('\\' == *++txt);
+    return *txt;
+}
+
+static TCHAR *tstr_parse_quoted(TCHAR **txt)
+{
+    TCHAR * strStart;
+    TCHAR * token;
+    TCHAR * cur;
+    TCHAR * dst;
+    size_t  len;
+
+    assert(txt && *txt && '"' == **txt);
+    strStart = *txt + 1;
+
+    for (cur = strStart; *cur && *cur != '"'; cur++) {
+        // skip escaped quotation marks according to
+        // http://msdn.microsoft.com/en-us/library/17w5ykft.aspx
+        if ('\\' == *cur && '"' == tstr_skip_backslashs(cur))
+            cur++;
+    }
+    len = cur - strStart;
+    token = SAZA(TCHAR, len + 1);
+    if (!token)
+        return NULL;
+
+    dst = token;
+    for (cur = strStart; *cur && *cur != '"'; cur++) {
+        if ('\\' == *cur && '"' == tstr_skip_backslashs(cur))
+            cur++;
+        *dst++ = *cur;
+    }
+    *dst = _T('\0');
+
+    if ('"' == *cur)
+        cur++;
+    *txt = cur;
+    return token;
+}
+
+static TCHAR *tstr_parse_non_quoted(TCHAR **txt)
+{
+    TCHAR * cur;
+    TCHAR * token;
+    size_t  strLen;
+
+    assert(txt && *txt && **txt && '"' != **txt && !_istspace(**txt));
+
+    // contrary to http://msdn.microsoft.com/en-us/library/17w5ykft.aspx
+    // we don't treat quotation marks or backslashes in non-quoted
+    // arguments in any special way
+    for (cur = *txt; *cur && !_istspace(*cur); cur++);
+    strLen = cur - *txt;
+    token = Str::DupN(*txt, strLen);
+
+    *txt = cur;
+    return token;
+}
+
+/* 'txt' is path that can be:
+  - escaped, in which case it starts with '"', ends with '"' and
+    each '"' that is part of the name is escaped with '\'
+  - unescaped, in which case it start with != '"' and ends with ' ' or eol (0)
+  This function extracts escaped or unescaped path from 'txt'. Returns NULL in case of error.
+  Caller needs to free() the result. */
+TCHAR *tstr_parse_possibly_quoted(TCHAR **txt)
+{
+    TCHAR * cur;
+    if (!txt || !*txt)
+        return NULL;
+
+    cur = *txt;
+    tstr_skip_ws(&cur);
+    if (0 == *cur)
+        return NULL;
+    *txt = cur;
+
+    if ('"' == **txt)
+        return tstr_parse_quoted(txt);
+    return tstr_parse_non_quoted(txt);
 }

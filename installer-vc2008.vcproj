@@ -106,14 +106,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\baseutils\TStrUtil.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\baseutils\TStrUtil.h"
-				>
-			</File>
-			<File
 				RelativePath=".\baseutils\UtilTests.h"
 				>
 			</File>

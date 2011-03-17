@@ -2,7 +2,7 @@
    License: GPLv3 */
 
 #include "BencUtil.h"
-#include "TStrUtil.h"
+#include "StrUtil.h"
 #include "FileUtil.h"
 
 #include "AppPrefs.h"
@@ -370,7 +370,7 @@ bool Load(TCHAR *filepath, SerializableGlobalPrefs *globalPrefs, FileHistoryList
     for (int index = 0; fileHistory->Get(index); index++) {
         DisplayState *state = fileHistory->Get(index);
         if (!File::Exists(state->filePath)) {
-            DBG_OUT_T("Prefs_Load() file '%s' doesn't exist anymore\n", state->filePath);
+            DBG_OUT("Prefs_Load() file '%s' doesn't exist anymore\n", state->filePath);
             fileHistory->Remove(state);
             delete state;
         }

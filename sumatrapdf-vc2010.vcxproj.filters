@@ -506,9 +506,6 @@
     <ClCompile Include="baseutils\StrUtil.cpp">
       <Filter>baseutils</Filter>
     </ClCompile>
-    <ClCompile Include="baseutils\TStrUtil.cpp">
-      <Filter>baseutils</Filter>
-    </ClCompile>
     <ClCompile Include="baseutils\UtilTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -689,9 +686,6 @@
       <Filter>baseutils</Filter>
     </ClInclude>
     <ClInclude Include="baseutils\StrUtil.h">
-      <Filter>baseutils</Filter>
-    </ClInclude>
-    <ClInclude Include="baseutils\TStrUtil.h">
       <Filter>baseutils</Filter>
     </ClInclude>
     <ClInclude Include="baseutils\Vec.h">

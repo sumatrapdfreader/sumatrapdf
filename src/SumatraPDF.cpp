@@ -1380,7 +1380,7 @@ static bool LoadPdfIntoWindow(
     win->dm = DisplayModel::CreateFromFileName(win, fileName, displayMode, startPage);
 
     if (!win->dm) {
-        DBG_OUT_T("failed to load file %s\n", fileName);
+        DBG_OUT("failed to load file %s\n", fileName);
         win->needrefresh = true;
         // if there is an error while reading the pdf and pdfrepair is not requested
         // then fallback to the previous state
@@ -1934,7 +1934,7 @@ static DWORD OnUrlDownloaded(WindowInfo *win, HttpReqCtx *ctx, bool silent)
 
     ScopedMem<TCHAR> verTxt(ansi_to_tstr(txt));
     /* reduce the string to a single line (resp. drop the newline) */
-    tstr_trans_chars(verTxt, _T("\r\n"), _T("\0\0"));
+    Str::TransChars(verTxt, _T("\r\n"), _T("\0\0"));
     if (CompareVersion(verTxt, UPDATE_CHECK_VER) <= 0) {
         /* if automated => don't notify that there is no new version */
         if (!silent) {
@@ -2557,7 +2557,7 @@ static void OnInverseSearch(WindowInfo *win, UINT x, UINT y)
             CloseHandle(pi.hProcess);
             CloseHandle(pi.hThread);
         } else {
-            DBG_OUT_T("CreateProcess failed (%d): '%s'.\n", GetLastError(), cmdline);
+            DBG_OUT("CreateProcess failed (%d): '%s'.\n", GetLastError(), cmdline);
             WindowInfo_ShowMessage_Async(win, _TR("Cannot start inverse search command. Please check the command line in the settings."), true);
         }
     }
@@ -3413,12 +3413,12 @@ static void OnMenuSaveAs(WindowInfo *win)
     }
     fileFilter.Append(_TR("All files"));
     fileFilter.Append(_T("\1*.*\1"));
-    tstr_trans_chars(fileFilter.Get(), _T("\1"), _T("\0"));
+    Str::TransChars(fileFilter.Get(), _T("\1"), _T("\0"));
 
     // Remove the extension so that it can be re-added depending on the chosen filter
     Str::CopyTo(dstFileName, dimof(dstFileName), Path::GetBaseName(srcFileName));
     // TODO: fix saving embedded PDF documents
-    tstr_trans_chars(dstFileName, _T(":"), _T("_"));
+    Str::TransChars(dstFileName, _T(":"), _T("_"));
     if (Str::EndsWithI(dstFileName, _T(".pdf")))
         dstFileName[Str::Len(dstFileName) - 4] = 0;
 
@@ -3498,7 +3498,7 @@ bool DisplayModel::saveStreamAs(unsigned char *data, int dataLen, const TCHAR *f
     // double-zero terminated string isn't cut by the string handling
     // methods too early on)
     ScopedMem<TCHAR> fileFilter(Str::Format(_T("%s\1*.*\1"), _TR("All files")));
-    tstr_trans_chars(fileFilter, _T("\1"), _T("\0"));
+    Str::TransChars(fileFilter, _T("\1"), _T("\0"));
 
     OPENFILENAME ofn = { 0 };
     ofn.lStructSize = sizeof(ofn);
@@ -3554,7 +3554,7 @@ static void OnMenuOpen(WindowInfo *win)
     // methods too early on)
     ScopedMem<TCHAR> fileFilter(Str::Format(_T("%s\1*.pdf\1%s\1*.*\1"),
         _TR("PDF documents"), _TR("All files")));
-    tstr_trans_chars(fileFilter, _T("\1"), _T("\0"));
+    Str::TransChars(fileFilter, _T("\1"), _T("\0"));
 
     OPENFILENAME ofn = {0};
     ofn.lStructSize = sizeof(ofn);
@@ -5441,7 +5441,7 @@ static HTREEITEM AddTocItemToView(HWND hwnd, PdfTocItem *entry, HTREEITEM parent
     tvinsert.itemex.stateMask = TVIS_EXPANDED;
     tvinsert.itemex.lParam = (LPARAM)entry;
     // Replace unprintable whitespace with regular spaces
-    tstr_trans_chars(entry->title, _T("\t\n\v\f\r"), _T("     "));
+    Str::TransChars(entry->title, _T("\t\n\v\f\r"), _T("     "));
     tvinsert.itemex.pszText = entry->title;
 
 #ifdef DISPLAY_TOC_PAGE_NUMBERS

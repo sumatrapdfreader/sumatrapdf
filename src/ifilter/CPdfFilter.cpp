@@ -2,7 +2,7 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
-#include "TStrUtil.h"
+#include "StrUtil.h"
 #include "CPdfFilter.h"
 #include "PdfEngine.h"
 
