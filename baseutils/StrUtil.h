@@ -23,10 +23,10 @@ void    win32_dbg_out_hex(const char *dsc, const unsigned char *data, int dataLe
 
 namespace Str {
 
-static inline size_t Len(const char *s) { return strlen(s); }
-static inline size_t Len(const WCHAR *s) { return wcslen(s); }
-static inline char *Dup(const char *s) { return _strdup(s); }
-static inline WCHAR *Dup(const WCHAR *s) { return _wcsdup(s); }
+inline size_t Len(const char *s) { return strlen(s); }
+inline size_t Len(const WCHAR *s) { return wcslen(s); }
+inline char *Dup(const char *s) { return _strdup(s); }
+inline WCHAR *Dup(const WCHAR *s) { return _wcsdup(s); }
 bool IsEmpty(const char *str);
 bool IsEmpty(const WCHAR *str);
 bool Eq(const char *str1, const char *str2);
@@ -36,10 +36,8 @@ bool EqI(const WCHAR *str1, const WCHAR *str2);
 bool EqN(const char *str1, const char *str2, size_t len);
 bool EqN(const WCHAR *str1, const WCHAR *str2, size_t len);
 
-static inline bool StartsWith(const char *str, const char *txt) {
-    return Str::EqN(str, txt, Str::Len(txt));
-}
-static inline bool StartsWith(const WCHAR *str, const WCHAR *txt) {
+template <typename T>
+inline bool StartsWith(const T* str, const T* txt) {
     return Str::EqN(str, txt, Str::Len(txt));
 }
 
