@@ -53,7 +53,7 @@ void FileWatcher::Init(LPCTSTR filefullpath)
 
     free(szFilepath);
     szFilepath = StrCopy(filefullpath);
-    TCHAR *dirPath = FilePath_GetDir(szFilepath);
+    TCHAR *dirPath = Path::GetDir(szFilepath);
     
     hDir = CreateFile(
         dirPath, // pointer to the directory containing the tex files

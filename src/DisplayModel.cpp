@@ -1396,8 +1396,8 @@ void DisplayModel::goToTocLink(pdf_link* link)
     else if (PDF_LLAUNCH == link->kind && (path = getLinkPath(link))) {
         /* for safety, only handle relative PDF paths and only open them in SumatraPDF */
         if (!tstr_startswith(path, _T("\\")) && tstr_endswithi(path, _T(".pdf"))) {
-            ScopedMem<TCHAR> basePath(FilePath_GetDir(fileName()));
-            ScopedMem<TCHAR> combinedPath(FilePath_Join(basePath, path));
+            ScopedMem<TCHAR> basePath(Path::GetDir(fileName()));
+            ScopedMem<TCHAR> combinedPath(Path::Join(basePath, path));
             LoadDocument(combinedPath);
         }
         free(path);
@@ -1427,8 +1427,8 @@ void DisplayModel::goToTocLink(pdf_link* link)
         if (type && str_eq(type, "GoToR") && fz_dictgets(link->dest, "D") && (path = getLinkPath(link))) {
             /* for safety, only handle relative PDF paths and only open them in SumatraPDF */
             if (!tstr_startswith(path, _T("\\")) && tstr_endswithi(path, _T(".pdf"))) {
-                ScopedMem<TCHAR> basePath(FilePath_GetDir(fileName()));
-                ScopedMem<TCHAR> combinedPath(FilePath_Join(basePath, path));
+                ScopedMem<TCHAR> basePath(Path::GetDir(fileName()));
+                ScopedMem<TCHAR> combinedPath(Path::Join(basePath, path));
                 // TODO: respect fz_tobool(fz_dictgets(link->dest, "NewWindow"))
                 WindowInfo *newWin = LoadDocument(combinedPath);
                 if (newWin && newWin->dm)

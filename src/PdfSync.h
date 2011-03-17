@@ -87,7 +87,7 @@ public:
     Synchronizer(LPCTSTR _syncfilepath) {
         this->index_discarded = true;
         this->coordsys = BottomLeft; // by default set the internal coordinate system to bottom-left
-        this->dir = FilePath_GetDir(_syncfilepath);
+        this->dir = Path::GetDir(_syncfilepath);
         tstr_copy(this->syncfilepath, dimof(this->syncfilepath), _syncfilepath);
         _tstat(_syncfilepath, &syncfileTimestamp);
     }

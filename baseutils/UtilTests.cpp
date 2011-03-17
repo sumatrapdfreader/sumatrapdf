@@ -177,24 +177,24 @@ static void FileUtilTest()
     const TCHAR *baseName = Path::GetBaseName(path1);
     assert(tstr_eq(baseName, _T("SumatraPDF.exe")));
 
-    TCHAR *dirName = FilePath_GetDir(path1);
+    TCHAR *dirName = Path::GetDir(path1);
     assert(tstr_eq(dirName, _T("C:\\Program Files\\SumatraPDF")));
     baseName = Path::GetBaseName(dirName);
     assert(tstr_eq(baseName, _T("SumatraPDF")));
     free(dirName);
 
     path1 = _T("C:\\Program Files");
-    dirName = FilePath_GetDir(path1);
+    dirName = Path::GetDir(path1);
     assert(tstr_eq(dirName, _T("C:\\")));
     free(dirName);
 
-    TCHAR *path2 = FilePath_Join(_T("C:\\"), _T("Program Files"));
+    TCHAR *path2 = Path::Join(_T("C:\\"), _T("Program Files"));
     assert(tstr_eq(path1, path2));
     free(path2);
-    path2 = FilePath_Join(path1, _T("SumatraPDF"));
+    path2 = Path::Join(path1, _T("SumatraPDF"));
     assert(tstr_eq(path2, _T("C:\\Program Files\\SumatraPDF")));
     free(path2);
-    path2 = FilePath_Join(_T("C:\\"), _T("\\Windows"));
+    path2 = Path::Join(_T("C:\\"), _T("\\Windows"));
     assert(tstr_eq(path2, _T("C:\\Windows")));
     free(path2);
 }

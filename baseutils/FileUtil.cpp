@@ -6,27 +6,25 @@
 #include "FileUtil.h"
 #include <sys/stat.h>
 
-static inline bool FilePath_IsSep(TCHAR c)
+namespace Path {
+
+static inline bool IsSep(TCHAR c)
 {
     return '\\' == c || '//' == c;
 }
-
-namespace Path {
 
 const TCHAR *GetBaseName(const TCHAR *path)
 {
     const TCHAR *fileBaseName = path + StrLen(path);
     for (; fileBaseName > path; fileBaseName--)
-        if (FilePath_IsSep(fileBaseName[-1]))
+        if (IsSep(fileBaseName[-1]))
             break;
     return fileBaseName;
 }
 
-}
-
-TCHAR *FilePath_GetDir(const TCHAR *path)
+TCHAR *GetDir(const TCHAR *path)
 {
-    const TCHAR *baseName = Path::GetBaseName(path);
+    const TCHAR *baseName = GetBaseName(path);
     int dirLen;
     if (baseName <= path + 1)
         dirLen = StrLen(path);
@@ -37,11 +35,11 @@ TCHAR *FilePath_GetDir(const TCHAR *path)
     return tstr_dupn(path, dirLen);
 }
 
-TCHAR *FilePath_Join(const TCHAR *path, const TCHAR *filename)
+TCHAR *Join(const TCHAR *path, const TCHAR *filename)
 {
-    if (FilePath_IsSep(*filename))
+    if (IsSep(*filename))
         filename++;
-    bool needsSep = !FilePath_IsSep(path[StrLen(path) - 1]);
+    bool needsSep = !IsSep(path[StrLen(path) - 1]);
     if (needsSep)
         return tstr_printf(_T("%s\\%s"), path, filename);
     return tstr_cat(path, filename);
@@ -65,7 +63,7 @@ TCHAR *FilePath_Join(const TCHAR *path, const TCHAR *filename)
 // e.g. suppose the a file "C:\foo\Bar.Pdf" exists on the file system then
 //    "c:\foo\bar.pdf" becomes "c:\foo\Bar.Pdf"
 //    "C:\foo\BAR.PDF" becomes "C:\foo\Bar.Pdf"
-TCHAR *FilePath_Normalize(const TCHAR *path)
+TCHAR *Normalize(const TCHAR *path)
 {
     // convert to absolute path, change slashes into backslashes
     DWORD cb = GetFullPathName(path, 0, NULL, NULL);
@@ -93,10 +91,10 @@ TCHAR *FilePath_Normalize(const TCHAR *path)
 // Returns 0 if the paths lhs and rhs point to the same file.
 //         1 if the paths point to different files
 //         -1 if an error occured
-static int FilePath_Compare(const TCHAR *lhs, const TCHAR *rhs)
+static int Compare(const TCHAR *lhs, const TCHAR *rhs)
 {
-    ScopedMem<TCHAR> nl(FilePath_Normalize(lhs));
-    ScopedMem<TCHAR> nr(FilePath_Normalize(rhs));
+    ScopedMem<TCHAR> nl(Normalize(lhs));
+    ScopedMem<TCHAR> nr(Normalize(rhs));
     if (!nl || !nr)
         return -1;
     if (!tstr_ieq(nl, nr))
@@ -106,7 +104,7 @@ static int FilePath_Compare(const TCHAR *lhs, const TCHAR *rhs)
 
 // Code adapted from http://stackoverflow.com/questions/562701/best-way-to-determine-if-two-path-reference-to-same-file-in-c-c/562830#562830
 // Determine if 2 paths point ot the same file...
-bool FilePath_IsSameFile(const TCHAR *path1, const TCHAR *path2)
+bool IsSame(const TCHAR *path1, const TCHAR *path2)
 {
     bool isSame = false, needFallback = true;
     HANDLE handle1 = CreateFile(path1, 0, 0, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
@@ -126,9 +124,12 @@ bool FilePath_IsSameFile(const TCHAR *path1, const TCHAR *path2)
     CloseHandle(handle2);
 
     if (needFallback)
-        return FilePath_Compare(path1, path2) == 0;
+        return Compare(path1, path2) == 0;
     return isSame;
 }
+
+}
+
 
 bool file_exists(const TCHAR *file_path)
 {

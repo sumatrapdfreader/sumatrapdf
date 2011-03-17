@@ -91,7 +91,7 @@ TCHAR *ExePathGet()
     TCHAR buf[MAX_PATH];
     buf[0] = 0;
     GetModuleFileName(NULL, buf, dimof(buf));
-    return FilePath_Normalize(buf);
+    return Path::Normalize(buf);
 }
 
 /* Return false if this program has been started from "Program Files" directory
@@ -112,7 +112,7 @@ bool IsRunningInPortableMode()
             tstr_cat_s(programFilesDir, dimof(programFilesDir), _T("\\"));
             tstr_cat_s(programFilesDir, dimof(programFilesDir), Path::GetBaseName(exePath));
         }
-        if (FilePath_IsSameFile(programFilesDir, exePath))
+        if (Path::IsSame(programFilesDir, exePath))
             return false;
     }
 
@@ -123,7 +123,7 @@ bool IsRunningInPortableMode()
         TCHAR *baseName;
         while ((baseName = (TCHAR*)Path::GetBaseName(exePath)) > exePath) {
             baseName[-1] = '\0';
-            if (FilePath_IsSameFile(programFilesDir, exePath))
+            if (Path::IsSame(programFilesDir, exePath))
                 return false;
         }
     }
@@ -144,7 +144,7 @@ TCHAR *AppGenDataFilename(TCHAR *pFilename)
         TCHAR *exePath = ExePathGet();
         if (exePath) {
             assert(exePath[0]);
-            path = FilePath_GetDir(exePath);
+            path = Path::GetDir(exePath);
             free(exePath);
         }
     } else {
@@ -152,14 +152,14 @@ TCHAR *AppGenDataFilename(TCHAR *pFilename)
         TCHAR dir[MAX_PATH];
         *dir = '\0';
         SHGetSpecialFolderPath(NULL, dir, CSIDL_APPDATA, TRUE);
-        path = FilePath_Join(dir, APP_NAME_STR);
+        path = Path::Join(dir, APP_NAME_STR);
         if (path)
             _tmkdir(path);
     }
     if (!path)
         return NULL;
 
-    TCHAR *filename = FilePath_Join(path, pFilename);
+    TCHAR *filename = Path::Join(path, pFilename);
     free(path);
 
     return filename;
@@ -300,7 +300,7 @@ bool IsExeAssociatedWithPdfExtension()
     TCHAR *exePathReg = tstr_parse_possibly_quoted(&openCommand);
     TCHAR *exePath = ExePathGet();
     if (exePath && exePathReg && _tcsstr(openCommand, _T("\"%1\"")))
-        same = FilePath_IsSameFile(exePath, exePathReg);
+        same = Path::IsSame(exePath, exePathReg);
     free(exePath);
     free(exePathReg);
 
@@ -429,10 +429,10 @@ LPTSTR AutoDetectInverseSearchCommands(HWND hwndCombo)
         TCHAR *exePath;
         if (editor_rules[i].Type == SiblingPath) {
             // remove file part
-            ScopedMem<TCHAR> dir(FilePath_GetDir(path));
-            exePath = FilePath_Join(dir, editor_rules[i].BinaryFilename);
+            ScopedMem<TCHAR> dir(Path::GetDir(path));
+            exePath = Path::Join(dir, editor_rules[i].BinaryFilename);
         } else if (editor_rules[i].Type == BinaryDir)
-            exePath = FilePath_Join(path, editor_rules[i].BinaryFilename);
+            exePath = Path::Join(path, editor_rules[i].BinaryFilename);
         else // if (editor_rules[i].Type == BinaryPath)
             exePath = StrCopy(path);
 

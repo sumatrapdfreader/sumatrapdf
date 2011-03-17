@@ -7,13 +7,13 @@
 namespace Path {
 
 const TCHAR *GetBaseName(const TCHAR *path);
+TCHAR *      GetDir(const TCHAR *path);
+TCHAR *      Join(const TCHAR *path, const TCHAR *filename);
+TCHAR *      Normalize(const TCHAR *path);
+bool         IsSame(const TCHAR *path1, const TCHAR *path2);
 
 }
 
-TCHAR *         FilePath_GetDir(const TCHAR *path);
-TCHAR *         FilePath_Join(const TCHAR *path, const TCHAR *filename);
-TCHAR *         FilePath_Normalize(const TCHAR *path);
-bool            FilePath_IsSameFile(const TCHAR *path1, const TCHAR *path2);
 
 bool            file_exists(const TCHAR *file_path);
 
