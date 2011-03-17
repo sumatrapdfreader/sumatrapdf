@@ -20,8 +20,6 @@
   #define tchar_is_ws       iswspace
   #define tstr_find_char    wstr_find_char
 
-  #define tstr_startswith   wstr_startswith
-  #define tstr_startswithi  wstr_startswithi
   #define tstr_endswith     wstr_endswith
   #define tstr_endswithi    wstr_endswithi
   #define tstr_empty        wstr_empty
@@ -46,8 +44,6 @@
   #define tchar_is_ws       isspace
   #define tstr_find_char    str_find_char
 
-  #define tstr_startswith   str_startswith
-  #define tstr_startswithi  str_startswithi
   #define tstr_endswith     str_endswith
   #define tstr_endswithi    str_endswithi
   #define tstr_empty        str_empty

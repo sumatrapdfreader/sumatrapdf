@@ -84,9 +84,9 @@ static void ParseColor(int *destColor, const TCHAR* txt)
 {
     if (!destColor)
         return;
-    if (tstr_startswith(txt, _T("0x")))
+    if (Str::StartsWith(txt, _T("0x")))
         txt += 2;
-    else if (tstr_startswith(txt, _T("#")))
+    else if (Str::StartsWith(txt, _T("#")))
         txt += 1;
 
     int r, g, b;

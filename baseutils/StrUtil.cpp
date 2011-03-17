@@ -66,25 +66,6 @@ int str_copy(char *dst, size_t dst_cch_size, const char *src)
     return str_copyn(dst, dst_cch_size, src, Str::Len(src));
 }
 
-/* return true if 'str' starts with 'txt', case-sensitive */
-int str_startswith(const char *str, const char *txt)
-{
-    return Str::EqN(str, txt, Str::Len(txt));
-}
-
-/* return true if 'str' starts with 'txt', NOT case-sensitive */
-int str_startswithi(const char *str, const char *txt)
-{
-    if (str == txt)
-        return TRUE;
-    if (!str || !txt)
-        return FALSE;
-
-    if (0 == _strnicmp(str, txt, Str::Len(txt)))
-        return TRUE;
-    return FALSE;
-}
-
 int str_endswith(const char *txt, const char *end)
 {
     size_t end_len;

@@ -81,14 +81,14 @@ WCHAR *CTeXFilter::ExtractBracedBlock()
             // skip all LaTeX/TeX commands
             if (iscmdchar(*m_pPtr)) {
                 // ignore the content of \begin{...} and \end{...}
-                if (wstr_startswith(m_pPtr, L"begin{") || wstr_startswith(m_pPtr, L"end{")) {
+                if (Str::StartsWith(m_pPtr, L"begin{") || wstr_startswith(m_pPtr, L"end{")) {
                     m_pPtr = wcschr(m_pPtr, '{') + 1;
                     ExtractBracedBlock();
                     addsingleNL(result, &rptr);
                     break;
                 }
                 // convert \item to a single dash
-                if (wstr_startswith(m_pPtr, L"item") && !iscmdchar(*(m_pPtr + 4))) {
+                if (Str::StartsWith(m_pPtr, L"item") && !iscmdchar(*(m_pPtr + 4))) {
                     m_pPtr += 4;
                     addsingleNL(result, &rptr);
                     *rptr++ = '-';
@@ -107,9 +107,9 @@ WCHAR *CTeXFilter::ExtractBracedBlock()
             if (*m_pPtr == ',')  { addsinglespace(result, &rptr); m_pPtr++; break; }
             if (*m_pPtr == '>')  { *rptr++ = '\t'; m_pPtr++; break; }
             // TODO: handle more international characters
-            if (wstr_startswith(m_pPtr, L"'e")) { *rptr++ = L'é'; m_pPtr += 2; break; }
-            if (wstr_startswith(m_pPtr, L"`e")) { *rptr++ = L'è'; m_pPtr += 2; break; }
-            if (wstr_startswith(m_pPtr, L"`a")) { *rptr++ = L'à'; m_pPtr += 2; break; }
+            if (Str::StartsWith(m_pPtr, L"'e")) { *rptr++ = L'é'; m_pPtr += 2; break; }
+            if (Str::StartsWith(m_pPtr, L"`e")) { *rptr++ = L'è'; m_pPtr += 2; break; }
+            if (Str::StartsWith(m_pPtr, L"`a")) { *rptr++ = L'à'; m_pPtr += 2; break; }
             if (*m_pPtr != '"')
                 break;
             m_pPtr++;

@@ -6,8 +6,6 @@
 
 #define wstr_find_char wcschr
 
-int     wstr_startswith(const WCHAR *str, const WCHAR *txt);
-int     wstr_startswithi(const WCHAR *str, const WCHAR *txt);
 int     wstr_endswith(const WCHAR *str, const WCHAR *end);
 int     wstr_endswithi(const WCHAR *str, const WCHAR *end);
 int     wstr_empty(const WCHAR *str);

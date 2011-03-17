@@ -109,6 +109,43 @@ static bool EqN(const WCHAR *str1, const WCHAR *str2, size_t len)
     return false;
 }
 
+/* return true if 'str' starts with 'txt', case-sensitive */
+static bool StartsWith(const char *str, const char *txt)
+{
+    return Str::EqN(str, txt, Str::Len(txt));
+}
+
+static bool StartsWith(const WCHAR *str, const WCHAR *txt)
+{
+    return Str::EqN(str, txt, Str::Len(txt));
+}
+
+/* return true if 'str' starts with 'txt', NOT case-sensitive */
+static bool StartsWithI(const char *str, const char *txt)
+{
+    if (str == txt)
+        return true;
+    if (!str || !txt)
+        return false;
+
+    if (0 == _strnicmp(str, txt, Str::Len(txt)))
+        return true;
+    return false;
+}
+
+/* return true if 'str' starts with 'txt', NOT case-sensitive */
+static bool StartsWithI(const WCHAR *str, const WCHAR *txt)
+{
+    if (!str && !txt)
+        return true;
+    if (!str || !txt)
+        return false;
+
+    if (0 == _wcsnicmp(str, txt, Str::Len(txt)))
+        return true;
+    return false;
+}
+
 }
 
 static inline bool ChrIsDigit(const WCHAR c)
@@ -117,8 +154,6 @@ static inline bool ChrIsDigit(const WCHAR c)
 }
 
 // TODO: make these return bool instead of int
-int     str_startswith(const char *str, const char *txt);
-int     str_startswithi(const char *str, const char *txt);
 int     str_endswith(const char *str, const char *end);
 int     str_endswithi(const char *str, const char *end);
 int     str_empty(const char *str);

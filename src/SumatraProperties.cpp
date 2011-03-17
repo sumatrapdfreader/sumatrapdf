@@ -26,7 +26,7 @@ extern SerializableGlobalPrefs gGlobalPrefs;
 static bool PdfDateParse(TCHAR *pdfDate, SYSTEMTIME *timeOut) {
     ZeroMemory(timeOut, sizeof(SYSTEMTIME));
     // "D:" at the beginning is optional
-    if (tstr_startswith(pdfDate, _T("D:")))
+    if (Str::StartsWith(pdfDate, _T("D:")))
         pdfDate += 2;
     return 6 == _stscanf(pdfDate, _T("%4d%2d%2d") _T("%2d%2d%2d"),
         &timeOut->wYear, &timeOut->wMonth, &timeOut->wDay,

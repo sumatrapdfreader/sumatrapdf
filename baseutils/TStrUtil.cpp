@@ -79,7 +79,7 @@ TCHAR *tstr_url_encode(const TCHAR *str)
    it and return TRUE; otherwise return FALSE. */
 int tstr_skip(const TCHAR **strp, const TCHAR *expect)
 {
-    if (tstr_startswith(*strp, expect)) {
+    if (Str::StartsWith(*strp, expect)) {
         size_t len = Str::Len(expect);
         *strp += len;
         return TRUE;

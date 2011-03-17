@@ -55,7 +55,7 @@ HRESULT CPdfFilter::OnInit()
 static bool PdfDateParse(WCHAR *pdfDate, SYSTEMTIME *timeOut) {
     ZeroMemory(timeOut, sizeof(SYSTEMTIME));
     // "D:" at the beginning is optional
-    if (wstr_startswith(pdfDate, L"D:"))
+    if (Str::StartsWith(pdfDate, L"D:"))
         pdfDate += 2;
     return 6 == swscanf(pdfDate, L"%4d%2d%2d" L"%2d%2d%2d",
         &timeOut->wYear, &timeOut->wMonth, &timeOut->wDay,

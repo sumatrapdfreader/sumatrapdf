@@ -256,7 +256,7 @@ int Pdfsync::scan_and_build_index(FILE *fp)
                 PSTR pfilename = buff;
                 size_t len = Str::Len(buff);
                 // if the filename contains quotes then remove them
-                if (str_startswith(buff, "\"") && str_endswith(buff, "\"")) {
+                if (Str::StartsWith(buff, "\"") && str_endswith(buff, "\"")) {
                     pfilename++;
                     len-=2;
                 }

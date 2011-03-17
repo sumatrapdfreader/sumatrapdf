@@ -813,7 +813,7 @@ TCHAR *WindowInfo::GetPassword(const TCHAR *fileName, unsigned char *fileDigest,
     DisplayState *fileFromHistory = gFileHistory.Find(fileName);
     if (fileFromHistory && fileFromHistory->decryptionKey) {
         ScopedMem<char> fingerprint(mem_to_hexstr(fileDigest, 16));
-        *saveKey = str_startswith(fileFromHistory->decryptionKey, fingerprint);
+        *saveKey = Str::StartsWith(fileFromHistory->decryptionKey, fingerprint);
         if (*saveKey && hexstr_to_mem(fileFromHistory->decryptionKey + 32, decryptionKeyOut, 32))
             return NULL;
     }
@@ -1920,7 +1920,7 @@ static DWORD OnUrlDownloaded(WindowInfo *win, HttpReqCtx *ctx, bool silent)
 {
     if (ctx->error)
         return ctx->error;
-    if (!tstr_startswith(ctx->url, SUMATRA_UPDATE_INFO_URL))
+    if (!Str::StartsWith(ctx->url, SUMATRA_UPDATE_INFO_URL))
         return ERROR_INTERNET_INVALID_URL;
 
     // See http://code.google.com/p/sumatrapdf/issues/detail?id=725

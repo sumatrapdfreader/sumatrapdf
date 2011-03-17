@@ -908,7 +908,7 @@ static bool isMultilineLink(TCHAR *pageText, TCHAR *pos, fz_bbox *coords)
         coords[pos - pageText + 1].y1 > coords[pos - pageText - 1].y0 &&
         coords[pos - pageText + 1].y0 <= coords[pos - pageText - 1].y1 &&
         coords[pos - pageText + 1].x0 < coords[pos - pageText - 1].x1 &&
-        !tstr_startswith(pos + 1, _T("http"));
+        !Str::StartsWith(pos + 1, _T("http"));
 }
 
 static TCHAR *findLinkEnd(TCHAR *start)
@@ -989,9 +989,9 @@ void PdfEngine::linkifyPageText(pdf_page *page)
     pdf_link *firstLink = page->links;
     for (TCHAR *start = pageText; *start; start++) {
         // look for words starting with "http://", "https://" or "www."
-        if (('h' != *start || !tstr_startswith(start, _T("http://")) &&
-                              !tstr_startswith(start, _T("https://"))) &&
-            ('w' != *start || !tstr_startswith(start, _T("www."))) ||
+        if (('h' != *start || !Str::StartsWith(start, _T("http://")) &&
+                              !Str::StartsWith(start, _T("https://"))) &&
+            ('w' != *start || !Str::StartsWith(start, _T("www."))) ||
             (start > pageText && (_istalnum(start[-1]) || '/' == start[-1])))
             continue;
 
@@ -1008,9 +1008,9 @@ void PdfEngine::linkifyPageText(pdf_page *page)
         }
 
         // add the link, if it's a new one (ignoring www. links without a toplevel domain)
-        if (*start && (tstr_startswith(start, _T("http")) || _tcschr(start + 5, '.') != NULL)) {
+        if (*start && (Str::StartsWith(start, _T("http")) || _tcschr(start + 5, '.') != NULL)) {
             char *uri = tstr_to_utf8(start);
-            char *httpUri = str_startswith(uri, "http") ? uri : str_cat("http://", uri);
+            char *httpUri = Str::StartsWith(uri, "http") ? uri : str_cat("http://", uri);
             fz_obj *dest = fz_newstring(httpUri, (int)strlen(httpUri));
             pdf_link *link = pdf_newlink(dest, PDF_LURI);
             link->rect = fz_bboxtorect(bbox);
