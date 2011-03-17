@@ -9,7 +9,6 @@
 #include "GeomUtil.h"
 #include "StrUtil.h"
 #include "Vec.h"
-#include "vstrlist.h"
 #include <time.h>
 
 static void GeomTest()

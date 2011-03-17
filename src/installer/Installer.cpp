@@ -28,6 +28,7 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include "FileUtil.h"
 #include "WinUtil.h"
 #include "Version.h"
+#include "vstrlist.h"
 #include "../ifilter/PdfFilter.h"
 
 // define for testing the uninstaller
@@ -2041,23 +2042,24 @@ void ShowUsage()
 
 void ParseCommandLine(TCHAR *cmdLine)
 {
-    // skip the first arg (exe path)
-    TCHAR *arg = tstr_parse_possibly_quoted(&cmdLine);
-    free(arg);
+    VStrList argList;
+    argList.ParseCommandLine(cmdLine);
 
-#define get_next_arg() tstr_parse_possibly_quoted(&cmdLine)
 #define is_arg(param) Str::EqI(arg + 1, _T(param))
+#define is_arg_with_param(param) (is_arg(param) && i < argList.Count() - 1)
 
-    for (; (arg = get_next_arg()); free(arg)) {
+    // skip the first arg (exe path)
+    for (size_t i = 1; i < argList.Count(); i++) {
+        TCHAR *arg = argList[i];
         if ('-' != *arg && '/' != *arg)
             continue;
 
         if (is_arg("s"))
             gGlobalData.silent = true;
-        else if (is_arg("d")) {
+        else if (is_arg_with_param("d")) {
             if (gGlobalData.installDir)
                 free(gGlobalData.installDir);
-            gGlobalData.installDir = get_next_arg();
+            gGlobalData.installDir = Str::Dup(argList[++i]);
         }
         else if (is_arg("register"))
             gGlobalData.registerAsDefault = true;

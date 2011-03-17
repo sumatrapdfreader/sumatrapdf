@@ -295,16 +295,13 @@ bool IsExeAssociatedWithPdfExtension()
     if (!ok)
         return false;
 
-    bool same = false;
-    TCHAR *openCommand = tmp;
-    TCHAR *exePathReg = tstr_parse_possibly_quoted(&openCommand);
-    TCHAR *exePath = ExePathGet();
-    if (exePath && exePathReg && _tcsstr(openCommand, _T("\"%1\"")))
-        same = Path::IsSame(exePath, exePathReg);
-    free(exePath);
-    free(exePathReg);
+    VStrList argList;
+    argList.ParseCommandLine(tmp);
+    ScopedMem<TCHAR> exePath(ExePathGet());
+    if (!exePath || !argList.Find(_T("%1")))
+        return false;
 
-    return same;
+    return Path::IsSame(exePath, argList[0]);
 }
 
 bool GetAcrobatPath(TCHAR *bufOut, int bufCchSize)

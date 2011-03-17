@@ -128,6 +128,5 @@ inline WCHAR *tstr_to_wstr_q(char *src)
 
 int       tstr_skip(const TCHAR **strp, const TCHAR *expect);
 int       tstr_copy_skip_until(const TCHAR **strp, TCHAR *dst, size_t dst_size, TCHAR stop);
-TCHAR *   tstr_parse_possibly_quoted(TCHAR **txt);
 
 #endif

@@ -2,7 +2,7 @@
    License: GPLv3 */
 
 #include "PdfSelection.h"
-#include "vstrlist.h"
+#include "Vec.h"
 
 PdfSelection::PdfSelection(PdfEngine *engine) : engine(engine)
 {

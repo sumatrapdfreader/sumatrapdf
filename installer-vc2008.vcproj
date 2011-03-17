@@ -114,10 +114,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\baseutils\vstrlist.h"
-				>
-			</File>
-			<File
 				RelativePath=".\baseutils\WinUtil.cpp"
 				>
 			</File>

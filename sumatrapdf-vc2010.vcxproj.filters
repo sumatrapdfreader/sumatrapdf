@@ -691,9 +691,6 @@
     <ClInclude Include="baseutils\Vec.h">
       <Filter>baseutils</Filter>
     </ClInclude>
-    <ClInclude Include="baseutils\vstrlist.h">
-      <Filter>baseutils</Filter>
-    </ClInclude>
     <ClInclude Include="baseutils\WinUtil.h">
       <Filter>baseutils</Filter>
     </ClInclude>

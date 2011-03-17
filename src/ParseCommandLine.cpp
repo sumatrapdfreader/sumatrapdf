@@ -4,7 +4,7 @@
 #include "SumatraPDF.h"
 #include "BaseUtil.h"
 #include "StrUtil.h"
-#include "vstrlist.h"
+#include "Vec.h"
 #include "WinUtil.h"
 #include "ParseCommandLine.h"
 #include "Benchmark.h"
@@ -144,25 +144,11 @@ static void ParseZoomValue(float *zoom, const TCHAR *txt)
         _stscanf(txt, _T("%f"), zoom);
 }
 
-static void VStrList_FromCmdLine(VStrList *strList, TCHAR *cmdLine)
-{
-    assert(strList && cmdLine);
-    if (!strList || !cmdLine)
-        return;
-
-    for (;;) {
-        TCHAR *txt = tstr_parse_possibly_quoted(&cmdLine);
-        if (!txt)
-            break;
-        strList->Push(txt);
-    }
-}
-
 /* parse argument list. we assume that all unrecognized arguments are PDF file names. */
 void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
 {
     VStrList argList;
-    VStrList_FromCmdLine(&argList, cmdLine);
+    argList.ParseCommandLine(cmdLine);
     size_t argCount = argList.Count();
 
 #define is_arg(txt) Str::EqI(_T(txt), argument)

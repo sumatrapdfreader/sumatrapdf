@@ -5,7 +5,7 @@
 #define ParseCommandLine_h
 
 #include "DisplayState.h"
-#include "vstrlist.h"
+#include "Vec.h"
 
 class CommandLineInfo {
 public:

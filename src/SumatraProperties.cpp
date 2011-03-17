@@ -10,7 +10,7 @@
 #include "WinUtil.h"
 #include "FileUtil.h"
 #include "AppTools.h"
-#include "vstrlist.h"
+#include "Vec.h"
 
 #define PROPERTIES_LEFT_RIGHT_SPACE_DX 8
 #define PROPERTIES_RECT_PADDING     8

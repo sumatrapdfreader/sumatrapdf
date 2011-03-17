@@ -165,15 +165,33 @@ public:
     }
 };
 
+// only suitable for T that are pointers that were malloc()ed
+template <typename T>
+inline void FreeVecMembers(Vec<T>& v)
+{
+    for (size_t i = 0; i < v.Count(); i++) {
+        free(v.At(i));
+    }
+    v.Reset();
+}
+
+// only suitable for T that are pointers to C++ objects
+template <typename T>
+inline void DeleteVecMembers(Vec<T>& v)
+{
+    for (size_t i = 0; i < v.Count(); i++) {
+        delete v.At(i);
+    }
+    v.Reset();
+}
+
+
 namespace Str {
 template <typename T>
 
 class Str : public Vec<T> {
 public:
-    Str(size_t initCap=0) :
-        Vec(initCap, 1)
-    {
-    }
+    Str(size_t initCap=0) : Vec(initCap, 1) { }
 
     void Append(T c)
     {
@@ -193,8 +211,8 @@ public:
         va_list args;
         va_start(args, fmt);
         T *res = FmtV(fmt, args);
-        va_end(args);
         AppendAndFree(res);
+        va_end(args);
     }
 
     void AppendAndFree(const T* s)
@@ -218,24 +236,103 @@ public:
 
 }
 
-// only suitable for T that are pointers that were malloc()ed
-template <typename T>
-inline void FreeVecMembers(Vec<T>& v)
+class VStrList : public Vec<TCHAR *>
 {
-    for (size_t i = 0; i < v.Count(); i++) {
-        free(v.At(i));
+public:
+    ~VStrList() {
+        FreeVecMembers(*this);
     }
-    v.Reset();
-}
 
-// only suitable for T that are pointers to C++ objects
-template <typename T>
-inline void DeleteVecMembers(Vec<T>& v)
-{
-    for (size_t i = 0; i < v.Count(); i++) {
-        delete v.At(i);
+    TCHAR *Join(TCHAR *joint=NULL) {
+        Str::Str<TCHAR> tmp(256);
+        size_t jointLen = joint ? Str::Len(joint) : 0;
+        for (size_t i = 0; i < Count(); i++) {
+            TCHAR *s = At(i);
+            if (i > 0 && jointLen > 0)
+                tmp.Append(joint, jointLen);
+            tmp.Append(s);
+        }
+        return tmp.StealData();
     }
-    v.Reset();
-}
+
+    int Find(TCHAR *string) const {
+        size_t n = Count();
+        for (size_t i = 0; i < n; i++) {
+            TCHAR *item = At(i);
+            if (Str::Eq(string, item))
+                return (int)i;
+        }
+        return -1;
+    }
+
+    /* 'cmdLine' contains one or several arguments can be:
+        - escaped, in which case it starts with '"', ends with '"' and
+          each '"' that is part of the name is escaped with '\\'
+        - unescaped, in which case it start with != '"' and ends with ' ' or '\0' */
+    size_t ParseCommandLine(TCHAR *cmdLine)
+    {
+        size_t start = Count();
+
+        while (cmdLine) {
+            // skip whitespace
+            while (_istspace(*cmdLine))
+                cmdLine++;
+            if ('"' == *cmdLine)
+                cmdLine = ParseQuoted(cmdLine);
+            else if ('\0' != *cmdLine)
+                cmdLine = ParseUnquoted(cmdLine);
+            else
+                cmdLine = NULL;
+        }
+
+        return Count() - start;
+    }
+
+private:
+    /* returns the next character in '*txt' that isn't a backslash */
+    static TCHAR SkipBackslashs(TCHAR *txt)
+    {
+        assert(txt && '\\' == *txt);
+        while ('\\' == *++txt);
+        return *txt;
+    }
+
+    /* appends the next quoted argument and returns the position after it */
+    TCHAR *ParseQuoted(TCHAR *arg)
+    {
+        assert(arg && '"' == *arg);
+        arg++;
+
+        Str::Str<TCHAR> txt(Str::Len(arg) / 2);
+        TCHAR *next;
+        for (next = arg; *next && *next != '"'; next++) {
+            // skip escaped quotation marks according to
+            // http://msdn.microsoft.com/en-us/library/17w5ykft.aspx
+            if ('\\' == *next && '"' == SkipBackslashs(next))
+                next++;
+            txt.Append(*next);
+        }
+        this->Append(txt.StealData());
+
+        if ('"' == *next)
+            next++;
+        return next;
+    }
+
+    /* appends the next unquoted argument and returns the position after it */
+    TCHAR *ParseUnquoted(TCHAR *arg)
+    {
+        assert(arg && *arg && '"' != *arg && !_istspace(*arg));
+
+        TCHAR *next;
+        // contrary to http://msdn.microsoft.com/en-us/library/17w5ykft.aspx
+        // we don't treat quotation marks or backslashes in non-quoted
+        // arguments in any special way
+        for (next = arg; *next && !_istspace(*next); next++);
+        this->Append(Str::DupN(arg, next - arg));
+
+        return next;
+    }
+};
 
 #endif

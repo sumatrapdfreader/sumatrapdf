@@ -232,7 +232,6 @@
     <ClInclude Include="baseutils\GeomUtil.h" />
     <ClInclude Include="baseutils\StrUtil.h" />
     <ClInclude Include="baseutils\Vec.h" />
-    <ClInclude Include="baseutils\vstrlist.h" />
     <ClInclude Include="baseutils\WinUtil.h" />
     <ClInclude Include="ext\libjpeg-turbo\jchuff.h" />
     <ClInclude Include="ext\libjpeg-turbo\jconfig.h" />
