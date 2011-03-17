@@ -96,7 +96,7 @@ static void TStrTest()
     assert(!Str::StartsWith(str, _T("Astr")));
     assert(Str::EndsWith(str, _T("ing")) && Str::EndsWithI(str, _T("ING")));
     assert(!Str::EndsWith(str, _T("ung")));
-    assert(tstr_empty(NULL) && tstr_empty(_T("")) && !tstr_empty(str));
+    assert(Str::IsEmpty((char*)NULL) && Str::IsEmpty((WCHAR*)NULL)&& Str::IsEmpty(_T("")) && !Str::IsEmpty(str));
     assert(tstr_find_char(str, _T('s')) && !tstr_find_char(str, _T('S')));
     int res = tstr_copyn(buf, dimof(buf), str, 4);
     assert(res && Str::Eq(buf, _T("a st")));

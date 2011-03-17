@@ -2328,7 +2328,7 @@ static void CopySelectionToClipboard(WindowInfo *win)
         }
 
         // don't copy empty text
-        if (!tstr_empty(selText)) {
+        if (!Str::IsEmpty(selText)) {
             HGLOBAL handle = GlobalAlloc(GMEM_MOVEABLE, (Str::Len(selText) + 1) * sizeof(TCHAR));
             if (handle) {
                 TCHAR *globalText = (TCHAR *)GlobalLock(handle);

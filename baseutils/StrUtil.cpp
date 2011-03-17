@@ -66,15 +66,6 @@ int str_copy(char *dst, size_t dst_cch_size, const char *src)
     return str_copyn(dst, dst_cch_size, src, Str::Len(src));
 }
 
-int str_empty(const char *str)
-{
-    if (!str)
-        return TRUE;
-    if (0 == *str)
-        return TRUE;
-    return FALSE;
-}
-
 /* Convert binary data in <buf> of size <len> to a hex-encoded string */
 char *mem_to_hexstr(const unsigned char *buf, int len)
 {

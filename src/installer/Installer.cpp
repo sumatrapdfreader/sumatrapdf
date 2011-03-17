@@ -1036,7 +1036,7 @@ bool IsCheckboxChecked(HWND hwnd)
 void OnButtonInstall()
 {
     TCHAR *userInstallDir = Win::GetText(gHwndTextboxInstDir);
-    if (!tstr_empty(userInstallDir)) {
+    if (!Str::IsEmpty(userInstallDir)) {
         free(gGlobalData.installDir);
         gGlobalData.installDir = userInstallDir;
     }
@@ -1217,7 +1217,7 @@ static int CALLBACK BrowseCallbackProc(HWND hwnd, UINT msg, LPARAM lParam, LPARA
 {
     switch (msg) {
     case BFFM_INITIALIZED:
-        if (!tstr_empty((TCHAR *)lpData))
+        if (!Str::IsEmpty((TCHAR *)lpData))
             SendMessage(hwnd, BFFM_SETSELECTION, TRUE, lpData);
         break;
 

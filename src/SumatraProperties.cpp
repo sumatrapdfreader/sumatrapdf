@@ -172,7 +172,7 @@ static TCHAR *FormatPdfPermissions(PdfEngine *pdfEngine) {
 void PdfPropertiesLayout::AddProperty(const TCHAR *key, const TCHAR *value)
 {
     // don't display value-less properties
-    if (!tstr_empty(value))
+    if (!Str::IsEmpty(value))
         Append(new PdfPropertyEl(key, value));
     else
         delete value;

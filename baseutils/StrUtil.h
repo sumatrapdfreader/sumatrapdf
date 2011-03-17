@@ -43,6 +43,24 @@ static inline WCHAR *Dup(const WCHAR *s)
     return _wcsdup(s);
 }
 
+static inline bool IsEmpty(const char *str)
+{
+    if (!str)
+        return true;
+    if (0 == *str)
+        return true;
+    return false;
+}
+
+static inline bool IsEmpty(const WCHAR *str)
+{
+    if (!str)
+        return true;
+    if (0 == *str)
+        return true;
+    return false;
+}
+
 static inline bool Eq(const char *str1, const char *str2)
 {
     if (str1 == str2)
@@ -212,7 +230,6 @@ static inline bool ChrIsDigit(const WCHAR c)
 }
 
 // TODO: make these return bool instead of int
-int     str_empty(const char *str);
 int     str_copy(char *dst, size_t dst_cch_size, const char *src);
 int     str_copyn(char *dst, size_t dst_cch_size, const char *src, size_t src_cch_size);
 char *  str_dupn(const char *str, size_t len);

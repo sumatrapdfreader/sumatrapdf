@@ -67,15 +67,6 @@ int wstr_copy(WCHAR *dst, size_t dst_cch_size, const WCHAR *src)
     return wstr_copyn(dst, dst_cch_size, src, Str::Len(src));
 }
 
-int wstr_empty(const WCHAR *str)
-{
-    if (!str)
-        return TRUE;
-    if (0 == *str)
-        return TRUE;
-    return FALSE;
-}
-
 WCHAR *wstr_printf(const WCHAR *format, ...)
 {
     va_list args;

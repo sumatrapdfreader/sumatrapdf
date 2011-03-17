@@ -116,7 +116,7 @@ int PdfSearch::MatchLen(TCHAR *start)
 // TODO: use Boyer-Moore algorithm here (if it proves to be faster)
 bool PdfSearch::FindTextInPage(int pageNo)
 {
-    if (tstr_empty(anchor))
+    if (Str::IsEmpty(anchor))
         return false;
     if (!pageNo)
         pageNo = findPage;
@@ -149,7 +149,7 @@ bool PdfSearch::FindTextInPage(int pageNo)
 
 bool PdfSearch::FindStartingAtPage(int pageNo)
 {
-    if (tstr_empty(anchor))
+    if (Str::IsEmpty(anchor))
         return false;
 
     int total = engine->pageCount();
