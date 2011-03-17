@@ -4,7 +4,7 @@
 #include "BencUtil.h"
 #include "TStrUtil.h"
 
-BencObj *BencObj::Decode(const char *bytes, size_t *len_out)
+BencObj *BencObj::Decode(const char *bytes, size_t *lenOut)
 {
     size_t len;
     BencObj *result = BencString::Decode(bytes, &len);
@@ -17,13 +17,13 @@ BencObj *BencObj::Decode(const char *bytes, size_t *len_out)
 
     // if the caller isn't interested in the amount of bytes
     // processed, verify that we've processed all of them
-    if (result && !len_out && bytes[len] != '\0') {
+    if (result && !lenOut && bytes[len] != '\0') {
         delete result;
         result = NULL;
     }
 
-    if (result && len_out)
-        *len_out = len;
+    if (result && lenOut)
+        *lenOut = len;
     return result;
 }
 
@@ -67,7 +67,7 @@ char *BencString::Encode() const
     return str_printf("%" PRIuPTR ":%s", StrLen(value), value);
 }
 
-BencString *BencString::Decode(const char *bytes, size_t *len_out)
+BencString *BencString::Decode(const char *bytes, size_t *lenOut)
 {
     if (!bytes || !ChrIsDigit(*bytes))
         return NULL;
@@ -81,8 +81,8 @@ BencString *BencString::Decode(const char *bytes, size_t *len_out)
     if (StrLen(start) < len)
         return NULL;
 
-    if (len_out)
-        *len_out = (start - bytes) + (size_t)len;
+    if (lenOut)
+        *lenOut = (start - bytes) + (size_t)len;
     return new BencRawString(start, (size_t)len);
 }
 
@@ -94,7 +94,7 @@ char *BencInt::Encode() const
     return str_printf("i%" PRId64 "e", value);
 }
 
-BencInt *BencInt::Decode(const char *bytes, size_t *len_out)
+BencInt *BencInt::Decode(const char *bytes, size_t *lenOut)
 {
     if (!bytes || *bytes != 'i')
         return NULL;
@@ -104,8 +104,8 @@ BencInt *BencInt::Decode(const char *bytes, size_t *len_out)
     if (!end || *end != 'e')
         return NULL;
 
-    if (len_out)
-        *len_out = (end - bytes) + 1;
+    if (lenOut)
+        *lenOut = (end - bytes) + 1;
     return new BencInt(value);
 }
 
@@ -127,7 +127,7 @@ char *BencArray::Encode() const
     return bytes.StealData();
 }
 
-BencArray *BencArray::Decode(const char *bytes, size_t *len_out)
+BencArray *BencArray::Decode(const char *bytes, size_t *lenOut)
 {
     if (!bytes || *bytes != 'l')
         return NULL;
@@ -145,8 +145,8 @@ BencArray *BencArray::Decode(const char *bytes, size_t *len_out)
         list->Add(obj);
     }
 
-    if (len_out)
-        *len_out = ix + 1;
+    if (lenOut)
+        *lenOut = ix + 1;
     return list;
 }
 
@@ -205,7 +205,7 @@ char *BencDict::Encode() const
     return bytes.StealData();
 }
 
-BencDict *BencDict::Decode(const char *bytes, size_t *len_out)
+BencDict *BencDict::Decode(const char *bytes, size_t *lenOut)
 {
     if (!bytes || *bytes != 'd')
         return NULL;
@@ -232,7 +232,7 @@ BencDict *BencDict::Decode(const char *bytes, size_t *len_out)
         delete key;
     }
 
-    if (len_out)
-        *len_out = ix + 1;
+    if (lenOut)
+        *lenOut = ix + 1;
     return dict;
 }

@@ -29,7 +29,7 @@ public:
     BencType Type() const { return type; }
 
     virtual char *Encode() const = 0;
-    static BencObj *Decode(const char *bytes, size_t *len_out=NULL);
+    static BencObj *Decode(const char *bytes, size_t *lenOut=NULL);
 };
 
 class BencString : public BencObj {
@@ -46,7 +46,7 @@ public:
     const char *RawValue() const { return value; }
 
     virtual char *Encode() const;
-    static BencString *Decode(const char *bytes, size_t *len_out);
+    static BencString *Decode(const char *bytes, size_t *lenOut);
 };
 
 class BencRawString : public BencString {
@@ -62,7 +62,7 @@ public:
     int64_t Value() const { return value; }
 
     virtual char *Encode() const;
-    static BencInt *Decode(const char *bytes, size_t *len_out);
+    static BencInt *Decode(const char *bytes, size_t *lenOut);
 };
 
 class BencDict;
@@ -104,7 +104,7 @@ public:
     BencDict *GetDict(size_t index) const;
 
     virtual char *Encode() const;
-    static BencArray *Decode(const char *bytes, size_t *len_out);
+    static BencArray *Decode(const char *bytes, size_t *lenOut);
 };
 
 class BencDict : public BencObj {
@@ -155,7 +155,7 @@ public:
     }
 
     virtual char *Encode() const;
-    static BencDict *Decode(const char *bytes, size_t *len_out);
+    static BencDict *Decode(const char *bytes, size_t *lenOut);
 };
 
 #endif
