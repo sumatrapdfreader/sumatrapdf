@@ -74,7 +74,7 @@ bool IsBenchPagesInfo(TCHAR *s)
 
 static void BenchFile(TCHAR *filePath, TCHAR *pagesSpec)
 {
-    if (!file_exists(filePath)) {
+    if (!File::Exists(filePath)) {
         logbench("Error: file %s doesn't exist\n", filePath);
         return;
     }

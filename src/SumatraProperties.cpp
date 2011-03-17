@@ -345,7 +345,7 @@ void OnMenuProperties(WindowInfo *win)
         layoutData->AddProperty(_TR("PDF Version:"), str);
     }
 
-    size_t fileSize = file_size_get(pdfEngine->fileName());
+    size_t fileSize = File::GetSize(pdfEngine->fileName());
     if (fileSize == INVALID_FILE_SIZE) {
         fz_buffer *data = pdfEngine->getStreamData();
         if (data) {

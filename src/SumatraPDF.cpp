@@ -346,7 +346,7 @@ static bool HasValidFileOrNoFile(WindowInfo *win)
 {
     if (!win) return false;
     if (!win->loadedFilePath) return true;
-    return file_exists(win->loadedFilePath);
+    return File::Exists(win->loadedFilePath);
 }
 
 static bool CanViewWithFoxit(WindowInfo *win)
@@ -842,7 +842,7 @@ static TCHAR *GetUniqueCrashDumpPath()
         }
         path = AppGenDataFilename(fileName);
         free(fileName);
-        if (!file_exists(path) || (n==20))
+        if (!File::Exists(path) || (n==20))
             return path;
         free(path);
     }
@@ -3446,13 +3446,13 @@ static void OnMenuSaveAs(WindowInfo *win)
         ScopedMem<TCHAR> text(win->dm->extractAllText(Target_Export));
         ScopedMem<char> textUTF8(tstr_to_utf8(text));
         ScopedMem<char> textUTF8BOM(str_cat("\xEF\xBB\xBF", textUTF8));
-        write_to_file(realDstFileName, textUTF8BOM, StrLen(textUTF8BOM));
+        File::WriteAll(realDstFileName, textUTF8BOM, StrLen(textUTF8BOM));
     }
     // Recreate inexistant PDF files from memory...
-    else if (!file_exists(srcFileName)) {
+    else if (!File::Exists(srcFileName)) {
         fz_buffer *data = win->dm->pdfEngine->getStreamData();
         if (data) {
-            write_to_file(realDstFileName, data->data, data->len);
+            File::WriteAll(realDstFileName, data->data, data->len);
             fz_dropbuffer(data);
         } else {
             MessageBox(win->hwndFrame, _TR("Failed to save a file"), _TR("Warning"), MB_OK | MB_ICONEXCLAMATION);
@@ -3510,7 +3510,7 @@ bool DisplayModel::saveStreamAs(unsigned char *data, int dataLen, const TCHAR *f
 
     if (FALSE == GetSaveFileName(&ofn))
         return false;
-    return write_to_file(dstFileName, data, dataLen);
+    return File::WriteAll(dstFileName, data, dataLen);
 }
 
 // code adapted from http://support.microsoft.com/kb/131462/en-us

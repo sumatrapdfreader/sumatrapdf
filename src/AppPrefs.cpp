@@ -356,7 +356,7 @@ bool Load(TCHAR *filepath, SerializableGlobalPrefs *globalPrefs, FileHistoryList
         return false;
 
     size_t prefsFileLen;
-    ScopedMem<char> prefsTxt(file_read_all(filepath, &prefsFileLen));
+    ScopedMem<char> prefsTxt(File::ReadAll(filepath, &prefsFileLen));
     if (!str_empty(prefsTxt)) {
         ok = Prefs_Deserialize(prefsTxt, globalPrefs, fileHistory);
         assert(ok);
@@ -369,7 +369,7 @@ bool Load(TCHAR *filepath, SerializableGlobalPrefs *globalPrefs, FileHistoryList
 #if 0
     for (int index = 0; fileHistory->Get(index); index++) {
         DisplayState *state = fileHistory->Get(index);
-        if (!file_exists(state->filePath)) {
+        if (!File::Exists(state->filePath)) {
             DBG_OUT_T("Prefs_Load() file '%s' doesn't exist anymore\n", state->filePath);
             fileHistory->Remove(state);
             delete state;
@@ -395,7 +395,7 @@ bool Save(TCHAR *filepath, SerializableGlobalPrefs *globalPrefs, FileHistoryList
     /* TODO: consider 2-step process:
         * write to a temp file
         * rename temp file to final file */
-    return write_to_file(filepath, (void*)data.Get(), dataLen);
+    return File::WriteAll(filepath, (void*)data.Get(), dataLen);
 }
 
 }

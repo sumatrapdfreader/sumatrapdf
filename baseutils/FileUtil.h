@@ -14,11 +14,13 @@ bool         IsSame(const TCHAR *path1, const TCHAR *path2);
 
 }
 
+namespace File {
 
-bool            file_exists(const TCHAR *file_path);
+bool         Exists(const TCHAR *file_path);
+char *       ReadAll(const TCHAR *file_path, size_t *file_size_out);
+bool         WriteAll(const TCHAR *file_path, void *data, size_t data_len);
+size_t       GetSize(const TCHAR *file_path);
 
-char *          file_read_all(const TCHAR *file_path, size_t *file_size_out);
-bool            write_to_file(const TCHAR *file_path, void *data, size_t data_len);
-size_t          file_size_get(const TCHAR *file_path);
+}
 
 #endif

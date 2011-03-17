@@ -451,7 +451,7 @@ BOOL InstallCopyFiles(void)
         TCHAR *inpath = ansi_to_tstr(filename);
         TCHAR *extpath = Path::Join(gGlobalData.installDir, Path::GetBaseName(inpath));
 
-        BOOL ok = write_to_file(extpath, data, (size_t)finfo.uncompressed_size);
+        BOOL ok = File::WriteAll(extpath, data, (size_t)finfo.uncompressed_size);
         if (ok) {
             // set modification time to original value
             HANDLE hFile = CreateFile(extpath, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
@@ -521,7 +521,7 @@ void bz_internal_error(int errcode)
 BOOL CreateUninstaller(void)
 {
     size_t installerSize;
-    char *installerData = file_read_all(GetOwnPath(), &installerSize);
+    char *installerData = File::ReadAll(GetOwnPath(), &installerSize);
     if (!installerData) {
         NotifyFailed(_T("Couldn't access installer for uninstaller extraction"));
         return FALSE;
@@ -552,7 +552,7 @@ BOOL CreateUninstaller(void)
     }
 
     ScopedMem<TCHAR> uninstallerPath(GetUninstallerPath());
-    BOOL ok = write_to_file(uninstallerPath, installerData, installerSize);
+    BOOL ok = File::WriteAll(uninstallerPath, installerData, installerSize);
     free(installerData);
 
     if (!ok)
@@ -574,7 +574,7 @@ bool IsUninstaller()
     size_t markSize = StrLen(gUnInstMark);
 
     size_t uninstallerSize;
-    ScopedMem<char> uninstallerData(file_read_all(GetOwnPath(), &uninstallerSize));
+    ScopedMem<char> uninstallerData(File::ReadAll(GetOwnPath(), &uninstallerSize));
     if (!uninstallerData) {
         NotifyFailed(_T("Couldn't open myself for reading"));
         return false;
@@ -694,7 +694,7 @@ bool WriteUninstallerRegistryInfo(bool allUsers)
 BOOL IsUninstallerNeeded()
 {
     ScopedMem<TCHAR> exePath(GetInstalledExePath());
-    return file_exists(exePath);
+    return File::Exists(exePath);
 }
 
 BOOL RegDelKeyRecurse(HKEY hkey, TCHAR *path)
@@ -756,7 +756,7 @@ bool IsBrowserPluginInstalled()
         ok = ReadRegStr(HKEY_CURRENT_USER, REG_PATH_PLUGIN, PLUGIN_PATH, buf, dimof(buf));
     if (!ok)
         return false;
-    return file_exists(buf);
+    return File::Exists(buf);
 }
 
 bool IsPdfFilterInstalled()
@@ -845,7 +845,7 @@ BOOL RemoveInstalledFiles()
         ScopedMem<TCHAR> relPath(utf8_to_tstr(gPayloadData[i].filepath));
         ScopedMem<TCHAR> path(Path::Join(gGlobalData.installDir, relPath));
 
-        if (file_exists(path))
+        if (File::Exists(path))
             success &= DeleteFile(path);
     }
 

@@ -174,7 +174,7 @@ void AdjustRemovableDriveLetter(TCHAR *path)
     DWORD driveMask;
 
     // Don't bother if the file path is still valid
-    if (file_exists(path))
+    if (File::Exists(path))
         return;
 
     // Don't bother for invalid and non-removable drives
@@ -191,7 +191,7 @@ void AdjustRemovableDriveLetter(TCHAR *path)
     for (driveMask = GetLogicalDrives(); driveMask; driveMask >>= 1) {
         if ((driveMask & 1) && szDrive[0] != origDrive && GetDriveType(szDrive) == DRIVE_REMOVABLE) {
             path[0] = szDrive[0];
-            if (file_exists(path))
+            if (File::Exists(path))
                 return;
         }
         szDrive[0]++;
@@ -314,7 +314,7 @@ bool GetAcrobatPath(TCHAR *bufOut, int bufCchSize)
     bool found = ReadRegStr(HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\AcroRd32.exe"), NULL, path, dimof(path)) ||
                  ReadRegStr(HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\Acrobat.exe"), NULL, path, dimof(path));
     if (found)
-        found = file_exists(path);
+        found = File::Exists(path);
     if (found && bufOut)
         lstrcpyn(bufOut, path, bufCchSize);
     return found;
@@ -325,7 +325,7 @@ bool GetFoxitPath(TCHAR *bufOut, int bufCchSize)
     TCHAR path[MAX_PATH];
     bool found = ReadRegStr(HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Foxit Reader"), _T("DisplayIcon"), path, dimof(path));
     if (found)
-        found = file_exists(path);
+        found = File::Exists(path);
     if (found && bufOut)
         lstrcpyn(bufOut, path, bufCchSize);
     return found;
@@ -339,7 +339,7 @@ bool GetPDFXChangePath(TCHAR *bufOut, int bufCchSize)
     if (!found)
         return false;
     tstr_cat_s(path, dimof(path), _T("PDFXCview.exe"));
-    found = file_exists(path);
+    found = File::Exists(path);
     if (found && bufOut)
         lstrcpyn(bufOut, path, bufCchSize);
     return found;

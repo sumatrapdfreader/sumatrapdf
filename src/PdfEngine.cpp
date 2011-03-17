@@ -359,11 +359,11 @@ bool PdfEngine::load(const TCHAR *fileName, PasswordUI *pwdUI)
 
     if (embedMarks)
         *embedMarks = '\0';
-    size_t fileSize = file_size_get(_fileName);
+    size_t fileSize = File::GetSize(_fileName);
     // load small files entirely into memory so that they can be
     // overwritten even by programs that don't open files with FILE_SHARE_READ
     if (fileSize < MAX_MEMORY_FILE_SIZE)
-        fileData = file_read_all(_fileName, &fileSize);
+        fileData = File::ReadAll(_fileName, &fileSize);
     if (fileData) {
         fz_buffer *data = fz_newbuffer((int)fileSize);
         if (data) {

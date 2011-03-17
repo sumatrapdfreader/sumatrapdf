@@ -130,8 +130,9 @@ bool IsSame(const TCHAR *path1, const TCHAR *path2)
 
 }
 
+namespace File {
 
-bool file_exists(const TCHAR *file_path)
+bool Exists(const TCHAR *file_path)
 {
     struct _stat buf;
     int          res;
@@ -144,7 +145,7 @@ bool file_exists(const TCHAR *file_path)
     return true;
 }
 
-size_t file_size_get(const TCHAR *file_path)
+size_t GetSize(const TCHAR *file_path)
 {
     WIN32_FILE_ATTRIBUTE_DATA   fileInfo;
 
@@ -166,7 +167,7 @@ size_t file_size_get(const TCHAR *file_path)
     return res;
 }
 
-char *file_read_all(const TCHAR *file_path, size_t *file_size_out)
+char *ReadAll(const TCHAR *file_path, size_t *file_size_out)
 {
     char *data = NULL;
 
@@ -200,7 +201,7 @@ Exit:
     return data;
 }
 
-bool write_to_file(const TCHAR *file_path, void *data, size_t data_len)
+bool WriteAll(const TCHAR *file_path, void *data, size_t data_len)
 {
     HANDLE h = CreateFile(file_path, GENERIC_WRITE, FILE_SHARE_READ, NULL,  
                           CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL,  NULL); 
@@ -213,4 +214,6 @@ bool write_to_file(const TCHAR *file_path, void *data, size_t data_len)
     CloseHandle(h);
 
     return f_ok && data_len == size;
+}
+
 }
