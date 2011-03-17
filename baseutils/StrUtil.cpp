@@ -158,26 +158,19 @@ WCHAR *DupN(const WCHAR *s, size_t lenCch)
 
 char * str_cat_s(char * dst, size_t dst_cch_size, const char * src)
 {
-    return str_catn_s(dst, dst_cch_size, src, strlen(src));
-}
-
-char * str_catn_s(char *dst, size_t dst_cch_size, const char *src, size_t src_cch_size)
-{
-    char *dstEnd = dst + strlen(dst);
-    size_t len = min(src_cch_size + 1, dst_cch_size - (dstEnd - dst));
-    if (dst_cch_size <= (size_t)(dstEnd - dst))
+    size_t dstLen = Str::Len(dst);
+    if (dst_cch_size <= dstLen)
         return NULL;
-    
-    strncpy(dstEnd, src, len);
-    dstEnd[len - 1] = '\0';
-    
-    if (src_cch_size >= len)
+
+    int ok = str_copy(dst + dstLen, dst_cch_size - dstLen, src);
+    if (!ok)
         return NULL;
     return dst;
 }
 
-int str_copyn(char *dst, size_t dst_cch_size, const char *src, size_t src_cch_size)
+int str_copy(char *dst, size_t dst_cch_size, const char *src)
 {
+    size_t src_cch_size = Str::Len(src);
     size_t len = min(src_cch_size + 1, dst_cch_size);
     
     strncpy(dst, src, len);
@@ -186,11 +179,6 @@ int str_copyn(char *dst, size_t dst_cch_size, const char *src, size_t src_cch_si
     if (src_cch_size >= dst_cch_size)
         return FALSE;
     return TRUE;
-}
-
-int str_copy(char *dst, size_t dst_cch_size, const char *src)
-{
-    return str_copyn(dst, dst_cch_size, src, Str::Len(src));
 }
 
 /* Convert binary data in <buf> of size <len> to a hex-encoded string */

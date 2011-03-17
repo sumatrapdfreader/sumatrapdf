@@ -2546,9 +2546,10 @@ static void OnInverseSearch(WindowInfo *win, UINT x, UINT y)
         // Detect a text editor and use it as the default inverse search handler for now
         inverseSearch = AutoDetectInverseSearchCommands();
 
-    TCHAR cmdline[MAX_PATH];
-    if (inverseSearch && win->pdfsync->prepare_commandline(inverseSearch,
-      srcfilepath, line, col, cmdline, dimof(cmdline)) && *cmdline) {
+    TCHAR *cmdline = NULL;
+    if (inverseSearch)
+        cmdline = win->pdfsync->prepare_commandline(inverseSearch, srcfilepath, line, col);
+    if (!Str::IsEmpty(cmdline)) {
         //ShellExecute(NULL, NULL, cmdline, cmdline, NULL, SW_SHOWNORMAL);
         STARTUPINFO si = {0};
         PROCESS_INFORMATION pi = {0};
@@ -2563,6 +2564,7 @@ static void OnInverseSearch(WindowInfo *win, UINT x, UINT y)
     }
     else if (gGlobalPrefs.m_enableTeXEnhancements)
         WindowInfo_ShowMessage_Async(win, _TR("Cannot start inverse search command. Please check the command line in the settings."), true);
+    free(cmdline);
 
     if (inverseSearch != gGlobalPrefs.m_inverseSearchCmdLine)
         free(inverseSearch);

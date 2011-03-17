@@ -13,7 +13,7 @@ int tstr_trans_chars(TCHAR *str, const TCHAR *oldChars, const TCHAR *newChars)
     int findCount = 0;
     TCHAR *c = str;
     while (*c) {
-        const TCHAR *found = tstr_find_char(oldChars, *c);
+        const TCHAR *found = Str::FindChar(oldChars, *c);
         if (found) {
             *c = newChars[found - oldChars];
             findCount++;
@@ -30,7 +30,7 @@ static int tchar_needs_url_encode(TCHAR c)
 {
     if (_istalnum(c) && _istascii(c))
         return FALSE;
-    if (tstr_find_char(CHAR_URL_DONT_ENCODE, c))
+    if (Str::FindChar(CHAR_URL_DONT_ENCODE, c))
         return FALSE;
     return TRUE;
 }
@@ -96,7 +96,7 @@ int tstr_skip(const TCHAR **strp, const TCHAR *expect)
 int tstr_copy_skip_until(const TCHAR **strp, TCHAR *dst, size_t dst_size, TCHAR stop)
 {
     const TCHAR *start = *strp;
-    const TCHAR *end = tstr_find_char(start, stop);
+    const TCHAR *end = Str::FindChar(start, stop);
 
     if (!end) {
         size_t len = Str::Len(*strp);
@@ -105,7 +105,10 @@ int tstr_copy_skip_until(const TCHAR **strp, TCHAR *dst, size_t dst_size, TCHAR 
     }
 
     *strp = end + 1;
-    return tstr_copyn(dst, dst_size, start, end - start);
+    size_t len = min(dst_size, (size_t)(end - start) + 1);
+    tstr_copy(dst, len, start);
+
+    return len <= dst_size;
 }
 
 /* Given a pointer to a string in '*txt', skip past whitespace in the string
@@ -113,7 +116,7 @@ int tstr_copy_skip_until(const TCHAR **strp, TCHAR *dst, size_t dst_size, TCHAR 
 static void tstr_skip_ws(TCHAR **txt)
 {
     assert(txt && *txt);
-    while (tchar_is_ws(**txt))
+    while (_istspace(**txt))
         (*txt)++;
 }
 
@@ -167,12 +170,12 @@ static TCHAR *tstr_parse_non_quoted(TCHAR **txt)
     TCHAR * token;
     size_t  strLen;
 
-    assert(txt && *txt && **txt && '"' != **txt && !tchar_is_ws(**txt));
+    assert(txt && *txt && **txt && '"' != **txt && !_istspace(**txt));
 
     // contrary to http://msdn.microsoft.com/en-us/library/17w5ykft.aspx
     // we don't treat quotation marks or backslashes in non-quoted
     // arguments in any special way
-    for (cur = *txt; *cur && !tchar_is_ws(*cur); cur++);
+    for (cur = *txt; *cur && !_istspace(*cur); cur++);
     strLen = cur - *txt;
     token = Str::DupN(*txt, strLen);
 

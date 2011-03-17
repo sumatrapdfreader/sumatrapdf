@@ -97,12 +97,8 @@ static void TStrTest()
     assert(Str::EndsWith(str, _T("ing")) && Str::EndsWithI(str, _T("ING")));
     assert(!Str::EndsWith(str, _T("ung")));
     assert(Str::IsEmpty((char*)NULL) && Str::IsEmpty((WCHAR*)NULL)&& Str::IsEmpty(_T("")) && !Str::IsEmpty(str));
-    assert(tstr_find_char(str, _T('s')) && !tstr_find_char(str, _T('S')));
-    int res = tstr_copyn(buf, dimof(buf), str, 4);
-    assert(res && Str::Eq(buf, _T("a st")));
-    res = tstr_copyn(buf, 4, str, 4);
-    assert(!res && Str::Eq(buf, _T("a s")));
-    res = tstr_printf_s(buf, 4, _T("%s"), str);
+    assert(Str::FindChar(str, _T('s')) && !Str::FindChar(str, _T('S')));
+    int res = tstr_printf_s(buf, 4, _T("%s"), str);
     assert(Str::Eq(buf, _T("a s")) && res < 0);
     res = tstr_printf_s(buf, dimof(buf), _T("%s!!"), str);
     assert(Str::StartsWith(buf, str) && Str::EndsWith(buf, _T("!!")) && res == 10);
@@ -132,8 +128,6 @@ static void TStrTest()
     assert(Str::Eq(buf, _T("abcde")) && !str);
     str = tstr_cat_s(buf, dimof(buf), _T("jkl"));
     assert(buf == str && Str::Eq(buf, _T("abcdejkl")));
-    str = tstr_catn_s(buf, dimof(buf), _T("mno"), 2);
-    assert(buf == str && Str::Eq(buf, _T("abcdejklmn")));
 
     tstr_copy(buf, dimof(buf), _T("abc\1efg\1"));
     tstr_trans_chars(buf, _T("ace"), _T("ACE"));

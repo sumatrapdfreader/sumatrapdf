@@ -6,28 +6,21 @@
 #include "StrUtil.h"
 #include "WStrUtil.h"
 
-WCHAR * wstr_cat_s(WCHAR * dest, size_t dst_cch_size, const WCHAR * src)
+WCHAR * wstr_cat_s(WCHAR * dst, size_t dst_cch_size, const WCHAR * src)
 {
-    return wstr_catn_s(dest, dst_cch_size, src, Str::Len(src));
-}
-
-WCHAR * wstr_catn_s(WCHAR *dst, size_t dst_cch_size, const WCHAR *src, size_t src_cch_size)
-{
-    WCHAR *dstEnd = dst + Str::Len(dst);
-    size_t len = min(src_cch_size + 1, dst_cch_size - (dstEnd - dst));
-    if (dst_cch_size <= (size_t)(dstEnd - dst))
+    size_t dstLen = Str::Len(dst);
+    if (dst_cch_size <= dstLen)
         return NULL;
-    
-    wcsncpy(dstEnd, src, len);
-    dstEnd[len - 1] = L'\0';
-    
-    if (src_cch_size >= len)
+
+    int ok = wstr_copy(dst + dstLen, dst_cch_size - dstLen, src);
+    if (!ok)
         return NULL;
     return dst;
 }
 
-int wstr_copyn(WCHAR *dst, size_t dst_cch_size, const WCHAR *src, size_t src_cch_size)
+int wstr_copy(WCHAR *dst, size_t dst_cch_size, const WCHAR *src)
 {
+    size_t src_cch_size = Str::Len(src);
     size_t len = min(src_cch_size + 1, dst_cch_size);
     
     wcsncpy(dst, src, len);
@@ -36,11 +29,6 @@ int wstr_copyn(WCHAR *dst, size_t dst_cch_size, const WCHAR *src, size_t src_cch
     if (src_cch_size >= dst_cch_size)
         return FALSE;
     return TRUE;
-}
-
-int wstr_copy(WCHAR *dst, size_t dst_cch_size, const WCHAR *src)
-{
-    return wstr_copyn(dst, dst_cch_size, src, Str::Len(src));
 }
 
 WCHAR *wstr_printf(const WCHAR *format, ...)

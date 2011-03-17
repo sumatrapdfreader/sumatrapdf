@@ -164,7 +164,8 @@ public:
         return 0;
     }
 
-    UINT prepare_commandline(LPCTSTR pattern, LPCTSTR filename, UINT line, UINT col, PTSTR cmdline, UINT cchCmdline);
+    // the caller must free() the command line
+    TCHAR * prepare_commandline(LPCTSTR pattern, LPCTSTR filename, UINT line, UINT col);
 
 private:
     bool index_discarded; // true if the index needs to be recomputed (needs to be set to true when a change to the pdfsync file is detected)

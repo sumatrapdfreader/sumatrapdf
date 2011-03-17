@@ -17,13 +17,8 @@
 #endif
 
 #ifdef _UNICODE
-  #define tchar_is_ws       iswspace
-  #define tstr_find_char    wstr_find_char
-
   #define tstr_copy         wstr_copy
-  #define tstr_copyn        wstr_copyn
   #define tstr_cat_s        wstr_cat_s
-  #define tstr_catn_s       wstr_catn_s
   #define tstr_printf       wstr_printf
   #define tstr_printf_s     wstr_printf_s
 
@@ -36,13 +31,8 @@
   #define wstr_to_tstr_q(src)               (src)
   #define tstr_to_wstr_q(src)               (src)
 #else
-  #define tchar_is_ws       isspace
-  #define tstr_find_char    str_find_char
-
   #define tstr_copy         str_copy
-  #define tstr_copyn        str_copyn
   #define tstr_cat_s        str_cat_s
-  #define tstr_catn_s       str_catn_s
   #define tstr_printf       str_printf
   #define tstr_printf_s     str_printf_s
 

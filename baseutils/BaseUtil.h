@@ -43,6 +43,9 @@
 #define dimof(X)    (sizeof(X)/sizeof((X)[0]))
 #define NoOp()      ((void)0)
 
+/* compile-time assert */
+#define CASSERT(exp, name) typedef int assert_##name [(exp) != FALSE]
+
 template <typename T>
 static inline void swap(T& one, T&two)
 {

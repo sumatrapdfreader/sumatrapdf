@@ -18,8 +18,6 @@ void    win32_dbg_out_hex(const char *dsc, const unsigned char *data, int dataLe
   #define DBG_OUT_HEX(...) NoOp()
 #endif
 
-#define str_find_char strchr
-
 /* Note: this demonstrates how eventually I would like to get rid of
    tstr_* and wstr_* functions and instead rely on C++'s ability
    to use overloaded functions and only have Str::* functions */
@@ -62,6 +60,13 @@ bool EndsWithI(const WCHAR *txt, const WCHAR *end);
 char *  DupN(const char *s, size_t lenCch);
 WCHAR * DupN(const WCHAR *s, size_t lenCch);
 
+inline const char * FindChar(const char *str, const char c) {
+    return strchr(str, c);
+}
+inline const WCHAR * FindChar(const WCHAR *str, const WCHAR c) {
+    return wcschr(str, c);
+}
+
 }
 
 static inline bool ChrIsDigit(const WCHAR c)
@@ -73,9 +78,7 @@ static inline bool ChrIsDigit(const WCHAR c)
 // using either Str class or Str::Join() etc.
 // Using fixed size buffers is a known receipt for buffer overruns
 int     str_copy(char *dst, size_t dst_cch_size, const char *src);
-int     str_copyn(char *dst, size_t dst_cch_size, const char *src, size_t src_cch_size);
 char *  str_cat_s(char *dst, size_t dst_cch_size, const char *src);
-char *  str_catn_s(char *dst, size_t dst_cch_size, const char *src, size_t src_cch_size);
 
 
 char *  str_printf(const char *format, ...);

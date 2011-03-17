@@ -181,7 +181,7 @@ public:
 
     void Append(const T* src, size_t size=-1)
     {
-        if (-1 == size)
+        if ((size_t)-1 == size)
             size = Len(src);
         T* dst = MakeSpaceAt(len, size);
         memcpy(dst, src, size * sizeof(T));

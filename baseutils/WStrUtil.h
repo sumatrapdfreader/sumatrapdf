@@ -4,12 +4,8 @@
 #ifndef WStrUtil_h
 #define WStrUtil_h
 
-#define wstr_find_char wcschr
-
 int     wstr_copy(WCHAR *dst, size_t dst_cch_size, const WCHAR *src);
-int     wstr_copyn(WCHAR *dst, size_t dst_cch_size, const WCHAR *src, size_t src_cch_size);
 WCHAR * wstr_cat_s(WCHAR *dst, size_t dst_cch_size, const WCHAR *src);
-WCHAR * wstr_catn_s(WCHAR *dst, size_t dst_cch_size, const WCHAR *src, size_t src_cch_size);
 int     wstr_printf_s(WCHAR *out, size_t out_cch_size, const WCHAR *format, ...);
 
 char *  wstr_to_multibyte(const WCHAR *txt, UINT CodePage);

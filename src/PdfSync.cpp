@@ -95,43 +95,35 @@ UINT CreateSynchronizer(LPCTSTR pdffilename, Synchronizer **sync)
 }
 
 // Replace in 'pattern' the macros %f %l %c by 'filename', 'line' and 'col'
-// the result is stored in cmdline
-UINT Synchronizer::prepare_commandline(LPCTSTR pattern, LPCTSTR filename, UINT line, UINT col, PTSTR cmdline, UINT cchCmdline)
+// the caller must free() the result
+TCHAR * Synchronizer::prepare_commandline(LPCTSTR pattern, LPCTSTR filename, UINT line, UINT col)
 {
     LPCTSTR perc;
-    size_t len = 0;
-    cmdline[0] = '\0';
-    LPTSTR out = cmdline;
-    size_t cchOut = cchCmdline;
-    while (perc = tstr_find_char(pattern, '%')) {
-        tstr_copyn(out, cchOut, pattern, perc - pattern);
-        len = Str::Len(out);
-        out += len;
-        cchOut -= len;
+    Str::Str<TCHAR> cmdline(256);
 
+    while ((perc = Str::FindChar(pattern, '%'))) {
+        cmdline.Append(pattern, perc - pattern);
+        pattern = perc + 2;
         perc++;
-        if (*perc == 'f') {
-            tstr_copy(out, cchOut, filename);
-        }
+
+        if (*perc == 'f')
+            cmdline.Append(filename);
         else if (*perc == 'l') {
-            tstr_printf_s(out, cchOut, _T("%d"), line);
+            ScopedMem<TCHAR> lineNo(tstr_printf(_T("%u"), line));
+            cmdline.Append(lineNo);
         }
         else if (*perc == 'c') {
-            tstr_printf_s(out, cchOut, _T("%d"), col);
+            ScopedMem<TCHAR> colNo(tstr_printf(_T("%u"), col));
+            cmdline.Append(colNo);
         }
-        else {
-            tstr_copyn(out, cchOut, perc - 1, 2);
-        }
-        len = Str::Len(out);
-        out += len;
-        cchOut -= len;
-
-        pattern = perc+1;
+        else if (*perc == '%')
+            cmdline.Append('%');
+        else
+            cmdline.Append(perc - 1, 2);
     }
-    
-    tstr_cat_s(cmdline, cchCmdline, pattern);
+    cmdline.Append(pattern);
 
-    return 1;
+    return cmdline.StealData();
 }
 
 // PDFSYNC synchronizer
@@ -223,7 +215,6 @@ int Pdfsync::scan_and_build_index(FILE *fp)
     record_sections.Reset();
     pdfsheet_index.Reset();
 
-    CHAR buff[_MAX_PATH];
     fpos_t linepos;
     fgetpos(fp, &linepos);
     char c;
@@ -243,24 +234,19 @@ int Pdfsync::scan_and_build_index(FILE *fp)
         switch (c) {
         case '(': 
             {
-                // read the filename
-                fgetline(buff, dimof(buff), fp);
-                PSTR pfilename = buff;
-                size_t len = Str::Len(buff);
-                // if the filename contains quotes then remove them
-                if (Str::StartsWith(buff, "\"") && Str::EndsWith(buff, "\"")) {
-                    pfilename++;
-                    len-=2;
-                }
-
                 src_file s;
                 s.first_recordsection = (size_t)-1;
                 s.last_recordsection = (size_t)-1;
-                str_copyn(s.filename, dimof(s.filename), pfilename, len);
+
+                // read the filename
+                fgetline(s.filename, dimof(s.filename), fp);
+
+                CASSERT(sizeof(s.filename) == MAX_PATH, sufficient_path_length);
+                // if the filename contains quotes then remove them
+                PathUnquoteSpacesA(s.filename);
                 // if the file name extension is not specified then add the suffix '.tex'
-                if (str_find_char(pfilename, '.') == NULL) {
-                     str_cat_s(s.filename, dimof(s.filename), ".tex");
-                }
+                if (!Str::FindChar(s.filename, '.'))
+                    PathAddExtensionA(s.filename, ".tex");
 #ifndef NDEBUG
                 s.openline_pos = linepos;
                 s.closeline_pos = -1;
