@@ -502,7 +502,7 @@ UINT Pdfsync::source_to_record(FILE *fp, LPCTSTR srcfilename, UINT line, UINT co
     // find the source file entry
     size_t isrc = (size_t)-1;
     for (size_t i = 0; i<this->srcfiles.Count(); i++) {
-        if (str_ieq(mb_srcfilename, this->srcfiles[i].filename)) {
+        if (Str::EqI(mb_srcfilename, this->srcfiles[i].filename)) {
             isrc = i;
             break;
         }

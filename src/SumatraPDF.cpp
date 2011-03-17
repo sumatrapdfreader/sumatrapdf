@@ -1946,7 +1946,7 @@ static DWORD OnUrlDownloaded(WindowInfo *win, HttpReqCtx *ctx, bool silent)
     }
 
     // if automated, respect gGlobalPrefs.m_versionToSkip
-    if (silent && tstr_ieq(gGlobalPrefs.m_versionToSkip, verTxt))
+    if (silent && Str::EqI(gGlobalPrefs.m_versionToSkip, verTxt))
         return 0;
 
     bool download = ShowNewVersionDialog(win, verTxt);

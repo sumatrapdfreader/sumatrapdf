@@ -287,7 +287,7 @@ bool IsExeAssociatedWithPdfExtension()
 
     // HKEY_CLASSES_ROOT\SumatraPDF\shell\open default key must be: open
     ok = ReadRegStr(HKEY_CLASSES_ROOT, _T("SumatraPDF\\shell"), NULL, tmp, dimof(tmp));
-    if (!ok || !tstr_ieq(tmp, _T("open")))
+    if (!ok || !Str::EqI(tmp, _T("open")))
         return false;
 
     // HKEY_CLASSES_ROOT\SumatraPDF\shell\open\command default key must be: "${exe_path}" "%1"

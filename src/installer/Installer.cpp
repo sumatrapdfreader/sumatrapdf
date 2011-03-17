@@ -480,7 +480,7 @@ BOOL InstallCopyFiles(void)
         }
 
         for (int i = 0; i < dimof(gPayloadData); i++) {
-            if (success && gPayloadData[i].install && str_ieq(filename, gPayloadData[i].filepath)) {
+            if (success && gPayloadData[i].install && Str::EqI(filename, gPayloadData[i].filepath)) {
                 gPayloadData[i].install = false;
                 break;
             }
@@ -766,7 +766,7 @@ bool IsPdfFilterInstalled()
     if (!ok)
         return false;
     ScopedMem<WCHAR> handler_iid(tstr_to_wstr(buf));
-    return wstr_ieq(handler_iid, SZ_PDF_FILTER_HANDLER);
+    return Str::EqI(handler_iid, SZ_PDF_FILTER_HANDLER);
 }
 
 void InstallBrowserPlugin()
@@ -1131,7 +1131,7 @@ static DWORD WINAPI UninstallerThread(LPVOID data)
         NotifyFailed(_T("Couldn't remove the shortcut"));
 
     ScopedMem<TCHAR> defaultViewer(GetDefaultPdfViewer());
-    if (tstr_ieq(defaultViewer, TAPP)) {
+    if (Str::EqI(defaultViewer, TAPP)) {
         UnregisterFromBeingDefaultViewer(true);
         UnregisterFromBeingDefaultViewer(false);
     }
@@ -1771,7 +1771,7 @@ void OnCreateInstaller(HWND hwnd)
     y += 40;
 
     ScopedMem<TCHAR> defaultViewer(GetDefaultPdfViewer());
-    BOOL hasOtherViewer = !tstr_ieq(defaultViewer, TAPP);
+    BOOL hasOtherViewer = !Str::EqI(defaultViewer, TAPP);
     BOOL isSumatraDefaultViewer = defaultViewer && !hasOtherViewer;
 
     // only show the checbox if Sumatra is not already a default viewer.
@@ -2044,7 +2044,7 @@ void ParseCommandLine(TCHAR *cmdLine)
     free(arg);
 
 #define get_next_arg() tstr_parse_possibly_quoted(&cmdLine)
-#define is_arg(param) tstr_ieq(arg + 1, _T(param))
+#define is_arg(param) Str::EqI(arg + 1, _T(param))
 
     for (; (arg = get_next_arg()); free(arg)) {
         if ('-' != *arg && '/' != *arg)

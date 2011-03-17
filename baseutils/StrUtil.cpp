@@ -66,17 +66,6 @@ int str_copy(char *dst, size_t dst_cch_size, const char *src)
     return str_copyn(dst, dst_cch_size, src, strlen(src));
 }
 
-int str_ieq(const char *str1, const char *str2)
-{
-    if (str1 == str2)
-        return TRUE;
-    if (!str1 || !str2)
-        return FALSE;
-    if (0 == _stricmp(str1, str2))
-        return TRUE;
-    return FALSE;
-}
-
 int str_eqn(const char *str1, const char *str2, size_t len)
 {
     if (str1 == str2)
@@ -136,7 +125,7 @@ int str_endswithi(const char *txt, const char *end)
     end_len = strlen(end);
     if (end_len > txt_len)
         return FALSE;
-    if (str_ieq(txt+txt_len-end_len, end))
+    if (Str::EqI(txt+txt_len-end_len, end))
         return TRUE;
     return FALSE;
 }

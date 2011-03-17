@@ -67,17 +67,6 @@ int wstr_copy(WCHAR *dst, size_t dst_cch_size, const WCHAR *src)
     return wstr_copyn(dst, dst_cch_size, src, Str::Len(src));
 }
 
-int wstr_ieq(const WCHAR *str1, const WCHAR *str2)
-{
-    if (str1 == str2)
-        return TRUE;
-    if (!str1 || !str2)
-        return FALSE;
-    if (0 == _wcsicmp(str1, str2))
-        return TRUE;
-    return FALSE;
-}
-
 int wstr_eqn(const WCHAR *str1, const WCHAR *str2, size_t len)
 {
     if (str1 == str2)
@@ -124,7 +113,7 @@ int wstr_endswithi(const WCHAR *txt, const WCHAR *end)
     end_len = Str::Len(end);
     if (end_len > txt_len)
         return FALSE;
-    if (wstr_ieq(txt+txt_len-end_len, end))
+    if (Str::EqI(txt+txt_len-end_len, end))
         return TRUE;
     return FALSE;
 }

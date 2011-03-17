@@ -51,7 +51,7 @@ public:
                     }
     DisplayState *  Find(const TCHAR *filePath) const {
                         for (size_t i = 0; i < states.Count(); i++)
-                            if (tstr_ieq(states[i]->filePath, filePath))
+                            if (Str::EqI(states[i]->filePath, filePath))
                                 return states[i];
                         return NULL;
                     }

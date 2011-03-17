@@ -146,7 +146,7 @@ bool FileWatcher::NotifyChange()
     for (;;) {
         wstr_copyn(filenameW, dimof(filenameW), pFileNotify->FileName, pFileNotify->FileNameLength / sizeof(WCHAR));
         TCHAR *ptNotifyFilename = wstr_to_tstr(filenameW);
-        bool isWatchedFile = tstr_ieq(ptNotifyFilename, Path::GetBaseName(szFilepath));
+        bool isWatchedFile = Str::EqI(ptNotifyFilename, Path::GetBaseName(szFilepath));
         free(ptNotifyFilename);
 
         // is it the file that is being watched?

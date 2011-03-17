@@ -165,7 +165,7 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
     VStrList_FromCmdLine(&argList, cmdLine);
     size_t argCount = argList.Count();
 
-#define is_arg(txt) tstr_ieq(_T(txt), argument)
+#define is_arg(txt) Str::EqI(_T(txt), argument)
 #define is_arg_with_param(txt) (is_arg(txt) && param != NULL)
 
     for (size_t n = 1; n < argCount; n++) {

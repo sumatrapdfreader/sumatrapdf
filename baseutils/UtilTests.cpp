@@ -90,8 +90,8 @@ static void TStrTest()
     assert(Str::Len(str) == 8);
     assert(Str::Eq(str, _T("a string")) && Str::Eq(str, str));
     assert(!Str::Eq(str, NULL) && !Str::Eq(str, _T("A String")));
-    assert(tstr_ieq(str, _T("A String")) && tstr_ieq(str, str));
-    assert(!tstr_ieq(str, NULL) && tstr_ieq(NULL, NULL));
+    assert(Str::EqI(str, _T("A String")) && Str::EqI(str, str));
+    assert(!Str::EqI(str, NULL) && Str::EqI((char*)NULL, (char*)NULL));
     assert(tstr_startswith(str, _T("a s")) && tstr_startswithi(str, _T("A Str")));
     assert(!tstr_startswith(str, _T("Astr")));
     assert(tstr_endswith(str, _T("ing")) && tstr_endswithi(str, _T("ING")));

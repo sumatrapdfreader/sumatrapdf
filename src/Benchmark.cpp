@@ -55,7 +55,7 @@ static void GetRange(TCHAR *s, int& start, int& end)
 // * description of page ranges e.g. "1", "1-5", "2-3,6,8-10"
 bool IsBenchPagesInfo(TCHAR *s)
 {
-    if (tstr_ieq(s, _T("loadonly")))
+    if (Str::EqI(s, _T("loadonly")))
         return true;
 
     while (s) {

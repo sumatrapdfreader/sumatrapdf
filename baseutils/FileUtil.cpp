@@ -97,7 +97,7 @@ static int Compare(const TCHAR *lhs, const TCHAR *rhs)
     ScopedMem<TCHAR> nr(Normalize(rhs));
     if (!nl || !nr)
         return -1;
-    if (!tstr_ieq(nl, nr))
+    if (!Str::EqI(nl, nr))
         return 1;
     return 0;
 }
