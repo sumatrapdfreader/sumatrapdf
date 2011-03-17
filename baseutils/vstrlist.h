@@ -15,7 +15,7 @@ public:
     }
 
     TCHAR *Join(TCHAR *joint=NULL) {
-        Vec<TCHAR> tmp(256, 1);
+        Str::Str<TCHAR> tmp(256);
         size_t jointLen = joint ? Str::Len(joint) : 0;
         for (size_t i = 0; i < Count(); i++) {
             TCHAR *s = At(i);

@@ -1537,7 +1537,7 @@ TCHAR *DisplayModel::getTextInRegion(int pageNo, RectD *region)
 /* extract all text from the document (caller needs to free() the result) */
 TCHAR *DisplayModel::extractAllText(RenderTarget target)
 {
-    Vec<TCHAR> txt(1024,1);
+    Str::Str<TCHAR> txt(1024);
 
     for (int pageNo = 1; pageNo <= pageCount(); pageNo++)
     {

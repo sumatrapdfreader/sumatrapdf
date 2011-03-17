@@ -145,6 +145,7 @@ public:
         Reset();
         return res;
     }
+
     T *LendData() const {
         return els;
     }
@@ -162,6 +163,19 @@ public:
             RemoveAt(i);
     }
 };
+
+namespace Str {
+template <typename T>
+
+class Str : public Vec<T> {
+public:
+    Str(size_t initCap=0) :
+        Vec(initCap, 1)
+    {
+    }
+};
+
+}
 
 // only suitable for T that are pointers that were malloc()ed
 template <typename T>

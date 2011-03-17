@@ -49,7 +49,7 @@ inline bool IsEmpty(T *s) {
 
 template <typename T>
 inline bool StartsWith(const T* str, const T* txt) {
-    return Str::EqN(str, txt, Str::Len(txt));
+    return EqN(str, txt, Len(txt));
 }
 
 bool StartsWithI(const char *str, const char *txt);

@@ -117,7 +117,7 @@ BencDict *BencArray::GetDict(size_t index) const {
 
 char *BencArray::Encode() const
 {
-    Vec<char> bytes(256, 1);
+    Str::Str<char> bytes(256);
     bytes.Append("l", 1);
     for (size_t i = 0; i < Length(); i++) {
         ScopedMem<char> objBytes(value[i]->Encode());
@@ -193,7 +193,7 @@ void BencDict::Add(const char *key, BencObj *obj)
 
 char *BencDict::Encode() const
 {
-    Vec<char> bytes(256, 1);
+    Str::Str<char> bytes(256);
     bytes.Append("d", 1);
     for (size_t i = 0; i < Length(); i++) {
         ScopedMem<char> key(str_printf("%" PRIuPTR ":%s", Str::Len(keys[i]), keys[i]));

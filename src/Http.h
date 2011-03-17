@@ -16,7 +16,7 @@ public:
     CallbackFunc *  callback;
 
     TCHAR *         url;
-    Vec<char> *     data;
+    Str::Str<char> *data;
     DWORD           error;
 
     HttpReqCtx(const TCHAR *url, CallbackFunc *callback=NULL);

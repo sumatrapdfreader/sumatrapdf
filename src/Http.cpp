@@ -11,7 +11,7 @@ HttpReqCtx::HttpReqCtx(const TCHAR *url, CallbackFunc *callback)
 {
     assert(url);
     this->url = Str::Dup(url);
-    data = new Vec<char>(256, 1);
+    data = new Str::Str<char>(256);
     if (callback)
         hThread = CreateThread(NULL, 0, HttpDownloadThread, this, 0, 0);
     else

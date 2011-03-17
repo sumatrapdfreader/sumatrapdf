@@ -250,7 +250,7 @@ static void VecTest()
 
     {
         char buf[2] = {'a', '\0'};
-        Vec<char> v(0,1);
+        Str::Str<char> v(0);
         for (int i=0; i<7; i++) {
             v.Append(buf, 1);
             buf[0] = buf[0] + 1;
@@ -261,7 +261,7 @@ static void VecTest()
     }
 
     {
-        Vec<char> v(128,1);
+        Str::Str<char> v(128);
         v.Append("boo", 3);
         assert(Str::Eq("boo", v.LendData()));
         assert(v.Count() == 3);
@@ -278,7 +278,7 @@ static void VecTest()
     }
 
     {
-        Vec<char> v(0,1);
+        Str::Str<char> v(0);
         for (int i=0; i<32; i++) {
             assert(v.Count() == i * 6);
             v.Append("lambd", 5);
