@@ -30,7 +30,7 @@ public:
         size_t n = Count();
         for (size_t i = 0; i < n; i++) {
             TCHAR *item = At(i);
-            if (tstr_eq(string, item))
+            if (Str::Eq(string, item))
                 return (int)i;
         }
         return -1;

@@ -88,8 +88,8 @@ static void TStrTest()
     TCHAR buf[32];
     TCHAR *str = _T("a string");
     assert(Str::Len(str) == 8);
-    assert(tstr_eq(str, _T("a string")) && tstr_eq(str, str));
-    assert(!tstr_eq(str, NULL) && !tstr_eq(str, _T("A String")));
+    assert(Str::Eq(str, _T("a string")) && Str::Eq(str, str));
+    assert(!Str::Eq(str, NULL) && !Str::Eq(str, _T("A String")));
     assert(tstr_ieq(str, _T("A String")) && tstr_ieq(str, str));
     assert(!tstr_ieq(str, NULL) && tstr_ieq(NULL, NULL));
     assert(tstr_startswith(str, _T("a s")) && tstr_startswithi(str, _T("A Str")));
@@ -99,58 +99,58 @@ static void TStrTest()
     assert(tstr_empty(NULL) && tstr_empty(_T("")) && !tstr_empty(str));
     assert(tstr_find_char(str, _T('s')) && !tstr_find_char(str, _T('S')));
     int res = tstr_copyn(buf, dimof(buf), str, 4);
-    assert(res && tstr_eq(buf, _T("a st")));
+    assert(res && Str::Eq(buf, _T("a st")));
     res = tstr_copyn(buf, 4, str, 4);
-    assert(!res && tstr_eq(buf, _T("a s")));
+    assert(!res && Str::Eq(buf, _T("a s")));
     res = tstr_printf_s(buf, 4, _T("%s"), str);
-    assert(tstr_eq(buf, _T("a s")) && res < 0);
+    assert(Str::Eq(buf, _T("a s")) && res < 0);
     res = tstr_printf_s(buf, dimof(buf), _T("%s!!"), str);
     assert(tstr_startswith(buf, str) && tstr_endswith(buf, _T("!!")) && res == 10);
     tstr_copy(buf, dimof(buf), str);
-    assert(tstr_eq(buf, str));
+    assert(Str::Eq(buf, str));
 
     str = Str::Dup(buf);
-    assert(tstr_eq(str, buf));
+    assert(Str::Eq(str, buf));
     free(str);
     str = tstr_dupn(buf, 4);
-    assert(tstr_eq(str, _T("a st")));
+    assert(Str::Eq(str, _T("a st")));
     free(str);
     str = tstr_printf(_T("%s"), buf);
-    assert(tstr_eq(str, buf));
+    assert(Str::Eq(str, buf));
     free(str);
     str = tstr_cat(buf, buf);
     assert(Str::Len(str) == 2 * Str::Len(buf));
     free(str);
     str = tstr_cat(NULL, _T("ab"));
-    assert(tstr_eq(str, _T("ab")));
+    assert(Str::Eq(str, _T("ab")));
     free(str);
 
     tstr_copy(buf, 6, _T("abc"));
     str = tstr_cat_s(buf, 6, _T("def"));
-    assert(tstr_eq(buf, _T("abcde")) && !str);
+    assert(Str::Eq(buf, _T("abcde")) && !str);
     str = tstr_cat_s(buf, 6, _T("ghi"));
-    assert(tstr_eq(buf, _T("abcde")) && !str);
+    assert(Str::Eq(buf, _T("abcde")) && !str);
     str = tstr_cat_s(buf, dimof(buf), _T("jkl"));
-    assert(buf == str && tstr_eq(buf, _T("abcdejkl")));
+    assert(buf == str && Str::Eq(buf, _T("abcdejkl")));
     str = tstr_catn_s(buf, dimof(buf), _T("mno"), 2);
-    assert(buf == str && tstr_eq(buf, _T("abcdejklmn")));
+    assert(buf == str && Str::Eq(buf, _T("abcdejklmn")));
 
     tstr_copy(buf, dimof(buf), _T("abc\1efg\1"));
     tstr_trans_chars(buf, _T("ace"), _T("ACE"));
-    assert(tstr_eq(buf, _T("AbC\1Efg\1")));
+    assert(Str::Eq(buf, _T("AbC\1Efg\1")));
     tstr_trans_chars(buf, _T("\1"), _T("\0"));
-    assert(tstr_eq(buf, _T("AbC")) && tstr_eq(buf + 4, _T("Efg")));
+    assert(Str::Eq(buf, _T("AbC")) && Str::Eq(buf + 4, _T("Efg")));
 
     TCHAR *url = tstr_url_encode(_T("key=value&key2=more data! (even \"\xFCmlauts\")'\b"));
-    assert(tstr_eq(url, _T("key%3dvalue%26key2%3dmore+data!+(even+%22%fcmlauts%22)'%08")));
+    assert(Str::Eq(url, _T("key%3dvalue%26key2%3dmore+data!+(even+%22%fcmlauts%22)'%08")));
     free(url);
 
     const TCHAR *pos = _T("[Open(\"filename.pdf\",0,1,0)]");
     assert(tstr_skip(&pos, _T("[Open(\"")));
     assert(tstr_copy_skip_until(&pos, buf, dimof(buf), '"'));
-    assert(tstr_eq(buf, _T("filename.pdf")));
+    assert(Str::Eq(buf, _T("filename.pdf")));
     assert(!tstr_skip(&pos, _T("0,1")));
-    assert(tstr_eq(pos, _T(",0,1,0)]")));
+    assert(Str::Eq(pos, _T(",0,1,0)]")));
     *buf = _T('\0');
     assert(!tstr_copy_skip_until(&pos, buf, dimof(buf), '"'));
     assert(!*pos && !*buf);
@@ -159,10 +159,10 @@ static void TStrTest()
     // as all others might not be available in all code pages
 #define TEST_STRING "aBc"
     char *strA = tstr_to_ansi(_T(TEST_STRING));
-    assert(str_eq(strA, TEST_STRING));
+    assert(Str::Eq(strA, TEST_STRING));
     str = ansi_to_tstr(strA);
     free(strA);
-    assert(tstr_eq(str, _T(TEST_STRING)));
+    assert(Str::Eq(str, _T(TEST_STRING)));
     free(str);
 #undef TEST_STRING
 
@@ -175,27 +175,27 @@ static void FileUtilTest()
     TCHAR *path1 = _T("C:\\Program Files\\SumatraPDF\\SumatraPDF.exe");
 
     const TCHAR *baseName = Path::GetBaseName(path1);
-    assert(tstr_eq(baseName, _T("SumatraPDF.exe")));
+    assert(Str::Eq(baseName, _T("SumatraPDF.exe")));
 
     TCHAR *dirName = Path::GetDir(path1);
-    assert(tstr_eq(dirName, _T("C:\\Program Files\\SumatraPDF")));
+    assert(Str::Eq(dirName, _T("C:\\Program Files\\SumatraPDF")));
     baseName = Path::GetBaseName(dirName);
-    assert(tstr_eq(baseName, _T("SumatraPDF")));
+    assert(Str::Eq(baseName, _T("SumatraPDF")));
     free(dirName);
 
     path1 = _T("C:\\Program Files");
     dirName = Path::GetDir(path1);
-    assert(tstr_eq(dirName, _T("C:\\")));
+    assert(Str::Eq(dirName, _T("C:\\")));
     free(dirName);
 
     TCHAR *path2 = Path::Join(_T("C:\\"), _T("Program Files"));
-    assert(tstr_eq(path1, path2));
+    assert(Str::Eq(path1, path2));
     free(path2);
     path2 = Path::Join(path1, _T("SumatraPDF"));
-    assert(tstr_eq(path2, _T("C:\\Program Files\\SumatraPDF")));
+    assert(Str::Eq(path2, _T("C:\\Program Files\\SumatraPDF")));
     free(path2);
     path2 = Path::Join(_T("C:\\"), _T("\\Windows"));
-    assert(tstr_eq(path2, _T("C:\\Windows")));
+    assert(Str::Eq(path2, _T("C:\\Windows")));
     free(path2);
 }
 
@@ -206,18 +206,18 @@ static void VecStrTest()
     v.Append(Str::Dup(_T("bar")));
     TCHAR *s = v.Join();
     assert(v.Count() == 2);
-    assert(tstr_eq(_T("foobar"), s));
+    assert(Str::Eq(_T("foobar"), s));
     free(s);
 
     s = v.Join(_T(";"));
     assert(v.Count() == 2);
-    assert(tstr_eq(_T("foo;bar"), s));
+    assert(Str::Eq(_T("foo;bar"), s));
     free(s);
 
     v.Append(Str::Dup(_T("glee")));
     s = v.Join(_T("_ _"));
     assert(v.Count() == 3);
-    assert(tstr_eq(_T("foo_ _bar_ _glee"), s));
+    assert(Str::Eq(_T("foo_ _bar_ _glee"), s));
     free(s);
 }
 
@@ -256,23 +256,23 @@ static void VecTest()
             buf[0] = buf[0] + 1;
         }
         char *s = v.LendData();
-        assert(str_eq("abcdefg", s));
+        assert(Str::Eq("abcdefg", s));
         assert(7 == v.Count());
     }
 
     {
         Vec<char> v(128,1);
         v.Append("boo", 3);
-        assert(str_eq("boo", v.LendData()));
+        assert(Str::Eq("boo", v.LendData()));
         assert(v.Count() == 3);
         v.Append("fop", 3);
-        assert(str_eq("boofop", v.LendData()));
+        assert(Str::Eq("boofop", v.LendData()));
         assert(v.Count() == 6);
         v.RemoveAt(2, 3);
         assert(v.Count() == 3);
-        assert(str_eq("bop", v.LendData()));
+        assert(Str::Eq("bop", v.LendData()));
         char *s = v.StealData();
-        assert(str_eq("bop", s));
+        assert(Str::Eq("bop", s));
         free(s);
         assert(v.Count() == 0);
     }
@@ -296,9 +296,9 @@ static void VecTest()
         v.RemoveAt(0, 6 * 15);
         assert(v.Count() == 6);
         char *s = v.LendData();
-        assert(str_eq(s, "lambda"));
+        assert(Str::Eq(s, "lambda"));
         s = v.StealData();
-        assert(str_eq(s, "lambda"));
+        assert(Str::Eq(s, "lambda"));
         free(s);
         assert(v.Count() == 0);
     }
@@ -325,7 +325,7 @@ static void BencTestSerialization(BencObj *obj, const char *dataOrig)
 {
     ScopedMem<char> data(obj->Encode());
     assert(data);
-    assert(str_eq(data, dataOrig));
+    assert(Str::Eq(data, dataOrig));
 }
 
 static void BencTestParseInt()
@@ -416,7 +416,7 @@ static void BencTestParseString()
             assert(obj);
             assert(obj->Type() == BT_STRING);
             ScopedMem<TCHAR> value(static_cast<BencString *>(obj)->Value());
-            assert(tstr_eq(value, testData[i].value));
+            assert(Str::Eq(value, testData[i].value));
             BencTestSerialization(obj, testData[i].benc);
             delete obj;
         } else {
@@ -426,7 +426,7 @@ static void BencTestParseString()
 
     BencRawString raw("a\x82");
     BencTestSerialization(&raw, "2:a\x82");
-    assert(str_eq(raw.RawValue(), "a\x82"));
+    assert(Str::Eq(raw.RawValue(), "a\x82"));
 }
 
 static void BencTestParseArray(const char *benc, size_t expectedLen)

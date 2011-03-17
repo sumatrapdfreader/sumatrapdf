@@ -39,7 +39,7 @@ void PdfSearch::SetText(TCHAR *text)
     SkipWhitespace(text);
 
     // don't reset anything if the search text hasn't changed at all
-    if (tstr_eq(this->lastText, text))
+    if (Str::Eq(this->lastText, text))
         return;
 
     this->Clear();

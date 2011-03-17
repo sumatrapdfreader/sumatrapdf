@@ -228,7 +228,7 @@ ContinueParsing:
             return S_OK;
         }
 
-        if (!wcsncmp(start, L"begin", end - start) && wstr_eq(ExtractBracedBlock(), L"document"))
+        if (!wcsncmp(start, L"begin", end - start) && Str::Eq(ExtractBracedBlock(), L"document"))
             m_state = STATE_TEX_CONTENT;
         goto ContinueParsing;
     case STATE_TEX_CONTENT:

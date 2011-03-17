@@ -656,7 +656,7 @@ DWORD GetDirSize(TCHAR *dir)
         if (!(findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
             totalSize += findData.nFileSizeLow;
         }
-        else if (!tstr_eq(findData.cFileName, _T(".")) && !tstr_eq(findData.cFileName, _T(".."))) {
+        else if (!Str::Eq(findData.cFileName, _T(".")) && !Str::Eq(findData.cFileName, _T(".."))) {
             ScopedMem<TCHAR> subdir(Path::Join(dir, findData.cFileName));
             totalSize += GetDirSize(subdir);
         }
@@ -729,7 +729,7 @@ void UnregisterFromBeingDefaultViewer(bool allUsers)
         WriteRegStr(hkey, REG_CLASSES_PDF, NULL, buf);
     } else {
         bool ok = ReadRegStr(hkey, REG_CLASSES_PDF, NULL, buf, dimof(buf));
-        if (ok && tstr_eq(TAPP, buf))
+        if (ok && Str::Eq(TAPP, buf))
             RegDelKeyRecurse(hkey, REG_CLASSES_PDF);
     }
 }
@@ -741,7 +741,7 @@ void RemoveOwnRegistryKeys()
 
     TCHAR buf[MAX_PATH + 8];
     bool ok = ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT, PROG_ID, buf, dimof(buf));
-    if (ok && tstr_eq(buf, TAPP)) {
+    if (ok && Str::Eq(buf, TAPP)) {
         LONG res = SHDeleteValue(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT, PROG_ID);
         if (res != ERROR_SUCCESS)
             SeeLastError(res);
@@ -818,8 +818,8 @@ BOOL RemoveEmptyDirectory(TCHAR *dir)
             // filter out directories. Even though there shouldn't be any
             // subdirectories, it also filters out the standard "." and ".."
             if ((attrs & FILE_ATTRIBUTE_DIRECTORY) &&
-                !tstr_eq(findData.cFileName, _T(".")) &&
-                !tstr_eq(findData.cFileName, _T(".."))) {
+                !Str::Eq(findData.cFileName, _T(".")) &&
+                !Str::Eq(findData.cFileName, _T(".."))) {
                 success &= RemoveEmptyDirectory(path);
             }
         } while (FindNextFile(h, &findData) != 0);

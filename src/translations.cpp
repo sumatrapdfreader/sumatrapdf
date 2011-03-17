@@ -36,7 +36,7 @@ static const TCHAR **g_translations = NULL;  // cached translations
 bool Translations_SetCurrentLanguage(const char* lang)
 {
     for (int i=0; i < g_transLangsCount; i++) {
-        if (str_eq(lang, g_transLangs[i])) {
+        if (Str::Eq(lang, g_transLangs[i])) {
             currLangIdx = i;
             return true;
         }

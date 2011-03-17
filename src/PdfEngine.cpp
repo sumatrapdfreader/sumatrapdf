@@ -180,7 +180,7 @@ pdf_outline *pdf_loadattachments(pdf_xref *xref)
         fz_obj *type = fz_dictgets(dest, "Type");
 
         node->title = fz_strdup(fz_toname(name));
-        if (fz_isname(type) && str_eq(fz_toname(type), "Filespec"))
+        if (fz_isname(type) && Str::Eq(fz_toname(type), "Filespec"))
             node->link = pdf_newlink(fz_keepobj(dest), PDF_LLAUNCH);
     }
     fz_dropobj(dict);
@@ -1151,7 +1151,7 @@ bool PdfEngine::isDocumentDirectionR2L(void)
     fz_obj *prefs = fz_dictgets(root, "ViewerPreferences");
     char *direction = fz_toname(fz_dictgets(prefs, "Direction"));
     LeaveCriticalSection(&_xrefAccess);
-    return str_eq(direction, "R2L");
+    return Str::Eq(direction, "R2L");
 }
 
 fz_buffer *PdfEngine::getStreamData(int num, int gen)

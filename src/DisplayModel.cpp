@@ -101,7 +101,7 @@ bool DisplayModel::displayStateFromModel(DisplayState *ds)
 {
     bool presMode = getPresentationMode();
 
-    if (!ds->filePath || !tstr_eq(ds->filePath, fileName())) {
+    if (!ds->filePath || !Str::Eq(ds->filePath, fileName())) {
         TCHAR *filePath = Str::Dup(fileName());
         if (!filePath)
             return false;
@@ -1331,7 +1331,7 @@ TCHAR *DisplayModel::getLinkPath(pdf_link *link)
             break;
         case PDF_LLAUNCH:
             obj = fz_dictgets(link->dest, "Type");
-            if (!fz_isname(obj) || !str_eq(fz_toname(obj), "Filespec"))
+            if (!fz_isname(obj) || !Str::Eq(fz_toname(obj), "Filespec"))
                 break;
             obj = fz_dictgets(link->dest, "UF"); 
             if (!fz_isstring(obj))
@@ -1346,7 +1346,7 @@ TCHAR *DisplayModel::getLinkPath(pdf_link *link)
             obj = fz_dictgets(link->dest, "S");
             if (!fz_isname(obj))
                 break;
-            if (str_eq(fz_toname(obj), "GoToR")) {
+            if (Str::Eq(fz_toname(obj), "GoToR")) {
                 obj = fz_dictgets(link->dest, "F");
                 if (fz_isstring(obj)) {
                     path = pdf_to_tstr(obj);
@@ -1404,27 +1404,27 @@ void DisplayModel::goToTocLink(pdf_link* link)
     }
     else if (PDF_LNAMED == link->kind) {
         char *name = fz_toname(link->dest);
-        if (str_eq(name, "NextPage"))
+        if (Str::Eq(name, "NextPage"))
             goToNextPage(0);
-        else if (str_eq(name, "PrevPage"))
+        else if (Str::Eq(name, "PrevPage"))
             goToPrevPage(0);
-        else if (str_eq(name, "FirstPage"))
+        else if (Str::Eq(name, "FirstPage"))
             goToFirstPage();
-        else if (str_eq(name, "LastPage"))
+        else if (Str::Eq(name, "LastPage"))
             goToLastPage();
         // Adobe Reader extensions to the spec, cf. http://www.tug.org/applications/hyperref/manual.html
-        else if (str_eq(name, "FullScreen"))
+        else if (Str::Eq(name, "FullScreen"))
             PostMessage(_appData->hwndFrame, WM_COMMAND, IDM_VIEW_PRESENTATION_MODE, 0);
-        else if (str_eq(name, "GoBack"))
+        else if (Str::Eq(name, "GoBack"))
             navigate(-1);
-        else if (str_eq(name, "GoForward"))
+        else if (Str::Eq(name, "GoForward"))
             navigate(1);
-        else if (str_eq(name, "Print"))
+        else if (Str::Eq(name, "Print"))
             PostMessage(_appData->hwndFrame, WM_COMMAND, IDM_PRINT, 0);
     }
     else if (PDF_LACTION == link->kind) {
         char *type = fz_toname(fz_dictgets(link->dest, "S"));
-        if (type && str_eq(type, "GoToR") && fz_dictgets(link->dest, "D") && (path = getLinkPath(link))) {
+        if (type && Str::Eq(type, "GoToR") && fz_dictgets(link->dest, "D") && (path = getLinkPath(link))) {
             /* for safety, only handle relative PDF paths and only open them in SumatraPDF */
             if (!tstr_startswith(path, _T("\\")) && tstr_endswithi(path, _T(".pdf"))) {
                 ScopedMem<TCHAR> basePath(Path::GetDir(fileName()));
@@ -1446,7 +1446,7 @@ void DisplayModel::goToPdfDest(fz_obj *dest)
     if (pageNo > 0) {
         double scrollY = 0, scrollX = -1;
         fz_obj *obj = fz_arrayget(dest, 1);
-        if (str_eq(fz_toname(obj), "XYZ")) {
+        if (Str::Eq(fz_toname(obj), "XYZ")) {
             scrollX = fz_toreal(fz_arrayget(dest, 2));
             scrollY = fz_toreal(fz_arrayget(dest, 3));
             cvtUserToScreen(pageNo, &scrollX, &scrollY);
@@ -1469,7 +1469,7 @@ void DisplayModel::goToPdfDest(fz_obj *dest)
                 scrollY = MAX(scrollY, 0); // Adobe Reader never shows the previous page
             }
         }
-        else if (str_eq(fz_toname(obj), "FitR")) {
+        else if (Str::Eq(fz_toname(obj), "FitR")) {
             scrollX = fz_toreal(fz_arrayget(dest, 2)); // left
             scrollY = fz_toreal(fz_arrayget(dest, 5)); // top
             cvtUserToScreen(pageNo, &scrollX, &scrollY);
@@ -1485,7 +1485,7 @@ void DisplayModel::goToPdfDest(fz_obj *dest)
             }
         }
         /* // ignore author-set zoom settings (at least as long as there's no way to overrule them)
-        else if (str_eq(fz_toname(obj), "Fit")) {
+        else if (Str::Eq(fz_toname(obj), "Fit")) {
             zoomTo(ZOOM_FIT_PAGE);
             _appData->UpdateToolbarState();
         }

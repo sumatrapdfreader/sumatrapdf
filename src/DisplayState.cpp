@@ -51,7 +51,7 @@ const char *DisplayModeNameFromEnum(DisplayMode var)
 }
 
 #define IS_STR_ENUM(enumName) \
-    if (str_eq(txt, enumName##_STR)) { \
+    if (Str::Eq(txt, enumName##_STR)) { \
         *resOut = enumName; \
         return true; \
     }

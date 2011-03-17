@@ -240,7 +240,7 @@ static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, RectI *rect)
     HGDIOBJ origFont = SelectObject(hdc, fontSumatraTxt);
 
     /* show/hide the SyncTeX attribution line */
-    assert(!gAboutLayoutInfo[dimof(gAboutLayoutInfo) - 2].leftTxt || tstr_eq(gAboutLayoutInfo[dimof(gAboutLayoutInfo) - 2].leftTxt, _T("synctex")));
+    assert(!gAboutLayoutInfo[dimof(gAboutLayoutInfo) - 2].leftTxt || Str::Eq(gAboutLayoutInfo[dimof(gAboutLayoutInfo) - 2].leftTxt, _T("synctex")));
     if (gGlobalPrefs.m_enableTeXEnhancements)
         gAboutLayoutInfo[dimof(gAboutLayoutInfo) - 2].leftTxt = _T("synctex");
     else

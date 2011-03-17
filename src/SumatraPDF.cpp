@@ -259,7 +259,7 @@ static int LangGetIndex(const char *name)
 {
     for (int i = 0; i < LANGS_COUNT; i++) {
         const char *langName = g_langs[i]._langName;
-        if (str_eq(name, langName))
+        if (Str::Eq(name, langName))
             return i;
     }
     return -1;
@@ -670,7 +670,7 @@ static HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int n, HMENU m=NULL)
         if (gRestrictedUse && (md.flags & MF_NOT_IN_RESTRICTED))
             continue;
 
-        if (str_eq(title, SEP_ITEM)) {
+        if (Str::Eq(title, SEP_ITEM)) {
             AppendMenu(m, MF_SEPARATOR, 0, NULL);
         } else if (MF_NO_TRANSLATE == (md.flags & MF_NO_TRANSLATE)) {
             ScopedMem<TCHAR> tmp(utf8_to_tstr(title));
@@ -1022,7 +1022,7 @@ static void WindowInfo_Refresh(WindowInfo* win, bool autorefresh) {
         // we don't ask again at the next refresh
         DisplayState *state = gFileHistory.Find(ds.filePath);
         char *decryptionKey = win->dm->pdfEngine->getDecryptionKey();
-        if (state && !str_eq(state->decryptionKey, decryptionKey)) {
+        if (state && !Str::Eq(state->decryptionKey, decryptionKey)) {
             free(state->decryptionKey);
             state->decryptionKey = decryptionKey;
         }
@@ -1394,7 +1394,7 @@ static bool LoadPdfIntoWindow(
             goto Error;
         }
     } else {
-        if (previousmodel && tstr_eq(win->dm->fileName(), previousmodel->fileName()))
+        if (previousmodel && Str::Eq(win->dm->fileName(), previousmodel->fileName()))
             gRenderCache.KeepForDisplayModel(previousmodel, win->dm);
         delete previousmodel;
         win->needrefresh = false;

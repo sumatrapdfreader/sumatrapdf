@@ -235,7 +235,7 @@ void DoAssociateExeWithPdfExtension(HKEY hkey)
 
     // Remember the previous default app for the Uninstaller
     bool ok = ReadRegStr(hkey, _T("Software\\Classes\\.pdf"), NULL, previousPdfHandler, dimof(previousPdfHandler));
-    if (ok && !tstr_eq(previousPdfHandler, APP_NAME_STR)) {
+    if (ok && !Str::Eq(previousPdfHandler, APP_NAME_STR)) {
         WriteRegStr(hkey, _T("Software\\Classes\\") APP_NAME_STR, _T("previous.pdf"), previousPdfHandler);
     }
 
@@ -277,12 +277,12 @@ bool IsExeAssociatedWithPdfExtension()
 
     // this one doesn't have to exist but if it does, it must be APP_NAME_STR
     ok = ReadRegStr(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\.pdf"), _T("Progid"), tmp, dimof(tmp));
-    if (ok && !tstr_eq(tmp, APP_NAME_STR))
+    if (ok && !Str::Eq(tmp, APP_NAME_STR))
         return false;
 
     // HKEY_CLASSES_ROOT\.pdf default key must exist and be equal to APP_NAME_STR
     ok = ReadRegStr(HKEY_CLASSES_ROOT, _T(".pdf"), NULL, tmp, dimof(tmp));
-    if (!ok || !tstr_eq(tmp, APP_NAME_STR))
+    if (!ok || !Str::Eq(tmp, APP_NAME_STR))
         return false;
 
     // HKEY_CLASSES_ROOT\SumatraPDF\shell\open default key must be: open
@@ -450,7 +450,7 @@ LPTSTR AutoDetectInverseSearchCommands(HWND hwndCombo)
         free(editorCmd);
 
         // skip the remaining rules for this editor
-        while (i + 1 < dimof(editor_rules) && tstr_eq(editor_rules[i].Name, editor_rules[i+1].Name))
+        while (i + 1 < dimof(editor_rules) && Str::Eq(editor_rules[i].Name, editor_rules[i+1].Name))
             i++;
     }
 

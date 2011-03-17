@@ -180,7 +180,7 @@ void BencDict::Add(const char *key, BencObj *obj)
         if (strcmp(keys[oix], key) >= 0)
             break;
 
-    if (oix < keys.Count() && str_eq(keys[oix], key)) {
+    if (oix < keys.Count() && Str::Eq(keys[oix], key)) {
         // overwrite a previous value
         delete values[oix];
         values[oix] = obj;

@@ -6,7 +6,6 @@
 
 #define wstr_find_char wcschr
 
-int     wstr_eq(const WCHAR *str1, const WCHAR *str2);
 int     wstr_ieq(const WCHAR *str1, const WCHAR *str2);
 int     wstr_eqn(const WCHAR *str1, const WCHAR *str2, size_t len);
 int     wstr_startswith(const WCHAR *str, const WCHAR *txt);
