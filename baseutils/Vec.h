@@ -187,6 +187,13 @@ public:
         memcpy(dst, src, size * sizeof(T));
     }
 
+    void AppendAndFree(const T* s)
+    {
+        if (s)
+            Append(s, Len(s));
+        free((void*)s);
+    }
+
     void Set(const T* s)
     {
         Reset();

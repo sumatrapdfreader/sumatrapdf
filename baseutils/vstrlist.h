@@ -21,7 +21,7 @@ public:
             TCHAR *s = At(i);
             if (i > 0 && jointLen > 0)
                 tmp.Append(joint, jointLen);
-            tmp.Append(s, Str::Len(s));
+            tmp.Append(s);
         }
         return tmp.StealData();
     }

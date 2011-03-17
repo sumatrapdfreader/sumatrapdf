@@ -196,10 +196,8 @@ char *BencDict::Encode() const
     Str::Str<char> bytes(256);
     bytes.Append('d');
     for (size_t i = 0; i < Length(); i++) {
-        ScopedMem<char> key(str_printf("%" PRIuPTR ":%s", Str::Len(keys[i]), keys[i]));
-        bytes.Append(key, Str::Len(key));
-        ScopedMem<char> objBytes(values[i]->Encode());
-        bytes.Append(objBytes.Get());
+        bytes.AppendAndFree(str_printf("%" PRIuPTR ":%s", Str::Len(keys[i]), keys[i]));
+        bytes.AppendAndFree(values[i]->Encode());
     }
     bytes.Append('e');
     return bytes.StealData();
