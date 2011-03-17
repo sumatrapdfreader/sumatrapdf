@@ -5,6 +5,178 @@
 #include "BaseUtil.h"
 #include "StrUtil.h"
 
+namespace Str {
+
+bool IsEmpty(const char *str)
+{
+    if (!str)
+        return true;
+    if (0 == *str)
+        return true;
+    return false;
+}
+
+bool IsEmpty(const WCHAR *str)
+{
+    if (!str)
+        return true;
+    if (0 == *str)
+        return true;
+    return false;
+}
+
+bool Eq(const char *str1, const char *str2)
+{
+    if (str1 == str2)
+        return true;
+    if (!str1 || !str2)
+        return false;
+    if (0 == strcmp(str1, str2))
+        return true;
+    return false;
+}
+
+bool Eq(const WCHAR *str1, const WCHAR *str2)
+{
+    if (str1 == str2)
+        return true;
+    if (!str1 || !str2)
+        return false;
+    if (0 == wcscmp(str1, str2))
+        return true;
+    return false;
+}
+
+bool EqI(const char *str1, const char *str2)
+{
+    if (str1 == str2)
+        return true;
+    if (!str1 || !str2)
+        return false;
+    if (0 == _stricmp(str1, str2))
+        return true;
+    return false;
+}
+
+bool EqI(const WCHAR *str1, const WCHAR *str2)
+{
+    if (str1 == str2)
+        return true;
+    if (!str1 || !str2)
+        return false;
+    if (0 == _wcsicmp(str1, str2))
+        return true;
+    return false;
+}
+
+bool EqN(const char *str1, const char *str2, size_t len)
+{
+    if (str1 == str2)
+        return true;
+    if (!str1 || !str2)
+        return false;
+    if (0 == strncmp(str1, str2, len))
+        return true;
+    return false;
+}
+
+bool EqN(const WCHAR *str1, const WCHAR *str2, size_t len)
+{
+    if (str1 == str2)
+        return true;
+    if (!str1 || !str2)
+        return false;
+    if (0 == wcsncmp(str1, str2, len))
+        return true;
+    return false;
+}
+
+/* return true if 'str' starts with 'txt', NOT case-sensitive */
+bool StartsWithI(const char *str, const char *txt)
+{
+    if (str == txt)
+        return true;
+    if (!str || !txt)
+        return false;
+
+    if (0 == _strnicmp(str, txt, Str::Len(txt)))
+        return true;
+    return false;
+}
+
+/* return true if 'str' starts with 'txt', NOT case-sensitive */
+bool StartsWithI(const WCHAR *str, const WCHAR *txt)
+{
+    if (!str && !txt)
+        return true;
+    if (!str || !txt)
+        return false;
+
+    if (0 == _wcsnicmp(str, txt, Str::Len(txt)))
+        return true;
+    return false;
+}
+
+bool EndsWith(const char *txt, const char *end)
+{
+    size_t end_len;
+    size_t txt_len;
+
+    if (!txt || !end)
+        return FALSE;
+
+    txt_len = Str::Len(txt);
+    end_len = Str::Len(end);
+    if (end_len > txt_len)
+        return false;
+    return Str::Eq(txt+txt_len-end_len, end);
+}
+
+bool EndsWithI(const char *txt, const char *end)
+{
+    size_t end_len;
+    size_t txt_len;
+
+    if (!txt || !end)
+        return false;
+
+    txt_len = Str::Len(txt);
+    end_len = Str::Len(end);
+    if (end_len > txt_len)
+        return false;
+    return Str::EqI(txt+txt_len-end_len, end);
+}
+
+bool EndsWith(const WCHAR *txt, const WCHAR *end)
+{
+    size_t end_len;
+    size_t txt_len;
+    if (!txt || !end)
+        return false;
+    txt_len = Str::Len(txt);
+    end_len = Str::Len(end);
+    if (end_len > txt_len)
+        return false;
+    return Str::Eq(txt+txt_len-end_len, end);
+}
+
+bool EndsWithI(const WCHAR *txt, const WCHAR *end)
+{
+    size_t end_len;
+    size_t txt_len;
+
+    if (!txt || !end)
+        return false;
+
+    txt_len = Str::Len(txt);
+    end_len = Str::Len(end);
+    if (end_len > txt_len)
+        return false;
+    return Str::EqI(txt+txt_len-end_len, end);
+}
+
+}
+
 char * str_cat_s(char * dst, size_t dst_cch_size, const char * src)
 {
     return str_catn_s(dst, dst_cch_size, src, strlen(src));

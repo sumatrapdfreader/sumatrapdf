@@ -19,208 +19,36 @@ void    win32_dbg_out_hex(const char *dsc, const unsigned char *data, int dataLe
 
 /* Note: this demonstrates how eventually I would like to get rid of
    tstr_* and wstr_* functions and instead rely on C++'s ability
-   to use overloaded functions and only have Str* functions */
+   to use overloaded functions and only have Str::* functions */
 
 namespace Str {
 
-static inline size_t Len(const char *s)
-{
-    return strlen(s);
-}
+static inline size_t Len(const char *s) { return strlen(s); }
+static inline size_t Len(const WCHAR *s) { return wcslen(s); }
+static inline char *Dup(const char *s) { return _strdup(s); }
+static inline WCHAR *Dup(const WCHAR *s) { return _wcsdup(s); }
+bool IsEmpty(const char *str);
+bool IsEmpty(const WCHAR *str);
+bool Eq(const char *str1, const char *str2);
+bool Eq(const WCHAR *str1, const WCHAR *str2);
+bool EqI(const char *str1, const char *str2);
+bool EqI(const WCHAR *str1, const WCHAR *str2);
+bool EqN(const char *str1, const char *str2, size_t len);
+bool EqN(const WCHAR *str1, const WCHAR *str2, size_t len);
 
-static inline size_t Len(const WCHAR *s)
-{
-    return wcslen(s);
+static inline bool StartsWith(const char *str, const char *txt) {
+    return Str::EqN(str, txt, Str::Len(txt));
 }
-
-static inline char *Dup(const char *s)
-{
-    return _strdup(s);
-}
-
-static inline WCHAR *Dup(const WCHAR *s)
-{
-    return _wcsdup(s);
-}
-
-static inline bool IsEmpty(const char *str)
-{
-    if (!str)
-        return true;
-    if (0 == *str)
-        return true;
-    return false;
-}
-
-static inline bool IsEmpty(const WCHAR *str)
-{
-    if (!str)
-        return true;
-    if (0 == *str)
-        return true;
-    return false;
-}
-
-static inline bool Eq(const char *str1, const char *str2)
-{
-    if (str1 == str2)
-        return true;
-    if (!str1 || !str2)
-        return false;
-    if (0 == strcmp(str1, str2))
-        return true;
-    return false;
-}
-
-static inline bool Eq(const WCHAR *str1, const WCHAR *str2)
-{
-    if (str1 == str2)
-        return true;
-    if (!str1 || !str2)
-        return false;
-    if (0 == wcscmp(str1, str2))
-        return true;
-    return false;
-}
-
-static inline bool EqI(const char *str1, const char *str2)
-{
-    if (str1 == str2)
-        return true;
-    if (!str1 || !str2)
-        return false;
-    if (0 == _stricmp(str1, str2))
-        return true;
-    return false;
-}
-
-static inline bool EqI(const WCHAR *str1, const WCHAR *str2)
-{
-    if (str1 == str2)
-        return true;
-    if (!str1 || !str2)
-        return false;
-    if (0 == _wcsicmp(str1, str2))
-        return true;
-    return false;
-}
-
-static inline bool EqN(const char *str1, const char *str2, size_t len)
-{
-    if (str1 == str2)
-        return true;
-    if (!str1 || !str2)
-        return false;
-    if (0 == strncmp(str1, str2, len))
-        return true;
-    return false;
-}
-
-static inline bool EqN(const WCHAR *str1, const WCHAR *str2, size_t len)
-{
-    if (str1 == str2)
-        return true;
-    if (!str1 || !str2)
-        return false;
-    if (0 == wcsncmp(str1, str2, len))
-        return true;
-    return false;
-}
-
-/* return true if 'str' starts with 'txt', case-sensitive */
-static inline bool StartsWith(const char *str, const char *txt)
-{
+static inline bool StartsWith(const WCHAR *str, const WCHAR *txt) {
     return Str::EqN(str, txt, Str::Len(txt));
 }
 
-static inline bool StartsWith(const WCHAR *str, const WCHAR *txt)
-{
-    return Str::EqN(str, txt, Str::Len(txt));
-}
-
-/* return true if 'str' starts with 'txt', NOT case-sensitive */
-static inline bool StartsWithI(const char *str, const char *txt)
-{
-    if (str == txt)
-        return true;
-    if (!str || !txt)
-        return false;
-
-    if (0 == _strnicmp(str, txt, Str::Len(txt)))
-        return true;
-    return false;
-}
-
-/* return true if 'str' starts with 'txt', NOT case-sensitive */
-static inline bool StartsWithI(const WCHAR *str, const WCHAR *txt)
-{
-    if (!str && !txt)
-        return true;
-    if (!str || !txt)
-        return false;
-
-    if (0 == _wcsnicmp(str, txt, Str::Len(txt)))
-        return true;
-    return false;
-}
-
-static inline bool EndsWith(const char *txt, const char *end)
-{
-    size_t end_len;
-    size_t txt_len;
-
-    if (!txt || !end)
-        return FALSE;
-
-    txt_len = Str::Len(txt);
-    end_len = Str::Len(end);
-    if (end_len > txt_len)
-        return false;
-    return Str::Eq(txt+txt_len-end_len, end);
-}
-
-static inline bool EndsWithI(const char *txt, const char *end)
-{
-    size_t end_len;
-    size_t txt_len;
-
-    if (!txt || !end)
-        return false;
-
-    txt_len = Str::Len(txt);
-    end_len = Str::Len(end);
-    if (end_len > txt_len)
-        return false;
-    return Str::EqI(txt+txt_len-end_len, end);
-}
-
-static inline bool EndsWith(const WCHAR *txt, const WCHAR *end)
-{
-    size_t end_len;
-    size_t txt_len;
-    if (!txt || !end)
-        return false;
-    txt_len = Str::Len(txt);
-    end_len = Str::Len(end);
-    if (end_len > txt_len)
-        return false;
-    return Str::Eq(txt+txt_len-end_len, end);
-}
-
-static inline bool EndsWithI(const WCHAR *txt, const WCHAR *end)
-{
-    size_t end_len;
-    size_t txt_len;
-
-    if (!txt || !end)
-        return false;
-
-    txt_len = Str::Len(txt);
-    end_len = Str::Len(end);
-    if (end_len > txt_len)
-        return false;
-    return Str::EqI(txt+txt_len-end_len, end);
-}
+bool StartsWithI(const char *str, const char *txt);
+bool StartsWithI(const WCHAR *str, const WCHAR *txt);
+bool EndsWith(const char *txt, const char *end);
+bool EndsWithI(const char *txt, const char *end);
+bool EndsWith(const WCHAR *txt, const WCHAR *end);
+bool EndsWithI(const WCHAR *txt, const WCHAR *end);
 
 }
 
