@@ -26,18 +26,6 @@ WCHAR * wstr_catn_s(WCHAR *dst, size_t dst_cch_size, const WCHAR *src, size_t sr
     return dst;
 }
 
-WCHAR *wstr_dupn(const WCHAR *str, size_t str_len_cch)
-{
-    WCHAR *copy;
-
-    if (!str)
-        return NULL;
-    copy = (WCHAR *)memdup((void *)str, (str_len_cch + 1) * sizeof(WCHAR));
-    if (copy)
-        copy[str_len_cch] = 0;
-    return copy;
-}
-
 int wstr_copyn(WCHAR *dst, size_t dst_cch_size, const WCHAR *src, size_t src_cch_size)
 {
     size_t len = min(src_cch_size + 1, dst_cch_size);

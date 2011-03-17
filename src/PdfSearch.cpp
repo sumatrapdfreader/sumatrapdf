@@ -49,11 +49,12 @@ void PdfSearch::SetText(TCHAR *text)
     // extract anchor string (the first word or the first symbol) for faster searching
     if (isnoncjkwordchar(*text)) {
         TCHAR *end;
-        for (end = text; isnoncjkwordchar(*end); end++);
-        this->anchor = tstr_dupn(text, end - text);
+        for (end = text; isnoncjkwordchar(*end); end++)
+            ;
+        anchor = Str::DupN(text, end - text);
     }
     else
-        this->anchor = tstr_dupn(text, 1);
+        anchor = Str::DupN(text, 1);
 
     // search text ending in a single space enables the 'Whole words' option
     // (that behavior already "kind of" exists without special treatment, but

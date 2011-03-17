@@ -109,7 +109,7 @@ void PdfSelection::FillResultRects(int pageNo, int glyph, int length, VStrList *
             continue;
 
         if (lines) {
-            lines->Push(tstr_dupn(text[pageNo - 1] + (c0p - coords[pageNo - 1]), c - c0p + 1));
+            lines->Push(Str::DupN(text[pageNo - 1] + (c0p - coords[pageNo - 1]), c - c0p + 1));
             continue;
         }
 

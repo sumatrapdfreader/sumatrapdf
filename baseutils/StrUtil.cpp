@@ -131,6 +131,26 @@ WCHAR *Join(const WCHAR *s1, const WCHAR *s2, const WCHAR *s3)
     return wstr_printf(L"%s%s%s", s1, s2, s3);
 }
 
+char *DupN(const char *s, size_t lenCch)
+{
+    if (!s)
+        return NULL;
+    char *res = (char *)memdup((void *)s, lenCch + 1);
+    if (res)
+        res[lenCch] = 0;
+    return res;
+}
+
+WCHAR *DupN(const WCHAR *s, size_t lenCch)
+{
+    if (!s)
+        return NULL;
+    WCHAR *res = (WCHAR *)memdup((void *)s, (lenCch + 1) * sizeof(WCHAR));
+    if (res)
+        res[lenCch] = 0;
+    return res;
+}
+
 }
 
 char * str_cat_s(char * dst, size_t dst_cch_size, const char * src)
@@ -151,18 +171,6 @@ char * str_catn_s(char *dst, size_t dst_cch_size, const char *src, size_t src_cc
     if (src_cch_size >= len)
         return NULL;
     return dst;
-}
-
-char *str_dupn(const char *str, size_t str_len_cch)
-{
-    char *copy;
-
-    if (!str)
-        return NULL;
-    copy = (char *)memdup((void *)str, str_len_cch + 1);
-    if (copy)
-        copy[str_len_cch] = 0;
-    return copy;
 }
 
 int str_copyn(char *dst, size_t dst_cch_size, const char *src, size_t src_cch_size)

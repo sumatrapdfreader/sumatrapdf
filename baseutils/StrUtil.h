@@ -59,14 +59,15 @@ bool EndsWith(const WCHAR *txt, const WCHAR *end);
 bool EndsWithI(const char *txt, const char *end);
 bool EndsWithI(const WCHAR *txt, const WCHAR *end);
 
+char *  DupN(const char *s, size_t lenCch);
+WCHAR * DupN(const WCHAR *s, size_t lenCch);
+
 }
 
 static inline bool ChrIsDigit(const WCHAR c)
 {
     return '0' <= c && c <= '9';
 }
-
-char *  str_dupn(const char *str, size_t len);
 
 // I would like to remove the usage of *str_copy* and *str_cat* completely,
 // using either Str class or Str::Join() etc.

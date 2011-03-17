@@ -31,7 +31,7 @@ TCHAR *GetDir(const TCHAR *path)
         dirLen = baseName - path;
     else
         dirLen = baseName - path - 1;
-    return tstr_dupn(path, dirLen);
+    return Str::DupN(path, dirLen);
 }
 
 TCHAR *Join(const TCHAR *path, const TCHAR *filename)

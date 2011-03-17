@@ -174,7 +174,7 @@ static TCHAR *tstr_parse_non_quoted(TCHAR **txt)
     // arguments in any special way
     for (cur = *txt; *cur && !tchar_is_ws(*cur); cur++);
     strLen = cur - *txt;
-    token = tstr_dupn(*txt, strLen);
+    token = Str::DupN(*txt, strLen);
 
     *txt = cur;
     return token;

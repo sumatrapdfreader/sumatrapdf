@@ -112,7 +112,7 @@ static void TStrTest()
     str = Str::Dup(buf);
     assert(Str::Eq(str, buf));
     free(str);
-    str = tstr_dupn(buf, 4);
+    str = Str::DupN(buf, 4);
     assert(Str::Eq(str, _T("a st")));
     free(str);
     str = tstr_printf(_T("%s"), buf);

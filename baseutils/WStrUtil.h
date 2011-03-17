@@ -8,7 +8,6 @@
 
 int     wstr_copy(WCHAR *dst, size_t dst_cch_size, const WCHAR *src);
 int     wstr_copyn(WCHAR *dst, size_t dst_cch_size, const WCHAR *src, size_t src_cch_size);
-WCHAR * wstr_dupn(const WCHAR *str, size_t str_len_cch);
 WCHAR * wstr_cat_s(WCHAR *dst, size_t dst_cch_size, const WCHAR *src);
 WCHAR * wstr_catn_s(WCHAR *dst, size_t dst_cch_size, const WCHAR *src, size_t src_cch_size);
 int     wstr_printf_s(WCHAR *out, size_t out_cch_size, const WCHAR *format, ...);

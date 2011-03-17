@@ -54,7 +54,7 @@ BencString::BencString(const TCHAR *value) : BencObj(BT_STRING)
 
 BencString::BencString(const char *rawValue, size_t len) : BencObj(BT_STRING)
 {
-    this->value = str_dupn(rawValue, len);
+    value = Str::DupN(rawValue, len);
 }
 
 TCHAR *BencString::Value() const

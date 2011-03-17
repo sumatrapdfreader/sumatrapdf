@@ -22,7 +22,6 @@
 
   #define tstr_copy         wstr_copy
   #define tstr_copyn        wstr_copyn
-  #define tstr_dupn         wstr_dupn
   #define tstr_cat_s        wstr_cat_s
   #define tstr_catn_s       wstr_catn_s
   #define tstr_printf       wstr_printf
@@ -42,7 +41,6 @@
 
   #define tstr_copy         str_copy
   #define tstr_copyn        str_copyn
-  #define tstr_dupn         str_dupn
   #define tstr_cat_s        str_cat_s
   #define tstr_catn_s       str_catn_s
   #define tstr_printf       str_printf

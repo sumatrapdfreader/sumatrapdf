@@ -66,7 +66,7 @@ UINT CreateSynchronizer(LPCTSTR pdffilename, Synchronizer **sync)
     }
 
     size_t baseLen = Str::Len(pdffilename) - Str::Len(PDF_EXTENSION);
-    ScopedMem<TCHAR> baseName(tstr_dupn(pdffilename, baseLen));
+    ScopedMem<TCHAR> baseName(Str::DupN(pdffilename, baseLen));
 
     // Check if a PDFSYNC file is present
     ScopedMem<TCHAR> syncFile(Str::Join(baseName, PDFSYNC_EXTENSION));
