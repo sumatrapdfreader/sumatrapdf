@@ -147,6 +147,7 @@ int Pdfsync::get_record_section(int record_index)
     return -1;
 }
 
+// TODO: we should just read the whole file in memory and parse it from there
 FILE *Pdfsync::opensyncfile()
 {
     FILE *fp;
@@ -159,12 +160,12 @@ FILE *Pdfsync::opensyncfile()
 }
 
 // read a line from a stream (exclude the end-of-line mark)
-LPSTR fgetline(LPSTR dst, size_t cchDst, FILE *fp)
+char* fgetline(char* dst, size_t cchDst, FILE *fp)
 {
     if (!fgets(dst, (int)cchDst, fp))
         return NULL;
 
-    LPSTR end =  dst+Str::Len(dst)-1;
+    char* end =  dst+Str::Len(dst)-1;
     while (*end == '\n' || *end == '\r')
         *(end--) = 0;
     return dst;
@@ -172,13 +173,12 @@ LPSTR fgetline(LPSTR dst, size_t cchDst, FILE *fp)
 
 int Pdfsync::scan_and_build_index(FILE *fp)
 {
-    char jobname[_MAX_PATH];
+    char buf[_MAX_PATH];
     
-    fgetline(jobname, dimof(jobname) - 4, fp); // get the job name from the first line
+    fgetline(buf, dimof(buf) - 4, fp); // get the job name from the first line
     // replace star by spaces (somehow tex replaces spaces by stars in the jobname)
-    for (LPSTR rep = jobname; (rep = (LPSTR)Str::FindChar(rep, '*')); rep++)
-        *rep = _T(' ');
-    strcat(jobname, ".tex");
+    Str::TransChars(buf, "*", " ");
+    ScopedMem<char> jobName(Str::Join(buf), ".tex");
 
     UINT versionNumber = 0;
     int ret = fscanf(fp, "version %u\n", &versionNumber);
@@ -193,7 +193,7 @@ int Pdfsync::scan_and_build_index(FILE *fp)
     src_file s;
     s.first_recordsection = (size_t)-1;
     s.last_recordsection = (size_t)-1;
-    Str::BufSet(s.filename, dimof(s.filename), jobname);
+    Str::BufSet(s.filename, dimof(s.filename), jobName);
 #ifndef NDEBUG    
     s.closeline_pos = -1;
     fgetpos(fp, &s.openline_pos);
@@ -865,7 +865,7 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
             if (win && WS_ERROR_LOADING_PDF == win->state)
                 SendMessage(win->hwndFrame, WM_COMMAND, IDM_REFRESH, FALSE);
             if (win && WS_SHOWING_PDF == win->state) {
-                LPSTR destname_utf8 = Str::Conv::ToUtf8(destname);
+                char * destname_utf8 = Str::Conv::ToUtf8(destname);
                 if (destname_utf8) {
                     win->dm->goToNamedDest(destname_utf8);
                     ack.fAck = 1;
