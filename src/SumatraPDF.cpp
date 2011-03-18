@@ -994,22 +994,23 @@ static bool Prefs_Save(void)
     return Prefs::Save(path, &gGlobalPrefs, &gFileHistory);
 }
 
-static void WindowInfo_Refresh(WindowInfo* win, bool autorefresh) {
-    if (win->pdfsync)
-        win->pdfsync->discard_index();
+void WindowInfo::Reload(bool autorefresh)
+{
+    if (this->pdfsync)
+        this->pdfsync->discard_index();
     DisplayState ds;
     ds.useGlobalValues = gGlobalPrefs.m_globalPrefsOnly;
-    if (!win->dm || !win->dm->displayStateFromModel(&ds)) {
-        if (!autorefresh && !win->dm && win->loadedFilePath)
-            LoadPdf(win->loadedFilePath, win);
+    if (!this->dm || !this->dm->displayStateFromModel(&ds)) {
+        if (!autorefresh && !this->dm && this->loadedFilePath)
+            LoadPdf(this->loadedFilePath, this);
         return;
     }
-    UpdateDisplayStateWindowRect(win, &ds);
-    win->DisplayStateFromToC(&ds);
+    UpdateDisplayStateWindowRect(this, &ds);
+    this->DisplayStateFromToC(&ds);
     // Set the windows state based on the actual window's placement
-    ds.windowState =  win->fullScreen ? WIN_STATE_FULLSCREEN
-                    : IsZoomed(win->hwndFrame) ? WIN_STATE_MAXIMIZED 
-                    : IsIconic(win->hwndFrame) ? WIN_STATE_MINIMIZED
+    ds.windowState =  this->fullScreen ? WIN_STATE_FULLSCREEN
+                    : IsZoomed(this->hwndFrame) ? WIN_STATE_MAXIMIZED 
+                    : IsIconic(this->hwndFrame) ? WIN_STATE_MINIMIZED
                     : WIN_STATE_NORMAL ;
 
     // We don't allow PDF-repair if it is an autorefresh because
@@ -1017,14 +1018,14 @@ static void WindowInfo_Refresh(WindowInfo* win, bool autorefresh) {
     // in which case the repair could fail. Instead, if the file is broken, 
     // we postpone the reload until the next autorefresh event
     bool tryRepair = !autorefresh;
-    ScopedMem<TCHAR> path(Str::Dup(win->loadedFilePath));
-    LoadPdfIntoWindow(path, win, &ds, false, tryRepair, true, false);
+    ScopedMem<TCHAR> path(Str::Dup(this->loadedFilePath));
+    LoadPdfIntoWindow(path, this, &ds, false, tryRepair, true, false);
 
-    if (win->dm) {
+    if (this->dm) {
         // save a newly remembered password into file history so that
         // we don't ask again at the next refresh
         DisplayState *state = gFileHistory.Find(ds.filePath);
-        char *decryptionKey = win->dm->pdfEngine->getDecryptionKey();
+        char *decryptionKey = this->dm->pdfEngine->getDecryptionKey();
         if (state && !Str::Eq(state->decryptionKey, decryptionKey)) {
             free(state->decryptionKey);
             state->decryptionKey = decryptionKey;
@@ -1524,7 +1525,7 @@ public:
     FileChangeCallback(WindowInfo *win) : UIThreadWorkItem(win) { }
 
     virtual void Callback(void *arg) {
-        // We cannot call WindowInfo_Refresh directly as it could cause race conditions
+        // We cannot call win->Reload directly as it could cause race conditions
         // between the watching thread and the main thread (and only pass a copy of this
         // callback to the UIThreadMarshaller, as the object will be deleted after use)
         gUIThreadMarshaller.Queue(new FileChangeCallback(win));
@@ -4409,7 +4410,7 @@ static void OnChar(WindowInfo *win, WPARAM key)
         CloseWindow(win, TRUE);
         return;
     case 'r':
-        WindowInfo_Refresh(win, false);
+        win->Reload();
         return;
     }
 
@@ -4508,7 +4509,7 @@ static void OnChar(WindowInfo *win, WPARAM key)
 #ifdef DEBUG
     case '$':
         gUseGdiRenderer = !gUseGdiRenderer;
-        WindowInfo_Refresh(win, false);
+        win->Reload();
         break;
 #endif
     }
@@ -5880,7 +5881,7 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
                     break;
                 case AUTO_RELOAD_TIMER_ID:
                     KillTimer(hwnd, AUTO_RELOAD_TIMER_ID);
-                    WindowInfo_Refresh(win, true);
+                    win->Reload(true);
                     break;
                 }
             }
@@ -6073,9 +6074,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                     break;
 
                 case IDM_REFRESH:
-                    // for accelerators, lParam is 0 (FALSE), so
-                    // make a value of 1 (TRUE) mean autorefresh
-                    WindowInfo_Refresh(win, lParam);
+                    win->Reload();
                     break;
 
                 case IDT_VIEW_FIT_WIDTH:

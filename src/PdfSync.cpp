@@ -150,12 +150,9 @@ int Pdfsync::get_record_section(int record_index)
 // TODO: maybe would be easier to load into memory and parse from there
 FILE *Pdfsync::opensyncfile()
 {
-    FILE *fp;
-    fp = _tfopen(syncfilepath, _T("rb"));
-    if (NULL == fp) {
+    FILE *fp = _tfopen(syncfilepath, _T("rb"));
+    if (!fp)
         DBG_OUT("The syncfile %s cannot be opened\n", syncfilepath);
-        return NULL;
-    }
     return fp;
 }
 
@@ -165,9 +162,7 @@ char* fgetline(char* dst, size_t cchDst, FILE *fp)
     if (!fgets(dst, (int)cchDst, fp))
         return NULL;
 
-    char* end = dst + Str::Len(dst)-1;
-    while (*end == '\n' || *end == '\r')
-        *(end--) = 0;
+    Str::TransChars(dst, "\r\n", "\0\0");
     return dst;
 }
 
@@ -355,18 +350,18 @@ UINT Pdfsync::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR srcfilepath, UINT 
         return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
 
     // distance to the closest pdf location (in the range <PDFSYNC_EPSILON_SQUARE)
-    UINT closest_xydist = (UINT)-1,
-        closest_xydist_record = (UINT)-1;
+    UINT closest_xydist = (UINT)-1;
+    UINT closest_xydist_record = (UINT)-1;
 
     // If no record is found within a distance^2 of PDFSYNC_EPSILON_SQUARE
     // (closest_xydist_record==-1) then we pick up the record that is closest 
     // vertically to the hit-point.
-    UINT closest_ydist = (UINT)-1, // vertical distance between the hit point and the vertically-closest record
-        closest_xdist = (UINT)-1, // horizontal distance between the hit point and the vertically-closest record
-        closest_ydist_record = (UINT)-1; // vertically-closest record
+    UINT closest_ydist = (UINT)-1; // vertical distance between the hit point and the vertically-closest record
+    UINT closest_xdist = (UINT)-1; // horizontal distance between the hit point and the vertically-closest record
+    UINT closest_ydist_record = (UINT)-1; // vertically-closest record
 
     // find the entry in the index corresponding to this page
-    if (sheet>=pdfsheet_index.Count()) {
+    if (sheet >= pdfsheet_index.Count()) {
         fclose(fp);
         return PDFSYNCERR_INVALID_PAGE_NUMBER;
     }
@@ -374,15 +369,15 @@ UINT Pdfsync::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR srcfilepath, UINT 
     // read all the sections of 'p' declarations for this pdf sheet
     fpos_t linepos;
     for (size_t cur_psection = pdfsheet_index[sheet];
-        (cur_psection<this->pline_sections.Count())
-        && ((sheet < pdfsheet_index.Count() - 1 && cur_psection < pdfsheet_index[sheet+1])
-                || sheet==pdfsheet_index.Count() - 1) ;
-        cur_psection++) {
+         (cur_psection < this->pline_sections.Count()) &&
+         ((sheet < pdfsheet_index.Count() - 1 && cur_psection < pdfsheet_index[sheet + 1]) ||
+          sheet == pdfsheet_index.Count() - 1);
+         cur_psection++) {
         
         linepos = this->pline_sections[cur_psection].startpos;
         fsetpos(fp, &linepos);
         int c;
-        while ((c = fgetc(fp))=='p' && !feof(fp)) {
+        while ((c = fgetc(fp)) == 'p' && !feof(fp)) {
             // skip the optional star
             if (fgetc(fp)=='*')
                 fgetc(fp);
@@ -392,12 +387,14 @@ UINT Pdfsync::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR srcfilepath, UINT 
             // check whether it is closer that the closest point found so far
             UINT dx = abs((int)x - (int)SYNCCOORDINATE_TO_PDFCOORDINATE(xPosition));
             UINT dy = abs((int)y - (int)SYNCCOORDINATE_TO_PDFCOORDINATE(yPosition));
-            UINT dist = dx*dx + dy*dy;
-            if (dist<PDFSYNC_EPSILON_SQUARE && dist<closest_xydist) {
+            UINT dist = dx * dx + dy * dy;
+            if (dist < PDFSYNC_EPSILON_SQUARE && dist < closest_xydist) {
                 closest_xydist_record = recordNumber;
                 closest_xydist = dist;
             }
-            else if ((closest_xydist == (UINT)-1) && ( dy < PDFSYNC_EPSILON_Y ) && (dy < closest_ydist || (dy==closest_ydist && dx<closest_xdist))) {                closest_ydist_record = recordNumber;
+            else if ((closest_xydist == (UINT)-1) && dy < PDFSYNC_EPSILON_Y &&
+                     (dy < closest_ydist || (dy == closest_ydist && dx < closest_xdist))) {
+                closest_ydist_record = recordNumber;
                 closest_ydist = dy;
                 closest_xdist = dx;
             }
@@ -418,16 +415,12 @@ UINT Pdfsync::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR srcfilepath, UINT 
     int sec = this->get_record_section(selected_record);
 
     // get the file name from the record section
-    PSTR srcFilenameA = this->srcfiles[record_sections[sec].srcfile].filename;
-    PTSTR srcFilename = Str::Conv::FromAnsi(srcFilenameA);
+    char *srcFilenameA = this->srcfiles[record_sections[sec].srcfile].filename;
+    ScopedMem<TCHAR> srcFilename(Str::Conv::FromAnsi(srcFilenameA));
     // Convert the source filepath to an absolute path
-    if (PathIsRelative(srcFilename)) {
-        PTSTR srcFilename2 = Path::Join(this->dir, srcFilename);
-        free(srcFilename);
-        srcFilename = srcFilename2;
-    }
+    if (PathIsRelative(srcFilename))
+        srcFilename.Set(Path::Join(this->dir, srcFilename));
     Str::BufSet(srcfilepath, cchFilepath, srcFilename);
-    free(srcFilename);
 
     // find the record declaration in the section
     fsetpos(fp, &record_sections[sec].startpos);
@@ -474,7 +467,7 @@ UINT Pdfsync::source_to_record(FILE *fp, const TCHAR* srcfilename, UINT line, UI
 
     // find the source file entry
     size_t isrc = (size_t)-1;
-    for (size_t i = 0; i<this->srcfiles.Count(); i++) {
+    for (size_t i = 0; i < this->srcfiles.Count(); i++) {
         if (Str::EqI(mb_srcfilename, this->srcfiles[i].filename)) {
             isrc = i;
             break;
@@ -484,16 +477,16 @@ UINT Pdfsync::source_to_record(FILE *fp, const TCHAR* srcfilename, UINT line, UI
     if (isrc == (size_t)-1)
         return PDFSYNCERR_UNKNOWN_SOURCEFILE;
 
-    src_file srcfile=this->srcfiles[isrc];
+    src_file srcfile = this->srcfiles[isrc];
 
     if (srcfile.first_recordsection == (size_t)-1)
         return PDFSYNCERR_NORECORD_IN_SOURCEFILE; // there is not any record declaration for that particular source file
 
     // look for sections belonging to the specified file
     // starting with the first section that is declared within the scope of the file.
-    UINT min_distance = (UINT)-1, // distance to the closest record
-         closestrec = (UINT)-1, // closest record
-         closestrecline = (UINT)-1; // closest record-line
+    UINT min_distance = (UINT)-1; // distance to the closest record
+    UINT closestrec = (UINT)-1; // closest record
+    UINT closestrecline = (UINT)-1; // closest record-line
     fpos_t closestrecline_filepos = -1; // position of the closest record-line in the file
     int c;
     for (size_t isec=srcfile.first_recordsection; isec<=srcfile.last_recordsection; isec++ ) {
@@ -503,11 +496,11 @@ UINT Pdfsync::source_to_record(FILE *fp, const TCHAR* srcfilename, UINT line, UI
             // scan the 'l' declarations of the section to find the specified line and column
             fpos_t linepos = sec.startpos;
             fsetpos(fp, &linepos);
-            while ((c = fgetc(fp))=='l' && !feof(fp)) {
+            while ((c = fgetc(fp)) == 'l' && !feof(fp)) {
                 UINT columnNumber = 0, lineNumber = 0, recordNumber = 0;
                 fscanf(fp, " %u %u %u\n", &recordNumber, &lineNumber, &columnNumber);
-                UINT d = abs((int)lineNumber-(int)line);
-                if (d<EPSILON_LINE && d<min_distance) {
+                UINT d = abs((int)lineNumber - (int)line);
+                if (d < EPSILON_LINE && d < min_distance) {
                     min_distance = d;
                     closestrec = recordNumber;
                     closestrecline = lineNumber;
@@ -535,7 +528,7 @@ read_linerecords:
         lineNumber = 0;
         recordNumber = 0;
         fscanf(fp, "%c %u %u %u\n", &c, &recordNumber, &lineNumber, &columnNumber);
-    } while (c =='l' && !feof(fp) && (lineNumber==closestrecline) );
+    } while (c == 'l' && !feof(fp) && (lineNumber == closestrecline));
     return PDFSYNCERR_SUCCESS;
 
 }
@@ -551,7 +544,7 @@ UINT Pdfsync::source_to_pdf(const TCHAR* srcfilename, UINT line, UINT col, UINT 
 
     Vec<size_t> found_records;
     UINT ret = source_to_record(fp, srcfilename, line, col, found_records);
-    if (ret!=PDFSYNCERR_SUCCESS || found_records.Count() == 0 ) {
+    if (ret != PDFSYNCERR_SUCCESS || found_records.Count() == 0) {
         DBG_OUT("source->pdf: %s:%u -> no record found, error:%u\n", srcfilename, line, ret);
         fclose(fp);
         return ret;
@@ -566,9 +559,9 @@ UINT Pdfsync::source_to_pdf(const TCHAR* srcfilename, UINT line, UINT col, UINT 
             if (this->pdfsheet_index[sheet] != (size_t)-1) {
                 fsetpos(fp, &this->pline_sections[this->pdfsheet_index[sheet]].startpos);
                 int c;
-                while ((c = fgetc(fp))=='p' && !feof(fp)) {
+                while ((c = fgetc(fp)) == 'p' && !feof(fp)) {
                     // skip the optional star
-                    if (fgetc(fp)=='*')
+                    if (fgetc(fp) == '*')
                         fgetc(fp);
                     // read the location
                     UINT recordNumber = 0, xPosition = 0, yPosition = 0;
@@ -576,11 +569,9 @@ UINT Pdfsync::source_to_pdf(const TCHAR* srcfilename, UINT line, UINT col, UINT 
                     if (recordNumber == record) {
                         *page = (UINT)sheet;
                         rects.Reset();
-                        RectI rc;
-                        rc.x = (UINT)SYNCCOORDINATE_TO_PDFCOORDINATE(xPosition);
-                        rc.y = (UINT)SYNCCOORDINATE_TO_PDFCOORDINATE(yPosition);
-                        rc.dx = MARK_SIZE;
-                        rc.dy = MARK_SIZE;
+                        RectI rc((int)SYNCCOORDINATE_TO_PDFCOORDINATE(xPosition),
+                                 (int)SYNCCOORDINATE_TO_PDFCOORDINATE(yPosition),
+                                 MARK_SIZE, MARK_SIZE);
                         rects.Push(rc);
                         DBG_OUT("source->pdf: %s:%u -> record:%u -> page:%u, x:%u, y:%u\n",
                             srcfilename, line, record, sheet, rc.x, rc.y);
@@ -588,11 +579,11 @@ UINT Pdfsync::source_to_pdf(const TCHAR* srcfilename, UINT line, UINT col, UINT 
                         return PDFSYNCERR_SUCCESS;
                     }
                 }
-    #ifndef NDEBUG
+#ifndef NDEBUG
                 fpos_t linepos;
                 fgetpos(fp, &linepos);
-                assert(feof(fp) || (linepos-1==this->pline_sections[this->pdfsheet_index[sheet]].endpos));
-    #endif
+                assert(feof(fp) || (linepos - 1 == this->pline_sections[this->pdfsheet_index[sheet]].endpos));
+#endif
 
             }
         }
@@ -619,10 +610,9 @@ int SyncTex::rebuild_index() {
     this->scanner = synctex_scanner_new_with_output_file(mb_syncfname, NULL, 1);
     free(mb_syncfname);
 
-    if (scanner)
-        return Synchronizer::rebuild_index();
-    else
+    if (!scanner)
         return 1; // cannot rebuild the index
+    return Synchronizer::rebuild_index();
 }
 
 UINT SyncTex::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR srcfilepath, UINT cchFilepath, UINT *line, UINT *col)
@@ -639,27 +629,17 @@ UINT SyncTex::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR srcfilepath, UINT 
         *line = synctex_node_line(node);
         *col = synctex_node_column(node);
         const char *name = synctex_scanner_get_name(this->scanner,synctex_node_tag(node));
-        TCHAR *srcfilename = Str::Conv::FromAnsi(name);
+        ScopedMem<TCHAR> srcfilename(Str::Conv::FromAnsi(name));
         if (!srcfilename)
             return PDFSYNCERR_OUTOFMEMORY;
 
         // undecorate the filepath: replace * by space and / by \ 
-        TCHAR *p = srcfilename;
-        while(*p) {
-            if (*p=='*') *p=' ';
-            else if (*p=='/') *p='\\';
-            p++;
-        }
-
+        Str::TransChars(srcfilename, _T("*/"), _T(" \\"));
         // Convert the source filepath to an absolute path
-        if (PathIsRelative(srcfilename)) {
-            TCHAR *srcfilename2 = Path::Join(this->dir, srcfilename);
-            free(srcfilename);
-            srcfilename = srcfilename2;
-        }
-        Str::BufSet(srcfilepath, cchFilepath, srcfilename);
-        free(srcfilename);
+        if (PathIsRelative(srcfilename))
+            srcfilename.Set(Path::Join(this->dir, srcfilename));
 
+        Str::BufSet(srcfilepath, cchFilepath, srcfilename);
         return PDFSYNCERR_SUCCESS;
     }
     return PDFSYNCERR_NO_SYNC_AT_LOCATION;
@@ -692,20 +672,19 @@ UINT SyncTex::source_to_pdf(const TCHAR* srcfilename, UINT line, UINT col, UINT 
         default:
             synctex_node_t node;
             int firstpage = -1;
-            RectI rc;
             rects.Reset();
             while (node = synctex_next_result(this->scanner)) {
-                if (firstpage == -1)
-                {
+                if (firstpage == -1) {
                     firstpage = synctex_node_page(node);
                     *page = (UINT)firstpage;
                 }
                 if (synctex_node_page(node) != firstpage)
                     continue;
 
-                rc.x = (int)synctex_node_box_visible_h(node);
+                RectI rc;
+                rc.x  = (int)synctex_node_box_visible_h(node);
                 rc.y  = (int)(synctex_node_box_visible_v(node) - synctex_node_box_visible_height(node));
-                rc.dx =  (int)synctex_node_box_visible_width(node),
+                rc.dx = (int)synctex_node_box_visible_width(node),
                 rc.dy = (int)(synctex_node_box_visible_height(node) + synctex_node_box_visible_depth(node));
                 rects.Push(rc);
             }
@@ -766,7 +745,7 @@ static const TCHAR *HandleSyncCmd(const TCHAR *cmd, DDEACK& ack)
     if (newWindow || !win)
         win = LoadDocument(pdfFile, !newWindow ? win : NULL);
     else if (win && WS_ERROR_LOADING_PDF == win->state)
-        SendMessage(win->hwndFrame, WM_COMMAND, IDM_REFRESH, FALSE);
+        win->Reload();
     
     if (!win || (WS_SHOWING_PDF != win->state))
         return next;
@@ -804,7 +783,7 @@ static const TCHAR *HandleOpenCmd(const TCHAR *cmd, DDEACK& ack)
     if (newWindow || !win)
         win = LoadDocument(pdfFile, !newWindow ? win : NULL);
     else if (win && WS_ERROR_LOADING_PDF == win->state) {
-        SendMessage(win->hwndFrame, WM_COMMAND, IDM_REFRESH, FALSE);
+        win->Reload();
         forceRefresh = 0;
     }
     
@@ -814,7 +793,7 @@ static const TCHAR *HandleOpenCmd(const TCHAR *cmd, DDEACK& ack)
 
     ack.fAck = 1;
     if (forceRefresh)
-        PostMessage(win->hwndFrame, WM_COMMAND, IDM_REFRESH, TRUE);
+        win->Reload(true);
     if (setFocus)
         SetFocusHelper(win->hwndFrame);
 
@@ -836,8 +815,7 @@ static const TCHAR *HandleGotoCmd(const TCHAR *cmd, DDEACK& ack)
         return next;
 
     if (WS_ERROR_LOADING_PDF == win->state)
-        SendMessage(win->hwndFrame, WM_COMMAND, IDM_REFRESH, FALSE);
-
+        win->Reload();
     if (WS_SHOWING_PDF != win->state)
         return next;
     
@@ -868,8 +846,7 @@ static const TCHAR *HandlePageCmd(const TCHAR *cmd, DDEACK& ack)
         return next;
 
     if (WS_ERROR_LOADING_PDF == win->state)
-        SendMessage(win->hwndFrame, WM_COMMAND, IDM_REFRESH, FALSE);
-
+        win->Reload();
     if (WS_SHOWING_PDF != win->state)
         return next;
 
@@ -898,8 +875,7 @@ static const TCHAR *HandleSetViewCmd(const TCHAR *cmd, DDEACK& ack)
         return next;
 
     if (WS_ERROR_LOADING_PDF == win->state)
-        SendMessage(win->hwndFrame, WM_COMMAND, IDM_REFRESH, FALSE);
-
+        win->Reload();
     if (WS_SHOWING_PDF != win->state)
         return next;
 
@@ -931,8 +907,7 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
     ack.fAck = 0;
 
     LPVOID command = GlobalLock((HGLOBAL)hi);
-    if (!command)
-    {
+    if (!command) {
         DBG_OUT("WM_DDE_EXECUTE: No command specified\n");
         goto Exit;
     }
@@ -965,8 +940,7 @@ Exit:
     GlobalUnlock((HGLOBAL)hi);
 
     DBG_OUT("Posting %s WM_DDE_ACK to %p\n", ack.fAck ? _T("ACCEPT") : _T("REJECT"), (HWND)wparam);
-    WORD status = * (WORD *) & ack;
-    lparam = ReuseDDElParam(lparam, WM_DDE_EXECUTE, WM_DDE_ACK, status, hi);
+    lparam = ReuseDDElParam(lparam, WM_DDE_EXECUTE, WM_DDE_ACK, *(WORD *)&ack, hi);
     PostMessage((HWND)wparam, WM_DDE_ACK, (WPARAM)hwnd, lparam);
     return 0;
 }

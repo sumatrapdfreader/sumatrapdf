@@ -98,22 +98,19 @@ public:
     // conversion from one coordinate system to another
     void convert_coord_to_internal(UINT *x, UINT *y, UINT pageHeight, CoordSystem src)
     {
-        if (src==this->coordsys)
-            return;    
-        *y = pageHeight - *y;
+        if (src != this->coordsys)
+            *y = pageHeight - *y;
     }
     void convert_coord_from_internal(UINT *x, UINT *y, UINT pageHeight, CoordSystem dst)
     {
-        if (dst==this->coordsys)
-            return;    
-        *y = pageHeight - *y;
+        if (dst != this->coordsys)
+            *y = pageHeight - *y;
     }
 
     void convert_coord_from_internal(RectI *rc, UINT pageHeight, CoordSystem dst)
     {
-        if (dst==this->coordsys)
-            return;    
-        rc->y = pageHeight - (rc->y + rc->dy);
+        if (dst != this->coordsys)
+            rc->y = pageHeight - (rc->y + rc->dy);
     }
     
     // Inverse-search:
@@ -174,7 +171,7 @@ private:
 protected:
     TCHAR syncfilepath[MAX_PATH]; // path  to the synchronization file
     CoordSystem coordsys; // system used internally by the syncfile for the PDF coordinates
-    PTSTR dir;            // directory where the syncfile lies
+    TCHAR * dir;          // directory where the syncfile lies
 };
 
 

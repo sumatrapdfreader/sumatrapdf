@@ -205,6 +205,7 @@ public:
     void DoubleBuffer_Delete();
     void RedrawAll(bool update=false);
     void RepaintAsync(UINT delay=0);
+    void Reload(bool autorefresh=false);
 
     bool PdfLoaded() const { return this->dm != NULL; }
     HTREEITEM TreeItemForPageNo(HTREEITEM hItem, int pageNo);
