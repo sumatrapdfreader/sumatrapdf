@@ -140,8 +140,15 @@ static void TStrTest()
 
     int i1, i2;
     assert(parser.Init(_T("1,2+3")));
-    assert(parser.Scan(_T("%d,%d+"), &i1, &i2) && i1 == 1 && i2 == 2);
+    assert(parser.Scan(_T("%d,%d"), &i1, &i2) && i1 == 1 && i2 == 2);
     assert(!Str::IsEmpty(parser.Peek()));
+    assert(parser.Scan(_T("+3")));
+    assert(Str::IsEmpty(parser.Peek()));
+
+    float f;
+    assert(parser.Init(_T("%1.23y")));
+    assert(parser.Scan(_T("%%%fy"), &f));
+    assert(f == 1.23f);
 
     // the test string should only contain ASCII characters,
     // as all others might not be available in all code pages

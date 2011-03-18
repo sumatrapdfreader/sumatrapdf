@@ -825,7 +825,8 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
         else if (pos.Init(curCommand) &&
             pos.Skip(_T("[") DDECOMMAND_OPEN _T("(\"")) &&
             pos.CopyUntil('"', pdffile, dimof(pdffile)) &&
-            (pos.Scan(_T(",%u,%u,%u)]"), &newwindow, &setfocus, &forcerefresh) || pos.Skip(_T(")"))))
+            (pos.Scan(_T(",%u,%u,%u)]"), &newwindow, &setfocus, &forcerefresh) ||
+             pos.Skip(_T(")]"))))
         {
             // check if the PDF is already opened
             WindowInfo *win = FindWindowInfoByFile(pdffile);
@@ -857,7 +858,7 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
             pos.CopyUntil('"', pdffile, dimof(pdffile)) &&
             pos.Skip(_T(",\""), _T(", \"")) &&
             pos.CopyUntil('"', destname, dimof(destname)) &&
-            pos.Skip(_T(")")))
+            pos.Skip(_T(")]")))
         {
             // check if the PDF is already opened
             WindowInfo *win = FindWindowInfoByFile(pdffile);
@@ -919,13 +920,13 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
                     win->ZoomToSelection(zoom, false);
             }
         }
-        else
+        else {
             DBG_OUT("WM_DDE_EXECUTE: unknown DDE command or bad command format\n");
+            pos.CopyUntil(']', pdffile, 1);
+        }
 
         // next command
-        curCommand = Str::FindChar(pos.Peek(), ']');
-        if (curCommand)
-            curCommand++;
+        curCommand = pos.Peek();
     }
     free(pwCommand);
 

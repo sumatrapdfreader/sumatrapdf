@@ -399,18 +399,41 @@ bool Parser::CopyUntil(TCHAR c, TCHAR *buffer, size_t bufSize)
     return len <= bufSize;
 }
 
-/* Exctract values from <pos> with sscanf according to <format>. */
+/* Exctract values from <pos> according to <format> similar to sscanf. */
 bool Parser::Scan(const TCHAR *format, ...)
 {
-    // hack inspired by http://stackoverflow.com/questions/2457331/replacement-for-vsscanf-on-msvc
-    void *hack[11] = { 0 };
     va_list args;
     va_start(args, format);
-    for (int i = 0; i < dimof(hack) - 1; i++)
-        hack[i] = va_arg(args, void *);
-    int count = _stscanf(pos, format, hack[0], hack[1], hack[2], hack[3], hack[4], hack[5], hack[6], hack[7], hack[8], hack[9]);
+    const TCHAR *cur = pos;
+    for (const TCHAR *f = format; *f; f++) {
+        if (*f != '%') {
+            if (*f != *cur)
+                goto Failure;
+            cur++;
+            continue;
+        }
+        f++;
+
+        TCHAR *end = NULL;
+        if ('u' == *f)
+            *va_arg(args, unsigned int *) = _tcstoul(cur, &end, 10);
+        else if ('d' == *f)
+            *va_arg(args, int *) = _tcstol(cur, &end, 10);
+        else if ('f' == *f)
+            *va_arg(args, float *) = (float)_tcstod(cur, &end);
+        else if ('%' == *f && *f == *cur)
+            end = (TCHAR *)cur + 1;
+        if (end <= cur)
+            goto Failure;
+        cur = end;
+    }
     va_end(args);
-    return hack[count + 1] == NULL;
+    pos = cur;
+    return true;
+
+Failure:
+    va_end(args);
+    return false;
 }
 
 }
