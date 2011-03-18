@@ -950,6 +950,62 @@ static bool HandleGotoCmd(const TCHAR *cmd, Str::Parser& parser, DDEACK& ack)
     return true;
 }
 
+class ParsedPageCmd {
+public:
+    ParsedPageCmd() {}
+
+    ScopedMem<TCHAR>    pdfFile;
+    UINT                page;
+};
+
+static bool ParsePageCmd(const TCHAR *cmd, Str::Parser& parser, ParsedPageCmd& parsed)
+{    
+    if (!parser.Init(cmd))
+        return false;
+
+    if (!parser.Skip(_T("[") DDECOMMAND_PAGE _T("(\"")))
+        return false;
+
+    TCHAR *tmp = parser.ExtractUntil('"');
+    if (!tmp)
+        return false;
+    parsed.pdfFile.Set(tmp);
+
+    if (!parser.Scan(_T(",%u)]"), &parsed.page))
+        return false;
+
+    return true;
+}
+
+// Jump to page DDE command. Format:
+// [<DDECOMMAND_PAGE>("<pdffilepath>", <page number>)]
+static bool HandlePageCmd(const TCHAR *cmd, Str::Parser& parser, DDEACK& ack)
+{
+    ParsedPageCmd parsed;
+    if (!ParsePageCmd(cmd, parser, parsed))
+        return false;
+
+    // check if the PDF is already opened
+    WindowInfo *win = FindWindowInfoByFile(parsed.pdfFile);
+    if (!win)
+        return true;
+
+    if (WS_ERROR_LOADING_PDF == win->state)
+        SendMessage(win->hwndFrame, WM_COMMAND, IDM_REFRESH, FALSE);
+
+    if (WS_SHOWING_PDF != win->state)
+        return true;
+
+    if (win->dm->validPageNo(parsed.page)) {
+        win->dm->goToPage(parsed.page, 0, true);
+        ack.fAck = 1;
+        if (IsIconic(win->hwndFrame))
+            ShowWindow(win->hwndFrame, SW_RESTORE);
+        SetFocus(win->hwndFrame);
+    }
+    return true;
+}
+
 // TODO: this function would benefit from being split into smaller pieces
 LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
 {
@@ -972,13 +1028,13 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
         goto Exit;
     }
 
-    TCHAR *pwCommand;
+    TCHAR *cmd;
     if (IsWindowUnicode((HWND)wparam)) {
         DBG_OUT("The client window is UNICODE!\n");
-        pwCommand = Str::Conv::FromWStr((const WCHAR*)command);
+        cmd = Str::Conv::FromWStr((const WCHAR*)command);
     } else {
         DBG_OUT("The client window is ANSI!\n");
-        pwCommand = Str::Conv::FromAnsi((const char*)command);
+        cmd = Str::Conv::FromAnsi((const char*)command);
     }
 
     // Parse the command
@@ -987,44 +1043,26 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
     UINT newwindow = 0, setfocus = 0, forcerefresh = 0, page = 0;
     float zoom;
     
-    const TCHAR *curCommand = pwCommand;
-    while (!Str::IsEmpty(curCommand)) {
+    const TCHAR *currCmd = cmd;
+    while (!Str::IsEmpty(currCmd)) {
         Str::Parser parser;
 
         // TODO: don't really like the fact that have to pass the parser in
-        if (HandleSyncCmd(curCommand, parser, ack))
+        if (HandleSyncCmd(currCmd, parser, ack))
             goto Next;
 
-        if (HandleOpenCmd(curCommand, parser, ack))
+        if (HandleOpenCmd(currCmd, parser, ack))
             goto Next;
 
-        if (HandleGotoCmd(curCommand, parser, ack))
+        if (HandleGotoCmd(currCmd, parser, ack))
             goto Next;
 
-        // Jump to page DDE command.
-        // format is [<DDECOMMAND_GOTO>("<pdffilepath>", <page number>)]
-        if (parser.Init(curCommand) &&
-            parser.Skip(_T("[") DDECOMMAND_PAGE _T("(\"")) &&
-            parser.CopyUntil('"', pdffile, dimof(pdffile)) &&
-            parser.Scan(_T(",%u)]"), &page))
-        {
-            // check if the PDF is already opened
-            WindowInfo *win = FindWindowInfoByFile(pdffile);
-            if (win && WS_ERROR_LOADING_PDF == win->state)
-                SendMessage(win->hwndFrame, WM_COMMAND, IDM_REFRESH, FALSE);
-            if (win && WS_SHOWING_PDF == win->state) {
-                if (win->dm->validPageNo(page)) {
-                    win->dm->goToPage(page, 0, true);
-                    ack.fAck = 1;
-                    if (IsIconic(win->hwndFrame))
-                        ShowWindow(win->hwndFrame, SW_RESTORE);
-                    SetFocus(win->hwndFrame);
-                }
-            }
-        }
+        if (HandlePageCmd(currCmd, parser, ack))
+            goto Next;
+
         // Set view mode and zoom level
         // format is [<DDECOMMAND_SETVIEW>("<pdffilepath>", "<view mode>", <zoom level>)]
-        else if (parser.Init(curCommand) &&
+        if (parser.Init(currCmd) &&
             parser.Skip(_T("[") DDECOMMAND_SETVIEW _T("(\"")) &&
             parser.CopyUntil('"', pdffile, dimof(pdffile)) &&
             parser.Skip(_T(",\""), _T(", \"")) &&
@@ -1051,9 +1089,9 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
         }
 Next:
         // next command
-        curCommand = parser.Peek();
+        currCmd = parser.Peek();
     }
-    free(pwCommand);
+    free(cmd);
 
 Exit:
     GlobalUnlock((HGLOBAL)hi);
