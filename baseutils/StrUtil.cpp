@@ -379,19 +379,39 @@ static TCHAR *ExtractUntil(const TCHAR *pos, TCHAR c, const TCHAR **endOut)
     return Str::DupN(pos, *endOut - pos);
 }
 
+static const TCHAR *ParseLimitedNumber(const TCHAR *str, const TCHAR *format,
+                                       TCHAR **endOut, void *valueOut)
+{
+    UINT width;
+    TCHAR f2[] = _T("% ");
+    const TCHAR *endF = Parse(format, _T("%u%c"), &width, &f2[1]);
+    if (endF && FindChar(_T("udx"), f2[1]) && width <= Len(str)) {
+        ScopedMem<TCHAR> limited(DupN(str, width));
+        const TCHAR *end = Parse(limited, f2, valueOut);
+        if (end && !*end)
+            *endOut = (TCHAR *)str + width;
+    }
+    return endF;
+}
+
 /* Parses a string into several variables sscanf-style (i.e. pass in pointers
    to where the parsed values are to be stored). Returns a pointer to the first
    character that's not been parsed when successful and NULL otherwise.
 
    Supported formats:
      %u - parses an unsigned int
-     %i - parses a signed int
+     %d - parses a signed int
+     %x - parses an unsigned hex-int
      %f - parses a float
-     %d - parses a double
+     %c - parses a single TCHAR
      %s - parses a string (pass in a TCHAR**, free after use)
      %S - parses a string into a ScopedMem<TCHAR>
      %? - makes the next single character optional (e.g. "x%?,y" parses both "xy" and "x,y")
      %% - parses a single '%'
+
+   %u, %d and %x accept an optional width argument, indicating exactly how many
+   characters must be read for parsing the number (e.g. "%4d" parses -123 out of "-12345"
+   and doesn't parse "123" at all).
    */
 const TCHAR *Parse(const TCHAR *str, const TCHAR *format, ...)
 {
@@ -409,12 +429,14 @@ const TCHAR *Parse(const TCHAR *str, const TCHAR *format, ...)
         TCHAR *end = NULL;
         if ('u' == *f)
             *va_arg(args, unsigned int *) = _tcstoul(str, &end, 10);
-        else if ('i' == *f)
+        else if ('d' == *f)
             *va_arg(args, int *) = _tcstol(str, &end, 10);
+        else if ('x' == *f)
+            *va_arg(args, unsigned int *) = _tcstoul(str, &end, 16);
         else if ('f' == *f)
             *va_arg(args, float *) = (float)_tcstod(str, &end);
-        else if ('d' == *f)
-            *va_arg(args, double *) = _tcstod(str, &end);
+        else if ('c' == *f)
+            *va_arg(args, TCHAR *) = *str, end = (TCHAR *)str + 1;
         else if ('s' == *f)
             *va_arg(args, TCHAR **) = ExtractUntil(str, *(f + 1), (const TCHAR **)&end);
         else if ('S' == *f)
@@ -428,6 +450,8 @@ const TCHAR *Parse(const TCHAR *str, const TCHAR *format, ...)
                 continue;
             end = (TCHAR *)str + 1;
         }
+        else if (ChrIsDigit(*f))
+            f = ParseLimitedNumber(str, f, &end, va_arg(args, void *)) - 1;
         if (!end || end == str)
             goto Failure;
         str = end;

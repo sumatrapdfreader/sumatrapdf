@@ -28,9 +28,9 @@ static bool PdfDateParse(TCHAR *pdfDate, SYSTEMTIME *timeOut) {
     // "D:" at the beginning is optional
     if (Str::StartsWith(pdfDate, _T("D:")))
         pdfDate += 2;
-    return 6 == _stscanf(pdfDate, _T("%4d%2d%2d") _T("%2d%2d%2d"),
+    return Str::Parse(pdfDate, _T("%4d%2d%2d") _T("%2d%2d%2d"),
         &timeOut->wYear, &timeOut->wMonth, &timeOut->wDay,
-        &timeOut->wHour, &timeOut->wMinute, &timeOut->wSecond);
+        &timeOut->wHour, &timeOut->wMinute, &timeOut->wSecond) != NULL;
     // don't bother about the day of week, we won't display it anyway
 }
 
@@ -74,7 +74,7 @@ static TCHAR *FormatNumWithThousandSep(size_t num) {
     ScopedMem<TCHAR> buf(Str::Format(_T("%Iu"), num));
 
     Str::Str<TCHAR> res(32);
-    int i = Str::Len(buf) % 3;
+    int i = 3 - (Str::Len(buf) % 3);
     for (TCHAR *src = buf.Get(); *src; src++) {
         res.Append(*src);
         if (*(src + 1) && i == 2)

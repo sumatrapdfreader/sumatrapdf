@@ -89,8 +89,8 @@ static void ParseColor(int *destColor, const TCHAR* txt)
     else if (Str::StartsWith(txt, _T("#")))
         txt += 1;
 
-    int r, g, b;
-    if (_stscanf(txt, _T("%2x%2x%2x"), &r, &g, &b) == 3)
+    unsigned int r, g, b;
+    if (Str::Parse(txt, _T("%2x%2x%2x"), &r, &g, &b))
         *destColor = RGB(r, g, b);
 }
 
@@ -145,7 +145,7 @@ static void ParseZoomValue(float *zoom, const TCHAR *txt)
     else if (Str::EqIS(txt, _T("fit content")))
         *zoom = ZOOM_FIT_CONTENT;
     else
-        _stscanf(txt, _T("%f"), zoom);
+        Str::Parse(txt, _T("%f"), zoom);
 }
 
 /* parse argument list. we assume that all unrecognized arguments are PDF file names. */

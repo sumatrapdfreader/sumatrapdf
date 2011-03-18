@@ -175,9 +175,9 @@ int Pdfsync::scan_and_build_index(FILE *fp)
 {
     char buf[_MAX_PATH];
     
-    fgetline(buf, dimof(buf) - 4, fp); // get the job name from the first line
+    fgetline(buf, dimof(buf), fp); // get the job name from the first line
     // replace star by spaces (somehow tex replaces spaces by stars in the jobname)
-    Str::TransChars(&(buf[0]), "*", " ");
+    Str::TransChars(buf, "*", " ");
     ScopedMem<char> jobName(Str::Join(buf, ".tex"));
 
     UINT versionNumber = 0;
@@ -826,7 +826,8 @@ static const TCHAR *HandleOpenCmd(const TCHAR *cmd, DDEACK& ack)
 static const TCHAR *HandleGotoCmd(const TCHAR *cmd, DDEACK& ack)
 {
     ScopedMem<TCHAR> pdfFile, destName;
-    const TCHAR *next = Str::Parse(cmd, _T("[") DDECOMMAND_GOTO _T("(\"%S\",%? \"%S\")]"), &pdfFile, &destName);
+    const TCHAR *next = Str::Parse(cmd, _T("[") DDECOMMAND_GOTO _T("(\"%S\",%? \"%S\")]"),
+                                   &pdfFile, &destName);
     if (!next)
         return NULL;
 
@@ -856,7 +857,8 @@ static const TCHAR *HandlePageCmd(const TCHAR *cmd, DDEACK& ack)
 {
     ScopedMem<TCHAR> pdfFile;
     UINT page;
-    const TCHAR *next = Str::Parse(cmd, _T("[") DDECOMMAND_PAGE _T("(\"%S\",%u)]"), &pdfFile, &page);
+    const TCHAR *next = Str::Parse(cmd, _T("[") DDECOMMAND_PAGE _T("(\"%S\",%u)]"),
+                                   &pdfFile, &page);
     if (!next)
         return false;
 
@@ -886,7 +888,8 @@ static const TCHAR *HandleSetViewCmd(const TCHAR *cmd, DDEACK& ack)
 {
     ScopedMem<TCHAR> pdfFile, viewMode;
     float zoom = INVALID_ZOOM;
-    const TCHAR *next = Str::Parse(cmd, _T("[") DDECOMMAND_SETVIEW _T("(\"%S\",%? \"%S\",%f)]"), &pdfFile, &viewMode, &zoom);
+    const TCHAR *next = Str::Parse(cmd, _T("[") DDECOMMAND_SETVIEW _T("(\"%S\",%? \"%S\",%f)]"),
+                                   &pdfFile, &viewMode, &zoom);
     if (!next)
         return NULL;
 

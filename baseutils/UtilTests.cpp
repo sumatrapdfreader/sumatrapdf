@@ -142,35 +142,46 @@ static void TStrTest()
         const TCHAR *end = Str::Parse(str, _T("[Open(\"%S\",0%?,%u,0)]"), &str1, &u1);
         assert(end && !*end);
         assert(u1 == 1 && Str::Eq(str1, _T("filename.pdf")));
+
+        assert(Str::Parse(_T("0xABCD"), _T("%x"), &u1));
+        assert(u1 == 0xABCD);
+        assert(Str::Parse(_T("ABCD"), _T("%2x%S"), &u1, &str1));
+        assert(u1 == 0xAB && Str::Eq(str1, _T("CD")));
     }
 
     {
         int i1, i2;
-        const TCHAR *end = Str::Parse(_T("1, 2+3"), _T("%i,%i"), &i1, &i2);
+        const TCHAR *end = Str::Parse(_T("1, 2+3"), _T("%d,%d"), &i1, &i2);
         assert(end && Str::Eq(end, _T("+3")));
         assert(i1 == 1 && i2 == 2);
         end = Str::Parse(end, _T("+3"));
         assert(end && !*end);
 
-        assert(Str::Parse(_T(" -2"), _T("%i"), &i1));
+        assert(Str::Parse(_T(" -2"), _T("%d"), &i1));
         assert(i1 == -2);
         assert(Str::Parse(_T(" 2"), _T(" %u"), &i1));
         assert(i1 == 2);
+        assert(Str::Parse(_T("123-456"), _T("%3d%3d6"), &i1, &i2));
+        assert(i1 == 123 && i2 == -45);
+        assert(!Str::Parse(_T("123"), _T("%4d"), &i1));
+        assert(Str::Parse(_T("654"), _T("%3d"), &i1));
+        assert(i1 == 654);
     }
 
     {
-        float f;
-        double d;
-        const TCHAR *end = Str::Parse(_T("%1.23y -2e-3z"), _T("%%%fy%dz"), &f, &d);
+        float f1, f2;
+        const TCHAR *end = Str::Parse(_T("%1.23y -2e-3z"), _T("%%%fy%fz"), &f1, &f2);
         assert(end && !*end);
-        assert(f == 1.23f && d == -2e-3);
+        assert(f1 == 1.23f && f2 == -2e-3f);
     }
 
     {
         TCHAR *str1 = NULL;
-        int i1 = -1;
+        TCHAR c1;
         assert(!Str::Parse(_T("no exclamation mark?"), _T("%s!"), &str1));
         assert(!str1);
+        assert(Str::Parse(_T("xyz"), _T("x%cz"), &c1));
+        assert(c1 == 'y');
     }
 
     // the test string should only contain ASCII characters,

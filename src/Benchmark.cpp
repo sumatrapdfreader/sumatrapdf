@@ -42,9 +42,9 @@ static void BenchLoadRender(PdfEngine *engine, int pagenum)
 // and <end> to values that won't be valid to the caller
 static void GetRange(TCHAR *s, int& start, int& end)
 {
-    if (_stscanf(s, _T("%d-%d"), &start, &end) == 2)
+    if (Str::Parse(s, _T("%d-%d"), &start, &end))
         ;
-    else if (_stscanf(s, _T("%d"), &start) == 1)
+    else if (Str::Parse(s, _T("%d"), &start))
         end = start;
     else
         start = end = -1; // error case
