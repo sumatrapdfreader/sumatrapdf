@@ -126,29 +126,52 @@ static void TStrTest()
     count = Str::TransChars(buf, _T(""), _T("X"));
     assert(Str::Eq(buf, _T("AbC")) && count == 0);
 
-    Str::Parser parser;
-    const TCHAR *pos = _T("[Open(\"filename.pdf\",0,1,0)]");
-    assert(parser.Init(pos));
-    assert(parser.Skip(_T("[Open(\"")));
-    ScopedMem<TCHAR> tmp(parser.ExtractUntil('"'));
-    assert(Str::Eq(tmp, _T("filename.pdf")));
-    assert(!parser.Skip(_T("0,1")));
-    assert(parser.Skip(_T("0,1"), _T(",0,1")));
-    tmp.Set(parser.ExtractUntil('"'));
-    assert(tmp.Get() == NULL);
-    assert(!*parser.AtCurrPos());
+    str = _T("[Open(\"filename.pdf\",0,1,0)]");
+    {
+        UINT u1 = 0;
+        TCHAR *str1 = NULL;
+        const TCHAR *end = Str::Parse(str, _T("[Open(\"%s\",%? 0,%u,0)]"), &str1, &u1);
+        assert(end && !*end);
+        assert(u1 == 1 && Str::Eq(str1, _T("filename.pdf")));
+        free(str1);
+    }
 
-    int i1, i2;
-    assert(parser.Init(_T("1,2+3")));
-    assert(parser.Scan(_T("%d,%d"), &i1, &i2) && i1 == 1 && i2 == 2);
-    assert(!Str::IsEmpty(parser.AtCurrPos()));
-    assert(parser.Scan(_T("+3")));
-    assert(Str::IsEmpty(parser.AtCurrPos()));
+    {
+        UINT u1 = 0;
+        ScopedMem<TCHAR> str1;
+        const TCHAR *end = Str::Parse(str, _T("[Open(\"%S\",0%?,%u,0)]"), &str1, &u1);
+        assert(end && !*end);
+        assert(u1 == 1 && Str::Eq(str1, _T("filename.pdf")));
+    }
 
-    float f;
-    assert(parser.Init(_T("%1.23y")));
-    assert(parser.Scan(_T("%%%fy"), &f));
-    assert(f == 1.23f);
+    {
+        int i1, i2;
+        const TCHAR *end = Str::Parse(_T("1, 2+3"), _T("%i,%i"), &i1, &i2);
+        assert(end && Str::Eq(end, _T("+3")));
+        assert(i1 == 1 && i2 == 2);
+        end = Str::Parse(end, _T("+3"));
+        assert(end && !*end);
+
+        assert(Str::Parse(_T(" -2"), _T("%i"), &i1));
+        assert(i1 == -2);
+        assert(Str::Parse(_T(" 2"), _T(" %u"), &i1));
+        assert(i1 == 2);
+    }
+
+    {
+        float f;
+        double d;
+        const TCHAR *end = Str::Parse(_T("%1.23y -2e-3z"), _T("%%%fy%dz"), &f, &d);
+        assert(end && !*end);
+        assert(f == 1.23f && d == -2e-3);
+    }
+
+    {
+        TCHAR *str1 = NULL;
+        int i1 = -1;
+        assert(!Str::Parse(_T("no exclamation mark?"), _T("%s!"), &str1));
+        assert(!str1);
+    }
 
     // the test string should only contain ASCII characters,
     // as all others might not be available in all code pages

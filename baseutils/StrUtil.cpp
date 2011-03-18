@@ -371,79 +371,73 @@ void DbgOut(const TCHAR *format, ...)
     va_end(args);
 }
 
-bool Parser::Init(const TCHAR *pos)
+static TCHAR *ExtractUntil(const TCHAR *pos, TCHAR c, const TCHAR **endOut)
 {
-    this->pos = pos;
-    return pos != NULL;
-}
-
-/* If the string at <pos> starts with either <str> or <alt>, skip <pos> past
-   it and return true; otherwise return false. */
-bool Parser::Skip(const TCHAR *str, const TCHAR *alt)
-{
-    if (str && StartsWith(pos, str)) {
-        pos += Str::Len(str);
-        return true;
-    }
-    if (alt && StartsWith(pos, alt)) {
-        pos += Str::Len(alt);
-        return true;
-    }
-    return false;
-}
-
-/* Return copy of the string from <pos> until first <c>. Updates
-   <pos> to the end (after <c>). 
-   If <c> is not found, <pos> will point to the end of the string 
-   and we return NULL. */
-TCHAR *Parser::ExtractUntil(TCHAR c)
-{
-    const TCHAR *end = FindChar(pos, c);
-    if (!end) {
-        pos += Str::Len(pos);
+    *endOut = FindChar(pos, c);
+    if (!*endOut)
         return NULL;
-    }
-
-    size_t len = end - pos + 1;
-    pos = end + 1;
-    return Str::DupN(pos, len);
+    return Str::DupN(pos, *endOut - pos);
 }
 
-/* Exctract values from <pos> according to <format> similar to sscanf. */
-bool Parser::Scan(const TCHAR *format, ...)
+/* Parses a string into several variables sscanf-style (i.e. pass in pointers
+   to where the parsed values are to be stored). Returns a pointer to the first
+   character that's not been parsed when successful and NULL otherwise.
+
+   Supported formats:
+     %u - parses an unsigned int
+     %i - parses a signed int
+     %f - parses a float
+     %d - parses a double
+     %s - parses a string (pass in a TCHAR**, free after use)
+     %S - parses a string into a ScopedMem<TCHAR>
+     %? - makes the next single character optional (e.g. "x%?,y" parses both "xy" and "x,y")
+     %% - parses a single '%'
+   */
+const TCHAR *Parse(const TCHAR *str, const TCHAR *format, ...)
 {
     va_list args;
     va_start(args, format);
-    const TCHAR *cur = pos;
     for (const TCHAR *f = format; *f; f++) {
         if (*f != '%') {
-            if (*f != *cur)
+            if (*f != *str)
                 goto Failure;
-            cur++;
+            str++;
             continue;
         }
         f++;
 
         TCHAR *end = NULL;
         if ('u' == *f)
-            *va_arg(args, unsigned int *) = _tcstoul(cur, &end, 10);
-        else if ('d' == *f)
-            *va_arg(args, int *) = _tcstol(cur, &end, 10);
+            *va_arg(args, unsigned int *) = _tcstoul(str, &end, 10);
+        else if ('i' == *f)
+            *va_arg(args, int *) = _tcstol(str, &end, 10);
         else if ('f' == *f)
-            *va_arg(args, float *) = (float)_tcstod(cur, &end);
-        else if ('%' == *f && *f == *cur)
-            end = (TCHAR *)cur + 1;
-        if (end <= cur)
+            *va_arg(args, float *) = (float)_tcstod(str, &end);
+        else if ('d' == *f)
+            *va_arg(args, double *) = _tcstod(str, &end);
+        else if ('s' == *f)
+            *va_arg(args, TCHAR **) = ExtractUntil(str, *(f + 1), (const TCHAR **)&end);
+        else if ('S' == *f)
+            va_arg(args, ScopedMem<TCHAR> *)->Set(ExtractUntil(str, *(f + 1), (const TCHAR **)&end));
+        else if ('%' == *f && *f == *str)
+            end = (TCHAR *)str + 1;
+        else if ('?' == *f && *(f + 1)) {
+            // skip the next format character, advance the string,
+            // if it the optional character is the next character to parse
+            if (*str != *++f)
+                continue;
+            end = (TCHAR *)str + 1;
+        }
+        if (!end || end == str)
             goto Failure;
-        cur = end;
+        str = end;
     }
     va_end(args);
-    pos = cur;
-    return true;
+    return str;
 
 Failure:
     va_end(args);
-    return false;
+    return NULL;
 }
 
 }

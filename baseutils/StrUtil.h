@@ -71,18 +71,7 @@ bool    HexToMem(const char *s, unsigned char *buf, int bufLen);
 void    DbgOut(const TCHAR *format, ...);
 #endif
 
-class Parser {
-    const TCHAR *pos;
-
-public:
-    Parser() : pos(NULL) { }
-
-    bool            Init(const TCHAR *pos);
-    bool            Skip(const TCHAR *str, const TCHAR *alt=NULL);
-    TCHAR *         ExtractUntil(TCHAR c);
-    bool            Scan(const TCHAR *format, ...);
-    const TCHAR *   AtCurrPos() { return pos; }
-};
+const TCHAR *   Parse(const TCHAR *str, const TCHAR *format, ...);
 
 namespace Conv {
 

@@ -739,19 +739,6 @@ LRESULT OnDDEInitiate(HWND hwnd, WPARAM wparam, LPARAM lparam)
 
 // DDE commands
 
-// All commands start with the same pattern:
-// [<CMD>("<pdffile>"
-// so extract common parsing pattern into a function
-static TCHAR *ExtractCmdFileName(const TCHAR *cmd, const TCHAR *cmdName, Str::Parser& parser)
-{
-    if (!parser.Init(cmd))
-        return NULL;
-    ScopedMem<TCHAR> cmdStart(Str::Join(_T("["), cmdName, _T("(\"")));
-    if (!parser.Skip(cmdStart))
-        return NULL;
-    return parser.ExtractUntil('"');
-}
-
 static void SetFocusHelper(HWND hwnd)
 {
     if (IsIconic(hwnd))
@@ -759,288 +746,170 @@ static void SetFocusHelper(HWND hwnd)
     SetFocus(hwnd);
 }
 
-class ParsedSyncCmd {
-public:
-    ParsedSyncCmd() : line(0), col(0), newWindow(0), setFocus(0) {}
-
-    ScopedMem<TCHAR> pdfFile;
-    ScopedMem<TCHAR> srcFile;
-    UINT             line;
-    UINT             col;
-    UINT             newWindow;
-    UINT             setFocus;
-};
-
-static bool ParseSyncCmd(const TCHAR *cmd, Str::Parser& parser, ParsedSyncCmd& parsed)
-{
-    TCHAR *tmp = ExtractCmdFileName(cmd, DDECOMMAND_SYNC, parser);
-    if (!tmp)
-        return false;
-    parsed.pdfFile.Set(tmp);
-
-    if (parser.Skip(_T(",\""), _T(", \"")))
-        return false;
-    tmp = parser.ExtractUntil('"');
-    if (!tmp)
-        return false;
-    parsed.srcFile.Set(tmp);
-    if (!parser.Scan(_T(",%u,%u,%u,%u)]"), &parsed.line, &parsed.col, &parsed.newWindow, &parsed.setFocus))
-    {
-        if (!parser.Scan(_T(",%u,%u)]"), &parsed.line, &parsed.col))
-            return false;
-    }
-    return true;
-}
-
 // Synchronization command format:
 // [<DDECOMMAND_SYNC>("<pdffile>","<srcfile>",<line>,<col>[,<newwindow>,<setfocus>])]
-static bool HandleSyncCmd(const TCHAR *cmd, Str::Parser& parser, DDEACK& ack)
+static const TCHAR *HandleSyncCmd(const TCHAR *cmd, DDEACK& ack)
 {
-    ParsedSyncCmd parsed;
-    if (!ParseSyncCmd(cmd, parser, parsed))
-        return false;
+    ScopedMem<TCHAR> pdfFile, srcFile;
+    BOOL line = 0, col = 0, newWindow = 0, setFocus = 0;
+    const TCHAR *next = Str::Parse(cmd, _T("[") DDECOMMAND_SYNC _T("(\"%S\",%? \"%S\",%u,%u)]"),
+                                   &pdfFile, &srcFile, &line, &col);
+    if (!next)
+        next = Str::Parse(cmd, _T("[") DDECOMMAND_SYNC _T("(\"%S\",%? \"%S\",%u,%u,%u,%u)]"),
+                          &pdfFile, &srcFile, &line, &col, &newWindow, &setFocus);
+    if (!next)
+        return NULL;
 
     // check if the PDF is already opened
-    WindowInfo *win = FindWindowInfoByFile(parsed.pdfFile);
-    
+    WindowInfo *win = FindWindowInfoByFile(pdfFile);
     // if not then open it
-    if (parsed.newWindow || !win)
-        win = LoadDocument(parsed.pdfFile, !parsed.newWindow ? win : NULL);
+    if (newWindow || !win)
+        win = LoadDocument(pdfFile, !newWindow ? win : NULL);
     else if (win && WS_ERROR_LOADING_PDF == win->state)
         SendMessage(win->hwndFrame, WM_COMMAND, IDM_REFRESH, FALSE);
     
     if (!win || (WS_SHOWING_PDF != win->state))
-        return true;
-
+        return next;
     if (!win->pdfsync) {
         DBG_OUT("PdfSync: No sync file loaded!\n");
-        return true;
+        return next;
     }
 
     ack.fAck = 1;
     assert(win->dm);
     UINT page;
     Vec<RectI> rects;
-    UINT ret = win->pdfsync->source_to_pdf(parsed.srcFile, parsed.line, parsed.col, &page, rects);
-    WindowInfo_ShowForwardSearchResult(win, parsed.srcFile, parsed.line, parsed.col, ret, page, rects);
-    if (!parsed.setFocus)
-        return true;
+    UINT ret = win->pdfsync->source_to_pdf(srcFile, line, col, &page, rects);
+    WindowInfo_ShowForwardSearchResult(win, srcFile, line, col, ret, page, rects);
+    if (setFocus)
+        SetFocusHelper(win->hwndFrame);
 
-    SetFocusHelper(win->hwndFrame);
-    return true;
-}
-
-class ParsedOpenCmd {
-public:
-    ParsedOpenCmd() : newWindow(0), setFocus(0), forceRefresh(0) {}
-
-    ScopedMem<TCHAR>    pdfFile;
-    UINT                newWindow;
-    UINT                setFocus;
-    UINT                forceRefresh;
-};
-
-static bool ParseOpenCmd(const TCHAR *cmd, Str::Parser& parser, ParsedOpenCmd& parsed)
-{    
-    TCHAR *tmp = ExtractCmdFileName(cmd, DDECOMMAND_OPEN, parser);
-    if (!tmp)
-        return false;
-    parsed.pdfFile.Set(tmp);
-
-    if (!parser.Scan(_T(",%u,%u,%u)]"), &parsed.newWindow, &parsed.setFocus, &parsed.forceRefresh))
-    {
-        if (!parser.Skip(_T(")]")))
-            return false;
-    }
-    return true;
+    return next;
 }
 
 // Open file DDE command, format:
 // [<DDECOMMAND_OPEN>("<pdffilepath>"[,<newwindow>,<setfocus>,<forcerefresh>])]
-static bool HandleOpenCmd(const TCHAR *cmd, Str::Parser& parser, DDEACK& ack)
+static const TCHAR *HandleOpenCmd(const TCHAR *cmd, DDEACK& ack)
 {
-    ParsedOpenCmd parsed;
-    if (!ParseOpenCmd(cmd, parser, parsed))
-        return false;
+    ScopedMem<TCHAR> pdfFile;
+    BOOL newWindow = 0, setFocus = 0, forceRefresh = 0;
+    const TCHAR *next = Str::Parse(cmd, _T("[") DDECOMMAND_OPEN _T("(\"%S\")]"), &pdfFile);
+    if (!next)
+        next = Str::Parse(cmd, _T("[") DDECOMMAND_OPEN _T("(\"%S\",%u,%u,%u)]"),
+                          &pdfFile, &newWindow, &setFocus, &forceRefresh);
+    if (!next)
+        return NULL;
     
-    WindowInfo *win = FindWindowInfoByFile(parsed.pdfFile);
-    
-    if (parsed.newWindow || !win)
-        win = LoadDocument(parsed.pdfFile, !parsed.newWindow ? win : NULL);
+    WindowInfo *win = FindWindowInfoByFile(pdfFile);
+    if (newWindow || !win)
+        win = LoadDocument(pdfFile, !newWindow ? win : NULL);
     else if (win && WS_ERROR_LOADING_PDF == win->state) {
         SendMessage(win->hwndFrame, WM_COMMAND, IDM_REFRESH, FALSE);
-        parsed.forceRefresh = 0;
+        forceRefresh = 0;
     }
     
     assert(!win || WS_ABOUT != win->state);
     if (!win)
-        return true;
+        return next;
 
     ack.fAck = 1;
-    if (parsed.forceRefresh)
+    if (forceRefresh)
         PostMessage(win->hwndFrame, WM_COMMAND, IDM_REFRESH, TRUE);
+    if (setFocus)
+        SetFocusHelper(win->hwndFrame);
 
-    if (!parsed.setFocus)
-        return true;
-
-    SetFocusHelper(win->hwndFrame);
-    return true;
-}
-
-class ParsedGotoCmd {
-public:
-    ParsedGotoCmd() {}
-
-    ScopedMem<TCHAR>    pdfFile;
-    ScopedMem<TCHAR>    destName;
-};
-
-static bool ParseGotoCmd(const TCHAR *cmd, Str::Parser& parser, ParsedGotoCmd& parsed)
-{    
-    TCHAR *tmp = ExtractCmdFileName(cmd, DDECOMMAND_GOTO, parser);
-    if (!tmp)
-        return false;
-    parsed.pdfFile.Set(tmp);
-
-    if (!parser.Skip(_T(",\""), _T(", \"")))
-        return false;
-
-    tmp = parser.ExtractUntil('"');
-    if (!tmp)
-        return false;
-    parsed.destName.Set(tmp);
-    
-    return parser.Skip(_T(")]"));
+    return next;
 }
 
 // Jump to named destination DDE command. Command format:
 // [<DDECOMMAND_GOTO>("<pdffilepath>", "<destination name>")]
-static bool HandleGotoCmd(const TCHAR *cmd, Str::Parser& parser, DDEACK& ack)
+static const TCHAR *HandleGotoCmd(const TCHAR *cmd, DDEACK& ack)
 {
-    ParsedGotoCmd parsed;
-    if (!ParseGotoCmd(cmd, parser, parsed))
-        return false;
+    ScopedMem<TCHAR> pdfFile, destName;
+    const TCHAR *next = Str::Parse(cmd, _T("[") DDECOMMAND_GOTO _T("(\"%S\",%? \"%S\")]"), &pdfFile, &destName);
+    if (!next)
+        return NULL;
 
-    WindowInfo *win = FindWindowInfoByFile(parsed.pdfFile);
+    WindowInfo *win = FindWindowInfoByFile(pdfFile);
     if (!win)
-        return true;
+        return next;
 
     if (WS_ERROR_LOADING_PDF == win->state)
         SendMessage(win->hwndFrame, WM_COMMAND, IDM_REFRESH, FALSE);
 
     if (WS_SHOWING_PDF != win->state)
-        return true;
+        return next;
     
-    ScopedMem<char> destName(Str::Conv::ToUtf8(parsed.destName));
-    if (!destName)
-        return true;
+    ScopedMem<char> destNameUtf8(Str::Conv::ToUtf8(destName));
+    if (!destNameUtf8)
+        return next;
 
-    win->dm->goToNamedDest(destName);
+    win->dm->goToNamedDest(destNameUtf8);
     ack.fAck = 1;
     SetFocusHelper(win->hwndFrame);
-    return true;
-}
-
-class ParsedPageCmd {
-public:
-    ParsedPageCmd() {}
-
-    ScopedMem<TCHAR>    pdfFile;
-    UINT                page;
-};
-
-static bool ParsePageCmd(const TCHAR *cmd, Str::Parser& parser, ParsedPageCmd& parsed)
-{    
-    TCHAR *tmp = ExtractCmdFileName(cmd, DDECOMMAND_PAGE, parser);
-    if (!tmp)
-        return false;
-    parsed.pdfFile.Set(tmp);
-
-    return parser.Scan(_T(",%u)]"), &parsed.page);
+    return next;
 }
 
 // Jump to page DDE command. Format:
 // [<DDECOMMAND_PAGE>("<pdffilepath>", <page number>)]
-static bool HandlePageCmd(const TCHAR *cmd, Str::Parser& parser, DDEACK& ack)
+static const TCHAR *HandlePageCmd(const TCHAR *cmd, DDEACK& ack)
 {
-    ParsedPageCmd parsed;
-    if (!ParsePageCmd(cmd, parser, parsed))
+    ScopedMem<TCHAR> pdfFile;
+    UINT page;
+    const TCHAR *next = Str::Parse(cmd, _T("[") DDECOMMAND_PAGE _T("(\"%S\",%u)]"), &pdfFile, &page);
+    if (!next)
         return false;
 
     // check if the PDF is already opened
-    WindowInfo *win = FindWindowInfoByFile(parsed.pdfFile);
+    WindowInfo *win = FindWindowInfoByFile(pdfFile);
     if (!win)
-        return true;
+        return next;
 
     if (WS_ERROR_LOADING_PDF == win->state)
         SendMessage(win->hwndFrame, WM_COMMAND, IDM_REFRESH, FALSE);
 
     if (WS_SHOWING_PDF != win->state)
-        return true;
+        return next;
 
-    if (win->dm->validPageNo(parsed.page)) {
-        win->dm->goToPage(parsed.page, 0, true);
-        ack.fAck = 1;
-        SetFocusHelper(win->hwndFrame);
-    }
-    return true;
-}
+    if (!win->dm->validPageNo(page))
+        return next;
 
-class ParsedSetViewCmd {
-public:
-    ParsedSetViewCmd() {}
-
-    ScopedMem<TCHAR>    pdfFile;
-    ScopedMem<TCHAR>    viewMode;
-    UINT                mode;
-    float               zoom;
-};
-
-static bool ParseSetViewCmd(const TCHAR *cmd, Str::Parser& parser, ParsedSetViewCmd& parsed)
-{    
-    TCHAR *tmp = ExtractCmdFileName(cmd, DDECOMMAND_SETVIEW, parser);
-    if (!tmp)
-        return false;
-    parsed.pdfFile.Set(tmp);
-
-    if (!parser.Skip(_T(",\""), _T(", \"")))
-        return false;
-
-    tmp = parser.ExtractUntil('"');
-    if (!tmp)
-        return false;
-    parsed.viewMode.Set(tmp);
-
-    return parser.Scan(_T(",%f)]"), &parsed.zoom);
+    win->dm->goToPage(page, 0, true);
+    ack.fAck = 1;
+    SetFocusHelper(win->hwndFrame);
+    return next;
 }
 
 // Set view mode and zoom level. Format:
 // [<DDECOMMAND_SETVIEW>("<pdffilepath>", "<view mode>", <zoom level>)]
-static bool HandleSetViewCmd(const TCHAR *cmd, Str::Parser& parser, DDEACK& ack)
+static const TCHAR *HandleSetViewCmd(const TCHAR *cmd, DDEACK& ack)
 {
-    ParsedSetViewCmd parsed;
-    if (!ParseSetViewCmd(cmd, parser, parsed))
-        return false;
+    ScopedMem<TCHAR> pdfFile, viewMode;
+    float zoom = INVALID_ZOOM;
+    const TCHAR *next = Str::Parse(cmd, _T("[") DDECOMMAND_SETVIEW _T("(\"%S\",%? \"%S\",%f)]"), &pdfFile, &viewMode, &zoom);
+    if (!next)
+        return NULL;
 
-    WindowInfo *win = FindWindowInfoByFile(parsed.pdfFile);
+    WindowInfo *win = FindWindowInfoByFile(pdfFile);
     if (!win)
-        return true;
+        return next;
 
     if (WS_ERROR_LOADING_PDF == win->state)
         SendMessage(win->hwndFrame, WM_COMMAND, IDM_REFRESH, FALSE);
 
     if (WS_SHOWING_PDF != win->state)
-        return true;
+        return next;
 
-    ScopedMem<char> viewMode(Str::Conv::ToUtf8(parsed.viewMode));
+    ScopedMem<char> viewModeUtf8(Str::Conv::ToUtf8(viewMode));
     DisplayMode mode;
-    if (DisplayModeEnumFromName(viewMode, &mode) && mode != DM_AUTOMATIC)
+    if (DisplayModeEnumFromName(viewModeUtf8, &mode) && mode != DM_AUTOMATIC)
         win->SwitchToDisplayMode(mode);
 
-    if (parsed.zoom != INVALID_ZOOM)
-        win->ZoomToSelection(parsed.zoom, false);
+    if (zoom != INVALID_ZOOM)
+        win->ZoomToSelection(zoom, false);
 
-    return true;
+    ack.fAck = 1;
+    return next;
 }
 
 LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
@@ -1072,38 +941,27 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
         DBG_OUT("The client window is ANSI!\n");
         cmd.Set(Str::Conv::FromAnsi((const char*)command));
     }
-    
+
     const TCHAR *currCmd = cmd;
     while (!Str::IsEmpty(currCmd)) {
-        Str::Parser parser;
-        ScopedMem<TCHAR> tmp;
-
-        // TODO: don't really like the fact that have to pass the parser in
-        if (HandleSyncCmd(currCmd, parser, ack))
-            goto Next;
-
-        if (HandleOpenCmd(currCmd, parser, ack))
-            goto Next;
-
-        if (HandleGotoCmd(currCmd, parser, ack))
-            goto Next;
-
-        if (HandlePageCmd(currCmd, parser, ack))
-            goto Next;
-
-        if (HandleSetViewCmd(currCmd, parser, ack))
-            goto Next;
-
-        DBG_OUT("WM_DDE_EXECUTE: unknown DDE command or bad command format\n");
-        tmp.Set(parser.ExtractUntil(']'));
-Next:
-        currCmd = parser.AtCurrPos();
+        const TCHAR *nextCmd = NULL;
+        if (!nextCmd) nextCmd = HandleSyncCmd(currCmd, ack);
+        if (!nextCmd) nextCmd = HandleOpenCmd(currCmd, ack);
+        if (!nextCmd) nextCmd = HandleGotoCmd(currCmd, ack);
+        if (!nextCmd) nextCmd = HandlePageCmd(currCmd, ack);
+        if (!nextCmd) nextCmd = HandleSetViewCmd(currCmd, ack);
+        if (!nextCmd) {
+            DBG_OUT("WM_DDE_EXECUTE: unknown DDE command or bad command format\n");
+            ScopedMem<TCHAR> tmp;
+            nextCmd = Str::Parse(currCmd, _T("%S]"), &tmp);
+        }
+        currCmd = nextCmd;
     }
 
 Exit:
     GlobalUnlock((HGLOBAL)hi);
 
-    DBG_OUT("Posting %s WM_DDE_ACK to %p\n", ack.fAck ? "ACCEPT" : "REJECT", (HWND)wparam);
+    DBG_OUT("Posting %s WM_DDE_ACK to %p\n", ack.fAck ? _T("ACCEPT") : _T("REJECT"), (HWND)wparam);
     WORD status = * (WORD *) & ack;
     lparam = ReuseDDElParam(lparam, WM_DDE_EXECUTE, WM_DDE_ACK, status, hi);
     PostMessage((HWND)wparam, WM_DDE_ACK, (WPARAM)hwnd, lparam);
