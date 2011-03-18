@@ -552,6 +552,7 @@ MenuDef menuDefFile[] = {
     { _TRN("&Save As...\tCtrl-S"),          IDM_SAVEAS,                 MF_NOT_IN_RESTRICTED },
     { _TRN("&Print...\tCtrl-P"),            IDM_PRINT,                  MF_NOT_IN_RESTRICTED },
     { SEP_ITEM,                             0,                          MF_NOT_IN_RESTRICTED },
+    { _TRN("Save &Bookmark...\tCtrl-Shift-S"), IDM_SAVEAS_BOOKMARK,     MF_NOT_IN_RESTRICTED },
     { _TRN("Open in &Adobe Reader"),        IDM_VIEW_WITH_ACROBAT,      MF_NOT_IN_RESTRICTED },
     { _TRN("Open in &Foxit Reader"),        IDM_VIEW_WITH_FOXIT,        MF_NOT_IN_RESTRICTED },
     { _TRN("Open in PDF-XChange"),          IDM_VIEW_WITH_PDF_XCHANGE,  MF_NOT_IN_RESTRICTED },
@@ -714,25 +715,22 @@ static void AddOrRemoveFileMenuAtPos(int n, bool add)
 }
 
 // Suppress menu items that depend on specific software being installed:
-// e-mail client, Adobe Reader, Foxit
+// e-mail client, Adobe Reader, Foxit, PDF-XChange
 static void SetupProgramDependentMenus(WindowInfo *win)
 {
     bool acrobat = CanViewWithAcrobat(win);
     bool foxit = CanViewWithFoxit(win);
     bool pdfexch = CanViewWithPDFXChange(win);
     bool email = CanSendAsEmailAttachment(win);
-    bool separator = email | acrobat | foxit | pdfexch;
     for (int i = 0; i < dimof(menuDefFile); i++) {
-        if (IDM_VIEW_WITH_ACROBAT == menuDefFile[i].id) {
+        if (IDM_VIEW_WITH_ACROBAT == menuDefFile[i].id)
             AddOrRemoveFileMenuAtPos(i, acrobat);
-            AddOrRemoveFileMenuAtPos(i-1, separator);
-        } else if (IDM_VIEW_WITH_FOXIT == menuDefFile[i].id) {
+        else if (IDM_VIEW_WITH_FOXIT == menuDefFile[i].id)
             AddOrRemoveFileMenuAtPos(i, foxit);
-        } else if (IDM_VIEW_WITH_PDF_XCHANGE ==  menuDefFile[i].id) {
+        else if (IDM_VIEW_WITH_PDF_XCHANGE ==  menuDefFile[i].id)
             AddOrRemoveFileMenuAtPos(i, pdfexch);
-        } else if (IDM_SEND_BY_EMAIL == menuDefFile[i].id) {
+        else if (IDM_SEND_BY_EMAIL == menuDefFile[i].id)
             AddOrRemoveFileMenuAtPos(i, email);
-        }
     }
 }
 
@@ -1161,7 +1159,7 @@ static void MenuUpdateStateForWindow(WindowInfo *win) {
     static UINT menusToDisableIfNoPdf[] = {
         IDM_VIEW_ROTATE_LEFT, IDM_VIEW_ROTATE_RIGHT, IDM_GOTO_NEXT_PAGE, IDM_GOTO_PREV_PAGE,
         IDM_GOTO_FIRST_PAGE, IDM_GOTO_LAST_PAGE, IDM_GOTO_NAV_BACK, IDM_GOTO_NAV_FORWARD,
-        IDM_GOTO_PAGE, IDM_FIND_FIRST, IDM_SAVEAS, IDM_SEND_BY_EMAIL,
+        IDM_GOTO_PAGE, IDM_FIND_FIRST, IDM_SAVEAS, IDM_SAVEAS_BOOKMARK, IDM_SEND_BY_EMAIL,
         IDM_VIEW_WITH_ACROBAT, IDM_VIEW_WITH_FOXIT, IDM_VIEW_WITH_PDF_XCHANGE, 
         IDM_SELECT_ALL, IDM_COPY_SELECTION, IDM_PROPERTIES, 
         IDM_VIEW_PRESENTATION_MODE, IDM_THREAD_STRESS };
@@ -3511,7 +3509,7 @@ bool DisplayModel::saveStreamAs(unsigned char *data, int dataLen, const TCHAR *f
 
     OPENFILENAME ofn = { 0 };
     ofn.lStructSize = sizeof(ofn);
-    ofn.hwndOwner = ((WindowInfo *)_pdfSearch->tracker)->hwndFrame;
+    ofn.hwndOwner = _appData->hwndFrame;
     ofn.lpstrFile = dstFileName;
     ofn.nMaxFile = dimof(dstFileName);
     ofn.lpstrFilter = fileFilter;
@@ -3521,6 +3519,68 @@ bool DisplayModel::saveStreamAs(unsigned char *data, int dataLen, const TCHAR *f
     if (FALSE == GetSaveFileName(&ofn))
         return false;
     return File::WriteAll(dstFileName, data, dataLen);
+}
+
+static void OnMenuSaveBookmark(WindowInfo *win)
+{
+    if (gRestrictedUse) return;
+    assert(win);
+    if (!win) return;
+    assert(win->dm);
+    if (!win->dm) return;
+
+    TCHAR dstFileName[MAX_PATH] = { 0 };
+    // Remove the extension so that it can be re-added depending on the chosen filter
+    Str::BufSet(dstFileName, dimof(dstFileName), Path::GetBaseName(win->dm->fileName()));
+    Str::TransChars(dstFileName, _T(":"), _T("_"));
+    if (Str::EndsWithI(dstFileName, _T(".pdf")))
+        dstFileName[Str::Len(dstFileName) - 4] = 0;
+
+    // Prepare the file filters (use \1 instead of \0 so that the
+    // double-zero terminated string isn't cut by the string handling
+    // methods too early on)
+    ScopedMem<TCHAR> fileFilter(Str::Format(_T("%s\1*.lnk\1"), _TR("Bookmark Links")));
+    Str::TransChars(fileFilter, _T("\1"), _T("\0"));
+
+    OPENFILENAME ofn = { 0 };
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = win->hwndFrame;
+    ofn.lpstrFile = dstFileName;
+    ofn.nMaxFile = dimof(dstFileName);
+    ofn.lpstrFilter = fileFilter;
+    ofn.nFilterIndex = 1;
+    ofn.lpstrDefExt = _T("lnk");
+    ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
+
+    if (FALSE == GetSaveFileName(&ofn))
+        return;
+
+    ScopedMem<TCHAR> filename(Str::Dup(dstFileName));
+    if (!Str::EndsWithI(dstFileName, _T(".lnk")))
+        filename.Set(Str::Join(dstFileName, _T(".lnk")));
+
+    ScrollState ss;
+    if (!win->dm->getScrollState(&ss)) {
+        ss.page = win->dm->currentPageNo();
+        ss.x = ss.y = -1;
+    }
+    const char *modeName = DisplayModeNameFromEnum(win->dm->displayMode());
+    ScopedMem<TCHAR> viewMode(Str::Conv::FromAnsi(modeName));
+    ScopedMem<TCHAR> zoomVirtual(Str::Format(_T("%.2f"), win->dm->zoomVirtual()));
+    if (ZOOM_FIT_PAGE == win->dm->zoomVirtual())
+        zoomVirtual.Set(Str::Dup(_T("fitpage")));
+    else if (ZOOM_FIT_WIDTH == win->dm->zoomVirtual())
+        zoomVirtual.Set(Str::Dup(_T("fitwidth")));
+    else if (ZOOM_FIT_CONTENT == win->dm->zoomVirtual())
+        zoomVirtual.Set(Str::Dup(_T("fitcontent")));
+
+    ScopedMem<TCHAR> args(Str::Format(_T("\"%s\" -page %d -view \"%s\" -zoom %s -scroll %d,%d -reuse-instance"),
+                          win->dm->fileName(), ss.page, viewMode, zoomVirtual, (int)ss.x, (int)ss.y));
+    ScopedMem<TCHAR> exePath(ExePathGet());
+    ScopedMem<TCHAR> desc(Str::Format(_TR("Bookmark link to page %d of %s"),
+                          ss.page, Path::GetBaseName(win->dm->fileName())));
+
+    CreateShortcut(filename, exePath, args, desc, 1);
 }
 
 // code adapted from http://support.microsoft.com/kb/131462/en-us
@@ -6077,6 +6137,10 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                     win->Reload();
                     break;
 
+                case IDM_SAVEAS_BOOKMARK:
+                    OnMenuSaveBookmark(win);
+                    break;
+
                 case IDT_VIEW_FIT_WIDTH:
                     if (win->dm)
                         OnMenuFitWidthContinuous(win);
@@ -6684,9 +6748,11 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
                 ScopedMem<TCHAR> command(Str::Format(_T("[") DDECOMMAND_PAGE _T("(\"%s\", %d)]"), fullpath, i.pageNumber));
                 DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, command);
             }
-            if ((i.startView != DM_AUTOMATIC || i.startZoom != INVALID_ZOOM) && !firstDocLoaded) {
+            if ((i.startView != DM_AUTOMATIC || i.startZoom != INVALID_ZOOM ||
+                 i.startScroll.x != -1 && i.startScroll.y != -1) && !firstDocLoaded) {
                 ScopedMem<TCHAR> viewMode(Str::Conv::FromUtf8(DisplayModeNameFromEnum(i.startView)));
-                ScopedMem<TCHAR> command(Str::Format(_T("[") DDECOMMAND_SETVIEW _T("(\"%s\", \"%s\", %.2f)]"), fullpath, viewMode, i.startZoom));
+                ScopedMem<TCHAR> command(Str::Format(_T("[") DDECOMMAND_SETVIEW _T("(\"%s\", \"%s\", %.2f, %d, %d)]"),
+                                         fullpath, viewMode, i.startZoom, i.startScroll.x, i.startScroll.y));
                 DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, command);
             }
         }
@@ -6712,7 +6778,15 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
             if (i.startView != DM_AUTOMATIC && !firstDocLoaded)
                 win->SwitchToDisplayMode(i.startView);
             if (i.startZoom != INVALID_ZOOM && !firstDocLoaded)
-                OnMenuZoom(win, MenuIdFromVirtualZoom(i.startZoom));
+                win->ZoomToSelection(i.startZoom, false);
+            if (i.startScroll.x != -1 || i.startScroll.y != -1) {
+                ScrollState ss;
+                if (win->dm->getScrollState(&ss)) {
+                    ss.x = i.startScroll.x;
+                    ss.y = i.startScroll.y;
+                    win->dm->setScrollState(&ss);
+                }
+            }
         }
 
         if (i.printDialog)

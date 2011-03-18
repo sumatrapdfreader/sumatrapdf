@@ -232,6 +232,8 @@ Duputsa
 #Automatic
 #Automatically check for &updates
 #Book View
+#Bookmark Links
+#Bookmark link to page %d of %s
 #Bookmarks
 #Bytes
 #Can't connect to the Internet (error %#x).
@@ -285,6 +287,7 @@ Duputsa
 #Pr&esentation\tCtrl-L
 #Print range
 #Remember &opened files
+#Save &Bookmark...\tCtrl-Shift-S
 #Searching %d of %d...
 #Select &All\tCtrl-A
 #Select content with Ctrl+left mouse button

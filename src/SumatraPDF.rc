@@ -81,6 +81,7 @@ BEGIN
     "L",            IDM_VIEW_FULLSCREEN,    VIRTKEY, SHIFT, CONTROL
     "O",            IDM_OPEN,               VIRTKEY, CONTROL
     "S",            IDM_SAVEAS,             VIRTKEY, CONTROL
+    "S",            IDM_SAVEAS_BOOKMARK,    VIRTKEY, SHIFT, CONTROL
     "P",            IDM_PRINT,              VIRTKEY, CONTROL
     "Q",            IDM_EXIT,               VIRTKEY, CONTROL
     "W",            IDM_CLOSE,              VIRTKEY, CONTROL

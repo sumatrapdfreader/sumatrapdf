@@ -412,6 +412,8 @@ Faktor-zoum
 #Application:
 #Attachment: %s
 #Author:
+#Bookmark Links
+#Bookmark link to page %d of %s
 #Bookmarks
 #Bytes
 #Can't connect to the Internet (error %#x).
@@ -436,6 +438,7 @@ Faktor-zoum
 #Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L
 #Print range
+#Save &Bookmark...\tCtrl-Shift-S
 #Select &All\tCtrl-A
 #Subject:
 #SumatraPDF Update

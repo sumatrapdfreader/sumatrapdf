@@ -860,13 +860,17 @@ static const TCHAR *HandlePageCmd(const TCHAR *cmd, DDEACK& ack)
 }
 
 // Set view mode and zoom level. Format:
-// [<DDECOMMAND_SETVIEW>("<pdffilepath>", "<view mode>", <zoom level>)]
+// [<DDECOMMAND_SETVIEW>("<pdffilepath>", "<view mode>", <zoom level>[, <scrollX>, <scrollY>])]
 static const TCHAR *HandleSetViewCmd(const TCHAR *cmd, DDEACK& ack)
 {
     ScopedMem<TCHAR> pdfFile, viewMode;
     float zoom = INVALID_ZOOM;
+    PointI scroll(-1, -1);
     const TCHAR *next = Str::Parse(cmd, _T("[") DDECOMMAND_SETVIEW _T("(\"%S\",%? \"%S\",%f)]"),
                                    &pdfFile, &viewMode, &zoom);
+    if (!next)
+        next = Str::Parse(cmd, _T("[") DDECOMMAND_SETVIEW _T("(\"%S\",%? \"%S\",%f,%d,%d)]"),
+                          &pdfFile, &viewMode, &zoom, &scroll.x, &scroll.y);
     if (!next)
         return NULL;
 
@@ -886,6 +890,15 @@ static const TCHAR *HandleSetViewCmd(const TCHAR *cmd, DDEACK& ack)
 
     if (zoom != INVALID_ZOOM)
         win->ZoomToSelection(zoom, false);
+
+    if (scroll.x != -1 || scroll.y != -1) {
+        ScrollState ss;
+        if (win->dm->getScrollState(&ss)) {
+            ss.x = scroll.x;
+            ss.y = scroll.y;
+            win->dm->setScrollState(&ss);
+        }
+    }
 
     ack.fAck = 1;
     return next;

@@ -82,7 +82,7 @@ static void ParseCommandLineTest()
         CommandLineInfo i;
         i.ParseCommandLine(_T("SumatraPDF.exe -presentation -bgcolor 0xaa0c13 foo.pdf -invert-colors bar.pdf"));
         assert(true == i.enterPresentation);
-        assert(TRUE == i.invertColors);
+        assert(true == i.invertColors);
         assert(1248426 == i.bgColor);
         assert(2 == i.fileNames.Count());
         assert(0 == i.fileNames.Find(_T("foo.pdf")));
@@ -92,7 +92,7 @@ static void ParseCommandLineTest()
     {
         CommandLineInfo i;
         i.ParseCommandLine(_T("SumatraPDF.exe -bg-color 0xaa0c13 -invertcolors rosanna.pdf"));
-        assert(TRUE == i.invertColors);
+        assert(true == i.invertColors);
         assert(1248426 == i.bgColor);
         assert(1 == i.fileNames.Count());
         assert(0 == i.fileNames.Find(_T("rosanna.pdf")));
@@ -104,6 +104,25 @@ static void ParseCommandLineTest()
         assert(2 == i.fileNames.Count());
         assert(0 == i.fileNames.Find(_T("foo \" bar \\\\.pdf")));
         assert(1 == i.fileNames.Find(_T("un\\\"quoted.pdf")));
+    }
+
+    {
+        CommandLineInfo i;
+        i.ParseCommandLine(_T("SumatraPDF.exe -page 37 -view continuousfacing -zoom fitcontent -scroll 45,1234 -reuse-instance"));
+        assert(0 == i.fileNames.Count());
+        assert(i.pageNumber == 37);
+        assert(i.startView == DM_CONTINUOUS_FACING);
+        assert(i.startZoom == ZOOM_FIT_CONTENT);
+        assert(i.startScroll.x == 45 && i.startScroll.y == 1234);
+    }
+
+    {
+        CommandLineInfo i;
+        i.ParseCommandLine(_T("SumatraPDF.exe -view \"single page\" -zoom 237.45 -scroll -21,-1"));
+        assert(0 == i.fileNames.Count());
+        assert(i.startView == DM_SINGLE_PAGE);
+        assert(i.startZoom == 237.45f);
+        assert(i.startScroll.x == -21 && i.startScroll.y == -1);
     }
 }
 

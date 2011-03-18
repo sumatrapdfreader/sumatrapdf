@@ -844,70 +844,22 @@ BOOL RemoveInstalledFiles()
     return success;
 }
 
-BOOL CreateShortcut(TCHAR *shortcutPath, TCHAR *exePath, TCHAR *workingDir, TCHAR *description)
-{
-    IShellLink* sl = NULL;
-    IPersistFile* pf = NULL;
-    BOOL ok = TRUE;
-
-    ScopedCom com;
-
-    HRESULT hr = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, IID_IShellLink, (void **)&sl);
-    if (FAILED(hr)) 
-        goto Exit;
-
-    hr = sl->QueryInterface(IID_IPersistFile, (void **)&pf);
-    if (FAILED(hr))
-        goto Exit;
-
-    hr = sl->SetPath(exePath);
-    sl->SetWorkingDirectory(workingDir);
-    //sl->SetShowCmd(SW_SHOWNORMAL);
-    //sl->SetHotkey(0);
-    sl->SetIconLocation(exePath, 0);
-    //sl->SetArguments(_T(""));
-    if (description)
-        sl->SetDescription(description);
-
-#ifndef _UNICODE
-    {
-        ScopedMem<WCHAR> shortcutPathW(Str::Conv::ToWStr(shortcutPath));
-        hr = pf->Save(shortcutPathW, TRUE);
-    }
-#else
-    hr = pf->Save(shortcutPath, TRUE);
-#endif
-
-Exit:
-    if (pf)
-        pf->Release();
-    if (sl)
-        sl->Release();
-
-    if (FAILED(hr)) {
-        ok = FALSE;
-        SeeLastError();
-    }
-    return ok;
-}
-
 bool CreateAppShortcut(bool allUsers)
 {
     ScopedMem<TCHAR> installedExePath(GetInstalledExePath());
     ScopedMem<TCHAR> shortcutPath(GetShortcutPath(allUsers));
-    bool ok = CreateShortcut(shortcutPath, installedExePath, gGlobalData.installDir, NULL);
-    return ok;
+    return CreateShortcut(shortcutPath, installedExePath);
 }
 
 bool RemoveShortcut(bool allUsers)
 {
     ScopedMem<TCHAR> p(GetShortcutPath(allUsers));
     bool ok = DeleteFile(p);
-    if (!ok && (ERROR_FILE_NOT_FOUND != GetLastError()))
+    if (!ok && (ERROR_FILE_NOT_FOUND != GetLastError())) {
         SeeLastError();
-    else
-        ok = true;
-    return ok;
+        return false;
+    }
+    return true;
 }
 
 bool CreateInstallationDirectory()
@@ -916,10 +868,9 @@ bool CreateInstallationDirectory()
     if (!ok && (GetLastError() != ERROR_ALREADY_EXISTS)) {
         SeeLastError();
         NotifyFailed(_T("Couldn't create installation directory"));
-    } else {
-        ok = true;
+        return false;
     }
-    return ok;
+    return true;
 }
 
 void CreateButtonExit(HWND hwndParent)

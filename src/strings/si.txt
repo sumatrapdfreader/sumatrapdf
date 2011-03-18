@@ -501,10 +501,13 @@ printing document
 ලේඛනය මුද්‍රණය
 
 # Untranslated:
+#Bookmark Links
+#Bookmark link to page %d of %s
 #Page scaling
 #Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L
 #Print range
+#Save &Bookmark...\tCtrl-Shift-S
 #Select &All\tCtrl-A
 #Set inverse search command-line
 #SumatraPDF Update

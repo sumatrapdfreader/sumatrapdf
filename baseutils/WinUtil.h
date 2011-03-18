@@ -109,7 +109,10 @@ bool WriteRegDWORD(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, DWOR
 
 void EnableNx();
 void RedirectIOToConsole();
-TCHAR *ResolveLnk(TCHAR *path);
+TCHAR *ResolveLnk(const TCHAR *path);
+bool CreateShortcut(const TCHAR *shortcutPath, const TCHAR *exePath,
+                    const TCHAR *args=NULL, const TCHAR *description=NULL,
+                    int iconIndex=0);
 IDataObject* GetDataObjectForFile(LPCTSTR filePath, HWND hwnd=NULL);
 DWORD GetFileVersion(TCHAR *path);
 

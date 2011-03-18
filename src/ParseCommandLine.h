@@ -37,6 +37,7 @@ public:
     bool        enterFullscreen;
     DisplayMode startView;
     float       startZoom;
+    PointI      startScroll;
     bool        showConsole;
     HWND        hwndPluginParent;
     bool        exitImmediately;
@@ -49,7 +50,7 @@ public:
         reuseInstance(false), lang(NULL), destName(NULL), pageNumber(-1),
         restrictedUse(false), invertColors(FALSE),
         enterPresentation(false), enterFullscreen(false), hwndPluginParent(NULL),
-        startView(DM_AUTOMATIC), startZoom(INVALID_ZOOM),
+        startView(DM_AUTOMATIC), startZoom(INVALID_ZOOM), startScroll(PointI(-1, -1)),
         showConsole(false), exitImmediately(false), silent(false)
     { }
 

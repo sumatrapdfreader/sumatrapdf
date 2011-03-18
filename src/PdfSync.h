@@ -236,7 +236,7 @@ UINT CreateSynchronizer(const TCHAR* pdffilename, Synchronizer **sync);
 #define DDECOMMAND_PAGE       _T("GotoPage")
 
 // set view mode and zoom level
-//  format: [SetView("<pdffilepath>", "<view mode>", <zoom level>)]
+//  format: [SetView("<pdffilepath>", "<view mode>", <zoom level>[, <scrollX>, <scrollY>])]
 //  eg: [SetView("c:\file.pdf", "book view", -2)]
 //  note: use -1 for ZOOM_FIT_PAGE, -2 for ZOOM_FIT_WIDTH and -3 for ZOOM_FIT_CONTENT
 #define DDECOMMAND_SETVIEW    _T("SetView")

@@ -8,6 +8,7 @@
 
 #include "BaseUtil.h"
 #include "WinUtil.h"
+#include "FileUtil.h"
 #include "StrUtil.h"
 
 #define DONT_INHERIT_HANDLES FALSE
@@ -146,13 +147,13 @@ void RedirectIOToConsole(void)
     setvbuf(stdin, NULL, _IONBF, 0);
 }
 
-TCHAR *ResolveLnk(TCHAR * path)
+TCHAR *ResolveLnk(const TCHAR * path)
 {
     IShellLink *lnk = NULL;
     IPersistFile *file = NULL;
     TCHAR *resolvedPath = NULL;
 
-    LPCOLESTR olePath = Str::Conv::ToWStr(path);
+    ScopedMem<OLECHAR> olePath(Str::Conv::ToWStr(path));
     if (!olePath)
         return NULL;
 
@@ -185,9 +186,56 @@ Exit:
         file->Release();
     if (lnk)
         lnk->Release();
-    free((void *)olePath);
 
     return resolvedPath;
+}
+
+bool CreateShortcut(const TCHAR *shortcutPath, const TCHAR *exePath,
+                    const TCHAR *args, const TCHAR *description, int iconIndex)
+{
+    IShellLink *lnk = NULL;
+    IPersistFile *file = NULL;
+    bool ok = false;
+
+    ScopedCom com;
+    HRESULT hr = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER,
+                                  IID_IShellLink, (LPVOID *)&lnk);
+    if (FAILED(hr)) 
+        goto Exit;
+
+    hr = lnk->QueryInterface(IID_IPersistFile, (LPVOID *)&file);
+    if (FAILED(hr))
+        goto Exit;
+
+    hr = lnk->SetPath(exePath);
+    if (FAILED(hr))
+        goto Exit;
+
+    lnk->SetWorkingDirectory(ScopedMem<TCHAR>(Path::GetDir(exePath)));
+    // lnk->SetShowCmd(SW_SHOWNORMAL);
+    // lnk->SetHotkey(0);
+    lnk->SetIconLocation(exePath, iconIndex);
+    if (args)
+        lnk->SetArguments(args);
+    if (description)
+        lnk->SetDescription(description);
+
+#ifndef _UNICODE
+    hr = file->Save(ScopedMem<WCHAR>(Str::Conv::ToWStr(shortcutPath)), TRUE);
+#else
+    hr = file->Save(shortcutPath, TRUE);
+#endif
+    ok = SUCCEEDED(hr);
+
+Exit:
+    if (file)
+        file->Release();
+    if (lnk)
+        lnk->Release();
+    if (FAILED(hr))
+        SeeLastError();
+
+    return ok;
 }
 
 /* adapted from http://blogs.msdn.com/oldnewthing/archive/2004/09/20/231739.aspx */

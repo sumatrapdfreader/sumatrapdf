@@ -148,6 +148,14 @@ static void ParseZoomValue(float *zoom, const TCHAR *txt)
         Str::Parse(txt, _T("%f"), zoom);
 }
 
+// -scroll x,y
+static void ParseScrollValue(PointI *scroll, const TCHAR *txt)
+{
+    int x, y;
+    if (Str::Parse(txt, _T("%d,%d"), &x, &y))
+        *scroll = PointI(x, y);
+}
+
 /* parse argument list. we assume that all unrecognized arguments are PDF file names. */
 void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
 {
@@ -251,6 +259,9 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
         }
         else if (is_arg_with_param("-zoom")) {
             ParseZoomValue(&this->startZoom, argList[++n]);
+        }
+        else if (is_arg_with_param("-scroll")) {
+            ParseScrollValue(&this->startScroll, argList[++n]);
         }
         else if (is_arg("-console")) {
             this->showConsole = true;

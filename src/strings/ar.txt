@@ -526,3 +526,8 @@ copying text
 printing document
 تتم حالياً الطباعة
 
+# Untranslated:
+#Bookmark Links
+#Bookmark link to page %d of %s
+#Save &Bookmark...\tCtrl-Shift-S
+

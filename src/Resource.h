@@ -21,6 +21,7 @@
 #define IDM_PRINT                       403
 #define IDM_EXIT                        405
 #define IDM_REFRESH                     406
+#define IDM_SAVEAS_BOOKMARK             407
 #define IDM_SEND_BY_EMAIL               408
 #define IDM_PROPERTIES                  409
 

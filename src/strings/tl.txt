@@ -523,5 +523,8 @@ printing document
 ipini-print ang dokumento
 
 # Untranslated:
+#Bookmark Links
+#Bookmark link to page %d of %s
+#Save &Bookmark...\tCtrl-Shift-S
 #Select &All\tCtrl-A
 

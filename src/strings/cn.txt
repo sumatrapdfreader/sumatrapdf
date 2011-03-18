@@ -504,10 +504,13 @@ printing document
 正在打印文档
 
 # Untranslated:
+#Bookmark Links
+#Bookmark link to page %d of %s
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
 #Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L
+#Save &Bookmark...\tCtrl-Shift-S
 #Select &All\tCtrl-A
 #SumatraPDF Update
 #SumatraPDF crashed

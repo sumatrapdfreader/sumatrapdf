@@ -296,5 +296,5 @@ $(O)\WindowInfo.obj: mupdf\fitz\fitz.h mupdf\mupdf\mupdf.h src\DisplayModel.h
 $(O)\WindowInfo.obj: src\DisplayState.h src\FileWatch.h src\PdfEngine.h
 $(O)\WindowInfo.obj: src\PdfSearch.h src\PdfSelection.h src\PdfSync.h
 $(O)\WindowInfo.obj: src\Resource.h src\WindowInfo.h
-$(O)\WinUtil.obj: baseutils\BaseUtil.h baseutils\GeomUtil.h baseutils\StrUtil.h
-$(O)\WinUtil.obj: baseutils\WinUtil.h
+$(O)\WinUtil.obj: baseutils\BaseUtil.h baseutils\FileUtil.h baseutils\GeomUtil.h
+$(O)\WinUtil.obj: baseutils\StrUtil.h baseutils\WinUtil.h

@@ -525,3 +525,8 @@ s'està copiant text
 printing document
 s'està imprimint el document
 
+# Untranslated:
+#Bookmark Links
+#Bookmark link to page %d of %s
+#Save &Bookmark...\tCtrl-Shift-S
+

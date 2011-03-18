@@ -450,6 +450,8 @@ printing document
 
 # Untranslated:
 #&Use original page sizes
+#Bookmark Links
+#Bookmark link to page %d of %s
 #Cannot start inverse search command. Please check the command line in the settings.
 #Continuous Book View
 #Default PDF reader can't be changed in portable mode
@@ -466,6 +468,7 @@ printing document
 #No synchronization info at this position
 #Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L
+#Save &Bookmark...\tCtrl-Shift-S
 #Select &All\tCtrl-A
 #Select content with Ctrl+left mouse button
 #Show &pages continuously
