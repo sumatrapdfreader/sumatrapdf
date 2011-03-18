@@ -99,34 +99,35 @@ TCHAR *ExePathGet()
    location of a SumatraPDF installation (HKLM\Software\SumatraPDF\Install_Dir) */
 bool IsRunningInPortableMode()
 {
-    TCHAR programFilesDir[MAX_PATH];
     ScopedMem<TCHAR> exePath(ExePathGet());
+    if (NULL == exePath.Get())
+        return true;
 
     // if we can't get a path, assume we're not running from "Program Files"
-
-    bool ok = ReadRegStr(HKEY_LOCAL_MACHINE, _T("Software\\") APP_NAME_STR, _T("Install_Dir"), programFilesDir, dimof(programFilesDir));
-    if (!ok)
-        ok = ReadRegStr(HKEY_CURRENT_USER, _T("Software\\") APP_NAME_STR, _T("Install_Dir"), programFilesDir, dimof(programFilesDir));
-    if (ok && exePath) {
-        if (!Str::EndsWithI(programFilesDir, _T(".exe"))) {
-            ScopedMem<TCHAR> installedPath(Path::Join(programFilesDir, Path::GetBaseName(exePath)));
-            if (Path::IsSame(installedPath, exePath))
-                return false;
+    ScopedMem<TCHAR> installedPath(NULL);
+    installedPath.Set(ReadRegStr(HKEY_LOCAL_MACHINE, _T("Software\\") APP_NAME_STR, _T("Install_Dir")));
+    if (NULL == installedPath.Get())
+        installedPath.Set(ReadRegStr(HKEY_CURRENT_USER, _T("Software\\") APP_NAME_STR, _T("Install_Dir")));
+    if (NULL != installedPath.Get()) {
+        if (!Str::EndsWithI(installedPath.Get(), _T(".exe"))) {
+            installedPath.Set(Path::Join(installedPath.Get(), Path::GetBaseName(exePath)));
         }
-        else if (Path::IsSame(programFilesDir, exePath))
+        if (Path::IsSame(installedPath, exePath))
             return false;
     }
 
-    ok = SHGetSpecialFolderPath(NULL, programFilesDir, CSIDL_PROGRAM_FILES, FALSE);
-    if (ok && exePath) {
-        // check if one of the exePath's parent directories is "Program Files"
-        // (or a junction to it)
-        TCHAR *baseName;
-        while ((baseName = (TCHAR*)Path::GetBaseName(exePath)) > exePath) {
-            baseName[-1] = '\0';
-            if (Path::IsSame(programFilesDir, exePath))
-                return false;
-        }
+    TCHAR programFilesDir[MAX_PATH] = {0};
+    BOOL ok = SHGetSpecialFolderPath(NULL, programFilesDir, CSIDL_PROGRAM_FILES, FALSE);
+    if (FALSE == ok)
+        return true;
+
+    // check if one of the exePath's parent directories is "Program Files"
+    // (or a junction to it)
+    TCHAR *baseName;
+    while ((baseName = (TCHAR*)Path::GetBaseName(exePath)) > exePath) {
+        baseName[-1] = '\0';
+        if (Path::IsSame(programFilesDir, exePath))
+            return false;
     }
 
     return true;
@@ -150,8 +151,7 @@ TCHAR *AppGenDataFilename(TCHAR *pFilename)
         }
     } else {
         /* Use %APPDATA% */
-        TCHAR dir[MAX_PATH];
-        *dir = '\0';
+        TCHAR dir[MAX_PATH] = {0};
         SHGetSpecialFolderPath(NULL, dir, CSIDL_APPDATA, TRUE);
         path = Path::Join(dir, APP_NAME_STR);
         if (path)
@@ -228,15 +228,15 @@ UnregisterFromBeingDefaultViewer() in Installer.cpp.
 */
 void DoAssociateExeWithPdfExtension(HKEY hkey)
 {
-    TCHAR previousPdfHandler[MAX_PATH + 8];
-    TCHAR *exePath = ExePathGet();
+    ScopedMem<TCHAR> exePath(ExePathGet());
     if (!exePath)
         return;
 
+    ScopedMem<TCHAR> prevHandler(NULL);
     // Remember the previous default app for the Uninstaller
-    bool ok = ReadRegStr(hkey, _T("Software\\Classes\\.pdf"), NULL, previousPdfHandler, dimof(previousPdfHandler));
-    if (ok && !Str::Eq(previousPdfHandler, APP_NAME_STR)) {
-        WriteRegStr(hkey, _T("Software\\Classes\\") APP_NAME_STR, _T("previous.pdf"), previousPdfHandler);
+    prevHandler.Set(ReadRegStr(hkey, _T("Software\\Classes\\.pdf"), NULL));
+    if (prevHandler && !Str::Eq(prevHandler, APP_NAME_STR)) {
+        WriteRegStr(hkey, _T("Software\\Classes\\") APP_NAME_STR, _T("previous.pdf"), prevHandler);
     }
 
     WriteRegStr(hkey, _T("Software\\Classes\\") APP_NAME_STR, NULL, _TR("PDF Document"));
@@ -247,7 +247,7 @@ void DoAssociateExeWithPdfExtension(HKEY hkey)
     WriteRegStr(hkey, _T("Software\\Classes\\") APP_NAME_STR _T("\\shell"), NULL, _T("open"));
 
     ScopedMem<TCHAR> cmdPath(Str::Format(_T("\"%s\" \"%%1\""), exePath)); // "${exePath}" "%1"
-    ok = WriteRegStr(hkey, _T("Software\\Classes\\") APP_NAME_STR _T("\\shell\\open\\command"), NULL, cmdPath);
+    bool ok = WriteRegStr(hkey, _T("Software\\Classes\\") APP_NAME_STR _T("\\shell\\open\\command"), NULL, cmdPath);
 
     // also register for printing
     ScopedMem<TCHAR> printPath(Str::Format(_T("\"%s\" -print-to-default \"%%1\""), exePath)); // "${exePath}" -print-to-default "%1"
@@ -264,35 +264,30 @@ void DoAssociateExeWithPdfExtension(HKEY hkey)
             WriteRegStr(hkey, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\.pdf"), _T("Progid"), APP_NAME_STR);
         }
     }
-
-    free(exePath);
 }
 
 // verify that all registry entries that need to be set in order to associate
 // Sumatra with .pdf files exist and have the right values
 bool IsExeAssociatedWithPdfExtension()
 {
-    TCHAR tmp[MAX_PATH + 8];
-    bool ok;
-
     // this one doesn't have to exist but if it does, it must be APP_NAME_STR
-    ok = ReadRegStr(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\.pdf"), _T("Progid"), tmp, dimof(tmp));
-    if (ok && !Str::Eq(tmp, APP_NAME_STR))
+    ScopedMem<TCHAR> tmp(ReadRegStr(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\.pdf"), _T("Progid")));
+    if (tmp && !Str::Eq(tmp, APP_NAME_STR))
         return false;
 
     // HKEY_CLASSES_ROOT\.pdf default key must exist and be equal to APP_NAME_STR
-    ok = ReadRegStr(HKEY_CLASSES_ROOT, _T(".pdf"), NULL, tmp, dimof(tmp));
-    if (!ok || !Str::Eq(tmp, APP_NAME_STR))
+    tmp.Set(ReadRegStr(HKEY_CLASSES_ROOT, _T(".pdf"), NULL));
+    if (!Str::Eq(tmp, APP_NAME_STR))
         return false;
 
     // HKEY_CLASSES_ROOT\SumatraPDF\shell\open default key must be: open
-    ok = ReadRegStr(HKEY_CLASSES_ROOT, _T("SumatraPDF\\shell"), NULL, tmp, dimof(tmp));
-    if (!ok || !Str::EqI(tmp, _T("open")))
+    tmp.Set(ReadRegStr(HKEY_CLASSES_ROOT, _T("SumatraPDF\\shell"), NULL));
+    if (!Str::EqI(tmp, _T("open")))
         return false;
 
     // HKEY_CLASSES_ROOT\SumatraPDF\shell\open\command default key must be: "${exe_path}" "%1"
-    ok = ReadRegStr(HKEY_CLASSES_ROOT, _T("SumatraPDF\\shell\\open\\command"), NULL, tmp, dimof(tmp));
-    if (!ok)
+    tmp.Set(ReadRegStr(HKEY_CLASSES_ROOT, _T("SumatraPDF\\shell\\open\\command"), NULL));
+    if (!tmp)
         return false;
 
     VStrList argList;
@@ -304,42 +299,36 @@ bool IsExeAssociatedWithPdfExtension()
     return Path::IsSame(exePath, argList[0]);
 }
 
-bool GetAcrobatPath(TCHAR *bufOut, int bufCchSize)
+TCHAR *GetAcrobatPath()
 {
-    TCHAR path[MAX_PATH];
     // Try Adobe Acrobat as a fall-back, if the Reader isn't installed
-    bool found = ReadRegStr(HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\AcroRd32.exe"), NULL, path, dimof(path)) ||
-                 ReadRegStr(HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\Acrobat.exe"), NULL, path, dimof(path));
-    if (found)
-        found = File::Exists(path);
-    if (found && bufOut)
-        Str::CopyTo(bufOut, bufCchSize, path);
-    return found;
+    ScopedMem<TCHAR> path(ReadRegStr(HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\AcroRd32.exe"), NULL));
+    if (!path)
+        path.Set(ReadRegStr(HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\Acrobat.exe"), NULL));
+    if (path && File::Exists(path))
+        return path.StealData();
+    return NULL;
 }
 
-bool GetFoxitPath(TCHAR *bufOut, int bufCchSize)
+TCHAR *GetFoxitPath()
 {
-    TCHAR path[MAX_PATH];
-    bool found = ReadRegStr(HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Foxit Reader"), _T("DisplayIcon"), path, dimof(path));
-    if (found)
-        found = File::Exists(path);
-    if (found && bufOut)
-        Str::CopyTo(bufOut, bufCchSize, path);
-    return found;
+    ScopedMem<TCHAR> path(ReadRegStr(HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Foxit Reader"), _T("DisplayIcon")));
+    if (path && File::Exists(path))
+        return path.StealData();
+    return NULL;
 }
 
-bool GetPDFXChangePath(TCHAR *bufOut, int bufCchSize)
+TCHAR *GetPDFXChangePath()
 {
-    TCHAR path[MAX_PATH];
-    bool found = ReadRegStr(HKEY_LOCAL_MACHINE, _T("Software\\Tracker Software\\PDFViewer"), _T("InstallPath"), path, dimof(path)) ||
-                 ReadRegStr(HKEY_CURRENT_USER,  _T("Software\\Tracker Software\\PDFViewer"), _T("InstallPath"), path, dimof(path));
-    if (!found)
+    ScopedMem<TCHAR> path(ReadRegStr(HKEY_LOCAL_MACHINE, _T("Software\\Tracker Software\\PDFViewer"), _T("InstallPath")));
+    if (!path)
+        path.Set(ReadRegStr(HKEY_CURRENT_USER,  _T("Software\\Tracker Software\\PDFViewer"), _T("InstallPath")));
+    if (!path)
         return false;
     ScopedMem<TCHAR> exePath(Path::Join(path, _T("PDFXCview.exe")));
-    found = File::Exists(exePath);
-    if (found && bufOut)
-        Str::CopyTo(bufOut, bufCchSize, exePath);
-    return found;
+    if (File::Exists(exePath))
+        return exePath.StealData();
+    return NULL;
 }
 
 // List of rules used to detect TeX editors.
@@ -416,11 +405,12 @@ static struct {
 LPTSTR AutoDetectInverseSearchCommands(HWND hwndCombo)
 {
     LPTSTR firstEditor = NULL;
-    TCHAR path[MAX_PATH];
+    ScopedMem<TCHAR> path(NULL);
 
     for (int i = 0; i < dimof(editor_rules); i++)
     {
-        if (!ReadRegStr(editor_rules[i].RegRoot, editor_rules[i].RegKey, editor_rules[i].RegValue, path, dimof(path)))
+        path.Set(ReadRegStr(editor_rules[i].RegRoot, editor_rules[i].RegKey, editor_rules[i].RegValue));
+        if (!path)
             continue;
 
         TCHAR *exePath;

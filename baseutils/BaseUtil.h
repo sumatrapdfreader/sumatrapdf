@@ -87,6 +87,11 @@ public:
         obj = o;
     }
     T *Get() const { return obj; }
+    T *StealData() {
+        T *tmp = obj;
+        obj = NULL;
+        return tmp;
+    }
     operator T*() const { return obj; }
 };
 

@@ -63,12 +63,17 @@ void SeeLastError(DWORD err) {
     LocalFree(msgBuf);
 }
 
-bool ReadRegStr(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, const TCHAR *buffer, DWORD bufLen)
+// called needs to free() the result
+TCHAR *ReadRegStr(HKEY keySub, const TCHAR *keyName, const TCHAR *valName)
 {
-    LONG res = SHGetValue(keySub, keyName, valName, NULL, (VOID *)buffer, &bufLen);
+    TCHAR val[MAX_PATH+8] = {0};
+    DWORD valLenCb = sizeof(val);
+    LONG res = SHGetValue(keySub, keyName, valName, NULL, (VOID *)val, &valLenCb);
     if (ERROR_SUCCESS != res && ERROR_FILE_NOT_FOUND != res)
         SeeLastError(res);
-    return ERROR_SUCCESS == res;
+    if (ERROR_SUCCESS != res)
+        return NULL;
+    return Str::Dup(val);
 }
 
 bool WriteRegStr(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, const TCHAR *value)
@@ -287,23 +292,6 @@ void exec_with_params(const TCHAR *exe, const TCHAR *params, bool hidden)
   #define SPECIAL_FOLDER_PATH CSIDL_PERSONAL
  #endif
 #endif
-
-/* see http://www.opennetcf.org/Forums/post.asp?method=TopicQuote&TOPIC_ID=95&FORUM_ID=12 
-   for more possibilities
-   return false on failure, true if ok. Even if returns false, it'll return root ("\")
-   directory so that clients can ignore failures from this function
-*/
-TCHAR *get_app_data_folder_path(bool f_create)
-{
-#ifdef SPECIAL_FOLDER_PATH
-    TCHAR path[MAX_PATH];
-    bool f_ok = SHGetSpecialFolderPath(NULL, path, SPECIAL_FOLDER_PATH, f_create);
-    if (f_ok)
-        return Str::Dup(path);
-#endif
-    /* if all else fails, just use root ("\") directory */
-    return Str::Dup(_T(""));
-}
 
 int screen_get_dx(void)
 {

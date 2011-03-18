@@ -103,7 +103,7 @@ bool IsAppThemed();
 bool WindowsVerVistaOrGreater();
 
 void SeeLastError(DWORD err=0);
-bool ReadRegStr(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, const TCHAR *buffer, DWORD bufLen);
+TCHAR *ReadRegStr(HKEY keySub, const TCHAR *keyName, const TCHAR *valName);
 bool WriteRegStr(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, const TCHAR *value);
 bool WriteRegDWORD(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, DWORD value);
 
@@ -199,7 +199,6 @@ inline void Enable(HMENU m, UINT id, bool enable)
 
 #define DRAGQUERY_NUMFILES 0xFFFFFFFF
 
-
 #define Edit_SelectAll(hwnd) Edit_SetSel(hwnd, 0, -1)
 #define ListBox_AppendString_NoSort(hwnd, txt) ListBox_InsertString(hwnd, -1, txt)
 #define Window_SetFont(hwnd, font) SetWindowFont(hwnd, font, TRUE)
@@ -212,8 +211,6 @@ void    rect_shift_to_work_area(RECT *rect, bool bFully);
 
 void    launch_url(const TCHAR *url);
 void    exec_with_params(const TCHAR *exe, const TCHAR *params, bool hidden);
-
-TCHAR * get_app_data_folder_path(bool f_create);
 
 void    paint_round_rect_around_hwnd(HDC hdc, HWND hwnd_edit_parent, HWND hwnd_edit, COLORREF col);
 void    paint_rect(HDC hdc, RECT * rect);

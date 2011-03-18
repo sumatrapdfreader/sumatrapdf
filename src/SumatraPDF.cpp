@@ -354,7 +354,8 @@ static bool CanViewWithFoxit(WindowInfo *win)
     // Requirements: a valid filename and a valid path to Foxit
     if (gRestrictedUse || !HasValidFileOrNoFile(win))
         return false;
-    return GetFoxitPath();
+    ScopedMem<TCHAR> path(GetFoxitPath());
+    return path != NULL;
 }
 
 static bool ViewWithFoxit(WindowInfo *win, TCHAR *args=NULL)
@@ -362,8 +363,8 @@ static bool ViewWithFoxit(WindowInfo *win, TCHAR *args=NULL)
     if (!CanViewWithFoxit(win))
         return false;
 
-    TCHAR exePath[MAX_PATH];
-    if (!GetFoxitPath(exePath, dimof(exePath)))
+    ScopedMem<TCHAR> exePath(GetFoxitPath());
+    if (!exePath)
         return false;
     if (!args)
         args = _T("");
@@ -381,7 +382,8 @@ static bool CanViewWithPDFXChange(WindowInfo *win)
     // Requirements: a valid filename and a valid path to Foxit
     if (gRestrictedUse || !HasValidFileOrNoFile(win))
         return false;
-    return GetPDFXChangePath();
+    ScopedMem<TCHAR> path(GetPDFXChangePath());
+    return path != NULL;
 }
 
 static bool ViewWithPDFXChange(WindowInfo *win, TCHAR *args=NULL)
@@ -389,8 +391,8 @@ static bool ViewWithPDFXChange(WindowInfo *win, TCHAR *args=NULL)
     if (!CanViewWithPDFXChange(win))
         return false;
 
-    TCHAR exePath[MAX_PATH];
-    if (!GetPDFXChangePath(exePath, dimof(exePath)))
+    ScopedMem<TCHAR> exePath(GetPDFXChangePath());
+    if (exePath)
         return false;
     if (!args)
         args = _T("");
@@ -408,7 +410,8 @@ static bool CanViewWithAcrobat(WindowInfo *win)
     // Requirements: a valid filename and a valid path to Adobe Reader
     if (gRestrictedUse || !HasValidFileOrNoFile(win))
         return false;
-    return GetAcrobatPath();
+    ScopedMem<TCHAR> exePath(GetAcrobatPath());
+    return exePath != NULL;
 }
 
 static bool ViewWithAcrobat(WindowInfo *win, TCHAR *args=NULL)
@@ -416,13 +419,14 @@ static bool ViewWithAcrobat(WindowInfo *win, TCHAR *args=NULL)
     if (!CanViewWithAcrobat(win))
         return false;
 
-    TCHAR exePath[MAX_PATH];
-    if (!GetAcrobatPath(exePath, dimof(exePath)))
+    ScopedMem<TCHAR> exePath(GetAcrobatPath());
+    if (!exePath)
         return false;
+
     if (!args)
         args = _T("");
 
-    TCHAR *params;
+    ScopedMem<TCHAR> params(NULL);
     // Command line format for version 6 and later:
     //   /A "page=%d&zoom=%.1f,%d,%d&..." <filename>
     // see http://www.adobe.com/devnet/acrobat/pdfs/pdf_open_parameters.pdf
@@ -430,11 +434,10 @@ static bool ViewWithAcrobat(WindowInfo *win, TCHAR *args=NULL)
     // see http://www.adobe.com/devnet/acrobat/pdfs/Acrobat_SDK_developer_faq.pdf#page=24
     // TODO: Also set zoom factor and scroll to current position?
     if (win->dm && HIWORD(GetFileVersion(exePath)) >= 6)
-        params = Str::Format(_T("/A \"page=%d\" %s \"%s\""), win->dm->currentPageNo(), args, win->dm->fileName());
+        params.Set(Str::Format(_T("/A \"page=%d\" %s \"%s\""), win->dm->currentPageNo(), args, win->dm->fileName()));
     else
-        params = Str::Format(_T("%s \"%s\""), args, win->loadedFilePath);
+        params.Set(Str::Format(_T("%s \"%s\""), args, win->loadedFilePath));
     exec_with_params(exePath, params, FALSE);
-    free(params);
 
     return true;
 }

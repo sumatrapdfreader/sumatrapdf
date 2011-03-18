@@ -76,9 +76,9 @@ void AdjustRemovableDriveLetter(TCHAR *path);
 void DoAssociateExeWithPdfExtension(HKEY hkey);
 bool IsExeAssociatedWithPdfExtension();
 
-bool GetAcrobatPath(TCHAR *bufOut=NULL, int bufCchSize=0);
-bool GetFoxitPath(TCHAR *buffer=NULL, int bufCchSize=0);
-bool GetPDFXChangePath(TCHAR *bufOut=NULL, int bufCchSize=0);
+TCHAR* GetAcrobatPath();
+TCHAR* GetFoxitPath();
+TCHAR* GetPDFXChangePath();
 
 LPTSTR AutoDetectInverseSearchCommands(HWND hwndCombo=NULL);
 void DDEExecute(LPCTSTR server, LPCTSTR topic, LPCTSTR command);

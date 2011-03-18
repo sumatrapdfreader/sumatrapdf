@@ -271,17 +271,16 @@ TCHAR *GetOwnPath()
 
 TCHAR *GetInstallationDir(bool forUninstallation=false)
 {
-    TCHAR dir[MAX_PATH];
-
     // try the previous installation directory first
-    bool ok = ReadRegStr(HKEY_LOCAL_MACHINE, REG_PATH_SOFTWARE, INSTALL_DIR, dir, dimof(dir));
-    if (!ok)
-        ok = ReadRegStr(HKEY_CURRENT_USER, REG_PATH_SOFTWARE, INSTALL_DIR, dir, dimof(dir));
-    if (ok) {
-        if (Str::EndsWithI(dir, _T(".exe")))
-            *(TCHAR *)Path::GetBaseName(dir) = '\0';
-        if (*dir && PathIsDirectory(dir))
-            return Str::Dup(dir);
+    ScopedMem<TCHAR> dir(ReadRegStr(HKEY_LOCAL_MACHINE, REG_PATH_SOFTWARE, INSTALL_DIR));
+    if (!dir)
+        dir.Set(ReadRegStr(HKEY_CURRENT_USER, REG_PATH_SOFTWARE, INSTALL_DIR));
+    if (dir) {
+        if (Str::EndsWithI(dir, _T(".exe"))) {
+            dir.Set(Path::GetDir(dir));
+        }
+        if (!Str::IsEmpty(dir.Get()) && PathIsDirectory(dir))
+            return dir.StealData();
     }
 
     if (forUninstallation) {
@@ -290,8 +289,9 @@ TCHAR *GetInstallationDir(bool forUninstallation=false)
     }
 
     // fall back to %ProgramFiles%
-    ok = SHGetSpecialFolderPath(NULL, dir, CSIDL_PROGRAM_FILES, FALSE);
-    if (!ok)
+    TCHAR buf[MAX_PATH] = {0};
+    BOOL ok = SHGetSpecialFolderPath(NULL, dir, CSIDL_PROGRAM_FILES, FALSE);
+    if (ok == FALSE)
         return NULL;
     return Path::Join(dir, TAPP);
 }
@@ -724,13 +724,12 @@ void UnregisterFromBeingDefaultViewer(bool allUsers)
     HKEY hkey = HKEY_LOCAL_MACHINE;
     if (!allUsers)
         hkey = HKEY_CURRENT_USER;
-    TCHAR buf[MAX_PATH + 8];
-    bool ok = ReadRegStr(hkey, REG_CLASSES_APP, _T("previous.pdf"), buf, dimof(buf));
-    if (ok) {
-        WriteRegStr(hkey, REG_CLASSES_PDF, NULL, buf);
+    ScopedMem<TCHAR> prev(ReadRegStr(hkey, REG_CLASSES_APP, _T("previous.pdf")));
+    if (prev) {
+        WriteRegStr(hkey, REG_CLASSES_PDF, NULL, prev);
     } else {
-        bool ok = ReadRegStr(hkey, REG_CLASSES_PDF, NULL, buf, dimof(buf));
-        if (ok && Str::Eq(TAPP, buf))
+        prev.Set(ReadRegStr(hkey, REG_CLASSES_PDF, NULL));
+        if (Str::Eq(TAPP, prev))
             RegDelKeyRecurse(hkey, REG_CLASSES_PDF);
     }
 }
@@ -740,9 +739,8 @@ void RemoveOwnRegistryKeys()
     RegDelKeyRecurse(HKEY_LOCAL_MACHINE, REG_CLASSES_APP);
     RegDelKeyRecurse(HKEY_CURRENT_USER, REG_CLASSES_APP);
 
-    TCHAR buf[MAX_PATH + 8];
-    bool ok = ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT, PROG_ID, buf, dimof(buf));
-    if (ok && Str::Eq(buf, TAPP)) {
+    ScopedMem<TCHAR> buf(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT, PROG_ID));
+    if (Str::Eq(buf, TAPP)) {
         LONG res = SHDeleteValue(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT, PROG_ID);
         if (res != ERROR_SUCCESS)
             SeeLastError(res);
@@ -751,20 +749,16 @@ void RemoveOwnRegistryKeys()
 
 bool IsBrowserPluginInstalled()
 {
-    TCHAR buf[MAX_PATH];
-    bool ok = ReadRegStr(HKEY_LOCAL_MACHINE, REG_PATH_PLUGIN, PLUGIN_PATH, buf, dimof(buf));
-    if (!ok)
-        ok = ReadRegStr(HKEY_CURRENT_USER, REG_PATH_PLUGIN, PLUGIN_PATH, buf, dimof(buf));
-    if (!ok)
-        return false;
+    ScopedMem<TCHAR> buf(ReadRegStr(HKEY_LOCAL_MACHINE, REG_PATH_PLUGIN, PLUGIN_PATH));
+    if (!buf)
+        buf.Set(ReadRegStr(HKEY_CURRENT_USER, REG_PATH_PLUGIN, PLUGIN_PATH));
     return File::Exists(buf);
 }
 
 bool IsPdfFilterInstalled()
 {
-    TCHAR buf[MAX_PATH];
-    bool ok = ReadRegStr(HKEY_CLASSES_ROOT, _T(".pdf\\PersistentHandler"), NULL, buf, dimof(buf));
-    if (!ok)
+    ScopedMem<TCHAR> buf(ReadRegStr(HKEY_CLASSES_ROOT, _T(".pdf\\PersistentHandler"), NULL));
+    if (!buf)
         return false;
     ScopedMem<WCHAR> handler_iid(Str::Conv::ToWStr(buf));
     return Str::EqI(handler_iid, SZ_PDF_FILTER_HANDLER);
@@ -797,11 +791,7 @@ void InstallPdfFilter()
 /* Caller needs to free() the result. */
 TCHAR *GetDefaultPdfViewer()
 {
-    TCHAR buf[MAX_PATH];
-    bool ok = ReadRegStr(HKEY_CLASSES_ROOT, _T(".pdf"), NULL, buf, dimof(buf));
-    if (!ok)
-        return NULL;
-    return Str::Dup(buf);
+    return ReadRegStr(HKEY_CLASSES_ROOT, _T(".pdf"), NULL);
 }
 
 BOOL RemoveEmptyDirectory(TCHAR *dir)
