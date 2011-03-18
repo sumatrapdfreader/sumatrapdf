@@ -130,13 +130,13 @@ static void TStrTest()
     const TCHAR *pos = _T("[Open(\"filename.pdf\",0,1,0)]");
     assert(parser.Init(pos));
     assert(parser.Skip(_T("[Open(\"")));
-    assert(parser.CopyUntil('"', buf, dimof(buf)));
-    assert(Str::Eq(buf, _T("filename.pdf")));
+    ScopedMem<TCHAR> tmp(parser.ExtractUntil('"'));
+    assert(Str::Eq(tmp, _T("filename.pdf")));
     assert(!parser.Skip(_T("0,1")));
     assert(parser.Skip(_T("0,1"), _T(",0,1")));
-    *buf = _T('\0');
-    assert(!parser.CopyUntil('"', buf, dimof(buf)));
-    assert(!*parser.Peek() && !*buf);
+    tmp.Set(parser.ExtractUntil('"'));
+    assert(tmp.Get() == NULL);
+    assert(!*parser.Peek());
 
     int i1, i2;
     assert(parser.Init(_T("1,2+3")));

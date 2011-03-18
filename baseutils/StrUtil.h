@@ -79,7 +79,7 @@ public:
 
     bool            Init(const TCHAR *pos);
     bool            Skip(const TCHAR *str, const TCHAR *alt=NULL);
-    bool            CopyUntil(TCHAR c, TCHAR *buffer, size_t bufSize);
+//    bool            CopyUntil(TCHAR c, TCHAR *buffer, size_t bufSize);
     TCHAR *         ExtractUntil(TCHAR c);
     bool            Scan(const TCHAR *format, ...);
     const TCHAR *   Peek() { return pos; }

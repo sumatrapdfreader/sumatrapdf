@@ -913,10 +913,7 @@ static bool ParseGotoCmd(const TCHAR *cmd, Str::Parser& parser, ParsedGotoCmd& p
         return false;
     parsed.destName.Set(tmp);
     
-    if (!parser.Skip(_T(")]")))
-        return false;
-
-    return true;
+    return parser.Skip(_T(")]"));
 }
 
 // Jump to named destination DDE command. Command format:
@@ -971,10 +968,7 @@ static bool ParsePageCmd(const TCHAR *cmd, Str::Parser& parser, ParsedPageCmd& p
         return false;
     parsed.pdfFile.Set(tmp);
 
-    if (!parser.Scan(_T(",%u)]"), &parsed.page))
-        return false;
-
-    return true;
+    return parser.Scan(_T(",%u)]"), &parsed.page);
 }
 
 // Jump to page DDE command. Format:
@@ -1006,7 +1000,69 @@ static bool HandlePageCmd(const TCHAR *cmd, Str::Parser& parser, DDEACK& ack)
     return true;
 }
 
-// TODO: this function would benefit from being split into smaller pieces
+class ParsedSetViewCmd {
+public:
+    ParsedSetViewCmd() {}
+
+    ScopedMem<TCHAR>    pdfFile;
+    ScopedMem<TCHAR>    viewMode;
+    UINT                mode;
+    float               zoom;
+};
+
+static bool ParseSetViewCmd(const TCHAR *cmd, Str::Parser& parser, ParsedSetViewCmd& parsed)
+{    
+    if (!parser.Init(cmd))
+        return false;
+
+    if (!parser.Skip(_T("[") DDECOMMAND_SETVIEW _T("(\"")))
+        return false;
+
+    TCHAR *tmp = parser.ExtractUntil('"');
+    if (!tmp)
+        return false;
+    parsed.pdfFile.Set(tmp);
+
+    if (!parser.Skip(_T(",\""), _T(", \"")))
+        return false;
+
+    tmp = parser.ExtractUntil('"');
+    if (!tmp)
+        return false;
+    parsed.viewMode.Set(tmp);
+
+    return parser.Scan(_T(",%f)]"), &parsed.zoom);
+}
+
+// Set view mode and zoom level. Format:
+// [<DDECOMMAND_SETVIEW>("<pdffilepath>", "<view mode>", <zoom level>)]
+static bool HandleSetViewCmd(const TCHAR *cmd, Str::Parser& parser, DDEACK& ack)
+{
+    ParsedSetViewCmd parsed;
+    if (!ParseSetViewCmd(cmd, parser, parsed))
+        return false;
+
+    WindowInfo *win = FindWindowInfoByFile(parsed.pdfFile);
+    if (!win)
+        return true;
+
+    if (WS_ERROR_LOADING_PDF == win->state)
+        SendMessage(win->hwndFrame, WM_COMMAND, IDM_REFRESH, FALSE);
+
+    if (WS_SHOWING_PDF != win->state)
+        return true;
+
+    ScopedMem<char> viewMode(Str::Conv::ToUtf8(parsed.viewMode));
+    DisplayMode mode;
+    if (DisplayModeEnumFromName(viewMode, &mode) && mode != DM_AUTOMATIC)
+        win->SwitchToDisplayMode(mode);
+
+    if (parsed.zoom != INVALID_ZOOM)
+        win->ZoomToSelection(parsed.zoom, false);
+
+    return true;
+}
+
 LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
 {
     DBG_OUT("Received WM_DDE_EXECUTE from %p with %08lx\n", (HWND)wparam, lparam);
@@ -1015,6 +1071,7 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
     UnpackDDElParam(WM_DDE_EXECUTE, lparam, &lo, &hi);
     DBG_OUT("%08lx => lo %04x hi %04x\n", lparam, lo, hi);
 
+    ScopedMem<TCHAR> cmd;
     DDEACK ack;
     ack.bAppReturnCode = 0;
     ack.reserved = 0;
@@ -1028,24 +1085,18 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
         goto Exit;
     }
 
-    TCHAR *cmd;
     if (IsWindowUnicode((HWND)wparam)) {
         DBG_OUT("The client window is UNICODE!\n");
-        cmd = Str::Conv::FromWStr((const WCHAR*)command);
+        cmd.Set(Str::Conv::FromWStr((const WCHAR*)command));
     } else {
         DBG_OUT("The client window is ANSI!\n");
-        cmd = Str::Conv::FromAnsi((const char*)command);
+        cmd.Set(Str::Conv::FromAnsi((const char*)command));
     }
-
-    // Parse the command
-    TCHAR pdffile[MAX_PATH];
-    TCHAR destname[MAX_PATH];
-    UINT newwindow = 0, setfocus = 0, forcerefresh = 0, page = 0;
-    float zoom;
     
     const TCHAR *currCmd = cmd;
     while (!Str::IsEmpty(currCmd)) {
         Str::Parser parser;
+        ScopedMem<TCHAR> tmp;
 
         // TODO: don't really like the fact that have to pass the parser in
         if (HandleSyncCmd(currCmd, parser, ack))
@@ -1060,38 +1111,14 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
         if (HandlePageCmd(currCmd, parser, ack))
             goto Next;
 
-        // Set view mode and zoom level
-        // format is [<DDECOMMAND_SETVIEW>("<pdffilepath>", "<view mode>", <zoom level>)]
-        if (parser.Init(currCmd) &&
-            parser.Skip(_T("[") DDECOMMAND_SETVIEW _T("(\"")) &&
-            parser.CopyUntil('"', pdffile, dimof(pdffile)) &&
-            parser.Skip(_T(",\""), _T(", \"")) &&
-            parser.CopyUntil('"', destname, dimof(destname)) &&
-            parser.Scan(_T(",%f)]"), &zoom))
-        {
-            // check if the PDF is already opened
-            WindowInfo *win = FindWindowInfoByFile(pdffile);
-            if (win && WS_ERROR_LOADING_PDF == win->state)
-                SendMessage(win->hwndFrame, WM_COMMAND, IDM_REFRESH, FALSE);
-            if (win && WS_SHOWING_PDF == win->state) {
-                char *viewMode = Str::Conv::ToUtf8(destname);
-                DisplayMode mode;
-                if (DisplayModeEnumFromName(viewMode, &mode) && mode != DM_AUTOMATIC)
-                    win->SwitchToDisplayMode(mode);
-                free(viewMode);
-                if (zoom != INVALID_ZOOM)
-                    win->ZoomToSelection(zoom, false);
-            }
-        }
-        else {
-            DBG_OUT("WM_DDE_EXECUTE: unknown DDE command or bad command format\n");
-            parser.CopyUntil(']', pdffile, 1);
-        }
+        if (HandleSetViewCmd(currCmd, parser, ack))
+            goto Next;
+
+        DBG_OUT("WM_DDE_EXECUTE: unknown DDE command or bad command format\n");
+        tmp.Set(parser.ExtractUntil(']'));
 Next:
-        // next command
         currCmd = parser.Peek();
     }
-    free(cmd);
 
 Exit:
     GlobalUnlock((HGLOBAL)hi);

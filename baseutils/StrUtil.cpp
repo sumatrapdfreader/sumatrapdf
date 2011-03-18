@@ -392,26 +392,10 @@ bool Parser::Skip(const TCHAR *str, const TCHAR *alt)
     return false;
 }
 
-/* Copy the string from <pos> into <buffer> until <c> is found, and point
-   <pos> at the end (after <c>). Returns true unless <bufSize> isn't
-   big enough, in which case <pos> is still updated, but false is returned
-   and <buffer> is truncated. If <c> is not found, <pos> will point to
-   the end of the string and false is returned. */
-bool Parser::CopyUntil(TCHAR c, TCHAR *buffer, size_t bufSize)
-{
-    const TCHAR *end = FindChar(pos, c);
-    if (!end) {
-        pos += Str::Len(pos);
-        return false;
-    }
-
-    size_t len = min(bufSize, (size_t)(end - pos) + 1);
-    Str::BufSet(buffer, len, pos);
-    pos = end + 1;
-
-    return len <= bufSize;
-}
-
+/* Return copy of the string from <pos> until first <c>. Updates
+   <pos> to the end (after <c>). 
+   If <c> is not found, <pos> will point to the end of the string 
+   and we return NULL. */
 TCHAR *Parser::ExtractUntil(TCHAR c)
 {
     const TCHAR *end = FindChar(pos, c);
