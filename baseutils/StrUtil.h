@@ -70,6 +70,19 @@ bool    HexToMem(const char *s, unsigned char *buf, int bufLen);
 void    DbgOut(const TCHAR *format, ...);
 #endif
 
+class Parser {
+    const TCHAR *pos;
+
+public:
+    Parser() : pos(NULL) { }
+
+    bool            Init(const TCHAR *pos);
+    bool            Skip(const TCHAR *str, const TCHAR *alt=NULL);
+    bool            CopyUntil(TCHAR c, TCHAR *buffer, size_t bufSize);
+    bool            Scan(const TCHAR *format, ...);
+    const TCHAR *   Peek() { return pos; }
+};
+
 }
 
 inline bool ChrIsDigit(const WCHAR c)
@@ -125,8 +138,5 @@ inline WCHAR *tstr_to_wstr_q(char *src)
     return str;
 }
 #endif
-
-int       tstr_skip(const TCHAR **strp, const TCHAR *expect);
-int       tstr_copy_skip_until(const TCHAR **strp, TCHAR *dst, size_t dst_size, TCHAR stop);
 
 #endif

@@ -205,7 +205,7 @@ char *FmtV(const char *fmt, va_list args)
     char  * buf = message;
     for (;;)
     {
-        int count = vsnprintf(buf, bufCchSize, fmt, args);
+        int count = _vsnprintf(buf, bufCchSize, fmt, args);
         if (0 <= count && (size_t)count < bufCchSize)
             break;
         /* we have to make the buffer bigger. The algorithm used to calculate
@@ -345,49 +345,66 @@ bool HexToMem(const char *s, unsigned char *buf, int bufLen)
 
 void DbgOut(const TCHAR *format, ...)
 {
-    TCHAR   buf[4096];
     va_list args;
-
     va_start(args, format);
-    _vsntprintf(buf, dimof(buf), format, args);
+    ScopedMem<TCHAR> buf(FmtV(format, args));
     OutputDebugString(buf);
     va_end(args);
 }
 
+bool Parser::Init(const TCHAR *pos)
+{
+    this->pos = pos;
+    return pos != NULL;
 }
 
-/* If the string at <*strp> starts with string at <expect>, skip <*strp> past
-   it and return TRUE; otherwise return FALSE. */
-int tstr_skip(const TCHAR **strp, const TCHAR *expect)
+/* If the string at <pos> starts with either <str> or <alt>, skip <pos> past
+   it and return true; otherwise return false. */
+bool Parser::Skip(const TCHAR *str, const TCHAR *alt)
 {
-    if (Str::StartsWith(*strp, expect)) {
-        size_t len = Str::Len(expect);
-        *strp += len;
-        return TRUE;
+    if (str && StartsWith(pos, str)) {
+        pos += Str::Len(str);
+        return true;
     }
-
-    return FALSE;
+    if (alt && StartsWith(pos, alt)) {
+        pos += Str::Len(alt);
+        return true;
+    }
+    return false;
 }
 
-/* Copy the string from <*strp> into <dst> until <stop> is found, and point
-    <*strp> at the end (after <stop>). Returns TRUE unless <dst_size> isn't
-    big enough, in which case <*strp> is still updated, but FALSE is returned
-    and <dst> is truncated. If <delim> is not found, <*strp> will point to
-    the end of the string and FALSE is returned. */
-int tstr_copy_skip_until(const TCHAR **strp, TCHAR *dst, size_t dst_size, TCHAR stop)
+/* Copy the string from <pos> into <buffer> until <c> is found, and point
+   <pos> at the end (after <c>). Returns true unless <bufSize> isn't
+   big enough, in which case <pos> is still updated, but false is returned
+   and <buffer> is truncated. If <c> is not found, <pos> will point to
+   the end of the string and false is returned. */
+bool Parser::CopyUntil(TCHAR c, TCHAR *buffer, size_t bufSize)
 {
-    const TCHAR *start = *strp;
-    const TCHAR *end = Str::FindChar(start, stop);
-
+    const TCHAR *end = FindChar(pos, c);
     if (!end) {
-        size_t len = Str::Len(*strp);
-        *strp += len;
-        return FALSE;
+        pos += Str::Len(pos);
+        return false;
     }
 
-    *strp = end + 1;
-    size_t len = min(dst_size, (size_t)(end - start) + 1);
-    Str::CopyTo(dst, len, start);
+    size_t len = min(bufSize, (size_t)(end - pos) + 1);
+    Str::CopyTo(buffer, len, pos);
+    pos = end + 1;
 
-    return len <= dst_size;
+    return len <= bufSize;
+}
+
+/* Exctract values from <pos> with sscanf according to <format>. */
+bool Parser::Scan(const TCHAR *format, ...)
+{
+    // hack inspired by http://stackoverflow.com/questions/2457331/replacement-for-vsscanf-on-msvc
+    void *hack[11] = { 0 };
+    va_list args;
+    va_start(args, format);
+    for (int i = 0; i < dimof(hack) - 1; i++)
+        hack[i] = va_arg(args, void *);
+    int count = _stscanf(pos, format, hack[0], hack[1], hack[2], hack[3], hack[4], hack[5], hack[6], hack[7], hack[8], hack[9]);
+    va_end(args);
+    return hack[count + 1] == NULL;
+}
+
 }

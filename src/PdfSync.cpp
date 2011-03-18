@@ -108,12 +108,10 @@ TCHAR * Synchronizer::prepare_commandline(LPCTSTR pattern, LPCTSTR filename, UIN
 
         if (*perc == 'f')
             cmdline.Append(filename);
-        else if (*perc == 'l') {
+        else if (*perc == 'l')
             cmdline.AppendFmt(_T("%u"), line);
-        }
-        else if (*perc == 'c') {
+        else if (*perc == 'c')
             cmdline.AppendFmt(_T("%u"), col);
-        }
         else if (*perc == '%')
             cmdline.Append('%');
         else
@@ -779,23 +777,21 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
     TCHAR pdffile[MAX_PATH];
     TCHAR srcfile[MAX_PATH];
     TCHAR destname[MAX_PATH];
-    TCHAR dump[MAX_PATH];
     UINT line, col, newwindow = 0, setfocus = 0, forcerefresh = 0, page = 0;
-    const TCHAR *pos, *curCommand;
     float zoom;
     
-    curCommand = pos = pwCommand;
-    while (*pos) {
+    const TCHAR *curCommand = pwCommand;
+    while (!Str::IsEmpty(curCommand)) {
+        Str::Parser pos;
         // Synchronization command.
         // format is [<DDECOMMAND_SYNC>("<pdffile>","<srcfile>",<line>,<col>[,<newwindow>,<setfocus>])]
-        if ( (pos = curCommand) &&
-            tstr_skip(&pos, _T("[") DDECOMMAND_SYNC _T("(\"")) &&
-            tstr_copy_skip_until(&pos, pdffile, dimof(pdffile), '"') &&
-            (tstr_skip(&pos, _T(",\"")) || tstr_skip(&pos, _T(", \""))) &&
-            tstr_copy_skip_until(&pos, srcfile, dimof(srcfile), '"') &&
-            (4 == _stscanf(pos, _T(",%u,%u,%u,%u)]"), &line, &col, &newwindow, &setfocus)
-            || 2 == _stscanf(pos, _T(",%u,%u)]"), &line, &col))
-            )
+        if (pos.Init(curCommand) &&
+            pos.Skip(_T("[") DDECOMMAND_SYNC _T("(\"")) &&
+            pos.CopyUntil('"', pdffile, dimof(pdffile)) &&
+            pos.Skip(_T(",\""), _T(", \"")) &&
+            pos.CopyUntil('"', srcfile, dimof(srcfile)) &&
+            (pos.Scan(_T(",%u,%u,%u,%u)]"), &line, &col, &newwindow, &setfocus) ||
+             pos.Scan(_T(",%u,%u)]"), &line, &col)))
         {
             // check if the PDF is already opened
             WindowInfo *win = FindWindowInfoByFile(pdffile);
@@ -826,11 +822,10 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
         }
         // Open file DDE command.
         // format is [<DDECOMMAND_OPEN>("<pdffilepath>"[,<newwindow>,<setfocus>,<forcerefresh>])]
-        else if ( (pos = curCommand) &&
-            tstr_skip(&pos, _T("[") DDECOMMAND_OPEN _T("(\"")) &&
-            tstr_copy_skip_until(&pos, pdffile, dimof(pdffile), '"') &&
-            (3 == _stscanf(pos, _T(",%u,%u,%u)]"), &newwindow, &setfocus, &forcerefresh) || tstr_skip(&pos, _T(")")))
-            )
+        else if (pos.Init(curCommand) &&
+            pos.Skip(_T("[") DDECOMMAND_OPEN _T("(\"")) &&
+            pos.CopyUntil('"', pdffile, dimof(pdffile)) &&
+            (pos.Scan(_T(",%u,%u,%u)]"), &newwindow, &setfocus, &forcerefresh) || pos.Skip(_T(")"))))
         {
             // check if the PDF is already opened
             WindowInfo *win = FindWindowInfoByFile(pdffile);
@@ -857,14 +852,14 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
         }
         // Jump to named destination DDE command.
         // format is [<DDECOMMAND_GOTO>("<pdffilepath>", "<destination name>")]
-        else if ( (pos = curCommand) &&
-            tstr_skip(&pos, _T("[") DDECOMMAND_GOTO _T("(\"")) &&
-            tstr_copy_skip_until(&pos, pdffile, dimof(pdffile), _T('"')) &&
-            (tstr_skip(&pos, _T(",\"")) || tstr_skip(&pos, _T(", \""))) &&
-            tstr_copy_skip_until(&pos, destname, dimof(destname), _T('"'))
-            )
+        else if (pos.Init(curCommand) &&
+            pos.Skip(_T("[") DDECOMMAND_GOTO _T("(\"")) &&
+            pos.CopyUntil('"', pdffile, dimof(pdffile)) &&
+            pos.Skip(_T(",\""), _T(", \"")) &&
+            pos.CopyUntil('"', destname, dimof(destname)) &&
+            pos.Skip(_T(")")))
         {
-           // check if the PDF is already opened
+            // check if the PDF is already opened
             WindowInfo *win = FindWindowInfoByFile(pdffile);
             if (win && WS_ERROR_LOADING_PDF == win->state)
                 SendMessage(win->hwndFrame, WM_COMMAND, IDM_REFRESH, FALSE);
@@ -882,13 +877,12 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
         }
         // Jump to page DDE command.
         // format is [<DDECOMMAND_GOTO>("<pdffilepath>", <page number>)]
-        else if ( (pos = curCommand) &&
-            tstr_skip(&pos, _T("[") DDECOMMAND_PAGE _T("(\"")) &&
-            tstr_copy_skip_until(&pos, pdffile, dimof(pdffile), _T('"')) &&
-            1 == _stscanf(pos, _T(",%u)]"), &page)
-            )
+        else if (pos.Init(curCommand) &&
+            pos.Skip(_T("[") DDECOMMAND_PAGE _T("(\"")) &&
+            pos.CopyUntil('"', pdffile, dimof(pdffile)) &&
+            pos.Scan(_T(",%u)]"), &page))
         {
-           // check if the PDF is already opened
+            // check if the PDF is already opened
             WindowInfo *win = FindWindowInfoByFile(pdffile);
             if (win && WS_ERROR_LOADING_PDF == win->state)
                 SendMessage(win->hwndFrame, WM_COMMAND, IDM_REFRESH, FALSE);
@@ -904,15 +898,14 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
         }
         // Set view mode and zoom level
         // format is [<DDECOMMAND_SETVIEW>("<pdffilepath>", "<view mode>", <zoom level>)]
-        else if ( (pos = curCommand) &&
-            tstr_skip(&pos, _T("[") DDECOMMAND_SETVIEW _T("(\"")) &&
-            tstr_copy_skip_until(&pos, pdffile, dimof(pdffile), _T('"')) &&
-            (tstr_skip(&pos, _T(",\"")) || tstr_skip(&pos, _T(", \""))) &&
-            tstr_copy_skip_until(&pos, destname, dimof(destname), _T('"')) &&
-            1 == _stscanf(pos, _T(",%f)]"), &zoom)
-            )
+        else if (pos.Init(curCommand) &&
+            pos.Skip(_T("[") DDECOMMAND_SETVIEW _T("(\"")) &&
+            pos.CopyUntil('"', pdffile, dimof(pdffile)) &&
+            pos.Skip(_T(",\""), _T(", \"")) &&
+            pos.CopyUntil('"', destname, dimof(destname)) &&
+            pos.Scan(_T(",%f)]"), &zoom))
         {
-           // check if the PDF is already opened
+            // check if the PDF is already opened
             WindowInfo *win = FindWindowInfoByFile(pdffile);
             if (win && WS_ERROR_LOADING_PDF == win->state)
                 SendMessage(win->hwndFrame, WM_COMMAND, IDM_REFRESH, FALSE);
@@ -930,8 +923,9 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
             DBG_OUT("WM_DDE_EXECUTE: unknown DDE command or bad command format\n");
 
         // next command
-        tstr_copy_skip_until(&pos, dump, dimof(dump), ']');
-        curCommand = pos;
+        curCommand = Str::FindChar(pos.Peek(), ']');
+        if (curCommand)
+            curCommand++;
     }
     free(pwCommand);
 

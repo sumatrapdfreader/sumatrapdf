@@ -126,15 +126,22 @@ static void TStrTest()
     count = Str::TransChars(buf, _T(""), _T("X"));
     assert(Str::Eq(buf, _T("AbC")) && count == 0);
 
+    Str::Parser parser;
     const TCHAR *pos = _T("[Open(\"filename.pdf\",0,1,0)]");
-    assert(tstr_skip(&pos, _T("[Open(\"")));
-    assert(tstr_copy_skip_until(&pos, buf, dimof(buf), '"'));
+    assert(parser.Init(pos));
+    assert(parser.Skip(_T("[Open(\"")));
+    assert(parser.CopyUntil('"', buf, dimof(buf)));
     assert(Str::Eq(buf, _T("filename.pdf")));
-    assert(!tstr_skip(&pos, _T("0,1")));
-    assert(Str::Eq(pos, _T(",0,1,0)]")));
+    assert(!parser.Skip(_T("0,1")));
+    assert(parser.Skip(_T("0,1"), _T(",0,1")));
     *buf = _T('\0');
-    assert(!tstr_copy_skip_until(&pos, buf, dimof(buf), '"'));
-    assert(!*pos && !*buf);
+    assert(!parser.CopyUntil('"', buf, dimof(buf)));
+    assert(!*parser.Peek() && !*buf);
+
+    int i1, i2;
+    assert(parser.Init(_T("1,2+3")));
+    assert(parser.Scan(_T("%d,%d+"), &i1, &i2) && i1 == 1 && i2 == 2);
+    assert(!Str::IsEmpty(parser.Peek()));
 
     // the test string should only contain ASCII characters,
     // as all others might not be available in all code pages
