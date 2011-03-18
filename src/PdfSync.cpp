@@ -884,6 +884,72 @@ static bool HandleOpenCmd(const TCHAR *cmd, Str::Parser& parser, DDEACK& ack)
     return true;
 }
 
+class ParsedGotoCmd {
+public:
+    ParsedGotoCmd() {}
+
+    ScopedMem<TCHAR>    pdfFile;
+    ScopedMem<TCHAR>    destName;
+};
+
+static bool ParseGotoCmd(const TCHAR *cmd, Str::Parser& parser, ParsedGotoCmd& parsed)
+{    
+    if (!parser.Init(cmd))
+        return false;
+
+    if (!parser.Skip(_T("[") DDECOMMAND_GOTO _T("(\"")))
+        return false;
+
+    TCHAR *tmp = parser.ExtractUntil('"');
+    if (!tmp)
+        return false;
+    parsed.pdfFile.Set(tmp);
+
+    if (!parser.Skip(_T(",\""), _T(", \"")))
+        return false;
+
+    tmp = parser.ExtractUntil('"');
+    if (!tmp)
+        return false;
+    parsed.destName.Set(tmp);
+    
+    if (!parser.Skip(_T(")]")))
+        return false;
+
+    return true;
+}
+
+// Jump to named destination DDE command. Command format:
+// [<DDECOMMAND_GOTO>("<pdffilepath>", "<destination name>")]
+static bool HandleGotoCmd(const TCHAR *cmd, Str::Parser& parser, DDEACK& ack)
+{
+    ParsedGotoCmd parsed;
+    if (!ParseGotoCmd(cmd, parser, parsed))
+        return false;
+
+    // check if the PDF is already opened
+    WindowInfo *win = FindWindowInfoByFile(parsed.pdfFile);
+    if (!win)
+        return true;
+
+    if (WS_ERROR_LOADING_PDF == win->state)
+        SendMessage(win->hwndFrame, WM_COMMAND, IDM_REFRESH, FALSE);
+
+    if (WS_SHOWING_PDF != win->state)
+        return true;
+    
+    ScopedMem<char> destName(Str::Conv::ToUtf8(parsed.destName));
+    if (!destName)
+        return true;
+
+    win->dm->goToNamedDest(destName);
+    ack.fAck = 1;
+    if (IsIconic(win->hwndFrame))
+        ShowWindow(win->hwndFrame, SW_RESTORE);
+    SetFocus(win->hwndFrame);
+    return true;
+}
+
 // TODO: this function would benefit from being split into smaller pieces
 LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
 {
@@ -932,34 +998,12 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
         if (HandleOpenCmd(curCommand, parser, ack))
             goto Next;
 
-        // Jump to named destination DDE command.
-        // format is [<DDECOMMAND_GOTO>("<pdffilepath>", "<destination name>")]
-        else if (parser.Init(curCommand) &&
-            parser.Skip(_T("[") DDECOMMAND_GOTO _T("(\"")) &&
-            parser.CopyUntil('"', pdffile, dimof(pdffile)) &&
-            parser.Skip(_T(",\""), _T(", \"")) &&
-            parser.CopyUntil('"', destname, dimof(destname)) &&
-            parser.Skip(_T(")]")))
-        {
-            // check if the PDF is already opened
-            WindowInfo *win = FindWindowInfoByFile(pdffile);
-            if (win && WS_ERROR_LOADING_PDF == win->state)
-                SendMessage(win->hwndFrame, WM_COMMAND, IDM_REFRESH, FALSE);
-            if (win && WS_SHOWING_PDF == win->state) {
-                char * destname_utf8 = Str::Conv::ToUtf8(destname);
-                if (destname_utf8) {
-                    win->dm->goToNamedDest(destname_utf8);
-                    ack.fAck = 1;
-                    if (IsIconic(win->hwndFrame))
-                        ShowWindow(win->hwndFrame, SW_RESTORE);
-                    SetFocus(win->hwndFrame);
-                    free(destname_utf8);
-                }
-            }
-        }
+        if (HandleGotoCmd(curCommand, parser, ack))
+            goto Next;
+
         // Jump to page DDE command.
         // format is [<DDECOMMAND_GOTO>("<pdffilepath>", <page number>)]
-        else if (parser.Init(curCommand) &&
+        if (parser.Init(curCommand) &&
             parser.Skip(_T("[") DDECOMMAND_PAGE _T("(\"")) &&
             parser.CopyUntil('"', pdffile, dimof(pdffile)) &&
             parser.Scan(_T(",%u)]"), &page))
