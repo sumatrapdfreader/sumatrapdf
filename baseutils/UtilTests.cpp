@@ -136,14 +136,14 @@ static void TStrTest()
     assert(parser.Skip(_T("0,1"), _T(",0,1")));
     tmp.Set(parser.ExtractUntil('"'));
     assert(tmp.Get() == NULL);
-    assert(!*parser.Peek());
+    assert(!*parser.AtCurrPos());
 
     int i1, i2;
     assert(parser.Init(_T("1,2+3")));
     assert(parser.Scan(_T("%d,%d"), &i1, &i2) && i1 == 1 && i2 == 2);
-    assert(!Str::IsEmpty(parser.Peek()));
+    assert(!Str::IsEmpty(parser.AtCurrPos()));
     assert(parser.Scan(_T("+3")));
-    assert(Str::IsEmpty(parser.Peek()));
+    assert(Str::IsEmpty(parser.AtCurrPos()));
 
     float f;
     assert(parser.Init(_T("%1.23y")));

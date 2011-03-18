@@ -1097,7 +1097,7 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
         DBG_OUT("WM_DDE_EXECUTE: unknown DDE command or bad command format\n");
         tmp.Set(parser.ExtractUntil(']'));
 Next:
-        currCmd = parser.Peek();
+        currCmd = parser.AtCurrPos();
     }
 
 Exit:
