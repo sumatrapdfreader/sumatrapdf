@@ -80,6 +80,7 @@ class ScopedMem
 {
     T *obj;
 public:
+    ScopedMem() : obj(NULL) {}
     explicit ScopedMem(T* obj) : obj(obj) {}
     ~ScopedMem() { free((void*)obj); }
     void Set(T *o) {

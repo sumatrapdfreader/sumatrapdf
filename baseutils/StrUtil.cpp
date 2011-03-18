@@ -276,12 +276,27 @@ WCHAR *Format(const WCHAR *fmt, ...)
 /* replace in <str> the chars from <oldChars> with their equivalents
    from <newChars> (similar to UNIX's tr command)
    Returns the number of replaced characters. */
-size_t TransChars(TCHAR *str, const TCHAR *oldChars, const TCHAR *newChars)
+size_t TransChars(char *str, const char *oldChars, const char *newChars)
 {
     size_t findCount = 0;
 
-    for (TCHAR *c = str; *c; c++) {
-        const TCHAR *found = Str::FindChar(oldChars, *c);
+    for (char *c = str; *c; c++) {
+        const char *found = Str::FindChar(oldChars, *c);
+        if (found) {
+            *c = newChars[found - oldChars];
+            findCount++;
+        }
+    }
+
+    return findCount;
+}
+
+size_t TransChars(WCHAR *str, const WCHAR *oldChars, const WCHAR *newChars)
+{
+    size_t findCount = 0;
+
+    for (WCHAR *c = str; *c; c++) {
+        const WCHAR *found = Str::FindChar(oldChars, *c);
         if (found) {
             *c = newChars[found - oldChars];
             findCount++;
@@ -395,6 +410,19 @@ bool Parser::CopyUntil(TCHAR c, TCHAR *buffer, size_t bufSize)
     pos = end + 1;
 
     return len <= bufSize;
+}
+
+TCHAR *Parser::ExtractUntil(TCHAR c)
+{
+    const TCHAR *end = FindChar(pos, c);
+    if (!end) {
+        pos += Str::Len(pos);
+        return NULL;
+    }
+
+    size_t len = end - pos + 1;
+    pos = end + 1;
+    return Str::DupN(pos, len);
 }
 
 /* Exctract values from <pos> according to <format> similar to sscanf. */

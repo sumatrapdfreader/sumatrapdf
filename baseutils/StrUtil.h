@@ -58,7 +58,8 @@ char *  Format(const char *fmt, ...);
 WCHAR * FmtV(const WCHAR *fmt, va_list args);
 WCHAR * Format(const WCHAR *fmt, ...);
 
-size_t  TransChars(TCHAR *str, const TCHAR *oldChars, const TCHAR *newChars);
+size_t  TransChars(char *str, const char *oldChars, const char *newChars);
+size_t  TransChars(WCHAR *str, const WCHAR *oldChars, const WCHAR *newChars);
 
 size_t  BufSet(char *dst, size_t dstCchSize, const char *src);
 size_t  BufSet(WCHAR *dst, size_t dstCchSize, const WCHAR *src);
@@ -79,6 +80,7 @@ public:
     bool            Init(const TCHAR *pos);
     bool            Skip(const TCHAR *str, const TCHAR *alt=NULL);
     bool            CopyUntil(TCHAR c, TCHAR *buffer, size_t bufSize);
+    TCHAR *         ExtractUntil(TCHAR c);
     bool            Scan(const TCHAR *format, ...);
     const TCHAR *   Peek() { return pos; }
 };

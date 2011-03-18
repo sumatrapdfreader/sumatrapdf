@@ -177,8 +177,8 @@ int Pdfsync::scan_and_build_index(FILE *fp)
     
     fgetline(buf, dimof(buf) - 4, fp); // get the job name from the first line
     // replace star by spaces (somehow tex replaces spaces by stars in the jobname)
-    Str::TransChars(buf, "*", " ");
-    ScopedMem<char> jobName(Str::Join(buf), ".tex");
+    Str::TransChars(&(buf[0]), "*", " ");
+    ScopedMem<char> jobName(Str::Join(buf, ".tex"));
 
     UINT versionNumber = 0;
     int ret = fscanf(fp, "version %u\n", &versionNumber);
@@ -739,6 +739,85 @@ LRESULT OnDDEInitiate(HWND hwnd, WPARAM wparam, LPARAM lparam)
 
 // DDE commands
 
+class ParsedSyncCmd {
+public:
+    ParsedSyncCmd() : line(0), col(0), newWindow(0), setFocus(0) {}
+
+    ScopedMem<TCHAR> pdfFile;
+    ScopedMem<TCHAR> srcFile;
+    UINT             line;
+    UINT             col;
+    UINT             newWindow;
+    UINT             setFocus;
+};
+
+static bool ParseSyncCmd(const TCHAR *cmd, ParsedSyncCmd& parsed)
+{
+    Str::Parser parser;
+    if (!parser.Init(cmd))
+        return false;
+    if (!parser.Skip(_T("[") DDECOMMAND_SYNC _T("(\"")))
+        return false;
+
+    TCHAR *tmp = parser.ExtractUntil('"');
+    if (!tmp)
+        return false;
+    parsed.pdfFile.Set(tmp);
+
+    if (parser.Skip(_T(",\""), _T(", \"")))
+        return false;
+    tmp = parser.ExtractUntil('"');
+    if (!tmp)
+        return false;
+    parsed.srcFile.Set(tmp);
+    if (!parser.Scan(_T(",%u,%u,%u,%u)]"), &parsed.line, &parsed.col, &parsed.newWindow, &parsed.setFocus))
+    {
+        if (!parser.Scan(_T(",%u,%u)]"), &parsed.line, &parsed.col))
+            return false;
+    }
+    return true;
+}
+
+// Synchronization command format:
+// [<DDECOMMAND_SYNC>("<pdffile>","<srcfile>",<line>,<col>[,<newwindow>,<setfocus>])]
+static bool HandleSyncCmd(const TCHAR *cmd, DDEACK& ack)
+{
+    ParsedSyncCmd parsed;
+    if (!ParseSyncCmd(cmd, parsed))
+        return false;
+
+    // check if the PDF is already opened
+    WindowInfo *win = FindWindowInfoByFile(parsed.pdfFile);
+    
+    // if not then open it
+    if (parsed.newWindow || !win)
+        win = LoadDocument(parsed.pdfFile, !parsed.newWindow ? win : NULL);
+    else if (win && WS_ERROR_LOADING_PDF == win->state)
+        SendMessage(win->hwndFrame, WM_COMMAND, IDM_REFRESH, FALSE);
+    
+    if (!win || (WS_SHOWING_PDF != win->state))
+        return true;
+
+    if (!win->pdfsync) {
+        DBG_OUT("PdfSync: No sync file loaded!\n");
+        return true;
+    }
+
+    ack.fAck = 1;
+    assert(win->dm);
+    UINT page;
+    Vec<RectI> rects;
+    UINT ret = win->pdfsync->source_to_pdf(parsed.srcFile, parsed.line, parsed.col, &page, rects);
+    WindowInfo_ShowForwardSearchResult(win, parsed.srcFile, parsed.line, parsed.col, ret, page, rects);
+    if (!parsed.setFocus)
+        return true;
+    
+    if (IsIconic(win->hwndFrame))
+        ShowWindow(win->hwndFrame, SW_RESTORE);
+    SetFocus(win->hwndFrame);
+    return true;
+}
+
 // TODO: this function would benefit from being split into smaller pieces
 LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
 {
@@ -775,51 +854,16 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
 
     // Parse the command
     TCHAR pdffile[MAX_PATH];
-    TCHAR srcfile[MAX_PATH];
     TCHAR destname[MAX_PATH];
-    UINT line, col, newwindow = 0, setfocus = 0, forcerefresh = 0, page = 0;
+    UINT newwindow = 0, setfocus = 0, forcerefresh = 0, page = 0;
     float zoom;
     
     const TCHAR *curCommand = pwCommand;
     while (!Str::IsEmpty(curCommand)) {
         Str::Parser pos;
-        // Synchronization command.
-        // format is [<DDECOMMAND_SYNC>("<pdffile>","<srcfile>",<line>,<col>[,<newwindow>,<setfocus>])]
-        if (pos.Init(curCommand) &&
-            pos.Skip(_T("[") DDECOMMAND_SYNC _T("(\"")) &&
-            pos.CopyUntil('"', pdffile, dimof(pdffile)) &&
-            pos.Skip(_T(",\""), _T(", \"")) &&
-            pos.CopyUntil('"', srcfile, dimof(srcfile)) &&
-            (pos.Scan(_T(",%u,%u,%u,%u)]"), &line, &col, &newwindow, &setfocus) ||
-             pos.Scan(_T(",%u,%u)]"), &line, &col)))
-        {
-            // check if the PDF is already opened
-            WindowInfo *win = FindWindowInfoByFile(pdffile);
-            
-            // if not then open it
-            if (newwindow || !win)
-                win = LoadDocument(pdffile, !newwindow ? win : NULL);
-            else if (win && WS_ERROR_LOADING_PDF == win->state)
-                SendMessage(win->hwndFrame, WM_COMMAND, IDM_REFRESH, FALSE);
-            
-            if (win && WS_SHOWING_PDF == win->state) {
-                if (!win->pdfsync)
-                    DBG_OUT("PdfSync: No sync file loaded!\n");
-                else {
-                    ack.fAck = 1;
-                    assert(win->dm);
-                    UINT page;
-                    Vec<RectI> rects;
-                    UINT ret = win->pdfsync->source_to_pdf(srcfile, line, col, &page, rects);
-                    WindowInfo_ShowForwardSearchResult(win, srcfile, line, col, ret, page, rects);
-                    if (setfocus) {
-                        if (IsIconic(win->hwndFrame))
-                            ShowWindow(win->hwndFrame, SW_RESTORE);
-                        SetFocus(win->hwndFrame);
-                    }
-                }
-            }
-        }
+
+        if (HandleSyncCmd(curCommand, ack))
+            ;
         // Open file DDE command.
         // format is [<DDECOMMAND_OPEN>("<pdffilepath>"[,<newwindow>,<setfocus>,<forcerefresh>])]
         else if (pos.Init(curCommand) &&
