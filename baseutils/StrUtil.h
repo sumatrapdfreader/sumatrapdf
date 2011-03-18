@@ -83,6 +83,40 @@ public:
     const TCHAR *   Peek() { return pos; }
 };
 
+namespace Conv {
+
+#ifdef _UNICODE
+inline TCHAR *  FromUtf8(const char *src) { return ToWideChar(src, CP_UTF8); }
+inline char *   ToUtf8(const TCHAR *src) { return ToMultiByte(src, CP_UTF8); }
+inline TCHAR *  FromAnsi(const char *src) { return ToWideChar(src, CP_ACP); }
+inline char *   ToAnsi(const TCHAR *src) { return ToMultiByte(src, CP_ACP); }
+inline TCHAR *  FromWStr(const WCHAR *src) { return Dup(src); }
+inline WCHAR *  ToWStr(const TCHAR *src) { return Dup(src); }
+inline TCHAR *  FromWStrQ(WCHAR *src) { return src; }
+inline WCHAR *  ToWStrQ(TCHAR *src) { return src; }
+#else
+inline TCHAR *  FromUtf8(const char *src) { return ToMultiByte(src, CP_UTF8, CP_ACP); }
+inline char *   ToUtf8(const TCHAR *src) { return ToMultiByte(src, CP_ACP, CP_UTF8); }
+inline TCHAR *  FromAnsi(const char *src) { return Dup(src); }
+inline char *   ToAnsi(const TCHAR *src) { return Dup(src); }
+inline TCHAR *  FromWStr(const WCHAR *src) { return ToMultiByte(src, CP_ACP); }
+inline WCHAR *  ToWStr(const TCHAR *src) { return ToWideChar(src, CP_ACP); }
+inline TCHAR *FromWStrQ(WCHAR *src) {
+    if (!src) return NULL;
+    char *str = FromWStr(src);
+    free(src);
+    return str;
+}
+inline WCHAR *ToWStrQ(TCHAR *src) {
+    if (!src) return NULL;
+    WCHAR *str = ToWStr(src);
+    free(src);
+    return str;
+}
+#endif
+
+}
+
 }
 
 inline bool ChrIsDigit(const WCHAR c)
@@ -103,40 +137,8 @@ inline bool ChrIsDigit(const WCHAR c)
 
 #ifdef _UNICODE
   #define CF_T_TEXT CF_UNICODETEXT
-
-  #define utf8_to_tstr(src) Str::ToWideChar((src), CP_UTF8)
-  #define tstr_to_utf8(src) Str::ToMultiByte((src), CP_UTF8)
-  #define ansi_to_tstr(src) Str::ToWideChar((src), CP_ACP)
-  #define tstr_to_ansi(src) Str::ToMultiByte((src), CP_ACP)
-  #define wstr_to_tstr(src) Str::Dup(src)
-  #define tstr_to_wstr(src) Str::Dup(src)
-
-  #define wstr_to_tstr_q(src)   (src)
-  #define tstr_to_wstr_q(src)   (src)
 #else
   #define CF_T_TEXT CF_TEXT
-
-  #define utf8_to_tstr(src) Str::ToMultiByte((src), CP_UTF8, CP_ACP)
-  #define tstr_to_utf8(src) Str::ToMultiByte((src), CP_ACP, CP_UTF8)
-  #define ansi_to_tstr(src) Str::ToMultiByte((src), CP_ACP, CP_ACP)
-  #define tstr_to_ansi(src) Str::ToMultiByte((src), CP_ACP, CP_ACP)
-  #define wstr_to_tstr(src) Str::ToMultiByte((src), CP_ACP)
-  #define tstr_to_wstr(src) Str::ToWideChar((src), CP_ACP)
-
-inline char *wstr_to_tstr_q(WCHAR *src)
-{
-    if (!src) return NULL;
-    char *str = wstr_to_tstr(src);
-    free(src);
-    return str;
-}
-inline WCHAR *tstr_to_wstr_q(char *src)
-{
-    if (!src) return NULL;
-    WCHAR *str = tstr_to_wstr(src);
-    free(src);
-    return str;
-}
 #endif
 
 #endif

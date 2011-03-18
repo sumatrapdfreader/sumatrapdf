@@ -673,7 +673,7 @@ static HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int n, HMENU m=NULL)
         if (Str::Eq(title, SEP_ITEM)) {
             AppendMenu(m, MF_SEPARATOR, 0, NULL);
         } else if (MF_NO_TRANSLATE == (md.flags & MF_NO_TRANSLATE)) {
-            ScopedMem<TCHAR> tmp(utf8_to_tstr(title));
+            ScopedMem<TCHAR> tmp(Str::Conv::FromUtf8(title));
             AppendMenu(m, MF_STRING, (UINT_PTR)md.id, tmp);
         } else {
             const TCHAR *tmp =  Translations_GetTranslation(title);
@@ -1932,7 +1932,7 @@ static DWORD OnUrlDownloaded(WindowInfo *win, HttpReqCtx *ctx, bool silent)
     if (!IsValidProgramVersion(txt))
         return ERROR_INTERNET_INVALID_URL;
 
-    ScopedMem<TCHAR> verTxt(ansi_to_tstr(txt));
+    ScopedMem<TCHAR> verTxt(Str::Conv::FromAnsi(txt));
     /* reduce the string to a single line (resp. drop the newline) */
     Str::TransChars(verTxt, _T("\r\n"), _T("\0\0"));
     if (CompareVersion(verTxt, UPDATE_CHECK_VER) <= 0) {
@@ -3446,7 +3446,7 @@ static void OnMenuSaveAs(WindowInfo *win)
     // Extract all text when saving as a plain text file
     if (hasCopyPerm && Str::EndsWithI(realDstFileName, _T(".txt"))) {
         ScopedMem<TCHAR> text(win->dm->extractAllText(Target_Export));
-        ScopedMem<char> textUTF8(tstr_to_utf8(text));
+        ScopedMem<char> textUTF8(Str::Conv::ToUtf8(text));
         ScopedMem<char> textUTF8BOM(Str::Join("\xEF\xBB\xBF", textUTF8));
         File::WriteAll(realDstFileName, textUTF8BOM, Str::Len(textUTF8BOM));
     }
@@ -6678,7 +6678,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
                 DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, command);
             }
             if ((i.startView != DM_AUTOMATIC || i.startZoom != INVALID_ZOOM) && !firstDocLoaded) {
-                ScopedMem<TCHAR> viewMode(utf8_to_tstr(DisplayModeNameFromEnum(i.startView)));
+                ScopedMem<TCHAR> viewMode(Str::Conv::FromUtf8(DisplayModeNameFromEnum(i.startView)));
                 ScopedMem<TCHAR> command(Str::Format(_T("[") DDECOMMAND_SETVIEW _T("(\"%s\", \"%s\", %.2f)]"), fullpath, viewMode, i.startZoom));
                 DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, command);
             }
@@ -6691,7 +6691,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
             if (!win)
                 goto Exit;
             if (WS_SHOWING_PDF == win->state && i.destName && !firstDocLoaded) {
-                ScopedMem<char> tmp(tstr_to_utf8(i.destName));
+                ScopedMem<char> tmp(Str::Conv::ToUtf8(i.destName));
                 win->dm->goToNamedDest(tmp);
             }
             else if (WS_SHOWING_PDF == win->state && i.pageNumber > 0 && !firstDocLoaded) {

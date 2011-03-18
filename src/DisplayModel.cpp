@@ -1327,7 +1327,7 @@ TCHAR *DisplayModel::getLinkPath(pdf_link *link)
 
     switch (link ? link->kind : -1) {
         case PDF_LURI:
-            path = pdf_to_tstr(link->dest);
+            path = Str::Conv::FromPdf(link->dest);
             break;
         case PDF_LLAUNCH:
             obj = fz_dictgets(link->dest, "Type");
@@ -1338,7 +1338,7 @@ TCHAR *DisplayModel::getLinkPath(pdf_link *link)
                 obj = fz_dictgets(link->dest, "F"); 
 
             if (fz_isstring(obj)) {
-                path = pdf_to_tstr(obj);
+                path = Str::Conv::FromPdf(obj);
                 Str::TransChars(path, _T("/"), _T("\\"));
             }
             break;
@@ -1349,7 +1349,7 @@ TCHAR *DisplayModel::getLinkPath(pdf_link *link)
             if (Str::Eq(fz_toname(obj), "GoToR")) {
                 obj = fz_dictgets(link->dest, "F");
                 if (fz_isstring(obj)) {
-                    path = pdf_to_tstr(obj);
+                    path = Str::Conv::FromPdf(obj);
                     Str::TransChars(path, _T("/"), _T("\\"));
                 }
             }

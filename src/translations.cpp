@@ -83,7 +83,7 @@ const TCHAR* Translations_GetTranslation(const char* txt)
     int transIdx = (currLangIdx * g_transTranslationsCount) + idx;
     const TCHAR *trans = g_translations[transIdx];
     if (!trans)
-        trans = g_translations[transIdx] = utf8_to_tstr(txt);
+        trans = g_translations[transIdx] = Str::Conv::FromUtf8(txt);
     return trans;
 }
 

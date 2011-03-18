@@ -214,13 +214,6 @@ bool fz_isptinrect(fz_rect rect, fz_point pt)
 
 #define fz_sizeofrect(rect) (((rect).x1 - (rect).x0) * ((rect).y1 - (rect).y0))
 
-// Caller needs to fz_free the result
-static char *tstr_to_pdfdoc(TCHAR *tstr)
-{
-    ScopedMem<WCHAR> wstr(tstr_to_wstr(tstr));
-    return pdf_fromucs2((unsigned short *)wstr.Get());
-}
-
 RenderedBitmap::RenderedBitmap(fz_pixmap *pixmap, HDC hDC) :
     _hbmp(fz_pixtobitmap(hDC, pixmap, TRUE)),
     _width(pixmap->w), _height(pixmap->h), outOfDate(false) { }
@@ -321,7 +314,7 @@ PdfEngine *PdfEngine::clone()
     char *key = NULL;
     if (_xref->crypt)
         key = _MemToHex(&_xref->crypt->key);
-    TCHAR *password = key ? ansi_to_tstr(key) : NULL;
+    TCHAR *password = key ? Str::Conv::FromAnsi(key) : NULL;
     free(key);
 
     PdfEngine *clone = PdfEngine::CreateFromStream(_xref->file, password);
@@ -409,17 +402,17 @@ OpenEmbeddedFile:
                 break;
             }
 
-            char *pwd_doc = tstr_to_pdfdoc(pwd);
+            char *pwd_doc = Str::Conv::ToPDF(pwd);
             okay = pwd_doc && pdf_authenticatepassword(_xref, pwd_doc);
             fz_free(pwd_doc);
             // try the UTF-8 password, if the PDFDocEncoding one doesn't work
             if (!okay) {
-                ScopedMem<char> pwd_utf8(tstr_to_utf8(pwd));
+                ScopedMem<char> pwd_utf8(Str::Conv::ToUtf8(pwd));
                 okay = pwd_utf8 && pdf_authenticatepassword(_xref, pwd_utf8);
             }
             // fall back to an ANSI-encoded password as a last measure
             if (!okay) {
-                ScopedMem<char> pwd_ansi(tstr_to_ansi(pwd));
+                ScopedMem<char> pwd_ansi(Str::Conv::ToAnsi(pwd));
                 okay = pwd_ansi && pdf_authenticatepassword(_xref, pwd_ansi);
             }
         }
@@ -466,22 +459,22 @@ bool PdfEngine::load(fz_stream *stm, TCHAR *password)
         if (!password)
             return false;
 
-        char *pwd_doc = tstr_to_pdfdoc(password);
+        char *pwd_doc = Str::Conv::ToPDF(password);
         bool okay = pwd_doc && pdf_authenticatepassword(_xref, pwd_doc);
         fz_free(pwd_doc);
         // try the UTF-8 password, if the PDFDocEncoding one doesn't work
         if (!okay) {
-            ScopedMem<char> pwd_utf8(tstr_to_utf8(password));
+            ScopedMem<char> pwd_utf8(Str::Conv::ToUtf8(password));
             okay = pwd_utf8 && pdf_authenticatepassword(_xref, pwd_utf8);
         }
         // fall back to an ANSI-encoded password as a last measure
         if (!okay) {
-            ScopedMem<char> pwd_ansi(tstr_to_ansi(password));
+            ScopedMem<char> pwd_ansi(Str::Conv::ToAnsi(password));
             okay = pwd_ansi && pdf_authenticatepassword(_xref, pwd_ansi);
         }
         // finally, try using the password as hex-encoded encryption key
         if (!okay && Str::Len(password) == 64) {
-            ScopedMem<char> pwd_hex(tstr_to_ansi(password));
+            ScopedMem<char> pwd_hex(Str::Conv::ToAnsi(password));
             okay = _HexToMem(pwd_hex, &_xref->crypt->key);
         }
 
@@ -520,7 +513,7 @@ bool PdfEngine::finishLoading(void)
 
 PdfTocItem *PdfEngine::buildTocTree(pdf_outline *entry, int *idCounter)
 {
-    TCHAR *name = entry->title ? utf8_to_tstr(entry->title) : Str::Dup(_T(""));
+    TCHAR *name = entry->title ? Str::Conv::FromUtf8(entry->title) : Str::Dup(_T(""));
     PdfTocItem *node = new PdfTocItem(name, entry->link);
     node->open = entry->count >= 0;
     node->id = ++(*idCounter);
@@ -940,7 +933,7 @@ static TCHAR *parseMultilineLink(pdf_page *page, TCHAR *pageText, TCHAR *start, 
 
         // add a new link for this line
         fz_bbox bbox = fz_unionbbox(coords[start - pageText], coords[end - pageText - 1]);
-        ScopedMem<char> uriPart(tstr_to_utf8(start));
+        ScopedMem<char> uriPart(Str::Conv::ToUtf8(start));
         char *newUri = Str::Join(uri, uriPart);
         free(uri);
         uri = newUri;
@@ -1009,7 +1002,7 @@ void PdfEngine::linkifyPageText(pdf_page *page)
 
         // add the link, if it's a new one (ignoring www. links without a toplevel domain)
         if (*start && (Str::StartsWith(start, _T("http")) || _tcschr(start + 5, '.') != NULL)) {
-            char *uri = tstr_to_utf8(start);
+            char *uri = Str::Conv::ToUtf8(start);
             char *httpUri = Str::StartsWith(uri, "http") ? uri : Str::Join("http://", uri);
             fz_obj *dest = fz_newstring(httpUri, (int)strlen(httpUri));
             pdf_link *link = pdf_newlink(dest, PDF_LURI);
@@ -1088,7 +1081,7 @@ CleanUp:
     fz_freetextspan(text);
     LeaveCriticalSection(&_xrefAccess);
 
-    return wstr_to_tstr_q(content);
+    return Str::Conv::FromWStrQ(content);
 }
 
 TCHAR *PdfEngine::ExtractPageText(int pageNo, TCHAR *lineSep, fz_bbox **coords_out, RenderTarget target)
@@ -1115,7 +1108,7 @@ TCHAR *PdfEngine::getPdfInfo(char *key) const
         return NULL;
 
     WCHAR *ucs2 = (WCHAR *)pdf_toucs2(obj);
-    TCHAR *tstr = wstr_to_tstr(ucs2);
+    TCHAR *tstr = Str::Conv::FromWStr(ucs2);
     fz_free(ucs2);
 
     return tstr;

@@ -75,7 +75,7 @@ protected:
 
     void SetLang(TCHAR *s) {
         free(lang);
-        lang = tstr_to_ansi(s);
+        lang = Str::Conv::ToAnsi(s);
     }
     
     void SetDestName(TCHAR *s) {

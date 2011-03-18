@@ -348,7 +348,7 @@ static INT_PTR CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT message, WPAR
         Win::SetText(hDlg, _TR("Change Language"));
         langList = GetDlgItem(hDlg, IDC_CHANGE_LANG_LANG_LIST);
         for (int i = 0; i < LANGS_COUNT; i++) {
-            TCHAR *langName = utf8_to_tstr(g_langs[i]._langMenuTitle);
+            TCHAR *langName = Str::Conv::FromUtf8(g_langs[i]._langMenuTitle);
             ListBox_AppendString_NoSort(langList, langName);
             free(langName);
         }

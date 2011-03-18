@@ -94,8 +94,10 @@ static void ParseColor(int *destColor, const TCHAR* txt)
         *destColor = RGB(r, g, b);
 }
 
+namespace Str {
+
 // compares two strings ignoring case and whitespace
-static bool tstr_ieqs(const TCHAR *s1, const TCHAR *s2)
+static bool EqIS(const TCHAR *s1, const TCHAR *s2)
 {
     while (*s1 && *s2) {
         // skip whitespace
@@ -110,8 +112,10 @@ static bool tstr_ieqs(const TCHAR *s1, const TCHAR *s2)
     return !*s1 && !*s2;
 }
 
+}
+
 #define IS_STR_ENUM(enumName) \
-    if (tstr_ieqs(txt, _T(enumName##_STR))) { \
+    if (Str::EqIS(txt, _T(enumName##_STR))) { \
         *mode = enumName; \
         return; \
     }
@@ -125,7 +129,7 @@ static void ParseViewMode(DisplayMode *mode, const TCHAR *txt)
     IS_STR_ENUM(DM_CONTINUOUS_FACING);
     IS_STR_ENUM(DM_BOOK_VIEW);
     IS_STR_ENUM(DM_CONTINUOUS_BOOK_VIEW);
-    if (tstr_ieqs(txt, _T("continuous single page"))) {
+    if (Str::EqIS(txt, _T("continuous single page"))) {
         *mode = DM_CONTINUOUS;
         return;
     }
@@ -134,11 +138,11 @@ static void ParseViewMode(DisplayMode *mode, const TCHAR *txt)
 // -zoom [fitwidth|fitpage|fitcontent|100%] (with 100% meaning actual size)
 static void ParseZoomValue(float *zoom, const TCHAR *txt)
 {
-    if (tstr_ieqs(txt, _T("fit page")))
+    if (Str::EqIS(txt, _T("fit page")))
         *zoom = ZOOM_FIT_PAGE;
-    else if (tstr_ieqs(txt, _T("fit width")))
+    else if (Str::EqIS(txt, _T("fit width")))
         *zoom = ZOOM_FIT_WIDTH;
-    else if (tstr_ieqs(txt, _T("fit content")))
+    else if (Str::EqIS(txt, _T("fit content")))
         *zoom = ZOOM_FIT_CONTENT;
     else
         _stscanf(txt, _T("%f"), zoom);

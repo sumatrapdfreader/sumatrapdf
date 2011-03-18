@@ -49,7 +49,7 @@ static const char *ParseBencInt(const char *bytes, int64_t& value)
 
 BencString::BencString(const TCHAR *value) : BencObj(BT_STRING)
 {
-    this->value = tstr_to_utf8(value);
+    this->value = Str::Conv::ToUtf8(value);
 }
 
 BencString::BencString(const char *rawValue, size_t len) : BencObj(BT_STRING)
@@ -59,7 +59,7 @@ BencString::BencString(const char *rawValue, size_t len) : BencObj(BT_STRING)
 
 TCHAR *BencString::Value() const
 {
-    return utf8_to_tstr(value);
+    return Str::Conv::FromUtf8(value);
 }
 
 char *BencString::Encode() const

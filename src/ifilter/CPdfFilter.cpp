@@ -75,7 +75,7 @@ HRESULT CPdfFilter::GetNextChunkValue(CChunkValue &chunkValue)
 
     case STATE_PDF_AUTHOR:
         m_state = STATE_PDF_TITLE;
-        str = tstr_to_wstr_q(m_pdfEngine->getPdfInfo("Author"));
+        str = Str::Conv::ToWStrQ(m_pdfEngine->getPdfInfo("Author"));
         if (!Str::IsEmpty(str)) {
             chunkValue.SetTextValue(PKEY_Author, str);
             free(str);
@@ -86,8 +86,8 @@ HRESULT CPdfFilter::GetNextChunkValue(CChunkValue &chunkValue)
 
     case STATE_PDF_TITLE:
         m_state = STATE_PDF_DATE;
-        str = tstr_to_wstr_q(m_pdfEngine->getPdfInfo("Title"));
-        if (!str) str = tstr_to_wstr_q(m_pdfEngine->getPdfInfo("Subject"));
+        str = Str::Conv::ToWStrQ(m_pdfEngine->getPdfInfo("Title"));
+        if (!str) str = Str::Conv::ToWStrQ(m_pdfEngine->getPdfInfo("Subject"));
         if (!Str::IsEmpty(str)) {
             chunkValue.SetTextValue(PKEY_Title, str);
             free(str);
@@ -98,8 +98,8 @@ HRESULT CPdfFilter::GetNextChunkValue(CChunkValue &chunkValue)
 
     case STATE_PDF_DATE:
         m_state = STATE_PDF_CONTENT;
-        str = tstr_to_wstr_q(m_pdfEngine->getPdfInfo("ModDate"));
-        if (!str) str = tstr_to_wstr_q(m_pdfEngine->getPdfInfo("CreationDate"));
+        str = Str::Conv::ToWStrQ(m_pdfEngine->getPdfInfo("ModDate"));
+        if (!str) str = Str::Conv::ToWStrQ(m_pdfEngine->getPdfInfo("CreationDate"));
         if (!Str::IsEmpty(str)) {
             SYSTEMTIME systime;
             if (PdfDateParse(str, &systime)) {
@@ -115,7 +115,7 @@ HRESULT CPdfFilter::GetNextChunkValue(CChunkValue &chunkValue)
 
     case STATE_PDF_CONTENT:
         if (++m_iPageNo <= m_pdfEngine->pageCount()) {
-            str = tstr_to_wstr_q(m_pdfEngine->ExtractPageText(m_iPageNo));
+            str = Str::Conv::ToWStrQ(m_pdfEngine->ExtractPageText(m_iPageNo));
             chunkValue.SetTextValue(PKEY_Search_Contents, str, CHUNK_TEXT);
             free(str);
             return S_OK;

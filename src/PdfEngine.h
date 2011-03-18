@@ -195,12 +195,25 @@ public:
     static PdfEngine *CreateFromStream(fz_stream *stm, TCHAR *password=NULL);
 };
 
-static inline TCHAR *pdf_to_tstr(fz_obj *obj)
+namespace Str {
+    namespace Conv {
+
+inline TCHAR *FromPdf(fz_obj *obj)
 {
     WCHAR *ucs2 = (WCHAR *)pdf_toucs2(obj);
-    TCHAR *tstr = wstr_to_tstr(ucs2);
+    TCHAR *tstr = FromWStr(ucs2);
     fz_free(ucs2);
     return tstr;
+}
+
+// Caller needs to fz_free the result
+inline char *ToPDF(TCHAR *tstr)
+{
+    ScopedMem<WCHAR> wstr(ToWStr(tstr));
+    return pdf_fromucs2((unsigned short *)wstr.Get());
+}
+
+    }
 }
 
 static inline fz_rect fz_bboxtorect(fz_bbox bbox)

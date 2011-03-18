@@ -147,7 +147,7 @@ TCHAR *ResolveLnk(TCHAR * path)
     IPersistFile *file = NULL;
     TCHAR *resolvedPath = NULL;
 
-    LPCOLESTR olePath = tstr_to_wstr(path);
+    LPCOLESTR olePath = Str::Conv::ToWStr(path);
     if (!olePath)
         return NULL;
 
@@ -194,7 +194,7 @@ IDataObject* GetDataObjectForFile(LPCTSTR filePath, HWND hwnd)
     if (FAILED(hr))
         return NULL;
 
-    LPWSTR lpWPath = tstr_to_wstr(filePath);
+    LPWSTR lpWPath = Str::Conv::ToWStr(filePath);
     LPITEMIDLIST pidl;
     hr = pDesktopFolder->ParseDisplayName(NULL, NULL, lpWPath, NULL, &pidl, NULL);
     if (SUCCEEDED(hr)) {

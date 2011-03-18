@@ -449,7 +449,7 @@ BOOL InstallCopyFiles(void)
             goto Error;
         }
 
-        TCHAR *inpath = ansi_to_tstr(filename);
+        TCHAR *inpath = Str::Conv::FromAnsi(filename);
         TCHAR *extpath = Path::Join(gGlobalData.installDir, Path::GetBaseName(inpath));
 
         BOOL ok = File::WriteAll(extpath, data, (size_t)finfo.uncompressed_size);
@@ -766,7 +766,7 @@ bool IsPdfFilterInstalled()
     bool ok = ReadRegStr(HKEY_CLASSES_ROOT, _T(".pdf\\PersistentHandler"), NULL, buf, dimof(buf));
     if (!ok)
         return false;
-    ScopedMem<WCHAR> handler_iid(tstr_to_wstr(buf));
+    ScopedMem<WCHAR> handler_iid(Str::Conv::ToWStr(buf));
     return Str::EqI(handler_iid, SZ_PDF_FILTER_HANDLER);
 }
 
@@ -843,7 +843,7 @@ BOOL RemoveInstalledFiles()
     BOOL success = TRUE;
 
     for (int i = 0; i < dimof(gPayloadData); i++) {
-        ScopedMem<TCHAR> relPath(utf8_to_tstr(gPayloadData[i].filepath));
+        ScopedMem<TCHAR> relPath(Str::Conv::FromUtf8(gPayloadData[i].filepath));
         ScopedMem<TCHAR> path(Path::Join(gGlobalData.installDir, relPath));
 
         if (File::Exists(path))
@@ -880,8 +880,10 @@ BOOL CreateShortcut(TCHAR *shortcutPath, TCHAR *exePath, TCHAR *workingDir, TCHA
         sl->SetDescription(description);
 
 #ifndef _UNICODE
-    ScopedMem<WCHAR> shortcutPathW(multibyte_to_wstr(shortcutPath, CP_ACP));
-    hr = pf->Save(shortcutPathW, TRUE);
+    {
+        ScopedMem<WCHAR> shortcutPathW(Str::Conv::ToWStr(shortcutPath));
+        hr = pf->Save(shortcutPathW, TRUE);
+    }
 #else
     hr = pf->Save(shortcutPath, TRUE);
 #endif
@@ -1515,7 +1517,7 @@ void CalcLettersLayout(Graphics& g, Font *f, int dx)
 
 REAL DrawMessage(Graphics &g, TCHAR *msg, REAL y, REAL dx, Color color)
 {
-    ScopedMem<WCHAR> s(tstr_to_wstr(msg));
+    ScopedMem<WCHAR> s(Str::Conv::ToWStr(msg));
 
     Font f(L"Impact", 16, FontStyleRegular);
     RectF maxbox(0, y, dx, 0);
@@ -1570,7 +1572,7 @@ void DrawSumatraLetters(Graphics &g, Font *f, Font *fVer, REAL y)
     g.RotateTransform(45.f);
     REAL x2 = 15; REAL y2 = -34;
 
-    ScopedMem<WCHAR> ver_s(tstr_to_wstr(_T("v") CURR_VERSION_STR));
+    ScopedMem<WCHAR> ver_s(Str::Conv::ToWStr(_T("v") CURR_VERSION_STR));
 #ifdef DRAW_TEXT_SHADOW
     SolidBrush b1(Color(0,0,0));
     g.DrawString(ver_s, -1, fVer, PointF(x2-2,y2-1), &b1);

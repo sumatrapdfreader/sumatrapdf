@@ -419,7 +419,7 @@ UINT Pdfsync::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR srcfilepath, UINT 
 
     // get the file name from the record section
     PSTR srcFilenameA = this->srcfiles[record_sections[sec].srcfile].filename;
-    PTSTR srcFilename = ansi_to_tstr(srcFilenameA);
+    PTSTR srcFilename = Str::Conv::FromAnsi(srcFilenameA);
     // Convert the source filepath to an absolute path
     if (PathIsRelative(srcFilename)) {
         PTSTR srcFilename2 = Path::Join(this->dir, srcFilename);
@@ -468,7 +468,7 @@ UINT Pdfsync::source_to_record(FILE *fp, LPCTSTR srcfilename, UINT line, UINT co
     if (!srcfilename)
         return PDFSYNCERR_INVALID_ARGUMENT;
 
-    char *mb_srcfilename = tstr_to_ansi(srcfilename);
+    char *mb_srcfilename = Str::Conv::ToAnsi(srcfilename);
     if (!mb_srcfilename)
         return PDFSYNCERR_OUTOFMEMORY;
 
@@ -612,7 +612,7 @@ int SyncTex::rebuild_index() {
     if (this->scanner)
         synctex_scanner_free(this->scanner);
 
-    char *mb_syncfname = tstr_to_ansi(this->syncfilepath);
+    char *mb_syncfname = Str::Conv::ToAnsi(this->syncfilepath);
     if (mb_syncfname==NULL)
         return PDFSYNCERR_OUTOFMEMORY;
 
@@ -639,7 +639,7 @@ UINT SyncTex::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR srcfilepath, UINT 
         *line = synctex_node_line(node);
         *col = synctex_node_column(node);
         const char *name = synctex_scanner_get_name(this->scanner,synctex_node_tag(node));
-        TCHAR *srcfilename = ansi_to_tstr(name);
+        TCHAR *srcfilename = Str::Conv::FromAnsi(name);
         if (!srcfilename)
             return PDFSYNCERR_OUTOFMEMORY;
 
@@ -679,7 +679,7 @@ UINT SyncTex::source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page
     else
         srcfilepath.Set(Str::Dup(srcfilename));
 
-    char *mb_srcfilepath = tstr_to_ansi(srcfilepath.Get());
+    char *mb_srcfilepath = Str::Conv::ToAnsi(srcfilepath.Get());
     if (!mb_srcfilepath)
         return PDFSYNCERR_OUTOFMEMORY;
     int ret = synctex_display_query(this->scanner,mb_srcfilepath,line,col);
@@ -766,11 +766,11 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
     LPTSTR pwCommand;
     if (bUnicodeSender) {
         DBG_OUT("The client window is UNICODE!\n");
-        pwCommand = wstr_to_tstr((LPCWSTR)command);
+        pwCommand = Str::Conv::FromWStr((LPCWSTR)command);
     }
     else {
         DBG_OUT("The client window is ANSI!\n");
-        pwCommand = ansi_to_tstr((LPCSTR)command);
+        pwCommand = Str::Conv::FromAnsi((LPCSTR)command);
     }
 
     // Parse the command
@@ -864,7 +864,7 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
             if (win && WS_ERROR_LOADING_PDF == win->state)
                 SendMessage(win->hwndFrame, WM_COMMAND, IDM_REFRESH, FALSE);
             if (win && WS_SHOWING_PDF == win->state) {
-                LPSTR destname_utf8 = tstr_to_utf8(destname);
+                LPSTR destname_utf8 = Str::Conv::ToUtf8(destname);
                 if (destname_utf8) {
                     win->dm->goToNamedDest(destname_utf8);
                     ack.fAck = 1;
@@ -910,7 +910,7 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
             if (win && WS_ERROR_LOADING_PDF == win->state)
                 SendMessage(win->hwndFrame, WM_COMMAND, IDM_REFRESH, FALSE);
             if (win && WS_SHOWING_PDF == win->state) {
-                char *viewMode = tstr_to_utf8(destname);
+                char *viewMode = Str::Conv::ToUtf8(destname);
                 DisplayMode mode;
                 if (DisplayModeEnumFromName(viewMode, &mode) && mode != DM_AUTOMATIC)
                     win->SwitchToDisplayMode(mode);
