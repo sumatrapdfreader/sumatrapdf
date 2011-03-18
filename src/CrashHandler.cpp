@@ -20,7 +20,7 @@ typedef BOOL WINAPI MiniDumpWriteProc(
     PMINIDUMP_CALLBACK_INFORMATION CallbackParam
 );
 
-static TCHAR g_crashDumpPath[MAX_PATH];
+static ScopedMem<TCHAR> g_crashDumpPath(NULL);
 static HANDLE g_dumpEvent = NULL;
 static HANDLE g_dumpThread = NULL;
 static MINIDUMP_EXCEPTION_INFORMATION mei = { 0 };
@@ -59,7 +59,7 @@ static DWORD WINAPI CrashDumpThread(LPVOID data)
         return 0;
     }
 
-    HANDLE dumpFile = CreateFile(g_crashDumpPath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH, NULL);
+    HANDLE dumpFile = CreateFile(g_crashDumpPath.Get(), GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH, NULL);
     if (INVALID_HANDLE_VALUE == dumpFile)
     {
 #ifdef SVN_PRE_RELEASE_VER
@@ -100,7 +100,7 @@ static LONG WINAPI DumpExceptionHandler(EXCEPTION_POINTERS *exceptionInfo)
     SetEvent(g_dumpEvent);
     WaitForSingleObject(g_dumpThread, INFINITE);
 
-    ScopedMem<TCHAR> msg(Str::Format(_T("%s\n\n%s"), _TR("Please include the following file in your crash report:"), g_crashDumpPath));
+    ScopedMem<TCHAR> msg(Str::Format(_T("%s\n\n%s"), _TR("Please include the following file in your crash report:"), g_crashDumpPath.Get()));
     MessageBox(NULL, msg.Get(), _TR("SumatraPDF crashed"), MB_ICONERROR | MB_OK);
 
     return EXCEPTION_CONTINUE_SEARCH;
@@ -110,7 +110,7 @@ void InstallCrashHandler(const TCHAR *crashDumpPath)
 {
     if (NULL == crashDumpPath)
         return;
-    Str::BufSet(g_crashDumpPath, dimof(g_crashDumpPath), crashDumpPath);
+    g_crashDumpPath.Set(Str::Dup(crashDumpPath));
     if (!g_dumpEvent && !g_dumpThread) {
         g_dumpEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
         g_dumpThread = CreateThread(NULL, 0, CrashDumpThread, NULL, 0, 0);
