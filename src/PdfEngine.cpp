@@ -955,31 +955,41 @@ static TCHAR *parseMultilineLink(pdf_page *page, TCHAR *pageText, TCHAR *start, 
     return end;
 }
 
+static void FixupPageLinks(pdf_page *page)
+{
+    // Links in PDF documents are added from bottom-most to top-most,
+    // i.e. links that appear later in the list should be preferred
+    // to links appearing before. Since we search from the start of
+    // the (single-linked) list, we have to reverse the order of links
+    // (cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1303 )
+    pdf_link *newTop = NULL;
+    while (page->links) {
+        pdf_link *tmp = page->links->next;
+        page->links->next = newTop;
+        newTop = page->links;
+        page->links = tmp;
+
+        // there are PDFs that have x,y positions in reverse order, so fix them up
+        pdf_link *link = newTop;
+        if (link->rect.x0 > link->rect.x1)
+            swap(link->rect.x0, link->rect.x1);
+        if (link->rect.y0 > link->rect.y1)
+            swap(link->rect.y0, link->rect.y1);
+        assert(link->rect.x1 >= link->rect.x0);
+        assert(link->rect.y1 >= link->rect.y0);
+    }
+    page->links = newTop;
+}
+
 void PdfEngine::linkifyPageText(pdf_page *page)
 {
+    FixupPageLinks(page);
+
     fz_bbox *coords;
     TCHAR *pageText = ExtractPageText(page, _T("\n"), &coords, Target_View, true);
     if (!pageText)
         return;
 
-    // there are PDFs that have x,y positions in reverse order, so fix them up
-    for (pdf_link *link = page->links; link; link = link->next) {
-        if (link->rect.x0 > link->rect.x1) {
-            float tmp = link->rect.x0;
-            link->rect.x0 = link->rect.x1;
-            link->rect.x1 = tmp;
-        }
-        assert(link->rect.x1 >= link->rect.x0);
-
-        if (link->rect.y0 > link->rect.y1) {
-            float tmp = link->rect.y0;
-            link->rect.y0 = link->rect.y1;
-            link->rect.y1 = tmp;
-        }
-        assert(link->rect.y1 >= link->rect.y0);
-    }
-
-    pdf_link *firstLink = page->links;
     for (TCHAR *start = pageText; *start; start++) {
         // look for words starting with "http://", "https://" or "www."
         if (('h' != *start || !Str::StartsWith(start, _T("http://")) &&
@@ -994,7 +1004,7 @@ void PdfEngine::linkifyPageText(pdf_page *page)
 
         // make sure that no other link is associated with this area
         fz_bbox bbox = fz_unionbbox(coords[start - pageText], coords[end - pageText - 1]);
-        for (pdf_link *link = firstLink; link && *start; link = link->next) {
+        for (pdf_link *link = page->links; link && *start; link = link->next) {
             fz_bbox isect = fz_intersectbbox(bbox, fz_roundrect(link->rect));
             if (!fz_isemptybbox(isect) && fz_sizeofrect(isect) >= 0.25 * fz_sizeofrect(link->rect))
                 start = end;
