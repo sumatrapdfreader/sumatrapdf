@@ -24,8 +24,8 @@ public:
         assert(Str::EndsWithI(_syncfilename, SYNCTEX_EXTENSION) ||
                Str::EndsWithI(_syncfilename, SYNCTEXGZ_EXTENSION));
         
-        this->scanner = NULL;
-        this->coordsys = TopLeft;
+        scanner = NULL;
+        coordsys = TopLeft;
     }
     virtual ~SyncTex()
     {
@@ -147,7 +147,7 @@ int Pdfsync::get_record_section(int record_index)
     return -1;
 }
 
-// TODO: we should just read the whole file in memory and parse it from there
+// TODO: maybe would be easier to load into memory and parse from there
 FILE *Pdfsync::opensyncfile()
 {
     FILE *fp;
@@ -165,7 +165,7 @@ char* fgetline(char* dst, size_t cchDst, FILE *fp)
     if (!fgets(dst, (int)cchDst, fp))
         return NULL;
 
-    char* end =  dst+Str::Len(dst)-1;
+    char* end = dst + Str::Len(dst)-1;
     while (*end == '\n' || *end == '\r')
         *(end--) = 0;
     return dst;
@@ -739,6 +739,26 @@ LRESULT OnDDEInitiate(HWND hwnd, WPARAM wparam, LPARAM lparam)
 
 // DDE commands
 
+// All commands start with the same pattern:
+// [<CMD>("<pdffile>"
+// so extract common parsing pattern into a function
+static TCHAR *ExtractCmdFileName(const TCHAR *cmd, const TCHAR *cmdName, Str::Parser& parser)
+{
+    if (!parser.Init(cmd))
+        return NULL;
+    ScopedMem<TCHAR> cmdStart(Str::Join(_T("["), cmdName, _T("(\"")));
+    if (!parser.Skip(cmdStart))
+        return NULL;
+    return parser.ExtractUntil('"');
+}
+
+static void SetFocusHelper(HWND hwnd)
+{
+    if (IsIconic(hwnd))
+        ShowWindow(hwnd, SW_RESTORE);
+    SetFocus(hwnd);
+}
+
 class ParsedSyncCmd {
 public:
     ParsedSyncCmd() : line(0), col(0), newWindow(0), setFocus(0) {}
@@ -753,12 +773,7 @@ public:
 
 static bool ParseSyncCmd(const TCHAR *cmd, Str::Parser& parser, ParsedSyncCmd& parsed)
 {
-    if (!parser.Init(cmd))
-        return false;
-    if (!parser.Skip(_T("[") DDECOMMAND_SYNC _T("(\"")))
-        return false;
-
-    TCHAR *tmp = parser.ExtractUntil('"');
+    TCHAR *tmp = ExtractCmdFileName(cmd, DDECOMMAND_SYNC, parser);
     if (!tmp)
         return false;
     parsed.pdfFile.Set(tmp);
@@ -810,10 +825,8 @@ static bool HandleSyncCmd(const TCHAR *cmd, Str::Parser& parser, DDEACK& ack)
     WindowInfo_ShowForwardSearchResult(win, parsed.srcFile, parsed.line, parsed.col, ret, page, rects);
     if (!parsed.setFocus)
         return true;
-    
-    if (IsIconic(win->hwndFrame))
-        ShowWindow(win->hwndFrame, SW_RESTORE);
-    SetFocus(win->hwndFrame);
+
+    SetFocusHelper(win->hwndFrame);
     return true;
 }
 
@@ -829,13 +842,7 @@ public:
 
 static bool ParseOpenCmd(const TCHAR *cmd, Str::Parser& parser, ParsedOpenCmd& parsed)
 {    
-    if (!parser.Init(cmd))
-        return false;
-
-    if (parser.Skip(_T("[") DDECOMMAND_OPEN _T("(\"")))
-        return false;
-
-    TCHAR *tmp = parser.ExtractUntil('"');
+    TCHAR *tmp = ExtractCmdFileName(cmd, DDECOMMAND_OPEN, parser);
     if (!tmp)
         return false;
     parsed.pdfFile.Set(tmp);
@@ -856,10 +863,8 @@ static bool HandleOpenCmd(const TCHAR *cmd, Str::Parser& parser, DDEACK& ack)
     if (!ParseOpenCmd(cmd, parser, parsed))
         return false;
     
-    // check if the PDF is already opened
     WindowInfo *win = FindWindowInfoByFile(parsed.pdfFile);
     
-    // if not then open it
     if (parsed.newWindow || !win)
         win = LoadDocument(parsed.pdfFile, !parsed.newWindow ? win : NULL);
     else if (win && WS_ERROR_LOADING_PDF == win->state) {
@@ -878,9 +883,7 @@ static bool HandleOpenCmd(const TCHAR *cmd, Str::Parser& parser, DDEACK& ack)
     if (!parsed.setFocus)
         return true;
 
-    if (IsIconic(win->hwndFrame))
-        ShowWindow(win->hwndFrame, SW_RESTORE);
-    SetFocus(win->hwndFrame);
+    SetFocusHelper(win->hwndFrame);
     return true;
 }
 
@@ -894,13 +897,7 @@ public:
 
 static bool ParseGotoCmd(const TCHAR *cmd, Str::Parser& parser, ParsedGotoCmd& parsed)
 {    
-    if (!parser.Init(cmd))
-        return false;
-
-    if (!parser.Skip(_T("[") DDECOMMAND_GOTO _T("(\"")))
-        return false;
-
-    TCHAR *tmp = parser.ExtractUntil('"');
+    TCHAR *tmp = ExtractCmdFileName(cmd, DDECOMMAND_GOTO, parser);
     if (!tmp)
         return false;
     parsed.pdfFile.Set(tmp);
@@ -924,7 +921,6 @@ static bool HandleGotoCmd(const TCHAR *cmd, Str::Parser& parser, DDEACK& ack)
     if (!ParseGotoCmd(cmd, parser, parsed))
         return false;
 
-    // check if the PDF is already opened
     WindowInfo *win = FindWindowInfoByFile(parsed.pdfFile);
     if (!win)
         return true;
@@ -941,9 +937,7 @@ static bool HandleGotoCmd(const TCHAR *cmd, Str::Parser& parser, DDEACK& ack)
 
     win->dm->goToNamedDest(destName);
     ack.fAck = 1;
-    if (IsIconic(win->hwndFrame))
-        ShowWindow(win->hwndFrame, SW_RESTORE);
-    SetFocus(win->hwndFrame);
+    SetFocusHelper(win->hwndFrame);
     return true;
 }
 
@@ -957,13 +951,7 @@ public:
 
 static bool ParsePageCmd(const TCHAR *cmd, Str::Parser& parser, ParsedPageCmd& parsed)
 {    
-    if (!parser.Init(cmd))
-        return false;
-
-    if (!parser.Skip(_T("[") DDECOMMAND_PAGE _T("(\"")))
-        return false;
-
-    TCHAR *tmp = parser.ExtractUntil('"');
+    TCHAR *tmp = ExtractCmdFileName(cmd, DDECOMMAND_PAGE, parser);
     if (!tmp)
         return false;
     parsed.pdfFile.Set(tmp);
@@ -993,9 +981,7 @@ static bool HandlePageCmd(const TCHAR *cmd, Str::Parser& parser, DDEACK& ack)
     if (win->dm->validPageNo(parsed.page)) {
         win->dm->goToPage(parsed.page, 0, true);
         ack.fAck = 1;
-        if (IsIconic(win->hwndFrame))
-            ShowWindow(win->hwndFrame, SW_RESTORE);
-        SetFocus(win->hwndFrame);
+        SetFocusHelper(win->hwndFrame);
     }
     return true;
 }
@@ -1012,13 +998,7 @@ public:
 
 static bool ParseSetViewCmd(const TCHAR *cmd, Str::Parser& parser, ParsedSetViewCmd& parsed)
 {    
-    if (!parser.Init(cmd))
-        return false;
-
-    if (!parser.Skip(_T("[") DDECOMMAND_SETVIEW _T("(\"")))
-        return false;
-
-    TCHAR *tmp = parser.ExtractUntil('"');
+    TCHAR *tmp = ExtractCmdFileName(cmd, DDECOMMAND_SETVIEW, parser);
     if (!tmp)
         return false;
     parsed.pdfFile.Set(tmp);
