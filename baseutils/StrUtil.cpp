@@ -295,28 +295,26 @@ size_t TransChars(TCHAR *str, const TCHAR *oldChars, const TCHAR *newChars)
 // handling buffers in OS-defined structures)
 size_t BufSet(char *dst, size_t dstCchSize, const char *src)
 {
+    if (0 == dstCchSize) return 0;
+
     size_t srcCchSize = Str::Len(src);
     size_t size = min(dstCchSize, srcCchSize + 1);
 
-    if (size > 0) {
-        strncpy(dst, src, size);
-        dst[size - 1] = 0;
-    } else if (dstCchSize > 0)
-        dst[0] = 0;
+    strncpy(dst, src, size);
+    dst[size - 1] = '\0';
 
     return size;
 }
 
 size_t BufSet(WCHAR *dst, size_t dstCchSize, const WCHAR *src)
 {
+    if (0 == dstCchSize) return 0;
+
     size_t srcCchSize = Str::Len(src);
     size_t size = min(dstCchSize, srcCchSize + 1);
 
-    if (size > 0) {
-        wcsncpy(dst, src, size);
-        dst[size - 1] = 0;
-    } else if (dstCchSize > 0)
-        dst[0] = 0;
+    wcsncpy(dst, src, size);
+    dst[size - 1] = '\0';
 
     return size;
 }
