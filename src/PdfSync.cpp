@@ -19,7 +19,7 @@
 class SyncTex : public Synchronizer
 {
 public:
-    SyncTex(LPCTSTR _syncfilename) : Synchronizer(_syncfilename)
+    SyncTex(const TCHAR* _syncfilename) : Synchronizer(_syncfilename)
     {
         assert(Str::EndsWithI(_syncfilename, SYNCTEX_EXTENSION) ||
                Str::EndsWithI(_syncfilename, SYNCTEXGZ_EXTENSION));
@@ -35,7 +35,7 @@ public:
     bool is_index_discarded() { return Synchronizer::is_index_discarded(); }
 
     UINT pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR srcfilepath, UINT cchFilepath, UINT *line, UINT *col);
-    UINT source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page, Vec<RectI> &rects);
+    UINT source_to_pdf(const TCHAR* srcfilename, UINT line, UINT col, UINT *page, Vec<RectI> &rects);
     int rebuild_index();
 
 private:
@@ -55,7 +55,7 @@ private:
 // It creates either a SyncTex or PdfSync object
 // based on the synchronization file found in the folder containing the PDF file.
 //
-UINT CreateSynchronizer(LPCTSTR pdffilename, Synchronizer **sync)
+UINT CreateSynchronizer(const TCHAR* pdffilename, Synchronizer **sync)
 {
     if (!sync)
         return PDFSYNCERR_INVALID_ARGUMENT;
@@ -96,9 +96,9 @@ UINT CreateSynchronizer(LPCTSTR pdffilename, Synchronizer **sync)
 
 // Replace in 'pattern' the macros %f %l %c by 'filename', 'line' and 'col'
 // the caller must free() the result
-TCHAR * Synchronizer::prepare_commandline(LPCTSTR pattern, LPCTSTR filename, UINT line, UINT col)
+TCHAR * Synchronizer::prepare_commandline(const TCHAR* pattern, const TCHAR* filename, UINT line, UINT col)
 {
-    LPCTSTR perc;
+    const TCHAR* perc;
     Str::Str<TCHAR> cmdline(256);
 
     while ((perc = Str::FindChar(pattern, '%'))) {
@@ -463,7 +463,7 @@ UINT Pdfsync::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR srcfilepath, UINT 
 //
 // The function returns PDFSYNCERR_SUCCESS if a matching record was found.
 //
-UINT Pdfsync::source_to_record(FILE *fp, LPCTSTR srcfilename, UINT line, UINT col, Vec<size_t> &records)
+UINT Pdfsync::source_to_record(FILE *fp, const TCHAR* srcfilename, UINT line, UINT col, Vec<size_t> &records)
 {
     if (!srcfilename)
         return PDFSYNCERR_INVALID_ARGUMENT;
@@ -540,7 +540,7 @@ read_linerecords:
 
 }
 
-UINT Pdfsync::source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page, Vec<RectI> &rects)
+UINT Pdfsync::source_to_pdf(const TCHAR* srcfilename, UINT line, UINT col, UINT *page, Vec<RectI> &rects)
 {
     if (this->is_index_discarded())
         rebuild_index();
@@ -665,7 +665,7 @@ UINT SyncTex::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR srcfilepath, UINT 
     return PDFSYNCERR_NO_SYNC_AT_LOCATION;
 }
 
-UINT SyncTex::source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page, Vec<RectI> &rects)
+UINT SyncTex::source_to_pdf(const TCHAR* srcfilename, UINT line, UINT col, UINT *page, Vec<RectI> &rects)
 {
     if (this->is_index_discarded())
         if (rebuild_index())
@@ -842,14 +842,14 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
         goto Exit;
     }
 
-    LPTSTR pwCommand;
+    TCHAR *pwCommand;
     if (bUnicodeSender) {
         DBG_OUT("The client window is UNICODE!\n");
-        pwCommand = Str::Conv::FromWStr((LPCWSTR)command);
+        pwCommand = Str::Conv::FromWStr((const WCHAR*)command);
     }
     else {
         DBG_OUT("The client window is ANSI!\n");
-        pwCommand = Str::Conv::FromAnsi((LPCSTR)command);
+        pwCommand = Str::Conv::FromAnsi((const char*)command);
     }
 
     // Parse the command

@@ -84,7 +84,7 @@ typedef enum { TopLeft,    // origin at the top-left corner
 class Synchronizer
 {
 public:
-    Synchronizer(LPCTSTR _syncfilepath) {
+    Synchronizer(const TCHAR* _syncfilepath) {
         this->index_discarded = true;
         this->coordsys = BottomLeft; // by default set the internal coordinate system to bottom-left
         this->dir = Path::GetDir(_syncfilepath);
@@ -131,7 +131,7 @@ public:
     // Forward-search:
     // The result is returned in (page,x,y). The coordinates x,y are specified in the internal 
     // coordinate system.
-    virtual UINT source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page, Vec<RectI>& rects) = 0;
+    virtual UINT source_to_pdf(const TCHAR* srcfilename, UINT line, UINT col, UINT *page, Vec<RectI>& rects) = 0;
 
     void discard_index() { this->index_discarded = true; }
     bool is_index_discarded() const
@@ -165,7 +165,7 @@ public:
     }
 
     // the caller must free() the command line
-    TCHAR * prepare_commandline(LPCTSTR pattern, LPCTSTR filename, UINT line, UINT col);
+    TCHAR * prepare_commandline(const TCHAR* pattern, const TCHAR* filename, UINT line, UINT col);
 
 private:
     bool index_discarded; // true if the index needs to be recomputed (needs to be set to true when a change to the pdfsync file is detected)
@@ -184,7 +184,7 @@ protected:
 class Pdfsync : public Synchronizer
 {
 public:
-    Pdfsync(LPCTSTR _syncfilename) : Synchronizer(_syncfilename)
+    Pdfsync(const TCHAR* _syncfilename) : Synchronizer(_syncfilename)
     {
         assert(Str::EndsWithI(_syncfilename, PDFSYNC_EXTENSION));
         this->coordsys = BottomLeft;
@@ -192,12 +192,12 @@ public:
 
     int rebuild_index();
     virtual UINT pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR srcfilepath, UINT cchFilepath, UINT *line, UINT *col);
-    virtual UINT source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page, Vec<RectI>& rects);
+    virtual UINT source_to_pdf(const TCHAR* srcfilename, UINT line, UINT col, UINT *page, Vec<RectI>& rects);
 
 private:
     int get_record_section(int record_index);
     int scan_and_build_index(FILE *fp);
-    UINT source_to_record(FILE *fp, LPCTSTR srcfilename, UINT line, UINT col, Vec<size_t>& records);
+    UINT source_to_record(FILE *fp, const TCHAR* srcfilename, UINT line, UINT col, Vec<size_t>& records);
     FILE *opensyncfile();
 
 private:
@@ -209,7 +209,7 @@ private:
 
 
 // Create a synchronizer object for a PDF file
-UINT CreateSynchronizer(LPCTSTR pdffilename, Synchronizer **sync);
+UINT CreateSynchronizer(const TCHAR* pdffilename, Synchronizer **sync);
 
 #define PDFSYNC_DDE_SERVICE   _T("SUMATRA")
 #define PDFSYNC_DDE_TOPIC     _T("control")
