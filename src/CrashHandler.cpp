@@ -100,9 +100,8 @@ static LONG WINAPI DumpExceptionHandler(EXCEPTION_POINTERS *exceptionInfo)
     SetEvent(g_dumpEvent);
     WaitForSingleObject(g_dumpThread, INFINITE);
 
-    TCHAR *msg = Str::Format(_T("%s\n\n%s"), _TR("Please include the following file in your crash report:"), g_crashDumpPath);
-    MessageBox(NULL, msg, _TR("SumatraPDF crashed"), MB_ICONERROR | MB_OK);
-    free(msg);
+    ScopedMem<TCHAR> msg(Str::Format(_T("%s\n\n%s"), _TR("Please include the following file in your crash report:"), g_crashDumpPath));
+    MessageBox(NULL, msg.Get(), _TR("SumatraPDF crashed"), MB_ICONERROR | MB_OK);
 
     return EXCEPTION_CONTINUE_SEARCH;
 }
@@ -111,7 +110,7 @@ void InstallCrashHandler(const TCHAR *crashDumpPath)
 {
     if (NULL == crashDumpPath)
         return;
-    Str::CopyTo(g_crashDumpPath, dimof(g_crashDumpPath), crashDumpPath);
+    Str::BufSet(g_crashDumpPath, dimof(g_crashDumpPath), crashDumpPath);
     if (!g_dumpEvent && !g_dumpThread) {
         g_dumpEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
         g_dumpThread = CreateThread(NULL, 0, CrashDumpThread, NULL, 0, 0);

@@ -193,7 +193,7 @@ int Pdfsync::scan_and_build_index(FILE *fp)
     src_file s;
     s.first_recordsection = (size_t)-1;
     s.last_recordsection = (size_t)-1;
-    Str::CopyTo(s.filename, dimof(s.filename), jobname);
+    Str::BufSet(s.filename, dimof(s.filename), jobname);
 #ifndef NDEBUG    
     s.closeline_pos = -1;
     fgetpos(fp, &s.openline_pos);
@@ -426,7 +426,7 @@ UINT Pdfsync::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR srcfilepath, UINT 
         free(srcFilename);
         srcFilename = srcFilename2;
     }
-    Str::CopyTo(srcfilepath, cchFilepath, srcFilename);
+    Str::BufSet(srcfilepath, cchFilepath, srcFilename);
     free(srcFilename);
 
     // find the record declaration in the section
@@ -657,7 +657,7 @@ UINT SyncTex::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR srcfilepath, UINT 
             free(srcfilename);
             srcfilename = srcfilename2;
         }
-        Str::CopyTo(srcfilepath, cchFilepath, srcfilename);
+        Str::BufSet(srcfilepath, cchFilepath, srcfilename);
         free(srcfilename);
 
         return PDFSYNCERR_SUCCESS;

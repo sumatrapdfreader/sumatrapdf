@@ -60,8 +60,8 @@ WCHAR * Format(const WCHAR *fmt, ...);
 
 size_t  TransChars(TCHAR *str, const TCHAR *oldChars, const TCHAR *newChars);
 
-size_t  CopyTo(char *dst, size_t dstCchSize, const char *src);
-size_t  CopyTo(WCHAR *dst, size_t dstCchSize, const WCHAR *src);
+size_t  BufSet(char *dst, size_t dstCchSize, const char *src);
+size_t  BufSet(WCHAR *dst, size_t dstCchSize, const WCHAR *src);
 
 char *  MemToHex(const unsigned char *buf, int len);
 bool    HexToMem(const char *s, unsigned char *buf, int bufLen);

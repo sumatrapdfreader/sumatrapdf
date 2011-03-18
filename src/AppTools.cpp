@@ -524,7 +524,7 @@ HFONT Win32_Font_GetSimple(HDC hdc, TCHAR *fontName, int fontSize)
     lf.lfOutPrecision = OUT_TT_PRECIS;
     lf.lfQuality = DEFAULT_QUALITY;
     lf.lfPitchAndFamily = DEFAULT_PITCH;    
-    Str::CopyTo(lf.lfFaceName, dimof(lf.lfFaceName), fontName);
+    Str::BufSet(lf.lfFaceName, dimof(lf.lfFaceName), fontName);
     lf.lfWeight = FW_DONTCARE;
     lf.lfClipPrecision = CLIP_DEFAULT_PRECIS;
     lf.lfEscapement = 0;

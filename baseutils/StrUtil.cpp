@@ -291,26 +291,32 @@ size_t TransChars(TCHAR *str, const TCHAR *oldChars, const TCHAR *newChars)
     return findCount;
 }
 
-size_t CopyTo(char *dst, size_t dstCchSize, const char *src)
+// Note: BufSet() should only be used when absolutely necessary (e.g. when
+// handling buffers in OS-defined structures)
+size_t BufSet(char *dst, size_t dstCchSize, const char *src)
 {
     size_t srcCchSize = Str::Len(src);
     size_t size = min(dstCchSize, srcCchSize + 1);
 
-    strncpy(dst, src, size);
-    if (size > 0)
-        dst[size - 1] = '\0';
+    if (size > 0) {
+        strncpy(dst, src, size);
+        dst[size - 1] = 0;
+    } else if (dstCchSize > 0)
+        dst[0] = 0;
 
     return size;
 }
 
-size_t CopyTo(WCHAR *dst, size_t dstCchSize, const WCHAR *src)
+size_t BufSet(WCHAR *dst, size_t dstCchSize, const WCHAR *src)
 {
     size_t srcCchSize = Str::Len(src);
     size_t size = min(dstCchSize, srcCchSize + 1);
 
-    wcsncpy(dst, src, size);
-    if (size > 0)
-        dst[size - 1] = '\0';
+    if (size > 0) {
+        wcsncpy(dst, src, size);
+        dst[size - 1] = 0;
+    } else if (dstCchSize > 0)
+        dst[0] = 0;
 
     return size;
 }
@@ -387,7 +393,7 @@ bool Parser::CopyUntil(TCHAR c, TCHAR *buffer, size_t bufSize)
     }
 
     size_t len = min(bufSize, (size_t)(end - pos) + 1);
-    Str::CopyTo(buffer, len, pos);
+    Str::BufSet(buffer, len, pos);
     pos = end + 1;
 
     return len <= bufSize;

@@ -97,9 +97,9 @@ static void TStrTest()
     assert(!Str::EndsWith(str, _T("ung")));
     assert(Str::IsEmpty((char*)NULL) && Str::IsEmpty((WCHAR*)NULL)&& Str::IsEmpty(_T("")) && !Str::IsEmpty(str));
     assert(Str::FindChar(str, _T('s')) && !Str::FindChar(str, _T('S')));
-    size_t len = Str::CopyTo(buf, dimof(buf), str);
+    size_t len = Str::BufSet(buf, dimof(buf), str);
     assert(len == Str::Len(buf) + 1 && Str::Eq(buf, str));
-    len = Str::CopyTo(buf, 6, str);
+    len = Str::BufSet(buf, 6, str);
     assert(len == 6 && Str::Eq(buf, _T("a str")));
 
     str = Str::Dup(buf);
@@ -118,7 +118,7 @@ static void TStrTest()
     assert(Str::Eq(str, _T("ab")));
     free(str);
 
-    Str::CopyTo(buf, dimof(buf), _T("abc\1efg\1"));
+    Str::BufSet(buf, dimof(buf), _T("abc\1efg\1"));
     size_t count = Str::TransChars(buf, _T("ace"), _T("ACE"));
     assert(Str::Eq(buf, _T("AbC\1Efg\1")) && count == 3);
     count = Str::TransChars(buf, _T("\1"), _T("\0"));

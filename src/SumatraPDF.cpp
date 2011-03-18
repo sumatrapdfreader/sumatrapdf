@@ -1862,7 +1862,7 @@ static void OnDropFiles(WindowInfo *win, HDROP hDrop)
         if (Str::EndsWithI(filename, _T(".lnk"))) {
             ScopedMem<TCHAR> resolved(ResolveLnk(filename));
             if (resolved)
-                Str::CopyTo(filename, MAX_PATH, resolved);
+                Str::BufSet(filename, MAX_PATH, resolved);
         }
         // The first dropped document may override the current window
         LoadDocument(filename, i == 0 ? win : NULL);
@@ -3424,7 +3424,7 @@ static void OnMenuSaveAs(WindowInfo *win)
     Str::TransChars(fileFilter.Get(), _T("\1"), _T("\0"));
 
     // Remove the extension so that it can be re-added depending on the chosen filter
-    Str::CopyTo(dstFileName, dimof(dstFileName), Path::GetBaseName(srcFileName));
+    Str::BufSet(dstFileName, dimof(dstFileName), Path::GetBaseName(srcFileName));
     // TODO: fix saving embedded PDF documents
     Str::TransChars(dstFileName, _T(":"), _T("_"));
     if (Str::EndsWithI(dstFileName, _T(".pdf")))
@@ -3500,7 +3500,7 @@ bool DisplayModel::saveStreamAs(unsigned char *data, int dataLen, const TCHAR *f
 
     TCHAR dstFileName[MAX_PATH] = { 0 };
     if (fileName)
-        Str::CopyTo(dstFileName, dimof(dstFileName), fileName);
+        Str::BufSet(dstFileName, dimof(dstFileName), fileName);
 
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling
@@ -5675,7 +5675,7 @@ static void CustomizeToCInfoTip(WindowInfo *win, LPNMTVGETINFOTIP nmit)
     }
 
     infotip.Append(path);
-    Str::CopyTo(nmit->pszText, nmit->cchTextMax, infotip.Get());
+    Str::BufSet(nmit->pszText, nmit->cchTextMax, infotip.Get());
     free(path);
 }
 
