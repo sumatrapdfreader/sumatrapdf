@@ -2473,6 +2473,11 @@ static void OnSelectAll(WindowInfo *win, bool textOnly=false)
     assert(win && win->dm);
     if (!win || !win->dm) return;
 
+    if (win->hwndFindBox == GetFocus() || win->hwndPageBox == GetFocus()) {
+        Edit_SelectAll(GetFocus());
+        return;
+    }
+
     if (textOnly) {
         int pageNo;
         for (pageNo = 1; !win->dm->getPageInfo(pageNo)->shown; pageNo++);
