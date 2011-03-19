@@ -525,8 +525,3 @@ copiando texto
 printing document
 imprimindo documento
 
-# Untranslated:
-#Bookmark Links
-#Bookmark link to page %d of %s
-#Save &Bookmark...\tCtrl-Shift-S
-

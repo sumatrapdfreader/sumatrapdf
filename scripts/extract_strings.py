@@ -13,7 +13,8 @@ comments at the end of strings file for each language.
 C_FILES_TO_PROCESS = ["SumatraPDF.cpp", "SumatraAbout.cpp", "SumatraProperties.cpp", "SumatraDialogs.cpp", "CrashHandler.cpp", "AppTools.cpp"]
 C_FILES_TO_PROCESS = [os.path.join("..", "src", f) for f in C_FILES_TO_PROCESS]
 STRINGS_PATH = os.path.join("..", "src", "strings")
-TRANSLATION_PATTERN = r'_TRN?\("(.*?)"\)'
+TRANSLATION_PATTERN = r'\b_TRN?\("(.*?)"\)'
+TB_TRANSLATION_PATTERN = r'_TB_TRN?\("(.*?)"\)'
 
 LANG_TXT = "Lang:"
 CONTRIBUTOR_TXT = "Contributor:"
@@ -151,11 +152,12 @@ def get_lang_list(strings_dict):
     return langs
 
 def extract_strings_from_c_files():
-    strings = []
+    strings, tb_strings = [], []
     for f in C_FILES_TO_PROCESS:
         file_content = open(f, "r").read()
         strings += re.findall(TRANSLATION_PATTERN, file_content)
-    return seq_uniq(strings)
+        tb_strings += re.findall(TB_TRANSLATION_PATTERN, file_content)
+    return (seq_uniq(strings), seq_uniq(tb_strings))
 
 (SS_ONLY_IN_C, SS_ONLY_IN_TXT, SS_IN_BOTH) = range(3)
 
@@ -280,7 +282,7 @@ def load_lang_index():
 
 def main_obsolete():
     (strings_dict, langs, contributors) = load_strings_file_new()
-    strings = extract_strings_from_c_files()
+    strings = extract_strings_from_c_files()[0]
     if len(sys.argv) == 1:
         untranslated = dump_missing_per_language(strings, strings_dict)
         write_out_strings_files(strings_dict, langs, contributors, untranslated)

@@ -505,14 +505,11 @@ printing document
 מדפיס מסמך
 
 # Untranslated:
-#Bookmark Links
-#Bookmark link to page %d of %s
 #Enter the command-line to invoke when you double-click on the PDF document:
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
 #Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L
-#Save &Bookmark...\tCtrl-Shift-S
 #Select &All\tCtrl-A
 #SumatraPDF crashed
 

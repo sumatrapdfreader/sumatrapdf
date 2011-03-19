@@ -522,8 +522,5 @@ printing document
 印刷するドキュメント
 
 # Untranslated:
-#Bookmark Links
-#Bookmark link to page %d of %s
-#Save &Bookmark...\tCtrl-Shift-S
 #Select &All\tCtrl-A
 

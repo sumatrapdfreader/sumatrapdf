@@ -401,8 +401,6 @@ Zoom factor
 #Application:
 #Attachment: %s
 #Author:
-#Bookmark Links
-#Bookmark link to page %d of %s
 #Bookmarks
 #Bytes
 #Can't connect to the Internet (error %#x).
@@ -428,7 +426,6 @@ Zoom factor
 #Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L
 #Print range
-#Save &Bookmark...\tCtrl-Shift-S
 #Select &All\tCtrl-A
 #Send by &E-mail...
 #Subject:

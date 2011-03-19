@@ -453,8 +453,6 @@ printing document
 #&Yes
 #(of %d)
 #Attachment: %s
-#Bookmark Links
-#Bookmark link to page %d of %s
 #Bookmarks
 #Can't connect to the Internet (error %#x).
 #Copying text was denied (copying as image only)
@@ -468,7 +466,6 @@ printing document
 #Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L
 #Print range
-#Save &Bookmark...\tCtrl-Shift-S
 #Searching %d of %d...
 #Select &All\tCtrl-A
 #SumatraPDF Update

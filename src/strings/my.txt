@@ -339,8 +339,6 @@ mencetak dokumen
 #Associate with PDF files?
 #Attachment: %s
 #Author:
-#Bookmark Links
-#Bookmark link to page %d of %s
 #Bookmarks
 #Can't connect to the Internet (error %#x).
 #Cannot start inverse search command. Please check the command line in the settings.
@@ -380,7 +378,6 @@ mencetak dokumen
 #Pr&esentation\tCtrl-L
 #Print range
 #Remember &opened files
-#Save &Bookmark...\tCtrl-Shift-S
 #Searching %d of %d...
 #Select &All\tCtrl-A
 #Select content with Ctrl+left mouse button

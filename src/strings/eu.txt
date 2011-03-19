@@ -394,8 +394,6 @@ dokumentua imprimatzen
 #&Shrink pages to printable area (if necessary)
 #(of %d)
 #Advanced
-#Bookmark Links
-#Bookmark link to page %d of %s
 #Bookmarks
 #Cannot start inverse search command. Please check the command line in the settings.
 #Continuous Book View
@@ -420,7 +418,6 @@ dokumentua imprimatzen
 #Pr&esentation\tCtrl-L
 #Print range
 #Remember &opened files
-#Save &Bookmark...\tCtrl-Shift-S
 #Select &All\tCtrl-A
 #Select content with Ctrl+left mouse button
 #Show &pages continuously

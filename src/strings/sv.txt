@@ -529,8 +529,3 @@ kopierar text
 printing document
 skriver ut dokumentet
 
-# Untranslated:
-#Bookmark Links
-#Bookmark link to page %d of %s
-#Save &Bookmark...\tCtrl-Shift-S
-

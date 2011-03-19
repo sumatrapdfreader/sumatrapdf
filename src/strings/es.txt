@@ -528,8 +528,3 @@ copiado de texto
 printing document
 impresión de documento
 
-# Untranslated:
-#Bookmark Links
-#Bookmark link to page %d of %s
-#Save &Bookmark...\tCtrl-Shift-S
-

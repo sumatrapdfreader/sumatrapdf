@@ -527,8 +527,3 @@ kopierer tekst
 printing document
 printer dokument
 
-# Untranslated:
-#Bookmark Links
-#Bookmark link to page %d of %s
-#Save &Bookmark...\tCtrl-Shift-S
-

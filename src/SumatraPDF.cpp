@@ -552,7 +552,7 @@ MenuDef menuDefFile[] = {
     { _TRN("&Save As...\tCtrl-S"),          IDM_SAVEAS,                 MF_NOT_IN_RESTRICTED },
     { _TRN("&Print...\tCtrl-P"),            IDM_PRINT,                  MF_NOT_IN_RESTRICTED },
     { SEP_ITEM,                             0,                          MF_NOT_IN_RESTRICTED },
-    { _TRN("Save &Bookmark...\tCtrl-Shift-S"), IDM_SAVEAS_BOOKMARK,     MF_NOT_IN_RESTRICTED },
+    { _TB_TRN("Save &Bookmark...\tCtrl-Shift-S"), IDM_SAVEAS_BOOKMARK,  MF_NOT_IN_RESTRICTED },
     { _TRN("Open in &Adobe Reader"),        IDM_VIEW_WITH_ACROBAT,      MF_NOT_IN_RESTRICTED },
     { _TRN("Open in &Foxit Reader"),        IDM_VIEW_WITH_FOXIT,        MF_NOT_IN_RESTRICTED },
     { _TRN("Open in PDF-XChange"),          IDM_VIEW_WITH_PDF_XCHANGE,  MF_NOT_IN_RESTRICTED },
@@ -3539,7 +3539,7 @@ static void OnMenuSaveBookmark(WindowInfo *win)
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling
     // methods too early on)
-    ScopedMem<TCHAR> fileFilter(Str::Format(_T("%s\1*.lnk\1"), _TR("Bookmark Links")));
+    ScopedMem<TCHAR> fileFilter(Str::Format(_T("%s\1*.lnk\1"), _TB_TR("Bookmark Links")));
     Str::TransChars(fileFilter, _T("\1"), _T("\0"));
 
     OPENFILENAME ofn = { 0 };
@@ -3577,7 +3577,7 @@ static void OnMenuSaveBookmark(WindowInfo *win)
     ScopedMem<TCHAR> args(Str::Format(_T("\"%s\" -page %d -view \"%s\" -zoom %s -scroll %d,%d -reuse-instance"),
                           win->dm->fileName(), ss.page, viewMode, zoomVirtual, (int)ss.x, (int)ss.y));
     ScopedMem<TCHAR> exePath(ExePathGet());
-    ScopedMem<TCHAR> desc(Str::Format(_TR("Bookmark link to page %d of %s"),
+    ScopedMem<TCHAR> desc(Str::Format(_TB_TR("Bookmark link to page %d of %s"),
                           ss.page, Path::GetBaseName(win->dm->fileName())));
 
     CreateShortcut(filename, exePath, args, desc, 1);

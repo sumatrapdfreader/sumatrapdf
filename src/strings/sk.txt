@@ -446,8 +446,6 @@ prebieha tlač dokumentu
 #&Shrink pages to printable area (if necessary)
 #&Use original page sizes
 #Attachment: %s
-#Bookmark Links
-#Bookmark link to page %d of %s
 #Bookmarks
 #Can't connect to the Internet (error %#x).
 #Cannot start inverse search command. Please check the command line in the settings.
@@ -464,7 +462,6 @@ prebieha tlač dokumentu
 #Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L
 #Print range
-#Save &Bookmark...\tCtrl-Shift-S
 #Select &All\tCtrl-A
 #Source file %s has no synchronization point
 #SumatraPDF Update

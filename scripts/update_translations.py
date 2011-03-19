@@ -271,14 +271,14 @@ def get_untranslated_as_list(untranslated_dict):
 
 def main():
     (strings_dict, langs, contributors) = load_strings_file_new()
-    strings = extract_strings_from_c_files()
+    (strings, tb_strings) = extract_strings_from_c_files()
     for s in strings_dict.keys():
-        if s not in strings:
+        if s not in strings and s not in tb_strings:
             del strings_dict[s]
     untranslated_dict = dump_missing_per_language(strings, strings_dict)
-    untranslated = get_untranslated_as_list(untranslated_dict)
     write_out_strings_files(strings_dict, langs, contributors, untranslated_dict)
-    for s in untranslated:
+    untranslated = get_untranslated_as_list(untranslated_dict)
+    for s in (untranslated + tb_strings):
         if s not in strings_dict:
             strings_dict[s] = []
     h_file_name = os.path.join(g_src_dir, "translations_txt.h")

@@ -523,8 +523,5 @@ printing document
 argraffu dogfen
 
 # Untranslated:
-#Bookmark Links
-#Bookmark link to page %d of %s
 #Enter the command-line to invoke when you double-click on the PDF document:
-#Save &Bookmark...\tCtrl-Shift-S
 

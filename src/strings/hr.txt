@@ -464,8 +464,6 @@ ispisujem dokument
 #&Shrink pages to printable area (if necessary)
 #&Use original page sizes
 #Attachment: %s
-#Bookmark Links
-#Bookmark link to page %d of %s
 #Bookmarks
 #Can't connect to the Internet (error %#x).
 #Copying text was denied (copying as image only)
@@ -478,7 +476,6 @@ ispisujem dokument
 #Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L
 #Print range
-#Save &Bookmark...\tCtrl-Shift-S
 #Select &All\tCtrl-A
 #SumatraPDF Update
 #SumatraPDF crashed
