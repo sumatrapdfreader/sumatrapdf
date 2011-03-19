@@ -441,7 +441,7 @@ parseTTF(fz_stream *file, int offset, int index, char *path)
 	// TODO: is there a better way to distinguish Arial Caps from Arial proper?
 	// cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1290
 	if (!strcmp(szPSName, "ArialMT") && (strstr(path, "caps") || strstr(path, "Caps")))
-		return fz_throw("ignore %s, as it can't be distinguished from Arial,Regular");
+		return fz_throw("ignore %s, as it can't be distinguished from Arial,Regular", path);
 
 	if (szPSName[0])
 	{
