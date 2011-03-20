@@ -6,92 +6,115 @@
 
 Lang: pl Polish (Polski)
 
+Contributor: Skiff
+
 &About
-O programie
+&O SumatraPDF
 
 &Actual Size\tCtrl-1
-Prawdziwy rozmiar\tCtrl-1
+Rozmiar &rzeczywisty\tCtrl+1
+
+&All selected pages
+&Zaznaczone strony
 
 &Back\tAlt+Left Arrow
-Wstecz\tAlt+Kewa strzałka
+&Wstecz\tAlt+W lewo
 
 &Close\tCtrl-W
-&Zamknij\tCtrl-W
+&Zamknij\tCtrl+W
 
 &Copy Selection\tCtrl-C
-Kopiuj zaznaczone\tCtrl-C
+Kopiuj &zaznaczenie\tCtrl+C
 
 &Don't ask me again
-&Nie pytaj ponownie
+&Nie pytaj więcej
+
+&Even pages only
+Strony &parzyste
 
 &File
-Plik
+&Plik
 
 &Find what:
 &Szukaj:
 
 &First Page\tHome
-Pierwsza strona\tHome
+&Pierwsza strona\tHome
+
+&Fit pages to printable area
+Dopasuj strony do rozmiaru &wydruku
 
 &Go To
-Idź do
+&Idź do
 
 &Go to page:
-&Idź do strony:
+Idź &do strony:
 
 &Help
 &Pomoc
 
 &Last Page\tEnd
-Ostatnia strona\tEnd
+&Ostatnia strona\tEnd
 
 &Magnification:
-&Powiększenie
+&Powiększenie:
 
 &Manual
-Instrukcja obsługi
+Instrukcja o&bsługi
 
 &Match case
-&Dopasuj przypadki
+&Uwzględnij wielkość liter
 
 &Next Page\tRight Arrow
-Następna strona\t->
+&Następna strona\tW prawo
 
 &No
 &Nie
 
 &No, thanks
-&Nie, dziękuję
+Nie, &dziękuję
+
+&Odd pages only
+Strony &nieparzyste
 
 &Open\tCtrl-O
-Otwórz\tCtrl-O
+&Otwórz…\tCtrl+O
 
 &Options...
 &Opcje...
 
 &Password:
-&Hasło
+&Hasło:
 
 &Previous Page\tLeft Arrow
-Poprzednia strona\t<-
+&Poprzednia strona\tW lewo
 
 &Print...\tCtrl-P
-Drukuj\tCtrl-P
+&Drukuj\tCtrl+P
 
 &Print... (denied)
-&Drukuj... (odmowa)
+&Drukuj... (odmówiono)
+
+&Remember the password for this document
+Pamiętaj &hasło dla tego dokumentu
 
 &Remember these settings for each document
-&Zapamiętaj te ustawienia dla każdego dokumentu
+Pamiętaj ustawienia dla &każdego dokumentu
 
 &Save As...\tCtrl-S
-Zapisz jako\tCtrl-S
+Zapisz &jako…\tCtrl+S
 
 &Settings
 &Ustawienia
 
+&Shrink pages to printable area (if necessary)
+&Zmniejsz strony do rozmiaru wydruku (w razie potrzeby)
+
 &Skip this version
-&Pomiń tę wersję
+&Pomiń tą wersję
+
+&Use original page sizes
+Użyj &oryginalnego rozmiaru stron
 
 &View
 &Widok
@@ -100,13 +123,13 @@ Zapisz jako\tCtrl-S
 &Tak
 
 &Zoom
-Powiększenie
+Po&większenie
 
 (of %d)
 (z %d)
 
 About SumatraPDF
-O programie
+O SumatraPDF
 
 Advanced
 Zaawansowane
@@ -115,10 +138,13 @@ All files
 Wszystkie pliki
 
 Application:
-Aplikacja:
+Program:
 
 Associate with PDF files?
 Skojarzyć z plikami PDF?
+
+Attachment: %s
+Załącznik: %s
 
 Author:
 Autor:
@@ -127,70 +153,85 @@ Automatic
 Automatycznie
 
 Automatically check for &updates
-Automatycznie sprawdzaj aktualizacje
+&Szukaj aktualizacji automatycznie
 
 Book View
-Widok książki
+Widok odczytu
 
 Book&marks\tF12
-Zakładki\tF12
+&Zakładki\tF12
+
+Bookmark Links
+Odnośniki zakładek
+
+Bookmark link to page %d of %s
+Odnośnik zakładki do strony %d z %s
+
+Bookmarks
+Zakładki
 
 Bytes
-Bajtów
+bajtów
+
+Can't connect to the Internet (error %#x).
+Nie można połączyć z Internetem (błąd %#x).
 
 Cancel
 Anuluj
 
 Cannot print this file
-Nie można wydrukować tego pliku
+Nie można drukować tego pliku
 
 Cannot start inverse search command. Please check the command line in the settings.
-Nie można uruchomić polecenia odwrotnego wyszukiwania. Sprawdź z lini poleceń w ustawieniach.
+Nie można rozpocząć odwrotnego wyszukiwania. Proszę sprawdzić ustawienia wiersza poleceń.
 
 Change Language
 Zmień język (Change Language)
 
 Check for &Updates
-&Sprawdź w poszukiwaniu nowej wersji
+Szukaj &aktualizacji
 
 Continuous
-Ciągły
+Pojedyncza strona - układ ciągły
 
 Continuous Book View
-Kontynuuj widok książki
+Widok odczytu - układ ciągły
 
 Continuous Facing
-Ciągły na przeciwko
+Wiele stron - układ ciągły
 
 Contribute Translation
-Pomóż przy tłumaczeniu
+Dodaj swoje tłumaczenie
+
+Copying text was denied (copying as image only)
+Nie można kopiować tekstu (można kopiować jako obrazy)
 
 Could not open Printer
-Drukarka niedostępna.
+Nie można uzyskać dostępu do drukarki
 
 Couldn't initialize printer
-Nie można zinicjalizować drukarki
+Nie można zainicjować drukarki
 
 Couldn't render the page
-Nie można zrenderować strony
+Nie można wyświetlić strony
 
 Created:
-Utworzone:
+Utworzono:
 
 Custom &Zoom...\tCtrl-Y
-&Dopasuj powiększenie...\tCtrl-Y
+&Własne powiększenie...\tCtrl+Y
 
 Default &Layout:
-Domyślny &układ:
+&Układ domyślny:
 
 Default &Zoom:
 Domyślne &powiększenie:
 
 Default PDF reader can't be changed in portable mode
-Główny czytnik PDF nie może zostać zmieniony na tryb przenośny
+Domyślna przeglądarka PDF nie może być zmieniona w trybie przenośnym
 
 Denied Permissions:
-Dostęp zablokowany:
+Brak zezwoleń:
 
 Document Properties
 Właściwości dokumentu
@@ -199,7 +240,7 @@ Download
 Pobierz
 
 E&xit\tCtrl-Q
-Wyjdź\tCtrl-Q
+&Wyjście\tCtrl+Q
 
 Enter password
 Podaj hasło
@@ -207,20 +248,23 @@ Podaj hasło
 Enter password for %s
 Podaj hasło dla %s
 
+Enter the command-line to invoke when you double-click on the PDF document:
+Podaj polecenie wykonywane po dwukrotnym kliknięciu pliku PDF:
+
 Error loading PDF file.
-Problem przy otwarzaniu pliku.
+Błąd wczytywania pliku PDF.
 
 F&orward\tAlt+Right Arrow
-Dalej \tAlt+Prawa strzałka
+&Dalej\tAlt+W prawo
 
 F&ullscreen\tCtrl-Shift-L
-Na cały ekran\tCtrl-Shift-L
+Pełny Ekran\tCtrl+Shift+L
 
 Facing
-Na przeciwko
+Wiele stron
 
 Failed to save a file
-Problem przy zapisywaniu pliku.
+Błąd zapisywania pliku
 
 File Size:
 Rozmiar pliku:
@@ -229,31 +273,43 @@ File:
 Plik:
 
 Fin&d...\tCtrl-F
-Szukaj...\tCtrl-F
+&Znajdź...\tCtrl+F
 
 Find
-Szukaj
+Znajdź
 
 Find Next
-Szukaj następny
+Znajdź następny
 
 Find Previous
-Szukaj poprzedni
+Znajdź poprzedni
 
 Find:
-Szukaj:
+Znajdź:
+
+Fit &Content\tCtrl-3
+Dopasuj do &zawartości\tCtrl+3
 
 Fit &Page\tCtrl-0
-Dopasuj do strony\tCtrl-0
+Dopasuj do s&trony\tCtrl+0
 
 Fit &Width\tCtrl-2
-Dopasuj do szerokości\tCtrl-2
+Dopasuj do sz&erokości\tCtrl+2
+
+Fit Content
+Dopasuj do zawartości strony
 
 Fit Page
-Dopasuj do strony
+Dopasuj do całej strony
 
 Fit Width
-Dopasuj do szerokości
+Dopasuj szerokości strony
+
+Fit Width and Show Pages Continuously
+Dopasuj szerokość i wyświetlaj strony w układzie ciągłym
+
+Fit a Single Page
+Dopasuj pojedynczą stronę
 
 Found text at page %d
 Znaleziono tekst na stronie %d
@@ -262,10 +318,10 @@ GB
 GB
 
 Go to page
-Idź do strony
+Przejdź do strony
 
 Hint: Use the F3 key for finding again
-Wskazówka: Użyj klawisza F3, aby wyszukać ponownie
+Wskazówka: użyj klawisza F3, aby szukać dalej
 
 KB
 KB
@@ -274,13 +330,13 @@ MB
 MB
 
 Make SumatraPDF default application for PDF files?
-Ustawić SumatraPDF jako domyślną aplikację dla plików PDF?
+Ustawić program SumatraPDF jako domyślną przeglądarkę plików PDF?
 
 Make SumatraPDF my default PDF reader
-Ustaw SumatraPDF jako domyślny czytnik PDF
+Ustaw SumatraPDF jako domyślną przeglądarkę PDF
 
 Match Case
-Dopasuj przypadki
+Uwzględnij wielkość liter
 
 Modified:
 Zmodyfikowano:
@@ -289,19 +345,19 @@ New version %s is available. Download new version?
 Nowa wersja %s jest dostępna. Pobrać nową wersję?
 
 Next Page
-Następna strona
+&Następna strona
 
 No matches were found
-Nie znaleziono dopasowań
+Nie znaleziono wyników
 
 No result found around line %u in file %s
-Brak wyników w wierszu %u w pliku %s
+Nie znaleziono wyników w okolicach wiersza %u w pliku %s
 
 No synchronization file found
-Synchronizacji pliku nie znaleziono
+Nie znaleziono pliku synchronizacji
 
 No synchronization info at this position
-Brak informacji o synchronizacji na tej pozycji
+Brak informacji o synchronizacji w tej pozycji
 
 Number of Pages:
 Liczba stron:
@@ -322,7 +378,7 @@ Open in PDF-XChange
 Otwórz w PDF-XChange
 
 P&roperties\tCtrl-D
-Właściwości...\tCtrl-D
+&Właściwości\tCtrl+D
 
 PDF Document
 Dokument PDF
@@ -337,61 +393,79 @@ PDF documents
 Dokumenty PDF
 
 Pa&ge...\tCtrl-G
-Strona...\tCtrl-G
+&Strona...\tCtrl+G
 
 Page Size:
 Rozmiar strony:
 
 Page number %u inexistant
-Numer strony %u ze wszystkich
+Brak strony o numerze %u
+
+Page scaling
+Skalowanie strony
 
 Page:
 Strona:
 
+Please include the following file in your crash report:
+Proszę dołączyć następujący plik do raportu awarii:
+
 Please wait - rendering...
 Proszę czekać - renderowanie...
 
+Pr&esentation\tCtrl-L
+&Prezentacja\tCtrl+L
+
 Previous Page
 Poprzednia strona
+
+Print range
+Zakres druku
 
 Printing problem.
 Problem z drukowaniem.
 
 Remember &opened files
-Zapamiętaj &otwarte pliki
+Pamiętaj &otwierane pliki
 
 Rotate &Left\tCtrl-Shift--
-Obróć w lewo\tCtrl-Shift--
+Obróć w &lewo\tCtrl+Shift+Minus
 
 Rotate &Right\tCtrl-Shift-+
-Obróć w prawo\tCtrl-Shift-+
+Obróć w &prawo\tCtrl+Shift+Plus
+
+Save &Bookmark...\tCtrl-Shift-S
+Zapisz &zakładkę\tCtrl+Shift+S
 
 Searching %d of %d...
-Szukanie %d z %d...
+Szukanie &d z %d...
+
+Select &All\tCtrl-A
+Zaznacz &wszystko\tCtrl+A
 
 Select content with Ctrl+left mouse button
-Wybierz materiał za pomocą Ctrl+Lewy przycisk myszy
+Zaznacz zawartość wciskając Ctrl i lewy przycisk myszy
 
 Send by &E-mail...
-Wyślij przez &email...
+Dołącz do wiadomości &e-mail...
 
 Set inverse search command-line
-Ustaw odwrotne wyszukiwanie lini poleceń
+Ustaw wiersz poleceń do odwrotnego wyszukiwania
 
 Show &Toolbar
-Pokaż pasek narzędzi
+Pokaż pasek &narzędzi
 
 Show &pages continuously
-Pokaż strony kontynuując
+Wyświetlaj strony w układzie &ciągłym
 
 Show the &bookmarks sidebar when available
-Pokaż &zakładki na bocznym pasku, kiedy dostępne
+Pokaż panel za&kładek, gdy są dostępne
 
 Single Page
 Pojedyncza strona
 
 Source file %s has no synchronization point
-Źródło pliku %s ma niezsynchronizowany punkt
+Plik źródłowy %s nie posiada punktów synchronizacji
 
 Subject:
 Temat:
@@ -399,29 +473,35 @@ Temat:
 SumatraPDF Options
 Opcje SumatraPDF
 
+SumatraPDF Update
+Aktualizacja SumatraPDF
+
+SumatraPDF crashed
+SumatraPDF uległ awarii
+
 SumatraPDF is your default PDF reader
-SumatraPDF jest twoim domyślnym czytnikiem PDF
+SumatraPDF jest domyślną przeglądarką PDF
 
 SumatraPDF should now be your default PDF reader
-SumatraPDF jest teraz twoim domyślnym czytnikiem PDF
+SumatraPDF powinien być teraz domyślną przeglądarką PDF
 
 Synchronization file cannot be opened
-Synchronizacja pliku nie może zostać otwarta
+Nie można otworzyć pliku synchronizacji
 
 Text documents
-Dokumenty tekstowe
+Pliki tekstowe
 
 Title:
 Tytuł:
 
 Unknown source file (%s)
-Nieznane źródło pliku (%s)
+Nieznany plik źródłowy (%s)
 
 View
 Widok
 
 Visit &Website
-Strona www
+Odwiedź &stronę internetową
 
 Warning
 Uwaga
@@ -430,7 +510,7 @@ You have the latest version.
 Posiadasz najnowszą wersję.
 
 You have version %s
-Posiadasz wersję %s
+Posiadasz wersję %s.
 
 Zoom
 Powiększenie
@@ -439,42 +519,17 @@ Zoom In
 Powiększ
 
 Zoom Out
-Pomniejsz
+Zmniejsz
 
 Zoom factor
-Narzędzie powiększania
+Współczynnik powiększenia
 
 [Changes detected; refreshing] %s
-[Wykryto zmiany; odświeżanie] %s
+[wykryto zmiany; odświeżanie] %s
 
 copying text
-kopiowanie teksty
+Kopiowanie tekstu
 
 printing document
 drukowanie dokumentu
-
-# Untranslated:
-#&All selected pages
-#&Even pages only
-#&Fit pages to printable area
-#&Odd pages only
-#&Remember the password for this document
-#&Shrink pages to printable area (if necessary)
-#&Use original page sizes
-#Attachment: %s
-#Bookmarks
-#Can't connect to the Internet (error %#x).
-#Copying text was denied (copying as image only)
-#Enter the command-line to invoke when you double-click on the PDF document:
-#Fit &Content\tCtrl-3
-#Fit Content
-#Fit Width and Show Pages Continuously
-#Fit a Single Page
-#Page scaling
-#Please include the following file in your crash report:
-#Pr&esentation\tCtrl-L
-#Print range
-#Select &All\tCtrl-A
-#SumatraPDF Update
-#SumatraPDF crashed
 
