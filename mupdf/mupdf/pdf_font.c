@@ -446,7 +446,8 @@ loadsimplefont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict)
 	}
 
 	/* encode by glyph name where we can */
-	if (kind == TRUETYPE)
+	/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692090 */
+	if (kind == TRUETYPE || !strcmp(fz_toname(fz_dictgets(dict, "Subtype")), "TrueType"))
 	{
 		/* Unicode cmap */
 		if (!symbolic && face->charmap && face->charmap->platform_id == 3)
