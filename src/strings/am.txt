@@ -57,13 +57,13 @@ Contributor: Hrant Ohanyan »»» http://haysoft.org (hrantohanyan@mail.am)
 Վերջին էջը\tEnd
 
 &Magnification:
-&Մեժացնել
+&Մեծացնել
 
 &Manual
 &Օգնություն
 
 &Match case
-&Հաշվի առնել գրանցումները
+&Հաշվի առնել մեծատառ/փոքրատառը
 
 &Next Page\tRight Arrow
 Հաջորդ էջը\t->
@@ -72,7 +72,7 @@ Contributor: Hrant Ohanyan »»» http://haysoft.org (hrantohanyan@mail.am)
 &Ոչ
 
 &No, thanks
-&Ոչ
+&Ոչ, շնորհակալություն
 
 &Odd pages only
 &Միայն կենտ էջերը
@@ -84,7 +84,7 @@ Contributor: Hrant Ohanyan »»» http://haysoft.org (hrantohanyan@mail.am)
 &Ընտրանքներ...
 
 &Password:
-&Գաղտնաբառը
+&Ծածկագիրը
 
 &Previous Page\tLeft Arrow
 Նախորդ էջը\t<-
@@ -141,7 +141,7 @@ Application:
 Ծրագիրը.
 
 Associate with PDF files?
-Ասոցացնե՞լ PDF ֆայլերի հետ։
+Ասոցիացնե՞լ PDF ֆայլերի հետ։
 
 Attachment: %s
 Կցորդ. %s
@@ -183,7 +183,7 @@ Change Language
 Փոխել լեզուն (Change Language)
 
 Check for &Updates
-&Ստուգել նոր տարբերակները
+&Ստուգել նոր տարբերակը
 
 Continuous
 Անդադար
@@ -216,10 +216,10 @@ Custom &Zoom...\tCtrl-Y
 &Ընտրված չափը\tCtrl-Y
 
 Default &Layout:
-Չափը &Լռելայն
+Ծրագրային &լայնքը.
 
 Default &Zoom:
-Մեծությունը &Լռելայն
+Ծրագրային &չափը.
 
 Default PDF reader can't be changed in portable mode
 Շարժական վիճակում հնարավոր չէ փոխել PDF կարդալու հիմնական ծրագիրը
@@ -234,13 +234,13 @@ Download
 Բեռնել
 
 E&xit\tCtrl-Q
-Դուրս &գալ\tCtrl-Q
+Փա&կել\tCtrl-Q
 
 Enter password
-Գրել գաղտնագիրը
+Գրել ծածկագիրը
 
 Enter password for %s
-Գրել գաղտնագիրը՝ %s-ի համար
+Գրել ծածկագիրը՝ %s-ի համար
 
 Enter the command-line to invoke when you double-click on the PDF document:
 Մուտքագրեք հրաման, որը կկատարվի PDF փաստաթղթում մկնիկի կրկնակի սեղման ժամանակ. 
@@ -330,13 +330,13 @@ Make SumatraPDF my default PDF reader
 Ասոցացնել PDF ֆայլերը SumatraPDF-ի հետ
 
 Match Case
-Հաշվի առնել գրանցումները
+Հաշվի առնել մեծատառ/փոքրատառը
 
 Modified:
 Փոփոխված.
 
 New version %s is available. Download new version?
-Նոր՝ %s տարբերակը հասանելի է։ Բեռնե՞լ նոր տարբերակը։
+Հասանելի է նոր՝ %s տարբերակը։ Բեռնե՞լ նոր տարբերակը։
 
 Next Page
 Հաջորդ էջը
@@ -492,7 +492,7 @@ View
 Դիտել
 
 Visit &Website
-&Ծրագրի կայքը
+Ծրագրի &կայքը
 
 Warning
 Զգուշացում
