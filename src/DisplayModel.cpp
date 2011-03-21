@@ -321,7 +321,7 @@ bool DisplayModel::pageVisibleNearby(int pageNo)
     int columns = columnsFromDisplayMode(mode);
 
     pageNo = FirstPageInARowNo(pageNo, columns, displayModeShowCover(mode));
-    for (int i = pageNo - columns; i < pageNo + 2 * columns - 1; i++)
+    for (int i = pageNo - columns; i < pageNo + 2 * columns; i++)
         if (validPageNo(i) && pageVisible(i))
             return true;
 
@@ -856,6 +856,7 @@ bool DisplayModel::isOverText(int x, int y)
 
 void DisplayModel::renderVisibleParts(void)
 {
+    int firstVisible = 0;
     int lastVisible = 0;
 
 //    DBG_OUT("DisplayModel::renderVisibleParts()\n");
@@ -864,16 +865,18 @@ void DisplayModel::renderVisibleParts(void)
         if (pageInfo->visible) {
             assert(pageInfo->shown);
             StartRenderingPage(pageNo);
+            if (0 == firstVisible)
+                firstVisible = pageNo;
             lastVisible = pageNo;
         }
     }
 
 #ifdef PREDICTIVE_RENDER
     // TODO: prerender two pages in Facing and Book View modes?
-    if (0 < lastVisible && lastVisible < pageCount())
-        StartRenderingPage(lastVisible+1);
-    if (lastVisible > 1)
-        StartRenderingPage(lastVisible-1);
+    if (lastVisible < pageCount())
+        StartRenderingPage(lastVisible + 1);
+    if (firstVisible > 1)
+        StartRenderingPage(firstVisible - 1);
 #endif
 }
 
