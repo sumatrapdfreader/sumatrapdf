@@ -7416,7 +7416,7 @@ const char *g_transTranslations[] = {
   "Iikot Pakanan\tCtrl-Shift-+",
   NULL,
   "Hinahanap: $d ng #d...",
-  NULL,
+  "Piliin L&ahat\tCtrl-A",
   "Mamili ng content gamit ang Ctrl+left mouse button",
   "Ipadala sa &email...",
   "Iayos ang Utos-Linya ng Tiwarik na Paghahanap",

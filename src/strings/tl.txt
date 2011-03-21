@@ -432,6 +432,9 @@ Iikot Pakanan\tCtrl-Shift-+
 Searching %d of %d...
 Hinahanap: $d ng #d...
 
+Select &All\tCtrl-A
+Piliin L&ahat\tCtrl-A
+
 Select content with Ctrl+left mouse button
 Mamili ng content gamit ang Ctrl+left mouse button
 
@@ -521,7 +524,4 @@ kinokopya ang mensahe
 
 printing document
 ipini-print ang dokumento
-
-# Untranslated:
-#Select &All\tCtrl-A
 
