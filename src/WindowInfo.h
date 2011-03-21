@@ -220,7 +220,7 @@ public:
     void SwitchToDisplayMode(DisplayMode displayMode, bool keepContinuous=false);
     void MoveDocBy(int dx, int dy);
 
-    TOOLINFO CreateToolInfo(const TCHAR *text=NULL);
+    void CreateInfotip(const TCHAR *text=NULL, RectI *rc=NULL);
     void DeleteInfotip();
 
     virtual bool FindUpdateStatus(int count, int total);

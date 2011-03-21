@@ -52,6 +52,12 @@ inline const char * FindChar(const char *str, const char c) {
 inline const WCHAR * FindChar(const WCHAR *str, const WCHAR c) {
     return wcschr(str, c);
 }
+inline const char * Find(const char *str, const char *find) {
+    return strstr(str, find);
+}
+inline const WCHAR * Find(const WCHAR *str, const WCHAR *find) {
+    return wcsstr(str, find);
+}
 
 char *  FmtV(const char *fmt, va_list args);
 char *  Format(const char *fmt, ...);

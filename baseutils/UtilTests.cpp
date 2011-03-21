@@ -248,6 +248,22 @@ static void VecStrTest()
     assert(v.Count() == 3);
     assert(Str::Eq(_T("foo_ _bar_ _glee"), s));
     free(s);
+
+    {
+        VStrList v2;
+        size_t count = v2.Split(_T("a,b,,c,"), _T(","));
+        assert(count == 5 && v2.Find(_T("c")) == 3);
+        ScopedMem<TCHAR> joined(v2.Join(_T(";")));
+        assert(Str::Eq(joined, _T("a;b;;c;")));
+    }
+
+    {
+        VStrList v2;
+        size_t count = v2.Split(_T("a,b,,c,"), _T(","), true);
+        assert(count == 3 && v2.Find(_T("c")) == 2);
+        ScopedMem<TCHAR> joined(v2.Join(_T(";")));
+        assert(Str::Eq(joined, _T("a;b;c")));
+    }
 }
 
 static void VecTest()

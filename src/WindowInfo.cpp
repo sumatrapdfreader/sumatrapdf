@@ -296,3 +296,41 @@ void WindowInfo::MoveDocBy(int dx, int dy)
         this->dm->scrollYBy(dy, FALSE);
 }
 
+#define MULTILINE_INFOTIP_WIDTH_PX 300
+
+void WindowInfo::CreateInfotip(const TCHAR *text, RectI *rc)
+{
+    if (Str::IsEmpty(text)) {
+        this->DeleteInfotip();
+        return;
+    }
+
+    TOOLINFO ti = { 0 };
+    ti.cbSize = sizeof(ti);
+    ti.hwnd = this->hwndCanvas;
+    ti.uFlags = TTF_SUBCLASS;
+    ti.lpszText = (TCHAR *)text;
+    if (rc)
+        ti.rect = rc->ToRECT();
+
+    if (Str::FindChar(text, '\n'))
+        SendMessage(this->hwndInfotip, TTM_SETMAXTIPWIDTH, 0, MULTILINE_INFOTIP_WIDTH_PX);
+    else
+        SendMessage(this->hwndInfotip, TTM_SETMAXTIPWIDTH, 0, -1);
+
+    SendMessage(this->hwndInfotip, this->infotipVisible ? TTM_NEWTOOLRECT : TTM_ADDTOOL, 0, (LPARAM)&ti);
+    this->infotipVisible = true;
+}
+
+void WindowInfo::DeleteInfotip()
+{
+    if (!this->infotipVisible)
+        return;
+
+    TOOLINFO ti = { 0 };
+    ti.cbSize = sizeof(ti);
+    ti.hwnd = this->hwndCanvas;
+
+    SendMessage(this->hwndInfotip, TTM_DELTOOL, 0, (LPARAM)&ti);
+    this->infotipVisible = false;
+}

@@ -199,6 +199,7 @@ public:
     void            goToTocLink(pdf_link *link);
     void            goToNamedDest(const char *name);
     bool            isOverText(int x, int y);
+    pdf_annot *     getCommentAtPosition(int x, int y);
 
     bool            cvtUserToScreen(int pageNo, double *x, double *y);
     bool            cvtScreenToUser(int *pageNo, double *x, double *y);

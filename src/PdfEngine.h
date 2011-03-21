@@ -128,6 +128,7 @@ public:
     bool hasPermission(int permission);
     int getPdfLinks(int pageNo, pdf_link **links);
     pdf_link *getLinkAtPosition(int pageNo, float x, float y);
+    pdf_annot *getCommentAtPosition(int pageNo, float x, float y);
     bool hasTocTree() const { 
         return _outline != NULL || _attachments != NULL; 
     }

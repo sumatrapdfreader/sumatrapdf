@@ -826,6 +826,16 @@ pdf_link *DisplayModel::getLinkAtPosition(int x, int y)
     return pdfEngine->getLinkAtPosition(pageNo, (float)posX, (float)posY);
 }
 
+pdf_annot *DisplayModel::getCommentAtPosition(int x, int y)
+{
+    int pageNo = INVALID_PAGE_NO;
+    double posX = x, posY = y;
+    if (!cvtScreenToUser(&pageNo, &posX, &posY))
+        return NULL;
+
+    return pdfEngine->getCommentAtPosition(pageNo, (float)posX, (float)posY);
+}
+
 int DisplayModel::getPdfLinks(int pageNo, pdf_link **links)
 {
     int count = pdfEngine->getPdfLinks(pageNo, links);

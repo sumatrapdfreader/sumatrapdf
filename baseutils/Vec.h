@@ -243,7 +243,7 @@ public:
         FreeVecMembers(*this);
     }
 
-    TCHAR *Join(TCHAR *joint=NULL) {
+    TCHAR *Join(const TCHAR *joint=NULL) {
         Str::Str<TCHAR> tmp(256);
         size_t jointLen = joint ? Str::Len(joint) : 0;
         for (size_t i = 0; i < Count(); i++) {
@@ -255,7 +255,7 @@ public:
         return tmp.StealData();
     }
 
-    int Find(TCHAR *string) const {
+    int Find(const TCHAR *string) const {
         size_t n = Count();
         for (size_t i = 0; i < n; i++) {
             TCHAR *item = At(i);
@@ -265,11 +265,30 @@ public:
         return -1;
     }
 
+    /* splits a string into several substrings, separated by the separator
+       (optionally collapsing several consecutive separators into one);
+       e.g. splitting "a,b,,c," by "," results in the list "a", "b", "", "c", ""
+       (resp. "a", "b", "c" if separators are collapsed) */
+    size_t Split(const TCHAR *string, const TCHAR *separator, bool collapse=false) {
+        size_t start = Count();
+        const TCHAR *next;
+
+        while ((next = Str::Find(string, separator))) {
+            if (!collapse || next > string)
+                Append(Str::DupN(string, next - string));
+            string = next + Str::Len(separator);
+        }
+        if (!collapse || *string)
+            Append(Str::Dup(string));
+
+        return Count() - start;
+    }
+
     /* 'cmdLine' contains one or several arguments can be:
         - escaped, in which case it starts with '"', ends with '"' and
           each '"' that is part of the name is escaped with '\\'
         - unescaped, in which case it start with != '"' and ends with ' ' or '\0' */
-    size_t ParseCommandLine(TCHAR *cmdLine)
+    size_t ParseCommandLine(const TCHAR *cmdLine)
     {
         size_t start = Count();
 
@@ -290,7 +309,7 @@ public:
 
 private:
     /* returns the next character in '*txt' that isn't a backslash */
-    static TCHAR SkipBackslashs(TCHAR *txt)
+    static TCHAR SkipBackslashs(const TCHAR *txt)
     {
         assert(txt && '\\' == *txt);
         while ('\\' == *++txt);
@@ -298,13 +317,13 @@ private:
     }
 
     /* appends the next quoted argument and returns the position after it */
-    TCHAR *ParseQuoted(TCHAR *arg)
+    const TCHAR *ParseQuoted(const TCHAR *arg)
     {
         assert(arg && '"' == *arg);
         arg++;
 
         Str::Str<TCHAR> txt(Str::Len(arg) / 2);
-        TCHAR *next;
+        const TCHAR *next;
         for (next = arg; *next && *next != '"'; next++) {
             // skip escaped quotation marks according to
             // http://msdn.microsoft.com/en-us/library/17w5ykft.aspx
@@ -320,11 +339,11 @@ private:
     }
 
     /* appends the next unquoted argument and returns the position after it */
-    TCHAR *ParseUnquoted(TCHAR *arg)
+    const TCHAR *ParseUnquoted(const TCHAR *arg)
     {
         assert(arg && *arg && '"' != *arg && !_istspace(*arg));
 
-        TCHAR *next;
+        const TCHAR *next;
         // contrary to http://msdn.microsoft.com/en-us/library/17w5ykft.aspx
         // we don't treat quotation marks or backslashes in non-quoted
         // arguments in any special way

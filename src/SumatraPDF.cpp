@@ -5740,37 +5740,18 @@ static void CustomizeToCInfoTip(WindowInfo *win, LPNMTVGETINFOTIP nmit)
     free(path);
 }
 
-TOOLINFO WindowInfo::CreateToolInfo(const TCHAR *text)
-{
-    TOOLINFO ti = { 0 };
-    ti.cbSize = sizeof(ti);
-    ti.hwnd = this->hwndCanvas;
-    ti.uFlags = TTF_SUBCLASS;
-    ti.lpszText = (TCHAR *)text;
-    return ti;
-}
-
-void WindowInfo::DeleteInfotip()
-{
-    if (!this->infotipVisible)
-        return;
-
-    SendMessage(this->hwndInfotip, TTM_DELTOOL, 0, (LPARAM)&this->CreateToolInfo());
-    this->infotipVisible = false;
-}
-
 static void CreateInfotipForPdfLink(WindowInfo *win, int pageNo, pdf_link *link)
 {
     ScopedMem<TCHAR> linkPath(win->dm->getLinkPath(link));
-    if (linkPath) {
-        TOOLINFO ti = win->CreateToolInfo(linkPath);
-        fz_rect rect = win->dm->rectCvtUserToScreen(pageNo, link->rect);
-        ti.rect = Rect<float>(rect.x0, rect.y0, rect.x1, rect.y1).ToRECT();
+    fz_rect r = win->dm->rectCvtUserToScreen(pageNo, link->rect);
+    win->CreateInfotip(linkPath, &Rect<float>(r.x0, r.y0, r.x1, r.y1).Convert<int>());
+}
 
-        SendMessage(win->hwndInfotip, win->infotipVisible ? TTM_NEWTOOLRECT : TTM_ADDTOOL, 0, (LPARAM)&ti);
-        win->infotipVisible = true;
-    } else
-        win->DeleteInfotip();
+static void CreateInfotipForComment(WindowInfo *win, int pageNo, pdf_annot *annot)
+{
+    ScopedMem<TCHAR> comment(Str::Conv::FromUtf8(fz_tostrbuf(fz_dictgets(annot->obj, "Contents"))));
+    fz_rect r = win->dm->rectCvtUserToScreen(pageNo, annot->rect);
+    win->CreateInfotip(comment, &Rect<float>(r.x0, r.y0, r.x1, r.y1).Convert<int>());
 }
 
 static int  gDeltaPerLine = 0;         // for mouse wheel logic
@@ -5872,7 +5853,13 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
                             SetCursor(gCursorHand);
                             return TRUE;
                         }
-                        win->DeleteInfotip();
+                        pdf_annot *comment = win->dm->getCommentAtPosition(pt.x, pt.y);
+                        if (comment) {
+                            int pageNo = win->dm->getPageNoByPoint(pt.x, pt.y);
+                            CreateInfotipForComment(win, pageNo, comment);
+                        }
+                        else
+                            win->DeleteInfotip();
                         if (win->dm->isOverText(pt.x, pt.y))
                             SetCursor(gCursorIBeam);
                         else

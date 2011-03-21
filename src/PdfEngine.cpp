@@ -865,6 +865,24 @@ pdf_link *PdfEngine::getLinkAtPosition(int pageNo, float x, float y)
     return NULL;
 }
 
+pdf_annot *PdfEngine::getCommentAtPosition(int pageNo, float x, float y)
+{
+    pdf_page *page = getPdfPage(pageNo, true);
+    if (!page)
+        return NULL;
+
+    for (pdf_annot *annot = page->annots; annot; annot = annot->next) {
+        fz_point pt = { x, y };
+        if (fz_isptinrect(annot->rect, pt) &&
+            Str::Eq(fz_toname(fz_dictgets(annot->obj, "Subtype")), "Text") &&
+            !Str::IsEmpty(fz_tostrbuf(fz_dictgets(annot->obj, "Contents")))) {
+            return annot;
+        }
+    }
+
+    return NULL;
+}
+
 int PdfEngine::getPdfLinks(int pageNo, pdf_link **links)
 {
     pdf_page *page = getPdfPage(pageNo, true);

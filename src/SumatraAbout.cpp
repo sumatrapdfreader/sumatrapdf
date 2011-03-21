@@ -474,17 +474,6 @@ static void OnPaint(WindowInfo *win)
     EndPaint(win->hwndCanvas, &ps);
 }
 
-void CreateInfotipForAboutLink(WindowInfo *win, AboutLayoutInfoEl *aboutEl)
-{
-    if (aboutEl && aboutEl->url) {
-        TOOLINFO ti = win->CreateToolInfo(aboutEl->url);
-        ti.rect = aboutEl->rightPos.ToRECT();
-        SendMessage(win->hwndInfotip, win->infotipVisible ? TTM_NEWTOOLRECT : TTM_ADDTOOL, 0, (LPARAM)&ti);
-        win->infotipVisible = true;
-    } else
-        win->DeleteInfotip();
-}
-
 LRESULT HandleWindowAboutMsg(WindowInfo *win, HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, bool& handled)
 {
     POINT        pt;
@@ -503,7 +492,7 @@ LRESULT HandleWindowAboutMsg(WindowInfo *win, HWND hwnd, UINT message, WPARAM wP
             if (GetCursorPos(&pt) && ScreenToClient(hwnd, &pt)) {
                 AboutLayoutInfoEl *aboutEl;
                 if (AboutGetLink(win, pt.x, pt.y, &aboutEl)) {
-                    CreateInfotipForAboutLink(win, aboutEl);
+                    win->CreateInfotip(aboutEl->url, &aboutEl->rightPos);
                     SetCursor(gCursorHand);
                     handled = true;
                     return TRUE;
