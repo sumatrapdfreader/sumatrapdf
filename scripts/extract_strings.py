@@ -132,7 +132,7 @@ def load_one_strings_file(file_path, lang_code, strings_dict, langs_dict, contri
 # [language, text translated into this language]
 # 'langs' is an array of language definition tuples. First item in a tuple
 # is language iso code (e.g. "en" or "sp-rs" and second is language name
-def load_strings_file_new():
+def load_strings_file():
     strings_dict = {}
     langs_dict = { "en" : "English" }
     contributors_dict = {}
@@ -281,7 +281,7 @@ def load_lang_index():
     return re.findall("^(\S+)\t([^\t\r\n]*)(?:\t(.*))?", index, re.M)
 
 def main_obsolete():
-    (strings_dict, langs, contributors) = load_strings_file_new()
+    (strings_dict, langs, contributors) = load_strings_file()
     strings = extract_strings_from_c_files()[0]
     if len(sys.argv) == 1:
         untranslated = dump_missing_per_language(strings, strings_dict)
