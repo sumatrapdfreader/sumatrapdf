@@ -7,7 +7,6 @@
 enum { SEARCH_PAGE, SKIP_PAGE };
 
 #define SkipWhitespace(c) for (; _istspace(*(c)); (c)++)
-#define iswordchar(c) IsCharAlphaNumeric(c)
 // ignore spaces between CJK glyphs but not between Latin, Greek, Cyrillic, etc. letters
 // cf. http://code.google.com/p/sumatrapdf/issues/detail?id=959
 #define isnoncjkwordchar(c) (iswordchar(c) && (unsigned short)(c) < 0x2E80)

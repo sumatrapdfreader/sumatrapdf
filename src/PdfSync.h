@@ -96,18 +96,18 @@ public:
     }
 
     // conversion from one coordinate system to another
-    void convert_coord_to_internal(UINT *x, UINT *y, UINT pageHeight, CoordSystem src)
+    void convert_coord_to_internal(int *x, int *y, int pageHeight, CoordSystem src)
     {
         if (src != this->coordsys)
             *y = pageHeight - *y;
     }
-    void convert_coord_from_internal(UINT *x, UINT *y, UINT pageHeight, CoordSystem dst)
+    void convert_coord_from_internal(int *x, int *y, int pageHeight, CoordSystem dst)
     {
         if (dst != this->coordsys)
             *y = pageHeight - *y;
     }
 
-    void convert_coord_from_internal(RectI *rc, UINT pageHeight, CoordSystem dst)
+    void convert_coord_from_internal(RectI *rc, int pageHeight, CoordSystem dst)
     {
         if (dst != this->coordsys)
             rc->y = pageHeight - (rc->y + rc->dy);

@@ -8,6 +8,8 @@
 
 class VStrList;
 
+#define iswordchar(c) IsCharAlphaNumeric(c)
+
 typedef struct {
     int len;
     int *pages;
@@ -29,6 +31,7 @@ public:
     void SelectUpTo(int pageNo, double x, double y) {
         SelectUpTo(pageNo, FindClosestGlyph(pageNo, x, y));
     }
+    void SelectWordAt(int pageNo, double x, double y);
     TCHAR *ExtractText(TCHAR *lineSep=DOS_NEWLINE);
     void Reset();
 

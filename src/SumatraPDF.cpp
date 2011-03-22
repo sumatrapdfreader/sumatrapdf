@@ -2499,11 +2499,12 @@ static void OnSelectAll(WindowInfo *win, bool textOnly=false)
     win->RepaintAsync();
 }
 
-static void OnInverseSearch(WindowInfo *win, UINT x, UINT y)
+// returns true if the double-click was handled and false if it wasn't
+static bool OnInverseSearch(WindowInfo *win, int x, int y)
 {
     assert(win);
-    if (!win || !win->dm) return;
-    if (gRestrictedUse || gPluginMode) return;
+    if (!win || !win->dm) return false;
+    if (gRestrictedUse || gPluginMode) return false;
 
     // Clear the last forward-search result
     win->fwdsearchmarkRects.Reset();
@@ -2513,27 +2514,31 @@ static void OnInverseSearch(WindowInfo *win, UINT x, UINT y)
     // if the PDF does not have a synchronization file
     if (!win->pdfsync) {
         UINT err = CreateSynchronizer(win->loadedFilePath, &win->pdfsync);
-
         if (err == PDFSYNCERR_SYNCFILE_NOTFOUND) {
+            DBG_OUT("Pdfsync: Sync file not found!\n");
+            // Fall back to selecting a word when double-clicking over text in
+            // a document with no corresponding synchronization file
+            if (win->dm->isOverText(x, y))
+                return false;
             // In order to avoid confusion for non-LaTeX users, we do not show
             // any error message if the SyncTeX enhancements are hidden from UI
-            DBG_OUT("Pdfsync: Sync file not found!\n");
             if (gGlobalPrefs.m_enableTeXEnhancements)
                 WindowInfo_ShowMessage_Async(win, _TR("No synchronization file found"), true);
-            return;
+            return true;
         }
-        else if (err != PDFSYNCERR_SUCCESS || !win->pdfsync) {
+        if (err != PDFSYNCERR_SUCCESS || !win->pdfsync) {
             DBG_OUT("Pdfsync: Sync file cannot be loaded!\n");
             WindowInfo_ShowMessage_Async(win, _TR("Synchronization file cannot be opened"), true);
-            return;
+            return true;
         }
+        gGlobalPrefs.m_enableTeXEnhancements = true;
     }
 
     int pageNo = POINT_OUT_OF_PAGE;
     double dblx = x, dbly = y;
     win->dm->cvtScreenToUser(&pageNo, &dblx, &dbly);
     if (pageNo == POINT_OUT_OF_PAGE) 
-        return;
+        return false;
     x = (UINT)dblx; y = (UINT)dbly;
 
     const PdfPageInfo *pageInfo = win->dm->getPageInfo(pageNo);
@@ -2544,7 +2549,7 @@ static void OnInverseSearch(WindowInfo *win, UINT x, UINT y)
     if (err != PDFSYNCERR_SUCCESS) {
         DBG_OUT("cannot sync from pdf to source!\n");
         WindowInfo_ShowMessage_Async(win, _TR("No synchronization info at this position"), true);
-        return;
+        return true;
     }
 
     TCHAR *inverseSearch = gGlobalPrefs.m_inverseSearchCmdLine;
@@ -2574,6 +2579,8 @@ static void OnInverseSearch(WindowInfo *win, UINT x, UINT y)
 
     if (inverseSearch != gGlobalPrefs.m_inverseSearchCmdLine)
         free(inverseSearch);
+
+    return true;
 }
 
 static void ChangePresentationMode(WindowInfo *win, PresentationMode mode)
@@ -2752,14 +2759,6 @@ static void OnSelectionStop(WindowInfo *win, int x, int y, bool aborted)
     win->RepaintAsync();
 }
 
-static void OnMouseLeftButtonDblClk(WindowInfo *win, int x, int y, WPARAM key)
-{
-    //DBG_OUT("Left button clicked on %d %d\n", x, y);
-    assert (win);
-    if (!win) return;
-    OnInverseSearch(win, x, y);
-}
-
 static void OnMouseLeftButtonDown(WindowInfo *win, int x, int y, WPARAM key)
 {
     //DBG_OUT("Left button clicked on %d %d\n", x, y);
@@ -2835,6 +2834,37 @@ static void OnMouseLeftButtonUp(WindowInfo *win, int x, int y, WPARAM key)
 
     win->mouseAction = MA_IDLE;
     win->linkOnLastButtonDown = NULL;
+}
+
+static void OnMouseLeftButtonDblClk(WindowInfo *win, int x, int y, WPARAM key)
+{
+    //DBG_OUT("Left button clicked on %d %d\n", x, y);
+    if (!win) return;
+
+    if ((win->fullScreen || win->presentation) && !key) {
+        // in presentation and fullscreen modes, left clicks turn the page,
+        // make two quick left clicks (AKA one double-click) turn two pages
+        OnMouseLeftButtonDown(win, x, y, key);
+        return;
+    }
+
+    bool dontSelect = false;
+    if (gGlobalPrefs.m_enableTeXEnhancements && !key)
+        dontSelect = OnInverseSearch(win, x, y);
+    if (dontSelect)
+        return;
+
+    if (!win->dm || !win->dm->isOverText(x, y))
+        return;
+
+    int pageNo;
+    double dX = x;
+    double dY = y;
+    if (win->dm->cvtScreenToUser(&pageNo, &dX, &dY))
+        win->dm->textSelection->SelectWordAt(pageNo, dX, dY);
+
+    UpdateTextSelection(win, false);
+    win->RepaintAsync();
 }
 
 static void OnMouseMiddleButtonDown(WindowInfo *win, int x, int y, int key)
@@ -5787,12 +5817,7 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
             break;
 
         case WM_LBUTTONDBLCLK:
-            if (win) {
-                if ((win->fullScreen || win->presentation) && !gGlobalPrefs.m_enableTeXEnhancements)
-                    OnMouseLeftButtonDown(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
-                else
-                    OnMouseLeftButtonDblClk(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
-            }
+            OnMouseLeftButtonDblClk(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
             break;
 
         case WM_LBUTTONDOWN:
@@ -6677,7 +6702,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         free(gGlobalPrefs.m_inverseSearchCmdLine);
         gGlobalPrefs.m_inverseSearchCmdLine = i.inverseSearchCmdLine;
         i.inverseSearchCmdLine = NULL;
-        gGlobalPrefs.m_enableTeXEnhancements = TRUE;
+        gGlobalPrefs.m_enableTeXEnhancements = true;
     }
     CurrLangNameSet(i.lang);
 

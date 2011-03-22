@@ -186,6 +186,21 @@ void PdfSelection::SelectUpTo(int pageNo, int glyphIx)
     }
 }
 
+void PdfSelection::SelectWordAt(int pageNo, double x, double y)
+{
+    int ix = FindClosestGlyph(pageNo, x, y);
+
+    for (; ix > 0; ix--)
+        if (!iswordchar(text[pageNo - 1][ix - 1]))
+            break;
+    StartAt(pageNo, ix);
+
+    for (; ix < lens[pageNo - 1]; ix++)
+        if (!iswordchar(text[pageNo - 1][ix]))
+            break;
+    SelectUpTo(pageNo, ix);
+}
+
 TCHAR *PdfSelection::ExtractText(TCHAR *lineSep)
 {
     VStrList lines;
