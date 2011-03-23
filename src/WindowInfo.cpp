@@ -226,7 +226,7 @@ void WindowInfo::ZoomToSelection(float factor, bool relative)
     assert(this->dm);
     if (!this->dm) return;
 
-    POINT pt;
+    PointI pt;
     bool zoomToPt = this->showSelection && this->selectionOnPage;
 
     if (zoomToPt) {
@@ -241,8 +241,8 @@ void WindowInfo::ZoomToSelection(float factor, bool relative)
         pt.x = CLAMP(pt.x, selRect.x, selRect.x + selRect.dx);
         pt.y = CLAMP(pt.y, selRect.y, selRect.y + selRect.dy);
 
-        ScrollState ss = { 0, pt.x, pt.y };
-        if (!this->dm->cvtScreenToUser(&ss.page, &ss.x, &ss.y) ||
+        ScrollState ss(0, pt.x, pt.y);
+        if (!this->dm->cvtScreenToUser(&ss.page, &ss) ||
             !this->dm->pageVisible(ss.page))
             zoomToPt = false;
     }

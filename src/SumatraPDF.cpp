@@ -1353,7 +1353,7 @@ static bool LoadPdfIntoWindow(
 
     DisplayMode displayMode = gGlobalPrefs.m_defaultDisplayMode;
     int startPage = 1;
-    ScrollState ss = { 1, -1, -1 };
+    ScrollState ss(1, -1, -1);
     bool showAsFullScreen = WIN_STATE_FULLSCREEN == gGlobalPrefs.m_windowState;
     int showType = gGlobalPrefs.m_windowState == WIN_STATE_MAXIMIZED || showAsFullScreen ? SW_MAXIMIZE : SW_NORMAL;
 
@@ -2051,10 +2051,9 @@ static void UpdateTextSelection(WindowInfo *win, bool select=true)
 
     if (select) {
         int pageNo;
-        double dX = win->selectionRect.x + win->selectionRect.dx;
-        double dY = win->selectionRect.y + win->selectionRect.dy;
-        if (win->dm->cvtScreenToUser(&pageNo, &dX, &dY))
-            win->dm->textSelection->SelectUpTo(pageNo, dX, dY);
+        PointD pt = win->selectionRect.BR().Convert<double>();
+        if (win->dm->cvtScreenToUser(&pageNo, &pt))
+            win->dm->textSelection->SelectUpTo(pageNo, pt.x, pt.y);
     }
 
     DeleteOldSelectionInfo(win);
@@ -2535,11 +2534,11 @@ static bool OnInverseSearch(WindowInfo *win, int x, int y)
     }
 
     int pageNo = POINT_OUT_OF_PAGE;
-    double dblx = x, dbly = y;
-    win->dm->cvtScreenToUser(&pageNo, &dblx, &dbly);
+    PointD pt(x, y);
+    win->dm->cvtScreenToUser(&pageNo, &pt);
     if (pageNo == POINT_OUT_OF_PAGE) 
         return false;
-    x = (UINT)dblx; y = (UINT)dbly;
+    x = (int)pt.x; y = (int)pt.y;
 
     const PdfPageInfo *pageInfo = win->dm->getPageInfo(pageNo);
     TCHAR srcfilepath[MAX_PATH];
@@ -2720,9 +2719,9 @@ static void OnSelectionStart(WindowInfo *win, int x, int y, WPARAM key)
     // Ctrl+drag forces a rectangular selection
     if (!(key & MK_CONTROL) || (key & MK_SHIFT)) {
         int pageNo;
-        double dX = x, dY = y;
-        if (win->dm->cvtScreenToUser(&pageNo, &dX, &dY)) {
-            win->dm->textSelection->StartAt(pageNo, dX, dY);
+        PointD pt(x, y);
+        if (win->dm->cvtScreenToUser(&pageNo, &pt)) {
+            win->dm->textSelection->StartAt(pageNo, pt.x, pt.y);
             win->mouseAction = MA_SELECTING_TEXT;
         }
     }
@@ -2777,7 +2776,7 @@ static void OnMouseLeftButtonDown(WindowInfo *win, int x, int y, WPARAM key)
 
     SetFocus(win->hwndFrame);
 
-    win->linkOnLastButtonDown = win->dm->getLinkAtPosition(x, y);
+    win->linkOnLastButtonDown = win->dm->getLinkAtPosition(PointI(x, y));
     win->dragStartPending = true;
     win->dragStartX = x;
     win->dragStartY = y;
@@ -2788,7 +2787,7 @@ static void OnMouseLeftButtonDown(WindowInfo *win, int x, int y, WPARAM key)
     // - pressing Ctrl forces a rectangular selection
     // - pressing Ctrl+Shift forces text selection
     // - in restricted mode, selections aren't allowed
-    if (gRestrictedUse || ((key & MK_SHIFT) || !win->dm->isOverText(x,y)) && !(key & MK_CONTROL))
+    if (gRestrictedUse || ((key & MK_SHIFT) || !win->dm->isOverText(x, y)) && !(key & MK_CONTROL))
         OnDraggingStart(win, x, y);
     else
         OnSelectionStart(win, x, y, key);
@@ -2814,7 +2813,7 @@ static void OnMouseLeftButtonUp(WindowInfo *win, int x, int y, WPARAM key)
 
     if (didDragMouse)
         /* pass */;
-    else if (win->linkOnLastButtonDown && win->dm->getLinkAtPosition(x, y) == win->linkOnLastButtonDown) {
+    else if (win->linkOnLastButtonDown && win->dm->getLinkAtPosition(PointI(x, y)) == win->linkOnLastButtonDown) {
         win->dm->goToTocLink(win->linkOnLastButtonDown);
         SetCursor(gCursorArrow);
     }
@@ -2858,10 +2857,9 @@ static void OnMouseLeftButtonDblClk(WindowInfo *win, int x, int y, WPARAM key)
         return;
 
     int pageNo;
-    double dX = x;
-    double dY = y;
-    if (win->dm->cvtScreenToUser(&pageNo, &dX, &dY))
-        win->dm->textSelection->SelectWordAt(pageNo, dX, dY);
+    PointD pt(x, y);
+    if (win->dm->cvtScreenToUser(&pageNo, &pt))
+        win->dm->textSelection->SelectWordAt(pageNo, pt.x, pt.y);
 
     UpdateTextSelection(win, false);
     win->RepaintAsync();
@@ -3146,11 +3144,14 @@ static void PrintToDevice(PdfEngine *pdfEngine, HDC hdc, LPDEVMODE devMode,
                 clipRegion.x0 = (float)r->x; clipRegion.x1 = (float)(r->x + r->dx);
                 clipRegion.y0 = (float)r->y; clipRegion.y1 = (float)(r->y + r->dy);
 
-                int rotation = pdfEngine->pageRotation(sel->pageNo) + dm_rotation;
+                SizeF sSize = r->Size().Convert<float>();
                 // Swap width and height for rotated documents
-                SizeD sSize = (rotation % 180) == 0 ? SizeD(r->dx, r->dy) : SizeD(r->dy, r->dx);
+                int rotation = pdfEngine->pageRotation(sel->pageNo) + dm_rotation;
+                if (rotation % 180 != 0)
+                    swap(sSize.dx, sSize.dy);
 
-                float zoom = (float)min((double)printableWidth / sSize.dx, (double)printableHeight / sSize.dy);
+                float zoom = min((float)printableWidth / sSize.dx,
+                                 (float)printableHeight / sSize.dy);
                 // use the correct zoom values, if the page fits otherwise
                 // and the user didn't ask for anything else (default setting)
                 if (PrintScaleShrink == scaleAdv)
@@ -3159,9 +3160,9 @@ static void PrintToDevice(PdfEngine *pdfEngine, HDC hdc, LPDEVMODE devMode,
                     zoom = dpiFactor;
 
 #ifdef USE_GDI_FOR_PRINTING
-                RectI rc((LONG)(printableWidth - sSize.dx * zoom) / 2,
-                         (LONG)(printableHeight - sSize.dy * zoom) / 2,
-                         printableWidth, printableHeight);
+                RectI rc = RectI::FromXY((int)(printableWidth - sSize.dx * zoom) / 2,
+                                         (int)(printableHeight - sSize.dy * zoom) / 2,
+                                         paperWidth, paperHeight);
                 pdfEngine->renderPage(hdc, sel->pageNo, &rc, NULL, zoom, dm_rotation, &clipRegion, Target_Print);
 #else
                 RenderedBitmap *bmp = pdfEngine->renderBitmap(sel->pageNo, zoom, dm_rotation, &clipRegion, Target_Print, gUseGdiRenderer);
@@ -3191,19 +3192,19 @@ static void PrintToDevice(PdfEngine *pdfEngine, HDC hdc, LPDEVMODE devMode,
             // MM_TEXT: Each logical unit is mapped to one device pixel.
             // Positive x is to the right; positive y is down.
 
-            SizeD pSize = pdfEngine->pageSize(pageNo);
+            SizeF pSize = pdfEngine->pageSize(pageNo).Convert<float>();
             int rotation = pdfEngine->pageRotation(pageNo);
             // Turn the document by 90 deg if it isn't in portrait mode
             if (pSize.dx > pSize.dy) {
                 rotation += 90;
-                pSize = SizeD(pSize.dy, pSize.dx);
+                swap(pSize.dx, pSize.dy);
             }
             // make sure not to print upside-down
             rotation = (rotation % 180) == 0 ? 0 : 270;
             // finally turn the page by (another) 90 deg in landscape mode
             if (!bPrintPortrait) {
                 rotation = (rotation + 90) % 360;
-                pSize = SizeD(pSize.dy, pSize.dx);
+                swap(pSize.dx, pSize.dy);
             }
 
             // dpiFactor means no physical zoom
@@ -3222,10 +3223,10 @@ static void PrintToDevice(PdfEngine *pdfEngine, HDC hdc, LPDEVMODE devMode,
                 // and the whole document page on the physical paper
                 fz_rect rect = fz_bboxtorect(pdfEngine->pageContentBox(pageNo, Target_Print));
                 fz_rect cbox = fz_transformrect(pdfEngine->viewctm(pageNo, 1.0, rotation), rect);
-                zoom = (float)min((double)printableWidth / (cbox.x1 - cbox.x0),
-                              min((double)printableHeight / (cbox.y1 - cbox.y0),
-                              min((double)paperWidth / pSize.dx,
-                                  (double)paperHeight / pSize.dy)));
+                zoom = min((float)printableWidth / (cbox.x1 - cbox.x0),
+                       min((float)printableHeight / (cbox.y1 - cbox.y0),
+                       min((float)paperWidth / pSize.dx,
+                           (float)paperHeight / pSize.dy)));
                 // use the correct zoom values, if the page fits otherwise
                 // and the user didn't ask for anything else (default setting)
                 if (PrintScaleShrink == scaleAdv && dpiFactor < zoom)
@@ -3242,9 +3243,9 @@ static void PrintToDevice(PdfEngine *pdfEngine, HDC hdc, LPDEVMODE devMode,
             }
 
 #ifdef USE_GDI_FOR_PRINTING
-            RectI rc((LONG)(printableWidth - pSize.dx * zoom) / 2 - horizOffset,
-                     (LONG)(printableHeight - pSize.dy * zoom) / 2 - vertOffset,
-                     printableWidth, printableHeight);
+            RectI rc = RectI::FromXY((int)(printableWidth - pSize.dx * zoom) / 2 - horizOffset,
+                                     (int)(printableHeight - pSize.dy * zoom) / 2 - vertOffset,
+                                     paperWidth, paperHeight);
             pdfEngine->renderPage(hdc, pageNo, &rc, NULL, zoom, rotation, NULL, Target_Print);
 #else
             RenderedBitmap *bmp = pdfEngine->renderBitmap(pageNo, zoom, rotation, NULL, Target_Print, gUseGdiRenderer);
@@ -5774,14 +5775,14 @@ static void CreateInfotipForPdfLink(WindowInfo *win, int pageNo, pdf_link *link)
 {
     ScopedMem<TCHAR> linkPath(win->dm->getLinkPath(link));
     fz_rect r = win->dm->rectCvtUserToScreen(pageNo, link->rect);
-    win->CreateInfotip(linkPath, &Rect<float>(r.x0, r.y0, r.x1, r.y1).Convert<int>());
+    win->CreateInfotip(linkPath, &RectF(r.x0, r.y0, r.x1, r.y1).Convert<int>());
 }
 
 static void CreateInfotipForComment(WindowInfo *win, int pageNo, pdf_annot *annot)
 {
     ScopedMem<TCHAR> comment(Str::Conv::FromUtf8(fz_tostrbuf(fz_dictgets(annot->obj, "Contents"))));
     fz_rect r = win->dm->rectCvtUserToScreen(pageNo, annot->rect);
-    win->CreateInfotip(comment, &Rect<float>(r.x0, r.y0, r.x1, r.y1).Convert<int>());
+    win->CreateInfotip(comment, &RectF(r.x0, r.y0, r.x1, r.y1).Convert<int>());
 }
 
 static int  gDeltaPerLine = 0;         // for mouse wheel logic
@@ -5871,21 +5872,22 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
                     break;
                 case MA_IDLE:
                     if (GetCursor() && GetCursorPos(&pt) && ScreenToClient(hwnd, &pt)) {
-                        pdf_link *link = win->dm->getLinkAtPosition(pt.x, pt.y);
+                        PointI pti(pt.x, pt.y);
+                        pdf_link *link = win->dm->getLinkAtPosition(pti);
                         if (link) {
-                            int pageNo = win->dm->getPageNoByPoint(pt.x, pt.y);
+                            int pageNo = win->dm->getPageNoByPoint(pti);
                             CreateInfotipForPdfLink(win, pageNo, link);
                             SetCursor(gCursorHand);
                             return TRUE;
                         }
-                        pdf_annot *comment = win->dm->getCommentAtPosition(pt.x, pt.y);
+                        pdf_annot *comment = win->dm->getCommentAtPosition(pti);
                         if (comment) {
-                            int pageNo = win->dm->getPageNoByPoint(pt.x, pt.y);
+                            int pageNo = win->dm->getPageNoByPoint(pti);
                             CreateInfotipForComment(win, pageNo, comment);
                         }
                         else
                             win->DeleteInfotip();
-                        if (win->dm->isOverText(pt.x, pt.y))
+                        if (win->dm->isOverText(pti.x, pti.y))
                             SetCursor(gCursorIBeam);
                         else
                             SetCursor(gCursorArrow);
@@ -5997,7 +5999,7 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
 
                 short delta = GET_WHEEL_DELTA_WPARAM(wParam);
                 float factor = delta < 0 ? ZOOM_OUT_FACTOR : ZOOM_IN_FACTOR;
-                win->dm->zoomBy(factor, &pt);
+                win->dm->zoomBy(factor, &PointI(pt.x, pt.y));
                 win->UpdateToolbarState();
                 return 0;
             }

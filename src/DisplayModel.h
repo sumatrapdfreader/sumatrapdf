@@ -86,11 +86,14 @@ typedef struct PdfPageInfo {
 } PdfPageInfo;
 
 /* The current scroll state (needed for saving/restoring the scroll position) */
-typedef struct ScrollState {
+/* coordinates are in user space units (per page) */
+class ScrollState : public PointD {
+public:
+    ScrollState() : PointD(), page(0) { }
+    ScrollState(int page, double x, double y) : PointD(x, y), page(page) { }
+
     int page;
-    double x; /* in user space units (per page) */
-    double y; /* in user space units (per page) */
-} ScrollState;
+};
 
 /* Information needed to drive the display of a given PDF document on a screen.
    You can think of it as a model in the MVC pardigm.
@@ -186,23 +189,23 @@ public:
     void            scrollYTo(int yOff);
     void            scrollYBy(int dy, bool changePage);
 
-    void            zoomTo(float zoomVirtual, POINT *fixPt=NULL);
-    void            zoomBy(float zoomFactor, POINT *fixPt=NULL);
+    void            zoomTo(float zoomVirtual, PointI *fixPt=NULL);
+    void            zoomBy(float zoomFactor, PointI *fixPt=NULL);
     void            rotateBy(int rotation);
 
     TCHAR *         getTextInRegion(int pageNo, RectD *region);
     TCHAR *         extractAllText(RenderTarget target=Target_View);
 
-    pdf_link *      getLinkAtPosition(int x, int y);
+    pdf_link *      getLinkAtPosition(PointI pt);
     int             getPdfLinks(int pageNo, pdf_link **links);
     TCHAR *         getLinkPath(pdf_link *link);
     void            goToTocLink(pdf_link *link);
     void            goToNamedDest(const char *name);
     bool            isOverText(int x, int y);
-    pdf_annot *     getCommentAtPosition(int x, int y);
+    pdf_annot *     getCommentAtPosition(PointI pt);
 
-    bool            cvtUserToScreen(int pageNo, double *x, double *y);
-    bool            cvtScreenToUser(int *pageNo, double *x, double *y);
+    bool            cvtUserToScreen(int pageNo, PointD *pt);
+    bool            cvtScreenToUser(int *pageNo, PointD *pt);
     bool            rectCvtUserToScreen(int pageNo, RectD *r);
     fz_rect         rectCvtUserToScreen(int pageNo, fz_rect rect);
     bool            rectCvtScreenToUser(int *pageNo, RectD *r);
@@ -214,7 +217,7 @@ public:
     int             lastFoundPage(void) const { return _pdfSearch->findPage; }
     bool            bFoundText;
 
-    int             getPageNoByPoint(int x, int y);
+    int             getPageNoByPoint(PointI pt);
 
     bool            ShowResultRectToScreen(PdfSel *res);
 

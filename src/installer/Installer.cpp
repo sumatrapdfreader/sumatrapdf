@@ -1432,8 +1432,8 @@ void CalcLettersLayout(Graphics& g, Font *f, int dx)
     const REAL letterSpacing = -12.f;
     REAL totalDx = -letterSpacing; // counter last iteration of the loop
     WCHAR s[2] = { 0 };
-    PointF origin(0.f, 0.f);
-    RectF bbox;
+    Gdiplus::PointF origin(0.f, 0.f);
+    Gdiplus::RectF bbox;
     for (int i=0; i<dimof(gLetters); i++) {
         li = &gLetters[i];
         s[0] = li->c;
@@ -1461,8 +1461,8 @@ REAL DrawMessage(Graphics &g, TCHAR *msg, REAL y, REAL dx, Color color)
     ScopedMem<WCHAR> s(Str::Conv::ToWStr(msg));
 
     Font f(L"Impact", 16, FontStyleRegular);
-    RectF maxbox(0, y, dx, 0);
-    RectF bbox;
+    Gdiplus::RectF maxbox(0, y, dx, 0);
+    Gdiplus::RectF bbox;
     g.MeasureString(s, -1, &f, maxbox, &bbox);
 
     bbox.X += (dx - bbox.Width) / 2.f;
@@ -1496,12 +1496,12 @@ void DrawSumatraLetters(Graphics &g, Font *f, Font *fVer, REAL y)
 #ifdef DRAW_TEXT_SHADOW
         // draw shadow first
         SolidBrush b2(li->colShadow);
-        PointF o2(li->x - 3.f, y + 4.f + li->dyOff);
+        Gdiplus::PointF o2(li->x - 3.f, y + 4.f + li->dyOff);
         g.DrawString(s, 1, f, o2, &b2);
 #endif
 
         SolidBrush b1(li->col);
-        PointF o1(li->x, y + li->dyOff);
+        Gdiplus::PointF o1(li->x, y + li->dyOff);
         g.DrawString(s, 1, f, o1, &b1);
         g.RotateTransform(li->rotation, MatrixOrderAppend);
         g.ResetTransform();
@@ -1516,10 +1516,10 @@ void DrawSumatraLetters(Graphics &g, Font *f, Font *fVer, REAL y)
     ScopedMem<WCHAR> ver_s(Str::Conv::ToWStr(_T("v") CURR_VERSION_STR));
 #ifdef DRAW_TEXT_SHADOW
     SolidBrush b1(Color(0,0,0));
-    g.DrawString(ver_s, -1, fVer, PointF(x2-2,y2-1), &b1);
+    g.DrawString(ver_s, -1, fVer, Gdiplus::PointF(x2-2,y2-1), &b1);
 #endif
     SolidBrush b2(Color(255,255,255));
-    g.DrawString(ver_s, -1, fVer, PointF(x2,y2), &b2);
+    g.DrawString(ver_s, -1, fVer, Gdiplus::PointF(x2,y2), &b2);
     g.ResetTransform();
 }
 

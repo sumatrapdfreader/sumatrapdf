@@ -18,11 +18,16 @@ public:
 
     template <typename S>
     Point<S> Convert() const {
-        return Point<S>((S)floor(x + 0.5), (S)floor(y + 0.5));
+        return Point<S>((S)x, (S)y);
+    }
+    template <>
+    Point<int> Convert() const {
+        return Point<int>((int)floor(x + 0.5), (int)floor(y + 0.5));
     }
 };
 
 typedef Point<int> PointI;
+typedef Point<float> PointF;
 typedef Point<double> PointD;
 
 template <typename T>
@@ -36,11 +41,16 @@ public :
 
     template <typename S>
     Size<S> Convert() const {
-        return Size<S>((S)floor(dx + 0.5), (S)floor(dy + 0.5));
+        return Size<S>((S)dx, (S)dy);
+    }
+    template <>
+    Size<int> Convert() const {
+        return Size<int>((int)floor(dx + 0.5), (int)floor(dy + 0.5));
     }
 };
 
 typedef Size<int> SizeI;
+typedef Size<float> SizeF;
 typedef Size<double> SizeD;
 
 template <typename T>
@@ -53,6 +63,7 @@ public:
     Rect() : x(0), y(0), dx(0), dy(0) { }
     Rect(T x, T y, T dx, T dy) : x(x), y(y), dx(dx), dy(dy) { }
     Rect(Point<T> pt, Size<T> size) : x(pt.x), y(pt.y), dx(size.dx), dy(size.dy) { }
+    Rect(Point<T> TL, Point<T> BR) : x(TL.x), y(TL.y), dx(BR.x - TL.x), dy(BR.y - TL.y) { }
 
     static Rect FromXY(T xs, T ys, T xe, T ye) {
         if (xs > xe)
@@ -64,10 +75,12 @@ public:
 
     template <typename S>
     Rect<S> Convert() const {
-        // Hack: round when converting from double to int but
-        //       don't change the value when converting from int to double
-        return Rect<S>((S)floor(x + 0.5), (S)floor(y + 0.5),
-                       (S)floor(dx + 0.5), (S)floor(dy + 0.5));
+        return Rect<S>((S)x, (S)y, (S)dx, (S)dy);
+    }
+    template <>
+    Rect<int> Convert() const {
+        return Rect<int>((int)floor(x + 0.5), (int)floor(y + 0.5),
+                         (int)floor(dx + 0.5), (int)floor(dy + 0.5));
     }
 
     bool IsEmpty() const {
@@ -137,6 +150,7 @@ public:
 };
 
 typedef Rect<int> RectI;
+typedef Rect<float> RectF;
 typedef Rect<double> RectD;
 
 #endif

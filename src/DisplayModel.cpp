@@ -120,7 +120,7 @@ bool DisplayModel::displayStateFromModel(DisplayState *ds)
     if (presMode)
         ds->scrollPos = PointI();
     else
-        ds->scrollPos = PointD(ss.x, ss.y).Convert<int>();
+        ds->scrollPos = ss.Convert<int>();
 
     free(ds->decryptionKey);
     ds->decryptionKey = pdfEngine->getDecryptionKey();
@@ -750,26 +750,22 @@ void DisplayModel::recalcVisibleParts(void)
 /* Map rectangle <r> on the page <pageNo> to point on the screen. */
 bool DisplayModel::rectCvtUserToScreen(int pageNo, RectD *r)
 {
-    double sx = r->x, ex = r->x + r->dx;
-    double sy = r->y, ey = r->y + r->dy;
-
-    if (!cvtUserToScreen(pageNo, &sx, &sy) || !cvtUserToScreen(pageNo, &ex, &ey))
+    PointD TL = r->TL(), BR = r->BR();
+    if (!cvtUserToScreen(pageNo, &TL) || !cvtUserToScreen(pageNo, &BR))
         return false;
 
-    *r = RectD::FromXY(sx, sy, ex, ey);
+    *r = RectD(TL, BR);
     return true;
 }
 
 fz_rect DisplayModel::rectCvtUserToScreen(int pageNo, fz_rect rect)
 {
-    double x0 = rect.x0, x1 = rect.x1;
-    double y0 = rect.y0, y1 = rect.y1;
-
-    if (!cvtUserToScreen(pageNo, &x0, &y0) || !cvtUserToScreen(pageNo, &x1, &y1))
+    PointD TL(rect.x0, rect.y0), BR(rect.x1, rect.y1);
+    if (!cvtUserToScreen(pageNo, &TL) || !cvtUserToScreen(pageNo, &BR))
         return fz_emptyrect;
     
-    rect.x0 = (float)MIN(x0, x1); rect.x1 = (float)MAX(x0, x1);
-    rect.y0 = (float)MIN(y0, y1); rect.y1 = (float)MAX(y0, y1);
+    rect.x0 = (float)MIN(TL.x, BR.x); rect.x1 = (float)MAX(TL.x, BR.x);
+    rect.y0 = (float)MIN(TL.y, BR.y); rect.y1 = (float)MAX(TL.y, BR.y);
     
     return rect;
 }
@@ -777,17 +773,14 @@ fz_rect DisplayModel::rectCvtUserToScreen(int pageNo, fz_rect rect)
 /* Map rectangle <r> on the page <pageNo> to point on the screen. */
 bool DisplayModel::rectCvtScreenToUser(int *pageNo, RectD *r)
 {
-    double sx = r->x, ex = r->x + r->dx;
-    double sy = r->y, ey = r->y + r->dy;
-
-    if (!cvtScreenToUser(pageNo, &sx, &sy) || !cvtScreenToUser(pageNo, &ex, &ey))
+    PointD TL = r->TL(), BR = r->BR();
+    if (!cvtScreenToUser(pageNo, &TL) || !cvtScreenToUser(pageNo, &BR))
         return false;
-
-    *r = RectD::FromXY(sx, sy, ex, ey);
+    *r = RectD(TL, BR);
     return true;
 }
 
-int DisplayModel::getPageNoByPoint(int x, int y) 
+int DisplayModel::getPageNoByPoint(PointI pt) 
 {
     // no reasonable answer possible, if zoom hasn't been set yet
     if (!_zoomReal)
@@ -799,7 +792,7 @@ int DisplayModel::getPageNoByPoint(int x, int y)
         if (!pageInfo->shown)
             continue;
 
-        if (pageInfo->pageOnScreen.Inside(PointI(x, y)))
+        if (pageInfo->pageOnScreen.Inside(pt))
             return pageNo;
     }
     return POINT_OUT_OF_PAGE;
@@ -816,24 +809,24 @@ int DisplayModel::getPageNoByPoint(int x, int y)
          Another way: build a list with only those visible, so we don't
          even have to traverse those that are invisible.
    */
-pdf_link *DisplayModel::getLinkAtPosition(int x, int y)
+pdf_link *DisplayModel::getLinkAtPosition(PointI pt)
 {
     int pageNo = INVALID_PAGE_NO;
-    double posX = x, posY = y;
-    if (!cvtScreenToUser(&pageNo, &posX, &posY))
+    PointD pos = pt.Convert<double>();
+    if (!cvtScreenToUser(&pageNo, &pos))
         return NULL;
 
-    return pdfEngine->getLinkAtPosition(pageNo, (float)posX, (float)posY);
+    return pdfEngine->getLinkAtPosition(pageNo, (float)pos.x, (float)pos.y);
 }
 
-pdf_annot *DisplayModel::getCommentAtPosition(int x, int y)
+pdf_annot *DisplayModel::getCommentAtPosition(PointI pt)
 {
     int pageNo = INVALID_PAGE_NO;
-    double posX = x, posY = y;
-    if (!cvtScreenToUser(&pageNo, &posX, &posY))
+    PointD pos = pt.Convert<double>();
+    if (!cvtScreenToUser(&pageNo, &pos))
         return NULL;
 
-    return pdfEngine->getCommentAtPosition(pageNo, (float)posX, (float)posY);
+    return pdfEngine->getCommentAtPosition(pageNo, (float)pos.x, (float)pos.y);
 }
 
 int DisplayModel::getPdfLinks(int pageNo, pdf_link **links)
@@ -847,11 +840,11 @@ int DisplayModel::getPdfLinks(int pageNo, pdf_link **links)
 bool DisplayModel::isOverText(int x, int y)
 {
     int pageNo = INVALID_PAGE_NO;
-    double posX = x, posY = y;
-    if (!cvtScreenToUser(&pageNo, &posX, &posY))
+    PointD pos(x, y);
+    if (!cvtScreenToUser(&pageNo, &pos))
         return false;
 
-    return textSelection->IsOverGlyph(pageNo, posX, posY);
+    return textSelection->IsOverGlyph(pageNo, pos.x, pos.y);
 }
 
 void DisplayModel::renderVisibleParts(void)
@@ -1216,15 +1209,14 @@ void DisplayModel::scrollYBy(int dy, bool changePage)
     RepaintDisplay();
 }
 
-void DisplayModel::zoomTo(float zoomVirtual, POINT *fixPt)
+void DisplayModel::zoomTo(float zoomVirtual, PointI *fixPt)
 {
     ScrollState ss;
     if (getScrollState(&ss)) {
         ScrollState center;
         if (fixPt) {
-            center.x = fixPt->x;
-            center.y = fixPt->y;
-            if (!cvtScreenToUser(&center.page, &center.x, &center.y))
+            center = ScrollState(0, fixPt->x, fixPt->y);
+            if (!cvtScreenToUser(&center.page, &center))
                 fixPt = NULL;
         }
 
@@ -1238,7 +1230,7 @@ void DisplayModel::zoomTo(float zoomVirtual, POINT *fixPt)
 
         if (fixPt) {
             // scroll so that the fix point remains in the same screen location after zooming
-            cvtUserToScreen(center.page, &center.x, &center.y);
+            cvtUserToScreen(center.page, &center);
             if ((int)(center.x - fixPt->x) != 0)
                 scrollXBy((int)(center.x - fixPt->x));
             if ((int)(center.y - fixPt->y) != 0)
@@ -1247,7 +1239,7 @@ void DisplayModel::zoomTo(float zoomVirtual, POINT *fixPt)
     }
 }
 
-void DisplayModel::zoomBy(float zoomFactor, POINT *fixPt)
+void DisplayModel::zoomBy(float zoomFactor, PointI *fixPt)
 {
     // zoomTo expects a zoomVirtual, so undo the _dpiFactor here
     float newZoom = 100.0f * _zoomReal / _dpiFactor * zoomFactor;
@@ -1299,37 +1291,37 @@ PdfSel *DisplayModel::Find(PdfSearchDirection direction, TCHAR *text, UINT fromP
     return NULL;
 }
 
-bool DisplayModel::cvtUserToScreen(int pageNo, double *x, double *y)
+bool DisplayModel::cvtUserToScreen(int pageNo, PointD *pt)
 {
     PdfPageInfo *pageInfo = getPageInfo(pageNo);
     if (!pageInfo)
         return false;
 
-    fz_point p = { (float)*x, (float)*y };
+    fz_point p = { (float)pt->x, (float)pt->y };
     fz_matrix ctm = pdfEngine->viewctm(pageNo, _zoomReal, _rotation);
     fz_point tp = fz_transformpoint(ctm, p);
 
-    *x = tp.x + 0.5 + pageInfo->currPos.x - areaOffset.x;
-    *y = tp.y + 0.5 + pageInfo->currPos.y - areaOffset.y;
+    pt->x = tp.x + 0.5 + pageInfo->currPos.x - areaOffset.x;
+    pt->y = tp.y + 0.5 + pageInfo->currPos.y - areaOffset.y;
     return true;
 }
 
-bool DisplayModel::cvtScreenToUser(int *pageNo, double *x, double *y)
+bool DisplayModel::cvtScreenToUser(int *pageNo, PointD *pt)
 {
-    *pageNo = getPageNoByPoint((int)*x, (int)*y);
+    *pageNo = getPageNoByPoint(pt->Convert<int>());
     if (*pageNo == POINT_OUT_OF_PAGE) 
         return false;
     const PdfPageInfo *pageInfo = getPageInfo(*pageNo);
 
     fz_point p;
-    p.x = (float)(*x - 0.5 - pageInfo->currPos.x + areaOffset.x);
-    p.y = (float)(*y - 0.5 - pageInfo->currPos.y + areaOffset.y);
+    p.x = (float)(pt->x - 0.5 - pageInfo->currPos.x + areaOffset.x);
+    p.y = (float)(pt->y - 0.5 - pageInfo->currPos.y + areaOffset.y);
 
     fz_matrix ctm = pdfEngine->viewctm(*pageNo, _zoomReal, _rotation);
     fz_point tp = fz_transformpoint(fz_invertmatrix(ctm), p);
 
-    *x = tp.x;
-    *y = tp.y;
+    pt->x = tp.x;
+    pt->y = tp.y;
     return true;
 }
 
@@ -1457,35 +1449,35 @@ void DisplayModel::goToPdfDest(fz_obj *dest)
 {
     int pageNo = pdfEngine->findPageNo(dest);
     if (pageNo > 0) {
-        double scrollY = 0, scrollX = -1;
+        PointD scroll(-1, 0);
         fz_obj *obj = fz_arrayget(dest, 1);
         if (Str::Eq(fz_toname(obj), "XYZ")) {
-            scrollX = fz_toreal(fz_arrayget(dest, 2));
-            scrollY = fz_toreal(fz_arrayget(dest, 3));
-            cvtUserToScreen(pageNo, &scrollX, &scrollY);
+            scroll.x = fz_toreal(fz_arrayget(dest, 2));
+            scroll.y = fz_toreal(fz_arrayget(dest, 3));
+            cvtUserToScreen(pageNo, &scroll);
 
             // goToPage needs scrolling info relative to the page's top border
             // and the page line's left margin
             PdfPageInfo * pageInfo = getPageInfo(pageNo);
             // TODO: These values are not up-to-date, if the page has not been shown yet
             if (pageInfo->shown) {
-                scrollX -= pageInfo->pageOnScreen.x;
-                scrollY -= pageInfo->pageOnScreen.y;
+                scroll.x -= pageInfo->pageOnScreen.x;
+                scroll.y -= pageInfo->pageOnScreen.y;
             }
 
             // NULL values for the coordinates mean: keep the current position
             if (fz_isnull(fz_arrayget(dest, 2)))
-                scrollX = -1;
+                scroll.x = -1;
             if (fz_isnull(fz_arrayget(dest, 3))) {
                 pageInfo = getPageInfo(currentPageNo());
-                scrollY = -(pageInfo->pageOnScreen.y - _padding->pageBorderTop);
-                scrollY = MAX(scrollY, 0); // Adobe Reader never shows the previous page
+                scroll.y = -(pageInfo->pageOnScreen.y - _padding->pageBorderTop);
+                scroll.y = MAX(scroll.y, 0); // Adobe Reader never shows the previous page
             }
         }
         else if (Str::Eq(fz_toname(obj), "FitR")) {
-            scrollX = fz_toreal(fz_arrayget(dest, 2)); // left
-            scrollY = fz_toreal(fz_arrayget(dest, 5)); // top
-            cvtUserToScreen(pageNo, &scrollX, &scrollY);
+            scroll.x = fz_toreal(fz_arrayget(dest, 2)); // left
+            scroll.y = fz_toreal(fz_arrayget(dest, 5)); // top
+            cvtUserToScreen(pageNo, &scroll);
             // TODO: adjust zoom so that the bottom right corner is also visible?
 
             // goToPage needs scrolling info relative to the page's top border
@@ -1493,8 +1485,8 @@ void DisplayModel::goToPdfDest(fz_obj *dest)
             PdfPageInfo * pageInfo = getPageInfo(pageNo);
             // TODO: These values are not up-to-date, if the page has not been shown yet
             if (pageInfo->shown) {
-                scrollX -= pageInfo->pageOnScreen.x;
-                scrollY -= pageInfo->pageOnScreen.y;
+                scroll.x -= pageInfo->pageOnScreen.x;
+                scroll.y -= pageInfo->pageOnScreen.y;
             }
         }
         /* // ignore author-set zoom settings (at least as long as there's no way to overrule them)
@@ -1503,7 +1495,7 @@ void DisplayModel::goToPdfDest(fz_obj *dest)
             _appData->UpdateToolbarState();
         }
         // */
-        goToPage(pageNo, (int)scrollY, true, (int)scrollX);
+        goToPage(pageNo, (int)scroll.y, true, (int)scroll.x);
     }
 }
 
@@ -1644,7 +1636,7 @@ bool DisplayModel::getScrollState(ScrollState *state)
         return true;
     }
     
-    bool result = cvtScreenToUser(&state->page, &state->x, &state->y);
+    bool result = cvtScreenToUser(&state->page, state);
     // Remember to show the margin, if it's currently visible
     if (pageInfo->screenX > 0)
         state->x = -1;
@@ -1661,18 +1653,17 @@ void DisplayModel::setScrollState(ScrollState *state)
     if (state->x < 0 && state->y < 0)
         return;
 
-    double newX = max(state->x, 0);
-    double newY = max(state->y, 0);
-    cvtUserToScreen(state->page, &newX, &newY);
+    PointD newPt(max(state->x, 0), max(state->y, 0));
+    cvtUserToScreen(state->page, &newPt);
 
     // Also show the margins, if this has been requested
     if (state->x < 0)
-        newX = -1;
+        newPt.x = -1;
     else
-        newX += areaOffset.x;
+        newPt.x += areaOffset.x;
     if (state->y < 0)
-        newY = 0;
-    goToPage(state->page, (int)newY, false, (int)newX);
+        newPt.y = 0;
+    goToPage(state->page, (int)newPt.y, false, (int)newPt.x);
 }
 
 /* Records the current scroll state for later navigating back to. */
