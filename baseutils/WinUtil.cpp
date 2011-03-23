@@ -67,14 +67,37 @@ void SeeLastError(DWORD err) {
 // called needs to free() the result
 TCHAR *ReadRegStr(HKEY keySub, const TCHAR *keyName, const TCHAR *valName)
 {
-    TCHAR val[MAX_PATH+8] = {0};
-    DWORD valLenCb = sizeof(val);
-    LONG res = SHGetValue(keySub, keyName, valName, NULL, (VOID *)val, &valLenCb);
+    TCHAR *val = NULL;
+    REGSAM access = KEY_READ;
+    HKEY hKey;
+TryAgainWOW64:
+    LONG res = RegOpenKeyEx(keySub, keyName, 0, access, &hKey);
+    if (ERROR_SUCCESS == res) {
+        DWORD valLen;
+        res = RegQueryValueEx(hKey, valName, NULL, NULL, NULL, &valLen);
+        if (ERROR_SUCCESS == res) {
+            val = SAZA(TCHAR, valLen / sizeof(TCHAR) + 1);
+            res = RegQueryValueEx(hKey, valName, NULL, NULL, (LPBYTE)val, &valLen);
+            if (ERROR_SUCCESS != res) {
+                free(val);
+                val = NULL;
+            }
+        }
+        RegCloseKey(hKey);
+    }
+    if (ERROR_FILE_NOT_FOUND == res && HKEY_LOCAL_MACHINE == keySub && KEY_READ == access) {
+        // try the (non-)64-bit key as well, as HKLM\Software is not shared between 32-bit and
+        // 64-bit applications per http://msdn.microsoft.com/en-us/library/aa384253(v=vs.85).aspx
+#ifdef _WIN64
+        access = KEY_READ | KEY_WOW64_32KEY;
+#else
+        access = KEY_READ | KEY_WOW64_64KEY;
+#endif
+        goto TryAgainWOW64;
+    }
     if (ERROR_SUCCESS != res && ERROR_FILE_NOT_FOUND != res)
         SeeLastError(res);
-    if (ERROR_SUCCESS != res)
-        return NULL;
-    return Str::Dup(val);
+    return val;
 }
 
 bool WriteRegStr(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, const TCHAR *value)
