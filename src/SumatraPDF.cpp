@@ -2841,7 +2841,7 @@ static void OnMouseLeftButtonDblClk(WindowInfo *win, int x, int y, WPARAM key)
     //DBG_OUT("Left button clicked on %d %d\n", x, y);
     if (!win) return;
 
-    if ((win->fullScreen || win->presentation) && !key) {
+    if ((win->fullScreen || win->presentation) && !(key & ~MK_LBUTTON)) {
         // in presentation and fullscreen modes, left clicks turn the page,
         // make two quick left clicks (AKA one double-click) turn two pages
         OnMouseLeftButtonDown(win, x, y, key);
@@ -2849,7 +2849,7 @@ static void OnMouseLeftButtonDblClk(WindowInfo *win, int x, int y, WPARAM key)
     }
 
     bool dontSelect = false;
-    if (gGlobalPrefs.m_enableTeXEnhancements && !key)
+    if (gGlobalPrefs.m_enableTeXEnhancements && !(key & ~MK_LBUTTON))
         dontSelect = OnInverseSearch(win, x, y);
     if (dontSelect)
         return;
