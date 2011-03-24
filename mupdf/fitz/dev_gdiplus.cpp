@@ -88,8 +88,9 @@ public:
 	Graphics *graphics;
 	fz_device *dev;
 	fz_hashtable *outlines, *fontCollections;
+	float *t3color;
 
-	userData(HDC hDC, fz_bbox clip) : stack(new userDataStackItem()), dev(NULL), outlines(NULL), fontCollections(NULL)
+	userData(HDC hDC, fz_bbox clip) : stack(new userDataStackItem()), dev(NULL), outlines(NULL), fontCollections(NULL), t3color(NULL)
 	{
 		assert(GetMapMode(hDC) == MM_TEXT);
 		graphics = _setup(new Graphics(hDC));
@@ -529,7 +530,12 @@ static Brush *
 gdiplusgetbrush(void *user, fz_colorspace *colorspace, float *color, float alpha)
 {
 	float rgb[3];
-	fz_convertcolor(colorspace, color, fz_devicergb, rgb);
+	
+	if (!((userData *)user)->t3color)
+		fz_convertcolor(colorspace, color, fz_devicergb, rgb);
+	else
+		memcpy(rgb, ((userData *)user)->t3color, sizeof(rgb));
+	
 	return new SolidBrush(Color(((userData *)user)->getAlpha(alpha) * 255,
 		rgb[0] * 255, rgb[1] * 255, rgb[2] * 255));
 }
@@ -941,26 +947,25 @@ gdiplusrunt3text(void *user, fz_text *text, fz_matrix ctm,
 	if (gpath)
 		fz_warn("stroking Type 3 glyphs is not supported");
 	
-	fz_font *font = text->font;
+	float rgb[3];
+	fz_convertcolor(colorspace, color, fz_devicergb, rgb);
+	((userData *)user)->t3color = rgb;
 	
+	fz_font *font = text->font;
 	for (int i = 0; i < text->len; i++)
 	{
 		int gid = text->els[i].gid;
 		if (gid < 0 || gid > 255 || !font->t3procs[gid])
 			continue;
 		
-		fz_bbox bbox;
-		fz_device *dev = fz_newbboxdevice(&bbox);
-		font->t3run((pdf_xref_s *)font->t3xref, font->t3resources, font->t3procs[gid], dev, fz_concat(font->t3matrix, text->trm));
-		fz_freedevice(dev);
-		
 		fz_matrix ctm2 = fz_concat(fz_translate(text->els[i].x, text->els[i].y), ctm);
 		ctm2 = fz_concat(text->trm, ctm2);
 		ctm2 = fz_concat(font->t3matrix, ctm2);
-		ctm2 = fz_concat(fz_translate(bbox.x0, bbox.y0), ctm2);
 		
 		font->t3run((pdf_xref_s *)font->t3xref, font->t3resources, font->t3procs[gid], ((userData *)user)->dev, ctm2);
 	}
+	
+	((userData *)user)->t3color = NULL;
 }
 
 extern "C" static void
@@ -1088,7 +1093,10 @@ fz_gdiplusfillimagemask(void *user, fz_pixmap *image, fz_matrix ctm,
 	fz_colorspace *colorspace, float *color, float alpha)
 {
 	float rgb[3];
-	fz_convertcolor(colorspace, color, fz_devicergb, rgb);
+	if (!((userData *)user)->t3color)
+		fz_convertcolor(colorspace, color, fz_devicergb, rgb);
+	else
+		memcpy(rgb, ((userData *)user)->t3color, sizeof(rgb));
 	
 	fz_pixmap *img2 = fz_newpixmap(fz_devicergb, image->x, image->y, image->w, image->h);
 	for (int i = 0; i < img2->w * img2->h; i++)
