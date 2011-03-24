@@ -267,9 +267,13 @@ public:
 		_setDrawAttributes(&imgAttrs, alpha);
 		
 		float scale = _hypotf(_hypotf(ctm.a, ctm.b), _hypotf(ctm.c, ctm.d)) / _hypotf(image->w, image->h);
+		/* cf. fz_paintimageimp in draw/imagedraw.c for when (not) to interpolate */
 		bool downscale = _hypotf(ctm.a, ctm.b) < image->w && _hypotf(ctm.c, ctm.d) < image->h;
+		bool alwaysInterpolate = downscale ||
+			_hypotf(ctm.a, ctm.b) > image->w && _hypotf(ctm.c, ctm.d) > image->h &&
+			_hypotf(ctm.a, ctm.b) < 2 * image->w && _hypotf(ctm.c, ctm.d) < 2 * image->h;
 		
-		if (!image->interpolate && !downscale && graphics == this->graphics)
+		if (!image->interpolate && !alwaysInterpolate && graphics == this->graphics)
 		{
 			GraphicsState state = graphics->Save();
 			graphics->SetInterpolationMode(InterpolationModeNearestNeighbor);

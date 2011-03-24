@@ -298,6 +298,10 @@ fz_paintimageimp(fz_pixmap *dst, fz_bbox scissor, fz_pixmap *img, fz_matrix ctm,
 		if (sqrtf(ctm.c * ctm.c + ctm.d * ctm.d) > img->h)
 			dolerp = 1;
 	}
+	/* SumatraPDF: also interpolate images that aren't to be interpolated up to 200% */
+	else if (_hypotf(ctm.a, ctm.b) > img->w && _hypotf(ctm.c, ctm.d) > img->h &&
+		_hypotf(ctm.a, ctm.b) < 2 * img->w && _hypotf(ctm.c, ctm.d) < 2 * img->h)
+		dolerp = 1;
 
 	bbox = fz_roundrect(fz_transformrect(ctm, fz_unitrect));
 	bbox = fz_intersectbbox(bbox, scissor);
