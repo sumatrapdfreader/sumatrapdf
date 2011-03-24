@@ -5774,15 +5774,19 @@ static void CustomizeToCInfoTip(WindowInfo *win, LPNMTVGETINFOTIP nmit)
 static void CreateInfotipForPdfLink(WindowInfo *win, int pageNo, pdf_link *link)
 {
     ScopedMem<TCHAR> linkPath(win->dm->getLinkPath(link));
-    fz_rect r = win->dm->rectCvtUserToScreen(pageNo, link->rect);
-    win->CreateInfotip(linkPath, &RectF(r.x0, r.y0, r.x1, r.y1).Convert<int>());
+    RectD rc = RectD::FromXY(link->rect.x0, link->rect.y0, link->rect.x1, link->rect.y1);
+    if (!win->dm->rectCvtUserToScreen(pageNo, &rc))
+        rc = RectD();
+    win->CreateInfotip(linkPath, &rc.Convert<int>());
 }
 
 static void CreateInfotipForComment(WindowInfo *win, int pageNo, pdf_annot *annot)
 {
     ScopedMem<TCHAR> comment(Str::Conv::FromUtf8(fz_tostrbuf(fz_dictgets(annot->obj, "Contents"))));
-    fz_rect r = win->dm->rectCvtUserToScreen(pageNo, annot->rect);
-    win->CreateInfotip(comment, &RectF(r.x0, r.y0, r.x1, r.y1).Convert<int>());
+    RectD rc = RectD::FromXY(annot->rect.x0, annot->rect.y0, annot->rect.x1, annot->rect.y1);
+    if (!win->dm->rectCvtUserToScreen(pageNo, &rc))
+        rc = RectD();
+    win->CreateInfotip(comment, &rc.Convert<int>());
 }
 
 static int  gDeltaPerLine = 0;         // for mouse wheel logic

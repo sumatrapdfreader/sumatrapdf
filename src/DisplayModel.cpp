@@ -753,20 +753,20 @@ bool DisplayModel::rectCvtUserToScreen(int pageNo, RectD *r)
     PointD TL = r->TL(), BR = r->BR();
     if (!cvtUserToScreen(pageNo, &TL) || !cvtUserToScreen(pageNo, &BR))
         return false;
-
-    *r = RectD(TL, BR);
+    *r = RectD::FromXY(TL, BR);
     return true;
 }
 
 fz_rect DisplayModel::rectCvtUserToScreen(int pageNo, fz_rect rect)
 {
-    PointD TL(rect.x0, rect.y0), BR(rect.x1, rect.y1);
-    if (!cvtUserToScreen(pageNo, &TL) || !cvtUserToScreen(pageNo, &BR))
+    RectD rc = RectD::FromXY(rect.x0, rect.y0, rect.x1, rect.y1);
+    if (!rectCvtUserToScreen(pageNo, &rc))
         return fz_emptyrect;
-    
-    rect.x0 = (float)MIN(TL.x, BR.x); rect.x1 = (float)MAX(TL.x, BR.x);
-    rect.y0 = (float)MIN(TL.y, BR.y); rect.y1 = (float)MAX(TL.y, BR.y);
-    
+
+    RectF rcF = rc.Convert<float>();
+    rect.x0 = rcF.x; rect.x1 = rcF.x + rcF.dx;
+    rect.y0 = rcF.y; rect.y1 = rcF.y + rcF.dy;
+
     return rect;
 }
 
@@ -776,7 +776,7 @@ bool DisplayModel::rectCvtScreenToUser(int *pageNo, RectD *r)
     PointD TL = r->TL(), BR = r->BR();
     if (!cvtScreenToUser(pageNo, &TL) || !cvtScreenToUser(pageNo, &BR))
         return false;
-    *r = RectD(TL, BR);
+    *r = RectD::FromXY(TL, BR);
     return true;
 }
 

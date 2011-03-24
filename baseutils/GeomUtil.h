@@ -63,7 +63,6 @@ public:
     Rect() : x(0), y(0), dx(0), dy(0) { }
     Rect(T x, T y, T dx, T dy) : x(x), y(y), dx(dx), dy(dy) { }
     Rect(Point<T> pt, Size<T> size) : x(pt.x), y(pt.y), dx(size.dx), dy(size.dy) { }
-    Rect(Point<T> TL, Point<T> BR) : x(TL.x), y(TL.y), dx(BR.x - TL.x), dy(BR.y - TL.y) { }
 
     static Rect FromXY(T xs, T ys, T xe, T ye) {
         if (xs > xe)
@@ -71,6 +70,9 @@ public:
         if (ys > ye)
             swap(ys, ye);
         return Rect(xs, ys, xe - xs, ye - ys);
+    }
+    static Rect FromXY(Point<T> TL, Point<T> BR) {
+        return FromXY(TL.x, TL.y, BR.x, BR.y);
     }
 
     template <typename S>
