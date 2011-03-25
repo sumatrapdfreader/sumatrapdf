@@ -11,76 +11,76 @@ Contributor: Dmitry Yerokhin (erodim@mail.ru)
 Contributor: Victor Kozyakin
 
 &About
-О программе...
+&О программе...
 
 &Actual Size\tCtrl-1
-Реальный размер\tCtrl-1
+&Настоящий размер\tCtrl-1
 
 &All selected pages
-Все выбранные страницы
+&Все выбранные страницы
 
 &Back\tAlt+Left Arrow
-Назад\tAlt+<-
+&Назад\tAlt+Стрелка влево
 
 &Close\tCtrl-W
-Закрыть\tCtrl-W
+&Закрыть\tCtrl-W
 
 &Copy Selection\tCtrl-C
-Скопировать выделенное\tCtrl-C
+С&копировать выделенное\tCtrl-C
 
 &Don't ask me again
-Больше не спрашивать
+&Больше не спрашивать
 
 &Even pages only
-Только четные страницы
+Только ч&ётные страницы
 
 &File
-Файл
+&Файл
 
 &Find what:
-&Найти:
+На&йти:
 
 &First Page\tHome
-Первая страница\tHome
+Перва&я страница\tHome
 
 &Fit pages to printable area
-Подогнать страницы под область печати
+Подо&гнать страницы под область печати
 
 &Go To
-Переход
+Пере&ход
 
 &Go to page:
-&Перейти к странице
+Перейти &к странице
 
 &Help
-Справка
+&Справка
 
 &Last Page\tEnd
-Последняя страница\tEnd
+Пос&ледняя страница\tEnd
 
 &Magnification:
-Масштабирование:
+Мас&штабирование:
 
 &Manual
-Руководство
+&Руководство
 
 &Match case
 &Учитывать регистр
 
 &Next Page\tRight Arrow
-Следующая страница\t->
+С&ледующая страница\tСтрелка вправо
 
 &No
-Нет
+&Нет
 
 &No, thanks
-Нет, спасибо
+&Нет, спасибо
 
 &Odd pages only
-Только нечетные страницы
+Только нечётн&ые страницы
 
 &Open\tCtrl-O
-Открыть\tCtrl-O
+&Открыть\tCtrl-O
 
 &Options...
 &Параметры...
@@ -89,43 +89,43 @@ Contributor: Victor Kozyakin
 &Пароль:
 
 &Previous Page\tLeft Arrow
-Предыдущая страница\t<-
+Пре&дыдущая страница\tСтрелка влево
 
 &Print...\tCtrl-P
-Печать\tCtrl-P
+Пе&чать\tCtrl-P
 
 &Print... (denied)
-Печать... (отмена)
+Пе&чать... (отмена)
 
 &Remember the password for this document
-Запомнить пароль для этого документа
+Запомнит&ь пароль для этого документа
 
 &Remember these settings for each document
-Запомнить эти параметры для &каждого документа
+Запомнит&ь эти параметры для каждого документа
 
 &Save As...\tCtrl-S
-Сохранить как...\tCtrl-S
+Сохранить &как...\tCtrl-S
 
 &Settings
-Настройки
+&Настройки
 
 &Shrink pages to printable area (if necessary)
 Уменьшить страницы до области печати (если нужно)
 
 &Skip this version
-Пропустить эту версию.
+Пропустить эту версию
 
 &Use original page sizes
-Использовать оригиналный размер страниц
+&Исходный размер страниц
 
 &View
-Вид
+&Вид
 
 &Yes
-Да
+&Да
 
 &Zoom
-Масштаб
+Мас&штаб
 
 (of %d)
 (из %d)
@@ -155,7 +155,7 @@ Automatic
 Автоматически
 
 Automatically check for &updates
-&Автоматически проверять обновления
+Автоматически проверять обновления
 
 Book View
 В разворот
@@ -197,7 +197,7 @@ Continuous
 Разрешить прокрутку
 
 Continuous Book View
-Прокуртка в разворот
+Прокрутка в разворот
 
 Continuous Facing
 Прокрутка по две страницы
@@ -224,16 +224,16 @@ Custom &Zoom...\tCtrl-Y
 Указать масштаб...\tCtrl-Y
 
 Default &Layout:
-&Компоновка по умолчанию
+Компоновка по умолчанию
 
 Default &Zoom:
-&Масштаб по умолчанию
+Масштаб по умолчанию
 
 Default PDF reader can't be changed in portable mode
 В мобильном режиме ассоциирование невозможно
 
 Denied Permissions:
-Запрещенные права:
+Запрещённые права:
 
 Document Properties
 Свойства документа
@@ -242,7 +242,7 @@ Download
 Загрузка
 
 E&xit\tCtrl-Q
-Выход\tCtrl-Q
+В&ыход\tCtrl-Q
 
 Enter password
 Введите пароль
@@ -251,16 +251,16 @@ Enter password for %s
 Введите пароль для %s
 
 Enter the command-line to invoke when you double-click on the PDF document:
-Введите командную строку, которая будет исполнена при двойном щелчке в PDF документе:
+Введите командную строку, вызываемую при двойном щелчке на PDF-документе:
 
 Error loading PDF file.
 Ошибка открытия PDF-файла.
 
 F&orward\tAlt+Right Arrow
-Вперед\tAlt+->
+Вперё&д\tAlt+Стрелка вправо
 
 F&ullscreen\tCtrl-Shift-L
-Полный экран\tCtrl-Shift-L
+Полный &экран\tCtrl-Shift-L
 
 Facing
 По две страницы
@@ -275,7 +275,7 @@ File:
 Файл:
 
 Fin&d...\tCtrl-F
-Найти...\tCtrl-F
+На&йти...\tCtrl-F
 
 Find
 Поиск
@@ -290,13 +290,13 @@ Find:
 Найти:
 
 Fit &Content\tCtrl-3
-По содержимиму\tCtrl-3
+По содер&жимому\tCtrl-3
 
 Fit &Page\tCtrl-0
-По размеру страницы\tCtrl-0
+По &размеру страницы\tCtrl-0
 
 Fit &Width\tCtrl-2
-По ширине\tCtrl-2
+По &ширине\tCtrl-2
 
 Fit Content
 По содержимому
@@ -341,7 +341,7 @@ Match Case
 Учитывать регистр
 
 Modified:
-Изменен:
+Изменён:
 
 New version %s is available. Download new version?
 Доступна новая версия: %s. Загрузить её?
@@ -371,10 +371,10 @@ Open
 Открыть
 
 Open in &Adobe Reader
-Открыть в &Adobe Reader
+Открыть в Adobe Reader
 
 Open in &Foxit Reader
-Открыть в &Foxit Reader
+Открыть в Foxit Reader
 
 Open in PDF-XChange
 Открыть в PDF-XChange
@@ -410,7 +410,7 @@ Page:
 Страница:
 
 Please include the following file in your crash report:
-Пожалуйста, приложите следующий файл к Вашему отчету об аварийном завершении работы:
+Приложите этот файл к отчёту об аварийном завершении работы:
 
 Please wait - rendering...
 Формируется изображение, подождите...
@@ -428,7 +428,7 @@ Printing problem.
 Ошибка при печати.
 
 Remember &opened files
-&Запоминать открытые файлы
+Запоминать открытые файлы
 
 Rotate &Left\tCtrl-Shift--
 Повернуть влево\tCtrl-Shift--
@@ -449,7 +449,7 @@ Select content with Ctrl+left mouse button
 Выберите содержимое, нажав Ctrl и левую кнопку мыши
 
 Send by &E-mail...
-Послать по &email...
+Отправить по электронной почте...
 
 Set inverse search command-line
 Задать команду обратного поиска
@@ -461,13 +461,13 @@ Show &pages continuously
 Разрешить прокрутку
 
 Show the &bookmarks sidebar when available
-Показывать панель &закладок (по возможности)
+Показывать панель закладок (по возможности)
 
 Single Page
 Постранично
 
 Source file %s has no synchronization point
-Отсутствует точка синхронизации в исходном файле %s
+Нет точки синхронизации в исходном файле %s
 
 Subject:
 Тема:
@@ -503,13 +503,13 @@ View
 Вид
 
 Visit &Website
-Посетить веб-сайт программы
+Посетить сайт программы
 
 Warning
 Внимание
 
 You have the latest version.
-Вы используете новейшую версию.
+Вы используете самую новую версию программы.
 
 You have version %s
 Вы используете версию %s

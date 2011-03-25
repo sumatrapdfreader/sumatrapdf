@@ -1,4 +1,4 @@
-from extract_strings import load_strings_file_new, untranslated_count_for_lang, extract_strings_from_c_files, dump_missing_per_language, write_out_strings_files, key_sort_func, load_lang_index
+from extract_strings import load_strings_file, untranslated_count_for_lang, extract_strings_from_c_files, dump_missing_per_language, write_out_strings_files, key_sort_func, load_lang_index
 import simplejson
 import os.path
 
@@ -270,7 +270,7 @@ def get_untranslated_as_list(untranslated_dict):
     return untranslated
 
 def main():
-    (strings_dict, langs, contributors) = load_strings_file_new()
+    (strings_dict, langs, contributors) = load_strings_file()
     (strings, tb_strings) = extract_strings_from_c_files()
     for s in strings_dict.keys():
         if s not in strings and s not in tb_strings:
