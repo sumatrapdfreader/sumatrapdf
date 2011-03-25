@@ -392,7 +392,7 @@ static bool ViewWithPDFXChange(WindowInfo *win, TCHAR *args=NULL)
         return false;
 
     ScopedMem<TCHAR> exePath(GetPDFXChangePath());
-    if (exePath)
+    if (!exePath)
         return false;
     if (!args)
         args = _T("");
