@@ -56,7 +56,7 @@ Contributor: Victor Kozyakin
 &Справка
 
 &Last Page\tEnd
-Пос&ледняя страница\tEnd
+Посл&едняя страница\tEnd
 
 &Magnification:
 Мас&штабирование:
@@ -155,13 +155,13 @@ Automatic
 Автоматически
 
 Automatically check for &updates
-Автоматически проверять обновления
+&Автоматически проверять обновления
 
 Book View
 В разворот
 
 Book&marks\tF12
-Закладки\tF12
+&Закладки\tF12
 
 Bookmark Links
 Ссылки на закладки
@@ -188,10 +188,10 @@ Cannot start inverse search command. Please check the command line in the settin
 Ошибка команды обратного поиска. Проверьте параметры командной строки.
 
 Change Language
-Изменить язык (Change Language)
+Изменить &язык (Change Language)
 
 Check for &Updates
-Проверить наличие новой версии
+Проверить наличие новой &версии
 
 Continuous
 Разрешить прокрутку
@@ -221,13 +221,13 @@ Created:
 Создан:
 
 Custom &Zoom...\tCtrl-Y
-Указать масштаб...\tCtrl-Y
+&Указать масштаб...\tCtrl-Y
 
 Default &Layout:
-Компоновка по умолчанию
+&Компоновка по умолчанию
 
 Default &Zoom:
-Масштаб по умолчанию
+Масшта&б по умолчанию
 
 Default PDF reader can't be changed in portable mode
 В мобильном режиме ассоциирование невозможно
@@ -257,7 +257,7 @@ Error loading PDF file.
 Ошибка открытия PDF-файла.
 
 F&orward\tAlt+Right Arrow
-Вперё&д\tAlt+Стрелка вправо
+&Вперёд\tAlt+Стрелка вправо
 
 F&ullscreen\tCtrl-Shift-L
 Полный &экран\tCtrl-Shift-L
@@ -371,16 +371,16 @@ Open
 Открыть
 
 Open in &Adobe Reader
-Открыть в Adobe Reader
+О&ткрыть в Adobe Reader
 
 Open in &Foxit Reader
-Открыть в Foxit Reader
+Отк&рыть в Foxit Reader
 
 Open in PDF-XChange
 Открыть в PDF-XChange
 
 P&roperties\tCtrl-D
-Свойства...\tCtrl-D
+Сво&йства...\tCtrl-D
 
 PDF Document
 PDF-документ
@@ -392,10 +392,10 @@ PDF Version:
 Версия PDF:
 
 PDF documents
-PDF-документы
+Документы PDF
 
 Pa&ge...\tCtrl-G
-Указанная страница...\tCtrl-G
+&Указанная страница...\tCtrl-G
 
 Page Size:
 Формат страницы:
@@ -416,7 +416,7 @@ Please wait - rendering...
 Формируется изображение, подождите...
 
 Pr&esentation\tCtrl-L
-Презентация\tCtrl-L
+Пр&езентация\tCtrl-L
 
 Previous Page
 Предыдущая страница
@@ -428,13 +428,13 @@ Printing problem.
 Ошибка при печати.
 
 Remember &opened files
-Запоминать открытые файлы
+Запоминать &открытые файлы
 
 Rotate &Left\tCtrl-Shift--
-Повернуть влево\tCtrl-Shift--
+Повернуть в&лево\tCtrl-Shift--
 
 Rotate &Right\tCtrl-Shift-+
-Повернуть вправо\tCtrl-Shift-+
+Повернуть в&право\tCtrl-Shift-+
 
 Save &Bookmark...\tCtrl-Shift-S
 Сохранить закладку...\tCtrl-Shift-S
@@ -443,25 +443,25 @@ Searching %d of %d...
 Обработка страницы %d из %d...
 
 Select &All\tCtrl-A
-Выделить все\tCtrl-A
+В&ыделить все\tCtrl-A
 
 Select content with Ctrl+left mouse button
 Выберите содержимое, нажав Ctrl и левую кнопку мыши
 
 Send by &E-mail...
-Отправить по электронной почте...
+Отправить по &электронной почте...
 
 Set inverse search command-line
 Задать команду обратного поиска
 
 Show &Toolbar
-Панель инструментов
+Панель &инструментов
 
 Show &pages continuously
-Разрешить прокрутку
+&Разрешить прокрутку
 
 Show the &bookmarks sidebar when available
-Показывать панель закладок (по возможности)
+Показывать панель &закладок (по возможности)
 
 Single Page
 Постранично
@@ -503,7 +503,7 @@ View
 Вид
 
 Visit &Website
-Посетить сайт программы
+Посетить &сайт программы
 
 Warning
 Внимание
