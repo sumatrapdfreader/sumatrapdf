@@ -1670,7 +1670,7 @@ static WindowInfo* LoadPdf(const TCHAR *fileName, WindowInfo *win, bool showWin)
         UINT res = CreateSynchronizer(fullpath, &win->pdfsync);
         // expose SyncTeX in the UI
         if (PDFSYNCERR_SUCCESS == res)
-            gGlobalPrefs.m_enableTeXEnhancements;
+            gGlobalPrefs.m_enableTeXEnhancements = true;
     }
 
     if (gGlobalPrefs.m_rememberOpenedFiles)
