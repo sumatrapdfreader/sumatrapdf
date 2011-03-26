@@ -271,7 +271,7 @@ void DoAssociateExeWithPdfExtension(HKEY hkey)
         WriteRegStr(hkey, REG_CLASSES_PDF, NULL, APP_NAME_STR);
         if (hkey == HKEY_CURRENT_USER) {
             WriteRegStr(hkey, REG_EXPLORER_PDF_EXT, _T("Progid"), APP_NAME_STR);
-            DeleteRegKey(hkey, REG_EXPLORER_PDF_EXT _T("\\UserChoice"));
+            DeleteRegKey(hkey, REG_EXPLORER_PDF_EXT _T("\\UserChoice"), true);
         }
     }
 }

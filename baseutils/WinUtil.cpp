@@ -116,8 +116,22 @@ bool WriteRegDWORD(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, DWOR
     return ERROR_SUCCESS == res;
 }
 
-bool DeleteRegKey(HKEY keySub, const TCHAR *keyName)
+bool DeleteRegKey(HKEY keySub, const TCHAR *keyName, bool resetACLFirst)
 {
+    if (resetACLFirst) {
+        // try to remove any access restrictions on the key to delete
+        // by first granting everybody all access to this key (NULL DACL)
+        HKEY hKey;
+        LONG res = RegOpenKeyEx(keySub, keyName, 0, WRITE_DAC, &hKey);
+        if (ERROR_SUCCESS == res) {
+            SECURITY_DESCRIPTOR secdesc;
+            InitializeSecurityDescriptor(&secdesc, SECURITY_DESCRIPTOR_REVISION);
+            SetSecurityDescriptorDacl(&secdesc, TRUE, NULL, TRUE);
+            RegSetKeySecurity(hKey, DACL_SECURITY_INFORMATION, &secdesc);
+            RegCloseKey(hKey);
+        }
+    }
+
     LSTATUS res = SHDeleteKey(keySub, keyName);
     if (ERROR_SUCCESS != res && ERROR_FILE_NOT_FOUND != res)
         SeeLastError(res);

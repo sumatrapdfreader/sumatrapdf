@@ -737,7 +737,7 @@ void RemoveOwnRegistryKeys()
     }
     buf.Set(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT _T("\\UserChoice"), PROG_ID));
     if (Str::Eq(buf, TAPP))
-        DeleteRegKey(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT _T("\\UserChoice"));
+        DeleteRegKey(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT _T("\\UserChoice"), true);
 }
 
 bool IsBrowserPluginInstalled()
