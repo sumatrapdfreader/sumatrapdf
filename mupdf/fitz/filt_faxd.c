@@ -625,13 +625,13 @@ eol:
 	if (fax->rp < fax->wp)
 		return p - buf;
 
-	fax->rp = fax->dst;
-	fax->wp = fax->dst + fax->stride;
-
 	tmp = fax->ref;
 	fax->ref = fax->dst;
 	fax->dst = tmp;
 	memset(fax->dst, 0, fax->stride);
+
+	fax->rp = fax->dst;
+	fax->wp = fax->dst + fax->stride;
 
 	fax->stage = SNORMAL;
 	fax->c = 0;
