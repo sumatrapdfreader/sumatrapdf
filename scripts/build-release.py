@@ -93,13 +93,15 @@ def main():
     remote_pdb_zip     = remote_pdb + ".zip"
     remote_exe_dbg     = "%s-dbg.exe" % tmp
     remote_pdb_dbg_zip = "%s-dbg.pdb.zip" % tmp
+  else:
+    remote_installed_pdb_zip = "%s-installed.pdb.zip" % tmp
 
   if upload:
     remote_files = [remote_exe, remote_installer_exe]
     if build_prerelease:
       remote_files += [remote_pdb_zip, remote_exe_dbg, remote_pdb_dbg_zip]
     else:
-      remote_files += [remote_pdb, remote_zip]
+      remote_files += [remote_pdb, remote_zip, remote_installed_pdb_zip]
     map(ensure_s3_doesnt_exist, remote_files)
 
   if not testing:
@@ -153,6 +155,10 @@ def main():
     zip_file(local_pdb_dbg_zip, tmp_pdb_dbg, "%s.pdb" % filename_base)
     zip_file(local_pdb_dbg_zip, tmp_pdb2_dbg, append=True)
     zip_file(local_pdb_dbg_zip, tmp_lib_pdb_dbg, append=True)
+  else:
+    local_installed_pdb_zip = os.path.join(builds_dir, "%s-installed.pdb.zip" % filename_base)
+    zip_file(local_installed_pdb_zip, tmp_pdb2, "SumatraPDF.pdb")
+    zip_file(local_installed_pdb_zip, tmp_lib_pdb, append=True)
 
   # run mpress and StripReloc from inside builds_dir for better
   # compat across python version
@@ -189,10 +195,10 @@ def main():
 
   elif upload or upload_tmp and not build_prerelease:
     s3UploadFilePublic(local_exe_uncompr, remote_exe)
-    # TODO: also upload PDBs for libmupdf.dll, SumatraPDF-no-mupdf.exe, npPdfViewer.dll, etc.?
     s3UploadFilePublic(local_pdb, remote_pdb)
     s3UploadFilePublic(local_zip, remote_zip)
     s3UploadFilePublic(local_installer_native_exe, remote_installer_exe)
+    s3UploadFilePublic(local_installed_pdb_zip, remote_installed_pdb_zip)
     txt = "%s\n" % ver
     # s3UploadDataPublic(txt, "sumatrapdf/sumpdf-latest.txt")
 
