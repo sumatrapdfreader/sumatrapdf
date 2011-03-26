@@ -4830,6 +4830,7 @@ typedef struct FindThreadData {
 static DWORD WINAPI FindThread(LPVOID data)
 {
     FindThreadData *ftd = (FindThreadData *)data;
+    assert(ftd && ftd->win && ftd->win->dm);
     WindowInfo *win = ftd->win;
 
     PdfSel *rect;
@@ -4872,8 +4873,11 @@ static void Find(WindowInfo *win, PdfSearchDirection direction)
     Edit_SetModify(win->hwndFindBox, FALSE);
 
     bool hasText = Str::Len(ftd.text) > 0;
-    if (hasText)
-        win->findThread = CreateThread(NULL, 0, FindThread, _memdup(&ftd), 0, 0);
+    if (hasText) {
+        LPVOID data = _memdup(&ftd);
+        if (data)
+            win->findThread = CreateThread(NULL, 0, FindThread, data, 0, 0);
+    }
 }
 
 static WNDPROC DefWndProcToolbar = NULL;
