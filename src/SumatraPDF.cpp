@@ -2745,16 +2745,11 @@ static void OnSelectionStop(WindowInfo *win, int x, int y, bool aborted)
     if (MA_SELECTING_TEXT == win->mouseAction)
         UpdateTextSelection(win);
 
-    win->selectionRect.dx = abs(x - win->selectionRect.x);
-    win->selectionRect.dy = abs(y - win->selectionRect.y);
-    win->selectionRect.x = min(win->selectionRect.x, x);
-    win->selectionRect.y = min(win->selectionRect.y, y);
-
-    if (win->selectionRect.dx == 0 || win->selectionRect.dy == 0) {
+    win->selectionRect = RectI::FromXY(win->selectionRect.x, win->selectionRect.y, x, y);
+    if (win->selectionRect.IsEmpty())
         DeleteOldSelectionInfo(win);
-    } else if (win->mouseAction == MA_SELECTING) {
-        ConvertSelectionRectToSelectionOnPage (win);
-    }
+    else if (win->mouseAction == MA_SELECTING)
+        ConvertSelectionRectToSelectionOnPage(win);
     win->RepaintAsync();
 }
 

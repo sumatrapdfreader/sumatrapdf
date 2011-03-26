@@ -23,7 +23,7 @@ bool IsValidProgramVersion(char *txt)
             continue;
         if (*txt == '.' && ChrIsDigit(*(txt + 1)))
             continue;
-        if (*txt == '\r'&& *(txt + 1) == '\n')
+        if (*txt == '\r' && *(txt + 1) == '\n')
             continue;
         if (*txt == '\n' && !*(txt + 1))
             continue;
@@ -34,14 +34,11 @@ bool IsValidProgramVersion(char *txt)
 }
 
 // extract the next (positive) number from the string *txt
-static int ExtractNextNumber(TCHAR **txt)
+static unsigned int ExtractNextNumber(TCHAR **txt)
 {
-    int val = 0;
-    // skip non numeric characters (should only be dots)
-    for (; **txt && !ChrIsDigit(**txt); (*txt)++);
-    for (; **txt && ChrIsDigit(**txt); (*txt)++)
-        val = val * 10 + (**txt - '0');
-
+    unsigned int val = 0;
+    const TCHAR *next = Str::Parse(*txt, _T("%u%?."), &val);
+    *txt = next ? (TCHAR *)next : *txt + Str::Len(*txt);
     return val;
 }
 
@@ -54,8 +51,8 @@ static int ExtractNextNumber(TCHAR **txt)
 int CompareVersion(TCHAR *txt1, TCHAR *txt2)
 {
     while (*txt1 || *txt2) {
-        int v1 = ExtractNextNumber(&txt1);
-        int v2 = ExtractNextNumber(&txt2);
+        unsigned int v1 = ExtractNextNumber(&txt1);
+        unsigned int v2 = ExtractNextNumber(&txt2);
         if (v1 != v2)
             return v1 - v2;
     }
@@ -465,14 +462,8 @@ LPTSTR AutoDetectInverseSearchCommands(HWND hwndCombo)
     return firstEditor;
 }
 
-static HDDEDATA CALLBACK DdeCallback(UINT uType,
-    UINT uFmt,
-    HCONV hconv,
-    HSZ hsz1,
-    HSZ hsz2,
-    HDDEDATA hdata,
-    ULONG_PTR dwData1,
-    ULONG_PTR dwData2)
+static HDDEDATA CALLBACK DdeCallback(UINT uType, UINT uFmt, HCONV hconv, HSZ hsz1,
+    HSZ hsz2, HDDEDATA hdata, ULONG_PTR dwData1, ULONG_PTR dwData2)
 {
     return 0;
 }
@@ -487,31 +478,35 @@ void DDEExecute(LPCTSTR server, LPCTSTR topic, LPCTSTR command)
 
     UINT result = DdeInitialize(&inst, &DdeCallback, APPCMD_CLIENTONLY, 0);
     if (result != DMLERR_NO_ERROR) {
-        DBG_OUT("DDE communication could not be initiated %d.", result);
+        DBG_OUT("DDE communication could not be initiated %u.", result);
         goto exit;
     }
     hszServer = DdeCreateStringHandle(inst, server, CP_WINNEUTRAL);
-    if (hszServer == 0) {
+    if (!hszServer) {
         DBG_OUT("DDE communication could not be initiated %u.", DdeGetLastError(inst));
         goto exit;
     }
     hszTopic = DdeCreateStringHandle(inst, topic, CP_WINNEUTRAL);
-    if (hszTopic == 0) {
+    if (!hszTopic) {
         DBG_OUT("DDE communication could not be initiated %u.", DdeGetLastError(inst));
         goto exit;
     }
     hconv = DdeConnect(inst, hszServer, hszTopic, 0);
-    if (hconv == 0) {
+    if (!hconv) {
         DBG_OUT("DDE communication could not be initiated %u.", DdeGetLastError(inst));
         goto exit;
     }
     hddedata = DdeCreateDataHandle(inst, (BYTE*)command, (DWORD)(Str::Len(command) + 1) * sizeof(TCHAR), 0, 0, CF_T_TEXT, 0);
-    if (hddedata == 0) {
+    if (!hddedata) {
         DBG_OUT("DDE communication could not be initiated %u.", DdeGetLastError(inst));
+        goto exit;
     }
-    if (DdeClientTransaction((BYTE*)hddedata, (DWORD)-1, hconv, 0, 0, XTYP_EXECUTE, 10000, 0) == 0) {
+    HDDEDATA answer = DdeClientTransaction((BYTE*)hddedata, (DWORD)-1, hconv, 0, 0, XTYP_EXECUTE, 10000, 0);
+    if (answer)
+        DdeFreeDataHandle(answer);
+    else
         DBG_OUT("DDE transaction failed %u.", DdeGetLastError(inst));
-    }
+
 exit:
     DdeFreeDataHandle(hddedata);
     DdeDisconnect(hconv);
