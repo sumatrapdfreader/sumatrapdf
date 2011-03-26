@@ -698,23 +698,13 @@ BOOL IsUninstallerNeeded()
     return File::Exists(exePath);
 }
 
-BOOL RegDelKeyRecurse(HKEY hkey, TCHAR *path)
-{
-    LSTATUS res = SHDeleteKey(hkey, path);
-    if ((ERROR_SUCCESS != res) && (res != ERROR_FILE_NOT_FOUND)) {
-        SeeLastError(res);
-        return FALSE;
-    }
-    return TRUE;
-}
-
-BOOL RemoveUninstallerRegistryInfo(bool allUsers)
+bool RemoveUninstallerRegistryInfo(bool allUsers)
 {
     HKEY hkey = HKEY_LOCAL_MACHINE;
     if (!allUsers)
         hkey = HKEY_CURRENT_USER;
-    BOOL ok1 = RegDelKeyRecurse(hkey, REG_PATH_UNINST);
-    BOOL ok2 = RegDelKeyRecurse(hkey, REG_PATH_SOFTWARE);
+    bool ok1 = DeleteRegKey(hkey, REG_PATH_UNINST);
+    bool ok2 = DeleteRegKey(hkey, REG_PATH_SOFTWARE);
     return ok1 && ok2;
 }
 
@@ -730,14 +720,14 @@ void UnregisterFromBeingDefaultViewer(bool allUsers)
     } else {
         prev.Set(ReadRegStr(hkey, REG_CLASSES_PDF, NULL));
         if (Str::Eq(TAPP, prev))
-            RegDelKeyRecurse(hkey, REG_CLASSES_PDF);
+            DeleteRegKey(hkey, REG_CLASSES_PDF);
     }
 }
 
 void RemoveOwnRegistryKeys()
 {
-    RegDelKeyRecurse(HKEY_LOCAL_MACHINE, REG_CLASSES_APP);
-    RegDelKeyRecurse(HKEY_CURRENT_USER, REG_CLASSES_APP);
+    DeleteRegKey(HKEY_LOCAL_MACHINE, REG_CLASSES_APP);
+    DeleteRegKey(HKEY_CURRENT_USER, REG_CLASSES_APP);
 
     ScopedMem<TCHAR> buf(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT, PROG_ID));
     if (Str::Eq(buf, TAPP)) {
@@ -745,6 +735,9 @@ void RemoveOwnRegistryKeys()
         if (res != ERROR_SUCCESS)
             SeeLastError(res);
     }
+    buf.Set(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT _T("\\UserChoice"), PROG_ID));
+    if (Str::Eq(buf, TAPP))
+        DeleteRegKey(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT _T("\\UserChoice"));
 }
 
 bool IsBrowserPluginInstalled()

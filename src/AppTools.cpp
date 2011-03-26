@@ -216,6 +216,10 @@ Software\Classes\SumatraPDF\shell\open\command = "$exePath" "%1"
   tells how to call sumatra to open PDF file. %1 is replaced by PDF file path
 Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.pdf\Progid
   should be SumatraPDF (FoxIt takes it over); only needed for HKEY_CURRENT_USER
+Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.pdf\UserChoice\Progid
+  should be SumatraPDF as well (also only needed for HKEY_CURRENT_USER);
+  this key is used for remembering a user's choice with Explorer's Open With dialog
+  and can't be written to - so we delete it instead!
 
 HKEY_CLASSES_ROOT\.pdf\OpenWithList
   list of all apps that can be used to open PDF files. We don't touch that.
@@ -224,8 +228,13 @@ HKEY_CLASSES_ROOT\.pdf default comes from either HKCU\Software\Classes\.pdf or
 HKLM\Software\Classes\.pdf (HKCU has priority over HKLM)
 
 Note: When making changes below, please also adjust
-UnregisterFromBeingDefaultViewer() in Installer.cpp.
+UnregisterFromBeingDefaultViewer() and RemoveOwnRegistryKeys() in Installer.cpp.
 */
+#define REG_CLASSES_APP     _T("Software\\Classes\\") APP_NAME_STR
+#define REG_CLASSES_PDF     _T("Software\\Classes\\.pdf")
+
+#define REG_EXPLORER_PDF_EXT _T("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\.pdf")
+
 void DoAssociateExeWithPdfExtension(HKEY hkey)
 {
     ScopedMem<TCHAR> exePath(ExePathGet());
@@ -234,34 +243,35 @@ void DoAssociateExeWithPdfExtension(HKEY hkey)
 
     ScopedMem<TCHAR> prevHandler(NULL);
     // Remember the previous default app for the Uninstaller
-    prevHandler.Set(ReadRegStr(hkey, _T("Software\\Classes\\.pdf"), NULL));
+    prevHandler.Set(ReadRegStr(hkey, REG_CLASSES_PDF, NULL));
     if (prevHandler && !Str::Eq(prevHandler, APP_NAME_STR)) {
-        WriteRegStr(hkey, _T("Software\\Classes\\") APP_NAME_STR, _T("previous.pdf"), prevHandler);
+        WriteRegStr(hkey, REG_CLASSES_APP, _T("previous.pdf"), prevHandler);
     }
 
-    WriteRegStr(hkey, _T("Software\\Classes\\") APP_NAME_STR, NULL, _TR("PDF Document"));
+    WriteRegStr(hkey, REG_CLASSES_APP, NULL, _TR("PDF Document"));
     TCHAR *icon_path = Str::Join(exePath, _T(",1"));
-    WriteRegStr(hkey, _T("Software\\Classes\\") APP_NAME_STR _T("\\DefaultIcon"), NULL, icon_path);
+    WriteRegStr(hkey, REG_CLASSES_APP _T("\\DefaultIcon"), NULL, icon_path);
     free(icon_path);
 
-    WriteRegStr(hkey, _T("Software\\Classes\\") APP_NAME_STR _T("\\shell"), NULL, _T("open"));
+    WriteRegStr(hkey, REG_CLASSES_APP _T("\\shell"), NULL, _T("open"));
 
     ScopedMem<TCHAR> cmdPath(Str::Format(_T("\"%s\" \"%%1\""), exePath)); // "${exePath}" "%1"
-    bool ok = WriteRegStr(hkey, _T("Software\\Classes\\") APP_NAME_STR _T("\\shell\\open\\command"), NULL, cmdPath);
+    bool ok = WriteRegStr(hkey, REG_CLASSES_APP _T("\\shell\\open\\command"), NULL, cmdPath);
 
     // also register for printing
     ScopedMem<TCHAR> printPath(Str::Format(_T("\"%s\" -print-to-default \"%%1\""), exePath)); // "${exePath}" -print-to-default "%1"
-    WriteRegStr(hkey, _T("Software\\Classes\\") APP_NAME_STR _T("\\shell\\print\\command"), NULL, printPath);
+    WriteRegStr(hkey, REG_CLASSES_APP _T("\\shell\\print\\command"), NULL, printPath);
 
     // also register for printing to specific printer
     ScopedMem<TCHAR> printToPath(Str::Format(_T("\"%s\" -print-to \"%%2\" \"%%1\""), exePath)); // "${exePath}" -print-to "%2" "%1"
-    WriteRegStr(hkey, _T("Software\\Classes\\") APP_NAME_STR _T("\\shell\\printto\\command"), NULL, printToPath);
+    WriteRegStr(hkey, REG_CLASSES_APP _T("\\shell\\printto\\command"), NULL, printToPath);
 
     // Only change the association if we're confident, that we've registered ourselves well enough
     if (ok) {
-        WriteRegStr(hkey, _T("Software\\Classes\\.pdf"), NULL, APP_NAME_STR);
+        WriteRegStr(hkey, REG_CLASSES_PDF, NULL, APP_NAME_STR);
         if (hkey == HKEY_CURRENT_USER) {
-            WriteRegStr(hkey, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\.pdf"), _T("Progid"), APP_NAME_STR);
+            WriteRegStr(hkey, REG_EXPLORER_PDF_EXT, _T("Progid"), APP_NAME_STR);
+            DeleteRegKey(hkey, REG_EXPLORER_PDF_EXT _T("\\UserChoice"));
         }
     }
 }
@@ -271,7 +281,12 @@ void DoAssociateExeWithPdfExtension(HKEY hkey)
 bool IsExeAssociatedWithPdfExtension()
 {
     // this one doesn't have to exist but if it does, it must be APP_NAME_STR
-    ScopedMem<TCHAR> tmp(ReadRegStr(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\.pdf"), _T("Progid")));
+    ScopedMem<TCHAR> tmp(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT, _T("Progid")));
+    if (tmp && !Str::Eq(tmp, APP_NAME_STR))
+        return false;
+
+    // this one doesn't have to exist but if it does, it must be APP_NAME_STR
+    tmp.Set(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT _T("\\UserChoice"), _T("Progid")));
     if (tmp && !Str::Eq(tmp, APP_NAME_STR))
         return false;
 

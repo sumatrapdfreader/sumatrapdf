@@ -106,6 +106,7 @@ void SeeLastError(DWORD err=0);
 TCHAR *ReadRegStr(HKEY keySub, const TCHAR *keyName, const TCHAR *valName);
 bool WriteRegStr(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, const TCHAR *value);
 bool WriteRegDWORD(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, DWORD value);
+bool DeleteRegKey(HKEY keySub, const TCHAR *keyName);
 
 void EnableNx();
 void RedirectIOToConsole();

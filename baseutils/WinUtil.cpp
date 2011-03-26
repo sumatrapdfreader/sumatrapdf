@@ -102,7 +102,7 @@ TryAgainWOW64:
 
 bool WriteRegStr(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, const TCHAR *value)
 {
-    LONG res = SHSetValue(keySub, keyName, valName, REG_SZ, (const VOID *)value, (DWORD)(Str::Len(value) + 1) * sizeof(TCHAR));
+    LSTATUS res = SHSetValue(keySub, keyName, valName, REG_SZ, (const VOID *)value, (DWORD)(Str::Len(value) + 1) * sizeof(TCHAR));
     if (ERROR_SUCCESS != res)
         SeeLastError(res);
     return ERROR_SUCCESS == res;
@@ -110,10 +110,18 @@ bool WriteRegStr(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, const 
 
 bool WriteRegDWORD(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, DWORD value)
 {
-    LONG res = SHSetValue(keySub, keyName, valName, REG_DWORD, (const VOID *)&value, sizeof(DWORD));
+    LSTATUS res = SHSetValue(keySub, keyName, valName, REG_DWORD, (const VOID *)&value, sizeof(DWORD));
     if (ERROR_SUCCESS != res)
         SeeLastError(res);
     return ERROR_SUCCESS == res;
+}
+
+bool DeleteRegKey(HKEY keySub, const TCHAR *keyName)
+{
+    LSTATUS res = SHDeleteKey(keySub, keyName);
+    if (ERROR_SUCCESS != res && ERROR_FILE_NOT_FOUND != res)
+        SeeLastError(res);
+    return ERROR_SUCCESS == res || ERROR_FILE_NOT_FOUND == res;
 }
 
 #define PROCESS_EXECUTE_FLAGS 0x22
