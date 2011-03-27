@@ -1,8 +1,10 @@
 ﻿# Translations for Thai (ภาษาไทย) (th) language
 
-# Lines at the beginning starting with # are comments
-# This file must be in utf-8 encoding. Make sure you use a proper
-# text editor (notepad++ or notepad2 will work) and set utf8 encoding.
+# * Lines starting with # are comments (such as this).
+# * This file must be in UTF-8 encoding. Make sure you use a proper
+#   text editor (Notepad++ or Notepad2) and set UTF-8 encoding.
+# * For lines containing several variables (such as %s, %d or %u), the
+#   variables must remain in that exact order in the translation.
 
 Lang: th Thai (ภาษาไทย)
 
@@ -182,9 +184,6 @@ Visit &Website
 You have the latest version.
 โปรแกรมของคุณเป็นเวอร์ชั่นล่าสุดอยู่แล้ว
 
-You have version %s
-ของคุณเป็นเวอร์ชั่น
-
 Zoom In
 ขยาย
 
@@ -298,6 +297,7 @@ Zoom Out
 #Title:
 #Unknown source file (%s)
 #Warning
+#You have version %s
 #Zoom
 #Zoom factor
 #[Changes detected; refreshing] %s

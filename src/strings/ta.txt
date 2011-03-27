@@ -1,8 +1,10 @@
 ﻿# Translations for Tamil (தமிழ்) (ta) language
 
-# Lines at the beginning starting with # are comments
-# This file must be in utf-8 encoding. Make sure you use a proper
-# text editor (notepad++ or notepad2 will work) and set utf8 encoding.
+# * Lines starting with # are comments (such as this).
+# * This file must be in UTF-8 encoding. Make sure you use a proper
+#   text editor (Notepad++ or Notepad2) and set UTF-8 encoding.
+# * For lines containing several variables (such as %s, %d or %u), the
+#   variables must remain in that exact order in the translation.
 
 Lang: ta Tamil (தமிழ்)
 
@@ -294,9 +296,6 @@ Next Page
 No matches were found
 ஒரு பொருத்தமும் இல்லை
 
-No result found around line %u in file %s
-முடிவுகள் எதுவும் கோப்பு %s இல் உள்ள வரி %u கண்டுபிடிக்க முடியவில்லை
-
 No synchronization file found
 ஒத்தியங்கு கோப்பு எதுவும் கண்டுபிடிக்கவில்லை
 
@@ -411,9 +410,6 @@ Text documents
 Title:
 தலைப்பு:
 
-Unknown source file (%s)
-தெரியாத மூல கோப்பு
-
 View
 நோக்கு
 
@@ -468,6 +464,7 @@ printing document
 #Fit Content
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
+#No result found around line %u in file %s
 #Page scaling
 #Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L
@@ -476,4 +473,5 @@ printing document
 #Set inverse search command-line
 #SumatraPDF Update
 #SumatraPDF crashed
+#Unknown source file (%s)
 

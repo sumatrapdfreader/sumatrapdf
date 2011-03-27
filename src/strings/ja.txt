@@ -1,8 +1,10 @@
 ﻿# Translations for Japanese (日本語) (ja) language
 
-# Lines at the beginning starting with # are comments
-# This file must be in utf-8 encoding. Make sure you use a proper
-# text editor (notepad++ or notepad2 will work) and set utf8 encoding.
+# * Lines starting with # are comments (such as this).
+# * This file must be in UTF-8 encoding. Make sure you use a proper
+#   text editor (Notepad++ or Notepad2) and set UTF-8 encoding.
+# * For lines containing several variables (such as %s, %d or %u), the
+#   variables must remain in that exact order in the translation.
 
 Lang: ja Japanese (日本語)
 
@@ -344,9 +346,6 @@ Next Page
 No matches were found
 一致が見つかりませんでした
 
-No result found around line %u in file %s
-結果がファイル %s の行 %u に見つかりません
-
 No synchronization file found
 同期化ファイルが見つかりません
 
@@ -522,5 +521,6 @@ printing document
 印刷するドキュメント
 
 # Untranslated:
+#No result found around line %u in file %s
 #Select &All\tCtrl-A
 

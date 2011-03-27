@@ -1,8 +1,10 @@
 ﻿# Translations for Burmese (ဗမာ စာ) (mm) language
 
-# Lines at the beginning starting with # are comments
-# This file must be in utf-8 encoding. Make sure you use a proper
-# text editor (notepad++ or notepad2 will work) and set utf8 encoding.
+# * Lines starting with # are comments (such as this).
+# * This file must be in UTF-8 encoding. Make sure you use a proper
+#   text editor (Notepad++ or Notepad2) and set UTF-8 encoding.
+# * For lines containing several variables (such as %s, %d or %u), the
+#   variables must remain in that exact order in the translation.
 
 Lang: mm Burmese (ဗမာ စာ)
 
@@ -152,9 +154,6 @@ Make SumatraPDF my default PDF reader
 Match Case
 တူညီ သော
 
-New version %s is available. Download new version?
-အမျိုးအစားသစ်ရှိသည်။ယူမလား။
-
 Next Page
 နောက် တမျက်နှာ
 
@@ -268,6 +267,7 @@ Zoom Out
 #Found text at page %d
 #Hint: Use the F3 key for finding again
 #Modified:
+#New version %s is available. Download new version?
 #No matches were found
 #No result found around line %u in file %s
 #No synchronization file found

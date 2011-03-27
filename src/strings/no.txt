@@ -1,8 +1,10 @@
 ﻿# Translations for Norwegian (Norsk) (no) language
 
-# Lines at the beginning starting with # are comments
-# This file must be in utf-8 encoding. Make sure you use a proper
-# text editor (notepad++ or notepad2 will work) and set utf8 encoding.
+# * Lines starting with # are comments (such as this).
+# * This file must be in UTF-8 encoding. Make sure you use a proper
+#   text editor (Notepad++ or Notepad2) and set UTF-8 encoding.
+# * For lines containing several variables (such as %s, %d or %u), the
+#   variables must remain in that exact order in the translation.
 
 Lang: no Norwegian (Norsk)
 
@@ -308,9 +310,6 @@ Tilpass bredde og vis sider kontinuerlig
 Fit a Single Page
 Tilpass til enkeltside
 
-Found text at page %d
-Fant tekst på side &d
-
 GB
 GB
 
@@ -488,9 +487,6 @@ Tekstdokumenter
 Title:
 Tittel:
 
-Unknown source file (%s)
-Ukjent kildefil (&s)
-
 View
 Vis
 
@@ -526,4 +522,8 @@ kopierer tekst
 
 printing document
 skriver ut dokument
+
+# Untranslated:
+#Found text at page %d
+#Unknown source file (%s)
 

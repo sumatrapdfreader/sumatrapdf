@@ -1,8 +1,10 @@
 ﻿# Translations for Hebrew (עברית) (he) language
 
-# Lines at the beginning starting with # are comments
-# This file must be in utf-8 encoding. Make sure you use a proper
-# text editor (notepad++ or notepad2 will work) and set utf8 encoding.
+# * Lines starting with # are comments (such as this).
+# * This file must be in UTF-8 encoding. Make sure you use a proper
+#   text editor (Notepad++ or Notepad2) and set UTF-8 encoding.
+# * For lines containing several variables (such as %s, %d or %u), the
+#   variables must remain in that exact order in the translation.
 
 Lang: he Hebrew (עברית)
 
@@ -143,9 +145,6 @@ Application:
 
 Associate with PDF files?
 ?PDF לשייך לקבצי
-
-Attachment: %s
-מצורף:
 
 Author:
 עורך:
@@ -336,9 +335,6 @@ Next Page
 No matches were found
 לא נמצאו התאמות
 
-No result found around line %u in file %s
-%s בקובץ %u אין תוצאה באזור שורה
-
 No synchronization file found
 לא נמצא קובץ סנכרון
 
@@ -505,9 +501,11 @@ printing document
 מדפיס מסמך
 
 # Untranslated:
+#Attachment: %s
 #Enter the command-line to invoke when you double-click on the PDF document:
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
+#No result found around line %u in file %s
 #Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L
 #Select &All\tCtrl-A

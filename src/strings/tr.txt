@@ -1,8 +1,10 @@
 ﻿# Translations for Turkish (Türkçe) (tr) language
 
-# Lines at the beginning starting with # are comments
-# This file must be in utf-8 encoding. Make sure you use a proper
-# text editor (notepad++ or notepad2 will work) and set utf8 encoding.
+# * Lines starting with # are comments (such as this).
+# * This file must be in UTF-8 encoding. Make sure you use a proper
+#   text editor (Notepad++ or Notepad2) and set UTF-8 encoding.
+# * For lines containing several variables (such as %s, %d or %u), the
+#   variables must remain in that exact order in the translation.
 
 Lang: tr Turkish (Türkçe)
 
@@ -163,9 +165,6 @@ Book&marks\tF12
 
 Bookmark Links
 Bağlantıları yer imlerine ekle
-
-Bookmark link to page %d of %s
-%s belgesinde %d nolu sayfaya yer imi ekle
 
 Bookmarks
 Yer imleri
@@ -350,9 +349,6 @@ Sonraki Sayfa
 No matches were found
 Sonuç bulunamadı
 
-No result found around line %u in file %s
-%s dosyasında %u satırı sularında hiçbir sonuç bulunamadı
-
 No synchronization file found
 Herhangi bir senkronizasyon dosyası bulunamadı
 
@@ -532,4 +528,7 @@ metin kopyalanıyor
 
 printing document
 belge baskılanyor
+
+# Untranslated:
+#No result found around line %u in file %s
 

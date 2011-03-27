@@ -268,7 +268,7 @@ WCHAR *Format(const WCHAR *fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
-    WCHAR *res = FmtV(fmt, args);    
+    WCHAR *res = FmtV(fmt, args);
     va_end(args);
     return res;
 }

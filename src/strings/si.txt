@@ -1,8 +1,10 @@
 ﻿# Translations for Sinhala (සිංහල) (si) language
 
-# Lines at the beginning starting with # are comments
-# This file must be in utf-8 encoding. Make sure you use a proper
-# text editor (notepad++ or notepad2 will work) and set utf8 encoding.
+# * Lines starting with # are comments (such as this).
+# * This file must be in UTF-8 encoding. Make sure you use a proper
+#   text editor (Notepad++ or Notepad2) and set UTF-8 encoding.
+# * For lines containing several variables (such as %s, %d or %u), the
+#   variables must remain in that exact order in the translation.
 
 Lang: si Sinhala (සිංහල)
 
@@ -344,9 +346,6 @@ Next Page
 No matches were found
 සෙවුම් යතුර සොයාගැනීමට නොහැකි විය
 
-No result found around line %u in file %s
-%s ගොනුවේ %u පේළිය වටා කිසිදු ප්‍රතිඵලයක් හමුනොවිණි.
-
 No synchronization file found
 සමකාලනයකල ගොනුවක් සොයාගැනීමට නොහැකි විය
 
@@ -501,6 +500,7 @@ printing document
 ලේඛනය මුද්‍රණය
 
 # Untranslated:
+#No result found around line %u in file %s
 #Page scaling
 #Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L

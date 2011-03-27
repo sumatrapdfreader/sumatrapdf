@@ -1,8 +1,10 @@
 ﻿# Translations for Catalan (Català) (ca) language
 
-# Lines at the beginning starting with # are comments
-# This file must be in utf-8 encoding. Make sure you use a proper
-# text editor (notepad++ or notepad2 will work) and set utf8 encoding.
+# * Lines starting with # are comments (such as this).
+# * This file must be in UTF-8 encoding. Make sure you use a proper
+#   text editor (Notepad++ or Notepad2) and set UTF-8 encoding.
+# * For lines containing several variables (such as %s, %d or %u), the
+#   variables must remain in that exact order in the translation.
 
 Lang: ca Catalan (Català)
 
@@ -336,9 +338,6 @@ Distigeix la caixa
 Modified:
 Modificat:
 
-New version %s is available. Download new version?
-Hi ha disponible una versió nova. Voleu baixar-la?
-
 Next Page
 Pàgina següent
 
@@ -524,4 +523,7 @@ s'està copiant text
 
 printing document
 s'està imprimint el document
+
+# Untranslated:
+#New version %s is available. Download new version?
 

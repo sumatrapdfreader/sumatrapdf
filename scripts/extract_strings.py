@@ -77,11 +77,13 @@ def load_one_strings_file(file_path, lang_code, strings_dict, langs_dict, contri
         line_no = line_no + 1
         l = l.strip("\r\n") # strip trailing new line
         #print "'%s'" % l
-        if 0 == len(l):
+        if l == "":
             if curr_orig is None: continue
             assert curr_orig not in all_origs, "Duplicate entry for '%s'" % curr_orig
             assert curr_trans is not None, "File %s, line %d" % (file_path, line_no)
-            if curr_orig not in strings_dict:
+            if re.findall(r"%\w", curr_orig) != re.findall(r"%\w", curr_trans):
+                pass # ignore translation with different variable configuration
+            elif curr_orig not in strings_dict:
                 strings_dict[curr_orig] = [(lang_code, curr_trans)]
             else:
                 strings_dict[curr_orig].append((lang_code, curr_trans))
@@ -202,9 +204,11 @@ def dump_missing_per_language(strings, strings_dict, dump_strings=False):
     return untranslated_dict
 
 TOP_COMMENT = """
-# Lines at the beginning starting with # are comments
-# This file must be in utf-8 encoding. Make sure you use a proper
-# text editor (notepad++ or notepad2 will work) and set utf8 encoding.
+# * Lines starting with # are comments (such as this).
+# * This file must be in UTF-8 encoding. Make sure you use a proper
+#   text editor (Notepad++ or Notepad2) and set UTF-8 encoding.
+# * For lines containing several variables (such as %s, %d or %u), the
+#   variables must remain in that exact order in the translation.
 
 """
 

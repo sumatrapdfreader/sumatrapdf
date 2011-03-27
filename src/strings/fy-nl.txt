@@ -1,8 +1,10 @@
 ﻿# Translations for Frisian (Frysk) (fy-nl) language
 
-# Lines at the beginning starting with # are comments
-# This file must be in utf-8 encoding. Make sure you use a proper
-# text editor (notepad++ or notepad2 will work) and set utf8 encoding.
+# * Lines starting with # are comments (such as this).
+# * This file must be in UTF-8 encoding. Make sure you use a proper
+#   text editor (Notepad++ or Notepad2) and set UTF-8 encoding.
+# * For lines containing several variables (such as %s, %d or %u), the
+#   variables must remain in that exact order in the translation.
 
 Lang: fy-nl Frisian (Frysk)
 
@@ -290,9 +292,6 @@ Folgjende side
 No matches were found
 Gjin sykresultaat fûn
 
-No result found around line %u in file %s
-Gjin resultaat fûn yn bestând %s by rigel %u
-
 No synchronization file found
 Gjin syngronisaasjebestân fûn
 
@@ -459,6 +458,7 @@ Zoomfaktor
 #Fit Content
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
+#No result found around line %u in file %s
 #Page scaling
 #Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L

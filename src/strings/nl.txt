@@ -1,8 +1,10 @@
 ﻿# Translations for Dutch (Nederlands) (nl) language
 
-# Lines at the beginning starting with # are comments
-# This file must be in utf-8 encoding. Make sure you use a proper
-# text editor (notepad++ or notepad2 will work) and set utf8 encoding.
+# * Lines starting with # are comments (such as this).
+# * This file must be in UTF-8 encoding. Make sure you use a proper
+#   text editor (Notepad++ or Notepad2) and set UTF-8 encoding.
+# * For lines containing several variables (such as %s, %d or %u), the
+#   variables must remain in that exact order in the translation.
 
 Lang: nl Dutch (Nederlands)
 
@@ -350,9 +352,6 @@ Volgende pagina
 No matches were found
 Geen zoekresultaat gevonden
 
-No result found around line %u in file %s
-Geen resultaat gevonden in bestand %s bij regel %u
-
 No synchronization file found
 Geen synchronisatiebestand gevonden
 
@@ -529,4 +528,7 @@ tekst kopieren
 
 printing document
 bestand afdrukken
+
+# Untranslated:
+#No result found around line %u in file %s
 

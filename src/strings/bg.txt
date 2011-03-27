@@ -1,8 +1,10 @@
 ﻿# Translations for Bulgarian (Български) (bg) language
 
-# Lines at the beginning starting with # are comments
-# This file must be in utf-8 encoding. Make sure you use a proper
-# text editor (notepad++ or notepad2 will work) and set utf8 encoding.
+# * Lines starting with # are comments (such as this).
+# * This file must be in UTF-8 encoding. Make sure you use a proper
+#   text editor (Notepad++ or Notepad2) and set UTF-8 encoding.
+# * For lines containing several variables (such as %s, %d or %u), the
+#   variables must remain in that exact order in the translation.
 
 Lang: bg Bulgarian (Български)
 
@@ -380,9 +382,6 @@ Pa&ge...\tCtrl-G
 Page Size:
 Размер на страницата:
 
-Page number %u inexistant
-Страница номер не съществува
-
 Page:
 Страница:
 
@@ -502,6 +501,7 @@ printing document
 #Fit Content
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
+#Page number %u inexistant
 #Page scaling
 #Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L
