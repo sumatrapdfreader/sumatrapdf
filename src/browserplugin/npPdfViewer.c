@@ -270,6 +270,17 @@ LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lPar
 			InvalidateRect(hChild, NULL, FALSE);
 		}
 	}
+	else if (uiMsg == WM_SIZE)
+	{
+		HWND hChild = FindWindowEx(hWnd, NULL, NULL, NULL);
+		if (hChild)
+		{
+			RECT rcClient;
+			GetClientRect(hWnd, &rcClient);
+			MoveWindow(hChild, rcClient.left, rcClient.top, rcClient.right - rcClient.left, rcClient.bottom - rcClient.top, FALSE);
+		}
+		
+	}
 	
 	return DefWindowProc(hWnd, uiMsg, wParam, lParam);
 }
