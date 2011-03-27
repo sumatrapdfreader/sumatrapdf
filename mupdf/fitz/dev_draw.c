@@ -591,6 +591,8 @@ fz_drawfillimage(void *user, fz_pixmap *image, fz_matrix ctm, float alpha)
 	if (image->w == 0 || image->h == 0)
 		return;
 
+	/* SumatraPDF: scale grayscale images first (be more memory efficient) */
+	if (image->colorspace != fz_devicegray)
 	if (image->colorspace != model)
 	{
 		converted = fz_newpixmap(model, image->x, image->y, image->w, image->h);
@@ -622,6 +624,14 @@ fz_drawfillimage(void *user, fz_pixmap *image, fz_matrix ctm, float alpha)
 		image = scaled;
 	}
 #endif
+
+	/* SumatraPDF: scale grayscale images first (be more memory efficient) */
+	if (image->colorspace != model)
+	{
+		converted = fz_newpixmap(model, image->x, image->y, image->w, image->h);
+		fz_convertpixmap(image, converted);
+		image = converted;
+	}
 
 	fz_paintimage(dev->dest, dev->scissor, image, ctm, alpha * 255);
 

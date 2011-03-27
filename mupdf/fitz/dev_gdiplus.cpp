@@ -218,7 +218,7 @@ public:
 				_applyBlend(stack->layer, stack->bounds, stack->blendmode);
 			
 			ImageAttributes imgAttrs;
-			_setDrawAttributes(&imgAttrs, stack->layerAlpha);
+			_setDrawAttributes(imgAttrs, stack->layerAlpha);
 			graphics->DrawImage(stack->layer, stack->bounds, 0, 0, stack->layer->GetWidth(), stack->layer->GetHeight(), UnitPixel, &imgAttrs);
 			delete stack->layer;
 		}
@@ -265,7 +265,7 @@ public:
 		};
 		
 		ImageAttributes imgAttrs;
-		_setDrawAttributes(&imgAttrs, alpha);
+		_setDrawAttributes(imgAttrs, alpha);
 		
 		float scale = _hypotf(_hypotf(ctm.a, ctm.b), _hypotf(ctm.c, ctm.d)) / _hypotf(image->w, image->h);
 		/* cf. fz_paintimageimp in draw/imagedraw.c for when (not) to interpolate */
@@ -285,11 +285,25 @@ public:
 		{
 			int w = ceilf(image->w * scale);
 			int h = ceilf(image->h * scale);
-			Bitmap *scaled = new Bitmap(w, h);
+			Bitmap *scaled = NULL;
 			
-			Graphics g2(scaled);
-			_setup(&g2);
-			g2.DrawImage(&PixmapBitmap(image), 0, 0, w, h);
+			if (image->colorspace == fz_devicegray)
+			{
+				fz_pixmap *scaledpx = fz_smoothscalepixmap(image, 0, 0, w, h);
+				if (scaledpx)
+				{
+					scaled = new PixmapBitmap(scaledpx);
+					fz_droppixmap(scaledpx);
+				}
+			}
+			
+			if (!scaled)
+			{
+				scaled = new Bitmap(w, h);
+				Graphics g2(scaled);
+				_setup(&g2);
+				g2.DrawImage(&PixmapBitmap(image), 0, 0, w, h);
+			}
 			
 			graphics->DrawImage(scaled, corners, 3, 0, 0, w, h, UnitPixel, &imgAttrs);
 			delete scaled;
@@ -485,7 +499,7 @@ protected:
 		return true;
 	}
 
-	void _setDrawAttributes(ImageAttributes *imgAttrs, float alpha)
+	void _setDrawAttributes(ImageAttributes& imgAttrs, float alpha)
 	{
 		ColorMatrix matrix = { 
 			1.0f, 0.0f, 0.0f, 0.0f, 0.0f,
@@ -495,8 +509,8 @@ protected:
 			0.0f, 0.0f, 0.0f, 0.0f, 1.0f
 		};
 		if (alpha != 1.0f)
-			imgAttrs->SetColorMatrix(&matrix, ColorMatrixFlagsDefault, ColorAdjustTypeBitmap);
-		// imgAttrs->SetWrapMode(WrapModeClamp);
+			imgAttrs.SetColorMatrix(&matrix, ColorMatrixFlagsDefault, ColorAdjustTypeBitmap);
+		// imgAttrs.SetWrapMode(WrapModeClamp);
 	}
 };
 
