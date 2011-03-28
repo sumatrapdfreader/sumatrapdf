@@ -56,7 +56,7 @@ Halaman Pertama\tHome
 &Pergi ke halaman:
 
 &Help
-Ban&tuan
+Bantua&n
 
 &Last Page\tEnd
 Halaman Terakhir\tEnd
@@ -68,7 +68,7 @@ Halaman Terakhir\tEnd
 &Manual
 
 &Match case
-&Samakan jenis
+&Samakan ukuran
 
 &Next Page\tRight Arrow
 Halaman Berikutnya\t->
@@ -122,7 +122,7 @@ Halaman Sebelumnya\t<-
 &Gunakan ukuran halaman sebenarnya
 
 &View
-&Lihat
+&Tampilan
 
 &Yes
 &Ya
@@ -161,7 +161,7 @@ Automatically check for &updates
 Periksa &pembaruan secara otomatis
 
 Book View
-Tampilan buku
+Tampilan Buku
 
 Book&marks\tF12
 &Markah\tF12
@@ -185,22 +185,22 @@ Cannot start inverse search command. Please check the command line in the settin
 Tidak dapat memulai perintah pencarian terbalik. Harap periksa baris perintah di bagian pengaturan.
 
 Change Language
-Ubah bahasa (Change Language)
+Ubah Bahasa (Change Language)
 
 Check for &Updates
-&Periksa versi terbaru
+&Periksa Versi Terbaru
 
 Continuous
 Kontinu
 
 Continuous Book View
-Tampilan buku secara kontinu
+Tampilan Buku Secara Kontinu
 
 Continuous Facing
-Dua halaman kontinu
+Dua Halaman Kontinu
 
 Contribute Translation
-Membantu alihbahasa
+Membantu Alihbahasa
 
 Copying text was denied (copying as image only)
 Menyalin teks ditolak (menyalin sebagai gambar saja)
@@ -230,7 +230,7 @@ Default PDF reader can't be changed in portable mode
 Pembaca PDF utama tidak dapat diubah dalam mode portabel
 
 Denied Permissions:
-Izin yang ditolak:
+Izin Ditolak:
 
 Document Properties
 Properti Dokumen
@@ -248,10 +248,10 @@ Enter password for %s
 Masukkan kata kunci untuk %s
 
 Enter the command-line to invoke when you double-click on the PDF document:
-Masukkan baris perintah untuk dijalankan ketika Anda mengklik dua kali di dokumen PDF:
+Masukkan baris perintah untuk dijalankan ketika Anda mengklik dua kali pada dokumen PDF:
 
 Error loading PDF file.
-Kesalahan dalam memanggil berkas PDF.
+Kesalahan memuat berkas PDF.
 
 F&orward\tAlt+Right Arrow
 Berikutnya\tAlt+->
@@ -278,10 +278,10 @@ Find
 Cari
 
 Find Next
-Temukan Sesudah
+Temukan Selanjutnya
 
 Find Previous
-Temukan Sebelum
+Temukan Sebelumnya
 
 Find:
 Temukan:
@@ -290,22 +290,22 @@ Fit &Content\tCtrl-3
 Sesuaikan &Konten\tCtrl-3 
 
 Fit &Page\tCtrl-0
-&Sesuaikan\tCtrl-0
+&Sesuaikan Dengan Halaman\tCtrl-0
 
 Fit &Width\tCtrl-2
 Sesuaikan Dengan &Lebar\tCtrl-2
 
 Fit Content
-Sesuaikan Konten
+Sesuaikan Dengan Konten
 
 Fit Page
-Sesuaikan
+Sesuaikan Dengan Halaman
 
 Fit Width
 Sesuaikan Dengan Lebar
 
 Fit Width and Show Pages Continuously
-Sesuaikan Lebar dan Tampilkan Halaman Secara Kontinu
+Sesuaikan Lebar Dan Tampilkan Halaman Secara Kontinu
 
 Fit a Single Page
 Sesuaikan Halaman Tunggal
@@ -335,7 +335,7 @@ Make SumatraPDF my default PDF reader
 Jadikan SumatraPDF sebagai pembaca PDF utama
 
 Match Case
-Cocokkan Huruf Besar-Kecilnya
+Cocokkan Ukuran Huruf
 
 Modified:
 Dimodifikasi:
@@ -374,7 +374,7 @@ Open in &Foxit Reader
 Buka di &Foxit Reader
 
 Open in PDF-XChange
-Buka di PDF-XChange
+Buka di PDF-&XChange
 
 P&roperties\tCtrl-D
 P&roperti\tCtrl-D
@@ -389,7 +389,7 @@ PDF Version:
 Versi PDF:
 
 PDF documents
-Berkas-berkas dokumen
+Dokumen PDF
 
 Pa&ge...\tCtrl-G
 Halaman...\tCtrl-G
@@ -428,10 +428,10 @@ Remember &opened files
 Ingat &berkas yang pernah dibuka
 
 Rotate &Left\tCtrl-Shift--
-Putar ke Kiri\tCtrl-Shift--
+Putar Ke Kiri\tCtrl-Shift--
 
 Rotate &Right\tCtrl-Shift-+
-Putar ke Kanan\tCtrl-Shift-+
+Putar Ke Kanan\tCtrl-Shift-+
 
 Searching %d of %d...
 Sedang mencari %d dari %d
@@ -443,13 +443,13 @@ Select content with Ctrl+left mouse button
 Pilih konten dengan tombol Ctrl+left pada mouse
 
 Send by &E-mail...
-Kirim via &Email...
+Kirim Via &Email...
 
 Set inverse search command-line
 Tetapkan baris perintah pencarian terbalik
 
 Show &Toolbar
-Perlihatkan &Toolbar
+Tampilkan &Toolbar
 
 Show &pages continuously
 Tampilkan halaman secara kontinu
@@ -467,7 +467,7 @@ Subject:
 Perihal:
 
 SumatraPDF Options
-Pilihan-pilihan di SumatraPDF
+Pengaturan SumatraPDF
 
 SumatraPDF Update
 Pembaruan SumatraPDF
@@ -485,7 +485,7 @@ Synchronization file cannot be opened
 Berkas sinkronisasi tidak dapat dibuka
 
 Text documents
-Dokumen-dokumen teks
+Dokumen teks
 
 Title:
 Judul:
@@ -494,7 +494,7 @@ Unknown source file (%s)
 Berkas asal (%s) tidak diketahui
 
 View
-Lihat
+Tampilan
 
 Visit &Website
 &Kunjungi Halaman Web
