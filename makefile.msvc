@@ -30,6 +30,9 @@ MUPDF_DIR=mupdf
 EXTLIBSDIR=ext
 !endif
 
+# include SumatraPDF's version number in libmupdf.dll
+LIBMUPDF_RES = $(O)\libmupdf.res
+
 # default target
 all_sumatrapdf: SumatraPDF Installer PDFFilter BrowserPlugin
 
@@ -137,6 +140,9 @@ $(SUMATRA_APP): $(LIBS_OBJS) $(BZIP2_OBJS) $(MINIZIP_OBJS) $(BASEUTILS_OBJS) $(S
 
 $(SUMATRA_APP_NO_MUPDF): $(BZIP2_OBJS) $(MINIZIP_OBJS) $(BASEUTILS_OBJS) $(SUMATRA_OBJS) $(O)\MuPDF_Exports.obj
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ $(LIBMUPDF_LIB)
+
+$(LIBMUPDF_RES): src\libmupdf.rc src\Version.h
+	rc /r /fo$@ $(EXTCFLAGS) src\libmupdf.rc
 
 $(INSTALLER_RES): src\installer\Installer.rc src\installer\Resource.h src\Version.h
 	rc /r /fo$@ $(EXTCFLAGS) src\installer\Installer.rc

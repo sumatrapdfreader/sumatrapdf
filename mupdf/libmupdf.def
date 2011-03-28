@@ -3,13 +3,17 @@ EXPORTS
 
 ; Fitz exports
 
+	gettimeofday
 	fz_warn
+	fz_flushwarnings
 	fz_throwimp
 	fz_rethrowimp
 	fz_catchimp
 	fz_throwimpx
 	fz_rethrowimpx
 	fz_catchimpx
+	fz_geterrorcount
+	fz_geterrorline
 	fz_malloc
 	fz_calloc
 	fz_realloc
@@ -19,6 +23,10 @@ EXPORTS
 	fz_strsep
 	fz_strlcpy
 	fz_strlcat
+	chartorune
+	runetochar
+	runelen
+	fz_getopt
 	fz_newhash
 	fz_debughash
 	fz_emptyhash
