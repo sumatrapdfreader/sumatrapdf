@@ -526,5 +526,12 @@ printing document
 штампање документа
 
 # Untranslated:
+#&Copy Selection
+#&Print...
+#&Save As...
+#Copy &Link Address
+#Copy Co&mment
+#P&roperties
+#Select &All
 #Source file %s has no synchronization point
 

@@ -522,6 +522,13 @@ printing document
 argraffu dogfen
 
 # Untranslated:
+#&Copy Selection
+#&Print...
+#&Save As...
+#Copy &Link Address
+#Copy Co&mment
 #Enter the command-line to invoke when you double-click on the PDF document:
+#P&roperties
+#Select &All
 #[Changes detected; refreshing] %s
 

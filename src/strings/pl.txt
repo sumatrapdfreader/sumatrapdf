@@ -524,5 +524,12 @@ printing document
 drukowanie dokumentu
 
 # Untranslated:
+#&Copy Selection
+#&Print...
+#&Save As...
+#Copy &Link Address
+#Copy Co&mment
+#P&roperties
 #Searching %d of %d...
+#Select &All
 

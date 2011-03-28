@@ -449,15 +449,20 @@ printing document
 
 # Untranslated:
 #&All selected pages
+#&Copy Selection
 #&Even pages only
 #&Fit pages to printable area
 #&Odd pages only
+#&Print...
 #&Remember the password for this document
+#&Save As...
 #&Shrink pages to printable area (if necessary)
 #&Use original page sizes
 #Attachment: %s
 #Bookmarks
 #Can't connect to the Internet (error %#x).
+#Copy &Link Address
+#Copy Co&mment
 #Copying text was denied (copying as image only)
 #Enter the command-line to invoke when you double-click on the PDF document:
 #Fit &Content\tCtrl-3
@@ -467,10 +472,12 @@ printing document
 #No matches were found
 #No result found around line %u in file %s
 #No synchronization info at this position
+#P&roperties
 #Page scaling
 #Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L
 #Print range
+#Select &All
 #Select &All\tCtrl-A
 #Show the &bookmarks sidebar when available
 #SumatraPDF Update

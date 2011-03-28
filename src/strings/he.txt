@@ -501,13 +501,20 @@ printing document
 מדפיס מסמך
 
 # Untranslated:
+#&Copy Selection
+#&Print...
+#&Save As...
 #Attachment: %s
+#Copy &Link Address
+#Copy Co&mment
 #Enter the command-line to invoke when you double-click on the PDF document:
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
 #No result found around line %u in file %s
+#P&roperties
 #Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L
+#Select &All
 #Select &All\tCtrl-A
 #SumatraPDF crashed
 

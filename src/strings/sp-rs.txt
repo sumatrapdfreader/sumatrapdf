@@ -386,11 +386,14 @@ Faktor uvećanja
 # Untranslated:
 #&All selected pages
 #&Back\tAlt+Left Arrow
+#&Copy Selection
 #&Even pages only
 #&Fit pages to printable area
 #&Odd pages only
+#&Print...
 #&Print... (denied)
 #&Remember the password for this document
+#&Save As...
 #&Shrink pages to printable area (if necessary)
 #&Use original page sizes
 #Application:
@@ -401,6 +404,8 @@ Faktor uvećanja
 #Bytes
 #Can't connect to the Internet (error %#x).
 #Continuous Book View
+#Copy &Link Address
+#Copy Co&mment
 #Copying text was denied (copying as image only)
 #Created:
 #Denied Permissions:
@@ -415,6 +420,7 @@ Faktor uvećanja
 #Fit a Single Page
 #Modified:
 #Number of Pages:
+#P&roperties
 #P&roperties\tCtrl-D
 #PDF Producer:
 #PDF Version:
@@ -423,6 +429,7 @@ Faktor uvećanja
 #Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L
 #Print range
+#Select &All
 #Select &All\tCtrl-A
 #Send by &E-mail...
 #Source file %s has no synchronization point

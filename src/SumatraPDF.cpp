@@ -535,9 +535,10 @@ void WindowInfo::SwitchToDisplayMode(DisplayMode displayMode, bool keepContinuou
 #define SEP_ITEM "-----"
 
 enum menuFlags {
-    MF_NOT_IN_RESTRICTED = 0x1,
-    MF_NO_TRANSLATE      = 0x2,
-    MF_REMOVED           = 0x4
+    MF_NOT_IN_RESTRICTED = 1 << 0,
+    MF_NO_TRANSLATE      = 1 << 1,
+    MF_REMOVED           = 1 << 2,
+    MF_PLUGIN_MODE_ONLY  = 1 << 3,
 };
 
 typedef struct MenuDef {
@@ -639,6 +640,18 @@ MenuDef menuDefHelp[] = {
 #endif
 };
 
+MenuDef menuDefContext[] = {
+    { _TRN("&Copy Selection"),              IDM_COPY_SELECTION,         0 },
+    { _TRN("Copy &Link Address"),           IDM_COPY_LINK_TARGET,       0 },
+    { _TRN("Copy Co&mment"),                IDM_COPY_COMMENT,           0 },
+    { SEP_ITEM,                             0,                          0 },
+    { _TRN("Select &All"),                  IDM_SELECT_ALL,             0 },
+    { SEP_ITEM,                             0,                          MF_PLUGIN_MODE_ONLY },
+    { _TRN("&Save As..."),                  IDM_SAVEAS,                 MF_PLUGIN_MODE_ONLY },
+    { _TRN("&Print..."),                    IDM_PRINT,                  MF_PLUGIN_MODE_ONLY },
+    { _TRN("P&roperties"),                  IDM_PROPERTIES,             MF_PLUGIN_MODE_ONLY },
+};
+
 static void AddFileMenuItem(HMENU menuFile, DisplayState *state, UINT index)
 {
     assert(state && menuFile);
@@ -658,14 +671,12 @@ static void EmptyMenu(HMENU m)
     }
 }
 
-static HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int n, HMENU m=NULL)
+static HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuLen, HMENU menu)
 {
-    if (m)
-        EmptyMenu(m);
-    else
-        m = CreateMenu();
+    assert(menu);
+    if (!menu) return NULL;
 
-    for (int i=0; i < n; i++) {
+    for (int i = 0; i < menuLen; i++) {
         MenuDef md = menuDefs[i];
         const char *title = md.title;
         if (md.flags & MF_REMOVED)
@@ -673,18 +684,21 @@ static HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int n, HMENU m=NULL)
 
         if (gRestrictedUse && (md.flags & MF_NOT_IN_RESTRICTED))
             continue;
+        if (!gPluginMode && (md.flags & MF_PLUGIN_MODE_ONLY))
+            continue;
 
         if (Str::Eq(title, SEP_ITEM)) {
-            AppendMenu(m, MF_SEPARATOR, 0, NULL);
+            AppendMenu(menu, MF_SEPARATOR, 0, NULL);
         } else if (MF_NO_TRANSLATE == (md.flags & MF_NO_TRANSLATE)) {
             ScopedMem<TCHAR> tmp(Str::Conv::FromUtf8(title));
-            AppendMenu(m, MF_STRING, (UINT_PTR)md.id, tmp);
+            AppendMenu(menu, MF_STRING, (UINT_PTR)md.id, tmp);
         } else {
-            const TCHAR *tmp =  Translations_GetTranslation(title);
-            AppendMenu(m, MF_STRING, (UINT_PTR)md.id, tmp);
+            const TCHAR *tmp = Translations_GetTranslation(title);
+            AppendMenu(menu, MF_STRING, (UINT_PTR)md.id, tmp);
         }
     }
-    return m;
+
+    return menu;
 }
 
 static void AppendRecentFilesToMenu(HMENU m)
@@ -706,12 +720,12 @@ static void AppendRecentFilesToMenu(HMENU m)
     InsertMenu(m, IDM_EXIT, MF_BYCOMMAND | MF_SEPARATOR, 0, NULL);
 }
 
-static void AddOrRemoveFileMenuAtPos(int n, bool add)
+static inline void AddOrRemoveFileMenuAtPos(MenuDef *item, bool add)
 {
     if (add)
-        menuDefFile[n].flags &= ~MF_REMOVED;
+        item->flags &= ~MF_REMOVED;
     else
-        menuDefFile[n].flags |= MF_REMOVED;
+        item->flags |= MF_REMOVED;
 }
 
 // Suppress menu items that depend on specific software being installed:
@@ -724,20 +738,21 @@ static void SetupProgramDependentMenus(WindowInfo *win)
     bool email = CanSendAsEmailAttachment(win);
     for (int i = 0; i < dimof(menuDefFile); i++) {
         if (IDM_VIEW_WITH_ACROBAT == menuDefFile[i].id)
-            AddOrRemoveFileMenuAtPos(i, acrobat);
+            AddOrRemoveFileMenuAtPos(&menuDefFile[i], acrobat);
         else if (IDM_VIEW_WITH_FOXIT == menuDefFile[i].id)
-            AddOrRemoveFileMenuAtPos(i, foxit);
+            AddOrRemoveFileMenuAtPos(&menuDefFile[i], foxit);
         else if (IDM_VIEW_WITH_PDF_XCHANGE ==  menuDefFile[i].id)
-            AddOrRemoveFileMenuAtPos(i, pdfexch);
+            AddOrRemoveFileMenuAtPos(&menuDefFile[i], pdfexch);
         else if (IDM_SEND_BY_EMAIL == menuDefFile[i].id)
-            AddOrRemoveFileMenuAtPos(i, email);
+            AddOrRemoveFileMenuAtPos(&menuDefFile[i], email);
     }
 }
 
 static HMENU RebuildFileMenu(WindowInfo *win, HMENU menu)
 {
     SetupProgramDependentMenus(win);
-    menu = BuildMenuFromMenuDef(menuDefFile, dimof(menuDefFile), menu);
+    EmptyMenu(menu);
+    BuildMenuFromMenuDef(menuDefFile, dimof(menuDefFile), menu);
     AppendRecentFilesToMenu(menu);
     return menu;
 }
@@ -747,17 +762,17 @@ static void BuildMenu(WindowInfo *win)
     assert(NULL == win->menu);
 
     HMENU mainMenu = CreateMenu();
-    HMENU m = RebuildFileMenu(win, NULL);
+    HMENU m = RebuildFileMenu(win, CreateMenu());
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&File"));
-    m = BuildMenuFromMenuDef(menuDefView, dimof(menuDefView));
+    m = BuildMenuFromMenuDef(menuDefView, dimof(menuDefView), CreateMenu());
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&View"));
-    m = BuildMenuFromMenuDef(menuDefGoTo, dimof(menuDefGoTo));
+    m = BuildMenuFromMenuDef(menuDefGoTo, dimof(menuDefGoTo), CreateMenu());
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Go To"));
-    m = BuildMenuFromMenuDef(menuDefZoom, dimof(menuDefZoom));
+    m = BuildMenuFromMenuDef(menuDefZoom, dimof(menuDefZoom), CreateMenu());
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Zoom"));
-    m = BuildMenuFromMenuDef(menuDefLang, dimof(menuDefLang));
+    m = BuildMenuFromMenuDef(menuDefLang, dimof(menuDefLang), CreateMenu());
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Settings"));
-    m = BuildMenuFromMenuDef(menuDefHelp, dimof(menuDefHelp));
+    m = BuildMenuFromMenuDef(menuDefHelp, dimof(menuDefHelp), CreateMenu());
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Help"));
 
     win->menu = mainMenu;
@@ -1136,7 +1151,7 @@ static void ToolbarUpdateStateForWindow(WindowInfo *win) {
     }
 }
 
-static void MenuUpdatePrintItem(WindowInfo *win) {
+static void MenuUpdatePrintItem(WindowInfo *win, HMENU menu, bool disableOnly=false) {
     bool filePrintEnabled = false;
     if (win->dm && win->dm->pdfEngine)
         filePrintEnabled = true;
@@ -1149,10 +1164,11 @@ static void MenuUpdatePrintItem(WindowInfo *win) {
         const TCHAR *printItem = Translations_GetTranslation(menuDefFile[ix].title);
         if (!filePrintAllowed)
             printItem = _TR("&Print... (denied)");
-        ModifyMenu(win->menu, IDM_PRINT, MF_BYCOMMAND | MF_STRING, IDM_PRINT, printItem);
+        if (!filePrintAllowed || !disableOnly)
+            ModifyMenu(menu, IDM_PRINT, MF_BYCOMMAND | MF_STRING, IDM_PRINT, printItem);
     }
 
-    Win::Menu::Enable(win->menu, IDM_PRINT, filePrintEnabled && filePrintAllowed);
+    Win::Menu::Enable(menu, IDM_PRINT, filePrintEnabled && filePrintAllowed);
 }
 
 static void MenuUpdateStateForWindow(WindowInfo *win) {
@@ -1167,7 +1183,7 @@ static void MenuUpdateStateForWindow(WindowInfo *win) {
     assert(FileCloseMenuEnabled() == (win->loadedFilePath != NULL)); // TODO: ???
     Win::Menu::Enable(win->menu, IDM_CLOSE, FileCloseMenuEnabled());
         
-    MenuUpdatePrintItem(win);
+    MenuUpdatePrintItem(win, win->menu);
 
     bool enabled = WS_SHOWING_PDF == win->state && win->dm && win->dm->hasTocTree();
     Win::Menu::Enable(win->menu, IDM_VIEW_BOOKMARKS, enabled);
@@ -2328,17 +2344,8 @@ static void CopySelectionToClipboard(WindowInfo *win)
         }
 
         // don't copy empty text
-        if (!Str::IsEmpty(selText)) {
-            HGLOBAL handle = GlobalAlloc(GMEM_MOVEABLE, (Str::Len(selText) + 1) * sizeof(TCHAR));
-            if (handle) {
-                TCHAR *globalText = (TCHAR *)GlobalLock(handle);
-                lstrcpy(globalText, selText);
-                GlobalUnlock(handle);
-
-                if (!SetClipboardData(CF_T_TEXT, handle))
-                    SeeLastError();
-            }
-        }
+        if (!Str::IsEmpty(selText))
+            CopyTextToClipboard(selText, true);
         free(selText);
 
         if (win->dm->textSelection->result.len > 0) {
@@ -2586,6 +2593,55 @@ static void ChangePresentationMode(WindowInfo *win, PresentationMode mode)
 {
     win->presentation = mode;
     win->RedrawAll();
+}
+
+static void OnContextMenu(WindowInfo *win, int x, int y)
+{
+    if (!win || !win->dm)
+        return;
+
+    pdf_link *link = win->dm->getLinkAtPosition(PointI(x, y));
+    ScopedMem<TCHAR> linkAddress(win->dm->getLinkPath(link));
+    pdf_annot *comment = win->dm->getCommentAtPosition(PointI(x, y));
+    for (int i = 0; i < dimof(menuDefContext); i++) {
+        MenuDef md = menuDefContext[i];
+        if (IDM_COPY_LINK_TARGET == md.id)
+            AddOrRemoveFileMenuAtPos(&menuDefContext[i], linkAddress.Get() != NULL);
+        else if (IDM_COPY_COMMENT == md.id)
+            AddOrRemoveFileMenuAtPos(&menuDefContext[i], comment != NULL);
+    }
+
+    HMENU popup = BuildMenuFromMenuDef(menuDefContext, dimof(menuDefContext), CreatePopupMenu());
+    if (!win->selectionOnPage)
+        Win::Menu::Enable(popup, IDM_COPY_SELECTION, false);
+    MenuUpdatePrintItem(win, popup, true);
+
+    POINT pt = { x, y };
+    MapWindowPoints(win->hwndCanvas, HWND_DESKTOP, &pt, 1);
+    INT cmd = TrackPopupMenu(popup, TPM_RETURNCMD | TPM_RIGHTBUTTON,
+                             pt.x, pt.y, 0, win->hwndFrame, NULL);
+    switch (cmd) {
+    case IDM_COPY_SELECTION:
+    case IDM_SELECT_ALL:
+    case IDM_SAVEAS:
+    case IDM_PRINT:
+    case IDM_PROPERTIES:
+        SendMessage(win->hwndFrame, WM_COMMAND, cmd, 0);
+        break;
+
+    case IDM_COPY_LINK_TARGET:
+        CopyTextToClipboard(linkAddress);
+        break;
+
+    case IDM_COPY_COMMENT:
+        {
+            ScopedMem<TCHAR> commentText(Str::Conv::FromUtf8(fz_tostrbuf(fz_dictgets(comment->obj, "Contents"))));
+            CopyTextToClipboard(commentText);
+        }
+        break;
+    }
+
+    DestroyMenu(popup);
 }
 
 static void OnDraggingStart(WindowInfo *win, int x, int y, bool right=false)
@@ -2928,7 +2984,9 @@ static void OnMouseRightButtonUp(WindowInfo *win, int x, int y, WPARAM key)
     if (didDragMouse)
         /* pass */;
     else if (win->fullScreen || PM_ENABLED == win->presentation) {
-        if ((key & MK_SHIFT))
+        if ((key & MK_CONTROL))
+            OnContextMenu(win, x, y);
+        else if ((key & MK_SHIFT))
             win->dm->goToNextPage(0);
         else
             win->dm->goToPrevPage(0);
@@ -2936,6 +2994,8 @@ static void OnMouseRightButtonUp(WindowInfo *win, int x, int y, WPARAM key)
     /* return from white/black screens in presentation mode */
     else if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation)
         ChangePresentationMode(win, PM_ENABLED);
+    else
+        OnContextMenu(win, x, y);
 
     win->mouseAction = MA_IDLE;
 }
@@ -6403,6 +6463,11 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
 
         case WM_KEYDOWN:
             OnKeydown(win, wParam, lParam);
+            break;
+
+        case WM_KEYUP:
+            if (VK_APPS == wParam)
+                OnContextMenu(win, 0, 0);
             break;
 
         case WM_SETTINGCHANGE:

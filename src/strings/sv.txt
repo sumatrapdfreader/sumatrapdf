@@ -531,3 +531,12 @@ kopierar text
 printing document
 skriver ut dokumentet
 
+# Untranslated:
+#&Copy Selection
+#&Print...
+#&Save As...
+#Copy &Link Address
+#Copy Co&mment
+#P&roperties
+#Select &All
+

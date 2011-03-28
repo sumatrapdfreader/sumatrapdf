@@ -531,3 +531,12 @@ copie du texte
 printing document
 impression du document
 
+# Untranslated:
+#&Copy Selection
+#&Print...
+#&Save As...
+#Copy &Link Address
+#Copy Co&mment
+#P&roperties
+#Select &All
+

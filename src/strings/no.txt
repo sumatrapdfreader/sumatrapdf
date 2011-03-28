@@ -524,6 +524,13 @@ printing document
 skriver ut dokument
 
 # Untranslated:
+#&Copy Selection
+#&Print...
+#&Save As...
+#Copy &Link Address
+#Copy Co&mment
 #Found text at page %d
+#P&roperties
+#Select &All
 #Unknown source file (%s)
 

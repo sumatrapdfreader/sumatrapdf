@@ -527,3 +527,12 @@ copying text
 printing document
 đang in tập tin
 
+# Untranslated:
+#&Copy Selection
+#&Print...
+#&Save As...
+#Copy &Link Address
+#Copy Co&mment
+#P&roperties
+#Select &All
+

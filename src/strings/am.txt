@@ -524,5 +524,12 @@ printing document
 փաստաթուղթը տպվում է
 
 # Untranslated:
+#&Copy Selection
+#&Print...
+#&Save As...
+#Copy &Link Address
+#Copy Co&mment
 #No result found around line %u in file %s
+#P&roperties
+#Select &All
 

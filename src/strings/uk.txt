@@ -208,6 +208,7 @@ Zoom Out
 # Untranslated:
 #&All selected pages
 #&Back\tAlt+Left Arrow
+#&Copy Selection
 #&Copy Selection\tCtrl-C
 #&Even pages only
 #&Find what:
@@ -221,9 +222,11 @@ Zoom Out
 #&Odd pages only
 #&Options...
 #&Password:
+#&Print...
 #&Print... (denied)
 #&Remember the password for this document
 #&Remember these settings for each document
+#&Save As...
 #&Settings
 #&Shrink pages to printable area (if necessary)
 #&Use original page sizes
@@ -244,6 +247,8 @@ Zoom Out
 #Cannot print this file
 #Cannot start inverse search command. Please check the command line in the settings.
 #Continuous Book View
+#Copy &Link Address
+#Copy Co&mment
 #Copying text was denied (copying as image only)
 #Couldn't initialize printer
 #Couldn't render the page
@@ -276,6 +281,7 @@ Zoom Out
 #Open in &Adobe Reader
 #Open in &Foxit Reader
 #Open in PDF-XChange
+#P&roperties
 #P&roperties\tCtrl-D
 #PDF Document
 #PDF Producer:
@@ -291,6 +297,7 @@ Zoom Out
 #Print range
 #Remember &opened files
 #Searching %d of %d...
+#Select &All
 #Select &All\tCtrl-A
 #Select content with Ctrl+left mouse button
 #Send by &E-mail...

@@ -529,3 +529,12 @@ Szöveg vágólapra
 printing document
 Nyomtatás
 
+# Untranslated:
+#&Copy Selection
+#&Print...
+#&Save As...
+#Copy &Link Address
+#Copy Co&mment
+#P&roperties
+#Select &All
+

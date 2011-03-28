@@ -525,5 +525,12 @@ printing document
 s'està imprimint el document
 
 # Untranslated:
+#&Copy Selection
+#&Print...
+#&Save As...
+#Copy &Link Address
+#Copy Co&mment
 #New version %s is available. Download new version?
+#P&roperties
+#Select &All
 

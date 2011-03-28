@@ -522,6 +522,13 @@ printing document
 ipini-print ang dokumento
 
 # Untranslated:
+#&Copy Selection
+#&Print...
+#&Save As...
+#Copy &Link Address
+#Copy Co&mment
 #No result found around line %u in file %s
+#P&roperties
 #Searching %d of %d...
+#Select &All
 

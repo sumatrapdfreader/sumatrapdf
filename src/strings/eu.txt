@@ -387,18 +387,23 @@ dokumentua imprimatzen
 
 # Untranslated:
 #&Back\tAlt+Left Arrow
+#&Copy Selection
 #&Even pages only
 #&Find what:
 #&Fit pages to printable area
 #&Manual
 #&Match case
 #&Odd pages only
+#&Print...
+#&Save As...
 #&Shrink pages to printable area (if necessary)
 #(of %d)
 #Advanced
 #Bookmarks
 #Cannot start inverse search command. Please check the command line in the settings.
 #Continuous Book View
+#Copy &Link Address
+#Copy Co&mment
 #Copying text was denied (copying as image only)
 #Couldn't initialize printer
 #Couldn't render the page
@@ -414,12 +419,14 @@ dokumentua imprimatzen
 #No result found around line %u in file %s
 #No synchronization file found
 #No synchronization info at this position
+#P&roperties
 #Page scaling
 #Please include the following file in your crash report:
 #Please wait - rendering...
 #Pr&esentation\tCtrl-L
 #Print range
 #Remember &opened files
+#Select &All
 #Select &All\tCtrl-A
 #Select content with Ctrl+left mouse button
 #Show &pages continuously

@@ -528,5 +528,12 @@ printing document
 impresión de documento
 
 # Untranslated:
+#&Copy Selection
+#&Print...
+#&Save As...
+#Copy &Link Address
+#Copy Co&mment
+#P&roperties
 #Page number %u inexistant
+#Select &All
 

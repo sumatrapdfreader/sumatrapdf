@@ -451,9 +451,14 @@ printing document
 문서 인쇄중
 
 # Untranslated:
+#&Copy Selection
+#&Print...
+#&Save As...
 #&Use original page sizes
 #Cannot start inverse search command. Please check the command line in the settings.
 #Continuous Book View
+#Copy &Link Address
+#Copy Co&mment
 #Default PDF reader can't be changed in portable mode
 #Denied Permissions:
 #Enter the command-line to invoke when you double-click on the PDF document:
@@ -466,8 +471,10 @@ printing document
 #No result found around line %u in file %s
 #No synchronization file found
 #No synchronization info at this position
+#P&roperties
 #Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L
+#Select &All
 #Select &All\tCtrl-A
 #Select content with Ctrl+left mouse button
 #Show &pages continuously

@@ -28,6 +28,9 @@ Contributor: Andreas Hopp (teraflop@arcor.de)
 &Close\tCtrl-W
 &Schließen\tStrg+W
 
+&Copy Selection
+Auswahl &kopieren
+
 &Copy Selection\tCtrl-C
 Auswahl &kopieren\tStrg+C
 
@@ -94,6 +97,9 @@ Nur &ungerade Seiten
 &Previous Page\tLeft Arrow
 &Vorherige Seite\t<-
 
+&Print...
+&Drucken…
+
 &Print...\tCtrl-P
 &Drucken…\tStrg+P
 
@@ -105,6 +111,9 @@ Passwort für dieses Dokument &merken
 
 &Remember these settings for each document
 Ansicht-&Einstellungen für jedes Dokument einzeln merken
+
+&Save As...
+&Speichern unter…
 
 &Save As...\tCtrl-S
 Speichern &unter…\tStrg+S
@@ -207,6 +216,12 @@ Fortlaufende Doppelseiten
 
 Contribute Translation
 Übersetzung beisteuern
+
+Copy &Link Address
+Adresse des &Links kopieren
+
+Copy Co&mment
+K&ommentar kopieren
 
 Copying text was denied (copying as image only)
 Text kopieren verweigert (nur als Bild kopiert)
@@ -382,6 +397,9 @@ Mit F&oxit Reader öffnen
 Open in PDF-XChange
 Mit PDF-XChange öffnen
 
+P&roperties
+Ei&genschaften
+
 P&roperties\tCtrl-D
 Ei&genschaften\tStrg+D
 
@@ -444,6 +462,9 @@ Save S&hortcut...\tCtrl-Shift-S
 
 Searching %d of %d...
 Suche auf Seite %d von %d…
+
+Select &All
+Alles &markieren
 
 Select &All\tCtrl-A
 Alles &markieren\tStrg+A

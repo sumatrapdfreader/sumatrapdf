@@ -500,11 +500,18 @@ printing document
 ලේඛනය මුද්‍රණය
 
 # Untranslated:
+#&Copy Selection
+#&Print...
+#&Save As...
+#Copy &Link Address
+#Copy Co&mment
 #No result found around line %u in file %s
+#P&roperties
 #Page scaling
 #Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L
 #Print range
+#Select &All
 #Select &All\tCtrl-A
 #Set inverse search command-line
 #SumatraPDF Update

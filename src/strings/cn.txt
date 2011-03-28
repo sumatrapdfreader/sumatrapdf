@@ -506,10 +506,17 @@ printing document
 正在打印文档
 
 # Untranslated:
+#&Copy Selection
+#&Print...
+#&Save As...
+#Copy &Link Address
+#Copy Co&mment
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
+#P&roperties
 #Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L
+#Select &All
 #Select &All\tCtrl-A
 #SumatraPDF Update
 #SumatraPDF crashed

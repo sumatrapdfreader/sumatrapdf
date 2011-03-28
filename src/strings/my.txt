@@ -333,7 +333,10 @@ printing document
 mencetak dokumen
 
 # Untranslated:
+#&Copy Selection
 #&Match case
+#&Print...
+#&Save As...
 #&Shrink pages to printable area (if necessary)
 #&Use original page sizes
 #(of %d)
@@ -345,6 +348,8 @@ mencetak dokumen
 #Can't connect to the Internet (error %#x).
 #Cannot start inverse search command. Please check the command line in the settings.
 #Check for &Updates
+#Copy &Link Address
+#Copy Co&mment
 #Copying text was denied (copying as image only)
 #Couldn't initialize printer
 #Couldn't render the page
@@ -371,6 +376,7 @@ mencetak dokumen
 #Open in &Adobe Reader
 #Open in &Foxit Reader
 #Open in PDF-XChange
+#P&roperties
 #P&roperties\tCtrl-D
 #PDF Producer:
 #Page number %u inexistant
@@ -381,6 +387,7 @@ mencetak dokumen
 #Print range
 #Remember &opened files
 #Searching %d of %d...
+#Select &All
 #Select &All\tCtrl-A
 #Select content with Ctrl+left mouse button
 #Send by &E-mail...

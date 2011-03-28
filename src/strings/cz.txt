@@ -529,3 +529,12 @@ kopírování textu
 printing document
 tisk dokumentu
 
+# Untranslated:
+#&Copy Selection
+#&Print...
+#&Save As...
+#Copy &Link Address
+#Copy Co&mment
+#P&roperties
+#Select &All
+

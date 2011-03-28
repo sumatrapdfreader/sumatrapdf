@@ -526,5 +526,12 @@ printing document
 tiskanje dokumenta
 
 # Untranslated:
+#&Copy Selection
+#&Print...
+#&Save As...
+#Copy &Link Address
+#Copy Co&mment
+#P&roperties
+#Select &All
 #Select &All\tCtrl-A
 

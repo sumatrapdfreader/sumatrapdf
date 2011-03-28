@@ -529,3 +529,12 @@ kopierer tekst
 printing document
 printer dokument
 
+# Untranslated:
+#&Copy Selection
+#&Print...
+#&Save As...
+#Copy &Link Address
+#Copy Co&mment
+#P&roperties
+#Select &All
+

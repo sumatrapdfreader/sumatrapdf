@@ -528,3 +528,12 @@ copying text
 printing document
 εκτύπωση εγγράφου
 
+# Untranslated:
+#&Copy Selection
+#&Print...
+#&Save As...
+#Copy &Link Address
+#Copy Co&mment
+#P&roperties
+#Select &All
+

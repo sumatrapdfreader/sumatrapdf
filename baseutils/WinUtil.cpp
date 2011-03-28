@@ -510,3 +510,29 @@ void CenterDialog(HWND hDlg)
     SetWindowPos(hDlg, 0, rcDialog.left, rcDialog.top, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 }
 
+bool CopyTextToClipboard(const TCHAR *text, bool appendOnly)
+{
+    assert(text);
+    if (!text) return false;
+
+    if (!appendOnly) {
+        if (!OpenClipboard(NULL))
+            return false;
+        EmptyClipboard();
+    }
+
+    HGLOBAL handle = GlobalAlloc(GMEM_MOVEABLE, (Str::Len(text) + 1) * sizeof(TCHAR));
+    if (handle) {
+        TCHAR *globalText = (TCHAR *)GlobalLock(handle);
+        lstrcpy(globalText, text);
+        GlobalUnlock(handle);
+
+        if (!SetClipboardData(CF_T_TEXT, handle))
+            SeeLastError();
+    }
+
+    if (!appendOnly)
+        CloseClipboard();
+
+    return handle != NULL;
+}

@@ -501,12 +501,19 @@ printing document
 spausdinamas dokumentas
 
 # Untranslated:
+#&Copy Selection
+#&Print...
+#&Save As...
+#Copy &Link Address
+#Copy Co&mment
 #Fin&d...\tCtrl-F
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
 #No result found around line %u in file %s
+#P&roperties
 #Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L
+#Select &All
 #Select &All\tCtrl-A
 #SumatraPDF Update
 #SumatraPDF crashed

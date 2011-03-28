@@ -440,17 +440,22 @@ prebieha tlač dokumentu
 
 # Untranslated:
 #&All selected pages
+#&Copy Selection
 #&Even pages only
 #&Fit pages to printable area
 #&Go to page:
 #&Odd pages only
+#&Print...
 #&Remember the password for this document
+#&Save As...
 #&Shrink pages to printable area (if necessary)
 #&Use original page sizes
 #Attachment: %s
 #Bookmarks
 #Can't connect to the Internet (error %#x).
 #Cannot start inverse search command. Please check the command line in the settings.
+#Copy &Link Address
+#Copy Co&mment
 #Copying text was denied (copying as image only)
 #Couldn't initialize printer
 #Enter the command-line to invoke when you double-click on the PDF document:
@@ -460,10 +465,12 @@ prebieha tlač dokumentu
 #Fit a Single Page
 #No synchronization file found
 #No synchronization info at this position
+#P&roperties
 #Page scaling
 #Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L
 #Print range
+#Select &All
 #Select &All\tCtrl-A
 #Source file %s has no synchronization point
 #SumatraPDF Update

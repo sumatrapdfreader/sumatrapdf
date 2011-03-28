@@ -222,6 +222,6 @@ void    draw_centered_text(HDC hdc, RectI r, const TCHAR *txt);
 
 bool    IsCursorOverWindow(HWND hwnd);
 void    CenterDialog(HWND hDlg);
-
+bool    CopyTextToClipboard(const TCHAR *text, bool appendOnly=false);
 
 #endif

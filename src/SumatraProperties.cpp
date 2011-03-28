@@ -442,28 +442,16 @@ static void OnPaintProperties(HWND hwnd)
 
 void CopyPropertiesToClipboard(HWND hwnd)
 {
-    if (!OpenClipboard(NULL))
-        return;
-
     // just concatenate all the properties into a multi-line string
     PdfPropertiesLayout *layoutData = (PdfPropertiesLayout *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
-    VStrList lines;
+
+    Str::Str<TCHAR> lines(256);
     for (size_t i = 0; i < layoutData->Count(); i++) {
         PdfPropertyEl *el = layoutData->At(i);
-        lines.Append(Str::Format(_T("%s %s\r\n"), el->leftTxt, el->rightTxt));
+        lines.AppendFmt(_T("%s %s\r\n"), el->leftTxt, el->rightTxt);
     }
-    ScopedMem<TCHAR> result(lines.Join());
 
-    HGLOBAL handle = GlobalAlloc(GMEM_MOVEABLE, (Str::Len(result) + 1) * sizeof(TCHAR));
-    if (handle) {
-        TCHAR *selText = (TCHAR *)GlobalLock(handle);
-        lstrcpy(selText, result);
-        GlobalUnlock(handle);
-
-        EmptyClipboard();
-        SetClipboardData(CF_T_TEXT, handle);
-    }
-    CloseClipboard();
+    CopyTextToClipboard(lines.LendData());
 }
 
 LRESULT CALLBACK WndProcProperties(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)

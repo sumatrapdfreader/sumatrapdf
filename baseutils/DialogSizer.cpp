@@ -132,7 +132,7 @@ void UpdateWindowSize(DialogData *pdd, const int cx, const int cy, HWND hwnd)
 
         RECT rc;
         GetWindowRect(hwndChild, &rc);
-        MapWindowPoints(GetDesktopWindow(), hwnd, (LPPOINT)&rc, 2);
+        MapWindowPoints(HWND_DESKTOP, hwnd, (LPPOINT)&rc, 2);
         RectI rect = RectI::FromXY(rc.left, rc.top, rc.right, rc.bottom);
 
         // Adjust the window horizontally

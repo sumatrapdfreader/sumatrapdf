@@ -347,14 +347,17 @@ Zoom Out
 # Untranslated:
 #&All selected pages
 #&Back\tAlt+Left Arrow
+#&Copy Selection
 #&Copy Selection\tCtrl-C
 #&Even pages only
 #&Fit pages to printable area
 #&Magnification:
 #&Manual
 #&Odd pages only
+#&Print...
 #&Print... (denied)
 #&Remember the password for this document
+#&Save As...
 #&Shrink pages to printable area (if necessary)
 #&Use original page sizes
 #Application:
@@ -367,6 +370,8 @@ Zoom Out
 #Can't connect to the Internet (error %#x).
 #Cannot start inverse search command. Please check the command line in the settings.
 #Continuous Book View
+#Copy &Link Address
+#Copy Co&mment
 #Copying text was denied (copying as image only)
 #Couldn't initialize printer
 #Created:
@@ -385,6 +390,7 @@ Zoom Out
 #Modified:
 #No synchronization file found
 #Number of Pages:
+#P&roperties
 #P&roperties\tCtrl-D
 #PDF Producer:
 #PDF Version:
@@ -393,6 +399,7 @@ Zoom Out
 #Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L
 #Print range
+#Select &All
 #Select &All\tCtrl-A
 #Select content with Ctrl+left mouse button
 #Send by &E-mail...
