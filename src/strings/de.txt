@@ -166,10 +166,10 @@ Buchansicht
 Book&marks\tF12
 Lese&zeichen\tF12
 
-Bookmark Links
+Bookmark Shortcuts
 Lesezeichen-Verknüpfungen
 
-Bookmark link to page %d of %s
+Bookmark shortcut to page %d of %s
 Lesezeichen-Verknüpfung zu Seite %d von %s
 
 Bookmarks
@@ -439,8 +439,8 @@ Drehung &links\tStrg+Umschalt+-
 Rotate &Right\tCtrl-Shift-+
 Drehung &rechts\tStrg+Umschalt++
 
-Save &Bookmark...\tCtrl-Shift-S
-&Lesezeichen speichern…\tStrg+Umschalt+S
+Save S&hortcut...\tCtrl-Shift-S
+&Verknüpfung speichern…\tStrg+Umschalt+S
 
 Searching %d of %d...
 Suche auf Seite %d von %d…

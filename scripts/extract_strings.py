@@ -81,7 +81,7 @@ def load_one_strings_file(file_path, lang_code, strings_dict, langs_dict, contri
             if curr_orig is None: continue
             assert curr_orig not in all_origs, "Duplicate entry for '%s'" % curr_orig
             assert curr_trans is not None, "File %s, line %d" % (file_path, line_no)
-            if re.findall(r"%\w", curr_orig) != re.findall(r"%\w", curr_trans):
+            if re.findall(r"%#?[sdux]", curr_orig) != re.findall(r"%#?[sdux]", curr_trans):
                 pass # ignore translation with different variable configuration
             elif curr_orig not in strings_dict:
                 strings_dict[curr_orig] = [(lang_code, curr_trans)]

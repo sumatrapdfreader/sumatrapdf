@@ -164,12 +164,6 @@ Xem dạng sách
 Book&marks\tF12
 Chỉ dấu sách\tF12
 
-Bookmark Links
-Liên kết chỉ dấu sách
-
-Bookmark link to page %d of %s
-Liên kết chỉ dấu sách đến trang %d của %s
-
 Bookmarks
 Chỉ dấu sách
 
@@ -436,9 +430,6 @@ Quay trái\tCtrl-Shift--
 
 Rotate &Right\tCtrl-Shift-+
 Quay phải\tCtrl-Shift-+
-
-Save &Bookmark...\tCtrl-Shift-S
-Lưu chỉ dấu sách...\tCtrl-Shift-S
 
 Searching %d of %d...
 Đang tìm %d trên %d

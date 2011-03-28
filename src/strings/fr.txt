@@ -168,12 +168,6 @@ Comme un livre
 Book&marks\tF12
 Signets\tF12
 
-Bookmark Links
-Ajouter les liens aux signets
-
-Bookmark link to page %d of %s
-Ajouter un signet pour la page %d de %s
-
 Bookmarks
 Signets
 
@@ -440,9 +434,6 @@ Rotation &antihoraire\tCtrl-Shift--
 
 Rotate &Right\tCtrl-Shift-+
 Rotation &horaire\tCtrl-Shift-+
-
-Save &Bookmark...\tCtrl-Shift-S
-Sauvegarder le signet...\tCtrl-Shift-S
 
 Searching %d of %d...
 Recherche de %d à %d...

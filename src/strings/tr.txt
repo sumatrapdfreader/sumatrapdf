@@ -163,9 +163,6 @@ Kitap Gibi Görünüm
 Book&marks\tF12
 &Yer imleri\tF12
 
-Bookmark Links
-Bağlantıları yer imlerine ekle
-
 Bookmarks
 Yer imleri
 
@@ -429,9 +426,6 @@ S&ola çevir\tCtrl-Shift--
 
 Rotate &Right\tCtrl-Shift-+
 &Sağa çevir\tCtrl-Shift-+
-
-Save &Bookmark...\tCtrl-Shift-S
-Yer imini &kaydet...\tCtrl-Shift-S
 
 Searching %d of %d...
 %d sayfa (toplam %d sayfa) taranıyor...

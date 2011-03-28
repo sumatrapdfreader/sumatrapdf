@@ -163,12 +163,6 @@ Widok odczytu
 Book&marks\tF12
 &Zakładki\tF12
 
-Bookmark Links
-Odnośniki zakładek
-
-Bookmark link to page %d of %s
-Odnośnik zakładki do strony %d z %s
-
 Bookmarks
 Zakładki
 
@@ -435,9 +429,6 @@ Obróć w &lewo\tCtrl+Shift+Minus
 
 Rotate &Right\tCtrl-Shift-+
 Obróć w &prawo\tCtrl+Shift+Plus
-
-Save &Bookmark...\tCtrl-Shift-S
-Zapisz &zakładkę\tCtrl+Shift+S
 
 Select &All\tCtrl-A
 Zaznacz &wszystko\tCtrl+A

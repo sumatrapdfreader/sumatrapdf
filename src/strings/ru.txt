@@ -165,12 +165,6 @@ Book View
 Book&marks\tF12
 &Закладки\tF12
 
-Bookmark Links
-Ссылки на закладки
-
-Bookmark link to page %d of %s
-Ссылка на страницу %d из %s
-
 Bookmarks
 Закладки
 
@@ -437,9 +431,6 @@ Rotate &Left\tCtrl-Shift--
 
 Rotate &Right\tCtrl-Shift-+
 Повернуть в&право\tCtrl-Shift-+
-
-Save &Bookmark...\tCtrl-Shift-S
-Сохранить закладку...\tCtrl-Shift-S
 
 Searching %d of %d...
 Обработка страницы %d из %d...

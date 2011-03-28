@@ -164,10 +164,10 @@ Ver como livro
 Book&marks\tF12
 Marcadores\tF12
 
-Bookmark Links
+Bookmark Shortcuts
 Atalhos de Favoritos
 
-Bookmark link to page %d of %s
+Bookmark shortcut to page %d of %s
 Atalho para a página %d de %s
 
 Bookmarks
@@ -436,9 +436,6 @@ Girar à esquerda\tCtrl-Shift--
 
 Rotate &Right\tCtrl-Shift-+
 Girar à direita\tCtrl-Shift-+
-
-Save &Bookmark...\tCtrl-Shift-S
-Salvar &Favorito...\tCtrl-Shift-S
 
 Searching %d of %d...
 Localizando %d de %d...
