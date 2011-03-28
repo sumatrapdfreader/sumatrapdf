@@ -26,10 +26,6 @@
 #pragma comment(linker, "/EXPORT:DllUnregisterServer=_DllUnregisterServer@0,PRIVATE")
 #endif
 
-#ifndef CP_UTF8
-#define CP_UTF8 65001
-#endif
-
 NPNetscapeFuncs gNPNFuncs;
 HINSTANCE g_hInstance = NULL;
 const WCHAR *g_lpRegKey = L"Software\\MozillaPlugins\\@mozilla.zeniko.ch/SumatraPDF_Browser_Plugin";
@@ -205,7 +201,7 @@ typedef struct {
 	WCHAR filepath[MAX_PATH];
 	HANDLE hProcess;
 	WCHAR exepath[MAX_PATH + 2];
-	FLOAT progress;
+	FLOAT progress, lastUpdate;
 } InstanceData;
 
 #define COL_WINDOW_BG RGB(0xcc, 0xcc, 0xcc)
@@ -373,6 +369,7 @@ NPError NP_LOADDS NPP_NewStream(NPP instance, NPMIMEType type, NPStream* stream,
 	{
 		InvalidateRect((HWND)data->npwin->window, NULL, FALSE);
 		UpdateWindow((HWND)data->npwin->window);
+		data->lastUpdate = data->progress;
 	}
 	
 	return NPERR_NO_ERROR;
@@ -394,16 +391,20 @@ int32_t NP_LOADDS NPP_Write(NPP instance, NPStream* stream, int32_t offset, int3
 	InstanceData *data = instance->pdata;
 	
 	data->progress = stream->end > 0 ? 1.0f * (offset + len) / stream->end : 0;
-	if (data->npwin)
+	if (data->npwin && (!data->progress || data->progress - data->lastUpdate > 0.01f))
 	{
 		InvalidateRect((HWND)data->npwin->window, NULL, FALSE);
 		UpdateWindow((HWND)data->npwin->window);
+		data->lastUpdate = data->progress;
 	}
 	
 	return len;
 	
 	UNREFERENCED_PARAMETER(buffer);
 }
+
+// TODO: NPP_StreamAsFile is never called by Firefox 4.0 for large files due to
+//       Mozilla bug https://bugzilla.mozilla.org/show_bug.cgi?id=644149
 
 void NP_LOADDS NPP_StreamAsFile(NPP instance, NPStream* stream, const char* fname)
 {
@@ -413,16 +414,21 @@ void NP_LOADDS NPP_StreamAsFile(NPP instance, NPStream* stream, const char* fnam
 	PROCESS_INFORMATION pi = { 0 };
 	STARTUPINFOW si = { 0 };
 	
+	if (!fname)
+	{
+		data->message = L"Error: The PDF document couldn't be downloaded!";
+	}
+	
 	data->progress = 1.0f;
 	if (data->npwin)
 	{
 		InvalidateRect((HWND)data->npwin->window, NULL, FALSE);
 		UpdateWindow((HWND)data->npwin->window);
+		data->lastUpdate = data->progress;
 	}
 	
 	if (!fname)
 	{
-		data->message = L"Error: The PDF document couldn't be downloaded!";
 		return;
 	}
 	
