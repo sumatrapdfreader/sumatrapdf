@@ -26,6 +26,9 @@ Voltar\tAlt+<-
 &Close\tCtrl-W
 &Fechar\tCtrl-W
 
+&Copy Selection
+&Copiar Seleção
+
 &Copy Selection\tCtrl-C
 Copiar seleção\tCtrl-C
 
@@ -92,6 +95,9 @@ A&brir\tCtrl-O
 &Previous Page\tLeft Arrow
 Página anterior\t<-
 
+&Print...
+Im&primir...
+
 &Print...\tCtrl-P
 &Imprimir\tCtrl-P
 
@@ -103,6 +109,9 @@ Lembra&r a senha deste documento
 
 &Remember these settings for each document
 Lembrar estas preferências para cada documento
+
+&Save As...
+&Salvar como...
 
 &Save As...\tCtrl-S
 &Salvar como...\tCtrl-S
@@ -205,6 +214,12 @@ Página dupla contínua
 
 Contribute Translation
 Contribute Translation
+
+Copy &Link Address
+Copiar Ata&lho
+
+Copy Co&mment
+Copiar Co&mentário
 
 Copying text was denied (copying as image only)
 Cópia de texto negada (copiando somente como imagem)
@@ -380,6 +395,9 @@ Abrir no &Foxit Reader
 Open in PDF-XChange
 Abrir no PDF-XChange
 
+P&roperties
+P&ropriedades
+
 P&roperties\tCtrl-D
 Propriedades...\tCtrl-D
 
@@ -439,6 +457,9 @@ Girar à direita\tCtrl-Shift-+
 
 Searching %d of %d...
 Localizando %d de %d...
+
+Select &All
+Selecion&ar tudo
 
 Select &All\tCtrl-A
 Selecion&ar Tudo\tCtrl-A
@@ -532,13 +553,4 @@ copiando texto
 
 printing document
 imprimindo documento
-
-# Untranslated:
-#&Copy Selection
-#&Print...
-#&Save As...
-#Copy &Link Address
-#Copy Co&mment
-#P&roperties
-#Select &All
 
