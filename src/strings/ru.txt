@@ -27,6 +27,9 @@ Contributor: Victor Kozyakin
 &Close\tCtrl-W
 &Закрыть\tCtrl-W
 
+&Copy Selection
+С&копировать выделенное
+
 &Copy Selection\tCtrl-C
 С&копировать выделенное\tCtrl-C
 
@@ -93,6 +96,9 @@ Contributor: Victor Kozyakin
 &Previous Page\tLeft Arrow
 Пре&дыдущая страница\tСтрелка влево
 
+&Print...
+Пе&чать...
+
 &Print...\tCtrl-P
 Пе&чать\tCtrl-P
 
@@ -104,6 +110,9 @@ Contributor: Victor Kozyakin
 
 &Remember these settings for each document
 Запомнит&ь эти параметры для каждого документа
+
+&Save As...
+Сохранить &как...
 
 &Save As...\tCtrl-S
 Сохранить &как...\tCtrl-S
@@ -200,6 +209,12 @@ Continuous Facing
 
 Contribute Translation
 Помочь с переводом
+
+Copy &Link Address
+Скопировать адрес &ссылки
+
+Copy Co&mment
+Скопировать ко&мментарий
 
 Copying text was denied (copying as image only)
 Скопировать текст невозможно (копируется как изображение)
@@ -375,6 +390,9 @@ Open in &Foxit Reader
 Open in PDF-XChange
 Открыть в PDF-XChange
 
+P&roperties
+Сво&йства...
+
 P&roperties\tCtrl-D
 Сво&йства...\tCtrl-D
 
@@ -434,6 +452,9 @@ Rotate &Right\tCtrl-Shift-+
 
 Searching %d of %d...
 Обработка страницы %d из %d...
+
+Select &All
+В&ыделить все
 
 Select &All\tCtrl-A
 В&ыделить все\tCtrl-A
@@ -527,13 +548,4 @@ copying text
 
 printing document
 печатается документ
-
-# Untranslated:
-#&Copy Selection
-#&Print...
-#&Save As...
-#Copy &Link Address
-#Copy Co&mment
-#P&roperties
-#Select &All
 
