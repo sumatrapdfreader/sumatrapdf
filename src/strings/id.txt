@@ -28,6 +28,9 @@ Kembali\tAlt+<-
 &Close\tCtrl-W
 &Tutup\tCtrl-W
 
+&Copy Selection
+&Salin Seleksi
+
 &Copy Selection\tCtrl-C
 Salin Hasil Seleksi\tCtrl-C
 
@@ -94,6 +97,9 @@ Hanya halaman ganji&l
 &Previous Page\tLeft Arrow
 Halaman Sebelumnya\t<-
 
+&Print...
+&Cetak...
+
 &Print...\tCtrl-P
 &Cetak...\tCtrl-P
 
@@ -105,6 +111,9 @@ Halaman Sebelumnya\t<-
 
 &Remember these settings for each document
 &Ingat pengaturan ini untuk setiap dokumen
+
+&Save As...
+Si&mpan Sebagai...
 
 &Save As...\tCtrl-S
 &Simpan Sebagai\tCtrl-S
@@ -202,6 +211,12 @@ Dua Halaman Kontinu
 Contribute Translation
 Membantu Alihbahasa
 
+Copy &Link Address
+Salin Alamat &Link
+
+Copy Co&mment
+Salin &Komentar
+
 Copying text was denied (copying as image only)
 Menyalin teks ditolak (menyalin sebagai gambar saja)
 
@@ -290,7 +305,7 @@ Fit &Content\tCtrl-3
 Sesuaikan &Konten\tCtrl-3 
 
 Fit &Page\tCtrl-0
-&Sesuaikan Dengan Halaman\tCtrl-0
+Sesuaikan Dengan &Halaman\tCtrl-0
 
 Fit &Width\tCtrl-2
 Sesuaikan Dengan &Lebar\tCtrl-2
@@ -376,6 +391,9 @@ Buka di &Foxit Reader
 Open in PDF-XChange
 Buka di PDF-&XChange
 
+P&roperties
+P&roperti
+
 P&roperties\tCtrl-D
 P&roperti\tCtrl-D
 
@@ -436,6 +454,9 @@ Putar Ke Kanan\tCtrl-Shift-+
 Searching %d of %d...
 Sedang mencari %d dari %d
 
+Select &All
+Pilih Semu&a
+
 Select &All\tCtrl-A
 Pilih Semu&a\tCtrl-A
 
@@ -452,7 +473,7 @@ Show &Toolbar
 Tampilkan &Toolbar
 
 Show &pages continuously
-Tampilkan halaman secara kontinu
+Tampilkan Halaman Secara &Kontinu
 
 Show the &bookmarks sidebar when available
 Tampilkan kolom &markah jika tersedia
@@ -509,7 +530,7 @@ You have version %s
 Anda memiliki versi %s
 
 Zoom
-Pembesaran
+Sesuaikan
 
 Zoom In
 Perbesar
@@ -528,13 +549,4 @@ menyalin teks
 
 printing document
 mencetak dokumen
-
-# Untranslated:
-#&Copy Selection
-#&Print...
-#&Save As...
-#Copy &Link Address
-#Copy Co&mment
-#P&roperties
-#Select &All
 
