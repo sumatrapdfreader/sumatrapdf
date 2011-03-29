@@ -362,6 +362,61 @@ bool HexToMem(const char *s, unsigned char *buf, int bufLen)
     return *s == '\0';
 }
 
+/* compares two strings "naturally" by sorting numbers within a string
+   numerically instead of by pure ASCII order; we imitate Windows Explorer
+   by sorting special characters before alphanumeric characters
+   (e.g. ".hg" < "2.pdf" < "100.pdf" < "zzz")
+   TODO: use StrCmpLogicalW instead once we no longer support Windows 2000 */
+int CmpNatural(const TCHAR *a, const TCHAR *b)
+{
+    const TCHAR *aStart = a, *bStart = b;
+    int diff = 0;
+
+    for (; 0 == diff; a++, b++) {
+        // ignore leading and trailing spaces, and differences in whitespace only
+        if (a == aStart || !*a || !*b || _istspace(*a) && _istspace(*b)) {
+            for (; _istspace(*a); a++);
+            for (; _istspace(*b); b++);
+        }
+        // if two strings are identical when ignoring case, leading zeroes and
+        // whitespace, compare them traditionally for a stable sort order
+        if (!*a && !*b)
+            return _tcscmp(aStart, bStart);
+        if (ChrIsDigit(*a) && ChrIsDigit(*b)) {
+            // ignore leading zeroes
+            for (; '0' == *a; a++);
+            for (; '0' == *b; b++);
+            // compare the two numbers as (positive) integers
+            for (diff = 0; ChrIsDigit(*a) || ChrIsDigit(*b); a++, b++) {
+                // if either *a or *b isn't a number, they differ in magnitude
+                if (!ChrIsDigit(*a))
+                    return -1;
+                if (!ChrIsDigit(*b))
+                    return 1;
+                // remember the difference for when the numbers are of the same magnitude
+                if (0 == diff)
+                    diff = *a - *b;
+            }
+            // neither *a nor *b is a digit, so continue with them (unless diff != 0)
+            a--;
+            b--;
+        }
+        // sort letters case-insensitively
+        else if (_istalnum(*a) && _istalnum(*b))
+            diff = _totlower(*a) - _totlower(*b);
+        // sort special characters before text and numbers
+        else if (_istalnum(*a))
+            return 1;
+        else if (_istalnum(*b))
+            return -1;
+        // sort special characters by ASCII code
+        else
+            diff = *a - *b;
+    }
+
+    return diff;
+}
+
 void DbgOut(const TCHAR *format, ...)
 {
     va_list args;

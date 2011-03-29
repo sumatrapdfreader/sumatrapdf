@@ -163,6 +163,10 @@ public:
         if (i > -1)
             RemoveAt(i);
     }
+
+    void Sort(int (*cmpFunc)(const void *a, const void *b)) {
+        qsort(els, len, sizeof(T), cmpFunc);
+    }
 };
 
 // only suitable for T that are pointers that were malloc()ed
@@ -283,6 +287,15 @@ public:
 
         return Count() - start;
     }
+
+private:
+    static int cmpNatural(const void *a, const void *b) {
+        return Str::CmpNatural(*(const TCHAR **)a, *(const TCHAR **)b);
+    }
+
+public:
+    void Sort() { Vec::Sort(cmpNatural); }
+
 
     /* 'cmdLine' contains one or several arguments can be:
         - escaped, in which case it starts with '"', ends with '"' and

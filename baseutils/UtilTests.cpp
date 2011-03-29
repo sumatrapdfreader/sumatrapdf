@@ -197,6 +197,13 @@ static void TStrTest()
 
     assert(ChrIsDigit('0') && ChrIsDigit(_T('5')) && ChrIsDigit(L'9'));
     assert(iswdigit(L'\xB2') && !ChrIsDigit(L'\xB2'));
+
+    assert(Str::CmpNatural(_T(".hg"), _T("2.pdf")) < 0);
+    assert(Str::CmpNatural(_T("100.pdf"), _T("2.pdf")) > 0);
+    assert(Str::CmpNatural(_T("2.pdf"), _T("zzz")) < 0);
+    assert(Str::CmpNatural(_T("abc"), _T(".svn")) > 0);
+    assert(Str::CmpNatural(_T("ab0200"), _T("AB333")) < 0);
+    assert(Str::CmpNatural(_T("a b"), _T("a  c")) < 0);
 }
 
 static void FileUtilTest()
@@ -247,6 +254,11 @@ static void VecStrTest()
     s = v.Join(_T("_ _"));
     assert(v.Count() == 3);
     assert(Str::Eq(_T("foo_ _bar_ _glee"), s));
+    free(s);
+
+    v.Sort();
+    s = v.Join();
+    assert(Str::Eq(_T("barfooglee"), s));
     free(s);
 
     {

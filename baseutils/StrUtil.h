@@ -73,6 +73,8 @@ size_t  BufSet(WCHAR *dst, size_t dstCchSize, const WCHAR *src);
 char *  MemToHex(const unsigned char *buf, int len);
 bool    HexToMem(const char *s, unsigned char *buf, int bufLen);
 
+int     CmpNatural(const TCHAR *a, const TCHAR *b);
+
 #ifdef DEBUG
 void    DbgOut(const TCHAR *format, ...);
 #endif

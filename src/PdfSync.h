@@ -141,16 +141,13 @@ public:
         struct _stat newstamp;
         if (_tstat(syncfilepath, &newstamp) == 0 &&
             difftime(newstamp.st_mtime, syncfileTimestamp.st_mtime) > 0) {
-                DBG_OUT("PdfSync:sync file has changed, rebuilding index: %s\n", syncfilepath);
-
-                // update time stamp
-                memcpy((void *)&syncfileTimestamp, &newstamp, sizeof(syncfileTimestamp));
-
-                return true; // the file has changed!
+            DBG_OUT("PdfSync:sync file has changed, rebuilding index: %s\n", syncfilepath);
+            // update time stamp
+            memcpy((void *)&syncfileTimestamp, &newstamp, sizeof(syncfileTimestamp));
+            return true; // the file has changed!
         }
-        else {
-            return false;
-        }
+
+        return false;
     }
 
     int rebuild_index()
@@ -172,41 +169,11 @@ protected:
     TCHAR syncfilepath[MAX_PATH]; // path  to the synchronization file
     CoordSystem coordsys; // system used internally by the syncfile for the PDF coordinates
     TCHAR * dir;          // directory where the syncfile lies
-};
 
-
-
-
-// Synchronizer based on .sync file generated with the pdfsync tex package
-class Pdfsync : public Synchronizer
-{
 public:
-    Pdfsync(const TCHAR* _syncfilename) : Synchronizer(_syncfilename)
-    {
-        assert(Str::EndsWithI(_syncfilename, PDFSYNC_EXTENSION));
-        this->coordsys = BottomLeft;
-    }
-
-    int rebuild_index();
-    virtual UINT pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR srcfilepath, UINT cchFilepath, UINT *line, UINT *col);
-    virtual UINT source_to_pdf(const TCHAR* srcfilename, UINT line, UINT col, UINT *page, Vec<RectI>& rects);
-
-private:
-    int get_record_section(int record_index);
-    int scan_and_build_index(FILE *fp);
-    UINT source_to_record(FILE *fp, const TCHAR* srcfilename, UINT line, UINT col, Vec<size_t>& records);
-    FILE *opensyncfile();
-
-private:
-    Vec<size_t> pdfsheet_index; // pdfsheet_index[i] contains the index in pline_sections of the first pline section for that sheet
-    Vec<plines_section> pline_sections;
-    Vec<record_section> record_sections;
-    Vec<src_file> srcfiles;
+    static int Create(const TCHAR *pdffilename, Synchronizer **sync);
 };
 
-
-// Create a synchronizer object for a PDF file
-UINT CreateSynchronizer(const TCHAR* pdffilename, Synchronizer **sync);
 
 #define PDFSYNC_DDE_SERVICE   _T("SUMATRA")
 #define PDFSYNC_DDE_TOPIC     _T("control")

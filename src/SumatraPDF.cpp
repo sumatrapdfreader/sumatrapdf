@@ -238,7 +238,7 @@ static void OnMenuFindMatchCase(WindowInfo *win);
 static bool LoadPdfIntoWindow(const TCHAR *fileName, WindowInfo *win, 
     const DisplayState *state, bool isNewWindow, bool tryRepair, 
     bool showWin, bool placeWindow);
-static WindowInfo* LoadPdf(const TCHAR *fileName, WindowInfo *win, bool showWin=true);
+static WindowInfo* LoadPdf(const TCHAR *fileName, WindowInfo *win, bool showWin=true, bool forceReuse=false);
 static void WindowInfo_ShowMessage_Async(WindowInfo *win, const TCHAR *message, bool resize);
 
 static void Find(WindowInfo *win, PdfSearchDirection direction = FIND_FORWARD);
@@ -1009,8 +1009,6 @@ static bool Prefs_Save(void)
 
 void WindowInfo::Reload(bool autorefresh)
 {
-    if (this->pdfsync)
-        this->pdfsync->discard_index();
     DisplayState ds;
     ds.useGlobalValues = gGlobalPrefs.m_globalPrefsOnly;
     if (!this->dm || !this->dm->displayStateFromModel(&ds)) {
@@ -1392,6 +1390,8 @@ static bool LoadPdfIntoWindow(
 
     DisplayModel *previousmodel = win->dm;
     win->AbortFinding();
+    delete win->pdfsync;
+    win->pdfsync = NULL;
 
     free(win->loadedFilePath);
     win->loadedFilePath = Str::Dup(fileName);
@@ -1484,6 +1484,13 @@ static bool LoadPdfIntoWindow(
     }
     Win::SetText(win->hwndFrame, title);
     free(title);
+
+    if (!gRestrictedUse) {
+        int res = Synchronizer::Create(fileName, &win->pdfsync);
+        // expose SyncTeX in the UI
+        if (PDFSYNCERR_SUCCESS == res)
+            gGlobalPrefs.m_enableTeXEnhancements = true;
+    }
 
 Error:
     if (isNewWindow || placeWindow && state) {
@@ -1643,7 +1650,7 @@ Error:
     return NULL;
 }
 
-static WindowInfo* LoadPdf(const TCHAR *fileName, WindowInfo *win, bool showWin)
+static WindowInfo* LoadPdf(const TCHAR *fileName, WindowInfo *win, bool showWin, bool forceReuse)
 {
     assert(fileName);
     if (!fileName) return NULL;
@@ -1656,7 +1663,7 @@ static WindowInfo* LoadPdf(const TCHAR *fileName, WindowInfo *win, bool showWin)
     if (!win && 1 == gWindows.Count() && WS_ABOUT == gWindows[0]->state) {
         win = gWindows[0];
     }
-    else if (!win || WS_SHOWING_PDF == win->state) {
+    else if (!win || WS_SHOWING_PDF == win->state && !forceReuse) {
         isNewWindow = true;
         win = WindowInfo_CreateEmpty();
         if (!win)
@@ -1681,13 +1688,6 @@ static WindowInfo* LoadPdf(const TCHAR *fileName, WindowInfo *win, bool showWin)
 #ifdef THREAD_BASED_FILEWATCH
     win->watcher->StartWatchThread();
 #endif
-
-    if (!gRestrictedUse) {
-        UINT res = CreateSynchronizer(fullpath, &win->pdfsync);
-        // expose SyncTeX in the UI
-        if (PDFSYNCERR_SUCCESS == res)
-            gGlobalPrefs.m_enableTeXEnhancements = true;
-    }
 
     if (gGlobalPrefs.m_rememberOpenedFiles)
         gFileHistory.MarkFileLoaded(fullpath);
@@ -2519,7 +2519,7 @@ static bool OnInverseSearch(WindowInfo *win, int x, int y)
     // On double-clicking error message will be shown to the user
     // if the PDF does not have a synchronization file
     if (!win->pdfsync) {
-        UINT err = CreateSynchronizer(win->loadedFilePath, &win->pdfsync);
+        int err = Synchronizer::Create(win->loadedFilePath, &win->pdfsync);
         if (err == PDFSYNCERR_SYNCFILE_NOTFOUND) {
             DBG_OUT("Pdfsync: Sync file not found!\n");
             // Fall back to selecting a word when double-clicking over text in
@@ -2532,7 +2532,7 @@ static bool OnInverseSearch(WindowInfo *win, int x, int y)
                 WindowInfo_ShowMessage_Async(win, _TR("No synchronization file found"), true);
             return true;
         }
-        if (err != PDFSYNCERR_SUCCESS || !win->pdfsync) {
+        if (err != PDFSYNCERR_SUCCESS) {
             DBG_OUT("Pdfsync: Sync file cannot be loaded!\n");
             WindowInfo_ShowMessage_Async(win, _TR("Synchronization file cannot be opened"), true);
             return true;
@@ -2894,11 +2894,9 @@ static void OnMouseLeftButtonDblClk(WindowInfo *win, int x, int y, WPARAM key)
 
     bool dontSelect = false;
     if (gGlobalPrefs.m_enableTeXEnhancements && !(key & ~MK_LBUTTON))
-        dontSelect = OnInverseSearch(win, x, y);
-    if (dontSelect)
-        return;
+        dontSelect = !OnInverseSearch(win, x, y);
 
-    if (!win->dm || !win->dm->isOverText(x, y))
+    if (dontSelect || !win->dm || !win->dm->isOverText(x, y))
         return;
 
     int pageNo;
@@ -3092,6 +3090,8 @@ static void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose=false)
         win->dm = NULL;
         free(win->loadedFilePath);
         win->loadedFilePath = NULL;
+        delete win->pdfsync;
+        win->pdfsync = NULL;
 
         if (win->hwndPdfProperties) {
             DestroyWindow(win->hwndPdfProperties);
@@ -3759,6 +3759,44 @@ static void OnMenuOpen(WindowInfo *win)
             LoadDocument(filePath, win);
         fileName += Str::Len(fileName) + 1;
     }
+}
+
+static void BrowseFolder(WindowInfo *win, bool forward)
+{
+    assert(win && win->loadedFilePath);
+    if (!win || !win->loadedFilePath) return;
+    if (gRestrictedUse || gPluginMode) return;
+
+    VStrList files;
+    WIN32_FIND_DATA fdata;
+    ScopedMem<TCHAR> dir(Path::GetDir(win->loadedFilePath));
+    ScopedMem<TCHAR> pattern(Path::Join(dir, _T("*.pdf")));
+
+    HANDLE hfind = FindFirstFile(pattern, &fdata);
+    if (INVALID_HANDLE_VALUE == hfind)
+        return;
+    do {
+        if (!(fdata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+            files.Append(Str::Dup(fdata.cFileName));
+    } while (FindNextFile(hfind, &fdata));
+    FindClose(hfind);
+
+    const TCHAR *baseName = Path::GetBaseName(win->loadedFilePath);
+    if (-1 == files.Find(baseName))
+        files.Append(Str::Dup(baseName));
+    if (1 == files.Count())
+        return;
+
+    files.Sort();
+    int index = files.Find(baseName);
+    if (forward)
+        index = (index + 1) % files.Count();
+    else
+        index = (index + files.Count() - 1) % files.Count();
+
+    ScopedMem<TCHAR> fullpath(Path::Join(dir, files[index]));
+    UpdateCurrentFileDisplayStateForWin(win);
+    LoadPdf(fullpath, win, true, true);
 }
 
 static void RotateLeft(WindowInfo *win)
@@ -4505,12 +4543,16 @@ static bool OnKeydown(WindowInfo *win, WPARAM key, LPARAM lparam, bool inTextfie
         // The remaining keys have a different meaning
         return false;
     } else if (VK_LEFT == key) {
-        if (win->dm->needHScroll())
+        if (IsShiftPressed() && IsCtrlPressed())
+            BrowseFolder(win, false);
+        else if (win->dm->needHScroll())
             SendMessage(win->hwndCanvas, WM_HSCROLL, IsShiftPressed() ? SB_PAGELEFT : SB_LINELEFT, 0);
         else
             win->dm->goToPrevPage(0);
     } else if (VK_RIGHT == key) {
-        if (win->dm->needHScroll())
+        if (IsShiftPressed() && IsCtrlPressed())
+            BrowseFolder(win, true);
+        else if (win->dm->needHScroll())
             SendMessage(win->hwndCanvas, WM_HSCROLL, IsShiftPressed() ? SB_PAGERIGHT : SB_LINERIGHT, 0);
         else
             win->dm->goToNextPage(0);

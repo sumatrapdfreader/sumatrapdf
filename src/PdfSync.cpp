@@ -9,8 +9,35 @@
 #include "PdfSync.h"
 #include <shlwapi.h>
 
+// Synchronizer based on .sync file generated with the pdfsync tex package
+class Pdfsync : public Synchronizer
+{
+public:
+    Pdfsync(const TCHAR* _syncfilename) : Synchronizer(_syncfilename)
+    {
+        assert(Str::EndsWithI(_syncfilename, PDFSYNC_EXTENSION));
+        this->coordsys = BottomLeft;
+    }
+
+    int rebuild_index();
+    virtual UINT pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR srcfilepath, UINT cchFilepath, UINT *line, UINT *col);
+    virtual UINT source_to_pdf(const TCHAR* srcfilename, UINT line, UINT col, UINT *page, Vec<RectI>& rects);
+
+private:
+    int get_record_section(int record_index);
+    int scan_and_build_index(FILE *fp);
+    UINT source_to_record(FILE *fp, const TCHAR* srcfilename, UINT line, UINT col, Vec<size_t>& records);
+    FILE *opensyncfile();
+
+private:
+    Vec<size_t> pdfsheet_index; // pdfsheet_index[i] contains the index in pline_sections of the first pline section for that sheet
+    Vec<plines_section> pline_sections;
+    Vec<record_section> record_sections;
+    Vec<src_file> srcfiles;
+};
+
 #ifdef SYNCTEX_FEATURE
-#include "synctex_parser.h"
+#include <synctex_parser.h>
 
 #define SYNCTEX_EXTENSION       _T(".synctex")
 #define SYNCTEXGZ_EXTENSION     _T(".synctex.gz")
@@ -31,8 +58,6 @@ public:
     {
         synctex_scanner_free(scanner);
     }
-    void discard_index() { Synchronizer::discard_index();}
-    bool is_index_discarded() { return Synchronizer::is_index_discarded(); }
 
     UINT pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR srcfilepath, UINT cchFilepath, UINT *line, UINT *col);
     UINT source_to_pdf(const TCHAR* srcfilename, UINT line, UINT col, UINT *page, Vec<RectI> &rects);
@@ -55,7 +80,7 @@ private:
 // It creates either a SyncTex or PdfSync object
 // based on the synchronization file found in the folder containing the PDF file.
 //
-UINT CreateSynchronizer(const TCHAR* pdffilename, Synchronizer **sync)
+int Synchronizer::Create(const TCHAR *pdffilename, Synchronizer **sync)
 {
     if (!sync)
         return PDFSYNCERR_INVALID_ARGUMENT;
@@ -70,10 +95,9 @@ UINT CreateSynchronizer(const TCHAR* pdffilename, Synchronizer **sync)
 
     // Check if a PDFSYNC file is present
     ScopedMem<TCHAR> syncFile(Str::Join(baseName, PDFSYNC_EXTENSION));
-    if (File::Exists(syncFile.Get())) 
-    {
-        *sync = new Pdfsync(syncFile.Get());
-        return PDFSYNCERR_SUCCESS;
+    if (File::Exists(syncFile)) {
+        *sync = new Pdfsync(syncFile);
+        return *sync ? PDFSYNCERR_SUCCESS : PDFSYNCERR_OUTOFMEMORY;
     }
 
 #ifdef SYNCTEX_FEATURE
@@ -81,13 +105,11 @@ UINT CreateSynchronizer(const TCHAR* pdffilename, Synchronizer **sync)
     ScopedMem<TCHAR> texGzFile(Str::Join(baseName, SYNCTEXGZ_EXTENSION));
     ScopedMem<TCHAR> texFile(Str::Join(baseName, SYNCTEX_EXTENSION));
 
-    if (File::Exists(texGzFile.Get()) ||
-        File::Exists(texFile.Get())) 
-    {
+    if (File::Exists(texGzFile) || File::Exists(texFile)) {
         // due to a bug with synctex_parser.c, this must always be 
         // the path to the .synctex file (even if a .synctex.gz file is used instead)
-        *sync = new SyncTex(texFile.Get());
-        return PDFSYNCERR_SUCCESS;
+        *sync = new SyncTex(texFile);
+        return *sync ? PDFSYNCERR_SUCCESS : PDFSYNCERR_OUTOFMEMORY;
     }
 #endif
 
@@ -659,7 +681,7 @@ UINT SyncTex::source_to_pdf(const TCHAR* srcfilename, UINT line, UINT col, UINT 
     else
         srcfilepath.Set(Str::Dup(srcfilename));
 
-    char *mb_srcfilepath = Str::Conv::ToAnsi(srcfilepath.Get());
+    char *mb_srcfilepath = Str::Conv::ToAnsi(srcfilepath);
     if (!mb_srcfilepath)
         return PDFSYNCERR_OUTOFMEMORY;
     int ret = synctex_display_query(this->scanner,mb_srcfilepath,line,col);
