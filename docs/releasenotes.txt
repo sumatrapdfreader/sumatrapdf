@@ -6,6 +6,8 @@ Next version:
 * add "Save Shortcut" to create shortcuts to specific places in a document
 * add a basic context menu for copying text, link addresses and comments
   (and saving and printing for the browser plugin)
+* add folder browsing (Ctrl+Shift+Right opens the next PDF document in the
+  current folder, Ctrl+Shift+Left the previous one)
 
 1.4 (2011-03-12)
 
