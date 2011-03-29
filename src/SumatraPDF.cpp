@@ -2765,10 +2765,7 @@ static void OnSelectionStart(WindowInfo *win, int x, int y, WPARAM key)
 {
     DeleteOldSelectionInfo (win);
 
-    win->selectionRect.x = x;
-    win->selectionRect.y = y;
-    win->selectionRect.dx = 0;
-    win->selectionRect.dy = 0;
+    win->selectionRect = RectI(x, y, 0, 0);
     win->showSelection = true;
     win->mouseAction = MA_SELECTING;
 
@@ -2794,15 +2791,12 @@ static void OnSelectionStop(WindowInfo *win, int x, int y, bool aborted)
         ReleaseCapture();
     KillTimer(win->hwndCanvas, SMOOTHSCROLL_TIMER_ID);
 
-    if (aborted)
-        return;
-
     // update the text selection before changing the selectionRect
     if (MA_SELECTING_TEXT == win->mouseAction)
         UpdateTextSelection(win);
 
     win->selectionRect = RectI::FromXY(win->selectionRect.x, win->selectionRect.y, x, y);
-    if (win->selectionRect.IsEmpty())
+    if (aborted || (MA_SELECTING == win->mouseAction ? win->selectionRect.IsEmpty() : !win->selectionOnPage))
         DeleteOldSelectionInfo(win);
     else if (win->mouseAction == MA_SELECTING)
         ConvertSelectionRectToSelectionOnPage(win);
@@ -2998,6 +2992,19 @@ static void OnMouseRightButtonUp(WindowInfo *win, int x, int y, WPARAM key)
         OnContextMenu(win, x, y);
 
     win->mouseAction = MA_IDLE;
+}
+
+static void OnMouseRightButtonDblClick(WindowInfo *win, int x, int y, int key)
+{
+    assert(win);
+    if (!win) return;
+
+    if ((win->fullScreen || win->presentation) && !(key & ~MK_RBUTTON)) {
+        // in presentation and fullscreen modes, right clicks turn the page,
+        // make two quick right clicks (AKA one double-click) turn two pages
+        OnMouseRightButtonDown(win, x, y, key);
+        return;
+    }
 }
 
 static void OnPaint(WindowInfo *win)
@@ -5901,6 +5908,11 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
             }
             return 0;
 
+        case WM_RBUTTONDBLCLK:
+            if (win)
+                OnMouseRightButtonDblClick(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
+            break;
+
         case WM_RBUTTONDOWN:
             if (win)
                 OnMouseRightButtonDown(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
@@ -6465,9 +6477,8 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
             OnKeydown(win, wParam, lParam);
             break;
 
-        case WM_KEYUP:
-            if (VK_APPS == wParam)
-                OnContextMenu(win, 0, 0);
+        case WM_CONTEXTMENU:
+            OnContextMenu(win, 0, 0);
             break;
 
         case WM_SETTINGCHANGE:
