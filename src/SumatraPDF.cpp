@@ -2894,7 +2894,7 @@ static void OnMouseLeftButtonDblClk(WindowInfo *win, int x, int y, WPARAM key)
 
     bool dontSelect = false;
     if (gGlobalPrefs.m_enableTeXEnhancements && !(key & ~MK_LBUTTON))
-        dontSelect = !OnInverseSearch(win, x, y);
+        dontSelect = OnInverseSearch(win, x, y);
 
     if (dontSelect || !win->dm || !win->dm->isOverText(x, y))
         return;
