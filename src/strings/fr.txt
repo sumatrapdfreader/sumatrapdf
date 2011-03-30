@@ -30,6 +30,9 @@ Contributor: bernard
 &Close\tCtrl-W
 &Fermer\tCtrl-W
 
+&Copy Selection
+&Copier la sélection
+
 &Copy Selection\tCtrl-C
 &Copier la sélection
 
@@ -96,6 +99,9 @@ Seulement les pages &impaires
 &Previous Page\tLeft Arrow
 Page &précédente\t<-
 
+&Print...
+Im&primer...
+
 &Print...\tCtrl-P
 &Imprimer...\tCtrl-P
 
@@ -107,6 +113,9 @@ Page &précédente\t<-
 
 &Remember these settings for each document
 &Se rappeler ces paramètres pour chaque document
+
+&Save As...
+&Enregistrer sous...
 
 &Save As...\tCtrl-S
 &Enregistrer sous...\tCtrl-S
@@ -203,6 +212,12 @@ Vue continue, page double
 
 Contribute Translation
 Contribuer à la traduction
+
+Copy &Link Address
+Copier l'adresse du &lien
+
+Copy Co&mment
+Copier le co&mmentaire
 
 Copying text was denied (copying as image only)
 La copie en texte est refusée (seule une capture d’écran est faite)
@@ -378,6 +393,9 @@ Ouvrir dans Fo&xit Reader
 Open in PDF-XChange
 Ouvrir dans PDF-XChange
 
+P&roperties
+P&ropriétés
+
 P&roperties\tCtrl-D
 &Propriétés\tCtrl-D
 
@@ -437,6 +455,9 @@ Rotation &horaire\tCtrl-Shift-+
 
 Searching %d of %d...
 Recherche de %d à %d...
+
+Select &All
+&Tout sélectionner
 
 Select &All\tCtrl-A
 &Tout sélectionner\tCtrl-A
@@ -530,13 +551,4 @@ copie du texte
 
 printing document
 impression du document
-
-# Untranslated:
-#&Copy Selection
-#&Print...
-#&Save As...
-#Copy &Link Address
-#Copy Co&mment
-#P&roperties
-#Select &All
 
