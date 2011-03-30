@@ -1211,6 +1211,9 @@ void DisplayModel::scrollYBy(int dy, bool changePage)
 
 void DisplayModel::zoomTo(float zoomVirtual, PointI *fixPt)
 {
+    if (!ValidZoomVirtual(zoomVirtual))
+        return;
+
     ScrollState ss;
     if (getScrollState(&ss)) {
         ScrollState center;
@@ -1243,11 +1246,8 @@ void DisplayModel::zoomBy(float zoomFactor, PointI *fixPt)
 {
     // zoomTo expects a zoomVirtual, so undo the _dpiFactor here
     float newZoom = 100.0f * _zoomReal / _dpiFactor * zoomFactor;
+    newZoom = CLAMP(newZoom, ZOOM_MIN, ZOOM_MAX);
     //DBG_OUT("DisplayModel::zoomBy() zoomReal=%.6f, zoomFactor=%.2f, newZoom=%.2f\n", dm->zoomReal, zoomFactor, newZoom);
-    if (newZoom > ZOOM_MAX)
-        newZoom = ZOOM_MAX;
-    if (newZoom < ZOOM_MIN)
-        newZoom = ZOOM_MIN;
     zoomTo(newZoom, fixPt);
 }
 

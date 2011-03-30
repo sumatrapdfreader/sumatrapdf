@@ -6908,18 +6908,20 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
             }
             if (i.hwndPluginParent)
                 MakePluginWindow(win, i.hwndPluginParent);
-            if (WS_SHOWING_PDF == win->state && !firstDocLoaded && (i.enterPresentation || i.enterFullscreen))
-                WindowInfo_EnterFullscreen(win, i.enterPresentation);
-            if (i.startView != DM_AUTOMATIC && !firstDocLoaded)
-                win->SwitchToDisplayMode(i.startView);
-            if (i.startZoom != INVALID_ZOOM && !firstDocLoaded)
-                win->ZoomToSelection(i.startZoom, false);
-            if (i.startScroll.x != -1 || i.startScroll.y != -1) {
-                ScrollState ss;
-                if (win->dm->getScrollState(&ss)) {
-                    ss.x = i.startScroll.x;
-                    ss.y = i.startScroll.y;
-                    win->dm->setScrollState(&ss);
+            if (WS_SHOWING_PDF == win->state && win->dm && !firstDocLoaded) {
+                if (i.enterPresentation || i.enterFullscreen)
+                    WindowInfo_EnterFullscreen(win, i.enterPresentation);
+                if (i.startView != DM_AUTOMATIC)
+                    win->SwitchToDisplayMode(i.startView);
+                if (i.startZoom != INVALID_ZOOM)
+                    win->ZoomToSelection(i.startZoom, false);
+                if (i.startScroll.x != -1 || i.startScroll.y != -1) {
+                    ScrollState ss;
+                    if (win->dm->getScrollState(&ss)) {
+                        ss.x = i.startScroll.x;
+                        ss.y = i.startScroll.y;
+                        win->dm->setScrollState(&ss);
+                    }
                 }
             }
         }
