@@ -10,7 +10,7 @@ Lang: sl Slovenian (Slovenščina)
 
 Contributor: Janez Vehovec
 Contributor: Martin Srebotnjak
-Contributor: Damjan Gerli
+Contributor: Damjan Gerl
 
 &About
 &O programu …
@@ -26,6 +26,9 @@ Contributor: Damjan Gerli
 
 &Close\tCtrl-W
 &Zapri\tCtrl-W
+
+&Copy Selection
+Kopiraj izbor
 
 &Copy Selection\tCtrl-C
 Kopiraj izbor\tCtrl-C
@@ -93,6 +96,9 @@ Samo &lihe strani
 &Previous Page\tLeft Arrow
 Predhodna stran\tPuščica levo
 
+&Print...
+&Natisni …
+
 &Print...\tCtrl-P
 &Natisni …\tCtrl-P
 
@@ -104,6 +110,9 @@ Predhodna stran\tPuščica levo
 
 &Remember these settings for each document
 Zapomni si te &nastavitve za vsak dokument
+
+&Save As...
+Shrani &kot …
 
 &Save As...\tCtrl-S
 Shrani &kot …\tCtrl-S
@@ -200,6 +209,12 @@ Nepretrgano dvostransko
 
 Contribute Translation
 Prispevajte prevod
+
+Copy &Link Address
+Kopiraj nas&lov povezave
+
+Copy Co&mment
+Kopiraj ko&mentar
 
 Copying text was denied (copying as image only)
 Kopiranje besedila je bilo zavrnjeno (kopiranje samo kot slika)
@@ -375,6 +390,9 @@ Odpri s programom &Foxit Reader
 Open in PDF-XChange
 Odpri s programom PDF-XChange
 
+P&roperties
+Lastnosti
+
 P&roperties\tCtrl-D
 Lastnosti\tCtrl-D
 
@@ -434,6 +452,12 @@ Zasukaj v desno\tCtrl-Shift-+
 
 Searching %d of %d...
 Preiskovanje strani %d od %d …
+
+Select &All
+Izberi vse
+
+Select &All\tCtrl-A
+Izberi vse\tCtrl-A
 
 Select content with Ctrl+left mouse button
 Izberite vsebino s pritisnjeno tipko Ctrl in levim gumbom miške
@@ -524,14 +548,4 @@ kopiranje besedila
 
 printing document
 tiskanje dokumenta
-
-# Untranslated:
-#&Copy Selection
-#&Print...
-#&Save As...
-#Copy &Link Address
-#Copy Co&mment
-#P&roperties
-#Select &All
-#Select &All\tCtrl-A
 
