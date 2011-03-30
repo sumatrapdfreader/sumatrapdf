@@ -9,7 +9,7 @@
 Lang: vn Vietnamese (Việt Nam)
 
 Contributor: Nguyễn Lương Đống (http://sites.google.com/site/nguyenluongdong)
-Contributor: Tào Trần Vương Thắng (https://sites.google.com/site/moihoctinhoc)
+Contributor: Tào Trần Vương Thắng
 
 &About
 Giới thiệu
@@ -25,6 +25,9 @@ Trở về\tAlt+<-
 
 &Close\tCtrl-W
 Đóng tập tin\tCtrl-W
+
+&Copy Selection
+&Chép phần chọn
 
 &Copy Selection\tCtrl-C
 Chép phần đánh dấu
@@ -92,6 +95,9 @@ Mật mã:
 &Previous Page\tLeft Arrow
 Trang trước\t<-
 
+&Print...
+In...
+
 &Print...\tCtrl-P
 In\tCtrl-P
 
@@ -103,6 +109,9 @@ Nhớ mật khẩu cho tập tin này
 
 &Remember these settings for each document
 Nhớ cài đặt này cho mọi tập tin
+
+&Save As...
+Lưu thành...
 
 &Save As...\tCtrl-S
 Lưu thành\tCtrl-S
@@ -199,6 +208,12 @@ Trang kép liên tiếp
 
 Contribute Translation
 Đóng góp dịch thuật
+
+Copy &Link Address
+Chép địa chỉ liên kết
+
+Copy Co&mment
+Chép chú thích
 
 Copying text was denied (copying as image only)
 Chép văn bản bị từ chối (chỉ được chép như hình ảnh)
@@ -374,6 +389,9 @@ Mở bằng Foxit Reader
 Open in PDF-XChange
 Mở bằng PDF-XChange
 
+P&roperties
+Thuộc tính
+
 P&roperties\tCtrl-D
 Thuộc tính
 
@@ -433,6 +451,9 @@ Quay phải\tCtrl-Shift-+
 
 Searching %d of %d...
 Đang tìm %d trên %d
+
+Select &All
+Chọn hết
 
 Select &All\tCtrl-A
 Chọn hết\tCtrl-A
@@ -526,13 +547,4 @@ copying text
 
 printing document
 đang in tập tin
-
-# Untranslated:
-#&Copy Selection
-#&Print...
-#&Save As...
-#Copy &Link Address
-#Copy Co&mment
-#P&roperties
-#Select &All
 
