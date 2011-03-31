@@ -30,7 +30,7 @@ pdf_growmesh(fz_shade *shade, int amount)
 static void
 pdf_addvertex(fz_shade *shade, struct vertex *v)
 {
-	int ncomp = shade->usefunction ? 1 : shade->cs->n;
+	int ncomp = shade->usefunction ? 1 : shade->colorspace->n;
 	int i;
 	pdf_growmesh(shade, 2 + ncomp);
 	shade->mesh[shade->meshlen++] = v->x;
@@ -331,7 +331,7 @@ pdf_samplecompositeshadefunction(fz_shade *shade, pdf_function *func, float t0, 
 	for (i = 0; i < 256; i++)
 	{
 		t = t0 + (i / 255.0f) * (t1 - t0);
-		pdf_evalfunction(func, &t, 1, shade->function[i], shade->cs->n);
+		pdf_evalfunction(func, &t, 1, shade->function[i], shade->colorspace->n);
 	}
 }
 
@@ -413,7 +413,7 @@ pdf_loadfunctionbasedshading(fz_shade *shade, pdf_xref *xref, fz_obj *dict, pdf_
 
 				fv[0] = v[i].x;
 				fv[1] = v[i].y;
-				pdf_evalfunction(func, fv, 2, v[i].c, shade->cs->n);
+				pdf_evalfunction(func, fv, 2, v[i].c, shade->colorspace->n);
 
 				pt.x = v[i].x;
 				pt.y = v[i].y;
@@ -625,7 +625,7 @@ pdf_loadtype4shade(fz_shade *shade, pdf_xref *xref, fz_obj *dict,
 		pdf_sampleshadefunction(shade, funcs, func, p.c0[0], p.c1[0]);
 	}
 	else
-		ncomp = shade->cs->n;
+		ncomp = shade->colorspace->n;
 
 	while (!fz_iseofbits(stream))
 	{
@@ -691,7 +691,7 @@ pdf_loadtype5shade(fz_shade *shade, pdf_xref *xref, fz_obj *dict,
 		pdf_sampleshadefunction(shade, funcs, func, p.c0[0], p.c1[0]);
 	}
 	else
-		ncomp = shade->cs->n;
+		ncomp = shade->colorspace->n;
 
 	ref = fz_calloc(p.vprow, sizeof(struct vertex));
 	buf = fz_calloc(p.vprow, sizeof(struct vertex));
@@ -743,7 +743,7 @@ pdf_loadtype6shade(fz_shade *shade, pdf_xref *xref, fz_obj *dict,
 		pdf_sampleshadefunction(shade, funcs, func, p.c0[0], p.c1[0]);
 	}
 	else
-		ncomp = shade->cs->n;
+		ncomp = shade->colorspace->n;
 
 	hasprevpatch = 0;
 
@@ -863,7 +863,7 @@ pdf_loadtype7shade(fz_shade *shade, pdf_xref *xref, fz_obj *dict,
 		pdf_sampleshadefunction(shade, funcs, func, p.c0[0], p.c1[0]);
 	}
 	else
-		ncomp = shade->cs->n;
+		ncomp = shade->colorspace->n;
 
 	hasprevpatch = 0;
 
@@ -992,7 +992,7 @@ pdf_loadshadingdict(fz_shade **shadep, pdf_xref *xref, fz_obj *dict, fz_matrix t
 	shade->meshcap = 0;
 	shade->mesh = nil;
 
-	shade->cs = nil;
+	shade->colorspace = nil;
 
 	funcs = 0;
 
@@ -1005,20 +1005,20 @@ pdf_loadshadingdict(fz_shade **shadep, pdf_xref *xref, fz_obj *dict, fz_matrix t
 		fz_dropshade(shade);
 		return fz_throw("shading colorspace is missing");
 	}
-	error = pdf_loadcolorspace(&shade->cs, xref, obj);
+	error = pdf_loadcolorspace(&shade->colorspace, xref, obj);
 	if (error)
 	{
 		fz_dropshade(shade);
 		return fz_rethrow(error, "cannot load colorspace (%d %d R)", fz_tonum(obj), fz_togen(obj));
 	}
-	pdf_logshade("colorspace %s\n", shade->cs->name);
+	pdf_logshade("colorspace %s\n", shade->colorspace->name);
 
 	obj = fz_dictgets(dict, "Background");
 	if (obj)
 	{
 		pdf_logshade("background\n");
 		shade->usebackground = 1;
-		for (i = 0; i < shade->cs->n; i++)
+		for (i = 0; i < shade->colorspace->n; i++)
 			shade->background[i] = fz_toreal(fz_arrayget(obj, i));
 	}
 
@@ -1043,7 +1043,7 @@ pdf_loadshadingdict(fz_shade **shadep, pdf_xref *xref, fz_obj *dict, fz_matrix t
 	else if (fz_isarray(obj))
 	{
 		funcs = fz_arraylen(obj);
-		if (funcs != 1 && funcs != shade->cs->n)
+		if (funcs != 1 && funcs != shade->colorspace->n)
 		{
 			error = fz_throw("incorrect number of shading functions");
 			goto cleanup;

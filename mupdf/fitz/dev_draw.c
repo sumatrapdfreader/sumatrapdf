@@ -499,7 +499,7 @@ fz_drawfillshade(void *user, fz_shade *shade, fz_matrix ctm, float alpha)
 	{
 		unsigned char *s;
 		int x, y, n, i;
-		fz_convertcolor(shade->cs, shade->background, model, colorfv);
+		fz_convertcolor(shade->colorspace, shade->background, model, colorfv);
 		for (i = 0; i < model->n; i++)
 			colorbv[i] = colorfv[i] * 255;
 		colorbv[i] = 255;

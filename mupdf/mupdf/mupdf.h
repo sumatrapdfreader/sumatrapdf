@@ -567,7 +567,7 @@ enum
 struct pdf_material_s
 {
 	int kind;
-	fz_colorspace *cs;
+	fz_colorspace *colorspace;
 	pdf_pattern *pattern;
 	fz_shade *shade;
 	float alpha;
@@ -609,10 +609,16 @@ struct pdf_csi_s
 	fz_device *dev;
 	pdf_xref *xref;
 
-	fz_obj *stack[32];
+	fz_obj *obj;
+	char name[256];
+	unsigned char string[256];
+	int stringlen;
+	float stack[32];
 	int top;
+
 	int xbalance;
-	fz_obj *array;
+	int intext;
+	int inarray;
 
 	/* path object state */
 	fz_path *path;
@@ -639,6 +645,8 @@ void pdf_setcolor(pdf_csi *csi, int what, float *v);
 void pdf_setpattern(pdf_csi *csi, int what, pdf_pattern *pat, float *v);
 void pdf_setshade(pdf_csi *csi, int what, fz_shade *shade);
 void pdf_showpath(pdf_csi*, int close, int fill, int stroke, int evenodd);
+void pdf_showspace(pdf_csi *csi, float tadj);
+void pdf_showstring(pdf_csi *csi, unsigned char *buf, int len);
 void pdf_showtext(pdf_csi*, fz_obj *text);
 void pdf_flushtext(pdf_csi*);
 void pdf_showimage(pdf_csi*, fz_pixmap *image);

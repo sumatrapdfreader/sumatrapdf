@@ -625,6 +625,7 @@ eol:
 	if (fax->rp < fax->wp)
 		return p - buf;
 
+
 	tmp = fax->ref;
 	fax->ref = fax->dst;
 	fax->dst = tmp;

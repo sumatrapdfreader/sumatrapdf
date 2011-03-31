@@ -12,8 +12,8 @@ fz_dropshade(fz_shade *shade)
 {
 	if (shade && --shade->refs == 0)
 	{
-		if (shade->cs)
-			fz_dropcolorspace(shade->cs);
+		if (shade->colorspace)
+			fz_dropcolorspace(shade->colorspace);
 		fz_free(shade->mesh);
 		fz_free(shade);
 	}
@@ -28,7 +28,7 @@ fz_boundshade(fz_shade *shade, fz_matrix ctm)
 	int i, ncomp, nvert;
 
 	ctm = fz_concat(shade->matrix, ctm);
-	ncomp = shade->usefunction ? 3 : 2 + shade->cs->n;
+	ncomp = shade->usefunction ? 3 : 2 + shade->colorspace->n;
 	nvert = shade->meshlen / ncomp;
 	v = shade->mesh;
 
@@ -82,7 +82,7 @@ fz_debugshade(fz_shade *shade)
 		shade->bbox.x0, shade->bbox.y0,
 		shade->bbox.x1, shade->bbox.y1);
 
-	printf("\tcolorspace %s\n", shade->cs->name);
+	printf("\tcolorspace %s\n", shade->colorspace->name);
 
 	printf("\tmatrix [%g %g %g %g %g %g]\n",
 			shade->matrix.a, shade->matrix.b, shade->matrix.c,
@@ -91,7 +91,7 @@ fz_debugshade(fz_shade *shade)
 	if (shade->usebackground)
 	{
 		printf("\tbackground [");
-		for (i = 0; i < shade->cs->n; i++)
+		for (i = 0; i < shade->colorspace->n; i++)
 			printf("%s%g", i == 0 ? "" : " ", shade->background[i]);
 		printf("]\n");
 	}
@@ -102,7 +102,7 @@ fz_debugshade(fz_shade *shade)
 		n = 3;
 	}
 	else
-		n = 2 + shade->cs->n;
+		n = 2 + shade->colorspace->n;
 
 	printf("\tvertices: %d\n", shade->meshlen);
 

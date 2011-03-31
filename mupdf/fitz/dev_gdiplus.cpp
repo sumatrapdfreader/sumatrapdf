@@ -1076,7 +1076,7 @@ fz_gdiplusfillshade(void *user, fz_shade *shade, fz_matrix ctm, float alpha)
 	if (shade->usebackground)
 	{
 		float colorfv[4];
-		fz_convertcolor(shade->cs, shade->background, fz_devicergb, colorfv);
+		fz_convertcolor(shade->colorspace, shade->background, fz_devicergb, colorfv);
 		colorfv[3] = 1.0;
 		
 		for (int y = bbox.y0; y < bbox.y1; y++)

@@ -498,7 +498,7 @@ fz_paintmesh(fz_shade *shade, fz_matrix ctm, fz_pixmap *dest, fz_bbox bbox)
 	if (shade->usefunction)
 		ntris = shade->meshlen / 9;
 	else
-		ntris = shade->meshlen / ((2 + shade->cs->n) * 3);
+		ntris = shade->meshlen / ((2 + shade->colorspace->n) * 3);
 
 	while (ntris--)
 	{
@@ -513,10 +513,10 @@ fz_paintmesh(fz_shade *shade, fz_matrix ctm, fz_pixmap *dest, fz_bbox bbox)
 				tri[k][2] = *mesh++ * 255;
 			else
 			{
-				fz_convertcolor(shade->cs, mesh, dest->colorspace, tri[k] + 2);
+				fz_convertcolor(shade->colorspace, mesh, dest->colorspace, tri[k] + 2);
 				for (i = 0; i < dest->colorspace->n; i++)
 					tri[k][i + 2] *= 255;
-				mesh += shade->cs->n;
+				mesh += shade->colorspace->n;
 			}
 		}
 		fz_painttriangle(dest, tri[0], tri[1], tri[2], 2 + dest->colorspace->n, bbox);
@@ -537,7 +537,7 @@ fz_paintshade(fz_shade *shade, fz_matrix ctm, fz_pixmap *dest, fz_bbox bbox)
 	{
 		for (i = 0; i < 256; i++)
 		{
-			fz_convertcolor(shade->cs, shade->function[i], dest->colorspace, color);
+			fz_convertcolor(shade->colorspace, shade->function[i], dest->colorspace, color);
 			for (k = 0; k < dest->colorspace->n; k++)
 				clut[i][k] = color[k] * 255;
 		}
