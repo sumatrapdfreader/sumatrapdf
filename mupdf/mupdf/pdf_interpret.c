@@ -575,6 +575,10 @@ static fz_error pdf_run_Do(pdf_csi *csi, fz_obj *rdb)
 	if (!fz_isname(subtype))
 		return fz_throw("no XObject subtype specified");
 
+	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1076 */
+	if (pdf_isinvisibleocg(csi->xref, obj))
+		return fz_okay;
+
 	if (!strcmp(fz_toname(subtype), "Form") && fz_dictgets(obj, "Subtype2"))
 		subtype = fz_dictgets(obj, "Subtype2");
 
@@ -1439,6 +1443,10 @@ pdf_runpage(pdf_xref *xref, pdf_page *page, fz_device *dev, fz_matrix ctm)
 		if (flags & (1 << 1)) /* Hidden */
 			continue;
 		if (flags & (1 << 5)) /* NoView */
+			continue;
+
+		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1076 */
+		if (pdf_isinvisibleocg(xref, annot->obj))
 			continue;
 
 		csi = pdf_newcsi(xref, dev, ctm);
