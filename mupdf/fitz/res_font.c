@@ -332,7 +332,14 @@ fz_renderftglyph(fz_font *font, int gid, fz_matrix trm)
 		return nil;
 	}
 
-	glyph = fz_newpixmap(nil,
+	/* SumatraPDF: http://code.google.com/p/sumatrapdf/issues/detail?id=1332 */
+	if (face->glyph->bitmap.width == 0 || face->glyph->bitmap.rows == 0)
+	{
+		fz_warn("empty glyph (gid %d)", gid);
+		return nil;
+	}
+
+    glyph = fz_newpixmap(nil,
 		face->glyph->bitmap_left,
 		face->glyph->bitmap_top - face->glyph->bitmap.rows,
 		face->glyph->bitmap.width,

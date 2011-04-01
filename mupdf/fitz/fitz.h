@@ -147,6 +147,8 @@ char *fz_geterrorline(int n);
 /* memory allocation */
 void *fz_malloc(int size);
 void *fz_calloc(int count, int size);
+void *fz_calloc_no_abort(int count, int size); /* SumatraPDF */
+
 void *fz_realloc(void *p, int count, int size);
 void fz_free(void *p);
 char *fz_strdup(char *s);
@@ -687,7 +689,9 @@ struct fz_pixmap_s
 	int freesamples;
 };
 
-fz_pixmap *fz_newpixmapwithdata(fz_colorspace *colorspace, int x, int y, int w, int h, unsigned char *samples);
+/* SumatraPDF: http://code.google.com/p/sumatrapdf/issues/detail?id=1332 */
+fz_pixmap *fz_newpixmap_no_abort(fz_colorspace *, int x, int y, int w, int h);
+fz_pixmap *fz_newpixmapwithdata(fz_colorspace *colorspace, int x, int y, int w, int h, unsigned char *samples, int abortonfail);
 fz_pixmap *fz_newpixmapwithrect(fz_colorspace *, fz_bbox bbox);
 fz_pixmap *fz_newpixmap(fz_colorspace *, int x, int y, int w, int h);
 fz_pixmap *fz_keeppixmap(fz_pixmap *pix);

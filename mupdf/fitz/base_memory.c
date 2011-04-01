@@ -12,11 +12,10 @@ fz_malloc(int size)
 	return p;
 }
 
+/* SumatraPDF: http://code.google.com/p/sumatrapdf/issues/detail?id=1332 */
 void *
-fz_calloc(int count, int size)
+fz_calloc_no_abort(int count, int size)
 {
-	void *p;
-
 	if (count == 0 || size == 0)
 		return 0;
 
@@ -25,8 +24,13 @@ fz_calloc(int count, int size)
 		fprintf(stderr, "fatal error: out of memory (integer overflow)\n");
 		abort();
 	}
+	return calloc(count, size);
+}
 
-	p = malloc(count * size);
+void *
+fz_calloc(int count, int size)
+{
+	void *p = fz_calloc_no_abort(count, size);
 	if (!p)
 	{
 		fprintf(stderr, "fatal error: out of memory\n");

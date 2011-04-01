@@ -157,7 +157,10 @@ pdf_loadimageimp(fz_pixmap **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict, fz
 	}
 
 	stride = (w * n * bpc + 7) / 8;
-	samples = fz_calloc(h, stride);
+	/* SumatraPDF: http://code.google.com/p/sumatrapdf/issues/detail?id=1332 */
+	samples = fz_calloc_no_abort(h, stride);
+	if (!samples)
+		return fz_throw("image too big to load");
 
 	if (cstm)
 	{
@@ -172,6 +175,7 @@ pdf_loadimageimp(fz_pixmap **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict, fz
 				fz_dropcolorspace(colorspace);
 			if (mask)
 				fz_droppixmap(mask);
+			fz_free(samples); /* SumatraPDF */
 			return fz_rethrow(error, "cannot open image data stream (%d 0 R)", fz_tonum(dict));
 		}
 	}
@@ -184,6 +188,7 @@ pdf_loadimageimp(fz_pixmap **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict, fz
 			fz_dropcolorspace(colorspace);
 		if (mask)
 			fz_droppixmap(mask);
+		fz_free(samples); /* SumatraPDF */
 		return fz_rethrow(len, "cannot read image data");
 	}
 
@@ -221,7 +226,12 @@ pdf_loadimageimp(fz_pixmap **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict, fz
 
 	/* Unpack samples into pixmap */
 
-	tile = fz_newpixmap(colorspace, 0, 0, w, h);
+	tile = fz_newpixmap_no_abort(colorspace, 0, 0, w, h);
+	if (!tile)
+	{
+		fz_free(samples);
+		return fz_throw("image too big to load");
+	}
 
 	scale = 1;
 	if (!indexed)

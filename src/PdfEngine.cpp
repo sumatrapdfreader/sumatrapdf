@@ -69,7 +69,7 @@ fz_pixmap *fz_newpixmap_nullonoom(fz_colorspace *colorspace, int x, int y, int w
     if (!samples)
         return NULL;
 
-    fz_pixmap *image = fz_newpixmapwithdata(colorspace, x, y, w, h, samples);
+    fz_pixmap *image = fz_newpixmapwithdata(colorspace, x, y, w, h, samples, 1);
     // tell MuPDF to free the memory when discarding the pixmap
     image->freesamples = 1;
 
