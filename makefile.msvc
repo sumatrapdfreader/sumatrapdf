@@ -88,7 +88,7 @@ BROWSER_PLUGIN_CFLAGS = $(CFLAGS) /Ibaseutils/msvc /wd4819
 LIBS_BROWSER_PLUGIN = user32.lib gdi32.lib advapi32.lib shlwapi.lib
 
 BASEUTILS_OBJS = \
-	$(O)\BencUtil.obj $(O)\FileUtil.obj $(O)\WinUtil.obj \
+	$(O)\BencUtil.obj $(O)\FileUtil.obj $(O)\WinUtil.obj $(O)\SimpleLog.obj \
 	$(O)\StrUtil.obj $(O)\UtilTests.obj $(O)\DialogSizer.obj
 
 SUMATRA_OBJS = \
