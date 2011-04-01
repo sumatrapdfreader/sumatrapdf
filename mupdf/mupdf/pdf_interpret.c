@@ -807,7 +807,6 @@ static fz_error pdf_run_Tf(pdf_csi *csi, fz_obj *rdb)
 	fz_obj *obj;
 
 	gstate->size = csi->stack[0];
-	gstate->font = nil;
 
 	dict = fz_dictgets(rdb, "Font");
 	if (!dict)
@@ -1322,6 +1321,11 @@ pdf_runcsifile(pdf_csi *csi, fz_obj *rdb, fz_stream *file, char *buf, int buflen
 			{
 				pdf_showstring(csi, (unsigned char *)buf, len);
 			}
+			/* SumatraPDF: some producers try to put Tw and Tc commands in the TJ array */
+			else if (tok == PDF_TKEYWORD && (!strcmp(buf, "Tw") || !strcmp(buf, "Tc")))
+			{
+				fz_warn("ignoring keyword '%s' inside array", buf);
+			}
 			else if (tok == PDF_TEOF)
 			{
 				return fz_okay;
@@ -1430,9 +1434,6 @@ pdf_runpage(pdf_xref *xref, pdf_page *page, fz_device *dev, fz_matrix ctm)
 	if (error)
 		return fz_rethrow(error, "cannot parse page content stream");
 
-	if (page->transparency)
-		dev->endgroup(dev->user);
-
 	for (annot = page->annots; annot; annot = annot->next)
 	{
 		flags = fz_toint(fz_dictgets(annot->obj, "F"));
@@ -1455,6 +1456,10 @@ pdf_runpage(pdf_xref *xref, pdf_page *page, fz_device *dev, fz_matrix ctm)
 		if (error)
 			return fz_rethrow(error, "cannot parse annotation appearance stream");
 	}
+
+	/* SumatraPDF: dev_gdiplus needs a page group for transparent annotations */
+	if (page->transparency)
+		dev->endgroup(dev->user);
 
 	return fz_okay;
 }
