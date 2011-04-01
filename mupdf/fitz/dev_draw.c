@@ -580,6 +580,7 @@ fz_drawfillimage(void *user, fz_pixmap *image, fz_matrix ctm, float alpha)
 	fz_colorspace *model = dev->dest->colorspace;
 	fz_pixmap *converted = nil;
 	fz_pixmap *scaled = nil;
+	int after;
 	int dx, dy;
 
 	if (!model)
@@ -591,9 +592,19 @@ fz_drawfillimage(void *user, fz_pixmap *image, fz_matrix ctm, float alpha)
 	if (image->w == 0 || image->h == 0)
 		return;
 
-	/* SumatraPDF: scale grayscale images first (be more memory efficient) */
-	if (image->colorspace != fz_devicegray)
-	if (image->colorspace != model)
+	/* convert images with more components (cmyk->rgb) before scaling */
+	/* convert images with fewer components (gray->rgb after scaling */
+	/* convert images with expensive colorspace transforms after scaling */
+
+	after = 0;
+	if (image->colorspace->n < model->n)
+		after = 1;
+	if (!strcmp(image->colorspace->name, "Separation"))
+		after = 1;
+	if (!strcmp(image->colorspace->name, "DeviceN"))
+		after = 1;
+
+	if (image->colorspace != model && !after)
 	{
 		converted = fz_newpixmap(model, image->x, image->y, image->w, image->h);
 		fz_convertpixmap(image, converted);
@@ -625,8 +636,7 @@ fz_drawfillimage(void *user, fz_pixmap *image, fz_matrix ctm, float alpha)
 	}
 #endif
 
-	/* SumatraPDF: scale grayscale images first (be more memory efficient) */
-	if (image->colorspace != model)
+	if (image->colorspace != model && after)
 	{
 		converted = fz_newpixmap(model, image->x, image->y, image->w, image->h);
 		fz_convertpixmap(image, converted);

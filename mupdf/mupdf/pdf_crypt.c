@@ -121,7 +121,7 @@ pdf_newcrypt(pdf_crypt **cryptp, fz_obj *dict, fz_obj *id)
 				}
 			}
 
-			/* SumatraPDF: in crypt revision 4, the crypt filter determines the key length */
+			/* in crypt revision 4, the crypt filter determines the key length */
 			if (crypt->strf.method != PDF_CRYPT_NONE)
 				crypt->length = crypt->stmf.length;
 		}
@@ -255,7 +255,7 @@ pdf_parsecryptfilter(pdf_cryptfilter *cf, fz_obj *dict, int defaultlength)
 	if (fz_isint(obj))
 		cf->length = fz_toint(obj);
 
-	/* SumatraPDF: the length for crypt filters is supposed to be in bytes not bits */
+	/* the length for crypt filters is supposed to be in bytes not bits */
 	if (cf->length < 40)
 		cf->length = cf->length * 8;
 

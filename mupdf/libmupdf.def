@@ -380,6 +380,8 @@ EXPORTS
 	pdf_setpattern
 	pdf_setshade
 	pdf_showpath
+	pdf_showspace
+	pdf_showstring
 	pdf_showtext
 	pdf_flushtext
 	pdf_showimage
