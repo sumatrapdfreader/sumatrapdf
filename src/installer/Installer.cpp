@@ -1980,7 +1980,7 @@ void ShowUsage()
 
 void ParseCommandLine(TCHAR *cmdLine)
 {
-    ParsedCmdLineArguments argList(cmdLine);
+    CmdLineParser argList(cmdLine);
 
 #define is_arg(param) Str::EqI(arg + 1, _T(param))
 #define is_arg_with_param(param) (is_arg(param) && i < argList.Count() - 1)
