@@ -90,20 +90,10 @@ public:
     int             dpi;
     float           uiDPIFactor;
 
-    HANDLE          findThread;
-    bool            findCanceled;
-    int             findPercent;
-    bool            findStatusVisible;    
-    HANDLE          findStatusThread; // handle of the thread showing the status of the search result
-    HANDLE          stopFindStatusThreadEvent; // event raised to tell the findstatus thread to stop
-
     /* bitmap and hdc for (optional) double-buffering */
     HDC             hdcToDraw;
     HDC             hdcDoubleBuffer;
     HBITMAP         bmpDoubleBuffer;
-
-    pdf_link *      linkOnLastButtonDown;
-    const TCHAR *   url;
 
     MouseAction     mouseAction;
     bool            dragStartPending;
@@ -121,16 +111,6 @@ public:
        of the mouse from the point where the user middle clicked. */
     int             xScrollSpeed, yScrollSpeed;
 
-    /* when doing a forward search, the result location is highlighted with
-     * rectangular marks in the document. These variables indicate the position of the markers
-     * and whether they should be shown. */
-    struct          {
-                        bool show;          // are the markers visible?
-                        Vec<RectI> rects;   // location of the markers in user coordinates
-                        int page;
-                        int hideStep;       // value used to gradually hide the markers
-                    } fwdsearchmark;
-
     bool            showSelection;
 
     /* selection rectangle in screen coordinates
@@ -143,16 +123,6 @@ public:
 
     // file change watcher
     FileWatcher *   watcher;
-    
-    // synchronizer based on .pdfsync file
-    Synchronizer *  pdfsync;
-
-    bool            tocLoaded;
-    bool            tocShow;
-    // tocState is an array of ids for ToC items that have been expanded/collapsed
-    // by the user (tocState[0] is the length of the list)
-    int *           tocState;
-    PdfTocItem *    tocRoot;
 
     bool            fullScreen;
     bool            _tocBeforeFullScreen;
@@ -171,7 +141,62 @@ public:
 
     int             wheelAccumDelta;
     UINT_PTR        delayedRepaintTimer;
+
+    // the following properties only apply to PDF documents
+
+    HANDLE          findThread;
+    bool            findCanceled;
+    int             findPercent;
+    bool            findStatusVisible;    
+    HANDLE          findStatusThread; // handle of the thread showing the status of the search result
+    HANDLE          stopFindStatusThreadEvent; // event raised to tell the findstatus thread to stop
+
+    pdf_link *      linkOnLastButtonDown;
+    const TCHAR *   url;
+
+    bool            tocLoaded;
+    bool            tocShow;
+    // tocState is an array of ids for ToC items that have been expanded/collapsed
+    // by the user (tocState[0] is the length of the list)
+    int *           tocState;
+    PdfTocItem *    tocRoot;
     bool            resizingTocBox;
+
+    // synchronizer based on .pdfsync file
+    Synchronizer *  pdfsync;
+
+    /* when doing a forward search, the result location is highlighted with
+     * rectangular marks in the document. These variables indicate the position of the markers
+     * and whether they should be shown. */
+    struct          {
+                        bool show;          // are the markers visible?
+                        Vec<RectI> rects;   // location of the markers in user coordinates
+                        int page;
+                        int hideStep;       // value used to gradually hide the markers
+                    } fwdsearchmark;
+
+    void FocusPageNoEdit();
+    void UpdateToolbarState();
+
+    bool DoubleBuffer_New();
+    void DoubleBuffer_Show(HDC hdc);
+    void DoubleBuffer_Delete();
+    void ResizeIfNeeded(bool resizeWindow=true);
+
+    void UpdateCanvasSize();
+    void RedrawAll(bool update=false);
+    void RepaintAsync(UINT delay=0);
+    void Reload(bool autorefresh=false);
+
+    void ToggleZoom();
+    void ZoomToSelection(float factor, bool relative);
+    void SwitchToDisplayMode(DisplayMode displayMode, bool keepContinuous=false);
+    void MoveDocBy(int dx, int dy);
+
+    // the following methods only apply to PDF documents
+
+    void FindStart();
+    void AbortFinding();
 
     void ShowTocBox();
     void HideTocBox();
@@ -179,43 +204,23 @@ public:
     void LoadTocTree();
     void ToggleTocBox();
 
-    void FindStart();
-    void AbortFinding();
-    void FocusPageNoEdit();
-
-    void UpdateCanvasSize();
-    bool DoubleBuffer_New();
-    void DoubleBuffer_Show(HDC hdc);
-    void DoubleBuffer_Delete();
-    void RedrawAll(bool update=false);
-    void RepaintAsync(UINT delay=0);
-    void Reload(bool autorefresh=false);
-
     HTREEITEM TreeItemForPageNo(HTREEITEM hItem, int pageNo);
     void UpdateTocSelection(int currPageNo);
     void UpdateToCExpansionState(HTREEITEM hItem);
     void DisplayStateFromToC(DisplayState *ds);
-    void UpdateToolbarState();
-
-    void ResizeIfNeeded(bool resizeWindow=true);
-    void ToggleZoom();
-    void ZoomToSelection(float factor, bool relative);
-    void SwitchToDisplayMode(DisplayMode displayMode, bool keepContinuous=false);
-    void MoveDocBy(int dx, int dy);
 
     void CreateInfotip(const TCHAR *text=NULL, RectI *rc=NULL);
     void DeleteInfotip();
 
+    void ShowForwardSearchResult(const TCHAR *fileName, UINT line, UINT col, UINT ret, UINT page, Vec<RectI>& rects);
+
     virtual bool FindUpdateStatus(int count, int total);
     virtual TCHAR * GetPassword(const TCHAR *fileName, unsigned char *fileDigest,
                                 unsigned char decryptionKeyOut[32], bool *saveKey);
-
 };
 
 WindowInfo* FindWindowInfoByFile(TCHAR *file);
 WindowInfo* FindWindowInfoByHwnd(HWND hwnd);
-
 WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win=NULL, bool showWin=true);
-void        WindowInfo_ShowForwardSearchResult(WindowInfo *win, LPCTSTR srcfilename, UINT line, UINT col, UINT ret, UINT page, Vec<RectI>& rects);
 
 #endif

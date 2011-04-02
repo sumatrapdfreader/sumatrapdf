@@ -343,7 +343,7 @@ void LaunchBrowser(const TCHAR *url)
 static bool HasValidFileOrNoFile(WindowInfo *win)
 {
     if (!win) return false;
-    if (!win->loadedFilePath) return true;
+    if (win->IsAboutWindow()) return true;
     return File::Exists(win->loadedFilePath);
 }
 
@@ -730,6 +730,7 @@ static inline void AddOrRemoveFileMenuAtPos(MenuDef *item, bool add)
 // e-mail client, Adobe Reader, Foxit, PDF-XChange
 static void SetupProgramDependentMenus(WindowInfo *win)
 {
+    assert(win);
     bool acrobat = CanViewWithAcrobat(win);
     bool foxit = CanViewWithFoxit(win);
     bool pdfexch = CanViewWithPDFXChange(win);
@@ -746,21 +747,20 @@ static void SetupProgramDependentMenus(WindowInfo *win)
     }
 }
 
-static HMENU RebuildFileMenu(WindowInfo *win, HMENU menu)
+static HMENU RebuildFileMenu(HMENU menu, WindowInfo *win=NULL)
 {
-    SetupProgramDependentMenus(win);
+    if (win)
+        SetupProgramDependentMenus(win);
     EmptyMenu(menu);
     BuildMenuFromMenuDef(menuDefFile, dimof(menuDefFile), menu);
     AppendRecentFilesToMenu(menu);
     return menu;
 }
 
-static void BuildMenu(WindowInfo *win)
+static HMENU BuildMenu(HWND hWnd)
 {
-    assert(NULL == win->menu);
-
     HMENU mainMenu = CreateMenu();
-    HMENU m = RebuildFileMenu(win, CreateMenu());
+    HMENU m = RebuildFileMenu(CreateMenu());
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&File"));
     m = BuildMenuFromMenuDef(menuDefView, dimof(menuDefView), CreateMenu());
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&View"));
@@ -773,8 +773,8 @@ static void BuildMenu(WindowInfo *win)
     m = BuildMenuFromMenuDef(menuDefHelp, dimof(menuDefHelp), CreateMenu());
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Help"));
 
-    win->menu = mainMenu;
-    SetMenu(win->hwndFrame, win->menu);
+    SetMenu(hWnd, mainMenu);
+    return mainMenu;
 }
 
 // TODO: move the next three methods into gWindows?
@@ -804,7 +804,7 @@ WindowInfo* FindWindowInfoByFile(TCHAR *file)
 
     for (size_t i = 0; i < gWindows.Count(); i++) {
         WindowInfo *win = gWindows.At(i);
-        if (win->loadedFilePath && Path::IsSame(win->loadedFilePath, normFile))
+        if (!win->IsAboutWindow() && Path::IsSame(win->loadedFilePath, normFile))
             return win;
     }
 
@@ -1164,7 +1164,7 @@ static void MenuUpdateStateForWindow(WindowInfo *win) {
         IDM_SELECT_ALL, IDM_COPY_SELECTION, IDM_PROPERTIES, 
         IDM_VIEW_PRESENTATION_MODE, IDM_THREAD_STRESS };
 
-    assert(FileCloseMenuEnabled() == (win->loadedFilePath != NULL)); // TODO: ???
+    assert(FileCloseMenuEnabled() == !win->IsAboutWindow()); // TODO: ???
     Win::Menu::Enable(win->menu, IDM_CLOSE, FileCloseMenuEnabled());
         
     MenuUpdatePrintItem(win, win->menu);
@@ -1277,7 +1277,9 @@ static WindowInfo* WindowInfo_CreateEmpty(void)
         return NULL;
     // hide scrollbars to avoid showing/hiding on empty window
     ShowScrollBar(hwndCanvas, SB_BOTH, FALSE);
-    BuildMenu(win);
+
+    assert(NULL == win->menu);
+    win->menu = BuildMenu(win->hwndFrame);
 
     win->hwndCanvas = hwndCanvas;
     ShowWindow(win->hwndCanvas, SW_SHOW);
@@ -1315,7 +1317,8 @@ static void UpdateTocWidth(WindowInfo *win, const DisplayState *ds=NULL, int def
     SetWindowPos(win->hwndTocBox, NULL, rc.x, rc.y, rc.dx, rc.dy, SWP_NOZORDER);
 }
 
-static void RecalcSelectionPosition (WindowInfo *win) {
+static void RecalcSelectionPosition(WindowInfo *win)
+{
     SelectionOnPage *   selOnPage = win->selectionOnPage;
     PdfPageInfo*        pageInfo;
 
@@ -1940,10 +1943,10 @@ void DownloadSumatraUpdateInfo(WindowInfo *win, bool autoCheck)
     gGlobalPrefs.m_lastUpdateTime = GetSystemTimeAsStr();
 }
 
-static void PaintTransparentRectangle(WindowInfo *win, HDC hdc, RectI *rect, COLORREF selectionColor, BYTE alpha = 0x5f, int margin = 1) {
+static void PaintTransparentRectangle(HDC hdc, RectI screenRc, RectI *rect, COLORREF selectionColor, BYTE alpha = 0x5f, int margin = 1) {
     // don't draw selection parts not visible on screen
-    RectI screen(-margin, -margin, win->canvasRc.dx + 2 * margin, win->canvasRc.dy + 2 * margin);
-    RectI isect = rect->Intersect(screen);
+    screenRc.Inflate(margin, margin);
+    RectI isect = rect->Intersect(screenRc);
     if (isect.IsEmpty())
         return;
     rect = &isect;
@@ -2011,7 +2014,7 @@ static void PaintSelection (WindowInfo *win, HDC hdc) {
             selRect.dy *= -1;
         }
 
-        PaintTransparentRectangle(win, hdc, &selRect, COL_SELECTION_RECT);
+        PaintTransparentRectangle(hdc, win->canvasRc, &selRect, COL_SELECTION_RECT);
     } else {
         if (MA_SELECTING_TEXT == win->mouseAction)
             UpdateTextSelection(win);
@@ -2020,7 +2023,7 @@ static void PaintSelection (WindowInfo *win, HDC hdc) {
         // TODO: Move recalcing to better place
         RecalcSelectionPosition(win);
         for (SelectionOnPage *sel = win->selectionOnPage; sel; sel = sel->next)
-            PaintTransparentRectangle(win, hdc, &sel->selectionCanvas, COL_SELECTION_RECT);
+            PaintTransparentRectangle(hdc, win->canvasRc, &sel->selectionCanvas, COL_SELECTION_RECT);
     }
 }
 
@@ -2030,8 +2033,7 @@ static void PaintForwardSearchMark(WindowInfo *win, HDC hdc) {
         return;
     
     // Draw the rectangles highlighting the forward search results
-    for (UINT i = 0; i < win->fwdsearchmark.rects.Count(); i++)
-    {
+    for (UINT i = 0; i < win->fwdsearchmark.rects.Count(); i++) {
         RectD recD = win->fwdsearchmark.rects[i].Convert<double>();
         win->dm->rectCvtUserToScreen(win->fwdsearchmark.page, &recD);
         if (gGlobalPrefs.m_fwdsearchOffset > 0) {
@@ -2042,7 +2044,7 @@ static void PaintForwardSearchMark(WindowInfo *win, HDC hdc) {
         }
         RectI recI = recD.Convert<int>();
         BYTE alpha = (BYTE)(0x5f * 1.0f * (HIDE_FWDSRCHMARK_STEPS - win->fwdsearchmark.hideStep) / HIDE_FWDSRCHMARK_STEPS);
-        PaintTransparentRectangle(win, hdc, &recI, gGlobalPrefs.m_fwdsearchColor, alpha, 0);
+        PaintTransparentRectangle(hdc, win->canvasRc, &recI, gGlobalPrefs.m_fwdsearchColor, alpha, 0);
     }
 }
 
@@ -2675,7 +2677,7 @@ static void OnMouseMove(WindowInfo *win, int x, int y, WPARAM flags)
 
 static void OnSelectionStart(WindowInfo *win, int x, int y, WPARAM key)
 {
-    DeleteOldSelectionInfo (win);
+    DeleteOldSelectionInfo(win);
 
     win->selectionRect = RectI(x, y, 0, 0);
     win->showSelection = true;
@@ -3674,7 +3676,7 @@ static void OnMenuOpen(WindowInfo *win)
 static void BrowseFolder(WindowInfo *win, bool forward)
 {
     assert(win && win->loadedFilePath);
-    if (!win || !win->loadedFilePath) return;
+    if (!win || win->IsAboutWindow()) return;
     if (gRestrictedUse || gPluginMode) return;
 
     StrVec files;
@@ -4267,44 +4269,42 @@ static void WindowInfo_HideMessage(WindowInfo *win)
 }
 
 // Show the result of a PDF forward-search synchronization (initiated by a DDE command)
-void WindowInfo_ShowForwardSearchResult(WindowInfo *win, LPCTSTR srcfilename, UINT line, UINT col, UINT ret, UINT page, Vec<RectI> &rects)
+void WindowInfo::ShowForwardSearchResult(const TCHAR *fileName, UINT line, UINT col, UINT ret, UINT page, Vec<RectI> &rects)
 {
-    win->fwdsearchmark.rects.Reset();
+    this->fwdsearchmark.rects.Reset();
     if (ret == PDFSYNCERR_SUCCESS && rects.Count() > 0 ) {
         // remember the position of the search result for drawing the rect later on
-        const PdfPageInfo *pi = win->dm->getPageInfo(page);
+        const PdfPageInfo *pi = this->dm->getPageInfo(page);
         if (pi) {
-            WindowInfo_HideMessage(win);
+            WindowInfo_HideMessage(this);
 
             RectI overallrc;
             RectI rc = rects[0];
-            win->pdfsync->convert_coord_from_internal(&rc, pi->page.Convert<int>().dy, BottomLeft);
+            this->pdfsync->convert_coord_from_internal(&rc, pi->page.Convert<int>().dy, BottomLeft);
 
             overallrc = rc;
-            for (size_t i = 0; i < rects.Count(); i++)
-            {
+            for (size_t i = 0; i < rects.Count(); i++) {
                 rc = rects[i];
-                win->pdfsync->convert_coord_from_internal(&rc, pi->page.Convert<int>().dy, BottomLeft);
+                this->pdfsync->convert_coord_from_internal(&rc, pi->page.Convert<int>().dy, BottomLeft);
                 overallrc = overallrc.Union(rc);
-                win->fwdsearchmark.rects.Push(rc);
+                this->fwdsearchmark.rects.Push(rc);
             }
-            win->fwdsearchmark.page = page;
-            win->fwdsearchmark.show = true;
-            if (!gGlobalPrefs.m_fwdsearchPermanent) 
-            {
-                win->fwdsearchmark.hideStep = 0;
-                SetTimer(win->hwndCanvas, HIDE_FWDSRCHMARK_TIMER_ID, HIDE_FWDSRCHMARK_DELAY_IN_MS, NULL);
+            this->fwdsearchmark.page = page;
+            this->fwdsearchmark.show = true;
+            if (!gGlobalPrefs.m_fwdsearchPermanent)  {
+                this->fwdsearchmark.hideStep = 0;
+                SetTimer(this->hwndCanvas, HIDE_FWDSRCHMARK_TIMER_ID, HIDE_FWDSRCHMARK_DELAY_IN_MS, NULL);
             }
             
             // Scroll to show the overall highlighted zone
             int pageNo = page;
             PdfSel res = { 1, &pageNo, &overallrc };
-            if (!win->dm->pageVisible(page))
-                win->dm->goToPage(page, 0, true);
-            if (!win->dm->ShowResultRectToScreen(&res))
-                win->RepaintAsync();
-            if (IsIconic(win->hwndFrame))
-                ShowWindowAsync(win->hwndFrame, SW_RESTORE);
+            if (!this->dm->pageVisible(page))
+                this->dm->goToPage(page, 0, true);
+            if (!this->dm->ShowResultRectToScreen(&res))
+                this->RepaintAsync();
+            if (IsIconic(this->hwndFrame))
+                ShowWindowAsync(this->hwndFrame, SW_RESTORE);
             return;
         }
     }
@@ -4319,15 +4319,15 @@ void WindowInfo_ShowForwardSearchResult(WindowInfo *win, LPCTSTR srcfilename, UI
     else if (ret == PDFSYNCERR_NO_SYNC_AT_LOCATION)
         buf = Str::Dup(_TR("No synchronization info at this position"));
     else if (ret == PDFSYNCERR_UNKNOWN_SOURCEFILE)
-        buf = Str::Format(_TR("Unknown source file (%s)"), srcfilename);
+        buf = Str::Format(_TR("Unknown source file (%s)"), fileName);
     else if (ret == PDFSYNCERR_NORECORD_IN_SOURCEFILE)
-        buf = Str::Format(_TR("Source file %s has no synchronization point"), srcfilename);
+        buf = Str::Format(_TR("Source file %s has no synchronization point"), fileName);
     else if (ret == PDFSYNCERR_NORECORD_FOR_THATLINE)
-        buf = Str::Format(_TR("No result found around line %u in file %s"), line, srcfilename);
+        buf = Str::Format(_TR("No result found around line %u in file %s"), line, fileName);
     else if (ret == PDFSYNCERR_NOSYNCPOINT_FOR_LINERECORD)
-        buf = Str::Format(_TR("No result found around line %u in file %s"), line, srcfilename);
+        buf = Str::Format(_TR("No result found around line %u in file %s"), line, fileName);
 
-    WindowInfo_ShowMessage_Async(win, buf, true);
+    WindowInfo_ShowMessage_Async(this, buf, true);
     free(buf);
 }
 
@@ -4707,8 +4707,7 @@ static void RebuildMenuBar(void)
     for (size_t i = 0; i < gWindows.Count(); i++) {
         WindowInfo *win = gWindows[i];
         HMENU oldMenu = win->menu;
-        win->menu = NULL;
-        BuildMenu(win);
+        win->menu = BuildMenu(win->hwndFrame);
         DestroyMenu(oldMenu);
     }
 }
@@ -6096,9 +6095,8 @@ void WindowInfo::RepaintAsync(UINT delay)
 static void UpdateMenu(WindowInfo *win, HMENU m)
 {
     UINT id = GetMenuItemID(m, 0);
-    if (id == menuDefFile[0].id) {
-        RebuildFileMenu(win, GetSubMenu(win->menu, 0));
-    }
+    if (id == menuDefFile[0].id)
+        RebuildFileMenu(GetSubMenu(win->menu, 0), win);
     MenuUpdateStateForWindow(win);
 }
 

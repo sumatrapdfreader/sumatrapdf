@@ -781,7 +781,7 @@ static const TCHAR *HandleSyncCmd(const TCHAR *cmd, DDEACK& ack)
     UINT page;
     Vec<RectI> rects;
     UINT ret = win->pdfsync->source_to_pdf(srcFile, line, col, &page, rects);
-    WindowInfo_ShowForwardSearchResult(win, srcFile, line, col, ret, page, rects);
+    win->ShowForwardSearchResult(srcFile, line, col, ret, page, rects);
     if (setFocus)
         SetFocusHelper(win->hwndFrame);
 

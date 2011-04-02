@@ -84,8 +84,8 @@ public:
         rotation(0), windowState(0), showToc(true), tocDx(0), tocState(NULL) { }
 
     ~DisplayState() {
-        free((void *)filePath);
-        free((void *)decryptionKey);
+        free(filePath);
+        free(decryptionKey);
         free(tocState);
     }
 
@@ -101,7 +101,7 @@ public:
     int                 windowState;
     RectI               windowPos;
 
-    // vales below only apply to PDF files
+    // values below only apply to PDF files
 
     // hex encoded MD5 fingerprint of file content (32 chars) 
     // followed by crypt key (64 chars)
