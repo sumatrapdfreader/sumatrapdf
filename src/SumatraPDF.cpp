@@ -780,17 +780,12 @@ static void BuildMenu(WindowInfo *win)
 // TODO: move the next three methods into gWindows?
 WindowInfo* FindWindowInfoByHwnd(HWND hwnd)
 {
-    HWND parent = GetParent(hwnd);
-    HWND grandparent = GetParent(parent);
+    HWND rootWnd = GetAncestor(hwnd, GA_ROOT);
 
     for (size_t i = 0; i < gWindows.Count(); i++) {
         WindowInfo *win = gWindows.At(i);
-        if (hwnd == win->hwndFrame ||
-            parent == win->hwndFrame ||
-            grandparent == win->hwndFrame ||
-            hwnd == win->hwndPdfProperties) {
+        if (rootWnd == win->hwndFrame || hwnd == win->hwndPdfProperties)
             return win;
-        }
     }
     return NULL;
 }
