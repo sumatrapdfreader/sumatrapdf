@@ -6037,6 +6037,11 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
                 float factor = delta < 0 ? ZOOM_OUT_FACTOR : ZOOM_IN_FACTOR;
                 win->dm->zoomBy(factor, &PointI(pt.x, pt.y));
                 win->UpdateToolbarState();
+
+                // don't show the context menu when zooming with the right mouse-button down
+                if ((LOWORD(wParam) & MK_RBUTTON))
+                    win->dragStartPending = false;
+
                 return 0;
             }
 
