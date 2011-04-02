@@ -59,23 +59,6 @@ fz_error pdf_runpagefortarget(pdf_xref *xref, pdf_page *page, fz_device *dev, fz
     return error;
 }
 
-fz_pixmap *fz_newpixmap_nullonoom(fz_colorspace *colorspace, int x, int y, int w, int h)
-{
-    // allocate the memory needed for the pixmap ourselves, as MuPDF just aborts on OOM
-    assert(w > 0 && h > 0 && colorspace && colorspace->n > 0);
-    if (w <= 0 || h < 0 || INT_MAX / (colorspace->n + 1) <= h)
-        return NULL;
-    unsigned char *samples = (unsigned char *)fz_calloc(w, h * (colorspace->n + 1));
-    if (!samples)
-        return NULL;
-
-    fz_pixmap *image = fz_newpixmapwithdata(colorspace, x, y, w, h, samples, 1);
-    // tell MuPDF to free the memory when discarding the pixmap
-    image->freesamples = 1;
-
-    return image;
-}
-
 HBITMAP fz_pixtobitmap(HDC hDC, fz_pixmap *pixmap, bool paletted)
 {
     int paletteSize = 0;
@@ -87,7 +70,7 @@ HBITMAP fz_pixtobitmap(HDC hDC, fz_pixmap *pixmap, bool paletted)
     int rows8 = ((w + 3) / 4) * 4;
     
     /* abgr is a GDI compatible format */
-    fz_pixmap *bgrPixmap = fz_newpixmap_nullonoom(fz_getstaticcolorspace("DeviceBGR"), pixmap->x, pixmap->y, w, h);
+    fz_pixmap *bgrPixmap = fz_newpixmap_no_abort(fz_getstaticcolorspace("DeviceBGR"), pixmap->x, pixmap->y, w, h);
     if (!bgrPixmap)
         return NULL;
     fz_convertpixmap(pixmap, bgrPixmap);
@@ -830,7 +813,7 @@ RenderedBitmap *PdfEngine::renderBitmap(
         return new RenderedBitmap(hbmp, w, h);
     }
 
-    fz_pixmap *image = fz_newpixmap_nullonoom(fz_getstaticcolorspace("DeviceRGB"),
+    fz_pixmap *image = fz_newpixmap_no_abort(fz_getstaticcolorspace("DeviceRGB"),
         bbox.x0, bbox.y0, bbox.x1 - bbox.x0, bbox.y1 - bbox.y0);
     if (!image)
         return NULL;

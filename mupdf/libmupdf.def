@@ -16,6 +16,7 @@ EXPORTS
 	fz_geterrorline
 	fz_malloc
 	fz_calloc
+	fz_calloc_no_abort
 	fz_realloc
 	fz_free
 	fz_strdup
@@ -146,6 +147,7 @@ EXPORTS
 	fz_openlzwd
 	fz_openpredict
 	fz_openjbig2d
+	fz_newpixmap_no_abort
 	fz_newpixmapwithdata
 	fz_newpixmapwithrect
 	fz_newpixmap

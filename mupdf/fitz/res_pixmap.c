@@ -1,8 +1,7 @@
 #include "fitz.h"
 
-/* SumatraPDF: http://code.google.com/p/sumatrapdf/issues/detail?id=1332 */
 fz_pixmap *
-fz_newpixmapwithdata(fz_colorspace *colorspace, int x, int y, int w, int h, unsigned char *samples, int abortonfail)
+fz_newpixmapwithdata(fz_colorspace *colorspace, int x, int y, int w, int h, unsigned char *samples)
 {
 	fz_pixmap *pix;
 
@@ -32,11 +31,7 @@ fz_newpixmapwithdata(fz_colorspace *colorspace, int x, int y, int w, int h, unsi
 	{
 		/* SumatraPDF: abort on integer overflow */
 		if (pix->w > INT_MAX / pix->n) abort();
-		/* SumatraPDF: http://code.google.com/p/sumatrapdf/issues/detail?id=1332 */
-		if (abortonfail)
-			pix->samples = fz_calloc(pix->h, pix->w * pix->n);
-		else
-			pix->samples = fz_calloc_no_abort(pix->h, pix->w * pix->n);
+		pix->samples = fz_calloc(pix->h, pix->w * pix->n);
 		pix->freesamples = 1;
 	}
 
@@ -46,20 +41,28 @@ fz_newpixmapwithdata(fz_colorspace *colorspace, int x, int y, int w, int h, unsi
 fz_pixmap *
 fz_newpixmap(fz_colorspace *colorspace, int x, int y, int w, int h)
 {
-	/* SumatraPDF: http://code.google.com/p/sumatrapdf/issues/detail?id=1332 */
-	return fz_newpixmapwithdata(colorspace, x, y, w, h, nil, 1);
+	return fz_newpixmapwithdata(colorspace, x, y, w, h, nil);
 }
 
-/* SumatraPDF: http://code.google.com/p/sumatrapdf/issues/detail?id=1332 */
+/* SumatraPDF: don't abort on OOM when loading images */
 fz_pixmap *
 fz_newpixmap_no_abort(fz_colorspace *colorspace, int x, int y, int w, int h)
 {
-	fz_pixmap *pixmap = fz_newpixmapwithdata(colorspace, x, y, w, h, nil, 0);
-	if (!pixmap->samples)
-	{
-		fz_free(pixmap);
-		return NULL;
-	}
+	fz_pixmap *pixmap;
+	unsigned char *samples;
+	int n = 1;
+
+	if (colorspace)
+		n = colorspace->n + 1;
+
+	if (w > INT_MAX / n)
+		return nil;
+	samples = fz_calloc_no_abort(h, w * n);
+	if (!samples)
+		return nil;
+
+	pixmap = fz_newpixmapwithdata(colorspace, x, y, w, h, samples);
+	pixmap->freesamples = 1;
 	return pixmap;
 }
 

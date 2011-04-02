@@ -12,17 +12,17 @@ fz_malloc(int size)
 	return p;
 }
 
-/* SumatraPDF: http://code.google.com/p/sumatrapdf/issues/detail?id=1332 */
+/* SumatraPDF: don't abort on OOM when loading images */
 void *
 fz_calloc_no_abort(int count, int size)
 {
 	if (count == 0 || size == 0)
-		return 0;
+		return nil;
 
 	if (count < 0 || size < 0 || count > INT_MAX / size)
 	{
 		fprintf(stderr, "fatal error: out of memory (integer overflow)\n");
-		abort();
+		return nil;
 	}
 	return calloc(count, size);
 }

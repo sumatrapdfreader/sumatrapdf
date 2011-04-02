@@ -255,6 +255,8 @@ $(O)\RenderCache.obj: baseutils\BaseUtil.h baseutils\GeomUtil.h baseutils\StrUti
 $(O)\RenderCache.obj: mupdf\fitz\fitz.h mupdf\mupdf\mupdf.h src\DisplayModel.h
 $(O)\RenderCache.obj: src\DisplayState.h src\PdfEngine.h src\PdfSearch.h
 $(O)\RenderCache.obj: src\PdfSelection.h src\RenderCache.h
+$(O)\SimpleLog.obj: baseutils\BaseUtil.h baseutils\SimpleLog.h baseutils\StrUtil.h
+$(O)\SimpleLog.obj: baseutils\Vec.h
 $(O)\StrUtil.obj: baseutils\BaseUtil.h baseutils\StrUtil.h
 $(O)\SumatraAbout.obj: baseutils\BaseUtil.h baseutils\GeomUtil.h baseutils\StrUtil.h
 $(O)\SumatraAbout.obj: baseutils\Vec.h baseutils\WinUtil.h mupdf\fitz\fitz.h

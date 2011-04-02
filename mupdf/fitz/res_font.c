@@ -332,18 +332,18 @@ fz_renderftglyph(fz_font *font, int gid, fz_matrix trm)
 		return nil;
 	}
 
-	/* SumatraPDF: http://code.google.com/p/sumatrapdf/issues/detail?id=1332 */
-	if (face->glyph->bitmap.width == 0 || face->glyph->bitmap.rows == 0)
-	{
-		fz_warn("empty glyph (gid %d)", gid);
-		return nil;
-	}
-
-    glyph = fz_newpixmap(nil,
+	/* SumatraPDF: don't abort on OOM when loading images */
+	glyph = fz_newpixmap_no_abort(nil,
 		face->glyph->bitmap_left,
 		face->glyph->bitmap_top - face->glyph->bitmap.rows,
 		face->glyph->bitmap.width,
 		face->glyph->bitmap.rows);
+	if (!glyph)
+	{
+		fz_warn("couldn't create bitmap for glyph (gid %d)", gid);
+		return nil;
+	}
+
 
 	for (y = 0; y < glyph->h; y++)
 	{
