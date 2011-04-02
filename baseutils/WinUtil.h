@@ -163,6 +163,16 @@ inline void Enable(HMENU m, UINT id, bool enable)
     EnableMenuItem(m, id, MF_BYCOMMAND | (enable ? MF_ENABLED : MF_GRAYED));
 }
 
+inline void Hide(HMENU m, UINT id)
+{
+    RemoveMenu(m, id, MF_BYCOMMAND);
+}
+
+inline void Empty(HMENU m)
+{
+    while (RemoveMenu(m, 0, MF_BYPOSITION));
+}
+
 } // namespace Menu
 } // namespace Win
 

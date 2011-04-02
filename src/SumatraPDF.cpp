@@ -239,7 +239,6 @@ static bool LoadPdfIntoWindow(const TCHAR *fileName, WindowInfo *win,
 static WindowInfo* LoadPdf(const TCHAR *fileName, WindowInfo *win, bool showWin=true, bool forceReuse=false);
 static void WindowInfo_ShowMessage_Async(WindowInfo *win, const TCHAR *message, bool resize);
 
-static void Find(WindowInfo *win, PdfSearchDirection direction = FIND_FORWARD);
 static void DeleteOldSelectionInfo(WindowInfo *win);
 static void ClearSearch(WindowInfo *win);
 static void WindowInfo_EnterFullscreen(WindowInfo *win, bool presentation=false);
@@ -340,17 +339,19 @@ void LaunchBrowser(const TCHAR *url)
     launch_url(url);
 }
 
-static bool HasValidFileOrNoFile(WindowInfo *win)
+static bool CanViewExternally(WindowInfo *win=NULL)
 {
-    if (!win) return false;
-    if (win->IsAboutWindow()) return true;
+    if (gRestrictedUse)
+        return false;
+    if (!win || win->IsAboutWindow())
+        return true;
     return File::Exists(win->loadedFilePath);
 }
 
-static bool CanViewWithFoxit(WindowInfo *win)
+static bool CanViewWithFoxit(WindowInfo *win=NULL)
 {
     // Requirements: a valid filename and a valid path to Foxit
-    if (gRestrictedUse || !HasValidFileOrNoFile(win))
+    if (!CanViewExternally(win))
         return false;
     ScopedMem<TCHAR> path(GetFoxitPath());
     return path != NULL;
@@ -375,10 +376,10 @@ static bool ViewWithFoxit(WindowInfo *win, TCHAR *args=NULL)
     return true;
 }
 
-static bool CanViewWithPDFXChange(WindowInfo *win)
+static bool CanViewWithPDFXChange(WindowInfo *win=NULL)
 {
-    // Requirements: a valid filename and a valid path to Foxit
-    if (gRestrictedUse || !HasValidFileOrNoFile(win))
+    // Requirements: a valid filename and a valid path to PDF X-Change
+    if (!CanViewExternally(win))
         return false;
     ScopedMem<TCHAR> path(GetPDFXChangePath());
     return path != NULL;
@@ -403,10 +404,10 @@ static bool ViewWithPDFXChange(WindowInfo *win, TCHAR *args=NULL)
     return true;
 }
 
-static bool CanViewWithAcrobat(WindowInfo *win)
+static bool CanViewWithAcrobat(WindowInfo *win=NULL)
 {
     // Requirements: a valid filename and a valid path to Adobe Reader
-    if (gRestrictedUse || !HasValidFileOrNoFile(win))
+    if (!CanViewExternally(win))
         return false;
     ScopedMem<TCHAR> exePath(GetAcrobatPath());
     return exePath != NULL;
@@ -444,10 +445,10 @@ static bool ViewWithAcrobat(WindowInfo *win, TCHAR *args=NULL)
     static const GUID name = { l, w1, w2, { b1, b2,  b3,  b4,  b5,  b6,  b7,  b8 } }
 DEFINE_GUID_STATIC(CLSID_SendMail, 0x9E56BE60, 0xC50F, 0x11CF, 0x9A, 0x2C, 0x00, 0xA0, 0xC9, 0x0A, 0x90, 0xCE); 
 
-static bool CanSendAsEmailAttachment(WindowInfo *win)
+static bool CanSendAsEmailAttachment(WindowInfo *win=NULL)
 {
     // Requirements: a valid filename and access to SendMail's IDropTarget interface
-    if (gRestrictedUse || !HasValidFileOrNoFile(win))
+    if (!CanViewExternally(win))
         return false;
 
     IDropTarget *pDropTarget = NULL;
@@ -535,8 +536,7 @@ void WindowInfo::SwitchToDisplayMode(DisplayMode displayMode, bool keepContinuou
 enum menuFlags {
     MF_NOT_IN_RESTRICTED = 1 << 0,
     MF_NO_TRANSLATE      = 1 << 1,
-    MF_REMOVED           = 1 << 2,
-    MF_PLUGIN_MODE_ONLY  = 1 << 3,
+    MF_PLUGIN_MODE_ONLY  = 1 << 2,
 };
 
 typedef struct MenuDef {
@@ -660,15 +660,6 @@ static void AddFileMenuItem(HMENU menuFile, DisplayState *state, UINT index)
     InsertMenu(menuFile, IDM_EXIT, MF_BYCOMMAND | MF_ENABLED | MF_STRING, menuId, menuString);
 }
 
-static void EmptyMenu(HMENU m)
-{
-    for (;;) {
-        bool ok = RemoveMenu(m, 0, MF_BYPOSITION);
-        if (!ok)
-            return;
-    }
-}
-
 static HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuLen, HMENU menu)
 {
     assert(menu);
@@ -677,9 +668,6 @@ static HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuLen, HMENU menu)
     for (int i = 0; i < menuLen; i++) {
         MenuDef md = menuDefs[i];
         const char *title = md.title;
-        if (md.flags & MF_REMOVED)
-            continue;
-
         if (gRestrictedUse && (md.flags & MF_NOT_IN_RESTRICTED))
             continue;
         if (!gPluginMode && (md.flags & MF_PLUGIN_MODE_ONLY))
@@ -718,42 +706,23 @@ static void AppendRecentFilesToMenu(HMENU m)
     InsertMenu(m, IDM_EXIT, MF_BYCOMMAND | MF_SEPARATOR, 0, NULL);
 }
 
-static inline void AddOrRemoveFileMenuAtPos(MenuDef *item, bool add)
+static HMENU RebuildFileMenu(HMENU menu)
 {
-    if (add)
-        item->flags &= ~MF_REMOVED;
-    else
-        item->flags |= MF_REMOVED;
-}
-
-// Suppress menu items that depend on specific software being installed:
-// e-mail client, Adobe Reader, Foxit, PDF-XChange
-static void SetupProgramDependentMenus(WindowInfo *win)
-{
-    assert(win);
-    bool acrobat = CanViewWithAcrobat(win);
-    bool foxit = CanViewWithFoxit(win);
-    bool pdfexch = CanViewWithPDFXChange(win);
-    bool email = CanSendAsEmailAttachment(win);
-    for (int i = 0; i < dimof(menuDefFile); i++) {
-        if (IDM_VIEW_WITH_ACROBAT == menuDefFile[i].id)
-            AddOrRemoveFileMenuAtPos(&menuDefFile[i], acrobat);
-        else if (IDM_VIEW_WITH_FOXIT == menuDefFile[i].id)
-            AddOrRemoveFileMenuAtPos(&menuDefFile[i], foxit);
-        else if (IDM_VIEW_WITH_PDF_XCHANGE ==  menuDefFile[i].id)
-            AddOrRemoveFileMenuAtPos(&menuDefFile[i], pdfexch);
-        else if (IDM_SEND_BY_EMAIL == menuDefFile[i].id)
-            AddOrRemoveFileMenuAtPos(&menuDefFile[i], email);
-    }
-}
-
-static HMENU RebuildFileMenu(HMENU menu, WindowInfo *win=NULL)
-{
-    if (win)
-        SetupProgramDependentMenus(win);
-    EmptyMenu(menu);
+    Win::Menu::Empty(menu);
     BuildMenuFromMenuDef(menuDefFile, dimof(menuDefFile), menu);
     AppendRecentFilesToMenu(menu);
+
+    // Suppress menu items that depend on specific software being installed:
+    // e-mail client, Adobe Reader, Foxit, PDF-XChange
+    if (!CanViewWithAcrobat())
+        Win::Menu::Hide(menu, IDM_VIEW_WITH_ACROBAT);
+    if (!CanViewWithFoxit())
+        Win::Menu::Hide(menu, IDM_VIEW_WITH_FOXIT);
+    if (!CanViewWithPDFXChange())
+        Win::Menu::Hide(menu, IDM_VIEW_WITH_PDF_XCHANGE);
+    if (!CanSendAsEmailAttachment())
+        Win::Menu::Hide(menu, IDM_SEND_BY_EMAIL);
+
     return menu;
 }
 
@@ -1166,7 +1135,7 @@ static void MenuUpdateStateForWindow(WindowInfo *win) {
 
     assert(FileCloseMenuEnabled() == !win->IsAboutWindow()); // TODO: ???
     Win::Menu::Enable(win->menu, IDM_CLOSE, FileCloseMenuEnabled());
-        
+
     MenuUpdatePrintItem(win, win->menu);
 
     bool enabled = win->PdfLoaded() && win->dm->hasTocTree();
@@ -1300,9 +1269,9 @@ static WindowInfo* WindowInfo_CreateEmpty(void)
     return win;
 }
 
-static void UpdateTocWidth(WindowInfo *win, const DisplayState *ds=NULL, int defaultDx=0)
+static void UpdateTocWidth(HWND hwndTocBox, const DisplayState *ds=NULL, int defaultDx=0)
 {
-    WindowRect rc(win->hwndTocBox);
+    WindowRect rc(hwndTocBox);
     if (rc.IsEmpty())
         return;
 
@@ -1314,7 +1283,7 @@ static void UpdateTocWidth(WindowInfo *win, const DisplayState *ds=NULL, int def
     if (!rc.dx) // first time
         rc.dx = defaultDx;
 
-    SetWindowPos(win->hwndTocBox, NULL, rc.x, rc.y, rc.dx, rc.dy, SWP_NOZORDER);
+    SetWindowPos(hwndTocBox, NULL, rc.x, rc.y, rc.dx, rc.dy, SWP_NOZORDER);
 }
 
 static void RecalcSelectionPosition(WindowInfo *win)
@@ -1435,7 +1404,7 @@ static bool LoadPdfIntoWindow(
     else {
         win->tocShow = gGlobalPrefs.m_showToc;
     }
-    UpdateTocWidth(win, state);
+    UpdateTocWidth(win->hwndTocBox, state);
 
     // Review needed: Is the following block really necessary?
     /*
@@ -1781,27 +1750,23 @@ static bool RegisterForPdfExtentions(HWND hwnd)
     return true;
 }
 
-static void OnDropFiles(WindowInfo *win, HDROP hDrop)
+static void OnDropFiles(HDROP hDrop)
 {
-    int         i;
     TCHAR       filename[MAX_PATH];
-    const int   files_count = DragQueryFile(hDrop, DRAGQUERY_NUMFILES, 0, 0);
+    const int   count = DragQueryFile(hDrop, DRAGQUERY_NUMFILES, 0, 0);
 
-    for (i = 0; i < files_count; i++)
+    for (int i = 0; i < count; i++)
     {
-        DragQueryFile(hDrop, i, filename, MAX_PATH);
+        DragQueryFile(hDrop, i, filename, dimof(filename));
         if (Str::EndsWithI(filename, _T(".lnk"))) {
             ScopedMem<TCHAR> resolved(ResolveLnk(filename));
             if (resolved)
-                Str::BufSet(filename, MAX_PATH, resolved);
+                Str::BufSet(filename, dimof(filename), resolved);
         }
         // The first dropped document may override the current window
-        LoadDocument(filename, i == 0 ? win : NULL);
+        LoadDocument(filename);
     }
     DragFinish(hDrop);
-
-    if (files_count > 0)
-        win->RedrawAll();
 }
 
 bool WindowInfo::DoubleBuffer_New()
@@ -1835,21 +1800,23 @@ bool WindowInfo::DoubleBuffer_New()
     return true;
 }
 
-static bool ShowNewVersionDialog(WindowInfo *win, const TCHAR *newVersion)
+static bool ShowNewVersionDialog(HWND hParent, const TCHAR *newVersion)
 {
-    Dialog_NewVersion_Data data = {0};
+    Dialog_NewVersion_Data data;
     data.currVersion = UPDATE_CHECK_VER;
     data.newVersion = newVersion;
     data.skipThisVersion = false;
-    INT_PTR res = Dialog_NewVersionAvailable(win->hwndFrame, &data);
+
+    INT_PTR res = Dialog_NewVersionAvailable(hParent, &data);
     if (data.skipThisVersion) {
         free(gGlobalPrefs.m_versionToSkip);
         gGlobalPrefs.m_versionToSkip = Str::Dup(newVersion);
     }
+
     return DIALOG_OK_PRESSED == res;
 }
 
-static DWORD OnUrlDownloaded(WindowInfo *win, HttpReqCtx *ctx, bool silent)
+static DWORD OnUrlDownloaded(HWND hParent, HttpReqCtx *ctx, bool silent)
 {
     if (ctx->error)
         return ctx->error;
@@ -1872,7 +1839,7 @@ static DWORD OnUrlDownloaded(WindowInfo *win, HttpReqCtx *ctx, bool silent)
     if (CompareVersion(verTxt, UPDATE_CHECK_VER) <= 0) {
         /* if automated => don't notify that there is no new version */
         if (!silent) {
-            MessageBox(win->hwndFrame, _TR("You have the latest version."),
+            MessageBox(hParent, _TR("You have the latest version."),
                        _TR("SumatraPDF Update"), MB_ICONINFORMATION | MB_OK);
         }
         return 0;
@@ -1882,7 +1849,7 @@ static DWORD OnUrlDownloaded(WindowInfo *win, HttpReqCtx *ctx, bool silent)
     if (silent && Str::EqI(gGlobalPrefs.m_versionToSkip, verTxt))
         return 0;
 
-    bool download = ShowNewVersionDialog(win, verTxt);
+    bool download = ShowNewVersionDialog(hParent, verTxt);
     if (download)
         LaunchBrowser(SVN_UPDATE_LINK);
 
@@ -1905,7 +1872,7 @@ public:
 
     virtual void Execute() {
         if (WindowInfoStillValid(win) && ctx) {
-            DWORD error = OnUrlDownloaded(win, ctx, autoCheck);
+            DWORD error = OnUrlDownloaded(win->hwndFrame, ctx, autoCheck);
             if (error && !autoCheck) {
                 // notify the user about the error during a manual update check
                 ScopedMem<TCHAR> msg(Str::Format(_TR("Can't connect to the Internet (error %#x)."), error));
@@ -1921,7 +1888,6 @@ void DownloadSumatraUpdateInfo(WindowInfo *win, bool autoCheck)
     if (gRestrictedUse || gPluginMode)
         return;
     assert(win);
-    HWND hwndToNotify = win->hwndFrame;
 
     /* For auto-check, only check if at least a day passed since last check */
     if (autoCheck && gGlobalPrefs.m_lastUpdateTime) {
@@ -2001,7 +1967,7 @@ static void UpdateTextSelection(WindowInfo *win, bool select=true)
     win->showSelection = true;
 }
 
-static void PaintSelection (WindowInfo *win, HDC hdc) {
+static void PaintSelection(WindowInfo *win, HDC hdc) {
     if (win->mouseAction == MA_SELECTING) {
         // during selecting
         RectI selRect = win->selectionRect;
@@ -2504,12 +2470,6 @@ static bool OnInverseSearch(WindowInfo *win, int x, int y)
     return true;
 }
 
-static void ChangePresentationMode(WindowInfo *win, PresentationMode mode)
-{
-    win->presentation = mode;
-    win->RedrawAll();
-}
-
 static void OnContextMenu(WindowInfo *win, int x, int y)
 {
     if (!win || !win->PdfLoaded())
@@ -2518,15 +2478,13 @@ static void OnContextMenu(WindowInfo *win, int x, int y)
     pdf_link *link = win->dm->getLinkAtPosition(PointI(x, y));
     ScopedMem<TCHAR> linkAddress(win->dm->getLinkPath(link));
     pdf_annot *comment = win->dm->getCommentAtPosition(PointI(x, y));
-    for (int i = 0; i < dimof(menuDefContext); i++) {
-        MenuDef md = menuDefContext[i];
-        if (IDM_COPY_LINK_TARGET == md.id)
-            AddOrRemoveFileMenuAtPos(&menuDefContext[i], linkAddress.Get() != NULL);
-        else if (IDM_COPY_COMMENT == md.id)
-            AddOrRemoveFileMenuAtPos(&menuDefContext[i], comment != NULL);
-    }
 
     HMENU popup = BuildMenuFromMenuDef(menuDefContext, dimof(menuDefContext), CreatePopupMenu());
+    if (!linkAddress)
+        Win::Menu::Hide(popup, IDM_COPY_LINK_TARGET);
+    if (!comment)
+        Win::Menu::Hide(popup, IDM_COPY_COMMENT);
+
     if (!win->selectionOnPage)
         Win::Menu::Enable(popup, IDM_COPY_SELECTION, false);
     MenuUpdatePrintItem(win, popup, true);
@@ -2788,7 +2746,7 @@ static void OnMouseLeftButtonUp(WindowInfo *win, int x, int y, WPARAM key)
     }
     /* return from white/black screens in presentation mode */
     else if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation)
-        ChangePresentationMode(win, PM_ENABLED);
+        win->ChangePresentationMode(PM_ENABLED);
 
     win->mouseAction = MA_IDLE;
     win->linkOnLastButtonDown = NULL;
@@ -2899,7 +2857,7 @@ static void OnMouseRightButtonUp(WindowInfo *win, int x, int y, WPARAM key)
     }
     /* return from white/black screens in presentation mode */
     else if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation)
-        ChangePresentationMode(win, PM_ENABLED);
+        win->ChangePresentationMode(PM_ENABLED);
     else
         OnContextMenu(win, x, y);
 
@@ -4065,7 +4023,7 @@ static void OnMenuFind(WindowInfo *win)
         win->dm->SetFindMatchCase(matchCase);
     }
 
-    Find(win, FIND_FORWARD);
+    win->Find();
 }
 
 static void OnMenuViewRotateLeft(WindowInfo *win)
@@ -4333,9 +4291,12 @@ void WindowInfo::ShowForwardSearchResult(const TCHAR *fileName, UINT line, UINT 
 
 static void WindowInfo_ShowFindStatus(WindowInfo *win)
 {
-    LPARAM disable = (LPARAM)MAKELONG(0,0);
+    LPARAM disable = (LPARAM)MAKELONG(0, 0);
 
-    MoveWindow(win->hwndFindStatus, FIND_STATUS_MARGIN, FIND_STATUS_MARGIN, MulDiv(FIND_STATUS_WIDTH, win->dpi, USER_DEFAULT_SCREEN_DPI), MulDiv(23, win->dpi, USER_DEFAULT_SCREEN_DPI) + FIND_STATUS_PROGRESS_HEIGHT + 8, false);
+    MoveWindow(win->hwndFindStatus, FIND_STATUS_MARGIN, FIND_STATUS_MARGIN,
+               MulDiv(FIND_STATUS_WIDTH, win->dpi, USER_DEFAULT_SCREEN_DPI),
+               MulDiv(23, win->dpi, USER_DEFAULT_SCREEN_DPI) + FIND_STATUS_PROGRESS_HEIGHT + 8,
+               false);
     ShowWindow(win->hwndFindStatus, SW_SHOWNA);
     win->findStatusVisible = true;
 
@@ -4346,7 +4307,7 @@ static void WindowInfo_ShowFindStatus(WindowInfo *win)
 
 static void WindowInfo_HideFindStatus(WindowInfo *win, bool canceled=false)
 {
-    LPARAM enable = (LPARAM)MAKELONG(1,0);
+    LPARAM enable = (LPARAM)MAKELONG(1, 0);
 
     SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_PREV, enable);
     SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_NEXT, enable);
@@ -4367,13 +4328,13 @@ static void WindowInfo_HideFindStatus(WindowInfo *win, bool canceled=false)
 static void OnMenuFindNext(WindowInfo *win)
 {
     if (SendMessage(win->hwndToolbar, TB_ISBUTTONENABLED, IDM_FIND_NEXT, 0))
-        Find(win, FIND_FORWARD);
+        win->Find(FIND_FORWARD);
 }
 
 static void OnMenuFindPrev(WindowInfo *win)
 {
     if (SendMessage(win->hwndToolbar, TB_ISBUTTONENABLED, IDM_FIND_PREV, 0))
-        Find(win, FIND_BACKWARD);
+        win->Find(FIND_BACKWARD);
 }
 
 static void OnMenuFindMatchCase(WindowInfo *win)
@@ -4494,7 +4455,7 @@ static void OnChar(WindowInfo *win, WPARAM key)
         key = (TCHAR)CharLower((LPTSTR)(TCHAR)key);
 
     if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation) {
-        ChangePresentationMode(win, PM_ENABLED);
+        win->ChangePresentationMode(PM_ENABLED);
         return;
     }
 
@@ -4596,11 +4557,11 @@ static void OnChar(WindowInfo *win, WPARAM key)
     case '.':
         // for Logitech's wireless presenters which target PowerPoint's shortcuts
         if (win->presentation)
-            ChangePresentationMode(win, PM_BLACK_SCREEN);
+            win->ChangePresentationMode(PM_BLACK_SCREEN);
         break;
     case 'w':
         if (win->presentation)
-            ChangePresentationMode(win, PM_WHITE_SCREEN);
+            win->ChangePresentationMode(PM_WHITE_SCREEN);
         break;
     case 'i':
         // experimental "page info" tip: make figuring out current page and
@@ -4769,7 +4730,7 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, L
 
         if (VK_RETURN == wParam)
         {
-            Find(win);
+            win->Find();
             return 1;
         }
 
@@ -4875,22 +4836,22 @@ static DWORD WINAPI FindThread(LPVOID data)
     return 0;
 }
 
-static void Find(WindowInfo *win, PdfSearchDirection direction)
+void WindowInfo::Find(PdfSearchDirection direction)
 {
-    win->AbortFinding();
+    AbortFinding();
 
     FindThreadData ftd;
-    ftd.win = win;
+    ftd.win = this;
     ftd.direction = direction;
-    GetWindowText(win->hwndFindBox, ftd.text, dimof(ftd.text));
-    ftd.wasModified = Edit_GetModify(win->hwndFindBox);
-    Edit_SetModify(win->hwndFindBox, FALSE);
+    GetWindowText(hwndFindBox, ftd.text, dimof(ftd.text));
+    ftd.wasModified = Edit_GetModify(hwndFindBox);
+    Edit_SetModify(hwndFindBox, FALSE);
 
     bool hasText = Str::Len(ftd.text) > 0;
     if (hasText) {
         LPVOID data = _memdup(&ftd);
         if (data)
-            win->findThread = CreateThread(NULL, 0, FindThread, data, 0, 0);
+            findThread = CreateThread(NULL, 0, FindThread, data, 0, 0);
     }
 }
 
@@ -5698,7 +5659,7 @@ void WindowInfo::ShowTocBox()
     int cw, ch, cx, cy;
 
     ClientRect rframe(hwndFrame);
-    UpdateTocWidth(this, NULL, rframe.dx / 4);
+    UpdateTocWidth(this->hwndTocBox, NULL, rframe.dx / 4);
 
     if (gGlobalPrefs.m_showToolbar && !fullScreen && !presentation)
         cy = gReBarDy + gReBarDyFrame;
@@ -5985,8 +5946,7 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
             break;
 
         case WM_DROPFILES:
-            if (win)
-                OnDropFiles(win, (HDROP)wParam);
+            OnDropFiles((HDROP)wParam);
             break;
 
         case WM_ERASEBKGND:
@@ -6096,7 +6056,7 @@ static void UpdateMenu(WindowInfo *win, HMENU m)
 {
     UINT id = GetMenuItemID(m, 0);
     if (id == menuDefFile[0].id)
-        RebuildFileMenu(GetSubMenu(win->menu, 0), win);
+        RebuildFileMenu(m);
     MenuUpdateStateForWindow(win);
 }
 

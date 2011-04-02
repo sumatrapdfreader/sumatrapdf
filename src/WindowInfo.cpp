@@ -102,6 +102,12 @@ void WindowInfo::RedrawAll(bool update)
         UpdateWindow(this->hwndCanvas);
 }
 
+void WindowInfo::ChangePresentationMode(PresentationMode mode)
+{
+    presentation = mode;
+    RedrawAll();
+}
+
 HTREEITEM WindowInfo::TreeItemForPageNo(HTREEITEM hItem, int pageNo)
 {
     HTREEITEM hCurrItem = NULL;

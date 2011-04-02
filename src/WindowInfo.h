@@ -187,6 +187,7 @@ public:
     void RedrawAll(bool update=false);
     void RepaintAsync(UINT delay=0);
     void Reload(bool autorefresh=false);
+    void ChangePresentationMode(PresentationMode mode);
 
     void ToggleZoom();
     void ZoomToSelection(float factor, bool relative);
@@ -195,6 +196,7 @@ public:
 
     // the following methods only apply to PDF documents
 
+    void Find(PdfSearchDirection direction=FIND_FORWARD);
     void FindStart();
     void AbortFinding();
 
