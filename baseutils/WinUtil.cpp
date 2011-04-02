@@ -6,11 +6,10 @@
 #include <io.h>
 #include <fcntl.h>
 
-#include "WinUtil.h"
-
 #include "BaseUtil.h"
 #include "FileUtil.h"
 #include "StrUtil.h"
+#include "WinUtil.h"
 
 #define DONT_INHERIT_HANDLES FALSE
 

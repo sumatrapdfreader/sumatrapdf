@@ -10,7 +10,7 @@
 
 /* Handling of file history list.
 
-   We keep an infinite list of all (still existing in the file system) PDF
+   We keep an infinite list of all (still existing in the file system)
    files that a user has ever opened. For each file we also keep a bunch of
    attributes describing the display state at the time the file was closed.
 
@@ -37,53 +37,53 @@ class FileHistory {
 public:
     FileHistory() { }
     ~FileHistory() { Clear(); }
-    void            Clear(void) { DeleteVecMembers(states); }
+    void  Clear() { DeleteVecMembers(states); }
 
-    void            Prepend(DisplayState *state) { states.InsertAt(0, state); }
-    void            Append(DisplayState *state) { states.Append(state); }
-    void            Remove(DisplayState *state) { states.Remove(state); }
-    bool            IsEmpty(void) const { return states.Count() == 0; }
+    void  Prepend(DisplayState *state) { states.InsertAt(0, state); }
+    void  Append(DisplayState *state) { states.Append(state); }
+    void  Remove(DisplayState *state) { states.Remove(state); }
+    bool  IsEmpty() const { return states.Count() == 0; }
 
-    DisplayState *  Get(size_t index) const {
-                        if (index < states.Count())
-                            return states[index];
-                        return NULL;
-                    }
-    DisplayState *  Find(const TCHAR *filePath) const {
-                        for (size_t i = 0; i < states.Count(); i++)
-                            if (Str::EqI(states[i]->filePath, filePath))
-                                return states[i];
-                        return NULL;
-                    }
+    DisplayState *Get(size_t index) const {
+        if (index < states.Count())
+            return states[index];
+        return NULL;
+    }
 
-    void            MarkFileLoaded(const TCHAR *filePath) {
-                        assert(filePath);
-                        // if a history entry with the same name already exists,
-                        // then reuse it. That way we don't have duplicates and
-                        // the file moves to the front of the list
-                        DisplayState *state = Find(filePath);
-                        if (!state) {
-                            state = new DisplayState();
-                            if (!state)
-                                return;
-                            state->filePath = Str::Dup(filePath);
-                        }
-                        else
-                            Remove(state);
-                        Prepend(state);
-                    }
-    void            MarkFileInexistent(const TCHAR *filePath) {
-                        assert(filePath);
-                        // move the file history entry to the very end of the list
-                        // (if it exists at all), so that we don't completely forget
-                        // the settings, should the file reappear later on - but
-                        // make space for other documents first
-                        DisplayState *state = Find(filePath);
-                        if (!state)
-                            return;
-                        Remove(state);
-                        Append(state);
-                    }
+    DisplayState *Find(const TCHAR *filePath) const {
+        for (size_t i = 0; i < states.Count(); i++)
+            if (Str::EqI(states[i]->filePath, filePath))
+                return states[i];
+        return NULL;
+    }
+
+    void MarkFileLoaded(const TCHAR *filePath) {
+        assert(filePath);
+        // if a history entry with the same name already exists,
+        // then reuse it. That way we don't have duplicates and
+        // the file moves to the front of the list
+        DisplayState *state = Find(filePath);
+        if (!state) {
+            state = new DisplayState();
+            state->filePath = Str::Dup(filePath);
+        }
+        else
+            Remove(state);
+        Prepend(state);
+    }
+
+    void MarkFileInexistent(const TCHAR *filePath) {
+        assert(filePath);
+        // move the file history entry to the very end of the list
+        // (if it exists at all), so that we don't completely forget
+        // the settings, should the file reappear later on - but
+        // make space for other documents first
+        DisplayState *state = Find(filePath);
+        if (!state)
+            return;
+        Remove(state);
+        Append(state);
+    }
 };
 
 #endif

@@ -90,7 +90,7 @@ public:
     }
 
     TCHAR *             filePath;
-    char *              decryptionKey; // hex encoded MD5 fingerprint of file content (32 chars) followed by crypt key (64 chars)
+
     bool                useGlobalValues;
 
     enum DisplayMode    displayMode;
@@ -100,6 +100,12 @@ public:
     int                 rotation;
     int                 windowState;
     RectI               windowPos;
+
+    // vales below only apply to PDF files
+
+    // hex encoded MD5 fingerprint of file content (32 chars) 
+    // followed by crypt key (64 chars). Only applies to PDF files
+    char *              decryptionKey;
     bool                showToc;
     int                 tocDx;
     int *               tocState;
