@@ -59,16 +59,9 @@ public:
     WindowInfo(HWND hwnd);
     ~WindowInfo();
 
-    void GetCanvasSize();
-
-    int winDx() const { return canvasRc.dx; }
-    int winDy() const { return canvasRc.dy; }
-    SizeI winSize() const { return canvasRc.Size(); }
-
     bool IsAboutWindow() const { return !loadedFilePath; }
     bool PdfLoaded() const { return this->dm != NULL; }
 
-    bool            needrefresh; // true if the view of the PDF is not synchronized with the content of the file on disk
     TCHAR *         loadedFilePath;
     bool            threadStressRunning;
     DisplayModel *  dm;
@@ -131,10 +124,12 @@ public:
     /* when doing a forward search, the result location is highlighted with
      * rectangular marks in the document. These variables indicate the position of the markers
      * and whether they should be shown. */
-    bool            showForwardSearchMark; // are the markers visible?
-    Vec<RectI>      fwdsearchmarkRects;    // location of the markers in user coordinates
-    int             fwdsearchmarkPage;     // page 
-    int             fwdsearchmarkHideStep; // value used to gradually hide the markers
+    struct          {
+                        bool show;          // are the markers visible?
+                        Vec<RectI> rects;   // location of the markers in user coordinates
+                        int page;
+                        int hideStep;       // value used to gradually hide the markers
+                    } fwdsearchmark;
 
     bool            showSelection;
 
@@ -166,9 +161,9 @@ public:
     int             _windowStateBeforePresentation;
 
     long            prevStyle;
-    RectI           frameRc;
+    RectI           frameRc; // window position before entering presentation/fullscreen mode
     RectI           canvasRc;
-    PointI          prevCanvasBR;
+    SizeI           prevCanvasSize;
     float           prevZoomVirtual;
     DisplayMode     prevDisplayMode;
 
@@ -177,9 +172,6 @@ public:
     int             wheelAccumDelta;
     UINT_PTR        delayedRepaintTimer;
     bool            resizingTocBox;
-
-    // (browser) parent, when displayed as a frame-less plugin
-    HWND            pluginParent;
 
     void ShowTocBox();
     void HideTocBox();
@@ -191,6 +183,7 @@ public:
     void AbortFinding();
     void FocusPageNoEdit();
 
+    void UpdateCanvasSize();
     bool DoubleBuffer_New();
     void DoubleBuffer_Show(HDC hdc);
     void DoubleBuffer_Delete();

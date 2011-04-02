@@ -243,7 +243,7 @@ bool DisplayModel::load(const TCHAR *fileName, int startPage, WindowInfo *win)
         return false;
 
     _appData = win;
-    setTotalDrawAreaSize(win->winSize());
+    setTotalDrawAreaSize(win->canvasRc.Size());
 
     if (validPageNo(startPage))
         _startPage = startPage;

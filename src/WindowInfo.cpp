@@ -23,23 +23,24 @@ WindowInfo::WindowInfo(HWND hwnd) :
     menu(NULL), hdc(NULL),
     findThread(NULL), findCanceled(false), findPercent(0), findStatusVisible(false),
     findStatusThread(NULL), stopFindStatusThreadEvent(NULL),
-    showSelection(false), showForwardSearchMark(false), fwdsearchmarkHideStep(0),
-    mouseAction(MA_IDLE), needrefresh(false),
+    showSelection(false), mouseAction(MA_IDLE),
     hdcToDraw(NULL), hdcDoubleBuffer(NULL), bmpDoubleBuffer(NULL),
     prevZoomVirtual(INVALID_ZOOM), prevDisplayMode(DM_AUTOMATIC),
     loadedFilePath(NULL), currPageNo(0),
     xScrollSpeed(0), yScrollSpeed(0), wheelAccumDelta(0),
     delayedRepaintTimer(0), resizingTocBox(false), watcher(NULL),
-    pdfsync(NULL), pluginParent(NULL), threadStressRunning(false)
+    pdfsync(NULL), threadStressRunning(false)
 {
     ZeroMemory(&selectionRect, sizeof(selectionRect));
-    prevCanvasBR.x = prevCanvasBR.y = -1;
+    prevCanvasSize.dx = prevCanvasSize.dy = -1;
 
     HDC hdcFrame = GetDC(hwndFrame);
     dpi = GetDeviceCaps(hdcFrame, LOGPIXELSY);
     // round untypical resolutions up to the nearest quarter
     uiDPIFactor = ceil(dpi * 4.0f / USER_DEFAULT_SCREEN_DPI) / 4.0f;
     ReleaseDC(hwndFrame, hdcFrame);
+
+    fwdsearchmark.show = false;
 }
 
 WindowInfo::~WindowInfo() {
@@ -59,7 +60,7 @@ WindowInfo::~WindowInfo() {
     free(this->tocState);
 }
 
-void WindowInfo::GetCanvasSize()
+void WindowInfo::UpdateCanvasSize()
 {
     this->canvasRc = ClientRect(hwndCanvas);
 }
@@ -68,7 +69,7 @@ void WindowInfo::DoubleBuffer_Show(HDC hdc)
 {
     if (this->hdc != this->hdcToDraw) {
         assert(this->hdcToDraw == this->hdcDoubleBuffer);
-        BitBlt(hdc, 0, 0, this->winDx(), this->winDy(), this->hdcDoubleBuffer, 0, 0, SRCCOPY);
+        BitBlt(hdc, 0, 0, this->canvasRc.dx, this->canvasRc.dy, this->hdcDoubleBuffer, 0, 0, SRCCOPY);
     }
 }
 
@@ -197,12 +198,12 @@ void WindowInfo::ResizeIfNeeded(bool resizeWindow)
 {
     ClientRect rc(this->hwndCanvas);
 
-    if (!this->hdcToDraw || this->winDx() != rc.dx || this->winDy() != rc.dy) {
+    if (!this->hdcToDraw || this->canvasRc.dx != rc.dx || this->canvasRc.dy != rc.dy) {
         this->DoubleBuffer_New();
         if (resizeWindow) {
             assert(this->dm);
             if (!this->PdfLoaded()) return;
-            this->dm->changeTotalDrawAreaSize(this->winSize());
+            this->dm->changeTotalDrawAreaSize(this->canvasRc.Size());
         }
     }
 }
@@ -212,7 +213,7 @@ void WindowInfo::ToggleZoom()
     assert(this->dm);
     if (!this->PdfLoaded()) return;
 
-    this->prevCanvasBR.x = this->prevCanvasBR.y = -1;
+    this->prevCanvasSize.dx = this->prevCanvasSize.dy = -1;
     if (ZOOM_FIT_PAGE == this->dm->zoomVirtual())
         this->dm->zoomTo(ZOOM_FIT_WIDTH);
     else if (ZOOM_FIT_WIDTH == this->dm->zoomVirtual())
@@ -247,7 +248,7 @@ void WindowInfo::ZoomToSelection(float factor, bool relative)
             zoomToPt = false;
     }
 
-    this->prevCanvasBR.x = this->prevCanvasBR.y = -1;
+    this->prevCanvasSize.dx = this->prevCanvasSize.dy = -1;
     if (relative)
         this->dm->zoomBy(factor, zoomToPt ? &pt : NULL);
     else

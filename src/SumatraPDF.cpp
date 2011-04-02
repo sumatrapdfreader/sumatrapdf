@@ -525,7 +525,7 @@ void WindowInfo::SwitchToDisplayMode(DisplayMode displayMode, bool keepContinuou
         }
     }
 
-    this->prevCanvasBR.x = this->prevCanvasBR.y = -1;
+    this->prevCanvasSize.dx = this->prevCanvasSize.dy = -1;
     this->dm->changeDisplayMode(displayMode);
     UpdateToolbarState();
 }
@@ -1110,8 +1110,8 @@ static void ToolbarUpdateStateForWindow(WindowInfo *win) {
             switch (cmdId)
             {
                 case IDM_OPEN:
-                    // don'opening different files isn't allowed in plugin mode
-                    if (win->pluginParent)
+                    // opening different files isn't allowed in plugin mode
+                    if (gPluginMode)
                         buttonState = disable;
                     break;
 
@@ -1370,9 +1370,9 @@ static bool LoadPdfIntoWindow(
     }
 
     /* TODO: need to get rid of that, but not sure if that won't break something
-       i.e. GetCanvasSize() caches size of canvas and some code might depend
+       i.e. UpdateCanvasSize() caches size of canvas and some code might depend
        on this being a cached value, not the real value at the time of calling */
-    win->GetCanvasSize();
+    win->UpdateCanvasSize();
 
     DisplayModel *previousmodel = win->dm;
     win->AbortFinding();
@@ -1382,11 +1382,11 @@ static bool LoadPdfIntoWindow(
     free(win->loadedFilePath);
     win->loadedFilePath = Str::Dup(fileName);
     win->dm = DisplayModel::CreateFromFileName(win, fileName, displayMode, startPage);
+    bool needrefresh = !win->dm;
 
     if (!win->dm) {
         assert(!win->PdfLoaded() && !win->IsAboutWindow());
         DBG_OUT("failed to load file %s\n", fileName);
-        win->needrefresh = true;
         // if there is an error while reading the pdf and pdfrepair is not requested
         // then fallback to the previous state
         if (!tryRepair) {
@@ -1402,8 +1402,7 @@ static bool LoadPdfIntoWindow(
         if (previousmodel && Str::Eq(win->dm->fileName(), previousmodel->fileName()))
             gRenderCache.KeepForDisplayModel(previousmodel, win->dm);
         delete previousmodel;
-        win->needrefresh = false;
-        win->prevCanvasBR.x = win->prevCanvasBR.y = -1;
+        win->prevCanvasSize.dx = win->prevCanvasSize.dy = -1;
     }
 
     float zoomVirtual = gGlobalPrefs.m_defaultZoom;
@@ -1463,7 +1462,7 @@ static bool LoadPdfIntoWindow(
 
     const TCHAR *baseName = Path::GetBaseName(win->dm->fileName());
     TCHAR *title = Str::Format(_T("%s - %s"), baseName, SUMATRA_WINDOW_TITLE);
-    if (win->needrefresh) {
+    if (needrefresh) {
         TCHAR *msg = Str::Format(_TR("[Changes detected; refreshing] %s"), title);
         free(title);
         title = msg;
@@ -1641,9 +1640,10 @@ void DisplayModel::pageChanged()
         }
         if (currPageNo != win->currPageNo) {
             win->UpdateTocSelection(currPageNo);
-            if (ZOOM_FIT_CONTENT == _zoomVirtual)
+            if (ZOOM_FIT_CONTENT == _zoomVirtual) {
                 // re-allow hiding the scroll bars
-                win->prevCanvasBR.x = win->prevCanvasBR.y = -1;
+                win->prevCanvasSize.dx = win->prevCanvasSize.dy = -1;
+            }
             win->currPageNo = currPageNo;
         }
     }
@@ -1671,30 +1671,28 @@ void DisplayModel::setScrollbarsState(void)
     si.cbSize = sizeof(si);
     si.fMask = SIF_ALL;
 
-    int canvasDx = _canvasSize.dx;
-    int canvasDy = _canvasSize.dy;
-    int drawAreaDx = drawAreaSize.dx;
-    int drawAreaDy = drawAreaSize.dy;
+    SizeI canvas = _canvasSize;
+    SizeI drawArea = drawAreaSize;
 
     // When hiding the scroll bars and fitting content, it could be that we'd have to
     // display the scroll bars right again for the new zoom. Make sure we haven't just done
     // that - or if so, force the scroll bars to remain visible.
     if (ZOOM_FIT_CONTENT == _zoomVirtual) {
-        if (win->prevCanvasBR.y == drawAreaDy && win->prevCanvasBR.x == drawAreaDx + GetSystemMetrics(SM_CXVSCROLL)) {
-            if (drawAreaDy == canvasDy)
-                canvasDy++;
+        if (win->prevCanvasSize.dy == drawArea.dy &&
+            win->prevCanvasSize.dx == drawArea.dx + GetSystemMetrics(SM_CXVSCROLL)) {
+            if (drawArea.dy == canvas.dy)
+                canvas.dy++;
         }
-        else if (win->prevCanvasBR.x == drawAreaDx && win->prevCanvasBR.y == drawAreaDy + GetSystemMetrics(SM_CYHSCROLL)) {
-            if (drawAreaDx == canvasDx)
-                canvasDx++;
+        else if (win->prevCanvasSize.dx == drawArea.dx &&
+                 win->prevCanvasSize.dy == drawArea.dy + GetSystemMetrics(SM_CYHSCROLL)) {
+            if (drawArea.dx == canvas.dx)
+                canvas.dx++;
         }
-        else {
-            win->prevCanvasBR.x = drawAreaDx;
-            win->prevCanvasBR.y = drawAreaDy;
-        }
+        else
+            win->prevCanvasSize = drawArea;
     }
 
-    if (drawAreaDx >= canvasDx) {
+    if (drawArea.dx >= canvas.dx) {
         si.nPos = 0;
         si.nMin = 0;
         si.nMax = 99;
@@ -1702,8 +1700,8 @@ void DisplayModel::setScrollbarsState(void)
     } else {
         si.nPos = areaOffset.x;
         si.nMin = 0;
-        si.nMax = canvasDx-1;
-        si.nPage = drawAreaDx;
+        si.nMax = canvas.dx - 1;
+        si.nPage = drawArea.dx;
     }
     SetScrollInfo(win->hwndCanvas, SB_HORZ, &si, TRUE);
 
@@ -1711,16 +1709,15 @@ void DisplayModel::setScrollbarsState(void)
     // display the scroll bars right again for the new width. Make sure we haven't just done
     // that - or if so, force the vertical scroll bar to remain visible.
     if (ZOOM_FIT_WIDTH == _zoomVirtual || ZOOM_FIT_PAGE == _zoomVirtual) {
-        if (win->prevCanvasBR.y != drawAreaDy || win->prevCanvasBR.x != drawAreaDx + GetSystemMetrics(SM_CXVSCROLL)) {
-            win->prevCanvasBR.x = drawAreaDx;
-            win->prevCanvasBR.y = drawAreaDy;
+        if (win->prevCanvasSize.dy != drawArea.dy ||
+            win->prevCanvasSize.dx != drawArea.dx + GetSystemMetrics(SM_CXVSCROLL)) {
+            win->prevCanvasSize = drawArea;
         }
-        else if (drawAreaDy == canvasDy) {
-            canvasDy++;
-        }
+        else if (drawArea.dy == canvas.dy)
+            canvas.dy++;
     }
 
-    if (drawAreaDy >= canvasDy) {
+    if (drawArea.dy >= canvas.dy) {
         si.nPos = 0;
         si.nMin = 0;
         si.nMax = 99;
@@ -1728,13 +1725,13 @@ void DisplayModel::setScrollbarsState(void)
     } else {
         si.nPos = areaOffset.y;
         si.nMin = 0;
-        si.nMax = canvasDy-1;
-        si.nPage = drawAreaDy;
+        si.nMax = canvas.dy - 1;
+        si.nPage = drawArea.dy;
 
         if (ZOOM_FIT_PAGE != _zoomVirtual) {
             // keep the top/bottom 5% of the previous page visible after paging down/up
             si.nPage = (UINT)(si.nPage * 0.95);
-            si.nMax -= drawAreaDy - si.nPage;
+            si.nMax -= drawArea.dy - si.nPage;
         }
     }
     SetScrollInfo(win->hwndCanvas, SB_VERT, &si, TRUE);
@@ -1810,24 +1807,24 @@ bool WindowInfo::DoubleBuffer_New()
 
     this->hdc = GetDC(this->hwndCanvas);
     this->hdcToDraw = this->hdc;
-    this->GetCanvasSize();
+    this->UpdateCanvasSize();
 
 #ifdef DOUBLE_BUFFER
-    if (0 == this->winDx() || 0 == this->winDy())
+    if (this->canvasRc.IsEmpty())
         return true;
 
     this->hdcDoubleBuffer = CreateCompatibleDC(this->hdc);
     if (!this->hdcDoubleBuffer)
         return false;
 
-    this->bmpDoubleBuffer = CreateCompatibleBitmap(this->hdc, this->winDx(), this->winDy());
+    this->bmpDoubleBuffer = CreateCompatibleBitmap(this->hdc, this->canvasRc.dx, this->canvasRc.dy);
     if (!this->bmpDoubleBuffer) {
         this->DoubleBuffer_Delete();
         return false;
     }
     SelectObject(this->hdcDoubleBuffer, this->bmpDoubleBuffer);
     /* fill out everything with background color */
-    RectI r(PointI(0, 0), this->winSize());
+    RectI r(PointI(0, 0), this->canvasRc.Size());
     FillRect(this->hdcDoubleBuffer, &r.ToRECT(), this->presentation ? gBrushBlack : gBrushBg);
     this->hdcToDraw = this->hdcDoubleBuffer;
 #endif
@@ -1945,7 +1942,7 @@ void DownloadSumatraUpdateInfo(WindowInfo *win, bool autoCheck)
 
 static void PaintTransparentRectangle(WindowInfo *win, HDC hdc, RectI *rect, COLORREF selectionColor, BYTE alpha = 0x5f, int margin = 1) {
     // don't draw selection parts not visible on screen
-    RectI screen(-margin, -margin, win->winDx() + 2 * margin, win->winDy() + 2 * margin);
+    RectI screen(-margin, -margin, win->canvasRc.dx + 2 * margin, win->canvasRc.dy + 2 * margin);
     RectI isect = rect->Intersect(screen);
     if (isect.IsEmpty())
         return;
@@ -2028,15 +2025,15 @@ static void PaintSelection (WindowInfo *win, HDC hdc) {
 }
 
 static void PaintForwardSearchMark(WindowInfo *win, HDC hdc) {
-    PdfPageInfo *pageInfo = win->dm->getPageInfo(win->fwdsearchmarkPage);
+    PdfPageInfo *pageInfo = win->dm->getPageInfo(win->fwdsearchmark.page);
     if (!pageInfo->visible)
         return;
     
     // Draw the rectangles highlighting the forward search results
-    for (UINT i = 0; i < win->fwdsearchmarkRects.Count(); i++)
+    for (UINT i = 0; i < win->fwdsearchmark.rects.Count(); i++)
     {
-        RectD recD = win->fwdsearchmarkRects[i].Convert<double>();
-        win->dm->rectCvtUserToScreen(win->fwdsearchmarkPage, &recD);
+        RectD recD = win->fwdsearchmark.rects[i].Convert<double>();
+        win->dm->rectCvtUserToScreen(win->fwdsearchmark.page, &recD);
         if (gGlobalPrefs.m_fwdsearchOffset > 0) {
             recD.x = pageInfo->screenX + (double)gGlobalPrefs.m_fwdsearchOffset * win->dm->zoomReal();
             recD.dx = (gGlobalPrefs.m_fwdsearchWidth > 0 ? (double)gGlobalPrefs.m_fwdsearchWidth : 15.0) * win->dm->zoomReal();
@@ -2044,7 +2041,7 @@ static void PaintForwardSearchMark(WindowInfo *win, HDC hdc) {
             recD.dy += 8;
         }
         RectI recI = recD.Convert<int>();
-        BYTE alpha = (BYTE)(0x5f * 1.0f * (HIDE_FWDSRCHMARK_STEPS - win->fwdsearchmarkHideStep) / HIDE_FWDSRCHMARK_STEPS);
+        BYTE alpha = (BYTE)(0x5f * 1.0f * (HIDE_FWDSRCHMARK_STEPS - win->fwdsearchmark.hideStep) / HIDE_FWDSRCHMARK_STEPS);
         PaintTransparentRectangle(win, hdc, &recI, gGlobalPrefs.m_fwdsearchColor, alpha, 0);
     }
 }
@@ -2184,7 +2181,7 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
     if (win->showSelection)
         PaintSelection(win, hdc);
     
-    if (win->showForwardSearchMark)
+    if (win->fwdsearchmark.show)
         PaintForwardSearchMark(win, hdc);
 
     DBG_OUT("\n");
@@ -2429,7 +2426,7 @@ static bool OnInverseSearch(WindowInfo *win, int x, int y)
     if (gRestrictedUse || gPluginMode) return false;
 
     // Clear the last forward-search result
-    win->fwdsearchmarkRects.Reset();
+    win->fwdsearchmark.rects.Reset();
     InvalidateRect(win->hwndCanvas, NULL, FALSE);
 
     // On double-clicking error message will be shown to the user
@@ -2598,11 +2595,11 @@ static void OnSelectionEdgeAutoscroll(WindowInfo *win, int x, int y)
 
     if (x < SELECT_AUTOSCROLL_AREA_WIDTH * win->uiDPIFactor)
         dx = -SELECT_AUTOSCROLL_STEP_LENGTH;
-    else if (x > (win->winDx() - SELECT_AUTOSCROLL_AREA_WIDTH) * win->uiDPIFactor)
+    else if (x > (win->canvasRc.dx - SELECT_AUTOSCROLL_AREA_WIDTH) * win->uiDPIFactor)
         dx = SELECT_AUTOSCROLL_STEP_LENGTH;
     if (y < SELECT_AUTOSCROLL_AREA_WIDTH * win->uiDPIFactor)
         dy = -SELECT_AUTOSCROLL_STEP_LENGTH;
-    else if (y > (win->winDy() - SELECT_AUTOSCROLL_AREA_WIDTH) * win->uiDPIFactor)
+    else if (y > (win->canvasRc.dy - SELECT_AUTOSCROLL_AREA_WIDTH) * win->uiDPIFactor)
         dy = SELECT_AUTOSCROLL_STEP_LENGTH;
 
     if (dx != 0 || dy != 0) {
@@ -2974,7 +2971,7 @@ static void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose=false)
     if (!win)  return;
     // when used as an embedded plugin, closing should happen automatically
     // when the parent window is destroyed (cf. WM_DESTROY)
-    if (win->pluginParent && !forceClose)
+    if (gPluginMode && !forceClose)
         return;
 
     if (win->PdfLoaded())
@@ -3621,7 +3618,7 @@ static void OnMenuOpen(WindowInfo *win)
 {
     if (gRestrictedUse) return;
     // don't allow opening different files in plugin mode
-    if (win->pluginParent)
+    if (gPluginMode)
         return;
 
     // Prepare the file filters (use \1 instead of \0 so that the
@@ -3716,7 +3713,7 @@ static void RotateLeft(WindowInfo *win)
 {
     if (!win || !win->PdfLoaded())
         return;
-    win->prevCanvasBR.x = win->prevCanvasBR.y = -1;
+    win->prevCanvasSize.dx = win->prevCanvasSize.dy = -1;
     win->dm->rotateBy(-90);
 }
 
@@ -3724,7 +3721,7 @@ static void RotateRight(WindowInfo *win)
 {
     if (!win || !win->PdfLoaded())
         return;
-    win->prevCanvasBR.x = win->prevCanvasBR.y = -1;
+    win->prevCanvasSize.dx = win->prevCanvasSize.dy = -1;
     win->dm->rotateBy(90);
 }
 
@@ -4272,7 +4269,7 @@ static void WindowInfo_HideMessage(WindowInfo *win)
 // Show the result of a PDF forward-search synchronization (initiated by a DDE command)
 void WindowInfo_ShowForwardSearchResult(WindowInfo *win, LPCTSTR srcfilename, UINT line, UINT col, UINT ret, UINT page, Vec<RectI> &rects)
 {
-    win->fwdsearchmarkRects.Reset();
+    win->fwdsearchmark.rects.Reset();
     if (ret == PDFSYNCERR_SUCCESS && rects.Count() > 0 ) {
         // remember the position of the search result for drawing the rect later on
         const PdfPageInfo *pi = win->dm->getPageInfo(page);
@@ -4289,13 +4286,13 @@ void WindowInfo_ShowForwardSearchResult(WindowInfo *win, LPCTSTR srcfilename, UI
                 rc = rects[i];
                 win->pdfsync->convert_coord_from_internal(&rc, pi->page.Convert<int>().dy, BottomLeft);
                 overallrc = overallrc.Union(rc);
-                win->fwdsearchmarkRects.Push(rc);
+                win->fwdsearchmark.rects.Push(rc);
             }
-            win->fwdsearchmarkPage = page;
-            win->showForwardSearchMark = true;
+            win->fwdsearchmark.page = page;
+            win->fwdsearchmark.show = true;
             if (!gGlobalPrefs.m_fwdsearchPermanent) 
             {
-                win->fwdsearchmarkHideStep = 0;
+                win->fwdsearchmark.hideStep = 0;
                 SetTimer(win->hwndCanvas, HIDE_FWDSRCHMARK_TIMER_ID, HIDE_FWDSRCHMARK_DELAY_IN_MS, NULL);
             }
             
@@ -5962,16 +5959,16 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
                     break;
                 case HIDE_FWDSRCHMARK_TIMER_ID:
                     {
-                        win->fwdsearchmarkHideStep++;
-                        if (win->fwdsearchmarkHideStep == 1 )
+                        win->fwdsearchmark.hideStep++;
+                        if (1 == win->fwdsearchmark.hideStep)
                         {
                             SetTimer(hwnd, HIDE_FWDSRCHMARK_TIMER_ID, HIDE_FWDSRCHMARK_DECAYINTERVAL_IN_MS, NULL);
                         }
-                        else if (win->fwdsearchmarkHideStep >= HIDE_FWDSRCHMARK_STEPS )
+                        else if (win->fwdsearchmark.hideStep >= HIDE_FWDSRCHMARK_STEPS)
                         {
                             KillTimer(hwnd, HIDE_FWDSRCHMARK_TIMER_ID);
-                            win->showForwardSearchMark = false;
-                            win->fwdsearchmarkHideStep = 0;
+                            win->fwdsearchmark.show = false;
+                            win->fwdsearchmark.hideStep = 0;
                             win->RepaintAsync();
                         }
                         else

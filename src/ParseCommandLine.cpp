@@ -16,7 +16,6 @@ void MakePluginWindow(WindowInfo *win, HWND hwndParent)
 {
     assert(IsWindow(hwndParent));
     assert(gPluginMode);
-    win->pluginParent = hwndParent;
 
     long ws = GetWindowLong(win->hwndFrame, GWL_STYLE);
     ws &= ~(WS_POPUP|WS_BORDER|WS_CAPTION|WS_THICKFRAME);
