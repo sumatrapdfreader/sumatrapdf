@@ -57,7 +57,7 @@ TCHAR *Join(const TCHAR *path, const TCHAR *filename)
 //
 // Note:
 //   - the case of the root component is preserved
-//   - the case of rest is set to the wayt it is stored on the file system
+//   - the case of rest is set to the way it is stored on the file system
 //
 // e.g. suppose the a file "C:\foo\Bar.Pdf" exists on the file system then
 //    "c:\foo\bar.pdf" becomes "c:\foo\Bar.Pdf"
@@ -65,24 +65,24 @@ TCHAR *Join(const TCHAR *path, const TCHAR *filename)
 TCHAR *Normalize(const TCHAR *path)
 {
     // convert to absolute path, change slashes into backslashes
-    DWORD cb = GetFullPathName(path, 0, NULL, NULL);
-    if (!cb)
+    DWORD cch = GetFullPathName(path, 0, NULL, NULL);
+    if (!cch)
         return NULL;
-    TCHAR *normpath = SAZA(TCHAR, cb);
+    TCHAR *normpath = SAZA(TCHAR, cch);
     if (!path)
         return NULL;
-    GetFullPathName(path, cb, normpath, NULL);
+    GetFullPathName(path, cch, normpath, NULL);
 
     // convert to long form
-    cb = GetLongPathName(normpath, NULL, 0);
-    if (!cb)
+    cch = GetLongPathName(normpath, NULL, 0);
+    if (!cch)
         return normpath;
-    TCHAR *tmp = (TCHAR *)realloc(normpath, cb * sizeof(TCHAR));
+    TCHAR *tmp = (TCHAR *)realloc(normpath, cch * sizeof(TCHAR));
     if (!tmp)
         return normpath;
     normpath = tmp;
 
-    GetLongPathName(normpath, normpath, cb);
+    GetLongPathName(normpath, normpath, cch);
     return normpath;
 }
 
@@ -209,11 +209,11 @@ bool WriteAll(const TCHAR *filePath, void *data, size_t dataLen)
         return FALSE;
 
     DWORD size;
-    bool f_ok = WriteFile(h, data, (DWORD)dataLen, &size, NULL);
-    assert(!f_ok || (dataLen == size));
+    bool ok = WriteFile(h, data, (DWORD)dataLen, &size, NULL);
+    assert(!ok || (dataLen == size));
     CloseHandle(h);
 
-    return f_ok && dataLen == size;
+    return ok && dataLen == size;
 }
 
 }
