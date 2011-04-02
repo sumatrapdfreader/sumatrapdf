@@ -11,10 +11,6 @@
 #define _UNICODE
 #endif
 
-#include <windows.h>
-#include <gdiplus.h>
-#include <tchar.h>
-
 #ifdef DEBUG
 #define _CRTDBG_MAP_ALLOC
 #endif
@@ -24,6 +20,9 @@
 #define DEBUG_NEW new(_NORMAL_BLOCK, __FILE__, __LINE__)
 #define new DEBUG_NEW
 #endif
+
+#include <windows.h>
+#include <tchar.h>
 
 /* Few most common includes for C stdlib */
 #include <assert.h>

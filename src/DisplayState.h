@@ -104,8 +104,9 @@ public:
     // vales below only apply to PDF files
 
     // hex encoded MD5 fingerprint of file content (32 chars) 
-    // followed by crypt key (64 chars). Only applies to PDF files
+    // followed by crypt key (64 chars)
     char *              decryptionKey;
+
     bool                showToc;
     int                 tocDx;
     int *               tocState;

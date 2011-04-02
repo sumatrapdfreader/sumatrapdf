@@ -1958,6 +1958,15 @@ int RunApp()
     }
 }
 
+class ScopedGdiPlus {
+protected:
+    GdiplusStartupInput si;
+    ULONG_PTR           token;
+public:
+    ScopedGdiPlus()  { GdiplusStartup(&token, &si, NULL); }
+    ~ScopedGdiPlus() { GdiplusShutdown(token); }
+};
+
 void ShowUsage()
 {
     MessageBox(NULL, TAPP _T("-install.exe [/s][/d <path>][/default]\n\

@@ -29,15 +29,6 @@ public:
     ~ScopedCom() { CoUninitialize(); }
 };
 
-class ScopedGdiPlus {
-protected:
-    Gdiplus::GdiplusStartupInput si;
-    ULONG_PTR                    token;
-public:
-    ScopedGdiPlus()  { Gdiplus::GdiplusStartup(&token, &si, NULL); }
-    ~ScopedGdiPlus() { Gdiplus::GdiplusShutdown(token); }
-};
-
 class MillisecondTimer {
     LARGE_INTEGER   start;
     LARGE_INTEGER   end;

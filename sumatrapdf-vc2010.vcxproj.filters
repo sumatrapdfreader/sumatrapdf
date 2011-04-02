@@ -248,6 +248,12 @@
     <ClCompile Include="src\AppPrefs.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\ComicEngine.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CrashHandler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="src\DisplayModel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -569,6 +575,12 @@
       <Filter>mupdf\mupdf</Filter>
     </ClInclude>
     <ClInclude Include="src\AppPrefs.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ComicEngine.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\CrashHandler.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="src\DisplayModel.h">

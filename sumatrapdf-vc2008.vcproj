@@ -92,6 +92,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\ComicEngine.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\ComicEngine.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\CrashHandler.cpp"
 				>
 			</File>
