@@ -24,13 +24,19 @@ fz_calloc_no_abort(int count, int size)
 		fprintf(stderr, "fatal error: out of memory (integer overflow)\n");
 		return nil;
 	}
+
 	return calloc(count, size);
 }
 
 void *
 fz_calloc(int count, int size)
 {
-	void *p = fz_calloc_no_abort(count, size);
+	void *p;
+
+	if (count == 0 || size == 0)
+		return 0;
+
+	p = fz_calloc_no_abort(count, size);
 	if (!p)
 	{
 		fprintf(stderr, "fatal error: out of memory\n");
