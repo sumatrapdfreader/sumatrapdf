@@ -26,7 +26,7 @@ public:
 
 class ComicBookPage {
 public:
-    ComicBookPage(Bitmap *bmp) : w(-1), h(-1), bmp(bmp) { }
+    ComicBookPage(Bitmap *bmp) : bmp(bmp), w(bmp->GetWidth()), h(bmp->GetHeight()) { }
 
     int         w, h;
     Bitmap *    bmp;
@@ -85,8 +85,6 @@ ComicBookPage *LoadCurrentComicBookPage(unzFile& uf)
     ComicBookPage *page = NULL;
     HGLOBAL data = NULL;
     int readBytes;
-    RectF boundsRect;
-    Unit unit;
 
     int err = unzGetCurrentFileInfo64(uf, &finfo, fileName, dimof(fileName), NULL, 0, NULL, 0);
     if (err != UNZ_OK)
@@ -120,11 +118,6 @@ ComicBookPage *LoadCurrentComicBookPage(unzFile& uf)
         goto Exit;
 
     page = new ComicBookPage(bmp);
-
-    bmp->GetBounds(&boundsRect, &unit);
-    assert(unit == UnitPixel);
-    page->w = (int)boundsRect.Width;
-    page->h = (int)boundsRect.Height;
 
 Exit:
     err = unzCloseCurrentFile(uf);
@@ -178,6 +171,7 @@ WindowInfo *LoadComicBook(const TCHAR *fileName, WindowInfo *win, bool showWin)
     }
 
     // TODO: open a window etc.
+    DeleteVecMembers(*pages);
     delete pages; // for now
     return NULL;
 

@@ -777,21 +777,18 @@ static void BuildMenu(WindowInfo *win)
     SetMenu(win->hwndFrame, win->menu);
 }
 
+// TODO: move the next three methods into gWindows?
 WindowInfo* FindWindowInfoByHwnd(HWND hwnd)
 {
+    HWND parent = GetParent(hwnd);
+    HWND grandparent = GetParent(parent);
+
     for (size_t i = 0; i < gWindows.Count(); i++) {
         WindowInfo *win = gWindows.At(i);
-        if (hwnd == win->hwndFrame      ||
-            hwnd == win->hwndCanvas     ||
-            hwnd == win->hwndReBar      ||
-            hwnd == win->hwndFindBox    ||
-            hwnd == win->hwndFindStatus ||
-            hwnd == win->hwndPageBox    ||
-            hwnd == win->hwndTocBox     ||
-            hwnd == win->hwndTocTree    ||
-            hwnd == win->hwndSpliter    ||
-            hwnd == win->hwndPdfProperties)
-        {
+        if (hwnd == win->hwndFrame ||
+            parent == win->hwndFrame ||
+            grandparent == win->hwndFrame ||
+            hwnd == win->hwndPdfProperties) {
             return win;
         }
     }
@@ -5189,9 +5186,8 @@ static HBITMAP LoadExternalBitmap(HINSTANCE hInst, TCHAR * filename, INT resourc
 }
 
 static void CreateToolbar(WindowInfo *win, HINSTANCE hInst) {
-    HWND hwndOwner = win->hwndFrame;
     HWND hwndToolbar = CreateWindowEx(0, TOOLBARCLASSNAME, NULL, WS_TOOLBAR,
-                                 0,0,0,0, hwndOwner,(HMENU)IDC_TOOLBAR, hInst,NULL);
+                                 0,0,0,0, win->hwndFrame,(HMENU)IDC_TOOLBAR, hInst,NULL);
     win->hwndToolbar = hwndToolbar;
     LRESULT lres = SendMessage(hwndToolbar, TB_BUTTONSTRUCTSIZE, (WPARAM)sizeof(TBBUTTON), 0);
 
@@ -5233,7 +5229,7 @@ static void CreateToolbar(WindowInfo *win, HINSTANCE hInst) {
 
     DWORD  reBarStyle = WS_REBAR | WS_VISIBLE;
     win->hwndReBar = CreateWindowEx(WS_EX_TOOLWINDOW, REBARCLASSNAME, NULL, reBarStyle,
-                             0,0,0,0, hwndOwner, (HMENU)IDC_REBAR, hInst, NULL);
+                             0,0,0,0, win->hwndFrame, (HMENU)IDC_REBAR, hInst, NULL);
     if (!win->hwndReBar)
         SeeLastError();
 
