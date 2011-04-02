@@ -226,6 +226,7 @@ pdf_loadimageimp(fz_pixmap **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict, fz
 
 	/* Unpack samples into pixmap */
 
+	/* SumatraPDF: don't abort on OOM when loading images */
 	tile = fz_newpixmap_no_abort(colorspace, 0, 0, w, h);
 	if (!tile)
 	{

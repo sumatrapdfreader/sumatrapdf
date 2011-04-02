@@ -24,13 +24,24 @@ class PixmapBitmap : public Bitmap
 public:
 	PixmapBitmap(fz_pixmap *pixmap) : Bitmap(pixmap->w, pixmap->h, PixelFormat32bppARGB)
 	{
-		fz_pixmap *pix = fz_newpixmap(fz_devicebgr, pixmap->x, pixmap->y, pixmap->w, pixmap->h);
-		
-		if (!pixmap->colorspace)
-			for (int i = 0; i < pix->w * pix->h; i++)
-				pix->samples[i * 4 + 3] = pixmap->samples[i];
+		fz_pixmap *pix;
+		if (pixmap->colorspace != fz_devicebgr)
+		{
+			pix = fz_newpixmap_no_abort(fz_devicebgr, pixmap->x, pixmap->y, pixmap->w, pixmap->h);
+			if (!pix)
+			{
+				fz_warn("OOM in PixmapBitmap constructor: painting blank image");
+				return;
+			}
+			
+			if (!pixmap->colorspace)
+				for (int i = 0; i < pix->w * pix->h; i++)
+					pix->samples[i * 4 + 3] = pixmap->samples[i];
+			else
+				fz_convertpixmap(pixmap, pix);
+		}
 		else
-			fz_convertpixmap(pixmap, pix);
+			pix = fz_keeppixmap(pixmap);
 		
 		BitmapData data;
 		LockBits(&Rect(0, 0, pix->w, pix->h), ImageLockModeWrite, PixelFormat32bppARGB, &data);
@@ -1112,7 +1123,10 @@ fz_gdiplusfillimagemask(void *user, fz_pixmap *image, fz_matrix ctm,
 	else
 		memcpy(rgb, ((userData *)user)->t3color, sizeof(rgb));
 	
-	fz_pixmap *img2 = fz_newpixmap(fz_devicergb, image->x, image->y, image->w, image->h);
+	fz_pixmap *img2 = fz_newpixmap_no_abort(fz_devicergb, image->x, image->y, image->w, image->h);
+	if (!img2)
+		return;
+	
 	for (int i = 0; i < img2->w * img2->h; i++)
 	{
 		img2->samples[i * 4] = rgb[0] * 255;

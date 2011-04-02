@@ -90,7 +90,13 @@ fz_loadjpximage(fz_pixmap **imgp, unsigned char *data, int size)
 		return fz_throw("unknown jpx colorspace (%d components)", n);
 	}
 
-	img = fz_newpixmap(colorspace, 0, 0, w, h);
+	/* SumatraPDF: don't abort on OOM when loading images */
+	img = fz_newpixmap_no_abort(colorspace, 0, 0, w, h);
+	if (!img)
+	{
+		opj_image_destroy(jpx);
+		return fz_throw("failed to allocate memory for pixmap");
+	}
 
 	p = img->samples;
 	for (y = 0; y < h; y++)
