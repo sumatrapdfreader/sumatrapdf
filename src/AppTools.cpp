@@ -302,7 +302,7 @@ bool IsExeAssociatedWithPdfExtension()
     if (!tmp)
         return false;
 
-    VStrList argList;
+    StrVec argList;
     argList.ParseCommandLine(tmp);
     ScopedMem<TCHAR> exePath(ExePathGet());
     if (!exePath || !argList.Find(_T("%1")))

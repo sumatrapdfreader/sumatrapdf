@@ -240,10 +240,10 @@ public:
 
 }
 
-class VStrList : public Vec<TCHAR *>
+class StrVec : public Vec<TCHAR *>
 {
 public:
-    ~VStrList() {
+    ~StrVec() {
         FreeVecMembers(*this);
     }
 
@@ -296,6 +296,11 @@ private:
 public:
     void Sort() { Vec::Sort(cmpNatural); }
 
+
+    /* TODO: I don't like that ParseCommandLine() is part of StrVec. Logically
+       it has nothing to do with functionality of maintaining an array of strings
+       and can be implemented as a stand-alone helper function that uses StrVec
+       but is not part of it */
 
     /* 'cmdLine' contains one or several arguments can be:
         - escaped, in which case it starts with '"', ends with '"' and

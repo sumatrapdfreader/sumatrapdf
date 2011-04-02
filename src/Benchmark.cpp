@@ -123,7 +123,7 @@ static void BenchFile(TCHAR *filePath, TCHAR *pagesSpec)
     logbench("Finished (in %.2f ms): %s\n", total.GetTimeInMs(), filePath);
 }
 
-void Bench(VStrList& filesToBench)
+void Bench(StrVec& filesToBench)
 {
     size_t n = filesToBench.Count() / 2;
     for (size_t i = 0; i < n; i++)

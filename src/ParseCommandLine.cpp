@@ -159,7 +159,7 @@ static void ParseScrollValue(PointI *scroll, const TCHAR *txt)
 /* parse argument list. we assume that all unrecognized arguments are PDF file names. */
 void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
 {
-    VStrList argList;
+    StrVec argList;
     argList.ParseCommandLine(cmdLine);
     size_t argCount = argList.Count();
 

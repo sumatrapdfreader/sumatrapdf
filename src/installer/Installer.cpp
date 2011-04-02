@@ -1978,7 +1978,7 @@ void ShowUsage()
 
 void ParseCommandLine(TCHAR *cmdLine)
 {
-    VStrList argList;
+    StrVec argList;
     argList.ParseCommandLine(cmdLine);
 
 #define is_arg(param) Str::EqI(arg + 1, _T(param))

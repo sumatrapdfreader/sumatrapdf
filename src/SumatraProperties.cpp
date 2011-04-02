@@ -156,7 +156,7 @@ static TCHAR *FormatPdfPageSize(SizeD size) {
 // returns a list of permissions denied by this document
 // Caller needs to free the result
 static TCHAR *FormatPdfPermissions(PdfEngine *pdfEngine) {
-    VStrList denials;
+    StrVec denials;
 
     if (!pdfEngine->hasPermission(PDF_PERM_PRINT))
         denials.Push(Str::Dup(_TR("printing document")));

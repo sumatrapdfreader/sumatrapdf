@@ -235,9 +235,9 @@ static void FileUtilTest()
     free(path2);
 }
 
-static void VecStrTest()
+static void StrVecTest()
 {
-    VStrList v;
+    StrVec v;
     v.Append(Str::Dup(_T("foo")));
     v.Append(Str::Dup(_T("bar")));
     TCHAR *s = v.Join();
@@ -262,7 +262,7 @@ static void VecStrTest()
     free(s);
 
     {
-        VStrList v2;
+        StrVec v2;
         size_t count = v2.Split(_T("a,b,,c,"), _T(","));
         assert(count == 5 && v2.Find(_T("c")) == 3);
         ScopedMem<TCHAR> joined(v2.Join(_T(";")));
@@ -270,7 +270,7 @@ static void VecStrTest()
     }
 
     {
-        VStrList v2;
+        StrVec v2;
         size_t count = v2.Split(_T("a,b,,c,"), _T(","), true);
         assert(count == 3 && v2.Find(_T("c")) == 2);
         ScopedMem<TCHAR> joined(v2.Join(_T(";")));
@@ -622,8 +622,8 @@ void BaseUtils_UnitTests(void)
     GeomTest();
     TStrTest();
     FileUtilTest();
-    VecStrTest();
     VecTest();
+    StrVecTest();
     BencTestParseInt();
     BencTestParseString();
     BencTestParseArrays();

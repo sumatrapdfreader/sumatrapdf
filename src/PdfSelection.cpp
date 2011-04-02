@@ -90,7 +90,7 @@ int PdfSelection::FindClosestGlyph(int pageNo, double x, double y)
     return result;
 }
 
-void PdfSelection::FillResultRects(int pageNo, int glyph, int length, VStrList *lines)
+void PdfSelection::FillResultRects(int pageNo, int glyph, int length, StrVec *lines)
 {
     fz_bbox mediabox = fz_roundrect(engine->pageMediabox(pageNo));
     fz_bbox *c = &coords[pageNo - 1][glyph], *end = c + length;
@@ -203,7 +203,7 @@ void PdfSelection::SelectWordAt(int pageNo, double x, double y)
 
 TCHAR *PdfSelection::ExtractText(TCHAR *lineSep)
 {
-    VStrList lines;
+    StrVec lines;
 
     int fromPage = min(startPage, endPage), toPage = max(startPage, endPage);
     int fromGlyph = (fromPage == endPage ? endGlyph : startGlyph);

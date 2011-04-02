@@ -7,6 +7,6 @@
 #include "Vec.h"
 
 bool IsBenchPagesInfo(TCHAR *s);
-void Bench(VStrList& filesToBench);
+void Bench(StrVec& filesToBench);
 
 #endif

@@ -2334,7 +2334,7 @@ static void CopySelectionToClipboard(WindowInfo *win)
             selText = win->dm->textSelection->ExtractText();
         }
         else {
-            VStrList selections;
+            StrVec selections;
             for (SelectionOnPage *selOnPage = win->selectionOnPage; selOnPage; selOnPage = selOnPage->next) {
                 selText = win->dm->getTextInRegion(selOnPage->pageNo, &selOnPage->selectionPage);
                 if (selText)
@@ -3767,7 +3767,7 @@ static void BrowseFolder(WindowInfo *win, bool forward)
     if (!win || !win->loadedFilePath) return;
     if (gRestrictedUse || gPluginMode) return;
 
-    VStrList files;
+    StrVec files;
     WIN32_FIND_DATA fdata;
     ScopedMem<TCHAR> dir(Path::GetDir(win->loadedFilePath));
     ScopedMem<TCHAR> pattern(Path::Join(dir, _T("*.pdf")));
