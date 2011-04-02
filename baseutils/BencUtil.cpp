@@ -1,6 +1,7 @@
 /* Copyright 2006-2011 the SumatraPDF project authors (see ../AUTHORS file).
    License: FreeBSD (see ./COPYING) */
 
+#include "BaseUtil.h"
 #include "BencUtil.h"
 #include "StrUtil.h"
 

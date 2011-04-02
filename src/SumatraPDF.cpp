@@ -1591,6 +1591,106 @@ bool IsComicBook(const TCHAR *fileName)
     return false;
 }
 
+class ComicBookPage {
+public:
+    ComicBookPage() : w(-1), h(-1), bmp(NULL) {}
+
+    int                 w, h;
+    Gdiplus::Bitmap *   bmp;
+};
+
+static bool IsImageFile(char *fileName)
+{
+    if (Str::EndsWithI(fileName, ".png"))
+        return true;
+    if (Str::EndsWithI(fileName, ".jpg") || Str::EndsWithI(fileName, ".jpeg"))
+        return true;
+    return false;
+}
+
+// HGLOBAL must be allocated with GlobalAlloc(GMEM_MOVEABLE, ...)
+Gdiplus::Bitmap* BitmapFromHGlobal(HGLOBAL mem)
+{
+    IStream *stream = NULL;
+    Gdiplus::Bitmap *bmp = NULL;
+
+    GlobalLock(mem); // not sure if needed
+
+    if (CreateStreamOnHGlobal(mem, FALSE, &stream) != S_OK)
+        goto Exit;
+
+    bmp = Gdiplus::Bitmap::FromStream(stream);
+    stream->Release();
+    if (!bmp)
+        goto Exit;
+
+    if (bmp->GetLastStatus() != Gdiplus::Ok)
+    {
+        delete bmp;
+        bmp = NULL;
+    }
+Exit:
+    GlobalUnlock(mem);
+    return bmp;
+}
+
+ComicBookPage *LoadCurrentComicBookPage(unzFile& uf)
+{
+    char fileName[MAX_PATH];
+    unz_file_info64 finfo;
+    ComicBookPage *page = NULL;
+    HGLOBAL data = NULL;
+    int readBytes;
+    Gdiplus::RectF boundsRect;
+    Gdiplus::Unit unit;
+
+    int err = unzGetCurrentFileInfo64(uf, &finfo, fileName, dimof(fileName), NULL, 0, NULL, 0);
+    if (err != UNZ_OK)
+        return NULL;
+
+    if (!IsImageFile(fileName))
+        return NULL;
+
+    err = unzOpenCurrentFilePassword(uf, NULL);
+    if (err != UNZ_OK)
+        return NULL;
+
+    unsigned len = (unsigned)finfo.uncompressed_size;
+    ZPOS64_T len2 = len;
+    if (len2 != finfo.uncompressed_size) // overflow check
+        goto Exit;
+
+    data = GlobalAlloc(GMEM_MOVEABLE, len);
+    if (!data)
+        goto Exit;
+
+    void *buf = GlobalLock(data);
+    readBytes = unzReadCurrentFile(uf, buf, len);
+    GlobalUnlock(data);
+
+    if ((unsigned)readBytes != len)
+        goto Exit;
+
+    Gdiplus::Bitmap *bmp = BitmapFromHGlobal(data);
+    if (!bmp)
+        goto Exit;
+
+    page = new ComicBookPage();
+    page->bmp = bmp;
+
+    bmp->GetBounds(&boundsRect, &unit);
+    assert(unit == Gdiplus::UnitPixel);
+    page->w = (int)boundsRect.Width;
+    page->h = (int)boundsRect.Height;
+
+Exit:
+    err = unzCloseCurrentFile(uf);
+    // ignoring the error
+
+    GlobalFree(data);
+    return page;
+}
+
 // Load *.cbz / *.cbr file
 // TODO: far from being done
 static WindowInfo* LoadComicBook(const TCHAR *fileName, WindowInfo *win, bool showWin)
@@ -1598,6 +1698,8 @@ static WindowInfo* LoadComicBook(const TCHAR *fileName, WindowInfo *win, bool sh
     zlib_filefunc64_def ffunc;
     unzFile uf;
     fill_win32_filefunc64(&ffunc);
+
+    ScopedGdiPlus gdiPlus;
 
     uf = unzOpen2_64(fileName, &ffunc);
     if (!uf) {
@@ -1610,38 +1712,30 @@ static WindowInfo* LoadComicBook(const TCHAR *fileName, WindowInfo *win, bool sh
     }
 
     // extract all contained files one by one
-    int pngCount = 0, jpegCount = 0;
+    Vec<ComicBookPage*> *pages = new Vec<ComicBookPage *>(256);
+
+    unzGoToFirstFile(uf);
+
+    // Note: maybe lazy loading would be beneficial (but at least I would
+    // need to parse image headers to extract width/height information)
     for (int n = 0; n < ginfo.number_entry; n++) {
-        char filename[MAX_PATH];
-        unz_file_info64 finfo;
-        err = unzGetCurrentFileInfo64(uf, &finfo, filename, dimof(filename), NULL, 0, NULL, 0);
-        if (err != UNZ_OK) {
-            goto Error;
-        }
-
-        err = unzOpenCurrentFilePassword(uf, NULL);
-        if (err != UNZ_OK) {
-            goto Error;
-        }
-
-        if (Str::EndsWithI(filename, ".png"))
-            pngCount++;
-        else if (Str::EndsWithI(filename, ".jpg") || Str::EndsWithI(filename, ".jpeg"))
-            jpegCount++;
-
-        err = unzCloseCurrentFile(uf);
-        if (err != UNZ_OK) {
-            goto Error;
-        }
-
+        ComicBookPage *page = LoadCurrentComicBookPage(uf);
+        if (page)
+            pages->Append(page);
         err = unzGoToNextFile(uf);
         if (err != UNZ_OK)
             break;
     }
 
     unzClose(uf);
+    if (0 == pages->Count())
+    {
+        delete pages;
+        return NULL;
+    }
 
-    // TODO: if (pngCount + jpegCount > 0) => treat it as a valid comic book file
+    // TODO: open a window etc.
+    delete pages; // for now
     return NULL;
 
 Error:
@@ -1701,10 +1795,8 @@ static WindowInfo* LoadPdf(const TCHAR *fileName, WindowInfo *win, bool showWin,
 
 WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin)
 {
-#if 0 // not yet
     if (IsComicBook(fileName))
         return LoadComicBook(fileName, win, showWin);
-#endif
     return LoadPdf(fileName, win, showWin);
 }
 

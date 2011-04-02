@@ -1,8 +1,8 @@
 /* Modified version of DialogSizer_Set.cpp. See DialogSizer.h for the original Copyright */
 
 #include "BaseUtil.h"
-#include "GeomUtil.h"
 #include "WinUtil.h"
+#include "GeomUtil.h"
 #include "DialogSizer.h"
 
 #define DIALOG_DATA_PROPERTY _T("GipsySoftDialogSizerData")
