@@ -2,7 +2,7 @@
    License: GPLv3 */
 
 #include <windows.h>
-#include "ComicEngine.h"
+#include "ComicBook.h"
 #include "StrUtil.h"
 #include "Vec.h"
 #include "WinUtil.h"

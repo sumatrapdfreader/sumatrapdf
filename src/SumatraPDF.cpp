@@ -11,7 +11,7 @@
 #include "Resource.h"
 
 #ifdef BUILD_COMIC_ENGINE
-#include "ComicEngine.h"
+#include "ComicBook.h"
 #endif
 
 #include "AppPrefs.h"
