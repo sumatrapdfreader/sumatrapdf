@@ -8,6 +8,7 @@
 #include "LangMenuDef.h"
 #include "translations.h"
 #include "AppTools.h"
+#include "ParseCommandLine.h"
 #include <shlobj.h>
 
 // the only valid chars are 0-9, . and newlines.
@@ -302,8 +303,7 @@ bool IsExeAssociatedWithPdfExtension()
     if (!tmp)
         return false;
 
-    StrVec argList;
-    argList.ParseCommandLine(tmp);
+    ParsedCmdLineArguments argList(tmp);
     ScopedMem<TCHAR> exePath(ExePathGet());
     if (!exePath || !argList.Find(_T("%1")))
         return false;

@@ -29,6 +29,8 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include "WinUtil.h"
 #include "Version.h"
 #include "Vec.h"
+
+#include "ParseCommandLine.h"
 #include "../ifilter/PdfFilter.h"
 
 // define for testing the uninstaller
@@ -1978,8 +1980,7 @@ void ShowUsage()
 
 void ParseCommandLine(TCHAR *cmdLine)
 {
-    StrVec argList;
-    argList.ParseCommandLine(cmdLine);
+    ParsedCmdLineArguments argList(cmdLine);
 
 #define is_arg(param) Str::EqI(arg + 1, _T(param))
 #define is_arg_with_param(param) (is_arg(param) && i < argList.Count() - 1)

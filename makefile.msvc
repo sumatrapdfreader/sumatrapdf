@@ -202,9 +202,9 @@ $(O)\AppPrefs.obj: src\AppPrefs.h src\DisplayState.h src\FileHistory.h
 $(O)\AppTools.obj: baseutils\BaseUtil.h baseutils\FileUtil.h baseutils\GeomUtil.h
 $(O)\AppTools.obj: baseutils\StrUtil.h baseutils\Vec.h baseutils\WinUtil.h
 $(O)\AppTools.obj: mupdf\fitz\fitz.h mupdf\mupdf\mupdf.h src\AppTools.h
-$(O)\AppTools.obj: src\DisplayState.h src\LangMenuDef.h src\PdfEngine.h
-$(O)\AppTools.obj: src\PdfSearch.h src\PdfSelection.h src\SumatraPDF.h
-$(O)\AppTools.obj: src\translations.h src\WindowInfo.h
+$(O)\AppTools.obj: src\DisplayState.h src\LangMenuDef.h src\ParseCommandLine.h
+$(O)\AppTools.obj: src\PdfEngine.h src\PdfSearch.h src\PdfSelection.h
+$(O)\AppTools.obj: src\SumatraPDF.h src\translations.h src\WindowInfo.h
 $(O)\Benchmark.obj: baseutils\BaseUtil.h baseutils\FileUtil.h baseutils\GeomUtil.h
 $(O)\Benchmark.obj: baseutils\StrUtil.h baseutils\Vec.h baseutils\WinUtil.h
 $(O)\Benchmark.obj: mupdf\fitz\fitz.h mupdf\mupdf\mupdf.h src\Benchmark.h
@@ -236,7 +236,8 @@ $(O)\Http.obj: baseutils\BaseUtil.h baseutils\StrUtil.h baseutils\Vec.h
 $(O)\Http.obj: src\Http.h src\SumatraPDF.h src\Version.h
 $(O)\Installer.obj: baseutils\BaseUtil.h baseutils\FileUtil.h baseutils\GeomUtil.h
 $(O)\Installer.obj: baseutils\StrUtil.h baseutils\Vec.h baseutils\WinUtil.h
-$(O)\Installer.obj: src\installer\..\ifilter\PdfFilter.h src\installer\Resource.h src\Version.h
+$(O)\Installer.obj: src\DisplayState.h src\installer\..\ifilter\PdfFilter.h src\installer\Resource.h
+$(O)\Installer.obj: src\ParseCommandLine.h src\Version.h
 $(O)\LangMenuDef.obj: src\LangMenuDef.h
 $(O)\MuPDF_Exports.obj: mupdf\fitz\fitz.h
 $(O)\npPdfViewer.obj: src\browserplugin\npapi\npapi.h src\browserplugin\npapi\npfunctions.h src\browserplugin\npapi\npruntime.h
