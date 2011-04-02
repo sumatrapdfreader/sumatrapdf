@@ -478,7 +478,7 @@ LRESULT HandleWindowAboutMsg(WindowInfo *win, HWND hwnd, UINT message, WPARAM wP
 {
     POINT        pt;
 
-    assert(win->state == WS_ABOUT);
+    assert(win->IsAboutWindow());
     handled = false;
 
     switch (message)

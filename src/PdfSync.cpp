@@ -766,10 +766,10 @@ static const TCHAR *HandleSyncCmd(const TCHAR *cmd, DDEACK& ack)
     // if not then open it
     if (newWindow || !win)
         win = LoadDocument(pdfFile, !newWindow ? win : NULL);
-    else if (win && WS_ERROR_LOADING_PDF == win->state)
+    else if (win && !win->PdfLoaded())
         win->Reload();
     
-    if (!win || (WS_SHOWING_PDF != win->state))
+    if (!win || !win->PdfLoaded())
         return next;
     if (!win->pdfsync) {
         DBG_OUT("PdfSync: No sync file loaded!\n");
@@ -777,7 +777,7 @@ static const TCHAR *HandleSyncCmd(const TCHAR *cmd, DDEACK& ack)
     }
 
     ack.fAck = 1;
-    assert(win->dm);
+    assert(win->PdfLoaded());
     UINT page;
     Vec<RectI> rects;
     UINT ret = win->pdfsync->source_to_pdf(srcFile, line, col, &page, rects);
@@ -804,12 +804,12 @@ static const TCHAR *HandleOpenCmd(const TCHAR *cmd, DDEACK& ack)
     WindowInfo *win = FindWindowInfoByFile(pdfFile);
     if (newWindow || !win)
         win = LoadDocument(pdfFile, !newWindow ? win : NULL);
-    else if (win && WS_ERROR_LOADING_PDF == win->state) {
+    else if (win && !win->PdfLoaded()) {
         win->Reload();
         forceRefresh = 0;
     }
     
-    assert(!win || WS_ABOUT != win->state);
+    assert(!win || !win->IsAboutWindow());
     if (!win)
         return next;
 
@@ -835,12 +835,12 @@ static const TCHAR *HandleGotoCmd(const TCHAR *cmd, DDEACK& ack)
     WindowInfo *win = FindWindowInfoByFile(pdfFile);
     if (!win)
         return next;
-
-    if (WS_ERROR_LOADING_PDF == win->state)
+    if (!win->PdfLoaded()) {
         win->Reload();
-    if (WS_SHOWING_PDF != win->state)
-        return next;
-    
+        if (!win->PdfLoaded())
+            return next;
+    }
+
     ScopedMem<char> destNameUtf8(Str::Conv::ToUtf8(destName));
     if (!destNameUtf8)
         return next;
@@ -866,11 +866,11 @@ static const TCHAR *HandlePageCmd(const TCHAR *cmd, DDEACK& ack)
     WindowInfo *win = FindWindowInfoByFile(pdfFile);
     if (!win)
         return next;
-
-    if (WS_ERROR_LOADING_PDF == win->state)
+    if (!win->PdfLoaded()) {
         win->Reload();
-    if (WS_SHOWING_PDF != win->state)
-        return next;
+        if (!win->PdfLoaded())
+            return next;
+    }
 
     if (!win->dm->validPageNo(page))
         return next;
@@ -899,11 +899,11 @@ static const TCHAR *HandleSetViewCmd(const TCHAR *cmd, DDEACK& ack)
     WindowInfo *win = FindWindowInfoByFile(pdfFile);
     if (!win)
         return next;
-
-    if (WS_ERROR_LOADING_PDF == win->state)
+    if (!win->PdfLoaded()) {
         win->Reload();
-    if (WS_SHOWING_PDF != win->state)
-        return next;
+        if (!win->PdfLoaded())
+            return next;
+    }
 
     ScopedMem<char> viewModeUtf8(Str::Conv::ToUtf8(viewMode));
     DisplayMode mode;

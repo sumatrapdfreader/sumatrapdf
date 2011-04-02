@@ -11,7 +11,7 @@
 #include "FileWatch.h"
 
 WindowInfo::WindowInfo(HWND hwnd) :
-    dm(NULL), state(WS_ABOUT), hwndFrame(hwnd),
+    dm(NULL), hwndFrame(hwnd),
     linkOnLastButtonDown(NULL), url(NULL), selectionOnPage(NULL),
     tocLoaded(false), tocShow(false), tocState(NULL), tocRoot(NULL),
     fullScreen(false), presentation(PM_DISABLED),
@@ -201,7 +201,7 @@ void WindowInfo::ResizeIfNeeded(bool resizeWindow)
         this->DoubleBuffer_New();
         if (resizeWindow) {
             assert(this->dm);
-            if (!this->dm) return;
+            if (!this->PdfLoaded()) return;
             this->dm->changeTotalDrawAreaSize(this->winSize());
         }
     }
@@ -210,7 +210,7 @@ void WindowInfo::ResizeIfNeeded(bool resizeWindow)
 void WindowInfo::ToggleZoom()
 {
     assert(this->dm);
-    if (!this->dm) return;
+    if (!this->PdfLoaded()) return;
 
     this->prevCanvasBR.x = this->prevCanvasBR.y = -1;
     if (ZOOM_FIT_PAGE == this->dm->zoomVirtual())
@@ -224,7 +224,7 @@ void WindowInfo::ToggleZoom()
 void WindowInfo::ZoomToSelection(float factor, bool relative)
 {
     assert(this->dm);
-    if (!this->dm) return;
+    if (!this->PdfLoaded()) return;
 
     PointI pt;
     bool zoomToPt = this->showSelection && this->selectionOnPage;
@@ -258,7 +258,7 @@ void WindowInfo::ZoomToSelection(float factor, bool relative)
 
 void WindowInfo::UpdateToolbarState()
 {
-    if (!this->dm)
+    if (!this->PdfLoaded())
         return;
 
     WORD state = (WORD)SendMessage(this->hwndToolbar, TB_GETSTATE, IDT_VIEW_FIT_WIDTH, 0);
@@ -284,10 +284,8 @@ void WindowInfo::UpdateToolbarState()
 
 void WindowInfo::MoveDocBy(int dx, int dy)
 {
-    assert(WS_SHOWING_PDF == this->state);
-    if (WS_SHOWING_PDF != this->state) return;
     assert(this->dm);
-    if (!this->dm) return;
+    if (!this->PdfLoaded()) return;
     assert(!this->linkOnLastButtonDown);
     if (this->linkOnLastButtonDown) return;
     if (0 != dx)

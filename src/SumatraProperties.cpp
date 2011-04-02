@@ -299,7 +299,7 @@ void OnMenuProperties(WindowInfo *win)
         return;
     }
 
-    if (!win->dm || !win->dm->pdfEngine)
+    if (!win->PdfLoaded())
         return;
     PdfEngine *pdfEngine = win->dm->pdfEngine;
 

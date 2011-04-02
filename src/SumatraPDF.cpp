@@ -487,7 +487,7 @@ static void MenuUpdateDisplayMode(WindowInfo *win)
 {
     bool enabled = false;
     DisplayMode displayMode = gGlobalPrefs.m_defaultDisplayMode;
-    if (win->dm) {
+    if (win->PdfLoaded()) {
         enabled = true;
         displayMode = win->dm->displayMode();
     }
@@ -514,7 +514,7 @@ static void MenuUpdateDisplayMode(WindowInfo *win)
 
 void WindowInfo::SwitchToDisplayMode(DisplayMode displayMode, bool keepContinuous)
 {
-    if (!this->dm)
+    if (!this->PdfLoaded())
         return;
 
     if (keepContinuous && displayModeContinuous(this->dm->displayMode())) {
@@ -915,10 +915,10 @@ static void ZoomMenuItemCheck(HMENU m, UINT menuItemId, bool canZoom)
 static void MenuUpdateZoom(WindowInfo *win)
 {
     float zoomVirtual = gGlobalPrefs.m_defaultZoom;
-    if (win->dm)
+    if (win->PdfLoaded())
         zoomVirtual = win->dm->zoomVirtual();
     UINT menuId = MenuIdFromVirtualZoom(zoomVirtual);
-    ZoomMenuItemCheck(win->menu, menuId, NULL != win->dm);
+    ZoomMenuItemCheck(win->menu, menuId, win->PdfLoaded());
 }
 
 static void RememberWindowPosition(WindowInfo *win)
@@ -961,9 +961,7 @@ static void UpdateCurrentFileDisplayStateForWin(WindowInfo *win)
         return;
 
     RememberWindowPosition(win);
-    if (WS_SHOWING_PDF != win->state)
-        return;
-    if (!win->dm)
+    if (!win->PdfLoaded())
         return;
 
     const TCHAR *fileName = win->dm->fileName();
@@ -1001,8 +999,8 @@ void WindowInfo::Reload(bool autorefresh)
 {
     DisplayState ds;
     ds.useGlobalValues = gGlobalPrefs.m_globalPrefsOnly;
-    if (!this->dm || !this->dm->displayStateFromModel(&ds)) {
-        if (!autorefresh && !this->dm && this->loadedFilePath)
+    if (!this->PdfLoaded() || !this->dm->displayStateFromModel(&ds)) {
+        if (!autorefresh && !this->PdfLoaded() && !this->IsAboutWindow())
             LoadPdf(this->loadedFilePath, this);
         return;
     }
@@ -1022,7 +1020,7 @@ void WindowInfo::Reload(bool autorefresh)
     ScopedMem<TCHAR> path(Str::Dup(this->loadedFilePath));
     LoadPdfIntoWindow(path, this, &ds, false, tryRepair, true, false);
 
-    if (this->dm) {
+    if (this->PdfLoaded()) {
         // save a newly remembered password into file history so that
         // we don't ask again at the next refresh
         DisplayState *state = gFileHistory.Find(ds.filePath);
@@ -1065,11 +1063,11 @@ static void UpdateToolbarBg(HWND hwnd, bool enabled)
 }
 
 static void WindowInfo_UpdateFindbox(WindowInfo *win) {
-    UpdateToolbarBg(win->hwndFindBg, win->dm != NULL);
-    UpdateToolbarBg(win->hwndPageBg, win->dm != NULL);
+    UpdateToolbarBg(win->hwndFindBg, win->PdfLoaded());
+    UpdateToolbarBg(win->hwndPageBg, win->PdfLoaded());
 
     InvalidateRect(win->hwndToolbar, NULL, true);
-    if (!win->dm) {  // Avoid focus on Find box
+    if (!win->PdfLoaded()) {  // Avoid focus on Find box
         SetClassLongPtr(win->hwndFindBox, GCLP_HCURSOR, (LONG_PTR)gCursorArrow);
         HideCaret(NULL);
     } else {
@@ -1080,7 +1078,7 @@ static void WindowInfo_UpdateFindbox(WindowInfo *win) {
 
 static bool FileCloseMenuEnabled(void) {
     for (size_t i = 0; i < gWindows.Count(); i++)
-        if (gWindows[i]->state != WS_ABOUT)
+        if (!gWindows[i]->IsAboutWindow())
             return true;
     return false;
 }
@@ -1103,7 +1101,7 @@ static void ToolbarUpdateStateForWindow(WindowInfo *win) {
 
         if (gRestrictedUse && gToolbarButtons[i].flags & TBF_RESTRICTED) // If restricted, disable
             buttonState = disable;
-        else if (WS_SHOWING_PDF != win->state) { // If no file open, only enable open button.
+        else if (!win->PdfLoaded()) { // If no file open, only enable open button.
             if (IDM_OPEN != cmdId)
                 buttonState = disable;
         }
@@ -1140,9 +1138,7 @@ static void ToolbarUpdateStateForWindow(WindowInfo *win) {
 }
 
 static void MenuUpdatePrintItem(WindowInfo *win, HMENU menu, bool disableOnly=false) {
-    bool filePrintEnabled = false;
-    if (win->dm && win->dm->pdfEngine)
-        filePrintEnabled = true;
+    bool filePrintEnabled = win->PdfLoaded();
     bool filePrintAllowed = !filePrintEnabled || win->dm->pdfEngine->hasPermission(PDF_PERM_PRINT);
 
     int ix;
@@ -1173,7 +1169,7 @@ static void MenuUpdateStateForWindow(WindowInfo *win) {
         
     MenuUpdatePrintItem(win, win->menu);
 
-    bool enabled = WS_SHOWING_PDF == win->state && win->dm && win->dm->hasTocTree();
+    bool enabled = win->PdfLoaded() && win->dm->hasTocTree();
     Win::Menu::Enable(win->menu, IDM_VIEW_BOOKMARKS, enabled);
 
     bool documentSpecific = win->PdfLoaded();
@@ -1185,14 +1181,14 @@ static void MenuUpdateStateForWindow(WindowInfo *win) {
     MenuUpdateZoom(win);
     Win::Menu::Check(win->menu, IDM_THREAD_STRESS, win->threadStressRunning);
 
-    if (WS_SHOWING_PDF == win->state) {
+    if (win->PdfLoaded()) {
         Win::Menu::Enable(win->menu, IDM_GOTO_NAV_BACK, win->dm->canNavigate(-1));
         Win::Menu::Enable(win->menu, IDM_GOTO_NAV_FORWARD, win->dm->canNavigate(1));
     }
 
     for (int i = 0; i < dimof(menusToDisableIfNoPdf); i++) {
         UINT id = menusToDisableIfNoPdf[i];
-        Win::Menu::Enable(win->menu, id, WS_SHOWING_PDF == win->state);
+        Win::Menu::Enable(win->menu, id, win->PdfLoaded());
     }
 }
 
@@ -1203,9 +1199,9 @@ static void UpdateToolbarAndScrollbarsForAllWindows(void)
         WindowInfo *win = gWindows[i];
         ToolbarUpdateStateForWindow(win);
 
-        if (WS_SHOWING_PDF != win->state) {
+        if (!win->PdfLoaded()) {
             ShowScrollBar(win->hwndCanvas, SB_BOTH, FALSE);
-            if (WS_ABOUT == win->state)
+            if (win->IsAboutWindow())
                 Win::SetText(win->hwndFrame, SUMATRA_WINDOW_TITLE);
         }
     }
@@ -1388,6 +1384,7 @@ static bool LoadPdfIntoWindow(
     win->dm = DisplayModel::CreateFromFileName(win, fileName, displayMode, startPage);
 
     if (!win->dm) {
+        assert(!win->PdfLoaded() && !win->IsAboutWindow());
         DBG_OUT("failed to load file %s\n", fileName);
         win->needrefresh = true;
         // if there is an error while reading the pdf and pdfrepair is not requested
@@ -1396,12 +1393,12 @@ static bool LoadPdfIntoWindow(
             win->dm = previousmodel;
         } else {
             delete previousmodel;
-            win->state = WS_ERROR_LOADING_PDF;
             ScopedMem<TCHAR> title(Str::Format(_T("%s - %s"), Path::GetBaseName(fileName), SUMATRA_WINDOW_TITLE));
             Win::SetText(win->hwndFrame, title);
             goto Error;
         }
     } else {
+        assert(win->PdfLoaded());
         if (previousmodel && Str::Eq(win->dm->fileName(), previousmodel->fileName()))
             gRenderCache.KeepForDisplayModel(previousmodel, win->dm);
         delete previousmodel;
@@ -1412,7 +1409,6 @@ static bool LoadPdfIntoWindow(
     float zoomVirtual = gGlobalPrefs.m_defaultZoom;
     int rotation = DEFAULT_ROTATION;
 
-    win->state = WS_SHOWING_PDF;
     if (state) {
         if (win->dm->validPageNo(startPage)) {
             ss.page = startPage;
@@ -1489,7 +1485,7 @@ Error:
             RectI rect = state->windowPos;
             // Make sure it doesn't have a position like outside of the screen etc.
             rect_shift_to_work_area(&rect.ToRECT(), FALSE);
-            // This shouldn't happen until win->state != WS_ABOUT, so that we don't
+            // This shouldn't happen until !win->IsAboutWindow(), so that we don't
             // accidentally update gGlobalState with this window's dimensions
             MoveWindow(win->hwndFrame, rect.x, rect.y, rect.dx, rect.dy, TRUE);
         }
@@ -1505,7 +1501,7 @@ Error:
     }
     if (win->tocLoaded)
         win->ClearTocBox();
-    if (win->dm)
+    if (win->PdfLoaded())
         win->dm->setScrollState(&ss);
     if (win->PdfLoaded() && win->tocShow) {
         if (win->dm->hasTocTree()) {
@@ -1517,7 +1513,7 @@ Error:
         }
     }
     UpdateToolbarAndScrollbarsForAllWindows();
-    if (win->state == WS_ERROR_LOADING_PDF) {
+    if (!win->PdfLoaded()) {
         win->RedrawAll();
         return false;
     }
@@ -1580,10 +1576,10 @@ static WindowInfo* LoadPdf(const TCHAR *fileName, WindowInfo *win, bool showWin,
         return win;
 
     bool isNewWindow = false;
-    if (!win && 1 == gWindows.Count() && WS_ABOUT == gWindows[0]->state) {
+    if (!win && 1 == gWindows.Count() && gWindows[0]->IsAboutWindow()) {
         win = gWindows[0];
     }
-    else if (!win || WS_SHOWING_PDF == win->state && !forceReuse) {
+    else if (!win || win->PdfLoaded() && !forceReuse) {
         isNewWindow = true;
         win = WindowInfo_CreateEmpty();
         if (!win)
@@ -1982,8 +1978,8 @@ static void PaintTransparentRectangle(WindowInfo *win, HDC hdc, RectI *rect, COL
 
 static void UpdateTextSelection(WindowInfo *win, bool select=true)
 {
-    assert(win && win->dm);
-    if (!win || !win->dm) return;
+    assert(win && win->PdfLoaded());
+    if (!win || !win->PdfLoaded()) return;
 
     if (select) {
         int pageNo;
@@ -2370,7 +2366,7 @@ static void StartStressRenderingPage(WindowInfo *win, int pageNo)
     assert(win);
     if (!win) return;
 
-    if (win->state != WS_SHOWING_PDF || win->dm == NULL || win->dm->_dontRenderFlag) {
+    if (!win->PdfLoaded() || win->dm->_dontRenderFlag) {
         win->threadStressRunning = false;
     }
     if (!win->threadStressRunning)
@@ -2398,8 +2394,8 @@ static void ToggleThreadStress(WindowInfo *win)
 
 static void OnSelectAll(WindowInfo *win, bool textOnly=false)
 {
-    assert(win && win->dm);
-    if (!win || !win->dm) return;
+    assert(win && win->PdfLoaded());
+    if (!win || !win->PdfLoaded()) return;
 
     if (win->hwndFindBox == GetFocus() || win->hwndPageBox == GetFocus()) {
         Edit_SelectAll(GetFocus());
@@ -2429,7 +2425,7 @@ static void OnSelectAll(WindowInfo *win, bool textOnly=false)
 static bool OnInverseSearch(WindowInfo *win, int x, int y)
 {
     assert(win);
-    if (!win || !win->dm) return false;
+    if (!win || !win->PdfLoaded()) return false;
     if (gRestrictedUse || gPluginMode) return false;
 
     // Clear the last forward-search result
@@ -2517,7 +2513,7 @@ static void ChangePresentationMode(WindowInfo *win, PresentationMode mode)
 
 static void OnContextMenu(WindowInfo *win, int x, int y)
 {
-    if (!win || !win->dm)
+    if (!win || !win->PdfLoaded())
         return;
 
     pdf_link *link = win->dm->getLinkAtPosition(PointI(x, y));
@@ -2627,10 +2623,9 @@ static void OnMouseMove(WindowInfo *win, int x, int y, WPARAM flags)
     int dragDx, dragDy;
 
     assert(win);
-    if (!win || WS_SHOWING_PDF != win->state)
+    if (!win || !win->PdfLoaded())
         return;
     assert(win->dm);
-    if (!win->dm) return;
 
     if (win->presentation) {
         // shortly display the cursor if the mouse has moved and the cursor is hidden
@@ -2726,7 +2721,7 @@ static void OnSelectionStop(WindowInfo *win, int x, int y, bool aborted)
 static void OnMouseLeftButtonDown(WindowInfo *win, int x, int y, WPARAM key)
 {
     //DBG_OUT("Left button clicked on %d %d\n", x, y);
-    if (!win || (WS_SHOWING_PDF != win->state))
+    if (!win || !win->PdfLoaded())
         return;
 
     if (MA_DRAGGING_RIGHT == win->mouseAction)
@@ -2760,7 +2755,7 @@ static void OnMouseLeftButtonDown(WindowInfo *win, int x, int y, WPARAM key)
 
 static void OnMouseLeftButtonUp(WindowInfo *win, int x, int y, WPARAM key)
 {
-    if (!win || (WS_SHOWING_PDF != win->state))
+    if (!win || !win->PdfLoaded())
         return;
 
     assert(win->dm);
@@ -2816,7 +2811,7 @@ static void OnMouseLeftButtonDblClk(WindowInfo *win, int x, int y, WPARAM key)
     if (gGlobalPrefs.m_enableTeXEnhancements && !(key & ~MK_LBUTTON))
         dontSelect = OnInverseSearch(win, x, y);
 
-    if (dontSelect || !win->dm || !win->dm->isOverText(x, y))
+    if (dontSelect || !win->PdfLoaded() || !win->dm->isOverText(x, y))
         return;
 
     int pageNo;
@@ -2858,7 +2853,7 @@ static void OnMouseRightButtonDown(WindowInfo *win, int x, int y, int key)
     assert (win);
     if (!win) return;
 
-    if (WS_SHOWING_PDF != win->state)
+    if (!win->PdfLoaded())
         return;
 
     if (MA_SCROLLING == win->mouseAction)
@@ -2881,7 +2876,7 @@ static void OnMouseRightButtonUp(WindowInfo *win, int x, int y, WPARAM key)
     assert (win);
     if (!win) return;
 
-    if (WS_SHOWING_PDF != win->state)
+    if (!win->PdfLoaded())
         return;
 
     assert(win->dm);
@@ -2930,7 +2925,8 @@ static void OnPaint(WindowInfo *win)
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(win->hwndCanvas, &ps);
 
-    if (WS_ERROR_LOADING_PDF == win->state) {
+    if (!win->PdfLoaded()) {
+        assert(!win->IsAboutWindow());
         HFONT fontRightTxt = Win32_Font_GetSimple(hdc, _T("MS Shell Dlg"), 14);
         HGDIOBJ origFont = SelectObject(hdc, fontRightTxt); /* Just to remember the orig font */
         SetBkMode(hdc, TRANSPARENT);
@@ -2938,7 +2934,7 @@ static void OnPaint(WindowInfo *win)
         draw_centered_text(hdc, ClientRect(win->hwndCanvas), _TR("Error loading PDF file."));
         SelectObject(hdc, origFont);
         Win32_Font_Delete(fontRightTxt);
-    } else if (WS_SHOWING_PDF == win->state) {
+    } else {
         switch (win->presentation) {
         case PM_BLACK_SCREEN:
             FillRect(hdc, &ps.rcPaint, gBrushBlack);
@@ -2951,8 +2947,7 @@ static void OnPaint(WindowInfo *win)
             WindowInfo_Paint(win, hdc, &ps);
             win->DoubleBuffer_Show(hdc);
         }
-    } else
-        assert(0);
+    }
 
     EndPaint(win->hwndCanvas, &ps);
 }
@@ -2982,7 +2977,7 @@ static void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose=false)
     if (win->pluginParent && !forceClose)
         return;
 
-    if (win->dm)
+    if (win->PdfLoaded())
         win->dm->_dontRenderFlag = true;
     if (win->presentation)
         WindowInfo_ExitFullscreen(win);
@@ -2995,8 +2990,6 @@ static void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose=false)
         Prefs_Save();
     else
         UpdateCurrentFileDisplayStateForWin(win);
-
-    win->state = WS_ABOUT;
 
     if (lastWindow && !quitIfLast) {
         /* last window - don't delete it */
@@ -3041,7 +3034,7 @@ static void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose=false)
 */
 static void OnMenuZoom(WindowInfo *win, UINT menuId)
 {
-    if (!win->dm)
+    if (!win->PdfLoaded())
         return;
 
     float zoom = ZoomMenuItemToZoom(menuId);
@@ -3050,7 +3043,7 @@ static void OnMenuZoom(WindowInfo *win, UINT menuId)
 
 static void OnMenuCustomZoom(WindowInfo *win)
 {
-    if (!win->dm)
+    if (!win->PdfLoaded())
         return;
 
     float zoom = win->dm->zoomVirtual();
@@ -3411,7 +3404,7 @@ static void OnMenuSaveAs(WindowInfo *win)
     assert(win);
     if (!win) return;
     assert(win->dm);
-    if (!win->dm) return;
+    if (!win->PdfLoaded()) return;
 
     srcFileName = win->dm->fileName();
     assert(srcFileName);
@@ -3540,7 +3533,7 @@ static void OnMenuSaveBookmark(WindowInfo *win)
     assert(win);
     if (!win) return;
     assert(win->dm);
-    if (!win->dm) return;
+    if (!win->PdfLoaded()) return;
 
     TCHAR dstFileName[MAX_PATH] = { 0 };
     // Remove the extension so that it can be re-added depending on the chosen filter
@@ -3767,7 +3760,7 @@ static void OnVScroll(WindowInfo *win, WPARAM wParam)
     GetScrollInfo(win->hwndCanvas, SB_VERT, &si);
 
     // If the position has changed, scroll the window and update it
-    if (win->dm && (si.nPos != iVertPos)) {
+    if (win->PdfLoaded() && (si.nPos != iVertPos)) {
         win->dm->scrollYTo(si.nPos);
     }
 }
@@ -3801,7 +3794,7 @@ static void OnHScroll(WindowInfo *win, WPARAM wParam)
     GetScrollInfo(win->hwndCanvas, SB_HORZ, &si);
 
     // If the position has changed, scroll the window and update it
-    if (win->dm && (si.nPos != iVertPos))
+    if (win->PdfLoaded() && (si.nPos != iVertPos))
         win->dm->scrollXTo(si.nPos);
 }
 
@@ -3858,7 +3851,7 @@ static void OnSize(WindowInfo *win, int dx, int dy)
     else
         SetWindowPos(win->hwndCanvas, NULL, 0, rebBarDy, dx, dy-rebBarDy, SWP_NOZORDER);
     // Need this here, so that -page and -nameddest work correctly in continuous mode
-    if (WS_SHOWING_PDF == win->state)
+    if (win->PdfLoaded())
         win->ResizeIfNeeded();
 }
 
@@ -3948,7 +3941,7 @@ static void OnMenuViewContinuous(WindowInfo *win)
 static void ToogleToolbarViewButton(WindowInfo *win, float newZoom, bool pagesContinuously)
 {
     assert(win && win->dm);
-    if (!win || !win->dm) return;
+    if (!win || !win->PdfLoaded()) return;
 
     float zoom = win->dm->zoomVirtual();
     DisplayMode mode = win->dm->displayMode();
@@ -4095,7 +4088,7 @@ static void WindowInfo_EnterFullscreen(WindowInfo *win, bool presentation)
     assert(presentation ? !win->fullScreen : !win->presentation);
     if (presentation) {
         assert(win->dm);
-        if (!win->dm)
+        if (!win->PdfLoaded())
             return;
 
         if (IsZoomed(win->hwndFrame))
@@ -4171,7 +4164,7 @@ static void WindowInfo_ExitFullscreen(WindowInfo *win)
         SetCursor(gCursorArrow);
     }
 
-    if (win->dm && (wasPresentation ? win->_tocBeforePresentation : win->_tocBeforeFullScreen))
+    if (win->PdfLoaded() && (wasPresentation ? win->_tocBeforePresentation : win->_tocBeforeFullScreen))
         win->ShowTocBox();
 
     if (gGlobalPrefs.m_showToolbar)
@@ -4429,7 +4422,7 @@ static void AdvanceFocus(WindowInfo *win)
 
 static bool OnKeydown(WindowInfo *win, WPARAM key, LPARAM lparam, bool inTextfield=false)
 {
-    if (!win || !win->dm)
+    if (!win || !win->PdfLoaded())
         return false;
     
     //DBG_OUT("key=%d,%c,shift=%d\n", key, (char)key, (int)WasKeyDown(VK_SHIFT));
@@ -4490,7 +4483,7 @@ static bool OnKeydown(WindowInfo *win, WPARAM key, LPARAM lparam, bool inTextfie
 static void ClearSearch(WindowInfo *win)
 {
     DeleteOldSelectionInfo(win);
-    if (win->dm)
+    if (win->PdfLoaded())
         win->dm->textSelection->Reset();
     win->RepaintAsync();
 }
@@ -4529,7 +4522,7 @@ static void OnChar(WindowInfo *win, WPARAM key)
         return;
     }
 
-    if (!win->dm)
+    if (!win->PdfLoaded())
         return;
 
     switch (key) {
@@ -4639,7 +4632,7 @@ public:
         UIThreadWorkItem(win), tocItem(ti) {}
 
     virtual void Execute() {
-        if (WindowInfoStillValid(win) && win->dm)
+        if (WindowInfoStillValid(win) && win->PdfLoaded())
             win->dm->goToTocLink(tocItem->link);
     }
 };
@@ -4654,7 +4647,8 @@ static void GoToTocLinkForTVItem(WindowInfo *win, HWND hTV, HTREEITEM hItem=NULL
     item.mask = TVIF_PARAM;
     TreeView_GetItem(hTV, &item);
     PdfTocItem *tocItem = (PdfTocItem *)item.lParam;
-    if (win->dm && tocItem && (allowExternal || tocItem->link && PDF_LGOTO == tocItem->link->kind)) {
+    if (win->PdfLoaded() && tocItem &&
+        (allowExternal || tocItem->link && PDF_LGOTO == tocItem->link->kind)) {
         gUIThreadMarshaller.Queue(new GoToTocLinkWorkItem(win, tocItem));
     }
 }
@@ -4762,7 +4756,7 @@ static WNDPROC DefWndProcFindBox = NULL;
 static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     WindowInfo *win = FindWindowInfoByHwnd(hwnd);
-    if (!win || !win->dm)
+    if (!win || !win->PdfLoaded())
         return DefWindowProc(hwnd, message, wParam, lParam);
 
     if (FocusUnselectedWndProc(hwnd, message)) {
@@ -4830,7 +4824,7 @@ public:
     virtual void Execute() {
         if (!WindowInfoStillValid(win))
             return;
-        if (!win->dm) {
+        if (!win->PdfLoaded()) {
             // the document was closed while finding
             WindowInfo_ShowMessage_Async(win, NULL, false);
         } else if (pdfSel) {
@@ -5052,7 +5046,7 @@ static WNDPROC DefWndProcPageBox = NULL;
 static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     WindowInfo *win = FindWindowInfoByHwnd(hwnd);
-    if (!win || !win->dm)
+    if (!win || !win->PdfLoaded())
         return DefWindowProc(hwnd, message, wParam, lParam);
 
     if (FocusUnselectedWndProc(hwnd, message)) {
@@ -5861,7 +5855,7 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
             break;
 
         case WM_MBUTTONDOWN:
-            if (win && WS_SHOWING_PDF == win->state)
+            if (win && win->PdfLoaded())
             {
                 SetTimer(hwnd, SMOOTHSCROLL_TIMER_ID, SMOOTHSCROLL_DELAY_IN_MS, NULL);
                 // TODO: Create window that shows location of initial click for reference
@@ -5888,8 +5882,7 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
             if (!win)
                 return DefWindowProc(hwnd, message, wParam, lParam);
 
-            switch (win->state) {
-            case WS_SHOWING_PDF:
+            if (win->PdfLoaded()) {
                 if (win->mouseAction != MA_IDLE)
                     win->DeleteInfotip();
 
@@ -5933,11 +5926,9 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
                 }
                 if (win->presentation)
                     return TRUE;
-                break;
-
-            default:
+            }
+            else {
                 win->DeleteInfotip();
-                break;
             }
             return DefWindowProc(hwnd, message, wParam, lParam);
 
@@ -6014,7 +6005,7 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
             break;
 
         case WM_MOUSEWHEEL:
-            if (!win || !win->dm)
+            if (!win || !win->PdfLoaded())
                 break;
 
             // Scroll the ToC sidebar, if it's visible and the cursor is in it
@@ -6197,22 +6188,22 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                     break;
 
                 case IDT_VIEW_FIT_WIDTH:
-                    if (win->dm)
+                    if (win->PdfLoaded())
                         OnMenuFitWidthContinuous(win);
                     break;
 
                 case IDT_VIEW_FIT_PAGE:
-                    if (win->dm)
+                    if (win->PdfLoaded())
                         OnMenuFitSinglePage(win);
                     break;
 
                 case IDT_VIEW_ZOOMIN:
-                    if (win->dm)
+                    if (win->PdfLoaded())
                         win->ZoomToSelection(ZOOM_IN_FACTOR, true);
                     break;
 
                 case IDT_VIEW_ZOOMOUT:
-                    if (win->dm)
+                    if (win->PdfLoaded())
                         win->ZoomToSelection(ZOOM_OUT_FACTOR, true);
                     break;
 
@@ -6373,12 +6364,12 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                     break;
 
                 case IDM_GOTO_NAV_BACK:
-                    if (win->dm)
+                    if (win->PdfLoaded())
                         win->dm->navigate(-1);
                     break;
                     
                 case IDM_GOTO_NAV_FORWARD:
-                    if (win->dm)
+                    if (win->PdfLoaded())
                         win->dm->navigate(1);
                     break;
 
@@ -6395,7 +6386,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                     break;
 
                 case IDM_SELECT_ALL:
-                    if (win->dm)
+                    if (win->PdfLoaded())
                         OnSelectAll(win);
                     break;
 
@@ -6818,21 +6809,21 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         else {
             bool showWin = !(i.printDialog && i.exitOnPrint) && !gPluginMode;
             win = LoadDocument(i.fileNames[n], NULL, showWin);
-            if (!win || win->state != WS_SHOWING_PDF)
+            if (!win || !win->PdfLoaded())
                 msg.wParam++; // set an error code for the next goto Exit
             if (!win)
                 goto Exit;
-            if (WS_SHOWING_PDF == win->state && i.destName && !firstDocLoaded) {
+            if (win->PdfLoaded() && i.destName && !firstDocLoaded) {
                 ScopedMem<char> tmp(Str::Conv::ToUtf8(i.destName));
                 win->dm->goToNamedDest(tmp);
             }
-            else if (WS_SHOWING_PDF == win->state && i.pageNumber > 0 && !firstDocLoaded) {
+            else if (win->PdfLoaded() && i.pageNumber > 0 && !firstDocLoaded) {
                 if (win->dm->validPageNo(i.pageNumber))
                     win->dm->goToPage(i.pageNumber, 0);
             }
             if (i.hwndPluginParent)
                 MakePluginWindow(win, i.hwndPluginParent);
-            if (WS_SHOWING_PDF == win->state && win->dm && !firstDocLoaded) {
+            if (win->PdfLoaded() && !firstDocLoaded) {
                 if (i.enterPresentation || i.enterFullscreen)
                     WindowInfo_EnterFullscreen(win, i.enterPresentation);
                 if (i.startView != DM_AUTOMATIC)

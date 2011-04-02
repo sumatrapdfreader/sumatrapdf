@@ -1436,7 +1436,7 @@ void DisplayModel::goToTocLink(pdf_link* link)
                 ScopedMem<TCHAR> combinedPath(Path::Join(basePath, path));
                 // TODO: respect fz_tobool(fz_dictgets(link->dest, "NewWindow"))
                 WindowInfo *newWin = LoadDocument(combinedPath);
-                if (newWin && newWin->dm)
+                if (newWin && newWin->PdfLoaded())
                     newWin->dm->goToPdfDest(fz_dictgets(link->dest, "D"));
             }
             free(path);

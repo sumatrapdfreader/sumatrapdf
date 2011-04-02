@@ -14,16 +14,6 @@ class DisplayModel;
 class FileWatcher;
 class Synchronizer;
 
-/* Current state of a window:
-  - WS_ERROR_LOADING_PDF - showing an error message after failing to open a PDF
-  - WS_SHOWING_PDF - showing a PDF file
-  - WS_ABOUT - showing "about" screen */
-enum WinState {
-    WS_ERROR_LOADING_PDF = 1,
-    WS_SHOWING_PDF,
-    WS_ABOUT
-};
-
 #if 0
 // TODO: WindowInfoType is meant to replace WinState
 enum WindowInfoType {
@@ -74,9 +64,10 @@ public:
     int winDx() const { return canvasRc.dx; }
     int winDy() const { return canvasRc.dy; }
     SizeI winSize() const { return canvasRc.Size(); }
-    bool IsAboutWindow() const { return WS_ABOUT == state; }
 
-    WinState        state;
+    bool IsAboutWindow() const { return !loadedFilePath; }
+    bool PdfLoaded() const { return this->dm != NULL; }
+
     bool            needrefresh; // true if the view of the PDF is not synchronized with the content of the file on disk
     TCHAR *         loadedFilePath;
     bool            threadStressRunning;
@@ -207,7 +198,6 @@ public:
     void RepaintAsync(UINT delay=0);
     void Reload(bool autorefresh=false);
 
-    bool PdfLoaded() const { return this->dm != NULL; }
     HTREEITEM TreeItemForPageNo(HTREEITEM hItem, int pageNo);
     void UpdateTocSelection(int currPageNo);
     void UpdateToCExpansionState(HTREEITEM hItem);
