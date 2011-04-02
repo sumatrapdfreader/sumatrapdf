@@ -2,11 +2,10 @@
    License: GPLv3 */
 
 #include <windows.h>
-#include <Gdiplus.h>
-
 #include "ComicEngine.h"
 #include "StrUtil.h"
 #include "Vec.h"
+#include "WinUtil.h"
 
 // mini(un)zip
 #include <ioapi.h>
@@ -14,15 +13,6 @@
 #include <unzip.h>
 
 using namespace Gdiplus;
-
-class ScopedGdiPlus {
-protected:
-    GdiplusStartupInput si;
-    ULONG_PTR           token;
-public:
-    ScopedGdiPlus()  { GdiplusStartup(&token, &si, NULL); }
-    ~ScopedGdiPlus() { GdiplusShutdown(token); }
-};
 
 class ComicBookPage {
 public:

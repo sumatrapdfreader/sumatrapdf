@@ -477,7 +477,7 @@ void paint_rect(HDC hdc, RECT * rect)
     LineTo(hdc, rect->left, rect->top);
 }
 
-void draw_centered_text(HDC hdc, RectI r, const TCHAR *txt)
+void DrawCenteredText(HDC hdc, RectI r, const TCHAR *txt)
 {    
     SetBkMode(hdc, TRANSPARENT);
     DrawText(hdc, txt, -1, &r.ToRECT(), DT_CENTER | DT_VCENTER | DT_SINGLELINE);
@@ -508,6 +508,17 @@ void CenterDialog(HWND hDlg)
     rect_shift_to_work_area(&rcDialog, TRUE);
 
     SetWindowPos(hDlg, 0, rcDialog.left, rcDialog.top, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
+}
+
+/* Get the name of default printer or NULL if not exists.
+   The caller needs to free() the result */
+TCHAR *GetDefaultPrinterName()
+{
+    TCHAR buf[512];
+    DWORD bufSize = dimof(buf);
+    if (GetDefaultPrinter(buf, &bufSize))
+        return Str::Dup(buf);
+    return NULL;
 }
 
 bool CopyTextToClipboard(const TCHAR *text, bool appendOnly)

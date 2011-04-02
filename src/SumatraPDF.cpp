@@ -79,6 +79,11 @@ static bool             gUseGdiRenderer = true;
 static bool             gUseGdiRenderer = false;
 #endif
 
+// in plugin mode, the window's frame isn't drawn and closing and
+// fullscreen are disabled, so that SumatraPDF can be displayed
+// embedded (e.g. in a web browser)
+bool                    gPluginMode = false;
+
 /* default UI settings */
 
 #define DEFAULT_DISPLAY_MODE    DM_AUTOMATIC
@@ -2118,11 +2123,11 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
                 if (renderDelay < REPAINT_MESSAGE_DELAY_IN_MS)
                     win->RepaintAsync(REPAINT_MESSAGE_DELAY_IN_MS / 4);
                 else
-                    draw_centered_text(hdc, bounds, _TR("Please wait - rendering..."));
+                    DrawCenteredText(hdc, bounds, _TR("Please wait - rendering..."));
                 DBG_OUT("drawing empty %d ", pageNo);
                 rendering = true;
             } else {
-                draw_centered_text(hdc, bounds, _TR("Couldn't render the page"));
+                DrawCenteredText(hdc, bounds, _TR("Couldn't render the page"));
                 DBG_OUT("   missing bitmap on visible page %d\n", pageNo);
             }
             SelectObject(hdc, origFont);
@@ -2888,7 +2893,7 @@ static void OnPaint(WindowInfo *win)
         HGDIOBJ origFont = SelectObject(hdc, fontRightTxt); /* Just to remember the orig font */
         SetBkMode(hdc, TRANSPARENT);
         FillRect(hdc, &ps.rcPaint, gBrushBg);
-        draw_centered_text(hdc, ClientRect(win->hwndCanvas), _TR("Error loading PDF file."));
+        DrawCenteredText(hdc, ClientRect(win->hwndCanvas), _TR("Error loading PDF file."));
         SelectObject(hdc, origFont);
         Win32_Font_Delete(fontRightTxt);
     } else {
@@ -6614,6 +6619,25 @@ Exit:
     free(devMode);
     DeleteDC(hdcPrint);
     return success;
+}
+
+static void MakePluginWindow(WindowInfo *win, HWND hwndParent)
+{
+    assert(IsWindow(hwndParent));
+    assert(gPluginMode);
+
+    long ws = GetWindowLong(win->hwndFrame, GWL_STYLE);
+    ws &= ~(WS_POPUP|WS_BORDER|WS_CAPTION|WS_THICKFRAME);
+    ws |= WS_CHILD;
+    SetWindowLong(win->hwndFrame, GWL_STYLE, ws);
+
+    SetParent(win->hwndFrame, hwndParent);
+    ClientRect rc(hwndParent);
+    MoveWindow(win->hwndFrame, 0, 0, rc.dx, rc.dy, FALSE);
+    ShowWindow(win->hwndFrame, SW_SHOW);
+
+    // from here on, we depend on the plugin's host to resize us
+    SetFocus(win->hwndFrame);
 }
 
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)

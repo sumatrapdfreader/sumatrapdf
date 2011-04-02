@@ -11,6 +11,9 @@
 #define _UNICODE
 #endif
 
+#include <windows.h>
+#include <gdiplus.h>
+
 #ifdef DEBUG
 #define _CRTDBG_MAP_ALLOC
 #endif
@@ -21,7 +24,6 @@
 #define new DEBUG_NEW
 #endif
 
-#include <windows.h>
 #include <tchar.h>
 
 /* Few most common includes for C stdlib */

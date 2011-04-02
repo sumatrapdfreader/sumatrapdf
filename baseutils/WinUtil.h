@@ -4,7 +4,8 @@
 #ifndef WinUtil_h
 #define WinUtil_h
 
-#include <windows.h>
+#include "BaseUtil.h"
+#include <WindowsX.h>
 #include <CommCtrl.h>
 #include "GeomUtil.h"
 
@@ -43,6 +44,15 @@ public:
         double timeInSecs = (double)(end.QuadPart-start.QuadPart)/(double)freq.QuadPart;
         return timeInSecs * 1000.0;
     }
+};
+
+class ScopedGdiPlus {
+protected:
+    Gdiplus::GdiplusStartupInput si;
+    ULONG_PTR           token;
+public:
+    ScopedGdiPlus()  { Gdiplus::GdiplusStartup(&token, &si, NULL); }
+    ~ScopedGdiPlus() { Gdiplus::GdiplusShutdown(token); }
 };
 
 class ClientRect : public RectI {
@@ -151,6 +161,11 @@ inline void SetText(HWND hwnd, const TCHAR *txt)
     SendMessage(hwnd, WM_SETTEXT, (WPARAM)0, (LPARAM)txt);
 }
 
+inline void SetFont(HWND hwnd, HFONT font)
+{
+	SetWindowFont(hwnd, font, TRUE);
+}
+
 namespace Menu {
 
 inline void Check(HMENU m, UINT id, bool check)
@@ -215,7 +230,6 @@ inline void Empty(HMENU m)
 
 #define Edit_SelectAll(hwnd) Edit_SetSel(hwnd, 0, -1)
 #define ListBox_AppendString_NoSort(hwnd, txt) ListBox_InsertString(hwnd, -1, txt)
-#define Window_SetFont(hwnd, font) SetWindowFont(hwnd, font, TRUE)
 
 int     screen_get_dx(void);
 int     screen_get_dy(void);
@@ -228,10 +242,11 @@ void    exec_with_params(const TCHAR *exe, const TCHAR *params, bool hidden);
 
 void    paint_round_rect_around_hwnd(HDC hdc, HWND hwnd_edit_parent, HWND hwnd_edit, COLORREF col);
 void    paint_rect(HDC hdc, RECT * rect);
-void    draw_centered_text(HDC hdc, RectI r, const TCHAR *txt);
+void    DrawCenteredText(HDC hdc, RectI r, const TCHAR *txt);
 
 bool    IsCursorOverWindow(HWND hwnd);
 void    CenterDialog(HWND hDlg);
+TCHAR * GetDefaultPrinterName();
 bool    CopyTextToClipboard(const TCHAR *text, bool appendOnly=false);
 
 #endif

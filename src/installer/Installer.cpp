@@ -883,7 +883,7 @@ void CreateButtonExit(HWND hwndParent)
                         x, y, buttonDx, buttonDy, hwndParent, 
                         (HMENU)ID_BUTTON_EXIT,
                         ghinst, NULL);
-    Window_SetFont(gHwndButtonExit, gFontDefault);
+    Win::SetFont(gHwndButtonExit, gFontDefault);
 }
 
 void CreateButtonRunSumatra(HWND hwndParent)
@@ -901,7 +901,7 @@ void CreateButtonRunSumatra(HWND hwndParent)
                         x, y, buttonDx, buttonDy, hwndParent, 
                         (HMENU)ID_BUTTON_START_SUMATRA,
                         ghinst, NULL);
-    Window_SetFont(gHwndButtonRunSumatra, gFontDefault);
+    Win::SetFont(gHwndButtonRunSumatra, gFontDefault);
 }
 
 static DWORD WINAPI InstallerThread(LPVOID data)
@@ -1599,7 +1599,7 @@ void OnCreateUninstaller(HWND hwnd)
                         BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
                         x, y, buttonDx, buttonDy, hwnd,
                         (HMENU)ID_BUTTON_UNINSTALL, ghinst, NULL);
-    Window_SetFont(gHwndButtonUninstall, gFontDefault);
+    Win::SetFont(gHwndButtonUninstall, gFontDefault);
 }
 
 static LRESULT CALLBACK UninstallerWndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -1685,30 +1685,30 @@ void OnCreateInstaller(HWND hwnd)
                         BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
                         x, y, buttonDx, buttonDy, hwnd, 
                         (HMENU)ID_BUTTON_INSTALL, ghinst, NULL);
-    Window_SetFont(gHwndButtonInstall, gFontDefault);
+    Win::SetFont(gHwndButtonInstall, gFontDefault);
 
     x = 8;
     gHwndButtonOptions = CreateWindow(WC_BUTTON, _T("&Options"),
                         BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
                         x, y, 96, buttonDy, hwnd, 
                         (HMENU)ID_BUTTON_OPTIONS, ghinst, NULL);
-    Window_SetFont(gHwndButtonOptions, gFontDefault);
+    Win::SetFont(gHwndButtonOptions, gFontDefault);
 
     y = TITLE_PART_DY + x;
     gHwndStaticInstDir = CreateWindow(WC_STATIC, _T("Install ") TAPP _T(" into the following &folder:"),
                                       WS_CHILD,
                                       x, y, r.dx - 2 * x, 20, hwnd, 0, ghinst, NULL);
-    Window_SetFont(gHwndStaticInstDir, gFontDefault);
+    Win::SetFont(gHwndStaticInstDir, gFontDefault);
     y += 20;
 
     gHwndTextboxInstDir = CreateWindow(WC_EDIT, gGlobalData.installDir,
                                        WS_CHILD | WS_TABSTOP | WS_BORDER | ES_LEFT | ES_AUTOHSCROLL,
                                        x, y, r.dx - 3 * x - 20, 20, hwnd, 0, ghinst, NULL);
-    Window_SetFont(gHwndTextboxInstDir, gFontDefault);
+    Win::SetFont(gHwndTextboxInstDir, gFontDefault);
     gHwndButtonBrowseDir = CreateWindow(WC_BUTTON, _T("&..."),
                                         BS_PUSHBUTTON | WS_CHILD | WS_TABSTOP,
                                         r.dx - x - 20, y, 20, 20, hwnd, (HMENU)ID_BUTTON_BROWSE, ghinst, NULL);
-    Window_SetFont(gHwndButtonBrowseDir, gFontDefault);
+    Win::SetFont(gHwndButtonBrowseDir, gFontDefault);
     y += 40;
 
     ScopedMem<TCHAR> defaultViewer(GetDefaultPdfViewer());
@@ -1722,7 +1722,7 @@ void OnCreateInstaller(HWND hwnd)
             WC_BUTTON, _T("Use ") TAPP _T(" as the &default PDF reader"),
             WS_CHILD | BS_AUTOCHECKBOX | WS_TABSTOP,
             x, y, r.dx - 2 * x, 22, hwnd, (HMENU)ID_CHECKBOX_MAKE_DEFAULT, ghinst, NULL);
-        Window_SetFont(gHwndCheckboxRegisterDefault, gFontDefault);
+        Win::SetFont(gHwndCheckboxRegisterDefault, gFontDefault);
         // only check the "Use as default" checkbox when no other PDF viewer
         // is currently selected (not going to intrude)
         Button_SetCheck(gHwndCheckboxRegisterDefault, !hasOtherViewer || gGlobalData.registerAsDefault);
@@ -1733,7 +1733,7 @@ void OnCreateInstaller(HWND hwnd)
         WC_BUTTON, _T("Install PDF &browser plugin for Firefox, Chrome and Opera"),
         WS_CHILD | BS_AUTOCHECKBOX | WS_TABSTOP,
         x, y, r.dx - 2 * x, 22, hwnd, (HMENU)ID_CHECKBOX_BROWSER_PLUGIN, ghinst, NULL);
-    Window_SetFont(gHwndCheckboxRegisterBrowserPlugin, gFontDefault);
+    Win::SetFont(gHwndCheckboxRegisterBrowserPlugin, gFontDefault);
     Button_SetCheck(gHwndCheckboxRegisterBrowserPlugin, gGlobalData.installBrowserPlugin || IsBrowserPluginInstalled());
     y += 22;
 
@@ -1741,7 +1741,7 @@ void OnCreateInstaller(HWND hwnd)
         WC_BUTTON, _T("Let Windows Desktop Search &search PDF documents"),
         WS_CHILD | BS_AUTOCHECKBOX | WS_TABSTOP,
         x, y, r.dx - 2 * x, 22, hwnd, (HMENU)ID_CHECKBOX_PDF_FILTER, ghinst, NULL);
-    Window_SetFont(gHwndCheckboxRegisterPdfFilter, gFontDefault);
+    Win::SetFont(gHwndCheckboxRegisterPdfFilter, gFontDefault);
     Button_SetCheck(gHwndCheckboxRegisterPdfFilter, gGlobalData.installPdfFilter || IsPdfFilterInstalled());
 
     gShowOptions = !gShowOptions;
@@ -1959,15 +1959,6 @@ int RunApp()
         }
     }
 }
-
-class ScopedGdiPlus {
-protected:
-    GdiplusStartupInput si;
-    ULONG_PTR           token;
-public:
-    ScopedGdiPlus()  { GdiplusStartup(&token, &si, NULL); }
-    ~ScopedGdiPlus() { GdiplusShutdown(token); }
-};
 
 void ShowUsage()
 {

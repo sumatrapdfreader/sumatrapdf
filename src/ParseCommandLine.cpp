@@ -10,38 +10,6 @@
 #include "Benchmark.h"
 #include "WindowInfo.h"
 
-bool gPluginMode = false;
-
-void MakePluginWindow(WindowInfo *win, HWND hwndParent)
-{
-    assert(IsWindow(hwndParent));
-    assert(gPluginMode);
-
-    long ws = GetWindowLong(win->hwndFrame, GWL_STYLE);
-    ws &= ~(WS_POPUP|WS_BORDER|WS_CAPTION|WS_THICKFRAME);
-    ws |= WS_CHILD;
-    SetWindowLong(win->hwndFrame, GWL_STYLE, ws);
-
-    SetParent(win->hwndFrame, hwndParent);
-    ClientRect rc(hwndParent);
-    MoveWindow(win->hwndFrame, 0, 0, rc.dx, rc.dy, FALSE);
-    ShowWindow(win->hwndFrame, SW_SHOW);
-
-    // from here on, we depend on the plugin's host to resize us
-    SetFocus(win->hwndFrame);
-}
-
-/* Get the name of default printer or NULL if not exists.
-   The caller needs to free() the result */
-static TCHAR *GetDefaultPrinterName()
-{
-    TCHAR buf[512];
-    DWORD bufSize = dimof(buf);
-    if (GetDefaultPrinter(buf, &bufSize))
-        return Str::Dup(buf);
-    return NULL;
-}
-
 #ifdef DEBUG
 static void EnumeratePrinters()
 {
