@@ -1,3 +1,6 @@
+/* Copyright 2006-2011 the SumatraPDF project authors (see ../AUTHORS file).
+   License: FreeBSD (see ./COPYING) */
+
 #ifndef SimpleLog_h
 #define SimpleLog_h
 
@@ -7,74 +10,51 @@ namespace Log {
 
 class Logger {
 public:
-	virtual ~Logger();
-	virtual void Log(char *s, bool takeOwnership=false) = 0;
+    virtual ~Logger() { }
+    virtual void Log(TCHAR *s, bool takeOwnership=false) = 0;
 };
 
-class FileLogger : Logger {
-
-	FILE *	fp;
-	TCHAR *	fileName;
-	bool 	failedToOpen;
-
-	bool OpenLogFile()
-	{
-		if (failedToOpen)
-			return false;
-		fp = _tfopen(fileName, _T("ab"));
-		if (!fp)
-			failedToOpen = true;
-		return !failedToOpen;
-	}
+class FileLogger : public Logger {
+    HANDLE fh;
 
 public:
-	FileLogger(TCHAR *fileName)
-	{
-		this->fileName = Str::Dup(fileName);
-		fp = NULL;
-		failedToOpen = false;
-	}
+    FileLogger(const TCHAR *fileName)
+    {
+        fh = CreateFile(fileName, FILE_APPEND_DATA, FILE_SHARE_READ, NULL,
+                        OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    }
+    FileLogger(HANDLE fh) : fh(fh) { }
+    virtual ~FileLogger() { CloseHandle(fh); }
 
-	virtual ~FileLogger()
-	{
-		if (fp)
-			fclose(fp);
-		free(fileName);
-	}
-
-	virtual void Log(char *s, bool takeOwnership=false)
-	{
-		if (!OpenLogFile())
-			return;
-		fwrite(s, Str::Len(s), 1, fp);
-		fflush(fp);
-		if (takeOwnership)
-			free(s);
-	}
+    virtual void Log(TCHAR *s, bool takeOwnership=false)
+    {
+        ScopedMem<char> utf8s(Str::Conv::ToUtf8(s));
+        if (utf8s && INVALID_HANDLE_VALUE != fh) {
+            DWORD len;
+            BOOL ok = WriteFile(fh, utf8s.Get(), Str::Len(utf8s), &len, NULL);
+            if (ok)
+                WriteFile(fh, "\r\n", 2, &len, NULL);
+        }
+        if (takeOwnership)
+            free(s);
+    }
 };
 
-class MemoryLogger : Logger {
-	Vec<char *> lines;
+class MemoryLogger : public Logger {
+    StrVec  lines;
+
 public:
-	MemoryLogger()
-	{
-	}
+    virtual void Log(TCHAR *s, bool takeOwnership=false)
+    {
+        TCHAR *tmp = s;
+        if (!takeOwnership)
+            tmp = Str::Dup(s);
+        if (tmp)
+            lines.Append(tmp);
+    }
 
-	virtual ~MemoryLogger()
-	{
-		FreeVecMembers(lines);
-	}
-
-	virtual void Log(char* s, bool takeOwnership=false)
-	{
-		char *tmp = s;
-		if (!takeOwnership)
-			tmp = Str::Dup(s);
-		if (tmp)
-			lines.Append(tmp);
-	}
-
-	// TODO: some way to get the lines as text ?
+    // caller has to free() the result
+    TCHAR *GetLines() { return lines.Join(_T("\r\n")); }
 };
 
 void Initialize();
@@ -83,8 +63,8 @@ void Destroy();
 void AddLogger(Logger *);
 void RemoveLogger(Logger *);
 
-void Log(char *s, bool takeOwnership=false);
-void LogFmt(char *fmt, ...);
+void Log(TCHAR *s, bool takeOwnership=false);
+void LogFmt(TCHAR *fmt, ...);
 
 } // namespace Log
 

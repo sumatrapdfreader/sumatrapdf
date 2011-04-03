@@ -338,6 +338,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\baseutils\SimpleLog.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\SimpleLog.h"
+				>
+			</File>
+			<File
 				RelativePath=".\baseutils\StrUtil.cpp"
 				>
 			</File>

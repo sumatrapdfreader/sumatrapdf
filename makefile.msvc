@@ -317,7 +317,8 @@ $(O)\UnitTests.obj: mupdf\mupdf\mupdf.h src\AppTools.h src\DisplayState.h
 $(O)\UnitTests.obj: src\ParseCommandLine.h src\PdfEngine.h src\PdfSearch.h
 $(O)\UnitTests.obj: src\PdfSelection.h src\WindowInfo.h
 $(O)\UtilTests.obj: baseutils\BaseUtil.h baseutils\BencUtil.h baseutils\FileUtil.h
-$(O)\UtilTests.obj: baseutils\GeomUtil.h baseutils\StrUtil.h baseutils\Vec.h
+$(O)\UtilTests.obj: baseutils\GeomUtil.h baseutils\SimpleLog.h baseutils\StrUtil.h
+$(O)\UtilTests.obj: baseutils\Vec.h
 $(O)\WindowInfo.obj: baseutils\BaseUtil.h baseutils\FileUtil.h baseutils\GeomUtil.h
 $(O)\WindowInfo.obj: baseutils\StrUtil.h baseutils\Vec.h baseutils\WinUtil.h
 $(O)\WindowInfo.obj: mupdf\fitz\fitz.h mupdf\mupdf\mupdf.h src\ComicBook.h

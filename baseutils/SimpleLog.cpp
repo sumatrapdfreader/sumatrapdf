@@ -1,3 +1,5 @@
+/* Copyright 2006-2011 the SumatraPDF project authors (see ../AUTHORS file).
+   License: FreeBSD (see ./COPYING) */
 
 #include "SimpleLog.h"
 #include "Vec.h"
@@ -35,7 +37,7 @@ void RemoveLogger(Logger *logger)
     g_loggers->Remove(logger);
 }
 
-void Log(char *s, bool takeOwnership)
+void Log(TCHAR *s, bool takeOwnership)
 {
     if (0 == g_loggers->Count())
         return;
@@ -47,14 +49,14 @@ void Log(char *s, bool takeOwnership)
     }
 }
 
-void LogFmt(char *fmt, ...)
+void LogFmt(TCHAR *fmt, ...)
 {
     if (0 == g_loggers->Count())
         return;
 
     va_list args;
     va_start(args, fmt);
-    char *s = Str::FmtV(fmt, args);
+    TCHAR *s = Str::FmtV(fmt, args);
     Log(s, true);
     va_end(args);
 }

@@ -514,4 +514,3 @@ exit:
     DdeFreeStringHandle(inst, hszServer);
     DdeUninitialize(inst);
 }
-

@@ -9,6 +9,7 @@
 #include "GeomUtil.h"
 #include "StrUtil.h"
 #include "Vec.h"
+#include "SimpleLog.h"
 #include <time.h>
 
 static void GeomTest()
@@ -384,6 +385,41 @@ static void VecTest()
     }
 }
 
+static void LogTest()
+{
+    Log::Initialize();
+    {
+        Log::MemoryLogger ml;
+        Log::AddLogger(&ml);
+        Log::Log(_T("Test"));
+        Log::LogFmt(_T("%s : %d"), _T("filen\xE4me.pdf"), 25);
+        Log::RemoveLogger(&ml);
+
+        ScopedMem<TCHAR> log(ml.GetLines());
+        assert(Str::Eq(log, _T("Test\r\nfilen\xE4me.pdf : 25")));
+    }
+
+    {
+        HANDLE hRead, hWrite;
+        CreatePipe(&hRead, &hWrite, NULL, 0);
+        Log::FileLogger fl(hWrite);
+        Log::AddLogger(&fl);
+        Log::Log(_T("Test"));
+        Log::LogFmt(_T("%s : %d"), _T("filen\xE4me.pdf"), 25);
+        Log::RemoveLogger(&fl);
+
+        char pipeData[32];
+        char *expected = "Test\r\nfilen\xC3\xA4me.pdf : 25\r\n";
+        DWORD len;
+        BOOL ok = ReadFile(hRead, pipeData, sizeof(pipeData), &len, NULL);
+        assert(ok && len == Str::Len(expected));
+        pipeData[len] = '\0';
+        assert(Str::Eq(pipeData, expected));
+        CloseHandle(hRead);
+    }
+    Log::Destroy();
+}
+
 static void BencTestSerialization(BencObj *obj, const char *dataOrig)
 {
     ScopedMem<char> data(obj->Encode());
@@ -624,6 +660,7 @@ void BaseUtils_UnitTests(void)
     FileUtilTest();
     VecTest();
     StrVecTest();
+    LogTest();
     BencTestParseInt();
     BencTestParseString();
     BencTestParseArrays();
