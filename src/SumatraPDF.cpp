@@ -88,7 +88,6 @@ bool                    gPluginMode = false;
 
 #define DEFAULT_DISPLAY_MODE    DM_AUTOMATIC
 #define DEFAULT_ZOOM            ZOOM_FIT_PAGE
-#define DEFAULT_ROTATION        0
 #define DEFAULT_LANGUAGE        "en"
 
 #if defined(SVN_PRE_RELEASE_VER) && !defined(BLACK_ON_YELLOW)
@@ -157,7 +156,7 @@ static HBITMAP                      gBitmapReloadingCue;
 
 static RenderCache                  gRenderCache;
        Vec<WindowInfo*>             gWindows;
-static FileHistory                  gFileHistory;
+       FileHistory                  gFileHistory;
 static UIThreadWorkItemQueue        gUIThreadMarshaller;
 
 static int                          gReBarDy;
@@ -240,7 +239,6 @@ static void WindowInfo_ShowMessage_Async(WindowInfo *win, const TCHAR *message, 
 
 static void DeleteOldSelectionInfo(WindowInfo *win);
 static void ClearSearch(WindowInfo *win);
-static void WindowInfo_EnterFullscreen(WindowInfo *win, bool presentation=false);
 static void WindowInfo_ExitFullscreen(WindowInfo *win);
 
 extern "C" {
@@ -1160,7 +1158,7 @@ static void MenuUpdateStateForWindow(WindowInfo *win) {
     }
 }
 
-static void UpdateToolbarAndScrollbarsForAllWindows(void) 
+void UpdateToolbarAndScrollbarsForAllWindows()
 {
     for (size_t i = 0; i < gWindows.Count(); i++)
     {
@@ -1345,7 +1343,7 @@ static bool LoadPdfIntoWindow(
        on this being a cached value, not the real value at the time of calling */
     win->UpdateCanvasSize();
 
-    DisplayModel *previousmodel = win->dm;
+    DisplayModel *prevModel = win->dm;
     win->AbortFinding();
     delete win->pdfsync;
     win->pdfsync = NULL;
@@ -1361,18 +1359,18 @@ static bool LoadPdfIntoWindow(
         // if there is an error while reading the pdf and pdfrepair is not requested
         // then fallback to the previous state
         if (!tryRepair) {
-            win->dm = previousmodel;
+            win->dm = prevModel;
         } else {
-            delete previousmodel;
+            delete prevModel;
             ScopedMem<TCHAR> title(Str::Format(_T("%s - %s"), Path::GetBaseName(fileName), SUMATRA_WINDOW_TITLE));
             Win::SetText(win->hwndFrame, title);
             goto Error;
         }
     } else {
         assert(win->PdfLoaded());
-        if (previousmodel && Str::Eq(win->dm->fileName(), previousmodel->fileName()))
-            gRenderCache.KeepForDisplayModel(previousmodel, win->dm);
-        delete previousmodel;
+        if (prevModel && Str::Eq(win->dm->fileName(), prevModel->fileName()))
+            gRenderCache.KeepForDisplayModel(prevModel, win->dm);
+        delete prevModel;
         win->prevCanvasSize.dx = win->prevCanvasSize.dy = -1;
     }
 
@@ -1517,7 +1515,7 @@ public:
 };
 
 #ifndef THREAD_BASED_FILEWATCH
-static void RefreshUpdatedFiles(void) {
+static void RefreshUpdatedFiles() {
     for (size_t i = 0; i < gWindows.Count(); i++) {
         WindowInfo *win = gWindows[i];
         if (win->watcher)
@@ -1526,7 +1524,7 @@ static void RefreshUpdatedFiles(void) {
 }
 #endif
 
-static void CheckPositionAndSize(DisplayState* ds)
+void CheckPositionAndSize(DisplayState *ds)
 {
     if (!ds)
         return;
@@ -1550,10 +1548,10 @@ static WindowInfo* LoadPdf(const TCHAR *fileName, WindowInfo *win, bool showWin,
         win = gWindows[0];
     }
     else if (!win || win->PdfLoaded() && !forceReuse) {
-        isNewWindow = true;
         win = WindowInfo_CreateEmpty();
         if (!win)
             return NULL;
+        isNewWindow = true;
     }
 
     DisplayState *ds = gFileHistory.Find(fullpath);
@@ -4035,7 +4033,7 @@ static void OnMenuViewRotateRight(WindowInfo *win)
     RotateRight(win);
 }
 
-static void WindowInfo_EnterFullscreen(WindowInfo *win, bool presentation)
+void WindowInfo_EnterFullscreen(WindowInfo *win, bool presentation)
 {
     if ((presentation ? win->presentation : win->fullScreen) ||
         !IsWindowVisible(win->hwndFrame) || gPluginMode)

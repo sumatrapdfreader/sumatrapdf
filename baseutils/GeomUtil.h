@@ -155,4 +155,14 @@ typedef Rect<int> RectI;
 typedef Rect<float> RectF;
 typedef Rect<double> RectD;
 
+/* The current scroll state (needed for saving/restoring the scroll position) */
+/* coordinates are in user space units (per page) */
+class ScrollState : public PointD
+{
+public:
+    ScrollState() : PointD(), page(0) { }
+    ScrollState(int page, double x, double y) : PointD(x, y), page(page) { }
+    int page;
+};
+
 #endif

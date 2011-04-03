@@ -13,6 +13,7 @@
 class DisplayModel;
 class FileWatcher;
 class Synchronizer;
+class ComicBookPage;
 
 #if 0
 // TODO: WindowInfoType is meant to replace WinState
@@ -59,8 +60,10 @@ public:
     WindowInfo(HWND hwnd);
     ~WindowInfo();
 
+    // TODO: misleading name, it also applies to error window
     bool IsAboutWindow() const { return !loadedFilePath; }
     bool PdfLoaded() const { return this->dm != NULL; }
+    bool ComicBookLoaded() const { return comicPages != NULL; }
 
     TCHAR *         loadedFilePath;
     bool            threadStressRunning;
@@ -174,6 +177,9 @@ public:
                         int page;
                         int hideStep;       // value used to gradually hide the markers
                     } fwdsearchmark;
+
+    // Stuff related to comic book handling
+    Vec<ComicBookPage*> *comicPages;
 
     void FocusPageNoEdit();
     void UpdateToolbarState();

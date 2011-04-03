@@ -25,11 +25,17 @@
 #define SUMATRA_WINDOW_TITLE    _T("SumatraPDF")
 #define CANVAS_CLASS_NAME       _T("SUMATRA_PDF_CANVAS")
 
+#define DEFAULT_ROTATION        0
+
 class WindowInfo;
+class DisplayState;
 
 extern HINSTANCE ghinst;
 extern Vec<WindowInfo*> gWindows;
 HMENU BuildMenu(HWND hWnd);
 void CreateToolbar(WindowInfo *win, HINSTANCE hInst);
+void UpdateToolbarAndScrollbarsForAllWindows();
+void WindowInfo_EnterFullscreen(WindowInfo *win, bool presentation=false);
+void CheckPositionAndSize(DisplayState *ds);
 
 #endif

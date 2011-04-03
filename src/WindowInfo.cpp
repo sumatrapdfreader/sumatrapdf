@@ -9,6 +9,7 @@
 #include "StrUtil.h"
 #include "WinUtil.h"
 #include "FileWatch.h"
+#include "ComicBook.h"
 
 WindowInfo::WindowInfo(HWND hwnd) :
     dm(NULL), hwndFrame(hwnd),
@@ -29,7 +30,8 @@ WindowInfo::WindowInfo(HWND hwnd) :
     loadedFilePath(NULL), currPageNo(0),
     xScrollSpeed(0), yScrollSpeed(0), wheelAccumDelta(0),
     delayedRepaintTimer(0), resizingTocBox(false), watcher(NULL),
-    pdfsync(NULL), threadStressRunning(false)
+    pdfsync(NULL), threadStressRunning(false),
+    comicPages(NULL)
 {
     ZeroMemory(&selectionRect, sizeof(selectionRect));
     prevCanvasSize.dx = prevCanvasSize.dy = -1;
@@ -58,6 +60,11 @@ WindowInfo::~WindowInfo() {
 
     delete this->tocRoot;
     free(this->tocState);
+
+    if (comicPages) {
+        DeleteVecMembers(*comicPages);
+        delete comicPages;
+    }
 }
 
 void WindowInfo::UpdateCanvasSize()

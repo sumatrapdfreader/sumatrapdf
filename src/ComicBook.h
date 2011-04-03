@@ -7,6 +7,17 @@
 #include "BaseUtil.h"
 #include "GeomUtil.h"
 
+class ComicBookPage {
+public:
+    ComicBookPage(Gdiplus::Bitmap *bmp) :
+        bmp(bmp),  w(bmp->GetWidth()), h(bmp->GetHeight())
+    {
+    }
+
+    int                 w, h;
+    Gdiplus::Bitmap *   bmp;
+};
+
 class WindowInfo;
 
 bool        IsComicBook(const TCHAR *fileName);

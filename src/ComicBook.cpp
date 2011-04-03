@@ -7,8 +7,11 @@
 #include "StrUtil.h"
 #include "Vec.h"
 #include "WinUtil.h"
+#include "FileUtil.h"
 #include "WindowInfo.h"
 #include "AppPrefs.h"
+#include "FileHistory.h"
+#include "AppTools.h"
 
 // mini(un)zip
 #include <ioapi.h>
@@ -16,14 +19,6 @@
 #include <unzip.h>
 
 using namespace Gdiplus;
-
-class ComicBookPage {
-public:
-    ComicBookPage(Bitmap *bmp) : bmp(bmp), w(bmp->GetWidth()), h(bmp->GetHeight()) { }
-
-    int         w, h;
-    Bitmap *    bmp;
-};
 
 bool IsComicBook(const TCHAR *fileName)
 {
@@ -161,7 +156,7 @@ WindowInfo* CreateEmptyComicBookWindow()
         return NULL;
     // hide scrollbars to avoid showing/hiding on empty window
     ShowScrollBar(hwndCanvas, SB_BOTH, FALSE);
-    win->menu = BuildMenu(win->hwndFrame);
+    win->menu = BuildMenu(win->hwndFrame); // TODO: probably BuildComicBookMenu()
 
     win->hwndCanvas = hwndCanvas;
     ShowWindow(win->hwndCanvas, SW_SHOW);
@@ -172,32 +167,29 @@ WindowInfo* CreateEmptyComicBookWindow()
         CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
         win->hwndCanvas, NULL, ghinst, NULL);
 
-    CreateToolbar(win, ghinst);
+    CreateToolbar(win, ghinst); // TODO: a different toolbar for a comic book
     DragAcceptFiles(win->hwndCanvas, TRUE);
 
     gWindows.Append(win);
     return win;
 }
 
-// Load *.cbz / *.cbr file
-// TODO: far from being done
-WindowInfo *LoadComicBook(const TCHAR *fileName, WindowInfo *win, bool showWin)
-{    
+static Vec<ComicBookPage*> *LoadComicBookPages(const TCHAR *filePath)
+{
     zlib_filefunc64_def ffunc;
     unzFile uf;
     fill_win32_filefunc64(&ffunc);
 
     ScopedGdiPlus gdiPlus;
 
-    uf = unzOpen2_64(fileName, &ffunc);
-    if (!uf) {
-        goto Error;
-    }
+    uf = unzOpen2_64(filePath, &ffunc);
+    if (!uf)
+        goto Exit;
+
     unz_global_info64 ginfo;
     int err = unzGetGlobalInfo64(uf, &ginfo);
-    if (err != UNZ_OK) {
-        goto Error;
-    }
+    if (err != UNZ_OK)
+        goto Exit;
 
     // extract all contained files one by one
     Vec<ComicBookPage*> *pages = new Vec<ComicBookPage *>(256);
@@ -215,20 +207,159 @@ WindowInfo *LoadComicBook(const TCHAR *fileName, WindowInfo *win, bool showWin)
             break;
     }
 
-    unzClose(uf);
-    if (0 == pages->Count())
+Exit:
+    if (uf)
+        unzClose(uf);
+    if (pages && pages->Count() == 0)
     {
         delete pages;
         return NULL;
     }
+    return pages;
 
-    // TODO: open a window etc.
-    DeleteVecMembers(*pages);
-    delete pages; // for now
-    return NULL;
+}
+
+static bool LoadComicBookIntoWindow(
+    const TCHAR *filePath,
+    WindowInfo *win,
+    const DisplayState *state,
+    bool isNewWindow,    // if true then 'win' refers to a newly created window that needs to be resized and placed
+    bool showWin,          // window visible or not
+    bool placeWindow)      // if true then the Window will be moved/sized according to the 'state' information even if the window was already placed before (isNewWindow=false)
+{
+    Vec<ComicBookPage *> *pages = NULL;
+
+    // Never load settings from a preexisting state if the user doesn't wish to
+    // (unless we're just refreshing the document, i.e. only if placeWindow == true)
+    if (placeWindow && (gGlobalPrefs.m_globalPrefsOnly || state && state->useGlobalValues))
+        state = NULL;
+    DisplayMode displayMode = gGlobalPrefs.m_defaultDisplayMode;
+    size_t startPage = 1;
+    ScrollState ss(1, -1, -1);
+    bool showAsFullScreen = WIN_STATE_FULLSCREEN == gGlobalPrefs.m_windowState;
+    int showType = gGlobalPrefs.m_windowState == WIN_STATE_MAXIMIZED || showAsFullScreen ? SW_MAXIMIZE : SW_NORMAL;
+
+    if (state) {
+        startPage = state->pageNo;
+        displayMode = state->displayMode;
+        showAsFullScreen = WIN_STATE_FULLSCREEN == state->windowState;
+        if (state->windowState == WIN_STATE_NORMAL)
+            showType = SW_NORMAL;
+        else if (state->windowState == WIN_STATE_MAXIMIZED || showAsFullScreen)
+            showType = SW_MAXIMIZE;
+        else if (state->windowState == WIN_STATE_MINIMIZED)
+            showType = SW_MINIMIZE;
+    }
+    /* TODO: need to get rid of that, but not sure if that won't break something
+       i.e. UpdateCanvasSize() caches size of canvas and some code might depend
+       on this being a cached value, not the real value at the time of calling */
+    win->UpdateCanvasSize();
+
+    free(win->loadedFilePath);
+    win->loadedFilePath = Str::Dup(filePath);
+    
+    pages = LoadComicBookPages(filePath);
+    if (!pages)
+        goto Error;
+
+    win->comicPages = pages;
+    float zoomVirtual = gGlobalPrefs.m_defaultZoom;
+    int rotation = DEFAULT_ROTATION;
+
+    if (state) {
+        if (startPage >= 1 && startPage <= pages->Count()) {
+            ss.page = startPage;
+            if (ZOOM_FIT_CONTENT != state->zoomVirtual) {
+                ss.x = state->scrollPos.x;
+                ss.y = state->scrollPos.y;
+            }
+            // else relayout scroll to fit the page (again)
+        } else if (startPage > pages->Count())
+            ss.page = pages->Count();
+        zoomVirtual = state->zoomVirtual;
+        rotation = state->rotation;
+    }
+    // TODO: layout
+
+    if (!isNewWindow)
+        win->RedrawAll();
+
+
+    const TCHAR *title = Path::GetBaseName(win->loadedFilePath);
+    Win::SetText(win->hwndFrame, title);
 
 Error:
-    if (uf)
-        unzClose(uf);
-    return NULL;
+    if (isNewWindow || placeWindow && state) {
+        assert(win);
+        if (isNewWindow && state && !state->windowPos.IsEmpty()) {
+            RectI rect = state->windowPos;
+            // Make sure it doesn't have a position like outside of the screen etc.
+            rect_shift_to_work_area(&rect.ToRECT(), FALSE);
+            // This shouldn't happen until !win->IsAboutWindow(), so that we don't
+            // accidentally update gGlobalState with this window's dimensions
+            MoveWindow(win->hwndFrame, rect.x, rect.y, rect.dx, rect.dy, TRUE);
+        }
+
+        if (showWin) {
+            ShowWindow(win->hwndFrame, showType);
+        }
+        UpdateWindow(win->hwndFrame);
+    }
+
+//    if (win->ComicBookLoaded())
+//        win->dm->setScrollState(&ss);
+
+    UpdateToolbarAndScrollbarsForAllWindows();
+    if (!win->ComicBookLoaded()) {
+        win->RedrawAll();
+        return false;
+    }
+    // This should only happen after everything else is ready
+    if ((isNewWindow || placeWindow) && showWin && showAsFullScreen)
+        WindowInfo_EnterFullscreen(win);
+
+//    if (!isNewWindow && win->presentation && win->dm)
+//        win->dm->setPresentationMode(true);
+
+    return true;
 }
+
+// Load *.cbz / *.cbr file
+// TODO: far from being done
+WindowInfo *LoadComicBook(const TCHAR *fileName, WindowInfo *win, bool showWin)
+{
+    ScopedMem<TCHAR> filePath(Path::Normalize(fileName));
+    if (!filePath)
+        return win;
+
+    bool isNewWindow = false;
+    if (!win && 1 == gWindows.Count() && gWindows[0]->IsAboutWindow()) {
+        win = gWindows[0];
+    } if (!win || win->PdfLoaded()) { // TODO: PdfLoaded probably a bad check
+        win = CreateEmptyComicBookWindow();
+        if (!win)
+            return NULL;
+        isNewWindow = true;
+    }
+
+    DisplayState *ds = gFileHistory.Find(filePath);
+    if (ds) {
+        AdjustRemovableDriveLetter(filePath);
+        CheckPositionAndSize(ds);
+    }
+
+    if (!LoadComicBookIntoWindow(filePath, win, ds, isNewWindow, showWin, true)) {
+        /* failed to open */
+        gFileHistory.MarkFileInexistent(filePath);
+        return win;
+    }
+
+    if (gGlobalPrefs.m_rememberOpenedFiles)
+        gFileHistory.MarkFileLoaded(filePath);
+
+    // Add the file also to Windows' recently used documents (this doesn't
+    // happen automatically on drag&drop, reopening from history, etc.)
+    SHAddToRecentDocs(SHARD_PATH, filePath);
+    return win;
+}
+

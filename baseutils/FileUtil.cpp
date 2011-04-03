@@ -12,6 +12,7 @@ static inline bool IsSep(TCHAR c)
     return '\\' == c || '//' == c;
 }
 
+// Note: returns pointer inside <path>, do not free
 const TCHAR *GetBaseName(const TCHAR *path)
 {
     const TCHAR *fileBaseName = path + Str::Len(path);

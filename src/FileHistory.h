@@ -86,4 +86,7 @@ public:
     }
 };
 
+// in SumatraPDF.cpp
+extern FileHistory gFileHistory;
+
 #endif

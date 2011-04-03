@@ -85,16 +85,6 @@ typedef struct PdfPageInfo {
     RectI           pageOnScreen;
 } PdfPageInfo;
 
-/* The current scroll state (needed for saving/restoring the scroll position) */
-/* coordinates are in user space units (per page) */
-class ScrollState : public PointD {
-public:
-    ScrollState() : PointD(), page(0) { }
-    ScrollState(int page, double x, double y) : PointD(x, y), page(page) { }
-
-    int page;
-};
-
 /* Information needed to drive the display of a given PDF document on a screen.
    You can think of it as a model in the MVC pardigm.
    All the display changes should be done through changing this model via
