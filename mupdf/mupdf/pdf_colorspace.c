@@ -246,8 +246,10 @@ loadindexed(fz_colorspace **csp, pdf_xref *xref, fz_obj *array)
 	idx = fz_malloc(sizeof(struct indexed));
 	idx->base = base;
 	idx->high = fz_toint(highobj);
+	idx->high = CLAMP(idx->high, 0, 255);
 	n = base->n * (idx->high + 1);
 	idx->lookup = fz_malloc(n);
+	memset(idx->lookup, 0, n);
 
 	cs = fz_newcolorspace("Indexed", 1);
 	cs->toxyz = indexedtoxyz;

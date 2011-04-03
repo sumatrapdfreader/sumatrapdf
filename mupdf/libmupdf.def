@@ -86,7 +86,6 @@ EXPORTS
 	fz_isdict
 	fz_isindirect
 	fz_objcmp
-	fz_resolveindirect
 	fz_tobool
 	fz_toint
 	fz_toreal
@@ -155,6 +154,7 @@ EXPORTS
 	fz_droppixmap
 	fz_clearpixmap
 	fz_clearpixmapwithcolor
+	fz_premultiplypixmap
 	fz_alphafromgray
 	fz_boundpixmap
 	fz_scalepixmap
@@ -185,6 +185,7 @@ EXPORTS
 	fz_curvetoy
 	fz_closepath
 	fz_freepath
+	fz_transformpath
 	fz_clonepath
 	fz_boundpath
 	fz_debugpath
@@ -274,6 +275,7 @@ EXPORTS
 	pdf_needspassword
 	pdf_authenticatepassword
 	pdf_debugcrypt
+	pdf_resolveindirect
 	pdf_cacheobject
 	pdf_loadobject
 	pdf_updateobject
@@ -396,6 +398,66 @@ EXPORTS
 	pdf_runglyph
 	pdf_keepmaterial
 	pdf_dropmaterial
+
+; MuXPS exports
+
+	xps_strcasecmp
+	xps_absolute_path
+	xps_hash_new
+	xps_hash_lookup
+	xps_hash_insert
+	xps_hash_free
+	xps_hash_debug
+	xml_parse_document
+	xml_next
+	xml_down
+	xml_tag
+	xml_att
+	xml_free_element
+	xml_print_element
+	xps_new_part
+	xps_read_part
+	xps_free_part
+	xps_read_page_list
+	xps_debug_page_list
+	xps_free_page_list
+	xps_count_pages
+	xps_load_page
+	xps_free_page
+	xps_decode_jpeg
+	xps_decode_png
+	xps_decode_tiff
+	xps_count_font_encodings
+	xps_identify_font_encoding
+	xps_select_font_encoding
+	xps_encode_font_char
+	xps_measure_font_glyph
+	xps_parse_color
+	xps_set_color
+	xps_parse_resource_dictionary
+	xps_free_resource_dictionary
+	xps_resolve_resource_reference
+	xps_debug_resource_dictionary
+	xps_parse_fixed_page
+	xps_parse_canvas
+	xps_parse_path
+	xps_parse_glyphs
+	xps_parse_image_brush
+	xps_parse_visual_brush
+	xps_parse_linear_gradient_brush
+	xps_parse_radial_gradient_brush
+	xps_parse_tiling_brush
+	xps_parse_matrix_transform
+	xps_parse_render_transform
+	xps_parse_rectangle
+	xps_begin_opacity
+	xps_end_opacity
+	xps_parse_brush
+	xps_parse_element
+	xps_clip
+	xps_new_context
+	xps_open_file
+	xps_free_context
 
 ; zlib exports
 

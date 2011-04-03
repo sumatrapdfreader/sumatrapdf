@@ -171,6 +171,42 @@ fz_boundpath(fz_path *path, fz_strokestate *stroke, fz_matrix ctm)
 }
 
 void
+fz_transformpath(fz_path *path, fz_matrix ctm)
+{
+	fz_point p;
+	int k, i = 0;
+
+	while (i < path->len)
+	{
+		switch (path->els[i++].k)
+		{
+		case FZ_CURVETO:
+			for (k = 0; k < 3; k++)
+			{
+				p.x = path->els[i].v;
+				p.y = path->els[i+1].v;
+				p = fz_transformpoint(ctm, p);
+				path->els[i].v = p.x;
+				path->els[i+1].v = p.y;
+				i += 2;
+			}
+			break;
+		case FZ_MOVETO:
+		case FZ_LINETO:
+			p.x = path->els[i].v;
+			p.y = path->els[i+1].v;
+			p = fz_transformpoint(ctm, p);
+			path->els[i].v = p.x;
+			path->els[i+1].v = p.y;
+			i += 2;
+			break;
+		case FZ_CLOSEPATH:
+			break;
+		}
+	}
+}
+
+void
 fz_debugpath(fz_path *path, int indent)
 {
 	float x, y;

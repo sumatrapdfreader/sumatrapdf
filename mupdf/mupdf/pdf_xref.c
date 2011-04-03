@@ -535,6 +535,9 @@ pdf_openxrefwithstream(pdf_xref **xrefp, fz_stream *file, char *password)
 	fz_obj *dict, *obj;
 	int i, repaired = 0;
 
+	/* install pdf specific callback */
+	fz_resolveindirect = pdf_resolveindirect;
+
 	xref = fz_malloc(sizeof(pdf_xref));
 
 	memset(xref, 0, sizeof(pdf_xref));
@@ -891,6 +894,30 @@ pdf_loadobject(fz_obj **objp, pdf_xref *xref, int num, int gen)
 	*objp = fz_keepobj(xref->table[num].obj);
 
 	return fz_okay;
+}
+
+/* SumatraPDF: allow access to pdf_resolveindirect when building as libmupdf.dll */
+fz_obj *
+pdf_resolveindirect(fz_obj *ref)
+{
+	if (fz_isindirect(ref))
+	{
+		pdf_xref *xref = ref->u.r.xref;
+		int num = fz_tonum(ref);
+		int gen = fz_togen(ref);
+		if (xref)
+		{
+			fz_error error = pdf_cacheobject(xref, num, gen);
+			if (error)
+			{
+				fz_catch(error, "cannot load object (%d %d R) into cache", num, gen);
+				return ref;
+			}
+			if (xref->table[num].obj)
+				return xref->table[num].obj;
+		}
+	}
+	return ref;
 }
 
 /* Replace numbered object -- for use by pdfclean and similar tools */

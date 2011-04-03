@@ -1,8 +1,14 @@
 #include "fitz.h"
-#include "mupdf.h" /* for pdf_loadobject */
 
 extern void fz_freearray(fz_obj *array);
 extern void fz_freedict(fz_obj *dict);
+
+static fz_obj *fz_resolve_indirect_null(fz_obj *ref)
+{
+	return ref;
+}
+
+fz_obj* (*fz_resolveindirect)(fz_obj*) = fz_resolve_indirect_null;
 
 fz_obj *
 fz_newnull(void)
@@ -66,7 +72,7 @@ fz_newname(char *str)
 }
 
 fz_obj *
-fz_newindirect(int num, int gen, pdf_xref *xref)
+fz_newindirect(int num, int gen, void *xref)
 {
 	fz_obj *o = fz_malloc(sizeof(fz_obj));
 	o->refs = 1;
@@ -217,28 +223,6 @@ int fz_togen(fz_obj *obj)
 	if (fz_isindirect(obj))
 		return obj->u.r.gen;
 	return 0;
-}
-
-fz_obj *fz_resolveindirect(fz_obj *ref)
-{
-	if (fz_isindirect(ref))
-	{
-		pdf_xref *xref = ref->u.r.xref;
-		int num = fz_tonum(ref);
-		int gen = fz_togen(ref);
-		if (xref)
-		{
-			fz_error error = pdf_cacheobject(xref, num, gen);
-			if (error)
-			{
-				fz_catch(error, "cannot load object (%d %d R) into cache", num, gen);
-				return ref;
-			}
-			if (xref->table[num].obj)
-				return xref->table[num].obj;
-		}
-	}
-	return ref;
 }
 
 int

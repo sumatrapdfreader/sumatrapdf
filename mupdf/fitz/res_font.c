@@ -176,6 +176,7 @@ fz_finalizefreetype(void)
 fz_error
 fz_newfontfromfile(fz_font **fontp, char *path, int index)
 {
+	FT_Face face;
 	fz_error error;
 	fz_font *font;
 	int fterr;
@@ -184,14 +185,16 @@ fz_newfontfromfile(fz_font **fontp, char *path, int index)
 	if (error)
 		return fz_rethrow(error, "cannot init freetype library");
 
-	font = fz_newfont();
-
-	fterr = FT_New_Face(fz_ftlib, path, index, (FT_Face*)&font->ftface);
+	fterr = FT_New_Face(fz_ftlib, path, index, &face);
 	if (fterr)
-	{
-		fz_free(font);
 		return fz_throw("freetype: cannot load font: %s", ft_errorstring(fterr));
-	}
+
+	font = fz_newfont();
+	font->ftface = face;
+	font->bbox.x0 = face->bbox.xMin * 1000 / face->units_per_EM;
+	font->bbox.y0 = face->bbox.yMin * 1000 / face->units_per_EM;
+	font->bbox.x1 = face->bbox.xMax * 1000 / face->units_per_EM;
+	font->bbox.y1 = face->bbox.yMax * 1000 / face->units_per_EM;
 
 	*fontp = font;
 	return fz_okay;
@@ -200,6 +203,7 @@ fz_newfontfromfile(fz_font **fontp, char *path, int index)
 fz_error
 fz_newfontfrombuffer(fz_font **fontp, unsigned char *data, int len, int index)
 {
+	FT_Face face;
 	fz_error error;
 	fz_font *font;
 	int fterr;
@@ -208,14 +212,16 @@ fz_newfontfrombuffer(fz_font **fontp, unsigned char *data, int len, int index)
 	if (error)
 		return fz_rethrow(error, "cannot init freetype library");
 
-	font = fz_newfont();
-
-	fterr = FT_New_Memory_Face(fz_ftlib, data, len, index, (FT_Face*)&font->ftface);
+	fterr = FT_New_Memory_Face(fz_ftlib, data, len, index, &face);
 	if (fterr)
-	{
-		fz_free(font);
 		return fz_throw("freetype: cannot load font: %s", ft_errorstring(fterr));
-	}
+
+	font = fz_newfont();
+	font->ftface = face;
+	font->bbox.x0 = face->bbox.xMin * 1000 / face->units_per_EM;
+	font->bbox.y0 = face->bbox.yMin * 1000 / face->units_per_EM;
+	font->bbox.x1 = face->bbox.xMax * 1000 / face->units_per_EM;
+	font->bbox.y1 = face->bbox.yMax * 1000 / face->units_per_EM;
 
 	*fontp = font;
 	return fz_okay;

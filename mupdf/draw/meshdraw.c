@@ -540,6 +540,7 @@ fz_paintshade(fz_shade *shade, fz_matrix ctm, fz_pixmap *dest, fz_bbox bbox)
 			fz_convertcolor(shade->colorspace, shade->function[i], dest->colorspace, color);
 			for (k = 0; k < dest->colorspace->n; k++)
 				clut[i][k] = color[k] * 255;
+			clut[i][k] = shade->function[i][shade->colorspace->n] * 255;
 		}
 		conv = fz_newpixmapwithrect(dest->colorspace, bbox);
 		temp = fz_newpixmapwithrect(fz_devicegray, bbox);
@@ -565,7 +566,7 @@ fz_paintshade(fz_shade *shade, fz_matrix ctm, fz_pixmap *dest, fz_bbox bbox)
 		while (len--)
 		{
 			int v = *s++;
-			int a = *s++;
+			int a = fz_mul255(*s++, clut[v][conv->n - 1]);
 			for (k = 0; k < conv->n - 1; k++)
 				*d++ = fz_mul255(clut[v][k], a);
 			*d++ = a;

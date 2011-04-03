@@ -29,7 +29,8 @@ OT  = $(O)\jpegturbo
 OOJ = $(O)\openjpeg
 OJB = $(O)\jbig2
 OFZ = $(O)\fitz
-OM  = $(O)\mupdf
+OP  = $(O)\mupdf
+OX  = $(O)\muxps
 OCM = $(O)\cmaps_fonts
 
 # To over-ride location of fitz/mupdf sources, define MUPDF_DIR
@@ -143,7 +144,8 @@ MUPDF_CFLAGS = $(CFLAGS) /D "NEED_MATH" /D "NEED_GETTIMEOFDAY" /D "HAVE_JBIG2DEC
 
 MUPDF_CFLAGS = $(MUPDF_CFLAGS) /D "HAVE_OPENJPEG" /I$(OPENJPEG_DIR)
 
-MUPDF_CFLAGS = $(MUPDF_CFLAGS) /I$(MUPDF_DIR)/fitz /I$(MUPDF_DIR)/mupdf /I$(MUPDF_DIR)/apps \
+MUPDF_CFLAGS = $(MUPDF_CFLAGS) \
+	/I$(MUPDF_DIR)/fitz /I$(MUPDF_DIR)/mupdf /I$(MUPDF_DIR)/xps /I$(MUPDF_DIR)/apps \
 	/I$(FREETYPE_DIR)/config /I$(FREETYPE_DIR)/include /I$(ZLIB_DIR) /I$(JBIG2_DIR)
 
 !if "$(JPEG_TURBO_DIR)"==""
@@ -260,15 +262,21 @@ FITZ_OBJS = \
 	$(OFZ)\filt_dctd.obj $(OFZ)\dev_gdiplus.obj
 
 MUPDF_OBJS = \
-	$(OM)\pdf_annot.obj $(OM)\pdf_build.obj $(OM)\pdf_cmap.obj \
-	$(OM)\pdf_colorspace.obj $(OM)\pdf_crypt.obj $(OM)\pdf_debug.obj \
-	$(OM)\pdf_font.obj $(OM)\pdf_fontagl.obj $(OM)\pdf_fontenc.obj $(OM)\pdf_fontmtx.obj \
-	$(OM)\pdf_function.obj $(OM)\pdf_image.obj $(OM)\pdf_interpret.obj $(OM)\pdf_lex.obj \
-	$(OM)\pdf_nametree.obj $(OM)\pdf_outline.obj $(OM)\pdf_page.obj $(OM)\pdf_pagetree.obj \
-	$(OM)\pdf_parse.obj $(OM)\pdf_pattern.obj $(OM)\pdf_repair.obj $(OM)\pdf_shade.obj \
-	$(OM)\pdf_store.obj $(OM)\pdf_stream.obj $(OM)\pdf_type3.obj $(OM)\pdf_unicode.obj \
-	$(OM)\pdf_xobject.obj $(OM)\pdf_xref.obj $(OM)\pdf_fontfile.obj \
-	$(OM)\pdf_cmap_load.obj $(OM)\pdf_cmap_parse.obj $(OM)\pdf_cmap_table.obj $(OM)\pdf_ft_tools.obj
+	$(OP)\pdf_annot.obj $(OP)\pdf_build.obj $(OP)\pdf_cmap.obj \
+	$(OP)\pdf_colorspace.obj $(OP)\pdf_crypt.obj $(OP)\pdf_debug.obj \
+	$(OP)\pdf_font.obj $(OP)\pdf_fontagl.obj $(OP)\pdf_fontenc.obj $(OP)\pdf_fontmtx.obj \
+	$(OP)\pdf_function.obj $(OP)\pdf_image.obj $(OP)\pdf_interpret.obj $(OP)\pdf_lex.obj \
+	$(OP)\pdf_nametree.obj $(OP)\pdf_outline.obj $(OP)\pdf_page.obj $(OP)\pdf_pagetree.obj \
+	$(OP)\pdf_parse.obj $(OP)\pdf_pattern.obj $(OP)\pdf_repair.obj $(OP)\pdf_shade.obj \
+	$(OP)\pdf_store.obj $(OP)\pdf_stream.obj $(OP)\pdf_type3.obj $(OP)\pdf_unicode.obj \
+	$(OP)\pdf_xobject.obj $(OP)\pdf_xref.obj $(OP)\pdf_fontfile.obj \
+	$(OP)\pdf_cmap_load.obj $(OP)\pdf_cmap_parse.obj $(OP)\pdf_cmap_table.obj $(OP)\pdf_ft_tools.obj
+
+MUXPS_OBJS = \
+	$(OX)\xps_common.obj $(OX)\xps_doc.obj $(OX)\xps_glyphs.obj $(OX)\xps_gradient.obj \
+	$(OX)\xps_hash.obj $(OX)\xps_image.obj $(OX)\xps_jpeg.obj $(OX)\xps_path.obj \
+	$(OX)\xps_png.obj $(OX)\xps_resource.obj $(OX)\xps_tiff.obj $(OX)\xps_tile.obj \
+	$(OX)\xps_util.obj $(OX)\xps_xml.obj $(OX)\xps_zip.obj
 
 FONT_OBJS = \
 	$(OCM)\font_misc.obj \
@@ -299,7 +307,8 @@ LIBS_OBJS = \
 	$(FITZ_OBJS) \
 	$(MUPDF_OBJS) \
 	$(FONT_OBJS) \
-	$(CMAP_OBJS)
+	$(CMAP_OBJS) \
+	$(MUXPS_OBJS)
 
 !if "$(JPEG_TURBO_DIR)"==""
 LIBS_OBJS = $(LIBS_OBJS) $(JPEG_OBJS)
@@ -329,18 +338,21 @@ PDFINFO_APP = $(O)\pdfinfo.exe
 PDFEXTRACT_OBJS = $(LIBS_OBJS) $(O)\pdfextract.obj
 PDFEXTRACT_APP = $(O)\pdfextract.exe
 
-CMAPDUMP_OBJS = $(OM)\cmapdump.obj
+CMAPDUMP_OBJS = $(OP)\cmapdump.obj
 CMAPDUMP_APP = $(O)\cmapdump.exe
 
-FONTDUMP_OBJS = $(OM)\fontdump.obj
+FONTDUMP_OBJS = $(OP)\fontdump.obj
 FONTDUMP_APP = $(O)\fontdump.exe
+
+XPSDRAW_OBJS = $(LIBS_OBJS) $(O)\xpsdraw.obj
+XPSDRAW_APP = $(O)\xpsdraw.exe
 
 LIBMUPDF_LIB = $(O)\libmupdf.lib
 LIBMUPDF_DEF = $(MUPDF_DIR)\libmupdf.def
 LIBMUPDF_OBJS = $(LIBS_OBJS)
 LIBMUPDF_DLL = $(O)\libmupdf.dll
 
-all: $(O) $(PDFDRAW_APP) $(PDFSHOW_APP) $(PDFCLEAN_APP) $(PDFINFO_APP) $(PDFEXTRACT_APP) $(PDFBENCH_APP) $(PDFAPP_APP)
+all: $(O) $(PDFDRAW_APP) $(PDFSHOW_APP) $(PDFCLEAN_APP) $(PDFINFO_APP) $(PDFEXTRACT_APP) $(PDFBENCH_APP) $(PDFAPP_APP) $(XPSDRAW_APP)
 
 clean: force
 	-rmdir /S /Q $(O)
@@ -359,7 +371,8 @@ $(O): force
 	@if not exist $(OOJ) mkdir $(OOJ)
 	@if not exist $(OJB) mkdir $(OJB)
 	@if not exist $(OFZ) mkdir $(OFZ)
-	@if not exist $(OM) mkdir $(OM)
+	@if not exist $(OP) mkdir $(OP)
+	@if not exist $(OX) mkdir $(OX)
 	@if not exist $(OCM) mkdir $(OCM)
 
 $(PDFAPP_RES): $(MUPDF_DIR)\apps\win_res.rc
@@ -600,6 +613,9 @@ $(PDFAPP_APP): $(PDFAPP_OBJS)
 $(PDFEXTRACT_APP): $(PDFEXTRACT_OBJS)
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ /SUBSYSTEM:CONSOLE
 
+$(XPSDRAW_APP): $(XPSDRAW_OBJS)
+	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ /SUBSYSTEM:CONSOLE
+
 $(LIBMUPDF_DLL): $(LIBMUPDF_OBJS) $(LIBMUPDF_DEF) $(LIBMUPDF_RES)
 	$(LD) /DLL $(LDFLAGS) $(LIBMUPDF_OBJS) $(LIBMUPDF_RES) $(LIBS) /DEF:$(LIBMUPDF_DEF) /IMPLIB:$(LIBMUPDF_LIB) /PDB:$*.pdb /OUT:$@
 
@@ -708,8 +724,11 @@ $(LIBMUPDF_DLL): $(LIBMUPDF_OBJS) $(LIBMUPDF_DEF) $(LIBMUPDF_RES)
 {$(MUPDF_DIR)\apps}.c{$(O)}.obj::
 	$(CC) /TC $(MUPDF_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
 
-{$(MUPDF_DIR)\mupdf}.c{$(OM)}.obj::
-	$(CC) /TC $(MUPDF_CFLAGS) /Fo$(OM)\ /Fd$(O)\vc80.pdb $<
+{$(MUPDF_DIR)\mupdf}.c{$(OP)}.obj::
+	$(CC) /TC $(MUPDF_CFLAGS) /Fo$(OP)\ /Fd$(O)\vc80.pdb $<
+
+{$(MUPDF_DIR)\xps}.c{$(OX)}.obj::
+	$(CC) /TC $(MUPDF_CFLAGS) /Fo$(OX)\ /Fd$(O)\vc80.pdb $<
 
 {$(MUPDF_DIR)\draw}.c{$(OFZ)}.obj::
 	$(CC) /TC $(MUPDF_CFLAGS) /Fo$(OFZ)\ /Fd$(O)\vc80.pdb $<
@@ -732,5 +751,6 @@ $(LIBMUPDF_DLL): $(LIBMUPDF_OBJS) $(LIBMUPDF_DEF) $(LIBMUPDF_RES)
 
 $(FITZ_OBJS) $(FITZ_DRAW_OBJS): $(MUPDF_DIR)\fitz\fitz.h
 $(MUPDF_OBJS) $(CMAP_OBJS): $(MUPDF_DIR)\fitz\fitz.h $(MUPDF_DIR)\mupdf\mupdf.h
+$(MUXPS_OBJS): $(MUPDF_DIR)\fitz\fitz.h $(MUPDF_DIR)\xps\muxps.h
 
 force: ;

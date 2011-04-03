@@ -1,5 +1,6 @@
-#include <fitz.h>
-#include <mupdf.h>
+#include "fitz.h"
+#include "mupdf.h"
+#include "muxps.h"
 #include "pdfapp.h"
 
 #ifndef UNICODE
@@ -90,7 +91,7 @@ int winfilename(wchar_t *buf, int len)
 	ofn.nMaxFile = len;
 	ofn.lpstrInitialDir = NULL;
 	ofn.lpstrTitle = L"MuPDF: Open PDF file";
-	ofn.lpstrFilter = L"PDF Files (*.pdf)\0*.pdf\0All Files\0*\0\0";
+	ofn.lpstrFilter = L"Documents (*.pdf;*.xps)\0*.xps;*.pdf\0PDF Files (*.pdf)\0*.pdf\0XPS Files (*.xps)\0*.xps\0All Files\0*\0\0";
 	ofn.Flags = OFN_FILEMUSTEXIST|OFN_HIDEREADONLY;
 	return GetOpenFileNameW(&ofn);
 }
@@ -156,6 +157,14 @@ dloginfoproc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_INITDIALOG:
 
 		SetDlgItemTextW(hwnd, 0x10, wbuf);
+
+		if (!xref)
+		{
+			SetDlgItemTextA(hwnd, 0x11, "XPS");
+			SetDlgItemTextA(hwnd, 0x12, "None");
+			SetDlgItemTextA(hwnd, 0x13, "n/a");
+			return TRUE;
+		}
 
 		sprintf(buf, "PDF %d.%d", xref->version / 10, xref->version % 10);
 		SetDlgItemTextA(hwnd, 0x11, buf);

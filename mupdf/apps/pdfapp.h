@@ -31,6 +31,8 @@ struct pdfapp_s
 	char *doctitle;
 	pdf_xref *xref;
 	pdf_outline *outline;
+	xps_context *xps;
+
 	int pagecount;
 	fz_glyphcache *cache;
 
@@ -42,7 +44,11 @@ struct pdfapp_s
 
 	/* current page params */
 	int pageno;
-	pdf_page *page;
+	fz_rect page_bbox;
+	float page_rotate;
+	fz_displaylist *page_list;
+	fz_textspan *page_text;
+	pdf_link *page_links;
 
 	/* snapback history */
 	int hist[256];

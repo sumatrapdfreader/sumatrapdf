@@ -58,6 +58,16 @@ fz_unpacktile(fz_pixmap *dst, unsigned char * restrict src, int n, int depth, in
 	if (depth == 1)
 		initget1tables();
 
+	if (scale == 0)
+	{
+		switch (depth)
+		{
+		case 1: scale = 255; break;
+		case 2: scale = 85; break;
+		case 4: scale = 17; break;
+		}
+	}
+
 	for (y = 0; y < dst->h; y++)
 	{
 		unsigned char *sp = src + y * stride;

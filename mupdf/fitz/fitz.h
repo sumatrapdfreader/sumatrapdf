@@ -415,13 +415,15 @@ struct fz_obj_s
 	} u;
 };
 
+extern fz_obj* (*fz_resolveindirect)(fz_obj*);
+
 fz_obj *fz_newnull(void);
 fz_obj *fz_newbool(int b);
 fz_obj *fz_newint(int i);
 fz_obj *fz_newreal(float f);
 fz_obj *fz_newname(char *str);
 fz_obj *fz_newstring(char *str, int len);
-fz_obj *fz_newindirect(int num, int gen, struct pdf_xref_s *xref);
+fz_obj *fz_newindirect(int num, int gen, void *xref);
 
 fz_obj *fz_newarray(int initialcap);
 fz_obj *fz_newdict(int initialcap);
@@ -443,8 +445,6 @@ int fz_isdict(fz_obj *obj);
 int fz_isindirect(fz_obj *obj);
 
 int fz_objcmp(fz_obj *a, fz_obj *b);
-
-fz_obj *fz_resolveindirect(fz_obj *obj);
 
 /* silent failure, no error reporting */
 int fz_tobool(fz_obj *obj);
@@ -685,6 +685,7 @@ struct fz_pixmap_s
 	int x, y, w, h, n;
 	fz_pixmap *mask; /* explicit soft/image mask */
 	int interpolate;
+	int xres, yres;
 	fz_colorspace *colorspace;
 	unsigned char *samples;
 	int freesamples;
@@ -699,6 +700,7 @@ fz_pixmap *fz_keeppixmap(fz_pixmap *pix);
 void fz_droppixmap(fz_pixmap *pix);
 void fz_clearpixmap(fz_pixmap *pix);
 void fz_clearpixmapwithcolor(fz_pixmap *pix, int value);
+void fz_premultiplypixmap(fz_pixmap *pix);
 fz_pixmap *fz_alphafromgray(fz_pixmap *gray, int luminosity);
 fz_bbox fz_boundpixmap(fz_pixmap *pix);
 
@@ -845,6 +847,8 @@ void fz_curvetoy(fz_path*, float, float, float, float);
 void fz_closepath(fz_path*);
 void fz_freepath(fz_path *path);
 
+void fz_transformpath(fz_path *path, fz_matrix transform);
+
 fz_path *fz_clonepath(fz_path *old);
 
 fz_rect fz_boundpath(fz_path *path, fz_strokestate *stroke, fz_matrix ctm);
@@ -913,7 +917,7 @@ struct fz_shade_s
 	float background[FZ_MAXCOLORS];
 
 	int usefunction;
-	float function[256][FZ_MAXCOLORS];
+	float function[256][FZ_MAXCOLORS + 1];
 
 	int type; /* linear, radial, mesh */
 	int extend[2];

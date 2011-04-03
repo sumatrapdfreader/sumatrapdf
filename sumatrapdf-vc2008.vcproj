@@ -30,7 +30,7 @@
 				CleanCommandLine="nmake -f makefile.msvc CFG=dbg NASM=$(ProjectDir)bin\nasm.exe clean"
 				Output="obj-dbg\sumatrapdf.exe"
 				PreprocessorDefinitions="WIN32;UNICODE;_UNICODE;_DEBUG;DEBUG;SYNCTEX_FEATURE"
-				IncludeSearchPath="baseutils;mupdf\mupdf;mupdf\fitz"
+				IncludeSearchPath="baseutils;mupdf\fitz;mupdf\draw;mupdf\mupdf;mupdf\xps"
 				ForcedIncludes=""
 				AssemblySearchPath=""
 				ForcedUsingAssemblies=""
@@ -51,7 +51,7 @@
 				CleanCommandLine="nmake -f makefile.msvc CFG=rel NASM=$(ProjectDir)bin\nasm.exe clean"
 				Output="obj-rel\sumatrapdf.exe"
 				PreprocessorDefinitions="WIN32;UNICODE;_UNICODE;NDEBUG;SYNCTEX_FEATURE"
-				IncludeSearchPath=""
+				IncludeSearchPath="baseutils;mupdf\fitz;mupdf\draw;mupdf\mupdf;mupdf\xps"
 				ForcedIncludes=""
 				AssemblySearchPath=""
 				ForcedUsingAssemblies=""
@@ -742,6 +742,74 @@
 				</File>
 				<File
 					RelativePath=".\mupdf\mupdf\pdf_xref.c"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="xps"
+				>
+				<File
+					RelativePath=".\mupdf\xps\muxps.h"
+					>
+				</File>
+				<File
+					RelativePath=".\mupdf\xps\xps_common.c"
+					>
+				</File>
+				<File
+					RelativePath=".\mupdf\xps\xps_doc.c"
+					>
+				</File>
+				<File
+					RelativePath=".\mupdf\xps\xps_glyphs.c"
+					>
+				</File>
+				<File
+					RelativePath=".\mupdf\xps\xps_gradient.c"
+					>
+				</File>
+				<File
+					RelativePath=".\mupdf\xps\xps_hash.c"
+					>
+				</File>
+				<File
+					RelativePath=".\mupdf\xps\xps_image.c"
+					>
+				</File>
+				<File
+					RelativePath=".\mupdf\xps\xps_jpeg.c"
+					>
+				</File>
+				<File
+					RelativePath=".\mupdf\xps\xps_path.c"
+					>
+				</File>
+				<File
+					RelativePath=".\mupdf\xps\xps_png.c"
+					>
+				</File>
+				<File
+					RelativePath=".\mupdf\xps\xps_resource.c"
+					>
+				</File>
+				<File
+					RelativePath=".\mupdf\xps\xps_tiff.c"
+					>
+				</File>
+				<File
+					RelativePath=".\mupdf\xps\xps_tile.c"
+					>
+				</File>
+				<File
+					RelativePath=".\mupdf\xps\xps_util.c"
+					>
+				</File>
+				<File
+					RelativePath=".\mupdf\xps\xps_xml.c"
+					>
+				</File>
+				<File
+					RelativePath=".\mupdf\xps\xps_zip.c"
 					>
 				</File>
 			</Filter>

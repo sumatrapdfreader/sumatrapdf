@@ -1,6 +1,6 @@
 """
 Generates a list of all exports from libmupdf.dll from the function lists
-contained in the mupdf/fitz/fitz.h and mupdf/mupdf/mupdf.h headers.
+contained in the mupdf/*/*.h headers.
 """
 
 import os, re
@@ -24,6 +24,10 @@ EXPORTS
 
 %(mupdf_exports)s
 
+; MuXPS exports
+
+%(muxps_exports)s
+
 ; zlib exports
 
 	gzerror
@@ -42,6 +46,7 @@ EXPORTS
 def main():
 	fitz_exports = generateExports("fitz/fitz.h", ["fz_acceleratearch", "fz_paintaffinecolor"])
 	mupdf_exports = generateExports("mupdf/mupdf.h")
+	muxps_exports = generateExports("xps/muxps.h", ["xps_parse_solid_color_brush", "xps_debug_path"])
 	
 	list = LIBMUPDF_DEF % locals()
 	open("libmupdf.def", "wb").write(list.replace("\n", "\r\n"))

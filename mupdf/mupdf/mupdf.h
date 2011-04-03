@@ -154,6 +154,8 @@ struct pdf_xref_s
 	char scratch[65536];
 };
 
+/* SumatraPDF: allow access to pdf_resolveindirect when building as libmupdf.dll */
+fz_obj *pdf_resolveindirect(fz_obj *ref);
 fz_error pdf_cacheobject(pdf_xref *, int num, int gen);
 fz_error pdf_loadobject(fz_obj **objp, pdf_xref *, int num, int gen);
 void pdf_updateobject( pdf_xref *xref, int num, int gen, fz_obj *newobj);
@@ -525,8 +527,6 @@ struct pdf_page_s
 	int transparency;
 	fz_obj *resources;
 	fz_buffer *contents;
-	fz_displaylist *list;
-	fz_textspan *text;
 	pdf_link *links;
 	pdf_annot *annots;
 };

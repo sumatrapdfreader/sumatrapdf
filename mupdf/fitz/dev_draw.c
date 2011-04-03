@@ -597,14 +597,6 @@ fz_drawfillimage(void *user, fz_pixmap *image, fz_matrix ctm, float alpha)
 	/* convert images with expensive colorspace transforms after scaling */
 
 	after = 0;
-	/* SumatraPDF: only convert grayscale images after scaling * /
-	if (image->colorspace->n < model->n)
-		after = 1;
-	if (!strcmp(image->colorspace->name, "Separation"))
-		after = 1;
-	if (!strcmp(image->colorspace->name, "DeviceN"))
-		after = 1;
-	*/
 	if (image->colorspace == fz_devicegray)
 		after = 1;
 

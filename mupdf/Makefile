@@ -170,6 +170,26 @@ MUPDF_SRC := \
 MUPDF_OBJ := $(MUPDF_SRC:mupdf/%.c=$(OBJDIR)/%.o)
 $(MUPDF_OBJ): $(MUPDF_HDR)
 
+MUXPS_HDR := $(FITZ_HDR) xps/muxps.h
+MUXPS_SRC := \
+	xps/xps_common.c \
+	xps/xps_doc.c \
+	xps/xps_glyphs.c \
+	xps/xps_gradient.c \
+	xps/xps_hash.c \
+	xps/xps_image.c \
+	xps/xps_jpeg.c \
+	xps/xps_path.c \
+	xps/xps_png.c \
+	xps/xps_resource.c \
+	xps/xps_tiff.c \
+	xps/xps_tile.c \
+	xps/xps_util.c \
+	xps/xps_xml.c \
+	xps/xps_zip.c
+MUXPS_OBJ := $(MUXPS_SRC:xps/%.c=$(OBJDIR)/%.o)
+$(MUXPS_OBJ): $(MUXPS_HDR)
+
 $(OBJDIR)/%.o: fitz/%.c
 	$(CC_CMD)
 $(OBJDIR)/%.o: draw/%.c
@@ -177,6 +197,8 @@ $(OBJDIR)/%.o: draw/%.c
 $(OBJDIR)/%.o: draw/%.s
 	$(CC_CMD)
 $(OBJDIR)/%.o: mupdf/%.c
+	$(CC_CMD)
+$(OBJDIR)/%.o: xps/%.c
 	$(CC_CMD)
 $(OBJDIR)/%.o: $(GENDIR)/%.c
 	$(CC_CMD)
@@ -298,11 +320,15 @@ MUPDF_LIB = $(OBJDIR)/libmupdf.a
 $(MUPDF_LIB): $(FITZ_OBJ) $(DRAW_OBJ) $(MUPDF_OBJ) $(CMAP_OBJ) $(FONT_OBJ)
 	 $(AR_CMD)
 
+MUXPS_LIB = $(OBJDIR)/libmuxps.a
+$(MUXPS_LIB): $(FITZ_OBJ) $(DRAW_OBJ) $(MUXPS_OBJ)
+	 $(AR_CMD)
+
 #
 # Applications
 #
 
-APPS = $(PDFSHOW_EXE) $(PDFCLEAN_EXE) $(PDFDRAW_EXE) $(PDFEXTRACT_EXE) $(PDFINFO_EXE) $(PDFVIEW_EXE)
+APPS = $(PDFSHOW_EXE) $(PDFCLEAN_EXE) $(PDFDRAW_EXE) $(PDFEXTRACT_EXE) $(PDFINFO_EXE) $(PDFVIEW_EXE) $(XPSDRAW_EXE)
 
 APPS_MAN = \
 	apps/man/mupdf.1 \
@@ -348,6 +374,13 @@ $(PDFINFO_OBJ): $(MUPDF_HDR)
 $(PDFINFO_EXE): $(PDFINFO_OBJ) $(MUPDF_LIB) $(THIRD_LIBS)
 	$(LD_CMD)
 
+XPSDRAW_SRC=apps/xpsdraw.c
+XPSDRAW_OBJ=$(XPSDRAW_SRC:apps/%.c=$(OBJDIR)/%.o)
+XPSDRAW_EXE=$(OBJDIR)/xpsdraw
+$(XPSDRAW_OBJ): $(MUXPS_HDR)
+$(XPSDRAW_EXE): $(XPSDRAW_OBJ) $(MUXPS_LIB) $(THIRD_LIBS)
+	$(LD_CMD)
+
 PDFAPP_HDR = apps/pdfapp.h
 
 X11VIEW_SRC=apps/x11_main.c apps/x11_image.c apps/pdfapp.c
@@ -355,7 +388,7 @@ X11VIEW_OBJ=$(X11VIEW_SRC:apps/%.c=$(OBJDIR)/%.o)
 X11VIEW_EXE=$(OBJDIR)/mupdf
 
 $(X11VIEW_OBJ): $(MUPDF_HDR) $(PDFAPP_HDR)
-$(X11VIEW_EXE): $(X11VIEW_OBJ) $(MUPDF_LIB) $(THIRD_LIBS)
+$(X11VIEW_EXE): $(X11VIEW_OBJ) $(MUPDF_LIB) $(MUXPS_LIB) $(THIRD_LIBS)
 	$(LD_CMD) $(X11LIBS)
 
 WINVIEW_SRC=apps/win_main.c apps/pdfapp.c
@@ -367,7 +400,7 @@ $(OBJDIR)/%.o: apps/%.rc
 	$(WINDRES) -i $< -o $@ --include-dir=apps
 
 $(WINVIEW_OBJ): $(MUPDF_HDR) $(PDFAPP_HDR)
-$(WINVIEW_EXE): $(WINVIEW_OBJ) $(MUPDF_LIB) $(THIRD_LIBS)
+$(WINVIEW_EXE): $(WINVIEW_OBJ) $(MUPDF_LIB) $(MUXPS_LIB) $(THIRD_LIBS)
 	$(LD_CMD) $(W32LIBS)
 
 #

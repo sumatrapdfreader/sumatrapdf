@@ -1,5 +1,6 @@
 #include "fitz.h"
 #include "mupdf.h"
+#include "muxps.h"
 #include "pdfapp.h"
 
 #include <X11/Xlib.h>

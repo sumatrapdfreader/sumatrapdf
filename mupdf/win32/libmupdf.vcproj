@@ -520,6 +520,70 @@
 				>
 			</File>
 		</Filter>
+		<Filter
+			Name="xps"
+			>
+			<File
+				RelativePath="..\xps\xps_common.c"
+				>
+			</File>
+			<File
+				RelativePath="..\xps\xps_doc.c"
+				>
+			</File>
+			<File
+				RelativePath="..\xps\xps_glyphs.c"
+				>
+			</File>
+			<File
+				RelativePath="..\xps\xps_gradient.c"
+				>
+			</File>
+			<File
+				RelativePath="..\xps\xps_hash.c"
+				>
+			</File>
+			<File
+				RelativePath="..\xps\xps_image.c"
+				>
+			</File>
+			<File
+				RelativePath="..\xps\xps_jpeg.c"
+				>
+			</File>
+			<File
+				RelativePath="..\xps\xps_path.c"
+				>
+			</File>
+			<File
+				RelativePath="..\xps\xps_png.c"
+				>
+			</File>
+			<File
+				RelativePath="..\xps\xps_resource.c"
+				>
+			</File>
+			<File
+				RelativePath="..\xps\xps_tiff.c"
+				>
+			</File>
+			<File
+				RelativePath="..\xps\xps_tile.c"
+				>
+			</File>
+			<File
+				RelativePath="..\xps\xps_util.c"
+				>
+			</File>
+			<File
+				RelativePath="..\xps\xps_xml.c"
+				>
+			</File>
+			<File
+				RelativePath="..\xps\xps_zip.c"
+				>
+			</File>
+		</Filter>
 	</Files>
 	<Globals>
 	</Globals>

@@ -332,6 +332,7 @@ pdf_samplecompositeshadefunction(fz_shade *shade, pdf_function *func, float t0, 
 	{
 		t = t0 + (i / 255.0f) * (t1 - t0);
 		pdf_evalfunction(func, &t, 1, shade->function[i], shade->colorspace->n);
+		shade->function[i][shade->colorspace->n] = 1;
 	}
 }
 
@@ -346,6 +347,7 @@ pdf_samplecomponentshadefunction(fz_shade *shade, int funcs, pdf_function **func
 		t = t0 + (i / 255.0f) * (t1 - t0);
 		for (k = 0; k < funcs; k++)
 			pdf_evalfunction(func[k], &t, 1, &shade->function[i][k], 1);
+		shade->function[i][k] = 1;
 	}
 }
 

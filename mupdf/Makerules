@@ -7,7 +7,7 @@ CC ?=
 CFLAGS ?=
 LDFLAGS ?=
 
-CFLAGS += -Ifitz -Imupdf -Wall
+CFLAGS += -Ifitz -Imupdf -Ixps -Wall
 
 ifeq "$(build)" "debug"
 CFLAGS += -pipe -g
