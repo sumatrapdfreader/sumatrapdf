@@ -103,14 +103,9 @@ bool                    gPluginMode = false;
 #define COL_FWDSEARCH_BG        RGB(0x65, 0x81 ,0xff)
 #define COL_SELECTION_RECT      RGB(0xF5, 0xFC, 0x0C)
 
-#define SUMATRA_WINDOW_TITLE    _T("SumatraPDF")
-#define CANVAS_CLASS_NAME       _T("SUMATRA_PDF_CANVAS")
 #define SPLITER_CLASS_NAME      _T("Spliter")
 #define FINDSTATUS_CLASS_NAME   _T("FindStatus")
 #define PREFS_FILE_NAME         _T("sumatrapdfprefs.dat")
-
-/* Default size for the window, happens to be american A4 size (I think) */
-#define DEF_PAGE_RATIO (612.0/792.0)
 
 #define SPLITTER_DX  5
 #define SPLITTER_MIN_WIDTH 150
@@ -161,7 +156,7 @@ static HFONT                        gDefaultGuiFont;
 static HBITMAP                      gBitmapReloadingCue;
 
 static RenderCache                  gRenderCache;
-static Vec<WindowInfo*>             gWindows;
+       Vec<WindowInfo*>             gWindows;
 static FileHistory                  gFileHistory;
 static UIThreadWorkItemQueue        gUIThreadMarshaller;
 
@@ -231,7 +226,6 @@ static ToolbarButtonInfo gToolbarButtons[] = {
 
 #define TOOLBAR_BUTTONS_COUNT dimof(gToolbarButtons)
 
-static void CreateToolbar(WindowInfo *win, HINSTANCE hInst);
 static void CreateTocBox(WindowInfo *win, HINSTANCE hInst);
 static void UpdateToolbarFindText(WindowInfo *win);
 static void UpdateToolbarPageText(WindowInfo *win, int pageCount);
@@ -731,7 +725,7 @@ static HMENU RebuildFileMenu(HMENU menu)
     return menu;
 }
 
-static HMENU BuildMenu(HWND hWnd)
+HMENU BuildMenu(HWND hWnd)
 {
     HMENU mainMenu = CreateMenu();
     HMENU m = RebuildFileMenu(CreateMenu());
@@ -1184,7 +1178,7 @@ static void UpdateToolbarAndScrollbarsForAllWindows(void)
 #define MIN_WIN_DX 50
 #define MIN_WIN_DY 50
 
-static void EnsureWindowVisibility(RectI *rect)
+void EnsureWindowVisibility(RectI *rect)
 {
     RECT rc = rect->ToRECT();
 
@@ -5136,7 +5130,7 @@ static HBITMAP LoadExternalBitmap(HINSTANCE hInst, TCHAR * filename, INT resourc
     return hBmp;
 }
 
-static void CreateToolbar(WindowInfo *win, HINSTANCE hInst) {
+void CreateToolbar(WindowInfo *win, HINSTANCE hInst) {
     HWND hwndToolbar = CreateWindowEx(0, TOOLBARCLASSNAME, NULL, WS_TOOLBAR,
                                  0,0,0,0, win->hwndFrame,(HMENU)IDC_TOOLBAR, hInst,NULL);
     win->hwndToolbar = hwndToolbar;

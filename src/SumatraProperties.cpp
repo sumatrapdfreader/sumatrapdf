@@ -17,9 +17,6 @@
 #define PROPERTIES_TXT_DY_PADDING 2
 #define PROPERTIES_WIN_TITLE    _TR("Document Properties")
 
-extern HINSTANCE ghinst;
-extern SerializableGlobalPrefs gGlobalPrefs;
-
 // See: http://www.verypdf.com/pdfinfoeditor/pdf-date-format.htm
 // Format:  "D:YYYYMMDDHHMMSSxxxxxxx"
 // Example: "D:20091222171933-05'00'"

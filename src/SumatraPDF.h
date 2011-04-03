@@ -5,6 +5,7 @@
 #define SumatraPDF_h
 
 #include "BaseUtil.h"
+#include "Vec.h"
 
 #define APP_NAME_STR            _T("SumatraPDF")
 #define FRAME_CLASS_NAME        _T("SUMATRA_PDF_FRAME")
@@ -17,5 +18,18 @@
 #define RIGHT_TXT_FONT_SIZE     12
 
 #define COL_BLUE_LINK           RGB(0,0x20,0xa0)
+
+/* Default size for the window, happens to be american A4 size (I think) */
+#define DEF_PAGE_RATIO (612.0/792.0)
+
+#define SUMATRA_WINDOW_TITLE    _T("SumatraPDF")
+#define CANVAS_CLASS_NAME       _T("SUMATRA_PDF_CANVAS")
+
+class WindowInfo;
+
+extern HINSTANCE ghinst;
+extern Vec<WindowInfo*> gWindows;
+HMENU BuildMenu(HWND hWnd);
+void CreateToolbar(WindowInfo *win, HINSTANCE hInst);
 
 #endif

@@ -39,8 +39,6 @@
 
 extern HCURSOR gCursorHand;
 extern bool gRestrictedUse;
-extern HINSTANCE ghinst;
-extern SerializableGlobalPrefs gGlobalPrefs;
 
 static HWND gHwndAbout;
 

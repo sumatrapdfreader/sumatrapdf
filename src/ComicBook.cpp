@@ -3,9 +3,12 @@
 
 #include <windows.h>
 #include "ComicBook.h"
+#include "SumatraPDF.h"
 #include "StrUtil.h"
 #include "Vec.h"
 #include "WinUtil.h"
+#include "WindowInfo.h"
+#include "AppPrefs.h"
 
 // mini(un)zip
 #include <ioapi.h>
@@ -115,6 +118,65 @@ Exit:
 
     GlobalFree(data);
     return page;
+}
+
+// TODO: similar to WindowInfo_CreateEmpty(), extract common parts
+WindowInfo* CreateEmptyComicBookWindow()
+{
+    RectI windowPos;
+    if (gGlobalPrefs.m_windowPos.IsEmpty()) {
+        // center the window on the primary monitor
+        RECT workArea;
+        SystemParametersInfo(SPI_GETWORKAREA, 0, &workArea, 0);
+        windowPos.y = workArea.top;
+        windowPos.dy = RectDy(&workArea);
+        windowPos.dx = (int)min(windowPos.dy * DEF_PAGE_RATIO, RectDx(&workArea));
+        windowPos.x = (RectDx(&workArea) - windowPos.dx) / 2;
+    }
+    else {
+        windowPos = gGlobalPrefs.m_windowPos;
+        EnsureWindowVisibility(&windowPos);
+    }
+
+    HWND hwndFrame = CreateWindow(
+            FRAME_CLASS_NAME, SUMATRA_WINDOW_TITLE,
+            WS_OVERLAPPEDWINDOW,
+            windowPos.x, windowPos.y, windowPos.dx, windowPos.dy,
+            NULL, NULL,
+            ghinst, NULL);
+    if (!hwndFrame)
+        return NULL;
+
+    assert(NULL == FindWindowInfoByHwnd(hwndFrame));
+    WindowInfo *win = new WindowInfo(hwndFrame);
+
+    HWND hwndCanvas = CreateWindowEx(
+            WS_EX_STATICEDGE, 
+            CANVAS_CLASS_NAME, NULL,
+            WS_CHILD | WS_HSCROLL | WS_VSCROLL,
+            0, 0, 0, 0, /* position and size determined in OnSize */
+            hwndFrame, NULL,
+            ghinst, NULL);
+    if (!hwndCanvas)
+        return NULL;
+    // hide scrollbars to avoid showing/hiding on empty window
+    ShowScrollBar(hwndCanvas, SB_BOTH, FALSE);
+    win->menu = BuildMenu(win->hwndFrame);
+
+    win->hwndCanvas = hwndCanvas;
+    ShowWindow(win->hwndCanvas, SW_SHOW);
+    UpdateWindow(win->hwndCanvas);
+
+    win->hwndInfotip = CreateWindowEx(WS_EX_TOPMOST,
+        TOOLTIPS_CLASS, NULL, WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP,
+        CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+        win->hwndCanvas, NULL, ghinst, NULL);
+
+    CreateToolbar(win, ghinst);
+    DragAcceptFiles(win->hwndCanvas, TRUE);
+
+    gWindows.Append(win);
+    return win;
 }
 
 // Load *.cbz / *.cbr file

@@ -5,10 +5,14 @@
 #define ComicEngine_h
 
 #include "BaseUtil.h"
+#include "GeomUtil.h"
 
 class WindowInfo;
 
 bool        IsComicBook(const TCHAR *fileName);
 WindowInfo *LoadComicBook(const TCHAR *fileName, WindowInfo *win, bool showWin);
+
+// TODO: in sumatrapdf.cpp, find a better place to define
+void EnsureWindowVisibility(RectI *rect);
 
 #endif

@@ -70,6 +70,8 @@ typedef struct {
     bool m_invertColors; /* invert all colors for accessibility reasons (experimental!) */
 } SerializableGlobalPrefs;
 
+extern SerializableGlobalPrefs gGlobalPrefs;
+
 class FileHistory;
 
 namespace Prefs {
