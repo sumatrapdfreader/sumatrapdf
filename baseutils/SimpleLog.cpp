@@ -39,17 +39,14 @@ void RemoveLogger(Logger *logger)
     g_loggers->Remove(logger);
 }
 
-void Log(TCHAR *s, bool takeOwnership)
+void Log(TCHAR *s)
 {
-    if (g_loggers->Count() > 0) {
-        ScopedCritSec cs(&g_logCs);
-        for (size_t i = 0; i < g_loggers->Count(); i++)
-        {
-            g_loggers->At(i)->Log(s, false);
-        }
-    }
-    if (takeOwnership)
-        free(s);
+    ScopedCritSec cs(&g_logCs);
+    if (0 == g_loggers->Count())
+        return;
+
+    for (size_t i = 0; i < g_loggers->Count(); i++)
+        g_loggers->At(i)->Log(s);
 }
 
 void LogFmt(TCHAR *fmt, ...)
@@ -60,8 +57,14 @@ void LogFmt(TCHAR *fmt, ...)
     va_list args;
     va_start(args, fmt);
     TCHAR *s = Str::FmtV(fmt, args);
-    Log(s, true);
+    LogAndFree(s);
     va_end(args);
+}
+
+void LogAndFree(TCHAR *s)
+{
+    Log(s);
+    free(s);
 }
 
 } // namespace Log

@@ -470,7 +470,7 @@ static HDDEDATA CALLBACK DdeCallback(UINT uType, UINT uFmt, HCONV hconv, HSZ hsz
 
 void DDEExecute(LPCTSTR server, LPCTSTR topic, LPCTSTR command)
 {
-    DBG_OUT("DDEExecute(\"%s\",\"%s\",\"%s\")", server, topic, command);
+    DBG_OUT("DDEExecute(\"%s\",\"%s\",\"%s\")\n", server, topic, command);
     unsigned long inst = 0;
     HSZ hszServer = NULL, hszTopic = NULL;
     HCONV hconv = NULL;
@@ -478,34 +478,34 @@ void DDEExecute(LPCTSTR server, LPCTSTR topic, LPCTSTR command)
 
     UINT result = DdeInitialize(&inst, &DdeCallback, APPCMD_CLIENTONLY, 0);
     if (result != DMLERR_NO_ERROR) {
-        DBG_OUT("DDE communication could not be initiated %u.", result);
+        DBG_OUT("DDE communication could not be initiated %u.\n", result);
         goto exit;
     }
     hszServer = DdeCreateStringHandle(inst, server, CP_WINNEUTRAL);
     if (!hszServer) {
-        DBG_OUT("DDE communication could not be initiated %u.", DdeGetLastError(inst));
+        DBG_OUT("DDE communication could not be initiated %u.\n", DdeGetLastError(inst));
         goto exit;
     }
     hszTopic = DdeCreateStringHandle(inst, topic, CP_WINNEUTRAL);
     if (!hszTopic) {
-        DBG_OUT("DDE communication could not be initiated %u.", DdeGetLastError(inst));
+        DBG_OUT("DDE communication could not be initiated %u.\n", DdeGetLastError(inst));
         goto exit;
     }
     hconv = DdeConnect(inst, hszServer, hszTopic, 0);
     if (!hconv) {
-        DBG_OUT("DDE communication could not be initiated %u.", DdeGetLastError(inst));
+        DBG_OUT("DDE communication could not be initiated %u\n.", DdeGetLastError(inst));
         goto exit;
     }
     hddedata = DdeCreateDataHandle(inst, (BYTE*)command, (DWORD)(Str::Len(command) + 1) * sizeof(TCHAR), 0, 0, CF_T_TEXT, 0);
     if (!hddedata) {
-        DBG_OUT("DDE communication could not be initiated %u.", DdeGetLastError(inst));
+        DBG_OUT("DDE communication could not be initiated %u.\n", DdeGetLastError(inst));
         goto exit;
     }
     HDDEDATA answer = DdeClientTransaction((BYTE*)hddedata, (DWORD)-1, hconv, 0, 0, XTYP_EXECUTE, 10000, 0);
     if (answer)
         DdeFreeDataHandle(answer);
     else
-        DBG_OUT("DDE transaction failed %u.", DdeGetLastError(inst));
+        DBG_OUT("DDE transaction failed %u.\n", DdeGetLastError(inst));
 
 exit:
     DdeFreeDataHandle(hddedata);

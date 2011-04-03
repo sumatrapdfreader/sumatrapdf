@@ -388,7 +388,7 @@ static void VecTest()
 static void LogTest()
 {
     Log::Initialize();
-    Log::Log(Str::Dup(_T("Don't leak me!")), true);
+    Log::LogAndFree(Str::Dup(_T("Don't leak me!")));
 
     Log::MultiLogger log;
     Log::MemoryLogger logAll;
@@ -403,8 +403,7 @@ static void LogTest()
         Log::LogFmt(_T("%s : %d"), _T("filen\xE4me.pdf"), 25);
         log.RemoveLogger(&ml);
 
-        ScopedMem<TCHAR> logData(ml.GetLines());
-        assert(Str::Eq(logData, _T("Test1\r\nML\r\nfilen\xE4me.pdf : 25")));
+        assert(Str::Eq(ml.GetData(), _T("Test1\r\nML\r\nfilen\xE4me.pdf : 25\r\n")));
     }
 
     {
@@ -427,13 +426,14 @@ static void LogTest()
         CloseHandle(hRead);
     }
 
-    {
-        ScopedMem<TCHAR> logData(logAll.GetLines());
-        assert(Str::Eq(logData, _T("Test1\r\nfilen\xE4me.pdf : 25\r\nTest2\r\nfilen\xE4me.pdf : 25")));
-    }
-
+    assert(Str::Eq(logAll.GetData(), _T("Test1\r\nfilen\xE4me.pdf : 25\r\nTest2\r\nfilen\xE4me.pdf : 25\r\n")));
     Log::RemoveLogger(&logAll);
     Log::RemoveLogger(&log);
+
+    // don't leak the logger, don't crash on logging NULL
+    Log::AddLogger(new Log::DebugLogger());
+    Log::Log(NULL);
+
     Log::Destroy();
 }
 

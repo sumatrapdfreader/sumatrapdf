@@ -11,15 +11,21 @@ namespace Log {
 class Logger {
 public:
     virtual ~Logger() { }
-    virtual void Log(TCHAR *s, bool takeOwnership=false) = 0;
+    virtual void Log(TCHAR *s) = 0;
 
     void LogFmt(TCHAR *fmt, ...)
     {
         va_list args;
         va_start(args, fmt);
-        TCHAR *s = Str::FmtV(fmt, args);
-        Log(s, true);
+        ScopedMem<TCHAR> s(Str::FmtV(fmt, args));
+        Log(s);
         va_end(args);
+    }
+
+    void LogAndFree(TCHAR *s)
+    {
+        Log(s);
+        free(s);
     }
 };
 
@@ -35,7 +41,7 @@ public:
     FileLogger(HANDLE fh) : fh(fh) { }
     virtual ~FileLogger() { CloseHandle(fh); }
 
-    virtual void Log(TCHAR *s, bool takeOwnership=false)
+    virtual void Log(TCHAR *s)
     {
         ScopedMem<char> utf8s(Str::Conv::ToUtf8(s));
         if (utf8s && INVALID_HANDLE_VALUE != fh) {
@@ -44,26 +50,35 @@ public:
             if (ok)
                 WriteFile(fh, "\r\n", 2, &len, NULL);
         }
-        if (takeOwnership)
-            free(s);
     }
 };
 
 class MemoryLogger : public Logger {
-    StrVec  lines;
+    Str::Str<TCHAR> log;
 
 public:
-    virtual void Log(TCHAR *s, bool takeOwnership=false)
+    virtual void Log(TCHAR *s)
     {
-        TCHAR *tmp = s;
-        if (!takeOwnership)
-            tmp = Str::Dup(s);
-        if (tmp)
-            lines.Append(tmp);
+        if (s) {
+            log.Append(s);
+            log.Append(_T("\r\n"));
+        }
     }
 
-    // caller has to free() the result
-    TCHAR *GetLines() { return lines.Join(_T("\r\n")); }
+    // caller MUST NOT free the result
+    // (Str::Dup data, if the logger is in use)
+    TCHAR *GetData() { return log.LendData(); }
+};
+
+class DebugLogger : public Logger {
+public:
+    virtual void Log(TCHAR *s)
+    {
+        if (s) {
+            OutputDebugString(s);
+            OutputDebugString(_T("\r\n"));
+        }
+    }
 };
 
 // allows to log into several logs at the same time (thread safe)
@@ -81,15 +96,14 @@ public:
         DeleteCriticalSection(&cs);
     }
 
-    virtual void Log(TCHAR *s, bool takeOwnership=false)
+    virtual void Log(TCHAR *s)
     {
-        if (loggers.Count() > 0) {
-            ScopedCritSec scope(&cs);
-            for (size_t i = 0; i < loggers.Count(); i++)
-                loggers[i]->Log(s);
-        }
-        if (takeOwnership)
-            free(s);
+        ScopedCritSec scope(&cs);
+        if (0 == loggers.Count())
+            return;
+
+        for (size_t i = 0; i < loggers.Count(); i++)
+            loggers[i]->Log(s);
     }
 
     void AddLogger(Logger *logger)
@@ -115,8 +129,9 @@ void Destroy();
 void AddLogger(Logger *);
 void RemoveLogger(Logger *);
 
-void Log(TCHAR *s, bool takeOwnership=false);
+void Log(TCHAR *s);
 void LogFmt(TCHAR *fmt, ...);
+void LogAndFree(TCHAR *s);
 
 } // namespace Log
 
