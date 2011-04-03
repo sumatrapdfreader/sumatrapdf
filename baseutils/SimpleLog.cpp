@@ -39,14 +39,15 @@ void RemoveLogger(Logger *logger)
 
 void Log(TCHAR *s, bool takeOwnership)
 {
-    if (0 == g_loggers->Count())
-        return;
-
-    ScopedCritSec cs(&g_logCs);
-    for (size_t i=0; i<g_loggers->Count(); i++)
-    {
-        g_loggers->At(i)->Log(s, takeOwnership);
+    if (g_loggers->Count() > 0) {
+        ScopedCritSec cs(&g_logCs);
+        for (size_t i = 0; i < g_loggers->Count(); i++)
+        {
+            g_loggers->At(i)->Log(s, false);
+        }
     }
+    if (takeOwnership)
+        free(s);
 }
 
 void LogFmt(TCHAR *fmt, ...)

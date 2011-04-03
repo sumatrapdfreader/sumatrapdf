@@ -387,26 +387,27 @@ static void VecTest()
 
 static void LogTest()
 {
-    Log::Initialize();
+    Log::MultiLogger log;
+
     {
         Log::MemoryLogger ml;
-        Log::AddLogger(&ml);
-        Log::Log(_T("Test"));
-        Log::LogFmt(_T("%s : %d"), _T("filen\xE4me.pdf"), 25);
-        Log::RemoveLogger(&ml);
+        log.AddLogger(&ml);
+        log.Log(_T("Test"));
+        log.LogFmt(_T("%s : %d"), _T("filen\xE4me.pdf"), 25);
+        log.RemoveLogger(&ml);
 
-        ScopedMem<TCHAR> log(ml.GetLines());
-        assert(Str::Eq(log, _T("Test\r\nfilen\xE4me.pdf : 25")));
+        ScopedMem<TCHAR> logData(ml.GetLines());
+        assert(Str::Eq(logData, _T("Test\r\nfilen\xE4me.pdf : 25")));
     }
 
     {
         HANDLE hRead, hWrite;
         CreatePipe(&hRead, &hWrite, NULL, 0);
         Log::FileLogger fl(hWrite);
-        Log::AddLogger(&fl);
-        Log::Log(_T("Test"));
-        Log::LogFmt(_T("%s : %d"), _T("filen\xE4me.pdf"), 25);
-        Log::RemoveLogger(&fl);
+        log.AddLogger(&fl);
+        log.Log(_T("Test"));
+        log.LogFmt(_T("%s : %d"), _T("filen\xE4me.pdf"), 25);
+        log.RemoveLogger(&fl);
 
         char pipeData[32];
         char *expected = "Test\r\nfilen\xC3\xA4me.pdf : 25\r\n";
@@ -417,7 +418,6 @@ static void LogTest()
         assert(Str::Eq(pipeData, expected));
         CloseHandle(hRead);
     }
-    Log::Destroy();
 }
 
 static void BencTestSerialization(BencObj *obj, const char *dataOrig)

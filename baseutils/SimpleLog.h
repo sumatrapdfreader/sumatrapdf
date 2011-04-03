@@ -12,6 +12,15 @@ class Logger {
 public:
     virtual ~Logger() { }
     virtual void Log(TCHAR *s, bool takeOwnership=false) = 0;
+
+    void LogFmt(TCHAR *fmt, ...)
+    {
+        va_list args;
+        va_start(args, fmt);
+        TCHAR *s = Str::FmtV(fmt, args);
+        Log(s, true);
+        va_end(args);
+    }
 };
 
 class FileLogger : public Logger {
@@ -55,6 +64,34 @@ public:
 
     // caller has to free() the result
     TCHAR *GetLines() { return lines.Join(_T("\r\n")); }
+};
+
+// allows to log into several logs at the same time (thread safe)
+class MultiLogger : public Logger {
+    Vec<Logger *>    loggers;
+    CRITICAL_SECTION cs;
+
+public:
+    MultiLogger() { InitializeCriticalSection(&cs); }
+    ~MultiLogger()
+    {
+        DeleteVecMembers(loggers);
+        DeleteCriticalSection(&cs);
+    }
+
+    virtual void Log(TCHAR *s, bool takeOwnership=false)
+    {
+        if (loggers.Count() > 0) {
+            ScopedCritSec(&this->cs);
+            for (size_t i = 0; i < loggers.Count(); i++)
+                loggers[i]->Log(s);
+        }
+        if (takeOwnership)
+            free(s);
+    }
+
+    void AddLogger(Logger *logger) { loggers.Append(logger); }
+    void RemoveLogger(Logger *logger) { loggers.Remove(logger); }
 };
 
 void Initialize();
