@@ -131,7 +131,7 @@ public:
     RenderedBitmap *renderBitmap(int pageNo, float zoom, int rotation,
                          fz_rect *pageRect=NULL, /* if NULL: defaults to the page's mediabox */
                          RenderTarget target=Target_View, bool useGdi=false);
-    bool PdfEngine::renderPage(HDC hDC, int pageNo, RectI *screenRect,
+    bool renderPage(HDC hDC, int pageNo, RectI *screenRect,
                          fz_matrix *ctm=NULL, float zoom=0, int rotation=0,
                          fz_rect *pageRect=NULL, RenderTarget target=Target_View) {
         return renderPage(hDC, getPdfPage(pageNo), screenRect, ctm, zoom, rotation, pageRect, target);
