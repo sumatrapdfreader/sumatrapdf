@@ -42,9 +42,6 @@ void RemoveLogger(Logger *logger)
 void Log(TCHAR *s)
 {
     ScopedCritSec cs(&g_logCs);
-    if (0 == g_loggers->Count())
-        return;
-
     for (size_t i = 0; i < g_loggers->Count(); i++)
         g_loggers->At(i)->Log(s);
 }

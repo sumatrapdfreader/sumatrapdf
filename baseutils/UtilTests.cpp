@@ -400,7 +400,7 @@ static void LogTest()
         log.AddLogger(&ml);
         Log::Log(_T("Test1"));
         ml.Log(_T("ML"));
-        Log::LogFmt(_T("%s : %d"), _T("filen\xE4me.pdf"), 25);
+        log.LogFmt(_T("%s : %d"), _T("filen\xE4me.pdf"), 25);
         log.RemoveLogger(&ml);
 
         assert(Str::Eq(ml.GetData(), _T("Test1\r\nML\r\nfilen\xE4me.pdf : 25\r\n")));
@@ -410,11 +410,11 @@ static void LogTest()
         HANDLE hRead, hWrite;
         CreatePipe(&hRead, &hWrite, NULL, 0);
         Log::FileLogger fl(hWrite);
-        log.AddLogger(&fl);
+        Log::AddLogger(&fl);
         Log::Log(_T("Test2"));
         fl.Log(_T("FL"));
         Log::LogFmt(_T("%s : %d"), _T("filen\xE4me.pdf"), 25);
-        log.RemoveLogger(&fl);
+        Log::RemoveLogger(&fl);
 
         char pipeData[32];
         char *expected = "Test2\r\nFL\r\nfilen\xC3\xA4me.pdf : 25\r\n";
@@ -426,7 +426,7 @@ static void LogTest()
         CloseHandle(hRead);
     }
 
-    assert(Str::Eq(logAll.GetData(), _T("Test1\r\nfilen\xE4me.pdf : 25\r\nTest2\r\nfilen\xE4me.pdf : 25\r\n")));
+    assert(Str::Eq(logAll.GetData(), _T("Test1\r\nTest2\r\nfilen\xE4me.pdf : 25\r\n")));
     Log::RemoveLogger(&logAll);
     Log::RemoveLogger(&log);
 

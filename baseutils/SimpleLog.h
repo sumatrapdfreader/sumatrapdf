@@ -99,9 +99,6 @@ public:
     virtual void Log(TCHAR *s)
     {
         ScopedCritSec scope(&cs);
-        if (0 == loggers.Count())
-            return;
-
         for (size_t i = 0; i < loggers.Count(); i++)
             loggers[i]->Log(s);
     }
