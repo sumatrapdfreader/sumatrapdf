@@ -25,7 +25,7 @@ WindowInfo::WindowInfo(HWND hwnd) :
     hwndInfotip(NULL), infotipVisible(false), hwndPdfProperties(NULL),
     menu(NULL), hdc(NULL),
     findThread(NULL), findCanceled(false), findPercent(0), findStatusVisible(false),
-    findStatusThread(NULL), stopFindStatusThreadEvent(NULL),
+    findStatusThread(NULL), stopFindStatusThreadEvent(NULL), findStatusHighlight(false),
     showSelection(false), mouseAction(MA_IDLE),
     hdcToDraw(NULL), hdcDoubleBuffer(NULL), bmpDoubleBuffer(NULL),
     prevZoomVirtual(INVALID_ZOOM), prevDisplayMode(DM_AUTOMATIC),

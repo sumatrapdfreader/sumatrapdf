@@ -235,7 +235,7 @@ static bool LoadPdfIntoWindow(const TCHAR *fileName, WindowInfo *win,
     const DisplayState *state, bool isNewWindow, bool tryRepair, 
     bool showWin, bool placeWindow);
 static WindowInfo* LoadPdf(const TCHAR *fileName, WindowInfo *win, bool showWin=true, bool forceReuse=false);
-static void WindowInfo_ShowMessage_Async(WindowInfo *win, const TCHAR *message, bool resize);
+static void WindowInfo_ShowMessage_Async(WindowInfo *win, const TCHAR *message, bool resize, bool highlight=false);
 
 static void DeleteOldSelectionInfo(WindowInfo *win);
 static void ClearSearch(WindowInfo *win);
@@ -4182,7 +4182,8 @@ static DWORD WINAPI ShowMessageThread(LPVOID data)
 
 // Display the message 'message' asynchronously
 // If resize = true then the window width is adjusted to the length of the text
-static void WindowInfo_ShowMessage_Async(WindowInfo *win, const TCHAR *message, bool resize)
+// if highlight = true the message text is displayed inverted in order to draw some attention
+static void WindowInfo_ShowMessage_Async(WindowInfo *win, const TCHAR *message, bool resize, bool highlight)
 {
     if (message)
         Win::SetText(win->hwndFindStatus, message);
@@ -4201,6 +4202,7 @@ static void WindowInfo_ShowMessage_Async(WindowInfo *win, const TCHAR *message, 
     }
 
     win->findStatusVisible = false;
+    win->findStatusHighlight = highlight;
     // if a thread has previously been started then make sure it has ended
     if (win->findStatusThread) {
         SetEvent(win->stopFindStatusThreadEvent);
@@ -4302,7 +4304,7 @@ static void WindowInfo_ShowFindStatus(WindowInfo *win)
     SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_MATCH, disable);
 }
 
-static void WindowInfo_HideFindStatus(WindowInfo *win, bool canceled=false)
+static void WindowInfo_HideFindStatus(WindowInfo *win, bool canceled=false, bool loopedAround=false)
 {
     LPARAM enable = (LPARAM)MAKELONG(1, 0);
 
@@ -4318,7 +4320,9 @@ static void WindowInfo_HideFindStatus(WindowInfo *win, bool canceled=false)
         WindowInfo_ShowMessage_Async(win, _TR("No matches were found"), false);
     else {
         ScopedMem<TCHAR> buf(Str::Format(_TR("Found text at page %d"), win->dm->currentPageNo()));
-        WindowInfo_ShowMessage_Async(win, buf, false);
+        if (loopedAround)
+            buf.Set(Str::Format(_TB_TR("Found text at page %d (again)"), win->dm->currentPageNo()));
+        WindowInfo_ShowMessage_Async(win, buf, false, loopedAround);
     }    
 }
 
@@ -4770,10 +4774,15 @@ class FindEndWorkItem : public UIThreadWorkItem
 {
     PdfSel *pdfSel;
     bool    wasModifiedCanceled;
+    bool    loopedAround;
 
 public:
-    FindEndWorkItem(WindowInfo *win, PdfSel *pdfSel, bool wasModifiedCanceled) :
-        UIThreadWorkItem(win), pdfSel(pdfSel), wasModifiedCanceled(wasModifiedCanceled) {}
+    FindEndWorkItem(WindowInfo *win, PdfSel *pdfSel,
+                    bool wasModifiedCanceled,
+                    bool loopedAround=false) :
+        UIThreadWorkItem(win), pdfSel(pdfSel),
+            loopedAround(loopedAround),
+            wasModifiedCanceled(wasModifiedCanceled) {}
 
     virtual void Execute() {
         if (!WindowInfoStillValid(win))
@@ -4783,7 +4792,7 @@ public:
             WindowInfo_ShowMessage_Async(win, NULL, false);
         } else if (pdfSel) {
             WindowInfo_ShowSearchResult(win, pdfSel, wasModifiedCanceled);
-            WindowInfo_HideFindStatus(win);
+            WindowInfo_HideFindStatus(win, false, loopedAround);
         } else {
             // nothing found or search canceled
             ClearSearch(win);
@@ -4812,15 +4821,19 @@ static DWORD WINAPI FindThread(LPVOID data)
     else
         rect = win->dm->Find(ftd->direction);
 
+    bool loopedAround = false;
     if (!win->findCanceled && !rect) {
         // With no further findings, start over (unless this was a new search from the beginning)
         int startPage = (FIND_FORWARD == ftd->direction) ? 1 : win->dm->pageCount();
-        if (!ftd->wasModified || win->dm->currentPageNo() != startPage)
+        if (!ftd->wasModified || win->dm->currentPageNo() != startPage) {
+            loopedAround = true;
+            MessageBeep(MB_ICONINFORMATION);
             rect = win->dm->Find(ftd->direction, ftd->text, startPage);
+        }
     }
 
     if (rect && !win->findCanceled)
-        gUIThreadMarshaller.Queue(new FindEndWorkItem(win, rect, ftd->wasModified));
+        gUIThreadMarshaller.Queue(new FindEndWorkItem(win, rect, ftd->wasModified, loopedAround));
     else
         gUIThreadMarshaller.Queue(new FindEndWorkItem(win, NULL, win->findCanceled));
 
@@ -4882,7 +4895,14 @@ static LRESULT CALLBACK WndProcFindStatus(HWND hwnd, UINT message, WPARAM wParam
         ClientRect rect(hwnd);
         GetWindowText(hwnd, text, 256);
 
-        SetBkMode(hdc, TRANSPARENT);
+        if (win->findStatusHighlight) {
+            SetBkMode(hdc, OPAQUE);
+            SetTextColor(hdc, GetSysColor(COLOR_HIGHLIGHTTEXT));
+            SetBkColor(hdc, GetSysColor(COLOR_HIGHLIGHT));
+        } else {
+            SetBkMode(hdc, TRANSPARENT);
+            SetTextColor(hdc, GetSysColor(COLOR_WINDOWTEXT));
+        }
         rect.x += 10; rect.dx -= 10;
         rect.y += 4; rect.dy -= 4;
         DrawText(hdc, text, Str::Len(text), &rect.ToRECT(), DT_LEFT);

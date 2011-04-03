@@ -147,14 +147,16 @@ public:
     int             wheelAccumDelta;
     UINT_PTR        delayedRepaintTimer;
 
+    bool            findStatusHighlight; // whether to highlight the status text
+    HANDLE          findStatusThread; // handle of the thread showing the status of the search result
+    HANDLE          stopFindStatusThreadEvent; // event raised to tell the findstatus thread to stop
+
     // the following properties only apply to PDF documents
 
     HANDLE          findThread;
     bool            findCanceled;
     int             findPercent;
-    bool            findStatusVisible;    
-    HANDLE          findStatusThread; // handle of the thread showing the status of the search result
-    HANDLE          stopFindStatusThreadEvent; // event raised to tell the findstatus thread to stop
+    bool            findStatusVisible;
 
     pdf_link *      linkOnLastButtonDown;
     const TCHAR *   url;

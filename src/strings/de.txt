@@ -334,6 +334,9 @@ An eine einzelne Seite anpassen
 Found text at page %d
 Text auf Seite %d gefunden
 
+Found text at page %d (again)
+Text auf Seite %d gefunden (erneut)
+
 GB
 GB
 
