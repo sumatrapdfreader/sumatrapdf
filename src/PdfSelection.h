@@ -19,7 +19,7 @@ typedef struct {
 class PdfSelection
 {
 public:
-    PdfSelection(PdfEngine *engine);
+    PdfSelection(BaseEngine *engine);
     ~PdfSelection();
 
     bool IsOverGlyph(int pageNo, double x, double y);
@@ -38,8 +38,8 @@ public:
     PdfSel result;
 
 protected:
-    PdfEngine * engine;
-    fz_bbox  ** coords;
+    BaseEngine* engine;
+    RectI    ** coords;
     TCHAR    ** text;
     int       * lens;
 

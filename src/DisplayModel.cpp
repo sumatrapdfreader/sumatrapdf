@@ -1516,7 +1516,7 @@ void DisplayModel::goToNamedDest(const char *name)
  * into a newly allocated buffer (which the caller needs to free()). */
 TCHAR *DisplayModel::getTextInRegion(int pageNo, RectD *region)
 {
-    fz_bbox *coords;
+    RectI *coords;
     TCHAR *pageText = pdfEngine->ExtractPageText(pageNo, _T("\n\n"), &coords);
     if (!pageText)
         return NULL;
@@ -1525,8 +1525,7 @@ TCHAR *DisplayModel::getTextInRegion(int pageNo, RectD *region)
     TCHAR *result = SAZA(TCHAR, Str::Len(pageText) + 1), *dest = result;
     for (TCHAR *src = pageText; *src; src++) {
         if (*src != '\n') {
-            fz_bbox *bbox = &coords[src - pageText];
-            RectI rect(bbox->x0, bbox->y0, bbox->x1 - bbox->x0, bbox->y1 - bbox->y0);
+            RectI rect = coords[src - pageText];
             RectI isect = regionI.Intersect(rect);
             if (!isect.IsEmpty() && 1.0 * isect.dx * isect.dy / (rect.dx * rect.dy) >= 0.3) {
                 *dest++ = *src;
@@ -1541,7 +1540,7 @@ TCHAR *DisplayModel::getTextInRegion(int pageNo, RectD *region)
     }
     *dest = 0;
 
-    free(coords);
+    delete coords;
     free(pageText);
 
     return result;

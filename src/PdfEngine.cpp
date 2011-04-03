@@ -1095,11 +1095,18 @@ CleanUp:
     return Str::Conv::FromWStrQ(content);
 }
 
-TCHAR *PdfEngine::ExtractPageText(int pageNo, TCHAR *lineSep, fz_bbox **coords_out, RenderTarget target)
+TCHAR *PdfEngine::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_out, RenderTarget target)
 {
+    // TODO: move fz_bbox** to RectI** conversion into ExtractPageText(pdf_page, ...)
+    fz_bbox *coords = NULL;
+    fz_bbox **coords_tmp = coords_out ? &coords : NULL;
+    TCHAR *result = NULL;
+
     pdf_page *page = getPdfPage(pageNo, true);
-    if (page)
-        return ExtractPageText(page, lineSep, coords_out, target);
+    if (page) {
+        result = ExtractPageText(page, lineSep, coords_tmp, target);
+        goto ConvertCoords;
+    }
 
     EnterCriticalSection(&_xrefAccess);
     fz_error error = pdf_loadpage(&page, _xref, pdf_getpageobject(_xref, pageNo));
@@ -1107,10 +1114,20 @@ TCHAR *PdfEngine::ExtractPageText(int pageNo, TCHAR *lineSep, fz_bbox **coords_o
     if (error)
         return NULL;
 
-    TCHAR *text = ExtractPageText(page, lineSep, coords_out, target);
+    result = ExtractPageText(page, lineSep, coords_tmp, target);
     pdf_freepage(page);
-    return text;
-};
+
+ConvertCoords:
+    if (coords) {
+        size_t len = Str::Len(result);
+        RectI *destRect = *coords_out = new RectI[len];
+        for (size_t i = 0; i < len; i++)
+            destRect[i] = RectI::FromXY(coords[i].x0, coords[i].y0, coords[i].x1, coords[i].y1);
+        free(coords);
+    }
+
+    return result;
+}
 
 TCHAR *PdfEngine::getPdfInfo(char *key) const
 {

@@ -22,7 +22,7 @@ public:
 class PdfSearch : public PdfSelection
 {
 public:
-    PdfSearch(PdfEngine *engine, PdfSearchTracker *tracker=NULL);
+    PdfSearch(BaseEngine *engine, PdfSearchTracker *tracker=NULL);
     ~PdfSearch();
 
     void SetText(TCHAR *text);

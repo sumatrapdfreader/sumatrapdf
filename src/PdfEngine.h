@@ -97,24 +97,36 @@ public:
                                 unsigned char decryptionKeyOut[32], bool *saveKey) = 0;
 };
 
-class PdfEngine {
+class BaseEngine {
 public:
-    PdfEngine();
-    ~PdfEngine();
-    PdfEngine *clone(void);
+    virtual ~BaseEngine() { }
+    virtual BaseEngine *clone() = 0;
 
-    const TCHAR *fileName(void) const { return _fileName; };
-    int pageCount(void) const { return _pageCount; }
+    virtual const TCHAR *fileName() const = 0;
+    virtual int pageCount() const = 0;
 
     bool validPageNo(int pageNo) const {
-        if ((pageNo >= 1) && (pageNo <= _pageCount))
-            return true;
-        return false;
+        return 1 <= pageNo && pageNo <= pageCount();
     }
+
+    virtual fz_rect pageMediabox(int pageNo) = 0;
+    virtual fz_matrix viewctm(int pageNo, float zoom, int rotate) = 0;
+
+    virtual TCHAR * ExtractPageText(int pageNo, TCHAR *lineSep=DOS_NEWLINE, RectI **coords_out=NULL, RenderTarget target=Target_View) = 0;
+};
+
+class PdfEngine : public BaseEngine {
+public:
+    PdfEngine();
+    virtual ~PdfEngine();
+    virtual PdfEngine *clone();
+
+    virtual const TCHAR *fileName() const { return _fileName; };
+    virtual int pageCount() const { return _pageCount; }
 
     int pageRotation(int pageNo);
     SizeD pageSize(int pageNo);
-    fz_rect pageMediabox(int pageNo);
+    virtual fz_rect pageMediabox(int pageNo);
     fz_bbox pageContentBox(int pageNo, RenderTarget target=Target_View);
     RenderedBitmap *renderBitmap(int pageNo, float zoom, int rotation,
                          fz_rect *pageRect=NULL, /* if NULL: defaults to the page's mediabox */
@@ -134,13 +146,13 @@ public:
     }
     void ageStore();
     PdfTocItem *getTocTree();
-    fz_matrix  viewctm(int pageNo, float zoom, int rotate);
+    virtual fz_matrix viewctm(int pageNo, float zoom, int rotate);
 
     int        findPageNo(fz_obj *dest);
     fz_obj   * getNamedDest(const char *name);
     char     * getPageLayoutName(void);
     bool       isDocumentDirectionR2L(void);
-    TCHAR    * ExtractPageText(int pageNo, TCHAR *lineSep=DOS_NEWLINE, fz_bbox **coords_out=NULL, RenderTarget target=Target_View);
+    virtual TCHAR * ExtractPageText(int pageNo, TCHAR *lineSep=DOS_NEWLINE, RectI **coords_out=NULL, RenderTarget target=Target_View);
     TCHAR    * getPdfInfo(char *key) const;
     int        getPdfVersion(void) const;
     char     * getDecryptionKey(void) const { return _decryptionKey ? Str::Dup(_decryptionKey) : NULL; }

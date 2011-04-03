@@ -4,11 +4,12 @@
 #include "PdfSelection.h"
 #include "Vec.h"
 
-PdfSelection::PdfSelection(PdfEngine *engine) : engine(engine)
+PdfSelection::PdfSelection(BaseEngine *engine) : engine(engine)
 {
-    coords = SAZA(fz_bbox *, engine->pageCount());
-    text = SAZA(TCHAR *, engine->pageCount());
-    lens = SAZA(int, engine->pageCount());
+    int count = engine->pageCount();
+    coords = SAZA(RectI *, count);
+    text = SAZA(TCHAR *, count);
+    lens = SAZA(int, count);
 
     result.len = 0;
     result.pages = NULL;
@@ -23,7 +24,7 @@ PdfSelection::~PdfSelection()
     Reset();
 
     for (int i = 0; i < engine->pageCount(); i++) {
-        free(coords[i]);
+        delete coords[i];
         coords[i] = NULL;
         free(text[i]);
         text[i] = NULL;
@@ -61,14 +62,14 @@ int PdfSelection::FindClosestGlyph(int pageNo, double x, double y)
 
     double maxDist = -1;
     int result = -1;
-    fz_bbox *_coords = coords[pageNo - 1];
+    RectI *_coords = coords[pageNo - 1];
 
     for (int i = 0; i < lens[pageNo - 1]; i++) {
-        if (!_coords[i].x0 && !_coords[i].x1)
+        if (!_coords[i].x && !_coords[i].dx)
             continue;
 
-        double dist = _hypot(x - 0.5 * (_coords[i].x0 + _coords[i].x1),
-                             y - 0.5 * (_coords[i].y0 + _coords[i].y1));
+        double dist = _hypot(x - _coords[i].x - 0.5 * _coords[i].dx,
+                             y - _coords[i].y - 0.5 * _coords[i].dy);
         if (maxDist < 0 || dist < maxDist) {
             result = i;
             maxDist = dist;
@@ -79,9 +80,13 @@ int PdfSelection::FindClosestGlyph(int pageNo, double x, double y)
         return 0;
     assert(0 <= result && result < lens[pageNo - 1]);
 
+    // TODO: move this into either BaseEngine or GeomUtil?
     // the result indexes the first glyph to be selected in a forward selection
     fz_matrix ctm = engine->viewctm(pageNo, 1.0, 0);
-    fz_bbox bbox = fz_transformbbox(ctm, _coords[result]);
+    fz_bbox bbox = { _coords[result].x, _coords[result].y,
+                     _coords[result].x + _coords[result].dx,
+                     _coords[result].y + _coords[result].dy };
+    bbox = fz_transformbbox(ctm, bbox);
     fz_point pt = { (float)x, (float)y };
     pt = fz_transformpoint(ctm, pt);
     if (pt.x > 0.5 * (bbox.x0 + bbox.x1))
@@ -92,20 +97,21 @@ int PdfSelection::FindClosestGlyph(int pageNo, double x, double y)
 
 void PdfSelection::FillResultRects(int pageNo, int glyph, int length, StrVec *lines)
 {
-    fz_bbox mediabox = fz_roundrect(engine->pageMediabox(pageNo));
-    fz_bbox *c = &coords[pageNo - 1][glyph], *end = c + length;
+    fz_bbox mbx = fz_roundrect(engine->pageMediabox(pageNo));
+    RectI mediabox = RectI::FromXY(mbx.x0, mbx.y0, mbx.x1, mbx.y1);
+    RectI *c = &coords[pageNo - 1][glyph], *end = c + length;
     for (; c < end; c++) {
         // skip line breaks
-        if (!c->x0 && !c->x1)
+        if (!c->x && !c->dx)
             continue;
 
-        fz_bbox c0 = *c, *c0p = c;
-        for (; c < end && (c->x0 || c->x1); c++);
+        RectI c0 = *c, *c0p = c;
+        for (; c < end && (c->x || c->dx); c++);
         c--;
-        fz_bbox c1 = *c;
-        fz_bbox bbox = fz_intersectbbox(fz_unionbbox(c0, c1), mediabox);
+        RectI c1 = *c;
+        RectI bbox = c0.Union(c1).Intersect(mediabox);
         // skip text that's completely outside a page's mediabox
-        if (fz_isemptybbox(bbox))
+        if (bbox.IsEmpty())
             continue;
 
         if (lines) {
@@ -114,35 +120,29 @@ void PdfSelection::FillResultRects(int pageNo, int glyph, int length, StrVec *li
         }
 
         // cut the right edge, if it overlaps the next character
-        if ((c[1].x0 || c[1].x1) && bbox.x0 < c[1].x0 && bbox.x1 > c[1].x0)
-            bbox.x1 = c[1].x0;
+        if ((c[1].x || c[1].dx) && bbox.x < c[1].x && bbox.x + bbox.dx > c[1].x)
+            bbox.dx = c[1].x - bbox.x;
 
         result.len++;
         result.pages = (int *)realloc(result.pages, sizeof(int) * result.len);
         result.pages[result.len - 1] = pageNo;
         result.rects = (RectI *)realloc(result.rects, sizeof(RectI) * result.len);
-        result.rects[result.len - 1] = RectI::FromXY(bbox.x0, bbox.y0, bbox.x1, bbox.y1);
+        result.rects[result.len - 1] = bbox;
     }
-}
-
-bool fz_isptinbbox(fz_bbox bbox, fz_point pt)
-{
-    return MIN(bbox.x0, bbox.x1) <= pt.x && pt.x < MAX(bbox.x0, bbox.x1) &&
-           MIN(bbox.y0, bbox.y1) <= pt.y && pt.y < MAX(bbox.y0, bbox.y1);
 }
 
 bool PdfSelection::IsOverGlyph(int pageNo, double x, double y)
 {
     int glyphIx = FindClosestGlyph(pageNo, x, y);
-    fz_point pt = { (float)x, (float)y };
-    fz_bbox *_coords = coords[pageNo - 1];
+    PointI pt = PointD(x, y).Convert<int>();
+    RectI *_coords = coords[pageNo - 1];
     // when over the right half of a glyph, FindClosestGlyph returns the
     // index of the next glyph, in which case glyphIx must be decremented
-    if (glyphIx == lens[pageNo - 1] || !fz_isptinbbox(_coords[glyphIx], pt))
+    if (glyphIx == lens[pageNo - 1] || !_coords[glyphIx].Inside(pt))
         glyphIx--;
     if (-1 == glyphIx)
         return false;
-    return fz_isptinbbox(_coords[glyphIx], pt);
+    return _coords[glyphIx].Inside(pt);
 }
 
 void PdfSelection::StartAt(int pageNo, int glyphIx)
