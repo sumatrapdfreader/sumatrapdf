@@ -132,7 +132,7 @@
     <ClCompile Include="mupdf\fitz\res_pixmap.c" />
     <ClCompile Include="mupdf\fitz\res_text.c" />
     <ClCompile Include="src\AppPrefs.cpp" />
-    <ClCompile Include="src\ComicEngine.cpp" />
+    <ClCompile Include="src\ComicBook.cpp" />
     <ClCompile Include="src\CrashHandler.cpp" />
     <ClCompile Include="src\DisplayModel.cpp" />
     <ClCompile Include="src\DisplayState.cpp" />
@@ -250,7 +250,7 @@
     <ClInclude Include="ext\libjpeg-turbo\jversion.h" />
     <ClInclude Include="ext\libjpeg-turbo\simd\jsimd.h" />
     <ClInclude Include="src\AppPrefs.h" />
-    <ClInclude Include="src\ComicEngine.h" />
+    <ClInclude Include="src\ComicBook.h" />
     <ClInclude Include="src\CrashHandler.h" />
     <ClInclude Include="src\DisplayModel.h" />
     <ClInclude Include="src\DisplayState.h" />

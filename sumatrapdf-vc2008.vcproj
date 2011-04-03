@@ -92,11 +92,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\ComicEngine.cpp"
+				RelativePath=".\src\ComicBook.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\src\ComicEngine.h"
+				RelativePath=".\src\ComicBook.h"
 				>
 			</File>
 			<File

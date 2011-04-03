@@ -37,9 +37,6 @@
  #define VERSION_SUB_TXT        _T("")
 #endif
 
-extern HCURSOR gCursorHand;
-extern bool gRestrictedUse;
-
 static HWND gHwndAbout;
 
 typedef struct AboutLayoutInfoEl {

@@ -60,7 +60,9 @@ public:
     WindowInfo(HWND hwnd);
     ~WindowInfo();
 
-    // TODO: misleading name, it also applies to error window
+    // TODO: error windows currently have
+    //       !IsAboutWindow() && !PdfLoaded() && !ComicBookLoaded()
+    //       which doesn't allow distinction between PDF and ComicBook errors
     bool IsAboutWindow() const { return !loadedFilePath; }
     bool PdfLoaded() const { return this->dm != NULL; }
     bool ComicBookLoaded() const { return comicPages != NULL; }

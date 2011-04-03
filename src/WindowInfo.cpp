@@ -9,7 +9,9 @@
 #include "StrUtil.h"
 #include "WinUtil.h"
 #include "FileWatch.h"
+#ifdef BUILD_COMIC_ENGINE
 #include "ComicBook.h"
+#endif
 
 WindowInfo::WindowInfo(HWND hwnd) :
     dm(NULL), hwndFrame(hwnd),
@@ -61,10 +63,12 @@ WindowInfo::~WindowInfo() {
     delete this->tocRoot;
     free(this->tocState);
 
+#ifdef BUILD_COMIC_ENGINE
     if (comicPages) {
         DeleteVecMembers(*comicPages);
         delete comicPages;
     }
+#endif
 }
 
 void WindowInfo::UpdateCanvasSize()

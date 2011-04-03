@@ -6,6 +6,7 @@
 
 #include "BaseUtil.h"
 #include "Vec.h"
+#include "AppPrefs.h"
 
 #define APP_NAME_STR            _T("SumatraPDF")
 #define FRAME_CLASS_NAME        _T("SUMATRA_PDF_FRAME")
@@ -29,10 +30,17 @@
 
 class WindowInfo;
 class DisplayState;
+class FileHistory;
 
-extern HINSTANCE ghinst;
-extern Vec<WindowInfo*> gWindows;
-extern HBRUSH gBrushBg;
+// all defined in SumatraPDF.cpp
+extern HINSTANCE                ghinst;
+extern Vec<WindowInfo*>         gWindows;
+extern HBRUSH                   gBrushBg;
+extern SerializableGlobalPrefs  gGlobalPrefs;
+extern FileHistory              gFileHistory;
+extern HCURSOR                  gCursorHand;
+extern bool                     gRestrictedUse;
+
 
 HMENU BuildMenu(HWND hWnd);
 void CreateToolbar(WindowInfo *win, HINSTANCE hInst);

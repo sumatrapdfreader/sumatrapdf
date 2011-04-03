@@ -248,7 +248,7 @@
     <ClCompile Include="src\AppPrefs.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\ComicEngine.cpp">
+    <ClCompile Include="src\ComicBook.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\CrashHandler.cpp">
@@ -577,7 +577,7 @@
     <ClInclude Include="src\AppPrefs.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\ComicEngine.h">
+    <ClInclude Include="src\ComicBook.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="src\CrashHandler.h">

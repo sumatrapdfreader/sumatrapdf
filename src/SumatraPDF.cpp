@@ -5781,11 +5781,13 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
             return res;
     }
 
+#ifdef BUILD_COMIC_ENGINE
     if (win && win->ComicBookLoaded()) {
         res = HandleWindowComicBookMsg(win, hwnd, message, wParam, lParam, handled);
         if (handled)
             return res;
     }
+#endif
 
     switch (message)
     {
