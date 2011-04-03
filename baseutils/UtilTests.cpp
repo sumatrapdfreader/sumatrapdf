@@ -387,17 +387,24 @@ static void VecTest()
 
 static void LogTest()
 {
+    Log::Initialize();
+    Log::Log(Str::Dup(_T("Don't leak me!")), true);
+
     Log::MultiLogger log;
+    Log::MemoryLogger logAll;
+    Log::AddLogger(&log);
+    Log::AddLogger(&logAll);
 
     {
         Log::MemoryLogger ml;
         log.AddLogger(&ml);
-        log.Log(_T("Test"));
-        log.LogFmt(_T("%s : %d"), _T("filen\xE4me.pdf"), 25);
+        Log::Log(_T("Test1"));
+        ml.Log(_T("ML"));
+        Log::LogFmt(_T("%s : %d"), _T("filen\xE4me.pdf"), 25);
         log.RemoveLogger(&ml);
 
         ScopedMem<TCHAR> logData(ml.GetLines());
-        assert(Str::Eq(logData, _T("Test\r\nfilen\xE4me.pdf : 25")));
+        assert(Str::Eq(logData, _T("Test1\r\nML\r\nfilen\xE4me.pdf : 25")));
     }
 
     {
@@ -405,12 +412,13 @@ static void LogTest()
         CreatePipe(&hRead, &hWrite, NULL, 0);
         Log::FileLogger fl(hWrite);
         log.AddLogger(&fl);
-        log.Log(_T("Test"));
-        log.LogFmt(_T("%s : %d"), _T("filen\xE4me.pdf"), 25);
+        Log::Log(_T("Test2"));
+        fl.Log(_T("FL"));
+        Log::LogFmt(_T("%s : %d"), _T("filen\xE4me.pdf"), 25);
         log.RemoveLogger(&fl);
 
         char pipeData[32];
-        char *expected = "Test\r\nfilen\xC3\xA4me.pdf : 25\r\n";
+        char *expected = "Test2\r\nFL\r\nfilen\xC3\xA4me.pdf : 25\r\n";
         DWORD len;
         BOOL ok = ReadFile(hRead, pipeData, sizeof(pipeData), &len, NULL);
         assert(ok && len == Str::Len(expected));
@@ -418,6 +426,15 @@ static void LogTest()
         assert(Str::Eq(pipeData, expected));
         CloseHandle(hRead);
     }
+
+    {
+        ScopedMem<TCHAR> logData(logAll.GetLines());
+        assert(Str::Eq(logData, _T("Test1\r\nfilen\xE4me.pdf : 25\r\nTest2\r\nfilen\xE4me.pdf : 25")));
+    }
+
+    Log::RemoveLogger(&logAll);
+    Log::RemoveLogger(&log);
+    Log::Destroy();
 }
 
 static void BencTestSerialization(BencObj *obj, const char *dataOrig)

@@ -75,14 +75,16 @@ public:
     MultiLogger() { InitializeCriticalSection(&cs); }
     ~MultiLogger()
     {
+        EnterCriticalSection(&cs);
         DeleteVecMembers(loggers);
+        LeaveCriticalSection(&cs);
         DeleteCriticalSection(&cs);
     }
 
     virtual void Log(TCHAR *s, bool takeOwnership=false)
     {
         if (loggers.Count() > 0) {
-            ScopedCritSec(&this->cs);
+            ScopedCritSec scope(&cs);
             for (size_t i = 0; i < loggers.Count(); i++)
                 loggers[i]->Log(s);
         }
@@ -90,8 +92,21 @@ public:
             free(s);
     }
 
-    void AddLogger(Logger *logger) { loggers.Append(logger); }
-    void RemoveLogger(Logger *logger) { loggers.Remove(logger); }
+    void AddLogger(Logger *logger)
+    {
+        ScopedCritSec scope(&cs);
+        loggers.Append(logger);
+    }
+    void RemoveLogger(Logger *logger)
+    {
+        ScopedCritSec scope(&cs);
+        loggers.Remove(logger);
+    }
+    size_t CountLoggers()
+    {
+        ScopedCritSec scope(&cs);
+        return loggers.Count();
+    }
 };
 
 void Initialize();

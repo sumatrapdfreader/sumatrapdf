@@ -6,6 +6,8 @@
 
 namespace Log {
 
+// TODO: implement this as a MultiLogger instead, so that we can test
+//       just the MultiLogger instead?
 static Vec<Logger*> *g_loggers;
 static CRITICAL_SECTION g_logCs;
 
