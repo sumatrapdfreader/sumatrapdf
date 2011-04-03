@@ -163,6 +163,7 @@ public:
     bool            pageShown(int pageNo);
     bool            pageVisible(int pageNo);
     bool            pageVisibleNearby(int pageNo);
+    int             firstVisiblePageNo(void) const;
     bool            firstBookPageVisible();
     bool            lastBookPageVisible();
     void            relayout(float zoomVirtual, int rotation);
@@ -232,7 +233,6 @@ protected:
 
     bool            buildPagesInfo(void);
     float           zoomRealFromVirtualForPage(float zoomVirtual, int pageNo);
-    int             firstVisiblePageNo(void) const;
     void            changeStartPage(int startPage);
     void            getContentStart(int pageNo, int *x, int *y);
     void            setZoomVirtual(float zoomVirtual);

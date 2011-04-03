@@ -252,6 +252,7 @@ void WindowInfo::ZoomToSelection(float factor, bool relative)
     PointI pt;
     bool zoomToPt = this->showSelection && this->selectionOnPage;
 
+    // either scroll towards the center of the current selection
     if (zoomToPt) {
         RectI selRect = this->selectionOnPage->selectionCanvas;
         for (SelectionOnPage *sel = this->selectionOnPage->next; sel; sel = sel->next)
@@ -268,6 +269,21 @@ void WindowInfo::ZoomToSelection(float factor, bool relative)
         if (!this->dm->cvtScreenToUser(&ss.page, &ss) ||
             !this->dm->pageVisible(ss.page))
             zoomToPt = false;
+    }
+    // or towards the top-left-most part of the first visible page
+    else {
+        int page = this->dm->firstVisiblePageNo();
+        PdfPageInfo *pageInfo = this->dm->getPageInfo(page);
+        if (pageInfo) {
+            RectI visible = pageInfo->pageOnScreen.Intersect(this->canvasRc);
+            pt = visible.TL();
+
+            ScrollState ss(0, pt.x, pt.y);
+            if (!visible.IsEmpty() &&
+                this->dm->cvtScreenToUser(&ss.page, &ss) &&
+                this->dm->pageVisible(ss.page))
+                zoomToPt = true;
+        }
     }
 
     this->prevCanvasSize.dx = this->prevCanvasSize.dy = -1;

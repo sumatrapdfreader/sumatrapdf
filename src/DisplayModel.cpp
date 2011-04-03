@@ -1240,6 +1240,14 @@ void DisplayModel::zoomTo(float zoomVirtual, PointI *fixPt)
                 scrollYBy((int)(center.y - fixPt->y), false);
         }
     }
+    else {
+        //DBG_OUT("DisplayModel::zoomTo() zoomVirtual=%.6f\n", _zoomVirtual);
+        ss.page = currentPageNo();
+        PdfPageInfo *pageInfo = getPageInfo(ss.page);
+        relayout(zoomVirtual, _rotation);
+        if (pageInfo)
+            goToPage(ss.page, max(-pageInfo->pageOnScreen.y, 0));
+    }
 }
 
 void DisplayModel::zoomBy(float zoomFactor, PointI *fixPt)
@@ -1624,6 +1632,7 @@ bool DisplayModel::getScrollState(ScrollState *state)
 {
     state->page = firstVisiblePageNo();
     if (state->page <= 0)
+        // TODO: use currentPageNo() instead?
         return false;
 
     PdfPageInfo *pageInfo = getPageInfo(state->page);
@@ -1635,13 +1644,14 @@ bool DisplayModel::getScrollState(ScrollState *state)
         state->x = state->y = -1;
         return true;
     }
-    
+
     bool result = cvtScreenToUser(&state->page, state);
     // Remember to show the margin, if it's currently visible
     if (pageInfo->screenX > 0)
         state->x = -1;
     if (pageInfo->screenY > 0)
         state->y = -1;
+    // TODO: get more meaningful results for result==false and then always succeed?
     return result;
 }
 
