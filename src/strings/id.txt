@@ -362,10 +362,10 @@ Next Page
 Halaman Berikutnya
 
 No matches were found
-Tidak ada kesamaan ditemukan
+Tidak ditemukan kesamaan
 
 No result found around line %u in file %s
-Tidak ada hasil ditemukan pada baris %u di dalam berkas %s
+Tidak ditemukan hasil pada baris %u di dalam berkas %s
 
 No synchronization file found
 Tidak ada berkas sinkronisasi ditemukan
@@ -401,7 +401,7 @@ PDF Document
 Dokumen PDF
 
 PDF Producer:
-Produser PDF:
+Pembuat PDF:
 
 PDF Version:
 Versi PDF:
