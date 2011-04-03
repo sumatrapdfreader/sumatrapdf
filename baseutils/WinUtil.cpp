@@ -547,3 +547,38 @@ bool CopyTextToClipboard(const TCHAR *text, bool appendOnly)
 
     return handle != NULL;
 }
+
+namespace Win {
+namespace Font {
+
+#ifndef USER_DEFAULT_SCREEN_DPI
+// the following is only defined if _WIN32_WINNT >= 0x0600 and we use 0x0500
+#define USER_DEFAULT_SCREEN_DPI 96
+#endif
+
+HFONT GetSimple(HDC hdc, TCHAR *fontName, int fontSize)
+{
+    LOGFONT lf = { 0 };
+
+    lf.lfWidth = 0;
+    lf.lfHeight = -MulDiv(fontSize, GetDeviceCaps(hdc, LOGPIXELSY), USER_DEFAULT_SCREEN_DPI);
+    lf.lfItalic = FALSE;
+    lf.lfUnderline = FALSE;
+    lf.lfStrikeOut = FALSE;
+    lf.lfCharSet = DEFAULT_CHARSET;
+    lf.lfOutPrecision = OUT_TT_PRECIS;
+    lf.lfQuality = DEFAULT_QUALITY;
+    lf.lfPitchAndFamily = DEFAULT_PITCH;    
+    Str::BufSet(lf.lfFaceName, dimof(lf.lfFaceName), fontName);
+    lf.lfWeight = FW_DONTCARE;
+    lf.lfClipPrecision = CLIP_DEFAULT_PRECIS;
+    lf.lfEscapement = 0;
+    lf.lfOrientation = 0;
+
+    return CreateFontIndirect(&lf);
+}
+
+
+}
+}
+

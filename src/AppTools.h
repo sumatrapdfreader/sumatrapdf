@@ -81,9 +81,6 @@ TCHAR* GetFoxitPath();
 TCHAR* GetPDFXChangePath();
 
 LPTSTR AutoDetectInverseSearchCommands(HWND hwndCombo=NULL);
-void DDEExecute(LPCTSTR server, LPCTSTR topic, LPCTSTR command);
-
-HFONT Win32_Font_GetSimple(HDC hdc, TCHAR *fontName, int fontSize);
-void Win32_Font_Delete(HFONT font);
+void   DDEExecute(LPCTSTR server, LPCTSTR topic, LPCTSTR command);
 
 #endif

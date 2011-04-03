@@ -189,6 +189,18 @@ inline void Empty(HMENU m)
 }
 
 } // namespace Menu
+
+namespace Font {
+    
+HFONT GetSimple(HDC hdc, TCHAR *fontName, int fontSize);
+
+inline void Delete(HFONT font)
+{
+    DeleteObject(font);
+}
+
+}// namespace Font
+
 } // namespace Win
 
 // used to be in win_util.h

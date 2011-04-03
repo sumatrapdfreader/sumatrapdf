@@ -365,14 +365,14 @@ WindowInfo *LoadComicBook(const TCHAR *fileName, WindowInfo *win, bool showWin)
 
 void DrawComicBook(HWND hwnd, HDC hdc, RectI rect)
 {
-    HFONT fontRightTxt = Win32_Font_GetSimple(hdc, _T("MS Shell Dlg"), 14);
+    HFONT fontRightTxt = Win::Font::GetSimple(hdc, _T("MS Shell Dlg"), 14);
     HGDIOBJ origFont = SelectObject(hdc, fontRightTxt); /* Just to remember the orig font */
     SetBkMode(hdc, TRANSPARENT);
     RECT r = rect.ToRECT();
     FillRect(hdc, &r, gBrushBg);
     DrawCenteredText(hdc, rect, _T("Will show comic books"));
     SelectObject(hdc, origFont);
-    Win32_Font_Delete(fontRightTxt);
+    Win::Font::Delete(fontRightTxt);
 }
 
 static void OnPaint(WindowInfo *win)

@@ -123,10 +123,10 @@ static void DrawAbout(HWND hwnd, HDC hdc, RectI rect)
     HPEN penDivideLine = CreatePen(PS_SOLID, ABOUT_LINE_SEP_SIZE, WIN_COL_BLACK);
     HPEN penLinkLine = CreatePen(PS_SOLID, ABOUT_LINE_SEP_SIZE, COL_BLUE_LINK);
 
-    HFONT fontSumatraTxt = Win32_Font_GetSimple(hdc, SUMATRA_TXT_FONT, SUMATRA_TXT_FONT_SIZE);
-    HFONT fontVersionTxt = Win32_Font_GetSimple(hdc, VERSION_TXT_FONT, VERSION_TXT_FONT_SIZE);
-    HFONT fontLeftTxt = Win32_Font_GetSimple(hdc, LEFT_TXT_FONT, LEFT_TXT_FONT_SIZE);
-    HFONT fontRightTxt = Win32_Font_GetSimple(hdc, RIGHT_TXT_FONT, RIGHT_TXT_FONT_SIZE);
+    HFONT fontSumatraTxt = Win::Font::GetSimple(hdc, SUMATRA_TXT_FONT, SUMATRA_TXT_FONT_SIZE);
+    HFONT fontVersionTxt = Win::Font::GetSimple(hdc, VERSION_TXT_FONT, VERSION_TXT_FONT_SIZE);
+    HFONT fontLeftTxt = Win::Font::GetSimple(hdc, LEFT_TXT_FONT, LEFT_TXT_FONT_SIZE);
+    HFONT fontRightTxt = Win::Font::GetSimple(hdc, RIGHT_TXT_FONT, RIGHT_TXT_FONT_SIZE);
 
     HGDIOBJ origFont = SelectObject(hdc, fontSumatraTxt); /* Just to remember the orig font */
 
@@ -209,10 +209,10 @@ static void DrawAbout(HWND hwnd, HDC hdc, RectI rect)
     LineTo(hdc, linePosX + offX, linePosY + lineDy + offY);
 
     SelectObject(hdc, origFont);
-    Win32_Font_Delete(fontSumatraTxt);
-    Win32_Font_Delete(fontVersionTxt);
-    Win32_Font_Delete(fontLeftTxt);
-    Win32_Font_Delete(fontRightTxt);
+    Win::Font::Delete(fontSumatraTxt);
+    Win::Font::Delete(fontVersionTxt);
+    Win::Font::Delete(fontLeftTxt);
+    Win::Font::Delete(fontRightTxt);
 
     DeleteObject(brushBg);
     DeleteObject(penBorder);
@@ -231,10 +231,10 @@ static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, RectI *rect)
     int             offX, offY;
     int             boxDy;
 
-    HFONT fontSumatraTxt = Win32_Font_GetSimple(hdc, SUMATRA_TXT_FONT, SUMATRA_TXT_FONT_SIZE);
-    HFONT fontVersionTxt = Win32_Font_GetSimple(hdc, VERSION_TXT_FONT, VERSION_TXT_FONT_SIZE);
-    HFONT fontLeftTxt = Win32_Font_GetSimple(hdc, LEFT_TXT_FONT, LEFT_TXT_FONT_SIZE);
-    HFONT fontRightTxt = Win32_Font_GetSimple(hdc, RIGHT_TXT_FONT, RIGHT_TXT_FONT_SIZE);
+    HFONT fontSumatraTxt = Win::Font::GetSimple(hdc, SUMATRA_TXT_FONT, SUMATRA_TXT_FONT_SIZE);
+    HFONT fontVersionTxt = Win::Font::GetSimple(hdc, VERSION_TXT_FONT, VERSION_TXT_FONT_SIZE);
+    HFONT fontLeftTxt = Win::Font::GetSimple(hdc, LEFT_TXT_FONT, LEFT_TXT_FONT_SIZE);
+    HFONT fontRightTxt = Win::Font::GetSimple(hdc, RIGHT_TXT_FONT, RIGHT_TXT_FONT_SIZE);
     HGDIOBJ origFont = SelectObject(hdc, fontSumatraTxt);
 
     /* show/hide the SyncTeX attribution line */
@@ -328,10 +328,10 @@ static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, RectI *rect)
     }
 
     SelectObject(hdc, origFont);
-    Win32_Font_Delete(fontSumatraTxt);
-    Win32_Font_Delete(fontVersionTxt);
-    Win32_Font_Delete(fontLeftTxt);
-    Win32_Font_Delete(fontRightTxt);
+    Win::Font::Delete(fontSumatraTxt);
+    Win::Font::Delete(fontVersionTxt);
+    Win::Font::Delete(fontLeftTxt);
+    Win::Font::Delete(fontRightTxt);
 }
 
 void OnPaintAbout(HWND hwnd)

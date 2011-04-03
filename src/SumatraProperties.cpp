@@ -179,8 +179,8 @@ static void UpdatePropertiesLayout(HWND hwnd, HDC hdc, RectI *rect) {
     WindowInfo *    win = FindWindowInfoByHwnd(hwnd);
 
     PdfPropertiesLayout *layoutData = (PdfPropertiesLayout *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
-    HFONT fontLeftTxt = Win32_Font_GetSimple(hdc, LEFT_TXT_FONT, LEFT_TXT_FONT_SIZE);
-    HFONT fontRightTxt = Win32_Font_GetSimple(hdc, RIGHT_TXT_FONT, RIGHT_TXT_FONT_SIZE);
+    HFONT fontLeftTxt = Win::Font::GetSimple(hdc, LEFT_TXT_FONT, LEFT_TXT_FONT_SIZE);
+    HFONT fontRightTxt = Win::Font::GetSimple(hdc, RIGHT_TXT_FONT, RIGHT_TXT_FONT_SIZE);
     HGDIOBJ origFont = SelectObject(hdc, fontLeftTxt);
 
     /* calculate text dimensions for the left side */
@@ -235,8 +235,8 @@ static void UpdatePropertiesLayout(HWND hwnd, HDC hdc, RectI *rect) {
     }
 
     SelectObject(hdc, origFont);
-    Win32_Font_Delete(fontLeftTxt);
-    Win32_Font_Delete(fontRightTxt);
+    Win::Font::Delete(fontLeftTxt);
+    Win::Font::Delete(fontRightTxt);
 }
 
 static void CreatePropertiesWindow(WindowInfo *win, PdfPropertiesLayout *layoutData) {
@@ -383,8 +383,8 @@ static void DrawProperties(HWND hwnd, HDC hdc)
     HPEN penBorder = CreatePen(PS_SOLID, ABOUT_LINE_OUTER_SIZE, COL_BLACK);
 #endif
 
-    HFONT fontLeftTxt = Win32_Font_GetSimple(hdc, LEFT_TXT_FONT, LEFT_TXT_FONT_SIZE);
-    HFONT fontRightTxt = Win32_Font_GetSimple(hdc, RIGHT_TXT_FONT, RIGHT_TXT_FONT_SIZE);
+    HFONT fontLeftTxt = Win::Font::GetSimple(hdc, LEFT_TXT_FONT, LEFT_TXT_FONT_SIZE);
+    HFONT fontRightTxt = Win::Font::GetSimple(hdc, RIGHT_TXT_FONT, RIGHT_TXT_FONT_SIZE);
 
     HGDIOBJ origFont = SelectObject(hdc, fontLeftTxt); /* Just to remember the orig font */
 
@@ -418,8 +418,8 @@ static void DrawProperties(HWND hwnd, HDC hdc)
     }
 
     SelectObject(hdc, origFont);
-    Win32_Font_Delete(fontLeftTxt);
-    Win32_Font_Delete(fontRightTxt);
+    Win::Font::Delete(fontLeftTxt);
+    Win::Font::Delete(fontRightTxt);
 
     DeleteObject(brushBg);
 #if 0

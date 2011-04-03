@@ -2108,7 +2108,7 @@ static void DrawPdf(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
         UINT renderDelay = gRenderCache.Paint(hdc, &bounds, dm, pageNo, pageInfo, &renderOutOfDateCue);
 
         if (renderDelay) {
-            HFONT fontRightTxt = Win32_Font_GetSimple(hdc, _T("MS Shell Dlg"), 14);
+            HFONT fontRightTxt = Win::Font::GetSimple(hdc, _T("MS Shell Dlg"), 14);
             HGDIOBJ origFont = SelectObject(hdc, fontRightTxt); /* Just to remember the orig font */
             SetTextColor(hdc, gGlobalPrefs.m_invertColors ? WIN_COL_WHITE : WIN_COL_BLACK);
             if (renderDelay != RENDER_DELAY_FAILED) {
@@ -2123,7 +2123,7 @@ static void DrawPdf(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
                 DBG_OUT("   missing bitmap on visible page %d\n", pageNo);
             }
             SelectObject(hdc, origFont);
-            Win32_Font_Delete(fontRightTxt);
+            Win::Font::Delete(fontRightTxt);
             continue;
         }
 
@@ -2881,13 +2881,13 @@ static void OnPaint(WindowInfo *win)
 
     if (!win->PdfLoaded()) {
         assert(!win->IsAboutWindow());
-        HFONT fontRightTxt = Win32_Font_GetSimple(hdc, _T("MS Shell Dlg"), 14);
+        HFONT fontRightTxt = Win::Font::GetSimple(hdc, _T("MS Shell Dlg"), 14);
         HGDIOBJ origFont = SelectObject(hdc, fontRightTxt); /* Just to remember the orig font */
         SetBkMode(hdc, TRANSPARENT);
         FillRect(hdc, &ps.rcPaint, gBrushBg);
         DrawCenteredText(hdc, ClientRect(win->hwndCanvas), _TR("Error loading PDF file."));
         SelectObject(hdc, origFont);
-        Win32_Font_Delete(fontRightTxt);
+        Win::Font::Delete(fontRightTxt);
     } else {
         switch (win->presentation) {
         case PM_BLACK_SCREEN:
