@@ -363,3 +363,43 @@ WindowInfo *LoadComicBook(const TCHAR *fileName, WindowInfo *win, bool showWin)
     return win;
 }
 
+void DrawComicBook(HWND hwnd, HDC hdc, RectI rect)
+{
+    HFONT fontRightTxt = Win32_Font_GetSimple(hdc, _T("MS Shell Dlg"), 14);
+    HGDIOBJ origFont = SelectObject(hdc, fontRightTxt); /* Just to remember the orig font */
+    SetBkMode(hdc, TRANSPARENT);
+    RECT r = rect.ToRECT();
+    FillRect(hdc, &r, gBrushBg);
+    DrawCenteredText(hdc, rect, _T("Will show comic books"));
+    SelectObject(hdc, origFont);
+    Win32_Font_Delete(fontRightTxt);
+}
+
+static void OnPaint(WindowInfo *win)
+{
+    ClientRect rc(win->hwndCanvas);
+    PAINTSTRUCT ps;
+    HDC hdc = BeginPaint(win->hwndCanvas, &ps);
+    win->ResizeIfNeeded(false);
+    DrawComicBook(win->hwndCanvas, win->hdcToDraw, rc);
+    win->DoubleBuffer_Show(hdc);
+    EndPaint(win->hwndCanvas, &ps);
+}
+
+LRESULT HandleWindowComicBookMsg(WindowInfo *win, HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, bool& handled)
+{
+    assert(win->ComicBookLoaded());
+    handled = false;
+
+    switch (message)
+    {
+        case WM_PAINT:
+            OnPaint(win);
+            handled = true;
+            return 0;
+    }
+
+    return 0;
+}
+
+

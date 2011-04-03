@@ -22,6 +22,7 @@ class WindowInfo;
 
 bool        IsComicBook(const TCHAR *fileName);
 WindowInfo *LoadComicBook(const TCHAR *fileName, WindowInfo *win, bool showWin);
+LRESULT     HandleWindowComicBookMsg(WindowInfo *win, HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, bool& handled);
 
 // TODO: in sumatrapdf.cpp, find a better place to define
 void EnsureWindowVisibility(RectI *rect);

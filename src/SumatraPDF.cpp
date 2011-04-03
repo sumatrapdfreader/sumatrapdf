@@ -147,7 +147,7 @@ static HCURSOR                      gCursorIBeam;
 static HCURSOR                      gCursorScroll;
 static HCURSOR                      gCursorSizeWE;
 static HCURSOR                      gCursorNo;
-static HBRUSH                       gBrushBg;
+       HBRUSH                       gBrushBg;
 static HBRUSH                       gBrushWhite;
 static HBRUSH                       gBrushBlack;
 static HBRUSH                       gBrushShadow;
@@ -2077,7 +2077,7 @@ static void PaintPageFrameAndShadow(HDC hdc, PdfPageInfo *pageInfo, bool present
 }
 #endif
 
-static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
+static void DrawPdf(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
 {
     RectI bounds;
     bool rendering = false;
@@ -2093,7 +2093,7 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
 
     FillRect(hdc, &ps->rcPaint, win->presentation ? gBrushBlack : gBrushBg);
 
-    DBG_OUT("WindowInfo_Paint() ");
+    DBG_OUT("DrawPdf() ");
     for (int pageNo = 1; pageNo <= dm->pageCount(); ++pageNo) {
         PdfPageInfo *pageInfo = dm->getPageInfo(pageNo);
         if (!pageInfo->visible)
@@ -2898,7 +2898,7 @@ static void OnPaint(WindowInfo *win)
             break;
         default:
             win->ResizeIfNeeded();
-            WindowInfo_Paint(win, hdc, &ps);
+            DrawPdf(win, hdc, &ps);
             win->DoubleBuffer_Show(hdc);
         }
     }
@@ -5772,11 +5772,17 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
     int          currentScrollPos;
     LRESULT      res;
     POINT        pt;
+    bool        handled;
 
     WindowInfo * win = FindWindowInfoByHwnd(hwnd);
     if (win && win->IsAboutWindow()) {
-        bool handled;
         res = HandleWindowAboutMsg(win, hwnd, message, wParam, lParam, handled);
+        if (handled)
+            return res;
+    }
+
+    if (win && win->ComicBookLoaded()) {
+        res = HandleWindowComicBookMsg(win, hwnd, message, wParam, lParam, handled);
         if (handled)
             return res;
     }

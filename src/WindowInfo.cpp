@@ -209,16 +209,21 @@ void WindowInfo::DisplayStateFromToC(DisplayState *ds)
 
 void WindowInfo::ResizeIfNeeded(bool resizeWindow)
 {
-    ClientRect rc(this->hwndCanvas);
+    ClientRect rc(hwndCanvas);
 
-    if (!this->hdcToDraw || this->canvasRc.dx != rc.dx || this->canvasRc.dy != rc.dy) {
-        this->DoubleBuffer_New();
-        if (resizeWindow) {
-            assert(this->dm);
-            if (!this->PdfLoaded()) return;
-            this->dm->changeTotalDrawAreaSize(this->canvasRc.Size());
-        }
-    }
+    if (hdcToDraw && canvasRc.dx == rc.dx && canvasRc.dy == rc.dy)
+        return;
+
+    DoubleBuffer_New();
+    if (!resizeWindow)
+        return;
+
+    if (PdfLoaded())
+        dm->changeTotalDrawAreaSize(this->canvasRc.Size());
+    else if (ComicBookLoaded()) {
+        // TODO: code for comic book
+    } else
+        assert(false);
 }
 
 void WindowInfo::ToggleZoom()

@@ -32,6 +32,8 @@ class DisplayState;
 
 extern HINSTANCE ghinst;
 extern Vec<WindowInfo*> gWindows;
+extern HBRUSH gBrushBg;
+
 HMENU BuildMenu(HWND hWnd);
 void CreateToolbar(WindowInfo *win, HINSTANCE hInst);
 void UpdateToolbarAndScrollbarsForAllWindows();
