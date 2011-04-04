@@ -16,7 +16,7 @@ PdfSearch::PdfSearch(BaseEngine *engine, PdfSearchTracker *tracker) : PdfSelecti
     caseSensitive(false), wholeWords(false), forward(true),
     findPage(0), findIndex(0), lastText(NULL)
 {
-    findCache = SAZA(BYTE, this->engine->pageCount());
+    findCache = SAZA(BYTE, this->engine->PageCount());
 }
 
 PdfSearch::~PdfSearch()
@@ -64,7 +64,7 @@ void PdfSearch::SetText(TCHAR *text)
         this->findText[Str::Len(this->findText) - 1] = '\0';
     }
 
-    memset(this->findCache, SEARCH_PAGE, this->engine->pageCount());
+    memset(this->findCache, SEARCH_PAGE, this->engine->PageCount());
 }
 
 void PdfSearch::SetSensitive(bool sensitive)
@@ -73,7 +73,7 @@ void PdfSearch::SetSensitive(bool sensitive)
         return;
     this->caseSensitive = sensitive;
 
-    memset(this->findCache, SEARCH_PAGE, this->engine->pageCount());
+    memset(this->findCache, SEARCH_PAGE, this->engine->PageCount());
 }
 
 void PdfSearch::SetDirection(bool forward)
@@ -153,7 +153,7 @@ bool PdfSearch::FindStartingAtPage(int pageNo)
     if (Str::IsEmpty(anchor))
         return false;
 
-    int total = engine->pageCount();
+    int total = engine->PageCount();
     while (1 <= pageNo && pageNo <= total && UpdateTracker(pageNo, total)) {
         if (SKIP_PAGE == findCache[pageNo - 1]) {
             pageNo += forward ? 1 : -1;

@@ -9,10 +9,7 @@
 #include "RenderCache.h"
 #include "PdfSync.h"
 #include "Resource.h"
-
-#ifdef BUILD_COMIC_ENGINE
 #include "ComicBook.h"
-#endif
 
 #include "AppPrefs.h"
 #include "SumatraDialogs.h"
@@ -985,11 +982,11 @@ void WindowInfo::Reload(bool autorefresh)
     ScopedMem<TCHAR> path(Str::Dup(this->loadedFilePath));
     LoadPdfIntoWindow(path, this, &ds, false, tryRepair, true, false);
 
-    if (this->PdfLoaded()) {
+    if (this->PdfLoaded() && ENGINE_PDF == this->dm->engineType) {
         // save a newly remembered password into file history so that
         // we don't ask again at the next refresh
         DisplayState *state = gFileHistory.Find(ds.filePath);
-        char *decryptionKey = this->dm->pdfEngine->getDecryptionKey();
+        char *decryptionKey = static_cast<PdfEngine *>(this->dm->engine)->getDecryptionKey();
         if (state && !Str::Eq(state->decryptionKey, decryptionKey)) {
             free(state->decryptionKey);
             state->decryptionKey = decryptionKey;
@@ -1118,7 +1115,7 @@ static void ToolbarUpdateStateForWindow(WindowInfo *win) {
 
 static void MenuUpdatePrintItem(WindowInfo *win, HMENU menu, bool disableOnly=false) {
     bool filePrintEnabled = win->PdfLoaded();
-    bool filePrintAllowed = !filePrintEnabled || win->dm->pdfEngine->hasPermission(PDF_PERM_PRINT);
+    bool filePrintAllowed = !filePrintEnabled || win->dm->engine->IsPrintingAllowed();
 
     int ix;
     for (ix = 0; ix < dimof(menuDefFile) && menuDefFile[ix].id != IDM_PRINT; ix++);
@@ -1598,7 +1595,7 @@ static WindowInfo* LoadPdf(const TCHAR *fileName, WindowInfo *win, bool showWin,
 
 WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin)
 {
-#ifdef BUILD_COMIC_ENGINE
+#ifdef DEBUG
     if (IsComicBook(fileName))
         return LoadComicBook(fileName, win, showWin);
 #endif
@@ -2130,7 +2127,7 @@ static void DebugShowLinks(DisplayModel *dm, HDC hdc, bool rendering)
             if (!pageInfo->shown || 0.0 == pageInfo->visibleRatio)
                 continue;
 
-            fz_bbox cbox = dm->pdfEngine->pageContentBox(pageNo);
+            fz_bbox cbox = dm->engine->PageContentBox(pageNo);
             RectD rect = RectI::FromXY(cbox.x0, cbox.y0, cbox.x1, cbox.y1).Convert<double>();
             if (dm->rectCvtUserToScreen(pageNo, &rect))
                 paint_rect(hdc, &rect.ToRECT());
@@ -2221,7 +2218,7 @@ static void CopySelectionToClipboard(WindowInfo *win)
     if (!OpenClipboard(NULL)) return;
     EmptyClipboard();
 
-    if (win->dm->pdfEngine->hasPermission(PDF_PERM_COPY)) {
+    if (win->dm->engine->IsCopyingTextAllowed()) {
         TCHAR *selText;
         if (win->dm->textSelection->result.len > 0) {
             selText = win->dm->textSelection->ExtractText();
@@ -3041,19 +3038,19 @@ static bool CheckPrinterStretchDibSupport(HWND hwndForMsgBox, HDC hdc)
 }
 
 // TODO: make it run in a background thread
-static void PrintToDevice(PdfEngine *pdfEngine, HDC hdc, LPDEVMODE devMode,
+static void PrintToDevice(BaseEngine *engine, HDC hdc, LPDEVMODE devMode,
                           int nPageRanges, LPPRINTPAGERANGE pr,
                           int dm_rotation=0,
                           enum PrintRangeAdv rangeAdv=PrintRangeAll,
                           enum PrintScaleAdv scaleAdv=PrintScaleShrink,
                           SelectionOnPage *sel=NULL) {
 
-    assert(pdfEngine);
-    if (!pdfEngine) return;
+    assert(engine);
+    if (!engine) return;
 
     DOCINFO di = {0};
     di.cbSize = sizeof (DOCINFO);
-    di.lpszDocName = pdfEngine->fileName();
+    di.lpszDocName = engine->FileName();
 
     if (StartDoc(hdc, &di) <= 0)
         return;
@@ -3090,7 +3087,7 @@ static void PrintToDevice(PdfEngine *pdfEngine, HDC hdc, LPDEVMODE devMode,
 
                 SizeF sSize = r->Size().Convert<float>();
                 // Swap width and height for rotated documents
-                int rotation = pdfEngine->pageRotation(sel->pageNo) + dm_rotation;
+                int rotation = engine->PageRotation(sel->pageNo) + dm_rotation;
                 if (rotation % 180 != 0)
                     swap(sSize.dx, sSize.dy);
 
@@ -3107,9 +3104,9 @@ static void PrintToDevice(PdfEngine *pdfEngine, HDC hdc, LPDEVMODE devMode,
                 RectI rc = RectI::FromXY((int)(printableWidth - sSize.dx * zoom) / 2,
                                          (int)(printableHeight - sSize.dy * zoom) / 2,
                                          paperWidth, paperHeight);
-                pdfEngine->renderPage(hdc, sel->pageNo, &rc, NULL, zoom, dm_rotation, &clipRegion, Target_Print);
+                engine->RenderPage(hdc, sel->pageNo, &rc, NULL, zoom, dm_rotation, &clipRegion, Target_Print);
 #else
-                RenderedBitmap *bmp = pdfEngine->renderBitmap(sel->pageNo, zoom, dm_rotation, &clipRegion, Target_Print, gUseGdiRenderer);
+                RenderedBitmap *bmp = engine->RenderBitmap(sel->pageNo, zoom, dm_rotation, &clipRegion, Target_Print, gUseGdiRenderer);
                 if (bmp) {
                     bmp->stretchDIBits(hdc, (printableWidth - bmp->dx()) / 2,
                         (printableHeight - bmp->dy()) / 2, bmp->dx(), bmp->dy());
@@ -3136,8 +3133,8 @@ static void PrintToDevice(PdfEngine *pdfEngine, HDC hdc, LPDEVMODE devMode,
             // MM_TEXT: Each logical unit is mapped to one device pixel.
             // Positive x is to the right; positive y is down.
 
-            SizeF pSize = pdfEngine->pageSize(pageNo).Convert<float>();
-            int rotation = pdfEngine->pageRotation(pageNo);
+            SizeF pSize = engine->PageSize(pageNo).Convert<float>();
+            int rotation = engine->PageRotation(pageNo);
             // Turn the document by 90 deg if it isn't in portrait mode
             if (pSize.dx > pSize.dy) {
                 rotation += 90;
@@ -3165,8 +3162,8 @@ static void PrintToDevice(PdfEngine *pdfEngine, HDC hdc, LPDEVMODE devMode,
             if (scaleAdv != PrintScaleNone) {
                 // make sure to fit all content into the printable area when scaling
                 // and the whole document page on the physical paper
-                fz_rect rect = fz_bboxtorect(pdfEngine->pageContentBox(pageNo, Target_Print));
-                fz_rect cbox = fz_transformrect(pdfEngine->viewctm(pageNo, 1.0, rotation), rect);
+                fz_rect rect = fz_bboxtorect(engine->PageContentBox(pageNo, Target_Print));
+                fz_rect cbox = fz_transformrect(engine->viewctm(pageNo, 1.0, rotation), rect);
                 zoom = min((float)printableWidth / (cbox.x1 - cbox.x0),
                        min((float)printableHeight / (cbox.y1 - cbox.y0),
                        min((float)paperWidth / pSize.dx,
@@ -3190,9 +3187,9 @@ static void PrintToDevice(PdfEngine *pdfEngine, HDC hdc, LPDEVMODE devMode,
             RectI rc = RectI::FromXY((int)(printableWidth - pSize.dx * zoom) / 2 - horizOffset,
                                      (int)(printableHeight - pSize.dy * zoom) / 2 - vertOffset,
                                      paperWidth, paperHeight);
-            pdfEngine->renderPage(hdc, pageNo, &rc, NULL, zoom, rotation, NULL, Target_Print);
+            engine->RenderPage(hdc, pageNo, &rc, NULL, zoom, rotation, NULL, Target_Print);
 #else
-            RenderedBitmap *bmp = pdfEngine->renderBitmap(pageNo, zoom, rotation, NULL, Target_Print, gUseGdiRenderer);
+            RenderedBitmap *bmp = engine->RenderBitmap(pageNo, zoom, rotation, NULL, Target_Print, gUseGdiRenderer);
             if (bmp) {
                 bmp->stretchDIBits(hdc, (printableWidth - bmp->dx()) / 2 - horizOffset,
                     (printableHeight - bmp->dy()) / 2 - vertOffset, bmp->dx(), bmp->dy());
@@ -3289,7 +3286,7 @@ static void OnMenuPrint(WindowInfo *win)
     if (!dm) return;
 
     /* printing uses the WindowInfo' dm that is created for the
-       screen, it may be possible to create a new PdfEngine
+       screen, it may be possible to create a new BaseEngine
        for printing so we don't mess with the screen one,
        but the user is not inconvenienced too much, and this
        way we only need to concern ourselves with one dm. */
@@ -3337,7 +3334,7 @@ static void OnMenuPrint(WindowInfo *win)
                     pd.lpPageRanges->nToPage  =dm->pageCount();
                 }
                 LPDEVMODE devMode = (LPDEVMODE)GlobalLock(pd.hDevMode);
-                PrintToDevice(dm->pdfEngine, pd.hDC, devMode, pd.nPageRanges, pd.lpPageRanges,
+                PrintToDevice(dm->engine, pd.hDC, devMode, pd.nPageRanges, pd.lpPageRanges,
                               dm->rotation(), advanced.range, advanced.scale, win->selectionOnPage);
                 if (devMode)
                     GlobalUnlock(pd.hDevMode);
@@ -3380,7 +3377,7 @@ static void OnMenuSaveAs(WindowInfo *win)
     if (!srcFileName) return;
 
     // Can't save a PDF's content as a plain text if text copying isn't allowed
-    if (!win->dm->pdfEngine->hasPermission(PDF_PERM_COPY))
+    if (!win->dm->engine->IsCopyingTextAllowed())
         hasCopyPerm = false;
 
     // Prepare the file filters (use \1 instead of \0 so that the
@@ -3434,7 +3431,7 @@ static void OnMenuSaveAs(WindowInfo *win)
     }
     // Recreate inexistant PDF files from memory...
     else if (!File::Exists(srcFileName)) {
-        fz_buffer *data = win->dm->pdfEngine->getStreamData();
+        fz_buffer *data = win->dm->engine->GetStreamData();
         if (data) {
             File::WriteAll(realDstFileName, data->data, data->len);
             fz_dropbuffer(data);
@@ -5816,13 +5813,11 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
             return res;
     }
 
-#ifdef BUILD_COMIC_ENGINE
     if (win && win->ComicBookLoaded()) {
         res = HandleWindowComicBookMsg(win, hwnd, message, wParam, lParam, handled);
         if (handled)
             return res;
     }
-#endif
 
     switch (message)
     {
@@ -6568,9 +6563,9 @@ static bool PrintFile(const TCHAR *fileName, const TCHAR *printerName, bool disp
     bool        success = false;
 
     ScopedMem<TCHAR> fileName2(Path::Normalize(fileName));
-    PdfEngine *pdfEngine = PdfEngine::CreateFromFileName(fileName2);
+    BaseEngine *engine = PdfEngine::CreateFromFileName(fileName2);
 
-    if (!pdfEngine || !pdfEngine->hasPermission(PDF_PERM_PRINT)) {
+    if (!engine || !engine->IsPrintingAllowed()) {
         if (displayErrors)
             MessageBox(NULL, _TR("Cannot print this file"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK);
         return false;
@@ -6646,8 +6641,8 @@ static bool PrintFile(const TCHAR *fileName, const TCHAR *printerName, bool disp
         goto Exit;
     }
     if (CheckPrinterStretchDibSupport(NULL, hdcPrint)) {
-        PRINTPAGERANGE pr = { 1, pdfEngine->pageCount() };
-        PrintToDevice(pdfEngine, hdcPrint, devMode, 1, &pr);
+        PRINTPAGERANGE pr = { 1, engine->PageCount() };
+        PrintToDevice(engine, hdcPrint, devMode, 1, &pr);
         success = true;
     }
 Exit:

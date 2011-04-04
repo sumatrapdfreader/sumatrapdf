@@ -114,7 +114,7 @@ HRESULT CPdfFilter::GetNextChunkValue(CChunkValue &chunkValue)
         // fall through
 
     case STATE_PDF_CONTENT:
-        if (++m_iPageNo <= m_pdfEngine->pageCount()) {
+        if (++m_iPageNo <= m_pdfEngine->PageCount()) {
             str = Str::Conv::ToWStrQ(m_pdfEngine->ExtractPageText(m_iPageNo));
             chunkValue.SetTextValue(PKEY_Search_Contents, str, CHUNK_TEXT);
             free(str);

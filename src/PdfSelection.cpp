@@ -6,7 +6,7 @@
 
 PdfSelection::PdfSelection(BaseEngine *engine) : engine(engine)
 {
-    int count = engine->pageCount();
+    int count = engine->PageCount();
     coords = SAZA(RectI *, count);
     text = SAZA(TCHAR *, count);
     lens = SAZA(int, count);
@@ -23,7 +23,7 @@ PdfSelection::~PdfSelection()
 {
     Reset();
 
-    for (int i = 0; i < engine->pageCount(); i++) {
+    for (int i = 0; i < engine->PageCount(); i++) {
         delete coords[i];
         coords[i] = NULL;
         free(text[i]);
@@ -49,7 +49,7 @@ void PdfSelection::Reset()
 // glyph following it, which will be the first glyph (not) to be selected)
 int PdfSelection::FindClosestGlyph(int pageNo, double x, double y)
 {
-    assert(1 <= pageNo && pageNo <= engine->pageCount());
+    assert(1 <= pageNo && pageNo <= engine->PageCount());
     if (!text[pageNo - 1]) {
         text[pageNo - 1] = engine->ExtractPageText(pageNo, _T("\n"), &coords[pageNo - 1]);
         if (!text[pageNo - 1]) {
@@ -97,7 +97,7 @@ int PdfSelection::FindClosestGlyph(int pageNo, double x, double y)
 
 void PdfSelection::FillResultRects(int pageNo, int glyph, int length, StrVec *lines)
 {
-    fz_bbox mbx = fz_roundrect(engine->pageMediabox(pageNo));
+    fz_bbox mbx = fz_roundrect(engine->PageMediabox(pageNo));
     RectI mediabox = RectI::FromXY(mbx.x0, mbx.y0, mbx.x1, mbx.y1);
     RectI *c = &coords[pageNo - 1][glyph], *end = c + length;
     for (; c < end; c++) {

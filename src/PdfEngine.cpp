@@ -291,7 +291,7 @@ PdfEngine::~PdfEngine()
     DeleteCriticalSection(&_pagesAccess);
 }
 
-PdfEngine *PdfEngine::clone()
+PdfEngine *PdfEngine::Clone()
 {
     // use this document's encryption key (if any) to load the clone
     char *key = NULL;
@@ -666,16 +666,16 @@ void PdfEngine::dropPageRun(PdfPageRun *run, bool forceRemove)
     LeaveCriticalSection(&_pagesAccess);
 }
 
-int PdfEngine::pageRotation(int pageNo)
+int PdfEngine::PageRotation(int pageNo)
 {
-    assert(validPageNo(pageNo));
+    assert(1 <= pageNo && pageNo <= PageCount());
     fz_obj *page = pdf_getpageobject(_xref, pageNo);
     if (!page)
         return INVALID_ROTATION;
     return fz_toint(fz_dictgets(page, "Rotate"));
 }
 
-fz_rect PdfEngine::pageMediabox(int pageNo)
+fz_rect PdfEngine::PageMediabox(int pageNo)
 {
     fz_rect mediabox;
     if (pdf_getmediabox(&mediabox, pdf_getpageobject(_xref, pageNo)) != fz_okay)
@@ -683,16 +683,9 @@ fz_rect PdfEngine::pageMediabox(int pageNo)
     return mediabox;
 }
 
-SizeD PdfEngine::pageSize(int pageNo)
+fz_bbox PdfEngine::PageContentBox(int pageNo, RenderTarget target)
 {
-    assert(validPageNo(pageNo));
-    fz_rect bbox = pageMediabox(pageNo);
-    return SizeD(fabs(bbox.x1 - bbox.x0), fabs(bbox.y1 - bbox.y0));
-}
-
-fz_bbox PdfEngine::pageContentBox(int pageNo, RenderTarget target)
-{
-    assert(validPageNo(pageNo));
+    assert(1 <= pageNo && pageNo <= PageCount());
     pdf_page *page = getPdfPage(pageNo);
     if (!page)
         return fz_emptybbox;
@@ -702,7 +695,7 @@ fz_bbox PdfEngine::pageContentBox(int pageNo, RenderTarget target)
     if (error != fz_okay)
         return fz_emptybbox;
 
-    return fz_intersectbbox(bbox, fz_roundrect(pageMediabox(pageNo)));
+    return fz_intersectbbox(bbox, fz_roundrect(PageMediabox(pageNo)));
 }
 
 bool PdfEngine::hasPermission(int permission)
@@ -775,7 +768,7 @@ bool PdfEngine::renderPage(HDC hDC, pdf_page *page, RectI *screenRect, fz_matrix
     return fz_okay == error;
 }
 
-RenderedBitmap *PdfEngine::renderBitmap(
+RenderedBitmap *PdfEngine::RenderBitmap(
                            int pageNo, float zoom, int rotation,
                            fz_rect *pageRect, RenderTarget target,
                            bool useGdi)
@@ -1175,22 +1168,13 @@ bool PdfEngine::isDocumentDirectionR2L()
     return Str::Eq(direction, "R2L");
 }
 
-fz_buffer *PdfEngine::getStreamData(int num, int gen)
+fz_buffer *PdfEngine::GetStreamData()
 {
-    fz_stream *stream = NULL;
-    fz_buffer *data = NULL;
-
-    if (num) {
-        fz_error error = pdf_loadstream(&data, _xref, num, gen);
-        if (error != fz_okay)
-            return NULL;
-        return data;
-    }
-
-    stream = fz_keepstream(_xref->file);
+    fz_stream *stream = fz_keepstream(_xref->file);
     if (!stream)
         return NULL;
 
+    fz_buffer *data = NULL;
     fz_seek(stream, 0, 2);
     int len = fz_tell(stream);
     fz_seek(stream, 0, 0);
@@ -1200,7 +1184,16 @@ fz_buffer *PdfEngine::getStreamData(int num, int gen)
     return data;
 }
 
-bool PdfEngine::isImagePage(int pageNo)
+fz_buffer *PdfEngine::getStreamData(int num, int gen)
+{
+    fz_buffer *data = NULL;
+    fz_error error = pdf_loadstream(&data, _xref, num, gen);
+    if (error != fz_okay)
+        return NULL;
+    return data;
+}
+
+bool PdfEngine::IsImagePage(int pageNo)
 {
     pdf_page *page = getPdfPage(pageNo, true);
     // pages containing a single image usually contain about 50

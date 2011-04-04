@@ -152,12 +152,12 @@ static TCHAR *FormatPdfPageSize(SizeD size) {
 
 // returns a list of permissions denied by this document
 // Caller needs to free the result
-static TCHAR *FormatPdfPermissions(PdfEngine *pdfEngine) {
+static TCHAR *FormatPermissions(BaseEngine *engine) {
     StrVec denials;
 
-    if (!pdfEngine->hasPermission(PDF_PERM_PRINT))
+    if (!engine->IsPrintingAllowed())
         denials.Push(Str::Dup(_TR("printing document")));
-    if (!pdfEngine->hasPermission(PDF_PERM_COPY))
+    if (!engine->IsCopyingTextAllowed())
         denials.Push(Str::Dup(_TR("copying text")));
 
     return denials.Join(_T(", "));
@@ -298,14 +298,18 @@ void OnMenuProperties(WindowInfo *win)
 
     if (!win->PdfLoaded())
         return;
-    PdfEngine *pdfEngine = win->dm->pdfEngine;
+    BaseEngine *engine = win->dm->engine;
 
     PdfPropertiesLayout *layoutData = new PdfPropertiesLayout();
     if (!layoutData)
         return;
 
-    TCHAR *str = Str::Dup(pdfEngine->fileName());
+    TCHAR *str = Str::Dup(engine->FileName());
     layoutData->AddProperty(_TR("File:"), str);
+
+    if (win->dm->engineType != ENGINE_PDF)
+        goto SkipPdfPropertiesForNow;
+    PdfEngine *pdfEngine = static_cast<PdfEngine *>(engine);
 
     str = pdfEngine->getPdfInfo("Title");
     layoutData->AddProperty(_TR("Title:"), str);
@@ -339,9 +343,10 @@ void OnMenuProperties(WindowInfo *win)
         layoutData->AddProperty(_TR("PDF Version:"), str);
     }
 
-    size_t fileSize = File::GetSize(pdfEngine->fileName());
+SkipPdfPropertiesForNow:
+    size_t fileSize = File::GetSize(engine->FileName());
     if (fileSize == INVALID_FILE_SIZE) {
-        fz_buffer *data = pdfEngine->getStreamData();
+        fz_buffer *data = engine->GetStreamData();
         if (data) {
             fileSize = data->len;
             fz_dropbuffer(data);
@@ -352,13 +357,13 @@ void OnMenuProperties(WindowInfo *win)
         layoutData->AddProperty(_TR("File Size:"), str);
     }
 
-    str = Str::Format(_T("%d"), pdfEngine->pageCount());
+    str = Str::Format(_T("%d"), engine->PageCount());
     layoutData->AddProperty(_TR("Number of Pages:"), str);
 
-    str = FormatPdfPageSize(pdfEngine->pageSize(win->dm->currentPageNo()));
+    str = FormatPdfPageSize(engine->PageSize(win->dm->currentPageNo()));
     layoutData->AddProperty(_TR("Page Size:"), str);
 
-    str = FormatPdfPermissions(pdfEngine);
+    str = FormatPermissions(pdfEngine);
     layoutData->AddProperty(_TR("Denied Permissions:"), str);
 
     // TODO: this is about linearlized PDF. Looks like mupdf would

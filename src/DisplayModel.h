@@ -18,6 +18,8 @@
 
 class WindowInfo;
 
+typedef enum { ENGINE_PDF, ENGINE_XPS, ENGINE_CBX } EngineType;
+
 // TODO: better name, Paddings? PaddingInfo?
 typedef struct DisplaySettings {
     int     pageBorderTop;
@@ -102,19 +104,26 @@ public:
     RenderedBitmap *renderBitmap(int pageNo, float zoom, int rotation,
                          fz_rect *pageRect=NULL, /* if NULL: defaults to the page's mediabox */
                          RenderTarget target=Target_View, bool useGdi=false) {
-        if (!pdfEngine) return NULL;
-        return pdfEngine->renderBitmap(pageNo, zoom, rotation, pageRect, target, useGdi);
+        if (!engine) return NULL;
+        return engine->RenderBitmap(pageNo, zoom, rotation, pageRect, target, useGdi);
     }
     bool renderPage(HDC hDC, int pageNo, RectI *screenRect, float zoom=0, int rotation=0, fz_rect *pageRect=NULL, RenderTarget target=Target_View) {
-        if (!pdfEngine) return false;
-        return pdfEngine->renderPage(hDC, pageNo, screenRect, NULL, zoom, rotation, pageRect, target);
+        if (!engine) return false;
+        return engine->RenderPage(hDC, pageNo, screenRect, NULL, zoom, rotation, pageRect, target);
     }
 
     /* number of pages in PDF document */
-    int  pageCount() const { return pdfEngine->pageCount(); }
-    bool validPageNo(int pageNo) const { return pdfEngine->validPageNo(pageNo); }
-    bool hasTocTree() { return pdfEngine->hasTocTree(); }
-    PdfTocItem *getTocTree() { return pdfEngine->getTocTree(); }
+    int  pageCount() const { return engine->PageCount(); }
+    bool validPageNo(int pageNo) const {
+        return 1 <= pageNo && pageNo <= engine->PageCount();
+    }
+
+    bool hasTocTree() { return engine->HasTocTree(); }
+    PdfTocItem *getTocTree() {
+        if (engineType != ENGINE_PDF)
+            return NULL;
+        return static_cast<PdfEngine *>(engine)->getTocTree();
+    }
 
     /* current rotation selected by user */
     int rotation() const { return _rotation; }
@@ -125,7 +134,7 @@ public:
     void setPresentationMode(bool enable);
     bool getPresentationMode() const { return _presentationMode; }
 
-    const TCHAR *fileName() const { return pdfEngine->fileName(); }
+    const TCHAR *fileName() const { return engine->FileName(); }
 
     /* a "virtual" zoom level. Can be either a real zoom level in percent
        (i.e. 100.0 is original size) or one of virtual values ZOOM_FIT_PAGE,
@@ -139,7 +148,8 @@ public:
 
     int currentPageNo() const;
 
-    PdfEngine *     pdfEngine;
+    EngineType      engineType;
+    BaseEngine *    engine;
     PdfSelection *  textSelection;
 
     /* TODO: rename to pageInfo() */
@@ -227,7 +237,10 @@ public:
 
     bool            displayStateFromModel(DisplayState *ds);
 
-    void            ageStore() const { pdfEngine->ageStore(); }
+    void            ageStore() const {
+        if (engineType == ENGINE_PDF)
+            static_cast<PdfEngine *>(engine)->ageStore();
+    }
 
     void            StartRenderingPage(int pageNo);
 

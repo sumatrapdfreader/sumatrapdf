@@ -10,7 +10,7 @@
 
 #define logbench(msg, ...) _ftprintf(stderr, _T(msg), __VA_ARGS__)
 
-static void BenchLoadRender(PdfEngine *engine, int pagenum)
+static void BenchLoadRender(BaseEngine *engine, int pagenum)
 {
     MillisecondTimer t;
 
@@ -26,7 +26,7 @@ static void BenchLoadRender(PdfEngine *engine, int pagenum)
     logbench("pageload   %3d: %.2f ms\n", pagenum, timems);
 
     t.Start();
-    RenderedBitmap *rendered = engine->renderBitmap(pagenum, 1.0, 0);
+    RenderedBitmap *rendered = engine->RenderBitmap(pagenum, 1.0, 0);
     t.Stop();
 
     if (!rendered) {
@@ -86,7 +86,7 @@ static void BenchFile(TCHAR *filePath, TCHAR *pagesSpec)
 
     MillisecondTimer t;
     t.Start();
-    PdfEngine *engine = PdfEngine::CreateFromFileName(filePath);
+    BaseEngine *engine = PdfEngine::CreateFromFileName(filePath);
     t.Stop();
 
     if (!engine) {
@@ -96,7 +96,7 @@ static void BenchFile(TCHAR *filePath, TCHAR *pagesSpec)
 
     double timems = t.GetTimeInMs();
     logbench("load: %.2f ms\n", timems);
-    int pages = engine->pageCount();
+    int pages = engine->PageCount();
     logbench("page count: %d\n", pages);
 
     if (NULL == pagesSpec) {

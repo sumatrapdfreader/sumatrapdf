@@ -124,7 +124,10 @@ bool DisplayModel::displayStateFromModel(DisplayState *ds)
         ds->scrollPos = ss.Convert<int>();
 
     free(ds->decryptionKey);
-    ds->decryptionKey = pdfEngine->getDecryptionKey();
+    if (engineType == ENGINE_PDF)
+        ds->decryptionKey = static_cast<PdfEngine *>(engine)->getDecryptionKey();
+    else
+        ds->decryptionKey = NULL;
 
     return true;
 }
@@ -203,7 +206,7 @@ DisplayModel::DisplayModel(DisplayMode displayMode, int dpi)
     _dpiFactor = dpi / PDF_FILE_DPI;
     _startPage = INVALID_PAGE_NO;
     _appData = NULL;
-    pdfEngine = NULL;
+    engine = NULL;
     textSelection = NULL;
     _pdfSearch = NULL;
     _pagesInfo = NULL;
@@ -224,7 +227,7 @@ DisplayModel::~DisplayModel()
     free(_navHistory);
     delete _pdfSearch;
     delete textSelection;
-    delete pdfEngine;
+    delete engine;
 }
 
 PdfPageInfo *DisplayModel::getPageInfo(int pageNo) const
@@ -240,9 +243,10 @@ PdfPageInfo *DisplayModel::getPageInfo(int pageNo) const
 bool DisplayModel::load(const TCHAR *fileName, int startPage, WindowInfo *win)
 { 
     assert(fileName);
-    pdfEngine = PdfEngine::CreateFromFileName(fileName, win);
-    if (!pdfEngine)
+    engine = PdfEngine::CreateFromFileName(fileName, win);
+    if (!engine)
         return false;
+    engineType = ENGINE_PDF;
 
     _appData = win;
     setTotalDrawAreaSize(win->canvasRc.Size());
@@ -252,22 +256,31 @@ bool DisplayModel::load(const TCHAR *fileName, int startPage, WindowInfo *win)
     else
         _startPage = 1;
 
-    const char *pageLayoutName = pdfEngine->getPageLayoutName();
-    if (DM_AUTOMATIC == _displayMode) {
-        if (Str::EndsWith(pageLayoutName, "Right"))
-            _displayMode = DM_CONTINUOUS_BOOK_VIEW;
-        else if (Str::StartsWith(pageLayoutName, "Two"))
-            _displayMode = DM_CONTINUOUS_FACING;
-        else
-            _displayMode = DM_CONTINUOUS;
+    if (engineType == ENGINE_PDF) {
+        PdfEngine *pdfEngine = static_cast<PdfEngine *>(engine);
+        const char *pageLayoutName = pdfEngine->getPageLayoutName();
+        if (DM_AUTOMATIC == _displayMode) {
+            if (Str::EndsWith(pageLayoutName, "Right"))
+                _displayMode = DM_CONTINUOUS_BOOK_VIEW;
+            else if (Str::StartsWith(pageLayoutName, "Two"))
+                _displayMode = DM_CONTINUOUS_FACING;
+            else
+                _displayMode = DM_CONTINUOUS;
+        }
+        _displayR2L = pdfEngine->isDocumentDirectionR2L();
     }
-    _displayR2L = pdfEngine->isDocumentDirectionR2L();
+    else {
+        // TODO: allow BaseEngine to set these
+        if (DM_AUTOMATIC == _displayMode)
+            _displayMode = DM_CONTINUOUS;
+        _displayR2L = false;
+    }
 
     if (!buildPagesInfo())
         return false;
 
-    textSelection = new PdfSelection(pdfEngine);
-    _pdfSearch = new PdfSearch(pdfEngine, win);
+    textSelection = new PdfSelection(engine);
+    _pdfSearch = new PdfSearch(engine, win);
     return true;
 }
 
@@ -286,8 +299,8 @@ bool DisplayModel::buildPagesInfo()
         startPage--;
     for (int pageNo = 1; pageNo <= _pageCount; pageNo++) {
         PdfPageInfo *pageInfo = getPageInfo(pageNo);
-        pageInfo->page = pdfEngine->pageSize(pageNo);
-        pageInfo->rotation = pdfEngine->pageRotation(pageNo);
+        pageInfo->page = engine->PageSize(pageNo);
+        pageInfo->rotation = engine->PageRotation(pageNo);
         pageInfo->visibleRatio = 0.0;
         pageInfo->shown = false;
         if (displayModeContinuous(_displayMode)) {
@@ -382,20 +395,20 @@ float DisplayModel::zoomRealFromVirtualForPage(float zoomVirtual, int pageNo)
             SizeD pageSize;
             pageInfo = getPageInfo(i);
             if (fz_isemptybbox(pageInfo->contentBox))
-                pageInfo->contentBox = pdfEngine->pageContentBox(i);
+                pageInfo->contentBox = engine->PageContentBox(i);
             pageSizeAfterRotation(pageInfo, _rotation, &pageSize);
             row.dx += pageSize.dx;
             if (i == first && !fz_isemptybbox(pageInfo->contentBox)) {
                 if (rotationFlipped(pageInfo->rotation + _rotation))
-                    row.dx -= pageInfo->contentBox.y0 - pdfEngine->pageMediabox(first).y0;
+                    row.dx -= pageInfo->contentBox.y0 - engine->PageMediabox(first).y0;
                 else
-                    row.dx -= pageInfo->contentBox.x0 - pdfEngine->pageMediabox(first).x0;
+                    row.dx -= pageInfo->contentBox.x0 - engine->PageMediabox(first).x0;
             }
             if (i == last && !fz_isemptybbox(pageInfo->contentBox)) {
                 if (rotationFlipped(pageInfo->rotation + _rotation))
-                    row.dx -= pdfEngine->pageMediabox(last).y1 - pageInfo->contentBox.y1;
+                    row.dx -= engine->PageMediabox(last).y1 - pageInfo->contentBox.y1;
                 else
-                    row.dx -= pdfEngine->pageMediabox(last).x1 - pageInfo->contentBox.x1;
+                    row.dx -= engine->PageMediabox(last).x1 - pageInfo->contentBox.x1;
             }
             pageSizeAfterRotation(pageInfo, _rotation, &pageSize, true);
             if (row.dy < pageSize.dy)
@@ -403,7 +416,7 @@ float DisplayModel::zoomRealFromVirtualForPage(float zoomVirtual, int pageNo)
         }
     } else {
         if (fitToContent && fz_isemptybbox(pageInfo->contentBox))
-            pageInfo->contentBox = pdfEngine->pageContentBox(pageNo);
+            pageInfo->contentBox = engine->PageContentBox(pageNo);
         pageSizeAfterRotation(pageInfo, _rotation, &row, fitToContent);
         row.dx *= columns;
     }
@@ -813,27 +826,36 @@ int DisplayModel::getPageNoByPoint(PointI pt)
    */
 pdf_link *DisplayModel::getLinkAtPosition(PointI pt)
 {
+    if (engineType != ENGINE_PDF)
+        return NULL;
+
     int pageNo = INVALID_PAGE_NO;
     PointD pos = pt.Convert<double>();
     if (!cvtScreenToUser(&pageNo, &pos))
         return NULL;
 
-    return pdfEngine->getLinkAtPosition(pageNo, (float)pos.x, (float)pos.y);
+    return static_cast<PdfEngine *>(engine)->getLinkAtPosition(pageNo, (float)pos.x, (float)pos.y);
 }
 
 pdf_annot *DisplayModel::getCommentAtPosition(PointI pt)
 {
+    if (engineType != ENGINE_PDF)
+        return NULL;
+
     int pageNo = INVALID_PAGE_NO;
     PointD pos = pt.Convert<double>();
     if (!cvtScreenToUser(&pageNo, &pos))
         return NULL;
 
-    return pdfEngine->getCommentAtPosition(pageNo, (float)pos.x, (float)pos.y);
+    return static_cast<PdfEngine *>(engine)->getCommentAtPosition(pageNo, (float)pos.x, (float)pos.y);
 }
 
 int DisplayModel::getPdfLinks(int pageNo, pdf_link **links)
 {
-    int count = pdfEngine->getPdfLinks(pageNo, links);
+    if (engineType != ENGINE_PDF)
+        return 0;
+
+    int count = static_cast<PdfEngine *>(engine)->getPdfLinks(pageNo, links);
     for (int i = 0; i < count; i++)
         (*links)[i].rect = rectCvtUserToScreen(pageNo, (*links)[i].rect);
     return count;
@@ -902,11 +924,11 @@ fz_rect DisplayModel::getContentBox(int pageNo, fz_matrix ctm, RenderTarget targ
     if (Target_View == target) {
         PdfPageInfo *pageInfo = getPageInfo(pageNo);
         if (fz_isemptybbox(pageInfo->contentBox))
-            pageInfo->contentBox = pdfEngine->pageContentBox(pageNo);
+            pageInfo->contentBox = engine->PageContentBox(pageNo);
         cbox = pageInfo->contentBox;
     }
     else
-        cbox = pdfEngine->pageContentBox(pageNo, target);
+        cbox = engine->PageContentBox(pageNo, target);
 
     fz_rect rect = fz_bboxtorect(cbox);
     return fz_transformrect(ctm, rect);
@@ -916,7 +938,7 @@ fz_rect DisplayModel::getContentBox(int pageNo, fz_matrix ctm, RenderTarget targ
    content begins (relative to the page's top left corner) */
 void DisplayModel::getContentStart(int pageNo, int *x, int *y)
 {
-    fz_matrix ctm = pdfEngine->viewctm(pageNo, _zoomReal, _rotation);
+    fz_matrix ctm = engine->viewctm(pageNo, _zoomReal, _rotation);
     fz_rect contentBox = getContentBox(pageNo, ctm);
     if (fz_isemptyrect(contentBox)) {
         *x = *y = 0;
@@ -1308,7 +1330,7 @@ bool DisplayModel::cvtUserToScreen(int pageNo, PointD *pt)
         return false;
 
     fz_point p = { (float)pt->x, (float)pt->y };
-    fz_matrix ctm = pdfEngine->viewctm(pageNo, _zoomReal, _rotation);
+    fz_matrix ctm = engine->viewctm(pageNo, _zoomReal, _rotation);
     fz_point tp = fz_transformpoint(ctm, p);
 
     pt->x = tp.x + 0.5 + pageInfo->currPos.x - areaOffset.x;
@@ -1327,7 +1349,7 @@ bool DisplayModel::cvtScreenToUser(int *pageNo, PointD *pt)
     p.x = (float)(pt->x - 0.5 - pageInfo->currPos.x + areaOffset.x);
     p.y = (float)(pt->y - 0.5 - pageInfo->currPos.y + areaOffset.y);
 
-    fz_matrix ctm = pdfEngine->viewctm(*pageNo, _zoomReal, _rotation);
+    fz_matrix ctm = engine->viewctm(*pageNo, _zoomReal, _rotation);
     fz_point tp = fz_transformpoint(fz_invertmatrix(ctm), p);
 
     pt->x = tp.x;
@@ -1398,9 +1420,9 @@ void DisplayModel::goToTocLink(pdf_link* link)
             // open embedded PDF documents in a new window
             ScopedMem<TCHAR> combinedPath(Str::Format(_T("%s:%d:%d"), fileName(), fz_tonum(embedded), fz_togen(embedded)));
             LoadDocument(combinedPath);
-        } else {
+        } else if (engineType == ENGINE_PDF) {
             // offer to save other attachments to a file
-            fz_buffer *data = pdfEngine->getStreamData(fz_tonum(embedded), fz_togen(embedded));
+            fz_buffer *data = static_cast<PdfEngine *>(engine)->getStreamData(fz_tonum(embedded), fz_togen(embedded));
             if (data) {
                 saveStreamAs(data->data, data->len, path);
                 fz_dropbuffer(data);
@@ -1457,7 +1479,10 @@ void DisplayModel::goToTocLink(pdf_link* link)
 
 void DisplayModel::goToPdfDest(fz_obj *dest)
 {
-    int pageNo = pdfEngine->findPageNo(dest);
+    if (engineType != ENGINE_PDF)
+        return;
+
+    int pageNo = static_cast<PdfEngine *>(engine)->findPageNo(dest);
     if (pageNo > 0) {
         PointD scroll(-1, 0);
         fz_obj *obj = fz_arrayget(dest, 1);
@@ -1511,7 +1536,10 @@ void DisplayModel::goToPdfDest(fz_obj *dest)
 
 void DisplayModel::goToNamedDest(const char *name)
 {
-    goToPdfDest(pdfEngine->getNamedDest(name));
+    if (engineType != ENGINE_PDF)
+        return;
+
+    goToPdfDest(static_cast<PdfEngine *>(engine)->getNamedDest(name));
 }
 
 /* Given <region> (in user coordinates ) on page <pageNo>, copies text in that region
@@ -1519,7 +1547,7 @@ void DisplayModel::goToNamedDest(const char *name)
 TCHAR *DisplayModel::getTextInRegion(int pageNo, RectD *region)
 {
     RectI *coords;
-    TCHAR *pageText = pdfEngine->ExtractPageText(pageNo, _T("\n\n"), &coords);
+    TCHAR *pageText = engine->ExtractPageText(pageNo, _T("\n\n"), &coords);
     if (!pageText)
         return NULL;
 
@@ -1554,9 +1582,7 @@ TCHAR *DisplayModel::extractAllText(RenderTarget target)
     Str::Str<TCHAR> txt(1024);
 
     for (int pageNo = 1; pageNo <= pageCount(); pageNo++)
-    {
-        txt.AppendAndFree(pdfEngine->ExtractPageText(pageNo, DOS_NEWLINE, NULL, target));
-    }
+        txt.AppendAndFree(engine->ExtractPageText(pageNo, DOS_NEWLINE, NULL, target));
 
     return txt.StealData();
 }

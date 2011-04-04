@@ -100,48 +100,72 @@ public:
 class BaseEngine {
 public:
     virtual ~BaseEngine() { }
-    virtual BaseEngine *clone() = 0;
+    virtual BaseEngine *Clone() = 0;
 
-    virtual const TCHAR *fileName() const = 0;
-    virtual int pageCount() const = 0;
+    virtual const TCHAR *FileName() const = 0;
+    virtual int PageCount() const = 0;
 
-    bool validPageNo(int pageNo) const {
-        return 1 <= pageNo && pageNo <= pageCount();
+    // TODO: make most these const(?)
+    virtual int PageRotation(int pageNo) { return 0; }
+    virtual SizeD PageSize(int pageNo)
+    {
+        assert(1 <= pageNo && pageNo <= PageCount());
+        fz_rect bbox = PageMediabox(pageNo);
+        RectD mbox = RectD::FromXY(bbox.x0, bbox.y0, bbox.x1, bbox.y1);
+        return mbox.Size();
     }
+    // TODO: replace fz_* with Rect<T>
+    virtual fz_rect PageMediabox(int pageNo) = 0;
+    virtual fz_bbox PageContentBox(int pageNo, RenderTarget target=Target_View) {
+        return fz_roundrect(PageMediabox(pageNo));
+    }
+    virtual RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
+                         fz_rect *pageRect=NULL, /* if NULL: defaults to the page's mediabox */
+                         RenderTarget target=Target_View, bool useGdi=false) = 0;
+    virtual bool RenderPage(HDC hDC, int pageNo, RectI *screenRect,
+                         fz_matrix *ctm=NULL, float zoom=0, int rotation=0,
+                         fz_rect *pageRect=NULL, RenderTarget target=Target_View) = 0;
+    virtual bool HasTocTree() const { return false; }
 
-    virtual fz_rect pageMediabox(int pageNo) = 0;
+    // TODO: turn into UserToScreen and ScreenToUser for a Point<T> and/or Rect<T>
     virtual fz_matrix viewctm(int pageNo, float zoom, int rotate) = 0;
 
+    virtual fz_buffer* GetStreamData() { return NULL; }
     virtual TCHAR * ExtractPageText(int pageNo, TCHAR *lineSep=DOS_NEWLINE, RectI **coords_out=NULL, RenderTarget target=Target_View) = 0;
+    virtual bool IsImagePage(int pageNo) = 0;
+
+    // TODO: needs a more general interface
+    virtual bool IsPrintingAllowed() { return true; }
+    virtual bool IsCopyingTextAllowed() { return true; }
+
+    virtual bool _benchLoadPage(int pageNo) = 0;
 };
 
 class PdfEngine : public BaseEngine {
 public:
     PdfEngine();
     virtual ~PdfEngine();
-    virtual PdfEngine *clone();
+    virtual PdfEngine *Clone();
 
-    virtual const TCHAR *fileName() const { return _fileName; };
-    virtual int pageCount() const { return _pageCount; }
+    virtual const TCHAR *FileName() const { return _fileName; };
+    virtual int PageCount() const { return _pageCount; }
 
-    int pageRotation(int pageNo);
-    SizeD pageSize(int pageNo);
-    virtual fz_rect pageMediabox(int pageNo);
-    fz_bbox pageContentBox(int pageNo, RenderTarget target=Target_View);
-    RenderedBitmap *renderBitmap(int pageNo, float zoom, int rotation,
+    virtual int PageRotation(int pageNo);
+    virtual fz_rect PageMediabox(int pageNo);
+    virtual fz_bbox PageContentBox(int pageNo, RenderTarget target=Target_View);
+    virtual RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
                          fz_rect *pageRect=NULL, /* if NULL: defaults to the page's mediabox */
                          RenderTarget target=Target_View, bool useGdi=false);
-    bool renderPage(HDC hDC, int pageNo, RectI *screenRect,
+    virtual bool RenderPage(HDC hDC, int pageNo, RectI *screenRect,
                          fz_matrix *ctm=NULL, float zoom=0, int rotation=0,
                          fz_rect *pageRect=NULL, RenderTarget target=Target_View) {
         return renderPage(hDC, getPdfPage(pageNo), screenRect, ctm, zoom, rotation, pageRect, target);
     }
 
-    bool hasPermission(int permission);
     int getPdfLinks(int pageNo, pdf_link **links);
     pdf_link *getLinkAtPosition(int pageNo, float x, float y);
     pdf_annot *getCommentAtPosition(int pageNo, float x, float y);
-    bool hasTocTree() const { 
+    virtual bool HasTocTree() const { 
         return _outline != NULL || _attachments != NULL; 
     }
     void ageStore();
@@ -156,12 +180,13 @@ public:
     TCHAR    * getPdfInfo(char *key) const;
     int        getPdfVersion() const;
     char     * getDecryptionKey() const { return _decryptionKey ? Str::Dup(_decryptionKey) : NULL; }
-    fz_buffer* getStreamData(int num=0, int gen=0);
-    bool       isImagePage(int pageNo);
+    virtual fz_buffer* GetStreamData();
+    fz_buffer* getStreamData(int num, int gen);
+    virtual bool IsImagePage(int pageNo);
+    virtual bool IsPrintingAllowed() { return hasPermission(PDF_PERM_PRINT); }
+    virtual bool IsCopyingTextAllowed() { return hasPermission(PDF_PERM_COPY); }
 
-    bool       _benchLoadPage(int pageNo) {
-        return getPdfPage(pageNo) != NULL;
-    }
+    virtual bool _benchLoadPage(int pageNo) { return getPdfPage(pageNo) != NULL; }
 
 protected:
     const TCHAR *_fileName;
@@ -197,6 +222,7 @@ protected:
 
     PdfTocItem    * buildTocTree(pdf_outline *entry, int *idCounter);
     void            linkifyPageText(pdf_page *page);
+    bool            hasPermission(int permission);
 
     pdf_outline   * _outline;
     pdf_outline   * _attachments;

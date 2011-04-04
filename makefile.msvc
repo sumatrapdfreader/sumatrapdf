@@ -53,7 +53,7 @@ CFLAGS = $(CFLAGS) /D "WINVER=0x0500" /D "_WIN32_WINNT=0x0500"
 SUMATRA_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
 	/wd4800 \
 	/Ibaseutils /Ibaseutils/msvc /I$(MUPDF_DIR)\fitz /I$(MUPDF_DIR)\mupdf /I$(MUPDF_DIR)\xps \
-	/Isrc /I$(EXTLIBSDIR)/synctex /D "SYNCTEX_FEATURE"
+	/Isrc /I$(EXTLIBSDIR)/synctex /D "SYNCTEX_FEATURE" /I$(ZLIB_DIR) /I$(ZLIB_DIR)/minizip
 
 INSTALLER_CFLAGS = $(CFLAGS) $(EXTCFLAGS) /wd4800 \
 	/Ibaseutils /Ibaseutils/msvc /Isrc /Isrc/installer /I$(ZLIB_DIR) /I$(ZLIB_DIR)/minizip
@@ -97,7 +97,8 @@ SUMATRA_OBJS = \
 	$(O)\SumatraPDF.obj $(O)\translations.obj $(O)\translations_txt.obj $(O)\LangMenuDef.obj \
 	$(O)\FileWatch.obj $(O)\PdfSync.obj $(O)\synctex_parser.obj $(O)\synctex_parser_utils.obj \
 	$(O)\RenderCache.obj $(O)\PdfSelection.obj $(O)\WindowInfo.obj $(O)\ParseCommandLine.obj \
-	$(O)\Benchmark.obj $(O)\UnitTests.obj $(O)\AppTools.obj $(SUMATRA_RES)
+	$(O)\Benchmark.obj $(O)\UnitTests.obj $(O)\AppTools.obj $(SUMATRA_RES) \
+	$(O)\ComicBook.obj $(BZIP2_OBJS) $(MINIZIP_OBJS)
 
 INSTALLER_OBJS = \
 	$(O)\Installer.obj $(INSTALLER_RES)
@@ -109,16 +110,6 @@ PDFFILTER_OBJS = \
 
 BROWSER_PLUGIN_OBJS = \
 	$(O)\npPdfViewer.obj $(BROWSER_PLUGIN_RES)
-
-# TODO: never build comic book support (resp. always only conditionally)?
-!if "$(CFG)"=="dbg"
-BUILD_COMIC_ENGINE = 1
-!endif
-
-!if "$(BUILD_COMIC_ENGINE)"!=""
-SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "BUILD_COMIC_ENGINE" /I$(ZLIB_DIR) /I$(ZLIB_DIR)/minizip
-SUMATRA_OBJS = $(SUMATRA_OBJS) $(O)\ComicBook.obj $(BZIP2_OBJS) $(MINIZIP_OBJS)
-!endif
 
 !if "$(BUILD_TEX_IFILTER)"!=""
 PDFFILTER_OBJS = $(PDFFILTER_OBJS) $(O)\CTeXFilter.obj
@@ -215,9 +206,10 @@ $(O)\BencUtil.obj: baseutils\Vec.h
 $(O)\ComicBook.obj: baseutils\BaseUtil.h baseutils\FileUtil.h baseutils\GeomUtil.h
 $(O)\ComicBook.obj: baseutils\StrUtil.h baseutils\Vec.h baseutils\WinUtil.h
 $(O)\ComicBook.obj: mupdf\fitz\fitz.h mupdf\mupdf\mupdf.h src\AppPrefs.h
-$(O)\ComicBook.obj: src\AppTools.h src\ComicBook.h src\DisplayState.h
-$(O)\ComicBook.obj: src\FileHistory.h src\PdfEngine.h src\PdfSearch.h
-$(O)\ComicBook.obj: src\PdfSelection.h src\SumatraPDF.h src\WindowInfo.h
+$(O)\ComicBook.obj: src\AppTools.h src\ComicBook.h src\DisplayModel.h
+$(O)\ComicBook.obj: src\DisplayState.h src\FileHistory.h src\PdfEngine.h
+$(O)\ComicBook.obj: src\PdfSearch.h src\PdfSelection.h src\SumatraPDF.h
+$(O)\ComicBook.obj: src\WindowInfo.h
 $(O)\CPdfFilter.obj: baseutils\BaseUtil.h baseutils\GeomUtil.h baseutils\StrUtil.h
 $(O)\CPdfFilter.obj: mupdf\fitz\fitz.h mupdf\mupdf\mupdf.h src\ifilter\CPdfFilter.h
 $(O)\CPdfFilter.obj: src\ifilter\FilterBase.h src\ifilter\PdfFilter.h src\PdfEngine.h
