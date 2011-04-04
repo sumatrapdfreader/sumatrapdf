@@ -66,17 +66,17 @@ typedef struct PdfPageInfo {
     /* data that is calculated when needed. actual content size within a page (View target) */
     fz_bbox         contentBox;
 
-    /* data that needs to be set before DisplayModel_relayout().
+    /* data that needs to be set before DisplayModel::relayout().
        Determines whether a given page should be shown on the screen. */
     bool            shown;
 
     /* data that changes when zoom and rotation changes */
     /* position and size within total area after applying zoom and rotation.
        Represents display rectangle for a given page.
-       Calculated in DisplayModel_relayout() */
+       Calculated in DisplayModel::relayout() */
     RectI           currPos;
-    /* data that changes due to scrolling. Calculated in DisplayModel_RecalcVisibleParts() */
-    float           visible; /* visible ratio of the page (0 = invisible, 1 = fully visible) */
+    /* data that changes due to scrolling. Calculated in DisplayModel::recalcVisibleParts() */
+    float           visibleRatio; /* (0.0 = invisible, 1.0 = fully visible) */
     /* part of the image that should be shown */
     RectI           bitmap;
     /* where it should be blitted on the screen */
@@ -296,9 +296,10 @@ public:
                                             DisplayMode displayMode, int startPage);
 };
 
-bool                displayModeContinuous(DisplayMode displayMode);
-bool                displayModeFacing(DisplayMode displayMode);
-bool                displayModeShowCover(DisplayMode displayMode);
-int                 columnsFromDisplayMode(DisplayMode displayMode);
+bool    displayModeContinuous(DisplayMode displayMode);
+bool    displayModeFacing(DisplayMode displayMode);
+bool    displayModeShowCover(DisplayMode displayMode);
+int     columnsFromDisplayMode(DisplayMode displayMode);
+bool    rotationFlipped(int rotation);
 
 #endif

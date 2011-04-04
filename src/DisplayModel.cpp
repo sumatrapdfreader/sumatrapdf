@@ -54,6 +54,7 @@
 #define PREDICTIVE_RENDER 1
 #endif
 
+// TODO: a better name, PaddingInfo ?
 DisplaySettings gDisplaySettings = {
   PADDING_PAGE_BORDER_TOP_DEF,
   PADDING_PAGE_BORDER_BOTTOM_DEF,
@@ -286,7 +287,7 @@ bool DisplayModel::buildPagesInfo(void)
         PdfPageInfo *pageInfo = getPageInfo(pageNo);
         pageInfo->page = pdfEngine->pageSize(pageNo);
         pageInfo->rotation = pdfEngine->pageRotation(pageNo);
-        pageInfo->visible = 0;
+        pageInfo->visibleRatio = 0.0;
         pageInfo->shown = false;
         if (displayModeContinuous(_displayMode)) {
             pageInfo->shown = true;
@@ -311,7 +312,7 @@ bool DisplayModel::pageVisible(int pageNo)
     PdfPageInfo *pageInfo = getPageInfo(pageNo);
     if (!pageInfo)
         return false;
-    return pageInfo->visible > 0;
+    return pageInfo->visibleRatio > 0.0;
 }
 
 /* Return true if a page is visible or a page in a row below or above is visible */
@@ -321,10 +322,10 @@ bool DisplayModel::pageVisibleNearby(int pageNo)
     int columns = columnsFromDisplayMode(mode);
 
     pageNo = FirstPageInARowNo(pageNo, columns, displayModeShowCover(mode));
-    for (int i = pageNo - columns; i < pageNo + 2 * columns; i++)
+    for (int i = pageNo - columns; i < pageNo + 2 * columns; i++) {
         if (validPageNo(i) && pageVisible(i))
             return true;
-
+    }
     return false;
 }
 
@@ -349,7 +350,7 @@ bool DisplayModel::lastBookPageVisible()
         return false;
     if (currentPageNo() == count)
         return true;
-    if (getPageInfo(count)->visible < 1.0)
+    if (getPageInfo(count)->visibleRatio < 1.0)
         return false;
     if (FirstPageInARowNo(count, columnsFromDisplayMode(mode),
                           displayModeShowCover(mode)) < count)
@@ -397,8 +398,7 @@ float DisplayModel::zoomRealFromVirtualForPage(float zoomVirtual, int pageNo)
             if (row.dy < pageSize.dy)
                 row.dy = pageSize.dy;
         }
-    }
-    else {
+    } else {
         if (fitToContent && fz_isemptybbox(pageInfo->contentBox))
             pageInfo->contentBox = pdfEngine->pageContentBox(pageNo);
         pageSizeAfterRotation(pageInfo, _rotation, &row, fitToContent);
@@ -427,7 +427,7 @@ int DisplayModel::firstVisiblePageNo(void) const
 
     for (int pageNo = 1; pageNo <= pageCount(); ++pageNo) {
         PdfPageInfo *pageInfo = getPageInfo(pageNo);
-        if (pageInfo->visible)
+        if (pageInfo->visibleRatio > 0.0)
             return pageNo;
     }
     
@@ -435,7 +435,8 @@ int DisplayModel::firstVisiblePageNo(void) const
     return INVALID_PAGE_NO;
 }
 
-int DisplayModel::currentPageNo(void) const
+// TODO: this is really MostVisiblePage()
+int DisplayModel::currentPageNo() const
 {
     if (!displayModeContinuous(displayMode()))
         return _startPage;
@@ -448,9 +449,9 @@ int DisplayModel::currentPageNo(void) const
 
     for (int pageNo = 1; pageNo <= pageCount(); pageNo++) {
         PdfPageInfo *pageInfo = getPageInfo(pageNo);
-        if (pageInfo->visible > ratio) {
+        if (pageInfo->visibleRatio > ratio) {
             mostVisiblePage = pageNo;
-            ratio = pageInfo->visible;
+            ratio = pageInfo->visibleRatio;
         }
     }
 
@@ -561,7 +562,7 @@ void DisplayModel::relayout(float zoomVirtual, int rotation)
     for (pageNo = 1; pageNo <= pageCount(); ++pageNo) {
         pageInfo = getPageInfo(pageNo);
         if (!pageInfo->shown) {
-            assert(!pageInfo->visible);
+            assert(0.0 == pageInfo->visibleRatio);
             continue;
         }
         pageSizeAfterRotation(pageInfo, rotation, &pageSize);
@@ -616,7 +617,7 @@ void DisplayModel::relayout(float zoomVirtual, int rotation)
     for (pageNo = 1; pageNo <= pageCount(); ++pageNo) {
         pageInfo = getPageInfo(pageNo);
         if (!pageInfo->shown) {
-            assert(!pageInfo->visible);
+            assert(0.0 == pageInfo->visibleRatio);
             continue;
         }
         // leave first spot empty in cover page mode
@@ -656,7 +657,7 @@ void DisplayModel::relayout(float zoomVirtual, int rotation)
         for (pageNo = 1; pageNo <= pageCount(); ++pageNo) {
             pageInfo = getPageInfo(pageNo);
             if (!pageInfo->shown) {
-                assert(!pageInfo->visible);
+                assert(0.0 == pageInfo->visibleRatio);
                 continue;
             }
             pageInfo->currPos.y += offY;
@@ -688,7 +689,7 @@ void DisplayModel::changeStartPage(int startPage)
             pageInfo->shown = true;
         } else
             pageInfo->shown = false;
-        pageInfo->visible = 0;
+        pageInfo->visibleRatio = 0.0;
     }
     relayout(_zoomVirtual, _rotation);
 }
@@ -710,27 +711,27 @@ void DisplayModel::recalcVisibleParts(void)
     for (int pageNo = 1; pageNo <= pageCount(); ++pageNo) {
         PdfPageInfo *pageInfo = getPageInfo(pageNo);
         if (!pageInfo->shown) {
-            assert(!pageInfo->visible);
+            assert(0.0 == pageInfo->visibleRatio);
             continue;
         }
 
         RectI pageRect = pageInfo->currPos;
-        pageInfo->visible = 0;
+        pageInfo->visibleRatio = 0.0;
 
-        RectI intersect = pageRect.Intersect(drawAreaRect);
-        if (pageRect.dx > 0 && pageRect.dy > 0 && !intersect.IsEmpty()) {
+        RectI visiblePart = pageRect.Intersect(drawAreaRect);
+        if (pageRect.dx > 0 && pageRect.dy > 0 && !visiblePart.IsEmpty()) {
             // calculate with floating point precision to prevent an integer overflow
-            pageInfo->visible = 1.0f * intersect.dx * intersect.dy / ((float)pageRect.dx * pageRect.dy);
+            pageInfo->visibleRatio = 1.0f * visiblePart.dx * visiblePart.dy / ((float)pageRect.dx * pageRect.dy);
 
-            pageInfo->bitmap = intersect;
+            pageInfo->bitmap = visiblePart;
             pageInfo->bitmap.x -= pageRect.x;
             assert(pageInfo->bitmap.x >= 0);
             pageInfo->bitmap.y -= pageRect.y;
             assert(pageInfo->bitmap.y >= 0);
-            pageInfo->screenX = intersect.x - areaOffset.x;
+            pageInfo->screenX = visiblePart.x - areaOffset.x;
             assert(pageInfo->screenX >= 0);
             assert(pageInfo->screenX <= drawAreaSize.dx);
-            pageInfo->screenY = intersect.y - areaOffset.y;
+            pageInfo->screenY = visiblePart.y - areaOffset.y;
             assert(pageInfo->screenX >= 0);
             assert(pageInfo->screenY <= drawAreaSize.dy);
 /*          DBG_OUT("                                  visible page = %d, (x=%3d,y=%3d,dx=%4d,dy=%4d) at (x=%d,y=%d)\n",
@@ -742,8 +743,8 @@ void DisplayModel::recalcVisibleParts(void)
         pageInfo->pageOnScreen = pageRect;
         pageInfo->pageOnScreen.x = pageInfo->pageOnScreen.x - areaOffset.x;
         pageInfo->pageOnScreen.y = pageInfo->pageOnScreen.y - areaOffset.y;
-        assert(max(pageInfo->pageOnScreen.x, 0) == pageInfo->screenX || !pageInfo->visible);
-        assert(max(pageInfo->pageOnScreen.y, 0) == pageInfo->screenY || !pageInfo->visible);
+        assert(max(pageInfo->pageOnScreen.x, 0) == pageInfo->screenX || 0.0 == pageInfo->visibleRatio);
+        assert(max(pageInfo->pageOnScreen.y, 0) == pageInfo->screenY || 0.0 == pageInfo->visibleRatio);
     }
 }
 
@@ -788,7 +789,7 @@ int DisplayModel::getPageNoByPoint(PointI pt)
 
     for (int pageNo = 1; pageNo <= pageCount(); ++pageNo) {
         PdfPageInfo *pageInfo = getPageInfo(pageNo);
-        assert(!pageInfo->visible || pageInfo->shown);
+        assert(0.0 == pageInfo->visibleRatio || pageInfo->shown);
         if (!pageInfo->shown)
             continue;
 
@@ -855,7 +856,7 @@ void DisplayModel::renderVisibleParts(void)
 //    DBG_OUT("DisplayModel::renderVisibleParts()\n");
     for (int pageNo = 1; pageNo <= pageCount(); ++pageNo) {
         PdfPageInfo *pageInfo = getPageInfo(pageNo);
-        if (pageInfo->visible) {
+        if (pageInfo->visibleRatio > 0.0) {
             assert(pageInfo->shown);
             StartRenderingPage(pageNo);
             if (0 == firstVisible)
@@ -946,7 +947,7 @@ void DisplayModel::goToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
         // make sure that setZoomVirtual uses the correct page to calculate
         // the zoom level for (visibility will be recalculated below anyway)
         for (int i =  pageCount(); i > 0; i--)
-            getPageInfo(i)->visible = (i == pageNo ? 1.0f : 0);
+            getPageInfo(i)->visibleRatio = (i == pageNo ? 1.0f : 0);
         relayout(_zoomVirtual, _rotation);
     }
     //DBG_OUT("DisplayModel::goToPage(pageNo=%d, scrollY=%d)\n", pageNo, scrollY);
@@ -1001,7 +1002,7 @@ void DisplayModel::changeDisplayMode(DisplayMode displayMode)
         for (int pageNo = 1; pageNo <= pageCount(); pageNo++) {
             PdfPageInfo *pageInfo = &(_pagesInfo[pageNo-1]);
             pageInfo->shown = true;
-            pageInfo->visible = 0;
+            pageInfo->visibleRatio = 0.0;
         }
         relayout(_zoomVirtual, _rotation);
     }
@@ -1036,7 +1037,7 @@ bool DisplayModel::goToNextPage(int scrollY)
     int columns = columnsFromDisplayMode(displayMode());
     int currPageNo = currentPageNo();
     // Fully display the current page, if the previous page is still visible
-    if (validPageNo(currPageNo - columns) && pageVisible(currPageNo - columns) && getPageInfo(currPageNo)->visible < 1) {
+    if (validPageNo(currPageNo - columns) && pageVisible(currPageNo - columns) && getPageInfo(currPageNo)->visibleRatio < 1.0) {
         goToPage(currPageNo, scrollY);
         return true;
     }
