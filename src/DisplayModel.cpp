@@ -271,7 +271,7 @@ bool DisplayModel::load(const TCHAR *fileName, int startPage, WindowInfo *win)
     return true;
 }
 
-bool DisplayModel::buildPagesInfo(void)
+bool DisplayModel::buildPagesInfo()
 {
     assert(!_pagesInfo);
     int _pageCount = pageCount();
@@ -423,7 +423,7 @@ float DisplayModel::zoomRealFromVirtualForPage(float zoomVirtual, int pageNo)
     return zoomY;
 }
 
-int DisplayModel::firstVisiblePageNo(void) const
+int DisplayModel::firstVisiblePageNo() const
 {
     assert(_pagesInfo);
     if (!_pagesInfo) return INVALID_PAGE_NO;
@@ -849,7 +849,7 @@ bool DisplayModel::isOverText(int x, int y)
     return textSelection->IsOverGlyph(pageNo, pos.x, pos.y);
 }
 
-void DisplayModel::renderVisibleParts(void)
+void DisplayModel::renderVisibleParts()
 {
     int firstVisible = 0;
     int lastVisible = 0;
@@ -1084,7 +1084,7 @@ bool DisplayModel::goToPrevPage(int scrollY)
     return TRUE;
 }
 
-bool DisplayModel::goToLastPage(void)
+bool DisplayModel::goToLastPage()
 {
     DBG_OUT("DisplayModel::goToLastPage()\n");
 
@@ -1099,7 +1099,7 @@ bool DisplayModel::goToLastPage(void)
     return TRUE;
 }
 
-bool DisplayModel::goToFirstPage(void)
+bool DisplayModel::goToFirstPage()
 {
     DBG_OUT("DisplayModel::goToFirstPage()\n");
 

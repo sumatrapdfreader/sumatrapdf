@@ -144,7 +144,7 @@ static void versioncheck_test()
     assert(CompareVersion(_T("1.3.0"), _T("2662")) < 0);
 }
 
-void SumatraPDF_UnitTests(void)
+void SumatraPDF_UnitTests()
 {
     DBG_OUT("Running SumatraPDF unit tests\n");
     hexstrTest();

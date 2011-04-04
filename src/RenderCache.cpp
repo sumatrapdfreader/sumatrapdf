@@ -9,7 +9,7 @@
    due to insufficient (GDI) memory. */
 #define CONSERVE_MEMORY
 
-RenderCache::RenderCache(void)
+RenderCache::RenderCache()
     : _cacheCount(0), _requestCount(0), invertColors(NULL), useGdiRenderer(NULL),
       maxTileSize(GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN))
 {
@@ -21,7 +21,7 @@ RenderCache::RenderCache(void)
     assert(NULL != _renderThread);
 }
 
-RenderCache::~RenderCache(void)
+RenderCache::~RenderCache()
 {
     EnterCriticalSection(&_requestAccess);
     EnterCriticalSection(&_cacheAccess);
@@ -235,7 +235,7 @@ bool RenderCache::FreeForDisplayModel(DisplayModel *dm)
 
 /* Free all bitmaps in the cache that are not visible. Returns TRUE if freed
    at least one item. */
-bool RenderCache::FreeNotVisible(void)
+bool RenderCache::FreeNotVisible()
 {
     return FreePage();
 }
@@ -269,7 +269,7 @@ USHORT RenderCache::GetTileRes(DisplayModel *dm, int pageNo)
 }
 
 // reduce the size of tiles in order to hopefully use less memory overall
-bool RenderCache::ReduceTileSize(void)
+bool RenderCache::ReduceTileSize()
 {
     if (maxTileSize.dx < 200 || maxTileSize.dy < 200)
         return false;
@@ -429,7 +429,7 @@ bool RenderCache::GetNextRequest(PageRenderRequest *req)
     return true;
 }
 
-bool RenderCache::ClearCurrentRequest(void)
+bool RenderCache::ClearCurrentRequest()
 {
     ScopedCritSec scope(&_requestAccess);
     _curReq = NULL;

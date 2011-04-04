@@ -150,12 +150,12 @@ public:
 
     int        findPageNo(fz_obj *dest);
     fz_obj   * getNamedDest(const char *name);
-    char     * getPageLayoutName(void);
-    bool       isDocumentDirectionR2L(void);
+    char     * getPageLayoutName();
+    bool       isDocumentDirectionR2L();
     virtual TCHAR * ExtractPageText(int pageNo, TCHAR *lineSep=DOS_NEWLINE, RectI **coords_out=NULL, RenderTarget target=Target_View);
     TCHAR    * getPdfInfo(char *key) const;
-    int        getPdfVersion(void) const;
-    char     * getDecryptionKey(void) const { return _decryptionKey ? Str::Dup(_decryptionKey) : NULL; }
+    int        getPdfVersion() const;
+    char     * getDecryptionKey() const { return _decryptionKey ? Str::Dup(_decryptionKey) : NULL; }
     fz_buffer* getStreamData(int num=0, int gen=0);
     bool       isImagePage(int pageNo);
 
@@ -178,7 +178,7 @@ protected:
 
     bool            load(const TCHAR *fileName, PasswordUI *pwdUI=NULL);
     bool            load(fz_stream *stm, TCHAR *password=NULL);
-    bool            finishLoading(void);
+    bool            finishLoading();
     pdf_page      * getPdfPage(int pageNo, bool failIfBusy=false);
     fz_matrix       viewctm(pdf_page *page, float zoom, int rotate);
     bool            renderPage(HDC hDC, pdf_page *page, RectI *screenRect,

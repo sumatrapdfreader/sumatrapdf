@@ -388,7 +388,7 @@ static inline void ProgressStep()
         PostMessage(gHwndProgressBar, PBM_STEPIT, 0, 0);
 }
 
-BOOL IsValidInstaller(void)
+BOOL IsValidInstaller()
 {
     zlib_filefunc64_def ffunc;
     fill_win32_filefunc64(&ffunc);
@@ -403,7 +403,7 @@ BOOL IsValidInstaller(void)
     return err == UNZ_OK && ginfo.number_entry > 0;
 }
 
-BOOL InstallCopyFiles(void)
+BOOL InstallCopyFiles()
 {
     zlib_filefunc64_def ffunc;
     fill_win32_filefunc64(&ffunc);
@@ -521,7 +521,7 @@ void bz_internal_error(int errcode)
 }
 }
 
-BOOL CreateUninstaller(void)
+BOOL CreateUninstaller()
 {
     size_t installerSize;
     char *installerData = File::ReadAll(GetOwnPath(), &installerSize);

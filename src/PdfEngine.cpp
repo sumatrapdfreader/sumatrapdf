@@ -468,7 +468,7 @@ bool PdfEngine::load(fz_stream *stm, TCHAR *password)
     return finishLoading();
 }
 
-bool PdfEngine::finishLoading(void)
+bool PdfEngine::finishLoading()
 {
     fz_error error = pdf_loadpagetree(_xref);
     if (error)
@@ -1143,7 +1143,7 @@ TCHAR *PdfEngine::getPdfInfo(char *key) const
 };
 
 // returns the version in the format Mmmee (Major, minor, extensionlevel)
-int PdfEngine::getPdfVersion(void) const
+int PdfEngine::getPdfVersion() const
 {
     if (!_xref)
         return -1;
@@ -1156,7 +1156,7 @@ int PdfEngine::getPdfVersion(void) const
     return version;
 }
 
-char *PdfEngine::getPageLayoutName(void)
+char *PdfEngine::getPageLayoutName()
 {
     EnterCriticalSection(&_xrefAccess);
     fz_obj *root = fz_dictgets(_xref->trailer, "Root");
@@ -1165,7 +1165,7 @@ char *PdfEngine::getPageLayoutName(void)
     return name;
 }
 
-bool PdfEngine::isDocumentDirectionR2L(void)
+bool PdfEngine::isDocumentDirectionR2L()
 {
     EnterCriticalSection(&_xrefAccess);
     fz_obj *root = fz_dictgets(_xref->trailer, "Root");

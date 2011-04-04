@@ -269,10 +269,10 @@ public:
 #define Edit_SelectAll(hwnd) Edit_SetSel(hwnd, 0, -1)
 #define ListBox_AppendString_NoSort(hwnd, txt) ListBox_InsertString(hwnd, -1, txt)
 
-int     screen_get_dx(void);
-int     screen_get_dy(void);
-int     screen_get_menu_dy(void);
-int     screen_get_caption_dy(void);
+int     screen_get_dx();
+int     screen_get_dy();
+int     screen_get_menu_dy();
+int     screen_get_caption_dy();
 void    rect_shift_to_work_area(RECT *rect, bool bFully);
 
 void    launch_url(const TCHAR *url);

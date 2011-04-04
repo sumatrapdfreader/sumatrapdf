@@ -117,7 +117,7 @@ public:
     PdfTocItem *getTocTree() { return pdfEngine->getTocTree(); }
 
     /* current rotation selected by user */
-    int rotation(void) const { return _rotation; }
+    int rotation() const { return _rotation; }
     void setRotation(int rotation) { _rotation = rotation; }
 
     DisplayMode displayMode() const { return _displayMode; }
@@ -125,19 +125,19 @@ public:
     void setPresentationMode(bool enable);
     bool getPresentationMode() const { return _presentationMode; }
 
-    const TCHAR *fileName(void) const { return pdfEngine->fileName(); }
+    const TCHAR *fileName() const { return pdfEngine->fileName(); }
 
     /* a "virtual" zoom level. Can be either a real zoom level in percent
        (i.e. 100.0 is original size) or one of virtual values ZOOM_FIT_PAGE,
        ZOOM_FIT_WIDTH or ZOOM_FIT_CONTENT, whose real value depends on draw area size */
-    float zoomVirtual(void) const { return _zoomVirtual; }
+    float zoomVirtual() const { return _zoomVirtual; }
 
-    float zoomReal(void) const { return _zoomReal; }
+    float zoomReal() const { return _zoomReal; }
     float zoomReal(int pageNo);
 
-    int startPage(void) const { return _startPage; }
+    int startPage() const { return _startPage; }
 
-    int currentPageNo(void) const;
+    int currentPageNo() const;
 
     PdfEngine *     pdfEngine;
     PdfSelection *  textSelection;
@@ -167,7 +167,7 @@ public:
     bool            pageShown(int pageNo);
     bool            pageVisible(int pageNo);
     bool            pageVisibleNearby(int pageNo);
-    int             firstVisiblePageNo(void) const;
+    int             firstVisiblePageNo() const;
     bool            firstBookPageVisible();
     bool            lastBookPageVisible();
     void            relayout(float zoomVirtual, int rotation);
@@ -175,8 +175,8 @@ public:
     void            goToPage(int pageNo, int scrollY, bool addNavPt=false, int scrollX=-1);
     bool            goToPrevPage(int scrollY);
     bool            goToNextPage(int scrollY);
-    bool            goToFirstPage(void);
-    bool            goToLastPage(void);
+    bool            goToFirstPage();
+    bool            goToLastPage();
 
     void            scrollXTo(int xOff);
     void            scrollXBy(int dx);
@@ -209,7 +209,7 @@ public:
     void            SetFindMatchCase(bool match) { _pdfSearch->SetSensitive(match); }
     PdfSel *        Find(PdfSearchDirection direction=FIND_FORWARD, TCHAR *text=NULL, UINT fromPage=0);
     // note: lastFoundPage might not be a valid page number!
-    int             lastFoundPage(void) const { return _pdfSearch->findPage; }
+    int             lastFoundPage() const { return _pdfSearch->findPage; }
     bool            bFoundText;
 
     int             getPageNoByPoint(PointI pt);
@@ -235,22 +235,22 @@ protected:
 
     bool            load(const TCHAR *fileName, int startPage, WindowInfo *win);
 
-    bool            buildPagesInfo(void);
+    bool            buildPagesInfo();
     float           zoomRealFromVirtualForPage(float zoomVirtual, int pageNo);
     void            changeStartPage(int startPage);
     void            getContentStart(int pageNo, int *x, int *y);
     void            setZoomVirtual(float zoomVirtual);
-    void            recalcVisibleParts(void);
-    void            renderVisibleParts(void);
+    void            recalcVisibleParts();
+    void            renderVisibleParts();
     /* Those need to be implemented somewhere else by the GUI */
-    void            setScrollbarsState(void);
+    void            setScrollbarsState();
     /* called when a page number changes */
-    void            pageChanged(void);
+    void            pageChanged();
     /* called when this DisplayModel is destroyed */
-    void            clearAllRenderings(void);
+    void            clearAllRenderings();
 public:
     /* called when we decide that the display needs to be redrawn */
-    void            RepaintDisplay(void);
+    void            RepaintDisplay();
 
 protected:
     void            goToPdfDest(fz_obj *dest);

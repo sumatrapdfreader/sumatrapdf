@@ -79,8 +79,8 @@ public:
     bool              * invertColors;
     bool              * useGdiRenderer;
 
-    RenderCache(void);
-    ~RenderCache(void);
+    RenderCache();
+    ~RenderCache();
 
     void                Render(DisplayModel *dm, int pageNo, CallbackFunc *callback=NULL);
     void                CancelRendering(DisplayModel *dm);
@@ -93,16 +93,16 @@ public:
     /* Interface for page rendering thread */
     HANDLE              startRendering;
 
-    bool                ClearCurrentRequest(void);
+    bool                ClearCurrentRequest();
     bool                GetNextRequest(PageRenderRequest *req);
     void                Add(PageRenderRequest &req, RenderedBitmap *bitmap);
-    bool                FreeNotVisible(void);
+    bool                FreeNotVisible();
 
 private:
     USHORT              GetTileRes(DisplayModel *dm, int pageNo);
-    bool                ReduceTileSize(void);
+    bool                ReduceTileSize();
 
-    bool                IsRenderQueueFull(void) const {
+    bool                IsRenderQueueFull() const {
                             return _requestCount == MAX_PAGE_REQUESTS;
                         }
     UINT                GetRenderDelay(DisplayModel *dm, int pageNo, TilePosition tile);

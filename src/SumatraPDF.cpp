@@ -227,8 +227,8 @@ static ToolbarButtonInfo gToolbarButtons[] = {
 
 static void CreateTocBox(WindowInfo *win, HINSTANCE hInst);
 static void UpdateToolbarFindText(WindowInfo *win);
-static void UpdateToolbarToolText(void);
-static void RebuildMenuBar(void);
+static void UpdateToolbarToolText();
+static void RebuildMenuBar();
 static void OnMenuFindMatchCase(WindowInfo *win);
 static bool LoadPdfIntoWindow(const TCHAR *fileName, WindowInfo *win, 
     const DisplayState *state, bool isNewWindow, bool tryRepair, 
@@ -946,7 +946,7 @@ static void UpdateCurrentFileDisplayStateForWin(WindowInfo *win)
     win->DisplayStateFromToC(state);
 }
 
-static bool Prefs_Save(void)
+static bool Prefs_Save()
 {
     // don't save preferences for plugin windows
     if (gPluginMode)
@@ -1041,7 +1041,7 @@ static void WindowInfo_UpdateFindbox(WindowInfo *win) {
     }
 }
 
-static bool FileCloseMenuEnabled(void) {
+static bool FileCloseMenuEnabled() {
     for (size_t i = 0; i < gWindows.Count(); i++)
         if (!gWindows[i]->IsAboutWindow())
             return true;
@@ -1210,7 +1210,7 @@ void EnsureWindowVisibility(RectI *rect)
     }
 }
 
-static WindowInfo* WindowInfo_CreateEmpty(void)
+static WindowInfo* WindowInfo_CreateEmpty()
 {
     RectI windowPos;
     if (gGlobalPrefs.m_windowPos.IsEmpty()) {
@@ -1631,13 +1631,13 @@ void DisplayModel::StartRenderingPage(int pageNo)
     gRenderCache.Render(this, pageNo);
 }
 
-void DisplayModel::clearAllRenderings(void)
+void DisplayModel::clearAllRenderings()
 {
     gRenderCache.CancelRendering(this);
     gRenderCache.FreeForDisplayModel(this);
 }
 
-void DisplayModel::setScrollbarsState(void)
+void DisplayModel::setScrollbarsState()
 {
     WindowInfo *win = this->_appData;
     assert(win);
@@ -1713,7 +1713,7 @@ void DisplayModel::setScrollbarsState(void)
     SetScrollInfo(win->hwndCanvas, SB_VERT, &si, TRUE);
 }
 
-void AssociateExeWithPdfExtension(void)
+void AssociateExeWithPdfExtension()
 {
     DoAssociateExeWithPdfExtension(HKEY_CURRENT_USER);
     DoAssociateExeWithPdfExtension(HKEY_LOCAL_MACHINE);
@@ -2915,7 +2915,7 @@ static void OnPaint(WindowInfo *win)
     EndPaint(win->hwndCanvas, &ps);
 }
 
-static void OnMenuExit(void)
+static void OnMenuExit()
 {
     if (gPluginMode)
         return;
@@ -4663,7 +4663,7 @@ static void UpdateToolbarButtonsToolTipsForWindow(WindowInfo* win)
     }
 }
 
-static void UpdateToolbarToolText(void)
+static void UpdateToolbarToolText()
 {
     for (size_t i = 0; i < gWindows.Count(); i++) {
         WindowInfo *win = gWindows[i];
@@ -4673,7 +4673,7 @@ static void UpdateToolbarToolText(void)
     }        
 }
 
-static void RebuildMenuBar(void)
+static void RebuildMenuBar()
 {
     for (size_t i = 0; i < gWindows.Count(); i++) {
         WindowInfo *win = gWindows[i];
@@ -6682,9 +6682,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     EnableNx();
 
 #ifdef DEBUG
-    extern void BaseUtils_UnitTests(void);
+    extern void BaseUtils_UnitTests();
     BaseUtils_UnitTests();
-    extern void SumatraPDF_UnitTests(void);
+    extern void SumatraPDF_UnitTests();
     SumatraPDF_UnitTests();
 #endif
 

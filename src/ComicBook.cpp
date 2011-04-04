@@ -331,6 +331,9 @@ RestartLayout:
    coordinates of a current view into that large sheet, calculate which
    parts of each page is visible on the screen.
    Needs to be recalucated after scrolling the view. */
+// TODO: it's convenient for this to be here, but it's not an absolutely
+// necessary part of the layout. It could be part of some higher level logic
+// that deals with scrollbar state
 void Layout::RecalcVisibleParts()
 {
     RectI drawAreaRect(areaOffset, drawAreaSize);

@@ -669,7 +669,7 @@ static void BencTestDictAppend()
     delete dict;
 }
 
-void BaseUtils_UnitTests(void)
+void BaseUtils_UnitTests()
 {
     DBG_OUT("Running BaseUtils unit tests\n");
     GeomTest();

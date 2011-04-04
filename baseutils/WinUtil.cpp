@@ -151,7 +151,7 @@ typedef HRESULT (WINAPI *_NtSetInformationProcess)(
    ULONG   ProcessInformationLength
    );
 
-void EnableNx(void)
+void EnableNx()
 {
     WinLibrary lib(_T("ntdll.dll"));
     _NtSetInformationProcess ntsip;
@@ -163,7 +163,7 @@ void EnableNx(void)
 }
 
 // Code from http://www.halcyon.com/~ast/dload/guicon.htm
-void RedirectIOToConsole(void)
+void RedirectIOToConsole()
 {
     CONSOLE_SCREEN_BUFFER_INFO coninfo;
     int hConHandle;
@@ -386,22 +386,22 @@ void exec_with_params(const TCHAR *exe, const TCHAR *params, bool hidden)
  #endif
 #endif
 
-int screen_get_dx(void)
+int screen_get_dx()
 {
     return GetSystemMetrics(SM_CXSCREEN);
 }
 
-int screen_get_dy(void)
+int screen_get_dy()
 {
     return GetSystemMetrics(SM_CYSCREEN);
 }
 
-int screen_get_menu_dy(void)
+int screen_get_menu_dy()
 {
     return GetSystemMetrics(SM_CYMENU);
 }
 
-int screen_get_caption_dy(void)
+int screen_get_caption_dy()
 {
     return GetSystemMetrics(SM_CYCAPTION);
 }
