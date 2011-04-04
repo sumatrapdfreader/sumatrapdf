@@ -171,6 +171,7 @@ int limitValue(int val, int min, int max)
    (3,4)   3                (2,3)   2
    (5)     5                (4,5)   4
  */
+// TODO: should it take _displayRL into account?
 static int FirstPageInARowNo(int pageNo, int columns, bool showCover)
 {
     if (showCover && columns > 1)
@@ -299,6 +300,9 @@ bool DisplayModel::buildPagesInfo(void)
     return true;
 }
 
+
+// TODO: a better name e.g. ShouldShow() to better distinguish between
+// before-layout info and after-layout visibility checks
 bool DisplayModel::pageShown(int pageNo)
 {
     PdfPageInfo *pageInfo = getPageInfo(pageNo);

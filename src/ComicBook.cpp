@@ -50,8 +50,23 @@ struct PageInfo {
     bool    notShown;
 
     // data that changes as a result of layout process
+    /* position and size within total area after applying zoom and rotation.
+       Represents display rectangle for a given page.
+       Calculated in DisplayModel::relayout() */
+    RectI           currPos;
 
+    // data that changes due to scrolling. Calculated in DisplayModel::recalcVisibleParts() */
+    float           visibleRatio; /* (0.0 = invisible, 1.0 = fully visible) */
+    /* part of the image that should be shown */
+    RectI           bitmap;
+    /* where it should be blitted on the screen */
+    int             screenX, screenY;
+    /* position of page relative to visible draw area */
+    RectI           pageOnScreen;
 };
+
+// Terminology:
+// viewPort - what DisplayMode calls drawArea i.e. the visible 
 
 // Note: this layout implementation handles scrollbars
 // Note: for compat with DisplayModel, page numbers are 1-based
@@ -65,27 +80,36 @@ public:
     DisplaySettings * padding;
 
     DisplayMode       displayMode;
+    bool              displayR2L;
 
-    /* size of draw area, including part that might be taken by scrollbars */
-    SizeI           drawAreaSize; // TODO: a better name e.g. totalBoxSize
+    // width/height of vertical/horizontal scrollbar
     int             vertScrollbarDx, horizScrollbarDy;
 
-    // drawAreaSize
-    /* areaOffset is "polymorphic". If drawAreaSize.dx > totalAreSize.dx then
-       areaOffset.x is offset of total area rect inside draw area, otherwise
-       an offset of draw area inside total area.
+    /* size of draw area, including part that might be taken by scrollbars. Updated by
+       clients when window size changes. */
+    SizeI           totalAreaSize; // TODO: better name, e.g. totalViewPortSize
+
+    /* drawAreaSize = totalAreaSize - area taken by visible scrollbars */
+    SizeI           drawAreaSize; // TODO: a better name e.g. viewPortSize
+
+    /* areaOffset is "polymorphic". If drawAreaSize.dx > canvasSize.dx then
+       areaOffset.x is offset of canvas rect inside draw area, otherwise
+       an offset of draw area inside canvas.
        The same for areaOff.y, except it's for dy */
     PointI          areaOffset;
+
+    SizeI           canvasSize; // TODO: better name e.g. areaSize
 
     float zoomVirtual, zoomReal;
     int rotation;
 
-    Layout(SizeI drawAreaSize, Vec<PageInfo> *pages, DisplayMode dm) : 
-        drawAreaSize(drawAreaSize), pages(pages), displayMode(dm)
+    Layout(SizeI totalAreaSize, Vec<PageInfo> *pages, DisplayMode dm) : 
+        totalAreaSize(totalAreaSize), pages(pages), displayMode(dm)
     {
         padding = &gDisplaySettings2;
         vertScrollbarDx = GetSystemMetrics(SM_CXVSCROLL);
         horizScrollbarDy = GetSystemMetrics(SM_CYHSCROLL);
+        displayR2L = false;
     }
 
     ~Layout() {
@@ -233,17 +257,184 @@ void Layout::SetZoomVirtual(float zoom)
 
 void Layout::DoLayout(float zoomVirtual, int rot)
 {
+    int         pageNo;
+    PageInfo    pageInfo;
+    SizeD       pageSize;
+    int         totalAreaDx, totalAreaDy;
+    int         rowMaxPageDy;
+    int         offX;
+    int         pageOffX;
+    int         pageInARow;
+    int         columns;
+    int         newAreaOffsetX;
+    int         columnOffsets[2];
+
     // we start layout assuming we can use the whole drawAreaSize
     // when we discover we need to show scrollbars, we restart layout
     // using drawAreaSize - part used by scrollbars
     bool showHorizScrollbar = false;
     bool showVertScrollbar = false;
 
+    // TODO: for now always show scrollbars
+    showHorizScrollbar = showVertScrollbar = true;
+
     normalizeRotation(&rot);
     rotation = rot;
     float currZoomReal = zoomReal;
-    SetZoomVirtual(zoomVirtual);
 
+RestartLayout:
+    // substract scrollbars area if needed
+    drawAreaSize = totalAreaSize;
+    if (showHorizScrollbar)
+        drawAreaSize.dy -= horizScrollbarDy;
+    if (showVertScrollbar)
+        drawAreaSize.dx -= vertScrollbarDx;
+
+    SetZoomVirtual(zoomVirtual);
+    int currPosY = padding->pageBorderTop;
+
+    if (0 == currZoomReal || INVALID_ZOOM == currZoomReal)
+        newAreaOffsetX = 0;
+    else
+        newAreaOffsetX = (int)(areaOffset.x * zoomReal / currZoomReal);
+    areaOffset.x = newAreaOffsetX;
+    /* calculate the position of each page on the canvas, given current zoom,
+       rotation, columns parameters. You can think of it as a simple
+       table layout i.e. rows with a fixed number of columns. */
+    columns = columnsFromDisplayMode(displayMode);
+
+    pageInARow = 0;
+    rowMaxPageDy = 0;
+    for (pageNo = 1; pageNo <= PageCount(); ++pageNo) {
+        PageInfo pageInfo = GetPageInfo(pageNo);
+        if (pageInfo.notShown) {
+            assert(0.0 == pageInfo.visibleRatio);
+            continue;
+        }
+        pageSizeAfterRotation(pageInfo, rotation, &pageSize);
+        pageInfo.currPos.dx = (int)(pageSize.dx * zoomReal + 0.5);
+        pageInfo.currPos.dy = (int)(pageSize.dy * zoomReal + 0.5);
+
+        if (rowMaxPageDy < pageInfo.currPos.dy)
+            rowMaxPageDy = pageInfo.currPos.dy;
+        pageInfo.currPos.y = currPosY;
+
+        if (displayModeShowCover(displayMode) && pageNo == 1 && columns - pageInARow > 1)
+            pageInARow++;
+        if (columnOffsets[pageInARow] < pageInfo.currPos.dx)
+            columnOffsets[pageInARow] = pageInfo.currPos.dx;
+
+        pageInARow++;
+        assert(pageInARow <= columns);
+        if (pageInARow == columns) {
+            /* starting next row */
+            currPosY += rowMaxPageDy + padding->betweenPagesY;
+            rowMaxPageDy = 0;
+            pageInARow = 0;
+        }
+
+        // if we're not showing one of the scrollbars but detect that we should
+        // because we exceeded available area, note that and restart the layout
+        if (!showHorizScrollbar) {
+            int maxX = pageInfo.currPos.x + pageInfo.currPos.dx;
+            // TODO: take padding into account?
+            if (maxX > totalAreaSize.dx) {
+                showHorizScrollbar = true;
+                goto RestartLayout;
+            }
+        }
+
+        if (!showVertScrollbar) {
+            int maxY = pageInfo.currPos.y + pageInfo.currPos.dy;
+            // TODO: take padding into account?
+            if (maxY > totalAreaSize.dy) {
+                showVertScrollbar = true;
+                goto RestartLayout;
+            }
+        }
+
+/*        DBG_OUT("  page = %3d, (x=%3d, y=%5d, dx=%4d, dy=%4d) orig=(dx=%d,dy=%d)\n",
+            pageNo, pageInfo.currPos.x, pageInfo.currPos.y,
+                    pageInfo.currPos.dx, pageInfo.currPos.dy,
+                    (int)pageSize.dx, (int)pageSize.dy); */
+    }
+
+    if (pageInARow != 0)
+        /* this is a partial row */
+        currPosY += rowMaxPageDy + padding->betweenPagesY;
+    if (columns == 2 && PageCount() == 1) {
+        /* don't center a single page over two columns */
+        if (displayModeShowCover(displayMode))
+            columnOffsets[0] = columnOffsets[1];
+        else
+            columnOffsets[1] = columnOffsets[0];
+    }
+    totalAreaDx = padding->pageBorderLeft + columnOffsets[0] + (columns == 2 ? padding->betweenPagesX + columnOffsets[1] : 0) + padding->pageBorderRight;
+
+    /* since pages can be smaller than the drawing area, center them in x axis */
+    offX = 0;
+    if (totalAreaDx < drawAreaSize.dx) {
+        areaOffset.x = 0;
+        offX = (drawAreaSize.dx - totalAreaDx) / 2;
+        totalAreaDx = drawAreaSize.dx;
+    }
+    assert(offX >= 0);
+    pageInARow = 0;
+    pageOffX = offX + padding->pageBorderLeft;
+    for (pageNo = 1; pageNo <= PageCount(); ++pageNo) {
+        pageInfo = GetPageInfo(pageNo);
+        if (pageInfo.notShown) {
+            assert(0.0 == pageInfo.visibleRatio);
+            continue;
+        }
+        // leave first spot empty in cover page mode
+        if (displayModeShowCover(displayMode) && pageNo == 1)
+            pageOffX += columnOffsets[pageInARow++] + padding->betweenPagesX;
+        pageInfo.currPos.x = pageOffX + (columnOffsets[pageInARow] - pageInfo.currPos.dx) / 2;
+        // center the cover page over the first two spots in non-continuous mode
+        if (displayModeShowCover(displayMode) && pageNo == 1 && !displayModeContinuous(displayMode))
+            pageInfo.currPos.x = offX + padding->pageBorderLeft + (columnOffsets[0] + padding->betweenPagesX + columnOffsets[1] - pageInfo.currPos.dx) / 2;
+        // mirror the page layout when displaying a Right-to-Left document
+        if (displayR2L && columns > 1)
+            pageInfo.currPos.x = totalAreaDx - pageInfo.currPos.x - pageInfo.currPos.dx;
+        pageOffX += columnOffsets[pageInARow++] + padding->betweenPagesX;
+        assert(pageOffX >= 0 && pageInfo.currPos.x >= 0);
+
+        if (pageInARow == columns) {
+            pageOffX = offX + padding->pageBorderLeft;
+            pageInARow = 0;
+        }
+    }
+
+    /* if after resizing we would have blank space on the right due to x offset
+       being too much, make x offset smaller so that there's no blank space */
+    if (drawAreaSize.dx - (totalAreaDx - newAreaOffsetX) > 0) {
+        newAreaOffsetX = totalAreaDx - drawAreaSize.dx;
+        areaOffset.x = newAreaOffsetX;
+    }
+
+    /* if a page is smaller than drawing area in y axis, y-center the page */
+    totalAreaDy = currPosY + padding->pageBorderBottom - padding->betweenPagesY;
+    if (totalAreaDy < drawAreaSize.dy) {
+        int offY = padding->pageBorderTop + (drawAreaSize.dy - totalAreaDy) / 2;
+        DBG_OUT("  offY = %.2f\n", offY);
+        assert(offY >= 0.0);
+        totalAreaDy = drawAreaSize.dy;
+        for (pageNo = 1; pageNo <= PageCount(); ++pageNo) {
+            pageInfo = GetPageInfo(pageNo);
+            if (pageInfo.notShown) {
+                assert(0.0 == pageInfo.visibleRatio);
+                continue;
+            }
+            pageInfo.currPos.y += offY;
+            DBG_OUT("  page = %3d, (x=%3d, y=%5d, dx=%4d, dy=%4d) orig=(dx=%d,dy=%d)\n",
+                pageNo, pageInfo.currPos.x, pageInfo.currPos.y,
+                        pageInfo.currPos.dx, pageInfo.currPos.dy,
+                        (int)pageSize.dx, (int)pageSize.dy);
+        }
+    }
+
+    canvasSize = SizeI(totalAreaDx, totalAreaDy);
 }
 
 
