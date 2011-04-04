@@ -293,7 +293,6 @@ bool DisplayModel::buildPagesInfo(void)
         if (displayModeContinuous(_displayMode)) {
             pageInfo->shown = true;
         } else if (pageNo >= startPage && pageNo < startPage + columns) {
-            DBG_OUT("DisplayModelSplash::CreateFromPdfDoc() set page %d as shown\n", pageNo);
             pageInfo->shown = true;
         }
     }
