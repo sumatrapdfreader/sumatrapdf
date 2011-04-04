@@ -211,6 +211,10 @@ void WindowInfo::DisplayStateFromToC(DisplayState *ds)
         ds->tocState = (int *)memdup(this->tocState, (this->tocState[0] + 1) * sizeof(int));
 }
 
+// TODO: this conflates 2 unrelated things: resizing backing storage for double buffer
+// and triggering re-layout. It also has a bug where relayout wouldn't be triggered
+// if double-buffer storage (hdcToDraw) didn't exist (it probably isn't triggered in
+// our current codepaths)
 void WindowInfo::ResizeIfNeeded(bool resizeWindow)
 {
     ClientRect rc(hwndCanvas);

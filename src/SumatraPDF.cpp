@@ -1292,7 +1292,7 @@ static void RecalcSelectionPosition(WindowInfo *win)
         pageInfo = win->dm->getPageInfo(selOnPage->pageNo);
         /* if page is not visible, we hide seletion by simply moving it off
          * the canvas */
-        if (!pageInfo->visible) {
+        if (0.0 == pageInfo->visibleRatio) {
             selOnPage->selectionCanvas.x = -100;
             selOnPage->selectionCanvas.y = -100;
             selOnPage->selectionCanvas.dx = 0;
@@ -1992,7 +1992,7 @@ static void PaintSelection(WindowInfo *win, HDC hdc) {
 
 static void PaintForwardSearchMark(WindowInfo *win, HDC hdc) {
     PdfPageInfo *pageInfo = win->dm->getPageInfo(win->fwdsearchmark.page);
-    if (!pageInfo->visible)
+    if (0.0 == pageInfo->visibleRatio)
         return;
     
     // Draw the rectangles highlighting the forward search results
@@ -2077,6 +2077,56 @@ static void PaintPageFrameAndShadow(HDC hdc, PdfPageInfo *pageInfo, bool present
 }
 #endif
 
+/* debug code to visualize links (can block while rendering) */
+static void DebugShowLinks(DisplayModel *dm, HDC hdc, bool rendering)
+{
+    if (!gDebugShowLinks || rendering)
+        return;
+
+    fz_bbox drawAreaRect = { 0, 0, dm->drawAreaSize.dx, dm->drawAreaSize.dy };
+    HPEN pen = CreatePen(PS_SOLID, 1, RGB(0x00, 0xff, 0xff));
+    HGDIOBJ oldPen = SelectObject(hdc, pen);
+
+    for (int pageNo = dm->pageCount(); pageNo >= 1; --pageNo) {
+        PdfPageInfo *pageInfo = dm->getPageInfo(pageNo);
+        if (!pageInfo->shown || 0.0 == pageInfo->visibleRatio)
+            continue;
+
+        pdf_link *links = NULL;
+        int linkCount = dm->getPdfLinks(pageNo, &links);
+        for (int i = 0; i < linkCount; i++) {
+            fz_bbox isect = fz_intersectbbox(fz_roundrect(links[i].rect), drawAreaRect);
+            if (fz_isemptybbox(isect))
+                continue;
+
+            RectI rectScreen = RectI::FromXY(isect.x0, isect.y0, isect.x1, isect.y1);
+            paint_rect(hdc, &rectScreen.ToRECT());
+        }
+        free(links);
+    }
+
+    DeletePen(SelectObject(hdc, oldPen));
+
+    if (dm->zoomVirtual() == ZOOM_FIT_CONTENT) {
+        // also display the content box when fitting content
+        pen = CreatePen(PS_SOLID, 1, RGB(0xff, 0x00, 0xff));
+        oldPen = SelectObject(hdc, pen);
+
+        for (int pageNo = dm->pageCount(); pageNo >= 1; --pageNo) {
+            PdfPageInfo *pageInfo = dm->getPageInfo(pageNo);
+            if (!pageInfo->shown || 0.0 == pageInfo->visibleRatio)
+                continue;
+
+            fz_bbox cbox = dm->pdfEngine->pageContentBox(pageNo);
+            RectD rect = RectI::FromXY(cbox.x0, cbox.y0, cbox.x1, cbox.y1).Convert<double>();
+            if (dm->rectCvtUserToScreen(pageNo, &rect))
+                paint_rect(hdc, &rect.ToRECT());
+        }
+
+        DeletePen(SelectObject(hdc, oldPen));
+    }
+}
+
 static void DrawPdf(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
 {
     RectI bounds;
@@ -2088,15 +2138,12 @@ static void DrawPdf(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
     assert(dm);
     if (!dm) return;
 
-    assert(win->hdcToDraw);
-    hdc = win->hdcToDraw;
-
     FillRect(hdc, &ps->rcPaint, win->presentation ? gBrushBlack : gBrushBg);
 
     DBG_OUT("DrawPdf() ");
     for (int pageNo = 1; pageNo <= dm->pageCount(); ++pageNo) {
         PdfPageInfo *pageInfo = dm->getPageInfo(pageNo);
-        if (!pageInfo->visible)
+        if (0.0 == pageInfo->visibleRatio)
             continue;
         assert(pageInfo->shown);
         if (!pageInfo->shown)
@@ -2150,52 +2197,7 @@ static void DrawPdf(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
         PaintForwardSearchMark(win, hdc);
 
     DBG_OUT("\n");
-
-    if (gDebugShowLinks && !rendering) {
-        /* debug code to visualize links (can block while rendering) */
-        fz_bbox drawAreaRect = { 0, 0, dm->drawAreaSize.dx, dm->drawAreaSize.dy };
-        HPEN pen = CreatePen(PS_SOLID, 1, RGB(0x00, 0xff, 0xff));
-        HGDIOBJ oldPen = SelectObject(hdc, pen);
-
-        for (int pageNo = win->dm->pageCount(); pageNo >= 1; --pageNo) {
-            PdfPageInfo *pageInfo = win->dm->getPageInfo(pageNo);
-            if (!pageInfo->shown || !pageInfo->visible)
-                continue;
-
-            pdf_link *links = NULL;
-            int linkCount = dm->getPdfLinks(pageNo, &links);
-            for (int i = 0; i < linkCount; i++) {
-                fz_bbox isect = fz_intersectbbox(fz_roundrect(links[i].rect), drawAreaRect);
-                if (fz_isemptybbox(isect))
-                    continue;
-
-                RectI rectScreen = RectI::FromXY(isect.x0, isect.y0, isect.x1, isect.y1);
-                paint_rect(hdc, &rectScreen.ToRECT());
-            }
-            free(links);
-        }
-
-        DeletePen(SelectObject(hdc, oldPen));
-
-        if (dm->zoomVirtual() == ZOOM_FIT_CONTENT) {
-            // also display the content box when fitting content
-            pen = CreatePen(PS_SOLID, 1, RGB(0xff, 0x00, 0xff));
-            oldPen = SelectObject(hdc, pen);
-
-            for (int pageNo = win->dm->pageCount(); pageNo >= 1; --pageNo) {
-                PdfPageInfo *pageInfo = win->dm->getPageInfo(pageNo);
-                if (!pageInfo->shown || !pageInfo->visible)
-                    continue;
-
-                fz_bbox cbox = dm->pdfEngine->pageContentBox(pageNo);
-                RectD rect = RectI::FromXY(cbox.x0, cbox.y0, cbox.x1, cbox.y1).Convert<double>();
-                if (dm->rectCvtUserToScreen(pageNo, &rect))
-                    paint_rect(hdc, &rect.ToRECT());
-            }
-
-            DeletePen(SelectObject(hdc, oldPen));
-        }
-    }
+    DebugShowLinks(dm, hdc, rendering);
 }
 
 static void CopySelectionToClipboard(WindowInfo *win)
@@ -2268,7 +2270,7 @@ static void ConvertSelectionRectToSelectionOnPage(WindowInfo *win) {
     win->dm->textSelection->Reset();
     for (int pageNo = win->dm->pageCount(); pageNo >= 1; --pageNo) {
         PdfPageInfo *pageInfo = win->dm->getPageInfo(pageNo);
-        assert(!pageInfo->visible || pageInfo->shown);
+        assert(0.0 == pageInfo->visibleRatio || pageInfo->shown);
         if (!pageInfo->shown)
             continue;
 
@@ -2898,7 +2900,7 @@ static void OnPaint(WindowInfo *win)
             break;
         default:
             win->ResizeIfNeeded();
-            DrawPdf(win, hdc, &ps);
+            DrawPdf(win, win->hdcToDraw, &ps);
             win->DoubleBuffer_Show(hdc);
         }
     }
@@ -4816,7 +4818,7 @@ static DWORD WINAPI FindThread(LPVOID data)
 
     PdfSel *rect;
     if (ftd->wasModified || !win->dm->validPageNo(win->dm->lastFoundPage()) ||
-        !win->dm->getPageInfo(win->dm->lastFoundPage())->visible)
+        !win->dm->getPageInfo(win->dm->lastFoundPage())->visibleRatio)
         rect = win->dm->Find(ftd->direction, ftd->text);
     else
         rect = win->dm->Find(ftd->direction);
@@ -6687,6 +6689,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     ScopedCom com;
     InitAllCommonControls();
     fz_accelerate();
+    ScopedGdiPlus gdiPlus;
 
     {
         ScopedMem<TCHAR> prefsFilename(Prefs_GetFileName());

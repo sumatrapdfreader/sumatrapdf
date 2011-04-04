@@ -12,11 +12,240 @@
 #include "AppPrefs.h"
 #include "FileHistory.h"
 #include "AppTools.h"
+#include "DisplayModel.h"
 
 // mini(un)zip
 #include <ioapi.h>
 #include <iowin32.h>
 #include <unzip.h>
+
+// TODO: use gDisplaySettings
+DisplaySettings gDisplaySettings2 = {
+  PADDING_PAGE_BORDER_TOP_DEF,
+  PADDING_PAGE_BORDER_BOTTOM_DEF,
+  PADDING_PAGE_BORDER_LEFT_DEF,
+  PADDING_PAGE_BORDER_RIGHT_DEF,
+  PADDING_BETWEEN_PAGES_X_DEF,
+  PADDING_BETWEEN_PAGES_Y_DEF
+}, gDisplaySettingsPresentation2 = {
+  0, 0, 0, 0,
+  PADDING_BETWEEN_PAGES_X_DEF, PADDING_BETWEEN_PAGES_X_DEF
+};
+
+// Information about a page for the purpose of the layout.
+// Note: not happy about the name. It represents a rectangle on the screen.
+// It's a page in the pdf but an image in cb* file. BoxInfo? Box?
+struct PageInfo {
+
+    // constant info that is set only once
+    SizeD   size;
+    // native rotation. Only valid for PDF, always 0 for others
+    int     rotation;
+
+    // data that needs to set before calling Layout()
+    // notShown is used to support non-continuous mode with the same layout
+    // code. In non-continous mode only one (in single page mode) or
+    // two (in facing or book view mode) pages are considered visible by
+    // layout and all others are marked as notShown
+    bool    notShown;
+
+    // data that changes as a result of layout process
+
+};
+
+// Note: this layout implementation handles scrollbars
+// Note: for compat with DisplayModel, page numbers are 1-based
+// but eventually should be 0-based
+// Note: it doesn't do dpi scaling (_dpiFactor), it seems like wrong
+// place to do it
+class Layout {
+public:
+    Vec<PageInfo> *pages;
+
+    DisplaySettings * padding;
+
+    DisplayMode       displayMode;
+
+    /* size of draw area, including part that might be taken by scrollbars */
+    SizeI           drawAreaSize; // TODO: a better name e.g. totalBoxSize
+    int             vertScrollbarDx, horizScrollbarDy;
+
+    // drawAreaSize
+    /* areaOffset is "polymorphic". If drawAreaSize.dx > totalAreSize.dx then
+       areaOffset.x is offset of total area rect inside draw area, otherwise
+       an offset of draw area inside total area.
+       The same for areaOff.y, except it's for dy */
+    PointI          areaOffset;
+
+    float zoomVirtual, zoomReal;
+    int rotation;
+
+    Layout(SizeI drawAreaSize, Vec<PageInfo> *pages, DisplayMode dm) : 
+        drawAreaSize(drawAreaSize), pages(pages), displayMode(dm)
+    {
+        padding = &gDisplaySettings2;
+        vertScrollbarDx = GetSystemMetrics(SM_CXVSCROLL);
+        horizScrollbarDy = GetSystemMetrics(SM_CYHSCROLL);
+    }
+
+    ~Layout() {
+        delete pages;
+    }
+
+    int PageCount() const { return pages->Count(); }
+    PageInfo& GetPageInfo(int pageNo) const { return pages->At(pageNo - 1); }
+    bool PageShown(int pageNo) {
+        PageInfo pi = GetPageInfo(pageNo);
+        return !pi.notShown;
+    }
+
+    float ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo);
+    void DoLayout(float zoomVirtual, int rot);
+
+    void SetZoomVirtual(float zoom);
+};
+
+/* Given 'pageInfo', which should contain correct information about
+   pageDx, pageDy and rotation, return a page size after applying a global
+   rotation */
+static void pageSizeAfterRotation(PageInfo& pageInfo, int rotation,
+    SizeD *pageSize, bool fitToContent=false)
+{
+    assert(pageSize);
+    if (!pageSize)
+        return;
+
+#if 0 // pdf-specific
+    if (fitToContent) {
+        if (fz_isemptybbox(pageInfo->contentBox))
+            return pageSizeAfterRotation(pageInfo, rotation, pageSize);
+        pageSize->dx = pageInfo->contentBox.x1 - pageInfo->contentBox.x0;
+        pageSize->dy = pageInfo->contentBox.y1 - pageInfo->contentBox.y0;
+    } else
+#endif
+        *pageSize = pageInfo.size;
+
+    rotation += pageInfo.rotation;
+    if (rotationFlipped(rotation))
+        swap(pageSize->dx, pageSize->dy);
+}
+
+/* Given a zoom level that can include a "virtual" zoom levels like ZOOM_FIT_WIDTH,
+   ZOOM_FIT_PAGE or ZOOM_FIT_CONTENT, calculate an absolute zoom level */
+float Layout::ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo)
+{
+    if (zoomVirtual != ZOOM_FIT_WIDTH && zoomVirtual != ZOOM_FIT_PAGE && zoomVirtual != ZOOM_FIT_CONTENT)
+        return zoomVirtual * 0.01f;
+
+    SizeD row;
+    PageInfo pageInfo = GetPageInfo(pageNo);
+    int columns = columnsFromDisplayMode(displayMode);
+
+    bool fitToContent = false; // (ZOOM_FIT_CONTENT == zoomVirtual);
+    if (fitToContent && columns > 1) {
+#if 0 // this is PDF-specific code that would have to be abstracted in some way e.g. via optional proxy class that can return necessary info
+        // Fit the content of all the pages in the same row into the visible area
+        // (i.e. don't crop inner margins but just the left-most, right-most, etc.)
+        int first = FirstPageInARowNo(pageNo, columns, displayModeShowCover(displayMode()));
+        int last = LastPageInARowNo(pageNo, columns, displayModeShowCover(displayMode()), pageCount());
+        for (int i = first; i <= last; i++) {
+            SizeD pageSize;
+            pageInfo = getPageInfo(i);
+            if (fz_isemptybbox(pageInfo->contentBox))
+                pageInfo->contentBox = pdfEngine->pageContentBox(i);
+            pageSizeAfterRotation(pageInfo, _rotation, &pageSize);
+            row.dx += pageSize.dx;
+            if (i == first && !fz_isemptybbox(pageInfo->contentBox)) {
+                if (rotationFlipped(pageInfo->rotation + _rotation))
+                    row.dx -= pageInfo->contentBox.y0 - pdfEngine->pageMediabox(first).y0;
+                else
+                    row.dx -= pageInfo->contentBox.x0 - pdfEngine->pageMediabox(first).x0;
+            }
+            if (i == last && !fz_isemptybbox(pageInfo->contentBox)) {
+                if (rotationFlipped(pageInfo->rotation + _rotation))
+                    row.dx -= pdfEngine->pageMediabox(last).y1 - pageInfo->contentBox.y1;
+                else
+                    row.dx -= pdfEngine->pageMediabox(last).x1 - pageInfo->contentBox.x1;
+            }
+            pageSizeAfterRotation(pageInfo, _rotation, &pageSize, true);
+            if (row.dy < pageSize.dy)
+                row.dy = pageSize.dy;
+        }
+#endif
+    } else {
+#if 0 // pdf-specific
+        if (fitToContent && fz_isemptybbox(pageInfo->contentBox))
+            pageInfo->contentBox = pdfEngine->pageContentBox(pageNo);
+#endif
+        pageSizeAfterRotation(pageInfo, rotation, &row, fitToContent);
+        row.dx *= columns;
+    }
+
+    assert(0 != (int)row.dx);
+    assert(0 != (int)row.dy);
+
+    int areaForPagesDx = drawAreaSize.dx - padding->pageBorderLeft - padding->pageBorderRight - padding->betweenPagesX * (columns - 1);
+    int areaForPagesDy = drawAreaSize.dy - padding->pageBorderTop - padding->pageBorderBottom;
+    if (areaForPagesDx <= 0 || areaForPagesDy <= 0)
+        return 0;
+
+    float zoomX = areaForPagesDx / (float)row.dx;
+    float zoomY = areaForPagesDy / (float)row.dy;
+    if (zoomX < zoomY || ZOOM_FIT_WIDTH == zoomVirtual)
+        return zoomX;
+    return zoomY;
+}
+
+// zoom is either in percent or one of the special values
+void Layout::SetZoomVirtual(float zoom)
+{
+    zoomVirtual = zoom;
+    if ((ZOOM_FIT_WIDTH == zoom) || (ZOOM_FIT_PAGE == zoom)) {
+        /* we want the same zoom for all pages, so use the smallest zoom
+           across the pages so that the largest page fits. Usually all
+           pages are the same size anyway */
+        float minZoom = (float)HUGE_VAL;
+        for (int pageNo = 1; pageNo <= PageCount(); pageNo++) {
+            if (PageShown(pageNo)) {
+                float thisPageZoom = ZoomRealFromVirtualForPage(zoomVirtual, pageNo);
+                if (minZoom > thisPageZoom)
+                    minZoom = thisPageZoom;
+            }
+        }
+        assert(minZoom != (float)HUGE_VAL);
+        zoomReal = minZoom;
+    } else if (ZOOM_FIT_CONTENT == zoomVirtual) {
+#if 0 // pdf-specific
+        float newZoom = ZoomRealFromVirtualForPage(zoomVirtual, currentPageNo());
+        // limit zooming in to 800% on almost empty pages
+        if (newZoom > 8.0)
+            newZoom = 8.0;
+        // don't zoom in by just a few pixels (throwing away a prerendered page)
+        if (newZoom < zoomReal || zoomReal / newZoom < 0.95 ||
+            zoomReal < ZoomRealFromVirtualForPage(ZOOM_FIT_PAGE, currentPageNo()))
+            zoomReal = newZoom;
+#else
+        zoomReal = zoomVirtual * 0.01f;
+#endif
+    } else
+        zoomReal = zoomVirtual * 0.01f;
+}
+
+void Layout::DoLayout(float zoomVirtual, int rot)
+{
+    // we start layout assuming we can use the whole drawAreaSize
+    // when we discover we need to show scrollbars, we restart layout
+    // using drawAreaSize - part used by scrollbars
+    bool showHorizScrollbar = false;
+    bool showVertScrollbar = false;
+
+    normalizeRotation(&rot);
+    rotation = rot;
+    float currZoomReal = zoomReal;
+    SetZoomVirtual(zoomVirtual);
+
+}
+
 
 using namespace Gdiplus;
 
@@ -71,7 +300,7 @@ ComicBookPage *LoadCurrentComicBookPage(unzFile& uf)
     char fileName[MAX_PATH];
     unz_file_info64 finfo;
     ComicBookPage *page = NULL;
-    HGLOBAL data = NULL;
+    HGLOBAL bmpData = NULL;
     int readBytes;
 
     int err = unzGetCurrentFileInfo64(uf, &finfo, fileName, dimof(fileName), NULL, 0, NULL, 0);
@@ -90,28 +319,31 @@ ComicBookPage *LoadCurrentComicBookPage(unzFile& uf)
     if (len2 != finfo.uncompressed_size) // overflow check
         goto Exit;
 
-    data = GlobalAlloc(GMEM_MOVEABLE, len);
-    if (!data)
+    bmpData = GlobalAlloc(GMEM_MOVEABLE, len);
+    if (!bmpData)
         goto Exit;
 
-    void *buf = GlobalLock(data);
+    void *buf = GlobalLock(bmpData);
     readBytes = unzReadCurrentFile(uf, buf, len);
-    GlobalUnlock(data);
+    GlobalUnlock(bmpData);
 
     if ((unsigned)readBytes != len)
         goto Exit;
 
-    Bitmap *bmp = BitmapFromHGlobal(data);
+    // TODO: do I have to keep bmpData locked? Bitmap created from IStream
+    // based on HGLOBAL memory data seems to need underlying memory bits
+    // for its lifetime (it gets corrupted if I GlobalFree(bmpData)).
+    // What happens if this data is moved?
+    Bitmap *bmp = BitmapFromHGlobal(bmpData);
     if (!bmp)
         goto Exit;
 
-    page = new ComicBookPage(bmp);
+    page = new ComicBookPage(bmpData, bmp);
+    bmpData = NULL;
 
 Exit:
-    err = unzCloseCurrentFile(uf);
-    // ignoring the error
-
-    GlobalFree(data);
+    unzCloseCurrentFile(uf); // ignoring error code
+    GlobalFree(bmpData);
     return page;
 }
 
@@ -179,8 +411,6 @@ static Vec<ComicBookPage*> *LoadComicBookPages(const TCHAR *filePath)
     zlib_filefunc64_def ffunc;
     unzFile uf;
     fill_win32_filefunc64(&ffunc);
-
-    ScopedGdiPlus gdiPlus;
 
     uf = unzOpen2_64(filePath, &ffunc);
     if (!uf)
@@ -257,7 +487,7 @@ static bool LoadComicBookIntoWindow(
 
     free(win->loadedFilePath);
     win->loadedFilePath = Str::Dup(filePath);
-    
+
     pages = LoadComicBookPages(filePath);
     if (!pages)
         goto Error;
@@ -283,7 +513,6 @@ static bool LoadComicBookIntoWindow(
 
     if (!isNewWindow)
         win->RedrawAll();
-
 
     const TCHAR *title = Path::GetBaseName(win->loadedFilePath);
     Win::SetText(win->hwndFrame, title);
@@ -335,7 +564,7 @@ WindowInfo *LoadComicBook(const TCHAR *fileName, WindowInfo *win, bool showWin)
     bool isNewWindow = false;
     if (!win && 1 == gWindows.Count() && gWindows[0]->IsAboutWindow()) {
         win = gWindows[0];
-    } if (!win || win->PdfLoaded()) { // TODO: PdfLoaded probably a bad check
+    } if (!win || !win->IsAboutWindow()) {
         win = CreateEmptyComicBookWindow();
         if (!win)
             return NULL;
@@ -363,25 +592,39 @@ WindowInfo *LoadComicBook(const TCHAR *fileName, WindowInfo *win, bool showWin)
     return win;
 }
 
-void DrawComicBook(HWND hwnd, HDC hdc, RectI rect)
+void DrawComicBook(WindowInfo *win, HWND hwnd, HDC hdc)
 {
-    HFONT fontRightTxt = Win::Font::GetSimple(hdc, _T("MS Shell Dlg"), 14);
-    HGDIOBJ origFont = SelectObject(hdc, fontRightTxt); /* Just to remember the orig font */
-    SetBkMode(hdc, TRANSPARENT);
-    RECT r = rect.ToRECT();
-    FillRect(hdc, &r, gBrushBg);
-    DrawCenteredText(hdc, rect, _T("Will show comic books"));
-    SelectObject(hdc, origFont);
-    Win::Font::Delete(fontRightTxt);
+    Win::Font::ScopedFont font(hdc, _T("MS Shell Dlg"), 14);
+    Win::HdcScopedSelectFont tmp(hdc, font);
+
+    ClientRect r(hwnd); // should get that from hdc ?
+
+    Graphics g(hdc);
+    g.SetCompositingQuality(CompositingQualityHighQuality);
+    g.SetSmoothingMode(SmoothingModeAntiAlias);
+    g.SetPageUnit(UnitPixel);
+
+    SolidBrush bgBrush(Color(255,242,0));
+    Gdiplus::Rect r2(r.y-1, r.x-1, r.dx+1, r.dy+1);
+    g.FillRectangle(&bgBrush, r2);
+
+    Vec<ComicBookPage *> *pages = win->comicPages;
+    if (0 == pages->Count()) {
+        DrawCenteredText(hdc, r, _T("Will show comic books"));
+        return;
+    }
+
+    ComicBookPage *page = pages->At(0);
+    Bitmap *bmp = page->bmp;
+    g.DrawImage(bmp, 0, 0, r.dx, r.dy);
 }
 
 static void OnPaint(WindowInfo *win)
 {
-    ClientRect rc(win->hwndCanvas);
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(win->hwndCanvas, &ps);
     win->ResizeIfNeeded(false);
-    DrawComicBook(win->hwndCanvas, win->hdcToDraw, rc);
+    DrawComicBook(win, win->hwndCanvas, win->hdcToDraw);
     win->DoubleBuffer_Show(hdc);
     EndPaint(win->hwndCanvas, &ps);
 }
