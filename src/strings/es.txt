@@ -29,6 +29,9 @@ Atrás\tAlt+<-
 &Close\tCtrl-W
 &Cerrar\tCtrl-W
 
+&Copy Selection
+&Copiar selección
+
 &Copy Selection\tCtrl-C
 Copiar Selección\tCtrl-C
 
@@ -95,6 +98,9 @@ Página siguiente\t->
 &Previous Page\tLeft Arrow
 Página anterior\t<-
 
+&Print...
+&Imprimir...
+
 &Print...\tCtrl-P
 &Imprimir\tCtrl-P
 
@@ -106,6 +112,9 @@ Página anterior\t<-
 
 &Remember these settings for each document
 &Recordar estas configuraciones para cada documento
+
+&Save As...
+&Guardar como...
 
 &Save As...\tCtrl-S
 &Guardar como...\tCtrl-S
@@ -202,6 +211,12 @@ Página doble continua
 
 Contribute Translation
 Contribuir en la traducción
+
+Copy &Link Address
+Copiar dirección de enlace
+
+Copy Co&mment
+Copiar co&mentario
 
 Copying text was denied (copying as image only)
 Ha sido denegada la copia de texto (copiar solamente como imagen)
@@ -377,6 +392,9 @@ Abrir en &Foxit Reader
 Open in PDF-XChange
 Abrir en PDF-XChange
 
+P&roperties
+P&ropiedades
+
 P&roperties\tCtrl-D
 P&ropriedades...\tCtrl-D
 
@@ -397,6 +415,9 @@ Página...\tCtrl-G
 
 Page Size:
 Tamaño de Página:
+
+Page number %u inexistant
+Número de página %u inexistente
 
 Page scaling
 Escalado de página
@@ -433,6 +454,9 @@ Girar a la derecha\tCtrl-Shift-+
 
 Searching %d of %d...
 Buscando %d de %d…
+
+Select &All
+Seleccionar &todo
 
 Select &All\tCtrl-A
 Seleccionar &todo\tCtrl-A
@@ -526,14 +550,4 @@ copiado de texto
 
 printing document
 impresión de documento
-
-# Untranslated:
-#&Copy Selection
-#&Print...
-#&Save As...
-#Copy &Link Address
-#Copy Co&mment
-#P&roperties
-#Page number %u inexistant
-#Select &All
 
