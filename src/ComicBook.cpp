@@ -340,6 +340,56 @@ RestartLayout:
     canvasSize = SizeI(totalAreaDx, totalAreaDy);
 }
 
+/* Given positions of each page in a large sheet that is continous view and
+   coordinates of a current view into that large sheet, calculate which
+   parts of each page is visible on the screen.
+   Needs to be recalucated after scrolling the view. */
+void Layout::RecalcVisibleParts()
+{
+    RectI drawAreaRect(areaOffset, drawAreaSize);
+
+//    DBG_OUT("DisplayModel::recalcVisibleParts() draw area         (x=%3d,y=%3d,dx=%4d,dy=%4d)\n",
+//        drawAreaRect.x, drawAreaRect.y, drawAreaRect.dx, drawAreaRect.dy);
+    for (int pageNo = 1; pageNo <= PageCount(); ++pageNo) {
+        PageInfo pageInfo = GetPageInfo(pageNo);
+        if (pageInfo.notShown) {
+            assert(0.0 == pageInfo.visibleRatio);
+            continue;
+        }
+
+        RectI pageRect = pageInfo.currPos;
+        pageInfo.visibleRatio = 0.0;
+
+        RectI visiblePart = pageRect.Intersect(drawAreaRect);
+        if (pageRect.dx > 0 && pageRect.dy > 0 && !visiblePart.IsEmpty()) {
+            // calculate with floating point precision to prevent an integer overflow
+            pageInfo.visibleRatio = 1.0f * visiblePart.dx * visiblePart.dy / ((float)pageRect.dx * pageRect.dy);
+
+            pageInfo.bitmap = visiblePart;
+            pageInfo.bitmap.x -= pageRect.x;
+            assert(pageInfo.bitmap.x >= 0);
+            pageInfo.bitmap.y -= pageRect.y;
+            assert(pageInfo.bitmap.y >= 0);
+            pageInfo.screenX = visiblePart.x - areaOffset.x;
+            assert(pageInfo.screenX >= 0);
+            assert(pageInfo.screenX <= drawAreaSize.dx);
+            pageInfo.screenY = visiblePart.y - areaOffset.y;
+            assert(pageInfo.screenX >= 0);
+            assert(pageInfo.screenY <= drawAreaSize.dy);
+/*          DBG_OUT("                                  visible page = %d, (x=%3d,y=%3d,dx=%4d,dy=%4d) at (x=%d,y=%d)\n",
+                pageNo, pageInfo.bitmap.x, pageInfo.bitmap.y,
+                          pageInfo.bitmap.dx, pageInfo.bitmap.dy,
+                          pageInfo.screenX, pageInfo.screenY); */
+        }
+
+        pageInfo.pageOnScreen = pageRect;
+        pageInfo.pageOnScreen.x = pageInfo.pageOnScreen.x - areaOffset.x;
+        pageInfo.pageOnScreen.y = pageInfo.pageOnScreen.y - areaOffset.y;
+        assert(max(pageInfo.pageOnScreen.x, 0) == pageInfo.screenX || 0.0 == pageInfo.visibleRatio);
+        assert(max(pageInfo.pageOnScreen.y, 0) == pageInfo.screenY || 0.0 == pageInfo.visibleRatio);
+    }
+}
+
 
 using namespace Gdiplus;
 

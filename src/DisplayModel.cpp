@@ -699,7 +699,7 @@ void DisplayModel::changeStartPage(int startPage)
    coordinates of a current view into that large sheet, calculate which
    parts of each page is visible on the screen.
    Needs to be recalucated after scrolling the view. */
-void DisplayModel::recalcVisibleParts(void)
+void DisplayModel::recalcVisibleParts()
 {
     assert(_pagesInfo);
     if (!_pagesInfo)

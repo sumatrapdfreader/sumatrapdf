@@ -62,7 +62,7 @@ struct PageInfo {
 // Terminology:
 // viewPort - what DisplayMode calls drawArea i.e. the visible 
 
-// Note: this layout implementation handles scrollbars
+// Note: this layout implementation handles scrollbars internally
 // Note: for compat with DisplayModel, page numbers are 1-based
 // but eventually should be 0-based
 // Note: it doesn't do dpi scaling (_dpiFactor), it seems like wrong
@@ -119,7 +119,7 @@ public:
 
     float ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo);
     void DoLayout(float zoomVirtual, int rot);
-
+    void RecalcVisibleParts();
     void SetZoomVirtual(float zoom);
 };
 
