@@ -1087,10 +1087,16 @@ static LPARAM ToolbarButtonEnabledState(WindowInfo *win, int buttonNo)
             break;
     
         case IDM_GOTO_NEXT_PAGE:
+            if (win->cbdm) // TODO: temporary
+                return win->cbdm->CurrentPageNo() == win->cbdm->PageCount() ? disabled : enabled;
+
             if (win->dm->currentPageNo() == win->dm->pageCount())
                 return disabled;
             break;
         case IDM_GOTO_PREV_PAGE:
+            if (win->cbdm) // TODO: temporary
+                return win->cbdm->CurrentPageNo() == 1 ? disabled : enabled;
+
             if (win->dm->currentPageNo() == 1)
                 return disabled;
             break;

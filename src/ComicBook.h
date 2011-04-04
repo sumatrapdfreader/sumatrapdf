@@ -141,6 +141,7 @@ public:
     }
 
     int PageCount() const { return pages->Count(); }
+    int CurrentPageNo() const { return 1; } // TODO: write me
     void DoLayout(float zoomVirtual, int rotation) {
         layout->DoLayout(zoomVirtual, rotation);
     }

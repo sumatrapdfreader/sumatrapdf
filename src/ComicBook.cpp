@@ -586,7 +586,7 @@ Exit:
 static Vec<PageInfo> *PageInfosFromPages(Vec<ComicBookPage*> *pages)
 {
     Vec<PageInfo> *pageInfos = new Vec<PageInfo>(pages->Count());
-    PageInfo *currPageInfo = pageInfos->MakeSpaceAt(pages->Count());
+    PageInfo *currPageInfo = pageInfos->MakeSpaceAt(0, pages->Count());
     for (size_t i=0; i<pages->Count(); i++) {
         ComicBookPage *p = pages->At(i);
         currPageInfo->size = SizeD(p->w, p->h);
