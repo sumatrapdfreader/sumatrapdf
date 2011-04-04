@@ -166,6 +166,20 @@ inline void SetFont(HWND hwnd, HFONT font)
 	SetWindowFont(hwnd, font, TRUE);
 }
 
+class HdcScopedSelectFont {
+    HGDIOBJ prevFont;
+    HDC hdc;
+public:
+    HdcScopedSelectFont(HDC hdc, HFONT font) : hdc(hdc)
+    {
+        prevFont = SelectObject(hdc, font);
+    }
+    ~HdcScopedSelectFont()
+    {
+        SelectObject(hdc, prevFont);
+    } 
+};
+
 namespace Menu {
 
 inline void Check(HMENU m, UINT id, bool check)
@@ -198,6 +212,18 @@ inline void Delete(HFONT font)
 {
     DeleteObject(font);
 }
+
+class ScopedFont {
+    HFONT font;
+public:
+    ScopedFont(HDC hdc, TCHAR *fontName, int fontSize) {
+        font = GetSimple(hdc, fontName, fontSize);
+    }
+    ~ScopedFont() {
+        DeleteObject(font);
+    }
+    operator HFONT() const { return font; }
+};
 
 }// namespace Font
 
