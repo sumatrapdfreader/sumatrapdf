@@ -8,6 +8,7 @@
 #include "GeomUtil.h"
 #include "DisplayState.h"
 #include "PdfSearch.h"
+#include "PdfEngine.h"
 #include "Vec.h"
 
 class DisplayModel;

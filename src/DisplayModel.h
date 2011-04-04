@@ -18,8 +18,6 @@
 
 class WindowInfo;
 
-typedef enum { ENGINE_PDF, ENGINE_XPS, ENGINE_CBX } EngineType;
-
 // TODO: better name, Paddings? PaddingInfo?
 typedef struct DisplaySettings {
     int     pageBorderTop;
@@ -70,7 +68,7 @@ typedef struct PdfPageInfo {
     int             rotation;
 
     /* data that is calculated when needed. actual content size within a page (View target) */
-    fz_bbox         contentBox;
+    RectI           contentBox;
 
     /* data that needs to be set before DisplayModel::relayout().
        Determines whether a given page should be shown on the screen. */
@@ -102,14 +100,14 @@ public:
     ~DisplayModel();
 
     RenderedBitmap *renderBitmap(int pageNo, float zoom, int rotation,
-                         fz_rect *pageRect=NULL, /* if NULL: defaults to the page's mediabox */
+                         RectD *pageRect=NULL, /* if NULL: defaults to the page's mediabox */
                          RenderTarget target=Target_View, bool useGdi=false) {
         if (!engine) return NULL;
         return engine->RenderBitmap(pageNo, zoom, rotation, pageRect, target, useGdi);
     }
-    bool renderPage(HDC hDC, int pageNo, RectI *screenRect, float zoom=0, int rotation=0, fz_rect *pageRect=NULL, RenderTarget target=Target_View) {
+    bool renderPage(HDC hDC, int pageNo, RectI *screenRect, float zoom=0, int rotation=0, RectD *pageRect=NULL, RenderTarget target=Target_View) {
         if (!engine) return false;
-        return engine->RenderPage(hDC, pageNo, screenRect, NULL, zoom, rotation, pageRect, target);
+        return engine->RenderPage(hDC, pageNo, screenRect, zoom, rotation, pageRect, target);
     }
 
     /* number of pages in PDF document */
@@ -118,11 +116,15 @@ public:
         return 1 <= pageNo && pageNo <= engine->PageCount();
     }
 
-    bool hasTocTree() { return engine->HasTocTree(); }
+    bool hasTocTree() {
+        if (!pdfEngine)
+            return false;
+        return pdfEngine->hasTocTree();
+    }
     PdfTocItem *getTocTree() {
-        if (engineType != ENGINE_PDF)
+        if (!pdfEngine)
             return NULL;
-        return static_cast<PdfEngine *>(engine)->getTocTree();
+        return pdfEngine->getTocTree();
     }
 
     /* current rotation selected by user */
@@ -148,8 +150,8 @@ public:
 
     int currentPageNo() const;
 
-    EngineType      engineType;
     BaseEngine *    engine;
+    PdfEngine *     pdfEngine;
     PdfSelection *  textSelection;
 
     /* TODO: rename to pageInfo() */
@@ -212,9 +214,8 @@ public:
     bool            cvtUserToScreen(int pageNo, PointD *pt);
     bool            cvtScreenToUser(int *pageNo, PointD *pt);
     bool            rectCvtUserToScreen(int pageNo, RectD *r);
-    fz_rect         rectCvtUserToScreen(int pageNo, fz_rect rect);
     bool            rectCvtScreenToUser(int *pageNo, RectD *r);
-    fz_rect         getContentBox(int pageNo, fz_matrix ctm=fz_identity, RenderTarget target=Target_View);
+    RectD           getContentBox(int pageNo, RenderTarget target=Target_View);
 
     void            SetFindMatchCase(bool match) { _pdfSearch->SetSensitive(match); }
     PdfSel *        Find(PdfSearchDirection direction=FIND_FORWARD, TCHAR *text=NULL, UINT fromPage=0);
@@ -238,8 +239,8 @@ public:
     bool            displayStateFromModel(DisplayState *ds);
 
     void            ageStore() const {
-        if (engineType == ENGINE_PDF)
-            static_cast<PdfEngine *>(engine)->ageStore();
+        if (pdfEngine)
+            pdfEngine->ageStore();
     }
 
     void            StartRenderingPage(int pageNo);

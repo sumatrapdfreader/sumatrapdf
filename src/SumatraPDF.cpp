@@ -982,11 +982,11 @@ void WindowInfo::Reload(bool autorefresh)
     ScopedMem<TCHAR> path(Str::Dup(this->loadedFilePath));
     LoadPdfIntoWindow(path, this, &ds, false, tryRepair, true, false);
 
-    if (this->PdfLoaded() && ENGINE_PDF == this->dm->engineType) {
+    if (this->PdfLoaded() && this->dm->pdfEngine) {
         // save a newly remembered password into file history so that
         // we don't ask again at the next refresh
         DisplayState *state = gFileHistory.Find(ds.filePath);
-        char *decryptionKey = static_cast<PdfEngine *>(this->dm->engine)->getDecryptionKey();
+        char *decryptionKey = this->dm->pdfEngine->getDecryptionKey();
         if (state && !Str::Eq(state->decryptionKey, decryptionKey)) {
             free(state->decryptionKey);
             state->decryptionKey = decryptionKey;
@@ -2093,7 +2093,7 @@ static void DebugShowLinks(DisplayModel *dm, HDC hdc, bool rendering)
     if (!gDebugShowLinks || rendering)
         return;
 
-    fz_bbox drawAreaRect = { 0, 0, dm->drawAreaSize.dx, dm->drawAreaSize.dy };
+    RectI drawAreaRect(PointI(), dm->drawAreaSize);
     HPEN pen = CreatePen(PS_SOLID, 1, RGB(0x00, 0xff, 0xff));
     HGDIOBJ oldPen = SelectObject(hdc, pen);
 
@@ -2105,12 +2105,9 @@ static void DebugShowLinks(DisplayModel *dm, HDC hdc, bool rendering)
         pdf_link *links = NULL;
         int linkCount = dm->getPdfLinks(pageNo, &links);
         for (int i = 0; i < linkCount; i++) {
-            fz_bbox isect = fz_intersectbbox(fz_roundrect(links[i].rect), drawAreaRect);
-            if (fz_isemptybbox(isect))
-                continue;
-
-            RectI rectScreen = RectI::FromXY(isect.x0, isect.y0, isect.x1, isect.y1);
-            paint_rect(hdc, &rectScreen.ToRECT());
+            RectI isect = drawAreaRect.Intersect(fz_recttoRectD(links[i].rect).Round());
+            if (!isect.IsEmpty())
+                paint_rect(hdc, &isect.ToRECT());
         }
         free(links);
     }
@@ -2127,8 +2124,7 @@ static void DebugShowLinks(DisplayModel *dm, HDC hdc, bool rendering)
             if (!pageInfo->shown || 0.0 == pageInfo->visibleRatio)
                 continue;
 
-            fz_bbox cbox = dm->engine->PageContentBox(pageNo);
-            RectD rect = RectI::FromXY(cbox.x0, cbox.y0, cbox.x1, cbox.y1).Convert<double>();
+            RectD rect = dm->engine->PageContentBox(pageNo).Convert<double>();
             if (dm->rectCvtUserToScreen(pageNo, &rect))
                 paint_rect(hdc, &rect.ToRECT());
         }
@@ -2249,13 +2245,10 @@ static void CopySelectionToClipboard(WindowInfo *win)
 
     /* also copy a screenshot of the current selection to the clipboard */
     SelectionOnPage *selOnPage = win->selectionOnPage;
-    RectD *r = &selOnPage->selectionPage;
-    fz_rect clipRegion;
-    clipRegion.x0 = (float)r->x; clipRegion.x1 = (float)(r->x + r->dx);
-    clipRegion.y0 = (float)r->y; clipRegion.y1 = (float)(r->y + r->dy);
+    RectD *clipRegion = &selOnPage->selectionPage;
 
     RenderedBitmap * bmp = win->dm->renderBitmap(selOnPage->pageNo, win->dm->zoomReal(),
-        win->dm->rotation(), &clipRegion, Target_Export, gUseGdiRenderer);
+        win->dm->rotation(), clipRegion, Target_Export, gUseGdiRenderer);
     if (bmp) {
         if (!SetClipboardData(CF_BITMAP, bmp->getBitmap()))
             SeeLastError();
@@ -3080,12 +3073,9 @@ static void PrintToDevice(BaseEngine *engine, HDC hdc, LPDEVMODE devMode,
             for (; sel; sel = sel->next) {
                 StartPage(hdc);
 
-                RectD *r = &sel->selectionPage;
-                fz_rect clipRegion;
-                clipRegion.x0 = (float)r->x; clipRegion.x1 = (float)(r->x + r->dx);
-                clipRegion.y0 = (float)r->y; clipRegion.y1 = (float)(r->y + r->dy);
+                RectD *clipRegion = &sel->selectionPage;
 
-                SizeF sSize = r->Size().Convert<float>();
+                SizeF sSize = clipRegion->Size().Convert<float>();
                 // Swap width and height for rotated documents
                 int rotation = engine->PageRotation(sel->pageNo) + dm_rotation;
                 if (rotation % 180 != 0)
@@ -3104,9 +3094,9 @@ static void PrintToDevice(BaseEngine *engine, HDC hdc, LPDEVMODE devMode,
                 RectI rc = RectI::FromXY((int)(printableWidth - sSize.dx * zoom) / 2,
                                          (int)(printableHeight - sSize.dy * zoom) / 2,
                                          paperWidth, paperHeight);
-                engine->RenderPage(hdc, sel->pageNo, &rc, NULL, zoom, dm_rotation, &clipRegion, Target_Print);
+                engine->RenderPage(hdc, sel->pageNo, &rc, zoom, dm_rotation, clipRegion, Target_Print);
 #else
-                RenderedBitmap *bmp = engine->RenderBitmap(sel->pageNo, zoom, dm_rotation, &clipRegion, Target_Print, gUseGdiRenderer);
+                RenderedBitmap *bmp = engine->RenderBitmap(sel->pageNo, zoom, dm_rotation, clipRegion, Target_Print, gUseGdiRenderer);
                 if (bmp) {
                     bmp->stretchDIBits(hdc, (printableWidth - bmp->dx()) / 2,
                         (printableHeight - bmp->dy()) / 2, bmp->dx(), bmp->dy());
@@ -3162,10 +3152,10 @@ static void PrintToDevice(BaseEngine *engine, HDC hdc, LPDEVMODE devMode,
             if (scaleAdv != PrintScaleNone) {
                 // make sure to fit all content into the printable area when scaling
                 // and the whole document page on the physical paper
-                fz_rect rect = fz_bboxtorect(engine->PageContentBox(pageNo, Target_Print));
-                fz_rect cbox = fz_transformrect(engine->viewctm(pageNo, 1.0, rotation), rect);
-                zoom = min((float)printableWidth / (cbox.x1 - cbox.x0),
-                       min((float)printableHeight / (cbox.y1 - cbox.y0),
+                RectD rect = engine->PageContentBox(pageNo, Target_Print).Convert<double>();
+                RectF cbox = engine->ApplyTransform(rect, pageNo, 1.0, rotation).Convert<float>();
+                zoom = min((float)printableWidth / cbox.dx,
+                       min((float)printableHeight / cbox.dy,
                        min((float)paperWidth / pSize.dx,
                            (float)paperHeight / pSize.dy)));
                 // use the correct zoom values, if the page fits otherwise
@@ -3173,21 +3163,21 @@ static void PrintToDevice(BaseEngine *engine, HDC hdc, LPDEVMODE devMode,
                 if (PrintScaleShrink == scaleAdv && dpiFactor < zoom)
                     zoom = dpiFactor;
                 // make sure that no content lies in the non-printable paper margins
-                if (leftMargin > cbox.x0 * zoom)
-                    horizOffset = (int)(horizOffset - leftMargin + cbox.x0 * zoom);
-                else if (rightMargin > (pSize.dx - cbox.x1) * zoom)
-                    horizOffset = (int)(horizOffset + rightMargin - (pSize.dx - cbox.x1) * zoom);
-                if (topMargin > cbox.y0 * zoom)
-                    vertOffset = (int)(vertOffset - topMargin + cbox.y0 * zoom);
-                else if (bottomMargin > (pSize.dy - cbox.y1) * zoom)
-                    vertOffset = (int)(vertOffset + bottomMargin - (pSize.dy - cbox.y1) * zoom);
+                if (leftMargin > cbox.x * zoom)
+                    horizOffset = (int)(horizOffset - leftMargin + cbox.x * zoom);
+                else if (rightMargin > (pSize.dx - (cbox.x + cbox.dx)) * zoom)
+                    horizOffset = (int)(horizOffset + rightMargin - (pSize.dx - (cbox.x + cbox.dx)) * zoom);
+                if (topMargin > cbox.y * zoom)
+                    vertOffset = (int)(vertOffset - topMargin + cbox.y * zoom);
+                else if (bottomMargin > (pSize.dy - (cbox.y + cbox.dy)) * zoom)
+                    vertOffset = (int)(vertOffset + bottomMargin - (pSize.dy - (cbox.y + cbox.dy)) * zoom);
             }
 
 #ifdef USE_GDI_FOR_PRINTING
             RectI rc = RectI::FromXY((int)(printableWidth - pSize.dx * zoom) / 2 - horizOffset,
                                      (int)(printableHeight - pSize.dy * zoom) / 2 - vertOffset,
                                      paperWidth, paperHeight);
-            engine->RenderPage(hdc, pageNo, &rc, NULL, zoom, rotation, NULL, Target_Print);
+            engine->RenderPage(hdc, pageNo, &rc, zoom, rotation, NULL, Target_Print);
 #else
             RenderedBitmap *bmp = engine->RenderBitmap(pageNo, zoom, rotation, NULL, Target_Print, gUseGdiRenderer);
             if (bmp) {
@@ -3227,7 +3217,7 @@ public:
     ApplyButtonDiablingCallback() : m_cRef(0) { };
     STDMETHODIMP QueryInterface(REFIID riid, void **ppv) {
         if (riid == IID_IUnknown || riid == IID_IPrintDialogCallback) {
-            *ppv = static_cast<IUnknown*>(this);
+            *ppv = this;
             this->AddRef();
             return S_OK;
         }
@@ -3431,10 +3421,11 @@ static void OnMenuSaveAs(WindowInfo *win)
     }
     // Recreate inexistant PDF files from memory...
     else if (!File::Exists(srcFileName)) {
-        fz_buffer *data = win->dm->engine->GetStreamData();
+        size_t dataLen;
+        unsigned char *data = win->dm->engine->GetFileData(&dataLen);
         if (data) {
-            File::WriteAll(realDstFileName, data->data, data->len);
-            fz_dropbuffer(data);
+            File::WriteAll(realDstFileName, data, dataLen);
+            free(data);
         } else {
             MessageBox(win->hwndFrame, _TR("Failed to save a file"), _TR("Warning"), MB_OK | MB_ICONEXCLAMATION);
         }
@@ -5781,7 +5772,7 @@ static void CustomizeToCInfoTip(WindowInfo *win, LPNMTVGETINFOTIP nmit)
 static void CreateInfotipForPdfLink(WindowInfo *win, int pageNo, pdf_link *link)
 {
     ScopedMem<TCHAR> linkPath(win->dm->getLinkPath(link));
-    RectD rc = RectD::FromXY(link->rect.x0, link->rect.y0, link->rect.x1, link->rect.y1);
+    RectD rc = fz_recttoRectD(link->rect);
     if (!win->dm->rectCvtUserToScreen(pageNo, &rc))
         rc = RectD();
     win->CreateInfotip(linkPath, &rc.Convert<int>());
@@ -5790,7 +5781,7 @@ static void CreateInfotipForPdfLink(WindowInfo *win, int pageNo, pdf_link *link)
 static void CreateInfotipForComment(WindowInfo *win, int pageNo, pdf_annot *annot)
 {
     ScopedMem<TCHAR> comment(Str::Conv::FromUtf8(fz_tostrbuf(fz_dictgets(annot->obj, "Contents"))));
-    RectD rc = RectD::FromXY(annot->rect.x0, annot->rect.y0, annot->rect.x1, annot->rect.y1);
+    RectD rc = fz_recttoRectD(annot->rect);
     if (!win->dm->rectCvtUserToScreen(pageNo, &rc))
         rc = RectD();
     win->CreateInfotip(comment, &rc.Convert<int>());

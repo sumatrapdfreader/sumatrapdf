@@ -5,7 +5,7 @@
 #define PdfSearch_h
 
 #include <windows.h>
-#include "PdfEngine.h"
+#include "BaseEngine.h"
 #include "PdfSelection.h"
 
 enum PdfSearchDirection {

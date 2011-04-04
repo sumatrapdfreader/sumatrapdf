@@ -197,9 +197,11 @@ bool fz_isptinrect(fz_rect rect, fz_point pt)
 
 #define fz_sizeofrect(rect) (((rect).x1 - (rect).x0) * ((rect).y1 - (rect).y0))
 
-RenderedBitmap::RenderedBitmap(fz_pixmap *pixmap, HDC hDC) :
-    _hbmp(fz_pixtobitmap(hDC, pixmap, TRUE)),
-    _width(pixmap->w), _height(pixmap->h), outOfDate(false) { }
+class RenderedFitzBitmap : public RenderedBitmap {
+public:
+    RenderedFitzBitmap(fz_pixmap *pixmap, HDC hDC) :
+        RenderedBitmap(fz_pixtobitmap(hDC, pixmap, TRUE), pixmap->w, pixmap->h) { }
+};
 
 void RenderedBitmap::stretchDIBits(HDC hdc, int leftMargin, int topMargin, int pageDx, int pageDy) {
     HDC bmpDC = CreateCompatibleDC(hdc);
@@ -666,7 +668,7 @@ void PdfEngine::dropPageRun(PdfPageRun *run, bool forceRemove)
     LeaveCriticalSection(&_pagesAccess);
 }
 
-int PdfEngine::PageRotation(int pageNo)
+int PdfEngine::PageRotation(int pageNo) const
 {
     assert(1 <= pageNo && pageNo <= PageCount());
     fz_obj *page = pdf_getpageobject(_xref, pageNo);
@@ -675,27 +677,28 @@ int PdfEngine::PageRotation(int pageNo)
     return fz_toint(fz_dictgets(page, "Rotate"));
 }
 
-fz_rect PdfEngine::PageMediabox(int pageNo)
+RectD PdfEngine::PageMediabox(int pageNo) const
 {
     fz_rect mediabox;
     if (pdf_getmediabox(&mediabox, pdf_getpageobject(_xref, pageNo)) != fz_okay)
-        return fz_emptyrect;
-    return mediabox;
+        return RectD();
+    return fz_recttoRectD(mediabox);
 }
 
-fz_bbox PdfEngine::PageContentBox(int pageNo, RenderTarget target)
+RectI PdfEngine::PageContentBox(int pageNo, RenderTarget target)
 {
     assert(1 <= pageNo && pageNo <= PageCount());
     pdf_page *page = getPdfPage(pageNo);
     if (!page)
-        return fz_emptybbox;
+        return RectI();
 
     fz_bbox bbox;
     fz_error error = runPage(page, fz_newbboxdevice(&bbox), fz_identity, target, page->mediabox, false);
     if (error != fz_okay)
-        return fz_emptybbox;
+        return RectI();
 
-    return fz_intersectbbox(bbox, fz_roundrect(PageMediabox(pageNo)));
+    RectI bbox2 = fz_bboxtoRectI(bbox);
+    return bbox2.Intersect(PageMediabox(pageNo).Round());
 }
 
 bool PdfEngine::hasPermission(int permission)
@@ -740,20 +743,51 @@ fz_matrix PdfEngine::viewctm(int pageNo, float zoom, int rotate)
     return viewctm(&partialPage, zoom, rotate);
 }
 
-bool PdfEngine::renderPage(HDC hDC, pdf_page *page, RectI *screenRect, fz_matrix *ctm, float zoom, int rotation, fz_rect *pageRect, RenderTarget target)
+PointD PdfEngine::ApplyTransform(PointD pt, int pageNo, float zoom, int rotate)
+{
+    fz_matrix ctm = viewctm(pageNo, zoom, rotate);
+    fz_point pt2 = { (float)pt.x, (float)pt.y };
+    pt2 = fz_transformpoint(ctm, pt2);
+    return PointD(pt2.x, pt2.y);
+}
+
+RectD PdfEngine::ApplyTransform(RectD rect, int pageNo, float zoom, int rotate)
+{
+    fz_matrix ctm = viewctm(pageNo, zoom, rotate);
+    fz_rect rect2 = fz_RectDtorect(rect);
+    rect2 = fz_transformrect(ctm, rect2);
+    return fz_recttoRectD(rect2);
+}
+
+PointD PdfEngine::RevertTransform(PointD pt, int pageNo, float zoom, int rotate)
+{
+    fz_matrix ctm = viewctm(pageNo, zoom, rotate);
+    fz_point pt2 = { (float)pt.x, (float)pt.y };
+    pt2 = fz_transformpoint(fz_invertmatrix(ctm), pt2);
+    return PointD(pt2.x, pt2.y);
+}
+
+RectD PdfEngine::RevertTransform(RectD rect, int pageNo, float zoom, int rotate)
+{
+    fz_matrix ctm = viewctm(pageNo, zoom, rotate);
+    fz_rect rect2 = fz_RectDtorect(rect);
+    rect2 = fz_transformrect(fz_invertmatrix(ctm), rect2);
+    return fz_recttoRectD(rect2);
+}
+
+bool PdfEngine::renderPage(HDC hDC, pdf_page *page, RectI *screenRect, fz_matrix *ctm, float zoom, int rotation, RectD *pageRect, RenderTarget target)
 {
     if (!page)
         return false;
 
+    fz_rect pRect = pageRect ? fz_RectDtorect(*pageRect) : page->mediabox;
     fz_matrix ctm2;
-    if (!pageRect)
-        pageRect = &page->mediabox;
     if (!ctm) {
         if (!zoom)
             zoom = min(1.0f * screenRect->dx / (page->mediabox.x1 - page->mediabox.x0),
                        1.0f * screenRect->dy / (page->mediabox.y1 - page->mediabox.y0));
         ctm2 = viewctm(page, zoom, rotation);
-        fz_bbox bbox = fz_roundrect(fz_transformrect(ctm2, *pageRect));
+        fz_bbox bbox = fz_roundrect(fz_transformrect(ctm2, pRect));
         ctm2 = fz_concat(ctm2, fz_translate((float)screenRect->x - bbox.x0, (float)screenRect->y - bbox.y0));
         ctm = &ctm2;
     }
@@ -763,23 +797,23 @@ bool PdfEngine::renderPage(HDC hDC, pdf_page *page, RectI *screenRect, fz_matrix
     DeleteObject(bgBrush);
 
     fz_bbox clipBox = { screenRect->x, screenRect->y, screenRect->x + screenRect->dx, screenRect->y + screenRect->dy };
-    fz_error error = runPage(page, fz_newgdiplusdevice(hDC, clipBox), *ctm, target, *pageRect);
+    fz_error error = runPage(page, fz_newgdiplusdevice(hDC, clipBox), *ctm, target, pRect);
 
     return fz_okay == error;
 }
 
 RenderedBitmap *PdfEngine::RenderBitmap(
                            int pageNo, float zoom, int rotation,
-                           fz_rect *pageRect, RenderTarget target,
+                           RectD *pageRect, RenderTarget target,
                            bool useGdi)
 {
     pdf_page* page = getPdfPage(pageNo);
     if (!page)
         return NULL;
+
+    fz_rect pRect = pageRect ? fz_RectDtorect(*pageRect) : page->mediabox;
     fz_matrix ctm = viewctm(page, zoom, rotation);
-    if (!pageRect)
-        pageRect = &page->mediabox;
-    fz_bbox bbox = fz_roundrect(fz_transformrect(ctm, *pageRect));
+    fz_bbox bbox = fz_roundrect(fz_transformrect(ctm, pRect));
 
     // GDI+ seems to render quicker and more reliable at high zoom levels
     if (zoom > 40.0)
@@ -796,7 +830,8 @@ RenderedBitmap *PdfEngine::RenderBitmap(
         DeleteObject(SelectObject(hDCMem, hbmp));
 
         RectI rc(0, 0, w, h);
-        bool success = renderPage(hDCMem, page, &rc, &ctm, 0, 0, pageRect, target);
+        RectD pageRect2 = fz_recttoRectD(pRect);
+        bool success = renderPage(hDCMem, page, &rc, &ctm, 0, 0, &pageRect2, target);
         DeleteDC(hDCMem);
         ReleaseDC(NULL, hDC);
         if (!success) {
@@ -815,11 +850,11 @@ RenderedBitmap *PdfEngine::RenderBitmap(
     if (!_drawcache)
         _drawcache = fz_newglyphcache();
 
-    fz_error error = runPage(page, fz_newdrawdevice(_drawcache, image), ctm, target, *pageRect);
+    fz_error error = runPage(page, fz_newdrawdevice(_drawcache, image), ctm, target, pRect);
     RenderedBitmap *bitmap = NULL;
     if (!error) {
         HDC hDC = GetDC(NULL);
-        bitmap = new RenderedBitmap(image, hDC);
+        bitmap = new RenderedFitzBitmap(image, hDC);
         ReleaseDC(NULL, hDC);
     }
     fz_droppixmap(image);
@@ -1115,7 +1150,7 @@ ConvertCoords:
         size_t len = Str::Len(result);
         RectI *destRect = *coords_out = new RectI[len];
         for (size_t i = 0; i < len; i++)
-            destRect[i] = RectI::FromXY(coords[i].x0, coords[i].y0, coords[i].x1, coords[i].y1);
+            destRect[i] = fz_bboxtoRectI(coords[i]);
         free(coords);
     }
 
@@ -1168,18 +1203,26 @@ bool PdfEngine::isDocumentDirectionR2L()
     return Str::Eq(direction, "R2L");
 }
 
-fz_buffer *PdfEngine::GetStreamData()
+unsigned char *PdfEngine::GetFileData(size_t *cbCount)
 {
     fz_stream *stream = fz_keepstream(_xref->file);
     if (!stream)
         return NULL;
 
-    fz_buffer *data = NULL;
+    fz_buffer *buffer = NULL;
     fz_seek(stream, 0, 2);
     int len = fz_tell(stream);
     fz_seek(stream, 0, 0);
-    fz_readall(&data, stream, len);
+    fz_readall(&buffer, stream, len);
     fz_close(stream);
+
+    unsigned char *data = (unsigned char *)malloc(buffer->len);
+    if (data) {
+        memcpy(data, buffer->data, buffer->len);
+        if (cbCount)
+            *cbCount = buffer->len;
+    }
+    fz_dropbuffer(buffer);
 
     return data;
 }

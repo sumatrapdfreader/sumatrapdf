@@ -84,6 +84,13 @@ public:
         return Rect<int>((int)floor(x + 0.5), (int)floor(y + 0.5),
                          (int)floor(dx + 0.5), (int)floor(dy + 0.5));
     }
+    // cf. fz_roundrect in mupdf/fitz/base_geometry.c
+    Rect<int> Round() const {
+        return Rect<int>::FromXY((int)floor(x + 0.001),
+                                 (int)floor(y + 0.001),
+                                 (int)ceil(x + dx - 0.001),
+                                 (int)ceil(y + dy - 0.001));
+    }
 
     bool IsEmpty() const {
         return dx == 0 || dy == 0;

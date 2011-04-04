@@ -117,39 +117,38 @@ void RenderCache::Add(PageRenderRequest &req, RenderedBitmap *bitmap)
 }
 
 // get the (user) coordinates of a specific tile
-static fz_rect GetTileRect(BaseEngine *engine, int pageNo, int rotation, float zoom, TilePosition tile)
+static RectD GetTileRect(BaseEngine *engine, int pageNo, int rotation, float zoom, TilePosition tile)
 {
-    fz_rect mediabox = engine->PageMediabox(pageNo);
+    RectD mediabox = engine->PageMediabox(pageNo);
 
     if (tile.res && tile.res != INVALID_TILE_RES) {
-        float width = (mediabox.x1 - mediabox.x0) / (1 << tile.res);
-        mediabox.x0 += tile.col * width;
-        mediabox.x1 = mediabox.x0 + width;
-        float height = (mediabox.y1 - mediabox.y0) / (1 << tile.res);
-        mediabox.y0 += ((1 << tile.res) - tile.row - 1) * height;
-        mediabox.y1 = mediabox.y0 + height;
+        double width = mediabox.dx / (1 << tile.res);
+        mediabox.x += tile.col * width;
+        mediabox.dx = width;
+        double height = mediabox.dy / (1 << tile.res);
+        mediabox.y += ((1 << tile.res) - tile.row - 1) * height;
+        mediabox.dy = height;
     }
 
-    fz_matrix ctm = engine->viewctm(pageNo, zoom, rotation);
-    fz_bbox pixelbox = fz_roundrect(fz_transformrect(ctm, mediabox));
+    RectD pixelbox = engine->ApplyTransform(mediabox, pageNo, zoom, rotation);
+    pixelbox = pixelbox.Round().Convert<double>();
+    mediabox = engine->RevertTransform(pixelbox, pageNo, zoom, rotation);
 
-    mediabox = fz_transformrect(fz_invertmatrix(ctm), fz_bboxtorect(pixelbox));
     return mediabox;
 }
 
-static RectI GetTileOnScreen(BaseEngine *engine, int pageNo, int rotation, float zoom, TilePosition tile, fz_matrix ctm)
+static RectI GetTileOnScreen(BaseEngine *engine, int pageNo, int rotation, float zoom, TilePosition tile, RectI pageOnScreen)
 {
-    fz_rect mediabox = GetTileRect(engine, pageNo, rotation, zoom, tile);
-    fz_bbox bbox = fz_roundrect(fz_transformrect(ctm, mediabox));
-    return RectI::FromXY(bbox.x0, bbox.y0, bbox.x1, bbox.y1);
+    RectD mediabox = GetTileRect(engine, pageNo, rotation, zoom, tile);
+    RectI bbox = engine->ApplyTransform(mediabox, pageNo, zoom, rotation).Round();
+    bbox.Offset(pageOnScreen.x, pageOnScreen.y);
+    return bbox;
 }
 
 static bool IsTileVisible(DisplayModel *dm, int pageNo, int rotation, float zoom, TilePosition tile, float fuzz=0)
 {
     PdfPageInfo *pageInfo = dm->getPageInfo(pageNo);
-    fz_matrix ctm = dm->engine->viewctm(pageNo, zoom, rotation);
-    ctm = fz_concat(ctm, fz_translate((float)pageInfo->pageOnScreen.x, (float)pageInfo->pageOnScreen.y));
-    RectI tileOnScreen = GetTileOnScreen(dm->engine, pageNo, rotation, zoom, tile, ctm);
+    RectI tileOnScreen = GetTileOnScreen(dm->engine, pageNo, rotation, zoom, tile, pageInfo->pageOnScreen);
     // consider nearby tiles visible depending on the fuzz factor
     tileOnScreen.x -= (int)(tileOnScreen.dx * fuzz * 0.5);
     tileOnScreen.dx = (int)(tileOnScreen.dx * (fuzz + 1));
@@ -244,12 +243,11 @@ bool RenderCache::FreeNotVisible()
 // determine the count of tiles required for a page at a given zoom level
 USHORT RenderCache::GetTileRes(DisplayModel *dm, int pageNo)
 {
-    fz_rect mediabox = dm->engine->PageMediabox(pageNo);
-    fz_matrix ctm = dm->engine->viewctm(pageNo, dm->zoomReal(), dm->rotation());
-    fz_rect pixelbox = fz_transformrect(ctm, mediabox);
+    RectD mediabox = dm->engine->PageMediabox(pageNo);
+    RectD pixelbox = dm->engine->ApplyTransform(mediabox, pageNo, dm->zoomReal(), dm->rotation());
 
-    float factorW = (pixelbox.x1 - pixelbox.x0) / (maxTileSize.dx + 1);
-    float factorH = (pixelbox.y1 - pixelbox.y0) / (maxTileSize.dy + 1);
+    float factorW = (float)pixelbox.dx / (maxTileSize.dx + 1);
+    float factorH = (float)pixelbox.dy / (maxTileSize.dy + 1);
     float factorMax = max(factorW, factorH);
 
     // use larger tiles when fitting page or width or when a page is smaller
@@ -257,7 +255,7 @@ USHORT RenderCache::GetTileRes(DisplayModel *dm, int pageNo)
     // containing a single image (MuPDF isn't that much faster for rendering
     // individual tiles than for rendering the whole image in a single pass)
     if (dm->zoomVirtual() == ZOOM_FIT_PAGE || dm->zoomVirtual() == ZOOM_FIT_WIDTH ||
-        pixelbox.x1 - pixelbox.x0 <= dm->drawAreaSize.dx || pixelbox.y1 - pixelbox.y0 < dm->drawAreaSize.dy ||
+        pixelbox.dx <= dm->drawAreaSize.dx || pixelbox.dy < dm->drawAreaSize.dy ||
         dm->engine->IsImagePage(pageNo)) {
         factorMax /= 2.0;
     }
@@ -515,7 +513,7 @@ DWORD WINAPI RenderCache::RenderCacheThread(LPVOID data)
             continue;
         }
 
-        fz_rect pageRect = GetTileRect(req.dm->engine, req.pageNo, req.rotation, req.zoom, req.tile);
+        RectD pageRect = GetTileRect(req.dm->engine, req.pageNo, req.rotation, req.zoom, req.tile);
         bmp = req.dm->renderBitmap(req.pageNo, req.zoom, req.rotation, &pageRect,
                                    Target_View, cache->useGdiRenderer && *cache->useGdiRenderer);
         if (req.abort) {
@@ -580,11 +578,10 @@ UINT RenderCache::PaintTile(HDC hdc, RectI *bounds, DisplayModel *dm, int pageNo
 
     HDC bmpDC = CreateCompatibleDC(hdc);
     if (bmpDC) {
-        int renderedBmpDx = renderedBmp->dx();
-        int renderedBmpDy = renderedBmp->dy();
+        SizeI bmpSize = renderedBmp->size();
         int xSrc = -min(tileOnScreen->x, 0);
         int ySrc = -min(tileOnScreen->y, 0);
-        float factor = min(1.0f * renderedBmpDx / tileOnScreen->dx, 1.0f * renderedBmpDy / tileOnScreen->dy);
+        float factor = min(1.0f * bmpSize.dx / tileOnScreen->dx, 1.0f * bmpSize.dy / tileOnScreen->dy);
 
         SelectObject(bmpDC, hbmp);
         if (factor != 1.0f)
@@ -614,17 +611,15 @@ UINT RenderCache::PaintTiles(HDC hdc, RectI *bounds, DisplayModel *dm, int pageN
     int tileCount = 1 << tileRes;
 
     TilePosition tile = { tileRes, 0, 0 };
-    fz_matrix ctm = dm->engine->viewctm(pageNo, zoom, rotation);
-    ctm = fz_concat(ctm, fz_translate((float)pageOnScreen->x, (float)pageOnScreen->y));
 
     UINT renderTimeMin = (UINT)-1;
     for (tile.row = 0; tile.row < tileCount; tile.row++) {
         for (tile.col = 0; tile.col < tileCount; tile.col++) {
-            RectI tileOnScreen = GetTileOnScreen(dm->engine, pageNo, rotation, zoom, tile, ctm);
-            RectI isectPOS = pageOnScreen->Intersect(tileOnScreen);
-            RectI isect = bounds->Intersect(isectPOS);
+            RectI tileOnScreen = GetTileOnScreen(dm->engine, pageNo, rotation, zoom, tile, *pageOnScreen);
+            tileOnScreen = pageOnScreen->Intersect(tileOnScreen);
+            RectI isect = bounds->Intersect(tileOnScreen);
             if (!isect.IsEmpty()) {
-                UINT renderTime = PaintTile(hdc, &isect, dm, pageNo, tile, &isectPOS, renderMissing, renderOutOfDateCue, renderedReplacement);
+                UINT renderTime = PaintTile(hdc, &isect, dm, pageNo, tile, &tileOnScreen, renderMissing, renderOutOfDateCue, renderedReplacement);
                 renderTimeMin = min(renderTime, renderTimeMin);
             }
         }

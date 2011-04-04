@@ -80,16 +80,10 @@ int PdfSelection::FindClosestGlyph(int pageNo, double x, double y)
         return 0;
     assert(0 <= result && result < lens[pageNo - 1]);
 
-    // TODO: move this into either BaseEngine or GeomUtil?
     // the result indexes the first glyph to be selected in a forward selection
-    fz_matrix ctm = engine->viewctm(pageNo, 1.0, 0);
-    fz_bbox bbox = { _coords[result].x, _coords[result].y,
-                     _coords[result].x + _coords[result].dx,
-                     _coords[result].y + _coords[result].dy };
-    bbox = fz_transformbbox(ctm, bbox);
-    fz_point pt = { (float)x, (float)y };
-    pt = fz_transformpoint(ctm, pt);
-    if (pt.x > 0.5 * (bbox.x0 + bbox.x1))
+    RectD bbox = engine->ApplyTransform(_coords[result].Convert<double>(), pageNo, 1.0, 0);
+    PointD pt = engine->ApplyTransform(PointD(x, y), pageNo, 1.0, 0);
+    if (pt.x > bbox.x + 0.5 * bbox.dx)
         result++;
 
     return result;
@@ -97,8 +91,7 @@ int PdfSelection::FindClosestGlyph(int pageNo, double x, double y)
 
 void PdfSelection::FillResultRects(int pageNo, int glyph, int length, StrVec *lines)
 {
-    fz_bbox mbx = fz_roundrect(engine->PageMediabox(pageNo));
-    RectI mediabox = RectI::FromXY(mbx.x0, mbx.y0, mbx.x1, mbx.y1);
+    RectI mediabox = engine->PageMediabox(pageNo).Round();
     RectI *c = &coords[pageNo - 1][glyph], *end = c + length;
     for (; c < end; c++) {
         // skip line breaks

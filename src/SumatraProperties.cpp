@@ -307,9 +307,9 @@ void OnMenuProperties(WindowInfo *win)
     TCHAR *str = Str::Dup(engine->FileName());
     layoutData->AddProperty(_TR("File:"), str);
 
-    if (win->dm->engineType != ENGINE_PDF)
+    if (!win->dm->pdfEngine)
         goto SkipPdfPropertiesForNow;
-    PdfEngine *pdfEngine = static_cast<PdfEngine *>(engine);
+    PdfEngine *pdfEngine = win->dm->pdfEngine;
 
     str = pdfEngine->getPdfInfo("Title");
     layoutData->AddProperty(_TR("Title:"), str);
@@ -346,11 +346,8 @@ void OnMenuProperties(WindowInfo *win)
 SkipPdfPropertiesForNow:
     size_t fileSize = File::GetSize(engine->FileName());
     if (fileSize == INVALID_FILE_SIZE) {
-        fz_buffer *data = engine->GetStreamData();
-        if (data) {
-            fileSize = data->len;
-            fz_dropbuffer(data);
-        }
+        unsigned char *data = engine->GetFileData(&fileSize);
+        free(data);
     }
     if (fileSize != INVALID_FILE_SIZE) {
         str = FormatPdfSize(fileSize);

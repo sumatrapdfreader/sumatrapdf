@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 #include "PdfSearch.h"
+#include "StrUtil.h"
 #include <shlwapi.h>
 
 enum { SEARCH_PAGE, SKIP_PAGE };

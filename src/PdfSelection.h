@@ -4,7 +4,7 @@
 #ifndef PdfSelection_h
 #define PdfSelection_h
 
-#include "PdfEngine.h"
+#include "BaseEngine.h"
 
 class StrVec;
 
