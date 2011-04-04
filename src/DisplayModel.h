@@ -202,13 +202,18 @@ public:
 
     TCHAR *         getTextInRegion(int pageNo, RectD *region);
     TCHAR *         extractAllText(RenderTarget target=Target_View);
+    bool            isOverText(int x, int y);
 
+    // TODO: generalize for non-PDF formats(?)
     pdf_link *      getLinkAtPosition(PointI pt);
     int             getPdfLinks(int pageNo, pdf_link **links);
-    TCHAR *         getLinkPath(pdf_link *link);
+    TCHAR *         getLinkPath(pdf_link *link) {
+        if (!pdfEngine)
+            return NULL;
+        return pdfEngine->getLinkPath(link);
+    }
     void            goToTocLink(pdf_link *link);
     void            goToNamedDest(const char *name);
-    bool            isOverText(int x, int y);
     pdf_annot *     getCommentAtPosition(PointI pt);
 
     bool            cvtUserToScreen(int pageNo, PointD *pt);

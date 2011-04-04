@@ -124,10 +124,7 @@ bool DisplayModel::displayStateFromModel(DisplayState *ds)
         ds->scrollPos = ss.Convert<int>();
 
     free(ds->decryptionKey);
-    if (pdfEngine)
-        ds->decryptionKey = pdfEngine->getDecryptionKey();
-    else
-        ds->decryptionKey = NULL;
+    ds->decryptionKey = pdfEngine ? pdfEngine->getDecryptionKey() : NULL;
 
     return true;
 }
@@ -255,24 +252,15 @@ bool DisplayModel::load(const TCHAR *fileName, int startPage, WindowInfo *win)
     else
         _startPage = 1;
 
-    if (pdfEngine) {
-        const char *pageLayoutName = pdfEngine->getPageLayoutName();
-        if (DM_AUTOMATIC == _displayMode) {
-            if (Str::EndsWith(pageLayoutName, "Right"))
-                _displayMode = DM_CONTINUOUS_BOOK_VIEW;
-            else if (Str::StartsWith(pageLayoutName, "Two"))
-                _displayMode = DM_CONTINUOUS_FACING;
-            else
-                _displayMode = DM_CONTINUOUS;
+    PageLayoutType layout = engine->PreferredLayout();
+    if (DM_AUTOMATIC == _displayMode) {
+        switch (layout & ~Layout_R2L) {
+        case Layout_Single: _displayMode = DM_CONTINUOUS; break;
+        case Layout_Facing: _displayMode = DM_CONTINUOUS_FACING; break;
+        case Layout_Book: _displayMode = DM_CONTINUOUS_BOOK_VIEW; break;
         }
-        _displayR2L = pdfEngine->isDocumentDirectionR2L();
     }
-    else {
-        // TODO: allow BaseEngine to set these
-        if (DM_AUTOMATIC == _displayMode)
-            _displayMode = DM_CONTINUOUS;
-        _displayR2L = false;
-    }
+    _displayR2L = (layout & Layout_R2L) != 0;
 
     if (!buildPagesInfo())
         return false;
@@ -1338,45 +1326,6 @@ bool DisplayModel::cvtScreenToUser(int *pageNo, PointD *pt)
     pt->x = p.x;
     pt->y = p.y;
     return true;
-}
-
-TCHAR *DisplayModel::getLinkPath(pdf_link *link)
-{
-    TCHAR *path = NULL;
-    fz_obj *obj;
-
-    switch (link ? link->kind : -1) {
-        case PDF_LURI:
-            path = Str::Conv::FromPdf(link->dest);
-            break;
-        case PDF_LLAUNCH:
-            obj = fz_dictgets(link->dest, "Type");
-            if (!fz_isname(obj) || !Str::Eq(fz_toname(obj), "Filespec"))
-                break;
-            obj = fz_dictgets(link->dest, "UF"); 
-            if (!fz_isstring(obj))
-                obj = fz_dictgets(link->dest, "F"); 
-
-            if (fz_isstring(obj)) {
-                path = Str::Conv::FromPdf(obj);
-                Str::TransChars(path, _T("/"), _T("\\"));
-            }
-            break;
-        case PDF_LACTION:
-            obj = fz_dictgets(link->dest, "S");
-            if (!fz_isname(obj))
-                break;
-            if (Str::Eq(fz_toname(obj), "GoToR")) {
-                obj = fz_dictgets(link->dest, "F");
-                if (fz_isstring(obj)) {
-                    path = Str::Conv::FromPdf(obj);
-                    Str::TransChars(path, _T("/"), _T("\\"));
-                }
-            }
-            break;
-    }
-
-    return path;
 }
 
 void DisplayModel::goToTocLink(pdf_link* link)

@@ -9,6 +9,27 @@
 // so that their content can be loaded on demand in order to preserve memory
 #define MAX_MEMORY_FILE_SIZE (10 * 1024 * 1024)
 
+namespace Str {
+    namespace Conv {
+
+inline TCHAR *FromPdf(fz_obj *obj)
+{
+    WCHAR *ucs2 = (WCHAR *)pdf_toucs2(obj);
+    TCHAR *tstr = FromWStr(ucs2);
+    fz_free(ucs2);
+    return tstr;
+}
+
+// Caller needs to fz_free the result
+inline char *ToPDF(TCHAR *tstr)
+{
+    ScopedMem<WCHAR> wstr(ToWStr(tstr));
+    return pdf_fromucs2((unsigned short *)wstr.Get());
+}
+
+    }
+}
+
 // adapted from pdf_page.c's pdf_loadpageinfo
 fz_error pdf_getmediabox(fz_rect *mediabox, fz_obj *page)
 {
@@ -189,6 +210,12 @@ void pdf_streamfingerprint(fz_stream *file, unsigned char *digest)
     fz_dropbuffer(buffer);
 }
 
+inline fz_rect fz_bboxtorect(fz_bbox bbox)
+{
+    fz_rect result = { (float)bbox.x0, (float)bbox.y0, (float)bbox.x1, (float)bbox.y1 };
+    return result;
+}
+
 bool fz_isptinrect(fz_rect rect, fz_point pt)
 {
     return MIN(rect.x0, rect.x1) <= pt.x && pt.x < MAX(rect.x0, rect.x1) &&
@@ -197,45 +224,16 @@ bool fz_isptinrect(fz_rect rect, fz_point pt)
 
 #define fz_sizeofrect(rect) (((rect).x1 - (rect).x0) * ((rect).y1 - (rect).y0))
 
+inline RectI fz_bboxtoRectI(fz_bbox bbox)
+{
+    return RectI::FromXY(bbox.x0, bbox.y0, bbox.x1, bbox.y1);
+}
+
 class RenderedFitzBitmap : public RenderedBitmap {
 public:
     RenderedFitzBitmap(fz_pixmap *pixmap, HDC hDC) :
         RenderedBitmap(fz_pixtobitmap(hDC, pixmap, TRUE), pixmap->w, pixmap->h) { }
 };
-
-void RenderedBitmap::stretchDIBits(HDC hdc, int leftMargin, int topMargin, int pageDx, int pageDy) {
-    HDC bmpDC = CreateCompatibleDC(hdc);
-    HGDIOBJ oldBmp = SelectObject(bmpDC, _hbmp);
-    SetStretchBltMode(hdc, HALFTONE);
-    StretchBlt(hdc, leftMargin, topMargin, pageDx, pageDy,
-        bmpDC, 0, 0, _width, _height, SRCCOPY);
-    SelectObject(bmpDC, oldBmp);
-    DeleteDC(bmpDC);
-}
-
-void RenderedBitmap::grayOut(float alpha) {
-    HDC hDC = GetDC(NULL);
-    BITMAPINFO bmi = { 0 };
-
-    bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
-    bmi.bmiHeader.biHeight = _height;
-    bmi.bmiHeader.biWidth = _width;
-    bmi.bmiHeader.biPlanes = 1;
-    bmi.bmiHeader.biBitCount = 32;
-    bmi.bmiHeader.biCompression = BI_RGB;
-
-    unsigned char *bmpData = (unsigned char *)malloc(_width * _height * 4);
-    if (GetDIBits(hDC, _hbmp, 0, _height, bmpData, &bmi, DIB_RGB_COLORS)) {
-        int dataLen = _width * _height * 4;
-        for (int i = 0; i < dataLen; i++)
-            if ((i + 1) % 4) // don't affect the alpha channel
-                bmpData[i] = (unsigned char)(bmpData[i] * alpha + (alpha > 0 ? 0 : 255));
-        SetDIBits(hDC, _hbmp, 0, _height, bmpData, &bmi, DIB_RGB_COLORS);
-    }
-
-    free(bmpData);
-    ReleaseDC(NULL, hDC);
-}
 
 PdfEngine::PdfEngine() : 
         _fileName(NULL)
@@ -894,6 +892,45 @@ pdf_annot *PdfEngine::getCommentAtPosition(int pageNo, float x, float y)
     return NULL;
 }
 
+TCHAR *PdfEngine::getLinkPath(pdf_link *link)
+{
+    TCHAR *path = NULL;
+    fz_obj *obj;
+
+    switch (link ? link->kind : -1) {
+        case PDF_LURI:
+            path = Str::Conv::FromPdf(link->dest);
+            break;
+        case PDF_LLAUNCH:
+            obj = fz_dictgets(link->dest, "Type");
+            if (!fz_isname(obj) || !Str::Eq(fz_toname(obj), "Filespec"))
+                break;
+            obj = fz_dictgets(link->dest, "UF"); 
+            if (!fz_isstring(obj))
+                obj = fz_dictgets(link->dest, "F"); 
+
+            if (fz_isstring(obj)) {
+                path = Str::Conv::FromPdf(obj);
+                Str::TransChars(path, _T("/"), _T("\\"));
+            }
+            break;
+        case PDF_LACTION:
+            obj = fz_dictgets(link->dest, "S");
+            if (!fz_isname(obj))
+                break;
+            if (Str::Eq(fz_toname(obj), "GoToR")) {
+                obj = fz_dictgets(link->dest, "F");
+                if (fz_isstring(obj)) {
+                    path = Str::Conv::FromPdf(obj);
+                    Str::TransChars(path, _T("/"), _T("\\"));
+                }
+            }
+            break;
+    }
+
+    return path;
+}
+
 int PdfEngine::getPdfLinks(int pageNo, pdf_link **links)
 {
     pdf_page *page = getPdfPage(pageNo, true);
@@ -1184,23 +1221,25 @@ int PdfEngine::getPdfVersion() const
     return version;
 }
 
-char *PdfEngine::getPageLayoutName()
+PageLayoutType PdfEngine::PreferredLayout()
 {
-    EnterCriticalSection(&_xrefAccess);
-    fz_obj *root = fz_dictgets(_xref->trailer, "Root");
-    char *name = fz_toname(fz_dictgets(root, "PageLayout"));
-    LeaveCriticalSection(&_xrefAccess);
-    return name;
-}
+    PageLayoutType layout = Layout_Single;
 
-bool PdfEngine::isDocumentDirectionR2L()
-{
-    EnterCriticalSection(&_xrefAccess);
+    ScopedCritSec scope(&_xrefAccess);
     fz_obj *root = fz_dictgets(_xref->trailer, "Root");
+
+    char *name = fz_toname(fz_dictgets(root, "PageLayout"));
+    if (Str::EndsWith(name, "Right"))
+        layout = Layout_Book;
+    else if (Str::StartsWith(name, "Two"))
+        layout = Layout_Facing;
+
     fz_obj *prefs = fz_dictgets(root, "ViewerPreferences");
     char *direction = fz_toname(fz_dictgets(prefs, "Direction"));
-    LeaveCriticalSection(&_xrefAccess);
-    return Str::Eq(direction, "R2L");
+    if (Str::Eq(direction, "R2L"))
+        layout = (PageLayoutType)(layout | Layout_R2L);
+
+    return layout;
 }
 
 unsigned char *PdfEngine::GetFileData(size_t *cbCount)

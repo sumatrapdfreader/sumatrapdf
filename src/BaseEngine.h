@@ -14,6 +14,8 @@
 /* certain OCGs will only be rendered for some of these (e.g. watermarks) */
 enum RenderTarget { Target_View, Target_Print, Target_Export };
 
+enum PageLayoutType { Layout_Single = 0, Layout_Facing = 1, Layout_Book = 2, Layout_R2L = 16 };
+
 class RenderedBitmap {
 public:
     bool outOfDate;
@@ -26,8 +28,39 @@ public:
     HBITMAP getBitmap() const { return _hbmp; }
     SizeI size() const { return SizeI(_width, _height); }
 
-    void stretchDIBits(HDC hdc, int leftMargin, int topMargin, int pageDx, int pageDy);
-    void grayOut(float alpha);
+    void stretchDIBits(HDC hdc, int leftMargin, int topMargin, int pageDx, int pageDy) {
+        HDC bmpDC = CreateCompatibleDC(hdc);
+        HGDIOBJ oldBmp = SelectObject(bmpDC, _hbmp);
+        SetStretchBltMode(hdc, HALFTONE);
+        StretchBlt(hdc, leftMargin, topMargin, pageDx, pageDy,
+            bmpDC, 0, 0, _width, _height, SRCCOPY);
+        SelectObject(bmpDC, oldBmp);
+        DeleteDC(bmpDC);
+    }
+
+    void grayOut(float alpha) {
+        HDC hDC = GetDC(NULL);
+        BITMAPINFO bmi = { 0 };
+
+        bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
+        bmi.bmiHeader.biHeight = _height;
+        bmi.bmiHeader.biWidth = _width;
+        bmi.bmiHeader.biPlanes = 1;
+        bmi.bmiHeader.biBitCount = 32;
+        bmi.bmiHeader.biCompression = BI_RGB;
+
+        unsigned char *bmpData = (unsigned char *)malloc(_width * _height * 4);
+        if (GetDIBits(hDC, _hbmp, 0, _height, bmpData, &bmi, DIB_RGB_COLORS)) {
+            int dataLen = _width * _height * 4;
+            for (int i = 0; i < dataLen; i++)
+                if ((i + 1) % 4) // don't affect the alpha channel
+                    bmpData[i] = (unsigned char)(bmpData[i] * alpha + (alpha > 0 ? 0 : 255));
+            SetDIBits(hDC, _hbmp, 0, _height, bmpData, &bmi, DIB_RGB_COLORS);
+        }
+
+        free(bmpData);
+        ReleaseDC(NULL, hDC);
+    }
     void invertColors() { grayOut(-1); }
 
 protected:
@@ -88,6 +121,8 @@ public:
     virtual TCHAR * ExtractPageText(int pageNo, TCHAR *lineSep=DOS_NEWLINE, RectI **coords_out=NULL, RenderTarget target=Target_View) = 0;
     // certain optimizations can be made for a page consisting of a single large image
     virtual bool IsImagePage(int pageNo) = 0;
+    // the layout type this document's author suggests (if the user doesn't care)
+    virtual PageLayoutType PreferredLayout() { return Layout_Single; }
 
     // TODO: needs a more general interface
     // whether it is allowed to print the current document

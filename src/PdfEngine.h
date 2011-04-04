@@ -98,6 +98,7 @@ public:
     virtual unsigned char *GetFileData(size_t *cbCount);
     virtual TCHAR * ExtractPageText(int pageNo, TCHAR *lineSep=DOS_NEWLINE, RectI **coords_out=NULL, RenderTarget target=Target_View);
     virtual bool IsImagePage(int pageNo);
+    virtual PageLayoutType PreferredLayout();
 
     virtual bool IsPrintingAllowed() { return hasPermission(PDF_PERM_PRINT); }
     virtual bool IsCopyingTextAllowed() { return hasPermission(PDF_PERM_COPY); }
@@ -108,6 +109,7 @@ public:
     int getPdfLinks(int pageNo, pdf_link **links);
     pdf_link *getLinkAtPosition(int pageNo, float x, float y);
     pdf_annot *getCommentAtPosition(int pageNo, float x, float y);
+    TCHAR *getLinkPath(pdf_link *link);
     bool hasTocTree() const { 
         return _outline != NULL || _attachments != NULL; 
     }
@@ -116,8 +118,6 @@ public:
 
     int        findPageNo(fz_obj *dest);
     fz_obj   * getNamedDest(const char *name);
-    char     * getPageLayoutName();
-    bool       isDocumentDirectionR2L();
     TCHAR    * getPdfInfo(char *key) const;
     int        getPdfVersion() const;
     char     * getDecryptionKey() const { return _decryptionKey ? Str::Dup(_decryptionKey) : NULL; }
@@ -170,36 +170,7 @@ public:
     static PdfEngine *CreateFromStream(fz_stream *stm, TCHAR *password=NULL);
 };
 
-// TODO: these shouldn't have to be exposed outside PdfEngine.cpp
-
-namespace Str {
-    namespace Conv {
-
-inline TCHAR *FromPdf(fz_obj *obj)
-{
-    WCHAR *ucs2 = (WCHAR *)pdf_toucs2(obj);
-    TCHAR *tstr = FromWStr(ucs2);
-    fz_free(ucs2);
-    return tstr;
-}
-
-// Caller needs to fz_free the result
-inline char *ToPDF(TCHAR *tstr)
-{
-    ScopedMem<WCHAR> wstr(ToWStr(tstr));
-    return pdf_fromucs2((unsigned short *)wstr.Get());
-}
-
-    }
-}
-
 // TODO: move inside PdfEngine.cpp once we've gotten rid of fz_* outside
-
-inline fz_rect fz_bboxtorect(fz_bbox bbox)
-{
-    fz_rect result = { (float)bbox.x0, (float)bbox.y0, (float)bbox.x1, (float)bbox.y1 };
-    return result;
-}
 
 inline RectD fz_recttoRectD(fz_rect rect)
 {
@@ -210,11 +181,6 @@ inline fz_rect fz_RectDtorect(RectD rect)
 {
     fz_rect result = { (float)rect.x, (float)rect.y, (float)(rect.x + rect.dx), (float)(rect.y + rect.dy) };
     return result;
-}
-
-inline RectI fz_bboxtoRectI(fz_bbox bbox)
-{
-    return RectI::FromXY(bbox.x0, bbox.y0, bbox.x1, bbox.y1);
 }
 
 #endif
