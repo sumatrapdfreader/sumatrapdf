@@ -18,6 +18,7 @@
 
 class WindowInfo;
 
+// TODO: better name, Paddings? PaddingInfo?
 typedef struct DisplaySettings {
     int     pageBorderTop;
     int     pageBorderBottom;
@@ -26,6 +27,9 @@ typedef struct DisplaySettings {
     int     betweenPagesX;
     int     betweenPagesY;
 } DisplaySettings;
+
+extern DisplaySettings gDisplaySettings;
+extern DisplaySettings gDisplaySettingsPresentation;
 
 /* the default distance between a page and window border edges, in pixels */
 #ifdef DRAW_PAGE_SHADOWS

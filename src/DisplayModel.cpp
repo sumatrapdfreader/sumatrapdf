@@ -54,7 +54,7 @@
 #define PREDICTIVE_RENDER 1
 #endif
 
-// TODO: a better name, PaddingInfo ?
+// TODO: a better name, gPaddings? gPaddingInfo ?
 DisplaySettings gDisplaySettings = {
   PADDING_PAGE_BORDER_TOP_DEF,
   PADDING_PAGE_BORDER_BOTTOM_DEF,
