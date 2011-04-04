@@ -530,7 +530,7 @@ void DisplayModel::relayout(float zoomVirtual, int rotation)
     int         pageInARow;
     int         columns;
     int         newAreaOffsetX;
-    int       * columnOffsets;
+    int         columnOffsets[2];
 
     assert(_pagesInfo);
     if (!_pagesInfo)
@@ -556,7 +556,6 @@ void DisplayModel::relayout(float zoomVirtual, int rotation)
        rotation, columns parameters. You can think of it as a simple
        table layout i.e. rows with a fixed number of columns. */
     columns = columnsFromDisplayMode(displayMode());
-    columnOffsets = SAZA(int, columns);
     pageInARow = 0;
     rowMaxPageDy = 0;
     for (pageNo = 1; pageNo <= pageCount(); ++pageNo) {
@@ -638,7 +637,6 @@ void DisplayModel::relayout(float zoomVirtual, int rotation)
             pageInARow = 0;
         }
     }
-    free(columnOffsets);
 
     /* if after resizing we would have blank space on the right due to x offset
        being too much, make x offset smaller so that there's no blank space */
