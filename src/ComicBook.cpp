@@ -615,8 +615,6 @@ static bool LoadComicBookIntoWindow(
     bool showWin,          // window visible or not
     bool placeWindow)      // if true then the Window will be moved/sized according to the 'state' information even if the window was already placed before (isNewWindow=false)
 {
-    Vec<ComicBookPage *> *pages = NULL;
-
     // Never load settings from a preexisting state if the user doesn't wish to
     // (unless we're just refreshing the document, i.e. only if placeWindow == true)
     if (placeWindow && (gGlobalPrefs.m_globalPrefsOnly || state && state->useGlobalValues))
@@ -655,15 +653,15 @@ static bool LoadComicBookIntoWindow(
     int rotation = DEFAULT_ROTATION;
 
     if (state) {
-        if (startPage >= 1 && startPage <= pages->Count()) {
+        if (startPage >= 1 && startPage <= (size_t)win->cbdm->PageCount()) {
             ss.page = startPage;
             if (ZOOM_FIT_CONTENT != state->zoomVirtual) {
                 ss.x = state->scrollPos.x;
                 ss.y = state->scrollPos.y;
             }
             // else relayout scroll to fit the page (again)
-        } else if (startPage > pages->Count())
-            ss.page = pages->Count();
+        } else if (startPage > (size_t)win->cbdm->PageCount())
+            ss.page = win->cbdm->PageCount();
         zoomVirtual = state->zoomVirtual;
         rotation = state->rotation;
     }
