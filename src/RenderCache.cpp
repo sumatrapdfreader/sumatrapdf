@@ -636,7 +636,7 @@ UINT RenderCache::PaintTiles(HDC hdc, RectI *bounds, DisplayModel *dm, int pageN
 UINT RenderCache::Paint(HDC hdc, RectI *bounds, DisplayModel *dm, int pageNo,
                         PdfPageInfo *pageInfo, bool *renderOutOfDateCue)
 {
-    assert(pageInfo->shown && pageInfo->visible);
+    assert(pageInfo->shown && 0.0 != pageInfo->visibleRatio);
 
     USHORT tileRes = GetTileRes(dm, pageNo);
     bool renderedReplacement;
