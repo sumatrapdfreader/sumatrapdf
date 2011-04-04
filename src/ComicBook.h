@@ -69,7 +69,7 @@ struct PageInfo {
 // place to do it
 class Layout {
 public:
-    Vec<PageInfo> *pages;
+    Vec<PageInfo> *   pages;
 
     DisplaySettings * padding;
 
@@ -125,9 +125,29 @@ public:
 
 class ComicBookDisplayModel {
 public:
-    ComicBookDisplayModel() {};
-    ~ComicBookDisplayModel() {}
+    Vec<ComicBookPage*> * pages;
+    Layout *              layout;
+    
+    ComicBookDisplayModel(Vec<ComicBookPage*> *pages, Layout *layout) :
+        pages(pages), layout(layout)
+    {}
+
+    ~ComicBookDisplayModel() {
+        if (pages) {
+            DeleteVecMembers(*pages);
+            delete pages;
+        }
+        delete layout;
+    }
+
+    int PageCount() const { return pages->Count(); }
+    void DoLayout(float zoomVirtual, int rotation) {
+        layout->DoLayout(zoomVirtual, rotation);
+    }
+    
 };
+
+ComicBookDisplayModel *ComicBookDisplayModelFromFile(const TCHAR *filePath);
 
 class WindowInfo;
 

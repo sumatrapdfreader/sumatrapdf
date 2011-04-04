@@ -44,19 +44,6 @@ protected:
         els = newEls;
     }
 
-    T* MakeSpaceAt(size_t idx, size_t count=1) {
-        EnsureCap(len + count);
-        T* res = &(els[idx]);
-        int tomove = len - idx;
-        if (tomove > 0) {
-            T* src = els + idx;
-            T* dst = els + idx + count;
-            memmove(dst, src, tomove * sizeof(T));
-        }
-        len += count;
-        return res;
-    }
-
     void FreeEls() {
         if (els != buf)
             free(els);
@@ -80,6 +67,19 @@ public:
         FreeEls();
         els = buf;
         memset(buf, 0, sizeof(buf));
+    }
+
+    T* MakeSpaceAt(size_t idx, size_t count=1) {
+        EnsureCap(len + count);
+        T* res = &(els[idx]);
+        int tomove = len - idx;
+        if (tomove > 0) {
+            T* src = els + idx;
+            T* dst = els + idx + count;
+            memmove(dst, src, tomove * sizeof(T));
+        }
+        len += count;
+        return res;
     }
 
     T& operator[](size_t idx) const {

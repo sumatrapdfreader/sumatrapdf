@@ -19,19 +19,6 @@
 #include <iowin32.h>
 #include <unzip.h>
 
-// TODO: use gDisplaySettings
-DisplaySettings gDisplaySettings2 = {
-  PADDING_PAGE_BORDER_TOP_DEF,
-  PADDING_PAGE_BORDER_BOTTOM_DEF,
-  PADDING_PAGE_BORDER_LEFT_DEF,
-  PADDING_PAGE_BORDER_RIGHT_DEF,
-  PADDING_BETWEEN_PAGES_X_DEF,
-  PADDING_BETWEEN_PAGES_Y_DEF
-}, gDisplaySettingsPresentation2 = {
-  0, 0, 0, 0,
-  PADDING_BETWEEN_PAGES_X_DEF, PADDING_BETWEEN_PAGES_X_DEF
-};
-
 /* Given 'pageInfo', which should contain correct information about
    pageDx, pageDy and rotation, return a page size after applying a global
    rotation */
@@ -593,6 +580,30 @@ Exit:
 
 }
 
+static Vec<PageInfo> *PageInfosFromPages(Vec<ComicBookPage*> *pages)
+{
+    Vec<PageInfo> *pageInfos = new Vec<PageInfo>(pages->Count());
+    PageInfo *currPageInfo = pageInfos->MakeSpaceAt(pages->Count());
+    for (size_t i=0; i<pages->Count(); i++) {
+        ComicBookPage *p = pages->At(i);
+        currPageInfo->size = SizeD(p->w, p->h);
+        currPageInfo->rotation = 0;
+        ++currPageInfo;
+    }
+    return pageInfos;
+}
+
+ComicBookDisplayModel *ComicBookDisplayModelFromFile(WindowInfo *win, const TCHAR *filePath, DisplayMode displayMode)
+{    
+    Vec<ComicBookPage *> *pages = LoadComicBookPages(filePath);
+    if (!pages)
+        return NULL;
+    Vec<PageInfo> *pageInfos = PageInfosFromPages(pages);
+    SizeI totalAreaSize = win->canvasRc.Size();
+    Layout *layout = new Layout(totalAreaSize, pageInfos, displayMode);
+    return new ComicBookDisplayModel(pages, layout);
+}
+
 static bool LoadComicBookIntoWindow(
     const TCHAR *filePath,
     WindowInfo *win,
@@ -630,13 +641,13 @@ static bool LoadComicBookIntoWindow(
     win->UpdateCanvasSize();
 
     free(win->loadedFilePath);
-    win->loadedFilePath = Str::Dup(filePath);
 
-    pages = LoadComicBookPages(filePath);
-    if (!pages)
+    win->cbdm = ComicBookDisplayModelFromFile(win, filePath, displayMode);
+    if (!win->cbdm)
         goto Error;
 
-    win->comicPages = pages;
+    win->loadedFilePath = Str::Dup(filePath);
+
     float zoomVirtual = gGlobalPrefs.m_defaultZoom;
     int rotation = DEFAULT_ROTATION;
 
@@ -653,10 +664,16 @@ static bool LoadComicBookIntoWindow(
         zoomVirtual = state->zoomVirtual;
         rotation = state->rotation;
     }
-    // TODO: layout
+
+    win->cbdm->DoLayout(zoomVirtual, rotation);
 
     if (!isNewWindow)
         win->RedrawAll();
+
+    int pageCount = win->cbdm->PageCount();
+    if (pageCount > 0) {
+        UpdateToolbarPageText(win, pageCount);
+    }
 
     const TCHAR *title = Path::GetBaseName(win->loadedFilePath);
     Win::SetText(win->hwndFrame, title);
@@ -752,7 +769,7 @@ void DrawComicBook(WindowInfo *win, HWND hwnd, HDC hdc)
     Gdiplus::Rect r2(r.y-1, r.x-1, r.dx+1, r.dy+1);
     g.FillRectangle(&bgBrush, r2);
 
-    Vec<ComicBookPage *> *pages = win->comicPages;
+    Vec<ComicBookPage *> *pages = win->cbdm->pages;
     if (0 == pages->Count()) {
         DrawCenteredText(hdc, r, _T("Will show comic books"));
         return;

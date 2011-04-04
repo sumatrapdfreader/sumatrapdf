@@ -33,7 +33,7 @@ WindowInfo::WindowInfo(HWND hwnd) :
     xScrollSpeed(0), yScrollSpeed(0), wheelAccumDelta(0),
     delayedRepaintTimer(0), resizingTocBox(false), watcher(NULL),
     pdfsync(NULL), threadStressRunning(false),
-    comicPages(NULL)
+    cbdm(NULL)
 {
     ZeroMemory(&selectionRect, sizeof(selectionRect));
     prevCanvasSize.dx = prevCanvasSize.dy = -1;
@@ -64,10 +64,7 @@ WindowInfo::~WindowInfo() {
     free(this->tocState);
 
 #ifdef BUILD_COMIC_ENGINE
-    if (comicPages) {
-        DeleteVecMembers(*comicPages);
-        delete comicPages;
-    }
+    delete cbdm;
 #endif
 }
 

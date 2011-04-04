@@ -227,7 +227,6 @@ static ToolbarButtonInfo gToolbarButtons[] = {
 
 static void CreateTocBox(WindowInfo *win, HINSTANCE hInst);
 static void UpdateToolbarFindText(WindowInfo *win);
-static void UpdateToolbarPageText(WindowInfo *win, int pageCount);
 static void UpdateToolbarToolText(void);
 static void RebuildMenuBar(void);
 static void OnMenuFindMatchCase(WindowInfo *win);
@@ -1052,54 +1051,62 @@ static bool FileCloseMenuEnabled(void) {
 bool TbIsSeparator(ToolbarButtonInfo *tbi) {
     return tbi->bmpIndex < 0;
 }
- 
+
+static LPARAM ToolbarButtonEnabledState(WindowInfo *win, int buttonNo)
+{
+    const LPARAM enabled = (LPARAM)MAKELONG(1,0);
+    const LPARAM disabled = (LPARAM)MAKELONG(0,0);
+
+    int cmdId = gToolbarButtons[buttonNo].cmdId;
+
+    // If restricted, disable
+    if (gRestrictedUse && gToolbarButtons[buttonNo].flags & TBF_RESTRICTED)
+        return disabled;
+    
+    // If no file open, only enable open button
+    if (!win->PdfLoaded() && !win->ComicBookLoaded()) {
+        if (IDM_OPEN == cmdId)
+            return enabled;
+        else
+            return disabled;
+    }
+
+    switch (cmdId)
+    {
+        case IDM_OPEN:
+            // opening different files isn't allowed in plugin mode
+            if (gPluginMode)
+                return disabled;
+            break;
+    
+        case IDM_FIND_NEXT:
+        case IDM_FIND_PREV: 
+            // TODO: Update on whether there's more to find, not just on whether there is text.
+            if (Win::GetTextLen(win->hwndFindBox) == 0)
+                return disabled;
+            break;
+    
+        case IDM_GOTO_NEXT_PAGE:
+            if (win->dm->currentPageNo() == win->dm->pageCount())
+                return disabled;
+            break;
+        case IDM_GOTO_PREV_PAGE:
+            if (win->dm->currentPageNo() == 1)
+                return disabled;
+            break;
+    }
+
+    return enabled;
+}
+
 static void ToolbarUpdateStateForWindow(WindowInfo *win) {
-    const LPARAM enable = (LPARAM)MAKELONG(1,0);
-    const LPARAM disable = (LPARAM)MAKELONG(0,0);
 
     for (int i = 0; i < TOOLBAR_BUTTONS_COUNT; i++) {
         if (TbIsSeparator(&gToolbarButtons[i]))
             continue;
 
-        int cmdId = gToolbarButtons[i].cmdId;
-        // Assume the button is enabled.
-        LPARAM buttonState = enable;
-
-        if (gRestrictedUse && gToolbarButtons[i].flags & TBF_RESTRICTED) // If restricted, disable
-            buttonState = disable;
-        else if (!win->PdfLoaded()) { // If no file open, only enable open button.
-            if (IDM_OPEN != cmdId)
-                buttonState = disable;
-        }
-        else // Figure out what to show.
-        {
-            switch (cmdId)
-            {
-                case IDM_OPEN:
-                    // opening different files isn't allowed in plugin mode
-                    if (gPluginMode)
-                        buttonState = disable;
-                    break;
-
-                case IDM_FIND_NEXT:
-                case IDM_FIND_PREV: 
-                    // TODO: Update on whether there's more to find, not just on whether there is text.
-                    if (Win::GetTextLen(win->hwndFindBox) == 0)
-                        buttonState = disable;
-                    break;
-
-                case IDM_GOTO_NEXT_PAGE:
-                    if (win->dm->currentPageNo() == win->dm->pageCount())
-                         buttonState = disable;
-                    break;
-                case IDM_GOTO_PREV_PAGE:
-                    if (win->dm->currentPageNo() == 1)
-                        buttonState = disable;
-                    break;
-            }
-        }
-  
-        SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, cmdId, buttonState);
+        LPARAM buttonState = ToolbarButtonEnabledState(win, i);
+        SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, gToolbarButtons[i].cmdId, buttonState);
     }
 }
 
@@ -5065,7 +5072,7 @@ static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT message, WPARAM wParam, L
 }
 
 #define PAGE_BOX_WIDTH 40
-static void UpdateToolbarPageText(WindowInfo *win, int pageCount)
+void UpdateToolbarPageText(WindowInfo *win, int pageCount)
 {
     const TCHAR *text = _TR("Page:");
     Win::SetText(win->hwndPageText, text);

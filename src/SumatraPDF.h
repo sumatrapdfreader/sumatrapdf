@@ -47,5 +47,6 @@ void CreateToolbar(WindowInfo *win, HINSTANCE hInst);
 void UpdateToolbarAndScrollbarsForAllWindows();
 void WindowInfo_EnterFullscreen(WindowInfo *win, bool presentation=false);
 void CheckPositionAndSize(DisplayState *ds);
+void UpdateToolbarPageText(WindowInfo *win, int pageCount);
 
 #endif

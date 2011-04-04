@@ -14,17 +14,7 @@ class DisplayModel;
 class FileWatcher;
 class Synchronizer;
 class ComicBookPage;
-
-#if 0
-// TODO: WindowInfoType is meant to replace WinState
-enum WindowInfoType {
-    WitInvalid = 0,
-    WitAbout,       // WindowInfoAbout
-    WitError,       // WindowInfoError
-    WitPdf,         // WindowInfoPdf
-    WitComic        // WindowInfoComic
-};
-#endif
+class ComicBookDisplayModel;
 
 /* Describes actions which can be performed by mouse */
 enum MouseAction {
@@ -65,7 +55,7 @@ public:
     //       which doesn't allow distinction between PDF and ComicBook errors
     bool IsAboutWindow() const { return !loadedFilePath; }
     bool PdfLoaded() const { return this->dm != NULL; }
-    bool ComicBookLoaded() const { return comicPages != NULL; }
+    bool ComicBookLoaded() const { return cbdm != NULL; }
 
     TCHAR *         loadedFilePath;
     bool            threadStressRunning;
@@ -183,7 +173,7 @@ public:
                     } fwdsearchmark;
 
     // Stuff related to comic book handling
-    Vec<ComicBookPage*> *comicPages;
+    ComicBookDisplayModel *cbdm;
 
     void FocusPageNoEdit();
     void UpdateToolbarState();
