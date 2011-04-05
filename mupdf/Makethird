@@ -4,158 +4,11 @@
 # static libraries. Download and unzip the the mupdf-thirdparty.zip archive
 # in the source directory.
 
-jbig2dec_dir := $(wildcard thirdparty/jbig2dec*)
-openjpeg_dir := $(wildcard thirdparty/openjpeg*/libopenjpeg)
 freetype_dir := $(wildcard thirdparty/freetype*)
+jbig2dec_dir := $(wildcard thirdparty/jbig2dec*)
 jpeg_dir := $(wildcard thirdparty/jpeg*)
+openjpeg_dir := $(wildcard thirdparty/openjpeg*/libopenjpeg)
 zlib_dir := $(wildcard thirdparty/zlib*)
-
-ifneq "$(jbig2dec_dir)" ""
-
-THIRD_LIBS += $(JBIG2DEC_LIB)
-THIRD_INCS += -I$(jbig2dec_dir)
-LIBS := $(filter-out -ljbig2dec, $(LIBS))
-
-JBIG2DEC_SRC=$(addprefix $(jbig2dec_dir)/, \
-	jbig2.c \
-	jbig2_arith.c \
-	jbig2_arith_int.c \
-	jbig2_arith_iaid.c \
-	jbig2_huffman.c \
-	jbig2_segment.c \
-	jbig2_page.c \
-	jbig2_symbol_dict.c \
-	jbig2_text.c \
-	jbig2_generic.c \
-	jbig2_refinement.c \
-	jbig2_mmr.c \
-	jbig2_image.c \
-	jbig2_metadata.c )
-JBIG2DEC_OBJ=$(JBIG2DEC_SRC:$(jbig2dec_dir)/%.c=$(OBJDIR)/%.o)
-JBIG2DEC_LIB=$(OBJDIR)/libjbig2dec.a
-$(JBIG2DEC_LIB): $(JBIG2DEC_OBJ)
-	$(AR_CMD)
-$(OBJDIR)/%.o: $(jbig2dec_dir)/%.c
-	$(CC_CMD) -DHAVE_STDINT_H
-
-endif
-
-ifneq "$(openjpeg_dir)" ""
-
-THIRD_LIBS += $(OPENJPEG_LIB)
-THIRD_INCS += -I$(openjpeg_dir)
-LIBS := $(filter-out -lopenjpeg, $(LIBS))
-
-# opj_config.h does not exist in the pristine source
-$(OBJDIR)/opj_config.h:
-	cp $(openjpeg_dir)/../opj_config.h.in.user $@
-
-OPENJPEG_SRC=$(addprefix $(openjpeg_dir)/, \
-	bio.c \
-	cio.c \
-	dwt.c \
-	event.c \
-	image.c \
-	j2k.c \
-	j2k_lib.c \
-	jp2.c \
-	jpt.c \
-	mct.c \
-	mqc.c \
-	openjpeg.c \
-	pi.c \
-	raw.c \
-	t1.c \
-	t2.c \
-	tcd.c \
-	tgt.c )
-OPENJPEG_OBJ=$(OPENJPEG_SRC:$(openjpeg_dir)/%.c=$(OBJDIR)/opj_%.o)
-OPENJPEG_LIB=$(OBJDIR)/libopenjpeg.a
-$(OPENJPEG_OBJ): $(OBJDIR)/opj_config.h
-$(OPENJPEG_LIB): $(OPENJPEG_OBJ)
-	 $(AR_CMD)
-$(OBJDIR)/opj_%.o: $(openjpeg_dir)/%.c
-	$(CC_CMD) -I$(OBJDIR) -DOPJ_STATIC
-
-endif
-
-ifneq "$(jpeg_dir)" ""
-
-THIRD_LIBS += $(JPEG_LIB)
-THIRD_INCS += -I$(jpeg_dir) -I$(OBJDIR)
-LIBS := $(filter-out -ljpeg, $(LIBS))
-
-# jconfig.h does not exist in the pristine source
-$(OBJDIR)/jconfig.h:
-	cp $(jpeg_dir)/jconfig.txt $@
-
-JPEG_SRC=$(addprefix $(jpeg_dir)/, \
-	jaricom.c \
-	jcomapi.c \
-	jdapimin.c \
-	jdapistd.c \
-	jdarith.c \
-	jdatadst.c \
-	jdatasrc.c \
-	jdcoefct.c \
-	jdcolor.c \
-	jddctmgr.c \
-	jdhuff.c \
-	jdinput.c \
-	jdmainct.c \
-	jdmarker.c \
-	jdmaster.c \
-	jdmerge.c \
-	jdpostct.c \
-	jdsample.c \
-	jdtrans.c \
-	jerror.c \
-	jfdctflt.c \
-	jfdctfst.c \
-	jfdctint.c \
-	jidctflt.c \
-	jidctfst.c \
-	jidctint.c \
-	jquant1.c \
-	jquant2.c \
-	jutils.c \
-	jmemmgr.c \
-	jmemansi.c)
-JPEG_OBJ=$(JPEG_SRC:$(jpeg_dir)/%.c=$(OBJDIR)/jpeg_%.o)
-JPEG_LIB=$(OBJDIR)/libjpeg.a
-$(JPEG_OBJ): $(OBJDIR)/jconfig.h
-$(JPEG_LIB): $(JPEG_OBJ)
-	 $(AR_CMD)
-$(OBJDIR)/jpeg_%.o: $(jpeg_dir)/%.c
-	$(CC_CMD) -Dmain=xxxmain
-
-endif
-
-ifneq "$(zlib_dir)" ""
-
-THIRD_LIBS += $(ZLIB_LIB)
-THIRD_INCS += -I$(zlib_dir)
-LIBS := $(filter-out -lz, $(LIBS))
-
-ZLIB_SRC=$(addprefix $(zlib_dir)/, \
-	adler32.c \
-	compress.c \
-	crc32.c \
-	deflate.c \
-	inffast.c \
-	inflate.c \
-	inftrees.c \
-	trees.c \
-	uncompr.c \
-	zutil.c )
-ZLIB_OBJ=$(ZLIB_SRC:$(zlib_dir)/%.c=$(OBJDIR)/zlib_%.o)
-ZLIB_LIB=$(OBJDIR)/libz.a
-$(ZLIB_LIB): $(ZLIB_OBJ)
-	$(AR_CMD)
-$(OBJDIR)/zlib_%.o: $(zlib_dir)/%.c
-	$(CC_CMD)
-
-endif
 
 ifneq "$(freetype_dir)" ""
 
@@ -215,5 +68,152 @@ $(OBJDIR)/ft_truetype.o: $(freetype_dir)/src/truetype/truetype.c
 	$(FTCC_CMD)
 $(OBJDIR)/ft_type1.o: $(freetype_dir)/src/type1/type1.c
 	$(FTCC_CMD)
+
+endif
+
+ifneq "$(jbig2dec_dir)" ""
+
+THIRD_LIBS += $(JBIG2DEC_LIB)
+THIRD_INCS += -I$(jbig2dec_dir)
+LIBS := $(filter-out -ljbig2dec, $(LIBS))
+
+JBIG2DEC_SRC=$(addprefix $(jbig2dec_dir)/, \
+	jbig2.c \
+	jbig2_arith.c \
+	jbig2_arith_int.c \
+	jbig2_arith_iaid.c \
+	jbig2_huffman.c \
+	jbig2_segment.c \
+	jbig2_page.c \
+	jbig2_symbol_dict.c \
+	jbig2_text.c \
+	jbig2_generic.c \
+	jbig2_refinement.c \
+	jbig2_mmr.c \
+	jbig2_image.c \
+	jbig2_metadata.c )
+JBIG2DEC_OBJ=$(JBIG2DEC_SRC:$(jbig2dec_dir)/%.c=$(OBJDIR)/%.o)
+JBIG2DEC_LIB=$(OBJDIR)/libjbig2dec.a
+$(JBIG2DEC_LIB): $(JBIG2DEC_OBJ)
+	$(AR_CMD)
+$(OBJDIR)/%.o: $(jbig2dec_dir)/%.c
+	$(CC_CMD) -DHAVE_STDINT_H
+
+endif
+
+ifneq "$(jpeg_dir)" ""
+
+THIRD_LIBS += $(JPEG_LIB)
+THIRD_INCS += -I$(jpeg_dir) -I$(OBJDIR)
+LIBS := $(filter-out -ljpeg, $(LIBS))
+
+# jconfig.h does not exist in the pristine source
+$(OBJDIR)/jconfig.h:
+	cp $(jpeg_dir)/jconfig.txt $@
+
+JPEG_SRC=$(addprefix $(jpeg_dir)/, \
+	jaricom.c \
+	jcomapi.c \
+	jdapimin.c \
+	jdapistd.c \
+	jdarith.c \
+	jdatadst.c \
+	jdatasrc.c \
+	jdcoefct.c \
+	jdcolor.c \
+	jddctmgr.c \
+	jdhuff.c \
+	jdinput.c \
+	jdmainct.c \
+	jdmarker.c \
+	jdmaster.c \
+	jdmerge.c \
+	jdpostct.c \
+	jdsample.c \
+	jdtrans.c \
+	jerror.c \
+	jfdctflt.c \
+	jfdctfst.c \
+	jfdctint.c \
+	jidctflt.c \
+	jidctfst.c \
+	jidctint.c \
+	jquant1.c \
+	jquant2.c \
+	jutils.c \
+	jmemmgr.c \
+	jmemansi.c)
+JPEG_OBJ=$(JPEG_SRC:$(jpeg_dir)/%.c=$(OBJDIR)/jpeg_%.o)
+JPEG_LIB=$(OBJDIR)/libjpeg.a
+$(JPEG_OBJ): $(OBJDIR)/jconfig.h
+$(JPEG_LIB): $(JPEG_OBJ)
+	 $(AR_CMD)
+$(OBJDIR)/jpeg_%.o: $(jpeg_dir)/%.c
+	$(CC_CMD) -Dmain=xxxmain
+
+endif
+
+ifneq "$(openjpeg_dir)" ""
+
+THIRD_LIBS += $(OPENJPEG_LIB)
+THIRD_INCS += -I$(openjpeg_dir)
+LIBS := $(filter-out -lopenjpeg, $(LIBS))
+
+# opj_config.h does not exist in the pristine source
+$(OBJDIR)/opj_config.h:
+	cp $(openjpeg_dir)/../opj_config.h.in.user $@
+
+OPENJPEG_SRC=$(addprefix $(openjpeg_dir)/, \
+	bio.c \
+	cio.c \
+	dwt.c \
+	event.c \
+	image.c \
+	j2k.c \
+	j2k_lib.c \
+	jp2.c \
+	jpt.c \
+	mct.c \
+	mqc.c \
+	openjpeg.c \
+	pi.c \
+	raw.c \
+	t1.c \
+	t2.c \
+	tcd.c \
+	tgt.c )
+OPENJPEG_OBJ=$(OPENJPEG_SRC:$(openjpeg_dir)/%.c=$(OBJDIR)/opj_%.o)
+OPENJPEG_LIB=$(OBJDIR)/libopenjpeg.a
+$(OPENJPEG_OBJ): $(OBJDIR)/opj_config.h
+$(OPENJPEG_LIB): $(OPENJPEG_OBJ)
+	 $(AR_CMD)
+$(OBJDIR)/opj_%.o: $(openjpeg_dir)/%.c
+	$(CC_CMD) -I$(OBJDIR) -DOPJ_STATIC
+
+endif
+
+ifneq "$(zlib_dir)" ""
+
+THIRD_LIBS += $(ZLIB_LIB)
+THIRD_INCS += -I$(zlib_dir)
+LIBS := $(filter-out -lz, $(LIBS))
+
+ZLIB_SRC=$(addprefix $(zlib_dir)/, \
+	adler32.c \
+	compress.c \
+	crc32.c \
+	deflate.c \
+	inffast.c \
+	inflate.c \
+	inftrees.c \
+	trees.c \
+	uncompr.c \
+	zutil.c )
+ZLIB_OBJ=$(ZLIB_SRC:$(zlib_dir)/%.c=$(OBJDIR)/zlib_%.o)
+ZLIB_LIB=$(OBJDIR)/libz.a
+$(ZLIB_LIB): $(ZLIB_OBJ)
+	$(AR_CMD)
+$(OBJDIR)/zlib_%.o: $(zlib_dir)/%.c
+	$(CC_CMD)
 
 endif

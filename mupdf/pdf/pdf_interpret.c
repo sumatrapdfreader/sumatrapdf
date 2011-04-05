@@ -1408,8 +1408,7 @@ pdf_run_page_with_usage(pdf_xref *xref, pdf_page *page, fz_device *dev, fz_matri
 	int flags;
 
 	if (page->transparency)
-		dev->begin_group(dev->user,
-			fz_transform_rect(ctm, page->mediabox),
+		fz_begin_group(dev, fz_transform_rect(ctm, page->mediabox),
 			0, 0, FZ_BLEND_NORMAL, 1);
 
 	csi = pdf_new_csi(xref, dev, ctm, target);
@@ -1441,7 +1440,7 @@ pdf_run_page_with_usage(pdf_xref *xref, pdf_page *page, fz_device *dev, fz_matri
 	}
 
 	if (page->transparency)
-		dev->end_group(dev->user);
+		fz_end_group(dev);
 
 	return fz_okay;
 }

@@ -50,10 +50,10 @@ AR_CMD = rm -f $@ && $(AR) cru $@ $^
 
 else
 
-GENFILE_CMD = @ echo GENFILE $@ && $(firstword $^) $@ $(wordlist 2, 999, $^)
-CC_CMD = @ echo CC $@ && $(CC) -o $@ -c $< $(CFLAGS)
-LD_CMD = @ echo LD $@ && $(CC) -o $@ $^ $(LDFLAGS) $(LIBS)
-AR_CMD = @ echo AR $@ && rm -f $@ && $(AR) cru $@ $^
+GENFILE_CMD = @ echo "    GENFILE" $@ && $(firstword $^) $@ $(wordlist 2, 999, $^)
+CC_CMD = @ echo "    CC" $@ && $(CC) -o $@ -c $< $(CFLAGS)
+LD_CMD = @ echo "    LD" $@ && $(CC) -o $@ $^ $(LDFLAGS) $(LIBS)
+AR_CMD = @ echo "    AR" $@ && rm -f $@ && $(AR) cru $@ $^
 
 endif
 
@@ -87,7 +87,6 @@ FITZ_SRC := \
 	fitz/crypt_md5.c \
 	fitz/crypt_sha2.c \
 	fitz/dev_bbox.c \
-	fitz/dev_draw.c \
 	fitz/dev_list.c \
 	fitz/dev_null.c \
 	fitz/dev_text.c \
@@ -120,6 +119,7 @@ DRAW_SRC := $(DRAW_ARCH_SRC) \
 	draw/arch_port.c \
 	draw/draw_affine.c \
 	draw/draw_blend.c \
+	draw/draw_device.c \
 	draw/draw_edge.c \
 	draw/draw_glyph.c \
 	draw/draw_mesh.c \
@@ -312,13 +312,25 @@ CMAP_OBJ := $(CMAP_SRC:$(GENDIR)/%.c=$(OBJDIR)/%.o)
 # Library
 #
 
+FITZ_LIB = $(OBJDIR)/libfitz.a
+$(FITZ_LIB): $(FITZ_OBJ) $(DRAW_OBJ)
+	 $(AR_CMD)
+
+DATA_LIB = $(OBJDIR)/libmupdfdata.a
+$(DATA_LIB): $(CMAP_OBJ) $(FONT_OBJ)
+	 $(AR_CMD)
+
 MUPDF_LIB = $(OBJDIR)/libmupdf.a
-$(MUPDF_LIB): $(FITZ_OBJ) $(DRAW_OBJ) $(MUPDF_OBJ) $(CMAP_OBJ) $(FONT_OBJ)
+$(MUPDF_LIB): $(MUPDF_OBJ)
 	 $(AR_CMD)
 
 MUXPS_LIB = $(OBJDIR)/libmuxps.a
-$(MUXPS_LIB): $(FITZ_OBJ) $(DRAW_OBJ) $(MUXPS_OBJ)
+$(MUXPS_LIB): $(MUXPS_OBJ)
 	 $(AR_CMD)
+
+ALL_LIBS = $(MUXPS_LIB) $(MUPDF_LIB) $(DATA_LIB) $(FITZ_LIB)
+PDF_LIBS = $(MUPDF_LIB) $(DATA_LIB) $(FITZ_LIB)
+XPS_LIBS = $(MUXPS_LIB) $(FITZ_LIB)
 
 #
 # Applications
@@ -339,42 +351,42 @@ PDFSHOW_SRC=apps/pdfshow.c
 PDFSHOW_OBJ=$(PDFSHOW_SRC:apps/%.c=$(OBJDIR)/%.o)
 PDFSHOW_EXE=$(OBJDIR)/pdfshow
 $(PDFSHOW_OBJ): $(MUPDF_HDR) $(FITZ_HDR)
-$(PDFSHOW_EXE): $(PDFSHOW_OBJ) $(MUPDF_LIB) $(THIRD_LIBS)
+$(PDFSHOW_EXE): $(PDFSHOW_OBJ) $(PDF_LIBS) $(THIRD_LIBS)
 	$(LD_CMD)
 
 PDFCLEAN_SRC=apps/pdfclean.c
 PDFCLEAN_OBJ=$(PDFCLEAN_SRC:apps/%.c=$(OBJDIR)/%.o)
 PDFCLEAN_EXE=$(OBJDIR)/pdfclean
 $(PDFCLEAN_OBJ): $(MUPDF_HDR) $(FITZ_HDR)
-$(PDFCLEAN_EXE): $(PDFCLEAN_OBJ) $(MUPDF_LIB) $(THIRD_LIBS)
+$(PDFCLEAN_EXE): $(PDFCLEAN_OBJ) $(PDF_LIBS) $(THIRD_LIBS)
 	$(LD_CMD)
 
 PDFDRAW_SRC=apps/pdfdraw.c
 PDFDRAW_OBJ=$(PDFDRAW_SRC:apps/%.c=$(OBJDIR)/%.o)
 PDFDRAW_EXE=$(OBJDIR)/pdfdraw
 $(PDFDRAW_OBJ): $(MUPDF_HDR) $(FITZ_HDR)
-$(PDFDRAW_EXE): $(PDFDRAW_OBJ) $(MUPDF_LIB) $(THIRD_LIBS)
+$(PDFDRAW_EXE): $(PDFDRAW_OBJ) $(PDF_LIBS) $(THIRD_LIBS)
 	$(LD_CMD)
 
 PDFEXTRACT_SRC=apps/pdfextract.c
 PDFEXTRACT_OBJ=$(PDFEXTRACT_SRC:apps/%.c=$(OBJDIR)/%.o)
 PDFEXTRACT_EXE=$(OBJDIR)/pdfextract
 $(PDFEXTRACT_OBJ): $(MUPDF_HDR) $(FITZ_HDR)
-$(PDFEXTRACT_EXE): $(PDFEXTRACT_OBJ) $(MUPDF_LIB) $(THIRD_LIBS)
+$(PDFEXTRACT_EXE): $(PDFEXTRACT_OBJ) $(PDF_LIBS) $(THIRD_LIBS)
 	$(LD_CMD)
 
 PDFINFO_SRC=apps/pdfinfo.c
 PDFINFO_OBJ=$(PDFINFO_SRC:apps/%.c=$(OBJDIR)/%.o)
 PDFINFO_EXE=$(OBJDIR)/pdfinfo
 $(PDFINFO_OBJ): $(MUPDF_HDR) $(FITZ_HDR)
-$(PDFINFO_EXE): $(PDFINFO_OBJ) $(MUPDF_LIB) $(THIRD_LIBS)
+$(PDFINFO_EXE): $(PDFINFO_OBJ) $(PDF_LIBS) $(THIRD_LIBS)
 	$(LD_CMD)
 
 XPSDRAW_SRC=apps/xpsdraw.c
 XPSDRAW_OBJ=$(XPSDRAW_SRC:apps/%.c=$(OBJDIR)/%.o)
 XPSDRAW_EXE=$(OBJDIR)/xpsdraw
 $(XPSDRAW_OBJ): $(MUXPS_HDR) $(FITZ_HDR)
-$(XPSDRAW_EXE): $(XPSDRAW_OBJ) $(MUXPS_LIB) $(THIRD_LIBS)
+$(XPSDRAW_EXE): $(XPSDRAW_OBJ) $(XPS_LIBS) $(THIRD_LIBS)
 	$(LD_CMD)
 
 PDFAPP_HDR = apps/pdfapp.h
@@ -384,7 +396,7 @@ X11VIEW_OBJ=$(X11VIEW_SRC:apps/%.c=$(OBJDIR)/%.o)
 X11VIEW_EXE=$(OBJDIR)/mupdf
 
 $(X11VIEW_OBJ): $(PDFAPP_HDR) $(MUPDF_HDR) $(MUXPS_HDR) $(FITZ_HDR)
-$(X11VIEW_EXE): $(X11VIEW_OBJ) $(MUPDF_LIB) $(MUXPS_LIB) $(THIRD_LIBS)
+$(X11VIEW_EXE): $(X11VIEW_OBJ) $(ALL_LIBS) $(THIRD_LIBS)
 	$(LD_CMD) $(X11LIBS)
 
 WINVIEW_SRC=apps/win_main.c apps/pdfapp.c
@@ -396,7 +408,7 @@ $(OBJDIR)/%.o: apps/%.rc
 	$(WINDRES) -i $< -o $@ --include-dir=apps
 
 $(WINVIEW_OBJ): $(PDFAPP_HDR) $(MUPDF_HDR) $(MUXPS_HDR) $(FITZ_HDR)
-$(WINVIEW_EXE): $(WINVIEW_OBJ) $(MUPDF_LIB) $(MUXPS_LIB) $(THIRD_LIBS)
+$(WINVIEW_EXE): $(WINVIEW_OBJ) $(ALL_LIBS) $(THIRD_LIBS)
 	$(LD_CMD) $(W32LIBS)
 
 #
@@ -405,7 +417,7 @@ $(WINVIEW_EXE): $(WINVIEW_OBJ) $(MUPDF_LIB) $(MUXPS_LIB) $(THIRD_LIBS)
 
 .PHONY: default all pregen clean nuke install
 
-all: $(OBJDIR) $(GENDIR) $(THIRD_LIBS) $(MUPDF_LIB) $(APPS)
+all: $(OBJDIR) $(GENDIR) $(THIRD_LIBS) $(FITZ_LIB) $(DATA_LIB) $(MUPDF_LIB) $(MUXPS_LIB) $(APPS)
 
 clean:
 	rm -rf $(OBJDIR)/*

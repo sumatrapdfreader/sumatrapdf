@@ -429,10 +429,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\fitz\dev_draw.c"
-					>
-				</File>
-				<File
 					RelativePath=".\mupdf\fitz\dev_gdiplus.cpp"
 					>
 				</File>
@@ -562,6 +558,10 @@
 				</File>
 				<File
 					RelativePath=".\mupdf\draw\draw_blend.c"
+					>
+				</File>
+				<File
+					RelativePath=".\mupdf\draw\draw_device.c"
 					>
 				</File>
 				<File

@@ -1,7 +1,6 @@
 #include "fitz.h"
 
-#define ISOLATED 1
-#define KNOCKOUT 2
+enum { ISOLATED = 1, KNOCKOUT = 2 };
 
 static fz_display_node *
 fz_new_display_node(fz_display_command cmd, fz_matrix ctm,
