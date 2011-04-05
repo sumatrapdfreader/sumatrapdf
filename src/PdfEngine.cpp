@@ -657,7 +657,7 @@ int PdfEngine::PageRotation(int pageNo)
     assert(1 <= pageNo && pageNo <= PageCount());
     fz_obj *page = _xref->page_objs[pageNo-1];
     if (!page)
-        return INVALID_ROTATION;
+        return 0;
     return fz_to_int(fz_dict_gets(page, "Rotate"));
 }
 
@@ -1323,8 +1323,11 @@ XpsEngine::XpsEngine(const TCHAR *fileName) :
     xps_open_file(&_ctx, (TCHAR *)_fileName);
 #endif
 
-    if (_ctx)
-        _pages = SAZA(xps_page *, PageCount());
+    if (!_ctx)
+        return;
+
+    _pages = SAZA(xps_page *, PageCount());
+    // TODO: extract document properties from the "/docProps/core.xml" part
 }
 
 XpsEngine::~XpsEngine()

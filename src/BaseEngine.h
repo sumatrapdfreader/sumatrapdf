@@ -7,8 +7,6 @@
 #include "BaseUtil.h"
 #include "GeomUtil.h"
 
-#define INVALID_PAGE_NO     -1
-#define INVALID_ROTATION    -1
 #define DOS_NEWLINE _T("\r\n")
 
 /* certain OCGs will only be rendered for some of these (e.g. watermarks) */

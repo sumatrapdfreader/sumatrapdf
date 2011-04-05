@@ -85,8 +85,12 @@ static void BenchFile(TCHAR *filePath, TCHAR *pagesSpec)
     logbench("Starting: %s\n", filePath);
 
     MillisecondTimer t;
+    BaseEngine *engine;
     t.Start();
-    BaseEngine *engine = PdfEngine::CreateFromFileName(filePath);
+    if (Str::EndsWithI(filePath, _T(".xps")))
+        engine = XpsEngine::CreateFromFileName(filePath);
+    else
+        engine = PdfEngine::CreateFromFileName(filePath);
     t.Stop();
 
     if (!engine) {

@@ -31,6 +31,9 @@ typedef struct DisplaySettings {
 extern DisplaySettings gDisplaySettings;
 extern DisplaySettings gDisplaySettingsPresentation;
 
+#define INVALID_PAGE_NO     -1
+#define INVALID_ROTATION    -1
+
 /* the default distance between a page and window border edges, in pixels */
 #ifdef DRAW_PAGE_SHADOWS
 #define PADDING_PAGE_BORDER_TOP_DEF      5
