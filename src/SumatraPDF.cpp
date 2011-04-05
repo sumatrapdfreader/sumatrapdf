@@ -54,6 +54,11 @@
 
 /* Define if you want to display additional debug helpers in the Help menu */
 // #define SHOW_DEBUG_MENU_ITEMS
+#ifdef DEBUG
+#ifndef SHOW_DEBUG_MENU_ITEMS
+#define SHOW_DEBUG_MENU_ITEMS
+#endif
+#endif
 
 #define ZOOM_IN_FACTOR      1.2f
 #define ZOOM_OUT_FACTOR     1.0f / ZOOM_IN_FACTOR
@@ -2300,6 +2305,9 @@ static void ConvertSelectionRectToSelectionOnPage(WindowInfo *win) {
 // for testing only
 static void CrashMe()
 {
+    // TODO: temporary, for testing
+    extern void SaveCrashInfoText();
+    SaveCrashInfoText();
     char *p = NULL;
     *p = 0;
 }

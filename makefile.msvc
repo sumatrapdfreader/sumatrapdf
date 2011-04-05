@@ -45,10 +45,8 @@ all_sumatrapdf: SumatraPDF Installer PDFFilter BrowserPlugin
 # Modify the following defines if you have to target a platform prior to the ones specified below.
 # Their meaning: http://msdn.microsoft.com/en-us/library/aa383745(VS.85).aspx
 # and http://blogs.msdn.com/oldnewthing/archive/2007/04/11/2079137.aspx
-# We set the features uniformly to Win 2000 or later.
-CFLAGS = $(CFLAGS) /D "WINVER=0x0500" /D "_WIN32_WINNT=0x0500"
-
-# /D "_WIN32_WINDOWS=0x0500" /D "_WIN32_IE=0x0600"
+# We set the features uniformly to Win XP or later.
+CFLAGS = $(CFLAGS) /D "WINVER=0x0501" /D "_WIN32_WINNT=0x0501"
 
 SUMATRA_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
 	/wd4800 \

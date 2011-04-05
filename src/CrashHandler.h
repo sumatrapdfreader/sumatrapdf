@@ -8,4 +8,6 @@
 
 void InstallCrashHandler(const TCHAR *crashDumpPath);
 
+void SaveCrashInfoText();
+
 #endif

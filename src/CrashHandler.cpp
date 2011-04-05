@@ -3,11 +3,16 @@
 
 #include <windows.h>
 #include <dbghelp.h>
+#include <tlhelp32.h>
 #include "CrashHandler.h"
+
+#include "Version.h"
 
 #include "BaseUtil.h"
 #include "StrUtil.h"
 #include "WinUtil.h"
+#include "Vec.h"
+
 #include "translations.h"
 
 typedef BOOL WINAPI MiniDumpWriteProc(
@@ -17,13 +22,77 @@ typedef BOOL WINAPI MiniDumpWriteProc(
     LONG DumpType,
     PMINIDUMP_EXCEPTION_INFORMATION ExceptionParam,
     PMINIDUMP_USER_STREAM_INFORMATION UserStreamParam,
-    PMINIDUMP_CALLBACK_INFORMATION CallbackParam
+    PMINIDUMP_CALLBACK_INFORMATION CallbackParam);
+
+typedef BOOL IMAGEAPI SymInitializeProc(
+    HANDLE hProcess,
+    PCSTR UserSearchPath,
+    BOOL fInvadeProcess);
+
+typedef DWORD IMAGEAPI SymGetOptionsProc();
+typedef DWORD IMAGEAPI SymSetOptionsProc(DWORD SymOptions);
+
+typedef BOOL IMAGEAPI StackWalk64Proc(
+    DWORD MachineType,
+    HANDLE hProcess,
+    HANDLE hThread,
+    LPSTACKFRAME64 StackFrame,
+    PVOID ContextRecord,
+    PREAD_PROCESS_MEMORY_ROUTINE64 ReadMemoryRoutine,
+    PFUNCTION_TABLE_ACCESS_ROUTINE64 FunctionTableAccessRoutine,
+    PGET_MODULE_BASE_ROUTINE64 GetModuleBaseRoutine,
+    PTRANSLATE_ADDRESS_ROUTINE64 TranslateAddress);
+
+typedef BOOL IMAGEAPI SymFromAddrProc(
+    HANDLE hProcess,
+    DWORD64 Address,
+    PDWORD64 Displacement,
+    PSYMBOL_INFO Symbol
 );
+
+typedef PVOID IMAGEAPI SymFunctionTableAccess64Proc(
+    HANDLE hProcess,
+    DWORD64 AddrBase);
+
+typedef DWORD64 IMAGEAPI SymGetModuleBase64Proc(
+    HANDLE hProcess,
+    DWORD64 qwAddr);
+
+static MiniDumpWriteProc *              _MiniDumpWriteDump;
+static SymInitializeProc *              _SymInitialize;
+static SymGetOptionsProc *              _SymGetOptions;
+static SymSetOptionsProc *              _SymSetOptions;
+static StackWalk64Proc   *              _StackWalk64;
+static SymFunctionTableAccess64Proc *   _SymFunctionTableAccess64;
+static SymGetModuleBase64Proc *         _SymGetModuleBase64;
+static SymFromAddrProc *                _SymFromAddr;
 
 static ScopedMem<TCHAR> g_crashDumpPath(NULL);
 static HANDLE g_dumpEvent = NULL;
 static HANDLE g_dumpThread = NULL;
 static MINIDUMP_EXCEPTION_INFORMATION mei = { 0 };
+
+static BOOL gSymInitializeOk = FALSE;
+
+static void LoadDbgHelpFuncs()
+{
+    if (_MiniDumpWriteDump)
+        return;
+    WinLibrary lib(_T("DBGHELP.DLL"));
+    _MiniDumpWriteDump = (MiniDumpWriteProc *)lib.GetProcAddr("MiniDumpWriteDump");
+    _SymInitialize = (SymInitializeProc*)lib.GetProcAddr("SymInitialize");
+    _SymGetOptions = (SymGetOptionsProc*)lib.GetProcAddr("SymGetOptions");
+    _SymSetOptions = (SymSetOptionsProc*)lib.GetProcAddr("SymSetOptions");
+    _StackWalk64 =   (StackWalk64Proc*)lib.GetProcAddr("StackWalk64");
+    _SymFunctionTableAccess64 = (SymFunctionTableAccess64Proc*)lib.GetProcAddr("SymFunctionTableAccess64");
+    _SymGetModuleBase64 = (SymGetModuleBase64Proc*)lib.GetProcAddr("SymGetModuleBase64");
+    _SymFromAddr = (SymFromAddrProc*)lib.GetProcAddr("SymFromAddr");
+}
+
+static bool CanStackWalk()
+{
+    return gSymInitializeOk && _SymInitialize && _StackWalk64 && _SymFunctionTableAccess64 && _SymGetModuleBase64 && _SymFromAddr;
+}
 
 static BOOL CALLBACK OpenMiniDumpCallback(void* /*param*/, PMINIDUMP_CALLBACK_INPUT input, PMINIDUMP_CALLBACK_OUTPUT output)
 {
@@ -45,13 +114,107 @@ static BOOL CALLBACK OpenMiniDumpCallback(void* /*param*/, PMINIDUMP_CALLBACK_IN
     }
 }
 
+static void EnumerateModules(Str::Str<char> & s)
+{
+    HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, GetCurrentProcessId());
+      if (snap == INVALID_HANDLE_VALUE) return;
+
+    MODULEENTRY32 mod;
+    mod.dwSize = sizeof(mod);
+    BOOL cont = Module32First(snap, &mod);
+    while (cont) {
+        s.AppendFmt("Module: %s 0x%p 0x%x\n", mod.szModule, (void*)mod.modBaseAddr, (int)mod.modBaseSize);
+        cont = Module32Next(snap, &mod);
+    }
+    CloseHandle(snap);
+}
+
+#define MAX_NAME_LEN 512
+
+static void EnumerateCallstack(Str::Str<char>& s)
+{
+    if (!CanStackWalk())
+        return;
+
+    HANDLE hProc = GetCurrentProcess();
+    HANDLE hThread = GetCurrentThread();
+    DWORD threadId = GetCurrentThreadId();
+
+    s.AppendFmt("\nThread: 0x%x\n", (int)threadId);
+
+    DWORD symOptions =_SymGetOptions();
+    symOptions |= SYMOPT_LOAD_LINES;
+    _SymSetOptions(symOptions);
+
+    CONTEXT ctx;
+    RtlCaptureContext(&ctx);
+
+    STACKFRAME64 stackFrame;
+    memset(&stackFrame, 0, sizeof(stackFrame));
+#ifdef  _WIN64
+    stackFrame.AddrPC.Offset = ctx.Rip;
+    stackFrame.AddrFrame.Offset = ctx.Rbp;
+    stackFrame.AddrStack.Offset = ctx.Rsp;
+#else
+    stackFrame.AddrPC.Offset = ctx.Eip;
+    stackFrame.AddrFrame.Offset = ctx.Ebp;
+    stackFrame.AddrStack.Offset = ctx.Esp;
+#endif
+    stackFrame.AddrPC.Mode = AddrModeFlat;
+    stackFrame.AddrFrame.Mode = AddrModeFlat;
+    stackFrame.AddrStack.Mode = AddrModeFlat;
+
+    char buf[sizeof(SYMBOL_INFO) + MAX_NAME_LEN * sizeof(char)];
+    SYMBOL_INFO *symInfo = (SYMBOL_INFO*)buf;
+
+    int framesCount = 0;
+    int maxFrames = 32;
+    while (framesCount < maxFrames) {
+        BOOL ok = _StackWalk64( IMAGE_FILE_MACHINE_I386, hProc, hThread,
+            &stackFrame, &ctx, NULL, _SymFunctionTableAccess64,
+            _SymGetModuleBase64, NULL);
+        if (!ok)
+            break;
+
+        memset(buf, 0, sizeof(buf));
+        symInfo->SizeOfStruct = sizeof(SYMBOL_INFO);
+        symInfo->MaxNameLen = MAX_NAME_LEN;
+        DWORD64 addr = stackFrame.AddrPC.Offset;
+
+        DWORD64 symDisp = 0;
+        ok = _SymFromAddr(hProc, addr, &symDisp, symInfo);
+        if (ok) {
+            char *name = &(symInfo->Name[0]);
+            s.AppendFmt("0x%x %s\n", (int)addr, name);
+        }
+        framesCount++;
+    }
+}
+
+static char *BuildCrashInfoText()
+{
+    Str::Str<char> s;
+    s.AppendFmt("Ver: %s\n", QM(CURR_VERSION));
+    s.Append("\n");
+    EnumerateModules(s);
+    s.Append("\n");
+    EnumerateCallstack(s);
+    return s.StealData();
+}
+
+void SaveCrashInfoText()
+{
+    LoadDbgHelpFuncs();
+    char *s = BuildCrashInfoText();
+    free(s);
+}
+
 static DWORD WINAPI CrashDumpThread(LPVOID data)
 {
     WaitForSingleObject(g_dumpEvent, INFINITE);
+    LoadDbgHelpFuncs();
 
-    WinLibrary lib(_T("DBGHELP.DLL"));
-    MiniDumpWriteProc *pMiniDumpWriteDump = (MiniDumpWriteProc *)lib.GetProcAddr("MiniDumpWriteDump");
-    if (!pMiniDumpWriteDump)
+    if (!_MiniDumpWriteDump)
     {
 #ifdef SVN_PRE_RELEASE_VER
         MessageBox(NULL, _T("Couldn't create a crashdump file: dbghelp.dll is unexpectedly missing."), _TR("SumatraPDF crashed"), MB_ICONEXCLAMATION | MB_OK);
@@ -74,9 +237,11 @@ static DWORD WINAPI CrashDumpThread(LPVOID data)
         type = (MINIDUMP_TYPE)(type | MiniDumpWithDataSegs | MiniDumpWithHandleData | MiniDumpWithPrivateReadWriteMemory);
     MINIDUMP_CALLBACK_INFORMATION mci = { OpenMiniDumpCallback, NULL }; 
 
-    pMiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), dumpFile, type, &mei, NULL, &mci);
+    _MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), dumpFile, type, &mei, NULL, &mci);
 
     CloseHandle(dumpFile);
+
+    SaveCrashInfoText();
 
     // exec_with_params(g_exePath, CMD_ARG_SEND_CRASHDUMP, TRUE /* hidden */);
     return 0;
@@ -108,6 +273,10 @@ static LONG WINAPI DumpExceptionHandler(EXCEPTION_POINTERS *exceptionInfo)
 
 void InstallCrashHandler(const TCHAR *crashDumpPath)
 {
+    LoadDbgHelpFuncs();
+    //TODO: crashes, but why?
+    //if (_SymInitialize)
+    //   gSymInitializeOk = _SymInitialize(GetCurrentProcess(), NULL, FALSE);
     if (NULL == crashDumpPath)
         return;
     g_crashDumpPath.Set(Str::Dup(crashDumpPath));
