@@ -50,10 +50,25 @@ public:
 class ScopedGdiPlus {
 protected:
     Gdiplus::GdiplusStartupInput si;
-    ULONG_PTR           token;
+    Gdiplus::GdiplusStartupOutput so;
+    ULONG_PTR token, hookToken;
+    bool noBgThread;
+
 public:
-    ScopedGdiPlus()  { Gdiplus::GdiplusStartup(&token, &si, NULL); }
-    ~ScopedGdiPlus() { Gdiplus::GdiplusShutdown(token); }
+    // suppress the GDI+ background thread when initiating in WinMain,
+    // as that thread causes DDE messages to be sent too early and
+    // thus unexpected timeouts
+    ScopedGdiPlus(bool inWinMain=false) : noBgThread(inWinMain) {
+        si.SuppressBackgroundThread = noBgThread;
+        Gdiplus::GdiplusStartup(&token, &si, &so);
+        if (noBgThread)
+            so.NotificationHook(&hookToken);
+    }
+    ~ScopedGdiPlus() {
+        if (noBgThread)
+            so.NotificationUnhook(hookToken);
+        Gdiplus::GdiplusShutdown(token);
+    }
 };
 
 class ClientRect : public RectI {
