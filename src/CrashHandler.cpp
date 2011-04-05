@@ -116,6 +116,7 @@ static BOOL CALLBACK OpenMiniDumpCallback(void* /*param*/, PMINIDUMP_CALLBACK_IN
     }
 }
 
+// returns false for 32bit processes running on 64bit os
 static bool Is64Bit()
 {
     typedef void (WINAPI * GetSystemInfoProc)(LPSYSTEM_INFO);
@@ -151,6 +152,21 @@ static char *OsNameFromVer(OSVERSIONINFOEX ver)
     }
 }
 
+
+static bool IsWow64()
+{
+    typedef BOOL (WINAPI *IsWow64ProcessProc)(HANDLE, PBOOL);
+    IsWow64ProcessProc _IsWow64Process;
+
+    WinLibrary lib(_T("kernel32.dll"));
+    _IsWow64Process = (IsWow64ProcessProc)lib.GetProcAddr("IsWow64Process");
+    if (!_IsWow64Process)
+        return false;
+    BOOL isWow = FALSE;
+    _IsWow64Process(GetCurrentProcess(), &isWow);
+    return isWow;
+}
+
 static void GetOsVersion(Str::Str<char>& s)
 {
     OSVERSIONINFOEX ver;
@@ -162,10 +178,9 @@ static void GetOsVersion(Str::Str<char>& s)
     char *os = OsNameFromVer(ver);
     int servicePackMajor = ver.wServicePackMajor;
     int servicePackMinor = ver.wServicePackMinor;
-    char *tmp = Is64Bit() ? "32bit" : "64bit";
-    // TOOD: also add WOW info via IsWow64Process() because Is64Bit() returns
-    // false for 32bit processes running on 64bit os
-    s.AppendFmt("OS: %s %d.%d %s\n", os, servicePackMajor, servicePackMinor, tmp);
+    char *is64bit = Is64Bit() ? "32bit" : "64bit";
+    char *isWow = IsWow64() ? "" : "Wow64";
+    s.AppendFmt("OS: %s %d.%d %s %s\n", os, servicePackMajor, servicePackMinor, is64bit, isWow);
 }
 
 static void GetModules(Str::Str<char>& s)
