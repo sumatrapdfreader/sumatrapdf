@@ -11,6 +11,7 @@ Lang: gr Greek (Ελληνικά)
 Contributor: Giorgos Dimopoulos (geodimo1985@gmail.com)
 Contributor: George Georgiou (geonetor@yahoo.gr)
 Contributor: Dimitris Mytilinaios
+Contributor: XhmikosR
 
 &About
 &Σχετικά...
@@ -26,6 +27,9 @@ Contributor: Dimitris Mytilinaios
 
 &Close\tCtrl-W
 &Κλείσιμο\tCtrl-W
+
+&Copy Selection
+&Αντιγραφή επιλογής
 
 &Copy Selection\tCtrl-C
 Αντιγραφή επιλεγμένων\tCtrl-C
@@ -93,6 +97,9 @@ Contributor: Dimitris Mytilinaios
 &Previous Page\tLeft Arrow
 Προηγούμενη σελίδα\t<-
 
+&Print...
+&Εκτύπωση
+
 &Print...\tCtrl-P
 &Εκτύπωση\tCtrl-P
 
@@ -104,6 +111,9 @@ Contributor: Dimitris Mytilinaios
 
 &Remember these settings for each document
 &Απομνημόνευση ρυθμίσεων για κάθε έγγραφο
+
+&Save As...
+&Αποθήκευση ως...
 
 &Save As...\tCtrl-S
 &Αποθήκευση ως\tCtrl-S
@@ -200,6 +210,12 @@ Continuous Facing
 
 Contribute Translation
 Βοηθήστε στη μετάφραση
+
+Copy &Link Address
+Αντιγραφή &Διεύθυνσης
+
+Copy Co&mment
+Αντιγραφή σ&χολίου
 
 Copying text was denied (copying as image only)
 Η αντιγραφή κειμένου δεν επετράπη (μόνο ως εικόνα)
@@ -375,6 +391,9 @@ Open in &Foxit Reader
 Open in PDF-XChange
 Άνοιγμα με PDF-XChange
 
+P&roperties
+&Ιδιότητες
+
 P&roperties\tCtrl-D
 &Ιδιότητες\tCtrl-D
 
@@ -434,6 +453,9 @@ Rotate &Right\tCtrl-Shift-+
 
 Searching %d of %d...
 Αναζήτηση %d από %d...
+
+Select &All
+Επιλογή Ό&λων
 
 Select &All\tCtrl-A
 Επιλογή όλων\tCtrl-A
@@ -527,13 +549,4 @@ copying text
 
 printing document
 εκτύπωση εγγράφου
-
-# Untranslated:
-#&Copy Selection
-#&Print...
-#&Save As...
-#Copy &Link Address
-#Copy Co&mment
-#P&roperties
-#Select &All
 
