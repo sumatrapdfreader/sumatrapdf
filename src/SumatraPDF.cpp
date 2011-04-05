@@ -6488,6 +6488,8 @@ InitMouseWheelInfo:
             return 0;
 
         case WM_MOUSEWHEEL:
+            if (!win)
+                break;
             // Pass the message to the canvas' window procedure
             // (required since the canvas itself never has the focus and thus
             // never receives WM_MOUSEWHEEL messages)
