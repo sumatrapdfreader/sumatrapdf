@@ -62,22 +62,12 @@ fz_error pdf_getmediabox(fz_rect *mediabox, fz_obj *page)
     return fz_okay;
 }
 
-fz_error pdf_runpagefortarget(pdf_xref *xref, pdf_page *page, fz_device *dev, fz_matrix ctm, RenderTarget target)
+char *fz_namefortarget(RenderTarget target)
 {
-    fz_obj *targetName = fz_newname(
-        target == Target_View ? "View" :
-        target == Target_Print ? "Print" :
-        target == Target_Export ? "Export" :
-        "<unknown>"
-    );
-    fz_dictputs(xref->trailer, "_MuPDF_OCG_Usage", targetName);
-
-    fz_error error = pdf_runpage(xref, page, dev, ctm);
-
-    fz_dictdels(xref->trailer, "_MuPDF_OCG_Usage");
-    fz_dropobj(targetName);
-
-    return error;
+    return target == Target_View ? "View" :
+           target == Target_Print ? "Print" :
+           target == Target_Export ? "Export" :
+           "<unknown>";
 }
 
 HBITMAP fz_pixtobitmap(HDC hDC, fz_pixmap *pixmap, bool paletted)
@@ -351,9 +341,9 @@ bool PdfEngine::load(const TCHAR *fileName, PasswordUI *pwdUI)
     }
     else {
 #ifdef UNICODE
-        file = fz_openfile2W(_fileName);
+        file = fz_openfilew(_fileName);
 #else
-        file = fz_openfile2(_fileName);
+        file = fz_openfile(_fileName);
 #endif
     }
     if (embedMarks)
@@ -597,7 +587,7 @@ PdfPageRun *PdfEngine::getPageRun(pdf_page *page, bool tryOnly)
 
         fz_device *dev = fz_newlistdevice(list);
         EnterCriticalSection(&_xrefAccess);
-        fz_error error = pdf_runpagefortarget(_xref, page, dev, fz_identity, Target_View);
+        fz_error error = pdf_runpage(_xref, page, dev, fz_identity);
         fz_freedevice(dev);
         if (error)
             fz_freedisplaylist(list);
@@ -629,13 +619,15 @@ fz_error PdfEngine::runPage(pdf_page *page, fz_device *dev, fz_matrix ctm, Rende
 
     if (Target_View == target && (run = getPageRun(page, !cacheRun))) {
         EnterCriticalSection(&_xrefAccess);
-        fz_executedisplaylist2(run->list, dev, ctm, fz_roundrect(bounds));
+        fz_executedisplaylist(run->list, dev, ctm, fz_roundrect(bounds));
         LeaveCriticalSection(&_xrefAccess);
         dropPageRun(run);
     }
     else {
+        char *targetName = target == Target_Print ? "Print" :
+                           target == Target_Export ? "Export" : "View";
         EnterCriticalSection(&_xrefAccess);
-        error = pdf_runpagefortarget(_xref, page, dev, ctm, target);
+        error = pdf_runpagewithtarget(_xref, page, dev, ctm, targetName);
         LeaveCriticalSection(&_xrefAccess);
     }
     fz_freedevice(dev);

@@ -90,6 +90,8 @@ fz_freedisplaynode(fz_displaynode *node)
 	case FZ_CMDENDMASK:
 	case FZ_CMDBEGINGROUP:
 	case FZ_CMDENDGROUP:
+	case FZ_CMDBEGINTILE:
+	case FZ_CMDENDTILE:
 		break;
 	}
 	if (node->stroke)
@@ -176,7 +178,7 @@ fz_listcliptext(void *user, fz_text *text, fz_matrix ctm, int accumulate)
 	node->rect = fz_boundtext(text, ctm);
 	node->item.text = fz_clonetext(text);
 	node->flag = accumulate;
-	// SumatraPDF: when accumulating, be conservative about clipping
+	/* when accumulating, be conservative about culling */
 	if (accumulate)
 		node->rect = fz_infiniterect;
 	fz_appenddisplaynode(user, node);
@@ -291,6 +293,29 @@ fz_listendgroup(void *user)
 	fz_appenddisplaynode(user, node);
 }
 
+static void
+fz_listbegintile(void *user, fz_rect area, fz_rect view, float xstep, float ystep, fz_matrix ctm)
+{
+	fz_displaynode *node;
+	node = fz_newdisplaynode(FZ_CMDBEGINTILE, ctm, nil, nil, 0);
+	node->rect = area;
+	node->color[0] = xstep;
+	node->color[1] = ystep;
+	node->color[2] = view.x0;
+	node->color[3] = view.y0;
+	node->color[4] = view.x1;
+	node->color[5] = view.y1;
+	fz_appenddisplaynode(user, node);
+}
+
+static void
+fz_listendtile(void *user)
+{
+	fz_displaynode *node;
+	node = fz_newdisplaynode(FZ_CMDENDTILE, fz_identity, nil, nil, 0);
+	fz_appenddisplaynode(user, node);
+}
+
 fz_device *
 fz_newlistdevice(fz_displaylist *list)
 {
@@ -319,6 +344,9 @@ fz_newlistdevice(fz_displaylist *list)
 	dev->begingroup = fz_listbegingroup;
 	dev->endgroup = fz_listendgroup;
 
+	dev->begintile = fz_listbegintile;
+	dev->endtile = fz_listendtile;
+
 	return dev;
 }
 
@@ -345,33 +373,41 @@ fz_freedisplaylist(fz_displaylist *list)
 }
 
 void
-fz_executedisplaylist(fz_displaylist *list, fz_device *dev, fz_matrix topctm)
-{
-	fz_executedisplaylist2(list, dev, topctm, fz_infinitebbox);
-}
-
-/* SumatraPDF: accelerate execution through a prior visibility check */
-void
-fz_executedisplaylist2(fz_displaylist *list, fz_device *dev, fz_matrix topctm, fz_bbox bounds)
+fz_executedisplaylist(fz_displaylist *list, fz_device *dev, fz_matrix topctm, fz_bbox bounds)
 {
 	fz_displaynode *node;
 	fz_rect bbox;
-	/* SumatraPDF: accelerate execution through a prior visibility check */
-	unsigned int clipped = 0;
-	if (!fz_isinfinitebbox(bounds)) {
-		// add some fuzz at the edges, as especially glyph rects
-		// are sometimes not actually completely bounding the glyph
+	int clipped = 0;
+	int tiled = 0;
+
+	if (!fz_isinfinitebbox(bounds))
+	{
+		/* add some fuzz at the edges, as especially glyph rects
+		 * are sometimes not actually completely bounding the glyph */
 		bounds.x0 -= 20; bounds.y0 -= 20;
 		bounds.x1 += 20; bounds.y1 += 20;
 	}
+
 	for (node = list->first; node; node = node->next)
 	{
 		fz_matrix ctm = fz_concat(node->ctm, topctm);
-		/* SumatraPDF: accelerate execution through a prior visibility check */
-		if (clipped || fz_isemptybbox(fz_intersectbbox(fz_roundrect(node->rect), bounds)))
+		fz_rect rect = fz_transformrect(topctm, node->rect);
+
+		/* never skip tiles */
+		if (tiled)
+			goto visible;
+
+		/* cull objects to draw using a quick visibility test */
+		if (clipped || fz_isemptybbox(fz_intersectbbox(fz_roundrect(rect), bounds)))
 		{
 			switch (node->cmd)
 			{
+			case FZ_CMDBEGINTILE:
+				tiled++;
+				goto visible;
+			case FZ_CMDENDTILE:
+				tiled--;
+				goto visible;
 			case FZ_CMDCLIPPATH:
 			case FZ_CMDCLIPSTROKEPATH:
 			case FZ_CMDCLIPTEXT:
@@ -384,18 +420,19 @@ fz_executedisplaylist2(fz_displaylist *list, fz_device *dev, fz_matrix topctm, f
 			case FZ_CMDPOPCLIP:
 			case FZ_CMDENDGROUP:
 				if (!clipped)
-					break;
+					goto visible;
 				clipped--;
 				continue;
 			case FZ_CMDENDMASK:
 				if (!clipped)
-					break;
+					goto visible;
 				continue;
 			default:
 				continue;
 			}
 		}
 
+visible:
 		switch (node->cmd)
 		{
 		case FZ_CMDFILLPATH:
@@ -461,7 +498,17 @@ fz_executedisplaylist2(fz_displaylist *list, fz_device *dev, fz_matrix topctm, f
 		case FZ_CMDENDGROUP:
 			dev->endgroup(dev->user);
 			break;
+		case FZ_CMDBEGINTILE:
+			bbox.x0 = node->color[2];
+			bbox.y0 = node->color[3];
+			bbox.x1 = node->color[4];
+			bbox.y1 = node->color[5];
+			dev->begintile(dev->user, node->rect, bbox,
+				node->color[0], node->color[1], ctm);
+			break;
+		case FZ_CMDENDTILE:
+			dev->endtile(dev->user);
+			break;
 		}
 	}
-	assert(clipped == 0); /* SumatraPDF */
 }

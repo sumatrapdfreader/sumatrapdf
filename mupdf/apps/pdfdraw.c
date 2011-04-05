@@ -132,7 +132,7 @@ static void drawbmp(pdf_xref *xref, pdf_page *page, fz_displaylist *list, int pa
 
 	dev = fz_newgdiplusdevice(hDC, bbox);
 	if (list)
-		fz_executedisplaylist2(list, dev, ctm, fz_roundrect(page->mediabox));
+		fz_executedisplaylist(list, dev, ctm, fz_roundrect(page->mediabox));
 	else
 		pdf_runpage(xref, page, dev, ctm);
 	fz_freedevice(dev);
@@ -230,7 +230,7 @@ static void drawpage(pdf_xref *xref, int pagenum)
 		dev = fz_newtracedevice();
 		printf("<page number=\"%d\">\n", pagenum);
 		if (list)
-			fz_executedisplaylist(list, dev, fz_identity);
+			fz_executedisplaylist(list, dev, fz_identity, fz_infinitebbox);
 		else
 			pdf_runpage(xref, page, dev, fz_identity);
 		printf("</page>\n");
@@ -242,7 +242,7 @@ static void drawpage(pdf_xref *xref, int pagenum)
 		fz_textspan *text = fz_newtextspan();
 		dev = fz_newtextdevice(text);
 		if (list)
-			fz_executedisplaylist(list, dev, fz_identity);
+			fz_executedisplaylist(list, dev, fz_identity, fz_infinitebbox);
 		else
 			pdf_runpage(xref, page, dev, fz_identity);
 		fz_freedevice(dev);
@@ -288,7 +288,7 @@ static void drawpage(pdf_xref *xref, int pagenum)
 
 		dev = fz_newdrawdevice(glyphcache, pix);
 		if (list)
-			fz_executedisplaylist(list, dev, ctm);
+			fz_executedisplaylist(list, dev, ctm, bbox);
 		else
 			pdf_runpage(xref, page, dev, ctm);
 		fz_freedevice(dev);

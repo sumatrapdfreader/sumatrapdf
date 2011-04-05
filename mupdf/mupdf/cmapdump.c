@@ -51,7 +51,6 @@ main(int argc, char **argv)
 	char name[256];
 	char *realname;
 	int i, k;
-	int fd;
 
 	if (argc < 3)
 	{
@@ -89,14 +88,9 @@ main(int argc, char **argv)
 		strcpy(name, realname);
 		clean(name);
 
-		fd = open(argv[i], O_BINARY | O_RDONLY, 0666);
-		if (fd < 0)
-		{
+		fi = fz_openfile(argv[i]);
+		if (!fi)
 			fz_throw("cmapdump: could not open input file '%s'\n", argv[i]);
-			return 1;
-		}
-
-		fi = fz_openfile(fd);
 
 		error = pdf_parsecmap(&cmap, fi);
 		if (error)

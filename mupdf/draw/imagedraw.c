@@ -289,14 +289,20 @@ fz_paintimageimp(fz_pixmap *dst, fz_bbox scissor, fz_pixmap *img, fz_matrix ctm,
 
 	/* turn on interpolation for upscaled and non-rectilinear transforms */
 	dolerp = 0;
-	if (img->interpolate)
+	if (!fz_isrectilinear(ctm))
+		dolerp = 1;
+	if (sqrtf(ctm.a * ctm.a + ctm.b * ctm.b) > img->w)
+		dolerp = 1;
+	if (sqrtf(ctm.c * ctm.c + ctm.d * ctm.d) > img->h)
+		dolerp = 1;
+
+	/* except when we shouldn't, at large magnifications */
+	if (!img->interpolate)
 	{
-		if (!fz_isrectilinear(ctm))
-			dolerp = 1;
-		if (sqrtf(ctm.a * ctm.a + ctm.b * ctm.b) > img->w)
-			dolerp = 1;
-		if (sqrtf(ctm.c * ctm.c + ctm.d * ctm.d) > img->h)
-			dolerp = 1;
+		if (sqrtf(ctm.a * ctm.a + ctm.b * ctm.b) > img->w * 2)
+			dolerp = 0;
+		if (sqrtf(ctm.c * ctm.c + ctm.d * ctm.d) > img->h * 2)
+			dolerp = 0;
 	}
 	/* SumatraPDF: also interpolate images that aren't to be interpolated up to 200% */
 	else if (_hypotf(ctm.a, ctm.b) > img->w && _hypotf(ctm.c, ctm.d) > img->h &&

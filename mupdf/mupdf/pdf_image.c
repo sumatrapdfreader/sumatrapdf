@@ -157,10 +157,6 @@ pdf_loadimageimp(fz_pixmap **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict, fz
 	}
 
 	stride = (w * n * bpc + 7) / 8;
-	/* SumatraPDF: don't abort on OOM when loading images */
-	samples = fz_calloc_no_abort(h, stride);
-	if (!samples)
-		return fz_throw("image too big to load");
 
 	if (cstm)
 	{
@@ -175,9 +171,19 @@ pdf_loadimageimp(fz_pixmap **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict, fz
 				fz_dropcolorspace(colorspace);
 			if (mask)
 				fz_droppixmap(mask);
-			fz_free(samples); /* SumatraPDF: don't leak samples */
 			return fz_rethrow(error, "cannot open image data stream (%d 0 R)", fz_tonum(dict));
 		}
+	}
+
+	/* SumatraPDF: don't abort on OOM when loading images */
+	samples = fz_calloc_no_abort(h, stride);
+	if (!samples)
+	{
+		if (colorspace)
+			fz_dropcolorspace(colorspace);
+		if (mask)
+			fz_droppixmap(mask);
+		return fz_throw("image too big to load");
 	}
 
 	len = fz_read(stm, samples, h * stride);
@@ -188,7 +194,7 @@ pdf_loadimageimp(fz_pixmap **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict, fz
 			fz_dropcolorspace(colorspace);
 		if (mask)
 			fz_droppixmap(mask);
-		fz_free(samples); /* SumatraPDF: don't leak samples */
+		fz_free(samples);
 		return fz_rethrow(len, "cannot read image data");
 	}
 

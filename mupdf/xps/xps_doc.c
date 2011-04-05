@@ -86,13 +86,14 @@ xps_add_fixed_page(xps_context *ctx, char *name, int width, int height)
 static void
 xps_free_fixed_pages(xps_context *ctx)
 {
-	xps_page *node = ctx->first_page;
-	while (node)
+	xps_page *page = ctx->first_page;
+	while (page)
 	{
-		xps_page *next = node->next;
-		fz_free(node->name);
-		fz_free(node);
-		node = next;
+		xps_page *next = page->next;
+		xps_free_page(ctx, page);
+		fz_free(page->name);
+		fz_free(page);
+		page = next;
 	}
 	ctx->first_page = NULL;
 	ctx->last_page = NULL;
@@ -101,13 +102,13 @@ xps_free_fixed_pages(xps_context *ctx)
 static void
 xps_free_fixed_documents(xps_context *ctx)
 {
-	xps_document *node = ctx->first_fixdoc;
-	while (node)
+	xps_document *doc = ctx->first_fixdoc;
+	while (doc)
 	{
-		xps_document *next = node->next;
-		fz_free(node->name);
-		fz_free(node);
-		node = next;
+		xps_document *next = doc->next;
+		fz_free(doc->name);
+		fz_free(doc);
+		doc = next;
 	}
 	ctx->first_fixdoc = NULL;
 	ctx->last_fixdoc = NULL;
@@ -333,6 +334,7 @@ xps_load_page(xps_context *ctx, int number)
 void
 xps_free_page(xps_context *ctx, xps_page *page)
 {
+	/* only free the XML contents */
 	if (page->root)
 		xml_free_element(page->root);
 	page->root = NULL;

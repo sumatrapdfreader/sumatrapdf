@@ -2,13 +2,14 @@
 #include "mupdf.h"
 
 static pdf_csi *
-pdf_newcsi(pdf_xref *xref, fz_device *dev, fz_matrix ctm)
+pdf_newcsi(pdf_xref *xref, fz_device *dev, fz_matrix ctm, char *target)
 {
 	pdf_csi *csi;
 
 	csi = fz_malloc(sizeof(pdf_csi));
 	csi->xref = xref;
 	csi->dev = dev;
+	csi->target = target;
 
 	csi->top = 0;
 	csi->obj = nil;
@@ -154,32 +155,23 @@ pdf_freecsi(pdf_csi *csi)
 	fz_free(csi);
 }
 
-/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1076 */
 static int
-pdf_isinvisibleocg(pdf_xref *xref, fz_obj *xobj)
+pdf_ishiddenocg(pdf_csi *csi, fz_obj *xobj)
 {
-	char targetState[16];
-	fz_obj *obj = fz_dictgets(xobj, "OC");
-	fz_obj *target = fz_dictgets(xref->trailer, "_MuPDF_OCG_Usage");
+	char target_state[16];
+	fz_obj *obj;
 
-	if (!obj || !fz_isdict(obj) || !fz_isname(target))
-		return 0;
+	fz_strlcpy(target_state, csi->target, sizeof target_state);
+	fz_strlcat(target_state, "State", sizeof target_state);
 
+	obj = fz_dictgets(xobj, "OC");
 	obj = fz_dictgets(obj, "OCGs");
 	if (fz_isarray(obj))
 		obj = fz_arrayget(obj, 0);
-	if (!obj || !fz_isdict(obj))
-		return 0;
-
-	obj = fz_dictget(fz_dictgets(obj, "Usage"), target);
-	if (!obj)
-		return 0;
-
-	fz_strlcpy(targetState, fz_toname(target), nelem(targetState));
-	fz_strlcat(targetState, "State", nelem(targetState));
-	obj = fz_dictgets(obj, targetState);
-
-	return fz_isname(obj) && !strcmp(fz_toname(obj), "OFF");
+	obj = fz_dictgets(obj, "Usage");
+	obj = fz_dictgets(obj, csi->target);
+	obj = fz_dictgets(obj, target_state);
+	return !strcmp(fz_toname(obj), "OFF");
 }
 
 fz_error
@@ -575,8 +567,7 @@ static fz_error pdf_run_Do(pdf_csi *csi, fz_obj *rdb)
 	if (!fz_isname(subtype))
 		return fz_throw("no XObject subtype specified");
 
-	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1076 */
-	if (pdf_isinvisibleocg(csi->xref, obj))
+	if (pdf_ishiddenocg(csi, obj))
 		return fz_okay;
 
 	if (!strcmp(fz_toname(subtype), "Form") && fz_dictgets(obj, "Subtype2"))
@@ -1409,7 +1400,7 @@ pdf_runcsibuffer(pdf_csi *csi, fz_obj *rdb, fz_buffer *contents)
 }
 
 fz_error
-pdf_runpage(pdf_xref *xref, pdf_page *page, fz_device *dev, fz_matrix ctm)
+pdf_runpagewithtarget(pdf_xref *xref, pdf_page *page, fz_device *dev, fz_matrix ctm, char *target)
 {
 	pdf_csi *csi;
 	fz_error error;
@@ -1421,7 +1412,7 @@ pdf_runpage(pdf_xref *xref, pdf_page *page, fz_device *dev, fz_matrix ctm)
 			fz_transformrect(ctm, page->mediabox),
 			0, 0, FZ_BNORMAL, 1);
 
-	csi = pdf_newcsi(xref, dev, ctm);
+	csi = pdf_newcsi(xref, dev, ctm, target);
 	error = pdf_runcsibuffer(csi, page->resources, page->contents);
 	pdf_freecsi(csi);
 	if (error)
@@ -1439,11 +1430,10 @@ pdf_runpage(pdf_xref *xref, pdf_page *page, fz_device *dev, fz_matrix ctm)
 		if (flags & (1 << 5)) /* NoView */
 			continue;
 
-		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1076 */
-		if (pdf_isinvisibleocg(xref, annot->obj))
+		if (pdf_ishiddenocg(csi, annot->obj))
 			continue;
 
-		csi = pdf_newcsi(xref, dev, ctm);
+		csi = pdf_newcsi(xref, dev, ctm, target);
 		error = pdf_runxobject(csi, page->resources, annot->ap, annot->matrix);
 		pdf_freecsi(csi);
 		if (error)
@@ -1457,9 +1447,15 @@ pdf_runpage(pdf_xref *xref, pdf_page *page, fz_device *dev, fz_matrix ctm)
 }
 
 fz_error
+pdf_runpage(pdf_xref *xref, pdf_page *page, fz_device *dev, fz_matrix ctm)
+{
+	return pdf_runpagewithtarget(xref, page, dev, ctm, "View");
+}
+
+fz_error
 pdf_runglyph(pdf_xref *xref, fz_obj *resources, fz_buffer *contents, fz_device *dev, fz_matrix ctm)
 {
-	pdf_csi *csi = pdf_newcsi(xref, dev, ctm);
+	pdf_csi *csi = pdf_newcsi(xref, dev, ctm, "View");
 	fz_error error = pdf_runcsibuffer(csi, resources, contents);
 	pdf_freecsi(csi);
 	if (error)

@@ -47,63 +47,63 @@ xps_draw_arc_segment(fz_path *path, fz_matrix mtx, float th0, float th1, int isc
 	fz_point p;
 
 	while (th1 < th0)
-		th1 += (float)M_PI * 2.0;
+		th1 += (float)M_PI * 2;
 
-	d = 1 * (float)(M_PI / 180.0); /* 1-degree precision */
+	d = (float)M_PI / 180; /* 1-degree precision */
 
 	if (iscw)
 	{
-		p.x = cos(th0);
-		p.y = sin(th0);
+		p.x = cosf(th0);
+		p.y = sinf(th0);
 		p = fz_transformpoint(mtx, p);
 		fz_lineto(path, p.x, p.y);
 		for (t = th0; t < th1; t += d)
 		{
-			p.x = cos(t);
-			p.y = sin(t);
+			p.x = cosf(t);
+			p.y = sinf(t);
 			p = fz_transformpoint(mtx, p);
 			fz_lineto(path, p.x, p.y);
 		}
-		p.x = cos(th1);
-		p.y = sin(th1);
+		p.x = cosf(th1);
+		p.y = sinf(th1);
 		p = fz_transformpoint(mtx, p);
 		fz_lineto(path, p.x, p.y);
 	}
 	else
 	{
 		th0 += (float)M_PI * 2;
-		p.x = cos(th0);
-		p.y = sin(th0);
+		p.x = cosf(th0);
+		p.y = sinf(th0);
 		p = fz_transformpoint(mtx, p);
 		fz_lineto(path, p.x, p.y);
 		for (t = th0; t > th1; t -= d)
 		{
-			p.x = cos(t);
-			p.y = sin(t);
+			p.x = cosf(t);
+			p.y = sinf(t);
 			p = fz_transformpoint(mtx, p);
 			fz_lineto(path, p.x, p.y);
 		}
-		p.x = cos(th1);
-		p.y = sin(th1);
+		p.x = cosf(th1);
+		p.y = sinf(th1);
 		p = fz_transformpoint(mtx, p);
 		fz_lineto(path, p.x, p.y);
 	}
 }
 
 /* Given two vectors find the angle between them. */
-static inline double
+static inline float
 angle_between(const fz_point u, const fz_point v)
 {
-	double det = u.x * v.y - u.y * v.x;
-	double sign = (det < 0 ? -1.0 : 1.0);
-	double magu = u.x * u.x + u.y * u.y;
-	double magv = v.x * v.x + v.y * v.y;
-	double udotv = u.x * v.x + u.y * v.y;
-	double t = udotv / (magu * magv);
+	float det = u.x * v.y - u.y * v.x;
+	float sign = (det < 0 ? -1 : 1);
+	float magu = u.x * u.x + u.y * u.y;
+	float magv = v.x * v.x + v.y * v.y;
+	float udotv = u.x * v.x + u.y * v.y;
+	float t = udotv / (magu * magv);
 	/* guard against rounding errors when near |1| (where acos will return NaN) */
-	if (t < -1.0) t = -1.0;
-	if (t > 1.0) t = 1.0;
-	return sign * acos(t);
+	if (t < -1) t = -1;
+	if (t > 1) t = 1;
+	return sign * acosf(t);
 }
 
 static void
@@ -115,13 +115,13 @@ xps_draw_arc(fz_path *path,
 	fz_matrix rotmat, revmat;
 	fz_matrix mtx;
 	fz_point pt;
-	double rx, ry;
-	double x1, y1, x2, y2;
-	double x1t, y1t;
-	double cxt, cyt, cx, cy;
-	double t1, t2, t3;
-	double sign;
-	double th1, dth;
+	float rx, ry;
+	float x1, y1, x2, y2;
+	float x1t, y1t;
+	float cxt, cyt, cx, cy;
+	float t1, t2, t3;
+	float sign;
+	float th1, dth;
 
 	pt = fz_currentpoint(path);
 	x1 = pt.x;
@@ -145,7 +145,7 @@ xps_draw_arc(fz_path *path,
 	/* F.6.6.1 -- ensure radii are positive and non-zero */
 	rx = fabsf(rx);
 	ry = fabsf(ry);
-	if (rx < 0.001 || ry < 0.001)
+	if (rx < 0.001f || ry < 0.001f)
 	{
 		fz_lineto(path, x2, y2);
 		return;
@@ -160,7 +160,7 @@ xps_draw_arc(fz_path *path,
 
 	/* F.6.6.2 -- ensure radii are large enough */
 	t1 = (x1t * x1t) / (rx * rx) + (y1t * y1t) / (ry * ry);
-	if (t1 > 1.0)
+	if (t1 > 1)
 	{
 		rx = rx * sqrtf(t1);
 		ry = ry * sqrtf(t1);
@@ -171,7 +171,7 @@ xps_draw_arc(fz_path *path,
 	t2 = (rx * rx * y1t * y1t) + (ry * ry * x1t * x1t);
 	t3 = t1 / t2;
 	/* guard against rounding errors; sqrt of negative numbers is bad for your health */
-	if (t3 < 0.0) t3 = 0.0;
+	if (t3 < 0) t3 = 0;
 	t3 = sqrtf(t3);
 
 	cxt = sign * t3 * (rx * y1t) / ry;
@@ -198,9 +198,9 @@ xps_draw_arc(fz_path *path,
 		th1 = angle_between(coord1, coord2);
 		dth = angle_between(coord3, coord4);
 		if (dth < 0 && !is_clockwise)
-			dth += ((M_PI / 180.0) * 360);
+			dth += (((float)M_PI / 180) * 360);
 		if (dth > 0 && is_clockwise)
-			dth -= ((M_PI / 180.0) * 360);
+			dth -= (((float)M_PI / 180) * 360);
 	}
 
 	mtx = fz_identity;
@@ -264,8 +264,8 @@ xps_parse_abbreviated_geometry(xps_context *ctx, char *geom, int *fill_rule)
 	old = 0;
 
 	reset_smooth = 1;
-	smooth_x = 0.0;
-	smooth_y = 0.0;
+	smooth_x = 0;
+	smooth_y = 0;
 
 	while (i < n)
 	{
@@ -277,8 +277,8 @@ xps_parse_abbreviated_geometry(xps_context *ctx, char *geom, int *fill_rule)
 
 		if (reset_smooth)
 		{
-			smooth_x = 0.0;
-			smooth_y = 0.0;
+			smooth_x = 0;
+			smooth_y = 0;
 		}
 
 		reset_smooth = 1;
@@ -629,8 +629,8 @@ xps_parse_path_figure(fz_path *path, xml_element *root, int stroking)
 
 	int is_closed = 0;
 	int is_filled = 1;
-	float start_x = 0.0;
-	float start_y = 0.0;
+	float start_x = 0;
+	float start_y = 0;
 
 	int skipped_stroke = 0;
 
@@ -892,11 +892,11 @@ xps_parse_path(xps_context *ctx, fz_matrix ctm, char *base_uri, xps_resource *di
 		if (!strcmp(stroke_line_join_att, "Bevel")) stroke.linejoin = 2;
 	}
 
-	stroke.miterlimit = 10.0;
+	stroke.miterlimit = 10;
 	if (stroke_miter_limit_att)
 		stroke.miterlimit = atof(stroke_miter_limit_att);
 
-	stroke.linewidth = 1.0;
+	stroke.linewidth = 1;
 	if (stroke_thickness_att)
 		stroke.linewidth = atof(stroke_thickness_att);
 

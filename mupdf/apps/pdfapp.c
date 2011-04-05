@@ -108,7 +108,7 @@ static void pdfapp_open_pdf(pdfapp_t *app, char *filename, int fd)
 	 * Open PDF and load xref table
 	 */
 
-	file = fz_openfile(fd);
+	file = fz_openfd(fd);
 	error = pdf_openxrefwithstream(&app->xref, file, nil);
 	if (error)
 		pdfapp_error(app, fz_rethrow(error, "cannot open document '%s'", filename));
@@ -365,7 +365,7 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repai
 		/* Extract text */
 		app->page_text = fz_newtextspan();
 		tdev = fz_newtextdevice(app->page_text);
-		fz_executedisplaylist(app->page_list, tdev, fz_identity);
+		fz_executedisplaylist(app->page_list, tdev, fz_identity, fz_infinitebbox);
 		fz_freedevice(tdev);
 	}
 
@@ -392,7 +392,7 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repai
 		app->image = fz_newpixmapwithrect(colorspace, bbox);
 		fz_clearpixmapwithcolor(app->image, 255);
 		idev = fz_newdrawdevice(app->cache, app->image);
-		fz_executedisplaylist(app->page_list, idev, ctm);
+		fz_executedisplaylist(app->page_list, idev, ctm, bbox);
 		fz_freedevice(idev);
 	}
 
@@ -472,12 +472,14 @@ static inline fz_bbox bboxcharat(fz_textspan *span, int idx)
 void pdfapp_inverthit(pdfapp_t *app)
 {
 	fz_bbox hitbox, bbox;
+	fz_matrix ctm;
 	int i;
 
 	if (app->hit < 0)
 		return;
 
 	hitbox = fz_emptybbox;
+	ctm = pdfapp_viewctm(app);
 
 	for (i = app->hit; i < app->hit + app->hitlen; i++)
 	{
@@ -485,7 +487,7 @@ void pdfapp_inverthit(pdfapp_t *app)
 		if (fz_isemptyrect(bbox))
 		{
 			if (!fz_isemptyrect(hitbox))
-				pdfapp_invert(app, hitbox);
+				pdfapp_invert(app, fz_transformbbox(ctm, hitbox));
 			hitbox = fz_emptybbox;
 		}
 		else
@@ -495,14 +497,7 @@ void pdfapp_inverthit(pdfapp_t *app)
 	}
 
 	if (!fz_isemptyrect(hitbox))
-	{
-		fz_matrix ctm;
-
-		ctm = pdfapp_viewctm(app);
-		hitbox = fz_transformbbox(ctm, hitbox);
-
-		pdfapp_invert(app, hitbox);
-	}
+		pdfapp_invert(app, fz_transformbbox(ctm, hitbox));
 }
 
 static inline int charat(fz_textspan *span, int idx)

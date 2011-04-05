@@ -47,7 +47,7 @@ xps_begin_opacity(xps_context *ctx, fz_matrix ctm, fz_rect area,
 	if (!opacity_att && !opacity_mask_tag)
 		return;
 
-	opacity = 1.0;
+	opacity = 1;
 	if (opacity_att)
 		opacity = atof(opacity_att);
 
@@ -105,9 +105,9 @@ xps_parse_render_transform(xps_context *ctx, char *transform, fz_matrix *matrix)
 	char *s = transform;
 	int i;
 
-	args[0] = 1.0; args[1] = 0.0;
-	args[2] = 0.0; args[3] = 1.0;
-	args[4] = 0.0; args[5] = 0.0;
+	args[0] = 1; args[1] = 0;
+	args[2] = 0; args[3] = 1;
+	args[4] = 0; args[5] = 0;
 
 	for (i = 0; i < 6 && *s; i++)
 	{
@@ -145,8 +145,8 @@ xps_parse_rectangle(xps_context *ctx, char *text, fz_rect *rect)
 	char *s = text;
 	int i;
 
-	args[0] = 0.0; args[1] = 0.0;
-	args[2] = 1.0; args[3] = 1.0;
+	args[0] = 0; args[1] = 0;
+	args[2] = 1; args[3] = 1;
 
 	for (i = 0; i < 4 && *s; i++)
 	{
@@ -186,10 +186,10 @@ xps_parse_color(xps_context *ctx, char *base_uri, char *string,
 
 	*csp = fz_devicergb;
 
-	samples[0] = 1.0;
-	samples[1] = 0.0;
-	samples[2] = 0.0;
-	samples[3] = 0.0;
+	samples[0] = 1;
+	samples[1] = 0;
+	samples[2] = 0;
+	samples[3] = 0;
 
 	if (string[0] == '#')
 	{
@@ -202,16 +202,16 @@ xps_parse_color(xps_context *ctx, char *base_uri, char *string,
 		}
 		else
 		{
-			samples[0] = 255.0;
+			samples[0] = 255;
 			samples[1] = unhex(string[1]) * 16 + unhex(string[2]);
 			samples[2] = unhex(string[3]) * 16 + unhex(string[4]);
 			samples[3] = unhex(string[5]) * 16 + unhex(string[6]);
 		}
 
-		samples[0] /= 255.0;
-		samples[1] /= 255.0;
-		samples[2] /= 255.0;
-		samples[3] /= 255.0;
+		samples[0] /= 255;
+		samples[1] /= 255;
+		samples[2] /= 255;
+		samples[3] /= 255;
 	}
 
 	else if (string[0] == 's' && string[1] == 'c' && string[2] == '#')
@@ -257,7 +257,7 @@ xps_parse_color(xps_context *ctx, char *base_uri, char *string,
 		}
 		while (i < n)
 		{
-			samples[i++] = 0.0;
+			samples[i++] = 0;
 		}
 
 		/* TODO: load ICC profile */

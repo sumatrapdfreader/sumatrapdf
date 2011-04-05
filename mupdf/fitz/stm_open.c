@@ -78,7 +78,7 @@ static void closefile(fz_stream *stm)
 }
 
 fz_stream *
-fz_openfile(int fd)
+fz_openfd(int fd)
 {
 	fz_stream *stm;
 	int *state;
@@ -92,24 +92,25 @@ fz_openfile(int fd)
 	return stm;
 }
 
-/* SumatraPDF: allow to open files when compiling MuPDF as a library */
 fz_stream *
-fz_openfile2(const char *name)
+fz_openfile(const char *name)
 {
-	int fd = _open(name, O_BINARY | O_RDONLY, 0);
+	int fd = open(name, O_BINARY | O_RDONLY, 0);
 	if (fd == -1)
 		return nil;
-	return fz_openfile(fd);
+	return fz_openfd(fd);
 }
 
+#ifdef _WIN32
 fz_stream *
-fz_openfile2W(const wchar_t *name)
+fz_openfilew(const wchar_t *name)
 {
 	int fd = _wopen(name, O_BINARY | O_RDONLY, 0);
 	if (fd == -1)
 		return nil;
-	return fz_openfile(fd);
+	return fz_openfd(fd);
 }
+#endif
 
 /* Memory stream */
 
@@ -132,7 +133,8 @@ static void seekbuffer(fz_stream *stm, int offset, int whence)
 
 static void closebuffer(fz_stream *stm)
 {
-	fz_dropbuffer(stm->state);
+	if (stm->state)
+		fz_dropbuffer(stm->state);
 }
 
 fz_stream *
@@ -149,6 +151,24 @@ fz_openbuffer(fz_buffer *buf)
 	stm->ep = buf->data + buf->len;
 
 	stm->pos = buf->len;
+
+	return stm;
+}
+
+fz_stream *
+fz_openmemory(unsigned char *data, int len)
+{
+	fz_stream *stm;
+
+	stm = fz_newstream(nil, readbuffer, closebuffer);
+	stm->seek = seekbuffer;
+
+	stm->bp = data;
+	stm->rp = data;
+	stm->wp = data + len;
+	stm->ep = data + len;
+
+	stm->pos = len;
 
 	return stm;
 }

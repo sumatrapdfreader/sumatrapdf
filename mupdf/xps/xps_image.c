@@ -42,8 +42,8 @@ xps_paint_image_brush(xps_context *ctx, fz_matrix ctm, fz_rect area, char *base_
 	xml_element *root, void *vimage)
 {
 	fz_pixmap *pixmap = vimage;
-	float xs = pixmap->w * 96.0 / pixmap->xres;
-	float ys = pixmap->h * 96.0 / pixmap->yres;
+	float xs = pixmap->w * 96 / pixmap->xres;
+	float ys = pixmap->h * 96 / pixmap->yres;
 	fz_matrix im = fz_scale(xs, -ys);
 	im.f = ys;
 	ctm = fz_concat(im, ctm);

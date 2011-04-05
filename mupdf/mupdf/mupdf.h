@@ -154,7 +154,6 @@ struct pdf_xref_s
 	char scratch[65536];
 };
 
-/* SumatraPDF: allow access to pdf_resolveindirect when building as libmupdf.dll */
 fz_obj *pdf_resolveindirect(fz_obj *ref);
 fz_error pdf_cacheobject(pdf_xref *, int num, int gen);
 fz_error pdf_loadobject(fz_obj **objp, pdf_xref *, int num, int gen);
@@ -609,6 +608,10 @@ struct pdf_csi_s
 	fz_device *dev;
 	pdf_xref *xref;
 
+	/* usage mode for optional content groups */
+	char *target; /* "View", "Print", "Export" */
+
+	/* interpreter stack */
 	fz_obj *obj;
 	char name[256];
 	unsigned char string[256];
@@ -657,6 +660,7 @@ void pdf_gsave(pdf_csi *csi);
 void pdf_grestore(pdf_csi *csi);
 fz_error pdf_runcsibuffer(pdf_csi *csi, fz_obj *rdb, fz_buffer *contents);
 fz_error pdf_runxobject(pdf_csi *csi, fz_obj *resources, pdf_xobject *xobj, fz_matrix transform);
+fz_error pdf_runpagewithtarget(pdf_xref *xref, pdf_page *page, fz_device *dev, fz_matrix ctm, char *target);
 fz_error pdf_runpage(pdf_xref *xref, pdf_page *page, fz_device *dev, fz_matrix ctm);
 fz_error pdf_runglyph(pdf_xref *xref, fz_obj *resources, fz_buffer *contents, fz_device *dev, fz_matrix ctm);
 

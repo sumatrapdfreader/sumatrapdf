@@ -55,8 +55,8 @@ xps_decode_jpeg(fz_pixmap **imagep, byte *rbuf, int rlen)
 	struct jpeg_source_mgr src;
 	unsigned char *row[1], *sp, *dp;
 	fz_colorspace *colorspace;
-	int k;
 	unsigned int x;
+	int k;
 
 	fz_pixmap *image = NULL;
 
@@ -103,8 +103,8 @@ xps_decode_jpeg(fz_pixmap **imagep, byte *rbuf, int rlen)
 	}
 	else if (cinfo.density_unit == 2)
 	{
-		image->xres = cinfo.X_density * 2.54;
-		image->yres = cinfo.Y_density * 2.54;
+		image->xres = cinfo.X_density * 254 / 100;
+		image->yres = cinfo.Y_density * 254 / 100;
 	}
 
 	fz_clearpixmap(image);

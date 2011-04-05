@@ -45,6 +45,8 @@ int gettimeofday(struct timeval *tv, struct timezone *tz);
 #define snprintf _snprintf
 #define strtoll _strtoi64
 
+#define roundf(val) floorf((val) + 0.5);
+
 #else /* Unix or close enough */
 
 #include <unistd.h>
@@ -524,11 +526,11 @@ struct fz_stream_s
 	unsigned char buf[4096];
 };
 
-fz_stream *fz_openfile(int file);
-/* SumatraPDF: allow to open files when compiling MuPDF as a library */
-fz_stream *fz_openfile2(const char *name);
-fz_stream *fz_openfile2W(const wchar_t *name);
+fz_stream *fz_openfd(int file);
+fz_stream *fz_openfile(const char *filename);
+fz_stream *fz_openfilew(const wchar_t *filename); /* only on win32 */
 fz_stream *fz_openbuffer(fz_buffer *buf);
+fz_stream *fz_openmemory(unsigned char *data, int len);
 void fz_close(fz_stream *stm);
 
 fz_stream *fz_newstream(void*, int(*)(fz_stream*, unsigned char*, int), void(*)(fz_stream *));
@@ -1039,6 +1041,9 @@ struct fz_device_s
 	void (*endmask)(void *);
 	void (*begingroup)(void *, fz_rect, int isolated, int knockout, fz_blendmode blendmode, float alpha);
 	void (*endgroup)(void *);
+
+	void (*begintile)(void *, fz_rect area, fz_rect view, float xstep, float ystep, fz_matrix ctm);
+	void (*endtile)(void *);
 };
 
 fz_device *fz_newdevice(void *user);
@@ -1111,6 +1116,8 @@ typedef enum fz_displaycommand_e
 	FZ_CMDENDMASK,
 	FZ_CMDBEGINGROUP,
 	FZ_CMDENDGROUP,
+	FZ_CMDBEGINTILE,
+	FZ_CMDENDTILE
 } fz_displaycommand;
 
 struct fz_displaynode_s
@@ -1142,9 +1149,7 @@ struct fz_displaylist_s
 fz_displaylist *fz_newdisplaylist(void);
 void fz_freedisplaylist(fz_displaylist *list);
 fz_device *fz_newlistdevice(fz_displaylist *list);
-void fz_executedisplaylist(fz_displaylist *list, fz_device *dev, fz_matrix ctm);
-/* SumatraPDF: speed up drawing by executing only nodes within visible bounds */
-void fz_executedisplaylist2(fz_displaylist *list, fz_device *dev, fz_matrix ctm, fz_bbox bounds);
+void fz_executedisplaylist(fz_displaylist *list, fz_device *dev, fz_matrix ctm, fz_bbox area);
 
 /*
  * Function pointers for plotting functions.
@@ -1212,6 +1217,7 @@ void fz_paintimagecolor(fz_pixmap *dst, fz_bbox scissor, fz_pixmap *img, fz_matr
 
 void fz_paintpixmap(fz_pixmap *dst, fz_pixmap *src, int alpha);
 void fz_paintpixmapmask(fz_pixmap *dst, fz_pixmap *src, fz_pixmap *msk);
+void fz_paintpixmapbbox(fz_pixmap *dst, fz_pixmap *src, int alpha, fz_bbox bbox);
 
 void fz_blendpixmap(fz_pixmap *dst, fz_pixmap *src, int alpha, fz_blendmode blendmode);
 

@@ -253,6 +253,23 @@ fz_traceendgroup(void *user)
 	printf("</group>\n");
 }
 
+static void
+fz_tracebegintile(void *user, fz_rect area, fz_rect view, float xstep, float ystep, fz_matrix ctm)
+{
+	printf("<tile ");
+	printf("area=\"%g %g %g %g\" ", area.x0, area.y0, area.x1, area.y1);
+	printf("view=\"%g %g %g %g\" ", view.x0, view.y0, view.x1, view.y1);
+	printf("xstep=\"%g\" ystep=\"%g\" ", xstep, ystep);
+	fz_tracematrix(ctm);
+	printf(">\n");
+}
+
+static void
+fz_traceendtile(void *user)
+{
+	printf("</tile>\n");
+}
+
 fz_device *fz_newtracedevice(void)
 {
 	fz_device *dev = fz_newdevice(nil);
@@ -279,6 +296,9 @@ fz_device *fz_newtracedevice(void)
 	dev->endmask = fz_traceendmask;
 	dev->begingroup = fz_tracebegingroup;
 	dev->endgroup = fz_traceendgroup;
+
+	dev->begintile = fz_tracebegintile;
+	dev->endtile = fz_traceendtile;
 
 	return dev;
 }

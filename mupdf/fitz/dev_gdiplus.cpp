@@ -1184,6 +1184,18 @@ fz_gdiplusendgroup(void *user)
 }
 
 extern "C" static void
+fz_gdiplusbegintile(void *user, fz_rect area, fz_rect view, float xstep, float ystep, fz_matrix ctm)
+{
+	// TODO: implement me
+}
+
+extern "C" static void
+fz_gdiplusendtile(void *user)
+{
+	// TODO: implement me
+}
+
+extern "C" static void
 fz_gdiplusfreeuser(void *user)
 {
 	delete (userData *)user;
@@ -1227,6 +1239,9 @@ fz_newgdiplusdevice(void *hDC, fz_bbox baseClip)
 	dev->endmask = fz_gdiplusendmask;
 	dev->begingroup = fz_gdiplusbegingroup;
 	dev->endgroup = fz_gdiplusendgroup;
+	
+	dev->begintile = fz_gdiplusbegintile;
+	dev->endtile = fz_gdiplusendtile;
 	
 	return dev;
 }

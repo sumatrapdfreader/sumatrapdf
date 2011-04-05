@@ -120,10 +120,11 @@ EXPORTS
 	fz_dropbuffer
 	fz_resizebuffer
 	fz_growbuffer
+	fz_openfd
 	fz_openfile
-	fz_openfile2
-	fz_openfile2W
+	fz_openfilew
 	fz_openbuffer
+	fz_openmemory
 	fz_close
 	fz_newstream
 	fz_keepstream
@@ -235,7 +236,6 @@ EXPORTS
 	fz_freedisplaylist
 	fz_newlistdevice
 	fz_executedisplaylist
-	fz_executedisplaylist2
 	fz_accelerate
 	fz_decodetile
 	fz_decodeindexedtile
@@ -246,6 +246,7 @@ EXPORTS
 	fz_paintimagecolor
 	fz_paintpixmap
 	fz_paintpixmapmask
+	fz_paintpixmapbbox
 	fz_blendpixmap
 
 ; MuPDF exports
@@ -394,6 +395,7 @@ EXPORTS
 	pdf_grestore
 	pdf_runcsibuffer
 	pdf_runxobject
+	pdf_runpagewithtarget
 	pdf_runpage
 	pdf_runglyph
 	pdf_keepmaterial

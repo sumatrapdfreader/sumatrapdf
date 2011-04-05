@@ -451,6 +451,11 @@ static void xps_free_font_func(void *ptr)
 	fz_dropfont(ptr);
 }
 
+static void xps_free_colorspace_func(void *ptr)
+{
+	fz_dropcolorspace(ptr);
+}
+
 int
 xps_free_context(xps_context *ctx)
 {
@@ -459,14 +464,19 @@ xps_free_context(xps_context *ctx)
 	if (ctx->file)
 		fclose(ctx->file);
 
+	if (ctx->start_part)
+		fz_free(ctx->start_part);
+
 	for (i = 0; i < ctx->zip_count; i++)
 		fz_free(ctx->zip_table[i].name);
 	fz_free(ctx->zip_table);
 
 	xps_hash_free(ctx->font_table, xps_free_key_func, xps_free_font_func);
-	xps_hash_free(ctx->colorspace_table, xps_free_key_func, NULL);
+	xps_hash_free(ctx->colorspace_table, xps_free_key_func, xps_free_colorspace_func);
 
 	xps_free_page_list(ctx);
+
+	fz_free(ctx);
 
 	return 0;
 }

@@ -322,13 +322,13 @@ xps_draw_radial_gradient(xps_context *ctx, fz_matrix ctm,
 		yrad = atof(radius_y_att);
 
 	/* scale the ctm to make ellipses */
-	ctm = fz_concat(fz_scale(1.0, yrad / xrad), ctm);
+	ctm = fz_concat(fz_scale(1, yrad / xrad), ctm);
 
 	invscale = xrad / yrad;
 	y0 = y0 * invscale;
 	y1 = y1 * invscale;
 
-	r0 = 0.0;
+	r0 = 0;
 	r1 = xrad;
 
 	xps_draw_one_radial_gradient(ctx, ctm, stops, count, 1, x0, y0, r0, x1, y1, r1);

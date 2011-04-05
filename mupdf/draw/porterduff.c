@@ -347,6 +347,36 @@ fz_paintspan(byte * restrict dp, byte * restrict sp, int n, int w, int alpha)
  */
 
 void
+fz_paintpixmapbbox(fz_pixmap *dst, fz_pixmap *src, int alpha, fz_bbox bbox)
+{
+	unsigned char *sp, *dp;
+	int x, y, w, h, n;
+
+	assert(dst->n == src->n);
+
+	bbox = fz_intersectbbox(bbox, fz_boundpixmap(dst));
+	bbox = fz_intersectbbox(bbox, fz_boundpixmap(src));
+
+	x = bbox.x0;
+	y = bbox.y0;
+	w = bbox.x1 - bbox.x0;
+	h = bbox.y1 - bbox.y0;
+	if ((w | h) == 0)
+		return;
+
+	n = src->n;
+	sp = src->samples + ((y - src->y) * src->w + (x - src->x)) * src->n;
+	dp = dst->samples + ((y - dst->y) * dst->w + (x - dst->x)) * dst->n;
+
+	while (h--)
+	{
+		fz_paintspan(dp, sp, n, w, alpha);
+		sp += src->w * n;
+		dp += dst->w * n;
+	}
+}
+
+void
 fz_paintpixmap(fz_pixmap *dst, fz_pixmap *src, int alpha)
 {
 	unsigned char *sp, *dp;

@@ -3,6 +3,8 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
+#define TILE
+
 void
 pdf_initgstate(pdf_gstate *gs, fz_matrix ctm)
 {
@@ -152,13 +154,13 @@ pdf_setshade(pdf_csi *csi, int what, fz_shade *shade)
 }
 
 static void
-pdf_showpattern(pdf_csi *csi, pdf_pattern *pat, fz_rect bbox, int what)
+pdf_showpattern(pdf_csi *csi, pdf_pattern *pat, fz_rect area, int what)
 {
 	pdf_gstate *gstate;
 	fz_matrix ptm, invptm;
 	fz_matrix oldtopctm;
 	fz_error error;
-	int x, y, x0, y0, x1, y1;
+	int x0, y0, x1, y1;
 	int oldtop;
 
 	pdf_gsave(csi);
@@ -199,33 +201,51 @@ pdf_showpattern(pdf_csi *csi, pdf_pattern *pat, fz_rect bbox, int what)
 
 	/* patterns are painted using the ctm in effect at the beginning of the content stream */
 	/* get bbox of shape in pattern space for stamping */
-	bbox = fz_transformrect(invptm, bbox);
-	x0 = floorf(bbox.x0 / pat->xstep);
-	y0 = floorf(bbox.y0 / pat->ystep);
-	x1 = ceilf(bbox.x1 / pat->xstep);
-	y1 = ceilf(bbox.y1 / pat->ystep);
+	area = fz_transformrect(invptm, area);
+	x0 = floorf(area.x0 / pat->xstep);
+	y0 = floorf(area.y0 / pat->ystep);
+	x1 = ceilf(area.x1 / pat->xstep);
+	y1 = ceilf(area.y1 / pat->ystep);
 
 	oldtopctm = csi->topctm;
 	oldtop = csi->gtop;
 
-	for (y = y0; y < y1; y++)
+#ifdef TILE
+	if ((x1 - x0) * (y1 - y0) > 0)
 	{
-		for (x = x0; x < x1; x++)
+		csi->dev->begintile(csi->dev->user, area, pat->bbox, pat->xstep, pat->ystep, ptm);
+		gstate->ctm = ptm;
+		csi->topctm = gstate->ctm;
+		error = pdf_runcsibuffer(csi, pat->resources, pat->contents);
+		if (error)
+			fz_catch(error, "cannot render pattern tile");
+		while (oldtop < csi->gtop)
+			pdf_grestore(csi);
+		csi->dev->endtile(csi->dev->user);
+	}
+#else
+	{
+		int x, y;
+		for (y = y0; y < y1; y++)
 		{
-			gstate->ctm = fz_concat(fz_translate(x * pat->xstep, y * pat->ystep), ptm);
-			csi->topctm = gstate->ctm;
-			error = pdf_runcsibuffer(csi, pat->resources, pat->contents);
-			while (oldtop < csi->gtop)
-				pdf_grestore(csi);
-			if (error)
+			for (x = x0; x < x1; x++)
 			{
-				fz_catch(error, "cannot render pattern tile");
-				goto cleanup;
+				gstate->ctm = fz_concat(fz_translate(x * pat->xstep, y * pat->ystep), ptm);
+				csi->topctm = gstate->ctm;
+				error = pdf_runcsibuffer(csi, pat->resources, pat->contents);
+				while (oldtop < csi->gtop)
+					pdf_grestore(csi);
+				if (error)
+				{
+					fz_catch(error, "cannot render pattern tile");
+					goto cleanup;
+				}
 			}
 		}
 	}
-
 cleanup:
+#endif
+
 	csi->topctm = oldtopctm;
 
 	pdf_grestore(csi);

@@ -27,6 +27,9 @@ struct fz_drawdevice_s
 		fz_blendmode blendmode;
 		int luminosity;
 		float alpha;
+		fz_matrix ctm;
+		float xstep, ystep;
+		fz_rect area;
 	} stack[STACKSIZE];
 };
 
@@ -928,6 +931,82 @@ fz_drawendgroup(void *user)
 }
 
 static void
+fz_drawbegintile(void *user, fz_rect area, fz_rect view, float xstep, float ystep, fz_matrix ctm)
+{
+	fz_drawdevice *dev = user;
+	fz_colorspace *model = dev->dest->colorspace;
+	fz_pixmap *dest;
+	fz_bbox bbox;
+
+	/* area, view, xstep, ystep are in pattern space */
+	/* ctm maps from pattern space to device space */
+
+	if (dev->top == STACKSIZE)
+	{
+		fz_warn("assert: too many buffers on stack");
+		return;
+	}
+
+	bbox = fz_roundrect(fz_transformrect(ctm, view));
+	dest = fz_newpixmapwithrect(model, bbox);
+	fz_clearpixmap(dest);
+
+	dev->stack[dev->top].scissor = dev->scissor;
+	dev->stack[dev->top].dest = dev->dest;
+	dev->stack[dev->top].xstep = xstep;
+	dev->stack[dev->top].ystep = ystep;
+	dev->stack[dev->top].area = area;
+	dev->stack[dev->top].ctm = ctm;
+	dev->top++;
+
+	dev->scissor = bbox;
+	dev->dest = dest;
+}
+
+static void
+fz_drawendtile(void *user)
+{
+	fz_drawdevice *dev = user;
+	fz_pixmap *tile = dev->dest;
+	float xstep, ystep;
+	fz_matrix ctm, ttm;
+	fz_rect area;
+	int x0, y0, x1, y1, x, y;
+
+	if (dev->top > 0)
+	{
+		dev->top--;
+		xstep = dev->stack[dev->top].xstep;
+		ystep = dev->stack[dev->top].ystep;
+		area = dev->stack[dev->top].area;
+		ctm = dev->stack[dev->top].ctm;
+		dev->scissor = dev->stack[dev->top].scissor;
+		dev->dest = dev->stack[dev->top].dest;
+
+		x0 = floorf(area.x0 / xstep);
+		y0 = floorf(area.y0 / ystep);
+		x1 = ceilf(area.x1 / xstep);
+		y1 = ceilf(area.y1 / ystep);
+
+		ctm.e = tile->x;
+		ctm.f = tile->y;
+
+		for (y = y0; y < y1; y++)
+		{
+			for (x = x0; x < x1; x++)
+			{
+				ttm = fz_concat(fz_translate(x * xstep, y * ystep), ctm);
+				tile->x = roundf(ttm.e);
+				tile->y = roundf(ttm.f);
+				fz_paintpixmapbbox(dev->dest, tile, 255, dev->scissor);
+			}
+		}
+
+		fz_droppixmap(tile);
+	}
+}
+
+static void
 fz_drawfreeuser(void *user)
 {
 	fz_drawdevice *dev = user;
@@ -978,6 +1057,9 @@ fz_newdrawdevice(fz_glyphcache *cache, fz_pixmap *dest)
 	dev->endmask = fz_drawendmask;
 	dev->begingroup = fz_drawbegingroup;
 	dev->endgroup = fz_drawendgroup;
+
+	dev->begintile = fz_drawbegintile;
+	dev->endtile = fz_drawendtile;
 
 	return dev;
 }

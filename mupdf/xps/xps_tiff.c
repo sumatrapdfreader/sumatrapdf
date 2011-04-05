@@ -358,7 +358,6 @@ xps_expand_tiff_colormap(struct tiff *tiff)
 static int
 xps_decode_tiff_strips(struct tiff *tiff)
 {
-	fz_buffer buf;
 	fz_stream *stm;
 	int error;
 
@@ -415,8 +414,8 @@ xps_decode_tiff_strips(struct tiff *tiff)
 		/* no unit conversion needed */
 		break;
 	case 3:
-		tiff->xresolution *= 2.54;
-		tiff->yresolution *= 2.54;
+		tiff->xresolution = tiff->xresolution * 254 / 100;
+		tiff->yresolution = tiff->yresolution * 254 / 100;
 		break;
 	default:
 		tiff->xresolution = 96;
@@ -454,14 +453,8 @@ xps_decode_tiff_strips(struct tiff *tiff)
 			for (i = 0; i < rlen; i++)
 				rp[i] = bitrev[rp[i]];
 
-		/* create a fz_buffer on the stack */
-		buf.refs = 2;
-		buf.data = rp;
-		buf.len = rlen;
-		buf.cap = rlen;
-
 		/* the strip decoders will close this */
-		stm = fz_openbuffer(&buf);
+		stm = fz_openmemory(rp, rlen);
 
 		switch (tiff->compression)
 		{

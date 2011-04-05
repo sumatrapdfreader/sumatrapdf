@@ -136,7 +136,7 @@ static void drawbmp(xps_context *ctx, xps_page *page, fz_displaylist *list, int 
 
 	dev = fz_newgdiplusdevice(hDC, bbox);
 	if (list)
-		fz_executedisplaylist(list, dev, ctm);
+		fz_executedisplaylist(list, dev, ctm, fz_roundrect(rect));
 	else
 		xps_run_page(ctx, page, dev, ctm);
 	fz_freedevice(dev);
@@ -229,7 +229,7 @@ static void drawpage(xps_context *ctx, int pagenum)
 		dev = fz_newtracedevice();
 		printf("<page number=\"%d\">\n", pagenum);
 		if (list)
-			fz_executedisplaylist(list, dev, fz_identity);
+			fz_executedisplaylist(list, dev, fz_identity, fz_infinitebbox);
 		else
 			xps_run_page(ctx, page, dev, fz_identity);
 		printf("</page>\n");
@@ -241,7 +241,7 @@ static void drawpage(xps_context *ctx, int pagenum)
 		fz_textspan *text = fz_newtextspan();
 		dev = fz_newtextdevice(text);
 		if (list)
-			fz_executedisplaylist(list, dev, fz_identity);
+			fz_executedisplaylist(list, dev, fz_identity, fz_infinitebbox);
 		else
 			xps_run_page(ctx, page, dev, fz_identity);
 		fz_freedevice(dev);
@@ -290,7 +290,7 @@ static void drawpage(xps_context *ctx, int pagenum)
 
 		dev = fz_newdrawdevice(glyphcache, pix);
 		if (list)
-			fz_executedisplaylist(list, dev, ctm);
+			fz_executedisplaylist(list, dev, ctm, bbox);
 		else
 			xps_run_page(ctx, page, dev, ctm);
 		fz_freedevice(dev);

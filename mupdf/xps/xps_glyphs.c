@@ -289,8 +289,8 @@ xps_parse_glyphs_imp(xps_context *ctx, fz_matrix ctm, fz_font *font, float size,
 		while (glyph_count--)
 		{
 			int glyph_index = -1;
-			float u_offset = 0.0;
-			float v_offset = 0.0;
+			float u_offset = 0;
+			float v_offset = 0;
 			float advance;
 
 			if (is && *is)
@@ -301,11 +301,11 @@ xps_parse_glyphs_imp(xps_context *ctx, fz_matrix ctm, fz_font *font, float size,
 
 			xps_measure_font_glyph(ctx, font, glyph_index, &mtx);
 			if (is_sideways)
-				advance = mtx.vadv * 100.0;
+				advance = mtx.vadv * 100;
 			else if (bidi_level & 1)
-				advance = -mtx.hadv * 100.0;
+				advance = -mtx.hadv * 100;
 			else
-				advance = mtx.hadv * 100.0;
+				advance = mtx.hadv * 100;
 
 			if (is && *is)
 			{
@@ -317,13 +317,13 @@ xps_parse_glyphs_imp(xps_context *ctx, fz_matrix ctm, fz_font *font, float size,
 			if (bidi_level & 1)
 				u_offset = -mtx.hadv * 100 - u_offset;
 
-			u_offset = u_offset * 0.01 * size;
-			v_offset = v_offset * 0.01 * size;
+			u_offset = u_offset * 0.01f * size;
+			v_offset = v_offset * 0.01f * size;
 
 			if (is_sideways)
 			{
 				e = x + u_offset + (mtx.vorg * size);
-				f = y - v_offset + (mtx.hadv * 0.5 * size);
+				f = y - v_offset + (mtx.hadv * 0.5f * size);
 			}
 			else
 			{
@@ -333,7 +333,7 @@ xps_parse_glyphs_imp(xps_context *ctx, fz_matrix ctm, fz_font *font, float size,
 
 			fz_addtext(text, glyph_index, char_code, e, f);
 
-			x += advance * 0.01 * size;
+			x += advance * 0.01f * size;
 		}
 	}
 
@@ -379,7 +379,7 @@ xps_parse_glyphs(xps_context *ctx, fz_matrix ctm,
 	char partname[1024];
 	char *subfont;
 
-	float font_size = 10.0;
+	float font_size = 10;
 	int subfontid = 0;
 	int is_sideways = 0;
 	int bidi_level = 0;
@@ -483,7 +483,9 @@ xps_parse_glyphs(xps_context *ctx, fz_matrix ctm,
 
 		xps_hash_insert(ctx->font_table, part->name, font);
 
-		/* NOTE: we kept part->name in the hashtable and part->data in the font */
+		/* NOTE: we keep part->name in the hashtable and part->data in the font */
+		font->ftdata = part->data;
+		font->ftsize = part->size;
 		fz_free(part);
 	}
 

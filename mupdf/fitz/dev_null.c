@@ -19,6 +19,8 @@ static void fz_nullbeginmask(void *user, fz_rect r, int luminosity, fz_colorspac
 static void fz_nullendmask(void *user) {}
 static void fz_nullbegingroup(void *user, fz_rect r, int isolated, int knockout, fz_blendmode blendmode, float alpha) {}
 static void fz_nullendgroup(void *user) {}
+static void fz_nullbegintile(void *user, fz_rect area, fz_rect view, float xstep, float ystep, fz_matrix ctm) {}
+static void fz_nullendtile(void *user) {}
 
 fz_device *
 fz_newdevice(void *user)
@@ -53,6 +55,9 @@ fz_newdevice(void *user)
 	dev->endmask = fz_nullendmask;
 	dev->begingroup = fz_nullbegingroup;
 	dev->endgroup = fz_nullendgroup;
+
+	dev->begintile = fz_nullbegintile;
+	dev->endtile = fz_nullendtile;
 
 	return dev;
 }
