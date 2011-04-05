@@ -6751,7 +6751,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     ScopedCom com;
     InitAllCommonControls();
     fz_accelerate();
-    ScopedGdiPlus gdiPlus;
+    // TODO: initiating GDI+ here seems to cause frequent DDE timeouts
+    // ScopedGdiPlus gdiPlus;
 
     {
         ScopedMem<TCHAR> prefsFilename(Prefs_GetFileName());
