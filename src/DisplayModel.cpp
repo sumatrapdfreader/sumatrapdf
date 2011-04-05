@@ -558,6 +558,7 @@ void DisplayModel::relayout(float zoomVirtual, int rotation)
        rotation, columns parameters. You can think of it as a simple
        table layout i.e. rows with a fixed number of columns. */
     columns = columnsFromDisplayMode(displayMode());
+    columnOffsets[0] = columnOffsets[1] = 0;
     pageInARow = 0;
     rowMaxPageDy = 0;
     for (pageNo = 1; pageNo <= pageCount(); ++pageNo) {
