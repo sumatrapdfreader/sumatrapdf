@@ -6693,6 +6693,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     // without a cd).
     SetErrorMode(SEM_NOOPENFILEERRORBOX | SEM_FAILCRITICALERRORS);
 
+    TCHAR * crashDumpPath = GetUniqueCrashDumpPath();
+    InstallCrashHandler(crashDumpPath);
+    free(crashDumpPath);
+
     ScopedCom com;
     InitAllCommonControls();
     fz_accelerate();
@@ -6752,11 +6756,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         gGlobalPrefs.m_enableTeXEnhancements = true;
     }
     CurrLangNameSet(i.lang);
-
-    {
-        ScopedMem<TCHAR> crashDumpPath(GetUniqueCrashDumpPath());
-        InstallCrashHandler(crashDumpPath);
-    }
 
     msg.wParam = 1; // set an error code, in case we prematurely have to goto Exit
     if (!RegisterWinClass(hInstance))

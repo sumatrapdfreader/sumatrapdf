@@ -24,15 +24,15 @@ typedef BOOL WINAPI MiniDumpWriteProc(
     PMINIDUMP_USER_STREAM_INFORMATION UserStreamParam,
     PMINIDUMP_CALLBACK_INFORMATION CallbackParam);
 
-typedef BOOL IMAGEAPI SymInitializeProc(
+typedef BOOL _stdcall SymInitializeProc(
     HANDLE hProcess,
     PCSTR UserSearchPath,
     BOOL fInvadeProcess);
 
-typedef DWORD IMAGEAPI SymGetOptionsProc();
-typedef DWORD IMAGEAPI SymSetOptionsProc(DWORD SymOptions);
+typedef DWORD _stdcall SymGetOptionsProc();
+typedef DWORD _stdcall SymSetOptionsProc(DWORD SymOptions);
 
-typedef BOOL IMAGEAPI StackWalk64Proc(
+typedef BOOL _stdcall StackWalk64Proc(
     DWORD MachineType,
     HANDLE hProcess,
     HANDLE hThread,
@@ -43,18 +43,18 @@ typedef BOOL IMAGEAPI StackWalk64Proc(
     PGET_MODULE_BASE_ROUTINE64 GetModuleBaseRoutine,
     PTRANSLATE_ADDRESS_ROUTINE64 TranslateAddress);
 
-typedef BOOL IMAGEAPI SymFromAddrProc(
+typedef BOOL _stdcall SymFromAddrProc(
     HANDLE hProcess,
     DWORD64 Address,
     PDWORD64 Displacement,
     PSYMBOL_INFO Symbol
 );
 
-typedef PVOID IMAGEAPI SymFunctionTableAccess64Proc(
+typedef PVOID _stdcall SymFunctionTableAccess64Proc(
     HANDLE hProcess,
     DWORD64 AddrBase);
 
-typedef DWORD64 IMAGEAPI SymGetModuleBase64Proc(
+typedef DWORD64 _stdcall SymGetModuleBase64Proc(
     HANDLE hProcess,
     DWORD64 qwAddr);
 
@@ -80,18 +80,20 @@ static void LoadDbgHelpFuncs()
         return;
     WinLibrary lib(_T("DBGHELP.DLL"));
     _MiniDumpWriteDump = (MiniDumpWriteProc *)lib.GetProcAddr("MiniDumpWriteDump");
-    _SymInitialize = (SymInitializeProc*)lib.GetProcAddr("SymInitialize");
-    _SymGetOptions = (SymGetOptionsProc*)lib.GetProcAddr("SymGetOptions");
-    _SymSetOptions = (SymSetOptionsProc*)lib.GetProcAddr("SymSetOptions");
-    _StackWalk64 =   (StackWalk64Proc*)lib.GetProcAddr("StackWalk64");
-    _SymFunctionTableAccess64 = (SymFunctionTableAccess64Proc*)lib.GetProcAddr("SymFunctionTableAccess64");
-    _SymGetModuleBase64 = (SymGetModuleBase64Proc*)lib.GetProcAddr("SymGetModuleBase64");
-    _SymFromAddr = (SymFromAddrProc*)lib.GetProcAddr("SymFromAddr");
+    _SymInitialize = (SymInitializeProc *)lib.GetProcAddr("SymInitialize");
+    _SymGetOptions = (SymGetOptionsProc *)lib.GetProcAddr("SymGetOptions");
+    _SymSetOptions = (SymSetOptionsProc *)lib.GetProcAddr("SymSetOptions");
+    _StackWalk64 =   (StackWalk64Proc *)lib.GetProcAddr("StackWalk64");
+    _SymFunctionTableAccess64 = (SymFunctionTableAccess64Proc *)lib.GetProcAddr("SymFunctionTableAccess64");
+    _SymGetModuleBase64 = (SymGetModuleBase64Proc *)lib.GetProcAddr("SymGetModuleBase64");
+    _SymFromAddr = (SymFromAddrProc *)lib.GetProcAddr("SymFromAddr");
 }
 
 static bool CanStackWalk()
 {
-    return gSymInitializeOk && _SymInitialize && _StackWalk64 && _SymFunctionTableAccess64 && _SymGetModuleBase64 && _SymFromAddr;
+    return gSymInitializeOk && _SymInitialize && _SymGetOptions 
+        && _SymSetOptions&& _StackWalk64 && _SymFunctionTableAccess64 
+        && _SymGetModuleBase64 && _SymFromAddr;
 }
 
 static BOOL CALLBACK OpenMiniDumpCallback(void* /*param*/, PMINIDUMP_CALLBACK_INPUT input, PMINIDUMP_CALLBACK_OUTPUT output)
@@ -274,9 +276,10 @@ static LONG WINAPI DumpExceptionHandler(EXCEPTION_POINTERS *exceptionInfo)
 void InstallCrashHandler(const TCHAR *crashDumpPath)
 {
     LoadDbgHelpFuncs();
-    //TODO: crashes, but why?
+    HANDLE hProc = GetCurrentProcess();
+    //TODO: _SymInitialize crashes, why?
     //if (_SymInitialize)
-    //   gSymInitializeOk = _SymInitialize(GetCurrentProcess(), NULL, FALSE);
+    //   gSymInitializeOk = _SymInitialize(hProc, NULL, FALSE);
     if (NULL == crashDumpPath)
         return;
     g_crashDumpPath.Set(Str::Dup(crashDumpPath));
