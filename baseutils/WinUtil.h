@@ -11,17 +11,18 @@
 
 class WinLibrary {
 public:
-    WinLibrary(const TCHAR *libName) {
-        _hlib = _LoadSystemLibrary(libName);
+    WinLibrary(const TCHAR *libName, bool dontFree=false) : dontFree(dontFree) {
+        hlib = LoadSystemLibrary(libName);
     }
-    ~WinLibrary() { FreeLibrary(_hlib); }
+    ~WinLibrary() { if (!dontFree) FreeLibrary(hlib); }
     FARPROC GetProcAddr(const char *procName) {
-        if (!_hlib) return NULL;
-        return GetProcAddress(_hlib, procName);
+        if (!hlib) return NULL;
+        return GetProcAddress(hlib, procName);
     }
 private:
-    HMODULE _hlib;
-    HMODULE _LoadSystemLibrary(const TCHAR *libName);
+    bool    dontFree;
+    HMODULE hlib;
+    HMODULE LoadSystemLibrary(const TCHAR *libName);
 };
 
 class ScopedCom {

@@ -26,7 +26,7 @@ bool IsAppThemed() {
 }
 
 // Loads a DLL explicitly from the system's library collection
-HMODULE WinLibrary::_LoadSystemLibrary(const TCHAR *libName) {
+HMODULE WinLibrary::LoadSystemLibrary(const TCHAR *libName) {
     TCHAR dllPath[MAX_PATH];
     GetSystemDirectory(dllPath, dimof(dllPath));
     PathAppend(dllPath, libName);

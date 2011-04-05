@@ -78,7 +78,7 @@ static void LoadDbgHelpFuncs()
 {
     if (_MiniDumpWriteDump)
         return;
-    WinLibrary lib(_T("DBGHELP.DLL"));
+    WinLibrary lib(_T("DBGHELP.DLL"), true);
     _MiniDumpWriteDump = (MiniDumpWriteProc *)lib.GetProcAddr("MiniDumpWriteDump");
     _SymInitialize = (SymInitializeProc *)lib.GetProcAddr("SymInitialize");
     _SymGetOptions = (SymGetOptionsProc *)lib.GetProcAddr("SymGetOptions");
@@ -179,7 +179,7 @@ static void GetOsVersion(Str::Str<char>& s)
     int servicePackMajor = ver.wServicePackMajor;
     int servicePackMinor = ver.wServicePackMinor;
     char *is64bit = Is64Bit() ? "32bit" : "64bit";
-    char *isWow = IsWow64() ? "" : "Wow64";
+    char *isWow = IsWow64() ?  "Wow64" : "";
     s.AppendFmt("OS: %s %d.%d %s %s\n", os, servicePackMajor, servicePackMinor, is64bit, isWow);
 }
 
@@ -192,7 +192,13 @@ static void GetModules(Str::Str<char>& s)
     mod.dwSize = sizeof(mod);
     BOOL cont = Module32First(snap, &mod);
     while (cont) {
-        s.AppendFmt("Module: %s 0x%p 0x%x\n", mod.szModule, (void*)mod.modBaseAddr, (int)mod.modBaseSize);
+        TCHAR *name = mod.szModule;
+        TCHAR *path = mod.szExePath;
+        char *nameA = Str::Conv::ToUtf8(name);
+        char *pathA = Str::Conv::ToUtf8(path);
+        s.AppendFmt("Module: %s 0x%p 0x%x %s\n", nameA, (void*)mod.modBaseAddr, (int)mod.modBaseSize, pathA);
+        free(nameA);
+        free(pathA);
         cont = Module32Next(snap, &mod);
     }
     CloseHandle(snap);
@@ -251,10 +257,13 @@ static void GetCallstack(Str::Str<char>& s)
         DWORD64 addr = stackFrame.AddrPC.Offset;
 
         DWORD64 symDisp = 0;
+        // TODO: _SymFromAddr returns false
         ok = _SymFromAddr(hProc, addr, &symDisp, symInfo);
         if (ok) {
             char *name = &(symInfo->Name[0]);
-            s.AppendFmt("0x%x %s\n", (int)addr, name);
+            s.AppendFmt("0x%p %s\n", (void*)addr, name);
+        } else {
+            s.AppendFmt("0x%p\n", (void*)addr);
         }
         framesCount++;
     }
@@ -344,10 +353,8 @@ static LONG WINAPI DumpExceptionHandler(EXCEPTION_POINTERS *exceptionInfo)
 void InstallCrashHandler(const TCHAR *crashDumpPath)
 {
     LoadDbgHelpFuncs();
-    HANDLE hProc = GetCurrentProcess();
-    //TODO: _SymInitialize crashes, why?
-    //if (_SymInitialize)
-    //   gSymInitializeOk = _SymInitialize(hProc, NULL, FALSE);
+    if (_SymInitialize)
+       gSymInitializeOk = _SymInitialize(GetCurrentProcess(), NULL, FALSE);
     if (NULL == crashDumpPath)
         return;
     g_crashDumpPath.Set(Str::Dup(crashDumpPath));
