@@ -822,6 +822,25 @@ static TCHAR *GetUniqueCrashDumpPath()
     return NULL;
 }
 
+static TCHAR *GetUniqueCrashTextPath()
+{
+    TCHAR *path;
+    TCHAR *fileName;
+    for (int n = 0; n <= 20; n++) {
+        if (n == 0) {
+            fileName = Str::Dup(_T("SumatraPDF-crash.txt"));
+        } else {
+            fileName = Str::Format(_T("SumatraPDF-crash-%d.txt"), n);
+        }
+        path = AppGenDataFilename(fileName);
+        free(fileName);
+        if (!File::Exists(path) || (n==20))
+            return path;
+        free(path);
+    }
+    return NULL;
+}
+
 static struct {
     unsigned short itemId;
     float zoom;
@@ -6694,8 +6713,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     SetErrorMode(SEM_NOOPENFILEERRORBOX | SEM_FAILCRITICALERRORS);
 
     TCHAR * crashDumpPath = GetUniqueCrashDumpPath();
-    InstallCrashHandler(crashDumpPath);
+    TCHAR * crashTxtPath = GetUniqueCrashTextPath();
+    InstallCrashHandler(crashDumpPath, crashTxtPath);
     free(crashDumpPath);
+    free(crashTxtPath);
 
     ScopedCom com;
     InitAllCommonControls();

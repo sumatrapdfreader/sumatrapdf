@@ -68,6 +68,7 @@ static SymGetModuleBase64Proc *         _SymGetModuleBase64;
 static SymFromAddrProc *                _SymFromAddr;
 
 static ScopedMem<TCHAR> g_crashDumpPath(NULL);
+static ScopedMem<TCHAR> g_crashTxtPath(NULL);
 static HANDLE g_dumpEvent = NULL;
 static HANDLE g_dumpThread = NULL;
 static MINIDUMP_EXCEPTION_INFORMATION mei = { 0 };
@@ -204,6 +205,41 @@ static void GetModules(Str::Str<char>& s)
     CloseHandle(snap);
 }
 
+static bool GetAddrInfo(void *addr, char *module, DWORD moduleLen, DWORD& sectionOut, DWORD& offsetOut)
+{
+    MEMORY_BASIC_INFORMATION mbi;
+    if (!VirtualQuery(addr, &mbi, sizeof(mbi)))
+            return false;
+
+    DWORD hMod = (DWORD)mbi.AllocationBase;
+    if (!GetModuleFileNameA((HMODULE)hMod, module, moduleLen))
+            return false;
+
+    PIMAGE_DOS_HEADER dosHeader = (PIMAGE_DOS_HEADER)hMod;
+    PIMAGE_NT_HEADERS pNtHeader = (PIMAGE_NT_HEADERS)(hMod + dosHeader->e_lfanew);
+    PIMAGE_SECTION_HEADER section = IMAGE_FIRST_SECTION(pNtHeader);
+    
+    DWORD lAddr = (DWORD)addr - hMod;
+    for (unsigned int i = 0; i < pNtHeader->FileHeader.NumberOfSections; i++)
+    {
+            DWORD startAddr = section->VirtualAddress;
+            DWORD endAddr = startAddr;
+            if (section->SizeOfRawData > section->Misc.VirtualSize)
+                    endAddr += section->SizeOfRawData;
+            else
+                    section->Misc.VirtualSize;
+    
+            if (lAddr >= startAddr && lAddr <= endAddr)
+            {
+                    sectionOut = i+1;
+                    offsetOut = lAddr - startAddr;
+                    return true;
+            }
+            section++;
+    }
+    return false;
+}
+
 #define MAX_NAME_LEN 512
 
 static void GetCallstack(Str::Str<char>& s)
@@ -217,10 +253,14 @@ static void GetCallstack(Str::Str<char>& s)
 
     s.AppendFmt("\nThread: 0x%x\n", (int)threadId);
 
+    // TODO: should this be done in InstallCrashHandler() ?
     DWORD symOptions =_SymGetOptions();
     symOptions |= SYMOPT_LOAD_LINES;
+    symOptions |= SYMOPT_FAIL_CRITICAL_ERRORS; // don't show system msg box on errors
+    symOptions |= SYMOPT_DEFERRED_LOADS;
     _SymSetOptions(symOptions);
-
+    // TODO: should I setup sympath to Microsoft's symbol server via
+    // SymSetSearchPath() so that at least I get names for system dlls?
     CONTEXT ctx;
     RtlCaptureContext(&ctx);
 
@@ -244,8 +284,9 @@ static void GetCallstack(Str::Str<char>& s)
 
     int framesCount = 0;
     int maxFrames = 32;
-    while (framesCount < maxFrames) {
-        BOOL ok = _StackWalk64( IMAGE_FILE_MACHINE_I386, hProc, hThread,
+    while (framesCount < maxFrames)
+    {
+        BOOL ok = _StackWalk64(IMAGE_FILE_MACHINE_I386, hProc, hThread,
             &stackFrame, &ctx, NULL, _SymFunctionTableAccess64,
             _SymGetModuleBase64, NULL);
         if (!ok)
@@ -253,17 +294,24 @@ static void GetCallstack(Str::Str<char>& s)
 
         memset(buf, 0, sizeof(buf));
         symInfo->SizeOfStruct = sizeof(SYMBOL_INFO);
-        symInfo->MaxNameLen = MAX_NAME_LEN;
+        symInfo->MaxNameLen = MAX_NAME_LEN - 1;
         DWORD64 addr = stackFrame.AddrPC.Offset;
 
         DWORD64 symDisp = 0;
-        // TODO: _SymFromAddr returns false
         ok = _SymFromAddr(hProc, addr, &symDisp, symInfo);
         if (ok) {
             char *name = &(symInfo->Name[0]);
-            s.AppendFmt("0x%p %s\n", (void*)addr, name);
+            s.AppendFmt("0x%p %s+0x%x\n", (void*)addr, name, (int)symDisp);
         } else {
-            s.AppendFmt("0x%p\n", (void*)addr);
+            char module[MAX_PATH] = { 0 };
+            DWORD section, offset;
+            // TODO: shouldn't we be able to use export table of the DLL to
+            // at least know which function in the DLL it is even when we
+            // don't have symbols?
+            if (GetAddrInfo((void*)addr, module, sizeof(module), section, offset))
+                s.AppendFmt("0x%p 0x%x:0x%x %s\n", (void*)addr, section, offset, module);
+            else
+                s.AppendFmt("0x%p\n", (void*)addr);
         }
         framesCount++;
     }
@@ -277,15 +325,20 @@ static char *BuildCrashInfoText()
     s.Append("\n");
     GetModules(s);
     s.Append("\n");
+    // TODO: Suspend all threads and get their callstacks
     GetCallstack(s);
+    // TODO: add info about the exception
     return s.StealData();
 }
 
 void SaveCrashInfoText()
 {
-    LoadDbgHelpFuncs();
     char *s = BuildCrashInfoText();
+    if (s && g_crashTxtPath) {
+        File::WriteAll(g_crashTxtPath, s, Str::Len(s));
+    }
     free(s);
+    // TODO: submit to a website
 }
 
 static DWORD WINAPI CrashDumpThread(LPVOID data)
@@ -350,7 +403,7 @@ static LONG WINAPI DumpExceptionHandler(EXCEPTION_POINTERS *exceptionInfo)
     return EXCEPTION_CONTINUE_SEARCH;
 }
 
-void InstallCrashHandler(const TCHAR *crashDumpPath)
+void InstallCrashHandler(const TCHAR *crashDumpPath, const TCHAR *crashTxtPath)
 {
     LoadDbgHelpFuncs();
     if (_SymInitialize)
@@ -358,6 +411,7 @@ void InstallCrashHandler(const TCHAR *crashDumpPath)
     if (NULL == crashDumpPath)
         return;
     g_crashDumpPath.Set(Str::Dup(crashDumpPath));
+    g_crashTxtPath.Set(Str::Dup(crashTxtPath));
     if (!g_dumpEvent && !g_dumpThread) {
         g_dumpEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
         g_dumpThread = CreateThread(NULL, 0, CrashDumpThread, NULL, 0, 0);
