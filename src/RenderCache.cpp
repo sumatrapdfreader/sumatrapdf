@@ -113,7 +113,7 @@ void RenderCache::Add(PageRenderRequest &req, RenderedBitmap *bitmap)
         delete bitmap;
     else
         _cacheCount++;
-    req.dm->ageStore();
+    req.dm->runEngineGC();
 }
 
 // get the (user) coordinates of a specific tile

@@ -132,13 +132,13 @@ static TCHAR *FormatPdfSize(size_t size) {
 
 // format page size according to locale (e.g. "29.7 x 20.9 cm" or "11.69 x 8.23 in")
 // Caller needs to free the result
-static TCHAR *FormatPdfPageSize(SizeD size) {
+static TCHAR *FormatPdfPageSize(SizeD size, float fileDPI) {
     TCHAR unitSystem[2];
     GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_IMEASURE, unitSystem, dimof(unitSystem));
     bool isMetric = unitSystem[0] == '0';
 
-    double width = size.dx * (isMetric ? 2.54 : 1.0) / PDF_FILE_DPI;
-    double height = size.dy * (isMetric ? 2.54 : 1.0) / PDF_FILE_DPI;
+    double width = size.dx * (isMetric ? 2.54 : 1.0) / fileDPI;
+    double height = size.dy * (isMetric ? 2.54 : 1.0) / fileDPI;
     if (((int)(width * 100)) % 100 == 99)
         width += 0.01;
     if (((int)(height * 100)) % 100 == 99)
@@ -357,10 +357,10 @@ SkipPdfPropertiesForNow:
     str = Str::Format(_T("%d"), engine->PageCount());
     layoutData->AddProperty(_TR("Number of Pages:"), str);
 
-    str = FormatPdfPageSize(engine->PageSize(win->dm->currentPageNo()));
+    str = FormatPdfPageSize(engine->PageSize(win->dm->currentPageNo()), engine->GetFileDPI());
     layoutData->AddProperty(_TR("Page Size:"), str);
 
-    str = FormatPermissions(pdfEngine);
+    str = FormatPermissions(engine);
     layoutData->AddProperty(_TR("Denied Permissions:"), str);
 
     // TODO: this is about linearlized PDF. Looks like mupdf would

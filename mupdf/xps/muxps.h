@@ -233,6 +233,13 @@ struct xps_context_s
 };
 
 int xps_open_file(xps_context **ctxp, char *filename);
+/* SumatraPDF: allow opening all files under modern Windows */
+#ifdef _WIN32
+int xps_open_file_w(xps_context **ctxp, wchar_t *filename);
+#endif
 void xps_free_context(xps_context *ctx);
+
+/* SumatraPDF: work-around not having direct access to ctx->file in libmupdf.dll */
+unsigned char *xps_get_file_data(xps_context *ctx, long *cbCount);
 
 #endif

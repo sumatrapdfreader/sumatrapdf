@@ -390,8 +390,9 @@ xps_read_part(xps_context *ctx, char *partname)
 	return xps_read_zip_part(ctx, partname);
 }
 
-int
-xps_open_file(xps_context **ctxp, char *filename)
+/* SumatraPDF: allow opening all files under modern Windows */
+static int
+xps_open_file_imp(xps_context **ctxp, FILE *file, char *filename)
 {
 	xps_context *ctx;
 	char buf[2048];
@@ -404,7 +405,7 @@ xps_open_file(xps_context **ctxp, char *filename)
 	ctx->colorspace_table = xps_hash_new();
 	ctx->start_part = NULL;
 
-	ctx->file = fopen(filename, "rb");
+	ctx->file = file;
 	if (!ctx->file)
 	{
 		xps_free_context(ctx);
@@ -441,6 +442,26 @@ xps_open_file(xps_context **ctxp, char *filename)
 	return fz_okay;
 }
 
+/* SumatraPDF: allow opening all files under modern Windows */
+// TODO: use an fz_stream instead to allow loading in-memory data
+#ifdef _WIN32
+int
+xps_open_file_w(xps_context **ctxp, wchar_t *filename)
+{
+	char fname[_MAX_PATH * 2];
+	size_t res = wcstombs(fname, filename, _MAX_PATH);
+	if (!res || res == (size_t)-1)
+		strcpy(fname, "unknown filename");
+	return xps_open_file_imp(ctxp, _wfopen(filename, L"rb"), fname);
+}
+#endif
+
+int
+xps_open_file(xps_context **ctxp, char *filename)
+{
+	return xps_open_file_imp(ctxp, fopen(filename, "rb"), filename);
+}
+
 static void xps_free_key_func(void *ptr)
 {
 	fz_free(ptr);
@@ -475,4 +496,29 @@ xps_free_context(xps_context *ctx)
 	fz_free(ctx->start_part);
 	fz_free(ctx->directory);
 	fz_free(ctx);
+}
+
+/* SumatraPDF: work-around not having direct access to ctx->file in libmupdf.dll */
+unsigned char *
+xps_get_file_data(xps_context *ctx, long *cbCount)
+{
+	unsigned char *data;
+	long pos = ftell(ctx->file);
+	long len;
+
+	fseek(ctx->file, 0, SEEK_END);
+	len = ftell(ctx->file);
+	fseek(ctx->file, 0, SEEK_SET);
+
+	data = fz_malloc(len);
+	if (data)
+	{
+		fread(data, 1, len, ctx->file);
+		if (cbCount)
+			*cbCount = len;
+	}
+
+	fseek(ctx->file, pos, SEEK_SET);
+
+	return data;
 }

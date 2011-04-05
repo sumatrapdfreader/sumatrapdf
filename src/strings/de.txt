@@ -535,6 +535,9 @@ Visit &Website
 Warning
 Warnung
 
+XPS documents
+XPS-Dokumente
+
 You have the latest version.
 Sie haben die neuste Version installiert.
 

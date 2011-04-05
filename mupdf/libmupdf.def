@@ -475,7 +475,9 @@ EXPORTS
 	xps_parse_element
 	xps_clip
 	xps_open_file
+	xps_open_file_w
 	xps_free_context
+	xps_get_file_data
 
 ; zlib exports
 

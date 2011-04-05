@@ -346,6 +346,13 @@ static bool CanViewExternally(WindowInfo *win=NULL)
     return File::Exists(win->loadedFilePath);
 }
 
+static bool IsNonPdfDocument(WindowInfo *win=NULL)
+{
+    if (!win || !win->dm)
+        return false;
+    return !win->dm->pdfEngine;
+}
+
 static bool CanViewWithFoxit(WindowInfo *win=NULL)
 {
     // Requirements: a valid filename and a valid path to Foxit
@@ -357,7 +364,7 @@ static bool CanViewWithFoxit(WindowInfo *win=NULL)
 
 static bool ViewWithFoxit(WindowInfo *win, TCHAR *args=NULL)
 {
-    if (!CanViewWithFoxit(win))
+    if (!CanViewWithFoxit(win) || IsNonPdfDocument(win))
         return false;
 
     ScopedMem<TCHAR> exePath(GetFoxitPath());
@@ -385,7 +392,7 @@ static bool CanViewWithPDFXChange(WindowInfo *win=NULL)
 
 static bool ViewWithPDFXChange(WindowInfo *win, TCHAR *args=NULL)
 {
-    if (!CanViewWithPDFXChange(win))
+    if (!CanViewWithPDFXChange(win) || IsNonPdfDocument(win))
         return false;
 
     ScopedMem<TCHAR> exePath(GetPDFXChangePath());
@@ -413,7 +420,7 @@ static bool CanViewWithAcrobat(WindowInfo *win=NULL)
 
 static bool ViewWithAcrobat(WindowInfo *win, TCHAR *args=NULL)
 {
-    if (!CanViewWithAcrobat(win))
+    if (!CanViewWithAcrobat(win) || IsNonPdfDocument(win))
         return false;
 
     ScopedMem<TCHAR> exePath(GetAcrobatPath());
@@ -1163,6 +1170,9 @@ static void MenuUpdateStateForWindow(WindowInfo *win) {
         IDM_VIEW_WITH_ACROBAT, IDM_VIEW_WITH_FOXIT, IDM_VIEW_WITH_PDF_XCHANGE, 
         IDM_SELECT_ALL, IDM_COPY_SELECTION, IDM_PROPERTIES, 
         IDM_VIEW_PRESENTATION_MODE, IDM_THREAD_STRESS };
+    static UINT menusToDisableIfNonPdf[] = {
+        IDM_VIEW_WITH_ACROBAT, IDM_VIEW_WITH_FOXIT, IDM_VIEW_WITH_PDF_XCHANGE
+    };
 
     assert(FileCloseMenuEnabled() == !win->IsAboutWindow()); // TODO: ???
     Win::Menu::Enable(win->menu, IDM_CLOSE, FileCloseMenuEnabled());
@@ -1189,6 +1199,13 @@ static void MenuUpdateStateForWindow(WindowInfo *win) {
     for (int i = 0; i < dimof(menusToDisableIfNoPdf); i++) {
         UINT id = menusToDisableIfNoPdf[i];
         Win::Menu::Enable(win->menu, id, win->PdfLoaded());
+    }
+
+    if (IsNonPdfDocument(win)) {
+        for (int i = 0; i < dimof(menusToDisableIfNonPdf); i++) {
+            UINT id = menusToDisableIfNonPdf[i];
+            Win::Menu::Enable(win->menu, id, false);
+        }
     }
 }
 
@@ -2129,7 +2146,7 @@ static void DebugShowLinks(DisplayModel *dm, HDC hdc, bool rendering)
         pdf_link *links = NULL;
         int linkCount = dm->getPdfLinks(pageNo, &links);
         for (int i = 0; i < linkCount; i++) {
-            RectI isect = drawAreaRect.Intersect(fz_recttoRectD(links[i].rect).Round());
+            RectI isect = drawAreaRect.Intersect(fz_rect_to_RectD(links[i].rect).Round());
             if (!isect.IsEmpty())
                 paint_rect(hdc, &isect.ToRECT());
         }
@@ -3085,8 +3102,8 @@ static void PrintToDevice(BaseEngine *engine, HDC hdc, LPDEVMODE devMode,
     int topMargin = GetDeviceCaps(hdc, PHYSICALOFFSETY);
     int rightMargin = paperWidth - printableWidth - leftMargin;
     int bottomMargin = paperHeight - printableHeight - topMargin;
-    float dpiFactor = min(GetDeviceCaps(hdc, LOGPIXELSX) / PDF_FILE_DPI,
-                          GetDeviceCaps(hdc, LOGPIXELSY) / PDF_FILE_DPI);
+    float dpiFactor = min(GetDeviceCaps(hdc, LOGPIXELSX) / engine->GetFileDPI(),
+                          GetDeviceCaps(hdc, LOGPIXELSY) / engine->GetFileDPI());
     bool bPrintPortrait = paperWidth < paperHeight;
     if (devMode && devMode->dmFields & DM_ORIENTATION)
         bPrintPortrait = DMORIENT_PORTRAIT == devMode->dmOrientation;
@@ -3381,7 +3398,6 @@ static void OnMenuSaveAs(WindowInfo *win)
     OPENFILENAME   ofn = {0};
     TCHAR          dstFileName[MAX_PATH] = {0};
     const TCHAR *  srcFileName = NULL;
-    bool           hasCopyPerm = true;
 
     if (gRestrictedUse) return;
     assert(win);
@@ -3394,15 +3410,21 @@ static void OnMenuSaveAs(WindowInfo *win)
     if (!srcFileName) return;
 
     // Can't save a PDF's content as a plain text if text copying isn't allowed
-    if (!win->dm->engine->IsCopyingTextAllowed())
-        hasCopyPerm = false;
+    bool hasCopyPerm = win->dm->engine->IsCopyingTextAllowed();
+
+    TCHAR *defExt = _T(".pdf");
+    if (win->dm->xpsEngine)
+        defExt = _T(".xps");
 
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling
     // methods too early on)
     Str::Str<TCHAR> fileFilter(256);
-    fileFilter.Append(_TR("PDF documents"));
-    fileFilter.Append(_T("\1*.pdf\1"));
+    if (win->dm->xpsEngine)
+        fileFilter.Append(_TB_TR("XPS documents"));
+    else
+        fileFilter.Append(_TR("PDF documents"));
+    fileFilter.AppendFmt(_T("\1*%s\1"), defExt);
     if (hasCopyPerm) {
         fileFilter.Append(_TR("Text documents"));
         fileFilter.Append(_T("\1*.txt\1"));
@@ -3415,7 +3437,7 @@ static void OnMenuSaveAs(WindowInfo *win)
     Str::BufSet(dstFileName, dimof(dstFileName), Path::GetBaseName(srcFileName));
     // TODO: fix saving embedded PDF documents
     Str::TransChars(dstFileName, _T(":"), _T("_"));
-    if (Str::EndsWithI(dstFileName, _T(".pdf")))
+    if (Str::EndsWithI(dstFileName, defExt))
         dstFileName[Str::Len(dstFileName) - 4] = 0;
 
     ofn.lStructSize = sizeof(ofn);
@@ -3427,7 +3449,7 @@ static void OnMenuSaveAs(WindowInfo *win)
     ofn.lpstrFileTitle = NULL;
     ofn.nMaxFileTitle = 0;
     ofn.lpstrInitialDir = NULL;
-    ofn.lpstrDefExt = _T("pdf");
+    ofn.lpstrDefExt = win->dm->xpsEngine ? _T("xps") : _T("pdf");
     ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
 
     if (FALSE == GetSaveFileName(&ofn))
@@ -3435,8 +3457,8 @@ static void OnMenuSaveAs(WindowInfo *win)
 
     TCHAR * realDstFileName = dstFileName;
     // Make sure that the file has a valid ending
-    if (!Str::EndsWithI(dstFileName, _T(".pdf")) && !(hasCopyPerm && Str::EndsWithI(dstFileName, _T(".txt")))) {
-        TCHAR *defaultExt = hasCopyPerm && 2 == ofn.nFilterIndex ? _T(".txt") : _T(".pdf");
+    if (!Str::EndsWithI(dstFileName, defExt) && !(hasCopyPerm && Str::EndsWithI(dstFileName, _T(".txt")))) {
+        TCHAR *defaultExt = hasCopyPerm && 2 == ofn.nFilterIndex ? _T(".txt") : defExt;
         realDstFileName = Str::Format(_T("%s%s"), dstFileName, defaultExt);
     }
     // Extract all text when saving as a plain text file
@@ -3519,11 +3541,15 @@ static void OnMenuSaveBookmark(WindowInfo *win)
     assert(win->dm);
     if (!win->PdfLoaded()) return;
 
+    TCHAR *defExt = _T(".pdf");
+    if (win->dm->xpsEngine)
+        defExt = _T(".xps");
+
     TCHAR dstFileName[MAX_PATH] = { 0 };
     // Remove the extension so that it can be re-added depending on the chosen filter
     Str::BufSet(dstFileName, dimof(dstFileName), Path::GetBaseName(win->dm->fileName()));
     Str::TransChars(dstFileName, _T(":"), _T("_"));
-    if (Str::EndsWithI(dstFileName, _T(".pdf")))
+    if (Str::EndsWithI(dstFileName, defExt))
         dstFileName[Str::Len(dstFileName) - 4] = 0;
 
     // Prepare the file filters (use \1 instead of \0 so that the
@@ -3611,7 +3637,7 @@ static void OnMenuOpen(WindowInfo *win)
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling
     // methods too early on)
-    ScopedMem<TCHAR> fileFilter(Str::Format(_T("%s\1*.pdf\1%s\1*.*\1"),
+    ScopedMem<TCHAR> fileFilter(Str::Format(_T("%s\1*.pdf;*.xps\1%s\1*.*\1"),
         _TR("PDF documents"), _TR("All files")));
     Str::TransChars(fileFilter, _T("\1"), _T("\0"));
 
@@ -3668,6 +3694,10 @@ static void BrowseFolder(WindowInfo *win, bool forward)
     WIN32_FIND_DATA fdata;
     ScopedMem<TCHAR> dir(Path::GetDir(win->loadedFilePath));
     ScopedMem<TCHAR> pattern(Path::Join(dir, _T("*.pdf")));
+
+    // TODO: browse through all supported file types at the same time?
+    if (win->dm->xpsEngine)
+        pattern.Set(Path::Join(dir, _T("*.xps")));
 
     HANDLE hfind = FindFirstFile(pattern, &fdata);
     if (INVALID_HANDLE_VALUE == hfind)
@@ -5799,7 +5829,7 @@ static void CustomizeToCInfoTip(WindowInfo *win, LPNMTVGETINFOTIP nmit)
 static void CreateInfotipForPdfLink(WindowInfo *win, int pageNo, pdf_link *link)
 {
     ScopedMem<TCHAR> linkPath(win->dm->getLinkPath(link));
-    RectD rc = fz_recttoRectD(link->rect);
+    RectD rc = fz_rect_to_RectD(link->rect);
     if (!win->dm->rectCvtUserToScreen(pageNo, &rc))
         rc = RectD();
     win->CreateInfotip(linkPath, &rc.Convert<int>());
@@ -5808,7 +5838,7 @@ static void CreateInfotipForPdfLink(WindowInfo *win, int pageNo, pdf_link *link)
 static void CreateInfotipForComment(WindowInfo *win, int pageNo, pdf_annot *annot)
 {
     ScopedMem<TCHAR> comment(Str::Conv::FromUtf8(fz_to_str_buf(fz_dict_gets(annot->obj, "Contents"))));
-    RectD rc = fz_recttoRectD(annot->rect);
+    RectD rc = fz_rect_to_RectD(annot->rect);
     if (!win->dm->rectCvtUserToScreen(pageNo, &rc))
         rc = RectD();
     win->CreateInfotip(comment, &rc.Convert<int>());

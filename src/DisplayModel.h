@@ -152,6 +152,7 @@ public:
 
     BaseEngine *    engine;
     PdfEngine *     pdfEngine;
+    XpsEngine *     xpsEngine;
     PdfSelection *  textSelection;
 
     /* TODO: rename to pageInfo() */
@@ -243,7 +244,7 @@ public:
 
     bool            displayStateFromModel(DisplayState *ds);
 
-    void            ageStore() const {
+    void            runEngineGC() const {
         if (pdfEngine)
             pdfEngine->ageStore();
     }

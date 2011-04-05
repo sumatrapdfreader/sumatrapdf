@@ -199,10 +199,14 @@ DisplayModel::DisplayModel(DisplayMode displayMode, int dpi)
     _padding = &gDisplaySettings;
     _presentationMode = false;
     _zoomReal = INVALID_ZOOM;
-    _dpiFactor = dpi / PDF_FILE_DPI;
+    _dpiFactor = (float)dpi;
     _startPage = INVALID_PAGE_NO;
     _appData = NULL;
+
     engine = NULL;
+    pdfEngine = NULL;
+    xpsEngine = NULL;
+
     textSelection = NULL;
     _pdfSearch = NULL;
     _pagesInfo = NULL;
@@ -239,12 +243,22 @@ PdfPageInfo *DisplayModel::getPageInfo(int pageNo) const
 bool DisplayModel::load(const TCHAR *fileName, int startPage, WindowInfo *win)
 { 
     assert(fileName);
-    pdfEngine = PdfEngine::CreateFromFileName(fileName, win);
-    if (!pdfEngine)
+    if (Str::EndsWithI(fileName, _T(".pdf")))
+        engine = pdfEngine = PdfEngine::CreateFromFileName(fileName, win);
+    else if (Str::EndsWithI(fileName, _T(".xps")))
+        engine = xpsEngine = XpsEngine::CreateFromFileName(fileName);
+    else {
+        // try loading as either supported file format
+        // TODO: sniff the file content instead
+        engine = pdfEngine = PdfEngine::CreateFromFileName(fileName, win);
+        if (!engine)
+            engine = xpsEngine = XpsEngine::CreateFromFileName(fileName);
+    }
+    if (!engine)
         return false;
-    engine = pdfEngine;
 
     _appData = win;
+    _dpiFactor /= engine->GetFileDPI();
     setTotalDrawAreaSize(win->canvasRc.Size());
 
     if (validPageNo(startPage))
@@ -831,9 +845,9 @@ int DisplayModel::getPdfLinks(int pageNo, pdf_link **links)
 
     int count = pdfEngine->getPdfLinks(pageNo, links);
     for (int i = 0; i < count; i++) {
-        RectD rc = fz_recttoRectD((*links)[i].rect);
+        RectD rc = fz_rect_to_RectD((*links)[i].rect);
         if (rectCvtUserToScreen(pageNo, &rc))
-            (*links)[i].rect = fz_RectDtorect(rc);
+            (*links)[i].rect = fz_RectD_to_rect(rc);
         else
             (*links)[i].rect = fz_empty_rect;
     }

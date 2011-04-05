@@ -81,14 +81,14 @@ public:
     virtual int PageCount() const = 0;
 
     // the angle in degrees the given page is rotated natively (usually 0 deg)
-    virtual int PageRotation(int pageNo) const { return 0; }
+    virtual int PageRotation(int pageNo) { return 0; }
     // the dimensions of the given page (shortcut for PageMediabox(pageNo).Size())
-    SizeD PageSize(int pageNo) const {
+    SizeD PageSize(int pageNo) {
         assert(1 <= pageNo && pageNo <= PageCount());
         return PageMediabox(pageNo).Size();
     }
     // the box into which a page will be drawn (usually RectD(0, 0, pageWidth, pageHeight))
-    virtual RectD PageMediabox(int pageNo) const = 0;
+    virtual RectD PageMediabox(int pageNo) = 0;
     // the box inside PageMediabox that actually contains any relevant content
     // (used for auto-cropping in Fit Content mode, can be PageMediabox)
     virtual RectI PageContentBox(int pageNo, RenderTarget target=Target_View) {
@@ -130,6 +130,9 @@ public:
     // whether it is allowed to extract text from the current document
     // (except for searching an accessibility reasons)
     virtual bool IsCopyingTextAllowed() { return true; }
+
+    // the DPI for a file is needed when converting internal measures to physical ones
+    virtual float GetFileDPI() const { return 96.0f; }
 
     // loads the given page so that the time required can be measured
     // without also measuring rendering times

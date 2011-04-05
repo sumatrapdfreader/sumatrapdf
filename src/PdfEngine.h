@@ -11,6 +11,7 @@ __pragma(warning(push))
 
 #include <fitz.h>
 #include <mupdf.h>
+#include <muxps.h>
 
 #ifdef _MSC_VER
 __pragma(warning(pop))
@@ -22,8 +23,6 @@ __pragma(warning(pop))
 #include "StrUtil.h"
 #include "BaseEngine.h"
 
-/* one PDF user space unit equals 1/72 inch */
-#define PDF_FILE_DPI        72.0f
 // number of page content trees to cache for quicker rendering
 #define MAX_PAGE_RUN_CACHE  8
 
@@ -75,10 +74,12 @@ public:
     virtual PdfEngine *Clone();
 
     virtual const TCHAR *FileName() const { return _fileName; };
-    virtual int PageCount() const { return _pageCount; }
+    virtual int PageCount() const {
+        return _xref ? pdf_count_pages(_xref) : 0;
+    }
 
-    virtual int PageRotation(int pageNo) const;
-    virtual RectD PageMediabox(int pageNo) const;
+    virtual int PageRotation(int pageNo);
+    virtual RectD PageMediabox(int pageNo);
     virtual RectI PageContentBox(int pageNo, RenderTarget target=Target_View);
 
     virtual RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
@@ -103,6 +104,8 @@ public:
     virtual bool IsPrintingAllowed() { return hasPermission(PDF_PERM_PRINT); }
     virtual bool IsCopyingTextAllowed() { return hasPermission(PDF_PERM_COPY); }
 
+    virtual float GetFileDPI() const { return 72.0f; }
+
     virtual bool _benchLoadPage(int pageNo) { return getPdfPage(pageNo) != NULL; }
 
     // TODO: move any of these into BaseEngine?
@@ -126,7 +129,6 @@ public:
 protected:
     const TCHAR *_fileName;
     char *_decryptionKey;
-    int _pageCount;
 
     // make sure to never ask for _pagesAccess in an _xrefAccess
     // protected critical section in order to avoid deadlocks
@@ -146,7 +148,7 @@ protected:
                                fz_matrix *ctm=NULL, float zoom=0, int rotation=0,
                                RectD *pageRect=NULL, RenderTarget target=Target_View);
     TCHAR         * ExtractPageText(pdf_page *page, TCHAR *lineSep=DOS_NEWLINE,
-                                    fz_bbox **coords_out=NULL, RenderTarget target=Target_View,
+                                    RectI **coords_out=NULL, RenderTarget target=Target_View,
                                     bool cacheRun=false);
 
     PdfPageRun    * _runCache[MAX_PAGE_RUN_CACHE];
@@ -170,14 +172,92 @@ public:
     static PdfEngine *CreateFromStream(fz_stream *stm, TCHAR *password=NULL);
 };
 
+typedef struct {
+    xps_page *page;
+    fz_display_list *list;
+    int refs;
+} XpsPageRun;
+
+class XpsEngine : public BaseEngine {
+public:
+    XpsEngine(const TCHAR *fileName);
+    virtual ~XpsEngine();
+    virtual XpsEngine *Clone() {
+        return CreateFromFileName(_fileName);
+    }
+
+    virtual const TCHAR *FileName() const { return _fileName; };
+    virtual int PageCount() const {
+        return _ctx ? xps_count_pages(_ctx) : 0;
+    }
+
+    virtual RectD PageMediabox(int pageNo);
+    virtual RectI PageContentBox(int pageNo, RenderTarget target=Target_View);
+
+    virtual RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
+                         RectD *pageRect=NULL, /* if NULL: defaults to the page's mediabox */
+                         RenderTarget target=Target_View, bool useGdi=false);
+    virtual bool RenderPage(HDC hDC, int pageNo, RectI *screenRect,
+                         float zoom=0, int rotation=0,
+                         RectD *pageRect=NULL, RenderTarget target=Target_View) {
+        return renderPage(hDC, getXpsPage(pageNo), screenRect, NULL, zoom, rotation, pageRect);
+    }
+
+    virtual PointD ApplyTransform(PointD pt, int pageNo, float zoom, int rotate);
+    virtual RectD ApplyTransform(RectD rect, int pageNo, float zoom, int rotate);
+    virtual PointD RevertTransform(PointD pt, int pageNo, float zoom, int rotate);
+    virtual RectD RevertTransform(RectD rect, int pageNo, float zoom, int rotate);
+
+    virtual unsigned char *GetFileData(size_t *cbCount);
+    virtual TCHAR * ExtractPageText(int pageNo, TCHAR *lineSep=DOS_NEWLINE, RectI **coords_out=NULL, RenderTarget target=Target_View);
+    virtual bool IsImagePage(int pageNo) { return false; }
+
+    virtual float GetFileDPI() const { return 96.0f; }
+
+    virtual bool _benchLoadPage(int pageNo) { return getXpsPage(pageNo) != NULL; }
+
+protected:
+    const TCHAR *_fileName;
+
+    // make sure to never ask for _pagesAccess in an _ctxAccess
+    // protected critical section in order to avoid deadlocks
+    CRITICAL_SECTION _ctxAccess;
+    xps_context *    _ctx;
+
+    CRITICAL_SECTION _pagesAccess;
+    xps_page **     _pages;
+
+    xps_page      * getXpsPage(int pageNo, bool failIfBusy=false);
+    fz_matrix       viewctm(int pageNo, float zoom, int rotate) {
+        return viewctm(getXpsPage(pageNo), zoom, rotate);
+    }
+    fz_matrix       viewctm(xps_page *page, float zoom, int rotate);
+    bool            renderPage(HDC hDC, xps_page *page, RectI *screenRect,
+                               fz_matrix *ctm=NULL, float zoom=0, int rotation=0,
+                               RectD *pageRect=NULL);
+    TCHAR         * ExtractPageText(xps_page *page, TCHAR *lineSep=DOS_NEWLINE,
+                                    RectI **coords_out=NULL, bool cacheRun=false);
+
+    XpsPageRun    * _runCache[MAX_PAGE_RUN_CACHE];
+    XpsPageRun    * getPageRun(xps_page *page, bool tryOnly=false);
+    void            runPage(xps_page *page, fz_device *dev, fz_matrix ctm,
+                            fz_rect bounds=fz_infinite_rect, bool cacheRun=true);
+    void            dropPageRun(XpsPageRun *run, bool forceRemove=false);
+
+    fz_glyph_cache* _drawcache;
+
+public:
+    static XpsEngine *CreateFromFileName(const TCHAR *fileName);
+};
+
 // TODO: move inside PdfEngine.cpp once we've gotten rid of fz_* outside
 
-inline RectD fz_recttoRectD(fz_rect rect)
+inline RectD fz_rect_to_RectD(fz_rect rect)
 {
     return RectD::FromXY(rect.x0, rect.y0, rect.x1, rect.y1);
 }
 
-inline fz_rect fz_RectDtorect(RectD rect)
+inline fz_rect fz_RectD_to_rect(RectD rect)
 {
     fz_rect result = { (float)rect.x, (float)rect.y, (float)(rect.x + rect.dx), (float)(rect.y + rect.dy) };
     return result;
