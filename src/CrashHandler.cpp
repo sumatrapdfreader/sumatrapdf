@@ -116,7 +116,59 @@ static BOOL CALLBACK OpenMiniDumpCallback(void* /*param*/, PMINIDUMP_CALLBACK_IN
     }
 }
 
-static void EnumerateModules(Str::Str<char> & s)
+static bool Is64Bit()
+{
+    typedef void (WINAPI * GetSystemInfoProc)(LPSYSTEM_INFO);
+    WinLibrary lib(_T("kernel32.dll"));
+    GetSystemInfoProc _GetNativeSystemInfo = (GetSystemInfoProc)lib.GetProcAddr("GetNativeSystemInfo");
+
+    if (!_GetNativeSystemInfo)
+        return false;
+    SYSTEM_INFO sysInfo = {0};
+    _GetNativeSystemInfo(&sysInfo);
+    return sysInfo.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64;
+}
+
+static char *OsNameFromVer(OSVERSIONINFOEX ver)
+{
+    if (VER_PLATFORM_WIN32_NT != ver.dwPlatformId)
+        return "Unknown";
+    // Windows 7 beta 1 reports the same major version as Vista does.
+    if (ver.dwMajorVersion == 6 && ver.dwMinorVersion == 1) {
+        return "7";
+    } else if (ver.dwMajorVersion == 6 && ver.dwMinorVersion == 0) {
+        return "Vista";
+    } else if (ver.dwMajorVersion == 5 && ver.dwMinorVersion == 2) {
+        return "Sever 2003";
+    } else if (ver.dwMajorVersion == 5 && ver.dwMinorVersion == 1) {
+        return "XP";
+    } else if (ver.dwMajorVersion == 5 && ver.dwMinorVersion == 0) {
+        return "2000";
+    } else if (ver.dwMajorVersion <= 4) {
+        return "9xOrNT";
+    } else {
+        return "Unknown";
+    }
+}
+
+static void GetOsVersion(Str::Str<char>& s)
+{
+    OSVERSIONINFOEX ver;
+    ZeroMemory(&ver, sizeof(ver));
+    ver.dwOSVersionInfoSize = sizeof(ver);
+    BOOL ok = GetVersionEx((OSVERSIONINFO*)&ver);
+    if (!ok)
+        return;
+    char *os = OsNameFromVer(ver);
+    int servicePackMajor = ver.wServicePackMajor;
+    int servicePackMinor = ver.wServicePackMinor;
+    char *tmp = Is64Bit() ? "32bit" : "64bit";
+    // TOOD: also add WOW info via IsWow64Process() because Is64Bit() returns
+    // false for 32bit processes running on 64bit os
+    s.AppendFmt("OS: %s %d.%d %s\n", os, servicePackMajor, servicePackMinor, tmp);
+}
+
+static void GetModules(Str::Str<char>& s)
 {
     HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, GetCurrentProcessId());
       if (snap == INVALID_HANDLE_VALUE) return;
@@ -133,7 +185,7 @@ static void EnumerateModules(Str::Str<char> & s)
 
 #define MAX_NAME_LEN 512
 
-static void EnumerateCallstack(Str::Str<char>& s)
+static void GetCallstack(Str::Str<char>& s)
 {
     if (!CanStackWalk())
         return;
@@ -197,10 +249,11 @@ static char *BuildCrashInfoText()
 {
     Str::Str<char> s;
     s.AppendFmt("Ver: %s\n", QM(CURR_VERSION));
+    GetOsVersion(s);
     s.Append("\n");
-    EnumerateModules(s);
+    GetModules(s);
     s.Append("\n");
-    EnumerateCallstack(s);
+    GetCallstack(s);
     return s.StealData();
 }
 
