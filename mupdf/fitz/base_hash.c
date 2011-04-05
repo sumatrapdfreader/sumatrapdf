@@ -8,21 +8,21 @@ exhibiting bad behaviour if entries are inserted
 and removed frequently.
 */
 
-enum { MAXKEYLEN = 48 };
-typedef struct fz_hashentry_s fz_hashentry;
+enum { MAX_KEY_LEN = 48 };
+typedef struct fz_hash_entry_s fz_hash_entry;
 
-struct fz_hashentry_s
+struct fz_hash_entry_s
 {
-	unsigned char key[MAXKEYLEN];
+	unsigned char key[MAX_KEY_LEN];
 	void *val;
 };
 
-struct fz_hashtable_s
+struct fz_hash_table_s
 {
 	int keylen;
 	int size;
 	int load;
-	fz_hashentry *ents;
+	fz_hash_entry *ents;
 };
 
 static unsigned hash(unsigned char *s, int len)
@@ -41,59 +41,59 @@ static unsigned hash(unsigned char *s, int len)
 	return val;
 }
 
-fz_hashtable *
-fz_newhash(int initialsize, int keylen)
+fz_hash_table *
+fz_new_hash_table(int initialsize, int keylen)
 {
-	fz_hashtable *table;
+	fz_hash_table *table;
 
-	assert(keylen <= MAXKEYLEN);
+	assert(keylen <= MAX_KEY_LEN);
 
-	table = fz_malloc(sizeof(fz_hashtable));
+	table = fz_malloc(sizeof(fz_hash_table));
 	table->keylen = keylen;
 	table->size = initialsize;
 	table->load = 0;
-	table->ents = fz_calloc(table->size, sizeof(fz_hashentry));
-	memset(table->ents, 0, sizeof(fz_hashentry) * table->size);
+	table->ents = fz_calloc(table->size, sizeof(fz_hash_entry));
+	memset(table->ents, 0, sizeof(fz_hash_entry) * table->size);
 
 	return table;
 }
 
 void
-fz_emptyhash(fz_hashtable *table)
+fz_empty_hash(fz_hash_table *table)
 {
 	table->load = 0;
-	memset(table->ents, 0, sizeof(fz_hashentry) * table->size);
+	memset(table->ents, 0, sizeof(fz_hash_entry) * table->size);
 }
 
 int
-fz_hashlen(fz_hashtable *table)
+fz_hash_len(fz_hash_table *table)
 {
 	return table->size;
 }
 
 void *
-fz_hashgetkey(fz_hashtable *table, int idx)
+fz_hash_get_key(fz_hash_table *table, int idx)
 {
 	return table->ents[idx].key;
 }
 
 void *
-fz_hashgetval(fz_hashtable *table, int idx)
+fz_hash_get_val(fz_hash_table *table, int idx)
 {
 	return table->ents[idx].val;
 }
 
 void
-fz_freehash(fz_hashtable *table)
+fz_free_hash(fz_hash_table *table)
 {
 	fz_free(table->ents);
 	fz_free(table);
 }
 
 static void
-fz_resizehash(fz_hashtable *table, int newsize)
+fz_resize_hash(fz_hash_table *table, int newsize)
 {
-	fz_hashentry *oldents = table->ents;
+	fz_hash_entry *oldents = table->ents;
 	int oldsize = table->size;
 	int oldload = table->load;
 	int i;
@@ -104,8 +104,8 @@ fz_resizehash(fz_hashtable *table, int newsize)
 		return;
 	}
 
-	table->ents = fz_calloc(newsize, sizeof(fz_hashentry));
-	memset(table->ents, 0, sizeof(fz_hashentry) * newsize);
+	table->ents = fz_calloc(newsize, sizeof(fz_hash_entry));
+	memset(table->ents, 0, sizeof(fz_hash_entry) * newsize);
 	table->size = newsize;
 	table->load = 0;
 
@@ -113,7 +113,7 @@ fz_resizehash(fz_hashtable *table, int newsize)
 	{
 		if (oldents[i].val)
 		{
-			fz_hashinsert(table, oldents[i].key, oldents[i].val);
+			fz_hash_insert(table, oldents[i].key, oldents[i].val);
 		}
 	}
 
@@ -121,16 +121,16 @@ fz_resizehash(fz_hashtable *table, int newsize)
 }
 
 void *
-fz_hashfind(fz_hashtable *table, void *key)
+fz_hash_find(fz_hash_table *table, void *key)
 {
-	fz_hashentry *ents = table->ents;
+	fz_hash_entry *ents = table->ents;
 	unsigned size = table->size;
 	unsigned pos = hash(key, table->keylen) % size;
 
 	while (1)
 	{
 		if (!ents[pos].val)
-			return nil;
+			return NULL;
 
 		if (memcmp(key, ents[pos].key, table->keylen) == 0)
 			return ents[pos].val;
@@ -140,15 +140,15 @@ fz_hashfind(fz_hashtable *table, void *key)
 }
 
 void
-fz_hashinsert(fz_hashtable *table, void *key, void *val)
+fz_hash_insert(fz_hash_table *table, void *key, void *val)
 {
-	fz_hashentry *ents;
+	fz_hash_entry *ents;
 	unsigned size;
 	unsigned pos;
 
 	if (table->load > table->size * 8 / 10)
 	{
-		fz_resizehash(table, table->size * 2);
+		fz_resize_hash(table, table->size * 2);
 	}
 
 	ents = table->ents;
@@ -173,9 +173,9 @@ fz_hashinsert(fz_hashtable *table, void *key, void *val)
 }
 
 void
-fz_hashremove(fz_hashtable *table, void *key)
+fz_hash_remove(fz_hash_table *table, void *key)
 {
-	fz_hashentry *ents = table->ents;
+	fz_hash_entry *ents = table->ents;
 	unsigned size = table->size;
 	unsigned pos = hash(key, table->keylen) % size;
 	unsigned hole, look, code;
@@ -190,7 +190,7 @@ fz_hashremove(fz_hashtable *table, void *key)
 
 		if (memcmp(key, ents[pos].key, table->keylen) == 0)
 		{
-			ents[pos].val = nil;
+			ents[pos].val = NULL;
 
 			hole = pos;
 			look = (hole + 1) % size;
@@ -203,7 +203,7 @@ fz_hashremove(fz_hashtable *table, void *key)
 					(hole < look && look < code))
 				{
 					ents[hole] = ents[look];
-					ents[look].val = nil;
+					ents[look].val = NULL;
 					hole = look;
 				}
 
@@ -220,7 +220,7 @@ fz_hashremove(fz_hashtable *table, void *key)
 }
 
 void
-fz_debughash(fz_hashtable *table)
+fz_debug_hash(fz_hash_table *table)
 {
 	int i, k;
 
@@ -233,7 +233,7 @@ fz_debughash(fz_hashtable *table)
 		else
 		{
 			printf("table % 4d: key=", i);
-			for (k = 0; k < MAXKEYLEN; k++)
+			for (k = 0; k < MAX_KEY_LEN; k++)
 				printf("%02x", ((char*)table->ents[i].key)[k]);
 			printf(" val=$%p\n", table->ents[i].val);
 		}

@@ -17,12 +17,12 @@ void *
 fz_calloc_no_abort(int count, int size)
 {
 	if (count == 0 || size == 0)
-		return nil;
+		return NULL;
 
 	if (count < 0 || size < 0 || count > INT_MAX / size)
 	{
 		fprintf(stderr, "fatal error: out of memory (integer overflow)\n");
-		return nil;
+		return NULL;
 	}
 
 	return calloc(count, size);
@@ -63,7 +63,7 @@ fz_realloc(void *p, int count, int size)
 	}
 
 	np = realloc(p, count * size);
-	if (np == nil)
+	if (np == NULL)
 	{
 		fprintf(stderr, "fatal error: out of memory\n");
 		abort();

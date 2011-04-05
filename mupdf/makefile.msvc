@@ -145,7 +145,7 @@ MUPDF_CFLAGS = $(CFLAGS) /D "NEED_MATH" /D "NEED_GETTIMEOFDAY" /D "HAVE_JBIG2DEC
 MUPDF_CFLAGS = $(MUPDF_CFLAGS) /D "HAVE_OPENJPEG" /I$(OPENJPEG_DIR)
 
 MUPDF_CFLAGS = $(MUPDF_CFLAGS) \
-	/I$(MUPDF_DIR)/fitz /I$(MUPDF_DIR)/mupdf /I$(MUPDF_DIR)/xps /I$(MUPDF_DIR)/apps \
+	/I$(MUPDF_DIR)/fitz /I$(MUPDF_DIR)/pdf /I$(MUPDF_DIR)/xps /I$(MUPDF_DIR)/apps \
 	/I$(FREETYPE_DIR)/config /I$(FREETYPE_DIR)/include /I$(ZLIB_DIR) /I$(JBIG2_DIR)
 
 !if "$(JPEG_TURBO_DIR)"==""
@@ -244,9 +244,9 @@ OPENJPEG_OBJS = \
 	$(OOJ)\t2.obj $(OOJ)\tcd.obj $(OOJ)\tgt.obj
 
 FITZ_DRAW_OBJS = \
-	$(OFZ)\archport.obj $(OFZ)\blendmodes.obj $(OFZ)\imagescale.obj $(OFZ)\imagesmooth.obj \
-	$(OFZ)\pathfill.obj $(OFZ)\glyphcache.obj $(OFZ)\imageunpack.obj $(OFZ)\pathscan.obj \
-	$(OFZ)\porterduff.obj $(OFZ)\imagedraw.obj $(OFZ)\meshdraw.obj $(OFZ)\pathstroke.obj
+	$(OFZ)\arch_port.obj $(OFZ)\draw_affine.obj $(OFZ)\draw_blend.obj $(OFZ)\draw_edge.obj \
+	$(OFZ)\draw_glyph.obj $(OFZ)\draw_mesh.obj $(OFZ)\draw_paint.obj $(OFZ)\draw_path.obj \
+	$(OFZ)\draw_scale.obj $(OFZ)\draw_unpack.obj
 
 FITZ_OBJS = \
 	$(OFZ)\base_error.obj $(OFZ)\base_geometry.obj $(OFZ)\base_getopt.obj $(OFZ)\base_hash.obj \
@@ -266,7 +266,7 @@ MUPDF_OBJS = \
 	$(OP)\pdf_colorspace.obj $(OP)\pdf_crypt.obj $(OP)\pdf_debug.obj \
 	$(OP)\pdf_font.obj $(OP)\pdf_fontagl.obj $(OP)\pdf_fontenc.obj $(OP)\pdf_fontmtx.obj \
 	$(OP)\pdf_function.obj $(OP)\pdf_image.obj $(OP)\pdf_interpret.obj $(OP)\pdf_lex.obj \
-	$(OP)\pdf_nametree.obj $(OP)\pdf_outline.obj $(OP)\pdf_page.obj $(OP)\pdf_pagetree.obj \
+	$(OP)\pdf_nametree.obj $(OP)\pdf_outline.obj $(OP)\pdf_page.obj \
 	$(OP)\pdf_parse.obj $(OP)\pdf_pattern.obj $(OP)\pdf_repair.obj $(OP)\pdf_shade.obj \
 	$(OP)\pdf_store.obj $(OP)\pdf_stream.obj $(OP)\pdf_type3.obj $(OP)\pdf_unicode.obj \
 	$(OP)\pdf_xobject.obj $(OP)\pdf_xref.obj $(OP)\pdf_fontfile.obj \
@@ -558,8 +558,7 @@ $(OCM)\font_cjk.obj: $(OCM)\font_cjk.c
 $(OCM)\font_misc.c: $(FONTDUMP_APP)
 	$(FONTDUMP_APP) $(OCM)\font_misc.c \
 	$(MUPDF_DIR)\fonts\Dingbats.cff \
-	$(MUPDF_DIR)\fonts\StandardSymL.cff \
-	$(MUPDF_DIR)\fonts\URWChanceryL-MediItal.cff
+	$(MUPDF_DIR)\fonts\StandardSymL.cff
 
 $(OCM)\font_mono.c: $(FONTDUMP_APP)
 	$(FONTDUMP_APP) $(OCM)\font_mono.c \
@@ -724,7 +723,7 @@ $(LIBMUPDF_DLL): $(LIBMUPDF_OBJS) $(LIBMUPDF_DEF) $(LIBMUPDF_RES)
 {$(MUPDF_DIR)\apps}.c{$(O)}.obj::
 	$(CC) /TC $(MUPDF_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
 
-{$(MUPDF_DIR)\mupdf}.c{$(OP)}.obj::
+{$(MUPDF_DIR)\pdf}.c{$(OP)}.obj::
 	$(CC) /TC $(MUPDF_CFLAGS) /Fo$(OP)\ /Fd$(O)\vc80.pdb $<
 
 {$(MUPDF_DIR)\xps}.c{$(OX)}.obj::
@@ -750,7 +749,7 @@ $(LIBMUPDF_DLL): $(LIBMUPDF_OBJS) $(LIBMUPDF_DEF) $(LIBMUPDF_RES)
 	$(CC) /TC $(MUPDF_CFLAGS) /Fo$(OCM)\ /Fd$(O)\vc80.pdb $<
 
 $(FITZ_OBJS) $(FITZ_DRAW_OBJS): $(MUPDF_DIR)\fitz\fitz.h
-$(MUPDF_OBJS) $(CMAP_OBJS): $(MUPDF_DIR)\fitz\fitz.h $(MUPDF_DIR)\mupdf\mupdf.h
+$(MUPDF_OBJS) $(CMAP_OBJS): $(MUPDF_DIR)\fitz\fitz.h $(MUPDF_DIR)\pdf\mupdf.h
 $(MUXPS_OBJS): $(MUPDF_DIR)\fitz\fitz.h $(MUPDF_DIR)\xps\muxps.h
 
 force: ;

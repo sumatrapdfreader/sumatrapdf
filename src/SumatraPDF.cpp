@@ -2510,7 +2510,7 @@ static void OnContextMenu(WindowInfo *win, int x, int y)
 
     case IDM_COPY_COMMENT:
         {
-            ScopedMem<TCHAR> commentText(Str::Conv::FromUtf8(fz_tostrbuf(fz_dictgets(comment->obj, "Contents"))));
+            ScopedMem<TCHAR> commentText(Str::Conv::FromUtf8(fz_to_str_buf(fz_dict_gets(comment->obj, "Contents"))));
             CopyTextToClipboard(commentText);
         }
         break;
@@ -4610,7 +4610,7 @@ static void GoToTocLinkForTVItem(WindowInfo *win, HWND hTV, HTREEITEM hItem=NULL
     TreeView_GetItem(hTV, &item);
     PdfTocItem *tocItem = (PdfTocItem *)item.lParam;
     if (win->PdfLoaded() && tocItem &&
-        (allowExternal || tocItem->link && PDF_LGOTO == tocItem->link->kind)) {
+        (allowExternal || tocItem->link && PDF_LINK_GOTO == tocItem->link->kind)) {
         gUIThreadMarshaller.Queue(new GoToTocLinkWorkItem(win, tocItem));
     }
 }
@@ -5758,7 +5758,7 @@ static void CustomizeToCInfoTip(WindowInfo *win, LPNMTVGETINFOTIP nmit)
         infotip.Append(_T("\r\n"));
     }
 
-    if (PDF_LLAUNCH == tocItem->link->kind && fz_dictgets(tocItem->link->dest, "EF")) {
+    if (PDF_LINK_LAUNCH == tocItem->link->kind && fz_dict_gets(tocItem->link->dest, "EF")) {
         TCHAR *comment = Str::Format(_TR("Attachment: %s"), path);
         free(path);
         path = comment;
@@ -5780,7 +5780,7 @@ static void CreateInfotipForPdfLink(WindowInfo *win, int pageNo, pdf_link *link)
 
 static void CreateInfotipForComment(WindowInfo *win, int pageNo, pdf_annot *annot)
 {
-    ScopedMem<TCHAR> comment(Str::Conv::FromUtf8(fz_tostrbuf(fz_dictgets(annot->obj, "Contents"))));
+    ScopedMem<TCHAR> comment(Str::Conv::FromUtf8(fz_to_str_buf(fz_dict_gets(annot->obj, "Contents"))));
     RectD rc = fz_recttoRectD(annot->rect);
     if (!win->dm->rectCvtUserToScreen(pageNo, &rc))
         rc = RectD();

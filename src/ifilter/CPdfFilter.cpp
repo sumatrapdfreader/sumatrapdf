@@ -27,7 +27,7 @@ HRESULT CPdfFilter::OnInit()
         return res;
 
     DWORD size = stat.cbSize.LowPart;
-    fz_buffer *filedata = fz_newbuffer(size);
+    fz_buffer *filedata = fz_new_buffer(size);
     filedata->len = size;
 
     LARGE_INTEGER zero;
@@ -35,12 +35,12 @@ HRESULT CPdfFilter::OnInit()
     m_pStream->Seek(zero, STREAM_SEEK_SET, NULL);
     res = m_pStream->Read(filedata->data, filedata->len, NULL);
     if (FAILED(res)) {
-        fz_dropbuffer(filedata);
+        fz_drop_buffer(filedata);
         return res;
     }
 
-    fz_stream *stm = fz_openbuffer(filedata);
-    fz_dropbuffer(filedata);
+    fz_stream *stm = fz_open_buffer(filedata);
+    fz_drop_buffer(filedata);
 
     m_pdfEngine = PdfEngine::CreateFromStream(stm);
     if (!m_pdfEngine)

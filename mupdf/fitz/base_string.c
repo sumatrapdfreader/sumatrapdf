@@ -1,7 +1,7 @@
 #include "fitz.h"
 
 int
-fz_isbigendian(void)
+fz_is_big_endian(void)
 {
 	static const int one = 1;
 	return *(char*)&one == 0;
@@ -11,8 +11,8 @@ char *
 fz_strsep(char **stringp, const char *delim)
 {
 	char *ret = *stringp;
-	if (ret == nil) return nil;
-	if ((*stringp = strpbrk(*stringp, delim)) != nil)
+	if (ret == NULL) return NULL;
+	if ((*stringp = strpbrk(*stringp, delim)) != NULL)
 		*((*stringp)++) = '\0';
 	return ret;
 }

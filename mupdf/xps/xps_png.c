@@ -484,7 +484,7 @@ png_read_image(struct info *info, unsigned char *p, int total)
 static fz_pixmap *
 png_expand_palette(struct info *info, fz_pixmap *src)
 {
-	fz_pixmap *dst = fz_newpixmap(fz_devicergb, 0, 0, src->w, src->h);
+	fz_pixmap *dst = fz_new_pixmap(fz_device_rgb, 0, 0, src->w, src->h);
 	unsigned char *sp = src->samples;
 	unsigned char *dp = dst->samples;
 	int x, y;
@@ -505,7 +505,7 @@ png_expand_palette(struct info *info, fz_pixmap *src)
 		}
 	}
 
-	fz_droppixmap(src);
+	fz_drop_pixmap(src);
 	return dst;
 }
 
@@ -547,17 +547,17 @@ xps_decode_png(fz_pixmap **imagep, byte *p, int total)
 		return fz_rethrow(code, "cannot read png image");
 
 	if (png.n == 3 || png.n == 4)
-		colorspace = fz_devicergb;
+		colorspace = fz_device_rgb;
 	else
-		colorspace = fz_devicegray;
+		colorspace = fz_device_gray;
 
 	stride = (png.width * png.n * png.depth + 7) / 8;
 
-	image = fz_newpixmap(colorspace, 0, 0, png.width, png.height);
+	image = fz_new_pixmap(colorspace, 0, 0, png.width, png.height);
 	image->xres = png.xres;
 	image->yres = png.yres;
 
-	fz_unpacktile(image, png.samples, png.n, png.depth, stride, png.indexed);
+	fz_unpack_tile(image, png.samples, png.n, png.depth, stride, png.indexed);
 
 	if (png.indexed)
 		image = png_expand_palette(&png, image);
@@ -565,7 +565,7 @@ xps_decode_png(fz_pixmap **imagep, byte *p, int total)
 		png_mask_transparency(&png, image);
 
 	if (png.transparency || png.n == 2 || png.n == 4)
-		fz_premultiplypixmap(image);
+		fz_premultiply_pixmap(image);
 
 	fz_free(png.samples);
 

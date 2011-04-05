@@ -3,23 +3,23 @@
 /* Pretend we have a filter that just copies data forever */
 
 fz_stream *
-fz_opencopy(fz_stream *chain)
+fz_open_copy(fz_stream *chain)
 {
-	return fz_keepstream(chain);
+	return fz_keep_stream(chain);
 }
 
 /* Null filter copies a specified amount of data */
 
-struct nullfilter
+struct null_filter
 {
 	fz_stream *chain;
 	int remain;
 };
 
 static int
-readnull(fz_stream *stm, unsigned char *buf, int len)
+read_null(fz_stream *stm, unsigned char *buf, int len)
 {
-	struct nullfilter *state = stm->state;
+	struct null_filter *state = stm->state;
 	int amount = MIN(len, state->remain);
 	int n = fz_read(state->chain, buf, amount);
 	if (n < 0)
@@ -29,23 +29,23 @@ readnull(fz_stream *stm, unsigned char *buf, int len)
 }
 
 static void
-closenull(fz_stream *stm)
+close_null(fz_stream *stm)
 {
-	struct nullfilter *state = stm->state;
+	struct null_filter *state = stm->state;
 	fz_close(state->chain);
 	fz_free(state);
 }
 
 fz_stream *
-fz_opennull(fz_stream *chain, int len)
+fz_open_null(fz_stream *chain, int len)
 {
-	struct nullfilter *state;
+	struct null_filter *state;
 
-	state = fz_malloc(sizeof(struct nullfilter));
+	state = fz_malloc(sizeof(struct null_filter));
 	state->chain = chain;
 	state->remain = len;
 
-	return fz_newstream(state, readnull, closenull);
+	return fz_new_stream(state, read_null, close_null);
 }
 
 /* ASCII Hex Decode */
@@ -75,7 +75,7 @@ static inline int ishex(int a)
 		(a >= '0' && a <= '9');
 }
 
-static inline int fromhex(int a)
+static inline int from_hex(int a)
 {
 	if (a >= 'A' && a <= 'F')
 		return a - 'A' + 0xA;
@@ -87,7 +87,7 @@ static inline int fromhex(int a)
 }
 
 static int
-readahxd(fz_stream *stm, unsigned char *buf, int len)
+read_ahxd(fz_stream *stm, unsigned char *buf, int len)
 {
 	fz_ahxd *state = stm->state;
 	unsigned char *p = buf;
@@ -101,7 +101,7 @@ readahxd(fz_stream *stm, unsigned char *buf, int len)
 		if (state->eod)
 			return p - buf;
 
-		c = fz_readbyte(state->chain);
+		c = fz_read_byte(state->chain);
 		if (c < 0)
 			return p - buf;
 
@@ -109,12 +109,12 @@ readahxd(fz_stream *stm, unsigned char *buf, int len)
 		{
 			if (!odd)
 			{
-				a = fromhex(c);
+				a = from_hex(c);
 				odd = 1;
 			}
 			else
 			{
-				b = fromhex(c);
+				b = from_hex(c);
 				*p++ = (a << 4) | b;
 				odd = 0;
 			}
@@ -135,7 +135,7 @@ readahxd(fz_stream *stm, unsigned char *buf, int len)
 }
 
 static void
-closeahxd(fz_stream *stm)
+close_ahxd(fz_stream *stm)
 {
 	fz_ahxd *state = stm->state;
 	fz_close(state->chain);
@@ -143,7 +143,7 @@ closeahxd(fz_stream *stm)
 }
 
 fz_stream *
-fz_openahxd(fz_stream *chain)
+fz_open_ahxd(fz_stream *chain)
 {
 	fz_ahxd *state;
 
@@ -151,7 +151,7 @@ fz_openahxd(fz_stream *chain)
 	state->chain = chain;
 	state->eod = 0;
 
-	return fz_newstream(state, readahxd, closeahxd);
+	return fz_new_stream(state, read_ahxd, close_ahxd);
 }
 
 /* ASCII 85 Decode */
@@ -167,7 +167,7 @@ struct fz_a85d_s
 };
 
 static int
-reada85d(fz_stream *stm, unsigned char *buf, int len)
+read_a85d(fz_stream *stm, unsigned char *buf, int len)
 {
 	fz_a85d *state = stm->state;
 	unsigned char *p = buf;
@@ -184,7 +184,7 @@ reada85d(fz_stream *stm, unsigned char *buf, int len)
 		if (state->eod)
 			return p - buf;
 
-		c = fz_readbyte(state->chain);
+		c = fz_read_byte(state->chain);
 		if (c < 0)
 			return p - buf;
 
@@ -223,11 +223,7 @@ reada85d(fz_stream *stm, unsigned char *buf, int len)
 
 		else if (c == '~')
 		{
-			c = fz_readbyte(state->chain);
-			/* SumatraPDF: tolerate slightly broken ASCII85Decode streams */
-			if (c == EOF)
-				fz_warn("bad eod marker in a85d: ~ instead of ~>");
-			else
+			c = fz_read_byte(state->chain);
 			if (c != '>')
 				fz_warn("bad eod marker in a85d");
 
@@ -274,7 +270,7 @@ reada85d(fz_stream *stm, unsigned char *buf, int len)
 }
 
 static void
-closea85d(fz_stream *stm)
+close_a85d(fz_stream *stm)
 {
 	fz_a85d *state = stm->state;
 	fz_close(state->chain);
@@ -282,7 +278,7 @@ closea85d(fz_stream *stm)
 }
 
 fz_stream *
-fz_opena85d(fz_stream *chain)
+fz_open_a85d(fz_stream *chain)
 {
 	fz_a85d *state;
 
@@ -292,7 +288,7 @@ fz_opena85d(fz_stream *chain)
 	state->wp = state->bp;
 	state->eod = 0;
 
-	return fz_newstream(state, reada85d, closea85d);
+	return fz_new_stream(state, read_a85d, close_a85d);
 }
 
 /* Run Length Decode */
@@ -306,7 +302,7 @@ struct fz_rld_s
 };
 
 static int
-readrld(fz_stream *stm, unsigned char *buf, int len)
+read_rld(fz_stream *stm, unsigned char *buf, int len)
 {
 	fz_rld *state = stm->state;
 	unsigned char *p = buf;
@@ -319,7 +315,7 @@ readrld(fz_stream *stm, unsigned char *buf, int len)
 
 		if (state->n == 0)
 		{
-			state->run = fz_readbyte(state->chain);
+			state->run = fz_read_byte(state->chain);
 			if (state->run < 0)
 				state->run = 128;
 			if (state->run < 128)
@@ -327,7 +323,7 @@ readrld(fz_stream *stm, unsigned char *buf, int len)
 			if (state->run > 128)
 			{
 				state->n = 257 - state->run;
-				state->c = fz_readbyte(state->chain);
+				state->c = fz_read_byte(state->chain);
 				if (state->c < 0)
 					return fz_throw("premature end of data in run length decode");
 			}
@@ -337,7 +333,7 @@ readrld(fz_stream *stm, unsigned char *buf, int len)
 		{
 			while (p < ep && state->n)
 			{
-				int c = fz_readbyte(state->chain);
+				int c = fz_read_byte(state->chain);
 				if (c < 0)
 					return fz_throw("premature end of data in run length decode");
 				*p++ = c;
@@ -359,7 +355,7 @@ readrld(fz_stream *stm, unsigned char *buf, int len)
 }
 
 static void
-closerld(fz_stream *stm)
+close_rld(fz_stream *stm)
 {
 	fz_rld *state = stm->state;
 	fz_close(state->chain);
@@ -367,7 +363,7 @@ closerld(fz_stream *stm)
 }
 
 fz_stream *
-fz_openrld(fz_stream *chain)
+fz_open_rld(fz_stream *chain)
 {
 	fz_rld *state;
 
@@ -377,7 +373,7 @@ fz_openrld(fz_stream *chain)
 	state->n = 0;
 	state->c = 0;
 
-	return fz_newstream(state, readrld, closerld);
+	return fz_new_stream(state, read_rld, close_rld);
 }
 
 /* RC4 Filter */
@@ -391,7 +387,7 @@ struct fz_arc4c_s
 };
 
 static int
-readarc4(fz_stream *stm, unsigned char *buf, int len)
+read_arc4(fz_stream *stm, unsigned char *buf, int len)
 {
 	fz_arc4c *state = stm->state;
 	int n;
@@ -400,13 +396,13 @@ readarc4(fz_stream *stm, unsigned char *buf, int len)
 	if (n < 0)
 		return fz_rethrow(n, "read error in arc4 filter");
 
-	fz_arc4encrypt(&state->arc4, buf, buf, n);
+	fz_arc4_encrypt(&state->arc4, buf, buf, n);
 
 	return n;
 }
 
 static void
-closearc4(fz_stream *stm)
+close_arc4(fz_stream *stm)
 {
 	fz_arc4c *state = stm->state;
 	fz_close(state->chain);
@@ -414,15 +410,15 @@ closearc4(fz_stream *stm)
 }
 
 fz_stream *
-fz_openarc4(fz_stream *chain, unsigned char *key, unsigned keylen)
+fz_open_arc4(fz_stream *chain, unsigned char *key, unsigned keylen)
 {
 	fz_arc4c *state;
 
 	state = fz_malloc(sizeof(fz_arc4c));
 	state->chain = chain;
-	fz_arc4init(&state->arc4, key, keylen);
+	fz_arc4_init(&state->arc4, key, keylen);
 
-	return fz_newstream(state, readarc4, closearc4);
+	return fz_new_stream(state, read_arc4, close_arc4);
 }
 
 /* AES Filter */
@@ -440,7 +436,7 @@ struct fz_aesd_s
 };
 
 static int
-readaesd(fz_stream *stm, unsigned char *buf, int len)
+read_aesd(fz_stream *stm, unsigned char *buf, int len)
 {
 	fz_aesd *state = stm->state;
 	unsigned char *p = buf;
@@ -448,7 +444,7 @@ readaesd(fz_stream *stm, unsigned char *buf, int len)
 
 	while (state->ivcount < 16)
 	{
-		int c = fz_readbyte(state->chain);
+		int c = fz_read_byte(state->chain);
 		if (c < 0)
 			return fz_throw("premature end in aes filter");
 		state->iv[state->ivcount++] = c;
@@ -472,7 +468,7 @@ readaesd(fz_stream *stm, unsigned char *buf, int len)
 		state->wp = state->bp + 16;
 
 		/* strip padding at end of file */
-		if (fz_iseof(state->chain))
+		if (fz_is_eof(state->chain))
 		{
 			int pad = state->bp[15];
 			if (pad < 1 || pad > 16)
@@ -488,7 +484,7 @@ readaesd(fz_stream *stm, unsigned char *buf, int len)
 }
 
 static void
-closeaesd(fz_stream *stm)
+close_aesd(fz_stream *stm)
 {
 	fz_aesd *state = stm->state;
 	fz_close(state->chain);
@@ -496,7 +492,7 @@ closeaesd(fz_stream *stm)
 }
 
 fz_stream *
-fz_openaesd(fz_stream *chain, unsigned char *key, unsigned keylen)
+fz_open_aesd(fz_stream *chain, unsigned char *key, unsigned keylen)
 {
 	fz_aesd *state;
 
@@ -507,5 +503,5 @@ fz_openaesd(fz_stream *chain, unsigned char *key, unsigned keylen)
 	state->rp = state->bp;
 	state->wp = state->bp;
 
-	return fz_newstream(state, readaesd, closeaesd);
+	return fz_new_stream(state, read_aesd, close_aesd);
 }

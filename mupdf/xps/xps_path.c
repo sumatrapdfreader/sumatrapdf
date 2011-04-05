@@ -12,22 +12,22 @@ fz_currentpoint(fz_path *path)
 
 	while (i < path->len)
 	{
-		switch (path->els[i++].k)
+		switch (path->items[i++].k)
 		{
 		case FZ_MOVETO:
-			m.x = c.x = path->els[i++].v;
-			m.y = c.y = path->els[i++].v;
+			m.x = c.x = path->items[i++].v;
+			m.y = c.y = path->items[i++].v;
 			break;
 		case FZ_LINETO:
-			c.x = path->els[i++].v;
-			c.y = path->els[i++].v;
+			c.x = path->items[i++].v;
+			c.y = path->items[i++].v;
 			break;
 		case FZ_CURVETO:
 			i += 4;
-			c.x = path->els[i++].v;
-			c.y = path->els[i++].v;
+			c.x = path->items[i++].v;
+			c.y = path->items[i++].v;
 			break;
-		case FZ_CLOSEPATH:
+		case FZ_CLOSE_PATH:
 			c = m;
 		}
 	}
@@ -55,18 +55,18 @@ xps_draw_arc_segment(fz_path *path, fz_matrix mtx, float th0, float th1, int isc
 	{
 		p.x = cosf(th0);
 		p.y = sinf(th0);
-		p = fz_transformpoint(mtx, p);
+		p = fz_transform_point(mtx, p);
 		fz_lineto(path, p.x, p.y);
 		for (t = th0; t < th1; t += d)
 		{
 			p.x = cosf(t);
 			p.y = sinf(t);
-			p = fz_transformpoint(mtx, p);
+			p = fz_transform_point(mtx, p);
 			fz_lineto(path, p.x, p.y);
 		}
 		p.x = cosf(th1);
 		p.y = sinf(th1);
-		p = fz_transformpoint(mtx, p);
+		p = fz_transform_point(mtx, p);
 		fz_lineto(path, p.x, p.y);
 	}
 	else
@@ -74,18 +74,18 @@ xps_draw_arc_segment(fz_path *path, fz_matrix mtx, float th0, float th1, int isc
 		th0 += (float)M_PI * 2;
 		p.x = cosf(th0);
 		p.y = sinf(th0);
-		p = fz_transformpoint(mtx, p);
+		p = fz_transform_point(mtx, p);
 		fz_lineto(path, p.x, p.y);
 		for (t = th0; t > th1; t -= d)
 		{
 			p.x = cosf(t);
 			p.y = sinf(t);
-			p = fz_transformpoint(mtx, p);
+			p = fz_transform_point(mtx, p);
 			fz_lineto(path, p.x, p.y);
 		}
 		p.x = cosf(th1);
 		p.y = sinf(th1);
-		p = fz_transformpoint(mtx, p);
+		p = fz_transform_point(mtx, p);
 		fz_lineto(path, p.x, p.y);
 	}
 }
@@ -154,7 +154,7 @@ xps_draw_arc(fz_path *path,
 	/* F.6.5.1 */
 	pt.x = (x1 - x2) / 2;
 	pt.y = (y1 - y2) / 2;
-	pt = fz_transformvector(revmat, pt);
+	pt = fz_transform_vector(revmat, pt);
 	x1t = pt.x;
 	y1t = pt.y;
 
@@ -180,7 +180,7 @@ xps_draw_arc(fz_path *path,
 	/* F.6.5.3 */
 	pt.x = cxt;
 	pt.y = cyt;
-	pt = fz_transformvector(rotmat, pt);
+	pt = fz_transform_vector(rotmat, pt);
 	cx = pt.x + (x1 + x2) / 2;
 	cy = pt.y + (y1 + y2) / 2;
 
@@ -232,7 +232,7 @@ xps_parse_abbreviated_geometry(xps_context *ctx, char *geom, int *fill_rule)
 	float smooth_x, smooth_y; /* saved cubic bezier control point for smooth curves */
 	int reset_smooth;
 
-	path = fz_newpath();
+	path = fz_new_path();
 
 	args = fz_calloc(strlen(geom) + 1, sizeof(char*));
 	pargs = args;
@@ -716,7 +716,7 @@ xps_parse_path_geometry(xps_context *ctx, xps_resource *dict, xml_element *root,
 	if (figures_att)
 		path = xps_parse_abbreviated_geometry(ctx, figures_att, fill_rule);
 	else
-		path = fz_newpath();
+		path = fz_new_path();
 
 	if (figures_tag)
 		xps_parse_path_figure(path, figures_tag, stroking);
@@ -728,7 +728,7 @@ xps_parse_path_geometry(xps_context *ctx, xps_resource *dict, xml_element *root,
 	}
 
 	if (transform_att || transform_tag)
-		fz_transformpath(path, transform);
+		fz_transform_path(path, transform);
 
 	return path;
 }
@@ -757,9 +757,9 @@ xps_clip(xps_context *ctx, fz_matrix ctm, xps_resource *dict, char *clip_att, xm
 	else if (clip_tag)
 		path = xps_parse_path_geometry(ctx, dict, clip_tag, 0, &fill_rule);
 	else
-		path = fz_newpath();
-	ctx->dev->clippath(ctx->dev->user, path, fill_rule == 0, ctm);
-	fz_freepath(path);
+		path = fz_new_path();
+	fz_clip_path(ctx->dev, path, fill_rule == 0, ctm);
+	fz_free_path(path);
 }
 
 /*
@@ -803,7 +803,7 @@ xps_parse_path(xps_context *ctx, fz_matrix ctm, char *base_uri, xps_resource *di
 	char *stroke_miter_limit_att;
 	char *stroke_thickness_att;
 
-	fz_strokestate stroke;
+	fz_stroke_state stroke;
 	fz_matrix transform;
 	float samples[32];
 	fz_colorspace *colorspace;
@@ -900,20 +900,20 @@ xps_parse_path(xps_context *ctx, fz_matrix ctm, char *base_uri, xps_resource *di
 	if (stroke_thickness_att)
 		stroke.linewidth = atof(stroke_thickness_att);
 
-	stroke.dashphase = 0;
-	stroke.dashlen = 0;
+	stroke.dash_phase = 0;
+	stroke.dash_len = 0;
 	if (stroke_dash_array_att)
 	{
 		char *s = stroke_dash_array_att;
 
 		if (stroke_dash_offset_att)
-			stroke.dashphase = atof(stroke_dash_offset_att) * stroke.linewidth;
+			stroke.dash_phase = atof(stroke_dash_offset_att) * stroke.linewidth;
 
-		while (*s && stroke.dashlen < nelem(stroke.dashlist))
+		while (*s && stroke.dash_len < nelem(stroke.dash_list))
 		{
 			while (*s == ' ')
 				s++;
-			stroke.dashlist[stroke.dashlen++] = atof(s) * stroke.linewidth;
+			stroke.dash_list[stroke.dash_len++] = atof(s) * stroke.linewidth;
 			while (*s && *s != ' ')
 				s++;
 		}
@@ -936,9 +936,9 @@ xps_parse_path(xps_context *ctx, fz_matrix ctm, char *base_uri, xps_resource *di
 		path = xps_parse_path_geometry(ctx, dict, data_tag, 0, &fill_rule);
 
 	if (stroke_att || stroke_tag)
-		area = fz_boundpath(path, &stroke, ctm);
+		area = fz_bound_path(path, &stroke, ctm);
 	else
-		area = fz_boundpath(path, NULL, ctm);
+		area = fz_bound_path(path, NULL, ctm);
 
 	xps_begin_opacity(ctx, ctm, area, opacity_mask_uri, dict, opacity_att, opacity_mask_tag);
 
@@ -949,17 +949,17 @@ xps_parse_path(xps_context *ctx, fz_matrix ctm, char *base_uri, xps_resource *di
 			samples[0] = atof(fill_opacity_att);
 		xps_set_color(ctx, colorspace, samples);
 
-		ctx->dev->fillpath(ctx->dev->user, path, fill_rule == 0, ctm,
+		fz_fill_path(ctx->dev, path, fill_rule == 0, ctm,
 			ctx->colorspace, ctx->color, ctx->alpha);
 	}
 
 	if (fill_tag)
 	{
-		area = fz_boundpath(path, NULL, ctm);
+		area = fz_bound_path(path, NULL, ctm);
 
-		ctx->dev->clippath(ctx->dev->user, path, fill_rule == 0, ctm);
+		fz_clip_path(ctx->dev, path, fill_rule == 0, ctm);
 		xps_parse_brush(ctx, ctm, area, fill_uri, dict, fill_tag);
-		ctx->dev->popclip(ctx->dev->user);
+		fz_pop_clip(ctx->dev);
 	}
 
 	if (stroke_att)
@@ -969,22 +969,22 @@ xps_parse_path(xps_context *ctx, fz_matrix ctm, char *base_uri, xps_resource *di
 			samples[0] = atof(stroke_opacity_att);
 		xps_set_color(ctx, colorspace, samples);
 
-		ctx->dev->strokepath(ctx->dev->user, path, &stroke, ctm,
+		fz_stroke_path(ctx->dev, path, &stroke, ctm,
 			ctx->colorspace, ctx->color, ctx->alpha);
 	}
 
 	if (stroke_tag)
 	{
-		ctx->dev->clipstrokepath(ctx->dev->user, path, &stroke, ctm);
+		fz_clip_stroke_path(ctx->dev, path, &stroke, ctm);
 		xps_parse_brush(ctx, ctm, area, stroke_uri, dict, stroke_tag);
-		ctx->dev->popclip(ctx->dev->user);
+		fz_pop_clip(ctx->dev);
 	}
 
 	xps_end_opacity(ctx, opacity_mask_uri, dict, opacity_att, opacity_mask_tag);
 
-	fz_freepath(path);
+	fz_free_path(path);
 	path = NULL;
 
 	if (clip_att || clip_tag)
-		ctx->dev->popclip(ctx->dev->user);
+		fz_pop_clip(ctx->dev);
 }

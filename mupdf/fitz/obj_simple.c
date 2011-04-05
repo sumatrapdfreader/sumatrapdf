@@ -1,17 +1,17 @@
 #include "fitz.h"
 
-extern void fz_freearray(fz_obj *array);
-extern void fz_freedict(fz_obj *dict);
+extern void fz_free_array(fz_obj *array);
+extern void fz_free_dict(fz_obj *dict);
 
 static fz_obj *fz_resolve_indirect_null(fz_obj *ref)
 {
 	return ref;
 }
 
-fz_obj* (*fz_resolveindirect)(fz_obj*) = fz_resolve_indirect_null;
+fz_obj* (*fz_resolve_indirect)(fz_obj*) = fz_resolve_indirect_null;
 
 fz_obj *
-fz_newnull(void)
+fz_new_null(void)
 {
 	fz_obj *o = fz_malloc(sizeof(fz_obj));
 	o->refs = 1;
@@ -20,7 +20,7 @@ fz_newnull(void)
 }
 
 fz_obj *
-fz_newbool(int b)
+fz_new_bool(int b)
 {
 	fz_obj *o = fz_malloc(sizeof(fz_obj));
 	o->refs = 1;
@@ -30,7 +30,7 @@ fz_newbool(int b)
 }
 
 fz_obj *
-fz_newint(int i)
+fz_new_int(int i)
 {
 	fz_obj *o = fz_malloc(sizeof(fz_obj));
 	o->refs = 1;
@@ -40,7 +40,7 @@ fz_newint(int i)
 }
 
 fz_obj *
-fz_newreal(float f)
+fz_new_real(float f)
 {
 	fz_obj *o = fz_malloc(sizeof(fz_obj));
 	o->refs = 1;
@@ -50,7 +50,7 @@ fz_newreal(float f)
 }
 
 fz_obj *
-fz_newstring(char *str, int len)
+fz_new_string(char *str, int len)
 {
 	fz_obj *o = fz_malloc(offsetof(fz_obj, u.s.buf) + len + 1);
 	o->refs = 1;
@@ -62,7 +62,7 @@ fz_newstring(char *str, int len)
 }
 
 fz_obj *
-fz_newname(char *str)
+fz_new_name(char *str)
 {
 	fz_obj *o = fz_malloc(offsetof(fz_obj, u.n) + strlen(str) + 1);
 	o->refs = 1;
@@ -72,7 +72,7 @@ fz_newname(char *str)
 }
 
 fz_obj *
-fz_newindirect(int num, int gen, void *xref)
+fz_new_indirect(int num, int gen, void *xref)
 {
 	fz_obj *o = fz_malloc(sizeof(fz_obj));
 	o->refs = 1;
@@ -84,143 +84,143 @@ fz_newindirect(int num, int gen, void *xref)
 }
 
 fz_obj *
-fz_keepobj(fz_obj *o)
+fz_keep_obj(fz_obj *o)
 {
-	assert(o != nil);
+	assert(o != NULL);
 	o->refs ++;
 	return o;
 }
 
 void
-fz_dropobj(fz_obj *o)
+fz_drop_obj(fz_obj *o)
 {
-	assert(o != nil);
+	assert(o != NULL);
 	if (--o->refs == 0)
 	{
 		if (o->kind == FZ_ARRAY)
-			fz_freearray(o);
+			fz_free_array(o);
 		else if (o->kind == FZ_DICT)
-			fz_freedict(o);
+			fz_free_dict(o);
 		else
 			fz_free(o);
 	}
 }
 
-int fz_isindirect(fz_obj *obj)
+int fz_is_indirect(fz_obj *obj)
 {
 	return obj ? obj->kind == FZ_INDIRECT : 0;
 }
 
-int fz_isnull(fz_obj *obj)
+int fz_is_null(fz_obj *obj)
 {
-	obj = fz_resolveindirect(obj);
+	obj = fz_resolve_indirect(obj);
 	return obj ? obj->kind == FZ_NULL : 0;
 }
 
-int fz_isbool(fz_obj *obj)
+int fz_is_bool(fz_obj *obj)
 {
-	obj = fz_resolveindirect(obj);
+	obj = fz_resolve_indirect(obj);
 	return obj ? obj->kind == FZ_BOOL : 0;
 }
 
-int fz_isint(fz_obj *obj)
+int fz_is_int(fz_obj *obj)
 {
-	obj = fz_resolveindirect(obj);
+	obj = fz_resolve_indirect(obj);
 	return obj ? obj->kind == FZ_INT : 0;
 }
 
-int fz_isreal(fz_obj *obj)
+int fz_is_real(fz_obj *obj)
 {
-	obj = fz_resolveindirect(obj);
+	obj = fz_resolve_indirect(obj);
 	return obj ? obj->kind == FZ_REAL : 0;
 }
 
-int fz_isstring(fz_obj *obj)
+int fz_is_string(fz_obj *obj)
 {
-	obj = fz_resolveindirect(obj);
+	obj = fz_resolve_indirect(obj);
 	return obj ? obj->kind == FZ_STRING : 0;
 }
 
-int fz_isname(fz_obj *obj)
+int fz_is_name(fz_obj *obj)
 {
-	obj = fz_resolveindirect(obj);
+	obj = fz_resolve_indirect(obj);
 	return obj ? obj->kind == FZ_NAME : 0;
 }
 
-int fz_isarray(fz_obj *obj)
+int fz_is_array(fz_obj *obj)
 {
-	obj = fz_resolveindirect(obj);
+	obj = fz_resolve_indirect(obj);
 	return obj ? obj->kind == FZ_ARRAY : 0;
 }
 
-int fz_isdict(fz_obj *obj)
+int fz_is_dict(fz_obj *obj)
 {
-	obj = fz_resolveindirect(obj);
+	obj = fz_resolve_indirect(obj);
 	return obj ? obj->kind == FZ_DICT : 0;
 }
 
-int fz_tobool(fz_obj *obj)
+int fz_to_bool(fz_obj *obj)
 {
-	obj = fz_resolveindirect(obj);
-	if (fz_isbool(obj))
+	obj = fz_resolve_indirect(obj);
+	if (fz_is_bool(obj))
 		return obj->u.b;
 	return 0;
 }
 
-int fz_toint(fz_obj *obj)
+int fz_to_int(fz_obj *obj)
 {
-	obj = fz_resolveindirect(obj);
-	if (fz_isint(obj))
+	obj = fz_resolve_indirect(obj);
+	if (fz_is_int(obj))
 		return obj->u.i;
-	if (fz_isreal(obj))
+	if (fz_is_real(obj))
 		return obj->u.f;
 	return 0;
 }
 
-float fz_toreal(fz_obj *obj)
+float fz_to_real(fz_obj *obj)
 {
-	obj = fz_resolveindirect(obj);
-	if (fz_isreal(obj))
+	obj = fz_resolve_indirect(obj);
+	if (fz_is_real(obj))
 		return obj->u.f;
-	if (fz_isint(obj))
+	if (fz_is_int(obj))
 		return obj->u.i;
 	return 0;
 }
 
-char *fz_toname(fz_obj *obj)
+char *fz_to_name(fz_obj *obj)
 {
-	obj = fz_resolveindirect(obj);
-	if (fz_isname(obj))
+	obj = fz_resolve_indirect(obj);
+	if (fz_is_name(obj))
 		return obj->u.n;
 	return "";
 }
 
-char *fz_tostrbuf(fz_obj *obj)
+char *fz_to_str_buf(fz_obj *obj)
 {
-	obj = fz_resolveindirect(obj);
-	if (fz_isstring(obj))
+	obj = fz_resolve_indirect(obj);
+	if (fz_is_string(obj))
 		return obj->u.s.buf;
 	return "";
 }
 
-int fz_tostrlen(fz_obj *obj)
+int fz_to_str_len(fz_obj *obj)
 {
-	obj = fz_resolveindirect(obj);
-	if (fz_isstring(obj))
+	obj = fz_resolve_indirect(obj);
+	if (fz_is_string(obj))
 		return obj->u.s.len;
 	return 0;
 }
 
-int fz_tonum(fz_obj *obj)
+int fz_to_num(fz_obj *obj)
 {
-	if (fz_isindirect(obj))
+	if (fz_is_indirect(obj))
 		return obj->u.r.num;
 	return 0;
 }
 
-int fz_togen(fz_obj *obj)
+int fz_to_gen(fz_obj *obj)
 {
-	if (fz_isindirect(obj))
+	if (fz_is_indirect(obj))
 		return obj->u.r.gen;
 	return 0;
 }
@@ -306,8 +306,8 @@ fz_objcmp(fz_obj *a, fz_obj *b)
 
 char *fz_objkindstr(fz_obj *obj)
 {
-	if (obj == nil)
-		return "<nil>";
+	if (obj == NULL)
+		return "<NULL>";
 	switch (obj->kind)
 	{
 	case FZ_NULL: return "null";

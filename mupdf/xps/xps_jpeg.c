@@ -63,7 +63,7 @@ xps_decode_jpeg(fz_pixmap **imagep, byte *rbuf, int rlen)
 	if (setjmp(err.env))
 	{
 		if (image)
-			fz_droppixmap(image);
+			fz_drop_pixmap(image);
 		return fz_throw("jpeg error: %s", err.msg);
 	}
 
@@ -86,15 +86,15 @@ xps_decode_jpeg(fz_pixmap **imagep, byte *rbuf, int rlen)
 	jpeg_start_decompress(&cinfo);
 
 	if (cinfo.output_components == 1)
-		colorspace = fz_devicegray;
+		colorspace = fz_device_gray;
 	else if (cinfo.output_components == 3)
-		colorspace = fz_devicergb;
+		colorspace = fz_device_rgb;
 	else if (cinfo.output_components == 4)
-		colorspace = fz_devicecmyk;
+		colorspace = fz_device_cmyk;
 	else
 		return fz_throw("bad number of components in jpeg: %d", cinfo.output_components);
 
-	image = fz_newpixmap(colorspace, 0, 0, cinfo.output_width, cinfo.output_height);
+	image = fz_new_pixmap(colorspace, 0, 0, cinfo.output_width, cinfo.output_height);
 
 	if (cinfo.density_unit == 1)
 	{
@@ -107,7 +107,7 @@ xps_decode_jpeg(fz_pixmap **imagep, byte *rbuf, int rlen)
 		image->yres = cinfo.Y_density * 254 / 100;
 	}
 
-	fz_clearpixmap(image);
+	fz_clear_pixmap(image);
 
 	row[0] = fz_malloc(cinfo.output_components * cinfo.output_width);
 	dp = image->samples;

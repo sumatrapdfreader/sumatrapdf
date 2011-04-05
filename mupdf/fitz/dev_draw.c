@@ -4,15 +4,13 @@
 #define HSUBPIX 5.0
 #define VSUBPIX 5.0
 
-#define STACKSIZE 96
+#define STACK_SIZE 96
 
-#define SMOOTHSCALE
+typedef struct fz_draw_device_s fz_draw_device;
 
-typedef struct fz_drawdevice_s fz_drawdevice;
-
-struct fz_drawdevice_s
+struct fz_draw_device_s
 {
-	fz_glyphcache *cache;
+	fz_glyph_cache *cache;
 	fz_gel *gel;
 	fz_ael *ael;
 
@@ -30,118 +28,118 @@ struct fz_drawdevice_s
 		fz_matrix ctm;
 		float xstep, ystep;
 		fz_rect area;
-	} stack[STACKSIZE];
+	} stack[STACK_SIZE];
 };
 
 static void
-fz_drawfillpath(void *user, fz_path *path, int evenodd, fz_matrix ctm,
+fz_draw_fill_path(void *user, fz_path *path, int even_odd, fz_matrix ctm,
 	fz_colorspace *colorspace, float *color, float alpha)
 {
-	fz_drawdevice *dev = user;
+	fz_draw_device *dev = user;
 	fz_colorspace *model = dev->dest->colorspace;
-	float expansion = fz_matrixexpansion(ctm);
+	float expansion = fz_matrix_expansion(ctm);
 	float flatness = 0.3f / expansion;
-	unsigned char colorbv[FZ_MAXCOLORS + 1];
-	float colorfv[FZ_MAXCOLORS];
+	unsigned char colorbv[FZ_MAX_COLORS + 1];
+	float colorfv[FZ_MAX_COLORS];
 	fz_bbox bbox;
 	int i;
 
-	fz_resetgel(dev->gel, dev->scissor);
-	fz_fillpath(dev->gel, path, ctm, flatness);
-	fz_sortgel(dev->gel);
+	fz_reset_gel(dev->gel, dev->scissor);
+	fz_flatten_fill_path(dev->gel, path, ctm, flatness);
+	fz_sort_gel(dev->gel);
 
-	bbox = fz_boundgel(dev->gel);
-	bbox = fz_intersectbbox(bbox, dev->scissor);
+	bbox = fz_bound_gel(dev->gel);
+	bbox = fz_intersect_bbox(bbox, dev->scissor);
 
-	if (fz_isemptyrect(bbox))
+	if (fz_is_empty_rect(bbox))
 		return;
 
-	fz_convertcolor(colorspace, color, model, colorfv);
+	fz_convert_color(colorspace, color, model, colorfv);
 	for (i = 0; i < model->n; i++)
 		colorbv[i] = colorfv[i] * 255;
 	colorbv[i] = alpha * 255;
 
-	fz_scanconvert(dev->gel, dev->ael, evenodd, bbox, dev->dest, colorbv);
+	fz_scan_convert(dev->gel, dev->ael, even_odd, bbox, dev->dest, colorbv);
 }
 
 static void
-fz_drawstrokepath(void *user, fz_path *path, fz_strokestate *stroke, fz_matrix ctm,
+fz_draw_stroke_path(void *user, fz_path *path, fz_stroke_state *stroke, fz_matrix ctm,
 	fz_colorspace *colorspace, float *color, float alpha)
 {
-	fz_drawdevice *dev = user;
+	fz_draw_device *dev = user;
 	fz_colorspace *model = dev->dest->colorspace;
-	float expansion = fz_matrixexpansion(ctm);
+	float expansion = fz_matrix_expansion(ctm);
 	float flatness = 0.3f / expansion;
 	float linewidth = stroke->linewidth;
-	unsigned char colorbv[FZ_MAXCOLORS + 1];
-	float colorfv[FZ_MAXCOLORS];
+	unsigned char colorbv[FZ_MAX_COLORS + 1];
+	float colorfv[FZ_MAX_COLORS];
 	fz_bbox bbox;
 	int i;
 
 	if (linewidth * expansion < 0.1f)
 		linewidth = 1 / expansion;
 
-	fz_resetgel(dev->gel, dev->scissor);
-	if (stroke->dashlen > 0)
-		fz_dashpath(dev->gel, path, stroke, ctm, flatness, linewidth);
+	fz_reset_gel(dev->gel, dev->scissor);
+	if (stroke->dash_len > 0)
+		fz_flatten_dash_path(dev->gel, path, stroke, ctm, flatness, linewidth);
 	else
-		fz_strokepath(dev->gel, path, stroke, ctm, flatness, linewidth);
-	fz_sortgel(dev->gel);
+		fz_flatten_stroke_path(dev->gel, path, stroke, ctm, flatness, linewidth);
+	fz_sort_gel(dev->gel);
 
-	bbox = fz_boundgel(dev->gel);
-	bbox = fz_intersectbbox(bbox, dev->scissor);
+	bbox = fz_bound_gel(dev->gel);
+	bbox = fz_intersect_bbox(bbox, dev->scissor);
 
-	if (fz_isemptyrect(bbox))
+	if (fz_is_empty_rect(bbox))
 		return;
 
-	fz_convertcolor(colorspace, color, model, colorfv);
+	fz_convert_color(colorspace, color, model, colorfv);
 	for (i = 0; i < model->n; i++)
 		colorbv[i] = colorfv[i] * 255;
 	colorbv[i] = alpha * 255;
 
-	fz_scanconvert(dev->gel, dev->ael, 0, bbox, dev->dest, colorbv);
+	fz_scan_convert(dev->gel, dev->ael, 0, bbox, dev->dest, colorbv);
 }
 
 static void
-fz_drawclippath(void *user, fz_path *path, int evenodd, fz_matrix ctm)
+fz_draw_clip_path(void *user, fz_path *path, int even_odd, fz_matrix ctm)
 {
-	fz_drawdevice *dev = user;
+	fz_draw_device *dev = user;
 	fz_colorspace *model = dev->dest->colorspace;
-	float expansion = fz_matrixexpansion(ctm);
+	float expansion = fz_matrix_expansion(ctm);
 	float flatness = 0.3f / expansion;
 	fz_pixmap *mask, *dest;
 	fz_bbox bbox;
 
-	if (dev->top == STACKSIZE)
+	if (dev->top == STACK_SIZE)
 	{
 		fz_warn("assert: too many buffers on stack");
 		return;
 	}
 
-	fz_resetgel(dev->gel, dev->scissor);
-	fz_fillpath(dev->gel, path, ctm, flatness);
-	fz_sortgel(dev->gel);
+	fz_reset_gel(dev->gel, dev->scissor);
+	fz_flatten_fill_path(dev->gel, path, ctm, flatness);
+	fz_sort_gel(dev->gel);
 
-	bbox = fz_boundgel(dev->gel);
-	bbox = fz_intersectbbox(bbox, dev->scissor);
+	bbox = fz_bound_gel(dev->gel);
+	bbox = fz_intersect_bbox(bbox, dev->scissor);
 
-	if (fz_isemptyrect(bbox) || fz_isrectgel(dev->gel))
+	if (fz_is_empty_rect(bbox) || fz_is_rect_gel(dev->gel))
 	{
 		dev->stack[dev->top].scissor = dev->scissor;
-		dev->stack[dev->top].mask = nil;
-		dev->stack[dev->top].dest = nil;
+		dev->stack[dev->top].mask = NULL;
+		dev->stack[dev->top].dest = NULL;
 		dev->scissor = bbox;
 		dev->top++;
 		return;
 	}
 
-	mask = fz_newpixmapwithrect(nil, bbox);
-	dest = fz_newpixmapwithrect(model, bbox);
+	mask = fz_new_pixmap_with_rect(NULL, bbox);
+	dest = fz_new_pixmap_with_rect(model, bbox);
 
-	fz_clearpixmap(mask);
-	fz_clearpixmap(dest);
+	fz_clear_pixmap(mask);
+	fz_clear_pixmap(dest);
 
-	fz_scanconvert(dev->gel, dev->ael, evenodd, bbox, mask, nil);
+	fz_scan_convert(dev->gel, dev->ael, even_odd, bbox, mask, NULL);
 
 	dev->stack[dev->top].scissor = dev->scissor;
 	dev->stack[dev->top].mask = mask;
@@ -152,17 +150,17 @@ fz_drawclippath(void *user, fz_path *path, int evenodd, fz_matrix ctm)
 }
 
 static void
-fz_drawclipstrokepath(void *user, fz_path *path, fz_strokestate *stroke, fz_matrix ctm)
+fz_draw_clip_stroke_path(void *user, fz_path *path, fz_stroke_state *stroke, fz_matrix ctm)
 {
-	fz_drawdevice *dev = user;
+	fz_draw_device *dev = user;
 	fz_colorspace *model = dev->dest->colorspace;
-	float expansion = fz_matrixexpansion(ctm);
+	float expansion = fz_matrix_expansion(ctm);
 	float flatness = 0.3f / expansion;
 	float linewidth = stroke->linewidth;
 	fz_pixmap *mask, *dest;
 	fz_bbox bbox;
 
-	if (dev->top == STACKSIZE)
+	if (dev->top == STACK_SIZE)
 	{
 		fz_warn("assert: too many buffers on stack");
 		return;
@@ -171,24 +169,24 @@ fz_drawclipstrokepath(void *user, fz_path *path, fz_strokestate *stroke, fz_matr
 	if (linewidth * expansion < 0.1f)
 		linewidth = 1 / expansion;
 
-	fz_resetgel(dev->gel, dev->scissor);
-	if (stroke->dashlen > 0)
-		fz_dashpath(dev->gel, path, stroke, ctm, flatness, linewidth);
+	fz_reset_gel(dev->gel, dev->scissor);
+	if (stroke->dash_len > 0)
+		fz_flatten_dash_path(dev->gel, path, stroke, ctm, flatness, linewidth);
 	else
-		fz_strokepath(dev->gel, path, stroke, ctm, flatness, linewidth);
-	fz_sortgel(dev->gel);
+		fz_flatten_stroke_path(dev->gel, path, stroke, ctm, flatness, linewidth);
+	fz_sort_gel(dev->gel);
 
-	bbox = fz_boundgel(dev->gel);
-	bbox = fz_intersectbbox(bbox, dev->scissor);
+	bbox = fz_bound_gel(dev->gel);
+	bbox = fz_intersect_bbox(bbox, dev->scissor);
 
-	mask = fz_newpixmapwithrect(nil, bbox);
-	dest = fz_newpixmapwithrect(model, bbox);
+	mask = fz_new_pixmap_with_rect(NULL, bbox);
+	dest = fz_new_pixmap_with_rect(model, bbox);
 
-	fz_clearpixmap(mask);
-	fz_clearpixmap(dest);
+	fz_clear_pixmap(mask);
+	fz_clear_pixmap(dest);
 
-	if (!fz_isemptyrect(bbox))
-		fz_scanconvert(dev->gel, dev->ael, 0, bbox, mask, nil);
+	if (!fz_is_empty_rect(bbox))
+		fz_scan_convert(dev->gel, dev->ael, 0, bbox, mask, NULL);
 
 	dev->stack[dev->top].scissor = dev->scissor;
 	dev->stack[dev->top].mask = mask;
@@ -199,20 +197,20 @@ fz_drawclipstrokepath(void *user, fz_path *path, fz_strokestate *stroke, fz_matr
 }
 
 static void
-drawglyph(unsigned char *colorbv, fz_pixmap *dst, fz_pixmap *msk,
+draw_glyph(unsigned char *colorbv, fz_pixmap *dst, fz_pixmap *msk,
 	int xorig, int yorig, fz_bbox scissor)
 {
 	unsigned char *dp, *mp;
 	fz_bbox bbox;
 	int x, y, w, h;
 
-	bbox = fz_boundpixmap(msk);
+	bbox = fz_bound_pixmap(msk);
 	bbox.x0 += xorig;
 	bbox.y0 += yorig;
 	bbox.x1 += xorig;
 	bbox.y1 += yorig;
 
-	bbox = fz_intersectbbox(bbox, scissor); /* scissor < dst */
+	bbox = fz_intersect_bbox(bbox, scissor); /* scissor < dst */
 	x = bbox.x0;
 	y = bbox.y0;
 	w = bbox.x1 - bbox.x0;
@@ -226,27 +224,27 @@ drawglyph(unsigned char *colorbv, fz_pixmap *dst, fz_pixmap *msk,
 	while (h--)
 	{
 		if (dst->colorspace)
-			fz_paintspancolor(dp, mp, dst->n, w, colorbv);
+			fz_paint_span_with_color(dp, mp, dst->n, w, colorbv);
 		else
-			fz_paintspan(dp, mp, 1, w, 255);
+			fz_paint_span(dp, mp, 1, w, 255);
 		dp += dst->w * dst->n;
 		mp += msk->w;
 	}
 }
 
 static void
-fz_drawfilltext(void *user, fz_text *text, fz_matrix ctm,
+fz_draw_fill_text(void *user, fz_text *text, fz_matrix ctm,
 	fz_colorspace *colorspace, float *color, float alpha)
 {
-	fz_drawdevice *dev = user;
+	fz_draw_device *dev = user;
 	fz_colorspace *model = dev->dest->colorspace;
-	unsigned char colorbv[FZ_MAXCOLORS + 1];
-	float colorfv[FZ_MAXCOLORS];
+	unsigned char colorbv[FZ_MAX_COLORS + 1];
+	float colorfv[FZ_MAX_COLORS];
 	fz_matrix tm, trm;
 	fz_pixmap *glyph;
 	int i, x, y, gid;
 
-	fz_convertcolor(colorspace, color, model, colorfv);
+	fz_convert_color(colorspace, color, model, colorfv);
 	for (i = 0; i < model->n; i++)
 		colorbv[i] = colorfv[i] * 255;
 	colorbv[i] = alpha * 255;
@@ -255,40 +253,40 @@ fz_drawfilltext(void *user, fz_text *text, fz_matrix ctm,
 
 	for (i = 0; i < text->len; i++)
 	{
-		gid = text->els[i].gid;
+		gid = text->items[i].gid;
 		if (gid < 0)
 			continue;
 
-		tm.e = text->els[i].x;
-		tm.f = text->els[i].y;
+		tm.e = text->items[i].x;
+		tm.f = text->items[i].y;
 		trm = fz_concat(tm, ctm);
 		x = floorf(trm.e);
 		y = floorf(trm.f);
 		trm.e = QUANT(trm.e - floorf(trm.e), HSUBPIX);
 		trm.f = QUANT(trm.f - floorf(trm.f), VSUBPIX);
 
-		glyph = fz_renderglyph(dev->cache, text->font, gid, trm);
+		glyph = fz_render_glyph(dev->cache, text->font, gid, trm);
 		if (glyph)
 		{
-			drawglyph(colorbv, dev->dest, glyph, x, y, dev->scissor);
-			fz_droppixmap(glyph);
+			draw_glyph(colorbv, dev->dest, glyph, x, y, dev->scissor);
+			fz_drop_pixmap(glyph);
 		}
 	}
 }
 
 static void
-fz_drawstroketext(void *user, fz_text *text, fz_strokestate *stroke, fz_matrix ctm,
+fz_draw_stroke_text(void *user, fz_text *text, fz_stroke_state *stroke, fz_matrix ctm,
 	fz_colorspace *colorspace, float *color, float alpha)
 {
-	fz_drawdevice *dev = user;
+	fz_draw_device *dev = user;
 	fz_colorspace *model = dev->dest->colorspace;
-	unsigned char colorbv[FZ_MAXCOLORS + 1];
-	float colorfv[FZ_MAXCOLORS];
+	unsigned char colorbv[FZ_MAX_COLORS + 1];
+	float colorfv[FZ_MAX_COLORS];
 	fz_matrix tm, trm;
 	fz_pixmap *glyph;
 	int i, x, y, gid;
 
-	fz_convertcolor(colorspace, color, model, colorfv);
+	fz_convert_color(colorspace, color, model, colorfv);
 	for (i = 0; i < model->n; i++)
 		colorbv[i] = colorfv[i] * 255;
 	colorbv[i] = alpha * 255;
@@ -297,31 +295,31 @@ fz_drawstroketext(void *user, fz_text *text, fz_strokestate *stroke, fz_matrix c
 
 	for (i = 0; i < text->len; i++)
 	{
-		gid = text->els[i].gid;
+		gid = text->items[i].gid;
 		if (gid < 0)
 			continue;
 
-		tm.e = text->els[i].x;
-		tm.f = text->els[i].y;
+		tm.e = text->items[i].x;
+		tm.f = text->items[i].y;
 		trm = fz_concat(tm, ctm);
 		x = floorf(trm.e);
 		y = floorf(trm.f);
 		trm.e = QUANT(trm.e - floorf(trm.e), HSUBPIX);
 		trm.f = QUANT(trm.f - floorf(trm.f), VSUBPIX);
 
-		glyph = fz_renderstrokedglyph(dev->cache, text->font, gid, trm, ctm, stroke);
+		glyph = fz_render_stroked_glyph(dev->cache, text->font, gid, trm, ctm, stroke);
 		if (glyph)
 		{
-			drawglyph(colorbv, dev->dest, glyph, x, y, dev->scissor);
-			fz_droppixmap(glyph);
+			draw_glyph(colorbv, dev->dest, glyph, x, y, dev->scissor);
+			fz_drop_pixmap(glyph);
 		}
 	}
 }
 
 static void
-fz_drawcliptext(void *user, fz_text *text, fz_matrix ctm, int accumulate)
+fz_draw_clip_text(void *user, fz_text *text, fz_matrix ctm, int accumulate)
 {
-	fz_drawdevice *dev = user;
+	fz_draw_device *dev = user;
 	fz_colorspace *model = dev->dest->colorspace;
 	fz_bbox bbox;
 	fz_pixmap *mask, *dest;
@@ -333,7 +331,7 @@ fz_drawcliptext(void *user, fz_text *text, fz_matrix ctm, int accumulate)
 	/* If accumulate == 1 then this text object is the first (or only) in a sequence */
 	/* If accumulate == 2 then this text object is a continuation */
 
-	if (dev->top == STACKSIZE)
+	if (dev->top == STACK_SIZE)
 	{
 		fz_warn("assert: too many buffers on stack");
 		return;
@@ -342,8 +340,8 @@ fz_drawcliptext(void *user, fz_text *text, fz_matrix ctm, int accumulate)
 	if (accumulate == 0)
 	{
 		/* make the mask the exact size needed */
-		bbox = fz_roundrect(fz_boundtext(text, ctm));
-		bbox = fz_intersectbbox(bbox, dev->scissor);
+		bbox = fz_round_rect(fz_bound_text(text, ctm));
+		bbox = fz_intersect_bbox(bbox, dev->scissor);
 	}
 	else
 	{
@@ -353,11 +351,11 @@ fz_drawcliptext(void *user, fz_text *text, fz_matrix ctm, int accumulate)
 
 	if (accumulate == 0 || accumulate == 1)
 	{
-		mask = fz_newpixmapwithrect(nil, bbox);
-		dest = fz_newpixmapwithrect(model, bbox);
+		mask = fz_new_pixmap_with_rect(NULL, bbox);
+		dest = fz_new_pixmap_with_rect(model, bbox);
 
-		fz_clearpixmap(mask);
-		fz_clearpixmap(dest);
+		fz_clear_pixmap(mask);
+		fz_clear_pixmap(dest);
 
 		dev->stack[dev->top].scissor = dev->scissor;
 		dev->stack[dev->top].mask = mask;
@@ -371,38 +369,38 @@ fz_drawcliptext(void *user, fz_text *text, fz_matrix ctm, int accumulate)
 		mask = dev->stack[dev->top-1].mask;
 	}
 
-	if (!fz_isemptyrect(bbox))
+	if (!fz_is_empty_rect(bbox))
 	{
 		tm = text->trm;
 
 		for (i = 0; i < text->len; i++)
 		{
-			gid = text->els[i].gid;
+			gid = text->items[i].gid;
 			if (gid < 0)
 				continue;
 
-			tm.e = text->els[i].x;
-			tm.f = text->els[i].y;
+			tm.e = text->items[i].x;
+			tm.f = text->items[i].y;
 			trm = fz_concat(tm, ctm);
 			x = floorf(trm.e);
 			y = floorf(trm.f);
 			trm.e = QUANT(trm.e - floorf(trm.e), HSUBPIX);
 			trm.f = QUANT(trm.f - floorf(trm.f), VSUBPIX);
 
-			glyph = fz_renderglyph(dev->cache, text->font, gid, trm);
+			glyph = fz_render_glyph(dev->cache, text->font, gid, trm);
 			if (glyph)
 			{
-				drawglyph(nil, mask, glyph, x, y, bbox);
-				fz_droppixmap(glyph);
+				draw_glyph(NULL, mask, glyph, x, y, bbox);
+				fz_drop_pixmap(glyph);
 			}
 		}
 	}
 }
 
 static void
-fz_drawclipstroketext(void *user, fz_text *text, fz_strokestate *stroke, fz_matrix ctm)
+fz_draw_clip_stroke_text(void *user, fz_text *text, fz_stroke_state *stroke, fz_matrix ctm)
 {
-	fz_drawdevice *dev = user;
+	fz_draw_device *dev = user;
 	fz_colorspace *model = dev->dest->colorspace;
 	fz_bbox bbox;
 	fz_pixmap *mask, *dest;
@@ -410,21 +408,21 @@ fz_drawclipstroketext(void *user, fz_text *text, fz_strokestate *stroke, fz_matr
 	fz_pixmap *glyph;
 	int i, x, y, gid;
 
-	if (dev->top == STACKSIZE)
+	if (dev->top == STACK_SIZE)
 	{
 		fz_warn("assert: too many buffers on stack");
 		return;
 	}
 
 	/* make the mask the exact size needed */
-	bbox = fz_roundrect(fz_boundtext(text, ctm));
-	bbox = fz_intersectbbox(bbox, dev->scissor);
+	bbox = fz_round_rect(fz_bound_text(text, ctm));
+	bbox = fz_intersect_bbox(bbox, dev->scissor);
 
-	mask = fz_newpixmapwithrect(nil, bbox);
-	dest = fz_newpixmapwithrect(model, bbox);
+	mask = fz_new_pixmap_with_rect(NULL, bbox);
+	dest = fz_new_pixmap_with_rect(model, bbox);
 
-	fz_clearpixmap(mask);
-	fz_clearpixmap(dest);
+	fz_clear_pixmap(mask);
+	fz_clear_pixmap(dest);
 
 	dev->stack[dev->top].scissor = dev->scissor;
 	dev->stack[dev->top].mask = mask;
@@ -433,57 +431,57 @@ fz_drawclipstroketext(void *user, fz_text *text, fz_strokestate *stroke, fz_matr
 	dev->dest = dest;
 	dev->top++;
 
-	if (!fz_isemptyrect(bbox))
+	if (!fz_is_empty_rect(bbox))
 	{
 		tm = text->trm;
 
 		for (i = 0; i < text->len; i++)
 		{
-			gid = text->els[i].gid;
+			gid = text->items[i].gid;
 			if (gid < 0)
 				continue;
 
-			tm.e = text->els[i].x;
-			tm.f = text->els[i].y;
+			tm.e = text->items[i].x;
+			tm.f = text->items[i].y;
 			trm = fz_concat(tm, ctm);
 			x = floorf(trm.e);
 			y = floorf(trm.f);
 			trm.e = QUANT(trm.e - floorf(trm.e), HSUBPIX);
 			trm.f = QUANT(trm.f - floorf(trm.f), VSUBPIX);
 
-			glyph = fz_renderstrokedglyph(dev->cache, text->font, gid, trm, ctm, stroke);
+			glyph = fz_render_stroked_glyph(dev->cache, text->font, gid, trm, ctm, stroke);
 			if (glyph)
 			{
-				drawglyph(nil, mask, glyph, x, y, bbox);
-				fz_droppixmap(glyph);
+				draw_glyph(NULL, mask, glyph, x, y, bbox);
+				fz_drop_pixmap(glyph);
 			}
 		}
 	}
 }
 
 static void
-fz_drawignoretext(void *user, fz_text *text, fz_matrix ctm)
+fz_draw_ignore_text(void *user, fz_text *text, fz_matrix ctm)
 {
 }
 
 static void
-fz_drawfillshade(void *user, fz_shade *shade, fz_matrix ctm, float alpha)
+fz_draw_fill_shade(void *user, fz_shade *shade, fz_matrix ctm, float alpha)
 {
-	fz_drawdevice *dev = user;
+	fz_draw_device *dev = user;
 	fz_colorspace *model = dev->dest->colorspace;
 	fz_pixmap *dest = dev->dest;
 	fz_rect bounds;
 	fz_bbox bbox, scissor;
-	float colorfv[FZ_MAXCOLORS];
-	unsigned char colorbv[FZ_MAXCOLORS + 1];
+	float colorfv[FZ_MAX_COLORS];
+	unsigned char colorbv[FZ_MAX_COLORS + 1];
 
-	bounds = fz_boundshade(shade, ctm);
-	bbox = fz_intersectbbox(fz_roundrect(bounds), dev->scissor);
+	bounds = fz_bound_shade(shade, ctm);
+	bbox = fz_intersect_bbox(fz_round_rect(bounds), dev->scissor);
 	scissor = dev->scissor;
 
 	// TODO: proper clip by shade->bbox
 
-	if (fz_isemptyrect(bbox))
+	if (fz_is_empty_rect(bbox))
 		return;
 
 	if (!model)
@@ -494,15 +492,15 @@ fz_drawfillshade(void *user, fz_shade *shade, fz_matrix ctm, float alpha)
 
 	if (alpha < 1)
 	{
-		dest = fz_newpixmapwithrect(dev->dest->colorspace, bbox);
-		fz_clearpixmap(dest);
+		dest = fz_new_pixmap_with_rect(dev->dest->colorspace, bbox);
+		fz_clear_pixmap(dest);
 	}
 
-	if (shade->usebackground)
+	if (shade->use_background)
 	{
 		unsigned char *s;
 		int x, y, n, i;
-		fz_convertcolor(shade->colorspace, shade->background, model, colorfv);
+		fz_convert_color(shade->colorspace, shade->background, model, colorfv);
 		for (i = 0; i < model->n; i++)
 			colorbv[i] = colorfv[i] * 255;
 		colorbv[i] = 255;
@@ -519,36 +517,26 @@ fz_drawfillshade(void *user, fz_shade *shade, fz_matrix ctm, float alpha)
 		}
 	}
 
-	fz_paintshade(shade, ctm, dest, bbox);
+	fz_paint_shade(shade, ctm, dest, bbox);
 
 	if (alpha < 1)
 	{
-		fz_paintpixmap(dev->dest, dest, alpha * 255);
-		fz_droppixmap(dest);
+		fz_paint_pixmap(dev->dest, dest, alpha * 255);
+		fz_drop_pixmap(dest);
 	}
 }
 
-static int
-fz_calcimagescale(fz_pixmap *image, fz_matrix ctm, int *dx, int *dy)
-{
-	float sx = image->w / sqrtf(ctm.a * ctm.a + ctm.b * ctm.b) * 0.66f;
-	float sy = image->h / sqrtf(ctm.c * ctm.c + ctm.d * ctm.d) * 0.66f;
-	*dx = sx > 1 ? sx : 1;
-	*dy = sy > 1 ? sy : 1;
-	return *dx > 1 || *dy > 1;
-}
-
 static fz_pixmap *
-fz_smoothtransformpixmap(fz_pixmap *image, fz_matrix *ctm, int x, int y, int dx, int dy)
+fz_transform_pixmap(fz_pixmap *image, fz_matrix *ctm, int x, int y, int dx, int dy)
 {
 	fz_pixmap *scaled;
 
 	if ((ctm->a != 0) && (ctm->b == 0) && (ctm->c == 0) && (ctm->d != 0))
 	{
 		/* Unrotated or X flip or Yflip or XYflip */
-		scaled = fz_smoothscalepixmap(image, ctm->e, ctm->f, ctm->a, ctm->d);
-		if (scaled == nil)
-			return nil;
+		scaled = fz_scale_pixmap(image, ctm->e, ctm->f, ctm->a, ctm->d);
+		if (scaled == NULL)
+			return NULL;
 		ctm->a = scaled->w;
 		ctm->d = scaled->h;
 		ctm->e = scaled->x;
@@ -558,9 +546,9 @@ fz_smoothtransformpixmap(fz_pixmap *image, fz_matrix *ctm, int x, int y, int dx,
 	if ((ctm->a == 0) && (ctm->b != 0) && (ctm->c != 0) && (ctm->d == 0))
 	{
 		/* Other orthogonal flip/rotation cases */
-		scaled = fz_smoothscalepixmap(image, ctm->f, ctm->e, ctm->b, ctm->c);
-		if (scaled == nil)
-			return nil;
+		scaled = fz_scale_pixmap(image, ctm->f, ctm->e, ctm->b, ctm->c);
+		if (scaled == NULL)
+			return NULL;
 		ctm->b = scaled->w;
 		ctm->c = scaled->h;
 		ctm->f = scaled->x;
@@ -570,19 +558,19 @@ fz_smoothtransformpixmap(fz_pixmap *image, fz_matrix *ctm, int x, int y, int dx,
 	/* Downscale, non rectilinear case */
 	if ((dx > 0) && (dy > 0))
 	{
-		scaled = fz_smoothscalepixmap(image, 0, 0, (float)dx, (float)dy);
+		scaled = fz_scale_pixmap(image, 0, 0, (float)dx, (float)dy);
 		return scaled;
 	}
-	return nil;
+	return NULL;
 }
 
 static void
-fz_drawfillimage(void *user, fz_pixmap *image, fz_matrix ctm, float alpha)
+fz_draw_fill_image(void *user, fz_pixmap *image, fz_matrix ctm, float alpha)
 {
-	fz_drawdevice *dev = user;
+	fz_draw_device *dev = user;
 	fz_colorspace *model = dev->dest->colorspace;
-	fz_pixmap *converted = nil;
-	fz_pixmap *scaled = nil;
+	fz_pixmap *converted = NULL;
+	fz_pixmap *scaled = NULL;
 	int after;
 	int dx, dy;
 
@@ -600,118 +588,102 @@ fz_drawfillimage(void *user, fz_pixmap *image, fz_matrix ctm, float alpha)
 	/* convert images with expensive colorspace transforms after scaling */
 
 	after = 0;
-	if (image->colorspace == fz_devicegray)
+	if (image->colorspace == fz_device_gray)
 		after = 1;
 
 	if (image->colorspace != model && !after)
 	{
-		converted = fz_newpixmap(model, image->x, image->y, image->w, image->h);
-		fz_convertpixmap(image, converted);
+		converted = fz_new_pixmap(model, image->x, image->y, image->w, image->h);
+		fz_convert_pixmap(image, converted);
 		image = converted;
 	}
 
-#ifdef SMOOTHSCALE
 	dx = sqrtf(ctm.a * ctm.a + ctm.b * ctm.b);
 	dy = sqrtf(ctm.c * ctm.c + ctm.d * ctm.d);
 	if (dx < image->w && dy < image->h)
 	{
-		scaled = fz_smoothtransformpixmap(image, &ctm, dev->dest->x, dev->dest->y, dx, dy);
-		if (scaled == nil)
+		scaled = fz_transform_pixmap(image, &ctm, dev->dest->x, dev->dest->y, dx, dy);
+		if (scaled == NULL)
 		{
 			if (dx < 1)
 				dx = 1;
 			if (dy < 1)
 				dy = 1;
-			scaled = fz_smoothscalepixmap(image, image->x, image->y, dx, dy);
+			scaled = fz_scale_pixmap(image, image->x, image->y, dx, dy);
 		}
-		if (scaled != nil)
+		if (scaled != NULL)
 			image = scaled;
 	}
-#else
-	if (fz_calcimagescale(image, ctm, &dx, &dy))
-	{
-		scaled = fz_scalepixmap(image, dx, dy);
-		image = scaled;
-	}
-#endif
 
 	if (image->colorspace != model && after)
 	{
-		converted = fz_newpixmap(model, image->x, image->y, image->w, image->h);
-		fz_convertpixmap(image, converted);
+		converted = fz_new_pixmap(model, image->x, image->y, image->w, image->h);
+		fz_convert_pixmap(image, converted);
 		image = converted;
 	}
 
-	fz_paintimage(dev->dest, dev->scissor, image, ctm, alpha * 255);
+	fz_paint_image(dev->dest, dev->scissor, image, ctm, alpha * 255);
 
 	if (scaled)
-		fz_droppixmap(scaled);
+		fz_drop_pixmap(scaled);
 	if (converted)
-		fz_droppixmap(converted);
+		fz_drop_pixmap(converted);
 }
 
 static void
-fz_drawfillimagemask(void *user, fz_pixmap *image, fz_matrix ctm,
+fz_draw_fill_image_mask(void *user, fz_pixmap *image, fz_matrix ctm,
 	fz_colorspace *colorspace, float *color, float alpha)
 {
-	fz_drawdevice *dev = user;
+	fz_draw_device *dev = user;
 	fz_colorspace *model = dev->dest->colorspace;
-	unsigned char colorbv[FZ_MAXCOLORS + 1];
-	float colorfv[FZ_MAXCOLORS];
-	fz_pixmap *scaled = nil;
+	unsigned char colorbv[FZ_MAX_COLORS + 1];
+	float colorfv[FZ_MAX_COLORS];
+	fz_pixmap *scaled = NULL;
 	int dx, dy;
 	int i;
 
 	if (image->w == 0 || image->h == 0)
 		return;
 
-#ifdef SMOOTHSCALE
 	dx = sqrtf(ctm.a * ctm.a + ctm.b * ctm.b);
 	dy = sqrtf(ctm.c * ctm.c + ctm.d * ctm.d);
 	if (dx < image->w && dy < image->h)
 	{
-		scaled = fz_smoothtransformpixmap(image, &ctm, dev->dest->x, dev->dest->y, dx, dy);
-		if (scaled == nil)
+		scaled = fz_transform_pixmap(image, &ctm, dev->dest->x, dev->dest->y, dx, dy);
+		if (scaled == NULL)
 		{
 			if (dx < 1)
 				dx = 1;
 			if (dy < 1)
 				dy = 1;
-			scaled = fz_smoothscalepixmap(image, image->x, image->y, dx, dy);
+			scaled = fz_scale_pixmap(image, image->x, image->y, dx, dy);
 		}
-		if (scaled != nil)
+		if (scaled != NULL)
 			image = scaled;
 	}
-#else
-	if (fz_calcimagescale(image, ctm, &dx, &dy))
-	{
-		scaled = fz_scalepixmap(image, dx, dy);
-		image = scaled;
-	}
-#endif
 
-	fz_convertcolor(colorspace, color, model, colorfv);
+	fz_convert_color(colorspace, color, model, colorfv);
 	for (i = 0; i < model->n; i++)
 		colorbv[i] = colorfv[i] * 255;
 	colorbv[i] = alpha * 255;
 
-	fz_paintimagecolor(dev->dest, dev->scissor, image, ctm, colorbv);
+	fz_paint_image_with_color(dev->dest, dev->scissor, image, ctm, colorbv);
 
 	if (scaled)
-		fz_droppixmap(scaled);
+		fz_drop_pixmap(scaled);
 }
 
 static void
-fz_drawclipimagemask(void *user, fz_pixmap *image, fz_matrix ctm)
+fz_draw_clip_image_mask(void *user, fz_pixmap *image, fz_matrix ctm)
 {
-	fz_drawdevice *dev = user;
+	fz_draw_device *dev = user;
 	fz_colorspace *model = dev->dest->colorspace;
 	fz_bbox bbox;
 	fz_pixmap *mask, *dest;
-	fz_pixmap *scaled = nil;
+	fz_pixmap *scaled = NULL;
 	int dx, dy;
 
-	if (dev->top == STACKSIZE)
+	if (dev->top == STACK_SIZE)
 	{
 		fz_warn("assert: too many buffers on stack");
 		return;
@@ -720,51 +692,43 @@ fz_drawclipimagemask(void *user, fz_pixmap *image, fz_matrix ctm)
 	if (image->w == 0 || image->h == 0)
 	{
 		dev->stack[dev->top].scissor = dev->scissor;
-		dev->stack[dev->top].mask = nil;
-		dev->stack[dev->top].dest = nil;
-		dev->scissor = fz_emptybbox;
+		dev->stack[dev->top].mask = NULL;
+		dev->stack[dev->top].dest = NULL;
+		dev->scissor = fz_empty_bbox;
 		dev->top++;
 		return;
 	}
 
-	bbox = fz_roundrect(fz_transformrect(ctm, fz_unitrect));
-	bbox = fz_intersectbbox(bbox, dev->scissor);
+	bbox = fz_round_rect(fz_transform_rect(ctm, fz_unit_rect));
+	bbox = fz_intersect_bbox(bbox, dev->scissor);
 
-	mask = fz_newpixmapwithrect(nil, bbox);
-	dest = fz_newpixmapwithrect(model, bbox);
+	mask = fz_new_pixmap_with_rect(NULL, bbox);
+	dest = fz_new_pixmap_with_rect(model, bbox);
 
-	fz_clearpixmap(mask);
-	fz_clearpixmap(dest);
+	fz_clear_pixmap(mask);
+	fz_clear_pixmap(dest);
 
-#ifdef SMOOTHSCALE
 	dx = sqrtf(ctm.a * ctm.a + ctm.b * ctm.b);
 	dy = sqrtf(ctm.c * ctm.c + ctm.d * ctm.d);
 	if (dx < image->w && dy < image->h)
 	{
-		scaled = fz_smoothtransformpixmap(image, &ctm, dev->dest->x, dev->dest->y, dx, dy);
-		if (scaled == nil)
+		scaled = fz_transform_pixmap(image, &ctm, dev->dest->x, dev->dest->y, dx, dy);
+		if (scaled == NULL)
 		{
 			if (dx < 1)
 				dx = 1;
 			if (dy < 1)
 				dy = 1;
-			scaled = fz_smoothscalepixmap(image, image->x, image->y, dx, dy);
+			scaled = fz_scale_pixmap(image, image->x, image->y, dx, dy);
 		}
-		if (scaled != nil)
+		if (scaled != NULL)
 			image = scaled;
 	}
-#else
-	if (fz_calcimagescale(image, ctm, &dx, &dy))
-	{
-		scaled = fz_scalepixmap(image, dx, dy);
-		image = scaled;
-	}
-#endif
 
-	fz_paintimage(mask, bbox, image, ctm, 255);
+	fz_paint_image(mask, bbox, image, ctm, 255);
 
 	if (scaled)
-		fz_droppixmap(scaled);
+		fz_drop_pixmap(scaled);
 
 	dev->stack[dev->top].scissor = dev->scissor;
 	dev->stack[dev->top].mask = mask;
@@ -775,9 +739,9 @@ fz_drawclipimagemask(void *user, fz_pixmap *image, fz_matrix ctm)
 }
 
 static void
-fz_drawpopclip(void *user)
+fz_draw_pop_clip(void *user)
 {
-	fz_drawdevice *dev = user;
+	fz_draw_device *dev = user;
 	fz_pixmap *mask, *dest;
 	if (dev->top > 0)
 	{
@@ -788,41 +752,41 @@ fz_drawpopclip(void *user)
 		if (mask && dest)
 		{
 			fz_pixmap *scratch = dev->dest;
-			fz_paintpixmapmask(dest, scratch, mask);
-			fz_droppixmap(mask);
-			fz_droppixmap(scratch);
+			fz_paint_pixmap_with_mask(dest, scratch, mask);
+			fz_drop_pixmap(mask);
+			fz_drop_pixmap(scratch);
 			dev->dest = dest;
 		}
 	}
 }
 
 static void
-fz_drawbeginmask(void *user, fz_rect rect, int luminosity, fz_colorspace *colorspace, float *colorfv)
+fz_draw_begin_mask(void *user, fz_rect rect, int luminosity, fz_colorspace *colorspace, float *colorfv)
 {
-	fz_drawdevice *dev = user;
+	fz_draw_device *dev = user;
 	fz_pixmap *dest;
 	fz_bbox bbox;
 
-	if (dev->top == STACKSIZE)
+	if (dev->top == STACK_SIZE)
 	{
 		fz_warn("assert: too many buffers on stack");
 		return;
 	}
 
-	bbox = fz_roundrect(rect);
-	bbox = fz_intersectbbox(bbox, dev->scissor);
-	dest = fz_newpixmapwithrect(fz_devicegray, bbox);
+	bbox = fz_round_rect(rect);
+	bbox = fz_intersect_bbox(bbox, dev->scissor);
+	dest = fz_new_pixmap_with_rect(fz_device_gray, bbox);
 
 	if (luminosity)
 	{
 		float bc;
 		if (!colorspace)
-			colorspace = fz_devicegray;
-		fz_convertcolor(colorspace, colorfv, fz_devicegray, &bc);
-		fz_clearpixmapwithcolor(dest, bc * 255);
+			colorspace = fz_device_gray;
+		fz_convert_color(colorspace, colorfv, fz_device_gray, &bc);
+		fz_clear_pixmap_with_color(dest, bc * 255);
 	}
 	else
-		fz_clearpixmap(dest);
+		fz_clear_pixmap(dest);
 
 	dev->stack[dev->top].scissor = dev->scissor;
 	dev->stack[dev->top].dest = dev->dest;
@@ -834,15 +798,15 @@ fz_drawbeginmask(void *user, fz_rect rect, int luminosity, fz_colorspace *colors
 }
 
 static void
-fz_drawendmask(void *user)
+fz_draw_end_mask(void *user)
 {
-	fz_drawdevice *dev = user;
+	fz_draw_device *dev = user;
 	fz_pixmap *mask = dev->dest;
 	fz_pixmap *temp, *dest;
 	fz_bbox bbox;
 	int luminosity;
 
-	if (dev->top == STACKSIZE)
+	if (dev->top == STACK_SIZE)
 	{
 		fz_warn("assert: too many buffers on stack");
 		return;
@@ -857,13 +821,13 @@ fz_drawendmask(void *user)
 		dev->dest = dev->stack[dev->top].dest;
 
 		/* convert to alpha mask */
-		temp = fz_alphafromgray(mask, luminosity);
-		fz_droppixmap(mask);
+		temp = fz_alpha_from_gray(mask, luminosity);
+		fz_drop_pixmap(mask);
 
 		/* create new dest scratch buffer */
-		bbox = fz_boundpixmap(temp);
-		dest = fz_newpixmapwithrect(dev->dest->colorspace, bbox);
-		fz_clearpixmap(dest);
+		bbox = fz_bound_pixmap(temp);
+		dest = fz_new_pixmap_with_rect(dev->dest->colorspace, bbox);
+		fz_clear_pixmap(dest);
 
 		/* push soft mask as clip mask */
 		dev->stack[dev->top].scissor = dev->scissor;
@@ -876,24 +840,24 @@ fz_drawendmask(void *user)
 }
 
 static void
-fz_drawbegingroup(void *user, fz_rect rect, int isolated, int knockout, fz_blendmode blendmode, float alpha)
+fz_draw_begin_group(void *user, fz_rect rect, int isolated, int knockout, fz_blendmode blendmode, float alpha)
 {
-	fz_drawdevice *dev = user;
+	fz_draw_device *dev = user;
 	fz_colorspace *model = dev->dest->colorspace;
 	fz_bbox bbox;
 	fz_pixmap *dest;
 
-	if (dev->top == STACKSIZE)
+	if (dev->top == STACK_SIZE)
 	{
 		fz_warn("assert: too many buffers on stack");
 		return;
 	}
 
-	bbox = fz_roundrect(rect);
-	bbox = fz_intersectbbox(bbox, dev->scissor);
-	dest = fz_newpixmapwithrect(model, bbox);
+	bbox = fz_round_rect(rect);
+	bbox = fz_intersect_bbox(bbox, dev->scissor);
+	dest = fz_new_pixmap_with_rect(model, bbox);
 
-	fz_clearpixmap(dest);
+	fz_clear_pixmap(dest);
 
 	dev->stack[dev->top].alpha = alpha;
 	dev->stack[dev->top].blendmode = blendmode;
@@ -906,9 +870,9 @@ fz_drawbegingroup(void *user, fz_rect rect, int isolated, int knockout, fz_blend
 }
 
 static void
-fz_drawendgroup(void *user)
+fz_draw_end_group(void *user)
 {
-	fz_drawdevice *dev = user;
+	fz_draw_device *dev = user;
 	fz_pixmap *group = dev->dest;
 	fz_blendmode blendmode;
 	float alpha;
@@ -921,19 +885,19 @@ fz_drawendgroup(void *user)
 		dev->dest = dev->stack[dev->top].dest;
 		dev->scissor = dev->stack[dev->top].scissor;
 
-		if (blendmode == FZ_BNORMAL)
-			fz_paintpixmap(dev->dest, group, alpha * 255);
+		if (blendmode == FZ_BLEND_NORMAL)
+			fz_paint_pixmap(dev->dest, group, alpha * 255);
 		else
-			fz_blendpixmap(dev->dest, group, alpha * 255, blendmode);
+			fz_blend_pixmap(dev->dest, group, alpha * 255, blendmode);
 
-		fz_droppixmap(group);
+		fz_drop_pixmap(group);
 	}
 }
 
 static void
-fz_drawbegintile(void *user, fz_rect area, fz_rect view, float xstep, float ystep, fz_matrix ctm)
+fz_draw_begin_tile(void *user, fz_rect area, fz_rect view, float xstep, float ystep, fz_matrix ctm)
 {
-	fz_drawdevice *dev = user;
+	fz_draw_device *dev = user;
 	fz_colorspace *model = dev->dest->colorspace;
 	fz_pixmap *dest;
 	fz_bbox bbox;
@@ -941,15 +905,15 @@ fz_drawbegintile(void *user, fz_rect area, fz_rect view, float xstep, float yste
 	/* area, view, xstep, ystep are in pattern space */
 	/* ctm maps from pattern space to device space */
 
-	if (dev->top == STACKSIZE)
+	if (dev->top == STACK_SIZE)
 	{
 		fz_warn("assert: too many buffers on stack");
 		return;
 	}
 
-	bbox = fz_roundrect(fz_transformrect(ctm, view));
-	dest = fz_newpixmapwithrect(model, bbox);
-	fz_clearpixmap(dest);
+	bbox = fz_round_rect(fz_transform_rect(ctm, view));
+	dest = fz_new_pixmap_with_rect(model, bbox);
+	fz_clear_pixmap(dest);
 
 	dev->stack[dev->top].scissor = dev->scissor;
 	dev->stack[dev->top].dest = dev->dest;
@@ -964,9 +928,9 @@ fz_drawbegintile(void *user, fz_rect area, fz_rect view, float xstep, float yste
 }
 
 static void
-fz_drawendtile(void *user)
+fz_draw_end_tile(void *user)
 {
-	fz_drawdevice *dev = user;
+	fz_draw_device *dev = user;
 	fz_pixmap *tile = dev->dest;
 	float xstep, ystep;
 	fz_matrix ctm, ttm;
@@ -996,34 +960,34 @@ fz_drawendtile(void *user)
 			for (x = x0; x < x1; x++)
 			{
 				ttm = fz_concat(fz_translate(x * xstep, y * ystep), ctm);
-				tile->x = roundf(ttm.e);
-				tile->y = roundf(ttm.f);
-				fz_paintpixmapbbox(dev->dest, tile, 255, dev->scissor);
+				tile->x = ttm.e;
+				tile->y = ttm.f;
+				fz_paint_pixmap_with_rect(dev->dest, tile, 255, dev->scissor);
 			}
 		}
 
-		fz_droppixmap(tile);
+		fz_drop_pixmap(tile);
 	}
 }
 
 static void
-fz_drawfreeuser(void *user)
+fz_draw_free_user(void *user)
 {
-	fz_drawdevice *dev = user;
+	fz_draw_device *dev = user;
 	/* TODO: pop and free the stacks */
-	fz_freegel(dev->gel);
-	fz_freeael(dev->ael);
+	fz_free_gel(dev->gel);
+	fz_free_ael(dev->ael);
 	fz_free(dev);
 }
 
 fz_device *
-fz_newdrawdevice(fz_glyphcache *cache, fz_pixmap *dest)
+fz_new_draw_device(fz_glyph_cache *cache, fz_pixmap *dest)
 {
 	fz_device *dev;
-	fz_drawdevice *ddev = fz_malloc(sizeof(fz_drawdevice));
+	fz_draw_device *ddev = fz_malloc(sizeof(fz_draw_device));
 	ddev->cache = cache;
-	ddev->gel = fz_newgel();
-	ddev->ael = fz_newael();
+	ddev->gel = fz_new_gel();
+	ddev->ael = fz_new_ael();
 	ddev->dest = dest;
 	ddev->top = 0;
 
@@ -1032,34 +996,34 @@ fz_newdrawdevice(fz_glyphcache *cache, fz_pixmap *dest)
 	ddev->scissor.x1 = dest->x + dest->w;
 	ddev->scissor.y1 = dest->y + dest->h;
 
-	dev = fz_newdevice(ddev);
-	dev->freeuser = fz_drawfreeuser;
+	dev = fz_new_device(ddev);
+	dev->free_user = fz_draw_free_user;
 
-	dev->fillpath = fz_drawfillpath;
-	dev->strokepath = fz_drawstrokepath;
-	dev->clippath = fz_drawclippath;
-	dev->clipstrokepath = fz_drawclipstrokepath;
+	dev->fill_path = fz_draw_fill_path;
+	dev->stroke_path = fz_draw_stroke_path;
+	dev->clip_path = fz_draw_clip_path;
+	dev->clip_stroke_path = fz_draw_clip_stroke_path;
 
-	dev->filltext = fz_drawfilltext;
-	dev->stroketext = fz_drawstroketext;
-	dev->cliptext = fz_drawcliptext;
-	dev->clipstroketext = fz_drawclipstroketext;
-	dev->ignoretext = fz_drawignoretext;
+	dev->fill_text = fz_draw_fill_text;
+	dev->stroke_text = fz_draw_stroke_text;
+	dev->clip_text = fz_draw_clip_text;
+	dev->clip_stroke_text = fz_draw_clip_stroke_text;
+	dev->ignore_text = fz_draw_ignore_text;
 
-	dev->fillimagemask = fz_drawfillimagemask;
-	dev->clipimagemask = fz_drawclipimagemask;
-	dev->fillimage = fz_drawfillimage;
-	dev->fillshade = fz_drawfillshade;
+	dev->fill_image_mask = fz_draw_fill_image_mask;
+	dev->clip_image_mask = fz_draw_clip_image_mask;
+	dev->fill_image = fz_draw_fill_image;
+	dev->fill_shade = fz_draw_fill_shade;
 
-	dev->popclip = fz_drawpopclip;
+	dev->pop_clip = fz_draw_pop_clip;
 
-	dev->beginmask = fz_drawbeginmask;
-	dev->endmask = fz_drawendmask;
-	dev->begingroup = fz_drawbegingroup;
-	dev->endgroup = fz_drawendgroup;
+	dev->begin_mask = fz_draw_begin_mask;
+	dev->end_mask = fz_draw_end_mask;
+	dev->begin_group = fz_draw_begin_group;
+	dev->end_group = fz_draw_end_group;
 
-	dev->begintile = fz_drawbegintile;
-	dev->endtile = fz_drawendtile;
+	dev->begin_tile = fz_draw_begin_tile;
+	dev->end_tile = fz_draw_end_tile;
 
 	return dev;
 }

@@ -29,7 +29,7 @@ struct fz_jbig2d_s
 };
 
 static void
-closejbig2d(fz_stream *stm)
+close_jbig2d(fz_stream *stm)
 {
 	fz_jbig2d *state = stm->state;
 	if (state->page)
@@ -42,7 +42,7 @@ closejbig2d(fz_stream *stm)
 }
 
 static int
-readjbig2d(fz_stream *stm, unsigned char *buf, int len)
+read_jbig2d(fz_stream *stm, unsigned char *buf, int len)
 {
 	fz_jbig2d *state = stm->state;
 	unsigned char tmp[4096];
@@ -81,23 +81,23 @@ readjbig2d(fz_stream *stm, unsigned char *buf, int len)
 }
 
 fz_stream *
-fz_openjbig2d(fz_stream *chain, fz_buffer *globals)
+fz_open_jbig2d(fz_stream *chain, fz_buffer *globals)
 {
 	fz_jbig2d *state;
 
 	state = fz_malloc(sizeof(fz_jbig2d));
 	state->chain = chain;
-	state->ctx = jbig2_ctx_new(nil, JBIG2_OPTIONS_EMBEDDED, nil, nil, nil);
-	state->gctx = nil;
-	state->page = nil;
+	state->ctx = jbig2_ctx_new(NULL, JBIG2_OPTIONS_EMBEDDED, NULL, NULL, NULL);
+	state->gctx = NULL;
+	state->page = NULL;
 	state->idx = 0;
 
 	if (globals)
 	{
 		jbig2_data_in(state->ctx, globals->data, globals->len);
 		state->gctx = jbig2_make_global_ctx(state->ctx);
-		state->ctx = jbig2_ctx_new(nil, JBIG2_OPTIONS_EMBEDDED, state->gctx, nil, nil);
+		state->ctx = jbig2_ctx_new(NULL, JBIG2_OPTIONS_EMBEDDED, state->gctx, NULL, NULL);
 	}
 
-	return fz_newstream(state, readjbig2d, closejbig2d);
+	return fz_new_stream(state, read_jbig2d, close_jbig2d);
 }

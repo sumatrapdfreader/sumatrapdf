@@ -196,7 +196,7 @@ static void transform(unsigned int state[4], const unsigned char block[64])
 }
 
 /* MD5 initialization. Begins an MD5 operation, writing a new context. */
-void fz_md5init(fz_md5 *context)
+void fz_md5_init(fz_md5 *context)
 {
 	context->count[0] = context->count[1] = 0;
 
@@ -210,7 +210,7 @@ void fz_md5init(fz_md5 *context)
 /* MD5 block update operation. Continues an MD5 message-digest operation,
  * processing another message block, and updating the context.
  */
-void fz_md5update(fz_md5 *context, const unsigned char *input, const unsigned inlen)
+void fz_md5_update(fz_md5 *context, const unsigned char *input, const unsigned inlen)
 {
 	unsigned i, index, partlen;
 
@@ -248,7 +248,7 @@ void fz_md5update(fz_md5 *context, const unsigned char *input, const unsigned in
 /* MD5 finalization. Ends an MD5 message-digest operation, writing the
  * the message digest and zeroizing the context.
  */
-void fz_md5final(fz_md5 *context, unsigned char digest[16])
+void fz_md5_final(fz_md5 *context, unsigned char digest[16])
 {
 	unsigned char bits[8];
 	unsigned index, padlen;
@@ -259,10 +259,10 @@ void fz_md5final(fz_md5 *context, unsigned char digest[16])
 	/* Pad out to 56 mod 64 */
 	index = (unsigned)((context->count[0] >> 3) & 0x3f);
 	padlen = index < 56 ? 56 - index : 120 - index;
-	fz_md5update(context, padding, padlen);
+	fz_md5_update(context, padding, padlen);
 
 	/* Append length (before padding) */
-	fz_md5update(context, bits, 8);
+	fz_md5_update(context, bits, 8);
 
 	/* Store state in digest */
 	encode(digest, context->state, 16);

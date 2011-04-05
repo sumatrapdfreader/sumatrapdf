@@ -221,19 +221,19 @@ xps_read_zip_dir(xps_context *ctx, int start_offset)
 static int
 xps_find_and_read_zip_dir(xps_context *ctx)
 {
-	int filesize, back, maxback;
+	int file_size, back, maxback;
 	int i, n;
 	char buf[512];
 
 	fseek(ctx->file, 0, SEEK_END);
-	filesize = ftell(ctx->file);
+	file_size = ftell(ctx->file);
 
-	maxback = MIN(filesize, 0xFFFF + sizeof buf);
+	maxback = MIN(file_size, 0xFFFF + sizeof buf);
 	back = MIN(maxback, sizeof buf);
 
 	while (back < maxback)
 	{
-		fseek(ctx->file, filesize - back, 0);
+		fseek(ctx->file, file_size - back, 0);
 
 		n = fread(buf, 1, sizeof buf, ctx->file);
 		if (n < 0)
@@ -241,7 +241,7 @@ xps_find_and_read_zip_dir(xps_context *ctx)
 
 		for (i = n - 4; i > 0; i--)
 			if (!memcmp(buf + i, "PK\5\6", 4))
-				return xps_read_zip_dir(ctx, filesize - back + i);
+				return xps_read_zip_dir(ctx, file_size - back + i);
 
 		back += sizeof buf - 4;
 	}
@@ -391,15 +391,25 @@ xps_read_part(xps_context *ctx, char *partname)
 }
 
 int
-xps_open_file(xps_context *ctx, char *filename)
+xps_open_file(xps_context **ctxp, char *filename)
 {
+	xps_context *ctx;
 	char buf[2048];
 	int code;
 	char *p;
 
+	ctx = fz_malloc(sizeof(xps_context));
+	memset(ctx, 0, sizeof(xps_context));
+	ctx->font_table = xps_hash_new();
+	ctx->colorspace_table = xps_hash_new();
+	ctx->start_part = NULL;
+
 	ctx->file = fopen(filename, "rb");
 	if (!ctx->file)
+	{
+		xps_free_context(ctx);
 		return fz_throw("cannot open file: '%s'", filename);
+	}
 
 	if (strstr(filename, "/_rels/.rels") || strstr(filename, "\\_rels\\.rels"))
 	{
@@ -414,31 +424,21 @@ xps_open_file(xps_context *ctx, char *filename)
 	{
 		code = xps_find_and_read_zip_dir(ctx);
 		if (code < 0)
+		{
+			xps_free_context(ctx);
 			return fz_rethrow(code, "cannot read zip central directory");
+		}
 	}
 
 	code = xps_read_page_list(ctx);
 	if (code)
+	{
+		xps_free_context(ctx);
 		return fz_rethrow(code, "cannot read page list");
+	}
 
+	*ctxp = ctx;
 	return fz_okay;
-}
-
-xps_context *
-xps_new_context(void)
-{
-	xps_context *ctx;
-
-	ctx = fz_malloc(sizeof(xps_context));
-
-	memset(ctx, 0, sizeof(xps_context));
-
-	ctx->font_table = xps_hash_new();
-	ctx->colorspace_table = xps_hash_new();
-
-	ctx->start_part = NULL;
-
-	return ctx;
 }
 
 static void xps_free_key_func(void *ptr)
@@ -448,15 +448,15 @@ static void xps_free_key_func(void *ptr)
 
 static void xps_free_font_func(void *ptr)
 {
-	fz_dropfont(ptr);
+	fz_drop_font(ptr);
 }
 
 static void xps_free_colorspace_func(void *ptr)
 {
-	fz_dropcolorspace(ptr);
+	fz_drop_colorspace(ptr);
 }
 
-int
+void
 xps_free_context(xps_context *ctx)
 {
 	int i;
@@ -464,19 +464,15 @@ xps_free_context(xps_context *ctx)
 	if (ctx->file)
 		fclose(ctx->file);
 
-	if (ctx->start_part)
-		fz_free(ctx->start_part);
-
 	for (i = 0; i < ctx->zip_count; i++)
 		fz_free(ctx->zip_table[i].name);
 	fz_free(ctx->zip_table);
 
 	xps_hash_free(ctx->font_table, xps_free_key_func, xps_free_font_func);
 	xps_hash_free(ctx->colorspace_table, xps_free_key_func, xps_free_colorspace_func);
-
 	xps_free_page_list(ctx);
 
+	fz_free(ctx->start_part);
+	fz_free(ctx->directory);
 	fz_free(ctx);
-
-	return 0;
 }

@@ -5,14 +5,14 @@
 #include "fitz.h"
 #include "mupdf.h"
 
-static pdf_xref *xref = nil;
+static pdf_xref *xref = NULL;
 static int dorgb = 0;
 
 void die(fz_error error)
 {
 	fz_catch(error, "aborting");
 	if (xref)
-		pdf_freexref(xref);
+		pdf_free_xref(xref);
 	exit(1);
 }
 
@@ -26,14 +26,14 @@ static void usage(void)
 
 static int isimage(fz_obj *obj)
 {
-	fz_obj *type = fz_dictgets(obj, "Subtype");
-	return fz_isname(type) && !strcmp(fz_toname(type), "Image");
+	fz_obj *type = fz_dict_gets(obj, "Subtype");
+	return fz_is_name(type) && !strcmp(fz_to_name(type), "Image");
 }
 
 static int isfontdesc(fz_obj *obj)
 {
-	fz_obj *type = fz_dictgets(obj, "Type");
-	return fz_isname(type) && !strcmp(fz_toname(type), "FontDescriptor");
+	fz_obj *type = fz_dict_gets(obj, "Type");
+	return fz_is_name(type) && !strcmp(fz_to_name(type), "FontDescriptor");
 }
 
 static void saveimage(int num)
@@ -43,20 +43,20 @@ static void saveimage(int num)
 	fz_obj *ref;
 	char name[1024];
 
-	ref = fz_newindirect(num, 0, xref);
+	ref = fz_new_indirect(num, 0, xref);
 
 	/* TODO: detect DCTD and save as jpeg */
 
-	error = pdf_loadimage(&img, xref, ref);
+	error = pdf_load_image(&img, xref, ref);
 	if (error)
 		die(error);
 
-	if (dorgb && img->colorspace && img->colorspace != fz_devicergb)
+	if (dorgb && img->colorspace && img->colorspace != fz_device_rgb)
 	{
 		fz_pixmap *temp;
-		temp = fz_newpixmap(fz_devicergb, img->x, img->y, img->w, img->h);
-		fz_convertpixmap(img, temp);
-		fz_droppixmap(img);
+		temp = fz_new_pixmap(fz_device_rgb, img->x, img->y, img->w, img->h);
+		fz_convert_pixmap(img, temp);
+		fz_drop_pixmap(img);
 		img = temp;
 	}
 
@@ -64,17 +64,17 @@ static void saveimage(int num)
 	{
 		sprintf(name, "img-%04d.png", num);
 		printf("extracting image %s\n", name);
-		fz_writepng(img, name, 0);
+		fz_write_png(img, name, 0);
 	}
 	else
 	{
 		sprintf(name, "img-%04d.pam", num);
 		printf("extracting image %s\n", name);
-		fz_writepam(img, name, 0);
+		fz_write_pam(img, name, 0);
 	}
 
-	fz_droppixmap(img);
-	fz_dropobj(ref);
+	fz_drop_pixmap(img);
+	fz_drop_obj(ref);
 }
 
 static void savefont(fz_obj *dict, int num)
@@ -83,41 +83,41 @@ static void savefont(fz_obj *dict, int num)
 	char name[1024];
 	char *subtype;
 	fz_buffer *buf;
-	fz_obj *stream = nil;
+	fz_obj *stream = NULL;
 	fz_obj *obj;
 	char *ext = "";
 	FILE *f;
 	char *fontname = "font";
 	int n;
 
-	obj = fz_dictgets(dict, "FontName");
+	obj = fz_dict_gets(dict, "FontName");
 	if (obj)
-		fontname = fz_toname(obj);
+		fontname = fz_to_name(obj);
 
-	obj = fz_dictgets(dict, "FontFile");
+	obj = fz_dict_gets(dict, "FontFile");
 	if (obj)
 	{
 		stream = obj;
 		ext = "pfa";
 	}
 
-	obj = fz_dictgets(dict, "FontFile2");
+	obj = fz_dict_gets(dict, "FontFile2");
 	if (obj)
 	{
 		stream = obj;
 		ext = "ttf";
 	}
 
-	obj = fz_dictgets(dict, "FontFile3");
+	obj = fz_dict_gets(dict, "FontFile3");
 	if (obj)
 	{
 		stream = obj;
 
-		obj = fz_dictgets(obj, "Subtype");
-		if (obj && !fz_isname(obj))
+		obj = fz_dict_gets(obj, "Subtype");
+		if (obj && !fz_is_name(obj))
 			die(fz_throw("Invalid font descriptor subtype"));
 
-		subtype = fz_toname(obj);
+		subtype = fz_to_name(obj);
 		if (!strcmp(subtype, "Type1C"))
 			ext = "cff";
 		else if (!strcmp(subtype, "CIDFontType0C"))
@@ -132,9 +132,9 @@ static void savefont(fz_obj *dict, int num)
 		return;
 	}
 
-	buf = fz_newbuffer(0);
+	buf = fz_new_buffer(0);
 
-	error = pdf_loadstream(&buf, xref, fz_tonum(stream), fz_togen(stream));
+	error = pdf_load_stream(&buf, xref, fz_to_num(stream), fz_to_gen(stream));
 	if (error)
 		die(error);
 
@@ -142,7 +142,7 @@ static void savefont(fz_obj *dict, int num)
 	printf("extracting font %s\n", name);
 
 	f = fopen(name, "wb");
-	if (f == nil)
+	if (f == NULL)
 		die(fz_throw("Error creating font file"));
 
 	n = fwrite(buf->data, 1, buf->len, f);
@@ -152,7 +152,7 @@ static void savefont(fz_obj *dict, int num)
 	if (fclose(f) < 0)
 		die(fz_throw("Error closing font file"));
 
-	fz_dropbuffer(buf);
+	fz_drop_buffer(buf);
 }
 
 static void showobject(int num)
@@ -163,7 +163,7 @@ static void showobject(int num)
 	if (!xref)
 		die(fz_throw("no file specified"));
 
-	error = pdf_loadobject(&obj, xref, num, 0);
+	error = pdf_load_object(&obj, xref, num, 0);
 	if (error)
 		die(error);
 
@@ -172,7 +172,7 @@ static void showobject(int num)
 	else if (isfontdesc(obj))
 		savefont(obj, num);
 
-	fz_dropobj(obj);
+	fz_drop_obj(obj);
 }
 
 int main(int argc, char **argv)
@@ -196,7 +196,7 @@ int main(int argc, char **argv)
 		usage();
 
 	infile = argv[fz_optind++];
-	error = pdf_openxref(&xref, infile, password);
+	error = pdf_open_xref(&xref, infile, password);
 	if (error)
 		die(fz_rethrow(error, "cannot open input file '%s'", infile));
 
@@ -214,9 +214,9 @@ int main(int argc, char **argv)
 		}
 	}
 
-	pdf_freexref(xref);
+	pdf_free_xref(xref);
 
-	fz_flushwarnings();
+	fz_flush_warnings();
 
 	return 0;
 }

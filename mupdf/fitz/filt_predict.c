@@ -60,7 +60,7 @@ paeth(int a, int b, int c)
 }
 
 static void
-fz_predicttiff(fz_predict *state, unsigned char *out, unsigned char *in, int len)
+fz_predict_tiff(fz_predict *state, unsigned char *out, unsigned char *in, int len)
 {
 	int left[MAXC];
 	int i, k;
@@ -82,7 +82,7 @@ fz_predicttiff(fz_predict *state, unsigned char *out, unsigned char *in, int len
 }
 
 static void
-fz_predictpng(fz_predict *state, unsigned char *out, unsigned char *in, int len, int predictor)
+fz_predict_png(fz_predict *state, unsigned char *out, unsigned char *in, int len, int predictor)
 {
 	int bpp = state->bpp;
 	int i;
@@ -141,7 +141,7 @@ fz_predictpng(fz_predict *state, unsigned char *out, unsigned char *in, int len,
 }
 
 static int
-readpredict(fz_stream *stm, unsigned char *buf, int len)
+read_predict(fz_stream *stm, unsigned char *buf, int len)
 {
 	fz_predict *state = stm->state;
 	unsigned char *p = buf;
@@ -163,10 +163,10 @@ readpredict(fz_stream *stm, unsigned char *buf, int len)
 		if (state->predictor == 1)
 			memcpy(state->out, state->in, n);
 		else if (state->predictor == 2)
-			fz_predicttiff(state, state->out, state->in, n);
+			fz_predict_tiff(state, state->out, state->in, n);
 		else
 		{
-			fz_predictpng(state, state->out, state->in + 1, n - 1, state->in[0]);
+			fz_predict_png(state, state->out, state->in + 1, n - 1, state->in[0]);
 			memcpy(state->ref, state->out, state->stride);
 		}
 
@@ -181,7 +181,7 @@ readpredict(fz_stream *stm, unsigned char *buf, int len)
 }
 
 static void
-closepredict(fz_stream *stm)
+close_predict(fz_stream *stm)
 {
 	fz_predict *state = stm->state;
 	fz_close(state->chain);
@@ -192,7 +192,7 @@ closepredict(fz_stream *stm)
 }
 
 fz_stream *
-fz_openpredict(fz_stream *chain, fz_obj *params)
+fz_open_predict(fz_stream *chain, fz_obj *params)
 {
 	fz_predict *state;
 	fz_obj *obj;
@@ -205,9 +205,9 @@ fz_openpredict(fz_stream *chain, fz_obj *params)
 	state->colors = 1;
 	state->bpc = 8;
 
-	obj = fz_dictgets(params, "Predictor");
+	obj = fz_dict_gets(params, "Predictor");
 	if (obj)
-		state->predictor = fz_toint(obj);
+		state->predictor = fz_to_int(obj);
 
 	if (state->predictor != 1 && state->predictor != 2 &&
 		state->predictor != 10 && state->predictor != 11 &&
@@ -218,17 +218,17 @@ fz_openpredict(fz_stream *chain, fz_obj *params)
 		state->predictor = 1;
 	}
 
-	obj = fz_dictgets(params, "Columns");
+	obj = fz_dict_gets(params, "Columns");
 	if (obj)
-		state->columns = fz_toint(obj);
+		state->columns = fz_to_int(obj);
 
-	obj = fz_dictgets(params, "Colors");
+	obj = fz_dict_gets(params, "Colors");
 	if (obj)
-		state->colors = fz_toint(obj);
+		state->colors = fz_to_int(obj);
 
-	obj = fz_dictgets(params, "BitsPerComponent");
+	obj = fz_dict_gets(params, "BitsPerComponent");
 	if (obj)
-		state->bpc = fz_toint(obj);
+		state->bpc = fz_to_int(obj);
 
 	state->stride = (state->bpc * state->colors * state->columns + 7) / 8;
 	state->bpp = (state->bpc * state->colors + 7) / 8;
@@ -241,5 +241,5 @@ fz_openpredict(fz_stream *chain, fz_obj *params)
 
 	memset(state->ref, 0, state->stride);
 
-	return fz_newstream(state, readpredict, closepredict);
+	return fz_new_stream(state, read_predict, close_predict);
 }

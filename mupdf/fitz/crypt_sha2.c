@@ -110,7 +110,7 @@ transform(unsigned int state[8], const unsigned int data_xe[16])
 	state[7] += h(0);
 }
 
-void fz_sha256init(fz_sha256 *context)
+void fz_sha256_init(fz_sha256 *context)
 {
 	context->count[0] = context->count[1] = 0;
 
@@ -124,7 +124,7 @@ void fz_sha256init(fz_sha256 *context)
 	context->state[7] = 0x5BE0CD19;
 }
 
-void fz_sha256update(fz_sha256 *context, const unsigned char *input, unsigned int inlen)
+void fz_sha256_update(fz_sha256 *context, const unsigned char *input, unsigned int inlen)
 {
 	/* Copy the input data into a properly aligned temporary buffer.
 	 * This way we can be called with arbitrarily sized buffers
@@ -151,7 +151,7 @@ void fz_sha256update(fz_sha256 *context, const unsigned char *input, unsigned in
 	}
 }
 
-void fz_sha256final(fz_sha256 *context, unsigned char digest[32])
+void fz_sha256_final(fz_sha256 *context, unsigned char digest[32])
 {
 	/* Add padding as described in RFC 3174 (it describes SHA-1 but
 	 * the same padding style is used for SHA-256 too). */

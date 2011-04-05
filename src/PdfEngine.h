@@ -29,7 +29,7 @@ __pragma(warning(pop))
 
 typedef struct {
     pdf_page *page;
-    fz_displaylist *list;
+    fz_display_list *list;
     int refs;
 } PdfPageRun;
 
@@ -152,7 +152,7 @@ protected:
     PdfPageRun    * _runCache[MAX_PAGE_RUN_CACHE];
     PdfPageRun    * getPageRun(pdf_page *page, bool tryOnly=false);
     fz_error        runPage(pdf_page *page, fz_device *dev, fz_matrix ctm,
-                            RenderTarget target=Target_View, fz_rect bounds=fz_infiniterect,
+                            RenderTarget target=Target_View, fz_rect bounds=fz_infinite_rect,
                             bool cacheRun=true);
     void            dropPageRun(PdfPageRun *run, bool forceRemove=false);
 
@@ -163,7 +163,7 @@ protected:
     pdf_outline   * _outline;
     pdf_outline   * _attachments;
     fz_obj        * _info;
-    fz_glyphcache * _drawcache;
+    fz_glyph_cache* _drawcache;
 
 public:
     static PdfEngine *CreateFromFileName(const TCHAR *fileName, PasswordUI *pwdUI=NULL);

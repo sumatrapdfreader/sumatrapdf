@@ -1,26 +1,26 @@
 #include "fitz.h"
 
 fz_shade *
-fz_keepshade(fz_shade *shade)
+fz_keep_shade(fz_shade *shade)
 {
 	shade->refs ++;
 	return shade;
 }
 
 void
-fz_dropshade(fz_shade *shade)
+fz_drop_shade(fz_shade *shade)
 {
 	if (shade && --shade->refs == 0)
 	{
 		if (shade->colorspace)
-			fz_dropcolorspace(shade->colorspace);
+			fz_drop_colorspace(shade->colorspace);
 		fz_free(shade->mesh);
 		fz_free(shade);
 	}
 }
 
 fz_rect
-fz_boundshade(fz_shade *shade, fz_matrix ctm)
+fz_bound_shade(fz_shade *shade, fz_matrix ctm)
 {
 	float *v;
 	fz_rect r;
@@ -28,22 +28,22 @@ fz_boundshade(fz_shade *shade, fz_matrix ctm)
 	int i, ncomp, nvert;
 
 	ctm = fz_concat(shade->matrix, ctm);
-	ncomp = shade->usefunction ? 3 : 2 + shade->colorspace->n;
-	nvert = shade->meshlen / ncomp;
+	ncomp = shade->use_function ? 3 : 2 + shade->colorspace->n;
+	nvert = shade->mesh_len / ncomp;
 	v = shade->mesh;
 
 	if (shade->type == FZ_LINEAR)
-		return fz_infiniterect;
+		return fz_infinite_rect;
 	if (shade->type == FZ_RADIAL)
-		return fz_infiniterect;
+		return fz_infinite_rect;
 
 	if (nvert == 0)
-		return fz_emptyrect;
+		return fz_empty_rect;
 
 	p.x = v[0];
 	p.y = v[1];
 	v += ncomp;
-	p = fz_transformpoint(ctm, p);
+	p = fz_transform_point(ctm, p);
 	r.x0 = r.x1 = p.x;
 	r.y0 = r.y1 = p.y;
 
@@ -51,7 +51,7 @@ fz_boundshade(fz_shade *shade, fz_matrix ctm)
 	{
 		p.x = v[0];
 		p.y = v[1];
-		p = fz_transformpoint(ctm, p);
+		p = fz_transform_point(ctm, p);
 		v += ncomp;
 		if (p.x < r.x0) r.x0 = p.x;
 		if (p.y < r.y0) r.y0 = p.y;
@@ -63,7 +63,7 @@ fz_boundshade(fz_shade *shade, fz_matrix ctm)
 }
 
 void
-fz_debugshade(fz_shade *shade)
+fz_debug_shade(fz_shade *shade)
 {
 	int i, j, n;
 	float *vertex;
@@ -88,7 +88,7 @@ fz_debugshade(fz_shade *shade)
 			shade->matrix.a, shade->matrix.b, shade->matrix.c,
 			shade->matrix.d, shade->matrix.e, shade->matrix.f);
 
-	if (shade->usebackground)
+	if (shade->use_background)
 	{
 		printf("\tbackground [");
 		for (i = 0; i < shade->colorspace->n; i++)
@@ -96,7 +96,7 @@ fz_debugshade(fz_shade *shade)
 		printf("]\n");
 	}
 
-	if (shade->usefunction)
+	if (shade->use_function)
 	{
 		printf("\tfunction\n");
 		n = 3;
@@ -104,12 +104,12 @@ fz_debugshade(fz_shade *shade)
 	else
 		n = 2 + shade->colorspace->n;
 
-	printf("\tvertices: %d\n", shade->meshlen);
+	printf("\tvertices: %d\n", shade->mesh_len);
 
 	vertex = shade->mesh;
 	triangle = 0;
 	i = 0;
-	while (i < shade->meshlen)
+	while (i < shade->mesh_len)
 	{
 		printf("\t%d:(%g, %g): ", triangle, vertex[0], vertex[1]);
 

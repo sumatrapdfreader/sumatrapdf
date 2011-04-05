@@ -85,7 +85,7 @@ fz_translate(float tx, float ty)
 }
 
 fz_matrix
-fz_invertmatrix(fz_matrix src)
+fz_invert_matrix(fz_matrix src)
 {
 	fz_matrix dst;
 	float rdet = 1 / (src.a * src.d - src.b * src.c);
@@ -99,20 +99,20 @@ fz_invertmatrix(fz_matrix src)
 }
 
 int
-fz_isrectilinear(fz_matrix m)
+fz_is_rectilinear(fz_matrix m)
 {
 	return (fabsf(m.b) < FLT_EPSILON && fabsf(m.c) < FLT_EPSILON) ||
 		(fabsf(m.a) < FLT_EPSILON && fabsf(m.d) < FLT_EPSILON);
 }
 
 float
-fz_matrixexpansion(fz_matrix m)
+fz_matrix_expansion(fz_matrix m)
 {
 	return sqrtf(fabsf(m.a * m.d - m.b * m.c));
 }
 
 fz_point
-fz_transformpoint(fz_matrix m, fz_point p)
+fz_transform_point(fz_matrix m, fz_point p)
 {
 	fz_point t;
 	t.x = p.x * m.a + p.y * m.c + m.e;
@@ -121,7 +121,7 @@ fz_transformpoint(fz_matrix m, fz_point p)
 }
 
 fz_point
-fz_transformvector(fz_matrix m, fz_point p)
+fz_transform_vector(fz_matrix m, fz_point p)
 {
 	fz_point t;
 	t.x = p.x * m.a + p.y * m.c;
@@ -131,16 +131,16 @@ fz_transformvector(fz_matrix m, fz_point p)
 
 /* Rectangles and bounding boxes */
 
-const fz_rect fz_infiniterect = { 1, 1, -1, -1 };
-const fz_rect fz_emptyrect = { 0, 0, 0, 0 };
-const fz_rect fz_unitrect = { 0, 0, 1, 1 };
+const fz_rect fz_infinite_rect = { 1, 1, -1, -1 };
+const fz_rect fz_empty_rect = { 0, 0, 0, 0 };
+const fz_rect fz_unit_rect = { 0, 0, 1, 1 };
 
-const fz_bbox fz_infinitebbox = { 1, 1, -1, -1 };
-const fz_bbox fz_emptybbox = { 0, 0, 0, 0 };
-const fz_bbox fz_unitbbox = { 0, 0, 1, 1 };
+const fz_bbox fz_infinite_bbox = { 1, 1, -1, -1 };
+const fz_bbox fz_empty_bbox = { 0, 0, 0, 0 };
+const fz_bbox fz_unit_bbox = { 0, 0, 1, 1 };
 
 fz_bbox
-fz_roundrect(fz_rect f)
+fz_round_rect(fz_rect f)
 {
 	fz_bbox i;
 	i.x0 = floorf(f.x0 + 0.001f); /* adjust by 0.001 to compensate for precision errors */
@@ -151,28 +151,28 @@ fz_roundrect(fz_rect f)
 }
 
 fz_bbox
-fz_intersectbbox(fz_bbox a, fz_bbox b)
+fz_intersect_bbox(fz_bbox a, fz_bbox b)
 {
 	fz_bbox r;
-	if (fz_isinfiniterect(a)) return b;
-	if (fz_isinfiniterect(b)) return a;
-	if (fz_isemptyrect(a)) return fz_emptybbox;
-	if (fz_isemptyrect(b)) return fz_emptybbox;
+	if (fz_is_infinite_rect(a)) return b;
+	if (fz_is_infinite_rect(b)) return a;
+	if (fz_is_empty_rect(a)) return fz_empty_bbox;
+	if (fz_is_empty_rect(b)) return fz_empty_bbox;
 	r.x0 = MAX(a.x0, b.x0);
 	r.y0 = MAX(a.y0, b.y0);
 	r.x1 = MIN(a.x1, b.x1);
 	r.y1 = MIN(a.y1, b.y1);
-	return (r.x1 < r.x0 || r.y1 < r.y0) ? fz_emptybbox : r;
+	return (r.x1 < r.x0 || r.y1 < r.y0) ? fz_empty_bbox : r;
 }
 
 fz_bbox
-fz_unionbbox(fz_bbox a, fz_bbox b)
+fz_union_bbox(fz_bbox a, fz_bbox b)
 {
 	fz_bbox r;
-	if (fz_isinfiniterect(a)) return a;
-	if (fz_isinfiniterect(b)) return b;
-	if (fz_isemptyrect(a)) return b;
-	if (fz_isemptyrect(b)) return a;
+	if (fz_is_infinite_rect(a)) return a;
+	if (fz_is_infinite_rect(b)) return b;
+	if (fz_is_empty_rect(a)) return b;
+	if (fz_is_empty_rect(b)) return a;
 	r.x0 = MIN(a.x0, b.x0);
 	r.y0 = MIN(a.y0, b.y0);
 	r.x1 = MAX(a.x1, b.x1);
@@ -181,21 +181,21 @@ fz_unionbbox(fz_bbox a, fz_bbox b)
 }
 
 fz_rect
-fz_transformrect(fz_matrix m, fz_rect r)
+fz_transform_rect(fz_matrix m, fz_rect r)
 {
 	fz_point s, t, u, v;
 
-	if (fz_isinfiniterect(r))
+	if (fz_is_infinite_rect(r))
 		return r;
 
 	s.x = r.x0; s.y = r.y0;
 	t.x = r.x0; t.y = r.y1;
 	u.x = r.x1; u.y = r.y1;
 	v.x = r.x1; v.y = r.y0;
-	s = fz_transformpoint(m, s);
-	t = fz_transformpoint(m, t);
-	u = fz_transformpoint(m, u);
-	v = fz_transformpoint(m, v);
+	s = fz_transform_point(m, s);
+	t = fz_transform_point(m, t);
+	u = fz_transform_point(m, u);
+	v = fz_transform_point(m, v);
 	r.x0 = MIN4(s.x, t.x, u.x, v.x);
 	r.y0 = MIN4(s.y, t.y, u.y, v.y);
 	r.x1 = MAX4(s.x, t.x, u.x, v.x);
@@ -204,21 +204,21 @@ fz_transformrect(fz_matrix m, fz_rect r)
 }
 
 fz_bbox
-fz_transformbbox(fz_matrix m, fz_bbox b)
+fz_transform_bbox(fz_matrix m, fz_bbox b)
 {
 	fz_point s, t, u, v;
 
-	if (fz_isinfinitebbox(b))
+	if (fz_is_infinite_bbox(b))
 		return b;
 
 	s.x = b.x0; s.y = b.y0;
 	t.x = b.x0; t.y = b.y1;
 	u.x = b.x1; u.y = b.y1;
 	v.x = b.x1; v.y = b.y0;
-	s = fz_transformpoint(m, s);
-	t = fz_transformpoint(m, t);
-	u = fz_transformpoint(m, u);
-	v = fz_transformpoint(m, v);
+	s = fz_transform_point(m, s);
+	t = fz_transform_point(m, t);
+	u = fz_transform_point(m, u);
+	v = fz_transform_point(m, v);
 	b.x0 = MIN4(s.x, t.x, u.x, v.x);
 	b.y0 = MIN4(s.y, t.y, u.y, v.y);
 	b.x1 = MAX4(s.x, t.x, u.x, v.x);

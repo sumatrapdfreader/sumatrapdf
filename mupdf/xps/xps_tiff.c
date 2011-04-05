@@ -146,7 +146,7 @@ xps_decode_tiff_uncompressed(struct tiff *tiff, fz_stream *stm, byte *wp, int wl
 static int
 xps_decode_tiff_packbits(struct tiff *tiff, fz_stream *chain, byte *wp, int wlen)
 {
-	fz_stream *stm = fz_openrld(chain);
+	fz_stream *stm = fz_open_rld(chain);
 	int n = fz_read(stm, wp, wlen);
 	fz_close(stm);
 	if (n < 0)
@@ -157,7 +157,7 @@ xps_decode_tiff_packbits(struct tiff *tiff, fz_stream *chain, byte *wp, int wlen
 static int
 xps_decode_tiff_lzw(struct tiff *tiff, fz_stream *chain, byte *wp, int wlen)
 {
-	fz_stream *stm = fz_openlzwd(chain, NULL);
+	fz_stream *stm = fz_open_lzwd(chain, NULL);
 	int n = fz_read(stm, wp, wlen);
 	fz_close(stm);
 	if (n < 0)
@@ -167,7 +167,7 @@ xps_decode_tiff_lzw(struct tiff *tiff, fz_stream *chain, byte *wp, int wlen)
 static int
 xps_decode_tiff_flate(struct tiff *tiff, fz_stream *chain, byte *wp, int wlen)
 {
-	fz_stream *stm = fz_openflated(chain);
+	fz_stream *stm = fz_open_flated(chain);
 	int n = fz_read(stm, wp, wlen);
 	fz_close(stm);
 	if (n < 0)
@@ -180,32 +180,32 @@ xps_decode_tiff_fax(struct tiff *tiff, int comp, fz_stream *chain, byte *wp, int
 {
 	fz_stream *stm;
 	fz_obj *params;
-	fz_obj *columns, *rows, *blackis1, *k, *encodedbytealign;
+	fz_obj *columns, *rows, *black_is_1, *k, *encoded_byte_align;
 	int n;
 
-	columns = fz_newint(tiff->imagewidth);
-	rows = fz_newint(tiff->imagelength);
-	blackis1 = fz_newbool(tiff->photometric == 0);
-	k = fz_newint(comp == 4 ? -1 : 0);
-	encodedbytealign = fz_newbool(comp == 2);
+	columns = fz_new_int(tiff->imagewidth);
+	rows = fz_new_int(tiff->imagelength);
+	black_is_1 = fz_new_bool(tiff->photometric == 0);
+	k = fz_new_int(comp == 4 ? -1 : 0);
+	encoded_byte_align = fz_new_bool(comp == 2);
 
-	params = fz_newdict(5);
-	fz_dictputs(params, "Columns", columns);
-	fz_dictputs(params, "Rows", rows);
-	fz_dictputs(params, "BlackIs1", blackis1);
-	fz_dictputs(params, "K", k);
-	fz_dictputs(params, "EncodedByteAlign", encodedbytealign);
+	params = fz_new_dict(5);
+	fz_dict_puts(params, "Columns", columns);
+	fz_dict_puts(params, "Rows", rows);
+	fz_dict_puts(params, "BlackIs1", black_is_1);
+	fz_dict_puts(params, "K", k);
+	fz_dict_puts(params, "EncodedByteAlign", encoded_byte_align);
 
-	fz_dropobj(columns);
-	fz_dropobj(rows);
-	fz_dropobj(blackis1);
-	fz_dropobj(k);
-	fz_dropobj(encodedbytealign);
+	fz_drop_obj(columns);
+	fz_drop_obj(rows);
+	fz_drop_obj(black_is_1);
+	fz_drop_obj(k);
+	fz_drop_obj(encoded_byte_align);
 
-	stm = fz_openfaxd(chain, params);
+	stm = fz_open_faxd(chain, params);
 	n = fz_read(stm, wp, wlen);
 	fz_close(stm);
-	fz_dropobj(params);
+	fz_drop_obj(params);
 
 	if (n < 0)
 		return fz_rethrow(n, "cannot read fax strip");
@@ -215,7 +215,7 @@ xps_decode_tiff_fax(struct tiff *tiff, int comp, fz_stream *chain, byte *wp, int
 static int
 xps_decode_tiff_jpeg(struct tiff *tiff, fz_stream *chain, byte *wp, int wlen)
 {
-	fz_stream *stm = fz_opendctd(chain, NULL);
+	fz_stream *stm = fz_open_dctd(chain, NULL);
 	int n = fz_read(stm, wp, wlen);
 	fz_close(stm);
 	if (n < 0)
@@ -386,23 +386,23 @@ xps_decode_tiff_strips(struct tiff *tiff)
 	switch (tiff->photometric)
 	{
 	case 0: /* WhiteIsZero -- inverted */
-		tiff->colorspace = fz_devicegray;
+		tiff->colorspace = fz_device_gray;
 		break;
 	case 1: /* BlackIsZero */
-		tiff->colorspace = fz_devicegray;
+		tiff->colorspace = fz_device_gray;
 		break;
 	case 2: /* RGB */
-		tiff->colorspace = fz_devicergb;
+		tiff->colorspace = fz_device_rgb;
 		break;
 	case 3: /* RGBPal */
-		tiff->colorspace = fz_devicergb;
+		tiff->colorspace = fz_device_rgb;
 		break;
 	case 5: /* CMYK */
-		tiff->colorspace = fz_devicecmyk;
+		tiff->colorspace = fz_device_cmyk;
 		break;
 	case 6: /* YCbCr */
 		/* it's probably a jpeg ... we let jpeg convert to rgb */
-		tiff->colorspace = fz_devicergb;
+		tiff->colorspace = fz_device_rgb;
 		break;
 	default:
 		return fz_throw("unknown photometric: %d", tiff->photometric);
@@ -454,7 +454,7 @@ xps_decode_tiff_strips(struct tiff *tiff)
 				rp[i] = bitrev[rp[i]];
 
 		/* the strip decoders will close this */
-		stm = fz_openmemory(rp, rlen);
+		stm = fz_open_memory(rp, rlen);
 
 		switch (tiff->compression)
 		{
@@ -824,15 +824,27 @@ xps_decode_tiff(fz_pixmap **imagep, byte *buf, int len)
 
 	/* Expand into fz_pixmap struct */
 
-	image = fz_newpixmap(tiff.colorspace, 0, 0, tiff.imagewidth, tiff.imagelength);
+	image = fz_new_pixmap(tiff.colorspace, 0, 0, tiff.imagewidth, tiff.imagelength);
 	image->xres = tiff.xresolution;
 	image->yres = tiff.yresolution;
 
-	fz_unpacktile(image, tiff.samples, tiff.samplesperpixel, tiff.bitspersample, tiff.stride, 0);
+	fz_unpack_tile(image, tiff.samples, tiff.samplesperpixel, tiff.bitspersample, tiff.stride, 0);
 
 	/* We should only do this on non-pre-multiplied images, but files in the wild are bad */
 	if (tiff.extrasamples /* == 2 */)
-		fz_premultiplypixmap(image);
+	{
+		/* CMYK is a subtractive colorspace, we want additive for premul alpha */
+		if (image->n == 5)
+		{
+			fz_pixmap *rgb = fz_new_pixmap(fz_device_rgb, 0, 0, image->w, image->h);
+			fz_convert_pixmap(image, rgb);
+			rgb->xres = image->xres;
+			rgb->yres = image->yres;
+			fz_drop_pixmap(image);
+			image = rgb;
+		}
+		fz_premultiply_pixmap(image);
+	}
 
 	/* Clean up scratch memory */
 

@@ -1,19 +1,19 @@
 /*
  *	FIPS-197 compliant AES implementation
  *
- *	Copyright (C) 2006-2007	 Christophe Devine
+ *	Copyright (C) 2006-2007 Christophe Devine
  *
  *	Redistribution and use in source and binary forms, with or without
  *	modification, are permitted provided that the following conditions
  *	are met:
  *
- *	  * Redistributions of source code _must_ retain the above copyright
+ *	* Redistributions of source code _must_ retain the above copyright
  *		notice, this list of conditions and the following disclaimer.
- *	  * Redistributions in binary form may or may not reproduce the above
+ *	* Redistributions in binary form may or may not reproduce the above
  *		copyright notice, this list of conditions and the following
  *		disclaimer in the documentation and/or other materials provided
  *		with the distribution.
- *	  * Neither the name of XySSL nor the names of its contributors may be
+ *	* Neither the name of XySSL nor the names of its contributors may be
  *		used to endorse or promote products derived from this software
  *		without specific prior written permission.
  *
@@ -46,22 +46,22 @@
  * 32-bit integer manipulation macros (little endian)
  */
 #ifndef GET_ULONG_LE
-#define GET_ULONG_LE(n,b,i)								\
-{														\
-	(n) = ( (unsigned long) (b)[(i)	   ]	   )		\
-		| ( (unsigned long) (b)[(i) + 1] <<	 8 )		\
-		| ( (unsigned long) (b)[(i) + 2] << 16 )		\
-		| ( (unsigned long) (b)[(i) + 3] << 24 );		\
+#define GET_ULONG_LE(n,b,i)					\
+{								\
+	(n) = ( (unsigned long) (b)[(i)] )			\
+		| ( (unsigned long) (b)[(i) + 1] << 8 )		\
+		| ( (unsigned long) (b)[(i) + 2] << 16 )	\
+		| ( (unsigned long) (b)[(i) + 3] << 24 );	\
 }
 #endif
 
 #ifndef PUT_ULONG_LE
-#define PUT_ULONG_LE(n,b,i)								\
-{														\
-	(b)[(i)	   ] = (unsigned char) ( (n)	   );		\
-	(b)[(i) + 1] = (unsigned char) ( (n) >>	 8 );		\
-	(b)[(i) + 2] = (unsigned char) ( (n) >> 16 );		\
-	(b)[(i) + 3] = (unsigned char) ( (n) >> 24 );		\
+#define PUT_ULONG_LE(n,b,i)				\
+{							\
+	(b)[(i) ] = (unsigned char) ( (n) );		\
+	(b)[(i) + 1] = (unsigned char) ( (n) >> 8 );	\
+	(b)[(i) + 2] = (unsigned char) ( (n) >> 16 );	\
+	(b)[(i) + 3] = (unsigned char) ( (n) >> 24 );	\
 }
 #endif
 
@@ -132,7 +132,7 @@ static void aes_gen_tables( void )
 	{
 		x = pow[255 - log[i]];
 
-		y  = x; y = ( (y << 1) | (y >> 7) ) & 0xFF;
+		y = x; y = ( (y << 1) | (y >> 7) ) & 0xFF;
 		x ^= y; y = ( (y << 1) | (y >> 7) ) & 0xFF;
 		x ^= y; y = ( (y << 1) | (y >> 7) ) & 0xFF;
 		x ^= y; y = ( (y << 1) | (y >> 7) ) & 0xFF;
@@ -149,9 +149,9 @@ static void aes_gen_tables( void )
 	{
 		x = FSb[i];
 		y = XTIME( x ) & 0xFF;
-		z =	 ( y ^ x ) & 0xFF;
+		z = ( y ^ x ) & 0xFF;
 
-		FT0[i] = ( (unsigned long) y	   ) ^
+		FT0[i] = ( (unsigned long) y ) ^
 		( (unsigned long) x <<	8 ) ^
 		( (unsigned long) x << 16 ) ^
 		( (unsigned long) z << 24 );
@@ -162,8 +162,8 @@ static void aes_gen_tables( void )
 
 		x = RSb[i];
 
-		RT0[i] = ( (unsigned long) MUL( 0x0E, x )		) ^
-		( (unsigned long) MUL( 0x09, x ) <<	 8 ) ^
+		RT0[i] = ( (unsigned long) MUL( 0x0E, x ) ) ^
+		( (unsigned long) MUL( 0x09, x ) << 8 ) ^
 		( (unsigned long) MUL( 0x0D, x ) << 16 ) ^
 		( (unsigned long) MUL( 0x0B, x ) << 24 );
 
@@ -214,15 +214,15 @@ void aes_setkey_enc( aes_context *ctx, const unsigned char *key, int keysize )
 
 		for( i = 0; i < 10; i++, RK += 4 )
 		{
-			RK[4]  = RK[0] ^ RCON[i] ^
-			( FSb[ ( RK[3] >>  8 ) & 0xFF ]		  ) ^
-			( FSb[ ( RK[3] >> 16 ) & 0xFF ] <<	8 ) ^
-			( FSb[ ( RK[3] >> 24 ) & 0xFF ] << 16 ) ^
-			( FSb[ ( RK[3]		 ) & 0xFF ] << 24 );
+			RK[4] = RK[0] ^ RCON[i] ^
+				( FSb[ ( RK[3] >> 8 ) & 0xFF ] ) ^
+				( FSb[ ( RK[3] >> 16 ) & 0xFF ] << 8 ) ^
+				( FSb[ ( RK[3] >> 24 ) & 0xFF ] << 16 ) ^
+				( FSb[ ( RK[3] ) & 0xFF ] << 24 );
 
-			RK[5]  = RK[1] ^ RK[4];
-			RK[6]  = RK[2] ^ RK[5];
-			RK[7]  = RK[3] ^ RK[6];
+			RK[5] = RK[1] ^ RK[4];
+			RK[6] = RK[2] ^ RK[5];
+			RK[7] = RK[3] ^ RK[6];
 		}
 		break;
 
@@ -230,15 +230,15 @@ void aes_setkey_enc( aes_context *ctx, const unsigned char *key, int keysize )
 
 		for( i = 0; i < 8; i++, RK += 6 )
 		{
-			RK[6]  = RK[0] ^ RCON[i] ^
-			( FSb[ ( RK[5] >>  8 ) & 0xFF ]		  ) ^
-			( FSb[ ( RK[5] >> 16 ) & 0xFF ] <<	8 ) ^
-			( FSb[ ( RK[5] >> 24 ) & 0xFF ] << 16 ) ^
-			( FSb[ ( RK[5]		 ) & 0xFF ] << 24 );
+			RK[6] = RK[0] ^ RCON[i] ^
+				( FSb[ ( RK[5] >> 8 ) & 0xFF ] ) ^
+				( FSb[ ( RK[5] >> 16 ) & 0xFF ] << 8 ) ^
+				( FSb[ ( RK[5] >> 24 ) & 0xFF ] << 16 ) ^
+				( FSb[ ( RK[5] ) & 0xFF ] << 24 );
 
-			RK[7]  = RK[1] ^ RK[6];
-			RK[8]  = RK[2] ^ RK[7];
-			RK[9]  = RK[3] ^ RK[8];
+			RK[7] = RK[1] ^ RK[6];
+			RK[8] = RK[2] ^ RK[7];
+			RK[9] = RK[3] ^ RK[8];
 			RK[10] = RK[4] ^ RK[9];
 			RK[11] = RK[5] ^ RK[10];
 		}
@@ -248,21 +248,21 @@ void aes_setkey_enc( aes_context *ctx, const unsigned char *key, int keysize )
 
 		for( i = 0; i < 7; i++, RK += 8 )
 		{
-			RK[8]  = RK[0] ^ RCON[i] ^
-			( FSb[ ( RK[7] >>  8 ) & 0xFF ]		  ) ^
-			( FSb[ ( RK[7] >> 16 ) & 0xFF ] <<	8 ) ^
-			( FSb[ ( RK[7] >> 24 ) & 0xFF ] << 16 ) ^
-			( FSb[ ( RK[7]		 ) & 0xFF ] << 24 );
+			RK[8] = RK[0] ^ RCON[i] ^
+				( FSb[ ( RK[7] >> 8 ) & 0xFF ] ) ^
+				( FSb[ ( RK[7] >> 16 ) & 0xFF ] << 8 ) ^
+				( FSb[ ( RK[7] >> 24 ) & 0xFF ] << 16 ) ^
+				( FSb[ ( RK[7] ) & 0xFF ] << 24 );
 
-			RK[9]  = RK[1] ^ RK[8];
+			RK[9] = RK[1] ^ RK[8];
 			RK[10] = RK[2] ^ RK[9];
 			RK[11] = RK[3] ^ RK[10];
 
 			RK[12] = RK[4] ^
-			( FSb[ ( RK[11]		  ) & 0xFF ]	   ) ^
-			( FSb[ ( RK[11] >>	8 ) & 0xFF ] <<	 8 ) ^
-			( FSb[ ( RK[11] >> 16 ) & 0xFF ] << 16 ) ^
-			( FSb[ ( RK[11] >> 24 ) & 0xFF ] << 24 );
+				( FSb[ ( RK[11] ) & 0xFF ] ) ^
+				( FSb[ ( RK[11] >> 8 ) & 0xFF ] << 8 ) ^
+				( FSb[ ( RK[11] >> 16 ) & 0xFF ] << 16 ) ^
+				( FSb[ ( RK[11] >> 24 ) & 0xFF ] << 24 );
 
 			RK[13] = RK[5] ^ RK[12];
 			RK[14] = RK[6] ^ RK[13];
@@ -312,10 +312,10 @@ void aes_setkey_dec( aes_context *ctx, const unsigned char *key, int keysize )
 	{
 		for( j = 0; j < 4; j++, SK++ )
 		{
-			*RK++ = RT0[ FSb[ ( *SK		  ) & 0xFF ] ] ^
-			RT1[ FSb[ ( *SK >>	8 ) & 0xFF ] ] ^
-			RT2[ FSb[ ( *SK >> 16 ) & 0xFF ] ] ^
-			RT3[ FSb[ ( *SK >> 24 ) & 0xFF ] ];
+			*RK++ = RT0[ FSb[ ( *SK ) & 0xFF ] ] ^
+				RT1[ FSb[ ( *SK >> 8 ) & 0xFF ] ] ^
+				RT2[ FSb[ ( *SK >> 16 ) & 0xFF ] ] ^
+				RT3[ FSb[ ( *SK >> 24 ) & 0xFF ] ];
 		}
 	}
 
@@ -327,50 +327,50 @@ void aes_setkey_dec( aes_context *ctx, const unsigned char *key, int keysize )
 	memset( &cty, 0, sizeof( aes_context ) );
 }
 
-#define AES_FROUND(X0,X1,X2,X3,Y0,Y1,Y2,Y3)		\
-{												\
-	X0 = *RK++ ^ FT0[ ( Y0		 ) & 0xFF ] ^	\
-				 FT1[ ( Y1 >>  8 ) & 0xFF ] ^	\
-				 FT2[ ( Y2 >> 16 ) & 0xFF ] ^	\
-				 FT3[ ( Y3 >> 24 ) & 0xFF ];	\
-												\
-	X1 = *RK++ ^ FT0[ ( Y1		 ) & 0xFF ] ^	\
-				 FT1[ ( Y2 >>  8 ) & 0xFF ] ^	\
-				 FT2[ ( Y3 >> 16 ) & 0xFF ] ^	\
-				 FT3[ ( Y0 >> 24 ) & 0xFF ];	\
-												\
-	X2 = *RK++ ^ FT0[ ( Y2		 ) & 0xFF ] ^	\
-				 FT1[ ( Y3 >>  8 ) & 0xFF ] ^	\
-				 FT2[ ( Y0 >> 16 ) & 0xFF ] ^	\
-				 FT3[ ( Y1 >> 24 ) & 0xFF ];	\
-												\
-	X3 = *RK++ ^ FT0[ ( Y3		 ) & 0xFF ] ^	\
-				 FT1[ ( Y0 >>  8 ) & 0xFF ] ^	\
-				 FT2[ ( Y1 >> 16 ) & 0xFF ] ^	\
-				 FT3[ ( Y2 >> 24 ) & 0xFF ];	\
+#define AES_FROUND(X0,X1,X2,X3,Y0,Y1,Y2,Y3)	\
+{						\
+	X0 = *RK++ ^ FT0[ ( Y0 ) & 0xFF ] ^	\
+		FT1[ ( Y1 >> 8 ) & 0xFF ] ^	\
+		FT2[ ( Y2 >> 16 ) & 0xFF ] ^	\
+		FT3[ ( Y3 >> 24 ) & 0xFF ];	\
+						\
+	X1 = *RK++ ^ FT0[ ( Y1 ) & 0xFF ] ^	\
+		FT1[ ( Y2 >> 8 ) & 0xFF ] ^	\
+		FT2[ ( Y3 >> 16 ) & 0xFF ] ^	\
+		FT3[ ( Y0 >> 24 ) & 0xFF ];	\
+						\
+	X2 = *RK++ ^ FT0[ ( Y2 ) & 0xFF ] ^	\
+		FT1[ ( Y3 >> 8 ) & 0xFF ] ^	\
+		FT2[ ( Y0 >> 16 ) & 0xFF ] ^	\
+		FT3[ ( Y1 >> 24 ) & 0xFF ];	\
+						\
+	X3 = *RK++ ^ FT0[ ( Y3 ) & 0xFF ] ^	\
+		FT1[ ( Y0 >> 8 ) & 0xFF ] ^	\
+		FT2[ ( Y1 >> 16 ) & 0xFF ] ^	\
+		FT3[ ( Y2 >> 24 ) & 0xFF ];	\
 }
 
-#define AES_RROUND(X0,X1,X2,X3,Y0,Y1,Y2,Y3)		\
-{												\
-	X0 = *RK++ ^ RT0[ ( Y0		 ) & 0xFF ] ^	\
-				 RT1[ ( Y3 >>  8 ) & 0xFF ] ^	\
-				 RT2[ ( Y2 >> 16 ) & 0xFF ] ^	\
-				 RT3[ ( Y1 >> 24 ) & 0xFF ];	\
-												\
-	X1 = *RK++ ^ RT0[ ( Y1		 ) & 0xFF ] ^	\
-				 RT1[ ( Y0 >>  8 ) & 0xFF ] ^	\
-				 RT2[ ( Y3 >> 16 ) & 0xFF ] ^	\
-				 RT3[ ( Y2 >> 24 ) & 0xFF ];	\
-												\
-	X2 = *RK++ ^ RT0[ ( Y2		 ) & 0xFF ] ^	\
-				 RT1[ ( Y1 >>  8 ) & 0xFF ] ^	\
-				 RT2[ ( Y0 >> 16 ) & 0xFF ] ^	\
-				 RT3[ ( Y3 >> 24 ) & 0xFF ];	\
-												\
-	X3 = *RK++ ^ RT0[ ( Y3		 ) & 0xFF ] ^	\
-				 RT1[ ( Y2 >>  8 ) & 0xFF ] ^	\
-				 RT2[ ( Y1 >> 16 ) & 0xFF ] ^	\
-				 RT3[ ( Y0 >> 24 ) & 0xFF ];	\
+#define AES_RROUND(X0,X1,X2,X3,Y0,Y1,Y2,Y3)	\
+{						\
+	X0 = *RK++ ^ RT0[ ( Y0 ) & 0xFF ] ^	\
+		RT1[ ( Y3 >> 8 ) & 0xFF ] ^	\
+		RT2[ ( Y2 >> 16 ) & 0xFF ] ^	\
+		RT3[ ( Y1 >> 24 ) & 0xFF ];	\
+						\
+	X1 = *RK++ ^ RT0[ ( Y1 ) & 0xFF ] ^	\
+		RT1[ ( Y0 >> 8 ) & 0xFF ] ^	\
+		RT2[ ( Y3 >> 16 ) & 0xFF ] ^	\
+		RT3[ ( Y2 >> 24 ) & 0xFF ];	\
+						\
+	X2 = *RK++ ^ RT0[ ( Y2 ) & 0xFF ] ^	\
+		RT1[ ( Y1 >> 8 ) & 0xFF ] ^	\
+		RT2[ ( Y0 >> 16 ) & 0xFF ] ^	\
+		RT3[ ( Y3 >> 24 ) & 0xFF ];	\
+						\
+	X3 = *RK++ ^ RT0[ ( Y3 ) & 0xFF ] ^	\
+		RT1[ ( Y2 >> 8 ) & 0xFF ] ^	\
+		RT2[ ( Y1 >> 16 ) & 0xFF ] ^	\
+		RT3[ ( Y0 >> 24 ) & 0xFF ];	\
 }
 
 /*
@@ -394,9 +394,9 @@ void aes_crypt_ecb( aes_context *ctx,
 
 	RK = ctx->rk;
 
-	GET_ULONG_LE( X0, input,  0 ); X0 ^= *RK++;
-	GET_ULONG_LE( X1, input,  4 ); X1 ^= *RK++;
-	GET_ULONG_LE( X2, input,  8 ); X2 ^= *RK++;
+	GET_ULONG_LE( X0, input, 0 ); X0 ^= *RK++;
+	GET_ULONG_LE( X1, input, 4 ); X1 ^= *RK++;
+	GET_ULONG_LE( X2, input, 8 ); X2 ^= *RK++;
 	GET_ULONG_LE( X3, input, 12 ); X3 ^= *RK++;
 
 	if( mode == AES_DECRYPT )
@@ -409,25 +409,25 @@ void aes_crypt_ecb( aes_context *ctx,
 
 		AES_RROUND( Y0, Y1, Y2, Y3, X0, X1, X2, X3 );
 
-		X0 = *RK++ ^ ( RSb[ ( Y0	   ) & 0xFF ]		) ^
-		( RSb[ ( Y3 >>	8 ) & 0xFF ] <<	 8 ) ^
-		( RSb[ ( Y2 >> 16 ) & 0xFF ] << 16 ) ^
-		( RSb[ ( Y1 >> 24 ) & 0xFF ] << 24 );
+		X0 = *RK++ ^ ( RSb[ ( Y0 ) & 0xFF ] ) ^
+			( RSb[ ( Y3 >> 8 ) & 0xFF ] << 8 ) ^
+			( RSb[ ( Y2 >> 16 ) & 0xFF ] << 16 ) ^
+			( RSb[ ( Y1 >> 24 ) & 0xFF ] << 24 );
 
-		X1 = *RK++ ^ ( RSb[ ( Y1	   ) & 0xFF ]		) ^
-		( RSb[ ( Y0 >>	8 ) & 0xFF ] <<	 8 ) ^
-		( RSb[ ( Y3 >> 16 ) & 0xFF ] << 16 ) ^
-		( RSb[ ( Y2 >> 24 ) & 0xFF ] << 24 );
+		X1 = *RK++ ^ ( RSb[ ( Y1 ) & 0xFF ] ) ^
+			( RSb[ ( Y0 >>8 ) & 0xFF ] << 8 ) ^
+			( RSb[ ( Y3 >> 16 ) & 0xFF ] << 16 ) ^
+			( RSb[ ( Y2 >> 24 ) & 0xFF ] << 24 );
 
-		X2 = *RK++ ^ ( RSb[ ( Y2	   ) & 0xFF ]		) ^
-		( RSb[ ( Y1 >>	8 ) & 0xFF ] <<	 8 ) ^
-		( RSb[ ( Y0 >> 16 ) & 0xFF ] << 16 ) ^
-		( RSb[ ( Y3 >> 24 ) & 0xFF ] << 24 );
+		X2 = *RK++ ^ ( RSb[ ( Y2 ) & 0xFF ] ) ^
+			( RSb[ ( Y1 >> 8 ) & 0xFF ] << 8 ) ^
+			( RSb[ ( Y0 >> 16 ) & 0xFF ] << 16 ) ^
+			( RSb[ ( Y3 >> 24 ) & 0xFF ] << 24 );
 
-		X3 = *RK++ ^ ( RSb[ ( Y3	   ) & 0xFF ]		) ^
-		( RSb[ ( Y2 >>	8 ) & 0xFF ] <<	 8 ) ^
-		( RSb[ ( Y1 >> 16 ) & 0xFF ] << 16 ) ^
-		( RSb[ ( Y0 >> 24 ) & 0xFF ] << 24 );
+		X3 = *RK++ ^ ( RSb[ ( Y3 ) & 0xFF ] ) ^
+			( RSb[ ( Y2 >> 8 ) & 0xFF ] << 8 ) ^
+			( RSb[ ( Y1 >> 16 ) & 0xFF ] << 16 ) ^
+			( RSb[ ( Y0 >> 24 ) & 0xFF ] << 24 );
 	}
 	else /* AES_ENCRYPT */
 	{
@@ -439,30 +439,30 @@ void aes_crypt_ecb( aes_context *ctx,
 
 		AES_FROUND( Y0, Y1, Y2, Y3, X0, X1, X2, X3 );
 
-		X0 = *RK++ ^ ( FSb[ ( Y0	   ) & 0xFF ]		) ^
-		( FSb[ ( Y1 >>	8 ) & 0xFF ] <<	 8 ) ^
-		( FSb[ ( Y2 >> 16 ) & 0xFF ] << 16 ) ^
-		( FSb[ ( Y3 >> 24 ) & 0xFF ] << 24 );
+		X0 = *RK++ ^ ( FSb[ ( Y0 ) & 0xFF ] ) ^
+			( FSb[ ( Y1 >> 8 ) & 0xFF ] << 8 ) ^
+			( FSb[ ( Y2 >> 16 ) & 0xFF ] << 16 ) ^
+			( FSb[ ( Y3 >> 24 ) & 0xFF ] << 24 );
 
-		X1 = *RK++ ^ ( FSb[ ( Y1	   ) & 0xFF ]		) ^
-		( FSb[ ( Y2 >>	8 ) & 0xFF ] <<	 8 ) ^
-		( FSb[ ( Y3 >> 16 ) & 0xFF ] << 16 ) ^
-		( FSb[ ( Y0 >> 24 ) & 0xFF ] << 24 );
+		X1 = *RK++ ^ ( FSb[ ( Y1 ) & 0xFF ] ) ^
+			( FSb[ ( Y2 >> 8 ) & 0xFF ] << 8 ) ^
+			( FSb[ ( Y3 >> 16 ) & 0xFF ] << 16 ) ^
+			( FSb[ ( Y0 >> 24 ) & 0xFF ] << 24 );
 
-		X2 = *RK++ ^ ( FSb[ ( Y2	   ) & 0xFF ]		) ^
-		( FSb[ ( Y3 >>	8 ) & 0xFF ] <<	 8 ) ^
-		( FSb[ ( Y0 >> 16 ) & 0xFF ] << 16 ) ^
-		( FSb[ ( Y1 >> 24 ) & 0xFF ] << 24 );
+		X2 = *RK++ ^ ( FSb[ ( Y2 ) & 0xFF ] ) ^
+			( FSb[ ( Y3 >> 8 ) & 0xFF ] << 8 ) ^
+			( FSb[ ( Y0 >> 16 ) & 0xFF ] << 16 ) ^
+			( FSb[ ( Y1 >> 24 ) & 0xFF ] << 24 );
 
-		X3 = *RK++ ^ ( FSb[ ( Y3	   ) & 0xFF ]		) ^
-		( FSb[ ( Y0 >>	8 ) & 0xFF ] <<	 8 ) ^
-		( FSb[ ( Y1 >> 16 ) & 0xFF ] << 16 ) ^
-		( FSb[ ( Y2 >> 24 ) & 0xFF ] << 24 );
+		X3 = *RK++ ^ ( FSb[ ( Y3 ) & 0xFF ] ) ^
+			( FSb[ ( Y0 >> 8 ) & 0xFF ] << 8 ) ^
+			( FSb[ ( Y1 >> 16 ) & 0xFF ] << 16 ) ^
+			( FSb[ ( Y2 >> 24 ) & 0xFF ] << 24 );
 	}
 
-	PUT_ULONG_LE( X0, output,  0 );
-	PUT_ULONG_LE( X1, output,  4 );
-	PUT_ULONG_LE( X2, output,  8 );
+	PUT_ULONG_LE( X0, output, 0 );
+	PUT_ULONG_LE( X1, output, 4 );
+	PUT_ULONG_LE( X2, output, 8 );
 	PUT_ULONG_LE( X3, output, 12 );
 }
 
@@ -499,7 +499,7 @@ void aes_crypt_cbc( aes_context *ctx,
 
 			memcpy( iv, temp, 16 );
 
-			input  += 16;
+			input += 16;
 			output += 16;
 			length -= 16;
 		}
@@ -514,7 +514,7 @@ void aes_crypt_cbc( aes_context *ctx,
 			aes_crypt_ecb( ctx, mode, output, output );
 			memcpy( iv, output, 16 );
 
-			input  += 16;
+			input += 16;
 			output += 16;
 			length -= 16;
 		}

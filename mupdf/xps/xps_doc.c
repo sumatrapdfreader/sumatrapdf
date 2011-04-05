@@ -305,8 +305,8 @@ xps_load_fixed_page(xps_context *ctx, xps_page *page)
 	return 0;
 }
 
-xps_page *
-xps_load_page(xps_context *ctx, int number)
+int
+xps_load_page(xps_page **pagep, xps_context *ctx, int number)
 {
 	xps_page *page;
 	int code;
@@ -319,16 +319,16 @@ xps_load_page(xps_context *ctx, int number)
 			if (!page->root)
 			{
 				code = xps_load_fixed_page(ctx, page);
-				if (code) {
-					fz_rethrow(code, "cannot load page %d", number + 1);
-					return NULL;
-				}
+				if (code)
+					return fz_rethrow(code, "cannot load page %d", number + 1);
 			}
-			return page;
+			*pagep = page;
+			return fz_okay;
 		}
 		n ++;
 	}
-	return nil;
+
+	return fz_throw("cannot find page %d", number + 1);
 }
 
 void

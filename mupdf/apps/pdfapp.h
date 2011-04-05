@@ -34,7 +34,7 @@ struct pdfapp_s
 	xps_context *xps;
 
 	int pagecount;
-	fz_glyphcache *cache;
+	fz_glyph_cache *cache;
 
 	/* current view params */
 	int resolution;
@@ -46,8 +46,8 @@ struct pdfapp_s
 	int pageno;
 	fz_rect page_bbox;
 	float page_rotate;
-	fz_displaylist *page_list;
-	fz_textspan *page_text;
+	fz_display_list *page_list;
+	fz_text_span *page_text;
 	pdf_link *page_links;
 
 	/* snapback history */

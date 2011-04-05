@@ -61,7 +61,7 @@ xps_parse_gradient_stops(xps_context *ctx, char *base_uri, xml_element *node,
 
 				xps_parse_color(ctx, base_uri, color, &colorspace, sample);
 
-				fz_convertcolor(colorspace, sample + 1, fz_devicergb, rgb);
+				fz_convert_color(colorspace, sample + 1, fz_device_rgb, rgb);
 
 				stops[count].r = rgb[0];
 				stops[count].g = rgb[1];
@@ -214,20 +214,20 @@ xps_draw_one_radial_gradient(xps_context *ctx, fz_matrix ctm,
 	/* TODO: this (and the stuff in pdf_shade) should move to res_shade.c */
 	shade = fz_malloc(sizeof(fz_shade));
 	shade->refs = 1;
-	shade->colorspace = fz_devicergb;
-	shade->bbox = fz_infiniterect;
+	shade->colorspace = fz_device_rgb;
+	shade->bbox = fz_infinite_rect;
 	shade->matrix = fz_identity;
-	shade->usebackground = 0;
-	shade->usefunction = 1;
+	shade->use_background = 0;
+	shade->use_function = 1;
 	shade->type = FZ_RADIAL;
 	shade->extend[0] = extend;
 	shade->extend[1] = extend;
 
 	xps_sample_gradient_stops(shade, stops, count);
 
-	shade->meshlen = 6;
-	shade->meshcap = 6;
-	shade->mesh = fz_calloc(shade->meshcap, sizeof(float));
+	shade->mesh_len = 6;
+	shade->mesh_cap = 6;
+	shade->mesh = fz_calloc(shade->mesh_cap, sizeof(float));
 	shade->mesh[0] = x0;
 	shade->mesh[1] = y0;
 	shade->mesh[2] = r0;
@@ -235,9 +235,9 @@ xps_draw_one_radial_gradient(xps_context *ctx, fz_matrix ctm,
 	shade->mesh[4] = y1;
 	shade->mesh[5] = r1;
 
-	ctx->dev->fillshade(ctx->dev->user, shade, ctm, 1);
+	fz_fill_shade(ctx->dev, shade, ctm, 1);
 
-	fz_dropshade(shade);
+	fz_drop_shade(shade);
 }
 
 /*
@@ -255,20 +255,20 @@ xps_draw_one_linear_gradient(xps_context *ctx, fz_matrix ctm,
 	/* TODO: this (and the stuff in pdf_shade) should move to res_shade.c */
 	shade = fz_malloc(sizeof(fz_shade));
 	shade->refs = 1;
-	shade->colorspace = fz_devicergb;
-	shade->bbox = fz_infiniterect;
+	shade->colorspace = fz_device_rgb;
+	shade->bbox = fz_infinite_rect;
 	shade->matrix = fz_identity;
-	shade->usebackground = 0;
-	shade->usefunction = 1;
+	shade->use_background = 0;
+	shade->use_function = 1;
 	shade->type = FZ_LINEAR;
 	shade->extend[0] = extend;
 	shade->extend[1] = extend;
 
 	xps_sample_gradient_stops(shade, stops, count);
 
-	shade->meshlen = 6;
-	shade->meshcap = 6;
-	shade->mesh = fz_calloc(shade->meshcap, sizeof(float));
+	shade->mesh_len = 6;
+	shade->mesh_cap = 6;
+	shade->mesh = fz_calloc(shade->mesh_cap, sizeof(float));
 	shade->mesh[0] = x0;
 	shade->mesh[1] = y0;
 	shade->mesh[2] = 0;
@@ -276,9 +276,9 @@ xps_draw_one_linear_gradient(xps_context *ctx, fz_matrix ctm,
 	shade->mesh[4] = y1;
 	shade->mesh[5] = 0;
 
-	ctx->dev->fillshade(ctx->dev->user, shade, ctm, 1);
+	fz_fill_shade(ctx->dev, shade, ctm, 1);
 
-	fz_dropshade(shade);
+	fz_drop_shade(shade);
 }
 
 /*

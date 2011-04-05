@@ -44,8 +44,8 @@ EXPORTS
 """
 
 def main():
-	fitz_exports = generateExports("fitz/fitz.h", ["fz_acceleratearch", "fz_paintaffinecolor"])
-	mupdf_exports = generateExports("mupdf/mupdf.h")
+	fitz_exports = generateExports("fitz/fitz.h", ["fz_accelerate_arch", "fz_paint_affine_color"])
+	mupdf_exports = generateExports("pdf/mupdf.h")
 	muxps_exports = generateExports("xps/muxps.h", ["xps_parse_solid_color_brush", "xps_debug_path"])
 	
 	list = LIBMUPDF_DEF % locals()

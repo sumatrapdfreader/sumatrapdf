@@ -834,7 +834,7 @@ int DisplayModel::getPdfLinks(int pageNo, pdf_link **links)
         if (rectCvtUserToScreen(pageNo, &rc))
             (*links)[i].rect = fz_RectDtorect(rc);
         else
-            (*links)[i].rect = fz_emptyrect;
+            (*links)[i].rect = fz_empty_rect;
     }
     return count;
 }
@@ -1333,36 +1333,36 @@ void DisplayModel::goToTocLink(pdf_link* link)
     TCHAR *path = NULL;
     if (!link)
         return;
-    if (PDF_LURI == link->kind && (path = getLinkPath(link))) {
+    if (PDF_LINK_URI == link->kind && (path = getLinkPath(link))) {
         if (Str::StartsWithI(path, _T("http:")) || Str::StartsWithI(path, _T("https:")))
             launch_url(path);
         /* else: unsupported uri type */
         free(path);
     }
-    else if (PDF_LGOTO == link->kind) {
+    else if (PDF_LINK_GOTO == link->kind) {
         goToPdfDest(link->dest);
     }
-    else if (PDF_LLAUNCH == link->kind && fz_dictgets(link->dest, "EF")) {
-        fz_obj *embeddedList = fz_dictgets(link->dest, "EF");
-        fz_obj *embedded = fz_dictgets(embeddedList, "UF");
+    else if (PDF_LINK_LAUNCH == link->kind && fz_dict_gets(link->dest, "EF")) {
+        fz_obj *embeddedList = fz_dict_gets(link->dest, "EF");
+        fz_obj *embedded = fz_dict_gets(embeddedList, "UF");
         if (!embedded)
-            embedded = fz_dictgets(embeddedList, "F");
+            embedded = fz_dict_gets(embeddedList, "F");
         path = getLinkPath(link);
         if (path && Str::EndsWithI(path, _T(".pdf"))) {
             // open embedded PDF documents in a new window
-            ScopedMem<TCHAR> combinedPath(Str::Format(_T("%s:%d:%d"), fileName(), fz_tonum(embedded), fz_togen(embedded)));
+            ScopedMem<TCHAR> combinedPath(Str::Format(_T("%s:%d:%d"), fileName(), fz_to_num(embedded), fz_to_gen(embedded)));
             LoadDocument(combinedPath);
         } else if (pdfEngine) {
             // offer to save other attachments to a file
-            fz_buffer *data = pdfEngine->getStreamData(fz_tonum(embedded), fz_togen(embedded));
+            fz_buffer *data = pdfEngine->getStreamData(fz_to_num(embedded), fz_to_gen(embedded));
             if (data) {
                 saveStreamAs(data->data, data->len, path);
-                fz_dropbuffer(data);
+                fz_drop_buffer(data);
             }
         }
         free(path);
     }
-    else if (PDF_LLAUNCH == link->kind && (path = getLinkPath(link))) {
+    else if (PDF_LINK_LAUNCH == link->kind && (path = getLinkPath(link))) {
         /* for safety, only handle relative PDF paths and only open them in SumatraPDF */
         if (!Str::StartsWith(path, _T("\\")) && Str::EndsWithI(path, _T(".pdf"))) {
             ScopedMem<TCHAR> basePath(Path::GetDir(fileName()));
@@ -1371,8 +1371,8 @@ void DisplayModel::goToTocLink(pdf_link* link)
         }
         free(path);
     }
-    else if (PDF_LNAMED == link->kind) {
-        char *name = fz_toname(link->dest);
+    else if (PDF_LINK_NAMED == link->kind) {
+        char *name = fz_to_name(link->dest);
         if (Str::Eq(name, "NextPage"))
             goToNextPage(0);
         else if (Str::Eq(name, "PrevPage"))
@@ -1391,17 +1391,17 @@ void DisplayModel::goToTocLink(pdf_link* link)
         else if (Str::Eq(name, "Print"))
             PostMessage(_appData->hwndFrame, WM_COMMAND, IDM_PRINT, 0);
     }
-    else if (PDF_LACTION == link->kind) {
-        char *type = fz_toname(fz_dictgets(link->dest, "S"));
-        if (type && Str::Eq(type, "GoToR") && fz_dictgets(link->dest, "D") && (path = getLinkPath(link))) {
+    else if (PDF_LINK_ACTION == link->kind) {
+        char *type = fz_to_name(fz_dict_gets(link->dest, "S"));
+        if (type && Str::Eq(type, "GoToR") && fz_dict_gets(link->dest, "D") && (path = getLinkPath(link))) {
             /* for safety, only handle relative PDF paths and only open them in SumatraPDF */
             if (!Str::StartsWith(path, _T("\\")) && Str::EndsWithI(path, _T(".pdf"))) {
                 ScopedMem<TCHAR> basePath(Path::GetDir(fileName()));
                 ScopedMem<TCHAR> combinedPath(Path::Join(basePath, path));
-                // TODO: respect fz_tobool(fz_dictgets(link->dest, "NewWindow"))
+                // TODO: respect fz_to_bool(fz_dict_gets(link->dest, "NewWindow"))
                 WindowInfo *newWin = LoadDocument(combinedPath);
                 if (newWin && newWin->PdfLoaded())
-                    newWin->dm->goToPdfDest(fz_dictgets(link->dest, "D"));
+                    newWin->dm->goToPdfDest(fz_dict_gets(link->dest, "D"));
             }
             free(path);
         }
@@ -1417,10 +1417,10 @@ void DisplayModel::goToPdfDest(fz_obj *dest)
     int pageNo = pdfEngine->findPageNo(dest);
     if (pageNo > 0) {
         PointD scroll(-1, 0);
-        fz_obj *obj = fz_arrayget(dest, 1);
-        if (Str::Eq(fz_toname(obj), "XYZ")) {
-            scroll.x = fz_toreal(fz_arrayget(dest, 2));
-            scroll.y = fz_toreal(fz_arrayget(dest, 3));
+        fz_obj *obj = fz_array_get(dest, 1);
+        if (Str::Eq(fz_to_name(obj), "XYZ")) {
+            scroll.x = fz_to_real(fz_array_get(dest, 2));
+            scroll.y = fz_to_real(fz_array_get(dest, 3));
             cvtUserToScreen(pageNo, &scroll);
 
             // goToPage needs scrolling info relative to the page's top border
@@ -1433,17 +1433,17 @@ void DisplayModel::goToPdfDest(fz_obj *dest)
             }
 
             // NULL values for the coordinates mean: keep the current position
-            if (fz_isnull(fz_arrayget(dest, 2)))
+            if (fz_is_null(fz_array_get(dest, 2)))
                 scroll.x = -1;
-            if (fz_isnull(fz_arrayget(dest, 3))) {
+            if (fz_is_null(fz_array_get(dest, 3))) {
                 pageInfo = getPageInfo(currentPageNo());
                 scroll.y = -(pageInfo->pageOnScreen.y - _padding->pageBorderTop);
                 scroll.y = MAX(scroll.y, 0); // Adobe Reader never shows the previous page
             }
         }
-        else if (Str::Eq(fz_toname(obj), "FitR")) {
-            scroll.x = fz_toreal(fz_arrayget(dest, 2)); // left
-            scroll.y = fz_toreal(fz_arrayget(dest, 5)); // top
+        else if (Str::Eq(fz_to_name(obj), "FitR")) {
+            scroll.x = fz_to_real(fz_array_get(dest, 2)); // left
+            scroll.y = fz_to_real(fz_array_get(dest, 5)); // top
             cvtUserToScreen(pageNo, &scroll);
             // TODO: adjust zoom so that the bottom right corner is also visible?
 
@@ -1457,7 +1457,7 @@ void DisplayModel::goToPdfDest(fz_obj *dest)
             }
         }
         /* // ignore author-set zoom settings (at least as long as there's no way to overrule them)
-        else if (Str::Eq(fz_toname(obj), "Fit")) {
+        else if (Str::Eq(fz_to_name(obj), "Fit")) {
             zoomTo(ZOOM_FIT_PAGE);
             _appData->UpdateToolbarState();
         }

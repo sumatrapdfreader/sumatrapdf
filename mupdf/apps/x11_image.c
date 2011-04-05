@@ -104,7 +104,7 @@ createximage(Display *dpy, Visual *vis, XShmSegmentInfo *xsi, int depth, int w, 
 	if (!info.useshm)
 		goto fallback;
 
-	img = XShmCreateImage(dpy, vis, depth, ZPixmap, nil, xsi, w, h);
+	img = XShmCreateImage(dpy, vis, depth, ZPixmap, NULL, xsi, w, h);
 	if (!img)
 	{
 		fprintf(stderr, "warn: could not XShmCreateImage\n");
@@ -121,7 +121,7 @@ createximage(Display *dpy, Visual *vis, XShmSegmentInfo *xsi, int depth, int w, 
 		goto fallback;
 	}
 
-	img->data = xsi->shmaddr = shmat(xsi->shmid, nil, 0);
+	img->data = xsi->shmaddr = shmat(xsi->shmid, NULL, 0);
 	if (img->data == (char*)-1)
 	{
 		XDestroyImage(img);
@@ -141,14 +141,14 @@ createximage(Display *dpy, Visual *vis, XShmSegmentInfo *xsi, int depth, int w, 
 
 	XSync(dpy, False);
 
-	shmctl(xsi->shmid, IPC_RMID, nil);
+	shmctl(xsi->shmid, IPC_RMID, NULL);
 
 	return img;
 
 fallback:
 	info.useshm = 0;
 
-	img = XCreateImage(dpy, vis, depth, ZPixmap, 0, nil, w, h, 32, 0);
+	img = XCreateImage(dpy, vis, depth, ZPixmap, 0, NULL, w, h, 32, 0);
 	if (!img)
 	{
 		fprintf(stderr, "fail: could not XCreateImage");
@@ -212,7 +212,7 @@ select_mode(void)
 	unsigned long rs, gs, bs;
 
 	byteorder = ImageByteOrder(info.display);
-	if (fz_isbigendian())
+	if (fz_is_big_endian())
 		byterev = byteorder != MSBFirst;
 	else
 		byterev = byteorder != LSBFirst;
@@ -278,14 +278,14 @@ create_pool(void)
 	info.lastused = 0;
 
 	for (i = 0; i < POOLSIZE; i++) {
-		info.pool[i] = nil;
+		info.pool[i] = NULL;
 	}
 
 	for (i = 0; i < POOLSIZE; i++) {
 		info.pool[i] = createximage(info.display,
 			info.visual.visual, &info.shminfo[i], info.visual.depth,
 			WIDTH, HEIGHT);
-		if (info.pool[i] == nil) {
+		if (info.pool[i] == NULL) {
 			return 0;
 		}
 	}

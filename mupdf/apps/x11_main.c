@@ -107,7 +107,7 @@ void winerror(pdfapp_t *app, fz_error error)
 char *winpassword(pdfapp_t *app, char *filename)
 {
 	char *r = password;
-	password = nil;
+	password = NULL;
 	return r;
 }
 
@@ -120,7 +120,7 @@ static void winopen(void)
 	XWMHints *wmhints;
 	XClassHint *classhint;
 
-	xdpy = XOpenDisplay(nil);
+	xdpy = XOpenDisplay(NULL);
 	if (!xdpy)
 		winerror(&gapp, fz_throw("cannot open display"));
 
@@ -154,7 +154,7 @@ static void winopen(void)
 		InputOutput,
 		ximage_get_visual(),
 		0,
-		nil);
+		NULL);
 	if (xwin == None)
 		winerror(&gapp, fz_throw("cannot create window"));
 
@@ -165,7 +165,7 @@ static void winopen(void)
 
 	mapped = 0;
 
-	xgc = XCreateGC(xdpy, xwin, 0, nil);
+	xgc = XCreateGC(xdpy, xwin, 0, NULL);
 
 	XDefineCursor(xdpy, xwin, xcarrow);
 
@@ -224,9 +224,9 @@ void wintitle(pdfapp_t *app, char *s)
 {
 	XStoreName(xdpy, xwin, s);
 #ifdef X_HAVE_UTF8_STRING
-	Xutf8SetWMProperties(xdpy, xwin, s, s, nil, 0, nil, nil, nil);
+	Xutf8SetWMProperties(xdpy, xwin, s, s, NULL, 0, NULL, NULL, NULL);
 #else
-	XmbSetWMProperties(xdpy, xwin, s, s, nil, 0, nil, nil, nil);
+	XmbSetWMProperties(xdpy, xwin, s, s, NULL, 0, NULL, NULL, NULL);
 #endif
 }
 
@@ -314,7 +314,7 @@ static void winblit(pdfapp_t *app)
 	{
 		int i = gapp.image->w*gapp.image->h;
 		unsigned char *color = malloc(i*4);
-		if (color != nil)
+		if (color != NULL)
 		{
 			unsigned char *s = gapp.image->samples;
 			unsigned char *d = color;
@@ -533,9 +533,9 @@ static void winawaitevent(struct timeval *tmo, struct timeval *tmo_at)
 		FD_ZERO(&fds);
 		FD_SET(x11fd, &fds);
 
-		if (select(x11fd + 1, &fds, nil, nil, tmo))
+		if (select(x11fd + 1, &fds, NULL, NULL, tmo))
 		{
-			gettimeofday(&now, nil);
+			gettimeofday(&now, NULL);
 			timersub(tmo_at, &now, tmo);
 			XNextEvent(xdpy, &xevt);
 		}
@@ -549,7 +549,7 @@ static void winsettmo(struct timeval *tmo, struct timeval *tmo_at)
 	tmo->tv_sec = 2;
 	tmo->tv_usec = 0;
 
-	gettimeofday(&now, nil);
+	gettimeofday(&now, NULL);
 	timeradd(&now, tmo, tmo_at);
 }
 
@@ -658,7 +658,7 @@ int main(int argc, char **argv)
 			case KeyPress:
 				wasshowingpage = isshowingpage;
 
-				len = XLookupString(&xevt.xkey, buf, sizeof buf, &keysym, nil);
+				len = XLookupString(&xevt.xkey, buf, sizeof buf, &keysym, NULL);
 
 				switch (keysym)
 				{

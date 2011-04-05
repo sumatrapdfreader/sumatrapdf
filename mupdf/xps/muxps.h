@@ -105,20 +105,16 @@ void xps_debug_page_list(xps_context *ctx);
 void xps_free_page_list(xps_context *ctx);
 
 int xps_count_pages(xps_context *ctx);
-xps_page *xps_load_page(xps_context *ctx, int number);
+int xps_load_page(xps_page **page, xps_context *ctx, int number);
 void xps_free_page(xps_context *ctx, xps_page *page);
 
 /*
- * Images.
+ * Images, fonts, and colorspaces.
  */
 
 int xps_decode_jpeg(fz_pixmap **imagep, byte *rbuf, int rlen);
 int xps_decode_png(fz_pixmap **imagep, byte *rbuf, int rlen);
 int xps_decode_tiff(fz_pixmap **imagep, byte *rbuf, int rlen);
-
-/*
- * Fonts.
- */
 
 typedef struct xps_glyph_metrics_s xps_glyph_metrics;
 
@@ -135,10 +131,6 @@ int xps_encode_font_char(fz_font *font, int key);
 void xps_measure_font_glyph(xps_context *ctx, fz_font *font, int gid, xps_glyph_metrics *mtx);
 
 void xps_debug_path(xps_context *ctx);
-
-/*
- * Colorspaces and colors.
- */
 
 void xps_parse_color(xps_context *ctx, char *base_uri, char *hexstring, fz_colorspace **csp, float *samples);
 void xps_set_color(xps_context *ctx, fz_colorspace *colorspace, float *samples);
@@ -240,8 +232,7 @@ struct xps_context_s
 	fz_device *dev;
 };
 
-xps_context *xps_new_context(void);
-int xps_open_file(xps_context *ctx, char *filename);
-int xps_free_context(xps_context *ctx);
+int xps_open_file(xps_context **ctxp, char *filename);
+void xps_free_context(xps_context *ctx);
 
 #endif

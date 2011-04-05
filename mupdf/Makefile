@@ -117,60 +117,57 @@ FITZ_OBJ := $(FITZ_SRC:fitz/%.c=$(OBJDIR)/%.o)
 $(FITZ_OBJ): $(FITZ_HDR)
 
 DRAW_SRC := $(DRAW_ARCH_SRC) \
-	draw/archport.c \
-	draw/blendmodes.c \
-	draw/glyphcache.c \
-	draw/imagedraw.c \
-	draw/imagescale.c \
-	draw/imagesmooth.c \
-	draw/imageunpack.c \
-	draw/meshdraw.c \
-	draw/pathfill.c \
-	draw/pathscan.c \
-	draw/pathstroke.c \
-	draw/porterduff.c
+	draw/arch_port.c \
+	draw/draw_affine.c \
+	draw/draw_blend.c \
+	draw/draw_edge.c \
+	draw/draw_glyph.c \
+	draw/draw_mesh.c \
+	draw/draw_paint.c \
+	draw/draw_path.c \
+	draw/draw_scale.c \
+	draw/draw_unpack.c
 DRAW_OBJ := $(DRAW_SRC:draw/%.c=$(OBJDIR)/%.o)
 DRAW_OBJ := $(DRAW_OBJ:draw/%.s=$(OBJDIR)/%.o)
 $(DRAW_OBJ): $(FITZ_HDR)
 
-MUPDF_HDR := $(FITZ_HDR) mupdf/mupdf.h
+MUPDF_HDR := pdf/mupdf.h
 MUPDF_SRC := \
-	mupdf/pdf_annot.c \
-	mupdf/pdf_build.c \
-	mupdf/pdf_cmap.c \
-	mupdf/pdf_cmap_load.c \
-	mupdf/pdf_cmap_parse.c \
-	mupdf/pdf_cmap_table.c \
-	mupdf/pdf_colorspace.c \
-	mupdf/pdf_crypt.c \
-	mupdf/pdf_debug.c \
-	mupdf/pdf_font.c \
-	mupdf/pdf_fontagl.c \
-	mupdf/pdf_fontenc.c \
-	mupdf/pdf_fontfile.c \
-	mupdf/pdf_fontmtx.c \
-	mupdf/pdf_function.c \
-	mupdf/pdf_image.c \
-	mupdf/pdf_interpret.c \
-	mupdf/pdf_lex.c \
-	mupdf/pdf_nametree.c \
-	mupdf/pdf_outline.c \
-	mupdf/pdf_page.c \
-	mupdf/pdf_pagetree.c \
-	mupdf/pdf_parse.c \
-	mupdf/pdf_pattern.c \
-	mupdf/pdf_repair.c \
-	mupdf/pdf_shade.c \
-	mupdf/pdf_store.c \
-	mupdf/pdf_stream.c \
-	mupdf/pdf_type3.c \
-	mupdf/pdf_unicode.c \
-	mupdf/pdf_xobject.c \
-	mupdf/pdf_xref.c
-MUPDF_OBJ := $(MUPDF_SRC:mupdf/%.c=$(OBJDIR)/%.o)
+	pdf/pdf_annot.c \
+	pdf/pdf_build.c \
+	pdf/pdf_cmap.c \
+	pdf/pdf_cmap_load.c \
+	pdf/pdf_cmap_parse.c \
+	pdf/pdf_cmap_table.c \
+	pdf/pdf_colorspace.c \
+	pdf/pdf_crypt.c \
+	pdf/pdf_debug.c \
+	pdf/pdf_font.c \
+	pdf/pdf_fontagl.c \
+	pdf/pdf_fontenc.c \
+	pdf/pdf_fontfile.c \
+	pdf/pdf_fontmtx.c \
+	pdf/pdf_function.c \
+	pdf/pdf_image.c \
+	pdf/pdf_interpret.c \
+	pdf/pdf_lex.c \
+	pdf/pdf_nametree.c \
+	pdf/pdf_outline.c \
+	pdf/pdf_page.c \
+	pdf/pdf_parse.c \
+	pdf/pdf_pattern.c \
+	pdf/pdf_repair.c \
+	pdf/pdf_shade.c \
+	pdf/pdf_store.c \
+	pdf/pdf_stream.c \
+	pdf/pdf_type3.c \
+	pdf/pdf_unicode.c \
+	pdf/pdf_xobject.c \
+	pdf/pdf_xref.c
+MUPDF_OBJ := $(MUPDF_SRC:pdf/%.c=$(OBJDIR)/%.o)
 $(MUPDF_OBJ): $(MUPDF_HDR)
 
-MUXPS_HDR := $(FITZ_HDR) xps/muxps.h
+MUXPS_HDR := xps/muxps.h
 MUXPS_SRC := \
 	xps/xps_common.c \
 	xps/xps_doc.c \
@@ -188,7 +185,7 @@ MUXPS_SRC := \
 	xps/xps_xml.c \
 	xps/xps_zip.c
 MUXPS_OBJ := $(MUXPS_SRC:xps/%.c=$(OBJDIR)/%.o)
-$(MUXPS_OBJ): $(MUXPS_HDR)
+$(MUXPS_OBJ): $(MUXPS_HDR) $(FITZ_HDR)
 
 $(OBJDIR)/%.o: fitz/%.c
 	$(CC_CMD)
@@ -196,7 +193,7 @@ $(OBJDIR)/%.o: draw/%.c
 	$(CC_CMD)
 $(OBJDIR)/%.o: draw/%.s
 	$(CC_CMD)
-$(OBJDIR)/%.o: mupdf/%.c
+$(OBJDIR)/%.o: pdf/%.c
 	$(CC_CMD)
 $(OBJDIR)/%.o: xps/%.c
 	$(CC_CMD)
@@ -221,8 +218,7 @@ BASEFONT_FILES := \
 	fonts/NimbusSanL-BoldItal.cff \
 	fonts/NimbusSanL-Regu.cff \
 	fonts/NimbusSanL-ReguItal.cff \
-	fonts/StandardSymL.cff \
-	fonts/URWChanceryL-MediItal.cff
+	fonts/StandardSymL.cff
 
 CJKFONT_FILES := \
 	fonts/droid/DroidSansFallback.ttf
@@ -342,42 +338,42 @@ $(OBJDIR)/%.o: apps/%.c
 PDFSHOW_SRC=apps/pdfshow.c
 PDFSHOW_OBJ=$(PDFSHOW_SRC:apps/%.c=$(OBJDIR)/%.o)
 PDFSHOW_EXE=$(OBJDIR)/pdfshow
-$(PDFSHOW_OBJ): $(MUPDF_HDR)
+$(PDFSHOW_OBJ): $(MUPDF_HDR) $(FITZ_HDR)
 $(PDFSHOW_EXE): $(PDFSHOW_OBJ) $(MUPDF_LIB) $(THIRD_LIBS)
 	$(LD_CMD)
 
 PDFCLEAN_SRC=apps/pdfclean.c
 PDFCLEAN_OBJ=$(PDFCLEAN_SRC:apps/%.c=$(OBJDIR)/%.o)
 PDFCLEAN_EXE=$(OBJDIR)/pdfclean
-$(PDFCLEAN_OBJ): $(MUPDF_HDR)
+$(PDFCLEAN_OBJ): $(MUPDF_HDR) $(FITZ_HDR)
 $(PDFCLEAN_EXE): $(PDFCLEAN_OBJ) $(MUPDF_LIB) $(THIRD_LIBS)
 	$(LD_CMD)
 
 PDFDRAW_SRC=apps/pdfdraw.c
 PDFDRAW_OBJ=$(PDFDRAW_SRC:apps/%.c=$(OBJDIR)/%.o)
 PDFDRAW_EXE=$(OBJDIR)/pdfdraw
-$(PDFDRAW_OBJ): $(MUPDF_HDR)
+$(PDFDRAW_OBJ): $(MUPDF_HDR) $(FITZ_HDR)
 $(PDFDRAW_EXE): $(PDFDRAW_OBJ) $(MUPDF_LIB) $(THIRD_LIBS)
 	$(LD_CMD)
 
 PDFEXTRACT_SRC=apps/pdfextract.c
 PDFEXTRACT_OBJ=$(PDFEXTRACT_SRC:apps/%.c=$(OBJDIR)/%.o)
 PDFEXTRACT_EXE=$(OBJDIR)/pdfextract
-$(PDFEXTRACT_OBJ): $(MUPDF_HDR)
+$(PDFEXTRACT_OBJ): $(MUPDF_HDR) $(FITZ_HDR)
 $(PDFEXTRACT_EXE): $(PDFEXTRACT_OBJ) $(MUPDF_LIB) $(THIRD_LIBS)
 	$(LD_CMD)
 
 PDFINFO_SRC=apps/pdfinfo.c
 PDFINFO_OBJ=$(PDFINFO_SRC:apps/%.c=$(OBJDIR)/%.o)
 PDFINFO_EXE=$(OBJDIR)/pdfinfo
-$(PDFINFO_OBJ): $(MUPDF_HDR)
+$(PDFINFO_OBJ): $(MUPDF_HDR) $(FITZ_HDR)
 $(PDFINFO_EXE): $(PDFINFO_OBJ) $(MUPDF_LIB) $(THIRD_LIBS)
 	$(LD_CMD)
 
 XPSDRAW_SRC=apps/xpsdraw.c
 XPSDRAW_OBJ=$(XPSDRAW_SRC:apps/%.c=$(OBJDIR)/%.o)
 XPSDRAW_EXE=$(OBJDIR)/xpsdraw
-$(XPSDRAW_OBJ): $(MUXPS_HDR)
+$(XPSDRAW_OBJ): $(MUXPS_HDR) $(FITZ_HDR)
 $(XPSDRAW_EXE): $(XPSDRAW_OBJ) $(MUXPS_LIB) $(THIRD_LIBS)
 	$(LD_CMD)
 
@@ -387,7 +383,7 @@ X11VIEW_SRC=apps/x11_main.c apps/x11_image.c apps/pdfapp.c
 X11VIEW_OBJ=$(X11VIEW_SRC:apps/%.c=$(OBJDIR)/%.o)
 X11VIEW_EXE=$(OBJDIR)/mupdf
 
-$(X11VIEW_OBJ): $(MUPDF_HDR) $(PDFAPP_HDR)
+$(X11VIEW_OBJ): $(PDFAPP_HDR) $(MUPDF_HDR) $(MUXPS_HDR) $(FITZ_HDR)
 $(X11VIEW_EXE): $(X11VIEW_OBJ) $(MUPDF_LIB) $(MUXPS_LIB) $(THIRD_LIBS)
 	$(LD_CMD) $(X11LIBS)
 
@@ -399,7 +395,7 @@ WINVIEW_EXE=$(OBJDIR)/mupdf.exe
 $(OBJDIR)/%.o: apps/%.rc
 	$(WINDRES) -i $< -o $@ --include-dir=apps
 
-$(WINVIEW_OBJ): $(MUPDF_HDR) $(PDFAPP_HDR)
+$(WINVIEW_OBJ): $(PDFAPP_HDR) $(MUPDF_HDR) $(MUXPS_HDR) $(FITZ_HDR)
 $(WINVIEW_EXE): $(WINVIEW_OBJ) $(MUPDF_LIB) $(MUXPS_LIB) $(THIRD_LIBS)
 	$(LD_CMD) $(W32LIBS)
 
@@ -427,4 +423,4 @@ install: $(OBJDIR) $(GENDIR) $(MUPDF_LIB) $(APPS)
 	install $(APPS) $(BINDIR)
 	install $(APPS_MAN) $(MANDIR)
 	install $(MUPDF_LIB) $(LIBDIR)
-	install $(MUPDF_HDR) $(INCDIR)
+	install $(MUPDF_HDR) $(MUXPS_HDR) $(FITZ_HDR) $(INCDIR)

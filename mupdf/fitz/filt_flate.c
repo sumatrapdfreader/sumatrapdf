@@ -21,7 +21,7 @@ static void zfree(void *opaque, void *ptr)
 }
 
 static int
-readflated(fz_stream *stm, unsigned char *outbuf, int outlen)
+read_flated(fz_stream *stm, unsigned char *outbuf, int outlen)
 {
 	fz_flate *state = stm->state;
 	fz_stream *chain = state->chain;
@@ -34,7 +34,7 @@ readflated(fz_stream *stm, unsigned char *outbuf, int outlen)
 	while (zp->avail_out > 0)
 	{
 		if (chain->rp == chain->wp)
-			fz_fillbuffer(chain);
+			fz_fill_buffer(chain);
 
 		zp->next_in = chain->rp;
 		zp->avail_in = chain->wp - chain->rp;
@@ -67,7 +67,7 @@ readflated(fz_stream *stm, unsigned char *outbuf, int outlen)
 }
 
 static void
-closeflated(fz_stream *stm)
+close_flated(fz_stream *stm)
 {
 	fz_flate *state = stm->state;
 	int code;
@@ -81,7 +81,7 @@ closeflated(fz_stream *stm)
 }
 
 fz_stream *
-fz_openflated(fz_stream *chain)
+fz_open_flated(fz_stream *chain)
 {
 	fz_flate *state;
 	int code;
@@ -91,13 +91,13 @@ fz_openflated(fz_stream *chain)
 
 	state->z.zalloc = zalloc;
 	state->z.zfree = zfree;
-	state->z.opaque = nil;
-	state->z.next_in = nil;
+	state->z.opaque = NULL;
+	state->z.next_in = NULL;
 	state->z.avail_in = 0;
 
 	code = inflateInit(&state->z);
 	if (code != Z_OK)
 		fz_warn("zlib error: inflateInit: %s", state->z.msg);
 
-	return fz_newstream(state, readflated, closeflated);
+	return fz_new_stream(state, read_flated, close_flated);
 }

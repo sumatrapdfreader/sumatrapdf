@@ -15,10 +15,10 @@
 
 int pagetobench = -1;
 int loadonly = 0;
-pdf_xref *xref = nil;
+pdf_xref *xref = NULL;
 int pagecount = 0;
-fz_glyphcache *drawcache = nil;
-pdf_page *drawpage = nil;
+fz_glyph_cache *drawcache = NULL;
+pdf_page *drawpage = NULL;
 
 /* milli-second timer */
 #ifdef _WIN32
@@ -100,26 +100,26 @@ void closexref(void)
 
 	if (xref->store)
 	{
-		pdf_freestore(xref->store);
-		xref->store = nil;
+		pdf_free_store(xref->store);
+		xref->store = NULL;
 	}
-	pdf_freexref(xref);
-	xref = nil;
+	pdf_free_xref(xref);
+	xref = NULL;
 }
 
 fz_error openxref(char *filename, char *password)
 {
 	fz_error error;
 	
-	error = pdf_openxref(&xref, filename, password);
+	error = pdf_open_xref(&xref, filename, password);
 	if (error)
 	{
 		return fz_rethrow(error, "pdf_openxref() failed");
 	}
 
-	if (pdf_needspassword(xref))
+	if (pdf_needs_password(xref))
 	{
-		int okay = pdf_authenticatepassword(xref, password);
+		int okay = pdf_authenticate_password(xref, password);
 		if (!okay)
 		{
 			logbench("Warning: pdf_setpassword() failed, incorrect password\n");
@@ -127,13 +127,13 @@ fz_error openxref(char *filename, char *password)
 		}
 	}
 
-	error = pdf_loadpagetree(xref);
+	error = pdf_load_page_tree(xref);
 	if (error)
 	{
 		return fz_rethrow(error, "cannot load page tree: %s", filename);
 	}
 
-	pagecount = pdf_getpagecount(xref);
+	pagecount = pdf_count_pages(xref);
 
 	return fz_okay;
 }
@@ -141,15 +141,13 @@ fz_error openxref(char *filename, char *password)
 fz_error benchloadpage(int pagenum)
 {
 	fz_error error;
-	fz_obj *pageobj;
 	mstimer timer;
 	double timems;
 
 	timerstart(&timer);
-	pageobj = pdf_getpageobject(xref, pagenum);
 
-	drawpage = nil;
-	error = pdf_loadpage(&drawpage, xref, pageobj);
+	drawpage = NULL;
+	error = pdf_load_page(&drawpage, xref, pagenum - 1);
 	timerstop(&timer);
 	if (error)
 	{
@@ -176,15 +174,15 @@ fz_error benchrenderpage(int pagenum)
 	ctm = fz_identity;
 	ctm = fz_concat(ctm, fz_translate(0, -drawpage->mediabox.y1));
 
-	bbox = fz_roundrect(fz_transformrect(ctm, drawpage->mediabox));
+	bbox = fz_round_rect(fz_transform_rect(ctm, drawpage->mediabox));
 	w = bbox.x1 - bbox.x0;
 	h = bbox.y1 - bbox.y0;
 
-	pix = fz_newpixmapwithrect(fz_devicergb, bbox);
-	fz_clearpixmapwithcolor(pix, 0xFF);
-	dev = fz_newdrawdevice(drawcache, pix);
-	error = pdf_runpage(xref, drawpage, dev, ctm);
-	fz_freedevice(dev);
+	pix = fz_new_pixmap_with_rect(fz_device_rgb, bbox);
+	fz_clear_pixmap_with_color(pix, 0xFF);
+	dev = fz_new_draw_device(drawcache, pix);
+	error = pdf_run_page(xref, drawpage, dev, ctm);
+	fz_free_device(dev);
 	if (error)
 	{
 		logbench("Error: pdf_runcontentstream() failed\n");
@@ -196,14 +194,14 @@ fz_error benchrenderpage(int pagenum)
 
 	logbench("pagerender %3d: %.2f ms\n", pagenum, timems);
 Exit:
-	fz_droppixmap(pix);
+	fz_drop_pixmap(pix);
 	return fz_okay;
 }
 
 void freepage(void)
 {
-	pdf_freepage(drawpage);
-	drawpage = nil;
+	pdf_free_page(drawpage);
+	drawpage = NULL;
 }
 
 void benchfile(char *pdffilename)
@@ -214,7 +212,7 @@ void benchfile(char *pdffilename)
 	int pages;
 	int curpage;
 
-	drawcache = fz_newglyphcache();
+	drawcache = fz_new_glyph_cache();
 	if (!drawcache)
 	{
 		logbench("Error: fz_newglyphcache() failed\n");
@@ -248,7 +246,7 @@ void benchfile(char *pdffilename)
 Exit:
 	logbench("Finished: %s\n", pdffilename);
 	if (drawcache)
-		fz_freeglyphcache(drawcache);
+		fz_free_glyph_cache(drawcache);
 	closexref();
 }
 

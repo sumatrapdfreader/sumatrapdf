@@ -24,7 +24,7 @@
 #include "fitz.h"
 
 void
-fz_arc4init(fz_arc4 *arc4, const unsigned char *key, const unsigned keylen)
+fz_arc4_init(fz_arc4 *arc4, const unsigned char *key, const unsigned keylen)
 {
 	unsigned int t, u;
 	unsigned int keyindex;
@@ -62,7 +62,7 @@ fz_arc4init(fz_arc4 *arc4, const unsigned char *key, const unsigned keylen)
 }
 
 static unsigned char
-fz_arc4next(fz_arc4 *arc4)
+fz_arc4_next(fz_arc4 *arc4)
 {
 	unsigned int x;
 	unsigned int y;
@@ -86,13 +86,13 @@ fz_arc4next(fz_arc4 *arc4)
 }
 
 void
-fz_arc4encrypt(fz_arc4 *arc4, unsigned char *dest, const unsigned char *src, const unsigned len)
+fz_arc4_encrypt(fz_arc4 *arc4, unsigned char *dest, const unsigned char *src, const unsigned len)
 {
 	unsigned int i;
 	for (i = 0; i < len; i++)
 	{
 		unsigned char x;
-		x = fz_arc4next(arc4);
+		x = fz_arc4_next(arc4);
 		dest[i] = src[i] ^ x;
 	}
 }

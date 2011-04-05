@@ -67,7 +67,7 @@ fz_read(fz_stream *stm, unsigned char *buf, int len)
 }
 
 void
-fz_fillbuffer(fz_stream *stm)
+fz_fill_buffer(fz_stream *stm)
 {
 	int n;
 
@@ -95,7 +95,7 @@ fz_fillbuffer(fz_stream *stm)
 }
 
 fz_error
-fz_readall(fz_buffer **bufp, fz_stream *stm, int initial)
+fz_read_all(fz_buffer **bufp, fz_stream *stm, int initial)
 {
 	fz_buffer *buf;
 	int n;
@@ -103,23 +103,23 @@ fz_readall(fz_buffer **bufp, fz_stream *stm, int initial)
 	if (initial < 1024)
 		initial = 1024;
 
-	buf = fz_newbuffer(initial);
+	buf = fz_new_buffer(initial);
 
 	while (1)
 	{
 		if (buf->len == buf->cap)
-			fz_growbuffer(buf);
+			fz_grow_buffer(buf);
 
 		if (buf->len / 200 > initial)
 		{
-			fz_dropbuffer(buf);
+			fz_drop_buffer(buf);
 			return fz_throw("compression bomb detected");
 		}
 
 		n = fz_read(stm, buf->data + buf->len, buf->cap - buf->len);
 		if (n < 0)
 		{
-			fz_dropbuffer(buf);
+			fz_drop_buffer(buf);
 			return fz_rethrow(n, "read error");
 		}
 		if (n == 0)
@@ -133,19 +133,19 @@ fz_readall(fz_buffer **bufp, fz_stream *stm, int initial)
 }
 
 void
-fz_readline(fz_stream *stm, char *mem, int n)
+fz_read_line(fz_stream *stm, char *mem, int n)
 {
 	char *s = mem;
 	int c = EOF;
 	while (n > 1)
 	{
-		c = fz_readbyte(stm);
+		c = fz_read_byte(stm);
 		if (c == EOF)
 			break;
 		if (c == '\r') {
-			c = fz_peekbyte(stm);
+			c = fz_peek_byte(stm);
 			if (c == '\n')
-				fz_readbyte(stm);
+				fz_read_byte(stm);
 			break;
 		}
 		if (c == '\n')
@@ -184,7 +184,7 @@ fz_seek(fz_stream *stm, int offset, int whence)
 			fz_warn("cannot seek backwards");
 		/* dog slow, but rare enough */
 		while (offset-- > 0)
-			fz_readbyte(stm);
+			fz_read_byte(stm);
 	}
 	else
 		fz_warn("cannot seek");

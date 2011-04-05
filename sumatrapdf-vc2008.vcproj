@@ -30,7 +30,7 @@
 				CleanCommandLine="nmake -f makefile.msvc CFG=dbg NASM=$(ProjectDir)bin\nasm.exe clean"
 				Output="obj-dbg\sumatrapdf.exe"
 				PreprocessorDefinitions="WIN32;UNICODE;_UNICODE;_DEBUG;DEBUG;SYNCTEX_FEATURE"
-				IncludeSearchPath="baseutils;mupdf\fitz;mupdf\draw;mupdf\mupdf;mupdf\xps"
+				IncludeSearchPath="baseutils;mupdf\fitz;mupdf\draw;mupdf\pdf;mupdf\xps"
 				ForcedIncludes=""
 				AssemblySearchPath=""
 				ForcedUsingAssemblies=""
@@ -51,7 +51,7 @@
 				CleanCommandLine="nmake -f makefile.msvc CFG=rel NASM=$(ProjectDir)bin\nasm.exe clean"
 				Output="obj-rel\sumatrapdf.exe"
 				PreprocessorDefinitions="WIN32;UNICODE;_UNICODE;NDEBUG;SYNCTEX_FEATURE"
-				IncludeSearchPath="baseutils;mupdf\fitz;mupdf\draw;mupdf\mupdf;mupdf\xps"
+				IncludeSearchPath="baseutils;mupdf\fitz;mupdf\draw;mupdf\pdf;mupdf\xps"
 				ForcedIncludes=""
 				AssemblySearchPath=""
 				ForcedUsingAssemblies=""
@@ -553,199 +553,187 @@
 				Name="draw"
 				>
 				<File
-					RelativePath=".\mupdf\draw\archport.c"
+					RelativePath=".\mupdf\draw\arch_port.c"
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\draw\blendmodes.c"
+					RelativePath=".\mupdf\draw\draw_affine.c"
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\draw\glyphcache.c"
+					RelativePath=".\mupdf\draw\draw_blend.c"
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\draw\imagedraw.c"
+					RelativePath=".\mupdf\draw\draw_edge.c"
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\draw\imagescale.c"
+					RelativePath=".\mupdf\draw\draw_glyph.c"
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\draw\imagesmooth.c"
+					RelativePath=".\mupdf\draw\draw_mesh.c"
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\draw\imageunpack.c"
+					RelativePath=".\mupdf\draw\draw_paint.c"
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\draw\meshdraw.c"
+					RelativePath=".\mupdf\draw\draw_path.c"
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\draw\pathfill.c"
+					RelativePath=".\mupdf\draw\draw_scale.c"
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\draw\pathscan.c"
-					>
-				</File>
-				<File
-					RelativePath=".\mupdf\draw\pathstroke.c"
-					>
-				</File>
-				<File
-					RelativePath=".\mupdf\draw\porterduff.c"
+					RelativePath=".\mupdf\draw\draw_unpack.c"
 					>
 				</File>
 			</Filter>
 			<Filter
-				Name="mupdf"
+				Name="pdf"
 				>
 				<File
-					RelativePath=".\mupdf\mupdf\cmapdump.c"
+					RelativePath=".\mupdf\pdf\cmapdump.c"
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\mupdf\fontdump.c"
+					RelativePath=".\mupdf\pdf\fontdump.c"
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\mupdf\mupdf.h"
+					RelativePath=".\mupdf\pdf\mupdf.h"
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\mupdf\pdf_annot.c"
+					RelativePath=".\mupdf\pdf\pdf_annot.c"
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\mupdf\pdf_build.c"
+					RelativePath=".\mupdf\pdf\pdf_build.c"
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\mupdf\pdf_cmap.c"
+					RelativePath=".\mupdf\pdf\pdf_cmap.c"
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\mupdf\pdf_cmap_load.c"
+					RelativePath=".\mupdf\pdf\pdf_cmap_load.c"
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\mupdf\pdf_cmap_parse.c"
+					RelativePath=".\mupdf\pdf\pdf_cmap_parse.c"
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\mupdf\pdf_cmap_table.c"
+					RelativePath=".\mupdf\pdf\pdf_cmap_table.c"
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\mupdf\pdf_colorspace.c"
+					RelativePath=".\mupdf\pdf\pdf_colorspace.c"
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\mupdf\pdf_crypt.c"
+					RelativePath=".\mupdf\pdf\pdf_crypt.c"
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\mupdf\pdf_debug.c"
+					RelativePath=".\mupdf\pdf\pdf_debug.c"
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\mupdf\pdf_font.c"
+					RelativePath=".\mupdf\pdf\pdf_font.c"
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\mupdf\pdf_fontagl.c"
+					RelativePath=".\mupdf\pdf\pdf_fontagl.c"
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\mupdf\pdf_fontenc.c"
+					RelativePath=".\mupdf\pdf\pdf_fontenc.c"
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\mupdf\pdf_fontfile.c"
+					RelativePath=".\mupdf\pdf\pdf_fontfile.c"
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\mupdf\pdf_fontmtx.c"
+					RelativePath=".\mupdf\pdf\pdf_fontmtx.c"
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\mupdf\pdf_ft_tools.c"
+					RelativePath=".\mupdf\pdf\pdf_ft_tools.c"
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\mupdf\pdf_function.c"
+					RelativePath=".\mupdf\pdf\pdf_function.c"
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\mupdf\pdf_image.c"
+					RelativePath=".\mupdf\pdf\pdf_image.c"
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\mupdf\pdf_interpret.c"
+					RelativePath=".\mupdf\pdf\pdf_interpret.c"
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\mupdf\pdf_lex.c"
+					RelativePath=".\mupdf\pdf\pdf_lex.c"
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\mupdf\pdf_nametree.c"
+					RelativePath=".\mupdf\pdf\pdf_nametree.c"
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\mupdf\pdf_outline.c"
+					RelativePath=".\mupdf\pdf\pdf_outline.c"
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\mupdf\pdf_page.c"
+					RelativePath=".\mupdf\pdf\pdf_page.c"
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\mupdf\pdf_pagetree.c"
+					RelativePath=".\mupdf\pdf\pdf_parse.c"
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\mupdf\pdf_parse.c"
+					RelativePath=".\mupdf\pdf\pdf_pattern.c"
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\mupdf\pdf_pattern.c"
+					RelativePath=".\mupdf\pdf\pdf_repair.c"
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\mupdf\pdf_repair.c"
+					RelativePath=".\mupdf\pdf\pdf_shade.c"
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\mupdf\pdf_shade.c"
+					RelativePath=".\mupdf\pdf\pdf_store.c"
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\mupdf\pdf_store.c"
+					RelativePath=".\mupdf\pdf\pdf_stream.c"
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\mupdf\pdf_stream.c"
+					RelativePath=".\mupdf\pdf\pdf_type3.c"
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\mupdf\pdf_type3.c"
+					RelativePath=".\mupdf\pdf\pdf_unicode.c"
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\mupdf\pdf_unicode.c"
+					RelativePath=".\mupdf\pdf\pdf_xobject.c"
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\mupdf\pdf_xobject.c"
-					>
-				</File>
-				<File
-					RelativePath=".\mupdf\mupdf\pdf_xref.c"
+					RelativePath=".\mupdf\pdf\pdf_xref.c"
 					>
 				</File>
 			</Filter>

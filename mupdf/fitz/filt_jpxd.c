@@ -19,7 +19,7 @@ static void fz_opj_info_callback(const char *msg, void *client_data)
 }
 
 fz_error
-fz_loadjpximage(fz_pixmap **imgp, unsigned char *data, int size)
+fz_load_jpx_image(fz_pixmap **imgp, unsigned char *data, int size)
 {
 	fz_pixmap *img;
 	opj_event_mgr_t evtmgr;
@@ -81,9 +81,9 @@ fz_loadjpximage(fz_pixmap **imgp, unsigned char *data, int size)
 
 	switch (n)
 	{
-	case 1: colorspace = fz_devicegray; break;
-	case 3: colorspace = fz_devicergb; break;
-	case 4: colorspace = fz_devicecmyk; break;
+	case 1: colorspace = fz_device_gray; break;
+	case 3: colorspace = fz_device_rgb; break;
+	case 4: colorspace = fz_device_cmyk; break;
 	default:
 		/* TODO: SMaskInData */
 		opj_image_destroy(jpx);
@@ -91,7 +91,7 @@ fz_loadjpximage(fz_pixmap **imgp, unsigned char *data, int size)
 	}
 
 	/* SumatraPDF: don't abort on OOM when loading images */
-	img = fz_newpixmap_no_abort(colorspace, 0, 0, w, h);
+	img = fz_new_pixmap_no_abort(colorspace, 0, 0, w, h);
 	if (!img)
 	{
 		opj_image_destroy(jpx);

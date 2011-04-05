@@ -8,7 +8,7 @@ typedef struct fz_dctd_s fz_dctd;
 struct fz_dctd_s
 {
 	fz_stream *chain;
-	int colortransform;
+	int color_transform;
 	int init;
 	int stride;
 	unsigned char *scanline;
@@ -44,7 +44,7 @@ static boolean fill_input_buffer(j_decompress_ptr cinfo)
 	fz_stream *chain = state->chain;
 
 	chain->rp = chain->wp;
-	fz_fillbuffer(chain);
+	fz_fill_buffer(chain);
 	src->next_input_byte = chain->rp;
 	src->bytes_in_buffer = chain->wp - chain->rp;
 
@@ -75,7 +75,7 @@ static void skip_input_data(j_decompress_ptr cinfo, long num_bytes)
 }
 
 static int
-readdctd(fz_stream *stm, unsigned char *buf, int len)
+read_dctd(fz_stream *stm, unsigned char *buf, int len)
 {
 	fz_dctd *state = stm->state;
 	j_decompress_ptr cinfo = &state->cinfo;
@@ -113,28 +113,28 @@ readdctd(fz_stream *stm, unsigned char *buf, int len)
 		cinfo->do_fancy_upsampling = FALSE;
 
 		/* default value if ColorTransform is not set */
-		if (state->colortransform == -1)
+		if (state->color_transform == -1)
 		{
 			if (state->cinfo.num_components == 3)
-				state->colortransform = 1;
+				state->color_transform = 1;
 			else
-				state->colortransform = 0;
+				state->color_transform = 0;
 		}
 
 		if (cinfo->saw_Adobe_marker)
-			state->colortransform = cinfo->Adobe_transform;
+			state->color_transform = cinfo->Adobe_transform;
 
 		/* Guess the input colorspace, and set output colorspace accordingly */
 		switch (cinfo->num_components)
 		{
 		case 3:
-			if (state->colortransform)
+			if (state->color_transform)
 				cinfo->jpeg_color_space = JCS_YCbCr;
 			else
 				cinfo->jpeg_color_space = JCS_RGB;
 			break;
 		case 4:
-			if (state->colortransform)
+			if (state->color_transform)
 				cinfo->jpeg_color_space = JCS_YCCK;
 			else
 				cinfo->jpeg_color_space = JCS_CMYK;
@@ -179,7 +179,7 @@ readdctd(fz_stream *stm, unsigned char *buf, int len)
 }
 
 static void
-closedctd(fz_stream *stm)
+close_dctd(fz_stream *stm)
 {
 	fz_dctd *state = stm->state;
 
@@ -202,7 +202,7 @@ skip:
 }
 
 fz_stream *
-fz_opendctd(fz_stream *chain, fz_obj *params)
+fz_open_dctd(fz_stream *chain, fz_obj *params)
 {
 	fz_dctd *state;
 	fz_obj *obj;
@@ -210,12 +210,12 @@ fz_opendctd(fz_stream *chain, fz_obj *params)
 	state = fz_malloc(sizeof(fz_dctd));
 	memset(state, 0, sizeof(fz_dctd));
 	state->chain = chain;
-	state->colortransform = -1; /* unset */
+	state->color_transform = -1; /* unset */
 	state->init = 0;
 
-	obj = fz_dictgets(params, "ColorTransform");
+	obj = fz_dict_gets(params, "ColorTransform");
 	if (obj)
-		state->colortransform = fz_toint(obj);
+		state->color_transform = fz_to_int(obj);
 
-	return fz_newstream(state, readdctd, closedctd);
+	return fz_new_stream(state, read_dctd, close_dctd);
 }

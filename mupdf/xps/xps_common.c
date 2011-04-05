@@ -75,9 +75,9 @@ xps_begin_opacity(xps_context *ctx, fz_matrix ctm, fz_rect area,
 
 	if (opacity_mask_tag)
 	{
-		ctx->dev->beginmask(ctx->dev->user, area, 0, NULL, NULL);
+		fz_begin_mask(ctx->dev, area, 0, NULL, NULL);
 		xps_parse_brush(ctx, ctm, area, base_uri, dict, opacity_mask_tag);
-		ctx->dev->endmask(ctx->dev->user);
+		fz_end_mask(ctx->dev);
 	}
 }
 
@@ -94,7 +94,7 @@ xps_end_opacity(xps_context *ctx, char *base_uri, xps_resource *dict,
 	if (opacity_mask_tag)
 	{
 		if (strcmp(xml_tag(opacity_mask_tag), "SolidColorBrush"))
-			ctx->dev->popclip(ctx->dev->user);
+			fz_pop_clip(ctx->dev);
 	}
 }
 
@@ -184,7 +184,7 @@ xps_parse_color(xps_context *ctx, char *base_uri, char *string,
 	char buf[1024];
 	char *profile;
 
-	*csp = fz_devicergb;
+	*csp = fz_device_rgb;
 
 	samples[0] = 1;
 	samples[1] = 0;
@@ -263,10 +263,10 @@ xps_parse_color(xps_context *ctx, char *base_uri, char *string,
 		/* TODO: load ICC profile */
 		switch (n)
 		{
-		case 2: *csp = fz_devicegray; break;
-		case 4: *csp = fz_devicergb; break;
-		case 5: *csp = fz_devicecmyk; break;
-		default: *csp = fz_devicegray; break;
+		case 2: *csp = fz_device_gray; break;
+		case 4: *csp = fz_device_rgb; break;
+		case 5: *csp = fz_device_cmyk; break;
+		default: *csp = fz_device_gray; break;
 		}
 	}
 }

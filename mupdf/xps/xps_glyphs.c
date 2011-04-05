@@ -21,14 +21,14 @@ static inline int unhex(int a)
 int
 xps_count_font_encodings(fz_font *font)
 {
-	FT_Face face = font->ftface;
+	FT_Face face = font->ft_face;
 	return face->num_charmaps;
 }
 
 void
 xps_identify_font_encoding(fz_font *font, int idx, int *pid, int *eid)
 {
-	FT_Face face = font->ftface;
+	FT_Face face = font->ft_face;
 	*pid = face->charmaps[idx]->platform_id;
 	*eid = face->charmaps[idx]->encoding_id;
 }
@@ -36,14 +36,14 @@ xps_identify_font_encoding(fz_font *font, int idx, int *pid, int *eid)
 void
 xps_select_font_encoding(fz_font *font, int idx)
 {
-	FT_Face face = font->ftface;
+	FT_Face face = font->ft_face;
 	FT_Set_Charmap(face, face->charmaps[idx]);
 }
 
 int
 xps_encode_font_char(fz_font *font, int code)
 {
-	FT_Face face = font->ftface;
+	FT_Face face = font->ft_face;
 	int gid = FT_Get_Char_Index(face, code);
 	if (gid == 0 && face->charmap->platform_id == 3 && face->charmap->encoding_id == 0)
 		gid = FT_Get_Char_Index(face, 0xF000 | code);
@@ -54,7 +54,7 @@ void
 xps_measure_font_glyph(xps_context *ctx, fz_font *font, int gid, xps_glyph_metrics *mtx)
 {
 	int mask = FT_LOAD_NO_BITMAP | FT_LOAD_NO_HINTING | FT_LOAD_IGNORE_TRANSFORM;
-	FT_Face face = font->ftface;
+	FT_Face face = font->ft_face;
 	FT_Fixed hadv, vadv;
 
 	FT_Set_Char_Size(face, 64, 64, 72, 72);
@@ -257,7 +257,7 @@ xps_parse_glyphs_imp(xps_context *ctx, fz_matrix ctm, fz_font *font, float size,
 	else
 		tm = fz_scale(size, -size);
 
-	text = fz_newtext(font, tm, is_sideways);
+	text = fz_new_text(font, tm, is_sideways);
 
 	while ((us && un > 0) || (is && *is))
 	{
@@ -331,7 +331,7 @@ xps_parse_glyphs_imp(xps_context *ctx, fz_matrix ctm, fz_font *font, float size,
 				f = y - v_offset;
 			}
 
-			fz_addtext(text, glyph_index, char_code, e, f);
+			fz_add_text(text, glyph_index, char_code, e, f);
 
 			x += advance * 0.01f * size;
 		}
@@ -472,7 +472,7 @@ xps_parse_glyphs(xps_context *ctx, fz_matrix ctm,
 		if (strstr(part->name, ".ODTTF"))
 			xps_deobfuscate_font_resource(ctx, part);
 
-		code = fz_newfontfrombuffer(&font, part->data, part->size, subfontid);
+		code = fz_new_font_from_memory(&font, part->data, part->size, subfontid);
 		if (code) {
 			fz_catch(code, "cannot load font resource '%s'", partname);
 			xps_free_part(ctx, part);
@@ -484,8 +484,8 @@ xps_parse_glyphs(xps_context *ctx, fz_matrix ctm,
 		xps_hash_insert(ctx->font_table, part->name, font);
 
 		/* NOTE: we keep part->name in the hashtable and part->data in the font */
-		font->ftdata = part->data;
-		font->ftsize = part->size;
+		font->ft_data = part->data;
+		font->ft_size = part->size;
 		fz_free(part);
 	}
 
@@ -512,7 +512,7 @@ xps_parse_glyphs(xps_context *ctx, fz_matrix ctm,
 			atof(origin_x_att), atof(origin_y_att),
 			is_sideways, bidi_level, indices_att, unicode_att);
 
-	area = fz_boundtext(text, ctm);
+	area = fz_bound_text(text, ctm);
 
 	xps_begin_opacity(ctx, ctm, area, opacity_mask_uri, dict, opacity_att, opacity_mask_tag);
 
@@ -537,7 +537,7 @@ xps_parse_glyphs(xps_context *ctx, fz_matrix ctm,
 			samples[0] = atof(fill_opacity_att);
 		xps_set_color(ctx, colorspace, samples);
 
-		ctx->dev->filltext(ctx->dev->user, text, ctm,
+		fz_fill_text(ctx->dev, text, ctm,
 			ctx->colorspace, ctx->color, ctx->alpha);
 	}
 
@@ -547,15 +547,15 @@ xps_parse_glyphs(xps_context *ctx, fz_matrix ctm,
 
 	if (fill_tag)
 	{
-		ctx->dev->cliptext(ctx->dev->user, text, ctm, 0);
+		fz_clip_text(ctx->dev, text, ctm, 0);
 		xps_parse_brush(ctx, ctm, area, fill_uri, dict, fill_tag);
-		ctx->dev->popclip(ctx->dev->user);
+		fz_pop_clip(ctx->dev);
 	}
 
 	xps_end_opacity(ctx, opacity_mask_uri, dict, opacity_att, opacity_mask_tag);
 
-	fz_freetext(text);
+	fz_free_text(text);
 
 	if (clip_att || clip_tag)
-		ctx->dev->popclip(ctx->dev->user);
+		fz_pop_clip(ctx->dev);
 }

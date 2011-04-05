@@ -47,7 +47,7 @@ xps_paint_image_brush(xps_context *ctx, fz_matrix ctm, fz_rect area, char *base_
 	fz_matrix im = fz_scale(xs, -ys);
 	im.f = ys;
 	ctm = fz_concat(im, ctm);
-	ctx->dev->fillimage(ctx->dev->user, pixmap, ctm, ctx->opacity[ctx->opacity_top]);
+	fz_fill_image(ctx->dev, pixmap, ctm, ctx->opacity[ctx->opacity_top]);
 }
 
 static xps_part *
@@ -123,6 +123,6 @@ xps_parse_image_brush(xps_context *ctx, fz_matrix ctm, fz_rect area,
 
 	xps_parse_tiling_brush(ctx, ctm, area, base_uri, dict, root, xps_paint_image_brush, image);
 
-	fz_droppixmap(image);
+	fz_drop_pixmap(image);
 	xps_free_part(ctx, part);
 }

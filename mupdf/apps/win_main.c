@@ -56,9 +56,9 @@ void winerror(pdfapp_t *app, fz_error error)
 	fz_catch(error, "displaying error message to user");
 
 	fz_strlcpy(msgbuf, "An error has occurred.\n\n", sizeof msgbuf);
-	for (i = 0; i < fz_geterrorcount(); i++)
+	for (i = 0; i < fz_get_error_count(); i++)
 	{
-		fz_strlcat(msgbuf, fz_geterrorline(i), sizeof msgbuf);
+		fz_strlcat(msgbuf, fz_get_error_line(i), sizeof msgbuf);
 		fz_strlcat(msgbuf, "\n", sizeof msgbuf);
 	}
 
@@ -142,7 +142,7 @@ char *winpassword(pdfapp_t *app, char *filename)
 		win32error("cannot create password dialog");
 	if (pd_okay)
 		return pd_password;
-	return nil;
+	return NULL;
 }
 
 INT CALLBACK
@@ -195,33 +195,33 @@ dloginfoproc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 			SetDlgItemTextA(hwnd, 0x13, "n/a");
 		}
 
-		info = fz_dictgets(xref->trailer, "Info");
+		info = fz_dict_gets(xref->trailer, "Info");
 		if (!info)
 			return TRUE;
 
 #define SETUCS(ID) \
 		{ \
 			unsigned short *ucs; \
-			ucs = pdf_toucs2(obj); \
+			ucs = pdf_to_ucs2(obj); \
 			SetDlgItemTextW(hwnd, ID, ucs); \
 			fz_free(ucs); \
 		}
 
-		if ((obj = fz_dictgets(info, "Title")))
+		if ((obj = fz_dict_gets(info, "Title")))
 			SETUCS(0x20);
-		if ((obj = fz_dictgets(info, "Author")))
+		if ((obj = fz_dict_gets(info, "Author")))
 			SETUCS(0x21);
-		if ((obj = fz_dictgets(info, "Subject")))
+		if ((obj = fz_dict_gets(info, "Subject")))
 			SETUCS(0x22);
-		if ((obj = fz_dictgets(info, "Keywords")))
+		if ((obj = fz_dict_gets(info, "Keywords")))
 			SETUCS(0x23);
-		if ((obj = fz_dictgets(info, "Creator")))
+		if ((obj = fz_dict_gets(info, "Creator")))
 			SETUCS(0x24);
-		if ((obj = fz_dictgets(info, "Producer")))
+		if ((obj = fz_dict_gets(info, "Producer")))
 			SETUCS(0x25);
-		if ((obj = fz_dictgets(info, "CreationDate")))
+		if ((obj = fz_dict_gets(info, "CreationDate")))
 			SETUCS(0x26);
-		if ((obj = fz_dictgets(info, "ModDate")))
+		if ((obj = fz_dict_gets(info, "ModDate")))
 			SETUCS(0x27);
 		return TRUE;
 
