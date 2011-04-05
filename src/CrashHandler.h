@@ -6,7 +6,7 @@
 
 // #define CMD_ARG_SEND_CRASHDUMP  _T("/sendcrashdump")
 
-void InstallCrashHandler(const TCHAR *crashDumpPath);
+void InstallCrashHandler(const TCHAR *crashDumpPath, const TCHAR *crashTxtPath);
 
 void SaveCrashInfoText();
 

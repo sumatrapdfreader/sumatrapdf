@@ -10,8 +10,9 @@
 
 #include "BaseUtil.h"
 #include "StrUtil.h"
-#include "WinUtil.h"
 #include "Vec.h"
+#include "WinUtil.h"
+#include "FileUtil.h"
 
 #include "translations.h"
 
@@ -179,9 +180,10 @@ static void GetOsVersion(Str::Str<char>& s)
     char *os = OsNameFromVer(ver);
     int servicePackMajor = ver.wServicePackMajor;
     int servicePackMinor = ver.wServicePackMinor;
+    int buildNumber = ver.dwBuildNumber & 0xFFFF;
     char *is64bit = Is64Bit() ? "32bit" : "64bit";
     char *isWow = IsWow64() ?  "Wow64" : "";
-    s.AppendFmt("OS: %s %d.%d %s %s\n", os, servicePackMajor, servicePackMinor, is64bit, isWow);
+    s.AppendFmt("OS: %s %d.%d build %d %s %s\n", os, servicePackMajor, servicePackMinor, buildNumber, is64bit, isWow);
 }
 
 static void GetModules(Str::Str<char>& s)
@@ -253,14 +255,6 @@ static void GetCallstack(Str::Str<char>& s)
 
     s.AppendFmt("\nThread: 0x%x\n", (int)threadId);
 
-    // TODO: should this be done in InstallCrashHandler() ?
-    DWORD symOptions =_SymGetOptions();
-    symOptions |= SYMOPT_LOAD_LINES;
-    symOptions |= SYMOPT_FAIL_CRITICAL_ERRORS; // don't show system msg box on errors
-    symOptions |= SYMOPT_DEFERRED_LOADS;
-    _SymSetOptions(symOptions);
-    // TODO: should I setup sympath to Microsoft's symbol server via
-    // SymSetSearchPath() so that at least I get names for system dlls?
     CONTEXT ctx;
     RtlCaptureContext(&ctx);
 
@@ -406,8 +400,20 @@ static LONG WINAPI DumpExceptionHandler(EXCEPTION_POINTERS *exceptionInfo)
 void InstallCrashHandler(const TCHAR *crashDumpPath, const TCHAR *crashTxtPath)
 {
     LoadDbgHelpFuncs();
-    if (_SymInitialize)
+
+    if (_SymInitialize) {
        gSymInitializeOk = _SymInitialize(GetCurrentProcess(), NULL, FALSE);
+       if (gSymInitializeOk) {
+           DWORD symOptions =_SymGetOptions();
+           symOptions |= SYMOPT_LOAD_LINES;
+           symOptions |= SYMOPT_FAIL_CRITICAL_ERRORS; // don't show system msg box on errors
+           symOptions |= SYMOPT_DEFERRED_LOADS;
+           _SymSetOptions(symOptions);
+           // TODO: should I setup sympath to Microsoft's symbol server via
+           // SymSetSearchPath() so that at least I get names for system dlls?
+       }
+    }
+
     if (NULL == crashDumpPath)
         return;
     g_crashDumpPath.Set(Str::Dup(crashDumpPath));
