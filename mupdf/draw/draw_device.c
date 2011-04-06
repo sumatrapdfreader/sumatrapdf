@@ -615,11 +615,18 @@ fz_draw_fill_image(void *user, fz_pixmap *image, fz_matrix ctm, float alpha)
 			image = scaled;
 	}
 
-	if (image->colorspace != model && after)
+	if (image->colorspace != model)
 	{
-		converted = fz_new_pixmap(model, image->x, image->y, image->w, image->h);
-		fz_convert_pixmap(image, converted);
-		image = converted;
+		if (image->colorspace == fz_device_gray && model == fz_device_rgb)
+		{
+			/* We have special case rendering code for gray -> rgb */
+		}
+		else
+		{
+			converted = fz_new_pixmap(model, image->x, image->y, image->w, image->h);
+			fz_convert_pixmap(image, converted);
+			image = converted;
+		}
 	}
 
 	fz_paint_image(dev->dest, dev->scissor, image, ctm, alpha * 255);

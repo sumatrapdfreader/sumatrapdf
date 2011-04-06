@@ -710,7 +710,50 @@ fz_error fz_write_pnm(fz_pixmap *pixmap, char *filename);
 fz_error fz_write_pam(fz_pixmap *pixmap, char *filename, int savealpha);
 fz_error fz_write_png(fz_pixmap *pixmap, char *filename, int savealpha);
 
-fz_error fz_load_jpx_image(fz_pixmap **imgp, unsigned char *data, int size);
+fz_error fz_load_jpx_image(fz_pixmap **imgp, unsigned char *data, int size, fz_colorspace *dcs);
+
+/*
+ * Bitmaps have 1 component per bit. Only used for creating halftoned versions
+ * of contone buffers, and saving out. Samples are stored msb first, akin to
+ * pbms.
+ */
+
+typedef struct fz_bitmap_s fz_bitmap;
+
+struct fz_bitmap_s
+{
+	int refs;
+	int w, h, span, n;
+	unsigned char *samples;
+};
+
+fz_bitmap *fz_new_bitmap(int w, int h, int n);
+fz_bitmap *fz_keep_bitmap(fz_bitmap *bit);
+void fz_clear_bitmap(fz_bitmap *bit);
+void fz_drop_bitmap(fz_bitmap *bit);
+
+fz_error fz_write_pbm(fz_bitmap *bitmap, char *filename);
+
+/*
+ * A halftone is a set of threshold tiles, one per component. Each threshold
+ * tile is a pixmap, possibly of varying sizes and phases.
+ */
+
+typedef struct fz_halftone_s fz_halftone;
+
+struct fz_halftone_s
+{
+	int refs;
+	int n;
+	fz_pixmap *comp[1];
+};
+
+fz_halftone *fz_new_halftone(int num_comps);
+fz_halftone *fz_get_default_halftone(int num_comps);
+fz_halftone *fz_keep_halftone(fz_halftone *half);
+void fz_drop_halftone(fz_halftone *half);
+
+fz_bitmap *fz_halftone_pixmap(fz_pixmap *pix, fz_halftone *ht);
 
 /*
  * Colorspace resources.
@@ -726,8 +769,8 @@ struct fz_colorspace_s
 	int refs;
 	char name[16];
 	int n;
-	void (*to_xyz)(fz_colorspace *, float *src, float *xyz);
-	void (*from_xyz)(fz_colorspace *, float *xyz, float *dst);
+	void (*to_rgb)(fz_colorspace *, float *src, float *rgb);
+	void (*from_rgb)(fz_colorspace *, float *rgb, float *dst);
 	void (*free_data)(fz_colorspace *);
 	void *data;
 };

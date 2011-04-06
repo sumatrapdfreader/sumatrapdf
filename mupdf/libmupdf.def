@@ -163,6 +163,16 @@ EXPORTS
 	fz_write_pam
 	fz_write_png
 	fz_load_jpx_image
+	fz_new_bitmap
+	fz_keep_bitmap
+	fz_clear_bitmap
+	fz_drop_bitmap
+	fz_write_pbm
+	fz_new_halftone
+	fz_get_default_halftone
+	fz_keep_halftone
+	fz_drop_halftone
+	fz_halftone_pixmap
 	fz_new_colorspace
 	fz_keep_colorspace
 	fz_drop_colorspace
@@ -355,6 +365,7 @@ EXPORTS
 	pdf_parse_cmap
 	pdf_load_embedded_cmap
 	pdf_load_system_cmap
+	pdf_find_builtin_cmap
 	pdf_load_encoding
 	pdf_lookup_agl
 	pdf_set_font_wmode
@@ -367,9 +378,10 @@ EXPORTS
 	pdf_get_hmtx
 	pdf_get_vmtx
 	pdf_load_to_unicode
-	pdf_load_builtin_font
-	pdf_load_embedded_font
-	pdf_load_system_font
+	pdf_find_builtin_font
+	pdf_find_builtin_cjk_font
+	pdf_load_windows_font
+	pdf_load_similar_cjk_font
 	pdf_load_type3_font
 	pdf_font_cid_to_gid
 	pdf_load_font_descriptor

@@ -9,22 +9,12 @@ build ?= debug
 prefix ?= /usr/local
 
 OBJDIR := build/$(build)
-GENDIR := build/generated
+GENDIR := generated
 
 $(OBJDIR):
 	mkdir -p $@
 $(GENDIR):
 	mkdir -p $@
-
-# If no pregen directory is supplied, then generate (dump) the
-# font and cmap .c files as part of the build.
-# If it is supplied, then just use the files from that directory.
-
-pregen := $(wildcard pregen)
-
-ifneq "$(pregen)" ""
-GENDIR := $(pregen)
-endif
 
 # Compiler flags and configuration options are kept in Makerules.
 # Thirdparty libs will be built by Makethird if the thirdparty
@@ -103,8 +93,10 @@ FITZ_SRC := \
 	fitz/obj_dict.c \
 	fitz/obj_print.c \
 	fitz/obj_simple.c \
+	fitz/res_bitmap.c \
 	fitz/res_colorspace.c \
 	fitz/res_font.c \
+	fitz/res_halftone.c \
 	fitz/res_path.c \
 	fitz/res_pixmap.c \
 	fitz/res_shade.c \
@@ -142,15 +134,14 @@ MUPDF_SRC := \
 	pdf/pdf_colorspace.c \
 	pdf/pdf_crypt.c \
 	pdf/pdf_debug.c \
+	pdf/pdf_encoding.c \
 	pdf/pdf_font.c \
-	pdf/pdf_fontagl.c \
-	pdf/pdf_fontenc.c \
 	pdf/pdf_fontfile.c \
-	pdf/pdf_fontmtx.c \
 	pdf/pdf_function.c \
 	pdf/pdf_image.c \
 	pdf/pdf_interpret.c \
 	pdf/pdf_lex.c \
+	pdf/pdf_metrics.c \
 	pdf/pdf_nametree.c \
 	pdf/pdf_outline.c \
 	pdf/pdf_page.c \
@@ -197,14 +188,14 @@ $(OBJDIR)/%.o: pdf/%.c
 	$(CC_CMD)
 $(OBJDIR)/%.o: xps/%.c
 	$(CC_CMD)
-$(OBJDIR)/%.o: $(GENDIR)/%.c
+$(OBJDIR)/%.o: scripts/%.c
 	$(CC_CMD)
 
 #
 # Generated font file dumps
 #
 
-BASEFONT_FILES := \
+BASE_FONT_FILES := \
 	fonts/Dingbats.cff \
 	fonts/NimbusMonL-Bold.cff \
 	fonts/NimbusMonL-BoldObli.cff \
@@ -220,24 +211,19 @@ BASEFONT_FILES := \
 	fonts/NimbusSanL-ReguItal.cff \
 	fonts/StandardSymL.cff
 
-CJKFONT_FILES := \
+CJK_FONT_FILES := \
 	fonts/droid/DroidSansFallback.ttf
 
-ifeq "$(pregen)" ""
-
-$(GENDIR)/font_base14.c: $(FONTDUMP_EXE) $(BASEFONT_FILES)
+$(GENDIR)/font_base14.h: $(FONTDUMP_EXE) $(BASE_FONT_FILES)
 	$(GENFILE_CMD)
-$(GENDIR)/font_cjk.c: $(FONTDUMP_EXE) $(CJKFONT_FILES)
+$(GENDIR)/font_cjk.h: $(FONTDUMP_EXE) $(CJK_FONT_FILES)
 	$(GENFILE_CMD)
 
-endif
+FONT_HDR := \
+	$(GENDIR)/font_base14.h \
+	$(GENDIR)/font_cjk.h
 
-FONT_SRC := \
-	$(GENDIR)/font_base14.c \
-	$(GENDIR)/font_cjk.c
-
-FONT_OBJ := $(FONT_SRC:$(GENDIR)/%.c=$(OBJDIR)/%.o)
-
+$(OBJDIR)/pdf_fontfile.o: $(FONT_HDR)
 
 #
 # Generated CMap file dumps
@@ -284,29 +270,25 @@ CMAP_KOREA_FILES := $(addprefix cmaps/, \
 	KSCms-UHC-HW-H KSCms-UHC-HW-V KSCms-UHC-V KSCpc-EUC-H \
 	KSCpc-EUC-V UniKS-UCS2-H UniKS-UCS2-V UniKS-UTF16-H UniKS-UTF16-V )
 
-ifeq "$(pregen)" ""
-
-$(GENDIR)/cmap_unicode.c: $(CMAPDUMP_EXE) $(CMAP_UNICODE_FILES)
+$(GENDIR)/cmap_unicode.h: $(CMAPDUMP_EXE) $(CMAP_UNICODE_FILES)
 	$(GENFILE_CMD)
-$(GENDIR)/cmap_cns.c: $(CMAPDUMP_EXE) $(CMAP_CNS_FILES)
+$(GENDIR)/cmap_cns.h: $(CMAPDUMP_EXE) $(CMAP_CNS_FILES)
 	$(GENFILE_CMD)
-$(GENDIR)/cmap_gb.c: $(CMAPDUMP_EXE) $(CMAP_GB_FILES)
+$(GENDIR)/cmap_gb.h: $(CMAPDUMP_EXE) $(CMAP_GB_FILES)
 	$(GENFILE_CMD)
-$(GENDIR)/cmap_japan.c: $(CMAPDUMP_EXE) $(CMAP_JAPAN_FILES)
+$(GENDIR)/cmap_japan.h: $(CMAPDUMP_EXE) $(CMAP_JAPAN_FILES)
 	$(GENFILE_CMD)
-$(GENDIR)/cmap_korea.c: $(CMAPDUMP_EXE) $(CMAP_KOREA_FILES)
+$(GENDIR)/cmap_korea.h: $(CMAPDUMP_EXE) $(CMAP_KOREA_FILES)
 	$(GENFILE_CMD)
 
-endif
+CMAP_HDR := \
+	$(GENDIR)/cmap_unicode.h \
+	$(GENDIR)/cmap_cns.h \
+	$(GENDIR)/cmap_gb.h \
+	$(GENDIR)/cmap_japan.h \
+	$(GENDIR)/cmap_korea.h
 
-CMAP_SRC := \
-	$(GENDIR)/cmap_unicode.c \
-	$(GENDIR)/cmap_cns.c \
-	$(GENDIR)/cmap_gb.c \
-	$(GENDIR)/cmap_japan.c \
-	$(GENDIR)/cmap_korea.c
-
-CMAP_OBJ := $(CMAP_SRC:$(GENDIR)/%.c=$(OBJDIR)/%.o)
+$(OBJDIR)/pdf_cmap_table.o: $(CMAP_HDR)
 
 #
 # Library
@@ -314,10 +296,6 @@ CMAP_OBJ := $(CMAP_SRC:$(GENDIR)/%.c=$(OBJDIR)/%.o)
 
 FITZ_LIB = $(OBJDIR)/libfitz.a
 $(FITZ_LIB): $(FITZ_OBJ) $(DRAW_OBJ)
-	 $(AR_CMD)
-
-DATA_LIB = $(OBJDIR)/libmupdfdata.a
-$(DATA_LIB): $(CMAP_OBJ) $(FONT_OBJ)
 	 $(AR_CMD)
 
 MUPDF_LIB = $(OBJDIR)/libmupdf.a
@@ -328,8 +306,8 @@ MUXPS_LIB = $(OBJDIR)/libmuxps.a
 $(MUXPS_LIB): $(MUXPS_OBJ)
 	 $(AR_CMD)
 
-ALL_LIBS = $(MUXPS_LIB) $(MUPDF_LIB) $(DATA_LIB) $(FITZ_LIB)
-PDF_LIBS = $(MUPDF_LIB) $(DATA_LIB) $(FITZ_LIB)
+ALL_LIBS = $(MUXPS_LIB) $(MUPDF_LIB) $(FITZ_LIB)
+PDF_LIBS = $(MUPDF_LIB) $(FITZ_LIB)
 XPS_LIBS = $(MUXPS_LIB) $(FITZ_LIB)
 
 #
@@ -415,9 +393,9 @@ $(WINVIEW_EXE): $(WINVIEW_OBJ) $(ALL_LIBS) $(THIRD_LIBS)
 # Default rules
 #
 
-.PHONY: default all pregen clean nuke install
+.PHONY: default all clean nuke install
 
-all: $(OBJDIR) $(GENDIR) $(THIRD_LIBS) $(FITZ_LIB) $(DATA_LIB) $(MUPDF_LIB) $(MUXPS_LIB) $(APPS)
+all: $(OBJDIR) $(THIRD_LIBS) $(FITZ_LIB) $(MUPDF_LIB) $(MUXPS_LIB) $(APPS)
 
 clean:
 	rm -rf $(OBJDIR)/*
@@ -430,7 +408,7 @@ LIBDIR ?= $(prefix)/lib
 INCDIR ?= $(prefix)/include
 MANDIR ?= $(prefix)/share/man/man1
 
-install: $(OBJDIR) $(GENDIR) $(MUPDF_LIB) $(APPS)
+install: $(OBJDIR) $(MUPDF_LIB) $(APPS)
 	install -d $(BINDIR) $(LIBDIR) $(INCDIR) $(MANDIR)
 	install $(APPS) $(BINDIR)
 	install $(APPS_MAN) $(MANDIR)

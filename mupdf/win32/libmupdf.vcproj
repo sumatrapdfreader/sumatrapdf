@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9.00"
+	Version="8.00"
 	Name="libmupdf"
 	ProjectGUID="{5F615F91-DFF8-4F05-BF48-6222B7D86519}"
 	RootNamespace="mupdf"
-	TargetFrameworkVersion="196613"
 	>
 	<Platforms>
 		<Platform
@@ -24,6 +23,8 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
+				Description="Generate CMap and Font source files"
+				CommandLine="generate.bat"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -40,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\win32;..\fitz;..\pdf;..\thirdparty\jbig2dec;..\thirdparty\jpeg-8c;..\thirdparty\openjpeg-1.4\libopenjpeg;..\thirdparty\zlib-1.2.5;..\thirdparty\freetype-2.4.4\include"
+				AdditionalIncludeDirectories="..\scripts;..\fitz;..\pdf;..\thirdparty\jbig2dec;..\thirdparty\jpeg-8c;..\thirdparty\openjpeg-1.4\libopenjpeg;..\thirdparty\zlib-1.2.5;..\thirdparty\freetype-2.4.4\include"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -85,6 +86,8 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
+				Description="Generate CMap and Font source files"
+				CommandLine="generate.bat"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -102,7 +105,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="..\win32;..\fitz;..\pdf;..\thirdparty\jbig2dec;..\thirdparty\jpeg-8c;..\thirdparty\openjpeg-1.4\libopenjpeg;..\thirdparty\zlib-1.2.5;..\thirdparty\freetype-2.4.4\include"
+				AdditionalIncludeDirectories="..\scripts;..\fitz;..\pdf;..\thirdparty\jbig2dec;..\thirdparty\jpeg-8c;..\thirdparty\openjpeg-1.4\libopenjpeg;..\thirdparty\zlib-1.2.5;..\thirdparty\freetype-2.4.4\include"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				WarningLevel="3"
@@ -140,38 +143,6 @@
 	<References>
 	</References>
 	<Files>
-		<Filter
-			Name="pregen"
-			>
-			<File
-				RelativePath="..\pregen\cmap_cns.c"
-				>
-			</File>
-			<File
-				RelativePath="..\pregen\cmap_gb.c"
-				>
-			</File>
-			<File
-				RelativePath="..\pregen\cmap_japan.c"
-				>
-			</File>
-			<File
-				RelativePath="..\pregen\cmap_korea.c"
-				>
-			</File>
-			<File
-				RelativePath="..\pregen\cmap_unicode.c"
-				>
-			</File>
-			<File
-				RelativePath="..\pregen\font_base14.c"
-				>
-			</File>
-			<File
-				RelativePath="..\pregen\font_cjk.c"
-				>
-			</File>
-		</Filter>
 		<Filter
 			Name="pdf"
 			>
@@ -216,23 +187,15 @@
 				>
 			</File>
 			<File
+				RelativePath="..\pdf\pdf_encoding.c"
+				>
+			</File>
+			<File
 				RelativePath="..\pdf\pdf_font.c"
 				>
 			</File>
 			<File
-				RelativePath="..\pdf\pdf_fontagl.c"
-				>
-			</File>
-			<File
-				RelativePath="..\pdf\pdf_fontenc.c"
-				>
-			</File>
-			<File
 				RelativePath="..\pdf\pdf_fontfile.c"
-				>
-			</File>
-			<File
-				RelativePath="..\pdf\pdf_fontmtx.c"
 				>
 			</File>
 			<File
@@ -252,6 +215,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\pdf\pdf_metrics.c"
+				>
+			</File>
+			<File
 				RelativePath="..\pdf\pdf_nametree.c"
 				>
 			</File>
@@ -261,10 +228,6 @@
 			</File>
 			<File
 				RelativePath="..\pdf\pdf_page.c"
-				>
-			</File>
-			<File
-				RelativePath="..\pdf\pdf_pagetree.c"
 				>
 			</File>
 			<File
@@ -360,10 +323,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\fitz\dev_draw.c"
-				>
-			</File>
-			<File
 				RelativePath="..\fitz\dev_list.c"
 				>
 			</File>
@@ -432,11 +391,19 @@
 				>
 			</File>
 			<File
+				RelativePath="..\fitz\res_bitmap.c"
+				>
+			</File>
+			<File
 				RelativePath="..\fitz\res_colorspace.c"
 				>
 			</File>
 			<File
 				RelativePath="..\fitz\res_font.c"
+				>
+			</File>
+			<File
+				RelativePath="..\fitz\res_halftone.c"
 				>
 			</File>
 			<File
@@ -481,6 +448,10 @@
 			</File>
 			<File
 				RelativePath="..\draw\draw_blend.c"
+				>
+			</File>
+			<File
+				RelativePath="..\draw\draw_device.c"
 				>
 			</File>
 			<File

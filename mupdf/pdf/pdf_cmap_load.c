@@ -107,29 +107,23 @@ pdf_new_identity_cmap(int wmode, int bytes)
 fz_error
 pdf_load_system_cmap(pdf_cmap **cmapp, char *cmap_name)
 {
-	fz_error error;
 	pdf_cmap *usecmap;
 	pdf_cmap *cmap;
-	int i;
 
 	pdf_log_font("loading system cmap %s\n", cmap_name);
 
-	for (i = 0; pdf_cmap_table[i]; i++)
+	cmap = pdf_find_builtin_cmap(cmap_name);
+	if (!cmap)
+		return fz_throw("no builtin cmap file: %s", cmap_name);
+
+	if (cmap->usecmap_name[0] && !cmap->usecmap)
 	{
-		if (!strcmp(cmap_name, pdf_cmap_table[i]->cmap_name))
-		{
-			cmap = pdf_cmap_table[i];
-			if (cmap->usecmap_name[0] && !cmap->usecmap)
-			{
-				error = pdf_load_system_cmap(&usecmap, cmap->usecmap_name);
-				if (error)
-					return fz_rethrow(error, "cannot load usecmap: %s", cmap->usecmap_name);
-				pdf_set_usecmap(cmap, usecmap);
-			}
-			*cmapp = cmap;
-			return fz_okay;
-		}
+		usecmap = pdf_find_builtin_cmap(cmap->usecmap_name);
+		if (!usecmap)
+			return fz_throw("nu builtin cmap file: %s", cmap->usecmap_name);
+		pdf_set_usecmap(cmap, usecmap);
 	}
 
-	return fz_throw("no builtin cmap file: %s", cmap_name);
+	*cmapp = cmap;
+	return fz_okay;
 }

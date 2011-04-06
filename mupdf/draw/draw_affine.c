@@ -59,6 +59,37 @@ fz_paint_affine_alpha_N_lerp(byte *dp, byte *sp, int sw, int sh, int u, int v, i
 	}
 }
 
+/* Special case code for gray -> rgb */
+static inline void
+fz_paint_affine_alpha_g2rgb_lerp(byte *dp, byte *sp, int sw, int sh, int u, int v, int fa, int fb, int w, int alpha)
+{
+	while (w--)
+	{
+		int ui = u >> 16;
+		int vi = v >> 16;
+		if (ui >= 0 && ui < sw && vi >= 0 && vi < sh)
+		{
+			int uf = u & 0xffff;
+			int vf = v & 0xffff;
+			byte *a = sample_nearest(sp, sw, sh, 2, ui, vi);
+			byte *b = sample_nearest(sp, sw, sh, 2, ui+1, vi);
+			byte *c = sample_nearest(sp, sw, sh, 2, ui, vi+1);
+			byte *d = sample_nearest(sp, sw, sh, 2, ui+1, vi+1);
+			int y = bilerp(a[1], b[1], c[1], d[1], uf, vf);
+			int t = 255 - fz_mul255(y, alpha);
+			int x = bilerp(a[0], b[0], c[0], d[0], uf, vf);
+			x = fz_mul255(x, alpha);
+			dp[0] = x + fz_mul255(dp[0], t);
+			dp[1] = x + fz_mul255(dp[1], t);
+			dp[2] = x + fz_mul255(dp[2], t);
+			dp[3] = fz_mul255(y, alpha) + fz_mul255(dp[3], t);
+		}
+		dp += 4;
+		u += fa;
+		v += fb;
+	}
+}
+
 static inline void
 fz_paint_affine_alpha_N_near(byte *dp, byte *sp, int sw, int sh, int u, int v, int fa, int fb, int w, int n, int alpha)
 {
@@ -76,6 +107,29 @@ fz_paint_affine_alpha_N_near(byte *dp, byte *sp, int sw, int sh, int u, int v, i
 				dp[k] = fz_mul255(sample[k], alpha) + fz_mul255(dp[k], t);
 		}
 		dp += n;
+		u += fa;
+		v += fb;
+	}
+}
+
+static inline void
+fz_paint_affine_alpha_g2rgb_near(byte *dp, byte *sp, int sw, int sh, int u, int v, int fa, int fb, int w, int alpha)
+{
+	while (w--)
+	{
+		int ui = u >> 16;
+		int vi = v >> 16;
+		if (ui >= 0 && ui < sw && vi >= 0 && vi < sh)
+		{
+			byte *sample = sp + ((vi * sw + ui) * 2);
+			int t = 255 - fz_mul255(sample[1], alpha);
+			int x = fz_mul255(sample[0], alpha);
+			dp[0] = x + fz_mul255(dp[0], t);
+			dp[1] = x + fz_mul255(dp[1], t);
+			dp[2] = x + fz_mul255(dp[2], t);
+			dp[3] = fz_mul255(sample[1], alpha) + fz_mul255(dp[3], t);
+		}
+		dp += 4;
 		u += fa;
 		v += fb;
 	}
@@ -114,6 +168,35 @@ fz_paint_affine_N_lerp(byte *dp, byte *sp, int sw, int sh, int u, int v, int fa,
 }
 
 static inline void
+fz_paint_affine_solid_g2rgb_lerp(byte *dp, byte *sp, int sw, int sh, int u, int v, int fa, int fb, int w)
+{
+	while (w--)
+	{
+		int ui = u >> 16;
+		int vi = v >> 16;
+		if (ui >= 0 && ui < sw && vi >= 0 && vi < sh)
+		{
+			int uf = u & 0xffff;
+			int vf = v & 0xffff;
+			byte *a = sample_nearest(sp, sw, sh, 2, ui, vi);
+			byte *b = sample_nearest(sp, sw, sh, 2, ui+1, vi);
+			byte *c = sample_nearest(sp, sw, sh, 2, ui, vi+1);
+			byte *d = sample_nearest(sp, sw, sh, 2, ui+1, vi+1);
+			int y = bilerp(a[1], b[1], c[1], d[1], uf, vf);
+			int t = 255 - y;
+			int x = bilerp(a[0], b[0], c[0], d[0], uf, vf);
+			dp[0] = x + fz_mul255(dp[0], t);
+			dp[1] = x + fz_mul255(dp[1], t);
+			dp[2] = x + fz_mul255(dp[2], t);
+			dp[3] = y + fz_mul255(dp[3], t);
+		}
+		dp += 4;
+		u += fa;
+		v += fb;
+	}
+}
+
+static inline void
 fz_paint_affine_N_near(byte *dp, byte *sp, int sw, int sh, int u, int v, int fa, int fb, int w, int n)
 {
 	int k;
@@ -130,6 +213,28 @@ fz_paint_affine_N_near(byte *dp, byte *sp, int sw, int sh, int u, int v, int fa,
 				dp[k] = sample[k] + fz_mul255(dp[k], t);
 		}
 		dp += n;
+		u += fa;
+		v += fb;
+	}
+}
+
+static inline void
+fz_paint_affine_solid_g2rgb_near(byte *dp, byte *sp, int sw, int sh, int u, int v, int fa, int fb, int w)
+{
+	while (w--)
+	{
+		int ui = u >> 16;
+		int vi = v >> 16;
+		if (ui >= 0 && ui < sw && vi >= 0 && vi < sh)
+		{
+			byte *sample = sp + ((vi * sw + ui) * 2);
+			int t = 255 - sample[1];
+			dp[0] = sample[0] + fz_mul255(dp[0], t);
+			dp[1] = sample[0] + fz_mul255(dp[1], t);
+			dp[2] = sample[0] + fz_mul255(dp[2], t);
+			dp[3] = sample[1] + fz_mul255(dp[3], t);
+		}
+		dp += 4;
 		u += fa;
 		v += fb;
 	}
@@ -192,7 +297,7 @@ fz_paint_affine_color_N_near(byte *dp, byte *sp, int sw, int sh, int u, int v, i
 }
 
 static void
-fz_paint_affine_lerp(byte *dp, byte *sp, int sw, int sh, int u, int v, int fa, int fb, int w, int n, int alpha)
+fz_paint_affine_lerp(byte *dp, byte *sp, int sw, int sh, int u, int v, int fa, int fb, int w, int n, int alpha, byte *color/*unused*/)
 {
 	if (alpha == 255)
 	{
@@ -217,7 +322,20 @@ fz_paint_affine_lerp(byte *dp, byte *sp, int sw, int sh, int u, int v, int fa, i
 }
 
 static void
-fz_paint_affine_near(byte *dp, byte *sp, int sw, int sh, int u, int v, int fa, int fb, int w, int n, int alpha)
+fz_paint_affine_g2rgb_lerp(byte *dp, byte *sp, int sw, int sh, int u, int v, int fa, int fb, int w, int n, int alpha, byte *color/*unused*/)
+{
+	if (alpha == 255)
+	{
+		fz_paint_affine_solid_g2rgb_lerp(dp, sp, sw, sh, u, v, fa, fb, w);
+	}
+	else if (alpha > 0)
+	{
+		fz_paint_affine_alpha_g2rgb_lerp(dp, sp, sw, sh, u, v, fa, fb, w, alpha);
+	}
+}
+
+static void
+fz_paint_affine_near(byte *dp, byte *sp, int sw, int sh, int u, int v, int fa, int fb, int w, int n, int alpha, byte *color/*unused */)
 {
 	if (alpha == 255)
 	{
@@ -242,7 +360,20 @@ fz_paint_affine_near(byte *dp, byte *sp, int sw, int sh, int u, int v, int fa, i
 }
 
 static void
-fz_paint_affine_color_lerp(byte *dp, byte *sp, int sw, int sh, int u, int v, int fa, int fb, int w, int n, byte *color)
+fz_paint_affine_g2rgb_near(byte *dp, byte *sp, int sw, int sh, int u, int v, int fa, int fb, int w, int n, int alpha, byte *color/*unused*/)
+{
+	if (alpha == 255)
+	{
+		fz_paint_affine_solid_g2rgb_near(dp, sp, sw, sh, u, v, fa, fb, w);
+	}
+	else if (alpha > 0)
+	{
+		fz_paint_affine_alpha_g2rgb_near(dp, sp, sw, sh, u, v, fa, fb, w, alpha);
+	}
+}
+
+static void
+fz_paint_affine_color_lerp(byte *dp, byte *sp, int sw, int sh, int u, int v, int fa, int fb, int w, int n, int alpha/*unused*/, byte *color)
 {
 	switch (n)
 	{
@@ -253,7 +384,7 @@ fz_paint_affine_color_lerp(byte *dp, byte *sp, int sw, int sh, int u, int v, int
 }
 
 static void
-fz_paint_affine_color_near(byte *dp, byte *sp, int sw, int sh, int u, int v, int fa, int fb, int w, int n, byte *color)
+fz_paint_affine_color_near(byte *dp, byte *sp, int sw, int sh, int u, int v, int fa, int fb, int w, int n, int alpha/*unused*/, byte *color)
 {
 	switch (n)
 	{
@@ -275,6 +406,7 @@ fz_paint_image_imp(fz_pixmap *dst, fz_bbox scissor, fz_pixmap *img, fz_matrix ct
 	fz_matrix inv;
 	fz_bbox bbox;
 	int dolerp;
+	void (*paintfn)(byte *dp, byte *sp, int sw, int sh, int u, int v, int fa, int fb, int w, int n, int alpha, byte *color);
 
 	/* grid fit the image */
 	if (fz_is_rectilinear(ctm))
@@ -335,22 +467,35 @@ fz_paint_image_imp(fz_pixmap *dst, fz_bbox scissor, fz_pixmap *img, fz_matrix ct
 
 	/* TODO: if (fb == 0 && fa == 1) call fz_paint_span */
 
-	while (h--)
+	if (dst->n == 4 && img->n == 2)
+	{
+		assert(color == NULL);
+		if (dolerp)
+			paintfn = fz_paint_affine_g2rgb_lerp;
+		else
+			paintfn = fz_paint_affine_g2rgb_near;
+	}
+	else
 	{
 		if (dolerp)
 		{
 			if (color)
-				fz_paint_affine_color_lerp(dp, sp, sw, sh, u, v, fa, fb, w, n, color);
+				paintfn = fz_paint_affine_color_lerp;
 			else
-				fz_paint_affine_lerp(dp, sp, sw, sh, u, v, fa, fb, w, n, alpha);
+				paintfn = fz_paint_affine_lerp;
 		}
 		else
 		{
 			if (color)
-				fz_paint_affine_color_near(dp, sp, sw, sh, u, v, fa, fb, w, n, color);
+				paintfn = fz_paint_affine_color_near;
 			else
-				fz_paint_affine_near(dp, sp, sw, sh, u, v, fa, fb, w, n, alpha);
+				paintfn = fz_paint_affine_near;
 		}
+	}
+
+	while (h--)
+	{
+		paintfn(dp, sp, sw, sh, u, v, fa, fb, w, n, alpha, color);
 		dp += dst->w * n;
 		u += fc;
 		v += fd;
@@ -367,6 +512,6 @@ fz_paint_image_with_color(fz_pixmap *dst, fz_bbox scissor, fz_pixmap *img, fz_ma
 void
 fz_paint_image(fz_pixmap *dst, fz_bbox scissor, fz_pixmap *img, fz_matrix ctm, int alpha)
 {
-	assert(dst->n == img->n);
+	assert(dst->n == img->n || (dst->n == 4 && img->n == 2));
 	fz_paint_image_imp(dst, scissor, img, ctm, NULL, alpha);
 }

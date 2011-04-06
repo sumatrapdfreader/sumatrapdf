@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9.00"
+	Version="8.00"
 	Name="pdfshow"
 	ProjectGUID="{50644121-C85F-4EE9-9C54-F7D1BDFAE354}"
 	RootNamespace="mupdf"

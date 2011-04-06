@@ -1,108 +1,101 @@
 #include "fitz.h"
 #include "mupdf.h"
 
-extern const unsigned char pdf_font_Dingbats_cff_buf[];
-extern const unsigned int pdf_font_Dingbats_cff_len;
-extern const unsigned char pdf_font_NimbusMonL_Bold_cff_buf[];
-extern const unsigned int pdf_font_NimbusMonL_Bold_cff_len;
-extern const unsigned char pdf_font_NimbusMonL_BoldObli_cff_buf[];
-extern const unsigned int pdf_font_NimbusMonL_BoldObli_cff_len;
-extern const unsigned char pdf_font_NimbusMonL_Regu_cff_buf[];
-extern const unsigned int pdf_font_NimbusMonL_Regu_cff_len;
-extern const unsigned char pdf_font_NimbusMonL_ReguObli_cff_buf[];
-extern const unsigned int pdf_font_NimbusMonL_ReguObli_cff_len;
-extern const unsigned char pdf_font_NimbusRomNo9L_Medi_cff_buf[];
-extern const unsigned int pdf_font_NimbusRomNo9L_Medi_cff_len;
-extern const unsigned char pdf_font_NimbusRomNo9L_MediItal_cff_buf[];
-extern const unsigned int pdf_font_NimbusRomNo9L_MediItal_cff_len;
-extern const unsigned char pdf_font_NimbusRomNo9L_Regu_cff_buf[];
-extern const unsigned int pdf_font_NimbusRomNo9L_Regu_cff_len;
-extern const unsigned char pdf_font_NimbusRomNo9L_ReguItal_cff_buf[];
-extern const unsigned int pdf_font_NimbusRomNo9L_ReguItal_cff_len;
-extern const unsigned char pdf_font_NimbusSanL_Bold_cff_buf[];
-extern const unsigned int pdf_font_NimbusSanL_Bold_cff_len;
-extern const unsigned char pdf_font_NimbusSanL_BoldItal_cff_buf[];
-extern const unsigned int pdf_font_NimbusSanL_BoldItal_cff_len;
-extern const unsigned char pdf_font_NimbusSanL_Regu_cff_buf[];
-extern const unsigned int pdf_font_NimbusSanL_Regu_cff_len;
-extern const unsigned char pdf_font_NimbusSanL_ReguItal_cff_buf[];
-extern const unsigned int pdf_font_NimbusSanL_ReguItal_cff_len;
-extern const unsigned char pdf_font_StandardSymL_cff_buf[];
-extern const unsigned int pdf_font_StandardSymL_cff_len;
-
-#if !defined(NOCJK) && !defined(NOCJKFONT)
-extern const unsigned char pdf_font_DroidSansFallback_ttf_buf[];
-extern const unsigned int pdf_font_DroidSansFallback_ttf_len;
+#ifdef NOCJK
+#define NOCJKFONT
 #endif
 
-enum
+#include "../generated/font_base14.h"
+
+#ifndef NOCJKFONT
+#include "../generated/font_cjk.h"
+#endif
+
+unsigned char *
+pdf_find_builtin_font(char *name, unsigned int *len)
 {
-	FD_FIXED_PITCH = 1 << 0,
-	FD_SERIF = 1 << 1,
-	FD_SYMBOLIC = 1 << 2,
-	FD_SCRIPT = 1 << 3,
-	FD_NONSYMBOLIC = 1 << 5,
-	FD_ITALIC = 1 << 6,
-	FD_ALL_CAP = 1 << 16,
-	FD_SMALL_CAP = 1 << 17,
-	FD_FORCE_BOLD = 1 << 18
-};
+	if (!strcmp("Courier", name)) {
+		*len = sizeof pdf_font_NimbusMonL_Regu;
+		return (unsigned char*) pdf_font_NimbusMonL_Regu;
+	}
+	if (!strcmp("Courier-Bold", name)) {
+		*len = sizeof pdf_font_NimbusMonL_Bold;
+		return (unsigned char*) pdf_font_NimbusMonL_Bold;
+	}
+	if (!strcmp("Courier", name)) {
+		*len = sizeof pdf_font_NimbusMonL_Regu;
+		return (unsigned char*) pdf_font_NimbusMonL_Regu;
+	}
+	if (!strcmp("Courier-Bold", name)) {
+		*len = sizeof pdf_font_NimbusMonL_Bold;
+		return (unsigned char*) pdf_font_NimbusMonL_Bold;
+	}
+	if (!strcmp("Courier-Oblique", name)) {
+		*len = sizeof pdf_font_NimbusMonL_ReguObli;
+		return (unsigned char*) pdf_font_NimbusMonL_ReguObli;
+	}
+	if (!strcmp("Courier-BoldOblique", name)) {
+		*len = sizeof pdf_font_NimbusMonL_BoldObli;
+		return (unsigned char*) pdf_font_NimbusMonL_BoldObli;
+	}
+	if (!strcmp("Helvetica", name)) {
+		*len = sizeof pdf_font_NimbusSanL_Regu;
+		return (unsigned char*) pdf_font_NimbusSanL_Regu;
+	}
+	if (!strcmp("Helvetica-Bold", name)) {
+		*len = sizeof pdf_font_NimbusSanL_Bold;
+		return (unsigned char*) pdf_font_NimbusSanL_Bold;
+	}
+	if (!strcmp("Helvetica-Oblique", name)) {
+		*len = sizeof pdf_font_NimbusSanL_ReguItal;
+		return (unsigned char*) pdf_font_NimbusSanL_ReguItal;
+	}
+	if (!strcmp("Helvetica-BoldOblique", name)) {
+		*len = sizeof pdf_font_NimbusSanL_BoldItal;
+		return (unsigned char*) pdf_font_NimbusSanL_BoldItal;
+	}
+	if (!strcmp("Times-Roman", name)) {
+		*len = sizeof pdf_font_NimbusRomNo9L_Regu;
+		return (unsigned char*) pdf_font_NimbusRomNo9L_Regu;
+	}
+	if (!strcmp("Times-Bold", name)) {
+		*len = sizeof pdf_font_NimbusRomNo9L_Medi;
+		return (unsigned char*) pdf_font_NimbusRomNo9L_Medi;
+	}
+	if (!strcmp("Times-Italic", name)) {
+		*len = sizeof pdf_font_NimbusRomNo9L_ReguItal;
+		return (unsigned char*) pdf_font_NimbusRomNo9L_ReguItal;
+	}
+	if (!strcmp("Times-BoldItalic", name)) {
+		*len = sizeof pdf_font_NimbusRomNo9L_MediItal;
+		return (unsigned char*) pdf_font_NimbusRomNo9L_MediItal;
+	}
+	if (!strcmp("Symbol", name)) {
+		*len = sizeof pdf_font_StandardSymL;
+		return (unsigned char*) pdf_font_StandardSymL;
+	}
+	if (!strcmp("ZapfDingbats", name)) {
+		*len = sizeof pdf_font_Dingbats;
+		return (unsigned char*) pdf_font_Dingbats;
+	}
+	*len = 0;
+	return NULL;
+}
 
-enum { CNS, GB, Japan, Korea };
-enum { MINCHO, GOTHIC };
+unsigned char *
+pdf_find_builtin_cjk_font(int ros, int gothic, unsigned int *len)
+{
+#ifndef NOCJKFONT
+	*len = sizeof pdf_font_DroidSansFallback;
+	return (unsigned char*) pdf_font_DroidSansFallback;
+#else
+	*len = 0;
+	return NULL;
+#endif
+}
 
-static const struct {
-	const char *name;
-	const unsigned char *cff;
-	const unsigned int *len;
-} base_fonts[] = {
-	{ "Courier",
-		pdf_font_NimbusMonL_Regu_cff_buf,
-		&pdf_font_NimbusMonL_Regu_cff_len },
-	{ "Courier-Bold",
-		pdf_font_NimbusMonL_Bold_cff_buf,
-		&pdf_font_NimbusMonL_Bold_cff_len },
-	{ "Courier-Oblique",
-		pdf_font_NimbusMonL_ReguObli_cff_buf,
-		&pdf_font_NimbusMonL_ReguObli_cff_len },
-	{ "Courier-BoldOblique",
-		pdf_font_NimbusMonL_BoldObli_cff_buf,
-		&pdf_font_NimbusMonL_BoldObli_cff_len },
-	{ "Helvetica",
-		pdf_font_NimbusSanL_Regu_cff_buf,
-		&pdf_font_NimbusSanL_Regu_cff_len },
-	{ "Helvetica-Bold",
-		pdf_font_NimbusSanL_Bold_cff_buf,
-		&pdf_font_NimbusSanL_Bold_cff_len },
-	{ "Helvetica-Oblique",
-		pdf_font_NimbusSanL_ReguItal_cff_buf,
-		&pdf_font_NimbusSanL_ReguItal_cff_len },
-	{ "Helvetica-BoldOblique",
-		pdf_font_NimbusSanL_BoldItal_cff_buf,
-		&pdf_font_NimbusSanL_BoldItal_cff_len },
-	{ "Times-Roman",
-		pdf_font_NimbusRomNo9L_Regu_cff_buf,
-		&pdf_font_NimbusRomNo9L_Regu_cff_len },
-	{ "Times-Bold",
-		pdf_font_NimbusRomNo9L_Medi_cff_buf,
-		&pdf_font_NimbusRomNo9L_Medi_cff_len },
-	{ "Times-Italic",
-		pdf_font_NimbusRomNo9L_ReguItal_cff_buf,
-		&pdf_font_NimbusRomNo9L_ReguItal_cff_len },
-	{ "Times-BoldItalic",
-		pdf_font_NimbusRomNo9L_MediItal_cff_buf,
-		&pdf_font_NimbusRomNo9L_MediItal_cff_len },
-	{ "Symbol",
-		pdf_font_StandardSymL_cff_buf,
-		&pdf_font_StandardSymL_cff_len },
-	{ "ZapfDingbats",
-		pdf_font_Dingbats_cff_buf,
-		&pdf_font_Dingbats_cff_len },
-	{ NULL, NULL, NULL }
-};
-
-#ifdef WIN32
-/***** start of Windows font loading code *****/
+/* SumatraPDF: also load fonts included with Windows */
+#ifdef _WIN32
 
 #include <windows.h>
 #include <tchar.h>
@@ -629,8 +622,8 @@ pdf_destroyfontlistMS(void)
 	return 0;
 }
 
-static fz_error
-loadwindowsfont(pdf_font_desc *font, char *fontname)
+fz_error
+pdf_load_windows_font(pdf_font_desc *font, char *fontname)
 {
 	fz_error error;
 	pdf_fontmapMS *found = NULL;
@@ -688,290 +681,33 @@ loadwindowsfont(pdf_font_desc *font, char *fontname)
 	return fz_okay;
 }
 
-static fz_error
-loadsimilarcjkfont(pdf_font_desc *font, int ros, int kind)
+fz_error
+pdf_load_similar_cjk_font(pdf_font_desc *font, int ros, int gothic)
 {
-	switch (kind)
+	if (!gothic)
 	{
-	case MINCHO:
 		switch (ros)
 		{
-		case CNS: return loadwindowsfont(font, "MingLiU");
-		case GB: return loadwindowsfont(font, "SimSun");
-		case Japan: return loadwindowsfont(font, "MS-Mincho");
-		case Korea: return loadwindowsfont(font, "Batang");
+		case PDF_ROS_CNS: return pdf_load_windows_font(font, "MingLiU");
+		case PDF_ROS_GB: return pdf_load_windows_font(font, "SimSun");
+		case PDF_ROS_JAPAN: return pdf_load_windows_font(font, "MS-Mincho");
+		case PDF_ROS_KOREA: return pdf_load_windows_font(font, "Batang");
 		}
-		break;
-	case GOTHIC:
+	}
+	else
+	{
 		switch (ros)
 		{
-		case CNS: return loadwindowsfont(font, "DFKaiShu-SB-Estd-BF");
-		case GB:
-			if (fz_okay == loadwindowsfont(font, "KaiTi"))
+		case PDF_ROS_CNS: return pdf_load_windows_font(font, "DFKaiShu-SB-Estd-BF");
+		case PDF_ROS_GB:
+			if (fz_okay == pdf_load_windows_font(font, "KaiTi"))
 				return fz_okay;
-			return loadwindowsfont(font, "KaiTi_GB2312");
-		case Japan: return loadwindowsfont(font, "MS-Gothic");
-		case Korea: return loadwindowsfont(font, "Gulim");
+			return pdf_load_windows_font(font, "KaiTi_GB2312");
+		case PDF_ROS_JAPAN: return pdf_load_windows_font(font, "MS-Gothic");
+		case PDF_ROS_KOREA: return pdf_load_windows_font(font, "Gulim");
 		}
-		break;
-	default:
-		return fz_throw("Unknown cid kind %d", kind);
 	}
 	return -1;
 }
 
-#if 0
-/* TODO: those rules conflict with pdf_loadsystemfont() logic. */
-static fz_error
-loadjapansubstitute(pdf_font_desc *font, char *fontname)
-{
-	if (!strcmp(fontname, "GothicBBB-Medium"))
-		return loadwindowsfont(font, "MS-Gothic");
-
-	if (!strcmp(fontname, "Ryumin-Light"))
-		return loadwindowsfont(font, "MS-Mincho");
-
-	if (font->flags & FD_FIXED)
-	{
-		if (font->flags & FD_SERIF)
-			return loadwindowsfont(font, "MS-Mincho");
-
-		return loadwindowsfont(font, "MS-Gothic");
-	}
-
-	if (font->flags & FD_SERIF)
-			return loadwindowsfont(font, "MS-PMincho");
-
-	return loadwindowsfont(font, "MS-PGothic");
-}
 #endif
-
-/***** end of Windows font loading code *****/
-#endif
-
-fz_error
-pdf_load_builtin_font(pdf_font_desc *fontdesc, char *fontname)
-{
-	fz_error error;
-	unsigned char *data;
-	unsigned int len;
-	int i;
-
-	for (i = 0; base_fonts[i].name; i++)
-		if (!strcmp(fontname, base_fonts[i].name))
-			goto found;
-
-#ifdef WIN32
-	/* we use built-in fonts in addition to those installed on windows
-	   because the metric for Times-Roman in windows fonts seems wrong
-	   and we end up with over-lapping text if this font is used.
-	   poppler doesn't have this problem even when using windows fonts
-	   so maybe there's a better fix. */
-	error = loadwindowsfont(fontdesc, fontname);
-	if (fz_okay == error)
-		return fz_okay;
-#endif
-
-	return fz_throw("cannot find font: '%s'", fontname);
-
-found:
-	pdf_log_font("load builtin font %s\n", fontname);
-
-	data = (unsigned char *) base_fonts[i].cff;
-	len = *base_fonts[i].len;
-
-	error = fz_new_font_from_memory(&fontdesc->font, data, len, 0);
-	if (error)
-		return fz_rethrow(error, "cannot load freetype font from buffer");
-
-	fz_strlcpy(fontdesc->font->name, fontname, sizeof fontdesc->font->name);
-
-	if (!strcmp(fontname, "Symbol") || !strcmp(fontname, "ZapfDingbats"))
-		fontdesc->flags |= FD_SYMBOLIC;
-
-	return fz_okay;
-}
-
-static fz_error
-load_system_cid_font(pdf_font_desc *fontdesc, int ros, int kind)
-{
-#if !defined(NOCJK) && !defined(NOCJKFONT)
-	fz_error error;
-#endif
-#ifdef WIN32
-	/* Try to fall back to a reasonable TrueType font that might be installed locally */
-	if (loadsimilarcjkfont(fontdesc, ros, kind) == fz_okay)
-	{
-		fontdesc->font->ft_substitute = 1;
-		return fz_okay;
-	}
-#ifdef NOCJKFONT
-	/* If no CJK fallback font is builtin, maybe one has been shipped separately */
-	if (loadwindowsfont(fontdesc, "DroidSansFallback") == fz_okay)
-	{
-		fontdesc->font->ft_substitute = 1;
-		return fz_okay;
-	}
-#endif
-#endif
-#if !defined(NOCJK) && !defined(NOCJKFONT)
-	/*
-	We only have one builtin fallback font.
-	We'd really like to have one for each combination of ROS and Kind.
-	*/
-	pdf_log_font("loading builtin CJK font\n");
-	error = fz_new_font_from_memory(&fontdesc->font,
-		(unsigned char *)pdf_font_DroidSansFallback_ttf_buf,
-		pdf_font_DroidSansFallback_ttf_len, 0);
-	if (error)
-		return fz_rethrow(error, "cannot load builtin CJK font");
-	fontdesc->font->ft_substitute = 1; /* substitute font */
-	return fz_okay;
-#else
-	fz_warn("no builtin CJK font file");
-	return pdf_load_system_font(fontdesc, "", NULL);
-#endif
-}
-
-fz_error
-pdf_load_system_font(pdf_font_desc *fontdesc, char *fontname, char *collection)
-{
-	fz_error error;
-	char *name;
-
-	int isbold = 0;
-	int isitalic = 0;
-	int isserif = 0;
-	int isscript = 0;
-	int isfixed = 0;
-
-#ifdef WIN32
-	/* try to find a precise match in Windows' fonts before falling back to a built-in one */
-	error = loadwindowsfont(fontdesc, fontname);
-	if (fz_okay == error)
-	{
-		/* TODO: this seems to be required at least for MS-Mincho - why? */
-		if (collection)
-			fontdesc->font->ft_substitute = 1;
-		return fz_okay;
-	}
-#endif
-
-	if (strstr(fontname, "Bold"))
-		isbold = 1;
-	if (strstr(fontname, "Italic"))
-		isitalic = 1;
-	if (strstr(fontname, "Oblique"))
-		isitalic = 1;
-
-	if (fontdesc->flags & FD_FIXED_PITCH)
-		isfixed = 1;
-	if (fontdesc->flags & FD_SERIF)
-		isserif = 1;
-	if (fontdesc->flags & FD_ITALIC)
-		isitalic = 1;
-	if (fontdesc->flags & FD_SCRIPT)
-		isscript = 1;
-	if (fontdesc->flags & FD_FORCE_BOLD)
-		isbold = 1;
-
-	pdf_log_font("fixed-%d serif-%d italic-%d script-%d bold-%d\n",
-		isfixed, isserif, isitalic, isscript, isbold);
-
-	if (collection)
-	{
-		int kind;
-
-		if (isserif)
-			kind = MINCHO;
-		else
-			kind = GOTHIC;
-
-		if (!strcmp(collection, "Adobe-CNS1"))
-			return load_system_cid_font(fontdesc, CNS, kind);
-		else if (!strcmp(collection, "Adobe-GB1"))
-			return load_system_cid_font(fontdesc, GB, kind);
-		else if (!strcmp(collection, "Adobe-Japan1"))
-			return load_system_cid_font(fontdesc, Japan, kind);
-		else if (!strcmp(collection, "Adobe-Japan2"))
-			return load_system_cid_font(fontdesc, Japan, kind);
-		else if (!strcmp(collection, "Adobe-Korea1"))
-			return load_system_cid_font(fontdesc, Korea, kind);
-
-		fz_warn("unknown cid collection: %s", collection);
-	}
-
-	else if (isfixed)
-	{
-		if (isitalic) {
-			if (isbold) name = "Courier-BoldOblique";
-			else name = "Courier-Oblique";
-		}
-		else {
-			if (isbold) name = "Courier-Bold";
-			else name = "Courier";
-		}
-	}
-
-	else if (isserif)
-	{
-		if (isitalic) {
-			if (isbold) name = "Times-BoldItalic";
-			else name = "Times-Italic";
-		}
-		else {
-			if (isbold) name = "Times-Bold";
-			else name = "Times-Roman";
-		}
-	}
-
-	else
-	{
-		if (isitalic) {
-			if (isbold) name = "Helvetica-BoldOblique";
-			else name = "Helvetica-Oblique";
-		}
-		else {
-			if (isbold) name = "Helvetica-Bold";
-			else name = "Helvetica";
-		}
-	}
-
-	error = pdf_load_builtin_font(fontdesc, name);
-	if (error)
-		return fz_throw("cannot load builtin substitute font: %s", name);
-
-	/* it's a substitute font: override the metrics */
-	fontdesc->font->ft_substitute = 1;
-
-	return fz_okay;
-}
-
-fz_error
-pdf_load_embedded_font(pdf_font_desc *fontdesc, pdf_xref *xref, fz_obj *stmref)
-{
-	fz_error error;
-	fz_buffer *buf;
-
-	pdf_log_font("load embedded font\n");
-
-	error = pdf_load_stream(&buf, xref, fz_to_num(stmref), fz_to_gen(stmref));
-	if (error)
-		return fz_rethrow(error, "cannot load font stream (%d %d R)", fz_to_num(stmref), fz_to_gen(stmref));
-
-	error = fz_new_font_from_memory(&fontdesc->font, buf->data, buf->len, 0);
-	if (error)
-	{
-		fz_drop_buffer(buf);
-		return fz_rethrow(error, "cannot load embedded font (%d %d R)", fz_to_num(stmref), fz_to_gen(stmref));
-	}
-
-	/* save the buffer so we can free it later */
-	fontdesc->font->ft_data = buf->data;
-	fontdesc->font->ft_size = buf->len;
-	fz_free(buf); /* only free the fz_buffer struct, not the contained data */
-
-	fontdesc->isembedded = 1;
-
-	return fz_okay;
-}

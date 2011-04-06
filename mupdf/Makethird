@@ -26,7 +26,7 @@ FREETYPE_LIB=$(OBJDIR)/libfreetype.a
 $(FREETYPE_LIB): $(FREETYPE_OBJ)
 	 $(AR_CMD)
 
-FTCC_CMD = $(CC_CMD) -DFT2_BUILD_LIBRARY -DDARWIN_NO_CARBON -Iwin32 \
+FTCC_CMD = $(CC_CMD) -DFT2_BUILD_LIBRARY -DDARWIN_NO_CARBON \
 	'-DFT_CONFIG_MODULES_H="slimftmodules.h"' \
 	'-DFT_CONFIG_OPTIONS_H="slimftoptions.h"'
 
@@ -104,12 +104,8 @@ endif
 ifneq "$(jpeg_dir)" ""
 
 THIRD_LIBS += $(JPEG_LIB)
-THIRD_INCS += -I$(jpeg_dir) -I$(OBJDIR)
+THIRD_INCS += -I$(jpeg_dir)
 LIBS := $(filter-out -ljpeg, $(LIBS))
-
-# jconfig.h does not exist in the pristine source
-$(OBJDIR)/jconfig.h:
-	cp $(jpeg_dir)/jconfig.txt $@
 
 JPEG_SRC=$(addprefix $(jpeg_dir)/, \
 	jaricom.c \
@@ -145,7 +141,6 @@ JPEG_SRC=$(addprefix $(jpeg_dir)/, \
 	jmemansi.c)
 JPEG_OBJ=$(JPEG_SRC:$(jpeg_dir)/%.c=$(OBJDIR)/jpeg_%.o)
 JPEG_LIB=$(OBJDIR)/libjpeg.a
-$(JPEG_OBJ): $(OBJDIR)/jconfig.h
 $(JPEG_LIB): $(JPEG_OBJ)
 	 $(AR_CMD)
 $(OBJDIR)/jpeg_%.o: $(jpeg_dir)/%.c
@@ -158,10 +153,6 @@ ifneq "$(openjpeg_dir)" ""
 THIRD_LIBS += $(OPENJPEG_LIB)
 THIRD_INCS += -I$(openjpeg_dir)
 LIBS := $(filter-out -lopenjpeg, $(LIBS))
-
-# opj_config.h does not exist in the pristine source
-$(OBJDIR)/opj_config.h:
-	cp $(openjpeg_dir)/../opj_config.h.in.user $@
 
 OPENJPEG_SRC=$(addprefix $(openjpeg_dir)/, \
 	bio.c \
@@ -184,11 +175,10 @@ OPENJPEG_SRC=$(addprefix $(openjpeg_dir)/, \
 	tgt.c )
 OPENJPEG_OBJ=$(OPENJPEG_SRC:$(openjpeg_dir)/%.c=$(OBJDIR)/opj_%.o)
 OPENJPEG_LIB=$(OBJDIR)/libopenjpeg.a
-$(OPENJPEG_OBJ): $(OBJDIR)/opj_config.h
 $(OPENJPEG_LIB): $(OPENJPEG_OBJ)
 	 $(AR_CMD)
 $(OBJDIR)/opj_%.o: $(openjpeg_dir)/%.c
-	$(CC_CMD) -I$(OBJDIR) -DOPJ_STATIC
+	$(CC_CMD) -DOPJ_STATIC
 
 endif
 

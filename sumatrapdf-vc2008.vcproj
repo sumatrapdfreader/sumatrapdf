@@ -505,11 +505,19 @@
 					>
 				</File>
 				<File
+					RelativePath=".\mupdf\fitz\res_bitmap.c"
+					>
+				</File>
+				<File
 					RelativePath=".\mupdf\fitz\res_colorspace.c"
 					>
 				</File>
 				<File
 					RelativePath=".\mupdf\fitz\res_font.c"
+					>
+				</File>
+				<File
+					RelativePath=".\mupdf\fitz\res_halftone.c"
 					>
 				</File>
 				<File
@@ -597,11 +605,11 @@
 				Name="pdf"
 				>
 				<File
-					RelativePath=".\mupdf\pdf\cmapdump.c"
+					RelativePath=".\mupdf\pdf\data_encodings.h"
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\pdf\fontdump.c"
+					RelativePath=".\mupdf\pdf\data_glyphlist.h"
 					>
 				</File>
 				<File
@@ -645,23 +653,15 @@
 					>
 				</File>
 				<File
+					RelativePath=".\mupdf\pdf\pdf_encoding.c"
+					>
+				</File>
+				<File
 					RelativePath=".\mupdf\pdf\pdf_font.c"
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\pdf\pdf_fontagl.c"
-					>
-				</File>
-				<File
-					RelativePath=".\mupdf\pdf\pdf_fontenc.c"
-					>
-				</File>
-				<File
 					RelativePath=".\mupdf\pdf\pdf_fontfile.c"
-					>
-				</File>
-				<File
-					RelativePath=".\mupdf\pdf\pdf_fontmtx.c"
 					>
 				</File>
 				<File
@@ -682,6 +682,10 @@
 				</File>
 				<File
 					RelativePath=".\mupdf\pdf\pdf_lex.c"
+					>
+				</File>
+				<File
+					RelativePath=".\mupdf\pdf\pdf_metrics.c"
 					>
 				</File>
 				<File

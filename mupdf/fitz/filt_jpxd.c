@@ -19,7 +19,7 @@ static void fz_opj_info_callback(const char *msg, void *client_data)
 }
 
 fz_error
-fz_load_jpx_image(fz_pixmap **imgp, unsigned char *data, int size)
+fz_load_jpx_image(fz_pixmap **imgp, unsigned char *data, int size, fz_colorspace *defcs)
 {
 	fz_pixmap *img;
 	opj_event_mgr_t evtmgr;
@@ -30,7 +30,7 @@ fz_load_jpx_image(fz_pixmap **imgp, unsigned char *data, int size)
 	fz_colorspace *colorspace;
 	unsigned char *p;
 	int format;
-	int n, w, h, depth, sgnd;
+	int a, n, w, h, depth, sgnd;
 	int x, y, k, v;
 
 	if (size < 2)
@@ -79,15 +79,34 @@ fz_load_jpx_image(fz_pixmap **imgp, unsigned char *data, int size)
 	depth = jpx->comps[0].prec;
 	sgnd = jpx->comps[0].sgnd;
 
-	switch (n)
+	if (jpx->color_space == CLRSPC_SRGB && n == 4) { n = 3; a = 1; }
+	else if (jpx->color_space == CLRSPC_SYCC && n == 4) { n = 3; a = 1; }
+	else if (n == 2) { n = 1; a = 1; }
+	else if (n > 4) { n = 4; a = 1; }
+	else { a = 0; }
+
+	if (defcs)
 	{
-	case 1: colorspace = fz_device_gray; break;
-	case 3: colorspace = fz_device_rgb; break;
-	case 4: colorspace = fz_device_cmyk; break;
-	default:
-		/* TODO: SMaskInData */
-		opj_image_destroy(jpx);
-		return fz_throw("unknown jpx colorspace (%d components)", n);
+		if (defcs->n == n)
+		{
+			colorspace = defcs;
+		}
+		else
+		{
+			fz_warn("jpx file and dict colorspaces do not match");
+			fz_drop_colorspace(defcs);
+			defcs = NULL;
+		}
+	}
+
+	if (!defcs)
+	{
+		switch (n)
+		{
+		case 1: colorspace = fz_device_gray; break;
+		case 3: colorspace = fz_device_rgb; break;
+		case 4: colorspace = fz_device_cmyk; break;
+		}
 	}
 
 	/* SumatraPDF: don't abort on OOM when loading images */
@@ -103,7 +122,7 @@ fz_load_jpx_image(fz_pixmap **imgp, unsigned char *data, int size)
 	{
 		for (x = 0; x < w; x++)
 		{
-			for (k = 0; k < n; k++)
+			for (k = 0; k < n + a; k++)
 			{
 				v = jpx->comps[k].data[y * w + x];
 				if (sgnd)
@@ -112,8 +131,21 @@ fz_load_jpx_image(fz_pixmap **imgp, unsigned char *data, int size)
 					v = v >> (depth - 8);
 				*p++ = v;
 			}
-			*p++ = 255; /* TODO: SMaskInData */
+			if (!a)
+				*p++ = 255;
 		}
+	}
+
+	if (a)
+	{
+		if (n == 4)
+		{
+			fz_pixmap *tmp = fz_new_pixmap(fz_device_rgb, 0, 0, w, h);
+			fz_convert_pixmap(img, tmp);
+			fz_drop_pixmap(img);
+			img = tmp;
+		}
+		fz_premultiply_pixmap(img);
 	}
 
 	opj_image_destroy(jpx);

@@ -319,22 +319,37 @@ pdf_load_jpx_image(fz_pixmap **imgp, pdf_xref *xref, fz_obj *dict)
 {
 	fz_error error;
 	fz_buffer *buf;
+	fz_colorspace *colorspace;
 	fz_pixmap *img;
 	fz_obj *obj;
 
 	pdf_log_image("jpeg2000\n");
 
+	colorspace = NULL;
+
 	error = pdf_load_stream(&buf, xref, fz_to_num(dict), fz_to_gen(dict));
 	if (error)
 		return fz_rethrow(error, "cannot load jpx image data");
 
-	error = fz_load_jpx_image(&img, buf->data, buf->len);
+	obj = fz_dict_gets(dict, "ColorSpace");
+	if (obj)
+	{
+		error = pdf_load_colorspace(&colorspace, xref, obj);
+		if (error)
+			fz_catch(error, "cannot load image colorspace");
+	}
+
+	error = fz_load_jpx_image(&img, buf->data, buf->len, colorspace);
 	if (error)
 	{
+		if (colorspace)
+			fz_drop_colorspace(colorspace);
 		fz_drop_buffer(buf);
 		return fz_rethrow(error, "cannot load jpx image");
 	}
 
+	if (colorspace)
+		fz_drop_colorspace(colorspace);
 	fz_drop_buffer(buf);
 
 	obj = fz_dict_getsa(dict, "SMask", "Mask");
@@ -345,37 +360,6 @@ pdf_load_jpx_image(fz_pixmap **imgp, pdf_xref *xref, fz_obj *dict)
 		{
 			fz_drop_pixmap(img);
 			return fz_rethrow(error, "cannot load image mask/softmask");
-		}
-	}
-
-	obj = fz_dict_gets(dict, "ColorSpace");
-	if (obj)
-	{
-		fz_colorspace *original = img->colorspace;
-		img->colorspace = NULL;
-
-		error = pdf_load_colorspace(&img->colorspace, xref, obj);
-		if (error)
-		{
-			fz_drop_colorspace(original);
-			return fz_rethrow(error, "cannot load image colorspace");
-		}
-
-		if (original->n != img->colorspace->n)
-		{
-			fz_warn("jpeg-2000 colorspace (%s) does not match promised colorspace (%s)", original->name, img->colorspace->name);
-			fz_drop_colorspace(img->colorspace);
-			img->colorspace = original;
-		}
-		else
-			fz_drop_colorspace(original);
-
-		if (!strcmp(img->colorspace->name, "Indexed"))
-		{
-			fz_pixmap *conv;
-			conv = pdf_expand_indexed_pixmap(img);
-			fz_drop_pixmap(img);
-			img = conv;
 		}
 	}
 

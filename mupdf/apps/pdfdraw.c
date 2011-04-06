@@ -301,6 +301,13 @@ static void drawpage(pdf_xref *xref, int pagenum)
 				fz_write_pam(pix, buf, savealpha);
 			else if (strstr(output, ".png"))
 				fz_write_png(pix, buf, savealpha);
+			else if (strstr(output, ".pbm")) {
+				fz_halftone *ht = fz_get_default_halftone(1);
+				fz_bitmap *bit = fz_halftone_pixmap(pix, ht);
+				fz_write_pbm(bit, buf);
+				fz_drop_bitmap(bit);
+				fz_drop_halftone(ht);
+			}
 		}
 
 		if (showmd5)
@@ -442,6 +449,8 @@ int main(int argc, char **argv)
 		colorspace = fz_device_gray;
 	if (output && strstr(output, ".ppm"))
 		colorspace = fz_device_rgb;
+	if (output && strstr(output, ".pbm"))
+		colorspace = fz_device_gray;
 
 	timing.count = 0;
 	timing.total = 0;

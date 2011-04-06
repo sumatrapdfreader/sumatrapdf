@@ -313,8 +313,6 @@ struct pdf_cmap_s
 	unsigned short *table;
 };
 
-extern pdf_cmap *pdf_cmap_table[]; /* list of builtin system cmaps */
-
 pdf_cmap *pdf_new_cmap(void);
 pdf_cmap *pdf_keep_cmap(pdf_cmap *cmap);
 void pdf_drop_cmap(pdf_cmap *cmap);
@@ -338,23 +336,36 @@ pdf_cmap *pdf_new_identity_cmap(int wmode, int bytes);
 fz_error pdf_parse_cmap(pdf_cmap **cmapp, fz_stream *file);
 fz_error pdf_load_embedded_cmap(pdf_cmap **cmapp, pdf_xref *xref, fz_obj *ref);
 fz_error pdf_load_system_cmap(pdf_cmap **cmapp, char *name);
+pdf_cmap *pdf_find_builtin_cmap(char *cmap_name);
 
 /*
  * Font
  */
 
+enum
+{
+	PDF_FD_FIXED_PITCH = 1 << 0,
+	PDF_FD_SERIF = 1 << 1,
+	PDF_FD_SYMBOLIC = 1 << 2,
+	PDF_FD_SCRIPT = 1 << 3,
+	PDF_FD_NONSYMBOLIC = 1 << 5,
+	PDF_FD_ITALIC = 1 << 6,
+	PDF_FD_ALL_CAP = 1 << 16,
+	PDF_FD_SMALL_CAP = 1 << 17,
+	PDF_FD_FORCE_BOLD = 1 << 18
+};
+
+enum { PDF_ROS_CNS, PDF_ROS_GB, PDF_ROS_JAPAN, PDF_ROS_KOREA };
+
 void pdf_load_encoding(char **estrings, char *encoding);
 int pdf_lookup_agl(char *name);
-char **pdf_lookup_agl_names(int ucs);
+const char **pdf_lookup_agl_duplicates(int ucs);
 
 extern const unsigned short pdf_doc_encoding[256];
 extern const char * const pdf_mac_roman[256];
 extern const char * const pdf_mac_expert[256];
 extern const char * const pdf_win_ansi[256];
 extern const char * const pdf_standard[256];
-extern const char * const pdf_expert[256];
-extern const char * const pdf_symbol[256];
-extern const char * const pdf_zapfdingbats[256];
 
 typedef struct pdf_font_desc_s pdf_font_desc;
 typedef struct pdf_hmtx_s pdf_hmtx;
@@ -413,7 +424,7 @@ struct pdf_font_desc_s
 	pdf_vmtx dvmtx;
 	pdf_vmtx *vmtx;
 
-	int isembedded;
+	int is_embedded;
 
 	/* SumatraPDF: store vertical glyph substitution data for the font's lifetime */
 	void *_vsubst;
@@ -434,9 +445,12 @@ pdf_vmtx pdf_get_vmtx(pdf_font_desc *font, int cid);
 fz_error pdf_load_to_unicode(pdf_font_desc *font, pdf_xref *xref, char **strings, char *collection, fz_obj *cmapstm);
 
 /* fontfile.c */
-fz_error pdf_load_builtin_font(pdf_font_desc *font, char *basefont);
-fz_error pdf_load_embedded_font(pdf_font_desc *font, pdf_xref *xref, fz_obj *stmref);
-fz_error pdf_load_system_font(pdf_font_desc *font, char *basefont, char *collection);
+unsigned char *pdf_find_builtin_font(char *name, unsigned int *len);
+unsigned char *pdf_find_builtin_cjk_font(int ros, int gothic, unsigned int *len);
+
+/* SumatraPDF: use locally installed fonts */
+fz_error pdf_load_windows_font(pdf_font_desc *font, char *fontname);
+fz_error pdf_load_similar_cjk_font(pdf_font_desc *font, int ros, int gothic);
 
 /* type3.c */
 fz_error pdf_load_type3_font(pdf_font_desc **fontp, pdf_xref *xref, fz_obj *rdb, fz_obj *obj);

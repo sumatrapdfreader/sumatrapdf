@@ -35,7 +35,7 @@ static char *base_font_names[14][7] =
 	{ "ZapfDingbats", NULL }
 };
 
-static int isdynalab(char *name)
+static int is_dynalab(char *name)
 {
 	if (strstr(name, "HuaTian"))
 		return 1;
@@ -144,17 +144,229 @@ static int ft_width(pdf_font_desc *fontdesc, int cid)
 	return ((FT_Face)fontdesc->font->ft_face)->glyph->advance.x;
 }
 
-/*
- * Basic encoding tables
- */
-
-static int mre_code(char *name)
+static int lookup_mre_code(char *name)
 {
 	int i;
 	for (i = 0; i < 256; i++)
 		if (pdf_mac_roman[i] && !strcmp(name, pdf_mac_roman[i]))
 			return i;
 	return -1;
+}
+
+/*
+ * Load font files.
+ */
+
+static fz_error
+pdf_load_builtin_font(pdf_font_desc *fontdesc, char *fontname)
+{
+	fz_error error;
+	unsigned char *data;
+	unsigned int len;
+
+	data = pdf_find_builtin_font(fontname, &len);
+	if (!data)
+	{
+#ifdef WIN32
+		/* we use built-in fonts in addition to those installed on windows
+		   because the metric for Times-Roman in windows fonts seems wrong
+		   and we end up with over-lapping text if this font is used.
+		   poppler doesn't have this problem even when using windows fonts
+		   so maybe there's a better fix. */
+		error = pdf_load_windows_font(fontdesc, fontname);
+		if (fz_okay == error)
+			return fz_okay;
+#endif
+		return fz_throw("cannot find font: '%s'", fontname);
+	}
+
+	pdf_log_font("load builtin font %s\n", fontname);
+
+	error = fz_new_font_from_memory(&fontdesc->font, data, len, 0);
+	if (error)
+		return fz_rethrow(error, "cannot load freetype font from memory");
+
+	fz_strlcpy(fontdesc->font->name, fontname, sizeof fontdesc->font->name);
+
+	if (!strcmp(fontname, "Symbol") || !strcmp(fontname, "ZapfDingbats"))
+		fontdesc->flags |= PDF_FD_SYMBOLIC;
+
+	return fz_okay;
+}
+
+static fz_error
+pdf_load_builtin_cjk_font(pdf_font_desc *fontdesc, int ros, int gothic)
+{
+	fz_error error;
+	unsigned char *data;
+	unsigned int len;
+
+#ifdef WIN32
+	/* Try to fall back to a reasonable TrueType font that might be installed locally */
+	error = pdf_load_similar_cjk_font(fontdesc, ros, gothic);
+	if (!error)
+	{
+		fontdesc->font->ft_substitute = 1;
+		return fz_okay;
+	}
+#ifdef NOCJKFONT
+	/* If no CJK fallback font is builtin, maybe one has been shipped separately */
+	error = pdf_load_windows_font(fontdesc, "DroidSansFallback");
+	if (!error)
+	{
+		fontdesc->font->ft_substitute = 1;
+		return fz_okay;
+	}
+#endif
+#endif
+
+	pdf_log_font("loading builtin CJK font\n");
+
+	data = pdf_find_builtin_cjk_font(ros, gothic, &len);
+	if (!data)
+		return fz_throw("cannot find builtin CJK font");
+
+	error = fz_new_font_from_memory(&fontdesc->font, data, len, 0);
+	if (error)
+		return fz_rethrow(error, "cannot load builtin CJK font");
+
+	fontdesc->font->ft_substitute = 1;
+	return fz_okay;
+}
+
+static fz_error
+pdf_load_system_font(pdf_font_desc *fontdesc, char *fontname, char *collection)
+{
+	fz_error error;
+	char *name;
+
+	int isbold = 0;
+	int isitalic = 0;
+	int isserif = 0;
+	int isscript = 0;
+	int isfixed = 0;
+
+#ifdef WIN32
+	/* try to find a precise match in Windows' fonts before falling back to a built-in one */
+	error = pdf_load_windows_font(fontdesc, fontname);
+	if (!error)
+	{
+		/* TODO: this seems to be required at least for MS-Mincho - why? */
+		if (collection)
+			fontdesc->font->ft_substitute = 1;
+		return fz_okay;
+	}
+#endif
+
+	if (strstr(fontname, "Bold"))
+		isbold = 1;
+	if (strstr(fontname, "Italic"))
+		isitalic = 1;
+	if (strstr(fontname, "Oblique"))
+		isitalic = 1;
+
+	if (fontdesc->flags & PDF_FD_FIXED_PITCH)
+		isfixed = 1;
+	if (fontdesc->flags & PDF_FD_SERIF)
+		isserif = 1;
+	if (fontdesc->flags & PDF_FD_ITALIC)
+		isitalic = 1;
+	if (fontdesc->flags & PDF_FD_SCRIPT)
+		isscript = 1;
+	if (fontdesc->flags & PDF_FD_FORCE_BOLD)
+		isbold = 1;
+
+	pdf_log_font("fixed-%d serif-%d italic-%d script-%d bold-%d\n",
+		isfixed, isserif, isitalic, isscript, isbold);
+
+	if (collection)
+	{
+		if (!strcmp(collection, "Adobe-CNS1"))
+			return pdf_load_builtin_cjk_font(fontdesc, PDF_ROS_CNS, !isserif);
+		else if (!strcmp(collection, "Adobe-GB1"))
+			return pdf_load_builtin_cjk_font(fontdesc, PDF_ROS_GB, !isserif);
+		else if (!strcmp(collection, "Adobe-Japan1"))
+			return pdf_load_builtin_cjk_font(fontdesc, PDF_ROS_JAPAN, !isserif);
+		else if (!strcmp(collection, "Adobe-Japan2"))
+			return pdf_load_builtin_cjk_font(fontdesc, PDF_ROS_JAPAN, !isserif);
+		else if (!strcmp(collection, "Adobe-Korea1"))
+			return pdf_load_builtin_cjk_font(fontdesc, PDF_ROS_KOREA, !isserif);
+		fz_warn("unknown cid collection: %s", collection);
+	}
+
+	else if (isfixed)
+	{
+		if (isitalic) {
+			if (isbold) name = "Courier-BoldOblique";
+			else name = "Courier-Oblique";
+		}
+		else {
+			if (isbold) name = "Courier-Bold";
+			else name = "Courier";
+		}
+	}
+
+	else if (isserif)
+	{
+		if (isitalic) {
+			if (isbold) name = "Times-BoldItalic";
+			else name = "Times-Italic";
+		}
+		else {
+			if (isbold) name = "Times-Bold";
+			else name = "Times-Roman";
+		}
+	}
+
+	else
+	{
+		if (isitalic) {
+			if (isbold) name = "Helvetica-BoldOblique";
+			else name = "Helvetica-Oblique";
+		}
+		else {
+			if (isbold) name = "Helvetica-Bold";
+			else name = "Helvetica";
+		}
+	}
+
+	error = pdf_load_builtin_font(fontdesc, name);
+	if (error)
+		return fz_throw("cannot load builtin substitute font: %s", name);
+
+	/* it's a substitute font: override the metrics */
+	fontdesc->font->ft_substitute = 1;
+
+	return fz_okay;
+}
+
+static fz_error
+pdf_load_embedded_font(pdf_font_desc *fontdesc, pdf_xref *xref, fz_obj *stmref)
+{
+	fz_error error;
+	fz_buffer *buf;
+
+	pdf_log_font("load embedded font\n");
+
+	error = pdf_load_stream(&buf, xref, fz_to_num(stmref), fz_to_gen(stmref));
+	if (error)
+		return fz_rethrow(error, "cannot load font stream (%d %d R)", fz_to_num(stmref), fz_to_gen(stmref));
+
+	error = fz_new_font_from_memory(&fontdesc->font, buf->data, buf->len, 0);
+	if (error)
+	{
+		fz_drop_buffer(buf);
+		return fz_rethrow(error, "cannot load embedded font (%d %d R)", fz_to_num(stmref), fz_to_gen(stmref));
+	}
+
+	/* save the buffer so we can free it later */
+	fontdesc->font->ft_data = buf->data;
+	fontdesc->font->ft_size = buf->len;
+	fz_free(buf); /* only free the fz_buffer struct, not the contained data */
+
+	fontdesc->is_embedded = 1;
+
+	return fz_okay;
 }
 
 /*
@@ -237,7 +449,7 @@ pdf_new_font_desc(void)
 	fontdesc->dvmtx.y = 880;
 	fontdesc->dvmtx.w = -1000;
 
-	fontdesc->isembedded = 0;
+	fontdesc->is_embedded = 0;
 
 	/* SumatraPDF: vertical glyph substitution */
 	fontdesc->_vsubst = NULL;
@@ -260,8 +472,8 @@ load_simple_font(pdf_font_desc **fontdescp, pdf_xref *xref, fz_obj *dict)
 	pdf_font_desc *fontdesc;
 	FT_Face face;
 	FT_CharMap cmap;
-	int kind;
 	int symbolic;
+	int kind;
 
 	char *basefont;
 	char *fontname;
@@ -386,7 +598,7 @@ load_simple_font(pdf_font_desc **fontdescp, pdf_xref *xref, fz_obj *dict)
 			base = fz_dict_gets(encoding, "BaseEncoding");
 			if (fz_is_name(base))
 				pdf_load_encoding(estrings, fz_to_name(base));
-			else if (!fontdesc->isembedded && !symbolic)
+			else if (!fontdesc->is_embedded && !symbolic)
 				pdf_load_encoding(estrings, "StandardEncoding");
 
 			diff = fz_dict_gets(encoding, "Differences");
@@ -424,13 +636,13 @@ load_simple_font(pdf_font_desc **fontdescp, pdf_xref *xref, fz_obj *dict)
 				if (etable[i] == 0)
 				{
 					int aglcode = pdf_lookup_agl(estrings[i]);
-					char **aglnames = pdf_lookup_agl_names(aglcode);
-					while (*aglnames)
+					const char **dupnames = pdf_lookup_agl_duplicates(aglcode);
+					while (*dupnames)
 					{
-						etable[i] = FT_Get_Name_Index(face, *aglnames);
+						etable[i] = FT_Get_Name_Index(face, (char*)*dupnames);
 						if (etable[i])
 							break;
-						aglnames++;
+						dupnames++;
 					}
 				}
 			}
@@ -466,7 +678,7 @@ load_simple_font(pdf_font_desc **fontdescp, pdf_xref *xref, fz_obj *dict)
 			{
 				if (estrings[i])
 				{
-					k = mre_code(estrings[i]);
+					k = lookup_mre_code(estrings[i]);
 					if (k <= 0)
 						etable[i] = FT_Get_Name_Index(face, estrings[i]);
 					else
@@ -636,7 +848,7 @@ load_cid_font(pdf_font_desc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj *e
 	/* Check for DynaLab fonts that must use hinting */
 	if (kind == TRUETYPE)
 	{
-		if (FT_IS_TRICKY(face) || isdynalab(fontdesc->font->name))
+		if (FT_IS_TRICKY(face) || is_dynalab(fontdesc->font->name))
 		{
 			fontdesc->font->ft_hint = 1;
 			pdf_log_font("forced hinting for dynalab font\n");
