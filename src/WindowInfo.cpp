@@ -9,7 +9,6 @@
 #include "StrUtil.h"
 #include "WinUtil.h"
 #include "FileWatch.h"
-#include "ComicBook.h"
 
 WindowInfo::WindowInfo(HWND hwnd) :
     dm(NULL), hwndFrame(hwnd),
@@ -30,8 +29,7 @@ WindowInfo::WindowInfo(HWND hwnd) :
     loadedFilePath(NULL), currPageNo(0),
     xScrollSpeed(0), yScrollSpeed(0), wheelAccumDelta(0),
     delayedRepaintTimer(0), resizingTocBox(false), watcher(NULL),
-    pdfsync(NULL), threadStressRunning(false),
-    cbdm(NULL)
+    pdfsync(NULL), threadStressRunning(false)
 {
     ZeroMemory(&selectionRect, sizeof(selectionRect));
     prevCanvasSize.dx = prevCanvasSize.dy = -1;
@@ -60,8 +58,6 @@ WindowInfo::~WindowInfo() {
 
     delete this->tocRoot;
     free(this->tocState);
-
-    delete cbdm;
 }
 
 void WindowInfo::UpdateCanvasSize()
@@ -219,18 +215,16 @@ void WindowInfo::ResizeIfNeeded(bool resizeWindow)
     if (!resizeWindow)
         return;
 
-    if (PdfLoaded())
+    if (IsDocLoaded())
         dm->changeTotalDrawAreaSize(this->canvasRc.Size());
-    else if (ComicBookLoaded()) {
-        // TODO: code for comic book
-    } else
+    else
         assert(false);
 }
 
 void WindowInfo::ToggleZoom()
 {
     assert(this->dm);
-    if (!this->PdfLoaded()) return;
+    if (!this->IsDocLoaded()) return;
 
     this->prevCanvasSize.dx = this->prevCanvasSize.dy = -1;
     if (ZOOM_FIT_PAGE == this->dm->zoomVirtual())
@@ -244,7 +238,7 @@ void WindowInfo::ToggleZoom()
 void WindowInfo::ZoomToSelection(float factor, bool relative)
 {
     assert(this->dm);
-    if (!this->PdfLoaded()) return;
+    if (!this->IsDocLoaded()) return;
 
     PointI pt;
     bool zoomToPt = this->showSelection && this->selectionOnPage;
@@ -294,7 +288,7 @@ void WindowInfo::ZoomToSelection(float factor, bool relative)
 
 void WindowInfo::UpdateToolbarState()
 {
-    if (!this->PdfLoaded())
+    if (!this->IsDocLoaded())
         return;
 
     WORD state = (WORD)SendMessage(this->hwndToolbar, TB_GETSTATE, IDT_VIEW_FIT_WIDTH, 0);
@@ -321,7 +315,7 @@ void WindowInfo::UpdateToolbarState()
 void WindowInfo::MoveDocBy(int dx, int dy)
 {
     assert(this->dm);
-    if (!this->PdfLoaded()) return;
+    if (!this->IsDocLoaded()) return;
     assert(!this->linkOnLastButtonDown);
     if (this->linkOnLastButtonDown) return;
     if (0 != dx)

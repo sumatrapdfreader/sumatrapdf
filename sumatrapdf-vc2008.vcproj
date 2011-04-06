@@ -104,14 +104,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\ComicBook.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\ComicBook.h"
-				>
-			</File>
-			<File
 				RelativePath=".\src\CrashHandler.cpp"
 				>
 			</File>

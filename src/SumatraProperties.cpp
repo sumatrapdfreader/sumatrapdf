@@ -296,7 +296,7 @@ void OnMenuProperties(WindowInfo *win)
         return;
     }
 
-    if (!win->PdfLoaded())
+    if (!win->IsDocLoaded())
         return;
     BaseEngine *engine = win->dm->engine;
 

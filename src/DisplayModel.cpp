@@ -897,10 +897,10 @@ void DisplayModel::changeTotalDrawAreaSize(SizeI totalDrawAreaSize)
 {
     ScrollState ss;
 
-    bool isDocLoaded = getScrollState(&ss);
+    bool isIsDocLoaded = getScrollState(&ss);
     setTotalDrawAreaSize(totalDrawAreaSize);
     relayout(_zoomVirtual, _rotation);
-    if (isDocLoaded) {
+    if (isIsDocLoaded) {
         // when fitting to content, let goToPage do the necessary scrolling
         if (_zoomVirtual != ZOOM_FIT_CONTENT)
             setScrollState(&ss);
@@ -1418,7 +1418,7 @@ void DisplayModel::goToTocLink(pdf_link* link)
                 ScopedMem<TCHAR> combinedPath(Path::Join(basePath, path));
                 // TODO: respect fz_to_bool(fz_dict_gets(link->dest, "NewWindow"))
                 WindowInfo *newWin = LoadDocument(combinedPath);
-                if (newWin && newWin->PdfLoaded())
+                if (newWin && newWin->IsDocLoaded())
                     newWin->dm->goToPdfDest(fz_dict_gets(link->dest, "D"));
             }
             free(path);

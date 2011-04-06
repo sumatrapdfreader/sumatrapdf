@@ -766,10 +766,10 @@ static const TCHAR *HandleSyncCmd(const TCHAR *cmd, DDEACK& ack)
     // if not then open it
     if (newWindow || !win)
         win = LoadDocument(pdfFile, !newWindow ? win : NULL);
-    else if (win && !win->PdfLoaded())
+    else if (win && !win->IsDocLoaded())
         win->Reload();
     
-    if (!win || !win->PdfLoaded())
+    if (!win || !win->IsDocLoaded())
         return next;
     if (!win->pdfsync) {
         DBG_OUT("PdfSync: No sync file loaded!\n");
@@ -777,7 +777,7 @@ static const TCHAR *HandleSyncCmd(const TCHAR *cmd, DDEACK& ack)
     }
 
     ack.fAck = 1;
-    assert(win->PdfLoaded());
+    assert(win->IsDocLoaded());
     UINT page;
     Vec<RectI> rects;
     UINT ret = win->pdfsync->source_to_pdf(srcFile, line, col, &page, rects);
@@ -804,7 +804,7 @@ static const TCHAR *HandleOpenCmd(const TCHAR *cmd, DDEACK& ack)
     WindowInfo *win = FindWindowInfoByFile(pdfFile);
     if (newWindow || !win)
         win = LoadDocument(pdfFile, !newWindow ? win : NULL);
-    else if (win && !win->PdfLoaded()) {
+    else if (win && !win->IsDocLoaded()) {
         win->Reload();
         forceRefresh = 0;
     }
@@ -835,9 +835,9 @@ static const TCHAR *HandleGotoCmd(const TCHAR *cmd, DDEACK& ack)
     WindowInfo *win = FindWindowInfoByFile(pdfFile);
     if (!win)
         return next;
-    if (!win->PdfLoaded()) {
+    if (!win->IsDocLoaded()) {
         win->Reload();
-        if (!win->PdfLoaded())
+        if (!win->IsDocLoaded())
             return next;
     }
 
@@ -866,9 +866,9 @@ static const TCHAR *HandlePageCmd(const TCHAR *cmd, DDEACK& ack)
     WindowInfo *win = FindWindowInfoByFile(pdfFile);
     if (!win)
         return next;
-    if (!win->PdfLoaded()) {
+    if (!win->IsDocLoaded()) {
         win->Reload();
-        if (!win->PdfLoaded())
+        if (!win->IsDocLoaded())
             return next;
     }
 
@@ -899,9 +899,9 @@ static const TCHAR *HandleSetViewCmd(const TCHAR *cmd, DDEACK& ack)
     WindowInfo *win = FindWindowInfoByFile(pdfFile);
     if (!win)
         return next;
-    if (!win->PdfLoaded()) {
+    if (!win->IsDocLoaded()) {
         win->Reload();
-        if (!win->PdfLoaded())
+        if (!win->IsDocLoaded())
             return next;
     }
 

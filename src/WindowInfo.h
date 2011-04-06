@@ -14,8 +14,6 @@
 class DisplayModel;
 class FileWatcher;
 class Synchronizer;
-class ComicBookPage;
-class ComicBookDisplayModel;
 
 /* Describes actions which can be performed by mouse */
 enum MouseAction {
@@ -52,11 +50,10 @@ public:
     ~WindowInfo();
 
     // TODO: error windows currently have
-    //       !IsAboutWindow() && !PdfLoaded() && !ComicBookLoaded()
-    //       which doesn't allow distinction between PDF and ComicBook errors
+    //       !IsAboutWindow() && !IsDocLoaded()
+    //       which doesn't allow distinction between PDF, XPS and ComicBook errors
     bool IsAboutWindow() const { return !loadedFilePath; }
-    bool PdfLoaded() const { return this->dm != NULL; }
-    bool ComicBookLoaded() const { return cbdm != NULL; }
+    bool IsDocLoaded() const { return this->dm != NULL; }
 
     TCHAR *         loadedFilePath;
     bool            threadStressRunning;
@@ -173,9 +170,6 @@ public:
                         int hideStep;       // value used to gradually hide the markers
                     } fwdsearchmark;
 
-    // Stuff related to comic book handling
-    ComicBookDisplayModel *cbdm;
-
     void FocusPageNoEdit();
     void UpdateToolbarState();
 
@@ -224,6 +218,6 @@ public:
 
 WindowInfo* FindWindowInfoByFile(TCHAR *file);
 WindowInfo* FindWindowInfoByHwnd(HWND hwnd);
-WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win=NULL, bool showWin=true);
+WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win=NULL, bool showWin=true, bool forceReuse=false);
 
 #endif
