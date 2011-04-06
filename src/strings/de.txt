@@ -205,6 +205,9 @@ Sprache ändern… (Change Language)
 Check for &Updates
 Nach &neuer Version suchen
 
+Comic books
+Comicbücher
+
 Continuous
 Fortlaufend
 

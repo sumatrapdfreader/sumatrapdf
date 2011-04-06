@@ -96,6 +96,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\CbxEngine.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\CbxEngine.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\ComicBook.cpp"
 				>
 			</File>

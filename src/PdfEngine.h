@@ -85,16 +85,14 @@ public:
     virtual RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
                          RectD *pageRect=NULL, /* if NULL: defaults to the page's mediabox */
                          RenderTarget target=Target_View, bool useGdi=false);
-    virtual bool RenderPage(HDC hDC, int pageNo, RectI *screenRect,
+    virtual bool RenderPage(HDC hDC, int pageNo, RectI screenRect,
                          float zoom=0, int rotation=0,
                          RectD *pageRect=NULL, RenderTarget target=Target_View) {
         return renderPage(hDC, getPdfPage(pageNo), screenRect, NULL, zoom, rotation, pageRect, target);
     }
 
-    virtual PointD ApplyTransform(PointD pt, int pageNo, float zoom, int rotate);
-    virtual RectD ApplyTransform(RectD rect, int pageNo, float zoom, int rotate);
-    virtual PointD RevertTransform(PointD pt, int pageNo, float zoom, int rotate);
-    virtual RectD RevertTransform(RectD rect, int pageNo, float zoom, int rotate);
+    virtual PointD Transform(PointD pt, int pageNo, float zoom, int rotate, bool inverse=false);
+    virtual RectD Transform(RectD rect, int pageNo, float zoom, int rotate, bool inverse=false);
 
     virtual unsigned char *GetFileData(size_t *cbCount);
     virtual TCHAR * ExtractPageText(int pageNo, TCHAR *lineSep=DOS_NEWLINE, RectI **coords_out=NULL, RenderTarget target=Target_View);
@@ -144,7 +142,7 @@ protected:
     pdf_page      * getPdfPage(int pageNo, bool failIfBusy=false);
     fz_matrix       viewctm(int pageNo, float zoom, int rotate);
     fz_matrix       viewctm(pdf_page *page, float zoom, int rotate);
-    bool            renderPage(HDC hDC, pdf_page *page, RectI *screenRect,
+    bool            renderPage(HDC hDC, pdf_page *page, RectI screenRect,
                                fz_matrix *ctm=NULL, float zoom=0, int rotation=0,
                                RectD *pageRect=NULL, RenderTarget target=Target_View);
     TCHAR         * ExtractPageText(pdf_page *page, TCHAR *lineSep=DOS_NEWLINE,
@@ -197,16 +195,14 @@ public:
     virtual RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
                          RectD *pageRect=NULL, /* if NULL: defaults to the page's mediabox */
                          RenderTarget target=Target_View, bool useGdi=false);
-    virtual bool RenderPage(HDC hDC, int pageNo, RectI *screenRect,
+    virtual bool RenderPage(HDC hDC, int pageNo, RectI screenRect,
                          float zoom=0, int rotation=0,
                          RectD *pageRect=NULL, RenderTarget target=Target_View) {
         return renderPage(hDC, getXpsPage(pageNo), screenRect, NULL, zoom, rotation, pageRect);
     }
 
-    virtual PointD ApplyTransform(PointD pt, int pageNo, float zoom, int rotate);
-    virtual RectD ApplyTransform(RectD rect, int pageNo, float zoom, int rotate);
-    virtual PointD RevertTransform(PointD pt, int pageNo, float zoom, int rotate);
-    virtual RectD RevertTransform(RectD rect, int pageNo, float zoom, int rotate);
+    virtual PointD Transform(PointD pt, int pageNo, float zoom, int rotate, bool inverse=false);
+    virtual RectD Transform(RectD rect, int pageNo, float zoom, int rotate, bool inverse=false);
 
     virtual unsigned char *GetFileData(size_t *cbCount);
     virtual TCHAR * ExtractPageText(int pageNo, TCHAR *lineSep=DOS_NEWLINE, RectI **coords_out=NULL, RenderTarget target=Target_View);
@@ -232,7 +228,7 @@ protected:
         return viewctm(getXpsPage(pageNo), zoom, rotate);
     }
     fz_matrix       viewctm(xps_page *page, float zoom, int rotate);
-    bool            renderPage(HDC hDC, xps_page *page, RectI *screenRect,
+    bool            renderPage(HDC hDC, xps_page *page, RectI screenRect,
                                fz_matrix *ctm=NULL, float zoom=0, int rotation=0,
                                RectD *pageRect=NULL);
     TCHAR         * ExtractPageText(xps_page *page, TCHAR *lineSep=DOS_NEWLINE,

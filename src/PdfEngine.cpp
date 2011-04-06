@@ -728,39 +728,27 @@ fz_matrix PdfEngine::viewctm(int pageNo, float zoom, int rotate)
     return viewctm(&partialPage, zoom, rotate);
 }
 
-PointD PdfEngine::ApplyTransform(PointD pt, int pageNo, float zoom, int rotate)
+PointD PdfEngine::Transform(PointD pt, int pageNo, float zoom, int rotate, bool inverse)
 {
-    fz_matrix ctm = viewctm(pageNo, zoom, rotate);
     fz_point pt2 = { (float)pt.x, (float)pt.y };
+    fz_matrix ctm = viewctm(pageNo, zoom, rotate);
+    if (inverse)
+        ctm = fz_invert_matrix(ctm);
     pt2 = fz_transform_point(ctm, pt2);
     return PointD(pt2.x, pt2.y);
 }
 
-RectD PdfEngine::ApplyTransform(RectD rect, int pageNo, float zoom, int rotate)
+RectD PdfEngine::Transform(RectD rect, int pageNo, float zoom, int rotate, bool inverse)
 {
-    fz_matrix ctm = viewctm(pageNo, zoom, rotate);
     fz_rect rect2 = fz_RectD_to_rect(rect);
+    fz_matrix ctm = viewctm(pageNo, zoom, rotate);
+    if (inverse)
+        ctm = fz_invert_matrix(ctm);
     rect2 = fz_transform_rect(ctm, rect2);
     return fz_rect_to_RectD(rect2);
 }
 
-PointD PdfEngine::RevertTransform(PointD pt, int pageNo, float zoom, int rotate)
-{
-    fz_matrix ctm = viewctm(pageNo, zoom, rotate);
-    fz_point pt2 = { (float)pt.x, (float)pt.y };
-    pt2 = fz_transform_point(fz_invert_matrix(ctm), pt2);
-    return PointD(pt2.x, pt2.y);
-}
-
-RectD PdfEngine::RevertTransform(RectD rect, int pageNo, float zoom, int rotate)
-{
-    fz_matrix ctm = viewctm(pageNo, zoom, rotate);
-    fz_rect rect2 = fz_RectD_to_rect(rect);
-    rect2 = fz_transform_rect(fz_invert_matrix(ctm), rect2);
-    return fz_rect_to_RectD(rect2);
-}
-
-bool PdfEngine::renderPage(HDC hDC, pdf_page *page, RectI *screenRect, fz_matrix *ctm, float zoom, int rotation, RectD *pageRect, RenderTarget target)
+bool PdfEngine::renderPage(HDC hDC, pdf_page *page, RectI screenRect, fz_matrix *ctm, float zoom, int rotation, RectD *pageRect, RenderTarget target)
 {
     if (!page)
         return false;
@@ -769,19 +757,19 @@ bool PdfEngine::renderPage(HDC hDC, pdf_page *page, RectI *screenRect, fz_matrix
     fz_matrix ctm2;
     if (!ctm) {
         if (!zoom)
-            zoom = min(1.0f * screenRect->dx / (page->mediabox.x1 - page->mediabox.x0),
-                       1.0f * screenRect->dy / (page->mediabox.y1 - page->mediabox.y0));
+            zoom = min(1.0f * screenRect.dx / (page->mediabox.x1 - page->mediabox.x0),
+                       1.0f * screenRect.dy / (page->mediabox.y1 - page->mediabox.y0));
         ctm2 = viewctm(page, zoom, rotation);
         fz_bbox bbox = fz_round_rect(fz_transform_rect(ctm2, pRect));
-        ctm2 = fz_concat(ctm2, fz_translate((float)screenRect->x - bbox.x0, (float)screenRect->y - bbox.y0));
+        ctm2 = fz_concat(ctm2, fz_translate((float)screenRect.x - bbox.x0, (float)screenRect.y - bbox.y0));
         ctm = &ctm2;
     }
 
     HBRUSH bgBrush = CreateSolidBrush(RGB(0xFF,0xFF,0xFF));
-    FillRect(hDC, &screenRect->ToRECT(), bgBrush); // initialize white background
+    FillRect(hDC, &screenRect.ToRECT(), bgBrush); // initialize white background
     DeleteObject(bgBrush);
 
-    fz_bbox clipBox = fz_RectI_to_bbox(*screenRect);
+    fz_bbox clipBox = fz_RectI_to_bbox(screenRect);
     fz_error error = runPage(page, fz_newgdiplusdevice(hDC, clipBox), *ctm, target, pRect);
 
     return fz_okay == error;
@@ -816,7 +804,7 @@ RenderedBitmap *PdfEngine::RenderBitmap(
 
         RectI rc(0, 0, w, h);
         RectD pageRect2 = fz_rect_to_RectD(pRect);
-        bool success = renderPage(hDCMem, page, &rc, &ctm, 0, 0, &pageRect2, target);
+        bool success = renderPage(hDCMem, page, rc, &ctm, 0, 0, &pageRect2, target);
         DeleteDC(hDCMem);
         ReleaseDC(NULL, hDC);
         if (!success) {
@@ -1507,39 +1495,27 @@ fz_matrix XpsEngine::viewctm(xps_page *page, float zoom, int rotate)
     return ctm;
 }
 
-PointD XpsEngine::ApplyTransform(PointD pt, int pageNo, float zoom, int rotate)
+PointD XpsEngine::Transform(PointD pt, int pageNo, float zoom, int rotate, bool inverse)
 {
-    fz_matrix ctm = viewctm(pageNo, zoom, rotate);
     fz_point pt2 = { (float)pt.x, (float)pt.y };
+    fz_matrix ctm = viewctm(pageNo, zoom, rotate);
+    if (inverse)
+        ctm = fz_invert_matrix(ctm);
     pt2 = fz_transform_point(ctm, pt2);
     return PointD(pt2.x, pt2.y);
 }
 
-RectD XpsEngine::ApplyTransform(RectD rect, int pageNo, float zoom, int rotate)
+RectD XpsEngine::Transform(RectD rect, int pageNo, float zoom, int rotate, bool inverse)
 {
-    fz_matrix ctm = viewctm(pageNo, zoom, rotate);
     fz_rect rect2 = fz_RectD_to_rect(rect);
+    fz_matrix ctm = viewctm(pageNo, zoom, rotate);
+    if (inverse)
+        ctm = fz_invert_matrix(ctm);
     rect2 = fz_transform_rect(ctm, rect2);
     return fz_rect_to_RectD(rect2);
 }
 
-PointD XpsEngine::RevertTransform(PointD pt, int pageNo, float zoom, int rotate)
-{
-    fz_matrix ctm = viewctm(pageNo, zoom, rotate);
-    fz_point pt2 = { (float)pt.x, (float)pt.y };
-    pt2 = fz_transform_point(fz_invert_matrix(ctm), pt2);
-    return PointD(pt2.x, pt2.y);
-}
-
-RectD XpsEngine::RevertTransform(RectD rect, int pageNo, float zoom, int rotate)
-{
-    fz_matrix ctm = viewctm(pageNo, zoom, rotate);
-    fz_rect rect2 = fz_RectD_to_rect(rect);
-    rect2 = fz_transform_rect(fz_invert_matrix(ctm), rect2);
-    return fz_rect_to_RectD(rect2);
-}
-
-bool XpsEngine::renderPage(HDC hDC, xps_page *page, RectI *screenRect, fz_matrix *ctm, float zoom, int rotation, RectD *pageRect)
+bool XpsEngine::renderPage(HDC hDC, xps_page *page, RectI screenRect, fz_matrix *ctm, float zoom, int rotation, RectD *pageRect)
 {
     if (!page)
         return false;
@@ -1549,19 +1525,19 @@ bool XpsEngine::renderPage(HDC hDC, xps_page *page, RectI *screenRect, fz_matrix
     fz_matrix ctm2;
     if (!ctm) {
         if (!zoom)
-            zoom = min(1.0f * screenRect->dx / (mediabox.x1 - mediabox.x0),
-                       1.0f * screenRect->dy / (mediabox.y1 - mediabox.y0));
+            zoom = min(1.0f * screenRect.dx / (mediabox.x1 - mediabox.x0),
+                       1.0f * screenRect.dy / (mediabox.y1 - mediabox.y0));
         ctm2 = viewctm(page, zoom, rotation);
         fz_bbox bbox = fz_round_rect(fz_transform_rect(ctm2, pRect));
-        ctm2 = fz_concat(ctm2, fz_translate((float)screenRect->x - bbox.x0, (float)screenRect->y - bbox.y0));
+        ctm2 = fz_concat(ctm2, fz_translate((float)screenRect.x - bbox.x0, (float)screenRect.y - bbox.y0));
         ctm = &ctm2;
     }
 
     HBRUSH bgBrush = CreateSolidBrush(RGB(0xFF,0xFF,0xFF));
-    FillRect(hDC, &screenRect->ToRECT(), bgBrush); // initialize white background
+    FillRect(hDC, &screenRect.ToRECT(), bgBrush); // initialize white background
     DeleteObject(bgBrush);
 
-    fz_bbox clipBox = fz_RectI_to_bbox(*screenRect);
+    fz_bbox clipBox = fz_RectI_to_bbox(screenRect);
     runPage(page, fz_newgdiplusdevice(hDC, clipBox), *ctm, pRect);
 
     return true;
@@ -1596,8 +1572,7 @@ RenderedBitmap *XpsEngine::RenderBitmap(
         DeleteObject(SelectObject(hDCMem, hbmp));
 
         RectI rc(0, 0, w, h);
-        RectD pageRect2 = fz_rect_to_RectD(pRect);
-        bool success = renderPage(hDCMem, page, &rc, &ctm, 0, 0, &pageRect2);
+        bool success = renderPage(hDCMem, page, rc, &ctm, 0, 0, pageRect);
         DeleteDC(hDCMem);
         ReleaseDC(NULL, hDC);
         if (!success) {

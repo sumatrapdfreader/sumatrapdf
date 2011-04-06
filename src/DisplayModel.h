@@ -5,6 +5,7 @@
 #define DisplayModel_h
 
 #include "PdfEngine.h"
+#include "CbxEngine.h"
 #include "DisplayState.h"
 #include "PdfSearch.h"
 
@@ -108,7 +109,7 @@ public:
         if (!engine) return NULL;
         return engine->RenderBitmap(pageNo, zoom, rotation, pageRect, target, useGdi);
     }
-    bool renderPage(HDC hDC, int pageNo, RectI *screenRect, float zoom=0, int rotation=0, RectD *pageRect=NULL, RenderTarget target=Target_View) {
+    bool renderPage(HDC hDC, int pageNo, RectI screenRect, float zoom=0, int rotation=0, RectD *pageRect=NULL, RenderTarget target=Target_View) {
         if (!engine) return false;
         return engine->RenderPage(hDC, pageNo, screenRect, zoom, rotation, pageRect, target);
     }
@@ -156,6 +157,7 @@ public:
     BaseEngine *    engine;
     PdfEngine *     pdfEngine;
     XpsEngine *     xpsEngine;
+    CbxEngine *     cbxEngine;
     PdfSelection *  textSelection;
 
     /* TODO: rename to pageInfo() */

@@ -1636,7 +1636,8 @@ static WindowInfo* LoadPdf(const TCHAR *fileName, WindowInfo *win, bool showWin,
 
 WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin)
 {
-#ifdef DEBUG
+    // TODO: rename LoadPdf to LoadDocument
+#if 0
     if (IsComicBook(fileName))
         return LoadComicBook(fileName, win, showWin);
 #endif
@@ -3138,7 +3139,7 @@ static void PrintToDevice(BaseEngine *engine, HDC hdc, LPDEVMODE devMode,
                 RectI rc = RectI::FromXY((int)(printableWidth - sSize.dx * zoom) / 2,
                                          (int)(printableHeight - sSize.dy * zoom) / 2,
                                          paperWidth, paperHeight);
-                engine->RenderPage(hdc, sel->pageNo, &rc, zoom, dm_rotation, clipRegion, Target_Print);
+                engine->RenderPage(hdc, sel->pageNo, rc, zoom, dm_rotation, clipRegion, Target_Print);
 #else
                 RenderedBitmap *bmp = engine->RenderBitmap(sel->pageNo, zoom, dm_rotation, clipRegion, Target_Print, gUseGdiRenderer);
                 if (bmp) {
@@ -3197,7 +3198,7 @@ static void PrintToDevice(BaseEngine *engine, HDC hdc, LPDEVMODE devMode,
                 // make sure to fit all content into the printable area when scaling
                 // and the whole document page on the physical paper
                 RectD rect = engine->PageContentBox(pageNo, Target_Print).Convert<double>();
-                RectF cbox = engine->ApplyTransform(rect, pageNo, 1.0, rotation).Convert<float>();
+                RectF cbox = engine->Transform(rect, pageNo, 1.0, rotation).Convert<float>();
                 zoom = min((float)printableWidth / cbox.dx,
                        min((float)printableHeight / cbox.dy,
                        min((float)paperWidth / pSize.dx,
@@ -3221,7 +3222,7 @@ static void PrintToDevice(BaseEngine *engine, HDC hdc, LPDEVMODE devMode,
             RectI rc = RectI::FromXY((int)(printableWidth - pSize.dx * zoom) / 2 - horizOffset,
                                      (int)(printableHeight - pSize.dy * zoom) / 2 - vertOffset,
                                      paperWidth, paperHeight);
-            engine->RenderPage(hdc, pageNo, &rc, zoom, rotation, NULL, Target_Print);
+            engine->RenderPage(hdc, pageNo, rc, zoom, rotation, NULL, Target_Print);
 #else
             RenderedBitmap *bmp = engine->RenderBitmap(pageNo, zoom, rotation, NULL, Target_Print, gUseGdiRenderer);
             if (bmp) {
@@ -3415,6 +3416,8 @@ static void OnMenuSaveAs(WindowInfo *win)
     TCHAR *defExt = _T(".pdf");
     if (win->dm->xpsEngine)
         defExt = _T(".xps");
+    else if (win->dm->cbxEngine)
+        defExt = _T(".cbz"); // TODO: expose correct extension on cbxEngine
 
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling
@@ -3422,6 +3425,8 @@ static void OnMenuSaveAs(WindowInfo *win)
     Str::Str<TCHAR> fileFilter(256);
     if (win->dm->xpsEngine)
         fileFilter.Append(_TB_TR("XPS documents"));
+    else if (win->dm->cbxEngine)
+        fileFilter.Append(_TB_TR("Comic books"));
     else
         fileFilter.Append(_TR("PDF documents"));
     fileFilter.AppendFmt(_T("\1*%s\1"), defExt);
@@ -3449,7 +3454,7 @@ static void OnMenuSaveAs(WindowInfo *win)
     ofn.lpstrFileTitle = NULL;
     ofn.nMaxFileTitle = 0;
     ofn.lpstrInitialDir = NULL;
-    ofn.lpstrDefExt = win->dm->xpsEngine ? _T("xps") : _T("pdf");
+    ofn.lpstrDefExt = defExt + 1;
     ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
 
     if (FALSE == GetSaveFileName(&ofn))
@@ -3544,6 +3549,8 @@ static void OnMenuSaveBookmark(WindowInfo *win)
     TCHAR *defExt = _T(".pdf");
     if (win->dm->xpsEngine)
         defExt = _T(".xps");
+    else if (win->dm->cbxEngine)
+        defExt = _T(".cbz");
 
     TCHAR dstFileName[MAX_PATH] = { 0 };
     // Remove the extension so that it can be re-added depending on the chosen filter
@@ -3637,7 +3644,7 @@ static void OnMenuOpen(WindowInfo *win)
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling
     // methods too early on)
-    ScopedMem<TCHAR> fileFilter(Str::Format(_T("%s\1*.pdf;*.xps\1%s\1*.*\1"),
+    ScopedMem<TCHAR> fileFilter(Str::Format(_T("%s\1*.pdf;*.xps;*.cbz\1%s\1*.*\1"),
         _TR("PDF documents"), _TR("All files")));
     Str::TransChars(fileFilter, _T("\1"), _T("\0"));
 
@@ -3698,6 +3705,8 @@ static void BrowseFolder(WindowInfo *win, bool forward)
     // TODO: browse through all supported file types at the same time?
     if (win->dm->xpsEngine)
         pattern.Set(Path::Join(dir, _T("*.xps")));
+    else if (win->dm->cbxEngine)
+        pattern.Set(Path::Join(dir, _T("*.cbz")));
 
     HANDLE hfind = FindFirstFile(pattern, &fdata);
     if (INVALID_HANDLE_VALUE == hfind)

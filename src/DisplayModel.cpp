@@ -206,6 +206,7 @@ DisplayModel::DisplayModel(DisplayMode displayMode, int dpi)
     engine = NULL;
     pdfEngine = NULL;
     xpsEngine = NULL;
+    cbxEngine = NULL;
 
     textSelection = NULL;
     _pdfSearch = NULL;
@@ -247,6 +248,8 @@ bool DisplayModel::load(const TCHAR *fileName, int startPage, WindowInfo *win)
         engine = pdfEngine = PdfEngine::CreateFromFileName(fileName, win);
     else if (Str::EndsWithI(fileName, _T(".xps")))
         engine = xpsEngine = XpsEngine::CreateFromFileName(fileName);
+    else if (Str::EndsWithI(fileName, _T(".cbz")))
+        engine = cbxEngine = CbxEngine::CreateFromFileName(fileName);
     else {
         // try loading as either supported file format
         // TODO: sniff the file content instead
@@ -923,7 +926,7 @@ RectD DisplayModel::getContentBox(int pageNo, RenderTarget target)
     else
         cbox = engine->PageContentBox(pageNo, target);
 
-    return engine->ApplyTransform(cbox.Convert<double>(), pageNo, _zoomReal, _rotation);
+    return engine->Transform(cbox.Convert<double>(), pageNo, _zoomReal, _rotation);
 }
 
 /* get the (screen) coordinates of the point where a page's actual
@@ -1321,7 +1324,7 @@ bool DisplayModel::cvtUserToScreen(int pageNo, PointD *pt)
     if (!pageInfo)
         return false;
 
-    PointD p = engine->ApplyTransform(*pt, pageNo, _zoomReal, _rotation);
+    PointD p = engine->Transform(*pt, pageNo, _zoomReal, _rotation);
     pt->x = p.x + 0.5 + pageInfo->currPos.x - areaOffset.x;
     pt->y = p.y + 0.5 + pageInfo->currPos.y - areaOffset.y;
     return true;
@@ -1336,7 +1339,7 @@ bool DisplayModel::cvtScreenToUser(int *pageNo, PointD *pt)
 
     PointD p = PointD(pt->x - 0.5 - pageInfo->currPos.x + areaOffset.x,
                       pt->y - 0.5 - pageInfo->currPos.y + areaOffset.y);
-    p = engine->RevertTransform(p, *pageNo, _zoomReal, _rotation);
+    p = engine->Transform(p, *pageNo, _zoomReal, _rotation, true);
 
     pt->x = p.x;
     pt->y = p.y;

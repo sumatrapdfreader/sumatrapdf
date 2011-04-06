@@ -8,23 +8,7 @@
 #include "GeomUtil.h"
 #include "Vec.h"
 #include "DisplayModel.h"
-
-class ComicBookPage {
-public:
-    HGLOBAL             bmpData;
-    Gdiplus::Bitmap *   bmp;
-    int                 w, h;
-
-    ComicBookPage(HGLOBAL bmpData, Gdiplus::Bitmap *bmp) :
-        bmpData(bmpData), bmp(bmp),  w(bmp->GetWidth()), h(bmp->GetHeight())
-    {
-    }
-
-    ~ComicBookPage() {
-        delete bmp;
-        GlobalFree(bmpData);
-    }
-};
+#include "CbxEngine.h"
 
 // Information about a page for the purpose of the layout.
 // Note: not happy about the name. It represents a rectangle on the screen.

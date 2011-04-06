@@ -98,16 +98,14 @@ public:
                          RectD *pageRect=NULL, /* if NULL: defaults to the page's mediabox */
                          RenderTarget target=Target_View, bool useGdi=false) = 0;
     // renders a page directly into an hDC (e.g. for printing)
-    virtual bool RenderPage(HDC hDC, int pageNo, RectI *screenRect,
+    virtual bool RenderPage(HDC hDC, int pageNo, RectI screenRect,
                          float zoom=0, int rotation=0,
                          RectD *pageRect=NULL, RenderTarget target=Target_View) = 0;
 
     // applies zoom and rotation to a point in user/page space
-    virtual PointD ApplyTransform(PointD pt, int pageNo, float zoom, int rotate) = 0;
-    virtual RectD ApplyTransform(RectD rect, int pageNo, float zoom, int rotate) = 0;
-    // reverts the above transformation
-    virtual PointD RevertTransform(PointD pt, int pageNo, float zoom, int rotate) = 0;
-    virtual RectD RevertTransform(RectD rect, int pageNo, float zoom, int rotate) = 0;
+    // or in the inverse direction from screen to user/page space
+    virtual PointD Transform(PointD pt, int pageNo, float zoom, int rotate, bool inverse=false) = 0;
+    virtual RectD Transform(RectD rect, int pageNo, float zoom, int rotate, bool inverse=false) = 0;
 
     // returns the binary data for the current file
     // (e.g. for saving again when the file has already been deleted)

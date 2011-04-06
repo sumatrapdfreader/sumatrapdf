@@ -81,8 +81,8 @@ int PdfSelection::FindClosestGlyph(int pageNo, double x, double y)
     assert(0 <= result && result < lens[pageNo - 1]);
 
     // the result indexes the first glyph to be selected in a forward selection
-    RectD bbox = engine->ApplyTransform(_coords[result].Convert<double>(), pageNo, 1.0, 0);
-    PointD pt = engine->ApplyTransform(PointD(x, y), pageNo, 1.0, 0);
+    RectD bbox = engine->Transform(_coords[result].Convert<double>(), pageNo, 1.0, 0);
+    PointD pt = engine->Transform(PointD(x, y), pageNo, 1.0, 0);
     if (pt.x > bbox.x + 0.5 * bbox.dx)
         result++;
 

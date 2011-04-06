@@ -130,9 +130,9 @@ static RectD GetTileRect(BaseEngine *engine, int pageNo, int rotation, float zoo
         mediabox.dy = height;
     }
 
-    RectD pixelbox = engine->ApplyTransform(mediabox, pageNo, zoom, rotation);
+    RectD pixelbox = engine->Transform(mediabox, pageNo, zoom, rotation);
     pixelbox = pixelbox.Round().Convert<double>();
-    mediabox = engine->RevertTransform(pixelbox, pageNo, zoom, rotation);
+    mediabox = engine->Transform(pixelbox, pageNo, zoom, rotation, true);
 
     return mediabox;
 }
@@ -140,7 +140,7 @@ static RectD GetTileRect(BaseEngine *engine, int pageNo, int rotation, float zoo
 static RectI GetTileOnScreen(BaseEngine *engine, int pageNo, int rotation, float zoom, TilePosition tile, RectI pageOnScreen)
 {
     RectD mediabox = GetTileRect(engine, pageNo, rotation, zoom, tile);
-    RectI bbox = engine->ApplyTransform(mediabox, pageNo, zoom, rotation).Round();
+    RectI bbox = engine->Transform(mediabox, pageNo, zoom, rotation).Round();
     bbox.Offset(pageOnScreen.x, pageOnScreen.y);
     return bbox;
 }
@@ -244,7 +244,7 @@ bool RenderCache::FreeNotVisible()
 USHORT RenderCache::GetTileRes(DisplayModel *dm, int pageNo)
 {
     RectD mediabox = dm->engine->PageMediabox(pageNo);
-    RectD pixelbox = dm->engine->ApplyTransform(mediabox, pageNo, dm->zoomReal(), dm->rotation());
+    RectD pixelbox = dm->engine->Transform(mediabox, pageNo, dm->zoomReal(), dm->rotation());
 
     float factorW = (float)pixelbox.dx / (maxTileSize.dx + 1);
     float factorH = (float)pixelbox.dy / (maxTileSize.dy + 1);
