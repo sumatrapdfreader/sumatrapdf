@@ -1649,15 +1649,23 @@ void WindowInfo::PageNoChanged(int pageNo)
 }
 
 /* Send the request to render a given page to a rendering thread */
-void DisplayModel::StartRenderingPage(int pageNo)
+void WindowInfo::RenderPage(int pageNo)
 {
-    gRenderCache.Render(this, pageNo);
+    assert(dm);
+    if (!dm)
+        return;
+
+    gRenderCache.Render(dm, pageNo);
 }
 
-void DisplayModel::clearAllRenderings()
+void WindowInfo::CleanUp(DisplayModel *dm)
 {
-    gRenderCache.CancelRendering(this);
-    gRenderCache.FreeForDisplayModel(this);
+    assert(dm);
+    if (!dm)
+        return;
+
+    gRenderCache.CancelRendering(dm);
+    gRenderCache.FreeForDisplayModel(dm);
 }
 
 void WindowInfo::UpdateScrollbars(SizeI canvas)

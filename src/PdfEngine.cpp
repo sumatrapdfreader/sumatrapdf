@@ -680,7 +680,9 @@ RectI PdfEngine::PageContentBox(int pageNo, RenderTarget target)
     fz_bbox bbox;
     fz_error error = runPage(page, fz_new_bbox_device(&bbox), fz_identity, target, page->mediabox, false);
     if (error != fz_okay)
-        return RectI();
+        return PageMediabox(pageNo).Round();
+    if (fz_is_infinite_bbox(bbox))
+        return PageMediabox(pageNo).Round();
 
     RectI bbox2 = fz_bbox_to_RectI(bbox);
     return bbox2.Intersect(PageMediabox(pageNo).Round());
@@ -1468,6 +1470,8 @@ RectI XpsEngine::PageContentBox(int pageNo, RenderTarget target)
 
     fz_bbox bbox;
     runPage(page, fz_new_bbox_device(&bbox), fz_identity);
+    if (fz_is_infinite_bbox(bbox))
+        return PageMediabox(pageNo).Round();
 
     RectI bbox2 = fz_bbox_to_RectI(bbox);
     return bbox2.Intersect(PageMediabox(pageNo).Round());

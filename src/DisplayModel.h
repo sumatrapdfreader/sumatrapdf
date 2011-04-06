@@ -86,12 +86,16 @@ typedef struct {
     RectI           pageOnScreen;
 } PageInfo;
 
+class DisplayModel;
+
 class DisplayModelCallback : public PasswordUI, public TextSearchTracker {
 public:
     virtual void Repaint() = 0;
     virtual void PageNoChanged(int pageNo) = 0;
     virtual void UpdateScrollbars(SizeI canvas) = 0;
-    virtual int GetScreenDPI() = 0;
+    virtual void RenderPage(int pageNo) = 0;
+    virtual int  GetScreenDPI() = 0;
+    virtual void CleanUp(DisplayModel *dm) = 0;
 };
 
 /* Information needed to drive the display of a given document on a screen.
@@ -243,8 +247,6 @@ public:
                             pdfEngine->ageStore();
                     }
 
-    void            StartRenderingPage(int pageNo);
-
 protected:
 
     bool            load(const TCHAR *fileName, int startPage, SizeI canvasSize);
@@ -256,8 +258,7 @@ protected:
     void            setZoomVirtual(float zoomVirtual);
     void            recalcVisibleParts();
     void            renderVisibleParts();
-    /* called when this DisplayModel is destroyed */
-    void            clearAllRenderings();
+
 public:
     /* called when we decide that the display needs to be redrawn */
     void            RepaintDisplay() { if (_callback) _callback->Repaint(); }

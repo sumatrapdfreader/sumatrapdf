@@ -16,7 +16,6 @@
 #define USER_DEFAULT_SCREEN_DPI 96
 #endif
 
-class DisplayModel;
 class FileWatcher;
 class Synchronizer;
 class PdfLinkHandler;
@@ -230,7 +229,9 @@ public:
     virtual void Repaint() { RepaintAsync(); };
     virtual void PageNoChanged(int pageNo);
     virtual void UpdateScrollbars(SizeI canvas);
-    virtual int GetScreenDPI() { return dpi; }
+    virtual void RenderPage(int pageNo);
+    virtual int  GetScreenDPI() { return dpi; }
+    virtual void CleanUp(DisplayModel *dm);
 };
 
 // TODO: find a better place to put this

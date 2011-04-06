@@ -212,7 +212,7 @@ DisplayModel::DisplayModel(DisplayModelCallback *callback, DisplayMode displayMo
 DisplayModel::~DisplayModel()
 {
     _dontRenderFlag = true;
-    clearAllRenderings();
+    _callback->CleanUp(this);
 
     free(_pagesInfo);
     free(_navHistory);
@@ -867,7 +867,7 @@ void DisplayModel::renderVisibleParts()
         PageInfo *pageInfo = getPageInfo(pageNo);
         if (pageInfo->visibleRatio > 0.0) {
             assert(pageInfo->shown);
-            StartRenderingPage(pageNo);
+            _callback->RenderPage(pageNo);
             if (0 == firstVisible)
                 firstVisible = pageNo;
             lastVisible = pageNo;
@@ -877,9 +877,9 @@ void DisplayModel::renderVisibleParts()
 #ifdef PREDICTIVE_RENDER
     // TODO: prerender two pages in Facing and Book View modes?
     if (lastVisible < pageCount())
-        StartRenderingPage(lastVisible + 1);
+        _callback->RenderPage(lastVisible + 1);
     if (firstVisible > 1)
-        StartRenderingPage(firstVisible - 1);
+        _callback->RenderPage(firstVisible - 1);
 #endif
 }
 
