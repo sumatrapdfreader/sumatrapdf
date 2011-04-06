@@ -87,7 +87,7 @@ public:
     bool                FreeForDisplayModel(DisplayModel *dm);
     void                KeepForDisplayModel(DisplayModel *oldDm, DisplayModel *newDm);
     UINT                Paint(HDC hdc, RectI *bounds, DisplayModel *dm, int pageNo,
-                              PdfPageInfo *pageInfo, bool *renderOutOfDateCue);
+                              PageInfo *pageInfo, bool *renderOutOfDateCue);
 
 public:
     /* Interface for page rendering thread */

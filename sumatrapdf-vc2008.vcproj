@@ -172,22 +172,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\PdfSearch.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\PdfSearch.h"
-				>
-			</File>
-			<File
-				RelativePath=".\src\PdfSelection.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\PdfSelection.h"
-				>
-			</File>
-			<File
 				RelativePath=".\src\PdfSync.cpp"
 				>
 			</File>
@@ -237,6 +221,22 @@
 			</File>
 			<File
 				RelativePath=".\src\SumatraProperties.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\TextSearch.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\TextSearch.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\TextSelection.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\TextSelection.h"
 				>
 			</File>
 			<File

@@ -7,7 +7,7 @@
 #include <shlobj.h>
 #include "GeomUtil.h"
 #include "DisplayState.h"
-#include "PdfSearch.h"
+#include "TextSearch.h"
 #include "PdfEngine.h"
 #include "Vec.h"
 
@@ -41,9 +41,9 @@ typedef struct SelectionOnPage {
                                          * or NULL if such page not exists */
 } SelectionOnPage;
 
-/* Describes information related to one window with (optional) pdf document
+/* Describes information related to one window with (optional) a document
    on the screen */
-class WindowInfo : public PdfSearchTracker, public PasswordUI
+class WindowInfo : public TextSearchTracker, public PasswordUI
 {
 public:
     WindowInfo(HWND hwnd);
@@ -74,7 +74,7 @@ public:
     HWND            hwndTocTree;
     HWND            hwndSpliter;
     HWND            hwndInfotip;
-    HWND            hwndPdfProperties;
+    HWND            hwndProperties;
 
     bool            infotipVisible;
     HMENU           menu;
@@ -139,12 +139,14 @@ public:
     HANDLE          findStatusThread; // handle of the thread showing the status of the search result
     HANDLE          stopFindStatusThreadEvent; // event raised to tell the findstatus thread to stop
 
-    // the following properties only apply to PDF documents
+    // the following properties only apply to PDF and XPS documents
 
     HANDLE          findThread;
     bool            findCanceled;
     int             findPercent;
     bool            findStatusVisible;
+
+    // the following properties only apply to PDF documents
 
     pdf_link *      linkOnLastButtonDown;
     const TCHAR *   url;
@@ -189,11 +191,13 @@ public:
     void SwitchToDisplayMode(DisplayMode displayMode, bool keepContinuous=false);
     void MoveDocBy(int dx, int dy);
 
-    // the following methods only apply to PDF documents
+    // the following methods only apply to PDF and XPS documents
 
-    void Find(PdfSearchDirection direction=FIND_FORWARD);
+    void Find(TextSearchDirection direction=FIND_FORWARD);
     void FindStart();
     void AbortFinding();
+
+    // the following methods only apply to PDF documents
 
     void ShowTocBox();
     void HideTocBox();

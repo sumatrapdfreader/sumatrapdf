@@ -589,7 +589,7 @@ static Vec<PageInfo> *PageInfosFromPages(Vec<ComicBookPage*> *pages)
     PageInfo *currPageInfo = pageInfos->MakeSpaceAt(0, pages->Count());
     for (size_t i=0; i<pages->Count(); i++) {
         ComicBookPage *p = pages->At(i);
-        currPageInfo->size = SizeD(p->w, p->h);
+        currPageInfo->size = SizeD(p->width, p->height);
         currPageInfo->rotation = 0;
         ++currPageInfo;
     }

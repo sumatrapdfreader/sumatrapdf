@@ -123,7 +123,7 @@ static void ParseScrollValue(PointI *scroll, const TCHAR *txt)
         *scroll = PointI(x, y);
 }
 
-/* parse argument list. we assume that all unrecognized arguments are PDF file names. */
+/* parse argument list. we assume that all unrecognized arguments are file names. */
 void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
 {
     CmdLineParser argList(cmdLine);

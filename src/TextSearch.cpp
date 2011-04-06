@@ -1,18 +1,18 @@
 /* Copyright 2006-2011 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "PdfSearch.h"
+#include "TextSearch.h"
 #include "StrUtil.h"
 #include <shlwapi.h>
 
-enum { SEARCH_PAGE, SKIP_PAGE };
+enum { IsDocLoaded, SKIP_PAGE };
 
 #define SkipWhitespace(c) for (; _istspace(*(c)); (c)++)
 // ignore spaces between CJK glyphs but not between Latin, Greek, Cyrillic, etc. letters
 // cf. http://code.google.com/p/sumatrapdf/issues/detail?id=959
 #define isnoncjkwordchar(c) (iswordchar(c) && (unsigned short)(c) < 0x2E80)
 
-PdfSearch::PdfSearch(BaseEngine *engine, PdfSearchTracker *tracker) : PdfSelection(engine),
+TextSearch::TextSearch(BaseEngine *engine, TextSearchTracker *tracker) : TextSelection(engine),
     tracker(tracker), findText(NULL), anchor(NULL), pageText(NULL),
     caseSensitive(false), wholeWords(false), forward(true),
     findPage(0), findIndex(0), lastText(NULL)
@@ -20,19 +20,19 @@ PdfSearch::PdfSearch(BaseEngine *engine, PdfSearchTracker *tracker) : PdfSelecti
     findCache = SAZA(BYTE, this->engine->PageCount());
 }
 
-PdfSearch::~PdfSearch()
+TextSearch::~TextSearch()
 {
     Clear();
     free(findCache);
 }
 
-void PdfSearch::Reset()
+void TextSearch::Reset()
 {
     pageText = NULL;
-    PdfSelection::Reset();
+    TextSelection::Reset();
 }
 
-void PdfSearch::SetText(TCHAR *text)
+void TextSearch::SetText(TCHAR *text)
 {
     // all whitespace characters before the first word will be ignored
     // (we're similarly fuzzy about whitespace as Adobe Reader in this regard)
@@ -65,19 +65,19 @@ void PdfSearch::SetText(TCHAR *text)
         this->findText[Str::Len(this->findText) - 1] = '\0';
     }
 
-    memset(this->findCache, SEARCH_PAGE, this->engine->PageCount());
+    memset(this->findCache, IsDocLoaded, this->engine->PageCount());
 }
 
-void PdfSearch::SetSensitive(bool sensitive)
+void TextSearch::SetSensitive(bool sensitive)
 {
     if (caseSensitive == sensitive)
         return;
     this->caseSensitive = sensitive;
 
-    memset(this->findCache, SEARCH_PAGE, this->engine->PageCount());
+    memset(this->findCache, IsDocLoaded, this->engine->PageCount());
 }
 
-void PdfSearch::SetDirection(bool forward)
+void TextSearch::SetDirection(bool forward)
 {
     if (forward == this->forward)
         return;
@@ -88,7 +88,7 @@ void PdfSearch::SetDirection(bool forward)
 
 // try to match "findText" from "start" with whitespace tolerance
 // (ignore all whitespace except after alphanumeric characters)
-int PdfSearch::MatchLen(TCHAR *start)
+int TextSearch::MatchLen(TCHAR *start)
 {
     TCHAR *match = findText, *end = start;
     assert(!_istspace(*end));
@@ -116,7 +116,7 @@ int PdfSearch::MatchLen(TCHAR *start)
 }
 
 // TODO: use Boyer-Moore algorithm here (if it proves to be faster)
-bool PdfSearch::FindTextInPage(int pageNo)
+bool TextSearch::FindTextInPage(int pageNo)
 {
     if (Str::IsEmpty(anchor))
         return false;
@@ -149,7 +149,7 @@ bool PdfSearch::FindTextInPage(int pageNo)
     return true;
 }
 
-bool PdfSearch::FindStartingAtPage(int pageNo)
+bool TextSearch::FindStartingAtPage(int pageNo)
 {
     if (Str::IsEmpty(anchor))
         return false;
@@ -185,14 +185,14 @@ bool PdfSearch::FindStartingAtPage(int pageNo)
     return false;
 }
 
-bool PdfSearch::FindFirst(int page, TCHAR *text)
+bool TextSearch::FindFirst(int page, TCHAR *text)
 {
     SetText(text);
 
     return FindStartingAtPage(page);
 }
 
-bool PdfSearch::FindNext()
+bool TextSearch::FindNext()
 {
     if (FindTextInPage())
         return true;

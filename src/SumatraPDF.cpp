@@ -756,7 +756,7 @@ WindowInfo* FindWindowInfoByHwnd(HWND hwnd)
 
     for (size_t i = 0; i < gWindows.Count(); i++) {
         WindowInfo *win = gWindows.At(i);
-        if (rootWnd == win->hwndFrame || hwnd == win->hwndPdfProperties)
+        if (rootWnd == win->hwndFrame || hwnd == win->hwndProperties)
             return win;
     }
     return NULL;
@@ -1027,12 +1027,12 @@ void WindowInfo::Reload(bool autorefresh)
 
 static void WindowInfo_Delete(WindowInfo *win)
 {
-    // must DestroyWindow(win->hwndPdfProperties) before removing win from
+    // must DestroyWindow(win->hwndProperties) before removing win from
     // the list of properties beacuse WM_DESTROY handler needs to find
     // WindowInfo for its HWND
-    if (win->hwndPdfProperties) {
-        DestroyWindow(win->hwndPdfProperties);
-        assert(NULL == win->hwndPdfProperties);
+    if (win->hwndProperties) {
+        DestroyWindow(win->hwndProperties);
+        assert(NULL == win->hwndProperties);
     }
     win->AbortFinding();
     gWindows.Remove(win);
@@ -1329,7 +1329,7 @@ static void UpdateTocWidth(HWND hwndTocBox, const DisplayState *ds=NULL, int def
 static void RecalcSelectionPosition(WindowInfo *win)
 {
     SelectionOnPage *   selOnPage = win->selectionOnPage;
-    PdfPageInfo*        pageInfo;
+    PageInfo*        pageInfo;
 
     while (selOnPage != NULL) {
         pageInfo = win->dm->getPageInfo(selOnPage->pageNo);
@@ -1987,7 +1987,7 @@ static void UpdateTextSelection(WindowInfo *win, bool select=true)
 
     DeleteOldSelectionInfo(win);
 
-    PdfSel *result = &win->dm->textSelection->result;
+    TextSel *result = &win->dm->textSelection->result;
     for (int i = result->len - 1; i >= 0; i--) {
         SelectionOnPage *selOnPage = new SelectionOnPage;
         selOnPage->pageNo = result->pages[i];
@@ -2025,7 +2025,7 @@ static void PaintSelection(WindowInfo *win, HDC hdc) {
 }
 
 static void PaintForwardSearchMark(WindowInfo *win, HDC hdc) {
-    PdfPageInfo *pageInfo = win->dm->getPageInfo(win->fwdsearchmark.page);
+    PageInfo *pageInfo = win->dm->getPageInfo(win->fwdsearchmark.page);
     if (0.0 == pageInfo->visibleRatio)
         return;
     
@@ -2048,7 +2048,7 @@ static void PaintForwardSearchMark(WindowInfo *win, HDC hdc) {
 #ifdef DRAW_PAGE_SHADOWS
 #define BORDER_SIZE   1
 #define SHADOW_OFFSET 4
-static void PaintPageFrameAndShadow(HDC hdc, PdfPageInfo * pageInfo, bool presentation, RectI *bounds)
+static void PaintPageFrameAndShadow(HDC hdc, PageInfo * pageInfo, bool presentation, RectI *bounds)
 {
     int xDest = pageInfo->screenX;
     int yDest = pageInfo->screenY;
@@ -2090,7 +2090,7 @@ static void PaintPageFrameAndShadow(HDC hdc, PdfPageInfo * pageInfo, bool presen
 #else
 #define BORDER_SIZE   0
 #define SHADOW_OFFSET 0
-static void PaintPageFrameAndShadow(HDC hdc, PdfPageInfo *pageInfo, bool presentation, RectI *bounds)
+static void PaintPageFrameAndShadow(HDC hdc, PageInfo *pageInfo, bool presentation, RectI *bounds)
 {
     int xDest = pageInfo->screenX;
     int yDest = pageInfo->screenY;
@@ -2122,7 +2122,7 @@ static void DebugShowLinks(DisplayModel *dm, HDC hdc, bool rendering)
     HGDIOBJ oldPen = SelectObject(hdc, pen);
 
     for (int pageNo = dm->pageCount(); pageNo >= 1; --pageNo) {
-        PdfPageInfo *pageInfo = dm->getPageInfo(pageNo);
+        PageInfo *pageInfo = dm->getPageInfo(pageNo);
         if (!pageInfo->shown || 0.0 == pageInfo->visibleRatio)
             continue;
 
@@ -2144,7 +2144,7 @@ static void DebugShowLinks(DisplayModel *dm, HDC hdc, bool rendering)
         oldPen = SelectObject(hdc, pen);
 
         for (int pageNo = dm->pageCount(); pageNo >= 1; --pageNo) {
-            PdfPageInfo *pageInfo = dm->getPageInfo(pageNo);
+            PageInfo *pageInfo = dm->getPageInfo(pageNo);
             if (!pageInfo->shown || 0.0 == pageInfo->visibleRatio)
                 continue;
 
@@ -2172,7 +2172,7 @@ static void DrawPdf(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
 
     DBG_OUT("DrawPdf() ");
     for (int pageNo = 1; pageNo <= dm->pageCount(); ++pageNo) {
-        PdfPageInfo *pageInfo = dm->getPageInfo(pageNo);
+        PageInfo *pageInfo = dm->getPageInfo(pageNo);
         if (0.0 == pageInfo->visibleRatio)
             continue;
         assert(pageInfo->shown);
@@ -2296,7 +2296,7 @@ static void DeleteOldSelectionInfo(WindowInfo *win) {
 static void ConvertSelectionRectToSelectionOnPage(WindowInfo *win) {
     win->dm->textSelection->Reset();
     for (int pageNo = win->dm->pageCount(); pageNo >= 1; --pageNo) {
-        PdfPageInfo *pageInfo = win->dm->getPageInfo(pageNo);
+        PageInfo *pageInfo = win->dm->getPageInfo(pageNo);
         assert(0.0 == pageInfo->visibleRatio || pageInfo->shown);
         if (!pageInfo->shown)
             continue;
@@ -2457,7 +2457,7 @@ static bool OnInverseSearch(WindowInfo *win, int x, int y)
         return false;
     x = (int)pt.x; y = (int)pt.y;
 
-    const PdfPageInfo *pageInfo = win->dm->getPageInfo(pageNo);
+    const PageInfo *pageInfo = win->dm->getPageInfo(pageNo);
     TCHAR srcfilepath[MAX_PATH];
     win->pdfsync->convert_coord_to_internal(&x, &y, pageInfo->page.Convert<int>().dy, BottomLeft);
     UINT line, col;
@@ -2992,9 +2992,9 @@ static void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose=false)
         delete win->pdfsync;
         win->pdfsync = NULL;
 
-        if (win->hwndPdfProperties) {
-            DestroyWindow(win->hwndPdfProperties);
-            assert(NULL == win->hwndPdfProperties);
+        if (win->hwndProperties) {
+            DestroyWindow(win->hwndProperties);
+            assert(!win->hwndProperties);
         }
         UpdateToolbarPageText(win, 0);
         UpdateToolbarFindText(win);
@@ -4204,12 +4204,12 @@ static void OnMenuViewPresentation(WindowInfo *win)
     OnMenuViewFullscreen(win, true);
 }
 
-static void WindowInfo_ShowSearchResult(WindowInfo *win, PdfSel *result, bool wasModified)
+static void WindowInfo_ShowSearchResult(WindowInfo *win, TextSel *result, bool wasModified)
 {
     assert(result->len > 0);
     win->dm->goToPage(result->pages[0], 0, wasModified);
 
-    PdfSelection *sel = win->dm->textSelection;
+    TextSelection *sel = win->dm->textSelection;
     sel->Reset();
     sel->result.pages = (int *)memdup(result->pages, result->len * sizeof(int));
     sel->result.rects = (RectI *)memdup(result->rects, result->len * sizeof(RectI));
@@ -4282,7 +4282,7 @@ void WindowInfo::ShowForwardSearchResult(const TCHAR *fileName, UINT line, UINT 
     this->fwdsearchmark.rects.Reset();
     if (ret == PDFSYNCERR_SUCCESS && rects.Count() > 0 ) {
         // remember the position of the search result for drawing the rect later on
-        const PdfPageInfo *pi = this->dm->getPageInfo(page);
+        const PageInfo *pi = this->dm->getPageInfo(page);
         if (pi) {
             WindowInfo_HideMessage(this);
 
@@ -4306,7 +4306,7 @@ void WindowInfo::ShowForwardSearchResult(const TCHAR *fileName, UINT line, UINT 
             
             // Scroll to show the overall highlighted zone
             int pageNo = page;
-            PdfSel res = { 1, &pageNo, &overallrc };
+            TextSel res = { 1, &pageNo, &overallrc };
             if (!this->dm->pageVisible(page))
                 this->dm->goToPage(page, 0, true);
             if (!this->dm->ShowResultRectToScreen(&res))
@@ -4823,12 +4823,12 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, L
 
 class FindEndWorkItem : public UIThreadWorkItem
 {
-    PdfSel *pdfSel;
+    TextSel*pdfSel;
     bool    wasModifiedCanceled;
     bool    loopedAround;
 
 public:
-    FindEndWorkItem(WindowInfo *win, PdfSel *pdfSel,
+    FindEndWorkItem(WindowInfo *win, TextSel *pdfSel,
                     bool wasModifiedCanceled,
                     bool loopedAround=false) :
         UIThreadWorkItem(win), pdfSel(pdfSel),
@@ -4854,7 +4854,7 @@ public:
 
 typedef struct FindThreadData {
     WindowInfo *win;
-    PdfSearchDirection direction;
+    TextSearchDirection direction;
     bool wasModified;
     TCHAR text[256];
 } FindThreadData;
@@ -4865,7 +4865,7 @@ static DWORD WINAPI FindThread(LPVOID data)
     assert(ftd && ftd->win && ftd->win->dm);
     WindowInfo *win = ftd->win;
 
-    PdfSel *rect;
+    TextSel *rect;
     if (ftd->wasModified || !win->dm->validPageNo(win->dm->lastFoundPage()) ||
         !win->dm->getPageInfo(win->dm->lastFoundPage())->visibleRatio)
         rect = win->dm->Find(ftd->direction, ftd->text);
@@ -4897,7 +4897,7 @@ static DWORD WINAPI FindThread(LPVOID data)
     return 0;
 }
 
-void WindowInfo::Find(PdfSearchDirection direction)
+void WindowInfo::Find(TextSearchDirection direction)
 {
     AbortFinding();
 
@@ -6400,8 +6400,8 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                     // Don't break the shortcut for text boxes
                     if (win->hwndFindBox == GetFocus() || win->hwndPageBox == GetFocus())
                         SendMessage(GetFocus(), WM_COPY, 0, 0);
-                    else if (win->hwndPdfProperties == GetForegroundWindow())
-                        CopyPropertiesToClipboard(win->hwndPdfProperties);
+                    else if (win->hwndProperties == GetForegroundWindow())
+                        CopyPropertiesToClipboard(win->hwndProperties);
                     else if (win->selectionOnPage)
                         CopySelectionToClipboard(win);
                     else

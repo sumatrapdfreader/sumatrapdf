@@ -7,7 +7,7 @@
 #include "PdfEngine.h"
 #include "CbxEngine.h"
 #include "DisplayState.h"
-#include "PdfSearch.h"
+#include "TextSearch.h"
 
 #ifndef USER_DEFAULT_SCREEN_DPI
 // the following is only defined if _WIN32_WINNT >= 0x0600 and we use 0x0500
@@ -19,18 +19,14 @@
 
 class WindowInfo;
 
-// TODO: better name, Paddings? PaddingInfo?
-typedef struct DisplaySettings {
+typedef struct {
     int     pageBorderTop;
     int     pageBorderBottom;
     int     pageBorderLeft;
     int     pageBorderRight;
     int     betweenPagesX;
     int     betweenPagesY;
-} DisplaySettings;
-
-extern DisplaySettings gDisplaySettings;
-extern DisplaySettings gDisplaySettingsPresentation;
+} ScreenPagePadding;
 
 #define INVALID_PAGE_NO     -1
 #define INVALID_ROTATION    -1
@@ -65,7 +61,7 @@ extern DisplaySettings gDisplaySettingsPresentation;
 #define NAV_HISTORY_LEN             50
 
 /* Describes many attributes of one page in one, convenient place */
-typedef struct PdfPageInfo {
+typedef struct {
     /* data that is constant for a given page. page size and rotation
        recorded in PDF file */
     SizeD           page;
@@ -91,9 +87,9 @@ typedef struct PdfPageInfo {
     int             screenX, screenY;
     /* position of page relative to visible draw area */
     RectI           pageOnScreen;
-} PdfPageInfo;
+} PageInfo;
 
-/* Information needed to drive the display of a given PDF document on a screen.
+/* Information needed to drive the display of a given document on a screen.
    You can think of it as a model in the MVC pardigm.
    All the display changes should be done through changing this model via
    API and re-displaying things based on new display information */
@@ -114,7 +110,7 @@ public:
         return engine->RenderPage(hDC, pageNo, screenRect, zoom, rotation, pageRect, target);
     }
 
-    /* number of pages in PDF document */
+    /* number of pages in the document */
     int  pageCount() const { return engine->PageCount(); }
     bool validPageNo(int pageNo) const {
         return 1 <= pageNo && pageNo <= engine->PageCount();
@@ -158,13 +154,10 @@ public:
     PdfEngine *     pdfEngine;
     XpsEngine *     xpsEngine;
     CbxEngine *     cbxEngine;
-    PdfSelection *  textSelection;
+    TextSelection * textSelection;
 
     /* TODO: rename to pageInfo() */
-    PdfPageInfo * getPageInfo(int pageNo) const;
-
-    /* an array of PdfPageInfo, len of array is pageCount */
-    PdfPageInfo *   _pagesInfo;
+    PageInfo *      getPageInfo(int pageNo) const;
 
     /* areaOffset is "polymorphic". If drawAreaSize.dx > totalAreSize.dx then
        areaOffset.x is offset of total area rect inside draw area, otherwise
@@ -228,15 +221,15 @@ public:
     bool            rectCvtScreenToUser(int *pageNo, RectD *r);
     RectD           getContentBox(int pageNo, RenderTarget target=Target_View);
 
-    void            SetFindMatchCase(bool match) { _pdfSearch->SetSensitive(match); }
-    PdfSel *        Find(PdfSearchDirection direction=FIND_FORWARD, TCHAR *text=NULL, UINT fromPage=0);
+    void            SetFindMatchCase(bool match) { _textSearch->SetSensitive(match); }
+    TextSel *       Find(TextSearchDirection direction=FIND_FORWARD, TCHAR *text=NULL, UINT fromPage=0);
     // note: lastFoundPage might not be a valid page number!
-    int             lastFoundPage() const { return _pdfSearch->findPage; }
+    int             lastFoundPage() const { return _textSearch->findPage; }
     bool            bFoundText;
 
     int             getPageNoByPoint(PointI pt);
 
-    bool            ShowResultRectToScreen(PdfSel *res);
+    bool            ShowResultRectToScreen(TextSel *res);
 
     bool            getScrollState(ScrollState *state);
     void            setScrollState(ScrollState *state);
@@ -250,9 +243,9 @@ public:
     bool            displayStateFromModel(DisplayState *ds);
 
     void            runEngineGC() const {
-        if (pdfEngine)
-            pdfEngine->ageStore();
-    }
+                        if (pdfEngine)
+                            pdfEngine->ageStore();
+                    }
 
     void            StartRenderingPage(int pageNo);
 
@@ -280,9 +273,12 @@ public:
 protected:
     void            goToPdfDest(fz_obj *dest);
 
-    PdfSearch *     _pdfSearch;
+    /* an array of PageInfo, len of array is pageCount */
+    PageInfo *      _pagesInfo;
+
+    TextSearch *    _textSearch;
     DisplayMode     _displayMode;
-    /* In non-continuous mode is the first page from a PDF file that we're
+    /* In non-continuous mode is the first page from a file that we're
        displaying.
        No meaning in continous mode. */
     int             _startPage;
@@ -294,7 +290,7 @@ protected:
 
     /* size of virtual canvas containing all rendered pages. */
     SizeI           _canvasSize;
-    DisplaySettings * _padding;
+    ScreenPagePadding* _padding;
 
     /* real zoom value calculated from zoomVirtual. Same as zoomVirtual * 0.01 except
        for ZOOM_FIT_PAGE, ZOOM_FIT_WIDTH and ZOOM_FIT_CONTENT */

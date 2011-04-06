@@ -19,7 +19,7 @@ WindowInfo::WindowInfo(HWND hwnd) :
     hwndFindText(NULL), hwndFindBox(NULL), hwndFindBg(NULL),
     hwndPageText(NULL), hwndPageBox(NULL), hwndPageBg(NULL), hwndPageTotal(NULL),
     hwndTocBox(NULL), hwndTocTree(NULL), hwndSpliter(NULL),
-    hwndInfotip(NULL), infotipVisible(false), hwndPdfProperties(NULL),
+    hwndInfotip(NULL), infotipVisible(false), hwndProperties(NULL),
     menu(NULL), hdc(NULL),
     findThread(NULL), findCanceled(false), findPercent(0), findStatusVisible(false),
     findStatusThread(NULL), stopFindStatusThreadEvent(NULL), findStatusHighlight(false),
@@ -264,7 +264,7 @@ void WindowInfo::ZoomToSelection(float factor, bool relative)
     // or towards the top-left-most part of the first visible page
     else {
         int page = this->dm->firstVisiblePageNo();
-        PdfPageInfo *pageInfo = this->dm->getPageInfo(page);
+        PageInfo *pageInfo = this->dm->getPageInfo(page);
         if (pageInfo) {
             RectI visible = pageInfo->pageOnScreen.Intersect(this->canvasRc);
             pt = visible.TL();

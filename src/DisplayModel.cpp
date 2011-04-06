@@ -34,7 +34,7 @@
   canvas. Canvas has to be >= draw area.
 
   Changing zoomLevel or rotation requires recalculation of total area and
-  position of pdf pages in it.
+  position of pages in it.
 
   We keep the offset of draw area relative to total area. The offset changes
   due to scrolling (with keys or using scrollbars).
@@ -54,15 +54,14 @@
 #define PREDICTIVE_RENDER 1
 #endif
 
-// TODO: a better name, gPaddings? gPaddingInfo ?
-DisplaySettings gDisplaySettings = {
+ScreenPagePadding gPagePadding = {
   PADDING_PAGE_BORDER_TOP_DEF,
   PADDING_PAGE_BORDER_BOTTOM_DEF,
   PADDING_PAGE_BORDER_LEFT_DEF,
   PADDING_PAGE_BORDER_RIGHT_DEF,
   PADDING_BETWEEN_PAGES_X_DEF,
   PADDING_BETWEEN_PAGES_Y_DEF
-}, gDisplaySettingsPresentation = {
+}, gPagePaddingPresentation = {
   0, 0, 0, 0,
   PADDING_BETWEEN_PAGES_X_DEF, PADDING_BETWEEN_PAGES_X_DEF
 };
@@ -132,7 +131,7 @@ bool DisplayModel::displayStateFromModel(DisplayState *ds)
 /* Given 'pageInfo', which should contain correct information about
    pageDx, pageDy and rotation, return a page size after applying a global
    rotation */
-static void pageSizeAfterRotation(PdfPageInfo *pageInfo, int rotation,
+static void pageSizeAfterRotation(PageInfo *pageInfo, int rotation,
     SizeD *pageSize, bool fitToContent=false)
 {
     assert(pageInfo && pageSize);
@@ -196,7 +195,7 @@ DisplayModel::DisplayModel(DisplayMode displayMode, int dpi)
     _presZoomVirtual = INVALID_ZOOM;
     _rotation = INVALID_ROTATION;
     _zoomVirtual = INVALID_ZOOM;
-    _padding = &gDisplaySettings;
+    _padding = &gPagePadding;
     _presentationMode = false;
     _zoomReal = INVALID_ZOOM;
     _dpiFactor = (float)dpi;
@@ -209,7 +208,7 @@ DisplayModel::DisplayModel(DisplayMode displayMode, int dpi)
     cbxEngine = NULL;
 
     textSelection = NULL;
-    _pdfSearch = NULL;
+    _textSearch = NULL;
     _pagesInfo = NULL;
 
     _navHistory = SAZA(ScrollState, NAV_HISTORY_LEN);
@@ -226,12 +225,12 @@ DisplayModel::~DisplayModel()
 
     free(_pagesInfo);
     free(_navHistory);
-    delete _pdfSearch;
+    delete _textSearch;
     delete textSelection;
     delete engine;
 }
 
-PdfPageInfo *DisplayModel::getPageInfo(int pageNo) const
+PageInfo *DisplayModel::getPageInfo(int pageNo) const
 {
     if (!validPageNo(pageNo))
         return NULL;
@@ -282,8 +281,8 @@ bool DisplayModel::load(const TCHAR *fileName, int startPage, WindowInfo *win)
     if (!buildPagesInfo())
         return false;
 
-    textSelection = new PdfSelection(engine);
-    _pdfSearch = new PdfSearch(engine, win);
+    textSelection = new TextSelection(engine);
+    _textSearch = new TextSearch(engine, win);
     return true;
 }
 
@@ -292,7 +291,7 @@ bool DisplayModel::buildPagesInfo()
     assert(!_pagesInfo);
     int _pageCount = pageCount();
 
-    _pagesInfo = SAZA(PdfPageInfo, _pageCount);
+    _pagesInfo = SAZA(PageInfo, _pageCount);
     if (!_pagesInfo)
         return false;
 
@@ -301,7 +300,7 @@ bool DisplayModel::buildPagesInfo()
     if (displayModeShowCover(_displayMode) && startPage == 1 && columns > 1)
         startPage--;
     for (int pageNo = 1; pageNo <= _pageCount; pageNo++) {
-        PdfPageInfo *pageInfo = getPageInfo(pageNo);
+        PageInfo *pageInfo = getPageInfo(pageNo);
         pageInfo->page = engine->PageSize(pageNo);
         pageInfo->rotation = engine->PageRotation(pageNo);
         pageInfo->visibleRatio = 0.0;
@@ -320,7 +319,7 @@ bool DisplayModel::buildPagesInfo()
 // before-layout info and after-layout visibility checks
 bool DisplayModel::pageShown(int pageNo)
 {
-    PdfPageInfo *pageInfo = getPageInfo(pageNo);
+    PageInfo *pageInfo = getPageInfo(pageNo);
     if (!pageInfo)
         return false;
     return pageInfo->shown;
@@ -328,7 +327,7 @@ bool DisplayModel::pageShown(int pageNo)
 
 bool DisplayModel::pageVisible(int pageNo)
 {
-    PdfPageInfo *pageInfo = getPageInfo(pageNo);
+    PageInfo *pageInfo = getPageInfo(pageNo);
     if (!pageInfo)
         return false;
     return pageInfo->visibleRatio > 0.0;
@@ -385,7 +384,7 @@ float DisplayModel::zoomRealFromVirtualForPage(float zoomVirtual, int pageNo)
         return zoomVirtual * 0.01f * this->_dpiFactor;
 
     SizeD row;
-    PdfPageInfo *pageInfo = getPageInfo(pageNo);
+    PageInfo *pageInfo = getPageInfo(pageNo);
     int columns = columnsFromDisplayMode(displayMode());
 
     bool fitToContent = (ZOOM_FIT_CONTENT == zoomVirtual);
@@ -445,7 +444,7 @@ int DisplayModel::firstVisiblePageNo() const
     if (!_pagesInfo) return INVALID_PAGE_NO;
 
     for (int pageNo = 1; pageNo <= pageCount(); ++pageNo) {
-        PdfPageInfo *pageInfo = getPageInfo(pageNo);
+        PageInfo *pageInfo = getPageInfo(pageNo);
         if (pageInfo->visibleRatio > 0.0)
             return pageNo;
     }
@@ -467,7 +466,7 @@ int DisplayModel::currentPageNo() const
     float ratio = 0;
 
     for (int pageNo = 1; pageNo <= pageCount(); pageNo++) {
-        PdfPageInfo *pageInfo = getPageInfo(pageNo);
+        PageInfo *pageInfo = getPageInfo(pageNo);
         if (pageInfo->visibleRatio > ratio) {
             mostVisiblePage = pageNo;
             ratio = pageInfo->visibleRatio;
@@ -476,7 +475,7 @@ int DisplayModel::currentPageNo() const
 
     /* if no page is visible, default to either the first or the last one */
     if (INVALID_PAGE_NO == mostVisiblePage) {
-        PdfPageInfo *pageInfo = getPageInfo(1);
+        PageInfo *pageInfo = getPageInfo(1);
         if (this->areaOffset.y > pageInfo->currPos.y + pageInfo->currPos.dy)
             mostVisiblePage = pageCount();
         else
@@ -493,8 +492,8 @@ void DisplayModel::setZoomVirtual(float zoomVirtual)
 
     if ((ZOOM_FIT_WIDTH == zoomVirtual) || (ZOOM_FIT_PAGE == zoomVirtual)) {
         /* we want the same zoom for all pages, so use the smallest zoom
-           across the pages so that the largest page fits. In most PDFs all
-           pages are the same size anyway */
+           across the pages so that the largest page fits. In most documents
+           all pages are the same size anyway */
         float minZoom = (float)HUGE_VAL;
         for (int pageNo = 1; pageNo <= pageCount(); pageNo++) {
             if (pageShown(pageNo)) {
@@ -531,7 +530,7 @@ float DisplayModel::zoomReal(int pageNo)
     return min(zoomRealFromVirtualForPage(_zoomVirtual, pageNo), zoomRealFromVirtualForPage(_zoomVirtual, pageNo + 1));
 }
 
-/* Given pdf info and zoom/rotation, calculate the position of each page on a
+/* Given zoom and rotation, calculate the position of each page on a
    large sheet that is continous view. Needs to be recalculated when:
      * zoom changes
      * rotation changes
@@ -540,7 +539,7 @@ float DisplayModel::zoomReal(int pageNo)
 void DisplayModel::relayout(float zoomVirtual, int rotation)
 {
     int         pageNo;
-    PdfPageInfo*pageInfo = NULL;
+    PageInfo*pageInfo = NULL;
     SizeD       pageSize;
     int         totalAreaDx, totalAreaDy;
     int         rowMaxPageDy;
@@ -699,7 +698,7 @@ void DisplayModel::changeStartPage(int startPage)
     if (displayModeShowCover(displayMode()) && startPage == 1 && columns > 1)
         startPage--;
     for (int pageNo = 1; pageNo <= pageCount(); pageNo++) {
-        PdfPageInfo *pageInfo = getPageInfo(pageNo);
+        PageInfo *pageInfo = getPageInfo(pageNo);
         if (displayModeContinuous(displayMode()))
             pageInfo->shown = true;
         else if (pageNo >= startPage && pageNo < startPage + columns) {
@@ -727,7 +726,7 @@ void DisplayModel::recalcVisibleParts()
 //    DBG_OUT("DisplayModel::recalcVisibleParts() draw area         (x=%3d,y=%3d,dx=%4d,dy=%4d)\n",
 //        drawAreaRect.x, drawAreaRect.y, drawAreaRect.dx, drawAreaRect.dy);
     for (int pageNo = 1; pageNo <= pageCount(); ++pageNo) {
-        PdfPageInfo *pageInfo = getPageInfo(pageNo);
+        PageInfo *pageInfo = getPageInfo(pageNo);
         if (!pageInfo->shown) {
             assert(0.0 == pageInfo->visibleRatio);
             continue;
@@ -793,7 +792,7 @@ int DisplayModel::getPageNoByPoint(PointI pt)
         return POINT_OUT_OF_PAGE;
 
     for (int pageNo = 1; pageNo <= pageCount(); ++pageNo) {
-        PdfPageInfo *pageInfo = getPageInfo(pageNo);
+        PageInfo *pageInfo = getPageInfo(pageNo);
         assert(0.0 == pageInfo->visibleRatio || pageInfo->shown);
         if (!pageInfo->shown)
             continue;
@@ -874,7 +873,7 @@ void DisplayModel::renderVisibleParts()
 
 //    DBG_OUT("DisplayModel::renderVisibleParts()\n");
     for (int pageNo = 1; pageNo <= pageCount(); ++pageNo) {
-        PdfPageInfo *pageInfo = getPageInfo(pageNo);
+        PageInfo *pageInfo = getPageInfo(pageNo);
         if (pageInfo->visibleRatio > 0.0) {
             assert(pageInfo->shown);
             StartRenderingPage(pageNo);
@@ -918,7 +917,7 @@ RectD DisplayModel::getContentBox(int pageNo, RenderTarget target)
     RectI cbox;
     // we cache the contentBox for the View target
     if (Target_View == target) {
-        PdfPageInfo *pageInfo = getPageInfo(pageNo);
+        PageInfo *pageInfo = getPageInfo(pageNo);
         if (pageInfo->contentBox.IsEmpty())
             pageInfo->contentBox = engine->PageContentBox(pageNo);
         cbox = pageInfo->contentBox;
@@ -969,7 +968,7 @@ void DisplayModel::goToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
         relayout(_zoomVirtual, _rotation);
     }
     //DBG_OUT("DisplayModel::goToPage(pageNo=%d, scrollY=%d)\n", pageNo, scrollY);
-    PdfPageInfo * pageInfo = getPageInfo(pageNo);
+    PageInfo * pageInfo = getPageInfo(pageNo);
 
     if (-1 == scrollX && 0 == scrollY && ZOOM_FIT_CONTENT == _zoomVirtual) {
         // scroll down to where the actual content starts
@@ -1018,7 +1017,7 @@ void DisplayModel::changeDisplayMode(DisplayMode displayMode)
            for non-continuous mode is in DisplayModel::changeStartPage() called
            from DisplayModel::goToPage() */
         for (int pageNo = 1; pageNo <= pageCount(); pageNo++) {
-            PdfPageInfo *pageInfo = &(_pagesInfo[pageNo-1]);
+            PageInfo *pageInfo = &(_pagesInfo[pageNo-1]);
             pageInfo->shown = true;
             pageInfo->visibleRatio = 0.0;
         }
@@ -1033,12 +1032,12 @@ void DisplayModel::setPresentationMode(bool enable)
     if (enable) {
         _presDisplayMode = _displayMode;
         _presZoomVirtual = _zoomVirtual;
-        _padding = &gDisplaySettingsPresentation;
+        _padding = &gPagePaddingPresentation;
         changeDisplayMode(DM_SINGLE_PAGE);
         zoomTo(ZOOM_FIT_PAGE);
     }
     else {
-        _padding = &gDisplaySettings;
+        _padding = &gPagePadding;
         changeDisplayMode(_presDisplayMode);
         if (!ValidZoomVirtual(_presZoomVirtual))
             _presZoomVirtual = _zoomVirtual;
@@ -1079,7 +1078,7 @@ bool DisplayModel::goToPrevPage(int scrollY)
     if ((0 == scrollY || -1 == scrollY) && _zoomVirtual == ZOOM_FIT_CONTENT)
         getContentStart(currPageNo, &topX, &topY);
 
-    PdfPageInfo * pageInfo = getPageInfo(currPageNo);
+    PageInfo * pageInfo = getPageInfo(currPageNo);
     if (_zoomVirtual == ZOOM_FIT_CONTENT && pageInfo->bitmap.y <= topY)
         scrollY = 0; // continue, even though the current page isn't fully visible
     else if (pageInfo->bitmap.y > scrollY && displayModeContinuous(displayMode())) {
@@ -1178,7 +1177,7 @@ void DisplayModel::scrollYTo(int yOff)
    of current page */
 void DisplayModel::scrollYBy(int dy, bool changePage)
 {
-    PdfPageInfo *   pageInfo;
+    PageInfo *   pageInfo;
     int             currYOff = areaOffset.y;
     int             newPageNo;
     int             currPageNo;
@@ -1262,7 +1261,7 @@ void DisplayModel::zoomTo(float zoomVirtual, PointI *fixPt)
     else {
         //DBG_OUT("DisplayModel::zoomTo() zoomVirtual=%.6f\n", _zoomVirtual);
         ss.page = currentPageNo();
-        PdfPageInfo *pageInfo = getPageInfo(ss.page);
+        PageInfo *pageInfo = getPageInfo(ss.page);
         relayout(zoomVirtual, _rotation);
         if (pageInfo)
             goToPage(ss.page, max(-pageInfo->pageOnScreen.y, 0));
@@ -1304,23 +1303,23 @@ void DisplayModel::RepaintDisplay()
     _appData->RepaintAsync();
 }
 
-PdfSel *DisplayModel::Find(PdfSearchDirection direction, TCHAR *text, UINT fromPage)
+TextSel *DisplayModel::Find(TextSearchDirection direction, TCHAR *text, UINT fromPage)
 {
     bool forward = (direction == FIND_FORWARD);
-    _pdfSearch->SetDirection(forward);
+    _textSearch->SetDirection(forward);
     if (text != NULL)
-        bFoundText = _pdfSearch->FindFirst(fromPage ? fromPage : currentPageNo(), text);
+        bFoundText = _textSearch->FindFirst(fromPage ? fromPage : currentPageNo(), text);
     else
-        bFoundText = _pdfSearch->FindNext();
+        bFoundText = _textSearch->FindNext();
 
     if (bFoundText)
-        return &_pdfSearch->result;
+        return &_textSearch->result;
     return NULL;
 }
 
 bool DisplayModel::cvtUserToScreen(int pageNo, PointD *pt)
 {
-    PdfPageInfo *pageInfo = getPageInfo(pageNo);
+    PageInfo *pageInfo = getPageInfo(pageNo);
     if (!pageInfo)
         return false;
 
@@ -1335,7 +1334,7 @@ bool DisplayModel::cvtScreenToUser(int *pageNo, PointD *pt)
     *pageNo = getPageNoByPoint(pt->Convert<int>());
     if (*pageNo == POINT_OUT_OF_PAGE) 
         return false;
-    const PdfPageInfo *pageInfo = getPageInfo(*pageNo);
+    const PageInfo *pageInfo = getPageInfo(*pageNo);
 
     PointD p = PointD(pt->x - 0.5 - pageInfo->currPos.x + areaOffset.x,
                       pt->y - 0.5 - pageInfo->currPos.y + areaOffset.y);
@@ -1443,7 +1442,7 @@ void DisplayModel::goToPdfDest(fz_obj *dest)
 
             // goToPage needs scrolling info relative to the page's top border
             // and the page line's left margin
-            PdfPageInfo * pageInfo = getPageInfo(pageNo);
+            PageInfo * pageInfo = getPageInfo(pageNo);
             // TODO: These values are not up-to-date, if the page has not been shown yet
             if (pageInfo->shown) {
                 scroll.x -= pageInfo->pageOnScreen.x;
@@ -1467,7 +1466,7 @@ void DisplayModel::goToPdfDest(fz_obj *dest)
 
             // goToPage needs scrolling info relative to the page's top border
             // and the page line's left margin
-            PdfPageInfo * pageInfo = getPageInfo(pageNo);
+            PageInfo * pageInfo = getPageInfo(pageNo);
             // TODO: These values are not up-to-date, if the page has not been shown yet
             if (pageInfo->shown) {
                 scroll.x -= pageInfo->pageOnScreen.x;
@@ -1538,7 +1537,7 @@ TCHAR *DisplayModel::extractAllText(RenderTarget target)
 }
 
 // returns true if it was necessary to scroll the display (horizontally or vertically)
-bool DisplayModel::ShowResultRectToScreen(PdfSel *res)
+bool DisplayModel::ShowResultRectToScreen(TextSel *res)
 {
     if (!res->len)
         return false;
@@ -1552,7 +1551,7 @@ bool DisplayModel::ShowResultRectToScreen(PdfSel *res)
         extremes = extremes.Union(rect);
     }
 
-    PdfPageInfo *pageInfo = getPageInfo(res->pages[0]);
+    PageInfo *pageInfo = getPageInfo(res->pages[0]);
     int sx = 0, sy = 0;
     //
     // Vertical scroll
@@ -1612,7 +1611,7 @@ bool DisplayModel::getScrollState(ScrollState *state)
         // TODO: use currentPageNo() instead?
         return false;
 
-    PdfPageInfo *pageInfo = getPageInfo(state->page);
+    PageInfo *pageInfo = getPageInfo(state->page);
     state->x = max(pageInfo->screenX - pageInfo->bitmap.x, 0);
     state->y = max(pageInfo->screenY - pageInfo->bitmap.y, 0);
     // Shortcut: don't calculate precise positions, if the

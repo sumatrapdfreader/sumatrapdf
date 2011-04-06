@@ -1,10 +1,10 @@
 /* Copyright 2006-2011 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "PdfSelection.h"
+#include "TextSelection.h"
 #include "Vec.h"
 
-PdfSelection::PdfSelection(BaseEngine *engine) : engine(engine)
+TextSelection::TextSelection(BaseEngine *engine) : engine(engine)
 {
     int count = engine->PageCount();
     coords = SAZA(RectI *, count);
@@ -19,7 +19,7 @@ PdfSelection::PdfSelection(BaseEngine *engine) : engine(engine)
     startGlyph = -1;
 }
 
-PdfSelection::~PdfSelection()
+TextSelection::~TextSelection()
 {
     Reset();
 
@@ -35,7 +35,7 @@ PdfSelection::~PdfSelection()
     free(lens);
 }
 
-void PdfSelection::Reset()
+void TextSelection::Reset()
 {
     result.len = 0;
     free(result.pages);
@@ -47,7 +47,7 @@ void PdfSelection::Reset()
 // returns the index of the glyph closest to the right of the given coordinates
 // (i.e. when over the right half of a glyph, the returned index will be for the
 // glyph following it, which will be the first glyph (not) to be selected)
-int PdfSelection::FindClosestGlyph(int pageNo, double x, double y)
+int TextSelection::FindClosestGlyph(int pageNo, double x, double y)
 {
     assert(1 <= pageNo && pageNo <= engine->PageCount());
     if (!text[pageNo - 1]) {
@@ -89,7 +89,7 @@ int PdfSelection::FindClosestGlyph(int pageNo, double x, double y)
     return result;
 }
 
-void PdfSelection::FillResultRects(int pageNo, int glyph, int length, StrVec *lines)
+void TextSelection::FillResultRects(int pageNo, int glyph, int length, StrVec *lines)
 {
     RectI mediabox = engine->PageMediabox(pageNo).Round();
     RectI *c = &coords[pageNo - 1][glyph], *end = c + length;
@@ -124,7 +124,7 @@ void PdfSelection::FillResultRects(int pageNo, int glyph, int length, StrVec *li
     }
 }
 
-bool PdfSelection::IsOverGlyph(int pageNo, double x, double y)
+bool TextSelection::IsOverGlyph(int pageNo, double x, double y)
 {
     int glyphIx = FindClosestGlyph(pageNo, x, y);
     PointI pt = PointD(x, y).Convert<int>();
@@ -138,7 +138,7 @@ bool PdfSelection::IsOverGlyph(int pageNo, double x, double y)
     return _coords[glyphIx].Inside(pt);
 }
 
-void PdfSelection::StartAt(int pageNo, int glyphIx)
+void TextSelection::StartAt(int pageNo, int glyphIx)
 {
     startPage = pageNo;
     startGlyph = glyphIx;
@@ -148,7 +148,7 @@ void PdfSelection::StartAt(int pageNo, int glyphIx)
     }
 }
 
-void PdfSelection::SelectUpTo(int pageNo, int glyphIx)
+void TextSelection::SelectUpTo(int pageNo, int glyphIx)
 {
     if (startPage == -1 || startGlyph == -1)
         return;
@@ -179,7 +179,7 @@ void PdfSelection::SelectUpTo(int pageNo, int glyphIx)
     }
 }
 
-void PdfSelection::SelectWordAt(int pageNo, double x, double y)
+void TextSelection::SelectWordAt(int pageNo, double x, double y)
 {
     int ix = FindClosestGlyph(pageNo, x, y);
 
@@ -194,7 +194,7 @@ void PdfSelection::SelectWordAt(int pageNo, double x, double y)
     SelectUpTo(pageNo, ix);
 }
 
-TCHAR *PdfSelection::ExtractText(TCHAR *lineSep)
+TCHAR *TextSelection::ExtractText(TCHAR *lineSep)
 {
     StrVec lines;
 

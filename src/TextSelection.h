@@ -1,8 +1,8 @@
 /* Copyright 2006-2011 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#ifndef PdfSelection_h
-#define PdfSelection_h
+#ifndef TextSelection_h
+#define TextSelection_h
 
 #include "BaseEngine.h"
 
@@ -14,13 +14,13 @@ typedef struct {
     int len;
     int *pages;
     RectI *rects;
-} PdfSel;
+} TextSel;
 
-class PdfSelection
+class TextSelection
 {
 public:
-    PdfSelection(BaseEngine *engine);
-    ~PdfSelection();
+    TextSelection(BaseEngine *engine);
+    ~TextSelection();
 
     bool IsOverGlyph(int pageNo, double x, double y);
     void StartAt(int pageNo, int glyphIx);
@@ -35,7 +35,7 @@ public:
     TCHAR *ExtractText(TCHAR *lineSep=DOS_NEWLINE);
     void Reset();
 
-    PdfSel result;
+    TextSel result;
 
 protected:
     BaseEngine* engine;

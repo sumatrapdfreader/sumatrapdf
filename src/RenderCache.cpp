@@ -147,7 +147,7 @@ static RectI GetTileOnScreen(BaseEngine *engine, int pageNo, int rotation, float
 
 static bool IsTileVisible(DisplayModel *dm, int pageNo, int rotation, float zoom, TilePosition tile, float fuzz=0)
 {
-    PdfPageInfo *pageInfo = dm->getPageInfo(pageNo);
+    PageInfo *pageInfo = dm->getPageInfo(pageNo);
     RectI tileOnScreen = GetTileOnScreen(dm->engine, pageNo, rotation, zoom, tile, pageInfo->pageOnScreen);
     // consider nearby tiles visible depending on the fuzz factor
     tileOnScreen.x -= (int)(tileOnScreen.dx * fuzz * 0.5);
@@ -629,7 +629,7 @@ UINT RenderCache::PaintTiles(HDC hdc, RectI *bounds, DisplayModel *dm, int pageN
 }
 
 UINT RenderCache::Paint(HDC hdc, RectI *bounds, DisplayModel *dm, int pageNo,
-                        PdfPageInfo *pageInfo, bool *renderOutOfDateCue)
+                        PageInfo *pageInfo, bool *renderOutOfDateCue)
 {
     assert(pageInfo->shown && 0.0 != pageInfo->visibleRatio);
 

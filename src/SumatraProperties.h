@@ -10,11 +10,11 @@
 
 enum Magnitudes { KB = 1024, MB = 1024 * KB, GB = 1024 * MB };
 
-class PdfPropertyEl {
+class PropertyEl {
 public:
-    PdfPropertyEl(const TCHAR *leftTxt, const TCHAR *rightTxt)
+    PropertyEl(const TCHAR *leftTxt, const TCHAR *rightTxt)
         : leftTxt(leftTxt), rightTxt(rightTxt) { }
-    ~PdfPropertyEl() {
+    ~PropertyEl() {
         // free the text on the right. Text on left is static, so doesn't need to be freed
         free((void *)rightTxt);
     }
@@ -29,9 +29,9 @@ public:
     RectI           rightPos;
 };
 
-class PdfPropertiesLayout : public Vec<PdfPropertyEl *> {
+class PropertiesLayout : public Vec<PropertyEl *> {
 public:
-    ~PdfPropertiesLayout() { DeleteVecMembers(*this); }
+    ~PropertiesLayout() { DeleteVecMembers(*this); }
     void AddProperty(const TCHAR *key, const TCHAR *value);
 };
 

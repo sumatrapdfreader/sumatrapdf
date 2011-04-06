@@ -1,29 +1,29 @@
 /* Copyright 2006-2011 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#ifndef PdfSearch_h
-#define PdfSearch_h
+#ifndef TextSearch_h
+#define TextSearch_h
 
 #include <windows.h>
 #include "BaseEngine.h"
-#include "PdfSelection.h"
+#include "TextSelection.h"
 
-enum PdfSearchDirection {
+enum TextSearchDirection {
     FIND_BACKWARD = false,
     FIND_FORWARD  = true
 };
 
-class PdfSearchTracker
+class TextSearchTracker
 {
 public:
     virtual bool FindUpdateStatus(int count, int total) = 0;
 };
 
-class PdfSearch : public PdfSelection
+class TextSearch : public TextSelection
 {
 public:
-    PdfSearch(BaseEngine *engine, PdfSearchTracker *tracker=NULL);
-    ~PdfSearch();
+    TextSearch(BaseEngine *engine, TextSearchTracker *tracker=NULL);
+    ~TextSearch();
 
     void SetText(TCHAR *text);
     void SetSensitive(bool sensitive);
@@ -32,7 +32,7 @@ public:
     bool FindNext();
 
     int findPage;
-    PdfSearchTracker *tracker;
+    TextSearchTracker *tracker;
 
 protected:
     TCHAR *findText;

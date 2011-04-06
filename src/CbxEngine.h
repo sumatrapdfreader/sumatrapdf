@@ -11,15 +11,11 @@ class ComicBookPage {
 public:
     HGLOBAL             bmpData;
     Gdiplus::Bitmap *   bmp;
-    int                 w, h;
     int                 width, height;
 
     ComicBookPage(HGLOBAL bmpData, Gdiplus::Bitmap *bmp) :
         bmpData(bmpData), bmp(bmp),
-        w(bmp->GetWidth()), h(bmp->GetHeight()),
-        width(bmp->GetWidth()), height(bmp->GetHeight())
-    {
-    }
+        width(bmp->GetWidth()), height(bmp->GetHeight()) { }
 
     ~ComicBookPage() {
         delete bmp;
