@@ -1,6 +1,7 @@
 /* Copyright 2006-2011 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+#include "SumatraPDF.h"
 #include "DisplayModel.h"
 #include "WindowInfo.h"
 #include "PdfSync.h"
@@ -40,6 +41,7 @@ WindowInfo::WindowInfo(HWND hwnd) :
     uiDPIFactor = ceil(dpi * 4.0f / USER_DEFAULT_SCREEN_DPI) / 4.0f;
     ReleaseDC(hwndFrame, hdcFrame);
 
+    linkHandler = new PdfLinkHandler(this);
     fwdsearchmark.show = false;
 }
 
@@ -48,6 +50,7 @@ WindowInfo::~WindowInfo() {
     delete this->dm;
     delete this->watcher;
     delete this->pdfsync;
+    delete this->linkHandler;
 
     CloseHandle(this->stopFindStatusThreadEvent);
     CloseHandle(this->findStatusThread);
@@ -361,4 +364,176 @@ void WindowInfo::DeleteInfotip()
 
     SendMessage(this->hwndInfotip, TTM_DELTOOL, 0, (LPARAM)&ti);
     this->infotipVisible = false;
+}
+
+// TODO: find a better place to put this
+
+PdfEngine *PdfLinkHandler::engine()
+{
+    if (!owner || !owner->dm)
+        return NULL;
+    return owner->dm->pdfEngine;
+}
+
+void PdfLinkHandler::GotoPdfLink(pdf_link *link)
+{
+    assert(owner && owner->linkHandler == this);
+    if (!engine())
+        return;
+
+    if (!link)
+        return;
+
+    DisplayModel *dm = owner->dm;
+    ScopedMem<TCHAR> path(GetLinkPath(link));
+    if (PDF_LINK_URI == link->kind && path) {
+        if (Str::StartsWithI(path, _T("http:")) || Str::StartsWithI(path, _T("https:")))
+            LaunchBrowser(path);
+        /* else: unsupported uri type */
+    }
+    else if (PDF_LINK_GOTO == link->kind) {
+        GotoPdfDest(link->dest);
+    }
+    else if (PDF_LINK_LAUNCH == link->kind && fz_dict_gets(link->dest, "EF")) {
+        fz_obj *embeddedList = fz_dict_gets(link->dest, "EF");
+        fz_obj *embedded = fz_dict_gets(embeddedList, "UF");
+        if (!embedded)
+            embedded = fz_dict_gets(embeddedList, "F");
+        if (path && Str::EndsWithI(path, _T(".pdf"))) {
+            // open embedded PDF documents in a new window
+            ScopedMem<TCHAR> combinedPath(Str::Format(_T("%s:%d:%d"), dm->fileName(), fz_to_num(embedded), fz_to_gen(embedded)));
+            LoadDocument(combinedPath);
+        } else {
+            // offer to save other attachments to a file
+            fz_buffer *data = dm->pdfEngine->getStreamData(fz_to_num(embedded), fz_to_gen(embedded));
+            if (data) {
+                SaveEmbeddedFile(data->data, data->len, path);
+                fz_drop_buffer(data);
+            }
+        }
+    }
+    else if (PDF_LINK_LAUNCH == link->kind && path) {
+        /* for safety, only handle relative PDF paths and only open them in SumatraPDF */
+        if (!Str::StartsWith(path.Get(), _T("\\")) &&
+            Str::EndsWithI(path.Get(), _T(".pdf"))) {
+            ScopedMem<TCHAR> basePath(Path::GetDir(dm->fileName()));
+            ScopedMem<TCHAR> combinedPath(Path::Join(basePath, path));
+            LoadDocument(combinedPath);
+        }
+    }
+    else if (PDF_LINK_NAMED == link->kind) {
+        char *name = fz_to_name(link->dest);
+        if (Str::Eq(name, "NextPage"))
+            dm->goToNextPage(0);
+        else if (Str::Eq(name, "PrevPage"))
+            dm->goToPrevPage(0);
+        else if (Str::Eq(name, "FirstPage"))
+            dm->goToFirstPage();
+        else if (Str::Eq(name, "LastPage"))
+            dm->goToLastPage();
+        // Adobe Reader extensions to the spec, cf. http://www.tug.org/applications/hyperref/manual.html
+        else if (Str::Eq(name, "FullScreen"))
+            PostMessage(owner->hwndFrame, WM_COMMAND, IDM_VIEW_PRESENTATION_MODE, 0);
+        else if (Str::Eq(name, "GoBack"))
+            dm->navigate(-1);
+        else if (Str::Eq(name, "GoForward"))
+            dm->navigate(1);
+        else if (Str::Eq(name, "Print"))
+            PostMessage(owner->hwndFrame, WM_COMMAND, IDM_PRINT, 0);
+    }
+    else if (PDF_LINK_ACTION == link->kind) {
+        char *type = fz_to_name(fz_dict_gets(link->dest, "S"));
+        if (type && Str::Eq(type, "GoToR") && fz_dict_gets(link->dest, "D") && path) {
+            /* for safety, only handle relative PDF paths and only open them in SumatraPDF */
+            if (!Str::StartsWith(path.Get(), _T("\\")) &&
+                Str::EndsWithI(path.Get(), _T(".pdf"))) {
+                ScopedMem<TCHAR> basePath(Path::GetDir(dm->fileName()));
+                ScopedMem<TCHAR> combinedPath(Path::Join(basePath, path));
+                // TODO: respect fz_to_bool(fz_dict_gets(link->dest, "NewWindow"))
+                WindowInfo *newWin = LoadDocument(combinedPath);
+                if (newWin && newWin->IsDocLoaded())
+                    newWin->linkHandler->GotoPdfDest(fz_dict_gets(link->dest, "D"));
+            }
+        }
+        /* else unsupported action */
+    }
+}
+
+void PdfLinkHandler::GotoPdfDest(fz_obj *dest)
+{
+    assert(owner && owner->linkHandler == this);
+    if (!engine())
+        return;
+
+    int pageNo = !engine()->findPageNo(dest);
+    if (pageNo <= 0)
+        return;
+
+    DisplayModel *dm = owner->dm;
+    PointD scroll(-1, 0);
+    fz_obj *obj = fz_array_get(dest, 1);
+    if (Str::Eq(fz_to_name(obj), "XYZ")) {
+        scroll.x = fz_to_real(fz_array_get(dest, 2));
+        scroll.y = fz_to_real(fz_array_get(dest, 3));
+        dm->cvtUserToScreen(pageNo, &scroll);
+
+        // goToPage needs scrolling info relative to the page's top border
+        // and the page line's left margin
+        PageInfo * pageInfo = dm->getPageInfo(pageNo);
+        // TODO: These values are not up-to-date, if the page has not been shown yet
+        if (pageInfo->shown) {
+            scroll.x -= pageInfo->pageOnScreen.x;
+            scroll.y -= pageInfo->pageOnScreen.y;
+        }
+
+        // NULL values for the coordinates mean: keep the current position
+        if (fz_is_null(fz_array_get(dest, 2)))
+            scroll.x = -1;
+        if (fz_is_null(fz_array_get(dest, 3))) {
+            pageInfo = dm->getPageInfo(dm->currentPageNo());
+            scroll.y = -(pageInfo->pageOnScreen.y - dm->getPadding()->pageBorderTop);
+            scroll.y = MAX(scroll.y, 0); // Adobe Reader never shows the previous page
+        }
+    }
+    else if (Str::Eq(fz_to_name(obj), "FitR")) {
+        scroll.x = fz_to_real(fz_array_get(dest, 2)); // left
+        scroll.y = fz_to_real(fz_array_get(dest, 5)); // top
+        dm->cvtUserToScreen(pageNo, &scroll);
+        // TODO: adjust zoom so that the bottom right corner is also visible?
+
+        // goToPage needs scrolling info relative to the page's top border
+        // and the page line's left margin
+        PageInfo * pageInfo = dm->getPageInfo(pageNo);
+        // TODO: These values are not up-to-date, if the page has not been shown yet
+        if (pageInfo->shown) {
+            scroll.x -= pageInfo->pageOnScreen.x;
+            scroll.y -= pageInfo->pageOnScreen.y;
+        }
+    }
+    /* // ignore author-set zoom settings (at least as long as there's no way to overrule them)
+    else if (Str::Eq(fz_to_name(obj), "Fit")) {
+        dm->zoomTo(ZOOM_FIT_PAGE);
+        owner->UpdateToolbarState();
+    }
+    // */
+    dm->goToPage(pageNo, (int)scroll.y, true, (int)scroll.x);
+}
+
+void PdfLinkHandler::GotoNamedDest(const TCHAR *name)
+{
+    assert(owner && owner->linkHandler == this);
+    if (!engine())
+        return;
+
+    ScopedMem<char> name_utf8(Str::Conv::ToUtf8(name));
+    GotoPdfDest(engine()->getNamedDest(name_utf8));
+}
+
+TCHAR *PdfLinkHandler::GetLinkPath(pdf_link *link)
+{
+    assert(owner && owner->linkHandler == this);
+    if (!engine())
+        return NULL;
+
+    return engine()->getLinkPath(link);
 }

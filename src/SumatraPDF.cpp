@@ -1393,7 +1393,7 @@ static bool LoadDocIntoWindow(
 
     free(win->loadedFilePath);
     win->loadedFilePath = Str::Dup(fileName);
-    win->dm = DisplayModel::CreateFromFileName(win, fileName, displayMode, startPage);
+    win->dm = DisplayModel::CreateFromFileName(win, fileName, displayMode, startPage, win->canvasRc.Size());
     bool needrefresh = !win->dm;
 
     if (!win->dm) {
@@ -1627,28 +1627,24 @@ WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin, b
 }
 
 // The current page edit box is updated with the current page number
-void DisplayModel::pageChanged()
+void WindowInfo::PageNoChanged(int pageNo)
 {
-    WindowInfo *win = _appData;
-    assert(win);
-    if (!win) return;
+    assert(dm && dm->pageCount() > 0);
+    if (!dm || dm->pageCount() == 0)
+        return;
 
-    int currPageNo = currentPageNo();
-    int pageCount = win->dm->pageCount();
-    if (pageCount > 0) {
-        if (INVALID_PAGE_NO != currPageNo) {
-            ScopedMem<TCHAR> buf(Str::Format(_T("%d"), currPageNo));
-            Win::SetText(win->hwndPageBox, buf);
-            ToolbarUpdateStateForWindow(win);
+    if (INVALID_PAGE_NO != pageNo) {
+        ScopedMem<TCHAR> buf(Str::Format(_T("%d"), pageNo));
+        Win::SetText(hwndPageBox, buf);
+        ToolbarUpdateStateForWindow(this);
+    }
+    if (pageNo != this->currPageNo) {
+        UpdateTocSelection(pageNo);
+        if (ZOOM_FIT_CONTENT == dm->zoomVirtual()) {
+            // re-allow hiding the scroll bars
+            this->prevCanvasSize.dx = this->prevCanvasSize.dy = -1;
         }
-        if (currPageNo != win->currPageNo) {
-            win->UpdateTocSelection(currPageNo);
-            if (ZOOM_FIT_CONTENT == _zoomVirtual) {
-                // re-allow hiding the scroll bars
-                win->prevCanvasSize.dx = win->prevCanvasSize.dy = -1;
-            }
-            win->currPageNo = currPageNo;
-        }
+        this->currPageNo = pageNo;
     }
 }
 
@@ -1664,35 +1660,34 @@ void DisplayModel::clearAllRenderings()
     gRenderCache.FreeForDisplayModel(this);
 }
 
-void DisplayModel::setScrollbarsState()
+void WindowInfo::UpdateScrollbars(SizeI canvas)
 {
-    WindowInfo *win = this->_appData;
-    assert(win);
-    if (!win) return;
+    assert(dm);
+    if (!dm)
+        return;
 
-    SCROLLINFO      si = {0};
+    SCROLLINFO si = { 0 };
     si.cbSize = sizeof(si);
     si.fMask = SIF_ALL;
 
-    SizeI canvas = _canvasSize;
-    SizeI drawArea = drawAreaSize;
+    SizeI drawArea = dm->drawAreaSize;
 
     // When hiding the scroll bars and fitting content, it could be that we'd have to
     // display the scroll bars right again for the new zoom. Make sure we haven't just done
     // that - or if so, force the scroll bars to remain visible.
-    if (ZOOM_FIT_CONTENT == _zoomVirtual) {
-        if (win->prevCanvasSize.dy == drawArea.dy &&
-            win->prevCanvasSize.dx == drawArea.dx + GetSystemMetrics(SM_CXVSCROLL)) {
+    if (ZOOM_FIT_CONTENT == dm->zoomVirtual()) {
+        if (this->prevCanvasSize.dy == drawArea.dy &&
+            this->prevCanvasSize.dx == drawArea.dx + GetSystemMetrics(SM_CXVSCROLL)) {
             if (drawArea.dy == canvas.dy)
                 canvas.dy++;
         }
-        else if (win->prevCanvasSize.dx == drawArea.dx &&
-                 win->prevCanvasSize.dy == drawArea.dy + GetSystemMetrics(SM_CYHSCROLL)) {
+        else if (this->prevCanvasSize.dx == drawArea.dx &&
+                 this->prevCanvasSize.dy == drawArea.dy + GetSystemMetrics(SM_CYHSCROLL)) {
             if (drawArea.dx == canvas.dx)
                 canvas.dx++;
         }
         else
-            win->prevCanvasSize = drawArea;
+            this->prevCanvasSize = drawArea;
     }
 
     if (drawArea.dx >= canvas.dx) {
@@ -1701,20 +1696,21 @@ void DisplayModel::setScrollbarsState()
         si.nMax = 99;
         si.nPage = 100;
     } else {
-        si.nPos = areaOffset.x;
+        si.nPos = dm->areaOffset.x;
         si.nMin = 0;
         si.nMax = canvas.dx - 1;
         si.nPage = drawArea.dx;
     }
-    SetScrollInfo(win->hwndCanvas, SB_HORZ, &si, TRUE);
+    SetScrollInfo(this->hwndCanvas, SB_HORZ, &si, TRUE);
 
     // When hiding the scroll bars and fitting width, it could be that we'd have to
     // display the scroll bars right again for the new width. Make sure we haven't just done
     // that - or if so, force the vertical scroll bar to remain visible.
-    if (ZOOM_FIT_WIDTH == _zoomVirtual || ZOOM_FIT_PAGE == _zoomVirtual) {
-        if (win->prevCanvasSize.dy != drawArea.dy ||
-            win->prevCanvasSize.dx != drawArea.dx + GetSystemMetrics(SM_CXVSCROLL)) {
-            win->prevCanvasSize = drawArea;
+    if (ZOOM_FIT_WIDTH == dm->zoomVirtual() ||
+        ZOOM_FIT_PAGE == dm->zoomVirtual()) {
+        if (this->prevCanvasSize.dy != drawArea.dy ||
+            this->prevCanvasSize.dx != drawArea.dx + GetSystemMetrics(SM_CXVSCROLL)) {
+            this->prevCanvasSize = drawArea;
         }
         else if (drawArea.dy == canvas.dy)
             canvas.dy++;
@@ -1726,18 +1722,18 @@ void DisplayModel::setScrollbarsState()
         si.nMax = 99;
         si.nPage = 100;
     } else {
-        si.nPos = areaOffset.y;
+        si.nPos = dm->areaOffset.y;
         si.nMin = 0;
         si.nMax = canvas.dy - 1;
         si.nPage = drawArea.dy;
 
-        if (ZOOM_FIT_PAGE != _zoomVirtual) {
+        if (ZOOM_FIT_PAGE != dm->zoomVirtual()) {
             // keep the top/bottom 5% of the previous page visible after paging down/up
             si.nPage = (UINT)(si.nPage * 0.95);
             si.nMax -= drawArea.dy - si.nPage;
         }
     }
-    SetScrollInfo(win->hwndCanvas, SB_VERT, &si, TRUE);
+    SetScrollInfo(this->hwndCanvas, SB_VERT, &si, TRUE);
 }
 
 void AssociateExeWithPdfExtension()
@@ -2450,10 +2446,10 @@ static bool OnInverseSearch(WindowInfo *win, int x, int y)
         gGlobalPrefs.m_enableTeXEnhancements = true;
     }
 
-    int pageNo = POINT_OUT_OF_PAGE;
+    int pageNo = 0;
     PointD pt(x, y);
     win->dm->cvtScreenToUser(&pageNo, &pt);
-    if (pageNo == POINT_OUT_OF_PAGE) 
+    if (!win->dm->validPageNo(pageNo))
         return false;
     x = (int)pt.x; y = (int)pt.y;
 
@@ -2505,7 +2501,7 @@ static void OnContextMenu(WindowInfo *win, int x, int y)
         return;
 
     pdf_link *link = win->dm->getLinkAtPosition(PointI(x, y));
-    ScopedMem<TCHAR> linkAddress(win->dm->getLinkPath(link));
+    ScopedMem<TCHAR> linkAddress(win->linkHandler->GetLinkPath(link));
     pdf_annot *comment = win->dm->getCommentAtPosition(PointI(x, y));
 
     HMENU popup = BuildMenuFromMenuDef(menuDefContext, dimof(menuDefContext), CreatePopupMenu());
@@ -2760,7 +2756,7 @@ static void OnMouseLeftButtonUp(WindowInfo *win, int x, int y, WPARAM key)
     if (didDragMouse)
         /* pass */;
     else if (win->linkOnLastButtonDown && win->dm->getLinkAtPosition(PointI(x, y)) == win->linkOnLastButtonDown) {
-        win->dm->goToTocLink(win->linkOnLastButtonDown);
+        win->linkHandler->GotoPdfLink(win->linkOnLastButtonDown);
         SetCursor(gCursorArrow);
     }
     /* if we had a selection and this was just a click, hide the selection */
@@ -3491,7 +3487,7 @@ static void OnMenuSaveAs(WindowInfo *win)
         free(realDstFileName);
 }
 
-bool DisplayModel::saveStreamAs(unsigned char *data, int dataLen, const TCHAR *fileName)
+bool PdfLinkHandler::SaveEmbeddedFile(unsigned char *data, int dataLen, const TCHAR *fileName)
 {
     if (gRestrictedUse)
         return false;
@@ -3508,7 +3504,7 @@ bool DisplayModel::saveStreamAs(unsigned char *data, int dataLen, const TCHAR *f
 
     OPENFILENAME ofn = { 0 };
     ofn.lStructSize = sizeof(ofn);
-    ofn.hwndOwner = _appData->hwndFrame;
+    ofn.hwndOwner = owner->hwndFrame;
     ofn.lpstrFile = dstFileName;
     ofn.nMaxFile = dimof(dstFileName);
     ofn.lpstrFilter = fileFilter;
@@ -4355,7 +4351,7 @@ static void WindowInfo_ShowFindStatus(WindowInfo *win)
     SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_MATCH, disable);
 }
 
-static void WindowInfo_HideFindStatus(WindowInfo *win, bool canceled=false, bool loopedAround=false)
+static void WindowInfo_HideFindStatus(WindowInfo *win, bool success=false, bool loopedAround=false)
 {
     LPARAM enable = (LPARAM)MAKELONG(1, 0);
 
@@ -4365,9 +4361,9 @@ static void WindowInfo_HideFindStatus(WindowInfo *win, bool canceled=false, bool
 
     // resize the window, in case another message has been displayed in the meantime
     MoveWindow(win->hwndFindStatus, FIND_STATUS_MARGIN, FIND_STATUS_MARGIN, MulDiv(FIND_STATUS_WIDTH, win->dpi, USER_DEFAULT_SCREEN_DPI), MulDiv(23, win->dpi, USER_DEFAULT_SCREEN_DPI) + FIND_STATUS_PROGRESS_HEIGHT + 8, false);
-    if (canceled)
+    if (!success && !loopedAround) // i.e. canceled
         WindowInfo_ShowMessage_Async(win, NULL, false);
-    else if (!win->dm->bFoundText)
+    else if (!success && loopedAround)
         WindowInfo_ShowMessage_Async(win, _TR("No matches were found"), false);
     else {
         ScopedMem<TCHAR> buf(Str::Format(_TR("Found text at page %d"), win->dm->currentPageNo()));
@@ -4643,7 +4639,7 @@ public:
 
     virtual void Execute() {
         if (WindowInfoStillValid(win) && win->IsDocLoaded())
-            win->dm->goToTocLink(tocItem->link);
+            win->linkHandler->GotoPdfLink(tocItem->link);
     }
 };
 
@@ -4823,17 +4819,17 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, L
 
 class FindEndWorkItem : public UIThreadWorkItem
 {
-    TextSel*pdfSel;
+    TextSel*textSel;
     bool    wasModifiedCanceled;
     bool    loopedAround;
 
 public:
-    FindEndWorkItem(WindowInfo *win, TextSel *pdfSel,
+    FindEndWorkItem(WindowInfo *win, TextSel *textSel,
                     bool wasModifiedCanceled,
                     bool loopedAround=false) :
-        UIThreadWorkItem(win), pdfSel(pdfSel),
+        UIThreadWorkItem(win), textSel(textSel),
             loopedAround(loopedAround),
-            wasModifiedCanceled(wasModifiedCanceled) {}
+            wasModifiedCanceled(wasModifiedCanceled) { }
 
     virtual void Execute() {
         if (!WindowInfoStillValid(win))
@@ -4841,13 +4837,13 @@ public:
         if (!win->IsDocLoaded()) {
             // the document was closed while finding
             WindowInfo_ShowMessage_Async(win, NULL, false);
-        } else if (pdfSel) {
-            WindowInfo_ShowSearchResult(win, pdfSel, wasModifiedCanceled);
-            WindowInfo_HideFindStatus(win, false, loopedAround);
+        } else if (textSel) {
+            WindowInfo_ShowSearchResult(win, textSel, wasModifiedCanceled);
+            WindowInfo_HideFindStatus(win, true, loopedAround);
         } else {
             // nothing found or search canceled
             ClearSearch(win);
-            WindowInfo_HideFindStatus(win, wasModifiedCanceled);
+            WindowInfo_HideFindStatus(win, false, !wasModifiedCanceled);
         }
     }
 };
@@ -5785,7 +5781,7 @@ void WindowInfo::ClearTocBox()
 static void CustomizeToCInfoTip(WindowInfo *win, LPNMTVGETINFOTIP nmit)
 {
     PdfTocItem *tocItem = (PdfTocItem *)nmit->lParam;
-    TCHAR *path = win->dm->getLinkPath(tocItem->link);
+    TCHAR *path = win->linkHandler->GetLinkPath(tocItem->link);
     if (!path)
         return;
 
@@ -5819,7 +5815,7 @@ static void CustomizeToCInfoTip(WindowInfo *win, LPNMTVGETINFOTIP nmit)
 
 static void CreateInfotipForPdfLink(WindowInfo *win, int pageNo, pdf_link *link)
 {
-    ScopedMem<TCHAR> linkPath(win->dm->getLinkPath(link));
+    ScopedMem<TCHAR> linkPath(win->linkHandler->GetLinkPath(link));
     RectD rc = fz_rect_to_RectD(link->rect);
     if (!win->dm->rectCvtUserToScreen(pageNo, &rc))
         rc = RectD();
@@ -6860,8 +6856,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
             if (!win)
                 goto Exit;
             if (win->IsDocLoaded() && i.destName && !firstIsDocLoaded) {
-                ScopedMem<char> tmp(Str::Conv::ToUtf8(i.destName));
-                win->dm->goToNamedDest(tmp);
+                win->linkHandler->GotoNamedDest(i.destName);
             }
             else if (win->IsDocLoaded() && i.pageNumber > 0 && !firstIsDocLoaded) {
                 if (win->dm->validPageNo(i.pageNumber))

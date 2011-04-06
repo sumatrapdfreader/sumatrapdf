@@ -6,14 +6,20 @@
 
 #include <shlobj.h>
 #include "GeomUtil.h"
-#include "DisplayState.h"
+#include "DisplayModel.h"
 #include "TextSearch.h"
 #include "PdfEngine.h"
 #include "Vec.h"
 
+#ifndef USER_DEFAULT_SCREEN_DPI
+// the following is only defined if _WIN32_WINNT >= 0x0600 and we use 0x0500
+#define USER_DEFAULT_SCREEN_DPI 96
+#endif
+
 class DisplayModel;
 class FileWatcher;
 class Synchronizer;
+class PdfLinkHandler;
 
 /* Describes actions which can be performed by mouse */
 enum MouseAction {
@@ -43,7 +49,7 @@ typedef struct SelectionOnPage {
 
 /* Describes information related to one window with (optional) a document
    on the screen */
-class WindowInfo : public TextSearchTracker, public PasswordUI
+class WindowInfo : public DisplayModelCallback
 {
 public:
     WindowInfo(HWND hwnd);
@@ -148,6 +154,7 @@ public:
 
     // the following properties only apply to PDF documents
 
+    PdfLinkHandler *linkHandler;
     pdf_link *      linkOnLastButtonDown;
     const TCHAR *   url;
 
@@ -215,9 +222,33 @@ public:
 
     void ShowForwardSearchResult(const TCHAR *fileName, UINT line, UINT col, UINT ret, UINT page, Vec<RectI>& rects);
 
+    // DisplayModelCallback implementation (incl. PasswordUI, TextSearchTracker)
+
     virtual bool FindUpdateStatus(int count, int total);
     virtual TCHAR * GetPassword(const TCHAR *fileName, unsigned char *fileDigest,
                                 unsigned char decryptionKeyOut[32], bool *saveKey);
+    virtual void Repaint() { RepaintAsync(); };
+    virtual void PageNoChanged(int pageNo);
+    virtual void UpdateScrollbars(SizeI canvas);
+    virtual int GetScreenDPI() { return dpi; }
+};
+
+// TODO: find a better place to put this
+
+class PdfLinkHandler {
+    WindowInfo *owner;
+    PdfEngine *engine();
+
+public:
+    PdfLinkHandler(WindowInfo *win) : owner(win) { }
+
+    void GotoPdfLink(pdf_link *link);
+    void GotoPdfDest(fz_obj *dest);
+    void GotoNamedDest(const TCHAR *name);
+
+    TCHAR *GetLinkPath(pdf_link *link);
+
+    bool SaveEmbeddedFile(unsigned char *data, int dataLen, const TCHAR *fileName);
 };
 
 WindowInfo* FindWindowInfoByFile(TCHAR *file);
