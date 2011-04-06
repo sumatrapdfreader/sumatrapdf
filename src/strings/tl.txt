@@ -26,6 +26,9 @@ Bumalik\tAlt+Left Arrow
 &Close\tCtrl-W
 Isara\tCtrl-W
 
+&Copy Selection
+Kopyahin ang napili
+
 &Copy Selection\tCtrl-C
 &Kopyahin ang Napili\tCtrl-C
 
@@ -92,6 +95,9 @@ Mga Pagpipilian
 &Previous Page\tLeft Arrow
 Naunang Pahina\t<-
 
+&Print...
+I-&print
+
 &Print...\tCtrl-P
 I-&print\tCtrl-P
 
@@ -103,6 +109,9 @@ Tandaan ang password para sa dokumentong ito
 
 &Remember these settings for each document
 Tandaan ang settings ng bawat dokumento
+
+&Save As...
+I-&save bilang...
 
 &Save As...\tCtrl-S
 I-save Bilang...\tCtrl-S
@@ -199,6 +208,12 @@ Tuloy-tuloy na Magkaharap
 
 Contribute Translation
 Magbigay ng Saling-wika
+
+Copy &Link Address
+Kopyahin nag address ng &link
+
+Copy Co&mment
+Kopyahin ang komento
 
 Copying text was denied (copying as image only)
 Hindi maaaring kopyahin ang mensahe (kinopya bilang isang imahe lamang)
@@ -347,6 +362,9 @@ Sunod na Pahina
 No matches were found
 Walang makitang kapareha
 
+No result found around line %u in file %s
+Walang nakitang resulta sa line %u ng file %s
+
 No synchronization file found
 Walang makitang synchronization file
 
@@ -370,6 +388,9 @@ Buksan sa Foxit Reader
 
 Open in PDF-XChange
 Buksan sa PDF-XChange
+
+P&roperties
+Mga katangian
 
 P&roperties\tCtrl-D
 Mga Katangian\tCtrl-D
@@ -427,6 +448,12 @@ Iikot Pakaliwa\tCtrl-Shift--
 
 Rotate &Right\tCtrl-Shift-+
 Iikot Pakanan\tCtrl-Shift-+
+
+Searching %d of %d...
+Hinahanap ang %d ng %dâ€¦
+
+Select &All
+Piliin lahat
 
 Select &All\tCtrl-A
 Piliin L&ahat\tCtrl-A
@@ -520,15 +547,4 @@ kinokopya ang mensahe
 
 printing document
 ipini-print ang dokumento
-
-# Untranslated:
-#&Copy Selection
-#&Print...
-#&Save As...
-#Copy &Link Address
-#Copy Co&mment
-#No result found around line %u in file %s
-#P&roperties
-#Searching %d of %d...
-#Select &All
 
