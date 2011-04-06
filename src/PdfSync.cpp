@@ -841,11 +841,7 @@ static const TCHAR *HandleGotoCmd(const TCHAR *cmd, DDEACK& ack)
             return next;
     }
 
-    ScopedMem<char> destNameUtf8(Str::Conv::ToUtf8(destName));
-    if (!destNameUtf8)
-        return next;
-
-    win->dm->goToNamedDest(destNameUtf8);
+    win->linkHandler->GotoNamedDest(destName);
     ack.fAck = 1;
     SetFocusHelper(win->hwndFrame);
     return next;

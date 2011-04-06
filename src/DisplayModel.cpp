@@ -43,16 +43,7 @@
   those pages to a bitmap and display those bitmaps.
 */
 
-#include "BaseUtil.h"
-#include "WindowInfo.h"
 #include "DisplayModel.h"
-#include "Resource.h"
-#include "WinUtil.h"
-#include "FileUtil.h"
-
-#ifndef DEBUG
-#define PREDICTIVE_RENDER 1
-#endif
 
 ScreenPagePadding gPagePadding = {
   PADDING_PAGE_BORDER_TOP_DEF,
@@ -188,7 +179,7 @@ static int LastPageInARowNo(int pageNo, int columns, bool showCover, int pageCou
     return min(lastPageNo, pageCount);
 }
 
-DisplayModel::DisplayModel(DisplayMode displayMode, int dpi)
+DisplayModel::DisplayModel(DisplayModelCallback *callback, DisplayMode displayMode)
 {
     _displayMode = displayMode;
     _presDisplayMode = displayMode;
@@ -198,9 +189,9 @@ DisplayModel::DisplayModel(DisplayMode displayMode, int dpi)
     _padding = &gPagePadding;
     _presentationMode = false;
     _zoomReal = INVALID_ZOOM;
-    _dpiFactor = (float)dpi;
+    _dpiFactor = 1.0f;
     _startPage = INVALID_PAGE_NO;
-    _appData = NULL;
+    _callback = callback;
 
     engine = NULL;
     pdfEngine = NULL;
@@ -240,11 +231,11 @@ PageInfo *DisplayModel::getPageInfo(int pageNo) const
     return &(_pagesInfo[pageNo-1]);
 }
 
-bool DisplayModel::load(const TCHAR *fileName, int startPage, WindowInfo *win)
+bool DisplayModel::load(const TCHAR *fileName, int startPage, SizeI canvasSize)
 { 
     assert(fileName);
     if (Str::EndsWithI(fileName, _T(".pdf")))
-        engine = pdfEngine = PdfEngine::CreateFromFileName(fileName, win);
+        engine = pdfEngine = PdfEngine::CreateFromFileName(fileName, _callback);
     else if (Str::EndsWithI(fileName, _T(".xps")))
         engine = xpsEngine = XpsEngine::CreateFromFileName(fileName);
     else if (Str::EndsWithI(fileName, _T(".cbz")))
@@ -252,16 +243,15 @@ bool DisplayModel::load(const TCHAR *fileName, int startPage, WindowInfo *win)
     else {
         // try loading as either supported file format
         // TODO: sniff the file content instead
-        engine = pdfEngine = PdfEngine::CreateFromFileName(fileName, win);
+        engine = pdfEngine = PdfEngine::CreateFromFileName(fileName, _callback);
         if (!engine)
             engine = xpsEngine = XpsEngine::CreateFromFileName(fileName);
     }
     if (!engine)
         return false;
 
-    _appData = win;
-    _dpiFactor /= engine->GetFileDPI();
-    setTotalDrawAreaSize(win->canvasRc.Size());
+    _dpiFactor = 1.0f * _callback->GetScreenDPI() / engine->GetFileDPI();
+    setTotalDrawAreaSize(canvasSize);
 
     if (validPageNo(startPage))
         _startPage = startPage;
@@ -282,7 +272,7 @@ bool DisplayModel::load(const TCHAR *fileName, int startPage, WindowInfo *win)
         return false;
 
     textSelection = new TextSelection(engine);
-    _textSearch = new TextSearch(engine, win);
+    _textSearch = new TextSearch(engine, _callback);
     return true;
 }
 
@@ -789,7 +779,7 @@ int DisplayModel::getPageNoByPoint(PointI pt)
 {
     // no reasonable answer possible, if zoom hasn't been set yet
     if (!_zoomReal)
-        return POINT_OUT_OF_PAGE;
+        return -1;
 
     for (int pageNo = 1; pageNo <= pageCount(); ++pageNo) {
         PageInfo *pageInfo = getPageInfo(pageNo);
@@ -800,7 +790,8 @@ int DisplayModel::getPageNoByPoint(PointI pt)
         if (pageInfo->pageOnScreen.Inside(pt))
             return pageNo;
     }
-    return POINT_OUT_OF_PAGE;
+
+    return -1;
 }
 
 /* Given position 'x'/'y' in the draw area, returns a structure describing
@@ -908,7 +899,7 @@ void DisplayModel::changeTotalDrawAreaSize(SizeI totalDrawAreaSize)
     } else {
         recalcVisibleParts();
         renderVisibleParts();
-        setScrollbarsState();
+        _callback->UpdateScrollbars(_canvasSize);
     }
 }
 
@@ -1000,8 +991,8 @@ void DisplayModel::goToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
 
     recalcVisibleParts();
     renderVisibleParts();
-    setScrollbarsState();
-    pageChanged();
+    _callback->UpdateScrollbars(_canvasSize);
+    _callback->PageNoChanged(pageNo);
     RepaintDisplay();
 }
 
@@ -1141,10 +1132,10 @@ void DisplayModel::scrollXTo(int xOff)
     int currPageNo = currentPageNo();
     areaOffset.x = xOff;
     recalcVisibleParts();
-    setScrollbarsState();
+    _callback->UpdateScrollbars(_canvasSize);
     
     if (currentPageNo() != currPageNo)
-        pageChanged();
+        _callback->PageNoChanged(currentPageNo());
     RepaintDisplay();
 }
 
@@ -1168,7 +1159,7 @@ void DisplayModel::scrollYTo(int yOff)
 
     int newPageNo = currentPageNo();
     if (newPageNo != currPageNo)
-        pageChanged();
+        _callback->PageNoChanged(newPageNo);
     RepaintDisplay();
 }
 
@@ -1220,10 +1211,10 @@ void DisplayModel::scrollYBy(int dy, bool changePage)
     areaOffset.y = newYOff;
     recalcVisibleParts();
     renderVisibleParts();
-    setScrollbarsState();
+    _callback->UpdateScrollbars(_canvasSize);
     newPageNo = currentPageNo();
     if (newPageNo != currPageNo)
-        pageChanged();
+        _callback->PageNoChanged(newPageNo);
     RepaintDisplay();
 }
 
@@ -1298,21 +1289,17 @@ void DisplayModel::rotateBy(int newRotation)
     goToPage(currPageNo, 0);
 }
 
-void DisplayModel::RepaintDisplay()
-{
-    _appData->RepaintAsync();
-}
-
 TextSel *DisplayModel::Find(TextSearchDirection direction, TCHAR *text, UINT fromPage)
 {
     bool forward = (direction == FIND_FORWARD);
     _textSearch->SetDirection(forward);
+    bool foundText;
     if (text != NULL)
-        bFoundText = _textSearch->FindFirst(fromPage ? fromPage : currentPageNo(), text);
+        foundText = _textSearch->FindFirst(fromPage ? fromPage : currentPageNo(), text);
     else
-        bFoundText = _textSearch->FindNext();
+        foundText = _textSearch->FindNext();
 
-    if (bFoundText)
+    if (foundText)
         return &_textSearch->result;
     return NULL;
 }
@@ -1332,7 +1319,7 @@ bool DisplayModel::cvtUserToScreen(int pageNo, PointD *pt)
 bool DisplayModel::cvtScreenToUser(int *pageNo, PointD *pt)
 {
     *pageNo = getPageNoByPoint(pt->Convert<int>());
-    if (*pageNo == POINT_OUT_OF_PAGE) 
+    if (!validPageNo(*pageNo))
         return false;
     const PageInfo *pageInfo = getPageInfo(*pageNo);
 
@@ -1343,152 +1330,6 @@ bool DisplayModel::cvtScreenToUser(int *pageNo, PointD *pt)
     pt->x = p.x;
     pt->y = p.y;
     return true;
-}
-
-void DisplayModel::goToTocLink(pdf_link* link)
-{
-    TCHAR *path = NULL;
-    if (!link)
-        return;
-    if (PDF_LINK_URI == link->kind && (path = getLinkPath(link))) {
-        if (Str::StartsWithI(path, _T("http:")) || Str::StartsWithI(path, _T("https:")))
-            launch_url(path);
-        /* else: unsupported uri type */
-        free(path);
-    }
-    else if (PDF_LINK_GOTO == link->kind) {
-        goToPdfDest(link->dest);
-    }
-    else if (PDF_LINK_LAUNCH == link->kind && fz_dict_gets(link->dest, "EF")) {
-        fz_obj *embeddedList = fz_dict_gets(link->dest, "EF");
-        fz_obj *embedded = fz_dict_gets(embeddedList, "UF");
-        if (!embedded)
-            embedded = fz_dict_gets(embeddedList, "F");
-        path = getLinkPath(link);
-        if (path && Str::EndsWithI(path, _T(".pdf"))) {
-            // open embedded PDF documents in a new window
-            ScopedMem<TCHAR> combinedPath(Str::Format(_T("%s:%d:%d"), fileName(), fz_to_num(embedded), fz_to_gen(embedded)));
-            LoadDocument(combinedPath);
-        } else if (pdfEngine) {
-            // offer to save other attachments to a file
-            fz_buffer *data = pdfEngine->getStreamData(fz_to_num(embedded), fz_to_gen(embedded));
-            if (data) {
-                saveStreamAs(data->data, data->len, path);
-                fz_drop_buffer(data);
-            }
-        }
-        free(path);
-    }
-    else if (PDF_LINK_LAUNCH == link->kind && (path = getLinkPath(link))) {
-        /* for safety, only handle relative PDF paths and only open them in SumatraPDF */
-        if (!Str::StartsWith(path, _T("\\")) && Str::EndsWithI(path, _T(".pdf"))) {
-            ScopedMem<TCHAR> basePath(Path::GetDir(fileName()));
-            ScopedMem<TCHAR> combinedPath(Path::Join(basePath, path));
-            LoadDocument(combinedPath);
-        }
-        free(path);
-    }
-    else if (PDF_LINK_NAMED == link->kind) {
-        char *name = fz_to_name(link->dest);
-        if (Str::Eq(name, "NextPage"))
-            goToNextPage(0);
-        else if (Str::Eq(name, "PrevPage"))
-            goToPrevPage(0);
-        else if (Str::Eq(name, "FirstPage"))
-            goToFirstPage();
-        else if (Str::Eq(name, "LastPage"))
-            goToLastPage();
-        // Adobe Reader extensions to the spec, cf. http://www.tug.org/applications/hyperref/manual.html
-        else if (Str::Eq(name, "FullScreen"))
-            PostMessage(_appData->hwndFrame, WM_COMMAND, IDM_VIEW_PRESENTATION_MODE, 0);
-        else if (Str::Eq(name, "GoBack"))
-            navigate(-1);
-        else if (Str::Eq(name, "GoForward"))
-            navigate(1);
-        else if (Str::Eq(name, "Print"))
-            PostMessage(_appData->hwndFrame, WM_COMMAND, IDM_PRINT, 0);
-    }
-    else if (PDF_LINK_ACTION == link->kind) {
-        char *type = fz_to_name(fz_dict_gets(link->dest, "S"));
-        if (type && Str::Eq(type, "GoToR") && fz_dict_gets(link->dest, "D") && (path = getLinkPath(link))) {
-            /* for safety, only handle relative PDF paths and only open them in SumatraPDF */
-            if (!Str::StartsWith(path, _T("\\")) && Str::EndsWithI(path, _T(".pdf"))) {
-                ScopedMem<TCHAR> basePath(Path::GetDir(fileName()));
-                ScopedMem<TCHAR> combinedPath(Path::Join(basePath, path));
-                // TODO: respect fz_to_bool(fz_dict_gets(link->dest, "NewWindow"))
-                WindowInfo *newWin = LoadDocument(combinedPath);
-                if (newWin && newWin->IsDocLoaded())
-                    newWin->dm->goToPdfDest(fz_dict_gets(link->dest, "D"));
-            }
-            free(path);
-        }
-        /* else unsupported action */
-    }
-}
-
-void DisplayModel::goToPdfDest(fz_obj *dest)
-{
-    if (!pdfEngine)
-        return;
-
-    int pageNo = pdfEngine->findPageNo(dest);
-    if (pageNo > 0) {
-        PointD scroll(-1, 0);
-        fz_obj *obj = fz_array_get(dest, 1);
-        if (Str::Eq(fz_to_name(obj), "XYZ")) {
-            scroll.x = fz_to_real(fz_array_get(dest, 2));
-            scroll.y = fz_to_real(fz_array_get(dest, 3));
-            cvtUserToScreen(pageNo, &scroll);
-
-            // goToPage needs scrolling info relative to the page's top border
-            // and the page line's left margin
-            PageInfo * pageInfo = getPageInfo(pageNo);
-            // TODO: These values are not up-to-date, if the page has not been shown yet
-            if (pageInfo->shown) {
-                scroll.x -= pageInfo->pageOnScreen.x;
-                scroll.y -= pageInfo->pageOnScreen.y;
-            }
-
-            // NULL values for the coordinates mean: keep the current position
-            if (fz_is_null(fz_array_get(dest, 2)))
-                scroll.x = -1;
-            if (fz_is_null(fz_array_get(dest, 3))) {
-                pageInfo = getPageInfo(currentPageNo());
-                scroll.y = -(pageInfo->pageOnScreen.y - _padding->pageBorderTop);
-                scroll.y = MAX(scroll.y, 0); // Adobe Reader never shows the previous page
-            }
-        }
-        else if (Str::Eq(fz_to_name(obj), "FitR")) {
-            scroll.x = fz_to_real(fz_array_get(dest, 2)); // left
-            scroll.y = fz_to_real(fz_array_get(dest, 5)); // top
-            cvtUserToScreen(pageNo, &scroll);
-            // TODO: adjust zoom so that the bottom right corner is also visible?
-
-            // goToPage needs scrolling info relative to the page's top border
-            // and the page line's left margin
-            PageInfo * pageInfo = getPageInfo(pageNo);
-            // TODO: These values are not up-to-date, if the page has not been shown yet
-            if (pageInfo->shown) {
-                scroll.x -= pageInfo->pageOnScreen.x;
-                scroll.y -= pageInfo->pageOnScreen.y;
-            }
-        }
-        /* // ignore author-set zoom settings (at least as long as there's no way to overrule them)
-        else if (Str::Eq(fz_to_name(obj), "Fit")) {
-            zoomTo(ZOOM_FIT_PAGE);
-            _appData->UpdateToolbarState();
-        }
-        // */
-        goToPage(pageNo, (int)scroll.y, true, (int)scroll.x);
-    }
-}
-
-void DisplayModel::goToNamedDest(const char *name)
-{
-    if (!pdfEngine)
-        return;
-
-    goToPdfDest(pdfEngine->getNamedDest(name));
 }
 
 /* Given <region> (in user coordinates ) on page <pageNo>, copies text in that region
@@ -1691,11 +1532,11 @@ void DisplayModel::navigate(int dir)
         setScrollState(&_navHistory[_navHistoryIx]);
 }
 
-DisplayModel *DisplayModel::CreateFromFileName(WindowInfo *win,
-    const TCHAR *fileName, DisplayMode displayMode, int startPage)
+DisplayModel *DisplayModel::CreateFromFileName(DisplayModelCallback *callback,
+    const TCHAR *fileName, DisplayMode displayMode, int startPage, SizeI canvasSize)
 {
-    DisplayModel *dm = new DisplayModel(displayMode, win->dpi);
-    if (!dm || !dm->load(fileName, startPage, win)) {
+    DisplayModel *dm = new DisplayModel(callback, displayMode);
+    if (!dm || !dm->load(fileName, startPage, canvasSize)) {
         delete dm;
         return NULL;
     }

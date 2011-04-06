@@ -11,7 +11,4 @@ LRESULT          HandleWindowAboutMsg(WindowInfo *win, HWND hwnd, UINT message, 
 
 void OnMenuAbout();
 
-// in SumatraPDF.cpp
-void LaunchBrowser(const TCHAR *url);
-
 #endif

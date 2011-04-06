@@ -9,15 +9,14 @@
 #include "DisplayState.h"
 #include "TextSearch.h"
 
-#ifndef USER_DEFAULT_SCREEN_DPI
-// the following is only defined if _WIN32_WINNT >= 0x0600 and we use 0x0500
-#define USER_DEFAULT_SCREEN_DPI 96
-#endif
-
 // define the following if you want shadows drawn around the pages
 // #define DRAW_PAGE_SHADOWS
 
-class WindowInfo;
+// define the following if you want the pages right before and after
+// the visible ones to be pre-rendered
+#ifndef DEBUG
+#define PREDICTIVE_RENDER 1
+#endif
 
 typedef struct {
     int     pageBorderTop;
@@ -56,8 +55,6 @@ typedef struct {
    columns > 1 */
 #define PADDING_BETWEEN_PAGES_X_DEF      PADDING_BETWEEN_PAGES_Y_DEF
 
-#define POINT_OUT_OF_PAGE           0
-
 #define NAV_HISTORY_LEN             50
 
 /* Describes many attributes of one page in one, convenient place */
@@ -89,6 +86,14 @@ typedef struct {
     RectI           pageOnScreen;
 } PageInfo;
 
+class DisplayModelCallback : public PasswordUI, public TextSearchTracker {
+public:
+    virtual void Repaint() = 0;
+    virtual void PageNoChanged(int pageNo) = 0;
+    virtual void UpdateScrollbars(SizeI canvas) = 0;
+    virtual int GetScreenDPI() = 0;
+};
+
 /* Information needed to drive the display of a given document on a screen.
    You can think of it as a model in the MVC pardigm.
    All the display changes should be done through changing this model via
@@ -96,7 +101,7 @@ typedef struct {
 class DisplayModel
 {
 public:
-    DisplayModel(DisplayMode displayMode, int dpi=USER_DEFAULT_SCREEN_DPI);
+    DisplayModel(DisplayModelCallback *callback, DisplayMode displayMode);
     ~DisplayModel();
 
     RenderedBitmap *renderBitmap(int pageNo, float zoom, int rotation,
@@ -206,26 +211,19 @@ public:
     // TODO: generalize for non-PDF formats(?)
     pdf_link *      getLinkAtPosition(PointI pt);
     int             getPdfLinks(int pageNo, pdf_link **links);
-    TCHAR *         getLinkPath(pdf_link *link) {
-        if (!pdfEngine)
-            return NULL;
-        return pdfEngine->getLinkPath(link);
-    }
-    void            goToTocLink(pdf_link *link);
-    void            goToNamedDest(const char *name);
     pdf_annot *     getCommentAtPosition(PointI pt);
 
     bool            cvtUserToScreen(int pageNo, PointD *pt);
     bool            cvtScreenToUser(int *pageNo, PointD *pt);
     bool            rectCvtUserToScreen(int pageNo, RectD *r);
     bool            rectCvtScreenToUser(int *pageNo, RectD *r);
+    ScreenPagePadding *getPadding() { return _padding; }
     RectD           getContentBox(int pageNo, RenderTarget target=Target_View);
 
     void            SetFindMatchCase(bool match) { _textSearch->SetSensitive(match); }
     TextSel *       Find(TextSearchDirection direction=FIND_FORWARD, TCHAR *text=NULL, UINT fromPage=0);
     // note: lastFoundPage might not be a valid page number!
     int             lastFoundPage() const { return _textSearch->findPage; }
-    bool            bFoundText;
 
     int             getPageNoByPoint(PointI pt);
 
@@ -238,8 +236,6 @@ public:
     bool            canNavigate(int dir) const;
     void            navigate(int dir);
 
-    bool            saveStreamAs(unsigned char *data, int dataLen, const TCHAR *fileName);
-
     bool            displayStateFromModel(DisplayState *ds);
 
     void            runEngineGC() const {
@@ -251,7 +247,7 @@ public:
 
 protected:
 
-    bool            load(const TCHAR *fileName, int startPage, WindowInfo *win);
+    bool            load(const TCHAR *fileName, int startPage, SizeI canvasSize);
 
     bool            buildPagesInfo();
     float           zoomRealFromVirtualForPage(float zoomVirtual, int pageNo);
@@ -260,15 +256,11 @@ protected:
     void            setZoomVirtual(float zoomVirtual);
     void            recalcVisibleParts();
     void            renderVisibleParts();
-    /* Those need to be implemented somewhere else by the GUI */
-    void            setScrollbarsState();
-    /* called when a page number changes */
-    void            pageChanged();
     /* called when this DisplayModel is destroyed */
     void            clearAllRenderings();
 public:
     /* called when we decide that the display needs to be redrawn */
-    void            RepaintDisplay();
+    void            RepaintDisplay() { if (_callback) _callback->Repaint(); }
 
 protected:
     void            goToPdfDest(fz_obj *dest);
@@ -283,10 +275,8 @@ protected:
        No meaning in continous mode. */
     int             _startPage;
 
-    /* an arbitrary pointer that can be used by an app e.g. a multi-window GUI
-       could link this to a data describing window displaying  this document */
-    // TODO: code depends on this being a WindowInfo in several places
-    WindowInfo *    _appData;
+    /* A callback to notify UI about required changes */
+    DisplayModelCallback *_callback;
 
     /* size of virtual canvas containing all rendered pages. */
     SizeI           _canvasSize;
@@ -317,8 +307,11 @@ public:
     /* allow resizing a window without triggering a new rendering (needed for window destruction) */
     bool            _dontRenderFlag;
 
-    static DisplayModel *CreateFromFileName(WindowInfo *win, const TCHAR *fileName,
-                                            DisplayMode displayMode, int startPage);
+    static DisplayModel *CreateFromFileName(DisplayModelCallback *callback,
+                                            const TCHAR *fileName,
+                                            DisplayMode displayMode,
+                                            int startPage,
+                                            SizeI canvasSize);
 };
 
 bool    displayModeContinuous(DisplayMode displayMode);

@@ -9,7 +9,7 @@ from util import verify_started_in_right_directory
 pjoin = os.path.join
 
 DIRS = ["baseutils", "src", pjoin("src", "installer"), pjoin("src", "ifilter"), pjoin("src", "browserplugin")]
-INCLUDE_DIRS = DIRS + [pjoin("mupdf", "fitz"), pjoin("mupdf", "mupdf"), pjoin("mupdf", "xps")]
+INCLUDE_DIRS = DIRS + [pjoin("mupdf", "fitz"), pjoin("mupdf", "pdf"), pjoin("mupdf", "xps")]
 MAKEFILE = "makefile.msvc"
 DEPENDENCIES_PER_LINE = 3
 
