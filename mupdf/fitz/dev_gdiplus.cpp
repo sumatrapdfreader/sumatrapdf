@@ -1254,7 +1254,7 @@ fz_gdiplus_free_user(void *user)
 }
 
 fz_device *
-fz_newgdiplusdevice(void *hDC, fz_bbox baseClip)
+fz_new_gdiplus_device(void *hDC, fz_bbox baseClip)
 {
 	if (InterlockedIncrement(&m_gdiplusUsage) == 1)
 	{

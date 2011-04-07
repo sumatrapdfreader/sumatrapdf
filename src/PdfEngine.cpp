@@ -24,7 +24,7 @@ inline TCHAR *FromPdf(fz_obj *obj)
 inline char *ToPDF(TCHAR *tstr)
 {
     ScopedMem<WCHAR> wstr(ToWStr(tstr));
-    return pdf_fromucs2((unsigned short *)wstr.Get());
+    return pdf_from_ucs2((unsigned short *)wstr.Get());
 }
 
     }
@@ -674,14 +674,14 @@ PdfPageRun *PdfEngine::getPageRun(pdf_page *page, bool tryOnly)
     return result;
 }
 
-fz_error PdfEngine::runPage(pdf_page *page, fz_device *dev, fz_matrix ctm, RenderTarget target, fz_rect bounds, bool cacheRun)
+fz_error PdfEngine::runPage(pdf_page *page, fz_device *dev, fz_matrix ctm, RenderTarget target, fz_bbox clipbox, bool cacheRun)
 {
     fz_error error = fz_okay;
     PdfPageRun *run;
 
     if (Target_View == target && (run = getPageRun(page, !cacheRun))) {
         EnterCriticalSection(&_xrefAccess);
-        fz_execute_display_list(run->list, dev, ctm, fz_round_rect(fz_transform_rect(ctm, bounds)));
+        fz_execute_display_list(run->list, dev, ctm, clipbox);
         LeaveCriticalSection(&_xrefAccess);
         dropPageRun(run);
     }
@@ -746,7 +746,7 @@ RectI PdfEngine::PageContentBox(int pageNo, RenderTarget target)
         return RectI();
 
     fz_bbox bbox;
-    fz_error error = runPage(page, fz_new_bbox_device(&bbox), fz_identity, target, page->mediabox, false);
+    fz_error error = runPage(page, fz_new_bbox_device(&bbox), fz_identity, target, fz_round_rect(page->mediabox), false);
     if (error != fz_okay)
         return PageMediabox(pageNo).Round();
     if (fz_is_infinite_bbox(bbox))
@@ -823,13 +823,13 @@ bool PdfEngine::renderPage(HDC hDC, pdf_page *page, RectI screenRect, fz_matrix 
     if (!page)
         return false;
 
-    fz_rect pRect = pageRect ? fz_RectD_to_rect(*pageRect) : page->mediabox;
     fz_matrix ctm2;
     if (!ctm) {
         if (!zoom)
             zoom = min(1.0f * screenRect.dx / (page->mediabox.x1 - page->mediabox.x0),
                        1.0f * screenRect.dy / (page->mediabox.y1 - page->mediabox.y0));
         ctm2 = viewctm(page, zoom, rotation);
+        fz_rect pRect = pageRect ? fz_RectD_to_rect(*pageRect) : page->mediabox;
         fz_bbox bbox = fz_round_rect(fz_transform_rect(ctm2, pRect));
         ctm2 = fz_concat(ctm2, fz_translate((float)screenRect.x - bbox.x0, (float)screenRect.y - bbox.y0));
         ctm = &ctm2;
@@ -839,8 +839,8 @@ bool PdfEngine::renderPage(HDC hDC, pdf_page *page, RectI screenRect, fz_matrix 
     FillRect(hDC, &screenRect.ToRECT(), bgBrush); // initialize white background
     DeleteObject(bgBrush);
 
-    fz_bbox clipBox = fz_RectI_to_bbox(screenRect);
-    fz_error error = runPage(page, fz_newgdiplusdevice(hDC, clipBox), *ctm, target, pRect);
+    fz_bbox clipbox = fz_RectI_to_bbox(screenRect);
+    fz_error error = runPage(page, fz_new_gdiplus_device(hDC, clipbox), *ctm, target, clipbox);
 
     return fz_okay == error;
 }
@@ -893,7 +893,7 @@ RenderedBitmap *PdfEngine::RenderBitmap(
     if (!_drawcache)
         _drawcache = fz_new_glyph_cache();
 
-    fz_error error = runPage(page, fz_new_draw_device(_drawcache, image), ctm, target, pRect);
+    fz_error error = runPage(page, fz_new_draw_device(_drawcache, image), ctm, target, bbox);
     RenderedBitmap *bitmap = NULL;
     if (!error) {
         HDC hDC = GetDC(NULL);
@@ -1155,7 +1155,7 @@ TCHAR *PdfEngine::ExtractPageText(pdf_page *page, TCHAR *lineSep, RectI **coords
     // use an infinite rectangle as bounds (instead of page->mediabox) to ensure that
     // the extracted text is consistent between cached runs using a list device and
     // fresh runs (otherwise the list device omits text outside the mediabox bounds)
-    fz_error error = runPage(page, fz_new_text_device(text), fz_identity, target, fz_infinite_rect, cacheRun);
+    fz_error error = runPage(page, fz_new_text_device(text), fz_identity, target, fz_infinite_bbox, cacheRun);
 
     WCHAR *content = NULL;
     if (!error)
@@ -1432,13 +1432,13 @@ XpsPageRun *XpsEngine::getPageRun(xps_page *page, bool tryOnly)
     return result;
 }
 
-void XpsEngine::runPage(xps_page *page, fz_device *dev, fz_matrix ctm, fz_rect bounds, bool cacheRun)
+void XpsEngine::runPage(xps_page *page, fz_device *dev, fz_matrix ctm, fz_bbox clipbox, bool cacheRun)
 {
     XpsPageRun *run;
 
     if ((run = getPageRun(page, !cacheRun))) {
         EnterCriticalSection(&_ctxAccess);
-        fz_execute_display_list(run->list, dev, ctm, fz_round_rect(fz_transform_rect(ctm, bounds)));
+        fz_execute_display_list(run->list, dev, ctm, clipbox);
         LeaveCriticalSection(&_ctxAccess);
         dropPageRun(run);
     }
@@ -1542,14 +1542,14 @@ bool XpsEngine::renderPage(HDC hDC, xps_page *page, RectI screenRect, fz_matrix 
     if (!page)
         return false;
 
-    fz_bbox mediabox = { 0, 0, page->width, page->height };
-    fz_rect pRect = pageRect ? fz_RectD_to_rect(*pageRect) : fz_bbox_to_rect(mediabox);
     fz_matrix ctm2;
     if (!ctm) {
+        fz_bbox mediabox = { 0, 0, page->width, page->height };
         if (!zoom)
             zoom = min(1.0f * screenRect.dx / (mediabox.x1 - mediabox.x0),
                        1.0f * screenRect.dy / (mediabox.y1 - mediabox.y0));
         ctm2 = viewctm(page, zoom, rotation);
+        fz_rect pRect = pageRect ? fz_RectD_to_rect(*pageRect) : fz_bbox_to_rect(mediabox);
         fz_bbox bbox = fz_round_rect(fz_transform_rect(ctm2, pRect));
         ctm2 = fz_concat(ctm2, fz_translate((float)screenRect.x - bbox.x0, (float)screenRect.y - bbox.y0));
         ctm = &ctm2;
@@ -1559,8 +1559,8 @@ bool XpsEngine::renderPage(HDC hDC, xps_page *page, RectI screenRect, fz_matrix 
     FillRect(hDC, &screenRect.ToRECT(), bgBrush); // initialize white background
     DeleteObject(bgBrush);
 
-    fz_bbox clipBox = fz_RectI_to_bbox(screenRect);
-    runPage(page, fz_newgdiplusdevice(hDC, clipBox), *ctm, pRect);
+    fz_bbox clipbox = fz_RectI_to_bbox(screenRect);
+    runPage(page, fz_new_gdiplus_device(hDC, clipbox), *ctm, clipbox);
 
     return true;
 }
@@ -1613,7 +1613,7 @@ RenderedBitmap *XpsEngine::RenderBitmap(
     if (!_drawcache)
         _drawcache = fz_new_glyph_cache();
 
-    runPage(page, fz_new_draw_device(_drawcache, image), ctm, pRect);
+    runPage(page, fz_new_draw_device(_drawcache, image), ctm, bbox);
     RenderedBitmap *bitmap = NULL;
     HDC hDC = GetDC(NULL);
     bitmap = new RenderedFitzBitmap(image, hDC);
@@ -1631,7 +1631,7 @@ TCHAR *XpsEngine::ExtractPageText(xps_page *page, TCHAR *lineSep, RectI **coords
     // use an infinite rectangle as bounds (instead of a mediabox) to ensure that
     // the extracted text is consistent between cached runs using a list device and
     // fresh runs (otherwise the list device omits text outside the mediabox bounds)
-    runPage(page, fz_new_text_device(text), fz_identity, fz_infinite_rect, cacheRun);
+    runPage(page, fz_new_text_device(text), fz_identity, fz_infinite_bbox, cacheRun);
 
     WCHAR *content = fz_span_to_wchar(text, lineSep, coords_out);
 

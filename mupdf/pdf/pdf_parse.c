@@ -100,7 +100,7 @@ pdf_to_ucs2(fz_obj *src)
 
 /* SumatraPDF: encode UCS-2 string in PdfDocEncoding for authentication */
 char *
-pdf_fromucs2(unsigned short *src)
+pdf_from_ucs2(unsigned short *src)
 {
 	int i, j;
 	int len = wcslen(src);

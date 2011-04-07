@@ -130,9 +130,9 @@ static void drawbmp(pdf_xref *xref, pdf_page *page, fz_display_list *list, int p
 	bbox.x0 = 0; bbox.x1 = w;
 	bbox.y0 = 0; bbox.y1 = h;
 
-	dev = fz_newgdiplusdevice(hDC, bbox);
+	dev = fz_new_gdiplus_device(hDC, bbox);
 	if (list)
-		fz_execute_display_list(list, dev, ctm, fz_round_rect(page->mediabox));
+		fz_execute_display_list(list, dev, ctm, bbox);
 	else
 		pdf_run_page(xref, page, dev, ctm);
 	fz_free_device(dev);

@@ -153,8 +153,8 @@ protected:
     PdfPageRun    * _runCache[MAX_PAGE_RUN_CACHE];
     PdfPageRun    * getPageRun(pdf_page *page, bool tryOnly=false);
     fz_error        runPage(pdf_page *page, fz_device *dev, fz_matrix ctm,
-                            RenderTarget target=Target_View, fz_rect bounds=fz_infinite_rect,
-                            bool cacheRun=true);
+                            RenderTarget target=Target_View,
+                            fz_bbox clipbox=fz_infinite_bbox, bool cacheRun=true);
     void            dropPageRun(PdfPageRun *run, bool forceRemove=false);
 
     PdfTocItem    * buildTocTree(pdf_outline *entry, int *idCounter);
@@ -240,7 +240,7 @@ protected:
     XpsPageRun    * _runCache[MAX_PAGE_RUN_CACHE];
     XpsPageRun    * getPageRun(xps_page *page, bool tryOnly=false);
     void            runPage(xps_page *page, fz_device *dev, fz_matrix ctm,
-                            fz_rect bounds=fz_infinite_rect, bool cacheRun=true);
+                            fz_bbox clipbox=fz_infinite_bbox, bool cacheRun=true);
     void            dropPageRun(XpsPageRun *run, bool forceRemove=false);
 
     fz_glyph_cache* _drawcache;

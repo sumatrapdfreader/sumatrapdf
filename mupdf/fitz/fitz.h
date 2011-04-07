@@ -1115,7 +1115,7 @@ fz_device *fz_new_bbox_device(fz_bbox *bboxp);
 fz_device *fz_new_draw_device(fz_glyph_cache *cache, fz_pixmap *dest);
 
 /* SumatraPDF: GDI+ draw device */
-fz_device *fz_newgdiplusdevice(void *hDC, fz_bbox baseClip);
+fz_device *fz_new_gdiplus_device(void *hDC, fz_bbox baseClip);
 
 /*
  * Text extraction device

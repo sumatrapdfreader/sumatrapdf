@@ -134,9 +134,9 @@ static void drawbmp(xps_context *ctx, xps_page *page, fz_display_list *list, int
 	bbox.x0 = 0; bbox.x1 = w;
 	bbox.y0 = 0; bbox.y1 = h;
 
-	dev = fz_newgdiplusdevice(hDC, bbox);
+	dev = fz_new_gdiplus_device(hDC, bbox);
 	if (list)
-		fz_execute_display_list(list, dev, ctm, fz_round_rect(rect));
+		fz_execute_display_list(list, dev, ctm, bbox);
 	else
 		xps_run_page(ctx, page, dev, ctm);
 	fz_free_device(dev);

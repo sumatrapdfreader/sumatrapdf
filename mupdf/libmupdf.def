@@ -255,7 +255,7 @@ EXPORTS
 	fz_new_trace_device
 	fz_new_bbox_device
 	fz_new_draw_device
-	fz_newgdiplusdevice
+	fz_new_gdiplus_device
 	fz_new_text_span
 	fz_free_text_span
 	fz_debug_text_span
@@ -290,7 +290,7 @@ EXPORTS
 	pdf_to_utf8
 	pdf_to_ucs2
 	pdf_to_utf8_name
-	pdf_fromucs2
+	pdf_from_ucs2
 	pdf_new_crypt
 	pdf_free_crypt
 	pdf_parse_crypt_filter
