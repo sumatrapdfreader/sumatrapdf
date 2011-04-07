@@ -193,6 +193,34 @@ static void GetOsVersion(Str::Str<char>& s)
     s.AppendFmt("OS: %s %d.%d build %d %s %s\r\n", os, servicePackMajor, servicePackMinor, buildNumber, is64bit, isWow);
 }
 
+static void GetProcessorName(Str::Str<char>& s)
+{
+    TCHAR *name = ReadRegStr(HKEY_LOCAL_MACHINE, _T("HARDWARE\\DESCRIPTION\\System\\CentralProcessor"), _T("ProcessorNameString"));
+    if (!name) // if more than one processor
+        name = ReadRegStr(HKEY_LOCAL_MACHINE, _T("HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0"), _T("ProcessorNameString"));;
+    if (!name)
+        return;
+    char *tmp = Str::Conv::ToUtf8(name);
+    s.AppendFmt("Processor: %s", tmp);
+    free(tmp);
+    free(name);
+}
+
+static void GetSystemInfo(Str::Str<char>& s)
+{
+    SYSTEM_INFO si;
+    GetSystemInfo(&si);
+
+    MEMORYSTATUS ms;
+    ms.dwLength = sizeof(ms);
+    GlobalMemoryStatus(&ms);
+
+    s.AppendFmt("Number Of Processors: %d\r\n", si.dwNumberOfProcessors);
+    GetProcessorName(s);
+    s.AppendFmt("Physical Memory: %d KB (Available: %d KB)\r\nCommit Charge Limit: %d KB\r\n",
+        ms.dwTotalPhys/0x400, ms.dwAvailPhys/0x400, ms.dwTotalPageFile/0x400);
+}
+
 static void GetModules(Str::Str<char>& s)
 {
     HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, GetCurrentProcessId());
@@ -463,6 +491,7 @@ static char *BuildCrashInfoText()
     Str::Str<char> s(16 * 1024);
     s.AppendFmt("Ver: %s\r\n", QM(CURR_VERSION));
     GetOsVersion(s);
+    GetSystemInfo(s);
     s.Append("\r\n");
     GetModules(s);
     s.Append("\r\n");

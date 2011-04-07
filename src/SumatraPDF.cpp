@@ -2328,8 +2328,11 @@ static void ConvertSelectionRectToSelectionOnPage(WindowInfo *win) {
 // for testing only
 static void CrashMe()
 {
+    SaveCrashInfoText();
+#if 0
     char *p = NULL;
     *p = 0;
+#endif
 }
 
 static void StartStressRenderingPage(WindowInfo *win, int pageNo);
