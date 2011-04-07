@@ -258,12 +258,6 @@ static void GetCallstack(Str::Str<char>& s, CONTEXT& ctx, HANDLE hThread)
         return;
 
     HANDLE hProc = GetCurrentProcess();
-#if 0 // WTH? 'GetThreadId': identifier not found ???
-    DWORD threadId = GetThreadId(hThread);
-    s.AppendFmt("\r\nThread: 0x%x\r\n", (int)threadId);
-#else
-    s.AppendFmt("\r\nThread: 0x%x\r\n", (int)hThread);
-#endif
 
     STACKFRAME64 stackFrame;
     memset(&stackFrame, 0, sizeof(stackFrame));
@@ -324,33 +318,37 @@ static void GetCurrentThreadCallstack(Str::Str<char>&s)
 {
     CONTEXT ctx;
     RtlCaptureContext(&ctx);
+    s.AppendFmt("\r\nThread: %x\r\n", GetCurrentThreadId());
     GetCallstack(s, ctx, GetCurrentThread());
 }
 
 static void GetThreadCallstack(Str::Str<char>& s, DWORD threadId)
 {
-    CONTEXT ctx;
-    ctx.ContextFlags = 0xffffffff;
-    DWORD access = THREAD_GET_CONTEXT | THREAD_QUERY_INFORMATION | THREAD_SUSPEND_RESUME;
-    HANDLE hThread = OpenThread(access, false, threadId);
-    if (!hThread)
+    if (threadId == GetCurrentThreadId())
         return;
 
-    if (hThread != GetCurrentThread()) {
-        // TODO: SuspendThread() seems to hang the app, GetThreadContext()
-        // doesn't seem to work on a thread that isn't suspended
-#if 0
-        DWORD res = SuspendThread(hThread);
-        if (-1 != res) {
-            if (GetThreadContext(hThread, &ctx))
-                GetCallstack(s, ctx, hThread);
-            ResumeThread(hThread);
-        }
-#else
-        if (GetThreadContext(hThread, &ctx))
-            GetCallstack(s, ctx, hThread);
-#endif
+    s.AppendFmt("\r\nThread: %x\r\n", threadId);
 
+    DWORD access = THREAD_GET_CONTEXT | THREAD_QUERY_INFORMATION | THREAD_SUSPEND_RESUME;
+    HANDLE hThread = OpenThread(access, false, threadId);
+    if (!hThread) {
+        s.Append("Failed to OpenThread()\r\n");
+        return;
+    }
+
+    DWORD res = SuspendThread(hThread);
+    if (-1 == res) {
+        s.Append("Failed to SuspendThread()\r\n");
+    } else {
+        CONTEXT ctx = { 0 };
+        ctx.ContextFlags = CONTEXT_FULL;
+        BOOL ok = GetThreadContext(hThread, &ctx);
+        if (ok)
+            GetCallstack(s, ctx, hThread);
+        else
+            s.Append("Failed to GetThreadContext()\r\n");
+            
+        ResumeThread(hThread);
     }
     CloseHandle(hThread);
 }
