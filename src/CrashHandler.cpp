@@ -544,6 +544,15 @@ static LONG WINAPI DumpExceptionHandler(EXCEPTION_POINTERS *exceptionInfo)
     return EXCEPTION_CONTINUE_SEARCH;
 }
 
+/* How to setup symbol path:
+if (GetEnvironmentVariableA("_NT_SYMBOL_PATH", szTemp, nTempLen) > 0)
+  add to sympath
+if (GetEnvironmentVariableA("_NT_ALTERNATE_SYMBOL_PATH", szTemp, nTempLen) > 0)
+  add to sympath
+add: "SRV*c:\\websymbols*http://msdl.microsoft.com/download/symbols"
+(except a better directory than c:\\websymbols
+*/
+
 void InstallCrashHandler(const TCHAR *crashDumpPath, const TCHAR *crashTxtPath)
 {
     LoadDbgHelpFuncs();
