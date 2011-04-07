@@ -251,10 +251,6 @@ public:
 			}
 		}
 		
-		delete stack->layer;
-		stack->layer = NULL;
-		graphics = stack->saveG;
-		stack->saveG = NULL;
 		popClip();
 	}
 
