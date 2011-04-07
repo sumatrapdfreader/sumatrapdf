@@ -2328,8 +2328,8 @@ static void ConvertSelectionRectToSelectionOnPage(WindowInfo *win) {
 // for testing only
 static void CrashMe()
 {
-    SaveCrashInfoText();
-#if 0
+    //SaveCrashInfoText();
+#if 1
     char *p = NULL;
     *p = 0;
 #endif

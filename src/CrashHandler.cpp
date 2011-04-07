@@ -14,6 +14,7 @@
 #include "WinUtil.h"
 #include "FileUtil.h"
 #include "AppTools.h"
+#include "Http.h"
 
 #include "translations.h"
 
@@ -353,7 +354,7 @@ static void GetCurrentThreadCallstack(Str::Str<char>&s)
 {
     CONTEXT ctx;
     RtlCaptureContext(&ctx);
-    s.AppendFmt("\r\nThread: %x\r\n", GetCurrentThreadId());
+    s.AppendFmt("Thread: %x\r\n", GetCurrentThreadId());
     GetCallstack(s, ctx, GetCurrentThread());
 }
 
@@ -502,19 +503,47 @@ static char *BuildCrashInfoText()
     GetModules(s);
     s.Append("\r\n");
     GetExceptionInfo(s, mei.ExceptionPointers);
+    s.Append("\r\n");
     GetCurrentThreadCallstack(s);
     GetAllThreadsCallstacks(s);
     return s.StealData();
 }
 
+#define CRASH_SUBMIT_SERVER "blog.kowalczyk.info"
+#define CRASH_SUBMIT_URL "/app/crashsubmit?appname=SumatraPDF"
+
+void SubmitCrashInfo(char *s)
+{
+    if (!s)
+        return;
+
+    char *boundary = "0xKhTmLbOuNdArY";
+    Str::Str<char> headers(256);
+    headers.AppendFmt("Content-Type: multipart/form-data; boundary=%s", boundary);
+
+    Str::Str<char> data(2048);
+    data.AppendFmt("--%s\r\n", boundary);
+    data.Append("Content-Disposition: form-data; name=\"file\"; filename=\"test.bin\"\r\n\r\n");
+    data.Append(s);
+    data.Append("\r\n");
+    data.AppendFmt("\r\n--%s--\r\n", boundary);
+
+    HttpPost(CRASH_SUBMIT_SERVER, CRASH_SUBMIT_URL, &headers, &data);
+}
+
 void SaveCrashInfoText()
 {
     char *s = BuildCrashInfoText();
+#if 0
+    // TODO: instead of doing SubmitCrashInfo() inside crash handler
+    // should I sublaunch myself with "-submitcrash g_crashTxtPath"
+    // cmd arg for better reliability?
     if (s && g_crashTxtPath) {
         File::WriteAll(g_crashTxtPath, s, Str::Len(s));
     }
+#endif
+    SubmitCrashInfo(s);
     free(s);
-    // TODO: submit to a website
 }
 
 static DWORD WINAPI CrashDumpThread(LPVOID data)

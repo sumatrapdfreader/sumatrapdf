@@ -1,10 +1,13 @@
 /* Copyright 2006-2011 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+#include "BaseUtil.h"
+#include <Wininet.h>
+
 #include "SumatraPDF.h"
 #include "Http.h"
+#include "WinUtil.h"
 #include "Version.h"
-#include <Wininet.h>
 
 bool HttpGet(TCHAR *url, Str::Str<char> *dataOut)
 {
@@ -34,25 +37,20 @@ Exit:
     return ok;
 }
 
-bool HttpPost(TCHAR *url, Str::Str<char> *headers, Str::Str<char> *data)
+bool HttpPost(char *server, char *url, Str::Str<char> *headers, Str::Str<char> *data)
 {
+    Str::Str<char> resp(2048);
     bool ok = false;
     HINTERNET hInet = NULL, hConn = NULL, hReq = NULL;
-
-    hInet = InternetOpen(APP_NAME_STR _T("/") CURR_VERSION_STR,
-        INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
+    hInet = InternetOpenA("SumatraPDF", INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
     if (!hInet)
         goto Exit;
-    hConn = InternetConnect(hInet, url, INTERNET_DEFAULT_HTTP_PORT, NULL, NULL,
-        INTERNET_SERVICE_HTTP, 0, 1);
+    hConn = InternetConnectA(hInet, server, INTERNET_DEFAULT_HTTP_PORT, NULL, NULL, INTERNET_SERVICE_HTTP, 0, 1);
     if (!hConn)
         goto Exit;
 
-    DWORD flags = INTERNET_FLAG_KEEP_CONNECTION | INTERNET_FLAG_FORMS_SUBMIT |
-                  INTERNET_FLAG_RELOAD | INTERNET_FLAG_NO_CACHE_WRITE |
-                  INTERNET_FLAG_IGNORE_REDIRECT_TO_HTTPS | INTERNET_FLAG_IGNORE_REDIRECT_TO_HTTP;
-
-    hReq = HttpOpenRequest(hConn, _T("POST"), url, NULL, NULL, NULL, flags, NULL);
+    DWORD flags = INTERNET_FLAG_KEEP_CONNECTION;
+    hReq = HttpOpenRequestA(hConn, "POST", url, NULL, NULL, NULL, flags, NULL);
     if (!hReq)
         goto Exit;
     char *hdr = NULL;
@@ -68,12 +66,43 @@ bool HttpPost(TCHAR *url, Str::Str<char> *headers, Str::Str<char> *data)
         dLen = data->Count();
     }
 
-    if (!HttpSendRequestA(hReq, hdr, hdrLen, d, dLen))
-        goto Exit;
-    if (!HttpEndRequest(hReq, NULL, 0, 0))
-        goto Exit;
+    unsigned int timeoutMs = 15 * 1000;
+    InternetSetOption(hReq, INTERNET_OPTION_SEND_TIMEOUT,
+                      &timeoutMs, sizeof(timeoutMs));
 
-    ok = true;
+    InternetSetOption(hReq, INTERNET_OPTION_RECEIVE_TIMEOUT,
+                      &timeoutMs, sizeof(timeoutMs));
+
+    if (!HttpSendRequestA(hReq, hdr, hdrLen, d, dLen)) {
+        SeeLastError();
+        goto Exit;
+    }
+
+    // Get the response status.
+    DWORD respHttpCode = 0;
+    DWORD respHttpCodeSize = sizeof(respHttpCode);
+    if (!HttpQueryInfo(hReq, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER,
+                       &respHttpCode, &respHttpCodeSize, 0)) {
+        SeeLastError();
+    }
+
+    DWORD dwRead;
+    do {
+        char *buf = resp.MakeSpaceAtNoLenIncrease(resp.Count(), 1024);
+        if (!InternetReadFile(hReq, buf, 1024, &dwRead))
+            goto Exit;
+        resp.LenIncrease(dwRead);
+    } while (dwRead > 0);
+
+#if 0
+    // it looks like I should be calling HttpEndRequest(), but it always claims
+    // a timeout even though the data has been sent, received and we get HTTP 200
+    if (!HttpEndRequestA(hReq, NULL, 0, 0)) {
+        SeeLastError();
+        goto Exit;
+    }
+#endif
+    ok = (200 == respHttpCode);
 Exit:
     InternetCloseHandle(hReq);
     InternetCloseHandle(hConn);
