@@ -285,7 +285,7 @@ static bool GetAddrInfo(void *addr, char *module, DWORD moduleLen, DWORD& sectio
     return false;
 }
 
-#define MAX_NAME_LEN 512
+#define MAX_SYM_LEN 512
 
 static void GetCallstack(Str::Str<char>& s, CONTEXT& ctx, HANDLE hThread)
 {
@@ -309,7 +309,7 @@ static void GetCallstack(Str::Str<char>& s, CONTEXT& ctx, HANDLE hThread)
     stackFrame.AddrFrame.Mode = AddrModeFlat;
     stackFrame.AddrStack.Mode = AddrModeFlat;
 
-    char buf[sizeof(SYMBOL_INFO) + MAX_NAME_LEN * sizeof(char)];
+    char buf[sizeof(SYMBOL_INFO) + MAX_SYM_LEN * sizeof(char)];
     SYMBOL_INFO *symInfo = (SYMBOL_INFO*)buf;
 
     int framesCount = 0;
@@ -324,7 +324,7 @@ static void GetCallstack(Str::Str<char>& s, CONTEXT& ctx, HANDLE hThread)
 
         memset(buf, 0, sizeof(buf));
         symInfo->SizeOfStruct = sizeof(SYMBOL_INFO);
-        symInfo->MaxNameLen = MAX_NAME_LEN - 1;
+        symInfo->MaxNameLen = MAX_SYM_LEN;
         DWORD64 addr = stackFrame.AddrPC.Offset;
 
         DWORD64 symDisp = 0;
@@ -632,9 +632,8 @@ void InstallCrashHandler(const TCHAR *crashDumpPath, const TCHAR *crashTxtPath)
        gSymInitializeOk = _SymInitialize(GetCurrentProcess(), NULL, FALSE);
        if (gSymInitializeOk) {
            DWORD symOptions =_SymGetOptions();
-           symOptions |= SYMOPT_LOAD_LINES;
+           symOptions |= (SYMOPT_LOAD_LINES | SYMOPT_DEFERRED_LOADS | SYMOPT_UNDNAME);
            symOptions |= SYMOPT_FAIL_CRITICAL_ERRORS; // don't show system msg box on errors
-           symOptions |= SYMOPT_DEFERRED_LOADS;
            _SymSetOptions(symOptions);
            SetupSymbolPath();
        }
