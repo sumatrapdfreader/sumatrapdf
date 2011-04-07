@@ -96,7 +96,7 @@ SUMATRA_OBJS = \
 	$(O)\FileWatch.obj $(O)\PdfSync.obj $(O)\synctex_parser.obj $(O)\synctex_parser_utils.obj \
 	$(O)\RenderCache.obj $(O)\TextSelection.obj $(O)\WindowInfo.obj $(O)\ParseCommandLine.obj \
 	$(O)\Benchmark.obj $(O)\UnitTests.obj $(O)\AppTools.obj $(SUMATRA_RES) \
-	$(O)\CbxEngine.obj $(BZIP2_OBJS) $(MINIZIP_OBJS)
+	$(O)\CbxEngine.obj $(BASEUTILS_OBJS) $(BZIP2_OBJS) $(MINIZIP_OBJS) $(UNRAR_OBJS)
 
 INSTALLER_OBJS = \
 	$(O)\Installer.obj $(INSTALLER_RES)
@@ -133,10 +133,10 @@ BrowserPlugin: $(O) $(BROWSER_PLUGIN)
 $(SUMATRA_RES): src\SumatraPDF.rc src\Resource.h src\Version.h
 	rc /r /fo$@ $(EXTCFLAGS) src\SumatraPDF.rc
 
-$(SUMATRA_APP): $(LIBS_OBJS) $(BASEUTILS_OBJS) $(SUMATRA_OBJS)
+$(SUMATRA_APP): $(LIBS_OBJS) $(SUMATRA_OBJS)
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@
 
-$(SUMATRA_APP_NO_MUPDF): $(BASEUTILS_OBJS) $(SUMATRA_OBJS) $(O)\MuPDF_Exports.obj
+$(SUMATRA_APP_NO_MUPDF): $(SUMATRA_OBJS) $(O)\MuPDF_Exports.obj
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ $(LIBMUPDF_LIB)
 
 $(LIBMUPDF_RES): src\libmupdf.rc src\Version.h
@@ -160,9 +160,11 @@ $(BROWSER_PLUGIN_RES): src\browserplugin\npPdfViewer.rc
 $(BROWSER_PLUGIN): $(BROWSER_PLUGIN_OBJS)
 	$(LD) /DLL $(LDFLAGS) $** $(LIBS_BROWSER_PLUGIN) /PDB:$*.pdb /OUT:$@
 
-# baseutils directory
 {baseutils}.cpp{$(O)}.obj::
 	$(CC) $(SUMATRA_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
+
+{$(EXTLIBSDIR)\unrar}.cpp{$(O)}.obj::
+	$(CC) /TC $(UNRAR_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
 
 {$(EXTLIBSDIR)\synctex}.c{$(O)}.obj::
 	$(CC) /TC $(SYNCTEX_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<

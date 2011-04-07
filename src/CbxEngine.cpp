@@ -91,14 +91,14 @@ Exit:
     return page;
 }
 
-CbxEngine::CbxEngine(const TCHAR *fileName) : _fileName(Str::Dup(fileName))
+CbxEngine::CbxEngine(const TCHAR *fileName) : fileName(Str::Dup(fileName))
 {
-	if (!_fileName)
-		return;
-	
+    if (!fileName)
+        return;
+
     zlib_filefunc64_def ffunc;
     fill_win32_filefunc64(&ffunc);
-    unzFile uf = unzOpen2_64(_fileName, &ffunc);
+    unzFile uf = unzOpen2_64(fileName, &ffunc);
     if (!uf)
         return;
 
@@ -117,7 +117,7 @@ CbxEngine::CbxEngine(const TCHAR *fileName) : _fileName(Str::Dup(fileName))
     for (int n = 0; n < ginfo.number_entry; n++) {
         ComicBookPage *page = LoadCurrentComicBookPage(uf);
         if (page)
-            _pages.Append(page);
+            pages.Append(page);
         err = unzGoToNextFile(uf);
         if (err != UNZ_OK)
             break;
@@ -130,8 +130,8 @@ CbxEngine::CbxEngine(const TCHAR *fileName) : _fileName(Str::Dup(fileName))
 
 CbxEngine::~CbxEngine()
 {
-	DeleteVecMembers(_pages);
-    free((void *)_fileName);
+	DeleteVecMembers(pages);
+    free((void *)fileName);
 }
 
 RenderedBitmap *CbxEngine::RenderBitmap(int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target, bool useGdi)
@@ -171,7 +171,7 @@ bool CbxEngine::RenderPage(HDC hDC, int pageNo, RectI screenRect, float zoom, in
     m.Translate((REAL)(screenRect.x - screen.x), (REAL)(screenRect.y - screen.y), MatrixOrderAppend);
     g.SetTransform(&m);
 
-    Status ok = g.DrawImage(_pages[pageNo - 1]->bmp, 0, 0);
+    Status ok = g.DrawImage(pages[pageNo - 1]->bmp, 0, 0);
     return ok == Ok;
 }
 
@@ -216,7 +216,7 @@ RectD CbxEngine::Transform(RectD rect, int pageNo, float zoom, int rotate, bool 
 
 unsigned char *CbxEngine::GetFileData(size_t *cbCount)
 {
-	return (unsigned char *)File::ReadAll(_fileName, cbCount);
+	return (unsigned char *)File::ReadAll(fileName, cbCount);
 }
 
 CbxEngine *CbxEngine::CreateFromFileName(const TCHAR *fileName)

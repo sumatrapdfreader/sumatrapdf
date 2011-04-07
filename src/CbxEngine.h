@@ -30,15 +30,15 @@ public:
     CbxEngine(const TCHAR *fileName);
     virtual ~CbxEngine();
     virtual CbxEngine *Clone() {
-        return CreateFromFileName(_fileName);
+        return CreateFromFileName(fileName);
     }
 
-    virtual const TCHAR *FileName() const { return _fileName; };
-    virtual int PageCount() const { return _pages.Count(); }
+    virtual const TCHAR *FileName() const { return fileName; };
+    virtual int PageCount() const { return pages.Count(); }
 
     virtual RectD PageMediabox(int pageNo) {
         assert(1 <= pageNo && pageNo <= PageCount());
-        ComicBookPage *page = _pages[pageNo - 1];
+        ComicBookPage *page = pages[pageNo - 1];
         return RectD(0, 0, page->width, page->height);
     }
 
@@ -63,8 +63,8 @@ public:
     virtual bool _benchLoadPage(int pageNo) { return true; }
 
 protected:
-    const TCHAR *_fileName;
-    Vec<ComicBookPage *> _pages;
+    const TCHAR *fileName;
+    Vec<ComicBookPage *> pages;
 
     void GetTransform(Gdiplus::Matrix& m, int pageNo, float zoom, int rotate);
 

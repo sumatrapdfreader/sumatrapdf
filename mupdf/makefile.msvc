@@ -23,6 +23,7 @@ O = $(O)64
 
 OZ  = $(O)\zlib
 OBZ = $(O)\bzip2
+OR =  $(O)\unrar
 OFT = $(O)\freetype
 OJ  = $(O)\jpeg
 OT  = $(O)\jpegturbo
@@ -46,6 +47,7 @@ EXTLIBSDIR=..\ext
 
 ZLIB_DIR=$(EXTLIBSDIR)\zlib-1.2.5
 BZIP2_DIR=$(EXTLIBSDIR)\bzip2
+UNRAR_DIR=$(EXTLIBSDIR)\unrar
 FREETYPE_DIR=$(EXTLIBSDIR)\freetype2
 
 # if JPEG_TURBO_DIR is defined, we use libjpeg-turbo, otherwise we use libpjeg
@@ -119,6 +121,11 @@ ZLIB_CFLAGS = $(CFLAGS)
 BZIP2_CFLAGS = $(CFLAGS) /D "BZ_NO_STDIO" /D "BZ_DEBUG=0"
 MINIZIP_CFLAGS = $(ZLIB_CFLAGS) /D "HAVE_BZIP2" /I$(ZLIB_DIR) /I$(BZIP2_DIR)
 
+UNRAR_CFLAGS = $(CFLAGS) /D "UNRAR" /D "RARDLL"
+# a hack to undo /D "UNICODE" since unrar defines it unconditionally, causing
+# compilation warnings
+UNRAR_CFLAGS = $(UNRAR_CFLAGS:UNICODE=IGNORE_THIS)
+
 FREETYPE_CFLAGS = $(CFLAGS) /TC /I$(FREETYPE_DIR)/config /I$(FREETYPE_DIR)/include \
 	/D "FT2_BUILD_LIBRARY" /D "FT_OPTION_AUTOFIT2"
 
@@ -186,6 +193,20 @@ BZIP2_OBJS = \
 
 MINIZIP_OBJS = \
 	$(OZ)\unzip.obj $(OZ)\ioapi.obj $(OZ)\iowin32.obj
+
+UNRAR_OBJS = \
+	$(OR)\archive.obj $(OR)\arcread.obj $(OR)\cmddata.obj \
+	$(OR)\consio.obj $(OR)\crc.obj $(OR)\crypt.obj $(OR)\encname.obj \
+	$(OR)\errhnd.obj $(OR)\extinfo.obj $(OR)\extract.obj $(OR)\filcreat.obj \
+	$(OR)\file.obj $(OR)\filefn.obj $(OR)\filestr.obj $(OR)\find.obj $(OR)\getbits.obj \
+	$(OR)\global.obj $(OR)\isnt.obj  $(OR)\list.obj $(OR)\match.obj \
+	$(OR)\pathfn.obj $(OR)\options.obj $(OR)\rar.obj $(OR)\rarvm.obj \
+	$(OR)\rawread.obj $(OR)\rdwrfn.obj $(OR)\recvol.obj \
+	$(OR)\resource.obj $(OR)\rijndael.obj $(OR)\rs.obj $(OR)\savepos.obj \
+	$(OR)\scantree.obj $(OR)\sha1.obj $(OR)\smallfn.obj $(OR)\strfn.obj \
+	$(OR)\strlist.obj $(OR)\system.obj $(OR)\timefn.obj \
+	$(OR)\ulinks.obj $(OR)\unicode.obj $(OR)\unpack.obj \
+	$(OR)\volume.obj 
 
 !if "$(JPEG_TURBO_DIR)"==""
 
@@ -343,6 +364,7 @@ cleanall: force
 $(O): force
 	@if not exist $(O) mkdir $(O)
 	@if not exist $(OBZ) mkdir $(OBZ)
+	@if not exist $(OR) mkdir $(OR)
 	@if not exist $(OZ) mkdir $(OZ)
 	@if not exist $(OFT) mkdir $(OFT)
 	@if not exist $(OJ) mkdir $(OJ)
@@ -464,6 +486,9 @@ $(LIBMUPDF_DLL): $(LIBMUPDF_OBJS) $(LIBMUPDF_DEF) $(LIBMUPDF_RES)
 
 {$(BZIP2_DIR)}.c{$(OBZ)}.obj::
 	$(CC) $(BZIP2_CFLAGS) /Fo$(OBZ)\ /Fd$(O)\vc80.pdb $<
+
+{$(UNRAR_DIR)}.cpp{$(OR)}.obj::
+	$(CC) $(UNRAR_CFLAGS) /Fo$(OR)\ /Fd$(O)\vc80.pdb $<
 
 {$(ZLIB_DIR)\minizip}.c{$(OZ)}.obj::
 	$(CC) $(MINIZIP_CFLAGS) /Fo$(OZ)\ /Fd$(O)\vc80.pdb $<
