@@ -239,9 +239,9 @@ public:
 	{
 		assert(stack->layer && stack->saveG && stack->xstep && stack->ystep);
 		
-		for (int y = floorf(stack->tileArea.y0); y < stack->tileArea.y1; y++)
+		for (int y = floorf(stack->tileArea.y0); y <= ceilf(stack->tileArea.y1); y++)
 		{
-			for (int x = floorf(stack->tileArea.x0); x < stack->tileArea.x1; x++)
+			for (int x = floorf(stack->tileArea.x0); x <= ceilf(stack->tileArea.x1); x++)
 			{
 				fz_matrix ttm = fz_concat(fz_translate(x * stack->xstep, y * stack->ystep), stack->tileCtm);
 				Rect bounds = stack->bounds;
