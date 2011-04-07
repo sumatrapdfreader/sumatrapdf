@@ -69,7 +69,7 @@ public:
         memset(buf, 0, sizeof(buf));
     }
 
-    T* MakeSpaceAt(size_t idx, size_t count=1) {
+    T *MakeSpaceAtNoLenIncrease(size_t idx, size_t count=1) {
         EnsureCap(len + count);
         T* res = &(els[idx]);
         int tomove = len - idx;
@@ -78,7 +78,16 @@ public:
             T* dst = els + idx + count;
             memmove(dst, src, tomove * sizeof(T));
         }
+        return res;
+    }
+
+    void LenIncrease(size_t count) {
         len += count;
+    }
+
+    T* MakeSpaceAt(size_t idx, size_t count=1) {
+        T *res = MakeSpaceAtNoLenIncrease(idx, count);
+        LenIncrease(count);
         return res;
     }
 

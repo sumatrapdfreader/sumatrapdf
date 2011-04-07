@@ -18,40 +18,44 @@ HttpReqCtx::HttpReqCtx(const TCHAR *url, CallbackFunc *callback)
         HttpDownloadThread(this);
 }
 
-DWORD WINAPI HttpReqCtx::HttpDownloadThread(LPVOID data)
+static bool HttpGet(TCHAR *url, Str::Str<char> *dataOut)
 {
-    HttpReqCtx *ctx = (HttpReqCtx *)data;
-
+    bool ok = false;
     HINTERNET hFile = NULL;
     HINTERNET hInet = InternetOpen(APP_NAME_STR _T("/") CURR_VERSION_STR,
         INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
     if (!hInet)
-        goto DownloadError;
+        goto Exit;
 
-    hFile = InternetOpenUrl(hInet, ctx->url, NULL, 0, 0, 0);
+    hFile = InternetOpenUrl(hInet, url, NULL, 0, 0, 0);
     if (!hFile)
-        goto DownloadError;
+        goto Exit;
 
-    char buffer[1024];
+    char *buf = dataOut->MakeSpaceAtNoLenIncrease(dataOut->Count(), 1024);
     DWORD dwRead;
     do {
-        if (!InternetReadFile(hFile, buffer, sizeof(buffer), &dwRead))
-            goto DownloadError;
-        ctx->data->Append(buffer, dwRead);
+        if (!InternetReadFile(hFile, buf, 1024, &dwRead))
+            goto Exit;
+        dataOut->LenIncrease(dwRead);
     } while (dwRead > 0);
 
-DownloadComplete:
+    ok = true;
+Exit:
     InternetCloseHandle(hFile);
     InternetCloseHandle(hInet);
+    return ok;
+}
 
-    if (ctx->callback)
-        ctx->callback->Callback(ctx);
-
+DWORD WINAPI HttpReqCtx::HttpDownloadThread(LPVOID data)
+{
+    HttpReqCtx *ctx = (HttpReqCtx *)data;
+    if (HttpGet(ctx->url, ctx->data)) {
+        if (ctx->callback)
+            ctx->callback->Callback(ctx);
+    } else {
+        ctx->error = GetLastError();
+        if (ctx->error == 0)
+            ctx->error = ERROR_GEN_FAILURE;
+    }
     return 0;
-
-DownloadError:
-    ctx->error = GetLastError();
-    if (ctx->error == 0)
-        ctx->error = ERROR_GEN_FAILURE;
-    goto DownloadComplete;
 }
