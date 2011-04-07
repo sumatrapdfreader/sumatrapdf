@@ -331,7 +331,7 @@ fz_render_ft_glyph(fz_font *font, int gid, fz_matrix trm)
 		}
 	}
 
-	fterr = FT_Render_Glyph(face->glyph, ft_render_mode_normal);
+	fterr = FT_Render_Glyph(face->glyph, fz_get_aa_level() > 0 ? ft_render_mode_normal : ft_render_mode_mono);
 	if (fterr)
 	{
 		fz_warn("freetype render glyph (gid %d): %s", gid, ft_error_string(fterr));
@@ -344,11 +344,34 @@ fz_render_ft_glyph(fz_font *font, int gid, fz_matrix trm)
 		face->glyph->bitmap.width,
 		face->glyph->bitmap.rows);
 
-	for (y = 0; y < glyph->h; y++)
+	if (face->glyph->bitmap.pixel_mode == FT_PIXEL_MODE_MONO)
 	{
-		memcpy(glyph->samples + y * glyph->w,
-			face->glyph->bitmap.buffer + (glyph->h - y - 1) * face->glyph->bitmap.pitch,
-			glyph->w);
+		for (y = 0; y < glyph->h; y++)
+		{
+			unsigned char *out = glyph->samples + y * glyph->w;
+			unsigned char *in = face->glyph->bitmap.buffer + (glyph->h - y - 1) * face->glyph->bitmap.pitch;
+			unsigned char bit = 0x80;
+			int w = glyph->w;
+			while (w--)
+			{
+				*out++ = (*in & bit) ? 255 : 0;
+				bit >>= 1;
+				if (bit == 0)
+				{
+					bit = 0x80;
+					in++;
+				}
+			}
+		}
+	}
+	else
+	{
+		for (y = 0; y < glyph->h; y++)
+		{
+			memcpy(glyph->samples + y * glyph->w,
+				face->glyph->bitmap.buffer + (glyph->h - y - 1) * face->glyph->bitmap.pitch,
+				glyph->w);
+		}
 	}
 
 	return glyph;
@@ -420,7 +443,7 @@ fz_render_ft_stroked_glyph(fz_font *font, int gid, fz_matrix trm, fz_matrix ctm,
 		return NULL;
 	}
 
-	fterr = FT_Glyph_To_Bitmap(&glyph, FT_RENDER_MODE_NORMAL, 0, 1);
+	fterr = FT_Glyph_To_Bitmap(&glyph, fz_get_aa_level() > 0 ? ft_render_mode_normal : ft_render_mode_mono, 0, 1);
 	if (fterr)
 	{
 		fz_warn("FT_Glyph_To_Bitmap: %s", ft_error_string(fterr));
@@ -436,11 +459,34 @@ fz_render_ft_stroked_glyph(fz_font *font, int gid, fz_matrix trm, fz_matrix ctm,
 		bitmap->bitmap.width,
 		bitmap->bitmap.rows);
 
-	for (y = 0; y < pix->h; y++)
+	if (face->glyph->bitmap.pixel_mode == FT_PIXEL_MODE_MONO)
 	{
-		memcpy(pix->samples + y * pix->w,
-			bitmap->bitmap.buffer + (pix->h - y - 1) * bitmap->bitmap.pitch,
-			pix->w);
+		for (y = 0; y < pix->h; y++)
+		{
+			unsigned char *out = pix->samples + y * pix->w;
+			unsigned char *in = bitmap->bitmap.buffer + (pix->h - y - 1) * bitmap->bitmap.pitch;
+			unsigned char bit = 0x80;
+			int w = bitmap->bitmap.width;
+			while (w--)
+			{
+				*out++ = (*in & bit) ? 255 : 0;
+				bit >>= 1;
+				if (bit == 0)
+				{
+					bit = 0x80;
+					in++;
+				}
+			}
+		}
+	}
+	else
+	{
+		for (y = 0; y < pix->h; y++)
+		{
+			memcpy(pix->samples + y * pix->w,
+				bitmap->bitmap.buffer + (pix->h - y - 1) * bitmap->bitmap.pitch,
+				pix->w);
+		}
 	}
 
 	FT_Done_Glyph(glyph);

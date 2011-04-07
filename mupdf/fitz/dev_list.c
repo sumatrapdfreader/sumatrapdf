@@ -375,6 +375,7 @@ void
 fz_execute_display_list(fz_display_list *list, fz_device *dev, fz_matrix top_ctm, fz_bbox bounds)
 {
 	fz_display_node *node;
+	fz_matrix ctm;
 	fz_rect bbox;
 	int clipped = 0;
 	int tiled = 0;
@@ -389,24 +390,25 @@ fz_execute_display_list(fz_display_list *list, fz_device *dev, fz_matrix top_ctm
 
 	for (node = list->first; node; node = node->next)
 	{
-		fz_matrix ctm = fz_concat(node->ctm, top_ctm);
-		fz_rect rect = fz_transform_rect(top_ctm, node->rect);
+		fz_bbox rect = fz_round_rect(fz_transform_rect(top_ctm, node->rect));
 
 		/* never skip tiles */
+		if (node->cmd == FZ_CMD_BEGIN_TILE) {
+			tiled++;
+			goto visible;
+		}
+		if (node->cmd == FZ_CMD_END_TILE) {
+			tiled--;
+			goto visible;
+		}
 		if (tiled)
 			goto visible;
 
 		/* cull objects to draw using a quick visibility test */
-		if (clipped || fz_is_empty_bbox(fz_intersect_bbox(fz_round_rect(rect), bounds)))
+		if (clipped || fz_is_empty_bbox(fz_intersect_bbox(rect, bounds)))
 		{
 			switch (node->cmd)
 			{
-			case FZ_CMD_BEGIN_TILE:
-				tiled++;
-				goto visible;
-			case FZ_CMD_END_TILE:
-				tiled--;
-				goto visible;
 			case FZ_CMD_CLIP_PATH:
 			case FZ_CMD_CLIP_STROKE_PATH:
 			case FZ_CMD_CLIP_TEXT:
@@ -432,6 +434,8 @@ fz_execute_display_list(fz_display_list *list, fz_device *dev, fz_matrix top_ctm
 		}
 
 visible:
+		ctm = fz_concat(node->ctm, top_ctm);
+
 		switch (node->cmd)
 		{
 		case FZ_CMD_FILL_PATH:

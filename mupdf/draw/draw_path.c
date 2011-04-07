@@ -702,6 +702,7 @@ fz_flatten_dash_path(fz_gel *gel, fz_path *path, fz_stroke_state *stroke, fz_mat
 {
 	struct sctx s;
 	fz_point p0, p1, p2, p3, beg;
+	float phase_len;
 	int i;
 
 	s.gel = gel;
@@ -723,15 +724,23 @@ fz_flatten_dash_path(fz_gel *gel, fz_path *path, fz_stroke_state *stroke, fz_mat
 	s.offset = 0;
 	s.phase = 0;
 
-	i = 0;
-
 	if (path->len > 0 && path->items[0].k != FZ_MOVETO)
 	{
 		fz_warn("assert: path must begin with moveto");
 		return;
 	}
 
+	phase_len = 0;
+	for (i = 0; i < stroke->dash_len; i++)
+		phase_len += stroke->dash_list[i];
+	if (phase_len <= FLT_EPSILON)
+	{
+		fz_flatten_stroke_path(gel, path, stroke, ctm, flatness, linewidth);
+		return;
+	}
+
 	p0.x = p0.y = 0;
+	i = 0;
 
 	while (i < path->len)
 	{

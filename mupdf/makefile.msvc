@@ -177,7 +177,7 @@ FT_OBJS = \
 	$(OFT)\ftglyph.obj $(OFT)\ftinit.obj $(OFT)\ftstroke.obj $(OFT)\ftsynth.obj \
 	$(OFT)\ftsystem.obj $(OFT)\fttype1.obj $(OFT)\ftxf86.obj $(OFT)\cff.obj \
 	$(OFT)\type1cid.obj $(OFT)\psaux.obj $(OFT)\psnames.obj $(OFT)\smooth.obj \
-	$(OFT)\sfnt.obj $(OFT)\truetype.obj $(OFT)\type1.obj \
+	$(OFT)\sfnt.obj $(OFT)\truetype.obj $(OFT)\type1.obj $(OFT)\raster.obj \
 	$(OFT)\otvalid.obj $(OFT)\ftotval.obj
 
 ZLIB_OBJS = \

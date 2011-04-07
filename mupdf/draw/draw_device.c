@@ -76,9 +76,6 @@ fz_draw_stroke_path(void *user, fz_path *path, fz_stroke_state *stroke, fz_matri
 	fz_bbox bbox;
 	int i;
 
-	/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692131 */
-	if (stroke->linewidth == 0) return;
-
 	if (linewidth * expansion < 0.1f)
 		linewidth = 1 / expansion;
 

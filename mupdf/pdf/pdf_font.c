@@ -280,7 +280,7 @@ pdf_load_system_font(pdf_font_desc *fontdesc, char *fontname, char *collection)
 			return pdf_load_builtin_cjk_font(fontdesc, PDF_ROS_JAPAN, !isserif);
 		else if (!strcmp(collection, "Adobe-Korea1"))
 			return pdf_load_builtin_cjk_font(fontdesc, PDF_ROS_KOREA, !isserif);
-		fz_warn("unknown cid collection: %s", collection);
+		return fz_throw("unknown cid collection: %s", collection);
 	}
 
 	else if (isfixed)

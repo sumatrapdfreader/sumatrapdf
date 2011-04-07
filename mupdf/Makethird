@@ -32,6 +32,7 @@ FREETYPE_SRC := \
 	cff.c \
 	psaux.c \
 	psnames.c \
+	raster.c \
 	sfnt.c \
 	smooth.c \
 	truetype.c \
@@ -53,6 +54,8 @@ $(OUT)/ft_%.o: $(FREETYPE_DIR)/src/cid/%.c	| $(OUT)
 $(OUT)/ft_%.o: $(FREETYPE_DIR)/src/psaux/%.c	| $(OUT)
 	$(CC_CMD) $(FT_CFLAGS)
 $(OUT)/ft_%.o: $(FREETYPE_DIR)/src/psnames/%.c	| $(OUT)
+	$(CC_CMD) $(FT_CFLAGS)
+$(OUT)/ft_%.o: $(FREETYPE_DIR)/src/raster/%.c	| $(OUT)
 	$(CC_CMD) $(FT_CFLAGS)
 $(OUT)/ft_%.o: $(FREETYPE_DIR)/src/smooth/%.c	| $(OUT)
 	$(CC_CMD) $(FT_CFLAGS)

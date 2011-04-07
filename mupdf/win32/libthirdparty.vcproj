@@ -5,7 +5,6 @@
 	Name="libthirdparty"
 	ProjectGUID="{5EDCF4FD-0291-4FB9-8D96-D58957CA5E3C}"
 	RootNamespace="mupdf"
-	TargetFrameworkVersion="196613"
 	>
 	<Platforms>
 		<Platform
@@ -463,6 +462,10 @@
 			</File>
 			<File
 				RelativePath="..\thirdparty\freetype-2.4.4\src\psnames\psnames.c"
+				>
+			</File>
+			<File
+				RelativePath="..\thirdparty\freetype-2.4.4\src\raster\raster.c"
 				>
 			</File>
 			<File

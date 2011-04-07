@@ -23,6 +23,7 @@ int showtime = 0;
 int showmd5 = 0;
 int savealpha = 0;
 int uselist = 1;
+int alphabits = 8;
 
 fz_colorspace *colorspace;
 fz_glyph_cache *glyphcache;
@@ -46,14 +47,15 @@ static void usage(void)
 		"usage: pdfdraw [options] input.pdf [pages]\n"
 		"\t-o -\toutput filename (%%d for page number)\n"
 #ifdef GDI_PLUS_BMP_RENDERER
-		"\t\tsupported formats: pgm, ppm, pam, png, bmp\n"
+		"\t\tsupported formats: pgm, ppm, pam, png, pbm, bmp\n"
 #else
-		"\t\tsupported formats: pgm, ppm, pam, png\n"
+		"\t\tsupported formats: pgm, ppm, pam, png, pbm\n"
 #endif
 		"\t-p -\tpassword\n"
 		"\t-r -\tresolution in dpi (default: 72)\n"
 		"\t-A\tdisable accelerated functions\n"
 		"\t-a\tsave alpha channel (only pam and png)\n"
+		"\t-b -\tnumber of bits of antialiasing (0 to 8)\n"
 		"\t-g\trender in grayscale\n"
 		"\t-m\tshow timing information\n"
 		"\t-t\tshow text (-tt for xml)\n"
@@ -408,7 +410,7 @@ int main(int argc, char **argv)
 	fz_error error;
 	int c;
 
-	while ((c = fz_getopt(argc, argv, "o:p:r:R:Aadgmtx5")) != -1)
+	while ((c = fz_getopt(argc, argv, "o:p:r:R:Aab:dgmtx5")) != -1)
 	{
 		switch (c)
 		{
@@ -418,6 +420,7 @@ int main(int argc, char **argv)
 		case 'R': rotation = atof(fz_optarg); break;
 		case 'A': accelerate = 0; break;
 		case 'a': savealpha = 1; break;
+		case 'b': alphabits = atoi(fz_optarg); break;
 		case 'm': showtime++; break;
 		case 't': showtext++; break;
 		case 'x': showxml++; break;
@@ -427,6 +430,8 @@ int main(int argc, char **argv)
 		default: usage(); break;
 		}
 	}
+
+	fz_set_aa_level(alphabits);
 
 	if (fz_optind == argc)
 		usage();

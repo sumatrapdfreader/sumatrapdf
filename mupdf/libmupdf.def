@@ -217,6 +217,8 @@ EXPORTS
 	fz_render_glyph
 	fz_render_stroked_glyph
 	fz_free_glyph_cache
+	fz_get_aa_level
+	fz_set_aa_level
 	fz_new_gel
 	fz_insert_gel
 	fz_bound_gel

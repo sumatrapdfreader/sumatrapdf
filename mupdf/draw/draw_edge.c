@@ -9,7 +9,109 @@ static inline int fz_idiv(int a, int b)
 	return a < 0 ? (a - b + 1) / b : a / b;
 }
 
-enum { HSCALE = 17, VSCALE = 15, SF = 1 };
+/* Allow the antialiasing level to be varied, both at compile time and at
+ * runtime.
+ *
+ * If AA_BITS is not defined, then we assume constant 8 bits of antialiasing.
+ * If it is defined to a positive number then we will attempt to provide
+ * at least that number of bits of accuracy in the antialiasing (to a
+ * maximum of 8). If it is defined to be 0 then no antialiasing is done.
+ * If it is defined to be a negative number we will leave the antialiasing
+ * accuracy as a run time choice.
+ */
+
+#ifndef AA_BITS
+#define AA_BITS 8
+#endif
+
+#if AA_BITS < 0
+static int fz_aa_hscale = 17;
+static int fz_aa_vscale = 15;
+static int fz_aa_scale = 256;
+static int fz_aa_level = 8;
+#define AASCALE(c) ((c*fz_aa_scale)>>8)
+#define HSCALE fz_aa_hscale
+#define VSCALE fz_aa_vscale
+#undef AA_BITS
+#define AA_BITS 0
+typedef int fz_delta;
+#elif AA_BITS == 0
+enum { HSCALE = 1, VSCALE = 1 };
+#define AASCALE(c) (c*255)
+#undef AA_BITS
+#define AA_BITS 2
+typedef unsigned char fz_delta;
+#elif AA_BITS <= 2
+enum { HSCALE = 2, VSCALE = 2 };
+#define AASCALE(c) ((c*255)>>2)
+#undef AA_BITS
+#define AA_BITS 2
+typedef int fz_delta;
+#elif AA_BITS <= 4
+enum { HSCALE = 5, VSCALE = 3 };
+#define AASCALE(c) (c*17)
+#undef AA_BITS
+#define AA_BITS 4
+typedef unsigned char fz_delta;
+#elif AA_BITS <= 6
+enum { HSCALE = 8, VSCALE = 8 };
+#define AASCALE(c) ((c*255)>>6)
+#undef AA_BITS
+#define AA_BITS 6
+typedef int fz_delta;
+#else /* AA_BITS <= 8 */
+enum { HSCALE = 17, VSCALE = 15 };
+#define AASCALE(c) (c)
+#undef AA_BITS
+#define AA_BITS 8
+typedef unsigned char fz_delta;
+#endif
+
+int fz_get_aa_level(void)
+{
+#if AA_BITS <= 0
+	return fz_aa_level;
+#else
+	return AA_BITS;
+#endif
+}
+
+void fz_set_aa_level(int level)
+{
+#if AA_BITS <= 0
+	if (level > 6)
+	{
+		fz_aa_hscale = 17;
+		fz_aa_vscale = 15;
+		fz_aa_level = 8;
+	}
+	else if (level > 4)
+	{
+		fz_aa_hscale = 8;
+		fz_aa_vscale = 8;
+		fz_aa_level = 6;
+	}
+	else if (level > 2)
+	{
+		fz_aa_hscale = 5;
+		fz_aa_vscale = 3;
+		fz_aa_level = 4;
+	}
+	else if (level > 0)
+	{
+		fz_aa_hscale = 2;
+		fz_aa_vscale = 2;
+		fz_aa_level = 2;
+	}
+	else
+	{
+		fz_aa_hscale = 1;
+		fz_aa_vscale = 1;
+		fz_aa_level = 0;
+	}
+	fz_aa_scale = 0xFF00 / (fz_aa_hscale * fz_aa_vscale);
+#endif
+}
 
 /*
  * Global Edge List -- list of straight path segments for scan conversion
@@ -393,7 +495,7 @@ advance_ael(fz_ael *ael)
  */
 
 static inline void
-add_span(unsigned char *list, int x0, int x1, int xofs)
+add_span(fz_delta *list, int x0, int x1, int xofs)
 {
 	int x0pix, x0sub;
 	int x1pix, x1sub;
@@ -426,7 +528,7 @@ add_span(unsigned char *list, int x0, int x1, int xofs)
 }
 
 static inline void
-non_zero_winding(fz_ael *ael, unsigned char *list, int xofs)
+non_zero_winding(fz_ael *ael, fz_delta *list, int xofs)
 {
 	int winding = 0;
 	int x = 0;
@@ -442,7 +544,7 @@ non_zero_winding(fz_ael *ael, unsigned char *list, int xofs)
 }
 
 static inline void
-even_odd(fz_ael *ael, unsigned char *list, int xofs)
+even_odd(fz_ael *ael, fz_delta *list, int xofs)
 {
 	int even = 0;
 	int x = 0;
@@ -458,13 +560,14 @@ even_odd(fz_ael *ael, unsigned char *list, int xofs)
 }
 
 static inline void
-undelta(unsigned char *list, int n)
+undelta(fz_delta *in, int n)
 {
 	int d = 0;
+	unsigned char *out = (unsigned char *)in;
 	while (n--)
 	{
-		d += *list;
-		*list++ = d;
+		d += *in++;
+		*out++ = AASCALE(d);
 	}
 }
 
@@ -486,7 +589,7 @@ fz_scan_convert(fz_gel *gel, fz_ael *ael, int eofill, fz_bbox clip,
 	fz_pixmap *dest, unsigned char *color)
 {
 	fz_error error;
-	unsigned char *deltas;
+	fz_delta *deltas;
 	int y, e;
 	int yd, yc;
 
@@ -504,8 +607,8 @@ fz_scan_convert(fz_gel *gel, fz_ael *ael, int eofill, fz_bbox clip,
 	assert(clip.x0 >= xmin);
 	assert(clip.x1 <= xmax);
 
-	deltas = fz_malloc(xmax - xmin + 1);
-	memset(deltas, 0, xmax - xmin + 1);
+	deltas = fz_malloc((xmax - xmin + 1) * sizeof(fz_delta));
+	memset(deltas, 0, (xmax - xmin + 1) * sizeof(fz_delta));
 
 	e = 0;
 	y = gel->edges[0].y;
@@ -520,8 +623,8 @@ fz_scan_convert(fz_gel *gel, fz_ael *ael, int eofill, fz_bbox clip,
 			if (yd >= clip.y0 && yd < clip.y1)
 			{
 				undelta(deltas, skipx + clipn);
-				blit(dest, xmin + skipx, yd, deltas + skipx, clipn, color);
-				memset(deltas, 0, skipx + clipn);
+				blit(dest, xmin + skipx, yd, (unsigned char *)deltas + skipx, clipn, color);
+				memset(deltas, 0, (skipx + clipn) * sizeof(fz_delta));
 			}
 		}
 		yd = yc;
@@ -551,7 +654,7 @@ fz_scan_convert(fz_gel *gel, fz_ael *ael, int eofill, fz_bbox clip,
 	if (yd >= clip.y0 && yd < clip.y1)
 	{
 		undelta(deltas, skipx + clipn);
-		blit(dest, xmin + skipx, yd, deltas + skipx, clipn, color);
+		blit(dest, xmin + skipx, yd, (unsigned char *)deltas + skipx, clipn, color);
 	}
 
 	fz_free(deltas);

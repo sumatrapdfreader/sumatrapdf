@@ -994,6 +994,9 @@ void fz_free_glyph_cache(fz_glyph_cache *);
  * Scan converter
  */
 
+int fz_get_aa_level(void);
+void fz_set_aa_level(int bits);
+
 typedef struct fz_edge_s fz_edge;
 typedef struct fz_gel_s fz_gel;
 typedef struct fz_ael_s fz_ael;
