@@ -393,11 +393,11 @@ fz_execute_display_list(fz_display_list *list, fz_device *dev, fz_matrix top_ctm
 		fz_bbox rect = fz_round_rect(fz_transform_rect(top_ctm, node->rect));
 
 		/* never skip tiles */
-		if (node->cmd == FZ_CMD_BEGIN_TILE) {
+		if (node->cmd == FZ_CMD_BEGIN_TILE && !clipped) {
 			tiled++;
 			goto visible;
 		}
-		if (node->cmd == FZ_CMD_END_TILE) {
+		if (node->cmd == FZ_CMD_END_TILE && !clipped) {
 			tiled--;
 			goto visible;
 		}
