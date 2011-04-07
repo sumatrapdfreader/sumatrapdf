@@ -73,7 +73,6 @@ static ScopedMem<TCHAR> g_crashTxtPath(NULL);
 static HANDLE g_dumpEvent = NULL;
 static HANDLE g_dumpThread = NULL;
 static MINIDUMP_EXCEPTION_INFORMATION mei = { 0 };
-
 static BOOL gSymInitializeOk = FALSE;
 
 static void LoadDbgHelpFuncs()
@@ -183,7 +182,7 @@ static void GetOsVersion(Str::Str<char>& s)
     int buildNumber = ver.dwBuildNumber & 0xFFFF;
     char *is64bit = Is64Bit() ? "32bit" : "64bit";
     char *isWow = IsWow64() ?  "Wow64" : "";
-    s.AppendFmt("OS: %s %d.%d build %d %s %s\n", os, servicePackMajor, servicePackMinor, buildNumber, is64bit, isWow);
+    s.AppendFmt("OS: %s %d.%d build %d %s %s\r\n", os, servicePackMajor, servicePackMinor, buildNumber, is64bit, isWow);
 }
 
 static void GetModules(Str::Str<char>& s)
@@ -199,7 +198,7 @@ static void GetModules(Str::Str<char>& s)
         TCHAR *path = mod.szExePath;
         char *nameA = Str::Conv::ToUtf8(name);
         char *pathA = Str::Conv::ToUtf8(path);
-        s.AppendFmt("Module: %s 0x%p 0x%x %s\n", nameA, (void*)mod.modBaseAddr, (int)mod.modBaseSize, pathA);
+        s.AppendFmt("Module: %s 0x%p 0x%x %s\r\n", nameA, (void*)mod.modBaseAddr, (int)mod.modBaseSize, pathA);
         free(nameA);
         free(pathA);
         cont = Module32Next(snap, &mod);
@@ -207,6 +206,7 @@ static void GetModules(Str::Str<char>& s)
     CloseHandle(snap);
 }
 
+// TODO: should offsetOut be DWORD_PTR for 64-bit compat?
 static bool GetAddrInfo(void *addr, char *module, DWORD moduleLen, DWORD& sectionOut, DWORD& offsetOut)
 {
     MEMORY_BASIC_INFORMATION mbi;
@@ -253,7 +253,7 @@ static void GetCallstack(Str::Str<char>& s)
     HANDLE hThread = GetCurrentThread();
     DWORD threadId = GetCurrentThreadId();
 
-    s.AppendFmt("\nThread: 0x%x\n", (int)threadId);
+    s.AppendFmt("\nThread: 0x%x\r\n", (int)threadId);
 
     CONTEXT ctx;
     RtlCaptureContext(&ctx);
@@ -295,7 +295,7 @@ static void GetCallstack(Str::Str<char>& s)
         ok = _SymFromAddr(hProc, addr, &symDisp, symInfo);
         if (ok) {
             char *name = &(symInfo->Name[0]);
-            s.AppendFmt("0x%p %s+0x%x\n", (void*)addr, name, (int)symDisp);
+            s.AppendFmt("0x%p %s+0x%x\r\n", (void*)addr, name, (int)symDisp);
         } else {
             char module[MAX_PATH] = { 0 };
             DWORD section, offset;
@@ -303,25 +303,110 @@ static void GetCallstack(Str::Str<char>& s)
             // at least know which function in the DLL it is even when we
             // don't have symbols?
             if (GetAddrInfo((void*)addr, module, sizeof(module), section, offset))
-                s.AppendFmt("0x%p 0x%x:0x%x %s\n", (void*)addr, section, offset, module);
+                s.AppendFmt("0x%p 0x%x:0x%x %s\r\n", (void*)addr, section, offset, module);
             else
-                s.AppendFmt("0x%p\n", (void*)addr);
+                s.AppendFmt("0x%p\r\n", (void*)addr);
         }
         framesCount++;
     }
 }
 
+static char *ExceptionNameFromCode(DWORD excCode)
+{
+#define EXC(x) case EXCEPTION_##x: return #x;
+
+    switch (excCode)
+    {
+        EXC(ACCESS_VIOLATION)
+        EXC(DATATYPE_MISALIGNMENT)
+        EXC(BREAKPOINT)
+        EXC(SINGLE_STEP)
+        EXC(ARRAY_BOUNDS_EXCEEDED)
+        EXC(FLT_DENORMAL_OPERAND)
+        EXC(FLT_DIVIDE_BY_ZERO)
+        EXC(FLT_INEXACT_RESULT)
+        EXC(FLT_INVALID_OPERATION)
+        EXC(FLT_OVERFLOW)
+        EXC(FLT_STACK_CHECK)
+        EXC(FLT_UNDERFLOW)
+        EXC(INT_DIVIDE_BY_ZERO)
+        EXC(INT_OVERFLOW)
+        EXC(PRIV_INSTRUCTION)
+        EXC(IN_PAGE_ERROR)
+        EXC(ILLEGAL_INSTRUCTION)
+        EXC(NONCONTINUABLE_EXCEPTION)
+        EXC(STACK_OVERFLOW)
+        EXC(INVALID_DISPOSITION)
+        EXC(GUARD_PAGE)
+        EXC(INVALID_HANDLE)
+    }
+#undef EXC
+
+    static char buf[512] = { 0 };
+
+    FormatMessageA(FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_FROM_HMODULE,
+        GetModuleHandleA("NTDLL.DLL"),
+        excCode, 0, buf, sizeof(buf), 0);
+
+    return buf;
+
+}
+
+static void GetExceptionInfo(Str::Str<char>& s, EXCEPTION_POINTERS *excPointers)
+{
+    if (!excPointers)
+        return;
+    EXCEPTION_RECORD *excRecord = excPointers->ExceptionRecord;
+    DWORD excCode = excRecord->ExceptionCode;
+    s.AppendFmt("Exception: %08X, %s\r\n", (int)excCode, ExceptionNameFromCode(excCode));
+
+    char module[MAX_PATH];
+    DWORD section;
+    DWORD offset;
+    GetAddrInfo(excRecord->ExceptionAddress, module, sizeof(module), section, offset);
+
+#ifdef _M_IX86
+    s.AppendFmt("Fault address:  %08X %02X:%08X %s\r\n", excRecord->ExceptionAddress, section, offset, module);
+#endif
+#ifdef _M_X64
+    s.AppendFmt("Fault address:  %016I64X %02X:%016I64X %s\r\n", excRecord->ExceptionAddress, section, offset, module);
+#endif
+
+    PCONTEXT ctx = excPointers->ContextRecord;
+    s.AppendFmt("\r\nRegisters:\r\n");
+
+#ifdef _M_IX86
+    s.AppendFmt("EAX:%08X\r\nEBX:%08X\r\nECX:%08X\r\nEDX:%08X\r\nESI:%08X\r\nEDI:%08X\r\n",
+        ctx->Eax, ctx->Ebx, ctx->Ecx, ctx->Edx, ctx->Esi, ctx->Edi);
+    s.AppendFmt("CS:EIP:%04X:%08X\r\n", ctx->SegCs, ctx->Eip);
+    s.AppendFmt("SS:ESP:%04X:%08X  EBP:%08X\r\n", ctx->SegSs, ctx->Esp, ctx->Ebp);
+    s.AppendFmt("DS:%04X  ES:%04X  FS:%04X  GS:%04X\r\n", ctx->SegDs, ctx->SegEs, ctx->SegFs, ctx->SegGs);
+    s.AppendFmt("Flags:%08X\r\n", ctx->EFlags);
+#endif
+
+#ifdef _M_X64
+    s.AppendFmt("RAX:%016I64X\r\nRBX:%016I64X\r\nRCX:%016I64X\r\nRDX:%016I64X\r\nRSI:%016I64X\r\nRDI:%016I64X\r\n"
+        "R8: %016I64X\r\nR9: %016I64X\r\nR10:%016I64X\r\nR11:%016I64X\r\nR12:%016I64X\r\nR13:%016I64X\r\nR14:%016I64X\r\nR15:%016I64X\r\n",
+        ctx->Rax, ctx->Rbx, ctx->Rcx, ctx->Rdx, ctx->Rsi, ctx->Rdi,
+        ctx->R9,ctx->R10,ctx->R11,ctx->R12,ctx->R13,ctx->R14,ctx->R15);
+    s.AppendFmt("CS:RIP:%04X:%016I64X\r\n", ctx->SegCs, ctx->Rip);
+    s.AppendFmt("SS:RSP:%04X:%016X  RBP:%08X\r\n", ctx->SegSs, ctx->Rsp, ctx->Rbp);
+    s.AppendFmt("DS:%04X  ES:%04X  FS:%04X  GS:%04X\r\n", ctx->SegDs, ctx->SegEs, ctx->SegFs, ctx->SegGs);
+    s.AppendFmt("Flags:%08X\r\n", ctx->EFlags);
+#endif
+}
+
 static char *BuildCrashInfoText()
 {
     Str::Str<char> s;
-    s.AppendFmt("Ver: %s\n", QM(CURR_VERSION));
+    s.AppendFmt("Ver: %s\r\n", QM(CURR_VERSION));
     GetOsVersion(s);
-    s.Append("\n");
+    s.Append("\r\n");
     GetModules(s);
-    s.Append("\n");
+    s.Append("\r\n");
+    GetExceptionInfo(s, mei.ExceptionPointers);
     // TODO: Suspend all threads and get their callstacks
     GetCallstack(s);
-    // TODO: add info about the exception
     return s.StealData();
 }
 
