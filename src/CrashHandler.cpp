@@ -75,19 +75,27 @@ static HANDLE g_dumpThread = NULL;
 static MINIDUMP_EXCEPTION_INFORMATION mei = { 0 };
 static BOOL gSymInitializeOk = FALSE;
 
+#define F(X) \
+    { #X, (void**)&_ ## X },
+
+FuncNameAddr g_dbgHelpFuncs[] = {
+    F(MiniDumpWriteDump)
+    F(SymInitialize)
+    F(SymGetOptions)
+    F(SymSetOptions)
+    F(StackWalk64)
+    F(SymFunctionTableAccess64)
+    F(SymGetModuleBase64)
+    F(SymFromAddr)
+    { NULL, NULL }
+};
+#undef F
+
 static void LoadDbgHelpFuncs()
 {
     if (_MiniDumpWriteDump)
         return;
-    WinLibrary lib(_T("DBGHELP.DLL"), true);
-    _MiniDumpWriteDump = (MiniDumpWriteProc *)lib.GetProcAddr("MiniDumpWriteDump");
-    _SymInitialize = (SymInitializeProc *)lib.GetProcAddr("SymInitialize");
-    _SymGetOptions = (SymGetOptionsProc *)lib.GetProcAddr("SymGetOptions");
-    _SymSetOptions = (SymSetOptionsProc *)lib.GetProcAddr("SymSetOptions");
-    _StackWalk64 =   (StackWalk64Proc *)lib.GetProcAddr("StackWalk64");
-    _SymFunctionTableAccess64 = (SymFunctionTableAccess64Proc *)lib.GetProcAddr("SymFunctionTableAccess64");
-    _SymGetModuleBase64 = (SymGetModuleBase64Proc *)lib.GetProcAddr("SymGetModuleBase64");
-    _SymFromAddr = (SymFromAddrProc *)lib.GetProcAddr("SymFromAddr");
+    LoadDllFuncs(_T("DBGHELP.DLL"), g_dbgHelpFuncs);
 }
 
 static bool CanStackWalk()

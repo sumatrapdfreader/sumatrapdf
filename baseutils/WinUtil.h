@@ -9,10 +9,19 @@
 #include <CommCtrl.h>
 #include "GeomUtil.h"
 
+HMODULE SafeLoadLibrary(const TCHAR *dllName);
+
+struct FuncNameAddr {
+    const char *name;
+    void **addr;
+};
+
+void LoadDllFuncs(TCHAR *dllName, FuncNameAddr *funcs);
+
 class WinLibrary {
 public:
-    WinLibrary(const TCHAR *libName, bool dontFree=false) : dontFree(dontFree) {
-        hlib = LoadSystemLibrary(libName);
+    WinLibrary(const TCHAR *dllName, bool dontFree=false) : dontFree(dontFree) {
+        hlib = SafeLoadLibrary(dllName);
     }
     ~WinLibrary() { if (!dontFree) FreeLibrary(hlib); }
     FARPROC GetProcAddr(const char *procName) {
@@ -22,8 +31,8 @@ public:
 private:
     bool    dontFree;
     HMODULE hlib;
-    HMODULE LoadSystemLibrary(const TCHAR *libName);
 };
+
 
 class ScopedCom {
 public:

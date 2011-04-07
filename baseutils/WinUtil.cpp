@@ -15,7 +15,8 @@
 
 // Return true if application is themed. Wrapper around IsAppThemed() in uxtheme.dll
 // that is compatible with earlier windows versions.
-bool IsAppThemed() {
+bool IsAppThemed()
+{
     WinLibrary lib(_T("uxtheme.dll"));
     FARPROC pIsAppThemed = lib.GetProcAddr("IsAppThemed");
     if (!pIsAppThemed) 
@@ -26,11 +27,27 @@ bool IsAppThemed() {
 }
 
 // Loads a DLL explicitly from the system's library collection
-HMODULE WinLibrary::LoadSystemLibrary(const TCHAR *libName) {
+HMODULE SafeLoadLibrary(const TCHAR *dllName)
+{
     TCHAR dllPath[MAX_PATH];
     GetSystemDirectory(dllPath, dimof(dllPath));
-    PathAppend(dllPath, libName);
+    PathAppend(dllPath, dllName);
     return LoadLibrary(dllPath);
+}
+
+void LoadDllFuncs(TCHAR *dllName, FuncNameAddr *funcs)
+{    
+    HMODULE h = SafeLoadLibrary(dllName);
+    if (!h)
+        return;
+    int i = 0;
+    while (funcs[i].name) {
+        *funcs[i].addr = GetProcAddress(h, funcs[i].name);
+        ++i;
+    }
+    // Note: we don't unload the dll. It's harmless for those that would stay
+    // loaded anyway but we would crash trying to call a function that
+    // was grabbed from a dll that was unloaded in the meantime
 }
 
 static int WindowsVerMajor()
@@ -52,7 +69,8 @@ bool WindowsVerVistaOrGreater()
     return false;
 }
 
-void SeeLastError(DWORD err) {
+void SeeLastError(DWORD err)
+{
     TCHAR *msgBuf = NULL;
     if (err == 0)
         err = GetLastError();
