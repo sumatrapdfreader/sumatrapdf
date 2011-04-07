@@ -31,9 +31,9 @@ static bool HttpGet(TCHAR *url, Str::Str<char> *dataOut)
     if (!hFile)
         goto Exit;
 
-    char *buf = dataOut->MakeSpaceAtNoLenIncrease(dataOut->Count(), 1024);
     DWORD dwRead;
     do {
+        char *buf = dataOut->MakeSpaceAtNoLenIncrease(dataOut->Count(), 1024);
         if (!InternetReadFile(hFile, buf, 1024, &dwRead))
             goto Exit;
         dataOut->LenIncrease(dwRead);
