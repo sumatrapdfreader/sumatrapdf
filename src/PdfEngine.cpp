@@ -372,20 +372,36 @@ PdfEngine::~PdfEngine()
     DeleteCriticalSection(&_pagesAccess);
 }
 
+class PasswordCloner : public PasswordUI {
+    unsigned char *cryptKey;
+
+public:
+    PasswordCloner(unsigned char *cryptKey) : cryptKey(cryptKey) { }
+
+    virtual TCHAR * GetPassword(const TCHAR *fileName, unsigned char *fileDigest,
+                                unsigned char decryptionKeyOut[32], bool *saveKey)
+    {
+        memcpy(decryptionKeyOut, cryptKey, 32);
+        *saveKey = true;
+        return NULL;
+    }
+};
+
 PdfEngine *PdfEngine::Clone()
 {
     // use this document's encryption key (if any) to load the clone
-    char *key = NULL;
+    PasswordCloner *pwdUI = NULL;
     if (_xref->crypt)
-        key = _MemToHex(&_xref->crypt->key);
-    TCHAR *password = key ? Str::Conv::FromAnsi(key) : NULL;
-    free(key);
-
-    PdfEngine *clone = PdfEngine::CreateFromStream(_xref->file, password);
-    free(password);
+        pwdUI = new PasswordCloner(_xref->crypt->key);
+    PdfEngine *clone = PdfEngine::CreateFromStream(_xref->file, pwdUI);
+    delete pwdUI;
 
     if (clone && _fileName)
         clone->_fileName = Str::Dup(_fileName);
+    if (clone && !_decryptionKey && _xref->crypt) {
+        delete clone->_decryptionKey;
+        clone->_decryptionKey = NULL;
+    }
 
     return clone;
 }
@@ -421,9 +437,45 @@ bool PdfEngine::load(const TCHAR *fileName, PasswordUI *pwdUI)
         return false;
 
 OpenEmbeddedFile:
-    // don't pass in a password so that _xref isn't thrown away if it was wrong
-    fz_error error = pdf_open_xref_with_stream(&_xref, file, NULL);
+    if (!load_from_stream(file, pwdUI)) {
+        fz_close(file);
+        return false;
+    }
     fz_close(file);
+
+    if (!embedMarks || !*embedMarks)
+        return finishLoading();
+
+    int num = _ttoi(embedMarks + 1); embedMarks = _tcschr(embedMarks + 1, ':');
+    int gen = _ttoi(embedMarks + 1); embedMarks = _tcschr(embedMarks + 1, ':');
+    if (!pdf_is_stream(_xref, num, gen))
+        return false;
+
+    fz_buffer *buffer;
+    fz_error error = pdf_load_stream(&buffer, _xref, num, gen);
+    if (error)
+        return false;
+
+    file = fz_open_buffer(buffer);
+    fz_drop_buffer(buffer);
+    pdf_free_xref(_xref);
+    _xref = NULL;
+
+    goto OpenEmbeddedFile;
+}
+
+bool PdfEngine::load(fz_stream *stm, PasswordUI *pwdUI)
+{
+    assert(!_fileName && !_xref);
+    if (!load_from_stream(stm, pwdUI))
+        return false;
+    return finishLoading();
+}
+
+bool PdfEngine::load_from_stream(fz_stream *stm, PasswordUI *pwdUI)
+{
+    // don't pass in a password so that _xref isn't thrown away if it was wrong
+    fz_error error = pdf_open_xref_with_stream(&_xref, stm, NULL);
     if (error || !_xref)
         return false;
 
@@ -466,64 +518,7 @@ OpenEmbeddedFile:
         }
     }
 
-    if (embedMarks && *embedMarks) {
-        int num = _ttoi(embedMarks + 1); embedMarks = _tcschr(embedMarks + 1, ':');
-        int gen = _ttoi(embedMarks + 1); embedMarks = _tcschr(embedMarks + 1, ':');
-        if (!pdf_is_stream(_xref, num, gen))
-            return false;
-
-        fz_buffer *buffer;
-        error = pdf_load_stream(&buffer, _xref, num, gen);
-        if (error)
-            return false;
-        file = fz_open_buffer(buffer);
-        fz_drop_buffer(buffer);
-
-        pdf_free_xref(_xref);
-        _xref = NULL;
-        goto OpenEmbeddedFile;
-    }
-
-    return finishLoading();
-}
-
-bool PdfEngine::load(fz_stream *stm, TCHAR *password)
-{
-    assert(!_fileName && !_xref);
-
-    // don't pass in a password so that _xref isn't thrown away if it was wrong
-    fz_error error = pdf_open_xref_with_stream(&_xref, stm, NULL);
-    if (error || !_xref)
-        return false;
-
-    if (pdf_needs_password(_xref)) {
-        if (!password)
-            return false;
-
-        char *pwd_doc = Str::Conv::ToPDF(password);
-        bool okay = pwd_doc && pdf_authenticate_password(_xref, pwd_doc);
-        fz_free(pwd_doc);
-        // try the UTF-8 password, if the PDFDocEncoding one doesn't work
-        if (!okay) {
-            ScopedMem<char> pwd_utf8(Str::Conv::ToUtf8(password));
-            okay = pwd_utf8 && pdf_authenticate_password(_xref, pwd_utf8);
-        }
-        // fall back to an ANSI-encoded password as a last measure
-        if (!okay) {
-            ScopedMem<char> pwd_ansi(Str::Conv::ToAnsi(password));
-            okay = pwd_ansi && pdf_authenticate_password(_xref, pwd_ansi);
-        }
-        // finally, try using the password as hex-encoded encryption key
-        if (!okay && Str::Len(password) == 64) {
-            ScopedMem<char> pwd_hex(Str::Conv::ToAnsi(password));
-            okay = _HexToMem(pwd_hex, &_xref->crypt->key);
-        }
-
-        if (!okay)
-            return false;
-    }
-
-    return finishLoading();
+    return true;
 }
 
 bool PdfEngine::finishLoading()
@@ -1291,10 +1286,10 @@ PdfEngine *PdfEngine::CreateFromFileName(const TCHAR *fileName, PasswordUI *pwdU
     return engine;
 }
 
-PdfEngine *PdfEngine::CreateFromStream(fz_stream *stm, TCHAR *password)
+PdfEngine *PdfEngine::CreateFromStream(fz_stream *stm, PasswordUI *pwdUI)
 {
     PdfEngine *engine = new PdfEngine();
-    if (!engine || !stm || !engine->load(stm, password)) {
+    if (!engine || !stm || !engine->load(stm, pwdUI)) {
         delete engine;
         return NULL;
     }
@@ -1311,31 +1306,11 @@ xps_run_page(xps_context *ctx, xps_page *page, fz_device *dev, fz_matrix ctm)
 	ctx->dev = NULL;
 }
 
-XpsEngine::XpsEngine(const TCHAR *fileName) : 
-          _fileName(Str::Dup(fileName))
-        , _ctx(NULL)
-        , _pages(NULL)
-        , _drawcache(NULL)
+XpsEngine::XpsEngine() : _fileName(NULL), _ctx(NULL), _pages(NULL), _drawcache(NULL)
 {
     InitializeCriticalSection(&_pagesAccess);
     InitializeCriticalSection(&_ctxAccess);
     ZeroMemory(&_runCache, sizeof(_runCache));
-
-    if (!_fileName)
-        return;
-
-    fz_stream *file = fz_open_stream(_fileName);
-    if (!file)
-        return;
-
-    xps_open_stream(&_ctx, file);
-    fz_close(file);
-
-    if (!_ctx)
-        return;
-
-    _pages = SAZA(xps_page *, PageCount());
-    // TODO: extract document properties from the "/docProps/core.xml" part
 }
 
 XpsEngine::~XpsEngine()
@@ -1368,6 +1343,31 @@ XpsEngine::~XpsEngine()
     DeleteCriticalSection(&_ctxAccess);
     LeaveCriticalSection(&_pagesAccess);
     DeleteCriticalSection(&_pagesAccess);
+}
+
+bool XpsEngine::load(const TCHAR *fileName)
+{
+    _fileName = Str::Dup(fileName);
+
+    fz_stream *file = fz_open_stream(_fileName);
+    if (!file)
+        return false;
+
+    bool result = load(file);
+    fz_close(file);
+    return result;
+}
+
+bool XpsEngine::load(fz_stream *stm)
+{
+    xps_open_stream(&_ctx, stm);
+    if (!_ctx)
+        return false;
+
+    _pages = SAZA(xps_page *, PageCount());
+    // TODO: extract document properties from the "/docProps/core.xml" part
+
+    return true;
 }
 
 xps_page *XpsEngine::getXpsPage(int pageNo, bool failIfBusy)
@@ -1670,8 +1670,18 @@ unsigned char *XpsEngine::GetFileData(size_t *cbCount)
 
 XpsEngine *XpsEngine::CreateFromFileName(const TCHAR *fileName)
 {
-    XpsEngine *engine = new XpsEngine(fileName);
-    if (!engine || engine->PageCount() == 0) {
+    XpsEngine *engine = new XpsEngine();
+    if (!engine || !engine->load(fileName)) {
+        delete engine;
+        return NULL;
+    }
+    return engine;
+}
+
+XpsEngine *XpsEngine::CreateFromStream(fz_stream *stm)
+{
+    XpsEngine *engine = new XpsEngine();
+    if (!engine || !engine->load(stm)) {
         delete engine;
         return NULL;
     }

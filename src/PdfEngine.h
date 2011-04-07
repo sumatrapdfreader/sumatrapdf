@@ -137,7 +137,8 @@ protected:
     pdf_page **     _pages;
 
     bool            load(const TCHAR *fileName, PasswordUI *pwdUI=NULL);
-    bool            load(fz_stream *stm, TCHAR *password=NULL);
+    bool            load(fz_stream *stm, PasswordUI *pwdUI=NULL);
+    bool            load_from_stream(fz_stream *stm, PasswordUI *pwdUI=NULL);
     bool            finishLoading();
     pdf_page      * getPdfPage(int pageNo, bool failIfBusy=false);
     fz_matrix       viewctm(int pageNo, float zoom, int rotate);
@@ -167,7 +168,7 @@ protected:
 
 public:
     static PdfEngine *CreateFromFileName(const TCHAR *fileName, PasswordUI *pwdUI=NULL);
-    static PdfEngine *CreateFromStream(fz_stream *stm, TCHAR *password=NULL);
+    static PdfEngine *CreateFromStream(fz_stream *stm, PasswordUI *pwdUI=NULL);
 };
 
 typedef struct {
@@ -178,7 +179,7 @@ typedef struct {
 
 class XpsEngine : public BaseEngine {
 public:
-    XpsEngine(const TCHAR *fileName);
+    XpsEngine();
     virtual ~XpsEngine();
     virtual XpsEngine *Clone() {
         return CreateFromFileName(_fileName);
@@ -223,6 +224,8 @@ protected:
     CRITICAL_SECTION _pagesAccess;
     xps_page **     _pages;
 
+    bool            load(const TCHAR *fileName);
+    bool            load(fz_stream *stm);
     xps_page      * getXpsPage(int pageNo, bool failIfBusy=false);
     fz_matrix       viewctm(int pageNo, float zoom, int rotate) {
         return viewctm(getXpsPage(pageNo), zoom, rotate);
@@ -244,6 +247,7 @@ protected:
 
 public:
     static XpsEngine *CreateFromFileName(const TCHAR *fileName);
+    static XpsEngine *CreateFromStream(fz_stream *stm);
 };
 
 // TODO: move inside PdfEngine.cpp once we've gotten rid of fz_* outside

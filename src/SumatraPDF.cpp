@@ -786,7 +786,8 @@ WindowInfo* FindWindowInfoByFile(TCHAR *file)
 /* Get password for a given 'fileName', can be NULL if user cancelled the
    dialog box or if the encryption key has been filled in instead.
    Caller needs to free() the result. */
-TCHAR *WindowInfo::GetPassword(const TCHAR *fileName, unsigned char *fileDigest, unsigned char decryptionKeyOut[32], bool *saveKey)
+TCHAR *WindowInfo::GetPassword(const TCHAR *fileName, unsigned char *fileDigest,
+                               unsigned char decryptionKeyOut[32], bool *saveKey)
 {
     DisplayState *fileFromHistory = gFileHistory.Find(fileName);
     if (fileFromHistory && fileFromHistory->decryptionKey) {
