@@ -13,6 +13,7 @@
 #include "Vec.h"
 #include "WinUtil.h"
 #include "FileUtil.h"
+#include "AppTools.h"
 
 #include "translations.h"
 
@@ -59,10 +60,16 @@ typedef DWORD64 _stdcall SymGetModuleBase64Proc(
     HANDLE hProcess,
     DWORD64 qwAddr);
 
+typedef BOOL WINAPI SymSetSearchPathWProc(
+    HANDLE hProcess,
+    PCWSTR SearchPath
+);
+
 static MiniDumpWriteProc *              _MiniDumpWriteDump;
 static SymInitializeProc *              _SymInitialize;
 static SymGetOptionsProc *              _SymGetOptions;
 static SymSetOptionsProc *              _SymSetOptions;
+static SymSetSearchPathWProc *          _SymSetSearchPathW;
 static StackWalk64Proc   *              _StackWalk64;
 static SymFunctionTableAccess64Proc *   _SymFunctionTableAccess64;
 static SymGetModuleBase64Proc *         _SymGetModuleBase64;
@@ -83,6 +90,7 @@ FuncNameAddr g_dbgHelpFuncs[] = {
     F(SymInitialize)
     F(SymGetOptions)
     F(SymSetOptions)
+    F(SymSetSearchPathW)
     F(StackWalk64)
     F(SymFunctionTableAccess64)
     F(SymGetModuleBase64)
@@ -438,7 +446,6 @@ static char *ExceptionNameFromCode(DWORD excCode)
         excCode, 0, buf, sizeof(buf), 0);
 
     return buf;
-
 }
 
 static void GetExceptionInfo(Str::Str<char>& s, EXCEPTION_POINTERS *excPointers)
@@ -572,14 +579,50 @@ static LONG WINAPI DumpExceptionHandler(EXCEPTION_POINTERS *exceptionInfo)
     return EXCEPTION_CONTINUE_SEARCH;
 }
 
+static bool GetEnvOk(DWORD ret, DWORD cchBufSize)
+{
+    return cchBufSize == ret;
+}
+
 /* How to setup symbol path:
-if (GetEnvironmentVariableA("_NT_SYMBOL_PATH", szTemp, nTempLen) > 0)
-  add to sympath
-if (GetEnvironmentVariableA("_NT_ALTERNATE_SYMBOL_PATH", szTemp, nTempLen) > 0)
-  add to sympath
-add: "SRV*c:\\websymbols*http://msdl.microsoft.com/download/symbols"
-(except a better directory than c:\\websymbols
-*/
+add GetEnvironmentVariableA("_NT_SYMBOL_PATH", szTemp, nTempLen)
+add GetEnvironmentVariableA("_NT_ALTERNATE_SYMBOL_PATH", szTemp, nTempLen)
+add: "srv*c:\\symbols*http://msdl.microsoft.com/download/symbols;cache*c:\\symbols"
+(except a better directory than c:\\symbols */
+
+// TODO: doesn't have expected result i.e. SymFromAddr() doesn't resolve symbols
+// even if I set sympath to my local directory that definitely has symbols
+// maybe it's related to dbghelp.dll version and I should try harder loading
+// the latest version available on the system?
+static void SetupSymbolPath()
+{
+    Str::Str<WCHAR> s(1024);
+
+    WCHAR buf[512];
+    DWORD cchBuf = dimof(buf);
+    DWORD res = GetEnvironmentVariableW(L"_NT_SYMBOL_PATH", buf, cchBuf);
+    if (GetEnvOk(res, cchBuf)) {
+        s.Append(buf);
+        s.Append(L";");
+    }
+    res = GetEnvironmentVariableW(L"_NT_ALTERNATE_SYMBOL_PATH", buf, cchBuf);
+    if (GetEnvOk(res, cchBuf)) {
+        s.Append(buf);
+        s.Append(L";");
+    }
+    WCHAR *dir = AppGenDataDir();
+    WCHAR *symDir = Path::Join(dir, L"symbols");
+    _tmkdir(symDir);
+    s.Append(L"srv*");
+    s.Append(symDir);
+    s.Append(L"*http://msdl.microsoft.com/download/symbols;cache*");
+    s.Append(symDir);
+    
+    BOOL ok = _SymSetSearchPathW(GetCurrentProcess(), s.Get());
+    //BOOL ok = _SymSetSearchPathW(GetCurrentProcess(), L"c:\\symbols");
+    free(dir);
+    free(symDir);
+}
 
 void InstallCrashHandler(const TCHAR *crashDumpPath, const TCHAR *crashTxtPath)
 {
@@ -593,8 +636,7 @@ void InstallCrashHandler(const TCHAR *crashDumpPath, const TCHAR *crashTxtPath)
            symOptions |= SYMOPT_FAIL_CRITICAL_ERRORS; // don't show system msg box on errors
            symOptions |= SYMOPT_DEFERRED_LOADS;
            _SymSetOptions(symOptions);
-           // TODO: should I setup sympath to Microsoft's symbol server via
-           // SymSetSearchPath() so that at least I get names for system dlls?
+           SetupSymbolPath();
        }
     }
 

@@ -70,6 +70,7 @@ const char *GuessLanguage();
 
 TCHAR *ExePathGet();
 bool IsRunningInPortableMode();
+TCHAR *AppGenDataDir();
 TCHAR *AppGenDataFilename(TCHAR *pFilename);
 void AdjustRemovableDriveLetter(TCHAR *path);
 

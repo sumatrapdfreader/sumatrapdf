@@ -131,6 +131,17 @@ bool IsRunningInPortableMode()
     return true;
 }
 
+TCHAR *AppGenDataDir()
+{
+    /* Use %APPDATA% */
+    TCHAR dir[MAX_PATH] = {0};
+    SHGetSpecialFolderPath(NULL, dir, CSIDL_APPDATA, TRUE);
+    TCHAR *path = Path::Join(dir, APP_NAME_STR);
+    if (path)
+        _tmkdir(path);
+    return path;
+}
+
 /* Generate the full path for a filename used by the app in the userdata path. */
 /* Caller needs to free() the result. */
 TCHAR *AppGenDataFilename(TCHAR *pFilename)
@@ -148,12 +159,7 @@ TCHAR *AppGenDataFilename(TCHAR *pFilename)
             free(exePath);
         }
     } else {
-        /* Use %APPDATA% */
-        TCHAR dir[MAX_PATH] = {0};
-        SHGetSpecialFolderPath(NULL, dir, CSIDL_APPDATA, TRUE);
-        path = Path::Join(dir, APP_NAME_STR);
-        if (path)
-            _tmkdir(path);
+        path = AppGenDataDir();
     }
     if (!path)
         return NULL;
