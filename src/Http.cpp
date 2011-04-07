@@ -113,14 +113,13 @@ Exit:
 static DWORD WINAPI HttpDownloadThread(LPVOID data)
 {
     HttpReqCtx *ctx = (HttpReqCtx *)data;
-    if (HttpGet(ctx->url, ctx->data)) {
-        if (ctx->callback)
-            ctx->callback->Callback(ctx);
-    } else {
+    if (!HttpGet(ctx->url, ctx->data)) {
         ctx->error = GetLastError();
         if (ctx->error == 0)
             ctx->error = ERROR_GEN_FAILURE;
     }
+    if (ctx->callback)
+        ctx->callback->Callback(ctx);
     return 0;
 }
 
