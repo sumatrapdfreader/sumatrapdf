@@ -76,12 +76,15 @@ struct userDataStackItem
 	fz_blendmode blendmode;
 	bool isolated;
 	bool knockout;
+	float xstep, ystep;
+	fz_rect tileArea;
+	fz_matrix tileCtm;
 	userDataStackItem *prev;
 
 	userDataStackItem(float _alpha=1.0, userDataStackItem *_prev=NULL) :
 		alpha(_alpha), prev(_prev), saveG(NULL), layer(NULL), mask(NULL),
 		luminosity(false), blendmode(FZ_BLEND_NORMAL), isolated(false), knockout(false),
-		layerAlpha(1.0) { }
+		xstep(0), ystep(0), layerAlpha(1.0) { }
 };
 
 static PointF
@@ -207,6 +210,52 @@ public:
 		graphics = _setup(new Graphics(stack->layer));
 		graphics->TranslateTransform(-stack->bounds.X, -stack->bounds.Y);
 		graphics->SetClip(&Region(stack->bounds));
+	}
+
+	void recordTile(fz_rect rect, fz_rect area, fz_matrix ctm, float xstep, float ystep)
+	{
+		pushClip(&Region());
+		
+		fz_bbox bbox = fz_round_rect(fz_transform_rect(ctm, rect));
+		stack->bounds.X = bbox.x0; stack->bounds.Width = bbox.x1 - bbox.x0;
+		stack->bounds.Y = bbox.y0; stack->bounds.Height = bbox.y1 - bbox.y0;
+		
+		stack->saveG = graphics;
+		stack->layer = new Bitmap(stack->bounds.Width, stack->bounds.Height, PixelFormat32bppARGB);
+		graphics = _setup(new Graphics(stack->layer));
+		graphics->TranslateTransform(-stack->bounds.X, -stack->bounds.Y);
+		graphics->SetClip(&Region(stack->bounds));
+		
+		area.x0 /= xstep; area.x1 /= xstep;
+		area.y0 /= ystep; area.y1 /= ystep;
+		
+		stack->xstep = xstep;
+		stack->ystep = ystep;
+		stack->tileArea = area;
+		stack->tileCtm = ctm;
+	}
+
+	void applyTiling()
+	{
+		assert(stack->layer && stack->saveG && stack->xstep && stack->ystep);
+		
+		for (int y = floorf(stack->tileArea.y0); y < stack->tileArea.y1; y++)
+		{
+			for (int x = floorf(stack->tileArea.x0); x < stack->tileArea.x1; x++)
+			{
+				fz_matrix ttm = fz_concat(fz_translate(x * stack->xstep, y * stack->ystep), stack->tileCtm);
+				Rect bounds = stack->bounds;
+				bounds.X = ttm.e;
+				bounds.Y = ttm.f;
+				stack->saveG->DrawImage(stack->layer, bounds, 0, 0, stack->layer->GetWidth(), stack->layer->GetHeight(), UnitPixel);
+			}
+		}
+		
+		delete stack->layer;
+		stack->layer = NULL;
+		graphics = stack->saveG;
+		stack->saveG = NULL;
+		popClip();
 	}
 
 	void popClip()
@@ -1186,13 +1235,13 @@ fz_gdiplus_end_group(void *user)
 extern "C" static void
 fz_gdiplus_begin_tile(void *user, fz_rect area, fz_rect view, float xstep, float ystep, fz_matrix ctm)
 {
-	// TODO: implement me
+	((userData *)user)->recordTile(view, area, ctm, xstep, ystep);
 }
 
 extern "C" static void
 fz_gdiplus_end_tile(void *user)
 {
-	// TODO: implement me
+	((userData *)user)->applyTiling();
 }
 
 extern "C" static void
