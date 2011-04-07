@@ -201,7 +201,7 @@ static void GetProcessorName(Str::Str<char>& s)
     if (!name)
         return;
     char *tmp = Str::Conv::ToUtf8(name);
-    s.AppendFmt("Processor: %s", tmp);
+    s.AppendFmt("Processor: %s\r\n", tmp);
     free(tmp);
     free(name);
 }
@@ -210,15 +210,17 @@ static void GetSystemInfo(Str::Str<char>& s)
 {
     SYSTEM_INFO si;
     GetSystemInfo(&si);
-
-    MEMORYSTATUS ms;
-    ms.dwLength = sizeof(ms);
-    GlobalMemoryStatus(&ms);
-
     s.AppendFmt("Number Of Processors: %d\r\n", si.dwNumberOfProcessors);
     GetProcessorName(s);
-    s.AppendFmt("Physical Memory: %d KB (Available: %d KB)\r\nCommit Charge Limit: %d KB\r\n",
-        ms.dwTotalPhys/0x400, ms.dwAvailPhys/0x400, ms.dwTotalPageFile/0x400);
+
+    MEMORYSTATUSEX ms;
+    ms.dwLength = sizeof(ms);
+    GlobalMemoryStatusEx(&ms);
+
+    float physMemGB   = (float)ms.ullTotalPhys     / (float)(1024 * 1024 * 1024);
+    float totalPageGB = (float)ms.ullTotalPageFile / (float)(1024 * 1024 * 1024);
+    DWORD usedPerc = ms.dwMemoryLoad;
+    s.AppendFmt("Physical Memory: %.2f GB\r\nCommit Charge Limit: %.2f GB\r\nMemory Used: %d%%\r\n", physMemGB, totalPageGB, usedPerc);
 }
 
 static void GetModules(Str::Str<char>& s)
