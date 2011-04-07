@@ -169,7 +169,7 @@ pdf_find_builtin_cmap(char *cmap_name)
 {
 	int l = 0;
 	int r = nelem(cmap_table) - 1;
-	while (l < r)
+	while (l <= r)
 	{
 		int m = (l + r) >> 1;
 		int c = strcmp(cmap_name, cmap_table[m].name);
