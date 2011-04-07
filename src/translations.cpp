@@ -33,7 +33,8 @@ const char **g_transTranslations;
 static int currLangIdx = 0;
 static const TCHAR **g_translations = NULL;  // cached translations
 
-bool Translations_SetCurrentLanguage(const char* lang)
+namespace Trans {
+bool SetCurrentLanguage(const char* lang)
 {
     for (int i=0; i < g_transLangsCount; i++) {
         if (Str::Eq(lang, g_transLangs[i])) {
@@ -49,7 +50,7 @@ static int cmpCharPtrs(const void *a, const void *b)
     return strcmp(*(char **)a, *(char **)b);
 }
 
-static const char* Translations_GetTranslationAndIndex(const char* txt, int& idx)
+static const char* GetTranslationAndIndex(const char* txt, int& idx)
 {
     assert(currLangIdx < g_transLangsCount);
     const char **res = (const char **)bsearch(&txt, &g_transTranslations, g_transTranslationsCount, sizeof(g_transTranslations[0]), cmpCharPtrs);
@@ -70,7 +71,7 @@ static const char* Translations_GetTranslationAndIndex(const char* txt, int& idx
 // array. That way the client doesn't have to worry about the lifetime of the string.
 // All allocated strings can be freed with Translations_FreeData(), which should be
 // done at program exit so that we're guaranteed no-one is using the data
-const TCHAR* Translations_GetTranslation(const char* txt)
+const TCHAR* GetTranslation(const char* txt)
 {
     if (!g_translations) {
         g_translations = SAZA(const TCHAR *, g_transTranslationsCount * g_transLangsCount);
@@ -78,7 +79,7 @@ const TCHAR* Translations_GetTranslation(const char* txt)
             return NULL;
     }
     int idx;
-    txt = Translations_GetTranslationAndIndex(txt, idx);
+    txt = GetTranslationAndIndex(txt, idx);
     if (!txt || (-1 == idx)) return NULL;
     int transIdx = (currLangIdx * g_transTranslationsCount) + idx;
     const TCHAR *trans = g_translations[transIdx];
@@ -88,7 +89,7 @@ const TCHAR* Translations_GetTranslation(const char* txt)
 }
 
 // Call at program exit to free all memory related to traslations functionality.
-void Translations_FreeData()
+void FreeData()
 {
     if (!g_translations)
         return;
@@ -98,3 +99,6 @@ void Translations_FreeData()
     free((void *)g_translations);
     g_translations = NULL;
 }
+
+}
+

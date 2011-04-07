@@ -268,7 +268,7 @@ bool CurrLangNameSet(const char* langName)
         return false;
     gGlobalPrefs.m_currentLanguage = (char *)g_langs[langIndex]._langName;
 
-    bool ok = Translations_SetCurrentLanguage(langName);
+    bool ok = Trans::SetCurrentLanguage(langName);
     assert(ok);
     return ok;
 }
@@ -682,7 +682,7 @@ static HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuLen, HMENU menu)
             ScopedMem<TCHAR> tmp(Str::Conv::FromUtf8(title));
             AppendMenu(menu, MF_STRING, (UINT_PTR)md.id, tmp);
         } else {
-            const TCHAR *tmp = Translations_GetTranslation(title);
+            const TCHAR *tmp = Trans::GetTranslation(title);
             AppendMenu(menu, MF_STRING, (UINT_PTR)md.id, tmp);
         }
     }
@@ -802,7 +802,7 @@ TCHAR *WindowInfo::GetPassword(const TCHAR *fileName, unsigned char *fileDigest,
 }
 
 /* Caller needs to free() the result. */
-static TCHAR *Prefs_GetFileName()
+static TCHAR *GetPrefsFileName()
 {
     return AppGenDataFilename(PREFS_FILE_NAME);
 }
@@ -972,7 +972,7 @@ static void UpdateCurrentFileDisplayStateForWin(WindowInfo *win)
     win->DisplayStateFromToC(state);
 }
 
-static bool Prefs_Save()
+static bool SavePrefs()
 {
     // don't save preferences for plugin windows
     if (gPluginMode)
@@ -982,7 +982,7 @@ static bool Prefs_Save()
     for (size_t i = 0; i < gWindows.Count(); i++)
         UpdateCurrentFileDisplayStateForWin(gWindows[i]);
 
-    ScopedMem<TCHAR> path(Prefs_GetFileName());
+    ScopedMem<TCHAR> path(GetPrefsFileName());
     return Prefs::Save(path, &gGlobalPrefs, &gFileHistory);
 }
 
@@ -1144,7 +1144,7 @@ static void MenuUpdatePrintItem(WindowInfo *win, HMENU menu, bool disableOnly=fa
     for (ix = 0; ix < dimof(menuDefFile) && menuDefFile[ix].id != IDM_PRINT; ix++);
     assert(ix < dimof(menuDefFile));
     if (ix < dimof(menuDefFile)) {
-        const TCHAR *printItem = Translations_GetTranslation(menuDefFile[ix].title);
+        const TCHAR *printItem = Trans::GetTranslation(menuDefFile[ix].title);
         if (!filePrintAllowed)
             printItem = _TR("&Print... (denied)");
         if (!filePrintAllowed || !disableOnly)
@@ -2950,7 +2950,7 @@ static void OnMenuExit()
     for (size_t i = 0; i < gWindows.Count(); i++)
         gWindows[i]->AbortFinding();
 
-    Prefs_Save();
+    SavePrefs();
     PostQuitMessage(0);
 }
 
@@ -2977,7 +2977,7 @@ static void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose=false)
         lastWindow = true;
 
     if (lastWindow)
-        Prefs_Save();
+        SavePrefs();
     else
         UpdateCurrentFileDisplayStateForWin(win);
 
@@ -3919,7 +3919,7 @@ static void OnMenuSettings(WindowInfo *win)
     if (!gGlobalPrefs.m_rememberOpenedFiles)
         gFileHistory.Clear();
 
-    Prefs_Save();
+    SavePrefs();
 }
 
 // toggles 'show pages continuously' state
@@ -4676,7 +4676,7 @@ static TBBUTTON TbButtonFromButtonInfo(int i) {
         tbButton.iBitmap = gToolbarButtons[i].bmpIndex;
         tbButton.fsState = TBSTATE_ENABLED;
         tbButton.fsStyle = TBSTYLE_BUTTON;
-        tbButton.iString = (INT_PTR)Translations_GetTranslation(gToolbarButtons[i].toolTip);
+        tbButton.iString = (INT_PTR)Trans::GetTranslation(gToolbarButtons[i].toolTip);
     }
     return tbButton;
 }
@@ -4702,7 +4702,7 @@ static void UpdateToolbarButtonsToolTipsForWindow(WindowInfo* win)
         const char *txt = gToolbarButtons[i].toolTip;
         if (NULL == txt)
             continue;
-        const TCHAR *translation = Translations_GetTranslation(txt);
+        const TCHAR *translation = Trans::GetTranslation(txt);
         BuildTBBUTTONINFO(buttonInfo, (TCHAR *)translation);
         res = SendMessage(hwnd, TB_SETBUTTONINFOW, buttonId, (LPARAM)&buttonInfo);
         assert(0 != res);
@@ -6745,7 +6745,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     ScopedGdiPlus gdiPlus(true);
 
     {
-        ScopedMem<TCHAR> prefsFilename(Prefs_GetFileName());
+        ScopedMem<TCHAR> prefsFilename(GetPrefsFileName());
         SerializableGlobalPrefs_Init();
         if (!Prefs::Load(prefsFilename, &gGlobalPrefs, &gFileHistory)) {
             // assume that this is because prefs file didn't exist
@@ -6970,7 +6970,7 @@ Exit:
     DeleteObject(gDefaultGuiFont);
     DeleteBitmap(gBitmapReloadingCue);
 
-    Translations_FreeData();
+    Trans::FreeData();
     SerializableGlobalPrefs_Deinit();
 
     return (int)msg.wParam;

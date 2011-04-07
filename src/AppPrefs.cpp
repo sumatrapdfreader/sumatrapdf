@@ -20,7 +20,7 @@ static bool ParseDisplayMode(const char *txt, DisplayMode *resOut)
 
 #define GLOBAL_PREFS_STR "gp"
 
-static BencDict* Prefs_SerializeGlobal(SerializableGlobalPrefs *globalPrefs)
+static BencDict* SerializeGlobalPrefs(SerializableGlobalPrefs *globalPrefs)
 {
     BencDict *prefs = new BencDict();
     if (!prefs)
@@ -144,14 +144,14 @@ Error:
     return NULL;      
 }
 
-static const char *Prefs_Serialize(SerializableGlobalPrefs *globalPrefs, FileHistory *root, size_t* lenOut)
+static const char *SerializePrefs(SerializableGlobalPrefs *globalPrefs, FileHistory *root, size_t* lenOut)
 {
     const char *data = NULL;
 
     BencDict *prefs = new BencDict();
     if (!prefs)
         goto Error;
-    BencDict* global = Prefs_SerializeGlobal(globalPrefs);
+    BencDict* global = SerializeGlobalPrefs(globalPrefs);
     if (!global)
         goto Error;
     prefs->Add(GLOBAL_PREFS_STR, global);
@@ -269,7 +269,7 @@ static DisplayState * DisplayState_Deserialize(BencDict *dict, bool globalPrefsO
     return ds;
 }
 
-static bool Prefs_Deserialize(const char *prefsTxt, SerializableGlobalPrefs *globalPrefs, FileHistory *fh)
+static bool DeserializePrefs(const char *prefsTxt, SerializableGlobalPrefs *globalPrefs, FileHistory *fh)
 {
     BencObj *obj = BencObj::Decode(prefsTxt);
     if (!obj || obj->Type() != BT_DICT)
@@ -358,7 +358,7 @@ bool Load(TCHAR *filepath, SerializableGlobalPrefs *globalPrefs, FileHistory *fi
     size_t prefsFileLen;
     ScopedMem<char> prefsTxt(File::ReadAll(filepath, &prefsFileLen));
     if (!Str::IsEmpty(prefsTxt.Get())) {
-        ok = Prefs_Deserialize(prefsTxt, globalPrefs, fileHistory);
+        ok = DeserializePrefs(prefsTxt, globalPrefs, fileHistory);
         assert(ok);
     }
 
@@ -387,7 +387,7 @@ bool Save(TCHAR *filepath, SerializableGlobalPrefs *globalPrefs, FileHistory *fi
         return false;
 
     size_t dataLen;
-    ScopedMem<const char> data(Prefs_Serialize(globalPrefs, fileHistory, &dataLen));
+    ScopedMem<const char> data(SerializePrefs(globalPrefs, fileHistory, &dataLen));
     if (!data)
         return false;
 
