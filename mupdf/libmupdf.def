@@ -280,12 +280,6 @@ EXPORTS
 
 ; MuPDF exports
 
-	pdf_log_xref
-	pdf_log_rsrc
-	pdf_log_font
-	pdf_log_image
-	pdf_log_shade
-	pdf_log_page
 	pdf_lex
 	pdf_parse_array
 	pdf_parse_dict

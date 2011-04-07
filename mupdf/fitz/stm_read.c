@@ -173,6 +173,16 @@ fz_seek(fz_stream *stm, int offset, int whence)
 			offset = fz_tell(stm) + offset;
 			whence = 0;
 		}
+		if (whence == 0)
+		{
+			unsigned char *p = stm->wp - (stm->pos - offset);
+			if (p >= stm->bp && p <= stm->wp)
+			{
+				stm->rp = p;
+				stm->eof = 0;
+				return;
+			}
+		}
 		stm->seek(stm, offset, whence);
 		stm->eof = 0;
 	}

@@ -1,416 +1,149 @@
-# GNU Makefile for MuPDF
-#
-# make build=release prefix=/usr/local verbose=true install
-#
+# GNU Makefile
+
+build ?= debug
+
+OUT := build/$(build)
+GEN := generated
+
+# --- Variables, Commands, etc... ---
 
 default: all
 
-build ?= debug
-prefix ?= /usr/local
-
-OBJDIR := build/$(build)
-GENDIR := generated
-
-$(OBJDIR):
-	mkdir -p $@
-$(GENDIR):
-	mkdir -p $@
-
-# Compiler flags and configuration options are kept in Makerules.
-# Thirdparty libs will be built by Makethird if the thirdparty
-# directory exists.
-
-LIBS := -lfreetype -ljbig2dec -lopenjpeg -ljpeg -lz -lm
+CFLAGS += -Ifitz -Ipdf -Ixps -Iscripts
+LIBS += -lfreetype -ljbig2dec -ljpeg -lopenjpeg -lz -lm
 
 include Makerules
 include Makethird
 
-CFLAGS += $(THIRD_INCS) $(SYS_FREETYPE_INC)
+THIRD_LIBS := $(FREETYPE_LIB)
+THIRD_LIBS += $(JBIG2DEC_LIB)
+THIRD_LIBS += $(JPEG_LIB)
+THIRD_LIBS += $(OPENJPEG_LIB)
+THIRD_LIBS += $(ZLIB_LIB)
 
-#
-# Build commands
-#
-
-ifneq "$(verbose)" ""
-
-GENFILE_CMD = $(firstword $^) $@ $(wordlist 2, 999, $^)
-CC_CMD = $(CC) -o $@ -c $< $(CFLAGS)
-LD_CMD = $(CC) -o $@ $^ $(LDFLAGS) $(LIBS)
-AR_CMD = rm -f $@ && $(AR) cru $@ $^
-
-else
-
-GENFILE_CMD = @ echo "    GENFILE" $@ && $(firstword $^) $@ $(wordlist 2, 999, $^)
-CC_CMD = @ echo "    CC" $@ && $(CC) -o $@ -c $< $(CFLAGS)
-LD_CMD = @ echo "    LD" $@ && $(CC) -o $@ $^ $(LDFLAGS) $(LIBS)
-AR_CMD = @ echo "    AR" $@ && rm -f $@ && $(AR) cru $@ $^
-
+ifeq "$(verbose)" ""
+QUIET_AR = @ echo ' ' ' ' AR $@ ;
+QUIET_CC = @ echo ' ' ' ' CC $@ ;
+QUIET_GEN = @ echo ' ' ' ' GEN $@ ;
+QUIET_LINK = @ echo ' ' ' ' LINK $@ ;
+QUIET_MKDIR = @ echo ' ' ' ' MKDIR $@ ;
 endif
 
-#
-# Code generation tools
-#
+CC_CMD = $(QUIET_CC) $(CC) $(CFLAGS) -o $@ -c $<
+AR_CMD = $(QUIET_AR) $(AR) cru $@ $^
+LINK_CMD = $(QUIET_LINK) $(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
+MKDIR_CMD = $(QUIET_MKDIR) mkdir -p $@
 
-FONTDUMP_EXE := $(OBJDIR)/fontdump
-$(FONTDUMP_EXE): $(OBJDIR)/fontdump.o
-	$(LD_CMD)
+# --- Rules ---
 
-CMAPDUMP_EXE := $(OBJDIR)/cmapdump
-$(CMAPDUMP_EXE): $(OBJDIR)/cmapdump.o
-	$(LD_CMD)
+$(OUT) $(GEN) :
+	$(MKDIR_CMD)
 
-#
-# Sources
-#
+$(OUT)/%.a :
+	$(AR_CMD)
 
-FITZ_HDR := fitz/fitz.h
-FITZ_SRC := \
-	fitz/base_error.c \
-	fitz/base_geometry.c \
-	fitz/base_getopt.c \
-	fitz/base_hash.c \
-	fitz/base_memory.c \
-	fitz/base_string.c \
-	fitz/base_time.c \
-	fitz/crypt_aes.c \
-	fitz/crypt_arc4.c \
-	fitz/crypt_md5.c \
-	fitz/crypt_sha2.c \
-	fitz/dev_bbox.c \
-	fitz/dev_list.c \
-	fitz/dev_null.c \
-	fitz/dev_text.c \
-	fitz/dev_trace.c \
-	fitz/filt_basic.c \
-	fitz/filt_dctd.c \
-	fitz/filt_faxd.c \
-	fitz/filt_flate.c \
-	fitz/filt_jbig2d.c \
-	fitz/filt_jpxd.c \
-	fitz/filt_lzwd.c \
-	fitz/filt_predict.c \
-	fitz/obj_array.c \
-	fitz/obj_dict.c \
-	fitz/obj_print.c \
-	fitz/obj_simple.c \
-	fitz/res_bitmap.c \
-	fitz/res_colorspace.c \
-	fitz/res_font.c \
-	fitz/res_halftone.c \
-	fitz/res_path.c \
-	fitz/res_pixmap.c \
-	fitz/res_shade.c \
-	fitz/res_text.c \
-	fitz/stm_buffer.c \
-	fitz/stm_open.c \
-	fitz/stm_read.c
-FITZ_OBJ := $(FITZ_SRC:fitz/%.c=$(OBJDIR)/%.o)
-$(FITZ_OBJ): $(FITZ_HDR)
+$(OUT)/% : $(OUT)/%.o
+	$(LINK_CMD)
 
-DRAW_SRC := $(DRAW_ARCH_SRC) \
-	draw/arch_port.c \
-	draw/draw_affine.c \
-	draw/draw_blend.c \
-	draw/draw_device.c \
-	draw/draw_edge.c \
-	draw/draw_glyph.c \
-	draw/draw_mesh.c \
-	draw/draw_paint.c \
-	draw/draw_path.c \
-	draw/draw_scale.c \
-	draw/draw_unpack.c
-DRAW_OBJ := $(DRAW_SRC:draw/%.c=$(OBJDIR)/%.o)
-DRAW_OBJ := $(DRAW_OBJ:draw/%.s=$(OBJDIR)/%.o)
-$(DRAW_OBJ): $(FITZ_HDR)
-
-MUPDF_HDR := pdf/mupdf.h
-MUPDF_SRC := \
-	pdf/pdf_annot.c \
-	pdf/pdf_build.c \
-	pdf/pdf_cmap.c \
-	pdf/pdf_cmap_load.c \
-	pdf/pdf_cmap_parse.c \
-	pdf/pdf_cmap_table.c \
-	pdf/pdf_colorspace.c \
-	pdf/pdf_crypt.c \
-	pdf/pdf_debug.c \
-	pdf/pdf_encoding.c \
-	pdf/pdf_font.c \
-	pdf/pdf_fontfile.c \
-	pdf/pdf_function.c \
-	pdf/pdf_image.c \
-	pdf/pdf_interpret.c \
-	pdf/pdf_lex.c \
-	pdf/pdf_metrics.c \
-	pdf/pdf_nametree.c \
-	pdf/pdf_outline.c \
-	pdf/pdf_page.c \
-	pdf/pdf_parse.c \
-	pdf/pdf_pattern.c \
-	pdf/pdf_repair.c \
-	pdf/pdf_shade.c \
-	pdf/pdf_store.c \
-	pdf/pdf_stream.c \
-	pdf/pdf_type3.c \
-	pdf/pdf_unicode.c \
-	pdf/pdf_xobject.c \
-	pdf/pdf_xref.c
-MUPDF_OBJ := $(MUPDF_SRC:pdf/%.c=$(OBJDIR)/%.o)
-$(MUPDF_OBJ): $(MUPDF_HDR)
-
-MUXPS_HDR := xps/muxps.h
-MUXPS_SRC := \
-	xps/xps_common.c \
-	xps/xps_doc.c \
-	xps/xps_glyphs.c \
-	xps/xps_gradient.c \
-	xps/xps_hash.c \
-	xps/xps_image.c \
-	xps/xps_jpeg.c \
-	xps/xps_path.c \
-	xps/xps_png.c \
-	xps/xps_resource.c \
-	xps/xps_tiff.c \
-	xps/xps_tile.c \
-	xps/xps_util.c \
-	xps/xps_xml.c \
-	xps/xps_zip.c
-MUXPS_OBJ := $(MUXPS_SRC:xps/%.c=$(OBJDIR)/%.o)
-$(MUXPS_OBJ): $(MUXPS_HDR) $(FITZ_HDR)
-
-$(OBJDIR)/%.o: fitz/%.c
+$(OUT)/%.o : fitz/%.c fitz/fitz.h | $(OUT)
 	$(CC_CMD)
-$(OBJDIR)/%.o: draw/%.c
+$(OUT)/%.o : draw/%.c fitz/fitz.h | $(OUT)
 	$(CC_CMD)
-$(OBJDIR)/%.o: draw/%.s
+$(OUT)/%.o : pdf/%.c fitz/fitz.h pdf/mupdf.h | $(OUT)
 	$(CC_CMD)
-$(OBJDIR)/%.o: pdf/%.c
+$(OUT)/%.o : xps/%.c fitz/fitz.h xps/muxps.h | $(OUT)
 	$(CC_CMD)
-$(OBJDIR)/%.o: xps/%.c
+$(OUT)/%.o : apps/%.c fitz/fitz.h pdf/mupdf.h xps/muxps.h | $(OUT)
 	$(CC_CMD)
-$(OBJDIR)/%.o: scripts/%.c
+$(OUT)/%.o : scripts/%.c | $(OUT)
 	$(CC_CMD)
 
-#
-# Generated font file dumps
-#
+.PRECIOUS : $(OUT)/%.o # Keep intermediates from chained rules
 
-BASE_FONT_FILES := \
-	fonts/Dingbats.cff \
-	fonts/NimbusMonL-Bold.cff \
-	fonts/NimbusMonL-BoldObli.cff \
-	fonts/NimbusMonL-Regu.cff \
-	fonts/NimbusMonL-ReguObli.cff \
-	fonts/NimbusRomNo9L-Medi.cff \
-	fonts/NimbusRomNo9L-MediItal.cff \
-	fonts/NimbusRomNo9L-Regu.cff \
-	fonts/NimbusRomNo9L-ReguItal.cff \
-	fonts/NimbusSanL-Bold.cff \
-	fonts/NimbusSanL-BoldItal.cff \
-	fonts/NimbusSanL-Regu.cff \
-	fonts/NimbusSanL-ReguItal.cff \
-	fonts/StandardSymL.cff
+# --- Fitz, MuPDF and MuXPS libraries ---
 
-CJK_FONT_FILES := \
-	fonts/droid/DroidSansFallback.ttf
+FITZ_LIB := $(OUT)/libfitz.a
+MUPDF_LIB := $(OUT)/libmupdf.a
+MUXPS_LIB := $(OUT)/libmuxps.a
 
-$(GENDIR)/font_base14.h: $(FONTDUMP_EXE) $(BASE_FONT_FILES)
-	$(GENFILE_CMD)
-$(GENDIR)/font_cjk.h: $(FONTDUMP_EXE) $(CJK_FONT_FILES)
-	$(GENFILE_CMD)
+FITZ_SRC := $(notdir $(wildcard fitz/*.c draw/*.c))
+MUPDF_SRC := $(notdir $(wildcard pdf/*.c))
+MUXPS_SRC := $(notdir $(wildcard xps/*.c))
 
-FONT_HDR := \
-	$(GENDIR)/font_base14.h \
-	$(GENDIR)/font_cjk.h
+$(FITZ_LIB) : $(addprefix $(OUT)/, $(FITZ_SRC:%.c=%.o))
+$(MUPDF_LIB) : $(addprefix $(OUT)/, $(MUPDF_SRC:%.c=%.o))
+$(MUXPS_LIB) : $(addprefix $(OUT)/, $(MUXPS_SRC:%.c=%.o))
 
-$(OBJDIR)/pdf_fontfile.o: $(FONT_HDR)
+# --- Generated CMAP and FONT files ---
 
-#
-# Generated CMap file dumps
-#
+CMAPDUMP := $(OUT)/cmapdump
+FONTDUMP := $(OUT)/fontdump
 
-CMAP_UNICODE_FILES := $(addprefix cmaps/, \
-	Adobe-CNS1-UCS2 Adobe-GB1-UCS2 \
-	Adobe-Japan1-UCS2 Adobe-Korea1-UCS2 )
+CMAP_CNS_SRC := $(wildcard cmaps/cns/*)
+CMAP_GB_SRC := $(wildcard cmaps/gb/*)
+CMAP_JAPAN_SRC := $(wildcard cmaps/japan/*)
+CMAP_KOREA_SRC := $(wildcard cmaps/korea/*)
+FONT_BASE14_SRC := $(wildcard fonts/*.cff)
+FONT_CJK_SRC := fonts/droid/DroidSansFallback.ttf
 
-CMAP_CNS_FILES := $(addprefix cmaps/, \
-	Adobe-CNS1-0 Adobe-CNS1-1 Adobe-CNS1-2 Adobe-CNS1-3 \
-	Adobe-CNS1-4 Adobe-CNS1-5 Adobe-CNS1-6 B5-H B5-V B5pc-H B5pc-V \
-	CNS-EUC-H CNS-EUC-V CNS1-H CNS1-V CNS2-H CNS2-V ETen-B5-H \
-	ETen-B5-V ETenms-B5-H ETenms-B5-V ETHK-B5-H ETHK-B5-V \
-	HKdla-B5-H HKdla-B5-V HKdlb-B5-H HKdlb-B5-V HKgccs-B5-H \
-	HKgccs-B5-V HKm314-B5-H HKm314-B5-V HKm471-B5-H HKm471-B5-V \
-	HKscs-B5-H HKscs-B5-V UniCNS-UCS2-H UniCNS-UCS2-V \
-	UniCNS-UTF16-H UniCNS-UTF16-V )
+$(GEN)/cmap_cns.h : $(CMAP_CNS_SRC)
+	$(QUIET_GEN) ./$(CMAPDUMP) $@ $(CMAP_CNS_SRC)
+$(GEN)/cmap_gb.h : $(CMAP_GB_SRC)
+	$(QUIET_GEN) ./$(CMAPDUMP) $@ $(CMAP_GB_SRC)
+$(GEN)/cmap_japan.h : $(CMAP_JAPAN_SRC)
+	$(QUIET_GEN) ./$(CMAPDUMP) $@ $(CMAP_JAPAN_SRC)
+$(GEN)/cmap_korea.h : $(CMAP_KOREA_SRC)
+	$(QUIET_GEN) ./$(CMAPDUMP) $@ $(CMAP_KOREA_SRC)
 
-CMAP_GB_FILES := $(addprefix cmaps/, \
-	Adobe-GB1-0 Adobe-GB1-1 Adobe-GB1-2 Adobe-GB1-3 Adobe-GB1-4 \
-	Adobe-GB1-5 GB-EUC-H GB-EUC-V GB-H GB-V GBK-EUC-H GBK-EUC-V \
-	GBK2K-H GBK2K-V GBKp-EUC-H GBKp-EUC-V GBpc-EUC-H GBpc-EUC-V \
-	GBT-EUC-H GBT-EUC-V GBT-H GBT-V GBTpc-EUC-H GBTpc-EUC-V \
-	UniGB-UCS2-H UniGB-UCS2-V UniGB-UTF16-H UniGB-UTF16-V )
+$(GEN)/font_base14.h : $(FONT_BASE14_SRC)
+	$(QUIET_GEN) ./$(FONTDUMP) $@ $(FONT_BASE14_SRC)
+$(GEN)/font_cjk.h : $(FONT_CJK_SRC)
+	$(QUIET_GEN) ./$(FONTDUMP) $@ $(FONT_CJK_SRC)
 
-CMAP_JAPAN_FILES := $(addprefix cmaps/, \
-	78-EUC-H 78-EUC-V 78-H 78-RKSJ-H 78-RKSJ-V 78-V 78ms-RKSJ-H \
-	78ms-RKSJ-V 83pv-RKSJ-H 90ms-RKSJ-H 90ms-RKSJ-V 90msp-RKSJ-H \
-	90msp-RKSJ-V 90pv-RKSJ-H 90pv-RKSJ-V Add-H Add-RKSJ-H \
-	Add-RKSJ-V Add-V Adobe-Japan1-0 Adobe-Japan1-1 Adobe-Japan1-2 \
-	Adobe-Japan1-3 Adobe-Japan1-4 Adobe-Japan1-5 Adobe-Japan1-6 \
-	EUC-H EUC-V Ext-H Ext-RKSJ-H Ext-RKSJ-V Ext-V H Hankaku \
-	Hiragana Katakana NWP-H NWP-V RKSJ-H RKSJ-V Roman \
-	UniJIS-UCS2-H UniJIS-UCS2-HW-H UniJIS-UCS2-HW-V UniJIS-UCS2-V \
-	UniJISPro-UCS2-HW-V UniJISPro-UCS2-V V WP-Symbol \
-	Adobe-Japan2-0 Hojo-EUC-H Hojo-EUC-V Hojo-H Hojo-V \
-	UniHojo-UCS2-H UniHojo-UCS2-V UniHojo-UTF16-H UniHojo-UTF16-V \
-	UniJIS-UTF16-H UniJIS-UTF16-V )
+CMAP_HDR := $(addprefix $(GEN)/, cmap_cns.h cmap_gb.h cmap_japan.h cmap_korea.h)
+FONT_HDR := $(GEN)/font_base14.h $(GEN)/font_cjk.h
 
-CMAP_KOREA_FILES := $(addprefix cmaps/, \
-	Adobe-Korea1-0 Adobe-Korea1-1 Adobe-Korea1-2 KSC-EUC-H \
-	KSC-EUC-V KSC-H KSC-Johab-H KSC-Johab-V KSC-V KSCms-UHC-H \
-	KSCms-UHC-HW-H KSCms-UHC-HW-V KSCms-UHC-V KSCpc-EUC-H \
-	KSCpc-EUC-V UniKS-UCS2-H UniKS-UCS2-V UniKS-UTF16-H UniKS-UTF16-V )
+$(CMAP_HDR) : $(CMAPDUMP) | $(GEN)
+$(FONT_HDR) : $(FONTDUMP) | $(GEN)
 
-$(GENDIR)/cmap_unicode.h: $(CMAPDUMP_EXE) $(CMAP_UNICODE_FILES)
-	$(GENFILE_CMD)
-$(GENDIR)/cmap_cns.h: $(CMAPDUMP_EXE) $(CMAP_CNS_FILES)
-	$(GENFILE_CMD)
-$(GENDIR)/cmap_gb.h: $(CMAPDUMP_EXE) $(CMAP_GB_FILES)
-	$(GENFILE_CMD)
-$(GENDIR)/cmap_japan.h: $(CMAPDUMP_EXE) $(CMAP_JAPAN_FILES)
-	$(GENFILE_CMD)
-$(GENDIR)/cmap_korea.h: $(CMAPDUMP_EXE) $(CMAP_KOREA_FILES)
-	$(GENFILE_CMD)
+$(OUT)/pdf_cmap_table.o : $(CMAP_HDR)
+$(OUT)/pdf_fontfile.o : $(FONT_HDR)
 
-CMAP_HDR := \
-	$(GENDIR)/cmap_unicode.h \
-	$(GENDIR)/cmap_cns.h \
-	$(GENDIR)/cmap_gb.h \
-	$(GENDIR)/cmap_japan.h \
-	$(GENDIR)/cmap_korea.h
+# --- Tools and Apps ---
 
-$(OBJDIR)/pdf_cmap_table.o: $(CMAP_HDR)
+PDF_APPS := $(addprefix $(OUT)/, pdfdraw pdfclean pdfextract pdfinfo pdfshow)
+XPS_APPS := $(addprefix $(OUT)/, xpsdraw)
 
-#
-# Library
-#
+$(PDF_APPS) : $(MUPDF_LIB) $(FITZ_LIB) $(THIRD_LIBS)
+$(XPS_APPS) : $(MUXPS_LIB) $(FITZ_LIB) $(THIRD_LIBS)
 
-FITZ_LIB = $(OBJDIR)/libfitz.a
-$(FITZ_LIB): $(FITZ_OBJ) $(DRAW_OBJ)
-	 $(AR_CMD)
+MUPDF := $(OUT)/mupdf
+$(MUPDF) : $(MUXPS_LIB) $(MUPDF_LIB) $(FITZ_LIB) $(THIRD_LIBS)
+$(MUPDF) : $(addprefix $(OUT)/, x11_main.o x11_image.o pdfapp.o)
+	$(LINK_CMD) $(X11_LIBS)
 
-MUPDF_LIB = $(OBJDIR)/libmupdf.a
-$(MUPDF_LIB): $(MUPDF_OBJ)
-	 $(AR_CMD)
+# --- Install ---
 
-MUXPS_LIB = $(OBJDIR)/libmuxps.a
-$(MUXPS_LIB): $(MUXPS_OBJ)
-	 $(AR_CMD)
+prefix ?= /usr/local
+bindir ?= $(prefix)/bin
+libdir ?= $(prefix)/lib
+incdir ?= $(prefix)/include
+mandir ?= $(prefix)/share/man
 
-ALL_LIBS = $(MUXPS_LIB) $(MUPDF_LIB) $(FITZ_LIB)
-PDF_LIBS = $(MUPDF_LIB) $(FITZ_LIB)
-XPS_LIBS = $(MUXPS_LIB) $(FITZ_LIB)
+install: $(MUXPS_LIB) $(MUPDF_LIB) $(FITZ_LIB) $(APPS)
+	install -d $(bindir) $(libdir) $(incdir) $(mandir)/man1
+	install $(MUXPS_LIB) $(MUPDF_LIB) $(FITZ_LIB) $(libdir)
+	install fitz/fitz.h pdf/mupdf.h xps/muxps.h $(incdir)
+	install $(PDF_APPS) $(XPS_APPS) $(MUPDF) $(bindir)
+	install $(wildcard apps/man/*.1) $(mandir)/man1
 
-#
-# Applications
-#
+# --- Clean and Default ---
 
-APPS = $(PDFSHOW_EXE) $(PDFCLEAN_EXE) $(PDFDRAW_EXE) $(PDFEXTRACT_EXE) $(PDFINFO_EXE) $(PDFVIEW_EXE) $(XPSDRAW_EXE)
-
-APPS_MAN = \
-	apps/man/mupdf.1 \
-	apps/man/pdfclean.1 \
-	apps/man/pdfdraw.1 \
-	apps/man/pdfshow.1
-
-$(OBJDIR)/%.o: apps/%.c
-	$(CC_CMD)
-
-PDFSHOW_SRC=apps/pdfshow.c
-PDFSHOW_OBJ=$(PDFSHOW_SRC:apps/%.c=$(OBJDIR)/%.o)
-PDFSHOW_EXE=$(OBJDIR)/pdfshow
-$(PDFSHOW_OBJ): $(MUPDF_HDR) $(FITZ_HDR)
-$(PDFSHOW_EXE): $(PDFSHOW_OBJ) $(PDF_LIBS) $(THIRD_LIBS)
-	$(LD_CMD)
-
-PDFCLEAN_SRC=apps/pdfclean.c
-PDFCLEAN_OBJ=$(PDFCLEAN_SRC:apps/%.c=$(OBJDIR)/%.o)
-PDFCLEAN_EXE=$(OBJDIR)/pdfclean
-$(PDFCLEAN_OBJ): $(MUPDF_HDR) $(FITZ_HDR)
-$(PDFCLEAN_EXE): $(PDFCLEAN_OBJ) $(PDF_LIBS) $(THIRD_LIBS)
-	$(LD_CMD)
-
-PDFDRAW_SRC=apps/pdfdraw.c
-PDFDRAW_OBJ=$(PDFDRAW_SRC:apps/%.c=$(OBJDIR)/%.o)
-PDFDRAW_EXE=$(OBJDIR)/pdfdraw
-$(PDFDRAW_OBJ): $(MUPDF_HDR) $(FITZ_HDR)
-$(PDFDRAW_EXE): $(PDFDRAW_OBJ) $(PDF_LIBS) $(THIRD_LIBS)
-	$(LD_CMD)
-
-PDFEXTRACT_SRC=apps/pdfextract.c
-PDFEXTRACT_OBJ=$(PDFEXTRACT_SRC:apps/%.c=$(OBJDIR)/%.o)
-PDFEXTRACT_EXE=$(OBJDIR)/pdfextract
-$(PDFEXTRACT_OBJ): $(MUPDF_HDR) $(FITZ_HDR)
-$(PDFEXTRACT_EXE): $(PDFEXTRACT_OBJ) $(PDF_LIBS) $(THIRD_LIBS)
-	$(LD_CMD)
-
-PDFINFO_SRC=apps/pdfinfo.c
-PDFINFO_OBJ=$(PDFINFO_SRC:apps/%.c=$(OBJDIR)/%.o)
-PDFINFO_EXE=$(OBJDIR)/pdfinfo
-$(PDFINFO_OBJ): $(MUPDF_HDR) $(FITZ_HDR)
-$(PDFINFO_EXE): $(PDFINFO_OBJ) $(PDF_LIBS) $(THIRD_LIBS)
-	$(LD_CMD)
-
-XPSDRAW_SRC=apps/xpsdraw.c
-XPSDRAW_OBJ=$(XPSDRAW_SRC:apps/%.c=$(OBJDIR)/%.o)
-XPSDRAW_EXE=$(OBJDIR)/xpsdraw
-$(XPSDRAW_OBJ): $(MUXPS_HDR) $(FITZ_HDR)
-$(XPSDRAW_EXE): $(XPSDRAW_OBJ) $(XPS_LIBS) $(THIRD_LIBS)
-	$(LD_CMD)
-
-PDFAPP_HDR = apps/pdfapp.h
-
-X11VIEW_SRC=apps/x11_main.c apps/x11_image.c apps/pdfapp.c
-X11VIEW_OBJ=$(X11VIEW_SRC:apps/%.c=$(OBJDIR)/%.o)
-X11VIEW_EXE=$(OBJDIR)/mupdf
-
-$(X11VIEW_OBJ): $(PDFAPP_HDR) $(MUPDF_HDR) $(MUXPS_HDR) $(FITZ_HDR)
-$(X11VIEW_EXE): $(X11VIEW_OBJ) $(ALL_LIBS) $(THIRD_LIBS)
-	$(LD_CMD) $(X11LIBS)
-
-WINVIEW_SRC=apps/win_main.c apps/pdfapp.c
-WINVIEW_RES=apps/win_res.rc
-WINVIEW_OBJ=$(WINVIEW_SRC:apps/%.c=$(OBJDIR)/%.o) $(WINVIEW_RES:apps/%.rc=$(OBJDIR)/%.o)
-WINVIEW_EXE=$(OBJDIR)/mupdf.exe
-
-$(OBJDIR)/%.o: apps/%.rc
-	$(WINDRES) -i $< -o $@ --include-dir=apps
-
-$(WINVIEW_OBJ): $(PDFAPP_HDR) $(MUPDF_HDR) $(MUXPS_HDR) $(FITZ_HDR)
-$(WINVIEW_EXE): $(WINVIEW_OBJ) $(ALL_LIBS) $(THIRD_LIBS)
-	$(LD_CMD) $(W32LIBS)
-
-#
-# Default rules
-#
-
-.PHONY: default all clean nuke install
-
-all: $(OBJDIR) $(THIRD_LIBS) $(FITZ_LIB) $(MUPDF_LIB) $(MUXPS_LIB) $(APPS)
+all: $(THIRD_LIBS) $(FITZ_LIB) $(PDF_APPS) $(XPS_APPS) $(MUPDF)
 
 clean:
-	rm -rf $(OBJDIR)/*
-
+	rm -rf $(OUT)
 nuke:
-	rm -rf build
+	rm -rf build/* $(GEN)
 
-BINDIR ?= $(prefix)/bin
-LIBDIR ?= $(prefix)/lib
-INCDIR ?= $(prefix)/include
-MANDIR ?= $(prefix)/share/man/man1
-
-install: $(OBJDIR) $(MUPDF_LIB) $(APPS)
-	install -d $(BINDIR) $(LIBDIR) $(INCDIR) $(MANDIR)
-	install $(APPS) $(BINDIR)
-	install $(APPS_MAN) $(MANDIR)
-	install $(MUPDF_LIB) $(LIBDIR)
-	install $(MUPDF_HDR) $(MUXPS_HDR) $(FITZ_HDR) $(INCDIR)
+.PHONY: all clean nuke install

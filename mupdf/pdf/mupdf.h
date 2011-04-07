@@ -7,13 +7,6 @@
 
 typedef struct pdf_xref_s pdf_xref;
 
-void pdf_log_xref(char *fmt, ...);
-void pdf_log_rsrc(char *fmt, ...);
-void pdf_log_font(char *fmt, ...);
-void pdf_log_image(char *fmt, ...);
-void pdf_log_shade(char *fmt, ...);
-void pdf_log_page(char *fmt, ...);
-
 /*
  * tokenizer and low-level object parser
  */

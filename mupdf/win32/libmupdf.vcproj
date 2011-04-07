@@ -183,10 +183,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\pdf\pdf_debug.c"
-				>
-			</File>
-			<File
 				RelativePath="..\pdf\pdf_encoding.c"
 				>
 			</File>

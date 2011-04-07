@@ -16,8 +16,6 @@ pdf_load_to_unicode(pdf_font_desc *font, pdf_xref *xref,
 
 	if (pdf_is_stream(xref, fz_to_num(cmapstm), fz_to_gen(cmapstm)))
 	{
-		pdf_log_font("to_unicode embedded cmap\n");
-
 		error = pdf_load_embedded_cmap(&cmap, xref, cmapstm);
 		if (error)
 			return fz_rethrow(error, "cannot load embedded cmap (%d %d R)", fz_to_num(cmapstm), fz_to_gen(cmapstm));
@@ -44,8 +42,6 @@ pdf_load_to_unicode(pdf_font_desc *font, pdf_xref *xref,
 
 	else if (collection)
 	{
-		pdf_log_font("to_unicode cid collection (%s)\n", collection);
-
 		error = fz_okay;
 
 		if (!strcmp(collection, "Adobe-CNS1"))
@@ -65,8 +61,6 @@ pdf_load_to_unicode(pdf_font_desc *font, pdf_xref *xref,
 
 	if (strings)
 	{
-		pdf_log_font("to_unicode strings\n");
-
 		/* TODO one-to-many mappings */
 
 		font->cid_to_ucs_len = 256;
@@ -83,9 +77,8 @@ pdf_load_to_unicode(pdf_font_desc *font, pdf_xref *xref,
 
 	if (!font->to_unicode && !font->cid_to_ucs)
 	{
-		pdf_log_font("to_unicode could not be loaded\n");
 		/* TODO: synthesize a ToUnicode if it's a freetype font with
-		* cmap and/or post tables or if it has glyph names. */
+		 * cmap and/or post tables or if it has glyph names. */
 	}
 
 	return fz_okay;

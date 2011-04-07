@@ -179,7 +179,7 @@ static void pdfapp_open_xps(pdfapp_t *app, char *filename, int fd)
 
 void pdfapp_open(pdfapp_t *app, char *filename, int fd)
 {
-	if (strstr(filename, ".xps") || strstr(filename, ".XPS"))
+	if (strstr(filename, ".xps") || strstr(filename, ".XPS") || strstr(filename, ".rels"))
 		pdfapp_open_xps(app, filename, fd);
 	else
 		pdfapp_open_pdf(app, filename, fd);

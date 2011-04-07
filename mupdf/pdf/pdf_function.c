@@ -835,8 +835,6 @@ load_postscript_func(pdf_function *func, pdf_xref *xref, fz_obj *dict, int num, 
 	int tok;
 	int len;
 
-	pdf_log_rsrc("load postscript function (%d %d R)\n", num, gen);
-
 	error = pdf_open_stream(&stream, xref, num, gen);
 	if (error)
 		return fz_rethrow(error, "cannot open calculator function stream");
@@ -907,8 +905,6 @@ load_sample_func(pdf_function *func, pdf_xref *xref, fz_obj *dict, int num, int 
 	int bps;
 	int i;
 
-	pdf_log_rsrc("sampled function {\n");
-
 	func->u.sa.samples = NULL;
 
 	obj = fz_dict_gets(dict, "Size");
@@ -921,8 +917,6 @@ load_sample_func(pdf_function *func, pdf_xref *xref, fz_obj *dict, int num, int 
 	if (!fz_is_int(obj))
 		return fz_throw("malformed /BitsPerSample");
 	func->u.sa.bps = bps = fz_to_int(obj);
-
-	pdf_log_rsrc("bps %d\n", bps);
 
 	obj = fz_dict_gets(dict, "Encode");
 	if (fz_is_array(obj))
@@ -966,8 +960,6 @@ load_sample_func(pdf_function *func, pdf_xref *xref, fz_obj *dict, int num, int 
 
 	for (i = 0, samplecount = func->n; i < func->m; i++)
 		samplecount *= func->u.sa.size[i];
-
-	pdf_log_rsrc("samplecount %d\n", samplecount);
 
 	func->u.sa.samples = fz_calloc(samplecount, sizeof(float));
 
@@ -1021,8 +1013,6 @@ load_sample_func(pdf_function *func, pdf_xref *xref, fz_obj *dict, int num, int 
 	}
 
 	fz_close(stream);
-
-	pdf_log_rsrc("}\n");
 
 	return fz_okay;
 }
@@ -1124,8 +1114,6 @@ load_exponential_func(pdf_function *func, fz_obj *dict)
 	fz_obj *obj;
 	int i;
 
-	pdf_log_rsrc("exponential function {\n");
-
 	if (func->m != 1)
 		return fz_throw("/Domain must be one dimension (%d)", func->m);
 
@@ -1133,7 +1121,6 @@ load_exponential_func(pdf_function *func, fz_obj *dict)
 	if (!fz_is_int(obj) && !fz_is_real(obj))
 		return fz_throw("malformed /N");
 	func->u.e.n = fz_to_real(obj);
-	pdf_log_rsrc("n %g\n", func->u.e.n);
 
 	obj = fz_dict_gets(dict, "C0");
 	if (fz_is_array(obj))
@@ -1143,7 +1130,6 @@ load_exponential_func(pdf_function *func, fz_obj *dict)
 			return fz_throw("exponential function result array out of range");
 		for (i = 0; i < func->n; i++)
 			func->u.e.c0[i] = fz_to_real(fz_array_get(obj, i));
-		pdf_log_rsrc("c0 %d\n", func->n);
 	}
 	else
 	{
@@ -1158,7 +1144,6 @@ load_exponential_func(pdf_function *func, fz_obj *dict)
 			return fz_throw("/C1 must match /C0 length");
 		for (i = 0; i < func->n; i++)
 			func->u.e.c1[i] = fz_to_real(fz_array_get(obj, i));
-		pdf_log_rsrc("c1 %d\n", func->n);
 	}
 	else
 	{
@@ -1166,8 +1151,6 @@ load_exponential_func(pdf_function *func, fz_obj *dict)
 			return fz_throw("/C1 must match /C0 length");
 		func->u.e.c1[0] = 1;
 	}
-
-	pdf_log_rsrc("}\n");
 
 	return fz_okay;
 }
@@ -1212,8 +1195,6 @@ load_stitching_func(pdf_function *func, pdf_xref *xref, fz_obj *dict)
 	int k;
 	int i;
 
-	pdf_log_rsrc("stitching {\n");
-
 	func->u.st.k = 0;
 
 	if (func->m != 1)
@@ -1224,8 +1205,6 @@ load_stitching_func(pdf_function *func, pdf_xref *xref, fz_obj *dict)
 		return fz_throw("stitching function has no input functions");
 	{
 		k = fz_array_len(obj);
-
-		pdf_log_rsrc("k %d\n", k);
 
 		func->u.st.funcs = fz_calloc(k, sizeof(pdf_function*));
 		func->u.st.bounds = fz_calloc(k - 1, sizeof(float));
@@ -1283,8 +1262,6 @@ load_stitching_func(pdf_function *func, pdf_xref *xref, fz_obj *dict)
 			func->u.st.encode[i*2+1] = fz_to_real(fz_array_get(obj, i*2+1));
 		}
 	}
-
-	pdf_log_rsrc("}\n");
 
 	return fz_okay;
 }
@@ -1384,16 +1361,12 @@ pdf_load_function(pdf_function **funcp, pdf_xref *xref, fz_obj *dict)
 		return fz_okay;
 	}
 
-	pdf_log_rsrc("load function (%d %d R) {\n", fz_to_num(dict), fz_to_gen(dict));
-
 	func = fz_malloc(sizeof(pdf_function));
 	memset(func, 0, sizeof(pdf_function));
 	func->refs = 1;
 
 	obj = fz_dict_gets(dict, "FunctionType");
 	func->type = fz_to_int(obj);
-
-	pdf_log_rsrc("type %d\n", func->type);
 
 	/* required for all */
 	obj = fz_dict_gets(dict, "Domain");
@@ -1403,7 +1376,6 @@ pdf_load_function(pdf_function **funcp, pdf_xref *xref, fz_obj *dict)
 		func->domain[i][0] = fz_to_real(fz_array_get(obj, i * 2 + 0));
 		func->domain[i][1] = fz_to_real(fz_array_get(obj, i * 2 + 1));
 	}
-	pdf_log_rsrc("domain %d\n", func->m);
 
 	/* required for type0 and type4, optional otherwise */
 	obj = fz_dict_gets(dict, "Range");
@@ -1416,7 +1388,6 @@ pdf_load_function(pdf_function **funcp, pdf_xref *xref, fz_obj *dict)
 			func->range[i][0] = fz_to_real(fz_array_get(obj, i * 2 + 0));
 			func->range[i][1] = fz_to_real(fz_array_get(obj, i * 2 + 1));
 		}
-		pdf_log_rsrc("range %d\n", func->n);
 	}
 	else
 	{
@@ -1472,8 +1443,6 @@ pdf_load_function(pdf_function **funcp, pdf_xref *xref, fz_obj *dict)
 		fz_free(func);
 		return fz_throw("unknown function type (%d %d R)", fz_to_num(dict), fz_to_gen(dict));
 	}
-
-	pdf_log_rsrc("}\n");
 
 	pdf_store_item(xref->store, pdf_keep_function, pdf_drop_function, dict, func);
 

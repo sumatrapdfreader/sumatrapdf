@@ -1,113 +1,108 @@
 # GNU Makefile for third party libraries used by MuPDF
 #
 # If thirdparty libraries are supplied, they will be built as
-# static libraries. Download and unzip the the mupdf-thirdparty.zip archive
-# in the source directory.
+# static libraries. Download and unzip the the mupdf-thirdparty.zip
+# archive in the source directory.
 
-freetype_dir := $(wildcard thirdparty/freetype*)
-jbig2dec_dir := $(wildcard thirdparty/jbig2dec*)
-jpeg_dir := $(wildcard thirdparty/jpeg*)
-openjpeg_dir := $(wildcard thirdparty/openjpeg*/libopenjpeg)
-zlib_dir := $(wildcard thirdparty/zlib*)
+FREETYPE_DIR := $(wildcard thirdparty/freetype*)
+JBIG2DEC_DIR := $(wildcard thirdparty/jbig2dec*)
+JPEG_DIR := $(wildcard thirdparty/jpeg*)
+OPENJPEG_DIR := $(wildcard thirdparty/openjpeg*/libopenjpeg)
+ZLIB_DIR := $(wildcard thirdparty/zlib*)
 
-ifneq "$(freetype_dir)" ""
+# --- FreeType 2 ---
 
-THIRD_LIBS += $(FREETYPE_LIB)
-THIRD_INCS += -I$(freetype_dir)/include
+ifneq "$(FREETYPE_DIR)" ""
+CFLAGS += -I$(FREETYPE_DIR)/include
 LIBS := $(filter-out -lfreetype, $(LIBS))
+FREETYPE_LIB := $(OUT)/libfreetype.a
 
-SYS_FREETYPE_INC :=
+FREETYPE_SRC := \
+	ftbase.c \
+	ftbbox.c \
+	ftbitmap.c \
+	ftgasp.c \
+	ftglyph.c \
+	ftinit.c \
+	ftstroke.c \
+	ftsynth.c \
+	ftsystem.c \
+	fttype1.c \
+	ftxf86.c \
+	cff.c \
+	psaux.c \
+	psnames.c \
+	sfnt.c \
+	smooth.c \
+	truetype.c \
+	type1.c \
+	type1cid.c \
 
-FREETYPE_OBJ=$(addprefix $(OBJDIR)/ft_, \
-	ftbase.o ftbbox.o ftbitmap.o ftgasp.o ftglyph.o ftinit.o \
-	ftstroke.o ftsynth.o ftsystem.o fttype1.o ftxf86.o \
-	cff.o type1cid.o psaux.o psnames.o smooth.o sfnt.o truetype.o type1.o )
-FREETYPE_LIB=$(OBJDIR)/libfreetype.a
-$(FREETYPE_LIB): $(FREETYPE_OBJ)
-	 $(AR_CMD)
+$(FREETYPE_LIB): $(addprefix $(OUT)/ft_, $(FREETYPE_SRC:%.c=%.o))
 
-FTCC_CMD = $(CC_CMD) -DFT2_BUILD_LIBRARY -DDARWIN_NO_CARBON \
+FT_CFLAGS := -DFT2_BUILD_LIBRARY -DDARWIN_NO_CARBON \
 	'-DFT_CONFIG_MODULES_H="slimftmodules.h"' \
 	'-DFT_CONFIG_OPTIONS_H="slimftoptions.h"'
 
-$(OBJDIR)/ft_ftbase.o: $(freetype_dir)/src/base/ftbase.c
-	$(FTCC_CMD)
-$(OBJDIR)/ft_ftbbox.o: $(freetype_dir)/src/base/ftbbox.c
-	$(FTCC_CMD)
-$(OBJDIR)/ft_ftbitmap.o: $(freetype_dir)/src/base/ftbitmap.c
-	$(FTCC_CMD)
-$(OBJDIR)/ft_ftgasp.o: $(freetype_dir)/src/base/ftgasp.c
-	$(FTCC_CMD)
-$(OBJDIR)/ft_ftglyph.o: $(freetype_dir)/src/base/ftglyph.c
-	$(FTCC_CMD)
-$(OBJDIR)/ft_ftinit.o: $(freetype_dir)/src/base/ftinit.c
-	$(FTCC_CMD)
-$(OBJDIR)/ft_ftstroke.o: $(freetype_dir)/src/base/ftstroke.c
-	$(FTCC_CMD)
-$(OBJDIR)/ft_ftsynth.o: $(freetype_dir)/src/base/ftsynth.c
-	$(FTCC_CMD)
-$(OBJDIR)/ft_ftsystem.o: $(freetype_dir)/src/base/ftsystem.c
-	$(FTCC_CMD)
-$(OBJDIR)/ft_fttype1.o: $(freetype_dir)/src/base/fttype1.c
-	$(FTCC_CMD)
-$(OBJDIR)/ft_ftxf86.o: $(freetype_dir)/src/base/ftxf86.c
-	$(FTCC_CMD)
-$(OBJDIR)/ft_cff.o: $(freetype_dir)/src/cff/cff.c
-	$(FTCC_CMD)
-$(OBJDIR)/ft_type1cid.o: $(freetype_dir)/src/cid/type1cid.c
-	$(FTCC_CMD)
-$(OBJDIR)/ft_psaux.o: $(freetype_dir)/src/psaux/psaux.c
-	$(FTCC_CMD)
-$(OBJDIR)/ft_psnames.o: $(freetype_dir)/src/psnames/psnames.c
-	$(FTCC_CMD)
-$(OBJDIR)/ft_smooth.o: $(freetype_dir)/src/smooth/smooth.c
-	$(FTCC_CMD)
-$(OBJDIR)/ft_sfnt.o: $(freetype_dir)/src/sfnt/sfnt.c
-	$(FTCC_CMD)
-$(OBJDIR)/ft_truetype.o: $(freetype_dir)/src/truetype/truetype.c
-	$(FTCC_CMD)
-$(OBJDIR)/ft_type1.o: $(freetype_dir)/src/type1/type1.c
-	$(FTCC_CMD)
+$(OUT)/ft_%.o: $(FREETYPE_DIR)/src/base/%.c	| $(OUT)
+	$(CC_CMD) $(FT_CFLAGS)
+$(OUT)/ft_%.o: $(FREETYPE_DIR)/src/cff/%.c	| $(OUT)
+	$(CC_CMD) $(FT_CFLAGS)
+$(OUT)/ft_%.o: $(FREETYPE_DIR)/src/cid/%.c	| $(OUT)
+	$(CC_CMD) $(FT_CFLAGS)
+$(OUT)/ft_%.o: $(FREETYPE_DIR)/src/psaux/%.c	| $(OUT)
+	$(CC_CMD) $(FT_CFLAGS)
+$(OUT)/ft_%.o: $(FREETYPE_DIR)/src/psnames/%.c	| $(OUT)
+	$(CC_CMD) $(FT_CFLAGS)
+$(OUT)/ft_%.o: $(FREETYPE_DIR)/src/smooth/%.c	| $(OUT)
+	$(CC_CMD) $(FT_CFLAGS)
+$(OUT)/ft_%.o: $(FREETYPE_DIR)/src/sfnt/%.c	| $(OUT)
+	$(CC_CMD) $(FT_CFLAGS)
+$(OUT)/ft_%.o: $(FREETYPE_DIR)/src/truetype/%.c	| $(OUT)
+	$(CC_CMD) $(FT_CFLAGS)
+$(OUT)/ft_%.o: $(FREETYPE_DIR)/src/type1/%.c	| $(OUT)
+	$(CC_CMD) $(FT_CFLAGS)
 
+else
+CFLAGS += $(SYS_FREETYPE_INC)
 endif
 
-ifneq "$(jbig2dec_dir)" ""
+# --- JBIG2DEC ---
 
-THIRD_LIBS += $(JBIG2DEC_LIB)
-THIRD_INCS += -I$(jbig2dec_dir)
+ifneq "$(JBIG2DEC_DIR)" ""
+CFLAGS += -I$(JBIG2DEC_DIR)
 LIBS := $(filter-out -ljbig2dec, $(LIBS))
+JBIG2DEC_LIB := $(OUT)/libjbig2dec.a
 
-JBIG2DEC_SRC=$(addprefix $(jbig2dec_dir)/, \
+JBIG2DEC_SRC := \
 	jbig2.c \
 	jbig2_arith.c \
-	jbig2_arith_int.c \
 	jbig2_arith_iaid.c \
+	jbig2_arith_int.c \
+	jbig2_generic.c \
 	jbig2_huffman.c \
-	jbig2_segment.c \
+	jbig2_image.c \
+	jbig2_metadata.c \
+	jbig2_mmr.c \
 	jbig2_page.c \
+	jbig2_refinement.c \
+	jbig2_segment.c \
 	jbig2_symbol_dict.c \
 	jbig2_text.c \
-	jbig2_generic.c \
-	jbig2_refinement.c \
-	jbig2_mmr.c \
-	jbig2_image.c \
-	jbig2_metadata.c )
-JBIG2DEC_OBJ=$(JBIG2DEC_SRC:$(jbig2dec_dir)/%.c=$(OBJDIR)/%.o)
-JBIG2DEC_LIB=$(OBJDIR)/libjbig2dec.a
-$(JBIG2DEC_LIB): $(JBIG2DEC_OBJ)
-	$(AR_CMD)
-$(OBJDIR)/%.o: $(jbig2dec_dir)/%.c
-	$(CC_CMD) -DHAVE_STDINT_H
 
+$(JBIG2DEC_LIB): $(addprefix $(OUT)/, $(JBIG2DEC_SRC:%.c=%.o))
+$(OUT)/%.o: $(JBIG2DEC_DIR)/%.c | $(OUT)
+	$(CC_CMD) -DHAVE_STDINT_H
 endif
 
-ifneq "$(jpeg_dir)" ""
+# --- JPEG library from IJG ---
 
-THIRD_LIBS += $(JPEG_LIB)
-THIRD_INCS += -I$(jpeg_dir)
+ifneq "$(JPEG_DIR)" ""
+CFLAGS += -I$(JPEG_DIR)
 LIBS := $(filter-out -ljpeg, $(LIBS))
+JPEG_LIB := $(OUT)/libjpeg.a
 
-JPEG_SRC=$(addprefix $(jpeg_dir)/, \
+JPEG_SRC := \
 	jaricom.c \
 	jcomapi.c \
 	jdapimin.c \
@@ -134,27 +129,25 @@ JPEG_SRC=$(addprefix $(jpeg_dir)/, \
 	jidctflt.c \
 	jidctfst.c \
 	jidctint.c \
+	jmemansi.c \
+	jmemmgr.c \
 	jquant1.c \
 	jquant2.c \
 	jutils.c \
-	jmemmgr.c \
-	jmemansi.c)
-JPEG_OBJ=$(JPEG_SRC:$(jpeg_dir)/%.c=$(OBJDIR)/jpeg_%.o)
-JPEG_LIB=$(OBJDIR)/libjpeg.a
-$(JPEG_LIB): $(JPEG_OBJ)
-	 $(AR_CMD)
-$(OBJDIR)/jpeg_%.o: $(jpeg_dir)/%.c
-	$(CC_CMD) -Dmain=xxxmain
 
+$(JPEG_LIB): $(addprefix $(OUT)/jpeg_, $(JPEG_SRC:%.c=%.o))
+$(OUT)/jpeg_%.o: $(JPEG_DIR)/%.c | $(OUT)
+	$(CC_CMD) -Dmain=xxxmain
 endif
 
-ifneq "$(openjpeg_dir)" ""
+# --- OpenJPEG ---
 
-THIRD_LIBS += $(OPENJPEG_LIB)
-THIRD_INCS += -I$(openjpeg_dir)
+ifneq "$(OPENJPEG_DIR)" ""
+CFLAGS += -I$(OPENJPEG_DIR)
 LIBS := $(filter-out -lopenjpeg, $(LIBS))
+OPENJPEG_LIB := $(OUT)/libopenjpeg.a
 
-OPENJPEG_SRC=$(addprefix $(openjpeg_dir)/, \
+OPENJPEG_SRC := \
 	bio.c \
 	cio.c \
 	dwt.c \
@@ -172,23 +165,21 @@ OPENJPEG_SRC=$(addprefix $(openjpeg_dir)/, \
 	t1.c \
 	t2.c \
 	tcd.c \
-	tgt.c )
-OPENJPEG_OBJ=$(OPENJPEG_SRC:$(openjpeg_dir)/%.c=$(OBJDIR)/opj_%.o)
-OPENJPEG_LIB=$(OBJDIR)/libopenjpeg.a
-$(OPENJPEG_LIB): $(OPENJPEG_OBJ)
-	 $(AR_CMD)
-$(OBJDIR)/opj_%.o: $(openjpeg_dir)/%.c
-	$(CC_CMD) -DOPJ_STATIC
+	tgt.c \
 
+$(OPENJPEG_LIB): $(addprefix $(OUT)/opj_, $(OPENJPEG_SRC:%.c=%.o))
+$(OUT)/opj_%.o: $(OPENJPEG_DIR)/%.c | $(OUT)
+	$(CC_CMD) -DOPJ_STATIC
 endif
 
-ifneq "$(zlib_dir)" ""
+# --- ZLIB ---
 
-THIRD_LIBS += $(ZLIB_LIB)
-THIRD_INCS += -I$(zlib_dir)
+ifneq "$(ZLIB_DIR)" ""
+CFLAGS += -I$(ZLIB_DIR)
 LIBS := $(filter-out -lz, $(LIBS))
+ZLIB_LIB := $(OUT)/libz.a
 
-ZLIB_SRC=$(addprefix $(zlib_dir)/, \
+ZLIB_SRC := \
 	adler32.c \
 	compress.c \
 	crc32.c \
@@ -198,12 +189,9 @@ ZLIB_SRC=$(addprefix $(zlib_dir)/, \
 	inftrees.c \
 	trees.c \
 	uncompr.c \
-	zutil.c )
-ZLIB_OBJ=$(ZLIB_SRC:$(zlib_dir)/%.c=$(OBJDIR)/zlib_%.o)
-ZLIB_LIB=$(OBJDIR)/libz.a
-$(ZLIB_LIB): $(ZLIB_OBJ)
-	$(AR_CMD)
-$(OBJDIR)/zlib_%.o: $(zlib_dir)/%.c
-	$(CC_CMD)
+	zutil.c \
 
+$(ZLIB_LIB): $(addprefix $(OUT)/zlib_, $(ZLIB_SRC:%.c=%.o))
+$(OUT)/zlib_%.o: $(ZLIB_DIR)/%.c | $(OUT)
+	$(CC_CMD)
 endif

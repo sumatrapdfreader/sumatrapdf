@@ -20,8 +20,6 @@ pdf_load_embedded_cmap(pdf_cmap **cmapp, pdf_xref *xref, fz_obj *stmobj)
 		return fz_okay;
 	}
 
-	pdf_log_font("load embedded cmap (%d %d R) {\n", fz_to_num(stmobj), fz_to_gen(stmobj));
-
 	error = pdf_open_stream(&file, xref, fz_to_num(stmobj), fz_to_gen(stmobj));
 	if (error)
 	{
@@ -40,15 +38,11 @@ pdf_load_embedded_cmap(pdf_cmap **cmapp, pdf_xref *xref, fz_obj *stmobj)
 
 	wmode = fz_dict_gets(stmobj, "WMode");
 	if (fz_is_int(wmode))
-	{
-		pdf_log_font("wmode %d\n", wmode);
 		pdf_set_wmode(cmap, fz_to_int(wmode));
-	}
 
 	obj = fz_dict_gets(stmobj, "UseCMap");
 	if (fz_is_name(obj))
 	{
-		pdf_log_font("usecmap /%s\n", fz_to_name(obj));
 		error = pdf_load_system_cmap(&usecmap, fz_to_name(obj));
 		if (error)
 		{
@@ -60,7 +54,6 @@ pdf_load_embedded_cmap(pdf_cmap **cmapp, pdf_xref *xref, fz_obj *stmobj)
 	}
 	else if (fz_is_indirect(obj))
 	{
-		pdf_log_font("usecmap (%d %d R)\n", fz_to_num(obj), fz_to_gen(obj));
 		error = pdf_load_embedded_cmap(&usecmap, xref, obj);
 		if (error)
 		{
@@ -70,8 +63,6 @@ pdf_load_embedded_cmap(pdf_cmap **cmapp, pdf_xref *xref, fz_obj *stmobj)
 		pdf_set_usecmap(cmap, usecmap);
 		pdf_drop_cmap(usecmap);
 	}
-
-	pdf_log_font("}\n");
 
 	pdf_store_item(xref->store, pdf_keep_cmap, pdf_drop_cmap, stmobj, cmap);
 
@@ -109,8 +100,6 @@ pdf_load_system_cmap(pdf_cmap **cmapp, char *cmap_name)
 {
 	pdf_cmap *usecmap;
 	pdf_cmap *cmap;
-
-	pdf_log_font("loading system cmap %s\n", cmap_name);
 
 	cmap = pdf_find_builtin_cmap(cmap_name);
 	if (!cmap)

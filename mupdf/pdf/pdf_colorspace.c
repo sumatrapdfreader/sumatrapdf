@@ -8,8 +8,6 @@ load_icc_based(fz_colorspace **csp, pdf_xref *xref, fz_obj *dict)
 {
 	int n;
 
-	pdf_log_rsrc("load ICCBased\n");
-
 	n = fz_to_int(fz_dict_gets(dict, "N"));
 
 	switch (n)
@@ -104,8 +102,6 @@ load_separation(fz_colorspace **csp, pdf_xref *xref, fz_obj *array)
 	pdf_function *tint;
 	int n;
 
-	pdf_log_rsrc("load Separation {\n");
-
 	if (fz_is_array(nameobj))
 		n = fz_array_len(nameobj);
 	else
@@ -113,8 +109,6 @@ load_separation(fz_colorspace **csp, pdf_xref *xref, fz_obj *array)
 
 	if (n > FZ_MAX_COLORS)
 		return fz_throw("too many components in colorspace");
-
-	pdf_log_rsrc("n = %d\n", n);
 
 	error = pdf_load_colorspace(&base, xref, baseobj);
 	if (error)
@@ -135,8 +129,6 @@ load_separation(fz_colorspace **csp, pdf_xref *xref, fz_obj *array)
 	cs->to_rgb = separation_to_rgb;
 	cs->free_data = free_separation;
 	cs->data = sep;
-
-	pdf_log_rsrc("}\n");
 
 	*csp = cs;
 	return fz_okay;
@@ -227,13 +219,9 @@ load_indexed(fz_colorspace **csp, pdf_xref *xref, fz_obj *array)
 	fz_colorspace *base;
 	int i, n;
 
-	pdf_log_rsrc("load Indexed {\n");
-
 	error = pdf_load_colorspace(&base, xref, baseobj);
 	if (error)
 		return fz_rethrow(error, "cannot load base colorspace (%d %d R)", fz_to_num(baseobj), fz_to_gen(baseobj));
-
-	pdf_log_rsrc("base %s\n", base->name);
 
 	idx = fz_malloc(sizeof(struct indexed));
 	idx->base = base;
@@ -250,19 +238,13 @@ load_indexed(fz_colorspace **csp, pdf_xref *xref, fz_obj *array)
 
 	if (fz_is_string(lookup) && fz_to_str_len(lookup) == n)
 	{
-		unsigned char *buf;
-
-		pdf_log_rsrc("string lookup\n");
-
-		buf = (unsigned char *) fz_to_str_buf(lookup);
+		unsigned char *buf = (unsigned char *) fz_to_str_buf(lookup);
 		for (i = 0; i < n; i++)
 			idx->lookup[i] = buf[i];
 	}
 	else if (fz_is_indirect(lookup))
 	{
 		fz_stream *file;
-
-		pdf_log_rsrc("stream lookup\n");
 
 		error = pdf_open_stream(&file, xref, fz_to_num(lookup), fz_to_gen(lookup));
 		if (error)
@@ -285,8 +267,6 @@ load_indexed(fz_colorspace **csp, pdf_xref *xref, fz_obj *array)
 		fz_drop_colorspace(cs);
 		return fz_throw("cannot parse colorspace lookup table");
 	}
-
-	pdf_log_rsrc("}\n");
 
 	*csp = cs;
 	return fz_okay;

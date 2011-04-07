@@ -637,7 +637,8 @@ pdf_load_windows_font(pdf_font_desc *font, char *fontname)
 		_onexit(pdf_destroyfontlistMS);
 	}
 
-	pdf_log_font("win32: try load font `%s'\n", fontname);
+	if (getenv("MULOG"))
+		printf("pdf_load_windows_font: looking for font '%s'\n", fontname);
 
 	// work on a normalized copy of the font name
 	fontname = strdup(fontname);
@@ -676,7 +677,8 @@ pdf_load_windows_font(pdf_font_desc *font, char *fontname)
 
 	font->font->ft_file = fz_strdup(found->fontpath);
 
-	pdf_log_font("win32: load font from `%s'\n", found->fontpath);
+	if (getenv("MULOG"))
+		printf("pdf_load_windows_font: loading font from '%s'\n", found->fontpath);
 
 	return fz_okay;
 }

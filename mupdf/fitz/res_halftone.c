@@ -173,15 +173,15 @@ fz_bitmap *fz_halftone_pixmap(fz_pixmap *pix, fz_halftone *ht)
 {
 	fz_bitmap *out;
 	unsigned char *ht_line, *o, *p;
-	int w, h, x, y, n, pspan, ospan;
+	int w, h, x, y, n, pstride, ostride;
 
-	if ((pix == NULL) || (ht == NULL))
+	if (pix == NULL || ht == NULL)
 		return NULL;
 
 	assert(pix->n == 2); /* Mono + Alpha */
 
 	n = pix->n-1; /* Remove alpha */
-	ht_line = fz_malloc(sizeof(unsigned char)*pix->w*n);
+	ht_line = fz_malloc(pix->w * n);
 	out = fz_new_bitmap(pix->w, pix->h, n);
 	o = out->samples;
 	p = pix->samples;
@@ -190,14 +190,14 @@ fz_bitmap *fz_halftone_pixmap(fz_pixmap *pix, fz_halftone *ht)
 	x = pix->x;
 	y = pix->y;
 	w = pix->w;
-	ospan = out->span;
-	pspan = pix->w * pix->n;
+	ostride = out->stride;
+	pstride = pix->w * pix->n;
 	while (h--)
 	{
 		make_ht_line(ht_line, ht, x, y++, w);
 		do_threshold_1(ht_line, p, o, w);
-		o += ospan;
-		p += pspan;
+		o += ostride;
+		p += pstride;
 	}
 	return out;
 }

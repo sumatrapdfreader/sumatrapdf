@@ -14,8 +14,6 @@ pdf_load_pattern(pdf_pattern **patp, pdf_xref *xref, fz_obj *dict)
 		return fz_okay;
 	}
 
-	pdf_log_rsrc("load pattern (%d %d R) {\n", fz_to_num(dict), fz_to_gen(dict));
-
 	pat = fz_malloc(sizeof(pdf_pattern));
 	pat->refs = 1;
 	pat->resources = NULL;
@@ -28,27 +26,14 @@ pdf_load_pattern(pdf_pattern **patp, pdf_xref *xref, fz_obj *dict)
 	pat->xstep = fz_to_real(fz_dict_gets(dict, "XStep"));
 	pat->ystep = fz_to_real(fz_dict_gets(dict, "YStep"));
 
-	pdf_log_rsrc("mask %d\n", pat->ismask);
-	pdf_log_rsrc("xstep %g\n", pat->xstep);
-	pdf_log_rsrc("ystep %g\n", pat->ystep);
-
 	obj = fz_dict_gets(dict, "BBox");
 	pat->bbox = pdf_to_rect(obj);
-
-	pdf_log_rsrc("bbox [%g %g %g %g]\n",
-		pat->bbox.x0, pat->bbox.y0,
-		pat->bbox.x1, pat->bbox.y1);
 
 	obj = fz_dict_gets(dict, "Matrix");
 	if (obj)
 		pat->matrix = pdf_to_matrix(obj);
 	else
 		pat->matrix = fz_identity;
-
-	pdf_log_rsrc("matrix [%g %g %g %g %g %g]\n",
-		pat->matrix.a, pat->matrix.b,
-		pat->matrix.c, pat->matrix.d,
-		pat->matrix.e, pat->matrix.f);
 
 	pat->resources = fz_dict_gets(dict, "Resources");
 	if (pat->resources)
@@ -61,8 +46,6 @@ pdf_load_pattern(pdf_pattern **patp, pdf_xref *xref, fz_obj *dict)
 		pdf_drop_pattern(pat);
 		return fz_rethrow(error, "cannot load pattern stream (%d %d R)", fz_to_num(dict), fz_to_gen(dict));
 	}
-
-	pdf_log_rsrc("}\n");
 
 	*patp = pat;
 	return fz_okay;

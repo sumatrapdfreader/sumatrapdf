@@ -1,80 +1,64 @@
 ABOUT
 
-MuPDF is a lightweight PDF viewer and toolkit written in portable C.
+MuPDF is a lightweight PDF and XPS viewer and parser/rendering library.
 
-The renderer in MuPDF is tailored for high quality anti-aliased
-graphics.  MuPDF renders text with metrics and spacing accurate to
-within fractions of a pixel for the highest fidelity in reproducing
-the look of a printed page on screen.
+The renderer in MuPDF is tailored for high quality anti-aliased graphics. It
+renders text with metrics and spacing accurate to within fractions of a pixel
+for the highest fidelity in reproducing the look of a printed page on screen.
 
-MuPDF has a small footprint.  A binary that includes the standard
-Roman fonts is only one megabyte.  A build with full CJK support
-(including an Asian font) is approximately five megabytes.
+MuPDF is also small, fast, and yet complete. We support PDF 1.7 with
+transparency, encryption, hyperlinks, annotations, search and many other bells
+and whistles. MuPDF can also read XPS documents (OpenXPS / ECMA-388).
 
-MuPDF has support for all non-interactive PDF 1.7 features, and the
-toolkit provides a simple API for accessing the internal structures of
-the PDF document.  Example code for navigating interactive links and
-bookmarks, encrypting PDF files, extracting fonts, images, and
-searchable text, and rendering pages to image files is provided.
+We don't support interactive features such as form filling, javascript and
+transitions. MuPDF is written modularly, so such features can be added on by
+integrators if they so desire.
 
 LICENSE
 
-MuPDF -- PDF parsing, rendering and viewing toolkit.
+MuPDF is Copyright 2006-2011 Artifex Software, Inc.
 
-Copyright (C) 2006-2010 Artifex Software, Inc.
+This program is free software: you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free Software
+Foundation, either version 3 of the License, or (at your option) any later
+version.
 
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
+This program is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+You should have received a copy of the GNU General Public License along with
+this program. If not, see <http://www.gnu.org/licenses/>.
 
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
+For commercial licensing please contact sales@artifex.com.
 
 COMPILING
 
-Before compiling MuPDF you need to install thirdy party dependencies.
-
-	zlib
-	libjpeg
-	freetype2
-	jbig2dec
-	OpenJPEG
-
-If you don't have these installed on your system you can download and unzip
-the mupdf-thirdparty.zip archive in the mupdf source tree. The makefile
-will pick up the existence of this directory automatically.
+If you are compiling from source you will need several third party libraries:
+freetype2, jbig2dec, libjpeg, openjpeg, and zlib. We have prepared a package
+(mupdf-thirdparty.zip) that you can unzip in the mupdf source tree if you don't
+have them installed on your system.
 
 You must unpack mupdf-thirdparty.zip to build using the Visual Studio project.
 
-You will need to use GNU Make to build with the supplied Makefile.
-It may be necessary to edit the Makefile for your system if it
-cannot find header files or libraries.
-
 DOWNLOAD
 
-The latest development source is available directly from the darcs repository.
-Browse the source or use the following command line to check out the source:
+The latest development source is available directly from the git repository:
 
-    darcs get http://mupdf.com/repos/mupdf
+	git clone http://mupdf.com/repos/mupdf.git
 
 INSTALLING
 
-Typing "make prefix=/usr/local install" will install the binary,
-static library and header files on your system.
+Typing "make prefix=/usr/local install" will install the binaries, man-pages,
+static libraries and header files on your system.
 
 REPORTING BUGS AND PROBLEMS
 
-Report bugs on the ghostscript bugzilla, with MuPDF as the
-selected component.
+The MuPDF developers hang out on IRC in the #ghostscript channel on irc.freenode.net.
+
+Report bugs on the ghostscript bugzilla, with MuPDF as the selected component.
 
 	http://bugs.ghostscript.com/
 
-If you are reporting a problem with PDF parsing,
-please include the problematic file as an attachment.
-
+If you are reporting a problem with PDF parsing, please include the problematic
+file as an attachment.

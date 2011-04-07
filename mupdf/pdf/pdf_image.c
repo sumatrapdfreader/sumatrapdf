@@ -228,8 +228,6 @@ pdf_load_image_imp(fz_pixmap **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict, 
 			p[i] = ~p[i];
 	}
 
-	pdf_log_image("size %dx%d n=%d bpc=%d imagemask=%d indexed=%d\n", w, h, n, bpc, imagemask, indexed);
-
 	/* Unpack samples into pixmap */
 
 	/* SumatraPDF: don't abort on OOM when loading images */
@@ -288,13 +286,9 @@ pdf_load_inline_image(fz_pixmap **pixp, pdf_xref *xref, fz_obj *rdb, fz_obj *dic
 {
 	fz_error error;
 
-	pdf_log_image("load inline image {\n");
-
 	error = pdf_load_image_imp(pixp, xref, rdb, dict, file, 0);
 	if (error)
 		return fz_rethrow(error, "cannot load inline image");
-
-	pdf_log_image("}\n");
 
 	return fz_okay;
 }
@@ -322,8 +316,6 @@ pdf_load_jpx_image(fz_pixmap **imgp, pdf_xref *xref, fz_obj *dict)
 	fz_colorspace *colorspace;
 	fz_pixmap *img;
 	fz_obj *obj;
-
-	pdf_log_image("jpeg2000\n");
 
 	colorspace = NULL;
 
@@ -378,15 +370,11 @@ pdf_load_image(fz_pixmap **pixp, pdf_xref *xref, fz_obj *dict)
 		return fz_okay;
 	}
 
-	pdf_log_image("load image (%d 0 R) {\n", fz_to_num(dict));
-
 	error = pdf_load_image_imp(pixp, xref, NULL, dict, NULL, 0);
 	if (error)
 		return fz_rethrow(error, "cannot load image (%d 0 R)", fz_to_num(dict));
 
 	pdf_store_item(xref->store, fz_keep_pixmap, fz_drop_pixmap, dict, *pixp);
-
-	pdf_log_image("}\n");
 
 	return fz_okay;
 }

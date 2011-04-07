@@ -283,7 +283,7 @@ FITZ_OBJS = \
 
 MUPDF_OBJS = \
 	$(OP)\pdf_annot.obj $(OP)\pdf_build.obj $(OP)\pdf_cmap.obj \
-	$(OP)\pdf_colorspace.obj $(OP)\pdf_crypt.obj $(OP)\pdf_debug.obj $(OP)\pdf_encoding.obj \
+	$(OP)\pdf_colorspace.obj $(OP)\pdf_crypt.obj $(OP)\pdf_encoding.obj \
 	$(OP)\pdf_font.obj $(OP)\pdf_fontfile.obj $(OP)\pdf_metrics.obj \
 	$(OP)\pdf_function.obj $(OP)\pdf_image.obj $(OP)\pdf_interpret.obj $(OP)\pdf_lex.obj \
 	$(OP)\pdf_nametree.obj $(OP)\pdf_outline.obj $(OP)\pdf_page.obj \
@@ -539,7 +539,7 @@ $(MUPDF_GEN_DIR):
 $(OP)\pdf_fontfile.obj: $(MUPDF_GEN_DIR) \
 	$(MUPDF_GEN_DIR)\font_base14.h $(MUPDF_GEN_DIR)\font_cjk.h
 $(OP)\pdf_cmap_tables.obj: $(MUPDF_GEN_DIR) \
-	$(MUPDF_GEN_DIR)\cmap_unicode.h $(MUPDF_GEN_DIR)\cmap_cns.h $(MUPDF_GEN_DIR)\cmap_gbs.h \
+	$(MUPDF_GEN_DIR)\cmap_cns.h $(MUPDF_GEN_DIR)\cmap_gbs.h \
 	$(MUPDF_GEN_DIR)\cmap_japan.h $(MUPDF_GEN_DIR)\cmap_korea.h
 
 $(FITZ_OBJS) $(FITZ_DRAW_OBJS): $(MUPDF_DIR)\fitz\fitz.h

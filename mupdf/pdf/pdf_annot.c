@@ -46,18 +46,11 @@ pdf_load_link(pdf_xref *xref, fz_obj *dict)
 	fz_rect bbox;
 	pdf_link_kind kind;
 
-	pdf_log_page("load link {\n");
-
 	dest = NULL;
 
 	obj = fz_dict_gets(dict, "Rect");
 	if (obj)
-	{
 		bbox = pdf_to_rect(obj);
-		pdf_log_page("rect [%g %g %g %g]\n",
-			bbox.x0, bbox.y0,
-			bbox.x1, bbox.y1);
-	}
 	else
 		bbox = fz_empty_rect;
 
@@ -66,7 +59,6 @@ pdf_load_link(pdf_xref *xref, fz_obj *dict)
 	{
 		kind = PDF_LINK_GOTO;
 		dest = resolve_dest(xref, obj);
-		pdf_log_page("dest (%d %d R)\n", fz_to_num(dest), fz_to_gen(dest));
 	}
 
 	action = fz_dict_gets(dict, "A");
@@ -77,40 +69,32 @@ pdf_load_link(pdf_xref *xref, fz_obj *dict)
 		{
 			kind = PDF_LINK_GOTO;
 			dest = resolve_dest(xref, fz_dict_gets(action, "D"));
-			pdf_log_page("action goto (%d %d R)\n", fz_to_num(dest), fz_to_gen(dest));
 		}
 		else if (fz_is_name(obj) && !strcmp(fz_to_name(obj), "URI"))
 		{
 			kind = PDF_LINK_URI;
 			dest = fz_dict_gets(action, "URI");
-			pdf_log_page("action uri %s\n", fz_to_str_buf(dest));
 		}
 		else if (fz_is_name(obj) && !strcmp(fz_to_name(obj), "Launch"))
 		{
 			kind = PDF_LINK_LAUNCH;
 			dest = fz_dict_gets(action, "F");
-			pdf_log_page("action %s (%d %d R)\n", fz_to_name(obj), fz_to_num(dest), fz_to_gen(dest));
 		}
 		else if (fz_is_name(obj) && !strcmp(fz_to_name(obj), "Named"))
 		{
 			kind = PDF_LINK_NAMED;
 			dest = fz_dict_gets(action, "N");
-			pdf_log_page("action %s (%d %d R)\n", fz_to_name(obj), fz_to_num(dest), fz_to_gen(dest));
 		}
 		else if (fz_is_name(obj) && (!strcmp(fz_to_name(obj), "GoToR")))
 		{
 			kind = PDF_LINK_ACTION;
 			dest = action;
-			pdf_log_page("action %s (%d %d R)\n", fz_to_name(obj), fz_to_num(dest), fz_to_gen(dest));
 		}
 		else
 		{
-			pdf_log_page("unhandled link action, ignoring link\n");
 			dest = NULL;
 		}
 	}
-
-	pdf_log_page("}\n");
 
 	if (dest)
 	{
@@ -135,8 +119,6 @@ pdf_load_links(pdf_link **linkp, pdf_xref *xref, fz_obj *annots)
 	head = tail = NULL;
 	link = NULL;
 
-	pdf_log_page("load link annotations {\n");
-
 	for (i = 0; i < fz_array_len(annots); i++)
 	{
 		obj = fz_array_get(annots, i);
@@ -152,8 +134,6 @@ pdf_load_links(pdf_link **linkp, pdf_xref *xref, fz_obj *annots)
 			}
 		}
 	}
-
-	pdf_log_page("}\n");
 
 	*linkp = head;
 }
@@ -197,8 +177,6 @@ pdf_load_annots(pdf_annot **annotp, pdf_xref *xref, fz_obj *annots)
 
 	head = tail = NULL;
 	annot = NULL;
-
-	pdf_log_page("load appearance annotations {\n");
 
 	for (i = 0; i < fz_array_len(annots); i++)
 	{
@@ -245,8 +223,6 @@ pdf_load_annots(pdf_annot **annotp, pdf_xref *xref, fz_obj *annots)
 			}
 		}
 	}
-
-	pdf_log_page("}\n");
 
 	*annotp = head;
 }

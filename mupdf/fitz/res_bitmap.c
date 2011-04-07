@@ -12,9 +12,9 @@ fz_new_bitmap(int w, int h, int n)
 	bit->n = n;
 	/* Span is 32 bit aligned. We may want to make this 64 bit if we
 	 * use SSE2 etc. */
-	bit->span = ((n*w+31)&~31)>>3;
+	bit->stride = ((n * w + 31) & ~31) >> 3;
 
-	bit->samples = fz_calloc(h, bit->span);
+	bit->samples = fz_calloc(h, bit->stride);
 
 	return bit;
 }
@@ -39,7 +39,7 @@ fz_drop_bitmap(fz_bitmap *bit)
 void
 fz_clear_bitmap(fz_bitmap *bit)
 {
-	memset(bit->samples, 0, bit->span * bit->h);
+	memset(bit->samples, 0, bit->stride * bit->h);
 }
 
 /*
@@ -51,7 +51,7 @@ fz_write_pbm(fz_bitmap *bitmap, char *filename)
 {
 	FILE *fp;
 	unsigned char *p;
-	int h, bytespan;
+	int h, bytestride;
 
 	fp = fopen(filename, "wb");
 	if (!fp)
@@ -64,11 +64,11 @@ fz_write_pbm(fz_bitmap *bitmap, char *filename)
 	p = bitmap->samples;
 
 	h = bitmap->h;
-	bytespan = (bitmap->w+7)>>3;
+	bytestride = (bitmap->w + 7) >> 3;
 	while (h--)
 	{
-		fwrite(p, 1, bytespan, fp);
-		p += bitmap->span;
+		fwrite(p, 1, bytestride, fp);
+		p += bitmap->stride;
 	}
 
 	fclose(fp);

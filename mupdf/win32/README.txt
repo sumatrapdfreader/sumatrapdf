@@ -1,1 +1,1 @@
-This MSVC project needs both the thirdparty and pregen sources to be in place.
+This MSVC project needs the thirdparty sources to be in place.

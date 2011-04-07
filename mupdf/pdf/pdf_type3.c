@@ -25,23 +25,11 @@ pdf_load_type3_font(pdf_font_desc **fontdescp, pdf_xref *xref, fz_obj *rdb, fz_o
 
 	fontdesc = pdf_new_font_desc();
 
-	pdf_log_font("load type3 font (%d %d R) ptr=%p {\n", fz_to_num(dict), fz_to_gen(dict), fontdesc);
-	pdf_log_font("name %s\n", buf);
-
 	obj = fz_dict_gets(dict, "FontMatrix");
 	matrix = pdf_to_matrix(obj);
 
-	pdf_log_font("matrix [%g %g %g %g %g %g]\n",
-		matrix.a, matrix.b,
-		matrix.c, matrix.d,
-		matrix.e, matrix.f);
-
 	obj = fz_dict_gets(dict, "FontBBox");
 	bbox = pdf_to_rect(obj);
-
-	pdf_log_font("bbox [%g %g %g %g]\n",
-		bbox.x0, bbox.y0,
-		bbox.x1, bbox.y1);
 
 	fontdesc->font = fz_new_type3_font(buf, matrix);
 
@@ -153,8 +141,6 @@ pdf_load_type3_font(pdf_font_desc **fontdescp, pdf_xref *xref, fz_obj *rdb, fz_o
 			}
 		}
 	}
-
-	pdf_log_font("}\n");
 
 	*fontdescp = fontdesc;
 	return fz_okay;

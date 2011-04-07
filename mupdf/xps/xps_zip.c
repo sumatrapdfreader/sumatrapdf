@@ -25,12 +25,11 @@ xps_free_part(xps_context *ctx, xps_part *part)
 	fz_free(part);
 }
 
-/* SumatraPDF: use fz_stream instead of FILE */
 static inline int getshort(fz_stream *file)
 {
 	int a = fz_read_byte(file);
 	int b = fz_read_byte(file);
-	return a | (b << 8);
+	return a | b << 8;
 }
 
 static inline int getlong(fz_stream *file)
@@ -39,7 +38,7 @@ static inline int getlong(fz_stream *file)
 	int b = fz_read_byte(file);
 	int c = fz_read_byte(file);
 	int d = fz_read_byte(file);
-	return a | (b << 8) | (c << 16) | (d << 24);
+	return a | b << 8 | c << 16 | d << 24;
 }
 
 static void *
@@ -207,7 +206,7 @@ xps_read_zip_dir(xps_context *ctx, int start_offset)
 		ctx->zip_table[i].offset = getlong(ctx->file);
 
 		ctx->zip_table[i].name = fz_malloc(namesize + 1);
-		fz_read(ctx->file, ctx->zip_table[i].name, namesize);
+		fz_read(ctx->file, (unsigned char*)ctx->zip_table[i].name, namesize);
 		ctx->zip_table[i].name[namesize] = 0;
 
 		fz_seek(ctx->file, metasize, 1);
@@ -222,9 +221,9 @@ xps_read_zip_dir(xps_context *ctx, int start_offset)
 static int
 xps_find_and_read_zip_dir(xps_context *ctx)
 {
+	unsigned char buf[512];
 	int file_size, back, maxback;
 	int i, n;
-	char buf[512];
 
 	fz_seek(ctx->file, 0, SEEK_END);
 	file_size = fz_tell(ctx->file);
@@ -392,12 +391,10 @@ xps_read_part(xps_context *ctx, char *partname)
 }
 
 int
-xps_open_file(xps_context **ctxp, char *filename)
+xps_open_directory(xps_context **ctxp, char *directory)
 {
 	xps_context *ctx;
-	char buf[2048];
 	int code;
-	char *p;
 
 	ctx = fz_malloc(sizeof(xps_context));
 	memset(ctx, 0, sizeof(xps_context));
@@ -405,31 +402,7 @@ xps_open_file(xps_context **ctxp, char *filename)
 	ctx->colorspace_table = xps_hash_new();
 	ctx->start_part = NULL;
 
-	ctx->file = fz_open_file(filename);
-	if (!ctx->file)
-	{
-		xps_free_context(ctx);
-		return fz_throw("cannot open file: '%s'", filename);
-	}
-
-	if (strstr(filename, "/_rels/.rels") || strstr(filename, "\\_rels\\.rels"))
-	{
-		fz_strlcpy(buf, filename, sizeof buf);
-		p = strstr(buf, "/_rels/.rels");
-		if (!p)
-			p = strstr(buf, "\\_rels\\.rels");
-		*p = 0;
-		ctx->directory = fz_strdup(buf);
-	}
-	else
-	{
-		code = xps_find_and_read_zip_dir(ctx);
-		if (code < 0)
-		{
-			xps_free_context(ctx);
-			return fz_rethrow(code, "cannot read zip central directory");
-		}
-	}
+	ctx->directory = fz_strdup(directory);
 
 	code = xps_read_page_list(ctx);
 	if (code)
@@ -442,7 +415,6 @@ xps_open_file(xps_context **ctxp, char *filename)
 	return fz_okay;
 }
 
-/* SumatraPDF: use fz_stream instead of FILE */
 int
 xps_open_stream(xps_context **ctxp, fz_stream *file)
 {
@@ -454,6 +426,7 @@ xps_open_stream(xps_context **ctxp, fz_stream *file)
 	ctx->font_table = xps_hash_new();
 	ctx->colorspace_table = xps_hash_new();
 	ctx->start_part = NULL;
+
 	ctx->file = fz_keep_stream(file);
 
 	code = xps_find_and_read_zip_dir(ctx);
@@ -471,6 +444,36 @@ xps_open_stream(xps_context **ctxp, fz_stream *file)
 	}
 
 	*ctxp = ctx;
+	return fz_okay;
+}
+
+int
+xps_open_file(xps_context **ctxp, char *filename)
+{
+	char buf[2048];
+	fz_stream *file;
+	char *p;
+	int code;
+
+	if (strstr(filename, "/_rels/.rels") || strstr(filename, "\\_rels\\.rels"))
+	{
+		fz_strlcpy(buf, filename, sizeof buf);
+		p = strstr(buf, "/_rels/.rels");
+		if (!p)
+			p = strstr(buf, "\\_rels\\.rels");
+		*p = 0;
+		return xps_open_directory(ctxp, buf);
+	}
+
+	file = fz_open_file(filename);
+	if (!file)
+		return fz_throw("cannot open file '%s': %s", filename, strerror(errno));
+
+	code = xps_open_stream(ctxp, file);
+	fz_close(file);
+	if (code)
+		return fz_rethrow(code, "cannot load document '%s'", filename);
+
 	return fz_okay;
 }
 

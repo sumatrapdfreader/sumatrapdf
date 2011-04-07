@@ -203,8 +203,6 @@ pdf_repair_xref(pdf_xref *xref, char *buf, int bufsize)
 	int next;
 	int i, n;
 
-	pdf_log_xref("repairxref %p\n", xref);
-
 	fz_seek(xref->file, 0, 0);
 
 	listlen = 0;
@@ -261,8 +259,6 @@ pdf_repair_xref(pdf_xref *xref, char *buf, int bufsize)
 				error = fz_rethrow(error, "cannot parse object (%d %d R)", num, gen);
 				goto cleanup;
 			}
-
-			pdf_log_xref("found object: (%d %d R)\n", num, gen);
 
 			if (listlen + 1 == listcap)
 			{
@@ -348,9 +344,6 @@ pdf_repair_xref(pdf_xref *xref, char *buf, int bufsize)
 		/* corrected stream length */
 		if (list[i].stm_len >= 0)
 		{
-			pdf_log_xref("correct stream length %d %d = %d\n",
-				list[i].num, list[i].gen, list[i].stm_len);
-
 			error = pdf_load_object(&dict, xref, list[i].num, list[i].gen);
 			if (error)
 			{

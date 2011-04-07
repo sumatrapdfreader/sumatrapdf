@@ -53,7 +53,6 @@ pdf_store_item(pdf_store *store, void *keepfunc, void *drop_func, fz_obj *key, v
 	if (fz_is_indirect(key))
 	{
 		struct refkey refkey;
-		pdf_log_rsrc("store item (%d %d R) ptr=%p\n", fz_to_num(key), fz_to_gen(key), val);
 		refkey.drop_func = drop_func;
 		refkey.num = fz_to_num(key);
 		refkey.gen = fz_to_gen(key);
@@ -61,7 +60,6 @@ pdf_store_item(pdf_store *store, void *keepfunc, void *drop_func, fz_obj *key, v
 	}
 	else
 	{
-		pdf_log_rsrc("store item (...) = %p\n", val);
 		item->next = store->root;
 		store->root = item;
 	}

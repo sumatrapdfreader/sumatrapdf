@@ -723,7 +723,7 @@ typedef struct fz_bitmap_s fz_bitmap;
 struct fz_bitmap_s
 {
 	int refs;
-	int w, h, span, n;
+	int w, h, stride, n;
 	unsigned char *samples;
 };
 

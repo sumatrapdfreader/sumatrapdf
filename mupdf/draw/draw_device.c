@@ -531,7 +531,7 @@ fz_transform_pixmap(fz_pixmap *image, fz_matrix *ctm, int x, int y, int dx, int 
 {
 	fz_pixmap *scaled;
 
-	if ((ctm->a != 0) && (ctm->b == 0) && (ctm->c == 0) && (ctm->d != 0))
+	if (ctm->a != 0 && ctm->b == 0 && ctm->c == 0 && ctm->d != 0)
 	{
 		/* Unrotated or X flip or Yflip or XYflip */
 		scaled = fz_scale_pixmap(image, ctm->e, ctm->f, ctm->a, ctm->d);
@@ -543,7 +543,7 @@ fz_transform_pixmap(fz_pixmap *image, fz_matrix *ctm, int x, int y, int dx, int 
 		ctm->f = scaled->y;
 		return scaled;
 	}
-	if ((ctm->a == 0) && (ctm->b != 0) && (ctm->c != 0) && (ctm->d == 0))
+	if (ctm->a == 0 && ctm->b != 0 && ctm->c != 0 && ctm->d == 0)
 	{
 		/* Other orthogonal flip/rotation cases */
 		scaled = fz_scale_pixmap(image, ctm->f, ctm->e, ctm->b, ctm->c);
@@ -556,7 +556,7 @@ fz_transform_pixmap(fz_pixmap *image, fz_matrix *ctm, int x, int y, int dx, int 
 		return scaled;
 	}
 	/* Downscale, non rectilinear case */
-	if ((dx > 0) && (dy > 0))
+	if (dx > 0 && dy > 0)
 	{
 		scaled = fz_scale_pixmap(image, 0, 0, (float)dx, (float)dy);
 		return scaled;
@@ -617,9 +617,10 @@ fz_draw_fill_image(void *user, fz_pixmap *image, fz_matrix ctm, float alpha)
 
 	if (image->colorspace != model)
 	{
-		if (image->colorspace == fz_device_gray && model == fz_device_rgb)
+		if ((image->colorspace == fz_device_gray && model == fz_device_rgb) ||
+			(image->colorspace == fz_device_gray && model == fz_device_bgr))
 		{
-			/* We have special case rendering code for gray -> rgb */
+			/* We have special case rendering code for gray -> rgb/bgr */
 		}
 		else
 		{

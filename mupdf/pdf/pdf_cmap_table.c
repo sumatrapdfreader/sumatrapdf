@@ -2,7 +2,6 @@
 #include "mupdf.h"
 
 #ifndef NOCJK
-#include "../generated/cmap_unicode.h"
 #include "../generated/cmap_cns.h"
 #include "../generated/cmap_gb.h"
 #include "../generated/cmap_japan.h"
