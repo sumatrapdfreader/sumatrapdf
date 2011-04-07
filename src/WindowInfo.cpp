@@ -464,7 +464,7 @@ void PdfLinkHandler::GotoPdfDest(fz_obj *dest)
     if (!engine())
         return;
 
-    int pageNo = !engine()->findPageNo(dest);
+    int pageNo = engine()->findPageNo(dest);
     if (pageNo <= 0)
         return;
 
