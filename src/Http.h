@@ -7,9 +7,11 @@
 #include "StrUtil.h"
 #include "Vec.h"
 
+bool HttpPost(TCHAR *url, Str::Str<char> *headers, Str::Str<char> *data);
+bool HttpGet(TCHAR *url, Str::Str<char> *dataOut);
+
 class HttpReqCtx {
     HANDLE          hThread;
-    static DWORD WINAPI HttpDownloadThread(LPVOID data);
 
 public:
     // the callback to execute when the download is complete
