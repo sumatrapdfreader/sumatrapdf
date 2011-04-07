@@ -228,7 +228,7 @@ pdf_load_page_contents_array(fz_buffer **bigbufp, pdf_xref *xref, fz_obj *list)
 		if (error)
 		{
 			fz_catch(error, "cannot load content stream part %d/%d (%d %d R)",
-				i + 1, fz_array_len(list), fz_to_num(stm));
+				i + 1, fz_array_len(list), fz_to_num(stm), fz_to_gen(stm));
 			continue;
 		}
 		loadCount ++;
