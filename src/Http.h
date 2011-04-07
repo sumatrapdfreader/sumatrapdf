@@ -8,7 +8,8 @@
 #include "Vec.h"
 
 bool HttpPost(char *server, char *url, Str::Str<char> *headers, Str::Str<char> *data);
-bool HttpGet(TCHAR *url, Str::Str<char> *dataOut);
+// returns ERROR_SUCCESS or an error code
+DWORD HttpGet(TCHAR *url, Str::Str<char> *dataOut);
 
 class HttpReqCtx {
     HANDLE          hThread;

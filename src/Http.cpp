@@ -9,32 +9,38 @@
 #include "WinUtil.h"
 #include "Version.h"
 
-bool HttpGet(TCHAR *url, Str::Str<char> *dataOut)
+DWORD HttpGet(TCHAR *url, Str::Str<char> *dataOut)
 {
-    bool ok = false;
+    DWORD error = ERROR_SUCCESS;
+
     HINTERNET hFile = NULL;
     HINTERNET hInet = InternetOpen(APP_NAME_STR _T("/") CURR_VERSION_STR,
         INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
     if (!hInet)
-        goto Exit;
+        goto Error;
 
     hFile = InternetOpenUrl(hInet, url, NULL, 0, 0, 0);
     if (!hFile)
-        goto Exit;
+        goto Error;
 
     DWORD dwRead;
     do {
         char *buf = dataOut->MakeSpaceAtNoLenIncrease(dataOut->Count(), 1024);
         if (!InternetReadFile(hFile, buf, 1024, &dwRead))
-            goto Exit;
+            goto Error;
         dataOut->LenIncrease(dwRead);
     } while (dwRead > 0);
 
-    ok = true;
 Exit:
     InternetCloseHandle(hFile);
     InternetCloseHandle(hInet);
-    return ok;
+    return error;
+
+Error:
+    error = GetLastError();
+    if (!error)
+        error = ERROR_GEN_FAILURE;
+    goto Exit;
 }
 
 bool HttpPost(char *server, char *url, Str::Str<char> *headers, Str::Str<char> *data)
@@ -113,11 +119,7 @@ Exit:
 static DWORD WINAPI HttpDownloadThread(LPVOID data)
 {
     HttpReqCtx *ctx = (HttpReqCtx *)data;
-    if (!HttpGet(ctx->url, ctx->data)) {
-        ctx->error = GetLastError();
-        if (ctx->error == 0)
-            ctx->error = ERROR_GEN_FAILURE;
-    }
+    ctx->error = HttpGet(ctx->url, ctx->data);
     if (ctx->callback)
         ctx->callback->Callback(ctx);
     return 0;
@@ -127,11 +129,10 @@ HttpReqCtx::HttpReqCtx(const TCHAR *url, CallbackFunc *callback)
     : callback(callback), error(0)
 {
     assert(url);
-    url = Str::Dup(url);
+    this->url = Str::Dup(url);
     data = new Str::Str<char>(256);
     if (callback)
         hThread = CreateThread(NULL, 0, HttpDownloadThread, this, 0, 0);
     else
         HttpDownloadThread(this);
 }
-
