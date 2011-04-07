@@ -221,7 +221,12 @@ $(O)\CPdfFilter.obj: src\BaseEngine.h src\ifilter\CPdfFilter.h src\ifilter\Filte
 $(O)\CPdfFilter.obj: src\ifilter\PdfFilter.h src\PdfEngine.h
 $(O)\CrashHandler.obj: baseutils\BaseUtil.h baseutils\FileUtil.h baseutils\GeomUtil.h
 $(O)\CrashHandler.obj: baseutils\StrUtil.h baseutils\Vec.h baseutils\WinUtil.h
-$(O)\CrashHandler.obj: src\CrashHandler.h src\translations.h src\Version.h
+$(O)\CrashHandler.obj: mupdf\fitz\fitz.h mupdf\pdf\mupdf.h mupdf\xps\muxps.h
+$(O)\CrashHandler.obj: src\AppTools.h src\BaseEngine.h src\CbxEngine.h
+$(O)\CrashHandler.obj: src\CrashHandler.h src\DisplayModel.h src\DisplayState.h
+$(O)\CrashHandler.obj: src\Http.h src\PdfEngine.h src\TextSearch.h
+$(O)\CrashHandler.obj: src\TextSelection.h src\translations.h src\Version.h
+$(O)\CrashHandler.obj: src\WindowInfo.h
 $(O)\CTeXFilter.obj: baseutils\BaseUtil.h baseutils\StrUtil.h src\ifilter\CTeXFilter.h
 $(O)\CTeXFilter.obj: src\ifilter\FilterBase.h src\ifilter\PdfFilter.h
 $(O)\DialogSizer.obj: baseutils\BaseUtil.h baseutils\DialogSizer.h baseutils\GeomUtil.h
@@ -237,8 +242,9 @@ $(O)\FileUtil.obj: baseutils\BaseUtil.h baseutils\FileUtil.h baseutils\StrUtil.h
 $(O)\FileWatch.obj: baseutils\BaseUtil.h baseutils\FileUtil.h baseutils\StrUtil.h
 $(O)\FileWatch.obj: src\FileWatch.h
 $(O)\Http.obj: baseutils\BaseUtil.h baseutils\GeomUtil.h baseutils\StrUtil.h
-$(O)\Http.obj: baseutils\Vec.h src\AppPrefs.h src\DisplayState.h
-$(O)\Http.obj: src\Http.h src\SumatraPDF.h src\Version.h
+$(O)\Http.obj: baseutils\Vec.h baseutils\WinUtil.h src\AppPrefs.h
+$(O)\Http.obj: src\DisplayState.h src\Http.h src\SumatraPDF.h
+$(O)\Http.obj: src\Version.h
 $(O)\Installer.obj: baseutils\BaseUtil.h baseutils\CmdLineParser.h baseutils\FileUtil.h
 $(O)\Installer.obj: baseutils\GeomUtil.h baseutils\StrUtil.h baseutils\Vec.h
 $(O)\Installer.obj: baseutils\WinUtil.h src\DisplayState.h src\installer\..\ifilter\PdfFilter.h

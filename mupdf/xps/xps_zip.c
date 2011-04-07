@@ -25,19 +25,20 @@ xps_free_part(xps_context *ctx, xps_part *part)
 	fz_free(part);
 }
 
-static inline int getshort(FILE *file)
+/* SumatraPDF: use fz_stream instead of FILE */
+static inline int getshort(fz_stream *file)
 {
-	int a = getc(file);
-	int b = getc(file);
+	int a = fz_read_byte(file);
+	int b = fz_read_byte(file);
 	return a | (b << 8);
 }
 
-static inline int getlong(FILE *file)
+static inline int getlong(fz_stream *file)
 {
-	int a = getc(file);
-	int b = getc(file);
-	int c = getc(file);
-	int d = getc(file);
+	int a = fz_read_byte(file);
+	int b = fz_read_byte(file);
+	int c = fz_read_byte(file);
+	int d = fz_read_byte(file);
 	return a | (b << 8) | (c << 16) | (d << 24);
 }
 
@@ -90,7 +91,7 @@ xps_read_zip_entry(xps_context *ctx, xps_entry *ent, unsigned char *outbuf)
 	int namelength, extralength;
 	int code;
 
-	fseek(ctx->file, ent->offset, 0);
+	fz_seek(ctx->file, ent->offset, 0);
 
 	sig = getlong(ctx->file);
 	if (sig != ZIP_LOCAL_FILE_SIG)
@@ -107,17 +108,17 @@ xps_read_zip_entry(xps_context *ctx, xps_entry *ent, unsigned char *outbuf)
 	namelength = getshort(ctx->file);
 	extralength = getshort(ctx->file);
 
-	fseek(ctx->file, namelength + extralength, 1);
+	fz_seek(ctx->file, namelength + extralength, 1);
 
 	if (method == 0)
 	{
-		fread(outbuf, 1, ent->usize, ctx->file);
+		fz_read(ctx->file, outbuf, ent->usize);
 	}
 	else if (method == 8)
 	{
 		inbuf = fz_malloc(ent->csize);
 
-		fread(inbuf, 1, ent->csize, ctx->file);
+		fz_read(ctx->file, inbuf, ent->csize);
 
 		memset(&stream, 0, sizeof(z_stream));
 		stream.zalloc = (alloc_func) xps_zip_alloc_items;
@@ -163,7 +164,7 @@ xps_read_zip_dir(xps_context *ctx, int start_offset)
 	int namesize, metasize, commentsize;
 	int i;
 
-	fseek(ctx->file, start_offset, 0);
+	fz_seek(ctx->file, start_offset, 0);
 
 	sig = getlong(ctx->file);
 	if (sig != ZIP_END_OF_CENTRAL_DIRECTORY_SIG)
@@ -180,7 +181,7 @@ xps_read_zip_dir(xps_context *ctx, int start_offset)
 	ctx->zip_table = fz_calloc(count, sizeof(xps_entry));
 	memset(ctx->zip_table, 0, sizeof(xps_entry) * count);
 
-	fseek(ctx->file, offset, 0);
+	fz_seek(ctx->file, offset, 0);
 
 	for (i = 0; i < count; i++)
 	{
@@ -206,11 +207,11 @@ xps_read_zip_dir(xps_context *ctx, int start_offset)
 		ctx->zip_table[i].offset = getlong(ctx->file);
 
 		ctx->zip_table[i].name = fz_malloc(namesize + 1);
-		fread(ctx->zip_table[i].name, 1, namesize, ctx->file);
+		fz_read(ctx->file, ctx->zip_table[i].name, namesize);
 		ctx->zip_table[i].name[namesize] = 0;
 
-		fseek(ctx->file, metasize, 1);
-		fseek(ctx->file, commentsize, 1);
+		fz_seek(ctx->file, metasize, 1);
+		fz_seek(ctx->file, commentsize, 1);
 	}
 
 	qsort(ctx->zip_table, count, sizeof(xps_entry), xps_compare_entries);
@@ -225,17 +226,17 @@ xps_find_and_read_zip_dir(xps_context *ctx)
 	int i, n;
 	char buf[512];
 
-	fseek(ctx->file, 0, SEEK_END);
-	file_size = ftell(ctx->file);
+	fz_seek(ctx->file, 0, SEEK_END);
+	file_size = fz_tell(ctx->file);
 
 	maxback = MIN(file_size, 0xFFFF + sizeof buf);
 	back = MIN(maxback, sizeof buf);
 
 	while (back < maxback)
 	{
-		fseek(ctx->file, file_size - back, 0);
+		fz_seek(ctx->file, file_size - back, 0);
 
-		n = fread(buf, 1, sizeof buf, ctx->file);
+		n = fz_read(ctx->file, buf, sizeof buf);
 		if (n < 0)
 			return fz_throw("cannot read end of central directory");
 
@@ -390,9 +391,8 @@ xps_read_part(xps_context *ctx, char *partname)
 	return xps_read_zip_part(ctx, partname);
 }
 
-/* SumatraPDF: allow opening all files under modern Windows */
-static int
-xps_open_file_imp(xps_context **ctxp, FILE *file, char *filename)
+int
+xps_open_file(xps_context **ctxp, char *filename)
 {
 	xps_context *ctx;
 	char buf[2048];
@@ -405,7 +405,7 @@ xps_open_file_imp(xps_context **ctxp, FILE *file, char *filename)
 	ctx->colorspace_table = xps_hash_new();
 	ctx->start_part = NULL;
 
-	ctx->file = file;
+	ctx->file = fz_open_file(filename);
 	if (!ctx->file)
 	{
 		xps_free_context(ctx);
@@ -442,24 +442,36 @@ xps_open_file_imp(xps_context **ctxp, FILE *file, char *filename)
 	return fz_okay;
 }
 
-/* SumatraPDF: allow opening all files under modern Windows */
-// TODO: use an fz_stream instead to allow loading in-memory data
-#ifdef _WIN32
+/* SumatraPDF: use fz_stream instead of FILE */
 int
-xps_open_file_w(xps_context **ctxp, wchar_t *filename)
+xps_open_stream(xps_context **ctxp, fz_stream *file)
 {
-	char fname[_MAX_PATH * 2];
-	size_t res = wcstombs(fname, filename, _MAX_PATH);
-	if (!res || res == (size_t)-1)
-		strcpy(fname, "unknown filename");
-	return xps_open_file_imp(ctxp, _wfopen(filename, L"rb"), fname);
-}
-#endif
+	xps_context *ctx;
+	int code;
 
-int
-xps_open_file(xps_context **ctxp, char *filename)
-{
-	return xps_open_file_imp(ctxp, fopen(filename, "rb"), filename);
+	ctx = fz_malloc(sizeof(xps_context));
+	memset(ctx, 0, sizeof(xps_context));
+	ctx->font_table = xps_hash_new();
+	ctx->colorspace_table = xps_hash_new();
+	ctx->start_part = NULL;
+	ctx->file = fz_keep_stream(file);
+
+	code = xps_find_and_read_zip_dir(ctx);
+	if (code < 0)
+	{
+		xps_free_context(ctx);
+		return fz_rethrow(code, "cannot read zip central directory");
+	}
+
+	code = xps_read_page_list(ctx);
+	if (code)
+	{
+		xps_free_context(ctx);
+		return fz_rethrow(code, "cannot read page list");
+	}
+
+	*ctxp = ctx;
+	return fz_okay;
 }
 
 static void xps_free_key_func(void *ptr)
@@ -483,7 +495,7 @@ xps_free_context(xps_context *ctx)
 	int i;
 
 	if (ctx->file)
-		fclose(ctx->file);
+		fz_close(ctx->file);
 
 	for (i = 0; i < ctx->zip_count; i++)
 		fz_free(ctx->zip_table[i].name);
@@ -496,29 +508,4 @@ xps_free_context(xps_context *ctx)
 	fz_free(ctx->start_part);
 	fz_free(ctx->directory);
 	fz_free(ctx);
-}
-
-/* SumatraPDF: work-around not having direct access to ctx->file in libmupdf.dll */
-unsigned char *
-xps_get_file_data(xps_context *ctx, long *cbCount)
-{
-	unsigned char *data;
-	long pos = ftell(ctx->file);
-	long len;
-
-	fseek(ctx->file, 0, SEEK_END);
-	len = ftell(ctx->file);
-	fseek(ctx->file, 0, SEEK_SET);
-
-	data = fz_malloc(len);
-	if (data)
-	{
-		fread(data, 1, len, ctx->file);
-		if (cbCount)
-			*cbCount = len;
-	}
-
-	fseek(ctx->file, pos, SEEK_SET);
-
-	return data;
 }

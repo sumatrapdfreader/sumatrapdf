@@ -30,36 +30,29 @@ inline char *ToPDF(TCHAR *tstr)
     }
 }
 
-// adapted from pdf_page.c's pdf_load_page_info
-fz_error pdf_get_mediabox(fz_rect *mediabox, fz_obj *page)
+inline fz_rect fz_bbox_to_rect(fz_bbox bbox)
 {
-    fz_obj *obj = fz_dict_gets(page, "MediaBox");
-    fz_bbox bbox = fz_round_rect(pdf_to_rect(obj));
-    if (fz_is_empty_rect(pdf_to_rect(obj)))
-    {
-        fz_warn("cannot find page bounds, guessing page bounds.");
-        bbox.x0 = 0;
-        bbox.y0 = 0;
-        bbox.x1 = 612;
-        bbox.y1 = 792;
-    }
+    fz_rect result = { (float)bbox.x0, (float)bbox.y0, (float)bbox.x1, (float)bbox.y1 };
+    return result;
+}
 
-    obj = fz_dict_gets(page, "CropBox");
-    if (fz_is_array(obj))
-    {
-        fz_bbox cropbox = fz_round_rect(pdf_to_rect(obj));
-        bbox = fz_intersect_bbox(bbox, cropbox);
-    }
+bool fz_is_pt_in_rect(fz_rect rect, fz_point pt)
+{
+    return MIN(rect.x0, rect.x1) <= pt.x && pt.x < MAX(rect.x0, rect.x1) &&
+           MIN(rect.y0, rect.y1) <= pt.y && pt.y < MAX(rect.y0, rect.y1);
+}
 
-    mediabox->x0 = (float)MIN(bbox.x0, bbox.x1);
-    mediabox->y0 = (float)MIN(bbox.y0, bbox.y1);
-    mediabox->x1 = (float)MAX(bbox.x0, bbox.x1);
-    mediabox->y1 = (float)MAX(bbox.y0, bbox.y1);
+#define fz_sizeofrect(rect) (((rect).x1 - (rect).x0) * ((rect).y1 - (rect).y0))
 
-    if (mediabox->x1 - mediabox->x0 < 1 || mediabox->y1 - mediabox->y0 < 1)
-        return fz_throw("invalid page size");
+inline RectI fz_bbox_to_RectI(fz_bbox bbox)
+{
+    return RectI::FromXY(bbox.x0, bbox.y0, bbox.x1, bbox.y1);
+}
 
-    return fz_okay;
+inline fz_bbox fz_RectI_to_bbox(RectI bbox)
+{
+    fz_bbox result = { bbox.x, bbox.y, bbox.x + bbox.dx, bbox.y + bbox.dy };
+    return result;
 }
 
 class RenderedFitzBitmap : public RenderedBitmap {
@@ -143,6 +136,118 @@ ProducingPaletteDone:
     free(bmpData);
 }
 
+fz_stream *fz_open_stream(const TCHAR *filePath)
+{
+    fz_stream *file = NULL;
+    char *fileData = NULL;
+
+    size_t fileSize = File::GetSize(filePath);
+    // load small files entirely into memory so that they can be
+    // overwritten even by programs that don't open files with FILE_SHARE_READ
+    if (fileSize < MAX_MEMORY_FILE_SIZE)
+        fileData = File::ReadAll(filePath, &fileSize);
+    if (fileData) {
+        fz_buffer *data = fz_new_buffer((int)fileSize);
+        if (data) {
+            memcpy(data->data, fileData, data->len = (int)fileSize);
+            file = fz_open_buffer(data);
+            fz_drop_buffer(data);
+        }
+        free(fileData);
+    }
+    else {
+#ifdef UNICODE
+        file = fz_open_file_w(filePath);
+#else
+        file = fz_open_file(filePath);
+#endif
+    }
+
+    return file;
+}
+
+unsigned char *fz_extract_stream_data(fz_stream *stream, size_t *cbCount)
+{
+    fz_seek(stream, 0, 2);
+    int fileLen = fz_tell(stream);
+
+    fz_buffer *buffer;
+    fz_seek(stream, 0, 0);
+    fz_read_all(&buffer, stream, fileLen);
+    assert(fileLen == buffer->len);
+
+    unsigned char *data = (unsigned char *)malloc(buffer->len);
+    if (data) {
+        memcpy(data, buffer->data, buffer->len);
+        if (cbCount)
+            *cbCount = buffer->len;
+    }
+
+    fz_drop_buffer(buffer);
+
+    return data;
+}
+
+void fz_stream_fingerprint(fz_stream *file, unsigned char *digest)
+{
+    fz_seek(file, 0, 2);
+    int fileLen = fz_tell(file);
+
+    fz_buffer *buffer;
+    fz_seek(file, 0, 0);
+    fz_read_all(&buffer, file, fileLen);
+    assert(fileLen == buffer->len);
+
+    fz_md5 md5;
+    fz_md5_init(&md5);
+    fz_md5_update(&md5, buffer->data, buffer->len);
+    fz_md5_final(&md5, digest);
+
+    fz_drop_buffer(buffer);
+}
+
+WCHAR *fz_span_to_wchar(fz_text_span *text, TCHAR *lineSep=DOS_NEWLINE, RectI **coords_out=NULL)
+{
+    int lineSepLen = Str::Len(lineSep);
+    size_t textLen = 0;
+    for (fz_text_span *span = text; span; span = span->next)
+        textLen += span->len + lineSepLen;
+
+    WCHAR *content = SAZA(WCHAR, textLen + 1);
+    if (!content)
+        return NULL;
+
+    RectI *destRect = NULL;
+    if (coords_out)
+        destRect = *coords_out = new RectI[textLen];
+
+    WCHAR *dest = content;
+    for (fz_text_span *span = text; span; span = span->next) {
+        for (int i = 0; i < span->len; i++) {
+            *dest = span->text[i].c;
+            if (*dest < 32)
+                *dest = '?';
+            dest++;
+            if (destRect)
+                *destRect++ = fz_bbox_to_RectI(span->text[i].bbox);
+        }
+        if (!span->eol)
+            continue;
+#ifdef UNICODE
+        lstrcpy(dest, lineSep);
+        dest += lineSepLen;
+#else
+        dest += MultiByteToWideChar(CP_ACP, 0, lineSep, -1, dest, lineSepLen + 1);
+#endif
+        if (destRect) {
+            ZeroMemory(destRect, lineSepLen * sizeof(fz_bbox));
+            destRect += lineSepLen;
+        }
+    }
+
+    return content;
+}
+
 pdf_link *pdf_new_link(fz_obj *dest, pdf_link_kind kind)
 {
     pdf_link *link = (pdf_link *)fz_malloc(sizeof(pdf_link));
@@ -178,48 +283,39 @@ pdf_outline *pdf_loadattachments(pdf_xref *xref)
     return root.next;
 }
 
-void pdf_streamfingerprint(fz_stream *file, unsigned char *digest)
+// adapted from pdf_page.c's pdf_load_page_info
+fz_error pdf_get_mediabox(fz_rect *mediabox, fz_obj *page)
 {
-    fz_seek(file, 0, 2);
-    int fileLen = fz_tell(file);
+    fz_obj *obj = fz_dict_gets(page, "MediaBox");
+    fz_bbox bbox = fz_round_rect(pdf_to_rect(obj));
+    if (fz_is_empty_rect(pdf_to_rect(obj)))
+    {
+        fz_warn("cannot find page bounds, guessing page bounds.");
+        bbox.x0 = 0;
+        bbox.y0 = 0;
+        bbox.x1 = 612;
+        bbox.y1 = 792;
+    }
 
-    fz_buffer *buffer;
-    fz_seek(file, 0, 0);
-    fz_read_all(&buffer, file, fileLen);
-    assert(fileLen == buffer->len);
+    obj = fz_dict_gets(page, "CropBox");
+    if (fz_is_array(obj))
+    {
+        fz_bbox cropbox = fz_round_rect(pdf_to_rect(obj));
+        bbox = fz_intersect_bbox(bbox, cropbox);
+    }
 
-    fz_md5 md5;
-    fz_md5_init(&md5);
-    fz_md5_update(&md5, buffer->data, buffer->len);
-    fz_md5_final(&md5, digest);
+    mediabox->x0 = (float)MIN(bbox.x0, bbox.x1);
+    mediabox->y0 = (float)MIN(bbox.y0, bbox.y1);
+    mediabox->x1 = (float)MAX(bbox.x0, bbox.x1);
+    mediabox->y1 = (float)MAX(bbox.y0, bbox.y1);
 
-    fz_drop_buffer(buffer);
+    if (mediabox->x1 - mediabox->x0 < 1 || mediabox->y1 - mediabox->y0 < 1)
+        return fz_throw("invalid page size");
+
+    return fz_okay;
 }
 
-inline fz_rect fz_bbox_to_rect(fz_bbox bbox)
-{
-    fz_rect result = { (float)bbox.x0, (float)bbox.y0, (float)bbox.x1, (float)bbox.y1 };
-    return result;
-}
-
-bool fz_is_pt_in_rect(fz_rect rect, fz_point pt)
-{
-    return MIN(rect.x0, rect.x1) <= pt.x && pt.x < MAX(rect.x0, rect.x1) &&
-           MIN(rect.y0, rect.y1) <= pt.y && pt.y < MAX(rect.y0, rect.y1);
-}
-
-#define fz_sizeofrect(rect) (((rect).x1 - (rect).x0) * ((rect).y1 - (rect).y0))
-
-inline RectI fz_bbox_to_RectI(fz_bbox bbox)
-{
-    return RectI::FromXY(bbox.x0, bbox.y0, bbox.x1, bbox.y1);
-}
-
-inline fz_bbox fz_RectI_to_bbox(RectI bbox)
-{
-    fz_bbox result = { bbox.x, bbox.y, bbox.x + bbox.dx, bbox.y + bbox.dy };
-    return result;
-}
+///// Above are extensions to Fitz and MuPDF, now follows PdfEngine /////
 
 PdfEngine::PdfEngine() : 
         _fileName(NULL)
@@ -315,32 +411,9 @@ bool PdfEngine::load(const TCHAR *fileName, PasswordUI *pwdUI)
             embedMarks = c;
     }
 
-    char *fileData = NULL;
-    fz_stream *file = NULL;
-
     if (embedMarks)
         *embedMarks = '\0';
-    size_t fileSize = File::GetSize(_fileName);
-    // load small files entirely into memory so that they can be
-    // overwritten even by programs that don't open files with FILE_SHARE_READ
-    if (fileSize < MAX_MEMORY_FILE_SIZE)
-        fileData = File::ReadAll(_fileName, &fileSize);
-    if (fileData) {
-        fz_buffer *data = fz_new_buffer((int)fileSize);
-        if (data) {
-            memcpy(data->data, fileData, data->len = (int)fileSize);
-            file = fz_open_buffer(data);
-            fz_drop_buffer(data);
-        }
-        free(fileData);
-    }
-    else {
-#ifdef UNICODE
-        file = fz_open_file_w(_fileName);
-#else
-        file = fz_open_file(_fileName);
-#endif
-    }
+    fz_stream *file = fz_open_stream(_fileName);
     if (embedMarks)
         *embedMarks = ':';
 
@@ -359,7 +432,7 @@ OpenEmbeddedFile:
             return false;
 
         unsigned char digest[16 + 32] = { 0 };
-        pdf_streamfingerprint(_xref->file, digest);
+        fz_stream_fingerprint(_xref->file, digest);
 
         bool okay = false, saveKey = false;
         for (int i = 0; !okay && i < 3; i++) {
@@ -1083,53 +1156,16 @@ TCHAR *PdfEngine::ExtractPageText(pdf_page *page, TCHAR *lineSep, RectI **coords
     if (!page)
         return NULL;
 
-    WCHAR *content = NULL;
-
     fz_text_span *text = fz_new_text_span();
     // use an infinite rectangle as bounds (instead of page->mediabox) to ensure that
     // the extracted text is consistent between cached runs using a list device and
     // fresh runs (otherwise the list device omits text outside the mediabox bounds)
     fz_error error = runPage(page, fz_new_text_device(text), fz_identity, target, fz_infinite_rect, cacheRun);
-    if (fz_okay != error)
-        goto CleanUp;
 
-    int lineSepLen = Str::Len(lineSep);
-    size_t textLen = 0;
-    for (fz_text_span *span = text; span; span = span->next)
-        textLen += span->len + lineSepLen;
+    WCHAR *content = NULL;
+    if (!error)
+        content = fz_span_to_wchar(text, lineSep, coords_out);
 
-    content = SAZA(WCHAR, textLen + 1);
-    if (!content)
-        goto CleanUp;
-    RectI *destRect = NULL;
-    if (coords_out)
-        destRect = *coords_out = new RectI[textLen];
-
-    WCHAR *dest = content;
-    for (fz_text_span *span = text; span; span = span->next) {
-        for (int i = 0; i < span->len; i++) {
-            *dest = span->text[i].c;
-            if (*dest < 32)
-                *dest = '?';
-            dest++;
-            if (destRect)
-                *destRect++ = fz_bbox_to_RectI(span->text[i].bbox);
-        }
-        if (!span->eol)
-            continue;
-#ifdef UNICODE
-        lstrcpy(dest, lineSep);
-        dest += lineSepLen;
-#else
-        dest += MultiByteToWideChar(CP_ACP, 0, lineSep, -1, dest, lineSepLen + 1);
-#endif
-        if (destRect) {
-            ZeroMemory(destRect, lineSepLen * sizeof(fz_bbox));
-            destRect += lineSepLen;
-        }
-    }
-
-CleanUp:
     EnterCriticalSection(&_xrefAccess);
     fz_free_text_span(text);
     LeaveCriticalSection(&_xrefAccess);
@@ -1205,26 +1241,7 @@ PageLayoutType PdfEngine::PreferredLayout()
 
 unsigned char *PdfEngine::GetFileData(size_t *cbCount)
 {
-    fz_stream *stream = fz_keep_stream(_xref->file);
-    if (!stream)
-        return NULL;
-
-    fz_buffer *buffer = NULL;
-    fz_seek(stream, 0, 2);
-    int len = fz_tell(stream);
-    fz_seek(stream, 0, 0);
-    fz_read_all(&buffer, stream, len);
-    fz_close(stream);
-
-    unsigned char *data = (unsigned char *)malloc(buffer->len);
-    if (data) {
-        memcpy(data, buffer->data, buffer->len);
-        if (cbCount)
-            *cbCount = buffer->len;
-    }
-    fz_drop_buffer(buffer);
-
-    return data;
+    return fz_extract_stream_data(_xref->file, cbCount);
 }
 
 fz_buffer *PdfEngine::getStreamData(int num, int gen)
@@ -1284,7 +1301,7 @@ PdfEngine *PdfEngine::CreateFromStream(fz_stream *stm, TCHAR *password)
     return engine;
 }
 
-// TODO: move into XpsEngine.cpp
+///// XpsEngine is also based on Fitz and shares quite some code with PdfEngine /////
 
 static void
 xps_run_page(xps_context *ctx, xps_page *page, fz_device *dev, fz_matrix ctm)
@@ -1307,11 +1324,12 @@ XpsEngine::XpsEngine(const TCHAR *fileName) :
     if (!_fileName)
         return;
 
-#ifdef UNICODE
-    xps_open_file_w(&_ctx, (TCHAR *)_fileName);
-#else
-    xps_open_file(&_ctx, (TCHAR *)_fileName);
-#endif
+    fz_stream *file = fz_open_stream(_fileName);
+    if (!file)
+        return;
+
+    xps_open_stream(&_ctx, file);
+    fz_close(file);
 
     if (!_ctx)
         return;
@@ -1609,51 +1627,14 @@ TCHAR *XpsEngine::ExtractPageText(xps_page *page, TCHAR *lineSep, RectI **coords
     if (!page)
         return NULL;
 
-    WCHAR *content = NULL;
-
     fz_text_span *text = fz_new_text_span();
     // use an infinite rectangle as bounds (instead of a mediabox) to ensure that
     // the extracted text is consistent between cached runs using a list device and
     // fresh runs (otherwise the list device omits text outside the mediabox bounds)
     runPage(page, fz_new_text_device(text), fz_identity, fz_infinite_rect, cacheRun);
 
-    int lineSepLen = Str::Len(lineSep);
-    size_t textLen = 0;
-    for (fz_text_span *span = text; span; span = span->next)
-        textLen += span->len + lineSepLen;
+    WCHAR *content = fz_span_to_wchar(text, lineSep, coords_out);
 
-    content = SAZA(WCHAR, textLen + 1);
-    if (!content)
-        goto CleanUp;
-    RectI *destRect = NULL;
-    if (coords_out)
-        destRect = *coords_out = new RectI[textLen];
-
-    WCHAR *dest = content;
-    for (fz_text_span *span = text; span; span = span->next) {
-        for (int i = 0; i < span->len; i++) {
-            *dest = span->text[i].c;
-            if (*dest < 32)
-                *dest = '?';
-            dest++;
-            if (destRect)
-                *destRect++ = fz_bbox_to_RectI(span->text[i].bbox);
-        }
-        if (!span->eol)
-            continue;
-#ifdef UNICODE
-        lstrcpy(dest, lineSep);
-        dest += lineSepLen;
-#else
-        dest += MultiByteToWideChar(CP_ACP, 0, lineSep, -1, dest, lineSepLen + 1);
-#endif
-        if (destRect) {
-            ZeroMemory(destRect, lineSepLen * sizeof(fz_bbox));
-            destRect += lineSepLen;
-        }
-    }
-
-CleanUp:
     EnterCriticalSection(&_ctxAccess);
     fz_free_text_span(text);
     LeaveCriticalSection(&_ctxAccess);
@@ -1684,19 +1665,7 @@ TCHAR *XpsEngine::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_out
 
 unsigned char *XpsEngine::GetFileData(size_t *cbCount)
 {
-    ScopedCritSec scope(&_ctxAccess);
-    unsigned char *data = NULL;
-
-    long len;
-    unsigned char *fzdata = xps_get_file_data(_ctx, &len);
-    if (fzdata) {
-        data = (unsigned char *)memdup(fzdata, len);
-        if (data && cbCount)
-            *cbCount = len;
-    }
-    fz_free(fzdata);
-
-    return data;
+    return fz_extract_stream_data(_ctx->file, cbCount);
 }
 
 XpsEngine *XpsEngine::CreateFromFileName(const TCHAR *fileName)
