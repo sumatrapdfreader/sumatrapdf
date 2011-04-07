@@ -206,7 +206,7 @@ static void GetModules(Str::Str<char>& s)
         TCHAR *path = mod.szExePath;
         char *nameA = Str::Conv::ToUtf8(name);
         char *pathA = Str::Conv::ToUtf8(path);
-        s.AppendFmt("Module: %s 0x%p 0x%x %s\r\n", nameA, (void*)mod.modBaseAddr, (int)mod.modBaseSize, pathA);
+        s.AppendFmt("Module: %08X %06X %-16s %s\r\n", (DWORD)mod.modBaseAddr, (DWORD)mod.modBaseSize, nameA, pathA);
         free(nameA);
         free(pathA);
         cont = Module32Next(snap, &mod);
@@ -252,19 +252,18 @@ static bool GetAddrInfo(void *addr, char *module, DWORD moduleLen, DWORD& sectio
 
 #define MAX_NAME_LEN 512
 
-static void GetCallstack(Str::Str<char>& s)
+static void GetCallstack(Str::Str<char>& s, CONTEXT& ctx, HANDLE hThread)
 {
     if (!CanStackWalk())
         return;
 
     HANDLE hProc = GetCurrentProcess();
-    HANDLE hThread = GetCurrentThread();
-    DWORD threadId = GetCurrentThreadId();
-
-    s.AppendFmt("\nThread: 0x%x\r\n", (int)threadId);
-
-    CONTEXT ctx;
-    RtlCaptureContext(&ctx);
+#if 0 // WTH? 'GetThreadId': identifier not found ???
+    DWORD threadId = GetThreadId(hThread);
+    s.AppendFmt("\r\nThread: 0x%x\r\n", (int)threadId);
+#else
+    s.AppendFmt("\r\nThread: 0x%x\r\n", (int)hThread);
+#endif
 
     STACKFRAME64 stackFrame;
     memset(&stackFrame, 0, sizeof(stackFrame));
@@ -310,13 +309,70 @@ static void GetCallstack(Str::Str<char>& s)
             // TODO: shouldn't we be able to use export table of the DLL to
             // at least know which function in the DLL it is even when we
             // don't have symbols?
-            if (GetAddrInfo((void*)addr, module, sizeof(module), section, offset))
-                s.AppendFmt("0x%p 0x%x:0x%x %s\r\n", (void*)addr, section, offset, module);
-            else
-                s.AppendFmt("0x%p\r\n", (void*)addr);
+            if (GetAddrInfo((void*)addr, module, sizeof(module), section, offset)) {
+                const char *moduleShort = Path::GetBaseName(module);
+                s.AppendFmt("0x%p %02X:%08X %s\r\n", (void*)addr, section, offset, moduleShort);
+            } else {
+                s.AppendFmt("%%08X\r\n", (DWORD)addr);
+            }
         }
         framesCount++;
     }
+}
+
+static void GetCurrentThreadCallstack(Str::Str<char>&s)
+{
+    CONTEXT ctx;
+    RtlCaptureContext(&ctx);
+    GetCallstack(s, ctx, GetCurrentThread());
+}
+
+static void GetThreadCallstack(Str::Str<char>& s, DWORD threadId)
+{
+    CONTEXT ctx;
+    ctx.ContextFlags = 0xffffffff;
+    DWORD access = THREAD_GET_CONTEXT | THREAD_QUERY_INFORMATION | THREAD_SUSPEND_RESUME;
+    HANDLE hThread = OpenThread(access, false, threadId);
+    if (!hThread)
+        return;
+
+    if (hThread != GetCurrentThread()) {
+        // TODO: SuspendThread() seems to hang the app, GetThreadContext()
+        // doesn't seem to work on a thread that isn't suspended
+#if 0
+        DWORD res = SuspendThread(hThread);
+        if (-1 != res) {
+            if (GetThreadContext(hThread, &ctx))
+                GetCallstack(s, ctx, hThread);
+            ResumeThread(hThread);
+        }
+#else
+        if (GetThreadContext(hThread, &ctx))
+            GetCallstack(s, ctx, hThread);
+#endif
+
+    }
+    CloseHandle(hThread);
+}
+    
+static void GetAllThreadsCallstacks(Str::Str<char>& s)
+{
+    HANDLE threadSnap = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
+    if (threadSnap == INVALID_HANDLE_VALUE)
+        return;
+
+    THREADENTRY32 te32;
+    te32.dwSize = sizeof(THREADENTRY32);
+
+    DWORD pid = GetCurrentProcessId();
+    BOOL ok = Thread32First(threadSnap, &te32);
+    while (ok) {
+        if (te32.th32OwnerProcessID == pid)
+            GetThreadCallstack(s, te32.th32ThreadID);
+        ok = Thread32Next(threadSnap, &te32);
+    }
+
+    CloseHandle(threadSnap);
 }
 
 static char *ExceptionNameFromCode(DWORD excCode)
@@ -366,18 +422,18 @@ static void GetExceptionInfo(Str::Str<char>& s, EXCEPTION_POINTERS *excPointers)
         return;
     EXCEPTION_RECORD *excRecord = excPointers->ExceptionRecord;
     DWORD excCode = excRecord->ExceptionCode;
-    s.AppendFmt("Exception: %08X, %s\r\n", (int)excCode, ExceptionNameFromCode(excCode));
+    s.AppendFmt("Exception: %08X %s\r\n", (int)excCode, ExceptionNameFromCode(excCode));
 
     char module[MAX_PATH];
     DWORD section;
     DWORD offset;
     GetAddrInfo(excRecord->ExceptionAddress, module, sizeof(module), section, offset);
-
+    const char *moduleShort = Path::GetBaseName(module);
 #ifdef _M_IX86
-    s.AppendFmt("Fault address:  %08X %02X:%08X %s\r\n", excRecord->ExceptionAddress, section, offset, module);
+    s.AppendFmt("Fault address:  %08X %02X:%08X %s\r\n", excRecord->ExceptionAddress, section, offset, moduleShort);
 #endif
 #ifdef _M_X64
-    s.AppendFmt("Fault address:  %016I64X %02X:%016I64X %s\r\n", excRecord->ExceptionAddress, section, offset, module);
+    s.AppendFmt("Fault address:  %016I64X %02X:%016I64X %s\r\n", excRecord->ExceptionAddress, section, offset, moduleShort);
 #endif
 
     PCONTEXT ctx = excPointers->ContextRecord;
@@ -406,15 +462,15 @@ static void GetExceptionInfo(Str::Str<char>& s, EXCEPTION_POINTERS *excPointers)
 
 static char *BuildCrashInfoText()
 {
-    Str::Str<char> s;
+    Str::Str<char> s(16 * 1024);
     s.AppendFmt("Ver: %s\r\n", QM(CURR_VERSION));
     GetOsVersion(s);
     s.Append("\r\n");
     GetModules(s);
     s.Append("\r\n");
     GetExceptionInfo(s, mei.ExceptionPointers);
-    // TODO: Suspend all threads and get their callstacks
-    GetCallstack(s);
+    GetCurrentThreadCallstack(s);
+    GetAllThreadsCallstacks(s);
     return s.StealData();
 }
 

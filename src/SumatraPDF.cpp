@@ -2328,9 +2328,6 @@ static void ConvertSelectionRectToSelectionOnPage(WindowInfo *win) {
 // for testing only
 static void CrashMe()
 {
-    // TODO: temporary, for testing
-    extern void SaveCrashInfoText();
-    SaveCrashInfoText();
     char *p = NULL;
     *p = 0;
 }

@@ -7,15 +7,29 @@
 
 namespace Path {
 
-static inline bool IsSep(TCHAR c)
+static inline bool IsSep(WCHAR c)
 {
-    return '\\' == c || '//' == c;
+    return L'\\' == c || L'/' == c;
+}
+
+static inline bool IsSep(char c)
+{
+    return '\\' == c || '/' == c;
 }
 
 // Note: returns pointer inside <path>, do not free
-const TCHAR *GetBaseName(const TCHAR *path)
+const WCHAR *GetBaseName(const WCHAR *path)
 {
-    const TCHAR *fileBaseName = path + Str::Len(path);
+    const WCHAR *fileBaseName = path + Str::Len(path);
+    for (; fileBaseName > path; fileBaseName--)
+        if (IsSep(fileBaseName[-1]))
+            break;
+    return fileBaseName;
+}
+
+const char *GetBaseName(const char *path)
+{
+    const char *fileBaseName = path + Str::Len(path);
     for (; fileBaseName > path; fileBaseName--)
         if (IsSep(fileBaseName[-1]))
             break;
