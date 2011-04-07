@@ -129,8 +129,7 @@ static BOOL CALLBACK OpenMiniDumpCallback(void* /*param*/, PMINIDUMP_CALLBACK_IN
 static bool Is64Bit()
 {
     typedef void (WINAPI * GetSystemInfoProc)(LPSYSTEM_INFO);
-    WinLibrary lib(_T("kernel32.dll"));
-    GetSystemInfoProc _GetNativeSystemInfo = (GetSystemInfoProc)lib.GetProcAddr("GetNativeSystemInfo");
+    GetSystemInfoProc _GetNativeSystemInfo = (GetSystemInfoProc)LoadDllFunc(_T("kernel32.dll"), "GetNativeSystemInfo");
 
     if (!_GetNativeSystemInfo)
         return false;
@@ -161,14 +160,12 @@ static char *OsNameFromVer(OSVERSIONINFOEX ver)
     }
 }
 
-
 static bool IsWow64()
 {
     typedef BOOL (WINAPI *IsWow64ProcessProc)(HANDLE, PBOOL);
     IsWow64ProcessProc _IsWow64Process;
 
-    WinLibrary lib(_T("kernel32.dll"));
-    _IsWow64Process = (IsWow64ProcessProc)lib.GetProcAddr("IsWow64Process");
+    _IsWow64Process = (IsWow64ProcessProc)LoadDllFunc(_T("kernel32.dll"), "IsWow64Process");
     if (!_IsWow64Process)
         return false;
     BOOL isWow = FALSE;

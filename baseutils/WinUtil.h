@@ -17,22 +17,7 @@ struct FuncNameAddr {
 };
 
 void LoadDllFuncs(TCHAR *dllName, FuncNameAddr *funcs);
-
-class WinLibrary {
-public:
-    WinLibrary(const TCHAR *dllName, bool dontFree=false) : dontFree(dontFree) {
-        hlib = SafeLoadLibrary(dllName);
-    }
-    ~WinLibrary() { if (!dontFree) FreeLibrary(hlib); }
-    FARPROC GetProcAddr(const char *procName) {
-        if (!hlib) return NULL;
-        return GetProcAddress(hlib, procName);
-    }
-private:
-    bool    dontFree;
-    HMODULE hlib;
-};
-
+FARPROC LoadDllFunc(TCHAR *dllName, const char *funcName);
 
 class ScopedCom {
 public:

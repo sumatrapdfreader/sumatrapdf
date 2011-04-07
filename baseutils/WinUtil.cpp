@@ -13,19 +13,6 @@
 
 #define DONT_INHERIT_HANDLES FALSE
 
-// Return true if application is themed. Wrapper around IsAppThemed() in uxtheme.dll
-// that is compatible with earlier windows versions.
-bool IsAppThemed()
-{
-    WinLibrary lib(_T("uxtheme.dll"));
-    FARPROC pIsAppThemed = lib.GetProcAddr("IsAppThemed");
-    if (!pIsAppThemed) 
-        return false;
-    if (pIsAppThemed())
-        return true;
-    return false;
-}
-
 // Loads a DLL explicitly from the system's library collection
 HMODULE SafeLoadLibrary(const TCHAR *dllName)
 {
@@ -33,6 +20,15 @@ HMODULE SafeLoadLibrary(const TCHAR *dllName)
     GetSystemDirectory(dllPath, dimof(dllPath));
     PathAppend(dllPath, dllName);
     return LoadLibrary(dllPath);
+}
+
+FARPROC LoadDllFunc(TCHAR *dllName, const char *funcName)
+{
+    FARPROC proc = NULL;
+    HMODULE h = SafeLoadLibrary(dllName);    
+    if (h)
+        proc = GetProcAddress(h, funcName);
+    return proc;
 }
 
 void LoadDllFuncs(TCHAR *dllName, FuncNameAddr *funcs)
@@ -49,6 +45,19 @@ void LoadDllFuncs(TCHAR *dllName, FuncNameAddr *funcs)
     // loaded anyway but we would crash trying to call a function that
     // was grabbed from a dll that was unloaded in the meantime
 }
+
+// Return true if application is themed. Wrapper around IsAppThemed() in uxtheme.dll
+// that is compatible with earlier windows versions.
+bool IsAppThemed()
+{
+    FARPROC pIsAppThemed = LoadDllFunc(_T("uxtheme.dll"), "IsAppThemed");
+    if (!pIsAppThemed) 
+        return false;
+    if (pIsAppThemed())
+        return true;
+    return false;
+}
+
 
 static int WindowsVerMajor()
 {
@@ -171,11 +180,10 @@ typedef HRESULT (WINAPI *_NtSetInformationProcess)(
 
 void EnableNx()
 {
-    WinLibrary lib(_T("ntdll.dll"));
     _NtSetInformationProcess ntsip;
     DWORD dep_mode = 13; /* ENABLE | DISABLE_ATL | PERMANENT */
 
-    ntsip = (_NtSetInformationProcess)lib.GetProcAddr("NtSetInformationProcess");
+    ntsip = (_NtSetInformationProcess)LoadDllFunc(_T("ntdll.dll"), "NtSetInformationProcess");
     if (ntsip)
         ntsip(GetCurrentProcess(), PROCESS_EXECUTE_FLAGS, &dep_mode, sizeof(dep_mode));
 }
