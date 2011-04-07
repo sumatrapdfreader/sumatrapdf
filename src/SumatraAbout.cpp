@@ -343,7 +343,7 @@ static const TCHAR *AboutGetLink(WindowInfo *win, int x, int y, AboutLayoutInfoE
 
     // Update the link location information
     if (win)
-        UpdateAboutLayoutInfo(win->hwndCanvas, win->hdcToDraw, NULL);
+        UpdateAboutLayoutInfo(win->hwndCanvas, win->buffer->GetDC(), NULL);
     else
         OnPaintAbout(gHwndAbout);
 
@@ -458,10 +458,9 @@ static void OnPaint(WindowInfo *win)
 
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(win->hwndCanvas, &ps);
-    win->ResizeIfNeeded(false);
-    UpdateAboutLayoutInfo(win->hwndCanvas, win->hdcToDraw, &rc);
-    DrawAbout(win->hwndCanvas, win->hdcToDraw, rc);
-    win->DoubleBuffer_Show(hdc);
+    UpdateAboutLayoutInfo(win->hwndCanvas, win->buffer->GetDC(), &rc);
+    DrawAbout(win->hwndCanvas, win->buffer->GetDC(), rc);
+    win->buffer->Flush(hdc);
     EndPaint(win->hwndCanvas, &ps);
 }
 

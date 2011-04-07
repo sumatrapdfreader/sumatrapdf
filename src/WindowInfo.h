@@ -18,6 +18,7 @@
 
 class FileWatcher;
 class Synchronizer;
+class DoubleBuffer;
 class PdfLinkHandler;
 
 /* Describes actions which can be performed by mouse */
@@ -61,8 +62,8 @@ public:
     bool IsDocLoaded() const { return this->dm != NULL; }
 
     TCHAR *         loadedFilePath;
-    bool            threadStressRunning;
     DisplayModel *  dm;
+
     HWND            hwndFrame;
     HWND            hwndCanvas;
     HWND            hwndToolbar;
@@ -84,14 +85,10 @@ public:
     bool            infotipVisible;
     HMENU           menu;
 
-    HDC             hdc;
     int             dpi;
     float           uiDPIFactor;
 
-    /* bitmap and hdc for (optional) double-buffering */
-    HDC             hdcToDraw;
-    HDC             hdcDoubleBuffer;
-    HBITMAP         bmpDoubleBuffer;
+    DoubleBuffer *  buffer;
 
     MouseAction     mouseAction;
     bool            dragStartPending;
@@ -99,10 +96,9 @@ public:
     /* when dragging the document around, this is previous position of the
        cursor. A delta between previous and current is by how much we
        moved */
-    int             dragPrevPosX, dragPrevPosY;
-
+    PointI          dragPrevPos;
     /* when dragging, mouse x/y position when dragging was started */
-    int             dragStartX, dragStartY;
+    PointI          dragStart;
 
     /* when moving the document by smooth scrolling, this keeps track of
        the speed at which we should scroll, which depends on the distance
@@ -123,28 +119,30 @@ public:
     FileWatcher *   watcher;
 
     bool            fullScreen;
-    bool            _tocBeforeFullScreen;
     PresentationMode presentation;
+    bool            _tocBeforeFullScreen;
     bool            _tocBeforePresentation;
     int             _windowStateBeforePresentation;
 
     long            prevStyle;
     RectI           frameRc; // window position before entering presentation/fullscreen mode
-    RectI           canvasRc;
     SizeI           prevCanvasSize;
     float           prevZoomVirtual;
     DisplayMode     prevDisplayMode;
 
+    RectI           canvasRc;
     int             currPageNo;
 
     int             wheelAccumDelta;
     UINT_PTR        delayedRepaintTimer;
 
+    bool            threadStressRunning;
+
+    // the following properties only apply to PDF and XPS documents
+
     bool            findStatusHighlight; // whether to highlight the status text
     HANDLE          findStatusThread; // handle of the thread showing the status of the search result
     HANDLE          stopFindStatusThreadEvent; // event raised to tell the findstatus thread to stop
-
-    // the following properties only apply to PDF and XPS documents
 
     HANDLE          findThread;
     bool            findCanceled;
@@ -178,19 +176,17 @@ public:
                         int hideStep;       // value used to gradually hide the markers
                     } fwdsearchmark;
 
-    void FocusPageNoEdit();
     void UpdateToolbarState();
-
-    bool DoubleBuffer_New();
-    void DoubleBuffer_Show(HDC hdc);
-    void DoubleBuffer_Delete();
-    void ResizeIfNeeded(bool resizeWindow=true);
 
     void UpdateCanvasSize();
     void RedrawAll(bool update=false);
     void RepaintAsync(UINT delay=0);
     void Reload(bool autorefresh=false);
-    void ChangePresentationMode(PresentationMode mode);
+
+    void ChangePresentationMode(PresentationMode mode) {
+        presentation = mode;
+        RedrawAll();
+    }
 
     void ToggleZoom();
     void ZoomToSelection(float factor, bool relative);
@@ -235,6 +231,20 @@ public:
 };
 
 // TODO: find a better place to put this
+
+class DoubleBuffer {
+    HWND hTarget;
+    HDC hdcCanvas, hdcBuffer;
+    HBITMAP doubleBuffer;
+    RectI rect;
+
+public:
+    DoubleBuffer(HWND hwnd, RectI rect);
+    ~DoubleBuffer();
+
+    HDC GetDC() const { return hdcBuffer ? hdcBuffer : hdcCanvas; }
+    void Flush(HDC hdc);
+};
 
 class PdfLinkHandler {
     WindowInfo *owner;

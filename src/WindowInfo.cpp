@@ -12,7 +12,7 @@
 #include "FileWatch.h"
 
 WindowInfo::WindowInfo(HWND hwnd) :
-    dm(NULL), hwndFrame(hwnd),
+    dm(NULL), menu(NULL), hwndFrame(hwnd),
     linkOnLastButtonDown(NULL), url(NULL), selectionOnPage(NULL),
     tocLoaded(false), tocShow(false), tocState(NULL), tocRoot(NULL),
     fullScreen(false), presentation(PM_DISABLED),
@@ -21,11 +21,9 @@ WindowInfo::WindowInfo(HWND hwnd) :
     hwndPageText(NULL), hwndPageBox(NULL), hwndPageBg(NULL), hwndPageTotal(NULL),
     hwndTocBox(NULL), hwndTocTree(NULL), hwndSpliter(NULL),
     hwndInfotip(NULL), infotipVisible(false), hwndProperties(NULL),
-    menu(NULL), hdc(NULL),
     findThread(NULL), findCanceled(false), findPercent(0), findStatusVisible(false),
     findStatusThread(NULL), stopFindStatusThreadEvent(NULL), findStatusHighlight(false),
     showSelection(false), mouseAction(MA_IDLE),
-    hdcToDraw(NULL), hdcDoubleBuffer(NULL), bmpDoubleBuffer(NULL),
     prevZoomVirtual(INVALID_ZOOM), prevDisplayMode(DM_AUTOMATIC),
     loadedFilePath(NULL), currPageNo(0),
     xScrollSpeed(0), yScrollSpeed(0), wheelAccumDelta(0),
@@ -41,6 +39,8 @@ WindowInfo::WindowInfo(HWND hwnd) :
     uiDPIFactor = ceil(dpi * 4.0f / USER_DEFAULT_SCREEN_DPI) / 4.0f;
     ReleaseDC(hwndFrame, hdcFrame);
 
+    buffer = new DoubleBuffer(hwndCanvas, canvasRc);
+
     linkHandler = new PdfLinkHandler(this);
     fwdsearchmark.show = false;
 }
@@ -55,7 +55,7 @@ WindowInfo::~WindowInfo() {
     CloseHandle(this->stopFindStatusThreadEvent);
     CloseHandle(this->findStatusThread);
 
-    this->DoubleBuffer_Delete();
+    delete this->buffer;
 
     free(this->loadedFilePath);
 
@@ -63,30 +63,21 @@ WindowInfo::~WindowInfo() {
     free(this->tocState);
 }
 
+// Notify both display model and double-buffer (if they exist)
+// about a potential change of available canvas size
 void WindowInfo::UpdateCanvasSize()
 {
-    this->canvasRc = ClientRect(hwndCanvas);
-}
+    ClientRect rc(hwndCanvas);
+    if (canvasRc == rc)
+        return;
+    canvasRc = ClientRect(hwndCanvas);
 
-void WindowInfo::DoubleBuffer_Show(HDC hdc)
-{
-    if (this->hdc != this->hdcToDraw) {
-        assert(this->hdcToDraw == this->hdcDoubleBuffer);
-        BitBlt(hdc, 0, 0, this->canvasRc.dx, this->canvasRc.dy, this->hdcDoubleBuffer, 0, 0, SRCCOPY);
-    }
-}
-
-void WindowInfo::DoubleBuffer_Delete() {
-    if (this->bmpDoubleBuffer) {
-        DeleteObject(this->bmpDoubleBuffer);
-        this->bmpDoubleBuffer = NULL;
-    }
-
-    if (this->hdcDoubleBuffer) {
-        DeleteDC(this->hdcDoubleBuffer);
-        this->hdcDoubleBuffer = NULL;
-    }
-    this->hdcToDraw = NULL;
+    // create a new output buffer and notify the model
+    // about the change of the canvas size
+    delete buffer;
+    buffer = new DoubleBuffer(hwndCanvas, canvasRc);
+    if (IsDocLoaded())
+        dm->changeTotalDrawAreaSize(canvasRc.Size());
 }
 
 void WindowInfo::AbortFinding()
@@ -103,12 +94,6 @@ void WindowInfo::RedrawAll(bool update)
     InvalidateRect(this->hwndCanvas, NULL, false);
     if (update)
         UpdateWindow(this->hwndCanvas);
-}
-
-void WindowInfo::ChangePresentationMode(PresentationMode mode)
-{
-    presentation = mode;
-    RedrawAll();
 }
 
 HTREEITEM WindowInfo::TreeItemForPageNo(HTREEITEM hItem, int pageNo)
@@ -201,27 +186,6 @@ void WindowInfo::DisplayStateFromToC(DisplayState *ds)
     ds->tocState = NULL;
     if (this->tocState)
         ds->tocState = (int *)memdup(this->tocState, (this->tocState[0] + 1) * sizeof(int));
-}
-
-// TODO: this conflates 2 unrelated things: resizing backing storage for double buffer
-// and triggering re-layout. It also has a bug where relayout wouldn't be triggered
-// if double-buffer storage (hdcToDraw) didn't exist (it probably isn't triggered in
-// our current codepaths)
-void WindowInfo::ResizeIfNeeded(bool resizeWindow)
-{
-    ClientRect rc(hwndCanvas);
-
-    if (hdcToDraw && canvasRc.dx == rc.dx && canvasRc.dy == rc.dy)
-        return;
-
-    DoubleBuffer_New();
-    if (!resizeWindow)
-        return;
-
-    if (IsDocLoaded())
-        dm->changeTotalDrawAreaSize(this->canvasRc.Size());
-    else
-        assert(false);
 }
 
 void WindowInfo::ToggleZoom()
@@ -367,6 +331,41 @@ void WindowInfo::DeleteInfotip()
 }
 
 // TODO: find a better place to put this
+
+DoubleBuffer::DoubleBuffer(HWND hwnd, RectI rect) :
+    hTarget(hwnd), rect(rect), hdcBuffer(NULL), doubleBuffer(NULL)
+{
+    hdcCanvas = ::GetDC(hwnd);
+
+    if (rect.IsEmpty())
+        return;
+
+    doubleBuffer = CreateCompatibleBitmap(hdcCanvas, rect.dx, rect.dy);
+    if (!doubleBuffer)
+        return;
+
+    hdcBuffer = CreateCompatibleDC(hdcCanvas);
+    if (!hdcBuffer)
+        return;
+
+    DeleteObject(SelectObject(hdcBuffer, doubleBuffer));
+}
+
+DoubleBuffer::~DoubleBuffer()
+{
+    if (doubleBuffer)
+        DeleteObject(doubleBuffer);
+    if (hdcBuffer)
+        DeleteDC(hdcBuffer);
+    ReleaseDC(hTarget, hdcCanvas);
+}
+
+void DoubleBuffer::Flush(HDC hdc)
+{
+    assert(hdc != hdcBuffer);
+    if (hdcBuffer)
+        BitBlt(hdc, rect.x, rect.y, rect.dx, rect.dy, hdcBuffer, 0, 0, SRCCOPY);
+}
 
 PdfEngine *PdfLinkHandler::engine()
 {

@@ -24,6 +24,10 @@ public:
     Point<int> Convert() const {
         return Point<int>((int)floor(x + 0.5), (int)floor(y + 0.5));
     }
+
+    bool operator==(Point<T>& other) {
+        return this->x == other.x && this->y == other.y;
+    }
 };
 
 typedef Point<int> PointI;
@@ -46,6 +50,10 @@ public :
     template <>
     Size<int> Convert() const {
         return Size<int>((int)floor(dx + 0.5), (int)floor(dy + 0.5));
+    }
+
+    bool operator==(Size<T>& other) {
+        return this->dx == other.dx && this->dy == other.dy;
     }
 };
 
@@ -155,6 +163,11 @@ public:
         Rect<int> rectI(this->Convert<int>());
         RECT result = { rectI.x, rectI.y, rectI.x + rectI.dx, rectI.y + rectI.dy };
         return result;
+    }
+
+    bool operator==(Rect<T>& other) {
+        return this->x == other.x && this->y == other.y &&
+               this->dx == other.dx && this->dy == other.dy;
     }
 };
 

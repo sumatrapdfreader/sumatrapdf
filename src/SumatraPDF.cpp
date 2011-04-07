@@ -42,9 +42,6 @@
 #endif
 #define USE_GDI_FOR_PRINTING
 
-/* undefine if you don't want to use memory consuming double-buffering for rendering the PDF */
-#define DOUBLE_BUFFER
-
 /* Define if you want page numbers to be displayed in the ToC sidebar */
 // #define DISPLAY_TOC_PAGE_NUMBERS
 
@@ -1382,11 +1379,6 @@ static bool LoadDocIntoWindow(
             showType = SW_MINIMIZE;
     }
 
-    /* TODO: need to get rid of that, but not sure if that won't break something
-       i.e. UpdateCanvasSize() caches size of canvas and some code might depend
-       on this being a cached value, not the real value at the time of calling */
-    win->UpdateCanvasSize();
-
     DisplayModel *prevModel = win->dm;
     win->AbortFinding();
     delete win->pdfsync;
@@ -1805,37 +1797,6 @@ static void OnDropFiles(HDROP hDrop)
     DragFinish(hDrop);
 }
 
-bool WindowInfo::DoubleBuffer_New()
-{
-    this->DoubleBuffer_Delete();
-
-    this->hdc = GetDC(this->hwndCanvas);
-    this->hdcToDraw = this->hdc;
-    this->UpdateCanvasSize();
-
-#ifdef DOUBLE_BUFFER
-    if (this->canvasRc.IsEmpty())
-        return true;
-
-    this->hdcDoubleBuffer = CreateCompatibleDC(this->hdc);
-    if (!this->hdcDoubleBuffer)
-        return false;
-
-    this->bmpDoubleBuffer = CreateCompatibleBitmap(this->hdc, this->canvasRc.dx, this->canvasRc.dy);
-    if (!this->bmpDoubleBuffer) {
-        this->DoubleBuffer_Delete();
-        return false;
-    }
-    SelectObject(this->hdcDoubleBuffer, this->bmpDoubleBuffer);
-    /* fill out everything with background color */
-    RectI r(PointI(0, 0), this->canvasRc.Size());
-    FillRect(this->hdcDoubleBuffer, &r.ToRECT(), this->presentation ? gBrushBlack : gBrushBg);
-    this->hdcToDraw = this->hdcDoubleBuffer;
-#endif
-
-    return true;
-}
-
 static bool ShowNewVersionDialog(HWND hParent, const TCHAR *newVersion)
 {
     Dialog_NewVersion_Data data;
@@ -2117,9 +2078,9 @@ static void PaintPageFrameAndShadow(HDC hdc, PageInfo *pageInfo, bool presentati
 #endif
 
 /* debug code to visualize links (can block while rendering) */
-static void DebugShowLinks(DisplayModel *dm, HDC hdc, bool rendering)
+static void DebugShowLinks(DisplayModel *dm, HDC hdc)
 {
-    if (!gDebugShowLinks || rendering)
+    if (!gDebugShowLinks)
         return;
 
     RectI drawAreaRect(PointI(), dm->drawAreaSize);
@@ -2162,7 +2123,7 @@ static void DebugShowLinks(DisplayModel *dm, HDC hdc, bool rendering)
     }
 }
 
-static void DrawPdf(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
+static void DrawDocument(WindowInfo *win, HDC hdc, RECT *rcArea)
 {
     RectI bounds;
     bool rendering = false;
@@ -2173,9 +2134,9 @@ static void DrawPdf(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
     assert(dm);
     if (!dm) return;
 
-    FillRect(hdc, &ps->rcPaint, win->presentation ? gBrushBlack : gBrushBg);
+    FillRect(hdc, rcArea, win->presentation ? gBrushBlack : gBrushBg);
 
-    DBG_OUT("DrawPdf() ");
+    DBG_OUT("DrawDocument() ");
     for (int pageNo = 1; pageNo <= dm->pageCount(); ++pageNo) {
         PageInfo *pageInfo = dm->getPageInfo(pageNo);
         if (0.0 == pageInfo->visibleRatio)
@@ -2232,7 +2193,8 @@ static void DrawPdf(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
         PaintForwardSearchMark(win, hdc);
 
     DBG_OUT("\n");
-    DebugShowLinks(dm, hdc, rendering);
+    if (!rendering)
+        DebugShowLinks(dm, hdc);
 }
 
 static void CopySelectionToClipboard(WindowInfo *win)
@@ -2555,8 +2517,7 @@ static void OnDraggingStart(WindowInfo *win, int x, int y, bool right=false)
 {
     SetCapture(win->hwndCanvas);
     win->mouseAction = right ? MA_DRAGGING_RIGHT : MA_DRAGGING;
-    win->dragPrevPosX = x;
-    win->dragPrevPosY = y;
+    win->dragPrevPos = PointI(x, y);
     if (GetCursor())
         SetCursor(gCursorDrag);
     DBG_OUT(" dragging start, x=%d, y=%d\n", x, y);
@@ -2574,8 +2535,8 @@ static void OnDraggingStop(WindowInfo *win, int x, int y, bool aborted)
     if (aborted)
         return;
 
-    int dragDx = x - win->dragPrevPosX;
-    int dragDy = y - win->dragPrevPosY;
+    int dragDx = x - win->dragPrevPos.x;
+    int dragDy = y - win->dragPrevPos.y;
     DBG_OUT(" dragging ends, x=%d, y=%d, dx=%d, dy=%d\n", x, y, dragDx, dragDy);
     win->MoveDocBy(dragDx, -dragDy*2);
 }
@@ -2620,7 +2581,7 @@ static void OnMouseMove(WindowInfo *win, int x, int y, WPARAM flags)
 
     if (win->presentation) {
         // shortly display the cursor if the mouse has moved and the cursor is hidden
-        if ((x != win->dragPrevPosX || y != win->dragPrevPosY) && !GetCursor()) {
+        if (!(PointI(x, y) == win->dragPrevPos) && !GetCursor()) {
             if (win->mouseAction == MA_IDLE)
                 SetCursor(gCursorArrow);
             else
@@ -2631,8 +2592,8 @@ static void OnMouseMove(WindowInfo *win, int x, int y, WPARAM flags)
 
     if (win->dragStartPending) {
         // have we already started a proper drag?
-        if (abs(x - win->dragStartX) <= GetSystemMetrics(SM_CXDRAG) &&
-            abs(y - win->dragStartY) <= GetSystemMetrics(SM_CYDRAG)) {
+        if (abs(x - win->dragStart.x) <= GetSystemMetrics(SM_CXDRAG) &&
+            abs(y - win->dragStart.y) <= GetSystemMetrics(SM_CYDRAG)) {
             return;
         }
         win->dragStartPending = false;
@@ -2641,8 +2602,8 @@ static void OnMouseMove(WindowInfo *win, int x, int y, WPARAM flags)
 
     switch (win->mouseAction) {
     case MA_SCROLLING:
-        win->yScrollSpeed = (y - win->dragStartY) / SMOOTHSCROLL_SLOW_DOWN_FACTOR;
-        win->xScrollSpeed = (x - win->dragStartX) / SMOOTHSCROLL_SLOW_DOWN_FACTOR;
+        win->yScrollSpeed = (y - win->dragStart.y) / SMOOTHSCROLL_SLOW_DOWN_FACTOR;
+        win->xScrollSpeed = (x - win->dragStart.x) / SMOOTHSCROLL_SLOW_DOWN_FACTOR;
         break;
     case MA_SELECTING_TEXT:
         if (GetCursor())
@@ -2656,15 +2617,14 @@ static void OnMouseMove(WindowInfo *win, int x, int y, WPARAM flags)
         break;
     case MA_DRAGGING:
     case MA_DRAGGING_RIGHT:
-        dragDx = win->dragPrevPosX - x;
-        dragDy = win->dragPrevPosY - y;
+        dragDx = win->dragPrevPos.x - x;
+        dragDy = win->dragPrevPos.y - y;
         DBG_OUT(" drag move, x=%d, y=%d, dx=%d, dy=%d\n", x, y, dragDx, dragDy);
         win->MoveDocBy(dragDx, dragDy);
         break;
     }
 
-    win->dragPrevPosX = x;
-    win->dragPrevPosY = y;
+    win->dragPrevPos = PointI(x, y);
 }
 
 static void OnSelectionStart(WindowInfo *win, int x, int y, WPARAM key)
@@ -2729,8 +2689,7 @@ static void OnMouseLeftButtonDown(WindowInfo *win, int x, int y, WPARAM key)
 
     win->linkOnLastButtonDown = win->dm->getLinkAtPosition(PointI(x, y));
     win->dragStartPending = true;
-    win->dragStartX = x;
-    win->dragStartY = y;
+    win->dragStart = PointI(x, y);
 
     // - without modifiers, clicking on text starts a text selection
     //   and clicking somewhere else starts a drag
@@ -2755,8 +2714,8 @@ static void OnMouseLeftButtonUp(WindowInfo *win, int x, int y, WPARAM key)
     assert(MA_SELECTING == win->mouseAction || MA_SELECTING_TEXT == win->mouseAction || MA_DRAGGING == win->mouseAction);
 
     bool didDragMouse = !win->dragStartPending ||
-        abs(x - win->dragStartX) > GetSystemMetrics(SM_CXDRAG) ||
-        abs(y - win->dragStartY) > GetSystemMetrics(SM_CYDRAG);
+        abs(x - win->dragStart.x) > GetSystemMetrics(SM_CXDRAG) ||
+        abs(y - win->dragStart.y) > GetSystemMetrics(SM_CYDRAG);
     if (MA_DRAGGING == win->mouseAction)
         OnDraggingStop(win, x, y, !didDragMouse);
     else
@@ -2827,8 +2786,7 @@ static void OnMouseMiddleButtonDown(WindowInfo *win, int x, int y, int key)
 
         // record current mouse position, distance mouse moves
         // from this poition is speed to shift document
-        win->dragStartX = x;
-        win->dragStartY = y; 
+        win->dragStart = PointI(x, y);
         SetCursor(gCursorScroll);
         break;
 
@@ -2856,8 +2814,7 @@ static void OnMouseRightButtonDown(WindowInfo *win, int x, int y, int key)
     SetFocus(win->hwndFrame);
 
     win->dragStartPending = true;
-    win->dragStartX = x;
-    win->dragStartY = y;
+    win->dragStart = PointI(x, y);
 
     OnDraggingStart(win, x, y, true);
 }
@@ -2875,8 +2832,8 @@ static void OnMouseRightButtonUp(WindowInfo *win, int x, int y, WPARAM key)
         return;
 
     bool didDragMouse = !win->dragStartPending ||
-        abs(x - win->dragStartX) > GetSystemMetrics(SM_CXDRAG) ||
-        abs(y - win->dragStartY) > GetSystemMetrics(SM_CYDRAG);
+        abs(x - win->dragStart.x) > GetSystemMetrics(SM_CXDRAG) ||
+        abs(y - win->dragStart.y) > GetSystemMetrics(SM_CYDRAG);
     OnDraggingStop(win, x, y, !didDragMouse);
 
     if (didDragMouse)
@@ -2934,9 +2891,8 @@ static void OnPaint(WindowInfo *win)
             FillRect(hdc, &ps.rcPaint, gBrushWhite);
             break;
         default:
-            win->ResizeIfNeeded();
-            DrawPdf(win, win->hdcToDraw, &ps);
-            win->DoubleBuffer_Show(hdc);
+            DrawDocument(win, win->buffer->GetDC(), &ps.rcPaint);
+            win->buffer->Flush(hdc);
         }
     }
 
@@ -3855,14 +3811,11 @@ static void OnSize(WindowInfo *win, int dx, int dy)
         SetWindowPos(win->hwndReBar, NULL, 0, 0, dx, rebBarDy, SWP_NOZORDER);
         rebBarDy = gReBarDy + gReBarDyFrame;
     }
-    
+
     if (win->tocLoaded && win->tocShow)
         win->ShowTocBox();
     else
         SetWindowPos(win->hwndCanvas, NULL, 0, rebBarDy, dx, dy-rebBarDy, SWP_NOZORDER);
-    // Need this here, so that -page and -nameddest work correctly in continuous mode
-    if (win->IsDocLoaded())
-        win->ResizeIfNeeded();
 }
 
 void OnMenuCheckUpdate(WindowInfo *win)
@@ -4020,7 +3973,7 @@ static void OnMenuGoToFirstPage(WindowInfo *win)
     win->dm->goToFirstPage();
 }
 
-void WindowInfo::FocusPageNoEdit()
+static void FocusPageNoEdit(HWND hwndPageBox)
 {
     if (GetFocus() == hwndPageBox)
         SendMessage(hwndPageBox, WM_SETFOCUS, 0, 0);
@@ -4035,7 +3988,7 @@ static void OnMenuGoToPage(WindowInfo *win)
 
     // Don't show a dialog if we don't have to - use the Toolbar instead
     if (gGlobalPrefs.m_showToolbar && !win->fullScreen && PM_DISABLED == win->presentation) {
-        win->FocusPageNoEdit();
+        FocusPageNoEdit(win->hwndPageBox);
         return;
     }
 
@@ -6028,9 +5981,13 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
 
         case WM_PAINT:
             /* it might happen that we get WM_PAINT after destroying a window */
-            if (win) {
+            if (win)
                 OnPaint(win);
-            }
+            break;
+
+        case WM_SIZE:
+            if (win)
+                win->UpdateCanvasSize();
             break;
 
         case WM_MOUSEWHEEL:

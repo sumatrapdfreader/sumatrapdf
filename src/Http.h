@@ -7,7 +7,7 @@
 #include "StrUtil.h"
 #include "Vec.h"
 
-bool HttpPost(char *server, char *url, Str::Str<char> *headers, Str::Str<char> *data);
+bool HttpPost(TCHAR *server, TCHAR *url, Str::Str<char> *headers, Str::Str<char> *data);
 // returns ERROR_SUCCESS or an error code
 DWORD HttpGet(TCHAR *url, Str::Str<char> *dataOut);
 

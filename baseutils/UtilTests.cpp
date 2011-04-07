@@ -19,14 +19,15 @@ static void GeomTest()
     PointI ptI = ptD.Convert<int>();
     assert(ptI.x == 12 && ptI.y == -14);
     ptD = ptI.Convert<double>();
-    assert(ptD.x == 12 && ptD.y == -14);
+    assert(PointD(12, -14) == ptD);
+    assert(!(PointD(12.4, -13.6) == ptD));
 
     SizeD szD(7.7, -3.3);
     assert(szD.dx == 7.7 && szD.dy == -3.3);
     SizeI szI = szD.Convert<int>();
     assert(szI.dx == 8 && szI.dy == -3);
     szD = szI.Convert<double>();
-    assert(szD.dx == 8 && szD.dy == -3);
+    assert(SizeD(8, -3) == szD);
 
     struct SRIData {
         int     x1s, x1e, y1s, y1e;
@@ -73,8 +74,7 @@ static void GeomTest()
             assert(isect.IsEmpty());
         }
         urect = rx1.Union(rx2);
-        assert(urect.x == curr->u_xs && urect.y == curr->u_ys);
-        assert(urect.x + urect.dx == curr->u_xe && urect.y + urect.dy == curr->u_ye);
+        assert(RectI::FromXY(curr->u_xs, curr->u_ys, curr->u_xe, curr->u_ye) == urect);
 
         assert(!rx1.Inside(PointI(-2, -2)));
         assert(rx1.Inside(rx1.TL()));

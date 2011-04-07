@@ -43,20 +43,22 @@ Error:
     goto Exit;
 }
 
-bool HttpPost(char *server, char *url, Str::Str<char> *headers, Str::Str<char> *data)
+bool HttpPost(TCHAR *server, TCHAR *url, Str::Str<char> *headers, Str::Str<char> *data)
 {
     Str::Str<char> resp(2048);
     bool ok = false;
     HINTERNET hInet = NULL, hConn = NULL, hReq = NULL;
-    hInet = InternetOpenA("SumatraPDF", INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
+    hInet = InternetOpen(APP_NAME_STR _T("/") CURR_VERSION_STR,
+                         INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
     if (!hInet)
         goto Exit;
-    hConn = InternetConnectA(hInet, server, INTERNET_DEFAULT_HTTP_PORT, NULL, NULL, INTERNET_SERVICE_HTTP, 0, 1);
+    hConn = InternetConnect(hInet, server, INTERNET_DEFAULT_HTTP_PORT,
+                            NULL, NULL, INTERNET_SERVICE_HTTP, 0, 1);
     if (!hConn)
         goto Exit;
 
     DWORD flags = INTERNET_FLAG_KEEP_CONNECTION;
-    hReq = HttpOpenRequestA(hConn, "POST", url, NULL, NULL, NULL, flags, NULL);
+    hReq = HttpOpenRequest(hConn, _T("POST"), url, NULL, NULL, NULL, flags, NULL);
     if (!hReq)
         goto Exit;
     char *hdr = NULL;
@@ -103,7 +105,7 @@ bool HttpPost(char *server, char *url, Str::Str<char> *headers, Str::Str<char> *
 #if 0
     // it looks like I should be calling HttpEndRequest(), but it always claims
     // a timeout even though the data has been sent, received and we get HTTP 200
-    if (!HttpEndRequestA(hReq, NULL, 0, 0)) {
+    if (!HttpEndRequest(hReq, NULL, 0, 0)) {
         SeeLastError();
         goto Exit;
     }

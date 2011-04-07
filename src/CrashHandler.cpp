@@ -134,39 +134,26 @@ static BOOL CALLBACK OpenMiniDumpCallback(void* /*param*/, PMINIDUMP_CALLBACK_IN
     }
 }
 
-// returns false for 32bit processes running on 64bit os
-static bool Is64Bit()
-{
-    typedef void (WINAPI * GetSystemInfoProc)(LPSYSTEM_INFO);
-    GetSystemInfoProc _GetNativeSystemInfo = (GetSystemInfoProc)LoadDllFunc(_T("kernel32.dll"), "GetNativeSystemInfo");
-
-    if (!_GetNativeSystemInfo)
-        return false;
-    SYSTEM_INFO sysInfo = {0};
-    _GetNativeSystemInfo(&sysInfo);
-    return sysInfo.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64;
-}
-
 static char *OsNameFromVer(OSVERSIONINFOEX ver)
 {
     if (VER_PLATFORM_WIN32_NT != ver.dwPlatformId)
-        return "Unknown";
-    // Windows 7 beta 1 reports the same major version as Vista does.
-    if (ver.dwMajorVersion == 6 && ver.dwMinorVersion == 1) {
-        return "7";
-    } else if (ver.dwMajorVersion == 6 && ver.dwMinorVersion == 0) {
+        return "No NT";
+
+    if (ver.dwMajorVersion == 6 && ver.dwMinorVersion == 1)
+        return "7"; // or Server 2008
+    if (ver.dwMajorVersion == 6 && ver.dwMinorVersion == 0)
         return "Vista";
-    } else if (ver.dwMajorVersion == 5 && ver.dwMinorVersion == 2) {
+    if (ver.dwMajorVersion == 5 && ver.dwMinorVersion == 2)
         return "Sever 2003";
-    } else if (ver.dwMajorVersion == 5 && ver.dwMinorVersion == 1) {
+    if (ver.dwMajorVersion == 5 && ver.dwMinorVersion == 1)
         return "XP";
-    } else if (ver.dwMajorVersion == 5 && ver.dwMinorVersion == 0) {
+    if (ver.dwMajorVersion == 5 && ver.dwMinorVersion == 0)
         return "2000";
-    } else if (ver.dwMajorVersion <= 4) {
-        return "9xOrNT";
-    } else {
-        return "Unknown";
-    }
+
+    // either a newer or an older NT version, neither of which we support
+    static char osVerStr[32];
+    wsprintfA(osVerStr, "NT %d.%d", ver.dwMajorVersion, ver.dwMinorVersion);
+    return osVerStr;
 }
 
 static bool IsWow64()
@@ -194,9 +181,12 @@ static void GetOsVersion(Str::Str<char>& s)
     int servicePackMajor = ver.wServicePackMajor;
     int servicePackMinor = ver.wServicePackMinor;
     int buildNumber = ver.dwBuildNumber & 0xFFFF;
-    char *is64bit = Is64Bit() ? "32bit" : "64bit";
-    char *isWow = IsWow64() ?  "Wow64" : "";
-    s.AppendFmt("OS: %s %d.%d build %d %s %s\r\n", os, servicePackMajor, servicePackMinor, buildNumber, is64bit, isWow);
+#ifdef _WIN64
+    char *arch = "64-bit";
+#else
+    char *arch = IsWow64() ? "Wow64" : "32-bit";
+#endif
+    s.AppendFmt("OS: Windows %s %d.%d build %d %s\r\n", os, servicePackMajor, servicePackMinor, buildNumber, arch);
 }
 
 static void GetProcessorName(Str::Str<char>& s)
@@ -255,33 +245,31 @@ static bool GetAddrInfo(void *addr, char *module, DWORD moduleLen, DWORD& sectio
 {
     MEMORY_BASIC_INFORMATION mbi;
     if (!VirtualQuery(addr, &mbi, sizeof(mbi)))
-            return false;
+        return false;
 
     DWORD hMod = (DWORD)mbi.AllocationBase;
     if (!GetModuleFileNameA((HMODULE)hMod, module, moduleLen))
-            return false;
+        return false;
 
     PIMAGE_DOS_HEADER dosHeader = (PIMAGE_DOS_HEADER)hMod;
     PIMAGE_NT_HEADERS pNtHeader = (PIMAGE_NT_HEADERS)(hMod + dosHeader->e_lfanew);
     PIMAGE_SECTION_HEADER section = IMAGE_FIRST_SECTION(pNtHeader);
     
     DWORD lAddr = (DWORD)addr - hMod;
-    for (unsigned int i = 0; i < pNtHeader->FileHeader.NumberOfSections; i++)
-    {
-            DWORD startAddr = section->VirtualAddress;
-            DWORD endAddr = startAddr;
-            if (section->SizeOfRawData > section->Misc.VirtualSize)
-                    endAddr += section->SizeOfRawData;
-            else
-                    section->Misc.VirtualSize;
-    
-            if (lAddr >= startAddr && lAddr <= endAddr)
-            {
-                    sectionOut = i+1;
-                    offsetOut = lAddr - startAddr;
-                    return true;
-            }
-            section++;
+    for (unsigned int i = 0; i < pNtHeader->FileHeader.NumberOfSections; i++) {
+        DWORD startAddr = section->VirtualAddress;
+        DWORD endAddr = startAddr;
+        if (section->SizeOfRawData > section->Misc.VirtualSize)
+            endAddr += section->SizeOfRawData;
+        else
+            section->Misc.VirtualSize;
+
+        if (lAddr >= startAddr && lAddr <= endAddr) {
+            sectionOut = i+1;
+            offsetOut = lAddr - startAddr;
+            return true;
+        }
+        section++;
     }
     return false;
 }
@@ -297,7 +285,7 @@ static void GetCallstack(Str::Str<char>& s, CONTEXT& ctx, HANDLE hThread)
 
     STACKFRAME64 stackFrame;
     memset(&stackFrame, 0, sizeof(stackFrame));
-#ifdef  _WIN64
+#ifdef _WIN64
     stackFrame.AddrPC.Offset = ctx.Rip;
     stackFrame.AddrFrame.Offset = ctx.Rbp;
     stackFrame.AddrStack.Offset = ctx.Rsp;
@@ -462,32 +450,29 @@ static void GetExceptionInfo(Str::Str<char>& s, EXCEPTION_POINTERS *excPointers)
     DWORD offset;
     GetAddrInfo(excRecord->ExceptionAddress, module, sizeof(module), section, offset);
     const char *moduleShort = Path::GetBaseName(module);
-#ifdef _M_IX86
-    s.AppendFmt("Fault address:  %08X %02X:%08X %s\r\n", excRecord->ExceptionAddress, section, offset, moduleShort);
-#endif
-#ifdef _M_X64
+#ifdef _WIN64
     s.AppendFmt("Fault address:  %016I64X %02X:%016I64X %s\r\n", excRecord->ExceptionAddress, section, offset, moduleShort);
+#else
+    s.AppendFmt("Fault address:  %08X %02X:%08X %s\r\n", excRecord->ExceptionAddress, section, offset, moduleShort);
 #endif
 
     PCONTEXT ctx = excPointers->ContextRecord;
     s.AppendFmt("\r\nRegisters:\r\n");
 
-#ifdef _M_IX86
-    s.AppendFmt("EAX:%08X\r\nEBX:%08X\r\nECX:%08X\r\nEDX:%08X\r\nESI:%08X\r\nEDI:%08X\r\n",
-        ctx->Eax, ctx->Ebx, ctx->Ecx, ctx->Edx, ctx->Esi, ctx->Edi);
-    s.AppendFmt("CS:EIP:%04X:%08X\r\n", ctx->SegCs, ctx->Eip);
-    s.AppendFmt("SS:ESP:%04X:%08X  EBP:%08X\r\n", ctx->SegSs, ctx->Esp, ctx->Ebp);
-    s.AppendFmt("DS:%04X  ES:%04X  FS:%04X  GS:%04X\r\n", ctx->SegDs, ctx->SegEs, ctx->SegFs, ctx->SegGs);
-    s.AppendFmt("Flags:%08X\r\n", ctx->EFlags);
-#endif
-
-#ifdef _M_X64
+#ifdef _WIN64
     s.AppendFmt("RAX:%016I64X\r\nRBX:%016I64X\r\nRCX:%016I64X\r\nRDX:%016I64X\r\nRSI:%016I64X\r\nRDI:%016I64X\r\n"
         "R8: %016I64X\r\nR9: %016I64X\r\nR10:%016I64X\r\nR11:%016I64X\r\nR12:%016I64X\r\nR13:%016I64X\r\nR14:%016I64X\r\nR15:%016I64X\r\n",
         ctx->Rax, ctx->Rbx, ctx->Rcx, ctx->Rdx, ctx->Rsi, ctx->Rdi,
         ctx->R9,ctx->R10,ctx->R11,ctx->R12,ctx->R13,ctx->R14,ctx->R15);
     s.AppendFmt("CS:RIP:%04X:%016I64X\r\n", ctx->SegCs, ctx->Rip);
     s.AppendFmt("SS:RSP:%04X:%016X  RBP:%08X\r\n", ctx->SegSs, ctx->Rsp, ctx->Rbp);
+    s.AppendFmt("DS:%04X  ES:%04X  FS:%04X  GS:%04X\r\n", ctx->SegDs, ctx->SegEs, ctx->SegFs, ctx->SegGs);
+    s.AppendFmt("Flags:%08X\r\n", ctx->EFlags);
+#else
+    s.AppendFmt("EAX:%08X\r\nEBX:%08X\r\nECX:%08X\r\nEDX:%08X\r\nESI:%08X\r\nEDI:%08X\r\n",
+        ctx->Eax, ctx->Ebx, ctx->Ecx, ctx->Edx, ctx->Esi, ctx->Edi);
+    s.AppendFmt("CS:EIP:%04X:%08X\r\n", ctx->SegCs, ctx->Eip);
+    s.AppendFmt("SS:ESP:%04X:%08X  EBP:%08X\r\n", ctx->SegSs, ctx->Esp, ctx->Ebp);
     s.AppendFmt("DS:%04X  ES:%04X  FS:%04X  GS:%04X\r\n", ctx->SegDs, ctx->SegEs, ctx->SegFs, ctx->SegGs);
     s.AppendFmt("Flags:%08X\r\n", ctx->EFlags);
 #endif
@@ -509,8 +494,8 @@ static char *BuildCrashInfoText()
     return s.StealData();
 }
 
-#define CRASH_SUBMIT_SERVER "blog.kowalczyk.info"
-#define CRASH_SUBMIT_URL "/app/crashsubmit?appname=SumatraPDF"
+#define CRASH_SUBMIT_SERVER _T("blog.kowalczyk.info")
+#define CRASH_SUBMIT_URL    _T("/app/crashsubmit?appname=SumatraPDF")
 
 void SubmitCrashInfo(char *s)
 {
