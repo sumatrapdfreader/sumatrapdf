@@ -15,7 +15,7 @@ static void BenchLoadRender(BaseEngine *engine, int pagenum)
     MillisecondTimer t;
 
     t.Start();
-    bool success = engine->_benchLoadPage(pagenum);
+    bool success = engine->BenchLoadPage(pagenum);
     t.Stop();
 
     if (!success) {

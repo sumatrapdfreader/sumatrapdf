@@ -104,7 +104,7 @@ public:
 
     virtual float GetFileDPI() const { return 72.0f; }
 
-    virtual bool _benchLoadPage(int pageNo) { return getPdfPage(pageNo) != NULL; }
+    virtual bool BenchLoadPage(int pageNo) { return getPdfPage(pageNo) != NULL; }
 
     // TODO: move any of these into BaseEngine?
     int getPdfLinks(int pageNo, pdf_link **links);
@@ -211,7 +211,7 @@ public:
 
     virtual float GetFileDPI() const { return 96.0f; }
 
-    virtual bool _benchLoadPage(int pageNo) { return getXpsPage(pageNo) != NULL; }
+    virtual bool BenchLoadPage(int pageNo) { return getXpsPage(pageNo) != NULL; }
 
 protected:
     const TCHAR *_fileName;

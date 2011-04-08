@@ -132,7 +132,7 @@ public:
 
     // loads the given page so that the time required can be measured
     // without also measuring rendering times
-    virtual bool _benchLoadPage(int pageNo) = 0;
+    virtual bool BenchLoadPage(int pageNo) = 0;
 };
 
 #endif

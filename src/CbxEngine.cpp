@@ -130,7 +130,7 @@ CbxEngine::CbxEngine(const TCHAR *fileName) : fileName(Str::Dup(fileName))
 
 CbxEngine::~CbxEngine()
 {
-	DeleteVecMembers(pages);
+    DeleteVecMembers(pages);
     free((void *)fileName);
 }
 
@@ -177,21 +177,21 @@ bool CbxEngine::RenderPage(HDC hDC, int pageNo, RectI screenRect, float zoom, in
 
 void CbxEngine::GetTransform(Matrix& m, int pageNo, float zoom, int rotate)
 {
-	SizeD size = PageSize(pageNo);
+    SizeD size = PageSize(pageNo);
 
     rotate = rotate % 360;
     if (rotate < 0) rotate = rotate + 360;
     if (90 == rotate)
-    	m.Translate(0, (REAL)-size.dy, MatrixOrderAppend);
+        m.Translate(0, (REAL)-size.dy, MatrixOrderAppend);
     else if (180 == rotate)
-    	m.Translate((REAL)-size.dx, (REAL)-size.dy, MatrixOrderAppend);
+        m.Translate((REAL)-size.dx, (REAL)-size.dy, MatrixOrderAppend);
     else if (270 == rotate)
-    	m.Translate((REAL)-size.dx, 0, MatrixOrderAppend);
+        m.Translate((REAL)-size.dx, 0, MatrixOrderAppend);
     else // if (0 == rotate)
-    	m.Translate(0, 0, MatrixOrderAppend);
+        m.Translate(0, 0, MatrixOrderAppend);
 
-	m.Scale(zoom, zoom, MatrixOrderAppend);
-	m.Rotate((REAL)rotate, MatrixOrderAppend);
+    m.Scale(zoom, zoom, MatrixOrderAppend);
+    m.Rotate((REAL)rotate, MatrixOrderAppend);
 }
 
 PointD CbxEngine::Transform(PointD pt, int pageNo, float zoom, int rotate, bool inverse)
@@ -206,12 +206,12 @@ RectD CbxEngine::Transform(RectD rect, int pageNo, float zoom, int rotate, bool 
         Gdiplus::PointF((REAL)rect.x, (REAL)rect.y),
         Gdiplus::PointF((REAL)(rect.x + rect.dx), (REAL)(rect.y + rect.dy))
     };
-	Matrix m;
+    Matrix m;
     GetTransform(m, pageNo, zoom, rotate);
-	if (inverse)
-		m.Invert();
-	m.TransformPoints(pts, 2);
-	return RectD::FromXY(pts[0].X, pts[0].Y, pts[1].X, pts[1].Y);
+    if (inverse)
+        m.Invert();
+    m.TransformPoints(pts, 2);
+    return RectD::FromXY(pts[0].X, pts[0].Y, pts[1].X, pts[1].Y);
 }
 
 unsigned char *CbxEngine::GetFileData(size_t *cbCount)

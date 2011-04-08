@@ -60,7 +60,7 @@ public:
     virtual bool IsCopyingTextAllowed() { return false; }
 
     // we currently don't load pages lazily, so there's nothing to do here
-    virtual bool _benchLoadPage(int pageNo) { return true; }
+    virtual bool BenchLoadPage(int pageNo) { return true; }
 
 protected:
     const TCHAR *fileName;

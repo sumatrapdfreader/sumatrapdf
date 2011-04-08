@@ -81,7 +81,7 @@ void RenderCache::Add(PageRenderRequest &req, RenderedBitmap *bitmap)
     assert(validRotation(req.rotation));
 
     normalizeRotation(&req.rotation);
-    DBG_OUT("BitmapCache_Add(pageNo=%d, rotation=%d, zoom=%.2f%%)\n", req.pageNo, req.rotation, req.zoom);
+    DBG_OUT("RenderCache::Add(pageNo=%d, rotation=%d, zoom=%.2f%%)\n", req.pageNo, req.rotation, req.zoom);
     assert(_cacheCount <= MAX_BITMAPS_CACHED);
 
     /* It's possible there still is a cached bitmap with different zoom/rotation */
@@ -192,7 +192,7 @@ bool RenderCache::FreePage(DisplayModel *dm, int pageNo, TilePosition *tile)
 
         if (shouldFree) {
             if (!freedSomething)
-                DBG_OUT("BitmapCache_FreePage(%#x, %d) ", dm, pageNo);
+                DBG_OUT("RenderCache::FreePage(%#x, %d) ", dm, pageNo);
             DBG_OUT("freed %d ", entry->pageNo);
             freedSomething = true;
             DropCacheEntry(entry);
@@ -238,7 +238,6 @@ bool RenderCache::FreeNotVisible()
 {
     return FreePage();
 }
-
 
 // determine the count of tiles required for a page at a given zoom level
 USHORT RenderCache::GetTileRes(DisplayModel *dm, int pageNo)
@@ -291,7 +290,6 @@ bool RenderCache::ReduceTileSize()
     return true;
 }
 
-
 void RenderCache::Render(DisplayModel *dm, int pageNo, CallbackFunc *callback)
 {
     TilePosition tile = { GetTileRes(dm, pageNo), 0, 0 };
@@ -308,7 +306,7 @@ void RenderCache::Render(DisplayModel *dm, int pageNo, CallbackFunc *callback)
 /* Render a bitmap for page <pageNo> in <dm>. */
 void RenderCache::Render(DisplayModel *dm, int pageNo, TilePosition tile, bool clearQueue, CallbackFunc *callback)
 {
-    DBG_OUT("RenderQueue_Add(pageNo=%d)\n", pageNo);
+    DBG_OUT("RenderCache::Render(pageNo=%d)\n", pageNo);
     assert(dm);
     PageRenderRequest* newRequest = NULL;
 
@@ -441,7 +439,7 @@ bool RenderCache::ClearCurrentRequest()
    user know he has to wait until we finish */
 void RenderCache::CancelRendering(DisplayModel *dm)
 {
-    DBG_OUT("cancelRenderingForDisplayModel()\n");
+    DBG_OUT("RenderCache::CancelRendering()\n");
     ClearQueueForDisplayModel(dm);
 
     for (;;) {
@@ -514,7 +512,7 @@ DWORD WINAPI RenderCache::RenderCacheThread(LPVOID data)
         }
 
         RectD pageRect = GetTileRect(req.dm->engine, req.pageNo, req.rotation, req.zoom, req.tile);
-        bmp = req.dm->renderBitmap(req.pageNo, req.zoom, req.rotation, &pageRect,
+        bmp = req.dm->RenderBitmap(req.pageNo, req.zoom, req.rotation, &pageRect,
                                    Target_View, cache->useGdiRenderer && *cache->useGdiRenderer);
         if (req.abort) {
             delete bmp;
@@ -528,7 +526,7 @@ DWORD WINAPI RenderCache::RenderCacheThread(LPVOID data)
         if (bmp)
             DBG_OUT("RenderCacheThread(): finished rendering %d\n", req.pageNo);
         else
-            DBG_OUT("PageRenderThread(): failed to render a bitmap of page %d\n", req.pageNo);
+            DBG_OUT("RenderCacheThread(): failed to render a bitmap of page %d\n", req.pageNo);
         cache->Add(req, bmp);
 #ifdef CONSERVE_MEMORY
         cache->FreeNotVisible();
@@ -541,7 +539,7 @@ DWORD WINAPI RenderCache::RenderCacheThread(LPVOID data)
             req.dm->RepaintDisplay();
     }
 
-    DBG_OUT("PageRenderThread() finished\n");
+    DBG_OUT("RenderCacheThread() finished\n");
     return 0;
 }
 

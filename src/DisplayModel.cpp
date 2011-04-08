@@ -857,12 +857,11 @@ bool DisplayModel::isOverText(int x, int y)
     return textSelection->IsOverGlyph(pageNo, pos.x, pos.y);
 }
 
-void DisplayModel::renderVisibleParts()
+void DisplayModel::RenderVisibleParts()
 {
     int firstVisible = 0;
     int lastVisible = 0;
 
-//    DBG_OUT("DisplayModel::renderVisibleParts()\n");
     for (int pageNo = 1; pageNo <= pageCount(); ++pageNo) {
         PageInfo *pageInfo = getPageInfo(pageNo);
         if (pageInfo->visibleRatio > 0.0) {
@@ -898,7 +897,7 @@ void DisplayModel::changeTotalDrawAreaSize(SizeI totalDrawAreaSize)
             goToPage(ss.page, 0);
     } else {
         recalcVisibleParts();
-        renderVisibleParts();
+        RenderVisibleParts();
         _callback->UpdateScrollbars(_canvasSize);
     }
 }
@@ -990,7 +989,7 @@ void DisplayModel::goToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
     areaOffset.y = limitValue(areaOffset.y, 0, _canvasSize.dy - drawAreaSize.dy);
 
     recalcVisibleParts();
-    renderVisibleParts();
+    RenderVisibleParts();
     _callback->UpdateScrollbars(_canvasSize);
     _callback->PageNoChanged(pageNo);
     RepaintDisplay();
@@ -1155,7 +1154,7 @@ void DisplayModel::scrollYTo(int yOff)
     int currPageNo = currentPageNo();
     areaOffset.y = yOff;
     recalcVisibleParts();
-    renderVisibleParts();
+    RenderVisibleParts();
 
     int newPageNo = currentPageNo();
     if (newPageNo != currPageNo)
@@ -1210,7 +1209,7 @@ void DisplayModel::scrollYBy(int dy, bool changePage)
     currPageNo = currentPageNo();
     areaOffset.y = newYOff;
     recalcVisibleParts();
-    renderVisibleParts();
+    RenderVisibleParts();
     _callback->UpdateScrollbars(_canvasSize);
     newPageNo = currentPageNo();
     if (newPageNo != currPageNo)

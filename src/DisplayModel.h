@@ -108,7 +108,7 @@ public:
     DisplayModel(DisplayModelCallback *callback, DisplayMode displayMode);
     ~DisplayModel();
 
-    RenderedBitmap *renderBitmap(int pageNo, float zoom, int rotation,
+    RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
                          RectD *pageRect=NULL, /* if NULL: defaults to the page's mediabox */
                          RenderTarget target=Target_View, bool useGdi=false) {
         if (!engine) return NULL;
@@ -257,7 +257,7 @@ protected:
     void            getContentStart(int pageNo, int *x, int *y);
     void            setZoomVirtual(float zoomVirtual);
     void            recalcVisibleParts();
-    void            renderVisibleParts();
+    void            RenderVisibleParts();
 
 public:
     /* called when we decide that the display needs to be redrawn */
