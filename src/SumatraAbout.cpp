@@ -6,9 +6,7 @@
 #include "SumatraAbout.h"
 #include "translations.h"
 #include "Version.h"
-#include "AppPrefs.h"
 #include "WinUtil.h"
-#include "AppTools.h"
 
 #define ABOUT_LINE_OUTER_SIZE       2
 #define ABOUT_LINE_SEP_SIZE         1
@@ -482,7 +480,7 @@ LRESULT HandleWindowAboutMsg(WindowInfo *win, HWND hwnd, UINT message, WPARAM wP
             if (GetCursorPos(&pt) && ScreenToClient(hwnd, &pt)) {
                 AboutLayoutInfoEl *aboutEl;
                 if (AboutGetLink(win, pt.x, pt.y, &aboutEl)) {
-                    win->CreateInfotip(aboutEl->url, &aboutEl->rightPos);
+                    win->CreateInfotip(aboutEl->url, aboutEl->rightPos);
                     SetCursor(gCursorHand);
                     handled = true;
                     return TRUE;
@@ -508,4 +506,3 @@ LRESULT HandleWindowAboutMsg(WindowInfo *win, HWND hwnd, UINT message, WPARAM wP
 
     return 0;
 }
-

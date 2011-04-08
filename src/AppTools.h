@@ -5,7 +5,8 @@
 #define AppTools_h
 
 #include "Vec.h"
-#include "WindowInfo.h"
+
+class WindowInfo;
 
 // Base class for code that has to be executed on UI thread. Derive your class
 // from UIThreadWorkItem and call gUIThreadMarshaller.Queue() to schedule execution
@@ -35,19 +36,7 @@ public:
         DeleteVecMembers(items);
     }
 
-    void Queue(UIThreadWorkItem *item) {
-        if (!item)
-            return;
-
-        ScopedCritSec scope(&cs);
-        items.Append(item);
-
-        if (item->win) {
-            // hwndCanvas is less likely to enter internal message pump (during which
-            // the messages are not visible to our processing in top-level message pump)
-            PostMessage(item->win->hwndCanvas, WM_NULL, 0, 0);
-        }
-    }
+    void Queue(UIThreadWorkItem *item);
 
     void Execute() {
         // no need to acquire a lock for this check
@@ -68,7 +57,7 @@ bool IsValidProgramVersion(char *txt);
 int CompareVersion(TCHAR *txt1, TCHAR *txt2);
 const char *GuessLanguage();
 
-TCHAR *ExePathGet();
+TCHAR *GetExePath();
 bool IsRunningInPortableMode();
 TCHAR *AppGenDataDir();
 TCHAR *AppGenDataFilename(TCHAR *pFilename);

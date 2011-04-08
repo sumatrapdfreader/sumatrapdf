@@ -29,7 +29,7 @@ public:
 
 private:
     /* returns the next character in '*txt' that isn't a backslash */
-    static TCHAR SkipBackslashs(const TCHAR *txt)
+    const TCHAR SkipBackslashs(const TCHAR *txt)
     {
         assert(txt && '\\' == *txt);
         while ('\\' == *++txt);

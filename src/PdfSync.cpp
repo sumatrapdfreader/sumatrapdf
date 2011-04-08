@@ -2,11 +2,8 @@
    License: GPLv3 */
 // PDF-source synchronizer based on .pdfsync file
 
-#include "BaseUtil.h"
-#include "WindowInfo.h"
-#include "DisplayModel.h"
-#include "Resource.h"
 #include "PdfSync.h"
+#include "WindowInfo.h"
 #include <shlwapi.h>
 
 // Synchronizer based on .sync file generated with the pdfsync tex package

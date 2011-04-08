@@ -4,11 +4,10 @@
 #include "SumatraPDF.h"
 #include "BaseUtil.h"
 #include "StrUtil.h"
-#include "Vec.h"
 #include "WinUtil.h"
 #include "ParseCommandLine.h"
+#include "CmdLineParser.h"
 #include "Benchmark.h"
-#include "WindowInfo.h"
 
 #ifdef DEBUG
 static void EnumeratePrinters()

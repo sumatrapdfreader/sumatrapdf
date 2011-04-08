@@ -145,7 +145,7 @@ static HCURSOR                      gCursorIBeam;
 static HCURSOR                      gCursorScroll;
 static HCURSOR                      gCursorSizeWE;
 static HCURSOR                      gCursorNo;
-       HBRUSH                       gBrushBg;
+static HBRUSH                       gBrushBg;
 static HBRUSH                       gBrushWhite;
 static HBRUSH                       gBrushBlack;
 static HBRUSH                       gBrushShadow;
@@ -153,8 +153,8 @@ static HFONT                        gDefaultGuiFont;
 static HBITMAP                      gBitmapReloadingCue;
 
 static RenderCache                  gRenderCache;
-       Vec<WindowInfo*>             gWindows;
-       FileHistory                  gFileHistory;
+static Vec<WindowInfo*>             gWindows;
+static FileHistory                  gFileHistory;
 static UIThreadWorkItemQueue        gUIThreadMarshaller;
 
 static int                          gReBarDy;
@@ -3447,7 +3447,7 @@ static void OnMenuSaveBookmark(WindowInfo *win)
 
     ScopedMem<TCHAR> args(Str::Format(_T("\"%s\" -page %d -view \"%s\" -zoom %s -scroll %d,%d -reuse-instance"),
                           win->dm->fileName(), ss.page, viewMode, zoomVirtual, (int)ss.x, (int)ss.y));
-    ScopedMem<TCHAR> exePath(ExePathGet());
+    ScopedMem<TCHAR> exePath(GetExePath());
     ScopedMem<TCHAR> desc(Str::Format(_TB_TR("Bookmark shortcut to page %d of %s"),
                           ss.page, Path::GetBaseName(win->dm->fileName())));
 
@@ -3895,7 +3895,7 @@ static void OnMenuGoToPage(WindowInfo *win)
         return;
     }
 
-    int newPageNo = Dialog_GoToPage(win);
+    int newPageNo = Dialog_GoToPage(win->hwndFrame, win->dm->currentPageNo(), win->dm->pageCount());
     if (win->dm->validPageNo(newPageNo))
         win->dm->goToPage(newPageNo, 0, true);
 }
@@ -5682,7 +5682,7 @@ static void CreateInfotipForElement(WindowInfo *win, int pageNo, PageElement *el
     RectD rc = el->GetRect();
     if (!win->dm->cvtUserToScreen(pageNo, &rc))
         rc = RectD();
-    win->CreateInfotip(text, &rc.Convert<int>());
+    win->CreateInfotip(text, rc.Convert<int>());
 }
 
 static int  gDeltaPerLine = 0;         // for mouse wheel logic
@@ -6539,6 +6539,21 @@ Exit:
     free(devMode);
     DeleteDC(hdcPrint);
     return success;
+}
+
+void UIThreadWorkItemQueue::Queue(UIThreadWorkItem *item)
+{
+    if (!item)
+        return;
+
+    ScopedCritSec scope(&cs);
+    items.Append(item);
+
+    if (item->win) {
+        // hwndCanvas is less likely to enter internal message pump (during which
+        // the messages are not visible to our processing in top-level message pump)
+        PostMessage(item->win->hwndCanvas, WM_NULL, 0, 0);
+    }
 }
 
 static void MakePluginWindow(WindowInfo *win, HWND hwndParent)

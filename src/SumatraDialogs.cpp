@@ -1,10 +1,9 @@
 /* Copyright 2006-2011 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "DisplayModel.h"
+// #include "DisplayModel.h"
 #include "AppPrefs.h"
 #include "SumatraDialogs.h"
-#include "WindowInfo.h"
 #include "AppTools.h"
 #include "Resource.h"
 
@@ -113,8 +112,7 @@ static INT_PTR CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT message, WPARAM wPa
         data = (Dialog_GoToPage_Data*)lParam;
         assert(data);
         SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
-        assert(INVALID_PAGE_NO != data->currPageNo);
-        assert(data->pageCount >= 1);
+        assert(1 <= data->currPageNo && data->currPageNo <= data->pageCount);
         Win::SetText(hDlg, _TR("Go to page"));
 
         newPageNoTxt = Str::Format(_T("%d"), data->currPageNo);
@@ -143,12 +141,12 @@ static INT_PTR CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT message, WPARAM wPa
                 case IDOK:
                     data = (Dialog_GoToPage_Data*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
                     assert(data);
-                    data->pageEnteredOut = INVALID_PAGE_NO;
+                    data->pageEnteredOut = 0;
                     editPageNo = GetDlgItem(hDlg, IDC_GOTO_PAGE_EDIT);
                     newPageNoTxt = Win::GetText(editPageNo);
                     if (newPageNoTxt) {
                         data->pageEnteredOut = _ttoi(newPageNoTxt);
-                        free((void*)newPageNoTxt);
+                        free(newPageNoTxt);
                     }
                     EndDialog(hDlg, DIALOG_OK_PRESSED);
                     return TRUE;
@@ -163,24 +161,17 @@ static INT_PTR CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT message, WPARAM wPa
 }
 
 /* Shows a 'go to page' dialog and returns a page number entered by the user
-   or INVALID_PAGE_NO if user clicked "cancel" button, entered invalid
-   page number or there was an error. */
-int Dialog_GoToPage(WindowInfo *win)
+   or an invalid page number if user clicked "cancel" button or there was an error. */
+int Dialog_GoToPage(HWND hwnd, int currentPageNo, int pageCount)
 {
     Dialog_GoToPage_Data    data;
     
-    assert(win);
-    if (!win) return INVALID_PAGE_NO;
-
-    data.currPageNo = win->dm->currentPageNo();
-    data.pageCount = win->dm->pageCount();
-    INT_PTR dialogResult = DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_DIALOG_GOTO_PAGE), win->hwndFrame, Dialog_GoToPage_Proc, (LPARAM)&data);
-    if (DIALOG_OK_PRESSED == dialogResult) {
-        if (win->dm->validPageNo(data.pageEnteredOut)) {
-            return data.pageEnteredOut;
-        }
-    }
-    return INVALID_PAGE_NO;
+    data.currPageNo = currentPageNo;
+    data.pageCount = pageCount;
+    INT_PTR dialogResult = DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_DIALOG_GOTO_PAGE), hwnd, Dialog_GoToPage_Proc, (LPARAM)&data);
+    if (DIALOG_OK_PRESSED == dialogResult)
+        return data.pageEnteredOut;
+    return 0;
 }
 
 /* For passing data to/from Find dialog */

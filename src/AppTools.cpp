@@ -8,7 +8,7 @@
 #include "LangMenuDef.h"
 #include "translations.h"
 #include "AppTools.h"
-#include "ParseCommandLine.h"
+#include "CmdLineParser.h"
 #include <shlobj.h>
 
 // the only valid chars are 0-9, . and newlines.
@@ -84,7 +84,7 @@ const char *GuessLanguage()
 
 /* Return the full exe path of my own executable.
    Caller needs to free() the result. */
-TCHAR *ExePathGet()
+TCHAR *GetExePath()
 {
     TCHAR buf[MAX_PATH];
     buf[0] = 0;
@@ -97,7 +97,7 @@ TCHAR *ExePathGet()
    location of a SumatraPDF installation (HKLM\Software\SumatraPDF\Install_Dir) */
 bool IsRunningInPortableMode()
 {
-    ScopedMem<TCHAR> exePath(ExePathGet());
+    ScopedMem<TCHAR> exePath(GetExePath());
     if (NULL == exePath.Get())
         return true;
 
@@ -152,7 +152,7 @@ TCHAR *AppGenDataFilename(TCHAR *pFilename)
     TCHAR * path = NULL;
     if (IsRunningInPortableMode()) {
         /* Use the same path as the binary */
-        TCHAR *exePath = ExePathGet();
+        TCHAR *exePath = GetExePath();
         if (exePath) {
             assert(exePath[0]);
             path = Path::GetDir(exePath);
@@ -241,7 +241,7 @@ UnregisterFromBeingDefaultViewer() and RemoveOwnRegistryKeys() in Installer.cpp.
 
 void DoAssociateExeWithPdfExtension(HKEY hkey)
 {
-    ScopedMem<TCHAR> exePath(ExePathGet());
+    ScopedMem<TCHAR> exePath(GetExePath());
     if (!exePath)
         return;
 
@@ -310,7 +310,7 @@ bool IsExeAssociatedWithPdfExtension()
         return false;
 
     CmdLineParser argList(tmp);
-    ScopedMem<TCHAR> exePath(ExePathGet());
+    ScopedMem<TCHAR> exePath(GetExePath());
     if (!exePath || !argList.Find(_T("%1")))
         return false;
 

@@ -3,14 +3,10 @@
 
 #include "SumatraPDF.h"
 #include "WindowInfo.h"
-#include "DisplayModel.h"
 #include "SumatraProperties.h"
-#include "AppPrefs.h"
 #include "translations.h"
 #include "WinUtil.h"
 #include "FileUtil.h"
-#include "AppTools.h"
-#include "Vec.h"
 
 #define PROPERTIES_LEFT_RIGHT_SPACE_DX 8
 #define PROPERTIES_RECT_PADDING     8
@@ -168,13 +164,13 @@ static TCHAR *FormatPermissions(BaseEngine *engine) {
     return denials.Join(_T(", "));
 }
 
-void PropertiesLayout::AddProperty(const TCHAR *key, const TCHAR *value)
+void PropertiesLayout::AddProperty(const TCHAR *key, TCHAR *value)
 {
     // don't display value-less properties
     if (!Str::IsEmpty(value))
         Append(new PropertyEl(key, value));
     else
-        delete value;
+        free(value);
 }
 
 static void UpdatePropertiesLayout(HWND hwnd, HDC hdc, RectI *rect) {

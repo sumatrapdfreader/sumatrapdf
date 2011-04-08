@@ -5,14 +5,12 @@
 #ifndef PdfSync_h
 #define PdfSync_h
 
-#include <windows.h>
-#include <assert.h>
-#include <time.h>
-
 #include "BaseUtil.h"
 #include "StrUtil.h"
 #include "FileUtil.h"
+#include "GeomUtil.h"
 #include "Vec.h"
+#include <time.h>
 
 // size of the mark highlighting the location calculated by forward-search
 #define MARK_SIZE                            10 

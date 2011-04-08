@@ -9,9 +9,7 @@
 #define DIALOG_CANCEL_PRESSED 2
 #define DIALOG_NO_PRESSED 3
 
-class WindowInfo;
-
-int     Dialog_GoToPage(WindowInfo *win);
+int     Dialog_GoToPage(HWND hwnd, int currentPageNo, int pageCount);
 TCHAR * Dialog_Find(HWND hwnd, const TCHAR *previousSearch, bool *matchCase);
 TCHAR * Dialog_GetPassword(HWND hwnd, const TCHAR *fileName, bool *rememberPassword);
 INT_PTR Dialog_PdfAssociate(HWND hwnd, bool *dontAskAgainOut);

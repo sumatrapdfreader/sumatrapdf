@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 #include "PdfEngine.h"
+#include "StrUtil.h"
 #include "FileUtil.h"
 
 // maximum size of a file that's entirely loaded into memory before parsed
@@ -377,6 +378,11 @@ TCHAR *PdfLink::GetValue() const
 RectD PdfComment::GetRect() const
 {
     return fz_rect_to_RectD(annot->rect);
+}
+
+TCHAR *PdfComment::GetValue() const
+{
+    return Str::Conv::FromUtf8(fz_to_str_buf(fz_dict_gets(annot->obj, "Contents")));
 }
 
 ///// Above are extensions to Fitz and MuPDF, now follows PdfEngine /////
@@ -1238,6 +1244,13 @@ int PdfEngine::getPdfVersion() const
         version += 3;
 
     return version;
+}
+
+char *PdfEngine::getDecryptionKey() const
+{
+    if (!_decryptionKey)
+        return NULL;
+    return Str::Dup(_decryptionKey);
 }
 
 PageLayoutType PdfEngine::PreferredLayout()

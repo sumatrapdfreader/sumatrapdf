@@ -164,7 +164,7 @@ static void SetupSymbolPath()
     s.Set(L"c:\\symbols");
 #endif
     // When running local builds, *.pdb is in the same dir as *.exe 
-    ScopedMem<TCHAR> exePath(ExePathGet());
+    ScopedMem<TCHAR> exePath(GetExePath());
     ScopedMem<TCHAR> exeDir(Path::GetDir(exePath));
     s.AppendFmt(_T(";%s"), exeDir);
     BOOL ok = _SymSetSearchPathW(GetCurrentProcess(), s.Get());

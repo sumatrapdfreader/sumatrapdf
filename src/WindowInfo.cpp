@@ -2,13 +2,11 @@
    License: GPLv3 */
 
 #include "SumatraPDF.h"
-#include "DisplayModel.h"
+#include "FileUtil.h"
+#include "WinUtil.h"
 #include "WindowInfo.h"
 #include "PdfSync.h"
 #include "Resource.h"
-#include "FileUtil.h"
-#include "StrUtil.h"
-#include "WinUtil.h"
 #include "FileWatch.h"
 
 WindowInfo::WindowInfo(HWND hwnd) :
@@ -295,7 +293,7 @@ void WindowInfo::MoveDocBy(int dx, int dy)
 
 #define MULTILINE_INFOTIP_WIDTH_PX 300
 
-void WindowInfo::CreateInfotip(const TCHAR *text, RectI *rc)
+void WindowInfo::CreateInfotip(const TCHAR *text, RectI& rc)
 {
     if (Str::IsEmpty(text)) {
         this->DeleteInfotip();
@@ -307,8 +305,7 @@ void WindowInfo::CreateInfotip(const TCHAR *text, RectI *rc)
     ti.hwnd = this->hwndCanvas;
     ti.uFlags = TTF_SUBCLASS;
     ti.lpszText = (TCHAR *)text;
-    if (rc)
-        ti.rect = rc->ToRECT();
+    ti.rect = rc.ToRECT();
 
     if (Str::FindChar(text, '\n'))
         SendMessage(this->hwndInfotip, TTM_SETMAXTIPWIDTH, 0, MULTILINE_INFOTIP_WIDTH_PX);
@@ -332,7 +329,7 @@ void WindowInfo::DeleteInfotip()
     this->infotipVisible = false;
 }
 
-// TODO: find a better place to put this
+// TODO: find a better place to put these
 
 DoubleBuffer::DoubleBuffer(HWND hwnd, RectI rect) :
     hTarget(hwnd), rect(rect), hdcBuffer(NULL), doubleBuffer(NULL)

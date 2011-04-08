@@ -30,7 +30,7 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include "Version.h"
 #include "Vec.h"
 
-#include "ParseCommandLine.h"
+#include "CmdLineParser.h"
 #include "../ifilter/PdfFilter.h"
 
 // define for testing the uninstaller

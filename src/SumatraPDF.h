@@ -34,10 +34,7 @@ class FileHistory;
 
 // all defined in SumatraPDF.cpp
 extern HINSTANCE                ghinst;
-extern Vec<WindowInfo*>         gWindows;
-extern HBRUSH                   gBrushBg;
 extern SerializableGlobalPrefs  gGlobalPrefs;
-extern FileHistory              gFileHistory;
 extern HCURSOR                  gCursorHand;
 extern bool                     gRestrictedUse;
 

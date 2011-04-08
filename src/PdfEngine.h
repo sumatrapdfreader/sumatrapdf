@@ -20,7 +20,6 @@ __pragma(warning(pop))
 
 #include "BaseUtil.h"
 #include "GeomUtil.h"
-#include "StrUtil.h"
 #include "BaseEngine.h"
 
 // number of page content trees to cache for quicker rendering
@@ -63,9 +62,7 @@ public:
     PdfComment(pdf_annot *annot) : annot(annot) { }
 
     virtual RectD GetRect() const;
-    virtual TCHAR *GetValue() const {
-        return Str::Conv::FromUtf8(fz_to_str_buf(fz_dict_gets(annot->obj, "Contents")));
-    }
+    virtual TCHAR *GetValue() const;
 };
 
 class PdfTocItem {
@@ -157,7 +154,7 @@ public:
     fz_obj   * getNamedDest(const char *name);
     TCHAR    * getPdfInfo(char *key) const;
     int        getPdfVersion() const;
-    char     * getDecryptionKey() const { return _decryptionKey ? Str::Dup(_decryptionKey) : NULL; }
+    char     * getDecryptionKey() const;
     fz_buffer* getStreamData(int num, int gen);
 
 protected:

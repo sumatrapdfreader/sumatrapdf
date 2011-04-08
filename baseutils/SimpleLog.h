@@ -81,6 +81,15 @@ public:
     }
 };
 
+class StderrLogger : public Logger {
+public:
+    virtual void Log(TCHAR *s)
+    {
+        if (s)
+            _ftprintf(stderr, _T("%s\n"), s);
+    }
+};
+
 // allows to log into several logs at the same time (thread safe)
 class MultiLogger : public Logger {
     Vec<Logger *>    loggers;

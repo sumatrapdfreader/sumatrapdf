@@ -7,9 +7,6 @@
 #include <shlobj.h>
 #include "GeomUtil.h"
 #include "DisplayModel.h"
-#include "TextSearch.h"
-#include "PdfEngine.h"
-#include "Vec.h"
 
 class FileWatcher;
 class Synchronizer;
@@ -198,7 +195,7 @@ public:
     void UpdateToCExpansionState(HTREEITEM hItem);
     void DisplayStateFromToC(DisplayState *ds);
 
-    void CreateInfotip(const TCHAR *text=NULL, RectI *rc=NULL);
+    void CreateInfotip(const TCHAR *text, RectI& rc);
     void DeleteInfotip();
 
     void ShowForwardSearchResult(const TCHAR *fileName, UINT line, UINT col, UINT ret, UINT page, Vec<RectI>& rects);
@@ -216,7 +213,7 @@ public:
     virtual void CleanUp(DisplayModel *dm);
 };
 
-// TODO: find a better place to put this
+// TODO: find a better place to put these
 
 class DoubleBuffer {
     HWND hTarget;
