@@ -575,7 +575,7 @@ RestartLayout:
         // restart the layout if we detect we need to show scrollbars
         if (!newNeedVScroll && viewPortSize.dy < currPosY + rowMaxPageDy) {
             newNeedVScroll = true;
-            viewPortSize.dx -= GetSystemMetrics(SM_CYVSCROLL);
+            viewPortSize.dx -= GetSystemMetrics(SM_CXVSCROLL);
             goto RestartLayout;
         }
 
@@ -586,7 +586,7 @@ RestartLayout:
 
         if (!newNeedHScroll && viewPortSize.dx < padding->left + columnMaxWidth[0] + (columns == 2 ? padding->inBetweenX + columnMaxWidth[1] : 0) + padding->right) {
             newNeedHScroll = true;
-            viewPortSize.dy -= GetSystemMetrics(SM_CXHSCROLL);
+            viewPortSize.dy -= GetSystemMetrics(SM_CYHSCROLL);
             goto RestartLayout;
         }
 
@@ -615,7 +615,7 @@ RestartLayout:
     const int canvasDy = currPosY + padding->bottom - padding->inBetweenY;
     if (!newNeedVScroll && canvasDy > viewPortSize.dy) {
         newNeedVScroll = true;
-        viewPortSize.dx -= GetSystemMetrics(SM_CYVSCROLL);
+        viewPortSize.dx -= GetSystemMetrics(SM_CXVSCROLL);
         goto RestartLayout;
     }
 
@@ -632,7 +632,7 @@ RestartLayout:
     int canvasDx = padding->left + columnMaxWidth[0] + (columns == 2 ? padding->inBetweenX + columnMaxWidth[1] : 0) + padding->right;
     if (!newNeedHScroll && canvasDx > viewPortSize.dx) {
         newNeedHScroll = true;
-        viewPortSize.dy -= GetSystemMetrics(SM_CXHSCROLL);
+        viewPortSize.dy -= GetSystemMetrics(SM_CYHSCROLL);
         goto RestartLayout;
     }
 

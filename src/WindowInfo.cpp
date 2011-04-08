@@ -66,10 +66,10 @@ WindowInfo::~WindowInfo() {
 // about a potential change of available canvas size
 void WindowInfo::UpdateCanvasSize()
 {
-    ClientRect rc(hwndCanvas);
+    RectI rc = ClientRect(hwndCanvas);
     if (canvasRc == rc)
         return;
-    canvasRc = ClientRect(hwndCanvas);
+    canvasRc = rc;
 
     // create a new output buffer and notify the model
     // about the change of the canvas size
@@ -78,8 +78,21 @@ void WindowInfo::UpdateCanvasSize()
 
     if (IsDocLoaded()) {
         // the display model needs to know the full size (including scroll bars)
-        dm->ChangeViewPortSize(WindowRect(hwndCanvas).Size());
+        dm->ChangeViewPortSize(GetViewPortSize());
     }
+}
+
+SizeI WindowInfo::GetViewPortSize()
+{
+    SizeI size = canvasRc.Size();
+
+    DWORD style = GetWindowLong(hwndCanvas, GWL_STYLE);
+    if ((style & WS_VSCROLL))
+        size.dx += GetSystemMetrics(SM_CXVSCROLL);
+    if ((style & WS_HSCROLL))
+        size.dy += GetSystemMetrics(SM_CYHSCROLL);
+
+    return size;
 }
 
 void WindowInfo::AbortFinding()

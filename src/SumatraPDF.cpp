@@ -1362,7 +1362,7 @@ static bool LoadDocIntoWindow(
     free(win->loadedFilePath);
     win->loadedFilePath = Str::Dup(fileName);
     win->dm = DisplayModel::CreateFromFileName(win, fileName, displayMode,
-        startPage, WindowRect(win->hwndCanvas).Size());
+        startPage, win->GetViewPortSize());
     bool needrefresh = !win->dm;
 
     if (!win->dm) {

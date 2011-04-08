@@ -94,8 +94,8 @@ private:
 
     void UpdateGripperRect()
     {
-        int width = GetSystemMetrics(SM_CYVSCROLL);
-        int height = GetSystemMetrics(SM_CXVSCROLL);
+        int width = GetSystemMetrics(SM_CXVSCROLL);
+        int height = GetSystemMetrics(SM_CYHSCROLL);
         rcGrip = RectI(sizeClient.dx - width, sizeClient.dy - height, width, height);
     }
 };

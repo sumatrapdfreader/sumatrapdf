@@ -162,6 +162,7 @@ public:
     void UpdateToolbarState();
 
     void UpdateCanvasSize();
+    SizeI GetViewPortSize();
     void RedrawAll(bool update=false);
     void RepaintAsync(UINT delay=0);
     void Reload(bool autorefresh=false);
