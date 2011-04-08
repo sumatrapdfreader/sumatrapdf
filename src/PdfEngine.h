@@ -26,16 +26,52 @@ __pragma(warning(pop))
 // number of page content trees to cache for quicker rendering
 #define MAX_PAGE_RUN_CACHE  8
 
+class PageElement {
+public:
+    virtual ~PageElement() { }
+    virtual RectD GetRect() const = 0;
+    virtual TCHAR *GetValue() const = 0;
+};
+
 typedef struct {
     pdf_page *page;
     fz_display_list *list;
     int refs;
 } PdfPageRun;
 
+class PdfLink : public PageElement {
+    pdf_link *link;
+
+public:
+    PdfLink() : link(NULL) { }
+    PdfLink(pdf_link *link) : link(link) { }
+
+    virtual RectD GetRect() const;
+    virtual TCHAR *GetValue() const;
+
+    pdf_link_kind kind() const { return link ? link->kind : (pdf_link_kind)-1; }
+    bool isEmbeddedFile() const { return link && PDF_LINK_LAUNCH == link->kind && fz_dict_gets(link->dest, "EF"); }
+
+    // TODO: remove this when it's no longer needed
+    fz_obj *dest() const { return link ? link->dest : NULL; }
+};
+
+class PdfComment : public PageElement {
+    pdf_annot *annot;
+
+public:
+    PdfComment(pdf_annot *annot) : annot(annot) { }
+
+    virtual RectD GetRect() const;
+    virtual TCHAR *GetValue() const {
+        return Str::Conv::FromUtf8(fz_to_str_buf(fz_dict_gets(annot->obj, "Contents")));
+    }
+};
+
 class PdfTocItem {
 public:
     TCHAR *title;
-    pdf_link *link;
+    PdfLink link;
     bool open;
     int pageNo;
     int id;
@@ -43,7 +79,7 @@ public:
     PdfTocItem *child;
     PdfTocItem *next;
 
-    PdfTocItem(TCHAR *title, pdf_link *link) :
+    PdfTocItem(TCHAR *title, PdfLink link) :
         title(title), link(link), open(true), pageNo(0), id(0), child(NULL), next(NULL) { }
 
     ~PdfTocItem()
@@ -107,11 +143,10 @@ public:
 
     virtual bool BenchLoadPage(int pageNo) { return getPdfPage(pageNo) != NULL; }
 
-    // TODO: move any of these into BaseEngine?
-    int getPdfLinks(int pageNo, pdf_link **links);
-    pdf_link *getLinkAtPosition(int pageNo, float x, float y);
-    pdf_annot *getCommentAtPosition(int pageNo, float x, float y);
-    TCHAR *getLinkPath(pdf_link *link);
+    // TODO: move any of the following into BaseEngine?
+    int getPdfLinks(int pageNo, PdfLink **links);
+    PdfLink *getLinkAtPosition(int pageNo, float x, float y);
+    PdfComment *getCommentAtPosition(int pageNo, float x, float y);
     bool hasTocTree() const { 
         return _outline != NULL || _attachments != NULL; 
     }
@@ -250,18 +285,5 @@ public:
     static XpsEngine *CreateFromFileName(const TCHAR *fileName);
     static XpsEngine *CreateFromStream(fz_stream *stm);
 };
-
-// TODO: move inside PdfEngine.cpp once we've gotten rid of fz_* outside
-
-inline RectD fz_rect_to_RectD(fz_rect rect)
-{
-    return RectD::FromXY(rect.x0, rect.y0, rect.x1, rect.y1);
-}
-
-inline fz_rect fz_RectD_to_rect(RectD rect)
-{
-    fz_rect result = { (float)rect.x, (float)rect.y, (float)(rect.x + rect.dx), (float)(rect.y + rect.dy) };
-    return result;
-}
 
 #endif

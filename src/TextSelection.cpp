@@ -24,7 +24,7 @@ TextSelection::~TextSelection()
     Reset();
 
     for (int i = 0; i < engine->PageCount(); i++) {
-        delete coords[i];
+        delete[] coords[i];
         coords[i] = NULL;
         free(text[i]);
         text[i] = NULL;

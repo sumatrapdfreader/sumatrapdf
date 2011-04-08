@@ -56,6 +56,7 @@ WindowInfo::~WindowInfo() {
 
     delete this->buffer;
     delete this->selectionOnPage;
+    delete this->linkOnLastButtonDown;
 
     free(this->loadedFilePath);
 
@@ -430,27 +431,26 @@ PdfEngine *PdfLinkHandler::engine()
     return owner->dm->pdfEngine;
 }
 
-void PdfLinkHandler::GotoPdfLink(pdf_link *link)
+void PdfLinkHandler::GotoPdfLink(PdfLink *link)
 {
     assert(owner && owner->linkHandler == this);
     if (!engine())
         return;
-
     if (!link)
         return;
 
     DisplayModel *dm = owner->dm;
-    ScopedMem<TCHAR> path(GetLinkPath(link));
-    if (PDF_LINK_URI == link->kind && path) {
+    ScopedMem<TCHAR> path(link->GetValue());
+    if (PDF_LINK_URI == link->kind() && path) {
         if (Str::StartsWithI(path, _T("http:")) || Str::StartsWithI(path, _T("https:")))
             LaunchBrowser(path);
         /* else: unsupported uri type */
     }
-    else if (PDF_LINK_GOTO == link->kind) {
-        GotoPdfDest(link->dest);
+    else if (PDF_LINK_GOTO == link->kind()) {
+        GotoPdfDest(link->dest());
     }
-    else if (PDF_LINK_LAUNCH == link->kind && fz_dict_gets(link->dest, "EF")) {
-        fz_obj *embeddedList = fz_dict_gets(link->dest, "EF");
+    else if (PDF_LINK_LAUNCH == link->kind() && fz_dict_gets(link->dest(), "EF")) {
+        fz_obj *embeddedList = fz_dict_gets(link->dest(), "EF");
         fz_obj *embedded = fz_dict_gets(embeddedList, "UF");
         if (!embedded)
             embedded = fz_dict_gets(embeddedList, "F");
@@ -467,7 +467,7 @@ void PdfLinkHandler::GotoPdfLink(pdf_link *link)
             }
         }
     }
-    else if (PDF_LINK_LAUNCH == link->kind && path) {
+    else if (PDF_LINK_LAUNCH == link->kind() && path) {
         /* for safety, only handle relative PDF paths and only open them in SumatraPDF */
         if (!Str::StartsWith(path.Get(), _T("\\")) &&
             Str::EndsWithI(path.Get(), _T(".pdf"))) {
@@ -476,8 +476,8 @@ void PdfLinkHandler::GotoPdfLink(pdf_link *link)
             LoadDocument(combinedPath);
         }
     }
-    else if (PDF_LINK_NAMED == link->kind) {
-        char *name = fz_to_name(link->dest);
+    else if (PDF_LINK_NAMED == link->kind()) {
+        char *name = fz_to_name(link->dest());
         if (Str::Eq(name, "NextPage"))
             dm->goToNextPage(0);
         else if (Str::Eq(name, "PrevPage"))
@@ -500,18 +500,18 @@ void PdfLinkHandler::GotoPdfLink(pdf_link *link)
         else if (Str::Eq(name, "ZoomTo"))
             PostMessage(owner->hwndFrame, WM_COMMAND, IDM_ZOOM_CUSTOM, 0);
     }
-    else if (PDF_LINK_ACTION == link->kind) {
-        char *type = fz_to_name(fz_dict_gets(link->dest, "S"));
-        if (type && Str::Eq(type, "GoToR") && fz_dict_gets(link->dest, "D") && path) {
+    else if (PDF_LINK_ACTION == link->kind()) {
+        char *type = fz_to_name(fz_dict_gets(link->dest(), "S"));
+        if (type && Str::Eq(type, "GoToR") && fz_dict_gets(link->dest(), "D") && path) {
             /* for safety, only handle relative PDF paths and only open them in SumatraPDF */
             if (!Str::StartsWith(path.Get(), _T("\\")) &&
                 Str::EndsWithI(path.Get(), _T(".pdf"))) {
                 ScopedMem<TCHAR> basePath(Path::GetDir(dm->fileName()));
                 ScopedMem<TCHAR> combinedPath(Path::Join(basePath, path));
-                // TODO: respect fz_to_bool(fz_dict_gets(link->dest, "NewWindow"))
+                // TODO: respect fz_to_bool(fz_dict_gets(link->dest(), "NewWindow"))
                 WindowInfo *newWin = LoadDocument(combinedPath);
                 if (newWin && newWin->IsDocLoaded())
-                    newWin->linkHandler->GotoPdfDest(fz_dict_gets(link->dest, "D"));
+                    newWin->linkHandler->GotoPdfDest(fz_dict_gets(link->dest(), "D"));
             }
         }
         /* else unsupported action */
@@ -586,13 +586,4 @@ void PdfLinkHandler::GotoNamedDest(const TCHAR *name)
 
     ScopedMem<char> name_utf8(Str::Conv::ToUtf8(name));
     GotoPdfDest(engine()->getNamedDest(name_utf8));
-}
-
-TCHAR *PdfLinkHandler::GetLinkPath(pdf_link *link)
-{
-    assert(owner && owner->linkHandler == this);
-    if (!engine())
-        return NULL;
-
-    return engine()->getLinkPath(link);
 }

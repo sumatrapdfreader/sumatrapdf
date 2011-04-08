@@ -44,6 +44,17 @@ bool fz_is_pt_in_rect(fz_rect rect, fz_point pt)
 
 #define fz_sizeofrect(rect) (((rect).x1 - (rect).x0) * ((rect).y1 - (rect).y0))
 
+inline RectD fz_rect_to_RectD(fz_rect rect)
+{
+    return RectD::FromXY(rect.x0, rect.y0, rect.x1, rect.y1);
+}
+
+inline fz_rect fz_RectD_to_rect(RectD rect)
+{
+    fz_rect result = { (float)rect.x, (float)rect.y, (float)(rect.x + rect.dx), (float)(rect.y + rect.dy) };
+    return result;
+}
+
 inline RectI fz_bbox_to_RectI(fz_bbox bbox)
 {
     return RectI::FromXY(bbox.x0, bbox.y0, bbox.x1, bbox.y1);
@@ -248,6 +259,10 @@ WCHAR *fz_span_to_wchar(fz_text_span *text, TCHAR *lineSep, RectI **coords_out=N
     return content;
 }
 
+// Ensure that fz_accelerate is called before using Fitz the first time.
+class FitzAccelerator { public: FitzAccelerator() { fz_accelerate(); } };
+FitzAccelerator _globalAccelerator;
+
 pdf_link *pdf_new_link(fz_obj *dest, pdf_link_kind kind)
 {
     pdf_link *link = (pdf_link *)fz_malloc(sizeof(pdf_link));
@@ -315,6 +330,55 @@ fz_error pdf_get_mediabox(fz_rect *mediabox, fz_obj *page)
     return fz_okay;
 }
 
+RectD PdfLink::GetRect() const
+{
+    return link ? fz_rect_to_RectD(link->rect) : RectD();
+}
+
+TCHAR *PdfLink::GetValue() const
+{
+    TCHAR *path = NULL;
+    fz_obj *obj;
+
+    switch (link ? link->kind : -1) {
+        case PDF_LINK_URI:
+            path = Str::Conv::FromPdf(link->dest);
+            break;
+        case PDF_LINK_LAUNCH:
+            obj = fz_dict_gets(link->dest, "Type");
+            if (!fz_is_name(obj) || !Str::Eq(fz_to_name(obj), "Filespec"))
+                break;
+            obj = fz_dict_gets(link->dest, "UF"); 
+            if (!fz_is_string(obj))
+                obj = fz_dict_gets(link->dest, "F"); 
+
+            if (fz_is_string(obj)) {
+                path = Str::Conv::FromPdf(obj);
+                Str::TransChars(path, _T("/"), _T("\\"));
+            }
+            break;
+        case PDF_LINK_ACTION:
+            obj = fz_dict_gets(link->dest, "S");
+            if (!fz_is_name(obj))
+                break;
+            if (Str::Eq(fz_to_name(obj), "GoToR")) {
+                obj = fz_dict_gets(link->dest, "F");
+                if (fz_is_string(obj)) {
+                    path = Str::Conv::FromPdf(obj);
+                    Str::TransChars(path, _T("/"), _T("\\"));
+                }
+            }
+            break;
+    }
+
+    return path;
+}
+
+RectD PdfComment::GetRect() const
+{
+    return fz_rect_to_RectD(annot->rect);
+}
+
 ///// Above are extensions to Fitz and MuPDF, now follows PdfEngine /////
 
 PdfEngine::PdfEngine() : 
@@ -338,7 +402,7 @@ PdfEngine::~PdfEngine()
     EnterCriticalSection(&_xrefAccess);
 
     if (_pages) {
-        for (int i=0; i < PageCount(); i++) {
+        for (int i = 0; i < PageCount(); i++) {
             if (_pages[i])
                 pdf_free_page(_pages[i]);
         }
@@ -550,7 +614,7 @@ bool PdfEngine::finishLoading()
 PdfTocItem *PdfEngine::buildTocTree(pdf_outline *entry, int *idCounter)
 {
     TCHAR *name = entry->title ? Str::Conv::FromUtf8(entry->title) : Str::Dup(_T(""));
-    PdfTocItem *node = new PdfTocItem(name, entry->link);
+    PdfTocItem *node = new PdfTocItem(name, PdfLink(entry->link));
     node->open = entry->count >= 0;
     node->id = ++(*idCounter);
 
@@ -904,7 +968,7 @@ RenderedBitmap *PdfEngine::RenderBitmap(
     return bitmap;
 }
 
-pdf_link *PdfEngine::getLinkAtPosition(int pageNo, float x, float y)
+PdfLink *PdfEngine::getLinkAtPosition(int pageNo, float x, float y)
 {
     pdf_page *page = getPdfPage(pageNo, true);
     if (!page)
@@ -913,13 +977,13 @@ pdf_link *PdfEngine::getLinkAtPosition(int pageNo, float x, float y)
     for (pdf_link *link = page->links; link; link = link->next) {
         fz_point pt = { x, y };
         if (fz_is_pt_in_rect(link->rect, pt))
-            return link;
+            return new PdfLink(link);
     }
 
     return NULL;
 }
 
-pdf_annot *PdfEngine::getCommentAtPosition(int pageNo, float x, float y)
+PdfComment *PdfEngine::getCommentAtPosition(int pageNo, float x, float y)
 {
     pdf_page *page = getPdfPage(pageNo, true);
     if (!page)
@@ -930,65 +994,28 @@ pdf_annot *PdfEngine::getCommentAtPosition(int pageNo, float x, float y)
         if (fz_is_pt_in_rect(annot->rect, pt) &&
             Str::Eq(fz_to_name(fz_dict_gets(annot->obj, "Subtype")), "Text") &&
             !Str::IsEmpty(fz_to_str_buf(fz_dict_gets(annot->obj, "Contents")))) {
-            return annot;
+            return new PdfComment(annot);
         }
     }
 
     return NULL;
 }
 
-TCHAR *PdfEngine::getLinkPath(pdf_link *link)
-{
-    TCHAR *path = NULL;
-    fz_obj *obj;
-
-    switch (link ? link->kind : -1) {
-        case PDF_LINK_URI:
-            path = Str::Conv::FromPdf(link->dest);
-            break;
-        case PDF_LINK_LAUNCH:
-            obj = fz_dict_gets(link->dest, "Type");
-            if (!fz_is_name(obj) || !Str::Eq(fz_to_name(obj), "Filespec"))
-                break;
-            obj = fz_dict_gets(link->dest, "UF"); 
-            if (!fz_is_string(obj))
-                obj = fz_dict_gets(link->dest, "F"); 
-
-            if (fz_is_string(obj)) {
-                path = Str::Conv::FromPdf(obj);
-                Str::TransChars(path, _T("/"), _T("\\"));
-            }
-            break;
-        case PDF_LINK_ACTION:
-            obj = fz_dict_gets(link->dest, "S");
-            if (!fz_is_name(obj))
-                break;
-            if (Str::Eq(fz_to_name(obj), "GoToR")) {
-                obj = fz_dict_gets(link->dest, "F");
-                if (fz_is_string(obj)) {
-                    path = Str::Conv::FromPdf(obj);
-                    Str::TransChars(path, _T("/"), _T("\\"));
-                }
-            }
-            break;
-    }
-
-    return path;
-}
-
-int PdfEngine::getPdfLinks(int pageNo, pdf_link **links)
+int PdfEngine::getPdfLinks(int pageNo, PdfLink **links)
 {
     pdf_page *page = getPdfPage(pageNo, true);
     if (!page)
-        return -1;
+        return 0;
 
     int count = 0;
     for (pdf_link *link = page->links; link; link = link->next)
         count++;
 
-    pdf_link *linkPtr = *links = SAZA(pdf_link, count);
+    *links = new PdfLink[count];
+
+    int i = 0;
     for (pdf_link *link = page->links; link; link = link->next)
-        *linkPtr++ = *link;
+        (*links)[i++] = PdfLink(link);
 
     return count;
 }

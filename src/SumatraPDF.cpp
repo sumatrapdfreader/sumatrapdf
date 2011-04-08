@@ -2000,6 +2000,8 @@ static void DebugShowLinks(DisplayModel *dm, HDC hdc)
 {
     if (!gDebugShowLinks)
         return;
+    if (!dm || !dm->pdfEngine)
+        return;
 
     RectI viewPortRect(PointI(), dm->viewPortSize);
     HPEN pen = CreatePen(PS_SOLID, 1, RGB(0x00, 0xff, 0xff));
@@ -2010,14 +2012,17 @@ static void DebugShowLinks(DisplayModel *dm, HDC hdc)
         if (!pageInfo->shown || 0.0 == pageInfo->visibleRatio)
             continue;
 
-        pdf_link *links = NULL;
-        int linkCount = dm->getPdfLinks(pageNo, &links);
+        PdfLink *links = NULL;
+        int linkCount = dm->pdfEngine->getPdfLinks(pageNo, &links);
         for (int i = 0; i < linkCount; i++) {
-            RectI isect = viewPortRect.Intersect(fz_rect_to_RectD(links[i].rect).Round());
-            if (!isect.IsEmpty())
-                PaintRect(hdc, &isect.ToRECT());
+            RectD rect = links[i].GetRect();
+            if (dm->cvtUserToScreen(pageNo, &rect)) {
+                RectI isect = viewPortRect.Intersect(rect.Round());
+                if (!isect.IsEmpty())
+                    PaintRect(hdc, &isect.ToRECT());
+            }
         }
-        free(links);
+        delete[] links;
     }
 
     DeletePen(SelectObject(hdc, oldPen));
@@ -2310,8 +2315,7 @@ static bool OnInverseSearch(WindowInfo *win, int x, int y)
 
     int pageNo = 0;
     PointD pt(x, y);
-    win->dm->cvtScreenToUser(&pageNo, &pt);
-    if (!win->dm->validPageNo(pageNo))
+    if (!win->dm->cvtScreenToUser(&pageNo, &pt))
         return false;
     x = (int)pt.x; y = (int)pt.y;
 
@@ -2362,14 +2366,15 @@ static void OnContextMenu(WindowInfo *win, int x, int y)
     if (!win || !win->IsDocLoaded())
         return;
 
-    pdf_link *link = win->dm->getLinkAtPosition(PointI(x, y));
-    ScopedMem<TCHAR> linkAddress(win->linkHandler->GetLinkPath(link));
-    pdf_annot *comment = win->dm->getCommentAtPosition(PointI(x, y));
+    PdfLink *link = win->dm->getLinkAtPosition(PointI(x, y));
+    ScopedMem<TCHAR> linkAddress(link ? link->GetValue() : NULL);
+    PdfComment *comment = win->dm->getCommentAtPosition(PointI(x, y));
+    ScopedMem<TCHAR> commentText(comment ? comment->GetValue() : NULL);
 
     HMENU popup = BuildMenuFromMenuDef(menuDefContext, dimof(menuDefContext), CreatePopupMenu());
     if (!linkAddress)
         Win::Menu::Hide(popup, IDM_COPY_LINK_TARGET);
-    if (!comment)
+    if (!commentText)
         Win::Menu::Hide(popup, IDM_COPY_COMMENT);
 
     if (!win->selectionOnPage)
@@ -2394,14 +2399,13 @@ static void OnContextMenu(WindowInfo *win, int x, int y)
         break;
 
     case IDM_COPY_COMMENT:
-        {
-            ScopedMem<TCHAR> commentText(Str::Conv::FromUtf8(fz_to_str_buf(fz_dict_gets(comment->obj, "Contents"))));
-            CopyTextToClipboard(commentText);
-        }
+        CopyTextToClipboard(commentText);
         break;
     }
 
     DestroyMenu(popup);
+    delete comment;
+    delete link;
 }
 
 static void OnDraggingStart(WindowInfo *win, int x, int y, bool right=false)
@@ -2488,6 +2492,7 @@ static void OnMouseMove(WindowInfo *win, int x, int y, WPARAM flags)
             return;
         }
         win->dragStartPending = false;
+        delete win->linkOnLastButtonDown;
         win->linkOnLastButtonDown = NULL;
     }
 
@@ -2578,6 +2583,7 @@ static void OnMouseLeftButtonDown(WindowInfo *win, int x, int y, WPARAM key)
 
     SetFocus(win->hwndFrame);
 
+    assert(!win->linkOnLastButtonDown);
     win->linkOnLastButtonDown = win->dm->getLinkAtPosition(PointI(x, y));
     win->dragStartPending = true;
     win->dragStart = PointI(x, y);
@@ -2612,9 +2618,13 @@ static void OnMouseLeftButtonUp(WindowInfo *win, int x, int y, WPARAM key)
     else
         OnSelectionStop(win, x, y, !didDragMouse);
 
+    PointD ptPage(x, y);
+    if (!win->dm->cvtScreenToUser(NULL, &ptPage))
+        ptPage = PointD(-1, -1);
+
     if (didDragMouse)
         /* pass */;
-    else if (win->linkOnLastButtonDown && win->dm->getLinkAtPosition(PointI(x, y)) == win->linkOnLastButtonDown) {
+    else if (win->linkOnLastButtonDown && win->linkOnLastButtonDown->GetRect().Inside(ptPage)) {
         win->linkHandler->GotoPdfLink(win->linkOnLastButtonDown);
         SetCursor(gCursorArrow);
     }
@@ -2633,6 +2643,7 @@ static void OnMouseLeftButtonUp(WindowInfo *win, int x, int y, WPARAM key)
         win->ChangePresentationMode(PM_ENABLED);
 
     win->mouseAction = MA_IDLE;
+    delete win->linkOnLastButtonDown;
     win->linkOnLastButtonDown = NULL;
 }
 
@@ -4491,7 +4502,7 @@ public:
 
     virtual void Execute() {
         if (WindowInfoStillValid(win) && win->IsDocLoaded())
-            win->linkHandler->GotoPdfLink(tocItem->link);
+            win->linkHandler->GotoPdfLink(&tocItem->link);
     }
 };
 
@@ -4506,7 +4517,7 @@ static void GoToTocLinkForTVItem(WindowInfo *win, HWND hTV, HTREEITEM hItem=NULL
     TreeView_GetItem(hTV, &item);
     PdfTocItem *tocItem = (PdfTocItem *)item.lParam;
     if (win->IsDocLoaded() && tocItem &&
-        (allowExternal || tocItem->link && PDF_LINK_GOTO == tocItem->link->kind)) {
+        (allowExternal || PDF_LINK_GOTO == tocItem->link.kind())) {
         gUIThreadMarshaller.Queue(new GoToTocLinkWorkItem(win, tocItem));
     }
 }
@@ -5633,7 +5644,7 @@ void WindowInfo::ClearTocBox()
 static void CustomizeToCInfoTip(WindowInfo *win, LPNMTVGETINFOTIP nmit)
 {
     PdfTocItem *tocItem = (PdfTocItem *)nmit->lParam;
-    TCHAR *path = win->linkHandler->GetLinkPath(tocItem->link);
+    TCHAR *path = tocItem->link.GetValue();
     if (!path)
         return;
 
@@ -5654,7 +5665,7 @@ static void CustomizeToCInfoTip(WindowInfo *win, LPNMTVGETINFOTIP nmit)
         infotip.Append(_T("\r\n"));
     }
 
-    if (PDF_LINK_LAUNCH == tocItem->link->kind && fz_dict_gets(tocItem->link->dest, "EF")) {
+    if (tocItem->link.isEmbeddedFile()) {
         TCHAR *comment = Str::Format(_TR("Attachment: %s"), path);
         free(path);
         path = comment;
@@ -5665,22 +5676,13 @@ static void CustomizeToCInfoTip(WindowInfo *win, LPNMTVGETINFOTIP nmit)
     free(path);
 }
 
-static void CreateInfotipForPdfLink(WindowInfo *win, int pageNo, pdf_link *link)
+static void CreateInfotipForElement(WindowInfo *win, int pageNo, PageElement *el)
 {
-    ScopedMem<TCHAR> linkPath(win->linkHandler->GetLinkPath(link));
-    RectD rc = fz_rect_to_RectD(link->rect);
+    ScopedMem<TCHAR> text(el->GetValue());
+    RectD rc = el->GetRect();
     if (!win->dm->cvtUserToScreen(pageNo, &rc))
         rc = RectD();
-    win->CreateInfotip(linkPath, &rc.Convert<int>());
-}
-
-static void CreateInfotipForComment(WindowInfo *win, int pageNo, pdf_annot *annot)
-{
-    ScopedMem<TCHAR> comment(Str::Conv::FromUtf8(fz_to_str_buf(fz_dict_gets(annot->obj, "Contents"))));
-    RectD rc = fz_rect_to_RectD(annot->rect);
-    if (!win->dm->cvtUserToScreen(pageNo, &rc))
-        rc = RectD();
-    win->CreateInfotip(comment, &rc.Convert<int>());
+    win->CreateInfotip(text, &rc.Convert<int>());
 }
 
 static int  gDeltaPerLine = 0;         // for mouse wheel logic
@@ -5775,17 +5777,18 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
                 case MA_IDLE:
                     if (GetCursor() && GetCursorPos(&pt) && ScreenToClient(hwnd, &pt)) {
                         PointI pti(pt.x, pt.y);
-                        pdf_link *link = win->dm->getLinkAtPosition(pti);
-                        if (link) {
+                        PageElement *pageEl;
+                        if ((pageEl = win->dm->getLinkAtPosition(pti))) {
                             int pageNo = win->dm->getPageNoByPoint(pti);
-                            CreateInfotipForPdfLink(win, pageNo, link);
+                            CreateInfotipForElement(win, pageNo, pageEl);
                             SetCursor(gCursorHand);
+                            delete pageEl;
                             return TRUE;
                         }
-                        pdf_annot *comment = win->dm->getCommentAtPosition(pti);
-                        if (comment) {
+                        if ((pageEl = win->dm->getCommentAtPosition(pti))) {
                             int pageNo = win->dm->getPageNoByPoint(pti);
-                            CreateInfotipForComment(win, pageNo, comment);
+                            CreateInfotipForElement(win, pageNo, pageEl);
+                            delete pageEl;
                         }
                         else
                             win->DeleteInfotip();
@@ -6589,7 +6592,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
     ScopedCom com;
     InitAllCommonControls();
-    fz_accelerate();
     ScopedGdiPlus gdiPlus(true);
 
     {

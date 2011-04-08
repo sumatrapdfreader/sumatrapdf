@@ -195,9 +195,8 @@ public:
     bool            isOverText(int x, int y);
 
     // TODO: generalize for non-PDF formats(?)
-    pdf_link *      getLinkAtPosition(PointI pt);
-    int             getPdfLinks(int pageNo, pdf_link **links);
-    pdf_annot *     getCommentAtPosition(PointI pt);
+    PdfLink *       getLinkAtPosition(PointI pt);
+    PdfComment *    getCommentAtPosition(PointI pt);
 
     bool            cvtUserToScreen(int pageNo, PointD *pt);
     bool            cvtUserToScreen(int pageNo, RectD *r);

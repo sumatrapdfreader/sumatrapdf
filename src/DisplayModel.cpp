@@ -807,7 +807,7 @@ int DisplayModel::getPageNoByPoint(PointI pt)
          Another way: build a list with only those visible, so we don't
          even have to traverse those that are invisible.
    */
-pdf_link *DisplayModel::getLinkAtPosition(PointI pt)
+PdfLink *DisplayModel::getLinkAtPosition(PointI pt)
 {
     if (!pdfEngine)
         return NULL;
@@ -820,7 +820,7 @@ pdf_link *DisplayModel::getLinkAtPosition(PointI pt)
     return pdfEngine->getLinkAtPosition(pageNo, (float)pos.x, (float)pos.y);
 }
 
-pdf_annot *DisplayModel::getCommentAtPosition(PointI pt)
+PdfComment *DisplayModel::getCommentAtPosition(PointI pt)
 {
     if (!pdfEngine)
         return NULL;
@@ -831,22 +831,6 @@ pdf_annot *DisplayModel::getCommentAtPosition(PointI pt)
         return NULL;
 
     return pdfEngine->getCommentAtPosition(pageNo, (float)pos.x, (float)pos.y);
-}
-
-int DisplayModel::getPdfLinks(int pageNo, pdf_link **links)
-{
-    if (!pdfEngine)
-        return 0;
-
-    int count = pdfEngine->getPdfLinks(pageNo, links);
-    for (int i = 0; i < count; i++) {
-        RectD rc = fz_rect_to_RectD((*links)[i].rect);
-        if (cvtUserToScreen(pageNo, &rc))
-            (*links)[i].rect = fz_RectD_to_rect(rc);
-        else
-            (*links)[i].rect = fz_empty_rect;
-    }
-    return count;
 }
 
 bool DisplayModel::isOverText(int x, int y)
@@ -1328,17 +1312,20 @@ bool DisplayModel::cvtUserToScreen(int pageNo, RectD *r)
 
 bool DisplayModel::cvtScreenToUser(int *pageNo, PointD *pt)
 {
-    *pageNo = getPageNoByPoint(pt->Convert<int>());
-    if (!validPageNo(*pageNo))
+    int page = getPageNoByPoint(pt->Convert<int>());
+    if (!validPageNo(page))
         return false;
-    const PageInfo *pageInfo = getPageInfo(*pageNo);
+    const PageInfo *pageInfo = getPageInfo(page);
 
     PointD p = PointD(pt->x - 0.5 - pageInfo->pos.x + viewPortOffset.x,
                       pt->y - 0.5 - pageInfo->pos.y + viewPortOffset.y);
-    p = engine->Transform(p, *pageNo, _zoomReal, _rotation, true);
+    p = engine->Transform(p, page, _zoomReal, _rotation, true);
 
     pt->x = p.x;
     pt->y = p.y;
+    if (pageNo)
+        *pageNo = page;
+
     return true;
 }
 
@@ -1378,7 +1365,7 @@ TCHAR *DisplayModel::getTextInRegion(int pageNo, RectD& region)
     }
     *dest = '\0';
 
-    delete coords;
+    delete[] coords;
     free(pageText);
 
     return result;
