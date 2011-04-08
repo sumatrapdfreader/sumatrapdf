@@ -446,7 +446,7 @@ void PdfLinkHandler::GotoPdfLink(PdfLink *link)
     else if (PDF_LINK_GOTO == link->kind()) {
         GotoPdfDest(link->dest());
     }
-    else if (PDF_LINK_LAUNCH == link->kind() && fz_dict_gets(link->dest(), "EF")) {
+    else if (link->isEmbeddedFile()) {
         fz_obj *embeddedList = fz_dict_gets(link->dest(), "EF");
         fz_obj *embedded = fz_dict_gets(embeddedList, "UF");
         if (!embedded)

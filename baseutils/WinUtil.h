@@ -88,6 +88,13 @@ public:
     }
 };
 
+inline RectI MapRectToWindow(RectI rect, HWND hwndFrom, HWND hwndTo)
+{
+    RECT rc = rect.ToRECT();
+    MapWindowPoints(hwndFrom, hwndTo, (LPPOINT)&rc, 2);
+    return RectI::FromXY(rc.left, rc.top, rc.right, rc.bottom);
+}
+
 static inline void InitAllCommonControls()
 {
     INITCOMMONCONTROLSEX cex = {0};
@@ -110,15 +117,8 @@ static inline void FillWndClassEx(WNDCLASSEX &wcex, HINSTANCE hInstance)
     wcex.hIconSm        = 0;
 }
 
-static inline int RectDx(const RECT *r)
-{
-    return r->right - r->left;
-}
-
-static inline int RectDy(const RECT *r)
-{
-    return r->bottom - r->top;
-}
+inline int RectDx(const RECT *r) { return r->right - r->left; }
+inline int RectDy(const RECT *r) { return r->bottom - r->top; }
 
 bool IsAppThemed();
 bool WindowsVerVistaOrGreater();

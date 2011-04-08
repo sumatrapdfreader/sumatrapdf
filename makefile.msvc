@@ -272,7 +272,7 @@ $(O)\SumatraDialogs.obj: baseutils\BaseUtil.h baseutils\DialogSizer.h baseutils\
 $(O)\SumatraDialogs.obj: baseutils\StrUtil.h baseutils\Vec.h baseutils\WinUtil.h
 $(O)\SumatraDialogs.obj: src\AppPrefs.h src\AppTools.h src\DisplayState.h
 $(O)\SumatraDialogs.obj: src\LangMenuDef.h src\Resource.h src\SumatraDialogs.h
-$(O)\SumatraDialogs.obj: src\translations.h
+$(O)\SumatraDialogs.obj: src\SumatraPDF.h src\translations.h
 $(O)\SumatraPDF.obj: baseutils\BaseUtil.h baseutils\FileUtil.h baseutils\GeomUtil.h
 $(O)\SumatraPDF.obj: baseutils\StrUtil.h baseutils\Vec.h baseutils\WinUtil.h
 $(O)\SumatraPDF.obj: mupdf\fitz\fitz.h mupdf\pdf\mupdf.h mupdf\xps\muxps.h

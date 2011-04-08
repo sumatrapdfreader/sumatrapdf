@@ -1,8 +1,7 @@
 /* Copyright 2006-2011 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-// #include "DisplayModel.h"
-#include "AppPrefs.h"
+#include "SumatraPDF.h"
 #include "SumatraDialogs.h"
 #include "AppTools.h"
 #include "Resource.h"
@@ -58,11 +57,11 @@ static INT_PTR CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT message, WPARAM 
                     data->pwdOut = Win::GetText(GetDlgItem(hDlg, IDC_GET_PASSWORD_EDIT));
                     if (data->remember)
                         *data->remember = BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_REMEMBER_PASSWORD);
-                    EndDialog(hDlg, DIALOG_OK_PRESSED);
+                    EndDialog(hDlg, IDOK);
                     return TRUE;
 
                 case IDCANCEL:
-                    EndDialog(hDlg, DIALOG_CANCEL_PRESSED);
+                    EndDialog(hDlg, IDCANCEL);
                     return TRUE;
             }
             break;
@@ -86,7 +85,7 @@ TCHAR *Dialog_GetPassword(HWND hwndParent, const TCHAR *fileName, bool *remember
     data.remember = rememberPassword;
 
     INT_PTR dialogResult = DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_DIALOG_GET_PASSWORD), hwndParent, Dialog_GetPassword_Proc, (LPARAM)&data);
-    if (DIALOG_OK_PRESSED != dialogResult) {
+    if (IDOK != dialogResult) {
         free((void*)data.pwdOut);
         return NULL;
     }
@@ -148,11 +147,11 @@ static INT_PTR CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT message, WPARAM wPa
                         data->pageEnteredOut = _ttoi(newPageNoTxt);
                         free(newPageNoTxt);
                     }
-                    EndDialog(hDlg, DIALOG_OK_PRESSED);
+                    EndDialog(hDlg, IDOK);
                     return TRUE;
 
                 case IDCANCEL:
-                    EndDialog(hDlg, DIALOG_CANCEL_PRESSED);
+                    EndDialog(hDlg, IDCANCEL);
                     return TRUE;
             }
             break;
@@ -169,7 +168,7 @@ int Dialog_GoToPage(HWND hwnd, int currentPageNo, int pageCount)
     data.currPageNo = currentPageNo;
     data.pageCount = pageCount;
     INT_PTR dialogResult = DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_DIALOG_GOTO_PAGE), hwnd, Dialog_GoToPage_Proc, (LPARAM)&data);
-    if (DIALOG_OK_PRESSED == dialogResult)
+    if (IDOK == dialogResult)
         return data.pageEnteredOut;
     return 0;
 }
@@ -213,11 +212,11 @@ static INT_PTR CALLBACK Dialog_Find_Proc(HWND hDlg, UINT message, WPARAM wParam,
             assert(data);
             data->searchTerm = Win::GetText(GetDlgItem(hDlg, IDC_FIND_EDIT));
             data->matchCase = BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_MATCH_CASE);
-            EndDialog(hDlg, DIALOG_OK_PRESSED);
+            EndDialog(hDlg, IDOK);
             return TRUE;
 
         case IDCANCEL:
-            EndDialog(hDlg, DIALOG_CANCEL_PRESSED);
+            EndDialog(hDlg, IDCANCEL);
             return TRUE;
         }
         break;
@@ -235,7 +234,7 @@ TCHAR * Dialog_Find(HWND hwnd, const TCHAR *previousSearch, bool *matchCase)
     data.matchCase = matchCase ? *matchCase : false;
 
     INT_PTR dialogResult = DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_DIALOG_FIND), hwnd, Dialog_Find_Proc, (LPARAM)&data);
-    if (dialogResult != DIALOG_OK_PRESSED)
+    if (dialogResult != IDOK)
         return NULL;
 
     if (matchCase)
@@ -280,13 +279,13 @@ static INT_PTR CALLBACK Dialog_PdfAssociate_Proc(HWND hDlg, UINT message, WPARAM
                 case IDOK:
                     if (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_DONT_ASK_ME_AGAIN))
                         data->dontAskAgain = true;
-                    EndDialog(hDlg, DIALOG_OK_PRESSED);
+                    EndDialog(hDlg, IDYES);
                     return TRUE;
 
                 case IDCANCEL:
                     if (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_DONT_ASK_ME_AGAIN))
                         data->dontAskAgain = true;
-                    EndDialog(hDlg, DIALOG_NO_PRESSED);
+                    EndDialog(hDlg, IDNO);
                     return TRUE;
 
                 case IDC_DONT_ASK_ME_AGAIN:
@@ -298,8 +297,8 @@ static INT_PTR CALLBACK Dialog_PdfAssociate_Proc(HWND hDlg, UINT message, WPARAM
 }
 
 /* Show "associate this application with PDF files" dialog.
-   Returns DIALOG_YES_PRESSED if "Yes" button was pressed or
-   DIALOG_NO_PRESSED if "No" button was pressed.
+   Returns IDYES if "Yes" button was pressed or
+   IDNO if "No" button was pressed.
    Returns the state of "don't ask me again" checkbox" in <dontAskAgain> */
 INT_PTR Dialog_PdfAssociate(HWND hwnd, bool *dontAskAgainOut)
 {
@@ -362,7 +361,7 @@ static INT_PTR CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT message, WPAR
                 langList = GetDlgItem(hDlg, IDC_CHANGE_LANG_LANG_LIST);
                 assert(langList == (HWND)lParam);
                 data->langId = ListBox_GetCurSel(langList);
-                EndDialog(hDlg, DIALOG_OK_PRESSED);
+                EndDialog(hDlg, IDOK);
                 return FALSE;
             }
             switch (LOWORD(wParam))
@@ -370,11 +369,11 @@ static INT_PTR CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT message, WPAR
                 case IDOK:
                     langList = GetDlgItem(hDlg, IDC_CHANGE_LANG_LANG_LIST);
                     data->langId = ListBox_GetCurSel(langList);
-                    EndDialog(hDlg, DIALOG_OK_PRESSED);
+                    EndDialog(hDlg, IDOK);
                     return TRUE;
 
                 case IDCANCEL:
-                    EndDialog(hDlg, DIALOG_CANCEL_PRESSED);
+                    EndDialog(hDlg, IDCANCEL);
                     return TRUE;
             }
             break;
@@ -391,10 +390,17 @@ int Dialog_ChangeLanguge(HWND hwnd, int currLangId)
     Dialog_ChangeLanguage_Data data;
     data.langId = currLangId;
     INT_PTR dialogResult = DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_DIALOG_CHANGE_LANGUAGE), hwnd, Dialog_ChangeLanguage_Proc, (LPARAM)&data);
-    if (DIALOG_CANCEL_PRESSED == dialogResult)
+    if (IDCANCEL == dialogResult)
         return -1;
     return data.langId;
 }
+
+/* For passing data to/from 'new version available' dialog */
+typedef struct {
+    const TCHAR *currVersion;
+    const TCHAR *newVersion;
+    bool skipThisVersion;
+} Dialog_NewVersion_Data;
 
 static INT_PTR CALLBACK Dialog_NewVersion_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -431,19 +437,19 @@ static INT_PTR CALLBACK Dialog_NewVersion_Proc(HWND hDlg, UINT message, WPARAM w
         case WM_COMMAND:
             data = (Dialog_NewVersion_Data*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
             assert(data);
-            data->skipThisVersion= FALSE;
+            data->skipThisVersion = false;
             switch (LOWORD(wParam))
             {
                 case IDOK:
                     if (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_SKIP_THIS_VERSION))
-                        data->skipThisVersion= TRUE;
-                    EndDialog(hDlg, DIALOG_OK_PRESSED);
+                        data->skipThisVersion = true;
+                    EndDialog(hDlg, IDYES);
                     return TRUE;
 
                 case IDCANCEL:
                     if (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_SKIP_THIS_VERSION))
-                        data->skipThisVersion= TRUE;
-                    EndDialog(hDlg, DIALOG_NO_PRESSED);
+                        data->skipThisVersion = true;
+                    EndDialog(hDlg, IDNO);
                     return TRUE;
 
                 case IDC_SKIP_THIS_VERSION:
@@ -454,9 +460,18 @@ static INT_PTR CALLBACK Dialog_NewVersion_Proc(HWND hDlg, UINT message, WPARAM w
     return FALSE;
 }
 
-INT_PTR Dialog_NewVersionAvailable(HWND hwnd, Dialog_NewVersion_Data *data)
+INT_PTR Dialog_NewVersionAvailable(HWND hwnd, const TCHAR *currentVersion, const TCHAR *newVersion, bool *skipThisVersion)
 {
-    return DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_DIALOG_NEW_VERSION), hwnd, Dialog_NewVersion_Proc, (LPARAM)data);
+    Dialog_NewVersion_Data data;
+    data.currVersion = currentVersion;
+    data.newVersion = newVersion;
+    data.skipThisVersion = false;
+
+    INT_PTR res = DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_DIALOG_NEW_VERSION), hwnd, Dialog_NewVersion_Proc, (LPARAM)&data);
+    if (skipThisVersion)
+        *skipThisVersion = data.skipThisVersion;
+
+    return res;
 }
 
 static float gItemZoom[] = { ZOOM_FIT_PAGE, ZOOM_FIT_WIDTH, ZOOM_FIT_CONTENT, 0,
@@ -537,11 +552,11 @@ static INT_PTR CALLBACK Dialog_CustomZoom_Proc(HWND hDlg, UINT message, WPARAM w
             currZoom = (float *)GetWindowLongPtr(hDlg, GWLP_USERDATA);
             assert(currZoom);
             *currZoom = GetZoomComboBoxValue(hDlg, IDC_DEFAULT_ZOOM, *currZoom);
-            EndDialog(hDlg, DIALOG_OK_PRESSED);
+            EndDialog(hDlg, IDOK);
             return TRUE;
 
         case IDCANCEL:
-            EndDialog(hDlg, DIALOG_CANCEL_PRESSED);
+            EndDialog(hDlg, IDCANCEL);
             return TRUE;
         }
         break;
@@ -604,23 +619,22 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT message, WPARAM wPa
         SetDlgItemText(hDlg, IDOK, _TR("OK"));
         SetDlgItemText(hDlg, IDCANCEL, _TR("Cancel"));
 
-        if (prefs->m_enableTeXEnhancements)
-        {
+        if (prefs->m_enableTeXEnhancements) {
             // Fit the additional section into the dialog
             // (this should rather happen in SumatraPDF.rc, but the resource
             // editor tends to overwrite conditional stuff which isn't its own)
-            RECT rc;
-            GetWindowRect(GetDlgItem(hDlg, IDC_SECTION_INVERSESEARCH), &rc);
-            UINT addHeight = RectDy(&rc) + 8;
-            GetWindowRect(hDlg, &rc);
-            MoveWindow(hDlg, rc.left, rc.top, RectDx(&rc), RectDy(&rc) + addHeight, TRUE);
+            RectI rc = WindowRect(GetDlgItem(hDlg, IDC_SECTION_INVERSESEARCH));
+            UINT addHeight = rc.dy + 8;
+            rc = WindowRect(hDlg);
+            MoveWindow(hDlg, rc.x, rc.y, rc.dx, rc.dy + addHeight, TRUE);
 
-            GetClientRect(GetDlgItem(hDlg, IDOK), &rc);
-            MapWindowPoints(GetDlgItem(hDlg, IDOK), hDlg, (LPPOINT)&rc, 2);
-            MoveWindow(GetDlgItem(hDlg, IDOK), rc.left, rc.top + addHeight, RectDx(&rc), RectDy(&rc), TRUE);
-            GetClientRect(GetDlgItem(hDlg, IDCANCEL), &rc);
-            MapWindowPoints(GetDlgItem(hDlg, IDCANCEL), hDlg, (LPPOINT)&rc, 2);
-            MoveWindow(GetDlgItem(hDlg, IDCANCEL), rc.left, rc.top + addHeight, RectDx(&rc), RectDy(&rc), TRUE);
+            HWND hItem = GetDlgItem(hDlg, IDOK);
+            rc = MapRectToWindow(ClientRect(hItem), hItem, hDlg);
+            MoveWindow(hItem, rc.x, rc.y + addHeight, rc.dx, rc.dy, TRUE);
+
+            hItem = GetDlgItem(hDlg, IDCANCEL);
+            rc = MapRectToWindow(ClientRect(hItem), hItem, hDlg);
+            MoveWindow(hItem, rc.x, rc.y + addHeight, rc.dx, rc.dy, TRUE);
 
             SetDlgItemText(hDlg, IDC_SECTION_INVERSESEARCH, _TR("Set inverse search command-line"));
             SetDlgItemText(hDlg, IDC_CMDLINE_LABEL, _TR("Enter the command-line to invoke when you double-click on the PDF document:"));
@@ -631,13 +645,11 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT message, WPARAM wPa
                 prefs->m_inverseSearchCmdLine = inverseSearch;
             // Find the index of the active command line    
             LRESULT ind = SendMessage(GetDlgItem(hDlg, IDC_CMDLINE), CB_FINDSTRINGEXACT, -1, (LPARAM) prefs->m_inverseSearchCmdLine);
-            if (CB_ERR == ind)
-            {            
+            if (CB_ERR == ind) {            
                 // if no existing command was selected then set the user custom command in the combo
                 SetDlgItemText(hDlg, IDC_CMDLINE, prefs->m_inverseSearchCmdLine);
             }
-            else
-            {
+            else {
                 // select the active command
                 SendMessage(GetDlgItem(hDlg, IDC_CMDLINE), CB_SETCURSEL, (WPARAM) ind , 0);
             }
@@ -672,11 +684,11 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT message, WPARAM wPa
                 free(prefs->m_inverseSearchCmdLine);
                 prefs->m_inverseSearchCmdLine = Win::GetText(GetDlgItem(hDlg, IDC_CMDLINE));
             }
-            EndDialog(hDlg, DIALOG_OK_PRESSED);
+            EndDialog(hDlg, IDOK);
             return TRUE;
 
         case IDCANCEL:
-            EndDialog(hDlg, DIALOG_CANCEL_PRESSED);
+            EndDialog(hDlg, IDCANCEL);
             return TRUE;
 
         case IDC_REMEMBER_OPENED_FILES:

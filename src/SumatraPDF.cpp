@@ -1703,10 +1703,10 @@ static bool RegisterForPdfExtentions(HWND hwnd)
        see this dialog */
     if (!gGlobalPrefs.m_pdfAssociateDontAskAgain) {
         INT_PTR result = Dialog_PdfAssociate(hwnd, &gGlobalPrefs.m_pdfAssociateDontAskAgain);
-        if (DIALOG_NO_PRESSED == result) {
+        if (IDNO == result) {
             gGlobalPrefs.m_pdfAssociateShouldAssociate = FALSE;
         } else {
-            assert(DIALOG_OK_PRESSED == result);
+            assert(IDYES == result);
             gGlobalPrefs.m_pdfAssociateShouldAssociate = TRUE;
         }
     }
@@ -1735,22 +1735,6 @@ static void OnDropFiles(HDROP hDrop)
         LoadDocument(filename);
     }
     DragFinish(hDrop);
-}
-
-static bool ShowNewVersionDialog(HWND hParent, const TCHAR *newVersion)
-{
-    Dialog_NewVersion_Data data;
-    data.currVersion = UPDATE_CHECK_VER;
-    data.newVersion = newVersion;
-    data.skipThisVersion = false;
-
-    INT_PTR res = Dialog_NewVersionAvailable(hParent, &data);
-    if (data.skipThisVersion) {
-        free(gGlobalPrefs.m_versionToSkip);
-        gGlobalPrefs.m_versionToSkip = Str::Dup(newVersion);
-    }
-
-    return DIALOG_OK_PRESSED == res;
 }
 
 static DWORD OnUrlDownloaded(HWND hParent, HttpReqCtx *ctx, bool silent)
@@ -1786,8 +1770,16 @@ static DWORD OnUrlDownloaded(HWND hParent, HttpReqCtx *ctx, bool silent)
     if (silent && Str::EqI(gGlobalPrefs.m_versionToSkip, verTxt))
         return 0;
 
-    bool download = ShowNewVersionDialog(hParent, verTxt);
-    if (download)
+    // ask whether to download the new version and allow the user to
+    // either open the browser, do nothing or don't be reminded of
+    // this update ever again
+    bool skipThisVersion = false;
+    INT_PTR res = Dialog_NewVersionAvailable(hParent, UPDATE_CHECK_VER, verTxt, &skipThisVersion);
+    if (skipThisVersion) {
+        free(gGlobalPrefs.m_versionToSkip);
+        gGlobalPrefs.m_versionToSkip = Str::Dup(verTxt);
+    }
+    if (IDYES == res)
         LaunchBrowser(SVN_UPDATE_LINK);
 
     return 0;
@@ -2896,7 +2888,7 @@ static void OnMenuCustomZoom(WindowInfo *win)
         return;
 
     float zoom = win->dm->zoomVirtual();
-    if (DIALOG_CANCEL_PRESSED == Dialog_CustomZoom(win->hwndFrame, &zoom))
+    if (IDCANCEL == Dialog_CustomZoom(win->hwndFrame, &zoom))
         return;
     win->ZoomToSelection(zoom, false);
 }
@@ -3583,20 +3575,6 @@ static void BrowseFolder(WindowInfo *win, bool forward)
     LoadDocument(fullpath, win, true, true);
 }
 
-static void RotateLeft(WindowInfo *win)
-{
-    if (!win || !win->IsDocLoaded())
-        return;
-    win->dm->rotateBy(-90);
-}
-
-static void RotateRight(WindowInfo *win)
-{
-    if (!win || !win->IsDocLoaded())
-        return;
-    win->dm->rotateBy(90);
-}
-
 static void OnVScroll(WindowInfo *win, WPARAM wParam)
 {
     SCROLLINFO   si = {0};
@@ -3770,7 +3748,7 @@ static void OnMenuSettings(WindowInfo *win)
 {
     if (gRestrictedUse) return;
 
-    if (DIALOG_OK_PRESSED != Dialog_Settings(win->hwndFrame, &gGlobalPrefs))
+    if (IDOK != Dialog_Settings(win->hwndFrame, &gGlobalPrefs))
         return;
 
     if (!gGlobalPrefs.m_rememberOpenedFiles)
@@ -3782,9 +3760,8 @@ static void OnMenuSettings(WindowInfo *win)
 // toggles 'show pages continuously' state
 static void OnMenuViewContinuous(WindowInfo *win)
 {
-    assert(win);
-    if (!win) return;
-    if (!win->dm) return;
+    if (!win || !win->IsDocLoaded())
+        return;
 
     DisplayMode newMode = win->dm->displayMode();
     switch (newMode) {
@@ -3937,12 +3914,16 @@ static void OnMenuFind(WindowInfo *win)
 
 static void OnMenuViewRotateLeft(WindowInfo *win)
 {
-    RotateLeft(win);
+    if (!win || !win->IsDocLoaded())
+        return;
+    win->dm->rotateBy(-90);
 }
 
 static void OnMenuViewRotateRight(WindowInfo *win)
 {
-    RotateRight(win);
+    if (!win || !win->IsDocLoaded())
+        return;
+    win->dm->rotateBy(90);
 }
 
 void WindowInfo_EnterFullscreen(WindowInfo *win, bool presentation)
@@ -5691,13 +5672,12 @@ static bool gWheelMsgRedirect = false; // set when WM_MOUSEWHEEL has been passed
 static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     int          currentScrollPos;
-    LRESULT      res;
     POINT        pt;
-    bool        handled;
 
     WindowInfo * win = FindWindowInfoByHwnd(hwnd);
     if (win && win->IsAboutWindow()) {
-        res = HandleWindowAboutMsg(win, hwnd, message, wParam, lParam, handled);
+        bool handled;
+        LRESULT res = HandleWindowAboutMsg(win, hwnd, message, wParam, lParam, handled);
         if (handled)
             return res;
     }
@@ -6058,7 +6038,8 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                     break;
 
                 case IDM_REFRESH:
-                    win->Reload();
+                    if (win)
+                        win->Reload();
                     break;
 
                 case IDM_SAVEAS_BOOKMARK:
@@ -6071,17 +6052,17 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                     break;
 
                 case IDT_VIEW_FIT_PAGE:
-                    if (win->IsDocLoaded())
+                    if (win && win->IsDocLoaded())
                         OnMenuFitSinglePage(win);
                     break;
 
                 case IDT_VIEW_ZOOMIN:
-                    if (win->IsDocLoaded())
+                    if (win && win->IsDocLoaded())
                         win->ZoomToSelection(ZOOM_IN_FACTOR, true);
                     break;
 
                 case IDT_VIEW_ZOOMOUT:
-                    if (win->IsDocLoaded())
+                    if (win && win->IsDocLoaded())
                         win->ZoomToSelection(ZOOM_OUT_FACTOR, true);
                     break;
 

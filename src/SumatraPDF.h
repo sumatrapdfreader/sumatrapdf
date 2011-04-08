@@ -46,5 +46,6 @@ void WindowInfo_EnterFullscreen(WindowInfo *win, bool presentation=false);
 void CheckPositionAndSize(DisplayState *ds);
 void UpdateToolbarPageText(WindowInfo *win, int pageCount);
 void LaunchBrowser(const TCHAR *url);
+void AssociateExeWithPdfExtension();
 
 #endif

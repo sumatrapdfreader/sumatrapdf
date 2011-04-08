@@ -129,11 +129,7 @@ void UpdateWindowSize(DialogData *pdd, const int cx, const int cy, HWND hwnd)
     for (int i = 0; i < pdd->nItemCount; i++) {
         const DialogSizerSizingItem *psd = pdd->psd + i;
         HWND hwndChild = GetDlgItem(hwnd, psd->uControlID);
-
-        RECT rc;
-        GetWindowRect(hwndChild, &rc);
-        MapWindowPoints(HWND_DESKTOP, hwnd, (LPPOINT)&rc, 2);
-        RectI rect = RectI::FromXY(rc.left, rc.top, rc.right, rc.bottom);
+        RectI rect = MapRectToWindow(WindowRect(hwndChild), HWND_DESKTOP, hwnd);
 
         // Adjust the window horizontally
         if (psd->uSizeInfo & DS_MoveX)
