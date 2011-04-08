@@ -218,12 +218,6 @@ pdf_load_page_contents_array(fz_buffer **bigbufp, pdf_xref *xref, fz_obj *list)
 	{
 		fz_obj *stm = fz_array_get(list, i);
 		error = pdf_load_stream(&one, xref, fz_to_num(stm), fz_to_gen(stm));
-		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1239 */
-		if (error)
-		{
-			fz_catch(error, "cannot load content stream part %d/%d", i + 1, n);
-			continue;
-		}
 		if (error)
 		{
 			fz_catch(error, "cannot load content stream part %d/%d", i + 1, n);
@@ -239,8 +233,8 @@ pdf_load_page_contents_array(fz_buffer **bigbufp, pdf_xref *xref, fz_obj *list)
 		fz_drop_buffer(one);
 	}
 
-	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1239 */
-	if (big->len == 0)
+	/* SumatraPDF: fail to load a content-stream less page */
+	if (n > 0 && big->len == 0)
 	{
 		fz_drop_buffer(big);
 		return fz_throw("couldn't load any content stream");

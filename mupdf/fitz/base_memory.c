@@ -23,7 +23,7 @@ fz_calloc(int count, int size)
 	if (count < 0 || size < 0 || count > INT_MAX / size)
 	{
 		fprintf(stderr, "fatal error: out of memory (integer overflow)\n");
-		return NULL;
+		abort();
 	}
 
 	p = malloc(count * size);
