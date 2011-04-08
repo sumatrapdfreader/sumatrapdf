@@ -1907,8 +1907,9 @@ static void PaintSelection(WindowInfo *win, HDC hdc) {
             UpdateTextSelection(win);
 
         // after selection is done
-        for (SelectionOnPage *sel = win->selectionOnPage; sel; sel = sel->next)
-            PaintTransparentRectangle(hdc, win->canvasRc, &sel->GetCanvasRect(win->dm), COL_SELECTION_RECT);
+        for (size_t i = 0; i < win->selectionOnPage->Count(); i++)
+            PaintTransparentRectangle(hdc, win->canvasRc,
+                &win->selectionOnPage->At(i).GetRect(win->dm), COL_SELECTION_RECT);
     }
 }
 
@@ -2129,7 +2130,8 @@ static void CopySelectionToClipboard(WindowInfo *win)
         }
         else {
             StrVec selections;
-            for (SelectionOnPage *selOnPage = win->selectionOnPage; selOnPage; selOnPage = selOnPage->next) {
+            for (size_t i = 0; i < win->selectionOnPage->Count(); i++) {
+                SelectionOnPage *selOnPage = &win->selectionOnPage->At(i);
                 selText = win->dm->getTextInRegion(selOnPage->pageNo, selOnPage->rect);
                 if (selText)
                     selections.Push(selText);
@@ -2152,7 +2154,7 @@ static void CopySelectionToClipboard(WindowInfo *win)
         WindowInfo_ShowMessage_Async(win, _TR("Copying text was denied (copying as image only)"), true);
 
     /* also copy a screenshot of the current selection to the clipboard */
-    SelectionOnPage *selOnPage = win->selectionOnPage;
+    SelectionOnPage *selOnPage = &win->selectionOnPage->At(0);
     RenderedBitmap * bmp = win->dm->engine->RenderBitmap(selOnPage->pageNo,
         win->dm->zoomReal(), win->dm->rotation(), &selOnPage->rect,
         Target_Export, gUseGdiRenderer);
@@ -2918,7 +2920,7 @@ static void PrintToDevice(BaseEngine *engine, HDC hdc, LPDEVMODE devMode,
                           int dm_rotation=0,
                           enum PrintRangeAdv rangeAdv=PrintRangeAll,
                           enum PrintScaleAdv scaleAdv=PrintScaleShrink,
-                          SelectionOnPage *sel=NULL) {
+                          Vec<SelectionOnPage> *sel=NULL) {
 
     assert(engine);
     if (!engine) return;
@@ -2952,14 +2954,14 @@ static void PrintToDevice(BaseEngine *engine, HDC hdc, LPDEVMODE devMode,
             assert(1 == nPageRanges && sel);
             DBG_OUT(" printing:  drawing bitmap for selection\n");
 
-            for (; sel; sel = sel->next) {
+            for (size_t i = 0; i < sel->Count(); i++) {
                 StartPage(hdc);
 
-                RectD *clipRegion = &sel->rect;
+                RectD *clipRegion = &sel->At(i).rect;
 
                 SizeF sSize = clipRegion->Size().Convert<float>();
                 // Swap width and height for rotated documents
-                int rotation = engine->PageRotation(sel->pageNo) + dm_rotation;
+                int rotation = engine->PageRotation(sel->At(i).pageNo) + dm_rotation;
                 if (rotation % 180 != 0)
                     swap(sSize.dx, sSize.dy);
 
@@ -2976,12 +2978,12 @@ static void PrintToDevice(BaseEngine *engine, HDC hdc, LPDEVMODE devMode,
                 RectI rc = RectI::FromXY((int)(printableWidth - sSize.dx * zoom) / 2,
                                          (int)(printableHeight - sSize.dy * zoom) / 2,
                                          paperWidth, paperHeight);
-                engine->RenderPage(hdc, sel->pageNo, rc, zoom, dm_rotation, clipRegion, Target_Print);
+                engine->RenderPage(hdc, sel->At(i).pageNo, rc, zoom, dm_rotation, clipRegion, Target_Print);
 #else
-                RenderedBitmap *bmp = engine->RenderBitmap(sel->pageNo, zoom, dm_rotation, clipRegion, Target_Print, gUseGdiRenderer);
+                RenderedBitmap *bmp = engine->RenderBitmap(sel->At(i).pageNo, zoom, dm_rotation, clipRegion, Target_Print, gUseGdiRenderer);
                 if (bmp) {
-                    bmp->stretchDIBits(hdc, (printableWidth - bmp->dx()) / 2,
-                        (printableHeight - bmp->dy()) / 2, bmp->dx(), bmp->dy());
+                    bmp->stretchDIBits(hdc, (printableWidth - bmp->size().dx) / 2,
+                        (printableHeight - bmp->size().dy) / 2, bmp->size().dx, bmp->size().dy);
                     delete bmp;
                 }
 #endif
@@ -3063,8 +3065,8 @@ static void PrintToDevice(BaseEngine *engine, HDC hdc, LPDEVMODE devMode,
 #else
             RenderedBitmap *bmp = engine->RenderBitmap(pageNo, zoom, rotation, NULL, Target_Print, gUseGdiRenderer);
             if (bmp) {
-                bmp->stretchDIBits(hdc, (printableWidth - bmp->dx()) / 2 - horizOffset,
-                    (printableHeight - bmp->dy()) / 2 - vertOffset, bmp->dx(), bmp->dy());
+                bmp->stretchDIBits(hdc, (printableWidth - bmp->size().dx) / 2 - horizOffset,
+                    (printableHeight - bmp->size().dy) / 2 - vertOffset, bmp->size().dx, bmp->size().dy);
                 delete bmp;
             }
 #endif

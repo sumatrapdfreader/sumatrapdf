@@ -227,8 +227,8 @@ void WindowInfo::ZoomToSelection(float factor, bool relative)
     // either scroll towards the center of the current selection
     if (zoomToPt) {
         RectI selRect;
-        for (SelectionOnPage *sel = this->selectionOnPage; sel; sel = sel->next)
-            selRect = selRect.Union(sel->GetCanvasRect(this->dm));
+        for (size_t i = 0; i < this->selectionOnPage->Count(); i++)
+            selRect = selRect.Union(this->selectionOnPage->At(i).GetRect(this->dm));
 
         ClientRect rc(this->hwndCanvas);
         pt.x = 2 * selRect.x + selRect.dx - rc.dx / 2;
@@ -379,7 +379,7 @@ void DoubleBuffer::Flush(HDC hdc)
         BitBlt(hdc, rect.x, rect.y, rect.dx, rect.dy, hdcBuffer, 0, 0, SRCCOPY);
 }
 
-RectI SelectionOnPage::GetCanvasRect(DisplayModel *dm)
+RectI SelectionOnPage::GetRect(DisplayModel *dm)
 {
     // if the page is not visible, we return an empty rectangle
     PageInfo *pageInfo = dm->getPageInfo(pageNo);
@@ -391,9 +391,9 @@ RectI SelectionOnPage::GetCanvasRect(DisplayModel *dm)
     return canvasRect.Convert<int>();
 }
 
-SelectionOnPage *SelectionOnPage::FromRectangle(DisplayModel *dm, RectI rect)
+Vec<SelectionOnPage> *SelectionOnPage::FromRectangle(DisplayModel *dm, RectI rect)
 {
-    SelectionOnPage *sel = NULL;
+    Vec<SelectionOnPage> *sel = new Vec<SelectionOnPage>();
 
     for (int pageNo = dm->pageCount(); pageNo >= 1; --pageNo) {
         PageInfo *pageInfo = dm->getPageInfo(pageNo);
@@ -412,24 +412,18 @@ SelectionOnPage *SelectionOnPage::FromRectangle(DisplayModel *dm, RectI rect)
             continue;
 
         assert(pageNo == selPageNo);
-
-        SelectionOnPage *selOnPage = new SelectionOnPage(selPageNo, &isectD);
-        selOnPage->next = sel;
-        sel = selOnPage;
+        sel->Append(SelectionOnPage(selPageNo, &isectD));
     }
 
     return sel;
 }
 
-SelectionOnPage *SelectionOnPage::FromTextSelect(TextSel *textSel)
+Vec<SelectionOnPage> *SelectionOnPage::FromTextSelect(TextSel *textSel)
 {
-    SelectionOnPage *sel = NULL;
+    Vec<SelectionOnPage> *sel = new Vec<SelectionOnPage>(textSel->len);
 
-    for (int i = textSel->len - 1; i >= 0; i--) {
-        SelectionOnPage *selOnPage = new SelectionOnPage(textSel->pages[i], &textSel->rects[i].Convert<double>());
-        selOnPage->next = sel;
-        sel = selOnPage;
-    }
+    for (int i = textSel->len - 1; i >= 0; i--)
+        sel->Append(SelectionOnPage(textSel->pages[i], &textSel->rects[i].Convert<double>()));
 
     return sel;
 }

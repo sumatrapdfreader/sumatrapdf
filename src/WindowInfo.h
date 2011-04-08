@@ -97,7 +97,7 @@ public:
 
     /* after selection is done, the selected area is converted
      * to user coordinates for each page which has not empty intersection with it */
-    SelectionOnPage *selectionOnPage;
+    Vec<SelectionOnPage> *selectionOnPage;
 
     // file change watcher
     FileWatcher *   watcher;
@@ -235,15 +235,15 @@ class SelectionOnPage {
 public:
     SelectionOnPage(int pageNo=0, RectD *rect=NULL) :
         pageNo(pageNo), rect(rect ? *rect : RectD()) { }
-    ~SelectionOnPage() { delete next; }
 
-    int              pageNo;    // page this selection is on
-    RectD            rect;      // position of selection rectangle on page (in page coordinates)
-    SelectionOnPage* next;      // pointer to next page with selected area (or NULL)
+    int     pageNo; // page this selection is on
+    RectD   rect;   // position of selection rectangle on page (in page coordinates)
 
-    RectI GetCanvasRect(DisplayModel *dm);
-    static SelectionOnPage *FromRectangle(DisplayModel *dm, RectI rect);
-    static SelectionOnPage *FromTextSelect(TextSel *textSel);
+    // position of selection rectangle in the view port
+    RectI   GetRect(DisplayModel *dm);
+
+    static Vec<SelectionOnPage> *FromRectangle(DisplayModel *dm, RectI rect);
+    static Vec<SelectionOnPage> *FromTextSelect(TextSel *textSel);
 };
 
 class PdfLinkHandler {
