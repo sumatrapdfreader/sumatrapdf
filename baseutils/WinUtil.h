@@ -16,8 +16,9 @@ struct FuncNameAddr {
     void **addr;
 };
 
-void LoadDllFuncs(TCHAR *dllName, FuncNameAddr *funcs);
 FARPROC LoadDllFunc(TCHAR *dllName, const char *funcName);
+void LoadDllFuncs(HMODULE h, FuncNameAddr *funcs);
+void LoadDllFuncs(TCHAR *dllName, FuncNameAddr *funcs);
 
 class ScopedCom {
 public:

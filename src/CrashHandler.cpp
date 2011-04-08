@@ -104,7 +104,85 @@ static void LoadDbgHelpFuncs()
 {
     if (_MiniDumpWriteDump)
         return;
+#if 0
+    TCHAR *dbghelpPath = _T("C:\\Program Files (x86)\\Microsoft Visual Studio 10.0\\Team Tools\\Performance Tools\\dbghelp.dll");
+    if (File::Exists(dbghelpPath)) {
+        HMODULE h = LoadLibrary(dbghelpPath);
+        if (h) {
+            LoadDllFuncs(h, g_dbgHelpFuncs);
+            return;
+        }
+    }
+#endif
     LoadDllFuncs(_T("DBGHELP.DLL"), g_dbgHelpFuncs);
+}
+
+static bool GetEnvOk(DWORD ret, DWORD cchBufSize)
+{
+    return cchBufSize == ret;
+}
+
+/* How to setup symbol path:
+add GetEnvironmentVariableA("_NT_SYMBOL_PATH", szTemp, nTempLen)
+add GetEnvironmentVariableA("_NT_ALTERNATE_SYMBOL_PATH", szTemp, nTempLen)
+add: "srv*c:\\symbols*http://msdl.microsoft.com/download/symbols;cache*c:\\symbols"
+(except a better directory than c:\\symbols */
+
+// TODO: doesn't have expected result i.e. SymFromAddr() doesn't resolve symbols
+// even if I set sympath to my local directory that definitely has symbols
+// maybe it's related to dbghelp.dll version and I should try harder loading
+// the latest version available on the system?
+static void SetupSymbolPath()
+{
+    Str::Str<WCHAR> s(1024);
+
+    WCHAR buf[512];
+    DWORD cchBuf = dimof(buf);
+    DWORD res = GetEnvironmentVariableW(L"_NT_SYMBOL_PATH", buf, cchBuf);
+    if (GetEnvOk(res, cchBuf)) {
+        s.Append(buf);
+        s.Append(L";");
+    }
+    res = GetEnvironmentVariableW(L"_NT_ALTERNATE_SYMBOL_PATH", buf, cchBuf);
+    if (GetEnvOk(res, cchBuf)) {
+        s.Append(buf);
+        s.Append(L";");
+    }
+    WCHAR *dir = AppGenDataDir();
+    WCHAR *symDir = Path::Join(dir, L"symbols");
+    _tmkdir(symDir);
+    s.Append(L"srv*");
+    s.Append(symDir);
+    s.Append(L"*http://msdl.microsoft.com/download/symbols;cache*");
+    s.Append(symDir);
+#if 0 // when testing use my local directory
+    s.Set(L"c:\\symbols");
+#endif
+    // When running local builds, *.pdb is in the same dir as *.exe 
+    ScopedMem<TCHAR> exePath(ExePathGet());
+    ScopedMem<TCHAR> exeDir(Path::GetDir(exePath));
+    s.AppendFmt(_T(";%s"), exeDir);
+    BOOL ok = _SymSetSearchPathW(GetCurrentProcess(), s.Get());
+    free(dir);
+    free(symDir);
+}
+
+static bool InitializeDbgHelp()
+{
+    LoadDbgHelpFuncs();
+    if (!_SymInitialize)
+        return false;
+
+    gSymInitializeOk = _SymInitialize(GetCurrentProcess(), NULL, TRUE);
+    if (!gSymInitializeOk)
+        return false;
+
+    DWORD symOptions =_SymGetOptions();
+    symOptions = (SYMOPT_LOAD_LINES | SYMOPT_DEFERRED_LOADS | SYMOPT_UNDNAME);
+    symOptions |= SYMOPT_FAIL_CRITICAL_ERRORS; // don't show system msg box on errors
+    _SymSetOptions(symOptions);
+    SetupSymbolPath();
+    return true;
 }
 
 static bool CanStackWalk()
@@ -275,6 +353,49 @@ static bool GetAddrInfo(void *addr, char *module, DWORD moduleLen, DWORD& sectio
 }
 
 #define MAX_SYM_LEN 512
+static bool GetStackFrameInfo(Str::Str<char>& s, STACKFRAME64 *stackFrame,
+                              CONTEXT *ctx, HANDLE hThread, HANDLE hProc)
+{
+
+    BOOL ok = _StackWalk64(IMAGE_FILE_MACHINE_I386, hProc, hThread,
+        stackFrame, ctx, NULL, _SymFunctionTableAccess64,
+        _SymGetModuleBase64, NULL);
+    if (!ok)
+        return false;
+    
+    char buf[sizeof(SYMBOL_INFO) + MAX_SYM_LEN * sizeof(char)];
+    SYMBOL_INFO *symInfo = (SYMBOL_INFO*)buf;
+
+    memset(buf, 0, sizeof(buf));
+    symInfo->SizeOfStruct = sizeof(SYMBOL_INFO);
+    symInfo->MaxNameLen = MAX_SYM_LEN;
+
+    DWORD64 addr = stackFrame->AddrPC.Offset;
+    if (0 == addr)
+        return true;
+    if (addr == stackFrame->AddrReturn.Offset)
+        return false;
+        
+    DWORD64 symDisp = 0;
+    char *symName = NULL;
+    ok = _SymFromAddr(hProc, addr, &symDisp, symInfo);
+    if (ok)
+        symName = &(symInfo->Name[0]);
+    
+    char module[MAX_PATH] = { 0 };
+    DWORD section, offset;
+    if (GetAddrInfo((void*)addr, module, sizeof(module), section, offset)) {
+        Str::ToLower(module);
+        const char *moduleShort = Path::GetBaseName(module);
+        if (symName)
+            s.AppendFmt("0x%p %02X:%08X %s!%s+0x%x\r\n", (void*)addr, section, offset, moduleShort, symName, (int)symDisp);
+        else
+            s.AppendFmt("0x%p %02X:%08X %s \r\n", (void*)addr, section, offset, moduleShort);
+    } else {
+        s.AppendFmt("%%08X\r\n", (DWORD)addr);
+    }
+    return true;
+}
 
 static void GetCallstack(Str::Str<char>& s, CONTEXT& ctx, HANDLE hThread)
 {
@@ -298,42 +419,11 @@ static void GetCallstack(Str::Str<char>& s, CONTEXT& ctx, HANDLE hThread)
     stackFrame.AddrFrame.Mode = AddrModeFlat;
     stackFrame.AddrStack.Mode = AddrModeFlat;
 
-    char buf[sizeof(SYMBOL_INFO) + MAX_SYM_LEN * sizeof(char)];
-    SYMBOL_INFO *symInfo = (SYMBOL_INFO*)buf;
-
     int framesCount = 0;
     int maxFrames = 32;
     while (framesCount < maxFrames)
     {
-        BOOL ok = _StackWalk64(IMAGE_FILE_MACHINE_I386, hProc, hThread,
-            &stackFrame, &ctx, NULL, _SymFunctionTableAccess64,
-            _SymGetModuleBase64, NULL);
-        if (!ok)
-            break;
-
-        memset(buf, 0, sizeof(buf));
-        symInfo->SizeOfStruct = sizeof(SYMBOL_INFO);
-        symInfo->MaxNameLen = MAX_SYM_LEN;
-        DWORD64 addr = stackFrame.AddrPC.Offset;
-
-        DWORD64 symDisp = 0;
-        ok = _SymFromAddr(hProc, addr, &symDisp, symInfo);
-        if (ok) {
-            char *name = &(symInfo->Name[0]);
-            s.AppendFmt("0x%p %s+0x%x\r\n", (void*)addr, name, (int)symDisp);
-        } else {
-            char module[MAX_PATH] = { 0 };
-            DWORD section, offset;
-            // TODO: shouldn't we be able to use export table of the DLL to
-            // at least know which function in the DLL it is even when we
-            // don't have symbols?
-            if (GetAddrInfo((void*)addr, module, sizeof(module), section, offset)) {
-                const char *moduleShort = Path::GetBaseName(module);
-                s.AppendFmt("0x%p %02X:%08X %s\r\n", (void*)addr, section, offset, moduleShort);
-            } else {
-                s.AppendFmt("%%08X\r\n", (DWORD)addr);
-            }
-        }
+        GetStackFrameInfo(s, &stackFrame, &ctx, hThread, hProc);
         framesCount++;
     }
 }
@@ -491,7 +581,9 @@ static void GetProgramVersion(Str::Str<char>& s)
 }
 
 static char *BuildCrashInfoText()
-{
+{    
+    InitializeDbgHelp();
+
     Str::Str<char> s(16 * 1024);
     GetProgramVersion(s);
     GetOsVersion(s);
@@ -605,68 +697,11 @@ static LONG WINAPI DumpExceptionHandler(EXCEPTION_POINTERS *exceptionInfo)
     return EXCEPTION_CONTINUE_SEARCH;
 }
 
-static bool GetEnvOk(DWORD ret, DWORD cchBufSize)
-{
-    return cchBufSize == ret;
-}
-
-/* How to setup symbol path:
-add GetEnvironmentVariableA("_NT_SYMBOL_PATH", szTemp, nTempLen)
-add GetEnvironmentVariableA("_NT_ALTERNATE_SYMBOL_PATH", szTemp, nTempLen)
-add: "srv*c:\\symbols*http://msdl.microsoft.com/download/symbols;cache*c:\\symbols"
-(except a better directory than c:\\symbols */
-
-// TODO: doesn't have expected result i.e. SymFromAddr() doesn't resolve symbols
-// even if I set sympath to my local directory that definitely has symbols
-// maybe it's related to dbghelp.dll version and I should try harder loading
-// the latest version available on the system?
-static void SetupSymbolPath()
-{
-    Str::Str<WCHAR> s(1024);
-
-    WCHAR buf[512];
-    DWORD cchBuf = dimof(buf);
-    DWORD res = GetEnvironmentVariableW(L"_NT_SYMBOL_PATH", buf, cchBuf);
-    if (GetEnvOk(res, cchBuf)) {
-        s.Append(buf);
-        s.Append(L";");
-    }
-    res = GetEnvironmentVariableW(L"_NT_ALTERNATE_SYMBOL_PATH", buf, cchBuf);
-    if (GetEnvOk(res, cchBuf)) {
-        s.Append(buf);
-        s.Append(L";");
-    }
-    WCHAR *dir = AppGenDataDir();
-    WCHAR *symDir = Path::Join(dir, L"symbols");
-    _tmkdir(symDir);
-    s.Append(L"srv*");
-    s.Append(symDir);
-    s.Append(L"*http://msdl.microsoft.com/download/symbols;cache*");
-    s.Append(symDir);
-    
-    BOOL ok = _SymSetSearchPathW(GetCurrentProcess(), s.Get());
-    //BOOL ok = _SymSetSearchPathW(GetCurrentProcess(), L"c:\\symbols");
-    free(dir);
-    free(symDir);
-}
-
 void InstallCrashHandler(const TCHAR *crashDumpPath, const TCHAR *crashTxtPath)
 {
-    LoadDbgHelpFuncs();
-
-    if (_SymInitialize) {
-       gSymInitializeOk = _SymInitialize(GetCurrentProcess(), NULL, FALSE);
-       if (gSymInitializeOk) {
-           DWORD symOptions =_SymGetOptions();
-           symOptions |= (SYMOPT_LOAD_LINES | SYMOPT_DEFERRED_LOADS | SYMOPT_UNDNAME);
-           symOptions |= SYMOPT_FAIL_CRITICAL_ERRORS; // don't show system msg box on errors
-           _SymSetOptions(symOptions);
-           SetupSymbolPath();
-       }
-    }
-
     if (NULL == crashDumpPath)
         return;
+
     g_crashDumpPath.Set(Str::Dup(crashDumpPath));
     g_crashTxtPath.Set(Str::Dup(crashTxtPath));
     if (!g_dumpEvent && !g_dumpThread) {

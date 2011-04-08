@@ -154,6 +154,15 @@ WCHAR *DupN(const WCHAR *s, size_t lenCch)
     return res;
 }
 
+void ToLower(char *s)
+{
+    if (!s) return;
+    while (*s) {
+        *s = tolower(*s);
+        s++;
+    }
+}
+
 /* Caller needs to free() the result */
 char *ToMultiByte(const WCHAR *txt, UINT CodePage)
 {

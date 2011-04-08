@@ -31,9 +31,8 @@ FARPROC LoadDllFunc(TCHAR *dllName, const char *funcName)
     return proc;
 }
 
-void LoadDllFuncs(TCHAR *dllName, FuncNameAddr *funcs)
-{    
-    HMODULE h = SafeLoadLibrary(dllName);
+void LoadDllFuncs(HMODULE h, FuncNameAddr *funcs)
+{
     if (!h)
         return;
     int i = 0;
@@ -44,6 +43,12 @@ void LoadDllFuncs(TCHAR *dllName, FuncNameAddr *funcs)
     // Note: we don't unload the dll. It's harmless for those that would stay
     // loaded anyway but we would crash trying to call a function that
     // was grabbed from a dll that was unloaded in the meantime
+}
+
+void LoadDllFuncs(TCHAR *dllName, FuncNameAddr *funcs)
+{
+    HMODULE h = SafeLoadLibrary(dllName);
+    LoadDllFuncs(h, funcs);
 }
 
 // Return true if application is themed. Wrapper around IsAppThemed() in uxtheme.dll
