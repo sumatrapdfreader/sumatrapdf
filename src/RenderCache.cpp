@@ -154,7 +154,7 @@ static bool IsTileVisible(DisplayModel *dm, int pageNo, int rotation, float zoom
     tileOnScreen.dx = (int)(tileOnScreen.dx * (fuzz + 1));
     tileOnScreen.y -= (int)(tileOnScreen.dy * fuzz * 0.5);
     tileOnScreen.dy = (int)(tileOnScreen.dy * (fuzz + 1));
-    RectI screen(0, 0, dm->viewPortSize.dx, dm->viewPortSize.dy);
+    RectI screen(PointI(), dm->viewPortSize);
     return !tileOnScreen.Intersect(screen).IsEmpty();
 }
 
@@ -512,8 +512,8 @@ DWORD WINAPI RenderCache::RenderCacheThread(LPVOID data)
         }
 
         RectD pageRect = GetTileRect(req.dm->engine, req.pageNo, req.rotation, req.zoom, req.tile);
-        bmp = req.dm->RenderBitmap(req.pageNo, req.zoom, req.rotation, &pageRect,
-                                   Target_View, cache->useGdiRenderer && *cache->useGdiRenderer);
+        bmp = req.dm->engine->RenderBitmap(req.pageNo, req.zoom, req.rotation, &pageRect, Target_View,
+                                           cache->useGdiRenderer && *cache->useGdiRenderer);
         if (req.abort) {
             delete bmp;
             if (req.callback)

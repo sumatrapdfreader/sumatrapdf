@@ -108,17 +108,7 @@ public:
     DisplayModel(DisplayModelCallback *callback, DisplayMode displayMode);
     ~DisplayModel();
 
-    RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
-                         RectD *pageRect=NULL, /* if NULL: defaults to the page's mediabox */
-                         RenderTarget target=Target_View, bool useGdi=false) {
-        if (!engine) return NULL;
-        return engine->RenderBitmap(pageNo, zoom, rotation, pageRect, target, useGdi);
-    }
-    bool renderPage(HDC hDC, int pageNo, RectI screenRect, float zoom=0, int rotation=0, RectD *pageRect=NULL, RenderTarget target=Target_View) {
-        if (!engine) return false;
-        return engine->RenderPage(hDC, pageNo, screenRect, zoom, rotation, pageRect, target);
-    }
-
+    const TCHAR *fileName() const { return engine->FileName(); }
     /* number of pages in the document */
     int  pageCount() const { return engine->PageCount(); }
     bool validPageNo(int pageNo) const {
@@ -145,18 +135,14 @@ public:
     void setPresentationMode(bool enable);
     bool getPresentationMode() const { return _presentationMode; }
 
-    const TCHAR *fileName() const { return engine->FileName(); }
-
     /* a "virtual" zoom level. Can be either a real zoom level in percent
        (i.e. 100.0 is original size) or one of virtual values ZOOM_FIT_PAGE,
        ZOOM_FIT_WIDTH or ZOOM_FIT_CONTENT, whose real value depends on draw area size */
     float zoomVirtual() const { return _zoomVirtual; }
-
     float zoomReal() const { return _zoomReal; }
     float zoomReal(int pageNo);
 
     int startPage() const { return _startPage; }
-
     int currentPageNo() const;
 
     BaseEngine *    engine;
@@ -170,21 +156,15 @@ public:
     /* viewPortOffset is "polymorphic". If viewPortSize.dx > totalAreSize.dx then
        viewPortOffset.x is offset of total area rect inside draw area, otherwise
        an offset of draw area inside total area.
-       The same for areaOff.y, except it's for dy */
+       The same for viewPortOffset.y, except it's for dy */
     PointI          viewPortOffset;
-
-    /* total size of view port (draw area) */
+    /* total size of view port (draw area), including scroll bars */
     SizeI           totalViewPortSize;
-    /* totalViewPortSize - size of visible scrollbars */
+    /* size of view port available for content (totalViewPortSize minus scroll bars) */
     SizeI           viewPortSize;
 
-    bool            rightSrollVisible;
-    bool            bottomScrollVisible;
-
-    void            SetViewPortSize(SizeI size) { totalViewPortSize = size; }
-    
-    bool            needHScroll() { return bottomScrollVisible; }
-    bool            needVScroll() { return rightSrollVisible; }
+    bool            needHScroll() const { return viewPortSize.dy < totalViewPortSize.dy; }
+    bool            needVScroll() const { return viewPortSize.dx < totalViewPortSize.dx; }
 
     void            ChangeViewPortSize(SizeI newViewPortSize);
 
@@ -252,7 +232,7 @@ public:
 
 protected:
 
-    bool            load(const TCHAR *fileName, int startPage, SizeI canvasSize);
+    bool            load(const TCHAR *fileName, int startPage, SizeI viewPort);
 
     bool            buildPagesInfo();
     float           zoomRealFromVirtualForPage(float zoomVirtual, int pageNo);
@@ -315,7 +295,7 @@ public:
                                             const TCHAR *fileName,
                                             DisplayMode displayMode,
                                             int startPage,
-                                            SizeI canvasSize);
+                                            SizeI viewPort);
 };
 
 bool    displayModeContinuous(DisplayMode displayMode);

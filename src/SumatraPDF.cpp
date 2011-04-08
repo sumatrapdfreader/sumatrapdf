@@ -1361,7 +1361,8 @@ static bool LoadDocIntoWindow(
 
     free(win->loadedFilePath);
     win->loadedFilePath = Str::Dup(fileName);
-    win->dm = DisplayModel::CreateFromFileName(win, fileName, displayMode, startPage, win->canvasRc.Size());
+    win->dm = DisplayModel::CreateFromFileName(win, fileName, displayMode,
+        startPage, WindowRect(win->hwndCanvas).Size());
     bool needrefresh = !win->dm;
 
     if (!win->dm) {
@@ -2131,6 +2132,8 @@ static void CopySelectionToClipboard(WindowInfo *win)
     assert(win);
     if (!win) return;
     if (!win->selectionOnPage) return;
+    if (!win->dm->engine) return;
+
     if (!OpenClipboard(NULL)) return;
     EmptyClipboard();
 
@@ -2165,8 +2168,9 @@ static void CopySelectionToClipboard(WindowInfo *win)
 
     /* also copy a screenshot of the current selection to the clipboard */
     SelectionOnPage *selOnPage = win->selectionOnPage;
-    RenderedBitmap * bmp = win->dm->RenderBitmap(selOnPage->pageNo, win->dm->zoomReal(),
-        win->dm->rotation(), &selOnPage->rect, Target_Export, gUseGdiRenderer);
+    RenderedBitmap * bmp = win->dm->engine->RenderBitmap(selOnPage->pageNo,
+        win->dm->zoomReal(), win->dm->rotation(), &selOnPage->rect,
+        Target_Export, gUseGdiRenderer);
     if (bmp) {
         if (!SetClipboardData(CF_BITMAP, bmp->getBitmap()))
             SeeLastError();

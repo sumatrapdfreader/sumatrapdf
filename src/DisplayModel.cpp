@@ -8,8 +8,8 @@
    In DM_SINGLE_PAGE mode total area is the size of currently displayed page
    given current zoom level and rotation.
    In DM_CONTINUOUS mode canvas area consist of all pages rendered sequentially
-   with a given zoom level and rotation. canvasDy is the sum of heights
-   of all pages plus spaces between them and canvasDx is the size of
+   with a given zoom level and rotation. canvasSize.dy is the sum of heights
+   of all pages plus spaces between them and canvasSize.dx is the size of
    the widest page.
 
    A possible configuration could look like this:
@@ -193,9 +193,6 @@ DisplayModel::DisplayModel(DisplayModelCallback *callback, DisplayMode displayMo
     _startPage = INVALID_PAGE_NO;
     _callback = callback;
 
-    rightSrollVisible = false;
-    bottomScrollVisible = false;
-
     engine = NULL;
     pdfEngine = NULL;
     xpsEngine = NULL;
@@ -234,7 +231,7 @@ PageInfo *DisplayModel::getPageInfo(int pageNo) const
     return &(_pagesInfo[pageNo-1]);
 }
 
-bool DisplayModel::load(const TCHAR *fileName, int startPage, SizeI canvasSize)
+bool DisplayModel::load(const TCHAR *fileName, int startPage, SizeI viewPort)
 { 
     assert(fileName);
     if (Str::EndsWithI(fileName, _T(".pdf")))
@@ -254,7 +251,7 @@ bool DisplayModel::load(const TCHAR *fileName, int startPage, SizeI canvasSize)
         return false;
 
     _dpiFactor = 1.0f * _callback->GetScreenDPI() / engine->GetFileDPI();
-    SetViewPortSize(canvasSize);
+    totalViewPortSize = viewPort;
 
     if (validPageNo(startPage))
         _startPage = startPage;
@@ -531,29 +528,17 @@ float DisplayModel::zoomReal(int pageNo)
      * navigating to another page in non-continuous mode */
 void DisplayModel::Relayout(float zoomVirtual, int rotation)
 {
-    int         pageNo;
-    PageInfo*   pageInfo = NULL;
-    SizeD       pageSize;
-    int         canvasDx, canvasDy;
-    int         rowMaxPageDy;
-    int         offX;
-    int         pageOffX;
-    int         pageInARow;
-    int         columns;
-    int         newViewPortOffsetX;
-    int         columnOffsets[2];
-    bool        newRightSrollVisible = false, newBottomScrollVisible = false;
-
-    viewPortSize = totalViewPortSize;
-
     assert(_pagesInfo);
     if (!_pagesInfo)
         return;
 
     normalizeRotation(&rotation);
     assert(validRotation(rotation));
-
     _rotation = rotation;
+
+    bool newNeedHScroll = false;
+    bool newNeedVScroll = false;
+    viewPortSize = totalViewPortSize;
 
 RestartLayout:
     int currPosY = padding->pageBorderTop;
@@ -562,24 +547,24 @@ RestartLayout:
 
 //    DBG_OUT("DisplayModel::Relayout(), pageCount=%d, zoomReal=%.6f, zoomVirtual=%.2f\n", pageCount, dm->zoomReal, dm->zoomVirtual);
 
-    if (0 == currZoomReal || INVALID_ZOOM == currZoomReal)
-        newViewPortOffsetX = 0;
-    else
+    int newViewPortOffsetX = 0;
+    if (0 != currZoomReal && INVALID_ZOOM != currZoomReal)
         newViewPortOffsetX = (int)(viewPortOffset.x * _zoomReal / currZoomReal);
     viewPortOffset.x = newViewPortOffsetX;
     /* calculate the position of each page on the canvas, given current zoom,
        rotation, columns parameters. You can think of it as a simple
        table layout i.e. rows with a fixed number of columns. */
-    columns = columnsFromDisplayMode(displayMode());
-    columnOffsets[0] = columnOffsets[1] = 0;
-    pageInARow = 0;
-    rowMaxPageDy = 0;
-    for (pageNo = 1; pageNo <= pageCount(); ++pageNo) {
-        pageInfo = getPageInfo(pageNo);
+    int columns = columnsFromDisplayMode(displayMode());
+    int columnOffsets[2] = { 0, 0 };
+    int pageInARow = 0;
+    int rowMaxPageDy = 0;
+    for (int pageNo = 1; pageNo <= pageCount(); ++pageNo) {
+        PageInfo *pageInfo = getPageInfo(pageNo);
         if (!pageInfo->shown) {
             assert(0.0 == pageInfo->visibleRatio);
             continue;
         }
+        SizeD pageSize;
         pageSizeAfterRotation(pageInfo, rotation, &pageSize);
         RectI pos;
         pos.dx = (int)(pageSize.dx * _zoomReal + 0.5);
@@ -593,22 +578,6 @@ RestartLayout:
             pageInARow++;
         if (columnOffsets[pageInARow] < pos.dx)
             columnOffsets[pageInARow] = pos.dx;
-
-        // restart the layout if we detect we need to show scrollbars
-        bool needsRestart = false;
-        int rightEdge = pos.dx + (int)pageSize.dx + padding->pageBorderRight;
-        if (!newRightSrollVisible && (rightEdge > viewPortSize.dx)) {
-            newRightSrollVisible = true;
-            viewPortSize.dx -= GetSystemMetrics(SM_CXVSCROLL);
-            goto RestartLayout;
-        }
-
-        int bottomEdge = pos.dy + (int)pageSize.dy + padding->pageBorderBottom;
-        if (!newBottomScrollVisible && (bottomEdge > viewPortSize.dy)) {
-            newBottomScrollVisible = true;
-            viewPortSize.dy -= GetSystemMetrics(SM_CYHSCROLL);
-            goto RestartLayout;
-        }
 
         pageInfo->pos = pos;
 
@@ -637,23 +606,32 @@ RestartLayout:
         else
             columnOffsets[1] = columnOffsets[0];
     }
+
     int padRight = padding->pageBorderRight;
     if (columns == 2)
         padRight += (padding->betweenPagesX + columnOffsets[1]);
-    canvasDx = padding->pageBorderLeft + columnOffsets[0] + padRight;
+    int canvasDx = padding->pageBorderLeft + columnOffsets[0] + padRight;
+    int offX = 0;
 
     /* since pages can be smaller than the drawing area, center them in x axis */
-    offX = 0;
     if (canvasDx < viewPortSize.dx) {
         viewPortOffset.x = 0;
         offX = (viewPortSize.dx - canvasDx) / 2;
         canvasDx = viewPortSize.dx;
     }
+    // restart the layout if we detect we need to show scrollbars
+    // TODO: make this decision sooner
+    else if (!newNeedHScroll && canvasDx > viewPortSize.dx) {
+        newNeedHScroll = true;
+        viewPortSize.dy -= GetSystemMetrics(SM_CXHSCROLL);
+        goto RestartLayout;
+    }
+
     assert(offX >= 0);
     pageInARow = 0;
-    pageOffX = offX + padding->pageBorderLeft;
-    for (pageNo = 1; pageNo <= pageCount(); ++pageNo) {
-        pageInfo = getPageInfo(pageNo);
+    int pageOffX = offX + padding->pageBorderLeft;
+    for (int pageNo = 1; pageNo <= pageCount(); ++pageNo) {
+        PageInfo *pageInfo = getPageInfo(pageNo);
         if (!pageInfo->shown) {
             assert(0.0 == pageInfo->visibleRatio);
             continue;
@@ -685,24 +663,30 @@ RestartLayout:
     }
 
     /* if a page is smaller than drawing area in y axis, y-center the page */
-    canvasDy = currPosY + padding->pageBorderBottom - padding->betweenPagesY;
+    int canvasDy = currPosY + padding->pageBorderBottom - padding->betweenPagesY;
     if (canvasDy < viewPortSize.dy) {
         int offY = padding->pageBorderTop + (viewPortSize.dy - canvasDy) / 2;
         DBG_OUT("  offY = %.2f\n", offY);
         assert(offY >= 0.0);
         canvasDy = viewPortSize.dy;
-        for (pageNo = 1; pageNo <= pageCount(); ++pageNo) {
-            pageInfo = getPageInfo(pageNo);
+        for (int pageNo = 1; pageNo <= pageCount(); ++pageNo) {
+            PageInfo *pageInfo = getPageInfo(pageNo);
             if (!pageInfo->shown) {
                 assert(0.0 == pageInfo->visibleRatio);
                 continue;
             }
             pageInfo->pos.y += offY;
-            DBG_OUT("  page = %3d, (x=%3d, y=%5d, dx=%4d, dy=%4d) orig=(dx=%d,dy=%d)\n",
+            DBG_OUT("  page = %3d, (x=%3d, y=%5d, dx=%4d, dy=%4d)\n",
                 pageNo, pageInfo->pos.x, pageInfo->pos.y,
-                        pageInfo->pos.dx, pageInfo->pos.dy,
-                        (int)pageSize.dx, (int)pageSize.dy);
+                        pageInfo->pos.dx, pageInfo->pos.dy);
         }
+    }
+    // restart the layout if we detect we need to show scrollbars
+    // TODO: make this decision sooner
+    else if (!newNeedVScroll && canvasDy > viewPortSize.dy) {
+        newNeedVScroll = true;
+        viewPortSize.dx -= GetSystemMetrics(SM_CYVSCROLL);
+        goto RestartLayout;
     }
 
     canvasSize = SizeI(canvasDx, canvasDy);
@@ -897,7 +881,7 @@ void DisplayModel::ChangeViewPortSize(SizeI newViewPortSize)
     ScrollState ss;
 
     bool isIsDocLoaded = getScrollState(&ss);
-    SetViewPortSize(newViewPortSize);
+    totalViewPortSize = newViewPortSize;
     Relayout(_zoomVirtual, _rotation);
     if (isIsDocLoaded) {
         // when fitting to content, let goToPage do the necessary scrolling
@@ -1402,9 +1386,7 @@ bool DisplayModel::ShowResultRectToScreen(TextSel *res)
     for (int i = 0; i < res->len; i++) {
         RectD rectD = res->rects[i].Convert<double>();
         cvtUserToScreen(res->pages[i], &rectD);
-        RectI rect = RectI::FromXY((int)floor(rectD.x), (int)floor(rectD.y), 
-                                   (int)ceil(rectD.x + rectD.dx), (int)ceil(rectD.y + rectD.dy));
-        extremes = extremes.Union(rect);
+        extremes = extremes.Union(rectD.Round());
     }
 
     PageInfo *pageInfo = getPageInfo(res->pages[0]);
@@ -1421,14 +1403,14 @@ bool DisplayModel::ShowResultRectToScreen(TextSel *res)
     }
     // scroll down to make top side of selection visible
     else if (extremes.y >= viewPortSize.dy) {
-        sy = (int)(extremes.y - viewPortSize.dy + 5);
+        sy = extremes.y - viewPortSize.dy + 5;
     }
 
     // scroll up to make bottom side of selection visible
     // (if selection height fits in visible area)
     if (extremes.y + extremes.dy > viewPortSize.dy
         && extremes.dy <= viewPortSize.dy + 5) {
-        sy = (int)(extremes.y + extremes.dy - viewPortSize.dy + 5);
+        sy = extremes.y + extremes.dy - viewPortSize.dy + 5;
     }
 
     //
@@ -1443,13 +1425,13 @@ bool DisplayModel::ShowResultRectToScreen(TextSel *res)
     }
     // scroll right to make left side of selection visible
     else if (extremes.x >= viewPortSize.dx) {
-        sx = (int)(extremes.x - viewPortSize.dx + 5);
+        sx = extremes.x - viewPortSize.dx + 5;
     }
     // scroll left to make right side of selection visible
     // (if selection width fits in visible area)
     if (extremes.x + extremes.dx > viewPortSize.dx
         && extremes.dx <= viewPortSize.dx - 5) {
-        sx = (int)(extremes.x + extremes.dx - viewPortSize.dx + 5);
+        sx = extremes.x + extremes.dx - viewPortSize.dx + 5;
     }
 
     if (sx != 0)
@@ -1548,10 +1530,10 @@ void DisplayModel::navigate(int dir)
 }
 
 DisplayModel *DisplayModel::CreateFromFileName(DisplayModelCallback *callback,
-    const TCHAR *fileName, DisplayMode displayMode, int startPage, SizeI canvasSize)
+    const TCHAR *fileName, DisplayMode displayMode, int startPage, SizeI viewPort)
 {
     DisplayModel *dm = new DisplayModel(callback, displayMode);
-    if (!dm || !dm->load(fileName, startPage, canvasSize)) {
+    if (!dm || !dm->load(fileName, startPage, viewPort)) {
         delete dm;
         return NULL;
     }

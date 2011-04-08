@@ -76,8 +76,11 @@ void WindowInfo::UpdateCanvasSize()
     // about the change of the canvas size
     delete buffer;
     buffer = new DoubleBuffer(hwndCanvas, canvasRc);
-    if (IsDocLoaded())
-        dm->ChangeViewPortSize(canvasRc.Size());
+
+    if (IsDocLoaded()) {
+        // the display model needs to know the full size (including scroll bars)
+        dm->ChangeViewPortSize(WindowRect(hwndCanvas).Size());
+    }
 }
 
 void WindowInfo::AbortFinding()

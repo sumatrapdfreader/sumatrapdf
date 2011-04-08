@@ -116,7 +116,7 @@ public:
     float           prevZoomVirtual;
     DisplayMode     prevDisplayMode;
 
-    RectI           canvasRc;
+    RectI           canvasRc; // size of the canvas (excluding any scroll bars)
     int             currPageNo;
 
     int             wheelAccumDelta;
