@@ -1,9 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="baseutils">
-      <UniqueIdentifier>{8f7c5754-2f23-4d99-81db-ee77bba94091}</UniqueIdentifier>
-    </Filter>
     <Filter Include="jbig2dec">
       <UniqueIdentifier>{215eb158-b04c-4cd9-8fb8-7a3a6c770934}</UniqueIdentifier>
     </Filter>
@@ -26,6 +23,9 @@
     </Filter>
     <Filter Include="jpeg">
       <UniqueIdentifier>{066558ef-98f1-4e63-b5d4-b5aaebd0d65e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="baseutils">
+      <UniqueIdentifier>{8f7c5754-2f23-4d99-81db-ee77bba94091}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -248,9 +248,6 @@
     <ClCompile Include="src\AppPrefs.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\ComicBook.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\CrashHandler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -270,9 +267,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\PdfEngine.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\PdfSearch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\PdfSync.cpp">
@@ -521,6 +515,24 @@
     <ClCompile Include="baseutils\strlist_util.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\AppTools.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CbxEngine.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Benchmark.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\RenderCache.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\TextSearch.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\TextSelection.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ext\jbig2dec\config_win32.h">
@@ -577,9 +589,6 @@
     <ClInclude Include="src\AppPrefs.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\ComicBook.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\CrashHandler.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -602,9 +611,6 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="src\PdfEngine.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\PdfSearch.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="src\PdfSync.h">
@@ -705,6 +711,27 @@
     </ClInclude>
     <ClInclude Include="baseutils\WinUtil.h">
       <Filter>baseutils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\AppTools.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\BaseEngine.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\CbxEngine.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Benchmark.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\RenderCache.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\TextSearch.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\TextSelection.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
