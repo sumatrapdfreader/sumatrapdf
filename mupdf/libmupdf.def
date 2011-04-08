@@ -176,9 +176,9 @@ EXPORTS
 	fz_new_colorspace
 	fz_keep_colorspace
 	fz_drop_colorspace
-	fz_get_static_colorspace
 	fz_convert_color
 	fz_convert_pixmap
+	fz_find_device_colorspace
 	ft_error_string
 	fz_new_type3_font
 	fz_new_font_from_memory

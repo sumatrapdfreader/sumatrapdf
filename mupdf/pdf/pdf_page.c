@@ -129,12 +129,9 @@ static int pdf_resources_use_blending(fz_obj *rdb);
 static int
 pdf_extgstate_uses_blending(fz_obj *dict)
 {
-	fz_obj *obj;
-
-	obj = fz_dict_gets(dict, "BM");
+	fz_obj *obj = fz_dict_gets(dict, "BM");
 	if (fz_is_name(obj) && strcmp(fz_to_name(obj), "Normal"))
 		return 1;
-
 	return 0;
 }
 
@@ -142,27 +139,21 @@ static int
 pdf_pattern_uses_blending(fz_obj *dict)
 {
 	fz_obj *obj;
-
 	obj = fz_dict_gets(dict, "Resources");
-	if (fz_is_dict(obj) && pdf_resources_use_blending(obj))
+	if (pdf_resources_use_blending(obj))
 		return 1;
-
 	obj = fz_dict_gets(dict, "ExtGState");
-	if (fz_is_dict(obj) && pdf_extgstate_uses_blending(obj))
+	if (pdf_extgstate_uses_blending(obj))
 		return 1;
-
 	return 0;
 }
 
 static int
 pdf_xobject_uses_blending(fz_obj *dict)
 {
-	fz_obj *obj;
-
-	obj = fz_dict_gets(dict, "Resources");
-	if (fz_is_dict(obj) && pdf_resources_use_blending(obj))
+	fz_obj *obj = fz_dict_gets(dict, "Resources");
+	if (pdf_resources_use_blending(obj))
 		return 1;
-
 	return 0;
 }
 
@@ -172,6 +163,9 @@ pdf_resources_use_blending(fz_obj *rdb)
 	fz_obj *dict;
 	fz_obj *tmp;
 	int i;
+
+	if (!rdb)
+		return 0;
 
 	/* stop on cyclic resource dependencies */
 	if (fz_dict_gets(rdb, ".useBM"))
@@ -213,25 +207,36 @@ pdf_load_page_contents_array(fz_buffer **bigbufp, pdf_xref *xref, fz_obj *list)
 	fz_error error;
 	fz_buffer *big;
 	fz_buffer *one;
-	int i;
-	int loadCount = 0; /* http://code.google.com/p/sumatrapdf/issues/detail?id=1239 */
+	int i, n;
 
 	/* TODO: openstream, read, close into big buffer at once */
 
 	big = fz_new_buffer(32 * 1024);
 
-	for (i = 0; i < fz_array_len(list); i++)
+	n = fz_array_len(list);
+	for (i = 0; i < n; i++)
 	{
 		fz_obj *stm = fz_array_get(list, i);
 		error = pdf_load_stream(&one, xref, fz_to_num(stm), fz_to_gen(stm));
 		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1239 */
 		if (error)
 		{
-			fz_catch(error, "cannot load content stream part %d/%d (%d %d R)",
-				i + 1, fz_array_len(list), fz_to_num(stm), fz_to_gen(stm));
+			fz_catch(error, "cannot load content stream part %d/%d", i + 1, n);
 			continue;
 		}
-		loadCount ++;
+		if (error)
+		{
+			if (i == 0)
+			{
+				fz_drop_buffer(big);
+				return fz_rethrow(error, "cannot load content stream part %d/%d", i + 1, n);
+			}
+			else
+			{
+				fz_catch(error, "cannot load content stream part %d/%d", i + 1, n);
+				break;
+			}
+		}
 
 		if (big->len + one->len + 1 > big->cap)
 			fz_resize_buffer(big, big->len + one->len + 1);
@@ -243,7 +248,7 @@ pdf_load_page_contents_array(fz_buffer **bigbufp, pdf_xref *xref, fz_obj *list)
 	}
 
 	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1239 */
-	if (loadCount == 0)
+	if (big->len == 0)
 	{
 		fz_drop_buffer(big);
 		return fz_throw("couldn't load any content stream");
@@ -262,7 +267,7 @@ pdf_load_page_contents(fz_buffer **bufp, pdf_xref *xref, fz_obj *obj)
 	{
 		error = pdf_load_page_contents_array(bufp, xref, obj);
 		if (error)
-			return fz_rethrow(error, "cannot load content stream array (%d 0 R)", fz_to_num(obj));
+			return fz_rethrow(error, "cannot load content stream array");
 	}
 	else if (pdf_is_stream(xref, fz_to_num(obj), fz_to_gen(obj)))
 	{
@@ -284,7 +289,8 @@ pdf_load_page(pdf_page **pagep, pdf_xref *xref, int number)
 {
 	fz_error error;
 	pdf_page *page;
-	fz_obj *dict;
+	pdf_annot *annot;
+	fz_obj *pageobj, *pageref;
 	fz_obj *obj;
 	fz_bbox bbox;
 
@@ -295,7 +301,8 @@ pdf_load_page(pdf_page **pagep, pdf_xref *xref, int number)
 	if (!xref->store)
 		xref->store = pdf_new_store();
 
-	dict = xref->page_objs[number];
+	pageobj = xref->page_objs[number];
+	pageref = xref->page_refs[number];
 
 	page = fz_malloc(sizeof(pdf_page));
 	page->resources = NULL;
@@ -304,7 +311,7 @@ pdf_load_page(pdf_page **pagep, pdf_xref *xref, int number)
 	page->links = NULL;
 	page->annots = NULL;
 
-	obj = fz_dict_gets(dict, "MediaBox");
+	obj = fz_dict_gets(pageobj, "MediaBox");
 	bbox = fz_round_rect(pdf_to_rect(obj));
 	if (fz_is_empty_rect(pdf_to_rect(obj)))
 	{
@@ -315,7 +322,7 @@ pdf_load_page(pdf_page **pagep, pdf_xref *xref, int number)
 		bbox.y1 = 792;
 	}
 
-	obj = fz_dict_gets(dict, "CropBox");
+	obj = fz_dict_gets(pageobj, "CropBox");
 	if (fz_is_array(obj))
 	{
 		fz_bbox cropbox = fz_round_rect(pdf_to_rect(obj));
@@ -333,38 +340,33 @@ pdf_load_page(pdf_page **pagep, pdf_xref *xref, int number)
 		page->mediabox = fz_unit_rect;
 	}
 
-	page->rotate = fz_to_int(fz_dict_gets(dict, "Rotate"));
+	page->rotate = fz_to_int(fz_dict_gets(pageobj, "Rotate"));
 
-	obj = fz_dict_gets(dict, "Annots");
+	obj = fz_dict_gets(pageobj, "Annots");
 	if (obj)
 	{
 		pdf_load_links(&page->links, xref, obj);
 		pdf_load_annots(&page->annots, xref, obj);
 	}
 
-	page->resources = fz_dict_gets(dict, "Resources");
+	page->resources = fz_dict_gets(pageobj, "Resources");
 	if (page->resources)
 		fz_keep_obj(page->resources);
 
-	obj = fz_dict_gets(dict, "Contents");
+	obj = fz_dict_gets(pageobj, "Contents");
 	error = pdf_load_page_contents(&page->contents, xref, obj);
 	if (error)
 	{
 		pdf_free_page(page);
-		return fz_rethrow(error, "cannot load page contents for page %d (%d 0 R)", number + 1, fz_to_num(obj));
+		return fz_rethrow(error, "cannot load page %d contents (%d 0 R)", number + 1, fz_to_num(pageref));
 	}
 
-	if (page->resources && pdf_resources_use_blending(page->resources))
+	if (pdf_resources_use_blending(page->resources))
 		page->transparency = 1;
 
-	/* SumatraPDF: dev_gdiplus needs a page group for transparent annotations */
-	if (page->annots)
-	{
-		pdf_annot *annot;
-		for (annot = page->annots; annot && !page->transparency; annot = annot->next)
-			if (pdf_resources_use_blending(annot->ap->resources))
-				page->transparency = 1;
-	}
+	for (annot = page->annots; annot && !page->transparency; annot = annot->next)
+		if (pdf_resources_use_blending(annot->ap->resources))
+			page->transparency = 1;
 
 	*pagep = page;
 	return fz_okay;

@@ -39,8 +39,7 @@ fz_matrix pdf_to_matrix(fz_obj *array);
 char *pdf_to_utf8(fz_obj *src);
 unsigned short *pdf_to_ucs2(fz_obj *src);
 fz_obj *pdf_to_utf8_name(fz_obj *src);
-/* SumatraPDF: encode UCS-2 string in PdfDocEncoding for authentication */
-char *pdf_from_ucs2(unsigned short *src);
+char *pdf_from_ucs2(unsigned short *str);
 
 /*
  * Encryption

@@ -6,16 +6,7 @@ static int keyvalcmp(const void *ap, const void *bp)
 {
 	const fz_keyval *a = ap;
 	const fz_keyval *b = bp;
-	if (fz_is_name(a->k) && fz_is_name(b->k))
-		return strcmp(fz_to_name(a->k), fz_to_name(b->k));
-	return -1;
-}
-
-static inline int keystrcmp(fz_obj *key, char *s)
-{
-	if (fz_is_name(key))
-		return strcmp(fz_to_name(key), s);
-	return -1;
+	return strcmp(fz_to_name(a->k), fz_to_name(b->k));
 }
 
 fz_obj *
@@ -95,7 +86,7 @@ fz_dict_get_val(fz_obj *obj, int i)
 	return obj->u.d.items[i].v;
 }
 
-static inline int
+static int
 fz_dict_finds(fz_obj *obj, char *key)
 {
 	if (obj->u.d.sorted)
@@ -105,7 +96,7 @@ fz_dict_finds(fz_obj *obj, char *key)
 		while (l <= r)
 		{
 			int m = (l + r) >> 1;
-			int c = -keystrcmp(obj->u.d.items[m].k, key);
+			int c = -strcmp(fz_to_name(obj->u.d.items[m].k), key);
 			if (c < 0)
 				r = m - 1;
 			else if (c > 0)
@@ -119,7 +110,7 @@ fz_dict_finds(fz_obj *obj, char *key)
 	{
 		int i;
 		for (i = 0; i < obj->u.d.len; i++)
-			if (keystrcmp(obj->u.d.items[i].k, key) == 0)
+			if (strcmp(fz_to_name(obj->u.d.items[i].k), key) == 0)
 				return i;
 	}
 
@@ -210,7 +201,7 @@ fz_dict_put(fz_obj *obj, fz_obj *key, fz_obj *val)
 
 	/* borked! */
 	if (obj->u.d.len)
-		if (keystrcmp(obj->u.d.items[obj->u.d.len - 1].k, s) > 0)
+		if (strcmp(fz_to_name(obj->u.d.items[obj->u.d.len - 1].k), s) > 0)
 			obj->u.d.sorted = 0;
 
 	obj->u.d.items[obj->u.d.len].k = fz_keep_obj(key);

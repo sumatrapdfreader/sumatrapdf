@@ -603,11 +603,6 @@ pdf_show_glyph(pdf_csi *csi, int cid)
 
 	gid = pdf_font_cid_to_gid(fontdesc, cid);
 
-	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=855 */
-	/* some chinese fonts only ship the similarly looking 0x2026 */
-	if (gid == 0 && ucsbuf[0] == 0x22ef && fontdesc->font->ft_face)
-		gid = FT_Get_Char_Index(fontdesc->font->ft_face, 0x2026);
-
 	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1149 */
 	if (fontdesc->wmode == 1 && fontdesc->font->ft_face)
 		gid = pdf_ft_get_vgid(fontdesc, gid);

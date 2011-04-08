@@ -778,11 +778,11 @@ struct fz_colorspace_s
 fz_colorspace *fz_new_colorspace(char *name, int n);
 fz_colorspace *fz_keep_colorspace(fz_colorspace *colorspace);
 void fz_drop_colorspace(fz_colorspace *colorspace);
-/* SumatraPDF: easy access to static color spaces when compiling MuPDF as a library */
-fz_colorspace *fz_get_static_colorspace(char *name);
 
 void fz_convert_color(fz_colorspace *srcs, float *srcv, fz_colorspace *dsts, float *dstv);
 void fz_convert_pixmap(fz_pixmap *src, fz_pixmap *dst);
+
+fz_colorspace *fz_find_device_colorspace(char *name);
 
 /*
  * Fonts come in two variants:

@@ -20,8 +20,7 @@ static inline int getint(unsigned char *p)
 	return p[0] << 24 | p[1] << 16 | p[2] << 8 | p[3];
 }
 
-static inline int
-getcomp(unsigned char *line, int x, int bpc)
+static inline int getcomp(unsigned char *line, int x, int bpc)
 {
 	switch (bpc)
 	{
@@ -34,8 +33,7 @@ getcomp(unsigned char *line, int x, int bpc)
 	return 0;
 }
 
-static inline void
-putcomp(unsigned char *line, int x, int bpc, int value)
+static inline void putcomp(unsigned char *line, int x, int bpc, int value)
 {
 	int maxval = (1 << bpc) - 1;
 

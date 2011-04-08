@@ -102,10 +102,15 @@ static int ft_char_index(FT_Face face, int cid)
 	int gid = FT_Get_Char_Index(face, cid);
 	if (gid == 0)
 		gid = FT_Get_Char_Index(face, 0xf000 + cid);
+
+	/* some chinese fonts only ship the similarly looking 0x2026 */
+	if (gid == 0 && cid == 0x22ef)
+		gid = FT_Get_Char_Index(face, 0x2026);
+
 	return gid;
 }
 
-static inline int ft_cid_to_gid(pdf_font_desc *fontdesc, int cid)
+static int ft_cid_to_gid(pdf_font_desc *fontdesc, int cid)
 {
 	if (fontdesc->to_ttf_cmap)
 	{
@@ -632,7 +637,7 @@ pdf_load_simple_font(pdf_font_desc **fontdescp, pdf_xref *xref, fz_obj *dict)
 
 	/* encode by glyph name where we can */
 	/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692090 */
-	if (kind == TRUETYPE || !strcmp(fz_to_name(fz_dict_gets(dict, "Subtype")), "TrueType"))
+	if (kind == TRUETYPE || !strcmp(fz_to_name(fz_dict_gets(dict, "Subtype")), "TrueType") && symbolic)
 	{
 		/* Unicode cmap */
 		if (!symbolic && face->charmap && face->charmap->platform_id == 3)

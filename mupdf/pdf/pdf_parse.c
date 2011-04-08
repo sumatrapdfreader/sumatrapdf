@@ -1,7 +1,8 @@
 #include "fitz.h"
 #include "mupdf.h"
 
-fz_rect pdf_to_rect(fz_obj *array)
+fz_rect
+pdf_to_rect(fz_obj *array)
 {
 	fz_rect r;
 	float a = fz_to_real(fz_array_get(array, 0));
@@ -15,7 +16,8 @@ fz_rect pdf_to_rect(fz_obj *array)
 	return r;
 }
 
-fz_matrix pdf_to_matrix(fz_obj *array)
+fz_matrix
+pdf_to_matrix(fz_obj *array)
 {
 	fz_matrix m;
 	m.a = fz_to_real(fz_array_get(array, 0));
@@ -27,6 +29,7 @@ fz_matrix pdf_to_matrix(fz_obj *array)
 	return m;
 }
 
+/* Convert Unicode/PdfDocEncoding string into utf-8 */
 char *
 pdf_to_utf8(fz_obj *src)
 {
@@ -72,6 +75,7 @@ pdf_to_utf8(fz_obj *src)
 	return dst;
 }
 
+/* Convert Unicode/PdfDocEncoding string into ucs-2 */
 unsigned short *
 pdf_to_ucs2(fz_obj *src)
 {
@@ -98,13 +102,18 @@ pdf_to_ucs2(fz_obj *src)
 	return dst;
 }
 
-/* SumatraPDF: encode UCS-2 string in PdfDocEncoding for authentication */
+/* Convert UCS-2 string into PdfDocEncoding for authentication */
 char *
 pdf_from_ucs2(unsigned short *src)
 {
-	int i, j;
-	int len = wcslen(src);
-	char *docstr = fz_malloc(len + 1);
+	int i, j, len;
+	char *docstr;
+
+	len = 0;
+	while (src[len])
+		len++;
+
+	docstr = fz_malloc(len + 1);
 
 	for (i = 0; i < len; i++)
 	{

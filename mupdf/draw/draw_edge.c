@@ -396,7 +396,7 @@ fz_free_ael(fz_ael *ael)
 	fz_free(ael);
 }
 
-static inline void
+static void
 sort_ael(fz_edge **a, int n)
 {
 	int h, i, k;
@@ -480,8 +480,7 @@ advance_ael(fz_ael *ael)
  * Anti-aliased scan conversion.
  */
 
-static inline void
-add_span_aa(int *list, int x0, int x1, int xofs)
+static inline void add_span_aa(int *list, int x0, int x1, int xofs)
 {
 	int x0pix, x0sub;
 	int x1pix, x1sub;
@@ -513,8 +512,7 @@ add_span_aa(int *list, int x0, int x1, int xofs)
 	}
 }
 
-static inline void
-non_zero_winding_aa(fz_ael *ael, int *list, int xofs)
+static inline void non_zero_winding_aa(fz_ael *ael, int *list, int xofs)
 {
 	int winding = 0;
 	int x = 0;
@@ -529,8 +527,7 @@ non_zero_winding_aa(fz_ael *ael, int *list, int xofs)
 	}
 }
 
-static inline void
-even_odd_aa(fz_ael *ael, int *list, int xofs)
+static inline void even_odd_aa(fz_ael *ael, int *list, int xofs)
 {
 	int even = 0;
 	int x = 0;
@@ -545,8 +542,7 @@ even_odd_aa(fz_ael *ael, int *list, int xofs)
 	}
 }
 
-static inline void
-undelta_aa(unsigned char * restrict out, int * restrict in, int n)
+static inline void undelta_aa(unsigned char * restrict out, int * restrict in, int n)
 {
 	int d = 0;
 	while (n--)
@@ -556,8 +552,8 @@ undelta_aa(unsigned char * restrict out, int * restrict in, int n)
 	}
 }
 
-static inline void
-blit_aa(fz_pixmap *dst, int x, int y, unsigned char *mp, int w, unsigned char *color)
+static inline void blit_aa(fz_pixmap *dst, int x, int y,
+	unsigned char *mp, int w, unsigned char *color)
 {
 	unsigned char *dp;
 	dp = dst->samples + ( (y - dst->y) * dst->w + (x - dst->x) ) * dst->n;
@@ -645,8 +641,8 @@ fz_scan_convert_aa(fz_gel *gel, fz_ael *ael, int eofill, fz_bbox clip,
  * Sharp (not anti-aliased) scan conversion
  */
 
-static inline void
-blit_sharp(int x0, int x1, int y, fz_bbox clip, fz_pixmap *dst, unsigned char *color)
+static inline void blit_sharp(int x0, int x1, int y,
+	fz_bbox clip, fz_pixmap *dst, unsigned char *color)
 {
 	unsigned char *dp;
 	x0 = CLAMP(x0, dst->x, dst->x + dst->w);
@@ -661,8 +657,8 @@ blit_sharp(int x0, int x1, int y, fz_bbox clip, fz_pixmap *dst, unsigned char *c
 	}
 }
 
-static inline void
-non_zero_winding_sharp(fz_ael *ael, int y, fz_bbox clip, fz_pixmap *dst, unsigned char *color)
+static inline void non_zero_winding_sharp(fz_ael *ael, int y,
+	fz_bbox clip, fz_pixmap *dst, unsigned char *color)
 {
 	int winding = 0;
 	int x = 0;
@@ -677,8 +673,8 @@ non_zero_winding_sharp(fz_ael *ael, int y, fz_bbox clip, fz_pixmap *dst, unsigne
 	}
 }
 
-static inline void
-even_odd_sharp(fz_ael *ael, int y, fz_bbox clip, fz_pixmap *dst, unsigned char *color)
+static inline void even_odd_sharp(fz_ael *ael, int y,
+	fz_bbox clip, fz_pixmap *dst, unsigned char *color)
 {
 	int even = 0;
 	int x = 0;

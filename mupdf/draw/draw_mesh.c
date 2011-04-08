@@ -121,8 +121,7 @@ static int clip_poly(float src[MAXV][MAXN],
  * gouraud shaded polygon scan conversion
  */
 
-static inline void
-paint_scan(fz_pixmap *pix, int y, int x1, int x2, int *v1, int *v2, int n)
+static void paint_scan(fz_pixmap *pix, int y, int x1, int x2, int *v1, int *v2, int n)
 {
 	unsigned char *p = pix->samples + ((y - pix->y) * pix->w + (x1 - pix->x)) * pix->n;
 	int v[FZ_MAX_COLORS];
@@ -156,8 +155,7 @@ paint_scan(fz_pixmap *pix, int y, int x1, int x2, int *v1, int *v2, int n)
 	}
 }
 
-static inline int
-find_next(int gel[MAXV][MAXN], int len, int a, int *s, int *e, int d)
+static int find_next(int gel[MAXV][MAXN], int len, int a, int *s, int *e, int d)
 {
 	int b;
 
@@ -186,8 +184,7 @@ find_next(int gel[MAXV][MAXN], int len, int a, int *s, int *e, int d)
 	}
 }
 
-static inline void
-load_edge(int gel[MAXV][MAXN], int s, int e, int *ael, int *del, int n)
+static void load_edge(int gel[MAXV][MAXN], int s, int e, int *ael, int *del, int n)
 {
 	int swp, k, dy;
 
@@ -207,8 +204,7 @@ load_edge(int gel[MAXV][MAXN], int s, int e, int *ael, int *del, int n)
 	}
 }
 
-static inline void
-step_edge(int *ael, int *del, int n)
+static inline void step_edge(int *ael, int *del, int n)
 {
 	int k;
 	ael[0] += del[0];

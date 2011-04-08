@@ -23,33 +23,31 @@ struct fz_predict_s
 	unsigned char *rp, *wp;
 };
 
-static inline int
-getcomponent(unsigned char *buf, int x, int bpc)
+static inline int getcomponent(unsigned char *line, int x, int bpc)
 {
 	switch (bpc)
 	{
-	case 1: return buf[x / 8] >> (7 - (x % 8)) & 0x01;
-	case 2: return buf[x / 4] >> ((3 - (x % 4)) * 2) & 0x03;
-	case 4: return buf[x / 2] >> ((1 - (x % 2)) * 4) & 0x0f;
-	case 8: return buf[x];
+	case 1: return (line[x >> 3] >> ( 7 - (x & 7) ) ) & 1;
+	case 2: return (line[x >> 2] >> ( ( 3 - (x & 3) ) << 1 ) ) & 3;
+	case 4: return (line[x >> 1] >> ( ( 1 - (x & 1) ) << 2 ) ) & 15;
+	case 8: return line[x];
 	}
 	return 0;
 }
 
-static inline void
-putcomponent(unsigned char *buf, int x, int bpc, int value)
+
+static inline void putcomponent(unsigned char *buf, int x, int bpc, int value)
 {
 	switch (bpc)
 	{
-	case 1: buf[x / 8] |= value << (7 - (x % 8)); break;
-	case 2: buf[x / 4] |= value << ((3 - (x % 4)) * 2); break;
-	case 4: buf[x / 2] |= value << ((1 - (x % 2)) * 4); break;
+	case 1: buf[x >> 3] |= value << (7 - (x & 7)); break;
+	case 2: buf[x >> 2] |= value << ((3 - (x & 3)) << 1); break;
+	case 4: buf[x >> 1] |= value << ((1 - (x & 1)) << 2); break;
 	case 8: buf[x] = value; break;
 	}
 }
 
-static inline int
-paeth(int a, int b, int c)
+static inline int paeth(int a, int b, int c)
 {
 	/* The definitions of ac and bc are correct, not a typo. */
 	int ac = b - c, bc = a - c, abcc = ac + bc;

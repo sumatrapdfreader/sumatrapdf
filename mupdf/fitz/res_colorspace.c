@@ -162,9 +162,8 @@ fz_colorspace *fz_device_rgb = &k_device_rgb;
 fz_colorspace *fz_device_bgr = &k_device_bgr;
 fz_colorspace *fz_device_cmyk = &k_device_cmyk;
 
-/* SumatraPDF: easy access to static color spaces when compiling MuPDF as a library */
 fz_colorspace *
-fz_get_static_colorspace(char *name)
+fz_find_device_colorspace(char *name)
 {
 	if (!strcmp(name, "DeviceGray"))
 		return fz_device_gray;
@@ -174,7 +173,7 @@ fz_get_static_colorspace(char *name)
 		return fz_device_bgr;
 	if (!strcmp(name, "DeviceCMYK"))
 		return fz_device_cmyk;
-	fz_warn("unknown static colorspace %s", name);
+	fz_warn("unknown device colorspace: %s", name);
 	return NULL;
 }
 

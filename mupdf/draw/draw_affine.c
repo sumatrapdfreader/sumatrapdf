@@ -435,11 +435,6 @@ fz_paint_image_imp(fz_pixmap *dst, fz_bbox scissor, fz_pixmap *img, fz_matrix ct
 			dolerp = 0;
 		if (sqrtf(ctm.c * ctm.c + ctm.d * ctm.d) > img->h * 2)
 			dolerp = 0;
-		/* SumatraPDF: ... and at exactly 100% */
-		if (sqrtf(ctm.a * ctm.a + ctm.b * ctm.b) == img->w)
-			dolerp = 0;
-		if (sqrtf(ctm.c * ctm.c + ctm.d * ctm.d) == img->h)
-			dolerp = 0;
 	}
 
 	bbox = fz_round_rect(fz_transform_rect(ctm, fz_unit_rect));

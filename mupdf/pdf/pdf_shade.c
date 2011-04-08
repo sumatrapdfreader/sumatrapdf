@@ -95,15 +95,14 @@ triangulate_patch(pdf_tensor_patch p, fz_shade *shade)
 	pdf_add_quad(shade, &v0, &v1, &v2, &v3);
 }
 
-static inline void
-midcolor(float *c, float *c1, float *c2)
+static inline void midcolor(float *c, float *c1, float *c2)
 {
 	int i;
 	for (i = 0; i < FZ_MAX_COLORS; i++)
 		c[i] = (c1[i] + c2[i]) * 0.5f;
 }
 
-static inline void
+static void
 split_curve(fz_point *pole, fz_point *q0, fz_point *q1, int polestep)
 {
 	/*
@@ -139,7 +138,7 @@ split_curve(fz_point *pole, fz_point *q0, fz_point *q1, int polestep)
 	q1[3 * polestep].y = pole[3 * polestep].y;
 }
 
-static inline void
+static void
 split_stripe(pdf_tensor_patch *p, pdf_tensor_patch *s0, pdf_tensor_patch *s1)
 {
 	/*
@@ -186,7 +185,7 @@ draw_stripe(pdf_tensor_patch *p, fz_shade *shade, int depth)
 	}
 }
 
-static inline void
+static void
 split_patch(pdf_tensor_patch *p, pdf_tensor_patch *s0, pdf_tensor_patch *s1)
 {
 	/*
@@ -233,7 +232,7 @@ draw_patch(fz_shade *shade, pdf_tensor_patch *p, int depth, int origdepth)
 	}
 }
 
-static inline fz_point
+static fz_point
 pdf_compute_tensor_interior(
 	fz_point a, fz_point b, fz_point c, fz_point d,
 	fz_point e, fz_point f, fz_point g, fz_point h)
@@ -259,7 +258,7 @@ pdf_compute_tensor_interior(
 	return pt;
 }
 
-static inline void
+static void
 pdf_make_tensor_patch(pdf_tensor_patch *p, int type, fz_point *pt)
 {
 	if (type == 6)
@@ -531,8 +530,7 @@ pdf_load_radial_shading(fz_shade *shade, pdf_xref *xref, fz_obj *dict, int funcs
 
 /* Type 4-7 -- Triangle and patch mesh shadings */
 
-static inline float
-read_sample(fz_stream *stream, int bits, float min, float max)
+static inline float read_sample(fz_stream *stream, int bits, float min, float max)
 {
 	/* we use pow(2,x) because (1<<x) would overflow the math on 32-bit samples */
 	float bitscale = 1 / (powf(2, bits) - 1);

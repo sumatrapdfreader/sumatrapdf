@@ -75,14 +75,11 @@ static inline int ishex(int a)
 		(a >= '0' && a <= '9');
 }
 
-static inline int from_hex(int a)
+static inline int unhex(int a)
 {
-	if (a >= 'A' && a <= 'F')
-		return a - 'A' + 0xA;
-	if (a >= 'a' && a <= 'f')
-		return a - 'a' + 0xA;
-	if (a >= '0' && a <= '9')
-		return a - '0';
+	if (a >= 'A' && a <= 'F') return a - 'A' + 0xA;
+	if (a >= 'a' && a <= 'f') return a - 'a' + 0xA;
+	if (a >= '0' && a <= '9') return a - '0';
 	return 0;
 }
 
@@ -109,12 +106,12 @@ read_ahxd(fz_stream *stm, unsigned char *buf, int len)
 		{
 			if (!odd)
 			{
-				a = from_hex(c);
+				a = unhex(c);
 				odd = 1;
 			}
 			else
 			{
-				b = from_hex(c);
+				b = unhex(c);
 				*p++ = (a << 4) | b;
 				odd = 0;
 			}

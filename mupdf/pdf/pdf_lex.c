@@ -23,8 +23,7 @@
 #define RANGE_A_F \
 	'A':case'B':case'C':case'D':case'E':case'F'
 
-static inline int
-iswhite(int ch)
+static inline int iswhite(int ch)
 {
 	return
 		ch == '\000' ||
@@ -35,40 +34,32 @@ iswhite(int ch)
 		ch == '\040';
 }
 
-static inline int
-from_hex(int ch)
+static inline int unhex(int ch)
 {
-	if (ch >= '0' && ch <= '9')
-		return ch - '0';
-	else if (ch >= 'A' && ch <= 'F')
-		return ch - 'A' + 0xA;
-	else if (ch >= 'a' && ch <= 'f')
-		return ch - 'a' + 0xA;
+	if (ch >= '0' && ch <= '9') return ch - '0';
+	if (ch >= 'A' && ch <= 'F') return ch - 'A' + 0xA;
+	if (ch >= 'a' && ch <= 'f') return ch - 'a' + 0xA;
 	return 0;
 }
 
-static inline void
+static void
 lex_white(fz_stream *f)
 {
 	int c;
-	do
-	{
+	do {
 		c = fz_read_byte(f);
-	}
-	while ((c <= 32) && (iswhite(c)));
+	} while ((c <= 32) && (iswhite(c)));
 	if (c != EOF)
 		fz_unread_byte(f);
 }
 
-static inline void
+static void
 lex_comment(fz_stream *f)
 {
 	int c;
-	do
-	{
+	do {
 		c = fz_read_byte(f);
-	}
-	while ((c != '\012') && (c != '\015') && (c != EOF));
+	} while ((c != '\012') && (c != '\015') && (c != EOF));
 }
 
 static int
@@ -329,21 +320,20 @@ lex_hex_string(fz_stream *f, char *buf, int n)
 		case IS_HEX:
 			if (x)
 			{
-				*s++ = a * 16 + from_hex(c);
+				*s++ = a * 16 + unhex(c);
 				x = !x;
 			}
 			else
 			{
-				a = from_hex(c);
+				a = unhex(c);
 				x = !x;
 			}
 			break;
 		case '>':
-		// cf. http://code.google.com/p/sumatrapdf/issues/detail?id=624
 		case EOF:
 			goto end;
 		default:
-			fz_warn("Ignoring invalid character in hexstring: %c", c);
+			fz_warn("ignoring invalid character in hex string: '%c'", c);
 		}
 	}
 end:

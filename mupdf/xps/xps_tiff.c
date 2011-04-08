@@ -223,8 +223,7 @@ xps_decode_tiff_jpeg(struct tiff *tiff, fz_stream *chain, byte *wp, int wlen)
 	return fz_okay;
 }
 
-static inline int
-getcomp(byte *line, int x, int bpc)
+static inline int getcomp(byte *line, int x, int bpc)
 {
 	switch (bpc)
 	{
@@ -237,8 +236,7 @@ getcomp(byte *line, int x, int bpc)
 	return 0;
 }
 
-static inline void
-putcomp(byte *line, int x, int bpc, int value)
+static inline void putcomp(byte *line, int x, int bpc, int value)
 {
 	int maxval = (1 << bpc) - 1;
 
@@ -305,8 +303,8 @@ xps_expand_tiff_colormap(struct tiff *tiff)
 	int maxval = 1 << tiff->bitspersample;
 	byte *samples;
 	byte *src, *dst;
-	int stride;
 	unsigned int x, y;
+	unsigned int stride;
 
 	/* colormap has first all red, then all green, then all blue values */
 	/* colormap values are 0..65535, bits is 4 or 8 */

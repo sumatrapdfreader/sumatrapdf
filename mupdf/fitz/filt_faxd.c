@@ -170,33 +170,12 @@ const cfd_node cf_uncompressed_decode[] = {
 
 /* bit magic */
 
-static inline void
-print_bits(FILE *f, int code, int nbits)
-{
-	int n, b;
-	for (n = nbits - 1; n >= 0; n--)
-	{
-		b = (code >> n) & 1;
-		fprintf(f, "%c", b ? '1' : '0');
-	}
-}
-
-static inline int
-getbit(const unsigned char *buf, int x)
+static inline int getbit(const unsigned char *buf, int x)
 {
 	return ( buf[x >> 3] >> ( 7 - (x & 7) ) ) & 1;
 }
 
-static inline void
-print_line(FILE *f, unsigned char *line, int w)
-{
-	int i;
-	for (i = 0; i < w; i++)
-		fprintf(f, "%c", getbit(line, i) ? '#' : '.');
-	fprintf(f, "\n");
-}
-
-static inline int
+static int
 find_changing(const unsigned char *line, int x, int w)
 {
 	int a, b;
@@ -226,7 +205,7 @@ find_changing(const unsigned char *line, int x, int w)
 	return x;
 }
 
-static inline int
+static int
 find_changing_color(const unsigned char *line, int x, int w, int color)
 {
 	if (!line)
@@ -248,8 +227,7 @@ static const unsigned char rm[8] = {
 	0x00, 0x80, 0xC0, 0xE0, 0xF0, 0xF8, 0xFC, 0xFE
 };
 
-static inline void
-setbits(unsigned char *line, int x0, int x1)
+static inline void setbits(unsigned char *line, int x0, int x1)
 {
 	int a0, a1, b0, b1, a;
 
@@ -311,14 +289,13 @@ struct fz_faxd_s
 	unsigned char *rp, *wp;
 };
 
-static inline void
-eat_bits(fz_faxd *fax, int nbits)
+static inline void eat_bits(fz_faxd *fax, int nbits)
 {
 	fax->word <<= nbits;
 	fax->bidx += nbits;
 }
 
-static inline int
+static int
 fill_bits(fz_faxd *fax)
 {
 	while (fax->bidx >= 8)
@@ -332,8 +309,8 @@ fill_bits(fz_faxd *fax)
 	return 0;
 }
 
-static inline int
-getcode(fz_faxd *fax, const cfd_node *table, int initialbits)
+static int
+get_code(fz_faxd *fax, const cfd_node *table, int initialbits)
 {
 	unsigned int word = fax->word;
 	int tidx = word >> (32 - initialbits);
@@ -363,9 +340,9 @@ dec1d(fz_faxd *fax)
 		fax->a = 0;
 
 	if (fax->c)
-		code = getcode(fax, cf_black_decode, cfd_black_initial_bits);
+		code = get_code(fax, cf_black_decode, cfd_black_initial_bits);
 	else
-		code = getcode(fax, cf_white_decode, cfd_white_initial_bits);
+		code = get_code(fax, cf_white_decode, cfd_white_initial_bits);
 
 	if (code == UNCOMPRESSED)
 		return fz_throw("uncompressed data in faxd");
@@ -404,9 +381,9 @@ dec2d(fz_faxd *fax)
 			fax->a = 0;
 
 		if (fax->c)
-			code = getcode(fax, cf_black_decode, cfd_black_initial_bits);
+			code = get_code(fax, cf_black_decode, cfd_black_initial_bits);
 		else
-			code = getcode(fax, cf_white_decode, cfd_white_initial_bits);
+			code = get_code(fax, cf_white_decode, cfd_white_initial_bits);
 
 		if (code == UNCOMPRESSED)
 			return fz_throw("uncompressed data in faxd");
@@ -434,7 +411,7 @@ dec2d(fz_faxd *fax)
 		return fz_okay;
 	}
 
-	code = getcode(fax, cf_2d_decode, cfd_2d_initial_bits);
+	code = get_code(fax, cf_2d_decode, cfd_2d_initial_bits);
 
 	switch (code)
 	{

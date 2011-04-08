@@ -27,14 +27,12 @@ const char *fz_blendmode_names[] =
 
 /* Separable blend modes */
 
-static inline int
-fz_screen_byte(int b, int s)
+static inline int fz_screen_byte(int b, int s)
 {
 	return b + s - fz_mul255(b, s);
 }
 
-static inline int
-fz_hard_light_byte(int b, int s)
+static inline int fz_hard_light_byte(int b, int s)
 {
 	int s2 = s << 1;
 	if (s <= 127)
@@ -43,26 +41,22 @@ fz_hard_light_byte(int b, int s)
 		return fz_screen_byte(b, s2 - 255);
 }
 
-static inline int
-fz_overlay_byte(int b, int s)
+static inline int fz_overlay_byte(int b, int s)
 {
 	return fz_hard_light_byte(s, b); /* note swapped order */
 }
 
-static inline int
-fz_darken_byte(int b, int s)
+static inline int fz_darken_byte(int b, int s)
 {
 	return MIN(b, s);
 }
 
-static inline int
-fz_lighten_byte(int b, int s)
+static inline int fz_lighten_byte(int b, int s)
 {
 	return MAX(b, s);
 }
 
-static inline int
-fz_color_dodge_byte(int b, int s)
+static inline int fz_color_dodge_byte(int b, int s)
 {
 	s = 255 - s;
 	if (b == 0)
@@ -73,8 +67,7 @@ fz_color_dodge_byte(int b, int s)
 		return (0x1fe * b + s) / (s << 1);
 }
 
-static inline int
-fz_color_burn_byte(int b, int s)
+static inline int fz_color_burn_byte(int b, int s)
 {
 	b = 255 - b;
 	if (b == 0)
@@ -85,8 +78,7 @@ fz_color_burn_byte(int b, int s)
 		return 0xff - (0x1fe * b + s) / (s << 1);
 }
 
-static inline int
-fz_soft_light_byte(int b, int s)
+static inline int fz_soft_light_byte(int b, int s)
 {
 	/* review this */
 	if (s < 128) {
@@ -102,21 +94,19 @@ fz_soft_light_byte(int b, int s)
 	}
 }
 
-static inline int
-fz_difference_byte(int b, int s)
+static inline int fz_difference_byte(int b, int s)
 {
 	return ABS(b - s);
 }
 
-static inline int
-fz_exclusion_byte(int b, int s)
+static inline int fz_exclusion_byte(int b, int s)
 {
 	return b + s - (fz_mul255(b, s)<<1);
 }
 
 /* Non-separable blend modes */
 
-static inline void
+static void
 fz_luminosity_rgb(int *rd, int *gd, int *bd, int rb, int gb, int bb, int rs, int gs, int bs)
 {
 	int delta, scale;

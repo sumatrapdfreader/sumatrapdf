@@ -7,7 +7,9 @@
 
 static inline int ishex(int a)
 {
-	return (a >= 'A' && a <= 'F') || (a >= 'a' && a <= 'f') || (a >= '0' && a <= '9');
+	return (a >= 'A' && a <= 'F') ||
+		(a >= 'a' && a <= 'f') ||
+		(a >= '0' && a <= '9');
 }
 
 static inline int unhex(int a)
@@ -175,7 +177,8 @@ xps_parse_digits(char *s, int *digit)
 
 static inline int is_real_num_char(int c)
 {
-	return (c >= '0' && c <= '9') || c == 'e' || c == 'E' || c == '+' || c == '-' || c == '.';
+	return (c >= '0' && c <= '9') ||
+		c == 'e' || c == 'E' || c == '+' || c == '-' || c == '.';
 }
 
 static char *
@@ -228,9 +231,10 @@ xps_parse_glyph_metrics(char *s, float *advance, float *uofs, float *vofs)
  * Calculate metrics for positioning.
  */
 static fz_text *
-xps_parse_glyphs_imp(xps_context *ctx, fz_matrix ctm, fz_font *font, float size,
-		float originx, float originy, int is_sideways, int bidi_level,
-		char *indices, char *unicode)
+xps_parse_glyphs_imp(xps_context *ctx, fz_matrix ctm,
+	fz_font *font, float size, float originx, float originy,
+	int is_sideways, int bidi_level,
+	char *indices, char *unicode)
 {
 	xps_glyph_metrics mtx;
 	fz_text *text;
@@ -275,7 +279,7 @@ xps_parse_glyphs_imp(xps_context *ctx, fz_matrix ctm, fz_font *font, float size,
 		if (glyph_count < 1)
 			glyph_count = 1;
 
-		/* TODO: add code chars with cluster mappings for proper text extraction */
+		/* TODO: add code chars with cluster mappings for text extraction */
 
 		while (code_count--)
 		{
@@ -516,9 +520,7 @@ xps_parse_glyphs(xps_context *ctx, fz_matrix ctm,
 
 	xps_begin_opacity(ctx, ctm, area, opacity_mask_uri, dict, opacity_att, opacity_mask_tag);
 
-	/*
-	 * If it's a solid color brush fill/stroke do a simple fill
-	 */
+	/* If it's a solid color brush fill/stroke do a simple fill */
 
 	if (fill_tag && !strcmp(xml_tag(fill_tag), "SolidColorBrush"))
 	{
@@ -541,9 +543,7 @@ xps_parse_glyphs(xps_context *ctx, fz_matrix ctm,
 			ctx->colorspace, ctx->color, ctx->alpha);
 	}
 
-	/*
-	 * If it's a visual brush or image, use the charpath as a clip mask to paint brush
-	 */
+	/* If it's a complex brush, use the charpath as a clip mask */
 
 	if (fill_tag)
 	{

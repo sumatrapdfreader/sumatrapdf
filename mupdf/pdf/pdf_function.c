@@ -59,7 +59,7 @@ struct pdf_function_s
 
 #define RADIAN 57.2957795
 
-static inline float LERP(float x, float xmin, float xmax, float ymin, float ymax)
+static inline float lerp(float x, float xmin, float xmax, float ymin, float ymax)
 {
 	if (xmin == xmax)
 		return ymin;
@@ -76,13 +76,15 @@ enum { PS_BOOL, PS_INT, PS_REAL, PS_OPERATOR, PS_BLOCK };
 
 enum
 {
-	PS_OP_ABS, PS_OP_ADD, PS_OP_AND, PS_OP_ATAN, PS_OP_BITSHIFT, PS_OP_CEILING,
-	PS_OP_COPY, PS_OP_COS, PS_OP_CVI, PS_OP_CVR, PS_OP_DIV, PS_OP_DUP, PS_OP_EQ,
-	PS_OP_EXCH, PS_OP_EXP, PS_OP_FALSE, PS_OP_FLOOR, PS_OP_GE, PS_OP_GT, PS_OP_IDIV,
-	PS_OP_INDEX, PS_OP_LE, PS_OP_LN, PS_OP_LOG, PS_OP_LT, PS_OP_MOD, PS_OP_MUL,
-	PS_OP_NE, PS_OP_NEG, PS_OP_NOT, PS_OP_OR, PS_OP_POP, PS_OP_ROLL, PS_OP_ROUND,
-	PS_OP_SIN, PS_OP_SQRT, PS_OP_SUB, PS_OP_TRUE, PS_OP_TRUNCATE, PS_OP_XOR,
-	PS_OP_IF, PS_OP_IFELSE, PS_OP_RETURN
+	PS_OP_ABS, PS_OP_ADD, PS_OP_AND, PS_OP_ATAN, PS_OP_BITSHIFT,
+	PS_OP_CEILING, PS_OP_COPY, PS_OP_COS, PS_OP_CVI, PS_OP_CVR,
+	PS_OP_DIV, PS_OP_DUP, PS_OP_EQ, PS_OP_EXCH, PS_OP_EXP,
+	PS_OP_FALSE, PS_OP_FLOOR, PS_OP_GE, PS_OP_GT, PS_OP_IDIV,
+	PS_OP_INDEX, PS_OP_LE, PS_OP_LN, PS_OP_LOG, PS_OP_LT, PS_OP_MOD,
+	PS_OP_MUL, PS_OP_NE, PS_OP_NEG, PS_OP_NOT, PS_OP_OR, PS_OP_POP,
+	PS_OP_ROLL, PS_OP_ROUND, PS_OP_SIN, PS_OP_SQRT, PS_OP_SUB,
+	PS_OP_TRUE, PS_OP_TRUNCATE, PS_OP_XOR, PS_OP_IF, PS_OP_IFELSE,
+	PS_OP_RETURN
 };
 
 static char *ps_op_names[] =
@@ -154,26 +156,22 @@ ps_init_stack(ps_stack *st)
 	st->sp = 0;
 }
 
-static inline int
-ps_overflow(ps_stack *st, int n)
+static inline int ps_overflow(ps_stack *st, int n)
 {
 	return n < 0 || st->sp + n >= nelem(st->stack);
 }
 
-static inline int
-ps_underflow(ps_stack *st, int n)
+static inline int ps_underflow(ps_stack *st, int n)
 {
 	return n < 0 || st->sp - n < 0;
 }
 
-static inline int
-ps_is_type(ps_stack *st, int t)
+static inline int ps_is_type(ps_stack *st, int t)
 {
 	return !ps_underflow(st, 1) && st->stack[st->sp - 1].type == t;
 }
 
-static inline int
-ps_is_type2(ps_stack *st, int t)
+static inline int ps_is_type2(ps_stack *st, int t)
 {
 	return !ps_underflow(st, 2) && st->stack[st->sp - 1].type == t && st->stack[st->sp - 2].type == t;
 }
@@ -1052,7 +1050,7 @@ eval_sample_func(pdf_function *func, float *in, float *out)
 	for (i = 0; i < func->m; i++)
 	{
 		x = CLAMP(in[i], func->domain[i][0], func->domain[i][1]);
-		x = LERP(x, func->domain[i][0], func->domain[i][1],
+		x = lerp(x, func->domain[i][0], func->domain[i][1],
 			func->u.sa.encode[i][0], func->u.sa.encode[i][1]);
 		x = CLAMP(x, 0, func->u.sa.size[i] - 1);
 		e0[i] = floorf(x);
@@ -1073,7 +1071,7 @@ eval_sample_func(pdf_function *func, float *in, float *out)
 
 			float ab = a + (b - a) * efrac[0];
 
-			out[i] = LERP(ab, 0, 1, func->u.sa.decode[i][0], func->u.sa.decode[i][1]);
+			out[i] = lerp(ab, 0, 1, func->u.sa.decode[i][0], func->u.sa.decode[i][1]);
 			out[i] = CLAMP(out[i], func->range[i][0], func->range[i][1]);
 		}
 
@@ -1091,14 +1089,14 @@ eval_sample_func(pdf_function *func, float *in, float *out)
 			float cd = c + (d - c) * efrac[0];
 			float abcd = ab + (cd - ab) * efrac[1];
 
-			out[i] = LERP(abcd, 0, 1, func->u.sa.decode[i][0], func->u.sa.decode[i][1]);
+			out[i] = lerp(abcd, 0, 1, func->u.sa.decode[i][0], func->u.sa.decode[i][1]);
 			out[i] = CLAMP(out[i], func->range[i][0], func->range[i][1]);
 		}
 
 		else
 		{
 			float x = interpolate_sample(func, scale, e0, e1, efrac, func->m - 1, i);
-			out[i] = LERP(x, 0, 1, func->u.sa.decode[i][0], func->u.sa.decode[i][1]);
+			out[i] = lerp(x, 0, 1, func->u.sa.decode[i][0], func->u.sa.decode[i][1]);
 			out[i] = CLAMP(out[i], func->range[i][0], func->range[i][1]);
 		}
 	}
@@ -1303,7 +1301,7 @@ eval_stitching_func(pdf_function *func, float in, float *out)
 		high = bounds[i];
 	}
 
-	in = LERP(in, low, high, func->u.st.encode[i*2+0], func->u.st.encode[i*2+1]);
+	in = lerp(in, low, high, func->u.st.encode[i*2+0], func->u.st.encode[i*2+1]);
 
 	pdf_eval_function(func->u.st.funcs[i], &in, 1, out, func->n);
 }

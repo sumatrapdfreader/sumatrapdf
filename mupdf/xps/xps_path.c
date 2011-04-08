@@ -40,7 +40,7 @@ fz_currentpoint(fz_path *path)
  * circular arcs, we need to transform the line to make them elliptical but
  * without transforming the line width.
  */
-static inline void
+static void
 xps_draw_arc_segment(fz_path *path, fz_matrix mtx, float th0, float th1, int iscw)
 {
 	float t, d;
@@ -91,7 +91,7 @@ xps_draw_arc_segment(fz_path *path, fz_matrix mtx, float th0, float th1, int isc
 }
 
 /* Given two vectors find the angle between them. */
-static inline float
+static float
 angle_between(const fz_point u, const fz_point v)
 {
 	float det = u.x * v.y - u.y * v.x;

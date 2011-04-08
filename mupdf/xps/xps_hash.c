@@ -30,8 +30,7 @@ struct xps_hash_table_s
 	xps_hash_entry *entries;
 };
 
-static inline int
-xps_tolower(int c)
+static inline int xps_tolower(int c)
 {
 	if (c >= 'A' && c <= 'Z')
 		return c + 32;
