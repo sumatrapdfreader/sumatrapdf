@@ -31,6 +31,7 @@ FREETYPE_SRC := \
 	ftxf86.c \
 	cff.c \
 	psaux.c \
+	pshinter.c \
 	psnames.c \
 	raster.c \
 	sfnt.c \
@@ -52,6 +53,8 @@ $(OUT)/ft_%.o: $(FREETYPE_DIR)/src/cff/%.c	| $(OUT)
 $(OUT)/ft_%.o: $(FREETYPE_DIR)/src/cid/%.c	| $(OUT)
 	$(CC_CMD) $(FT_CFLAGS)
 $(OUT)/ft_%.o: $(FREETYPE_DIR)/src/psaux/%.c	| $(OUT)
+	$(CC_CMD) $(FT_CFLAGS)
+$(OUT)/ft_%.o: $(FREETYPE_DIR)/src/pshinter/%.c	| $(OUT)
 	$(CC_CMD) $(FT_CFLAGS)
 $(OUT)/ft_%.o: $(FREETYPE_DIR)/src/psnames/%.c	| $(OUT)
 	$(CC_CMD) $(FT_CFLAGS)

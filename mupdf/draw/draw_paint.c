@@ -72,6 +72,35 @@ and stick to using the premultiplied form.
 
 typedef unsigned char byte;
 
+/* These are used by the non-aa scan converter */
+
+void
+fz_paint_solid_alpha(byte * restrict dp, int w, int alpha)
+{
+	int t = FZ_EXPAND(255 - alpha);
+	while (w--)
+	{
+		*dp = alpha + FZ_COMBINE(*dp, t);
+		dp ++;
+	}
+}
+
+void
+fz_paint_solid_color(byte * restrict dp, int n, int w, byte *color)
+{
+	int n1 = n - 1;
+	int sa = FZ_EXPAND(color[n1]);
+	int k;
+	while (w--)
+	{
+		int ma = FZ_COMBINE(FZ_EXPAND(255), sa);
+		for (k = 0; k < n1; k++)
+			dp[k] = FZ_BLEND(color[k], dp[k], ma);
+		dp[k] = FZ_BLEND(255, dp[k], ma);
+		dp += n;
+	}
+}
+
 /* Blend a non-premultiplied color in mask over destination */
 
 static inline void
@@ -111,14 +140,14 @@ fz_paint_span_with_color_4(byte * restrict dp, byte * restrict mp, int w, byte *
 static inline void
 fz_paint_span_with_color_N(byte * restrict dp, byte * restrict mp, int n, int w, byte *color)
 {
-	int sa = FZ_EXPAND(color[n-1]);
+	int n1 = n - 1;
+	int sa = FZ_EXPAND(color[n1]);
 	int k;
-	n--;
 	while (w--)
 	{
 		int ma = *mp++;
 		ma = FZ_COMBINE(FZ_EXPAND(ma), sa);
-		for (k = 0; k < n; k++)
+		for (k = 0; k < n1; k++)
 			dp[k] = FZ_BLEND(color[k], dp[k], ma);
 		dp[k] = FZ_BLEND(255, dp[k], ma);
 		dp += n;
@@ -181,7 +210,6 @@ fz_paint_span_with_mask_4(byte * restrict dp, byte * restrict sp, byte * restric
 static inline void
 fz_paint_span_with_mask_N(byte * restrict dp, byte * restrict sp, byte * restrict mp, int n, int w)
 {
-	n--;
 	while (w--)
 	{
 		int k = n;

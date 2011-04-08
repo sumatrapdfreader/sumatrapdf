@@ -271,6 +271,8 @@ EXPORTS
 	fz_decode_tile
 	fz_decode_indexed_tile
 	fz_unpack_tile
+	fz_paint_solid_alpha
+	fz_paint_solid_color
 	fz_paint_span
 	fz_paint_span_with_color
 	fz_paint_image

@@ -514,6 +514,7 @@ static void onmouse(int x, int y, int btn, int modifiers, int state)
 static void usage(void)
 {
 	fprintf(stderr, "usage: mupdf [options] file.pdf [page]\n");
+	fprintf(stderr, "\t-b -\tset anti-aliasing quality in bits (0=off, 8=best)\n");
 	fprintf(stderr, "\t-p -\tpassword\n");
 	fprintf(stderr, "\t-r -\tresolution\n");
 	fprintf(stderr, "\t-A\tdisable accelerated functions\n");
@@ -577,13 +578,14 @@ int main(int argc, char **argv)
 	int accelerate = 1;
 	int fd;
 
-	while ((c = fz_getopt(argc, argv, "p:r:A")) != -1)
+	while ((c = fz_getopt(argc, argv, "p:r:b:A")) != -1)
 	{
 		switch (c)
 		{
 		case 'p': password = fz_optarg; break;
 		case 'r': resolution = atoi(fz_optarg); break;
 		case 'A': accelerate = 0; break;
+		case 'b': fz_set_aa_level(atoi(fz_optarg)); break;
 		default: usage();
 		}
 	}

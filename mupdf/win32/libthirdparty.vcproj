@@ -461,6 +461,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\thirdparty\freetype-2.4.4\src\pshinter\pshinter.c"
+				>
+			</File>
+			<File
 				RelativePath="..\thirdparty\freetype-2.4.4\src\psnames\psnames.c"
 				>
 			</File>

@@ -372,40 +372,40 @@ fz_free_display_list(fz_display_list *list)
 }
 
 void
-fz_execute_display_list(fz_display_list *list, fz_device *dev, fz_matrix top_ctm, fz_bbox bounds)
+fz_execute_display_list(fz_display_list *list, fz_device *dev, fz_matrix top_ctm, fz_bbox scissor)
 {
 	fz_display_node *node;
 	fz_matrix ctm;
-	fz_rect bbox;
+	fz_rect rect;
+	fz_bbox bbox;
 	int clipped = 0;
 	int tiled = 0;
+	int empty;
 
-	if (!fz_is_infinite_bbox(bounds))
+	if (!fz_is_infinite_bbox(scissor))
 	{
 		/* add some fuzz at the edges, as especially glyph rects
 		 * are sometimes not actually completely bounding the glyph */
-		bounds.x0 -= 20; bounds.y0 -= 20;
-		bounds.x1 += 20; bounds.y1 += 20;
+		scissor.x0 -= 20; scissor.y0 -= 20;
+		scissor.x1 += 20; scissor.y1 += 20;
 	}
 
 	for (node = list->first; node; node = node->next)
 	{
-		fz_bbox rect = fz_round_rect(fz_transform_rect(top_ctm, node->rect));
-
-		/* never skip tiles */
-		if (node->cmd == FZ_CMD_BEGIN_TILE && !clipped) {
-			tiled++;
-			goto visible;
-		}
-		if (node->cmd == FZ_CMD_END_TILE && !clipped) {
-			tiled--;
-			goto visible;
-		}
-		if (tiled)
-			goto visible;
-
 		/* cull objects to draw using a quick visibility test */
-		if (clipped || fz_is_empty_bbox(fz_intersect_bbox(rect, bounds)))
+
+		if (tiled || node->cmd == FZ_CMD_BEGIN_TILE || node->cmd == FZ_CMD_END_TILE)
+		{
+			empty = 0;
+		}
+		else
+		{
+			bbox = fz_round_rect(fz_transform_rect(top_ctm, node->rect));
+			bbox = fz_intersect_bbox(bbox, scissor);
+			empty = fz_is_empty_bbox(bbox);
+		}
+
+		if (clipped || empty)
 		{
 			switch (node->cmd)
 			{
@@ -486,15 +486,15 @@ visible:
 			fz_pop_clip(dev);
 			break;
 		case FZ_CMD_BEGIN_MASK:
-			bbox = fz_transform_rect(top_ctm, node->rect);
-			fz_begin_mask(dev, bbox, node->flag, node->colorspace, node->color);
+			rect = fz_transform_rect(top_ctm, node->rect);
+			fz_begin_mask(dev, rect, node->flag, node->colorspace, node->color);
 			break;
 		case FZ_CMD_END_MASK:
 			fz_end_mask(dev);
 			break;
 		case FZ_CMD_BEGIN_GROUP:
-			bbox = fz_transform_rect(top_ctm, node->rect);
-			fz_begin_group(dev, bbox,
+			rect = fz_transform_rect(top_ctm, node->rect);
+			fz_begin_group(dev, rect,
 				node->flag & ISOLATED, node->flag & KNOCKOUT,
 				node->item.blendmode, node->alpha);
 			break;
@@ -502,14 +502,16 @@ visible:
 			fz_end_group(dev);
 			break;
 		case FZ_CMD_BEGIN_TILE:
-			bbox.x0 = node->color[2];
-			bbox.y0 = node->color[3];
-			bbox.x1 = node->color[4];
-			bbox.y1 = node->color[5];
-			fz_begin_tile(dev, node->rect, bbox,
+			tiled++;
+			rect.x0 = node->color[2];
+			rect.y0 = node->color[3];
+			rect.x1 = node->color[4];
+			rect.y1 = node->color[5];
+			fz_begin_tile(dev, node->rect, rect,
 				node->color[0], node->color[1], ctm);
 			break;
 		case FZ_CMD_END_TILE:
+			tiled--;
 			fz_end_tile(dev);
 			break;
 		}

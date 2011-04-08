@@ -1036,7 +1036,7 @@ int fz_is_rect_gel(fz_gel *gel);
 fz_ael *fz_new_ael(void);
 void fz_free_ael(fz_ael *ael);
 
-fz_error fz_scan_convert(fz_gel *gel, fz_ael *ael, int eofill,
+void fz_scan_convert(fz_gel *gel, fz_ael *ael, int eofill,
 	fz_bbox clip, fz_pixmap *pix, unsigned char *colorbv);
 
 void fz_flatten_fill_path(fz_gel *gel, fz_path *path, fz_matrix ctm, float flatness);
@@ -1223,6 +1223,9 @@ void fz_accelerate_arch(void);
 void fz_decode_tile(fz_pixmap *pix, float *decode);
 void fz_decode_indexed_tile(fz_pixmap *pix, float *decode, int maxval);
 void fz_unpack_tile(fz_pixmap *dst, unsigned char * restrict src, int n, int depth, int stride, int scale);
+
+void fz_paint_solid_alpha(unsigned char * restrict dp, int w, int alpha);
+void fz_paint_solid_color(unsigned char * restrict dp, int n, int w, unsigned char *color);
 
 void fz_paint_span(unsigned char * restrict dp, unsigned char * restrict sp, int n, int w, int alpha);
 void fz_paint_span_with_color(unsigned char * restrict dp, unsigned char * restrict mp, int n, int w, unsigned char *color);

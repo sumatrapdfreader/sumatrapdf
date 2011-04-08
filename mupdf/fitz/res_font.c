@@ -261,6 +261,47 @@ fz_adjust_ft_glyph_width(fz_font *font, int gid, fz_matrix trm)
 	return trm;
 }
 
+static fz_pixmap *
+fz_copy_ft_bitmap(int left, int top, FT_Bitmap *bitmap)
+{
+	fz_pixmap *pixmap;
+	int y;
+
+	pixmap = fz_new_pixmap(NULL, left, top - bitmap->rows, bitmap->width, bitmap->rows);
+
+	if (bitmap->pixel_mode == FT_PIXEL_MODE_MONO)
+	{
+		for (y = 0; y < pixmap->h; y++)
+		{
+			unsigned char *out = pixmap->samples + y * pixmap->w;
+			unsigned char *in = bitmap->buffer + (pixmap->h - y - 1) * bitmap->pitch;
+			unsigned char bit = 0x80;
+			int w = pixmap->w;
+			while (w--)
+			{
+				*out++ = (*in & bit) ? 255 : 0;
+				bit >>= 1;
+				if (bit == 0)
+				{
+					bit = 0x80;
+					in++;
+				}
+			}
+		}
+	}
+	else
+	{
+		for (y = 0; y < pixmap->h; y++)
+		{
+			memcpy(pixmap->samples + y * pixmap->w,
+				bitmap->buffer + (pixmap->h - y - 1) * bitmap->pitch,
+				pixmap->w);
+		}
+	}
+
+	return pixmap;
+}
+
 fz_pixmap *
 fz_render_ft_glyph(fz_font *font, int gid, fz_matrix trm)
 {
@@ -268,8 +309,6 @@ fz_render_ft_glyph(fz_font *font, int gid, fz_matrix trm)
 	FT_Matrix m;
 	FT_Vector v;
 	FT_Error fterr;
-	fz_pixmap *glyph;
-	int y;
 
 	trm = fz_adjust_ft_glyph_width(font, gid, trm);
 
@@ -293,16 +332,8 @@ fz_render_ft_glyph(fz_font *font, int gid, fz_matrix trm)
 		fz_warn("freetype setting character size: %s", ft_error_string(fterr));
 	FT_Set_Transform(face, &m, &v);
 
-	if (font->ft_hint)
+	if (fz_get_aa_level() == 0)
 	{
-		/*
-		Enable hinting, but keep the huge char size so that
-		it is hinted for a character. This will in effect nullify
-		the effect of grid fitting. This form of hinting should
-		only be used for DynaLab and similar tricky TrueType fonts,
-		so that we get the correct outline shape.
-		*/
-#ifdef GRIDFIT
 		/* If you really want grid fitting, enable this code. */
 		float scale = fz_matrix_expansion(trm);
 		m.xx = trm.a * 65536 / scale;
@@ -316,7 +347,19 @@ fz_render_ft_glyph(fz_font *font, int gid, fz_matrix trm)
 		if (fterr)
 			fz_warn("freetype setting character size: %s", ft_error_string(fterr));
 		FT_Set_Transform(face, &m, &v);
-#endif
+		fterr = FT_Load_Glyph(face, gid, FT_LOAD_NO_BITMAP);
+		if (fterr)
+			fz_warn("freetype load glyph (gid %d): %s", gid, ft_error_string(fterr));
+	}
+	else if (font->ft_hint)
+	{
+		/*
+		Enable hinting, but keep the huge char size so that
+		it is hinted for a character. This will in effect nullify
+		the effect of grid fitting. This form of hinting should
+		only be used for DynaLab and similar tricky TrueType fonts,
+		so that we get the correct outline shape.
+		*/
 		fterr = FT_Load_Glyph(face, gid, FT_LOAD_NO_BITMAP);
 		if (fterr)
 			fz_warn("freetype load glyph (gid %d): %s", gid, ft_error_string(fterr));
@@ -338,43 +381,7 @@ fz_render_ft_glyph(fz_font *font, int gid, fz_matrix trm)
 		return NULL;
 	}
 
-	glyph = fz_new_pixmap(NULL,
-		face->glyph->bitmap_left,
-		face->glyph->bitmap_top - face->glyph->bitmap.rows,
-		face->glyph->bitmap.width,
-		face->glyph->bitmap.rows);
-
-	if (face->glyph->bitmap.pixel_mode == FT_PIXEL_MODE_MONO)
-	{
-		for (y = 0; y < glyph->h; y++)
-		{
-			unsigned char *out = glyph->samples + y * glyph->w;
-			unsigned char *in = face->glyph->bitmap.buffer + (glyph->h - y - 1) * face->glyph->bitmap.pitch;
-			unsigned char bit = 0x80;
-			int w = glyph->w;
-			while (w--)
-			{
-				*out++ = (*in & bit) ? 255 : 0;
-				bit >>= 1;
-				if (bit == 0)
-				{
-					bit = 0x80;
-					in++;
-				}
-			}
-		}
-	}
-	else
-	{
-		for (y = 0; y < glyph->h; y++)
-		{
-			memcpy(glyph->samples + y * glyph->w,
-				face->glyph->bitmap.buffer + (glyph->h - y - 1) * face->glyph->bitmap.pitch,
-				glyph->w);
-		}
-	}
-
-	return glyph;
+	return fz_copy_ft_bitmap(face->glyph->bitmap_left, face->glyph->bitmap_top, &face->glyph->bitmap);
 }
 
 fz_pixmap *
@@ -389,8 +396,7 @@ fz_render_ft_stroked_glyph(fz_font *font, int gid, fz_matrix trm, fz_matrix ctm,
 	FT_Stroker stroker;
 	FT_Glyph glyph;
 	FT_BitmapGlyph bitmap;
-	fz_pixmap *pix;
-	int y;
+	fz_pixmap *pixmap;
 
 	trm = fz_adjust_ft_glyph_width(font, gid, trm);
 
@@ -443,56 +449,21 @@ fz_render_ft_stroked_glyph(fz_font *font, int gid, fz_matrix trm, fz_matrix ctm,
 		return NULL;
 	}
 
+	FT_Stroker_Done(stroker);
+
 	fterr = FT_Glyph_To_Bitmap(&glyph, fz_get_aa_level() > 0 ? ft_render_mode_normal : ft_render_mode_mono, 0, 1);
 	if (fterr)
 	{
 		fz_warn("FT_Glyph_To_Bitmap: %s", ft_error_string(fterr));
 		FT_Done_Glyph(glyph);
-		FT_Stroker_Done(stroker);
 		return NULL;
 	}
 
 	bitmap = (FT_BitmapGlyph)glyph;
-	pix = fz_new_pixmap(NULL,
-		bitmap->left,
-		bitmap->top - bitmap->bitmap.rows,
-		bitmap->bitmap.width,
-		bitmap->bitmap.rows);
-
-	if (face->glyph->bitmap.pixel_mode == FT_PIXEL_MODE_MONO)
-	{
-		for (y = 0; y < pix->h; y++)
-		{
-			unsigned char *out = pix->samples + y * pix->w;
-			unsigned char *in = bitmap->bitmap.buffer + (pix->h - y - 1) * bitmap->bitmap.pitch;
-			unsigned char bit = 0x80;
-			int w = bitmap->bitmap.width;
-			while (w--)
-			{
-				*out++ = (*in & bit) ? 255 : 0;
-				bit >>= 1;
-				if (bit == 0)
-				{
-					bit = 0x80;
-					in++;
-				}
-			}
-		}
-	}
-	else
-	{
-		for (y = 0; y < pix->h; y++)
-		{
-			memcpy(pix->samples + y * pix->w,
-				bitmap->bitmap.buffer + (pix->h - y - 1) * bitmap->bitmap.pitch,
-				pix->w);
-		}
-	}
-
+	pixmap = fz_copy_ft_bitmap(bitmap->left, bitmap->top, &bitmap->bitmap);
 	FT_Done_Glyph(glyph);
-	FT_Stroker_Done(stroker);
 
-	return pix;
+	return pixmap;
 }
 
 /*

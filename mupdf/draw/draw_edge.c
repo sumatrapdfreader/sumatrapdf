@@ -9,76 +9,64 @@ static inline int fz_idiv(int a, int b)
 	return a < 0 ? (a - b + 1) / b : a / b;
 }
 
-/* Allow the antialiasing level to be varied, both at compile time and at
- * runtime.
- *
- * If AA_BITS is not defined, then we assume constant 8 bits of antialiasing.
- * If it is defined to a positive number then we will attempt to provide
- * at least that number of bits of accuracy in the antialiasing (to a
- * maximum of 8). If it is defined to be 0 then no antialiasing is done.
- * If it is defined to be a negative number we will leave the antialiasing
+/* If AA_BITS is defined, then we assume constant N bits of antialiasing. We
+ * will attempt to provide at least that number of bits of accuracy in the
+ * antialiasing (to a maximum of 8). If it is defined to be 0 then no
+ * antialiasing is done. If it is undefined to we will leave the antialiasing
  * accuracy as a run time choice.
  */
 
 #ifndef AA_BITS
-#define AA_BITS 8
-#endif
-
-#if AA_BITS < 0
+#define AA_SCALE(x) ((x * fz_aa_scale) >> 8)
 static int fz_aa_hscale = 17;
 static int fz_aa_vscale = 15;
 static int fz_aa_scale = 256;
 static int fz_aa_level = 8;
-#define AASCALE(c) ((c*fz_aa_scale)>>8)
-#define HSCALE fz_aa_hscale
-#define VSCALE fz_aa_vscale
-#undef AA_BITS
-#define AA_BITS 0
-typedef int fz_delta;
-#elif AA_BITS == 0
-enum { HSCALE = 1, VSCALE = 1 };
-#define AASCALE(c) (c*255)
-#undef AA_BITS
-#define AA_BITS 2
-typedef unsigned char fz_delta;
-#elif AA_BITS <= 2
-enum { HSCALE = 2, VSCALE = 2 };
-#define AASCALE(c) ((c*255)>>2)
-#undef AA_BITS
-#define AA_BITS 2
-typedef int fz_delta;
-#elif AA_BITS <= 4
-enum { HSCALE = 5, VSCALE = 3 };
-#define AASCALE(c) (c*17)
-#undef AA_BITS
-#define AA_BITS 4
-typedef unsigned char fz_delta;
-#elif AA_BITS <= 6
-enum { HSCALE = 8, VSCALE = 8 };
-#define AASCALE(c) ((c*255)>>6)
-#undef AA_BITS
-#define AA_BITS 6
-typedef int fz_delta;
-#else /* AA_BITS <= 8 */
-enum { HSCALE = 17, VSCALE = 15 };
-#define AASCALE(c) (c)
-#undef AA_BITS
-#define AA_BITS 8
-typedef unsigned char fz_delta;
+
+#elif AA_BITS > 6
+#define AA_SCALE(x) (x)
+#define fz_aa_hscale 17
+#define fz_aa_vscale 15
+#define fz_aa_level 8
+
+#elif AA_BITS > 4
+#define AA_SCALE(x) ((x * 255) >> 6)
+#define fz_aa_hscale 8
+#define fz_aa_vscale 8
+#define fz_aa_level 6
+
+#elif AA_BITS > 2
+#define AA_SCALE(x) (x * 17)
+#define fz_aa_hscale 5
+#define fz_aa_vscale 3
+#define fz_aa_level 4
+
+#elif AA_BITS > 0
+#define AA_SCALE(x) ((x * 255) >> 2)
+#define fz_aa_hscale 2
+#define fz_aa_vscale 2
+#define fz_aa_level 2
+
+#else
+#define AA_SCALE(x) (x * 255)
+#define fz_aa_hscale 1
+#define fz_aa_vscale 1
+#define fz_aa_level 0
+
 #endif
 
-int fz_get_aa_level(void)
+int
+fz_get_aa_level(void)
 {
-#if AA_BITS <= 0
 	return fz_aa_level;
-#else
-	return AA_BITS;
-#endif
 }
 
-void fz_set_aa_level(int level)
+void
+fz_set_aa_level(int level)
 {
-#if AA_BITS <= 0
+#ifdef AA_BITS
+	fz_warn("anti-aliasing was compiled with a fixed precision of %d bits", fz_aa_level);
+#else
 	if (level > 6)
 	{
 		fz_aa_hscale = 17;
@@ -149,10 +137,10 @@ fz_reset_gel(fz_gel *gel, fz_bbox clip)
 		gel->clip.x1 = gel->clip.y1 = BBOX_MIN;
 	}
 	else {
-		gel->clip.x0 = clip.x0 * HSCALE;
-		gel->clip.x1 = clip.x1 * HSCALE;
-		gel->clip.y0 = clip.y0 * VSCALE;
-		gel->clip.y1 = clip.y1 * VSCALE;
+		gel->clip.x0 = clip.x0 * fz_aa_hscale;
+		gel->clip.x1 = clip.x1 * fz_aa_hscale;
+		gel->clip.y0 = clip.y0 * fz_aa_vscale;
+		gel->clip.y1 = clip.y1 * fz_aa_vscale;
 	}
 
 	gel->bbox.x0 = gel->bbox.y0 = BBOX_MAX;
@@ -174,10 +162,10 @@ fz_bound_gel(fz_gel *gel)
 	fz_bbox bbox;
 	if (gel->len == 0)
 		return fz_empty_bbox;
-	bbox.x0 = fz_idiv(gel->bbox.x0, HSCALE);
-	bbox.y0 = fz_idiv(gel->bbox.y0, VSCALE);
-	bbox.x1 = fz_idiv(gel->bbox.x1, HSCALE) + 1;
-	bbox.y1 = fz_idiv(gel->bbox.y1, VSCALE) + 1;
+	bbox.x0 = fz_idiv(gel->bbox.x0, fz_aa_hscale);
+	bbox.y0 = fz_idiv(gel->bbox.y0, fz_aa_vscale);
+	bbox.x1 = fz_idiv(gel->bbox.x1, fz_aa_hscale) + 1;
+	bbox.y1 = fz_idiv(gel->bbox.y1, fz_aa_vscale) + 1;
 	return bbox;
 }
 
@@ -281,10 +269,10 @@ fz_insert_gel(fz_gel *gel, float fx0, float fy0, float fx1, float fy1)
 	int x0, y0, x1, y1;
 	int d, v;
 
-	fx0 = floorf(fx0 * HSCALE);
-	fx1 = floorf(fx1 * HSCALE);
-	fy0 = floorf(fy0 * VSCALE);
-	fy1 = floorf(fy1 * VSCALE);
+	fx0 = floorf(fx0 * fz_aa_hscale);
+	fx1 = floorf(fx1 * fz_aa_hscale);
+	fy0 = floorf(fy0 * fz_aa_vscale);
+	fy1 = floorf(fy1 * fz_aa_vscale);
 
 	x0 = CLAMP(fx0, BBOX_MIN, BBOX_MAX);
 	y0 = CLAMP(fy0, BBOX_MIN, BBOX_MAX);
@@ -441,7 +429,7 @@ sort_ael(fz_edge **a, int n)
 	}
 }
 
-static fz_error
+static void
 insert_ael(fz_ael *ael, fz_gel *gel, int y, int *e)
 {
 	/* insert edges that start here */
@@ -457,8 +445,6 @@ insert_ael(fz_ael *ael, fz_gel *gel, int y, int *e)
 
 	/* shell-sort the edges by increasing x */
 	sort_ael(ael->edges, ael->len);
-
-	return fz_okay;
 }
 
 static void
@@ -491,11 +477,11 @@ advance_ael(fz_ael *ael)
 }
 
 /*
- * Scan convert
+ * Anti-aliased scan conversion.
  */
 
 static inline void
-add_span(fz_delta *list, int x0, int x1, int xofs)
+add_span_aa(int *list, int x0, int x1, int xofs)
 {
 	int x0pix, x0sub;
 	int x1pix, x1sub;
@@ -507,10 +493,10 @@ add_span(fz_delta *list, int x0, int x1, int xofs)
 	x0 -= xofs;
 	x1 -= xofs;
 
-	x0pix = x0 / HSCALE;
-	x0sub = x0 % HSCALE;
-	x1pix = x1 / HSCALE;
-	x1sub = x1 % HSCALE;
+	x0pix = x0 / fz_aa_hscale;
+	x0sub = x0 % fz_aa_hscale;
+	x1pix = x1 / fz_aa_hscale;
+	x1sub = x1 % fz_aa_hscale;
 
 	if (x0pix == x1pix)
 	{
@@ -520,15 +506,15 @@ add_span(fz_delta *list, int x0, int x1, int xofs)
 
 	else
 	{
-		list[x0pix] += HSCALE - x0sub;
+		list[x0pix] += fz_aa_hscale - x0sub;
 		list[x0pix+1] += x0sub;
-		list[x1pix] += x1sub - HSCALE;
+		list[x1pix] += x1sub - fz_aa_hscale;
 		list[x1pix+1] += -x1sub;
 	}
 }
 
 static inline void
-non_zero_winding(fz_ael *ael, fz_delta *list, int xofs)
+non_zero_winding_aa(fz_ael *ael, int *list, int xofs)
 {
 	int winding = 0;
 	int x = 0;
@@ -538,13 +524,13 @@ non_zero_winding(fz_ael *ael, fz_delta *list, int xofs)
 		if (!winding && (winding + ael->edges[i]->ydir))
 			x = ael->edges[i]->x;
 		if (winding && !(winding + ael->edges[i]->ydir))
-			add_span(list, x, ael->edges[i]->x, xofs);
+			add_span_aa(list, x, ael->edges[i]->x, xofs);
 		winding += ael->edges[i]->ydir;
 	}
 }
 
 static inline void
-even_odd(fz_ael *ael, fz_delta *list, int xofs)
+even_odd_aa(fz_ael *ael, int *list, int xofs)
 {
 	int even = 0;
 	int x = 0;
@@ -554,93 +540,87 @@ even_odd(fz_ael *ael, fz_delta *list, int xofs)
 		if (!even)
 			x = ael->edges[i]->x;
 		else
-			add_span(list, x, ael->edges[i]->x, xofs);
+			add_span_aa(list, x, ael->edges[i]->x, xofs);
 		even = !even;
 	}
 }
 
 static inline void
-undelta(fz_delta *in, int n)
+undelta_aa(unsigned char * restrict out, int * restrict in, int n)
 {
 	int d = 0;
-	unsigned char *out = (unsigned char *)in;
 	while (n--)
 	{
 		d += *in++;
-		*out++ = AASCALE(d);
+		*out++ = AA_SCALE(d);
 	}
 }
 
 static inline void
-blit(fz_pixmap *dest, int x, int y, unsigned char *mp, int w, unsigned char *color)
+blit_aa(fz_pixmap *dst, int x, int y, unsigned char *mp, int w, unsigned char *color)
 {
 	unsigned char *dp;
-
-	dp = dest->samples + ( (y - dest->y) * dest->w + (x - dest->x) ) * dest->n;
-
+	dp = dst->samples + ( (y - dst->y) * dst->w + (x - dst->x) ) * dst->n;
 	if (color)
-		fz_paint_span_with_color(dp, mp, dest->n, w, color);
+		fz_paint_span_with_color(dp, mp, dst->n, w, color);
 	else
 		fz_paint_span(dp, mp, 1, w, 255);
 }
 
-fz_error
-fz_scan_convert(fz_gel *gel, fz_ael *ael, int eofill, fz_bbox clip,
-	fz_pixmap *dest, unsigned char *color)
+static void
+fz_scan_convert_aa(fz_gel *gel, fz_ael *ael, int eofill, fz_bbox clip,
+	fz_pixmap *dst, unsigned char *color)
 {
-	fz_error error;
-	fz_delta *deltas;
+	unsigned char *alphas;
+	int *deltas;
 	int y, e;
 	int yd, yc;
 
-	int xmin = fz_idiv(gel->bbox.x0, HSCALE);
-	int xmax = fz_idiv(gel->bbox.x1, HSCALE) + 1;
+	int xmin = fz_idiv(gel->bbox.x0, fz_aa_hscale);
+	int xmax = fz_idiv(gel->bbox.x1, fz_aa_hscale) + 1;
 
-	int xofs = xmin * HSCALE;
+	int xofs = xmin * fz_aa_hscale;
 
 	int skipx = clip.x0 - xmin;
 	int clipn = clip.x1 - clip.x0;
 
 	if (gel->len == 0)
-		return fz_okay;
+		return;
 
 	assert(clip.x0 >= xmin);
 	assert(clip.x1 <= xmax);
 
-	deltas = fz_malloc((xmax - xmin + 1) * sizeof(fz_delta));
-	memset(deltas, 0, (xmax - xmin + 1) * sizeof(fz_delta));
+	alphas = fz_malloc(xmax - xmin + 1);
+	deltas = fz_malloc((xmax - xmin + 1) * sizeof(int));
+	memset(deltas, 0, (xmax - xmin + 1) * sizeof(int));
 
 	e = 0;
 	y = gel->edges[0].y;
-	yc = fz_idiv(y, VSCALE);
+	yc = fz_idiv(y, fz_aa_vscale);
 	yd = yc;
 
 	while (ael->len > 0 || e < gel->len)
 	{
-		yc = fz_idiv(y, VSCALE);
+		yc = fz_idiv(y, fz_aa_vscale);
 		if (yc != yd)
 		{
 			if (yd >= clip.y0 && yd < clip.y1)
 			{
-				undelta(deltas, skipx + clipn);
-				blit(dest, xmin + skipx, yd, (unsigned char *)deltas + skipx, clipn, color);
-				memset(deltas, 0, (skipx + clipn) * sizeof(fz_delta));
+				undelta_aa(alphas, deltas, skipx + clipn);
+				blit_aa(dst, xmin + skipx, yd, alphas + skipx, clipn, color);
+				memset(deltas, 0, (skipx + clipn) * sizeof(int));
 			}
 		}
 		yd = yc;
 
-		error = insert_ael(ael, gel, y, &e);
-		if (error) {
-			fz_free(deltas);
-			return error;
-		}
+		insert_ael(ael, gel, y, &e);
 
 		if (yd >= clip.y0 && yd < clip.y1)
 		{
 			if (eofill)
-				even_odd(ael, deltas, xofs);
+				even_odd_aa(ael, deltas, xofs);
 			else
-				non_zero_winding(ael, deltas, xofs);
+				non_zero_winding_aa(ael, deltas, xofs);
 		}
 
 		advance_ael(ael);
@@ -653,10 +633,99 @@ fz_scan_convert(fz_gel *gel, fz_ael *ael, int eofill, fz_bbox clip,
 
 	if (yd >= clip.y0 && yd < clip.y1)
 	{
-		undelta(deltas, skipx + clipn);
-		blit(dest, xmin + skipx, yd, (unsigned char *)deltas + skipx, clipn, color);
+		undelta_aa(alphas, deltas, skipx + clipn);
+		blit_aa(dst, xmin + skipx, yd, alphas + skipx, clipn, color);
 	}
 
 	fz_free(deltas);
-	return fz_okay;
+}
+
+/*
+ * Sharp (not anti-aliased) scan conversion
+ */
+
+static inline void
+blit_sharp(int x0, int x1, int y, fz_bbox clip, fz_pixmap *dst, unsigned char *color)
+{
+	unsigned char *dp;
+	x0 = CLAMP(x0, dst->x, dst->x + dst->w);
+	x1 = CLAMP(x1, dst->x, dst->x + dst->w);
+	if (x0 < x1)
+	{
+		dp = dst->samples + ( (y - dst->y) * dst->w + (x0 - dst->x) ) * dst->n;
+		if (color)
+			fz_paint_solid_color(dp, dst->n, x1 - x0, color);
+		else
+			fz_paint_solid_alpha(dp, x1 - x0, 255);
+	}
+}
+
+static inline void
+non_zero_winding_sharp(fz_ael *ael, int y, fz_bbox clip, fz_pixmap *dst, unsigned char *color)
+{
+	int winding = 0;
+	int x = 0;
+	int i;
+	for (i = 0; i < ael->len; i++)
+	{
+		if (!winding && (winding + ael->edges[i]->ydir))
+			x = ael->edges[i]->x;
+		if (winding && !(winding + ael->edges[i]->ydir))
+			blit_sharp(x, ael->edges[i]->x, y, clip, dst, color);
+		winding += ael->edges[i]->ydir;
+	}
+}
+
+static inline void
+even_odd_sharp(fz_ael *ael, int y, fz_bbox clip, fz_pixmap *dst, unsigned char *color)
+{
+	int even = 0;
+	int x = 0;
+	int i;
+	for (i = 0; i < ael->len; i++)
+	{
+		if (!even)
+			x = ael->edges[i]->x;
+		else
+			blit_sharp(x, ael->edges[i]->x, y, clip, dst, color);
+		even = !even;
+	}
+}
+
+static void
+fz_scan_convert_sharp(fz_gel *gel, fz_ael *ael, int eofill, fz_bbox clip,
+	fz_pixmap *dst, unsigned char *color)
+{
+	int e = 0;
+	int y = gel->edges[0].y;
+
+	while (ael->len > 0 || e < gel->len)
+	{
+		insert_ael(ael, gel, y, &e);
+
+		if (y >= clip.y0 && y < clip.y1)
+		{
+			if (eofill)
+				even_odd_sharp(ael, y, clip, dst, color);
+			else
+				non_zero_winding_sharp(ael, y, clip, dst, color);
+		}
+
+		advance_ael(ael);
+
+		if (ael->len > 0)
+			y ++;
+		else if (e < gel->len)
+			y = gel->edges[e].y;
+	}
+}
+
+void
+fz_scan_convert(fz_gel *gel, fz_ael *ael, int eofill, fz_bbox clip,
+	fz_pixmap *dst, unsigned char *color)
+{
+	if (fz_aa_level > 0)
+		fz_scan_convert_aa(gel, ael, eofill, clip, dst, color);
+	else
+		fz_scan_convert_sharp(gel, ael, eofill, clip, dst, color);
 }
