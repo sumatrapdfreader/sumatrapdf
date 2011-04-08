@@ -27,12 +27,13 @@ public:
 		fz_pixmap *pix;
 		if (pixmap->colorspace != fz_device_bgr)
 		{
-			pix = fz_new_pixmap_no_abort(fz_device_bgr, pixmap->x, pixmap->y, pixmap->w, pixmap->h);
+			pix = fz_new_pixmap_with_limit(fz_device_bgr, pixmap->w, pixmap->h);
 			if (!pix)
 			{
 				fz_warn("OOM in PixmapBitmap constructor: painting blank image");
 				return;
 			}
+			pix->x = pixmap->x; pix->y = pixmap->y;
 			
 			if (!pixmap->colorspace)
 				for (int i = 0; i < pix->w * pix->h; i++)
@@ -1168,9 +1169,10 @@ fz_gdiplus_fill_image_mask(void *user, fz_pixmap *image, fz_matrix ctm,
 	else
 		memcpy(rgb, ((userData *)user)->t3color, sizeof(rgb));
 	
-	fz_pixmap *img2 = fz_new_pixmap_no_abort(fz_device_rgb, image->x, image->y, image->w, image->h);
+	fz_pixmap *img2 = fz_new_pixmap_with_limit(fz_device_rgb, image->w, image->h);
 	if (!img2)
 		return;
+	img2->x = image->x; img2->y = image->y;
 	
 	for (int i = 0; i < img2->w * img2->h; i++)
 	{

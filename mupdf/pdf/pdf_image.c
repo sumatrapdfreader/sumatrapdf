@@ -43,7 +43,6 @@ pdf_load_image_imp(fz_pixmap **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict, 
 	int colorkey[FZ_MAX_COLORS * 2];
 	float decode[FZ_MAX_COLORS * 2];
 
-	int scale;
 	int stride;
 	unsigned char *samples;
 	int i, len;
@@ -156,6 +155,23 @@ pdf_load_image_imp(fz_pixmap **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict, 
 			colorkey[i] = fz_to_int(fz_array_get(obj, i));
 	}
 
+	/* Allocate now, to fail early if we run out of memory */
+	tile = fz_new_pixmap_with_limit(colorspace, w, h);
+	if (!tile)
+	{
+		if (colorspace)
+			fz_drop_colorspace(colorspace);
+		if (mask)
+			fz_drop_pixmap(mask);
+		return fz_throw("out of memory");
+	}
+
+	if (colorspace)
+		fz_drop_colorspace(colorspace);
+
+	tile->mask = mask;
+	tile->interpolate = interpolate;
+
 	stride = (w * n * bpc + 7) / 8;
 
 	if (cstm)
@@ -167,34 +183,19 @@ pdf_load_image_imp(fz_pixmap **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict, 
 		error = pdf_open_stream(&stm, xref, fz_to_num(dict), fz_to_gen(dict));
 		if (error)
 		{
-			if (colorspace)
-				fz_drop_colorspace(colorspace);
-			if (mask)
-				fz_drop_pixmap(mask);
+			fz_drop_pixmap(tile);
 			return fz_rethrow(error, "cannot open image data stream (%d 0 R)", fz_to_num(dict));
 		}
 	}
 
-	/* SumatraPDF: don't abort on OOM when loading images */
-	samples = fz_calloc_no_abort(h, stride);
-	if (!samples)
-	{
-		if (colorspace)
-			fz_drop_colorspace(colorspace);
-		if (mask)
-			fz_drop_pixmap(mask);
-		return fz_throw("image too big to load");
-	}
+	samples = fz_calloc(h, stride);
 
 	len = fz_read(stm, samples, h * stride);
 	if (len < 0)
 	{
 		fz_close(stm);
-		if (colorspace)
-			fz_drop_colorspace(colorspace);
-		if (mask)
-			fz_drop_pixmap(mask);
 		fz_free(samples);
+		fz_drop_pixmap(tile);
 		return fz_rethrow(len, "cannot read image data");
 	}
 
@@ -228,28 +229,9 @@ pdf_load_image_imp(fz_pixmap **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict, 
 			p[i] = ~p[i];
 	}
 
-	/* Unpack samples into pixmap */
+	fz_unpack_tile(tile, samples, n, bpc, stride, indexed);
 
-	/* SumatraPDF: don't abort on OOM when loading images */
-	tile = fz_new_pixmap_no_abort(colorspace, 0, 0, w, h);
-	if (!tile)
-	{
-		fz_free(samples);
-		return fz_throw("image too big to load");
-	}
-
-	scale = 1;
-	if (!indexed)
-	{
-		switch (bpc)
-		{
-		case 1: scale = 255; break;
-		case 2: scale = 85; break;
-		case 4: scale = 17; break;
-		}
-	}
-
-	fz_unpack_tile(tile, samples, n, bpc, stride, scale);
+	fz_free(samples);
 
 	if (usecolorkey)
 		pdf_mask_color_key(tile, n, colorkey);
@@ -257,9 +239,7 @@ pdf_load_image_imp(fz_pixmap **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict, 
 	if (indexed)
 	{
 		fz_pixmap *conv;
-
 		fz_decode_indexed_tile(tile, decode, (1 << bpc) - 1);
-
 		conv = pdf_expand_indexed_pixmap(tile);
 		fz_drop_pixmap(tile);
 		tile = conv;
@@ -268,14 +248,6 @@ pdf_load_image_imp(fz_pixmap **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict, 
 	{
 		fz_decode_tile(tile, decode);
 	}
-
-	if (colorspace)
-		fz_drop_colorspace(colorspace);
-
-	tile->mask = mask;
-	tile->interpolate = interpolate;
-
-	fz_free(samples);
 
 	*imgp = tile;
 	return fz_okay;

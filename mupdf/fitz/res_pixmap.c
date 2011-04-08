@@ -1,14 +1,18 @@
 #include "fitz.h"
 
+/* SumatraPDF: use max. 512 MB for images (originally 256 MB) */
+static int fz_memory_limit = 512 << 20;
+static int fz_memory_used = 0;
+
 fz_pixmap *
-fz_new_pixmap_with_data(fz_colorspace *colorspace, int x, int y, int w, int h, unsigned char *samples)
+fz_new_pixmap_with_data(fz_colorspace *colorspace, int w, int h, unsigned char *samples)
 {
 	fz_pixmap *pix;
 
 	pix = fz_malloc(sizeof(fz_pixmap));
 	pix->refs = 1;
-	pix->x = x;
-	pix->y = y;
+	pix->x = 0;
+	pix->y = 0;
 	pix->w = w;
 	pix->h = h;
 	pix->mask = NULL;
@@ -33,6 +37,7 @@ fz_new_pixmap_with_data(fz_colorspace *colorspace, int x, int y, int w, int h, u
 	{
 		/* SumatraPDF: abort on integer overflow */
 		if (pix->w > INT_MAX / pix->n) abort();
+		fz_memory_used += pix->w * pix->h * pix->n;
 		pix->samples = fz_calloc(pix->h, pix->w * pix->n);
 		pix->free_samples = 1;
 	}
@@ -41,37 +46,33 @@ fz_new_pixmap_with_data(fz_colorspace *colorspace, int x, int y, int w, int h, u
 }
 
 fz_pixmap *
-fz_new_pixmap(fz_colorspace *colorspace, int x, int y, int w, int h)
+fz_new_pixmap_with_limit(fz_colorspace *colorspace, int w, int h)
 {
-	return fz_new_pixmap_with_data(colorspace, x, y, w, h, NULL);
+	int n = colorspace ? colorspace->n + 1 : 1;
+	int size = w * h * n;
+	if (fz_memory_used + size > fz_memory_limit || INT_MAX / h / n < w)
+	{
+		fz_warn("pixmap memory exceeds soft limit %dM + %dM > %dM",
+			fz_memory_used/(1<<20), size/(1<<20), fz_memory_limit/(1<<20));
+		return NULL;
+	}
+	return fz_new_pixmap_with_data(colorspace, w, h, NULL);
 }
 
-/* SumatraPDF: don't abort on OOM when loading images */
 fz_pixmap *
-fz_new_pixmap_no_abort(fz_colorspace *colorspace, int x, int y, int w, int h)
+fz_new_pixmap(fz_colorspace *colorspace, int w, int h)
 {
-	fz_pixmap *pixmap;
-	unsigned char *samples;
-	int n = 1;
-
-	if (colorspace)
-		n = colorspace->n + 1;
-
-	if (w > INT_MAX / n)
-		return NULL;
-	samples = fz_calloc_no_abort(h, w * n);
-	if (!samples)
-		return NULL;
-
-	pixmap = fz_new_pixmap_with_data(colorspace, x, y, w, h, samples);
-	pixmap->free_samples = 1;
-	return pixmap;
+	return fz_new_pixmap_with_data(colorspace, w, h, NULL);
 }
 
 fz_pixmap *
 fz_new_pixmap_with_rect(fz_colorspace *colorspace, fz_bbox r)
 {
-	return fz_new_pixmap(colorspace, r.x0, r.y0, r.x1 - r.x0, r.y1 - r.y0);
+	fz_pixmap *pixmap;
+	pixmap = fz_new_pixmap(colorspace, r.x1 - r.x0, r.y1 - r.y0);
+	pixmap->x = r.x0;
+	pixmap->y = r.y0;
+	return pixmap;
 }
 
 fz_pixmap *
@@ -86,6 +87,7 @@ fz_drop_pixmap(fz_pixmap *pix)
 {
 	if (pix && --pix->refs == 0)
 	{
+		fz_memory_used -= pix->w * pix->h * pix->n;
 		if (pix->mask)
 			fz_drop_pixmap(pix->mask);
 		if (pix->colorspace)
@@ -162,7 +164,7 @@ fz_alpha_from_gray(fz_pixmap *gray, int luminosity)
 
 	assert(gray->n == 2);
 
-	alpha = fz_new_pixmap(NULL, gray->x, gray->y, gray->w, gray->h);
+	alpha = fz_new_pixmap_with_rect(NULL, fz_bound_pixmap(gray));
 	dp = alpha->samples;
 	sp = gray->samples;
 	if (!luminosity)

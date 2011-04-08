@@ -593,7 +593,7 @@ fz_draw_fill_image(void *user, fz_pixmap *image, fz_matrix ctm, float alpha)
 
 	if (image->colorspace != model && !after)
 	{
-		converted = fz_new_pixmap(model, image->x, image->y, image->w, image->h);
+		converted = fz_new_pixmap_with_rect(model, fz_bound_pixmap(image));
 		fz_convert_pixmap(image, converted);
 		image = converted;
 	}
@@ -624,7 +624,7 @@ fz_draw_fill_image(void *user, fz_pixmap *image, fz_matrix ctm, float alpha)
 		}
 		else
 		{
-			converted = fz_new_pixmap(model, image->x, image->y, image->w, image->h);
+			converted = fz_new_pixmap_with_rect(model, fz_bound_pixmap(image));
 			fz_convert_pixmap(image, converted);
 			image = converted;
 		}

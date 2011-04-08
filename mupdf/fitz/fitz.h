@@ -147,9 +147,6 @@ char *fz_get_error_line(int n);
 /* memory allocation */
 void *fz_malloc(int size);
 void *fz_calloc(int count, int size);
-/* SumatraPDF: don't abort on OOM when loading images */
-void *fz_calloc_no_abort(int count, int size);
-
 void *fz_realloc(void *p, int count, int size);
 void fz_free(void *p);
 char *fz_strdup(char *s);
@@ -691,11 +688,12 @@ struct fz_pixmap_s
 	int free_samples;
 };
 
-/* SumatraPDF: don't abort on OOM when loading images */
-fz_pixmap *fz_new_pixmap_no_abort(fz_colorspace *, int x, int y, int w, int h);
-fz_pixmap *fz_new_pixmap_with_data(fz_colorspace *colorspace, int x, int y, int w, int h, unsigned char *samples);
+/* will return NULL if soft limit is exceeded */
+fz_pixmap *fz_new_pixmap_with_limit(fz_colorspace *colorspace, int w, int h);
+
+fz_pixmap *fz_new_pixmap_with_data(fz_colorspace *colorspace, int w, int h, unsigned char *samples);
 fz_pixmap *fz_new_pixmap_with_rect(fz_colorspace *, fz_bbox bbox);
-fz_pixmap *fz_new_pixmap(fz_colorspace *, int x, int y, int w, int h);
+fz_pixmap *fz_new_pixmap(fz_colorspace *, int w, int h);
 fz_pixmap *fz_keep_pixmap(fz_pixmap *pix);
 void fz_drop_pixmap(fz_pixmap *pix);
 void fz_clear_pixmap(fz_pixmap *pix);

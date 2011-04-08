@@ -94,7 +94,13 @@ xps_decode_jpeg(fz_pixmap **imagep, byte *rbuf, int rlen)
 	else
 		return fz_throw("bad number of components in jpeg: %d", cinfo.output_components);
 
-	image = fz_new_pixmap(colorspace, 0, 0, cinfo.output_width, cinfo.output_height);
+	image = fz_new_pixmap_with_limit(colorspace, cinfo.output_width, cinfo.output_height);
+	if (!image)
+	{
+		jpeg_finish_decompress(&cinfo);
+		jpeg_destroy_decompress(&cinfo);
+		return fz_throw("out of memory");
+	}
 
 	if (cinfo.density_unit == 1)
 	{

@@ -267,7 +267,9 @@ fz_copy_ft_bitmap(int left, int top, FT_Bitmap *bitmap)
 	fz_pixmap *pixmap;
 	int y;
 
-	pixmap = fz_new_pixmap(NULL, left, top - bitmap->rows, bitmap->width, bitmap->rows);
+	pixmap = fz_new_pixmap(NULL, bitmap->width, bitmap->rows);
+	pixmap->x = left;
+	pixmap->y = top - bitmap->rows;
 
 	if (bitmap->pixel_mode == FT_PIXEL_MODE_MONO)
 	{
@@ -517,7 +519,12 @@ fz_render_t3_glyph(fz_font *font, int gid, fz_matrix trm)
 		fz_catch(error, "cannot draw type3 glyph");
 	fz_free_device(dev);
 
-	glyph = fz_new_pixmap(fz_device_gray, bbox.x0-1, bbox.y0-1, bbox.x1 - bbox.x0 + 1, bbox.y1 - bbox.y0 + 1);
+	bbox.x0--;
+	bbox.y0--;
+	bbox.x1++;
+	bbox.y1++;
+
+	glyph = fz_new_pixmap_with_rect(fz_device_gray, bbox);
 	fz_clear_pixmap(glyph);
 
 	cache = fz_new_glyph_cache();

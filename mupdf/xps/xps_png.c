@@ -482,7 +482,7 @@ png_read_image(struct info *info, unsigned char *p, int total)
 static fz_pixmap *
 png_expand_palette(struct info *info, fz_pixmap *src)
 {
-	fz_pixmap *dst = fz_new_pixmap(fz_device_rgb, 0, 0, src->w, src->h);
+	fz_pixmap *dst = fz_new_pixmap(fz_device_rgb, src->w, src->h);
 	unsigned char *sp = src->samples;
 	unsigned char *dp = dst->samples;
 	int x, y;
@@ -551,7 +551,13 @@ xps_decode_png(fz_pixmap **imagep, byte *p, int total)
 
 	stride = (png.width * png.n * png.depth + 7) / 8;
 
-	image = fz_new_pixmap(colorspace, 0, 0, png.width, png.height);
+	image = fz_new_pixmap_with_limit(colorspace, png.width, png.height);
+	if (!image)
+	{
+		fz_free(png.samples);
+		return fz_throw("out of memory");
+	}
+
 	image->xres = png.xres;
 	image->yres = png.yres;
 

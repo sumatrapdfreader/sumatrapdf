@@ -183,7 +183,7 @@ pdf_expand_indexed_pixmap(fz_pixmap *src)
 	lookup = idx->lookup;
 	n = idx->base->n;
 
-	dst = fz_new_pixmap(idx->base, src->x, src->y, src->w, src->h);
+	dst = fz_new_pixmap_with_rect(idx->base, fz_bound_pixmap(src));
 	s = src->samples;
 	d = dst->samples;
 

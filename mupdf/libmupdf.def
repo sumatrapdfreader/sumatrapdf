@@ -16,7 +16,6 @@ EXPORTS
 	fz_get_error_line
 	fz_malloc
 	fz_calloc
-	fz_calloc_no_abort
 	fz_realloc
 	fz_free
 	fz_strdup
@@ -147,7 +146,7 @@ EXPORTS
 	fz_open_lzwd
 	fz_open_predict
 	fz_open_jbig2d
-	fz_new_pixmap_no_abort
+	fz_new_pixmap_with_limit
 	fz_new_pixmap_with_data
 	fz_new_pixmap_with_rect
 	fz_new_pixmap

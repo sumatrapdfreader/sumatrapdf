@@ -108,12 +108,11 @@ fz_load_jpx_image(fz_pixmap **imgp, unsigned char *data, int size, fz_colorspace
 		}
 	}
 
-	/* SumatraPDF: don't abort on OOM when loading images */
-	img = fz_new_pixmap_no_abort(colorspace, 0, 0, w, h);
+	img = fz_new_pixmap_with_limit(colorspace, w, h);
 	if (!img)
 	{
 		opj_image_destroy(jpx);
-		return fz_throw("failed to allocate memory for pixmap");
+		return fz_throw("out of memory");
 	}
 
 	p = img->samples;
@@ -139,7 +138,7 @@ fz_load_jpx_image(fz_pixmap **imgp, unsigned char *data, int size, fz_colorspace
 	{
 		if (n == 4)
 		{
-			fz_pixmap *tmp = fz_new_pixmap(fz_device_rgb, 0, 0, w, h);
+			fz_pixmap *tmp = fz_new_pixmap(fz_device_rgb, w, h);
 			fz_convert_pixmap(img, tmp);
 			fz_drop_pixmap(img);
 			img = tmp;

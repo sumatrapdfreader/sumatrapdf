@@ -84,9 +84,10 @@ RenderedFitzBitmap::RenderedFitzBitmap(fz_pixmap *pixmap, HDC hDC) :
     int rows8 = ((w + 3) / 4) * 4;
     
     /* abgr is a GDI compatible format */
-    fz_pixmap *bgrPixmap = fz_new_pixmap_no_abort(fz_find_device_colorspace("DeviceBGR"), pixmap->x, pixmap->y, w, h);
+    fz_pixmap *bgrPixmap = fz_new_pixmap_with_limit(fz_find_device_colorspace("DeviceBGR"), w, h);
     if (!bgrPixmap)
         return;
+    bgrPixmap->x = pixmap->x; bgrPixmap->y = pixmap->y;
     fz_convert_pixmap(pixmap, bgrPixmap);
     
     assert(bgrPixmap->n == 4);
@@ -954,10 +955,11 @@ RenderedBitmap *PdfEngine::RenderBitmap(
         return new RenderedBitmap(hbmp, w, h);
     }
 
-    fz_pixmap *image = fz_new_pixmap_no_abort(fz_find_device_colorspace("DeviceRGB"),
-        bbox.x0, bbox.y0, bbox.x1 - bbox.x0, bbox.y1 - bbox.y0);
+    fz_pixmap *image = fz_new_pixmap_with_limit(fz_find_device_colorspace("DeviceRGB"),
+        bbox.x1 - bbox.x0, bbox.y1 - bbox.y0);
     if (!image)
         return NULL;
+    image->x = bbox.x0; image->y = bbox.y0;
 
     fz_clear_pixmap_with_color(image, 255); // initialize white background
     if (!_drawcache)
@@ -1645,10 +1647,11 @@ RenderedBitmap *XpsEngine::RenderBitmap(
         return new RenderedBitmap(hbmp, w, h);
     }
 
-    fz_pixmap *image = fz_new_pixmap_no_abort(fz_find_device_colorspace("DeviceRGB"),
-        bbox.x0, bbox.y0, bbox.x1 - bbox.x0, bbox.y1 - bbox.y0);
+    fz_pixmap *image = fz_new_pixmap_with_limit(fz_find_device_colorspace("DeviceRGB"),
+        bbox.x1 - bbox.x0, bbox.y1 - bbox.y0);
     if (!image)
         return NULL;
+    image->x = bbox.x0; image->y = bbox.y0;
 
     fz_clear_pixmap_with_color(image, 255); // initialize white background
     if (!_drawcache)

@@ -54,7 +54,7 @@ static void saveimage(int num)
 	if (dorgb && img->colorspace && img->colorspace != fz_device_rgb)
 	{
 		fz_pixmap *temp;
-		temp = fz_new_pixmap(fz_device_rgb, img->x, img->y, img->w, img->h);
+		temp = fz_new_pixmap_with_rect(fz_device_rgb, fz_bound_pixmap(img));
 		fz_convert_pixmap(img, temp);
 		fz_drop_pixmap(img);
 		img = temp;

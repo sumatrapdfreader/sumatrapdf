@@ -1090,9 +1090,9 @@ fz_scale_pixmap(fz_pixmap *src, float x, float y, float w, float h)
 
 	assert(contrib_cols == NULL || contrib_cols->count == dst_w_int);
 	assert(contrib_rows == NULL || contrib_rows->count == dst_h_int);
-	output = fz_new_pixmap(src->colorspace, dst_x_int, dst_y_int, dst_w_int, dst_h_int);
-	if (output == NULL)
-		goto cleanup;
+	output = fz_new_pixmap(src->colorspace, dst_w_int, dst_h_int);
+	output->x = dst_x_int;
+	output->y = dst_y_int;
 
 	/* Step 2: Apply the weights */
 #ifdef SINGLE_PIXEL_SPECIALS

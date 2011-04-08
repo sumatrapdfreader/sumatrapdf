@@ -633,8 +633,8 @@ fz_scan_convert_aa(fz_gel *gel, fz_ael *ael, int eofill, fz_bbox clip,
 		blit_aa(dst, xmin + skipx, yd, alphas + skipx, clipn, color);
 	}
 
-	fz_free(alphas);
 	fz_free(deltas);
+	fz_free(alphas);
 }
 
 /*

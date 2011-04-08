@@ -67,7 +67,7 @@ fz_halftone *fz_get_default_halftone(int num_comps)
 	/* Only support 1 component for now */
 	assert(num_comps == 1);
 
-	ht->comp[0] = fz_new_pixmap_with_data(NULL, 0, 0, 16, 16, mono_ht);
+	ht->comp[0] = fz_new_pixmap_with_data(NULL, 16, 16, mono_ht);
 	if (ht->comp[0] == NULL)
 	{
 		fz_drop_halftone(ht);
