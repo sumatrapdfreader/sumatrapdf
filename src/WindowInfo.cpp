@@ -495,6 +495,10 @@ void PdfLinkHandler::GotoPdfLink(pdf_link *link)
             dm->navigate(1);
         else if (Str::Eq(name, "Print"))
             PostMessage(owner->hwndFrame, WM_COMMAND, IDM_PRINT, 0);
+        else if (Str::Eq(name, "SaveAs"))
+            PostMessage(owner->hwndFrame, WM_COMMAND, IDM_SAVEAS, 0);
+        else if (Str::Eq(name, "ZoomTo"))
+            PostMessage(owner->hwndFrame, WM_COMMAND, IDM_ZOOM_CUSTOM, 0);
     }
     else if (PDF_LINK_ACTION == link->kind) {
         char *type = fz_to_name(fz_dict_gets(link->dest, "S"));
