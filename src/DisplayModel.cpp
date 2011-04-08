@@ -193,6 +193,9 @@ DisplayModel::DisplayModel(DisplayModelCallback *callback, DisplayMode displayMo
     _startPage = INVALID_PAGE_NO;
     _callback = callback;
 
+    rightSrollVisible = false;
+    bottomScrollVisible = false;
+
     engine = NULL;
     pdfEngine = NULL;
     xpsEngine = NULL;
@@ -466,7 +469,7 @@ int DisplayModel::currentPageNo() const
     /* if no page is visible, default to either the first or the last one */
     if (INVALID_PAGE_NO == mostVisiblePage) {
         PageInfo *pageInfo = getPageInfo(1);
-        if (this->viewPortOffset.y > pageInfo->currPos.y + pageInfo->currPos.dy)
+        if (viewPortOffset.y > pageInfo->pos.y + pageInfo->pos.dy)
             mostVisiblePage = pageCount();
         else
             mostVisiblePage = 1;
@@ -539,6 +542,9 @@ void DisplayModel::Relayout(float zoomVirtual, int rotation)
     int         columns;
     int         newViewPortOffsetX;
     int         columnOffsets[2];
+    bool        newRightSrollVisible = false, newBottomScrollVisible = false;
+
+    viewPortSize = totalViewPortSize;
 
     assert(_pagesInfo);
     if (!_pagesInfo)
@@ -549,6 +555,7 @@ void DisplayModel::Relayout(float zoomVirtual, int rotation)
 
     _rotation = rotation;
 
+RestartLayout:
     int currPosY = padding->pageBorderTop;
     float currZoomReal = _zoomReal;
     setZoomVirtual(zoomVirtual);
@@ -574,17 +581,36 @@ void DisplayModel::Relayout(float zoomVirtual, int rotation)
             continue;
         }
         pageSizeAfterRotation(pageInfo, rotation, &pageSize);
-        pageInfo->currPos.dx = (int)(pageSize.dx * _zoomReal + 0.5);
-        pageInfo->currPos.dy = (int)(pageSize.dy * _zoomReal + 0.5);
+        RectI pos;
+        pos.dx = (int)(pageSize.dx * _zoomReal + 0.5);
+        pos.dy = (int)(pageSize.dy * _zoomReal + 0.5);
 
-        if (rowMaxPageDy < pageInfo->currPos.dy)
-            rowMaxPageDy = pageInfo->currPos.dy;
-        pageInfo->currPos.y = currPosY;
+        if (rowMaxPageDy < pos.dy)
+            rowMaxPageDy = pos.dy;
+        pos.y = currPosY;
 
         if (displayModeShowCover(displayMode()) && pageNo == 1 && columns - pageInARow > 1)
             pageInARow++;
-        if (columnOffsets[pageInARow] < pageInfo->currPos.dx)
-            columnOffsets[pageInARow] = pageInfo->currPos.dx;
+        if (columnOffsets[pageInARow] < pos.dx)
+            columnOffsets[pageInARow] = pos.dx;
+
+        // restart the layout if we detect we need to show scrollbars
+        bool needsRestart = false;
+        int rightEdge = pos.dx + (int)pageSize.dx + padding->pageBorderRight;
+        if (!newRightSrollVisible && (rightEdge > viewPortSize.dx)) {
+            newRightSrollVisible = true;
+            viewPortSize.dx -= GetSystemMetrics(SM_CXVSCROLL);
+            goto RestartLayout;
+        }
+
+        int bottomEdge = pos.dy + (int)pageSize.dy + padding->pageBorderBottom;
+        if (!newBottomScrollVisible && (bottomEdge > viewPortSize.dy)) {
+            newBottomScrollVisible = true;
+            viewPortSize.dy -= GetSystemMetrics(SM_CYHSCROLL);
+            goto RestartLayout;
+        }
+
+        pageInfo->pos = pos;
 
         pageInARow++;
         assert(pageInARow <= columns);
@@ -600,9 +626,10 @@ void DisplayModel::Relayout(float zoomVirtual, int rotation)
                     (int)pageSize.dx, (int)pageSize.dy); */
     }
 
-    if (pageInARow != 0)
+    if (pageInARow != 0) {
         /* this is a partial row */
         currPosY += rowMaxPageDy + padding->betweenPagesY;
+    }
     if (columns == 2 && pageCount() == 1) {
         /* don't center a single page over two columns */
         if (displayModeShowCover(displayMode()))
@@ -610,7 +637,10 @@ void DisplayModel::Relayout(float zoomVirtual, int rotation)
         else
             columnOffsets[1] = columnOffsets[0];
     }
-    canvasDx = padding->pageBorderLeft + columnOffsets[0] + (columns == 2 ? padding->betweenPagesX + columnOffsets[1] : 0) + padding->pageBorderRight;
+    int padRight = padding->pageBorderRight;
+    if (columns == 2)
+        padRight += (padding->betweenPagesX + columnOffsets[1]);
+    canvasDx = padding->pageBorderLeft + columnOffsets[0] + padRight;
 
     /* since pages can be smaller than the drawing area, center them in x axis */
     offX = 0;
@@ -631,15 +661,15 @@ void DisplayModel::Relayout(float zoomVirtual, int rotation)
         // leave first spot empty in cover page mode
         if (displayModeShowCover(displayMode()) && pageNo == 1)
             pageOffX += columnOffsets[pageInARow++] + padding->betweenPagesX;
-        pageInfo->currPos.x = pageOffX + (columnOffsets[pageInARow] - pageInfo->currPos.dx) / 2;
+        pageInfo->pos.x = pageOffX + (columnOffsets[pageInARow] - pageInfo->pos.dx) / 2;
         // center the cover page over the first two spots in non-continuous mode
         if (displayModeShowCover(displayMode()) && pageNo == 1 && !displayModeContinuous(displayMode()))
-            pageInfo->currPos.x = offX + padding->pageBorderLeft + (columnOffsets[0] + padding->betweenPagesX + columnOffsets[1] - pageInfo->currPos.dx) / 2;
+            pageInfo->pos.x = offX + padding->pageBorderLeft + (columnOffsets[0] + padding->betweenPagesX + columnOffsets[1] - pageInfo->pos.dx) / 2;
         // mirror the page layout when displaying a Right-to-Left document
         if (_displayR2L && columns > 1)
-            pageInfo->currPos.x = canvasDx - pageInfo->currPos.x - pageInfo->currPos.dx;
+            pageInfo->pos.x = canvasDx - pageInfo->pos.x - pageInfo->pos.dx;
         pageOffX += columnOffsets[pageInARow++] + padding->betweenPagesX;
-        assert(pageOffX >= 0 && pageInfo->currPos.x >= 0);
+        assert(pageOffX >= 0 && pageInfo->pos.x >= 0);
 
         if (pageInARow == columns) {
             pageOffX = offX + padding->pageBorderLeft;
@@ -667,10 +697,10 @@ void DisplayModel::Relayout(float zoomVirtual, int rotation)
                 assert(0.0 == pageInfo->visibleRatio);
                 continue;
             }
-            pageInfo->currPos.y += offY;
+            pageInfo->pos.y += offY;
             DBG_OUT("  page = %3d, (x=%3d, y=%5d, dx=%4d, dy=%4d) orig=(dx=%d,dy=%d)\n",
-                pageNo, pageInfo->currPos.x, pageInfo->currPos.y,
-                        pageInfo->currPos.dx, pageInfo->currPos.dy,
+                pageNo, pageInfo->pos.x, pageInfo->pos.y,
+                        pageInfo->pos.dx, pageInfo->pos.dy,
                         (int)pageSize.dx, (int)pageSize.dy);
         }
     }
@@ -722,7 +752,7 @@ void DisplayModel::RecalcVisibleParts()
             continue;
         }
 
-        RectI pageRect = pageInfo->currPos;
+        RectI pageRect = pageInfo->pos;
         pageInfo->visibleRatio = 0.0;
 
         RectI visiblePart = pageRect.Intersect(viewPortRect);
@@ -968,13 +998,13 @@ void DisplayModel::goToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
             getContentStart(lastPageNo, &secondX, &secondY);
             scrollY = min(scrollY, secondY);
         }
-        viewPortOffset.x = scrollX + pageInfo->currPos.x - padding->pageBorderLeft;
+        viewPortOffset.x = scrollX + pageInfo->pos.x - padding->pageBorderLeft;
     }
     else if (-1 != scrollX)
         viewPortOffset.x = scrollX;
     // make sure to not display the blank space beside the first page in cover mode
     else if (-1 == scrollX && 1 == pageNo && displayModeShowCover(displayMode()))
-        viewPortOffset.x = pageInfo->currPos.x - padding->pageBorderLeft;
+        viewPortOffset.x = pageInfo->pos.x - padding->pageBorderLeft;
 
     /* Hack: if an image is smaller in Y axis than the draw area, then we center
        the image by setting pageInfo->currPos.y in RecalcPagesInfo. So we shouldn't
@@ -983,7 +1013,7 @@ void DisplayModel::goToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
     viewPortOffset.y = scrollY;
     // Move the next page to the top (unless the remaining pages fit onto a single screen)
     if (displayModeContinuous(displayMode()))
-        viewPortOffset.y = pageInfo->currPos.y - padding->pageBorderTop + scrollY;
+        viewPortOffset.y = pageInfo->pos.y - padding->pageBorderTop + scrollY;
 
     viewPortOffset.x = limitValue(viewPortOffset.x, 0, canvasSize.dx - viewPortSize.dx);
     viewPortOffset.y = limitValue(viewPortOffset.y, 0, canvasSize.dy - viewPortSize.dy);
@@ -1184,7 +1214,7 @@ void DisplayModel::scrollYBy(int dy, bool changePage)
                 newPageNo = _startPage-1;
                 assert(validPageNo(newPageNo));
                 pageInfo = getPageInfo(newPageNo);
-                newYOff = pageInfo->currPos.dy - viewPortSize.dy;
+                newYOff = pageInfo->pos.dy - viewPortSize.dy;
                 if (newYOff < 0)
                     newYOff = 0; /* TODO: center instead? */
                 goToPrevPage(newYOff);
@@ -1310,8 +1340,8 @@ bool DisplayModel::cvtUserToScreen(int pageNo, PointD *pt)
         return false;
 
     PointD p = engine->Transform(*pt, pageNo, _zoomReal, _rotation);
-    pt->x = p.x + 0.5 + pageInfo->currPos.x - viewPortOffset.x;
-    pt->y = p.y + 0.5 + pageInfo->currPos.y - viewPortOffset.y;
+    pt->x = p.x + 0.5 + pageInfo->pos.x - viewPortOffset.x;
+    pt->y = p.y + 0.5 + pageInfo->pos.y - viewPortOffset.y;
     return true;
 }
 
@@ -1322,8 +1352,8 @@ bool DisplayModel::cvtScreenToUser(int *pageNo, PointD *pt)
         return false;
     const PageInfo *pageInfo = getPageInfo(*pageNo);
 
-    PointD p = PointD(pt->x - 0.5 - pageInfo->currPos.x + viewPortOffset.x,
-                      pt->y - 0.5 - pageInfo->currPos.y + viewPortOffset.y);
+    PointD p = PointD(pt->x - 0.5 - pageInfo->pos.x + viewPortOffset.x,
+                      pt->y - 0.5 - pageInfo->pos.y + viewPortOffset.y);
     p = engine->Transform(p, *pageNo, _zoomReal, _rotation, true);
 
     pt->x = p.x;

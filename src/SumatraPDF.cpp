@@ -526,7 +526,6 @@ void WindowInfo::SwitchToDisplayMode(DisplayMode displayMode, bool keepContinuou
         }
     }
 
-    this->prevCanvasSize.dx = this->prevCanvasSize.dy = -1;
     this->dm->changeDisplayMode(displayMode);
     UpdateToolbarState();
 }
@@ -1407,7 +1406,6 @@ static bool LoadDocIntoWindow(
         if (prevModel && Str::Eq(win->dm->fileName(), prevModel->fileName()))
             gRenderCache.KeepForDisplayModel(prevModel, win->dm);
         delete prevModel;
-        win->prevCanvasSize.dx = win->prevCanvasSize.dy = -1;
     }
 
     float zoomVirtual = gGlobalPrefs.m_defaultZoom;
@@ -1631,13 +1629,9 @@ void WindowInfo::PageNoChanged(int pageNo)
         Win::SetText(hwndPageBox, buf);
         ToolbarUpdateStateForWindow(this);
     }
-    if (pageNo != this->currPageNo) {
+    if (pageNo != currPageNo) {
         UpdateTocSelection(pageNo);
-        if (ZOOM_FIT_CONTENT == dm->zoomVirtual()) {
-            // re-allow hiding the scroll bars
-            this->prevCanvasSize.dx = this->prevCanvasSize.dy = -1;
-        }
-        this->currPageNo = pageNo;
+        currPageNo = pageNo;
     }
 }
 
@@ -1673,24 +1667,6 @@ void WindowInfo::UpdateScrollbars(SizeI canvas)
 
     SizeI viewPort = dm->viewPortSize;
 
-    // When hiding the scroll bars and fitting content, it could be that we'd have to
-    // display the scroll bars right again for the new zoom. Make sure we haven't just done
-    // that - or if so, force the scroll bars to remain visible.
-    if (ZOOM_FIT_CONTENT == dm->zoomVirtual()) {
-        if (this->prevCanvasSize.dy == viewPort.dy &&
-            this->prevCanvasSize.dx == viewPort.dx + GetSystemMetrics(SM_CXVSCROLL)) {
-            if (viewPort.dy == canvas.dy)
-                canvas.dy++;
-        }
-        else if (this->prevCanvasSize.dx == viewPort.dx &&
-                 this->prevCanvasSize.dy == viewPort.dy + GetSystemMetrics(SM_CYHSCROLL)) {
-            if (viewPort.dx == canvas.dx)
-                canvas.dx++;
-        }
-        else
-            this->prevCanvasSize = viewPort;
-    }
-
     if (viewPort.dx >= canvas.dx) {
         si.nPos = 0;
         si.nMin = 0;
@@ -1702,20 +1678,7 @@ void WindowInfo::UpdateScrollbars(SizeI canvas)
         si.nMax = canvas.dx - 1;
         si.nPage = viewPort.dx;
     }
-    SetScrollInfo(this->hwndCanvas, SB_HORZ, &si, TRUE);
-
-    // When hiding the scroll bars and fitting width, it could be that we'd have to
-    // display the scroll bars right again for the new width. Make sure we haven't just done
-    // that - or if so, force the vertical scroll bar to remain visible.
-    if (ZOOM_FIT_WIDTH == dm->zoomVirtual() ||
-        ZOOM_FIT_PAGE == dm->zoomVirtual()) {
-        if (this->prevCanvasSize.dy != viewPort.dy ||
-            this->prevCanvasSize.dx != viewPort.dx + GetSystemMetrics(SM_CXVSCROLL)) {
-            this->prevCanvasSize = viewPort;
-        }
-        else if (viewPort.dy == canvas.dy)
-            canvas.dy++;
-    }
+    SetScrollInfo(hwndCanvas, SB_HORZ, &si, TRUE);
 
     if (viewPort.dy >= canvas.dy) {
         si.nPos = 0;
@@ -1734,7 +1697,7 @@ void WindowInfo::UpdateScrollbars(SizeI canvas)
             si.nMax -= viewPort.dy - si.nPage;
         }
     }
-    SetScrollInfo(this->hwndCanvas, SB_VERT, &si, TRUE);
+    SetScrollInfo(hwndCanvas, SB_VERT, &si, TRUE);
 }
 
 void AssociateExeWithPdfExtension()
@@ -3683,7 +3646,6 @@ static void RotateLeft(WindowInfo *win)
 {
     if (!win || !win->IsDocLoaded())
         return;
-    win->prevCanvasSize.dx = win->prevCanvasSize.dy = -1;
     win->dm->rotateBy(-90);
 }
 
@@ -3691,7 +3653,6 @@ static void RotateRight(WindowInfo *win)
 {
     if (!win || !win->IsDocLoaded())
         return;
-    win->prevCanvasSize.dx = win->prevCanvasSize.dy = -1;
     win->dm->rotateBy(90);
 }
 
@@ -3711,13 +3672,13 @@ static void OnVScroll(WindowInfo *win, WPARAM wParam)
 
     switch (LOWORD(wParam))
     {
-    case SB_TOP:        si.nPos = si.nMin; break;
-    case SB_BOTTOM:     si.nPos = si.nMax; break;
-    case SB_LINEUP:     si.nPos -= lineHeight; break;
-    case SB_LINEDOWN:   si.nPos += lineHeight; break;
-    case SB_PAGEUP:     si.nPos -= si.nPage; break;
-    case SB_PAGEDOWN:   si.nPos += si.nPage; break;
-    case SB_THUMBTRACK: si.nPos = si.nTrackPos; break;
+        case SB_TOP:        si.nPos = si.nMin; break;
+        case SB_BOTTOM:     si.nPos = si.nMax; break;
+        case SB_LINEUP:     si.nPos -= lineHeight; break;
+        case SB_LINEDOWN:   si.nPos += lineHeight; break;
+        case SB_PAGEUP:     si.nPos -= si.nPage; break;
+        case SB_PAGEDOWN:   si.nPos += si.nPage; break;
+        case SB_THUMBTRACK: si.nPos = si.nTrackPos; break;
     }
 
     // Set the position and then retrieve it.  Due to adjustments

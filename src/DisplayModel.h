@@ -75,7 +75,7 @@ typedef struct {
     /* position and size within total area after applying zoom and rotation.
        Represents display rectangle for a given page.
        Calculated in DisplayModel::Relayout() */
-    RectI           currPos;
+    RectI           pos;
     /* data that changes due to scrolling. Calculated in DisplayModel::RecalcVisibleParts() */
     float           visibleRatio; /* (0.0 = invisible, 1.0 = fully visible) */
     /* part of the image that should be shown */
@@ -173,13 +173,18 @@ public:
        The same for areaOff.y, except it's for dy */
     PointI          viewPortOffset;
 
-    /* size of draw area (excluding scrollbars) */
+    /* total size of view port (draw area) */
+    SizeI           totalViewPortSize;
+    /* totalViewPortSize - size of visible scrollbars */
     SizeI           viewPortSize;
 
-    void            SetViewPortSize(SizeI size) { viewPortSize = size; }
+    bool            rightSrollVisible;
+    bool            bottomScrollVisible;
+
+    void            SetViewPortSize(SizeI size) { totalViewPortSize = size; }
     
-    bool            needHScroll() { return viewPortSize.dx < canvasSize.dx; }
-    bool            needVScroll() { return viewPortSize.dy < canvasSize.dy; }
+    bool            needHScroll() { return bottomScrollVisible; }
+    bool            needVScroll() { return rightSrollVisible; }
 
     void            ChangeViewPortSize(SizeI newViewPortSize);
 

@@ -31,7 +31,6 @@ WindowInfo::WindowInfo(HWND hwnd) :
     pdfsync(NULL), threadStressRunning(false)
 {
     ZeroMemory(&selectionRect, sizeof(selectionRect));
-    prevCanvasSize.dx = prevCanvasSize.dy = -1;
 
     HDC hdcFrame = GetDC(hwndFrame);
     dpi = GetDeviceCaps(hdcFrame, LOGPIXELSY);
@@ -193,7 +192,6 @@ void WindowInfo::ToggleZoom()
     assert(this->dm);
     if (!this->IsDocLoaded()) return;
 
-    this->prevCanvasSize.dx = this->prevCanvasSize.dy = -1;
     if (ZOOM_FIT_PAGE == this->dm->zoomVirtual())
         this->dm->zoomTo(ZOOM_FIT_WIDTH);
     else if (ZOOM_FIT_WIDTH == this->dm->zoomVirtual())
@@ -244,7 +242,6 @@ void WindowInfo::ZoomToSelection(float factor, bool relative)
         }
     }
 
-    this->prevCanvasSize.dx = this->prevCanvasSize.dy = -1;
     if (relative)
         this->dm->zoomBy(factor, zoomToPt ? &pt : NULL);
     else

@@ -126,7 +126,6 @@ public:
 
     long            prevStyle;
     RectI           frameRc; // window position before entering presentation/fullscreen mode
-    SizeI           prevCanvasSize;
     float           prevZoomVirtual;
     DisplayMode     prevDisplayMode;
 
