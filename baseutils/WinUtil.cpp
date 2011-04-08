@@ -472,7 +472,7 @@ static void rect_client_to_screen(RECT *r, HWND hwnd)
     r->bottom = p2.y;
 }
 
-void paint_round_rect_around_hwnd(HDC hdc, HWND hwnd_edit_parent, HWND hwnd_edit, COLORREF col)
+void PaintRoundRectAroundHwnd(HDC hdc, HWND hwnd_edit_parent, HWND hwnd_edit, COLORREF col)
 {
     RECT    r;
     HBRUSH  br;
@@ -499,7 +499,7 @@ void paint_round_rect_around_hwnd(HDC hdc, HWND hwnd_edit_parent, HWND hwnd_edit
     DeleteObject(br);
 }
 
-void paint_rect(HDC hdc, RECT * rect)
+void PaintRect(HDC hdc, RECT * rect)
 {
     MoveToEx(hdc, rect->left, rect->top, NULL);
     LineTo(hdc, rect->right - 1, rect->top);

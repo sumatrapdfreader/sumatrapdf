@@ -289,8 +289,8 @@ void    rect_shift_to_work_area(RECT *rect, bool bFully);
 void    launch_url(const TCHAR *url);
 void    exec_with_params(const TCHAR *exe, const TCHAR *params, bool hidden);
 
-void    paint_round_rect_around_hwnd(HDC hdc, HWND hwnd_edit_parent, HWND hwnd_edit, COLORREF col);
-void    paint_rect(HDC hdc, RECT * rect);
+void    PaintRoundRectAroundHwnd(HDC hdc, HWND hwnd_edit_parent, HWND hwnd_edit, COLORREF col);
+void    PaintRect(HDC hdc, RECT * rect);
 void    DrawCenteredText(HDC hdc, RectI r, const TCHAR *txt);
 
 bool    IsCursorOverWindow(HWND hwnd);

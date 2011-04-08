@@ -77,7 +77,7 @@ void WindowInfo::UpdateCanvasSize()
     delete buffer;
     buffer = new DoubleBuffer(hwndCanvas, canvasRc);
     if (IsDocLoaded())
-        dm->changeTotalDrawAreaSize(canvasRc.Size());
+        dm->ChangeViewPortSize(canvasRc.Size());
 }
 
 void WindowInfo::AbortFinding()

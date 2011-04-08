@@ -67,16 +67,16 @@ typedef struct {
     /* data that is calculated when needed. actual content size within a page (View target) */
     RectI           contentBox;
 
-    /* data that needs to be set before DisplayModel::relayout().
+    /* data that needs to be set before DisplayModel::Relayout().
        Determines whether a given page should be shown on the screen. */
     bool            shown;
 
     /* data that changes when zoom and rotation changes */
     /* position and size within total area after applying zoom and rotation.
        Represents display rectangle for a given page.
-       Calculated in DisplayModel::relayout() */
+       Calculated in DisplayModel::Relayout() */
     RectI           currPos;
-    /* data that changes due to scrolling. Calculated in DisplayModel::recalcVisibleParts() */
+    /* data that changes due to scrolling. Calculated in DisplayModel::RecalcVisibleParts() */
     float           visibleRatio; /* (0.0 = invisible, 1.0 = fully visible) */
     /* part of the image that should be shown */
     RectI           bitmap;
@@ -165,24 +165,23 @@ public:
     CbxEngine *     cbxEngine;
     TextSelection * textSelection;
 
-    /* TODO: rename to pageInfo() */
     PageInfo *      getPageInfo(int pageNo) const;
 
-    /* areaOffset is "polymorphic". If drawAreaSize.dx > totalAreSize.dx then
-       areaOffset.x is offset of total area rect inside draw area, otherwise
+    /* viewPortOffset is "polymorphic". If viewPortSize.dx > totalAreSize.dx then
+       viewPortOffset.x is offset of total area rect inside draw area, otherwise
        an offset of draw area inside total area.
        The same for areaOff.y, except it's for dy */
-    PointI          areaOffset;
+    PointI          viewPortOffset;
 
     /* size of draw area (excluding scrollbars) */
-    SizeI           drawAreaSize;
+    SizeI           viewPortSize;
 
-    void            setTotalDrawAreaSize(SizeI size) { drawAreaSize = size; }
+    void            SetViewPortSize(SizeI size) { viewPortSize = size; }
     
-    bool            needHScroll() { return drawAreaSize.dx < _canvasSize.dx; }
-    bool            needVScroll() { return drawAreaSize.dy < _canvasSize.dy; }
+    bool            needHScroll() { return viewPortSize.dx < canvasSize.dx; }
+    bool            needVScroll() { return viewPortSize.dy < canvasSize.dy; }
 
-    void            changeTotalDrawAreaSize(SizeI totalDrawAreaSize);
+    void            ChangeViewPortSize(SizeI newViewPortSize);
 
     bool            pageShown(int pageNo);
     bool            pageVisible(int pageNo);
@@ -190,7 +189,7 @@ public:
     int             firstVisiblePageNo() const;
     bool            firstBookPageVisible();
     bool            lastBookPageVisible();
-    void            relayout(float zoomVirtual, int rotation);
+    void            Relayout(float zoomVirtual, int rotation);
 
     void            goToPage(int pageNo, int scrollY, bool addNavPt=false, int scrollX=-1);
     bool            goToPrevPage(int scrollY);
@@ -221,7 +220,7 @@ public:
     bool            cvtScreenToUser(int *pageNo, PointD *pt);
     bool            rectCvtUserToScreen(int pageNo, RectD *r);
     bool            rectCvtScreenToUser(int *pageNo, RectD *r);
-    ScreenPagePadding *getPadding() { return _padding; }
+    ScreenPagePadding *getPadding() { return padding; }
     RectD           getContentBox(int pageNo, RenderTarget target=Target_View);
 
     void            SetFindMatchCase(bool match) { _textSearch->SetSensitive(match); }
@@ -256,7 +255,7 @@ protected:
     void            changeStartPage(int startPage);
     void            getContentStart(int pageNo, int *x, int *y);
     void            setZoomVirtual(float zoomVirtual);
-    void            recalcVisibleParts();
+    void            RecalcVisibleParts();
     void            RenderVisibleParts();
 
 public:
@@ -280,8 +279,8 @@ protected:
     DisplayModelCallback *_callback;
 
     /* size of virtual canvas containing all rendered pages. */
-    SizeI           _canvasSize;
-    ScreenPagePadding* _padding;
+    SizeI           canvasSize;
+    ScreenPagePadding* padding;
 
     /* real zoom value calculated from zoomVirtual. Same as zoomVirtual * 0.01 except
        for ZOOM_FIT_PAGE, ZOOM_FIT_WIDTH and ZOOM_FIT_CONTENT */

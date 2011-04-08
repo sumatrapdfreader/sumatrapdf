@@ -1420,7 +1420,7 @@ static bool LoadDocIntoWindow(
                 ss.x = state->scrollPos.x;
                 ss.y = state->scrollPos.y;
             }
-            // else let win->dm->relayout scroll to fit the page (again)
+            // else let win->dm->Relayout() scroll to fit the page (again)
         }
         else if (startPage > win->dm->pageCount())
             ss.page = win->dm->pageCount();
@@ -1447,7 +1447,7 @@ static bool LoadDocIntoWindow(
     SendMessage(win->hwndFrame, WM_SIZE, 0, MAKELONG(rect.dx, rect.dy));
     */
 
-    win->dm->relayout(zoomVirtual, rotation);
+    win->dm->Relayout(zoomVirtual, rotation);
     // Only restore the scroll state when everything is visible
     // (otherwise we might have to relayout twice, which can take
     //  a while for longer documents)
@@ -1671,36 +1671,36 @@ void WindowInfo::UpdateScrollbars(SizeI canvas)
     si.cbSize = sizeof(si);
     si.fMask = SIF_ALL;
 
-    SizeI drawArea = dm->drawAreaSize;
+    SizeI viewPort = dm->viewPortSize;
 
     // When hiding the scroll bars and fitting content, it could be that we'd have to
     // display the scroll bars right again for the new zoom. Make sure we haven't just done
     // that - or if so, force the scroll bars to remain visible.
     if (ZOOM_FIT_CONTENT == dm->zoomVirtual()) {
-        if (this->prevCanvasSize.dy == drawArea.dy &&
-            this->prevCanvasSize.dx == drawArea.dx + GetSystemMetrics(SM_CXVSCROLL)) {
-            if (drawArea.dy == canvas.dy)
+        if (this->prevCanvasSize.dy == viewPort.dy &&
+            this->prevCanvasSize.dx == viewPort.dx + GetSystemMetrics(SM_CXVSCROLL)) {
+            if (viewPort.dy == canvas.dy)
                 canvas.dy++;
         }
-        else if (this->prevCanvasSize.dx == drawArea.dx &&
-                 this->prevCanvasSize.dy == drawArea.dy + GetSystemMetrics(SM_CYHSCROLL)) {
-            if (drawArea.dx == canvas.dx)
+        else if (this->prevCanvasSize.dx == viewPort.dx &&
+                 this->prevCanvasSize.dy == viewPort.dy + GetSystemMetrics(SM_CYHSCROLL)) {
+            if (viewPort.dx == canvas.dx)
                 canvas.dx++;
         }
         else
-            this->prevCanvasSize = drawArea;
+            this->prevCanvasSize = viewPort;
     }
 
-    if (drawArea.dx >= canvas.dx) {
+    if (viewPort.dx >= canvas.dx) {
         si.nPos = 0;
         si.nMin = 0;
         si.nMax = 99;
         si.nPage = 100;
     } else {
-        si.nPos = dm->areaOffset.x;
+        si.nPos = dm->viewPortOffset.x;
         si.nMin = 0;
         si.nMax = canvas.dx - 1;
-        si.nPage = drawArea.dx;
+        si.nPage = viewPort.dx;
     }
     SetScrollInfo(this->hwndCanvas, SB_HORZ, &si, TRUE);
 
@@ -1709,29 +1709,29 @@ void WindowInfo::UpdateScrollbars(SizeI canvas)
     // that - or if so, force the vertical scroll bar to remain visible.
     if (ZOOM_FIT_WIDTH == dm->zoomVirtual() ||
         ZOOM_FIT_PAGE == dm->zoomVirtual()) {
-        if (this->prevCanvasSize.dy != drawArea.dy ||
-            this->prevCanvasSize.dx != drawArea.dx + GetSystemMetrics(SM_CXVSCROLL)) {
-            this->prevCanvasSize = drawArea;
+        if (this->prevCanvasSize.dy != viewPort.dy ||
+            this->prevCanvasSize.dx != viewPort.dx + GetSystemMetrics(SM_CXVSCROLL)) {
+            this->prevCanvasSize = viewPort;
         }
-        else if (drawArea.dy == canvas.dy)
+        else if (viewPort.dy == canvas.dy)
             canvas.dy++;
     }
 
-    if (drawArea.dy >= canvas.dy) {
+    if (viewPort.dy >= canvas.dy) {
         si.nPos = 0;
         si.nMin = 0;
         si.nMax = 99;
         si.nPage = 100;
     } else {
-        si.nPos = dm->areaOffset.y;
+        si.nPos = dm->viewPortOffset.y;
         si.nMin = 0;
         si.nMax = canvas.dy - 1;
-        si.nPage = drawArea.dy;
+        si.nPage = viewPort.dy;
 
         if (ZOOM_FIT_PAGE != dm->zoomVirtual()) {
             // keep the top/bottom 5% of the previous page visible after paging down/up
             si.nPage = (UINT)(si.nPage * 0.95);
-            si.nMax -= drawArea.dy - si.nPage;
+            si.nMax -= viewPort.dy - si.nPage;
         }
     }
     SetScrollInfo(this->hwndCanvas, SB_VERT, &si, TRUE);
@@ -2083,7 +2083,7 @@ static void DebugShowLinks(DisplayModel *dm, HDC hdc)
     if (!gDebugShowLinks)
         return;
 
-    RectI drawAreaRect(PointI(), dm->drawAreaSize);
+    RectI viewPortRect(PointI(), dm->viewPortSize);
     HPEN pen = CreatePen(PS_SOLID, 1, RGB(0x00, 0xff, 0xff));
     HGDIOBJ oldPen = SelectObject(hdc, pen);
 
@@ -2095,9 +2095,9 @@ static void DebugShowLinks(DisplayModel *dm, HDC hdc)
         pdf_link *links = NULL;
         int linkCount = dm->getPdfLinks(pageNo, &links);
         for (int i = 0; i < linkCount; i++) {
-            RectI isect = drawAreaRect.Intersect(fz_rect_to_RectD(links[i].rect).Round());
+            RectI isect = viewPortRect.Intersect(fz_rect_to_RectD(links[i].rect).Round());
             if (!isect.IsEmpty())
-                paint_rect(hdc, &isect.ToRECT());
+                PaintRect(hdc, &isect.ToRECT());
         }
         free(links);
     }
@@ -2116,7 +2116,7 @@ static void DebugShowLinks(DisplayModel *dm, HDC hdc)
 
             RectD rect = dm->engine->PageContentBox(pageNo).Convert<double>();
             if (dm->rectCvtUserToScreen(pageNo, &rect))
-                paint_rect(hdc, &rect.ToRECT());
+                PaintRect(hdc, &rect.ToRECT());
         }
 
         DeletePen(SelectObject(hdc, oldPen));
@@ -2559,11 +2559,11 @@ static void OnSelectionEdgeAutoscroll(WindowInfo *win, int x, int y)
         dy = SELECT_AUTOSCROLL_STEP_LENGTH;
 
     if (dx != 0 || dy != 0) {
-        int oldX = win->dm->areaOffset.x, oldY = win->dm->areaOffset.y;
+        int oldX = win->dm->viewPortOffset.x, oldY = win->dm->viewPortOffset.y;
         win->MoveDocBy(dx, dy);
 
-        dx = win->dm->areaOffset.x - oldX;
-        dy = win->dm->areaOffset.y - oldY;
+        dx = win->dm->viewPortOffset.x - oldX;
+        dy = win->dm->viewPortOffset.y - oldY;
         win->selectionRect.x -= dx;
         win->selectionRect.y -= dy;
         win->selectionRect.dx += dx;
@@ -4921,7 +4921,7 @@ static LRESULT CALLBACK WndProcFindStatus(HWND hwnd, UINT message, WPARAM wParam
         rect.dx = width;
         rect.y += MulDiv(20, win->dpi, USER_DEFAULT_SCREEN_DPI);
         rect.dy = FIND_STATUS_PROGRESS_HEIGHT;
-        paint_rect(hdc, &rect.ToRECT());
+        PaintRect(hdc, &rect.ToRECT());
         
         int percent = win->findPercent;
         if (percent > 100)
