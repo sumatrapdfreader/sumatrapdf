@@ -292,10 +292,10 @@ TCHAR *GetInstallationDir(bool forUninstallation=false)
 
     // fall back to %ProgramFiles%
     TCHAR buf[MAX_PATH] = {0};
-    BOOL ok = SHGetSpecialFolderPath(NULL, dir, CSIDL_PROGRAM_FILES, FALSE);
-    if (ok == FALSE)
+    BOOL ok = SHGetSpecialFolderPath(NULL, buf, CSIDL_PROGRAM_FILES, FALSE);
+    if (!ok)
         return NULL;
-    return Path::Join(dir, TAPP);
+    return Path::Join(buf, TAPP);
 }
 
 // Try harder getting temporary directory
