@@ -1930,7 +1930,7 @@ static void PaintForwardSearchMark(WindowInfo *win, HDC hdc) {
         RectD recD = win->fwdsearchmark.rects[i].Convert<double>();
         win->dm->cvtUserToScreen(win->fwdsearchmark.page, &recD);
         if (gGlobalPrefs.m_fwdsearchOffset > 0) {
-            recD.x = pageInfo->screenX + (double)gGlobalPrefs.m_fwdsearchOffset * win->dm->zoomReal();
+            recD.x = pageInfo->screen.x + (double)gGlobalPrefs.m_fwdsearchOffset * win->dm->zoomReal();
             recD.dx = (gGlobalPrefs.m_fwdsearchWidth > 0 ? (double)gGlobalPrefs.m_fwdsearchWidth : 15.0) * win->dm->zoomReal();
             recD.y -= 4;
             recD.dy += 8;
@@ -1946,41 +1946,35 @@ static void PaintForwardSearchMark(WindowInfo *win, HDC hdc) {
 #define SHADOW_OFFSET 4
 static void PaintPageFrameAndShadow(HDC hdc, PageInfo * pageInfo, bool presentation, RectI *bounds)
 {
-    int xDest = pageInfo->screenX;
-    int yDest = pageInfo->screenY;
-    int bmpDx = pageInfo->bitmap.dx;
-    int bmpDy = pageInfo->bitmap.dy;
-
-    *bounds = RectI(xDest, yDest, bmpDx, bmpDy);
+    *bounds = RectI(pageInfo->screen, pageInfo->bitmap.Size());
 
     // Frame info
-    int fx = xDest - BORDER_SIZE, fy = yDest - BORDER_SIZE;
-    int fw = bmpDx + 2 * BORDER_SIZE, fh = bmpDy + 2 * BORDER_SIZE;
+    RectI frame = *bounds;
+    frame.Inflate(BORDER_SIZE, BORDER_SIZE);
 
     // Shadow info
-    int sx = fx + SHADOW_OFFSET, sy = fy + SHADOW_OFFSET, sw = fw, sh = fh;
-    if (xDest <= 0) {
+    RectI shadow = frame;
+    shadow.Offset(SHADOW_OFFSET, SHADOW_OFFSET);
+    if (frame.x < 0) {
         // the left of the page isn't visible, so start the shadow at the left
         int diff = min(pageInfo->bitmap.x, SHADOW_OFFSET);
-        sx -= diff; sw += diff;
+        shadow.x -= diff; shadow.dx += diff;
     }
-    if (yDest <= 0) {
+    if (frame.y < 0) {
         // the top of the page isn't visible, so start the shadow at the top
         int diff = min(pageInfo->bitmap.y, SHADOW_OFFSET);
-        sy -= diff; sh += diff;
+        shadow.y -= diff; shadow.dy += diff;
     }
 
     // Draw shadow
-    if (!presentation) {
-        RectI rc(sx, sy, sw, sh);
-        FillRect(hdc, &rc.ToRECT(), gBrushShadow);
-    }
+    if (!presentation)
+        FillRect(hdc, &shadow.ToRECT(), gBrushShadow);
 
     // Draw frame
     HPEN pe = CreatePen(PS_SOLID, 1, presentation ? TRANSPARENT : COL_PAGE_FRAME);
     SelectObject(hdc, pe);
     SelectObject(hdc, gGlobalPrefs.m_invertColors ? gBrushBlack : gBrushWhite);
-    Rectangle(hdc, fx, fy, fx + fw, fy + fh);
+    Rectangle(hdc, frame.x, frame.y, frame.x + frame.dx, frame.y + frame.dy);
     DeletePen(pe);
 }
 #else
@@ -1988,21 +1982,15 @@ static void PaintPageFrameAndShadow(HDC hdc, PageInfo * pageInfo, bool presentat
 #define SHADOW_OFFSET 0
 static void PaintPageFrameAndShadow(HDC hdc, PageInfo *pageInfo, bool presentation, RectI *bounds)
 {
-    int xDest = pageInfo->screenX;
-    int yDest = pageInfo->screenY;
-    int bmpDx = pageInfo->bitmap.dx;
-    int bmpDy = pageInfo->bitmap.dy;
+    *bounds = RectI(pageInfo->screen, pageInfo->bitmap.Size());
 
-    *bounds = RectI(xDest, yDest, bmpDx, bmpDy);
-
-    // Frame info
-    int fx = xDest - BORDER_SIZE, fy = yDest - BORDER_SIZE;
-    int fw = bmpDx + 2 * BORDER_SIZE, fh = bmpDy + 2 * BORDER_SIZE;
+    RectI frame = *bounds;
+    frame.Inflate(BORDER_SIZE, BORDER_SIZE);
 
     HPEN pe = CreatePen(PS_NULL, 0, 0);
     SelectObject(hdc, pe);
     SelectObject(hdc, gGlobalPrefs.m_invertColors ? gBrushBlack : gBrushWhite);
-    Rectangle(hdc, fx, fy, fx + fw + 1, fy + fh + 1);
+    Rectangle(hdc, frame.x, frame.y, frame.x + frame.dx + 1, frame.y + frame.dy + 1);
     DeletePen(pe);
 }
 #endif

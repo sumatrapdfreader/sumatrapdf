@@ -18,23 +18,22 @@
 #define PREDICTIVE_RENDER 1
 #endif
 
-typedef struct {
-    int     pageBorderTop;
-    int     pageBorderBottom;
-    int     pageBorderLeft;
-    int     pageBorderRight;
-    int     betweenPagesX;
-    int     betweenPagesY;
-} ScreenPagePadding;
-
 #define INVALID_PAGE_NO     -1
 #define INVALID_ROTATION    -1
+
+typedef struct {
+    // padding around the whole canvas
+    int top, left;
+    int bottom, right;
+    // padding between two pages in X and Y direction
+    int inBetweenX, inBetweenY;
+} ScreenPagePadding;
 
 /* the default distance between a page and window border edges, in pixels */
 #ifdef DRAW_PAGE_SHADOWS
 #define PADDING_PAGE_BORDER_TOP_DEF      5
-#define PADDING_PAGE_BORDER_BOTTOM_DEF   7
 #define PADDING_PAGE_BORDER_LEFT_DEF     5
+#define PADDING_PAGE_BORDER_BOTTOM_DEF   7
 #define PADDING_PAGE_BORDER_RIGHT_DEF    7
 /* the distance between pages in y axis, in pixels. Only applicable if
    more than one page in y axis (continuous mode) */
@@ -44,8 +43,8 @@ typedef struct {
 // before first page, after last page and between pages (currently
 // betwen pages = first page + last page (i.e. top + bottom)
 #define PADDING_PAGE_BORDER_TOP_DEF      2
-#define PADDING_PAGE_BORDER_BOTTOM_DEF   2
 #define PADDING_PAGE_BORDER_LEFT_DEF     4
+#define PADDING_PAGE_BORDER_BOTTOM_DEF   2
 #define PADDING_PAGE_BORDER_RIGHT_DEF    4
 /* the distance between pages in y axis, in pixels. Only applicable if
    more than one page in y axis (continuous mode) */
@@ -80,9 +79,9 @@ typedef struct {
     float           visibleRatio; /* (0.0 = invisible, 1.0 = fully visible) */
     /* part of the image that should be shown */
     RectI           bitmap;
-    /* where it should be blitted on the screen */
-    int             screenX, screenY;
-    /* position of page relative to visible draw area */
+    /* where it should be blitted in the view port */
+    PointI          screen;
+    /* position of page relative to visible view port */
     RectI           pageOnScreen;
 } PageInfo;
 
@@ -225,10 +224,11 @@ public:
 
     bool            displayStateFromModel(DisplayState *ds);
 
-    void            runEngineGC() const {
-                        if (pdfEngine)
-                            pdfEngine->ageStore();
-                    }
+    // called when we decide that the display needs to be redrawn
+    void            RepaintDisplay() { if (_callback) _callback->Repaint(); }
+    // called after rendering a page so that objects that had to be
+    // allocated for this can be freed by the rendering engine
+    void            runEngineGC() const { if (pdfEngine) pdfEngine->ageStore(); }
 
 protected:
 
@@ -241,13 +241,6 @@ protected:
     void            setZoomVirtual(float zoomVirtual);
     void            RecalcVisibleParts();
     void            RenderVisibleParts();
-
-public:
-    /* called when we decide that the display needs to be redrawn */
-    void            RepaintDisplay() { if (_callback) _callback->Repaint(); }
-
-protected:
-    void            goToPdfDest(fz_obj *dest);
 
     /* an array of PageInfo, len of array is pageCount */
     PageInfo *      _pagesInfo;

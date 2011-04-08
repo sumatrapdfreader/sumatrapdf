@@ -546,7 +546,7 @@ void PdfLinkHandler::GotoPdfDest(fz_obj *dest)
             scroll.x = -1;
         if (fz_is_null(fz_array_get(dest, 3))) {
             pageInfo = dm->getPageInfo(dm->currentPageNo());
-            scroll.y = -(pageInfo->pageOnScreen.y - dm->getPadding()->pageBorderTop);
+            scroll.y = -(pageInfo->pageOnScreen.y - dm->getPadding()->top);
             scroll.y = MAX(scroll.y, 0); // Adobe Reader never shows the previous page
         }
     }
