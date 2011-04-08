@@ -1333,13 +1333,10 @@ static void RecalcSelectionPosition(WindowInfo *win)
         /* if page is not visible, we hide seletion by simply moving it off
          * the canvas */
         if (0.0 == pageInfo->visibleRatio) {
-            selOnPage->selectionCanvas.x = -100;
-            selOnPage->selectionCanvas.y = -100;
-            selOnPage->selectionCanvas.dx = 0;
-            selOnPage->selectionCanvas.dy = 0;
+            selOnPage->selectionCanvas = RectI(-100, -100, 0, 0);
         } else {
             RectD selD = selOnPage->selectionPage;
-            win->dm->rectCvtUserToScreen(selOnPage->pageNo, &selD);
+            win->dm->cvtUserToScreen(selOnPage->pageNo, &selD);
             selOnPage->selectionCanvas = selD.Convert<int>();
         }
         selOnPage = selOnPage->next;
@@ -1961,7 +1958,7 @@ static void PaintForwardSearchMark(WindowInfo *win, HDC hdc) {
     // Draw the rectangles highlighting the forward search results
     for (UINT i = 0; i < win->fwdsearchmark.rects.Count(); i++) {
         RectD recD = win->fwdsearchmark.rects[i].Convert<double>();
-        win->dm->rectCvtUserToScreen(win->fwdsearchmark.page, &recD);
+        win->dm->cvtUserToScreen(win->fwdsearchmark.page, &recD);
         if (gGlobalPrefs.m_fwdsearchOffset > 0) {
             recD.x = pageInfo->screenX + (double)gGlobalPrefs.m_fwdsearchOffset * win->dm->zoomReal();
             recD.dx = (gGlobalPrefs.m_fwdsearchWidth > 0 ? (double)gGlobalPrefs.m_fwdsearchWidth : 15.0) * win->dm->zoomReal();
@@ -2078,7 +2075,7 @@ static void DebugShowLinks(DisplayModel *dm, HDC hdc)
                 continue;
 
             RectD rect = dm->engine->PageContentBox(pageNo).Convert<double>();
-            if (dm->rectCvtUserToScreen(pageNo, &rect))
+            if (dm->cvtUserToScreen(pageNo, &rect))
                 PaintRect(hdc, &rect.ToRECT());
         }
 
@@ -2171,12 +2168,12 @@ static void CopySelectionToClipboard(WindowInfo *win)
     if (win->dm->engine->IsCopyingTextAllowed()) {
         TCHAR *selText;
         if (win->dm->textSelection->result.len > 0) {
-            selText = win->dm->textSelection->ExtractText();
+            selText = win->dm->textSelection->ExtractText(_T("\r\n"));
         }
         else {
             StrVec selections;
             for (SelectionOnPage *selOnPage = win->selectionOnPage; selOnPage; selOnPage = selOnPage->next) {
-                selText = win->dm->getTextInRegion(selOnPage->pageNo, &selOnPage->selectionPage);
+                selText = win->dm->getTextInRegion(selOnPage->pageNo, selOnPage->selectionPage);
                 if (selText)
                     selections.Push(selText);
             }
@@ -2238,7 +2235,7 @@ static void ConvertSelectionRectToSelectionOnPage(WindowInfo *win) {
         /* selection intersects with a page <pageNo> on the screen */
         int selPageNo;
         RectD isectD = intersect.Convert<double>();
-        if (!win->dm->rectCvtScreenToUser(&selPageNo, &isectD))
+        if (!win->dm->cvtScreenToUser(&selPageNo, &isectD))
             continue;
 
         assert(pageNo == selPageNo);
@@ -3075,7 +3072,7 @@ static void PrintToDevice(BaseEngine *engine, HDC hdc, LPDEVMODE devMode,
             // MM_TEXT: Each logical unit is mapped to one device pixel.
             // Positive x is to the right; positive y is down.
 
-            SizeF pSize = engine->PageSize(pageNo).Convert<float>();
+            SizeF pSize = engine->PageMediabox(pageNo).Size().Convert<float>();
             int rotation = engine->PageRotation(pageNo);
             // Turn the document by 90 deg if it isn't in portrait mode
             if (pSize.dx > pSize.dy) {
@@ -3375,8 +3372,11 @@ static void OnMenuSaveAs(WindowInfo *win)
     }
     // Extract all text when saving as a plain text file
     if (hasCopyPerm && Str::EndsWithI(realDstFileName, _T(".txt"))) {
-        ScopedMem<TCHAR> text(win->dm->extractAllText(Target_Export));
-        ScopedMem<char> textUTF8(Str::Conv::ToUtf8(text));
+        Str::Str<TCHAR> text(1024);
+        for (int pageNo = 1; pageNo <= win->dm->pageCount(); pageNo++)
+            text.AppendAndFree(win->dm->engine->ExtractPageText(pageNo, _T("\r\n"), NULL, Target_Export));
+
+        ScopedMem<char> textUTF8(Str::Conv::ToUtf8(text.LendData()));
         ScopedMem<char> textUTF8BOM(Str::Join("\xEF\xBB\xBF", textUTF8));
         File::WriteAll(realDstFileName, textUTF8BOM, Str::Len(textUTF8BOM));
     }
@@ -5741,7 +5741,7 @@ static void CreateInfotipForPdfLink(WindowInfo *win, int pageNo, pdf_link *link)
 {
     ScopedMem<TCHAR> linkPath(win->linkHandler->GetLinkPath(link));
     RectD rc = fz_rect_to_RectD(link->rect);
-    if (!win->dm->rectCvtUserToScreen(pageNo, &rc))
+    if (!win->dm->cvtUserToScreen(pageNo, &rc))
         rc = RectD();
     win->CreateInfotip(linkPath, &rc.Convert<int>());
 }
@@ -5750,7 +5750,7 @@ static void CreateInfotipForComment(WindowInfo *win, int pageNo, pdf_annot *anno
 {
     ScopedMem<TCHAR> comment(Str::Conv::FromUtf8(fz_to_str_buf(fz_dict_gets(annot->obj, "Contents"))));
     RectD rc = fz_rect_to_RectD(annot->rect);
-    if (!win->dm->rectCvtUserToScreen(pageNo, &rc))
+    if (!win->dm->cvtUserToScreen(pageNo, &rc))
         rc = RectD();
     win->CreateInfotip(comment, &rc.Convert<int>());
 }

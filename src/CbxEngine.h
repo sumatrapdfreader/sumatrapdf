@@ -53,7 +53,8 @@ public:
     virtual RectD Transform(RectD rect, int pageNo, float zoom, int rotate, bool inverse=false);
 
     virtual unsigned char *GetFileData(size_t *cbCount);
-    virtual TCHAR * ExtractPageText(int pageNo, TCHAR *lineSep=DOS_NEWLINE, RectI **coords_out=NULL, RenderTarget target=Target_View) { return NULL; }
+    virtual TCHAR * ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_out=NULL,
+                                    RenderTarget target=Target_View) { return NULL; }
     virtual bool IsImagePage(int pageNo) { return true; }
 
     // there's no text...

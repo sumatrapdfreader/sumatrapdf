@@ -115,7 +115,7 @@ HRESULT CPdfFilter::GetNextChunkValue(CChunkValue &chunkValue)
 
     case STATE_PDF_CONTENT:
         if (++m_iPageNo <= m_pdfEngine->PageCount()) {
-            str = Str::Conv::ToWStrQ(m_pdfEngine->ExtractPageText(m_iPageNo));
+            str = Str::Conv::ToWStrQ(m_pdfEngine->ExtractPageText(m_iPageNo, _T("\r\n")));
             chunkValue.SetTextValue(PKEY_Search_Contents, str, CHUNK_TEXT);
             free(str);
             return S_OK;

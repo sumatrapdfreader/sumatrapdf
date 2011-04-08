@@ -95,7 +95,8 @@ public:
     virtual RectD Transform(RectD rect, int pageNo, float zoom, int rotate, bool inverse=false);
 
     virtual unsigned char *GetFileData(size_t *cbCount);
-    virtual TCHAR * ExtractPageText(int pageNo, TCHAR *lineSep=DOS_NEWLINE, RectI **coords_out=NULL, RenderTarget target=Target_View);
+    virtual TCHAR * ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_out=NULL,
+                                    RenderTarget target=Target_View);
     virtual bool IsImagePage(int pageNo);
     virtual PageLayoutType PreferredLayout();
 
@@ -146,9 +147,8 @@ protected:
     bool            renderPage(HDC hDC, pdf_page *page, RectI screenRect,
                                fz_matrix *ctm=NULL, float zoom=0, int rotation=0,
                                RectD *pageRect=NULL, RenderTarget target=Target_View);
-    TCHAR         * ExtractPageText(pdf_page *page, TCHAR *lineSep=DOS_NEWLINE,
-                                    RectI **coords_out=NULL, RenderTarget target=Target_View,
-                                    bool cacheRun=false);
+    TCHAR         * ExtractPageText(pdf_page *page, TCHAR *lineSep, RectI **coords_out=NULL,
+                                    RenderTarget target=Target_View, bool cacheRun=false);
 
     PdfPageRun    * _runCache[MAX_PAGE_RUN_CACHE];
     PdfPageRun    * getPageRun(pdf_page *page, bool tryOnly=false);
@@ -206,7 +206,8 @@ public:
     virtual RectD Transform(RectD rect, int pageNo, float zoom, int rotate, bool inverse=false);
 
     virtual unsigned char *GetFileData(size_t *cbCount);
-    virtual TCHAR * ExtractPageText(int pageNo, TCHAR *lineSep=DOS_NEWLINE, RectI **coords_out=NULL, RenderTarget target=Target_View);
+    virtual TCHAR * ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_out=NULL,
+                                    RenderTarget target=Target_View);
     virtual bool IsImagePage(int pageNo) { return false; }
 
     virtual float GetFileDPI() const { return 96.0f; }
@@ -234,7 +235,7 @@ protected:
     bool            renderPage(HDC hDC, xps_page *page, RectI screenRect,
                                fz_matrix *ctm=NULL, float zoom=0, int rotation=0,
                                RectD *pageRect=NULL);
-    TCHAR         * ExtractPageText(xps_page *page, TCHAR *lineSep=DOS_NEWLINE,
+    TCHAR         * ExtractPageText(xps_page *page, TCHAR *lineSep,
                                     RectI **coords_out=NULL, bool cacheRun=false);
 
     XpsPageRun    * _runCache[MAX_PAGE_RUN_CACHE];

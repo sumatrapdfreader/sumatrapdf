@@ -132,13 +132,18 @@ static TCHAR *FormatFileSize(size_t size) {
 
 // format page size according to locale (e.g. "29.7 x 20.9 cm" or "11.69 x 8.23 in")
 // Caller needs to free the result
-static TCHAR *FormatPageSize(SizeD size, float fileDPI) {
+static TCHAR *FormatPageSize(BaseEngine *engine, int pageNo, int rotation)
+{
+    RectD mediabox = engine->PageMediabox(pageNo);
+    SizeD size = engine->Transform(mediabox, pageNo, 1.0, rotation).Size();
+
     TCHAR unitSystem[2];
     GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_IMEASURE, unitSystem, dimof(unitSystem));
     bool isMetric = unitSystem[0] == '0';
+    double unitsPerInch = isMetric ? 2.54 : 1.0;
 
-    double width = size.dx * (isMetric ? 2.54 : 1.0) / fileDPI;
-    double height = size.dy * (isMetric ? 2.54 : 1.0) / fileDPI;
+    double width = size.dx * unitsPerInch / engine->GetFileDPI();
+    double height = size.dy * unitsPerInch / engine->GetFileDPI();
     if (((int)(width * 100)) % 100 == 99)
         width += 0.01;
     if (((int)(height * 100)) % 100 == 99)
@@ -357,7 +362,7 @@ SkipPdfPropertiesForNow:
     str = Str::Format(_T("%d"), engine->PageCount());
     layoutData->AddProperty(_TR("Number of Pages:"), str);
 
-    str = FormatPageSize(engine->PageSize(win->dm->currentPageNo()), engine->GetFileDPI());
+    str = FormatPageSize(engine, win->dm->currentPageNo(), win->dm->rotation());
     layoutData->AddProperty(_TR("Page Size:"), str);
 
     str = FormatPermissions(engine);

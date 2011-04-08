@@ -7,8 +7,6 @@
 #include "BaseUtil.h"
 #include "GeomUtil.h"
 
-#define DOS_NEWLINE _T("\r\n")
-
 /* certain OCGs will only be rendered for some of these (e.g. watermarks) */
 enum RenderTarget { Target_View, Target_Print, Target_Export };
 
@@ -80,17 +78,12 @@ public:
 
     // the angle in degrees the given page is rotated natively (usually 0 deg)
     virtual int PageRotation(int pageNo) { return 0; }
-    // the dimensions of the given page (shortcut for PageMediabox(pageNo).Size())
-    SizeD PageSize(int pageNo) {
-        assert(1 <= pageNo && pageNo <= PageCount());
-        return PageMediabox(pageNo).Size();
-    }
-    // the box into which a page will be drawn (usually RectD(0, 0, pageWidth, pageHeight))
+    // the box containing the visible page content (usually RectD(0, 0, pageWidth, pageHeight))
     virtual RectD PageMediabox(int pageNo) = 0;
     // the box inside PageMediabox that actually contains any relevant content
     // (used for auto-cropping in Fit Content mode, can be PageMediabox)
     virtual RectI PageContentBox(int pageNo, RenderTarget target=Target_View) {
-        return PageMediabox(pageNo).Convert<int>();
+        return PageMediabox(pageNo).Round();
     }
 
     // renders a page into a cacheable RenderedBitmap
@@ -100,10 +93,11 @@ public:
     // renders a page directly into an hDC (e.g. for printing)
     virtual bool RenderPage(HDC hDC, int pageNo, RectI screenRect,
                          float zoom=0, int rotation=0,
-                         RectD *pageRect=NULL, RenderTarget target=Target_View) = 0;
+                         RectD *pageRect=NULL, /* if NULL: defaults to the page's mediabox */
+                         RenderTarget target=Target_View) = 0;
 
-    // applies zoom and rotation to a point in user/page space
-    // or in the inverse direction from screen to user/page space
+    // applies zoom and rotation to a point in user/page space converting
+    // it into device/screen space - or in the inverse direction
     virtual PointD Transform(PointD pt, int pageNo, float zoom, int rotate, bool inverse=false) = 0;
     virtual RectD Transform(RectD rect, int pageNo, float zoom, int rotate, bool inverse=false) = 0;
 
@@ -114,7 +108,8 @@ public:
     // extracts all text found in the given page (and optionally also the
     // coordinates of the individual glyphs)
     // caller needs to free() the result
-    virtual TCHAR * ExtractPageText(int pageNo, TCHAR *lineSep=DOS_NEWLINE, RectI **coords_out=NULL, RenderTarget target=Target_View) = 0;
+    virtual TCHAR * ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_out=NULL,
+                                    RenderTarget target=Target_View) = 0;
     // certain optimizations can be made for a page consisting of a single large image
     virtual bool IsImagePage(int pageNo) = 0;
     // the layout type this document's author suggests (if the user doesn't care)

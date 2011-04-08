@@ -212,8 +212,7 @@ public:
     void            zoomBy(float zoomFactor, PointI *fixPt=NULL);
     void            rotateBy(int rotation);
 
-    TCHAR *         getTextInRegion(int pageNo, RectD *region);
-    TCHAR *         extractAllText(RenderTarget target=Target_View);
+    TCHAR *         getTextInRegion(int pageNo, RectD& region);
     bool            isOverText(int x, int y);
 
     // TODO: generalize for non-PDF formats(?)
@@ -222,9 +221,9 @@ public:
     pdf_annot *     getCommentAtPosition(PointI pt);
 
     bool            cvtUserToScreen(int pageNo, PointD *pt);
+    bool            cvtUserToScreen(int pageNo, RectD *r);
     bool            cvtScreenToUser(int *pageNo, PointD *pt);
-    bool            rectCvtUserToScreen(int pageNo, RectD *r);
-    bool            rectCvtScreenToUser(int *pageNo, RectD *r);
+    bool            cvtScreenToUser(int *pageNo, RectD *r);
     ScreenPagePadding *getPadding() { return padding; }
     RectD           getContentBox(int pageNo, RenderTarget target=Target_View);
 

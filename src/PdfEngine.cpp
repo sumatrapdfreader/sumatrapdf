@@ -206,7 +206,7 @@ void fz_stream_fingerprint(fz_stream *file, unsigned char *digest)
     fz_drop_buffer(buffer);
 }
 
-WCHAR *fz_span_to_wchar(fz_text_span *text, TCHAR *lineSep=DOS_NEWLINE, RectI **coords_out=NULL)
+WCHAR *fz_span_to_wchar(fz_text_span *text, TCHAR *lineSep, RectI **coords_out=NULL)
 {
     int lineSepLen = Str::Len(lineSep);
     size_t textLen = 0;
@@ -1236,6 +1236,7 @@ PageLayoutType PdfEngine::PreferredLayout()
 
 unsigned char *PdfEngine::GetFileData(size_t *cbCount)
 {
+    ScopedCritSec scope(&_xrefAccess);
     return fz_extract_stream_data(_xref->file, cbCount);
 }
 
@@ -1665,6 +1666,7 @@ TCHAR *XpsEngine::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_out
 
 unsigned char *XpsEngine::GetFileData(size_t *cbCount)
 {
+    ScopedCritSec scope(&_ctxAccess);
     return fz_extract_stream_data(_ctx->file, cbCount);
 }
 

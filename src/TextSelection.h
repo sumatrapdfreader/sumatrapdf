@@ -32,7 +32,7 @@ public:
         SelectUpTo(pageNo, FindClosestGlyph(pageNo, x, y));
     }
     void SelectWordAt(int pageNo, double x, double y);
-    TCHAR *ExtractText(TCHAR *lineSep=DOS_NEWLINE);
+    TCHAR *ExtractText(TCHAR *lineSep);
     void Reset();
 
     TextSel result;

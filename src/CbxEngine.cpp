@@ -177,7 +177,7 @@ bool CbxEngine::RenderPage(HDC hDC, int pageNo, RectI screenRect, float zoom, in
 
 void CbxEngine::GetTransform(Matrix& m, int pageNo, float zoom, int rotate)
 {
-    SizeD size = PageSize(pageNo);
+    SizeD size = PageMediabox(pageNo).Size();
 
     rotate = rotate % 360;
     if (rotate < 0) rotate = rotate + 360;

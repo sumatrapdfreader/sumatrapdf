@@ -6,7 +6,7 @@
    total area (canvas) of size canvasSize.
 
    In DM_SINGLE_PAGE mode total area is the size of currently displayed page
-   given current zoom lovel and rotation.
+   given current zoom level and rotation.
    In DM_CONTINUOUS mode canvas area consist of all pages rendered sequentially
    with a given zoom level and rotation. canvasDy is the sum of heights
    of all pages plus spaces between them and canvasDx is the size of
@@ -19,7 +19,7 @@
  |          -------------          |
  |          | window    |          |
  |          | i.e.      |          |
- |          | vew port  |          |
+ |          | view port |          |
  |          -------------          |
  |                                 |
  |                                 |
@@ -294,7 +294,7 @@ bool DisplayModel::buildPagesInfo()
         startPage--;
     for (int pageNo = 1; pageNo <= _pageCount; pageNo++) {
         PageInfo *pageInfo = getPageInfo(pageNo);
-        pageInfo->page = engine->PageSize(pageNo);
+        pageInfo->page = engine->PageMediabox(pageNo).Size();
         pageInfo->rotation = engine->PageRotation(pageNo);
         pageInfo->visibleRatio = 0.0;
         pageInfo->shown = false;
@@ -785,26 +785,6 @@ void DisplayModel::RecalcVisibleParts()
     }
 }
 
-/* Map rectangle <r> on the page <pageNo> to point on the screen. */
-bool DisplayModel::rectCvtUserToScreen(int pageNo, RectD *r)
-{
-    PointD TL = r->TL(), BR = r->BR();
-    if (!cvtUserToScreen(pageNo, &TL) || !cvtUserToScreen(pageNo, &BR))
-        return false;
-    *r = RectD::FromXY(TL, BR);
-    return true;
-}
-
-/* Map rectangle <r> on the page <pageNo> to point on the screen. */
-bool DisplayModel::rectCvtScreenToUser(int *pageNo, RectD *r)
-{
-    PointD TL = r->TL(), BR = r->BR();
-    if (!cvtScreenToUser(pageNo, &TL) || !cvtScreenToUser(pageNo, &BR))
-        return false;
-    *r = RectD::FromXY(TL, BR);
-    return true;
-}
-
 int DisplayModel::getPageNoByPoint(PointI pt) 
 {
     // no reasonable answer possible, if zoom hasn't been set yet
@@ -869,7 +849,7 @@ int DisplayModel::getPdfLinks(int pageNo, pdf_link **links)
     int count = pdfEngine->getPdfLinks(pageNo, links);
     for (int i = 0; i < count; i++) {
         RectD rc = fz_rect_to_RectD((*links)[i].rect);
-        if (rectCvtUserToScreen(pageNo, &rc))
+        if (cvtUserToScreen(pageNo, &rc))
             (*links)[i].rect = fz_RectD_to_rect(rc);
         else
             (*links)[i].rect = fz_empty_rect;
@@ -1345,6 +1325,15 @@ bool DisplayModel::cvtUserToScreen(int pageNo, PointD *pt)
     return true;
 }
 
+bool DisplayModel::cvtUserToScreen(int pageNo, RectD *r)
+{
+    PointD TL = r->TL(), BR = r->BR();
+    if (!cvtUserToScreen(pageNo, &TL) || !cvtUserToScreen(pageNo, &BR))
+        return false;
+    *r = RectD::FromXY(TL, BR);
+    return true;
+}
+
 bool DisplayModel::cvtScreenToUser(int *pageNo, PointD *pt)
 {
     *pageNo = getPageNoByPoint(pt->Convert<int>());
@@ -1361,19 +1350,28 @@ bool DisplayModel::cvtScreenToUser(int *pageNo, PointD *pt)
     return true;
 }
 
+bool DisplayModel::cvtScreenToUser(int *pageNo, RectD *r)
+{
+    PointD TL = r->TL(), BR = r->BR();
+    if (!cvtScreenToUser(pageNo, &TL) || !cvtScreenToUser(pageNo, &BR))
+        return false;
+    *r = RectD::FromXY(TL, BR);
+    return true;
+}
+
 /* Given <region> (in user coordinates ) on page <pageNo>, copies text in that region
  * into a newly allocated buffer (which the caller needs to free()). */
-TCHAR *DisplayModel::getTextInRegion(int pageNo, RectD *region)
+TCHAR *DisplayModel::getTextInRegion(int pageNo, RectD& region)
 {
     RectI *coords;
-    TCHAR *pageText = engine->ExtractPageText(pageNo, _T("\n\n"), &coords);
+    TCHAR *pageText = engine->ExtractPageText(pageNo, _T("\r\n"), &coords);
     if (!pageText)
         return NULL;
 
-    RectI regionI = region->Convert<int>();
+    RectI regionI = region.Round();
     TCHAR *result = SAZA(TCHAR, Str::Len(pageText) + 1), *dest = result;
     for (TCHAR *src = pageText; *src; src++) {
-        if (*src != '\n') {
+        if (*src != '\r' && *src != '\n') {
             RectI rect = coords[src - pageText];
             RectI isect = regionI.Intersect(rect);
             if (!isect.IsEmpty() && 1.0 * isect.dx * isect.dy / (rect.dx * rect.dy) >= 0.3) {
@@ -1382,28 +1380,16 @@ TCHAR *DisplayModel::getTextInRegion(int pageNo, RectD *region)
                 //DBG_OUT("Found char: %c : %hu; real %c : %hu\n", c, (unsigned short)(unsigned char) c, ln->text[i].c, ln->text[i].c);
             }
         } else if (dest > result && *(dest - 1) != '\n') {
-            *dest++ = DOS_NEWLINE[0];
-            *dest++ = DOS_NEWLINE[1];
+            *dest++ = *src;
             //DBG_OUT("Char: %c : %d; ushort: %hu\n", (char)buf[p], (int)(unsigned char)buf[p], buf[p]);
         }
     }
-    *dest = 0;
+    *dest = '\0';
 
     delete coords;
     free(pageText);
 
     return result;
-}
-
-/* extract all text from the document (caller needs to free() the result) */
-TCHAR *DisplayModel::extractAllText(RenderTarget target)
-{
-    Str::Str<TCHAR> txt(1024);
-
-    for (int pageNo = 1; pageNo <= pageCount(); pageNo++)
-        txt.AppendAndFree(engine->ExtractPageText(pageNo, DOS_NEWLINE, NULL, target));
-
-    return txt.StealData();
 }
 
 // returns true if it was necessary to scroll the display (horizontally or vertically)
@@ -1415,7 +1401,7 @@ bool DisplayModel::ShowResultRectToScreen(TextSel *res)
     RectI extremes;
     for (int i = 0; i < res->len; i++) {
         RectD rectD = res->rects[i].Convert<double>();
-        rectCvtUserToScreen(res->pages[i], &rectD);
+        cvtUserToScreen(res->pages[i], &rectD);
         RectI rect = RectI::FromXY((int)floor(rectD.x), (int)floor(rectD.y), 
                                    (int)ceil(rectD.x + rectD.dx), (int)ceil(rectD.y + rectD.dy));
         extremes = extremes.Union(rect);
@@ -1570,7 +1556,7 @@ DisplayModel *DisplayModel::CreateFromFileName(DisplayModelCallback *callback,
         return NULL;
     }
 
-//    DBG_OUT("DisplayModel_CreateFromPageTree() pageCount = %d, startPage=%d, displayMode=%d\n",
-//        dm->pageCount(), dm->startPage, (int)displayMode);
+//    DBG_OUT("DisplayModel::CreateFromFileName() pageCount = %d, startPage=%d, displayMode=%d\n",
+//        dm->pageCount(), startPage, (int)displayMode);
     return dm;
 }
