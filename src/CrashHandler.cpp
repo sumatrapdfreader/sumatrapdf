@@ -50,8 +50,7 @@ typedef BOOL _stdcall SymFromAddrProc(
     HANDLE hProcess,
     DWORD64 Address,
     PDWORD64 Displacement,
-    PSYMBOL_INFO Symbol
-);
+    PSYMBOL_INFO Symbol);
 
 typedef PVOID _stdcall SymFunctionTableAccess64Proc(
     HANDLE hProcess,
@@ -63,8 +62,13 @@ typedef DWORD64 _stdcall SymGetModuleBase64Proc(
 
 typedef BOOL WINAPI SymSetSearchPathWProc(
     HANDLE hProcess,
-    PCWSTR SearchPath
-);
+    PCWSTR SearchPath);
+
+typedef BOOL __stdcall SymGetLineFromAddr64Proc(
+    HANDLE hProcess,
+    DWORD64 dwAddr,
+    PDWORD pdwDisplacement,
+    PIMAGEHLP_LINE64 Line);
 
 static MiniDumpWriteProc *              _MiniDumpWriteDump;
 static SymInitializeProc *              _SymInitialize;
@@ -75,6 +79,7 @@ static StackWalk64Proc   *              _StackWalk64;
 static SymFunctionTableAccess64Proc *   _SymFunctionTableAccess64;
 static SymGetModuleBase64Proc *         _SymGetModuleBase64;
 static SymFromAddrProc *                _SymFromAddr;
+static SymGetLineFromAddr64Proc *       _SymGetLineFromAddr64;
 
 static ScopedMem<TCHAR> g_crashDumpPath(NULL);
 static ScopedMem<TCHAR> g_crashTxtPath(NULL);
@@ -96,6 +101,7 @@ FuncNameAddr g_dbgHelpFuncs[] = {
     F(SymFunctionTableAccess64)
     F(SymGetModuleBase64)
     F(SymFromAddr)
+    F(SymGetLineFromAddr64)
     { NULL, NULL }
 };
 #undef F
@@ -122,16 +128,15 @@ static bool GetEnvOk(DWORD ret, DWORD cchBufSize)
     return cchBufSize == ret;
 }
 
-/* How to setup symbol path:
-add GetEnvironmentVariableA("_NT_SYMBOL_PATH", szTemp, nTempLen)
-add GetEnvironmentVariableA("_NT_ALTERNATE_SYMBOL_PATH", szTemp, nTempLen)
+/* Setting symbol path:
+add GetEnvironmentVariableA("_NT_SYMBOL_PATH", ..., ...)
+add GetEnvironmentVariableA("_NT_ALTERNATE_SYMBOL_PATH", ..., ...)
 add: "srv*c:\\symbols*http://msdl.microsoft.com/download/symbols;cache*c:\\symbols"
-(except a better directory than c:\\symbols */
+(except a better directory than c:\\symbols
+*/
 
-// TODO: doesn't have expected result i.e. SymFromAddr() doesn't resolve symbols
-// even if I set sympath to my local directory that definitely has symbols
-// maybe it's related to dbghelp.dll version and I should try harder loading
-// the latest version available on the system?
+// TODO: Since the *.pdb files are on S3 with a known name, we could try to 
+// download them here to a directory in symbol path to get better info 
 static void SetupSymbolPath()
 {
     Str::Str<WCHAR> s(1024);
@@ -387,10 +392,16 @@ static bool GetStackFrameInfo(Str::Str<char>& s, STACKFRAME64 *stackFrame,
     if (GetAddrInfo((void*)addr, module, sizeof(module), section, offset)) {
         Str::ToLower(module);
         const char *moduleShort = Path::GetBaseName(module);
+        s.AppendFmt("0x%p %02X:%08X %s", (void*)addr, section, offset, moduleShort);
         if (symName)
-            s.AppendFmt("0x%p %02X:%08X %s!%s+0x%x\r\n", (void*)addr, section, offset, moduleShort, symName, (int)symDisp);
-        else
-            s.AppendFmt("0x%p %02X:%08X %s \r\n", (void*)addr, section, offset, moduleShort);
+            s.AppendFmt("!%s+0x%x", symName, (int)symDisp);
+        IMAGEHLP_LINE64 line;
+        line.SizeOfStruct = sizeof(IMAGEHLP_LINE64);
+        DWORD disp;
+        if (_SymGetLineFromAddr64(hProc, addr, &disp, &line)) {
+            s.AppendFmt(" %s+%d", line.FileName, line.LineNumber);
+        }
+        s.Append("\r\n");
     } else {
         s.AppendFmt("%%08X\r\n", (DWORD)addr);
     }
