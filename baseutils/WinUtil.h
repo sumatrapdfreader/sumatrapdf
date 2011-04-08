@@ -245,6 +245,11 @@ public:
 #include <commctrl.h>
 #include <windowsx.h>
 
+#ifndef USER_DEFAULT_SCREEN_DPI
+// the following is only defined if _WIN32_WINNT >= 0x0600 and we use 0x0500
+#define USER_DEFAULT_SCREEN_DPI 96
+#endif
+
 /* Utilities to help in common windows programming tasks */
 
 /* constant to make it easier to return proper LRESULT values when handling

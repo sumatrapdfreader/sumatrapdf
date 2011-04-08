@@ -233,7 +233,7 @@ static bool LoadDocIntoWindow(const TCHAR *fileName, WindowInfo *win,
     bool showWin, bool placeWindow);
 static void WindowInfo_ShowMessage_Async(WindowInfo *win, const TCHAR *message, bool resize, bool highlight=false);
 
-static void DeleteOldSelectionInfo(WindowInfo *win);
+static void DeleteOldSelectionInfo(WindowInfo *win, bool alsoTextSel=false);
 static void ClearSearch(WindowInfo *win);
 static void WindowInfo_ExitFullscreen(WindowInfo *win);
 
@@ -1035,7 +1035,6 @@ static void WindowInfo_Delete(WindowInfo *win)
     gWindows.Remove(win);
 
     DragAcceptFiles(win->hwndCanvas, FALSE);
-    DeleteOldSelectionInfo(win);
 
     delete win;
 }
@@ -1321,26 +1320,6 @@ static void UpdateTocWidth(HWND hwndTocBox, const DisplayState *ds=NULL, int def
         rc.dx = defaultDx;
 
     SetWindowPos(hwndTocBox, NULL, rc.x, rc.y, rc.dx, rc.dy, SWP_NOZORDER);
-}
-
-static void RecalcSelectionPosition(WindowInfo *win)
-{
-    SelectionOnPage *   selOnPage = win->selectionOnPage;
-    PageInfo*        pageInfo;
-
-    while (selOnPage != NULL) {
-        pageInfo = win->dm->getPageInfo(selOnPage->pageNo);
-        /* if page is not visible, we hide seletion by simply moving it off
-         * the canvas */
-        if (0.0 == pageInfo->visibleRatio) {
-            selOnPage->selectionCanvas = RectI(-100, -100, 0, 0);
-        } else {
-            RectD selD = selOnPage->selectionPage;
-            win->dm->cvtUserToScreen(selOnPage->pageNo, &selD);
-            selOnPage->selectionCanvas = selD.Convert<int>();
-        }
-        selOnPage = selOnPage->next;
-    }
 }
 
 static bool LoadDocIntoWindow(
@@ -1912,15 +1891,7 @@ static void UpdateTextSelection(WindowInfo *win, bool select=true)
     }
 
     DeleteOldSelectionInfo(win);
-
-    TextSel *result = &win->dm->textSelection->result;
-    for (int i = result->len - 1; i >= 0; i--) {
-        SelectionOnPage *selOnPage = new SelectionOnPage;
-        selOnPage->pageNo = result->pages[i];
-        selOnPage->selectionPage = result->rects[i].Convert<double>();
-        selOnPage->next = win->selectionOnPage;
-        win->selectionOnPage = selOnPage;
-    }
+    win->selectionOnPage = SelectionOnPage::FromTextSelect(&win->dm->textSelection->result);
     win->showSelection = true;
 }
 
@@ -1943,10 +1914,8 @@ static void PaintSelection(WindowInfo *win, HDC hdc) {
             UpdateTextSelection(win);
 
         // after selection is done
-        // TODO: Move recalcing to better place
-        RecalcSelectionPosition(win);
         for (SelectionOnPage *sel = win->selectionOnPage; sel; sel = sel->next)
-            PaintTransparentRectangle(hdc, win->canvasRc, &sel->selectionCanvas, COL_SELECTION_RECT);
+            PaintTransparentRectangle(hdc, win->canvasRc, &sel->GetCanvasRect(win->dm), COL_SELECTION_RECT);
     }
 }
 
@@ -2173,7 +2142,7 @@ static void CopySelectionToClipboard(WindowInfo *win)
         else {
             StrVec selections;
             for (SelectionOnPage *selOnPage = win->selectionOnPage; selOnPage; selOnPage = selOnPage->next) {
-                selText = win->dm->getTextInRegion(selOnPage->pageNo, selOnPage->selectionPage);
+                selText = win->dm->getTextInRegion(selOnPage->pageNo, selOnPage->rect);
                 if (selText)
                     selections.Push(selText);
             }
@@ -2196,10 +2165,8 @@ static void CopySelectionToClipboard(WindowInfo *win)
 
     /* also copy a screenshot of the current selection to the clipboard */
     SelectionOnPage *selOnPage = win->selectionOnPage;
-    RectD *clipRegion = &selOnPage->selectionPage;
-
     RenderedBitmap * bmp = win->dm->RenderBitmap(selOnPage->pageNo, win->dm->zoomReal(),
-        win->dm->rotation(), clipRegion, Target_Export, gUseGdiRenderer);
+        win->dm->rotation(), &selOnPage->rect, Target_Export, gUseGdiRenderer);
     if (bmp) {
         if (!SetClipboardData(CF_BITMAP, bmp->getBitmap()))
             SeeLastError();
@@ -2209,43 +2176,14 @@ static void CopySelectionToClipboard(WindowInfo *win)
     CloseClipboard();
 }
 
-static void DeleteOldSelectionInfo(WindowInfo *win) {
-    SelectionOnPage *selOnPage = win->selectionOnPage;
-    while (selOnPage != NULL) {
-        SelectionOnPage *tmp = selOnPage->next;
-        delete selOnPage;
-        selOnPage = tmp;
-    }
+static void DeleteOldSelectionInfo(WindowInfo *win, bool alsoTextSel)
+{
+    delete win->selectionOnPage;
     win->selectionOnPage = NULL;
     win->showSelection = false;
-}
 
-static void ConvertSelectionRectToSelectionOnPage(WindowInfo *win) {
-    win->dm->textSelection->Reset();
-    for (int pageNo = win->dm->pageCount(); pageNo >= 1; --pageNo) {
-        PageInfo *pageInfo = win->dm->getPageInfo(pageNo);
-        assert(0.0 == pageInfo->visibleRatio || pageInfo->shown);
-        if (!pageInfo->shown)
-            continue;
-
-        RectI intersect = win->selectionRect.Intersect(pageInfo->pageOnScreen);
-        if (intersect.IsEmpty())
-            continue;
-
-        /* selection intersects with a page <pageNo> on the screen */
-        int selPageNo;
-        RectD isectD = intersect.Convert<double>();
-        if (!win->dm->cvtScreenToUser(&selPageNo, &isectD))
-            continue;
-
-        assert(pageNo == selPageNo);
-
-        SelectionOnPage *selOnPage = new SelectionOnPage;
-        selOnPage->pageNo = selPageNo;
-        selOnPage->selectionPage = isectD;
-        selOnPage->next = win->selectionOnPage;
-        win->selectionOnPage = selOnPage;
-    }
+    if (alsoTextSel && win->IsDocLoaded())
+        win->dm->textSelection->Reset();
 }
 
 // for testing only
@@ -2334,9 +2272,9 @@ static void OnSelectAll(WindowInfo *win, bool textOnly=false)
         UpdateTextSelection(win);
     }
     else {
-        DeleteOldSelectionInfo(win);
+        DeleteOldSelectionInfo(win, true);
         win->selectionRect = RectI::FromXY(INT_MIN / 2, INT_MIN / 2, INT_MAX, INT_MAX);
-        ConvertSelectionRectToSelectionOnPage(win);
+        win->selectionOnPage = SelectionOnPage::FromRectangle(win->dm, win->selectionRect);
     }
 
     win->showSelection = true;
@@ -2590,7 +2528,7 @@ static void OnMouseMove(WindowInfo *win, int x, int y, WPARAM flags)
 
 static void OnSelectionStart(WindowInfo *win, int x, int y, WPARAM key)
 {
-    DeleteOldSelectionInfo(win);
+    DeleteOldSelectionInfo(win, true);
 
     win->selectionRect = RectI(x, y, 0, 0);
     win->showSelection = true;
@@ -2624,9 +2562,9 @@ static void OnSelectionStop(WindowInfo *win, int x, int y, bool aborted)
 
     win->selectionRect = RectI::FromXY(win->selectionRect.x, win->selectionRect.y, x, y);
     if (aborted || (MA_SELECTING == win->mouseAction ? win->selectionRect.IsEmpty() : !win->selectionOnPage))
-        DeleteOldSelectionInfo(win);
+        DeleteOldSelectionInfo(win, true);
     else if (win->mouseAction == MA_SELECTING)
-        ConvertSelectionRectToSelectionOnPage(win);
+        win->selectionOnPage = SelectionOnPage::FromRectangle(win->dm, win->selectionRect);
     win->RepaintAsync();
 }
 
@@ -2922,7 +2860,7 @@ static void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose=false)
         UpdateToolbarFindText(win);
         win->RedrawAll();
         WindowInfo_UpdateFindbox(win);
-        DeleteOldSelectionInfo(win);
+        DeleteOldSelectionInfo(win, true);
     } else {
         HWND hwndToDestroy = win->hwndFrame;
         WindowInfo_Delete(win);
@@ -3022,7 +2960,7 @@ static void PrintToDevice(BaseEngine *engine, HDC hdc, LPDEVMODE devMode,
             for (; sel; sel = sel->next) {
                 StartPage(hdc);
 
-                RectD *clipRegion = &sel->selectionPage;
+                RectD *clipRegion = &sel->rect;
 
                 SizeF sSize = clipRegion->Size().Convert<float>();
                 // Swap width and height for rotated documents
@@ -4412,9 +4350,7 @@ static bool OnKeydown(WindowInfo *win, WPARAM key, LPARAM lparam, bool inTextfie
 
 static void ClearSearch(WindowInfo *win)
 {
-    DeleteOldSelectionInfo(win);
-    if (win->IsDocLoaded())
-        win->dm->textSelection->Reset();
+    DeleteOldSelectionInfo(win, true);
     win->RepaintAsync();
 }
 

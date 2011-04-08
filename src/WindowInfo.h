@@ -11,14 +11,10 @@
 #include "PdfEngine.h"
 #include "Vec.h"
 
-#ifndef USER_DEFAULT_SCREEN_DPI
-// the following is only defined if _WIN32_WINNT >= 0x0600 and we use 0x0500
-#define USER_DEFAULT_SCREEN_DPI 96
-#endif
-
 class FileWatcher;
 class Synchronizer;
 class DoubleBuffer;
+class SelectionOnPage;
 class PdfLinkHandler;
 
 /* Describes actions which can be performed by mouse */
@@ -37,15 +33,6 @@ enum PresentationMode {
     PM_BLACK_SCREEN,
     PM_WHITE_SCREEN
 };
-
-/* Represents selected area on given page */
-typedef struct SelectionOnPage {
-    int              pageNo;
-    RectD            selectionPage;     /* position of selection rectangle on page */
-    RectI            selectionCanvas;   /* position of selection rectangle on canvas */
-    SelectionOnPage* next;              /* pointer to next page with selected area
-                                         * or NULL if such page not exists */
-} SelectionOnPage;
 
 /* Describes information related to one window with (optional) a document
    on the screen */
@@ -243,6 +230,22 @@ public:
 
     HDC GetDC() const { return hdcBuffer ? hdcBuffer : hdcCanvas; }
     void Flush(HDC hdc);
+};
+
+/* Represents selected area on given page */
+class SelectionOnPage {
+public:
+    SelectionOnPage(int pageNo=0, RectD *rect=NULL) :
+        pageNo(pageNo), rect(rect ? *rect : RectD()) { }
+    ~SelectionOnPage() { delete next; }
+
+    int              pageNo;    // page this selection is on
+    RectD            rect;      // position of selection rectangle on page (in page coordinates)
+    SelectionOnPage* next;      // pointer to next page with selected area (or NULL)
+
+    RectI GetCanvasRect(DisplayModel *dm);
+    static SelectionOnPage *FromRectangle(DisplayModel *dm, RectI rect);
+    static SelectionOnPage *FromTextSelect(TextSel *textSel);
 };
 
 class PdfLinkHandler {

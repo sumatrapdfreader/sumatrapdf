@@ -55,6 +55,7 @@ WindowInfo::~WindowInfo() {
     CloseHandle(this->findStatusThread);
 
     delete this->buffer;
+    delete this->selectionOnPage;
 
     free(this->loadedFilePath);
 
@@ -210,9 +211,9 @@ void WindowInfo::ZoomToSelection(float factor, bool relative)
 
     // either scroll towards the center of the current selection
     if (zoomToPt) {
-        RectI selRect = this->selectionOnPage->selectionCanvas;
-        for (SelectionOnPage *sel = this->selectionOnPage->next; sel; sel = sel->next)
-            selRect = selRect.Union(sel->selectionCanvas);
+        RectI selRect;
+        for (SelectionOnPage *sel = this->selectionOnPage; sel; sel = sel->next)
+            selRect = selRect.Union(sel->GetCanvasRect(this->dm));
 
         ClientRect rc(this->hwndCanvas);
         pt.x = 2 * selRect.x + selRect.dx - rc.dx / 2;
@@ -362,6 +363,61 @@ void DoubleBuffer::Flush(HDC hdc)
     assert(hdc != hdcBuffer);
     if (hdcBuffer)
         BitBlt(hdc, rect.x, rect.y, rect.dx, rect.dy, hdcBuffer, 0, 0, SRCCOPY);
+}
+
+RectI SelectionOnPage::GetCanvasRect(DisplayModel *dm)
+{
+    // if the page is not visible, we return an empty rectangle
+    PageInfo *pageInfo = dm->getPageInfo(pageNo);
+    if (pageInfo->visibleRatio <= 0.0)
+        return RectI();
+
+    RectD canvasRect = rect;
+    dm->cvtUserToScreen(pageNo, &canvasRect);
+    return canvasRect.Convert<int>();
+}
+
+SelectionOnPage *SelectionOnPage::FromRectangle(DisplayModel *dm, RectI rect)
+{
+    SelectionOnPage *sel = NULL;
+
+    for (int pageNo = dm->pageCount(); pageNo >= 1; --pageNo) {
+        PageInfo *pageInfo = dm->getPageInfo(pageNo);
+        assert(0.0 == pageInfo->visibleRatio || pageInfo->shown);
+        if (!pageInfo->shown)
+            continue;
+
+        RectI intersect = rect.Intersect(pageInfo->pageOnScreen);
+        if (intersect.IsEmpty())
+            continue;
+
+        /* selection intersects with a page <pageNo> on the screen */
+        int selPageNo;
+        RectD isectD = intersect.Convert<double>();
+        if (!dm->cvtScreenToUser(&selPageNo, &isectD))
+            continue;
+
+        assert(pageNo == selPageNo);
+
+        SelectionOnPage *selOnPage = new SelectionOnPage(selPageNo, &isectD);
+        selOnPage->next = sel;
+        sel = selOnPage;
+    }
+
+    return sel;
+}
+
+SelectionOnPage *SelectionOnPage::FromTextSelect(TextSel *textSel)
+{
+    SelectionOnPage *sel = NULL;
+
+    for (int i = textSel->len - 1; i >= 0; i--) {
+        SelectionOnPage *selOnPage = new SelectionOnPage(textSel->pages[i], &textSel->rects[i].Convert<double>());
+        selOnPage->next = sel;
+        sel = selOnPage;
+    }
+
+    return sel;
 }
 
 PdfEngine *PdfLinkHandler::engine()

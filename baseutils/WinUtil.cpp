@@ -582,11 +582,6 @@ bool CopyTextToClipboard(const TCHAR *text, bool appendOnly)
 namespace Win {
 namespace Font {
 
-#ifndef USER_DEFAULT_SCREEN_DPI
-// the following is only defined if _WIN32_WINNT >= 0x0600 and we use 0x0500
-#define USER_DEFAULT_SCREEN_DPI 96
-#endif
-
 HFONT GetSimple(HDC hdc, TCHAR *fontName, int fontSize)
 {
     LOGFONT lf = { 0 };
