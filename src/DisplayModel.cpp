@@ -534,8 +534,8 @@ void DisplayModel::Relayout(float zoomVirtual, int rotation)
     assert(validRotation(rotation));
     _rotation = rotation;
 
-    bool newNeedHScroll = false;
-    bool newNeedVScroll = false;
+    bool needHScroll = false;
+    bool needVScroll = false;
     viewPortSize = totalViewPortSize;
 
 RestartLayout:
@@ -573,8 +573,8 @@ RestartLayout:
         pos.y = currPosY;
 
         // restart the layout if we detect we need to show scrollbars
-        if (!newNeedVScroll && viewPortSize.dy < currPosY + rowMaxPageDy) {
-            newNeedVScroll = true;
+        if (!needVScroll && viewPortSize.dy < currPosY + rowMaxPageDy) {
+            needVScroll = true;
             viewPortSize.dx -= GetSystemMetrics(SM_CXVSCROLL);
             goto RestartLayout;
         }
@@ -584,8 +584,8 @@ RestartLayout:
         if (columnMaxWidth[pageInARow] < pos.dx)
             columnMaxWidth[pageInARow] = pos.dx;
 
-        if (!newNeedHScroll && viewPortSize.dx < padding->left + columnMaxWidth[0] + (columns == 2 ? padding->inBetweenX + columnMaxWidth[1] : 0) + padding->right) {
-            newNeedHScroll = true;
+        if (!needHScroll && viewPortSize.dx < padding->left + columnMaxWidth[0] + (columns == 2 ? padding->inBetweenX + columnMaxWidth[1] : 0) + padding->right) {
+            needHScroll = true;
             viewPortSize.dy -= GetSystemMetrics(SM_CYHSCROLL);
             goto RestartLayout;
         }
@@ -613,8 +613,8 @@ RestartLayout:
     // restart the layout if we detect we need to show scrollbars
     // (there are some edge cases we can't catch in the above loop)
     const int canvasDy = currPosY + padding->bottom - padding->inBetweenY;
-    if (!newNeedVScroll && canvasDy > viewPortSize.dy) {
-        newNeedVScroll = true;
+    if (!needVScroll && canvasDy > viewPortSize.dy) {
+        needVScroll = true;
         viewPortSize.dx -= GetSystemMetrics(SM_CXVSCROLL);
         goto RestartLayout;
     }
@@ -630,8 +630,8 @@ RestartLayout:
     // restart the layout if we detect we need to show scrollbars
     // (there are some edge cases we can't catch in the above loop)
     int canvasDx = padding->left + columnMaxWidth[0] + (columns == 2 ? padding->inBetweenX + columnMaxWidth[1] : 0) + padding->right;
-    if (!newNeedHScroll && canvasDx > viewPortSize.dx) {
-        newNeedHScroll = true;
+    if (!needHScroll && canvasDx > viewPortSize.dx) {
+        needHScroll = true;
         viewPortSize.dy -= GetSystemMetrics(SM_CYHSCROLL);
         goto RestartLayout;
     }
