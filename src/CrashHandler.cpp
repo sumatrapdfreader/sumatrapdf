@@ -478,10 +478,22 @@ static void GetExceptionInfo(Str::Str<char>& s, EXCEPTION_POINTERS *excPointers)
 #endif
 }
 
+static void GetProgramVersion(Str::Str<char>& s)
+{
+    s.AppendFmt("Ver: %s", QM(CURR_VERSION));
+#ifdef SVN_PRE_RELEASE_VER
+    s.AppendFmt(" pre-release %s", QM(SVN_PRE_RELEASE_VER));   
+#endif
+#ifdef DEBUG
+    s.Append(" dbg");
+#endif
+    s.Append("\r\n");
+}
+
 static char *BuildCrashInfoText()
 {
     Str::Str<char> s(16 * 1024);
-    s.AppendFmt("Ver: %s\r\n", QM(CURR_VERSION));
+    GetProgramVersion(s);
     GetOsVersion(s);
     GetSystemInfo(s);
     s.Append("\r\n");
