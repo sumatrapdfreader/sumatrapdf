@@ -14,7 +14,6 @@ public:
     HGLOBAL             bmpData;
     Gdiplus::Bitmap *   bmp;
     int                 width, height;
-    Gdiplus::REAL       horizDpi, vertDpi;    
 
     ComicBookPage(const TCHAR *fileName, HGLOBAL bmpData, Gdiplus::Bitmap *bmp) :
         bmpData(bmpData), bmp(bmp)
@@ -22,8 +21,6 @@ public:
         this->fileName = Str::Dup(fileName);
         width = bmp->GetWidth();
         height = bmp->GetHeight();
-        horizDpi = bmp->GetHorizontalResolution();
-        vertDpi = bmp->GetVerticalResolution();
     }
 
     ~ComicBookPage() {
