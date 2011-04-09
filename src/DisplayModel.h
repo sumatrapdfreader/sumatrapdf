@@ -12,12 +12,6 @@
 // define the following if you want shadows drawn around the pages
 // #define DRAW_PAGE_SHADOWS
 
-// define the following if you want the pages right before and after
-// the visible ones to be pre-rendered
-#ifndef DEBUG
-#define PREDICTIVE_RENDER 1
-#endif
-
 #define INVALID_PAGE_NO     -1
 #define INVALID_ROTATION    -1
 

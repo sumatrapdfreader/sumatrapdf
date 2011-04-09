@@ -7,6 +7,10 @@
 #include "BaseEngine.h"
 #include "Vec.h"
 
+// TODO: rename to ImagesEngine and support:
+// * a single file
+// * a directory of files
+
 class ComicBookPage {
 public:
     const TCHAR *       fileName;

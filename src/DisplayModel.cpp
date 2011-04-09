@@ -45,6 +45,10 @@
 
 #include "DisplayModel.h"
 
+// define the following if you want the pages right before and after
+// the visible ones to be pre-rendered
+#define PREDICTIVE_RENDER 1
+
 ScreenPagePadding gPagePadding = {
     PADDING_PAGE_BORDER_TOP_DEF, PADDING_PAGE_BORDER_LEFT_DEF,
     PADDING_PAGE_BORDER_BOTTOM_DEF, PADDING_PAGE_BORDER_RIGHT_DEF,
