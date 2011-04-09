@@ -1937,12 +1937,10 @@ static void PaintForwardSearchMark(WindowInfo *win, HDC hdc) {
 #ifdef DRAW_PAGE_SHADOWS
 #define BORDER_SIZE   1
 #define SHADOW_OFFSET 4
-static void PaintPageFrameAndShadow(HDC hdc, PageInfo * pageInfo, bool presentation, RectI *bounds)
+static void PaintPageFrameAndShadow(HDC hdc, PageInfo * pageInfo, bool presentation, RectI& bounds)
 {
-    *bounds = RectI(pageInfo->screen, pageInfo->bitmap.Size());
-
     // Frame info
-    RectI frame = *bounds;
+    RectI frame = bounds;
     frame.Inflate(BORDER_SIZE, BORDER_SIZE);
 
     // Shadow info
@@ -1973,11 +1971,9 @@ static void PaintPageFrameAndShadow(HDC hdc, PageInfo * pageInfo, bool presentat
 #else
 #define BORDER_SIZE   0
 #define SHADOW_OFFSET 0
-static void PaintPageFrameAndShadow(HDC hdc, PageInfo *pageInfo, bool presentation, RectI *bounds)
+static void PaintPageFrameAndShadow(HDC hdc, PageInfo *pageInfo, bool presentation, RectI& bounds)
 {
-    *bounds = RectI(pageInfo->screen, pageInfo->bitmap.Size());
-
-    RectI frame = *bounds;
+    RectI frame = bounds;
     frame.Inflate(BORDER_SIZE, BORDER_SIZE);
 
     HPEN pe = CreatePen(PS_NULL, 0, 0);
@@ -2061,7 +2057,9 @@ static void DrawDocument(WindowInfo *win, HDC hdc, RECT *rcArea)
         if (!pageInfo->shown)
             continue;
 
-        PaintPageFrameAndShadow(hdc, pageInfo, PM_ENABLED == win->presentation, &bounds);
+        bounds = RectI(pageInfo->screen, pageInfo->bitmap.Size());
+        if (!win->dm->cbxEngine)
+            PaintPageFrameAndShadow(hdc, pageInfo, PM_ENABLED == win->presentation, bounds);
 
         bool renderOutOfDateCue = false;
         UINT renderDelay = gRenderCache.Paint(hdc, &bounds, dm, pageNo, pageInfo, &renderOutOfDateCue);
@@ -2771,13 +2769,13 @@ static void OnPaint(WindowInfo *win)
 
     if (!win->IsDocLoaded()) {
         assert(!win->IsAboutWindow());
-        HFONT fontRightTxt = Win::Font::GetSimple(hdc, _T("MS Shell Dlg"), 14);
+        Win::Font::ScopedFont fontRightTxt(hdc, _T("MS Shell Dlg"), 14);
+        Win::HdcScopedSelectFont tmp(hdc, fontRightTxt);
         HGDIOBJ origFont = SelectObject(hdc, fontRightTxt); /* Just to remember the orig font */
         SetBkMode(hdc, TRANSPARENT);
         FillRect(hdc, &ps.rcPaint, gBrushBg);
+        // TODO: it's no longer just PDF file
         DrawCenteredText(hdc, ClientRect(win->hwndCanvas), _TR("Error loading PDF file."));
-        SelectObject(hdc, origFont);
-        Win::Font::Delete(fontRightTxt);
     } else {
         switch (win->presentation) {
         case PM_BLACK_SCREEN:
