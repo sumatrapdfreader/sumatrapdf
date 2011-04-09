@@ -57,6 +57,10 @@ ScreenPagePadding gPagePadding = {
     0, 0,
     0, 0,
     PADDING_BETWEEN_PAGES_X_DEF, PADDING_BETWEEN_PAGES_X_DEF
+}, gImagePadding = {
+    0, 0,
+    0, 0,
+    PADDING_BETWEEN_PAGES_X_DEF, PADDING_BETWEEN_PAGES_X_DEF
 };
 
 bool displayModeFacing(DisplayMode displayMode)
@@ -253,6 +257,9 @@ bool DisplayModel::load(const TCHAR *fileName, int startPage, SizeI viewPort)
     }
     if (!engine)
         return false;
+
+    if (cbxEngine)
+        padding = &gImagePadding;
 
     _dpiFactor = 1.0f * _callback->GetScreenDPI() / engine->GetFileDPI();
     totalViewPortSize = viewPort;
@@ -1020,6 +1027,8 @@ void DisplayModel::setPresentationMode(bool enable)
     }
     else {
         padding = &gPagePadding;
+        if (cbxEngine)
+            padding = &gImagePadding;
         changeDisplayMode(_presDisplayMode);
         if (!ValidZoomVirtual(_presZoomVirtual))
             _presZoomVirtual = _zoomVirtual;
