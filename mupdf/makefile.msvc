@@ -121,7 +121,7 @@ ZLIB_CFLAGS = $(CFLAGS)
 BZIP2_CFLAGS = $(CFLAGS) /D "BZ_NO_STDIO" /D "BZ_DEBUG=0"
 MINIZIP_CFLAGS = $(ZLIB_CFLAGS) /D "HAVE_BZIP2" /I$(ZLIB_DIR) /I$(BZIP2_DIR)
 
-UNRAR_CFLAGS = $(CFLAGS) /D "UNRAR" /D "RARDLL"
+UNRAR_CFLAGS = $(CFLAGS) /D "UNRAR" /D "RARDLL" /EHsc
 # a hack to undo /D "UNICODE" since unrar defines it unconditionally, causing
 # compilation warnings
 UNRAR_CFLAGS = $(UNRAR_CFLAGS:UNICODE=IGNORE_THIS)
@@ -206,7 +206,7 @@ UNRAR_OBJS = \
 	$(OR)\scantree.obj $(OR)\sha1.obj $(OR)\smallfn.obj $(OR)\strfn.obj \
 	$(OR)\strlist.obj $(OR)\system.obj $(OR)\timefn.obj \
 	$(OR)\ulinks.obj $(OR)\unicode.obj $(OR)\unpack.obj \
-	$(OR)\volume.obj 
+	$(OR)\volume.obj $(OR)\dll.obj
 
 !if "$(JPEG_TURBO_DIR)"==""
 

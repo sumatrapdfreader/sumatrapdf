@@ -10,6 +10,8 @@
 #include <iowin32.h>
 #include <unzip.h>
 
+#include "../ext/unrar/dll.hpp"
+
 using namespace Gdiplus;
 
 // HGLOBAL must be allocated with GlobalAlloc(GMEM_MOVEABLE, ...)
@@ -36,7 +38,21 @@ Exit:
     return bmp;
 }
 
-static ComicBookPage *LoadCurrentComicBookPage(unzFile& uf)
+static bool IsImageFile(const WCHAR *fileName)
+{
+    return Str::EndsWithI(fileName, L".png") ||
+           Str::EndsWithI(fileName, L".jpg") ||
+           Str::EndsWithI(fileName, L".jpeg");
+}
+
+static bool IsImageFile(const char *fileName)
+{
+    return Str::EndsWithI(fileName, ".png") ||
+           Str::EndsWithI(fileName, ".jpg") ||
+           Str::EndsWithI(fileName, ".jpeg");
+}
+
+static ComicBookPage *LoadCurrentCbzComicBookPage(unzFile& uf)
 {
     char fileName[MAX_PATH];
     unz_file_info64 finfo;
@@ -48,11 +64,8 @@ static ComicBookPage *LoadCurrentComicBookPage(unzFile& uf)
     if (err != UNZ_OK)
         return NULL;
 
-    if (!Str::EndsWithI(fileName, ".png") &&
-        !Str::EndsWithI(fileName, ".jpg") &&
-        !Str::EndsWithI(fileName, ".jpeg")) {
+    if (!IsImageFile(fileName))
         return NULL;
-    }
 
     err = unzOpenCurrentFilePassword(uf, NULL);
     if (err != UNZ_OK)
@@ -95,14 +108,103 @@ CbxEngine::CbxEngine() : fileName(NULL)
 {
 }
 
+struct RarDecompressData {
+    unsigned    totalSize;
+    char *      buf;
+    unsigned    currSize;
+};
+
+static int CALLBACK unrarCallback(UINT msg, long userData, long rarBuffer, long bytesProcessed)
+{
+    if (UCM_PROCESSDATA != msg)
+        return -1;
+
+    if (!userData)
+        return -1;
+    RarDecompressData *rrd = (RarDecompressData*)userData;
+
+    if (rrd->currSize + bytesProcessed > rrd->totalSize)
+        return -1;
+
+    char *buf = rrd->buf + rrd->currSize;
+    memcpy(buf, (char *)rarBuffer, bytesProcessed);
+    rrd->currSize += bytesProcessed;        
+    return 1;
+}
+
+static ComicBookPage *LoadCurrentCbrComicBookPage(HANDLE hArc, RARHeaderDataEx& rarHeader)
+{
+    HGLOBAL bmpData = NULL;
+    ComicBookPage *page = NULL;
+
+    TCHAR *fileName = rarHeader.FileNameW;
+    if (!IsImageFile(fileName))
+        return NULL;
+
+    if (rarHeader.UnpSizeHigh != 0)
+        return NULL;
+    if (rarHeader.UnpSize == 0)
+        return NULL;
+
+    RarDecompressData rdd = { 0, 0, 0 };
+    rdd.totalSize = rarHeader.UnpSize;
+    bmpData = GlobalAlloc(GMEM_MOVEABLE, rdd.totalSize);
+    if (!bmpData)
+        return NULL;
+
+    rdd.buf = (char*)GlobalLock(bmpData);
+    if (!rdd.buf)
+        goto Exit;
+
+    RARSetCallback(hArc, unrarCallback, (long)&rdd);
+    int res = RARProcessFile(hArc, RAR_TEST, NULL, NULL);
+    GlobalUnlock(bmpData);
+
+    if (0 != res)
+        goto Exit;
+
+    if (rdd.totalSize != rdd.currSize)
+        goto Exit;
+
+    Bitmap *bmp = BitmapFromHGlobal(bmpData);
+    if (!bmp)
+        goto Exit;
+
+    page = new ComicBookPage(bmpData, bmp);
+    bmpData = NULL;
+
+Exit:
+    GlobalFree(bmpData);
+    return page;
+ }
+
 bool CbxEngine::LoadCbrFile(const TCHAR *file)
 {
     if (!file)
         return false;
     fileName = Str::Dup(file);
 
-    // TODO: implement me
-    return false;
+    RAROpenArchiveDataEx  arcData = { 0 };
+    arcData.ArcNameW = (TCHAR*)file;
+    arcData.OpenMode = RAR_OM_EXTRACT;
+
+    HANDLE hArc = RAROpenArchiveEx(&arcData);
+    if (arcData.OpenResult != 0)
+        return false;
+
+    for (;;) {
+        RARHeaderDataEx rarHeader;
+        int res = RARReadHeaderEx(hArc, &rarHeader);
+        if (0 != res)
+            break;
+
+        ComicBookPage *page = LoadCurrentCbrComicBookPage(hArc, rarHeader);
+        if (page)
+            pages.Append(page);
+    }
+    RARCloseArchive(hArc);
+
+    return pages.Count() > 0;
 }
 
 bool CbxEngine::LoadCbzFile(const TCHAR *file)
@@ -130,7 +232,7 @@ bool CbxEngine::LoadCbzFile(const TCHAR *file)
     // TODO: maybe lazy loading would be beneficial (but at least I would
     // need to parse image headers to extract width/height information)
     for (int n = 0; n < ginfo.number_entry; n++) {
-        ComicBookPage *page = LoadCurrentComicBookPage(uf);
+        ComicBookPage *page = LoadCurrentCbzComicBookPage(uf);
         if (page)
             pages.Append(page);
         err = unzGoToNextFile(uf);
