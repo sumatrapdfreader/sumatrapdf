@@ -945,10 +945,10 @@ RenderedBitmap *PdfEngine::RenderBitmap(
 
         RectI rc(0, 0, w, h);
         RectD pageRect2 = fz_rect_to_RectD(pRect);
-        bool success = renderPage(hDCMem, page, rc, &ctm, 0, 0, &pageRect2, target);
+        bool ok = renderPage(hDCMem, page, rc, &ctm, 0, 0, &pageRect2, target);
         DeleteDC(hDCMem);
         ReleaseDC(NULL, hDC);
-        if (!success) {
+        if (!ok) {
             DeleteObject(hbmp);
             return NULL;
         }
@@ -1723,10 +1723,10 @@ RenderedBitmap *CXpsEngine::RenderBitmap(
         DeleteObject(SelectObject(hDCMem, hbmp));
 
         RectI rc(0, 0, w, h);
-        bool success = renderPage(hDCMem, page, rc, &ctm, 0, 0, pageRect);
+        bool ok = renderPage(hDCMem, page, rc, &ctm, 0, 0, pageRect);
         DeleteDC(hDCMem);
         ReleaseDC(NULL, hDC);
-        if (!success) {
+        if (!ok) {
             DeleteObject(hbmp);
             return NULL;
         }

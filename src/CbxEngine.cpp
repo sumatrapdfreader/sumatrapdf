@@ -293,10 +293,10 @@ RenderedBitmap *CbxEngine::RenderBitmap(int pageNo, float zoom, int rotation, Re
     HBITMAP hbmp = CreateCompatibleBitmap(hDC, screen.dx, screen.dy);
     DeleteObject(SelectObject(hDCMem, hbmp));
 
-    bool success = RenderPage(hDCMem, pageNo, screen, zoom, rotation, pageRect, target);
+    bool ok = RenderPage(hDCMem, pageNo, screen, zoom, rotation, pageRect, target);
     DeleteDC(hDCMem);
     ReleaseDC(NULL, hDC);
-    if (!success) {
+    if (!ok) {
         DeleteObject(hbmp);
         return NULL;
     }
@@ -314,12 +314,21 @@ bool CbxEngine::RenderPage(HDC hDC, int pageNo, RectI screenRect, float zoom, in
     g.SetSmoothingMode(SmoothingModeAntiAlias);
     g.SetPageUnit(UnitPixel);
 
+    Bitmap *bmp = pages[pageNo - 1]->bmp;
+    REAL scaleX = 1.0f, scaleY = 1.0f;
+    if (bmp->GetHorizontalResolution() != 0.f)
+        scaleX = bmp->GetHorizontalResolution() / 96.0f;
+    if (bmp->GetVerticalResolution() != 0.f)
+        scaleY = bmp->GetVerticalResolution() / 96.0f;
+
     Matrix m;
     GetTransform(m, pageNo, zoom, rotation);
     m.Translate((REAL)(screenRect.x - screen.x), (REAL)(screenRect.y - screen.y), MatrixOrderAppend);
+    if (scaleX != 1.0f || scaleY != 1.0f)
+        m.Scale(scaleX, scaleY, MatrixOrderPrepend);
     g.SetTransform(&m);
 
-    Status ok = g.DrawImage(pages[pageNo - 1]->bmp, 0, 0);
+    Status ok = g.DrawImage(bmp, 0, 0);
     return ok == Ok;
 }
 

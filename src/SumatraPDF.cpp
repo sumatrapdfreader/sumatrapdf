@@ -6431,7 +6431,7 @@ static bool PrintFile(const TCHAR *fileName, const TCHAR *printerName, bool disp
     HANDLE      printer;
     LPDEVMODE   devMode = NULL;
     DWORD       structSize, returnCode;
-    bool        success = false;
+    bool        ok = false;
 
     ScopedMem<TCHAR> fileName2(Path::Normalize(fileName));
     BaseEngine *engine = PdfEngine::CreateFromFileName(fileName2);
@@ -6514,12 +6514,12 @@ static bool PrintFile(const TCHAR *fileName, const TCHAR *printerName, bool disp
     if (CheckPrinterStretchDibSupport(NULL, hdcPrint)) {
         PRINTPAGERANGE pr = { 1, engine->PageCount() };
         PrintToDevice(engine, hdcPrint, devMode, 1, &pr);
-        success = true;
+        ok = true;
     }
 Exit:
     free(devMode);
     DeleteDC(hdcPrint);
-    return success;
+    return ok;
 }
 
 void UIThreadWorkItemQueue::Queue(UIThreadWorkItem *item)

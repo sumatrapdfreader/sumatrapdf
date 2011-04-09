@@ -15,10 +15,10 @@ static void BenchLoadRender(BaseEngine *engine, int pagenum)
     MillisecondTimer t;
 
     t.Start();
-    bool success = engine->BenchLoadPage(pagenum);
+    bool ok = engine->BenchLoadPage(pagenum);
     t.Stop();
 
-    if (!success) {
+    if (!ok) {
         logbench("Error: failed to load page %d\n", pagenum);
         return;
     }
