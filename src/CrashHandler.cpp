@@ -406,7 +406,12 @@ static void GetAddressInfo(Str::Str<char>& s, DWORD64 addr)
 static bool GetStackFrameInfo(Str::Str<char>& s, STACKFRAME64 *stackFrame,
                               CONTEXT *ctx, HANDLE hThread)
 {
-    BOOL ok = _StackWalk64(IMAGE_FILE_MACHINE_I386, GetCurrentProcess(), hThread,
+#if defined(_WIN64)
+    int machineType = IMAGE_FILE_MACHINE_AMD64;    
+#else
+    int machineType = IMAGE_FILE_MACHINE_I386;    
+#endif
+    BOOL ok = _StackWalk64(machineType, GetCurrentProcess(), hThread,
         stackFrame, ctx, NULL, _SymFunctionTableAccess64,
         _SymGetModuleBase64, NULL);
     if (!ok)
@@ -490,8 +495,6 @@ static void GetThreadCallstack(Str::Str<char>& s, DWORD threadId)
     CloseHandle(hThread);
 }
 
-// TODO: this doesn't seem to find the most important thread - the one
-// that crashed
 static void GetAllThreadsCallstacks(Str::Str<char>& s)
 {
     HANDLE threadSnap = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
@@ -583,6 +586,10 @@ static void GetExceptionInfo(Str::Str<char>& s, EXCEPTION_POINTERS *excPointers)
     s.AppendFmt("DS:%04X  ES:%04X  FS:%04X  GS:%04X\r\n", ctx->SegDs, ctx->SegEs, ctx->SegFs, ctx->SegGs);
     s.AppendFmt("Flags:%08X\r\n", ctx->EFlags);
 #endif
+
+    s.Append("\r\nCrashed thread:\r\n");
+    // it's not really for current thread, but it seems to work
+    GetCallstack(s, *ctx, GetCurrentThread());
 }
 
 static void GetProgramVersion(Str::Str<char>& s)
@@ -609,8 +616,8 @@ static char *BuildCrashInfoText()
     GetModules(s);
     s.Append("\r\n");
     GetExceptionInfo(s, mei.ExceptionPointers);
-    s.Append("\r\n");
     GetAllThreadsCallstacks(s);
+    s.Append("\r\n");
     GetCurrentThreadCallstack(s);
     return s.StealData();
 }
@@ -710,6 +717,8 @@ static LONG WINAPI DumpExceptionHandler(EXCEPTION_POINTERS *exceptionInfo)
 
     ScopedMem<TCHAR> msg(Str::Format(_T("%s\n\n%s"), _TR("Please include the following file in your crash report:"), g_crashDumpPath.Get()));
     MessageBox(NULL, msg.Get(), _TR("SumatraPDF crashed"), MB_ICONERROR | MB_OK);
+
+    TerminateProcess(GetCurrentProcess(), 1);
 
     return EXCEPTION_CONTINUE_SEARCH;
 }
