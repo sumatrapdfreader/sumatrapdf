@@ -137,7 +137,7 @@ struct RarDecompressData {
     unsigned    currSize;
 };
 
-static int CALLBACK unrarCallback(UINT msg, long userData, long rarBuffer, long bytesProcessed)
+static int CALLBACK unrarCallback(UINT msg, LPARAM userData, LPARAM rarBuffer, LPARAM bytesProcessed)
 {
     if (UCM_PROCESSDATA != msg)
         return -1;
