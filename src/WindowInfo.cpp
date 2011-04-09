@@ -365,10 +365,8 @@ DoubleBuffer::DoubleBuffer(HWND hwnd, RectI rect) :
 
 DoubleBuffer::~DoubleBuffer()
 {
-    if (doubleBuffer)
-        DeleteObject(doubleBuffer);
-    if (hdcBuffer)
-        DeleteDC(hdcBuffer);
+    DeleteObject(doubleBuffer);
+    DeleteDC(hdcBuffer);
     ReleaseDC(hTarget, hdcCanvas);
 }
 
