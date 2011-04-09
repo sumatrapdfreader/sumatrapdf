@@ -27,7 +27,7 @@ public:
 
 class CbxEngine : public BaseEngine {
 public:
-    CbxEngine(const TCHAR *fileName);
+    CbxEngine();
     virtual ~CbxEngine();
     virtual CbxEngine *Clone() {
         return CreateFromFileName(fileName);
@@ -63,6 +63,8 @@ public:
     // we currently don't load pages lazily, so there's nothing to do here
     virtual bool BenchLoadPage(int pageNo) { return true; }
 
+    bool LoadCbzFile(const TCHAR *fileName);
+    bool LoadCbrFile(const TCHAR *fileName);
 protected:
     const TCHAR *fileName;
     Vec<ComicBookPage *> pages;
@@ -70,7 +72,9 @@ protected:
     void GetTransform(Gdiplus::Matrix& m, int pageNo, float zoom, int rotate);
 
 public:
-    static CbxEngine *CreateFromFileName(const TCHAR *fileName);    
+    static CbxEngine *CreateFromFileName(const TCHAR *fileName);
+    static CbxEngine *CreateFromCbzFile(const TCHAR *fileName);
+    static CbxEngine *CreateFromCbrFile(const TCHAR *fileName);
 };
 
 #endif

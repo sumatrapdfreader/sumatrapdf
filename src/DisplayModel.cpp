@@ -237,7 +237,9 @@ bool DisplayModel::load(const TCHAR *fileName, int startPage, SizeI viewPort)
     else if (Str::EndsWithI(fileName, _T(".xps")))
         engine = xpsEngine = XpsEngine::CreateFromFileName(fileName);
     else if (Str::EndsWithI(fileName, _T(".cbz")))
-        engine = cbxEngine = CbxEngine::CreateFromFileName(fileName);
+        engine = cbxEngine = CbxEngine::CreateFromCbzFile(fileName);
+    else if (Str::EndsWithI(fileName, _T(".cbr")))
+        engine = cbxEngine = CbxEngine::CreateFromCbrFile(fileName);
     else {
         // try loading as either supported file format
         // TODO: sniff the file content instead

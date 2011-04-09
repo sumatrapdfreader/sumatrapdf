@@ -91,22 +91,37 @@ Exit:
     return page;
 }
 
-CbxEngine::CbxEngine(const TCHAR *fileName) : fileName(Str::Dup(fileName))
+CbxEngine::CbxEngine() : fileName(NULL)
 {
-    if (!fileName)
-        return;
+}
+
+bool CbxEngine::LoadCbrFile(const TCHAR *file)
+{
+    if (!file)
+        return false;
+    fileName = Str::Dup(file);
+
+    // TODO: implement me
+    return false;
+}
+
+bool CbxEngine::LoadCbzFile(const TCHAR *file)
+{
+    if (!file)
+        return false;
+    fileName = Str::Dup(file);
 
     zlib_filefunc64_def ffunc;
     fill_win32_filefunc64(&ffunc);
     unzFile uf = unzOpen2_64(fileName, &ffunc);
     if (!uf)
-        return;
+        return false;
 
     unz_global_info64 ginfo;
     int err = unzGetGlobalInfo64(uf, &ginfo);
     if (err != UNZ_OK) {
         unzClose(uf);
-        return;
+        return false;
     }
     unzGoToFirstFile(uf);
 
@@ -124,8 +139,9 @@ CbxEngine::CbxEngine(const TCHAR *fileName) : fileName(Str::Dup(fileName))
     }
 
     unzClose(uf);
-
     // TODO: any meta-information available?
+
+    return pages.Count() > 0;
 }
 
 CbxEngine::~CbxEngine()
@@ -216,15 +232,36 @@ RectD CbxEngine::Transform(RectD rect, int pageNo, float zoom, int rotate, bool 
 
 unsigned char *CbxEngine::GetFileData(size_t *cbCount)
 {
-	return (unsigned char *)File::ReadAll(fileName, cbCount);
+    return (unsigned char *)File::ReadAll(fileName, cbCount);
 }
 
 CbxEngine *CbxEngine::CreateFromFileName(const TCHAR *fileName)
 {
-    CbxEngine *engine = new CbxEngine(fileName);
-    if (!engine || engine->PageCount() == 0) {
+    if (Str::EndsWith(fileName, _T(".cbz")))
+        return CreateFromCbzFile(fileName);
+    else if (Str::EndsWith(fileName, _T(".cbr")))
+        return CreateFromCbrFile(fileName);
+    else
+        return NULL;
+}
+
+CbxEngine *CbxEngine::CreateFromCbzFile(const TCHAR *fileName)
+{
+    CbxEngine *engine = new CbxEngine();
+    if (!engine->LoadCbzFile(fileName)) {
         delete engine;
         return NULL;
     }
     return engine;
 }
+
+CbxEngine *CbxEngine::CreateFromCbrFile(const TCHAR *fileName)
+{
+    CbxEngine *engine = new CbxEngine();
+    if (!engine->LoadCbrFile(fileName)) {
+        delete engine;
+        return NULL;
+    }
+    return engine;
+}
+

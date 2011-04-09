@@ -3486,8 +3486,8 @@ static void OnMenuOpen(WindowInfo *win)
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling
     // methods too early on)
-    ScopedMem<TCHAR> fileFilter(Str::Format(_T("%s\1*.pdf;*.xps;*.cbz\1%s\1*.*\1"),
-        _TR("PDF documents"), _TR("All files")));
+    ScopedMem<TCHAR> fileFilter(Str::Format(_T("%s\1*.pdf;*.xps;*.cbz;*.cbr\1%s\1*.*\1"),
+        _TR("PDF documents"), _TR("All files"))); // TODO: it's not just "PDF documents" anymore
     Str::TransChars(fileFilter, _T("\1"), _T("\0"));
 
     OPENFILENAME ofn = {0};
@@ -3548,7 +3548,7 @@ static void BrowseFolder(WindowInfo *win, bool forward)
     if (win->dm->xpsEngine)
         pattern.Set(Path::Join(dir, _T("*.xps")));
     else if (win->dm->cbxEngine)
-        pattern.Set(Path::Join(dir, _T("*.cbz")));
+        pattern.Set(Path::Join(dir, _T("*.cb?")));
 
     HANDLE hfind = FindFirstFile(pattern, &fdata);
     if (INVALID_HANDLE_VALUE == hfind)
