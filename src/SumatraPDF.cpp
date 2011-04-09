@@ -2062,7 +2062,14 @@ static void DrawDocument(WindowInfo *win, HDC hdc, RECT *rcArea)
             PaintPageFrameAndShadow(hdc, pageInfo, PM_ENABLED == win->presentation, bounds);
 
         bool renderOutOfDateCue = false;
-        UINT renderDelay = gRenderCache.Paint(hdc, &bounds, dm, pageNo, pageInfo, &renderOutOfDateCue);
+        UINT renderDelay = 0;
+        if (win->dm->cbxEngine) {
+            float zoom = win->dm->zoomReal(pageNo);
+            int rotation = dm->rotation();
+            win->dm->cbxEngine->RenderPage(hdc, pageNo, pageInfo->pageOnScreen, zoom, rotation, NULL, Target_View);
+        } else {
+            renderDelay = gRenderCache.Paint(hdc, &bounds, dm, pageNo, pageInfo, &renderOutOfDateCue);
+        }
 
         if (renderDelay) {
             HFONT fontRightTxt = Win::Font::GetSimple(hdc, _T("MS Shell Dlg"), 14);
