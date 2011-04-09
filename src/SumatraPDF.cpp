@@ -2274,7 +2274,7 @@ static void OnSelectAll(WindowInfo *win, bool textOnly=false)
 static bool OnInverseSearch(WindowInfo *win, int x, int y)
 {
     assert(win);
-    if (!win || !win->IsDocLoaded()) return false;
+    if (!win || !win->IsDocLoaded() || !win->dm->pdfEngine) return false;
     if (gRestrictedUse || gPluginMode) return false;
 
     // Clear the last forward-search result

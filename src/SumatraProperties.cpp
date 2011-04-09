@@ -308,43 +308,34 @@ void OnMenuProperties(WindowInfo *win)
     TCHAR *str = Str::Dup(engine->FileName());
     layoutData->AddProperty(_TR("File:"), str);
 
-    if (!win->dm->pdfEngine)
-        goto SkipPdfPropertiesForNow;
-    PdfEngine *pdfEngine = win->dm->pdfEngine;
-
-    str = pdfEngine->getPdfInfo("Title");
+    str = engine->GetProperty("Title");
     layoutData->AddProperty(_TR("Title:"), str);
 
-    str = pdfEngine->getPdfInfo("Subject");
+    str = engine->GetProperty("Subject");
     layoutData->AddProperty(_TR("Subject:"), str);
 
-    str = pdfEngine->getPdfInfo("Author");
+    str = engine->GetProperty("Author");
     layoutData->AddProperty(_TR("Author:"), str);
 
-    str = pdfEngine->getPdfInfo("CreationDate");
-    PdfDateToDisplay(&str);
+    str = engine->GetProperty("CreationDate");
+    if (win->dm->pdfEngine)
+        PdfDateToDisplay(&str);
     layoutData->AddProperty(_TR("Created:"), str);
 
-    str = pdfEngine->getPdfInfo("ModDate");
-    PdfDateToDisplay(&str);
+    str = engine->GetProperty("ModDate");
+    if (win->dm->pdfEngine)
+        PdfDateToDisplay(&str);
     layoutData->AddProperty(_TR("Modified:"), str);
 
-    str = pdfEngine->getPdfInfo("Creator");
+    str = engine->GetProperty("Creator");
     layoutData->AddProperty(_TR("Application:"), str);
 
-    str = pdfEngine->getPdfInfo("Producer");
+    str = engine->GetProperty("Producer");
     layoutData->AddProperty(_TR("PDF Producer:"), str);
 
-    int version = pdfEngine->getPdfVersion();
-    if (version >= 10000) {
-        if (version % 100 > 0)
-            str = Str::Format(_T("%d.%d Adobe Extension Level %d"), version / 10000, (version / 100) % 100, version % 100);
-        else
-            str = Str::Format(_T("%d.%d"), version / 10000, (version / 100) % 100);
-        layoutData->AddProperty(_TR("PDF Version:"), str);
-    }
+    str = engine->GetProperty("PdfVersion");
+    layoutData->AddProperty(_TR("PDF Version:"), str);
 
-SkipPdfPropertiesForNow:
     size_t fileSize = File::GetSize(engine->FileName());
     if (fileSize == INVALID_FILE_SIZE) {
         unsigned char *data = engine->GetFileData(&fileSize);

@@ -114,6 +114,8 @@ public:
     virtual bool IsImagePage(int pageNo) = 0;
     // the layout type this document's author suggests (if the user doesn't care)
     virtual PageLayoutType PreferredLayout() { return Layout_Single; }
+    // access to various document properties (such as Author, Title, etc.)
+    virtual TCHAR *GetProperty(char *name) { return NULL; }
 
     // TODO: needs a more general interface
     // whether it is allowed to print the current document

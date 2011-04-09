@@ -11,7 +11,6 @@ __pragma(warning(push))
 
 #include <fitz.h>
 #include <mupdf.h>
-#include <muxps.h>
 
 #ifdef _MSC_VER
 __pragma(warning(pop))
@@ -132,6 +131,7 @@ public:
                                     RenderTarget target=Target_View);
     virtual bool IsImagePage(int pageNo);
     virtual PageLayoutType PreferredLayout();
+    virtual TCHAR *GetProperty(char *name);
 
     virtual bool IsPrintingAllowed() { return hasPermission(PDF_PERM_PRINT); }
     virtual bool IsCopyingTextAllowed() { return hasPermission(PDF_PERM_COPY); }
@@ -152,8 +152,6 @@ public:
 
     int        findPageNo(fz_obj *dest);
     fz_obj   * getNamedDest(const char *name);
-    TCHAR    * getPdfInfo(char *key) const;
-    int        getPdfVersion() const;
     char     * getDecryptionKey() const;
     fz_buffer* getStreamData(int num, int gen);
 
@@ -203,81 +201,10 @@ public:
     static PdfEngine *CreateFromStream(fz_stream *stm, PasswordUI *pwdUI=NULL);
 };
 
-typedef struct {
-    xps_page *page;
-    fz_display_list *list;
-    int refs;
-} XpsPageRun;
-
 class XpsEngine : public BaseEngine {
-public:
-    XpsEngine();
-    virtual ~XpsEngine();
-    virtual XpsEngine *Clone() {
-        return CreateFromFileName(_fileName);
-    }
-
-    virtual const TCHAR *FileName() const { return _fileName; };
-    virtual int PageCount() const {
-        return _ctx ? xps_count_pages(_ctx) : 0;
-    }
-
-    virtual RectD PageMediabox(int pageNo);
-    virtual RectI PageContentBox(int pageNo, RenderTarget target=Target_View);
-
-    virtual RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
-                         RectD *pageRect=NULL, /* if NULL: defaults to the page's mediabox */
-                         RenderTarget target=Target_View, bool useGdi=false);
-    virtual bool RenderPage(HDC hDC, int pageNo, RectI screenRect,
-                         float zoom=0, int rotation=0,
-                         RectD *pageRect=NULL, RenderTarget target=Target_View) {
-        return renderPage(hDC, getXpsPage(pageNo), screenRect, NULL, zoom, rotation, pageRect);
-    }
-
-    virtual PointD Transform(PointD pt, int pageNo, float zoom, int rotate, bool inverse=false);
-    virtual RectD Transform(RectD rect, int pageNo, float zoom, int rotate, bool inverse=false);
-
-    virtual unsigned char *GetFileData(size_t *cbCount);
-    virtual TCHAR * ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_out=NULL,
-                                    RenderTarget target=Target_View);
-    virtual bool IsImagePage(int pageNo) { return false; }
-
-    virtual float GetFileDPI() const { return 96.0f; }
-
-    virtual bool BenchLoadPage(int pageNo) { return getXpsPage(pageNo) != NULL; }
-
 protected:
-    const TCHAR *_fileName;
-
-    // make sure to never ask for _pagesAccess in an _ctxAccess
-    // protected critical section in order to avoid deadlocks
-    CRITICAL_SECTION _ctxAccess;
-    xps_context *    _ctx;
-
-    CRITICAL_SECTION _pagesAccess;
-    xps_page **     _pages;
-
-    bool            load(const TCHAR *fileName);
-    bool            load(fz_stream *stm);
-    xps_page      * getXpsPage(int pageNo, bool failIfBusy=false);
-    fz_matrix       viewctm(int pageNo, float zoom, int rotate) {
-        return viewctm(getXpsPage(pageNo), zoom, rotate);
-    }
-    fz_matrix       viewctm(xps_page *page, float zoom, int rotate);
-    bool            renderPage(HDC hDC, xps_page *page, RectI screenRect,
-                               fz_matrix *ctm=NULL, float zoom=0, int rotation=0,
-                               RectD *pageRect=NULL);
-    TCHAR         * ExtractPageText(xps_page *page, TCHAR *lineSep,
-                                    RectI **coords_out=NULL, bool cacheRun=false);
-
-    XpsPageRun    * _runCache[MAX_PAGE_RUN_CACHE];
-    XpsPageRun    * getPageRun(xps_page *page, bool tryOnly=false);
-    void            runPage(xps_page *page, fz_device *dev, fz_matrix ctm,
-                            fz_bbox clipbox=fz_infinite_bbox, bool cacheRun=true);
-    void            dropPageRun(XpsPageRun *run, bool forceRemove=false);
-
-    fz_glyph_cache* _drawcache;
-
+    virtual bool load(const TCHAR *fileName) = 0;
+    virtual bool load(fz_stream *stm) = 0;
 public:
     static XpsEngine *CreateFromFileName(const TCHAR *fileName);
     static XpsEngine *CreateFromStream(fz_stream *stm);
