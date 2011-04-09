@@ -357,33 +357,20 @@ static bool GetAddrInfo(void *addr, char *module, DWORD moduleLen, DWORD& sectio
     return false;
 }
 
-#define MAX_SYM_LEN 512
-static bool GetStackFrameInfo(Str::Str<char>& s, STACKFRAME64 *stackFrame,
-                              CONTEXT *ctx, HANDLE hThread, HANDLE hProc)
+static void GetAddressInfo(Str::Str<char>& s, DWORD64 addr)
 {
+    static const int MAX_SYM_LEN = 512;
 
-    BOOL ok = _StackWalk64(IMAGE_FILE_MACHINE_I386, hProc, hThread,
-        stackFrame, ctx, NULL, _SymFunctionTableAccess64,
-        _SymGetModuleBase64, NULL);
-    if (!ok)
-        return false;
-    
     char buf[sizeof(SYMBOL_INFO) + MAX_SYM_LEN * sizeof(char)];
     SYMBOL_INFO *symInfo = (SYMBOL_INFO*)buf;
 
     memset(buf, 0, sizeof(buf));
     symInfo->SizeOfStruct = sizeof(SYMBOL_INFO);
     symInfo->MaxNameLen = MAX_SYM_LEN;
-
-    DWORD64 addr = stackFrame->AddrPC.Offset;
-    if (0 == addr)
-        return true;
-    if (addr == stackFrame->AddrReturn.Offset)
-        return false;
         
     DWORD64 symDisp = 0;
     char *symName = NULL;
-    ok = _SymFromAddr(hProc, addr, &symDisp, symInfo);
+    BOOL ok = _SymFromAddr(GetCurrentProcess(), addr, &symDisp, symInfo);
     if (ok)
         symName = &(symInfo->Name[0]);
     
@@ -392,19 +379,46 @@ static bool GetStackFrameInfo(Str::Str<char>& s, STACKFRAME64 *stackFrame,
     if (GetAddrInfo((void*)addr, module, sizeof(module), section, offset)) {
         Str::ToLower(module);
         const char *moduleShort = Path::GetBaseName(module);
-        s.AppendFmt("0x%p %02X:%08X %s", (void*)addr, section, offset, moduleShort);
+#ifdef _WIN64
+        s.AppendFmt("%016I64X %02X:%016I64X %s", (DWORD64)addr, section, (DWORD64)offset, moduleShort);
+#else
+        s.AppendFmt("%08X %02X:%08X %s", (DWORD)addr, section, (DWORD)offset, moduleShort);
+#endif
         if (symName)
             s.AppendFmt("!%s+0x%x", symName, (int)symDisp);
         IMAGEHLP_LINE64 line;
         line.SizeOfStruct = sizeof(IMAGEHLP_LINE64);
         DWORD disp;
-        if (_SymGetLineFromAddr64(hProc, addr, &disp, &line)) {
+        if (_SymGetLineFromAddr64(GetCurrentProcess(), addr, &disp, &line)) {
             s.AppendFmt(" %s+%d", line.FileName, line.LineNumber);
         }
         s.Append("\r\n");
     } else {
-        s.AppendFmt("%%08X\r\n", (DWORD)addr);
+#ifdef _WIN64
+        s.AppendFmt("%016I64X\r\n", addr);
+#else
+        s.AppendFmt("%08X\r\n", (DWORD)addr);
+#endif
     }
+
+}
+
+static bool GetStackFrameInfo(Str::Str<char>& s, STACKFRAME64 *stackFrame,
+                              CONTEXT *ctx, HANDLE hThread)
+{
+    BOOL ok = _StackWalk64(IMAGE_FILE_MACHINE_I386, GetCurrentProcess(), hThread,
+        stackFrame, ctx, NULL, _SymFunctionTableAccess64,
+        _SymGetModuleBase64, NULL);
+    if (!ok)
+        return false;
+
+    DWORD64 addr = stackFrame->AddrPC.Offset;
+    if (0 == addr)
+        return true;
+    if (addr == stackFrame->AddrReturn.Offset)
+        return false;
+
+    GetAddressInfo(s, addr);
     return true;
 }
 
@@ -412,8 +426,6 @@ static void GetCallstack(Str::Str<char>& s, CONTEXT& ctx, HANDLE hThread)
 {
     if (!CanStackWalk())
         return;
-
-    HANDLE hProc = GetCurrentProcess();
 
     STACKFRAME64 stackFrame;
     memset(&stackFrame, 0, sizeof(stackFrame));
@@ -434,7 +446,7 @@ static void GetCallstack(Str::Str<char>& s, CONTEXT& ctx, HANDLE hThread)
     int maxFrames = 32;
     while (framesCount < maxFrames)
     {
-        GetStackFrameInfo(s, &stackFrame, &ctx, hThread, hProc);
+        GetStackFrameInfo(s, &stackFrame, &ctx, hThread);
         framesCount++;
     }
 }
@@ -477,7 +489,9 @@ static void GetThreadCallstack(Str::Str<char>& s, DWORD threadId)
     }
     CloseHandle(hThread);
 }
-    
+
+// TODO: this doesn't seem to find the most important thread - the one
+// that crashed
 static void GetAllThreadsCallstacks(Str::Str<char>& s)
 {
     HANDLE threadSnap = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
@@ -546,16 +560,8 @@ static void GetExceptionInfo(Str::Str<char>& s, EXCEPTION_POINTERS *excPointers)
     DWORD excCode = excRecord->ExceptionCode;
     s.AppendFmt("Exception: %08X %s\r\n", (int)excCode, ExceptionNameFromCode(excCode));
 
-    char module[MAX_PATH];
-    DWORD section;
-    DWORD offset;
-    GetAddrInfo(excRecord->ExceptionAddress, module, sizeof(module), section, offset);
-    const char *moduleShort = Path::GetBaseName(module);
-#ifdef _WIN64
-    s.AppendFmt("Fault address:  %016I64X %02X:%016I64X %s\r\n", excRecord->ExceptionAddress, section, offset, moduleShort);
-#else
-    s.AppendFmt("Fault address:  %08X %02X:%08X %s\r\n", excRecord->ExceptionAddress, section, offset, moduleShort);
-#endif
+    s.AppendFmt("Fault address: ");
+    GetAddressInfo(s, (DWORD64)excRecord->ExceptionAddress);
 
     PCONTEXT ctx = excPointers->ContextRecord;
     s.AppendFmt("\r\nRegisters:\r\n");
@@ -604,8 +610,8 @@ static char *BuildCrashInfoText()
     s.Append("\r\n");
     GetExceptionInfo(s, mei.ExceptionPointers);
     s.Append("\r\n");
-    GetCurrentThreadCallstack(s);
     GetAllThreadsCallstacks(s);
+    GetCurrentThreadCallstack(s);
     return s.StealData();
 }
 
