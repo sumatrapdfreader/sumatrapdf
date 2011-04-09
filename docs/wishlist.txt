@@ -21,12 +21,7 @@ Note: Automatic cropping is currently implemented as "Fit Content" View mode.
 
 4. eBooks seem to be all the rage those days. Add ePub support?
 
-4a. I always wanted a good .cbr & .cbz viewer but existing ones aren't to my
-liking. Extend Sumatra to support those?
-
-4b. SumatraPDF's interface would be nice for viewing XPS documents as well.
-
-4c. Make SumatraPDF extensible with different format back-ends/plugins and
+4a. Make SumatraPDF extensible with different format back-ends/plugins and
 turn it into a general document viewer?
 
 5. Add integration with web-based backup/viewer system. The idea is that users
@@ -44,14 +39,14 @@ They have APIs (http://www.scribd.com/developers).
 download and read PDF files in Dropbox account. Not sure if that makes sense,
 though, since having Dropbox pretty much means the files are locally anyway.
 
-8. PDF library management similar to how e.g. Picasa manages photos or iTunes
+8. Document library management similar to how e.g. Picasa manages photos or iTunes
 manages mp3 files.
 
-User would tell us which directories contain PDF files (or, on Win 7, we
-could use windows search or scan the whole hard-drive to automatically find
-all *.pdf files). We would index the files (their filenames, PDF metadata, maybe
-extract text for full-text search), build thumbnails and allow efficient 
-browsing/searching those PDFs.
+User would tell us which directories contain PDF and oher supported files
+(or, on Win 7, we could use windows search or scan the whole hard-drive to 
+automatically find all files). We would index the files (their filenames, metadata,
+maybe extract text for full-text search), build thumbnails and allow efficient 
+browsing/searching those files.
 
 This would be a good feature for those who have large collections of PDFs
 (compared to using file explorer or open file dialog for locating the file).
