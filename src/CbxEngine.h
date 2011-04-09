@@ -9,15 +9,25 @@
 
 class ComicBookPage {
 public:
+    const TCHAR *       fileName;
+
     HGLOBAL             bmpData;
     Gdiplus::Bitmap *   bmp;
     int                 width, height;
+    Gdiplus::REAL       horizDpi, vertDpi;    
 
-    ComicBookPage(HGLOBAL bmpData, Gdiplus::Bitmap *bmp) :
-        bmpData(bmpData), bmp(bmp),
-        width(bmp->GetWidth()), height(bmp->GetHeight()) { }
+    ComicBookPage(const TCHAR *fileName, HGLOBAL bmpData, Gdiplus::Bitmap *bmp) :
+        bmpData(bmpData), bmp(bmp)
+    {
+        this->fileName = Str::Dup(fileName);
+        width = bmp->GetWidth();
+        height = bmp->GetHeight();
+        horizDpi = bmp->GetHorizontalResolution();
+        vertDpi = bmp->GetVerticalResolution();
+    }
 
     ~ComicBookPage() {
+        free((void*)fileName);
         delete bmp;
         GlobalFree(bmpData);
     }
@@ -65,6 +75,7 @@ public:
 
     bool LoadCbzFile(const TCHAR *fileName);
     bool LoadCbrFile(const TCHAR *fileName);
+
 protected:
     const TCHAR *fileName;
     Vec<ComicBookPage *> pages;

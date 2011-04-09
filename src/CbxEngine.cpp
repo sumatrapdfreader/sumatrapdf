@@ -52,9 +52,30 @@ static bool IsImageFile(const char *fileName)
            Str::EndsWithI(fileName, ".jpeg");
 }
 
+static int cmpPageByName(const ComicBookPage **pp1, const ComicBookPage **pp2)
+{
+    const ComicBookPage *p1 = *pp1;
+    const ComicBookPage *p2 = *pp2;
+    const TCHAR *name1 = p1->fileName;
+    const TCHAR *name2 = p2->fileName;
+    return Str::CmpNatural(name1, name2);
+}
+
+static int cmpPageByName2(const void *o1, const void *o2)
+{
+    const ComicBookPage **pp1 = (const ComicBookPage**)o1;
+    const ComicBookPage **pp2 = (const ComicBookPage**)o2;
+    const ComicBookPage *p1 = *pp1;
+    const ComicBookPage *p2 = *pp2;
+    const TCHAR *name1 = p1->fileName;
+    const TCHAR *name2 = p2->fileName;
+    return Str::CmpNatural(name1, name2);
+}
+
 static ComicBookPage *LoadCurrentCbzComicBookPage(unzFile& uf)
 {
     char fileName[MAX_PATH];
+    TCHAR *fileName2 = NULL;
     unz_file_info64 finfo;
     ComicBookPage *page = NULL;
     HGLOBAL bmpData = NULL;
@@ -95,7 +116,9 @@ static ComicBookPage *LoadCurrentCbzComicBookPage(unzFile& uf)
     if (!bmp)
         goto Exit;
 
-    page = new ComicBookPage(bmpData, bmp);
+    fileName2 = Str::Conv::FromAnsi(fileName); // Note: maybe FromUtf8?
+    page = new ComicBookPage(fileName2, bmpData, bmp);
+    free(fileName2);
     bmpData = NULL;
 
 Exit:
@@ -170,7 +193,7 @@ static ComicBookPage *LoadCurrentCbrComicBookPage(HANDLE hArc, RARHeaderDataEx& 
     if (!bmp)
         goto Exit;
 
-    page = new ComicBookPage(bmpData, bmp);
+    page = new ComicBookPage(fileName, bmpData, bmp);
     bmpData = NULL;
 
 Exit:
@@ -204,7 +227,11 @@ bool CbxEngine::LoadCbrFile(const TCHAR *file)
     }
     RARCloseArchive(hArc);
 
-    return pages.Count() > 0;
+    if (pages.Count() == 0)
+        return false;
+    // TODO: why doesn't pages.Sort(cmpPageByName); work?
+    pages.Sort(cmpPageByName2);
+    return true;
 }
 
 bool CbxEngine::LoadCbzFile(const TCHAR *file)
@@ -243,7 +270,10 @@ bool CbxEngine::LoadCbzFile(const TCHAR *file)
     unzClose(uf);
     // TODO: any meta-information available?
 
-    return pages.Count() > 0;
+    if (pages.Count() == 0)
+        return false;
+    pages.Sort(cmpPageByName2);
+    return true;
 }
 
 CbxEngine::~CbxEngine()
