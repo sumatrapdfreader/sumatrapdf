@@ -74,6 +74,8 @@ public:
     // we currently don't load pages lazily, so there's nothing to do here
     virtual bool BenchLoadPage(int pageNo) { return true; }
 
+    virtual bool SupportsPermissions() const { return false; };
+
     bool LoadCbzFile(const TCHAR *fileName);
     bool LoadCbrFile(const TCHAR *fileName);
 

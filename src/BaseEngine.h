@@ -130,6 +130,9 @@ public:
     // loads the given page so that the time required can be measured
     // without also measuring rendering times
     virtual bool BenchLoadPage(int pageNo) = 0;
+
+    // if true, we show "Denied Permissions:" property in properties window
+    virtual bool SupportsPermissions() const = 0;
 };
 
 #endif

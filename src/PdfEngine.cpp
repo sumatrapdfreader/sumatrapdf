@@ -1393,6 +1393,8 @@ public:
 
     virtual bool BenchLoadPage(int pageNo) { return getXpsPage(pageNo) != NULL; }
 
+    virtual bool SupportsPermissions() const { return true; }
+
 protected:
     const TCHAR *_fileName;
 

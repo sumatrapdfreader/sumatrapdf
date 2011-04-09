@@ -140,6 +140,8 @@ public:
 
     virtual bool BenchLoadPage(int pageNo) { return getPdfPage(pageNo) != NULL; }
 
+    virtual bool SupportsPermissions() const { return true; };
+
     // TODO: move any of the following into BaseEngine?
     int getPdfLinks(int pageNo, PdfLink **links);
     PdfLink *getLinkAtPosition(int pageNo, float x, float y);
