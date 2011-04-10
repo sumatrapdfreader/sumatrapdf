@@ -1,5 +1,5 @@
 /* Copyright 2006-2011 the SumatraPDF project authors (see AUTHORS file).
-   License: GPLv3 */
+   License: Simplified BSD (see ./COPYING) */
 
 #include "BaseUtil.h"
 #include <Wininet.h>
@@ -9,6 +9,7 @@
 #include "WinUtil.h"
 #include "Version.h"
 
+// returns ERROR_SUCCESS or an error code
 DWORD HttpGet(TCHAR *url, Str::Str<char> *dataOut)
 {
     DWORD error = ERROR_SUCCESS;

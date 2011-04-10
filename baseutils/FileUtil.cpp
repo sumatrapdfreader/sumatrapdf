@@ -231,4 +231,16 @@ bool WriteAll(const TCHAR *filePath, void *data, size_t dataLen)
     return ok && dataLen == size;
 }
 
+// Returns true if the file wasn't there or was successfully deleted
+bool Delete(const TCHAR *filePath)
+{
+    BOOL ok = DeleteFile(filePath);
+    if (!ok) {
+        if (ERROR_FILE_NOT_FOUND == GetLastError())
+            return true;
+        return false;
+    }
+    return true;
+}
+
 }

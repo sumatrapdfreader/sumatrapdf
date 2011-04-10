@@ -671,11 +671,50 @@ void SubmitCrashInfo(char *s)
     HttpPost(CRASH_SUBMIT_SERVER, CRASH_SUBMIT_URL, &headers, &data);
 }
 
+// We might have symbol files for older builds. If we're here, then we
+// didn't get the symbols so we assume it's because symbols didn't match
+// Returns false if files were there but we couldn't delete them
+static bool DeleteSymbolsIfExist(TCHAR *symDir)
+{
+    ScopedMem<TCHAR> path(Path::Join(symDir, _T("libmupdf.pdb")));
+    if (!File::Delete(path))
+        return false;
+    path.Set(Path::Join(symDir, _T("SumatraPDF.pdb")));
+    return File::Delete(path);
+}
+
+// Note: for testing only
+//#define SVN_PRE_RELEASE_VER 3313
+
+static bool DownloadPreReleaseSymbols()
+{
+    //TCHAR *url = _T("http://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-") _T(QM(SVN_PRE_RELEASE_VER)) _T(".pdb.zip");
+    return false;
+}
+
+static bool DownloadReleaseSymbols()
+{
+    // TODO: implement me
+    return false;
+}
+
 // TODO: *.pdb files are on S3 with a known name, try to download them here to a directory in symbol
 // path to get better info 
-static bool DownloadSymbols()
+static bool DownloadSymbols(TCHAR *symDir)
 {
+    if (!DeleteSymbolsIfExist(symDir))
+        return false;
+
+#if defined(DEBUG)
+    // don't care about debug builds
     return false;
+#endif
+
+#if defined(SVN_PRE_RELEASE_VER)
+    return DownloadPreReleaseSymbols();
+#else
+    return DownloadReleaseSymbols();
+#endif
 }
 
 // We're (potentially) doing it twice for reliability reason. First with whatever symbols we already
@@ -697,7 +736,7 @@ void SaveCrashInfoText()
     SubmitCrashInfo(s1);
     if (HasOwnSymbols())
         goto Exit;
-    if (!DownloadSymbols())
+    if (!DownloadSymbols(g_crashDumpPath))
         goto Exit;
     if (HasOwnSymbols())
         goto Exit;

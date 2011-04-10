@@ -1,5 +1,5 @@
 /* Copyright 2006-2011 the SumatraPDF project authors (see AUTHORS file).
-   License: GPLv3 */
+   License: Simplified BSD (see ./COPYING) */
 
 #ifndef Http_h
 #define Http_h
@@ -7,8 +7,7 @@
 #include "StrUtil.h"
 #include "Vec.h"
 
-bool HttpPost(TCHAR *server, TCHAR *url, Str::Str<char> *headers, Str::Str<char> *data);
-// returns ERROR_SUCCESS or an error code
+bool  HttpPost(TCHAR *server, TCHAR *url, Str::Str<char> *headers, Str::Str<char> *data);
 DWORD HttpGet(TCHAR *url, Str::Str<char> *dataOut);
 
 class HttpReqCtx {
