@@ -135,11 +135,13 @@ add: "srv*c:\\symbols*http://msdl.microsoft.com/download/symbols;cache*c:\\symbo
 (except a better directory than c:\\symbols
 */
 
-// TODO: Since the *.pdb files are on S3 with a known name, we could try to 
-// download them here to a directory in symbol path to get better info 
 static void SetupSymbolPath()
 {
     Str::Str<WCHAR> s(1024);
+
+    // TODO: not present on XP? Try SymSetSearchPathA() ?
+    if (!_SymSetSearchPathW)
+        return;
 
     WCHAR buf[512];
     DWORD cchBuf = dimof(buf);
@@ -355,6 +357,31 @@ static bool GetAddrInfo(void *addr, char *module, DWORD moduleLen, DWORD& sectio
         section++;
     }
     return false;
+}
+
+static bool HasSymbolsForAddress(DWORD64 addr)
+{
+    static const int MAX_SYM_LEN = 512;
+
+    char buf[sizeof(SYMBOL_INFO) + MAX_SYM_LEN * sizeof(char)];
+    SYMBOL_INFO *symInfo = (SYMBOL_INFO*)buf;
+
+    memset(buf, 0, sizeof(buf));
+    symInfo->SizeOfStruct = sizeof(SYMBOL_INFO);
+    symInfo->MaxNameLen = MAX_SYM_LEN;
+        
+    DWORD64 symDisp = 0;
+    char *symName = NULL;
+    BOOL ok = _SymFromAddr(GetCurrentProcess(), addr, &symDisp, symInfo);
+    return ok && symInfo->Name[0];
+}
+
+// a heuristic to test if we have symbols for our own binaries by testing if
+// we can get symbol for any of our functions.
+static bool HasOwnSymbols()
+{
+    DWORD64 addr = (DWORD64)&HasSymbolsForAddress;
+    return HasSymbolsForAddress(addr);
 }
 
 static void GetAddressInfo(Str::Str<char>& s, DWORD64 addr)
@@ -644,19 +671,41 @@ void SubmitCrashInfo(char *s)
     HttpPost(CRASH_SUBMIT_SERVER, CRASH_SUBMIT_URL, &headers, &data);
 }
 
+// TODO: *.pdb files are on S3 with a known name, try to download them here to a directory in symbol
+// path to get better info 
+static bool DownloadSymbols()
+{
+    return false;
+}
+
+// We're (potentially) doing it twice for reliability reason. First with whatever symbols we already
+// have. Then, if we don't have symbols for our binaries, download the symbols from a website and
+// redo the callstacks. But if our state is so corrupted that we can't download symbols, we'll
+// at least have non-symbolized version of callstacks
 void SaveCrashInfoText()
 {
-    char *s = BuildCrashInfoText();
+    char *s1, *s2 = NULL;
+    s1 = BuildCrashInfoText();
 #if 0
     // TODO: instead of doing SubmitCrashInfo() inside crash handler
     // should I sublaunch myself with "-submitcrash g_crashTxtPath"
     // cmd arg for better reliability?
-    if (s && g_crashTxtPath) {
-        File::WriteAll(g_crashTxtPath, s, Str::Len(s));
+    if (s1 && g_crashTxtPath) {
+        File::WriteAll(g_crashTxtPath, s1, Str::Len(s));
     }
 #endif
-    SubmitCrashInfo(s);
-    free(s);
+    SubmitCrashInfo(s1);
+    if (HasOwnSymbols())
+        goto Exit;
+    if (!DownloadSymbols())
+        goto Exit;
+    if (HasOwnSymbols())
+        goto Exit;
+    s2 = BuildCrashInfoText();
+    SubmitCrashInfo(s2);
+Exit:
+    free(s2);
+    free(s1);    
 }
 
 static DWORD WINAPI CrashDumpThread(LPVOID data)
