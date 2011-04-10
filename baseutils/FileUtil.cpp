@@ -235,12 +235,19 @@ bool WriteAll(const TCHAR *filePath, void *data, size_t dataLen)
 bool Delete(const TCHAR *filePath)
 {
     BOOL ok = DeleteFile(filePath);
-    if (!ok) {
-        if (ERROR_FILE_NOT_FOUND == GetLastError())
-            return true;
-        return false;
-    }
-    return true;
+    if (ok)
+        return true;
+    DWORD err = GetLastError();
+    return ((ERROR_PATH_NOT_FOUND == err) || (ERROR_FILE_NOT_FOUND == err));
+}
+
+// return true if a directory already exists or has been created
+bool CreateDir(const TCHAR *dir)
+{
+    BOOL ok = CreateDirectory(dir, NULL);
+    if (ok)
+        return true;
+    return ERROR_ALREADY_EXISTS == GetLastError();
 }
 
 }

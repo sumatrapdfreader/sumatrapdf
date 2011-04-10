@@ -63,7 +63,6 @@ bool IsAppThemed()
     return false;
 }
 
-
 static int WindowsVerMajor()
 {
     DWORD version = GetVersion();

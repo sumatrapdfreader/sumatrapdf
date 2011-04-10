@@ -138,8 +138,12 @@ TCHAR *AppGenDataDir()
     TCHAR dir[MAX_PATH] = {0};
     SHGetSpecialFolderPath(NULL, dir, CSIDL_APPDATA, TRUE);
     TCHAR *path = Path::Join(dir, APP_NAME_STR);
-    if (path)
-        _tmkdir(path);
+    if (!path)
+        return NULL;
+    if (!File::CreateDir(path)) {
+        free(path);
+        return NULL;
+    }
     return path;
 }
 

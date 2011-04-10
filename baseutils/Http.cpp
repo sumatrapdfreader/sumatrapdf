@@ -44,21 +44,19 @@ Error:
     goto Exit;
 }
 
-// Download content of url to a file
+// Download content of a url to a file
 bool HttpGetToFile(const TCHAR *url, const TCHAR *destFilePath)
 {
     bool ok = false;
     char buf[1024];
     HINTERNET hFile = NULL, hInet = NULL;
-    HANDLE hf = NULL;
 
-    if (!File::Delete(destFilePath))
-        return false;
-
-    hf = CreateFile(destFilePath, GENERIC_READ, FILE_SHARE_READ, NULL,  
-            OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL,  NULL); 
-    if (hf == INVALID_HANDLE_VALUE)
+    HANDLE hf = CreateFile(destFilePath, GENERIC_WRITE, FILE_SHARE_READ, NULL,  
+            CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL,  NULL); 
+    if (INVALID_HANDLE_VALUE == hf) {
+        SeeLastError();
         goto Exit;
+    }
 
     hInet = InternetOpen(APP_NAME_STR _T("/") CURR_VERSION_STR,
         INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
@@ -78,11 +76,13 @@ bool HttpGetToFile(const TCHAR *url, const TCHAR *destFilePath)
 
         DWORD size;
         BOOL ok = WriteFile(hf, buf, (DWORD)dwRead, &size, NULL);
-        if (!ok)
+        if (!ok) {
+            SeeLastError();
             goto Exit;
+        }
         if (size != dwRead)
             goto Exit;
-    };
+    }
 
     ok = true;
 Exit:
@@ -92,7 +92,6 @@ Exit:
     if (!ok)
         File::Delete(destFilePath);
     return ok;
-
 }
 
 bool HttpPost(const TCHAR *server, const TCHAR *url, Str::Str<char> *headers, Str::Str<char> *data)

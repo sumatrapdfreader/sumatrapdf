@@ -23,6 +23,7 @@ char *       ReadAll(const TCHAR *filePath, size_t *fileSizeOut);
 bool         WriteAll(const TCHAR *filePath, void *data, size_t dataLen);
 size_t       GetSize(const TCHAR *filePath);
 bool         Delete(const TCHAR *filePath);
+bool         CreateDir(const TCHAR *dir);
 }
 
 #endif
