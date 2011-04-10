@@ -7,8 +7,9 @@
 #include "StrUtil.h"
 #include "Vec.h"
 
-bool  HttpPost(TCHAR *server, TCHAR *url, Str::Str<char> *headers, Str::Str<char> *data);
-DWORD HttpGet(TCHAR *url, Str::Str<char> *dataOut);
+bool  HttpPost(const TCHAR *server, const TCHAR *url, Str::Str<char> *headers, Str::Str<char> *data);
+DWORD HttpGet(const TCHAR *url, Str::Str<char> *dataOut);
+bool  HttpGetToFile(const TCHAR *url, const TCHAR *destFilePath);
 
 class HttpReqCtx {
     HANDLE          hThread;

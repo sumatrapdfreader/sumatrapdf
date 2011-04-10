@@ -224,7 +224,7 @@ bool WriteAll(const TCHAR *filePath, void *data, size_t dataLen)
         return FALSE;
 
     DWORD size;
-    bool ok = WriteFile(h, data, (DWORD)dataLen, &size, NULL);
+    BOOL ok = WriteFile(h, data, (DWORD)dataLen, &size, NULL);
     assert(!ok || (dataLen == size));
     CloseHandle(h);
 

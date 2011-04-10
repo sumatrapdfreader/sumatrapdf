@@ -9,6 +9,8 @@
 #define CURR_VERSION 1.5
 #endif
 
+#define APP_NAME_STR       _T("SumatraPDF")
+
 // #define SVN_PRE_RELEASE_VER 2295
 
 #define _QUOTEME(x) #x

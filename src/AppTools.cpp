@@ -1,7 +1,7 @@
 /* Copyright 2006-2011 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "SumatraPDF.h"
+#include "BaseUtil.h"
 #include "StrUtil.h"
 #include "FileUtil.h"
 #include "WinUtil.h"
@@ -9,6 +9,7 @@
 #include "translations.h"
 #include "AppTools.h"
 #include "CmdLineParser.h"
+#include "Version.h"
 #include <shlobj.h>
 
 // the only valid chars are 0-9, . and newlines.

@@ -8,7 +8,6 @@
 #include "Vec.h"
 #include "AppPrefs.h"
 
-#define APP_NAME_STR            _T("SumatraPDF")
 #define FRAME_CLASS_NAME        _T("SUMATRA_PDF_FRAME")
 
 /* styling for About/Properties windows */

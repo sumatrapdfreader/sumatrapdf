@@ -4,13 +4,13 @@
 #include "BaseUtil.h"
 #include <Wininet.h>
 
-#include "SumatraPDF.h"
 #include "Http.h"
+#include "FileUtil.h"
 #include "WinUtil.h"
 #include "Version.h"
 
 // returns ERROR_SUCCESS or an error code
-DWORD HttpGet(TCHAR *url, Str::Str<char> *dataOut)
+DWORD HttpGet(const TCHAR *url, Str::Str<char> *dataOut)
 {
     DWORD error = ERROR_SUCCESS;
 
@@ -44,7 +44,58 @@ Error:
     goto Exit;
 }
 
-bool HttpPost(TCHAR *server, TCHAR *url, Str::Str<char> *headers, Str::Str<char> *data)
+// Download content of url to a file
+bool HttpGetToFile(const TCHAR *url, const TCHAR *destFilePath)
+{
+    bool ok = false;
+    char buf[1024];
+    HINTERNET hFile = NULL, hInet = NULL;
+    HANDLE hf = NULL;
+
+    if (!File::Delete(destFilePath))
+        return false;
+
+    hf = CreateFile(destFilePath, GENERIC_READ, FILE_SHARE_READ, NULL,  
+            OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL,  NULL); 
+    if (hf == INVALID_HANDLE_VALUE)
+        goto Exit;
+
+    hInet = InternetOpen(APP_NAME_STR _T("/") CURR_VERSION_STR,
+        INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
+    if (!hInet)
+        goto Exit;
+
+    hFile = InternetOpenUrl(hInet, url, NULL, 0, 0, 0);
+    if (!hFile)
+        goto Exit;
+
+    DWORD dwRead;
+    for (;;) {
+        if (!InternetReadFile(hFile, buf, sizeof(buf), &dwRead))
+            goto Exit;
+        if (dwRead == 0)
+            break;
+
+        DWORD size;
+        BOOL ok = WriteFile(hf, buf, (DWORD)dwRead, &size, NULL);
+        if (!ok)
+            goto Exit;
+        if (size != dwRead)
+            goto Exit;
+    };
+
+    ok = true;
+Exit:
+    CloseHandle(hf);
+    InternetCloseHandle(hFile);
+    InternetCloseHandle(hInet);
+    if (!ok)
+        File::Delete(destFilePath);
+    return ok;
+
+}
+
+bool HttpPost(const TCHAR *server, const TCHAR *url, Str::Str<char> *headers, Str::Str<char> *data)
 {
     Str::Str<char> resp(2048);
     bool ok = false;
