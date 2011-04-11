@@ -148,11 +148,10 @@ namespace File {
 
 bool Exists(const TCHAR *filePath)
 {
-    WIN32_FILE_ATTRIBUTE_DATA   fileInfo;
-
     if (NULL == filePath)
         return false;
 
+    WIN32_FILE_ATTRIBUTE_DATA   fileInfo;
     BOOL res = GetFileAttributesEx(filePath, GetFileExInfoStandard, &fileInfo);
     if (0 == res)
         return false;
@@ -231,7 +230,7 @@ bool WriteAll(const TCHAR *filePath, void *data, size_t dataLen)
     return ok && dataLen == size;
 }
 
-// Returns true if the file wasn't there or was successfully deleted
+// Return true if the file wasn't there or was successfully deleted
 bool Delete(const TCHAR *filePath)
 {
     BOOL ok = DeleteFile(filePath);
@@ -240,9 +239,27 @@ bool Delete(const TCHAR *filePath)
     DWORD err = GetLastError();
     return ((ERROR_PATH_NOT_FOUND == err) || (ERROR_FILE_NOT_FOUND == err));
 }
+}
 
-// return true if a directory already exists or has been created
-bool CreateDir(const TCHAR *dir)
+namespace Dir {
+
+bool Exists(const TCHAR *dir)
+{
+    if (NULL == dir)
+        return false;
+
+    WIN32_FILE_ATTRIBUTE_DATA   fileInfo;
+    BOOL res = GetFileAttributesEx(dir, GetFileExInfoStandard, &fileInfo);
+    if (0 == res)
+        return false;
+
+    if (fileInfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+        return true;
+    return false;
+}
+
+// Return true if a directory already exists or has been successfully created
+bool Create(const TCHAR *dir)
 {
     BOOL ok = CreateDirectory(dir, NULL);
     if (ok)
@@ -251,3 +268,4 @@ bool CreateDir(const TCHAR *dir)
 }
 
 }
+

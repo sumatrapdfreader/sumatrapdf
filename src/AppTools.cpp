@@ -140,7 +140,7 @@ TCHAR *AppGenDataDir()
     TCHAR *path = Path::Join(dir, APP_NAME_STR);
     if (!path)
         return NULL;
-    if (!File::CreateDir(path)) {
+    if (!Dir::Create(path)) {
         free(path);
         return NULL;
     }

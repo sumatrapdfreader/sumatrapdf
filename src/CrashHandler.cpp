@@ -139,7 +139,7 @@ static TCHAR *GetCrashDumpDir()
     if (!dir) return NULL;
     TCHAR *symDir = Path::Join(dir, _T("symbols"));
     free(dir);
-    if (!File::CreateDir(symDir)) {
+    if (!Dir::Create(symDir)) {
         free(symDir);
         return NULL;
     }
@@ -324,7 +324,7 @@ static void GetSystemInfo(Str::Str<char>& s)
     s.AppendFmt("Physical Memory: %.2f GB\r\nCommit Charge Limit: %.2f GB\r\nMemory Used: %d%%\r\n", physMemGB, totalPageGB, usedPerc);
 }
 
-// return true for static build, false for a build with libmupdf.dll
+// return true for static, single executable build, false for a build with libmupdf.dll
 static bool IsStaticBuild()
 {
     HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, GetCurrentProcessId());
@@ -724,9 +724,9 @@ static bool DeleteSymbolsIfExist(const TCHAR *symDir)
 }
 
 struct FileToUnzip {
-    const char *fileNamePrefix;
-    const TCHAR *unzippedName; // optional
-    bool wasUnzipped;
+    const char *    fileNamePrefix;
+    const TCHAR *   unzippedName; // optional, will use fileNamePrefix if NULL
+    bool            wasUnzipped;
 };
 
 static void UnzipFileIfStartsWith(unzFile& uf,  FileToUnzip *files, const TCHAR *dir)
@@ -787,11 +787,26 @@ Exit:
     free(data);
 }
 
-static bool UnzipFilesStartingWith(const TCHAR *zipFile, FileToUnzip *files, const TCHAR *dir)
+static void MarkAllUnzipped(FileToUnzip *files)
 {
     for (int i=0; files[i].fileNamePrefix; i++) {
         files[i].wasUnzipped = false;
     }
+}
+
+static bool WereAllUnzipped(FileToUnzip *files)
+{
+    for (int i=0; files[i].fileNamePrefix; i++) {
+        if (!files[i].wasUnzipped) {
+            return false;
+        }
+    }
+    return true;
+}
+
+static bool UnzipFilesStartingWith(const TCHAR *zipFile, FileToUnzip *files, const TCHAR *dir)
+{
+    MarkAllUnzipped(files);
 
     zlib_filefunc64_def ffunc;
     fill_win32_filefunc64(&ffunc);
@@ -816,24 +831,15 @@ static bool UnzipFilesStartingWith(const TCHAR *zipFile, FileToUnzip *files, con
 
     unzClose(uf);
 
-    bool allUnzipped = true;
-
-    for (int i=0; files[i].fileNamePrefix; i++) {
-        if (!files[i].wasUnzipped) {
-            allUnzipped = false;
-            break;
-        }
-    }
-
-    return allUnzipped;
+    return WereAllUnzipped(files);
 }
 
 // In static (single executable) build, the pdb file insde symbolsZipPath
-// is named SumatraPDF-prelease-$bulno.pdb
+// is named SumatraPDF-prelease-${buildno}.pdb
 static bool UnpackStaticPreReleaseSymbols(const TCHAR *symbolsZipPath, const TCHAR *symDir)
 {
     FileToUnzip filesToUnnpack[] = {
-        { "SumatraPDF-prerelease", _T("SumatraPDF.pdb"), false },
+        { "SumatraPDF-prerelease", NULL, false },
         { NULL, false }
     };
     return UnzipFilesStartingWith(symbolsZipPath, filesToUnnpack, symDir);
@@ -844,14 +850,14 @@ static bool UnpackStaticPreReleaseSymbols(const TCHAR *symbolsZipPath, const TCH
 static bool UnpackLibPreReleaseSymbols(const TCHAR *symbolsZipPath, const TCHAR *symDir)
 {
     FileToUnzip filesToUnnpack[] = {
-        { "libmupdf.dll", NULL, false },
+        { "libmupdf.pdb", NULL, false },
         { "SumatraPDF-no-MuPDF.pdb", _T("SumatraPDF.pdb"), false },
         { NULL, false }
     };
     return UnzipFilesStartingWith(symbolsZipPath, filesToUnnpack, symDir);
 }
 
-#define SVN_PRE_RELEASE_VER 3313 // Note: for testing only
+//#define SVN_PRE_RELEASE_VER 3313 // Note: for testing only
 
 static bool DownloadPreReleaseSymbols(const TCHAR *symDir)
 {
@@ -879,7 +885,7 @@ static bool DownloadReleaseSymbols(const TCHAR *symDir)
 // path to get better info 
 static bool DownloadSymbols(const TCHAR *symDir)
 {
-    if (!symDir) return false;
+    if (!symDir || !Dir::Exists(symDir)) return false;
     if (!DeleteSymbolsIfExist(symDir))
         return false;
 
