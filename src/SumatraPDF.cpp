@@ -50,8 +50,7 @@
 
 /* Define if you want to display additional debug helpers in the Help menu */
 // #define SHOW_DEBUG_MENU_ITEMS
-// TODO: enable for now to make testing crash handler in pre-release builds easier
-#if defined(DEBUG) || 1
+#if defined(DEBUG)
 #ifndef SHOW_DEBUG_MENU_ITEMS
 #define SHOW_DEBUG_MENU_ITEMS
 #endif
