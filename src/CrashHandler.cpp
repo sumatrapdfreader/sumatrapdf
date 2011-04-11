@@ -445,7 +445,7 @@ static void GetProcessorName(Str::Str<char>& s)
     free(name);
 }
 
-static void GetMachineName(Str::Str<char> s)
+static void GetMachineName(Str::Str<char>& s)
 {
     TCHAR *s1 = ReadRegStr(HKEY_LOCAL_MACHINE, _T("HARDWARE/DESCRIPTION/BIOS"), _T("SystemFamily"));
     TCHAR *s2 = ReadRegStr(HKEY_LOCAL_MACHINE, _T("HARDWARE/DESCRIPTION/BIOS"), _T("SystemVersion"));
@@ -1038,7 +1038,7 @@ static bool DownloadSymbols(const TCHAR *symDir)
 
 void SubmitCrashInfo()
 {
-    char *s1, *s2 = NULL;
+    char *s1 = NULL, *s2 = NULL;
 
     LogDbg("Before SymInitialize(): ");
     LogDbgCurrDir();
