@@ -9,6 +9,7 @@
 Lang: uk Ukrainian (Українська)
 
 Contributor: Daniel Bohdan
+Contributor: Andriy Ilechko
 
 &About
 П&ро програму...
@@ -16,11 +17,26 @@ Contributor: Daniel Bohdan
 &Actual Size\tCtrl-1
 Справжній розмір\tCtrl-1
 
+&All selected pages
+Обрано всі сторінки
+
+&Back\tAlt+Left Arrow
+Назад\tAlt+Ліва стрілка
+
 &Close\tCtrl-W
 &Закрити\tCtrl-W
 
+&Copy Selection
+Скопіювати вибране
+
+&Copy Selection\tCtrl-C
+Скопіювати вибране\tCtrl-C
+
 &Don't ask me again
 Не питати знову
+
+&Even pages only
+Тільки парні сторінки
 
 &File
 &Файл
@@ -28,8 +44,14 @@ Contributor: Daniel Bohdan
 &First Page\tHome
 Перша сторінка\tHome
 
+&Fit pages to printable area
+Припасовувати сторінки до зони друку
+
 &Go To
 &Перейти
+
+&Go to page:
+Перейти на сторінку:
 
 &Help
 &Допомога
@@ -37,38 +59,128 @@ Contributor: Daniel Bohdan
 &Last Page\tEnd
 Остання сторінка\tEnd
 
+&Manual
+Керівництво з користування
+
 &Next Page\tRight Arrow
 Наступна сторінка\t->
+
+&No
+Ні
+
+&No, thanks
+Ні, дякую
+
+&Odd pages only
+Тільки непарні сторінки
 
 &Open\tCtrl-O
 Відкрити\tCtrl-O
 
+&Options...
+Опції...
+
+&Password:
+Пароль:
+
 &Previous Page\tLeft Arrow
 Попередня сторінка\t<-
+
+&Print...
+Друк...
 
 &Print...\tCtrl-P
 &Друкувати\tCtrl-P
 
+&Print... (denied)
+Друк... (відхилено)
+
+&Remember the password for this document
+Пам'ятати пароль для даного документа
+
+&Remember these settings for each document
+Зберегти налаштування для кожного документа
+
+&Save As...
+Зберегти як...
+
 &Save As...\tCtrl-S
 Зб&ерегти як...\tCtrl-S
+
+&Settings
+Налаштування
+
+&Shrink pages to printable area (if necessary)
+Урізати сторінки до зони друку (при необхідності)
 
 &Skip this version
 Пропустити цю версію.
 
+&Use original page sizes
+Використовувати оригінальні розміри сторінки
+
 &View
 Ви&гляд
+
+&Yes
+Так
 
 &Zoom
 &Збільшення
 
+(of %d)
+(з %d)
+
 About SumatraPDF
 Про програму SumatraPDF
+
+Advanced
+Просунуті
+
+All files
+Всі файли
+
+Application:
+Прикладна програма:
 
 Associate with PDF files?
 Асоціювати з PDF-файлами?
 
+Attachment: %s
+Додаток: %s
+
+Author:
+Автор:
+
+Automatic
+Автоматично
+
+Automatically check for &updates
+Автоматична перевірка оновлень
+
+Book View
+Книжна розгортка
+
 Book&marks\tF12
 Закладки\tF12
+
+Bookmarks
+Закладки
+
+Bytes
+Байт
+
+Can't connect to the Internet (error %#x).
+Неможливо під'єднатись до інтернету (помилка %#x).
+
+Cancel
+Відмінити
+
+Cannot print this file
+Не можу надрукувати цей файл
+
+Cannot start inverse search command. Please check the command line in the settings.
+Неможливо запустити команду зворотнього пошуку. Перевірте налашутвання командної стрічки.
 
 Change Language
 Змінити мову (Change Language)
@@ -85,8 +197,44 @@ Continuous Facing
 Contribute Translation
 Допоможіть перекласти
 
+Copy &Link Address
+Копіювати адресну стрічку
+
+Copy Co&mment
+Копіювати коментар
+
+Copying text was denied (copying as image only)
+Копіювання тексту заборонено (тільки як зображення)
+
 Could not open Printer
 Принтер недоступний.
+
+Couldn't initialize printer
+Неможливо знайти друкарку
+
+Couldn't render the page
+Неможливо згенерувати(відобразити) сторінку
+
+Created:
+Створено:
+
+Custom &Zoom...\tCtrl-Y
+Вказати масшта...\tCtrl-Y
+
+Default &Zoom:
+Масштаб за замовчуванням:
+
+Default PDF reader can't be changed in portable mode
+Не можна змінити штатний переглядач PDF у портативному режимі
+
+Denied Permissions:
+У доступі відмовлено:
+
+Document Properties
+Властивості документа
+
+Download
+Завантажити
 
 E&xit\tCtrl-Q
 &Вийти\tCtrl-Q
@@ -100,6 +248,9 @@ Enter password for %s
 Error loading PDF file.
 Помилка відкриття документу.
 
+F&orward\tAlt+Right Arrow
+Вперед\tAlt+Права стрілка
+
 F&ullscreen\tCtrl-Shift-L
 На цілий екран\tCtrl-Shift-L
 
@@ -109,8 +260,17 @@ Facing
 Failed to save a file
 Не можна зберегти файл.
 
+File Size:
+Розмір файла:
+
+File:
+Файл:
+
 Fin&d...\tCtrl-F
 Знайти...\tCtrl-F
+
+Find
+Знайти
 
 Find Next
 Знайти наступне
@@ -133,11 +293,17 @@ Fit Page
 Fit Width
 Припасувати до ширини
 
+Found text at page %d
+Знайти текст на %d сторінці
+
 GB
 GB
 
 Go to page
 Перейти на сторінку
+
+Hint: Use the F3 key for finding again
+Примітка: Для повторного пошуку натисніть F3
 
 KB
 KB
@@ -154,23 +320,83 @@ Make SumatraPDF my default PDF reader
 Match Case
 Розрізняти малу й велику літери
 
+Modified:
+Змінено:
+
 New version %s is available. Download new version?
 Нова версія %s є доступною. Завантажити нову версію?
 
 Next Page
 Наступна сторінка
 
+No matches were found
+Співпадінь не знайдено
+
+Number of Pages:
+Кількість сторінок:
+
+OK
+Гаразд
+
 Open
 Відкрити
+
+Open in &Adobe Reader
+Відкрити у Adobe Reader
+
+Open in &Foxit Reader
+Відкрити у Foxit Reader
+
+Open in PDF-XChange
+Відкрити у PDF-XChange
+
+P&roperties
+Властивості
+
+P&roperties\tCtrl-D
+Властивості\tCtrl-D
+
+PDF Document
+PDF документ
+
+PDF Producer:
+PDF видавець:
+
+PDF Version:
+Версія PDF
+
+PDF documents
+Документи PDF
 
 Pa&ge...\tCtrl-G
 До сторінки...\tCtrl-G
 
+Page Size:
+Розмір сторінки:
+
+Page:
+Сторінка:
+
+Please include the following file in your crash report:
+Будь-ласка вкладіть наступний файл у ваш звіт про падіння:
+
+Please wait - rendering...
+Зачекайте - генерується...
+
+Pr&esentation\tCtrl-L
+Презентація\tCtrl-L
+
 Previous Page
 Попередня сторінка
 
+Print range
+Межі друку
+
 Printing problem.
 Помилка друкування.
+
+Remember &opened files
+Запам'ятати відкриті файли
 
 Rotate &Left\tCtrl-Shift--
 Повернути ліворуч\tCtrl-Shift--
@@ -178,14 +404,59 @@ Rotate &Left\tCtrl-Shift--
 Rotate &Right\tCtrl-Shift-+
 Повернути праворуч\tCtrl-Shift-+
 
+Searching %d of %d...
+Пошук %d з %d...
+
+Select &All
+Вибрати всі
+
+Select &All\tCtrl-A
+Вибрати всі\tCtrl-A
+
+Select content with Ctrl+left mouse button
+Виберіть вміст з допомогою Ctrl+ліва кнопка миші
+
+Send by &E-mail...
+Відішліть через E-mail...
+
 Set inverse search command-line
 Установити зворотній пошук.
 
 Show &Toolbar
 Показати пенал
 
+Show the &bookmarks sidebar when available
+Якщо доступно відображати полосу закладок
+
 Single Page
 Одна сторінка
+
+Subject:
+Тема:
+
+SumatraPDF Options
+Опції SumatraPDF
+
+SumatraPDF Update
+Оновлення SumatraPDF
+
+SumatraPDF crashed
+SumatraPDF впав
+
+SumatraPDF is your default PDF reader
+SumatraPDF ваш PDF переглядач по замовчуванню
+
+SumatraPDF should now be your default PDF reader
+SumatraPDF тепер буде вашим PDF переглядачем по замовчуванню
+
+Text documents
+Текстові документи
+
+Title:
+Заголовок:
+
+Unknown source file (%s)
+Невідомий файл-джерело (%s)
 
 View
 Вигляд
@@ -193,11 +464,17 @@ View
 Visit &Website
 Відкрити сайт
 
+Warning
+Застереження
+
 You have the latest version.
 Ви вже маєте найновішу версію.
 
 You have version %s
 Ви використовуєте версію %s
+
+Zoom
+Масштаб
 
 Zoom In
 Збільшити
@@ -205,119 +482,33 @@ Zoom In
 Zoom Out
 Зменшити
 
+[Changes detected; refreshing] %s
+[Знайдено зміни; оновлення] %s
+
+copying text
+копіювання тексту
+
+printing document
+друк документа
+
 # Untranslated:
-#&All selected pages
-#&Back\tAlt+Left Arrow
-#&Copy Selection
-#&Copy Selection\tCtrl-C
-#&Even pages only
 #&Find what:
-#&Fit pages to printable area
-#&Go to page:
 #&Magnification:
-#&Manual
 #&Match case
-#&No
-#&No, thanks
-#&Odd pages only
-#&Options...
-#&Password:
-#&Print...
-#&Print... (denied)
-#&Remember the password for this document
-#&Remember these settings for each document
-#&Save As...
-#&Settings
-#&Shrink pages to printable area (if necessary)
-#&Use original page sizes
-#&Yes
-#(of %d)
-#Advanced
-#All files
-#Application:
-#Attachment: %s
-#Author:
-#Automatic
-#Automatically check for &updates
-#Book View
-#Bookmarks
-#Bytes
-#Can't connect to the Internet (error %#x).
-#Cancel
-#Cannot print this file
-#Cannot start inverse search command. Please check the command line in the settings.
 #Continuous Book View
-#Copy &Link Address
-#Copy Co&mment
-#Copying text was denied (copying as image only)
-#Couldn't initialize printer
-#Couldn't render the page
-#Created:
-#Custom &Zoom...\tCtrl-Y
 #Default &Layout:
-#Default &Zoom:
-#Default PDF reader can't be changed in portable mode
-#Denied Permissions:
-#Document Properties
-#Download
 #Enter the command-line to invoke when you double-click on the PDF document:
-#F&orward\tAlt+Right Arrow
-#File Size:
-#File:
-#Find
 #Fit &Content\tCtrl-3
 #Fit Content
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
-#Found text at page %d
-#Hint: Use the F3 key for finding again
-#Modified:
-#No matches were found
 #No result found around line %u in file %s
 #No synchronization file found
 #No synchronization info at this position
-#Number of Pages:
-#OK
-#Open in &Adobe Reader
-#Open in &Foxit Reader
-#Open in PDF-XChange
-#P&roperties
-#P&roperties\tCtrl-D
-#PDF Document
-#PDF Producer:
-#PDF Version:
-#PDF documents
-#Page Size:
 #Page number %u inexistant
 #Page scaling
-#Page:
-#Please include the following file in your crash report:
-#Please wait - rendering...
-#Pr&esentation\tCtrl-L
-#Print range
-#Remember &opened files
-#Searching %d of %d...
-#Select &All
-#Select &All\tCtrl-A
-#Select content with Ctrl+left mouse button
-#Send by &E-mail...
 #Show &pages continuously
-#Show the &bookmarks sidebar when available
 #Source file %s has no synchronization point
-#Subject:
-#SumatraPDF Options
-#SumatraPDF Update
-#SumatraPDF crashed
-#SumatraPDF is your default PDF reader
-#SumatraPDF should now be your default PDF reader
 #Synchronization file cannot be opened
-#Text documents
-#Title:
-#Unknown source file (%s)
-#Warning
-#Zoom
 #Zoom factor
-#[Changes detected; refreshing] %s
-#copying text
-#printing document
 
