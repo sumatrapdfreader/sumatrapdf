@@ -920,13 +920,24 @@ static bool DownloadSymbols(const TCHAR *symDir)
 // just do it once
 
 // TODO: needs more debugging. It does seem to download and unpack pdbs but:
-// 1. It never seems to send the second crash info, after downloading symbols
-// 2. pre-release static build doesn't seem to be able to get info about addresses
+// 1. pre-release static build doesn't seem to be able to get info about addresses
 //    within SumatraPdf-prerelease-${build}.exe module
-// 3. pre-release lib (installed) build walks symbols correctly but doesn't resolve
+//    Is it because of mpress compression?
+// 2. pre-release lib (installed) build walks symbols correctly but doesn't resolve
 //    symbols using pdbs it downloaded. It does work when it picks up symbols
 //    from the build process (that path must be embedded somewhere in the .exe?)
 //    That's probably because the pdb should be SumatraPDF-no-MuPDF.pdb
+//    Note: even though symbol path is set, it seems to ignore the directory
+//    where it downloads the symbols (per procmon). If e.g. I call
+//    SymSetSearchPathW("C:\Users\kkowalczyk\AppData\Roaming\SumatraPDF\symbols;C:\Program Files (x86)\SumatraPDF")
+//    on my win7 it seems to be looking into:
+//    C:\Users\kkowalczyk\Downloads
+//    C:\Users\kkowalczyk\Downloads\exe
+//    C:\Users\kkowalczyk\Downloads\symbols
+//    C:\Users\kkowalczyk\src\sumatrapdf\obj-rel
+//    The last one is where build was done but where does the
+//    C:\Users\kkowalczyk\Downloads etc. come from, I have no idea. Is it
+//    current directory?
 
 void SubmitCrashInfo()
 {
@@ -944,7 +955,7 @@ void SubmitCrashInfo()
     }
     SendCrashInfo(s1);
     if (HasOwnSymbols()) {
-        LogDbg("SubmitCrashInfo(): HasOwnSymbols() so skipping second report\r\n");
+        LogDbg("SubmitCrashInfo(): HasOwnSymbols() true, so skipping downloading symbols and second report\r\n");
         goto Exit;
     }
     if (!DownloadSymbols(GetCrashDumpDir()))
