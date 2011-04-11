@@ -533,6 +533,15 @@
     <ClCompile Include="src\TextSelection.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="baseutils\Http.cpp">
+      <Filter>baseutils</Filter>
+    </ClCompile>
+    <ClCompile Include="baseutils\SimpleLog.cpp">
+      <Filter>baseutils</Filter>
+    </ClCompile>
+    <ClCompile Include="baseutils\ZipUtil.cpp">
+      <Filter>baseutils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ext\jbig2dec\config_win32.h">
@@ -732,6 +741,18 @@
     </ClInclude>
     <ClInclude Include="src\TextSelection.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="baseutils\CmdLineParser.h">
+      <Filter>baseutils</Filter>
+    </ClInclude>
+    <ClInclude Include="baseutils\Http.h">
+      <Filter>baseutils</Filter>
+    </ClInclude>
+    <ClInclude Include="baseutils\SimpleLog.h">
+      <Filter>baseutils</Filter>
+    </ClInclude>
+    <ClInclude Include="baseutils\ZipUtil.h">
+      <Filter>baseutils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

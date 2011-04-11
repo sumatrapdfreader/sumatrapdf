@@ -64,9 +64,12 @@
     <ClCompile Include="baseutils\BencUtil.cpp" />
     <ClCompile Include="baseutils\DialogSizer.cpp" />
     <ClCompile Include="baseutils\FileUtil.cpp" />
+    <ClCompile Include="baseutils\Http.cpp" />
+    <ClCompile Include="baseutils\SimpleLog.cpp" />
     <ClCompile Include="baseutils\StrUtil.cpp" />
     <ClCompile Include="baseutils\UtilTests.cpp" />
     <ClCompile Include="baseutils\WinUtil.cpp" />
+    <ClCompile Include="baseutils\ZipUtil.cpp" />
     <ClCompile Include="ext\libjpeg-turbo\jaricom.c" />
     <ClCompile Include="ext\libjpeg-turbo\jcapimin.c" />
     <ClCompile Include="ext\libjpeg-turbo\jcapistd.c" />
@@ -232,12 +235,16 @@
   <ItemGroup>
     <ClInclude Include="baseutils\BaseUtil.h" />
     <ClInclude Include="baseutils\BencUtil.h" />
+    <ClInclude Include="baseutils\CmdLineParser.h" />
     <ClInclude Include="baseutils\DialogSizer.h" />
     <ClInclude Include="baseutils\FileUtil.h" />
     <ClInclude Include="baseutils\GeomUtil.h" />
+    <ClInclude Include="baseutils\Http.h" />
+    <ClInclude Include="baseutils\SimpleLog.h" />
     <ClInclude Include="baseutils\StrUtil.h" />
     <ClInclude Include="baseutils\Vec.h" />
     <ClInclude Include="baseutils\WinUtil.h" />
+    <ClInclude Include="baseutils\ZipUtil.h" />
     <ClInclude Include="ext\libjpeg-turbo\jchuff.h" />
     <ClInclude Include="ext\libjpeg-turbo\jconfig.h" />
     <ClInclude Include="ext\libjpeg-turbo\jdct.h" />

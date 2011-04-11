@@ -86,7 +86,8 @@ LIBS_BROWSER_PLUGIN = user32.lib gdi32.lib advapi32.lib shlwapi.lib
 
 BASEUTILS_OBJS = \
 	$(O)\BencUtil.obj $(O)\FileUtil.obj $(O)\Http.obj $(O)\SimpleLog.obj \
-	$(O)\StrUtil.obj $(O)\UtilTests.obj $(O)\WinUtil.obj $(O)\DialogSizer.obj
+	$(O)\StrUtil.obj $(O)\UtilTests.obj $(O)\WinUtil.obj $(O)\DialogSizer.obj \
+	$(O)\ZipUtil.obj
 
 SUMATRA_OBJS = \
 	$(O)\AppPrefs.obj $(O)\DisplayModel.obj $(O)\DisplayState.obj \
@@ -192,9 +193,8 @@ $(O)\AppPrefs.obj: baseutils\GeomUtil.h baseutils\StrUtil.h baseutils\Vec.h
 $(O)\AppPrefs.obj: src\AppPrefs.h src\DisplayState.h src\FileHistory.h
 $(O)\AppTools.obj: baseutils\BaseUtil.h baseutils\CmdLineParser.h baseutils\FileUtil.h
 $(O)\AppTools.obj: baseutils\GeomUtil.h baseutils\StrUtil.h baseutils\Vec.h
-$(O)\AppTools.obj: baseutils\WinUtil.h src\AppPrefs.h src\AppTools.h
-$(O)\AppTools.obj: src\DisplayState.h src\LangMenuDef.h src\SumatraPDF.h
-$(O)\AppTools.obj: src\translations.h
+$(O)\AppTools.obj: baseutils\WinUtil.h src\AppTools.h src\LangMenuDef.h
+$(O)\AppTools.obj: src\translations.h src\Version.h
 $(O)\Benchmark.obj: baseutils\BaseUtil.h baseutils\FileUtil.h baseutils\GeomUtil.h
 $(O)\Benchmark.obj: baseutils\StrUtil.h baseutils\Vec.h baseutils\WinUtil.h
 $(O)\Benchmark.obj: mupdf\fitz\fitz.h mupdf\pdf\mupdf.h src\BaseEngine.h
@@ -226,10 +226,9 @@ $(O)\DisplayState.obj: src\DisplayState.h
 $(O)\FileUtil.obj: baseutils\BaseUtil.h baseutils\FileUtil.h baseutils\StrUtil.h
 $(O)\FileWatch.obj: baseutils\BaseUtil.h baseutils\FileUtil.h baseutils\StrUtil.h
 $(O)\FileWatch.obj: src\FileWatch.h
-$(O)\Http.obj: baseutils\BaseUtil.h baseutils\GeomUtil.h baseutils\Http.h
-$(O)\Http.obj: baseutils\StrUtil.h baseutils\Vec.h baseutils\WinUtil.h
-$(O)\Http.obj: src\AppPrefs.h src\DisplayState.h src\SumatraPDF.h
-$(O)\Http.obj: src\Version.h
+$(O)\Http.obj: baseutils\BaseUtil.h baseutils\FileUtil.h baseutils\GeomUtil.h
+$(O)\Http.obj: baseutils\Http.h baseutils\StrUtil.h baseutils\Vec.h
+$(O)\Http.obj: baseutils\WinUtil.h src\Version.h
 $(O)\Installer.obj: baseutils\BaseUtil.h baseutils\CmdLineParser.h baseutils\FileUtil.h
 $(O)\Installer.obj: baseutils\GeomUtil.h baseutils\StrUtil.h baseutils\Vec.h
 $(O)\Installer.obj: baseutils\WinUtil.h src\installer\..\ifilter\PdfFilter.h src\installer\Resource.h
@@ -313,3 +312,4 @@ $(O)\WindowInfo.obj: src\PdfSync.h src\Resource.h src\SumatraPDF.h
 $(O)\WindowInfo.obj: src\TextSearch.h src\TextSelection.h src\WindowInfo.h
 $(O)\WinUtil.obj: baseutils\BaseUtil.h baseutils\FileUtil.h baseutils\GeomUtil.h
 $(O)\WinUtil.obj: baseutils\StrUtil.h baseutils\WinUtil.h
+$(O)\ZipUtil.obj: baseutils\BaseUtil.h baseutils\ZipUtil.h
