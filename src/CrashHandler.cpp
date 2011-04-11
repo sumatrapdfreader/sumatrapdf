@@ -54,6 +54,11 @@ typedef BOOL _stdcall SymInitializeWProc(
     PCWSTR UserSearchPath,
     BOOL fInvadeProcess);
 
+typedef BOOL _stdcall SymInitializeProc(
+    HANDLE hProcess,
+    PCSTR UserSearchPath,
+    BOOL fInvadeProcess);
+
 typedef BOOL _stdcall SymCleanupProc(
   HANDLE hProcess);
 
@@ -109,6 +114,7 @@ typedef BOOL __stdcall SymGetLineFromAddr64Proc(
 
 static MiniDumpWriteProc *              _MiniDumpWriteDump;
 static SymInitializeWProc *             _SymInitializeW;
+static SymInitializeProc *              _SymInitialize;
 static SymCleanupProc *                 _SymCleanup;
 static SymGetOptionsProc *              _SymGetOptions;
 static SymSetOptionsProc *              _SymSetOptions;
@@ -138,6 +144,7 @@ static Str::Str<char> *gDbgLog = NULL;
 FuncNameAddr gDbgHelpFuncs[] = {
     F(MiniDumpWriteDump)
     F(SymInitializeW)
+    F(SymInitialize)
     F(SymCleanup)
     F(SymGetOptions)
     F(SymSetOptions)
@@ -352,8 +359,8 @@ static bool InitializeDbgHelp()
         return false;
     }
 
-    if (!_SymInitializeW) {
-        LogDbg("InitializeDbgHelp(): SymInitializeW() not present in dbghelp.dll\r\n");
+    if (!_SymInitializeW && !_SymInitialize) {
+        LogDbg("InitializeDbgHelp(): SymInitializeW() or SymInitializeA() not present in dbghelp.dll\r\n");
         return false;
     }
 
@@ -363,7 +370,17 @@ static bool InitializeDbgHelp()
         return false;
     }
 
-    gSymInitializeOk = _SymInitializeW(GetCurrentProcess(), symPath, TRUE);
+    if (_SymInitializeW) {
+        gSymInitializeOk = _SymInitializeW(GetCurrentProcess(), symPath, TRUE);
+    } else {
+        char *tmp = Str::Conv::ToAnsi(symPath);
+        if (tmp) {
+            gSymInitializeOk = _SymInitialize(GetCurrentProcess(), tmp, TRUE);
+            free(tmp);
+        }
+
+    }
+
     if (!gSymInitializeOk) {
         LogDbg("InitializeDbgHelp(): _SymInitialize() failed\r\n");
         return false;
@@ -380,7 +397,7 @@ static bool InitializeDbgHelp()
 
 static bool CanStackWalk()
 {
-    return gSymInitializeOk && _SymInitializeW && _SymCleanup && _SymGetOptions 
+    return gSymInitializeOk && _SymCleanup && _SymGetOptions 
         && _SymSetOptions&& _StackWalk64 && _SymFunctionTableAccess64 
         && _SymGetModuleBase64 && _SymFromAddr;
 }
