@@ -357,6 +357,13 @@ static void GetOsVersion(Str::Str<char>& s)
     s.AppendFmt("OS: Windows %s %d.%d build %d %s\r\n", os, servicePackMajor, servicePackMinor, buildNumber, arch);
 }
 
+static void StrCharAppendT(Str::Str<char>& s, TCHAR *txt)
+{
+    char *tmp = Str::Conv::ToUtf8(txt);
+    s.Append(tmp);
+    free(tmp);
+}
+
 static void GetProcessorName(Str::Str<char>& s)
 {
     TCHAR *name = ReadRegStr(HKEY_LOCAL_MACHINE, _T("HARDWARE\\DESCRIPTION\\System\\CentralProcessor"), _T("ProcessorNameString"));
@@ -368,6 +375,32 @@ static void GetProcessorName(Str::Str<char>& s)
     s.AppendFmt("Processor: %s\r\n", tmp);
     free(tmp);
     free(name);
+}
+
+static void GetMachineName(Str::Str<char> s)
+{
+    TCHAR *s1 = ReadRegStr(HKEY_LOCAL_MACHINE, _T("HARDWARE/DESCRIPTION/BIOS"), _T("SystemFamily"));
+    TCHAR *s2 = ReadRegStr(HKEY_LOCAL_MACHINE, _T("HARDWARE/DESCRIPTION/BIOS"), _T("SystemVersion"));
+    if (!s1 && !s2)
+        return;
+    
+
+    s.Append("Machine: ");
+    if (!s1) {
+        StrCharAppendT(s, s2);
+        goto Exit;
+    }
+
+    if (!s2 || Str::EqI(s1,s2)) {
+        StrCharAppendT(s, s1);
+        goto Exit;
+    }
+
+    StrCharAppendT(s, s1);
+    s.Append(" ");
+    StrCharAppendT(s, s2);
+Exit:
+    s.Append("\r\n");
 }
 
 static void GetSystemInfo(Str::Str<char>& s)
@@ -386,9 +419,10 @@ static void GetSystemInfo(Str::Str<char>& s)
     DWORD usedPerc = ms.dwMemoryLoad;
     s.AppendFmt("Physical Memory: %.2f GB\r\nCommit Charge Limit: %.2f GB\r\nMemory Used: %d%%\r\n", physMemGB, totalPageGB, usedPerc);
 
+    GetMachineName(s);
+
     // Note: maybe more information, like:
     // * amount of memory used by Sumatra,
-    // * system name (HKLM/HARDWARE/DESCRIPTION/BIOS/SystemFamily and/or SystemVersion
     // * graphics card and its driver version
     // * processor capabilities (mmx, sse, sse2 etc.)
     // * list of currently opened documents (by traversing gWindows)
@@ -790,7 +824,6 @@ static void SendCrashInfo(char *s)
     HttpPost(CRASH_SUBMIT_SERVER, CRASH_SUBMIT_URL, &headers, &data);
 }
 
-
 #if defined(DEBUG_CRASH_INFO)
 static void SendDebugCrashInfo()
 {
@@ -892,8 +925,8 @@ static bool DownloadReleaseSymbols(const TCHAR *symDir)
     return ok;
 }
 
-// TODO: *.pdb files are on S3 with a known name, try to download them here to a directory in symbol
-// path to get better info 
+// *.pdb files are on S3 with a known name. Try to download them here to a directory
+// in symbol path to get meaningful callstacks 
 static bool DownloadSymbols(const TCHAR *symDir)
 {
     if (!symDir || !Dir::Exists(symDir)) return false;
@@ -939,10 +972,22 @@ static bool DownloadSymbols(const TCHAR *symDir)
 //    C:\Users\kkowalczyk\Downloads etc. come from, I have no idea. Is it
 //    current directory?
 
+#if defined(DEBUG_CRASH_INFO)
+static void LogDbgCurrDir()
+{
+    char buf[1024] = { 0 };
+    DWORD res = GetCurrentDirectoryA(sizeof(buf), buf);
+    if (res < sizeof(buf))
+        LogDbg(buf);
+}
+#endif
+
 void SubmitCrashInfo()
 {
     char *s1, *s2 = NULL;
-
+#if defined(DEBUG_CRASH_INFO)
+    LogDbgCurrDir();
+#endif
     if (!InitializeDbgHelp()) {
         LogDbg("SubmitCrashInfo(): InitializeDbgHelp() failed\r\n");
         goto Exit;
