@@ -214,22 +214,6 @@ public:
     virtual void CleanUp(DisplayModel *dm);
 };
 
-// TODO: find a better place to put these
-
-class DoubleBuffer {
-    HWND hTarget;
-    HDC hdcCanvas, hdcBuffer;
-    HBITMAP doubleBuffer;
-    RectI rect;
-
-public:
-    DoubleBuffer(HWND hwnd, RectI rect);
-    ~DoubleBuffer();
-
-    HDC GetDC() const { return hdcBuffer ? hdcBuffer : hdcCanvas; }
-    void Flush(HDC hdc);
-};
-
 /* Represents selected area on given page */
 class SelectionOnPage {
 public:

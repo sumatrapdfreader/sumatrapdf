@@ -331,50 +331,15 @@ void WindowInfo::CreateInfotip(const TCHAR *text, RectI& rc)
 
 void WindowInfo::DeleteInfotip()
 {
-    if (!this->infotipVisible)
+    if (!infotipVisible)
         return;
 
     TOOLINFO ti = { 0 };
     ti.cbSize = sizeof(ti);
-    ti.hwnd = this->hwndCanvas;
+    ti.hwnd = hwndCanvas;
 
-    SendMessage(this->hwndInfotip, TTM_DELTOOL, 0, (LPARAM)&ti);
-    this->infotipVisible = false;
-}
-
-// TODO: find a better place to put these
-
-DoubleBuffer::DoubleBuffer(HWND hwnd, RectI rect) :
-    hTarget(hwnd), rect(rect), hdcBuffer(NULL), doubleBuffer(NULL)
-{
-    hdcCanvas = ::GetDC(hwnd);
-
-    if (rect.IsEmpty())
-        return;
-
-    doubleBuffer = CreateCompatibleBitmap(hdcCanvas, rect.dx, rect.dy);
-    if (!doubleBuffer)
-        return;
-
-    hdcBuffer = CreateCompatibleDC(hdcCanvas);
-    if (!hdcBuffer)
-        return;
-
-    DeleteObject(SelectObject(hdcBuffer, doubleBuffer));
-}
-
-DoubleBuffer::~DoubleBuffer()
-{
-    DeleteObject(doubleBuffer);
-    DeleteDC(hdcBuffer);
-    ReleaseDC(hTarget, hdcCanvas);
-}
-
-void DoubleBuffer::Flush(HDC hdc)
-{
-    assert(hdc != hdcBuffer);
-    if (hdcBuffer)
-        BitBlt(hdc, rect.x, rect.y, rect.dx, rect.dy, hdcBuffer, 0, 0, SRCCOPY);
+    SendMessage(hwndInfotip, TTM_DELTOOL, 0, (LPARAM)&ti);
+    infotipVisible = false;
 }
 
 RectI SelectionOnPage::GetRect(DisplayModel *dm)

@@ -578,6 +578,39 @@ bool CopyTextToClipboard(const TCHAR *text, bool appendOnly)
     return handle != NULL;
 }
 
+DoubleBuffer::DoubleBuffer(HWND hwnd, RectI rect) :
+    hTarget(hwnd), rect(rect), hdcBuffer(NULL), doubleBuffer(NULL)
+{
+    hdcCanvas = ::GetDC(hwnd);
+
+    if (rect.IsEmpty())
+        return;
+
+    doubleBuffer = CreateCompatibleBitmap(hdcCanvas, rect.dx, rect.dy);
+    if (!doubleBuffer)
+        return;
+
+    hdcBuffer = CreateCompatibleDC(hdcCanvas);
+    if (!hdcBuffer)
+        return;
+
+    DeleteObject(SelectObject(hdcBuffer, doubleBuffer));
+}
+
+DoubleBuffer::~DoubleBuffer()
+{
+    DeleteObject(doubleBuffer);
+    DeleteDC(hdcBuffer);
+    ReleaseDC(hTarget, hdcCanvas);
+}
+
+void DoubleBuffer::Flush(HDC hdc)
+{
+    assert(hdc != hdcBuffer);
+    if (hdcBuffer)
+        BitBlt(hdc, rect.x, rect.y, rect.dx, rect.dy, hdcBuffer, 0, 0, SRCCOPY);
+}
+
 namespace Win {
 namespace Font {
 

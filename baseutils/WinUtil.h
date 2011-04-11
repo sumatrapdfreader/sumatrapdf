@@ -88,6 +88,20 @@ public:
     }
 };
 
+class DoubleBuffer {
+    HWND hTarget;
+    HDC hdcCanvas, hdcBuffer;
+    HBITMAP doubleBuffer;
+    RectI rect;
+
+public:
+    DoubleBuffer(HWND hwnd, RectI rect);
+    ~DoubleBuffer();
+
+    HDC GetDC() const { return hdcBuffer ? hdcBuffer : hdcCanvas; }
+    void Flush(HDC hdc);
+};
+
 inline RectI MapRectToWindow(RectI rect, HWND hwndFrom, HWND hwndTo)
 {
     RECT rc = rect.ToRECT();
