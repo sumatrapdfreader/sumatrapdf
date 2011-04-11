@@ -5151,6 +5151,8 @@ void CreateToolbar(WindowInfo *win, HINSTANCE hInst) {
 static LRESULT CALLBACK WndProcSpliter(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     WindowInfo *win = FindWindowInfoByHwnd(hwnd);
+    if (!win)
+        return DefWindowProc(hwnd, message, wParam, lParam);
 
     switch (message)
     {
