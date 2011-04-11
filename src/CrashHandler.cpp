@@ -702,8 +702,8 @@ static void GetProgramVersion(Str::Str<char>& s)
 }
 
 static char *BuildCrashInfoText()
-{    
-    if (!InitializeDbgHelp())
+{
+    if (!gSymInitializeOk)
         return NULL;
 
     Str::Str<char> s(16 * 1024);
@@ -874,6 +874,10 @@ static bool DownloadSymbols(const TCHAR *symDir)
 void SubmitCrashInfo()
 {
     char *s1, *s2 = NULL;
+
+    if (!InitializeDbgHelp())
+        goto Exit;
+
     s1 = BuildCrashInfoText();
     if (!s1)
         goto Exit;
