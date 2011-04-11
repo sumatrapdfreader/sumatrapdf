@@ -7,7 +7,8 @@
 #include "Http.h"
 #include "FileUtil.h"
 #include "WinUtil.h"
-#include "Version.h"
+
+#define USER_AGENT _T("Simple HTTP Lib")
 
 // returns ERROR_SUCCESS or an error code
 DWORD HttpGet(const TCHAR *url, Str::Str<char> *dataOut)
@@ -15,8 +16,7 @@ DWORD HttpGet(const TCHAR *url, Str::Str<char> *dataOut)
     DWORD error = ERROR_SUCCESS;
 
     HINTERNET hFile = NULL;
-    HINTERNET hInet = InternetOpen(APP_NAME_STR _T("/") CURR_VERSION_STR,
-        INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
+    HINTERNET hInet = InternetOpen(USER_AGENT, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
     if (!hInet)
         goto Error;
 
@@ -58,8 +58,7 @@ bool HttpGetToFile(const TCHAR *url, const TCHAR *destFilePath)
         goto Exit;
     }
 
-    hInet = InternetOpen(APP_NAME_STR _T("/") CURR_VERSION_STR,
-        INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
+    hInet = InternetOpen(USER_AGENT, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
     if (!hInet)
         goto Exit;
 
@@ -99,8 +98,7 @@ bool HttpPost(const TCHAR *server, const TCHAR *url, Str::Str<char> *headers, St
     Str::Str<char> resp(2048);
     bool ok = false;
     HINTERNET hInet = NULL, hConn = NULL, hReq = NULL;
-    hInet = InternetOpen(APP_NAME_STR _T("/") CURR_VERSION_STR,
-                         INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
+    hInet = InternetOpen(USER_AGENT, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
     if (!hInet)
         goto Exit;
     hConn = InternetConnect(hInet, server, INTERNET_DEFAULT_HTTP_PORT,
