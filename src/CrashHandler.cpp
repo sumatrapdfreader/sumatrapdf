@@ -21,6 +21,17 @@
 
 #define DEBUG_CRASH_INFO 1
 
+/* Notes.
+
+1. Instead of relying on whatever (crappy) dbghelp.dll is bundled with the os,
+   we could download latest, tested version from our website and LoadLibrary() it.
+
+2. For more reliability, instead of doing complicated things inside exception
+   handler, we could sublaunch ourselves in the "submit crash report for this
+   process" mode. External process should be able to walk our callstack etc.
+   (except maybe logging current exception ?)
+*/
+
 typedef BOOL WINAPI MiniDumpWriteProc(
     HANDLE hProcess,
     DWORD ProcessId,
@@ -144,6 +155,21 @@ static void LogDbg(TCHAR *s)
 static void LogDbg(TCHAR *s) {}
 #endif
 
+#if defined(DEBUG_CRASH_INFO)
+static void LogDbgCurrDir()
+{
+    char buf[1024] = { 0 };
+    DWORD res = GetCurrentDirectoryA(sizeof(buf), buf);
+    if (res < sizeof(buf)) {
+        LogDbg("Current directory: ");
+        LogDbg(buf);
+        LogDbg("\r\n");
+    }
+}
+#else
+static void LogDbgCurrDir() { }
+#endif
+
 static bool LoadDbgHelpFuncs()
 {
     if (_MiniDumpWriteDump)
@@ -196,6 +222,7 @@ static bool SetupSymbolPath()
         return false;
     }
 
+#if 0
     WCHAR buf[512];
     DWORD cchBuf = dimof(buf);
     DWORD res = GetEnvironmentVariableW(L"_NT_SYMBOL_PATH", buf, cchBuf);
@@ -208,10 +235,12 @@ static bool SetupSymbolPath()
         path.Append(buf);
         path.Append(L";");
     }
+#endif
+
     ScopedMem<TCHAR> symDir(GetCrashDumpDir());
     if (symDir) {
         path.Append(symDir);
-        path.Append(_T(";"));
+        //path.Append(_T(";"));
     }
 #if 0
     // this probably wouldn't work anyway because it requires symsrv.dll in the same directory
@@ -221,10 +250,12 @@ static bool SetupSymbolPath()
     path.Append(L"*http://msdl.microsoft.com/download/symbols;cache*");
     path.Append(symDir);
 #endif
+#if 0
     // when running local builds, *.pdb is in the same dir as *.exe 
     ScopedMem<TCHAR> exePath(GetExePath());
     ScopedMem<TCHAR> exeDir(Path::GetDir(exePath));
     path.AppendFmt(_T("%s"), exeDir);
+#endif
     BOOL ok = FALSE;
     if (_SymSetSearchPathW) {
         ok = _SymSetSearchPathW(GetCurrentProcess(), path.Get());
@@ -849,11 +880,11 @@ static bool DeleteSymbolsIfExist(const TCHAR *symDir)
 
 // In static (single executable) pre-release build, the pdb file inside 
 // symbolsZipPath is named SumatraPDF-prelease-${buildno}.pdb and must be
-// extracted under that name, to match executable name
+// extracted as "SumatraPDF.pdb"
 static bool UnpackStaticPreReleaseSymbols(const TCHAR *symbolsZipPath, const TCHAR *symDir)
 {
     FileToUnzip filesToUnnpack[] = {
-        { "SumatraPDF-prerelease", NULL, false },
+        { "SumatraPDF-prerelease", _T("SumatraPDF.pdb"), false },
         { NULL, false }
     };
     return UnzipFilesStartingWith(symbolsZipPath, filesToUnnpack, symDir);
@@ -971,29 +1002,20 @@ static bool DownloadSymbols(const TCHAR *symDir)
 //    C:\Users\kkowalczyk\Downloads etc. come from, I have no idea. Is it
 //    current directory?
 
-#if defined(DEBUG_CRASH_INFO)
-static void LogDbgCurrDir()
-{
-    char buf[1024] = { 0 };
-    DWORD res = GetCurrentDirectoryA(sizeof(buf), buf);
-    if (res < sizeof(buf)) {
-        LogDbg("Current directory: ");
-        LogDbg(buf);
-        LogDbg("\r\n");
-    }
-}
-#endif
-
 void SubmitCrashInfo()
 {
     char *s1, *s2 = NULL;
-#if defined(DEBUG_CRASH_INFO)
+
+    LogDbg("Before SymInitialize(): ");
     LogDbgCurrDir();
-#endif
+
     if (!InitializeDbgHelp()) {
         LogDbg("SubmitCrashInfo(): InitializeDbgHelp() failed\r\n");
         goto Exit;
     }
+
+    LogDbg("After SymInitialize(): ");
+    LogDbgCurrDir();
 
     s1 = BuildCrashInfoText();
     if (!s1) {
@@ -1006,6 +1028,7 @@ void SubmitCrashInfo()
         LogDbg("SubmitCrashInfo(): HasOwnSymbols() true, so skipping downloading symbols and second report\r\n");
         goto Exit;
     }
+
     if (!DownloadSymbols(GetCrashDumpDir()))
         goto Exit;
 
@@ -1013,6 +1036,7 @@ void SubmitCrashInfo()
         LogDbg("SubmitCrashInfo(): HasOwnSymbols() false after downloading symbols, so skipping second report\r\n");
         goto Exit;
     }
+
     s2 = BuildCrashInfoText();
     if (!s1) {
         LogDbg("SubmitCrashInfo(): BuildCrashInfoText() returned NULL for second report\r\n");
