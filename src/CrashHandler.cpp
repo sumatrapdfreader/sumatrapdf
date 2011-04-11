@@ -786,7 +786,7 @@ static bool UnpackLibSymbols(const TCHAR *symbolsZipPath, const TCHAR *symDir)
 {
     FileToUnzip filesToUnnpack[] = {
         { "libmupdf.pdb", NULL, false },
-        { "SumatraPDF-no-MuPDF.pdb", _T("SumatraPDF.pdb"), false },
+        { "SumatraPDF-no-MuPDF.pdb", NULL, false },
         { NULL, false }
     };
     return UnzipFilesStartingWith(symbolsZipPath, filesToUnnpack, symDir);
@@ -871,6 +871,16 @@ static bool DownloadSymbols(const TCHAR *symDir)
 // at least have non-symbolized version of callstacks
 // TODO: if it turns out that that downloading symbols is reliable, we will
 // just do it once
+
+// TODO: needs more debugging. It does seem to download and unpack pdbs but:
+// 1. It never seems to send the second crash info, after downloading symbols
+// 2. pre-release static build doesn't seem to be able to get info about addresses
+//    within SumatraPdf-prerelease-${build}.exe module
+// 3. pre-release lib (installed) build walks symbols correctly but doesn't resolve
+//    symbols using pdbs it downloaded. It does work when it picks up symbols
+//    from the build process (that path must be embedded somewhere in the .exe?)
+//    That's probably because the pdb should be SumatraPDF-no-MuPDF.pdb
+
 void SubmitCrashInfo()
 {
     char *s1, *s2 = NULL;
