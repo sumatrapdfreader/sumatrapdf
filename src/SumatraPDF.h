@@ -36,6 +36,7 @@ extern HINSTANCE                ghinst;
 extern SerializableGlobalPrefs  gGlobalPrefs;
 extern HCURSOR                  gCursorHand;
 extern bool                     gRestrictedUse;
+extern bool                     gPluginMode;
 
 
 HMENU BuildMenu(HWND hWnd);

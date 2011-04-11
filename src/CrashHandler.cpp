@@ -17,6 +17,8 @@
 #include "Http.h"
 #include "ZipUtil.h"
 
+#include "SumatraPDF.h"
+
 #include "translations.h"
 
 #define DEBUG_CRASH_INFO 1
@@ -501,8 +503,8 @@ static void GetProcessorName(Str::Str<char>& s)
 
 static void GetMachineName(Str::Str<char>& s)
 {
-    TCHAR *s1 = ReadRegStr(HKEY_LOCAL_MACHINE, _T("HARDWARE\\DESCRIPTION\\BIOS"), _T("SystemFamily"));
-    TCHAR *s2 = ReadRegStr(HKEY_LOCAL_MACHINE, _T("HARDWARE\\DESCRIPTION\\BIOS"), _T("SystemVersion"));
+    TCHAR *s1 = ReadRegStr(HKEY_LOCAL_MACHINE, _T("HARDWARE\\DESCRIPTION\\System\\BIOS"), _T("SystemFamily"));
+    TCHAR *s2 = ReadRegStr(HKEY_LOCAL_MACHINE, _T("HARDWARE\\DESCRIPTION\\System\\BIOS"), _T("SystemVersion"));
     if (!s1 && !s2)
         return;
 
@@ -892,7 +894,7 @@ static void GetExceptionInfo(Str::Str<char>& s, EXCEPTION_POINTERS *excPointers)
     GetCallstack(s, *ctx, GetCurrentThread());
 }
 
-static void GetProgramVersion(Str::Str<char>& s)
+static void GetProgramInfo(Str::Str<char>& s)
 {
     s.AppendFmt("Ver: %s", QM(CURR_VERSION));
 #ifdef SVN_PRE_RELEASE_VER
@@ -902,6 +904,7 @@ static void GetProgramVersion(Str::Str<char>& s)
     s.Append(" dbg");
 #endif
     s.Append("\r\n");
+    s.AppendFmt("Browser plugin: %s\r\n", gPluginMode ? "yes" : "no");
 }
 
 static char *BuildCrashInfoText()
@@ -910,7 +913,7 @@ static char *BuildCrashInfoText()
         return NULL;
 
     Str::Str<char> s(16 * 1024);
-    GetProgramVersion(s);
+    GetProgramInfo(s);
     GetOsVersion(s);
     GetSystemInfo(s);
     s.Append("\r\n");
