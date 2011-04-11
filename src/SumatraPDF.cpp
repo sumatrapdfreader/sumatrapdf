@@ -5714,7 +5714,8 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
     switch (message)
     {
         case WM_VSCROLL:
-            OnVScroll(win, wParam);
+            if (win)
+                OnVScroll(win, wParam);
             return WM_VSCROLL_HANDLED;
 
         case WM_HSCROLL:
