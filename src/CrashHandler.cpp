@@ -19,7 +19,7 @@
 
 #include "translations.h"
 
-//#define DEBUG_CRASH_INFO
+#define DEBUG_CRASH_INFO 1
 
 typedef BOOL WINAPI MiniDumpWriteProc(
     HANDLE hProcess,
@@ -95,6 +95,10 @@ static HANDLE gDumpThread = NULL;
 static MINIDUMP_EXCEPTION_INFORMATION gMei = { 0 };
 static BOOL gSymInitializeOk = FALSE;
 
+#if defined(DEBUG_CRASH_INFO)
+static Str::Str<char> *gDbgLog = NULL;
+#endif
+
 #define F(X) \
     { #X, (void**)&_ ## X },
 
@@ -113,6 +117,32 @@ FuncNameAddr gDbgHelpFuncs[] = {
     { NULL, NULL }
 };
 #undef F
+
+#if defined(DEBUG_CRASH_INFO)
+static void LogDbg(char *s)
+{
+    if (!s)
+        return;
+    if (!gDbgLog)
+        gDbgLog = new Str::Str<char>(2048);
+    if (!gDbgLog) return;
+    gDbgLog->Append(s);
+}
+#else
+static void LogDbg(char *s) {}
+#endif
+
+#if defined(DEBUG_CRASH_INFO)
+static void LogDbg(TCHAR *s)
+{
+    if (!s) return;
+    char *tmp = Str::Conv::ToAnsi(s);
+    LogDbg(tmp);
+    free(tmp);
+}
+#else
+static void LogDbg(TCHAR *s) {}
+#endif
 
 static bool LoadDbgHelpFuncs()
 {
@@ -161,8 +191,10 @@ static bool SetupSymbolPath()
 {
     Str::Str<WCHAR> path(1024);
 
-    if (!_SymSetSearchPathW && !_SymSetSearchPath)
+    if (!_SymSetSearchPathW && !_SymSetSearchPath) {
+        LogDbg("SetupSymbolPath(): _SymSetSearchPathW and _SymSetSearchPath missing\r\n");
         return false;
+    }
 
     WCHAR buf[512];
     DWORD cchBuf = dimof(buf);
@@ -196,10 +228,22 @@ static bool SetupSymbolPath()
     BOOL ok = FALSE;
     if (_SymSetSearchPathW) {
         ok = _SymSetSearchPathW(GetCurrentProcess(), path.Get());
+        if (ok) {
+            LogDbg("_SymSetSearchPathW() ok, path='");
+        } else {
+            LogDbg("_SymSetSearchPathW() failed, path='");
+        }
+        LogDbg(path.Get()); LogDbg("'\r\n");
     } else {
         char *tmp = Str::Conv::ToAnsi(path.Get());
         if (tmp) {
             ok = _SymSetSearchPath(GetCurrentProcess(), tmp);
+            if (ok) {
+                LogDbg("_SymSetSearchPath() ok, path='");
+            } else {
+                LogDbg("_SymSetSearchPath() failed, path='");
+            }
+            LogDbg(tmp); LogDbg("'\r\n");
             free(tmp);
         }
     }
@@ -209,15 +253,19 @@ static bool SetupSymbolPath()
 
 static bool InitializeDbgHelp()
 {
-    if (!LoadDbgHelpFuncs())
+    if (!LoadDbgHelpFuncs()) {
+        LogDbg("InitializeDbgHelp(): LoadDbgHelpFuncs() failed\r\n");
         return false;
+    }
 
     if (!_SymInitialize)
         return false;
 
     gSymInitializeOk = _SymInitialize(GetCurrentProcess(), NULL, TRUE);
-    if (!gSymInitializeOk)
+    if (!gSymInitializeOk) {
+        LogDbg("InitializeDbgHelp(): _SymInitialize() failed\r\n");
         return false;
+    }
 
     DWORD symOptions =_SymGetOptions();
     symOptions = (SYMOPT_LOAD_LINES | SYMOPT_DEFERRED_LOADS | SYMOPT_UNDNAME);
@@ -742,6 +790,16 @@ static void SendCrashInfo(char *s)
     HttpPost(CRASH_SUBMIT_SERVER, CRASH_SUBMIT_URL, &headers, &data);
 }
 
+
+#if defined(DEBUG_CRASH_INFO)
+static void SendDebugCrashInfo()
+{
+    if (!gDbgLog)
+        return;
+    SendCrashInfo(gDbgLog->Get());
+}
+#endif
+
 // We might have symbol files for older builds. If we're here, then we
 // didn't get the symbols so we assume it's because symbols didn't match
 // Returns false if files were there but we couldn't delete them
@@ -801,17 +859,12 @@ static bool DownloadPreReleaseSymbols(const TCHAR *symDir)
     bool ok = false;
     if (IsStaticBuild()) {
         ok = UnpackStaticPreReleaseSymbols(symbolsZipPath, symDir);
-#if defined(DEBUG_CRASH_INFO)
         if (!ok)
-            MessageBox(NULL, _T("Couldn't unpack pre-release symbols for static build"), _T("CrashHandler info"), MB_ICONERROR | MB_OK);
-#endif
-        
+            LogDbg("Couldn't unpack pre-release symbols for static build\r\n");
     } else {
         ok = UnpackLibSymbols(symbolsZipPath, symDir);
-#if defined(DEBUG_CRASH_INFO)
         if (!ok)
-            MessageBox(NULL, _T("Couldn't unpack pre-relase symbols for lib build"), _T("CrashHandler info"), MB_ICONERROR | MB_OK);
-#endif
+            LogDbg("Couldn't unpack pre-release symbols for lib build\r\n");
     }
     File::Delete(symbolsZipPath);
     return ok;
@@ -822,24 +875,18 @@ static bool DownloadReleaseSymbols(const TCHAR *symDir)
     TCHAR *url = _T("http://kjkpub.s3.amazonaws.com/sumatrapdf/rel/SumatraPDF-") _T(QM(CURR_VERSION)) _T(".pdb.zip");
     ScopedMem<TCHAR> symbolsZipPath(Path::Join(symDir, _T("symbols_tmp.zip")));
     if (!HttpGetToFile(url, symbolsZipPath)) {
-#if defined(DEBUG_CRASH_INFO)
-        MessageBox(NULL, _T("Couldn't download release symbols"), _T("CrashHandler info"), MB_ICONERROR | MB_OK);
-#endif
+        LogDbg("Couldn't download release symbols\r\n");
         return false;
     }
     bool ok = false;
     if (IsStaticBuild()) {
         ok = UnpackStaticReleaseSymbols(symbolsZipPath, symDir);
-#if defined(DEBUG_CRASH_INFO)
         if (!ok)
-            MessageBox(NULL, _T("Couldn't unpack release symbols for static build"), _T("CrashHandler info"), MB_ICONERROR | MB_OK);
-#endif
+            LogDbg("Couldn't unpack release symbols for static build\r\n");
     } else {
         ok = UnpackLibSymbols(symbolsZipPath, symDir);
-#if defined(DEBUG_CRASH_INFO)
         if (!ok)
-            MessageBox(NULL, _T("Couldn't unpack release symbols for lib build"), _T("CrashHandler info"), MB_ICONERROR | MB_OK);
-#endif
+            LogDbg("Couldn't unpack release symbols for lib build\r\n");
     }
     File::Delete(symbolsZipPath);
     return ok;
@@ -885,29 +932,39 @@ void SubmitCrashInfo()
 {
     char *s1, *s2 = NULL;
 
-    if (!InitializeDbgHelp())
+    if (!InitializeDbgHelp()) {
+        LogDbg("SubmitCrashInfo(): InitializeDbgHelp() failed\r\n");
         goto Exit;
+    }
 
     s1 = BuildCrashInfoText();
-    if (!s1)
+    if (!s1) {
+        LogDbg("SubmitCrashInfo(): BuildCrashInfoText() returned NULL for first report\r\n");
         goto Exit;
+    }
     SendCrashInfo(s1);
-    if (HasOwnSymbols())
+    if (HasOwnSymbols()) {
+        LogDbg("SubmitCrashInfo(): HasOwnSymbols() so skipping second report\r\n");
         goto Exit;
+    }
     if (!DownloadSymbols(GetCrashDumpDir()))
         goto Exit;
-    // TODO: should I re-initialize dbghlp? I'm getting empty callstack
     if (!HasOwnSymbols()) {
-#if defined(DEBUG_CRASH_INFO)
-        MessageBox(NULL, _T("Downloaded pdb but couldn't resolve symbols"), _T("CrashHandler info"), MB_ICONERROR | MB_OK);
-#endif
+        LogDbg("SubmitCrashInfo(): HasOwnSymbols() false after downloading symbols, so skipping second report\r\n");
         goto Exit;
     }
     s2 = BuildCrashInfoText();
+    if (!s1) {
+        LogDbg("SubmitCrashInfo(): BuildCrashInfoText() returned NULL for second report\r\n");
+        goto Exit;
+    }
     SendCrashInfo(s2);
 Exit:
     free(s2);
-    free(s1);    
+    free(s1);
+#if defined(DEBUG_CRASH_INFO)
+    SendDebugCrashInfo();
+#endif
 }
 
 static void WriteMiniDump()
