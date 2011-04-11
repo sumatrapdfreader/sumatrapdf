@@ -87,7 +87,7 @@ typedef BOOL _stdcall SymSetSearchPathProc(
     HANDLE hProcess,
     PCSTR SearchPath);
 
-BOOL _stdcall SymRefreshModuleListProc(
+typedef BOOL _stdcall SymRefreshModuleListProc(
   HANDLE hProcess);
 
 typedef BOOL __stdcall SymGetLineFromAddr64Proc(
@@ -1070,6 +1070,8 @@ void SubmitCrashInfo()
 
     if (!DownloadSymbols(GetCrashDumpDir()))
         goto Exit;
+
+    _SymRefreshModuleList(GetCurrentProcess());
 
     if (!HasOwnSymbols()) {
         LogDbg("SubmitCrashInfo(): HasOwnSymbols() false after downloading symbols, so skipping second report\r\n");
