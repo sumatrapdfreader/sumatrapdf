@@ -2580,7 +2580,7 @@ static void OnSelectionStop(WindowInfo *win, int x, int y, bool aborted)
 static void OnMouseLeftButtonDown(WindowInfo *win, int x, int y, WPARAM key)
 {
     //DBG_OUT("Left button clicked on %d %d\n", x, y);
-    if (!win || !win->IsDocLoaded())
+    if (!win->IsDocLoaded())
         return;
 
     if (MA_DRAGGING_RIGHT == win->mouseAction)
@@ -2614,7 +2614,7 @@ static void OnMouseLeftButtonDown(WindowInfo *win, int x, int y, WPARAM key)
 
 static void OnMouseLeftButtonUp(WindowInfo *win, int x, int y, WPARAM key)
 {
-    if (!win || !win->IsDocLoaded())
+    if (!win->IsDocLoaded())
         return;
 
     assert(win->dm);
@@ -2662,8 +2662,6 @@ static void OnMouseLeftButtonUp(WindowInfo *win, int x, int y, WPARAM key)
 static void OnMouseLeftButtonDblClk(WindowInfo *win, int x, int y, WPARAM key)
 {
     //DBG_OUT("Left button clicked on %d %d\n", x, y);
-    if (!win) return;
-
     if ((win->fullScreen || win->presentation) && !(key & ~MK_LBUTTON)) {
         // in presentation and fullscreen modes, left clicks turn the page,
         // make two quick left clicks (AKA one double-click) turn two pages
@@ -2713,9 +2711,6 @@ static void OnMouseMiddleButtonDown(WindowInfo *win, int x, int y, int key)
 static void OnMouseRightButtonDown(WindowInfo *win, int x, int y, int key)
 {
     //DBG_OUT("Right button clicked on %d %d\n", x, y);
-    assert (win);
-    if (!win) return;
-
     if (!win->IsDocLoaded())
         return;
 
@@ -2735,9 +2730,6 @@ static void OnMouseRightButtonDown(WindowInfo *win, int x, int y, int key)
 
 static void OnMouseRightButtonUp(WindowInfo *win, int x, int y, WPARAM key)
 {
-    assert (win);
-    if (!win) return;
-
     if (!win->IsDocLoaded())
         return;
 
@@ -2771,9 +2763,6 @@ static void OnMouseRightButtonUp(WindowInfo *win, int x, int y, WPARAM key)
 
 static void OnMouseRightButtonDblClick(WindowInfo *win, int x, int y, int key)
 {
-    assert(win);
-    if (!win) return;
-
     if ((win->fullScreen || win->presentation) && !(key & ~MK_RBUTTON)) {
         // in presentation and fullscreen modes, right clicks turn the page,
         // make two quick right clicks (AKA one double-click) turn two pages
@@ -5688,6 +5677,122 @@ static void CreateInfotipForElement(WindowInfo *win, int pageNo, PageElement *el
     win->CreateInfotip(text, rc.Convert<int>());
 }
 
+static LRESULT OnSetCursor(WindowInfo *win, HWND hwnd)
+{
+    POINT pt;
+
+    if (!win->IsDocLoaded()) {        
+        win->DeleteInfotip();
+        return FALSE;
+    }
+
+    if (win->mouseAction != MA_IDLE)
+        win->DeleteInfotip();
+
+    switch (win->mouseAction) {
+        case MA_DRAGGING:
+        case MA_DRAGGING_RIGHT:
+            SetCursor(gCursorDrag);
+            return TRUE;
+        case MA_SCROLLING:
+            SetCursor(gCursorScroll);
+            return TRUE;
+        case MA_SELECTING_TEXT:
+            SetCursor(gCursorIBeam);
+            return TRUE;
+        case MA_SELECTING:
+            break;
+        case MA_IDLE:
+            if (GetCursor() && GetCursorPos(&pt) && ScreenToClient(hwnd, &pt)) {
+                PointI pti(pt.x, pt.y);
+                PageElement *pageEl;
+                if ((pageEl = win->dm->getLinkAtPosition(pti))) {
+                    int pageNo = win->dm->getPageNoByPoint(pti);
+                    CreateInfotipForElement(win, pageNo, pageEl);
+                    SetCursor(gCursorHand);
+                    delete pageEl;
+                    return TRUE;
+                }
+                if ((pageEl = win->dm->getCommentAtPosition(pti))) {
+                    int pageNo = win->dm->getPageNoByPoint(pti);
+                    CreateInfotipForElement(win, pageNo, pageEl);
+                    delete pageEl;
+                }
+                else
+                    win->DeleteInfotip();
+                if (win->dm->isOverText(pti.x, pti.y))
+                    SetCursor(gCursorIBeam);
+                else
+                    SetCursor(gCursorArrow);
+                return TRUE;
+            }
+            win->DeleteInfotip();
+    }
+    if (win->presentation)
+        return TRUE;
+    return FALSE;
+}
+
+static void OnTimer(WindowInfo *win, HWND hwnd, WPARAM wParam)
+{
+    POINT pt;
+
+    if (REPAINT_TIMER_ID == wParam) {
+        win->delayedRepaintTimer = 0;
+        KillTimer(hwnd, REPAINT_TIMER_ID);
+        win->RedrawAll();
+        return;
+    }
+
+    if (SMOOTHSCROLL_TIMER_ID == wParam) {
+        if (MA_SCROLLING == win->mouseAction)
+            win->MoveDocBy(win->xScrollSpeed, win->yScrollSpeed);
+        else if (MA_SELECTING == win->mouseAction || MA_SELECTING_TEXT == win->mouseAction) {
+            GetCursorPos(&pt);
+            ScreenToClient(win->hwndCanvas, &pt);
+            OnMouseMove(win, pt.x, pt.y, MK_CONTROL);
+        }
+        else {
+            KillTimer(hwnd, SMOOTHSCROLL_TIMER_ID);
+            win->yScrollSpeed = 0;
+            win->xScrollSpeed = 0;
+        }
+        return;
+    }
+
+    if (HIDE_CURSOR_TIMER_ID == wParam) {
+        KillTimer(hwnd, HIDE_CURSOR_TIMER_ID);
+        if (win->presentation)
+            SetCursor(NULL);
+        return;
+    }
+
+    if (HIDE_FWDSRCHMARK_TIMER_ID == wParam) {
+        win->fwdsearchmark.hideStep++;
+        if (1 == win->fwdsearchmark.hideStep)
+        {
+            SetTimer(hwnd, HIDE_FWDSRCHMARK_TIMER_ID, HIDE_FWDSRCHMARK_DECAYINTERVAL_IN_MS, NULL);
+        }
+        else if (win->fwdsearchmark.hideStep >= HIDE_FWDSRCHMARK_STEPS)
+        {
+            KillTimer(hwnd, HIDE_FWDSRCHMARK_TIMER_ID);
+            win->fwdsearchmark.show = false;
+            win->fwdsearchmark.hideStep = 0;
+            win->RepaintAsync();
+        }
+        else
+            win->RepaintAsync();
+        return;
+    }
+
+    if (AUTO_RELOAD_TIMER_ID == wParam) {
+        KillTimer(hwnd, AUTO_RELOAD_TIMER_ID);
+        win->Reload(true);
+        return;
+    }
+}    
+
+// TODO: shouldn't this be per window?
 static int  gDeltaPerLine = 0;         // for mouse wheel logic
 static bool gWheelMsgRedirect = false; // set when WM_MOUSEWHEEL has been passed on (to prevent recursion)
 
@@ -5704,11 +5809,30 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
             return res;
     }
 
+    // messages that don't require win
+    switch (message)
+    {
+        case WM_DROPFILES:
+            OnDropFiles((HDROP)wParam);
+            break;
+
+        case WM_ERASEBKGND:
+            // do nothing, helps to avoid flicker
+            return TRUE;
+
+        case WM_TIMER:
+            assert(win);
+            break;
+    }
+
+    if (!win)
+        return DefWindowProc(hwnd, message, wParam, lParam);
+
+    // messages that require win
     switch (message)
     {
         case WM_VSCROLL:
-            if (win)
-                OnVScroll(win, wParam);
+            OnVScroll(win, wParam);
             return WM_VSCROLL_HANDLED;
 
         case WM_HSCROLL:
@@ -5716,8 +5840,7 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
             return WM_HSCROLL_HANDLED;
 
         case WM_MOUSEMOVE:
-            if (win)
-                OnMouseMove(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
+            OnMouseMove(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
             break;
 
         case WM_LBUTTONDBLCLK:
@@ -5733,7 +5856,7 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
             break;
 
         case WM_MBUTTONDOWN:
-            if (win && win->IsDocLoaded())
+            if (win->IsDocLoaded())
             {
                 SetTimer(hwnd, SMOOTHSCROLL_TIMER_ID, SMOOTHSCROLL_DELAY_IN_MS, NULL);
                 // TODO: Create window that shows location of initial click for reference
@@ -5742,138 +5865,25 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
             return 0;
 
         case WM_RBUTTONDBLCLK:
-            if (win)
-                OnMouseRightButtonDblClick(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
+            OnMouseRightButtonDblClick(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
             break;
 
         case WM_RBUTTONDOWN:
-            if (win)
-                OnMouseRightButtonDown(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
+            OnMouseRightButtonDown(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
             break;
 
         case WM_RBUTTONUP:
-            if (win)
-                OnMouseRightButtonUp(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
+            OnMouseRightButtonUp(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
             break;
 
         case WM_SETCURSOR:
-            if (!win)
-                return DefWindowProc(hwnd, message, wParam, lParam);
-
-            if (win->IsDocLoaded()) {
-                if (win->mouseAction != MA_IDLE)
-                    win->DeleteInfotip();
-
-                switch (win->mouseAction) {
-                case MA_DRAGGING:
-                case MA_DRAGGING_RIGHT:
-                    SetCursor(gCursorDrag);
-                    return TRUE;
-                case MA_SCROLLING:
-                    SetCursor(gCursorScroll);
-                    return TRUE;
-                case MA_SELECTING_TEXT:
-                    SetCursor(gCursorIBeam);
-                    return TRUE;
-                case MA_SELECTING:
-                    break;
-                case MA_IDLE:
-                    if (GetCursor() && GetCursorPos(&pt) && ScreenToClient(hwnd, &pt)) {
-                        PointI pti(pt.x, pt.y);
-                        PageElement *pageEl;
-                        if ((pageEl = win->dm->getLinkAtPosition(pti))) {
-                            int pageNo = win->dm->getPageNoByPoint(pti);
-                            CreateInfotipForElement(win, pageNo, pageEl);
-                            SetCursor(gCursorHand);
-                            delete pageEl;
-                            return TRUE;
-                        }
-                        if ((pageEl = win->dm->getCommentAtPosition(pti))) {
-                            int pageNo = win->dm->getPageNoByPoint(pti);
-                            CreateInfotipForElement(win, pageNo, pageEl);
-                            delete pageEl;
-                        }
-                        else
-                            win->DeleteInfotip();
-                        if (win->dm->isOverText(pti.x, pti.y))
-                            SetCursor(gCursorIBeam);
-                        else
-                            SetCursor(gCursorArrow);
-                        return TRUE;
-                    }
-                    win->DeleteInfotip();
-                }
-                if (win->presentation)
-                    return TRUE;
-            }
-            else {
-                win->DeleteInfotip();
-            }
+            if (OnSetCursor(win, hwnd))
+                return TRUE;
             return DefWindowProc(hwnd, message, wParam, lParam);
 
         case WM_TIMER:
-            assert(win);
-            if (win) {
-                switch (wParam) {
-                case REPAINT_TIMER_ID:
-                    win->delayedRepaintTimer = 0;
-                    KillTimer(hwnd, REPAINT_TIMER_ID);
-                    win->RedrawAll();
-                    break;
-                case SMOOTHSCROLL_TIMER_ID:
-                    if (MA_SCROLLING == win->mouseAction)
-                        win->MoveDocBy(win->xScrollSpeed, win->yScrollSpeed);
-                    else if (MA_SELECTING == win->mouseAction || MA_SELECTING_TEXT == win->mouseAction) {
-                        GetCursorPos(&pt);
-                        ScreenToClient(win->hwndCanvas, &pt);
-                        OnMouseMove(win, pt.x, pt.y, MK_CONTROL);
-                    }
-                    else {
-                        KillTimer(hwnd, SMOOTHSCROLL_TIMER_ID);
-                        win->yScrollSpeed = 0;
-                        win->xScrollSpeed = 0;
-                    }
-                    break;
-                case HIDE_CURSOR_TIMER_ID:
-                    KillTimer(hwnd, HIDE_CURSOR_TIMER_ID);
-                    if (win->presentation)
-                        SetCursor(NULL);
-                    break;
-                case HIDE_FWDSRCHMARK_TIMER_ID:
-                    {
-                        win->fwdsearchmark.hideStep++;
-                        if (1 == win->fwdsearchmark.hideStep)
-                        {
-                            SetTimer(hwnd, HIDE_FWDSRCHMARK_TIMER_ID, HIDE_FWDSRCHMARK_DECAYINTERVAL_IN_MS, NULL);
-                        }
-                        else if (win->fwdsearchmark.hideStep >= HIDE_FWDSRCHMARK_STEPS)
-                        {
-                            KillTimer(hwnd, HIDE_FWDSRCHMARK_TIMER_ID);
-                            win->fwdsearchmark.show = false;
-                            win->fwdsearchmark.hideStep = 0;
-                            win->RepaintAsync();
-                        }
-                        else
-                        {
-                            win->RepaintAsync();
-                        }
-                    }
-                    break;
-                case AUTO_RELOAD_TIMER_ID:
-                    KillTimer(hwnd, AUTO_RELOAD_TIMER_ID);
-                    win->Reload(true);
-                    break;
-                }
-            }
+            OnTimer(win, hwnd, wParam);
             break;
-
-        case WM_DROPFILES:
-            OnDropFiles((HDROP)wParam);
-            break;
-
-        case WM_ERASEBKGND:
-            // do nothing, helps to avoid flicker
-            return TRUE;
 
         case WM_PAINT:
             /* it might happen that we get WM_PAINT after destroying a window */
@@ -5887,7 +5897,7 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
             break;
 
         case WM_MOUSEWHEEL:
-            if (!win || !win->IsDocLoaded())
+            if (!win->IsDocLoaded())
                 break;
 
             // Scroll the ToC sidebar, if it's visible and the cursor is in it
