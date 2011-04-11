@@ -87,6 +87,9 @@ typedef BOOL _stdcall SymSetSearchPathProc(
     HANDLE hProcess,
     PCSTR SearchPath);
 
+BOOL _stdcall SymRefreshModuleListProc(
+  HANDLE hProcess);
+
 typedef BOOL __stdcall SymGetLineFromAddr64Proc(
     HANDLE hProcess,
     DWORD64 dwAddr,
@@ -104,6 +107,7 @@ static StackWalk64Proc   *              _StackWalk64;
 static SymFunctionTableAccess64Proc *   _SymFunctionTableAccess64;
 static SymGetModuleBase64Proc *         _SymGetModuleBase64;
 static SymFromAddrProc *                _SymFromAddr;
+static SymRefreshModuleListProc *       _SymRefreshModuleList;
 static SymGetLineFromAddr64Proc *       _SymGetLineFromAddr64;
 
 static ScopedMem<TCHAR> gCrashDumpPath(NULL);
@@ -131,6 +135,7 @@ FuncNameAddr gDbgHelpFuncs[] = {
     F(SymFunctionTableAccess64)
     F(SymGetModuleBase64)
     F(SymFromAddr)
+    F(SymRefreshModuleList)
     F(SymGetLineFromAddr64)
     { NULL, NULL }
 };
@@ -313,7 +318,7 @@ static bool SetupSymbolPath()
 
     LogDbg("After setting path ");
     LogDbgSymSearchPath();
-
+    _SymRefreshModuleList(GetCurrentProcess());
     return ok;    
 }
 
@@ -327,7 +332,7 @@ static bool InitializeDbgHelp()
     if (!_SymInitialize)
         return false;
 
-    gSymInitializeOk = _SymInitialize(GetCurrentProcess(), NULL, TRUE);
+    gSymInitializeOk = _SymInitialize(GetCurrentProcess(), NULL, FALSE);
     if (!gSymInitializeOk) {
         LogDbg("InitializeDbgHelp(): _SymInitialize() failed\r\n");
         return false;
