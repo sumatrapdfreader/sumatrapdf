@@ -353,11 +353,6 @@ static bool CanViewExternallyAsPdf(WindowInfo *win=NULL)
     return File::Exists(win->loadedFilePath);
 }
 
-static bool CanPrint(WindowInfo *win=NULL)
-{
-    return CanViewExternallyAsPdf(win);
-}
-
 static bool IsNonPdfDocument(WindowInfo *win=NULL)
 {
     if (!win || !win->dm)
@@ -727,9 +722,6 @@ static HMENU RebuildFileMenu(WindowInfo *win, HMENU menu)
     Win::Menu::Empty(menu);
     BuildMenuFromMenuDef(menuDefFile, dimof(menuDefFile), menu);
     AppendRecentFilesToMenu(menu);
-
-    if (!CanPrint(win))
-        Win::Menu::Hide(menu, IDM_PRINT);
 
     // Suppress menu items that depend on specific software being installed:
     // e-mail client, Adobe Reader, Foxit, PDF-XChange
