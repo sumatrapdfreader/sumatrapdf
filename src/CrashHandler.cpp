@@ -41,10 +41,13 @@ typedef BOOL WINAPI MiniDumpWriteProc(
     PMINIDUMP_USER_STREAM_INFORMATION UserStreamParam,
     PMINIDUMP_CALLBACK_INFORMATION CallbackParam);
 
-typedef BOOL _stdcall SymInitializeProc(
+typedef BOOL _stdcall SymInitializeWProc(
     HANDLE hProcess,
-    PCSTR UserSearchPath,
+    PCWSTR UserSearchPath,
     BOOL fInvadeProcess);
+
+typedef BOOL _stdcall SymCleanupProc(
+  HANDLE hProcess);
 
 typedef DWORD _stdcall SymGetOptionsProc();
 typedef DWORD _stdcall SymSetOptionsProc(DWORD SymOptions);
@@ -97,7 +100,8 @@ typedef BOOL __stdcall SymGetLineFromAddr64Proc(
     PIMAGEHLP_LINE64 Line);
 
 static MiniDumpWriteProc *              _MiniDumpWriteDump;
-static SymInitializeProc *              _SymInitialize;
+static SymInitializeWProc *             _SymInitializeW;
+static SymCleanupProc *                 _SymCleanup;
 static SymGetOptionsProc *              _SymGetOptions;
 static SymSetOptionsProc *              _SymSetOptions;
 static SymGetSearchPathWProc *          _SymGetSearchPathW;
@@ -125,7 +129,8 @@ static Str::Str<char> *gDbgLog = NULL;
 
 FuncNameAddr gDbgHelpFuncs[] = {
     F(MiniDumpWriteDump)
-    F(SymInitialize)
+    F(SymInitializeW)
+    F(SymCleanup)
     F(SymGetOptions)
     F(SymSetOptions)
     F(SymGetSearchPathW)
@@ -142,7 +147,7 @@ FuncNameAddr gDbgHelpFuncs[] = {
 #undef F
 
 #if defined(DEBUG_CRASH_INFO)
-static void LogDbg(char *s)
+static void LogDbg(const char *s)
 {
     if (!s)
         return;
@@ -152,11 +157,11 @@ static void LogDbg(char *s)
     gDbgLog->Append(s);
 }
 #else
-static void LogDbg(char *s) {}
+static void LogDbg(const char *s) {}
 #endif
 
 #if defined(DEBUG_CRASH_INFO)
-static void LogDbg(TCHAR *s)
+static void LogDbg(const WCHAR *s)
 {
     if (!s) return;
     char *tmp = Str::Conv::ToAnsi(s);
@@ -164,7 +169,7 @@ static void LogDbg(TCHAR *s)
     free(tmp);
 }
 #else
-static void LogDbg(TCHAR *s) {}
+static void LogDbg(const WCHAR *s) {}
 #endif
 
 #if defined(DEBUG_CRASH_INFO)
@@ -212,11 +217,8 @@ static bool LoadDbgHelpFuncs()
         }
     }
 #endif
-    HMODULE h = LoadLibrary(_T("C:\\Program Files (x86)\\Microsoft Visual Studio 10.0\\Team Tools\\Performance Tools\\dbghelp.dll"));
-    if (h)
-        LoadDllFuncs(h, gDbgHelpFuncs);
-    else
-        LoadDllFuncs(_T("DBGHELP.DLL"), gDbgHelpFuncs);
+
+    LoadDllFuncs(_T("DBGHELP.DLL"), gDbgHelpFuncs);
     return _MiniDumpWriteDump != 0;
 }
 
@@ -245,20 +247,9 @@ add: "srv*c:\\symbols*http://msdl.microsoft.com/download/symbols;cache*c:\\symbo
 (except a better directory than c:\\symbols
 */
 
-static bool SetupSymbolPath()
+static WCHAR *GetSymbolPath()
 {
     Str::Str<WCHAR> path(1024);
-
-    //SetCurrentDirectory(GetCrashDumpDir());
-
-    if (!_SymSetSearchPathW && !_SymSetSearchPath) {
-        LogDbg("SetupSymbolPath(): _SymSetSearchPathW and _SymSetSearchPath missing\r\n");
-        return false;
-    }
-
-    LogDbg("Before setting path ");
-    LogDbgSymSearchPath();
-
 #if 0
     WCHAR buf[512];
     DWORD cchBuf = dimof(buf);
@@ -293,17 +284,36 @@ static bool SetupSymbolPath()
     ScopedMem<TCHAR> exeDir(Path::GetDir(exePath));
     path.AppendFmt(_T("%s"), exeDir);
 #endif
+    return path.StealData();
+}
+
+static bool SetupSymbolPath()
+{
+    const TCHAR *path = NULL;
+    if (!_SymSetSearchPathW && !_SymSetSearchPath) {
+        LogDbg("SetupSymbolPath(): _SymSetSearchPathW and _SymSetSearchPath missing\r\n");
+        return false;
+    }
+    LogDbg("Before setting path ");
+    LogDbgSymSearchPath();
+
+    path = GetSymbolPath();
+    if (!path) {
+        LogDbg("SetupSymbolPath(): GetSymbolPath() returned NULL\r\n");
+        return false;
+    }
+
     BOOL ok = FALSE;
     if (_SymSetSearchPathW) {
-        ok = _SymSetSearchPathW(GetCurrentProcess(), path.Get());
+        ok = _SymSetSearchPathW(GetCurrentProcess(), path);
         if (ok) {
             LogDbg("_SymSetSearchPathW() ok, path='");
         } else {
             LogDbg("_SymSetSearchPathW() failed, path='");
         }
-        LogDbg(path.Get()); LogDbg("'\r\n");
+        LogDbg(path); LogDbg("'\r\n");
     } else {
-        char *tmp = Str::Conv::ToAnsi(path.Get());
+        char *tmp = Str::Conv::ToAnsi(path);
         if (tmp) {
             ok = _SymSetSearchPath(GetCurrentProcess(), tmp);
             if (ok) {
@@ -319,7 +329,8 @@ static bool SetupSymbolPath()
     LogDbg("After setting path ");
     LogDbgSymSearchPath();
     _SymRefreshModuleList(GetCurrentProcess());
-    return ok;    
+    free((void*)path);
+    return ok;
 }
 
 static bool InitializeDbgHelp()
@@ -329,10 +340,14 @@ static bool InitializeDbgHelp()
         return false;
     }
 
-    if (!_SymInitialize)
+    if (!_SymInitializeW)
         return false;
 
-    gSymInitializeOk = _SymInitialize(GetCurrentProcess(), NULL, FALSE);
+    WCHAR *symPath = GetSymbolPath();
+    if (!symPath)
+        return false;
+
+    gSymInitializeOk = _SymInitializeW(GetCurrentProcess(), symPath, FALSE);
     if (!gSymInitializeOk) {
         LogDbg("InitializeDbgHelp(): _SymInitialize() failed\r\n");
         return false;
@@ -342,13 +357,13 @@ static bool InitializeDbgHelp()
     symOptions = (SYMOPT_LOAD_LINES | SYMOPT_DEFERRED_LOADS | SYMOPT_UNDNAME);
     symOptions |= SYMOPT_FAIL_CRITICAL_ERRORS; // don't show system msg box on errors
     _SymSetOptions(symOptions);
-    SetupSymbolPath();
+    //SetupSymbolPath();
     return true;
 }
 
 static bool CanStackWalk()
 {
-    return gSymInitializeOk && _SymInitialize && _SymGetOptions 
+    return gSymInitializeOk && _SymInitializeW && _SymCleanup && _SymGetOptions 
         && _SymSetOptions&& _StackWalk64 && _SymFunctionTableAccess64 
         && _SymGetModuleBase64 && _SymFromAddr;
 }
@@ -1024,23 +1039,6 @@ static bool DownloadSymbols(const TCHAR *symDir)
 // TODO: if it turns out that that downloading symbols is reliable, we will
 // just do it once
 
-// TODO: needs more debugging. It does seem to download and unpack pdbs but:
-// 1. pre-release lib (installed) build walks symbols correctly but doesn't resolve
-//    symbols using pdbs it downloaded. It does work when it picks up symbols
-//    from the build process (that path must be embedded somewhere in the .exe?)
-//    That's probably because the pdb should be SumatraPDF-no-MuPDF.pdb
-//    Note: even though symbol path is set, it seems to ignore the directory
-//    where it downloads the symbols (per procmon). If e.g. I call
-//    SymSetSearchPathW("C:\Users\kkowalczyk\AppData\Roaming\SumatraPDF\symbols;C:\Program Files (x86)\SumatraPDF")
-//    on my win7 it seems to be looking into:
-//    C:\Users\kkowalczyk\Downloads
-//    C:\Users\kkowalczyk\Downloads\exe
-//    C:\Users\kkowalczyk\Downloads\symbols
-//    C:\Users\kkowalczyk\src\sumatrapdf\obj-rel
-//    The last one is where build was done but where does the
-//    C:\Users\kkowalczyk\Downloads etc. come from, I have no idea. Is it
-//    current directory?
-
 void SubmitCrashInfo()
 {
     char *s1 = NULL, *s2 = NULL;
@@ -1071,7 +1069,11 @@ void SubmitCrashInfo()
     if (!DownloadSymbols(GetCrashDumpDir()))
         goto Exit;
 
-    _SymRefreshModuleList(GetCurrentProcess());
+    _SymCleanup(GetCurrentProcess());
+    if (!InitializeDbgHelp()) {
+        LogDbg("SubmitCrashInfo(): InitializeDbgHelp() failed\r\n");
+        goto Exit;
+    }
 
     if (!HasOwnSymbols()) {
         LogDbg("SubmitCrashInfo(): HasOwnSymbols() false after downloading symbols, so skipping second report\r\n");
