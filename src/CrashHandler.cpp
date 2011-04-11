@@ -248,6 +248,7 @@ static bool SetupSymbolPath()
         }
     }
 
+    SetCurrentDirectory(GetCrashDumpDir());
     return ok;    
 }
 
@@ -359,16 +360,18 @@ static void GetOsVersion(Str::Str<char>& s)
 
 static void StrCharAppendT(Str::Str<char>& s, TCHAR *txt)
 {
-    char *tmp = Str::Conv::ToUtf8(txt);
-    s.Append(tmp);
-    free(tmp);
+    char *tmp = Str::Conv::ToAnsi(txt);
+    if (tmp) {
+        s.Append(tmp);
+        free(tmp);
+    }
 }
 
 static void GetProcessorName(Str::Str<char>& s)
 {
     TCHAR *name = ReadRegStr(HKEY_LOCAL_MACHINE, _T("HARDWARE\\DESCRIPTION\\System\\CentralProcessor"), _T("ProcessorNameString"));
     if (!name) // if more than one processor
-        name = ReadRegStr(HKEY_LOCAL_MACHINE, _T("HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0"), _T("ProcessorNameString"));;
+        name = ReadRegStr(HKEY_LOCAL_MACHINE, _T("HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0"), _T("ProcessorNameString"));
     if (!name)
         return;
     char *tmp = Str::Conv::ToUtf8(name);
@@ -383,7 +386,6 @@ static void GetMachineName(Str::Str<char> s)
     TCHAR *s2 = ReadRegStr(HKEY_LOCAL_MACHINE, _T("HARDWARE/DESCRIPTION/BIOS"), _T("SystemVersion"));
     if (!s1 && !s2)
         return;
-    
 
     s.Append("Machine: ");
     if (!s1) {
@@ -953,10 +955,7 @@ static bool DownloadSymbols(const TCHAR *symDir)
 // just do it once
 
 // TODO: needs more debugging. It does seem to download and unpack pdbs but:
-// 1. pre-release static build doesn't seem to be able to get info about addresses
-//    within SumatraPdf-prerelease-${build}.exe module
-//    Is it because of mpress compression?
-// 2. pre-release lib (installed) build walks symbols correctly but doesn't resolve
+// 1. pre-release lib (installed) build walks symbols correctly but doesn't resolve
 //    symbols using pdbs it downloaded. It does work when it picks up symbols
 //    from the build process (that path must be embedded somewhere in the .exe?)
 //    That's probably because the pdb should be SumatraPDF-no-MuPDF.pdb
@@ -977,8 +976,11 @@ static void LogDbgCurrDir()
 {
     char buf[1024] = { 0 };
     DWORD res = GetCurrentDirectoryA(sizeof(buf), buf);
-    if (res < sizeof(buf))
+    if (res < sizeof(buf)) {
+        LogDbg("Current directory: ");
         LogDbg(buf);
+        LogDbg("\r\n");
+    }
 }
 #endif
 
@@ -998,6 +1000,7 @@ void SubmitCrashInfo()
         LogDbg("SubmitCrashInfo(): BuildCrashInfoText() returned NULL for first report\r\n");
         goto Exit;
     }
+
     SendCrashInfo(s1);
     if (HasOwnSymbols()) {
         LogDbg("SubmitCrashInfo(): HasOwnSymbols() true, so skipping downloading symbols and second report\r\n");
@@ -1005,6 +1008,7 @@ void SubmitCrashInfo()
     }
     if (!DownloadSymbols(GetCrashDumpDir()))
         goto Exit;
+
     if (!HasOwnSymbols()) {
         LogDbg("SubmitCrashInfo(): HasOwnSymbols() false after downloading symbols, so skipping second report\r\n");
         goto Exit;

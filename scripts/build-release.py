@@ -51,7 +51,7 @@ def usage():
 #   * build an installer
 #   * upload to s3 kjkpub bucket. Uploaded files:
 #       sumatrapdf/prerel/SumatraPDF-prerelease-<svnrev>.exe
-#          mpress compressed portable executable
+#          static, portable executable
 #       sumatrapdf/prerel/SumatraPDF-prerelease-<svnrev>.pdb.zip
 #          pdb symbols for libmupdf.dll and Sumatra's static and library builds
 #       sumatrapdf/prerel/SumatraPDF-prerelease-<svnrev>-install.exe
@@ -152,7 +152,8 @@ def main():
   # compat across python version
   prevdir = os.getcwd(); os.chdir(builds_dir)
   run_cmd_throw("StripReloc", "Installer.exe")
-  run_cmd_throw("mpress", "-s", "-r", os.path.basename(exe_compressed))
+  if not build_prerelease:
+    run_cmd_throw("mpress", "-s", "-r", os.path.basename(exe_compressed))
   os.chdir(prevdir)
 
   installer = build_installer_native(builds_dir, filename_base)
@@ -173,14 +174,13 @@ def main():
 
     s3UploadFilePublic(installer, s3_installer)
     s3UploadFilePublic(pdb_zip, s3_pdb_zip)
+    s3UploadFilePublic(exe_uncompressed, s3_exe)
 
     if build_prerelease:
-      s3UploadFilePublic(exe_compressed, s3_exe)
       s3UploadDataPublic(jstxt, "sumatrapdf/sumatralatest.js")
       txt = "%s\n" % ver
       s3UploadDataPublic(txt, "sumatrapdf/sumpdf-prerelease-latest.txt")
     else:
-      s3UploadFilePublic(exe_uncompressed, s3_exe)
       s3UploadFilePublic(exe_zip, s3_exe_zip)
 
     # Note: for release builds, must update sumatrapdf/sumpdf-latest.txt in s3

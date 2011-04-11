@@ -172,7 +172,7 @@ size_t GetSize(const TCHAR *filePath)
     if (0 == res)
         return INVALID_FILE_SIZE;
 
-    size_t size = fileInfo.nFileSizeLow;;
+    size_t size = fileInfo.nFileSizeLow;
 #ifdef _WIN64
     size += fileInfo.nFileSizeHigh << 32;
 #else

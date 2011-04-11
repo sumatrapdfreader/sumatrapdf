@@ -330,7 +330,7 @@ int Pdfsync::scan_and_build_index(FILE *fp)
                 break;
             }
         default:
-            DBG_OUT("Malformed pdfsync file: unknown command '%c'\n",c);;
+            DBG_OUT("Malformed pdfsync file: unknown command '%c'\n",c);
             break;
         }
         fgetpos(fp, &linepos);
