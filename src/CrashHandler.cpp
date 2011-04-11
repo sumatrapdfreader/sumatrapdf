@@ -74,6 +74,11 @@ typedef DWORD64 _stdcall SymGetModuleBase64Proc(
     HANDLE hProcess,
     DWORD64 qwAddr);
 
+typedef BOOL _stdcall SymGetSearchPathWProc(
+    HANDLE hProcess,
+    PWSTR SearchPath,
+    DWORD SearchPathLength);
+
 typedef BOOL _stdcall SymSetSearchPathWProc(
     HANDLE hProcess,
     PCWSTR SearchPath);
@@ -92,6 +97,7 @@ static MiniDumpWriteProc *              _MiniDumpWriteDump;
 static SymInitializeProc *              _SymInitialize;
 static SymGetOptionsProc *              _SymGetOptions;
 static SymSetOptionsProc *              _SymSetOptions;
+static SymGetSearchPathWProc *          _SymGetSearchPathW;
 static SymSetSearchPathWProc *          _SymSetSearchPathW;
 static SymSetSearchPathProc *           _SymSetSearchPath;
 static StackWalk64Proc   *              _StackWalk64;
@@ -118,6 +124,7 @@ FuncNameAddr gDbgHelpFuncs[] = {
     F(SymInitialize)
     F(SymGetOptions)
     F(SymSetOptions)
+    F(SymGetSearchPathW)
     F(SymSetSearchPathW)
     F(SymSetSearchPath)
     F(StackWalk64)
@@ -170,6 +177,22 @@ static void LogDbgCurrDir()
 static void LogDbgCurrDir() { }
 #endif
 
+#if defined(DEBUG_CRASH_INFO)
+static void LogDbgSymSearchPath()
+{
+    WCHAR buf[1024] = { 0 };
+    if (!_SymGetSearchPathW)
+        return;
+    if (!_SymGetSearchPathW(GetCurrentProcess(), buf, dimof(buf)))
+        return;
+    LogDbg("symbol search path: ");
+    LogDbg(buf);
+    LogDbg("\r\n");
+}
+#else
+static void LogDbgSymSearchPath() {}
+#endif
+
 static bool LoadDbgHelpFuncs()
 {
     if (_MiniDumpWriteDump)
@@ -184,7 +207,11 @@ static bool LoadDbgHelpFuncs()
         }
     }
 #endif
-    LoadDllFuncs(_T("DBGHELP.DLL"), gDbgHelpFuncs);
+    HMODULE h = LoadLibrary(_T("C:\\Program Files (x86)\\Microsoft Visual Studio 10.0\\Team Tools\\Performance Tools\\dbghelp.dll"));
+    if (h)
+        LoadDllFuncs(h, gDbgHelpFuncs);
+    else
+        LoadDllFuncs(_T("DBGHELP.DLL"), gDbgHelpFuncs);
     return _MiniDumpWriteDump != 0;
 }
 
@@ -217,10 +244,15 @@ static bool SetupSymbolPath()
 {
     Str::Str<WCHAR> path(1024);
 
+    //SetCurrentDirectory(GetCrashDumpDir());
+
     if (!_SymSetSearchPathW && !_SymSetSearchPath) {
         LogDbg("SetupSymbolPath(): _SymSetSearchPathW and _SymSetSearchPath missing\r\n");
         return false;
     }
+
+    LogDbg("Before setting path ");
+    LogDbgSymSearchPath();
 
 #if 0
     WCHAR buf[512];
@@ -279,7 +311,9 @@ static bool SetupSymbolPath()
         }
     }
 
-    SetCurrentDirectory(GetCrashDumpDir());
+    LogDbg("After setting path ");
+    LogDbgSymSearchPath();
+
     return ok;    
 }
 
