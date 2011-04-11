@@ -125,9 +125,6 @@ def main():
   exe_uncompressed = os.path.join(builds_dir, "%s-uncompr.exe" % filename_base)
   copy_from_obj_rel("SumatraPDF.exe", exe_uncompressed)
 
-  exe_compressed = os.path.join(builds_dir, "%s.exe" % filename_base)
-  copy_from_obj_rel("SumatraPDF.exe", exe_compressed)
-
   exe_no_mupdf = os.path.join(builds_dir, "SumatraPDF-no-MuPDF.exe")
   copy_from_obj_rel("SumatraPDF-no-MuPDF.exe", exe_no_mupdf)
 
@@ -152,15 +149,13 @@ def main():
   # compat across python version
   prevdir = os.getcwd(); os.chdir(builds_dir)
   run_cmd_throw("StripReloc", "Installer.exe")
-  if not build_prerelease:
-    run_cmd_throw("mpress", "-s", "-r", os.path.basename(exe_compressed))
   os.chdir(prevdir)
 
   installer = build_installer_native(builds_dir, filename_base)
 
   if not build_prerelease:
     exe_zip = os.path.join(builds_dir, "%s.zip" % filename_base)
-    zip_file(exe_zip, exe_compressed, "SumatraPDF.exe", compress=False)
+    zip_file(exe_zip, exe_uncompressed, "SumatraPDF.exe", compress=True)
     ensure_path_exists(exe_zip)
 
   if upload or upload_tmp:
@@ -189,8 +184,6 @@ def main():
   # temporary files that were in builds_dir to make creating other files possible
   temp = [installer_stub, installer_stub + ".bak", exe_no_mupdf, libmupdf, plugin, pdffilter]
   map(os.remove, temp)
-  if not build_prerelease:
-    os.remove(exe_compressed) # is in exe_zip
 
 
 if __name__ == "__main__":
