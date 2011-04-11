@@ -345,7 +345,7 @@ static bool InitializeDbgHelp()
     if (!symPath)
         return false;
 
-    gSymInitializeOk = _SymInitializeW(GetCurrentProcess(), symPath, FALSE);
+    gSymInitializeOk = _SymInitializeW(GetCurrentProcess(), symPath, TRUE);
     if (!gSymInitializeOk) {
         LogDbg("InitializeDbgHelp(): _SymInitialize() failed\r\n");
         return false;
@@ -355,6 +355,7 @@ static bool InitializeDbgHelp()
     symOptions = (SYMOPT_LOAD_LINES | SYMOPT_DEFERRED_LOADS | SYMOPT_UNDNAME);
     symOptions |= SYMOPT_FAIL_CRITICAL_ERRORS; // don't show system msg box on errors
     _SymSetOptions(symOptions);
+
     //SetupSymbolPath();
     return true;
 }
