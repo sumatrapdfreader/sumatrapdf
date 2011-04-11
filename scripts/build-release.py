@@ -85,15 +85,14 @@ def main():
   if build_prerelease:
     filename_base = "SumatraPDF-prerelease-%s" % ver
 
-  if upload:
-    log("Will upload to s3")
-
   s3_dir = "sumatrapdf/rel"
   if build_prerelease:
     s3_dir = "sumatrapdf/prerel"
-  elif upload_tmp:
-    s3_dir = "sumatrapdf/tmp"
-    log("Will upload to tmp s3")
+  if upload_tmp:
+    s3_dir += "tmp"
+
+  if upload or upload_tmp:
+    log("Will upload to s3 at %s" % s3_dir)
 
   s3_prefix = "%s/%s" % (s3_dir, filename_base)
   s3_exe           = s3_prefix + ".exe"
@@ -163,10 +162,6 @@ def main():
     zip_file(exe_zip, exe_compressed, "SumatraPDF.exe", compress=False)
     ensure_path_exists(exe_zip)
 
-  # temporary files that were in builds_dir to make creating other files possible
-  temp = [installer_stub, installer_stub + ".bak", exe_no_mupdf, libmupdf, plugin, pdffilter]
-  map(os.remove, temp)
-
   if upload or upload_tmp:
     if build_prerelease:
       jstxt  = 'var sumLatestVer = %s;\n' % ver
@@ -190,6 +185,13 @@ def main():
 
     # Note: for release builds, must update sumatrapdf/sumpdf-latest.txt in s3
     # manually to: "%s\n" % ver
+
+  # temporary files that were in builds_dir to make creating other files possible
+  temp = [installer_stub, installer_stub + ".bak", exe_no_mupdf, libmupdf, plugin, pdffilter]
+  map(os.remove, temp)
+  if not build_prerelease:
+    os.remove(exe_compressed) # is in exe_zip
+
 
 if __name__ == "__main__":
   main()
