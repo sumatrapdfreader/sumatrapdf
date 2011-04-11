@@ -21,10 +21,18 @@
 
 #define DEBUG_CRASH_INFO 1
 
+// TODO: maybe symbol directory should include build number, to disambiguate
+// them. On the other hand, dbghelp.dll doesn't seem to be confused and if
+// a .pdb file with correct name but from incorrect build is present, we'll
+// delete it and download a new one anyway
+
 /* Notes.
 
-1. Instead of relying on whatever (crappy) dbghelp.dll is bundled with the os,
-   we could download latest, tested version from our website and LoadLibrary() it.
+1. Hard won wisdom: changing symbol path with SymSetSearchPath() after modules
+   have been loaded (invideProcess=TRUE in SymInitialize() or SymRefreshModuleList()).
+   I had to provide symbol path in SymInitialize() (and either invideProcess=TRUE
+   or invideProcess=FALSE but calls SymRefreshModuleList()). There's probably
+   a way to force it, but I'm happy I found a way that works.   
 
 2. For more reliability, instead of doing complicated things inside exception
    handler, we could sublaunch ourselves in the "submit crash report for this
@@ -243,11 +251,15 @@ add GetEnvironmentVariableA("_NT_SYMBOL_PATH", ..., ...)
 add GetEnvironmentVariableA("_NT_ALTERNATE_SYMBOL_PATH", ..., ...)
 add: "srv*c:\\symbols*http://msdl.microsoft.com/download/symbols;cache*c:\\symbols"
 (except a better directory than c:\\symbols
-*/
 
+Note: I've decided to use just one, known to me location rather than the
+more comprehensive list. It works so why give dbghelp.dll more directories
+to scan?
+*/
 static WCHAR *GetSymbolPath()
 {
     Str::Str<WCHAR> path(1024);
+
 #if 0
     WCHAR buf[512];
     DWORD cchBuf = dimof(buf);
@@ -285,6 +297,7 @@ static WCHAR *GetSymbolPath()
     return path.StealData();
 }
 
+#if 0
 static bool SetupSymbolPath()
 {
     const TCHAR *path = NULL;
@@ -330,6 +343,7 @@ static bool SetupSymbolPath()
     free((void*)path);
     return ok;
 }
+#endif
 
 static bool InitializeDbgHelp()
 {
@@ -338,12 +352,16 @@ static bool InitializeDbgHelp()
         return false;
     }
 
-    if (!_SymInitializeW)
+    if (!_SymInitializeW) {
+        LogDbg("InitializeDbgHelp(): SymInitializeW() not present in dbghelp.dll\r\n");
         return false;
+    }
 
     WCHAR *symPath = GetSymbolPath();
-    if (!symPath)
+    if (!symPath) {
+        LogDbg("InitializeDbgHelp(): GetSymbolPath() failed\r\n");
         return false;
+    }
 
     gSymInitializeOk = _SymInitializeW(GetCurrentProcess(), symPath, TRUE);
     if (!gSymInitializeOk) {
@@ -466,8 +484,8 @@ static void GetProcessorName(Str::Str<char>& s)
 
 static void GetMachineName(Str::Str<char>& s)
 {
-    TCHAR *s1 = ReadRegStr(HKEY_LOCAL_MACHINE, _T("HARDWARE/DESCRIPTION/BIOS"), _T("SystemFamily"));
-    TCHAR *s2 = ReadRegStr(HKEY_LOCAL_MACHINE, _T("HARDWARE/DESCRIPTION/BIOS"), _T("SystemVersion"));
+    TCHAR *s1 = ReadRegStr(HKEY_LOCAL_MACHINE, _T("HARDWARE\\DESCRIPTION\\BIOS"), _T("SystemFamily"));
+    TCHAR *s2 = ReadRegStr(HKEY_LOCAL_MACHINE, _T("HARDWARE\\DESCRIPTION\\BIOS"), _T("SystemVersion"));
     if (!s1 && !s2)
         return;
 
@@ -1040,54 +1058,39 @@ static bool DownloadSymbols(const TCHAR *symDir)
 
 void SubmitCrashInfo()
 {
-    char *s1 = NULL, *s2 = NULL;
+    char *s = NULL;
 
-    LogDbg("Before SymInitialize(): ");
-    LogDbgCurrDir();
-
-    if (!InitializeDbgHelp()) {
-        LogDbg("SubmitCrashInfo(): InitializeDbgHelp() failed\r\n");
-        goto Exit;
-    }
-
-    LogDbg("After SymInitialize(): ");
-    LogDbgCurrDir();
-
-    s1 = BuildCrashInfoText();
-    if (!s1) {
-        LogDbg("SubmitCrashInfo(): BuildCrashInfoText() returned NULL for first report\r\n");
-        goto Exit;
-    }
-
-    SendCrashInfo(s1);
-    if (HasOwnSymbols()) {
-        LogDbg("SubmitCrashInfo(): HasOwnSymbols() true, so skipping downloading symbols and second report\r\n");
-        goto Exit;
-    }
-
-    if (!DownloadSymbols(GetCrashDumpDir()))
-        goto Exit;
-
-    _SymCleanup(GetCurrentProcess());
     if (!InitializeDbgHelp()) {
         LogDbg("SubmitCrashInfo(): InitializeDbgHelp() failed\r\n");
         goto Exit;
     }
 
     if (!HasOwnSymbols()) {
-        LogDbg("SubmitCrashInfo(): HasOwnSymbols() false after downloading symbols, so skipping second report\r\n");
+        if (!DownloadSymbols(GetCrashDumpDir())) {
+            LogDbg("SubmitCrashInfo(): failed to download symbols");
+            goto Exit;
+        }
+        
+        _SymCleanup(GetCurrentProcess());
+        if (!InitializeDbgHelp()) {
+            LogDbg("SubmitCrashInfo(): InitializeDbgHelp() failed\r\n");
+            goto Exit;
+        }
+    }
+
+    if (!HasOwnSymbols()) {
+        LogDbg("SubmitCrashInfo(): HasOwnSymbols() false after downloading symbols\r\n");
         goto Exit;
     }
 
-    s2 = BuildCrashInfoText();
-    if (!s1) {
+    s = BuildCrashInfoText();
+    if (!s) {
         LogDbg("SubmitCrashInfo(): BuildCrashInfoText() returned NULL for second report\r\n");
         goto Exit;
     }
-    SendCrashInfo(s2);
+    SendCrashInfo(s);
 Exit:
-    free(s2);
-    free(s1);
+    free(s);
 #if defined(DEBUG_CRASH_INFO)
     SendDebugCrashInfo();
 #endif
