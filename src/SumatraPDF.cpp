@@ -50,7 +50,8 @@
 
 /* Define if you want to display additional debug helpers in the Help menu */
 // #define SHOW_DEBUG_MENU_ITEMS
-#ifdef DEBUG
+// TODO: enable for now to make testing crash handler in pre-release builds easier
+#if defined(DEBUG) || 1
 #ifndef SHOW_DEBUG_MENU_ITEMS
 #define SHOW_DEBUG_MENU_ITEMS
 #endif
@@ -62,7 +63,7 @@
 /* if TRUE, we're in debug mode where we show links as blue rectangle on
    the screen. Makes debugging code related to links easier.
    TODO: make a menu item in DEBUG build to turn it on/off. */
-#ifdef DEBUG
+#if defined(DEBUG)
 static bool             gDebugShowLinks = true;
 #else
 static bool             gDebugShowLinks = false;
@@ -71,7 +72,7 @@ static bool             gDebugShowLinks = false;
 /* if true, we're rendering everything with the GDI+ back-end,
    otherwise Fitz is used at least for screen rendering.
    In Debug builds, you can switch between the two by hitting the '$' key */
-#ifdef USE_GDI_FOR_RENDERING
+#if defined(USE_GDI_FOR_RENDERING)
 static bool             gUseGdiRenderer = true;
 #else
 static bool             gUseGdiRenderer = false;
@@ -129,7 +130,7 @@ bool                    gPluginMode = false;
 #define AUTO_RELOAD_TIMER_ID        5
 #define AUTO_RELOAD_DELAY_IN_MS     100
 
-#ifndef THREAD_BASED_FILEWATCH
+#if !defined(THREAD_BASED_FILEWATCH)
 #define FILEWATCH_DELAY_IN_MS       1000
 #endif
 
@@ -843,6 +844,7 @@ static TCHAR *GetUniqueCrashDumpPath()
     return NULL;
 }
 
+#if 0
 static TCHAR *GetUniqueCrashTextPath()
 {
     TCHAR *path;
@@ -861,6 +863,7 @@ static TCHAR *GetUniqueCrashTextPath()
     }
     return NULL;
 }
+#endif
 
 static struct {
     unsigned short itemId;
@@ -2208,7 +2211,7 @@ static void CrashMe()
     char *p = NULL;
     *p = 0;
 #else
-    SaveCrashInfoText();
+    SubmitCrashInfo();
 #endif
 }
 
@@ -6606,11 +6609,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     // without a cd).
     SetErrorMode(SEM_NOOPENFILEERRORBOX | SEM_FAILCRITICALERRORS);
 
-    TCHAR * crashDumpPath = GetUniqueCrashDumpPath();
-    TCHAR * crashTxtPath = GetUniqueCrashTextPath();
-    InstallCrashHandler(crashDumpPath, crashTxtPath);
-    free(crashDumpPath);
-    free(crashTxtPath);
+    ScopedMem<TCHAR> crashDumpPath(GetUniqueCrashDumpPath());
+    InstallCrashHandler(crashDumpPath);
 
     ScopedCom com;
     InitAllCommonControls();

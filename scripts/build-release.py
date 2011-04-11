@@ -14,7 +14,7 @@ from util import log, run_cmd_throw, test_for_flag, s3UploadFilePublic, s3Upload
 args = sys.argv
 upload               = test_for_flag(args, "-upload")
 upload_tmp           = test_for_flag(args, "-uploadtmp")
-testing              = test_for_flag(args, "-test") or test_for_flag(args, "-testing") or upload_tmp
+testing              = test_for_flag(args, "-test") or test_for_flag(args, "-testing")
 build_test_installer = test_for_flag(args, "-test-installer") or test_for_flag(args, "-testinst") or test_for_flag(args, "-testinstaller")
 build_prerelease     = test_for_flag(args, "-prerelease")
 

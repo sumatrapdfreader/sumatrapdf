@@ -19,6 +19,8 @@
 
 #include "translations.h"
 
+//#define DEBUG_CRASH_INFO
+
 typedef BOOL WINAPI MiniDumpWriteProc(
     HANDLE hProcess,
     DWORD ProcessId,
@@ -83,7 +85,6 @@ static SymFromAddrProc *                _SymFromAddr;
 static SymGetLineFromAddr64Proc *       _SymGetLineFromAddr64;
 
 static ScopedMem<TCHAR> gCrashDumpPath(NULL);
-static ScopedMem<TCHAR> gCrashTxtPath(NULL);
 static HANDLE gDumpEvent = NULL;
 static HANDLE gDumpThread = NULL;
 static MINIDUMP_EXCEPTION_INFORMATION gMei = { 0 };
@@ -107,10 +108,10 @@ FuncNameAddr gDbgHelpFuncs[] = {
 };
 #undef F
 
-static void LoadDbgHelpFuncs()
+static bool LoadDbgHelpFuncs()
 {
     if (_MiniDumpWriteDump)
-        return;
+        return true;
 #if 0
     TCHAR *dbghelpPath = _T("C:\\Program Files (x86)\\Microsoft Visual Studio 10.0\\Team Tools\\Performance Tools\\dbghelp.dll");
     if (File::Exists(dbghelpPath)) {
@@ -122,6 +123,7 @@ static void LoadDbgHelpFuncs()
     }
 #endif
     LoadDllFuncs(_T("DBGHELP.DLL"), gDbgHelpFuncs);
+    return _MiniDumpWriteDump != 0;
 }
 
 static bool GetEnvOk(DWORD ret, DWORD cchBufSize)
@@ -180,10 +182,7 @@ static void SetupSymbolPath()
     s.Append(L"*http://msdl.microsoft.com/download/symbols;cache*");
     s.Append(symDir);
 #endif
-#if 0 // when testing use my local directory
-    s.Set(L"c:\\symbols");
-#endif
-    // When running local builds, *.pdb is in the same dir as *.exe 
+    // when running local builds, *.pdb is in the same dir as *.exe 
     ScopedMem<TCHAR> exePath(GetExePath());
     ScopedMem<TCHAR> exeDir(Path::GetDir(exePath));
     s.AppendFmt(_T(";%s"), exeDir);
@@ -192,7 +191,9 @@ static void SetupSymbolPath()
 
 static bool InitializeDbgHelp()
 {
-    LoadDbgHelpFuncs();
+    if (!LoadDbgHelpFuncs())
+        return false;
+
     if (!_SymInitialize)
         return false;
 
@@ -483,8 +484,10 @@ static bool GetStackFrameInfo(Str::Str<char>& s, STACKFRAME64 *stackFrame,
     DWORD64 addr = stackFrame->AddrPC.Offset;
     if (0 == addr)
         return true;
-    if (addr == stackFrame->AddrReturn.Offset)
+    if (addr == stackFrame->AddrReturn.Offset) {
+        s.Append("GetStackFrameInfo(): addr == stackFrame->AddrReturn.Offset");
         return false;
+    }
 
     GetAddressInfo(s, addr);
     return true;
@@ -492,8 +495,10 @@ static bool GetStackFrameInfo(Str::Str<char>& s, STACKFRAME64 *stackFrame,
 
 static void GetCallstack(Str::Str<char>& s, CONTEXT& ctx, HANDLE hThread)
 {
-    if (!CanStackWalk())
+    if (!CanStackWalk()) {
+        s.Append("GetCallstack(): CanStackWalk() returned false");
         return;
+    }
 
     STACKFRAME64 stackFrame;
     memset(&stackFrame, 0, sizeof(stackFrame));
@@ -511,11 +516,15 @@ static void GetCallstack(Str::Str<char>& s, CONTEXT& ctx, HANDLE hThread)
     stackFrame.AddrStack.Mode = AddrModeFlat;
 
     int framesCount = 0;
-    int maxFrames = 32;
+    static const int maxFrames = 32;
     while (framesCount < maxFrames)
     {
-        GetStackFrameInfo(s, &stackFrame, &ctx, hThread);
+        if (!GetStackFrameInfo(s, &stackFrame, &ctx, hThread))
+            break;
         framesCount++;
+    }
+    if (0 == framesCount) {
+        s.Append("StackWalk64() couldn't get even the first stack frame info");
     }
 }
 
@@ -719,8 +728,9 @@ static bool DeleteSymbolsIfExist(const TCHAR *symDir)
     return File::Delete(path);
 }
 
-// In static (single executable) build, the pdb file insde symbolsZipPath
-// is named SumatraPDF-prelease-${buildno}.pdb
+// In static (single executable) pre-release build, the pdb file inside 
+// symbolsZipPath is named SumatraPDF-prelease-${buildno}.pdb and must be
+// extracted under that name, to match executable name
 static bool UnpackStaticPreReleaseSymbols(const TCHAR *symbolsZipPath, const TCHAR *symDir)
 {
     FileToUnzip filesToUnnpack[] = {
@@ -730,9 +740,23 @@ static bool UnpackStaticPreReleaseSymbols(const TCHAR *symbolsZipPath, const TCH
     return UnzipFilesStartingWith(symbolsZipPath, filesToUnnpack, symDir);
 }
 
-// In lib (.exe + libmupdf.dll) build, the pdf files inside symbolsZipPath
-// are libmupdf.pdb and SumatraPDF-no-MuPDF.pdb
-static bool UnpackLibPreReleaseSymbols(const TCHAR *symbolsZipPath, const TCHAR *symDir)
+// In static (single executable) release build, the pdb file inside
+// symbolsZipPath is named SumatraPDF-${ver}.pdb and must be extracted as
+// SumatraPDF.pdb, to match executable name
+static bool UnpackStaticReleaseSymbols(const TCHAR *symbolsZipPath, const TCHAR *symDir)
+{
+    FileToUnzip filesToUnnpack[] = {
+        { "SumatraPDF-" QM(CURR_VERSION) ".pdb", _T("SumatraPDF.pdb"), false },
+        { NULL, false }
+    };
+    return UnzipFilesStartingWith(symbolsZipPath, filesToUnnpack, symDir);
+}
+
+// In lib (.exe + libmupdf.dll) release and pre-release builds, the pdb files
+// inside symbolsZipPath are libmupdf.pdb and SumatraPDF-no-MuPDF.pdb and
+// must be extracted as libmupdf.pdb and SumatraPDF.pdb, to match the dll/exe
+// names.
+static bool UnpackLibSymbols(const TCHAR *symbolsZipPath, const TCHAR *symDir)
 {
     FileToUnzip filesToUnnpack[] = {
         { "libmupdf.pdb", NULL, false },
@@ -741,8 +765,6 @@ static bool UnpackLibPreReleaseSymbols(const TCHAR *symbolsZipPath, const TCHAR 
     };
     return UnzipFilesStartingWith(symbolsZipPath, filesToUnnpack, symDir);
 }
-
-//#define SVN_PRE_RELEASE_VER 3313 // Note: for testing only
 
 static bool DownloadPreReleaseSymbols(const TCHAR *symDir)
 {
@@ -753,8 +775,17 @@ static bool DownloadPreReleaseSymbols(const TCHAR *symDir)
     bool ok = false;
     if (IsStaticBuild()) {
         ok = UnpackStaticPreReleaseSymbols(symbolsZipPath, symDir);
+#if defined(DEBUG_CRASH_INFO)
+        if (!ok)
+            MessageBox(NULL, _T("Couldn't unpack pre-release symbols for static build"), _T("CrashHandler info"), MB_ICONERROR | MB_OK);
+#endif
+        
     } else {
-        ok = UnpackLibPreReleaseSymbols(symbolsZipPath, symDir);
+        ok = UnpackLibSymbols(symbolsZipPath, symDir);
+#if defined(DEBUG_CRASH_INFO)
+        if (!ok)
+            MessageBox(NULL, _T("Couldn't unpack pre-relase symbols for lib build"), _T("CrashHandler info"), MB_ICONERROR | MB_OK);
+#endif
     }
     File::Delete(symbolsZipPath);
     return ok;
@@ -762,8 +793,30 @@ static bool DownloadPreReleaseSymbols(const TCHAR *symDir)
 
 static bool DownloadReleaseSymbols(const TCHAR *symDir)
 {
-    // TODO: implement me
-    return false;
+    TCHAR *url = _T("http://kjkpub.s3.amazonaws.com/sumatrapdf/rel/SumatraPDF-") _T(QM(CURR_VERSION)) _T(".pdb.zip");
+    ScopedMem<TCHAR> symbolsZipPath(Path::Join(symDir, _T("symbols_tmp.zip")));
+    if (!HttpGetToFile(url, symbolsZipPath)) {
+#if defined(DEBUG_CRASH_INFO)
+        MessageBox(NULL, _T("Couldn't download release symbols"), _T("CrashHandler info"), MB_ICONERROR | MB_OK);
+#endif
+        return false;
+    }
+    bool ok = false;
+    if (IsStaticBuild()) {
+        ok = UnpackStaticReleaseSymbols(symbolsZipPath, symDir);
+#if defined(DEBUG_CRASH_INFO)
+        if (!ok)
+            MessageBox(NULL, _T("Couldn't unpack release symbols for static build"), _T("CrashHandler info"), MB_ICONERROR | MB_OK);
+#endif
+    } else {
+        ok = UnpackLibSymbols(symbolsZipPath, symDir);
+#if defined(DEBUG_CRASH_INFO)
+        if (!ok)
+            MessageBox(NULL, _T("Couldn't unpack release symbols for lib build"), _T("CrashHandler info"), MB_ICONERROR | MB_OK);
+#endif
+    }
+    File::Delete(symbolsZipPath);
+    return ok;
 }
 
 // TODO: *.pdb files are on S3 with a known name, try to download them here to a directory in symbol
@@ -775,7 +828,7 @@ static bool DownloadSymbols(const TCHAR *symDir)
         return false;
 
 #if defined(DEBUG)
-    // don't care about debug builds
+    // don't care about debug builds because we don't release them
     return false;
 #endif
 
@@ -790,25 +843,24 @@ static bool DownloadSymbols(const TCHAR *symDir)
 // have. Then, if we don't have symbols for our binaries, download the symbols from a website and
 // redo the callstacks. But if our state is so corrupted that we can't download symbols, we'll
 // at least have non-symbolized version of callstacks
-void SaveCrashInfoText()
+// TODO: if it turns out that that downloading symbols is reliable, we will
+// just do it once
+void SubmitCrashInfo()
 {
     char *s1, *s2 = NULL;
     s1 = BuildCrashInfoText();
-#if 0
-    // TODO: instead of doing SubmitCrashInfo() inside crash handler
-    // should I sublaunch myself with "-submitcrash gCrashTxtPath"
-    // cmd arg for better reliability?
-    if (s1 && gCrashTxtPath) {
-        File::WriteAll(gCrashTxtPath, s1, Str::Len(s));
-    }
-#endif
     SubmitCrashInfo(s1);
     if (HasOwnSymbols())
         goto Exit;
     if (!DownloadSymbols(GetCrashDumpDir()))
         goto Exit;
-    if (!HasOwnSymbols())
+    // TODO: should I re-initialize dbghlp? I'm getting empty callstack
+    if (!HasOwnSymbols()) {
+#if defined(DEBUG_CRASH_INFO)
+        MessageBox(NULL, _T("Downloaded pdb but couldn't resolve symbols"), _T("CrashHandler info"), MB_ICONERROR | MB_OK);
+#endif
         goto Exit;
+    }
     s2 = BuildCrashInfoText();
     SubmitCrashInfo(s2);
 Exit:
@@ -816,27 +868,11 @@ Exit:
     free(s1);    
 }
 
-static DWORD WINAPI CrashDumpThread(LPVOID data)
+static void WriteMiniDump()
 {
-    WaitForSingleObject(gDumpEvent, INFINITE);
-    LoadDbgHelpFuncs();
-
-    if (!_MiniDumpWriteDump)
-    {
-#ifdef SVN_PRE_RELEASE_VER
-        MessageBox(NULL, _T("Couldn't create a crashdump file: dbghelp.dll is unexpectedly missing."), _TR("SumatraPDF crashed"), MB_ICONEXCLAMATION | MB_OK);
-#endif
-        return 0;
-    }
-
     HANDLE dumpFile = CreateFile(gCrashDumpPath.Get(), GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH, NULL);
     if (INVALID_HANDLE_VALUE == dumpFile)
-    {
-#ifdef SVN_PRE_RELEASE_VER
-        MessageBox(NULL, _T("Couldn't create a crashdump file."), _TR("SumatraPDF crashed"), MB_ICONEXCLAMATION | MB_OK);
-#endif
-        return 0;
-    }
+        return;
 
     MINIDUMP_TYPE type = (MINIDUMP_TYPE)(MiniDumpNormal | MiniDumpWithIndirectlyReferencedMemory | MiniDumpScanMemory);
     // set the SUMATRAPDF_FULLDUMP environment variable for far more complete minidumps
@@ -847,10 +883,18 @@ static DWORD WINAPI CrashDumpThread(LPVOID data)
     _MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), dumpFile, type, &gMei, NULL, &mci);
 
     CloseHandle(dumpFile);
+}
 
-    SaveCrashInfoText();
+static DWORD WINAPI CrashDumpThread(LPVOID data)
+{
+    WaitForSingleObject(gDumpEvent, INFINITE);
+    if (!LoadDbgHelpFuncs())
+        return 0;
 
-    // exec_with_params(g_exePath, CMD_ARG_SEND_CRASHDUMP, TRUE /* hidden */);
+    // TODO: experimentally, don't write minidumps
+    //WriteMiniDump();
+
+    SubmitCrashInfo();
     return 0;
 }
 
@@ -861,7 +905,7 @@ static LONG WINAPI DumpExceptionHandler(EXCEPTION_POINTERS *exceptionInfo)
 
     static bool wasHere = false;
     if (wasHere)
-        return EXCEPTION_CONTINUE_SEARCH;
+        return EXCEPTION_CONTINUE_SEARCH; // Note: or should TerminateProcess()?
     wasHere = true;
 
     gMei.ThreadId = GetCurrentThreadId();
@@ -872,21 +916,22 @@ static LONG WINAPI DumpExceptionHandler(EXCEPTION_POINTERS *exceptionInfo)
     SetEvent(gDumpEvent);
     WaitForSingleObject(gDumpThread, INFINITE);
 
+#if 0
     ScopedMem<TCHAR> msg(Str::Format(_T("%s\n\n%s"), _TR("Please include the following file in your crash report:"), gCrashDumpPath.Get()));
     MessageBox(NULL, msg.Get(), _TR("SumatraPDF crashed"), MB_ICONERROR | MB_OK);
+#endif
 
     TerminateProcess(GetCurrentProcess(), 1);
 
     return EXCEPTION_CONTINUE_SEARCH;
 }
 
-void InstallCrashHandler(const TCHAR *crashDumpPath, const TCHAR *crashTxtPath)
+void InstallCrashHandler(const TCHAR *crashDumpPath)
 {
     if (NULL == crashDumpPath)
         return;
 
     gCrashDumpPath.Set(Str::Dup(crashDumpPath));
-    gCrashTxtPath.Set(Str::Dup(crashTxtPath));
     if (!gDumpEvent && !gDumpThread) {
         gDumpEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
         gDumpThread = CreateThread(NULL, 0, CrashDumpThread, NULL, 0, 0);
