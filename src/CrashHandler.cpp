@@ -207,14 +207,12 @@ static bool LoadDbgHelpFuncs()
 {
     if (_MiniDumpWriteDump)
         return true;
-#if 0
+#if 1
     TCHAR *dbghelpPath = _T("C:\\Program Files (x86)\\Microsoft Visual Studio 10.0\\Team Tools\\Performance Tools\\dbghelp.dll");
-    if (File::Exists(dbghelpPath)) {
-        HMODULE h = LoadLibrary(dbghelpPath);
-        if (h) {
-            LoadDllFuncs(h, gDbgHelpFuncs);
-            return;
-        }
+    HMODULE h = LoadLibrary(dbghelpPath);
+    if (h) {
+        LoadDllFuncs(h, gDbgHelpFuncs);
+        return _MiniDumpWriteDump != 0;
     }
 #endif
 
