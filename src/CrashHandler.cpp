@@ -319,6 +319,13 @@ static void GetSystemInfo(Str::Str<char>& s)
     float totalPageGB = (float)ms.ullTotalPageFile / (float)(1024 * 1024 * 1024);
     DWORD usedPerc = ms.dwMemoryLoad;
     s.AppendFmt("Physical Memory: %.2f GB\r\nCommit Charge Limit: %.2f GB\r\nMemory Used: %d%%\r\n", physMemGB, totalPageGB, usedPerc);
+
+    // Note: maybe more information, like:
+    // * amount of memory used by Sumatra,
+    // * system name (HKLM/HARDWARE/DESCRIPTION/BIOS/SystemFamily and/or SystemVersion
+    // * graphics card and its driver version
+    // * processor capabilities (mmx, sse, sse2 etc.)
+    // * list of currently opened documents (by traversing gWindows)
 }
 
 // return true for static, single executable build, false for a build with libmupdf.dll
