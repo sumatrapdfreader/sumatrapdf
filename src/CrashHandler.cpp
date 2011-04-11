@@ -63,9 +63,13 @@ typedef DWORD64 _stdcall SymGetModuleBase64Proc(
     HANDLE hProcess,
     DWORD64 qwAddr);
 
-typedef BOOL WINAPI SymSetSearchPathWProc(
+typedef BOOL _stdcall SymSetSearchPathWProc(
     HANDLE hProcess,
     PCWSTR SearchPath);
+
+typedef BOOL _stdcall SymSetSearchPathProc(
+    HANDLE hProcess,
+    PCSTR SearchPath);
 
 typedef BOOL __stdcall SymGetLineFromAddr64Proc(
     HANDLE hProcess,
@@ -78,6 +82,7 @@ static SymInitializeProc *              _SymInitialize;
 static SymGetOptionsProc *              _SymGetOptions;
 static SymSetOptionsProc *              _SymSetOptions;
 static SymSetSearchPathWProc *          _SymSetSearchPathW;
+static SymSetSearchPathProc *           _SymSetSearchPath;
 static StackWalk64Proc   *              _StackWalk64;
 static SymFunctionTableAccess64Proc *   _SymFunctionTableAccess64;
 static SymGetModuleBase64Proc *         _SymGetModuleBase64;
@@ -99,6 +104,7 @@ FuncNameAddr gDbgHelpFuncs[] = {
     F(SymGetOptions)
     F(SymSetOptions)
     F(SymSetSearchPathW)
+    F(SymSetSearchPath)
     F(StackWalk64)
     F(SymFunctionTableAccess64)
     F(SymGetModuleBase64)
@@ -151,42 +157,54 @@ add: "srv*c:\\symbols*http://msdl.microsoft.com/download/symbols;cache*c:\\symbo
 (except a better directory than c:\\symbols
 */
 
-static void SetupSymbolPath()
+static bool SetupSymbolPath()
 {
-    Str::Str<WCHAR> s(1024);
+    Str::Str<WCHAR> path(1024);
 
-    // TODO: not present on XP? Try SymSetSearchPathA() ?
-    if (!_SymSetSearchPathW)
-        return;
+    if (!_SymSetSearchPathW && !_SymSetSearchPath)
+        return false;
 
     WCHAR buf[512];
     DWORD cchBuf = dimof(buf);
     DWORD res = GetEnvironmentVariableW(L"_NT_SYMBOL_PATH", buf, cchBuf);
     if (GetEnvOk(res, cchBuf)) {
-        s.Append(buf);
-        s.Append(L";");
+        path.Append(buf);
+        path.Append(L";");
     }
     res = GetEnvironmentVariableW(L"_NT_ALTERNATE_SYMBOL_PATH", buf, cchBuf);
     if (GetEnvOk(res, cchBuf)) {
-        s.Append(buf);
-        s.Append(L";");
+        path.Append(buf);
+        path.Append(L";");
     }
     ScopedMem<TCHAR> symDir(GetCrashDumpDir());
     if (symDir) {
-        s.Append(symDir);
-        s.Append(_T(";"));
+        path.Append(symDir);
+        path.Append(_T(";"));
     }
-#if 0 // this probably wouldn't work anyway
-    s.Append(L"srv*");
-    s.Append(symDir);
-    s.Append(L"*http://msdl.microsoft.com/download/symbols;cache*");
-    s.Append(symDir);
+#if 0
+    // this probably wouldn't work anyway because it requires symsrv.dll in the same directory
+    // as dbghelp.dll and it's not present with the os-provided dbghelp.dll
+    path.Append(L"srv*");
+    path.Append(symDir);
+    path.Append(L"*http://msdl.microsoft.com/download/symbols;cache*");
+    path.Append(symDir);
 #endif
     // when running local builds, *.pdb is in the same dir as *.exe 
     ScopedMem<TCHAR> exePath(GetExePath());
     ScopedMem<TCHAR> exeDir(Path::GetDir(exePath));
-    s.AppendFmt(_T(";%s"), exeDir);
-    BOOL ok = _SymSetSearchPathW(GetCurrentProcess(), s.Get());
+    path.AppendFmt(_T("%s"), exeDir);
+    BOOL ok = FALSE;
+    if (_SymSetSearchPathW) {
+        ok = _SymSetSearchPathW(GetCurrentProcess(), path.Get());
+    } else {
+        char *tmp = Str::Conv::ToAnsi(path.Get());
+        if (tmp) {
+            ok = _SymSetSearchPath(GetCurrentProcess(), tmp);
+            free(tmp);
+        }
+    }
+
+    return ok;    
 }
 
 static bool InitializeDbgHelp()
@@ -685,7 +703,8 @@ static void GetProgramVersion(Str::Str<char>& s)
 
 static char *BuildCrashInfoText()
 {    
-    InitializeDbgHelp();
+    if (!InitializeDbgHelp())
+        return NULL;
 
     Str::Str<char> s(16 * 1024);
     GetProgramVersion(s);
@@ -704,7 +723,7 @@ static char *BuildCrashInfoText()
 #define CRASH_SUBMIT_SERVER _T("blog.kowalczyk.info")
 #define CRASH_SUBMIT_URL    _T("/app/crashsubmit?appname=SumatraPDF")
 
-void SubmitCrashInfo(char *s)
+static void SendCrashInfo(char *s)
 {
     if (!s)
         return;
@@ -856,7 +875,9 @@ void SubmitCrashInfo()
 {
     char *s1, *s2 = NULL;
     s1 = BuildCrashInfoText();
-    SubmitCrashInfo(s1);
+    if (!s1)
+        goto Exit;
+    SendCrashInfo(s1);
     if (HasOwnSymbols())
         goto Exit;
     if (!DownloadSymbols(GetCrashDumpDir()))
@@ -869,7 +890,7 @@ void SubmitCrashInfo()
         goto Exit;
     }
     s2 = BuildCrashInfoText();
-    SubmitCrashInfo(s2);
+    SendCrashInfo(s2);
 Exit:
     free(s2);
     free(s1);    
