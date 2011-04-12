@@ -244,10 +244,8 @@ bool DisplayModel::load(const TCHAR *fileName, int startPage, SizeI viewPort)
         engine = pdfEngine = PdfEngine::CreateFromFileName(fileName, _callback);
     else if (Str::EndsWithI(fileName, _T(".xps")))
         engine = xpsEngine = XpsEngine::CreateFromFileName(fileName);
-    else if (Str::EndsWithI(fileName, _T(".cbz")))
-        engine = imagesEngine = ImagesEngine::CreateFromCbzFile(fileName);
-    else if (Str::EndsWithI(fileName, _T(".cbr")))
-        engine = imagesEngine = ImagesEngine::CreateFromCbrFile(fileName);
+    else if (ImagesEngine::IsSupportedFile(fileName))
+        engine = imagesEngine = ImagesEngine::CreateFromFileName(fileName);
     else {
         // try loading as either supported file format
         // TODO: sniff the file content instead

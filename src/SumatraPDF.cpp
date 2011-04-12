@@ -3259,6 +3259,7 @@ static void OnMenuSaveAs(WindowInfo *win)
     // Can't save a PDF's content as a plain text if text copying isn't allowed
     bool hasCopyPerm = win->dm->engine->IsCopyingTextAllowed();
 
+    // TODO: use extension from the name of the loaded file?
     TCHAR *defExt = _T(".pdf");
     if (win->dm->xpsEngine)
         defExt = _T(".xps");
@@ -3494,8 +3495,8 @@ static void OnMenuOpen(WindowInfo *win)
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling
     // methods too early on)
-    ScopedMem<TCHAR> fileFilter(Str::Format(_T("%s\1*.pdf;*.xps;*.cbz;*.cbr\1%s\1*.*\1"),
-        _TR("PDF documents"), _TR("All files"))); // TODO: it's not just "PDF documents" anymore
+    ScopedMem<TCHAR> fileFilter(Str::Format(_T("%s\1*.pdf;*.xps;*.cbz;*.cbr;*.jpg;*.jpeg;*.png;*.bmp;*.gif\1%s\1*.*\1"),
+        _TR("PDF documents"), _TR("All files"))); // TODO: it's not just "PDF documents" anymore. "Supported documents" ?
     Str::TransChars(fileFilter, _T("\1"), _T("\0"));
 
     OPENFILENAME ofn = {0};
@@ -3553,6 +3554,7 @@ static void BrowseFolder(WindowInfo *win, bool forward)
     ScopedMem<TCHAR> pattern(Path::Join(dir, _T("*.pdf")));
 
     // TODO: browse through all supported file types at the same time?
+    // TODO: support images (.png, .jpg, .jpeg, .bmp)
     if (win->dm->xpsEngine)
         pattern.Set(Path::Join(dir, _T("*.xps")));
     else if (win->dm->imagesEngine)

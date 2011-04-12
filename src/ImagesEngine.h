@@ -7,12 +7,11 @@
 #include "BaseEngine.h"
 #include "Vec.h"
 
-// TODO: support:
-// * a single file
-// * a directory of files
+// TODO: support a directory of files
 
 class ImagesPage {
 public:
+    // TODO: do I need this?
     const TCHAR *       fileName;
 
     HGLOBAL             bmpData;
@@ -78,6 +77,7 @@ public:
 
     bool LoadCbzFile(const TCHAR *fileName);
     bool LoadCbrFile(const TCHAR *fileName);
+    bool LoadSingleFile(const TCHAR *fileName);
 
 protected:
     const TCHAR *fileName;
@@ -86,9 +86,14 @@ protected:
     void GetTransform(Gdiplus::Matrix& m, int pageNo, float zoom, int rotate);
 
 public:
+    static bool IsSupportedFile(const TCHAR *fileName);
     static ImagesEngine *CreateFromFileName(const TCHAR *fileName);
     static ImagesEngine *CreateFromCbzFile(const TCHAR *fileName);
     static ImagesEngine *CreateFromCbrFile(const TCHAR *fileName);
+    static ImagesEngine *CreateFromSingleFile(const TCHAR *fileName);
 };
+
+bool IsImageFile(const WCHAR *fileName);
+bool IsImageFile(const char *fileName);
 
 #endif
