@@ -4507,6 +4507,9 @@ public:
 
 static void GoToTocLinkForTVItem(WindowInfo *win, HWND hTV, HTREEITEM hItem=NULL, bool allowExternal=true)
 {
+    if (!win)
+        return;
+
     if (!hItem)
         hItem = TreeView_GetSelection(hTV);
 
