@@ -518,9 +518,6 @@
     <ClCompile Include="src\AppTools.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\CbxEngine.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\Benchmark.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -541,6 +538,9 @@
     </ClCompile>
     <ClCompile Include="baseutils\ZipUtil.cpp">
       <Filter>baseutils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ImagesEngine.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -727,9 +727,6 @@
     <ClInclude Include="src\BaseEngine.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\CbxEngine.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\Benchmark.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -753,6 +750,9 @@
     </ClInclude>
     <ClInclude Include="baseutils\ZipUtil.h">
       <Filter>baseutils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ImagesEngine.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

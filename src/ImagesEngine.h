@@ -1,17 +1,17 @@
 /* Copyright 2006-2011 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#ifndef CbxEngine_H
-#define CbxEngine_H
+#ifndef ImagesEngine_H
+#define ImagesEngine_H
 
 #include "BaseEngine.h"
 #include "Vec.h"
 
-// TODO: rename to ImagesEngine and support:
+// TODO: support:
 // * a single file
 // * a directory of files
 
-class ComicBookPage {
+class ImagesPage {
 public:
     const TCHAR *       fileName;
 
@@ -19,7 +19,7 @@ public:
     Gdiplus::Bitmap *   bmp;
     int                 width, height;
 
-    ComicBookPage(const TCHAR *fileName, HGLOBAL bmpData, Gdiplus::Bitmap *bmp) :
+    ImagesPage(const TCHAR *fileName, HGLOBAL bmpData, Gdiplus::Bitmap *bmp) :
         bmpData(bmpData), bmp(bmp)
     {
         this->fileName = Str::Dup(fileName);
@@ -27,7 +27,7 @@ public:
         height = bmp->GetHeight();
     }
 
-    ~ComicBookPage() {
+    ~ImagesPage() {
         free((void*)fileName);
         delete bmp;
         GlobalFree(bmpData);
@@ -36,11 +36,11 @@ public:
     SizeI size() { return SizeI(width, height); }
 };
 
-class CbxEngine : public BaseEngine {
+class ImagesEngine : public BaseEngine {
 public:
-    CbxEngine();
-    virtual ~CbxEngine();
-    virtual CbxEngine *Clone() {
+    ImagesEngine();
+    virtual ~ImagesEngine();
+    virtual ImagesEngine *Clone() {
         return CreateFromFileName(fileName);
     }
 
@@ -49,7 +49,7 @@ public:
 
     virtual RectD PageMediabox(int pageNo) {
         assert(1 <= pageNo && pageNo <= PageCount());
-        ComicBookPage *page = pages[pageNo - 1];
+        ImagesPage *page = pages[pageNo - 1];
         return RectD(0, 0, page->width, page->height);
     }
 
@@ -81,14 +81,14 @@ public:
 
 protected:
     const TCHAR *fileName;
-    Vec<ComicBookPage *> pages;
+    Vec<ImagesPage *> pages;
 
     void GetTransform(Gdiplus::Matrix& m, int pageNo, float zoom, int rotate);
 
 public:
-    static CbxEngine *CreateFromFileName(const TCHAR *fileName);
-    static CbxEngine *CreateFromCbzFile(const TCHAR *fileName);
-    static CbxEngine *CreateFromCbrFile(const TCHAR *fileName);
+    static ImagesEngine *CreateFromFileName(const TCHAR *fileName);
+    static ImagesEngine *CreateFromCbzFile(const TCHAR *fileName);
+    static ImagesEngine *CreateFromCbrFile(const TCHAR *fileName);
 };
 
 #endif

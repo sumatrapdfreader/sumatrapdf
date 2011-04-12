@@ -2071,15 +2071,15 @@ static void DrawDocument(WindowInfo *win, HDC hdc, RECT *rcArea)
             continue;
 
         bounds = RectI(pageInfo->screen, pageInfo->bitmap.Size());
-        if (!win->dm->cbxEngine)
+        if (!win->dm->imagesEngine)
             PaintPageFrameAndShadow(hdc, pageInfo, PM_ENABLED == win->presentation, bounds);
 
         bool renderOutOfDateCue = false;
         UINT renderDelay = 0;
-        if (win->dm->cbxEngine) {
+        if (win->dm->imagesEngine) {
             float zoom = win->dm->zoomReal(pageNo);
             int rotation = dm->rotation();
-            win->dm->cbxEngine->RenderPage(hdc, pageNo, pageInfo->pageOnScreen, zoom, rotation, NULL, Target_View);
+            win->dm->imagesEngine->RenderPage(hdc, pageNo, pageInfo->pageOnScreen, zoom, rotation, NULL, Target_View);
         } else {
             renderDelay = gRenderCache.Paint(hdc, &bounds, dm, pageNo, pageInfo, &renderOutOfDateCue);
         }
@@ -3262,8 +3262,8 @@ static void OnMenuSaveAs(WindowInfo *win)
     TCHAR *defExt = _T(".pdf");
     if (win->dm->xpsEngine)
         defExt = _T(".xps");
-    else if (win->dm->cbxEngine)
-        defExt = _T(".cbz"); // TODO: expose correct extension on cbxEngine
+    else if (win->dm->imagesEngine)
+        defExt = _T(".cbz"); // TODO: expose correct extension on ImgesEngine
 
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling
@@ -3271,7 +3271,7 @@ static void OnMenuSaveAs(WindowInfo *win)
     Str::Str<TCHAR> fileFilter(256);
     if (win->dm->xpsEngine)
         fileFilter.Append(_TB_TR("XPS documents"));
-    else if (win->dm->cbxEngine)
+    else if (win->dm->imagesEngine)
         fileFilter.Append(_TB_TR("Comic books"));
     else
         fileFilter.Append(_TR("PDF documents"));
@@ -3395,10 +3395,11 @@ static void OnMenuSaveBookmark(WindowInfo *win)
     assert(win->dm);
     if (!win->IsDocLoaded()) return;
 
+    // TODO: maybe we can just use the extension of the loaded file?
     TCHAR *defExt = _T(".pdf");
     if (win->dm->xpsEngine)
         defExt = _T(".xps");
-    else if (win->dm->cbxEngine)
+    else if (win->dm->imagesEngine)
         defExt = _T(".cbz");
 
     TCHAR dstFileName[MAX_PATH] = { 0 };
@@ -3554,7 +3555,7 @@ static void BrowseFolder(WindowInfo *win, bool forward)
     // TODO: browse through all supported file types at the same time?
     if (win->dm->xpsEngine)
         pattern.Set(Path::Join(dir, _T("*.xps")));
-    else if (win->dm->cbxEngine)
+    else if (win->dm->imagesEngine)
         pattern.Set(Path::Join(dir, _T("*.cb?")));
 
     HANDLE hfind = FindFirstFile(pattern, &fdata);

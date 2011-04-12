@@ -5,7 +5,7 @@
 #define DisplayModel_h
 
 #include "PdfEngine.h"
-#include "CbxEngine.h"
+#include "ImagesEngine.h"
 #include "DisplayState.h"
 #include "TextSearch.h"
 
@@ -141,7 +141,7 @@ public:
     BaseEngine *    engine;
     PdfEngine *     pdfEngine;
     XpsEngine *     xpsEngine;
-    CbxEngine *     cbxEngine;
+    ImagesEngine *  imagesEngine;
     TextSelection * textSelection;
 
     PageInfo *      getPageInfo(int pageNo) const;

@@ -1,7 +1,7 @@
 /* Copyright 2006-2011 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "CbxEngine.h"
+#include "ImagesEngine.h"
 #include "StrUtil.h"
 #include "FileUtil.h"
 
@@ -52,10 +52,10 @@ static bool IsImageFile(const char *fileName)
            Str::EndsWithI(fileName, ".jpeg");
 }
 
-static int cmpPageByName(const ComicBookPage **pp1, const ComicBookPage **pp2)
+static int cmpPageByName(const ImagesPage **pp1, const ImagesPage **pp2)
 {
-    const ComicBookPage *p1 = *pp1;
-    const ComicBookPage *p2 = *pp2;
+    const ImagesPage *p1 = *pp1;
+    const ImagesPage *p2 = *pp2;
     const TCHAR *name1 = p1->fileName;
     const TCHAR *name2 = p2->fileName;
     return Str::CmpNatural(name1, name2);
@@ -63,21 +63,21 @@ static int cmpPageByName(const ComicBookPage **pp1, const ComicBookPage **pp2)
 
 static int cmpPageByName2(const void *o1, const void *o2)
 {
-    const ComicBookPage **pp1 = (const ComicBookPage**)o1;
-    const ComicBookPage **pp2 = (const ComicBookPage**)o2;
-    const ComicBookPage *p1 = *pp1;
-    const ComicBookPage *p2 = *pp2;
+    const ImagesPage **pp1 = (const ImagesPage**)o1;
+    const ImagesPage **pp2 = (const ImagesPage**)o2;
+    const ImagesPage *p1 = *pp1;
+    const ImagesPage *p2 = *pp2;
     const TCHAR *name1 = p1->fileName;
     const TCHAR *name2 = p2->fileName;
     return Str::CmpNatural(name1, name2);
 }
 
-static ComicBookPage *LoadCurrentCbzComicBookPage(unzFile& uf)
+static ImagesPage *LoadCurrentCbzPage(unzFile& uf)
 {
     char fileName[MAX_PATH];
     TCHAR *fileName2 = NULL;
     unz_file_info64 finfo;
-    ComicBookPage *page = NULL;
+    ImagesPage *page = NULL;
     HGLOBAL bmpData = NULL;
     unsigned int readBytes;
 
@@ -117,7 +117,7 @@ static ComicBookPage *LoadCurrentCbzComicBookPage(unzFile& uf)
         goto Exit;
 
     fileName2 = Str::Conv::FromAnsi(fileName); // Note: maybe FromUtf8?
-    page = new ComicBookPage(fileName2, bmpData, bmp);
+    page = new ImagesPage(fileName2, bmpData, bmp);
     free(fileName2);
     bmpData = NULL;
 
@@ -127,7 +127,7 @@ Exit:
     return page;
 }
 
-CbxEngine::CbxEngine() : fileName(NULL)
+ImagesEngine::ImagesEngine() : fileName(NULL)
 {
 }
 
@@ -155,10 +155,10 @@ static int CALLBACK unrarCallback(UINT msg, LPARAM userData, LPARAM rarBuffer, L
     return 1;
 }
 
-static ComicBookPage *LoadCurrentCbrComicBookPage(HANDLE hArc, RARHeaderDataEx& rarHeader)
+static ImagesPage *LoadCurrentCbrPage(HANDLE hArc, RARHeaderDataEx& rarHeader)
 {
     HGLOBAL bmpData = NULL;
-    ComicBookPage *page = NULL;
+    ImagesPage *page = NULL;
 
     TCHAR *fileName = rarHeader.FileNameW;
     if (!IsImageFile(fileName))
@@ -193,7 +193,7 @@ static ComicBookPage *LoadCurrentCbrComicBookPage(HANDLE hArc, RARHeaderDataEx& 
     if (!bmp)
         goto Exit;
 
-    page = new ComicBookPage(fileName, bmpData, bmp);
+    page = new ImagesPage(fileName, bmpData, bmp);
     bmpData = NULL;
 
 Exit:
@@ -201,7 +201,7 @@ Exit:
     return page;
  }
 
-bool CbxEngine::LoadCbrFile(const TCHAR *file)
+bool ImagesEngine::LoadCbrFile(const TCHAR *file)
 {
     if (!file)
         return false;
@@ -221,7 +221,7 @@ bool CbxEngine::LoadCbrFile(const TCHAR *file)
         if (0 != res)
             break;
 
-        ComicBookPage *page = LoadCurrentCbrComicBookPage(hArc, rarHeader);
+        ImagesPage *page = LoadCurrentCbrPage(hArc, rarHeader);
         if (page)
             pages.Append(page);
     }
@@ -234,7 +234,7 @@ bool CbxEngine::LoadCbrFile(const TCHAR *file)
     return true;
 }
 
-bool CbxEngine::LoadCbzFile(const TCHAR *file)
+bool ImagesEngine::LoadCbzFile(const TCHAR *file)
 {
     if (!file)
         return false;
@@ -259,7 +259,7 @@ bool CbxEngine::LoadCbzFile(const TCHAR *file)
     // TODO: maybe lazy loading would be beneficial (but at least I would
     // need to parse image headers to extract width/height information)
     for (int n = 0; n < ginfo.number_entry; n++) {
-        ComicBookPage *page = LoadCurrentCbzComicBookPage(uf);
+        ImagesPage *page = LoadCurrentCbzPage(uf);
         if (page)
             pages.Append(page);
         err = unzGoToNextFile(uf);
@@ -276,13 +276,13 @@ bool CbxEngine::LoadCbzFile(const TCHAR *file)
     return true;
 }
 
-CbxEngine::~CbxEngine()
+ImagesEngine::~ImagesEngine()
 {
     DeleteVecMembers(pages);
     free((void *)fileName);
 }
 
-RenderedBitmap *CbxEngine::RenderBitmap(int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target, bool useGdi)
+RenderedBitmap *ImagesEngine::RenderBitmap(int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target, bool useGdi)
 {
     RectD pageRc = pageRect ? *pageRect : PageMediabox(pageNo);
     RectI screen = Transform(pageRc, pageNo, zoom, rotation).Round();
@@ -304,7 +304,7 @@ RenderedBitmap *CbxEngine::RenderBitmap(int pageNo, float zoom, int rotation, Re
     return new RenderedBitmap(hbmp, screen.dx, screen.dy);
 }
 
-bool CbxEngine::RenderPage(HDC hDC, int pageNo, RectI screenRect, float zoom, int rotation, RectD *pageRect, RenderTarget target)
+bool ImagesEngine::RenderPage(HDC hDC, int pageNo, RectI screenRect, float zoom, int rotation, RectD *pageRect, RenderTarget target)
 {
     RectD pageRc = pageRect ? *pageRect : PageMediabox(pageNo);
     RectI screen = Transform(pageRc, pageNo, zoom, rotation).Round();
@@ -332,7 +332,7 @@ bool CbxEngine::RenderPage(HDC hDC, int pageNo, RectI screenRect, float zoom, in
     return ok == Ok;
 }
 
-void CbxEngine::GetTransform(Matrix& m, int pageNo, float zoom, int rotate)
+void ImagesEngine::GetTransform(Matrix& m, int pageNo, float zoom, int rotate)
 {
     SizeD size = PageMediabox(pageNo).Size();
 
@@ -351,13 +351,13 @@ void CbxEngine::GetTransform(Matrix& m, int pageNo, float zoom, int rotate)
     m.Rotate((REAL)rotate, MatrixOrderAppend);
 }
 
-PointD CbxEngine::Transform(PointD pt, int pageNo, float zoom, int rotate, bool inverse)
+PointD ImagesEngine::Transform(PointD pt, int pageNo, float zoom, int rotate, bool inverse)
 {
     RectD rect = Transform(RectD(pt, SizeD()), pageNo, zoom, rotate, inverse);
     return PointD(rect.x, rect.y);
 }
 
-RectD CbxEngine::Transform(RectD rect, int pageNo, float zoom, int rotate, bool inverse)
+RectD ImagesEngine::Transform(RectD rect, int pageNo, float zoom, int rotate, bool inverse)
 {
     Gdiplus::PointF pts[2] = {
         Gdiplus::PointF((REAL)rect.x, (REAL)rect.y),
@@ -371,12 +371,12 @@ RectD CbxEngine::Transform(RectD rect, int pageNo, float zoom, int rotate, bool 
     return RectD::FromXY(pts[0].X, pts[0].Y, pts[1].X, pts[1].Y);
 }
 
-unsigned char *CbxEngine::GetFileData(size_t *cbCount)
+unsigned char *ImagesEngine::GetFileData(size_t *cbCount)
 {
     return (unsigned char *)File::ReadAll(fileName, cbCount);
 }
 
-CbxEngine *CbxEngine::CreateFromFileName(const TCHAR *fileName)
+ImagesEngine *ImagesEngine::CreateFromFileName(const TCHAR *fileName)
 {
     if (Str::EndsWith(fileName, _T(".cbz")))
         return CreateFromCbzFile(fileName);
@@ -386,9 +386,9 @@ CbxEngine *CbxEngine::CreateFromFileName(const TCHAR *fileName)
         return NULL;
 }
 
-CbxEngine *CbxEngine::CreateFromCbzFile(const TCHAR *fileName)
+ImagesEngine *ImagesEngine::CreateFromCbzFile(const TCHAR *fileName)
 {
-    CbxEngine *engine = new CbxEngine();
+    ImagesEngine *engine = new ImagesEngine();
     if (!engine->LoadCbzFile(fileName)) {
         delete engine;
         return NULL;
@@ -396,9 +396,9 @@ CbxEngine *CbxEngine::CreateFromCbzFile(const TCHAR *fileName)
     return engine;
 }
 
-CbxEngine *CbxEngine::CreateFromCbrFile(const TCHAR *fileName)
+ImagesEngine *ImagesEngine::CreateFromCbrFile(const TCHAR *fileName)
 {
-    CbxEngine *engine = new CbxEngine();
+    ImagesEngine *engine = new ImagesEngine();
     if (!engine->LoadCbrFile(fileName)) {
         delete engine;
         return NULL;
