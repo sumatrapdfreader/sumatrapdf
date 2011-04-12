@@ -106,7 +106,7 @@ CFLAGSB = $(CFLAGSB) /EHs-c-
 # /Ox  : maximum optimizations
 # /GL  : enable link-time code generation
 CFLAGS = $(CFLAGSB) /Os /Ox /GL /D "NDEBUG"
-CFLAGSOPT = $(CLFAGSB)
+CFLAGSOPT = $(CFLAGSB)
 LDFLAGS = $(LDFLAGS) /LTCG
 # /DYNAMICBASE and /NXCOMPAT for better protection against stack overflows
 # http://blogs.msdn.com/vcblog/archive/2009/05/21/dynamicbase-and-nxcompat.aspx
