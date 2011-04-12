@@ -62,6 +62,8 @@ public:
     virtual PointD Transform(PointD pt, int pageNo, float zoom, int rotate, bool inverse=false);
     virtual RectD Transform(RectD rect, int pageNo, float zoom, int rotate, bool inverse=false);
 
+    virtual COLORREF DefaultBackgroundColor() { return COL_BLACK; }
+
     virtual unsigned char *GetFileData(size_t *cbCount);
     virtual TCHAR * ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_out=NULL,
                                     RenderTarget target=Target_View) { return NULL; }

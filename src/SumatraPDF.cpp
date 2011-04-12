@@ -145,7 +145,7 @@ static HCURSOR                      gCursorIBeam;
 static HCURSOR                      gCursorScroll;
 static HCURSOR                      gCursorSizeWE;
 static HCURSOR                      gCursorNo;
-static HBRUSH                       gBrushBg;
+static HBRUSH                       gBrushNoDocBg;
 static HBRUSH                       gBrushWhite;
 static HBRUSH                       gBrushBlack;
 static HBRUSH                       gBrushShadow;
@@ -2059,7 +2059,13 @@ static void DrawDocument(WindowInfo *win, HDC hdc, RECT *rcArea)
     assert(dm);
     if (!dm) return;
 
-    FillRect(hdc, rcArea, win->presentation ? gBrushBlack : gBrushBg);
+    if (win->presentation)
+        FillRect(hdc, rcArea, gBrushBlack);
+    else {
+        HBRUSH bg = CreateSolidBrush(dm->engine->DefaultBackgroundColor());
+        FillRect(hdc, rcArea, bg);
+        DeleteObject(bg);
+    }
 
     DBG_OUT("DrawDocument() ");
     for (int pageNo = 1; pageNo <= dm->pageCount(); ++pageNo) {
@@ -2782,7 +2788,7 @@ static void OnPaint(WindowInfo *win)
         Win::HdcScopedSelectFont tmp(hdc, fontRightTxt);
         HGDIOBJ origFont = SelectObject(hdc, fontRightTxt); /* Just to remember the orig font */
         SetBkMode(hdc, TRANSPARENT);
-        FillRect(hdc, &ps.rcPaint, gBrushBg);
+        FillRect(hdc, &ps.rcPaint, gBrushNoDocBg);
         // TODO: it's no longer just PDF file
         DrawCenteredText(hdc, ClientRect(win->hwndCanvas), _TR("Error loading PDF file."));
     } else {
@@ -6443,14 +6449,15 @@ static bool InstanceInit(HINSTANCE hInstance, int nCmdShow)
     gCursorHand  = LoadCursor(NULL, IDC_HAND); // apparently only available if WINVER >= 0x0500
     if (!gCursorHand)
         gCursorHand = LoadCursor(ghinst, MAKEINTRESOURCE(IDC_CURSORDRAG));
-    gCursorScroll = LoadCursor(NULL, IDC_SIZEALL);
-    gCursorDrag  = LoadCursor(ghinst, MAKEINTRESOURCE(IDC_CURSORDRAG));
-    gCursorSizeWE = LoadCursor(NULL, IDC_SIZEWE);
-    gCursorNo    = LoadCursor(NULL, IDC_NO);
-    gBrushBg     = CreateSolidBrush(COL_WINDOW_BG);
-    gBrushWhite  = CreateSolidBrush(WIN_COL_WHITE);
-    gBrushBlack  = CreateSolidBrush(WIN_COL_BLACK);
-    gBrushShadow = CreateSolidBrush(COL_WINDOW_SHADOW);
+
+    gCursorScroll   = LoadCursor(NULL, IDC_SIZEALL);
+    gCursorDrag     = LoadCursor(ghinst, MAKEINTRESOURCE(IDC_CURSORDRAG));
+    gCursorSizeWE   = LoadCursor(NULL, IDC_SIZEWE);
+    gCursorNo       = LoadCursor(NULL, IDC_NO);
+    gBrushNoDocBg   = CreateSolidBrush(COL_WINDOW_BG);
+    gBrushWhite     = CreateSolidBrush(WIN_COL_WHITE);
+    gBrushBlack     = CreateSolidBrush(WIN_COL_BLACK);
+    gBrushShadow    = CreateSolidBrush(COL_WINDOW_SHADOW);
 
     NONCLIENTMETRICS ncm = {0};
     ncm.cbSize = sizeof(ncm);
@@ -6842,7 +6849,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 Exit:
     while (gWindows.Count() > 0)
         WindowInfo_Delete(gWindows[0]);
-    DeleteObject(gBrushBg);
+    DeleteObject(gBrushNoDocBg);
     DeleteObject(gBrushWhite);
     DeleteObject(gBrushBlack);
     DeleteObject(gBrushShadow);

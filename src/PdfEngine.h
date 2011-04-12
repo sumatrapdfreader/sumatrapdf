@@ -131,6 +131,7 @@ public:
                                     RenderTarget target=Target_View);
     virtual bool IsImagePage(int pageNo);
     virtual PageLayoutType PreferredLayout();
+    virtual COLORREF DefaultBackgroundColor() { return COL_GRAYISH; }
     virtual TCHAR *GetProperty(char *name);
 
     virtual bool IsPrintingAllowed() { return hasPermission(PDF_PERM_PRINT); }

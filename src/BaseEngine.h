@@ -7,6 +7,10 @@
 #include "BaseUtil.h"
 #include "GeomUtil.h"
 
+// convenient place to put this
+#define COL_GRAYISH RGB(0xcc, 0xcc, 0xcc)
+#define COL_BLACK   RGB(0, 0, 0)
+
 /* certain OCGs will only be rendered for some of these (e.g. watermarks) */
 enum RenderTarget { Target_View, Target_Print, Target_Export };
 
@@ -114,6 +118,10 @@ public:
     virtual bool IsImagePage(int pageNo) = 0;
     // the layout type this document's author suggests (if the user doesn't care)
     virtual PageLayoutType PreferredLayout() { return Layout_Single; }
+
+    // if not changed by the user, default background for this document type
+    virtual COLORREF DefaultBackgroundColor() = 0;
+
     // access to various document properties (such as Author, Title, etc.)
     virtual TCHAR *GetProperty(char *name) { return NULL; }
 

@@ -1383,6 +1383,8 @@ public:
     virtual PointD Transform(PointD pt, int pageNo, float zoom, int rotate, bool inverse=false);
     virtual RectD Transform(RectD rect, int pageNo, float zoom, int rotate, bool inverse=false);
 
+    virtual COLORREF DefaultBackgroundColor() { return COL_GRAYISH; }
+
     virtual unsigned char *GetFileData(size_t *cbCount);
     virtual TCHAR * ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_out=NULL,
                                     RenderTarget target=Target_View);
@@ -1432,9 +1434,9 @@ protected:
 static void
 xps_run_page(xps_context *ctx, xps_page *page, fz_device *dev, fz_matrix ctm)
 {
-	ctx->dev = dev;
-	xps_parse_fixed_page(ctx, ctm, page);
-	ctx->dev = NULL;
+    ctx->dev = dev;
+    xps_parse_fixed_page(ctx, ctm, page);
+    ctx->dev = NULL;
 }
 
 CXpsEngine::CXpsEngine() : _fileName(NULL), _ctx(NULL), _pages(NULL), _drawcache(NULL)
