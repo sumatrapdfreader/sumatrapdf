@@ -201,7 +201,7 @@ typedef struct {
 	WCHAR filepath[MAX_PATH];
 	HANDLE hProcess;
 	WCHAR exepath[MAX_PATH + 2];
-	FLOAT progress, lastUpdate;
+	FLOAT progress, prevProgress;
 } InstanceData;
 
 #define COL_WINDOW_BG RGB(0xcc, 0xcc, 0xcc)
@@ -353,6 +353,26 @@ NPError NP_LOADDS NPP_SetWindow(NPP instance, NPWindow *npwin)
 	return NPERR_NO_ERROR;
 }
 
+static void RepaintOnProgressChange(InstanceData *data)
+{
+	HWND hwnd;
+	FLOAT prev, diff;
+
+	if (!data || !data->npwin || !data->npwin->window)
+		return;
+
+	hwnd = (HWND)data->npwin->window;
+	prev = data->prevProgress;
+	data->prevProgress = data->progress;
+
+	diff = data->progress - prev;
+	if (diff < 0 || diff > 0.01f)
+	{
+		InvalidateRect(hwnd, NULL, FALSE);
+		UpdateWindow(hwnd);
+	}
+}
+
 NPError NP_LOADDS NPP_NewStream(NPP instance, NPMIMEType type, NPStream* stream, NPBool seekable, uint16_t* stype)
 {
 	InstanceData *data = instance->pdata;
@@ -365,12 +385,8 @@ NPError NP_LOADDS NPP_NewStream(NPP instance, NPMIMEType type, NPStream* stream,
 	*stype = NP_ASFILE;
 	
 	data->progress = stream->end > 0 ? 0.01f : 0;
-	if (data->npwin)
-	{
-		InvalidateRect((HWND)data->npwin->window, NULL, FALSE);
-		UpdateWindow((HWND)data->npwin->window);
-		data->lastUpdate = data->progress;
-	}
+	data->prevProgress = -.1f;
+	RepaintOnProgressChange(data);
 	
 	return NPERR_NO_ERROR;
 	
@@ -391,15 +407,9 @@ int32_t NP_LOADDS NPP_Write(NPP instance, NPStream* stream, int32_t offset, int3
 	InstanceData *data = instance->pdata;
 	
 	data->progress = stream->end > 0 ? 1.0f * (offset + len) / stream->end : 0;
-	if (data->npwin && (!data->progress || data->progress - data->lastUpdate > 0.01f))
-	{
-		InvalidateRect((HWND)data->npwin->window, NULL, FALSE);
-		UpdateWindow((HWND)data->npwin->window);
-		data->lastUpdate = data->progress;
-	}
-	
+	RepaintOnProgressChange(data);
 	return len;
-	
+
 	UNREFERENCED_PARAMETER(buffer);
 }
 
@@ -420,12 +430,8 @@ void NP_LOADDS NPP_StreamAsFile(NPP instance, NPStream* stream, const char* fnam
 	}
 	
 	data->progress = 1.0f;
-	if (data->npwin)
-	{
-		InvalidateRect((HWND)data->npwin->window, NULL, FALSE);
-		UpdateWindow((HWND)data->npwin->window);
-		data->lastUpdate = data->progress;
-	}
+	data->prevProgress = 0.0f; // force update
+	RepaintOnProgressChange(data);
 	
 	if (!fname)
 	{
