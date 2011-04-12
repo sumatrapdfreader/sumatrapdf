@@ -759,12 +759,26 @@ HMENU BuildMenu(HWND hWnd)
 // TODO: move the next three methods into gWindows?
 WindowInfo* FindWindowInfoByHwnd(HWND hwnd)
 {
-    HWND rootWnd = GetAncestor(hwnd, GA_ROOT);
-
     for (size_t i = 0; i < gWindows.Count(); i++) {
         WindowInfo *win = gWindows.At(i);
-        if (rootWnd == win->hwndFrame || hwnd == win->hwndProperties)
+        if (hwnd == win->hwndFrame      ||
+            hwnd == win->hwndCanvas     ||
+            hwnd == win->hwndToolbar    ||
+            hwnd == win->hwndReBar      ||
+            hwnd == win->hwndFindText   ||
+            hwnd == win->hwndFindBox    ||
+            hwnd == win->hwndFindBg     ||
+            hwnd == win->hwndFindStatus ||
+            hwnd == win->hwndPageText   ||
+            hwnd == win->hwndPageBox    ||
+            hwnd == win->hwndTocBox     ||
+            hwnd == win->hwndTocTree    ||
+            hwnd == win->hwndSpliter    ||
+            hwnd == win->hwndInfotip    ||
+            hwnd == win->hwndProperties)
+        {
             return win;
+        }
     }
     return NULL;
 }
