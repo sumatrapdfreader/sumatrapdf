@@ -355,21 +355,17 @@ NPError NP_LOADDS NPP_SetWindow(NPP instance, NPWindow *npwin)
 
 static void RepaintOnProgressChange(InstanceData *data)
 {
-	HWND hwnd;
-	FLOAT prev, diff;
+	FLOAT diff = data->progress - data->prevProgress;
 
 	if (!data || !data->npwin || !data->npwin->window)
 		return;
 
-	hwnd = (HWND)data->npwin->window;
-	prev = data->prevProgress;
-	data->prevProgress = data->progress;
-
-	diff = data->progress - prev;
 	if (diff < 0 || diff > 0.01f)
 	{
+		HWND hwnd = (HWND)data->npwin->window;
 		InvalidateRect(hwnd, NULL, FALSE);
 		UpdateWindow(hwnd);
+		data->prevProgress = data->progress;
 	}
 }
 
