@@ -70,18 +70,20 @@ NASM=nasm.exe
 
 CC = cl.exe
 
-#CFLAGS = $(CFLAGS) /showIncludes
-#CFLAGS = $(CFLAGS) /analyze
+# CFLGASB - CFLAGS base. 
 
-CFLAGS = $(CFLAGS) /nologo /c
+#CFLAGSB = $(CFLAGSB) /showIncludes
+#CFLAGSB = $(CFLAGSB) /analyze
+
+CFLAGSB = $(CFLAGSB) /nologo /c
 # standard windows defines
 !if "$(PLATFORM)"=="X64"
-CFLAGS = $(CFLAGS) /D "WIN64" /D "_WIN64"
+CFLAGSB = $(CFLAGSB) /D "WIN64" /D "_WIN64"
 !else
-CFLAGS = $(CFLAGS) /D "WIN32" /D "_WIN32"
+CFLAGSB = $(CFLAGSB) /D "WIN32" /D "_WIN32"
 !endif
 # suppress warning C4996: 'function': was declared deprecated
-CFLAGS = $(CFLAGS) /wd4996
+CFLAGSB = $(CFLAGSB) /wd4996
 
 # /W3  : bump warnings level from 1 to 3
 # /WX  : treat warnings as errors
@@ -89,52 +91,54 @@ CFLAGS = $(CFLAGS) /wd4996
 # /Zi  : enable debug information
 # /GS  : enable security checks
 # /Gy  : separate functions for linker
-CFLAGS = $(CFLAGS) /W3 /WX /GR- /Zi /GS /Gy
+CFLAGSB = $(CFLAGSB) /W3 /WX /GR- /Zi /GS /Gy
+
+# Make it easy to compile as ANSI or UNICODE application
+!if "$(_ANSI)"==""
+CFLAGSB = $(CFLAGSB) /D "UNICODE" /D "_UNICODE"
+!endif
+
+# /EHs-c- : disable C++ exceptions (generates smaller binaries)
+CFLAGSB = $(CFLAGSB) /EHs-c- 
 
 !if "$(CFG)"=="rel"
 # /Os  : favor code space
 # /Ox  : maximum optimizations
 # /GL  : enable link-time code generation
-CFLAGS = $(CFLAGS) /Os /Ox /GL /D "NDEBUG"
+CFLAGS = $(CFLAGSB) /Os /Ox /GL /D "NDEBUG"
+CFLAGSOPT = $(CLFAGSB)
 LDFLAGS = $(LDFLAGS) /LTCG
 # /DYNAMICBASE and /NXCOMPAT for better protection against stack overflows
 # http://blogs.msdn.com/vcblog/archive/2009/05/21/dynamicbase-and-nxcompat.aspx
 LDFLAGS = $(LDFLAGS) /NXCOMPAT /DYNAMICBASE /FIXED:NO
-# /EHs-c- : disable C++ exceptions (generates smaller binaries)
-CFLAGS = $(CFLAGS) /EHs-c- 
 !else
+# /MTd  : statically link debug crt (libcmtd.lib)
+CFLAGSB = $(CFLAGSB) /MTd
 # /Od   : disable optimizations
 # /RTCs : stack frame runtime checking
 # /RTCu : ununitialized local usage checks
-CFLAGS = $(CFLAGS) /Od /RTCs /RTCu
-# /MTd  : statically link debut crt (libcmtd.lib)
-# /EHs-c- : disable C++ exceptions (generates smaller binaries)
-CFLAGS = $(CFLAGS) /MTd /EHs-c-
+CFLAGS = $(CFLAGSB) /Od /RTCs /RTCu
+CFLAGSOPT    = $(CFLAGSB) /Os /Ox /D "NDEBUG"
 !endif
 
-# Make it easy to compile as ANSI or UNICODE application
-!if "$(_ANSI)"==""
-CFLAGS = $(CFLAGS) /D "UNICODE" /D "_UNICODE"
-!endif
-
-ZLIB_CFLAGS = $(CFLAGS)
-BZIP2_CFLAGS = $(CFLAGS) /D "BZ_NO_STDIO" /D "BZ_DEBUG=0"
+ZLIB_CFLAGS = $(CFLAGSOPT)
+BZIP2_CFLAGS = $(CFLAGSOPT) /D "BZ_NO_STDIO" /D "BZ_DEBUG=0"
 MINIZIP_CFLAGS = $(ZLIB_CFLAGS) /D "HAVE_BZIP2" /I$(ZLIB_DIR) /I$(BZIP2_DIR)
 
-UNRAR_CFLAGS = $(CFLAGS) /D "UNRAR" /D "RARDLL" /EHsc
+UNRAR_CFLAGS = $(CFLAGSOPT) /D "UNRAR" /D "RARDLL" /EHsc
 # a hack to undo /D "UNICODE" since unrar defines it unconditionally, causing
 # compilation warnings
 UNRAR_CFLAGS = $(UNRAR_CFLAGS:UNICODE=IGNORE_THIS)
 
-FREETYPE_CFLAGS = $(CFLAGS) /TC /I$(FREETYPE_DIR)/config /I$(FREETYPE_DIR)/include \
+FREETYPE_CFLAGS = $(CFLAGSOPT) /TC /I$(FREETYPE_DIR)/config /I$(FREETYPE_DIR)/include \
 	/D "FT2_BUILD_LIBRARY" /D "FT_OPTION_AUTOFIT2"
 
-JBIG2_CFLAGS = $(CFLAGS) /TC /D "HAVE_STRING_H=1" /I$(JBIG2_DIR) /wd4018
+JBIG2_CFLAGS = $(CFLAGSOPT) /TC /D "HAVE_STRING_H=1" /I$(JBIG2_DIR) /wd4018
 
-OPENJPEG_CFLAGS = $(CFLAGS) /TC /D "OPJ_STATIC" /D "OPJ_EXPORTS" /I$(OPENJPEG_DIR) /wd4819
+OPENJPEG_CFLAGS = $(CFLAGSOPT) /TC /D "OPJ_STATIC" /D "OPJ_EXPORTS" /I$(OPENJPEG_DIR) /wd4819
 
 !if "$(JPEG_TURBO_DIR)"==""
-JPEG_CFLAGS = $(CFLAGS) /I$(JPEG_DIR)
+JPEG_CFLAGS = $(CFLAGSOPT) /I$(JPEG_DIR)
 !else
 JPEG_TURBO_CFLAGS = $(CFLAGS) /I$(JPEG_TURBO_DIR) /I$(JPEG_TURBO_DIR)\simd
 JPEG_TURBO_CFLAGS = $(JPEG_TURBO_CFLAGS) /wd4101 /wd4018
@@ -146,6 +150,7 @@ JPEG_TURBO_NASM_FLAGS = $(JPEG_TURBO_NASM_FLAGS) -f win32
 !endif
 !endif
 
+# also use $(CFLAGSOPT) for mupdf ?
 MUPDF_CFLAGS = $(CFLAGS) /D "NEED_MATH" /D "NEED_GETTIMEOFDAY" /D "HAVE_JBIG2DEC" /D "USE_HINTING"
 
 MUPDF_CFLAGS = $(MUPDF_CFLAGS) /D "HAVE_OPENJPEG" /I$(OPENJPEG_DIR)
