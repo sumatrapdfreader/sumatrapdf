@@ -341,17 +341,6 @@ static bool CanViewExternally(WindowInfo *win=NULL)
     return File::Exists(win->loadedFilePath);
 }
 
-static bool CanViewExternallyAsPdf(WindowInfo *win=NULL)
-{
-    if (gRestrictedUse)
-        return false;
-    if (!win || !win->dm)
-        return true;
-    if (!win->dm->pdfEngine)
-        return false;
-    return File::Exists(win->loadedFilePath);
-}
-
 static bool IsNonPdfDocument(WindowInfo *win=NULL)
 {
     if (!win || !win->dm)
@@ -362,7 +351,7 @@ static bool IsNonPdfDocument(WindowInfo *win=NULL)
 static bool CanViewWithFoxit(WindowInfo *win=NULL)
 {
     // Requirements: a valid filename and a valid path to Foxit
-    if (!CanViewExternallyAsPdf(win))
+    if (!CanViewExternally(win) || IsNonPdfDocument(win))
         return false;
     ScopedMem<TCHAR> path(GetFoxitPath());
     return path != NULL;
@@ -390,7 +379,7 @@ static bool ViewWithFoxit(WindowInfo *win, TCHAR *args=NULL)
 static bool CanViewWithPDFXChange(WindowInfo *win=NULL)
 {
     // Requirements: a valid filename and a valid path to PDF X-Change
-    if (!CanViewExternallyAsPdf(win))
+    if (!CanViewExternally(win) || IsNonPdfDocument(win))
         return false;
     ScopedMem<TCHAR> path(GetPDFXChangePath());
     return path != NULL;
@@ -418,7 +407,7 @@ static bool ViewWithPDFXChange(WindowInfo *win, TCHAR *args=NULL)
 static bool CanViewWithAcrobat(WindowInfo *win=NULL)
 {
     // Requirements: a valid filename and a valid path to Adobe Reader
-    if (!CanViewExternallyAsPdf(win))
+    if (!CanViewExternally(win) || IsNonPdfDocument(win))
         return false;
     ScopedMem<TCHAR> exePath(GetAcrobatPath());
     return exePath != NULL;
@@ -716,7 +705,7 @@ static void AppendRecentFilesToMenu(HMENU m)
     InsertMenu(m, IDM_EXIT, MF_BYCOMMAND | MF_SEPARATOR, 0, NULL);
 }
 
-static HMENU RebuildFileMenu(WindowInfo *win, HMENU menu)
+static HMENU RebuildFileMenu(HMENU menu)
 {
     Win::Menu::Empty(menu);
     BuildMenuFromMenuDef(menuDefFile, dimof(menuDefFile), menu);
@@ -724,13 +713,15 @@ static HMENU RebuildFileMenu(WindowInfo *win, HMENU menu)
 
     // Suppress menu items that depend on specific software being installed:
     // e-mail client, Adobe Reader, Foxit, PDF-XChange
-    if (!CanViewWithAcrobat(win))
+    // (don't hide items here that won't always be hidden,
+    // do that in MenuUpdateStateForWindow)
+    if (!CanViewWithAcrobat())
         Win::Menu::Hide(menu, IDM_VIEW_WITH_ACROBAT);
-    if (!CanViewWithFoxit(win))
+    if (!CanViewWithFoxit())
         Win::Menu::Hide(menu, IDM_VIEW_WITH_FOXIT);
-    if (!CanViewWithPDFXChange(win))
+    if (!CanViewWithPDFXChange())
         Win::Menu::Hide(menu, IDM_VIEW_WITH_PDF_XCHANGE);
-    if (!CanSendAsEmailAttachment(win))
+    if (!CanSendAsEmailAttachment())
         Win::Menu::Hide(menu, IDM_SEND_BY_EMAIL);
 
     return menu;
@@ -739,7 +730,7 @@ static HMENU RebuildFileMenu(WindowInfo *win, HMENU menu)
 HMENU BuildMenu(HWND hWnd)
 {
     HMENU mainMenu = CreateMenu();
-    HMENU m = RebuildFileMenu(NULL, CreateMenu());
+    HMENU m = RebuildFileMenu(CreateMenu());
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&File"));
     m = BuildMenuFromMenuDef(menuDefView, dimof(menuDefView), CreateMenu());
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&View"));
@@ -6018,7 +6009,7 @@ static void UpdateMenu(WindowInfo *win, HMENU m)
 {
     UINT id = GetMenuItemID(m, 0);
     if (id == menuDefFile[0].id)
-        RebuildFileMenu(win, m);
+        RebuildFileMenu(m);
     MenuUpdateStateForWindow(win);
 }
 

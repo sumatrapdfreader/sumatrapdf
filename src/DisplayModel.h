@@ -85,7 +85,7 @@ class DisplayModelCallback : public PasswordUI, public TextSearchTracker {
 public:
     virtual void Repaint() = 0;
     virtual void PageNoChanged(int pageNo) = 0;
-    virtual void UpdateScrollbars(SizeI canvas) = 0; // TODO: no longer need to pass canvas in
+    virtual void UpdateScrollbars(SizeI canvas) = 0;
     virtual void RenderPage(int pageNo) = 0;
     virtual int  GetScreenDPI() = 0;
     virtual void CleanUp(DisplayModel *dm) = 0;

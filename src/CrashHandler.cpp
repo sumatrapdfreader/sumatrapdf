@@ -16,6 +16,7 @@
 #include "AppTools.h"
 #include "Http.h"
 #include "ZipUtil.h"
+#include "SimpleLog.h"
 
 #include "SumatraPDF.h"
 
@@ -137,7 +138,10 @@ static MINIDUMP_EXCEPTION_INFORMATION gMei = { 0 };
 static BOOL gSymInitializeOk = FALSE;
 
 #if defined(DEBUG_CRASH_INFO)
-static Str::Str<char> *gDbgLog = NULL;
+Log::MemoryLogger gLog;
+#define LogDbg(msg, ...) gLog.LogFmt(_T(msg), __VA_ARGS__)
+#else
+#define LogDbg(msg, ...) NoOp()
 #endif
 
 #define F(X) \
@@ -164,47 +168,6 @@ FuncNameAddr gDbgHelpFuncs[] = {
 #undef F
 
 #if defined(DEBUG_CRASH_INFO)
-static void LogDbg(const char *s)
-{
-    if (!s)
-        return;
-    if (!gDbgLog)
-        gDbgLog = new Str::Str<char>(2048);
-    if (!gDbgLog) return;
-    gDbgLog->Append(s);
-}
-#else
-static void LogDbg(const char *s) {}
-#endif
-
-#if defined(DEBUG_CRASH_INFO)
-static void LogDbg(const WCHAR *s)
-{
-    if (!s) return;
-    char *tmp = Str::Conv::ToAnsi(s);
-    LogDbg(tmp);
-    free(tmp);
-}
-#else
-static void LogDbg(const WCHAR *s) {}
-#endif
-
-#if defined(DEBUG_CRASH_INFO)
-static void LogDbgCurrDir()
-{
-    char buf[1024] = { 0 };
-    DWORD res = GetCurrentDirectoryA(sizeof(buf), buf);
-    if (res < sizeof(buf)) {
-        LogDbg("Current directory: ");
-        LogDbg(buf);
-        LogDbg("\r\n");
-    }
-}
-#else
-static void LogDbgCurrDir() { }
-#endif
-
-#if defined(DEBUG_CRASH_INFO)
 static void LogDbgSymSearchPath()
 {
     WCHAR buf[1024] = { 0 };
@@ -212,9 +175,11 @@ static void LogDbgSymSearchPath()
         return;
     if (!_SymGetSearchPathW(GetCurrentProcess(), buf, dimof(buf)))
         return;
-    LogDbg("symbol search path: ");
-    LogDbg(buf);
-    LogDbg("\r\n");
+#ifdef UNICODE
+    LogDbg("Symbol search path: %s", buf);
+#else
+    LogDbg("Symbol search path: %s", ScopedMem<char>(Str::Conv::FromWStr(buf)));
+#endif
 }
 #else
 static void LogDbgSymSearchPath() {}
@@ -309,41 +274,28 @@ static WCHAR *GetSymbolPath()
 #if 0
 static bool SetupSymbolPath()
 {
-    const TCHAR *path = NULL;
     if (!_SymSetSearchPathW && !_SymSetSearchPath) {
-        LogDbg("SetupSymbolPath(): _SymSetSearchPathW and _SymSetSearchPath missing\r\n");
+        LogDbg("SetupSymbolPath(): _SymSetSearchPathW and _SymSetSearchPath missing");
         return false;
     }
     LogDbg("Before setting path ");
     LogDbgSymSearchPath();
 
-    path = GetSymbolPath();
+    ScopedMem<WCHAR> path(GetSymbolPath());
     if (!path) {
-        LogDbg("SetupSymbolPath(): GetSymbolPath() returned NULL\r\n");
+        LogDbg("SetupSymbolPath(): GetSymbolPath() returned NULL");
         return false;
     }
 
     BOOL ok = FALSE;
+    ScopedMem<TCHAR> tpath(Str::Conv::FromWStr(path));
     if (_SymSetSearchPathW) {
         ok = _SymSetSearchPathW(GetCurrentProcess(), path);
-        if (ok) {
-            LogDbg("_SymSetSearchPathW() ok, path='");
-        } else {
-            LogDbg("_SymSetSearchPathW() failed, path='");
-        }
-        LogDbg(path); LogDbg("'\r\n");
+        LogDbg("_SymSetSearchPathW() %s, path='%s'", ok ? _T("ok") : _T("failed"), tpath);
     } else {
-        char *tmp = Str::Conv::ToAnsi(path);
-        if (tmp) {
-            ok = _SymSetSearchPath(GetCurrentProcess(), tmp);
-            if (ok) {
-                LogDbg("_SymSetSearchPath() ok, path='");
-            } else {
-                LogDbg("_SymSetSearchPath() failed, path='");
-            }
-            LogDbg(tmp); LogDbg("'\r\n");
-            free(tmp);
-        }
+        ScopedMem<char> tmp(Str::Conv::ToAnsi(tpath));
+        ok = _SymSetSearchPath(GetCurrentProcess(), tmp);
+        LogDbg("_SymSetSearchPath() %s, path='%s'", ok ? _T("ok") : _T("failed"), tpath);
     }
 
     LogDbg("After setting path ");
@@ -357,18 +309,18 @@ static bool SetupSymbolPath()
 static bool InitializeDbgHelp()
 {
     if (!LoadDbgHelpFuncs()) {
-        LogDbg("InitializeDbgHelp(): LoadDbgHelpFuncs() failed\r\n");
+        LogDbg("InitializeDbgHelp(): LoadDbgHelpFuncs() failed");
         return false;
     }
 
     if (!_SymInitializeW && !_SymInitialize) {
-        LogDbg("InitializeDbgHelp(): SymInitializeW() or SymInitializeA() not present in dbghelp.dll\r\n");
+        LogDbg("InitializeDbgHelp(): SymInitializeW() or SymInitializeA() not present in dbghelp.dll");
         return false;
     }
 
     WCHAR *symPath = GetSymbolPath();
     if (!symPath) {
-        LogDbg("InitializeDbgHelp(): GetSymbolPath() failed\r\n");
+        LogDbg("InitializeDbgHelp(): GetSymbolPath() failed");
         return false;
     }
 
@@ -384,7 +336,7 @@ static bool InitializeDbgHelp()
     }
 
     if (!gSymInitializeOk) {
-        LogDbg("InitializeDbgHelp(): _SymInitialize() failed\r\n");
+        LogDbg("InitializeDbgHelp(): _SymInitialize() failed");
         return false;
     }
 
@@ -948,15 +900,6 @@ static void SendCrashInfo(char *s)
     HttpPost(CRASH_SUBMIT_SERVER, CRASH_SUBMIT_URL, &headers, &data);
 }
 
-#if defined(DEBUG_CRASH_INFO)
-static void SendDebugCrashInfo()
-{
-    if (!gDbgLog)
-        return;
-    SendCrashInfo(gDbgLog->Get());
-}
-#endif
-
 // We might have symbol files for older builds. If we're here, then we
 // didn't get the symbols so we assume it's because symbols didn't match
 // Returns false if files were there but we couldn't delete them
@@ -1017,11 +960,11 @@ static bool DownloadPreReleaseSymbols(const TCHAR *symDir)
     if (IsStaticBuild()) {
         ok = UnpackStaticPreReleaseSymbols(symbolsZipPath, symDir);
         if (!ok)
-            LogDbg("Couldn't unpack pre-release symbols for static build\r\n");
+            LogDbg("Couldn't unpack pre-release symbols for static build");
     } else {
         ok = UnpackLibSymbols(symbolsZipPath, symDir);
         if (!ok)
-            LogDbg("Couldn't unpack pre-release symbols for lib build\r\n");
+            LogDbg("Couldn't unpack pre-release symbols for lib build");
     }
     File::Delete(symbolsZipPath);
     return ok;
@@ -1032,18 +975,18 @@ static bool DownloadReleaseSymbols(const TCHAR *symDir)
     TCHAR *url = _T("http://kjkpub.s3.amazonaws.com/sumatrapdf/rel/SumatraPDF-") _T(QM(CURR_VERSION)) _T(".pdb.zip");
     ScopedMem<TCHAR> symbolsZipPath(Path::Join(symDir, _T("symbols_tmp.zip")));
     if (!HttpGetToFile(url, symbolsZipPath)) {
-        LogDbg("Couldn't download release symbols\r\n");
+        LogDbg("Couldn't download release symbols");
         return false;
     }
     bool ok = false;
     if (IsStaticBuild()) {
         ok = UnpackStaticReleaseSymbols(symbolsZipPath, symDir);
         if (!ok)
-            LogDbg("Couldn't unpack release symbols for static build\r\n");
+            LogDbg("Couldn't unpack release symbols for static build");
     } else {
         ok = UnpackLibSymbols(symbolsZipPath, symDir);
         if (!ok)
-            LogDbg("Couldn't unpack release symbols for lib build\r\n");
+            LogDbg("Couldn't unpack release symbols for lib build");
     }
     File::Delete(symbolsZipPath);
     return ok;
@@ -1081,7 +1024,7 @@ void SubmitCrashInfo()
     char *s = NULL;
 
     if (!InitializeDbgHelp()) {
-        LogDbg("SubmitCrashInfo(): InitializeDbgHelp() failed\r\n");
+        LogDbg("SubmitCrashInfo(): InitializeDbgHelp() failed");
         goto Exit;
     }
 
@@ -1093,26 +1036,27 @@ void SubmitCrashInfo()
         
         _SymCleanup(GetCurrentProcess());
         if (!InitializeDbgHelp()) {
-            LogDbg("SubmitCrashInfo(): InitializeDbgHelp() failed\r\n");
+            LogDbg("SubmitCrashInfo(): InitializeDbgHelp() failed");
             goto Exit;
         }
     }
 
     if (!HasOwnSymbols()) {
-        LogDbg("SubmitCrashInfo(): HasOwnSymbols() false after downloading symbols\r\n");
+        LogDbg("SubmitCrashInfo(): HasOwnSymbols() false after downloading symbols");
         goto Exit;
     }
 
     s = BuildCrashInfoText();
     if (!s) {
-        LogDbg("SubmitCrashInfo(): BuildCrashInfoText() returned NULL for second report\r\n");
+        LogDbg("SubmitCrashInfo(): BuildCrashInfoText() returned NULL for second report");
         goto Exit;
     }
     SendCrashInfo(s);
 Exit:
     free(s);
 #if defined(DEBUG_CRASH_INFO)
-    SendDebugCrashInfo();
+    ScopedMem<char> log_utf8(Str::Conv::ToUtf8(gLog.GetData()));
+    SendCrashInfo(log_utf8);
 #endif
 }
 

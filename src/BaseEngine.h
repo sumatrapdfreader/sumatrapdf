@@ -119,6 +119,7 @@ public:
     // the layout type this document's author suggests (if the user doesn't care)
     virtual PageLayoutType PreferredLayout() { return Layout_Single; }
 
+    // TODO: presentation details don't really belong here
     // if not changed by the user, default background for this document type
     virtual COLORREF DefaultBackgroundColor() = 0;
 

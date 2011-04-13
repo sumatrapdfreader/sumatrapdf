@@ -8,7 +8,8 @@
 #include "FileUtil.h"
 #include "WinUtil.h"
 
-#define USER_AGENT _T("Simple HTTP Lib")
+// per RFC 1945 10.15 and 3.7, a user agent product token shouldn't contain whitespace
+#define USER_AGENT _T("BaseHTTP")
 
 // returns ERROR_SUCCESS or an error code
 DWORD HttpGet(const TCHAR *url, Str::Str<char> *dataOut)

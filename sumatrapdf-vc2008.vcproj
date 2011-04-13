@@ -377,6 +377,14 @@
 				RelativePath=".\baseutils\WinUtil.h"
 				>
 			</File>
+			<File
+				RelativePath=".\baseutils\ZipUtil.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\ZipUtil.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="mupdf"

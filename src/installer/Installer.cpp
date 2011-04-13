@@ -281,7 +281,7 @@ TCHAR *GetInstallationDir(bool forUninstallation=false)
         if (Str::EndsWithI(dir, _T(".exe"))) {
             dir.Set(Path::GetDir(dir));
         }
-        if (!Str::IsEmpty(dir.Get()) && PathIsDirectory(dir))
+        if (!Str::IsEmpty(dir.Get()) && Dir::Exists(dir))
             return dir.StealData();
     }
 
@@ -1208,7 +1208,7 @@ BOOL BrowseForFolder(HWND hwnd, LPCTSTR lpszInitialFolder, LPCTSTR lpszCaption, 
 void OnButtonBrowse()
 {
     TCHAR *installDir = Win::GetText(gHwndTextboxInstDir);
-    if (!PathIsDirectory(installDir)) {
+    if (!Dir::Exists(installDir)) {
         TCHAR *parentDir = Path::GetDir(installDir);
         free(installDir);
         installDir = parentDir;
