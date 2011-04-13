@@ -147,7 +147,9 @@ static RectI GetTileOnScreen(BaseEngine *engine, int pageNo, int rotation, float
 
 static bool IsTileVisible(DisplayModel *dm, int pageNo, int rotation, float zoom, TilePosition tile, float fuzz=0)
 {
+    if (!dm) return false;
     PageInfo *pageInfo = dm->getPageInfo(pageNo);
+    if (!dm->engine || !pageInfo) return false;
     RectI tileOnScreen = GetTileOnScreen(dm->engine, pageNo, rotation, zoom, tile, pageInfo->pageOnScreen);
     // consider nearby tiles visible depending on the fuzz factor
     tileOnScreen.x -= (int)(tileOnScreen.dx * fuzz * 0.5);
