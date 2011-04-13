@@ -462,8 +462,12 @@ PdfEngine *PdfEngine::Clone()
 {
     // use this document's encryption key (if any) to load the clone
     PasswordCloner *pwdUI = NULL;
+
+    /* TODO: mupdf has hidden definition of crypt */
+#if 0
     if (_xref->crypt)
         pwdUI = new PasswordCloner(_xref->crypt->key);
+#endif
     PdfEngine *clone = PdfEngine::CreateFromStream(_xref->file, pwdUI);
     delete pwdUI;
 
@@ -559,7 +563,7 @@ bool PdfEngine::load_from_stream(fz_stream *stm, PasswordUI *pwdUI)
 
         bool okay = false, saveKey = false;
         for (int i = 0; !okay && i < 3; i++) {
-            ScopedMem<TCHAR> pwd(pwdUI->GetPassword(_fileName, digest, _xref->crypt->key, &saveKey));
+            ScopedMem<TCHAR> pwd(pwdUI->GetPassword(_fileName, digest, pdf_get_crypt_key(_xref), &saveKey));
             if (!pwd) {
                 // password not given or encryption key has been remembered
                 okay = saveKey;
@@ -584,7 +588,7 @@ bool PdfEngine::load_from_stream(fz_stream *stm, PasswordUI *pwdUI)
             return false;
 
         if (saveKey) {
-            memcpy(digest + 16, _xref->crypt->key, 32);
+            memcpy(digest + 16, pdf_get_crypt_key(_xref), 32);
             _decryptionKey = _MemToHex(&digest);
         }
     }
@@ -829,12 +833,7 @@ RectI PdfEngine::PageContentBox(int pageNo, RenderTarget target)
 
 bool PdfEngine::hasPermission(int permission)
 {
-    assert(_xref);
-    if (!_xref || !_xref->crypt)
-        return true;
-    if (_xref->crypt->p & permission)
-        return true;
-    return false;
+    return (bool)pdf_has_permission(_xref, permission);
 }
 
 fz_matrix PdfEngine::viewctm(pdf_page *page, float zoom, int rotate)
@@ -1228,8 +1227,11 @@ TCHAR *PdfEngine::GetProperty(char *name)
 
     if (Str::Eq(name, "PdfVersion")) {
         int major = _xref->version / 10, minor = _xref->version % 10;
-        if (1 ==major && 7 == minor && _xref->crypt && 5 == _xref->crypt->v)
+        /* TODO: mupdf has hidden crypt */
+#if 0
+        if (1 == major && 7 == minor && _xref->crypt && 5 == _xref->crypt->v)
             return Str::Format(_T("%d.%d Adobe Extension Level %d"), major, minor, 3);
+#endif
         return Str::Format(_T("%d.%d"), major, minor);
     }
 
@@ -1300,8 +1302,13 @@ bool PdfEngine::IsImagePage(int pageNo)
     if (!run)
         return false;
 
+    /* TODO: no longer present in mupdf */
+#if 0
     bool hasSingleImage = run->list->first && !run->list->first->next &&
                           run->list->first->cmd == FZ_CMD_FILL_IMAGE;
+#else
+    bool hasSingleImage = false;
+#endif
     dropPageRun(run);
 
     return hasSingleImage;

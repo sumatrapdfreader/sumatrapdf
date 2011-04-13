@@ -165,12 +165,13 @@ static void pdfapp_open_pdf(pdfapp_t *app, char *filename, int fd)
 static void pdfapp_open_xps(pdfapp_t *app, char *filename, int fd)
 {
 	fz_error error;
+	fz_stream *file;
 
-	close(fd); // TODO: fix this for windows
-
-	error = xps_open_file(&app->xps, filename);
+	file = fz_open_fd(fd);
+	error = xps_open_stream(&app->xps, file);
 	if (error)
-		pdfapp_error(app, fz_rethrow(error, "cannot open document: '%s'", filename));
+		pdfapp_error(app, fz_rethrow(error, "cannot open document '%s'", filename));
+	fz_close(file);
 
 	app->doctitle = filename;
 

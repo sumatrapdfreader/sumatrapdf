@@ -1,6 +1,12 @@
 #include "fitz.h"
 #include "mupdf.h"
 
+static fz_error
+pdf_run_glyph_func(void *xref, fz_obj *rdb, fz_buffer *contents, fz_device *dev, fz_matrix ctm)
+{
+	return pdf_run_glyph(xref, rdb, contents, dev, ctm);
+}
+
 fz_error
 pdf_load_type3_font(pdf_font_desc **fontdescp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict)
 {
@@ -117,7 +123,7 @@ pdf_load_type3_font(pdf_font_desc **fontdescp, pdf_xref *xref, fz_obj *rdb, fz_o
 		fz_warn("no resource dictionary for type 3 font!");
 
 	fontdesc->font->t3xref = xref;
-	fontdesc->font->t3run = pdf_run_glyph;
+	fontdesc->font->t3run = pdf_run_glyph_func;
 
 	/* CharProcs */
 

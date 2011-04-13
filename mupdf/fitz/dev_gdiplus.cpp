@@ -74,7 +74,7 @@ struct userDataStackItem
 	Bitmap *layer, *mask;
 	Rect bounds;
 	bool luminosity;
-	fz_blendmode blendmode;
+	int blendmode;
 	bool isolated;
 	bool knockout;
 	float xstep, ystep;
@@ -84,7 +84,7 @@ struct userDataStackItem
 
 	userDataStackItem(float _alpha=1.0, userDataStackItem *_prev=NULL) :
 		alpha(_alpha), prev(_prev), saveG(NULL), layer(NULL), mask(NULL),
-		luminosity(false), blendmode(FZ_BLEND_NORMAL), isolated(false), knockout(false),
+		luminosity(false), blendmode(0), isolated(false), knockout(false),
 		xstep(0), ystep(0), layerAlpha(1.0) { }
 };
 
@@ -193,7 +193,7 @@ public:
 		stack->luminosity = luminosity;
 	}
 
-	void pushClipBlend(fz_rect rect, fz_blendmode blendmode, float alpha, bool isolated, bool knockout)
+	void pushClipBlend(fz_rect rect, int blendmode, float alpha, bool isolated, bool knockout)
 	{
 		recordClipMask(rect, false, NULL);
 		stack->layerAlpha *= alpha;
@@ -271,7 +271,7 @@ public:
 				_applyMask(stack->layer, stack->mask, stack->luminosity);
 				delete stack->mask;
 			}
-			if (stack->blendmode != FZ_BLEND_NORMAL && !stack->isolated)
+			if (stack->blendmode != 0 && !stack->isolated)
 				_applyBlend(stack->layer, stack->bounds, stack->blendmode);
 			
 			ImageAttributes imgAttrs;
@@ -419,7 +419,7 @@ protected:
 		bitmap->UnlockBits(&data);
 	}
 
-	void _applyBlend(Bitmap *bitmap, Rect clipBounds, fz_blendmode blendmode)
+	void _applyBlend(Bitmap *bitmap, Rect clipBounds, int blendmode)
 	{
 		userDataStackItem *bgStack = stack->prev;
 		while (bgStack && !bgStack->layer)
@@ -475,7 +475,7 @@ protected:
 		return backdrop;
 	}
 
-	void _compositeWithBackground(Bitmap *bitmap, Rect bounds, Bitmap *backdrop, Rect boundsBg, fz_blendmode blendmode, bool modifyBackdrop)
+	void _compositeWithBackground(Bitmap *bitmap, Rect bounds, Bitmap *backdrop, Rect boundsBg, int blendmode, bool modifyBackdrop)
 	{
 		separableBlend funcs[] = {
 			BlendNormal,
@@ -496,7 +496,7 @@ protected:
 		if (blendmode >= nelem(funcs) || !funcs[blendmode])
 		{
 			fz_warn("blend mode %d not implemented for GDI+", blendmode);
-			blendmode = FZ_BLEND_NORMAL;
+			blendmode = 0;
 		}
 		
 		assert(bounds.X >= 0 && bounds.Y >= 0);
@@ -680,7 +680,7 @@ gdiplus_get_pen(Brush *brush, fz_matrix ctm, fz_stroke_state *stroke)
 	Pen *pen = new Pen(brush, stroke->linewidth * fz_matrix_expansion(ctm));
 	
 	pen->SetMiterLimit(stroke->miterlimit);
-	switch (stroke->linecap)
+	switch (stroke->start_cap)
 	{
 	case 0: pen->SetStartCap(LineCapFlat); pen->SetEndCap(LineCapFlat); break;
 	case 1: pen->SetStartCap(LineCapRound); pen->SetEndCap(LineCapRound); break;
@@ -1033,7 +1033,7 @@ gdiplus_run_t3_text(void *user, fz_text *text, fz_matrix ctm,
 		ctm2 = fz_concat(text->trm, ctm2);
 		ctm2 = fz_concat(font->t3matrix, ctm2);
 		
-		font->t3run((pdf_xref_s *)font->t3xref, font->t3resources, font->t3procs[gid], ((userData *)user)->dev, ctm2);
+		font->t3run((void *)font->t3xref, font->t3resources, font->t3procs[gid], ((userData *)user)->dev, ctm2);
 	}
 	
 	((userData *)user)->t3color = NULL;
@@ -1219,7 +1219,7 @@ fz_gdiplus_end_mask(void *user)
 
 extern "C" static void
 fz_gdiplus_begin_group(void *user, fz_rect rect, int isolated, int knockout,
-	fz_blendmode blendmode, float alpha)
+	int blendmode, float alpha)
 {
 	((userData *)user)->pushClipBlend(rect, blendmode, alpha, !!isolated, !!knockout);
 }

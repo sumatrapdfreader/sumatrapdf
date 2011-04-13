@@ -136,7 +136,7 @@ fz_end_mask(fz_device *dev)
 }
 
 void
-fz_begin_group(fz_device *dev, fz_rect area, int isolated, int knockout, fz_blendmode blendmode, float alpha)
+fz_begin_group(fz_device *dev, fz_rect area, int isolated, int knockout, int blendmode, float alpha)
 {
 	if (dev->begin_group)
 		dev->begin_group(dev->user, area, isolated, knockout, blendmode, alpha);

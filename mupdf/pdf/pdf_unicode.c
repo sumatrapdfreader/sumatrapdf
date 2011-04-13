@@ -50,13 +50,11 @@ pdf_load_to_unicode(pdf_font_desc *font, pdf_xref *xref,
 			error = pdf_load_system_cmap(&font->to_unicode, "Adobe-GB1-UCS2");
 		else if (!strcmp(collection, "Adobe-Japan1"))
 			error = pdf_load_system_cmap(&font->to_unicode, "Adobe-Japan1-UCS2");
-		else if (!strcmp(collection, "Adobe-Japan2"))
-			error = pdf_load_system_cmap(&font->to_unicode, "Adobe-Japan2-UCS2"); /* where's this? */
 		else if (!strcmp(collection, "Adobe-Korea1"))
 			error = pdf_load_system_cmap(&font->to_unicode, "Adobe-Korea1-UCS2");
 
 		if (error)
-			return fz_rethrow(error, "cannot load to_unicode system cmap %s-UCS2", collection);
+			return fz_rethrow(error, "cannot load ToUnicode system cmap %s-UCS2", collection);
 	}
 
 	if (strings)

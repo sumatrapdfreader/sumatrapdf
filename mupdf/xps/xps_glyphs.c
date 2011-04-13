@@ -68,6 +68,26 @@ xps_measure_font_glyph(xps_context *ctx, fz_font *font, int gid, xps_glyph_metri
 	mtx->vorg = face->ascender / (float) face->units_per_EM;
 }
 
+static fz_font *
+xps_lookup_font(xps_context *ctx, char *name)
+{
+	xps_font_cache *cache;
+	for (cache = ctx->font_table; cache; cache = cache->next)
+		if (!xps_strcasecmp(cache->name, name))
+			return fz_keep_font(cache->font);
+	return NULL;
+}
+
+static void
+xps_insert_font(xps_context *ctx, char *name, fz_font *font)
+{
+	xps_font_cache *cache = fz_malloc(sizeof(xps_font_cache));
+	cache->name = fz_strdup(name);
+	cache->font = fz_keep_font(font);
+	cache->next = ctx->font_table;
+	ctx->font_table = cache;
+}
+
 /*
  * Some fonts in XPS are obfuscated by XOR:ing the first 32 bytes of the
  * data with the GUID in the fontname.
@@ -461,7 +481,7 @@ xps_parse_glyphs(xps_context *ctx, fz_matrix ctm,
 		*subfont = 0;
 	}
 
-	font = xps_hash_lookup(ctx->font_table, partname);
+	font = xps_lookup_font(ctx, partname);
 	if (!font)
 	{
 		part = xps_read_part(ctx, partname);
@@ -485,11 +505,12 @@ xps_parse_glyphs(xps_context *ctx, fz_matrix ctm,
 
 		xps_select_best_font_encoding(font);
 
-		xps_hash_insert(ctx->font_table, part->name, font);
+		xps_insert_font(ctx, part->name, font);
 
-		/* NOTE: we keep part->name in the hashtable and part->data in the font */
+		/* NOTE: we keep part->data in the font */
 		font->ft_data = part->data;
 		font->ft_size = part->size;
+		fz_free(part->name);
 		fz_free(part);
 	}
 
@@ -558,4 +579,6 @@ xps_parse_glyphs(xps_context *ctx, fz_matrix ctm,
 
 	if (clip_att || clip_tag)
 		fz_pop_clip(ctx->dev);
+
+	fz_drop_font(font);
 }

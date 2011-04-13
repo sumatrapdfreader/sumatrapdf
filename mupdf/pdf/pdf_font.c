@@ -5,6 +5,8 @@
 #include FT_FREETYPE_H
 #include FT_XFREE86_H
 
+static fz_error pdf_load_font_descriptor(pdf_font_desc *fontdesc, pdf_xref *xref, fz_obj *dict, char *collection, char *basefont);
+
 static char *base_font_names[14][7] =
 {
 	{ "Courier", "CourierNew", "CourierNewPSMT", NULL },
@@ -1045,7 +1047,7 @@ pdf_load_type0_font(pdf_font_desc **fontdescp, pdf_xref *xref, fz_obj *dict)
  * FontDescriptor
  */
 
-fz_error
+static fz_error
 pdf_load_font_descriptor(pdf_font_desc *fontdesc, pdf_xref *xref, fz_obj *dict, char *collection, char *basefont)
 {
 	fz_error error;

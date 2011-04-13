@@ -39,6 +39,66 @@ static wchar_t wbuf[1024];
 static char filename[1024];
 
 /*
+ * Create registry keys to associate MuPDF with PDF and XPS files.
+ */
+
+#define OPEN_KEY(parent, name, ptr) \
+	RegCreateKeyExA(parent, name, 0, 0, 0, KEY_WRITE, 0, &ptr, 0)
+
+#define SET_KEY(parent, name, value) \
+	RegSetValueExA(parent, name, 0, REG_SZ, value, strlen(value) + 1)
+
+void install_app(char *argv0)
+{
+	char buf[512];
+	HKEY software, classes, mupdf, dotpdf, dotxps;
+	HKEY shell, open, command, supported_types;
+	HKEY pdf_progids, xps_progids;
+
+	OPEN_KEY(HKEY_CURRENT_USER, "Software", software);
+	OPEN_KEY(software, "Classes", classes);
+	OPEN_KEY(classes, ".pdf", dotpdf);
+	OPEN_KEY(dotpdf, "OpenWithProgids", pdf_progids);
+	OPEN_KEY(classes, ".xps", dotxps);
+	OPEN_KEY(dotxps, "OpenWithProgids", xps_progids);
+	OPEN_KEY(classes, "MuPDF", mupdf);
+	OPEN_KEY(mupdf, "SupportedTypes", supported_types);
+	OPEN_KEY(mupdf, "shell", shell);
+	OPEN_KEY(shell, "open", open);
+	OPEN_KEY(open, "command", command);
+
+	sprintf(buf, "\"%s\" \"%%1\"", argv0);
+
+	SET_KEY(open, "FriendlyAppName", "MuPDF");
+	SET_KEY(command, "", buf);
+	SET_KEY(supported_types, ".pdf", "");
+	SET_KEY(supported_types, ".xps", "");
+	SET_KEY(pdf_progids, "MuPDF", "");
+	SET_KEY(xps_progids, "MuPDF", "");
+
+	RegCloseKey(dotxps);
+	RegCloseKey(dotpdf);
+	RegCloseKey(mupdf);
+	RegCloseKey(classes);
+	RegCloseKey(software);
+}
+
+void uninstall_app(void)
+{
+	HKEY software, classes;
+
+	RegOpenKeyExA(HKEY_CURRENT_USER, "Software", 0, KEY_ALL_ACCESS, &software);
+	RegOpenKeyExA(software, "Classes", 0, KEY_ALL_ACCESS, &classes);
+
+	RegDeleteTreeA(classes, "MuPDF");
+
+	RegCloseKey(classes);
+	RegCloseKey(software);
+
+	MessageBoxA(hwndframe, "MuPDF has been uninstalled.", "MuPDF", MB_ICONWARNING);
+}
+
+/*
  * Dialog boxes
  */
 
@@ -171,17 +231,15 @@ dloginfoproc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 		if (xref->crypt)
 		{
-			sprintf(buf, "Standard %d bit %s", xref->crypt->length,
-				xref->crypt->strf.method == PDF_CRYPT_AESV2 ? "AES" : "RC4");
-			SetDlgItemTextA(hwnd, 0x12, buf);
+			SetDlgItemTextA(hwnd, 0x12, "Encrypted.");
 			strcpy(buf, "");
-			if (xref->crypt->p & (1 << 2))
+			if (pdf_has_permission(xref, PDF_PERM_PRINT))
 				strcat(buf, "print, ");
-			if (xref->crypt->p & (1 << 3))
+			if (pdf_has_permission(xref, PDF_PERM_CHANGE))
 				strcat(buf, "modify, ");
-			if (xref->crypt->p & (1 << 4))
+			if (pdf_has_permission(xref, PDF_PERM_COPY))
 				strcat(buf, "copy, ");
-			if (xref->crypt->p & (1 << 5))
+			if (pdf_has_permission(xref, PDF_PERM_NOTES))
 				strcat(buf, "annotate, ");
 			if (strlen(buf) > 2)
 				buf[strlen(buf)-2] = 0;
@@ -790,6 +848,7 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShow
 {
 	int argc;
 	LPWSTR *argv = CommandLineToArgvW(GetCommandLineW(), &argc);
+	char argv0[256];
 	MSG msg;
 	int fd;
 	int code;
@@ -798,11 +857,18 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShow
 
 	pdfapp_init(&gapp);
 
-	/* associate(argv[0]); */
+	GetModuleFileNameA(NULL, argv0, sizeof argv0);
+	install_app(argv0);
+
 	winopen();
 
 	if (argc == 2)
 	{
+		if (argv[1][0] == '-' && argv[1][1] == 'u' && argv[1][2] == 0)
+		{
+			uninstall_app();
+			exit(0);
+		}
 		wcscpy(wbuf, argv[1]);
 	}
 	else

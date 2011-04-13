@@ -109,6 +109,26 @@ fz_set_aa_level(int level)
  * See Mike Abrash -- Graphics Programming Black Book (notably chapter 40)
  */
 
+typedef struct fz_edge_s fz_edge;
+
+struct fz_edge_s
+{
+	int x, e, h, y;
+	int adj_up, adj_down;
+	int xmove;
+	int xdir, ydir; /* -1 or +1 */
+};
+
+struct fz_gel_s
+{
+	fz_bbox clip;
+	fz_bbox bbox;
+	int cap, len;
+	fz_edge *edges;
+	int acap, alen;
+	fz_edge **active;
+};
+
 fz_gel *
 fz_new_gel(void)
 {
@@ -124,6 +144,10 @@ fz_new_gel(void)
 
 	gel->bbox.x0 = gel->bbox.y0 = BBOX_MAX;
 	gel->bbox.x1 = gel->bbox.y1 = BBOX_MIN;
+
+	gel->acap = 64;
+	gel->alen = 0;
+	gel->active = fz_calloc(gel->acap, sizeof(fz_edge*));
 
 	return gel;
 }
@@ -152,6 +176,7 @@ fz_reset_gel(fz_gel *gel, fz_bbox clip)
 void
 fz_free_gel(fz_gel *gel)
 {
+	fz_free(gel->active);
 	fz_free(gel->edges);
 	fz_free(gel);
 }
@@ -378,26 +403,8 @@ fz_is_rect_gel(fz_gel *gel)
  * Active Edge List -- keep track of active edges while sweeping
  */
 
-fz_ael *
-fz_new_ael(void)
-{
-	fz_ael *ael;
-	ael = fz_malloc(sizeof(fz_ael));
-	ael->cap = 64;
-	ael->len = 0;
-	ael->edges = fz_calloc(ael->cap, sizeof(fz_edge*));
-	return ael;
-}
-
-void
-fz_free_ael(fz_ael *ael)
-{
-	fz_free(ael->edges);
-	fz_free(ael);
-}
-
 static void
-sort_ael(fz_edge **a, int n)
+sort_active(fz_edge **a, int n)
 {
 	int h, i, k;
 	fz_edge *t;
@@ -430,38 +437,38 @@ sort_ael(fz_edge **a, int n)
 }
 
 static void
-insert_ael(fz_ael *ael, fz_gel *gel, int y, int *e)
+insert_active(fz_gel *gel, int y, int *e)
 {
 	/* insert edges that start here */
 	while (*e < gel->len && gel->edges[*e].y == y) {
-		if (ael->len + 1 == ael->cap) {
-			int newcap = ael->cap + 64;
-			fz_edge **newedges = fz_realloc(ael->edges, newcap, sizeof(fz_edge*));
-			ael->edges = newedges;
-			ael->cap = newcap;
+		if (gel->alen + 1 == gel->acap) {
+			int newcap = gel->acap + 64;
+			fz_edge **newactive = fz_realloc(gel->active, newcap, sizeof(fz_edge*));
+			gel->active = newactive;
+			gel->acap = newcap;
 		}
-		ael->edges[ael->len++] = &gel->edges[(*e)++];
+		gel->active[gel->alen++] = &gel->edges[(*e)++];
 	}
 
 	/* shell-sort the edges by increasing x */
-	sort_ael(ael->edges, ael->len);
+	sort_active(gel->active, gel->alen);
 }
 
 static void
-advance_ael(fz_ael *ael)
+advance_active(fz_gel *gel)
 {
 	fz_edge *edge;
 	int i = 0;
 
-	while (i < ael->len)
+	while (i < gel->alen)
 	{
-		edge = ael->edges[i];
+		edge = gel->active[i];
 
 		edge->h --;
 
 		/* terminator! */
 		if (edge->h == 0) {
-			ael->edges[i] = ael->edges[--ael->len];
+			gel->active[i] = gel->active[--gel->alen];
 		}
 
 		else {
@@ -512,32 +519,32 @@ static inline void add_span_aa(int *list, int x0, int x1, int xofs)
 	}
 }
 
-static inline void non_zero_winding_aa(fz_ael *ael, int *list, int xofs)
+static inline void non_zero_winding_aa(fz_gel *gel, int *list, int xofs)
 {
 	int winding = 0;
 	int x = 0;
 	int i;
-	for (i = 0; i < ael->len; i++)
+	for (i = 0; i < gel->alen; i++)
 	{
-		if (!winding && (winding + ael->edges[i]->ydir))
-			x = ael->edges[i]->x;
-		if (winding && !(winding + ael->edges[i]->ydir))
-			add_span_aa(list, x, ael->edges[i]->x, xofs);
-		winding += ael->edges[i]->ydir;
+		if (!winding && (winding + gel->active[i]->ydir))
+			x = gel->active[i]->x;
+		if (winding && !(winding + gel->active[i]->ydir))
+			add_span_aa(list, x, gel->active[i]->x, xofs);
+		winding += gel->active[i]->ydir;
 	}
 }
 
-static inline void even_odd_aa(fz_ael *ael, int *list, int xofs)
+static inline void even_odd_aa(fz_gel *gel, int *list, int xofs)
 {
 	int even = 0;
 	int x = 0;
 	int i;
-	for (i = 0; i < ael->len; i++)
+	for (i = 0; i < gel->alen; i++)
 	{
 		if (!even)
-			x = ael->edges[i]->x;
+			x = gel->active[i]->x;
 		else
-			add_span_aa(list, x, ael->edges[i]->x, xofs);
+			add_span_aa(list, x, gel->active[i]->x, xofs);
 		even = !even;
 	}
 }
@@ -564,7 +571,7 @@ static inline void blit_aa(fz_pixmap *dst, int x, int y,
 }
 
 static void
-fz_scan_convert_aa(fz_gel *gel, fz_ael *ael, int eofill, fz_bbox clip,
+fz_scan_convert_aa(fz_gel *gel, int eofill, fz_bbox clip,
 	fz_pixmap *dst, unsigned char *color)
 {
 	unsigned char *alphas;
@@ -595,7 +602,7 @@ fz_scan_convert_aa(fz_gel *gel, fz_ael *ael, int eofill, fz_bbox clip,
 	yc = fz_idiv(y, fz_aa_vscale);
 	yd = yc;
 
-	while (ael->len > 0 || e < gel->len)
+	while (gel->alen > 0 || e < gel->len)
 	{
 		yc = fz_idiv(y, fz_aa_vscale);
 		if (yc != yd)
@@ -609,19 +616,19 @@ fz_scan_convert_aa(fz_gel *gel, fz_ael *ael, int eofill, fz_bbox clip,
 		}
 		yd = yc;
 
-		insert_ael(ael, gel, y, &e);
+		insert_active(gel, y, &e);
 
 		if (yd >= clip.y0 && yd < clip.y1)
 		{
 			if (eofill)
-				even_odd_aa(ael, deltas, xofs);
+				even_odd_aa(gel, deltas, xofs);
 			else
-				non_zero_winding_aa(ael, deltas, xofs);
+				non_zero_winding_aa(gel, deltas, xofs);
 		}
 
-		advance_ael(ael);
+		advance_active(gel);
 
-		if (ael->len > 0)
+		if (gel->alen > 0)
 			y ++;
 		else if (e < gel->len)
 			y = gel->edges[e].y;
@@ -657,60 +664,60 @@ static inline void blit_sharp(int x0, int x1, int y,
 	}
 }
 
-static inline void non_zero_winding_sharp(fz_ael *ael, int y,
+static inline void non_zero_winding_sharp(fz_gel *gel, int y,
 	fz_bbox clip, fz_pixmap *dst, unsigned char *color)
 {
 	int winding = 0;
 	int x = 0;
 	int i;
-	for (i = 0; i < ael->len; i++)
+	for (i = 0; i < gel->alen; i++)
 	{
-		if (!winding && (winding + ael->edges[i]->ydir))
-			x = ael->edges[i]->x;
-		if (winding && !(winding + ael->edges[i]->ydir))
-			blit_sharp(x, ael->edges[i]->x, y, clip, dst, color);
-		winding += ael->edges[i]->ydir;
+		if (!winding && (winding + gel->active[i]->ydir))
+			x = gel->active[i]->x;
+		if (winding && !(winding + gel->active[i]->ydir))
+			blit_sharp(x, gel->active[i]->x, y, clip, dst, color);
+		winding += gel->active[i]->ydir;
 	}
 }
 
-static inline void even_odd_sharp(fz_ael *ael, int y,
+static inline void even_odd_sharp(fz_gel *gel, int y,
 	fz_bbox clip, fz_pixmap *dst, unsigned char *color)
 {
 	int even = 0;
 	int x = 0;
 	int i;
-	for (i = 0; i < ael->len; i++)
+	for (i = 0; i < gel->alen; i++)
 	{
 		if (!even)
-			x = ael->edges[i]->x;
+			x = gel->active[i]->x;
 		else
-			blit_sharp(x, ael->edges[i]->x, y, clip, dst, color);
+			blit_sharp(x, gel->active[i]->x, y, clip, dst, color);
 		even = !even;
 	}
 }
 
 static void
-fz_scan_convert_sharp(fz_gel *gel, fz_ael *ael, int eofill, fz_bbox clip,
+fz_scan_convert_sharp(fz_gel *gel, int eofill, fz_bbox clip,
 	fz_pixmap *dst, unsigned char *color)
 {
 	int e = 0;
 	int y = gel->edges[0].y;
 
-	while (ael->len > 0 || e < gel->len)
+	while (gel->alen > 0 || e < gel->len)
 	{
-		insert_ael(ael, gel, y, &e);
+		insert_active(gel, y, &e);
 
 		if (y >= clip.y0 && y < clip.y1)
 		{
 			if (eofill)
-				even_odd_sharp(ael, y, clip, dst, color);
+				even_odd_sharp(gel, y, clip, dst, color);
 			else
-				non_zero_winding_sharp(ael, y, clip, dst, color);
+				non_zero_winding_sharp(gel, y, clip, dst, color);
 		}
 
-		advance_ael(ael);
+		advance_active(gel);
 
-		if (ael->len > 0)
+		if (gel->alen > 0)
 			y ++;
 		else if (e < gel->len)
 			y = gel->edges[e].y;
@@ -718,11 +725,11 @@ fz_scan_convert_sharp(fz_gel *gel, fz_ael *ael, int eofill, fz_bbox clip,
 }
 
 void
-fz_scan_convert(fz_gel *gel, fz_ael *ael, int eofill, fz_bbox clip,
+fz_scan_convert(fz_gel *gel, int eofill, fz_bbox clip,
 	fz_pixmap *dst, unsigned char *color)
 {
 	if (fz_aa_level > 0)
-		fz_scan_convert_aa(gel, ael, eofill, clip, dst, color);
+		fz_scan_convert_aa(gel, eofill, clip, dst, color);
 	else
-		fz_scan_convert_sharp(gel, ael, eofill, clip, dst, color);
+		fz_scan_convert_sharp(gel, eofill, clip, dst, color);
 }

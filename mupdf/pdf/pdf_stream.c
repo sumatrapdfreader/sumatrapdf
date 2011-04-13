@@ -113,7 +113,6 @@ build_filter(fz_stream *chain, pdf_xref * xref, fz_obj * f, fz_obj * p, int num,
 
 	else if (!strcmp(s, "Crypt"))
 	{
-		pdf_crypt_filter cf;
 		fz_obj *name;
 
 		if (!xref->crypt)
@@ -123,18 +122,8 @@ build_filter(fz_stream *chain, pdf_xref * xref, fz_obj * f, fz_obj * p, int num,
 		}
 
 		name = fz_dict_gets(p, "Name");
-		if (fz_is_name(name) && strcmp(fz_to_name(name), "Identity") != 0)
-		{
-			fz_obj *obj = fz_dict_get(xref->crypt->cf, name);
-			if (fz_is_dict(obj))
-			{
-				error = pdf_parse_crypt_filter(&cf, obj, xref->crypt->length);
-				if (error)
-					fz_catch(error, "cannot parse crypt filter (%d %d R)", fz_to_num(obj), fz_to_gen(obj));
-				else
-					return pdf_open_crypt(chain, xref->crypt, &cf, num, gen);
-			}
-		}
+		if (fz_is_name(name))
+			return pdf_open_crypt_with_filter(chain, xref->crypt, fz_to_name(name), num, gen);
 
 		return chain;
 	}
@@ -184,7 +173,7 @@ pdf_open_raw_filter(fz_stream *chain, pdf_xref *xref, fz_obj *stmobj, int num, i
 
 	hascrypt = pdf_stream_has_crypt(stmobj);
 	if (xref->crypt && !hascrypt)
-		chain = pdf_open_crypt(chain, xref->crypt, &xref->crypt->stmf, num, gen);
+		chain = pdf_open_crypt(chain, xref->crypt, num, gen);
 
 	return chain;
 }

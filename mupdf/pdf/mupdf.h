@@ -25,10 +25,8 @@ enum
 	PDF_NUM_TOKENS
 };
 
-/* lex.c */
 fz_error pdf_lex(int *tok, fz_stream *f, char *buf, int n, int *len);
 
-/* parse.c */
 fz_error pdf_parse_array(fz_obj **op, pdf_xref *xref, fz_stream *f, char *buf, int cap);
 fz_error pdf_parse_dict(fz_obj **op, pdf_xref *xref, fz_stream *f, char *buf, int cap);
 fz_error pdf_parse_stm_obj(fz_obj **op, pdf_xref *xref, fz_stream *f, char *buf, int cap);
@@ -42,78 +40,11 @@ fz_obj *pdf_to_utf8_name(fz_obj *src);
 char *pdf_from_ucs2(unsigned short *str);
 
 /*
- * Encryption
- */
-
-/* Permission flag bits */
-#define PDF_PERM_PRINT (1<<2)
-#define PDF_PERM_CHANGE (1<<3)
-#define PDF_PERM_COPY (1<<4)
-#define PDF_PERM_NOTES (1<<5)
-#define PDF_PERM_FILL_FORM (1<<8)
-#define PDF_PERM_ACCESSIBILITY (1<<9)
-#define PDF_PERM_ASSEMBLE (1<<10)
-#define PDF_PERM_HIGH_RES_PRINT (1<<11)
-#define PDF_DEFAULT_PERM_FLAGS 0xfffc
-
-typedef struct pdf_crypt_s pdf_crypt;
-typedef struct pdf_crypt_filter_s pdf_crypt_filter;
-
-enum
-{
-	PDF_CRYPT_NONE,
-	PDF_CRYPT_RC4,
-	PDF_CRYPT_AESV2,
-	PDF_CRYPT_AESV3,
-	PDF_CRYPT_UNKNOWN,
-};
-
-struct pdf_crypt_filter_s
-{
-	int method;
-	int length;
-};
-
-struct pdf_crypt_s
-{
-	unsigned char id_string[32];
-	int id_length;
-
-	int v;
-	int length;
-	fz_obj *cf;
-	pdf_crypt_filter stmf;
-	pdf_crypt_filter strf;
-
-	int r;
-	unsigned char o[48];
-	unsigned char u[48];
-	unsigned char oe[32];
-	unsigned char ue[32];
-	int p;
-	int encrypt_metadata;
-
-	unsigned char key[32]; /* decryption key generated from password */
-};
-
-/* crypt.c */
-fz_error pdf_new_crypt(pdf_crypt **cp, fz_obj *enc, fz_obj *id);
-void pdf_free_crypt(pdf_crypt *crypt);
-
-fz_error pdf_parse_crypt_filter(pdf_crypt_filter *cf, fz_obj *dict, int defaultlength);
-fz_stream *pdf_open_crypt(fz_stream *chain, pdf_crypt *crypt, pdf_crypt_filter *cf, int num, int gen);
-void pdf_crypt_obj(pdf_crypt *crypt, fz_obj *obj, int num, int gen);
-
-int pdf_needs_password(pdf_xref *xref);
-int pdf_authenticate_password(pdf_xref *xref, char *pw);
-
-void pdf_debug_crypt(pdf_crypt *crypt);
-
-/*
  * xref and object / stream api
  */
 
 typedef struct pdf_xref_entry_s pdf_xref_entry;
+typedef struct pdf_crypt_s pdf_crypt;
 
 struct pdf_xref_entry_s
 {
@@ -170,6 +101,39 @@ void pdf_debug_xref(pdf_xref *);
 void pdf_resize_xref(pdf_xref *xref, int newcap);
 
 /*
+ * Encryption
+ */
+
+enum
+{
+	PDF_PERM_PRINT = 1 << 2,
+	PDF_PERM_CHANGE = 1 << 3,
+	PDF_PERM_COPY = 1 << 4,
+	PDF_PERM_NOTES = 1 << 5,
+	PDF_PERM_FILL_FORM = 1 << 8,
+	PDF_PERM_ACCESSIBILITY = 1 << 9,
+	PDF_PERM_ASSEMBLE = 1 << 10,
+	PDF_PERM_HIGH_RES_PRINT = 1 << 11,
+	PDF_DEFAULT_PERM_FLAGS = 0xfffc
+};
+
+fz_error pdf_new_crypt(pdf_crypt **cp, fz_obj *enc, fz_obj *id);
+void pdf_free_crypt(pdf_crypt *crypt);
+
+void pdf_crypt_obj(pdf_crypt *crypt, fz_obj *obj, int num, int gen);
+fz_stream *pdf_open_crypt(fz_stream *chain, pdf_crypt *crypt, int num, int gen);
+fz_stream *pdf_open_crypt_with_filter(fz_stream *chain, pdf_crypt *crypt, char *name, int num, int gen);
+
+int pdf_needs_password(pdf_xref *xref);
+int pdf_authenticate_password(pdf_xref *xref, char *pw);
+int pdf_has_permission(pdf_xref *xref, int p);
+
+/* SumatraPDF */
+unsigned char *pdf_get_crypt_key(pdf_xref *xref);
+
+void pdf_debug_crypt(pdf_crypt *crypt);
+
+/*
  * Resource store
  */
 
@@ -185,7 +149,7 @@ void pdf_remove_item(pdf_store *store, void *dropfn, fz_obj *key);
 void pdf_age_store(pdf_store *store, int maxage);
 
 /*
- * Functions
+ * Functions, Colorspaces, Shadings and Images
  */
 
 typedef struct pdf_function_s pdf_function;
@@ -195,12 +159,14 @@ void pdf_eval_function(pdf_function *func, float *in, int inlen, float *out, int
 pdf_function *pdf_keep_function(pdf_function *func);
 void pdf_drop_function(pdf_function *func);
 
-/*
- * Colorspace
- */
-
 fz_error pdf_load_colorspace(fz_colorspace **csp, pdf_xref *xref, fz_obj *obj);
 fz_pixmap *pdf_expand_indexed_pixmap(fz_pixmap *src);
+
+fz_error pdf_load_shading(fz_shade **shadep, pdf_xref *xref, fz_obj *obj);
+
+fz_error pdf_load_inline_image(fz_pixmap **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict, fz_stream *file);
+fz_error pdf_load_image(fz_pixmap **imgp, pdf_xref *xref, fz_obj *obj);
+int pdf_is_jpx_image(fz_obj *dict);
 
 /*
  * Pattern
@@ -223,12 +189,6 @@ struct pdf_pattern_s
 fz_error pdf_load_pattern(pdf_pattern **patp, pdf_xref *xref, fz_obj *obj);
 pdf_pattern *pdf_keep_pattern(pdf_pattern *pat);
 void pdf_drop_pattern(pdf_pattern *pat);
-
-/*
- * Shading
- */
-
-fz_error pdf_load_shading(fz_shade **shadep, pdf_xref *xref, fz_obj *obj);
 
 /*
  * XObject
@@ -254,14 +214,6 @@ pdf_xobject *pdf_keep_xobject(pdf_xobject *xobj);
 void pdf_drop_xobject(pdf_xobject *xobj);
 
 /*
- * Image
- */
-
-fz_error pdf_load_inline_image(fz_pixmap **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict, fz_stream *file);
-fz_error pdf_load_image(fz_pixmap **imgp, pdf_xref *xref, fz_obj *obj);
-int pdf_is_jpx_image(fz_obj *dict);
-
-/*
  * CMap
  */
 
@@ -277,7 +229,7 @@ struct pdf_range_s
 	 * are the extent, bottom 2 bits are flags: single, range, table,
 	 * multi */
 	unsigned short extent_flags;
-	unsigned int offset;	/* range-delta or table-index */
+	unsigned short offset;	/* range-delta or table-index */
 };
 
 struct pdf_cmap_s
@@ -422,7 +374,6 @@ struct pdf_font_desc_s
 	void *_vsubst;
 };
 
-/* fontmtx.c */
 void pdf_set_font_wmode(pdf_font_desc *font, int wmode);
 void pdf_set_default_hmtx(pdf_font_desc *font, int w);
 void pdf_set_default_vmtx(pdf_font_desc *font, int y, int w);
@@ -433,10 +384,10 @@ void pdf_end_vmtx(pdf_font_desc *font);
 pdf_hmtx pdf_get_hmtx(pdf_font_desc *font, int cid);
 pdf_vmtx pdf_get_vmtx(pdf_font_desc *font, int cid);
 
-/* unicode.c */
 fz_error pdf_load_to_unicode(pdf_font_desc *font, pdf_xref *xref, char **strings, char *collection, fz_obj *cmapstm);
 
-/* fontfile.c */
+int pdf_font_cid_to_gid(pdf_font_desc *fontdesc, int cid);
+
 unsigned char *pdf_find_builtin_font(char *name, unsigned int *len);
 unsigned char *pdf_find_builtin_cjk_font(int ros, int gothic, unsigned int *len);
 
@@ -444,20 +395,16 @@ unsigned char *pdf_find_builtin_cjk_font(int ros, int gothic, unsigned int *len)
 fz_error pdf_load_windows_font(pdf_font_desc *font, char *fontname);
 fz_error pdf_load_similar_cjk_font(pdf_font_desc *font, int ros, int gothic);
 
-/* type3.c */
 fz_error pdf_load_type3_font(pdf_font_desc **fontp, pdf_xref *xref, fz_obj *rdb, fz_obj *obj);
-
-/* font.c */
-int pdf_font_cid_to_gid(pdf_font_desc *fontdesc, int cid);
-fz_error pdf_load_font_descriptor(pdf_font_desc *font, pdf_xref *xref, fz_obj *desc, char *collection, char *basefont);
 fz_error pdf_load_font(pdf_font_desc **fontp, pdf_xref *xref, fz_obj *rdb, fz_obj *obj);
+
 pdf_font_desc *pdf_new_font_desc(void);
 pdf_font_desc *pdf_keep_font(pdf_font_desc *fontdesc);
 void pdf_drop_font(pdf_font_desc *font);
+
 void pdf_debug_font(pdf_font_desc *fontdesc);
 
-/* ft_tools.c */
-
+/* SumatraPDF */
 int pdf_ft_get_vgid(pdf_font_desc *fontdesc, int gid);
 void pdf_ft_free_vsubst(pdf_font_desc *fontdesc);
 
@@ -536,139 +483,19 @@ struct pdf_page_s
 	pdf_annot *annots;
 };
 
-/* pagetree.c */
 fz_error pdf_load_page_tree(pdf_xref *xref);
 int pdf_find_page_number(pdf_xref *xref, fz_obj *pageobj);
 int pdf_count_pages(pdf_xref *xref);
 
-/* page.c */
 fz_error pdf_load_page(pdf_page **pagep, pdf_xref *xref, int number);
 void pdf_free_page(pdf_page *page);
 
 /*
- * content stream parsing
+ * Content stream parsing
  */
 
-typedef struct pdf_material_s pdf_material;
-typedef struct pdf_gstate_s pdf_gstate;
-typedef struct pdf_csi_s pdf_csi;
-
-enum
-{
-	PDF_FILL,
-	PDF_STROKE,
-};
-
-enum
-{
-	PDF_MAT_NONE,
-	PDF_MAT_COLOR,
-	PDF_MAT_PATTERN,
-	PDF_MAT_SHADE,
-};
-
-struct pdf_material_s
-{
-	int kind;
-	fz_colorspace *colorspace;
-	pdf_pattern *pattern;
-	fz_shade *shade;
-	float alpha;
-	float v[32];
-};
-
-struct pdf_gstate_s
-{
-	fz_matrix ctm;
-	int clip_depth;
-
-	/* path stroking */
-	fz_stroke_state stroke_state;
-
-	/* materials */
-	pdf_material stroke;
-	pdf_material fill;
-
-	/* text state */
-	float char_space;
-	float word_space;
-	float scale;
-	float leading;
-	pdf_font_desc *font;
-	float size;
-	int render;
-	float rise;
-
-	/* transparency */
-	fz_blendmode blendmode;
-	pdf_xobject *softmask;
-	fz_matrix softmask_ctm;
-	float softmask_bc[FZ_MAX_COLORS];
-	int luminosity;
-};
-
-struct pdf_csi_s
-{
-	fz_device *dev;
-	pdf_xref *xref;
-
-	/* usage mode for optional content groups */
-	char *target; /* "View", "Print", "Export" */
-
-	/* interpreter stack */
-	fz_obj *obj;
-	char name[256];
-	unsigned char string[256];
-	int string_len;
-	float stack[32];
-	int top;
-
-	int xbalance;
-	int in_text;
-	int in_array;
-
-	/* path object state */
-	fz_path *path;
-	int clip;
-	int clip_even_odd;
-
-	/* text object state */
-	fz_text *text;
-	fz_matrix tlm;
-	fz_matrix tm;
-	int text_mode;
-	int accumulate;
-
-	/* graphics state */
-	fz_matrix top_ctm;
-	pdf_gstate gstate[64];
-	int gtop;
-};
-
-/* build.c */
-void pdf_init_gstate(pdf_gstate *gs, fz_matrix ctm);
-void pdf_set_colorspace(pdf_csi *csi, int what, fz_colorspace *cs);
-void pdf_set_color(pdf_csi *csi, int what, float *v);
-void pdf_set_pattern(pdf_csi *csi, int what, pdf_pattern *pat, float *v);
-void pdf_set_shade(pdf_csi *csi, int what, fz_shade *shade);
-void pdf_show_path(pdf_csi*, int close, int fill, int stroke, int even_odd);
-void pdf_show_space(pdf_csi *csi, float tadj);
-void pdf_show_string(pdf_csi *csi, unsigned char *buf, int len);
-void pdf_show_text(pdf_csi*, fz_obj *text);
-void pdf_flush_text(pdf_csi*);
-void pdf_show_image(pdf_csi*, fz_pixmap *image);
-void pdf_show_shade(pdf_csi*, fz_shade *shade);
-
-/* interpret.c */
-void pdf_gsave(pdf_csi *csi);
-void pdf_grestore(pdf_csi *csi);
-fz_error pdf_run_csi_buffer(pdf_csi *csi, fz_obj *rdb, fz_buffer *contents);
-fz_error pdf_run_xobject(pdf_csi *csi, fz_obj *resources, pdf_xobject *xobj, fz_matrix transform);
 fz_error pdf_run_page_with_usage(pdf_xref *xref, pdf_page *page, fz_device *dev, fz_matrix ctm, char *target);
 fz_error pdf_run_page(pdf_xref *xref, pdf_page *page, fz_device *dev, fz_matrix ctm);
 fz_error pdf_run_glyph(pdf_xref *xref, fz_obj *resources, fz_buffer *contents, fz_device *dev, fz_matrix ctm);
-
-pdf_material *pdf_keep_material(pdf_material *mat);
-pdf_material *pdf_drop_material(pdf_material *mat);
 
 #endif

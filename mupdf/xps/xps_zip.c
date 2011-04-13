@@ -398,9 +398,6 @@ xps_open_directory(xps_context **ctxp, char *directory)
 
 	ctx = fz_malloc(sizeof(xps_context));
 	memset(ctx, 0, sizeof(xps_context));
-	ctx->font_table = xps_hash_new();
-	ctx->colorspace_table = xps_hash_new();
-	ctx->start_part = NULL;
 
 	ctx->directory = fz_strdup(directory);
 
@@ -423,9 +420,6 @@ xps_open_stream(xps_context **ctxp, fz_stream *file)
 
 	ctx = fz_malloc(sizeof(xps_context));
 	memset(ctx, 0, sizeof(xps_context));
-	ctx->font_table = xps_hash_new();
-	ctx->colorspace_table = xps_hash_new();
-	ctx->start_part = NULL;
 
 	ctx->file = fz_keep_stream(file);
 
@@ -476,24 +470,10 @@ xps_open_file(xps_context **ctxp, char *filename)
 	return fz_okay;
 }
 
-static void xps_free_key_func(void *ptr)
-{
-	fz_free(ptr);
-}
-
-static void xps_free_font_func(void *ptr)
-{
-	fz_drop_font(ptr);
-}
-
-static void xps_free_colorspace_func(void *ptr)
-{
-	fz_drop_colorspace(ptr);
-}
-
 void
 xps_free_context(xps_context *ctx)
 {
+	xps_font_cache *font, *next;
 	int i;
 
 	if (ctx->file)
@@ -503,8 +483,16 @@ xps_free_context(xps_context *ctx)
 		fz_free(ctx->zip_table[i].name);
 	fz_free(ctx->zip_table);
 
-	xps_hash_free(ctx->font_table, xps_free_key_func, xps_free_font_func);
-	xps_hash_free(ctx->colorspace_table, xps_free_key_func, xps_free_colorspace_func);
+	font = ctx->font_table;
+	while (font)
+	{
+		next = font->next;
+		fz_drop_font(font->font);
+		fz_free(font->name);
+		fz_free(font);
+		font = next;
+	}
+
 	xps_free_page_list(ctx);
 
 	fz_free(ctx->start_part);

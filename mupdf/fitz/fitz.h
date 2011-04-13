@@ -21,10 +21,15 @@
 #include <assert.h>
 #include <errno.h>
 #include <limits.h>	/* INT_MAX & co */
-#include <float.h>	/* FLT_EPSILON */
-#include <fcntl.h>	/* O_RDONLY & co */
+#include <float.h> /* FLT_EPSILON */
+#include <fcntl.h> /* O_RDONLY & co */
 
 #define nelem(x) (sizeof(x)/sizeof((x)[0]))
+
+#define ABS(x) ( (x) < 0 ? -(x) : (x) )
+#define MIN(a,b) ( (a) < (b) ? (a) : (b) )
+#define MAX(a,b) ( (a) > (b) ? (a) : (b) )
+#define CLAMP(x,a,b) ( (x) > (b) ? (b) : ( (x) < (a) ? (a) : (x) ) )
 
 /*
  * Some differences in libc can be smoothed over
@@ -42,8 +47,6 @@ int gettimeofday(struct timeval *tv, struct timezone *tz);
 
 #define snprintf _snprintf
 #define strtoll _strtoi64
-
-#define roundf(val) floorf((val) + 0.5);
 
 #else /* Unix or close enough */
 
@@ -118,6 +121,8 @@ int gettimeofday(struct timeval *tv, struct timezone *tz);
 
 typedef int fz_error;
 
+#define fz_okay ((fz_error)0)
+
 void fz_warn(char *fmt, ...) __printflike(1, 2);
 void fz_flush_warnings(void);
 
@@ -129,8 +134,6 @@ fz_error fz_throw_impx(char *fmt, ...) __printflike(1, 2);
 fz_error fz_rethrow_impx(fz_error cause, char *fmt, ...) __printflike(2, 3);
 void fz_catch_impx(fz_error cause, char *fmt, ...) __printflike(2, 3);
 
-#define fz_okay ((fz_error)0)
-
 /* extract the last error stack trace */
 int fz_get_error_count(void);
 char *fz_get_error_line(int n);
@@ -138,11 +141,6 @@ char *fz_get_error_line(int n);
 /*
  * Basic runtime and utility functions
  */
-
-#define ABS(x) ( (x) < 0 ? -(x) : (x) )
-#define MIN(a,b) ( (a) < (b) ? (a) : (b) )
-#define MAX(a,b) ( (a) > (b) ? (a) : (b) )
-#define CLAMP(x,a,b) ( (x) > (b) ? (b) : ( (x) < (a) ? (a) : (x) ) )
 
 /* memory allocation */
 void *fz_malloc(int size);
@@ -356,61 +354,6 @@ void aes_crypt_cbc( fz_aes *ctx, int mode, int length,
  */
 
 typedef struct fz_obj_s fz_obj;
-typedef struct fz_keyval_s fz_keyval;
-
-struct pdf_xref_s;
-
-typedef enum fz_objkind_e
-{
-	FZ_NULL,
-	FZ_BOOL,
-	FZ_INT,
-	FZ_REAL,
-	FZ_STRING,
-	FZ_NAME,
-	FZ_ARRAY,
-	FZ_DICT,
-	FZ_INDIRECT
-} fz_objkind;
-
-struct fz_keyval_s
-{
-	fz_obj *k;
-	fz_obj *v;
-};
-
-struct fz_obj_s
-{
-	int refs;
-	fz_objkind kind;
-	union
-	{
-		int b;
-		int i;
-		float f;
-		struct {
-			unsigned short len;
-			char buf[1];
-		} s;
-		char n[1];
-		struct {
-			int len;
-			int cap;
-			fz_obj **items;
-		} a;
-		struct {
-			char sorted;
-			int len;
-			int cap;
-			fz_keyval *items;
-		} d;
-		struct {
-			int num;
-			int gen;
-			struct pdf_xref_s *xref;
-		} r;
-	} u;
-};
 
 extern fz_obj* (*fz_resolve_indirect)(fz_obj*);
 
@@ -443,7 +386,7 @@ int fz_is_indirect(fz_obj *obj);
 
 int fz_objcmp(fz_obj *a, fz_obj *b);
 
-/* silent failure, no error reporting */
+/* safe, silent failure, no error reporting */
 int fz_to_bool(fz_obj *obj);
 int fz_to_int(fz_obj *obj);
 float fz_to_real(fz_obj *obj);
@@ -457,7 +400,6 @@ int fz_array_len(fz_obj *array);
 fz_obj *fz_array_get(fz_obj *array, int i);
 void fz_array_put(fz_obj *array, int i, fz_obj *obj);
 void fz_array_push(fz_obj *array, fz_obj *obj);
-void fz_array_drop(fz_obj *array);
 void fz_array_insert(fz_obj *array, fz_obj *obj);
 
 int fz_dict_len(fz_obj *dict);
@@ -476,7 +418,8 @@ int fz_fprint_obj(FILE *fp, fz_obj *obj, int tight);
 void fz_debug_obj(fz_obj *obj);
 void fz_debug_ref(fz_obj *obj);
 
-char *fz_objkindstr(fz_obj *obj);
+void fz_set_str_len(fz_obj *obj, int newlen); /* private */
+void *fz_get_indirect_xref(fz_obj *obj); /* private */
 
 /*
  * Data buffers.
@@ -642,30 +585,8 @@ fz_stream *fz_open_jbig2d(fz_stream *chain, fz_buffer *global);
 
 enum { FZ_MAX_COLORS = 32 };
 
-typedef enum fz_blendmode_e
-{
-	/* PDF 1.4 -- standard separable */
-	FZ_BLEND_NORMAL,
-	FZ_BLEND_MULTIPLY,
-	FZ_BLEND_SCREEN,
-	FZ_BLEND_OVERLAY,
-	FZ_BLEND_DARKEN,
-	FZ_BLEND_LIGHTEN,
-	FZ_BLEND_COLOR_DODGE,
-	FZ_BLEND_COLOR_BURN,
-	FZ_BLEND_HARD_LIGHT,
-	FZ_BLEND_SOFT_LIGHT,
-	FZ_BLEND_DIFFERENCE,
-	FZ_BLEND_EXCLUSION,
-
-	/* PDF 1.4 -- standard non-separable */
-	FZ_BLEND_HUE,
-	FZ_BLEND_SATURATION,
-	FZ_BLEND_COLOR,
-	FZ_BLEND_LUMINOSITY,
-} fz_blendmode;
-
-extern const char *fz_blendmode_names[];
+int fz_find_blendmode(char *name);
+char *fz_blendmode_name(int blendmode);
 
 /*
  * Pixmaps have n components per pixel. the last is always alpha.
@@ -812,7 +733,7 @@ struct fz_font_s
 	fz_buffer **t3procs; /* has 256 entries if used */
 	float *t3widths; /* has 256 entries if used */
 	void *t3xref; /* a pdf_xref for the callback */
-	fz_error (*t3run)(struct pdf_xref_s *xref, fz_obj *resources, fz_buffer *contents,
+	fz_error (*t3run)(void *xref, fz_obj *resources, fz_buffer *contents,
 		struct fz_device_s *dev, fz_matrix ctm);
 
 	fz_rect bbox;
@@ -869,7 +790,7 @@ struct fz_path_s
 
 struct fz_stroke_state_s
 {
-	int linecap;
+	int start_cap, dash_cap, end_cap;
 	int linejoin;
 	float linewidth;
 	float miterlimit;
@@ -995,47 +916,17 @@ void fz_free_glyph_cache(fz_glyph_cache *);
 int fz_get_aa_level(void);
 void fz_set_aa_level(int bits);
 
-typedef struct fz_edge_s fz_edge;
 typedef struct fz_gel_s fz_gel;
-typedef struct fz_ael_s fz_ael;
-
-struct fz_edge_s
-{
-	int x, e, h, y;
-	int adj_up, adj_down;
-	int xmove;
-	int xdir, ydir; /* -1 or +1 */
-};
-
-struct fz_gel_s
-{
-	fz_bbox clip;
-	fz_bbox bbox;
-	int cap;
-	int len;
-	fz_edge *edges;
-};
-
-struct fz_ael_s
-{
-	int cap;
-	int len;
-	fz_edge **edges;
-};
 
 fz_gel *fz_new_gel(void);
 void fz_insert_gel(fz_gel *gel, float x0, float y0, float x1, float y1);
-fz_bbox fz_bound_gel(fz_gel *gel);
 void fz_reset_gel(fz_gel *gel, fz_bbox clip);
 void fz_sort_gel(fz_gel *gel);
+fz_bbox fz_bound_gel(fz_gel *gel);
 void fz_free_gel(fz_gel *gel);
 int fz_is_rect_gel(fz_gel *gel);
 
-fz_ael *fz_new_ael(void);
-void fz_free_ael(fz_ael *ael);
-
-void fz_scan_convert(fz_gel *gel, fz_ael *ael, int eofill,
-	fz_bbox clip, fz_pixmap *pix, unsigned char *colorbv);
+void fz_scan_convert(fz_gel *gel, int eofill, fz_bbox clip, fz_pixmap *pix, unsigned char *colorbv);
 
 void fz_flatten_fill_path(fz_gel *gel, fz_path *path, fz_matrix ctm, float flatness);
 void fz_flatten_stroke_path(fz_gel *gel, fz_path *path, fz_stroke_state *stroke, fz_matrix ctm, float flatness, float linewidth);
@@ -1080,7 +971,7 @@ struct fz_device_s
 
 	void (*begin_mask)(void *, fz_rect, int luminosity, fz_colorspace *, float *bc);
 	void (*end_mask)(void *);
-	void (*begin_group)(void *, fz_rect, int isolated, int knockout, fz_blendmode blendmode, float alpha);
+	void (*begin_group)(void *, fz_rect, int isolated, int knockout, int blendmode, float alpha);
 	void (*end_group)(void *);
 
 	void (*begin_tile)(void *, fz_rect area, fz_rect view, float xstep, float ystep, fz_matrix ctm);
@@ -1103,7 +994,7 @@ void fz_fill_image_mask(fz_device *dev, fz_pixmap *image, fz_matrix ctm, fz_colo
 void fz_clip_image_mask(fz_device *dev, fz_pixmap *image, fz_matrix ctm);
 void fz_begin_mask(fz_device *dev, fz_rect area, int luminosity, fz_colorspace *colorspace, float *bc);
 void fz_end_mask(fz_device *dev);
-void fz_begin_group(fz_device *dev, fz_rect area, int isolated, int knockout, fz_blendmode blendmode, float alpha);
+void fz_begin_group(fz_device *dev, fz_rect area, int isolated, int knockout, int blendmode, float alpha);
 void fz_end_group(fz_device *dev);
 void fz_begin_tile(fz_device *dev, fz_rect area, fz_rect view, float xstep, float ystep, fz_matrix ctm);
 void fz_end_tile(fz_device *dev);
@@ -1154,57 +1045,6 @@ fz_device *fz_new_text_device(fz_text_span *text);
  */
 
 typedef struct fz_display_list_s fz_display_list;
-typedef struct fz_display_node_s fz_display_node;
-
-typedef enum fz_display_command_e
-{
-	FZ_CMD_FILL_PATH,
-	FZ_CMD_STROKE_PATH,
-	FZ_CMD_CLIP_PATH,
-	FZ_CMD_CLIP_STROKE_PATH,
-	FZ_CMD_FILL_TEXT,
-	FZ_CMD_STROKE_TEXT,
-	FZ_CMD_CLIP_TEXT,
-	FZ_CMD_CLIP_STROKE_TEXT,
-	FZ_CMD_IGNORE_TEXT,
-	FZ_CMD_FILL_SHADE,
-	FZ_CMD_FILL_IMAGE,
-	FZ_CMD_FILL_IMAGE_MASK,
-	FZ_CMD_CLIP_IMAGE_MASK,
-	FZ_CMD_POP_CLIP,
-	FZ_CMD_BEGIN_MASK,
-	FZ_CMD_END_MASK,
-	FZ_CMD_BEGIN_GROUP,
-	FZ_CMD_END_GROUP,
-	FZ_CMD_BEGIN_TILE,
-	FZ_CMD_END_TILE
-} fz_display_command;
-
-struct fz_display_node_s
-{
-	fz_display_command cmd;
-	fz_display_node *next;
-	fz_rect rect;
-	union {
-		fz_path *path;
-		fz_text *text;
-		fz_shade *shade;
-		fz_pixmap *image;
-		fz_blendmode blendmode;
-	} item;
-	fz_stroke_state *stroke;
-	int flag; /* even_odd, accumulate, isolated/knockout... */
-	fz_matrix ctm;
-	fz_colorspace *colorspace;
-	float alpha;
-	float color[FZ_MAX_COLORS];
-};
-
-struct fz_display_list_s
-{
-	fz_display_node *first;
-	fz_display_node *last;
-};
 
 fz_display_list *fz_new_display_list(void);
 void fz_free_display_list(fz_display_list *list);
@@ -1235,6 +1075,6 @@ void fz_paint_pixmap(fz_pixmap *dst, fz_pixmap *src, int alpha);
 void fz_paint_pixmap_with_mask(fz_pixmap *dst, fz_pixmap *src, fz_pixmap *msk);
 void fz_paint_pixmap_with_rect(fz_pixmap *dst, fz_pixmap *src, int alpha, fz_bbox bbox);
 
-void fz_blend_pixmap(fz_pixmap *dst, fz_pixmap *src, int alpha, fz_blendmode blendmode);
+void fz_blend_pixmap(fz_pixmap *dst, fz_pixmap *src, int alpha, int blendmode);
 
 #endif

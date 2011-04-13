@@ -1,6 +1,47 @@
 #include "fitz.h"
 #include "mupdf.h"
 
+enum
+{
+	PDF_CRYPT_NONE,
+	PDF_CRYPT_RC4,
+	PDF_CRYPT_AESV2,
+	PDF_CRYPT_AESV3,
+	PDF_CRYPT_UNKNOWN,
+};
+
+typedef struct pdf_crypt_filter_s pdf_crypt_filter;
+
+struct pdf_crypt_filter_s
+{
+	int method;
+	int length;
+};
+
+struct pdf_crypt_s
+{
+	unsigned char id_string[32];
+	int id_length;
+
+	int v;
+	int length;
+	fz_obj *cf;
+	pdf_crypt_filter stmf;
+	pdf_crypt_filter strf;
+
+	int r;
+	unsigned char o[48];
+	unsigned char u[48];
+	unsigned char oe[32];
+	unsigned char ue[32];
+	int p;
+	int encrypt_metadata;
+
+	unsigned char key[32]; /* decryption key generated from password */
+};
+
+static fz_error pdf_parse_crypt_filter(pdf_crypt_filter *cf, fz_obj *dict, int defaultlength);
+
 /*
  * Create crypt object for decrypting strings and streams
  * given the Encryption and ID objects.
@@ -228,7 +269,7 @@ pdf_free_crypt(pdf_crypt *crypt)
  * Parse a CF dictionary entry (PDF 1.7 table 3.22)
  */
 
-fz_error
+static fz_error
 pdf_parse_crypt_filter(pdf_crypt_filter *cf, fz_obj *dict, int defaultlength)
 {
 	fz_obj *obj;
@@ -560,6 +601,23 @@ pdf_needs_password(pdf_xref *xref)
 	return 1;
 }
 
+int
+pdf_has_permission(pdf_xref *xref, int p)
+{
+	if (!xref->crypt)
+		return 1;
+	return xref->crypt->p & p;
+}
+
+/* SumatraPDF */
+unsigned char *
+pdf_get_crypt_key(pdf_xref *xref)
+{
+	if (!xref || !xref->crypt)
+		return NULL;
+	return xref->crypt->key;
+}
+
 /*
  * PDF 1.7 algorithm 3.1 and ExtensionLevel 3 algorithm 3.1a
  *
@@ -638,8 +696,8 @@ pdf_crypt_obj_imp(pdf_crypt *crypt, fz_obj *obj, unsigned char *key, int keylen)
 				memcpy(iv, s, 16);
 				aes_setkey_dec(&aes, key, keylen * 8);
 				aes_crypt_cbc(&aes, AES_DECRYPT, n - 16, iv, s + 16, s);
-				obj->u.s.len -= 16; /* delete space used for iv */
-				obj->u.s.len -= s[n - 17]; /* delete padding bytes at end */
+				/* delete space used for iv and padding bytes at end */
+				fz_set_str_len(obj, n - 16 - s[n - 17]);
 			}
 		}
 	}
@@ -679,8 +737,8 @@ pdf_crypt_obj(pdf_crypt *crypt, fz_obj *obj, int num, int gen)
  *
  * Create filter suitable for de/encrypting a stream.
  */
-fz_stream *
-pdf_open_crypt(fz_stream *chain, pdf_crypt *crypt, pdf_crypt_filter *stmf, int num, int gen)
+static fz_stream *
+pdf_open_crypt_imp(fz_stream *chain, pdf_crypt *crypt, pdf_crypt_filter *stmf, int num, int gen)
 {
 	unsigned char key[32];
 	int len;
@@ -694,6 +752,33 @@ pdf_open_crypt(fz_stream *chain, pdf_crypt *crypt, pdf_crypt_filter *stmf, int n
 		return fz_open_aesd(chain, key, len);
 
 	return fz_open_copy(chain);
+}
+
+fz_stream *
+pdf_open_crypt(fz_stream *chain, pdf_crypt *crypt, int num, int gen)
+{
+	return pdf_open_crypt_imp(chain, crypt, &crypt->stmf, num, gen);
+}
+
+fz_stream *
+pdf_open_crypt_with_filter(fz_stream *chain, pdf_crypt *crypt, char *name, int num, int gen)
+{
+	fz_error error;
+	pdf_crypt_filter cf;
+
+	if (strcmp(name, "Identity"))
+	{
+		fz_obj *obj = fz_dict_gets(crypt->cf, name);
+		if (fz_is_dict(obj))
+		{
+			error = pdf_parse_crypt_filter(&cf, obj, crypt->length);
+			if (error)
+				fz_catch(error, "cannot parse crypt filter (%d %d R)", fz_to_num(obj), fz_to_gen(obj));
+			else
+				return pdf_open_crypt_imp(chain, crypt, &cf, num, gen);
+		}
+	}
+	return chain;
 }
 
 void pdf_debug_crypt(pdf_crypt *crypt)

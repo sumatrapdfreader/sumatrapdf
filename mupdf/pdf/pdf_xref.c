@@ -683,11 +683,10 @@ pdf_debug_xref(pdf_xref *xref)
 	printf("xref\n0 %d\n", xref->len);
 	for (i = 0; i < xref->len; i++)
 	{
-		printf("%05d: %010d %05d %c (refs=%d, stm_ofs=%d)\n", i,
+		printf("%05d: %010d %05d %c (stm_ofs=%d)\n", i,
 			xref->table[i].ofs,
 			xref->table[i].gen,
 			xref->table[i].type ? xref->table[i].type : '-',
-			xref->table[i].obj ? xref->table[i].obj->refs : 0,
 			xref->table[i].stm_ofs);
 	}
 }
@@ -873,7 +872,7 @@ pdf_resolve_indirect(fz_obj *ref)
 {
 	if (fz_is_indirect(ref))
 	{
-		pdf_xref *xref = ref->u.r.xref;
+		pdf_xref *xref = fz_get_indirect_xref(ref);
 		int num = fz_to_num(ref);
 		int gen = fz_to_gen(ref);
 		if (xref)

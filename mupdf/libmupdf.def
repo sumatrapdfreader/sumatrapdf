@@ -97,7 +97,6 @@ EXPORTS
 	fz_array_get
 	fz_array_put
 	fz_array_push
-	fz_array_drop
 	fz_array_insert
 	fz_dict_len
 	fz_dict_get_key
@@ -113,7 +112,6 @@ EXPORTS
 	fz_fprint_obj
 	fz_debug_obj
 	fz_debug_ref
-	fz_objkindstr
 	fz_new_buffer
 	fz_keep_buffer
 	fz_drop_buffer
@@ -225,8 +223,6 @@ EXPORTS
 	fz_sort_gel
 	fz_free_gel
 	fz_is_rect_gel
-	fz_new_ael
-	fz_free_ael
 	fz_scan_convert
 	fz_flatten_fill_path
 	fz_flatten_stroke_path
@@ -296,9 +292,10 @@ EXPORTS
 	pdf_from_ucs2
 	pdf_new_crypt
 	pdf_free_crypt
-	pdf_parse_crypt_filter
 	pdf_open_crypt
 	pdf_crypt_obj
+	pdf_has_permission
+	pdf_get_crypt_key
 	pdf_needs_password
 	pdf_authenticate_password
 	pdf_debug_crypt
@@ -381,7 +378,6 @@ EXPORTS
 	pdf_load_similar_cjk_font
 	pdf_load_type3_font
 	pdf_font_cid_to_gid
-	pdf_load_font_descriptor
 	pdf_load_font
 	pdf_new_font_desc
 	pdf_keep_font
@@ -405,37 +401,14 @@ EXPORTS
 	pdf_count_pages
 	pdf_load_page
 	pdf_free_page
-	pdf_init_gstate
-	pdf_set_colorspace
-	pdf_set_color
-	pdf_set_pattern
-	pdf_set_shade
-	pdf_show_path
-	pdf_show_space
-	pdf_show_string
-	pdf_show_text
-	pdf_flush_text
-	pdf_show_image
-	pdf_show_shade
-	pdf_gsave
-	pdf_grestore
-	pdf_run_csi_buffer
-	pdf_run_xobject
 	pdf_run_page_with_usage
 	pdf_run_page
 	pdf_run_glyph
-	pdf_keep_material
-	pdf_drop_material
 
 ; MuXPS exports
 
 	xps_strcasecmp
 	xps_absolute_path
-	xps_hash_new
-	xps_hash_lookup
-	xps_hash_insert
-	xps_hash_free
-	xps_hash_debug
 	xml_parse_document
 	xml_next
 	xml_down

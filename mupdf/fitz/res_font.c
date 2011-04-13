@@ -432,7 +432,7 @@ fz_render_ft_stroked_glyph(fz_font *font, int gid, fz_matrix trm, fz_matrix ctm,
 		return NULL;
 	}
 
-	FT_Stroker_Set(stroker, linewidth, state->linecap, state->linejoin, state->miterlimit * 65536);
+	FT_Stroker_Set(stroker, linewidth, state->start_cap, state->linejoin, state->miterlimit * 65536);
 
 	fterr = FT_Get_Glyph(face->glyph, &glyph);
 	if (fterr)

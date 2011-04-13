@@ -208,7 +208,7 @@ fz_debug_text_span(fz_text_span *span)
 		fz_debug_text_span(span->next);
 }
 
-/***** various string fixups *****/
+/***** SumatraPDF: various string fixups *****/
 static void
 ensurespanlength(fz_text_span *span, int mincap)
 {
@@ -513,8 +513,6 @@ fz_text_extract_span(fz_text_span **last, fz_text *text, fz_matrix ctm, fz_point
 			rect.y0 = descender;
 			rect.x1 = adv;
 			rect.y1 = ascender;
-
-			// if (text->wmode) adv = -1;
 		}
 		else
 		{

@@ -1,7 +1,7 @@
 #include "fitz.h"
 #include "muxps.h"
 
-static inline int tolower(int c)
+static inline int xps_tolower(int c)
 {
 	if (c >= 'A' && c <= 'Z')
 		return c + 32;
@@ -11,13 +11,13 @@ static inline int tolower(int c)
 int
 xps_strcasecmp(char *a, char *b)
 {
-	while (tolower(*a) == tolower(*b))
+	while (xps_tolower(*a) == xps_tolower(*b))
 	{
 		if (*a++ == 0)
 			return 0;
 		b++;
 	}
-	return tolower(*a) - tolower(*b);
+	return xps_tolower(*a) - xps_tolower(*b);
 }
 
 #define SEP(x)	((x)=='/' || (x) == 0)

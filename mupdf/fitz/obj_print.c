@@ -78,12 +78,14 @@ static inline void fmt_sep(struct fmt *fmt)
 
 static void fmt_str(struct fmt *fmt, fz_obj *obj)
 {
+	char *s = fz_to_str_buf(obj);
+	int n = fz_to_str_len(obj);
 	int i, c;
 
 	fmt_putc(fmt, '(');
-	for (i = 0; i < obj->u.s.len; i++)
+	for (i = 0; i < n; i++)
 	{
-		c = (unsigned char) obj->u.s.buf[i];
+		c = (unsigned char)s[i];
 		if (c == '\n')
 			fmt_puts(fmt, "\\n");
 		else if (c == '\r')
@@ -112,11 +114,13 @@ static void fmt_str(struct fmt *fmt, fz_obj *obj)
 
 static void fmt_hex(struct fmt *fmt, fz_obj *obj)
 {
+	char *s = fz_to_str_buf(obj);
+	int n = fz_to_str_len(obj);
 	int i, b, c;
 
 	fmt_putc(fmt, '<');
-	for (i = 0; i < obj->u.s.len; i++) {
-		b = (unsigned char) obj->u.s.buf[i];
+	for (i = 0; i < n; i++) {
+		b = (unsigned char) s[i];
 		c = (b >> 4) & 0x0f;
 		fmt_putc(fmt, c < 0xA ? c + '0' : c + 'A' - 0xA);
 		c = (b) & 0x0f;
@@ -258,7 +262,7 @@ static void fmt_obj(struct fmt *fmt, fz_obj *obj)
 			else if (c >= 127)
 				added += 3;
 		}
-		if (added < obj->u.s.len)
+		if (added < len)
 			fmt_str(fmt, obj);
 		else
 			fmt_hex(fmt, obj);

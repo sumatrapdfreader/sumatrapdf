@@ -155,10 +155,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\pdf\pdf_build.c"
-				>
-			</File>
-			<File
 				RelativePath="..\pdf\pdf_cmap.c"
 				>
 			</File>
@@ -291,6 +287,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\fitz\base_object.c"
+				>
+			</File>
+			<File
 				RelativePath="..\fitz\base_string.c"
 				>
 			</File>
@@ -371,19 +371,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\fitz\obj_array.c"
-				>
-			</File>
-			<File
-				RelativePath="..\fitz\obj_dict.c"
-				>
-			</File>
-			<File
 				RelativePath="..\fitz\obj_print.c"
-				>
-			</File>
-			<File
-				RelativePath="..\fitz\obj_simple.c"
 				>
 			</File>
 			<File
@@ -496,10 +484,6 @@
 			</File>
 			<File
 				RelativePath="..\xps\xps_gradient.c"
-				>
-			</File>
-			<File
-				RelativePath="..\xps\xps_hash.c"
 				>
 			</File>
 			<File

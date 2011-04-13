@@ -741,7 +741,7 @@ xps_parse_line_cap(char *attr)
 		if (!strcmp(attr, "Flat")) return 0;
 		if (!strcmp(attr, "Round")) return 1;
 		if (!strcmp(attr, "Square")) return 2;
-		if (!strcmp(attr, "Triangle")) return 3; /* FIXME add triangle caps */
+		if (!strcmp(attr, "Triangle")) return 3;
 	}
 	return 0;
 }
@@ -880,9 +880,9 @@ xps_parse_path(xps_context *ctx, fz_matrix ctm, char *base_uri, xps_resource *di
 		stroke_tag = NULL;
 	}
 
-	stroke.linecap = xps_parse_line_cap(stroke_start_line_cap_att);
-//	fz_setlineendcap(ctx->pgs, xps_parse_line_cap(stroke_end_line_cap_att));
-//	fz_setlinedashcap(ctx->pgs, xps_parse_line_cap(stroke_dash_cap_att));
+	stroke.start_cap = xps_parse_line_cap(stroke_start_line_cap_att);
+	stroke.dash_cap = xps_parse_line_cap(stroke_dash_cap_att);
+	stroke.end_cap = xps_parse_line_cap(stroke_end_line_cap_att);
 
 	stroke.linejoin = 0;
 	if (stroke_line_join_att)

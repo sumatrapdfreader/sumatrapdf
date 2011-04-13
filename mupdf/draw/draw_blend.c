@@ -4,7 +4,30 @@
 
 typedef unsigned char byte;
 
-const char *fz_blendmode_names[] =
+enum
+{
+	/* PDF 1.4 -- standard separable */
+	FZ_BLEND_NORMAL,
+	FZ_BLEND_MULTIPLY,
+	FZ_BLEND_SCREEN,
+	FZ_BLEND_OVERLAY,
+	FZ_BLEND_DARKEN,
+	FZ_BLEND_LIGHTEN,
+	FZ_BLEND_COLOR_DODGE,
+	FZ_BLEND_COLOR_BURN,
+	FZ_BLEND_HARD_LIGHT,
+	FZ_BLEND_SOFT_LIGHT,
+	FZ_BLEND_DIFFERENCE,
+	FZ_BLEND_EXCLUSION,
+
+	/* PDF 1.4 -- standard non-separable */
+	FZ_BLEND_HUE,
+	FZ_BLEND_SATURATION,
+	FZ_BLEND_COLOR,
+	FZ_BLEND_LUMINOSITY,
+};
+
+static const char *fz_blendmode_names[] =
 {
 	"Normal",
 	"Multiply",
@@ -22,8 +45,23 @@ const char *fz_blendmode_names[] =
 	"Saturation",
 	"Color",
 	"Luminosity",
-	NULL
 };
+
+int fz_find_blendmode(char *name)
+{
+	int i;
+	for (i = 0; i < nelem(fz_blendmode_names); i++)
+		if (!strcmp(name, fz_blendmode_names[i]))
+			return i;
+	return FZ_BLEND_NORMAL;
+}
+
+char *fz_blendmode_name(int blendmode)
+{
+	if (blendmode >= 0 && blendmode < nelem(fz_blendmode_names))
+		return (char*)fz_blendmode_names[blendmode];
+	return "Normal";
+}
 
 /* Separable blend modes */
 
@@ -218,7 +256,7 @@ fz_hue_rgb(int *rr, int *rg, int *rb, int br, int bg, int bb, int sr, int sg, in
 /* Blending loops */
 
 void
-fz_blend_separable(byte * restrict bp, byte * restrict sp, int n, int w, fz_blendmode blendmode)
+fz_blend_separable(byte * restrict bp, byte * restrict sp, int n, int w, int blendmode)
 {
 	int k;
 	int n1 = n - 1;
@@ -266,7 +304,7 @@ fz_blend_separable(byte * restrict bp, byte * restrict sp, int n, int w, fz_blen
 }
 
 void
-fz_blend_nonseparable(byte * restrict bp, byte * restrict sp, int w, fz_blendmode blendmode)
+fz_blend_nonseparable(byte * restrict bp, byte * restrict sp, int w, int blendmode)
 {
 	while (w--)
 	{
@@ -316,7 +354,7 @@ fz_blend_nonseparable(byte * restrict bp, byte * restrict sp, int w, fz_blendmod
 }
 
 void
-fz_blend_pixmap(fz_pixmap *dst, fz_pixmap *src, int alpha, fz_blendmode blendmode)
+fz_blend_pixmap(fz_pixmap *dst, fz_pixmap *src, int alpha, int blendmode)
 {
 	unsigned char *sp, *dp;
 	fz_bbox bbox;

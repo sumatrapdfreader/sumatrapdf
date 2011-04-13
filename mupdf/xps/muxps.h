@@ -33,20 +33,6 @@ int xps_strcasecmp(char *a, char *b);
 void xps_absolute_path(char *output, char *base_uri, char *path, int output_size);
 
 /*
- * Generic hashtable.
- */
-
-typedef struct xps_hash_table_s xps_hash_table;
-
-xps_hash_table *xps_hash_new(void);
-void *xps_hash_lookup(xps_hash_table *table, char *key);
-int xps_hash_insert(xps_hash_table *table, char *key, void *value);
-void xps_hash_free(xps_hash_table *table,
-	void (*free_key)(void *),
-	void (*free_value)(void *));
-void xps_hash_debug(xps_hash_table *table);
-
-/*
  * XML document model
  */
 
@@ -115,6 +101,15 @@ void xps_free_page(xps_context *ctx, xps_page *page);
 int xps_decode_jpeg(fz_pixmap **imagep, byte *rbuf, int rlen);
 int xps_decode_png(fz_pixmap **imagep, byte *rbuf, int rlen);
 int xps_decode_tiff(fz_pixmap **imagep, byte *rbuf, int rlen);
+
+typedef struct xps_font_cache_s xps_font_cache;
+
+struct xps_font_cache_s
+{
+	char *name;
+	fz_font *font;
+	xps_font_cache *next;
+};
 
 typedef struct xps_glyph_metrics_s xps_glyph_metrics;
 
@@ -215,9 +210,8 @@ struct xps_context_s
 	char *base_uri; /* base uri for parsing XML and resolving relative paths */
 	char *part_uri; /* part uri for parsing metadata relations */
 
-	/* We cache font and colorspace resources */
-	xps_hash_table *font_table;
-	xps_hash_table *colorspace_table;
+	/* We cache font resources */
+	xps_font_cache *font_table;
 
 	/* Opacity attribute stack */
 	float opacity[64];
