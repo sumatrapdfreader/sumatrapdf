@@ -96,14 +96,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\CbxEngine.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\CbxEngine.h"
-				>
-			</File>
-			<File
 				RelativePath=".\src\CrashHandler.cpp"
 				>
 			</File>
@@ -140,11 +132,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\Http.cpp"
+				RelativePath=".\src\ImagesEngine.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\src\Http.h"
+				RelativePath=".\src\ImagesEngine.h"
 				>
 			</File>
 			<File
@@ -346,6 +338,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\baseutils\Http.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\Http.h"
+				>
+			</File>
+			<File
 				RelativePath=".\baseutils\SimpleLog.cpp"
 				>
 			</File>
@@ -402,6 +402,10 @@
 				</File>
 				<File
 					RelativePath=".\mupdf\fitz\base_memory.c"
+					>
+				</File>
+				<File
+					RelativePath=".\mupdf\fitz\base_object.c"
 					>
 				</File>
 				<File
@@ -493,19 +497,7 @@
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\fitz\obj_array.c"
-					>
-				</File>
-				<File
-					RelativePath=".\mupdf\fitz\obj_dict.c"
-					>
-				</File>
-				<File
 					RelativePath=".\mupdf\fitz\obj_print.c"
-					>
-				</File>
-				<File
-					RelativePath=".\mupdf\fitz\obj_simple.c"
 					>
 				</File>
 				<File
@@ -622,10 +614,6 @@
 				</File>
 				<File
 					RelativePath=".\mupdf\pdf\pdf_annot.c"
-					>
-				</File>
-				<File
-					RelativePath=".\mupdf\pdf\pdf_build.c"
 					>
 				</File>
 				<File
@@ -766,10 +754,6 @@
 				</File>
 				<File
 					RelativePath=".\mupdf\xps\xps_gradient.c"
-					>
-				</File>
-				<File
-					RelativePath=".\mupdf\xps\xps_hash.c"
 					>
 				</File>
 				<File

@@ -462,12 +462,8 @@ PdfEngine *PdfEngine::Clone()
 {
     // use this document's encryption key (if any) to load the clone
     PasswordCloner *pwdUI = NULL;
-
-    /* TODO: mupdf has hidden definition of crypt */
-#if 0
     if (_xref->crypt)
-        pwdUI = new PasswordCloner(_xref->crypt->key);
-#endif
+        pwdUI = new PasswordCloner(pdf_get_crypt_key(_xref));
     PdfEngine *clone = PdfEngine::CreateFromStream(_xref->file, pwdUI);
     delete pwdUI;
 
@@ -1227,11 +1223,8 @@ TCHAR *PdfEngine::GetProperty(char *name)
 
     if (Str::Eq(name, "PdfVersion")) {
         int major = _xref->version / 10, minor = _xref->version % 10;
-        /* TODO: mupdf has hidden crypt */
-#if 0
-        if (1 == major && 7 == minor && _xref->crypt && 5 == _xref->crypt->v)
+        if (1 == major && 7 == minor && 5 == pdf_get_crypt_revision(_xref))
             return Str::Format(_T("%d.%d Adobe Extension Level %d"), major, minor, 3);
-#endif
         return Str::Format(_T("%d.%d"), major, minor);
     }
 
@@ -1302,13 +1295,7 @@ bool PdfEngine::IsImagePage(int pageNo)
     if (!run)
         return false;
 
-    /* TODO: no longer present in mupdf */
-#if 0
-    bool hasSingleImage = run->list->first && !run->list->first->next &&
-                          run->list->first->cmd == FZ_CMD_FILL_IMAGE;
-#else
-    bool hasSingleImage = false;
-#endif
+    bool hasSingleImage = fz_list_is_single_image(run->list);
     dropPageRun(run);
 
     return hasSingleImage;

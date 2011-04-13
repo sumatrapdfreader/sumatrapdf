@@ -609,13 +609,22 @@ pdf_has_permission(pdf_xref *xref, int p)
 	return xref->crypt->p & p;
 }
 
-/* SumatraPDF */
+/* SumatraPDF: allow to save/restore the encryption key ("remember password") */
 unsigned char *
 pdf_get_crypt_key(pdf_xref *xref)
 {
-	if (!xref || !xref->crypt)
+	if (!xref->crypt)
 		return NULL;
 	return xref->crypt->key;
+}
+
+/* SumatraPDF: allow to determine the PDF 1.7 Extension Level */
+int
+pdf_get_crypt_revision(pdf_xref *xref)
+{
+	if (!xref->crypt)
+		return 0;
+	return xref->crypt->v;
 }
 
 /*

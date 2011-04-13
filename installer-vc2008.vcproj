@@ -78,6 +78,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\baseutils\CmdLineParser.h"
+				>
+			</File>
+			<File
 				RelativePath=".\baseutils\DialogSizer.cpp"
 				>
 			</File>
@@ -98,6 +102,22 @@
 				>
 			</File>
 			<File
+				RelativePath=".\baseutils\Http.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\Http.h"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\SimpleLog.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\SimpleLog.h"
+				>
+			</File>
+			<File
 				RelativePath=".\baseutils\StrUtil.cpp"
 				>
 			</File>
@@ -106,7 +126,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\baseutils\UtilTests.h"
+				RelativePath=".\baseutils\UtilTests.cpp"
 				>
 			</File>
 			<File

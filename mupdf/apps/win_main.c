@@ -10,6 +10,11 @@
 #define _UNICODE
 #endif
 #define WIN32_LEAN_AND_MEAN
+/* SumatraPDF: RegDeleteTree is only available under Windows Vista and later */
+#ifdef _WIN32_WINNT
+#undef _WIN32_WINNT
+#endif
+#define _WIN32_WINNT 0x0600
 #include <windows.h>
 #include <commdlg.h>
 #include <shellapi.h>

@@ -569,3 +569,10 @@ visible:
 		}
 	}
 }
+
+/* SumatraPDF: allow to optimize handling of single-image pages */
+int
+fz_list_is_single_image(fz_display_list *list)
+{
+	return list->first && !list->first->next && list->first->cmd == FZ_CMD_FILL_IMAGE;
+}

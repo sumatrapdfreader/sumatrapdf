@@ -112,6 +112,8 @@ EXPORTS
 	fz_fprint_obj
 	fz_debug_obj
 	fz_debug_ref
+	fz_set_str_len
+	fz_get_indirect_xref
 	fz_new_buffer
 	fz_keep_buffer
 	fz_drop_buffer
@@ -144,6 +146,8 @@ EXPORTS
 	fz_open_lzwd
 	fz_open_predict
 	fz_open_jbig2d
+	fz_find_blendmode
+	fz_blendmode_name
 	fz_new_pixmap_with_limit
 	fz_new_pixmap_with_data
 	fz_new_pixmap_with_rect
@@ -218,9 +222,9 @@ EXPORTS
 	fz_set_aa_level
 	fz_new_gel
 	fz_insert_gel
-	fz_bound_gel
 	fz_reset_gel
 	fz_sort_gel
+	fz_bound_gel
 	fz_free_gel
 	fz_is_rect_gel
 	fz_scan_convert
@@ -262,6 +266,7 @@ EXPORTS
 	fz_free_display_list
 	fz_new_list_device
 	fz_execute_display_list
+	fz_list_is_single_image
 	fz_accelerate
 	fz_decode_tile
 	fz_decode_indexed_tile
@@ -290,15 +295,6 @@ EXPORTS
 	pdf_to_ucs2
 	pdf_to_utf8_name
 	pdf_from_ucs2
-	pdf_new_crypt
-	pdf_free_crypt
-	pdf_open_crypt
-	pdf_crypt_obj
-	pdf_has_permission
-	pdf_get_crypt_key
-	pdf_needs_password
-	pdf_authenticate_password
-	pdf_debug_crypt
 	pdf_resolve_indirect
 	pdf_cache_object
 	pdf_load_object
@@ -317,6 +313,17 @@ EXPORTS
 	pdf_repair_obj_stms
 	pdf_debug_xref
 	pdf_resize_xref
+	pdf_new_crypt
+	pdf_free_crypt
+	pdf_crypt_obj
+	pdf_open_crypt
+	pdf_open_crypt_with_filter
+	pdf_needs_password
+	pdf_authenticate_password
+	pdf_has_permission
+	pdf_get_crypt_key
+	pdf_get_crypt_revision
+	pdf_debug_crypt
 	pdf_new_store
 	pdf_free_store
 	pdf_debug_store
@@ -330,16 +337,16 @@ EXPORTS
 	pdf_drop_function
 	pdf_load_colorspace
 	pdf_expand_indexed_pixmap
-	pdf_load_pattern
-	pdf_keep_pattern
-	pdf_drop_pattern
 	pdf_load_shading
-	pdf_load_xobject
-	pdf_keep_xobject
-	pdf_drop_xobject
 	pdf_load_inline_image
 	pdf_load_image
 	pdf_is_jpx_image
+	pdf_load_pattern
+	pdf_keep_pattern
+	pdf_drop_pattern
+	pdf_load_xobject
+	pdf_keep_xobject
+	pdf_drop_xobject
 	pdf_new_cmap
 	pdf_keep_cmap
 	pdf_drop_cmap
@@ -372,12 +379,12 @@ EXPORTS
 	pdf_get_hmtx
 	pdf_get_vmtx
 	pdf_load_to_unicode
+	pdf_font_cid_to_gid
 	pdf_find_builtin_font
 	pdf_find_builtin_cjk_font
 	pdf_load_windows_font
 	pdf_load_similar_cjk_font
 	pdf_load_type3_font
-	pdf_font_cid_to_gid
 	pdf_load_font
 	pdf_new_font_desc
 	pdf_keep_font
