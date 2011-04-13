@@ -5912,14 +5912,11 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
             break;
 
         case WM_PAINT:
-            /* it might happen that we get WM_PAINT after destroying a window */
-            if (win)
-                OnPaint(win);
+            OnPaint(win);
             break;
 
         case WM_SIZE:
-            if (win)
-                win->UpdateCanvasSize();
+            win->UpdateCanvasSize();
             break;
 
         case WM_MOUSEWHEEL:
@@ -5927,7 +5924,8 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
                 break;
 
             // Scroll the ToC sidebar, if it's visible and the cursor is in it
-            if (win->tocShow && IsCursorOverWindow(win->hwndTocTree) && !gWheelMsgRedirect) {
+            if (win->tocShow && IsCursorOverWindow(win->hwndTocTree) && !gWheelMsgRedirect)
+            {
                 // Note: hwndTocTree's window procedure doesn't always handle
                 //       WM_MOUSEWHEEL and when it's bubbling up, we'd return
                 //       here recursively - prevent that
@@ -5938,7 +5936,8 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
             }
 
             // Note: not all mouse drivers correctly report the Ctrl key's state
-            if ((LOWORD(wParam) & MK_CONTROL) || IsCtrlPressed() || (LOWORD(wParam) & MK_RBUTTON)) {
+            if ((LOWORD(wParam) & MK_CONTROL) || IsCtrlPressed() || (LOWORD(wParam) & MK_RBUTTON))
+            {
                 GetCursorPos(&pt);
                 ScreenToClient(win->hwndCanvas, &pt);
 
@@ -5964,6 +5963,7 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
                 SendMessage(win->hwndCanvas, WM_VSCROLL, SB_LINEUP, 0);
                 win->wheelAccumDelta -= gDeltaPerLine;
             }
+
             while (win->wheelAccumDelta <= -gDeltaPerLine) {
                 SendMessage(win->hwndCanvas, WM_VSCROLL, SB_LINEDOWN, 0);
                 win->wheelAccumDelta += gDeltaPerLine;
