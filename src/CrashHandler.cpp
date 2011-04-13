@@ -408,7 +408,15 @@ static void GetOsVersion(Str::Str<char>& s)
 #else
     char *arch = IsWow64() ? "Wow64" : "32-bit";
 #endif
-    s.AppendFmt("OS: Windows %s %d.%d build %d %s\r\n", os, servicePackMajor, servicePackMinor, buildNumber, arch);
+    if (0 == servicePackMinor) {
+        if (0 == servicePackMajor) {
+            s.AppendFmt("OS: Windows %s build %d %s\r\n", os, buildNumber, arch);
+        } else {
+            s.AppendFmt("OS: Windows %s SP%d build %d %s\r\n", os, servicePackMajor, buildNumber, arch);
+        }
+    } else {
+        s.AppendFmt("OS: Windows %s %d.%d build %d %s\r\n", os, servicePackMajor, servicePackMinor, buildNumber, arch);
+    }
 }
 
 static void StrCharAppendT(Str::Str<char>& s, TCHAR *txt)
