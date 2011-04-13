@@ -167,24 +167,6 @@ FuncNameAddr gDbgHelpFuncs[] = {
 };
 #undef F
 
-#if defined(DEBUG_CRASH_INFO)
-static void LogDbgSymSearchPath()
-{
-    WCHAR buf[1024] = { 0 };
-    if (!_SymGetSearchPathW)
-        return;
-    if (!_SymGetSearchPathW(GetCurrentProcess(), buf, dimof(buf)))
-        return;
-#ifdef UNICODE
-    LogDbg("Symbol search path: %s", buf);
-#else
-    LogDbg("Symbol search path: %s", ScopedMem<char>(Str::Conv::FromWStr(buf)));
-#endif
-}
-#else
-static void LogDbgSymSearchPath() {}
-#endif
-
 static bool LoadDbgHelpFuncs()
 {
     if (_MiniDumpWriteDump)
@@ -278,8 +260,6 @@ static bool SetupSymbolPath()
         LogDbg("SetupSymbolPath(): _SymSetSearchPathW and _SymSetSearchPath missing");
         return false;
     }
-    LogDbg("Before setting path ");
-    LogDbgSymSearchPath();
 
     ScopedMem<WCHAR> path(GetSymbolPath());
     if (!path) {
@@ -291,15 +271,15 @@ static bool SetupSymbolPath()
     ScopedMem<TCHAR> tpath(Str::Conv::FromWStr(path));
     if (_SymSetSearchPathW) {
         ok = _SymSetSearchPathW(GetCurrentProcess(), path);
-        LogDbg("_SymSetSearchPathW() %s, path='%s'", ok ? _T("ok") : _T("failed"), tpath);
+        if (!ok)
+            LogDbg("_SymSetSearchPathW() failed, path='%s'", tpath);
     } else {
         ScopedMem<char> tmp(Str::Conv::ToAnsi(tpath));
         ok = _SymSetSearchPath(GetCurrentProcess(), tmp);
-        LogDbg("_SymSetSearchPath() %s, path='%s'", ok ? _T("ok") : _T("failed"), tpath);
+        if (!ok)
+            LogDbg("_SymSetSearchPath() failed, path='%s'", tpath);
     }
 
-    LogDbg("After setting path ");
-    LogDbgSymSearchPath();
     _SymRefreshModuleList(GetCurrentProcess());
     free((void*)path);
     return ok;
