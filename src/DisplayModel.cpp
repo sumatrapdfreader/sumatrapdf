@@ -813,7 +813,7 @@ int DisplayModel::getPageNoByPoint(PointI pt)
 /* Given position 'x'/'y' in the draw area, returns a structure describing
    a link or NULL if there is no link at this position.
    TODO: this function is called frequently from UI code so make sure that
-         it's fast enough for a decent number of link.
+         it's fast enough for a decent number of links.
          Possible speed improvement: remember which links are visible after
          scrolling and skip the _Inside test for those invisible.
          Another way: build a list with only those visible, so we don't
