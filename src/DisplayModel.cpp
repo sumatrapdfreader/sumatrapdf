@@ -273,6 +273,9 @@ bool DisplayModel::load(const TCHAR *fileName, int startPage, SizeI viewPort)
         case Layout_Single: _displayMode = DM_CONTINUOUS; break;
         case Layout_Facing: _displayMode = DM_CONTINUOUS_FACING; break;
         case Layout_Book: _displayMode = DM_CONTINUOUS_BOOK_VIEW; break;
+        case Layout_Single | Layout_NonContinuous: _displayMode = DM_SINGLE_PAGE; break;
+        case Layout_Facing | Layout_NonContinuous: _displayMode = DM_FACING; break;
+        case Layout_Book | Layout_NonContinuous: _displayMode = DM_BOOK_VIEW; break;
         }
     }
     _displayR2L = (layout & Layout_R2L) != 0;
@@ -809,8 +812,6 @@ int DisplayModel::getPageNoByPoint(PointI pt)
 
 /* Given position 'x'/'y' in the draw area, returns a structure describing
    a link or NULL if there is no link at this position.
-   Note: PdfEngine owns this memory so it should not be changed by the
-   caller and caller should not reference it after it has changed.
    TODO: this function is called frequently from UI code so make sure that
          it's fast enough for a decent number of link.
          Possible speed improvement: remember which links are visible after
@@ -818,7 +819,7 @@ int DisplayModel::getPageNoByPoint(PointI pt)
          Another way: build a list with only those visible, so we don't
          even have to traverse those that are invisible.
    */
-PdfLink *DisplayModel::getLinkAtPosition(PointI pt)
+PageElement *DisplayModel::GetElementAtPos(PointI pt)
 {
     if (!pdfEngine)
         return NULL;
@@ -828,20 +829,7 @@ PdfLink *DisplayModel::getLinkAtPosition(PointI pt)
     if (!cvtScreenToUser(&pageNo, &pos))
         return NULL;
 
-    return pdfEngine->getLinkAtPosition(pageNo, (float)pos.x, (float)pos.y);
-}
-
-PdfComment *DisplayModel::getCommentAtPosition(PointI pt)
-{
-    if (!pdfEngine)
-        return NULL;
-
-    int pageNo = INVALID_PAGE_NO;
-    PointD pos = pt.Convert<double>();
-    if (!cvtScreenToUser(&pageNo, &pos))
-        return NULL;
-
-    return pdfEngine->getCommentAtPosition(pageNo, (float)pos.x, (float)pos.y);
+    return pdfEngine->GetElementAtPos(pageNo, pos);
 }
 
 bool DisplayModel::isOverText(int x, int y)

@@ -173,7 +173,7 @@ public:
             RemoveAt(i);
     }
 
-    void Sort(int (*cmpFunc)(const T* a, const T *b)) {
+    void Sort(int (*cmpFunc)(const T *a, const T *b)) {
         qsort(els, len, sizeof(T), cmpFunc);
     }
 

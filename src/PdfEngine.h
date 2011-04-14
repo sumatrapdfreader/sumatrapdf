@@ -20,15 +20,23 @@ __pragma(warning(pop))
 #include "BaseUtil.h"
 #include "GeomUtil.h"
 #include "BaseEngine.h"
+#include "Vec.h"
 
 // number of page content trees to cache for quicker rendering
 #define MAX_PAGE_RUN_CACHE  8
+
+class PageDestination {
+public:
+    // TODO: generalize a destination
+    virtual fz_obj *dest() const = 0;
+};
 
 class PageElement {
 public:
     virtual ~PageElement() { }
     virtual RectD GetRect() const = 0;
     virtual TCHAR *GetValue() const = 0;
+    virtual PageDestination *GetLink() = 0;
 };
 
 typedef struct {
@@ -37,7 +45,7 @@ typedef struct {
     int refs;
 } PdfPageRun;
 
-class PdfLink : public PageElement {
+class PdfLink : public PageElement, public PageDestination {
     pdf_link *link;
 
 public:
@@ -46,12 +54,13 @@ public:
 
     virtual RectD GetRect() const;
     virtual TCHAR *GetValue() const;
+    virtual PageDestination *GetLink() { return this; }
 
     pdf_link_kind kind() const { return link ? link->kind : (pdf_link_kind)-1; }
     bool isEmbeddedFile() const { return link && PDF_LINK_LAUNCH == link->kind && fz_dict_gets(link->dest, "EF"); }
 
     // TODO: remove this when it's no longer needed
-    fz_obj *dest() const { return link ? link->dest : NULL; }
+    virtual fz_obj *dest() const { return link ? link->dest : NULL; }
 };
 
 class PdfComment : public PageElement {
@@ -62,6 +71,7 @@ public:
 
     virtual RectD GetRect() const;
     virtual TCHAR *GetValue() const;
+    virtual PageDestination *GetLink() { return NULL; }
 };
 
 class PdfTocItem {
@@ -127,26 +137,24 @@ public:
     virtual RectD Transform(RectD rect, int pageNo, float zoom, int rotate, bool inverse=false);
 
     virtual unsigned char *GetFileData(size_t *cbCount);
+    virtual bool HasTextContent() { return true; }
     virtual TCHAR * ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_out=NULL,
                                     RenderTarget target=Target_View);
     virtual bool IsImagePage(int pageNo);
     virtual PageLayoutType PreferredLayout();
-    virtual COLORREF DefaultBackgroundColor() { return COL_GRAYISH; }
     virtual TCHAR *GetProperty(char *name);
 
     virtual bool IsPrintingAllowed() { return hasPermission(PDF_PERM_PRINT); }
     virtual bool IsCopyingTextAllowed() { return hasPermission(PDF_PERM_COPY); }
 
     virtual float GetFileDPI() const { return 72.0f; }
+    virtual const TCHAR *GetDefaultFileExt() const { return _T(".pdf"); }
 
     virtual bool BenchLoadPage(int pageNo) { return getPdfPage(pageNo) != NULL; }
 
-    virtual bool SupportsPermissions() const { return true; };
-
     // TODO: move any of the following into BaseEngine?
-    int getPdfLinks(int pageNo, PdfLink **links);
-    PdfLink *getLinkAtPosition(int pageNo, float x, float y);
-    PdfComment *getCommentAtPosition(int pageNo, float x, float y);
+    Vec<PageElement *> *GetElements(int pageNo);
+    PageElement *GetElementAtPos(int pageNo, PointD pt);
     bool hasTocTree() const { 
         return _outline != NULL || _attachments != NULL; 
     }
@@ -171,6 +179,7 @@ protected:
     pdf_page **     _pages;
 
     bool            load(const TCHAR *fileName, PasswordUI *pwdUI=NULL);
+    bool            load(IStream *stream, PasswordUI *pwdUI=NULL);
     bool            load(fz_stream *stm, PasswordUI *pwdUI=NULL);
     bool            load_from_stream(fz_stream *stm, PasswordUI *pwdUI=NULL);
     bool            finishLoading();
@@ -199,18 +208,19 @@ protected:
     fz_obj        * _info;
     fz_glyph_cache* _drawcache;
 
+    static PdfEngine *CreateFromStream(fz_stream *stm, PasswordUI *pwdUI=NULL);
 public:
     static PdfEngine *CreateFromFileName(const TCHAR *fileName, PasswordUI *pwdUI=NULL);
-    static PdfEngine *CreateFromStream(fz_stream *stm, PasswordUI *pwdUI=NULL);
+    static PdfEngine *CreateFromStream(IStream *stream, PasswordUI *pwdUI=NULL);
 };
 
 class XpsEngine : public BaseEngine {
 protected:
     virtual bool load(const TCHAR *fileName) = 0;
-    virtual bool load(fz_stream *stm) = 0;
+    virtual bool load(IStream *stream) = 0;
 public:
     static XpsEngine *CreateFromFileName(const TCHAR *fileName);
-    static XpsEngine *CreateFromStream(fz_stream *stm);
+    static XpsEngine *CreateFromStream(IStream *stream);
 };
 
 #endif

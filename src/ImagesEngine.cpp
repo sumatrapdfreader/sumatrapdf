@@ -49,9 +49,9 @@ bool IsImageFile(const WCHAR *fileName)
 
 bool IsImageFile(const char *fileName)
 {
-    return Str::EndsWithI(fileName, ".png")   ||
-           Str::EndsWithI(fileName, ".jpg")   ||
-           Str::EndsWithI(fileName, ".jpeg")   ||
+    return Str::EndsWithI(fileName, ".png")  ||
+           Str::EndsWithI(fileName, ".jpg")  ||
+           Str::EndsWithI(fileName, ".jpeg") ||
            Str::EndsWithI(fileName, ".gif")  ||
            Str::EndsWithI(fileName, ".bmp");
 }
@@ -442,6 +442,13 @@ bool ImagesEngine::IsSupportedFile(const TCHAR *fileName)
     return IsImageFile(fileName);
 }
 
+const TCHAR *ImagesEngine::GetDefaultFileExt() const
+{
+    if (IsSupportedFile(fileName))
+        return _tcsrchr(fileName, '.');
+    return NULL;
+}
+
 ImagesEngine *ImagesEngine::CreateFromFileName(const TCHAR *fileName)
 {
     if (Str::EndsWith(fileName, _T(".cbz")))
@@ -484,4 +491,3 @@ ImagesEngine *ImagesEngine::CreateFromCbrFile(const TCHAR *fileName)
     }
     return engine;
 }
-

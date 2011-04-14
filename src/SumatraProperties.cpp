@@ -352,10 +352,8 @@ void OnMenuProperties(WindowInfo *win)
     str = FormatPageSize(engine, win->dm->currentPageNo(), win->dm->rotation());
     layoutData->AddProperty(_TR("Page Size:"), str);
 
-    if (engine->SupportsPermissions()) {
-        str = FormatPermissions(engine);
-        layoutData->AddProperty(_TR("Denied Permissions:"), str);
-    }
+    str = FormatPermissions(engine);
+    layoutData->AddProperty(_TR("Denied Permissions:"), str);
 
     // TODO: this is about linearlized PDF. Looks like mupdf would
     // have to be extended to detect linearlized PDF. The rules are described

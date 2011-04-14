@@ -62,28 +62,25 @@ public:
     virtual PointD Transform(PointD pt, int pageNo, float zoom, int rotate, bool inverse=false);
     virtual RectD Transform(RectD rect, int pageNo, float zoom, int rotate, bool inverse=false);
 
-    virtual COLORREF DefaultBackgroundColor() { return COL_BLACK; }
-
     virtual unsigned char *GetFileData(size_t *cbCount);
+    virtual bool HasTextContent() { return false; }
     virtual TCHAR * ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_out=NULL,
                                     RenderTarget target=Target_View) { return NULL; }
     virtual bool IsImagePage(int pageNo) { return true; }
+    virtual PageLayoutType PreferredLayout() { return Layout_NonContinuous; }
 
-    // there's no text...
-    virtual bool IsCopyingTextAllowed() { return false; }
+    virtual const TCHAR *GetDefaultFileExt() const;
 
     // we currently don't load pages lazily, so there's nothing to do here
     virtual bool BenchLoadPage(int pageNo) { return true; }
 
-    virtual bool SupportsPermissions() const { return false; };
+protected:
+    const TCHAR *fileName;
+    Vec<ImagesPage *> pages;
 
     bool LoadCbzFile(const TCHAR *fileName);
     bool LoadCbrFile(const TCHAR *fileName);
     bool LoadSingleFile(const TCHAR *fileName);
-
-protected:
-    const TCHAR *fileName;
-    Vec<ImagesPage *> pages;
 
     void GetTransform(Gdiplus::Matrix& m, int pageNo, float zoom, int rotate);
 

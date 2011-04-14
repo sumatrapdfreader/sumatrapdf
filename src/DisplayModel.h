@@ -151,8 +151,10 @@ public:
        an offset of draw area inside total area.
        The same for viewPortOffset.y, except it's for dy */
     PointI          viewPortOffset;
+protected:
     /* total size of view port (draw area), including scroll bars */
     SizeI           totalViewPortSize;
+public:
     /* size of view port available for content (totalViewPortSize minus scroll bars) */
     SizeI           viewPortSize;
 
@@ -187,10 +189,7 @@ public:
 
     TCHAR *         getTextInRegion(int pageNo, RectD& region);
     bool            isOverText(int x, int y);
-
-    // TODO: generalize for non-PDF formats(?)
-    PdfLink *       getLinkAtPosition(PointI pt);
-    PdfComment *    getCommentAtPosition(PointI pt);
+    PageElement *   GetElementAtPos(PointI pt);
 
     bool            cvtUserToScreen(int pageNo, PointD *pt);
     bool            cvtUserToScreen(int pageNo, RectD *r);

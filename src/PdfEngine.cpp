@@ -261,6 +261,33 @@ WCHAR *fz_span_to_wchar(fz_text_span *text, TCHAR *lineSep, RectI **coords_out=N
     return content;
 }
 
+fz_stream *fz_open_istream(IStream *stream)
+{
+    // TODO: implement a IStream-to-fz_stream proxy
+    STATSTG stat;
+    HRESULT res = stream->Stat(&stat, STATFLAG_NONAME);
+    if (FAILED(res))
+        return NULL;
+
+    DWORD size = stat.cbSize.LowPart;
+    fz_buffer *filedata = fz_new_buffer(size);
+    filedata->len = size;
+
+    LARGE_INTEGER zero;
+    zero.QuadPart = 0;
+    stream->Seek(zero, STREAM_SEEK_SET, NULL);
+    res = stream->Read(filedata->data, filedata->len, NULL);
+    if (FAILED(res)) {
+        fz_drop_buffer(filedata);
+        return NULL;
+    }
+
+    fz_stream *stm = fz_open_buffer(filedata);
+    fz_drop_buffer(filedata);
+
+    return stm;
+}
+
 // Ensure that fz_accelerate is called before using Fitz the first time.
 class FitzAccelerator { public: FitzAccelerator() { fz_accelerate(); } };
 FitzAccelerator _globalAccelerator;
@@ -533,6 +560,11 @@ OpenEmbeddedFile:
     _xref = NULL;
 
     goto OpenEmbeddedFile;
+}
+
+bool PdfEngine::load(IStream *stream, PasswordUI *pwdUI)
+{
+    return load(fz_open_istream(stream), pwdUI);
 }
 
 bool PdfEngine::load(fz_stream *stm, PasswordUI *pwdUI)
@@ -971,56 +1003,45 @@ RenderedBitmap *PdfEngine::RenderBitmap(
     return bitmap;
 }
 
-PdfLink *PdfEngine::getLinkAtPosition(int pageNo, float x, float y)
+PageElement *PdfEngine::GetElementAtPos(int pageNo, PointD pt)
 {
     pdf_page *page = getPdfPage(pageNo, true);
     if (!page)
         return NULL;
 
-    for (pdf_link *link = page->links; link; link = link->next) {
-        fz_point pt = { x, y };
-        if (fz_is_pt_in_rect(link->rect, pt))
+    fz_point p = { (float)pt.x, (float)pt.y };
+    for (pdf_link *link = page->links; link; link = link->next)
+        if (fz_is_pt_in_rect(link->rect, p))
             return new PdfLink(link);
-    }
 
-    return NULL;
-}
-
-PdfComment *PdfEngine::getCommentAtPosition(int pageNo, float x, float y)
-{
-    pdf_page *page = getPdfPage(pageNo, true);
-    if (!page)
-        return NULL;
-
-    for (pdf_annot *annot = page->annots; annot; annot = annot->next) {
-        fz_point pt = { x, y };
-        if (fz_is_pt_in_rect(annot->rect, pt) &&
+    for (pdf_annot *annot = page->annots; annot; annot = annot->next)
+        if (fz_is_pt_in_rect(annot->rect, p) &&
             Str::Eq(fz_to_name(fz_dict_gets(annot->obj, "Subtype")), "Text") &&
             !Str::IsEmpty(fz_to_str_buf(fz_dict_gets(annot->obj, "Contents")))) {
             return new PdfComment(annot);
         }
-    }
 
     return NULL;
 }
 
-int PdfEngine::getPdfLinks(int pageNo, PdfLink **links)
+Vec<PageElement *> *PdfEngine::GetElements(int pageNo)
 {
+    Vec<PageElement *> *els = new Vec<PageElement *>();
+
     pdf_page *page = getPdfPage(pageNo, true);
     if (!page)
-        return 0;
+        return els;
 
-    int count = 0;
     for (pdf_link *link = page->links; link; link = link->next)
-        count++;
+        els->Append(new PdfLink(link));
 
-    *links = new PdfLink[count];
+    for (pdf_annot *annot = page->annots; annot; annot = annot->next)
+        if (Str::Eq(fz_to_name(fz_dict_gets(annot->obj, "Subtype")), "Text") &&
+            !Str::IsEmpty(fz_to_str_buf(fz_dict_gets(annot->obj, "Contents")))) {
+            els->Append(new PdfComment(annot));
+        }
 
-    int i = 0;
-    for (pdf_link *link = page->links; link; link = link->next)
-        (*links)[i++] = PdfLink(link);
-
-    return count;
+    return els;
 }
 
 static pdf_link *getLastLink(pdf_link *head)
@@ -1319,6 +1340,16 @@ PdfEngine *PdfEngine::CreateFromFileName(const TCHAR *fileName, PasswordUI *pwdU
     return engine;
 }
 
+PdfEngine *PdfEngine::CreateFromStream(IStream *stream, PasswordUI *pwdUI)
+{
+    PdfEngine *engine = new PdfEngine();
+    if (!engine || !stream || !engine->load(stream, pwdUI)) {
+        delete engine;
+        return NULL;
+    }
+    return engine;
+}
+
 PdfEngine *PdfEngine::CreateFromStream(fz_stream *stm, PasswordUI *pwdUI)
 {
     PdfEngine *engine = new PdfEngine();
@@ -1377,19 +1408,17 @@ public:
     virtual PointD Transform(PointD pt, int pageNo, float zoom, int rotate, bool inverse=false);
     virtual RectD Transform(RectD rect, int pageNo, float zoom, int rotate, bool inverse=false);
 
-    virtual COLORREF DefaultBackgroundColor() { return COL_GRAYISH; }
-
     virtual unsigned char *GetFileData(size_t *cbCount);
+    virtual bool HasTextContent() { return true; }
     virtual TCHAR * ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_out=NULL,
                                     RenderTarget target=Target_View);
     virtual bool IsImagePage(int pageNo) { return false; }
     virtual TCHAR *GetProperty(char *name) { return NULL; }
 
     virtual float GetFileDPI() const { return 96.0f; }
+    virtual const TCHAR *GetDefaultFileExt() const { return _T(".xps"); }
 
     virtual bool BenchLoadPage(int pageNo) { return getXpsPage(pageNo) != NULL; }
-
-    virtual bool SupportsPermissions() const { return true; }
 
 protected:
     const TCHAR *_fileName;
@@ -1403,7 +1432,8 @@ protected:
     xps_page **     _pages;
 
     virtual bool    load(const TCHAR *fileName);
-    virtual bool    load(fz_stream *stm);
+    virtual bool    load(IStream *stream);
+    bool            load(fz_stream *stm);
 
     xps_page      * getXpsPage(int pageNo, bool failIfBusy=false);
     fz_matrix       viewctm(int pageNo, float zoom, int rotate) {
@@ -1483,6 +1513,11 @@ bool CXpsEngine::load(const TCHAR *fileName)
     bool result = load(file);
     fz_close(file);
     return result;
+}
+
+bool CXpsEngine::load(IStream *stream)
+{
+    return load(fz_open_istream(stream));
 }
 
 bool CXpsEngine::load(fz_stream *stm)
@@ -1807,10 +1842,10 @@ XpsEngine *XpsEngine::CreateFromFileName(const TCHAR *fileName)
     return engine;
 }
 
-XpsEngine *XpsEngine::CreateFromStream(fz_stream *stm)
+XpsEngine *XpsEngine::CreateFromStream(IStream *stream)
 {
     XpsEngine *engine = new CXpsEngine();
-    if (!engine || !engine->load(stm)) {
+    if (!engine || !stream || !engine->load(stream)) {
         delete engine;
         return NULL;
     }

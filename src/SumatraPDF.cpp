@@ -2019,17 +2019,17 @@ static void DebugShowLinks(DisplayModel *dm, HDC hdc)
         if (!pageInfo->shown || 0.0 == pageInfo->visibleRatio)
             continue;
 
-        PdfLink *links = NULL;
-        int linkCount = dm->pdfEngine->getPdfLinks(pageNo, &links);
-        for (int i = 0; i < linkCount; i++) {
-            RectD rect = links[i].GetRect();
+        Vec<PageElement *> *els = dm->pdfEngine->GetElements(pageNo);
+        for (size_t i = 0; i < els->Count(); i++) {
+            RectD rect = els->At(i)->GetRect();
             if (dm->cvtUserToScreen(pageNo, &rect)) {
                 RectI isect = viewPortRect.Intersect(rect.Round());
                 if (!isect.IsEmpty())
                     PaintRect(hdc, &isect.ToRECT());
             }
         }
-        delete[] links;
+        DeleteVecMembers(*els);
+        delete els;
     }
 
     DeletePen(SelectObject(hdc, oldPen));
@@ -2066,11 +2066,11 @@ static void DrawDocument(WindowInfo *win, HDC hdc, RECT *rcArea)
 
     if (win->presentation)
         FillRect(hdc, rcArea, gBrushBlack);
-    else {
-        HBRUSH bg = CreateSolidBrush(dm->engine->DefaultBackgroundColor());
-        FillRect(hdc, rcArea, bg);
-        DeleteObject(bg);
-    }
+    // draw comic books and single images on a black background (without frame and shadow)
+    else if (win->dm->imagesEngine)
+        FillRect(hdc, rcArea, gBrushBlack);
+    else
+        FillRect(hdc, rcArea, gBrushNoDocBg);
 
     DBG_OUT("DrawDocument() ");
     for (int pageNo = 1; pageNo <= dm->pageCount(); ++pageNo) {
@@ -2152,35 +2152,35 @@ static void CopySelectionToClipboard(WindowInfo *win)
     if (!OpenClipboard(NULL)) return;
     EmptyClipboard();
 
-    if (win->dm->engine->IsCopyingTextAllowed()) {
-        TCHAR *selText;
-        if (win->dm->textSelection->result.len > 0) {
-            selText = win->dm->textSelection->ExtractText(_T("\r\n"));
+    if (!win->dm->engine->IsCopyingTextAllowed())
+        WindowInfo_ShowMessage_Async(win, _TR("Copying text was denied (copying as image only)"), true);
+    else if (win->dm->engine->HasTextContent()) {
+        ScopedMem<TCHAR> selText;
+        bool isTextSelection = win->dm->textSelection->result.len > 0;
+        if (isTextSelection) {
+            selText.Set(win->dm->textSelection->ExtractText(_T("\r\n")));
         }
         else {
             StrVec selections;
             for (size_t i = 0; i < win->selectionOnPage->Count(); i++) {
                 SelectionOnPage *selOnPage = &win->selectionOnPage->At(i);
-                selText = win->dm->getTextInRegion(selOnPage->pageNo, selOnPage->rect);
-                if (selText)
-                    selections.Push(selText);
+                TCHAR *text = win->dm->getTextInRegion(selOnPage->pageNo, selOnPage->rect);
+                if (text)
+                    selections.Push(text);
             }
-            selText = selections.Join();
+            selText.Set(selections.Join());
         }
 
         // don't copy empty text
-        if (!Str::IsEmpty(selText))
+        if (!Str::IsEmpty(selText.Get()))
             CopyTextToClipboard(selText, true);
-        free(selText);
 
-        if (win->dm->textSelection->result.len > 0) {
+        if (isTextSelection) {
             // don't also copy the first line of a text selection as an image
             CloseClipboard();
             return;
         }
     }
-    else
-        WindowInfo_ShowMessage_Async(win, _TR("Copying text was denied (copying as image only)"), true);
 
     /* also copy a screenshot of the current selection to the clipboard */
     SelectionOnPage *selOnPage = &win->selectionOnPage->At(0);
@@ -2389,15 +2389,13 @@ static void OnContextMenu(WindowInfo *win, int x, int y)
     if (!win || !win->IsDocLoaded())
         return;
 
-    PdfLink *link = win->dm->getLinkAtPosition(PointI(x, y));
-    ScopedMem<TCHAR> linkAddress(link ? link->GetValue() : NULL);
-    PdfComment *comment = win->dm->getCommentAtPosition(PointI(x, y));
-    ScopedMem<TCHAR> commentText(comment ? comment->GetValue() : NULL);
+    PageElement *pageEl = win->dm->GetElementAtPos(PointI(x, y));
+    ScopedMem<TCHAR> value(pageEl ? pageEl->GetValue() : NULL);
 
     HMENU popup = BuildMenuFromMenuDef(menuDefContext, dimof(menuDefContext), CreatePopupMenu());
-    if (!linkAddress)
+    if (!value || NULL == pageEl->GetLink())
         Win::Menu::Hide(popup, IDM_COPY_LINK_TARGET);
-    if (!commentText)
+    if (!value || NULL != pageEl->GetLink())
         Win::Menu::Hide(popup, IDM_COPY_COMMENT);
 
     if (!win->selectionOnPage)
@@ -2418,17 +2416,13 @@ static void OnContextMenu(WindowInfo *win, int x, int y)
         break;
 
     case IDM_COPY_LINK_TARGET:
-        CopyTextToClipboard(linkAddress);
-        break;
-
     case IDM_COPY_COMMENT:
-        CopyTextToClipboard(commentText);
+        CopyTextToClipboard(value);
         break;
     }
 
     DestroyMenu(popup);
-    delete comment;
-    delete link;
+    delete pageEl;
 }
 
 static void OnDraggingStart(WindowInfo *win, int x, int y, bool right=false)
@@ -2607,7 +2601,11 @@ static void OnMouseLeftButtonDown(WindowInfo *win, int x, int y, WPARAM key)
     SetFocus(win->hwndFrame);
 
     assert(!win->linkOnLastButtonDown);
-    win->linkOnLastButtonDown = win->dm->getLinkAtPosition(PointI(x, y));
+    PageElement *pageEl = win->dm->GetElementAtPos(PointI(x, y));
+    if (pageEl && pageEl->GetLink() && win->dm->pdfEngine)
+        win->linkOnLastButtonDown = static_cast<PdfLink *>(pageEl);
+    else
+        delete pageEl;
     win->dragStartPending = true;
     win->dragStart = PointI(x, y);
 
@@ -3268,14 +3266,11 @@ static void OnMenuSaveAs(WindowInfo *win)
     if (!srcFileName) return;
 
     // Can't save a PDF's content as a plain text if text copying isn't allowed
-    bool hasCopyPerm = win->dm->engine->IsCopyingTextAllowed();
+    bool hasCopyPerm = win->dm->engine->HasTextContent() &&
+                       win->dm->engine->IsCopyingTextAllowed();
 
     // TODO: use extension from the name of the loaded file?
-    TCHAR *defExt = _T(".pdf");
-    if (win->dm->xpsEngine)
-        defExt = _T(".xps");
-    else if (win->dm->imagesEngine)
-        defExt = _T(".cbz"); // TODO: expose correct extension on ImgesEngine
+    const TCHAR *defExt = win->dm->engine->GetDefaultFileExt();
 
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling
@@ -3284,6 +3279,7 @@ static void OnMenuSaveAs(WindowInfo *win)
     if (win->dm->xpsEngine)
         fileFilter.Append(_TB_TR("XPS documents"));
     else if (win->dm->imagesEngine)
+        // TODO: this is wrong for single images
         fileFilter.Append(_TB_TR("Comic books"));
     else
         fileFilter.Append(_TR("PDF documents"));
@@ -3407,12 +3403,7 @@ static void OnMenuSaveBookmark(WindowInfo *win)
     assert(win->dm);
     if (!win->IsDocLoaded()) return;
 
-    // TODO: maybe we can just use the extension of the loaded file?
-    TCHAR *defExt = _T(".pdf");
-    if (win->dm->xpsEngine)
-        defExt = _T(".xps");
-    else if (win->dm->imagesEngine)
-        defExt = _T(".cbz");
+    const TCHAR *defExt = win->dm->engine->GetDefaultFileExt();
 
     TCHAR dstFileName[MAX_PATH] = { 0 };
     // Remove the extension so that it can be re-added depending on the chosen filter
@@ -3562,14 +3553,10 @@ static void BrowseFolder(WindowInfo *win, bool forward)
     StrVec files;
     WIN32_FIND_DATA fdata;
     ScopedMem<TCHAR> dir(Path::GetDir(win->loadedFilePath));
-    ScopedMem<TCHAR> pattern(Path::Join(dir, _T("*.pdf")));
 
     // TODO: browse through all supported file types at the same time?
-    // TODO: support images (.png, .jpg, .jpeg, .bmp)
-    if (win->dm->xpsEngine)
-        pattern.Set(Path::Join(dir, _T("*.xps")));
-    else if (win->dm->imagesEngine)
-        pattern.Set(Path::Join(dir, _T("*.cb?")));
+    ScopedMem<TCHAR> pattern(Str::Format(_T("*%s"), win->dm->engine->GetDefaultFileExt()));
+    pattern.Set(Path::Join(dir, pattern));
 
     HANDLE hfind = FindFirstFile(pattern, &fdata);
     if (INVALID_HANDLE_VALUE == hfind)
@@ -5722,18 +5709,17 @@ static LRESULT OnSetCursor(WindowInfo *win, HWND hwnd)
         case MA_IDLE:
             if (GetCursor() && GetCursorPos(&pt) && ScreenToClient(hwnd, &pt)) {
                 PointI pti(pt.x, pt.y);
-                PageElement *pageEl;
-                if ((pageEl = win->dm->getLinkAtPosition(pti))) {
+                PageElement *pageEl = win->dm->GetElementAtPos(pti);
+                if (pageEl) {
                     int pageNo = win->dm->getPageNoByPoint(pti);
                     CreateInfotipForElement(win, pageNo, pageEl);
-                    SetCursor(gCursorHand);
+                    bool isLink = pageEl->GetLink() != NULL;
                     delete pageEl;
-                    return TRUE;
-                }
-                if ((pageEl = win->dm->getCommentAtPosition(pti))) {
-                    int pageNo = win->dm->getPageNoByPoint(pti);
-                    CreateInfotipForElement(win, pageNo, pageEl);
-                    delete pageEl;
+
+                    if (isLink) {
+                        SetCursor(gCursorHand);
+                        return TRUE;
+                    }
                 }
                 else
                     win->DeleteInfotip();

@@ -7,14 +7,11 @@
 #include "BaseUtil.h"
 #include "GeomUtil.h"
 
-// convenient place to put this
-#define COL_GRAYISH RGB(0xcc, 0xcc, 0xcc)
-#define COL_BLACK   RGB(0, 0, 0)
-
 /* certain OCGs will only be rendered for some of these (e.g. watermarks) */
 enum RenderTarget { Target_View, Target_Print, Target_Export };
 
-enum PageLayoutType { Layout_Single = 0, Layout_Facing = 1, Layout_Book = 2, Layout_R2L = 16 };
+enum PageLayoutType { Layout_Single = 0, Layout_Facing = 1, Layout_Book = 2,
+                      Layout_R2L = 16, Layout_NonContinuous = 32 };
 
 class RenderedBitmap {
 public:
@@ -109,6 +106,8 @@ public:
     // (e.g. for saving again when the file has already been deleted)
     // caller needs to free() the result
     virtual unsigned char *GetFileData(size_t *cbCount) { return NULL; }
+    // whether a document has text content at all (e.g. for hiding search UI)
+    virtual bool HasTextContent() = 0;
     // extracts all text found in the given page (and optionally also the
     // coordinates of the individual glyphs)
     // caller needs to free() the result
@@ -118,10 +117,6 @@ public:
     virtual bool IsImagePage(int pageNo) = 0;
     // the layout type this document's author suggests (if the user doesn't care)
     virtual PageLayoutType PreferredLayout() { return Layout_Single; }
-
-    // TODO: presentation details don't really belong here
-    // if not changed by the user, default background for this document type
-    virtual COLORREF DefaultBackgroundColor() = 0;
 
     // access to various document properties (such as Author, Title, etc.)
     virtual TCHAR *GetProperty(char *name) { return NULL; }
@@ -135,13 +130,12 @@ public:
 
     // the DPI for a file is needed when converting internal measures to physical ones
     virtual float GetFileDPI() const { return 96.0f; }
+    // the default file extension for a document like the currently loaded one (e.g. _T(".pdf"))
+    virtual const TCHAR *GetDefaultFileExt() const = 0;
 
     // loads the given page so that the time required can be measured
     // without also measuring rendering times
     virtual bool BenchLoadPage(int pageNo) = 0;
-
-    // if true, we show "Denied Permissions:" property in properties window
-    virtual bool SupportsPermissions() const = 0;
 };
 
 #endif
