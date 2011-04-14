@@ -481,6 +481,10 @@ pdf_show_glyph(pdf_csi *csi, int cid)
 
 	gid = pdf_font_cid_to_gid(fontdesc, cid);
 
+	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1149 */
+	if (fontdesc->wmode == 1 && fontdesc->font->ft_face)
+		gid = pdf_ft_get_vgid(fontdesc, gid);
+
 	if (fontdesc->wmode == 1)
 	{
 		v = pdf_get_vmtx(fontdesc, cid);
