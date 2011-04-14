@@ -1445,7 +1445,7 @@ static bool LoadDocIntoWindow(
     // Only restore the scroll state when everything is visible
     // (otherwise we might have to relayout twice, which can take
     //  a while for longer documents)
-    // win->dm->setScrollState(&ss);
+    // win->dm->SetScrollState(ss);
 
     if (!isNewWindow) {
         win->RedrawAll();
@@ -1500,7 +1500,7 @@ Error:
     if (win->tocLoaded)
         win->ClearTocBox();
     if (win->IsDocLoaded())
-        win->dm->setScrollState(&ss);
+        win->dm->SetScrollState(ss);
     if (win->IsDocLoaded() && win->tocShow) {
         if (win->dm->hasTocTree()) {
             win->ShowTocBox();
@@ -1896,10 +1896,11 @@ static void UpdateTextSelection(WindowInfo *win, bool select=true)
     if (!win || !win->IsDocLoaded()) return;
 
     if (select) {
-        int pageNo;
-        PointD pt = win->selectionRect.BR().Convert<double>();
-        if (win->dm->cvtScreenToUser(&pageNo, &pt))
+        int pageNo = win->dm->GetPageNoByPoint(win->selectionRect.BR());
+        if (win->dm->validPageNo(pageNo)) {
+            PointD pt = win->dm->CvtFromScreen(win->selectionRect.BR(), pageNo);
             win->dm->textSelection->SelectUpTo(pageNo, pt.x, pt.y);
+        }
     }
 
     DeleteOldSelectionInfo(win);
@@ -1940,14 +1941,13 @@ static void PaintForwardSearchMark(WindowInfo *win, HDC hdc) {
     // Draw the rectangles highlighting the forward search results
     for (UINT i = 0; i < win->fwdsearchmark.rects.Count(); i++) {
         RectD recD = win->fwdsearchmark.rects[i].Convert<double>();
-        win->dm->cvtUserToScreen(win->fwdsearchmark.page, &recD);
+        RectI recI = win->dm->CvtToScreen(win->fwdsearchmark.page, recD);
         if (gGlobalPrefs.m_fwdsearchOffset > 0) {
-            recD.x = pageInfo->screen.x + (double)gGlobalPrefs.m_fwdsearchOffset * win->dm->zoomReal();
-            recD.dx = (gGlobalPrefs.m_fwdsearchWidth > 0 ? (double)gGlobalPrefs.m_fwdsearchWidth : 15.0) * win->dm->zoomReal();
-            recD.y -= 4;
-            recD.dy += 8;
+            recI.x = pageInfo->screen.x + (int)(gGlobalPrefs.m_fwdsearchOffset * win->dm->zoomReal());
+            recI.dx = (int)((gGlobalPrefs.m_fwdsearchWidth > 0 ? gGlobalPrefs.m_fwdsearchWidth : 15.0) * win->dm->zoomReal());
+            recI.y -= 4;
+            recI.dy += 8;
         }
-        RectI recI = recD.Convert<int>();
         BYTE alpha = (BYTE)(0x5f * 1.0f * (HIDE_FWDSRCHMARK_STEPS - win->fwdsearchmark.hideStep) / HIDE_FWDSRCHMARK_STEPS);
         PaintTransparentRectangle(hdc, win->canvasRc, &recI, gGlobalPrefs.m_fwdsearchColor, alpha, 0);
     }
@@ -2022,12 +2022,10 @@ static void DebugShowLinks(DisplayModel *dm, HDC hdc)
 
         Vec<PageElement *> *els = dm->pdfEngine->GetElements(pageNo);
         for (size_t i = 0; i < els->Count(); i++) {
-            RectD rect = els->At(i)->GetRect();
-            if (dm->cvtUserToScreen(pageNo, &rect)) {
-                RectI isect = viewPortRect.Intersect(rect.Round());
-                if (!isect.IsEmpty())
-                    PaintRect(hdc, &isect.ToRECT());
-            }
+            RectI rect = dm->CvtToScreen(pageNo, els->At(i)->GetRect());
+            RectI isect = viewPortRect.Intersect(rect);
+            if (!isect.IsEmpty())
+                PaintRect(hdc, &isect.ToRECT());
         }
         DeleteVecMembers(*els);
         delete els;
@@ -2045,9 +2043,9 @@ static void DebugShowLinks(DisplayModel *dm, HDC hdc)
             if (!pageInfo->shown || 0.0 == pageInfo->visibleRatio)
                 continue;
 
-            RectD rect = dm->engine->PageContentBox(pageNo).Convert<double>();
-            if (dm->cvtUserToScreen(pageNo, &rect))
-                PaintRect(hdc, &rect.ToRECT());
+            RectI rect = dm->engine->PageContentBox(pageNo);
+            rect = dm->CvtToScreen(pageNo, rect.Convert<double>());
+            PaintRect(hdc, &rect.ToRECT());
         }
 
         DeletePen(SelectObject(hdc, oldPen));
@@ -2321,7 +2319,7 @@ static bool OnInverseSearch(WindowInfo *win, int x, int y)
             DBG_OUT("Pdfsync: Sync file not found!\n");
             // Fall back to selecting a word when double-clicking over text in
             // a document with no corresponding synchronization file
-            if (win->dm->isOverText(x, y))
+            if (win->dm->IsOverText(PointI(x, y)))
                 return false;
             // In order to avoid confusion for non-LaTeX users, we do not show
             // any error message if the SyncTeX enhancements are hidden from UI
@@ -2337,10 +2335,11 @@ static bool OnInverseSearch(WindowInfo *win, int x, int y)
         gGlobalPrefs.m_enableTeXEnhancements = true;
     }
 
-    int pageNo = 0;
-    PointD pt(x, y);
-    if (!win->dm->cvtScreenToUser(&pageNo, &pt))
+    int pageNo = win->dm->GetPageNoByPoint(PointI(x, y));
+    if (!win->dm->validPageNo(pageNo))
         return false;
+
+    PointD pt = win->dm->CvtFromScreen(PointI(x, y), pageNo);
     x = (int)pt.x; y = (int)pt.y;
 
     const PageInfo *pageInfo = win->dm->getPageInfo(pageNo);
@@ -2551,9 +2550,9 @@ static void OnSelectionStart(WindowInfo *win, int x, int y, WPARAM key)
 
     // Ctrl+drag forces a rectangular selection
     if (!(key & MK_CONTROL) || (key & MK_SHIFT)) {
-        int pageNo;
-        PointD pt(x, y);
-        if (win->dm->cvtScreenToUser(&pageNo, &pt)) {
+        int pageNo = win->dm->GetPageNoByPoint(PointI(x, y));
+        if (win->dm->validPageNo(pageNo)) {
+            PointD pt = win->dm->CvtFromScreen(PointI(x, y), pageNo);
             win->dm->textSelection->StartAt(pageNo, pt.x, pt.y);
             win->mouseAction = MA_SELECTING_TEXT;
         }
@@ -2616,7 +2615,7 @@ static void OnMouseLeftButtonDown(WindowInfo *win, int x, int y, WPARAM key)
     // - pressing Ctrl forces a rectangular selection
     // - pressing Ctrl+Shift forces text selection
     // - in restricted mode, selections aren't allowed
-    if (gRestrictedUse || ((key & MK_SHIFT) || !win->dm->isOverText(x, y)) && !(key & MK_CONTROL))
+    if (gRestrictedUse || ((key & MK_SHIFT) || !win->dm->IsOverText(PointI(x, y))) && !(key & MK_CONTROL))
         OnDraggingStart(win, x, y);
     else
         OnSelectionStart(win, x, y, key);
@@ -2640,9 +2639,7 @@ static void OnMouseLeftButtonUp(WindowInfo *win, int x, int y, WPARAM key)
     else
         OnSelectionStop(win, x, y, !didDragMouse);
 
-    PointD ptPage(x, y);
-    if (!win->dm->cvtScreenToUser(NULL, &ptPage))
-        ptPage = PointD(-1, -1);
+    PointD ptPage = win->dm->CvtFromScreen(PointI(x, y));
 
     if (didDragMouse)
         /* pass */;
@@ -2683,13 +2680,14 @@ static void OnMouseLeftButtonDblClk(WindowInfo *win, int x, int y, WPARAM key)
     if (gGlobalPrefs.m_enableTeXEnhancements && !(key & ~MK_LBUTTON))
         dontSelect = OnInverseSearch(win, x, y);
 
-    if (dontSelect || !win->IsDocLoaded() || !win->dm->isOverText(x, y))
+    if (dontSelect || !win->IsDocLoaded() || !win->dm->IsOverText(PointI(x, y)))
         return;
 
-    int pageNo;
-    PointD pt(x, y);
-    if (win->dm->cvtScreenToUser(&pageNo, &pt))
+    int pageNo = win->dm->GetPageNoByPoint(PointI(x, y));
+    if (win->dm->validPageNo(pageNo)) {
+        PointD pt = win->dm->CvtFromScreen(PointI(x, y), pageNo);
         win->dm->textSelection->SelectWordAt(pageNo, pt.x, pt.y);
+    }
 
     UpdateTextSelection(win, false);
     win->RepaintAsync();
@@ -3436,11 +3434,7 @@ static void OnMenuSaveBookmark(WindowInfo *win)
     if (!Str::EndsWithI(dstFileName, _T(".lnk")))
         filename.Set(Str::Join(dstFileName, _T(".lnk")));
 
-    ScrollState ss;
-    if (!win->dm->getScrollState(&ss)) {
-        ss.page = win->dm->currentPageNo();
-        ss.x = ss.y = -1;
-    }
+    ScrollState ss = win->dm->GetScrollState();
     const char *modeName = DisplayModeNameFromEnum(win->dm->displayMode());
     ScopedMem<TCHAR> viewMode(Str::Conv::FromAnsi(modeName));
     ScopedMem<TCHAR> zoomVirtual(Str::Format(_T("%.2f"), win->dm->zoomVirtual()));
@@ -5669,15 +5663,6 @@ static void CustomizeToCInfoTip(WindowInfo *win, LPNMTVGETINFOTIP nmit)
     Str::BufSet(nmit->pszText, nmit->cchTextMax, infotip.Get());
 }
 
-static void CreateInfotipForElement(WindowInfo *win, int pageNo, PageElement *el)
-{
-    ScopedMem<TCHAR> text(el->GetValue());
-    RectD rc = el->GetRect();
-    if (!win->dm->cvtUserToScreen(pageNo, &rc))
-        rc = RectD();
-    win->CreateInfotip(text, rc.Convert<int>());
-}
-
 static LRESULT OnSetCursor(WindowInfo *win, HWND hwnd)
 {
     POINT pt;
@@ -5708,8 +5693,10 @@ static LRESULT OnSetCursor(WindowInfo *win, HWND hwnd)
                 PointI pti(pt.x, pt.y);
                 PageElement *pageEl = win->dm->GetElementAtPos(pti);
                 if (pageEl) {
-                    int pageNo = win->dm->getPageNoByPoint(pti);
-                    CreateInfotipForElement(win, pageNo, pageEl);
+                    ScopedMem<TCHAR> text(pageEl->GetValue());
+                    RectI rc = win->dm->CvtToScreen(pageEl->GetPageNo(), pageEl->GetRect());
+                    win->CreateInfotip(text, rc);
+
                     bool isLink = pageEl->AsLink() != NULL;
                     delete pageEl;
 
@@ -5720,7 +5707,7 @@ static LRESULT OnSetCursor(WindowInfo *win, HWND hwnd)
                 }
                 else
                     win->DeleteInfotip();
-                if (win->dm->isOverText(pti.x, pti.y))
+                if (win->dm->IsOverText(pti))
                     SetCursor(gCursorIBeam);
                 else
                     SetCursor(gCursorArrow);
@@ -6757,12 +6744,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
                 if (i.startZoom != INVALID_ZOOM)
                     win->ZoomToSelection(i.startZoom, false);
                 if (i.startScroll.x != -1 || i.startScroll.y != -1) {
-                    ScrollState ss;
-                    if (win->dm->getScrollState(&ss)) {
-                        ss.x = i.startScroll.x;
-                        ss.y = i.startScroll.y;
-                        win->dm->setScrollState(&ss);
-                    }
+                    ScrollState ss = win->dm->GetScrollState();
+                    ss.x = i.startScroll.x;
+                    ss.y = i.startScroll.y;
+                    win->dm->SetScrollState(ss);
                 }
             }
         }

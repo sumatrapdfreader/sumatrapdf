@@ -79,6 +79,18 @@ typedef struct {
     RectI           pageOnScreen;
 } PageInfo;
 
+/* The current scroll state (needed for saving/restoring the scroll position) */
+/* coordinates are in user space units (per page) */
+class ScrollState
+{
+public:
+    ScrollState() : page(0), x(0), y(0) { }
+    ScrollState(int page, double x, double y) : page(page), x(x), y(y) { }
+
+    int page;
+    double x, y;
+};
+
 class DisplayModel;
 
 class DisplayModelCallback : public PasswordUI, public TextSearchTracker {
@@ -187,14 +199,10 @@ public:
     void            zoomBy(float zoomFactor, PointI *fixPt=NULL);
     void            rotateBy(int rotation);
 
-    TCHAR *         getTextInRegion(int pageNo, RectD& region);
-    bool            isOverText(int x, int y);
+    TCHAR *         getTextInRegion(int pageNo, RectD region);
+    bool            IsOverText(PointI pt);
     PageElement *   GetElementAtPos(PointI pt);
 
-    bool            cvtUserToScreen(int pageNo, PointD *pt);
-    bool            cvtUserToScreen(int pageNo, RectD *r);
-    bool            cvtScreenToUser(int *pageNo, PointD *pt);
-    bool            cvtScreenToUser(int *pageNo, RectD *r);
     ScreenPagePadding *getPadding() { return padding; }
     RectD           getContentBox(int pageNo, RenderTarget target=Target_View);
 
@@ -203,12 +211,17 @@ public:
     // note: lastFoundPage might not be a valid page number!
     int             lastFoundPage() const { return _textSearch->findPage; }
 
-    int             getPageNoByPoint(PointI pt);
+    int             GetPageNoByPoint(PointI pt);
+    int             GetPageNextToPoint(PointI pt);
+    PointI          CvtToScreen(int pageNo, PointD pt);
+    RectI           CvtToScreen(int pageNo, RectD r);
+    PointD          CvtFromScreen(PointI pt, int pageNo=INVALID_PAGE_NO);
+    RectD           CvtFromScreen(RectI r, int pageNo=INVALID_PAGE_NO);
 
     bool            ShowResultRectToScreen(TextSel *res);
 
-    bool            getScrollState(ScrollState *state);
-    void            setScrollState(ScrollState *state);
+    ScrollState     GetScrollState();
+    void            SetScrollState(ScrollState state);
 
     bool            addNavPoint(bool keepForward=false);
     bool            canNavigate(int dir) const;
@@ -229,7 +242,7 @@ protected:
     bool            buildPagesInfo();
     float           zoomRealFromVirtualForPage(float zoomVirtual, int pageNo);
     void            changeStartPage(int startPage);
-    void            getContentStart(int pageNo, int *x, int *y);
+    PointI          getContentStart(int pageNo);
     void            setZoomVirtual(float zoomVirtual);
     void            RecalcVisibleParts();
     void            RenderVisibleParts();
@@ -251,8 +264,9 @@ protected:
     SizeI           canvasSize;
     ScreenPagePadding* padding;
 
-    /* real zoom value calculated from zoomVirtual. Same as zoomVirtual * 0.01 except
-       for ZOOM_FIT_PAGE, ZOOM_FIT_WIDTH and ZOOM_FIT_CONTENT */
+    /* real zoom value calculated from zoomVirtual. Same as
+       zoomVirtual * 0.01 * _dpiFactor
+       except for ZOOM_FIT_PAGE, ZOOM_FIT_WIDTH and ZOOM_FIT_CONTENT */
     float           _zoomReal;
     float           _zoomVirtual;
     int             _rotation;
@@ -268,7 +282,7 @@ protected:
     float           _presZoomVirtual;
     DisplayMode     _presDisplayMode;
 
-    ScrollState   * _navHistory;
+    ScrollState     _navHistory[NAV_HISTORY_LEN];
     int             _navHistoryIx;
     int             _navHistoryEnd;
 

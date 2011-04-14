@@ -907,12 +907,10 @@ static const TCHAR *HandleSetViewCmd(const TCHAR *cmd, DDEACK& ack)
         win->ZoomToSelection(zoom, false);
 
     if (scroll.x != -1 || scroll.y != -1) {
-        ScrollState ss;
-        if (win->dm->getScrollState(&ss)) {
-            ss.x = scroll.x;
-            ss.y = scroll.y;
-            win->dm->setScrollState(&ss);
-        }
+        ScrollState ss = win->dm->GetScrollState();
+        ss.x = scroll.x;
+        ss.y = scroll.y;
+        win->dm->SetScrollState(ss);
     }
 
     ack.fAck = 1;

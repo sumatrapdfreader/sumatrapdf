@@ -382,13 +382,15 @@ fz_error pdf_get_mediabox(fz_rect *mediabox, fz_obj *page)
 
 class PdfLink : public PageDestination {
     pdf_link *link;
+    int pageNo;
 
 public:
-    PdfLink() : link(NULL) { }
-    PdfLink(pdf_link *link) : link(link) { }
+    PdfLink() : link(NULL), pageNo(-1) { }
+    PdfLink(pdf_link *link, int pageNo=-1) : link(link), pageNo(pageNo) { }
 
     virtual RectD GetRect() const;
     virtual TCHAR *GetValue() const;
+    virtual int GetPageNo() const { return pageNo; }
     virtual PageDestination *AsLink() { return this; }
 
     virtual const char *GetType() const;
@@ -490,15 +492,19 @@ fz_obj *PdfLink::dest() const
 
 class PdfComment : public PageElement {
     pdf_annot *annot;
+    int pageNo;
 
 public:
-    PdfComment(pdf_annot *annot) : annot(annot) { }
+    PdfComment(pdf_annot *annot, int pageNo=-1) : annot(annot), pageNo(pageNo) { }
 
     virtual RectD GetRect() const {
         return fz_rect_to_RectD(annot->rect);
     }
     virtual TCHAR *GetValue() const {
         return Str::Conv::FromUtf8(fz_to_str_buf(fz_dict_gets(annot->obj, "Contents")));
+    }
+    virtual int GetPageNo() const {
+        return pageNo;
     }
 };
 
@@ -1210,13 +1216,13 @@ PageElement *CPdfEngine::GetElementAtPos(int pageNo, PointD pt)
     fz_point p = { (float)pt.x, (float)pt.y };
     for (pdf_link *link = page->links; link; link = link->next)
         if (fz_is_pt_in_rect(link->rect, p))
-            return new PdfLink(link);
+            return new PdfLink(link, pageNo);
 
     for (pdf_annot *annot = page->annots; annot; annot = annot->next)
         if (fz_is_pt_in_rect(annot->rect, p) &&
             Str::Eq(fz_to_name(fz_dict_gets(annot->obj, "Subtype")), "Text") &&
             !Str::IsEmpty(fz_to_str_buf(fz_dict_gets(annot->obj, "Contents")))) {
-            return new PdfComment(annot);
+            return new PdfComment(annot, pageNo);
         }
 
     return NULL;
@@ -1231,12 +1237,12 @@ Vec<PageElement *> *CPdfEngine::GetElements(int pageNo)
         return els;
 
     for (pdf_link *link = page->links; link; link = link->next)
-        els->Append(new PdfLink(link));
+        els->Append(new PdfLink(link, pageNo));
 
     for (pdf_annot *annot = page->annots; annot; annot = annot->next)
         if (Str::Eq(fz_to_name(fz_dict_gets(annot->obj, "Subtype")), "Text") &&
             !Str::IsEmpty(fz_to_str_buf(fz_dict_gets(annot->obj, "Contents")))) {
-            els->Append(new PdfComment(annot));
+            els->Append(new PdfComment(annot, pageNo));
         }
 
     return els;

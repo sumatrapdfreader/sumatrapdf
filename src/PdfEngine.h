@@ -14,6 +14,7 @@ public:
     virtual ~PageElement() { }
     virtual RectD GetRect() const = 0;
     virtual TCHAR *GetValue() const = 0;
+    virtual int GetPageNo() const = 0;
     virtual PageDestination *AsLink() { return NULL; }
 };
 

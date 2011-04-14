@@ -237,9 +237,8 @@ void WindowInfo::ZoomToSelection(float factor, bool relative)
         pt.x = limitValue(pt.x, selRect.x, selRect.x + selRect.dx);
         pt.y = limitValue(pt.y, selRect.y, selRect.y + selRect.dy);
 
-        ScrollState ss(0, pt.x, pt.y);
-        if (!this->dm->cvtScreenToUser(&ss.page, &ss) ||
-            !this->dm->pageVisible(ss.page))
+        int pageNo = this->dm->GetPageNoByPoint(pt);
+        if (!this->dm->validPageNo(pageNo) || !this->dm->pageVisible(pageNo))
             zoomToPt = false;
     }
     // or towards the top-left-most part of the first visible page
@@ -250,10 +249,8 @@ void WindowInfo::ZoomToSelection(float factor, bool relative)
             RectI visible = pageInfo->pageOnScreen.Intersect(this->canvasRc);
             pt = visible.TL();
 
-            ScrollState ss(0, pt.x, pt.y);
-            if (!visible.IsEmpty() &&
-                this->dm->cvtScreenToUser(&ss.page, &ss) &&
-                this->dm->pageVisible(ss.page))
+            int pageNo = this->dm->GetPageNoByPoint(pt);
+            if (!visible.IsEmpty() && this->dm->validPageNo(pageNo) && this->dm->pageVisible(pageNo))
                 zoomToPt = true;
         }
     }
@@ -349,9 +346,7 @@ RectI SelectionOnPage::GetRect(DisplayModel *dm)
     if (pageInfo->visibleRatio <= 0.0)
         return RectI();
 
-    RectD canvasRect = rect;
-    dm->cvtUserToScreen(pageNo, &canvasRect);
-    return canvasRect.Convert<int>();
+    return dm->CvtToScreen(pageNo, rect);
 }
 
 Vec<SelectionOnPage> *SelectionOnPage::FromRectangle(DisplayModel *dm, RectI rect)
@@ -369,13 +364,8 @@ Vec<SelectionOnPage> *SelectionOnPage::FromRectangle(DisplayModel *dm, RectI rec
             continue;
 
         /* selection intersects with a page <pageNo> on the screen */
-        int selPageNo;
-        RectD isectD = intersect.Convert<double>();
-        if (!dm->cvtScreenToUser(&selPageNo, &isectD))
-            continue;
-
-        assert(pageNo == selPageNo);
-        sel->Append(SelectionOnPage(selPageNo, &isectD));
+        RectD isectD = dm->CvtFromScreen(intersect, pageNo);
+        sel->Append(SelectionOnPage(pageNo, &isectD));
     }
 
     return sel;
@@ -483,12 +473,13 @@ void PdfLinkHandler::GotoPdfDest(fz_obj *dest)
         return;
 
     DisplayModel *dm = owner->dm;
-    PointD scroll(-1, 0);
+    PointI scroll(-1, 0);
     fz_obj *obj = fz_array_get(dest, 1);
     if (Str::Eq(fz_to_name(obj), "XYZ")) {
-        scroll.x = fz_to_real(fz_array_get(dest, 2));
-        scroll.y = fz_to_real(fz_array_get(dest, 3));
-        dm->cvtUserToScreen(pageNo, &scroll);
+        PointD scrollD;
+        scrollD.x = fz_to_real(fz_array_get(dest, 2));
+        scrollD.y = fz_to_real(fz_array_get(dest, 3));
+        scroll = dm->CvtToScreen(pageNo, scrollD);
 
         // goToPage needs scrolling info relative to the page's top border
         // and the page line's left margin
@@ -509,9 +500,10 @@ void PdfLinkHandler::GotoPdfDest(fz_obj *dest)
         }
     }
     else if (Str::Eq(fz_to_name(obj), "FitR")) {
-        scroll.x = fz_to_real(fz_array_get(dest, 2)); // left
-        scroll.y = fz_to_real(fz_array_get(dest, 5)); // top
-        dm->cvtUserToScreen(pageNo, &scroll);
+        PointD scrollD;
+        scrollD.x = fz_to_real(fz_array_get(dest, 2)); // left
+        scrollD.y = fz_to_real(fz_array_get(dest, 5)); // top
+        scroll = dm->CvtToScreen(pageNo, scrollD);
         // TODO: adjust zoom so that the bottom right corner is also visible?
 
         // goToPage needs scrolling info relative to the page's top border
@@ -529,7 +521,7 @@ void PdfLinkHandler::GotoPdfDest(fz_obj *dest)
         owner->UpdateToolbarState();
     }
     // */
-    dm->goToPage(pageNo, (int)scroll.y, true, (int)scroll.x);
+    dm->goToPage(pageNo, scroll.y, true, scroll.x);
 }
 
 void PdfLinkHandler::GotoNamedDest(const TCHAR *name)
