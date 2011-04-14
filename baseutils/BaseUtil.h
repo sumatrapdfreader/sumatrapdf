@@ -49,12 +49,21 @@
 #define CASSERT(exp, name) typedef int assert_##name [(exp) != FALSE]
 
 template <typename T>
-static inline void swap(T& one, T&two)
+inline void swap(T& one, T&two)
 {
     T tmp = one; one = two; two = tmp;
 }
 
-static inline void *memdup(void *data, size_t len)
+template <typename T>
+inline T limitValue(T val, T min, T max)
+{
+    assert(max >= min);
+    if (val < min) return min;
+    if (val > max) return max;
+    return val;
+}
+
+inline void *memdup(void *data, size_t len)
 {
     void *dup = malloc(len);
     if (dup)

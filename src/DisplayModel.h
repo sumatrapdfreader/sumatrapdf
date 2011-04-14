@@ -111,12 +111,12 @@ public:
     bool hasTocTree() {
         if (!pdfEngine)
             return false;
-        return pdfEngine->hasTocTree();
+        return pdfEngine->HasToCTree();
     }
     PdfTocItem *getTocTree() {
         if (!pdfEngine)
             return NULL;
-        return pdfEngine->getTocTree();
+        return pdfEngine->GetToCTree();
     }
 
     /* current rotation selected by user */
@@ -220,7 +220,7 @@ public:
     void            RepaintDisplay() { if (_callback) _callback->Repaint(); }
     // called after rendering a page so that objects that had to be
     // allocated for this can be freed by the rendering engine
-    void            runEngineGC() const { if (pdfEngine) pdfEngine->ageStore(); }
+    void            runEngineGC() const { if (pdfEngine) pdfEngine->RunGC(); }
 
 protected:
 

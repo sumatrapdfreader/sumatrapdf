@@ -20,6 +20,7 @@
 
 #include "WinUtil.h"
 #include "Http.h"
+#include "FileUtil.h"
 #include "CrashHandler.h"
 #include "ParseCommandLine.h"
 #include "Benchmark.h"
@@ -1030,7 +1031,7 @@ void WindowInfo::Reload(bool autorefresh)
         // save a newly remembered password into file history so that
         // we don't ask again at the next refresh
         DisplayState *state = gFileHistory.Find(ds.filePath);
-        char *decryptionKey = this->dm->pdfEngine->getDecryptionKey();
+        char *decryptionKey = this->dm->pdfEngine->GetDecryptionKey();
         if (state && !Str::Eq(state->decryptionKey, decryptionKey)) {
             free(state->decryptionKey);
             state->decryptionKey = decryptionKey;
@@ -2393,9 +2394,9 @@ static void OnContextMenu(WindowInfo *win, int x, int y)
     ScopedMem<TCHAR> value(pageEl ? pageEl->GetValue() : NULL);
 
     HMENU popup = BuildMenuFromMenuDef(menuDefContext, dimof(menuDefContext), CreatePopupMenu());
-    if (!value || NULL == pageEl->GetLink())
+    if (!value || NULL == pageEl->AsLink())
         Win::Menu::Hide(popup, IDM_COPY_LINK_TARGET);
-    if (!value || NULL != pageEl->GetLink())
+    if (!value || NULL != pageEl->AsLink())
         Win::Menu::Hide(popup, IDM_COPY_COMMENT);
 
     if (!win->selectionOnPage)
@@ -2602,8 +2603,8 @@ static void OnMouseLeftButtonDown(WindowInfo *win, int x, int y, WPARAM key)
 
     assert(!win->linkOnLastButtonDown);
     PageElement *pageEl = win->dm->GetElementAtPos(PointI(x, y));
-    if (pageEl && pageEl->GetLink() && win->dm->pdfEngine)
-        win->linkOnLastButtonDown = static_cast<PdfLink *>(pageEl);
+    if (pageEl && pageEl->AsLink())
+        win->linkOnLastButtonDown = pageEl->AsLink();
     else
         delete pageEl;
     win->dragStartPending = true;
@@ -3366,14 +3367,14 @@ static void OnMenuSaveAs(WindowInfo *win)
         free(realDstFileName);
 }
 
-bool PdfLinkHandler::SaveEmbeddedFile(unsigned char *data, int dataLen, const TCHAR *fileName)
+bool PdfLinkSaver::SaveEmbedded(unsigned char *data, int len)
 {
     if (gRestrictedUse)
         return false;
 
     TCHAR dstFileName[MAX_PATH] = { 0 };
     if (fileName)
-        Str::BufSet(dstFileName, dimof(dstFileName), fileName);
+        Str::BufSet(dstFileName, dimof(dstFileName), this->fileName);
 
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling
@@ -3383,7 +3384,7 @@ bool PdfLinkHandler::SaveEmbeddedFile(unsigned char *data, int dataLen, const TC
 
     OPENFILENAME ofn = { 0 };
     ofn.lStructSize = sizeof(ofn);
-    ofn.hwndOwner = owner->hwndFrame;
+    ofn.hwndOwner = this->hwnd;
     ofn.lpstrFile = dstFileName;
     ofn.nMaxFile = dimof(dstFileName);
     ofn.lpstrFilter = fileFilter;
@@ -3392,7 +3393,7 @@ bool PdfLinkHandler::SaveEmbeddedFile(unsigned char *data, int dataLen, const TC
 
     if (FALSE == GetSaveFileName(&ofn))
         return false;
-    return File::WriteAll(dstFileName, data, dataLen);
+    return File::WriteAll(dstFileName, data, len);
 }
 
 static void OnMenuSaveBookmark(WindowInfo *win)
@@ -4493,7 +4494,7 @@ public:
 
     virtual void Execute() {
         if (WindowInfoStillValid(win) && win->IsDocLoaded())
-            win->linkHandler->GotoPdfLink(&tocItem->link);
+            win->linkHandler->GotoPdfLink(tocItem->GetLink());
     }
 };
 
@@ -4511,7 +4512,7 @@ static void GoToTocLinkForTVItem(WindowInfo *win, HWND hTV, HTREEITEM hItem=NULL
     TreeView_GetItem(hTV, &item);
     PdfTocItem *tocItem = (PdfTocItem *)item.lParam;
     if (win->IsDocLoaded() && tocItem &&
-        (allowExternal || PDF_LINK_GOTO == tocItem->link.kind())) {
+        (allowExternal || Str::Eq(tocItem->GetLink()->GetType(), "ScrollTo"))) {
         gUIThreadMarshaller.Queue(new GoToTocLinkWorkItem(win, tocItem));
     }
 }
@@ -5640,7 +5641,7 @@ void WindowInfo::ClearTocBox()
 static void CustomizeToCInfoTip(WindowInfo *win, LPNMTVGETINFOTIP nmit)
 {
     PdfTocItem *tocItem = (PdfTocItem *)nmit->lParam;
-    TCHAR *path = tocItem->link.GetValue();
+    ScopedMem<TCHAR> path(tocItem->GetLink()->GetValue());
     if (!path)
         return;
 
@@ -5661,15 +5662,11 @@ static void CustomizeToCInfoTip(WindowInfo *win, LPNMTVGETINFOTIP nmit)
         infotip.Append(_T("\r\n"));
     }
 
-    if (tocItem->link.isEmbeddedFile()) {
-        TCHAR *comment = Str::Format(_TR("Attachment: %s"), path);
-        free(path);
-        path = comment;
-    }
+    if (Str::Eq(tocItem->GetLink()->GetType(), "LaunchEmbedded"))
+        path.Set(Str::Format(_TR("Attachment: %s"), path));
 
     infotip.Append(path);
     Str::BufSet(nmit->pszText, nmit->cchTextMax, infotip.Get());
-    free(path);
 }
 
 static void CreateInfotipForElement(WindowInfo *win, int pageNo, PageElement *el)
@@ -5713,7 +5710,7 @@ static LRESULT OnSetCursor(WindowInfo *win, HWND hwnd)
                 if (pageEl) {
                     int pageNo = win->dm->getPageNoByPoint(pti);
                     CreateInfotipForElement(win, pageNo, pageEl);
-                    bool isLink = pageEl->GetLink() != NULL;
+                    bool isLink = pageEl->AsLink() != NULL;
                     delete pageEl;
 
                     if (isLink) {

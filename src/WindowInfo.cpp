@@ -234,8 +234,8 @@ void WindowInfo::ZoomToSelection(float factor, bool relative)
         pt.x = 2 * selRect.x + selRect.dx - rc.dx / 2;
         pt.y = 2 * selRect.y + selRect.dy - rc.dy / 2;
 
-        pt.x = CLAMP(pt.x, selRect.x, selRect.x + selRect.dx);
-        pt.y = CLAMP(pt.y, selRect.y, selRect.y + selRect.dy);
+        pt.x = limitValue(pt.x, selRect.x, selRect.x + selRect.dx);
+        pt.y = limitValue(pt.y, selRect.y, selRect.y + selRect.dy);
 
         ScrollState ss(0, pt.x, pt.y);
         if (!this->dm->cvtScreenToUser(&ss.page, &ss) ||
@@ -391,6 +391,12 @@ Vec<SelectionOnPage> *SelectionOnPage::FromTextSelect(TextSel *textSel)
     return sel;
 }
 
+extern "C" {
+__pragma(warning(push))
+#include <fitz.h>
+__pragma(warning(pop))
+}
+
 PdfEngine *PdfLinkHandler::engine()
 {
     if (!owner || !owner->dm)
@@ -398,91 +404,72 @@ PdfEngine *PdfLinkHandler::engine()
     return owner->dm->pdfEngine;
 }
 
-void PdfLinkHandler::GotoPdfLink(PdfLink *link)
+void PdfLinkHandler::GotoPdfLink(PageDestination *link)
 {
     assert(owner && owner->linkHandler == this);
     if (!engine())
         return;
-    if (!link)
+    if (!link || !link->AsLink())
         return;
 
     DisplayModel *dm = owner->dm;
     ScopedMem<TCHAR> path(link->GetValue());
-    if (PDF_LINK_URI == link->kind() && path) {
+    const char *type = link->GetType();
+    if (Str::Eq(type, "ScrollTo")) {
+        GotoPdfDest(link->dest());
+    }
+    else if (Str::Eq(type, "LaunchURL") && path) {
         if (Str::StartsWithI(path, _T("http:")) || Str::StartsWithI(path, _T("https:")))
             LaunchBrowser(path);
         /* else: unsupported uri type */
     }
-    else if (PDF_LINK_GOTO == link->kind()) {
-        GotoPdfDest(link->dest());
-    }
-    else if (link->isEmbeddedFile()) {
-        fz_obj *embeddedList = fz_dict_gets(link->dest(), "EF");
-        fz_obj *embedded = fz_dict_gets(embeddedList, "UF");
-        if (!embedded)
-            embedded = fz_dict_gets(embeddedList, "F");
+    else if (Str::Eq(type, "LaunchEmbedded")) {
+        fz_obj *embedded = link->dest();
         if (path && Str::EndsWithI(path, _T(".pdf"))) {
             // open embedded PDF documents in a new window
             ScopedMem<TCHAR> combinedPath(Str::Format(_T("%s:%d:%d"), dm->fileName(), fz_to_num(embedded), fz_to_gen(embedded)));
             LoadDocument(combinedPath);
         } else {
             // offer to save other attachments to a file
-            fz_buffer *data = dm->pdfEngine->getStreamData(fz_to_num(embedded), fz_to_gen(embedded));
-            if (data) {
-                SaveEmbeddedFile(data->data, data->len, path);
-                fz_drop_buffer(data);
-            }
+            PdfLinkSaver saveUI(owner->hwndFrame, path);
+            dm->pdfEngine->SaveEmbedded(embedded, saveUI);
         }
     }
-    else if (PDF_LINK_LAUNCH == link->kind() && path) {
+    else if ((Str::Eq(type, "LaunchFile") || Str::Eq(type, "ScrollToEx")) && path) {
         /* for safety, only handle relative PDF paths and only open them in SumatraPDF */
         if (!Str::StartsWith(path.Get(), _T("\\")) &&
             Str::EndsWithI(path.Get(), _T(".pdf"))) {
             ScopedMem<TCHAR> basePath(Path::GetDir(dm->fileName()));
             ScopedMem<TCHAR> combinedPath(Path::Join(basePath, path));
-            LoadDocument(combinedPath);
+            // TODO: respect fz_to_bool(fz_dict_gets(link->dest, "NewWindow")) for ScrollToEx
+            WindowInfo *newWin = LoadDocument(combinedPath);
+
+            if (Str::Eq(type, "ScrollToEx") && newWin && newWin->IsDocLoaded())
+                newWin->linkHandler->GotoPdfDest(link->dest());
         }
     }
-    else if (PDF_LINK_NAMED == link->kind()) {
-        char *name = fz_to_name(link->dest());
-        if (Str::Eq(name, "NextPage"))
-            dm->goToNextPage(0);
-        else if (Str::Eq(name, "PrevPage"))
-            dm->goToPrevPage(0);
-        else if (Str::Eq(name, "FirstPage"))
-            dm->goToFirstPage();
-        else if (Str::Eq(name, "LastPage"))
-            dm->goToLastPage();
-        // Adobe Reader extensions to the spec, cf. http://www.tug.org/applications/hyperref/manual.html
-        else if (Str::Eq(name, "FullScreen"))
-            PostMessage(owner->hwndFrame, WM_COMMAND, IDM_VIEW_PRESENTATION_MODE, 0);
-        else if (Str::Eq(name, "GoBack"))
-            dm->navigate(-1);
-        else if (Str::Eq(name, "GoForward"))
-            dm->navigate(1);
-        else if (Str::Eq(name, "Print"))
-            PostMessage(owner->hwndFrame, WM_COMMAND, IDM_PRINT, 0);
-        else if (Str::Eq(name, "SaveAs"))
-            PostMessage(owner->hwndFrame, WM_COMMAND, IDM_SAVEAS, 0);
-        else if (Str::Eq(name, "ZoomTo"))
-            PostMessage(owner->hwndFrame, WM_COMMAND, IDM_ZOOM_CUSTOM, 0);
-    }
-    else if (PDF_LINK_ACTION == link->kind()) {
-        char *type = fz_to_name(fz_dict_gets(link->dest(), "S"));
-        if (type && Str::Eq(type, "GoToR") && fz_dict_gets(link->dest(), "D") && path) {
-            /* for safety, only handle relative PDF paths and only open them in SumatraPDF */
-            if (!Str::StartsWith(path.Get(), _T("\\")) &&
-                Str::EndsWithI(path.Get(), _T(".pdf"))) {
-                ScopedMem<TCHAR> basePath(Path::GetDir(dm->fileName()));
-                ScopedMem<TCHAR> combinedPath(Path::Join(basePath, path));
-                // TODO: respect fz_to_bool(fz_dict_gets(link->dest(), "NewWindow"))
-                WindowInfo *newWin = LoadDocument(combinedPath);
-                if (newWin && newWin->IsDocLoaded())
-                    newWin->linkHandler->GotoPdfDest(fz_dict_gets(link->dest(), "D"));
-            }
-        }
-        /* else unsupported action */
-    }
+    // predefined named actions
+    else if (Str::Eq(type, "NextPage"))
+        dm->goToNextPage(0);
+    else if (Str::Eq(type, "PrevPage"))
+        dm->goToPrevPage(0);
+    else if (Str::Eq(type, "FirstPage"))
+        dm->goToFirstPage();
+    else if (Str::Eq(type, "LastPage"))
+        dm->goToLastPage();
+    // Adobe Reader extensions to the spec, cf. http://www.tug.org/applications/hyperref/manual.html
+    else if (Str::Eq(type, "FullScreen"))
+        PostMessage(owner->hwndFrame, WM_COMMAND, IDM_VIEW_PRESENTATION_MODE, 0);
+    else if (Str::Eq(type, "GoBack"))
+        dm->navigate(-1);
+    else if (Str::Eq(type, "GoForward"))
+        dm->navigate(1);
+    else if (Str::Eq(type, "Print"))
+        PostMessage(owner->hwndFrame, WM_COMMAND, IDM_PRINT, 0);
+    else if (Str::Eq(type, "SaveAs"))
+        PostMessage(owner->hwndFrame, WM_COMMAND, IDM_SAVEAS, 0);
+    else if (Str::Eq(type, "ZoomTo"))
+        PostMessage(owner->hwndFrame, WM_COMMAND, IDM_ZOOM_CUSTOM, 0);
 }
 
 void PdfLinkHandler::GotoPdfDest(fz_obj *dest)
@@ -491,7 +478,7 @@ void PdfLinkHandler::GotoPdfDest(fz_obj *dest)
     if (!engine())
         return;
 
-    int pageNo = engine()->findPageNo(dest);
+    int pageNo = engine()->FindPageNo(dest);
     if (pageNo <= 0)
         return;
 
@@ -551,6 +538,5 @@ void PdfLinkHandler::GotoNamedDest(const TCHAR *name)
     if (!engine())
         return;
 
-    ScopedMem<char> name_utf8(Str::Conv::ToUtf8(name));
-    GotoPdfDest(engine()->getNamedDest(name_utf8));
+    GotoPdfDest(engine()->GetNamedDest(name));
 }

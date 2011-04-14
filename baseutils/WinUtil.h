@@ -248,9 +248,6 @@ public:
 
 // used to be in win_util.h
 
-#include <commctrl.h>
-#include <windowsx.h>
-
 #ifndef USER_DEFAULT_SCREEN_DPI
 // the following is only defined if _WIN32_WINNT >= 0x0600 and we use 0x0500
 #define USER_DEFAULT_SCREEN_DPI 96

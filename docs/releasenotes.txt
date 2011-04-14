@@ -9,7 +9,7 @@ Next version:
 * add folder browsing (Ctrl+Shift+Right opens the next PDF document in the
   current folder, Ctrl+Shift+Left the previous one)
 * add support for displaying XPS documents
-* add support for displaying CBZ comic books
+* add support for displaying CBZ and CBR comic books
 
 1.4 (2011-03-12)
 

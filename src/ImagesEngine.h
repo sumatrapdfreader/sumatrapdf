@@ -92,7 +92,4 @@ public:
     static ImagesEngine *CreateFromSingleFile(const TCHAR *fileName);
 };
 
-bool IsImageFile(const WCHAR *fileName);
-bool IsImageFile(const char *fileName);
-
 #endif

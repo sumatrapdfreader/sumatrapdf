@@ -135,7 +135,7 @@ public:
     // the following properties only apply to PDF documents
 
     PdfLinkHandler *linkHandler;
-    PdfLink *       linkOnLastButtonDown;
+    PageDestination *linkOnLastButtonDown;
     const TCHAR *   url;
 
     bool            tocLoaded;
@@ -239,10 +239,18 @@ class PdfLinkHandler {
 public:
     PdfLinkHandler(WindowInfo *win) : owner(win) { }
 
-    void GotoPdfLink(PdfLink *link);
+    void GotoPdfLink(PageDestination *link);
     void GotoNamedDest(const TCHAR *name);
+};
 
-    bool SaveEmbeddedFile(unsigned char *data, int dataLen, const TCHAR *fileName);
+class PdfLinkSaver : public LinkSaverUI {
+    HWND hwnd;
+    const TCHAR *fileName;
+
+public:
+    PdfLinkSaver(HWND hwnd, const TCHAR *fileName) : hwnd(hwnd), fileName(fileName) { }
+
+    virtual bool SaveEmbedded(unsigned char *data, int cbCount);
 };
 
 WindowInfo* FindWindowInfoByFile(TCHAR *file);

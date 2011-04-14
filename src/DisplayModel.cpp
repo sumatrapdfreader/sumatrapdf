@@ -120,7 +120,7 @@ bool DisplayModel::displayStateFromModel(DisplayState *ds)
         ds->scrollPos = ss.Convert<int>();
 
     free(ds->decryptionKey);
-    ds->decryptionKey = pdfEngine ? pdfEngine->getDecryptionKey() : NULL;
+    ds->decryptionKey = pdfEngine ? pdfEngine->GetDecryptionKey() : NULL;
 
     return true;
 }
@@ -145,16 +145,6 @@ static void pageSizeAfterRotation(PageInfo *pageInfo, int rotation,
     rotation += pageInfo->rotation;
     if (rotationFlipped(rotation))
         swap(pageSize->dx, pageSize->dy);
-}
-
-int limitValue(int val, int min, int max)
-{
-    assert(max >= min);
-    if (val < min)
-        return min;
-    if (val > max)
-        return max;
-    return val;
 }
 
 /* given 'columns' and an absolute 'pageNo', return the number of the first
@@ -1249,7 +1239,7 @@ void DisplayModel::zoomBy(float zoomFactor, PointI *fixPt)
 {
     // zoomTo expects a zoomVirtual, so undo the _dpiFactor here
     float newZoom = 100.0f * _zoomReal / _dpiFactor * zoomFactor;
-    newZoom = CLAMP(newZoom, ZOOM_MIN, ZOOM_MAX);
+    newZoom = limitValue(newZoom, ZOOM_MIN, ZOOM_MAX);
     //DBG_OUT("DisplayModel::zoomBy() zoomReal=%.6f, zoomFactor=%.2f, newZoom=%.2f\n", dm->zoomReal, zoomFactor, newZoom);
     zoomTo(newZoom, fixPt);
 }

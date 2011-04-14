@@ -1,6 +1,12 @@
 /* Copyright 2006-2011 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+extern "C" {
+__pragma(warning(push))
+#include <fitz.h>
+__pragma(warning(pop))
+}
+
 #include "PdfEngine.h"
 #include "StrUtil.h"
 #include "FileUtil.h"
@@ -10,26 +16,8 @@
 // so that their content can be loaded on demand in order to preserve memory
 #define MAX_MEMORY_FILE_SIZE (10 * 1024 * 1024)
 
-namespace Str {
-    namespace Conv {
-
-inline TCHAR *FromPdf(fz_obj *obj)
-{
-    WCHAR *ucs2 = (WCHAR *)pdf_to_ucs2(obj);
-    TCHAR *tstr = FromWStr(ucs2);
-    fz_free(ucs2);
-    return tstr;
-}
-
-// Caller needs to fz_free the result
-inline char *ToPDF(TCHAR *tstr)
-{
-    ScopedMem<WCHAR> wstr(ToWStr(tstr));
-    return pdf_from_ucs2((unsigned short *)wstr.Get());
-}
-
-    }
-}
+// number of page content trees to cache for quicker rendering
+#define MAX_PAGE_RUN_CACHE  8
 
 inline fz_rect fz_bbox_to_rect(fz_bbox bbox)
 {
@@ -149,7 +137,7 @@ ProducingPaletteDone:
     free(bmpData);
 }
 
-fz_stream *fz_open_stream(const TCHAR *filePath)
+fz_stream *fz_open_file2(const TCHAR *filePath)
 {
     fz_stream *file = NULL;
     char *fileData = NULL;
@@ -300,6 +288,31 @@ fz_stream *fz_open_istream(IStream *stream)
 class FitzAccelerator { public: FitzAccelerator() { fz_accelerate(); } };
 FitzAccelerator _globalAccelerator;
 
+extern "C" {
+#include <mupdf.h>
+}
+
+namespace Str {
+    namespace Conv {
+
+inline TCHAR *FromPdf(fz_obj *obj)
+{
+    WCHAR *ucs2 = (WCHAR *)pdf_to_ucs2(obj);
+    TCHAR *tstr = FromWStr(ucs2);
+    fz_free(ucs2);
+    return tstr;
+}
+
+// Caller needs to fz_free the result
+inline char *ToPDF(TCHAR *tstr)
+{
+    ScopedMem<WCHAR> wstr(ToWStr(tstr));
+    return pdf_from_ucs2((unsigned short *)wstr.Get());
+}
+
+    }
+}
+
 pdf_link *pdf_new_link(fz_obj *dest, pdf_link_kind kind)
 {
     pdf_link *link = (pdf_link *)fz_malloc(sizeof(pdf_link));
@@ -367,6 +380,38 @@ fz_error pdf_get_mediabox(fz_rect *mediabox, fz_obj *page)
     return fz_okay;
 }
 
+class PdfLink : public PageDestination {
+    pdf_link *link;
+
+public:
+    PdfLink() : link(NULL) { }
+    PdfLink(pdf_link *link) : link(link) { }
+
+    virtual RectD GetRect() const;
+    virtual TCHAR *GetValue() const;
+    virtual PageDestination *AsLink() { return this; }
+
+    virtual const char *GetType() const;
+    // TODO: remove this when it's no longer needed
+    virtual fz_obj *dest() const;
+};
+
+class CPdfTocItem : public PdfTocItem {
+    PdfLink link;
+
+public:
+    CPdfTocItem(TCHAR *title, PdfLink link) : PdfTocItem(title), link(link) { }
+
+    void AddSibling(PdfTocItem *sibling)
+    {
+        PdfTocItem *item;
+        for (item = this; item->next; item = item->next);
+        item->next = sibling;
+    }
+
+    virtual PageDestination *GetLink() { return &link; }
+};
+
 RectD PdfLink::GetRect() const
 {
     return link ? fz_rect_to_RectD(link->rect) : RectD();
@@ -411,19 +456,165 @@ TCHAR *PdfLink::GetValue() const
     return path;
 }
 
-RectD PdfComment::GetRect() const
+const char *PdfLink::GetType() const
 {
-    return fz_rect_to_RectD(annot->rect);
+    switch (link ? link->kind : -1) {
+    case PDF_LINK_URI: return "LaunchURL";
+    case PDF_LINK_GOTO: return "ScrollTo";
+    case PDF_LINK_NAMED: return fz_to_name(link->dest);
+    case PDF_LINK_LAUNCH:
+        if (fz_dict_gets(link->dest, "EF"))
+            return "LaunchEmbedded";
+        return "LaunchFile";
+    case PDF_LINK_ACTION:
+        if (Str::Eq(fz_to_name(fz_dict_gets(link->dest, "S")), "GoToR") &&
+            fz_dict_gets(link->dest, "D")) {
+            return "ScrollToEx";
+        }
+        // fall through (unsupported action)
+    default:
+        return NULL;
+    }
 }
 
-TCHAR *PdfComment::GetValue() const
+fz_obj *PdfLink::dest() const
 {
-    return Str::Conv::FromUtf8(fz_to_str_buf(fz_dict_gets(annot->obj, "Contents")));
+    if (!link)
+        return NULL;
+    if (PDF_LINK_ACTION == link->kind && Str::Eq(GetType(), "ScrollToEx"))
+        return fz_dict_gets(link->dest, "D");
+    if (PDF_LINK_LAUNCH == link->kind && Str::Eq(GetType(), "LaunchEmbedded"))
+        return fz_dict_getsa(fz_dict_gets(link->dest, "EF"), "UF", "F");
+    return link->dest;
 }
+
+class PdfComment : public PageElement {
+    pdf_annot *annot;
+
+public:
+    PdfComment(pdf_annot *annot) : annot(annot) { }
+
+    virtual RectD GetRect() const {
+        return fz_rect_to_RectD(annot->rect);
+    }
+    virtual TCHAR *GetValue() const {
+        return Str::Conv::FromUtf8(fz_to_str_buf(fz_dict_gets(annot->obj, "Contents")));
+    }
+};
 
 ///// Above are extensions to Fitz and MuPDF, now follows PdfEngine /////
 
-PdfEngine::PdfEngine() : 
+typedef struct {
+    pdf_page *page;
+    fz_display_list *list;
+    int refs;
+} PdfPageRun;
+
+class CPdfEngine : public PdfEngine {
+public:
+    CPdfEngine();
+    virtual ~CPdfEngine();
+    virtual CPdfEngine *Clone();
+
+    virtual const TCHAR *FileName() const { return _fileName; };
+    virtual int PageCount() const {
+        return _xref ? pdf_count_pages(_xref) : 0;
+    }
+
+    virtual int PageRotation(int pageNo);
+    virtual RectD PageMediabox(int pageNo);
+    virtual RectI PageContentBox(int pageNo, RenderTarget target=Target_View);
+
+    virtual RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
+                         RectD *pageRect=NULL, /* if NULL: defaults to the page's mediabox */
+                         RenderTarget target=Target_View, bool useGdi=false);
+    virtual bool RenderPage(HDC hDC, int pageNo, RectI screenRect,
+                         float zoom=0, int rotation=0,
+                         RectD *pageRect=NULL, RenderTarget target=Target_View) {
+        return renderPage(hDC, getPdfPage(pageNo), screenRect, NULL, zoom, rotation, pageRect, target);
+    }
+
+    virtual PointD Transform(PointD pt, int pageNo, float zoom, int rotate, bool inverse=false);
+    virtual RectD Transform(RectD rect, int pageNo, float zoom, int rotate, bool inverse=false);
+
+    virtual unsigned char *GetFileData(size_t *cbCount);
+    virtual bool HasTextContent() { return true; }
+    virtual TCHAR * ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_out=NULL,
+                                    RenderTarget target=Target_View);
+    virtual bool IsImagePage(int pageNo);
+    virtual PageLayoutType PreferredLayout();
+    virtual TCHAR *GetProperty(char *name);
+
+    virtual bool IsPrintingAllowed() { return hasPermission(PDF_PERM_PRINT); }
+    virtual bool IsCopyingTextAllowed() { return hasPermission(PDF_PERM_COPY); }
+
+    virtual float GetFileDPI() const { return 72.0f; }
+    virtual const TCHAR *GetDefaultFileExt() const { return _T(".pdf"); }
+
+    virtual bool BenchLoadPage(int pageNo) { return getPdfPage(pageNo) != NULL; }
+
+    // TODO: move any of the following into BaseEngine?
+
+    virtual Vec<PageElement *> *GetElements(int pageNo);
+    virtual PageElement *GetElementAtPos(int pageNo, PointD pt);
+
+    virtual int FindPageNo(fz_obj *dest);
+    virtual fz_obj *GetNamedDest(const TCHAR *name);
+    virtual bool HasToCTree() const {
+        return _outline != NULL || _attachments != NULL;
+    }
+    virtual PdfTocItem *GetToCTree();
+    virtual bool SaveEmbedded(fz_obj *obj, LinkSaverUI& saveUI);
+
+    virtual char *GetDecryptionKey() const;
+    virtual void RunGC();
+
+protected:
+    const TCHAR *_fileName;
+    char *_decryptionKey;
+
+    // make sure to never ask for _pagesAccess in an _xrefAccess
+    // protected critical section in order to avoid deadlocks
+    CRITICAL_SECTION _xrefAccess;
+    pdf_xref *      _xref;
+
+    CRITICAL_SECTION _pagesAccess;
+    pdf_page **     _pages;
+
+    virtual bool    load(const TCHAR *fileName, PasswordUI *pwdUI=NULL);
+    virtual bool    load(IStream *stream, PasswordUI *pwdUI=NULL);
+    bool            load(fz_stream *stm, PasswordUI *pwdUI=NULL);
+    bool            load_from_stream(fz_stream *stm, PasswordUI *pwdUI=NULL);
+    bool            finishLoading();
+    pdf_page      * getPdfPage(int pageNo, bool failIfBusy=false);
+    fz_matrix       viewctm(int pageNo, float zoom, int rotate);
+    fz_matrix       viewctm(pdf_page *page, float zoom, int rotate);
+    bool            renderPage(HDC hDC, pdf_page *page, RectI screenRect,
+                               fz_matrix *ctm=NULL, float zoom=0, int rotation=0,
+                               RectD *pageRect=NULL, RenderTarget target=Target_View);
+    TCHAR         * ExtractPageText(pdf_page *page, TCHAR *lineSep, RectI **coords_out=NULL,
+                                    RenderTarget target=Target_View, bool cacheRun=false);
+
+    PdfPageRun    * _runCache[MAX_PAGE_RUN_CACHE];
+    PdfPageRun    * getPageRun(pdf_page *page, bool tryOnly=false);
+    fz_error        runPage(pdf_page *page, fz_device *dev, fz_matrix ctm,
+                            RenderTarget target=Target_View,
+                            fz_bbox clipbox=fz_infinite_bbox, bool cacheRun=true);
+    void            dropPageRun(PdfPageRun *run, bool forceRemove=false);
+
+    CPdfTocItem   * buildTocTree(pdf_outline *entry, int *idCounter);
+    void            linkifyPageText(pdf_page *page);
+    bool            hasPermission(int permission);
+
+    pdf_outline   * _outline;
+    pdf_outline   * _attachments;
+    fz_obj        * _info;
+    fz_glyph_cache* _drawcache;
+
+    static CPdfEngine *CreateFromStream(fz_stream *stm, PasswordUI *pwdUI=NULL);
+};
+
+CPdfEngine::CPdfEngine() : 
         _fileName(NULL)
         , _xref(NULL)
         , _outline(NULL)
@@ -438,7 +629,7 @@ PdfEngine::PdfEngine() :
     ZeroMemory(&_runCache, sizeof(_runCache));
 }
 
-PdfEngine::~PdfEngine()
+CPdfEngine::~CPdfEngine()
 {
     EnterCriticalSection(&_pagesAccess);
     EnterCriticalSection(&_xrefAccess);
@@ -493,13 +684,13 @@ public:
     }
 };
 
-PdfEngine *PdfEngine::Clone()
+CPdfEngine *CPdfEngine::Clone()
 {
     // use this document's encryption key (if any) to load the clone
     PasswordCloner *pwdUI = NULL;
     if (_xref->crypt)
         pwdUI = new PasswordCloner(pdf_get_crypt_key(_xref));
-    PdfEngine *clone = PdfEngine::CreateFromStream(_xref->file, pwdUI);
+    CPdfEngine *clone = CPdfEngine::CreateFromStream(_xref->file, pwdUI);
     delete pwdUI;
 
     if (clone && _fileName)
@@ -512,7 +703,7 @@ PdfEngine *PdfEngine::Clone()
     return clone;
 }
 
-bool PdfEngine::load(const TCHAR *fileName, PasswordUI *pwdUI)
+bool CPdfEngine::load(const TCHAR *fileName, PasswordUI *pwdUI)
 {
     assert(!_fileName && !_xref);
     _fileName = Str::Dup(fileName);
@@ -535,7 +726,7 @@ bool PdfEngine::load(const TCHAR *fileName, PasswordUI *pwdUI)
 
     if (embedMarks)
         *embedMarks = '\0';
-    fz_stream *file = fz_open_stream(_fileName);
+    fz_stream *file = fz_open_file2(_fileName);
     if (embedMarks)
         *embedMarks = ':';
 
@@ -567,12 +758,12 @@ OpenEmbeddedFile:
     goto OpenEmbeddedFile;
 }
 
-bool PdfEngine::load(IStream *stream, PasswordUI *pwdUI)
+bool CPdfEngine::load(IStream *stream, PasswordUI *pwdUI)
 {
     return load(fz_open_istream(stream), pwdUI);
 }
 
-bool PdfEngine::load(fz_stream *stm, PasswordUI *pwdUI)
+bool CPdfEngine::load(fz_stream *stm, PasswordUI *pwdUI)
 {
     assert(!_fileName && !_xref);
     if (!load_from_stream(fz_keep_stream(stm), pwdUI))
@@ -580,7 +771,7 @@ bool PdfEngine::load(fz_stream *stm, PasswordUI *pwdUI)
     return finishLoading();
 }
 
-bool PdfEngine::load_from_stream(fz_stream *stm, PasswordUI *pwdUI)
+bool CPdfEngine::load_from_stream(fz_stream *stm, PasswordUI *pwdUI)
 {
     // don't pass in a password so that _xref isn't thrown away if it was wrong
     fz_error error = pdf_open_xref_with_stream(&_xref, stm, NULL);
@@ -630,7 +821,7 @@ bool PdfEngine::load_from_stream(fz_stream *stm, PasswordUI *pwdUI)
     return true;
 }
 
-bool PdfEngine::finishLoading()
+bool CPdfEngine::finishLoading()
 {
     fz_error error = pdf_load_page_tree(_xref);
     if (error)
@@ -656,15 +847,15 @@ bool PdfEngine::finishLoading()
     return PageCount() > 0;
 }
 
-PdfTocItem *PdfEngine::buildTocTree(pdf_outline *entry, int *idCounter)
+CPdfTocItem *CPdfEngine::buildTocTree(pdf_outline *entry, int *idCounter)
 {
     TCHAR *name = entry->title ? Str::Conv::FromUtf8(entry->title) : Str::Dup(_T(""));
-    PdfTocItem *node = new PdfTocItem(name, PdfLink(entry->link));
+    CPdfTocItem *node = new CPdfTocItem(name, PdfLink(entry->link));
     node->open = entry->count >= 0;
     node->id = ++(*idCounter);
 
     if (entry->link && PDF_LINK_GOTO == entry->link->kind)
-        node->pageNo = findPageNo(entry->link->dest);
+        node->pageNo = FindPageNo(entry->link->dest);
     if (entry->child)
         node->child = buildTocTree(entry->child, idCounter);
     if (entry->next)
@@ -673,9 +864,9 @@ PdfTocItem *PdfEngine::buildTocTree(pdf_outline *entry, int *idCounter)
     return node;
 }
 
-PdfTocItem *PdfEngine::getTocTree()
+PdfTocItem *CPdfEngine::GetToCTree()
 {
-    PdfTocItem *node = NULL;
+    CPdfTocItem *node = NULL;
     int idCounter = 0;
 
     if (_outline) {
@@ -689,7 +880,7 @@ PdfTocItem *PdfEngine::getTocTree()
     return node;
 }
 
-int PdfEngine::findPageNo(fz_obj *dest)
+int CPdfEngine::FindPageNo(fz_obj *dest)
 {
     if (fz_is_dict(dest)) {
         // The destination is linked from a Go-To action's D array
@@ -705,16 +896,17 @@ int PdfEngine::findPageNo(fz_obj *dest)
     return pdf_find_page_number(_xref, dest) + 1;
 }
 
-fz_obj *PdfEngine::getNamedDest(const char *name)
+fz_obj *CPdfEngine::GetNamedDest(const TCHAR *name)
 {
-    fz_obj *nameobj = fz_new_string((char*)name, (int)strlen(name));
+    ScopedMem<char> name_utf8(Str::Conv::ToUtf8(name));
+    fz_obj *nameobj = fz_new_string((char *)name_utf8, (int)strlen(name_utf8));
     fz_obj *dest = pdf_lookup_dest(_xref, nameobj);
     fz_drop_obj(nameobj);
 
     return dest;
 }
 
-pdf_page *PdfEngine::getPdfPage(int pageNo, bool failIfBusy)
+pdf_page *CPdfEngine::getPdfPage(int pageNo, bool failIfBusy)
 {
     if (!_pages)
         return NULL;
@@ -739,7 +931,7 @@ pdf_page *PdfEngine::getPdfPage(int pageNo, bool failIfBusy)
     return page;
 }
 
-PdfPageRun *PdfEngine::getPageRun(pdf_page *page, bool tryOnly)
+PdfPageRun *CPdfEngine::getPageRun(pdf_page *page, bool tryOnly)
 {
     PdfPageRun *result = NULL;
     int i;
@@ -783,7 +975,7 @@ PdfPageRun *PdfEngine::getPageRun(pdf_page *page, bool tryOnly)
     return result;
 }
 
-fz_error PdfEngine::runPage(pdf_page *page, fz_device *dev, fz_matrix ctm, RenderTarget target, fz_bbox clipbox, bool cacheRun)
+fz_error CPdfEngine::runPage(pdf_page *page, fz_device *dev, fz_matrix ctm, RenderTarget target, fz_bbox clipbox, bool cacheRun)
 {
     fz_error error = fz_okay;
     PdfPageRun *run;
@@ -806,7 +998,7 @@ fz_error PdfEngine::runPage(pdf_page *page, fz_device *dev, fz_matrix ctm, Rende
     return error;
 }
 
-void PdfEngine::dropPageRun(PdfPageRun *run, bool forceRemove)
+void CPdfEngine::dropPageRun(PdfPageRun *run, bool forceRemove)
 {
     EnterCriticalSection(&_pagesAccess);
     run->refs--;
@@ -829,7 +1021,7 @@ void PdfEngine::dropPageRun(PdfPageRun *run, bool forceRemove)
     LeaveCriticalSection(&_pagesAccess);
 }
 
-int PdfEngine::PageRotation(int pageNo)
+int CPdfEngine::PageRotation(int pageNo)
 {
     assert(1 <= pageNo && pageNo <= PageCount());
     fz_obj *page = _xref->page_objs[pageNo-1];
@@ -838,7 +1030,7 @@ int PdfEngine::PageRotation(int pageNo)
     return fz_to_int(fz_dict_gets(page, "Rotate"));
 }
 
-RectD PdfEngine::PageMediabox(int pageNo)
+RectD CPdfEngine::PageMediabox(int pageNo)
 {
     assert(1 <= pageNo && pageNo <= PageCount());
     fz_rect mediabox;
@@ -847,7 +1039,7 @@ RectD PdfEngine::PageMediabox(int pageNo)
     return fz_rect_to_RectD(mediabox);
 }
 
-RectI PdfEngine::PageContentBox(int pageNo, RenderTarget target)
+RectI CPdfEngine::PageContentBox(int pageNo, RenderTarget target)
 {
     assert(1 <= pageNo && pageNo <= PageCount());
     pdf_page *page = getPdfPage(pageNo);
@@ -865,12 +1057,12 @@ RectI PdfEngine::PageContentBox(int pageNo, RenderTarget target)
     return bbox2.Intersect(PageMediabox(pageNo).Round());
 }
 
-bool PdfEngine::hasPermission(int permission)
+bool CPdfEngine::hasPermission(int permission)
 {
     return (bool)pdf_has_permission(_xref, permission);
 }
 
-fz_matrix PdfEngine::viewctm(pdf_page *page, float zoom, int rotate)
+fz_matrix CPdfEngine::viewctm(pdf_page *page, float zoom, int rotate)
 {
     fz_matrix ctm = fz_identity;
 
@@ -890,7 +1082,7 @@ fz_matrix PdfEngine::viewctm(pdf_page *page, float zoom, int rotate)
     return ctm;
 }
 
-fz_matrix PdfEngine::viewctm(int pageNo, float zoom, int rotate)
+fz_matrix CPdfEngine::viewctm(int pageNo, float zoom, int rotate)
 {
     pdf_page partialPage;
     fz_obj *page = _xref->page_objs[pageNo-1];
@@ -902,7 +1094,7 @@ fz_matrix PdfEngine::viewctm(int pageNo, float zoom, int rotate)
     return viewctm(&partialPage, zoom, rotate);
 }
 
-PointD PdfEngine::Transform(PointD pt, int pageNo, float zoom, int rotate, bool inverse)
+PointD CPdfEngine::Transform(PointD pt, int pageNo, float zoom, int rotate, bool inverse)
 {
     fz_point pt2 = { (float)pt.x, (float)pt.y };
     fz_matrix ctm = viewctm(pageNo, zoom, rotate);
@@ -912,7 +1104,7 @@ PointD PdfEngine::Transform(PointD pt, int pageNo, float zoom, int rotate, bool 
     return PointD(pt2.x, pt2.y);
 }
 
-RectD PdfEngine::Transform(RectD rect, int pageNo, float zoom, int rotate, bool inverse)
+RectD CPdfEngine::Transform(RectD rect, int pageNo, float zoom, int rotate, bool inverse)
 {
     fz_rect rect2 = fz_RectD_to_rect(rect);
     fz_matrix ctm = viewctm(pageNo, zoom, rotate);
@@ -922,7 +1114,7 @@ RectD PdfEngine::Transform(RectD rect, int pageNo, float zoom, int rotate, bool 
     return fz_rect_to_RectD(rect2);
 }
 
-bool PdfEngine::renderPage(HDC hDC, pdf_page *page, RectI screenRect, fz_matrix *ctm, float zoom, int rotation, RectD *pageRect, RenderTarget target)
+bool CPdfEngine::renderPage(HDC hDC, pdf_page *page, RectI screenRect, fz_matrix *ctm, float zoom, int rotation, RectD *pageRect, RenderTarget target)
 {
     if (!page)
         return false;
@@ -949,7 +1141,7 @@ bool PdfEngine::renderPage(HDC hDC, pdf_page *page, RectI screenRect, fz_matrix 
     return fz_okay == error;
 }
 
-RenderedBitmap *PdfEngine::RenderBitmap(
+RenderedBitmap *CPdfEngine::RenderBitmap(
                            int pageNo, float zoom, int rotation,
                            RectD *pageRect, RenderTarget target,
                            bool useGdi)
@@ -1009,7 +1201,7 @@ RenderedBitmap *PdfEngine::RenderBitmap(
     return bitmap;
 }
 
-PageElement *PdfEngine::GetElementAtPos(int pageNo, PointD pt)
+PageElement *CPdfEngine::GetElementAtPos(int pageNo, PointD pt)
 {
     pdf_page *page = getPdfPage(pageNo, true);
     if (!page)
@@ -1030,7 +1222,7 @@ PageElement *PdfEngine::GetElementAtPos(int pageNo, PointD pt)
     return NULL;
 }
 
-Vec<PageElement *> *PdfEngine::GetElements(int pageNo)
+Vec<PageElement *> *CPdfEngine::GetElements(int pageNo)
 {
     Vec<PageElement *> *els = new Vec<PageElement *>();
 
@@ -1149,7 +1341,7 @@ static void FixupPageLinks(pdf_page *page)
     page->links = newTop;
 }
 
-void PdfEngine::linkifyPageText(pdf_page *page)
+void CPdfEngine::linkifyPageText(pdf_page *page)
 {
     FixupPageLinks(page);
 
@@ -1203,7 +1395,7 @@ void PdfEngine::linkifyPageText(pdf_page *page)
     free(pageText);
 }
 
-TCHAR *PdfEngine::ExtractPageText(pdf_page *page, TCHAR *lineSep, RectI **coords_out, RenderTarget target, bool cacheRun)
+TCHAR *CPdfEngine::ExtractPageText(pdf_page *page, TCHAR *lineSep, RectI **coords_out, RenderTarget target, bool cacheRun)
 {
     if (!page)
         return NULL;
@@ -1225,7 +1417,7 @@ TCHAR *PdfEngine::ExtractPageText(pdf_page *page, TCHAR *lineSep, RectI **coords
     return Str::Conv::FromWStrQ(content);
 }
 
-TCHAR *PdfEngine::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_out, RenderTarget target)
+TCHAR *CPdfEngine::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_out, RenderTarget target)
 {
     pdf_page *page = getPdfPage(pageNo, true);
     if (page)
@@ -1243,7 +1435,7 @@ TCHAR *PdfEngine::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_out
     return result;
 }
 
-TCHAR *PdfEngine::GetProperty(char *name)
+TCHAR *CPdfEngine::GetProperty(char *name)
 {
     if (!_xref)
         return NULL;
@@ -1266,14 +1458,14 @@ TCHAR *PdfEngine::GetProperty(char *name)
     return tstr;
 };
 
-char *PdfEngine::getDecryptionKey() const
+char *CPdfEngine::GetDecryptionKey() const
 {
     if (!_decryptionKey)
         return NULL;
     return Str::Dup(_decryptionKey);
 }
 
-PageLayoutType PdfEngine::PreferredLayout()
+PageLayoutType CPdfEngine::PreferredLayout()
 {
     PageLayoutType layout = Layout_Single;
 
@@ -1294,22 +1486,24 @@ PageLayoutType PdfEngine::PreferredLayout()
     return layout;
 }
 
-unsigned char *PdfEngine::GetFileData(size_t *cbCount)
+unsigned char *CPdfEngine::GetFileData(size_t *cbCount)
 {
     ScopedCritSec scope(&_xrefAccess);
     return fz_extract_stream_data(_xref->file, cbCount);
 }
 
-fz_buffer *PdfEngine::getStreamData(int num, int gen)
+bool CPdfEngine::SaveEmbedded(fz_obj *obj, LinkSaverUI& saveUI)
 {
     fz_buffer *data = NULL;
-    fz_error error = pdf_load_stream(&data, _xref, num, gen);
+    fz_error error = pdf_load_stream(&data, _xref, fz_to_num(obj), fz_to_gen(obj));
     if (error != fz_okay)
-        return NULL;
-    return data;
+        return false;
+    bool result = saveUI.SaveEmbedded(data->data, data->len);
+    fz_drop_buffer(data);
+    return result;
 }
 
-bool PdfEngine::IsImagePage(int pageNo)
+bool CPdfEngine::IsImagePage(int pageNo)
 {
     pdf_page *page = getPdfPage(pageNo, true);
     // pages containing a single image usually contain about 50
@@ -1328,7 +1522,7 @@ bool PdfEngine::IsImagePage(int pageNo)
     return hasSingleImage;
 }
 
-void PdfEngine::ageStore()
+void CPdfEngine::RunGC()
 {
     EnterCriticalSection(&_xrefAccess);
     if (_xref && _xref->store)
@@ -1338,7 +1532,7 @@ void PdfEngine::ageStore()
 
 PdfEngine *PdfEngine::CreateFromFileName(const TCHAR *fileName, PasswordUI *pwdUI)
 {
-    PdfEngine *engine = new PdfEngine();
+    PdfEngine *engine = new CPdfEngine();
     if (!engine || !fileName || !engine->load(fileName, pwdUI)) {
         delete engine;
         return NULL;
@@ -1348,7 +1542,7 @@ PdfEngine *PdfEngine::CreateFromFileName(const TCHAR *fileName, PasswordUI *pwdU
 
 PdfEngine *PdfEngine::CreateFromStream(IStream *stream, PasswordUI *pwdUI)
 {
-    PdfEngine *engine = new PdfEngine();
+    PdfEngine *engine = new CPdfEngine();
     if (!engine || !stream || !engine->load(stream, pwdUI)) {
         delete engine;
         return NULL;
@@ -1356,9 +1550,9 @@ PdfEngine *PdfEngine::CreateFromStream(IStream *stream, PasswordUI *pwdUI)
     return engine;
 }
 
-PdfEngine *PdfEngine::CreateFromStream(fz_stream *stm, PasswordUI *pwdUI)
+CPdfEngine *CPdfEngine::CreateFromStream(fz_stream *stm, PasswordUI *pwdUI)
 {
-    PdfEngine *engine = new PdfEngine();
+    CPdfEngine *engine = new CPdfEngine();
     if (!engine || !stm || !engine->load(stm, pwdUI)) {
         delete engine;
         return NULL;
@@ -1369,15 +1563,7 @@ PdfEngine *PdfEngine::CreateFromStream(fz_stream *stm, PasswordUI *pwdUI)
 ///// XpsEngine is also based on Fitz and shares quite some code with PdfEngine /////
 
 extern "C" {
-#ifdef _MSC_VER
-__pragma(warning(push))
-#endif
-
 #include <muxps.h>
-
-#ifdef _MSC_VER
-__pragma(warning(pop))
-#endif
 }
 
 typedef struct {
@@ -1512,7 +1698,7 @@ bool CXpsEngine::load(const TCHAR *fileName)
 {
     _fileName = Str::Dup(fileName);
 
-    fz_stream *file = fz_open_stream(_fileName);
+    fz_stream *file = fz_open_file2(_fileName);
     if (!file)
         return false;
 
