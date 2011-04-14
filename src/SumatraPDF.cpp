@@ -1093,6 +1093,22 @@ bool TbIsSeparator(ToolbarButtonInfo *tbi) {
     return tbi->bmpIndex < 0;
 }
 
+static BOOL IsVisibleToolbarButton(WindowInfo *win, int buttonNo)
+{
+    if (!win || !win->dm || !win->dm->engine || win->dm->engine->HasTextContent())
+        return TRUE;
+
+    int cmdId = gToolbarButtons[buttonNo].cmdId;
+    switch (cmdId) {
+        case IDM_FIND_FIRST:
+        case IDM_FIND_NEXT:
+        case IDM_FIND_PREV:
+        case IDM_FIND_MATCH:
+            return FALSE;
+    }
+    return TRUE;
+}
+
 static LPARAM ToolbarButtonEnabledState(WindowInfo *win, int buttonNo)
 {
     const LPARAM enabled = (LPARAM)MAKELONG(1,0);
@@ -1106,10 +1122,7 @@ static LPARAM ToolbarButtonEnabledState(WindowInfo *win, int buttonNo)
     
     // If no file open, only enable open button
     if (!win->IsDocLoaded()) {
-        if (IDM_OPEN == cmdId)
-            return enabled;
-        else
-            return disabled;
+        return IDM_OPEN == cmdId;
     }
 
     switch (cmdId)
@@ -1121,12 +1134,12 @@ static LPARAM ToolbarButtonEnabledState(WindowInfo *win, int buttonNo)
             break;
     
         case IDM_FIND_NEXT:
-        case IDM_FIND_PREV: 
+        case IDM_FIND_PREV:
             // TODO: Update on whether there's more to find, not just on whether there is text.
             if (Win::GetTextLen(win->hwndFindBox) == 0)
                 return disabled;
             break;
-    
+
         case IDM_GOTO_NEXT_PAGE:
             if (win->dm->currentPageNo() == win->dm->pageCount())
                 return disabled;
@@ -1143,9 +1156,14 @@ static LPARAM ToolbarButtonEnabledState(WindowInfo *win, int buttonNo)
 static void ToolbarUpdateStateForWindow(WindowInfo *win) {
 
     for (int i = 0; i < TOOLBAR_BUTTONS_COUNT; i++) {
+
+        if (IsVisibleToolbarButton(win, i))
+            SendMessage(win->hwndToolbar, TB_HIDEBUTTON, gToolbarButtons[i].cmdId, FALSE);
+        else
+            SendMessage(win->hwndToolbar, TB_HIDEBUTTON, gToolbarButtons[i].cmdId, TRUE);
+
         if (TbIsSeparator(&gToolbarButtons[i]))
             continue;
-
         LPARAM buttonState = ToolbarButtonEnabledState(win, i);
         SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, gToolbarButtons[i].cmdId, buttonState);
     }
@@ -1214,6 +1232,9 @@ static void MenuUpdateStateForWindow(WindowInfo *win) {
             Win::Menu::Enable(win->menu, id, false);
         }
     }
+
+    if (win->dm && win->dm->engine)
+        Win::Menu::Enable(win->menu, IDM_FIND_FIRST, win->dm->engine->HasTextContent());
 }
 
 void UpdateToolbarAndScrollbarsForAllWindows()
@@ -4849,8 +4870,29 @@ SIZE TextSizeInHwnd(HWND hwnd, const TCHAR *txt)
 #define TOOLBAR_MIN_ICON_SIZE 16
 #define FIND_BOX_WIDTH 160
 
+// Note: a bit of a hack, but doing the obvious ShowWindow(..., SW_HIDE | SW_SHOW)
+// didn't work for me
+static void MoveOffScreen(HWND hwnd)
+{
+    WindowRect r(hwnd);
+    MoveWindow(hwnd, -200, -100, r.dx, r.dy, FALSE);
+}
+
+static void HideToolbarFindUI(WindowInfo *win)
+{
+    MoveOffScreen(win->hwndFindText);
+    MoveOffScreen(win->hwndFindBg);
+    MoveOffScreen(win->hwndFindBox);
+}
+
 static void UpdateToolbarFindText(WindowInfo *win)
 {
+    if (win && win->dm && win->dm->engine && !win->dm->engine->HasTextContent())
+    {
+        HideToolbarFindUI(win);
+        return;
+    }
+
     const TCHAR *text = _TR("Find:");
     Win::SetText(win->hwndFindText, text);
 
