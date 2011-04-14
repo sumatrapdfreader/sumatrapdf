@@ -3492,7 +3492,7 @@ static void OnMenuOpen(WindowInfo *win)
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling
     // methods too early on)
-    ScopedMem<TCHAR> fileFilter(Str::Format(_T("%s\1*.pdf;*.xps;*.cbz;*.cbr;*.jpg;*.jpeg;*.png;*.bmp;*.gif\1%s\1*.*\1"),
+    ScopedMem<TCHAR> fileFilter(Str::Format(_T("%s\1*.pdf;*.xps;*.cbz;*.cbr\1%s\1*.*\1"),
         _TR("PDF documents"), _TR("All files"))); // TODO: it's not just "PDF documents" anymore. "Supported documents" ?
     Str::TransChars(fileFilter, _T("\1"), _T("\0"));
 
