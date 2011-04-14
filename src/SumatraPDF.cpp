@@ -4872,12 +4872,13 @@ SIZE TextSizeInHwnd(HWND hwnd, const TCHAR *txt)
 #define TOOLBAR_MIN_ICON_SIZE 16
 #define FIND_BOX_WIDTH 160
 
-// Note: a bit of a hack, but doing the obvious ShowWindow(..., SW_HIDE | SW_SHOW)
+// Note: a bit of a hack, but doing just ShowWindow(..., SW_HIDE | SW_SHOW)
 // didn't work for me
 static void MoveOffScreen(HWND hwnd)
 {
     WindowRect r(hwnd);
     MoveWindow(hwnd, -200, -100, r.dx, r.dy, FALSE);
+    ShowWindow(hwnd, SW_HIDE);
 }
 
 static void HideToolbarFindUI(WindowInfo *win)
@@ -4895,6 +4896,10 @@ static void UpdateToolbarFindText(WindowInfo *win)
         return;
     }
 
+    ShowWindow(win->hwndFindText, SW_SHOW);
+    ShowWindow(win->hwndFindBg, SW_SHOW);
+    ShowWindow(win->hwndFindBox, SW_SHOW);
+
     const TCHAR *text = _TR("Find:");
     Win::SetText(win->hwndFindText, text);
 
@@ -4911,10 +4916,10 @@ static void UpdateToolbarFindText(WindowInfo *win)
     size.cx += 6;
 
     int padding = GetSystemMetrics(SM_CXEDGE);
-    MoveWindow(win->hwndFindText, pos_x, (findWndDy - size.cy + 1) / 2 + pos_y, size.cx, size.cy, true);
-    MoveWindow(win->hwndFindBg, pos_x + size.cx, pos_y, findWndDx, findWndDy, false);
+    MoveWindow(win->hwndFindText, pos_x, (findWndDy - size.cy + 1) / 2 + pos_y, size.cx, size.cy, TRUE);
+    MoveWindow(win->hwndFindBg, pos_x + size.cx, pos_y, findWndDx, findWndDy, FALSE);
     MoveWindow(win->hwndFindBox, pos_x + size.cx + padding, (findWndDy - size.cy + 1) / 2 + pos_y,
-        findWndDx - 2 * padding, size.cy, false);
+        findWndDx - 2 * padding, size.cy, FALSE);
 
     TBBUTTONINFO bi;
     bi.cbSize = sizeof(bi);
