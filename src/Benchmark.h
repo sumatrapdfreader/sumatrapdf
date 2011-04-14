@@ -6,7 +6,7 @@
 
 #include "Vec.h"
 
-bool IsBenchPagesInfo(TCHAR *s);
+bool IsBenchPagesInfo(const TCHAR *s);
 void Bench(StrVec& filesToBench);
 
 #endif

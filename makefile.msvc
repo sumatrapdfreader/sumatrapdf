@@ -46,7 +46,7 @@ all_sumatrapdf: SumatraPDF Installer PDFFilter BrowserPlugin
 # Their meaning: http://msdn.microsoft.com/en-us/library/aa383745(VS.85).aspx
 # and http://blogs.msdn.com/oldnewthing/archive/2007/04/11/2079137.aspx
 # We set the features uniformly to Win XP or later.
-CFLAGS = $(CFLAGS) /D "WINVER=0x0501" /D "_WIN32_WINNT=0x0501"
+CFLAGS = $(CFLAGS) /D "WINVER=0x0500" /D "_WIN32_WINNT=0x0500"
 
 SUMATRA_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
 	/wd4800 \
@@ -196,9 +196,9 @@ $(O)\AppTools.obj: baseutils\GeomUtil.h baseutils\StrUtil.h baseutils\Vec.h
 $(O)\AppTools.obj: baseutils\WinUtil.h src\AppTools.h src\LangMenuDef.h
 $(O)\AppTools.obj: src\translations.h src\Version.h
 $(O)\Benchmark.obj: baseutils\BaseUtil.h baseutils\FileUtil.h baseutils\GeomUtil.h
-$(O)\Benchmark.obj: baseutils\StrUtil.h baseutils\Vec.h baseutils\WinUtil.h
-$(O)\Benchmark.obj: mupdf\fitz\fitz.h mupdf\pdf\mupdf.h src\BaseEngine.h
-$(O)\Benchmark.obj: src\Benchmark.h src\PdfEngine.h
+$(O)\Benchmark.obj: baseutils\SimpleLog.h baseutils\StrUtil.h baseutils\Vec.h
+$(O)\Benchmark.obj: baseutils\WinUtil.h mupdf\fitz\fitz.h mupdf\pdf\mupdf.h
+$(O)\Benchmark.obj: src\BaseEngine.h src\Benchmark.h src\PdfEngine.h
 $(O)\BencUtil.obj: baseutils\BaseUtil.h baseutils\BencUtil.h baseutils\StrUtil.h
 $(O)\BencUtil.obj: baseutils\Vec.h
 $(O)\CPdfFilter.obj: baseutils\BaseUtil.h baseutils\GeomUtil.h baseutils\StrUtil.h

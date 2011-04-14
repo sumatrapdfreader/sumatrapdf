@@ -109,13 +109,16 @@ typedef BOOL _stdcall SymSetSearchPathProc(
 typedef BOOL _stdcall SymRefreshModuleListProc(
   HANDLE hProcess);
 
-typedef BOOL __stdcall SymGetLineFromAddr64Proc(
+typedef BOOL _stdcall SymGetLineFromAddr64Proc(
     HANDLE hProcess,
     DWORD64 dwAddr,
     PDWORD pdwDisplacement,
     PIMAGEHLP_LINE64 Line);
 
-static MiniDumpWriteProc *              _MiniDumpWriteDump;
+typedef VOID _stdcall RtlCaptureContextProc(
+    PCONTEXT ContextRecord);
+
+static MiniDumpWriteProc *              _MiniDumpWrite = NULL;
 static SymInitializeWProc *             _SymInitializeW;
 static SymInitializeProc *              _SymInitialize;
 static SymCleanupProc *                 _SymCleanup;
@@ -138,50 +141,44 @@ static MINIDUMP_EXCEPTION_INFORMATION gMei = { 0 };
 static BOOL gSymInitializeOk = FALSE;
 
 #if defined(DEBUG_CRASH_INFO)
-Log::MemoryLogger gLog;
-#define LogDbg(msg, ...) gLog.LogFmt(_T(msg), __VA_ARGS__)
+static Log::MemoryLogger gDbgLog;
+#define LogDbg(msg, ...) gDbgLog.LogFmt(_T(msg), __VA_ARGS__)
 #else
 #define LogDbg(msg, ...) NoOp()
 #endif
 
-#define F(X) \
-    { #X, (void**)&_ ## X },
-
-FuncNameAddr gDbgHelpFuncs[] = {
-    F(MiniDumpWriteDump)
-    F(SymInitializeW)
-    F(SymInitialize)
-    F(SymCleanup)
-    F(SymGetOptions)
-    F(SymSetOptions)
-    F(SymGetSearchPathW)
-    F(SymSetSearchPathW)
-    F(SymSetSearchPath)
-    F(StackWalk64)
-    F(SymFunctionTableAccess64)
-    F(SymGetModuleBase64)
-    F(SymFromAddr)
-    F(SymRefreshModuleList)
-    F(SymGetLineFromAddr64)
-    { NULL, NULL }
-};
-#undef F
-
 static bool LoadDbgHelpFuncs()
 {
-    if (_MiniDumpWriteDump)
+    if (_MiniDumpWrite)
         return true;
 #if 0
     TCHAR *dbghelpPath = _T("C:\\Program Files (x86)\\Microsoft Visual Studio 10.0\\Team Tools\\Performance Tools\\dbghelp.dll");
     HMODULE h = LoadLibrary(dbghelpPath);
-    if (h) {
-        LoadDllFuncs(h, gDbgHelpFuncs);
-        return _MiniDumpWriteDump != 0;
-    }
+#else
+    HMODULE h = SafeLoadLibrary(_T("DBGHELP.DLL"));
 #endif
+    if (!h)
+        return false;
 
-    LoadDllFuncs(_T("DBGHELP.DLL"), gDbgHelpFuncs);
-    return _MiniDumpWriteDump != 0;
+#define Load(func) _ ## func = (func ## Proc *)GetProcAddress(h, #func)
+    Load(MiniDumpWrite);
+    Load(SymInitializeW);
+    Load(SymInitialize);
+    Load(SymCleanup);
+    Load(SymGetOptions);
+    Load(SymSetOptions);
+    Load(SymGetSearchPathW);
+    Load(SymSetSearchPathW);
+    Load(SymSetSearchPath);
+    Load(StackWalk64);
+    Load(SymFunctionTableAccess64);
+    Load(SymGetModuleBase64);
+    Load(SymFromAddr);
+    Load(SymRefreshModuleList);
+    Load(SymGetLineFromAddr64);
+#undef Load
+
+    return _MiniDumpWrite != NULL;
 }
 
 static bool GetEnvOk(DWORD ret, DWORD cchBufSize)
@@ -307,12 +304,9 @@ static bool InitializeDbgHelp()
     if (_SymInitializeW) {
         gSymInitializeOk = _SymInitializeW(GetCurrentProcess(), symPath, TRUE);
     } else {
-        char *tmp = Str::Conv::ToAnsi(symPath);
-        if (tmp) {
+        ScopedMem<char> tmp(Str::Conv::ToAnsi(symPath));
+        if (tmp)
             gSymInitializeOk = _SymInitialize(GetCurrentProcess(), tmp, TRUE);
-            free(tmp);
-        }
-
     }
 
     if (!gSymInitializeOk) {
@@ -408,24 +402,12 @@ static void GetOsVersion(Str::Str<char>& s)
 #else
     char *arch = IsWow64() ? "Wow64" : "32-bit";
 #endif
-    if (0 == servicePackMinor) {
-        if (0 == servicePackMajor) {
-            s.AppendFmt("OS: Windows %s build %d %s\r\n", os, buildNumber, arch);
-        } else {
-            s.AppendFmt("OS: Windows %s SP%d build %d %s\r\n", os, servicePackMajor, buildNumber, arch);
-        }
-    } else {
+    if (0 == servicePackMajor)
+        s.AppendFmt("OS: Windows %s build %d %s\r\n", os, buildNumber, arch);
+    else if (0 == servicePackMinor)
+        s.AppendFmt("OS: Windows %s SP%d build %d %s\r\n", os, servicePackMajor, buildNumber, arch);
+    else
         s.AppendFmt("OS: Windows %s %d.%d build %d %s\r\n", os, servicePackMajor, servicePackMinor, buildNumber, arch);
-    }
-}
-
-static void StrCharAppendT(Str::Str<char>& s, TCHAR *txt)
-{
-    char *tmp = Str::Conv::ToAnsi(txt);
-    if (tmp) {
-        s.Append(tmp);
-        free(tmp);
-    }
 }
 
 static void GetProcessorName(Str::Str<char>& s)
@@ -435,9 +417,9 @@ static void GetProcessorName(Str::Str<char>& s)
         name = ReadRegStr(HKEY_LOCAL_MACHINE, _T("HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0"), _T("ProcessorNameString"));
     if (!name)
         return;
-    char *tmp = Str::Conv::ToUtf8(name);
+
+    ScopedMem<char> tmp(Str::Conv::ToUtf8(name));
     s.AppendFmt("Processor: %s\r\n", tmp);
-    free(tmp);
     free(name);
 }
 
@@ -445,25 +427,20 @@ static void GetMachineName(Str::Str<char>& s)
 {
     TCHAR *s1 = ReadRegStr(HKEY_LOCAL_MACHINE, _T("HARDWARE\\DESCRIPTION\\System\\BIOS"), _T("SystemFamily"));
     TCHAR *s2 = ReadRegStr(HKEY_LOCAL_MACHINE, _T("HARDWARE\\DESCRIPTION\\System\\BIOS"), _T("SystemVersion"));
-    if (!s1 && !s2)
-        return;
+    ScopedMem<char> s1u(s1 ? Str::Conv::ToUtf8(s1) : NULL);
+    ScopedMem<char> s2u(s2 ? Str::Conv::ToUtf8(s2) : NULL);
 
-    s.Append("Machine: ");
-    if (!s1) {
-        StrCharAppendT(s, s2);
-        goto Exit;
-    }
+    if (!s1u && !s2u)
+        ; // pass
+    else if (!s1u)
+        s.AppendFmt("Machine: %s\r\n", s2u.Get());
+    else if (!s2u || Str::EqI(s1u, s2u))
+        s.AppendFmt("Machine: %s\r\n", s1u.Get());
+    else
+        s.AppendFmt("Machine: %s %s\r\n", s1u.Get(), s2u.Get());
 
-    if (!s2 || Str::EqI(s1,s2)) {
-        StrCharAppendT(s, s1);
-        goto Exit;
-    }
-
-    StrCharAppendT(s, s1);
-    s.Append(" ");
-    StrCharAppendT(s, s2);
-Exit:
-    s.Append("\r\n");
+    free(s1);
+    free(s2);
 }
 
 static void GetSystemInfo(Str::Str<char>& s)
@@ -521,13 +498,9 @@ static void GetModules(Str::Str<char>& s)
     mod.dwSize = sizeof(mod);
     BOOL cont = Module32First(snap, &mod);
     while (cont) {
-        TCHAR *name = mod.szModule;
-        TCHAR *path = mod.szExePath;
-        char *nameA = Str::Conv::ToUtf8(name);
-        char *pathA = Str::Conv::ToUtf8(path);
+        ScopedMem<char> nameA(Str::Conv::ToUtf8(mod.szModule));
+        ScopedMem<char> pathA(Str::Conv::ToUtf8(mod.szExePath));
         s.AppendFmt("Module: %08X %06X %-16s %s\r\n", (DWORD)mod.modBaseAddr, (DWORD)mod.modBaseSize, nameA, pathA);
-        free(nameA);
-        free(pathA);
         cont = Module32Next(snap, &mod);
     }
     CloseHandle(snap);
@@ -700,6 +673,11 @@ static void GetCallstack(Str::Str<char>& s, CONTEXT& ctx, HANDLE hThread)
 
 static void GetCurrentThreadCallstack(Str::Str<char>&s)
 {
+    // not available under Win2000
+    RtlCaptureContextProc *RtlCaptureContext = (RtlCaptureContextProc *)LoadDllFunc(_T("kernel32.dll"), "RtlCaptureContext");
+    if (!RtlCaptureContext)
+        return;
+
     CONTEXT ctx;
     RtlCaptureContext(&ctx);
     s.AppendFmt("Thread: %x\r\n", GetCurrentThreadId());
@@ -1043,7 +1021,7 @@ void SubmitCrashInfo()
 Exit:
     free(s);
 #if defined(DEBUG_CRASH_INFO)
-    ScopedMem<char> log_utf8(Str::Conv::ToUtf8(gLog.GetData()));
+    ScopedMem<char> log_utf8(Str::Conv::ToUtf8(gDbgLog.GetData()));
     SendCrashInfo(log_utf8);
 #endif
 }
@@ -1060,7 +1038,7 @@ static void WriteMiniDump()
         type = (MINIDUMP_TYPE)(type | MiniDumpWithDataSegs | MiniDumpWithHandleData | MiniDumpWithPrivateReadWriteMemory);
     MINIDUMP_CALLBACK_INFORMATION mci = { OpenMiniDumpCallback, NULL }; 
 
-    _MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), dumpFile, type, &gMei, NULL, &mci);
+    _MiniDumpWrite(GetCurrentProcess(), GetCurrentProcessId(), dumpFile, type, &gMei, NULL, &mci);
 
     CloseHandle(dumpFile);
 }
@@ -1072,9 +1050,12 @@ static DWORD WINAPI CrashDumpThread(LPVOID data)
         return 0;
 
     // TODO: experimentally, don't write minidumps
-    //WriteMiniDump();
-
+#ifdef DONT_SUBMIT_CRASH_INFO
+    WriteMiniDump();
+#else
     SubmitCrashInfo();
+#endif
+
     return 0;
 }
 
@@ -1090,7 +1071,7 @@ static LONG WINAPI DumpExceptionHandler(EXCEPTION_POINTERS *exceptionInfo)
 
     gMei.ThreadId = GetCurrentThreadId();
     gMei.ExceptionPointers = exceptionInfo;
-    // per msdn (which is backed by my experience), MiniDumpWriteDump() doesn't
+    // per msdn (which is backed by my experience), MiniDumpWrite() doesn't
     // write callstack for the calling thread correctly. We use msdn-recommended
     // work-around of spinning a thread to do the writing
     SetEvent(gDumpEvent);

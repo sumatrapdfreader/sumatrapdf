@@ -7,6 +7,7 @@
 #include "StrUtil.h"
 #include "ParseCommandLine.h"
 #include "AppTools.h"
+#include "Benchmark.h"
 
 extern DWORD FileTimeDiffInSecs(FILETIME *ft1, FILETIME *ft2);
 
@@ -144,12 +145,31 @@ static void versioncheck_test()
     assert(CompareVersion(_T("1.3.0"), _T("2662")) < 0);
 }
 
+static void BenchRangeTest()
+{
+    assert(IsBenchPagesInfo(_T("1")));
+    assert(IsBenchPagesInfo(_T("2-4")));
+    assert(IsBenchPagesInfo(_T("5,7")));
+    assert(IsBenchPagesInfo(_T("6,8,")));
+    assert(IsBenchPagesInfo(_T("1-3,4,6-9,13")));
+    assert(IsBenchPagesInfo(_T("loadonly")));
+
+    assert(!IsBenchPagesInfo(_T("")));
+    assert(!IsBenchPagesInfo(_T("2-")));
+    assert(!IsBenchPagesInfo(_T("-2")));
+    assert(!IsBenchPagesInfo(_T("2--4")));
+    assert(!IsBenchPagesInfo(_T("4-2")));
+    assert(!IsBenchPagesInfo(_T("1-3,loadonly")));
+    assert(!IsBenchPagesInfo(NULL));
+}
+
 void SumatraPDF_UnitTests()
 {
     DBG_OUT("Running SumatraPDF unit tests\n");
     hexstrTest();
     ParseCommandLineTest();
     versioncheck_test();
+    BenchRangeTest();
 }
 
 #endif

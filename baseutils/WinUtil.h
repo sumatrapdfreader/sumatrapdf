@@ -10,15 +10,7 @@
 #include "GeomUtil.h"
 
 HMODULE SafeLoadLibrary(const TCHAR *dllName);
-
-struct FuncNameAddr {
-    const char *name;
-    void **addr;
-};
-
 FARPROC LoadDllFunc(TCHAR *dllName, const char *funcName);
-void LoadDllFuncs(HMODULE h, FuncNameAddr *funcs);
-void LoadDllFuncs(TCHAR *dllName, FuncNameAddr *funcs);
 
 class ScopedCom {
 public:

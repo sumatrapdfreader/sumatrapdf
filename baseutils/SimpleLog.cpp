@@ -2,66 +2,54 @@
    License: Simplified BSD (see ./COPYING) */
 
 #include "SimpleLog.h"
-#include "Vec.h"
 
 namespace Log {
 
-// TODO: implement this as a MultiLogger instead, so that we can test
-//       just the MultiLogger instead?
-static Vec<Logger*> *gLoggers;
-static CRITICAL_SECTION gLogCs;
+static MultiLogger *gLogger;
 
 void Initialize()
 {
-    gLoggers = new Vec<Logger*>();
-    InitializeCriticalSection(&gLogCs);
+    gLogger = new MultiLogger();
 }
 
 void Destroy()
 {
-    DeleteVecMembers(*gLoggers);
-    DeleteCriticalSection(&gLogCs);
-    delete gLoggers;
-    gLoggers = NULL;
+    delete gLogger;
+    gLogger = NULL;
 }
 
 // Note: unless you remove the logger with RemoveLogger(), we own the Logger
 // and it'll be deleted when Log::Destroy() is called.
 void AddLogger(Logger *logger)
-{        
-    ScopedCritSec cs(&gLogCs);
-    gLoggers->Append(logger);
+{
+    gLogger->AddLogger(logger);
 }
 
 void RemoveLogger(Logger *logger)
 {
-    ScopedCritSec cs(&gLogCs);
-    gLoggers->Remove(logger);
+    gLogger->RemoveLogger(logger);
 }
 
 void Log(TCHAR *s)
 {
-    ScopedCritSec cs(&gLogCs);
-    for (size_t i = 0; i < gLoggers->Count(); i++)
-        gLoggers->At(i)->Log(s);
+    gLogger->Log(s);
 }
 
 void LogFmt(TCHAR *fmt, ...)
 {
-    if (0 == gLoggers->Count())
+    if (0 == gLogger->CountLoggers())
         return;
 
     va_list args;
     va_start(args, fmt);
     TCHAR *s = Str::FmtV(fmt, args);
-    LogAndFree(s);
+    gLogger->LogAndFree(s);
     va_end(args);
 }
 
 void LogAndFree(TCHAR *s)
 {
-    Log(s);
-    free(s);
+    gLogger->LogAndFree(s);
 }
 
 } // namespace Log

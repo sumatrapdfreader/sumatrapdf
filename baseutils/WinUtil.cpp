@@ -11,8 +11,6 @@
 #include "StrUtil.h"
 #include "WinUtil.h"
 
-#define DONT_INHERIT_HANDLES FALSE
-
 // Loads a DLL explicitly from the system's library collection
 HMODULE SafeLoadLibrary(const TCHAR *dllName)
 {
@@ -24,31 +22,14 @@ HMODULE SafeLoadLibrary(const TCHAR *dllName)
 
 FARPROC LoadDllFunc(TCHAR *dllName, const char *funcName)
 {
-    FARPROC proc = NULL;
-    HMODULE h = SafeLoadLibrary(dllName);    
-    if (h)
-        proc = GetProcAddress(h, funcName);
-    return proc;
-}
-
-void LoadDllFuncs(HMODULE h, FuncNameAddr *funcs)
-{
+    HMODULE h = SafeLoadLibrary(dllName);
     if (!h)
-        return;
-    int i = 0;
-    while (funcs[i].name) {
-        *funcs[i].addr = GetProcAddress(h, funcs[i].name);
-        ++i;
-    }
+        return NULL;
+    return GetProcAddress(h, funcName);
+
     // Note: we don't unload the dll. It's harmless for those that would stay
     // loaded anyway but we would crash trying to call a function that
     // was grabbed from a dll that was unloaded in the meantime
-}
-
-void LoadDllFuncs(TCHAR *dllName, FuncNameAddr *funcs)
-{
-    HMODULE h = SafeLoadLibrary(dllName);
-    LoadDllFuncs(h, funcs);
 }
 
 // Return true if application is themed. Wrapper around IsAppThemed() in uxtheme.dll

@@ -387,20 +387,18 @@ static void VecTest()
 
 static void LogTest()
 {
-    Log::Initialize();
-    Log::LogAndFree(Str::Dup(_T("Don't leak me!")));
-
     Log::MultiLogger log;
+    log.LogAndFree(Str::Dup(_T("Don't leak me!")));
+
     Log::MemoryLogger logAll;
-    Log::AddLogger(&log);
-    Log::AddLogger(&logAll);
+    log.AddLogger(&logAll);
 
     {
         Log::MemoryLogger ml;
         log.AddLogger(&ml);
-        Log::Log(_T("Test1"));
+        log.Log(_T("Test1"));
         ml.Log(_T("ML"));
-        log.LogFmt(_T("%s : %d"), _T("filen\xE4me.pdf"), 25);
+        ml.LogFmt(_T("%s : %d"), _T("filen\xE4me.pdf"), 25);
         log.RemoveLogger(&ml);
 
         assert(Str::Eq(ml.GetData(), _T("Test1\r\nML\r\nfilen\xE4me.pdf : 25\r\n")));
@@ -410,11 +408,11 @@ static void LogTest()
         HANDLE hRead, hWrite;
         CreatePipe(&hRead, &hWrite, NULL, 0);
         Log::FileLogger fl(hWrite);
-        Log::AddLogger(&fl);
-        Log::Log(_T("Test2"));
+        log.AddLogger(&fl);
+        log.Log(_T("Test2"));
         fl.Log(_T("FL"));
-        Log::LogFmt(_T("%s : %d"), _T("filen\xE4me.pdf"), 25);
-        Log::RemoveLogger(&fl);
+        log.LogFmt(_T("%s : %d"), _T("filen\xE4me.pdf"), 25);
+        log.RemoveLogger(&fl);
 
         char pipeData[32];
         char *expected = "Test2\r\nFL\r\nfilen\xC3\xA4me.pdf : 25\r\n";
@@ -427,14 +425,11 @@ static void LogTest()
     }
 
     assert(Str::Eq(logAll.GetData(), _T("Test1\r\nTest2\r\nfilen\xE4me.pdf : 25\r\n")));
-    Log::RemoveLogger(&logAll);
-    Log::RemoveLogger(&log);
+    log.RemoveLogger(&logAll);
 
     // don't leak the logger, don't crash on logging NULL
-    Log::AddLogger(new Log::DebugLogger());
-    Log::Log(NULL);
-
-    Log::Destroy();
+    log.AddLogger(new Log::DebugLogger());
+    log.Log(NULL);
 }
 
 static void BencTestSerialization(BencObj *obj, const char *dataOrig)
