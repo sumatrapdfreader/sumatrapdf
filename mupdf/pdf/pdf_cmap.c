@@ -333,14 +333,14 @@ pdf_sort_cmap(pdf_cmap *cmap)
 			if (pdf_range_high(a) - a->low + a->offset + 1 == b->offset)
 			{
 				/* SR -> R and SS -> R and RR -> R and RS -> R */
-				if (pdf_range_flags(a) == PDF_CMAP_SINGLE || pdf_range_flags(a) == PDF_CMAP_RANGE)
+				if ((pdf_range_flags(a) == PDF_CMAP_SINGLE || pdf_range_flags(a) == PDF_CMAP_RANGE) && (pdf_range_high(b) - a->low <= 0x3fff))
 				{
 					pdf_range_set_flags(a, PDF_CMAP_RANGE);
 					pdf_range_set_high(a, pdf_range_high(b));
 				}
 
 				/* LS -> L */
-				else if (pdf_range_flags(a) == PDF_CMAP_TABLE && pdf_range_flags(b) == PDF_CMAP_SINGLE)
+				else if (pdf_range_flags(a) == PDF_CMAP_TABLE && pdf_range_flags(b) == PDF_CMAP_SINGLE && (pdf_range_high(b) - a->low <= 0x3fff))
 				{
 					pdf_range_set_high(a, pdf_range_high(b));
 					add_table(cmap, b->offset);
@@ -373,7 +373,7 @@ pdf_sort_cmap(pdf_cmap *cmap)
 				}
 
 				/* LS -> L */
-				else if (pdf_range_flags(a) == PDF_CMAP_TABLE && pdf_range_flags(b) == PDF_CMAP_SINGLE)
+				else if (pdf_range_flags(a) == PDF_CMAP_TABLE && pdf_range_flags(b) == PDF_CMAP_SINGLE && (pdf_range_high(b) - a->low <= 0x3fff))
 				{
 					pdf_range_set_high(a, pdf_range_high(b));
 					add_table(cmap, b->offset);
@@ -396,7 +396,7 @@ pdf_sort_cmap(pdf_cmap *cmap)
 		b ++;
 	}
 
-	cmap->rlen = a - cmap->ranges;
+	cmap->rlen = a - cmap->ranges + 1;
 
 	fz_flush_warnings();
 }
