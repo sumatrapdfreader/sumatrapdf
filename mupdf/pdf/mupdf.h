@@ -128,10 +128,10 @@ int pdf_needs_password(pdf_xref *xref);
 int pdf_authenticate_password(pdf_xref *xref, char *pw);
 int pdf_has_permission(pdf_xref *xref, int p);
 
-/* SumatraPDF: allow to save/restore the encryption key ("remember password") */
-unsigned char *pdf_get_crypt_key(pdf_xref *xref);
-/* SumatraPDF: allow to determine the PDF 1.7 Extension Level */
 int pdf_get_crypt_revision(pdf_xref *xref);
+char *pdf_get_crypt_method(pdf_xref *xref);
+int pdf_get_crypt_length(pdf_xref *xref);
+unsigned char *pdf_get_crypt_key(pdf_xref *xref);
 
 void pdf_debug_crypt(pdf_crypt *crypt);
 

@@ -222,7 +222,7 @@ pdf_repair_xref(pdf_xref *xref, char *buf, int bufsize)
 	{
 		if (memcmp(buf + i, "%PDF", 4) == 0)
 		{
-			fz_seek(xref->file, i, 0);
+			fz_seek(xref->file, i + 7, 0); /* skip "%PDF-X.Y" */
 			break;
 		}
 	}

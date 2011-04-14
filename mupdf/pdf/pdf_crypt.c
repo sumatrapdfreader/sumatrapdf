@@ -609,22 +609,45 @@ pdf_has_permission(pdf_xref *xref, int p)
 	return xref->crypt->p & p;
 }
 
-/* SumatraPDF: allow to save/restore the encryption key ("remember password") */
 unsigned char *
 pdf_get_crypt_key(pdf_xref *xref)
 {
-	if (!xref->crypt)
-		return NULL;
-	return xref->crypt->key;
+	if (xref->crypt)
+		return xref->crypt->key;
+	return NULL;
 }
 
-/* SumatraPDF: allow to determine the PDF 1.7 Extension Level */
 int
 pdf_get_crypt_revision(pdf_xref *xref)
 {
-	if (!xref->crypt)
-		return 0;
-	return xref->crypt->v;
+	if (xref->crypt)
+		return xref->crypt->v;
+	return 0;
+}
+
+char *
+pdf_get_crypt_method(pdf_xref *xref)
+{
+	if (xref->crypt)
+	{
+		switch (xref->crypt->strf.method)
+		{
+		case PDF_CRYPT_NONE: return "None";
+		case PDF_CRYPT_RC4: return "RC4";
+		case PDF_CRYPT_AESV2: return "AES";
+		case PDF_CRYPT_AESV3: return "AES";
+		case PDF_CRYPT_UNKNOWN: return "Unknown";
+		}
+	}
+	return "None";
+}
+
+int
+pdf_get_crypt_length(pdf_xref *xref)
+{
+	if (xref->crypt)
+		return xref->crypt->length;
+	return 0;
 }
 
 /*

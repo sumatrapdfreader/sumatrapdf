@@ -62,10 +62,11 @@ pdf_load_link(pdf_xref *xref, fz_obj *dict)
 	}
 
 	action = fz_dict_gets(dict, "A");
-	/* SumatraPDF: fall back to an "Additional Action"'s button "Down" or "Up" action */
+
+	/* fall back to additional action button's down/up action */
 	if (!action)
-		if ((action = fz_dict_gets(dict, "AA")))
-			action = fz_dict_getsa(action, "U", "D");
+		action = fz_dict_getsa(fz_dict_gets(dict, "AA"), "U", "D");
+
 	if (action)
 	{
 		obj = fz_dict_gets(action, "S");

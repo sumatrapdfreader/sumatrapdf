@@ -236,7 +236,9 @@ dloginfoproc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 		if (xref->crypt)
 		{
-			SetDlgItemTextA(hwnd, 0x12, "Encrypted.");
+			sprintf(buf, "Standard V%d %d-bit %s", pdf_get_crypt_revision(xref),
+				pdf_get_crypt_length(xref), pdf_get_crypt_method(xref));
+			SetDlgItemTextA(hwnd, 0x12, buf);
 			strcpy(buf, "");
 			if (pdf_has_permission(xref, PDF_PERM_PRINT))
 				strcat(buf, "print, ");
