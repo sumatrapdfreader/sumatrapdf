@@ -3244,8 +3244,10 @@ static void OnMenuPrint(WindowInfo *win)
                     pd.lpPageRanges->nToPage  =dm->pageCount();
                 }
                 LPDEVMODE devMode = (LPDEVMODE)GlobalLock(pd.hDevMode);
-                PrintToDevice(dm->engine, pd.hDC, devMode, pd.nPageRanges, pd.lpPageRanges,
+                BaseEngine *engine = dm->engine->Clone();
+                PrintToDevice(engine, pd.hDC, devMode, pd.nPageRanges, pd.lpPageRanges,
                               dm->rotation(), advanced.range, advanced.scale, win->selectionOnPage);
+                delete engine;
                 if (devMode)
                     GlobalUnlock(pd.hDevMode);
             }

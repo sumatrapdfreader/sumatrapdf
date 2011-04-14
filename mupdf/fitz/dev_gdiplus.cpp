@@ -229,6 +229,7 @@ public:
 		
 		area.x0 /= xstep; area.x1 /= xstep;
 		area.y0 /= ystep; area.y1 /= ystep;
+		ctm.e = bbox.x0; ctm.f = bbox.y0;
 		
 		stack->xstep = xstep;
 		stack->ystep = ystep;
@@ -251,6 +252,12 @@ public:
 				stack->saveG->DrawImage(stack->layer, bounds, 0, 0, stack->layer->GetWidth(), stack->layer->GetHeight(), UnitPixel);
 			}
 		}
+		
+		delete graphics;
+		graphics = stack->saveG;
+		stack->saveG = NULL;
+		delete stack->layer;
+		stack->layer = NULL;
 		
 		popClip();
 	}
@@ -342,25 +349,11 @@ public:
 		{
 			int w = ceilf(image->w * scale);
 			int h = ceilf(image->h * scale);
-			Bitmap *scaled = NULL;
 			
-			if (image->colorspace == fz_device_gray)
-			{
-				fz_pixmap *scaledpx = NULL;//fz_smoothscalepixmap(image, 0, 0, w, h);
-				if (scaledpx)
-				{
-					scaled = new PixmapBitmap(scaledpx);
-					fz_drop_pixmap(scaledpx);
-				}
-			}
-			
-			if (!scaled)
-			{
-				scaled = new Bitmap(w, h);
-				Graphics g2(scaled);
-				_setup(&g2);
-				g2.DrawImage(&PixmapBitmap(image), 0, 0, w, h);
-			}
+			Bitmap *scaled = new Bitmap(w, h);
+			Graphics g2(scaled);
+			_setup(&g2);
+			g2.DrawImage(&PixmapBitmap(image), 0, 0, w, h);
 			
 			graphics->DrawImage(scaled, corners, 3, 0, 0, w, h, UnitPixel, &imgAttrs);
 			delete scaled;
@@ -800,7 +793,10 @@ fz_gdiplus_clip_path(void *user, fz_path *path, int evenodd, fz_matrix ctm)
 	GraphicsPath *gpath = gdiplus_get_path(path, ctm, evenodd);
 	
 	// TODO: clipping non-rectangular areas doesn't result in anti-aliased edges
-	((userData *)user)->pushClip(gpath);
+	if (path->len > 0)
+		((userData *)user)->pushClip(gpath);
+	else
+		((userData *)user)->pushClip(&Region(Rect()));
 	
 	delete gpath;
 }
@@ -813,7 +809,10 @@ fz_gdiplus_clip_stroke_path(void *user, fz_path *path, fz_stroke_state *stroke, 
 	Pen *pen = gdiplus_get_pen(&SolidBrush(Color()), ctm, stroke);
 	gpath->Widen(pen);
 	
-	((userData *)user)->pushClip(gpath);
+	if (path->len > 0)
+		((userData *)user)->pushClip(gpath);
+	else
+		((userData *)user)->pushClip(&Region(Rect()));
 	
 	delete pen;
 	delete gpath;

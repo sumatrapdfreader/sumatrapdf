@@ -1000,7 +1000,7 @@ pdf_show_pattern(pdf_csi *csi, pdf_pattern *pat, fz_rect area, int what)
 			{
 				gstate->ctm = fz_concat(fz_translate(x * pat->xstep, y * pat->ystep), ptm);
 				csi->top_ctm = gstate->ctm;
-				error = pdf_run_csi_buffer(csi, pat->resources, pat->contents);
+				error = pdf_run_buffer(csi, pat->resources, pat->contents);
 				while (oldtop < csi->gtop)
 					pdf_grestore(csi);
 				if (error)
