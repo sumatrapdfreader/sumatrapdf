@@ -202,14 +202,15 @@ $(O)\Benchmark.obj: src\Benchmark.h src\PdfEngine.h
 $(O)\BencUtil.obj: baseutils\BaseUtil.h baseutils\BencUtil.h baseutils\StrUtil.h
 $(O)\BencUtil.obj: baseutils\Vec.h
 $(O)\CPdfFilter.obj: baseutils\BaseUtil.h baseutils\GeomUtil.h baseutils\StrUtil.h
-$(O)\CPdfFilter.obj: mupdf\fitz\fitz.h mupdf\pdf\mupdf.h src\BaseEngine.h
-$(O)\CPdfFilter.obj: src\ifilter\CPdfFilter.h src\ifilter\FilterBase.h src\ifilter\PdfFilter.h
-$(O)\CPdfFilter.obj: src\PdfEngine.h
+$(O)\CPdfFilter.obj: baseutils\Vec.h mupdf\fitz\fitz.h mupdf\pdf\mupdf.h
+$(O)\CPdfFilter.obj: src\BaseEngine.h src\ifilter\CPdfFilter.h src\ifilter\FilterBase.h
+$(O)\CPdfFilter.obj: src\ifilter\PdfFilter.h src\PdfEngine.h
 $(O)\CrashHandler.obj: baseutils\BaseUtil.h baseutils\FileUtil.h baseutils\GeomUtil.h
-$(O)\CrashHandler.obj: baseutils\Http.h baseutils\StrUtil.h baseutils\Vec.h
-$(O)\CrashHandler.obj: baseutils\WinUtil.h baseutils\ZipUtil.h src\AppPrefs.h
-$(O)\CrashHandler.obj: src\AppTools.h src\CrashHandler.h src\DisplayState.h
-$(O)\CrashHandler.obj: src\SumatraPDF.h src\translations.h src\Version.h
+$(O)\CrashHandler.obj: baseutils\Http.h baseutils\SimpleLog.h baseutils\StrUtil.h
+$(O)\CrashHandler.obj: baseutils\Vec.h baseutils\WinUtil.h baseutils\ZipUtil.h
+$(O)\CrashHandler.obj: src\AppPrefs.h src\AppTools.h src\CrashHandler.h
+$(O)\CrashHandler.obj: src\DisplayState.h src\SumatraPDF.h src\translations.h
+$(O)\CrashHandler.obj: src\Version.h
 $(O)\CTeXFilter.obj: baseutils\BaseUtil.h baseutils\StrUtil.h src\ifilter\CTeXFilter.h
 $(O)\CTeXFilter.obj: src\ifilter\FilterBase.h src\ifilter\PdfFilter.h
 $(O)\DialogSizer.obj: baseutils\BaseUtil.h baseutils\DialogSizer.h baseutils\GeomUtil.h
@@ -243,8 +244,9 @@ $(O)\ParseCommandLine.obj: baseutils\StrUtil.h baseutils\Vec.h baseutils\WinUtil
 $(O)\ParseCommandLine.obj: src\AppPrefs.h src\Benchmark.h src\DisplayState.h
 $(O)\ParseCommandLine.obj: src\ParseCommandLine.h src\SumatraPDF.h
 $(O)\PdfEngine.obj: baseutils\BaseUtil.h baseutils\FileUtil.h baseutils\GeomUtil.h
-$(O)\PdfEngine.obj: baseutils\StrUtil.h mupdf\fitz\fitz.h mupdf\pdf\mupdf.h
-$(O)\PdfEngine.obj: mupdf\xps\muxps.h src\BaseEngine.h src\PdfEngine.h
+$(O)\PdfEngine.obj: baseutils\StrUtil.h baseutils\Vec.h mupdf\fitz\fitz.h
+$(O)\PdfEngine.obj: mupdf\pdf\mupdf.h mupdf\xps\muxps.h src\BaseEngine.h
+$(O)\PdfEngine.obj: src\PdfEngine.h
 $(O)\PdfFilterDll.obj: src\ifilter\CPdfFilter.h src\ifilter\CTeXFilter.h src\ifilter\FilterBase.h
 $(O)\PdfFilterDll.obj: src\ifilter\PdfFilter.h
 $(O)\PdfSync.obj: baseutils\BaseUtil.h baseutils\FileUtil.h baseutils\GeomUtil.h

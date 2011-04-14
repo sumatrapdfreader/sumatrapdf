@@ -261,30 +261,38 @@ WCHAR *fz_span_to_wchar(fz_text_span *text, TCHAR *lineSep, RectI **coords_out=N
     return content;
 }
 
+extern "C" static int read_istream(fz_stream *stm, unsigned char *buf, int len)
+{
+    ULONG cbRead = len;
+    HRESULT res = ((IStream *)stm->state)->Read(buf, len, &cbRead);
+    if (FAILED(res))
+        return fz_throw("read error: %s", res);
+    return (int)cbRead;
+}
+
+extern "C" static void seek_istream(fz_stream *stm, int offset, int whence)
+{
+    LARGE_INTEGER off;
+    ULARGE_INTEGER n;
+    off.QuadPart = offset;
+    HRESULT res = ((IStream *)stm->state)->Seek(off, whence, &n);
+    if (FAILED(res))
+        fz_warn("cannot seek: %s", res);
+    stm->pos = (int)n.QuadPart;
+    stm->rp = stm->wp = stm->bp;
+}
+
+extern "C" static void close_istream(fz_stream *stm)
+{
+    ((IStream *)stm->state)->Release();
+}
+
 fz_stream *fz_open_istream(IStream *stream)
 {
-    // TODO: implement a IStream-to-fz_stream proxy
-    STATSTG stat;
-    HRESULT res = stream->Stat(&stat, STATFLAG_NONAME);
-    if (FAILED(res))
-        return NULL;
+    stream->AddRef();
 
-    DWORD size = stat.cbSize.LowPart;
-    fz_buffer *filedata = fz_new_buffer(size);
-    filedata->len = size;
-
-    LARGE_INTEGER zero;
-    zero.QuadPart = 0;
-    stream->Seek(zero, STREAM_SEEK_SET, NULL);
-    res = stream->Read(filedata->data, filedata->len, NULL);
-    if (FAILED(res)) {
-        fz_drop_buffer(filedata);
-        return NULL;
-    }
-
-    fz_stream *stm = fz_open_buffer(filedata);
-    fz_drop_buffer(filedata);
-
+    fz_stream *stm = fz_new_stream(stream, read_istream, close_istream);
+    stm->seek = seek_istream;
     return stm;
 }
 
@@ -535,11 +543,8 @@ bool PdfEngine::load(const TCHAR *fileName, PasswordUI *pwdUI)
         return false;
 
 OpenEmbeddedFile:
-    if (!load_from_stream(file, pwdUI)) {
-        fz_close(file);
+    if (!load_from_stream(file, pwdUI))
         return false;
-    }
-    fz_close(file);
 
     if (!embedMarks || !*embedMarks)
         return finishLoading();
@@ -570,7 +575,7 @@ bool PdfEngine::load(IStream *stream, PasswordUI *pwdUI)
 bool PdfEngine::load(fz_stream *stm, PasswordUI *pwdUI)
 {
     assert(!_fileName && !_xref);
-    if (!load_from_stream(stm, pwdUI))
+    if (!load_from_stream(fz_keep_stream(stm), pwdUI))
         return false;
     return finishLoading();
 }
@@ -579,6 +584,7 @@ bool PdfEngine::load_from_stream(fz_stream *stm, PasswordUI *pwdUI)
 {
     // don't pass in a password so that _xref isn't thrown away if it was wrong
     fz_error error = pdf_open_xref_with_stream(&_xref, stm, NULL);
+    fz_close(stm);
     if (error || !_xref)
         return false;
 
@@ -1433,7 +1439,7 @@ protected:
 
     virtual bool    load(const TCHAR *fileName);
     virtual bool    load(IStream *stream);
-    bool            load(fz_stream *stm);
+    bool            load_from_stream(fz_stream *stm);
 
     xps_page      * getXpsPage(int pageNo, bool failIfBusy=false);
     fz_matrix       viewctm(int pageNo, float zoom, int rotate) {
@@ -1510,19 +1516,18 @@ bool CXpsEngine::load(const TCHAR *fileName)
     if (!file)
         return false;
 
-    bool result = load(file);
-    fz_close(file);
-    return result;
+    return load_from_stream(file);
 }
 
 bool CXpsEngine::load(IStream *stream)
 {
-    return load(fz_open_istream(stream));
+    return load_from_stream(fz_open_istream(stream));
 }
 
-bool CXpsEngine::load(fz_stream *stm)
+bool CXpsEngine::load_from_stream(fz_stream *stm)
 {
     xps_open_stream(&_ctx, stm);
+    fz_close(stm);
     if (!_ctx)
         return false;
 

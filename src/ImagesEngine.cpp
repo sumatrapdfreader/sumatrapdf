@@ -56,24 +56,11 @@ bool IsImageFile(const char *fileName)
            Str::EndsWithI(fileName, ".bmp");
 }
 
-static int cmpPageByName(const ImagesPage **pp1, const ImagesPage **pp2)
+static int cmpPageByName(const void *o1, const void *o2)
 {
-    const ImagesPage *p1 = *pp1;
-    const ImagesPage *p2 = *pp2;
-    const TCHAR *name1 = p1->fileName;
-    const TCHAR *name2 = p2->fileName;
-    return Str::CmpNatural(name1, name2);
-}
-
-static int cmpPageByName2(const void *o1, const void *o2)
-{
-    const ImagesPage **pp1 = (const ImagesPage**)o1;
-    const ImagesPage **pp2 = (const ImagesPage**)o2;
-    const ImagesPage *p1 = *pp1;
-    const ImagesPage *p2 = *pp2;
-    const TCHAR *name1 = p1->fileName;
-    const TCHAR *name2 = p2->fileName;
-    return Str::CmpNatural(name1, name2);
+    ImagesPage *p1 = *(ImagesPage **)o1;
+    ImagesPage *p2 = *(ImagesPage **)o2;
+    return Str::CmpNatural(p1->fileName, p2->fileName);
 }
 
 static ImagesPage *LoadCurrentCbzPage(unzFile& uf)
@@ -233,8 +220,7 @@ bool ImagesEngine::LoadCbrFile(const TCHAR *file)
 
     if (pages.Count() == 0)
         return false;
-    // TODO: why doesn't pages.Sort(cmpPageByName); work?
-    pages.Sort(cmpPageByName2);
+    pages.Sort(cmpPageByName);
     return true;
 }
 
@@ -329,7 +315,7 @@ bool ImagesEngine::LoadCbzFile(const TCHAR *file)
 
     if (pages.Count() == 0)
         return false;
-    pages.Sort(cmpPageByName2);
+    pages.Sort(cmpPageByName);
     return true;
 }
 
