@@ -8,8 +8,10 @@ import os.path
 import shutil
 import sys
 import time
+import re
 
 from util import log, run_cmd_throw, test_for_flag, s3UploadFilePublic, s3UploadDataPublic, ensure_s3_doesnt_exist, ensure_path_exists, zip_file, extract_sumatra_version, verify_started_in_right_directory, build_installer_native, parse_svninfo_out
+from extract_strings import C_FILES_TO_PROCESS, TB_TRANSLATION_PATTERN
 
 args = sys.argv
 upload               = test_for_flag(args, "-upload")
@@ -80,6 +82,12 @@ def main():
   else:
     ver = extract_sumatra_version(os.path.join("src", "Version.h"))
   log("Version: '%s'" % ver)
+
+  if not build_prerelease and not testing:
+    for file in C_FILES_TO_PROCESS:
+      file_content = open(os.path.join("src", file), "r").read()
+      if re.findall(TB_TRANSLATION_PATTERN, file_content):
+        raise RuntimeError("Not building release with untranslated strings!")
 
   filename_base = "SumatraPDF-%s" % ver
   if build_prerelease:
