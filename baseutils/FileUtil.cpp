@@ -101,21 +101,6 @@ TCHAR *Normalize(const TCHAR *path)
     return normpath;
 }
 
-// Compare two file path.
-// Returns 0 if the paths lhs and rhs point to the same file.
-//         1 if the paths point to different files
-//         -1 if an error occured
-static int Compare(const TCHAR *lhs, const TCHAR *rhs)
-{
-    ScopedMem<TCHAR> nl(Normalize(lhs));
-    ScopedMem<TCHAR> nr(Normalize(rhs));
-    if (!nl || !nr)
-        return -1;
-    if (!Str::EqI(nl, nr))
-        return 1;
-    return 0;
-}
-
 // Code adapted from http://stackoverflow.com/questions/562701/best-way-to-determine-if-two-path-reference-to-same-file-in-c-c/562830#562830
 // Determine if 2 paths point ot the same file...
 bool IsSame(const TCHAR *path1, const TCHAR *path2)
@@ -130,16 +115,22 @@ bool IsSame(const TCHAR *path1, const TCHAR *path2)
             isSame = fi1.dwVolumeSerialNumber == fi2.dwVolumeSerialNumber &&
                      fi1.nFileIndexHigh == fi2.nFileIndexHigh &&
                      fi1.nFileIndexLow == fi2.nFileIndexLow;
-            needFallback = FALSE;
+            needFallback = false;
         }
     }
 
     CloseHandle(handle1);
     CloseHandle(handle2);
 
-    if (needFallback)
-        return Compare(path1, path2) == 0;
-    return isSame;
+    if (!needFallback)
+        return isSame;
+
+    ScopedMem<TCHAR> npath1(Normalize(path1));
+    ScopedMem<TCHAR> npath2(Normalize(path2));
+    // consider the files different, if their paths can't be normalized
+    if (!npath1 || !npath2)
+        return false;
+    return Str::EqI(npath1, npath2);
 }
 
 }
@@ -185,34 +176,39 @@ size_t GetSize(const TCHAR *filePath)
 
 char *ReadAll(const TCHAR *filePath, size_t *fileSizeOut)
 {
-    char *data = NULL;
-
-    HANDLE h = CreateFile(filePath, GENERIC_READ, FILE_SHARE_READ, NULL,  
-            OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL,  NULL); 
-    if (h == INVALID_HANDLE_VALUE)
-        return NULL;
-
-    DWORD size = GetFileSize(h, NULL);
+    size_t size = GetSize(filePath);
     if (INVALID_FILE_SIZE == size)
-        goto Exit;
+        return NULL;
 
     /* allocate one byte more and 0-terminate just in case it's a text
        file we'll want to treat as C string. Doesn't hurt for binary
        files */
-    data = SAZA(char, size + 1);
+    char *data = SAZA(char, size + 1);
     if (!data)
-        goto Exit;
+        return NULL;
+
+    if (!ReadAll(filePath, data, size)) {
+        free(data);
+        return NULL;
+    }
+
+    if (fileSizeOut)
+        *fileSizeOut = size;
+    return data;
+}
+
+bool ReadAll(const TCHAR *filePath, char *buffer, size_t bufferLen)
+{
+    HANDLE h = CreateFile(filePath, GENERIC_READ, FILE_SHARE_READ, NULL,  
+                          OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL,  NULL); 
+    if (h == INVALID_HANDLE_VALUE)
+        return false;
 
     DWORD sizeRead;
-    bool ok = ReadFile(h, data, size, &sizeRead, NULL);
-    if (!ok || sizeRead != size) {
-        free(data);
-        data = NULL;
-    } else if (fileSizeOut)
-        *fileSizeOut = size;
-Exit:
+    BOOL ok = ReadFile(h, buffer, bufferLen, &sizeRead, NULL);
     CloseHandle(h);
-    return data;
+
+    return ok && sizeRead == bufferLen;
 }
 
 bool WriteAll(const TCHAR *filePath, void *data, size_t dataLen)
@@ -268,4 +264,3 @@ bool Create(const TCHAR *dir)
 }
 
 }
-

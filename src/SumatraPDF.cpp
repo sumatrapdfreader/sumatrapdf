@@ -330,7 +330,7 @@ static void SerializableGlobalPrefs_Deinit()
 void LaunchBrowser(const TCHAR *url)
 {
     if (gRestrictedUse) return;
-    launch_url(url);
+    LaunchFile(url, NULL, _T("open"));
 }
 
 static bool CanViewExternally(WindowInfo *win=NULL)
@@ -373,7 +373,7 @@ static bool ViewWithFoxit(WindowInfo *win, TCHAR *args=NULL)
     // [PDF filename] [-n <page number>] [-pwd <password>] [-z <zoom>]
     // TODO: Foxit allows passing password and zoom
     ScopedMem<TCHAR> params(Str::Format(_T("%s \"%s\" -n %d"), args, win->loadedFilePath, win->dm->currentPageNo()));
-    exec_with_params(exePath, params, FALSE);
+    LaunchFile(exePath, params);
     return true;
 }
 
@@ -401,7 +401,7 @@ static bool ViewWithPDFXChange(WindowInfo *win, TCHAR *args=NULL)
     // [/A "param=value [&param2=value ..."] [PDF filename] 
     // /A params: page=<page number>
     ScopedMem<TCHAR> params(Str::Format(_T("%s /A \"page=%d\" \"%s\""), args, win->dm->currentPageNo(), win->loadedFilePath));
-    exec_with_params(exePath, params, FALSE);
+    LaunchFile(exePath, params);
     return true;
 }
 
@@ -437,7 +437,7 @@ static bool ViewWithAcrobat(WindowInfo *win, TCHAR *args=NULL)
         params.Set(Str::Format(_T("/A \"page=%d\" %s \"%s\""), win->dm->currentPageNo(), args, win->dm->fileName()));
     else
         params.Set(Str::Format(_T("%s \"%s\""), args, win->loadedFilePath));
-    exec_with_params(exePath, params, FALSE);
+    LaunchFile(exePath, params);
 
     return true;
 }
@@ -1255,31 +1255,27 @@ void UpdateToolbarAndScrollbarsForAllWindows()
 #define MIN_WIN_DX 50
 #define MIN_WIN_DY 50
 
-void EnsureWindowVisibility(RectI *rect)
+void EnsureWindowVisibility(RectI& rect)
 {
-    RECT rc = rect->ToRECT();
-
     // adjust to the work-area of the current monitor (not necessarily the primary one)
     MONITORINFO mi = { 0 };
     mi.cbSize = sizeof(mi);
-    if (!GetMonitorInfo(MonitorFromRect(&rc, MONITOR_DEFAULTTONEAREST), &mi))
+    if (!GetMonitorInfo(MonitorFromRect(&rect.ToRECT(), MONITOR_DEFAULTTONEAREST), &mi))
         SystemParametersInfo(SPI_GETWORKAREA, 0, &mi.rcWork, 0);
 
+    RectI work = RectIFromRECT(mi.rcWork);
     // make sure that the window is neither too small nor bigger than the monitor
-    if (rect->dx < MIN_WIN_DX || rect->dx > RectDx(&mi.rcWork))
-        rect->dx = (int)min(RectDy(&mi.rcWork) * DEF_PAGE_RATIO, RectDx(&mi.rcWork));
-    if (rect->dy < MIN_WIN_DY || rect->dy > RectDy(&mi.rcWork))
-        rect->dy = RectDy(&mi.rcWork);
+    if (rect.dx < MIN_WIN_DX || rect.dx > work.dx)
+        rect.dx = (int)min(work.dy * DEF_PAGE_RATIO, work.dx);
+    if (rect.dy < MIN_WIN_DY || rect.dy > work.dy)
+        rect.dy = work.dy;
 
     // check whether the lower half of the window's title bar is
     // inside a visible working area
     int captionDy = GetSystemMetrics(SM_CYCAPTION);
-    rc.bottom = rc.top + captionDy;
-    rc.top += captionDy / 2;
-    if (!IntersectRect(&mi.rcMonitor, &mi.rcWork, &rc)) {
-        rect->x = mi.rcWork.left;
-        rect->y = mi.rcWork.top;
-    }
+    RectI halfCaption(rect.x, rect.y + captionDy / 2, rect.dx, captionDy / 2);
+    if (halfCaption.Intersect(work).IsEmpty())
+        rect = RectI(work.TL(), rect.Size());
 }
 
 static WindowInfo* WindowInfo_CreateEmpty()
@@ -1289,14 +1285,15 @@ static WindowInfo* WindowInfo_CreateEmpty()
         // center the window on the primary monitor
         RECT workArea;
         SystemParametersInfo(SPI_GETWORKAREA, 0, &workArea, 0);
-        windowPos.y = workArea.top;
-        windowPos.dy = RectDy(&workArea);
-        windowPos.dx = (int)min(windowPos.dy * DEF_PAGE_RATIO, RectDx(&workArea));
-        windowPos.x = (RectDx(&workArea) - windowPos.dx) / 2;
+        RectI work = RectIFromRECT(workArea);
+        windowPos.y = work.x;
+        windowPos.dy = work.dy;
+        windowPos.dx = (int)min(windowPos.dy * DEF_PAGE_RATIO, work.dx);
+        windowPos.x = (work.dx - windowPos.dx) / 2;
     }
     else {
         windowPos = gGlobalPrefs.m_windowPos;
-        EnsureWindowVisibility(&windowPos);
+        EnsureWindowVisibility(windowPos);
     }
 
     HWND hwndFrame = CreateWindow(
@@ -1501,9 +1498,8 @@ Error:
     if (isNewWindow || placeWindow && state) {
         assert(win);
         if (isNewWindow && state && !state->windowPos.IsEmpty()) {
-            RectI rect = state->windowPos;
             // Make sure it doesn't have a position like outside of the screen etc.
-            rect_shift_to_work_area(&rect.ToRECT(), FALSE);
+            RectI rect = ShiftRectToWorkArea(state->windowPos);
             // This shouldn't happen until !win->IsAboutWindow(), so that we don't
             // accidentally update gGlobalState with this window's dimensions
             MoveWindow(win->hwndFrame, rect.x, rect.y, rect.dx, rect.dy, TRUE);
@@ -1582,7 +1578,7 @@ void CheckPositionAndSize(DisplayState *ds)
 
     if (ds->windowPos.IsEmpty())
         ds->windowPos = gGlobalPrefs.m_windowPos;
-    EnsureWindowVisibility(&ds->windowPos);
+    EnsureWindowVisibility(ds->windowPos);
 }
 
 WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin, bool forceReuse)
@@ -3995,22 +3991,14 @@ void WindowInfo_EnterFullscreen(WindowInfo *win, bool presentation)
     if (win->tocShow)
         win->HideTocBox();
 
-    int x, y, w, h;
+    RectI rect;
     MONITORINFOEX mi;
     mi.cbSize = sizeof(mi);
     HMONITOR m = MonitorFromWindow(win->hwndFrame, MONITOR_DEFAULTTONEAREST);
-    if (!GetMonitorInfo(m, (LPMONITORINFOEX)&mi)) {
-        x = 0;
-        y = 0;
-        w = GetSystemMetrics(SM_CXSCREEN);
-        h = GetSystemMetrics(SM_CYSCREEN);
-    }
-    else {
-        x = mi.rcMonitor.left;
-        y = mi.rcMonitor.top;
-        w = RectDx(&mi.rcMonitor);
-        h = RectDy(&mi.rcMonitor);
-    }
+    if (!GetMonitorInfo(m, (LPMONITORINFOEX)&mi))
+        rect = RectI(0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
+    else
+        rect = RectIFromRECT(mi.rcMonitor);
     long ws = GetWindowLong(win->hwndFrame, GWL_STYLE);
     if (!presentation || !win->fullScreen)
         win->prevStyle = ws;
@@ -4022,8 +4010,8 @@ void WindowInfo_EnterFullscreen(WindowInfo *win, bool presentation)
     SetMenu(win->hwndFrame, NULL);
     ShowWindow(win->hwndReBar, SW_HIDE);
     SetWindowLong(win->hwndFrame, GWL_STYLE, ws);
-    SetWindowPos(win->hwndFrame, HWND_NOTOPMOST, x, y, w, h, SWP_FRAMECHANGED|SWP_NOZORDER);
-    SetWindowPos(win->hwndCanvas, NULL, 0, 0, w, h, SWP_NOZORDER);
+    SetWindowPos(win->hwndFrame, HWND_NOTOPMOST, rect.x, rect.y, rect.dx, rect.dy, SWP_FRAMECHANGED|SWP_NOZORDER);
+    SetWindowPos(win->hwndCanvas, NULL, 0, 0, rect.dx, rect.dy, SWP_NOZORDER);
 
     if (presentation)
         win->dm->setPresentationMode(true);

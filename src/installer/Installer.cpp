@@ -883,7 +883,7 @@ void CreateButtonExit(HWND hwndParent)
                         x, y, buttonDx, buttonDy, hwndParent, 
                         (HMENU)ID_BUTTON_EXIT,
                         ghinst, NULL);
-    Win::SetFont(gHwndButtonExit, gFontDefault);
+    SetWindowFont(gHwndButtonExit, gFontDefault, TRUE);
 }
 
 void CreateButtonRunSumatra(HWND hwndParent)
@@ -901,7 +901,7 @@ void CreateButtonRunSumatra(HWND hwndParent)
                         x, y, buttonDx, buttonDy, hwndParent, 
                         (HMENU)ID_BUTTON_START_SUMATRA,
                         ghinst, NULL);
-    Win::SetFont(gHwndButtonRunSumatra, gFontDefault);
+    SetWindowFont(gHwndButtonRunSumatra, gFontDefault, TRUE);
 }
 
 static DWORD WINAPI InstallerThread(LPVOID data)
@@ -994,10 +994,10 @@ void OnButtonInstall()
         OnButtonOptions();
 
     // create a progress bar in place of the Options button
-    RECT rc = RectI(0, 0, INSTALLER_WIN_DX / 2, 22).ToRECT();
-    MapWindowRect(gHwndButtonOptions, gHwndFrame, &rc);
+    RectI rc(0, 0, INSTALLER_WIN_DX / 2, 22);
+    rc = MapRectToWindow(rc, gHwndButtonOptions, gHwndFrame);
     gHwndProgressBar = CreateWindow(PROGRESS_CLASS, NULL, WS_CHILD | WS_VISIBLE,
-                                    rc.left, rc.top, RectDx(&rc), RectDy(&rc),
+                                    rc.x, rc.y, rc.dx, rc.dy,
                                     gHwndFrame, 0, ghinst, NULL);
     SendMessage(gHwndProgressBar, PBM_SETRANGE32, 0, GetInstallationStepCount());
     SendMessage(gHwndProgressBar, PBM_SETSTEP, 1, 0);
@@ -1599,7 +1599,7 @@ void OnCreateUninstaller(HWND hwnd)
                         BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
                         x, y, buttonDx, buttonDy, hwnd,
                         (HMENU)ID_BUTTON_UNINSTALL, ghinst, NULL);
-    Win::SetFont(gHwndButtonUninstall, gFontDefault);
+    SetWindowFont(gHwndButtonUninstall, gFontDefault, TRUE);
 }
 
 static LRESULT CALLBACK UninstallerWndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -1685,30 +1685,30 @@ void OnCreateInstaller(HWND hwnd)
                         BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
                         x, y, buttonDx, buttonDy, hwnd, 
                         (HMENU)ID_BUTTON_INSTALL, ghinst, NULL);
-    Win::SetFont(gHwndButtonInstall, gFontDefault);
+    SetWindowFont(gHwndButtonInstall, gFontDefault, TRUE);
 
     x = 8;
     gHwndButtonOptions = CreateWindow(WC_BUTTON, _T("&Options"),
                         BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
                         x, y, 96, buttonDy, hwnd, 
                         (HMENU)ID_BUTTON_OPTIONS, ghinst, NULL);
-    Win::SetFont(gHwndButtonOptions, gFontDefault);
+    SetWindowFont(gHwndButtonOptions, gFontDefault, TRUE);
 
     y = TITLE_PART_DY + x;
     gHwndStaticInstDir = CreateWindow(WC_STATIC, _T("Install ") TAPP _T(" into the following &folder:"),
                                       WS_CHILD,
                                       x, y, r.dx - 2 * x, 20, hwnd, 0, ghinst, NULL);
-    Win::SetFont(gHwndStaticInstDir, gFontDefault);
+    SetWindowFont(gHwndStaticInstDir, gFontDefault, TRUE);
     y += 20;
 
     gHwndTextboxInstDir = CreateWindow(WC_EDIT, gGlobalData.installDir,
                                        WS_CHILD | WS_TABSTOP | WS_BORDER | ES_LEFT | ES_AUTOHSCROLL,
                                        x, y, r.dx - 3 * x - 20, 20, hwnd, 0, ghinst, NULL);
-    Win::SetFont(gHwndTextboxInstDir, gFontDefault);
+    SetWindowFont(gHwndTextboxInstDir, gFontDefault, TRUE);
     gHwndButtonBrowseDir = CreateWindow(WC_BUTTON, _T("&..."),
                                         BS_PUSHBUTTON | WS_CHILD | WS_TABSTOP,
                                         r.dx - x - 20, y, 20, 20, hwnd, (HMENU)ID_BUTTON_BROWSE, ghinst, NULL);
-    Win::SetFont(gHwndButtonBrowseDir, gFontDefault);
+    SetWindowFont(gHwndButtonBrowseDir, gFontDefault, TRUE);
     y += 40;
 
     ScopedMem<TCHAR> defaultViewer(GetDefaultPdfViewer());
@@ -1722,7 +1722,7 @@ void OnCreateInstaller(HWND hwnd)
             WC_BUTTON, _T("Use ") TAPP _T(" as the &default PDF reader"),
             WS_CHILD | BS_AUTOCHECKBOX | WS_TABSTOP,
             x, y, r.dx - 2 * x, 22, hwnd, (HMENU)ID_CHECKBOX_MAKE_DEFAULT, ghinst, NULL);
-        Win::SetFont(gHwndCheckboxRegisterDefault, gFontDefault);
+        SetWindowFont(gHwndCheckboxRegisterDefault, gFontDefault, TRUE);
         // only check the "Use as default" checkbox when no other PDF viewer
         // is currently selected (not going to intrude)
         Button_SetCheck(gHwndCheckboxRegisterDefault, !hasOtherViewer || gGlobalData.registerAsDefault);
@@ -1733,7 +1733,7 @@ void OnCreateInstaller(HWND hwnd)
         WC_BUTTON, _T("Install PDF &browser plugin for Firefox, Chrome and Opera"),
         WS_CHILD | BS_AUTOCHECKBOX | WS_TABSTOP,
         x, y, r.dx - 2 * x, 22, hwnd, (HMENU)ID_CHECKBOX_BROWSER_PLUGIN, ghinst, NULL);
-    Win::SetFont(gHwndCheckboxRegisterBrowserPlugin, gFontDefault);
+    SetWindowFont(gHwndCheckboxRegisterBrowserPlugin, gFontDefault, TRUE);
     Button_SetCheck(gHwndCheckboxRegisterBrowserPlugin, gGlobalData.installBrowserPlugin || IsBrowserPluginInstalled());
     y += 22;
 
@@ -1741,7 +1741,7 @@ void OnCreateInstaller(HWND hwnd)
         WC_BUTTON, _T("Let Windows Desktop Search &search PDF documents"),
         WS_CHILD | BS_AUTOCHECKBOX | WS_TABSTOP,
         x, y, r.dx - 2 * x, 22, hwnd, (HMENU)ID_CHECKBOX_PDF_FILTER, ghinst, NULL);
-    Win::SetFont(gHwndCheckboxRegisterPdfFilter, gFontDefault);
+    SetWindowFont(gHwndCheckboxRegisterPdfFilter, gFontDefault, TRUE);
     Button_SetCheck(gHwndCheckboxRegisterPdfFilter, gGlobalData.installPdfFilter || IsPdfFilterInstalled());
 
     gShowOptions = !gShowOptions;

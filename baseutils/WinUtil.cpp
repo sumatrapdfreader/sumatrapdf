@@ -341,142 +341,45 @@ DWORD GetFileVersion(TCHAR *path)
     return fileVersion;
 }
 
-// used to be in win_util.cpp
-void launch_url(const TCHAR *url)
+void LaunchFile(const TCHAR *path, const TCHAR *params, const TCHAR *verb, bool hidden)
 {
-    if (!url)
+    if (!path)
         return;
 
-    SHELLEXECUTEINFO sei;
-    ZeroMemory(&sei, sizeof(sei));
+    SHELLEXECUTEINFO sei = { 0 };
     sei.cbSize  = sizeof(sei);
     sei.fMask   = SEE_MASK_FLAG_NO_UI;
-    sei.lpVerb  = TEXT("open");
-    sei.lpFile  = url;
-    sei.nShow   = SW_SHOWNORMAL;
-
-    ShellExecuteEx(&sei);
-    return;
-}
-
-void exec_with_params(const TCHAR *exe, const TCHAR *params, bool hidden)
-{
-    if (!exe)
-        return;
-
-    SHELLEXECUTEINFO sei;
-    ZeroMemory(&sei, sizeof(sei));
-    sei.cbSize  = sizeof(sei);
-    sei.fMask   = SEE_MASK_FLAG_NO_UI;
-    sei.lpVerb  = NULL;
-    sei.lpFile  = exe;
+    sei.lpVerb  = verb;
+    sei.lpFile  = path;
     sei.lpParameters = params;
-    if (hidden)
-        sei.nShow = SW_HIDE;
-    else
-        sei.nShow   = SW_SHOWNORMAL;
+    sei.nShow   = hidden ? SW_HIDE : SW_SHOWNORMAL;
     ShellExecuteEx(&sei);
-}
-
-/* On windows those are defined as:
-#define CSIDL_PROGRAMS           0x0002
-#define CSIDL_PERSONAL           0x0005
-#define CSIDL_APPDATA            0x001a
- see shlobj.h for more */
-
-#ifdef CSIDL_APPDATA
-/* this doesn't seem to be defined on sm 2002 */
-#define SPECIAL_FOLDER_PATH CSIDL_APPDATA
-#endif
-
-#ifdef CSIDL_PERSONAL
-/* this is defined on sm 2002 and goes to "\My Documents".
-   Not sure if I should use it */
- #ifndef SPECIAL_FOLDER_PATH
-  #define SPECIAL_FOLDER_PATH CSIDL_PERSONAL
- #endif
-#endif
-
-int screen_get_dx()
-{
-    return GetSystemMetrics(SM_CXSCREEN);
-}
-
-int screen_get_dy()
-{
-    return GetSystemMetrics(SM_CYSCREEN);
-}
-
-int screen_get_menu_dy()
-{
-    return GetSystemMetrics(SM_CYMENU);
-}
-
-int screen_get_caption_dy()
-{
-    return GetSystemMetrics(SM_CYCAPTION);
 }
 
 /* Ensure that the rectangle is at least partially in the work area on a
    monitor. The rectangle is shifted into the work area if necessary. */
-void rect_shift_to_work_area(RECT *rect, bool bFully)
+RectI ShiftRectToWorkArea(RectI rect, bool bFully)
 {
     MONITORINFO mi = { 0 };
     mi.cbSize = sizeof mi;
-    GetMonitorInfo(MonitorFromRect(rect, MONITOR_DEFAULTTONEAREST), &mi);
-    
-    if (rect->bottom <= mi.rcWork.top || bFully && rect->top < mi.rcWork.top)
+    GetMonitorInfo(MonitorFromRect(&rect.ToRECT(), MONITOR_DEFAULTTONEAREST), &mi);
+    RectI monitor = RectIFromRECT(mi.rcWork);
+
+    if (rect.y + rect.dy <= monitor.x || bFully && rect.y < monitor.y)
         /* Rectangle is too far above work area */
-        OffsetRect(rect, 0, mi.rcWork.top - rect->top);
-    else if (rect->top >= mi.rcWork.bottom || bFully && rect->bottom > mi.rcWork.bottom)
+        rect.Offset(0, monitor.y - rect.y);
+    else if (rect.y >= monitor.y + monitor.dy || bFully && rect.y + rect.dy > monitor.y + monitor.dy)
         /* Rectangle is too far below */
-        OffsetRect(rect, 0, mi.rcWork.bottom - rect->bottom);
-    
-    if (rect->right <= mi.rcWork.left || bFully && rect->left < mi.rcWork.left)
+        rect.Offset(0, monitor.y - rect.y + monitor.dy - rect.dy);
+
+    if (rect.x + rect.dx <= monitor.x || bFully && rect.x < monitor.x)
         /* Too far left */
-        OffsetRect(rect, mi.rcWork.left - rect->left, 0);
-    else if (rect->left >= mi.rcWork.right || bFully && rect->right > mi.rcWork.right)
-        /* Right */
-        OffsetRect(rect, mi.rcWork.right - rect->right, 0);
-}
+        rect.Offset(monitor.x - rect.x, 0);
+    else if (rect.x >= monitor.x + monitor.dx || bFully && rect.x + rect.dx > monitor.x + monitor.dx)
+        /* Too far right */
+        rect.Offset(monitor.x - rect.x + monitor.dx - rect.dx, 0);
 
-static void rect_client_to_screen(RECT *r, HWND hwnd)
-{
-    POINT   p1 = {r->left, r->top};
-    POINT   p2 = {r->right, r->bottom};
-    ClientToScreen(hwnd, &p1);
-    ClientToScreen(hwnd, &p2);
-    r->left = p1.x;
-    r->top = p1.y;
-    r->right = p2.x;
-    r->bottom = p2.y;
-}
-
-void PaintRoundRectAroundHwnd(HDC hdc, HWND hwnd_edit_parent, HWND hwnd_edit, COLORREF col)
-{
-    RECT    r;
-    HBRUSH  br;
-    HGDIOBJ br_prev;
-    HGDIOBJ pen;
-    HGDIOBJ pen_prev;
-    GetClientRect(hwnd_edit, &r);
-    br = CreateSolidBrush(col);
-    if (!br) return;
-    pen = CreatePen(PS_SOLID, 1, col);
-    pen_prev = SelectObject(hdc, pen);
-    br_prev = SelectObject(hdc, br);
-    rect_client_to_screen(&r, hwnd_edit_parent);
-    /* TODO: the roundness value should probably be calculated from the dy of the rect */
-    /* TODO: total hack: I manually adjust rectangle to values that fit g_hwnd_edit, as
-       found by experimentation. My mapping of coordinates isn't right (I think I need
-       mapping from window to window but even then it wouldn't explain -3 for y axis */
-    RoundRect(hdc, r.left+4, r.top-3, r.right+12, r.bottom-3, 8, 8);
-    if (br_prev)
-        SelectObject(hdc, br_prev);
-    if (pen_prev)
-        SelectObject(hdc, pen_prev);
-    DeleteObject(pen);
-    DeleteObject(br);
+    return rect;
 }
 
 void PaintRect(HDC hdc, RECT * rect)
@@ -504,21 +407,22 @@ bool IsCursorOverWindow(HWND hwnd)
 
 void CenterDialog(HWND hDlg)
 {
-    RECT rcDialog, rcOwner, rcRect;
+    // RECT rcDialog, rcOwner, rcRect;
     HWND hParent = GetParent(hDlg);
 
-    GetWindowRect(hDlg, &rcDialog);
-    OffsetRect(&rcDialog, -rcDialog.left, -rcDialog.top);
-    GetWindowRect(hParent ? hParent : GetDesktopWindow(), &rcOwner);
-    CopyRect(&rcRect, &rcOwner);
-    OffsetRect(&rcRect, -rcRect.left, -rcRect.top);
+    RectI rcDialog = WindowRect(hDlg);
+    rcDialog.Offset(-rcDialog.x, -rcDialog.y);
+    RectI rcOwner = WindowRect(hParent ? hParent : GetDesktopWindow());
+    RectI rcRect = rcOwner;
+    rcRect.Offset(-rcRect.x, -rcRect.y);
 
     // center dialog on its parent window
-    OffsetRect(&rcDialog, rcOwner.left + (rcRect.right - rcDialog.right) / 2, rcOwner.top + (rcRect.bottom - rcDialog.bottom) / 2);
+    rcDialog.Offset(rcOwner.x + (rcRect.x - rcDialog.x + rcRect.dx - rcDialog.dx) / 2,
+                    rcOwner.y + (rcRect.y - rcDialog.y + rcRect.dy - rcDialog.dy) / 2);
     // ensure that the dialog is fully visible on one monitor
-    rect_shift_to_work_area(&rcDialog, TRUE);
+    rcDialog = ShiftRectToWorkArea(rcDialog, true);
 
-    SetWindowPos(hDlg, 0, rcDialog.left, rcDialog.top, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
+    SetWindowPos(hDlg, 0, rcDialog.x, rcDialog.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 }
 
 /* Get the name of default printer or NULL if not exists.
@@ -593,7 +497,7 @@ void DoubleBuffer::Flush(HDC hdc)
 }
 
 namespace Win {
-namespace Font {
+    namespace Font {
 
 HFONT GetSimple(HDC hdc, TCHAR *fontName, int fontSize)
 {
@@ -617,7 +521,5 @@ HFONT GetSimple(HDC hdc, TCHAR *fontName, int fontSize)
     return CreateFontIndirect(&lf);
 }
 
-
+    }
 }
-}
-

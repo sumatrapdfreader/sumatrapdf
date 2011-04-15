@@ -80,6 +80,18 @@ public:
     }
 };
 
+inline RectI RectIFromRECT(RECT& rect)
+{
+    return RectI::FromXY(rect.left, rect.top, rect.right, rect.bottom);
+}
+
+inline RectI MapRectToWindow(RectI rect, HWND hwndFrom, HWND hwndTo)
+{
+    RECT rc = rect.ToRECT();
+    MapWindowPoints(hwndFrom, hwndTo, (LPPOINT)&rc, 2);
+    return RectIFromRECT(rc);
+}
+
 class DoubleBuffer {
     HWND hTarget;
     HDC hdcCanvas, hdcBuffer;
@@ -94,14 +106,7 @@ public:
     void Flush(HDC hdc);
 };
 
-inline RectI MapRectToWindow(RectI rect, HWND hwndFrom, HWND hwndTo)
-{
-    RECT rc = rect.ToRECT();
-    MapWindowPoints(hwndFrom, hwndTo, (LPPOINT)&rc, 2);
-    return RectI::FromXY(rc.left, rc.top, rc.right, rc.bottom);
-}
-
-static inline void InitAllCommonControls()
+inline void InitAllCommonControls()
 {
     INITCOMMONCONTROLSEX cex = {0};
     cex.dwSize = sizeof(INITCOMMONCONTROLSEX);
@@ -109,22 +114,14 @@ static inline void InitAllCommonControls()
     InitCommonControlsEx(&cex);
 }
 
-static inline void FillWndClassEx(WNDCLASSEX &wcex, HINSTANCE hInstance) 
+inline void FillWndClassEx(WNDCLASSEX &wcex, HINSTANCE hInstance) 
 {
-    wcex.cbSize         = sizeof(WNDCLASSEX);
-    wcex.style          = CS_HREDRAW | CS_VREDRAW;
-    wcex.cbClsExtra     = 0;
-    wcex.cbWndExtra     = 0;
-    wcex.hInstance      = hInstance;
-    wcex.hIcon          = 0;
-    wcex.hCursor        = LoadCursor(NULL, IDC_ARROW);
-    wcex.hbrBackground  = NULL;
-    wcex.lpszMenuName   = NULL;
-    wcex.hIconSm        = 0;
+    ZeroMemory(&wcex, sizeof(WNDCLASSEX));
+    wcex.cbSize     = sizeof(WNDCLASSEX);
+    wcex.style      = CS_HREDRAW | CS_VREDRAW;
+    wcex.hInstance  = hInstance;
+    wcex.hCursor    = LoadCursor(NULL, IDC_ARROW);
 }
-
-inline int RectDx(const RECT *r) { return r->right - r->left; }
-inline int RectDy(const RECT *r) { return r->bottom - r->top; }
 
 bool IsAppThemed();
 bool WindowsVerVistaOrGreater();
@@ -154,9 +151,9 @@ inline bool IsCtrlPressed() { return IsKeyPressed(VK_CONTROL); }
 
 namespace Win {
 
-inline int GetTextLen(HWND hwnd)
+inline size_t GetTextLen(HWND hwnd)
 {
-    return (int)SendMessage(hwnd, WM_GETTEXTLENGTH, 0, 0);
+    return (size_t)SendMessage(hwnd, WM_GETTEXTLENGTH, 0, 0);
 }
 
 /* return a text in edit control represented by hwnd
@@ -175,12 +172,7 @@ inline TCHAR *GetText(HWND hwnd)
 
 inline void SetText(HWND hwnd, const TCHAR *txt)
 {
-    SendMessage(hwnd, WM_SETTEXT, (WPARAM)0, (LPARAM)txt);
-}
-
-inline void SetFont(HWND hwnd, HFONT font)
-{
-	SetWindowFont(hwnd, font, TRUE);
+    SendMessage(hwnd, WM_SETTEXT, 0, (LPARAM)txt);
 }
 
 class HdcScopedSelectFont {
@@ -246,8 +238,6 @@ public:
 
 } // namespace Win
 
-// used to be in win_util.h
-
 #ifndef USER_DEFAULT_SCREEN_DPI
 // the following is only defined if _WIN32_WINNT >= 0x0600 and we use 0x0500
 #define USER_DEFAULT_SCREEN_DPI 96
@@ -288,16 +278,10 @@ public:
 #define Edit_SelectAll(hwnd) Edit_SetSel(hwnd, 0, -1)
 #define ListBox_AppendString_NoSort(hwnd, txt) ListBox_InsertString(hwnd, -1, txt)
 
-int     screen_get_dx();
-int     screen_get_dy();
-int     screen_get_menu_dy();
-int     screen_get_caption_dy();
-void    rect_shift_to_work_area(RECT *rect, bool bFully);
+RectI   ShiftRectToWorkArea(RectI rect, bool bFully=false);
 
-void    launch_url(const TCHAR *url);
-void    exec_with_params(const TCHAR *exe, const TCHAR *params, bool hidden);
+void    LaunchFile(const TCHAR *path, const TCHAR *params=NULL, const TCHAR *verb=NULL, bool hidden=false);
 
-void    PaintRoundRectAroundHwnd(HDC hdc, HWND hwnd_edit_parent, HWND hwnd_edit, COLORREF col);
 void    PaintRect(HDC hdc, RECT * rect);
 void    DrawCenteredText(HDC hdc, RectI r, const TCHAR *txt);
 
