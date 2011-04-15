@@ -110,6 +110,10 @@ PDFFILTER_OBJS = \
 BROWSER_PLUGIN_OBJS = \
 	$(O)\npPdfViewer.obj $(BROWSER_PLUGIN_RES)
 
+!if "$(BUILD_XPS_IFILTER)"!=""
+PDFFILTER_OBJS = $(PDFFILTER_OBJS) $(O)\CXpsFilter.obj
+PDFFILTER_CFLAGS = $(PDFFILTER_CFLAGS) /D "BUILD_XPS_IFILTER"
+!endif
 !if "$(BUILD_TEX_IFILTER)"!=""
 PDFFILTER_OBJS = $(PDFFILTER_OBJS) $(O)\CTeXFilter.obj
 PDFFILTER_CFLAGS = $(PDFFILTER_CFLAGS) /D "BUILD_TEX_IFILTER"
@@ -212,6 +216,9 @@ $(O)\CrashHandler.obj: src\DisplayState.h src\SumatraPDF.h src\translations.h
 $(O)\CrashHandler.obj: src\Version.h
 $(O)\CTeXFilter.obj: baseutils\BaseUtil.h baseutils\StrUtil.h src\ifilter\CTeXFilter.h
 $(O)\CTeXFilter.obj: src\ifilter\FilterBase.h src\ifilter\PdfFilter.h
+$(O)\CXpsFilter.obj: baseutils\BaseUtil.h baseutils\GeomUtil.h baseutils\StrUtil.h
+$(O)\CXpsFilter.obj: baseutils\Vec.h src\BaseEngine.h src\ifilter\CXpsFilter.h
+$(O)\CXpsFilter.obj: src\ifilter\FilterBase.h src\ifilter\PdfFilter.h src\PdfEngine.h
 $(O)\DialogSizer.obj: baseutils\BaseUtil.h baseutils\DialogSizer.h baseutils\GeomUtil.h
 $(O)\DialogSizer.obj: baseutils\WinUtil.h
 $(O)\DisplayModel.obj: baseutils\BaseUtil.h baseutils\GeomUtil.h baseutils\StrUtil.h
@@ -245,8 +252,8 @@ $(O)\PdfEngine.obj: baseutils\BaseUtil.h baseutils\FileUtil.h baseutils\GeomUtil
 $(O)\PdfEngine.obj: baseutils\StrUtil.h baseutils\Vec.h mupdf\fitz\fitz.h
 $(O)\PdfEngine.obj: mupdf\pdf\mupdf.h mupdf\xps\muxps.h src\BaseEngine.h
 $(O)\PdfEngine.obj: src\PdfEngine.h
-$(O)\PdfFilterDll.obj: src\ifilter\CPdfFilter.h src\ifilter\CTeXFilter.h src\ifilter\FilterBase.h
-$(O)\PdfFilterDll.obj: src\ifilter\PdfFilter.h
+$(O)\PdfFilterDll.obj: src\ifilter\CPdfFilter.h src\ifilter\CTeXFilter.h src\ifilter\CXpsFilter.h
+$(O)\PdfFilterDll.obj: src\ifilter\FilterBase.h src\ifilter\PdfFilter.h
 $(O)\PdfSync.obj: baseutils\BaseUtil.h baseutils\FileUtil.h baseutils\GeomUtil.h
 $(O)\PdfSync.obj: baseutils\StrUtil.h baseutils\Vec.h src\BaseEngine.h
 $(O)\PdfSync.obj: src\DisplayModel.h src\DisplayState.h src\ImagesEngine.h
