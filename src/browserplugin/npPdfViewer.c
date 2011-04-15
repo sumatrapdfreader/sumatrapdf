@@ -75,6 +75,11 @@ void dbg(const char *format, ...)
 	va_end(args);
 }
 
+void dbgw(const WCHAR *s)
+{
+	OutputDebugStringW(s);
+}
+
 const char *DllMainReason(DWORD reason)
 {
 	if (DLL_PROCESS_ATTACH == reason)
@@ -89,6 +94,7 @@ const char *DllMainReason(DWORD reason)
 }
 #else
   #define dbg(format, ...) ((void)0)
+  #define dbgw(s) ((void)0)
 #endif
 
 NPNetscapeFuncs gNPNFuncs;
@@ -238,6 +244,8 @@ DLLEXPORT STDAPI DllUnregisterServer(VOID)
 
 /* ::::: Auxiliary Methods ::::: */
 
+#define dimof(X)    (sizeof(X)/sizeof((X)[0]))
+
 bool GetExePath(LPWSTR lpPath, int len)
 {
 	DWORD dwSize = len * sizeof(WCHAR);
@@ -266,15 +274,64 @@ bool GetExePath(LPWSTR lpPath, int len)
 	return false;
 }
 
+static BOOL FileExists(const WCHAR *filePath)
+{
+	WIN32_FILE_ATTRIBUTE_DATA   fileInfo;
+	BOOL res;
+	if (NULL == filePath)
+		return FALSE;
+
+	res = GetFileAttributesEx(filePath, GetFileExInfoStandard, &fileInfo);
+	if (0 == res)
+		return FALSE;
+
+	if (fileInfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+		return FALSE;
+	return TRUE;
+}
+
+// filePathBuf must be MAX_PATH in size
+HANDLE CreateTempFile(WCHAR *filePathBufOut)
+{
+	DWORD		ret;
+	UINT		uret;
+	HANDLE		hFile;
+	WCHAR		pathBuf[MAX_PATH];
+
+	ret = GetTempPath(dimof(pathBuf), pathBuf);
+	if (0 == ret || ret > dimof(pathBuf))
+	{
+		dbg("sp: CreateTempFile(): GetTempPath() failed\n");
+		return NULL;
+	}
+
+	uret = GetTempFileName(pathBuf, L"SPlugTmp", 0, filePathBufOut);
+	if (0 == uret)
+	{
+		dbg("sp: CreateTempFile(): GetTempFileName() failed\n");
+		return NULL;
+	}
+
+	hFile = CreateFile(filePathBufOut, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
+						FILE_ATTRIBUTE_NORMAL, NULL);
+	if (INVALID_HANDLE_VALUE == hFile)
+	{
+		dbg("sp: CreateTempFile(): CreateFile() failed\n");
+		return NULL;
+	}
+	return hFile;
+}
+
 /* ::::: Plugin Window Procedure ::::: */
 
 typedef struct {
-	NPWindow *npwin;
-	LPCWSTR message;
-	WCHAR filepath[MAX_PATH];
-	HANDLE hProcess;
-	WCHAR exepath[MAX_PATH + 2];
-	FLOAT progress, prevProgress;
+	NPWindow *	npwin;
+	LPCWSTR		message;
+	WCHAR		filepath[MAX_PATH];
+	HANDLE      hFile;
+	HANDLE		hProcess;
+	WCHAR		exepath[MAX_PATH + 2];
+	FLOAT		progress, prevProgress;
 } InstanceData;
 
 #define COL_WINDOW_BG RGB(0xcc, 0xcc, 0xcc)
@@ -454,21 +511,47 @@ static void RepaintOnProgressChange(InstanceData *data)
 	}
 }
 
+// To workaround FireFox bug https://bugzilla.mozilla.org/show_bug.cgi?id=644149
+// (our bug: http://code.google.com/p/sumatrapdf/issues/detail?id=1328)
+// if a file is big (not sure what the exact threshold should be, we use
+// conservative 6MB) we save it to a file ourselves instead of relying on the
+// browser to do it.
+#define BIG_FILE_THRESHOLD 6*1024*1024
+
 NPError NP_LOADDS NPP_NewStream(NPP instance, NPMIMEType type, NPStream* stream, NPBool seekable, uint16_t* stype)
 {
 	InstanceData *data = instance->pdata;
-	
+
 	if (!*data->exepath)
 	{
 		dbg("sp: NPP_NewStream() error: NPERR_FILE_NOT_FOUND\n");
-
 		return NPERR_FILE_NOT_FOUND;
 	}
 
 	dbg("sp: NPP_NewStream() end = %d\n", (int)stream->end);
 
+	data->hFile = NULL;
+	// TODO: this should only be done for FireFox, if we can detect we're
+	// hosted inside FireFox in a non-hacky way.
+	// (a hacky way could be getting a callstack and checking for FireFox.exe
+	// module up in the call chain)
+	if (stream->end > BIG_FILE_THRESHOLD)
+	{
+		data->hFile = CreateTempFile(data->filepath);
+		if (data->hFile)
+		{
+			dbg("sp: using temporary file: ");
+			dbgw(data->filepath);
+			dbg("\n");
+			*stype = NP_NORMAL;
+			goto Exit;
+		}
+	}
+
+	// either small file or failed to create a temporary file for the big file
 	*stype = NP_ASFILE;
-	
+
+Exit:
 	data->progress = stream->end > 0 ? 0.01f : 0;
 	data->prevProgress = -.1f;
 	RepaintOnProgressChange(data);
@@ -481,7 +564,6 @@ NPError NP_LOADDS NPP_NewStream(NPP instance, NPMIMEType type, NPStream* stream,
 
 int32_t NP_LOADDS NPP_WriteReady(NPP instance, NPStream* stream)
 {
-
 	int32_t res = stream->end > 0 ? stream->end : INT_MAX;
 	dbg("sp: NPP_WriteReady() res = %d\n", res);
 	return res;
@@ -493,64 +575,37 @@ int32_t NP_LOADDS NPP_WriteReady(NPP instance, NPStream* stream)
 int32_t NP_LOADDS NPP_Write(NPP instance, NPStream* stream, int32_t offset, int32_t len, void* buffer)
 {
 	InstanceData *data = instance->pdata;
+	DWORD bytesWritten = len;
 
 	dbg("sp: NPP_Write() off = %d, len=%d\n", (int)offset, (int)len);
 
+	if (data->hFile)
+	{
+		BOOL ok = WriteFile(data->hFile, buffer, (DWORD)len, &bytesWritten, NULL);
+		if (!ok)
+		{
+			dbg("sp: NPP_Write() failed to write %d bytes at offset %d\n", (int)len, (int)offset);
+			return -1;
+		}
+	}
+
 	data->progress = stream->end > 0 ? 1.0f * (offset + len) / stream->end : 0;
 	RepaintOnProgressChange(data);
-	return len;
+
+	return bytesWritten;
 
 	UNREFERENCED_PARAMETER(buffer);
 }
 
-BOOL FileExists(const char *filePath)
+static void LaunchWithSumatra(InstanceData *data)
 {
-    WIN32_FILE_ATTRIBUTE_DATA   fileInfo;
-    BOOL res;
-    if (NULL == filePath)
-        return FALSE;
-
-    res = GetFileAttributesExA(filePath, GetFileExInfoStandard, &fileInfo);
-    if (0 == res)
-        return FALSE;
-
-    if (fileInfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-        return FALSE;
-    return TRUE;
-}
-
-// TODO: NPP_StreamAsFile is never called by Firefox 4.0 for large files due to
-//       Mozilla bug https://bugzilla.mozilla.org/show_bug.cgi?id=644149
-
-void NP_LOADDS NPP_StreamAsFile(NPP instance, NPStream* stream, const char* fname)
-{
-	InstanceData *data = instance->pdata;
-	
 	WCHAR cmdLine[MAX_PATH * 3];
 	PROCESS_INFORMATION pi = { 0 };
 	STARTUPINFOW si = { 0 };
-	
-	if (!fname)
-	{
-		dbg("sp: NPP_StreamAsFile() error: fname is NULL\n");
-		data->message = L"Error: The PDF document couldn't be downloaded!";
-	}
 
-	dbg("sp: NPP_StreamAsFile() fname=%s\n", fname);
-
-	if (!FileExists(fname)) {
+	if (!FileExists(data->filepath))
 		dbg("sp: NPP_StreamAsFile() error: file doesn't exist\n");
-	}
 
-	data->progress = 1.0f;
-	data->prevProgress = 0.0f; // force update
-	RepaintOnProgressChange(data);
-
-	if (!MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, fname, -1, data->filepath, MAX_PATH))
-	{
-		MultiByteToWideChar(CP_ACP, 0, fname, -1, data->filepath, MAX_PATH);
-	}
-	
 	wsprintfW(cmdLine, L"%s -plugin %d \"%s\"", data->exepath, data->npwin->window, data->filepath);
 	
 	si.cb = sizeof(si);
@@ -564,7 +619,38 @@ void NP_LOADDS NPP_StreamAsFile(NPP instance, NPStream* stream, const char* fnam
 		dbg("sp: NPP_StreamAsFile() error: couldn't run SumatraPDF!\n");
 		data->message = L"Error: Couldn't run SumatraPDF!";
 	}
+}
 
+void NP_LOADDS NPP_StreamAsFile(NPP instance, NPStream* stream, const char* fname)
+{
+	InstanceData *data = instance->pdata;
+
+	if (!fname)
+	{
+		dbg("sp: NPP_StreamAsFile() error: fname is NULL\n");
+		data->message = L"Error: The PDF document couldn't be downloaded!";
+		goto Exit;
+	}
+
+	dbg("sp: NPP_StreamAsFile() fname=%s\n", fname);
+
+	if (data->hFile)
+	{
+		dbg("sp: NPP_StreamAsFile() error: data->hFile is != NULL (should be NULL)\n");
+	}
+
+	data->progress = 1.0f;
+	data->prevProgress = 0.0f; // force update
+	RepaintOnProgressChange(data);
+
+	if (!MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, fname, -1, data->filepath, MAX_PATH))
+	{
+		MultiByteToWideChar(CP_ACP, 0, fname, -1, data->filepath, MAX_PATH);
+	}
+
+	LaunchWithSumatra(data);
+
+Exit:
 	if (data->npwin)
 	{
 		InvalidateRect((HWND)data->npwin->window, NULL, FALSE);
@@ -576,7 +662,9 @@ void NP_LOADDS NPP_StreamAsFile(NPP instance, NPStream* stream, const char* fnam
 
 NPError NP_LOADDS NPP_DestroyStream(NPP instance, NPStream* stream, NPReason reason)
 {
-	dbg("sp: NPP_DestroyStream() reason: %d", (int)reason);
+	InstanceData *data;
+
+    dbg("sp: NPP_DestroyStream() reason: %d", (int)reason);
 	if (stream)
 	{
 		if (stream->url)
@@ -584,6 +672,32 @@ NPError NP_LOADDS NPP_DestroyStream(NPP instance, NPStream* stream, NPReason rea
 		dbg(" end: %d", stream->end);
 	}
 	dbg("\n");
+
+	if (!instance)
+	{
+		dbg("sp: NPP_DestroyStream() error: NPERR_INVALID_INSTANCE_ERROR\n");
+		return NPERR_INVALID_INSTANCE_ERROR;
+	}
+
+	data = instance->pdata;
+	if (!data)
+	{
+		dbg("sp: NPP_DestroyStream() error: instance->pdata is NULL\n");
+		return NPERR_NO_ERROR;
+	}
+
+	if (!data->hFile)
+        goto Exit;
+
+	CloseHandle(data->hFile);
+	LaunchWithSumatra(data);
+
+Exit:
+	if (data->npwin)
+	{
+		InvalidateRect((HWND)data->npwin->window, NULL, FALSE);
+		UpdateWindow((HWND)data->npwin->window);
+	}
 
 	return NPERR_NO_ERROR;
 	
@@ -606,16 +720,29 @@ NPError NP_LOADDS NPP_Destroy(NPP instance, NPSavedData** save)
 	data = instance->pdata;
 	if (data->hProcess)
 	{
+		dbg("sp: NPP_Destroy(): waiting for Sumatra to exit\n");
 		TerminateProcess(data->hProcess, 99);
 		WaitForSingleObject(data->hProcess, INFINITE);
 		CloseHandle(data->hProcess);
 	}
+	if (data->hFile)
+	{
+		dbg("sp: NPP_Destroy(): deleting internal temporary file ");
+		dbgw(data->filepath);
+		dbg("\n");
+		DeleteFileW(data->filepath);
+		*data->filepath = 0;
+	}
+
 	if (*data->filepath)
 	{
 		WCHAR tempDir[MAX_PATH];
 		DWORD len = GetTempPathW(MAX_PATH, tempDir);
 		if (0 < len && len < MAX_PATH && !wcsncmp(data->filepath, tempDir, len))
 		{
+			dbg("sp: NPP_Destroy(): deleting browser temporary file ");
+			dbgw(data->filepath);
+			dbg("\n");
 			DeleteFileW(data->filepath);
 		}
 	}
