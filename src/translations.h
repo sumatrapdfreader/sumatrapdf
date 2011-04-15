@@ -13,8 +13,15 @@ void FreeData();
 
 }
 
+// _TR() marks strings that need to be translated
 #define _TR(x)  Trans::GetTranslation(x)
+
+// _TRN() marks strings that need to be translated but are used in a context
+// that doesn't allow calling Trans::GetTranslation() (e.g. when used as part
+// of a struct). This allows the translation manager script to see the string
+// but they'll need additional code that does Trans::GetTranslation() on them
 #define _TRN(x) (x)
+
 #if defined(DEBUG) || defined(SVN_PRE_RELEASE_VER)
 // use the following macros to mark translatable strings that
 // translators should not yet translate, as the strings might
