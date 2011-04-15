@@ -14,46 +14,21 @@
 
 using namespace Gdiplus;
 
-// HGLOBAL must be allocated with GlobalAlloc(GMEM_MOVEABLE, ...)
-static Bitmap *BitmapFromHGlobal(HGLOBAL mem)
+// cf. http://stackoverflow.com/questions/4598872/creating-hbitmap-from-memory-buffer/4616394#4616394
+Bitmap *BitmapFromData(void *data, size_t len)
 {
-    IStream * stream = NULL;
-    Bitmap *  bmp = NULL;
+    IStream *stream;
+    HRESULT res = CreateStreamOnHGlobal(NULL, TRUE, &stream);
+    if (FAILED(res))
+        return NULL;
 
-    GlobalLock(mem); // not sure if needed
-
-    if (CreateStreamOnHGlobal(mem, FALSE, &stream) != S_OK)
-        goto Exit;
-
-    bmp = Bitmap::FromStream(stream);
+    Bitmap *bmp = NULL;
+    res = stream->Write(data, len, NULL);
+    if (SUCCEEDED(res))
+        bmp = Bitmap::FromStream(stream);
     stream->Release();
 
-    if (bmp && bmp->GetLastStatus() != Ok) {
-        delete bmp;
-        bmp = NULL;
-    }
-
-Exit:
-    GlobalUnlock(mem);
     return bmp;
-}
-
-bool IsImageFile(const WCHAR *fileName)
-{
-    return Str::EndsWithI(fileName, L".png")  ||
-           Str::EndsWithI(fileName, L".jpg")  ||
-           Str::EndsWithI(fileName, L".jpeg") ||
-           Str::EndsWithI(fileName, L".gif")  ||
-           Str::EndsWithI(fileName, L".bmp");
-}
-
-bool IsImageFile(const char *fileName)
-{
-    return Str::EndsWithI(fileName, ".png")  ||
-           Str::EndsWithI(fileName, ".jpg")  ||
-           Str::EndsWithI(fileName, ".jpeg") ||
-           Str::EndsWithI(fileName, ".gif")  ||
-           Str::EndsWithI(fileName, ".bmp");
 }
 
 static int cmpPageByName(const void *o1, const void *o2)
@@ -66,17 +41,16 @@ static int cmpPageByName(const void *o1, const void *o2)
 static ImagesPage *LoadCurrentCbzPage(unzFile& uf)
 {
     char            fileName[MAX_PATH];
-    TCHAR *         fileName2 = NULL;
     unz_file_info64 finfo;
     ImagesPage *    page = NULL;
-    HGLOBAL         bmpData = NULL;
-    unsigned int    readBytes;
+    char *          bmpData = NULL;
 
     int err = unzGetCurrentFileInfo64(uf, &finfo, fileName, dimof(fileName), NULL, 0, NULL, 0);
     if (err != UNZ_OK)
         return NULL;
 
-    if (!IsImageFile(fileName))
+    ScopedMem<TCHAR> fileName2(Str::Conv::FromUtf8(fileName));
+    if (!ImageEngine::IsSupportedFile(fileName2))
         return NULL;
 
     err = unzOpenCurrentFilePassword(uf, NULL);
@@ -88,37 +62,27 @@ static ImagesPage *LoadCurrentCbzPage(unzFile& uf)
     if (len2 != finfo.uncompressed_size) // overflow check
         goto Exit;
 
-    bmpData = GlobalAlloc(GMEM_MOVEABLE, len);
+    bmpData = SAZA(char, len);
     if (!bmpData)
         goto Exit;
 
-    void *buf = GlobalLock(bmpData);
-    readBytes = unzReadCurrentFile(uf, buf, len);
-    GlobalUnlock(bmpData);
-
+    unsigned int readBytes = unzReadCurrentFile(uf, bmpData, len);
     if (readBytes != len)
         goto Exit;
 
-    // TODO: do I have to keep bmpData locked? Bitmap created from IStream
-    // based on HGLOBAL memory data seems to need underlying memory bits
-    // for its lifetime (it gets corrupted if I GlobalFree(bmpData)).
-    // What happens if this data is moved?
-    Bitmap *bmp = BitmapFromHGlobal(bmpData);
+    Bitmap *bmp = BitmapFromData(bmpData, len);
     if (!bmp)
         goto Exit;
 
-    fileName2 = Str::Conv::FromAnsi(fileName); // Note: maybe FromUtf8?
-    page = new ImagesPage(fileName2, bmpData, bmp);
-    free(fileName2);
-    bmpData = NULL;
+    page = new ImagesPage(fileName2, bmp);
 
 Exit:
     unzCloseCurrentFile(uf); // ignoring error code
-    GlobalFree(bmpData);
+    free(bmpData);
     return page;
 }
 
-ImagesEngine::ImagesEngine() : fileName(NULL)
+ImagesEngine::ImagesEngine() : fileName(NULL), fileExt(NULL)
 {
 }
 
@@ -148,11 +112,15 @@ static int CALLBACK unrarCallback(UINT msg, LPARAM userData, LPARAM rarBuffer, L
 
 static ImagesPage *LoadCurrentCbrPage(HANDLE hArc, RARHeaderDataEx& rarHeader)
 {
-    HGLOBAL      bmpData = NULL;
+    char *       bmpData = NULL;
     ImagesPage * page = NULL;
 
+#ifdef UNICODE
     TCHAR *fileName = rarHeader.FileNameW;
-    if (!IsImageFile(fileName))
+#else
+    TCHAR *fileName = rarHeader.FileName;
+#endif
+    if (!ImageEngine::IsSupportedFile(fileName))
         return NULL;
 
     if (rarHeader.UnpSizeHigh != 0)
@@ -162,41 +130,37 @@ static ImagesPage *LoadCurrentCbrPage(HANDLE hArc, RARHeaderDataEx& rarHeader)
 
     RarDecompressData rdd = { 0, 0, 0 };
     rdd.totalSize = rarHeader.UnpSize;
-    bmpData = GlobalAlloc(GMEM_MOVEABLE, rdd.totalSize);
+    bmpData = SAZA(char, rdd.totalSize);
     if (!bmpData)
         return NULL;
 
-    rdd.buf = (char*)GlobalLock(bmpData);
-    if (!rdd.buf)
-        goto Exit;
-
-    RARSetCallback(hArc, unrarCallback, (long)&rdd);
+    rdd.buf = bmpData;
+    RARSetCallback(hArc, unrarCallback, (LPARAM)&rdd);
     int res = RARProcessFile(hArc, RAR_TEST, NULL, NULL);
-    GlobalUnlock(bmpData);
-
     if (0 != res)
         goto Exit;
 
     if (rdd.totalSize != rdd.currSize)
         goto Exit;
 
-    Bitmap *bmp = BitmapFromHGlobal(bmpData);
+    Bitmap *bmp = BitmapFromData(bmpData, rdd.totalSize);
     if (!bmp)
         goto Exit;
 
-    page = new ImagesPage(fileName, bmpData, bmp);
-    bmpData = NULL;
+    page = new ImagesPage(fileName, bmp);
 
 Exit:
-    GlobalFree(bmpData);
+    free(bmpData);
     return page;
  }
 
-bool ImagesEngine::LoadCbrFile(const TCHAR *file)
+bool CbxEngine::LoadCbrFile(const TCHAR *file)
 {
     if (!file)
         return false;
     fileName = Str::Dup(file);
+    fileExt = _T(".cbr");
+    assert(Str::EndsWithI(fileName, fileExt));
 
     RAROpenArchiveDataEx  arcData = { 0 };
     arcData.ArcNameW = (TCHAR*)file;
@@ -224,64 +188,41 @@ bool ImagesEngine::LoadCbrFile(const TCHAR *file)
     return true;
 }
 
-// TODO: could be more efficient by avoiding memory copy
-static ImagesPage *LoadImage(const TCHAR *fileName)
+ImagesPage *ImagesEngine::LoadImage(const TCHAR *fileName)
 {
-    HGLOBAL         bmpData = NULL;
-    ImagesPage *    page = NULL;
-    void *          data = NULL;
-    void *          buf = NULL;
-    size_t          len = 0;
-
-    if (!File::Exists(fileName))
-        return NULL;
-
-    len = 0;
-    data = File::ReadAll(fileName, &len);
-    if (!data || (0 == len))
-        return NULL;
-
-    bmpData = GlobalAlloc(GMEM_MOVEABLE, len);
+    size_t len = 0;
+    ScopedMem<char> bmpData(File::ReadAll(fileName, &len));
     if (!bmpData)
-        goto Exit;
+        return NULL;
 
-    buf = GlobalLock(bmpData);
-    memcpy(buf, data, len);
-    GlobalUnlock(bmpData);
-
-    // TODO: do I have to keep bmpData locked? Bitmap created from IStream
-    // based on HGLOBAL memory data seems to need underlying memory bits
-    // for its lifetime (it gets corrupted if I GlobalFree(bmpData)).
-    // What happens if this data is moved?
-    Bitmap *bmp = BitmapFromHGlobal(bmpData);
+    Bitmap *bmp = BitmapFromData(bmpData, len);
     if (!bmp)
-        goto Exit;
+        return NULL;
 
-    page = new ImagesPage(fileName, bmpData, bmp);
-    bmpData = NULL;
-
-Exit:
-    free(data);
-    GlobalFree(bmpData);
-    return page;
+    return new ImagesPage(fileName, bmp);
 }
 
-bool ImagesEngine::LoadSingleFile(const TCHAR *file)
+bool ImageEngine::LoadSingleFile(const TCHAR *file)
 {
+    assert(IsSupportedFile(file));
     ImagesPage *page = LoadImage(file);
     if (!page)
         return false;
 
     pages.Append(page);
     fileName = Str::Dup(file);
+    fileExt = _tcsrchr(fileName, '.');
+    assert(fileExt);
     return true;
 }
 
-bool ImagesEngine::LoadCbzFile(const TCHAR *file)
+bool CbxEngine::LoadCbzFile(const TCHAR *file)
 {
     if (!file)
         return false;
     fileName = Str::Dup(file);
+    fileExt = _T(".cbz");
+    assert(Str::EndsWithI(fileName, fileExt));
 
     zlib_filefunc64_def ffunc;
     fill_win32_filefunc64(&ffunc);
@@ -419,38 +360,10 @@ unsigned char *ImagesEngine::GetFileData(size_t *cbCount)
     return (unsigned char *)File::ReadAll(fileName, cbCount);
 }
 
-bool ImagesEngine::IsSupportedFile(const TCHAR *fileName)
+ImageEngine *ImageEngine::CreateFromFileName(const TCHAR *fileName)
 {
-    if (Str::EndsWith(fileName, _T(".cbz")))
-        return true;
-    if (Str::EndsWith(fileName, _T(".cbr")))
-        return true;
-    return IsImageFile(fileName);
-}
-
-const TCHAR *ImagesEngine::GetDefaultFileExt() const
-{
-    if (IsSupportedFile(fileName))
-        return _tcsrchr(fileName, '.');
-    return NULL;
-}
-
-ImagesEngine *ImagesEngine::CreateFromFileName(const TCHAR *fileName)
-{
-    if (Str::EndsWith(fileName, _T(".cbz")))
-        return CreateFromCbzFile(fileName);
-    else if (Str::EndsWith(fileName, _T(".cbr")))
-        return CreateFromCbrFile(fileName);
-    else if (IsImageFile(fileName))
-        return CreateFromSingleFile(fileName);
-    else
-        return NULL;
-}
-
-ImagesEngine *ImagesEngine::CreateFromSingleFile(const TCHAR *fileName)
-{
-    assert(IsImageFile(fileName));
-    ImagesEngine *engine = new ImagesEngine();
+    assert(IsSupportedFile(fileName));
+    ImageEngine *engine = new ImageEngine();
     if (!engine->LoadSingleFile(fileName)) {
         delete engine;
         return NULL;
@@ -458,20 +371,16 @@ ImagesEngine *ImagesEngine::CreateFromSingleFile(const TCHAR *fileName)
     return engine;    
 }
 
-ImagesEngine *ImagesEngine::CreateFromCbzFile(const TCHAR *fileName)
+CbxEngine *CbxEngine::CreateFromFileName(const TCHAR *fileName)
 {
-    ImagesEngine *engine = new ImagesEngine();
-    if (!engine->LoadCbzFile(fileName)) {
-        delete engine;
-        return NULL;
-    }
-    return engine;
-}
-
-ImagesEngine *ImagesEngine::CreateFromCbrFile(const TCHAR *fileName)
-{
-    ImagesEngine *engine = new ImagesEngine();
-    if (!engine->LoadCbrFile(fileName)) {
+    assert(IsSupportedFile(fileName));
+    CbxEngine *engine = new CbxEngine();
+    bool ok = false;
+    if (Str::EndsWithI(fileName, _T(".cbz")))
+        ok = engine->LoadCbzFile(fileName);
+    else if (Str::EndsWithI(fileName, _T(".cbr")))
+        ok = engine->LoadCbrFile(fileName);
+    if (!ok) {
         delete engine;
         return NULL;
     }

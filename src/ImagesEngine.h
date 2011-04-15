@@ -11,37 +11,25 @@
 
 class ImagesPage {
 public:
-    // TODO: do I need this?
-    const TCHAR *       fileName;
-
-    HGLOBAL             bmpData;
+    const TCHAR *       fileName; // for sorting image files
     Gdiplus::Bitmap *   bmp;
-    int                 width, height;
 
-    ImagesPage(const TCHAR *fileName, HGLOBAL bmpData, Gdiplus::Bitmap *bmp) :
-        bmpData(bmpData), bmp(bmp)
-    {
+    ImagesPage(const TCHAR *fileName, Gdiplus::Bitmap *bmp) : bmp(bmp) {
         this->fileName = Str::Dup(fileName);
-        width = bmp->GetWidth();
-        height = bmp->GetHeight();
     }
 
     ~ImagesPage() {
         free((void*)fileName);
         delete bmp;
-        GlobalFree(bmpData);
     }
 
-    SizeI size() { return SizeI(width, height); }
+    SizeI size() { return SizeI(bmp->GetWidth(), bmp->GetHeight()); }
 };
 
 class ImagesEngine : public BaseEngine {
 public:
     ImagesEngine();
     virtual ~ImagesEngine();
-    virtual ImagesEngine *Clone() {
-        return CreateFromFileName(fileName);
-    }
 
     virtual const TCHAR *FileName() const { return fileName; };
     virtual int PageCount() const { return pages.Count(); }
@@ -49,7 +37,7 @@ public:
     virtual RectD PageMediabox(int pageNo) {
         assert(1 <= pageNo && pageNo <= PageCount());
         ImagesPage *page = pages[pageNo - 1];
-        return RectD(0, 0, page->width, page->height);
+        return RectD(PointD(), page->size().Convert<double>());
     }
 
     virtual RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
@@ -69,27 +57,57 @@ public:
     virtual bool IsImagePage(int pageNo) { return true; }
     virtual PageLayoutType PreferredLayout() { return Layout_NonContinuous; }
 
-    virtual const TCHAR *GetDefaultFileExt() const;
+    virtual const TCHAR *GetDefaultFileExt() const { return fileExt; }
 
     // we currently don't load pages lazily, so there's nothing to do here
     virtual bool BenchLoadPage(int pageNo) { return true; }
 
 protected:
     const TCHAR *fileName;
+    const TCHAR *fileExt;
     Vec<ImagesPage *> pages;
-
-    bool LoadCbzFile(const TCHAR *fileName);
-    bool LoadCbrFile(const TCHAR *fileName);
-    bool LoadSingleFile(const TCHAR *fileName);
 
     void GetTransform(Gdiplus::Matrix& m, int pageNo, float zoom, int rotate);
 
+    static ImagesPage *LoadImage(const TCHAR *fileName);
+};
+
+class ImageEngine : public ImagesEngine {
 public:
-    static bool IsSupportedFile(const TCHAR *fileName);
-    static ImagesEngine *CreateFromFileName(const TCHAR *fileName);
-    static ImagesEngine *CreateFromCbzFile(const TCHAR *fileName);
-    static ImagesEngine *CreateFromCbrFile(const TCHAR *fileName);
-    static ImagesEngine *CreateFromSingleFile(const TCHAR *fileName);
+    virtual ImageEngine *Clone() {
+        return CreateFromFileName(fileName);
+    }
+
+protected:
+    bool LoadSingleFile(const TCHAR *fileName);
+
+public:
+    static bool IsSupportedFile(const TCHAR *fileName) {
+        return Str::EndsWithI(fileName, _T(".png"))  ||
+               Str::EndsWithI(fileName, _T(".jpg"))  ||
+               Str::EndsWithI(fileName, _T(".jpeg")) ||
+               Str::EndsWithI(fileName, _T(".gif"))  ||
+               Str::EndsWithI(fileName, _T(".bmp"));
+    }
+    static ImageEngine *CreateFromFileName(const TCHAR *fileName);
+};
+
+class CbxEngine : public ImagesEngine {
+public:
+    virtual CbxEngine *Clone() {
+        return CreateFromFileName(fileName);
+    }
+
+protected:
+    bool LoadCbzFile(const TCHAR *fileName);
+    bool LoadCbrFile(const TCHAR *fileName);
+
+public:
+    static bool IsSupportedFile(const TCHAR *fileName) {
+        return Str::EndsWithI(fileName, _T(".cbz")) ||
+               Str::EndsWithI(fileName, _T(".cbr"));
+    }
+    static CbxEngine *CreateFromFileName(const TCHAR *fileName);
 };
 
 #endif

@@ -2087,7 +2087,7 @@ static void DrawDocument(WindowInfo *win, HDC hdc, RECT *rcArea)
     if (win->presentation)
         FillRect(hdc, rcArea, gBrushBlack);
     // draw comic books and single images on a black background (without frame and shadow)
-    else if (win->dm->imagesEngine)
+    else if (win->dm->cbxEngine || win->dm->imageEngine)
         FillRect(hdc, rcArea, gBrushBlack);
     else
         FillRect(hdc, rcArea, gBrushNoDocBg);
@@ -2102,15 +2102,15 @@ static void DrawDocument(WindowInfo *win, HDC hdc, RECT *rcArea)
             continue;
 
         bounds = RectI(pageInfo->screen, pageInfo->bitmap.Size());
-        if (!win->dm->imagesEngine)
+        if (!win->dm->cbxEngine && !win->dm->imageEngine)
             PaintPageFrameAndShadow(hdc, pageInfo, PM_ENABLED == win->presentation, bounds);
 
         bool renderOutOfDateCue = false;
         UINT renderDelay = 0;
-        if (win->dm->imagesEngine) {
+        if (win->dm->cbxEngine || win->dm->imageEngine) {
             float zoom = win->dm->zoomReal(pageNo);
             int rotation = dm->rotation();
-            win->dm->imagesEngine->RenderPage(hdc, pageNo, pageInfo->pageOnScreen, zoom, rotation, NULL, Target_View);
+            win->dm->engine->RenderPage(hdc, pageNo, pageInfo->pageOnScreen, zoom, rotation, NULL, Target_View);
         } else {
             renderDelay = gRenderCache.Paint(hdc, &bounds, dm, pageNo, pageInfo, &renderOutOfDateCue);
         }
@@ -3303,9 +3303,10 @@ static void OnMenuSaveAs(WindowInfo *win)
     Str::Str<TCHAR> fileFilter(256);
     if (win->dm->xpsEngine)
         fileFilter.Append(_TB_TR("XPS documents"));
-    else if (win->dm->imagesEngine)
-        // TODO: this is wrong for single images
+    else if (win->dm->cbxEngine)
         fileFilter.Append(_TB_TR("Comic books"));
+    else if (win->dm->imageEngine)
+        fileFilter.AppendFmt(_TB_TR("Image files (*.%s)"), defExt + 1);
     else
         fileFilter.Append(_TR("PDF documents"));
     fileFilter.AppendFmt(_T("\1*%s\1"), defExt);
@@ -3518,8 +3519,8 @@ static void OnMenuOpen(WindowInfo *win)
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling
     // methods too early on)
-    ScopedMem<TCHAR> fileFilter(Str::Format(_T("%s\1*.pdf;*.xps;*.cbz;*.cbr\1%s\1*.*\1"),
-        _TR("PDF documents"), _TR("All files"))); // TODO: it's not just "PDF documents" anymore. "Supported documents" ?
+    ScopedMem<TCHAR> fileFilter(Str::Format(_T("%s\1*.pdf;*.xps;*.cbz;*.cbr\1%s\1*.pdf\1%s\1*.xps\1%s\1*.cbz;*.cbr\1%s\1*.*\1"),
+        _TB_TR("All supported documents"), _TR("PDF documents"), _TB_TR("XPS documents"), _TB_TR("Comic books"), _TR("All files")));
     Str::TransChars(fileFilter, _T("\1"), _T("\0"));
 
     OPENFILENAME ofn = {0};

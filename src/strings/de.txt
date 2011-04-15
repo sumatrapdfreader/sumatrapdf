@@ -151,6 +151,9 @@ Weiteres
 All files
 Alle Dateien
 
+All supported documents
+Alle unterstützten Dokumente
+
 Application:
 Anwendung:
 

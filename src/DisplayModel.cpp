@@ -191,7 +191,8 @@ DisplayModel::DisplayModel(DisplayModelCallback *callback, DisplayMode displayMo
     engine = NULL;
     pdfEngine = NULL;
     xpsEngine = NULL;
-    imagesEngine = NULL;
+    cbxEngine = NULL;
+    imageEngine = NULL;
 
     textSelection = NULL;
     _textSearch = NULL;
@@ -231,8 +232,10 @@ bool DisplayModel::load(const TCHAR *fileName, int startPage, SizeI viewPort)
         engine = pdfEngine = PdfEngine::CreateFromFileName(fileName, _callback);
     else if (Str::EndsWithI(fileName, _T(".xps")))
         engine = xpsEngine = XpsEngine::CreateFromFileName(fileName);
-    else if (ImagesEngine::IsSupportedFile(fileName))
-        engine = imagesEngine = ImagesEngine::CreateFromFileName(fileName);
+    else if (CbxEngine::IsSupportedFile(fileName))
+        engine = cbxEngine = CbxEngine::CreateFromFileName(fileName);
+    else if (ImageEngine::IsSupportedFile(fileName))
+        engine = imageEngine = ImageEngine::CreateFromFileName(fileName);
     else {
         // try loading as either supported file format
         // TODO: sniff the file content instead
@@ -243,7 +246,7 @@ bool DisplayModel::load(const TCHAR *fileName, int startPage, SizeI viewPort)
     if (!engine)
         return false;
 
-    if (imagesEngine)
+    if (cbxEngine || imageEngine)
         padding = &gImagePadding;
 
     _dpiFactor = 1.0f * _callback->GetScreenDPI() / engine->GetFileDPI();
@@ -1069,7 +1072,7 @@ void DisplayModel::setPresentationMode(bool enable)
     }
     else {
         padding = &gPagePadding;
-        if (imagesEngine)
+        if (cbxEngine || imageEngine)
             padding = &gImagePadding;
         changeDisplayMode(_presDisplayMode);
         if (!ValidZoomVirtual(_presZoomVirtual))

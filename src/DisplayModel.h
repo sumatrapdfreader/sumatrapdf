@@ -153,7 +153,8 @@ public:
     BaseEngine *    engine;
     PdfEngine *     pdfEngine;
     XpsEngine *     xpsEngine;
-    ImagesEngine *  imagesEngine;
+    CbxEngine *     cbxEngine;
+    ImageEngine *   imageEngine;
     TextSelection * textSelection;
 
     PageInfo *      getPageInfo(int pageNo) const;
