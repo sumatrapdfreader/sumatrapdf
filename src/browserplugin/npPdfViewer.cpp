@@ -1,100 +1,50 @@
 /* (Minimal) SumatraPDF Browser Plugin - Copyright © 2010-2011  Simon Bünzli */
 
-#include <windows.h>
-#include <shellapi.h>
+#include "BaseUtil.h"
+#include "StrUtil.h"
+#include "FileUtil.h"
+#include "WinUtil.h"
+#include "CmdLineParser.h"
+#include "SimpleLog.h"
 #include <shlwapi.h>
-#include <stdbool.h>
-#include <wchar.h>
-#include <limits.h>
-#include <stdio.h>
-#include <stdarg.h>
 
 #ifndef _WINDOWS
 #define _WINDOWS
 #endif
 #include "npapi/npfunctions.h"
 
-#ifndef _MSC_VER
-#define DLLEXPORT __declspec(dllexport)
-#else
 #undef NP_END_MACRO
 #define NP_END_MACRO } __pragma(warning(push)) __pragma(warning(disable:4127)) while (0) __pragma(warning(pop))
 
-#define DLLEXPORT
+#define DLLEXPORT extern "C"
 #pragma comment(linker, "/EXPORT:NP_GetEntryPoints=_NP_GetEntryPoints@4,PRIVATE")
 #pragma comment(linker, "/EXPORT:NP_Initialize=_NP_Initialize@4,PRIVATE")
 #pragma comment(linker, "/EXPORT:NP_Shutdown=_NP_Shutdown@0,PRIVATE")
 #pragma comment(linker, "/EXPORT:DllRegisterServer=_DllRegisterServer@0,PRIVATE")
 #pragma comment(linker, "/EXPORT:DllUnregisterServer=_DllUnregisterServer@0,PRIVATE")
-#endif
 
 /* Allow logging plugin activity with OutputDebugString(). This can be viewed
    with DebugView http://technet.microsoft.com/en-us/sysinternals/bb896647
    In debug output sp: stands for "Sumatra Plugin" (so that we can distinguish
    our logs from other apps logs) */
 #if 0
-#define SAZA(struct_name, n) (struct_name *)calloc((n), sizeof(struct_name))
+Log::DebugLogger gLogger;
+#define dbg(msg, ...) gLogger.LogFmt(_T(msg), __VA_ARGS__)
 
-char *FmtV(const char *fmt, va_list args)
-{
-    char    message[256];
-    size_t  bufCchSize = sizeof(message);
-    char  * buf = message;
-    for (;;)
-    {
-        int count = _vsnprintf(buf, bufCchSize, fmt, args);
-        if (0 <= count && (size_t)count < bufCchSize)
-            break;
-        /* we have to make the buffer bigger. The algorithm used to calculate
-           the new size is arbitrary (aka. educated guess) */
-        if (buf != message)
-            free(buf);
-        if (bufCchSize < 4*1024)
-            bufCchSize += bufCchSize;
-        else
-            bufCchSize += 1024;
-        buf = SAZA(char, bufCchSize);
-        if (!buf)
-            break;
-    }
-
-    if (buf == message)
-        buf = _strdup(message);
-
-    return buf;
-}
-
-void dbg(const char *format, ...)
-{
-    char *buf = NULL;
-	va_list args;
-	va_start(args, format);
-	buf = FmtV(format, args);
-	OutputDebugStringA(buf);
-	free(buf);
-	va_end(args);
-}
-
-void dbgw(const WCHAR *s)
-{
-	OutputDebugStringW(s);
-}
-
-const char *DllMainReason(DWORD reason)
+const TCHAR *DllMainReason(DWORD reason)
 {
 	if (DLL_PROCESS_ATTACH == reason)
-		return "DLL_PROCESS_ATTACH";
+		return _T("DLL_PROCESS_ATTACH");
 	if (DLL_PROCESS_DETACH == reason)
-		return "DLL_PROCESS_DETACH";
+		return _T("DLL_PROCESS_DETACH");
 	if (DLL_THREAD_ATTACH == reason)
-		return "DLL_THREAD_ATTACH";
+		return _T("DLL_THREAD_ATTACH");
 	if (DLL_THREAD_DETACH == reason)
-		return "DLL_THREAD_DETACH";
-	return "UNKNOWN";
+		return _T("DLL_THREAD_DETACH");
+	return _T("UNKNOWN");
 }
 #else
   #define dbg(format, ...) ((void)0)
-  #define dbgw(s) ((void)0)
 #endif
 
 NPNetscapeFuncs gNPNFuncs;
@@ -106,18 +56,15 @@ const WCHAR *g_lpRegKey = L"Software\\MozillaPlugins\\@mozilla.zeniko.ch/Sumatra
 
 BOOL APIENTRY DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
-	dbg("sp: DllMain() reason: %d (%s)\n", (int)dwReason, DllMainReason(dwReason));
+	dbg("sp: DllMain() reason: %d (%s)", dwReason, DllMainReason(dwReason));
 
 	g_hInstance = hInstance;
 	return TRUE;
-
-	UNREFERENCED_PARAMETER(dwReason);
-	UNREFERENCED_PARAMETER(lpReserved);
 }
 
 DLLEXPORT NPError WINAPI NP_GetEntryPoints(NPPluginFuncs *pFuncs)
 {
-	dbg("sp: NP_GetEntryPoints()\n");
+	dbg("sp: NP_GetEntryPoints()");
 	if (!pFuncs || pFuncs->size < sizeof(NPPluginFuncs))
 	{
 		return NPERR_INVALID_FUNCTABLE_ERROR;
@@ -145,16 +92,16 @@ DLLEXPORT NPError WINAPI NP_GetEntryPoints(NPPluginFuncs *pFuncs)
 
 DLLEXPORT NPError WINAPI NP_Initialize(NPNetscapeFuncs *pFuncs)
 {
-	dbg("sp: NP_Initialize()\n");
+	dbg("sp: NP_Initialize()");
 
 	if (!pFuncs || pFuncs->size < sizeof(NPNetscapeFuncs))
 	{
-		dbg("sp: NP_Initialize() error: NPERR_INVALID_FUNCTABLE_ERROR\n");
+		dbg("sp: NP_Initialize() error: NPERR_INVALID_FUNCTABLE_ERROR");
 		return NPERR_INVALID_FUNCTABLE_ERROR;
 	}
 	if (HIBYTE(pFuncs->version) > NP_VERSION_MAJOR)
 	{
-		dbg("sp: NP_Initialize() error: NPERR_INCOMPATIBLE_VERSION_ERROR\n");
+		dbg("sp: NP_Initialize() error: NPERR_INCOMPATIBLE_VERSION_ERROR");
 		return NPERR_INCOMPATIBLE_VERSION_ERROR;
 	}
 	
@@ -165,7 +112,7 @@ DLLEXPORT NPError WINAPI NP_Initialize(NPNetscapeFuncs *pFuncs)
 
 DLLEXPORT NPError WINAPI NP_Shutdown(void)
 {
-	dbg("sp: NP_Shutdown()\n");
+	dbg("sp: NP_Shutdown()");
 	return NPERR_NO_ERROR;
 }
 
@@ -175,8 +122,8 @@ DLLEXPORT NPError WINAPI NP_Shutdown(void)
 #endif
 bool SetRegValueW(LPWSTR lpKey, LPWSTR lpName, LPWSTR lpValue)
 {
-	SHRegSetUSValueW(lpKey, lpName, REG_SZ, lpValue, lstrlenW(lpValue) * sizeof(WCHAR), SHREGSET_HKLM);
-	return SHRegSetUSValueW(lpKey, lpName, REG_SZ, lpValue, lstrlenW(lpValue) * sizeof(WCHAR), SHREGSET_FORCE_HKCU) == ERROR_SUCCESS;
+	SHRegSetUSValueW(lpKey, lpName, REG_SZ, lpValue, Str::Len(lpValue) * sizeof(WCHAR), SHREGSET_HKLM);
+	return SHRegSetUSValueW(lpKey, lpName, REG_SZ, lpValue, Str::Len(lpValue) * sizeof(WCHAR), SHREGSET_FORCE_HKCU) == ERROR_SUCCESS;
 }
 
 DLLEXPORT STDAPI DllRegisterServer(VOID)
@@ -211,7 +158,7 @@ DLLEXPORT STDAPI DllRegisterServer(VOID)
 	*PathFindFileNameW(szPath) = L'\0';
 	if (SHGetValueW(HKEY_CURRENT_USER, L"Environment", L"MOZ_PLUGIN_PATH", NULL, NULL, NULL) == ERROR_FILE_NOT_FOUND)
 	{
-		SHSetValueW(HKEY_CURRENT_USER, L"Environment", L"MOZ_PLUGIN_PATH", REG_SZ, szPath, (lstrlenW(szPath) + 1) * sizeof(WCHAR));
+		SHSetValueW(HKEY_CURRENT_USER, L"Environment", L"MOZ_PLUGIN_PATH", REG_SZ, szPath, (Str::Len(szPath) + 1) * sizeof(WCHAR));
 		SendMessageTimeoutW(HWND_BROADCAST, WM_SETTINGCHANGE, 0, (LPARAM)L"Environment", SMTO_ABORTIFHUNG, 5000, NULL);
 	}
 	
@@ -227,7 +174,7 @@ DLLEXPORT STDAPI DllUnregisterServer(VOID)
 	{
 		WCHAR szModulePath[MAX_PATH];
 		GetModuleFileNameW(g_hInstance, szModulePath, MAX_PATH);
-		if (!wcsncmp(szPluginPath, szModulePath, lstrlenW(szPluginPath)))
+		if (Str::StartsWithI(szModulePath, szPluginPath))
 		{
 			SHDeleteValueW(HKEY_CURRENT_USER, L"Environment", L"MOZ_PLUGIN_PATH");
 		}
@@ -244,12 +191,8 @@ DLLEXPORT STDAPI DllUnregisterServer(VOID)
 
 /* ::::: Auxiliary Methods ::::: */
 
-#define dimof(X)    (sizeof(X)/sizeof((X)[0]))
-
 bool GetExePath(LPWSTR lpPath, int len)
 {
-	DWORD dwSize = len * sizeof(WCHAR);
-	
 	// Search the plugin's directory first
 	GetModuleFileNameW(g_hInstance, lpPath, len - 2);
 	lstrcpyW(PathFindFileNameW(lpPath), L"SumatraPDF.exe");
@@ -259,35 +202,19 @@ bool GetExePath(LPWSTR lpPath, int len)
 		return true;
 	}
 	
-	// Try to get the path from the registry (set e.g. when making the default PDF viewer)
-	if (SHRegGetUSValueW(L"Software\\Classes\\SumatraPDF\\Shell\\Open\\Command", NULL, NULL, lpPath, &dwSize, FALSE, NULL, 0) == ERROR_SUCCESS)
-	{
-		WCHAR *args = wcsstr(lpPath, L"\"%1\"");
-		if (args)
-		{
-			*args = L'\0';
-		}
-		return true;
-	}
-	
 	*lpPath = L'\0';
-	return false;
-}
+	// Try to get the path from the registry (set e.g. when making the default PDF viewer)
+	ScopedMem<TCHAR> path(ReadRegStr(HKEY_CURRENT_USER, _T("Software\\Classes\\SumatraPDF\\Shell\\Open\\Command"), NULL));
+	if (!path)
+		return false;
 
-static BOOL FileExists(const WCHAR *filePath)
-{
-	WIN32_FILE_ATTRIBUTE_DATA   fileInfo;
-	BOOL res;
-	if (NULL == filePath)
-		return FALSE;
+	CmdLineParser args(path);
+	if (!File::Exists(args[0]))
+		return false;
 
-	res = GetFileAttributesEx(filePath, GetFileExInfoStandard, &fileInfo);
-	if (0 == res)
-		return FALSE;
-
-	if (fileInfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-		return FALSE;
-	return TRUE;
+	ScopedMem<WCHAR> pathw(Str::Conv::ToWStr(path));
+	Str::BufSet(lpPath, len, pathw);
+	return true;
 }
 
 // filePathBuf must be MAX_PATH in size
@@ -301,14 +228,14 @@ HANDLE CreateTempFile(WCHAR *filePathBufOut)
 	ret = GetTempPath(dimof(pathBuf), pathBuf);
 	if (0 == ret || ret > dimof(pathBuf))
 	{
-		dbg("sp: CreateTempFile(): GetTempPath() failed\n");
+		dbg("sp: CreateTempFile(): GetTempPath() failed");
 		return NULL;
 	}
 
 	uret = GetTempFileName(pathBuf, L"SPlugTmp", 0, filePathBufOut);
 	if (0 == uret)
 	{
-		dbg("sp: CreateTempFile(): GetTempFileName() failed\n");
+		dbg("sp: CreateTempFile(): GetTempFileName() failed");
 		return NULL;
 	}
 
@@ -316,7 +243,7 @@ HANDLE CreateTempFile(WCHAR *filePathBufOut)
 						FILE_ATTRIBUTE_NORMAL, NULL);
 	if (INVALID_HANDLE_VALUE == hFile)
 	{
-		dbg("sp: CreateTempFile(): CreateFile() failed\n");
+		dbg("sp: CreateTempFile(): CreateFile() failed");
 		return NULL;
 	}
 	return hFile;
@@ -371,10 +298,10 @@ LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lPar
 			RECT rcProgress = rcClient;
 			HBRUSH brushProgress = CreateSolidBrush(RGB(0x80, 0x80, 0xff));
 			
-			GetTextExtentPoint32W(hDCBuffer, data->message, lstrlenW(data->message), &msgSize);
+			GetTextExtentPoint32W(hDCBuffer, data->message, Str::Len(data->message), &msgSize);
 			InflateRect(&rcProgress, -(rcProgress.right - rcProgress.left - msgSize.cx) / 2, -(rcProgress.bottom - rcProgress.top - msgSize.cy) / 2);
 			OffsetRect(&rcProgress, 0, msgSize.cy + 4);
-			FillRect(hDCBuffer, &rcProgress, GetStockObject(WHITE_BRUSH));
+			FillRect(hDCBuffer, &rcProgress, (HBRUSH)GetStockObject(WHITE_BRUSH));
 			rcProgress.right = (LONG)(rcProgress.left + data->progress * (rcProgress.right - rcProgress.left));
 			FillRect(hDCBuffer, &rcProgress, brushProgress);
 			
@@ -417,21 +344,21 @@ NPError NP_LOADDS NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, in
 {
 	InstanceData *data;
 
-	dbg("sp: NPP_New() mode=%d ", (int)mode);
+	dbg("sp: NPP_New() mode=%d ", mode);
 
 	if (!instance)
 	{
-		dbg("error: NPERR_INVALID_INSTANCE_ERROR\n");
+		dbg("error: NPERR_INVALID_INSTANCE_ERROR");
 		return NPERR_INVALID_INSTANCE_ERROR;
 	}
 
 	if (pluginType)
-		dbg("pluginType: %s ", pluginType);
+		dbg("sp:   pluginType: %s ", pluginType);
 	if (saved)
-		dbg("SavedData: len=%d", saved->len);
-	dbg("\n");
+		dbg("sp:   SavedData: len=%d", saved->len);
 
-	data = instance->pdata = calloc(1, sizeof(InstanceData));
+	instance->pdata = calloc(1, sizeof(InstanceData));
+	data = (InstanceData *)instance->pdata;
 	gNPNFuncs.setvalue(instance, NPPVpluginWindowBool, (void *)true);
 	
 	if (GetExePath(data->exepath, MAX_PATH + 2))
@@ -444,13 +371,6 @@ NPError NP_LOADDS NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, in
 	}
 	
 	return NPERR_NO_ERROR;
-	
-	UNREFERENCED_PARAMETER(pluginType);
-	UNREFERENCED_PARAMETER(mode);
-	UNREFERENCED_PARAMETER(argc);
-	UNREFERENCED_PARAMETER(argn);
-	UNREFERENCED_PARAMETER(argv);
-	UNREFERENCED_PARAMETER(saved);
 }
 
 NPError NP_LOADDS NPP_SetWindow(NPP instance, NPWindow *npwin)
@@ -459,20 +379,20 @@ NPError NP_LOADDS NPP_SetWindow(NPP instance, NPWindow *npwin)
 
 	if (!instance)
 	{
-		dbg("sp: NPP_SetWindow() errro: NPERR_INVALID_INSTANCE_ERROR\n");
+		dbg("sp: NPP_SetWindow() errro: NPERR_INVALID_INSTANCE_ERROR");
 		return NPERR_INVALID_INSTANCE_ERROR;
 	}
 
-	dbg("sp: NPP_SetWindow()\n");
+	dbg("sp: NPP_SetWindow()");
 
-	data = instance->pdata;
+	data = (InstanceData *)instance->pdata;
 	if (!npwin)
 	{
 		data->npwin = NULL;
 	}
 	else if (data->npwin != npwin)
 	{
-		HWND hWnd = npwin->window;
+		HWND hWnd = (HWND)npwin->window;
 		
 		data->npwin = npwin;
 		SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)data);
@@ -481,7 +401,7 @@ NPError NP_LOADDS NPP_SetWindow(NPP instance, NPWindow *npwin)
 	else
 	{
 		// The plugin's window hasn't changed, just its size
-		HWND hWnd = npwin->window;
+		HWND hWnd = (HWND)npwin->window;
 		HWND hChild = FindWindowEx(hWnd, NULL, NULL, NULL);
 		
 		if (hChild)
@@ -511,80 +431,68 @@ static void RepaintOnProgressChange(InstanceData *data)
 	}
 }
 
-// To workaround FireFox bug https://bugzilla.mozilla.org/show_bug.cgi?id=644149
+// To workaround Firefox bug https://bugzilla.mozilla.org/show_bug.cgi?id=644149
 // (our bug: http://code.google.com/p/sumatrapdf/issues/detail?id=1328)
 // if a file is big (not sure what the exact threshold should be, we use
 // conservative 6MB) we save it to a file ourselves instead of relying on the
 // browser to do it.
-#define BIG_FILE_THRESHOLD 6*1024*1024
+#define BIG_FILE_THRESHOLD (6 * 1024 * 1024)
 
 NPError NP_LOADDS NPP_NewStream(NPP instance, NPMIMEType type, NPStream* stream, NPBool seekable, uint16_t* stype)
 {
-	InstanceData *data = instance->pdata;
+	InstanceData *data = (InstanceData *)instance->pdata;
 
 	if (!*data->exepath)
 	{
-		dbg("sp: NPP_NewStream() error: NPERR_FILE_NOT_FOUND\n");
+		dbg("sp: NPP_NewStream() error: NPERR_FILE_NOT_FOUND");
 		return NPERR_FILE_NOT_FOUND;
 	}
 
-	dbg("sp: NPP_NewStream() end = %d\n", (int)stream->end);
+	dbg("sp: NPP_NewStream() end = %d", stream->end);
+
+	// default to asking the browser to create the temporary file for us
+	*stype = NP_ASFILE;
 
 	data->hFile = NULL;
-	// TODO: this should only be done for FireFox, if we can detect we're
-	// hosted inside FireFox in a non-hacky way.
-	// (a hacky way could be getting a callstack and checking for FireFox.exe
-	// module up in the call chain)
-	if (stream->end > BIG_FILE_THRESHOLD)
+	// create a temporary file only for Gecko based browsers such as Firefox
+	const char *userAgent = gNPNFuncs.uagent(instance);
+	if (strstr(userAgent, "Gecko/") && stream->end > BIG_FILE_THRESHOLD)
 	{
 		data->hFile = CreateTempFile(data->filepath);
 		if (data->hFile)
 		{
-			dbg("sp: using temporary file: ");
-			dbgw(data->filepath);
-			dbg("\n");
+			dbg("sp: using temporary file: %s", data->filepath);
 			*stype = NP_NORMAL;
-			goto Exit;
 		}
 	}
 
-	// either small file or failed to create a temporary file for the big file
-	*stype = NP_ASFILE;
-
-Exit:
 	data->progress = stream->end > 0 ? 0.01f : 0;
 	data->prevProgress = -.1f;
 	RepaintOnProgressChange(data);
 	
 	return NPERR_NO_ERROR;
-	
-	UNREFERENCED_PARAMETER(type);
-	UNREFERENCED_PARAMETER(seekable);
 }
 
 int32_t NP_LOADDS NPP_WriteReady(NPP instance, NPStream* stream)
 {
 	int32_t res = stream->end > 0 ? stream->end : INT_MAX;
-	dbg("sp: NPP_WriteReady() res = %d\n", res);
+	dbg("sp: NPP_WriteReady() res = %d", res);
 	return res;
-	
-	UNREFERENCED_PARAMETER(instance);
-	UNREFERENCED_PARAMETER(stream);
 }
 
 int32_t NP_LOADDS NPP_Write(NPP instance, NPStream* stream, int32_t offset, int32_t len, void* buffer)
 {
-	InstanceData *data = instance->pdata;
+	InstanceData *data = (InstanceData *)instance->pdata;
 	DWORD bytesWritten = len;
 
-	dbg("sp: NPP_Write() off = %d, len=%d\n", (int)offset, (int)len);
+	dbg("sp: NPP_Write() off = %d, len=%d", offset, len);
 
 	if (data->hFile)
 	{
 		BOOL ok = WriteFile(data->hFile, buffer, (DWORD)len, &bytesWritten, NULL);
 		if (!ok)
 		{
-			dbg("sp: NPP_Write() failed to write %d bytes at offset %d\n", (int)len, (int)offset);
+			dbg("sp: NPP_Write() failed to write %d bytes at offset %d", len, offset);
 			return -1;
 		}
 	}
@@ -593,20 +501,17 @@ int32_t NP_LOADDS NPP_Write(NPP instance, NPStream* stream, int32_t offset, int3
 	RepaintOnProgressChange(data);
 
 	return bytesWritten;
-
-	UNREFERENCED_PARAMETER(buffer);
 }
 
 static void LaunchWithSumatra(InstanceData *data)
 {
-	WCHAR cmdLine[MAX_PATH * 3];
 	PROCESS_INFORMATION pi = { 0 };
 	STARTUPINFOW si = { 0 };
 
-	if (!FileExists(data->filepath))
-		dbg("sp: NPP_StreamAsFile() error: file doesn't exist\n");
+	if (!PathFileExistsW(data->filepath))
+		dbg("sp: NPP_StreamAsFile() error: file doesn't exist");
 
-	wsprintfW(cmdLine, L"%s -plugin %d \"%s\"", data->exepath, data->npwin->window, data->filepath);
+	ScopedMem<WCHAR> cmdLine(Str::Format(L"%s -plugin %d \"%s\"", data->exepath, (HWND)data->npwin->window, data->filepath));
 	
 	si.cb = sizeof(si);
 	if (CreateProcessW(NULL, cmdLine, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
@@ -616,27 +521,27 @@ static void LaunchWithSumatra(InstanceData *data)
 	}
 	else
 	{
-		dbg("sp: NPP_StreamAsFile() error: couldn't run SumatraPDF!\n");
+		dbg("sp: NPP_StreamAsFile() error: couldn't run SumatraPDF!");
 		data->message = L"Error: Couldn't run SumatraPDF!";
 	}
 }
 
 void NP_LOADDS NPP_StreamAsFile(NPP instance, NPStream* stream, const char* fname)
 {
-	InstanceData *data = instance->pdata;
+	InstanceData *data = (InstanceData *)instance->pdata;
 
 	if (!fname)
 	{
-		dbg("sp: NPP_StreamAsFile() error: fname is NULL\n");
+		dbg("sp: NPP_StreamAsFile() error: fname is NULL");
 		data->message = L"Error: The PDF document couldn't be downloaded!";
 		goto Exit;
 	}
 
-	dbg("sp: NPP_StreamAsFile() fname=%s\n", fname);
+	dbg("sp: NPP_StreamAsFile() fname=%s", ScopedMem<TCHAR>(Str::Conv::FromAnsi(fname)));
 
 	if (data->hFile)
 	{
-		dbg("sp: NPP_StreamAsFile() error: data->hFile is != NULL (should be NULL)\n");
+		dbg("sp: NPP_StreamAsFile() error: data->hFile is != NULL (should be NULL)");
 	}
 
 	data->progress = 1.0f;
@@ -656,38 +561,35 @@ Exit:
 		InvalidateRect((HWND)data->npwin->window, NULL, FALSE);
 		UpdateWindow((HWND)data->npwin->window);
 	}
-	
-	UNREFERENCED_PARAMETER(stream);
 }
 
 NPError NP_LOADDS NPP_DestroyStream(NPP instance, NPStream* stream, NPReason reason)
 {
 	InstanceData *data;
 
-    dbg("sp: NPP_DestroyStream() reason: %d", (int)reason);
+	dbg("sp: NPP_DestroyStream() reason: %d", reason);
 	if (stream)
 	{
 		if (stream->url)
-			dbg(" url: %s", stream->url);
-		dbg(" end: %d", stream->end);
+			dbg("sp:   url: %s", stream->url);
+		dbg("sp:   end: %d", stream->end);
 	}
-	dbg("\n");
 
 	if (!instance)
 	{
-		dbg("sp: NPP_DestroyStream() error: NPERR_INVALID_INSTANCE_ERROR\n");
+		dbg("sp: NPP_DestroyStream() error: NPERR_INVALID_INSTANCE_ERROR");
 		return NPERR_INVALID_INSTANCE_ERROR;
 	}
 
-	data = instance->pdata;
+	data = (InstanceData *)instance->pdata;
 	if (!data)
 	{
-		dbg("sp: NPP_DestroyStream() error: instance->pdata is NULL\n");
+		dbg("sp: NPP_DestroyStream() error: instance->pdata is NULL");
 		return NPERR_NO_ERROR;
 	}
 
 	if (!data->hFile)
-        goto Exit;
+		goto Exit;
 
 	CloseHandle(data->hFile);
 	LaunchWithSumatra(data);
@@ -700,10 +602,6 @@ Exit:
 	}
 
 	return NPERR_NO_ERROR;
-	
-	UNREFERENCED_PARAMETER(instance);
-	UNREFERENCED_PARAMETER(stream);
-	UNREFERENCED_PARAMETER(reason);
 }
 
 NPError NP_LOADDS NPP_Destroy(NPP instance, NPSavedData** save)
@@ -712,24 +610,23 @@ NPError NP_LOADDS NPP_Destroy(NPP instance, NPSavedData** save)
 	
 	if (!instance)
 	{
-		dbg("sp: NPP_Destroy() error: NPERR_INVALID_INSTANCE_ERROR\n");
+		dbg("sp: NPP_Destroy() error: NPERR_INVALID_INSTANCE_ERROR");
 		return NPERR_INVALID_INSTANCE_ERROR;
 	}
 
-	dbg("sp: NPP_Destroy()\n");
-	data = instance->pdata;
+	dbg("sp: NPP_Destroy()");
+	data = (InstanceData *)instance->pdata;
 	if (data->hProcess)
 	{
-		dbg("sp: NPP_Destroy(): waiting for Sumatra to exit\n");
+		dbg("sp: NPP_Destroy(): waiting for Sumatra to exit");
 		TerminateProcess(data->hProcess, 99);
 		WaitForSingleObject(data->hProcess, INFINITE);
 		CloseHandle(data->hProcess);
 	}
 	if (data->hFile)
 	{
-		dbg("sp: NPP_Destroy(): deleting internal temporary file ");
-		dbgw(data->filepath);
-		dbg("\n");
+		dbg("sp: NPP_Destroy(): deleting internal temporary file %s",
+			ScopedMem<TCHAR>(Str::Conv::FromWStr(data->filepath)));
 		DeleteFileW(data->filepath);
 		*data->filepath = 0;
 	}
@@ -738,19 +635,16 @@ NPError NP_LOADDS NPP_Destroy(NPP instance, NPSavedData** save)
 	{
 		WCHAR tempDir[MAX_PATH];
 		DWORD len = GetTempPathW(MAX_PATH, tempDir);
-		if (0 < len && len < MAX_PATH && !wcsncmp(data->filepath, tempDir, len))
+		if (0 < len && len < MAX_PATH && Str::StartsWithI(data->filepath, tempDir))
 		{
-			dbg("sp: NPP_Destroy(): deleting browser temporary file ");
-			dbgw(data->filepath);
-			dbg("\n");
+			dbg("sp: NPP_Destroy(): deleting browser temporary file %s",
+				ScopedMem<TCHAR>(Str::Conv::FromWStr(data->filepath)));
 			DeleteFileW(data->filepath);
 		}
 	}
 	free(data);
 	
 	return NPERR_NO_ERROR;
-	
-	UNREFERENCED_PARAMETER(save);
 }
 
 // TODO: NPP_Print seems to never be called by Google Chrome
@@ -761,18 +655,18 @@ void NP_LOADDS NPP_Print(NPP instance, NPPrint* platformPrint)
 {
 	if (!platformPrint)
 	{
-		dbg("sp: NPP_Print(), platformPrint is NULL\n");
+		dbg("sp: NPP_Print(), platformPrint is NULL");
 		return;
 	}
 
 	if (NP_FULL != platformPrint->mode)
 	{
-		dbg("sp: NPP_Print(), platformPrint->mode is %d (!= NP_FULL)\n", (int)platformPrint->mode);
+		dbg("sp: NPP_Print(), platformPrint->mode is %d (!= NP_FULL)", platformPrint->mode);
 	}
 	else
 	{
-		InstanceData *data = instance->pdata;
-		HWND hWnd = data->npwin->window;
+		InstanceData *data = (InstanceData *)instance->pdata;
+		HWND hWnd = (HWND)data->npwin->window;
 		HWND hChild = FindWindowEx(hWnd, NULL, NULL, NULL);
 		
 		if (hChild)
@@ -782,4 +676,3 @@ void NP_LOADDS NPP_Print(NPP instance, NPPrint* platformPrint)
 		}
 	}
 }
-

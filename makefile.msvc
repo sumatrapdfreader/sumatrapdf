@@ -81,8 +81,7 @@ PDFFILTER_CFLAGS = $(SUMATRA_CFLAGS)
 
 BROWSER_PLUGIN = $(O)\npPdfViewer.dll
 BROWSER_PLUGIN_RES = $(O)\npPdfViewer.res
-BROWSER_PLUGIN_CFLAGS = $(CFLAGS) /Ibaseutils/msvc /wd4819
-LIBS_BROWSER_PLUGIN = user32.lib gdi32.lib advapi32.lib shlwapi.lib
+BROWSER_PLUGIN_CFLAGS = $(CFLAGS) /Ibaseutils /Ibaseutils/msvc /wd4819
 
 BASEUTILS_OBJS = \
 	$(O)\BencUtil.obj $(O)\FileUtil.obj $(O)\Http.obj $(O)\SimpleLog.obj \
@@ -108,7 +107,8 @@ PDFFILTER_OBJS = \
 	$(LIBMUPDF_LIB) $(O)\MuPDF_Exports.obj $(O)\PdfEngine.obj
 
 BROWSER_PLUGIN_OBJS = \
-	$(O)\npPdfViewer.obj $(BROWSER_PLUGIN_RES)
+	$(O)\npPdfViewer.obj $(BROWSER_PLUGIN_RES) \
+	$(O)\StrUtil.obj $(O)\FileUtil.obj $(O)\WinUtil.obj
 
 !if "$(BUILD_XPS_IFILTER)"!=""
 PDFFILTER_OBJS = $(PDFFILTER_OBJS) $(O)\CXpsFilter.obj
@@ -163,7 +163,7 @@ $(BROWSER_PLUGIN_RES): src\browserplugin\npPdfViewer.rc
 	rc /r /fo$@ $(EXTCFLAGS) src\browserplugin\npPdfViewer.rc
 
 $(BROWSER_PLUGIN): $(BROWSER_PLUGIN_OBJS)
-	$(LD) /DLL $(LDFLAGS) $** $(LIBS_BROWSER_PLUGIN) /PDB:$*.pdb /OUT:$@
+	$(LD) /DLL $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@
 
 {baseutils}.cpp{$(O)}.obj::
 	$(CC) $(SUMATRA_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
@@ -179,8 +179,8 @@ $(BROWSER_PLUGIN): $(BROWSER_PLUGIN_OBJS)
 	$(CC) $(SUMATRA_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
 
 # browserplugin directory
-{src\browserplugin}.c{$(O)}.obj::
-	$(CC) /TC $(BROWSER_PLUGIN_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
+{src\browserplugin}.cpp{$(O)}.obj::
+	$(CC) $(BROWSER_PLUGIN_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
 
 # IFilter directory
 {src\ifilter}.cpp{$(O)}.obj::
@@ -242,8 +242,10 @@ $(O)\Installer.obj: baseutils\WinUtil.h src\installer\..\ifilter\PdfFilter.h src
 $(O)\Installer.obj: src\Version.h
 $(O)\LangMenuDef.obj: src\LangMenuDef.h
 $(O)\MuPDF_Exports.obj: mupdf\fitz\fitz.h
-$(O)\npPdfViewer.obj: src\browserplugin\npapi\npapi.h src\browserplugin\npapi\npfunctions.h src\browserplugin\npapi\npruntime.h
-$(O)\npPdfViewer.obj: src\browserplugin\npapi\nptypes.h
+$(O)\npPdfViewer.obj: baseutils\BaseUtil.h baseutils\CmdLineParser.h baseutils\FileUtil.h
+$(O)\npPdfViewer.obj: baseutils\GeomUtil.h baseutils\SimpleLog.h baseutils\StrUtil.h
+$(O)\npPdfViewer.obj: baseutils\Vec.h baseutils\WinUtil.h src\browserplugin\npapi\npapi.h
+$(O)\npPdfViewer.obj: src\browserplugin\npapi\npfunctions.h src\browserplugin\npapi\npruntime.h src\browserplugin\npapi\nptypes.h
 $(O)\ParseCommandLine.obj: baseutils\BaseUtil.h baseutils\CmdLineParser.h baseutils\GeomUtil.h
 $(O)\ParseCommandLine.obj: baseutils\StrUtil.h baseutils\Vec.h baseutils\WinUtil.h
 $(O)\ParseCommandLine.obj: src\AppPrefs.h src\Benchmark.h src\DisplayState.h
