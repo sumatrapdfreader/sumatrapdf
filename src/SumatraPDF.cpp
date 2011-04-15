@@ -3908,9 +3908,16 @@ static void OnMenuGoToPage(WindowInfo *win)
         win->dm->goToPage(newPageNo, 0, true);
 }
 
+static bool NeedsFindUI(WindowInfo *win)
+{
+    assert(win);
+    if (!win) return true;
+    return !win->IsDocLoaded() || win->dm->engine && win->dm->engine->HasTextContent();
+}
+
 static void OnMenuFind(WindowInfo *win)
 {
-    if (!win || !win->IsDocLoaded())
+    if (!win || !win->IsDocLoaded() || !NeedsFindUI(win))
         return;
 
     // Don't show a dialog if we don't have to - use the Toolbar instead
@@ -4252,18 +4259,24 @@ static void WindowInfo_HideFindStatus(WindowInfo *win, bool success=false, bool 
 
 static void OnMenuFindNext(WindowInfo *win)
 {
+    if (!NeedsFindUI(win))
+        return;
     if (SendMessage(win->hwndToolbar, TB_ISBUTTONENABLED, IDM_FIND_NEXT, 0))
         win->Find(FIND_FORWARD);
 }
 
 static void OnMenuFindPrev(WindowInfo *win)
 {
+    if (!NeedsFindUI(win))
+        return;
     if (SendMessage(win->hwndToolbar, TB_ISBUTTONENABLED, IDM_FIND_PREV, 0))
         win->Find(FIND_BACKWARD);
 }
 
 static void OnMenuFindMatchCase(WindowInfo *win)
 {
+    if (!NeedsFindUI(win))
+        return;
     WORD state = (WORD)SendMessage(win->hwndToolbar, TB_GETSTATE, IDM_FIND_MATCH, 0);
     win->dm->SetFindMatchCase((state & TBSTATE_CHECKED) != 0);
     Edit_SetModify(win->hwndFindBox, TRUE);
@@ -4273,34 +4286,42 @@ static void AdvanceFocus(WindowInfo *win)
 {
     // Tab order: Frame -> Page -> Find -> ToC -> Frame -> ...
 
-    bool reversed = IsShiftPressed();
     bool hasToolbar = !win->fullScreen && !win->presentation && gGlobalPrefs.m_showToolbar;
-    bool hasToC = win->tocLoaded && win->tocShow;
+    int direction = IsShiftPressed() ? -1 : 1;
 
+    struct {
+        HWND hwnd;
+        bool isAvailable;
+    } tabOrder[] = {
+        { win->hwndFrame,   true                            },
+        { win->hwndPageBox, hasToolbar                      },
+        { win->hwndFindBox, hasToolbar && NeedsFindUI(win)  },
+        { win->hwndTocTree, win->tocLoaded && win->tocShow  },
+    };
+
+    /* // make sure that at least one element is available
+    bool hasAvailable = false;
+    for (int i = 0; i < dimof(tabOrder) && !hasAvailable; i++)
+        hasAvailable = tabOrder[i].isAvailable;
+    if (!hasAvailable)
+        return;
+    // */
+
+    // find the currently focused element
     HWND current = GetFocus();
-    HWND next = win->hwndFrame;
+    int ix;
+    for (ix = 0; ix < dimof(tabOrder); ix++)
+        if (tabOrder[ix].hwnd == current)
+            break;
+    // if it's not in the tab order, start at the beginning
+    if (ix == dimof(tabOrder))
+        ix = -direction;
 
-    if (current == win->hwndFrame) {
-        if ((!hasToolbar || reversed) && hasToC)
-            next = win->hwndTocTree;
-        else if (!reversed && hasToolbar)
-            next = win->hwndPageBox;
-        else if (reversed && hasToolbar)
-            next = win->hwndFindBox;
-    } else if (current == win->hwndTocTree) {
-        if (reversed && hasToolbar)
-            next = win->hwndFindBox;
-    } else if (current == win->hwndPageBox) {
-        if (!reversed)
-            next = win->hwndFindBox;
-    } else if (current == win->hwndFindBox) {
-        if (reversed)
-            next = win->hwndPageBox;
-        else if (hasToC)
-            next = win->hwndTocTree;
-    }
-
-    SetFocus(next);
+    // focus the next available element
+    do {
+        ix = (ix + direction + dimof(tabOrder)) % dimof(tabOrder);
+    } while (!tabOrder[ix].isAvailable);
+    SetFocus(tabOrder[ix].hwnd);
 }
 
 static bool OnKeydown(WindowInfo *win, WPARAM key, LPARAM lparam, bool inTextfield=false)
@@ -4893,8 +4914,7 @@ static void HideToolbarFindUI(WindowInfo *win)
 
 static void UpdateToolbarFindText(WindowInfo *win)
 {
-    if (win && win->dm && win->dm->engine && !win->dm->engine->HasTextContent())
-    {
+    if (!NeedsFindUI(win)) {
         HideToolbarFindUI(win);
         return;
     }
