@@ -6,6 +6,8 @@
 #include <stdbool.h>
 #include <wchar.h>
 #include <limits.h>
+#include <stdio.h>
+#include <stdarg.h>
 
 #ifndef _WINDOWS
 #define _WINDOWS
@@ -26,6 +28,69 @@
 #pragma comment(linker, "/EXPORT:DllUnregisterServer=_DllUnregisterServer@0,PRIVATE")
 #endif
 
+/* Allow logging plugin activity with OutputDebugString(). This can be viewed
+   with DebugView http://technet.microsoft.com/en-us/sysinternals/bb896647
+   In debug output sp: stands for "Sumatra Plugin" (so that we can distinguish
+   our logs from other apps logs) */
+#if 0
+#define SAZA(struct_name, n) (struct_name *)calloc((n), sizeof(struct_name))
+
+char *FmtV(const char *fmt, va_list args)
+{
+    char    message[256];
+    size_t  bufCchSize = sizeof(message);
+    char  * buf = message;
+    for (;;)
+    {
+        int count = _vsnprintf(buf, bufCchSize, fmt, args);
+        if (0 <= count && (size_t)count < bufCchSize)
+            break;
+        /* we have to make the buffer bigger. The algorithm used to calculate
+           the new size is arbitrary (aka. educated guess) */
+        if (buf != message)
+            free(buf);
+        if (bufCchSize < 4*1024)
+            bufCchSize += bufCchSize;
+        else
+            bufCchSize += 1024;
+        buf = SAZA(char, bufCchSize);
+        if (!buf)
+            break;
+    }
+
+    if (buf == message)
+        buf = _strdup(message);
+
+    return buf;
+}
+
+void dbg(const char *format, ...)
+{
+    char *buf = NULL;
+	va_list args;
+	va_start(args, format);
+	buf = FmtV(format, args);
+	OutputDebugStringA(buf);
+	free(buf);
+	va_end(args);
+}
+
+const char *DllMainReason(DWORD reason)
+{
+	if (DLL_PROCESS_ATTACH == reason)
+		return "DLL_PROCESS_ATTACH";
+	if (DLL_PROCESS_DETACH == reason)
+		return "DLL_PROCESS_DETACH";
+	if (DLL_THREAD_ATTACH == reason)
+		return "DLL_THREAD_ATTACH";
+	if (DLL_THREAD_DETACH == reason)
+		return "DLL_THREAD_DETACH";
+	return "UNKNOWN";
+}
+#else
+  #define dbg(format, ...) ((void)0)
+#endif
+
 NPNetscapeFuncs gNPNFuncs;
 HINSTANCE g_hInstance = NULL;
 const WCHAR *g_lpRegKey = L"Software\\MozillaPlugins\\@mozilla.zeniko.ch/SumatraPDF_Browser_Plugin";
@@ -35,15 +100,18 @@ const WCHAR *g_lpRegKey = L"Software\\MozillaPlugins\\@mozilla.zeniko.ch/Sumatra
 
 BOOL APIENTRY DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
+	dbg("sp: DllMain() reason: %d (%s)\n", (int)dwReason, DllMainReason(dwReason));
+
 	g_hInstance = hInstance;
 	return TRUE;
-	
+
 	UNREFERENCED_PARAMETER(dwReason);
 	UNREFERENCED_PARAMETER(lpReserved);
 }
 
 DLLEXPORT NPError WINAPI NP_GetEntryPoints(NPPluginFuncs *pFuncs)
 {
+	dbg("sp: NP_GetEntryPoints()\n");
 	if (!pFuncs || pFuncs->size < sizeof(NPPluginFuncs))
 	{
 		return NPERR_INVALID_FUNCTABLE_ERROR;
@@ -71,12 +139,16 @@ DLLEXPORT NPError WINAPI NP_GetEntryPoints(NPPluginFuncs *pFuncs)
 
 DLLEXPORT NPError WINAPI NP_Initialize(NPNetscapeFuncs *pFuncs)
 {
+	dbg("sp: NP_Initialize()\n");
+
 	if (!pFuncs || pFuncs->size < sizeof(NPNetscapeFuncs))
 	{
+		dbg("sp: NP_Initialize() error: NPERR_INVALID_FUNCTABLE_ERROR\n");
 		return NPERR_INVALID_FUNCTABLE_ERROR;
 	}
 	if (HIBYTE(pFuncs->version) > NP_VERSION_MAJOR)
 	{
+		dbg("sp: NP_Initialize() error: NPERR_INCOMPATIBLE_VERSION_ERROR\n");
 		return NPERR_INCOMPATIBLE_VERSION_ERROR;
 	}
 	
@@ -87,6 +159,7 @@ DLLEXPORT NPError WINAPI NP_Initialize(NPNetscapeFuncs *pFuncs)
 
 DLLEXPORT NPError WINAPI NP_Shutdown(void)
 {
+	dbg("sp: NP_Shutdown()\n");
 	return NPERR_NO_ERROR;
 }
 
@@ -286,12 +359,21 @@ LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lPar
 NPError NP_LOADDS NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* argn[], char* argv[], NPSavedData* saved)
 {
 	InstanceData *data;
-	
+
+	dbg("sp: NPP_New() mode=%d ", (int)mode);
+
 	if (!instance)
 	{
+		dbg("error: NPERR_INVALID_INSTANCE_ERROR\n");
 		return NPERR_INVALID_INSTANCE_ERROR;
 	}
-	
+
+	if (pluginType)
+		dbg("pluginType: %s ", pluginType);
+	if (saved)
+		dbg("SavedData: len=%d", saved->len);
+	dbg("\n");
+
 	data = instance->pdata = calloc(1, sizeof(InstanceData));
 	gNPNFuncs.setvalue(instance, NPPVpluginWindowBool, (void *)true);
 	
@@ -317,12 +399,15 @@ NPError NP_LOADDS NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, in
 NPError NP_LOADDS NPP_SetWindow(NPP instance, NPWindow *npwin)
 {
 	InstanceData *data;
-	
+
 	if (!instance)
 	{
+		dbg("sp: NPP_SetWindow() errro: NPERR_INVALID_INSTANCE_ERROR\n");
 		return NPERR_INVALID_INSTANCE_ERROR;
 	}
-	
+
+	dbg("sp: NPP_SetWindow()\n");
+
 	data = instance->pdata;
 	if (!npwin)
 	{
@@ -375,9 +460,13 @@ NPError NP_LOADDS NPP_NewStream(NPP instance, NPMIMEType type, NPStream* stream,
 	
 	if (!*data->exepath)
 	{
+		dbg("sp: NPP_NewStream() error: NPERR_FILE_NOT_FOUND\n");
+
 		return NPERR_FILE_NOT_FOUND;
 	}
-	
+
+	dbg("sp: NPP_NewStream() end = %d\n", (int)stream->end);
+
 	*stype = NP_ASFILE;
 	
 	data->progress = stream->end > 0 ? 0.01f : 0;
@@ -392,7 +481,10 @@ NPError NP_LOADDS NPP_NewStream(NPP instance, NPMIMEType type, NPStream* stream,
 
 int32_t NP_LOADDS NPP_WriteReady(NPP instance, NPStream* stream)
 {
-	return stream->end > 0 ? stream->end : INT_MAX;
+
+	int32_t res = stream->end > 0 ? stream->end : INT_MAX;
+	dbg("sp: NPP_WriteReady() res = %d\n", res);
+	return res;
 	
 	UNREFERENCED_PARAMETER(instance);
 	UNREFERENCED_PARAMETER(stream);
@@ -401,12 +493,30 @@ int32_t NP_LOADDS NPP_WriteReady(NPP instance, NPStream* stream)
 int32_t NP_LOADDS NPP_Write(NPP instance, NPStream* stream, int32_t offset, int32_t len, void* buffer)
 {
 	InstanceData *data = instance->pdata;
-	
+
+	dbg("sp: NPP_Write() off = %d, len=%d\n", (int)offset, (int)len);
+
 	data->progress = stream->end > 0 ? 1.0f * (offset + len) / stream->end : 0;
 	RepaintOnProgressChange(data);
 	return len;
 
 	UNREFERENCED_PARAMETER(buffer);
+}
+
+BOOL FileExists(const char *filePath)
+{
+    WIN32_FILE_ATTRIBUTE_DATA   fileInfo;
+    BOOL res;
+    if (NULL == filePath)
+        return FALSE;
+
+    res = GetFileAttributesExA(filePath, GetFileExInfoStandard, &fileInfo);
+    if (0 == res)
+        return FALSE;
+
+    if (fileInfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+        return FALSE;
+    return TRUE;
 }
 
 // TODO: NPP_StreamAsFile is never called by Firefox 4.0 for large files due to
@@ -422,18 +532,20 @@ void NP_LOADDS NPP_StreamAsFile(NPP instance, NPStream* stream, const char* fnam
 	
 	if (!fname)
 	{
+		dbg("sp: NPP_StreamAsFile() error: fname is NULL\n");
 		data->message = L"Error: The PDF document couldn't be downloaded!";
 	}
-	
+
+	dbg("sp: NPP_StreamAsFile() fname=%s\n", fname);
+
+	if (!FileExists(fname)) {
+		dbg("sp: NPP_StreamAsFile() error: file doesn't exist\n");
+	}
+
 	data->progress = 1.0f;
 	data->prevProgress = 0.0f; // force update
 	RepaintOnProgressChange(data);
-	
-	if (!fname)
-	{
-		return;
-	}
-	
+
 	if (!MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, fname, -1, data->filepath, MAX_PATH))
 	{
 		MultiByteToWideChar(CP_ACP, 0, fname, -1, data->filepath, MAX_PATH);
@@ -449,8 +561,10 @@ void NP_LOADDS NPP_StreamAsFile(NPP instance, NPStream* stream, const char* fnam
 	}
 	else
 	{
+		dbg("sp: NPP_StreamAsFile() error: couldn't run SumatraPDF!\n");
 		data->message = L"Error: Couldn't run SumatraPDF!";
 	}
+
 	if (data->npwin)
 	{
 		InvalidateRect((HWND)data->npwin->window, NULL, FALSE);
@@ -462,6 +576,15 @@ void NP_LOADDS NPP_StreamAsFile(NPP instance, NPStream* stream, const char* fnam
 
 NPError NP_LOADDS NPP_DestroyStream(NPP instance, NPStream* stream, NPReason reason)
 {
+	dbg("sp: NPP_DestroyStream() reason: %d", (int)reason);
+	if (stream)
+	{
+		if (stream->url)
+			dbg(" url: %s", stream->url);
+		dbg(" end: %d", stream->end);
+	}
+	dbg("\n");
+
 	return NPERR_NO_ERROR;
 	
 	UNREFERENCED_PARAMETER(instance);
@@ -475,9 +598,11 @@ NPError NP_LOADDS NPP_Destroy(NPP instance, NPSavedData** save)
 	
 	if (!instance)
 	{
+		dbg("sp: NPP_Destroy() error: NPERR_INVALID_INSTANCE_ERROR\n");
 		return NPERR_INVALID_INSTANCE_ERROR;
 	}
-	
+
+	dbg("sp: NPP_Destroy()\n");
 	data = instance->pdata;
 	if (data->hProcess)
 	{
@@ -507,7 +632,17 @@ NPError NP_LOADDS NPP_Destroy(NPP instance, NPSavedData** save)
 
 void NP_LOADDS NPP_Print(NPP instance, NPPrint* platformPrint)
 {
-	if (platformPrint && platformPrint->mode == NP_FULL)
+	if (!platformPrint)
+	{
+		dbg("sp: NPP_Print(), platformPrint is NULL\n");
+		return;
+	}
+
+	if (NP_FULL != platformPrint->mode)
+	{
+		dbg("sp: NPP_Print(), platformPrint->mode is %d (!= NP_FULL)\n", (int)platformPrint->mode);
+	}
+	else
 	{
 		InstanceData *data = instance->pdata;
 		HWND hWnd = data->npwin->window;
@@ -520,3 +655,4 @@ void NP_LOADDS NPP_Print(NPP instance, NPPrint* platformPrint)
 		}
 	}
 }
+
