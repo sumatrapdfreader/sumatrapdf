@@ -95,7 +95,9 @@ struct pdf_csi_s
 
 	/* graphics state */
 	fz_matrix top_ctm;
-	pdf_gstate gstate[64];
+	/* SumatraPDF: make gstate growable for rendering tikz-qtree documents */
+	pdf_gstate *gstate;
+	int gcap;
 	int gtop;
 };
 
@@ -682,6 +684,10 @@ pdf_new_csi(pdf_xref *xref, fz_device *dev, fz_matrix ctm, char *target)
 	csi->text_mode = 0;
 	csi->accumulate = 1;
 
+	/* SumatraPDF: make gstate growable for rendering tikz-qtree documents */
+	csi->gcap = 32;
+	csi->gstate = fz_calloc(csi->gcap, sizeof(pdf_gstate));
+
 	csi->top_ctm = ctm;
 	pdf_init_gstate(&csi->gstate[0], ctm);
 	csi->gtop = 0;
@@ -735,10 +741,12 @@ pdf_gsave(pdf_csi *csi)
 {
 	pdf_gstate *gs = csi->gstate + csi->gtop;
 
-	if (csi->gtop == nelem(csi->gstate) - 1)
+	/* SumatraPDF: make gstate growable for rendering tikz-qtree documents */
+	if (csi->gtop == csi->gcap - 1)
 	{
 		fz_warn("gstate overflow in content stream");
-		return;
+		csi->gcap *= 2;
+		csi->gstate = fz_realloc(csi->gstate, csi->gcap, sizeof(pdf_gstate));
 	}
 
 	memcpy(&csi->gstate[csi->gtop + 1], &csi->gstate[csi->gtop], sizeof(pdf_gstate));
@@ -802,6 +810,9 @@ pdf_free_csi(pdf_csi *csi)
 	if (csi->text) fz_free_text(csi->text);
 
 	pdf_clear_stack(csi);
+
+	/* SumatraPDF: make gstate growable for rendering tikz-qtree documents */
+	fz_free(csi->gstate);
 
 	fz_free(csi);
 }
