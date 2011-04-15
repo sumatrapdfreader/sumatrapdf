@@ -5,7 +5,7 @@
 #include "StrUtil.h"
 #include <shlwapi.h>
 
-enum { IsDocLoaded, SKIP_PAGE };
+enum { SEARCH_PAGE, SKIP_PAGE };
 
 #define SkipWhitespace(c) for (; _istspace(*(c)); (c)++)
 // ignore spaces between CJK glyphs but not between Latin, Greek, Cyrillic, etc. letters
@@ -65,7 +65,7 @@ void TextSearch::SetText(TCHAR *text)
         this->findText[Str::Len(this->findText) - 1] = '\0';
     }
 
-    memset(this->findCache, IsDocLoaded, this->engine->PageCount());
+    memset(this->findCache, SEARCH_PAGE, this->engine->PageCount());
 }
 
 void TextSearch::SetSensitive(bool sensitive)
@@ -74,11 +74,12 @@ void TextSearch::SetSensitive(bool sensitive)
         return;
     this->caseSensitive = sensitive;
 
-    memset(this->findCache, IsDocLoaded, this->engine->PageCount());
+    memset(this->findCache, SEARCH_PAGE, this->engine->PageCount());
 }
 
-void TextSearch::SetDirection(bool forward)
+void TextSearch::SetDirection(TextSearchDirection direction)
 {
+    bool forward = FIND_FORWARD == direction;
     if (forward == this->forward)
         return;
     this->forward = forward;
@@ -115,7 +116,6 @@ int TextSearch::MatchLen(TCHAR *start)
     return (int)(end - start);
 }
 
-// TODO: use Boyer-Moore algorithm here (if it proves to be faster)
 bool TextSearch::FindTextInPage(int pageNo)
 {
     if (Str::IsEmpty(anchor))
@@ -155,7 +155,7 @@ bool TextSearch::FindStartingAtPage(int pageNo)
         return false;
 
     int total = engine->PageCount();
-    while (1 <= pageNo && pageNo <= total && UpdateTracker(pageNo, total)) {
+    while (1 <= pageNo && pageNo <= total && CheckTracker(pageNo, total)) {
         if (SKIP_PAGE == findCache[pageNo - 1]) {
             pageNo += forward ? 1 : -1;
             continue;
@@ -185,18 +185,24 @@ bool TextSearch::FindStartingAtPage(int pageNo)
     return false;
 }
 
-bool TextSearch::FindFirst(int page, TCHAR *text)
+TextSel *TextSearch::FindFirst(int page, TCHAR *text)
 {
     SetText(text);
 
-    return FindStartingAtPage(page);
+    if (FindStartingAtPage(page))
+        return &result;
+    return NULL;
 }
 
-bool TextSearch::FindNext()
+TextSel *TextSearch::FindNext()
 {
-    if (FindTextInPage())
-        return true;
+    assert(findText);
+    if (!findText)
+        return NULL;
 
-    int newPage = findPage + (forward ? 1 : -1);
-    return FindStartingAtPage(newPage);
+    if (FindTextInPage())
+        return &result;
+    if (FindStartingAtPage(findPage + (forward ? 1 : -1)))
+        return &result;
+    return NULL;
 }

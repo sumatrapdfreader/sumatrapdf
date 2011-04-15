@@ -65,17 +65,22 @@ ScreenPagePadding gPagePadding = {
 
 bool displayModeFacing(DisplayMode displayMode)
 {
-    return DM_FACING == displayMode || DM_CONTINUOUS_FACING == displayMode || displayModeShowCover(displayMode);
+    return DM_FACING == displayMode ||
+           DM_CONTINUOUS_FACING == displayMode ||
+           displayModeShowCover(displayMode);
 }
 
 bool displayModeContinuous(DisplayMode displayMode)
 {
-    return DM_CONTINUOUS == displayMode || DM_CONTINUOUS_FACING == displayMode || DM_CONTINUOUS_BOOK_VIEW == displayMode;
+    return DM_CONTINUOUS == displayMode ||
+           DM_CONTINUOUS_FACING == displayMode ||
+           DM_CONTINUOUS_BOOK_VIEW == displayMode;
 }
 
 bool displayModeShowCover(DisplayMode displayMode)
 {
-    return DM_BOOK_VIEW == displayMode || DM_CONTINUOUS_BOOK_VIEW == displayMode;
+    return DM_BOOK_VIEW == displayMode ||
+           DM_CONTINUOUS_BOOK_VIEW == displayMode;
 }
 
 int columnsFromDisplayMode(DisplayMode displayMode)
@@ -85,19 +90,8 @@ int columnsFromDisplayMode(DisplayMode displayMode)
     return 1;
 }
 
-bool rotationFlipped(int rotation)
-{
-    normalizeRotation(&rotation);
-    assert(validRotation(rotation));
-    if (90 == rotation || 270 == rotation)
-        return true;
-    return false;
-}
-
 bool DisplayModel::displayStateFromModel(DisplayState *ds)
 {
-    bool presMode = getPresentationMode();
-
     if (!ds->filePath || !Str::Eq(ds->filePath, fileName())) {
         TCHAR *filePath = Str::Dup(fileName());
         if (!filePath)
@@ -107,13 +101,13 @@ bool DisplayModel::displayStateFromModel(DisplayState *ds)
         ds->filePath = filePath;
     }
 
-    ds->displayMode = presMode ? _presDisplayMode : displayMode();
+    ds->displayMode = _presentationMode ? _presDisplayMode : displayMode();
     ds->rotation = _rotation;
-    ds->zoomVirtual = presMode ? _presZoomVirtual : _zoomVirtual;
+    ds->zoomVirtual = _presentationMode ? _presZoomVirtual : _zoomVirtual;
 
     ScrollState ss = GetScrollState();
     ds->pageNo = ss.page;
-    if (presMode)
+    if (_presentationMode)
         ds->scrollPos = PointI();
     else
         ds->scrollPos = PointD(ss.x, ss.y).Convert<int>();
@@ -124,26 +118,22 @@ bool DisplayModel::displayStateFromModel(DisplayState *ds)
     return true;
 }
 
-/* Given 'pageInfo', which should contain correct information about
-   pageDx, pageDy and rotation, return a page size after applying a global
-   rotation */
-static void pageSizeAfterRotation(PageInfo *pageInfo, int rotation,
-    SizeD *pageSize, bool fitToContent=false)
+SizeD DisplayModel::PageSizeAfterRotation(int pageNo, bool fitToContent)
 {
-    assert(pageInfo && pageSize);
-    if (!pageInfo || !pageSize)
-        return;
-
-    if (fitToContent) {
+    PageInfo *pageInfo = getPageInfo(pageNo);
+    if (fitToContent && pageInfo->contentBox.IsEmpty()) {
+        pageInfo->contentBox = engine->PageContentBox(pageNo);
         if (pageInfo->contentBox.IsEmpty())
-            return pageSizeAfterRotation(pageInfo, rotation, pageSize);
-        *pageSize = pageInfo->contentBox.Size().Convert<double>();
-    } else
-        *pageSize = pageInfo->page;
+            return PageSizeAfterRotation(pageNo);
+    }
 
-    rotation += pageInfo->rotation;
-    if (rotationFlipped(rotation))
-        swap(pageSize->dx, pageSize->dy);
+    RectD box;
+    if (fitToContent)
+        box = pageInfo->contentBox.Convert<double>();
+    else
+        box = RectD(PointD(), pageInfo->page);
+
+    return engine->Transform(box, pageNo, 1.0, _rotation).Size();
 }
 
 /* given 'columns' and an absolute 'pageNo', return the number of the first
@@ -195,7 +185,7 @@ DisplayModel::DisplayModel(DisplayModelCallback *callback, DisplayMode displayMo
     imageEngine = NULL;
 
     textSelection = NULL;
-    _textSearch = NULL;
+    textSearch = NULL;
     _pagesInfo = NULL;
 
     _navHistoryIx = 0;
@@ -210,7 +200,7 @@ DisplayModel::~DisplayModel()
     _callback->CleanUp(this);
 
     free(_pagesInfo);
-    delete _textSearch;
+    delete textSearch;
     delete textSelection;
     delete engine;
 }
@@ -274,7 +264,7 @@ bool DisplayModel::load(const TCHAR *fileName, int startPage, SizeI viewPort)
         return false;
 
     textSelection = new TextSelection(engine);
-    _textSearch = new TextSearch(engine, _callback);
+    textSearch = new TextSearch(engine, _callback);
     return true;
 }
 
@@ -386,37 +376,35 @@ float DisplayModel::zoomRealFromVirtualForPage(float zoomVirtual, int pageNo)
         int first = FirstPageInARowNo(pageNo, columns, displayModeShowCover(displayMode()));
         int last = LastPageInARowNo(pageNo, columns, displayModeShowCover(displayMode()), pageCount());
         for (int i = first; i <= last; i++) {
-            SizeD pageSize;
+            SizeD pageSize = PageSizeAfterRotation(i);
+            row.dx += pageSize.dx;
+
             pageInfo = getPageInfo(i);
             if (pageInfo->contentBox.IsEmpty())
                 pageInfo->contentBox = engine->PageContentBox(i);
-            pageSizeAfterRotation(pageInfo, _rotation, &pageSize);
-            row.dx += pageSize.dx;
             if (i == first && !pageInfo->contentBox.IsEmpty()) {
-                if (rotationFlipped(pageInfo->rotation + _rotation))
+                if ((pageInfo->rotation + _rotation) % 180 != 0)
                     row.dx -= pageInfo->contentBox.y - engine->PageMediabox(first).y;
                 else
                     row.dx -= pageInfo->contentBox.x - engine->PageMediabox(first).x;
             }
             if (i == last && !pageInfo->contentBox.IsEmpty()) {
-                if (rotationFlipped(pageInfo->rotation + _rotation))
+                if ((pageInfo->rotation + _rotation) % 180 != 0)
                     row.dx -= engine->PageMediabox(last).BR().y - pageInfo->contentBox.BR().y;
                 else
                     row.dx -= engine->PageMediabox(last).BR().x - pageInfo->contentBox.BR().x;
             }
-            pageSizeAfterRotation(pageInfo, _rotation, &pageSize, true);
+
+            pageSize = PageSizeAfterRotation(i, true);
             if (row.dy < pageSize.dy)
                 row.dy = pageSize.dy;
         }
     } else {
-        if (fitToContent && pageInfo->contentBox.IsEmpty())
-            pageInfo->contentBox = engine->PageContentBox(pageNo);
-        pageSizeAfterRotation(pageInfo, _rotation, &row, fitToContent);
+        row = PageSizeAfterRotation(pageNo, fitToContent);
         row.dx *= columns;
     }
 
-    assert(0 != (int)row.dx);
-    assert(0 != (int)row.dy);
+    assert(!RectD(PointD(), row).IsEmpty());
 
     int areaForPagesDx = viewPortSize.dx - padding->left - padding->right - padding->inBetweenX * (columns - 1);
     int areaForPagesDy = viewPortSize.dy - padding->top - padding->bottom;
@@ -566,8 +554,7 @@ RestartLayout:
             assert(0.0 == pageInfo->visibleRatio);
             continue;
         }
-        SizeD pageSize;
-        pageSizeAfterRotation(pageInfo, rotation, &pageSize);
+        SizeD pageSize = PageSizeAfterRotation(pageNo);
         RectI pos;
         pos.dx = (int)(pageSize.dx * _zoomReal + 0.5);
         pos.dy = (int)(pageSize.dy * _zoomReal + 0.5);
@@ -1330,21 +1317,6 @@ void DisplayModel::rotateBy(int newRotation)
     goToPage(currPageNo, 0);
 }
 
-TextSel *DisplayModel::Find(TextSearchDirection direction, TCHAR *text, UINT fromPage)
-{
-    bool forward = (direction == FIND_FORWARD);
-    _textSearch->SetDirection(forward);
-    bool foundText;
-    if (text != NULL)
-        foundText = _textSearch->FindFirst(fromPage ? fromPage : currentPageNo(), text);
-    else
-        foundText = _textSearch->FindNext();
-
-    if (foundText)
-        return &_textSearch->result;
-    return NULL;
-}
-
 /* Given <region> (in user coordinates ) on page <pageNo>, copies text in that region
  * into a newly allocated buffer (which the caller needs to free()). */
 TCHAR *DisplayModel::getTextInRegion(int pageNo, RectD region)
@@ -1492,7 +1464,7 @@ void DisplayModel::SetScrollState(ScrollState state)
 }
 
 /* Records the current scroll state for later navigating back to. */
-bool DisplayModel::addNavPoint(bool keepForward)
+void DisplayModel::addNavPoint(bool keepForward)
 {
     ScrollState ss = GetScrollState();
 
@@ -1508,8 +1480,6 @@ bool DisplayModel::addNavPoint(bool keepForward)
     _navHistoryIx++;
     if (!keepForward || _navHistoryIx > _navHistoryEnd)
         _navHistoryEnd = _navHistoryIx;
-
-    return ss.page != 0;
 }
 
 bool DisplayModel::canNavigate(int dir) const

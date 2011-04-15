@@ -25,24 +25,26 @@ public:
     TextSearch(BaseEngine *engine, TextSearchTracker *tracker=NULL);
     ~TextSearch();
 
-    void SetText(TCHAR *text);
     void SetSensitive(bool sensitive);
-    void SetDirection(bool forward);
-    bool FindFirst(int page, TCHAR *text);
-    bool FindNext();
+    void SetDirection(TextSearchDirection direction);
+    TextSel *FindFirst(int page, TCHAR *text);
+    TextSel *FindNext();
 
-    int findPage;
-    TextSearchTracker *tracker;
+    // note: the result might not be a valid page number!
+    int GetCurrentPageNo() { return findPage; }
 
 protected:
+    TextSearchTracker *tracker;
     TCHAR *findText;
     TCHAR *anchor;
+    int findPage;
     bool forward;
     bool caseSensitive;
     // the 'Whole words' option is implicitly set when the search text
     // ends in a single space (many users already search that way)
     bool wholeWords;
 
+    void SetText(TCHAR *text);
     bool FindTextInPage(int pageNo = 0);
     bool FindStartingAtPage(int pageNo);
     int MatchLen(TCHAR *start);
@@ -58,9 +60,9 @@ protected:
         Reset();
     }
     void Reset();
-    
+
     // returns false, if the search has been canceled
-    bool UpdateTracker(int pageNo, int total)
+    bool CheckTracker(int pageNo, int total)
     {
         if (!tracker)
             return true;

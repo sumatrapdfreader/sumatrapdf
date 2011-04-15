@@ -120,17 +120,6 @@ public:
         return 1 <= pageNo && pageNo <= engine->PageCount();
     }
 
-    bool hasTocTree() {
-        if (!pdfEngine)
-            return false;
-        return pdfEngine->HasToCTree();
-    }
-    PdfTocItem *getTocTree() {
-        if (!pdfEngine)
-            return NULL;
-        return pdfEngine->GetToCTree();
-    }
-
     /* current rotation selected by user */
     int rotation() const { return _rotation; }
     void setRotation(int rotation) { _rotation = rotation; }
@@ -138,7 +127,6 @@ public:
     DisplayMode displayMode() const { return _displayMode; }
     void changeDisplayMode(DisplayMode displayMode);
     void setPresentationMode(bool enable);
-    bool getPresentationMode() const { return _presentationMode; }
 
     /* a "virtual" zoom level. Can be either a real zoom level in percent
        (i.e. 100.0 is original size) or one of virtual values ZOOM_FIT_PAGE,
@@ -147,7 +135,6 @@ public:
     float zoomReal() const { return _zoomReal; }
     float zoomReal(int pageNo);
 
-    int startPage() const { return _startPage; }
     int currentPageNo() const;
 
     BaseEngine *    engine;
@@ -155,7 +142,9 @@ public:
     XpsEngine *     xpsEngine;
     CbxEngine *     cbxEngine;
     ImageEngine *   imageEngine;
+
     TextSelection * textSelection;
+    TextSearch *    textSearch;
 
     PageInfo *      getPageInfo(int pageNo) const;
 
@@ -205,12 +194,6 @@ public:
     PageElement *   GetElementAtPos(PointI pt);
 
     ScreenPagePadding *getPadding() { return padding; }
-    RectD           getContentBox(int pageNo, RenderTarget target=Target_View);
-
-    void            SetFindMatchCase(bool match) { _textSearch->SetSensitive(match); }
-    TextSel *       Find(TextSearchDirection direction=FIND_FORWARD, TCHAR *text=NULL, UINT fromPage=0);
-    // note: lastFoundPage might not be a valid page number!
-    int             lastFoundPage() const { return _textSearch->findPage; }
 
     int             GetPageNoByPoint(PointI pt);
     int             GetPageNextToPoint(PointI pt);
@@ -224,7 +207,6 @@ public:
     ScrollState     GetScrollState();
     void            SetScrollState(ScrollState state);
 
-    bool            addNavPoint(bool keepForward=false);
     bool            canNavigate(int dir) const;
     void            navigate(int dir);
 
@@ -232,9 +214,6 @@ public:
 
     // called when we decide that the display needs to be redrawn
     void            RepaintDisplay() { if (_callback) _callback->Repaint(); }
-    // called after rendering a page so that objects that had to be
-    // allocated for this can be freed by the rendering engine
-    void            runEngineGC() const { if (pdfEngine) pdfEngine->RunGC(); }
 
 protected:
 
@@ -242,16 +221,19 @@ protected:
 
     bool            buildPagesInfo();
     float           zoomRealFromVirtualForPage(float zoomVirtual, int pageNo);
+    SizeD           PageSizeAfterRotation(int pageNo, bool fitToContent=false);
     void            changeStartPage(int startPage);
     PointI          getContentStart(int pageNo);
     void            setZoomVirtual(float zoomVirtual);
     void            RecalcVisibleParts();
     void            RenderVisibleParts();
 
+    void            addNavPoint(bool keepForward=false);
+    RectD           getContentBox(int pageNo, RenderTarget target=Target_View);
+
     /* an array of PageInfo, len of array is pageCount */
     PageInfo *      _pagesInfo;
 
-    TextSearch *    _textSearch;
     DisplayMode     _displayMode;
     /* In non-continuous mode is the first page from a file that we're
        displaying.
@@ -301,7 +283,5 @@ public:
 bool    displayModeContinuous(DisplayMode displayMode);
 bool    displayModeFacing(DisplayMode displayMode);
 bool    displayModeShowCover(DisplayMode displayMode);
-int     columnsFromDisplayMode(DisplayMode displayMode);
-bool    rotationFlipped(int rotation);
 
 #endif

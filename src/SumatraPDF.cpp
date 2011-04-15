@@ -1204,7 +1204,7 @@ static void MenuUpdateStateForWindow(WindowInfo *win) {
 
     MenuUpdatePrintItem(win, win->menu);
 
-    bool enabled = win->IsDocLoaded() && win->dm->hasTocTree();
+    bool enabled = win->IsDocLoaded() && win->dm->pdfEngine && win->dm->pdfEngine->HasToCTree();
     Win::Menu::Enable(win->menu, IDM_VIEW_BOOKMARKS, enabled);
 
     bool documentSpecific = win->IsDocLoaded();
@@ -1523,7 +1523,7 @@ Error:
     if (win->IsDocLoaded())
         win->dm->SetScrollState(ss);
     if (win->IsDocLoaded() && win->tocShow) {
-        if (win->dm->hasTocTree()) {
+        if (win->dm->pdfEngine && win->dm->pdfEngine->HasToCTree()) {
             win->ShowTocBox();
         } else {
             // Hide the now useless ToC sidebar and force an update afterwards
@@ -3945,7 +3945,7 @@ static void OnMenuFind(WindowInfo *win)
         else
             state &= ~TBSTATE_CHECKED;
         SendMessage(win->hwndToolbar, TB_SETSTATE, IDM_FIND_MATCH, state);
-        win->dm->SetFindMatchCase(matchCase);
+        win->dm->textSearch->SetSensitive(matchCase);
     }
 
     win->Find();
@@ -4279,7 +4279,7 @@ static void OnMenuFindMatchCase(WindowInfo *win)
     if (!NeedsFindUI(win))
         return;
     WORD state = (WORD)SendMessage(win->hwndToolbar, TB_GETSTATE, IDM_FIND_MATCH, 0);
-    win->dm->SetFindMatchCase((state & TBSTATE_CHECKED) != 0);
+    win->dm->textSearch->SetSensitive((state & TBSTATE_CHECKED) != 0);
     Edit_SetModify(win->hwndFindBox, TRUE);
 }
 
@@ -4762,11 +4762,12 @@ static DWORD WINAPI FindThread(LPVOID data)
     WindowInfo *win = ftd->win;
 
     TextSel *rect;
-    if (ftd->wasModified || !win->dm->validPageNo(win->dm->lastFoundPage()) ||
-        !win->dm->getPageInfo(win->dm->lastFoundPage())->visibleRatio)
-        rect = win->dm->Find(ftd->direction, ftd->text);
+    win->dm->textSearch->SetDirection(ftd->direction);
+    if (ftd->wasModified || !win->dm->validPageNo(win->dm->textSearch->GetCurrentPageNo()) ||
+        !win->dm->getPageInfo(win->dm->textSearch->GetCurrentPageNo())->visibleRatio)
+        rect = win->dm->textSearch->FindFirst(win->dm->currentPageNo(), ftd->text);
     else
-        rect = win->dm->Find(ftd->direction);
+        rect = win->dm->textSearch->FindNext();
 
     bool loopedAround = false;
     if (!win->findCanceled && !rect) {
@@ -4775,7 +4776,7 @@ static DWORD WINAPI FindThread(LPVOID data)
         if (!ftd->wasModified || win->dm->currentPageNo() != startPage) {
             loopedAround = true;
             MessageBeep(MB_ICONINFORMATION);
-            rect = win->dm->Find(ftd->direction, ftd->text, startPage);
+            rect = win->dm->textSearch->FindFirst(startPage, ftd->text);
         }
     }
 
@@ -5616,7 +5617,9 @@ void WindowInfo::LoadTocTree()
     if (tocLoaded)
         return;
 
-    tocRoot = dm->getTocTree();
+    tocRoot = NULL;
+    if (dm->pdfEngine)
+        tocRoot = dm->pdfEngine->GetToCTree();
     if (tocRoot)
         PopulateTocTreeView(hwndTocTree, tocRoot, tocState);
 
@@ -5637,7 +5640,7 @@ void WindowInfo::ToggleTocBox()
 
 void WindowInfo::ShowTocBox()
 {
-    if (!dm->hasTocTree()) {
+    if (!dm->pdfEngine || !dm->pdfEngine->HasToCTree()) {
         tocShow = true;
         return;
     }

@@ -352,6 +352,9 @@ Gehe zu Seite
 Hint: Use the F3 key for finding again
 Tipp: F3-Taste verwenden, um weiterzusuchen
 
+Image files (*.%s)
+Bilder (*.%s)
+
 KB
 KB
 

@@ -1262,7 +1262,7 @@ const char *g_transTranslations[] = {
   NULL,
   "Gehe zu Seite",
   "Tipp: F3-Taste verwenden, um weiterzusuchen",
-  NULL,
+  "Bilder (*.%s)",
   NULL,
   NULL,
   "SumatraPDF als Standardanwendung f\303\274r PDF-Dateien registrieren?",
