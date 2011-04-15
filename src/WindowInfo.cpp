@@ -474,50 +474,53 @@ void PdfLinkHandler::GotoPdfDest(fz_obj *dest)
 
     DisplayModel *dm = owner->dm;
     PointI scroll(-1, 0);
-    fz_obj *obj = fz_array_get(dest, 1);
-    if (Str::Eq(fz_to_name(obj), "XYZ")) {
-        PointD scrollD;
-        scrollD.x = fz_to_real(fz_array_get(dest, 2));
-        scrollD.y = fz_to_real(fz_array_get(dest, 3));
-        scroll = dm->CvtToScreen(pageNo, scrollD);
+    float zoom = INVALID_ZOOM;
 
-        // goToPage needs scrolling info relative to the page's top border
-        // and the page line's left margin
-        PageInfo * pageInfo = dm->getPageInfo(pageNo);
-        // TODO: These values are not up-to-date, if the page has not been shown yet
-        if (pageInfo->shown) {
-            scroll.x -= pageInfo->pageOnScreen.x;
-            scroll.y -= pageInfo->pageOnScreen.y;
-        }
+    fz_obj *obj = fz_array_get(dest, 1);
+    const char *type = fz_to_name(obj);
+    if (Str::Eq(type, "XYZ")) {
+        PointD scrollD = PointD(fz_to_real(fz_array_get(dest, 2)),
+                                fz_to_real(fz_array_get(dest, 3)));
+        scrollD = engine()->Transform(scrollD, pageNo, dm->zoomReal(), dm->rotation());
+        scroll = scrollD.Convert<int>();
 
         // NULL values for the coordinates mean: keep the current position
         if (fz_is_null(fz_array_get(dest, 2)))
             scroll.x = -1;
         if (fz_is_null(fz_array_get(dest, 3))) {
-            pageInfo = dm->getPageInfo(dm->currentPageNo());
+            PageInfo *pageInfo = dm->getPageInfo(dm->currentPageNo());
             scroll.y = -(pageInfo->pageOnScreen.y - dm->getPadding()->top);
-            scroll.y = MAX(scroll.y, 0); // Adobe Reader never shows the previous page
+            scroll.y = max(scroll.y, 0); // Adobe Reader never shows the previous page
         }
     }
-    else if (Str::Eq(fz_to_name(obj), "FitR")) {
-        PointD scrollD;
-        scrollD.x = fz_to_real(fz_array_get(dest, 2)); // left
-        scrollD.y = fz_to_real(fz_array_get(dest, 5)); // top
-        scroll = dm->CvtToScreen(pageNo, scrollD);
-        // TODO: adjust zoom so that the bottom right corner is also visible?
+    else if (Str::Eq(type, "FitR")) {
+        RectD rect = RectD::FromXY(fz_to_real(fz_array_get(dest, 2)),  // left
+                                   fz_to_real(fz_array_get(dest, 5)),  // top
+                                   fz_to_real(fz_array_get(dest, 4)),  // right
+                                   fz_to_real(fz_array_get(dest, 3))); // bottom
+        RectD rectD = engine()->Transform(rect, pageNo, dm->zoomReal(), dm->rotation());
+        scroll = rectD.TL().Convert<int>();
 
-        // goToPage needs scrolling info relative to the page's top border
-        // and the page line's left margin
-        PageInfo * pageInfo = dm->getPageInfo(pageNo);
-        // TODO: These values are not up-to-date, if the page has not been shown yet
-        if (pageInfo->shown) {
-            scroll.x -= pageInfo->pageOnScreen.x;
-            scroll.y -= pageInfo->pageOnScreen.y;
-        }
+        RectF rectF = engine()->Transform(rect, pageNo, 1.0, dm->rotation()).Convert<float>();
+        zoom = 100.0f * min(owner->canvasRc.dx / rectF.dx, owner->canvasRc.dy / rectF.dy);
+    }
+    else if (Str::Eq(type, "FitH") || Str::Eq(type, "FitBH")) {
+        PointD scrollD = PointD(0, fz_to_real(fz_array_get(dest, 2))); // top
+        scrollD = engine()->Transform(scrollD, pageNo, dm->zoomReal(), dm->rotation());
+        scroll.y = max(scrollD.Convert<int>().y, 0); // Adobe Reader never shows the previous page
+
+        zoom = Str::Eq(type, "FitH") ? ZOOM_FIT_WIDTH : ZOOM_FIT_CONTENT;
+    }
+    else if (Str::Eq(type, "Fit") || Str::Eq(type, "FitV")) {
+        zoom = ZOOM_FIT_PAGE;
+    }
+    else if (Str::Eq(type, "FitB") || Str::Eq(type, "FitBV")) {
+        zoom = ZOOM_FIT_CONTENT;
     }
     /* // ignore author-set zoom settings (at least as long as there's no way to overrule them)
-    else if (Str::Eq(fz_to_name(obj), "Fit")) {
-        dm->zoomTo(ZOOM_FIT_PAGE);
+    if (zoom != INVALID_ZOOM) {
+        // TODO: adjust the zoom level before calculating the scrolling coordinates
+        dm->zoomTo(zoom);
         owner->UpdateToolbarState();
     }
     // */
