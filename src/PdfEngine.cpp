@@ -616,8 +616,6 @@ protected:
     pdf_outline   * _attachments;
     fz_obj        * _info;
     fz_glyph_cache* _drawcache;
-
-    static CPdfEngine *CreateFromStream(fz_stream *stm, PasswordUI *pwdUI=NULL);
 };
 
 CPdfEngine::CPdfEngine() : 
@@ -692,16 +690,25 @@ public:
 
 CPdfEngine *CPdfEngine::Clone()
 {
+    CPdfEngine *clone = new CPdfEngine();
+    if (!clone)
+        return NULL;
+
     // use this document's encryption key (if any) to load the clone
     PasswordCloner *pwdUI = NULL;
     if (_xref->crypt)
         pwdUI = new PasswordCloner(pdf_get_crypt_key(_xref));
-    CPdfEngine *clone = CPdfEngine::CreateFromStream(_xref->file, pwdUI);
+    bool ok = clone->load(_xref->file, pwdUI);
     delete pwdUI;
 
-    if (clone && _fileName)
+    if (!ok) {
+        delete clone;
+        return NULL;
+    }
+
+    if (_fileName)
         clone->_fileName = Str::Dup(_fileName);
-    if (clone && !_decryptionKey && _xref->crypt) {
+    if (!_decryptionKey && _xref->crypt) {
         delete clone->_decryptionKey;
         clone->_decryptionKey = NULL;
     }
@@ -715,19 +722,20 @@ bool CPdfEngine::load(const TCHAR *fileName, PasswordUI *pwdUI)
     _fileName = Str::Dup(fileName);
     if (!_fileName)
         return false;
-    fileName = NULL; // use _fileName instead
 
     // File names ending in :<digits>:<digits> are interpreted as containing
     // embedded PDF documents (the digits are :<num>:<gen> of the embedded file stream)
     TCHAR *embedMarks = NULL;
     int colonCount = 0;
-    for (TCHAR *c = (TCHAR *)_fileName + Str::Len(_fileName); c > _fileName; c--) {
-        if (*c != ':')
-            continue;
-        if (!ChrIsDigit(*(c + 1)))
+    for (TCHAR *c = (TCHAR *)_fileName + Str::Len(_fileName) - 1; c > _fileName; c--) {
+        if (*c == ':') {
+            if (!ChrIsDigit(*(c + 1)))
+                break;
+            if (++colonCount % 2 == 0)
+                embedMarks = c;
+        }
+        else if (!ChrIsDigit(*c))
             break;
-        if (++colonCount % 2 == 0)
-            embedMarks = c;
     }
 
     if (embedMarks)
@@ -736,19 +744,17 @@ bool CPdfEngine::load(const TCHAR *fileName, PasswordUI *pwdUI)
     if (embedMarks)
         *embedMarks = ':';
 
-    if (!file)
-        return false;
-
 OpenEmbeddedFile:
     if (!load_from_stream(file, pwdUI))
         return false;
 
-    if (!embedMarks || !*embedMarks)
+    if (Str::IsEmpty(embedMarks))
         return finishLoading();
 
-    int num = _ttoi(embedMarks + 1); embedMarks = _tcschr(embedMarks + 1, ':');
-    int gen = _ttoi(embedMarks + 1); embedMarks = _tcschr(embedMarks + 1, ':');
-    if (!pdf_is_stream(_xref, num, gen))
+    int num, gen;
+    embedMarks = (TCHAR *)Str::Parse(embedMarks, _T(":%d:%d"), &num, &gen);
+    assert(embedMarks);
+    if (!embedMarks || !pdf_is_stream(_xref, num, gen))
         return false;
 
     fz_buffer *buffer;
@@ -766,7 +772,10 @@ OpenEmbeddedFile:
 
 bool CPdfEngine::load(IStream *stream, PasswordUI *pwdUI)
 {
-    return load(fz_open_istream(stream), pwdUI);
+    assert(!_fileName && !_xref);
+    if (!load_from_stream(fz_open_istream(stream), pwdUI))
+        return false;
+    return finishLoading();
 }
 
 bool CPdfEngine::load(fz_stream *stm, PasswordUI *pwdUI)
@@ -779,6 +788,9 @@ bool CPdfEngine::load(fz_stream *stm, PasswordUI *pwdUI)
 
 bool CPdfEngine::load_from_stream(fz_stream *stm, PasswordUI *pwdUI)
 {
+    if (!stm)
+        return false;
+
     // don't pass in a password so that _xref isn't thrown away if it was wrong
     fz_error error = pdf_open_xref_with_stream(&_xref, stm, NULL);
     fz_close(stm);
@@ -1556,16 +1568,6 @@ PdfEngine *PdfEngine::CreateFromStream(IStream *stream, PasswordUI *pwdUI)
     return engine;
 }
 
-CPdfEngine *CPdfEngine::CreateFromStream(fz_stream *stm, PasswordUI *pwdUI)
-{
-    CPdfEngine *engine = new CPdfEngine();
-    if (!engine || !stm || !engine->load(stm, pwdUI)) {
-        delete engine;
-        return NULL;
-    }
-    return engine;
-}
-
 ///// XpsEngine is also based on Fitz and shares quite some code with PdfEngine /////
 
 extern "C" {
@@ -1582,9 +1584,7 @@ class CXpsEngine : public XpsEngine {
 public:
     CXpsEngine();
     virtual ~CXpsEngine();
-    virtual XpsEngine *Clone() {
-        return CreateFromFileName(_fileName);
-    }
+    virtual CXpsEngine *Clone();
 
     virtual const TCHAR *FileName() const { return _fileName; };
     virtual int PageCount() const {
@@ -1631,6 +1631,7 @@ protected:
 
     virtual bool    load(const TCHAR *fileName);
     virtual bool    load(IStream *stream);
+    bool            load(fz_stream *stm);
     bool            load_from_stream(fz_stream *stm);
 
     xps_page      * getXpsPage(int pageNo, bool failIfBusy=false);
@@ -1700,24 +1701,46 @@ CXpsEngine::~CXpsEngine()
     DeleteCriticalSection(&_pagesAccess);
 }
 
+CXpsEngine *CXpsEngine::Clone()
+{
+    CXpsEngine *clone = new CXpsEngine();
+    if (!clone || !clone->load(_ctx->file)) {
+        delete clone;
+        return NULL;
+    }
+
+    if (_fileName)
+        clone->_fileName = Str::Dup(_fileName);
+
+    return clone;
+}
+
 bool CXpsEngine::load(const TCHAR *fileName)
 {
+    assert(!_fileName && !_ctx);
     _fileName = Str::Dup(fileName);
-
-    fz_stream *file = fz_open_file2(_fileName);
-    if (!file)
+    if (!_fileName)
         return false;
-
-    return load_from_stream(file);
+    return load_from_stream(fz_open_file2(_fileName));
 }
 
 bool CXpsEngine::load(IStream *stream)
 {
+    assert(!_fileName && !_ctx);
     return load_from_stream(fz_open_istream(stream));
+}
+
+bool CXpsEngine::load(fz_stream *stm)
+{
+    assert(!_fileName && !_ctx);
+    return load_from_stream(fz_keep_stream(stm));
 }
 
 bool CXpsEngine::load_from_stream(fz_stream *stm)
 {
+    if (!stm)
+        return false;
+
     xps_open_stream(&_ctx, stm);
     fz_close(stm);
     if (!_ctx)
@@ -2032,7 +2055,7 @@ unsigned char *CXpsEngine::GetFileData(size_t *cbCount)
 XpsEngine *XpsEngine::CreateFromFileName(const TCHAR *fileName)
 {
     XpsEngine *engine = new CXpsEngine();
-    if (!engine || !engine->load(fileName)) {
+    if (!engine || !fileName || !engine->load(fileName)) {
         delete engine;
         return NULL;
     }
