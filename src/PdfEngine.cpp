@@ -442,6 +442,10 @@ TCHAR *PdfLink::GetValue() const
                 break;
             if (Str::Eq(fz_to_name(obj), "GoToR")) {
                 obj = fz_dict_gets(link->dest, "F");
+                // Note: this might not be per standard but is required to fix Nissan_Manual_370Z.pdf
+                // from http://fofou.appspot.com/sumatrapdf/topic?id=2018365
+                if (fz_is_dict(obj))
+                    obj = fz_dict_gets(obj, "F");
                 if (fz_is_string(obj)) {
                     path = Str::Conv::FromPdf(obj);
                     Str::TransChars(path, _T("/"), _T("\\"));
