@@ -247,9 +247,6 @@ Enter password for %s
 Enter the command-line to invoke when you double-click on the PDF document:
 Մուտքագրեք հրաման, որը կկատարվի PDF փաստաթղթում մկնիկի կրկնակի սեղման ժամանակ. 
 
-Error loading PDF file.
-Սխալ՝ PDF ֆայլը բեռնելիս։
-
 F&orward\tAlt+Right Arrow
 Առաջ\tAlt+->
 

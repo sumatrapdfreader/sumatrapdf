@@ -100,9 +100,6 @@ Tik Wagwoord In
 Enter password for %s
 Tik Wagwoord In Vir %s
 
-Error loading PDF file.
-Daar was ñ fout terwyl die PDF lêer gelaai is.
-
 F&ullscreen\tCtrl-Shift-L
 Volskerm\tCtrl-Shift-L
 

@@ -182,9 +182,6 @@ Unesite lozinku
 Enter password for %s
 Unesite lozinku za %s
 
-Error loading PDF file.
-Greška pri učitavanju PDF dokumenta
-
 F&ullscreen\tCtrl-Shift-L
 Ceo ekran\tCtrl-Shift-L
 

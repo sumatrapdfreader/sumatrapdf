@@ -242,9 +242,6 @@ Enter password
 Enter password for %s
 %s הכנס סיסמה עבור
 
-Error loading PDF file.
-PDF שגיאה בהעלאת קובץ
-
 F&orward\tAlt+Right Arrow
 קדימה\tAlt+ ?
 

@@ -100,9 +100,6 @@ Enter password
 Enter password for %s
 ป้อนรหัสผ่านสำหรับ %s
 
-Error loading PDF file.
-การเปิดไฟล์ผิดพลาด
-
 F&ullscreen\tCtrl-Shift-L
 เต็มจอภาพ\tCtrl-Shift-L
 

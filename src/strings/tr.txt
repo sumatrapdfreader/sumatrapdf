@@ -247,9 +247,6 @@ Enter password for %s
 Enter the command-line to invoke when you double-click on the PDF document:
 PDF belgesine çift tıklanınca yürütülecek komutu giriniz:
 
-Error loading PDF file.
-Dosya yüklenirken hata çıktı.
-
 F&orward\tAlt+Right Arrow
 İ&leri\tAlt+Sağ Ok
 

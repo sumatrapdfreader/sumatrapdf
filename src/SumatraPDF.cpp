@@ -2004,12 +2004,9 @@ static void PaintPageFrameAndShadow(HDC hdc, PageInfo * pageInfo, bool presentat
     DeletePen(pe);
 }
 #else
-#define BORDER_SIZE   0
-#define SHADOW_OFFSET 0
 static void PaintPageFrameAndShadow(HDC hdc, PageInfo *pageInfo, bool presentation, RectI& bounds)
 {
     RectI frame = bounds;
-    frame.Inflate(BORDER_SIZE, BORDER_SIZE);
 
     HPEN pe = CreatePen(PS_NULL, 0, 0);
     SelectObject(hdc, pe);
@@ -2070,22 +2067,21 @@ static void DebugShowLinks(DisplayModel *dm, HDC hdc)
 
 static void DrawDocument(WindowInfo *win, HDC hdc, RECT *rcArea)
 {
-    RectI bounds;
-    bool rendering = false;
-
     assert(win);
     if (!win) return;
     DisplayModel* dm = win->dm;
     assert(dm);
     if (!dm) return;
 
-    if (win->presentation)
-        FillRect(hdc, rcArea, gBrushBlack);
+    bool paintOnBlackWithoutShadow = win->presentation ||
     // draw comic books and single images on a black background (without frame and shadow)
-    else if (win->dm->cbxEngine || win->dm->imageEngine)
+                                     dm->cbxEngine || dm->imageEngine;
+    if (paintOnBlackWithoutShadow)
         FillRect(hdc, rcArea, gBrushBlack);
     else
         FillRect(hdc, rcArea, gBrushNoDocBg);
+
+    bool rendering = false;
 
     DBG_OUT("DrawDocument() ");
     for (int pageNo = 1; pageNo <= dm->pageCount(); ++pageNo) {
@@ -2096,23 +2092,19 @@ static void DrawDocument(WindowInfo *win, HDC hdc, RECT *rcArea)
         if (!pageInfo->shown)
             continue;
 
-        bounds = RectI(pageInfo->screen, pageInfo->bitmap.Size());
-        if (!win->dm->cbxEngine && !win->dm->imageEngine)
-            PaintPageFrameAndShadow(hdc, pageInfo, PM_ENABLED == win->presentation, bounds);
+        RectI bounds = RectI(pageInfo->screen, pageInfo->bitmap.Size());
+        PaintPageFrameAndShadow(hdc, pageInfo, paintOnBlackWithoutShadow, bounds);
 
         bool renderOutOfDateCue = false;
         UINT renderDelay = 0;
-        if (win->dm->cbxEngine || win->dm->imageEngine) {
-            float zoom = win->dm->zoomReal(pageNo);
-            int rotation = dm->rotation();
-            win->dm->engine->RenderPage(hdc, pageNo, pageInfo->pageOnScreen, zoom, rotation, NULL, Target_View);
-        } else {
+        if (dm->cbxEngine || dm->imageEngine)
+            dm->engine->RenderPage(hdc, pageNo, pageInfo->pageOnScreen, dm->zoomReal(pageNo), dm->rotation());
+        else
             renderDelay = gRenderCache.Paint(hdc, &bounds, dm, pageNo, pageInfo, &renderOutOfDateCue);
-        }
 
         if (renderDelay) {
-            HFONT fontRightTxt = Win::Font::GetSimple(hdc, _T("MS Shell Dlg"), 14);
-            HGDIOBJ origFont = SelectObject(hdc, fontRightTxt); /* Just to remember the orig font */
+            Win::Font::ScopedFont fontRightTxt(hdc, _T("MS Shell Dlg"), 14);
+            Win::HdcScopedSelectFont scope(hdc, fontRightTxt);
             SetTextColor(hdc, gGlobalPrefs.m_invertColors ? WIN_COL_WHITE : WIN_COL_BLACK);
             if (renderDelay != RENDER_DELAY_FAILED) {
                 if (renderDelay < REPAINT_MESSAGE_DELAY_IN_MS)
@@ -2125,8 +2117,6 @@ static void DrawDocument(WindowInfo *win, HDC hdc, RECT *rcArea)
                 DrawCenteredText(hdc, bounds, _TR("Couldn't render the page"));
                 DBG_OUT("   missing bitmap on visible page %d\n", pageNo);
             }
-            SelectObject(hdc, origFont);
-            Win::Font::Delete(fontRightTxt);
             continue;
         }
 
@@ -2803,12 +2793,11 @@ static void OnPaint(WindowInfo *win)
     if (!win->IsDocLoaded()) {
         assert(!win->IsAboutWindow());
         Win::Font::ScopedFont fontRightTxt(hdc, _T("MS Shell Dlg"), 14);
-        Win::HdcScopedSelectFont tmp(hdc, fontRightTxt);
-        HGDIOBJ origFont = SelectObject(hdc, fontRightTxt); /* Just to remember the orig font */
+        Win::HdcScopedSelectFont scope(hdc, fontRightTxt);
         SetBkMode(hdc, TRANSPARENT);
         FillRect(hdc, &ps.rcPaint, gBrushNoDocBg);
-        // TODO: it's no longer just PDF file
-        DrawCenteredText(hdc, ClientRect(win->hwndCanvas), _TR("Error loading PDF file."));
+        ScopedMem<TCHAR> msg(Str::Format(_TB_TR("Error loading %s"), win->loadedFilePath));
+        DrawCenteredText(hdc, ClientRect(win->hwndCanvas), msg);
     } else {
         switch (win->presentation) {
         case PM_BLACK_SCREEN:

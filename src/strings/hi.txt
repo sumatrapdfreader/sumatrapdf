@@ -98,9 +98,6 @@ Enter password
 Enter password for %s
 %s के लिए पहचान शब्द भरें
 
-Error loading PDF file.
-फाईल खोली नहीं जा सकी
-
 F&ullscreen\tCtrl-Shift-L
 पूरा परदा\tCtrl-Shift-L
 

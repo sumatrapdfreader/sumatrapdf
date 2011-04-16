@@ -252,9 +252,6 @@ Ange lösenord för %s
 Enter the command-line to invoke when you double-click on the PDF document:
 Ange kommandorad att aktivera när du dubbelklickar på PDF-dokumentet:
 
-Error loading PDF file.
-Kan inte öppna PDF-filen.
-
 F&orward\tAlt+Right Arrow
 Framåt\tAlt+Pil höger
 

@@ -265,9 +265,6 @@ Enter password for %s
 Enter the command-line to invoke when you double-click on the PDF document:
 Εισάγετε την εντολή προς εκτέλεση με διπλό κλικ σε έγγραφο PDF:
 
-Error loading PDF file.
-Σφάλμα κατά τη φόρτωση του αρχείου PDF.
-
 F&orward\tAlt+Right Arrow
 Εμπρός\tAlt+->
 

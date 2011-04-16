@@ -247,9 +247,6 @@ Introduiu la constrasenya per a %s
 Enter the command-line to invoke when you double-click on the PDF document:
 Introduïu la línia d'ordes que voleu executar en fer doble clic al document PDF:
 
-Error loading PDF file.
-S'ha produït un error en carregar el fitxer.
-
 F&orward\tAlt+Right Arrow
 Avan&t\tAlt+Right Arrow
 

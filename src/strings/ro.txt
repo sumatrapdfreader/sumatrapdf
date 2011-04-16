@@ -248,9 +248,6 @@ Introduceţi parola pentru %s
 Enter the command-line to invoke when you double-click on the PDF document:
 Introduceţi comanda invocată la dublu click pe documentul PDF:
 
-Error loading PDF file.
-Erroare la încărcarea fişierului PDF.
-
 F&orward\tAlt+Right Arrow
 Înainte\tAlt+Right Arrow
 

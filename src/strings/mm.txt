@@ -97,9 +97,6 @@ Enter password
 Enter password for %s
 လျှို့ဝှက် ထည့်သွင်း %s
 
-Error loading PDF file.
-ဖိုင် ဖွင့်ရာ အမှားအယွင်းရှိ
-
 F&ullscreen\tCtrl-Shift-L
 မြင်ကွင်း ပြည့်\tCtrl-Shift-L
 

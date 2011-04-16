@@ -205,9 +205,6 @@ Wachtwurd ynfiere
 Enter password for %s
 Wachtwurd ynfiere foar %s
 
-Error loading PDF file.
-Flater by laden PDF bestân.
-
 F&orward\tAlt+Right Arrow
 Fierder\tAlt+->
 

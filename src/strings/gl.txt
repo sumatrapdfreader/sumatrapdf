@@ -100,9 +100,6 @@ Introduza o contrasinal
 Enter password for %s
 Introduza contrasinal para %s
 
-Error loading PDF file.
-Erro ao abrir o arquivo PDF.
-
 F&ullscreen\tCtrl-Shift-L
 A toda pantalla\tCtrl-Shift-L
 

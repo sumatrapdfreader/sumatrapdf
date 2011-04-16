@@ -253,9 +253,6 @@ Wachtwoord invoeren voor %s
 Enter the command-line to invoke when you double-click on the PDF document:
 Opdracht-regel die gestart moet worden bij het dubbelklikken van een PDF-bestand:
 
-Error loading PDF file.
-Fout bij laden PDF bestand.
-
 F&orward\tAlt+Right Arrow
 Verder\tAlt+->
 

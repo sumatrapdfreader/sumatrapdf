@@ -249,9 +249,6 @@ Enter password for %s
 Enter the command-line to invoke when you double-click on the PDF document:
 الدخول لاستدعاء سطر الأوامر عند النقر المزدوج على المستند
 
-Error loading PDF file.
-هناك خطأ في تشغيل الملف
-
 F&orward\tAlt+Right Arrow
 الأمام\tAlt+السهم الأيمن
 

@@ -263,9 +263,6 @@ Ipasok ang password ng %s
 Enter the command-line to invoke when you double-click on the PDF document:
 Pakisulat ang command na gagawin kapag dalawang beses na kli-nik ang dokumentong PDF:
 
-Error loading PDF file.
-Hindi mabuksan ang PDF file.
-
 F&orward\tAlt+Right Arrow
 Susunod\tAlt+Right Arrow
 

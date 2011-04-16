@@ -211,9 +211,6 @@ Unesi zaporku
 Enter password for %s
 Unesi zaporku za %s
 
-Error loading PDF file.
-Greška prilikom učitavanja PDF datoteke.
-
 F&orward\tAlt+Right Arrow
 Naprijed\tAlt+->
 

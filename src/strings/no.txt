@@ -250,9 +250,6 @@ Skriv inn passord for %s
 Enter the command-line to invoke when you double-click on the PDF document:
 Skriv inn kommandolinjen som skal kjøres når du dobbeltklikker på PDF-dokumentet:
 
-Error loading PDF file.
-Feil ved åpning av PDF-fil.
-
 F&orward\tAlt+Right Arrow
 Fremover\tAlt+Pil høyre
 

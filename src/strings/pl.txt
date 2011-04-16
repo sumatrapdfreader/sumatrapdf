@@ -247,9 +247,6 @@ Podaj hasło dla %s
 Enter the command-line to invoke when you double-click on the PDF document:
 Podaj polecenie wykonywane po dwukrotnym kliknięciu pliku PDF:
 
-Error loading PDF file.
-Błąd wczytywania pliku PDF.
-
 F&orward\tAlt+Right Arrow
 &Dalej\tAlt+W prawo
 

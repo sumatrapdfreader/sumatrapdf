@@ -254,9 +254,6 @@ Inserisci password per %s
 Enter the command-line to invoke when you double-click on the PDF document:
 Inserire la linea di comando da eseguire quando fai doppio clic su un documento PDF:
 
-Error loading PDF file.
-Errore durante il caricamento del file.
-
 F&orward\tAlt+Right Arrow
 A&vanti\tAlt+Freccia Destra
 

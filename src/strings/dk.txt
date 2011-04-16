@@ -250,9 +250,6 @@ Indtast kodeord for %s
 Enter the command-line to invoke when you double-click on the PDF document:
 Indtast den kommandolinie du vil bruge når du dobbeltklikker på PDF-dokumentet:
 
-Error loading PDF file.
-Fejl ved åbning af PDF-fil.
-
 F&orward\tAlt+Right Arrow
 F&remad\tAlt+->
 

@@ -212,9 +212,6 @@ Kirjoita salasana
 Enter password for %s
 Kirjoita tiedoston %s salasana
 
-Error loading PDF file.
-Tiedoston avaus epäonnistui
-
 F&orward\tAlt+Right Arrow
 Seuraava\tAlt+Oikea nuoli
 

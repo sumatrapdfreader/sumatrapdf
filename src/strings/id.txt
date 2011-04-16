@@ -265,9 +265,6 @@ Masukkan kata kunci untuk %s
 Enter the command-line to invoke when you double-click on the PDF document:
 Masukkan baris perintah untuk dijalankan ketika Anda mengklik dua kali pada dokumen PDF:
 
-Error loading PDF file.
-Kesalahan memuat berkas PDF.
-
 F&orward\tAlt+Right Arrow
 Berikutnya\tAlt+->
 

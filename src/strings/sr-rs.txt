@@ -249,9 +249,6 @@ Enter password for %s
 Enter the command-line to invoke when you double-click on the PDF document:
 Искористи двоструки клик на документ као позив командне линије:
 
-Error loading PDF file.
-Грешка при учитавању PDF документа
-
 F&orward\tAlt+Right Arrow
 Напред\tAlt+->
 

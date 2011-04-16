@@ -73,9 +73,6 @@ Could not open Printer
 E&xit\tCtrl-Q
 പുറത്തേക്ക് \tCtrl-Q
 
-Error loading PDF file.
-PDF ഫയല്‍ തുറക്കാന്‍ സാധിച്ചില്ല
-
 F&ullscreen\tCtrl-Shift-L
 മുഴുവന്‍ കാണിക്കുക\tCtrl-Shift-L
 

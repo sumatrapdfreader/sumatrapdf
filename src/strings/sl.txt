@@ -264,9 +264,6 @@ Vnesite geslo za %s
 Enter the command-line to invoke when you double-click on the PDF document:
 Vnesite ukazno vrstico, ki se bo izvedla, ko boste dvokliknili na PDF dokument:
 
-Error loading PDF file.
-Napaka pri branju datoteke PDF.
-
 F&orward\tAlt+Right Arrow
 Naprej\tAlt+Desna puščica
 

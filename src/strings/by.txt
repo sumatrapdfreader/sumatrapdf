@@ -161,9 +161,6 @@ Enter password
 Enter password for %s
 Увядзіце пароль для %s
 
-Error loading PDF file.
-Памылка пры адчыненні файла.
-
 F&ullscreen\tCtrl-Shift-L
 Поўны экран\tCtrl-Shift-L
 

@@ -269,9 +269,6 @@ Digite a senha de %s
 Enter the command-line to invoke when you double-click on the PDF document:
 Digite a linha de comando a ser invocada com um duplo clique sobre o documento PDF:
 
-Error loading PDF file.
-Erro ao abrir o arquivo PDF.
-
 F&orward\tAlt+Right Arrow
 Avançar\tAlt+->
 

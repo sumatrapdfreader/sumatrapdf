@@ -245,9 +245,6 @@ Enter password
 Enter password for %s
 Введіть пароль для %s
 
-Error loading PDF file.
-Помилка відкриття документу.
-
 F&orward\tAlt+Right Arrow
 Вперед\tAlt+Права стрілка
 

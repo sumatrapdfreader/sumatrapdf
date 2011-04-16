@@ -190,9 +190,6 @@ Pasahitza sartu
 Enter password for %s
 %s-rentzat pasahitza sartu
 
-Error loading PDF file.
-PDF fitxategia kargargatzerakoan errorea suertatu da
-
 F&ullscreen\tCtrl-Shift-L
 Pantaila osoan\tCtrl-Shift-L
 

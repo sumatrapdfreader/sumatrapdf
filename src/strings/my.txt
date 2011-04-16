@@ -182,9 +182,6 @@ Masukkan kata laluan
 Enter password for %s
 Masukkan kata laluan untuk %s
 
-Error loading PDF file.
-Ralat memuatkan fail PDF
-
 F&ullscreen\tCtrl-Shift-L
 Mukasurat Penuh\tCtrl-Shift-L
 

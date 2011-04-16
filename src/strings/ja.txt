@@ -247,9 +247,6 @@ Enter password for %s
 Enter the command-line to invoke when you double-click on the PDF document:
 PDF ドキュメント上でダブルクリックしたときに呼び出すコマンドラインを入力します:
 
-Error loading PDF file.
-PDF ファイルの読み込みエラーです。
-
 F&orward\tAlt+Right Arrow
 次に進む(&O)\tAlt+→
 

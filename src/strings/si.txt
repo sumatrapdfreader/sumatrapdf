@@ -247,9 +247,6 @@ Enter password for %s
 Enter the command-line to invoke when you double-click on the PDF document:
 PDF ගොනුව මත double-click කළ විට සිදුවන ක්‍රියාව සදහා විධාන පෙළට අවතීර්ණවන්න:
 
-Error loading PDF file.
-PDF ගොනුව පුරණය දෝෂ සහිතයි
-
 F&orward\tAlt+Right Arrow
 ඉදිරියට\tAlt+Right Arrow
 

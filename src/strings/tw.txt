@@ -203,9 +203,6 @@ Enter password
 Enter password for %s
 輸入 %s 的密碼
 
-Error loading PDF file.
-讀取PDF檔案時發失錯誤。
-
 F&orward\tAlt+Right Arrow
 下一停頓頁面\tAlt+->
 

@@ -250,9 +250,6 @@ Enter password for %s
 Enter the command-line to invoke when you double-click on the PDF document:
 Írja be a parancsot, ami a PDF dokumentumra való dupla kattintáskor fut le:
 
-Error loading PDF file.
-Hiba a PDF betöltése közben.
-
 F&orward\tAlt+Right Arrow
 Ugrás előre\tAlt+->
 

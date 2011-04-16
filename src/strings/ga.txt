@@ -98,9 +98,6 @@ Cuir isteach focal faire
 Enter password for %s
 Cuir isteach focal faire le haghaidh %s
 
-Error loading PDF file.
-Tharla botún ag luchtú comhad PDF.
-
 F&ullscreen\tCtrl-Shift-L
 Lánscáileán\tCtrl-Shift-L
 

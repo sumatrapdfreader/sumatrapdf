@@ -263,9 +263,6 @@ Nhập mật khẩu cho %s
 Enter the command-line to invoke when you double-click on the PDF document:
 Nhập dòng lệnh gọi khi bạn nhấp đúp vào tập tin PDF:
 
-Error loading PDF file.
-Không mở được tập tin PDF.
-
 F&orward\tAlt+Right Arrow
 Tiếp tục\tAlt+->
 

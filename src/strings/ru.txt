@@ -264,9 +264,6 @@ Enter password for %s
 Enter the command-line to invoke when you double-click on the PDF document:
 Введите командную строку, вызываемую при двойном щелчке на PDF-документе:
 
-Error loading PDF file.
-Ошибка открытия PDF-файла.
-
 F&orward\tAlt+Right Arrow
 &Вперёд\tAlt+Стрелка вправо
 

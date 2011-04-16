@@ -250,9 +250,6 @@ Zadejte heslo pro %s
 Enter the command-line to invoke when you double-click on the PDF document:
 Dvojité kliknutí na PDF dokument vykoná zadaný příkazový řádek:
 
-Error loading PDF file.
-Při načítání PDF souboru došlo k chybě.
-
 F&orward\tAlt+Right Arrow
 V&před\tAlt+Šipka vpravo
 

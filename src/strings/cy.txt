@@ -245,9 +245,6 @@ Rhoi cyfrinair
 Enter password for %s
 Rhoi cyfrinair ar gyfer %s
 
-Error loading PDF file.
-Gwall wrth lwytho ffeil.
-
 F&orward\tAlt+Right Arrow
 Ymlaen\tAlt+Saeth Dde
 

@@ -101,9 +101,6 @@ Enter password
 Enter password for %s
 %s-এর জন্য শব্দকূট প্রবেশ করুন
 
-Error loading PDF file.
-পিডিএফ সঞ্চিকা ভরণে ত্রুটি
-
 F&ullscreen\tCtrl-Shift-L
 পূর্ণ পর্দা\tCtrl-Shift-L
 

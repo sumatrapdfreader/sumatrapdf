@@ -267,9 +267,6 @@ Entrer le mot de passe pour %s
 Enter the command-line to invoke when you double-click on the PDF document:
 Entrer la ligne de commande à exécuter lorsque vous double-cliquez sur le document PDF :
 
-Error loading PDF file.
-Erreur à l'ouverture du fichier PDF.
-
 F&orward\tAlt+Right Arrow
 &Avancer\tAlt+->
 

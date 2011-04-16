@@ -231,9 +231,6 @@ Enter password
 Enter password for %s
 %s의 패스워드를 입력하십시오
 
-Error loading PDF file.
-PDF 파일을 읽을 수 없습니다.
-
 F&ullscreen\tCtrl-Shift-L
 전체 화면\tCtrl-Shift-L
 

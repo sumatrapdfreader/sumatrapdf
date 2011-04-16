@@ -209,9 +209,6 @@ Enter password
 Enter password for %s
 %s  காண கடவுச்சொல்லை வழங்கு
 
-Error loading PDF file.
-PDF கோப்பு ஏற்று பிழை
-
 F&orward\tAlt+Right Arrow
 முன்னோகி\tAlt+Right Arrow
 

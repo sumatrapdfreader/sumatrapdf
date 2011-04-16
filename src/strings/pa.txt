@@ -98,9 +98,6 @@ Enter password
 Enter password for %s
 %s ਲਈ ਪਾਸਵਰਡ ਭਰੋ
 
-Error loading PDF file.
-PDF ਫਾਈਲ ਖੋਲੀ ਨਹੀ ਜਾ ਸਕੀ ।
-
 F&ullscreen\tCtrl-Shift-L
 ਪੂਰੀ ਸਕਰੀਨ\tCtrl-Shift-L
 

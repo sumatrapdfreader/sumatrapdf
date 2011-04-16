@@ -213,9 +213,6 @@ Enter password
 Enter password for %s
 را وارد کنید %s کلمه عبور برای
 
-Error loading PDF file.
-باز کردن فایل با مشکل مواجه شد
-
 F&orward\tAlt+Right Arrow
 جلو\tAlt+Right Arrow
 

@@ -192,9 +192,6 @@ Ri ger-tremena
 Enter password for %s
 Ri ger-tremena rag %s
 
-Error loading PDF file.
-Gwall ow karga restren PDF.
-
 F&orward\tAlt+Right Arrow
 Yn-rag\tAlt+->
 

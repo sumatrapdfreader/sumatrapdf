@@ -204,9 +204,6 @@ Zadať heslo
 Enter password for %s
 Zadať heslo pre %s
 
-Error loading PDF file.
-Chyba pri pokuse načítať PDF súbor.
-
 F&orward\tAlt+Right Arrow
 Dopredu\tAlt+Right Arrow
 

@@ -97,9 +97,6 @@ Isa password
 Enter password for %s
 Isa password ya %s
 
-Error loading PDF file.
-Tatadza kulodha faira rePDF
-
 F&ullscreen\tCtrl-Shift-L
 Zadza Screen\tCtrl-Shift-L
 

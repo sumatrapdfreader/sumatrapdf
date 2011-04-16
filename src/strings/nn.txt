@@ -97,9 +97,6 @@ Skriv inn passord
 Enter password for %s
 Skriv inn passord for %s
 
-Error loading PDF file.
-Feil under lasting av PDF-fil
-
 F&ullscreen\tCtrl-Shift-L
 Full skjerm\tCtrl-Shift-L
 

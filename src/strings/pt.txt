@@ -264,9 +264,6 @@ Indique a palavra passe para %s
 Enter the command-line to invoke when you double-click on the PDF document:
 Insira a linha de comandos a invocar ao fazer duplo clique no documento PDF:
 
-Error loading PDF file.
-Erro ao carregar o PDF.
-
 F&orward\tAlt+Right Arrow
 A&vançar\tAlt + ->
 
