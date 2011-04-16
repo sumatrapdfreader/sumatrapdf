@@ -301,9 +301,9 @@ bool ImagesEngine::RenderPage(HDC hDC, int pageNo, RectI screenRect, float zoom,
     Bitmap *bmp = pages[pageNo - 1]->bmp;
     REAL scaleX = 1.0f, scaleY = 1.0f;
     if (bmp->GetHorizontalResolution() != 0.f)
-        scaleX = bmp->GetHorizontalResolution() / 96.0f;
+        scaleX = 1.0f * bmp->GetHorizontalResolution() / GetDeviceCaps(hDC, LOGPIXELSX);
     if (bmp->GetVerticalResolution() != 0.f)
-        scaleY = bmp->GetVerticalResolution() / 96.0f;
+        scaleY = 1.0f * bmp->GetVerticalResolution() / GetDeviceCaps(hDC, LOGPIXELSY);
 
     Matrix m;
     GetTransform(m, pageNo, zoom, rotation);

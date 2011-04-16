@@ -1653,6 +1653,11 @@ void WindowInfo::RenderPage(int pageNo)
     assert(dm);
     if (!dm)
         return;
+    // don't render any plain images on the rendering thread,
+    // they'll be rendered directly in DrawDocument during
+    // WM_PAINT on the UI thread
+    if (dm->cbxEngine || dm->imageEngine)
+        return;
 
     gRenderCache.Render(dm, pageNo);
 }
