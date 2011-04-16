@@ -501,7 +501,7 @@ void PdfLinkHandler::GotoPdfDest(fz_obj *dest)
         RectD rectD = engine()->Transform(rect, pageNo, dm->zoomReal(), dm->rotation());
         scroll = rectD.TL().Convert<int>();
 
-        RectF rectF = engine()->Transform(rect, pageNo, 1.0, dm->rotation()).Convert<float>();
+        Rect<float> rectF = engine()->Transform(rect, pageNo, 1.0, dm->rotation()).Convert<float>();
         zoom = 100.0f * min(owner->canvasRc.dx / rectF.dx, owner->canvasRc.dy / rectF.dy);
     }
     else if (Str::Eq(type, "FitH") || Str::Eq(type, "FitBH")) {

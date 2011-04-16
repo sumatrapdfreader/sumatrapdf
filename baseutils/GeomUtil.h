@@ -31,7 +31,6 @@ public:
 };
 
 typedef Point<int> PointI;
-typedef Point<float> PointF;
 typedef Point<double> PointD;
 
 template <typename T>
@@ -58,7 +57,6 @@ public :
 };
 
 typedef Size<int> SizeI;
-typedef Size<float> SizeF;
 typedef Size<double> SizeD;
 
 template <typename T>
@@ -159,11 +157,16 @@ public:
     Point<T> BR() const { return Point<T>(x + dx, y + dy); }
     Size<T> Size() const { return ::Size<T>(dx, dy); }
 
+#ifdef _WIN32
     RECT ToRECT() const {
         Rect<int> rectI(this->Convert<int>());
         RECT result = { rectI.x, rectI.y, rectI.x + rectI.dx, rectI.y + rectI.dy };
         return result;
     }
+    static Rect FromRECT(RECT& rect) {
+        return FromXY(rect.left, rect.top, rect.right, rect.bottom);
+    }
+#endif
 
     bool operator==(Rect<T>& other) {
         return this->x == other.x && this->y == other.y &&
@@ -172,7 +175,39 @@ public:
 };
 
 typedef Rect<int> RectI;
-typedef Rect<float> RectF;
 typedef Rect<double> RectD;
+
+#ifdef _WIN32
+
+class ClientRect : public RectI {
+public:
+    ClientRect(HWND hwnd) {
+        RECT rc;
+        if (GetClientRect(hwnd, &rc)) {
+            x = rc.left; dx = rc.right - rc.left;
+            y = rc.top; dy = rc.bottom - rc.top;
+        }
+    }
+};
+
+class WindowRect : public RectI {
+public:
+    WindowRect(HWND hwnd) {
+        RECT rc;
+        if (GetWindowRect(hwnd, &rc)) {
+            x = rc.left; dx = rc.right - rc.left;
+            y = rc.top; dy = rc.bottom - rc.top;
+        }
+    }
+};
+
+inline RectI MapRectToWindow(RectI rect, HWND hwndFrom, HWND hwndTo)
+{
+    RECT rc = rect.ToRECT();
+    MapWindowPoints(hwndFrom, hwndTo, (LPPOINT)&rc, 2);
+    return RectI::FromRECT(rc);
+}
+
+#endif
 
 #endif

@@ -343,9 +343,9 @@ PointD ImagesEngine::Transform(PointD pt, int pageNo, float zoom, int rotate, bo
 
 RectD ImagesEngine::Transform(RectD rect, int pageNo, float zoom, int rotate, bool inverse)
 {
-    Gdiplus::PointF pts[2] = {
-        Gdiplus::PointF((REAL)rect.x, (REAL)rect.y),
-        Gdiplus::PointF((REAL)(rect.x + rect.dx), (REAL)(rect.y + rect.dy))
+    PointF pts[2] = {
+        PointF((REAL)rect.x, (REAL)rect.y),
+        PointF((REAL)(rect.x + rect.dx), (REAL)(rect.y + rect.dy))
     };
     Matrix m;
     GetTransform(m, pageNo, zoom, rotate);

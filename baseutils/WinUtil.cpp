@@ -363,7 +363,7 @@ RectI ShiftRectToWorkArea(RectI rect, bool bFully)
     MONITORINFO mi = { 0 };
     mi.cbSize = sizeof mi;
     GetMonitorInfo(MonitorFromRect(&rect.ToRECT(), MONITOR_DEFAULTTONEAREST), &mi);
-    RectI monitor = RectIFromRECT(mi.rcWork);
+    RectI monitor = RectI::FromRECT(mi.rcWork);
 
     if (rect.y + rect.dy <= monitor.x || bFully && rect.y < monitor.y)
         /* Rectangle is too far above work area */

@@ -58,40 +58,6 @@ public:
     }
 };
 
-class ClientRect : public RectI {
-public:
-    ClientRect(HWND hwnd) {
-        RECT rc;
-        if (GetClientRect(hwnd, &rc)) {
-            x = rc.left; dx = rc.right - rc.left;
-            y = rc.top; dy = rc.bottom - rc.top;
-        }
-    }
-};
-
-class WindowRect : public RectI {
-public:
-    WindowRect(HWND hwnd) {
-        RECT rc;
-        if (GetWindowRect(hwnd, &rc)) {
-            x = rc.left; dx = rc.right - rc.left;
-            y = rc.top; dy = rc.bottom - rc.top;
-        }
-    }
-};
-
-inline RectI RectIFromRECT(RECT& rect)
-{
-    return RectI::FromXY(rect.left, rect.top, rect.right, rect.bottom);
-}
-
-inline RectI MapRectToWindow(RectI rect, HWND hwndFrom, HWND hwndTo)
-{
-    RECT rc = rect.ToRECT();
-    MapWindowPoints(hwndFrom, hwndTo, (LPPOINT)&rc, 2);
-    return RectIFromRECT(rc);
-}
-
 class DoubleBuffer {
     HWND hTarget;
     HDC hdcCanvas, hdcBuffer;

@@ -1262,7 +1262,7 @@ void EnsureWindowVisibility(RectI& rect)
     if (!GetMonitorInfo(MonitorFromRect(&rect.ToRECT(), MONITOR_DEFAULTTONEAREST), &mi))
         SystemParametersInfo(SPI_GETWORKAREA, 0, &mi.rcWork, 0);
 
-    RectI work = RectIFromRECT(mi.rcWork);
+    RectI work = RectI::FromRECT(mi.rcWork);
     // make sure that the window is neither too small nor bigger than the monitor
     if (rect.dx < MIN_WIN_DX || rect.dx > work.dx)
         rect.dx = (int)min(work.dy * DEF_PAGE_RATIO, work.dx);
@@ -1284,7 +1284,7 @@ static WindowInfo* WindowInfo_CreateEmpty()
         // center the window on the primary monitor
         RECT workArea;
         SystemParametersInfo(SPI_GETWORKAREA, 0, &workArea, 0);
-        RectI work = RectIFromRECT(workArea);
+        RectI work = RectI::FromRECT(workArea);
         windowPos.y = work.x;
         windowPos.dy = work.dy;
         windowPos.dx = (int)min(windowPos.dy * DEF_PAGE_RATIO, work.dx);
@@ -2990,7 +2990,7 @@ static void PrintToDevice(BaseEngine *engine, HDC hdc, LPDEVMODE devMode,
 
                 RectD *clipRegion = &sel->At(i).rect;
 
-                SizeF sSize = clipRegion->Size().Convert<float>();
+                Size<float> sSize = clipRegion->Size().Convert<float>();
                 // Swap width and height for rotated documents
                 int rotation = engine->PageRotation(sel->At(i).pageNo) + dm_rotation;
                 if (rotation % 180 != 0)
@@ -3038,7 +3038,7 @@ static void PrintToDevice(BaseEngine *engine, HDC hdc, LPDEVMODE devMode,
             // MM_TEXT: Each logical unit is mapped to one device pixel.
             // Positive x is to the right; positive y is down.
 
-            SizeF pSize = engine->PageMediabox(pageNo).Size().Convert<float>();
+            Size<float> pSize = engine->PageMediabox(pageNo).Size().Convert<float>();
             int rotation = engine->PageRotation(pageNo);
             // Turn the document by 90 deg if it isn't in portrait mode
             if (pSize.dx > pSize.dy) {
@@ -3068,7 +3068,7 @@ static void PrintToDevice(BaseEngine *engine, HDC hdc, LPDEVMODE devMode,
                 // make sure to fit all content into the printable area when scaling
                 // and the whole document page on the physical paper
                 RectD rect = engine->PageContentBox(pageNo, Target_Print).Convert<double>();
-                RectF cbox = engine->Transform(rect, pageNo, 1.0, rotation).Convert<float>();
+                Rect<float> cbox = engine->Transform(rect, pageNo, 1.0, rotation).Convert<float>();
                 zoom = min((float)printableWidth / cbox.dx,
                        min((float)printableHeight / cbox.dy,
                        min((float)paperWidth / pSize.dx,
@@ -3996,7 +3996,7 @@ void WindowInfo_EnterFullscreen(WindowInfo *win, bool presentation)
     if (!GetMonitorInfo(m, (LPMONITORINFOEX)&mi))
         rect = RectI(0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
     else
-        rect = RectIFromRECT(mi.rcMonitor);
+        rect = RectI::FromRECT(mi.rcMonitor);
     long ws = GetWindowLong(win->hwndFrame, GWL_STYLE);
     if (!presentation || !win->fullScreen)
         win->prevStyle = ws;
