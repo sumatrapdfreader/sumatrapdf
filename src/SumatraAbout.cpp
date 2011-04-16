@@ -36,6 +36,8 @@
 #endif
 
 static HWND gHwndAbout;
+static HWND gHwndAboutTooltip = NULL;
+static const TCHAR *clickedURL = NULL;
 
 typedef struct AboutLayoutInfoEl {
     /* static data, must be provided */
@@ -345,12 +347,9 @@ static const TCHAR *AboutGetLink(WindowInfo *win, int x, int y, AboutLayoutInfoE
     else
         OnPaintAbout(gHwndAbout);
 
+    PointI cursor(x, y);
     for (AboutLayoutInfoEl *el = gAboutLayoutInfo; el->leftTxt; el++) {
-        if ((x < el->rightPos.x) ||
-            (x > el->rightPos.x + el->rightPos.dx))
-            continue;
-        if ((y < el->rightPos.y) ||
-            (y > el->rightPos.y + el->rightPos.dy))
+        if (!el->rightPos.Inside(cursor))
             continue;
         if (el_out)
             *el_out = el;
@@ -394,6 +393,40 @@ void OnMenuAbout() {
     ShowWindow(gHwndAbout, SW_SHOW);
 }
 
+static void CreateInfotipForLink(const TCHAR *text, RectI& rc)
+{
+    if (gHwndAboutTooltip)
+        return;
+
+    gHwndAboutTooltip = CreateWindowEx(WS_EX_TOPMOST,
+        TOOLTIPS_CLASS, NULL, WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP,
+        CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+        gHwndAbout, NULL, ghinst, NULL);
+
+    TOOLINFO ti = { 0 };
+    ti.cbSize = sizeof(ti);
+    ti.hwnd = gHwndAbout;
+    ti.uFlags = TTF_SUBCLASS;
+    ti.lpszText = (TCHAR *)text;
+    ti.rect = rc.ToRECT();
+
+    SendMessage(gHwndAboutTooltip, TTM_ADDTOOL, 0, (LPARAM)&ti);
+}
+
+static void ClearInfotip()
+{
+    if (!gHwndAboutTooltip)
+        return;
+
+    TOOLINFO ti = { 0 };
+    ti.cbSize = sizeof(ti);
+    ti.hwnd = gHwndAbout;
+
+    SendMessage(gHwndAboutTooltip, TTM_DELTOOL, 0, (LPARAM)&ti);
+    DestroyWindow(gHwndAboutTooltip);
+    gHwndAboutTooltip = NULL;
+}
+
 LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     const TCHAR * url;
@@ -415,23 +448,24 @@ LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
 
         case WM_SETCURSOR:
             if (GetCursorPos(&pt) && ScreenToClient(hwnd, &pt)) {
-                if (AboutGetLink(NULL, pt.x, pt.y)) {
+                AboutLayoutInfoEl *aboutEl;
+                if (AboutGetLink(NULL, pt.x, pt.y, &aboutEl)) {
+                    CreateInfotipForLink(aboutEl->url, aboutEl->rightPos);
                     SetCursor(gCursorHand);
                     return TRUE;
                 }
             }
+            ClearInfotip();
             return DefWindowProc(hwnd, message, wParam, lParam);
 
         case WM_LBUTTONDOWN:
-            url = AboutGetLink(NULL, LOWORD(lParam), HIWORD(lParam));
-            SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)url);
+            clickedURL = AboutGetLink(NULL, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
             break;
 
         case WM_LBUTTONUP:
-            url = AboutGetLink(NULL, LOWORD(lParam), HIWORD(lParam));
-            if (url && url == (const TCHAR *)GetWindowLongPtr(hwnd, GWLP_USERDATA))
+            url = AboutGetLink(NULL, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+            if (url && url == clickedURL)
                 LaunchBrowser(url);
-            SetWindowLongPtr(hwnd, GWLP_USERDATA, 0);
             break;
 
         case WM_CHAR:
@@ -440,6 +474,7 @@ LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
             break;
 
         case WM_DESTROY:
+            ClearInfotip();
             assert(gHwndAbout);
             gHwndAbout = NULL;
             break;
