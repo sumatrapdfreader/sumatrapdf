@@ -310,8 +310,7 @@ static bool DeserializePrefs(const char *prefsTxt, SerializableGlobalPrefs *glob
     txt = GetRawString(global, UI_LANGUAGE_STR);
     int langIx = Trans::GetLanguageIndex(txt);
     if (langIx != -1)
-        if (Trans::SetCurrentLanguage(txt))
-            globalPrefs->m_currentLanguage = Trans::GetLanguageCode(langIx);
+        globalPrefs->m_currentLanguage = Trans::GetLanguageCode(langIx);
 
     Retrieve(global, FWDSEARCH_OFFSET, globalPrefs->m_fwdsearchOffset);
     Retrieve(global, FWDSEARCH_COLOR, globalPrefs->m_fwdsearchColor);
@@ -347,12 +346,6 @@ bool Load(TCHAR *filepath, SerializableGlobalPrefs *globalPrefs, FileHistory *fi
 {
     bool            ok = false;
 
-#ifdef DEBUG
-    static bool     loaded = false;
-    assert(!loaded);
-    loaded = true;
-#endif
-
     assert(filepath);
     if (!filepath)
         return false;
@@ -362,6 +355,7 @@ bool Load(TCHAR *filepath, SerializableGlobalPrefs *globalPrefs, FileHistory *fi
     if (!Str::IsEmpty(prefsTxt.Get())) {
         ok = DeserializePrefs(prefsTxt, globalPrefs, fileHistory);
         assert(ok);
+        globalPrefs->m_lastPrefUpdate = File::GetModificationTime(filepath);
     }
 
     // TODO: add a check if a file exists, to filter out deleted files
@@ -397,7 +391,10 @@ bool Save(TCHAR *filepath, SerializableGlobalPrefs *globalPrefs, FileHistory *fi
     /* TODO: consider 2-step process:
         * write to a temp file
         * rename temp file to final file */
-    return File::WriteAll(filepath, (void*)data.Get(), dataLen);
+    bool ok = File::WriteAll(filepath, (void*)data.Get(), dataLen);
+    if (ok)
+        globalPrefs->m_lastPrefUpdate = File::GetModificationTime(filepath);
+    return ok;
 }
 
 }

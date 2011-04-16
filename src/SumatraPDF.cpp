@@ -133,6 +133,8 @@ bool                    gPluginMode = false;
 #define FILEWATCH_DELAY_IN_MS       1000
 #endif
 
+#define UWM_PREFS_FILE_UPDATED  (WM_USER + 1)
+
 #define WS_REBAR (WS_CHILD | WS_CLIPCHILDREN | WS_BORDER | RBS_VARHEIGHT | \
                   RBS_BANDBORDERS | CCS_NODIVIDER | CCS_NOPARENTALIGN)
 
@@ -262,19 +264,19 @@ char *GetSystemTimeAsStr()
     return _MemToHex(&ft);
 }
 
-static void FileTimeToLargeInteger(FILETIME *ft, ULARGE_INTEGER *lt)
+static ULARGE_INTEGER FileTimeToLargeInteger(FILETIME& ft)
 {
-    lt->LowPart = ft->dwLowDateTime;
-    lt->HighPart = ft->dwHighDateTime;
+    ULARGE_INTEGER res;
+    res.LowPart = ft.dwLowDateTime;
+    res.HighPart = ft.dwHighDateTime;
+    return res;
 }
 
 /* Return <ft1> - <ft2> in seconds */
-DWORD FileTimeDiffInSecs(FILETIME *ft1, FILETIME *ft2)
+DWORD FileTimeDiffInSecs(FILETIME& ft1, FILETIME& ft2)
 {
-    ULARGE_INTEGER t1;
-    ULARGE_INTEGER t2;
-    FileTimeToLargeInteger(ft1, &t1);
-    FileTimeToLargeInteger(ft2, &t2);
+    ULARGE_INTEGER t1 = FileTimeToLargeInteger(ft1);
+    ULARGE_INTEGER t2 = FileTimeToLargeInteger(ft2);
     // diff is in 100 nanoseconds
     LONGLONG diff = t1.QuadPart - t2.QuadPart;
     diff = diff / (LONGLONG)10000000L;
@@ -969,18 +971,76 @@ static void UpdateCurrentFileDisplayStateForWin(WindowInfo *win)
     win->DisplayStateFromToC(state);
 }
 
+static void ShowOrHideToolbarGlobally()
+{
+    for (size_t i = 0; i < gWindows.Count(); i++) {
+        WindowInfo *win = gWindows[i];
+        if (gGlobalPrefs.m_showToolbar) {
+            ShowWindow(win->hwndReBar, SW_SHOW);
+        } else {
+            // Move the focus out of the toolbar
+            if (win->hwndFindBox == GetFocus() || win->hwndPageBox == GetFocus())
+                SetFocus(win->hwndFrame);
+            ShowWindow(win->hwndReBar, SW_HIDE);
+        }
+        ClientRect rect(win->hwndFrame);
+        SendMessage(win->hwndFrame, WM_SIZE, 0, MAKELONG(rect.dx, rect.dy));
+    }
+}
+
+// called whenever global preferences change or a file is
+// added or removed from gFileHistory (in order to keep
+// the list of recently opened documents in sync)
 static bool SavePrefs()
 {
     // don't save preferences for plugin windows
     if (gPluginMode)
-        return FALSE;
+        return false;
 
     /* mark currently shown files as visible */
     for (size_t i = 0; i < gWindows.Count(); i++)
         UpdateCurrentFileDisplayStateForWin(gWindows[i]);
 
     ScopedMem<TCHAR> path(GetPrefsFileName());
-    return Prefs::Save(path, &gGlobalPrefs, &gFileHistory);
+    bool ok = Prefs::Save(path, &gGlobalPrefs, &gFileHistory);
+    if (ok) {
+        // notify all SumatraPDF instances about the updated prefs file
+        HWND hwnd = NULL;
+        while ((hwnd = FindWindowEx(HWND_DESKTOP, hwnd, FRAME_CLASS_NAME, NULL)))
+            PostMessage(hwnd, UWM_PREFS_FILE_UPDATED, 0, 0);
+    }
+    return ok;
+}
+
+// refresh the preferences when a different SumatraPDF process saves them
+static bool ReloadPrefs()
+{
+    ScopedMem<TCHAR> path(GetPrefsFileName());
+
+    FILETIME time = File::GetModificationTime(path);
+    if (time.dwLowDateTime != gGlobalPrefs.m_lastPrefUpdate.dwLowDateTime ||
+        time.dwHighDateTime != gGlobalPrefs.m_lastPrefUpdate.dwHighDateTime) {
+        return true;
+    }
+
+    const char *currLang = gGlobalPrefs.m_currentLanguage;
+    bool showToolbar = gGlobalPrefs.m_showToolbar;
+
+    FileHistory fileHistory;
+    if (!Prefs::Load(path, &gGlobalPrefs, &fileHistory))
+        return false;
+
+    gFileHistory.Clear();
+    gFileHistory.ExtendWith(fileHistory);
+    // update the current language
+    if (!Str::Eq(currLang, gGlobalPrefs.m_currentLanguage)) {
+        CurrLangNameSet(gGlobalPrefs.m_currentLanguage);
+        RebuildMenuBar();
+        UpdateToolbarToolText();
+    }
+    if (gGlobalPrefs.m_showToolbar != showToolbar)
+        ShowOrHideToolbarGlobally();
+    return true;
 }
 
 void WindowInfo::Reload(bool autorefresh)
@@ -1590,7 +1650,8 @@ WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin, b
 
     if (!LoadDocIntoWindow(fullpath, win, ds, isNewWindow, true, showWin, true)) {
         /* failed to open */
-        gFileHistory.MarkFileInexistent(fullpath);
+        if (gFileHistory.MarkFileInexistent(fullpath))
+            SavePrefs();
         return win;
     }
 
@@ -1601,8 +1662,10 @@ WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin, b
     win->watcher->StartWatchThread();
 #endif
 
-    if (gGlobalPrefs.m_rememberOpenedFiles)
+    if (gGlobalPrefs.m_rememberOpenedFiles) {
         gFileHistory.MarkFileLoaded(fullpath);
+        SavePrefs();
+    }
 
     // Add the file also to Windows' recently used documents (this doesn't
     // happen automatically on drag&drop, reopening from history, etc.)
@@ -1846,7 +1909,7 @@ void DownloadSumatraUpdateInfo(WindowInfo *win, bool autoCheck)
         _HexToMem(gGlobalPrefs.m_lastUpdateTime, &lastUpdateTimeFt);
         FILETIME currentTimeFt;
         GetSystemTimeAsFileTime(&currentTimeFt);
-        int secs = FileTimeDiffInSecs(&currentTimeFt, &lastUpdateTimeFt);
+        int secs = FileTimeDiffInSecs(currentTimeFt, lastUpdateTimeFt);
         assert(secs >= 0);
         // if secs < 0 => somethings wrong, so ignore that case
         if ((secs > 0) && (secs < SECS_IN_DAY))
@@ -3720,30 +3783,14 @@ static void OnMenuChangeLanguage(WindowInfo *win)
         CurrLangNameSet(langName);
         RebuildMenuBar();
         UpdateToolbarToolText();
+        SavePrefs();
     }
 }
 
 static void OnMenuViewShowHideToolbar(WindowInfo *win)
 {
-    if (gGlobalPrefs.m_showToolbar)
-        gGlobalPrefs.m_showToolbar = FALSE;
-    else
-        gGlobalPrefs.m_showToolbar = TRUE;
-
-    // Move the focus out of the toolbar
-    // TODO: do this for all windows?
-    if (win->hwndFindBox == GetFocus() || win->hwndPageBox == GetFocus())
-        SetFocus(win->hwndFrame);
-
-    for (size_t i = 0; i < gWindows.Count(); i++) {
-        WindowInfo *win = gWindows[i];
-        if (gGlobalPrefs.m_showToolbar)
-            ShowWindow(win->hwndReBar, SW_SHOW);
-        else
-            ShowWindow(win->hwndReBar, SW_HIDE);
-        ClientRect rect(win->hwndFrame);
-        SendMessage(win->hwndFrame, WM_SIZE, 0, MAKELONG(rect.dx, rect.dy));
-    }
+    gGlobalPrefs.m_showToolbar = !gGlobalPrefs.m_showToolbar;
+    ShowOrHideToolbarGlobally();
 }
 
 static void OnMenuSettings(WindowInfo *win)
@@ -6357,7 +6404,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
 
         case WM_SETTINGCHANGE:
 InitMouseWheelInfo:
-            SystemParametersInfo (SPI_GETWHEELSCROLLLINES, 0, &ulScrollLines, 0);
+            SystemParametersInfo(SPI_GETWHEELSCROLLLINES, 0, &ulScrollLines, 0);
             // ulScrollLines usually equals 3 or 0 (for no scrolling)
             // WHEEL_DELTA equals 120, so iDeltaPerLine will be 40
             if (ulScrollLines)
@@ -6388,6 +6435,10 @@ InitMouseWheelInfo:
             return OnDDExecute(hwnd, wParam, lParam);
         case WM_DDE_TERMINATE:
             return OnDDETerminate(hwnd, wParam, lParam);
+
+        case UWM_PREFS_FILE_UPDATED:
+            ReloadPrefs();
+            break;
 
         default:
             return DefWindowProc(hwnd, message, wParam, lParam);
@@ -6655,6 +6706,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
             const char *lang = Trans::GuessLanguage();
             CurrLangNameSet(lang);
         }
+        else
+            CurrLangNameSet(gGlobalPrefs.m_currentLanguage);
     }
 
     CommandLineInfo i;
@@ -6717,7 +6770,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
             free(i.fileNames.Pop());
         i.reuseInstance = i.exitOnPrint = false;
         // always display the toolbar when embedded (as there's no menubar in that case)
-        gGlobalPrefs.m_showToolbar = TRUE;
+        gGlobalPrefs.m_showToolbar = true;
     }
 
     WindowInfo *win = NULL;

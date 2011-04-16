@@ -235,6 +235,18 @@ bool Delete(const TCHAR *filePath)
     DWORD err = GetLastError();
     return ((ERROR_PATH_NOT_FOUND == err) || (ERROR_FILE_NOT_FOUND == err));
 }
+
+FILETIME GetModificationTime(const TCHAR *filePath)
+{
+    FILETIME lastMod = { 0 };
+    HANDLE h = CreateFile(filePath, GENERIC_READ, FILE_SHARE_READ, NULL,  
+                          OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL,  NULL); 
+    if (h != INVALID_HANDLE_VALUE)
+        GetFileTime(h, NULL, NULL, &lastMod);
+    CloseHandle(h);
+    return lastMod;
+}
+
 }
 
 namespace Dir {

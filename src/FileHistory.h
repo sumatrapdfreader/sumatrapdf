@@ -72,7 +72,7 @@ public:
         Prepend(state);
     }
 
-    void MarkFileInexistent(const TCHAR *filePath) {
+    bool MarkFileInexistent(const TCHAR *filePath) {
         assert(filePath);
         // move the file history entry to the very end of the list
         // (if it exists at all), so that we don't completely forget
@@ -80,9 +80,19 @@ public:
         // make space for other documents first
         DisplayState *state = Find(filePath);
         if (!state)
-            return;
+            return false;
         Remove(state);
         Append(state);
+        return true;
+    }
+
+    // appends history to this one, leaving the other history emptied
+    void ExtendWith(FileHistory& other) {
+        while (!other.IsEmpty()) {
+            DisplayState *state = other.Get(0);
+            Append(state);
+            other.Remove(state);
+        }
     }
 };
 

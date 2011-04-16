@@ -9,7 +9,7 @@
 #include "AppTools.h"
 #include "Benchmark.h"
 
-extern DWORD FileTimeDiffInSecs(FILETIME *ft1, FILETIME *ft2);
+extern DWORD FileTimeDiffInSecs(FILETIME& ft1, FILETIME& ft2);
 
 static void hexstrTest()
 {
@@ -26,7 +26,7 @@ static void hexstrTest()
     GetSystemTimeAsFileTime(&ft1);
     s = _MemToHex(&ft1);
     _HexToMem(s, &ft2);
-    DWORD diff = FileTimeDiffInSecs(&ft1, &ft2);
+    DWORD diff = FileTimeDiffInSecs(ft1, ft2);
     assert(0 == diff);
     assert(ft1.dwLowDateTime == ft2.dwLowDateTime);
     assert(ft1.dwHighDateTime == ft2.dwHighDateTime);

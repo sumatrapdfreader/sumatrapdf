@@ -70,6 +70,8 @@ typedef struct {
                                   if true then highlights remain until the next forward search */
 
     bool m_invertColors; /* invert all colors for accessibility reasons (experimental!) */
+
+    FILETIME m_lastPrefUpdate; /* modification time of the preferences file when it was last read */
 } SerializableGlobalPrefs;
 
 class FileHistory;
