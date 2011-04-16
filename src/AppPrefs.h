@@ -6,7 +6,9 @@
 
 #include "DisplayState.h"
 
-// TODO: Move this somewhere more appropriate?
+// number of most recently used files that will be shown in the menu
+// (and remembered in the preferences file, if just filenames are
+//  to be remembered and not individual view settings per document)
 #define MAX_RECENT_FILES_IN_MENU 10
 
 /* enum from m_windowState */
@@ -49,12 +51,11 @@ typedef struct {
 
     char *m_lastUpdateTime;
 
-    /* Default state of Sumatra window */
-    /* TODO: I would also like to remember a monitor, but that seems a bit complicated */
     DisplayMode m_defaultDisplayMode;
-
     float m_defaultZoom;
+    /* Default state of Sumatra window */
     int   m_windowState;
+    /* Default position (can be on any monitor) */
     RectI m_windowPos;
 
     bool m_showToc;

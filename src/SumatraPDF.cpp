@@ -748,7 +748,6 @@ HMENU BuildMenu(HWND hWnd)
     return mainMenu;
 }
 
-// TODO: move the next three methods into gWindows?
 WindowInfo* FindWindowInfoByHwnd(HWND hwnd)
 {
     for (size_t i = 0; i < gWindows.Count(); i++) {
@@ -3286,11 +3285,10 @@ static void OnMenuSaveAs(WindowInfo *win)
     assert(srcFileName);
     if (!srcFileName) return;
 
-    // Can't save a PDF's content as a plain text if text copying isn't allowed
+    // Can't save a document's content as a plain text if text copying isn't allowed
     bool hasCopyPerm = win->dm->engine->HasTextContent() &&
                        win->dm->engine->IsCopyingTextAllowed();
 
-    // TODO: use extension from the name of the loaded file?
     const TCHAR *defExt = win->dm->engine->GetDefaultFileExt();
 
     // Prepare the file filters (use \1 instead of \0 so that the
@@ -5843,7 +5841,7 @@ static void OnTimer(WindowInfo *win, HWND hwnd, WPARAM wParam)
     }
 }    
 
-// TODO: shouldn't this be per window?
+// these can be global, as the mouse wheel can't affect more than one window at once
 static int  gDeltaPerLine = 0;         // for mouse wheel logic
 static bool gWheelMsgRedirect = false; // set when WM_MOUSEWHEEL has been passed on (to prevent recursion)
 
@@ -6877,7 +6875,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
         // process these messages here so that we don't have to add this
         // handling to every WndProc that might receive those messages
-        // TODO: this isn't called during an inner message loop, so
+        // note: this isn't called during an inner message loop, so
         //       Execute() also has to be called from a WndProc
         gUIThreadMarshaller.Execute();
     }

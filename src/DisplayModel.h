@@ -33,9 +33,6 @@ typedef struct {
    more than one page in y axis (continuous mode) */
 #define PADDING_BETWEEN_PAGES_Y_DEF      8
 #else
-// TODO: those should probably be more modular so that we can control space
-// before first page, after last page and between pages (currently
-// betwen pages = first page + last page (i.e. top + bottom)
 #define PADDING_PAGE_BORDER_TOP_DEF      2
 #define PADDING_PAGE_BORDER_LEFT_DEF     4
 #define PADDING_PAGE_BORDER_BOTTOM_DEF   2

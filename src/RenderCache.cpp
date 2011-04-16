@@ -548,6 +548,7 @@ DWORD WINAPI RenderCache::RenderCacheThread(LPVOID data)
 }
 
 // TODO: conceptually, RenderCache is not the right place for code that paints
+//       (this is the only place that knows about Tiles, though)
 UINT RenderCache::PaintTile(HDC hdc, RectI *bounds, DisplayModel *dm, int pageNo,
                             TilePosition tile, RectI *tileOnScreen, bool renderMissing,
                             bool *renderOutOfDateCue, bool *renderedReplacement)

@@ -288,7 +288,6 @@ Example xref->info ("Info") object:
 >>
 */
 
-// TODO: add missing properties
 // TODO: add information about fonts ?
 void OnMenuProperties(WindowInfo *win)
 {
@@ -473,7 +472,7 @@ LRESULT CALLBACK WndProcProperties(HWND hwnd, UINT message, WPARAM wParam, LPARA
             win->hwndProperties = NULL;
             break;
 
-        /* TODO: handle mouse move/down/up so that links work */
+        /* TODO: handle mouse move/down/up so that links work (?) */
         default:
             return DefWindowProc(hwnd, message, wParam, lParam);
     }

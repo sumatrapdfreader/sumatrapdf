@@ -390,7 +390,6 @@ public:
     virtual PageDestination *AsLink() { return this; }
 
     virtual const char *GetType() const;
-    // TODO: remove this when it's no longer needed
     virtual fz_obj *dest() const;
 };
 

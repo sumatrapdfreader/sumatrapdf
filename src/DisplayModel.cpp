@@ -140,12 +140,11 @@ SizeD DisplayModel::PageSizeAfterRotation(int pageNo, bool fitToContent)
    page in a row to which a 'pageNo' belongs e.g. if 'columns' is 2 and we
    have 5 pages in 3 rows (depending on showCover):
 
-   Pages   Result           Pages   Result
-   (1,2)   1                  (1)   1
-   (3,4)   3                (2,3)   2
-   (5)     5                (4,5)   4
+   Pages   Result           Pages   Result           Pages   Result (R2L)
+   (1,2)   1                  (1)   1                (2,1)   1
+   (3,4)   3                (2,3)   2                (4,3)   3
+   (5)     5                (4,5)   4                  (5)   5
  */
-// TODO: should it take _displayRL into account?
 static int FirstPageInARowNo(int pageNo, int columns, bool showCover)
 {
     if (showCover && columns > 1)
@@ -433,7 +432,8 @@ int DisplayModel::firstVisiblePageNo() const
     return INVALID_PAGE_NO;
 }
 
-// TODO: this is really MostVisiblePage()
+// we consider the most visible page the current one
+// (in continuous layout, there's no better criteria)
 int DisplayModel::currentPageNo() const
 {
     if (!displayModeContinuous(displayMode()))
@@ -867,6 +867,7 @@ RectD DisplayModel::CvtFromScreen(RectI r, int pageNo)
          scrolling and skip the _Inside test for those invisible.
          Another way: build a list with only those visible, so we don't
          even have to traverse those that are invisible.
+   TODO: we don't seem to have any speed issue, so no need to optimize?
    */
 PageElement *DisplayModel::GetElementAtPos(PointI pt)
 {
@@ -908,7 +909,8 @@ void DisplayModel::RenderVisibleParts()
     }
 
 #ifdef PREDICTIVE_RENDER
-    // TODO: prerender two pages in Facing and Book View modes?
+    // as a trade-off, we don't prerender two pages each in Facing
+    // and Book View modes (else 4 of 8 potential request slots would be taken)
     if (lastVisible < pageCount())
         _callback->RenderPage(lastVisible + 1);
     if (firstVisible > 1)
