@@ -122,7 +122,7 @@ static const unsigned char green_lut[256] = {
   113, 113, 114, 114, 115, 116, 116, 117, 117, 118, 119, 119,
   120, 120, 121, 122, 122, 123, 123, 124, 124, 125, 126, 126,
   127, 127, 128, 129, 129, 130, 130, 131, 131, 132, 133, 133,
-  34, 134, 135, 136, 136, 137, 137, 138, 139, 139, 140, 140,
+  134, 134, 135, 136, 136, 137, 137, 138, 139, 139, 140, 140,
   141, 141, 142, 143, 143, 144, 144, 145, 146, 146, 147, 147,
   148, 149, 149, 150
 };
@@ -258,14 +258,12 @@ rgb_gray_convert (j_compress_ptr cinfo,
 		  JSAMPARRAY input_buf, JSAMPIMAGE output_buf,
 		  JDIMENSION output_row, int num_rows)
 {
-  my_cconvert_ptr cconvert = (my_cconvert_ptr) cinfo->cconvert;
   #if BITS_IN_JSAMPLE != 8
   register INT32 * ctab = cconvert->rgb_ycc_tab;
   #endif
   register JSAMPROW inptr;
   register JSAMPROW outptr;
   JSAMPLE *maxoutptr;
-  register JDIMENSION col;
   JDIMENSION num_cols = cinfo->image_width;
   int rindex = rgb_red[cinfo->in_color_space];
   int gindex = rgb_green[cinfo->in_color_space];

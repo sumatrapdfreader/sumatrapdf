@@ -660,7 +660,7 @@ decode_mcu_slow (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
       symbol |= GET_BITS(1); \
       size++; \
     } \
-    symbol = htbl->pub->huffval[ (int) (symbol + htbl->valoffset[size]) ]; \
+    symbol = htbl->pub->huffval[ (int) (symbol + htbl->valoffset[size]) & 0xFF ]; \
   } \
 }
 

@@ -91,17 +91,17 @@ This will generate the following files under .libs/
       Development stub for TurboJPEG/OSS shared library
 
 {version} is 62.0.0, 7.0.0, or 8.0.2, depending on whether libjpeg v6b
-(default), v7, or v8b emulation is enabled.  If using Cygwin, {version} is
+(default), v7, or v8 emulation is enabled.  If using Cygwin, {version} is
 62, 7, or 8.
 
 
-libjpeg v7 or v8b Emulation
----------------------------
+libjpeg v7 or v8 Emulation
+--------------------------
 
 Add --with-jpeg7 to the configure command line to build a version of
 libjpeg-turbo that is compatible with libjpeg v7.  Add --with-jpeg8 to the
 configure command to build a version of libjpeg-turbo that is compatible with
-libjpeg v8b.  See README-turbo.txt for more information on libjpeg v7 and v8b
+libjpeg v8.  See README-turbo.txt for more information on libjpeg v7 and v8
 emulation.
 
 
@@ -110,7 +110,7 @@ Arithmetic Coding Support
 
 Since the patent on arithmetic coding has expired, this functionality has been
 included in this release of libjpeg-turbo.  libjpeg-turbo's implementation is
-based on the implementation in libjpeg v8b, but it works when emulating libjpeg
+based on the implementation in libjpeg v8, but it works when emulating libjpeg
 v7 or v6b as well.  The default is to enable both arithmetic encoding and
 decoding, but those who have philosophical objections to arithmetic coding can
 add --without-arith-enc or --without-arith-dec to the configure command line to
@@ -154,7 +154,7 @@ Build Recipes
 
 Add
 
-  --host i686-pc-linux-gnu CFLAGS='-O3 -m32' CXXFLAGS='-O3 -m32' LDFLAGS=-m32
+  --host i686-pc-linux-gnu CFLAGS='-O3 -m32' LDFLAGS=-m32
 
 to the configure command line.
 
@@ -175,7 +175,7 @@ installed.
 
 Add
 
-  CFLAGS='-O3 -m32' CXXFLAGS='-O3 -m32' LDFLAGS=-m32
+  CFLAGS='-O3 -m32' LDFLAGS=-m32
 
 to the configure command line.
 
@@ -187,8 +187,6 @@ Add
 
   --host x86_64-apple-darwin NASM=/opt/local/bin/nasm \
   CFLAGS='-isysroot /Developer/SDKs/MacOSX10.4u.sdk \
-    -mmacosx-version-min=10.4 -O3' \
-    CXXFLAGS='-isysroot /Developer/SDKs/MacOSX10.4u.sdk \
     -mmacosx-version-min=10.4 -O3' \
     LDFLAGS='-isysroot /Developer/SDKs/MacOSX10.4u.sdk \
     -mmacosx-version-min=10.4'
@@ -204,8 +202,6 @@ Add
 
   CFLAGS='-isysroot /Developer/SDKs/MacOSX10.4u.sdk \
     -mmacosx-version-min=10.4 -O3 -m32' \
-    CXXFLAGS='-isysroot /Developer/SDKs/MacOSX10.4u.sdk \
-    -mmacosx-version-min=10.4 -O3 -m32' \
     LDFLAGS='-isysroot /Developer/SDKs/MacOSX10.4u.sdk \
     -mmacosx-version-min=10.4 -m32'
 
@@ -217,7 +213,7 @@ to the configure command line.  The OS X 10.4 SDK must be installed.
 
 Add
 
-  --host x86_64-pc-solaris CFLAGS='-O3 -m64' CXXFLAGS='-O3 -m64' LDFLAGS=-m64
+  --host x86_64-pc-solaris CFLAGS='-O3 -m64' LDFLAGS=-m64
 
 to the configure command line.
 
@@ -227,8 +223,8 @@ to the configure command line.
 
 Add
 
-  --host i386-unknown-freebsd CC='gcc -B /usr/lib32' CXX='g++ -B/usr/lib32' \
-    CFLAGS='-O3 -m32' CXXFLAGS='-O3 -m32' LDFLAGS='-B/usr/lib32'
+  --host i386-unknown-freebsd CC='gcc -B /usr/lib32' CFLAGS='-O3 -m32' \
+    LDFLAGS='-B/usr/lib32'
 
 to the configure command line.  NASM 2.07 or later from FreeBSD ports must be
 installed.
@@ -239,15 +235,14 @@ Sun Studio
 
 Add
 
-  CC=cc CXX=CC
+  CC=cc
 
 to the configure command line.  libjpeg-turbo will automatically be built with
-the maximum optimization level (-xO5) unless you override CFLAGS and CXXFLAGS.
+the maximum optimization level (-xO5) unless you override CFLAGS.
 
 To build a 64-bit version of libjpeg-turbo using Sun Studio, add
 
-  --host x86_64-pc-solaris CC=cc CXX=CC CFLAGS='-xO5 -m64' \
-    CXXFLAGS='-xO5 -m64' LDFLAGS=-m64
+  --host x86_64-pc-solaris CC=cc CFLAGS='-xO5 -m64' LDFLAGS=-m64
 
 to the configure command line.
 
@@ -346,7 +341,7 @@ The following files will be generated under {build_directory}:
       Import library for TurboJPEG/OSS DLL
 
 {version} is 62, 7, or 8, depending on whether libjpeg v6b (default), v7, or
-v8b emulation is enabled.
+v8 emulation is enabled.
 
 
 Visual C++ (IDE)
@@ -380,7 +375,7 @@ This will generate the following files under {build_directory}:
 
 {configuration} is Debug, Release, RelWithDebInfo, or MinSizeRel, depending on
 the configuration you built in the IDE, and {version} is 62, 7, or 8,
-depending on whether libjpeg v6b (default), v7, or v8b emulation is enabled.
+depending on whether libjpeg v6b (default), v7, or v8 emulation is enabled.
 
 
 MinGW
@@ -406,7 +401,7 @@ This will generate the following files under {build_directory}
       Import library for TurboJPEG/OSS DLL
 
 {version} is 62, 7, or 8, depending on whether libjpeg v6b (default), v7, or
-v8b emulation is enabled.
+v8 emulation is enabled.
 
 
 Debug Build
@@ -417,13 +412,13 @@ NMake, remove "-DCMAKE_BUILD_TYPE=Release" (Debug builds are the default with
 NMake.)
 
 
-libjpeg v7 or v8b Emulation
----------------------------
+libjpeg v7 or v8 Emulation
+--------------------------
 
 Add "-DWITH_JPEG7=1" to the cmake command line to build a version of
 libjpeg-turbo that is compatible with libjpeg v7.  Add "-DWITH_JPEG8=1" to the
 cmake command to build a version of libjpeg-turbo that is compatible with
-libjpeg v8b.  See README-turbo.txt for more information on libjpeg v7 and v8b
+libjpeg v8.  See README-turbo.txt for more information on libjpeg v7 and v8
 emulation.
 
 
@@ -432,7 +427,7 @@ Arithmetic Coding Support
 
 Since the patent on arithmetic coding has expired, this functionality has been
 included in this release of libjpeg-turbo.  libjpeg-turbo's implementation is
-based on the implementation in libjpeg v8b, but it works when emulating libjpeg
+based on the implementation in libjpeg v8, but it works when emulating libjpeg
 v7 or v6b as well.  The default is to enable both arithmetic encoding and
 decoding, but those who have philosophical objections to arithmetic coding can
 add "-DWITH_ARITH_ENC=0" or "-DWITH_ARITH_DEC=0" to the cmake command line to
@@ -470,7 +465,7 @@ Build Recipes
 ----------------------------
 
   cd {build_directory}
-  CC=/usr/bin/x86_64-w64-mingw32-gcc CXX=/usr/bin/x86_64-w64-mingw32-g++ \
+  CC=/usr/bin/x86_64-w64-mingw32-gcc \
     cmake -G "Unix Makefiles" -DCMAKE_SYSTEM_NAME=Windows \
     -DCMAKE_AR=/usr/bin/x86_64-w64-mingw32-ar \
     -DCMAKE_RANLIB=/usr/bin/x86_64-w64-mingw32-ranlib {source_directory}
@@ -485,7 +480,7 @@ mingw64-x86_64-gcc-g++ packages (and their dependencies) must be installed.
 ----------------------------
 
   cd {build_directory}
-  CC=/usr/bin/i686-w64-mingw32-gcc CXX=/usr/bin/i686-w64-mingw32-g++ \
+  CC=/usr/bin/i686-w64-mingw32-gcc \
     cmake -G "Unix Makefiles" -DCMAKE_SYSTEM_NAME=Windows \
     -DDCMAKE_AR=/usr/bin/i686-w64-mingw32-ar \
     -DCMAKE_RANLIB=/usr/bin/i686-w64-mingw32-ranlib {source_directory}
@@ -504,7 +499,6 @@ toolchain (which is faster than the Cygwin version):
 
   cd {build_directory}
   CC={mingw-w64_binary_path}/x86_64-w64-mingw32-gcc \
-    CXX={mingw-w64_binary_path}/x86_64-w64-mingw32-g++ \
     cmake -G "MSYS Makefiles" \
     -DCMAKE_AR={mingw-w64_binary_path}/x86_64-w64-mingw32-ar \
     -DCMAKE_RANLIB={mingw-w64_binary_path}/x86_64-w64-mingw32-ranlib \
@@ -517,7 +511,6 @@ MinGW Build on Linux
 
   cd {build_directory}
   CC={mingw_binary_path}/i386-mingw32-gcc \
-    CXX={mingw_binary_path}/i386-mingw32-g++ \
     cmake -G "Unix Makefiles" -DCMAKE_SYSTEM_NAME=Windows \
     -DCMAKE_AR={mingw_binary_path}/i386-mingw32-ar \
     -DCMAKE_RANLIB={mingw_binary_path}/i386-mingw32-ranlib \

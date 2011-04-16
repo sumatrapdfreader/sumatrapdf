@@ -5,6 +5,7 @@
  * 
  * Based on the x86 SIMD extension for IJG JPEG library,
  * Copyright (C) 1999-2006, MIYASAKA Masaru.
+ * For conditions of distribution and use, see copyright notice in jsimdext.inc
  *
  */
 

@@ -1,14 +1,48 @@
-Significant changes since 1.0.1
-===============================
+1.1.0
+=====
 
-[1] Added emulation of the libjpeg v7 and v8b APIs and ABIs.  See
+[1] The algorithm used by the SIMD quantization function cannot produce correct
+results when the JPEG quality is >= 98 and the fast integer forward DCT is
+used.  Thus, the non-SIMD quantization function is now used for those cases,
+and libjpeg-turbo should now produce identical output to libjpeg v6b in all
+cases.
+
+[2] Despite the above, the fast integer forward DCT still degrades somewhat for
+JPEG qualities greater than 95, so TurboJPEG/OSS will now automatically use the
+slow integer forward DCT when generating JPEG images of quality 96 or greater.
+This reduces compression performance by as much as 15% for these high-quality
+images but is necessary to ensure that the images are perceptually lossless.
+It also ensures that the library can avoid the performance pitfall created by
+[1].
+
+[3] Ported jpgtest.cxx to pure C to avoid the need for a C++ compiler.
+
+[4] Fixed visual artifacts in grayscale JPEG compression caused by a typo in
+the RGB-to-chrominance lookup tables.
+
+[5] The Windows distribution packages now include the libjpeg run-time programs
+(cjpeg, etc.)
+
+[6] All packages now include jpgtest.
+
+[7] The TurboJPEG dynamic library now uses versioned symbols.
+
+[8] Added two new TurboJPEG API functions, tjEncodeYUV() and
+tjDecompressToYUV(), to replace the somewhat hackish TJ_YUV flag.
+
+
+1.0.90 (1.1 beta1)
+==================
+
+[1] Added emulation of the libjpeg v7 and v8 APIs and ABIs.  See
 README-turbo.txt for more details.  This feature was sponsored by CamTrace SAS.
 
 [2] Created a new CMake-based build system for the Visual C++ and MinGW builds.
 
 [3] TurboJPEG/OSS can now compress from/decompress to grayscale bitmaps.
 
-[4] jpgtest can now be used to test decompression performance only.
+[4] jpgtest can now be used to test decompression performance with existing
+JPEG images.
 
 [5] If the default install prefix (/opt/libjpeg-turbo) is used, then
 'make install' now creates /opt/libjpeg-turbo/lib32 and
@@ -18,7 +52,7 @@ packages.
 [6] All symbols in the libjpeg-turbo dynamic library are now versioned, even
 when the library is built with libjpeg v6b emulation.
 
-[7] Added arithmetic encoding and decoding support (can be disabled via
+[7] Added arithmetic encoding and decoding support (can be disabled with
 configure or CMake options)
 
 [8] Added a TJ_YUV flag to TurboJPEG/OSS which causes both the compressor and
@@ -27,9 +61,11 @@ decompressor to output planar YUV images.
 [9] Added an extended version of tjDecompressHeader() to TurboJPEG/OSS which
 allows the caller to determine the type of subsampling used in a JPEG image.
 
+[10] Added further protections against invalid Huffman codes.
 
-Significant changes since 1.0.0
-===============================
+
+1.0.1
+=====
 
 [1] The Huffman decoder will now handle erroneous Huffman codes (for instance,
 from a corrupt JPEG image.)  Previously, these would cause libjpeg-turbo to
@@ -42,8 +78,8 @@ be used instead of 4:2:0 when decompressing JPEG images using SSE2 code.
 INCOMPLETE_TYPES_BROKEN macro should be defined.
 
 
-Significant changes since 0.0.93
-================================
+1.0.0
+=====
 
 [1] 2983700: Further FreeBSD build tweaks (no longer necessary to specify
 --host when configuring on a 64-bit system)
@@ -67,18 +103,24 @@ contains just the 32-bit libjpeg-turbo libraries.
 unit tests now work on those architectures.
 
 
-Significant changes since 0.0.91
-================================
+0.0.93
+======
 
 [1] 2982659, Fixed x86-64 build on FreeBSD systems
 
 [2] 2988188: Added support for Windows 64-bit systems
 
 
-Significant changes since 0.0.90
-================================
+0.0.91
+======
 
 [1] Added documentation to .deb packages
 
 [2] 2968313: Fixed data corruption issues when decompressing large JPEG images
 and/or using buffered I/O with the libjpeg-turbo decompressor
+
+
+0.0.90
+======
+
+Initial release

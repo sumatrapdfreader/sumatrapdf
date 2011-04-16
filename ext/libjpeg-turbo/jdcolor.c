@@ -223,7 +223,6 @@ gray_rgb_convert (j_decompress_ptr cinfo,
 {
   register JSAMPROW inptr, outptr;
   JSAMPLE *maxinptr;
-  register JDIMENSION col;
   JDIMENSION num_cols = cinfo->output_width;
   int rindex = rgb_red[cinfo->out_color_space];
   int gindex = rgb_green[cinfo->out_color_space];

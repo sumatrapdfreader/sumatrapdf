@@ -34,4 +34,4 @@
 			"Copyright (C) 2004 Landmark Graphics Corporation\n" \
 			"Copyright (C) 2005-2007 Sun Microsystems, Inc.\n" \
 			"Copyright (C) 2009 Pierre Ossman for Cendio AB\n" \
-			"Copyright (C) 2009-2010 D. R. Commander"
+			"Copyright (C) 2009-2011 D. R. Commander"

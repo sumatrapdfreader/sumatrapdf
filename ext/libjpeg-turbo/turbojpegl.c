@@ -1,6 +1,6 @@
 /* Copyright (C)2004 Landmark Graphics Corporation
  * Copyright (C)2005 Sun Microsystems, Inc.
- * Copyright (C)2009-2010 D. R. Commander
+ * Copyright (C)2009-2011 D. R. Commander
  *
  * This library is free software and may be redistributed and/or modified under
  * the terms of the wxWindows Library License, Version 3.1 or (at your option)
@@ -23,24 +23,6 @@
 #include <jerror.h>
 #include <setjmp.h>
 #include "./turbojpeg.h"
-#ifdef sun
-#include <malloc.h>
-#endif
-
-void *__memalign(size_t boundary, size_t size)
-{
-	#if defined(_WIN32) || defined(__APPLE__)
-	return malloc(size);
-	#else
-	#ifdef sun
-	return memalign(boundary, size);
-	#else
-	void *ptr=NULL;
-	posix_memalign(&ptr, boundary, size);
-	return ptr;
-	#endif
-	#endif
-}
 
 #ifndef min
  #define min(a,b) ((a)<(b)?(a):(b))
@@ -88,10 +70,9 @@ static const int hsampfactor[NUMSUBOPT]={1, 2, 2, 1};
 static const int vsampfactor[NUMSUBOPT]={1, 1, 2, 1};
 static const int pixelsize[NUMSUBOPT]={3, 3, 3, 1};
 
-#define _throw(c) {sprintf(lasterror, "%s", c);  return -1;}
-#define _catch(f) {if((f)==-1) return -1;}
+#define _throw(c) {sprintf(lasterror, "%s", c);  retval=-1;  goto bailout;}
 #define checkhandle(h) jpgstruct *j=(jpgstruct *)h; \
-	if(!j) _throw("Invalid handle");
+	if(!j) {sprintf(lasterror, "Invalid handle");  return -1;}
 
 
 // CO
@@ -131,18 +112,46 @@ DLLEXPORT tjhandle DLLCALL tjInitCompress(void)
 	return (tjhandle)j;
 }
 
+
 DLLEXPORT unsigned long DLLCALL TJBUFSIZE(int width, int height)
 {
-	// This allows enough room in case the image doesn't compress
-	return ((width+15)&(~15)) * ((height+15)&(~15)) * 6 + 2048;
+	unsigned long retval=0;
+	if(width<1 || height<1)
+		_throw("Invalid argument in TJBUFSIZE()");
+
+	// This allows for rare corner cases in which a JPEG image can actually be
+	// larger than the uncompressed input (we wouldn't mention it if it hadn't
+	// happened before.)
+	retval=((width+15)&(~15)) * ((height+15)&(~15)) * 6 + 2048;
+
+	bailout:
+	return retval;
 }
+
+
+DLLEXPORT unsigned long DLLCALL TJBUFSIZEYUV(int width, int height,
+	int subsamp)
+{
+	unsigned long retval=0;
+	int pw, ph, cw, ch;
+	if(width<1 || height<1 || subsamp<0 || subsamp>=NUMSUBOPT)
+		_throw("Invalid argument in TJBUFSIZEYUV()");
+	pw=PAD(width, hsampfactor[subsamp]);
+	ph=PAD(height, vsampfactor[subsamp]);
+	cw=pw/hsampfactor[subsamp];  ch=ph/vsampfactor[subsamp];
+	retval=PAD(pw, 4)*ph + (subsamp==TJ_GRAYSCALE? 0:PAD(cw, 4)*ch*2);
+
+	bailout:
+	return retval;
+}
+
 
 DLLEXPORT int DLLCALL tjCompress(tjhandle h,
 	unsigned char *srcbuf, int width, int pitch, int height, int ps,
 	unsigned char *dstbuf, unsigned long *size,
 	int jpegsub, int qual, int flags)
 {
-	int i;  JSAMPROW *row_pointer=NULL;
+	int i, retval=0;  JSAMPROW *row_pointer=NULL;
 	JSAMPLE *_tmpbuf[MAX_COMPONENTS], *_tmpbuf2[MAX_COMPONENTS];
 	JSAMPROW *tmpbuf[MAX_COMPONENTS], *tmpbuf2[MAX_COMPONENTS];
 	JSAMPROW *outbuf[MAX_COMPONENTS];
@@ -192,16 +201,8 @@ DLLEXPORT int DLLCALL tjCompress(tjhandle h,
 
 	if(setjmp(j->jerr.jb))
 	{  // this will execute if LIBJPEG has an error
-		if(row_pointer) free(row_pointer);
-		for(i=0; i<MAX_COMPONENTS; i++)
-		{
-			if(tmpbuf[i]!=NULL) free(tmpbuf[i]);
-			if(_tmpbuf[i]!=NULL) free(_tmpbuf[i]);
-			if(tmpbuf2[i]!=NULL) free(tmpbuf2[i]);
-			if(_tmpbuf2[i]!=NULL) free(_tmpbuf2[i]);
-			if(outbuf[i]!=NULL) free(outbuf[i]);
-		}
-		return -1;
+		retval=-1;
+		goto bailout;
 	}
 
 	jpeg_set_defaults(&j->cinfo);
@@ -211,7 +212,8 @@ DLLEXPORT int DLLCALL tjCompress(tjhandle h,
 		jpeg_set_colorspace(&j->cinfo, JCS_GRAYSCALE);
 	else
 		jpeg_set_colorspace(&j->cinfo, JCS_YCbCr);
-	j->cinfo.dct_method = JDCT_FASTEST;
+	if(qual>=96) j->cinfo.dct_method=JDCT_ISLOW;
+	else j->cinfo.dct_method=JDCT_FASTEST;
 
 	j->cinfo.comp_info[0].h_samp_factor=hsampfactor[jpegsub];
 	j->cinfo.comp_info[1].h_samp_factor=1;
@@ -247,29 +249,35 @@ DLLEXPORT int DLLCALL tjCompress(tjhandle h,
 		for(i=0; i<cinfo->num_components; i++)
 		{
 			compptr=&cinfo->comp_info[i];
-			_tmpbuf[i]=(JSAMPLE *)__memalign(16,
+			_tmpbuf[i]=(JSAMPLE *)malloc(
 				PAD((compptr->width_in_blocks*cinfo->max_h_samp_factor*DCTSIZE)
-					/compptr->h_samp_factor, 16) * cinfo->max_v_samp_factor);
+					/compptr->h_samp_factor, 16) * cinfo->max_v_samp_factor + 16);
 			if(!_tmpbuf[i]) _throw("Memory allocation failure");
-			tmpbuf[i]=(JSAMPROW *)__memalign(16,
-				sizeof(JSAMPROW)*cinfo->max_v_samp_factor);
+			tmpbuf[i]=(JSAMPROW *)malloc(sizeof(JSAMPROW)*cinfo->max_v_samp_factor);
 			if(!tmpbuf[i]) _throw("Memory allocation failure");
 			for(row=0; row<cinfo->max_v_samp_factor; row++)
-				tmpbuf[i][row]=&_tmpbuf[i][
+			{
+				unsigned char *_tmpbuf_aligned=
+					(unsigned char *)PAD((size_t)_tmpbuf[i], 16);
+				tmpbuf[i][row]=&_tmpbuf_aligned[
 					PAD((compptr->width_in_blocks*cinfo->max_h_samp_factor*DCTSIZE)
 						/compptr->h_samp_factor, 16) * row];
-			_tmpbuf2[i]=(JSAMPLE *)__memalign(16,
-				PAD(compptr->width_in_blocks*DCTSIZE, 16) * compptr->v_samp_factor);
+			}
+			_tmpbuf2[i]=(JSAMPLE *)malloc(PAD(compptr->width_in_blocks*DCTSIZE, 16)
+				* compptr->v_samp_factor + 16);
 			if(!_tmpbuf2[i]) _throw("Memory allocation failure");
-			tmpbuf2[i]=(JSAMPROW *)__memalign(16,
-				sizeof(JSAMPROW)*compptr->v_samp_factor);
+			tmpbuf2[i]=(JSAMPROW *)malloc(sizeof(JSAMPROW)*compptr->v_samp_factor);
 			if(!tmpbuf2[i]) _throw("Memory allocation failure");
 			for(row=0; row<compptr->v_samp_factor; row++)
-				tmpbuf2[i][row]=&_tmpbuf2[i][
+			{
+				unsigned char *_tmpbuf2_aligned=
+					(unsigned char *)PAD((size_t)_tmpbuf2[i], 16);
+				tmpbuf2[i][row]=&_tmpbuf2_aligned[
 					PAD(compptr->width_in_blocks*DCTSIZE, 16) * row];
+			}
 			cw[i]=pw*compptr->h_samp_factor/cinfo->max_h_samp_factor;
 			ch[i]=ph*compptr->v_samp_factor/cinfo->max_v_samp_factor;
-			outbuf[i]=(JSAMPROW *)__memalign(16, sizeof(JSAMPROW)*ch[i]);
+			outbuf[i]=(JSAMPROW *)malloc(sizeof(JSAMPROW)*ch[i]);
 			if(!outbuf[i]) _throw("Memory allocation failure");
 			for(row=0; row<ch[i]; row++)
 			{
@@ -313,6 +321,8 @@ DLLEXPORT int DLLCALL tjCompress(tjhandle h,
 		*size=TJBUFSIZE(j->cinfo.image_width, j->cinfo.image_height)
 			-(unsigned long)(j->jdms.free_in_buffer);
 
+	bailout:
+	if(j->cinfo.global_state>CSTATE_START) jpeg_abort_compress(&j->cinfo);
 	if(row_pointer) free(row_pointer);
 	for(i=0; i<MAX_COMPONENTS; i++)
 	{
@@ -322,7 +332,17 @@ DLLEXPORT int DLLCALL tjCompress(tjhandle h,
 		if(_tmpbuf2[i]!=NULL) free(_tmpbuf2[i]);
 		if(outbuf[i]!=NULL) free(outbuf[i]);
 	}
-	return 0;
+	return retval;
+}
+
+
+DLLEXPORT int DLLCALL tjEncodeYUV(tjhandle h,
+	unsigned char *srcbuf, int width, int pitch, int height, int ps,
+	unsigned char *dstbuf, int subsamp, int flags)
+{
+	unsigned long size;
+	return tjCompress(h, srcbuf, width, pitch, height, ps, dstbuf, &size,
+		subsamp, 0, flags|TJ_YUV);
 }
 
 
@@ -372,45 +392,16 @@ DLLEXPORT tjhandle DLLCALL tjInitDecompress(void)
 }
 
 
-DLLEXPORT int DLLCALL tjDecompressHeader(tjhandle h,
-	unsigned char *srcbuf, unsigned long size,
-	int *width, int *height)
-{
-	checkhandle(h);
-
-	if(srcbuf==NULL || size<=0 || width==NULL || height==NULL)
-		_throw("Invalid argument in tjDecompressHeader()");
-	if(!j->initd) _throw("Instance has not been initialized for decompression");
-
-	if(setjmp(j->jerr.jb))
-	{  // this will execute if LIBJPEG has an error
-		return -1;
-	}
-
-	j->jsms.bytes_in_buffer = size;
-	j->jsms.next_input_byte = srcbuf;
-
-	jpeg_read_header(&j->dinfo, TRUE);
-
-	*width=j->dinfo.image_width;  *height=j->dinfo.image_height;
-
-	jpeg_abort_decompress(&j->dinfo);
-
-	if(*width<1 || *height<1) _throw("Invalid data returned in header");
-	return 0;
-}
-
-
 DLLEXPORT int DLLCALL tjDecompressHeader2(tjhandle h,
 	unsigned char *srcbuf, unsigned long size,
 	int *width, int *height, int *jpegsub)
 {
-	int i, k;
+	int i, k, retval=0;
 
 	checkhandle(h);
 
 	if(srcbuf==NULL || size<=0 || width==NULL || height==NULL || jpegsub==NULL)
-		_throw("Invalid argument in tjDecompressHeader()");
+		_throw("Invalid argument in tjDecompressHeader2()");
 	if(!j->initd) _throw("Instance has not been initialized for decompression");
 
 	if(setjmp(j->jerr.jb))
@@ -451,7 +442,18 @@ DLLEXPORT int DLLCALL tjDecompressHeader2(tjhandle h,
 
 	if(*jpegsub<0) _throw("Could not determine subsampling type for JPEG image");
 	if(*width<1 || *height<1) _throw("Invalid data returned in header");
-	return 0;
+
+	bailout:
+	return retval;
+}
+
+
+DLLEXPORT int DLLCALL tjDecompressHeader(tjhandle h,
+	unsigned char *srcbuf, unsigned long size,
+	int *width, int *height)
+{
+	int jpegsub;
+	return tjDecompressHeader2(h, srcbuf, size, width, height, &jpegsub);
 }
 
 
@@ -460,7 +462,7 @@ DLLEXPORT int DLLCALL tjDecompress(tjhandle h,
 	unsigned char *dstbuf, int width, int pitch, int height, int ps,
 	int flags)
 {
-	int i, row;  JSAMPROW *row_pointer=NULL, *outbuf[MAX_COMPONENTS];
+	int i, row, retval=0;  JSAMPROW *row_pointer=NULL, *outbuf[MAX_COMPONENTS];
 	int cw[MAX_COMPONENTS], ch[MAX_COMPONENTS], iw[MAX_COMPONENTS],
 		tmpbufsize=0, usetmpbuf=0, th[MAX_COMPONENTS];
 	JSAMPLE *_tmpbuf=NULL;  JSAMPROW *tmpbuf[MAX_COMPONENTS];
@@ -487,14 +489,8 @@ DLLEXPORT int DLLCALL tjDecompress(tjhandle h,
 
 	if(setjmp(j->jerr.jb))
 	{  // this will execute if LIBJPEG has an error
-		for(i=0; i<MAX_COMPONENTS; i++)
-		{
-			if(tmpbuf[i]!=NULL) free(tmpbuf[i]);
-			if(outbuf[i]!=NULL) free(outbuf[i]);
-		}
-		if(_tmpbuf) free(_tmpbuf);
-		if(row_pointer) free(row_pointer);
-		return -1;
+		retval=-1;
+		goto bailout;
 	}
 
 	j->jsms.bytes_in_buffer = size;
@@ -513,15 +509,15 @@ DLLEXPORT int DLLCALL tjDecompress(tjhandle h,
 			int ih;
 			iw[i]=compptr->width_in_blocks*DCTSIZE;
 			ih=compptr->height_in_blocks*DCTSIZE;
-			cw[i]=PAD(width, dinfo->max_h_samp_factor)*compptr->h_samp_factor
-				/dinfo->max_h_samp_factor;
-			ch[i]=PAD(height, dinfo->max_v_samp_factor)*compptr->v_samp_factor
-				/dinfo->max_v_samp_factor;
+			cw[i]=PAD(dinfo->image_width, dinfo->max_h_samp_factor)
+				*compptr->h_samp_factor/dinfo->max_h_samp_factor;
+			ch[i]=PAD(dinfo->image_height, dinfo->max_v_samp_factor)
+				*compptr->v_samp_factor/dinfo->max_v_samp_factor;
 			if(iw[i]!=cw[i] || ih!=ch[i]) usetmpbuf=1;
 			th[i]=compptr->v_samp_factor*DCTSIZE;
 			tmpbufsize+=iw[i]*th[i];
 			if((outbuf[i]=(JSAMPROW *)malloc(sizeof(JSAMPROW)*ch[i]))==NULL)
-				_throw("Memory allocation failed in tjInitDecompress()");
+				_throw("Memory allocation failed in tjDecompress()");
 			for(row=0; row<ch[i]; row++)
 			{
 				outbuf[i][row]=ptr;
@@ -531,13 +527,12 @@ DLLEXPORT int DLLCALL tjDecompress(tjhandle h,
 		if(usetmpbuf)
 		{
 			if((_tmpbuf=(JSAMPLE *)malloc(sizeof(JSAMPLE)*tmpbufsize))==NULL)
-				_throw("Memory allocation failed in tjInitDecompress()");
+				_throw("Memory allocation failed in tjDecompress()");
 			ptr=_tmpbuf;
 			for(i=0; i<dinfo->num_components; i++)
 			{
-				jpeg_component_info *compptr=&dinfo->comp_info[i];
 				if((tmpbuf[i]=(JSAMPROW *)malloc(sizeof(JSAMPROW)*th[i]))==NULL)
-					_throw("Memory allocation failed in tjInitDecompress()");
+					_throw("Memory allocation failed in tjDecompress()");
 				for(row=0; row<th[i]; row++)
 				{
 					tmpbuf[i][row]=ptr;
@@ -549,7 +544,7 @@ DLLEXPORT int DLLCALL tjDecompress(tjhandle h,
 	else
 	{
 		if((row_pointer=(JSAMPROW *)malloc(sizeof(JSAMPROW)*height))==NULL)
-			_throw("Memory allocation failed in tjInitDecompress()");
+			_throw("Memory allocation failed in tjDecompress()");
 		for(i=0; i<height; i++)
 		{
 			if(flags&TJ_BOTTOMUP) row_pointer[i]= &dstbuf[(height-i-1)*pitch];
@@ -599,7 +594,6 @@ DLLEXPORT int DLLCALL tjDecompress(tjhandle h,
 				int j;
 				for(i=0; i<dinfo->num_components; i++)
 				{
-					jpeg_component_info *compptr=&dinfo->comp_info[i];
 					for(j=0; j<min(th[i], ch[i]-crow[i]); j++)
 					{
 						memcpy(outbuf[i][crow[i]+j], tmpbuf[i][j], cw[i]);
@@ -618,6 +612,8 @@ DLLEXPORT int DLLCALL tjDecompress(tjhandle h,
 	}
 	jpeg_finish_decompress(&j->dinfo);
 
+	bailout:
+	if(j->dinfo.global_state>DSTATE_START) jpeg_abort_decompress(&j->dinfo);
 	for(i=0; i<MAX_COMPONENTS; i++)
 	{
 		if(tmpbuf[i]) free(tmpbuf[i]);
@@ -625,7 +621,15 @@ DLLEXPORT int DLLCALL tjDecompress(tjhandle h,
 	}
 	if(_tmpbuf) free(_tmpbuf);
 	if(row_pointer) free(row_pointer);
-	return 0;
+	return retval;
+}
+
+
+DLLEXPORT int DLLCALL tjDecompressToYUV(tjhandle h,
+	unsigned char *srcbuf, unsigned long size,
+	unsigned char *dstbuf, int flags)
+{
+	return tjDecompress(h, srcbuf, size, dstbuf, 1, 0, 1, 3, flags|TJ_YUV);
 }
 
 

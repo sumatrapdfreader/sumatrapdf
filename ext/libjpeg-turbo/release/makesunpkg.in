@@ -81,6 +81,7 @@ d none $PACKAGE_NAME/bin 0755 root bin
 f none $PACKAGE_NAME/bin/cjpeg 0755 root bin
 f none $PACKAGE_NAME/bin/djpeg 0755 root bin
 f none $PACKAGE_NAME/bin/jpegtran 0755 root bin
+f none $PACKAGE_NAME/bin/jpgtest 0755 root bin
 f none $PACKAGE_NAME/bin/rdjpgcom 0755 root bin
 f none $PACKAGE_NAME/bin/wrjpgcom 0755 root bin
 d none $PACKAGE_NAME/lib 0755 root bin

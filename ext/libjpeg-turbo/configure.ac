@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.56])
-AC_INIT([libjpeg-turbo], [1.0.90])
+AC_INIT([libjpeg-turbo], [1.1.0])
 BUILD=`date +%Y%m%d`
 
 AM_INIT_AUTOMAKE([-Wall foreign dist-bzip2])
@@ -13,10 +13,9 @@ AC_DEFINE([HAVE_PROTOTYPES], 1, [Define if your compiler supports prototypes])
 
 # Checks for programs.
 SAVED_CFLAGS=${CFLAGS}
-SAVED_CXXFLAGS=${CXXFLAGS}
+SAVED_CPPFLAGS=${CPPFLAGS}
 AC_PROG_CPP
 AC_PROG_CC
-AC_PROG_CXX
 AC_PROG_INSTALL
 AC_PROG_LIBTOOL
 AC_PROG_LN_S
@@ -32,8 +31,8 @@ if test "x${GCC}" = "xyes"; then
   if test "x${SAVED_CFLAGS}" = "x"; then
     CFLAGS=-O3
   fi
-  if test "x${SAVED_CXXFLAGS}" = "x"; then
-    CXXFLAGS=-O3
+  if test "x${SAVED_CPPFLAGS}" = "x"; then
+    CPPFLAGS=-Wall
   fi
 fi
 
@@ -41,9 +40,6 @@ AC_CHECK_DECL([__SUNPRO_C], [SUNCC="yes"], [SUNCC="no"])
 if test "x${SUNCC}" = "xyes"; then
   if test "x${SAVED_CFLAGS}" = "x"; then
     CFLAGS=-xO5
-  fi
-  if test "x${SAVED_CXXFLAGS}" = "x"; then
-    CXXFLAGS=-xO5
   fi
 fi
 
@@ -116,7 +112,7 @@ if test "x$JPEG_LIB_VERSION" = "x"; then
     AC_ARG_WITH([jpeg7],
         AC_HELP_STRING([--with-jpeg7], [Emulate libjpeg v7 API/ABI (this makes libjpeg-turbo backward incompatible with libjpeg v6b.)]))
     AC_ARG_WITH([jpeg8],
-        AC_HELP_STRING([--with-jpeg8], [Emulate libjpeg v8b API/ABI (this makes libjpeg-turbo backward incompatible with libjpeg v6b.)]))
+        AC_HELP_STRING([--with-jpeg8], [Emulate libjpeg v8 API/ABI (this makes libjpeg-turbo backward incompatible with libjpeg v6b.)]))
     if test "x${with_jpeg8}" = "xyes"; then
         JPEG_LIB_VERSION=80
     else
@@ -176,38 +172,15 @@ if test "x$VERSION_SCRIPT_FLAG" = "x"; then
   VERSION_SCRIPT=no
   AC_MSG_RESULT(no)
 fi
-
-ANON_VERSION_SCRIPT=yes
-AC_MSG_CHECKING([whether the linker supports anonymous version scripts])
-LDFLAGS="$SAVED_LDFLAGS -Wl,--version-script,conftest.map"
-cat > conftest.map <<EOF
-{
-  global: main;
-  local: *;
-};
-EOF
-AC_LINK_IFELSE(AC_LANG_PROGRAM([], []),
-  [ANON_VERSION_SCRIPT_FLAG=-Wl,--version-script,; AC_MSG_RESULT([yes (GNU style)])], [])
-if test "x$ANON_VERSION_SCRIPT_FLAG" = "x"; then
-  LDFLAGS="$SAVED_LDFLAGS -Wl,-M,conftest.map"
-  AC_LINK_IFELSE(AC_LANG_PROGRAM([], []),
-    [ANON_VERSION_SCRIPT_FLAG=-Wl,-M,; AC_MSG_RESULT([yes (Sun style)])], [])
-fi
-if test "x$ANON_VERSION_SCRIPT_FLAG" = "x"; then
-  ANON_VERSION_SCRIPT=no
-  AC_MSG_RESULT(no)
-fi
 LDFLAGS="$SAVED_LDFLAGS"
 
-AC_MSG_CHECKING([whether to use version script when building libjpeg])
+AC_MSG_CHECKING([whether to use version script when building libjpeg-turbo])
 AC_MSG_RESULT($VERSION_SCRIPT)
 
 AM_CONDITIONAL(VERSION_SCRIPT, test "x$VERSION_SCRIPT" = "xyes")
-AM_CONDITIONAL(ANON_VERSION_SCRIPT, test "x$ANON_VERSION_SCRIPT" = "xyes")
 AC_SUBST(VERSION_SCRIPT_FLAG)
-AC_SUBST(ANON_VERSION_SCRIPT_FLAG)
 
-AC_MSG_CHECKING([whether to use arithmetic encoding])
+AC_MSG_CHECKING([whether to include arithmetic encoding support])
 AC_ARG_WITH([arith-enc],
     AC_HELP_STRING([--without-arith-enc], [Omit arithmetic encoding support]))
 if test "x$with_arith_enc" = "xno"; then
@@ -218,7 +191,7 @@ else
 fi
 AM_CONDITIONAL([WITH_ARITH_ENC], [test "x$with_arith_enc" != "xno"])
 
-AC_MSG_CHECKING([whether to use arithmetic decoding])
+AC_MSG_CHECKING([whether to include arithmetic decoding support])
 AC_ARG_WITH([arith-dec],
     AC_HELP_STRING([--without-arith-dec], [Omit arithmetic decoding support]))
 if test "x$with_arith_dec" = "xno"; then

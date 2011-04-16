@@ -37,14 +37,9 @@ endif
 libturbojpeg_la_SOURCES = $(libjpeg_la_SOURCES) turbojpegl.c turbojpeg.h \
 	turbojpeg-mapfile
 
-if ANON_VERSION_SCRIPT
-
-libturbojpeg_la_LDFLAGS += $(ANON_VERSION_SCRIPT_FLAG)$(srcdir)/turbojpeg-mapfile
-
-endif
-
 if VERSION_SCRIPT
 
+libturbojpeg_la_LDFLAGS += $(VERSION_SCRIPT_FLAG)$(srcdir)/turbojpeg-mapfile
 libjpeg_la_LDFLAGS += $(VERSION_SCRIPT_FLAG)libjpeg.map
 
 endif
@@ -63,12 +58,12 @@ endif
 
 TSTHDRS = rrutil.h rrtimer.h
 
-bin_PROGRAMS = cjpeg djpeg jpegtran rdjpgcom wrjpgcom
-noinst_PROGRAMS = jpgtest jpegut
+bin_PROGRAMS = cjpeg djpeg jpegtran rdjpgcom wrjpgcom jpgtest
+noinst_PROGRAMS = jpegut
 
-jpgtest_SOURCES = $(TSTHDRS) jpgtest.cxx bmp.h bmp.c
+jpgtest_SOURCES = $(TSTHDRS) jpgtest.c bmp.h bmp.c
 
-jpgtest_LDADD = libturbojpeg.la
+jpgtest_LDADD = libturbojpeg.la -lm
 
 jpegut_SOURCES = $(TSTHDRS) jpegut.c bmp.h bmp.c
 
@@ -113,7 +108,7 @@ DOCS= README install.txt usage.txt wizard.txt example.c libjpeg.txt \
 TESTFILES= testorig.jpg testorig.ppm testimg.bmp testimgflt.jpg \
 	testimgfst.jpg testimgint.jpg testimgp.jpg testimgflt.ppm testimgfst.ppm \
 	testimgint.ppm testimgflt-nosimd.jpg testimgcrop.jpg testimgari.jpg \
-	testimgari.ppm
+	testimgari.ppm testimgfst100.jpg
 
 EXTRA_DIST = win release $(DOCS) $(TESTFILES) CMakeLists.txt \
 	sharedlib/CMakeLists.txt cmakescripts libjpeg.map.in
@@ -129,6 +124,8 @@ test: testclean all
 	cmp $(srcdir)/testimgint.jpg testoutint.jpg
 	./cjpeg -dct fast -opt -outfile testoutfst.jpg $(srcdir)/testorig.ppm
 	cmp $(srcdir)/testimgfst.jpg testoutfst.jpg
+	./cjpeg -dct fast -quality 100 -opt -outfile testoutfst100.jpg $(srcdir)/testorig.ppm
+	cmp $(srcdir)/testimgfst100.jpg testoutfst100.jpg
 	./cjpeg -dct float -outfile testoutflt.jpg $(srcdir)/testorig.ppm
 if WITH_SIMD
 	cmp $(srcdir)/testimgflt.jpg testoutflt.jpg

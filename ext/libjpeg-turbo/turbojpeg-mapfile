@@ -1,3 +1,4 @@
+TURBOJPEG_1.0
 {
 	global:
 		tjInitCompress;
@@ -5,10 +6,18 @@
 		TJBUFSIZE;
 		tjInitDecompress;
 		tjDecompressHeader;
-		tjDecompressHeader2;
 		tjDecompress;
 		tjDestroy;
 		tjGetErrorStr;
 	local:
 		*;
 };
+
+TURBOJPEG_1.1
+{
+	global:
+		TJBUFSIZEYUV;
+		tjDecompressHeader2;
+		tjDecompressToYUV;
+		tjEncodeYUV;
+} TURBOJPEG_1.0;

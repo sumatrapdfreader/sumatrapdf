@@ -216,6 +216,7 @@ wchar *GetExt(const wchar *Name)
 }
 
 
+// 'Ext' is an extension without the leading dot, like "rar".
 bool CmpExt(const char *Name,const char *Ext)
 {
   char *NameExt=GetExt(Name);
@@ -223,6 +224,7 @@ bool CmpExt(const char *Name,const char *Ext)
 }
 
 
+// 'Ext' is an extension without the leading dot, like L"rar".
 bool CmpExt(const wchar *Name,const wchar *Ext)
 {
   wchar *NameExt=GetExt(Name);
@@ -811,6 +813,28 @@ wchar* UnixSlashToDos(wchar *SrcName,wchar *DestName,uint MaxLength)
         *s='\\';
       else
         DestName[s-SrcName]='\\';
+  }
+  return(DestName==NULL ? SrcName:DestName);
+}
+
+
+wchar* DosSlashToUnix(wchar *SrcName,wchar *DestName,uint MaxLength)
+{
+  if (DestName!=NULL && DestName!=SrcName)
+    if (wcslen(SrcName)>=MaxLength)
+    {
+      *DestName=0;
+      return(DestName);
+    }
+    else
+      wcscpy(DestName,SrcName);
+  for (wchar *s=SrcName;*s!=0;s++)
+  {
+    if (*s=='\\')
+      if (DestName==NULL)
+        *s='/';
+      else
+        DestName[s-SrcName]='/';
   }
   return(DestName==NULL ? SrcName:DestName);
 }

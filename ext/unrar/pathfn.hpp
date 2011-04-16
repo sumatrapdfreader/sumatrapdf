@@ -43,6 +43,7 @@ void MakeNameUsable(wchar *Name,bool Extended);
 char* UnixSlashToDos(char *SrcName,char *DestName=NULL,uint MaxLength=NM);
 char* DosSlashToUnix(char *SrcName,char *DestName=NULL,uint MaxLength=NM);
 wchar* UnixSlashToDos(wchar *SrcName,wchar *DestName=NULL,uint MaxLength=NM);
+wchar* DosSlashToUnix(wchar *SrcName,wchar *DestName=NULL,uint MaxLength=NM);
 void ConvertNameToFull(const char *Src,char *Dest);
 void ConvertNameToFull(const wchar *Src,wchar *Dest);
 bool IsFullPath(const char *Path);

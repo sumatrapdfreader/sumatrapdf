@@ -125,7 +125,9 @@ ZLIB_CFLAGS = $(CFLAGSOPT)
 BZIP2_CFLAGS = $(CFLAGSOPT) /D "BZ_NO_STDIO" /D "BZ_DEBUG=0"
 MINIZIP_CFLAGS = $(ZLIB_CFLAGS) /D "HAVE_BZIP2" /I$(ZLIB_DIR) /I$(BZIP2_DIR)
 
-UNRAR_CFLAGS = $(CFLAGSOPT) /D "UNRAR" /D "RARDLL" /EHsc
+UNRAR_CFLAGS = $(CFLAGSOPT) /D "UNRAR" /D "RARDLL"
+# a hack to enable C++ exception handling for UnRAR (without triggering a warning)
+UNRAR_CFLAGS = $(UNRAR_CFLAGS:/EHs-c-=/EHsc)
 # a hack to undo /D "UNICODE" since unrar defines it unconditionally, causing
 # compilation warnings
 UNRAR_CFLAGS = $(UNRAR_CFLAGS:UNICODE=IGNORE_THIS)
