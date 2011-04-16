@@ -9,14 +9,14 @@
 #define STRINGS_COUNT 187
 
 typedef struct LangDef {
-    const char *_langName;
-    const char *_langMenuTitle;
-    LANGID _langId;
+    const char *code;
+    const char *fullName;
+    LANGID id;
 } LangDef;
 
 #define _LANGID(lang) MAKELANGID(lang, SUBLANG_NEUTRAL)
 
-LangDef g_langs[LANGS_COUNT] = {
+LangDef gLangData[LANGS_COUNT] = {
     { "en", "English", _LANGID(LANG_ENGLISH) },
     { "af", "Afrikaans", _LANGID(LANG_AFRIKAANS) },
     { "ar", "Arabic (\330\247\331\204\331\222\330\271\331\216\330\261\331\216\330\250\331\212\331\221\330\251)", _LANGID(LANG_ARABIC) },
@@ -81,7 +81,7 @@ LangDef g_langs[LANGS_COUNT] = {
 
 #undef _LANGID
 
-const char *g_transLangs[LANGS_COUNT] = {
+const char *gLangOrder[LANGS_COUNT] = {
     "en", "am", "af", "pt", "br", "bg", "de", "tr", "by", "hu",
     "lt", "my", "ja", "fa", "it", "nl", "fi", "ca", "ca-xv", "sl",
     "sr-rs", "ml", "he", "sp-rs", "id", "mk", "ro", "sk", "vn", "kr",
@@ -90,7 +90,7 @@ const char *g_transLangs[LANGS_COUNT] = {
     "sv", "pl", "dk", "ta", "cz", "th", "no", "kw", "fy-nl", "si"
 };
 
-const char *g_transTranslations[LANGS_COUNT * STRINGS_COUNT] = {
+const char *gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
 
   /* Translations for language en */
   "&About",

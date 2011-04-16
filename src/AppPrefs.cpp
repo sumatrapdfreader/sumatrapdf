@@ -308,9 +308,9 @@ static bool DeserializePrefs(const char *prefsTxt, SerializableGlobalPrefs *glob
     RetrieveRaw(global, LAST_UPDATE_STR, globalPrefs->m_lastUpdateTime);
 
     txt = GetRawString(global, UI_LANGUAGE_STR);
-    int langIx = Trans::GetLanguageIndex(txt);
-    if (langIx != -1)
-        globalPrefs->m_currentLanguage = Trans::GetLanguageCode(langIx);
+    const char *langCode = Trans::ConfirmLanguage(txt);
+    if (langCode)
+        globalPrefs->m_currentLanguage = langCode;
 
     Retrieve(global, FWDSEARCH_OFFSET, globalPrefs->m_fwdsearchOffset);
     Retrieve(global, FWDSEARCH_COLOR, globalPrefs->m_fwdsearchColor);

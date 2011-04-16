@@ -36,24 +36,24 @@ TRANSLATIONS_TXT_C = """\
 #define STRINGS_COUNT %(translations_count)d
 
 typedef struct LangDef {
-    const char *_langName;
-    const char *_langMenuTitle;
-    LANGID _langId;
+    const char *code;
+    const char *fullName;
+    LANGID id;
 } LangDef;
 
 #define _LANGID(lang) MAKELANGID(lang, SUBLANG_NEUTRAL)
 
-LangDef g_langs[LANGS_COUNT] = {
+LangDef gLangData[LANGS_COUNT] = {
     %(lang_names)s
 };
 
 #undef _LANGID
 
-const char *g_transLangs[LANGS_COUNT] = {
+const char *gLangOrder[LANGS_COUNT] = {
     %(langs_c)s
 };
 
-const char *g_transTranslations[LANGS_COUNT * STRINGS_COUNT] = {
+const char *gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
 %(translations)s
 };
 """

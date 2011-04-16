@@ -22,7 +22,7 @@ enum {
 /* Most of the global settings that we persist in preferences file. */
 typedef struct {
     bool m_globalPrefsOnly;
-    /* pointer to a static string returned by Trans::GetLanguageCode, don't free */
+    /* pointer to a static string returned by Trans::ConfirmLanguage, don't free */
     const char *m_currentLanguage;
 
     bool m_showToolbar;

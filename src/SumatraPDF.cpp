@@ -241,16 +241,13 @@ static void WindowInfo_ExitFullscreen(WindowInfo *win);
 
 static bool CurrLangNameSet(const char *langName)
 {
-    if (!langName)
+    const char *langCode = Trans::ConfirmLanguage(langName);
+    if (!langCode)
         return false;
 
-    int langIndex = Trans::GetLanguageIndex(langName);
-    if (-1 == langIndex)
-        return false;
-    gGlobalPrefs.m_currentLanguage = Trans::GetLanguageCode(langIndex);
-    assert(gGlobalPrefs.m_currentLanguage);
+    gGlobalPrefs.m_currentLanguage = langCode;
 
-    bool ok = Trans::SetCurrentLanguage(langName);
+    bool ok = Trans::SetCurrentLanguage(langCode);
     assert(ok);
     return ok;
 }
