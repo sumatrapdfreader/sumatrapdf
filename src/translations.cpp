@@ -6,39 +6,36 @@
 #include "translations_txt.h"
 #include "StrUtil.h"
 
+namespace Trans {
+
 /*
 This code relies on the following variables that must be defined in a 
-separate file (translations_txt.h and translations_txt.c).
+separate file (translations_txt.h and translations_txt.cpp).
 The idea is that those files are automatically generated 
 by a script from translations file.
 
-// number of languages we support
-int g_transLangsCount;
-
 // array of language names so that g_transLangs[i] is a name of
-// language. i is 0..g_transLangsCount-1
-const char **g_transLangs;
-
-// total number of translated strings
-int g_transTranslationsCount;
+// language. i is in 0 .. LANGS_COUNT-1
+const char *g_transLangs[LANGS_COUNT];
 
 // array of UTF-8 encoded translated strings. 
-// it has g_transLangsCount * g_translationsCount elements
+// it has LANGS_COUNT * STRINGS_COUNT elements
 // (for simplicity). Translation i for language n is at position
-// (n * g_transTranslationsCount) + i
-const char **g_transTranslations;
+// (n * STRINGS_COUNT) + i
+const char *g_transTranslations[LANGS_COUNT * STRINGS_COUNT];
 */
 
-// numeric index of the current language. 0 ... g_transLangsCount-1
-static int currLangIdx = 0;
+static int FreeData();
+
+// numeric index of the current language. 0 ... LANGS_COUNT-1
+static int g_currLangIdx = 0;
 static const TCHAR **g_translations = NULL;  // cached translations
 
-namespace Trans {
-bool SetCurrentLanguage(const char* lang)
+bool SetCurrentLanguage(const char *lang)
 {
-    for (int i=0; i < g_transLangsCount; i++) {
+    for (size_t i = 0; i < dimof(g_transLangs); i++) {
         if (Str::Eq(lang, g_transLangs[i])) {
-            currLangIdx = i;
+            g_currLangIdx = i;
             return true;
         }
     }
@@ -50,55 +47,59 @@ static int cmpCharPtrs(const void *a, const void *b)
     return strcmp(*(char **)a, *(char **)b);
 }
 
-static const char* GetTranslationAndIndex(const char* txt, int& idx)
+static int GetTranslationIndex(const char* txt)
 {
-    assert(currLangIdx < g_transLangsCount);
-    const char **res = (const char **)bsearch(&txt, &g_transTranslations, g_transTranslationsCount, sizeof(g_transTranslations[0]), cmpCharPtrs);
+    assert(g_currLangIdx < LANGS_COUNT);
+    const char **res = (const char **)bsearch(&txt, &g_transTranslations, STRINGS_COUNT, sizeof(g_transTranslations[0]), cmpCharPtrs);
     assert(res);
     if (!res) {
         // bad - didn't find a translation
-        idx = -1;
-        return txt;
+        return -1;
     }
 
-    idx = (int)(res - g_transTranslations);
-    const char *translation = g_transTranslations[(currLangIdx * g_transTranslationsCount) + idx];
-    return translation ? translation : txt;
+    return (int)(res - g_transTranslations);
 }
 
 // Return a properly encoded version of a translation for 'txt'.
 // Memory for the string needs to be allocated and is cached in g_translations
 // array. That way the client doesn't have to worry about the lifetime of the string.
-// All allocated strings can be freed with Translations_FreeData(), which should be
+// All allocated strings can be freed with Trans::FreeData(), which should be
 // done at program exit so that we're guaranteed no-one is using the data
-const TCHAR* GetTranslation(const char* txt)
+const TCHAR *GetTranslation(const char *txt)
 {
     if (!g_translations) {
-        g_translations = SAZA(const TCHAR *, g_transTranslationsCount * g_transLangsCount);
+        assert(dimof(g_transTranslations) == STRINGS_COUNT * LANGS_COUNT);
+        g_translations = SAZA(const TCHAR *, dimof(g_transTranslations));
         if (!g_translations)
-            return NULL;
+            return _T("Missing translation!?");
+        _onexit(FreeData);
     }
-    int idx;
-    txt = GetTranslationAndIndex(txt, idx);
-    if (!txt || (-1 == idx)) return NULL;
-    int transIdx = (currLangIdx * g_transTranslationsCount) + idx;
-    const TCHAR *trans = g_translations[transIdx];
-    if (!trans)
-        trans = g_translations[transIdx] = Str::Conv::FromUtf8(txt);
-    return trans;
+
+    int idx = GetTranslationIndex(txt);
+    assert(0 <= idx && idx < STRINGS_COUNT);
+    if (-1 == idx)
+        return _T("Missing translation!?");
+
+    int transIdx = (g_currLangIdx * STRINGS_COUNT) + idx;
+    // fall back to the English string, if a translation is missing
+    if (!g_transTranslations[transIdx])
+        transIdx = idx;
+
+    if (!g_translations[transIdx])
+        g_translations[transIdx] = Str::Conv::FromUtf8(g_transTranslations[transIdx]);
+    return g_translations[transIdx];
 }
 
-// Call at program exit to free all memory related to traslations functionality.
-void FreeData()
+// Call at program exit to free all memory related to translations functionality.
+static int FreeData()
 {
     if (!g_translations)
-        return;
-    for (int i=0; i < (g_transTranslationsCount * g_transLangsCount); i++) {
+        return 0;
+    for (size_t i = 0; i < dimof(g_transTranslations); i++)
         free((void *)g_translations[i]);
-    }
     free((void *)g_translations);
     g_translations = NULL;
+    return 0;
 }
 
 }
-

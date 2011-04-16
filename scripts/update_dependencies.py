@@ -5,7 +5,7 @@ to the recompilation of all the files depending on this header.
 """
 
 import os, re, fnmatch
-from util import verify_started_in_right_directory
+from util import verify_started_in_right_directory, group, uniquify
 pjoin = os.path.join
 
 DIRS = ["baseutils", "src", pjoin("src", "installer"), pjoin("src", "ifilter"), pjoin("src", "browserplugin")]
@@ -20,15 +20,6 @@ def memoize(func):
 			memory[args] = func(*args)
 		return memory[args]
 	return __decorated
-
-def group(list, size):
-	i = 0
-	while list[i:]:
-		yield list[i:i + size]
-		i += size
-
-def uniquify(array):
-	return list(set(array))
 
 def prependPath(files, basefile=None):
 	result = []

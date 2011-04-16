@@ -28,6 +28,15 @@ def log(s):
   print(s)
   sys.stdout.flush()
 
+def group(list, size):
+  i = 0
+  while list[i:]:
+    yield list[i:i + size]
+    i += size
+
+def uniquify(array):
+  return list(set(array))
+
 def test_for_flag(args, arg):
   if arg not in args:
     return False

@@ -25,11 +25,11 @@
 #include "ParseCommandLine.h"
 #include "Benchmark.h"
 
-#include "LangMenuDef.h"
+#include "translations_txt.h"
 #include "translations.h"
 #include "Version.h"
 
-// those are defined here instead of resource.h to avoid
+// those are defined here instead of Resource.h to avoid
 // having them overwritten by dialog editor
 #define IDM_VIEW_LAYOUT_FIRST           IDM_VIEW_SINGLE_PAGE
 #define IDM_VIEW_LAYOUT_LAST            IDM_VIEW_CONTINUOUS
@@ -6896,7 +6896,6 @@ Exit:
     DeleteObject(gDefaultGuiFont);
     DeleteBitmap(gBitmapReloadingCue);
 
-    Trans::FreeData();
     SerializableGlobalPrefs_Deinit();
 
     return (int)msg.wParam;

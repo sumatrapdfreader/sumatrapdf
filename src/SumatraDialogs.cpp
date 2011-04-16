@@ -8,7 +8,7 @@
 
 #include "WinUtil.h"
 #include "DialogSizer.h"
-#include "LangMenuDef.h"
+#include "translations_txt.h"
 #include "translations.h"
 
 /* For passing data to/from GetPassword dialog */

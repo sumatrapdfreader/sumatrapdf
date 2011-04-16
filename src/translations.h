@@ -6,10 +6,8 @@
 
 namespace Trans {
 
-bool         SetCurrentLanguage(const char* lang);
-const TCHAR* GetTranslation(const char* txt);
-
-void FreeData();
+bool         SetCurrentLanguage(const char *lang);
+const TCHAR *GetTranslation(const char *txt);
 
 }
 

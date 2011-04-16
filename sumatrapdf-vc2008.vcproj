@@ -140,14 +140,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\LangMenuDef.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\LangMenuDef.h"
-				>
-			</File>
-			<File
 				RelativePath=".\src\ParseCommandLine.cpp"
 				>
 			</File>
