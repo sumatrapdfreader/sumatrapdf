@@ -22,7 +22,8 @@ enum {
 /* Most of the global settings that we persist in preferences file. */
 typedef struct {
     bool m_globalPrefsOnly;
-    char *m_currentLanguage;
+    /* pointer to a static string returned by Trans::GetLanguageCode, don't free */
+    const char *m_currentLanguage;
 
     bool m_showToolbar;
     /* If false, we won't ask the user if he wants Sumatra to handle PDF files */

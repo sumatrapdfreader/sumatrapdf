@@ -23,6 +23,11 @@ const char *g_transLangs[LANGS_COUNT];
 // (for simplicity). Translation i for language n is at position
 // (n * STRINGS_COUNT) + i
 const char *g_transTranslations[LANGS_COUNT * STRINGS_COUNT];
+
+// array of language codes, names and IDs
+// used for determining the human readable name of a language
+// and for guessing the OS's current language settings
+LangDef g_langs[LANGS_COUNT];
 */
 
 static int FreeData();
@@ -30,6 +35,26 @@ static int FreeData();
 // numeric index of the current language. 0 ... LANGS_COUNT-1
 static int g_currLangIdx = 0;
 static const TCHAR **g_translations = NULL;  // cached translations
+
+const char *GuessLanguage()
+{
+    LANGID langId = GetUserDefaultUILanguage();
+    LANGID langIdNoSublang = MAKELANGID(PRIMARYLANGID(langId), SUBLANG_NEUTRAL);
+    const char *langName = NULL;
+
+    // Either find the exact primary/sub lang id match, or a neutral sublang if it exists
+    // (don't return any sublang for a given language, it might be too different)
+    for (int i = 0; i < LANGS_COUNT; i++) {
+        if (langId == g_langs[i]._langId)
+            return g_langs[i]._langName;
+
+        if (langIdNoSublang == g_langs[i]._langId)
+            langName = g_langs[i]._langName;
+        // continue searching after finding a match with a neutral sublanguage
+    }
+
+    return langName;
+}
 
 bool SetCurrentLanguage(const char *lang)
 {
@@ -100,6 +125,46 @@ static int FreeData()
     free((void *)g_translations);
     g_translations = NULL;
     return 0;
+}
+
+// returns an arbitrary index for a given language code
+// which can be used for calling GetLanguageCode and
+// GetLanguageName (this index isn't guaranteed to remain
+// stable after a restart, use the language code when saving
+// the current language settings instead)
+int GetLanguageIndex(const char *name)
+{
+    if (!name)
+        return -1;
+
+    for (int i = 0; i < LANGS_COUNT; i++) {
+        const char *langName = g_langs[i]._langName;
+        if (Str::Eq(name, langName))
+            return i;
+    }
+    return -1;
+}
+
+const char *GetLanguageCode(int index)
+{
+    assert(index >= 0);
+    if (index < 0)
+        return NULL;
+
+    if (LANGS_COUNT <= index)
+        return NULL;
+    return g_langs[index]._langName;
+}
+
+TCHAR *GetLanguageName(int index)
+{
+    assert(index >= 0);
+    if (index < 0)
+        return NULL;
+
+    if (LANGS_COUNT <= index)
+        return NULL;
+    return Str::Conv::FromUtf8(g_langs[index]._langMenuTitle);
 }
 
 }

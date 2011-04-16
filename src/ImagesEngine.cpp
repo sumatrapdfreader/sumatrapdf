@@ -12,6 +12,14 @@
 
 #include "../ext/unrar/dll.hpp"
 
+extern "C" {
+// needed because we compile bzip2 with #define BZ_NO_STDIO
+void bz_internal_error(int errcode)
+{
+    // do nothing
+}
+}
+
 using namespace Gdiplus;
 
 // cf. http://stackoverflow.com/questions/4598872/creating-hbitmap-from-memory-buffer/4616394#4616394

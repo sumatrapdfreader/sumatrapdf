@@ -2,7 +2,6 @@
    License: Simplified BSD (see ./COPYING) */
 
 #include "ZipUtil.h"
-
 #include "StrUtil.h"
 #include "FileUtil.h"
 

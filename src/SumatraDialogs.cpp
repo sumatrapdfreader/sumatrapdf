@@ -8,7 +8,6 @@
 
 #include "WinUtil.h"
 #include "DialogSizer.h"
-#include "translations_txt.h"
 #include "translations.h"
 
 /* For passing data to/from GetPassword dialog */
@@ -337,10 +336,10 @@ static INT_PTR CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT message, WPAR
         // otherwise all the user will see are squares
         Win::SetText(hDlg, _TR("Change Language"));
         langList = GetDlgItem(hDlg, IDC_CHANGE_LANG_LANG_LIST);
-        for (int i = 0; i < LANGS_COUNT; i++) {
-            TCHAR *langName = Str::Conv::FromUtf8(g_langs[i]._langMenuTitle);
+        for (int i = 0; Trans::GetLanguageCode(i) != NULL; i++) {
+            ScopedMem<TCHAR> langName(Trans::GetLanguageName(i));
+            assert(langName);
             ListBox_AppendString_NoSort(langList, langName);
-            free(langName);
         }
         ListBox_SetCurSel(langList, data->langId);
         SetDlgItemText(hDlg, IDOK, _TR("OK"));
@@ -384,7 +383,7 @@ static INT_PTR CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT message, WPAR
 
 /* Show "Change Language" dialog.
    Returns language id (as stored in g_langs[]._langId) or -1 if the user 
-   chose 'cancel' */
+   choses 'cancel' */
 int Dialog_ChangeLanguge(HWND hwnd, int currLangId)
 {
     Dialog_ChangeLanguage_Data data;

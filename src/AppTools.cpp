@@ -5,7 +5,6 @@
 #include "StrUtil.h"
 #include "FileUtil.h"
 #include "WinUtil.h"
-#include "translations_txt.h"
 #include "translations.h"
 #include "AppTools.h"
 #include "CmdLineParser.h"
@@ -60,26 +59,6 @@ int CompareVersion(TCHAR *txt1, TCHAR *txt2)
     }
 
     return 0;
-}
-
-const char *GuessLanguage()
-{
-    LANGID langId = GetUserDefaultUILanguage();
-    LANGID langIdNoSublang = MAKELANGID(PRIMARYLANGID(langId), SUBLANG_NEUTRAL);
-    const char *langName = NULL;
-
-    // Either find the exact primary/sub lang id match, or a neutral sublang if it exists
-    // (don't return any sublang for a given language, it might be too different)
-    for (int i = 0; i < LANGS_COUNT; i++) {
-        if (langId == g_langs[i]._langId)
-            return g_langs[i]._langName;
-
-        if (langIdNoSublang == g_langs[i]._langId)
-            langName = g_langs[i]._langName;
-        // continue searching after finding a match with a neutral sublanguage
-    }
-
-    return langName;
 }
 
 

@@ -55,7 +55,6 @@ public:
 
 bool IsValidProgramVersion(char *txt);
 int CompareVersion(TCHAR *txt1, TCHAR *txt2);
-const char *GuessLanguage();
 
 TCHAR *GetExePath();
 bool IsRunningInPortableMode();

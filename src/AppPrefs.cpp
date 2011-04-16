@@ -8,8 +8,7 @@
 #include "AppPrefs.h"
 #include "DisplayState.h"
 #include "FileHistory.h"
-
-extern bool CurrLangNameSet(const char* langName);
+#include "translations.h"
 
 static bool ParseDisplayMode(const char *txt, DisplayMode *resOut)
 {
@@ -309,7 +308,10 @@ static bool DeserializePrefs(const char *prefsTxt, SerializableGlobalPrefs *glob
     RetrieveRaw(global, LAST_UPDATE_STR, globalPrefs->m_lastUpdateTime);
 
     txt = GetRawString(global, UI_LANGUAGE_STR);
-    CurrLangNameSet(txt);
+    int langIx = Trans::GetLanguageIndex(txt);
+    if (langIx != -1)
+        if (Trans::SetCurrentLanguage(txt))
+            globalPrefs->m_currentLanguage = Trans::GetLanguageCode(langIx);
 
     Retrieve(global, FWDSEARCH_OFFSET, globalPrefs->m_fwdsearchOffset);
     Retrieve(global, FWDSEARCH_COLOR, globalPrefs->m_fwdsearchColor);

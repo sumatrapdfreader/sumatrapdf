@@ -195,10 +195,11 @@ $(BROWSER_PLUGIN): $(BROWSER_PLUGIN_OBJS)
 $(O)\AppPrefs.obj: baseutils\BaseUtil.h baseutils\BencUtil.h baseutils\FileUtil.h
 $(O)\AppPrefs.obj: baseutils\GeomUtil.h baseutils\StrUtil.h baseutils\Vec.h
 $(O)\AppPrefs.obj: src\AppPrefs.h src\DisplayState.h src\FileHistory.h
+$(O)\AppPrefs.obj: src\translations.h
 $(O)\AppTools.obj: baseutils\BaseUtil.h baseutils\CmdLineParser.h baseutils\FileUtil.h
 $(O)\AppTools.obj: baseutils\GeomUtil.h baseutils\StrUtil.h baseutils\Vec.h
 $(O)\AppTools.obj: baseutils\WinUtil.h src\AppTools.h src\translations.h
-$(O)\AppTools.obj: src\translations_txt.h src\Version.h
+$(O)\AppTools.obj: src\Version.h
 $(O)\Benchmark.obj: baseutils\BaseUtil.h baseutils\FileUtil.h baseutils\GeomUtil.h
 $(O)\Benchmark.obj: baseutils\SimpleLog.h baseutils\StrUtil.h baseutils\Vec.h
 $(O)\Benchmark.obj: baseutils\WinUtil.h src\BaseEngine.h src\Benchmark.h
@@ -277,7 +278,7 @@ $(O)\SumatraDialogs.obj: baseutils\BaseUtil.h baseutils\DialogSizer.h baseutils\
 $(O)\SumatraDialogs.obj: baseutils\StrUtil.h baseutils\Vec.h baseutils\WinUtil.h
 $(O)\SumatraDialogs.obj: src\AppPrefs.h src\AppTools.h src\DisplayState.h
 $(O)\SumatraDialogs.obj: src\Resource.h src\SumatraDialogs.h src\SumatraPDF.h
-$(O)\SumatraDialogs.obj: src\translations.h src\translations_txt.h
+$(O)\SumatraDialogs.obj: src\translations.h
 $(O)\SumatraPDF.obj: baseutils\BaseUtil.h baseutils\FileUtil.h baseutils\GeomUtil.h
 $(O)\SumatraPDF.obj: baseutils\Http.h baseutils\StrUtil.h baseutils\Vec.h
 $(O)\SumatraPDF.obj: baseutils\WinUtil.h src\AppPrefs.h src\AppTools.h
@@ -287,8 +288,8 @@ $(O)\SumatraPDF.obj: src\FileWatch.h src\ImagesEngine.h src\ParseCommandLine.h
 $(O)\SumatraPDF.obj: src\PdfEngine.h src\PdfSync.h src\RenderCache.h
 $(O)\SumatraPDF.obj: src\Resource.h src\SumatraAbout.h src\SumatraDialogs.h
 $(O)\SumatraPDF.obj: src\SumatraPDF.h src\SumatraProperties.h src\TextSearch.h
-$(O)\SumatraPDF.obj: src\TextSelection.h src\translations.h src\translations_txt.h
-$(O)\SumatraPDF.obj: src\Version.h src\WindowInfo.h
+$(O)\SumatraPDF.obj: src\TextSelection.h src\translations.h src\Version.h
+$(O)\SumatraPDF.obj: src\WindowInfo.h
 $(O)\SumatraProperties.obj: baseutils\BaseUtil.h baseutils\FileUtil.h baseutils\GeomUtil.h
 $(O)\SumatraProperties.obj: baseutils\StrUtil.h baseutils\Vec.h baseutils\WinUtil.h
 $(O)\SumatraProperties.obj: src\AppPrefs.h src\BaseEngine.h src\DisplayModel.h

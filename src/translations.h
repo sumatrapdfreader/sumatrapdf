@@ -6,8 +6,13 @@
 
 namespace Trans {
 
+const char * GuessLanguage();
 bool         SetCurrentLanguage(const char *lang);
 const TCHAR *GetTranslation(const char *txt);
+
+int          GetLanguageIndex(const char *name);
+const char * GetLanguageCode(int index);
+TCHAR       *GetLanguageName(int index);
 
 }
 

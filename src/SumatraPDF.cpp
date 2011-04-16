@@ -25,7 +25,6 @@
 #include "ParseCommandLine.h"
 #include "Benchmark.h"
 
-#include "translations_txt.h"
 #include "translations.h"
 #include "Version.h"
 
@@ -238,33 +237,16 @@ static void DeleteOldSelectionInfo(WindowInfo *win, bool alsoTextSel=false);
 static void ClearSearch(WindowInfo *win);
 static void WindowInfo_ExitFullscreen(WindowInfo *win);
 
-extern "C" {
-// needed because we compile bzip2 with #define BZ_NO_STDIO
-void bz_internal_error(int errcode)
-{
-    // do nothing
-}
-}
-
-static int LangGetIndex(const char *name)
-{
-    for (int i = 0; i < LANGS_COUNT; i++) {
-        const char *langName = g_langs[i]._langName;
-        if (Str::Eq(name, langName))
-            return i;
-    }
-    return -1;
-}
-
-bool CurrLangNameSet(const char* langName)
+static bool CurrLangNameSet(const char *langName)
 {
     if (!langName)
         return false;
 
-    int langIndex = LangGetIndex(langName);
+    int langIndex = Trans::GetLanguageIndex(langName);
     if (-1 == langIndex)
         return false;
-    gGlobalPrefs.m_currentLanguage = (char *)g_langs[langIndex]._langName;
+    gGlobalPrefs.m_currentLanguage = Trans::GetLanguageCode(langIndex);
+    assert(gGlobalPrefs.m_currentLanguage);
 
     bool ok = Trans::SetCurrentLanguage(langName);
     assert(ok);
@@ -3726,14 +3708,14 @@ void OnMenuCheckUpdate(WindowInfo *win)
 
 static void OnMenuChangeLanguage(WindowInfo *win)
 {
-    int langId = LangGetIndex(gGlobalPrefs.m_currentLanguage);
+    int langId = Trans::GetLanguageIndex(gGlobalPrefs.m_currentLanguage);
     int newLangId = Dialog_ChangeLanguge(win->hwndFrame, langId);
 
     if (newLangId != -1 && langId != newLangId) {
-        assert(0 <= newLangId && newLangId < LANGS_COUNT);
-        if (newLangId < 0 || LANGS_COUNT <= newLangId)
+        const char *langName = Trans::GetLanguageCode(newLangId);
+        assert(langName);
+        if (!langName)
             return;
-        const char *langName = g_langs[newLangId]._langName;
 
         CurrLangNameSet(langName);
         RebuildMenuBar();
@@ -6670,7 +6652,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         if (!Prefs::Load(prefsFilename, &gGlobalPrefs, &gFileHistory)) {
             // assume that this is because prefs file didn't exist
             // i.e. this could be the first time Sumatra is launched.
-            const char *lang = GuessLanguage();
+            const char *lang = Trans::GuessLanguage();
             CurrLangNameSet(lang);
         }
     }
