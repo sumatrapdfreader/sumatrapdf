@@ -393,13 +393,17 @@ Faktor uvećanja
 #&Save As...
 #&Shrink pages to printable area (if necessary)
 #&Use original page sizes
+#All supported documents
 #Application:
 #Attachment: %s
 #Author:
 #Book View
+#Bookmark Shortcuts
+#Bookmark shortcut to page %d of %s
 #Bookmarks
 #Bytes
 #Can't connect to the Internet (error %#x).
+#Comic books
 #Continuous Book View
 #Copy &Link Address
 #Copy Co&mment
@@ -408,6 +412,7 @@ Faktor uvećanja
 #Denied Permissions:
 #Document Properties
 #Enter the command-line to invoke when you double-click on the PDF document:
+#Error loading %s
 #F&orward\tAlt+Right Arrow
 #File Size:
 #File:
@@ -415,6 +420,8 @@ Faktor uvećanja
 #Fit Content
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
+#Found text at page %d (again)
+#Image files (*.%s)
 #Modified:
 #Number of Pages:
 #P&roperties
@@ -426,6 +433,7 @@ Faktor uvećanja
 #Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L
 #Print range
+#Save S&hortcut...\tCtrl-Shift-S
 #Select &All
 #Select &All\tCtrl-A
 #Send by &E-mail...
@@ -434,6 +442,7 @@ Faktor uvećanja
 #SumatraPDF Update
 #SumatraPDF crashed
 #Title:
+#XPS documents
 #copying text
 #printing document
 

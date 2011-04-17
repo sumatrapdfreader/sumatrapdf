@@ -497,18 +497,27 @@ printing document
 #&Copy Selection
 #&Print...
 #&Save As...
+#All supported documents
+#Bookmark Shortcuts
+#Bookmark shortcut to page %d of %s
+#Comic books
 #Copy &Link Address
 #Copy Co&mment
+#Error loading %s
 #Fit &Content\tCtrl-3
 #Fit Content
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
+#Found text at page %d (again)
+#Image files (*.%s)
 #P&roperties
 #Page number %u inexistant
 #Page scaling
 #Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L
 #Print range
+#Save S&hortcut...\tCtrl-Shift-S
 #Select &All
 #SumatraPDF crashed
+#XPS documents
 

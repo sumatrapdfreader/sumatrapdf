@@ -548,3 +548,14 @@ copiado de texto
 printing document
 impresión de documento
 
+# Untranslated:
+#All supported documents
+#Bookmark Shortcuts
+#Bookmark shortcut to page %d of %s
+#Comic books
+#Error loading %s
+#Found text at page %d (again)
+#Image files (*.%s)
+#Save S&hortcut...\tCtrl-Shift-S
+#XPS documents
+

@@ -447,19 +447,26 @@ prebieha tlač dokumentu
 #&Save As...
 #&Shrink pages to printable area (if necessary)
 #&Use original page sizes
+#All supported documents
 #Attachment: %s
+#Bookmark Shortcuts
+#Bookmark shortcut to page %d of %s
 #Bookmarks
 #Can't connect to the Internet (error %#x).
 #Cannot start inverse search command. Please check the command line in the settings.
+#Comic books
 #Copy &Link Address
 #Copy Co&mment
 #Copying text was denied (copying as image only)
 #Couldn't initialize printer
 #Enter the command-line to invoke when you double-click on the PDF document:
+#Error loading %s
 #Fit &Content\tCtrl-3
 #Fit Content
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
+#Found text at page %d (again)
+#Image files (*.%s)
 #No synchronization file found
 #No synchronization info at this position
 #P&roperties
@@ -467,10 +474,12 @@ prebieha tlač dokumentu
 #Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L
 #Print range
+#Save S&hortcut...\tCtrl-Shift-S
 #Select &All
 #Select &All\tCtrl-A
 #Source file %s has no synchronization point
 #SumatraPDF Update
 #SumatraPDF crashed
 #Synchronization file cannot be opened
+#XPS documents
 

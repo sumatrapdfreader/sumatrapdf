@@ -524,9 +524,18 @@ drukowanie dokumentu
 #&Copy Selection
 #&Print...
 #&Save As...
+#All supported documents
+#Bookmark Shortcuts
+#Bookmark shortcut to page %d of %s
+#Comic books
 #Copy &Link Address
 #Copy Co&mment
+#Error loading %s
+#Found text at page %d (again)
+#Image files (*.%s)
 #P&roperties
+#Save S&hortcut...\tCtrl-Shift-S
 #Searching %d of %d...
 #Select &All
+#XPS documents
 

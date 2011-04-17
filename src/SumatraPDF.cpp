@@ -532,7 +532,7 @@ MenuDef menuDefFile[] = {
     { _TRN("&Save As...\tCtrl-S"),          IDM_SAVEAS,                 MF_NOT_IN_RESTRICTED },
     { _TRN("&Print...\tCtrl-P"),            IDM_PRINT,                  MF_NOT_IN_RESTRICTED },
     { SEP_ITEM,                             0,                          MF_NOT_IN_RESTRICTED },
-    { _TB_TRN("Save S&hortcut...\tCtrl-Shift-S"), IDM_SAVEAS_BOOKMARK,  MF_NOT_IN_RESTRICTED },
+    { _TRN("Save S&hortcut...\tCtrl-Shift-S"), IDM_SAVEAS_BOOKMARK,     MF_NOT_IN_RESTRICTED },
     { _TRN("Open in &Adobe Reader"),        IDM_VIEW_WITH_ACROBAT,      MF_NOT_IN_RESTRICTED },
     { _TRN("Open in &Foxit Reader"),        IDM_VIEW_WITH_FOXIT,        MF_NOT_IN_RESTRICTED },
     { _TRN("Open in PDF-XChange"),          IDM_VIEW_WITH_PDF_XCHANGE,  MF_NOT_IN_RESTRICTED },
@@ -2843,7 +2843,7 @@ static void OnPaint(WindowInfo *win)
         Win::HdcScopedSelectFont scope(hdc, fontRightTxt);
         SetBkMode(hdc, TRANSPARENT);
         FillRect(hdc, &ps.rcPaint, gBrushNoDocBg);
-        ScopedMem<TCHAR> msg(Str::Format(_TB_TR("Error loading %s"), win->loadedFilePath));
+        ScopedMem<TCHAR> msg(Str::Format(_TR("Error loading %s"), win->loadedFilePath));
         DrawCenteredText(hdc, ClientRect(win->hwndCanvas), msg);
     } else {
         switch (win->presentation) {
@@ -3332,11 +3332,11 @@ static void OnMenuSaveAs(WindowInfo *win)
     // methods too early on)
     Str::Str<TCHAR> fileFilter(256);
     if (win->dm->xpsEngine)
-        fileFilter.Append(_TB_TR("XPS documents"));
+        fileFilter.Append(_TR("XPS documents"));
     else if (win->dm->cbxEngine)
-        fileFilter.Append(_TB_TR("Comic books"));
+        fileFilter.Append(_TR("Comic books"));
     else if (win->dm->imageEngine)
-        fileFilter.AppendFmt(_TB_TR("Image files (*.%s)"), defExt + 1);
+        fileFilter.AppendFmt(_TR("Image files (*.%s)"), defExt + 1);
     else
         fileFilter.Append(_TR("PDF documents"));
     fileFilter.AppendFmt(_T("\1*%s\1"), defExt);
@@ -3471,7 +3471,7 @@ static void OnMenuSaveBookmark(WindowInfo *win)
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling
     // methods too early on)
-    ScopedMem<TCHAR> fileFilter(Str::Format(_T("%s\1*.lnk\1"), _TB_TR("Bookmark Shortcuts")));
+    ScopedMem<TCHAR> fileFilter(Str::Format(_T("%s\1*.lnk\1"), _TR("Bookmark Shortcuts")));
     Str::TransChars(fileFilter, _T("\1"), _T("\0"));
 
     OPENFILENAME ofn = { 0 };
@@ -3505,7 +3505,7 @@ static void OnMenuSaveBookmark(WindowInfo *win)
     ScopedMem<TCHAR> args(Str::Format(_T("\"%s\" -page %d -view \"%s\" -zoom %s -scroll %d,%d -reuse-instance"),
                           win->dm->fileName(), ss.page, viewMode, zoomVirtual, (int)ss.x, (int)ss.y));
     ScopedMem<TCHAR> exePath(GetExePath());
-    ScopedMem<TCHAR> desc(Str::Format(_TB_TR("Bookmark shortcut to page %d of %s"),
+    ScopedMem<TCHAR> desc(Str::Format(_TR("Bookmark shortcut to page %d of %s"),
                           ss.page, Path::GetBaseName(win->dm->fileName())));
 
     CreateShortcut(filename, exePath, args, desc, 1);
@@ -3550,7 +3550,7 @@ static void OnMenuOpen(WindowInfo *win)
     // double-zero terminated string isn't cut by the string handling
     // methods too early on)
     ScopedMem<TCHAR> fileFilter(Str::Format(_T("%s\1*.pdf;*.xps;*.cbz;*.cbr\1%s\1*.pdf\1%s\1*.xps\1%s\1*.cbz;*.cbr\1%s\1*.*\1"),
-        _TB_TR("All supported documents"), _TR("PDF documents"), _TB_TR("XPS documents"), _TB_TR("Comic books"), _TR("All files")));
+        _TR("All supported documents"), _TR("PDF documents"), _TR("XPS documents"), _TR("Comic books"), _TR("All files")));
     Str::TransChars(fileFilter, _T("\1"), _T("\0"));
 
     OPENFILENAME ofn = {0};
@@ -4259,7 +4259,7 @@ static void WindowInfo_HideFindStatus(WindowInfo *win, bool success=false, bool 
     else {
         ScopedMem<TCHAR> buf(Str::Format(_TR("Found text at page %d"), win->dm->currentPageNo()));
         if (loopedAround)
-            buf.Set(Str::Format(_TB_TR("Found text at page %d (again)"), win->dm->currentPageNo()));
+            buf.Set(Str::Format(_TR("Found text at page %d (again)"), win->dm->currentPageNo()));
         WindowInfo_ShowMessage_Async(win, buf, false, loopedAround);
     }    
 }

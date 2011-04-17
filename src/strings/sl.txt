@@ -546,3 +546,14 @@ kopiranje besedila
 printing document
 tiskanje dokumenta
 
+# Untranslated:
+#All supported documents
+#Bookmark Shortcuts
+#Bookmark shortcut to page %d of %s
+#Comic books
+#Error loading %s
+#Found text at page %d (again)
+#Image files (*.%s)
+#Save S&hortcut...\tCtrl-Shift-S
+#XPS documents
+

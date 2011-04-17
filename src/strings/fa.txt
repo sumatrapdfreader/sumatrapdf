@@ -455,17 +455,24 @@ printing document
 #&Save As...
 #&Shrink pages to printable area (if necessary)
 #&Use original page sizes
+#All supported documents
 #Attachment: %s
+#Bookmark Shortcuts
+#Bookmark shortcut to page %d of %s
 #Bookmarks
 #Can't connect to the Internet (error %#x).
+#Comic books
 #Copy &Link Address
 #Copy Co&mment
 #Copying text was denied (copying as image only)
 #Enter the command-line to invoke when you double-click on the PDF document:
+#Error loading %s
 #Fit &Content\tCtrl-3
 #Fit Content
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
+#Found text at page %d (again)
+#Image files (*.%s)
 #No matches were found
 #No result found around line %u in file %s
 #No synchronization info at this position
@@ -474,9 +481,11 @@ printing document
 #Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L
 #Print range
+#Save S&hortcut...\tCtrl-Shift-S
 #Select &All
 #Select &All\tCtrl-A
 #Show the &bookmarks sidebar when available
 #SumatraPDF Update
 #SumatraPDF crashed
+#XPS documents
 

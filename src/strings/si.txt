@@ -500,17 +500,26 @@ printing document
 #&Copy Selection
 #&Print...
 #&Save As...
+#All supported documents
+#Bookmark Shortcuts
+#Bookmark shortcut to page %d of %s
+#Comic books
 #Copy &Link Address
 #Copy Co&mment
+#Error loading %s
+#Found text at page %d (again)
+#Image files (*.%s)
 #No result found around line %u in file %s
 #P&roperties
 #Page scaling
 #Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L
 #Print range
+#Save S&hortcut...\tCtrl-Shift-S
 #Select &All
 #Select &All\tCtrl-A
 #Set inverse search command-line
 #SumatraPDF Update
 #SumatraPDF crashed
+#XPS documents
 

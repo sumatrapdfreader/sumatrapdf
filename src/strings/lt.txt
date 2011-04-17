@@ -501,17 +501,26 @@ spausdinamas dokumentas
 #&Copy Selection
 #&Print...
 #&Save As...
+#All supported documents
+#Bookmark Shortcuts
+#Bookmark shortcut to page %d of %s
+#Comic books
 #Copy &Link Address
 #Copy Co&mment
+#Error loading %s
 #Fin&d...\tCtrl-F
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
+#Found text at page %d (again)
+#Image files (*.%s)
 #No result found around line %u in file %s
 #P&roperties
 #Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L
+#Save S&hortcut...\tCtrl-Shift-S
 #Select &All
 #Select &All\tCtrl-A
 #SumatraPDF Update
 #SumatraPDF crashed
+#XPS documents
 

@@ -230,18 +230,22 @@ Zoom Out
 #(of %d)
 #Advanced
 #All files
+#All supported documents
 #Application:
 #Attachment: %s
 #Author:
 #Automatic
 #Automatically check for &updates
 #Book View
+#Bookmark Shortcuts
+#Bookmark shortcut to page %d of %s
 #Bookmarks
 #Bytes
 #Can't connect to the Internet (error %#x).
 #Cancel
 #Cannot print this file
 #Cannot start inverse search command. Please check the command line in the settings.
+#Comic books
 #Continuous Book View
 #Contribute Translation
 #Copy &Link Address
@@ -258,6 +262,7 @@ Zoom Out
 #Document Properties
 #Download
 #Enter the command-line to invoke when you double-click on the PDF document:
+#Error loading %s
 #F&orward\tAlt+Right Arrow
 #File Size:
 #File:
@@ -267,7 +272,9 @@ Zoom Out
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
 #Found text at page %d
+#Found text at page %d (again)
 #Hint: Use the F3 key for finding again
+#Image files (*.%s)
 #Modified:
 #New version %s is available. Download new version?
 #No matches were found
@@ -293,6 +300,7 @@ Zoom Out
 #Pr&esentation\tCtrl-L
 #Print range
 #Remember &opened files
+#Save S&hortcut...\tCtrl-Shift-S
 #Searching %d of %d...
 #Select &All
 #Select &All\tCtrl-A
@@ -312,6 +320,7 @@ Zoom Out
 #Title:
 #Unknown source file (%s)
 #Warning
+#XPS documents
 #Zoom
 #Zoom factor
 #[Changes detected; refreshing] %s

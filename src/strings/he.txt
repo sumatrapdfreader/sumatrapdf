@@ -501,17 +501,26 @@ printing document
 #&Copy Selection
 #&Print...
 #&Save As...
+#All supported documents
 #Attachment: %s
+#Bookmark Shortcuts
+#Bookmark shortcut to page %d of %s
+#Comic books
 #Copy &Link Address
 #Copy Co&mment
 #Enter the command-line to invoke when you double-click on the PDF document:
+#Error loading %s
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
+#Found text at page %d (again)
+#Image files (*.%s)
 #No result found around line %u in file %s
 #P&roperties
 #Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L
+#Save S&hortcut...\tCtrl-Shift-S
 #Select &All
 #Select &All\tCtrl-A
 #SumatraPDF crashed
+#XPS documents
 

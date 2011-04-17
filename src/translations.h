@@ -26,11 +26,4 @@ TCHAR       *GetLanguageName(int index);
 // but they'll need additional code that does Trans::GetTranslation() on them
 #define _TRN(x) (x)
 
-// use the following macros to mark translatable strings that
-// translators should not yet translate, as the strings might
-// still change due to the experimental nature of a feature
-// (make sure not to have any of these in release builds!)
-#define _TB_TR(x)   Trans::GetTranslation(x)
-#define _TB_TRN(x)  (x)
-
 #endif

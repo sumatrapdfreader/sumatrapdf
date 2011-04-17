@@ -357,15 +357,19 @@ Zoom Out
 #&Save As...
 #&Shrink pages to printable area (if necessary)
 #&Use original page sizes
+#All supported documents
 #Application:
 #Attachment: %s
 #Author:
 #Automatic
 #Book View
+#Bookmark Shortcuts
+#Bookmark shortcut to page %d of %s
 #Bookmarks
 #Bytes
 #Can't connect to the Internet (error %#x).
 #Cannot start inverse search command. Please check the command line in the settings.
+#Comic books
 #Continuous Book View
 #Copy &Link Address
 #Copy Co&mment
@@ -376,6 +380,7 @@ Zoom Out
 #Denied Permissions:
 #Document Properties
 #Enter the command-line to invoke when you double-click on the PDF document:
+#Error loading %s
 #F&orward\tAlt+Right Arrow
 #File Size:
 #File:
@@ -383,7 +388,9 @@ Zoom Out
 #Fit Content
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
+#Found text at page %d (again)
 #Hint: Use the F3 key for finding again
+#Image files (*.%s)
 #Modified:
 #No synchronization file found
 #Number of Pages:
@@ -396,6 +403,7 @@ Zoom Out
 #Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L
 #Print range
+#Save S&hortcut...\tCtrl-Shift-S
 #Select &All
 #Select &All\tCtrl-A
 #Select content with Ctrl+left mouse button
@@ -406,6 +414,7 @@ Zoom Out
 #SumatraPDF crashed
 #Text documents
 #Title:
+#XPS documents
 #Zoom
 #Zoom factor
 #copying text

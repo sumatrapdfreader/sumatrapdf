@@ -551,3 +551,12 @@ copiando texto
 printing document
 imprimindo documento
 
+# Untranslated:
+#All supported documents
+#Comic books
+#Error loading %s
+#Found text at page %d (again)
+#Image files (*.%s)
+#Save S&hortcut...\tCtrl-Shift-S
+#XPS documents
+

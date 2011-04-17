@@ -396,8 +396,12 @@ dokumentua imprimatzen
 #&Shrink pages to printable area (if necessary)
 #(of %d)
 #Advanced
+#All supported documents
+#Bookmark Shortcuts
+#Bookmark shortcut to page %d of %s
 #Bookmarks
 #Cannot start inverse search command. Please check the command line in the settings.
+#Comic books
 #Continuous Book View
 #Copy &Link Address
 #Copy Co&mment
@@ -407,12 +411,15 @@ dokumentua imprimatzen
 #Default &Layout:
 #Default PDF reader can't be changed in portable mode
 #Enter the command-line to invoke when you double-click on the PDF document:
+#Error loading %s
 #F&orward\tAlt+Right Arrow
 #Fit &Content\tCtrl-3
 #Fit Content
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
+#Found text at page %d (again)
 #Hint: Use the F3 key for finding again
+#Image files (*.%s)
 #No result found around line %u in file %s
 #No synchronization file found
 #No synchronization info at this position
@@ -423,6 +430,7 @@ dokumentua imprimatzen
 #Pr&esentation\tCtrl-L
 #Print range
 #Remember &opened files
+#Save S&hortcut...\tCtrl-Shift-S
 #Select &All
 #Select &All\tCtrl-A
 #Select content with Ctrl+left mouse button
@@ -435,6 +443,7 @@ dokumentua imprimatzen
 #SumatraPDF is your default PDF reader
 #SumatraPDF should now be your default PDF reader
 #Synchronization file cannot be opened
+#XPS documents
 #Zoom factor
 #[Changes detected; refreshing] %s
 

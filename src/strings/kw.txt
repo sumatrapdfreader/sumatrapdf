@@ -411,12 +411,16 @@ Faktor-zoum
 #&Save As...
 #&Shrink pages to printable area (if necessary)
 #&Use original page sizes
+#All supported documents
 #Application:
 #Attachment: %s
 #Author:
+#Bookmark Shortcuts
+#Bookmark shortcut to page %d of %s
 #Bookmarks
 #Bytes
 #Can't connect to the Internet (error %#x).
+#Comic books
 #Copy &Link Address
 #Copy Co&mment
 #Copying text was denied (copying as image only)
@@ -424,12 +428,15 @@ Faktor-zoum
 #Denied Permissions:
 #Document Properties
 #Enter the command-line to invoke when you double-click on the PDF document:
+#Error loading %s
 #File Size:
 #File:
 #Fit &Content\tCtrl-3
 #Fit Content
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
+#Found text at page %d (again)
+#Image files (*.%s)
 #Modified:
 #Number of Pages:
 #P&roperties
@@ -441,12 +448,14 @@ Faktor-zoum
 #Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L
 #Print range
+#Save S&hortcut...\tCtrl-Shift-S
 #Select &All
 #Select &All\tCtrl-A
 #Subject:
 #SumatraPDF Update
 #SumatraPDF crashed
 #Title:
+#XPS documents
 #copying text
 #printing document
 

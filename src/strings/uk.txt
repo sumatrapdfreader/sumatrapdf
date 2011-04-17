@@ -492,20 +492,29 @@ printing document
 #&Find what:
 #&Magnification:
 #&Match case
+#All supported documents
+#Bookmark Shortcuts
+#Bookmark shortcut to page %d of %s
+#Comic books
 #Continuous Book View
 #Default &Layout:
 #Enter the command-line to invoke when you double-click on the PDF document:
+#Error loading %s
 #Fit &Content\tCtrl-3
 #Fit Content
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
+#Found text at page %d (again)
+#Image files (*.%s)
 #No result found around line %u in file %s
 #No synchronization file found
 #No synchronization info at this position
 #Page number %u inexistant
 #Page scaling
+#Save S&hortcut...\tCtrl-Shift-S
 #Show &pages continuously
 #Source file %s has no synchronization point
 #Synchronization file cannot be opened
+#XPS documents
 #Zoom factor
 

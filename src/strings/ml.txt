@@ -188,6 +188,7 @@ Zoom Out
 #(of %d)
 #Advanced
 #All files
+#All supported documents
 #Application:
 #Associate with PDF files?
 #Attachment: %s
@@ -196,6 +197,8 @@ Zoom Out
 #Automatically check for &updates
 #Book View
 #Book&marks\tF12
+#Bookmark Shortcuts
+#Bookmark shortcut to page %d of %s
 #Bookmarks
 #Bytes
 #Can't connect to the Internet (error %#x).
@@ -204,6 +207,7 @@ Zoom Out
 #Cannot start inverse search command. Please check the command line in the settings.
 #Change Language
 #Check for &Updates
+#Comic books
 #Continuous Book View
 #Copy &Link Address
 #Copy Co&mment
@@ -221,6 +225,7 @@ Zoom Out
 #Enter password
 #Enter password for %s
 #Enter the command-line to invoke when you double-click on the PDF document:
+#Error loading %s
 #F&orward\tAlt+Right Arrow
 #File Size:
 #File:
@@ -230,8 +235,10 @@ Zoom Out
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
 #Found text at page %d
+#Found text at page %d (again)
 #Go to page
 #Hint: Use the F3 key for finding again
+#Image files (*.%s)
 #Make SumatraPDF default application for PDF files?
 #Match Case
 #Modified:
@@ -260,6 +267,7 @@ Zoom Out
 #Pr&esentation\tCtrl-L
 #Print range
 #Remember &opened files
+#Save S&hortcut...\tCtrl-Shift-S
 #Searching %d of %d...
 #Select &All
 #Select &All\tCtrl-A
@@ -280,6 +288,7 @@ Zoom Out
 #Title:
 #Unknown source file (%s)
 #Warning
+#XPS documents
 #You have the latest version.
 #You have version %s
 #Zoom
