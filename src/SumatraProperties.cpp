@@ -59,42 +59,6 @@ static void PdfDateToDisplay(TCHAR **s) {
     *s = Str::Dup(buf);
 }
 
-// format a number with a given thousand separator e.g. it turns 1234 into "1,234"
-// Caller needs to free() the result.
-static TCHAR *FormatNumWithThousandSep(size_t num) {
-    TCHAR thousandSep[4];
-    GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_STHOUSAND, thousandSep, dimof(thousandSep));
-    ScopedMem<TCHAR> buf(Str::Format(_T("%Iu"), num));
-
-    Str::Str<TCHAR> res(32);
-    int i = 3 - (Str::Len(buf) % 3);
-    for (TCHAR *src = buf.Get(); *src; src++) {
-        res.Append(*src);
-        if (*(src + 1) && i == 2)
-            res.Append(thousandSep);
-        i = (i + 1) % 3;
-    }
-
-    return res.StealData();
-}
-
-// Format a floating point number with at most two decimal after the point
-// Caller needs to free the result.
-static TCHAR *FormatFloatWithThousandSep(double number, const TCHAR *unit=NULL) {
-    size_t num = (size_t)(number * 100);
-
-    ScopedMem<TCHAR> tmp(FormatNumWithThousandSep(num / 100));
-    TCHAR decimal[4];
-    GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, decimal, dimof(decimal));
-
-    // always add between one and two decimals after the point
-    ScopedMem<TCHAR> buf(Str::Format(_T("%s%s%02d"), tmp, decimal, num % 100));
-    if (Str::EndsWith(buf, _T("0")))
-        buf[Str::Len(buf) - 1] = '\0';
-
-    return unit ? Str::Format(_T("%s %s"), buf, unit) : Str::Dup(buf);
-}
-
 // Format the file size in a short form that rounds to the largest size unit
 // e.g. "3.48 GB", "12.38 MB", "23 KB"
 // Caller needs to free the result.
@@ -113,7 +77,7 @@ static TCHAR *FormatSizeSuccint(size_t size) {
         unit = _TR("KB");
     }
 
-    return FormatFloatWithThousandSep(s, unit);
+    return File::FormatFloatWithThousandSep(s, unit);
 }
 
 // format file size in a readable way e.g. 1348258 is shown
@@ -121,7 +85,7 @@ static TCHAR *FormatSizeSuccint(size_t size) {
 // Caller needs to free the result
 static TCHAR *FormatFileSize(size_t size) {
     ScopedMem<TCHAR> n1(FormatSizeSuccint(size));
-    ScopedMem<TCHAR> n2(FormatNumWithThousandSep(size));
+    ScopedMem<TCHAR> n2(File::FormatNumWithThousandSep(size));
 
     return Str::Format(_T("%s (%s %s)"), n1, n2, _TR("Bytes"));
 }
@@ -145,8 +109,8 @@ static TCHAR *FormatPageSize(BaseEngine *engine, int pageNo, int rotation)
     if (((int)(height * 100)) % 100 == 99)
         height += 0.01;
 
-    ScopedMem<TCHAR> strWidth(FormatFloatWithThousandSep(width));
-    ScopedMem<TCHAR> strHeight(FormatFloatWithThousandSep(height, isMetric ? _T("cm") : _T("in")));
+    ScopedMem<TCHAR> strWidth(File::FormatFloatWithThousandSep(width));
+    ScopedMem<TCHAR> strHeight(File::FormatFloatWithThousandSep(height, isMetric ? _T("cm") : _T("in")));
 
     return Str::Format(_T("%s x %s"), strWidth, strHeight);
 }

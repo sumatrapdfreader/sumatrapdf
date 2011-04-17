@@ -259,9 +259,33 @@ typedef struct {
 	HANDLE		hProcess;
 	WCHAR		exepath[MAX_PATH + 2];
 	FLOAT		progress, prevProgress;
+	uint32_t	totalSize, currSize;
 } InstanceData;
 
 #define COL_WINDOW_BG RGB(0xcc, 0xcc, 0xcc)
+
+enum Magnitudes { KB = 1024, MB = 1024 * KB, GB = 1024 * MB };
+
+// Format the file size in a short form that rounds to the largest size unit
+// e.g. "3.48 GB", "12.38 MB", "23 KB"
+// Caller needs to free the result.
+static TCHAR *FormatSizeSuccint(size_t size) {
+    const TCHAR *unit = NULL;
+    double s = (double)size;
+
+    if (size > GB) {
+        s /= GB;
+        unit = _T("GB");
+    } else if (size > MB) {
+        s /= MB;
+        unit = _T("MB");
+    } else {
+        s /= KB;
+        unit = _T("KB");
+    }
+
+    return File::FormatFloatWithThousandSep(s, unit);
+}
 
 LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -294,18 +318,25 @@ LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lPar
 		// draw a progress bar, if a download is in progress
 		if (0 < data->progress && data->progress <= 1)
 		{
+			ScopedMem<TCHAR> currSize(FormatSizeSuccint(data->currSize));
+			ScopedMem<TCHAR> totalSize(FormatSizeSuccint(data->totalSize));
+			ScopedMem<TCHAR> s(Str::Format(_T("%s of %s"), currSize, totalSize));
 			SIZE msgSize;
 			RECT rcProgress = rcClient;
+			RECT rcProgressAll;
 			HBRUSH brushProgress = CreateSolidBrush(RGB(0x80, 0x80, 0xff));
 			
 			GetTextExtentPoint32W(hDCBuffer, data->message, Str::Len(data->message), &msgSize);
-			InflateRect(&rcProgress, -(rcProgress.right - rcProgress.left - msgSize.cx) / 2, -(rcProgress.bottom - rcProgress.top - msgSize.cy) / 2);
-			OffsetRect(&rcProgress, 0, msgSize.cy + 4);
+			InflateRect(&rcProgress, -(rcProgress.right - rcProgress.left - msgSize.cx) / 2, (-(rcProgress.bottom - rcProgress.top - msgSize.cy) / 2) + 2);
+			OffsetRect(&rcProgress, 0, msgSize.cy + 4 + 2);
 			FillRect(hDCBuffer, &rcProgress, (HBRUSH)GetStockObject(WHITE_BRUSH));
+			rcProgressAll = rcProgress;
 			rcProgress.right = (LONG)(rcProgress.left + data->progress * (rcProgress.right - rcProgress.left));
 			FillRect(hDCBuffer, &rcProgress, brushProgress);
 			
 			DeleteObject(brushProgress);
+
+			DrawTextW(hDCBuffer, s, -1, &rcProgressAll, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
 		}
 		
 		// draw the buffer on screen
@@ -465,7 +496,8 @@ NPError NP_LOADDS NPP_NewStream(NPP instance, NPMIMEType type, NPStream* stream,
 			*stype = NP_NORMAL;
 		}
 	}
-
+	data->totalSize = stream->end;
+	data->currSize = 0;
 	data->progress = stream->end > 0 ? 0.01f : 0;
 	data->prevProgress = -.1f;
 	RepaintOnProgressChange(data);
@@ -489,6 +521,8 @@ int32_t NP_LOADDS NPP_Write(NPP instance, NPStream* stream, int32_t offset, int3
 
 	if (data->hFile)
 	{
+		// Note: we optimistically assume that data comes in sequentially
+		// (i.e. next offset will be current offset + bytesWritten)
 		BOOL ok = WriteFile(data->hFile, buffer, (DWORD)len, &bytesWritten, NULL);
 		if (!ok)
 		{
@@ -497,6 +531,7 @@ int32_t NP_LOADDS NPP_Write(NPP instance, NPStream* stream, int32_t offset, int3
 		}
 	}
 
+	data->currSize = offset + bytesWritten;
 	data->progress = stream->end > 0 ? 1.0f * (offset + len) / stream->end : 0;
 	RepaintOnProgressChange(data);
 

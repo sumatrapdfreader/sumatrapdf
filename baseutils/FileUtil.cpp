@@ -3,6 +3,7 @@
 
 #include "BaseUtil.h"
 #include "StrUtil.h"
+#include "Vec.h"
 #include "FileUtil.h"
 
 namespace Path {
@@ -245,6 +246,44 @@ FILETIME GetModificationTime(const TCHAR *filePath)
         GetFileTime(h, NULL, NULL, &lastMod);
     CloseHandle(h);
     return lastMod;
+}
+
+// format a number with a given thousand separator e.g. it turns 1234 into "1,234"
+// Caller needs to free() the result.
+TCHAR *FormatNumWithThousandSep(size_t num)
+{
+    TCHAR thousandSep[4];
+    GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_STHOUSAND, thousandSep, dimof(thousandSep));
+    ScopedMem<TCHAR> buf(Str::Format(_T("%Iu"), num));
+
+    Str::Str<TCHAR> res(32);
+    int i = 3 - (Str::Len(buf) % 3);
+    for (TCHAR *src = buf.Get(); *src; src++) {
+        res.Append(*src);
+        if (*(src + 1) && i == 2)
+            res.Append(thousandSep);
+        i = (i + 1) % 3;
+    }
+
+    return res.StealData();
+}
+
+// Format a floating point number with at most two decimal after the point
+// Caller needs to free the result.
+TCHAR *FormatFloatWithThousandSep(double number, const TCHAR *unit)
+{
+    size_t num = (size_t)(number * 100);
+
+    ScopedMem<TCHAR> tmp(FormatNumWithThousandSep(num / 100));
+    TCHAR decimal[4];
+    GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, decimal, dimof(decimal));
+
+    // always add between one and two decimals after the point
+    ScopedMem<TCHAR> buf(Str::Format(_T("%s%s%02d"), tmp, decimal, num % 100));
+    if (Str::EndsWith(buf, _T("0")))
+        buf[Str::Len(buf) - 1] = '\0';
+
+    return unit ? Str::Format(_T("%s %s"), buf, unit) : Str::Dup(buf);
 }
 
 }
