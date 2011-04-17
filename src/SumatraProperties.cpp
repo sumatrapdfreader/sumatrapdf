@@ -77,7 +77,7 @@ static TCHAR *FormatSizeSuccint(size_t size) {
         unit = _TR("KB");
     }
 
-    return File::FormatFloatWithThousandSep(s, unit);
+    return Str::FormatFloatWithThousandSep(s, unit);
 }
 
 // format file size in a readable way e.g. 1348258 is shown
@@ -85,7 +85,7 @@ static TCHAR *FormatSizeSuccint(size_t size) {
 // Caller needs to free the result
 static TCHAR *FormatFileSize(size_t size) {
     ScopedMem<TCHAR> n1(FormatSizeSuccint(size));
-    ScopedMem<TCHAR> n2(File::FormatNumWithThousandSep(size));
+    ScopedMem<TCHAR> n2(Str::FormatNumWithThousandSep(size));
 
     return Str::Format(_T("%s (%s %s)"), n1, n2, _TR("Bytes"));
 }
@@ -109,8 +109,8 @@ static TCHAR *FormatPageSize(BaseEngine *engine, int pageNo, int rotation)
     if (((int)(height * 100)) % 100 == 99)
         height += 0.01;
 
-    ScopedMem<TCHAR> strWidth(File::FormatFloatWithThousandSep(width));
-    ScopedMem<TCHAR> strHeight(File::FormatFloatWithThousandSep(height, isMetric ? _T("cm") : _T("in")));
+    ScopedMem<TCHAR> strWidth(Str::FormatFloatWithThousandSep(width));
+    ScopedMem<TCHAR> strHeight(Str::FormatFloatWithThousandSep(height, isMetric ? _T("cm") : _T("in")));
 
     return Str::Format(_T("%s x %s"), strWidth, strHeight);
 }

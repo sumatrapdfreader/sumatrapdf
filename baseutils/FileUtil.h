@@ -26,12 +26,6 @@ size_t       GetSize(const TCHAR *filePath);
 bool         Delete(const TCHAR *filePath);
 FILETIME     GetModificationTime(const TCHAR *filePath);
 
-// Not the best place to put it but it depends on Vec.h so can't be put in
-// StrUtil.h (and I don't want to try to create circular dependency between
-// StrUtil.h and Vec.h)
-TCHAR *     FormatFloatWithThousandSep(double number, const TCHAR *unit=NULL);
-TCHAR *     FormatNumWithThousandSep(size_t num);
-
 }
 
 namespace Dir {

@@ -284,7 +284,7 @@ static TCHAR *FormatSizeSuccint(size_t size) {
         unit = _T("KB");
     }
 
-    return File::FormatFloatWithThousandSep(s, unit);
+    return Str::FormatFloatWithThousandSep(s, unit);
 }
 
 LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lParam)

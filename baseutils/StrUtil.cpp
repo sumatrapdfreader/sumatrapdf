@@ -317,15 +317,16 @@ size_t TransChars(WCHAR *str, const WCHAR *oldChars, const WCHAR *newChars)
 
 // Note: BufSet() should only be used when absolutely necessary (e.g. when
 // handling buffers in OS-defined structures)
+// returns the number of characters written (without the terminating \0)
 size_t BufSet(char *dst, size_t dstCchSize, const char *src)
 {
     if (0 == dstCchSize) return 0;
 
     size_t srcCchSize = Str::Len(src);
-    size_t size = min(dstCchSize, srcCchSize + 1);
+    size_t size = min(dstCchSize - 1, srcCchSize);
 
-    strncpy(dst, src, size);
-    dst[size - 1] = '\0';
+    strncpy(dst, src, size + 1);
+    dst[size] = '\0';
 
     return size;
 }
@@ -335,10 +336,10 @@ size_t BufSet(WCHAR *dst, size_t dstCchSize, const WCHAR *src)
     if (0 == dstCchSize) return 0;
 
     size_t srcCchSize = Str::Len(src);
-    size_t size = min(dstCchSize, srcCchSize + 1);
+    size_t size = min(dstCchSize - 1, srcCchSize);
 
-    wcsncpy(dst, src, size);
-    dst[size - 1] = '\0';
+    wcsncpy(dst, src, size + 1);
+    dst[size] = '\0';
 
     return size;
 }
@@ -369,6 +370,49 @@ bool HexToMem(const char *s, unsigned char *buf, int bufLen)
         *buf++ = (unsigned char)c;
     }
     return *s == '\0';
+}
+
+// format a number with a given thousand separator e.g. it turns 1234 into "1,234"
+// Caller needs to free() the result.
+TCHAR *FormatNumWithThousandSep(size_t num, const TCHAR *sep)
+{
+    TCHAR thousandSep[4];
+    if (!sep) {
+        GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_STHOUSAND, thousandSep, dimof(thousandSep));
+        sep = thousandSep;
+    }
+    ScopedMem<TCHAR> buf(Str::Format(_T("%Iu"), num));
+
+    size_t resLen = Str::Len(buf) + Str::Len(sep) * (Str::Len(buf) + 3) / 3 + 1;
+    TCHAR *res = SAZA(TCHAR, resLen);
+    TCHAR *next = res;
+    int i = 3 - (Str::Len(buf) % 3);
+    for (TCHAR *src = buf.Get(); *src; ) {
+        *next++ = *src++;
+        if (*src && i == 2)
+            next += Str::BufSet(next, resLen - (next - res), sep);
+        i = (i + 1) % 3;
+    }
+
+    return res;
+}
+
+// Format a floating point number with at most two decimal after the point
+// Caller needs to free the result.
+TCHAR *FormatFloatWithThousandSep(double number, const TCHAR *unit)
+{
+    size_t num = (size_t)(number * 100);
+
+    ScopedMem<TCHAR> tmp(FormatNumWithThousandSep(num / 100));
+    TCHAR decimal[4];
+    GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, decimal, dimof(decimal));
+
+    // always add between one and two decimals after the point
+    ScopedMem<TCHAR> buf(Str::Format(_T("%s%s%02d"), tmp, decimal, num % 100));
+    if (Str::EndsWith(buf, _T("0")))
+        buf[Str::Len(buf) - 1] = '\0';
+
+    return unit ? Str::Format(_T("%s %s"), buf, unit) : Str::Dup(buf);
 }
 
 /* compares two strings "naturally" by sorting numbers within a string

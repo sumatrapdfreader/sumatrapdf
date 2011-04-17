@@ -99,9 +99,9 @@ static void TStrTest()
     assert(Str::IsEmpty((char*)NULL) && Str::IsEmpty((WCHAR*)NULL)&& Str::IsEmpty(_T("")) && !Str::IsEmpty(str));
     assert(Str::FindChar(str, _T('s')) && !Str::FindChar(str, _T('S')));
     size_t len = Str::BufSet(buf, dimof(buf), str);
-    assert(len == Str::Len(buf) + 1 && Str::Eq(buf, str));
+    assert(len == Str::Len(buf) && Str::Eq(buf, str));
     len = Str::BufSet(buf, 6, str);
-    assert(len == 6 && Str::Eq(buf, _T("a str")));
+    assert(len == 5 && Str::Eq(buf, _T("a str")));
 
     str = Str::Dup(buf);
     assert(Str::Eq(str, buf));
@@ -205,6 +205,25 @@ static void TStrTest()
     assert(Str::CmpNatural(_T("abc"), _T(".svn")) > 0);
     assert(Str::CmpNatural(_T("ab0200"), _T("AB333")) < 0);
     assert(Str::CmpNatural(_T("a b"), _T("a  c")) < 0);
+
+    struct {
+        size_t number;
+        const TCHAR *result;
+    } formatNumData[] = {
+        { 1,        _T("1") },
+        { 12,       _T("12") },
+        { 123,      _T("123") },
+        { 1234,     _T("1'234") },
+        { 12345,    _T("12'345") },
+        { 123456,   _T("123'456") },
+        { 1234567,  _T("1'234'567") },
+        { 12345678, _T("12'345'678") },
+    };
+
+    for (int i = 0; i < dimof(formatNumData); i++) {
+        ScopedMem<TCHAR> tmp(Str::FormatNumWithThousandSep(formatNumData[i].number, _T("'")));
+        assert(Str::Eq(tmp, formatNumData[i].result));
+    }
 }
 
 static void FileUtilTest()
