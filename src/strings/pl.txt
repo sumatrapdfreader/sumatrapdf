@@ -25,6 +25,9 @@ Rozmiar &rzeczywisty\tCtrl+1
 &Close\tCtrl-W
 &Zamknij\tCtrl+W
 
+&Copy Selection
+Kopiuj &zaznaczenie
+
 &Copy Selection\tCtrl-C
 Kopiuj &zaznaczenie\tCtrl+C
 
@@ -91,6 +94,9 @@ Strony &nieparzyste
 &Previous Page\tLeft Arrow
 &Poprzednia strona\tW lewo
 
+&Print...
+&Drukuj...
+
 &Print...\tCtrl-P
 &Drukuj\tCtrl+P
 
@@ -102,6 +108,9 @@ Pamiętaj &hasło dla tego dokumentu
 
 &Remember these settings for each document
 Pamiętaj ustawienia dla &każdego dokumentu
+
+&Save As...
+Zapisz jako...
 
 &Save As...\tCtrl-S
 Zapisz &jako…\tCtrl+S
@@ -138,6 +147,9 @@ Zaawansowane
 
 All files
 Wszystkie pliki
+
+All supported documents
+Wszystkie obsługiwane pliki
 
 Application:
 Program:
@@ -202,6 +214,9 @@ Wiele stron - układ ciągły
 Contribute Translation
 Dodaj swoje tłumaczenie
 
+Copy Co&mment
+Kopiuj komentarz
+
 Copying text was denied (copying as image only)
 Nie można kopiować tekstu (można kopiować jako obrazy)
 
@@ -249,6 +264,9 @@ Podaj hasło dla %s
 
 Enter the command-line to invoke when you double-click on the PDF document:
 Podaj polecenie wykonywane po dwukrotnym kliknięciu pliku PDF:
+
+Error loading %s
+Błąd ładowania pliku %s
 
 F&orward\tAlt+Right Arrow
 &Dalej\tAlt+W prawo
@@ -310,6 +328,9 @@ Dopasuj pojedynczą stronę
 Found text at page %d
 Znaleziono tekst na stronie %d
 
+Found text at page %d (again)
+Znaleziono tekst na stronie %d (znowu)
+
 GB
 GB
 
@@ -318,6 +339,9 @@ Przejdź do strony
 
 Hint: Use the F3 key for finding again
 Wskazówka: użyj klawisza F3, aby szukać dalej
+
+Image files (*.%s)
+Pliki graficzne (*.%s)
 
 KB
 KB
@@ -372,6 +396,9 @@ Otwórz w &Foxit Reader
 
 Open in PDF-XChange
 Otwórz w PDF-XChange
+
+P&roperties
+Właściwości
 
 P&roperties\tCtrl-D
 &Właściwości\tCtrl+D
@@ -429,6 +456,12 @@ Obróć w &lewo\tCtrl+Shift+Minus
 
 Rotate &Right\tCtrl-Shift-+
 Obróć w &prawo\tCtrl+Shift+Plus
+
+Searching %d of %d...
+Szukanie %d z %d...
+
+Select &All
+Zaznacz wszystko
 
 Select &All\tCtrl-A
 Zaznacz &wszystko\tCtrl+A
@@ -527,19 +560,8 @@ printing document
 drukowanie dokumentu
 
 # Untranslated:
-#&Copy Selection
-#&Print...
-#&Save As...
-#All supported documents
 #Bookmark Shortcuts
 #Bookmark shortcut to page %d of %s
 #Copy &Link Address
-#Copy Co&mment
-#Error loading %s
-#Found text at page %d (again)
-#Image files (*.%s)
-#P&roperties
 #Save S&hortcut...\tCtrl-Shift-S
-#Searching %d of %d...
-#Select &All
 
