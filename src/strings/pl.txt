@@ -187,6 +187,9 @@ Zmień język (Change Language)
 Check for &Updates
 Szukaj &aktualizacji
 
+Comic books
+Komiksy cbz, cbr
+
 Continuous
 Pojedyncza strona - układ ciągły
 
@@ -493,6 +496,9 @@ Odwiedź &stronę internetową
 Warning
 Uwaga
 
+XPS documents
+Pliki XPS
+
 You have the latest version.
 Posiadasz najnowszą wersję.
 
@@ -527,7 +533,6 @@ drukowanie dokumentu
 #All supported documents
 #Bookmark Shortcuts
 #Bookmark shortcut to page %d of %s
-#Comic books
 #Copy &Link Address
 #Copy Co&mment
 #Error loading %s
@@ -537,5 +542,4 @@ drukowanie dokumentu
 #Save S&hortcut...\tCtrl-Shift-S
 #Searching %d of %d...
 #Select &All
-#XPS documents
 
