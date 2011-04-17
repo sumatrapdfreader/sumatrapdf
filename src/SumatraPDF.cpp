@@ -192,6 +192,7 @@ SerializableGlobalPrefs             gGlobalPrefs = {
     15, // int  m_fwdsearchWidth
     0, // bool m_fwdsearchPermanent
     false, // bool m_invertColors
+    { 0, 0 }, // FILETIME m_lastPrefUpdate
 };
 
 typedef struct ToolbarButtonInfo {
@@ -1015,8 +1016,8 @@ static bool ReloadPrefs()
     ScopedMem<TCHAR> path(GetPrefsFileName());
 
     FILETIME time = File::GetModificationTime(path);
-    if (time.dwLowDateTime != gGlobalPrefs.m_lastPrefUpdate.dwLowDateTime ||
-        time.dwHighDateTime != gGlobalPrefs.m_lastPrefUpdate.dwHighDateTime) {
+    if (time.dwLowDateTime == gGlobalPrefs.m_lastPrefUpdate.dwLowDateTime &&
+        time.dwHighDateTime == gGlobalPrefs.m_lastPrefUpdate.dwHighDateTime) {
         return true;
     }
 
