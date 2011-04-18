@@ -35,6 +35,7 @@ class FileHistory;
 extern HINSTANCE                ghinst;
 extern SerializableGlobalPrefs  gGlobalPrefs;
 extern HCURSOR                  gCursorHand;
+extern HBRUSH                   gBrushNoDocBg;
 extern bool                     gRestrictedUse;
 extern bool                     gPluginMode;
 

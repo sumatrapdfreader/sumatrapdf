@@ -150,7 +150,7 @@ static HCURSOR                      gCursorIBeam;
 static HCURSOR                      gCursorScroll;
 static HCURSOR                      gCursorSizeWE;
 static HCURSOR                      gCursorNo;
-static HBRUSH                       gBrushNoDocBg;
+       HBRUSH                       gBrushNoDocBg;
 static HBRUSH                       gBrushWhite;
 static HBRUSH                       gBrushBlack;
 static HBRUSH                       gBrushShadow;

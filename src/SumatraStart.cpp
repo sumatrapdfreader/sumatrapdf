@@ -7,30 +7,14 @@
 #include "SumatraAbout.h"
 #include "FileHistory.h"
 #include "translations.h"
-#include "Version.h"
 #include "WinUtil.h"
 #include "FileUtil.h"
 #include "Vec.h"
 #include "Resource.h"
 #include "AppTools.h"
 
-// TODO: move the whole title calculations/drawing into SumatraAbout
 #define SUMATRA_TXT_FONT        _T("Arial Black")
 #define SUMATRA_TXT_FONT_SIZE   24
-
-#define VERSION_TXT_FONT        _T("Arial Black")
-#define VERSION_TXT_FONT_SIZE   12
-
-#define VERSION_TXT             _T("v") CURR_VERSION_STR
-#ifdef SVN_PRE_RELEASE_VER
- #define VERSION_SUB_TXT        _T("Pre-release")
-#else
- #define VERSION_SUB_TXT        _T("")
-#endif
-
-#define ABOUT_BOX_MARGIN_DX         6
-#define ABOUT_BOX_MARGIN_DY         6
-#define ABOUT_BORDER_COL            RGB(0,0,0)
 
 #define DOCLIST_SEPARATOR_DY        2
 #define DOCLIST_THUMBNAIL_BORDER_W  2
@@ -51,20 +35,15 @@ struct StartPageLink {
 static void DrawStartPage(WindowInfo *win, HDC hdc, FileHistory& fileHistory)
 {
     HBRUSH brushBg = CreateSolidBrush(gGlobalPrefs.m_bgColor);
-    HBRUSH brushBg2 = CreateSolidBrush(RGB(0xCC, 0xCC, 0xCC));
-    HBRUSH brushEmpty = CreateSolidBrush(WIN_COL_WHITE);
 
     HPEN penBorder = CreatePen(PS_SOLID, DOCLIST_SEPARATOR_DY, WIN_COL_BLACK);
     HPEN penThumbBorder = CreatePen(PS_SOLID, DOCLIST_THUMBNAIL_BORDER_W, WIN_COL_BLACK);
     HPEN penLinkLine = CreatePen(PS_SOLID, 1, COL_BLUE_LINK);
 
     Win::Font::ScopedFont fontSumatraTxt(hdc, SUMATRA_TXT_FONT, SUMATRA_TXT_FONT_SIZE);
-    Win::Font::ScopedFont fontVersionTxt(hdc, VERSION_TXT_FONT, VERSION_TXT_FONT_SIZE);
     Win::Font::ScopedFont fontLeftTxt(hdc, _T("MS Shell Dlg"), 14);
 
     HGDIOBJ origFont = SelectObject(hdc, fontSumatraTxt); /* Just to remember the orig font */
-
-    SetBkMode(hdc, TRANSPARENT);
 
     ClientRect rc(win->hwndCanvas);
     FillRect(hdc, &rc.ToRECT(), brushBg);
@@ -72,45 +51,21 @@ static void DrawStartPage(WindowInfo *win, HDC hdc, FileHistory& fileHistory)
     SelectObject(hdc, brushBg);
     SelectObject(hdc, penBorder);
 
-    /* calculate minimal top box size */
-    SIZE txtSize;
-    const TCHAR *txt = APP_NAME_STR;
-    GetTextExtentPoint32(hdc, txt, Str::Len(txt), &txtSize);
-    SizeI titleBox(txtSize.cx + ABOUT_BOX_MARGIN_DX * 2, txtSize.cy + ABOUT_BOX_MARGIN_DY * 2);
-
-    /* consider version and version-sub strings */
-    SelectObject(hdc, fontVersionTxt);
-    txt = VERSION_TXT;
-    GetTextExtentPoint32(hdc, txt, Str::Len(txt), &txtSize);
-    SizeI versionBox(txtSize.cx, txtSize.cy * 2 + 3);
-    txt = VERSION_SUB_TXT;
-    GetTextExtentPoint32(hdc, txt, Str::Len(txt), &txtSize);
-    versionBox.dx = max(versionBox.dx, txtSize.cx);
-    titleBox.dy = max(titleBox.dy, versionBox.dy);
-
     /* render title */
-    int x = max(rc.dx - titleBox.dx - versionBox.dx, 0);
-    SelectObject(hdc, fontSumatraTxt);
-    DrawSumatraPDF(hdc, x, ABOUT_BOX_MARGIN_DY);
-
-    SetTextColor(hdc, ABOUT_BORDER_COL);
-    SelectObject(hdc, fontVersionTxt);
-    x += titleBox.dx - 6;
-    txt = VERSION_TXT;
-    TextOut(hdc, x, ABOUT_BOX_MARGIN_DY, txt, Str::Len(txt));
-    txt = VERSION_SUB_TXT;
-    TextOut(hdc, x, ABOUT_BOX_MARGIN_DY + (versionBox.dy - 3) / 2, txt, Str::Len(txt));
-
-    SetTextColor(hdc, ABOUT_BORDER_COL);
+    RectI titleBox = RectI(PointI(0, 0), CalcSumatraVersionSize(hdc));
+    titleBox.x = max(rc.dx - titleBox.dx - 3, 0);
+    DrawSumatraVersion(hdc, titleBox);
     PaintLine(hdc, RectI(0, titleBox.dy, rc.dx, 0));
 
     /* render recent files list */
-    SelectObject(hdc, brushBg2);
+    SelectObject(hdc, gBrushNoDocBg);
     SelectObject(hdc, penThumbBorder);
+    SetBkMode(hdc, TRANSPARENT);
+    SetTextColor(hdc, WIN_COL_BLACK);
 
     rc.y += titleBox.dy;
     rc.dy -= titleBox.dy;
-    FillRect(hdc, &rc.ToRECT(), brushBg2);
+    FillRect(hdc, &rc.ToRECT(), gBrushNoDocBg);
     rc.dy -= DOCLIST_BOTTOM_BOX_DY;
 
     int width = min((rc.dx - DOCLIST_MARGIN_LEFT - DOCLIST_MARGIN_RIGHT + DOCLIST_MARGIN_BETWEEN_X) / (THUMBNAIL_DX + DOCLIST_MARGIN_BETWEEN_X), DOCLIST_MAX_THUMBNAILS_X);
@@ -118,8 +73,9 @@ static void DrawStartPage(WindowInfo *win, HDC hdc, FileHistory& fileHistory)
     PointI offset(rc.x + DOCLIST_MARGIN_LEFT + (rc.dx - width * THUMBNAIL_DX - (width - 1) * DOCLIST_MARGIN_BETWEEN_X - DOCLIST_MARGIN_LEFT - DOCLIST_MARGIN_RIGHT) / 2, rc.y + DOCLIST_MARGIN_TOP);
 
     SelectObject(hdc, fontSumatraTxt);
+    SIZE txtSize;
     // TODO: translate
-    txt = _T("Frequently Read");
+    const TCHAR *txt = _T("Frequently Read");
     GetTextExtentPoint32(hdc, txt, Str::Len(txt), &txtSize);
     TextOut(hdc, offset.x, rc.y + (DOCLIST_MARGIN_TOP - txtSize.cy) / 2, txt, Str::Len(txt));
 
@@ -197,8 +153,6 @@ static void DrawStartPage(WindowInfo *win, HDC hdc, FileHistory& fileHistory)
     SelectObject(hdc, origFont);
 
     DeleteObject(brushBg);
-    DeleteObject(brushBg2);
-    DeleteObject(brushEmpty);
     DeleteObject(penBorder);
     DeleteObject(penThumbBorder);
     DeleteObject(penLinkLine);

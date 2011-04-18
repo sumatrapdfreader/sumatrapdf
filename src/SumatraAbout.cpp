@@ -78,25 +78,81 @@ static AboutLayoutInfoEl gAboutLayoutInfo[] = {
 #define COL4 RGB(69, 132, 190)
 #define COL5 RGB(112, 115, 207)
 
-void DrawSumatraPDF(HDC hdc, int x, int y)
+static void DrawSumatraPDF(HDC hdc, PointI pt)
 {
     const TCHAR *txt = APP_NAME_STR;
 #ifdef BLACK_ON_YELLOW
     // simple black version
     SetTextColor(hdc, ABOUT_BORDER_COL);
-    TextOut(hdc, x, y, txt, Str::Len(txt));
+    TextOut(hdc, pt.x, pt.y, txt, Str::Len(txt));
 #else
     // colorful version
     COLORREF cols[] = { COL1, COL2, COL3, COL4, COL5, COL5, COL4, COL3, COL2, COL1 };
     for (size_t i = 0; i < Str::Len(txt); i++) {
         SetTextColor(hdc, cols[i % dimof(cols)]);
-        TextOut(hdc, x, y, txt + i, 1);
+        TextOut(hdc, pt.x, pt.y, txt + i, 1);
 
         SIZE txtSize;
         GetTextExtentPoint32(hdc, txt + i, 1, &txtSize);
-        x += txtSize.cx;
+        pt.x += txtSize.cx;
     }
 #endif
+}
+
+SizeI CalcSumatraVersionSize(HDC hdc)
+{
+    SizeI result;
+
+    Win::Font::ScopedFont fontSumatraTxt(hdc, SUMATRA_TXT_FONT, SUMATRA_TXT_FONT_SIZE);
+    Win::Font::ScopedFont fontVersionTxt(hdc, VERSION_TXT_FONT, VERSION_TXT_FONT_SIZE);
+    HGDIOBJ oldFont = SelectObject(hdc, fontSumatraTxt);
+
+    SIZE txtSize;
+    /* calculate minimal top box size */
+    const TCHAR *txt = APP_NAME_STR;
+    GetTextExtentPoint32(hdc, txt, Str::Len(txt), &txtSize);
+    result.dy = txtSize.cy + ABOUT_BOX_MARGIN_DY * 2;
+    result.dx = txtSize.cx;
+
+    /* consider version and version-sub strings */
+    SelectObject(hdc, fontVersionTxt);
+    txt = VERSION_TXT;
+    GetTextExtentPoint32(hdc, txt, Str::Len(txt), &txtSize);
+    int minWidth = txtSize.cx;
+    txt = VERSION_SUB_TXT;
+    GetTextExtentPoint32(hdc, txt, Str::Len(txt), &txtSize);
+    txtSize.cx = max(txtSize.cx, minWidth);
+    result.dx += 2 * (txtSize.cx + 6);
+
+    SelectObject(hdc, oldFont);
+
+    return result;
+}
+
+void DrawSumatraVersion(HDC hdc, RectI rect)
+{
+    Win::Font::ScopedFont fontSumatraTxt(hdc, SUMATRA_TXT_FONT, SUMATRA_TXT_FONT_SIZE);
+    Win::Font::ScopedFont fontVersionTxt(hdc, VERSION_TXT_FONT, VERSION_TXT_FONT_SIZE);
+    HGDIOBJ oldFont = SelectObject(hdc, fontSumatraTxt);
+
+    SetBkMode(hdc, TRANSPARENT);
+
+    SIZE txtSize;
+    const TCHAR *txt = APP_NAME_STR;
+    GetTextExtentPoint32(hdc, txt, Str::Len(txt), &txtSize);
+    RectI mainRect(rect.x + (rect.dx - txtSize.cx) / 2,
+                   rect.y + (rect.dy - txtSize.cy) / 2, txtSize.cx, txtSize.cy);
+    DrawSumatraPDF(hdc, mainRect.TL());
+
+    SetTextColor(hdc, WIN_COL_BLACK);
+    SelectObject(hdc, fontVersionTxt);
+    PointI pt(mainRect.x + mainRect.dx + 6, mainRect.y);
+    txt = VERSION_TXT;
+    TextOut(hdc, pt.x, pt.y, txt, Str::Len(txt));
+    txt = VERSION_SUB_TXT;
+    TextOut(hdc, pt.x, pt.y + 16, txt, Str::Len(txt));
+
+    SelectObject(hdc, oldFont);
 }
 
 /* Draws the about screen and remembers some state for hyperlinking.
@@ -104,73 +160,38 @@ void DrawSumatraPDF(HDC hdc, int x, int y)
    to understand without seeing the design. */
 static void DrawAbout(HWND hwnd, HDC hdc, RectI rect)
 {
-    SIZE            txtSize;
-    int             totalDx, totalDy;
-    int             leftLargestDx;
-    int             sumatraPdfTxtDx, sumatraPdfTxtDy;
-    int             linePosX, linePosY, lineDy;
-    int             offX, offY;
-    int             x, y;
-    int             boxDy;
-    int             bottomY;
-
     HBRUSH brushBg = CreateSolidBrush(gGlobalPrefs.m_bgColor);
 
     HPEN penBorder = CreatePen(PS_SOLID, ABOUT_LINE_OUTER_SIZE, WIN_COL_BLACK);
     HPEN penDivideLine = CreatePen(PS_SOLID, ABOUT_LINE_SEP_SIZE, WIN_COL_BLACK);
     HPEN penLinkLine = CreatePen(PS_SOLID, ABOUT_LINE_SEP_SIZE, COL_BLUE_LINK);
 
-    Win::Font::ScopedFont fontSumatraTxt(hdc, SUMATRA_TXT_FONT, SUMATRA_TXT_FONT_SIZE);
-    Win::Font::ScopedFont fontVersionTxt(hdc, VERSION_TXT_FONT, VERSION_TXT_FONT_SIZE);
     Win::Font::ScopedFont fontLeftTxt(hdc, LEFT_TXT_FONT, LEFT_TXT_FONT_SIZE);
     Win::Font::ScopedFont fontRightTxt(hdc, RIGHT_TXT_FONT, RIGHT_TXT_FONT_SIZE);
 
-    HGDIOBJ origFont = SelectObject(hdc, fontSumatraTxt); /* Just to remember the orig font */
-
-    SetBkMode(hdc, TRANSPARENT);
+    HGDIOBJ origFont = SelectObject(hdc, fontLeftTxt); /* Just to remember the orig font */
 
     ClientRect rc(hwnd);
     FillRect(hdc, &rc.ToRECT(), brushBg);
 
+    /* render title */
+    RectI titleRect(rect.TL(), CalcSumatraVersionSize(hdc));
+
     SelectObject(hdc, brushBg);
     SelectObject(hdc, penBorder);
+    Rectangle(hdc, rect.x, rect.y + ABOUT_LINE_OUTER_SIZE, rect.x + rect.dx, rect.y + titleRect.dy + ABOUT_LINE_OUTER_SIZE);
 
-    offX = rect.x;
-    offY = rect.y;
-    totalDx = rect.dx;
-    totalDy = rect.dy;
+    titleRect.Offset((rect.dx - titleRect.dx) / 2, 0);
+    DrawSumatraVersion(hdc, titleRect);
 
-    /* render title */
-    const TCHAR *txt = APP_NAME_STR;
-    GetTextExtentPoint32(hdc, txt, Str::Len(txt), &txtSize);
-    sumatraPdfTxtDx = txtSize.cx;
-    sumatraPdfTxtDy = txtSize.cy;
-
-    boxDy = sumatraPdfTxtDy + ABOUT_BOX_MARGIN_DY * 2;
-
-    Rectangle(hdc, offX, offY + ABOUT_LINE_OUTER_SIZE, offX + totalDx, offY + boxDy + ABOUT_LINE_OUTER_SIZE);
-
-    SelectObject(hdc, fontSumatraTxt);
-    x = offX + (totalDx - sumatraPdfTxtDx) / 2;
-    y = offY + (boxDy - sumatraPdfTxtDy) / 2;
-    DrawSumatraPDF(hdc, x, y);
-
+    /* render attribution box */
     SetTextColor(hdc, ABOUT_BORDER_COL);
-    SelectObject(hdc, fontVersionTxt);
-    x = offX + (totalDx - sumatraPdfTxtDx) / 2 + sumatraPdfTxtDx + 6;
-    y = offY + (boxDy - sumatraPdfTxtDy) / 2;
-    txt = VERSION_TXT;
-    TextOut(hdc, x, y, txt, Str::Len(txt));
-    txt = VERSION_SUB_TXT;
-    TextOut(hdc, x, y + 16, txt, Str::Len(txt));
+    SetBkMode(hdc, TRANSPARENT);
 
-    SetTextColor(hdc, ABOUT_BORDER_COL);
-
-    offY += boxDy;
-    Rectangle(hdc, offX, offY, offX + totalDx, offY + totalDy - boxDy);
+    Rectangle(hdc, rect.x, rect.y + titleRect.dy, rect.x + rect.dx, rect.y + rect.dy);
 
     /* render text on the left*/
-    leftLargestDx = 0;
+    int leftLargestDx = 0;
     SelectObject(hdc, fontLeftTxt);
     for (AboutLayoutInfoEl *el = gAboutLayoutInfo; el->leftTxt; el++) {
         TextOut(hdc, el->leftPos.x, el->leftPos.y, el->leftTxt, Str::Len(el->leftTxt));
@@ -179,7 +200,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, RectI rect)
     }
 
     /* render text on the right */
-    bottomY = 0;
+    int bottomY = 0;
     SelectObject(hdc, fontRightTxt);
     for (AboutLayoutInfoEl *el = gAboutLayoutInfo; el->leftTxt; el++) {
         bool hasUrl = !gRestrictedUse && el->url;
@@ -196,12 +217,11 @@ static void DrawAbout(HWND hwnd, HDC hdc, RectI rect)
         PaintLine(hdc, RectI(el->rightPos.x, underlineY, el->rightPos.dx, 0));
     }
 
-    linePosX = ABOUT_LINE_OUTER_SIZE + ABOUT_MARGIN_DX + leftLargestDx + ABOUT_LEFT_RIGHT_SPACE_DX;
-    linePosY = 4;
-    lineDy = bottomY - gAboutLayoutInfo[0].rightPos.y;
-
     SelectObject(hdc, penDivideLine);
-    PaintLine(hdc, RectI(linePosX + offX, linePosY + offY, 0, lineDy));
+    RectI divideLine(ABOUT_LINE_OUTER_SIZE + ABOUT_MARGIN_DX + leftLargestDx + ABOUT_LEFT_RIGHT_SPACE_DX,
+                     4, 0, bottomY - gAboutLayoutInfo[0].rightPos.y);
+    divideLine.Offset(rect.x, rect.y + titleRect.dy);
+    PaintLine(hdc, divideLine);
 
     SelectObject(hdc, origFont);
 
@@ -213,20 +233,10 @@ static void DrawAbout(HWND hwnd, HDC hdc, RectI rect)
 
 static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, RectI *rect)
 {
-    SIZE            txtSize;
-    int             totalDx, totalDy;
-    int             leftDy, rightDy;
-    int             leftLargestDx, rightLargestDx, titleLargestDx;
-    int             linePosX, linePosY;
-    int             currY;
-    int             offX, offY;
-    int             boxDy;
-
-    HFONT fontSumatraTxt = Win::Font::GetSimple(hdc, SUMATRA_TXT_FONT, SUMATRA_TXT_FONT_SIZE);
-    HFONT fontVersionTxt = Win::Font::GetSimple(hdc, VERSION_TXT_FONT, VERSION_TXT_FONT_SIZE);
     HFONT fontLeftTxt = Win::Font::GetSimple(hdc, LEFT_TXT_FONT, LEFT_TXT_FONT_SIZE);
     HFONT fontRightTxt = Win::Font::GetSimple(hdc, RIGHT_TXT_FONT, RIGHT_TXT_FONT_SIZE);
-    HGDIOBJ origFont = SelectObject(hdc, fontSumatraTxt);
+
+    HGDIOBJ origFont = SelectObject(hdc, fontLeftTxt);
 
     /* show/hide the SyncTeX attribution line */
     assert(!gAboutLayoutInfo[dimof(gAboutLayoutInfo) - 2].leftTxt || Str::Eq(gAboutLayoutInfo[dimof(gAboutLayoutInfo) - 2].leftTxt, _T("synctex")));
@@ -236,26 +246,14 @@ static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, RectI *rect)
         gAboutLayoutInfo[dimof(gAboutLayoutInfo) - 2].leftTxt = NULL;
 
     /* calculate minimal top box size */
-    const TCHAR *txt = APP_NAME_STR;
-    GetTextExtentPoint32(hdc, txt, Str::Len(txt), &txtSize);
-    boxDy = txtSize.cy + ABOUT_BOX_MARGIN_DY * 2;
-    titleLargestDx = txtSize.cx;
-
-    /* consider version and version-sub strings */
-    SelectObject(hdc, fontVersionTxt);
-    txt = VERSION_TXT;
-    GetTextExtentPoint32(hdc, txt, Str::Len(txt), &txtSize);
-    offX = txtSize.cx;
-    txt = VERSION_SUB_TXT;
-    GetTextExtentPoint32(hdc, txt, Str::Len(txt), &txtSize);
-    txtSize.cx = max(txtSize.cx, offX);
-    titleLargestDx += 2 * (txtSize.cx + 6);
+    SizeI headerSize = CalcSumatraVersionSize(hdc);
 
     /* calculate left text dimensions */
     SelectObject(hdc, fontLeftTxt);
-    leftLargestDx = 0;
-    leftDy = 0;
+    int leftLargestDx = 0;
+    int leftDy = 0;
     for (AboutLayoutInfoEl *el = gAboutLayoutInfo; el->leftTxt; el++) {
+        SIZE txtSize;
         GetTextExtentPoint32(hdc, el->leftTxt, Str::Len(el->leftTxt), &txtSize);
         el->leftPos.dx = txtSize.cx;
         el->leftPos.dy = txtSize.cy;
@@ -270,9 +268,10 @@ static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, RectI *rect)
 
     /* calculate right text dimensions */
     SelectObject(hdc, fontRightTxt);
-    rightLargestDx = 0;
-    rightDy = 0;
+    int rightLargestDx = 0;
+    int rightDy = 0;
     for (AboutLayoutInfoEl *el = gAboutLayoutInfo; el->leftTxt; el++) {
+        SIZE txtSize;
         GetTextExtentPoint32(hdc, el->rightTxt, Str::Len(el->rightTxt), &txtSize);
         el->rightPos.dx = txtSize.cx;
         el->rightPos.dy = txtSize.cy;
@@ -286,41 +285,36 @@ static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, RectI *rect)
     }
 
     /* calculate total dimension and position */
-    totalDx  = leftLargestDx + rightLargestDx;
-    totalDx += ABOUT_LEFT_RIGHT_SPACE_DX + ABOUT_LINE_SEP_SIZE + ABOUT_LEFT_RIGHT_SPACE_DX;
-    if (totalDx < titleLargestDx)
-        totalDx = titleLargestDx;
-    totalDx += 2 * ABOUT_LINE_OUTER_SIZE + 2 * ABOUT_MARGIN_DX;
+    RectI minRect;
+    minRect.dx = ABOUT_LEFT_RIGHT_SPACE_DX + leftLargestDx + ABOUT_LINE_SEP_SIZE + rightLargestDx + ABOUT_LEFT_RIGHT_SPACE_DX;
+    if (minRect.dx < headerSize.dx)
+        minRect.dx = headerSize.dx;
+    minRect.dx += 2 * ABOUT_LINE_OUTER_SIZE + 2 * ABOUT_MARGIN_DX;
 
-    totalDy  = boxDy;
-    totalDy += ABOUT_LINE_OUTER_SIZE;
+    minRect.dy = headerSize.dy;
     for (AboutLayoutInfoEl *el = gAboutLayoutInfo; el->leftTxt; el++)
-        totalDy += rightDy + ABOUT_TXT_DY;
-    totalDy += ABOUT_LINE_OUTER_SIZE + 4;
+        minRect.dy += rightDy + ABOUT_TXT_DY;
+    minRect.dy += 2 * ABOUT_LINE_OUTER_SIZE + 4;
 
     ClientRect rc(hwnd);
-    offX = (rc.dx - totalDx) / 2;
-    offY = (rc.dy - totalDy) / 2;
+    minRect.x = (rc.dx - minRect.dx) / 2;
+    minRect.y = (rc.dy - minRect.dy) / 2;
 
     if (rect)
-        *rect = RectI(offX, offY, totalDx, totalDy);
+        *rect = minRect;
 
     /* calculate text positions */
-    linePosX = ABOUT_LINE_OUTER_SIZE + ABOUT_MARGIN_DX + leftLargestDx + ABOUT_LEFT_RIGHT_SPACE_DX;
-    linePosY = 4;
-
-    currY = offY + boxDy + linePosY;
+    int linePosX = ABOUT_LINE_OUTER_SIZE + ABOUT_MARGIN_DX + leftLargestDx + ABOUT_LEFT_RIGHT_SPACE_DX;
+    int currY = minRect.y + headerSize.dy + 4;
     for (AboutLayoutInfoEl *el = gAboutLayoutInfo; el->leftTxt; el++) {
-        el->leftPos.x = offX + linePosX - ABOUT_LEFT_RIGHT_SPACE_DX - el->leftPos.dx;
+        el->leftPos.x = minRect.x + linePosX - ABOUT_LEFT_RIGHT_SPACE_DX - el->leftPos.dx;
         el->leftPos.y = currY + (rightDy - leftDy) / 2;
-        el->rightPos.x = offX + linePosX + ABOUT_LEFT_RIGHT_SPACE_DX;
+        el->rightPos.x = minRect.x + linePosX + ABOUT_LEFT_RIGHT_SPACE_DX;
         el->rightPos.y = currY;
         currY += rightDy + ABOUT_TXT_DY;
     }
 
     SelectObject(hdc, origFont);
-    Win::Font::Delete(fontSumatraTxt);
-    Win::Font::Delete(fontVersionTxt);
     Win::Font::Delete(fontLeftTxt);
     Win::Font::Delete(fontRightTxt);
 }

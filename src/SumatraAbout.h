@@ -13,7 +13,8 @@
 LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 LRESULT          HandleWindowAboutMsg(WindowInfo *win, HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, bool& handled);
 
-void DrawSumatraPDF(HDC hdc, int x, int y);
+SizeI CalcSumatraVersionSize(HDC);
+void DrawSumatraVersion(HDC hdc, RectI rect);
 
 void OnMenuAbout();
 
