@@ -149,6 +149,9 @@ Avançado
 All files
 Todos os arquivos
 
+All supported documents
+Todos os documentos suportados
+
 Application:
 Aplicativo:
 
@@ -202,6 +205,9 @@ Mudar o idioma (Change Language)
 
 Check for &Updates
 Procurar atualizações
+
+Comic books
+Quadrinhos
 
 Continuous
 Contínuo
@@ -269,6 +275,9 @@ Digite a senha de %s
 Enter the command-line to invoke when you double-click on the PDF document:
 Digite a linha de comando a ser invocada com um duplo clique sobre o documento PDF:
 
+Error loading %s
+Erro ao carregar %s 
+
 F&orward\tAlt+Right Arrow
 Avançar\tAlt+->
 
@@ -329,6 +338,9 @@ Ajustar em uma única página
 Found text at page %d
 Texto encontrado na página %d
 
+Found text at page %d (again)
+Texto encontrado (de novo) na página %d
+
 GB
 GB
 
@@ -337,6 +349,9 @@ Ir para a página
 
 Hint: Use the F3 key for finding again
 Dica: tecle F3 para achar a próxima ocorrência
+
+Image files (*.%s)
+Arquivos de imagem (*.%s)
 
 KB
 KB
@@ -452,6 +467,9 @@ Girar à esquerda\tCtrl-Shift--
 Rotate &Right\tCtrl-Shift-+
 Girar à direita\tCtrl-Shift-+
 
+Save S&hortcut...\tCtrl-Shift-S
+S&alvar atalho...\tCtrl-Shift-S
+
 Searching %d of %d...
 Localizando %d de %d...
 
@@ -524,6 +542,9 @@ Visit &Website
 Warning
 Aviso
 
+XPS documents
+Documentos XPS
+
 You have the latest version.
 Esta é a versão mais recente.
 
@@ -550,13 +571,4 @@ copiando texto
 
 printing document
 imprimindo documento
-
-# Untranslated:
-#All supported documents
-#Comic books
-#Error loading %s
-#Found text at page %d (again)
-#Image files (*.%s)
-#Save S&hortcut...\tCtrl-Shift-S
-#XPS documents
 
