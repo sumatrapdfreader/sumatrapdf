@@ -72,6 +72,7 @@ enum DisplayMode {
 #define DECRYPTION_KEY_STR          "Decryption Key"
 #define SHOW_RECENT_FILES_STR       "ShowStartPage"
 #define OPEN_COUNT_STR              "OpenCount"
+#define LAST_USE_DATE_STR           "LastUse"
 
 #define FWDSEARCH_OFFSET            "ForwardSearch_HighlightOffset"
 #define FWDSEARCH_COLOR             "ForwardSearch_HighlightColor"
@@ -82,9 +83,9 @@ enum DisplayMode {
 class DisplayState {
 public:
     DisplayState() :
-        filePath(NULL), useGlobalValues(false), openCount(0),
+        filePath(NULL), useGlobalValues(false), openCount(0), lastUse(0),
         displayMode(DM_AUTOMATIC), pageNo(1), zoomVirtual(100.0),
-        rotation(0), windowState(0), thumbnail(NULL),
+        rotation(0), windowState(0), thumbnail(NULL), _frecency(0),
         decryptionKey(NULL), showToc(true), tocDx(0), tocState(NULL) { }
 
     ~DisplayState() {
@@ -97,6 +98,11 @@ public:
     TCHAR *             filePath;
 
     int                 openCount; // minimal statistics
+    int                 lastUse;   // in days since 2011-01-01
+    // frecency is calculated from openCount and lastUse by
+    // reducing openCount's value according to how long the file hasn't
+    // been opened again (cached value, not persisted)
+    int                 _frecency;
     RenderedBitmap *    thumbnail; // persisted separately
 
     bool                useGlobalValues;

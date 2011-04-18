@@ -81,14 +81,18 @@ static void DrawStartPage(WindowInfo *win, HDC hdc, FileHistory& fileHistory)
     ZeroMemory(&gLinkInfo, sizeof(gLinkInfo));
     Vec<DisplayState *> *list = fileHistory.GetFrequencyOrder();
 
+    size_t idx = 0;
     for (int h = 0; h < height; h++) {
         for (int w = 0; w < width; w++) {
-            if (h * width + w >= (int)list->Count() ||
-                !list->At(h * width + w)->openCount) {
+            // don't show documents for which we don't have any statistics
+            while (idx < list->Count() && !list->At(idx)->openCount)
+                idx++;
+            if (idx >= (int)list->Count()) {
+                // display the "Open a document" link right below the last row
                 height = w > 0 ? h + 1 : h;
                 break;
             }
-            DisplayState *state = list->At(h * width + w);
+            DisplayState *state = list->At(idx++);
 
             RectI page(offset.x + w * (THUMBNAIL_DX + DOCLIST_MARGIN_BETWEEN_X),
                        offset.y + h * (THUMBNAIL_DY + DOCLIST_MARGIN_BETWEEN_Y),

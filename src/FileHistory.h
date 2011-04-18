@@ -44,12 +44,22 @@ class FileHistory {
     Vec<DisplayState *> states;
 
     // sorts the most often used files first
-    static int cmpOpenCount(const void *a, const void *b) {
+    static int cmpFrecency(const void *a, const void *b) {
         DisplayState *dsA = *(DisplayState **)a;
         DisplayState *dsB = *(DisplayState **)b;
-        if (dsA->openCount != dsB->openCount)
-            return dsB->openCount - dsA->openCount;
+        if (dsA->_frecency != dsB->_frecency)
+            return dsB->_frecency - dsA->_frecency;
         return Str::CmpNatural(dsA->filePath, dsB->filePath);
+    }
+
+    static int GetDaysCount() {
+        SYSTEMTIME date20110101 = { 0 };
+        date20110101.wYear = 2011; date20110101.wMonth = 1; date20110101.wDay = 1;
+        FILETIME origTime, currTime;
+        SystemTimeToFileTime(&date20110101, &origTime);
+        GetSystemTimeAsFileTime(&currTime);
+        return (currTime.dwHighDateTime - origTime.dwHighDateTime) / 201;
+        // 201 == (1 << 32) / (10 * 1000 * 1000 * 60 * 60 * 24)
     }
 
 public:
@@ -88,7 +98,9 @@ public:
         else
             Remove(state);
         Prepend(state);
+
         state->openCount++;
+        state->lastUse = GetDaysCount();
     }
 
     bool MarkFileInexistent(const TCHAR *filePath) {
@@ -115,11 +127,17 @@ public:
     }
 
     // returns a shallow copy of the file history list, sorted
-    // by open frequency instead of recency
+    // by open frecency (frequency and recency combined)
     // caller needs to delete the result (but not the contained states)
     Vec<DisplayState *> *GetFrequencyOrder() {
         Vec<DisplayState *> *list = states.Clone();
-        list->Sort(cmpOpenCount);
+        int currDays = GetDaysCount();
+        for (size_t i = 0; i < list->Count(); i++) {
+            DisplayState *state = list->At(i);
+            // cut openCount in half for every ten days the document hasn't been used
+            state->_frecency = state->openCount >> ((currDays - state->lastUse) / 10);
+        }
+        list->Sort(cmpFrecency);
         return list;
     }
 };
