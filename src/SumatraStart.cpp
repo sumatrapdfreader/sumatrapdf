@@ -119,11 +119,14 @@ static void DrawStartPage(HWND hwnd, HDC hdc)
     PointI offset(rc.x + DOCLIST_MARGIN_LEFT + (rc.dx - width * DOCLIST_THUMBNAIL_DX - (width - 1) * DOCLIST_MARGIN_BETWEEN_X - DOCLIST_MARGIN_LEFT - DOCLIST_MARGIN_RIGHT) / 2, rc.y + DOCLIST_MARGIN_TOP);
 
     ZeroMemory(&gLinkInfo, sizeof(gLinkInfo));
-    for (int w = 0; w < width; w++) {
-        for (int h = 0; h < height; h++) {
+    int h;
+    for (h = 0; h < height; h++) {
+        for (int w = 0; w < width; w++) {
             DisplayState *state = gFileHistory.Get(h * width + w);
-            if (!state)
+            if (!state) {
+                height = w > 0 ? h + 1 : h;
                 break;
+            }
 
             // TODO: polish appearance
             RectI page(offset.x + w * (DOCLIST_THUMBNAIL_DX + DOCLIST_MARGIN_BETWEEN_X),
