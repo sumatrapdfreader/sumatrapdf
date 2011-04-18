@@ -1035,6 +1035,7 @@ static bool ReloadPrefs()
     gFileHistory.Clear();
     gFileHistory.ExtendWith(fileHistory);
 #ifdef NEW_START_PAGE
+    LoadThumbnails(gFileHistory);
     if (gWindows[0]->IsAboutWindow())
         gWindows[0]->RedrawAll(true);
 #endif
@@ -1628,6 +1629,55 @@ void CheckPositionAndSize(DisplayState *ds)
     EnsureWindowVisibility(ds->windowPos);
 }
 
+#ifdef NEW_START_PAGE
+class ThumbnailRenderingWorkItem : public UIThreadWorkItem, public CallbackFunc
+{
+    const TCHAR *filePath;
+    RenderedBitmap *bmp;
+
+public:
+    ThumbnailRenderingWorkItem(WindowInfo *win, const TCHAR *filePath) :
+        UIThreadWorkItem(win), bmp(NULL) {
+        this->filePath = Str::Dup(filePath);
+    }
+    ~ThumbnailRenderingWorkItem() {
+        free((void *)filePath);
+        delete bmp;
+    }
+    
+    virtual void Callback(void *arg) {
+        bmp = (RenderedBitmap *)arg;
+        gUIThreadMarshaller.Queue(this);
+    }
+
+    virtual void Execute() {
+        if (WindowInfoStillValid(win)) {
+            DisplayState *state = gFileHistory.Find(filePath);
+            if (state) {
+                state->thumbnail = bmp;
+                bmp = NULL;
+                SaveThumbnail(state);
+            }
+        }
+    }
+};
+
+void CreateThumbnailForFile(WindowInfo *win, DisplayState *state)
+{
+    if (state->thumbnail)
+        return;
+
+    RectD pageRect = win->dm->engine->PageMediabox(1);
+    pageRect = win->dm->engine->Transform(pageRect, 1, 1.0, 0);
+    float zoom = 212 / (float)pageRect.dx;
+    pageRect.dy = 150.0 / zoom;
+    pageRect = win->dm->engine->Transform(pageRect, 1, 1.0, 0, true);
+
+    CallbackFunc *callback = new ThumbnailRenderingWorkItem(win, win->loadedFilePath);
+    gRenderCache.Render(win->dm, 1, 0, zoom, pageRect, *callback);
+}
+#endif
+
 WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin, bool forceReuse)
 {
     assert(fileName);
@@ -1671,16 +1721,9 @@ WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin, b
     if (gGlobalPrefs.m_rememberOpenedFiles) {
         gFileHistory.MarkFileLoaded(fullpath);
 #ifdef NEW_START_PAGE
-        if (!gFileHistory.Get(0)->thumbnail) {
-            RectD pageRect = win->dm->engine->PageMediabox(1);
-            pageRect = win->dm->engine->Transform(pageRect, 1, 1.0, 0);
-            float zoom = 212 / (float)pageRect.dx;
-            pageRect.dy = 150.0 / zoom;
-            pageRect = win->dm->engine->Transform(pageRect, 1, 1.0, 0, true);
-            // TODO: move this to rendering thread
-            // TODO: convert to grayscale thumbnail?
-            gFileHistory.Get(0)->thumbnail = win->dm->engine->RenderBitmap(1, zoom, 0, &pageRect);
-        }
+        assert(Str::Eq(fullpath, win->loadedFilePath));
+        if (gGlobalPrefs.m_showStartPage)
+            CreateThumbnailForFile(win, gFileHistory.Get(0));
 #endif
         SavePrefs();
     }
@@ -2302,8 +2345,11 @@ public:
         UIThreadWorkItem(win), pageNo(pageNo) { }
     
     virtual void Callback(void *arg) {
-        if ((bool)arg)
+        RenderedBitmap *bmp = (RenderedBitmap *)arg;
+        if (bmp) {
+            delete bmp;
             iterations++;
+        }
         gUIThreadMarshaller.Queue(this);
     }
 
@@ -6732,8 +6778,12 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
             const char *lang = Trans::GuessLanguage();
             CurrLangNameSet(lang);
         }
-        else
+        else {
             CurrLangNameSet(gGlobalPrefs.m_currentLanguage);
+#ifdef NEW_START_PAGE
+            LoadThumbnails(gFileHistory);
+#endif
+        }
     }
 
     CommandLineInfo i;

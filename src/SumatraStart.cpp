@@ -11,6 +11,7 @@
 #include "WinUtil.h"
 #include "FileUtil.h"
 #include "Resource.h"
+#include "AppTools.h"
 
 // TODO: move the whole title calculations/drawing into SumatraAbout
 #define SUMATRA_TXT_FONT        _T("Arial Black")
@@ -252,4 +253,50 @@ LRESULT HandleWindowStartMsg(WindowInfo *win, HWND hwnd, UINT message, WPARAM wP
     }
 
     return 0;
+}
+
+// TODO: remove obsolete thumbnails
+static TCHAR *GetThumbnailPath(const TCHAR *filePath)
+{
+    ScopedMem<TCHAR> thumbsPath(AppGenDataFilename(THUMBNAILS_DIR_NAME));
+    ScopedMem<char> fingerPrint(Path_Fingerprint(filePath));
+    ScopedMem<TCHAR> fname(Str::Conv::FromAnsi(fingerPrint));
+
+    return Str::Format(_T("%s\\%s.bmp"), thumbsPath, fname);
+}
+
+void LoadThumbnails(FileHistory& fileHistory)
+{
+    DisplayState *state;
+    for (int i = 0; (state = fileHistory.Get(i)); i++) {
+        if (state->thumbnail)
+            delete state->thumbnail;
+        state->thumbnail = NULL;
+
+        ScopedMem<TCHAR> bmpPath(GetThumbnailPath(state->filePath));
+        HBITMAP hbmp = (HBITMAP)LoadImage(NULL, bmpPath, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+        if (!hbmp)
+            continue;
+
+        BITMAP bmp;
+        GetObject(hbmp, sizeof(BITMAP), &bmp);
+
+        state->thumbnail = new RenderedBitmap(hbmp, bmp.bmWidth, bmp.bmHeight);
+    }
+}
+
+void SaveThumbnail(DisplayState *state)
+{
+    if (!state->thumbnail)
+        return;
+
+    size_t dataLen;
+    unsigned char *data = state->thumbnail->Serialize(&dataLen);
+    if (data) {
+        ScopedMem<TCHAR> bmpPath(GetThumbnailPath(state->filePath));
+        ScopedMem<TCHAR> thumbsPath(Path::GetDir(bmpPath));
+        if (Dir::Create(thumbsPath))
+            File::WriteAll(bmpPath, data, dataLen);
+        free(data);
+    }
 }

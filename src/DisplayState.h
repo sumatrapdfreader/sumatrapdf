@@ -71,6 +71,7 @@ enum DisplayMode {
 #define USE_GLOBAL_VALUES_STR       "UseGlobalValues"
 #define DECRYPTION_KEY_STR          "Decryption Key"
 #define SHOW_RECENT_FILES_STR       "ShowStartPage"
+#define OPEN_COUNT_STR              "OpenCount"
 
 #define FWDSEARCH_OFFSET            "ForwardSearch_HighlightOffset"
 #define FWDSEARCH_COLOR             "ForwardSearch_HighlightColor"
@@ -81,7 +82,7 @@ enum DisplayMode {
 class DisplayState {
 public:
     DisplayState() :
-        filePath(NULL), useGlobalValues(false),
+        filePath(NULL), useGlobalValues(false), openCount(0),
         displayMode(DM_AUTOMATIC), pageNo(1), zoomVirtual(100.0),
         rotation(0), windowState(0), thumbnail(NULL),
         decryptionKey(NULL), showToc(true), tocDx(0), tocState(NULL) { }
@@ -95,6 +96,9 @@ public:
 
     TCHAR *             filePath;
 
+    int                 openCount; // minimal statistics
+    RenderedBitmap *    thumbnail;
+
     bool                useGlobalValues;
 
     enum DisplayMode    displayMode;
@@ -104,10 +108,6 @@ public:
     int                 rotation;
     int                 windowState;
     RectI               windowPos;
-
-    // TODO: serialize to disk and restore on reloading preferences
-    //       (at least for the first 10 documents)
-    RenderedBitmap *    thumbnail;
 
     // values below only apply to PDF files
 

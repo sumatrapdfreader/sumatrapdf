@@ -70,6 +70,7 @@ public:
         else
             Remove(state);
         Prepend(state);
+        state->openCount++;
     }
 
     bool MarkFileInexistent(const TCHAR *filePath) {

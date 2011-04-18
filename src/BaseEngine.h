@@ -60,6 +60,42 @@ public:
     }
     void InvertColors() { GrayOut(-1); }
 
+    // create data for a .bmp file from this bitmap (if saved to disk, the HBITMAP
+    // can be deserialized with LoadImage(NULL, ..., LD_LOADFROMFILE) and its
+    // dimensions determined with GetObject(hbmp, sizeof(BITMAP), ...) )
+    unsigned char *Serialize(size_t *cbCount) {
+        size_t bmpHeaderLen = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFO);
+        size_t bmpDataLen = ((_width * 3 + 3) / 4) * 4 * _height + bmpHeaderLen;
+        unsigned char *bmpData = SAZA(unsigned char, bmpDataLen);
+        if (!bmpData)
+            return NULL;
+
+        BITMAPINFO *bmi = (BITMAPINFO *)(bmpData + sizeof(BITMAPFILEHEADER));
+        bmi->bmiHeader.biSize = sizeof(bmi->bmiHeader);
+        bmi->bmiHeader.biHeight = _height;
+        bmi->bmiHeader.biWidth = _width;
+        bmi->bmiHeader.biPlanes = 1;
+        bmi->bmiHeader.biBitCount = 24;
+        bmi->bmiHeader.biCompression = BI_RGB;
+
+        HDC hDC = GetDC(NULL);
+        if (GetDIBits(hDC, _hbmp, 0, _height, bmpData + bmpHeaderLen, bmi, DIB_RGB_COLORS)) {
+            BITMAPFILEHEADER *bmpfh = (BITMAPFILEHEADER *)bmpData;
+            bmpfh->bfType = MAKEWORD('B', 'M');
+            bmpfh->bfOffBits = bmpHeaderLen;
+            bmpfh->bfSize = bmpDataLen;
+        }
+        else {
+            free(bmpData);
+            bmpData = NULL;
+        }
+        ReleaseDC(NULL, hDC);
+
+        if (cbCount)
+            *cbCount = bmpDataLen;
+        return bmpData;
+    }
+
 protected:
     HBITMAP _hbmp;
     int     _width;

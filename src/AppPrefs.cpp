@@ -78,6 +78,7 @@ static BencDict *DisplayState_Serialize(DisplayState *ds, bool globalPrefsOnly)
     if (ds->decryptionKey)
         prefs->Add(DECRYPTION_KEY_STR, new BencRawString(ds->decryptionKey));
 
+    prefs->Add(OPEN_COUNT_STR, ds->openCount);
     if (globalPrefsOnly || ds->useGlobalValues) {
         prefs->Add(USE_GLOBAL_VALUES_STR, TRUE);
         return prefs;
@@ -228,6 +229,7 @@ static DisplayState * DisplayState_Deserialize(BencDict *dict, bool globalPrefsO
     }
 
     RetrieveRaw(dict, DECRYPTION_KEY_STR, ds->decryptionKey);
+    Retrieve(dict, OPEN_COUNT_STR, ds->openCount);
     if (globalPrefsOnly) {
         ds->useGlobalValues = TRUE;
         return ds;

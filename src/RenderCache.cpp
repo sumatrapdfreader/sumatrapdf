@@ -312,9 +312,9 @@ void RenderCache::Render(DisplayModel *dm, int pageNo, TilePosition tile, bool c
 {
     DBG_OUT("RenderCache::Render(pageNo=%d)\n", pageNo);
     assert(dm);
-    PageRenderRequest* newRequest = NULL;
 
     ScopedCritSec scope(&_requestAccess);
+    bool ok = false;
     if (!dm || dm->_dontRenderFlag) goto Exit;
 
     int rotation = dm->rotation();
@@ -369,6 +369,33 @@ void RenderCache::Render(DisplayModel *dm, int pageNo, TilePosition tile, bool c
         goto Exit;
     }
 
+    ok = Render(dm, pageNo, rotation, zoom, &tile, NULL, callback);
+
+Exit:
+    if (!ok && callback)
+        callback->Callback();
+}
+
+void RenderCache::Render(DisplayModel *dm, int pageNo, int rotation, float zoom, RectD pageRect, CallbackFunc& callback)
+{
+    bool ok = Render(dm, pageNo, rotation, zoom, NULL, &pageRect, &callback);
+    if (!ok)
+        callback.Callback();
+}
+
+bool RenderCache::Render(DisplayModel *dm, int pageNo, int rotation, float zoom, TilePosition *tile, RectD *pageRect, CallbackFunc *callback)
+{
+    assert(dm);
+    if (!dm || dm->_dontRenderFlag)
+        return false;
+
+    assert(tile || pageRect && callback);
+    if (!tile && !(pageRect && callback))
+        return false;
+
+    ScopedCritSec scope(&_requestAccess);
+    PageRenderRequest* newRequest;
+
     /* add request to the queue */
     if (_requestCount == MAX_PAGE_REQUESTS) {
         /* queue is full -> remove the oldest items on the queue */
@@ -381,20 +408,29 @@ void RenderCache::Render(DisplayModel *dm, int pageNo, TilePosition tile, bool c
         _requestCount++;
     }
     assert(_requestCount <= MAX_PAGE_REQUESTS);
+
     newRequest->dm = dm;
     newRequest->pageNo = pageNo;
     newRequest->rotation = rotation;
     newRequest->zoom = zoom;
-    newRequest->tile = tile;
+    if (tile) {
+        newRequest->pageRect = GetTileRect(dm->engine, pageNo, rotation, zoom, *tile);
+        newRequest->tile = *tile;
+    }
+    else if (pageRect) {
+        newRequest->pageRect = *pageRect;
+        // can't cache bitmaps that aren't for a given tile
+        assert(callback);
+    }
+    else
+        assert(0);
     newRequest->abort = false;
     newRequest->timestamp = GetTickCount();
     newRequest->callback = callback;
 
     SetEvent(startRendering);
 
-Exit:
-    if (!newRequest && callback)
-        callback->Callback();
+    return true;
 }
 
 UINT RenderCache::GetRenderDelay(DisplayModel *dm, int pageNo, TilePosition tile)
@@ -515,8 +551,7 @@ DWORD WINAPI RenderCache::RenderCacheThread(LPVOID data)
             continue;
         }
 
-        RectD pageRect = GetTileRect(req.dm->engine, req.pageNo, req.rotation, req.zoom, req.tile);
-        bmp = req.dm->engine->RenderBitmap(req.pageNo, req.zoom, req.rotation, &pageRect, Target_View,
+        bmp = req.dm->engine->RenderBitmap(req.pageNo, req.zoom, req.rotation, &req.pageRect, Target_View,
                                            cache->useGdiRenderer && *cache->useGdiRenderer);
         if (req.abort) {
             delete bmp;
@@ -531,16 +566,18 @@ DWORD WINAPI RenderCache::RenderCacheThread(LPVOID data)
             DBG_OUT("RenderCacheThread(): finished rendering %d\n", req.pageNo);
         else
             DBG_OUT("RenderCacheThread(): failed to render a bitmap of page %d\n", req.pageNo);
-        cache->Add(req, bmp);
-#ifdef CONSERVE_MEMORY
-        cache->FreeNotVisible();
-#endif
         if (req.callback) {
-            req.callback->Callback((void *)true);
+            // the callback must free the RenderedBitmap
+            req.callback->Callback(bmp);
             req.callback = (CallbackFunc *)1; // will crash if accessed again, which should not happen
         }
-        else
+        else {
+            cache->Add(req, bmp);
+#ifdef CONSERVE_MEMORY
+            cache->FreeNotVisible();
+#endif
             req.dm->RepaintDisplay();
+        }
     }
 
     DBG_OUT("RenderCacheThread() finished\n");

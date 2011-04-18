@@ -257,4 +257,7 @@ WindowInfo* FindWindowInfoByFile(TCHAR *file);
 WindowInfo* FindWindowInfoByHwnd(HWND hwnd);
 WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win=NULL, bool showWin=true, bool forceReuse=false);
 
+// TODO: move this somewhere more appropriate (depends on Fitz, so baseutils are out)
+char *Path_Fingerprint(const TCHAR *filePath);
+
 #endif
