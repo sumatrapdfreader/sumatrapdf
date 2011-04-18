@@ -342,11 +342,17 @@ Texto encontrado na página %d
 Found text at page %d (again)
 Texto encontrado na página %d
 
+Frequently Read
+Lidos frequentemente
+
 GB
 GB
 
 Go to page
 Ir para a página
+
+Hide frequently read
+Ocultar frequentes
 
 Hint: Use the F3 key for finding again
 Dica: utilize F3 para procurar a seguinte
@@ -398,6 +404,9 @@ OK
 
 Open
 Abrir
+
+Open a document...
+Abrir documento...
 
 Open in &Adobe Reader
 Abrir no Adobe &Reader
@@ -495,6 +504,9 @@ Mostrar barra de ferramen&tas
 Show &pages continuously
 Mostrar &páginas contínuas
 
+Show frequently read
+Mostrar frequentes
+
 Show the &bookmarks sidebar when available
 &Mostrar barra de marcadores quando disponível
 
@@ -572,10 +584,4 @@ copiando texto
 
 printing document
 imprimindo documento
-
-# Untranslated:
-#Frequently Read
-#Hide frequently read
-#Open a document...
-#Show frequently read
 
