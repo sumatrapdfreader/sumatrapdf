@@ -41,6 +41,9 @@ Contributor: Andriy Ilechko
 &File
 &Файл
 
+&Find what:
+Що шукати:
+
 &First Page\tHome
 Перша сторінка\tHome
 
@@ -59,8 +62,14 @@ Contributor: Andriy Ilechko
 &Last Page\tEnd
 Остання сторінка\tEnd
 
+&Magnification:
+Масштабування:
+
 &Manual
 Керівництво з користування
+
+&Match case
+Враховувати регістр
 
 &Next Page\tRight Arrow
 Наступна сторінка\t->
@@ -140,6 +149,9 @@ Advanced
 All files
 Всі файли
 
+All supported documents
+Всі документи, що підтримуються
+
 Application:
 Прикладна програма:
 
@@ -163,6 +175,12 @@ Book View
 
 Book&marks\tF12
 Закладки\tF12
+
+Bookmark Shortcuts
+Закладка ярликів
+
+Bookmark shortcut to page %d of %s
+Закладка ярлика на сторінку %d з %s
 
 Bookmarks
 Закладки
@@ -188,8 +206,14 @@ Change Language
 Check for &Updates
 Перевірити, чи є нова версія
 
+Comic books
+Документи CBR, CBZ (комікси)
+
 Continuous
 Протяжний
+
+Continuous Book View
+Книжковий безперервний
 
 Continuous Facing
 Дві протяжні сторінки
@@ -221,6 +245,9 @@ Created:
 Custom &Zoom...\tCtrl-Y
 Вказати масшта...\tCtrl-Y
 
+Default &Layout:
+Розташування за замовчуванням:
+
 Default &Zoom:
 Масштаб за замовчуванням:
 
@@ -244,6 +271,12 @@ Enter password
 
 Enter password for %s
 Введіть пароль для %s
+
+Enter the command-line to invoke when you double-click on the PDF document:
+Введіть командну стрічку, що викликається при подвійному клацані на PDF-документі:
+
+Error loading %s
+Помилка завантаження %s
 
 F&orward\tAlt+Right Arrow
 Вперед\tAlt+Права стрілка
@@ -278,11 +311,17 @@ Find Previous
 Find:
 Знайти:
 
+Fit &Content\tCtrl-3
+Розмістити вміст \tCtrl-3
+
 Fit &Page\tCtrl-0
 Припа&сувати сторінку\tCtrl-0
 
 Fit &Width\tCtrl-2
 Припасувати до &ширини\tCtrl-2
+
+Fit Content
+Розмістити вміст
 
 Fit Page
 Припасувати сторінку
@@ -290,8 +329,17 @@ Fit Page
 Fit Width
 Припасувати до ширини
 
+Fit Width and Show Pages Continuously
+Розмістити по ширині на безперервній сторінці
+
+Fit a Single Page
+Вмістити на сторінку
+
 Found text at page %d
 Знайти текст на %d сторінці
+
+Found text at page %d (again)
+Знайти текст на сторінці %d (знову)
 
 GB
 GB
@@ -301,6 +349,9 @@ Go to page
 
 Hint: Use the F3 key for finding again
 Примітка: Для повторного пошуку натисніть F3
+
+Image files (*.%s)
+Файли зображень (*.%s)
 
 KB
 KB
@@ -328,6 +379,15 @@ Next Page
 
 No matches were found
 Співпадінь не знайдено
+
+No result found around line %u in file %s
+Нічого не знайдено у лінії %u у файлі %s
+
+No synchronization file found
+Файли синхронізації не знайдено
+
+No synchronization info at this position
+Немає Інформації про синхронізацію на цій позиції
 
 Number of Pages:
 Кількість сторінок:
@@ -371,6 +431,12 @@ Pa&ge...\tCtrl-G
 Page Size:
 Розмір сторінки:
 
+Page number %u inexistant
+Неіснуючий номер сторінки %u
+
+Page scaling
+Масштаб сторінки
+
 Page:
 Сторінка:
 
@@ -401,6 +467,9 @@ Rotate &Left\tCtrl-Shift--
 Rotate &Right\tCtrl-Shift-+
 Повернути праворуч\tCtrl-Shift-+
 
+Save S&hortcut...\tCtrl-Shift-S
+Зберегти ярлик...\tCtrl-Shift-S
+
 Searching %d of %d...
 Пошук %d з %d...
 
@@ -422,11 +491,17 @@ Set inverse search command-line
 Show &Toolbar
 Показати пенал
 
+Show &pages continuously
+Відображати сторінки безперервно
+
 Show the &bookmarks sidebar when available
 Якщо доступно відображати полосу закладок
 
 Single Page
 Одна сторінка
+
+Source file %s has no synchronization point
+Файл-джерело %s немає точки синхронізації
 
 Subject:
 Тема:
@@ -446,6 +521,9 @@ SumatraPDF ваш PDF переглядач по замовчуванню
 SumatraPDF should now be your default PDF reader
 SumatraPDF тепер буде вашим PDF переглядачем по замовчуванню
 
+Synchronization file cannot be opened
+Неможливо відкрити файл синхронізації
+
 Text documents
 Текстові документи
 
@@ -464,6 +542,9 @@ Visit &Website
 Warning
 Застереження
 
+XPS documents
+Документи XPS
+
 You have the latest version.
 Ви вже маєте найновішу версію.
 
@@ -479,6 +560,9 @@ Zoom In
 Zoom Out
 Зменшити
 
+Zoom factor
+Масштаб
+
 [Changes detected; refreshing] %s
 [Знайдено зміни; оновлення] %s
 
@@ -487,34 +571,4 @@ copying text
 
 printing document
 друк документа
-
-# Untranslated:
-#&Find what:
-#&Magnification:
-#&Match case
-#All supported documents
-#Bookmark Shortcuts
-#Bookmark shortcut to page %d of %s
-#Comic books
-#Continuous Book View
-#Default &Layout:
-#Enter the command-line to invoke when you double-click on the PDF document:
-#Error loading %s
-#Fit &Content\tCtrl-3
-#Fit Content
-#Fit Width and Show Pages Continuously
-#Fit a Single Page
-#Found text at page %d (again)
-#Image files (*.%s)
-#No result found around line %u in file %s
-#No synchronization file found
-#No synchronization info at this position
-#Page number %u inexistant
-#Page scaling
-#Save S&hortcut...\tCtrl-Shift-S
-#Show &pages continuously
-#Source file %s has no synchronization point
-#Synchronization file cannot be opened
-#XPS documents
-#Zoom factor
 
