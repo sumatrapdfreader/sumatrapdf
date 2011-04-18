@@ -922,7 +922,7 @@ void DisplayModel::ChangeViewPortSize(SizeI newViewPortSize)
 {
     ScrollState ss = GetScrollState();
 
-    bool isIsDocLoaded = validPageNo(_startPage);
+    bool isIsDocLoaded = validPageNo(_startPage) && _zoomReal != 0;
     totalViewPortSize = newViewPortSize;
     Relayout(_zoomVirtual, _rotation);
     if (isIsDocLoaded) {
