@@ -14,9 +14,6 @@
 #include "SumatraDialogs.h"
 #include "SumatraProperties.h"
 #include "SumatraAbout.h"
-#ifdef NEW_START_PAGE
-#include "SumatraStart.h"
-#endif
 #include "FileHistory.h"
 #include "FileWatch.h"
 #include "AppTools.h"
@@ -1720,9 +1717,9 @@ WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin, b
 #endif
 
     if (gGlobalPrefs.m_rememberOpenedFiles) {
+        assert(Str::Eq(fullpath, win->loadedFilePath));
         gFileHistory.MarkFileLoaded(fullpath);
 #ifdef NEW_START_PAGE
-        assert(Str::Eq(fullpath, win->loadedFilePath));
         if (gGlobalPrefs.m_showStartPage)
             CreateThumbnailForFile(win, gFileHistory.Get(0));
 #endif
@@ -2706,6 +2703,10 @@ static void OnSelectionStop(WindowInfo *win, int x, int y, bool aborted)
 static void OnMouseLeftButtonDown(WindowInfo *win, int x, int y, WPARAM key)
 {
     //DBG_OUT("Left button clicked on %d %d\n", x, y);
+    if (win->IsAboutWindow())
+        // remember a link under so that on mouse up we only activate
+        // link if mouse up is on the same link as mouse down
+        win->url = GetStaticLink(win->staticLinks, x, y);
     if (!win->IsDocLoaded())
         return;
 
@@ -2744,6 +2745,27 @@ static void OnMouseLeftButtonDown(WindowInfo *win, int x, int y, WPARAM key)
 
 static void OnMouseLeftButtonUp(WindowInfo *win, int x, int y, WPARAM key)
 {
+    if (win->IsAboutWindow()) {
+        const TCHAR *url = GetStaticLink(win->staticLinks, x, y);
+        if (url && url == win->url) {
+#ifdef NEW_START_PAGE
+            if (Str::Eq(url, SLINK_OPEN_FILE))
+                SendMessage(win->hwndFrame, WM_COMMAND, IDM_OPEN, 0);
+            else if (Str::Eq(url, SLINK_LIST_HIDE)) {
+                gGlobalPrefs.m_showStartPage = false;
+                win->RedrawAll(true);
+            } else if (Str::Eq(url, SLINK_LIST_SHOW)) {
+                gGlobalPrefs.m_showStartPage = true;
+                win->RedrawAll(true);
+            } else if (!Str::StartsWithI(url, _T("http:")) &&
+                       !Str::StartsWithI(url, _T("https:")))
+                LoadDocument(url, win);
+            else
+#endif
+                LaunchBrowser(url);
+        }
+        win->url = NULL;
+    }
     if (!win->IsDocLoaded())
         return;
 
@@ -2790,7 +2812,7 @@ static void OnMouseLeftButtonUp(WindowInfo *win, int x, int y, WPARAM key)
 static void OnMouseLeftButtonDblClk(WindowInfo *win, int x, int y, WPARAM key)
 {
     //DBG_OUT("Left button clicked on %d %d\n", x, y);
-    if ((win->fullScreen || win->presentation) && !(key & ~MK_LBUTTON)) {
+    if ((win->fullScreen || win->presentation) && !(key & ~MK_LBUTTON) || win->IsAboutWindow()) {
         // in presentation and fullscreen modes, left clicks turn the page,
         // make two quick left clicks (AKA one double-click) turn two pages
         OnMouseLeftButtonDown(win, x, y, key);
@@ -2905,8 +2927,14 @@ static void OnPaint(WindowInfo *win)
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(win->hwndCanvas, &ps);
 
-    if (!win->IsDocLoaded()) {
-        assert(!win->IsAboutWindow());
+    if (win->IsAboutWindow()) {
+        if (!gRestrictedUse && gGlobalPrefs.m_rememberOpenedFiles && gGlobalPrefs.m_showStartPage)
+            DrawStartPage(win, win->buffer->GetDC(), gFileHistory);
+        else
+            DrawAboutPage(win, win->buffer->GetDC());
+        win->buffer->Flush(hdc);
+    }
+    else if (!win->IsDocLoaded()) {
         Win::Font::ScopedFont fontRightTxt(hdc, _T("MS Shell Dlg"), 14);
         Win::HdcScopedSelectFont scope(hdc, fontRightTxt);
         SetBkMode(hdc, TRANSPARENT);
@@ -5818,6 +5846,16 @@ static LRESULT OnSetCursor(WindowInfo *win, HWND hwnd)
 {
     POINT pt;
 
+    if (win->IsAboutWindow()) {
+        if (GetCursorPos(&pt) && ScreenToClient(hwnd, &pt)) {
+            StaticLinkInfo linkInfo;
+            if (GetStaticLink(win->staticLinks, pt.x, pt.y, &linkInfo)) {
+                win->CreateInfotip(linkInfo.infotip, linkInfo.rect);
+                SetCursor(gCursorHand);
+                return TRUE;
+            }
+        }
+    }
     if (!win->IsDocLoaded()) {        
         win->DeleteInfotip();
         return FALSE;
@@ -5938,20 +5976,7 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
 {
     int          currentScrollPos;
     POINT        pt;
-
     WindowInfo * win = FindWindowInfoByHwnd(hwnd);
-    if (win && win->IsAboutWindow()) {
-        bool handled;
-        LRESULT res;
-#ifdef NEW_START_PAGE
-        if (!gRestrictedUse && gGlobalPrefs.m_showStartPage && gGlobalPrefs.m_rememberOpenedFiles)
-            res = HandleWindowStartMsg(win, gFileHistory, hwnd, message, wParam, lParam, handled);
-        else
-#endif
-            res = HandleWindowAboutMsg(win, hwnd, message, wParam, lParam, handled);
-        if (handled)
-            return res;
-    }
 
     // messages that don't require win
     switch (message)

@@ -69,10 +69,7 @@ static AboutLayoutInfoEl gAboutLayoutInfo[] = {
     { NULL, NULL, NULL }
 };
 
-struct AboutPageLink {
-    const TCHAR *url; // usually AboutLayoutInfoEl->url
-    RectI rect;       // usually AboutLayoutInfoEl->rightPos
-} gLinkInfo[dimof(gAboutLayoutInfo) + 1];
+static Vec<StaticLinkInfo> gLinkInfo;
 
 #define COL1 RGB(196, 64, 50)
 #define COL2 RGB(227, 107, 35)
@@ -101,7 +98,7 @@ static void DrawSumatraPDF(HDC hdc, PointI pt)
 #endif
 }
 
-SizeI CalcSumatraVersionSize(HDC hdc)
+static SizeI CalcSumatraVersionSize(HDC hdc)
 {
     SizeI result;
 
@@ -131,7 +128,7 @@ SizeI CalcSumatraVersionSize(HDC hdc)
     return result;
 }
 
-void DrawSumatraVersion(HDC hdc, RectI rect)
+static void DrawSumatraVersion(HDC hdc, RectI rect)
 {
     Win::Font::ScopedFont fontSumatraTxt(hdc, SUMATRA_TXT_FONT, SUMATRA_TXT_FONT_SIZE);
     Win::Font::ScopedFont fontVersionTxt(hdc, VERSION_TXT_FONT, VERSION_TXT_FONT_SIZE);
@@ -157,7 +154,7 @@ void DrawSumatraVersion(HDC hdc, RectI rect)
     SelectObject(hdc, oldFont);
 }
 
-RectI DrawBottomRightLink(HWND hwnd, HDC hdc, const TCHAR *txt)
+static RectI DrawBottomRightLink(HWND hwnd, HDC hdc, const TCHAR *txt)
 {
     Win::Font::ScopedFont fontLeftTxt(hdc, _T("MS Shell Dlg"), 14);
     HPEN penLinkLine = CreatePen(PS_SOLID, 1, COL_BLUE_LINK);
@@ -187,7 +184,7 @@ RectI DrawBottomRightLink(HWND hwnd, HDC hdc, const TCHAR *txt)
 /* Draws the about screen and remembers some state for hyperlinking.
    It transcribes the design I did in graphics software - hopeless
    to understand without seeing the design. */
-static void DrawAbout(HWND hwnd, HDC hdc, RectI rect)
+static void DrawAbout(HWND hwnd, HDC hdc, RectI rect, Vec<StaticLinkInfo>& linkInfo)
 {
     HBRUSH brushBg = CreateSolidBrush(gGlobalPrefs.m_bgColor);
 
@@ -227,7 +224,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, RectI rect)
     /* render text on the right */
     SelectObject(hdc, fontRightTxt);
     SelectObject(hdc, penLinkLine);
-    ZeroMemory(&gLinkInfo, sizeof(gLinkInfo));
+    linkInfo.Reset();
     for (AboutLayoutInfoEl *el = gAboutLayoutInfo; el->leftTxt; el++) {
         bool hasUrl = !gRestrictedUse && el->url;
         SetTextColor(hdc, hasUrl ? COL_BLUE_LINK : ABOUT_BORDER_COL);
@@ -236,8 +233,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, RectI rect)
         if (hasUrl) {
             int underlineY = el->rightPos.y + el->rightPos.dy - 3;
             PaintLine(hdc, RectI(el->rightPos.x, underlineY, el->rightPos.dx, 0));
-            gLinkInfo[el - gAboutLayoutInfo].url = el->url;
-            gLinkInfo[el - gAboutLayoutInfo].rect = el->rightPos;
+            linkInfo.Append(StaticLinkInfo(el->rightPos, el->url, el->url));
         }
     }
 
@@ -342,29 +338,30 @@ static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, RectI *rect)
     Win::Font::Delete(fontRightTxt);
 }
 
-void OnPaintAbout(HWND hwnd)
+static void OnPaintAbout(HWND hwnd)
 {
     PAINTSTRUCT ps;
     RectI rc;
     HDC hdc = BeginPaint(hwnd, &ps);
     UpdateAboutLayoutInfo(hwnd, hdc, &rc);
-    DrawAbout(hwnd, hdc, rc);
+    DrawAbout(hwnd, hdc, rc, gLinkInfo);
     EndPaint(hwnd, &ps);
 }
 
-static const TCHAR *GetAboutLink(WindowInfo *win, int x, int y, RectI *rect=NULL)
+const TCHAR *GetStaticLink(Vec<StaticLinkInfo>& linkInfo, int x, int y, StaticLinkInfo *info)
 {
-    if (gRestrictedUse) return NULL;
+    if (gRestrictedUse)
+        return NULL;
 
-    PointI cursor(x, y);
-    for (int i = 0; i < dimof(gLinkInfo); i++) {
-        if (gLinkInfo[i].rect.Inside(cursor)) {
-            if (rect)
-                *rect = gLinkInfo[i].rect;
-            return gLinkInfo[i].url;
+    PointI pt(x, y);
+    for (size_t i = 0; i < linkInfo.Count(); i++) {
+        if (linkInfo[i].rect.Inside(pt)) {
+            if (info)
+                *info = linkInfo[i];
+            return linkInfo[i].target;
         }
     }
-    
+
     return NULL;
 }
 
@@ -402,7 +399,7 @@ void OnMenuAbout() {
     ShowWindow(gHwndAbout, SW_SHOW);
 }
 
-static void CreateInfotipForLink(const TCHAR *text, RectI& rc)
+static void CreateInfotipForLink(StaticLinkInfo& linkInfo)
 {
     if (gHwndAboutTooltip)
         return;
@@ -416,8 +413,8 @@ static void CreateInfotipForLink(const TCHAR *text, RectI& rc)
     ti.cbSize = sizeof(ti);
     ti.hwnd = gHwndAbout;
     ti.uFlags = TTF_SUBCLASS;
-    ti.lpszText = (TCHAR *)text;
-    ti.rect = rc.ToRECT();
+    ti.lpszText = (TCHAR *)linkInfo.infotip;
+    ti.rect = linkInfo.rect.ToRECT();
 
     SendMessage(gHwndAboutTooltip, TTM_ADDTOOL, 0, (LPARAM)&ti);
 }
@@ -457,10 +454,9 @@ LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
 
         case WM_SETCURSOR:
             if (GetCursorPos(&pt) && ScreenToClient(hwnd, &pt)) {
-                RectI rect;
-                const TCHAR *url = GetAboutLink(NULL, pt.x, pt.y, &rect);
-                if (url) {
-                    CreateInfotipForLink(url, rect);
+                StaticLinkInfo linkInfo;
+                if (GetStaticLink(gLinkInfo, pt.x, pt.y, &linkInfo)) {
+                    CreateInfotipForLink(linkInfo);
                     SetCursor(gCursorHand);
                     return TRUE;
                 }
@@ -469,11 +465,11 @@ LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
             return DefWindowProc(hwnd, message, wParam, lParam);
 
         case WM_LBUTTONDOWN:
-            gClickedURL = GetAboutLink(NULL, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+            gClickedURL = GetStaticLink(gLinkInfo, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
             break;
 
         case WM_LBUTTONUP:
-            url = GetAboutLink(NULL, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+            url = GetStaticLink(gLinkInfo, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
             if (url && url == gClickedURL)
                 LaunchBrowser(url);
             break;
@@ -495,77 +491,275 @@ LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
     return 0;
 }
 
-static void OnPaint(WindowInfo *win)
+void DrawAboutPage(WindowInfo *win, HDC hdc)
 {
     ClientRect rc(win->hwndCanvas);
-
-    PAINTSTRUCT ps;
-    HDC hdc = BeginPaint(win->hwndCanvas, &ps);
-    UpdateAboutLayoutInfo(win->hwndCanvas, win->buffer->GetDC(), &rc);
-    DrawAbout(win->hwndCanvas, win->buffer->GetDC(), rc);
+    UpdateAboutLayoutInfo(win->hwndCanvas, hdc, &rc);
+    DrawAbout(win->hwndCanvas, hdc, rc, win->staticLinks);
 #ifdef NEW_START_PAGE
-    // add "Show frequently read" link
     if (!gRestrictedUse && gGlobalPrefs.m_rememberOpenedFiles) {
         // TODO: translate
-        RectI rect = DrawBottomRightLink(win->hwndCanvas, win->buffer->GetDC(), _T("Show frequently read"));
-        gLinkInfo[dimof(gLinkInfo) - 1].url = _T("<View,ShowList>");
-        gLinkInfo[dimof(gLinkInfo) - 1].rect = rect;
+        RectI rect = DrawBottomRightLink(win->hwndCanvas, hdc, _T("Show frequently read"));
+        win->staticLinks.Append(StaticLinkInfo(rect, SLINK_LIST_SHOW));
     }
 #endif
-    win->buffer->Flush(hdc);
-    EndPaint(win->hwndCanvas, &ps);
 }
 
-LRESULT HandleWindowAboutMsg(WindowInfo *win, HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, bool& handled)
-{
-    POINT        pt;
-
-    assert(win->IsAboutWindow());
-    handled = false;
-
-    switch (message)
-    {
-        case WM_PAINT:
-            OnPaint(win);
-            handled = true;
-            return 0;
-
-        case WM_SETCURSOR:
-            if (GetCursorPos(&pt) && ScreenToClient(hwnd, &pt)) {
-                RectI rect;
-                const TCHAR *url = GetAboutLink(NULL, pt.x, pt.y, &rect);
-                if (url) {
-                    if (*url != '<')
-                        win->CreateInfotip(url, rect);
-                    SetCursor(gCursorHand);
-                    handled = true;
-                    return TRUE;
-                }
-            }
-            break;
-
-        case WM_LBUTTONDOWN:
-            // remember a link under so that on mouse up we only activate
-            // link if mouse up is on the same link as mouse down
-            win->url = GetAboutLink(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
-            handled = true;
-            break;
-
-        case WM_LBUTTONUP:
-            const TCHAR *url = GetAboutLink(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
-            if (url && url == win->url) {
 #ifdef NEW_START_PAGE
-                if (Str::Eq(url, _T("<View,ShowList>"))) {
-                    gGlobalPrefs.m_showStartPage = true;
-                    win->RedrawAll(true);
-                } else
-#endif
-                    LaunchBrowser(url);
+
+/* alternate static page to display when no document is loaded */
+
+#include "FileUtil.h"
+#include "AppTools.h"
+#include "FileHistory.h"
+
+#define DOCLIST_SEPARATOR_DY        2
+#define DOCLIST_THUMBNAIL_BORDER_W  2
+#define DOCLIST_MARGIN_LEFT        40
+#define DOCLIST_MARGIN_BETWEEN_X   30
+#define DOCLIST_MARGIN_RIGHT       40
+#define DOCLIST_MARGIN_TOP         60
+#define DOCLIST_MARGIN_BETWEEN_Y   50
+#define DOCLIST_MARGIN_BOTTOM      40
+#define DOCLIST_MAX_THUMBNAILS_X    5
+#define DOCLIST_BOTTOM_BOX_DY      50
+
+void DrawStartPage(WindowInfo *win, HDC hdc, FileHistory& fileHistory)
+{
+    HBRUSH brushBg = CreateSolidBrush(gGlobalPrefs.m_bgColor);
+
+    HPEN penBorder = CreatePen(PS_SOLID, DOCLIST_SEPARATOR_DY, WIN_COL_BLACK);
+    HPEN penThumbBorder = CreatePen(PS_SOLID, DOCLIST_THUMBNAIL_BORDER_W, WIN_COL_BLACK);
+    HPEN penLinkLine = CreatePen(PS_SOLID, 1, COL_BLUE_LINK);
+
+    Win::Font::ScopedFont fontSumatraTxt(hdc, _T("MS Shell Dlg"), 24);
+    Win::Font::ScopedFont fontLeftTxt(hdc, _T("MS Shell Dlg"), 14);
+
+    HGDIOBJ origFont = SelectObject(hdc, fontSumatraTxt); /* Just to remember the orig font */
+
+    ClientRect rc(win->hwndCanvas);
+    FillRect(hdc, &rc.ToRECT(), brushBg);
+
+    SelectObject(hdc, brushBg);
+    SelectObject(hdc, penBorder);
+
+    /* render title */
+    RectI titleBox = RectI(PointI(0, 0), CalcSumatraVersionSize(hdc));
+    titleBox.x = max(rc.dx - titleBox.dx - 3, 0);
+    DrawSumatraVersion(hdc, titleBox);
+    PaintLine(hdc, RectI(0, titleBox.dy, rc.dx, 0));
+
+    /* render recent files list */
+    SelectObject(hdc, gBrushNoDocBg);
+    SelectObject(hdc, penThumbBorder);
+    SetBkMode(hdc, TRANSPARENT);
+    SetTextColor(hdc, WIN_COL_BLACK);
+
+    rc.y += titleBox.dy;
+    rc.dy -= titleBox.dy;
+    FillRect(hdc, &rc.ToRECT(), gBrushNoDocBg);
+    rc.dy -= DOCLIST_BOTTOM_BOX_DY;
+
+    int width = min((rc.dx - DOCLIST_MARGIN_LEFT - DOCLIST_MARGIN_RIGHT + DOCLIST_MARGIN_BETWEEN_X) / (THUMBNAIL_DX + DOCLIST_MARGIN_BETWEEN_X), DOCLIST_MAX_THUMBNAILS_X);
+    int height = min((rc.dy - DOCLIST_MARGIN_TOP - DOCLIST_MARGIN_BOTTOM + DOCLIST_MARGIN_BETWEEN_Y) / (THUMBNAIL_DY + DOCLIST_MARGIN_BETWEEN_Y), FILE_HISTORY_MAX_FREQUENT / width);
+    PointI offset(rc.x + DOCLIST_MARGIN_LEFT + (rc.dx - width * THUMBNAIL_DX - (width - 1) * DOCLIST_MARGIN_BETWEEN_X - DOCLIST_MARGIN_LEFT - DOCLIST_MARGIN_RIGHT) / 2, rc.y + DOCLIST_MARGIN_TOP);
+
+    SelectObject(hdc, fontSumatraTxt);
+    SIZE txtSize;
+    // TODO: translate
+    const TCHAR *txt = _T("Frequently Read");
+    GetTextExtentPoint32(hdc, txt, Str::Len(txt), &txtSize);
+    TextOut(hdc, offset.x, rc.y + (DOCLIST_MARGIN_TOP - txtSize.cy) / 2, txt, Str::Len(txt));
+
+    SelectObject(hdc, fontLeftTxt);
+    SelectObject(hdc, GetStockObject(NULL_BRUSH));
+
+    win->staticLinks.Reset();
+    Vec<DisplayState *> *list = fileHistory.GetFrequencyOrder();
+
+    size_t idx = 0;
+    for (int h = 0; h < height; h++) {
+        for (int w = 0; w < width; w++) {
+            // don't show documents for which we don't have any statistics
+            // or which don't exist (anymore)
+            for (; idx < list->Count(); idx++) {
+                DisplayState *state = list->At(idx);
+                if (state->openCount && (state->thumbnail || File::Exists(state->filePath)))
+                    break;
             }
-            win->url = NULL;
-            handled = true;
-            break;            
+            if (idx >= (int)list->Count()) {
+                // display the "Open a document" link right below the last row
+                height = w > 0 ? h + 1 : h;
+                break;
+            }
+            DisplayState *state = list->At(idx++);
+
+            RectI page(offset.x + w * (THUMBNAIL_DX + DOCLIST_MARGIN_BETWEEN_X),
+                       offset.y + h * (THUMBNAIL_DY + DOCLIST_MARGIN_BETWEEN_Y),
+                       THUMBNAIL_DX, THUMBNAIL_DY);
+            if (state->thumbnail) {
+                HRGN clip = CreateRoundRectRgn(page.x, page.y, page.x + page.dx, page.y + page.dy, 10, 10);
+                SelectClipRgn(hdc, clip);
+                state->thumbnail->StretchDIBits(hdc, page);
+                SelectClipRgn(hdc, NULL);
+                DeleteObject(clip);
+            }
+            RoundRect(hdc, page.x, page.y, page.x + page.dx, page.y + page.dy, 10, 10);
+
+            RectI rect(page.x, page.y + THUMBNAIL_DY + 3, THUMBNAIL_DX, 16);
+            DrawText(hdc, Path::GetBaseName(state->filePath), -1, &rect.ToRECT(), DT_LEFT | DT_END_ELLIPSIS);
+
+            win->staticLinks.Append(StaticLinkInfo(rect.Union(page), state->filePath, state->filePath));
+        }
+    }
+    delete list;
+
+    /* render bottom links */
+    rc.y += DOCLIST_MARGIN_TOP + height * THUMBNAIL_DY + (height - 1) * DOCLIST_MARGIN_BETWEEN_Y + DOCLIST_MARGIN_BOTTOM;
+    rc.dy = DOCLIST_BOTTOM_BOX_DY;
+
+    SetTextColor(hdc, COL_BLUE_LINK);
+    SelectObject(hdc, penLinkLine);
+
+    HIMAGELIST himl = (HIMAGELIST)SendMessage(win->hwndToolbar, TB_GETIMAGELIST, 0, 0);
+    RectI rectIcon(offset.x, rc.y, 0, 0);
+    ImageList_GetIconSize(himl, &rectIcon.dx, &rectIcon.dy);
+    rectIcon.y += (rc.dy - rectIcon.dy) / 2;
+    ImageList_Draw(himl, 0, hdc, rectIcon.x, rectIcon.y, ILD_NORMAL);
+
+    // TODO: translate
+    txt = _T("Open a document...");
+    GetTextExtentPoint32(hdc, txt, Str::Len(txt), &txtSize);
+    RectI rect(offset.x + rectIcon.dx + 3, rc.y + (rc.dy - txtSize.cy) / 2, txtSize.cx, txtSize.cy);
+    DrawText(hdc, txt, -1, &rect.ToRECT(), DT_LEFT);
+    PaintLine(hdc, RectI(rect.x, rect.y + rect.dy, rect.dx, 0));
+    // make the click target larger
+    rect = rect.Union(rectIcon);
+    rect.Inflate(10, 10);
+    win->staticLinks.Append(StaticLinkInfo(rect, SLINK_OPEN_FILE));
+
+    // TODO: translate
+    rect = DrawBottomRightLink(win->hwndCanvas, hdc, _T("Hide frequently read"));
+    win->staticLinks.Append(StaticLinkInfo(rect, SLINK_LIST_HIDE));
+
+    SelectObject(hdc, origFont);
+
+    DeleteObject(brushBg);
+    DeleteObject(penBorder);
+    DeleteObject(penThumbBorder);
+    DeleteObject(penLinkLine);
+}
+
+static char *PathFingerprint(const TCHAR *filePath);
+
+// TODO: create in TEMP directory instead?
+static TCHAR *GetThumbnailPath(const TCHAR *filePath)
+{
+    ScopedMem<TCHAR> thumbsPath(AppGenDataFilename(THUMBNAILS_DIR_NAME));
+    ScopedMem<char> fingerPrint(PathFingerprint(filePath));
+    ScopedMem<TCHAR> fname(Str::Conv::FromAnsi(fingerPrint));
+
+    return Str::Format(_T("%s\\%s.bmp"), thumbsPath, fname);
+}
+
+// removes thumbnails that don't belong to any frequently used item in file history
+static void CleanUpCache(FileHistory& fileHistory)
+{
+    ScopedMem<TCHAR> thumbsPath(AppGenDataFilename(THUMBNAILS_DIR_NAME));
+    ScopedMem<TCHAR> pattern(Path::Join(thumbsPath, _T("*.bmp")));
+
+    StrVec files;
+    WIN32_FIND_DATA fdata;
+
+    HANDLE hfind = FindFirstFile(pattern, &fdata);
+    if (INVALID_HANDLE_VALUE == hfind)
+        return;
+    do {
+        if (!(fdata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+            files.Append(Str::Dup(fdata.cFileName));
+    } while (FindNextFile(hfind, &fdata));
+    FindClose(hfind);
+
+    Vec<DisplayState *> *list = fileHistory.GetFrequencyOrder();
+    for (size_t i = 0; i < list->Count() && i < FILE_HISTORY_MAX_FREQUENT; i++) {
+        ScopedMem<TCHAR> bmpPath(GetThumbnailPath(list->At(i)->filePath));
+        int idx = files.Find(Path::GetBaseName(bmpPath));
+        if (idx != -1) {
+            free(files[idx]);
+            files.RemoveAt(idx);
+        }
+    }
+    delete list;
+
+    for (size_t i = 0; i < files.Count(); i++) {
+        ScopedMem<TCHAR> bmpPath(Path::Join(thumbsPath, files[i]));
+        File::Delete(bmpPath);
+    }
+}
+
+void LoadThumbnails(FileHistory& fileHistory)
+{
+    DisplayState *state;
+    for (int i = 0; (state = fileHistory.Get(i)); i++) {
+        if (state->thumbnail)
+            delete state->thumbnail;
+        state->thumbnail = NULL;
+
+        ScopedMem<TCHAR> bmpPath(GetThumbnailPath(state->filePath));
+        HBITMAP hbmp = (HBITMAP)LoadImage(NULL, bmpPath, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+        if (!hbmp)
+            continue;
+
+        BITMAP bmp;
+        GetObject(hbmp, sizeof(BITMAP), &bmp);
+
+        state->thumbnail = new RenderedBitmap(hbmp, bmp.bmWidth, bmp.bmHeight);
     }
 
-    return 0;
+    CleanUpCache(fileHistory);
 }
+
+void SaveThumbnail(DisplayState *state)
+{
+    if (!state->thumbnail)
+        return;
+
+    size_t dataLen;
+    unsigned char *data = state->thumbnail->Serialize(&dataLen);
+    if (data) {
+        ScopedMem<TCHAR> bmpPath(GetThumbnailPath(state->filePath));
+        ScopedMem<TCHAR> thumbsPath(Path::GetDir(bmpPath));
+        if (Dir::Create(thumbsPath))
+            File::WriteAll(bmpPath, data, dataLen);
+        free(data);
+    }
+}
+
+
+extern "C" {
+__pragma(warning(push))
+#include <fitz.h>
+__pragma(warning(pop))
+}
+
+// creates a fingerprint of a (normalized) path and the
+// file's last modification time - much quicker than hashing
+// a file's entire content
+// caller needs to free() the result
+static char *PathFingerprint(const TCHAR *filePath)
+{
+    unsigned char digest[16];
+    ScopedMem<TCHAR> pathN(Path::Normalize(filePath));
+    ScopedMem<char> pathU(Str::Conv::ToUtf8(pathN));
+    FILETIME lastMod = File::GetModificationTime(pathN);
+
+    fz_md5 md5;
+    fz_md5_init(&md5);
+    fz_md5_update(&md5, (unsigned char *)pathU.Get(), Str::Len(pathU));
+    fz_md5_update(&md5, (unsigned char *)&lastMod, sizeof(lastMod));
+    fz_md5_final(&md5, digest);
+
+    return Str::MemToHex(digest, 16);
+}
+
+#endif

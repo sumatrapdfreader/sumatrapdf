@@ -10,13 +10,28 @@
 
 #define ABOUT_CLASS_NAME        _T("SUMATRA_PDF_ABOUT")
 
-LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
-LRESULT          HandleWindowAboutMsg(WindowInfo *win, HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, bool& handled);
-
-SizeI CalcSumatraVersionSize(HDC);
-void  DrawSumatraVersion(HDC hdc, RectI rect);
-RectI DrawBottomRightLink(HWND hwnd, HDC hdc, const TCHAR *txt);
-
 void OnMenuAbout();
+LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
+
+void  DrawAboutPage(WindowInfo *win, HDC hdc);
+
+const TCHAR *GetStaticLink(Vec<StaticLinkInfo>& linkInfo, int x, int y, StaticLinkInfo *info=NULL);
+
+#ifdef NEW_START_PAGE
+
+#define SLINK_OPEN_FILE _T("<File,Open>")
+#define SLINK_LIST_SHOW _T("<View,ShowList>")
+#define SLINK_LIST_HIDE _T("<View,HideList>")
+
+#define THUMBNAILS_DIR_NAME _T("sumatrapdfcache")
+// thumbnails are 150px high and have a ratio of sqrt(2) : 1
+#define THUMBNAIL_DX        212
+#define THUMBNAIL_DY        150
+
+void    DrawStartPage(WindowInfo *win, HDC hdc, FileHistory& fileHistory);
+void    LoadThumbnails(FileHistory& fileHistory);
+void    SaveThumbnail(DisplayState *state);
+
+#endif
 
 #endif

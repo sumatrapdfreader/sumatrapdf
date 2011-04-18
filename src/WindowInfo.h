@@ -31,6 +31,17 @@ enum PresentationMode {
     PM_WHITE_SCREEN
 };
 
+/* Describes position, the target (URL or file path) and infotip of a "hyperlink" */
+struct StaticLinkInfo {
+    StaticLinkInfo() : target(NULL), infotip(NULL) { }
+    StaticLinkInfo(RectI rect, const TCHAR *target, const TCHAR *infotip=NULL) :
+        rect(rect), target(target), infotip(infotip) { }
+
+    RectI rect;
+    const TCHAR *target;
+    const TCHAR *infotip;
+};
+
 /* Describes information related to one window with (optional) a document
    on the screen */
 class WindowInfo : public DisplayModelCallback
@@ -98,6 +109,9 @@ public:
     /* after selection is done, the selected area is converted
      * to user coordinates for each page which has not empty intersection with it */
     Vec<SelectionOnPage> *selectionOnPage;
+
+    // a list of static links (mainly used for About and Frequently Read pages)
+    Vec<StaticLinkInfo> staticLinks;
 
     // file change watcher
     FileWatcher *   watcher;
