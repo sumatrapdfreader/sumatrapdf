@@ -150,6 +150,9 @@ Advanced
 All files
 Все файлы
 
+All supported documents
+Все поддерживаемые документы
+
 Application:
 Приложение:
 
@@ -174,6 +177,12 @@ Book View
 Book&marks\tF12
 &Закладки\tF12
 
+Bookmark Shortcuts
+Ярлыки закладок
+
+Bookmark shortcut to page %d of %s
+Ярлык закладки на стр. %d из %s
+
 Bookmarks
 Закладки
 
@@ -197,6 +206,9 @@ Change Language
 
 Check for &Updates
 Проверить наличие новой &версии
+
+Comic books
+Документы CBR, CBZ (комиксы)
 
 Continuous
 Разрешить прокрутку
@@ -264,6 +276,9 @@ Enter password for %s
 Enter the command-line to invoke when you double-click on the PDF document:
 Введите командную строку, вызываемую при двойном щелчке на PDF-документе:
 
+Error loading %s
+Ошибка загрузки %s
+
 F&orward\tAlt+Right Arrow
 &Вперёд\tAlt+Стрелка вправо
 
@@ -324,6 +339,9 @@ Fit a Single Page
 Found text at page %d
 Текст найден на стр. %d
 
+Found text at page %d (again)
+Текст найден на стр. %d (повторно)
+
 GB
 Гб
 
@@ -332,6 +350,9 @@ Go to page
 
 Hint: Use the F3 key for finding again
 Для повторного поиска используйте клавишу F3
+
+Image files (*.%s)
+Файлы изображений (*.%s)
 
 KB
 Кб
@@ -394,7 +415,7 @@ P&roperties\tCtrl-D
 Сво&йства...\tCtrl-D
 
 PDF Document
-PDF-документ
+Документ PDF
 
 PDF Producer:
 Создатель PDF:
@@ -522,6 +543,9 @@ Visit &Website
 Warning
 Внимание
 
+XPS documents
+Документы XPS
+
 You have the latest version.
 Вы используете самую новую версию программы.
 
@@ -548,14 +572,4 @@ copying text
 
 printing document
 печатается документ
-
-# Untranslated:
-#All supported documents
-#Bookmark Shortcuts
-#Bookmark shortcut to page %d of %s
-#Comic books
-#Error loading %s
-#Found text at page %d (again)
-#Image files (*.%s)
-#XPS documents
 
