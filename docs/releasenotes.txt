@@ -3,13 +3,15 @@ the release notes, as we make them, to make the release process easier.
 
 Next version:
 
+1.5 (2011-04-??)
+
+* add support for displaying XPS documents
+* add support for displaying CBZ and CBR comic books
 * add "Save Shortcut" to create shortcuts to specific places in a document
 * add a basic context menu for copying text, link addresses and comments
   (and saving and printing for the browser plugin)
 * add folder browsing (Ctrl+Shift+Right opens the next PDF document in the
   current folder, Ctrl+Shift+Left the previous one)
-* add support for displaying XPS documents
-* add support for displaying CBZ and CBR comic books
 
 1.4 (2011-03-12)
 
