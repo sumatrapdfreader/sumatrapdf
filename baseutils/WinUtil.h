@@ -248,8 +248,9 @@ RectI   ShiftRectToWorkArea(RectI rect, bool bFully=false);
 
 void    LaunchFile(const TCHAR *path, const TCHAR *params=NULL, const TCHAR *verb=NULL, bool hidden=false);
 
-void    PaintRect(HDC hdc, RECT * rect);
-void    DrawCenteredText(HDC hdc, RectI r, const TCHAR *txt);
+void    PaintRect(HDC hdc, RectI& rect);
+void    PaintLine(HDC hdc, RectI& rect);
+void    DrawCenteredText(HDC hdc, RectI& r, const TCHAR *txt);
 
 bool    IsCursorOverWindow(HWND hwnd);
 void    CenterDialog(HWND hDlg);

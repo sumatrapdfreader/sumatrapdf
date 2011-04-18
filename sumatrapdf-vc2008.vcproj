@@ -208,6 +208,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\SumatraStart.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\SumatraStart.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\TextSearch.cpp"
 				>
 			</File>

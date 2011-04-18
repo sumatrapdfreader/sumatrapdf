@@ -63,7 +63,7 @@ static void ParseCommandLineTest()
     {
         CommandLineInfo i;
         i.ParseCommandLine(_T("SumatraPDF.exe -bench bar.pdf 1 -invert-colors"));
-        assert(TRUE == i.invertColors);
+        assert(true == i.invertColors);
         assert(2 == i.filesToBenchmark.Count());
         assert(Str::Eq(_T("bar.pdf"), i.filesToBenchmark.At(0)));
         assert(Str::Eq(_T("1"), i.filesToBenchmark.At(1)));

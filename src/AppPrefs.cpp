@@ -36,6 +36,7 @@ static BencDict* SerializeGlobalPrefs(SerializableGlobalPrefs *globalPrefs)
     prefs->Add(ENABLE_AUTO_UPDATE_STR, globalPrefs->m_enableAutoUpdate);
     prefs->Add(REMEMBER_OPENED_FILES_STR, globalPrefs->m_rememberOpenedFiles);
     prefs->Add(GLOBAL_PREFS_ONLY_STR, globalPrefs->m_globalPrefsOnly);
+    prefs->Add(SHOW_RECENT_FILES_STR, globalPrefs->m_showStartPage);
 
     const char *txt = DisplayModeNameFromEnum(globalPrefs->m_defaultDisplayMode);
     prefs->Add(DISPLAY_MODE_STR, new BencRawString(txt));
@@ -288,6 +289,7 @@ static bool DeserializePrefs(const char *prefsTxt, SerializableGlobalPrefs *glob
     Retrieve(global, ENABLE_AUTO_UPDATE_STR, globalPrefs->m_enableAutoUpdate);
     Retrieve(global, REMEMBER_OPENED_FILES_STR, globalPrefs->m_rememberOpenedFiles);
     Retrieve(global, GLOBAL_PREFS_ONLY_STR, globalPrefs->m_globalPrefsOnly);
+    Retrieve(global, SHOW_RECENT_FILES_STR, globalPrefs->m_showStartPage);
 
     const char* txt = GetRawString(global, DISPLAY_MODE_STR);
     if (txt)

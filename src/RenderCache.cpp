@@ -526,7 +526,7 @@ DWORD WINAPI RenderCache::RenderCacheThread(LPVOID data)
         }
 
         if (bmp && cache->invertColors && *cache->invertColors)
-            bmp->invertColors();
+            bmp->InvertColors();
         if (bmp)
             DBG_OUT("RenderCacheThread(): finished rendering %d\n", req.pageNo);
         else
@@ -565,7 +565,7 @@ UINT RenderCache::PaintTile(HDC hdc, RectI *bounds, DisplayModel *dm, int pageNo
             Render(dm, pageNo, tile);
     }
     RenderedBitmap *renderedBmp = entry ? entry->bitmap : NULL;
-    HBITMAP hbmp = renderedBmp ? renderedBmp->getBitmap() : NULL;
+    HBITMAP hbmp = renderedBmp ? renderedBmp->GetBitmap() : NULL;
 
     if (!hbmp) {
         if (entry && !(renderedBmp && ReduceTileSize()))
@@ -581,7 +581,7 @@ UINT RenderCache::PaintTile(HDC hdc, RectI *bounds, DisplayModel *dm, int pageNo
 
     HDC bmpDC = CreateCompatibleDC(hdc);
     if (bmpDC) {
-        SizeI bmpSize = renderedBmp->size();
+        SizeI bmpSize = renderedBmp->Size();
         int xSrc = -min(tileOnScreen->x, 0);
         int ySrc = -min(tileOnScreen->y, 0);
         float factor = min(1.0f * bmpSize.dx / tileOnScreen->dx, 1.0f * bmpSize.dy / tileOnScreen->dy);

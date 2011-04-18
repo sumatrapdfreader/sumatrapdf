@@ -19,9 +19,6 @@
 
 #define ABOUT_WIN_TITLE         _TR("About SumatraPDF")
 
-#ifndef SUMATRA_TXT
-#define SUMATRA_TXT             _T("SumatraPDF")
-#endif
 #define SUMATRA_TXT_FONT        _T("Arial Black")
 #define SUMATRA_TXT_FONT_SIZE   24
 
@@ -38,6 +35,9 @@
 static HWND gHwndAbout;
 static HWND gHwndAboutTooltip = NULL;
 static const TCHAR *clickedURL = NULL;
+#ifdef NEW_START_PAGE
+static SizeI showStartPageLink;
+#endif
 
 typedef struct AboutLayoutInfoEl {
     /* static data, must be provided */
@@ -80,7 +80,7 @@ static AboutLayoutInfoEl gAboutLayoutInfo[] = {
 
 void DrawSumatraPDF(HDC hdc, int x, int y)
 {
-    const TCHAR *txt = SUMATRA_TXT;
+    const TCHAR *txt = APP_NAME_STR;
 #ifdef BLACK_ON_YELLOW
     // simple black version
     SetTextColor(hdc, ABOUT_BORDER_COL);
@@ -99,7 +99,7 @@ void DrawSumatraPDF(HDC hdc, int x, int y)
 #endif
 }
 
-/* Draws the about screen a remember some state for hyperlinking.
+/* Draws the about screen and remembers some state for hyperlinking.
    It transcribes the design I did in graphics software - hopeless
    to understand without seeing the design. */
 static void DrawAbout(HWND hwnd, HDC hdc, RectI rect)
@@ -141,7 +141,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, RectI rect)
     totalDy = rect.dy;
 
     /* render title */
-    const TCHAR *txt = SUMATRA_TXT;
+    const TCHAR *txt = APP_NAME_STR;
     GetTextExtentPoint32(hdc, txt, Str::Len(txt), &txtSize);
     sumatraPdfTxtDx = txtSize.cx;
     sumatraPdfTxtDy = txtSize.cy;
@@ -193,8 +193,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, RectI rect)
 
         int underlineY = el->rightPos.y + el->rightPos.dy - 3;
         SelectObject(hdc, penLinkLine);
-        MoveToEx(hdc, el->rightPos.x, underlineY, NULL);
-        LineTo(hdc, el->rightPos.x + el->rightPos.dx, underlineY);    
+        PaintLine(hdc, RectI(el->rightPos.x, underlineY, el->rightPos.dx, 0));
     }
 
     linePosX = ABOUT_LINE_OUTER_SIZE + ABOUT_MARGIN_DX + leftLargestDx + ABOUT_LEFT_RIGHT_SPACE_DX;
@@ -202,8 +201,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, RectI rect)
     lineDy = bottomY - gAboutLayoutInfo[0].rightPos.y;
 
     SelectObject(hdc, penDivideLine);
-    MoveToEx(hdc, linePosX + offX, linePosY + offY, NULL);
-    LineTo(hdc, linePosX + offX, linePosY + lineDy + offY);
+    PaintLine(hdc, RectI(linePosX + offX, linePosY + offY, 0, lineDy));
 
     SelectObject(hdc, origFont);
 
@@ -238,7 +236,7 @@ static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, RectI *rect)
         gAboutLayoutInfo[dimof(gAboutLayoutInfo) - 2].leftTxt = NULL;
 
     /* calculate minimal top box size */
-    const TCHAR *txt = SUMATRA_TXT;
+    const TCHAR *txt = APP_NAME_STR;
     GetTextExtentPoint32(hdc, txt, Str::Len(txt), &txtSize);
     boxDy = txtSize.cy + ABOUT_BOX_MARGIN_DY * 2;
     titleLargestDx = txtSize.cx;
@@ -355,6 +353,20 @@ static const TCHAR *AboutGetLink(WindowInfo *win, int x, int y, AboutLayoutInfoE
             *el_out = el;
         return el->url;
     }
+    
+#ifdef NEW_START_PAGE
+    if (win) {
+        ClientRect rc(win->hwndCanvas);
+        RectI bottomRightLink(PointI(), showStartPageLink);
+        bottomRightLink.Offset(rc.dx - bottomRightLink.dx - 6, rc.dy - bottomRightLink.dy - 6);
+        if (bottomRightLink.Inside(cursor)) {
+            if (el_out)
+                *el_out = NULL;
+            return _T("<View,ShowList>");
+        }
+    }
+#endif
+
     return NULL;
 }
 
@@ -450,7 +462,8 @@ LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
             if (GetCursorPos(&pt) && ScreenToClient(hwnd, &pt)) {
                 AboutLayoutInfoEl *aboutEl;
                 if (AboutGetLink(NULL, pt.x, pt.y, &aboutEl)) {
-                    CreateInfotipForLink(aboutEl->url, aboutEl->rightPos);
+                    if (aboutEl)
+                        CreateInfotipForLink(aboutEl->url, aboutEl->rightPos);
                     SetCursor(gCursorHand);
                     return TRUE;
                 }
@@ -493,6 +506,38 @@ static void OnPaint(WindowInfo *win)
     HDC hdc = BeginPaint(win->hwndCanvas, &ps);
     UpdateAboutLayoutInfo(win->hwndCanvas, win->buffer->GetDC(), &rc);
     DrawAbout(win->hwndCanvas, win->buffer->GetDC(), rc);
+
+#ifdef NEW_START_PAGE
+    // TODO: move this into DrawAbout
+    // add "Show recent files" link
+    if (!gRestrictedUse && gGlobalPrefs.m_rememberOpenedFiles)
+    {
+        HDC hdc = win->buffer->GetDC();
+
+        Win::Font::ScopedFont fontLeftTxt(hdc, LEFT_TXT_FONT, LEFT_TXT_FONT_SIZE);
+        HGDIOBJ origFont = SelectObject(hdc, fontLeftTxt); /* Just to remember the orig font */
+        HPEN penLinkLine = CreatePen(PS_SOLID, 1, COL_BLUE_LINK);
+        HBRUSH brushBg = CreateSolidBrush(gGlobalPrefs.m_bgColor);
+        SetTextColor(hdc, COL_BLUE_LINK);
+        SelectObject(hdc, penLinkLine);
+        SelectObject(hdc, brushBg);
+        rc = ClientRect(win->hwndCanvas);
+
+        SIZE txtSize;
+        // TODO: translate
+        const TCHAR *txt = _T("Show recent files");
+        GetTextExtentPoint32(hdc, txt, Str::Len(txt), &txtSize);
+        RectI rect(rc.dx - txtSize.cx - 6, rc.y + rc.dy - txtSize.cy - 6, txtSize.cx, txtSize.cy);
+        DrawText(hdc, txt, -1, &rect.ToRECT(), DT_LEFT);
+        PaintLine(hdc, RectI(rect.x, rect.y + rect.dy, rect.dx, 0));
+        showStartPageLink = rect.Size();
+
+        SelectObject(hdc, origFont);
+        DeleteObject(brushBg);
+        DeleteObject(penLinkLine);
+    }
+#endif
+
     win->buffer->Flush(hdc);
     EndPaint(win->hwndCanvas, &ps);
 }
@@ -515,7 +560,8 @@ LRESULT HandleWindowAboutMsg(WindowInfo *win, HWND hwnd, UINT message, WPARAM wP
             if (GetCursorPos(&pt) && ScreenToClient(hwnd, &pt)) {
                 AboutLayoutInfoEl *aboutEl;
                 if (AboutGetLink(win, pt.x, pt.y, &aboutEl)) {
-                    win->CreateInfotip(aboutEl->url, aboutEl->rightPos);
+                    if (aboutEl)
+                        win->CreateInfotip(aboutEl->url, aboutEl->rightPos);
                     SetCursor(gCursorHand);
                     handled = true;
                     return TRUE;
@@ -532,8 +578,15 @@ LRESULT HandleWindowAboutMsg(WindowInfo *win, HWND hwnd, UINT message, WPARAM wP
 
         case WM_LBUTTONUP:
             const TCHAR *url = AboutGetLink(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
-            if (url && url == win->url)
-                LaunchBrowser(url);
+            if (url && url == win->url) {
+#ifdef NEW_START_PAGE
+                if (Str::Eq(url, _T("<View,ShowList>"))) {
+                    gGlobalPrefs.m_showStartPage = true;
+                    win->RedrawAll(true);
+                } else
+#endif
+                    LaunchBrowser(url);
+            }
             win->url = NULL;
             handled = true;
             break;            

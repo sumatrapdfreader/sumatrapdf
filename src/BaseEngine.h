@@ -22,20 +22,20 @@ public:
     ~RenderedBitmap() { DeleteObject(_hbmp); }
 
     // callers must not delete this (use CopyImage if you have to modify it)
-    HBITMAP getBitmap() const { return _hbmp; }
-    SizeI size() const { return SizeI(_width, _height); }
+    HBITMAP GetBitmap() const { return _hbmp; }
+    SizeI Size() const { return SizeI(_width, _height); }
 
-    void stretchDIBits(HDC hdc, int leftMargin, int topMargin, int pageDx, int pageDy) {
+    void StretchDIBits(HDC hdc, RectI target) {
         HDC bmpDC = CreateCompatibleDC(hdc);
         HGDIOBJ oldBmp = SelectObject(bmpDC, _hbmp);
         SetStretchBltMode(hdc, HALFTONE);
-        StretchBlt(hdc, leftMargin, topMargin, pageDx, pageDy,
+        StretchBlt(hdc, target.x, target.y, target.dx, target.dy,
             bmpDC, 0, 0, _width, _height, SRCCOPY);
         SelectObject(bmpDC, oldBmp);
         DeleteDC(bmpDC);
     }
 
-    void grayOut(float alpha) {
+    void GrayOut(float alpha) {
         HDC hDC = GetDC(NULL);
         BITMAPINFO bmi = { 0 };
 
@@ -58,7 +58,7 @@ public:
         free(bmpData);
         ReleaseDC(NULL, hDC);
     }
-    void invertColors() { grayOut(-1); }
+    void InvertColors() { GrayOut(-1); }
 
 protected:
     HBITMAP _hbmp;

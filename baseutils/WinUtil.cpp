@@ -382,16 +382,22 @@ RectI ShiftRectToWorkArea(RectI rect, bool bFully)
     return rect;
 }
 
-void PaintRect(HDC hdc, RECT * rect)
+void PaintRect(HDC hdc, RectI& rect)
 {
-    MoveToEx(hdc, rect->left, rect->top, NULL);
-    LineTo(hdc, rect->right - 1, rect->top);
-    LineTo(hdc, rect->right - 1, rect->bottom - 1);
-    LineTo(hdc, rect->left, rect->bottom - 1);
-    LineTo(hdc, rect->left, rect->top);
+    MoveToEx(hdc, rect.x, rect.y, NULL);
+    LineTo(hdc, rect.x + rect.dx - 1, rect.y);
+    LineTo(hdc, rect.x + rect.dx - 1, rect.y + rect.dy - 1);
+    LineTo(hdc, rect.x, rect.y + rect.dy - 1);
+    LineTo(hdc, rect.x, rect.y);
 }
 
-void DrawCenteredText(HDC hdc, RectI r, const TCHAR *txt)
+void PaintLine(HDC hdc, RectI& rect)
+{
+    MoveToEx(hdc, rect.x, rect.y, NULL);
+    LineTo(hdc, rect.x + rect.dx, rect.y + rect.dy);
+}
+
+void DrawCenteredText(HDC hdc, RectI& r, const TCHAR *txt)
 {    
     SetBkMode(hdc, TRANSPARENT);
     DrawText(hdc, txt, -1, &r.ToRECT(), DT_CENTER | DT_VCENTER | DT_SINGLELINE);

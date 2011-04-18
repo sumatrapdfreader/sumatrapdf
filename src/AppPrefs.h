@@ -71,6 +71,8 @@ typedef struct {
 
     bool m_invertColors; /* invert all colors for accessibility reasons (experimental!) */
 
+    bool m_showStartPage; /* whether to display recently used documents or the About page in an empty window */
+
     FILETIME m_lastPrefUpdate; /* modification time of the preferences file when it was last read */
 } SerializableGlobalPrefs;
 

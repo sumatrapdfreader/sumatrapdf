@@ -6,6 +6,7 @@
 
 #include "BaseUtil.h"
 #include "GeomUtil.h"
+#include "BaseEngine.h"
 
 enum DisplayMode {
     DM_FIRST = 0,
@@ -69,6 +70,7 @@ enum DisplayMode {
 #define GLOBAL_PREFS_ONLY_STR       "GlobalPrefsOnly"
 #define USE_GLOBAL_VALUES_STR       "UseGlobalValues"
 #define DECRYPTION_KEY_STR          "Decryption Key"
+#define SHOW_RECENT_FILES_STR       "ShowStartPage"
 
 #define FWDSEARCH_OFFSET            "ForwardSearch_HighlightOffset"
 #define FWDSEARCH_COLOR             "ForwardSearch_HighlightColor"
@@ -79,14 +81,16 @@ enum DisplayMode {
 class DisplayState {
 public:
     DisplayState() :
-        filePath(NULL), decryptionKey(NULL), useGlobalValues(false),
+        filePath(NULL), useGlobalValues(false),
         displayMode(DM_AUTOMATIC), pageNo(1), zoomVirtual(100.0),
-        rotation(0), windowState(0), showToc(true), tocDx(0), tocState(NULL) { }
+        rotation(0), windowState(0), thumbnail(NULL),
+        decryptionKey(NULL), showToc(true), tocDx(0), tocState(NULL) { }
 
     ~DisplayState() {
         free(filePath);
         free(decryptionKey);
         free(tocState);
+        delete thumbnail;
     }
 
     TCHAR *             filePath;
@@ -100,6 +104,10 @@ public:
     int                 rotation;
     int                 windowState;
     RectI               windowPos;
+
+    // TODO: serialize to disk and restore on reloading preferences
+    //       (at least for the first 10 documents)
+    RenderedBitmap *    thumbnail;
 
     // values below only apply to PDF files
 

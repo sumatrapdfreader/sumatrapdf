@@ -14,6 +14,9 @@
 #include "SumatraDialogs.h"
 #include "SumatraProperties.h"
 #include "SumatraAbout.h"
+#ifdef NEW_START_PAGE
+#include "SumatraStart.h"
+#endif
 #include "FileHistory.h"
 #include "FileWatch.h"
 #include "AppTools.h"
@@ -156,7 +159,7 @@ static HBITMAP                      gBitmapReloadingCue;
 
 static RenderCache                  gRenderCache;
 static Vec<WindowInfo*>             gWindows;
-static FileHistory                  gFileHistory;
+       FileHistory                  gFileHistory;
 static UIThreadWorkItemQueue        gUIThreadMarshaller;
 
 static int                          gReBarDy;
@@ -192,6 +195,7 @@ SerializableGlobalPrefs             gGlobalPrefs = {
     15, // int  m_fwdsearchWidth
     0, // bool m_fwdsearchPermanent
     false, // bool m_invertColors
+    true, // bool m_showStartPage
     { 0, 0 }, // FILETIME m_lastPrefUpdate
 };
 
@@ -1030,6 +1034,10 @@ static bool ReloadPrefs()
 
     gFileHistory.Clear();
     gFileHistory.ExtendWith(fileHistory);
+#ifdef NEW_START_PAGE
+    if (gWindows[0]->IsAboutWindow())
+        gWindows[0]->RedrawAll(true);
+#endif
     // update the current language
     if (!Str::Eq(currLang, gGlobalPrefs.m_currentLanguage)) {
         CurrLangNameSet(gGlobalPrefs.m_currentLanguage);
@@ -1662,6 +1670,18 @@ WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin, b
 
     if (gGlobalPrefs.m_rememberOpenedFiles) {
         gFileHistory.MarkFileLoaded(fullpath);
+#ifdef NEW_START_PAGE
+        if (!gFileHistory.Get(0)->thumbnail) {
+            RectD pageRect = win->dm->engine->PageMediabox(1);
+            pageRect = win->dm->engine->Transform(pageRect, 1, 1.0, 0);
+            float zoom = 212 / (float)pageRect.dx;
+            pageRect.dy = 150.0 / zoom;
+            pageRect = win->dm->engine->Transform(pageRect, 1, 1.0, 0, true);
+            // TODO: move this to rendering thread
+            // TODO: convert to grayscale thumbnail?
+            gFileHistory.Get(0)->thumbnail = win->dm->engine->RenderBitmap(1, zoom, 0, &pageRect);
+        }
+#endif
         SavePrefs();
     }
 
@@ -2086,7 +2106,7 @@ static void DebugShowLinks(DisplayModel *dm, HDC hdc)
             RectI rect = dm->CvtToScreen(pageNo, els->At(i)->GetRect());
             RectI isect = viewPortRect.Intersect(rect);
             if (!isect.IsEmpty())
-                PaintRect(hdc, &isect.ToRECT());
+                PaintRect(hdc, isect);
         }
         DeleteVecMembers(*els);
         delete els;
@@ -2106,7 +2126,7 @@ static void DebugShowLinks(DisplayModel *dm, HDC hdc)
 
             RectI rect = dm->engine->PageContentBox(pageNo);
             rect = dm->CvtToScreen(pageNo, rect.Convert<double>());
-            PaintRect(hdc, &rect.ToRECT());
+            PaintRect(hdc, rect);
         }
 
         DeletePen(SelectObject(hdc, oldPen));
@@ -2241,7 +2261,7 @@ static void CopySelectionToClipboard(WindowInfo *win)
         win->dm->zoomReal(), win->dm->rotation(), &selOnPage->rect,
         Target_Export, gUseGdiRenderer);
     if (bmp) {
-        if (!SetClipboardData(CF_BITMAP, bmp->getBitmap()))
+        if (!SetClipboardData(CF_BITMAP, bmp->GetBitmap()))
             SeeLastError();
         delete bmp;
     }
@@ -3050,8 +3070,9 @@ static void PrintToDevice(BaseEngine *engine, HDC hdc, LPDEVMODE devMode,
 #else
                 RenderedBitmap *bmp = engine->RenderBitmap(sel->At(i).pageNo, zoom, dm_rotation, clipRegion, Target_Print, gUseGdiRenderer);
                 if (bmp) {
-                    bmp->stretchDIBits(hdc, (printableWidth - bmp->size().dx) / 2,
-                        (printableHeight - bmp->size().dy) / 2, bmp->size().dx, bmp->size().dy);
+                    PointI TL((printableWidth - bmp->Size().dx) / 2,
+                              (printableHeight - bmp->Size().dy) / 2);
+                    bmp->StretchDIBits(hdc, RectI(TL, bmp->Size()));
                     delete bmp;
                 }
 #endif
@@ -3133,8 +3154,9 @@ static void PrintToDevice(BaseEngine *engine, HDC hdc, LPDEVMODE devMode,
 #else
             RenderedBitmap *bmp = engine->RenderBitmap(pageNo, zoom, rotation, NULL, Target_Print, gUseGdiRenderer);
             if (bmp) {
-                bmp->stretchDIBits(hdc, (printableWidth - bmp->size().dx) / 2 - horizOffset,
-                    (printableHeight - bmp->size().dy) / 2 - vertOffset, bmp->size().dx, bmp->size().dy);
+                PointI TL((printableWidth - bmp->Size().dx) / 2 - horizOffset,
+                          (printableHeight - bmp->Size().dy) / 2 - vertOffset);
+                bmp->StretchDIBits(hdc, RectI(TL, bmp->Size()));
                 delete bmp;
             }
 #endif
@@ -4083,7 +4105,7 @@ static void OnMenuViewFullscreen(WindowInfo *win, bool presentation=false)
     else
         WindowInfo_ExitFullscreen(win);
 
-    if (enterFullscreen)
+    if (enterFullscreen && (!presentation || win->IsDocLoaded()))
         WindowInfo_EnterFullscreen(win, presentation);
 }
 
@@ -4866,7 +4888,7 @@ static LRESULT CALLBACK WndProcFindStatus(HWND hwnd, UINT message, WPARAM wParam
         rect.dx = width;
         rect.y += MulDiv(20, win->dpi, USER_DEFAULT_SCREEN_DPI);
         rect.dy = FIND_STATUS_PROGRESS_HEIGHT;
-        PaintRect(hdc, &rect.ToRECT());
+        PaintRect(hdc, rect);
         
         int percent = win->findPercent;
         if (percent > 100)
@@ -5874,7 +5896,13 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
     WindowInfo * win = FindWindowInfoByHwnd(hwnd);
     if (win && win->IsAboutWindow()) {
         bool handled;
-        LRESULT res = HandleWindowAboutMsg(win, hwnd, message, wParam, lParam, handled);
+        LRESULT res;
+#ifdef NEW_START_PAGE
+        if (!gRestrictedUse && gGlobalPrefs.m_showStartPage && gGlobalPrefs.m_rememberOpenedFiles)
+            res = HandleWindowStartMsg(win, hwnd, message, wParam, lParam, handled);
+        else
+#endif
+            res = HandleWindowAboutMsg(win, hwnd, message, wParam, lParam, handled);
         if (handled)
             return res;
     }
