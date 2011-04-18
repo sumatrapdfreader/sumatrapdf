@@ -6,11 +6,6 @@
 
 #include "DisplayState.h"
 
-// number of most recently used files that will be shown in the menu
-// (and remembered in the preferences file, if just filenames are
-//  to be remembered and not individual view settings per document)
-#define MAX_RECENT_FILES_IN_MENU 10
-
 /* enum from m_windowState */
 enum {
     WIN_STATE_NORMAL = 1 /* use remebered position and size */
@@ -71,7 +66,7 @@ typedef struct {
 
     bool m_invertColors; /* invert all colors for accessibility reasons (experimental!) */
 
-    bool m_showStartPage; /* whether to display recently used documents or the About page in an empty window */
+    bool m_showStartPage; /* whether to display Frequently Read documents or the About page in an empty window */
 
     FILETIME m_lastPrefUpdate; /* modification time of the preferences file when it was last read */
 } SerializableGlobalPrefs;

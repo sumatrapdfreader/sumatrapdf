@@ -402,6 +402,15 @@ static void VecTest()
         }
         DeleteVecMembers(v);
     }
+
+    {
+        Vec<int> v;
+        v.Append(2);
+        v.Append(4);
+        Vec<int> *v2 = v.Clone();
+        assert(v2->Count() == 2 && v2->At(0) == 2 && v2->At(1) == 4);
+        delete v2;
+    }
 }
 
 static void LogTest()

@@ -10,6 +10,7 @@
 #include "Version.h"
 #include "WinUtil.h"
 #include "FileUtil.h"
+#include "Vec.h"
 #include "Resource.h"
 #include "AppTools.h"
 
@@ -32,41 +33,40 @@
 #define ABOUT_BORDER_COL            RGB(0,0,0)
 
 #define DOCLIST_SEPARATOR_DY        2
-#define DOCLIST_THUMBNAIL_DX        212
-#define DOCLIST_THUMBNAIL_DY        150
+#define DOCLIST_THUMBNAIL_BORDER_W  2
 #define DOCLIST_MARGIN_LEFT         40
-#define DOCLIST_MARGIN_BETWEEN_X    60
+#define DOCLIST_MARGIN_BETWEEN_X    30
 #define DOCLIST_MARGIN_RIGHT        40
-#define DOCLIST_MARGIN_TOP          40
-#define DOCLIST_MARGIN_BETWEEN_Y    60
+#define DOCLIST_MARGIN_TOP          60
+#define DOCLIST_MARGIN_BETWEEN_Y    50
 #define DOCLIST_MARGIN_BOTTOM       40
-#define DOCLIST_MAX_THUMBNAILS_X    4
-#define DOCLIST_MAX_THUMBNAILS      10
-#define DOCLIST_BOTTOM_BOX_DY       60
+#define DOCLIST_MAX_THUMBNAILS_X    5
+#define DOCLIST_BOTTOM_BOX_DY       50
 
 struct StartPageLink {
     const TCHAR *filePath;
     RectI rect;
-} gLinkInfo[DOCLIST_MAX_THUMBNAILS + 2];
+} gLinkInfo[FILE_HISTORY_MAX_FREQUENT + 2];
 
-static void DrawStartPage(HWND hwnd, HDC hdc)
+static void DrawStartPage(WindowInfo *win, HDC hdc, FileHistory& fileHistory)
 {
     HBRUSH brushBg = CreateSolidBrush(gGlobalPrefs.m_bgColor);
     HBRUSH brushBg2 = CreateSolidBrush(RGB(0xCC, 0xCC, 0xCC));
     HBRUSH brushEmpty = CreateSolidBrush(WIN_COL_WHITE);
 
     HPEN penBorder = CreatePen(PS_SOLID, DOCLIST_SEPARATOR_DY, WIN_COL_BLACK);
+    HPEN penThumbBorder = CreatePen(PS_SOLID, DOCLIST_THUMBNAIL_BORDER_W, WIN_COL_BLACK);
     HPEN penLinkLine = CreatePen(PS_SOLID, 1, COL_BLUE_LINK);
 
     Win::Font::ScopedFont fontSumatraTxt(hdc, SUMATRA_TXT_FONT, SUMATRA_TXT_FONT_SIZE);
     Win::Font::ScopedFont fontVersionTxt(hdc, VERSION_TXT_FONT, VERSION_TXT_FONT_SIZE);
-    Win::Font::ScopedFont fontLeftTxt(hdc, LEFT_TXT_FONT, LEFT_TXT_FONT_SIZE);
+    Win::Font::ScopedFont fontLeftTxt(hdc, _T("MS Shell Dlg"), 14);
 
     HGDIOBJ origFont = SelectObject(hdc, fontSumatraTxt); /* Just to remember the orig font */
 
     SetBkMode(hdc, TRANSPARENT);
 
-    ClientRect rc(hwnd);
+    ClientRect rc(win->hwndCanvas);
     FillRect(hdc, &rc.ToRECT(), brushBg);
 
     SelectObject(hdc, brushBg);
@@ -106,70 +106,93 @@ static void DrawStartPage(HWND hwnd, HDC hdc)
 
     /* render recent files list */
     SelectObject(hdc, brushBg2);
-    SelectObject(hdc, fontLeftTxt);
-
-    // TODO: add a header "Recently Opened Files"?
+    SelectObject(hdc, penThumbBorder);
 
     rc.y += titleBox.dy;
     rc.dy -= titleBox.dy;
     FillRect(hdc, &rc.ToRECT(), brushBg2);
     rc.dy -= DOCLIST_BOTTOM_BOX_DY;
 
-    int width = min((rc.dx - DOCLIST_MARGIN_LEFT - DOCLIST_MARGIN_RIGHT + DOCLIST_MARGIN_BETWEEN_X) / (DOCLIST_THUMBNAIL_DX + DOCLIST_MARGIN_BETWEEN_X), DOCLIST_MAX_THUMBNAILS_X);
-    int height = min((rc.dy - DOCLIST_MARGIN_TOP - DOCLIST_MARGIN_BOTTOM + DOCLIST_MARGIN_BETWEEN_Y) / (DOCLIST_THUMBNAIL_DY + DOCLIST_MARGIN_BETWEEN_Y), DOCLIST_MAX_THUMBNAILS / width);
-    PointI offset(rc.x + DOCLIST_MARGIN_LEFT + (rc.dx - width * DOCLIST_THUMBNAIL_DX - (width - 1) * DOCLIST_MARGIN_BETWEEN_X - DOCLIST_MARGIN_LEFT - DOCLIST_MARGIN_RIGHT) / 2, rc.y + DOCLIST_MARGIN_TOP);
+    int width = min((rc.dx - DOCLIST_MARGIN_LEFT - DOCLIST_MARGIN_RIGHT + DOCLIST_MARGIN_BETWEEN_X) / (THUMBNAIL_DX + DOCLIST_MARGIN_BETWEEN_X), DOCLIST_MAX_THUMBNAILS_X);
+    int height = min((rc.dy - DOCLIST_MARGIN_TOP - DOCLIST_MARGIN_BOTTOM + DOCLIST_MARGIN_BETWEEN_Y) / (THUMBNAIL_DY + DOCLIST_MARGIN_BETWEEN_Y), FILE_HISTORY_MAX_FREQUENT / width);
+    PointI offset(rc.x + DOCLIST_MARGIN_LEFT + (rc.dx - width * THUMBNAIL_DX - (width - 1) * DOCLIST_MARGIN_BETWEEN_X - DOCLIST_MARGIN_LEFT - DOCLIST_MARGIN_RIGHT) / 2, rc.y + DOCLIST_MARGIN_TOP);
+
+    SelectObject(hdc, fontSumatraTxt);
+    // TODO: translate
+    txt = _T("Frequently Read");
+    GetTextExtentPoint32(hdc, txt, Str::Len(txt), &txtSize);
+    TextOut(hdc, offset.x, rc.y + (DOCLIST_MARGIN_TOP - txtSize.cy) / 2, txt, Str::Len(txt));
+
+    SelectObject(hdc, fontLeftTxt);
+    SelectObject(hdc, GetStockObject(NULL_BRUSH));
 
     ZeroMemory(&gLinkInfo, sizeof(gLinkInfo));
+    Vec<DisplayState *> *list = fileHistory.GetFrequencyOrder();
+
     int h;
     for (h = 0; h < height; h++) {
         for (int w = 0; w < width; w++) {
-            DisplayState *state = gFileHistory.Get(h * width + w);
-            if (!state) {
+            if (h * width + w >= (int)list->Count() || !list->At(h * width + w)->openCount) {
                 height = w > 0 ? h + 1 : h;
                 break;
             }
+            DisplayState *state = list->At(h * width + w);
 
-            // TODO: polish appearance
-            RectI page(offset.x + w * (DOCLIST_THUMBNAIL_DX + DOCLIST_MARGIN_BETWEEN_X),
-                       offset.y + h * (DOCLIST_THUMBNAIL_DY + DOCLIST_MARGIN_BETWEEN_Y),
-                       DOCLIST_THUMBNAIL_DX, DOCLIST_THUMBNAIL_DY);
-            FillRect(hdc, &page.ToRECT(), brushEmpty);
-            if (state->thumbnail)
+            RectI page(offset.x + w * (THUMBNAIL_DX + DOCLIST_MARGIN_BETWEEN_X),
+                       offset.y + h * (THUMBNAIL_DY + DOCLIST_MARGIN_BETWEEN_Y),
+                       THUMBNAIL_DX, THUMBNAIL_DY);
+            if (state->thumbnail) {
+                HRGN clip = CreateRoundRectRgn(page.x, page.y, page.x + page.dx, page.y + page.dy, 10, 10);
+                SelectClipRgn(hdc, clip);
                 state->thumbnail->StretchDIBits(hdc, page);
+                SelectClipRgn(hdc, NULL);
+                DeleteObject(clip);
+            }
+            RoundRect(hdc, page.x, page.y, page.x + page.dx, page.y + page.dy, 10, 10);
 
-            RectI rect(page.x, page.y + DOCLIST_THUMBNAIL_DY + 3, DOCLIST_THUMBNAIL_DX, 16);
+            RectI rect(page.x, page.y + THUMBNAIL_DY + 3, THUMBNAIL_DX, 16);
             DrawText(hdc, Path::GetBaseName(state->filePath), -1, &rect.ToRECT(), DT_LEFT | DT_END_ELLIPSIS);
 
             gLinkInfo[h * width + w].filePath = state->filePath;
             gLinkInfo[h * width + w].rect = rect.Union(page);
         }
     }
+    delete list;
 
     /* render bottom links */
-    rc.y += DOCLIST_MARGIN_TOP + height * DOCLIST_THUMBNAIL_DY + (height - 1) * DOCLIST_MARGIN_BETWEEN_Y + DOCLIST_MARGIN_BOTTOM;
+    rc.y += DOCLIST_MARGIN_TOP + height * THUMBNAIL_DY + (height - 1) * DOCLIST_MARGIN_BETWEEN_Y + DOCLIST_MARGIN_BOTTOM;
     rc.dy = DOCLIST_BOTTOM_BOX_DY;
 
     SetTextColor(hdc, COL_BLUE_LINK);
     SelectObject(hdc, penLinkLine);
 
-    // TODO: translate
-    txt = _T("Open another document...");
-    GetTextExtentPoint32(hdc, txt, Str::Len(txt), &txtSize);
-    RectI rect(offset.x, rc.y + (rc.dy - txtSize.cy) / 2, txtSize.cx, txtSize.cy);
-    DrawText(hdc, txt, -1, &rect.ToRECT(), DT_LEFT);
-    gLinkInfo[DOCLIST_MAX_THUMBNAILS - 2].filePath = _T("<File,Open>");
-    gLinkInfo[DOCLIST_MAX_THUMBNAILS - 2].rect = rect;
-    PaintLine(hdc, RectI(rect.x, rect.y + rect.dy, rect.dx, 0));
+    HIMAGELIST himl = (HIMAGELIST)SendMessage(win->hwndToolbar, TB_GETIMAGELIST, 0, 0);
+    RectI rectIcon(offset.x, rc.y, 0, 0);
+    ImageList_GetIconSize(himl, &rectIcon.dx, &rectIcon.dy);
+    rectIcon.y += (rc.dy - rectIcon.dy) / 2;
+    ImageList_Draw(himl, 0, hdc, rectIcon.x, rectIcon.y, ILD_NORMAL);
 
-    rc = ClientRect(hwnd);
     // TODO: translate
-    txt = _T("Hide recent files");
+    txt = _T("Open a document...");
+    GetTextExtentPoint32(hdc, txt, Str::Len(txt), &txtSize);
+    RectI rect(offset.x + rectIcon.dx + 3, rc.y + (rc.dy - txtSize.cy) / 2, txtSize.cx, txtSize.cy);
+    DrawText(hdc, txt, -1, &rect.ToRECT(), DT_LEFT);
+    PaintLine(hdc, RectI(rect.x, rect.y + rect.dy, rect.dx, 0));
+    gLinkInfo[FILE_HISTORY_MAX_FREQUENT].filePath = _T("<File,Open>");
+    // make the click target larger
+    rect = rect.Union(rectIcon);
+    rect.Inflate(10, 10);
+    gLinkInfo[FILE_HISTORY_MAX_FREQUENT].rect = rect;
+
+    rc = ClientRect(win->hwndCanvas);
+    // TODO: translate
+    txt = _T("Hide frequently read");
     GetTextExtentPoint32(hdc, txt, Str::Len(txt), &txtSize);
     rect = RectI(rc.dx - txtSize.cx - 6, rc.y + rc.dy - txtSize.cy - 6, txtSize.cx, txtSize.cy);
     DrawText(hdc, txt, -1, &rect.ToRECT(), DT_LEFT);
-    gLinkInfo[DOCLIST_MAX_THUMBNAILS - 1].filePath = _T("<View,HideList>");
-    gLinkInfo[DOCLIST_MAX_THUMBNAILS - 1].rect = rect;
     PaintLine(hdc, RectI(rect.x, rect.y + rect.dy, rect.dx, 0));
+    gLinkInfo[FILE_HISTORY_MAX_FREQUENT + 1].filePath = _T("<View,HideList>");
+    gLinkInfo[FILE_HISTORY_MAX_FREQUENT + 1].rect = rect;
 
     SelectObject(hdc, origFont);
 
@@ -177,6 +200,7 @@ static void DrawStartPage(HWND hwnd, HDC hdc)
     DeleteObject(brushBg2);
     DeleteObject(brushEmpty);
     DeleteObject(penBorder);
+    DeleteObject(penThumbBorder);
     DeleteObject(penLinkLine);
 }
 
@@ -196,7 +220,7 @@ static const TCHAR *GetStartLink(int x, int y, RectI *rect=NULL)
     return NULL;
 }
 
-LRESULT HandleWindowStartMsg(WindowInfo *win, HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, bool& handled)
+LRESULT HandleWindowStartMsg(WindowInfo *win, FileHistory& fileHistory, HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, bool& handled)
 {
     POINT        pt;
 
@@ -208,7 +232,7 @@ LRESULT HandleWindowStartMsg(WindowInfo *win, HWND hwnd, UINT message, WPARAM wP
         {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(win->hwndCanvas, &ps);
-            DrawStartPage(win->hwndCanvas, win->buffer->GetDC());
+            DrawStartPage(win, win->buffer->GetDC(), fileHistory);
             win->buffer->Flush(hdc);
             EndPaint(win->hwndCanvas, &ps);
             handled = true;
@@ -255,7 +279,7 @@ LRESULT HandleWindowStartMsg(WindowInfo *win, HWND hwnd, UINT message, WPARAM wP
     return 0;
 }
 
-// TODO: remove obsolete thumbnails
+// TODO: create in TEMP directory instead?
 static TCHAR *GetThumbnailPath(const TCHAR *filePath)
 {
     ScopedMem<TCHAR> thumbsPath(AppGenDataFilename(THUMBNAILS_DIR_NAME));
@@ -263,6 +287,41 @@ static TCHAR *GetThumbnailPath(const TCHAR *filePath)
     ScopedMem<TCHAR> fname(Str::Conv::FromAnsi(fingerPrint));
 
     return Str::Format(_T("%s\\%s.bmp"), thumbsPath, fname);
+}
+
+// removes thumbnails that don't belong to any frequently used item in file history
+static void CleanUpCache(FileHistory& fileHistory)
+{
+    ScopedMem<TCHAR> thumbsPath(AppGenDataFilename(THUMBNAILS_DIR_NAME));
+    ScopedMem<TCHAR> pattern(Path::Join(thumbsPath, _T("*.bmp")));
+
+    StrVec files;
+    WIN32_FIND_DATA fdata;
+
+    HANDLE hfind = FindFirstFile(pattern, &fdata);
+    if (INVALID_HANDLE_VALUE == hfind)
+        return;
+    do {
+        if (!(fdata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+            files.Append(Str::Dup(fdata.cFileName));
+    } while (FindNextFile(hfind, &fdata));
+    FindClose(hfind);
+
+    Vec<DisplayState *> *list = fileHistory.GetFrequencyOrder();
+    for (size_t i = 0; i < list->Count() && i < FILE_HISTORY_MAX_FREQUENT; i++) {
+        ScopedMem<TCHAR> bmpPath(GetThumbnailPath(list->At(i)->filePath));
+        int idx = files.Find(Path::GetBaseName(bmpPath));
+        if (idx != -1) {
+            free(files[idx]);
+            files.RemoveAt(idx);
+        }
+    }
+    delete list;
+
+    for (size_t i = 0; i < files.Count(); i++) {
+        ScopedMem<TCHAR> bmpPath(Path::Join(thumbsPath, files[i]));
+        File::Delete(bmpPath);
+    }
 }
 
 void LoadThumbnails(FileHistory& fileHistory)
@@ -283,6 +342,8 @@ void LoadThumbnails(FileHistory& fileHistory)
 
         state->thumbnail = new RenderedBitmap(hbmp, bmp.bmWidth, bmp.bmHeight);
     }
+
+    CleanUpCache(fileHistory);
 }
 
 void SaveThumbnail(DisplayState *state)

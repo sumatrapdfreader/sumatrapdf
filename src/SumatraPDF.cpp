@@ -159,7 +159,7 @@ static HBITMAP                      gBitmapReloadingCue;
 
 static RenderCache                  gRenderCache;
 static Vec<WindowInfo*>             gWindows;
-       FileHistory                  gFileHistory;
+static FileHistory                  gFileHistory;
 static UIThreadWorkItemQueue        gUIThreadMarshaller;
 
 static int                          gReBarDy;
@@ -678,15 +678,15 @@ static void AppendRecentFilesToMenu(HMENU m)
     if (gRestrictedUse) return;
     if (gFileHistory.IsEmpty()) return;
 
-    for (int index = 0; index < MAX_RECENT_FILES_IN_MENU; index++) {
+    for (int index = 0; index < FILE_HISTORY_MAX_RECENT; index++) {
         DisplayState *state = gFileHistory.Get(index);
         if (!state)
             break;
         assert(state->filePath);
         if (state->filePath)
             AddFileMenuItem(m, state, index);
-        if (MAX_RECENT_FILES_IN_MENU == index)
-            DBG_OUT("  not adding, reached max %d items\n", MAX_RECENT_FILES_IN_MENU);
+        if (FILE_HISTORY_MAX_RECENT == index)
+            DBG_OUT("  not adding, reached max %d items\n", FILE_HISTORY_MAX_RECENT);
     }
 
     InsertMenu(m, IDM_EXIT, MF_BYCOMMAND | MF_SEPARATOR, 0, NULL);
@@ -1101,6 +1101,7 @@ static void WindowInfo_Delete(WindowInfo *win)
     win->AbortFinding();
     gWindows.Remove(win);
 
+    ImageList_Destroy((HIMAGELIST)SendMessage(win->hwndToolbar, TB_GETIMAGELIST, 0, 0));
     DragAcceptFiles(win->hwndCanvas, FALSE);
 
     delete win;
@@ -1669,8 +1670,8 @@ void CreateThumbnailForFile(WindowInfo *win, DisplayState *state)
 
     RectD pageRect = win->dm->engine->PageMediabox(1);
     pageRect = win->dm->engine->Transform(pageRect, 1, 1.0, 0);
-    float zoom = 212 / (float)pageRect.dx;
-    pageRect.dy = 150.0 / zoom;
+    float zoom = THUMBNAIL_DX / (float)pageRect.dx;
+    pageRect.dy = (float)THUMBNAIL_DY / zoom;
     pageRect = win->dm->engine->Transform(pageRect, 1, 1.0, 0, true);
 
     CallbackFunc *callback = new ThumbnailRenderingWorkItem(win, win->loadedFilePath);
@@ -5203,7 +5204,6 @@ void CreateToolbar(WindowInfo *win, HINSTANCE hInst) {
     LRESULT lres = SendMessage(hwndToolbar, TB_BUTTONSTRUCTSIZE, (WPARAM)sizeof(TBBUTTON), 0);
 
     ShowWindow(hwndToolbar, SW_SHOW);
-    HIMAGELIST himl = 0;
     TBBUTTON tbButtons[TOOLBAR_BUTTONS_COUNT];
 
     HBITMAP hbmp = LoadExternalBitmap(hInst, _T("toolbar_10.bmp"), IDB_TOOLBAR);
@@ -5217,7 +5217,7 @@ void CreateToolbar(WindowInfo *win, HINSTANCE hInst) {
         hbmp = (HBITMAP)CopyImage(hbmp, IMAGE_BITMAP, bmp.bmWidth, bmp.bmHeight, LR_COPYDELETEORG);
     }
     // Assume square icons
-    himl = ImageList_Create(bmp.bmHeight, bmp.bmHeight, ILC_COLORDDB | ILC_MASK, 0, 0);
+    HIMAGELIST himl = ImageList_Create(bmp.bmHeight, bmp.bmHeight, ILC_COLORDDB | ILC_MASK, 0, 0);
     ImageList_AddMasked(himl, hbmp, RGB(255, 0, 255));
     DeleteObject(hbmp);
 
@@ -5233,7 +5233,7 @@ void CreateToolbar(WindowInfo *win, HINSTANCE hInst) {
     exstyle |= TBSTYLE_EX_MIXEDBUTTONS;
     lres = SendMessage(hwndToolbar, TB_SETEXTENDEDSTYLE, 0, exstyle);
 
-    lres = SendMessage(hwndToolbar, TB_ADDBUTTONSW, TOOLBAR_BUTTONS_COUNT, (LPARAM)tbButtons);
+    lres = SendMessage(hwndToolbar, TB_ADDBUTTONS, TOOLBAR_BUTTONS_COUNT, (LPARAM)tbButtons);
 
     RECT rc;
     lres = SendMessage(hwndToolbar, TB_GETITEMRECT, 0, (LPARAM)&rc);
@@ -5945,7 +5945,7 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
         LRESULT res;
 #ifdef NEW_START_PAGE
         if (!gRestrictedUse && gGlobalPrefs.m_showStartPage && gGlobalPrefs.m_rememberOpenedFiles)
-            res = HandleWindowStartMsg(win, hwnd, message, wParam, lParam, handled);
+            res = HandleWindowStartMsg(win, gFileHistory, hwnd, message, wParam, lParam, handled);
         else
 #endif
             res = HandleWindowAboutMsg(win, hwnd, message, wParam, lParam, handled);

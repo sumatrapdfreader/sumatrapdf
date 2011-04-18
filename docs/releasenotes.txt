@@ -3,6 +3,8 @@ the release notes, as we make them, to make the release process easier.
 
 Next version:
 
+* display Frequent Read list when no document is open
+
 1.5 (2011-04-??)
 
 * add support for displaying XPS documents

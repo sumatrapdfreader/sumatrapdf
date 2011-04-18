@@ -128,11 +128,18 @@ static BencArray *SerializeFileHistory(FileHistory *fileHistory, bool globalPref
         goto Error;
 
     // Don't save more file entries than will be useful
-    int maxRememberdItems = globalPrefsOnly ? MAX_RECENT_FILES_IN_MENU : INT_MAX;
-    for (int index = 0; index < maxRememberdItems; index++) {
-        DisplayState *state = fileHistory->Get(index);
-        if (!state)
-            break;
+    int minOpenCount = 0;
+    if (globalPrefsOnly) {
+        Vec<DisplayState *> *frequencyList = fileHistory->GetFrequencyOrder();
+        if (frequencyList->Count() > FILE_HISTORY_MAX_RECENT)
+            minOpenCount = frequencyList->At(FILE_HISTORY_MAX_FREQUENT)->openCount / 2;
+        delete frequencyList;
+    }
+
+    DisplayState *state;
+    for (int index = 0; (state = fileHistory->Get(index)); index++) {
+        if (state->openCount < minOpenCount && index > FILE_HISTORY_MAX_RECENT)
+            continue;
         BencDict *obj = DisplayState_Serialize(state, globalPrefsOnly);
         if (!obj)
             goto Error;

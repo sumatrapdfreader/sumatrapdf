@@ -509,12 +509,12 @@ static void OnPaint(WindowInfo *win)
 
 #ifdef NEW_START_PAGE
     // TODO: move this into DrawAbout
-    // add "Show recent files" link
+    // add "Show frequently read" link
     if (!gRestrictedUse && gGlobalPrefs.m_rememberOpenedFiles)
     {
         HDC hdc = win->buffer->GetDC();
 
-        Win::Font::ScopedFont fontLeftTxt(hdc, LEFT_TXT_FONT, LEFT_TXT_FONT_SIZE);
+        Win::Font::ScopedFont fontLeftTxt(hdc, _T("MS Shell Dlg"), 14);
         HGDIOBJ origFont = SelectObject(hdc, fontLeftTxt); /* Just to remember the orig font */
         HPEN penLinkLine = CreatePen(PS_SOLID, 1, COL_BLUE_LINK);
         HBRUSH brushBg = CreateSolidBrush(gGlobalPrefs.m_bgColor);
@@ -525,7 +525,7 @@ static void OnPaint(WindowInfo *win)
 
         SIZE txtSize;
         // TODO: translate
-        const TCHAR *txt = _T("Show recent files");
+        const TCHAR *txt = _T("Show frequently read");
         GetTextExtentPoint32(hdc, txt, Str::Len(txt), &txtSize);
         RectI rect(rc.dx - txtSize.cx - 6, rc.y + rc.dy - txtSize.cy - 6, txtSize.cx, txtSize.cy);
         DrawText(hdc, txt, -1, &rect.ToRECT(), DT_LEFT);

@@ -97,7 +97,7 @@ public:
     TCHAR *             filePath;
 
     int                 openCount; // minimal statistics
-    RenderedBitmap *    thumbnail;
+    RenderedBitmap *    thumbnail; // persisted separately
 
     bool                useGlobalValues;
 

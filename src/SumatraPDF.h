@@ -37,7 +37,6 @@ extern SerializableGlobalPrefs  gGlobalPrefs;
 extern HCURSOR                  gCursorHand;
 extern bool                     gRestrictedUse;
 extern bool                     gPluginMode;
-extern FileHistory              gFileHistory;
 
 HMENU BuildMenu(HWND hWnd);
 void CreateToolbar(WindowInfo *win, HINSTANCE hInst);
