@@ -17,22 +17,22 @@ Contributor: XhmikosR
 &Σχετικά...
 
 &Actual Size\tCtrl-1
-Πραγματικό μέγεθος\tCtrl-1
+Πραγματικό &Μέγεθος\tCtrl-1
 
 &All selected pages
 Ό&λες οι επιλεγμένες
 
 &Back\tAlt+Left Arrow
-Πίσω\tAlt+<-
+&Πίσω\tAlt+<-
 
 &Close\tCtrl-W
 &Κλείσιμο\tCtrl-W
 
 &Copy Selection
-&Αντιγραφή επιλογής
+&Αντιγραφή Επιλογής
 
 &Copy Selection\tCtrl-C
-Αντιγραφή επιλεγμένων\tCtrl-C
+Αντιγραφή Επι&λεγμένων\tCtrl-C
 
 &Don't ask me again
 &Να μην ερωτηθώ ξανά
@@ -47,7 +47,7 @@ Contributor: XhmikosR
 &Εύρεση του:
 
 &First Page\tHome
-Πρώτη σελίδα\tHome
+Πρώτ&η Σελίδα\tHome
 
 &Fit pages to printable area
 Προσαρμογή σελίδων σε &εκτυπώσιμη περιοχή
@@ -62,19 +62,19 @@ Contributor: XhmikosR
 &Βοήθεια
 
 &Last Page\tEnd
-Τελευταία σελίδα\tEnd
+&Τελευταία Σελίδα\tEnd
 
 &Magnification:
 &Μεγέθυνση:
 
 &Manual
-&Οδηγίες χρήσης
+&Οδηγίες Χρήσης
 
 &Match case
 Ταίριασμα πεζών/κεφαλαίων
 
 &Next Page\tRight Arrow
-Επό&μενη σελίδα\t->
+&Επόμενη Σελίδα\t->
 
 &No
 Ό&χι
@@ -95,7 +95,7 @@ Contributor: XhmikosR
 &Κωδικός:
 
 &Previous Page\tLeft Arrow
-Προηγούμενη σελίδα\t<-
+&Προηγούμενη Σελίδα\t<-
 
 &Print...
 &Εκτύπωση
@@ -151,6 +151,9 @@ Advanced
 All files
 Όλα τα αρχεία
 
+All supported documents
+Όλα τα υποστηριζόμενα έγγραφα
+
 Application:
 Εφαρμογή:
 
@@ -167,13 +170,19 @@ Automatic
 Αυτόματα
 
 Automatically check for &updates
-Αυτόματος έλεγχος για ενημερώσεις
+Αυτόματος έλεγχος για &ενημερώσεις
 
 Book View
-Προβολή βιβλίου
+Προβολή Βιβλίου
 
 Book&marks\tF12
 &Σελιδοδείκτες\tF12
+
+Bookmark Shortcuts
+Συντομεύσεις Σελιδοδεικτών
+
+Bookmark shortcut to page %d of %s
+Συντόμευση σελιδοδείκτη στη σελίδα %d του %s
 
 Bookmarks
 Σελιδοδείκτες
@@ -194,28 +203,31 @@ Cannot start inverse search command. Please check the command line in the settin
 Δεν είναι δυνατή η εκκίνηση αντίστροφης αναζήτησης. Παρακαλώ ελέγξτε τη γραμμή εντολών στις ρυθμίσεις.
 
 Change Language
-Αλλαγή γλώσσας (Change Language)
+Αλλαγή Γλώσσας (Change Language)
 
 Check for &Updates
-Έλεγχος για νέα έκ&δοση
+Έ&λεγχος για νέα έκδοση
+
+Comic books
+Βιβλία κόμικ
 
 Continuous
 Μια σελίδα, συνεχόμενα
 
 Continuous Book View
-Συνεχόμενη προβολή βιβλίου
+Συνεχόμενη Προβολή Βιβλίου
 
 Continuous Facing
 Δύο σελίδες, συνεχόμενα
 
 Contribute Translation
-Βοηθήστε στη μετάφραση
+Βοηθήστε στη Μετάφραση
 
 Copy &Link Address
 Αντιγραφή &Διεύθυνσης
 
 Copy Co&mment
-Αντιγραφή σ&χολίου
+Αντιγραφή Σ&χολίου
 
 Copying text was denied (copying as image only)
 Η αντιγραφή κειμένου δεν επετράπη (μόνο ως εικόνα)
@@ -233,22 +245,22 @@ Created:
 Δημιουργήθηκε:
 
 Custom &Zoom...\tCtrl-Y
-&Ορισμός ζουμ...\tCtrl-Y
+&Προσαρμοσμένο Ζουμ...\tCtrl-Y
 
 Default &Layout:
-Προκαθορισμένη &διαμόρφωση:
+Προκαθορισμένη &Διαμόρφωση:
 
 Default &Zoom:
-Προκαθορισμένο &ζουμ:
+Προκαθορισμένο &Ζουμ:
 
 Default PDF reader can't be changed in portable mode
 Δε μπορεί να γίνει συσχετισμός σε portable mode
 
 Denied Permissions:
-Απαγόρευση δικαιωμάτων:
+Απαγόρευση Δικαιωμάτων:
 
 Document Properties
-Ιδιότητες εγγράφου
+Ιδιότητες Εγγράφου
 
 Download
 Λήψη
@@ -265,11 +277,14 @@ Enter password for %s
 Enter the command-line to invoke when you double-click on the PDF document:
 Εισάγετε την εντολή προς εκτέλεση με διπλό κλικ σε έγγραφο PDF:
 
+Error loading %s
+Σφάλμα φόρτωσης του %s
+
 F&orward\tAlt+Right Arrow
-Εμπρός\tAlt+->
+Εμπ&ρός\tAlt+->
 
 F&ullscreen\tCtrl-Shift-L
-Πλήρης οθόνη\tCtrl-Shift-L
+&Πλήρης Οθόνη\tCtrl-Shift-L
 
 Facing
 Δύο σελίδες
@@ -278,7 +293,7 @@ Failed to save a file
 Αποτυχία αποθήκευσης αρχείου
 
 File Size:
-Μέγεθος αρχείου:
+Μέγεθος Αρχείου:
 
 File:
 Αρχείο:
@@ -290,40 +305,43 @@ Find
 Εύρεση
 
 Find Next
-Εύρεση επόμενου
+Εύρεση Επόμενου
 
 Find Previous
-Εύρεση προηγούμενου
+Εύρεση Προηγούμενου
 
 Find:
 Εύρεση:
 
 Fit &Content\tCtrl-3
-Προσαρμογή &Περιεχόμενα\tCtrl-3
+&Προσαρμογή στα περιεχόμενα\tCtrl-3
 
 Fit &Page\tCtrl-0
-Ολόκληρη σελίδα\tCtrl-0
+&Προσαρμογή στη σελίδα\tCtrl-0
 
 Fit &Width\tCtrl-2
-Στο πλάτος παραθύρου\tCtrl-2
+&Προσαρμογή στο πλάτος παραθύρου\tCtrl-2
 
 Fit Content
-Προσαρμογή Περιεχομένων
+Προσαρμογή στα περιεχόμενα
 
 Fit Page
-Ολόκληρη σελίδα
+Ολόκληρη Σελίδα
 
 Fit Width
-Πλάτος παραθύρου
+Πλάτος Παραθύρου
 
 Fit Width and Show Pages Continuously
 Προσαρμογή Πλάτους και Εμφάνιση Σελίδων Συνεχόμενα
 
 Fit a Single Page
-Προσαρμογή μιας σελίδας
+Προσαρμογή μιας Σελίδας
 
 Found text at page %d
 Το κείμενο βρέθηκε στη σελίδα %d
+
+Found text at page %d (again)
+Το κείμενο βρέθηκε στη σελίδα %d (πάλι)
 
 GB
 GB
@@ -333,6 +351,9 @@ Go to page
 
 Hint: Use the F3 key for finding again
 Συμβουλή: Χρησιμοποιήστε το F3 για εύρεση του επόμενου
+
+Image files (*.%s)
+Αρχεία εικόνων (*.%s)
 
 KB
 KB
@@ -371,7 +392,7 @@ No synchronization info at this position
 Δε βρέθηκαν πληροφορίες συγχρονισμού στη θέση αυτή
 
 Number of Pages:
-Αριθμός σελίδων:
+Αριθμός Σελίδων:
 
 OK
 ΟΚ
@@ -407,10 +428,10 @@ PDF documents
 Αρχεία PDF
 
 Pa&ge...\tCtrl-G
-Σελίδα...\tCtrl-G
+&Σελίδα...\tCtrl-G
 
 Page Size:
-Μέγεθος σελίδας:
+Μέγεθος Σελίδας:
 
 Page number %u inexistant
 Δεν υπάρχει σελίδα με αριθμό %u
@@ -422,31 +443,34 @@ Page:
 Σελίδα:
 
 Please include the following file in your crash report:
-Παρακαλώ να συμπεριληφθεί το ακόλουθο αρχείο στην αναφορά κατάρρευσης
+Παρακαλώ να συμπεριληφθεί το ακόλουθο αρχείο στην αναφορά κατάρρευσης:
 
 Please wait - rendering...
 Παρακαλώ περιμένετε - φόρτωση...
 
 Pr&esentation\tCtrl-L
-Πλ&ήρης Οθόνη\tCtrl-L
+&Παρουσίαση\tCtrl-L
 
 Previous Page
-Προηγούμενη σελίδα
+Προηγούμενη Σελίδα
 
 Print range
 Εύρος εκτύπωσης
 
 Printing problem.
-Πρόβλημα εκτύπωσης
+Πρόβλημα εκτύπωσης.
 
 Remember &opened files
-Απομνημόνευση προσφάτων αρχείων
+Απο&μνημόνευση προσφάτων αρχείων
 
 Rotate &Left\tCtrl-Shift--
-Περιστροφή αριστερά\tCtrl-Shift--
+Περιστροφή Αριστερά\tCtrl-Shift--
 
 Rotate &Right\tCtrl-Shift-+
-Περιστροφή δεξιά\tCtrl-Shift-+
+Περιστροφή Δεξιά\tCtrl-Shift-+
+
+Save S&hortcut...\tCtrl-Shift-S
+Αποθήκευση &Συντόμευσης...\tCtrl-Shift-S
 
 Searching %d of %d...
 Αναζήτηση %d από %d...
@@ -455,28 +479,28 @@ Select &All
 Επιλογή Ό&λων
 
 Select &All\tCtrl-A
-Επιλογή όλων\tCtrl-A
+Επιλογή Όλων\tCtrl-A
 
 Select content with Ctrl+left mouse button
 Επιλέξτε περιεχόμενο με Ctrl+αριστερό πλήκτρο ποντικιού
 
 Send by &E-mail...
-Αποστολή με &email...
+Α&ποστολή με E-mail...
 
 Set inverse search command-line
 Εμφάνιση γραμμής αντίστροφης αναζήτησης
 
 Show &Toolbar
-Εμφάνιση γραμμής εργαλείων
+&Εμφάνιση Γραμμής Εργαλείων
 
 Show &pages continuously
-Συνεχής εμφάνιση σελίδων
+&Συνεχής εμφάνιση σελίδων
 
 Show the &bookmarks sidebar when available
-Εμφάνιση πλευρικής στήλης σελιδοδεικτών όπου είναι δυνατόν
+Εμφάνιση &πλευρικής στήλης σελιδοδεικτών όπου είναι δυνατόν
 
 Single Page
-Μονή σελίδα
+Μονή Σελίδα
 
 Source file %s has no synchronization point
 Το αρχείο προέλευσης %s δεν έχει σημείο συγχρονισμού
@@ -491,7 +515,7 @@ SumatraPDF Update
 Ενημέρωση SumatraPDF
 
 SumatraPDF crashed
-Το SumatraPDF κατάρρευσε
+Το SumatraPDF σταμάτησε να λειτουργεί
 
 SumatraPDF is your default PDF reader
 Το SumatraPDF είναι το προεπιλεγμένο πρόγραμμα PDF
@@ -515,10 +539,13 @@ View
 Προβολή
 
 Visit &Website
-&Ιστοσελίδα προγράμματος
+&Ιστοσελίδα Προγράμματος
 
 Warning
 Προειδοποίηση
+
+XPS documents
+Έγγραφα XPS
 
 You have the latest version.
 Έχετε την πιο πρόσφατη έκδοση.
@@ -546,15 +573,4 @@ copying text
 
 printing document
 εκτύπωση εγγράφου
-
-# Untranslated:
-#All supported documents
-#Bookmark Shortcuts
-#Bookmark shortcut to page %d of %s
-#Comic books
-#Error loading %s
-#Found text at page %d (again)
-#Image files (*.%s)
-#Save S&hortcut...\tCtrl-Shift-S
-#XPS documents
 
