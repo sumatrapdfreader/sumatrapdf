@@ -1470,6 +1470,7 @@ static bool LoadDocIntoWindow(
 
     float zoomVirtual = gGlobalPrefs.m_defaultZoom;
     int rotation = DEFAULT_ROTATION;
+    bool oldTocShow = win->tocShow;
 
     if (state) {
         if (win->dm->validPageNo(startPage)) {
@@ -1564,14 +1565,14 @@ Error:
         win->ClearTocBox();
     if (win->IsDocLoaded())
         win->dm->SetScrollState(ss);
-    if (win->IsDocLoaded() && win->tocShow) {
-        if (win->dm->pdfEngine && win->dm->pdfEngine->HasToCTree()) {
-            win->ShowTocBox();
-        } else {
-            // Hide the now useless ToC sidebar and force an update afterwards
-            win->HideTocBox();
-            win->RedrawAll(true);
-        }
+    if (win->IsDocLoaded() && win->tocShow &&
+        win->dm->pdfEngine && win->dm->pdfEngine->HasToCTree()) {
+        win->ShowTocBox();
+    } else if (oldTocShow) {
+        // Hide the now useless ToC sidebar and force an update afterwards
+        win->HideTocBox();
+        win->ClearTocBox();
+        win->RedrawAll(true);
     }
     UpdateToolbarAndScrollbarsForAllWindows();
     if (!win->IsDocLoaded()) {
@@ -3018,9 +3019,9 @@ static void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose=false)
         }
         UpdateToolbarPageText(win, 0);
         UpdateToolbarFindText(win);
+        DeleteOldSelectionInfo(win, true);
         win->RedrawAll();
         WindowInfo_UpdateFindbox(win);
-        DeleteOldSelectionInfo(win, true);
     } else {
         HWND hwndToDestroy = win->hwndFrame;
         WindowInfo_Delete(win);
@@ -3732,6 +3733,7 @@ static void BrowseFolder(WindowInfo *win, bool forward)
 
     ScopedMem<TCHAR> fullpath(Path::Join(dir, files[index]));
     UpdateCurrentFileDisplayStateForWin(win);
+    DeleteOldSelectionInfo(win, true);
     LoadDocument(fullpath, win, true, true);
 }
 
