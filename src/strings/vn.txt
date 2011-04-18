@@ -552,7 +552,11 @@ printing document
 #Comic books
 #Error loading %s
 #Found text at page %d (again)
+#Frequently Read
+#Hide frequently read
 #Image files (*.%s)
+#Open a document...
 #Save S&hortcut...\tCtrl-Shift-S
+#Show frequently read
 #XPS documents
 

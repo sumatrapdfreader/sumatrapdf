@@ -509,7 +509,10 @@ printing document
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
 #Found text at page %d (again)
+#Frequently Read
+#Hide frequently read
 #Image files (*.%s)
+#Open a document...
 #P&roperties
 #Page number %u inexistant
 #Page scaling
@@ -518,6 +521,7 @@ printing document
 #Print range
 #Save S&hortcut...\tCtrl-Shift-S
 #Select &All
+#Show frequently read
 #SumatraPDF crashed
 #XPS documents
 

@@ -471,8 +471,11 @@ printing document
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
 #Found text at page %d (again)
+#Frequently Read
+#Hide frequently read
 #Image files (*.%s)
 #No result found around line %u in file %s
+#Open a document...
 #P&roperties
 #Page scaling
 #Please include the following file in your crash report:
@@ -482,6 +485,7 @@ printing document
 #Searching %d of %d...
 #Select &All
 #Select &All\tCtrl-A
+#Show frequently read
 #SumatraPDF Update
 #SumatraPDF crashed
 #XPS documents

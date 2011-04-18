@@ -276,6 +276,8 @@ Zoom Out
 #Fit a Single Page
 #Found text at page %d
 #Found text at page %d (again)
+#Frequently Read
+#Hide frequently read
 #Hint: Use the F3 key for finding again
 #Image files (*.%s)
 #Modified:
@@ -285,6 +287,7 @@ Zoom Out
 #No synchronization info at this position
 #Number of Pages:
 #OK
+#Open a document...
 #Open in &Adobe Reader
 #Open in &Foxit Reader
 #Open in PDF-XChange
@@ -309,6 +312,7 @@ Zoom Out
 #Select content with Ctrl+left mouse button
 #Send by &E-mail...
 #Show &pages continuously
+#Show frequently read
 #Show the &bookmarks sidebar when available
 #Source file %s has no synchronization point
 #Subject:

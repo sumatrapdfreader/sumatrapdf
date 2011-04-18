@@ -572,3 +572,9 @@ copying text
 printing document
 друк документа
 
+# Untranslated:
+#Frequently Read
+#Hide frequently read
+#Open a document...
+#Show frequently read
+

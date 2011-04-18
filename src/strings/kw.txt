@@ -436,9 +436,12 @@ Faktor-zoum
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
 #Found text at page %d (again)
+#Frequently Read
+#Hide frequently read
 #Image files (*.%s)
 #Modified:
 #Number of Pages:
+#Open a document...
 #P&roperties
 #P&roperties\tCtrl-D
 #PDF Producer:
@@ -451,6 +454,7 @@ Faktor-zoum
 #Save S&hortcut...\tCtrl-Shift-S
 #Select &All
 #Select &All\tCtrl-A
+#Show frequently read
 #Subject:
 #SumatraPDF Update
 #SumatraPDF crashed

@@ -466,8 +466,11 @@ Zoomfaktor
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
 #Found text at page %d (again)
+#Frequently Read
+#Hide frequently read
 #Image files (*.%s)
 #No result found around line %u in file %s
+#Open a document...
 #P&roperties
 #Page scaling
 #Please include the following file in your crash report:
@@ -476,6 +479,7 @@ Zoomfaktor
 #Save S&hortcut...\tCtrl-Shift-S
 #Select &All
 #Select &All\tCtrl-A
+#Show frequently read
 #Subject:
 #SumatraPDF Update
 #SumatraPDF crashed

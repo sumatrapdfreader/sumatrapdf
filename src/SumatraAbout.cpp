@@ -16,6 +16,7 @@
 #define ABOUT_BORDER_COL            RGB(0,0,0)
 #define ABOUT_TXT_DY                6
 #define ABOUT_RECT_PADDING          8
+#define ABOUT_INNER_PADDING         6
 
 #define ABOUT_WIN_TITLE         _TR("About SumatraPDF")
 
@@ -121,7 +122,7 @@ static SizeI CalcSumatraVersionSize(HDC hdc)
     txt = VERSION_SUB_TXT;
     GetTextExtentPoint32(hdc, txt, Str::Len(txt), &txtSize);
     txtSize.cx = max(txtSize.cx, minWidth);
-    result.dx += 2 * (txtSize.cx + 6);
+    result.dx += 2 * (txtSize.cx + ABOUT_INNER_PADDING);
 
     SelectObject(hdc, oldFont);
 
@@ -145,7 +146,7 @@ static void DrawSumatraVersion(HDC hdc, RectI rect)
 
     SetTextColor(hdc, WIN_COL_BLACK);
     SelectObject(hdc, fontVersionTxt);
-    PointI pt(mainRect.x + mainRect.dx + 6, mainRect.y);
+    PointI pt(mainRect.x + mainRect.dx + ABOUT_INNER_PADDING, mainRect.y);
     txt = VERSION_TXT;
     TextOut(hdc, pt.x, pt.y, txt, Str::Len(txt));
     txt = VERSION_SUB_TXT;
@@ -167,7 +168,8 @@ static RectI DrawBottomRightLink(HWND hwnd, HDC hdc, const TCHAR *txt)
 
     SIZE txtSize;
     GetTextExtentPoint32(hdc, txt, Str::Len(txt), &txtSize);
-    RectI rect(rc.dx - txtSize.cx - 6, rc.y + rc.dy - txtSize.cy - 6, txtSize.cx, txtSize.cy);
+    RectI rect(rc.dx - txtSize.cx - ABOUT_INNER_PADDING,
+               rc.y + rc.dy - txtSize.cy - ABOUT_INNER_PADDING, txtSize.cx, txtSize.cy);
     DrawText(hdc, txt, -1, &rect.ToRECT(), DT_LEFT);
 
     SelectObject(hdc, penLinkLine);
@@ -177,7 +179,7 @@ static RectI DrawBottomRightLink(HWND hwnd, HDC hdc, const TCHAR *txt)
     DeleteObject(penLinkLine);
 
     // make the click target larger
-    rect.Inflate(6, 6);
+    rect.Inflate(ABOUT_INNER_PADDING, ABOUT_INNER_PADDING);
     return rect;
 }
 
@@ -498,8 +500,7 @@ void DrawAboutPage(WindowInfo *win, HDC hdc)
     DrawAbout(win->hwndCanvas, hdc, rc, win->staticLinks);
 #ifdef NEW_START_PAGE
     if (!gRestrictedUse && gGlobalPrefs.m_rememberOpenedFiles) {
-        // TODO: translate
-        RectI rect = DrawBottomRightLink(win->hwndCanvas, hdc, _T("Show frequently read"));
+        RectI rect = DrawBottomRightLink(win->hwndCanvas, hdc, _TR("Show frequently read"));
         win->staticLinks.Append(StaticLinkInfo(rect, SLINK_LIST_SHOW));
     }
 #endif
@@ -545,7 +546,7 @@ void DrawStartPage(WindowInfo *win, HDC hdc, FileHistory& fileHistory)
 
     /* render title */
     RectI titleBox = RectI(PointI(0, 0), CalcSumatraVersionSize(hdc));
-    titleBox.x = max(rc.dx - titleBox.dx - 3, 0);
+    titleBox.x = rc.dx - titleBox.dx - 3;
     DrawSumatraVersion(hdc, titleBox);
     PaintLine(hdc, RectI(0, titleBox.dy, rc.dx, 0));
 
@@ -560,16 +561,15 @@ void DrawStartPage(WindowInfo *win, HDC hdc, FileHistory& fileHistory)
     FillRect(hdc, &rc.ToRECT(), gBrushNoDocBg);
     rc.dy -= DOCLIST_BOTTOM_BOX_DY;
 
-    int width = min((rc.dx - DOCLIST_MARGIN_LEFT - DOCLIST_MARGIN_RIGHT + DOCLIST_MARGIN_BETWEEN_X) / (THUMBNAIL_DX + DOCLIST_MARGIN_BETWEEN_X), DOCLIST_MAX_THUMBNAILS_X);
-    int height = 0;
-    if (width != 0)
-        height = min((rc.dy - DOCLIST_MARGIN_TOP - DOCLIST_MARGIN_BOTTOM + DOCLIST_MARGIN_BETWEEN_Y) / (THUMBNAIL_DY + DOCLIST_MARGIN_BETWEEN_Y), FILE_HISTORY_MAX_FREQUENT / width);
+    int width = limitValue((rc.dx - DOCLIST_MARGIN_LEFT - DOCLIST_MARGIN_RIGHT + DOCLIST_MARGIN_BETWEEN_X) / (THUMBNAIL_DX + DOCLIST_MARGIN_BETWEEN_X), 1, DOCLIST_MAX_THUMBNAILS_X);
+    int height = min((rc.dy - DOCLIST_MARGIN_TOP - DOCLIST_MARGIN_BOTTOM + DOCLIST_MARGIN_BETWEEN_Y) / (THUMBNAIL_DY + DOCLIST_MARGIN_BETWEEN_Y), FILE_HISTORY_MAX_FREQUENT / width);
     PointI offset(rc.x + DOCLIST_MARGIN_LEFT + (rc.dx - width * THUMBNAIL_DX - (width - 1) * DOCLIST_MARGIN_BETWEEN_X - DOCLIST_MARGIN_LEFT - DOCLIST_MARGIN_RIGHT) / 2, rc.y + DOCLIST_MARGIN_TOP);
+    if (offset.x < ABOUT_INNER_PADDING)
+        offset.x = ABOUT_INNER_PADDING;
 
     SelectObject(hdc, fontSumatraTxt);
     SIZE txtSize;
-    // TODO: translate
-    const TCHAR *txt = _T("Frequently Read");
+    const TCHAR *txt = _TR("Frequently Read");
     GetTextExtentPoint32(hdc, txt, Str::Len(txt), &txtSize);
     TextOut(hdc, offset.x, rc.y + (DOCLIST_MARGIN_TOP - txtSize.cy) / 2, txt, Str::Len(txt));
 
@@ -608,7 +608,7 @@ void DrawStartPage(WindowInfo *win, HDC hdc, FileHistory& fileHistory)
             }
             RoundRect(hdc, page.x, page.y, page.x + page.dx, page.y + page.dy, 10, 10);
 
-            RectI rect(page.x, page.y + THUMBNAIL_DY + 3, THUMBNAIL_DX, 16);
+            RectI rect(page.x, page.y + THUMBNAIL_DY + 3, THUMBNAIL_DX, 20);
             DrawText(hdc, Path::GetBaseName(state->filePath), -1, &rect.ToRECT(), DT_LEFT | DT_END_ELLIPSIS);
 
             win->staticLinks.Append(StaticLinkInfo(rect.Union(page), state->filePath, state->filePath));
@@ -629,8 +629,7 @@ void DrawStartPage(WindowInfo *win, HDC hdc, FileHistory& fileHistory)
     rectIcon.y += (rc.dy - rectIcon.dy) / 2;
     ImageList_Draw(himl, 0, hdc, rectIcon.x, rectIcon.y, ILD_NORMAL);
 
-    // TODO: translate
-    txt = _T("Open a document...");
+    txt = _TR("Open a document...");
     GetTextExtentPoint32(hdc, txt, Str::Len(txt), &txtSize);
     RectI rect(offset.x + rectIcon.dx + 3, rc.y + (rc.dy - txtSize.cy) / 2, txtSize.cx, txtSize.cy);
     DrawText(hdc, txt, -1, &rect.ToRECT(), DT_LEFT);
@@ -640,8 +639,7 @@ void DrawStartPage(WindowInfo *win, HDC hdc, FileHistory& fileHistory)
     rect.Inflate(10, 10);
     win->staticLinks.Append(StaticLinkInfo(rect, SLINK_OPEN_FILE));
 
-    // TODO: translate
-    rect = DrawBottomRightLink(win->hwndCanvas, hdc, _T("Hide frequently read"));
+    rect = DrawBottomRightLink(win->hwndCanvas, hdc, _TR("Hide frequently read"));
     win->staticLinks.Append(StaticLinkInfo(rect, SLINK_LIST_HIDE));
 
     SelectObject(hdc, origFont);

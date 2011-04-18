@@ -369,6 +369,8 @@ mencetak dokumen
 #Fit a Single Page
 #Found text at page %d
 #Found text at page %d (again)
+#Frequently Read
+#Hide frequently read
 #Hint: Use the F3 key for finding again
 #Image files (*.%s)
 #Make SumatraPDF default application for PDF files?
@@ -377,6 +379,7 @@ mencetak dokumen
 #No result found around line %u in file %s
 #No synchronization file found
 #No synchronization info at this position
+#Open a document...
 #Open in &Adobe Reader
 #Open in &Foxit Reader
 #Open in PDF-XChange
@@ -397,6 +400,7 @@ mencetak dokumen
 #Select content with Ctrl+left mouse button
 #Send by &E-mail...
 #Set inverse search command-line
+#Show frequently read
 #Show the &bookmarks sidebar when available
 #Source file %s has no synchronization point
 #SumatraPDF Update

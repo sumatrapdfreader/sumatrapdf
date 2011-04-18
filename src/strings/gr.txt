@@ -574,3 +574,9 @@ copying text
 printing document
 εκτύπωση εγγράφου
 
+# Untranslated:
+#Frequently Read
+#Hide frequently read
+#Open a document...
+#Show frequently read
+

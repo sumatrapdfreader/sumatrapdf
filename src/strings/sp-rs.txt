@@ -421,9 +421,12 @@ Faktor uvećanja
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
 #Found text at page %d (again)
+#Frequently Read
+#Hide frequently read
 #Image files (*.%s)
 #Modified:
 #Number of Pages:
+#Open a document...
 #P&roperties
 #P&roperties\tCtrl-D
 #PDF Producer:
@@ -437,6 +440,7 @@ Faktor uvećanja
 #Select &All
 #Select &All\tCtrl-A
 #Send by &E-mail...
+#Show frequently read
 #Source file %s has no synchronization point
 #Subject:
 #SumatraPDF Update

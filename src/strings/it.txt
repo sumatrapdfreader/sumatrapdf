@@ -542,9 +542,13 @@ documento in stampa
 #Copy Co&mment
 #Error loading %s
 #Found text at page %d (again)
+#Frequently Read
+#Hide frequently read
 #Image files (*.%s)
+#Open a document...
 #P&roperties
 #Save S&hortcut...\tCtrl-Shift-S
 #Select &All
+#Show frequently read
 #XPS documents
 

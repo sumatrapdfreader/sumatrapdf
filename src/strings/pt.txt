@@ -573,3 +573,9 @@ copiando texto
 printing document
 imprimindo documento
 
+# Untranslated:
+#Frequently Read
+#Hide frequently read
+#Open a document...
+#Show frequently read
+

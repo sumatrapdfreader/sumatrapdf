@@ -343,11 +343,17 @@ Text auf Seite %d gefunden
 Found text at page %d (again)
 Text auf Seite %d gefunden (erneut)
 
+Frequently Read
+Oft gelesenene Dokumente
+
 GB
 GB
 
 Go to page
 Gehe zu Seite
+
+Hide frequently read
+Oft gelesene Dokumente ausblenden
 
 Hint: Use the F3 key for finding again
 Tipp: F3-Taste verwenden, um weiterzusuchen
@@ -399,6 +405,9 @@ OK
 
 Open
 Ö&ffnen…
+
+Open a document...
+Dokument öffnen…
 
 Open in &Adobe Reader
 Mit &Adobe Reader öffnen
@@ -495,6 +504,9 @@ Show &Toolbar
 
 Show &pages continuously
 Seiten &fortlaufend anzeigen
+
+Show frequently read
+Oft gelesene Dokumente einblenden
 
 Show the &bookmarks sidebar when available
 &Lesezeichenleiste beim Start anzeigen

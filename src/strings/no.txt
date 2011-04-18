@@ -533,10 +533,14 @@ skriver ut dokument
 #Error loading %s
 #Found text at page %d
 #Found text at page %d (again)
+#Frequently Read
+#Hide frequently read
 #Image files (*.%s)
+#Open a document...
 #P&roperties
 #Save S&hortcut...\tCtrl-Shift-S
 #Select &All
+#Show frequently read
 #Unknown source file (%s)
 #XPS documents
 

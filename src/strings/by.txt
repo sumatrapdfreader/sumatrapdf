@@ -389,11 +389,14 @@ Zoom Out
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
 #Found text at page %d (again)
+#Frequently Read
+#Hide frequently read
 #Hint: Use the F3 key for finding again
 #Image files (*.%s)
 #Modified:
 #No synchronization file found
 #Number of Pages:
+#Open a document...
 #P&roperties
 #P&roperties\tCtrl-D
 #PDF Producer:
@@ -409,6 +412,7 @@ Zoom Out
 #Select content with Ctrl+left mouse button
 #Send by &E-mail...
 #Show &pages continuously
+#Show frequently read
 #Subject:
 #SumatraPDF Update
 #SumatraPDF crashed

@@ -563,5 +563,9 @@ drukowanie dokumentu
 #Bookmark Shortcuts
 #Bookmark shortcut to page %d of %s
 #Copy &Link Address
+#Frequently Read
+#Hide frequently read
+#Open a document...
 #Save S&hortcut...\tCtrl-Shift-S
+#Show frequently read
 

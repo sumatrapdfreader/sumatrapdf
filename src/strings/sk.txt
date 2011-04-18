@@ -466,9 +466,12 @@ prebieha tlač dokumentu
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
 #Found text at page %d (again)
+#Frequently Read
+#Hide frequently read
 #Image files (*.%s)
 #No synchronization file found
 #No synchronization info at this position
+#Open a document...
 #P&roperties
 #Page scaling
 #Please include the following file in your crash report:
@@ -477,6 +480,7 @@ prebieha tlač dokumentu
 #Save S&hortcut...\tCtrl-Shift-S
 #Select &All
 #Select &All\tCtrl-A
+#Show frequently read
 #Source file %s has no synchronization point
 #SumatraPDF Update
 #SumatraPDF crashed

@@ -418,11 +418,14 @@ dokumentua imprimatzen
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
 #Found text at page %d (again)
+#Frequently Read
+#Hide frequently read
 #Hint: Use the F3 key for finding again
 #Image files (*.%s)
 #No result found around line %u in file %s
 #No synchronization file found
 #No synchronization info at this position
+#Open a document...
 #P&roperties
 #Page scaling
 #Please include the following file in your crash report:
@@ -435,6 +438,7 @@ dokumentua imprimatzen
 #Select &All\tCtrl-A
 #Select content with Ctrl+left mouse button
 #Show &pages continuously
+#Show frequently read
 #Show the &bookmarks sidebar when available
 #Source file %s has no synchronization point
 #SumatraPDF Options

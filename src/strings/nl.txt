@@ -577,3 +577,9 @@ tekst kopieren
 printing document
 bestand afdrukken
 
+# Untranslated:
+#Frequently Read
+#Hide frequently read
+#Open a document...
+#Show frequently read
+

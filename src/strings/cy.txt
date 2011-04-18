@@ -531,10 +531,14 @@ argraffu dogfen
 #Enter the command-line to invoke when you double-click on the PDF document:
 #Error loading %s
 #Found text at page %d (again)
+#Frequently Read
+#Hide frequently read
 #Image files (*.%s)
+#Open a document...
 #P&roperties
 #Save S&hortcut...\tCtrl-Shift-S
 #Select &All
+#Show frequently read
 #XPS documents
 #[Changes detected; refreshing] %s
 

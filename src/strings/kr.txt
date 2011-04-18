@@ -470,11 +470,14 @@ printing document
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
 #Found text at page %d (again)
+#Frequently Read
+#Hide frequently read
 #Image files (*.%s)
 #No matches were found
 #No result found around line %u in file %s
 #No synchronization file found
 #No synchronization info at this position
+#Open a document...
 #P&roperties
 #Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L
@@ -483,6 +486,7 @@ printing document
 #Select &All\tCtrl-A
 #Select content with Ctrl+left mouse button
 #Show &pages continuously
+#Show frequently read
 #Show the &bookmarks sidebar when available
 #Source file %s has no synchronization point
 #SumatraPDF Update

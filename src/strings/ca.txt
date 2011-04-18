@@ -533,10 +533,14 @@ s'està imprimint el document
 #Copy Co&mment
 #Error loading %s
 #Found text at page %d (again)
+#Frequently Read
+#Hide frequently read
 #Image files (*.%s)
 #New version %s is available. Download new version?
+#Open a document...
 #P&roperties
 #Save S&hortcut...\tCtrl-Shift-S
 #Select &All
+#Show frequently read
 #XPS documents
 
