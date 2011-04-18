@@ -103,10 +103,10 @@ Página &anterior\t<-
 &Imprimir\tCtrl-P
 
 &Print... (denied)
-&Imprimir...(rejeitado)
+&Imprimir...(recusado)
 
 &Remember the password for this document
-Lembrar a palavra passe deste documento
+&Lembrar a palavra passe deste documento
 
 &Remember these settings for each document
 &Lembrar estas definições para todos os documentos
@@ -127,7 +127,7 @@ Lembrar a palavra passe deste documento
 Ignorar &esta versão
 
 &Use original page sizes
-&Utilizar o tamanho original
+&Utilizar tamanho original
 
 &View
 &Ver
@@ -149,6 +149,9 @@ Avançadas
 
 All files
 Todos os ficheiros
+
+All supported documents
+Todos os documentos
 
 Application:
 Aplicação:
@@ -174,11 +177,17 @@ Como livro
 Book&marks\tF12
 M&arcadores\tF12
 
+Bookmark Shortcuts
+Atalhos de marcadores
+
+Bookmark shortcut to page %d of %s
+Atalho para a página %d de %s
+
 Bookmarks
 Marcadores
 
 Bytes
-"Bytes"
+Bytes
 
 Can't connect to the Internet (error %#x).
 Não foi possível ligar à internet (erro %#x).
@@ -197,6 +206,9 @@ Change Language
 
 Check for &Updates
 Verificar at&ualizações
+
+Comic books
+Livros Comic
 
 Continuous
 Página única contínua
@@ -217,7 +229,7 @@ Copy Co&mment
 Copiar co&mentário
 
 Copying text was denied (copying as image only)
-A cópia do texto foi rejeitada (copie como imagem)
+A cópia do texto foi recusada (copie como imagem)
 
 Could not open Printer
 Não foi possível abrir a impressora
@@ -244,7 +256,7 @@ Default PDF reader can't be changed in portable mode
 No modo portátil, não é possível alterar o leitor de PDFs
 
 Denied Permissions:
-Permissões rejeitadas:
+Permissões recusadas:
 
 Document Properties
 Propriedades do documento
@@ -259,10 +271,13 @@ Enter password
 Indique a palavra passe
 
 Enter password for %s
-Indique a palavra passe para %s
+Indique a palavra passe de %s
 
 Enter the command-line to invoke when you double-click on the PDF document:
 Insira a linha de comandos a invocar ao fazer duplo clique no documento PDF:
+
+Error loading %s
+Erro ao carregar %s
 
 F&orward\tAlt+Right Arrow
 A&vançar\tAlt + ->
@@ -324,6 +339,9 @@ Ajustar a uma página
 Found text at page %d
 Texto encontrado na página %d
 
+Found text at page %d (again)
+Texto encontrado na página %d
+
 GB
 GB
 
@@ -332,6 +350,9 @@ Ir para a página
 
 Hint: Use the F3 key for finding again
 Dica: utilize F3 para procurar a seguinte
+
+Image files (*.%s)
+Imagens (*.%s)
 
 KB
 KB
@@ -364,7 +385,7 @@ No result found around line %u in file %s
 Nenhum resultado perto da linha %u no ficheiro %s
 
 No synchronization file found
-Nenhum ficheiro de sincronização encontrado
+Não foi encontrado qualquer ficheiro de sincronização
 
 No synchronization info at this position
 Não há informação de sincronização nesta posição
@@ -436,7 +457,7 @@ Print range
 Intervalo de impressão
 
 Printing problem.
-Problema de impressão.
+Erro de	impressão.
 
 Remember &opened files
 Lembrar ficheiros abert&os
@@ -446,6 +467,9 @@ Rodar à &esquerda\tCtrl-Shift--
 
 Rotate &Right\tCtrl-Shift-+
 Rodar à &direita\tCtrl-Shift-+
+
+Save S&hortcut...\tCtrl-Shift-S
+Criar atal&ho...\tCtrl-Shift-S
 
 Searching %d of %d...
 Pesquisando %d de %d...
@@ -519,6 +543,9 @@ Visit &Website
 Warning
 Aviso
 
+XPS documents
+Documentos XPS
+
 You have the latest version.
 Já tem a versão mais recente.
 
@@ -545,15 +572,4 @@ copiando texto
 
 printing document
 imprimindo documento
-
-# Untranslated:
-#All supported documents
-#Bookmark Shortcuts
-#Bookmark shortcut to page %d of %s
-#Comic books
-#Error loading %s
-#Found text at page %d (again)
-#Image files (*.%s)
-#Save S&hortcut...\tCtrl-Shift-S
-#XPS documents
 
