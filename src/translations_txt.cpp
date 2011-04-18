@@ -798,7 +798,7 @@ const char *gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "P\303\241gina seguinte",
   "Nenhuma ocorr\303\252ncia encontrada",
   "Nenhum resultado perto da linha %u no ficheiro %s",
-  "N\303\243o foi encontrado qualquer ficheiro de sincroniza\303\247\303\243o",
+  "Nenhum ficheiro de sincroniza\303\247\303\243o encontrado",
   "N\303\243o h\303\241 informa\303\247\303\243o de sincroniza\303\247\303\243o nesta posi\303\247\303\243o",
   "N\303\272mero de p\303\241ginas:",
   NULL,

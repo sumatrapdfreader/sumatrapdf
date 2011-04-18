@@ -385,7 +385,7 @@ No result found around line %u in file %s
 Nenhum resultado perto da linha %u no ficheiro %s
 
 No synchronization file found
-Não foi encontrado qualquer ficheiro de sincronização
+Nenhum ficheiro de sincronização encontrado
 
 No synchronization info at this position
 Não há informação de sincronização nesta posição
