@@ -9,27 +9,23 @@
 #include "translations.h"
 #include "WinUtil.h"
 #include "FileUtil.h"
-#include "Vec.h"
 #include "Resource.h"
 #include "AppTools.h"
 
-#define SUMATRA_TXT_FONT        _T("Arial Black")
-#define SUMATRA_TXT_FONT_SIZE   24
-
 #define DOCLIST_SEPARATOR_DY        2
 #define DOCLIST_THUMBNAIL_BORDER_W  2
-#define DOCLIST_MARGIN_LEFT         40
-#define DOCLIST_MARGIN_BETWEEN_X    30
-#define DOCLIST_MARGIN_RIGHT        40
-#define DOCLIST_MARGIN_TOP          60
-#define DOCLIST_MARGIN_BETWEEN_Y    50
-#define DOCLIST_MARGIN_BOTTOM       40
+#define DOCLIST_MARGIN_LEFT        40
+#define DOCLIST_MARGIN_BETWEEN_X   30
+#define DOCLIST_MARGIN_RIGHT       40
+#define DOCLIST_MARGIN_TOP         60
+#define DOCLIST_MARGIN_BETWEEN_Y   50
+#define DOCLIST_MARGIN_BOTTOM      40
 #define DOCLIST_MAX_THUMBNAILS_X    5
-#define DOCLIST_BOTTOM_BOX_DY       50
+#define DOCLIST_BOTTOM_BOX_DY      50
 
 struct StartPageLink {
-    const TCHAR *filePath;
-    RectI rect;
+    const TCHAR *filePath; // usually DisplayState->filePath
+    RectI rect;            // calculated inside DrawStartPage
 } gLinkInfo[FILE_HISTORY_MAX_FREQUENT + 2];
 
 static void DrawStartPage(WindowInfo *win, HDC hdc, FileHistory& fileHistory)
@@ -40,7 +36,7 @@ static void DrawStartPage(WindowInfo *win, HDC hdc, FileHistory& fileHistory)
     HPEN penThumbBorder = CreatePen(PS_SOLID, DOCLIST_THUMBNAIL_BORDER_W, WIN_COL_BLACK);
     HPEN penLinkLine = CreatePen(PS_SOLID, 1, COL_BLUE_LINK);
 
-    Win::Font::ScopedFont fontSumatraTxt(hdc, SUMATRA_TXT_FONT, SUMATRA_TXT_FONT_SIZE);
+    Win::Font::ScopedFont fontSumatraTxt(hdc, _T("MS Shell Dlg"), 24);
     Win::Font::ScopedFont fontLeftTxt(hdc, _T("MS Shell Dlg"), 14);
 
     HGDIOBJ origFont = SelectObject(hdc, fontSumatraTxt); /* Just to remember the orig font */
@@ -85,10 +81,10 @@ static void DrawStartPage(WindowInfo *win, HDC hdc, FileHistory& fileHistory)
     ZeroMemory(&gLinkInfo, sizeof(gLinkInfo));
     Vec<DisplayState *> *list = fileHistory.GetFrequencyOrder();
 
-    int h;
-    for (h = 0; h < height; h++) {
+    for (int h = 0; h < height; h++) {
         for (int w = 0; w < width; w++) {
-            if (h * width + w >= (int)list->Count() || !list->At(h * width + w)->openCount) {
+            if (h * width + w >= (int)list->Count() ||
+                !list->At(h * width + w)->openCount) {
                 height = w > 0 ? h + 1 : h;
                 break;
             }
@@ -140,13 +136,8 @@ static void DrawStartPage(WindowInfo *win, HDC hdc, FileHistory& fileHistory)
     rect.Inflate(10, 10);
     gLinkInfo[FILE_HISTORY_MAX_FREQUENT].rect = rect;
 
-    rc = ClientRect(win->hwndCanvas);
     // TODO: translate
-    txt = _T("Hide frequently read");
-    GetTextExtentPoint32(hdc, txt, Str::Len(txt), &txtSize);
-    rect = RectI(rc.dx - txtSize.cx - 6, rc.y + rc.dy - txtSize.cy - 6, txtSize.cx, txtSize.cy);
-    DrawText(hdc, txt, -1, &rect.ToRECT(), DT_LEFT);
-    PaintLine(hdc, RectI(rect.x, rect.y + rect.dy, rect.dx, 0));
+    rect = DrawBottomRightLink(win->hwndCanvas, hdc, _T("Hide frequently read"));
     gLinkInfo[FILE_HISTORY_MAX_FREQUENT + 1].filePath = _T("<View,HideList>");
     gLinkInfo[FILE_HISTORY_MAX_FREQUENT + 1].rect = rect;
 
@@ -176,7 +167,7 @@ static const TCHAR *GetStartLink(int x, int y, RectI *rect=NULL)
 
 LRESULT HandleWindowStartMsg(WindowInfo *win, FileHistory& fileHistory, HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, bool& handled)
 {
-    POINT        pt;
+    POINT pt;
 
     assert(win->IsAboutWindow());
     handled = false;
@@ -233,11 +224,13 @@ LRESULT HandleWindowStartMsg(WindowInfo *win, FileHistory& fileHistory, HWND hwn
     return 0;
 }
 
+static char *PathFingerprint(const TCHAR *filePath);
+
 // TODO: create in TEMP directory instead?
 static TCHAR *GetThumbnailPath(const TCHAR *filePath)
 {
     ScopedMem<TCHAR> thumbsPath(AppGenDataFilename(THUMBNAILS_DIR_NAME));
-    ScopedMem<char> fingerPrint(Path_Fingerprint(filePath));
+    ScopedMem<char> fingerPrint(PathFingerprint(filePath));
     ScopedMem<TCHAR> fname(Str::Conv::FromAnsi(fingerPrint));
 
     return Str::Format(_T("%s\\%s.bmp"), thumbsPath, fname);
@@ -314,4 +307,31 @@ void SaveThumbnail(DisplayState *state)
             File::WriteAll(bmpPath, data, dataLen);
         free(data);
     }
+}
+
+
+extern "C" {
+__pragma(warning(push))
+#include <fitz.h>
+__pragma(warning(pop))
+}
+
+// creates a fingerprint of a (normalized) path and the
+// file's last modification time - much quicker than hashing
+// a file's entire content
+// caller needs to free() the result
+static char *PathFingerprint(const TCHAR *filePath)
+{
+    unsigned char digest[16];
+    ScopedMem<TCHAR> pathN(Path::Normalize(filePath));
+    ScopedMem<char> pathU(Str::Conv::ToUtf8(pathN));
+    FILETIME lastMod = File::GetModificationTime(pathN);
+
+    fz_md5 md5;
+    fz_md5_init(&md5);
+    fz_md5_update(&md5, (unsigned char *)pathU.Get(), Str::Len(pathU));
+    fz_md5_update(&md5, (unsigned char *)&lastMod, sizeof(lastMod));
+    fz_md5_final(&md5, digest);
+
+    return Str::MemToHex(digest, 16);
 }

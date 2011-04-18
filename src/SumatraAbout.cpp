@@ -34,12 +34,9 @@
 
 static HWND gHwndAbout;
 static HWND gHwndAboutTooltip = NULL;
-static const TCHAR *clickedURL = NULL;
-#ifdef NEW_START_PAGE
-static SizeI showStartPageLink;
-#endif
+static const TCHAR *gClickedURL = NULL;
 
-typedef struct AboutLayoutInfoEl {
+struct AboutLayoutInfoEl {
     /* static data, must be provided */
     const TCHAR *   leftTxt;
     const TCHAR *   rightTxt;
@@ -48,7 +45,7 @@ typedef struct AboutLayoutInfoEl {
     /* data calculated by the layout */
     RectI           leftPos;
     RectI           rightPos;
-} AboutLayoutInfoEl;
+};
 
 static AboutLayoutInfoEl gAboutLayoutInfo[] = {
     { _T("website"),        _T("SumatraPDF website"),   _T("http://blog.kowalczyk.info/software/sumatrapdf") },
@@ -71,6 +68,11 @@ static AboutLayoutInfoEl gAboutLayoutInfo[] = {
     { _T("synctex"),        _T("J\xE9rome Laurens"),    _T("http://itexmac.sourceforge.net/SyncTeX.html") },
     { NULL, NULL, NULL }
 };
+
+struct AboutPageLink {
+    const TCHAR *url; // usually AboutLayoutInfoEl->url
+    RectI rect;       // usually AboutLayoutInfoEl->rightPos
+} gLinkInfo[dimof(gAboutLayoutInfo) + 1];
 
 #define COL1 RGB(196, 64, 50)
 #define COL2 RGB(227, 107, 35)
@@ -155,6 +157,33 @@ void DrawSumatraVersion(HDC hdc, RectI rect)
     SelectObject(hdc, oldFont);
 }
 
+RectI DrawBottomRightLink(HWND hwnd, HDC hdc, const TCHAR *txt)
+{
+    Win::Font::ScopedFont fontLeftTxt(hdc, _T("MS Shell Dlg"), 14);
+    HPEN penLinkLine = CreatePen(PS_SOLID, 1, COL_BLUE_LINK);
+
+    HGDIOBJ origFont = SelectObject(hdc, fontLeftTxt); /* Just to remember the orig font */
+
+    SetTextColor(hdc, COL_BLUE_LINK);
+    SetBkMode(hdc, TRANSPARENT);
+    ClientRect rc(hwnd);
+
+    SIZE txtSize;
+    GetTextExtentPoint32(hdc, txt, Str::Len(txt), &txtSize);
+    RectI rect(rc.dx - txtSize.cx - 6, rc.y + rc.dy - txtSize.cy - 6, txtSize.cx, txtSize.cy);
+    DrawText(hdc, txt, -1, &rect.ToRECT(), DT_LEFT);
+
+    SelectObject(hdc, penLinkLine);
+    PaintLine(hdc, RectI(rect.x, rect.y + rect.dy, rect.dx, 0));
+
+    SelectObject(hdc, origFont);
+    DeleteObject(penLinkLine);
+
+    // make the click target larger
+    rect.Inflate(6, 6);
+    return rect;
+}
+
 /* Draws the about screen and remembers some state for hyperlinking.
    It transcribes the design I did in graphics software - hopeless
    to understand without seeing the design. */
@@ -191,36 +220,30 @@ static void DrawAbout(HWND hwnd, HDC hdc, RectI rect)
     Rectangle(hdc, rect.x, rect.y + titleRect.dy, rect.x + rect.dx, rect.y + rect.dy);
 
     /* render text on the left*/
-    int leftLargestDx = 0;
     SelectObject(hdc, fontLeftTxt);
-    for (AboutLayoutInfoEl *el = gAboutLayoutInfo; el->leftTxt; el++) {
+    for (AboutLayoutInfoEl *el = gAboutLayoutInfo; el->leftTxt; el++)
         TextOut(hdc, el->leftPos.x, el->leftPos.y, el->leftTxt, Str::Len(el->leftTxt));
-        if (leftLargestDx < el->leftPos.dx)
-            leftLargestDx = el->leftPos.dx;
-    }
 
     /* render text on the right */
-    int bottomY = 0;
     SelectObject(hdc, fontRightTxt);
+    SelectObject(hdc, penLinkLine);
+    ZeroMemory(&gLinkInfo, sizeof(gLinkInfo));
     for (AboutLayoutInfoEl *el = gAboutLayoutInfo; el->leftTxt; el++) {
         bool hasUrl = !gRestrictedUse && el->url;
         SetTextColor(hdc, hasUrl ? COL_BLUE_LINK : ABOUT_BORDER_COL);
-
         TextOut(hdc, el->rightPos.x, el->rightPos.y, el->rightTxt, Str::Len(el->rightTxt));
-        bottomY = el->rightPos.y + el->rightPos.dy + ABOUT_TXT_DY;
 
-        if (!hasUrl)
-            continue;
-
-        int underlineY = el->rightPos.y + el->rightPos.dy - 3;
-        SelectObject(hdc, penLinkLine);
-        PaintLine(hdc, RectI(el->rightPos.x, underlineY, el->rightPos.dx, 0));
+        if (hasUrl) {
+            int underlineY = el->rightPos.y + el->rightPos.dy - 3;
+            PaintLine(hdc, RectI(el->rightPos.x, underlineY, el->rightPos.dx, 0));
+            gLinkInfo[el - gAboutLayoutInfo].url = el->url;
+            gLinkInfo[el - gAboutLayoutInfo].rect = el->rightPos;
+        }
     }
 
     SelectObject(hdc, penDivideLine);
-    RectI divideLine(ABOUT_LINE_OUTER_SIZE + ABOUT_MARGIN_DX + leftLargestDx + ABOUT_LEFT_RIGHT_SPACE_DX,
-                     4, 0, bottomY - gAboutLayoutInfo[0].rightPos.y);
-    divideLine.Offset(rect.x, rect.y + titleRect.dy);
+    RectI divideLine(gAboutLayoutInfo[0].rightPos.x - ABOUT_LEFT_RIGHT_SPACE_DX,
+                     rect.y + titleRect.dy + 4, 0, rect.y + rect.dy - 4 - gAboutLayoutInfo[0].rightPos.y);
     PaintLine(hdc, divideLine);
 
     SelectObject(hdc, origFont);
@@ -329,41 +352,21 @@ void OnPaintAbout(HWND hwnd)
     EndPaint(hwnd, &ps);
 }
 
-static const TCHAR *AboutGetLink(WindowInfo *win, int x, int y, AboutLayoutInfoEl **el_out=NULL)
+static const TCHAR *GetAboutLink(WindowInfo *win, int x, int y, RectI *rect=NULL)
 {
     if (gRestrictedUse) return NULL;
 
-    // Update the link location information
-    if (win)
-        UpdateAboutLayoutInfo(win->hwndCanvas, win->buffer->GetDC(), NULL);
-    else
-        OnPaintAbout(gHwndAbout);
-
     PointI cursor(x, y);
-    for (AboutLayoutInfoEl *el = gAboutLayoutInfo; el->leftTxt; el++) {
-        if (!el->rightPos.Inside(cursor))
-            continue;
-        if (el_out)
-            *el_out = el;
-        return el->url;
-    }
-    
-#ifdef NEW_START_PAGE
-    if (win) {
-        ClientRect rc(win->hwndCanvas);
-        RectI bottomRightLink(PointI(), showStartPageLink);
-        bottomRightLink.Offset(rc.dx - bottomRightLink.dx - 6, rc.dy - bottomRightLink.dy - 6);
-        if (bottomRightLink.Inside(cursor)) {
-            if (el_out)
-                *el_out = NULL;
-            return _T("<View,ShowList>");
+    for (int i = 0; i < dimof(gLinkInfo); i++) {
+        if (gLinkInfo[i].rect.Inside(cursor)) {
+            if (rect)
+                *rect = gLinkInfo[i].rect;
+            return gLinkInfo[i].url;
         }
     }
-#endif
-
+    
     return NULL;
 }
-
 
 void OnMenuAbout() {
     if (gHwndAbout) {
@@ -454,10 +457,10 @@ LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
 
         case WM_SETCURSOR:
             if (GetCursorPos(&pt) && ScreenToClient(hwnd, &pt)) {
-                AboutLayoutInfoEl *aboutEl;
-                if (AboutGetLink(NULL, pt.x, pt.y, &aboutEl)) {
-                    if (aboutEl)
-                        CreateInfotipForLink(aboutEl->url, aboutEl->rightPos);
+                RectI rect;
+                const TCHAR *url = GetAboutLink(NULL, pt.x, pt.y, &rect);
+                if (url) {
+                    CreateInfotipForLink(url, rect);
                     SetCursor(gCursorHand);
                     return TRUE;
                 }
@@ -466,12 +469,12 @@ LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
             return DefWindowProc(hwnd, message, wParam, lParam);
 
         case WM_LBUTTONDOWN:
-            clickedURL = AboutGetLink(NULL, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+            gClickedURL = GetAboutLink(NULL, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
             break;
 
         case WM_LBUTTONUP:
-            url = AboutGetLink(NULL, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
-            if (url && url == clickedURL)
+            url = GetAboutLink(NULL, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+            if (url && url == gClickedURL)
                 LaunchBrowser(url);
             break;
 
@@ -500,38 +503,15 @@ static void OnPaint(WindowInfo *win)
     HDC hdc = BeginPaint(win->hwndCanvas, &ps);
     UpdateAboutLayoutInfo(win->hwndCanvas, win->buffer->GetDC(), &rc);
     DrawAbout(win->hwndCanvas, win->buffer->GetDC(), rc);
-
 #ifdef NEW_START_PAGE
-    // TODO: move this into DrawAbout
     // add "Show frequently read" link
-    if (!gRestrictedUse && gGlobalPrefs.m_rememberOpenedFiles)
-    {
-        HDC hdc = win->buffer->GetDC();
-
-        Win::Font::ScopedFont fontLeftTxt(hdc, _T("MS Shell Dlg"), 14);
-        HGDIOBJ origFont = SelectObject(hdc, fontLeftTxt); /* Just to remember the orig font */
-        HPEN penLinkLine = CreatePen(PS_SOLID, 1, COL_BLUE_LINK);
-        HBRUSH brushBg = CreateSolidBrush(gGlobalPrefs.m_bgColor);
-        SetTextColor(hdc, COL_BLUE_LINK);
-        SelectObject(hdc, penLinkLine);
-        SelectObject(hdc, brushBg);
-        rc = ClientRect(win->hwndCanvas);
-
-        SIZE txtSize;
+    if (!gRestrictedUse && gGlobalPrefs.m_rememberOpenedFiles) {
         // TODO: translate
-        const TCHAR *txt = _T("Show frequently read");
-        GetTextExtentPoint32(hdc, txt, Str::Len(txt), &txtSize);
-        RectI rect(rc.dx - txtSize.cx - 6, rc.y + rc.dy - txtSize.cy - 6, txtSize.cx, txtSize.cy);
-        DrawText(hdc, txt, -1, &rect.ToRECT(), DT_LEFT);
-        PaintLine(hdc, RectI(rect.x, rect.y + rect.dy, rect.dx, 0));
-        showStartPageLink = rect.Size();
-
-        SelectObject(hdc, origFont);
-        DeleteObject(brushBg);
-        DeleteObject(penLinkLine);
+        RectI rect = DrawBottomRightLink(win->hwndCanvas, win->buffer->GetDC(), _T("Show frequently read"));
+        gLinkInfo[dimof(gLinkInfo) - 1].url = _T("<View,ShowList>");
+        gLinkInfo[dimof(gLinkInfo) - 1].rect = rect;
     }
 #endif
-
     win->buffer->Flush(hdc);
     EndPaint(win->hwndCanvas, &ps);
 }
@@ -552,10 +532,11 @@ LRESULT HandleWindowAboutMsg(WindowInfo *win, HWND hwnd, UINT message, WPARAM wP
 
         case WM_SETCURSOR:
             if (GetCursorPos(&pt) && ScreenToClient(hwnd, &pt)) {
-                AboutLayoutInfoEl *aboutEl;
-                if (AboutGetLink(win, pt.x, pt.y, &aboutEl)) {
-                    if (aboutEl)
-                        win->CreateInfotip(aboutEl->url, aboutEl->rightPos);
+                RectI rect;
+                const TCHAR *url = GetAboutLink(NULL, pt.x, pt.y, &rect);
+                if (url) {
+                    if (*url != '<')
+                        win->CreateInfotip(url, rect);
                     SetCursor(gCursorHand);
                     handled = true;
                     return TRUE;
@@ -566,12 +547,12 @@ LRESULT HandleWindowAboutMsg(WindowInfo *win, HWND hwnd, UINT message, WPARAM wP
         case WM_LBUTTONDOWN:
             // remember a link under so that on mouse up we only activate
             // link if mouse up is on the same link as mouse down
-            win->url = AboutGetLink(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+            win->url = GetAboutLink(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
             handled = true;
             break;
 
         case WM_LBUTTONUP:
-            const TCHAR *url = AboutGetLink(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+            const TCHAR *url = GetAboutLink(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
             if (url && url == win->url) {
 #ifdef NEW_START_PAGE
                 if (Str::Eq(url, _T("<View,ShowList>"))) {

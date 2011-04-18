@@ -298,12 +298,12 @@ $(O)\SumatraProperties.obj: src\SumatraPDF.h src\SumatraProperties.h src\TextSea
 $(O)\SumatraProperties.obj: src\TextSelection.h src\translations.h src\WindowInfo.h
 $(O)\SumatraStart.obj: baseutils\BaseUtil.h baseutils\FileUtil.h baseutils\GeomUtil.h
 $(O)\SumatraStart.obj: baseutils\StrUtil.h baseutils\Vec.h baseutils\WinUtil.h
-$(O)\SumatraStart.obj: src\AppPrefs.h src\AppTools.h src\BaseEngine.h
-$(O)\SumatraStart.obj: src\DisplayModel.h src\DisplayState.h src\FileHistory.h
-$(O)\SumatraStart.obj: src\ImagesEngine.h src\PdfEngine.h src\Resource.h
-$(O)\SumatraStart.obj: src\SumatraAbout.h src\SumatraPDF.h src\SumatraStart.h
-$(O)\SumatraStart.obj: src\TextSearch.h src\TextSelection.h src\translations.h
-$(O)\SumatraStart.obj: src\WindowInfo.h
+$(O)\SumatraStart.obj: mupdf\fitz\fitz.h src\AppPrefs.h src\AppTools.h
+$(O)\SumatraStart.obj: src\BaseEngine.h src\DisplayModel.h src\DisplayState.h
+$(O)\SumatraStart.obj: src\FileHistory.h src\ImagesEngine.h src\PdfEngine.h
+$(O)\SumatraStart.obj: src\Resource.h src\SumatraAbout.h src\SumatraPDF.h
+$(O)\SumatraStart.obj: src\SumatraStart.h src\TextSearch.h src\TextSelection.h
+$(O)\SumatraStart.obj: src\translations.h src\WindowInfo.h
 $(O)\TextSearch.obj: baseutils\BaseUtil.h baseutils\GeomUtil.h baseutils\StrUtil.h
 $(O)\TextSearch.obj: src\BaseEngine.h src\TextSearch.h src\TextSelection.h
 $(O)\TextSelection.obj: baseutils\BaseUtil.h baseutils\GeomUtil.h baseutils\StrUtil.h

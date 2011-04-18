@@ -535,23 +535,3 @@ void PdfLinkHandler::GotoNamedDest(const TCHAR *name)
 
     GotoPdfDest(engine()->GetNamedDest(name));
 }
-
-// creates a fingerprint of a (normalized) path and the
-// file's last modification time - much quicker than hashing
-// a file's entire content
-// caller needs to free() the result
-char *Path_Fingerprint(const TCHAR *filePath)
-{
-    unsigned char digest[16];
-    ScopedMem<TCHAR> pathN(Path::Normalize(filePath));
-    ScopedMem<char> pathU(Str::Conv::ToUtf8(pathN));
-    FILETIME lastMod = File::GetModificationTime(pathN);
-
-    fz_md5 md5;
-    fz_md5_init(&md5);
-    fz_md5_update(&md5, (unsigned char *)pathU.Get(), Str::Len(pathU));
-    fz_md5_update(&md5, (unsigned char *)&lastMod, sizeof(lastMod));
-    fz_md5_final(&md5, digest);
-
-    return Str::MemToHex(digest, 16);
-}

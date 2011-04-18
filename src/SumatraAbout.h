@@ -14,7 +14,8 @@ LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
 LRESULT          HandleWindowAboutMsg(WindowInfo *win, HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, bool& handled);
 
 SizeI CalcSumatraVersionSize(HDC);
-void DrawSumatraVersion(HDC hdc, RectI rect);
+void  DrawSumatraVersion(HDC hdc, RectI rect);
+RectI DrawBottomRightLink(HWND hwnd, HDC hdc, const TCHAR *txt);
 
 void OnMenuAbout();
 
