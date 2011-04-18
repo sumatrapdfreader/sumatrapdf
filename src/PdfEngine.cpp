@@ -920,7 +920,12 @@ fz_obj *CPdfEngine::GetNamedDest(const TCHAR *name)
     fz_obj *dest = pdf_lookup_dest(_xref, nameobj);
     fz_drop_obj(nameobj);
 
-    return dest;
+    // names refer to either an array or a dictionary with an array /D
+    if (fz_is_dict(dest))
+        dest = fz_dict_gets(dest, "D");
+    if (fz_is_array(dest))
+        return dest;
+    return NULL;
 }
 
 pdf_page *CPdfEngine::getPdfPage(int pageNo, bool failIfBusy)
