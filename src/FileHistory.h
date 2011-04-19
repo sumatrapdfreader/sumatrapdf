@@ -103,6 +103,8 @@ public:
             return false;
         Remove(state);
         Append(state);
+        // also move the link to the back in the Frequently Read list
+        state->openCount >>= 2;
         return true;
     }
 

@@ -562,12 +562,6 @@ void DrawStartPage(WindowInfo *win, HDC hdc, FileHistory& fileHistory)
     rc.dy -= DOCLIST_BOTTOM_BOX_DY;
 
     Vec<DisplayState *> *list = fileHistory.GetFrequencyOrder();
-    // don't show any documents which don't exist (anymore)
-    for (size_t i = list->Count(); i > 0; i--) {
-        DisplayState *state = list->At(i - 1);
-        if (!state->thumbnail && !File::Exists(state->filePath))
-            list->RemoveAt(i - 1);
-    }
 
     int width = limitValue((rc.dx - DOCLIST_MARGIN_LEFT - DOCLIST_MARGIN_RIGHT + DOCLIST_MARGIN_BETWEEN_X) / (THUMBNAIL_DX + DOCLIST_MARGIN_BETWEEN_X), 1, DOCLIST_MAX_THUMBNAILS_X);
     int height = min((rc.dy - DOCLIST_MARGIN_TOP - DOCLIST_MARGIN_BOTTOM + DOCLIST_MARGIN_BETWEEN_Y) / (THUMBNAIL_DY + DOCLIST_MARGIN_BETWEEN_Y), FILE_HISTORY_MAX_FREQUENT / width);
