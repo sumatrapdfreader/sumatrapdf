@@ -342,11 +342,17 @@ Found text at page %d
 Found text at page %d (again)
 Текст найден на стр. %d (повторно)
 
+Frequently Read
+Часто используемые документы
+
 GB
 Гб
 
 Go to page
 Перейти на страницу
+
+Hide frequently read
+Скрыть часто используемые документы
 
 Hint: Use the F3 key for finding again
 Для повторного поиска используйте клавишу F3
@@ -398,6 +404,9 @@ OK
 
 Open
 Открыть
+
+Open a document...
+Открыть документ...
 
 Open in &Adobe Reader
 О&ткрыть в Adobe Reader
@@ -495,6 +504,9 @@ Show &Toolbar
 Show &pages continuously
 &Разрешить прокрутку
 
+Show frequently read
+Показать часто используемые документы
+
 Show the &bookmarks sidebar when available
 Показывать панель &закладок (по возможности)
 
@@ -572,10 +584,4 @@ copying text
 
 printing document
 печатается документ
-
-# Untranslated:
-#Frequently Read
-#Hide frequently read
-#Open a document...
-#Show frequently read
 
