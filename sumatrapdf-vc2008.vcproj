@@ -112,10 +112,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\DisplayState.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\src\DisplayState.h"
 				>
 			</File>

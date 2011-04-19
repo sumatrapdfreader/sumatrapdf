@@ -11,11 +11,11 @@
 #include "translations.h"
 
 /* For passing data to/from GetPassword dialog */
-typedef struct {
+struct Dialog_GetPassword_Data {
     const TCHAR *  fileName;   /* name of the file for which we need the password */
     TCHAR *        pwdOut;     /* password entered by the user */
     bool *         remember;   /* remember the password (encrypted) or ask again? */
-} Dialog_GetPassword_Data;
+};
 
 static INT_PTR CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -93,11 +93,11 @@ TCHAR *Dialog_GetPassword(HWND hwndParent, const TCHAR *fileName, bool *remember
 }
 
 /* For passing data to/from GoToPage dialog */
-typedef struct {
+struct Dialog_GoToPage_Data {
     int     currPageNo;      /* currently shown page number */
     int     pageCount;       /* total number of pages */
     int     pageEnteredOut;  /* page number entered by user */
-} Dialog_GoToPage_Data;
+};
 
 static INT_PTR CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -173,10 +173,10 @@ int Dialog_GoToPage(HWND hwnd, int currentPageNo, int pageCount)
 }
 
 /* For passing data to/from Find dialog */
-typedef struct {
+struct Dialog_Find_Data {
     TCHAR * searchTerm;
     bool    matchCase;
-} Dialog_Find_Data;
+};
 
 static INT_PTR CALLBACK Dialog_Find_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -242,9 +242,9 @@ TCHAR * Dialog_Find(HWND hwnd, const TCHAR *previousSearch, bool *matchCase)
 }
 
 /* For passing data to/from AssociateWithPdf dialog */
-typedef struct {
+struct Dialog_PdfAssociate_Data {
     bool dontAskAgain;
-} Dialog_PdfAssociate_Data;
+};
 
 static INT_PTR CALLBACK Dialog_PdfAssociate_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -311,9 +311,9 @@ INT_PTR Dialog_PdfAssociate(HWND hwnd, bool *dontAskAgainOut)
 }
 
 /* For passing data to/from ChangeLanguage dialog */
-typedef struct {
+struct Dialog_ChangeLanguage_Data {
     int langId;
-} Dialog_ChangeLanguage_Data;
+};
 
 static INT_PTR CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -395,11 +395,11 @@ int Dialog_ChangeLanguge(HWND hwnd, int currLangId)
 }
 
 /* For passing data to/from 'new version available' dialog */
-typedef struct {
+struct Dialog_NewVersion_Data {
     const TCHAR *currVersion;
     const TCHAR *newVersion;
     bool skipThisVersion;
-} Dialog_NewVersion_Data;
+};
 
 static INT_PTR CALLBACK Dialog_NewVersion_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {

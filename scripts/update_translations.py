@@ -35,7 +35,7 @@ TRANSLATIONS_TXT_C = """\
 #define LANGS_COUNT   %(langs_count)d
 #define STRINGS_COUNT %(translations_count)d
 
-typedef struct LangDef {
+typedef struct {
     const char *code;
     const char *fullName;
     LANGID id;

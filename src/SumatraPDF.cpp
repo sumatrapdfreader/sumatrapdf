@@ -196,13 +196,13 @@ SerializableGlobalPrefs             gGlobalPrefs = {
     { 0, 0 }, // FILETIME m_lastPrefUpdate
 };
 
-typedef struct ToolbarButtonInfo {
+struct ToolbarButtonInfo {
     /* index in the toolbar bitmap (-1 for separators) */
     int           bmpIndex;
     int           cmdId;
     const char *  toolTip;
     int           flags;
-} ToolbarButtonInfo;
+};
 
 enum ToolbarButtonFlag {
     TBF_RESTRICTED = 0x1 
@@ -299,16 +299,6 @@ DWORD FileTimeDiffInSecs(FILETIME& ft1, FILETIME& ft2)
 #endif
 
 #define SECS_IN_DAY 60*60*24
-
-static void SerializableGlobalPrefs_Init() {
-}
-
-static void SerializableGlobalPrefs_Deinit()
-{
-    free(gGlobalPrefs.m_versionToSkip);
-    free(gGlobalPrefs.m_inverseSearchCmdLine);
-    free(gGlobalPrefs.m_lastUpdateTime);
-}
 
 void LaunchBrowser(const TCHAR *url)
 {
@@ -522,11 +512,11 @@ enum menuFlags {
     MF_PLUGIN_MODE_ONLY  = 1 << 2,
 };
 
-typedef struct MenuDef {
+struct MenuDef {
     const char *title;
     int         id;
     int         flags;
-} MenuDef;
+};
 
 MenuDef menuDefFile[] = {
     { _TRN("&Open\tCtrl-O"),                IDM_OPEN ,                  MF_NOT_IN_RESTRICTED },
@@ -1001,7 +991,7 @@ static bool SavePrefs()
         UpdateCurrentFileDisplayStateForWin(gWindows[i]);
 
     ScopedMem<TCHAR> path(GetPrefsFileName());
-    bool ok = Prefs::Save(path, &gGlobalPrefs, &gFileHistory);
+    bool ok = Prefs::Save(path, gGlobalPrefs, gFileHistory);
     if (ok) {
         // notify all SumatraPDF instances about the updated prefs file
         HWND hwnd = NULL;
@@ -1026,7 +1016,7 @@ static bool ReloadPrefs()
     bool showToolbar = gGlobalPrefs.m_showToolbar;
 
     FileHistory fileHistory;
-    if (!Prefs::Load(path, &gGlobalPrefs, &fileHistory))
+    if (!Prefs::Load(path, gGlobalPrefs, fileHistory))
         return false;
 
     gFileHistory.Clear();
@@ -3591,8 +3581,7 @@ static void OnMenuSaveBookmark(WindowInfo *win)
         filename.Set(Str::Join(dstFileName, _T(".lnk")));
 
     ScrollState ss = win->dm->GetScrollState();
-    const char *modeName = DisplayModeNameFromEnum(win->dm->displayMode());
-    ScopedMem<TCHAR> viewMode(Str::Conv::FromAnsi(modeName));
+    const TCHAR *viewMode = DisplayModeConv::NameFromEnum(win->dm->displayMode());
     ScopedMem<TCHAR> zoomVirtual(Str::Format(_T("%.2f"), win->dm->zoomVirtual()));
     if (ZOOM_FIT_PAGE == win->dm->zoomVirtual())
         zoomVirtual.Set(Str::Dup(_T("fitpage")));
@@ -4858,12 +4847,12 @@ public:
     }
 };
 
-typedef struct FindThreadData {
+struct FindThreadData {
     WindowInfo *win;
     TextSearchDirection direction;
     bool wasModified;
     TCHAR text[256];
-} FindThreadData;
+};
 
 static DWORD WINAPI FindThread(LPVOID data)
 {
@@ -6802,8 +6791,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
     {
         ScopedMem<TCHAR> prefsFilename(GetPrefsFileName());
-        SerializableGlobalPrefs_Init();
-        if (!Prefs::Load(prefsFilename, &gGlobalPrefs, &gFileHistory)) {
+        if (!Prefs::Load(prefsFilename, gGlobalPrefs, gFileHistory)) {
             // assume that this is because prefs file didn't exist
             // i.e. this could be the first time Sumatra is launched.
             const char *lang = Trans::GuessLanguage();
@@ -6912,7 +6900,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
             }
             if ((i.startView != DM_AUTOMATIC || i.startZoom != INVALID_ZOOM ||
                  i.startScroll.x != -1 && i.startScroll.y != -1) && !firstIsDocLoaded) {
-                ScopedMem<TCHAR> viewMode(Str::Conv::FromUtf8(DisplayModeNameFromEnum(i.startView)));
+                const TCHAR *viewMode = DisplayModeConv::NameFromEnum(i.startView);
                 ScopedMem<TCHAR> command(Str::Format(_T("[") DDECOMMAND_SETVIEW _T("(\"%s\", \"%s\", %.2f, %d, %d)]"),
                                          fullpath, viewMode, i.startZoom, i.startScroll.x, i.startScroll.y));
                 DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, command);
@@ -7029,8 +7017,6 @@ Exit:
     DeleteObject(gBrushShadow);
     DeleteObject(gDefaultGuiFont);
     DeleteBitmap(gBitmapReloadingCue);
-
-    SerializableGlobalPrefs_Deinit();
 
     return (int)msg.wParam;
 }

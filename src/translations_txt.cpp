@@ -8,7 +8,7 @@
 #define LANGS_COUNT   60
 #define STRINGS_COUNT 191
 
-typedef struct LangDef {
+typedef struct {
     const char *code;
     const char *fullName;
     LANGID id;

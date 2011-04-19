@@ -10,60 +10,49 @@
 #include "FileHistory.h"
 #include "translations.h"
 
-static bool ParseDisplayMode(const char *txt, DisplayMode *resOut)
-{
-    assert(txt);
-    if (!txt) return false;
-    return DisplayModeEnumFromName(txt, resOut);
-}
-
-#define GLOBAL_PREFS_STR "gp"
-
-static BencDict* SerializeGlobalPrefs(SerializableGlobalPrefs *globalPrefs)
+static BencDict* SerializeGlobalPrefs(SerializableGlobalPrefs& globalPrefs)
 {
     BencDict *prefs = new BencDict();
     if (!prefs)
         return NULL;
 
-    prefs->Add(SHOW_TOOLBAR_STR, globalPrefs->m_showToolbar);
-    prefs->Add(SHOW_TOC_STR, globalPrefs->m_showToc);
-    prefs->Add(TOC_DX_STR, globalPrefs->m_tocDx);
-    prefs->Add(PDF_ASSOCIATE_DONT_ASK_STR, globalPrefs->m_pdfAssociateDontAskAgain);
-    prefs->Add(PDF_ASSOCIATE_ASSOCIATE_STR, globalPrefs->m_pdfAssociateShouldAssociate);
+    prefs->Add(SHOW_TOOLBAR_STR, globalPrefs.m_showToolbar);
+    prefs->Add(SHOW_TOC_STR, globalPrefs.m_showToc);
+    prefs->Add(TOC_DX_STR, globalPrefs.m_tocDx);
+    prefs->Add(PDF_ASSOCIATE_DONT_ASK_STR, globalPrefs.m_pdfAssociateDontAskAgain);
+    prefs->Add(PDF_ASSOCIATE_ASSOCIATE_STR, globalPrefs.m_pdfAssociateShouldAssociate);
 
-    prefs->Add(BG_COLOR_STR, globalPrefs->m_bgColor);
-    prefs->Add(ESC_TO_EXIT_STR, globalPrefs->m_escToExit);
-    prefs->Add(ENABLE_AUTO_UPDATE_STR, globalPrefs->m_enableAutoUpdate);
-    prefs->Add(REMEMBER_OPENED_FILES_STR, globalPrefs->m_rememberOpenedFiles);
-    prefs->Add(GLOBAL_PREFS_ONLY_STR, globalPrefs->m_globalPrefsOnly);
-    prefs->Add(SHOW_RECENT_FILES_STR, globalPrefs->m_showStartPage);
+    prefs->Add(BG_COLOR_STR, globalPrefs.m_bgColor);
+    prefs->Add(ESC_TO_EXIT_STR, globalPrefs.m_escToExit);
+    prefs->Add(ENABLE_AUTO_UPDATE_STR, globalPrefs.m_enableAutoUpdate);
+    prefs->Add(REMEMBER_OPENED_FILES_STR, globalPrefs.m_rememberOpenedFiles);
+    prefs->Add(GLOBAL_PREFS_ONLY_STR, globalPrefs.m_globalPrefsOnly);
+    prefs->Add(SHOW_RECENT_FILES_STR, globalPrefs.m_showStartPage);
 
-    const char *txt = DisplayModeNameFromEnum(globalPrefs->m_defaultDisplayMode);
-    prefs->Add(DISPLAY_MODE_STR, new BencRawString(txt));
+    const TCHAR *mode = DisplayModeConv::NameFromEnum(globalPrefs.m_defaultDisplayMode);
+    prefs->Add(DISPLAY_MODE_STR, mode);
 
-    txt = Str::Format("%.4f", globalPrefs->m_defaultZoom);
-    if (txt) {
-        prefs->Add(ZOOM_VIRTUAL_STR, new BencRawString(txt));
-        free((void*)txt);
-    }
-    prefs->Add(WINDOW_STATE_STR, globalPrefs->m_windowState);
-    prefs->Add(WINDOW_X_STR, globalPrefs->m_windowPos.x);
-    prefs->Add(WINDOW_Y_STR, globalPrefs->m_windowPos.y);
-    prefs->Add(WINDOW_DX_STR, globalPrefs->m_windowPos.dx);
-    prefs->Add(WINDOW_DY_STR, globalPrefs->m_windowPos.dy);
+    ScopedMem<char> zoom(Str::Format("%.4f", globalPrefs.m_defaultZoom));
+    if (zoom)
+        prefs->Add(ZOOM_VIRTUAL_STR, new BencRawString(zoom));
+    prefs->Add(WINDOW_STATE_STR, globalPrefs.m_windowState);
+    prefs->Add(WINDOW_X_STR, globalPrefs.m_windowPos.x);
+    prefs->Add(WINDOW_Y_STR, globalPrefs.m_windowPos.y);
+    prefs->Add(WINDOW_DX_STR, globalPrefs.m_windowPos.dx);
+    prefs->Add(WINDOW_DY_STR, globalPrefs.m_windowPos.dy);
 
-    if (globalPrefs->m_inverseSearchCmdLine)
-        prefs->Add(INVERSE_SEARCH_COMMANDLINE, globalPrefs->m_inverseSearchCmdLine);
-    prefs->Add(ENABLE_TEX_ENHANCEMENTS_STR, globalPrefs->m_enableTeXEnhancements);
-    if (globalPrefs->m_versionToSkip)
-        prefs->Add(VERSION_TO_SKIP_STR, globalPrefs->m_versionToSkip);
-    if (globalPrefs->m_lastUpdateTime)
-        prefs->Add(LAST_UPDATE_STR, new BencRawString(globalPrefs->m_lastUpdateTime));
-    prefs->Add(UI_LANGUAGE_STR, new BencRawString(globalPrefs->m_currentLanguage));
-    prefs->Add(FWDSEARCH_OFFSET, globalPrefs->m_fwdsearchOffset);
-    prefs->Add(FWDSEARCH_COLOR, globalPrefs->m_fwdsearchColor);
-    prefs->Add(FWDSEARCH_WIDTH, globalPrefs->m_fwdsearchWidth);
-    prefs->Add(FWDSEARCH_PERMANENT, globalPrefs->m_fwdsearchPermanent);
+    if (globalPrefs.m_inverseSearchCmdLine)
+        prefs->Add(INVERSE_SEARCH_COMMANDLINE, globalPrefs.m_inverseSearchCmdLine);
+    prefs->Add(ENABLE_TEX_ENHANCEMENTS_STR, globalPrefs.m_enableTeXEnhancements);
+    if (globalPrefs.m_versionToSkip)
+        prefs->Add(VERSION_TO_SKIP_STR, globalPrefs.m_versionToSkip);
+    if (globalPrefs.m_lastUpdateTime)
+        prefs->Add(LAST_UPDATE_STR, new BencRawString(globalPrefs.m_lastUpdateTime));
+    prefs->Add(UI_LANGUAGE_STR, new BencRawString(globalPrefs.m_currentLanguage));
+    prefs->Add(FWDSEARCH_OFFSET, globalPrefs.m_fwdsearchOffset);
+    prefs->Add(FWDSEARCH_COLOR, globalPrefs.m_fwdsearchColor);
+    prefs->Add(FWDSEARCH_WIDTH, globalPrefs.m_fwdsearchWidth);
+    prefs->Add(FWDSEARCH_PERMANENT, globalPrefs.m_fwdsearchPermanent);
 
     return prefs;
 }
@@ -85,9 +74,8 @@ static BencDict *DisplayState_Serialize(DisplayState *ds, bool globalPrefsOnly)
         return prefs;
     }
 
-    const char *txt = DisplayModeNameFromEnum(ds->displayMode);
-    if (txt)
-        prefs->Add(DISPLAY_MODE_STR, new BencRawString(txt));
+    const TCHAR *mode = DisplayModeConv::NameFromEnum(ds->displayMode);
+    prefs->Add(DISPLAY_MODE_STR, mode);
     prefs->Add(PAGE_NO_STR, ds->pageNo);
     prefs->Add(ROTATION_STR, ds->rotation);
     prefs->Add(SCROLL_X_STR, ds->scrollPos.x);
@@ -101,11 +89,9 @@ static BencDict *DisplayState_Serialize(DisplayState *ds, bool globalPrefsOnly)
     prefs->Add(SHOW_TOC_STR, ds->showToc);
     prefs->Add(TOC_DX_STR, ds->tocDx);
 
-    txt = Str::Format("%.4f", ds->zoomVirtual);
-    if (txt) {
-        prefs->Add(ZOOM_VIRTUAL_STR, new BencRawString(txt));
-        free((void*)txt);
-    }
+    ScopedMem<char> zoom(Str::Format("%.4f", ds->zoomVirtual));
+    if (zoom)
+        prefs->Add(ZOOM_VIRTUAL_STR, new BencRawString(zoom));
 
     if (ds->tocState && ds->tocState[0] > 0) {
         BencArray *tocState = new BencArray();
@@ -119,11 +105,8 @@ static BencDict *DisplayState_Serialize(DisplayState *ds, bool globalPrefsOnly)
     return prefs;
 }
 
-static BencArray *SerializeFileHistory(FileHistory *fileHistory, bool globalPrefsOnly)
+static BencArray *SerializeFileHistory(FileHistory& fileHistory, bool globalPrefsOnly)
 {
-    assert(fileHistory);
-    if (!fileHistory) return NULL;
-
     BencArray *arr = new BencArray();
     if (!arr)
         goto Error;
@@ -131,14 +114,14 @@ static BencArray *SerializeFileHistory(FileHistory *fileHistory, bool globalPref
     // Don't save more file entries than will be useful
     int minOpenCount = 0;
     if (globalPrefsOnly) {
-        Vec<DisplayState *> *frequencyList = fileHistory->GetFrequencyOrder();
+        Vec<DisplayState *> *frequencyList = fileHistory.GetFrequencyOrder();
         if (frequencyList->Count() > FILE_HISTORY_MAX_RECENT)
             minOpenCount = frequencyList->At(FILE_HISTORY_MAX_FREQUENT)->openCount / 2;
         delete frequencyList;
     }
 
     DisplayState *state;
-    for (int index = 0; (state = fileHistory->Get(index)); index++) {
+    for (int index = 0; (state = fileHistory.Get(index)); index++) {
         if (state->openCount < minOpenCount && index > FILE_HISTORY_MAX_RECENT)
             continue;
         BencDict *obj = DisplayState_Serialize(state, globalPrefsOnly);
@@ -153,7 +136,7 @@ Error:
     return NULL;      
 }
 
-static const char *SerializePrefs(SerializableGlobalPrefs *globalPrefs, FileHistory *root, size_t* lenOut)
+static const char *SerializePrefs(SerializableGlobalPrefs& globalPrefs, FileHistory& root, size_t* lenOut)
 {
     const char *data = NULL;
 
@@ -164,7 +147,7 @@ static const char *SerializePrefs(SerializableGlobalPrefs *globalPrefs, FileHist
     if (!global)
         goto Error;
     prefs->Add(GLOBAL_PREFS_STR, global);
-    BencArray *fileHistory = SerializeFileHistory(root, globalPrefs->m_globalPrefsOnly);
+    BencArray *fileHistory = SerializeFileHistory(root, globalPrefs.m_globalPrefsOnly);
     if (!fileHistory)
         goto Error;
     prefs->Add(FILE_HISTORY_STR, fileHistory);
@@ -224,6 +207,23 @@ static void Retrieve(BencDict *dict, const char *key, TCHAR *& value)
     }
 }
 
+static void Retrieve(BencDict *dict, const char *key, float& value)
+{
+    const char *string = GetRawString(dict, key);
+    if (string)
+        value = (float)atof(string);
+}
+
+static void Retrieve(BencDict *dict, const char *key, DisplayMode& value)
+{
+    BencString *string = dict->GetString(key);
+    if (string) {
+        ScopedMem<TCHAR> mode(string->Value());
+        if (mode)
+            DisplayModeConv::EnumFromName(mode, &value);
+    }
+}
+
 static DisplayState * DisplayState_Deserialize(BencDict *dict, bool globalPrefsOnly)
 {
     DisplayState *ds = new DisplayState();
@@ -244,9 +244,7 @@ static DisplayState * DisplayState_Deserialize(BencDict *dict, bool globalPrefsO
         return ds;
     }
 
-    const char* txt = GetRawString(dict, DISPLAY_MODE_STR);
-    if (txt)
-        DisplayModeEnumFromName(txt, &ds->displayMode);
+    Retrieve(dict, DISPLAY_MODE_STR, ds->displayMode);
     Retrieve(dict, PAGE_NO_STR, ds->pageNo);
     Retrieve(dict, ROTATION_STR, ds->rotation);
     Retrieve(dict, SCROLL_X_STR, ds->scrollPos.x);
@@ -258,9 +256,7 @@ static DisplayState * DisplayState_Deserialize(BencDict *dict, bool globalPrefsO
     Retrieve(dict, WINDOW_DY_STR, ds->windowPos.dy);
     Retrieve(dict, SHOW_TOC_STR, ds->showToc);
     Retrieve(dict, TOC_DX_STR, ds->tocDx);
-    txt = GetRawString(dict, ZOOM_VIRTUAL_STR);
-    if (txt)
-        ds->zoomVirtual = (float)atof(txt);
+    Retrieve(dict, ZOOM_VIRTUAL_STR, ds->zoomVirtual);
     Retrieve(dict, USE_GLOBAL_VALUES_STR, ds->useGlobalValues);
 
     BencArray *tocState = dict->GetArray(TOC_STATE_STR);
@@ -280,7 +276,7 @@ static DisplayState * DisplayState_Deserialize(BencDict *dict, bool globalPrefsO
     return ds;
 }
 
-static bool DeserializePrefs(const char *prefsTxt, SerializableGlobalPrefs *globalPrefs, FileHistory *fh)
+static bool DeserializePrefs(const char *prefsTxt, SerializableGlobalPrefs& globalPrefs, FileHistory& fh)
 {
     BencObj *obj = BencObj::Decode(prefsTxt);
     if (!obj || obj->Type() != BT_DICT)
@@ -290,45 +286,41 @@ static bool DeserializePrefs(const char *prefsTxt, SerializableGlobalPrefs *glob
     if (!global)
         goto Error;
 
-    Retrieve(global, SHOW_TOOLBAR_STR, globalPrefs->m_showToolbar);
-    Retrieve(global, SHOW_TOC_STR, globalPrefs->m_showToc);
-    Retrieve(global, TOC_DX_STR, globalPrefs->m_tocDx);
-    Retrieve(global, PDF_ASSOCIATE_DONT_ASK_STR, globalPrefs->m_pdfAssociateDontAskAgain);
-    Retrieve(global, PDF_ASSOCIATE_ASSOCIATE_STR, globalPrefs->m_pdfAssociateShouldAssociate);
-    Retrieve(global, ESC_TO_EXIT_STR, globalPrefs->m_escToExit);
-    Retrieve(global, BG_COLOR_STR, globalPrefs->m_bgColor);
-    Retrieve(global, ENABLE_AUTO_UPDATE_STR, globalPrefs->m_enableAutoUpdate);
-    Retrieve(global, REMEMBER_OPENED_FILES_STR, globalPrefs->m_rememberOpenedFiles);
-    Retrieve(global, GLOBAL_PREFS_ONLY_STR, globalPrefs->m_globalPrefsOnly);
-    Retrieve(global, SHOW_RECENT_FILES_STR, globalPrefs->m_showStartPage);
+    Retrieve(global, SHOW_TOOLBAR_STR, globalPrefs.m_showToolbar);
+    Retrieve(global, SHOW_TOC_STR, globalPrefs.m_showToc);
+    Retrieve(global, TOC_DX_STR, globalPrefs.m_tocDx);
+    Retrieve(global, PDF_ASSOCIATE_DONT_ASK_STR, globalPrefs.m_pdfAssociateDontAskAgain);
+    Retrieve(global, PDF_ASSOCIATE_ASSOCIATE_STR, globalPrefs.m_pdfAssociateShouldAssociate);
+    Retrieve(global, ESC_TO_EXIT_STR, globalPrefs.m_escToExit);
+    Retrieve(global, BG_COLOR_STR, globalPrefs.m_bgColor);
+    Retrieve(global, ENABLE_AUTO_UPDATE_STR, globalPrefs.m_enableAutoUpdate);
+    Retrieve(global, REMEMBER_OPENED_FILES_STR, globalPrefs.m_rememberOpenedFiles);
+    Retrieve(global, GLOBAL_PREFS_ONLY_STR, globalPrefs.m_globalPrefsOnly);
+    Retrieve(global, SHOW_RECENT_FILES_STR, globalPrefs.m_showStartPage);
 
-    const char* txt = GetRawString(global, DISPLAY_MODE_STR);
-    if (txt)
-        DisplayModeEnumFromName(txt, &globalPrefs->m_defaultDisplayMode);
-    txt = GetRawString(global, ZOOM_VIRTUAL_STR);
-    if (txt)
-        globalPrefs->m_defaultZoom = (float)atof(txt);
-    Retrieve(global, WINDOW_STATE_STR, globalPrefs->m_windowState);
+    Retrieve(global, DISPLAY_MODE_STR, globalPrefs.m_defaultDisplayMode);
+    Retrieve(global, ZOOM_VIRTUAL_STR, globalPrefs.m_defaultZoom);
+    Retrieve(global, WINDOW_STATE_STR, globalPrefs.m_windowState);
 
-    Retrieve(global, WINDOW_X_STR, globalPrefs->m_windowPos.x);
-    Retrieve(global, WINDOW_Y_STR, globalPrefs->m_windowPos.y);
-    Retrieve(global, WINDOW_DX_STR, globalPrefs->m_windowPos.dx);
-    Retrieve(global, WINDOW_DY_STR, globalPrefs->m_windowPos.dy);
+    Retrieve(global, WINDOW_X_STR, globalPrefs.m_windowPos.x);
+    Retrieve(global, WINDOW_Y_STR, globalPrefs.m_windowPos.y);
+    Retrieve(global, WINDOW_DX_STR, globalPrefs.m_windowPos.dx);
+    Retrieve(global, WINDOW_DY_STR, globalPrefs.m_windowPos.dy);
 
-    Retrieve(global, INVERSE_SEARCH_COMMANDLINE, globalPrefs->m_inverseSearchCmdLine);
-    Retrieve(global, ENABLE_TEX_ENHANCEMENTS_STR, globalPrefs->m_enableTeXEnhancements);
-    Retrieve(global, VERSION_TO_SKIP_STR, globalPrefs->m_versionToSkip);
-    RetrieveRaw(global, LAST_UPDATE_STR, globalPrefs->m_lastUpdateTime);
+    Retrieve(global, INVERSE_SEARCH_COMMANDLINE, globalPrefs.m_inverseSearchCmdLine);
+    Retrieve(global, ENABLE_TEX_ENHANCEMENTS_STR, globalPrefs.m_enableTeXEnhancements);
+    Retrieve(global, VERSION_TO_SKIP_STR, globalPrefs.m_versionToSkip);
+    RetrieveRaw(global, LAST_UPDATE_STR, globalPrefs.m_lastUpdateTime);
 
-    txt = GetRawString(global, UI_LANGUAGE_STR);
-    const char *langCode = Trans::ConfirmLanguage(txt);
+    const char *lang = GetRawString(global, UI_LANGUAGE_STR);
+    const char *langCode = Trans::ConfirmLanguage(lang);
     if (langCode)
-        globalPrefs->m_currentLanguage = langCode;
+        globalPrefs.m_currentLanguage = langCode;
 
-    Retrieve(global, FWDSEARCH_OFFSET, globalPrefs->m_fwdsearchOffset);
-    Retrieve(global, FWDSEARCH_COLOR, globalPrefs->m_fwdsearchColor);
-    Retrieve(global, FWDSEARCH_WIDTH, globalPrefs->m_fwdsearchWidth);
-    Retrieve(global, FWDSEARCH_PERMANENT, globalPrefs->m_fwdsearchPermanent);
+    Retrieve(global, FWDSEARCH_OFFSET, globalPrefs.m_fwdsearchOffset);
+    Retrieve(global, FWDSEARCH_COLOR, globalPrefs.m_fwdsearchColor);
+    Retrieve(global, FWDSEARCH_WIDTH, globalPrefs.m_fwdsearchWidth);
+    Retrieve(global, FWDSEARCH_PERMANENT, globalPrefs.m_fwdsearchPermanent);
 
     BencArray *fileHistory = prefs->GetArray(FILE_HISTORY_STR);
     if (!fileHistory)
@@ -338,9 +330,9 @@ static bool DeserializePrefs(const char *prefsTxt, SerializableGlobalPrefs *glob
         BencDict *dict = fileHistory->GetDict(i);
         assert(dict);
         if (!dict) continue;
-        DisplayState *state = DisplayState_Deserialize(dict, globalPrefs->m_globalPrefsOnly);
+        DisplayState *state = DisplayState_Deserialize(dict, globalPrefs.m_globalPrefsOnly);
         if (state)
-            fh->Append(state);
+            fh.Append(state);
     }
     delete obj;
     return true;
@@ -355,7 +347,7 @@ namespace Prefs {
 /* Load preferences from the preferences file.
    Returns true if preferences file was loaded, false if there was an error.
 */
-bool Load(TCHAR *filepath, SerializableGlobalPrefs *globalPrefs, FileHistory *fileHistory)
+bool Load(TCHAR *filepath, SerializableGlobalPrefs& globalPrefs, FileHistory& fileHistory)
 {
     bool            ok = false;
 
@@ -368,7 +360,7 @@ bool Load(TCHAR *filepath, SerializableGlobalPrefs *globalPrefs, FileHistory *fi
     if (!Str::IsEmpty(prefsTxt.Get())) {
         ok = DeserializePrefs(prefsTxt, globalPrefs, fileHistory);
         assert(ok);
-        globalPrefs->m_lastPrefUpdate = File::GetModificationTime(filepath);
+        globalPrefs.m_lastPrefUpdate = File::GetModificationTime(filepath);
     }
 
     // TODO: add a check if a file exists, to filter out deleted files
@@ -376,11 +368,11 @@ bool Load(TCHAR *filepath, SerializableGlobalPrefs *globalPrefs, FileHistory *fi
     // accessing network drives can be slow and unnecessarily spin
     // the drives).
 #if 0
-    for (int index = 0; fileHistory->Get(index); index++) {
-        DisplayState *state = fileHistory->Get(index);
+    for (int index = 0; fileHistory.Get(index); index++) {
+        DisplayState *state = fileHistory.Get(index);
         if (!File::Exists(state->filePath)) {
             DBG_OUT("Prefs_Load() file '%s' doesn't exist anymore\n", state->filePath);
-            fileHistory->Remove(state);
+            fileHistory.Remove(state);
             delete state;
         }
     }
@@ -389,7 +381,7 @@ bool Load(TCHAR *filepath, SerializableGlobalPrefs *globalPrefs, FileHistory *fi
     return ok;
 }
 
-bool Save(TCHAR *filepath, SerializableGlobalPrefs *globalPrefs, FileHistory *fileHistory)
+bool Save(TCHAR *filepath, SerializableGlobalPrefs& globalPrefs, FileHistory& fileHistory)
 {
     assert(filepath);
     if (!filepath)
@@ -406,8 +398,50 @@ bool Save(TCHAR *filepath, SerializableGlobalPrefs *globalPrefs, FileHistory *fi
         * rename temp file to final file */
     bool ok = File::WriteAll(filepath, (void*)data.Get(), dataLen);
     if (ok)
-        globalPrefs->m_lastPrefUpdate = File::GetModificationTime(filepath);
+        globalPrefs.m_lastPrefUpdate = File::GetModificationTime(filepath);
     return ok;
 }
+
+}
+
+namespace DisplayModeConv {
+
+#define STR_FROM_ENUM(val) \
+    if (val == var) \
+        return _T(val##_STR);
+
+const TCHAR *NameFromEnum(DisplayMode var)
+{
+    STR_FROM_ENUM(DM_AUTOMATIC)
+    STR_FROM_ENUM(DM_SINGLE_PAGE)
+    STR_FROM_ENUM(DM_FACING)
+    STR_FROM_ENUM(DM_BOOK_VIEW)
+    STR_FROM_ENUM(DM_CONTINUOUS)
+    STR_FROM_ENUM(DM_CONTINUOUS_FACING)
+    STR_FROM_ENUM(DM_CONTINUOUS_BOOK_VIEW)
+    return _T("unknown display mode!?");
+}
+
+#undef STR_FROM_ENUM
+
+#define IS_STR_ENUM(enumName) \
+    if (Str::Eq(txt, _T(enumName##_STR))) { \
+        *resOut = enumName; \
+        return true; \
+    }
+
+bool EnumFromName(const TCHAR *txt, DisplayMode *resOut)
+{
+    IS_STR_ENUM(DM_AUTOMATIC)
+    IS_STR_ENUM(DM_SINGLE_PAGE)
+    IS_STR_ENUM(DM_FACING)
+    IS_STR_ENUM(DM_BOOK_VIEW)
+    IS_STR_ENUM(DM_CONTINUOUS)
+    IS_STR_ENUM(DM_CONTINUOUS_FACING)
+    IS_STR_ENUM(DM_CONTINUOUS_BOOK_VIEW)
+    return false;
+}
+
+#undef IS_STR_ENUM
 
 }

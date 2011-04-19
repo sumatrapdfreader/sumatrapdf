@@ -509,11 +509,11 @@ public:
 
 ///// Above are extensions to Fitz and MuPDF, now follows PdfEngine /////
 
-typedef struct {
+struct PdfPageRun {
     pdf_page *page;
     fz_display_list *list;
     int refs;
-} PdfPageRun;
+};
 
 class CPdfEngine : public PdfEngine {
 public:
@@ -1578,11 +1578,11 @@ extern "C" {
 #include <muxps.h>
 }
 
-typedef struct {
+struct XpsPageRun {
     xps_page *page;
     fz_display_list *list;
     int refs;
-} XpsPageRun;
+};
 
 class CXpsEngine : public XpsEngine {
 public:

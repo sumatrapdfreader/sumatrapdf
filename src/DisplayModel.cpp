@@ -90,6 +90,36 @@ int columnsFromDisplayMode(DisplayMode displayMode)
     return 1;
 }
 
+void normalizeRotation(int *rotation)
+{
+    assert(rotation);
+    if (!rotation) return;
+    *rotation = *rotation % 360;
+    if (*rotation < 0)
+        *rotation += 360;
+}
+
+bool validRotation(int rotation)
+{
+    normalizeRotation(&rotation);
+    if ((0 == rotation) || (90 == rotation) ||
+        (180 == rotation) || (270 == rotation))
+        return true;
+    return false;
+}
+
+bool ValidZoomVirtual(float zoomVirtual)
+{
+    if ((ZOOM_FIT_PAGE == zoomVirtual) || (ZOOM_FIT_WIDTH == zoomVirtual) ||
+        (ZOOM_FIT_CONTENT == zoomVirtual) || (ZOOM_ACTUAL_SIZE == zoomVirtual))
+        return true;
+    if ((zoomVirtual < ZOOM_MIN) || (zoomVirtual > ZOOM_MAX)) {
+        DBG_OUT("ValidZoomVirtual() invalid zoom: %.4f\n", zoomVirtual);
+        return false;
+    }
+    return true;
+}
+
 bool DisplayModel::displayStateFromModel(DisplayState *ds)
 {
     if (!ds->filePath || !Str::Eq(ds->filePath, fileName())) {

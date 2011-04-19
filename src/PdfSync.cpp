@@ -4,6 +4,7 @@
 
 #include "PdfSync.h"
 #include "WindowInfo.h"
+#include "AppPrefs.h"
 #include <shlwapi.h>
 
 // Synchronizer based on .sync file generated with the pdfsync tex package
@@ -898,9 +899,8 @@ static const TCHAR *HandleSetViewCmd(const TCHAR *cmd, DDEACK& ack)
             return next;
     }
 
-    ScopedMem<char> viewModeUtf8(Str::Conv::ToUtf8(viewMode));
     DisplayMode mode;
-    if (DisplayModeEnumFromName(viewModeUtf8, &mode) && mode != DM_AUTOMATIC)
+    if (DisplayModeConv::EnumFromName(viewMode, &mode) && mode != DM_AUTOMATIC)
         win->SwitchToDisplayMode(mode);
 
     if (zoom != INVALID_ZOOM)
