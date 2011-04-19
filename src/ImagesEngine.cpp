@@ -305,6 +305,7 @@ bool ImagesEngine::RenderPage(HDC hDC, int pageNo, RectI screenRect, float zoom,
     g.SetCompositingQuality(CompositingQualityHighQuality);
     g.SetSmoothingMode(SmoothingModeAntiAlias);
     g.SetPageUnit(UnitPixel);
+    g.SetClip(Gdiplus::Rect(screenRect.x, screenRect.y, screenRect.dx, screenRect.dy));
 
     Bitmap *bmp = pages[pageNo - 1]->bmp;
     REAL scaleX = 1.0f, scaleY = 1.0f;

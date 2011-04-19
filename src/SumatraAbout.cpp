@@ -561,11 +561,22 @@ void DrawStartPage(WindowInfo *win, HDC hdc, FileHistory& fileHistory)
     FillRect(hdc, &rc.ToRECT(), gBrushNoDocBg);
     rc.dy -= DOCLIST_BOTTOM_BOX_DY;
 
+    Vec<DisplayState *> *list = fileHistory.GetFrequencyOrder();
+    // don't show documents for which we don't have any statistics
+    // or which don't exist (anymore)
+    for (size_t i = list->Count(); i > 0; i--) {
+        DisplayState *state = list->At(i - 1);
+        if (!state->openCount || !state->thumbnail && !File::Exists(state->filePath))
+            list->RemoveAt(i - 1);
+    }
+
     int width = limitValue((rc.dx - DOCLIST_MARGIN_LEFT - DOCLIST_MARGIN_RIGHT + DOCLIST_MARGIN_BETWEEN_X) / (THUMBNAIL_DX + DOCLIST_MARGIN_BETWEEN_X), 1, DOCLIST_MAX_THUMBNAILS_X);
     int height = min((rc.dy - DOCLIST_MARGIN_TOP - DOCLIST_MARGIN_BOTTOM + DOCLIST_MARGIN_BETWEEN_Y) / (THUMBNAIL_DY + DOCLIST_MARGIN_BETWEEN_Y), FILE_HISTORY_MAX_FREQUENT / width);
     PointI offset(rc.x + DOCLIST_MARGIN_LEFT + (rc.dx - width * THUMBNAIL_DX - (width - 1) * DOCLIST_MARGIN_BETWEEN_X - DOCLIST_MARGIN_LEFT - DOCLIST_MARGIN_RIGHT) / 2, rc.y + DOCLIST_MARGIN_TOP);
     if (offset.x < ABOUT_INNER_PADDING)
         offset.x = ABOUT_INNER_PADDING;
+    else if (list->Count() == 0)
+        offset.x = DOCLIST_MARGIN_LEFT;
 
     SelectObject(hdc, fontSumatraTxt);
     SIZE txtSize;
@@ -577,24 +588,14 @@ void DrawStartPage(WindowInfo *win, HDC hdc, FileHistory& fileHistory)
     SelectObject(hdc, GetStockObject(NULL_BRUSH));
 
     win->staticLinks.Reset();
-    Vec<DisplayState *> *list = fileHistory.GetFrequencyOrder();
-
-    size_t idx = 0;
     for (int h = 0; h < height; h++) {
         for (int w = 0; w < width; w++) {
-            // don't show documents for which we don't have any statistics
-            // or which don't exist (anymore)
-            for (; idx < list->Count(); idx++) {
-                DisplayState *state = list->At(idx);
-                if (state->openCount && (state->thumbnail || File::Exists(state->filePath)))
-                    break;
-            }
-            if (idx >= (int)list->Count()) {
+            if (h * width + w >= (int)list->Count()) {
                 // display the "Open a document" link right below the last row
                 height = w > 0 ? h + 1 : h;
                 break;
             }
-            DisplayState *state = list->At(idx++);
+            DisplayState *state = list->At(h * width + w);
 
             RectI page(offset.x + w * (THUMBNAIL_DX + DOCLIST_MARGIN_BETWEEN_X),
                        offset.y + h * (THUMBNAIL_DY + DOCLIST_MARGIN_BETWEEN_Y),
@@ -734,7 +735,6 @@ void SaveThumbnail(DisplayState *state)
         free(data);
     }
 }
-
 
 extern "C" {
 __pragma(warning(push))

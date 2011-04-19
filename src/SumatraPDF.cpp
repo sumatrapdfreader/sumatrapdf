@@ -3892,6 +3892,10 @@ static void OnMenuSettings(WindowInfo *win)
 
     if (!gGlobalPrefs.m_rememberOpenedFiles)
         gFileHistory.Clear();
+#ifdef NEW_START_PAGE
+    if (gWindows.Count() > 0 && gWindows[0]->IsAboutWindow())
+        gWindows[0]->RedrawAll(true);
+#endif
 
     SavePrefs();
 }
