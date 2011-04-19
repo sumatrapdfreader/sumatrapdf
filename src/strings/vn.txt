@@ -149,6 +149,9 @@ Nâng cao
 All files
 Mọi tập tin
 
+All supported documents
+Tất cả các tài liệu được hỗ trợ
+
 Application:
 Ứng dụng:
 
@@ -173,6 +176,12 @@ Xem dạng sách
 Book&marks\tF12
 Chỉ dấu sách\tF12
 
+Bookmark Shortcuts
+Lối tắt chỉ dấu sách
+
+Bookmark shortcut to page %d of %s
+Lối tắt chỉ dấu sách đến trang %d của %s
+
 Bookmarks
 Chỉ dấu sách
 
@@ -196,6 +205,9 @@ Change Language
 
 Check for &Updates
 Kiểm tra có phiên bản mới
+
+Comic books
+Sách truyện tranh
 
 Continuous
 Liên tiếp
@@ -263,6 +275,9 @@ Nhập mật khẩu cho %s
 Enter the command-line to invoke when you double-click on the PDF document:
 Nhập dòng lệnh gọi khi bạn nhấp đúp vào tập tin PDF:
 
+Error loading %s
+Lỗi tải %s
+
 F&orward\tAlt+Right Arrow
 Tiếp tục\tAlt+->
 
@@ -323,14 +338,26 @@ Vừa một trang đơn
 Found text at page %d
 Tìm thấy từ ở trang %d
 
+Found text at page %d (again)
+Tìm thấy đoạn văn bản tại trang %d (lần nữa)
+
+Frequently Read
+Tần suất đọc
+
 GB
 GB
 
 Go to page
 Nhảy đến trang
 
+Hide frequently read
+Ẩn tần suất đọc
+
 Hint: Use the F3 key for finding again
 Gợi ý: Nhấn phím F3 để tìm lại
+
+Image files (*.%s)
+Tập tin ảnh (*.%s)
 
 KB
 KB
@@ -376,6 +403,9 @@ OK
 
 Open
 Mở tập tin
+
+Open a document...
+Mở một tài liệu...
 
 Open in &Adobe Reader
 Mở bằng Adobe Reader
@@ -446,6 +476,9 @@ Quay trái\tCtrl-Shift--
 Rotate &Right\tCtrl-Shift-+
 Quay phải\tCtrl-Shift-+
 
+Save S&hortcut...\tCtrl-Shift-S
+Lưu lối tắt...\tCtrl-Shift-S
+
 Searching %d of %d...
 Đang tìm %d trên %d
 
@@ -469,6 +502,9 @@ Hiện thanh công cụ
 
 Show &pages continuously
 Xem trang liên tiếp
+
+Show frequently read
+Hiện tần suất đọc
 
 Show the &bookmarks sidebar when available
 Hiện chỉ dấu sách nếu có
@@ -518,6 +554,9 @@ Thăm &website
 Warning
 Cảnh báo
 
+XPS documents
+Tài liệu XPS
+
 You have the latest version.
 Bạn đang dùng phiên bản mới nhất.
 
@@ -544,19 +583,4 @@ copying text
 
 printing document
 đang in tập tin
-
-# Untranslated:
-#All supported documents
-#Bookmark Shortcuts
-#Bookmark shortcut to page %d of %s
-#Comic books
-#Error loading %s
-#Found text at page %d (again)
-#Frequently Read
-#Hide frequently read
-#Image files (*.%s)
-#Open a document...
-#Save S&hortcut...\tCtrl-Shift-S
-#Show frequently read
-#XPS documents
 
