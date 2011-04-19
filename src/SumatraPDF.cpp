@@ -264,25 +264,6 @@ char *GetSystemTimeAsStr()
     return _MemToHex(&ft);
 }
 
-static ULARGE_INTEGER FileTimeToLargeInteger(FILETIME& ft)
-{
-    ULARGE_INTEGER res;
-    res.LowPart = ft.dwLowDateTime;
-    res.HighPart = ft.dwHighDateTime;
-    return res;
-}
-
-/* Return <ft1> - <ft2> in seconds */
-DWORD FileTimeDiffInSecs(FILETIME& ft1, FILETIME& ft2)
-{
-    ULARGE_INTEGER t1 = FileTimeToLargeInteger(ft1);
-    ULARGE_INTEGER t2 = FileTimeToLargeInteger(ft2);
-    // diff is in 100 nanoseconds
-    LONGLONG diff = t1.QuadPart - t2.QuadPart;
-    diff = diff / (LONGLONG)10000000L;
-    return (DWORD)diff;
-}
-
 #ifndef SUMATRA_UPDATE_INFO_URL
 #ifdef SVN_PRE_RELEASE_VER
 #define SUMATRA_UPDATE_INFO_URL _T("http://kjkpub.s3.amazonaws.com/sumatrapdf/sumpdf-prerelease-latest.txt")

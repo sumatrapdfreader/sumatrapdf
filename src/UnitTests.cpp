@@ -9,8 +9,6 @@
 #include "AppTools.h"
 #include "Benchmark.h"
 
-extern DWORD FileTimeDiffInSecs(FILETIME& ft1, FILETIME& ft2);
-
 static void hexstrTest()
 {
     unsigned char buf[6] = {1, 2, 33, 255, 0, 18};

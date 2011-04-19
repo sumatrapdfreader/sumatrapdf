@@ -717,7 +717,10 @@ bool HasThumbnail(DisplayState *state)
 {
     if (state->thumbnail) {
         ScopedMem<TCHAR> bmpPath(GetThumbnailPath(state->filePath));
-        if (!File::Exists(bmpPath)) {
+        FILETIME bmpTime = File::GetModificationTime(bmpPath);
+        FILETIME fileTime = File::GetModificationTime(state->filePath);
+        // delete the thumbnail if the file is newer than the thumbnail
+        if (FileTimeDiffInSecs(fileTime, bmpTime) > 0) {
             delete state->thumbnail;
             state->thumbnail = NULL;
         }
@@ -748,21 +751,20 @@ __pragma(warning(push))
 __pragma(warning(pop))
 }
 
-// creates a fingerprint of a (normalized) path and the
-// file's last modification time - much quicker than hashing
-// a file's entire content
+// creates a fingerprint of a (normalized) path
+// I'd have liked to also include the file's last modification time
+// in the fingerprint (much quicker than hashing the entire file's
+// content), but that's too expensive for files on slow drives
 // caller needs to free() the result
 static char *PathFingerprint(const TCHAR *filePath)
 {
     unsigned char digest[16];
     ScopedMem<TCHAR> pathN(Path::Normalize(filePath));
     ScopedMem<char> pathU(Str::Conv::ToUtf8(pathN));
-    FILETIME lastMod = File::GetModificationTime(pathN);
 
     fz_md5 md5;
     fz_md5_init(&md5);
     fz_md5_update(&md5, (unsigned char *)pathU.Get(), Str::Len(pathU));
-    fz_md5_update(&md5, (unsigned char *)&lastMod, sizeof(lastMod));
     fz_md5_final(&md5, digest);
 
     return Str::MemToHex(digest, 16);

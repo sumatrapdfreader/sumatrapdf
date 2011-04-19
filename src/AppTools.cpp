@@ -61,6 +61,25 @@ int CompareVersion(TCHAR *txt1, TCHAR *txt2)
     return 0;
 }
 
+static ULARGE_INTEGER FileTimeToLargeInteger(FILETIME& ft)
+{
+    ULARGE_INTEGER res;
+    res.LowPart = ft.dwLowDateTime;
+    res.HighPart = ft.dwHighDateTime;
+    return res;
+}
+
+/* Return <ft1> - <ft2> in seconds */
+int FileTimeDiffInSecs(FILETIME& ft1, FILETIME& ft2)
+{
+    ULARGE_INTEGER t1 = FileTimeToLargeInteger(ft1);
+    ULARGE_INTEGER t2 = FileTimeToLargeInteger(ft2);
+    // diff is in 100 nanoseconds
+    LONGLONG diff = t1.QuadPart - t2.QuadPart;
+    diff = diff / (LONGLONG)10000000L;
+    return (int)diff;
+}
+
 
 /* Return the full exe path of my own executable.
    Caller needs to free() the result. */
