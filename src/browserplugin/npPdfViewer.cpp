@@ -270,21 +270,26 @@ enum Magnitudes { KB = 1024, MB = 1024 * KB, GB = 1024 * MB };
 // e.g. "3.48 GB", "12.38 MB", "23 KB"
 // Caller needs to free the result.
 static TCHAR *FormatSizeSuccint(size_t size) {
-    const TCHAR *unit = NULL;
-    double s = (double)size;
+	const TCHAR *unit = NULL;
+	double s = (double)size;
 
-    if (size > GB) {
-        s /= GB;
-        unit = _T("GB");
-    } else if (size > MB) {
-        s /= MB;
-        unit = _T("MB");
-    } else {
-        s /= KB;
-        unit = _T("KB");
-    }
-
-    return Str::FormatFloatWithThousandSep(s, unit);
+	if (size > GB)
+	{
+		s /= GB;
+		unit = _T("GB");
+	}
+	else if (size > MB)
+	{
+		s /= MB;
+		unit = _T("MB");
+	}
+	else
+	{
+		s /= KB;
+		unit = _T("KB");
+	}
+	
+	return Str::FormatFloatWithThousandSep(s, unit);
 }
 
 LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lParam)
@@ -335,8 +340,12 @@ LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lPar
 			FillRect(hDCBuffer, &rcProgress, brushProgress);
 			
 			DeleteObject(brushProgress);
-
-			DrawTextW(hDCBuffer, s, -1, &rcProgressAll, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
+			
+			// don't display weird values (especially when totalSize is unknown)
+			if (data->currSize <= data->totalSize && 0 < data->totalSize)
+			{
+				DrawTextW(hDCBuffer, s, -1, &rcProgressAll, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
+			}
 		}
 		
 		// draw the buffer on screen
