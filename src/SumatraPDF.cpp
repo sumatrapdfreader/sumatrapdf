@@ -193,6 +193,7 @@ SerializableGlobalPrefs             gGlobalPrefs = {
     0, // bool m_fwdsearchPermanent
     false, // bool m_invertColors
     true, // bool m_showStartPage
+    0, // int m_openCountWeek
     { 0, 0 }, // FILETIME m_lastPrefUpdate
 };
 

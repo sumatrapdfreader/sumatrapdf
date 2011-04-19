@@ -49,6 +49,8 @@ static BencDict* SerializeGlobalPrefs(SerializableGlobalPrefs& globalPrefs)
     if (globalPrefs.m_lastUpdateTime)
         prefs->Add(LAST_UPDATE_STR, new BencRawString(globalPrefs.m_lastUpdateTime));
     prefs->Add(UI_LANGUAGE_STR, new BencRawString(globalPrefs.m_currentLanguage));
+    prefs->Add(OPEN_COUNT_WEEK_STR, globalPrefs.m_openCountWeek);
+
     prefs->Add(FWDSEARCH_OFFSET, globalPrefs.m_fwdsearchOffset);
     prefs->Add(FWDSEARCH_COLOR, globalPrefs.m_fwdsearchColor);
     prefs->Add(FWDSEARCH_WIDTH, globalPrefs.m_fwdsearchWidth);
@@ -68,7 +70,6 @@ static BencDict *DisplayState_Serialize(DisplayState *ds, bool globalPrefsOnly)
         prefs->Add(DECRYPTION_KEY_STR, new BencRawString(ds->decryptionKey));
 
     prefs->Add(OPEN_COUNT_STR, ds->openCount);
-    prefs->Add(LAST_USE_DATE_STR, ds->lastUse);
     if (globalPrefsOnly || ds->useGlobalValues) {
         prefs->Add(USE_GLOBAL_VALUES_STR, TRUE);
         return prefs;
@@ -161,6 +162,18 @@ Error:
 }
 
 
+// number of weeks past since 2011-01-01
+static int GetWeekCount()
+{
+    SYSTEMTIME date20110101 = { 0 };
+    date20110101.wYear = 2011; date20110101.wMonth = 1; date20110101.wDay = 1;
+    FILETIME origTime, currTime;
+    SystemTimeToFileTime(&date20110101, &origTime);
+    GetSystemTimeAsFileTime(&currTime);
+    return (currTime.dwHighDateTime - origTime.dwHighDateTime) / 1408;
+    // 1408 == (10 * 1000 * 1000 * 60 * 60 * 24 * 7) / (1 << 32)
+}
+
 static void Retrieve(BencDict *dict, const char *key, int& value)
 {
     BencInt *intObj = dict->GetInt(key);
@@ -238,7 +251,6 @@ static DisplayState * DisplayState_Deserialize(BencDict *dict, bool globalPrefsO
 
     RetrieveRaw(dict, DECRYPTION_KEY_STR, ds->decryptionKey);
     Retrieve(dict, OPEN_COUNT_STR, ds->openCount);
-    Retrieve(dict, LAST_USE_DATE_STR, ds->lastUse);
     if (globalPrefsOnly) {
         ds->useGlobalValues = TRUE;
         return ds;
@@ -322,6 +334,10 @@ static bool DeserializePrefs(const char *prefsTxt, SerializableGlobalPrefs& glob
     Retrieve(global, FWDSEARCH_WIDTH, globalPrefs.m_fwdsearchWidth);
     Retrieve(global, FWDSEARCH_PERMANENT, globalPrefs.m_fwdsearchPermanent);
 
+    Retrieve(global, OPEN_COUNT_WEEK_STR, globalPrefs.m_openCountWeek);
+    int weekDiff = GetWeekCount() - globalPrefs.m_openCountWeek;
+    globalPrefs.m_openCountWeek = GetWeekCount();
+
     BencArray *fileHistory = prefs->GetArray(FILE_HISTORY_STR);
     if (!fileHistory)
         goto Error;
@@ -331,8 +347,11 @@ static bool DeserializePrefs(const char *prefsTxt, SerializableGlobalPrefs& glob
         assert(dict);
         if (!dict) continue;
         DisplayState *state = DisplayState_Deserialize(dict, globalPrefs.m_globalPrefsOnly);
-        if (state)
+        if (state) {
+            // "age" openCount statistics (cut in in half after every week)
+            state->openCount >>= weekDiff;
             fh.Append(state);
+        }
     }
     delete obj;
     return true;

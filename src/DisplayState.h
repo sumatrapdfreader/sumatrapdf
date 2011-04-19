@@ -32,9 +32,9 @@ enum DisplayMode {
 class DisplayState {
 public:
     DisplayState() :
-        filePath(NULL), useGlobalValues(false), openCount(0), lastUse(0),
+        filePath(NULL), useGlobalValues(false), openCount(0),
         displayMode(DM_AUTOMATIC), pageNo(1), zoomVirtual(100.0),
-        rotation(0), windowState(0), thumbnail(NULL), _frecency(0),
+        rotation(0), windowState(0), thumbnail(NULL),
         decryptionKey(NULL), showToc(true), tocDx(0), tocState(NULL) { }
 
     ~DisplayState() {
@@ -46,12 +46,14 @@ public:
 
     TCHAR *             filePath;
 
-    int                 openCount; // minimal statistics
-    int                 lastUse;   // in days since 2011-01-01
-    // frecency is calculated from openCount and lastUse by
-    // reducing openCount's value according to how long the file hasn't
-    // been opened again (cached value, not persisted)
-    int                 _frecency;
+    // in order to prevent documents that haven't been opened
+    // for a while but used to be opened very frequently
+    // constantly remain in top positions, the openCount
+    // will be cut in half after every week, so that the
+    // Frequently Read list hopefully better reflects the
+    // currently relevant documents
+    int                 openCount;
+    size_t              _index;    // temporary value needed for FileHistory::cmpOpenCount
     RenderedBitmap *    thumbnail; // persisted separately
 
     bool                useGlobalValues;

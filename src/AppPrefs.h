@@ -73,6 +73,7 @@ struct SerializableGlobalPrefs {
     bool m_invertColors; /* invert all colors for accessibility reasons (experimental!) */
 
     bool m_showStartPage; /* whether to display Frequently Read documents or the About page in an empty window */
+    int  m_openCountWeek; /* week count since 2011-01-01 needed to "age" openCount values in file history */
 
     FILETIME m_lastPrefUpdate; /* modification time of the preferences file when it was last read */
 };
@@ -113,7 +114,7 @@ struct SerializableGlobalPrefs {
 #define DECRYPTION_KEY_STR          "Decryption Key"
 #define SHOW_RECENT_FILES_STR       "ShowStartPage"
 #define OPEN_COUNT_STR              "OpenCount"
-#define LAST_USE_DATE_STR           "LastUse"
+#define OPEN_COUNT_WEEK_STR         "OpenCountWeek"
 #define FWDSEARCH_OFFSET            "ForwardSearch_HighlightOffset"
 #define FWDSEARCH_COLOR             "ForwardSearch_HighlightColor"
 #define FWDSEARCH_WIDTH             "ForwardSearch_HighlightWidth"

@@ -562,11 +562,10 @@ void DrawStartPage(WindowInfo *win, HDC hdc, FileHistory& fileHistory)
     rc.dy -= DOCLIST_BOTTOM_BOX_DY;
 
     Vec<DisplayState *> *list = fileHistory.GetFrequencyOrder();
-    // don't show documents for which we don't have any statistics
-    // or which don't exist (anymore)
+    // don't show any documents which don't exist (anymore)
     for (size_t i = list->Count(); i > 0; i--) {
         DisplayState *state = list->At(i - 1);
-        if (!state->openCount || !state->thumbnail && !File::Exists(state->filePath))
+        if (!state->thumbnail && !File::Exists(state->filePath))
             list->RemoveAt(i - 1);
     }
 
