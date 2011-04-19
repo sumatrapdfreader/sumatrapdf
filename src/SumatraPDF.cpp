@@ -1037,6 +1037,55 @@ static bool ReloadPrefs()
     return true;
 }
 
+#ifdef NEW_START_PAGE
+class ThumbnailRenderingWorkItem : public UIThreadWorkItem, public CallbackFunc
+{
+    const TCHAR *filePath;
+    RenderedBitmap *bmp;
+
+public:
+    ThumbnailRenderingWorkItem(WindowInfo *win, const TCHAR *filePath) :
+        UIThreadWorkItem(win), bmp(NULL) {
+        this->filePath = Str::Dup(filePath);
+    }
+    ~ThumbnailRenderingWorkItem() {
+        free((void *)filePath);
+        delete bmp;
+    }
+    
+    virtual void Callback(void *arg) {
+        bmp = (RenderedBitmap *)arg;
+        gUIThreadMarshaller.Queue(this);
+    }
+
+    virtual void Execute() {
+        if (WindowInfoStillValid(win)) {
+            DisplayState *state = gFileHistory.Find(filePath);
+            if (state) {
+                state->thumbnail = bmp;
+                bmp = NULL;
+                SaveThumbnail(state);
+            }
+        }
+    }
+};
+
+void CreateThumbnailForFile(WindowInfo *win, DisplayState *state)
+{
+    if (HasThumbnail(state))
+        return;
+
+    RectD pageRect = win->dm->engine->PageMediabox(1);
+    pageRect = win->dm->engine->Transform(pageRect, 1, 1.0f, 0);
+    float zoom = THUMBNAIL_DX / (float)pageRect.dx;
+    pageRect.dy = (float)THUMBNAIL_DY / zoom;
+    pageRect = win->dm->engine->Transform(pageRect, 1, 1.0f, 0, true);
+
+    CallbackFunc *callback = new ThumbnailRenderingWorkItem(win, win->loadedFilePath);
+    gRenderCache.Render(win->dm, 1, 0, zoom, pageRect, *callback);
+}
+#endif
+
 void WindowInfo::Reload(bool autorefresh)
 {
     DisplayState ds;
@@ -1060,9 +1109,18 @@ void WindowInfo::Reload(bool autorefresh)
     // we postpone the reload until the next autorefresh event
     bool tryRepair = !autorefresh;
     ScopedMem<TCHAR> path(Str::Dup(this->loadedFilePath));
-    LoadDocIntoWindow(path, this, &ds, false, tryRepair, true, false);
+    if (!LoadDocIntoWindow(path, this, &ds, false, tryRepair, true, false))
+        return;
 
-    if (this->IsDocLoaded() && this->dm->pdfEngine) {
+#ifdef NEW_START_PAGE
+    if (gGlobalPrefs.m_showStartPage) {
+        // refresh the thumbnail for this file
+        DisplayState *state = gFileHistory.Find(ds.filePath);
+        CreateThumbnailForFile(this, state);
+    }
+#endif
+
+    if (this->dm->pdfEngine) {
         // save a newly remembered password into file history so that
         // we don't ask again at the next refresh
         DisplayState *state = gFileHistory.Find(ds.filePath);
@@ -1617,55 +1675,6 @@ void CheckPositionAndSize(DisplayState *ds)
         ds->windowPos = gGlobalPrefs.m_windowPos;
     EnsureWindowVisibility(ds->windowPos);
 }
-
-#ifdef NEW_START_PAGE
-class ThumbnailRenderingWorkItem : public UIThreadWorkItem, public CallbackFunc
-{
-    const TCHAR *filePath;
-    RenderedBitmap *bmp;
-
-public:
-    ThumbnailRenderingWorkItem(WindowInfo *win, const TCHAR *filePath) :
-        UIThreadWorkItem(win), bmp(NULL) {
-        this->filePath = Str::Dup(filePath);
-    }
-    ~ThumbnailRenderingWorkItem() {
-        free((void *)filePath);
-        delete bmp;
-    }
-    
-    virtual void Callback(void *arg) {
-        bmp = (RenderedBitmap *)arg;
-        gUIThreadMarshaller.Queue(this);
-    }
-
-    virtual void Execute() {
-        if (WindowInfoStillValid(win)) {
-            DisplayState *state = gFileHistory.Find(filePath);
-            if (state) {
-                state->thumbnail = bmp;
-                bmp = NULL;
-                SaveThumbnail(state);
-            }
-        }
-    }
-};
-
-void CreateThumbnailForFile(WindowInfo *win, DisplayState *state)
-{
-    if (state->thumbnail)
-        return;
-
-    RectD pageRect = win->dm->engine->PageMediabox(1);
-    pageRect = win->dm->engine->Transform(pageRect, 1, 1.0, 0);
-    float zoom = THUMBNAIL_DX / (float)pageRect.dx;
-    pageRect.dy = (float)THUMBNAIL_DY / zoom;
-    pageRect = win->dm->engine->Transform(pageRect, 1, 1.0, 0, true);
-
-    CallbackFunc *callback = new ThumbnailRenderingWorkItem(win, win->loadedFilePath);
-    gRenderCache.Render(win->dm, 1, 0, zoom, pageRect, *callback);
-}
-#endif
 
 WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin, bool forceReuse)
 {

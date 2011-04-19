@@ -720,6 +720,19 @@ void LoadThumbnails(FileHistory& fileHistory)
     CleanUpCache(fileHistory);
 }
 
+bool HasThumbnail(DisplayState *state)
+{
+    if (state->thumbnail) {
+        ScopedMem<TCHAR> bmpPath(GetThumbnailPath(state->filePath));
+        if (!File::Exists(bmpPath)) {
+            delete state->thumbnail;
+            state->thumbnail = NULL;
+        }
+    }
+
+    return state->thumbnail != NULL;
+}
+
 void SaveThumbnail(DisplayState *state)
 {
     if (!state->thumbnail)
