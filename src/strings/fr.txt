@@ -153,6 +153,9 @@ Avancé
 All files
 Tous les fichiers
 
+All supported documents
+Tous les documents pris en charge
+
 Application:
 Application :
 
@@ -177,6 +180,12 @@ Comme un livre
 Book&marks\tF12
 Signets\tF12
 
+Bookmark Shortcuts
+Raccourcis des signets
+
+Bookmark shortcut to page %d of %s
+Raccourci du signet de la page %d de %s
+
 Bookmarks
 Signets
 
@@ -200,6 +209,9 @@ Changer de langue (Change Language)
 
 Check for &Updates
 &Vérifier les mises à jour
+
+Comic books
+Bandes dessinées
 
 Continuous
 Vue continue
@@ -267,6 +279,9 @@ Entrer le mot de passe pour %s
 Enter the command-line to invoke when you double-click on the PDF document:
 Entrer la ligne de commande à exécuter lorsque vous double-cliquez sur le document PDF :
 
+Error loading %s
+Erreur de chargement de %s
+
 F&orward\tAlt+Right Arrow
 &Avancer\tAlt+->
 
@@ -327,14 +342,26 @@ Page unique
 Found text at page %d
 Texte trouvé à la page %d
 
+Found text at page %d (again)
+Texte trouvé page %d (suivant)
+
+Frequently Read
+Documents lus fréquemment
+
 GB
 Go
 
 Go to page
 Aller à la page
 
+Hide frequently read
+Masquer les documents lus fréquemment
+
 Hint: Use the F3 key for finding again
 Remarque : utilisez la touche F3 pour trouver de nouveau
+
+Image files (*.%s)
+Fichiers-images (*.%s)
 
 KB
 Ko
@@ -380,6 +407,9 @@ OK
 
 Open
 Ouvrir
+
+Open a document...
+Ouvrir un document...
 
 Open in &Adobe Reader
 Ouvrir dans &Adobe Reader
@@ -450,6 +480,9 @@ Rotation &antihoraire\tCtrl-Shift--
 Rotate &Right\tCtrl-Shift-+
 Rotation &horaire\tCtrl-Shift-+
 
+Save S&hortcut...\tCtrl-Shift-S
+Enregistrer le raccourci... \tCtrl-Maj-S
+
 Searching %d of %d...
 Recherche de %d à %d...
 
@@ -473,6 +506,9 @@ Afficher la &barre d'outils
 
 Show &pages continuously
 &Vue continue
+
+Show frequently read
+Montrer les documents fréquemment lus
 
 Show the &bookmarks sidebar when available
 Voir la barre latérale des &signets lorsqu'elle est disponible
@@ -522,6 +558,9 @@ Visiter le site &web
 Warning
 Avertissement
 
+XPS documents
+Documents XPS
+
 You have the latest version.
 Vous avez la dernière version sortie
 
@@ -548,19 +587,4 @@ copie du texte
 
 printing document
 impression du document
-
-# Untranslated:
-#All supported documents
-#Bookmark Shortcuts
-#Bookmark shortcut to page %d of %s
-#Comic books
-#Error loading %s
-#Found text at page %d (again)
-#Frequently Read
-#Hide frequently read
-#Image files (*.%s)
-#Open a document...
-#Save S&hortcut...\tCtrl-Shift-S
-#Show frequently read
-#XPS documents
 
