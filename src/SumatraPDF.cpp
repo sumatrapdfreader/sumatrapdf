@@ -1033,7 +1033,7 @@ static bool ReloadPrefs()
     gFileHistory.ExtendWith(fileHistory);
 #ifdef NEW_START_PAGE
     LoadThumbnails(gFileHistory);
-    if (gWindows[0]->IsAboutWindow())
+    if (gWindows.Count() > 0 && gWindows[0]->IsAboutWindow())
         gWindows[0]->RedrawAll(true);
 #endif
     // update the current language
@@ -3880,6 +3880,10 @@ static void OnMenuChangeLanguage(WindowInfo *win)
         CurrLangNameSet(langName);
         RebuildMenuBar();
         UpdateToolbarToolText();
+#ifdef NEW_START_PAGE
+        if (gWindows.Count() > 0 && gWindows[0]->IsAboutWindow())
+            gWindows[0]->RedrawAll(true);
+#endif
         SavePrefs();
     }
 }
