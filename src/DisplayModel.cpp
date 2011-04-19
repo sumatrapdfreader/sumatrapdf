@@ -90,25 +90,20 @@ int columnsFromDisplayMode(DisplayMode displayMode)
     return 1;
 }
 
-void normalizeRotation(int *rotation)
+int normalizeRotation(int rotation)
 {
-    assert(rotation);
-    if (!rotation) return;
-    *rotation = *rotation % 360;
-    if (*rotation < 0)
-        *rotation += 360;
+    assert((rotation % 90) == 0);
+    rotation = rotation % 360;
+    if (rotation < 0)
+        rotation += 360;
+    if (rotation < 0 || rotation >= 360 || (rotation % 90) != 0) {
+        DBG_OUT("normalizeRotation() invalid rotation: %d\n", rotation);
+        return 0;
+    }
+    return rotation;
 }
 
-bool validRotation(int rotation)
-{
-    normalizeRotation(&rotation);
-    if ((0 == rotation) || (90 == rotation) ||
-        (180 == rotation) || (270 == rotation))
-        return true;
-    return false;
-}
-
-bool ValidZoomVirtual(float zoomVirtual)
+static bool ValidZoomVirtual(float zoomVirtual)
 {
     if ((ZOOM_FIT_PAGE == zoomVirtual) || (ZOOM_FIT_WIDTH == zoomVirtual) ||
         (ZOOM_FIT_CONTENT == zoomVirtual) || (ZOOM_ACTUAL_SIZE == zoomVirtual))
@@ -238,7 +233,6 @@ PageInfo *DisplayModel::getPageInfo(int pageNo) const
 {
     if (!validPageNo(pageNo))
         return NULL;
-    assert(validPageNo(pageNo));
     assert(_pagesInfo);
     if (!_pagesInfo) return NULL;
     return &(_pagesInfo[pageNo-1]);
@@ -552,9 +546,7 @@ void DisplayModel::Relayout(float zoomVirtual, int rotation)
     if (!_pagesInfo)
         return;
 
-    normalizeRotation(&rotation);
-    assert(validRotation(rotation));
-    _rotation = rotation;
+    _rotation = normalizeRotation(rotation);
 
     bool needHScroll = false;
     bool needVScroll = false;
@@ -1330,19 +1322,11 @@ void DisplayModel::zoomBy(float zoomFactor, PointI *fixPt)
 
 void DisplayModel::rotateBy(int newRotation)
 {
-    normalizeRotation(&newRotation);
+    newRotation = normalizeRotation(newRotation);
     assert(0 != newRotation);
     if (0 == newRotation)
         return;
-    assert(validRotation(newRotation));
-    if (!validRotation(newRotation))
-        return;
-
-    newRotation += _rotation;
-    normalizeRotation(&newRotation);
-    assert(validRotation(newRotation));
-    if (!validRotation(newRotation))
-        return;
+    newRotation = normalizeRotation(newRotation + _rotation);
 
     int currPageNo = currentPageNo();
     Relayout(_zoomVirtual, newRotation);

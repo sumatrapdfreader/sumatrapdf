@@ -43,7 +43,7 @@ BitmapCacheEntry *RenderCache::Find(DisplayModel *dm, int pageNo, int rotation, 
 {
     ScopedCritSec scope(&_cacheAccess);
     BitmapCacheEntry *entry;
-    normalizeRotation(&rotation);
+    rotation = normalizeRotation(rotation);
     for (int i = 0; i < _cacheCount; i++) {
         entry = _cache[i];
         if ((dm == entry->dm) && (pageNo == entry->pageNo) && (rotation == entry->rotation) &&
@@ -78,9 +78,8 @@ void RenderCache::Add(PageRenderRequest &req, RenderedBitmap *bitmap)
 {
     ScopedCritSec scope(&_cacheAccess);
     assert(req.dm);
-    assert(validRotation(req.rotation));
 
-    normalizeRotation(&req.rotation);
+    req.rotation = normalizeRotation(req.rotation);
     DBG_OUT("RenderCache::Add(pageNo=%d, rotation=%d, zoom=%.2f%%)\n", req.pageNo, req.rotation, req.zoom);
     assert(_cacheCount <= MAX_BITMAPS_CACHED);
 
@@ -317,8 +316,7 @@ void RenderCache::Render(DisplayModel *dm, int pageNo, TilePosition tile, bool c
     bool ok = false;
     if (!dm || dm->_dontRenderFlag) goto Exit;
 
-    int rotation = dm->rotation();
-    normalizeRotation(&rotation);
+    int rotation = normalizeRotation(dm->rotation());
     float zoom = dm->zoomReal(pageNo);
 
     if (_curReq && (_curReq->pageNo == pageNo) && (_curReq->dm == dm) && (_curReq->tile == tile)) {

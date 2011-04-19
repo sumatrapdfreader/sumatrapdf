@@ -1049,7 +1049,10 @@ int CPdfEngine::PageRotation(int pageNo)
     fz_obj *page = _xref->page_objs[pageNo-1];
     if (!page)
         return 0;
-    return fz_to_int(fz_dict_gets(page, "Rotate"));
+    int rotation = fz_to_int(fz_dict_gets(page, "Rotate"));
+    if ((rotation % 90) != 0)
+        return 0;
+    return rotation;
 }
 
 RectD CPdfEngine::PageMediabox(int pageNo)

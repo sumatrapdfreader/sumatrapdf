@@ -280,9 +280,6 @@ public:
 bool    displayModeContinuous(DisplayMode displayMode);
 bool    displayModeFacing(DisplayMode displayMode);
 bool    displayModeShowCover(DisplayMode displayMode);
-
-void    normalizeRotation(int *rotation);
-bool    validRotation(int rotation);
-bool    ValidZoomVirtual(float zoomVirtual);
+int     normalizeRotation(int rotation);
 
 #endif
