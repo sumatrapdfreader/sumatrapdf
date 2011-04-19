@@ -10,6 +10,18 @@
 #include "FileHistory.h"
 #include "translations.h"
 
+// number of weeks past since 2011-01-01
+static int GetWeekCount()
+{
+    SYSTEMTIME date20110101 = { 0 };
+    date20110101.wYear = 2011; date20110101.wMonth = 1; date20110101.wDay = 1;
+    FILETIME origTime, currTime;
+    SystemTimeToFileTime(&date20110101, &origTime);
+    GetSystemTimeAsFileTime(&currTime);
+    return (currTime.dwHighDateTime - origTime.dwHighDateTime) / 1408;
+    // 1408 == (10 * 1000 * 1000 * 60 * 60 * 24 * 7) / (1 << 32)
+}
+
 static BencDict* SerializeGlobalPrefs(SerializableGlobalPrefs& globalPrefs)
 {
     BencDict *prefs = new BencDict();
@@ -49,6 +61,9 @@ static BencDict* SerializeGlobalPrefs(SerializableGlobalPrefs& globalPrefs)
     if (globalPrefs.m_lastUpdateTime)
         prefs->Add(LAST_UPDATE_STR, new BencRawString(globalPrefs.m_lastUpdateTime));
     prefs->Add(UI_LANGUAGE_STR, new BencRawString(globalPrefs.m_currentLanguage));
+
+    if (!globalPrefs.m_openCountWeek)
+        globalPrefs.m_openCountWeek = GetWeekCount();
     prefs->Add(OPEN_COUNT_WEEK_STR, globalPrefs.m_openCountWeek);
 
     prefs->Add(FWDSEARCH_OFFSET, globalPrefs.m_fwdsearchOffset);
@@ -161,18 +176,6 @@ Error:
     return data;
 }
 
-
-// number of weeks past since 2011-01-01
-static int GetWeekCount()
-{
-    SYSTEMTIME date20110101 = { 0 };
-    date20110101.wYear = 2011; date20110101.wMonth = 1; date20110101.wDay = 1;
-    FILETIME origTime, currTime;
-    SystemTimeToFileTime(&date20110101, &origTime);
-    GetSystemTimeAsFileTime(&currTime);
-    return (currTime.dwHighDateTime - origTime.dwHighDateTime) / 1408;
-    // 1408 == (10 * 1000 * 1000 * 60 * 60 * 24 * 7) / (1 << 32)
-}
 
 static void Retrieve(BencDict *dict, const char *key, int& value)
 {
