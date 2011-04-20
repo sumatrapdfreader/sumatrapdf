@@ -23,10 +23,23 @@ xps_new_named_dest(char *target, int page)
 
 	dest->target = fz_strdup(target);
 	dest->page = page;
-	dest->rect = fz_empty_rect;
+	dest->rect = fz_empty_rect; // to be updated
 	dest->next = NULL;
 
 	return dest;
+}
+
+static xps_link *
+xps_new_link(char *target, fz_rect rect, int is_dest)
+{
+	xps_link *link = fz_malloc(sizeof(xps_link));
+
+	link->target = fz_strdup(target);
+	link->rect = rect;
+	link->is_dest = is_dest;
+	link->next = NULL;
+
+	return link;
 }
 
 void
@@ -48,6 +61,15 @@ xps_free_named_dest(xps_named_dest *dest)
 		xps_free_named_dest(dest->next);
 	fz_free(dest->target);
 	fz_free(dest);
+}
+
+void
+xps_free_link(xps_link *link)
+{
+	if (link->next)
+		xps_free_link(link->next);
+	fz_free(link->target);
+	fz_free(link);
 }
 
 static char *
@@ -321,4 +343,32 @@ xps_parse_named_dests(xps_context *ctx)
 	}
 
 	return root;
+}
+
+void
+xps_extract_link_info(xps_context *ctx, xml_element *node, fz_rect rect, char *base_uri)
+{
+	xps_link *link = NULL;
+	char *value;
+
+	if (!ctx->link_root)
+		return;
+
+	if ((value = xml_att(node, "FixedPage.NavigateUri")) && !strchr(value, ':'))
+	{
+		char tgtbuf[1024];
+		xps_absolute_path(tgtbuf, base_uri, value, sizeof(tgtbuf));
+		link = xps_new_link(tgtbuf, rect, 0);
+	}
+	else if (value) // link with a protocol (e.g. http://...)
+		link = xps_new_link(value, rect, 0);
+	else if ((value = xml_att(node, "Name")))
+		link = xps_new_link(value, rect, 1);
+
+	// insert the links in top-to-bottom order (first one is to be preferred)
+	if (link)
+	{
+		link->next = ctx->link_root->next;
+		ctx->link_root->next = link;
+	}
 }

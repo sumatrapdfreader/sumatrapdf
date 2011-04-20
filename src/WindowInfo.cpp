@@ -483,13 +483,13 @@ void PdfLinkHandler::GotoPdfDest(fz_obj *dest)
 
     fz_obj *obj = fz_array_get(dest, 1);
     const char *type = fz_to_name(obj);
-    if (!type || !engine2()) {
-        // XPS destination or semi-valid PDF destination
+    if (!type) {
+        // semi-valid XPS or PDF destination
     }
     else if (Str::Eq(type, "XYZ")) {
         PointD scrollD = PointD(fz_to_real(fz_array_get(dest, 2)),
                                 fz_to_real(fz_array_get(dest, 3)));
-        scrollD = engine()->Transform(scrollD, pageNo, dm->zoomReal(), dm->rotation());
+        scrollD = dm->engine->Transform(scrollD, pageNo, dm->zoomReal(), dm->rotation());
         scroll = scrollD.Convert<int>();
 
         // NULL values for the coordinates mean: keep the current position
@@ -506,15 +506,15 @@ void PdfLinkHandler::GotoPdfDest(fz_obj *dest)
                                    fz_to_real(fz_array_get(dest, 5)),  // top
                                    fz_to_real(fz_array_get(dest, 4)),  // right
                                    fz_to_real(fz_array_get(dest, 3))); // bottom
-        RectD rectD = engine()->Transform(rect, pageNo, dm->zoomReal(), dm->rotation());
+        RectD rectD = dm->engine->Transform(rect, pageNo, dm->zoomReal(), dm->rotation());
         scroll = rectD.TL().Convert<int>();
 
-        Rect<float> rectF = engine()->Transform(rect, pageNo, 1.0, dm->rotation()).Convert<float>();
+        Rect<float> rectF = dm->engine->Transform(rect, pageNo, 1.0, dm->rotation()).Convert<float>();
         zoom = 100.0f * min(owner->canvasRc.dx / rectF.dx, owner->canvasRc.dy / rectF.dy);
     }
     else if (Str::Eq(type, "FitH") || Str::Eq(type, "FitBH")) {
         PointD scrollD = PointD(0, fz_to_real(fz_array_get(dest, 2))); // top
-        scrollD = engine()->Transform(scrollD, pageNo, dm->zoomReal(), dm->rotation());
+        scrollD = dm->engine->Transform(scrollD, pageNo, dm->zoomReal(), dm->rotation());
         scroll.y = max(scrollD.Convert<int>().y, 0); // Adobe Reader never shows the previous page
 
         zoom = Str::Eq(type, "FitH") ? ZOOM_FIT_WIDTH : ZOOM_FIT_CONTENT;

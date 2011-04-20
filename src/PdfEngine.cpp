@@ -1382,22 +1382,22 @@ Vec<PageElement *> *CPdfEngine::GetElements(int pageNo)
     return els;
 }
 
-static void FixupPageLinks(pdf_page *page)
+static pdf_link *FixupPageLinks(pdf_link *root)
 {
     // Links in PDF documents are added from bottom-most to top-most,
     // i.e. links that appear later in the list should be preferred
     // to links appearing before. Since we search from the start of
     // the (single-linked) list, we have to reverse the order of links
     // (cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1303 )
-    pdf_link *newTop = NULL;
-    while (page->links) {
-        pdf_link *tmp = page->links->next;
-        page->links->next = newTop;
-        newTop = page->links;
-        page->links = tmp;
+    pdf_link *newRoot = NULL;
+    while (root) {
+        pdf_link *tmp = root->next;
+        root->next = newRoot;
+        newRoot = root;
+        root = tmp;
 
         // there are PDFs that have x,y positions in reverse order, so fix them up
-        pdf_link *link = newTop;
+        pdf_link *link = newRoot;
         if (link->rect.x0 > link->rect.x1)
             swap(link->rect.x0, link->rect.x1);
         if (link->rect.y0 > link->rect.y1)
@@ -1405,12 +1405,12 @@ static void FixupPageLinks(pdf_page *page)
         assert(link->rect.x1 >= link->rect.x0);
         assert(link->rect.y1 >= link->rect.y0);
     }
-    page->links = newTop;
+    return newRoot;
 }
 
 void CPdfEngine::linkifyPageText(pdf_page *page)
 {
-    FixupPageLinks(page);
+    page->links = FixupPageLinks(page->links);
 
     RectI *coords;
     TCHAR *pageText = ExtractPageText(page, _T("\n"), &coords, Target_View, true);
@@ -1675,7 +1675,7 @@ protected:
                                     RectI **coords_out=NULL, bool cacheRun=false);
 
     XpsPageRun    * _runCache[MAX_PAGE_RUN_CACHE];
-    XpsPageRun    * getPageRun(xps_page *page, bool tryOnly=false);
+    XpsPageRun    * getPageRun(xps_page *page, bool tryOnly=false, xps_link *extract=NULL);
     void            runPage(xps_page *page, fz_device *dev, fz_matrix ctm,
                             fz_bbox clipbox=fz_infinite_bbox, bool cacheRun=true);
     void            dropPageRun(XpsPageRun *run, bool forceRemove=false);
@@ -1690,10 +1690,12 @@ protected:
 };
 
 static void
-xps_run_page(xps_context *ctx, xps_page *page, fz_device *dev, fz_matrix ctm)
+xps_run_page(xps_context *ctx, xps_page *page, fz_device *dev, fz_matrix ctm, xps_link *extract=NULL)
 {
     ctx->dev = dev;
+    ctx->link_root = extract;
     xps_parse_fixed_page(ctx, ctm, page);
+    ctx->link_root = NULL;
     ctx->dev = NULL;
 }
 
@@ -1829,7 +1831,7 @@ xps_page *CXpsEngine::getXpsPage(int pageNo, bool failIfBusy)
     return page;
 }
 
-XpsPageRun *CXpsEngine::getPageRun(xps_page *page, bool tryOnly)
+XpsPageRun *CXpsEngine::getPageRun(xps_page *page, bool tryOnly, xps_link *extract)
 {
     ScopedCritSec scope(&_pagesAccess);
 
@@ -1849,7 +1851,7 @@ XpsPageRun *CXpsEngine::getPageRun(xps_page *page, bool tryOnly)
 
         fz_device *dev = fz_new_list_device(list);
         EnterCriticalSection(&_ctxAccess);
-        xps_run_page(_ctx, page, dev, fz_identity);
+        xps_run_page(_ctx, page, dev, fz_identity, extract);
         fz_free_device(dev);
         LeaveCriticalSection(&_ctxAccess);
 
@@ -2133,11 +2135,85 @@ Vec<PageElement *> *CXpsEngine::GetElements(int pageNo)
     return els;
 }
 
+static bool isSupportedUri(const char *target)
+{
+    return Str::StartsWithI(target, "http:") || Str::StartsWithI(target, "https:");
+}
+
+static fz_obj *xps_new_destination(fz_obj *obj, fz_rect rect)
+{
+    fz_obj *dest = fz_new_array(4);
+
+    fz_array_push(dest, obj); fz_drop_obj(obj);
+    /* // TODO: destination rectangles seem wrongly placed (compared with the XPS Viewer)
+    obj = fz_new_name("XYZ"); fz_array_push(dest, obj); fz_drop_obj(obj);
+    obj = fz_new_real(rect.x0); fz_array_push(dest, obj); fz_drop_obj(obj);
+    obj = fz_new_real(rect.y0); fz_array_push(dest, obj); fz_drop_obj(obj);
+    // */
+
+    return dest;
+}
+
+static pdf_link *xps_to_pdf_link(xps_link *link)
+{
+    pdf_link *pdflink;
+    fz_obj *dest = fz_new_string(link->target, strlen(link->target));
+
+    if (isSupportedUri(link->target))
+        pdflink = pdf_new_link(dest, PDF_LINK_URI);
+    else
+        pdflink = pdf_new_link(xps_new_destination(dest, link->rect), PDF_LINK_GOTO);
+
+    pdflink->rect = link->rect;
+    return pdflink;
+}
+
 void CXpsEngine::linkifyPageText(xps_page *page, int pageNo)
 {
     assert(_links && !_links[pageNo-1]);
     if (!_links)
         return;
+
+    // make MuXPS extract all links and named destinations from the page
+    assert(!getPageRun(page, true));
+    xps_link root = { 0 };
+    XpsPageRun *run = getPageRun(page, false, &root);
+    assert(run);
+    if (run)
+        dropPageRun(run);
+
+    for (xps_link *link = root.next; link; link = link->next) {
+        // convert xps_link to pdf_link for now
+        if (!link->is_dest) {
+            pdf_link *pdflink = xps_to_pdf_link(link);
+            pdflink->next = _links[pageNo-1];
+            _links[pageNo-1] = pdflink;
+        }
+        // or update the named destination
+        else {
+            ScopedMem<char> target(Str::Format("%s#%s", page->name, link->target));
+            bool foundDest = false;
+            for (xps_named_dest *dest = _dests; dest && !foundDest; dest = dest->next) {
+                if (Str::Eq(dest->target, target.Get())) {
+                    dest->rect = link->rect;
+                    foundDest = true;
+                }
+            }
+            // remember unknown destinations
+            if (!foundDest) {
+                xps_named_dest *dest = SAZA(xps_named_dest, 1);
+                dest->target = fz_strdup(target);
+                dest->rect = link->rect;
+                dest->page = pageNo;
+                dest->next = _dests;
+                _dests = dest;
+            }
+        }
+    }
+    if (root.next)
+        xps_free_link(root.next);
+
+    _links[pageNo-1] = FixupPageLinks(_links[pageNo-1]);
 
     RectI *coords;
     TCHAR *pageText = ExtractPageText(page, _T("\n"), &coords, true);
@@ -2152,14 +2228,21 @@ void CXpsEngine::linkifyPageText(xps_page *page, int pageNo)
 
 int CXpsEngine::FindPageNo(fz_obj *dest)
 {
-    if (!fz_is_string(dest))
-        return -1;
+    // currently, the destination is produced above with either
+    // fz_new_string or xps_new_destination (which produces an
+    // array [ pageNo /XYZ x0 y0 ] )
+    if (fz_is_array(dest))
+        dest = fz_array_get(dest, 0);
+    if (fz_is_int(dest))
+        return fz_to_int(dest);
+
     char *target = fz_to_str_buf(dest);
+    if (Str::IsEmpty(target))
+        return 0;
 
     for (xps_named_dest *dest = _dests; dest; dest = dest->next)
         if (Str::Eq(target, dest->target))
             return dest->page;
-
     return 0;
 }
 
@@ -2171,18 +2254,23 @@ fz_obj *CXpsEngine::GetNamedDest(const TCHAR *name)
 
     for (xps_named_dest *dest = _dests; dest; dest = dest->next)
         if (Str::EndsWithI(dest->target, name_utf8))
-            return fz_new_string(dest->target, strlen(dest->target));
+            return xps_new_destination(fz_new_int(dest->page), dest->rect);
 
     return NULL;
 }
 
 CPdfTocItem *CXpsEngine::buildTocTree(xps_outline *entry, int& idCounter)
 {
-    fz_obj *dest = fz_new_string(entry->target, strlen(entry->target));
-    pdf_link_kind kind = PDF_LINK_GOTO;
-    if (Str::StartsWithI(entry->target, "http:") || Str::StartsWithI(entry->target, "https:"))
-        kind = PDF_LINK_URI;
-    pdf_link *link = pdf_new_link(dest, kind);
+    fz_obj *destObj = NULL;
+    if (!isSupportedUri(entry->target)) {
+        for (xps_named_dest *dest = _dests; dest; dest = dest->next)
+            if (Str::Eq(dest->target, entry->target))
+                destObj = xps_new_destination(fz_new_int(dest->page), dest->rect);
+    }
+    if (!destObj)
+        destObj = fz_new_string(entry->target, strlen(entry->target));
+    pdf_link_kind kind = isSupportedUri(entry->target) ? PDF_LINK_URI : PDF_LINK_GOTO;
+    pdf_link *link = pdf_new_link(destObj, kind);
 
     TCHAR *name = entry->title ? Str::Conv::FromUtf8(entry->title) : Str::Dup(_T(""));
     CPdfTocItem *node = new CXpsTocItem(name, PdfLink(link), link);
@@ -2190,7 +2278,7 @@ CPdfTocItem *CXpsEngine::buildTocTree(xps_outline *entry, int& idCounter)
     node->id = ++idCounter;
 
     if (PDF_LINK_GOTO == kind)
-        node->pageNo = FindPageNo(dest);
+        node->pageNo = FindPageNo(destObj);
     if (entry->child)
         node->child = buildTocTree(entry->child, idCounter);
     if (entry->next)

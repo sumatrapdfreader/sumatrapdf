@@ -13,6 +13,9 @@ typedef unsigned char byte;
 
 typedef struct xps_context_s xps_context;
 
+/* SumatraPDF: support links and outlines */
+typedef struct xps_link_s xps_link;
+
 #define REL_START_PART \
 	"http://schemas.microsoft.com/xps/2005/06/fixedrepresentation"
 #define REL_REQUIRED_RESOURCE \
@@ -224,6 +227,9 @@ struct xps_context_s
 
 	/* Current device */
 	fz_device *dev;
+
+	/* SumatraPDF: set to non-NULL for link extraction */
+	xps_link *link_root;
 };
 
 int xps_open_file(xps_context **ctxp, char *filename);
@@ -251,9 +257,19 @@ struct xps_named_dest_s
 	xps_named_dest *next;
 };
 
+struct xps_link_s
+{
+	char *target;
+	fz_rect rect;
+	int is_dest;
+	xps_link *next;
+};
+
 xps_outline *xps_parse_outline(xps_context *ctx);
 void xps_free_outline(xps_outline *outline);
 xps_named_dest *xps_parse_named_dests(xps_context *ctx);
 void xps_free_named_dest(xps_named_dest *dest);
+void xps_extract_link_info(xps_context *ctx, xml_element *node, fz_rect rect, char *base_uri);
+void xps_free_link(xps_link *link);
 
 #endif

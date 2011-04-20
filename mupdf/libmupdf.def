@@ -472,6 +472,8 @@ EXPORTS
 	xps_free_outline
 	xps_parse_named_dests
 	xps_free_named_dest
+	xps_extract_link_info
+	xps_free_link
 
 ; zlib exports
 
