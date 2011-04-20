@@ -155,7 +155,7 @@ bool FileWatcher::NotifyChange()
             // PDF files produced by pdftex from small.tex document)
             DBG_OUT("FileWatch: change detected in %s\n", szFilepath);
             if (pCallback)
-                pCallback->Callback(szFilepath);
+                pCallback->Callback();
             return true;
         }
 

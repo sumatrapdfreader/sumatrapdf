@@ -293,7 +293,7 @@ bool RenderCache::ReduceTileSize()
     return true;
 }
 
-void RenderCache::Render(DisplayModel *dm, int pageNo, CallbackFunc *callback)
+void RenderCache::Render(DisplayModel *dm, int pageNo, RenderingCallback *callback)
 {
     TilePosition tile = { GetTileRes(dm, pageNo), 0, 0 };
     Render(dm, pageNo, tile, true, callback);
@@ -307,7 +307,7 @@ void RenderCache::Render(DisplayModel *dm, int pageNo, CallbackFunc *callback)
 }
 
 /* Render a bitmap for page <pageNo> in <dm>. */
-void RenderCache::Render(DisplayModel *dm, int pageNo, TilePosition tile, bool clearQueue, CallbackFunc *callback)
+void RenderCache::Render(DisplayModel *dm, int pageNo, TilePosition tile, bool clearQueue, RenderingCallback *callback)
 {
     DBG_OUT("RenderCache::Render(pageNo=%d)\n", pageNo);
     assert(dm);
@@ -374,14 +374,14 @@ Exit:
         callback->Callback();
 }
 
-void RenderCache::Render(DisplayModel *dm, int pageNo, int rotation, float zoom, RectD pageRect, CallbackFunc& callback)
+void RenderCache::Render(DisplayModel *dm, int pageNo, int rotation, float zoom, RectD pageRect, RenderingCallback& callback)
 {
     bool ok = Render(dm, pageNo, rotation, zoom, NULL, &pageRect, &callback);
     if (!ok)
         callback.Callback();
 }
 
-bool RenderCache::Render(DisplayModel *dm, int pageNo, int rotation, float zoom, TilePosition *tile, RectD *pageRect, CallbackFunc *callback)
+bool RenderCache::Render(DisplayModel *dm, int pageNo, int rotation, float zoom, TilePosition *tile, RectD *pageRect, RenderingCallback *callback)
 {
     assert(dm);
     if (!dm || dm->_dontRenderFlag)
@@ -567,7 +567,7 @@ DWORD WINAPI RenderCache::RenderCacheThread(LPVOID data)
         if (req.callback) {
             // the callback must free the RenderedBitmap
             req.callback->Callback(bmp);
-            req.callback = (CallbackFunc *)1; // will crash if accessed again, which should not happen
+            req.callback = (RenderingCallback *)1; // will crash if accessed again, which should not happen
         }
         else {
             cache->Add(req, bmp);

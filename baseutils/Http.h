@@ -11,23 +11,30 @@ bool  HttpPost(const TCHAR *server, const TCHAR *url, Str::Str<char> *headers, S
 DWORD HttpGet(const TCHAR *url, Str::Str<char> *dataOut);
 bool  HttpGetToFile(const TCHAR *url, const TCHAR *destFilePath);
 
+class HttpReqCallback;
+
 class HttpReqCtx {
     HANDLE          hThread;
 
 public:
     // the callback to execute when the download is complete
-    CallbackFunc *  callback;
+    HttpReqCallback *callback;
 
     TCHAR *         url;
     Str::Str<char> *data;
     DWORD           error;
 
-    HttpReqCtx(const TCHAR *url, CallbackFunc *callback=NULL);
+    HttpReqCtx(const TCHAR *url, HttpReqCallback *callback=NULL);
     ~HttpReqCtx() {
         free(url);
         delete data;
         CloseHandle(hThread);
     }
+};
+
+class HttpReqCallback {
+public:
+    virtual void Callback(HttpReqCtx *ctx=NULL) = 0;
 };
 
 #endif

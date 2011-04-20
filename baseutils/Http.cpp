@@ -177,7 +177,7 @@ static DWORD WINAPI HttpDownloadThread(LPVOID data)
     return 0;
 }
 
-HttpReqCtx::HttpReqCtx(const TCHAR *url, CallbackFunc *callback)
+HttpReqCtx::HttpReqCtx(const TCHAR *url, HttpReqCallback *callback)
     : callback(callback), error(0)
 {
     assert(url);

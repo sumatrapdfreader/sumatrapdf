@@ -1020,7 +1020,7 @@ static bool ReloadPrefs()
 }
 
 #ifdef NEW_START_PAGE
-class ThumbnailRenderingWorkItem : public UIThreadWorkItem, public CallbackFunc
+class ThumbnailRenderingWorkItem : public UIThreadWorkItem, public RenderingCallback
 {
     const TCHAR *filePath;
     RenderedBitmap *bmp;
@@ -1035,8 +1035,8 @@ public:
         delete bmp;
     }
     
-    virtual void Callback(void *arg) {
-        bmp = (RenderedBitmap *)arg;
+    virtual void Callback(RenderedBitmap *bmp) {
+        this->bmp = bmp;
         gUIThreadMarshaller.Queue(this);
     }
 
@@ -1063,7 +1063,7 @@ void CreateThumbnailForFile(WindowInfo *win, DisplayState *state)
     pageRect.dy = (float)THUMBNAIL_DY / zoom;
     pageRect = win->dm->engine->Transform(pageRect, 1, 1.0f, 0, true);
 
-    CallbackFunc *callback = new ThumbnailRenderingWorkItem(win, win->loadedFilePath);
+    RenderingCallback *callback = new ThumbnailRenderingWorkItem(win, win->loadedFilePath);
     gRenderCache.Render(win->dm, 1, 0, zoom, pageRect, *callback);
 }
 #endif
@@ -1618,12 +1618,12 @@ Error:
     return true;
 }
 
-class FileChangeCallback : public CallbackFunc, public UIThreadWorkItem
+class FileChangeCallback : public UIThreadWorkItem, public CallbackFunc
 {
 public:
     FileChangeCallback(WindowInfo *win) : UIThreadWorkItem(win) { }
 
-    virtual void Callback(void *arg) {
+    virtual void Callback() {
         // We cannot call win->Reload directly as it could cause race conditions
         // between the watching thread and the main thread (and only pass a copy of this
         // callback to the UIThreadMarshaller, as the object will be deleted after use)
@@ -1911,7 +1911,7 @@ static DWORD OnUrlDownloaded(HWND hParent, HttpReqCtx *ctx, bool silent)
     return 0;
 }
 
-class UpdateDownloadWorkItem : public UIThreadWorkItem, public CallbackFunc
+class UpdateDownloadWorkItem : public UIThreadWorkItem, public HttpReqCallback
 {
     bool autoCheck;
     HttpReqCtx *ctx;
@@ -1920,8 +1920,8 @@ public:
     UpdateDownloadWorkItem(WindowInfo *win, bool autoCheck) :
         UIThreadWorkItem(win), autoCheck(autoCheck), ctx(NULL) { }
 
-    virtual void Callback(void *arg) {
-        ctx = (HttpReqCtx *)arg;
+    virtual void Callback(HttpReqCtx *ctx) {
+        this->ctx = ctx;
         gUIThreadMarshaller.Queue(this);
     }
 
@@ -2315,7 +2315,7 @@ static void CrashMe()
 
 static void StartStressRenderingPage(WindowInfo *win, int pageNo);
 
-class StressTestPageRenderedWorkItem : public UIThreadWorkItem, public CallbackFunc
+class StressTestPageRenderedWorkItem : public UIThreadWorkItem, public RenderingCallback
 {
     int pageNo;
     static int iterations;
@@ -2324,8 +2324,7 @@ public:
     StressTestPageRenderedWorkItem(WindowInfo *win, int pageNo) :
         UIThreadWorkItem(win), pageNo(pageNo) { }
     
-    virtual void Callback(void *arg) {
-        RenderedBitmap *bmp = (RenderedBitmap *)arg;
+    virtual void Callback(RenderedBitmap *bmp) {
         if (bmp) {
             delete bmp;
             iterations++;
@@ -2355,7 +2354,7 @@ static void StartStressRenderingPage(WindowInfo *win, int pageNo)
         gRenderCache.FreeForDisplayModel(win->dm);
         pageNo = 1;
     }
-    CallbackFunc *callback = new StressTestPageRenderedWorkItem(win, pageNo);
+    RenderingCallback *callback = new StressTestPageRenderedWorkItem(win, pageNo);
     gRenderCache.Render(win->dm, pageNo, callback);
 }
 
