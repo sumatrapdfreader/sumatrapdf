@@ -5962,10 +5962,72 @@ static void OnTimer(WindowInfo *win, HWND hwnd, WPARAM wParam)
 static int  gDeltaPerLine = 0;         // for mouse wheel logic
 static bool gWheelMsgRedirect = false; // set when WM_MOUSEWHEEL has been passed on (to prevent recursion)
 
+static LRESULT OnMouseWheel(WindowInfo *win, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    POINT   pt;
+    int     currentScrollPos;
+
+    if (!win->IsDocLoaded())
+        return 0;
+    
+    // Scroll the ToC sidebar, if it's visible and the cursor is in it
+    if (win->tocShow && IsCursorOverWindow(win->hwndTocTree) && !gWheelMsgRedirect)
+    {
+        // Note: hwndTocTree's window procedure doesn't always handle
+        //       WM_MOUSEWHEEL and when it's bubbling up, we'd return
+        //       here recursively - prevent that
+        gWheelMsgRedirect = true;
+        LRESULT res = SendMessage(win->hwndTocTree, message, wParam, lParam);
+        gWheelMsgRedirect = false;
+        return res;
+    }
+    
+    // Note: not all mouse drivers correctly report the Ctrl key's state
+    if ((LOWORD(wParam) & MK_CONTROL) || IsCtrlPressed() || (LOWORD(wParam) & MK_RBUTTON))
+    {
+        GetCursorPos(&pt);
+        ScreenToClient(win->hwndCanvas, &pt);
+    
+        short delta = GET_WHEEL_DELTA_WPARAM(wParam);
+        float factor = delta < 0 ? ZOOM_OUT_FACTOR : ZOOM_IN_FACTOR;
+        win->dm->zoomBy(factor, &PointI(pt.x, pt.y));
+        win->UpdateToolbarState();
+    
+        // don't show the context menu when zooming with the right mouse-button down
+        if ((LOWORD(wParam) & MK_RBUTTON))
+            win->dragStartPending = false;
+    
+        return 0;
+    }
+    
+    if (gDeltaPerLine == 0)
+       return 0;
+    
+    win->wheelAccumDelta += GET_WHEEL_DELTA_WPARAM(wParam);     // 120 or -120
+    currentScrollPos = GetScrollPos(win->hwndCanvas, SB_VERT);
+    
+    while (win->wheelAccumDelta >= gDeltaPerLine) {
+        SendMessage(win->hwndCanvas, WM_VSCROLL, SB_LINEUP, 0);
+        win->wheelAccumDelta -= gDeltaPerLine;
+    }
+    
+    while (win->wheelAccumDelta <= -gDeltaPerLine) {
+        SendMessage(win->hwndCanvas, WM_VSCROLL, SB_LINEDOWN, 0);
+        win->wheelAccumDelta += gDeltaPerLine;
+    }
+    
+    if (!displayModeContinuous(win->dm->displayMode()) &&
+        GetScrollPos(win->hwndCanvas, SB_VERT) == currentScrollPos) {
+        if (GET_WHEEL_DELTA_WPARAM(wParam) > 0)
+            win->dm->goToPrevPage(-1);
+        else
+            win->dm->goToNextPage(0);
+    }
+    return 0;
+}
+
 static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    int          currentScrollPos;
-    POINT        pt;
     WindowInfo * win = FindWindowInfoByHwnd(hwnd);
 
     // messages that don't require win
@@ -5978,10 +6040,6 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
         case WM_ERASEBKGND:
             // do nothing, helps to avoid flicker
             return TRUE;
-
-        case WM_TIMER:
-            assert(win);
-            break;
     }
 
     if (!win)
@@ -6053,63 +6111,7 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
             break;
 
         case WM_MOUSEWHEEL:
-            if (!win->IsDocLoaded())
-                break;
-
-            // Scroll the ToC sidebar, if it's visible and the cursor is in it
-            if (win->tocShow && IsCursorOverWindow(win->hwndTocTree) && !gWheelMsgRedirect)
-            {
-                // Note: hwndTocTree's window procedure doesn't always handle
-                //       WM_MOUSEWHEEL and when it's bubbling up, we'd return
-                //       here recursively - prevent that
-                gWheelMsgRedirect = true;
-                LRESULT res = SendMessage(win->hwndTocTree, message, wParam, lParam);
-                gWheelMsgRedirect = false;
-                return res;
-            }
-
-            // Note: not all mouse drivers correctly report the Ctrl key's state
-            if ((LOWORD(wParam) & MK_CONTROL) || IsCtrlPressed() || (LOWORD(wParam) & MK_RBUTTON))
-            {
-                GetCursorPos(&pt);
-                ScreenToClient(win->hwndCanvas, &pt);
-
-                short delta = GET_WHEEL_DELTA_WPARAM(wParam);
-                float factor = delta < 0 ? ZOOM_OUT_FACTOR : ZOOM_IN_FACTOR;
-                win->dm->zoomBy(factor, &PointI(pt.x, pt.y));
-                win->UpdateToolbarState();
-
-                // don't show the context menu when zooming with the right mouse-button down
-                if ((LOWORD(wParam) & MK_RBUTTON))
-                    win->dragStartPending = false;
-
-                return 0;
-            }
-
-            if (gDeltaPerLine == 0)
-               break;
-
-            win->wheelAccumDelta += GET_WHEEL_DELTA_WPARAM(wParam);     // 120 or -120
-            currentScrollPos = GetScrollPos(win->hwndCanvas, SB_VERT);
-
-            while (win->wheelAccumDelta >= gDeltaPerLine) {
-                SendMessage(win->hwndCanvas, WM_VSCROLL, SB_LINEUP, 0);
-                win->wheelAccumDelta -= gDeltaPerLine;
-            }
-
-            while (win->wheelAccumDelta <= -gDeltaPerLine) {
-                SendMessage(win->hwndCanvas, WM_VSCROLL, SB_LINEDOWN, 0);
-                win->wheelAccumDelta += gDeltaPerLine;
-            }
-
-            if (!displayModeContinuous(win->dm->displayMode()) &&
-                GetScrollPos(win->hwndCanvas, SB_VERT) == currentScrollPos) {
-                if (GET_WHEEL_DELTA_WPARAM(wParam) > 0)
-                    win->dm->goToPrevPage(-1);
-                else
-                    win->dm->goToNextPage(0);
-            }
-            return 0;
+            return OnMouseWheel(win, message, wParam, lParam);
 
         default:
             // process thread queue events happening during an inner message loop
