@@ -2160,7 +2160,7 @@ int CXpsEngine::FindPageNo(fz_obj *dest)
         if (Str::Eq(target, dest->target))
             return dest->page;
 
-    return -1;
+    return 0;
 }
 
 fz_obj *CXpsEngine::GetNamedDest(const TCHAR *name)
@@ -2189,6 +2189,8 @@ CPdfTocItem *CXpsEngine::buildTocTree(xps_outline *entry, int& idCounter)
     node->open = false;
     node->id = ++idCounter;
 
+    if (PDF_LINK_GOTO == kind)
+        node->pageNo = FindPageNo(dest);
     if (entry->child)
         node->child = buildTocTree(entry->child, idCounter);
     if (entry->next)
