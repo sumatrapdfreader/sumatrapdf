@@ -684,8 +684,8 @@ public:
         return _outline != NULL || _attachments != NULL;
     }
     virtual PdfTocItem *GetToCTree();
-    virtual bool SaveEmbedded(fz_obj *obj, LinkSaverUI& saveUI);
 
+    virtual bool SaveEmbedded(fz_obj *obj, LinkSaverUI& saveUI);
     virtual char *GetDecryptionKey() const;
     virtual void RunGC();
 
@@ -722,7 +722,7 @@ protected:
                             fz_bbox clipbox=fz_infinite_bbox, bool cacheRun=true);
     void            dropPageRun(PdfPageRun *run, bool forceRemove=false);
 
-    CPdfTocItem   * buildTocTree(pdf_outline *entry, int *idCounter);
+    CPdfTocItem   * buildTocTree(pdf_outline *entry, int& idCounter);
     void            linkifyPageText(pdf_page *page);
     bool            hasPermission(int permission);
 
@@ -979,12 +979,12 @@ bool CPdfEngine::finishLoading()
     return PageCount() > 0;
 }
 
-CPdfTocItem *CPdfEngine::buildTocTree(pdf_outline *entry, int *idCounter)
+CPdfTocItem *CPdfEngine::buildTocTree(pdf_outline *entry, int& idCounter)
 {
     TCHAR *name = entry->title ? Str::Conv::FromUtf8(entry->title) : Str::Dup(_T(""));
     CPdfTocItem *node = new CPdfTocItem(name, PdfLink(entry->link));
     node->open = entry->count >= 0;
-    node->id = ++(*idCounter);
+    node->id = ++idCounter;
 
     if (entry->link && PDF_LINK_GOTO == entry->link->kind)
         node->pageNo = FindPageNo(entry->link->dest);
@@ -1002,12 +1002,12 @@ PdfTocItem *CPdfEngine::GetToCTree()
     int idCounter = 0;
 
     if (_outline) {
-        node = buildTocTree(_outline, &idCounter);
+        node = buildTocTree(_outline, idCounter);
         if (_attachments)
-            node->AddSibling(buildTocTree(_attachments, &idCounter));
+            node->AddSibling(buildTocTree(_attachments, idCounter));
     }
     else if (_attachments)
-        node = buildTocTree(_attachments, &idCounter);
+        node = buildTocTree(_attachments, idCounter);
 
     return node;
 }
@@ -1039,7 +1039,7 @@ fz_obj *CPdfEngine::GetNamedDest(const TCHAR *name)
     if (fz_is_dict(dest))
         dest = fz_dict_gets(dest, "D");
     if (fz_is_array(dest))
-        return dest;
+        return fz_keep_obj(dest);
     return NULL;
 }
 
@@ -1584,6 +1584,15 @@ extern "C" {
 #include <muxps.h>
 }
 
+class CXpsTocItem : public CPdfTocItem {
+    pdf_link *_link;
+
+public:
+    CXpsTocItem(TCHAR *title, PdfLink link, pdf_link *_link) :
+        CPdfTocItem(title, link), _link(_link) { }
+    virtual ~CXpsTocItem() { pdf_free_link(_link); }
+};
+
 struct XpsPageRun {
     xps_page *page;
     fz_display_list *list;
@@ -1631,6 +1640,13 @@ public:
     virtual Vec<PageElement *> *GetElements(int pageNo);
     virtual PageElement *GetElementAtPos(int pageNo, PointD pt);
 
+    virtual int FindPageNo(fz_obj *dest);
+    virtual fz_obj *GetNamedDest(const TCHAR *name);
+    virtual bool HasToCTree() const {
+        return _outline != NULL;
+    }
+    virtual PdfTocItem *GetToCTree();
+
 protected:
     const TCHAR *_fileName;
 
@@ -1664,9 +1680,12 @@ protected:
                             fz_bbox clipbox=fz_infinite_bbox, bool cacheRun=true);
     void            dropPageRun(XpsPageRun *run, bool forceRemove=false);
 
+    CPdfTocItem   * buildTocTree(xps_outline *entry, int& idCounter);
     void            linkifyPageText(xps_page *page, int pageNo);
 
-    pdf_link **     _links;
+    xps_outline   * _outline;
+    xps_named_dest* _dests;
+    pdf_link     ** _links;
     fz_glyph_cache* _drawcache;
 };
 
@@ -1679,7 +1698,7 @@ xps_run_page(xps_context *ctx, xps_page *page, fz_device *dev, fz_matrix ctm)
 }
 
 CXpsEngine::CXpsEngine() : _fileName(NULL), _ctx(NULL), _pages(NULL),
-    _links(NULL), _drawcache(NULL)
+    _outline(NULL), _dests(NULL), _links(NULL), _drawcache(NULL)
 {
     InitializeCriticalSection(&_pagesAccess);
     InitializeCriticalSection(&_ctxAccess);
@@ -1704,6 +1723,11 @@ CXpsEngine::~CXpsEngine()
                 pdf_free_link(_links[i]);
         free(_links);
     }
+
+    if (_outline)
+        xps_free_outline(_outline);
+    if (_dests)
+        xps_free_named_dest(_dests);
 
     if (_ctx) {
         xps_free_context(_ctx);
@@ -1771,7 +1795,12 @@ bool CXpsEngine::load_from_stream(fz_stream *stm)
 
     _pages = SAZA(xps_page *, PageCount());
     _links = SAZA(pdf_link *, PageCount());
+
+    _outline = xps_parse_outline(_ctx);
+    _dests = xps_parse_named_dests(_ctx);
+
     // TODO: extract document properties from the "/docProps/core.xml" part
+    //       (or wherever /_rels/.rels points)
 
     return true;
 }
@@ -2119,6 +2148,64 @@ void CXpsEngine::linkifyPageText(xps_page *page, int pageNo)
 
     free(coords);
     free(pageText);
+}
+
+int CXpsEngine::FindPageNo(fz_obj *dest)
+{
+    if (!fz_is_string(dest))
+        return -1;
+    char *target = fz_to_str_buf(dest);
+
+    for (xps_named_dest *dest = _dests; dest; dest = dest->next)
+        if (Str::Eq(target, dest->target))
+            return dest->page;
+
+    return -1;
+}
+
+fz_obj *CXpsEngine::GetNamedDest(const TCHAR *name)
+{
+    ScopedMem<char> name_utf8(Str::Conv::ToUtf8(name));
+    if (!Str::StartsWith(name_utf8.Get(), "#"))
+        name_utf8.Set(Str::Join("#", name_utf8));
+
+    for (xps_named_dest *dest = _dests; dest; dest = dest->next)
+        if (Str::EndsWithI(dest->target, name_utf8))
+            return fz_new_string(dest->target, strlen(dest->target));
+
+    return NULL;
+}
+
+CPdfTocItem *CXpsEngine::buildTocTree(xps_outline *entry, int& idCounter)
+{
+    fz_obj *dest = fz_new_string(entry->target, strlen(entry->target));
+    pdf_link_kind kind = PDF_LINK_GOTO;
+    if (Str::StartsWithI(entry->target, "http:") || Str::StartsWithI(entry->target, "https:"))
+        kind = PDF_LINK_URI;
+    pdf_link *link = pdf_new_link(dest, kind);
+
+    TCHAR *name = entry->title ? Str::Conv::FromUtf8(entry->title) : Str::Dup(_T(""));
+    CPdfTocItem *node = new CXpsTocItem(name, PdfLink(link), link);
+    node->open = false;
+    node->id = ++idCounter;
+
+    if (entry->child)
+        node->child = buildTocTree(entry->child, idCounter);
+    if (entry->next)
+        node->next = buildTocTree(entry->next, idCounter);
+
+    return node;
+}
+
+PdfTocItem *CXpsEngine::GetToCTree()
+{
+    CPdfTocItem *node = NULL;
+    int idCounter = 0;
+
+    if (_outline)
+        node = buildTocTree(_outline, idCounter);
+
+    return node;
 }
 
 XpsEngine *XpsEngine::CreateFromFileName(const TCHAR *fileName)

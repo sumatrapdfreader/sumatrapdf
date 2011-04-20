@@ -303,7 +303,7 @@ MUXPS_OBJS = \
 	$(OX)\xps_common.obj $(OX)\xps_doc.obj $(OX)\xps_glyphs.obj $(OX)\xps_gradient.obj \
 	$(OX)\xps_image.obj $(OX)\xps_jpeg.obj $(OX)\xps_path.obj \
 	$(OX)\xps_png.obj $(OX)\xps_resource.obj $(OX)\xps_tiff.obj $(OX)\xps_tile.obj \
-	$(OX)\xps_util.obj $(OX)\xps_xml.obj $(OX)\xps_zip.obj
+	$(OX)\xps_util.obj $(OX)\xps_xml.obj $(OX)\xps_zip.obj $(OX)\xps_outline.obj
 
 # Make it easy to compile a CJK font in
 !if "$(WITHCJKFONT)"==""

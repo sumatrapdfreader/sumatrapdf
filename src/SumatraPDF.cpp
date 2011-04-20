@@ -1291,7 +1291,8 @@ static void MenuUpdateStateForWindow(WindowInfo& win) {
 
     MenuUpdatePrintItem(win, win.menu);
 
-    bool enabled = win.IsDocLoaded() && win.dm->pdfEngine && win.dm->pdfEngine->HasToCTree();
+    bool enabled = win.IsDocLoaded() && (win.dm->pdfEngine && win.dm->pdfEngine->HasToCTree() ||
+                                         win.dm->xpsEngine && win.dm->xpsEngine->HasToCTree());
     Win::Menu::Enable(win.menu, IDM_VIEW_BOOKMARKS, enabled);
 
     bool documentSpecific = win.IsDocLoaded();
@@ -1605,7 +1606,8 @@ Error:
     if (win.IsDocLoaded())
         win.dm->SetScrollState(ss);
     if (win.IsDocLoaded() && win.tocShow &&
-        win.dm->pdfEngine && win.dm->pdfEngine->HasToCTree()) {
+        (win.dm->pdfEngine && win.dm->pdfEngine->HasToCTree() ||
+         win.dm->xpsEngine && win.dm->xpsEngine->HasToCTree())) {
         win.ShowTocBox();
     } else if (oldTocShow) {
         // Hide the now useless ToC sidebar and force an update afterwards
@@ -5606,6 +5608,8 @@ void WindowInfo::LoadTocTree()
     tocRoot = NULL;
     if (dm->pdfEngine)
         tocRoot = dm->pdfEngine->GetToCTree();
+    else if (dm->xpsEngine)
+        tocRoot = dm->xpsEngine->GetToCTree();
     if (tocRoot)
         PopulateTocTreeView(hwndTocTree, tocRoot, tocState);
 
@@ -5626,7 +5630,9 @@ void WindowInfo::ToggleTocBox()
 
 void WindowInfo::ShowTocBox()
 {
-    if (!dm->pdfEngine || !dm->pdfEngine->HasToCTree()) {
+    if (!dm->pdfEngine && !dm->xpsEngine ||
+        dm->pdfEngine && !dm->pdfEngine->HasToCTree() ||
+        dm->xpsEngine && !dm->xpsEngine->HasToCTree()) {
         tocShow = true;
         return;
     }

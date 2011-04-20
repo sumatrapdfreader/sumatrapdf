@@ -387,11 +387,18 @@ __pragma(warning(push))
 __pragma(warning(pop))
 }
 
-PdfEngine *PdfLinkHandler::engine()
+PdfEngine *PdfLinkHandler::engine() const
 {
     if (!owner || !owner->dm)
         return NULL;
     return owner->dm->pdfEngine;
+}
+
+XpsEngine *PdfLinkHandler::engine2() const
+{
+    if (!owner || !owner->dm)
+        return NULL;
+    return owner->dm->xpsEngine;
 }
 
 void PdfLinkHandler::GotoPdfLink(PageDestination *link)
@@ -399,7 +406,7 @@ void PdfLinkHandler::GotoPdfLink(PageDestination *link)
     assert(owner && owner->linkHandler == this);
     if (!link || !link->AsLink())
         return;
-    if (!engine() && !(owner->dm->xpsEngine && Str::Eq(link->GetType(), "LaunchURL")))
+    if (!engine() && !engine2())
         return;
 
     DisplayModel *dm = owner->dm;
@@ -419,10 +426,10 @@ void PdfLinkHandler::GotoPdfLink(PageDestination *link)
             // open embedded PDF documents in a new window
             ScopedMem<TCHAR> combinedPath(Str::Format(_T("%s:%d:%d"), dm->fileName(), fz_to_num(embedded), fz_to_gen(embedded)));
             LoadDocument(combinedPath);
-        } else {
+        } else if (engine()) {
             // offer to save other attachments to a file
             PdfLinkSaver saveUI(owner->hwndFrame, path);
-            dm->pdfEngine->SaveEmbedded(embedded, saveUI);
+            engine()->SaveEmbedded(embedded, saveUI);
         }
     }
     else if ((Str::Eq(type, "LaunchFile") || Str::Eq(type, "ScrollToEx")) && path) {
@@ -465,10 +472,8 @@ void PdfLinkHandler::GotoPdfLink(PageDestination *link)
 void PdfLinkHandler::GotoPdfDest(fz_obj *dest)
 {
     assert(owner && owner->linkHandler == this);
-    if (!engine())
-        return;
-
-    int pageNo = engine()->FindPageNo(dest);
+    int pageNo = engine() ? engine()->FindPageNo(dest) :
+                 engine2() ? engine2()->FindPageNo(dest) : -1;
     if (pageNo <= 0)
         return;
 
@@ -478,7 +483,10 @@ void PdfLinkHandler::GotoPdfDest(fz_obj *dest)
 
     fz_obj *obj = fz_array_get(dest, 1);
     const char *type = fz_to_name(obj);
-    if (Str::Eq(type, "XYZ")) {
+    if (!type || !engine2()) {
+        // XPS destination or semi-valid PDF destination
+    }
+    else if (Str::Eq(type, "XYZ")) {
         PointD scrollD = PointD(fz_to_real(fz_array_get(dest, 2)),
                                 fz_to_real(fz_array_get(dest, 3)));
         scrollD = engine()->Transform(scrollD, pageNo, dm->zoomReal(), dm->rotation());
@@ -530,8 +538,11 @@ void PdfLinkHandler::GotoPdfDest(fz_obj *dest)
 void PdfLinkHandler::GotoNamedDest(const TCHAR *name)
 {
     assert(owner && owner->linkHandler == this);
-    if (!engine())
+    fz_obj *dest = engine() ? engine()->GetNamedDest(name) :
+                   engine2() ? engine2()->GetNamedDest(name) : NULL;
+    if (!dest)
         return;
 
-    GotoPdfDest(engine()->GetNamedDest(name));
+    GotoPdfDest(dest);
+    fz_drop_obj(dest);
 }

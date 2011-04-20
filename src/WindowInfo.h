@@ -244,9 +244,12 @@ public:
     static Vec<SelectionOnPage> *FromTextSelect(TextSel *textSel);
 };
 
+// despite the name, PdfLinkHandler also handles XPS links
+// TODO: generalize or split into two handlers
 class PdfLinkHandler {
     WindowInfo *owner;
-    PdfEngine *engine();
+    PdfEngine *engine() const;
+    XpsEngine *engine2() const;
 
     void GotoPdfDest(fz_obj *dest);
 

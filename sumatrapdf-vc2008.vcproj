@@ -757,6 +757,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\mupdf\xps\xps_outline.c"
+					>
+				</File>
+				<File
 					RelativePath=".\mupdf\xps\xps_path.c"
 					>
 				</File>

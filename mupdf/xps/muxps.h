@@ -230,4 +230,30 @@ int xps_open_file(xps_context **ctxp, char *filename);
 int xps_open_stream(xps_context **ctxp, fz_stream *file);
 void xps_free_context(xps_context *ctx);
 
+/* SumatraPDF: support links and outlines */
+
+typedef struct xps_outline_s xps_outline;
+typedef struct xps_named_dest_s xps_named_dest;
+
+struct xps_outline_s
+{
+	char *title;
+	char *target;
+	xps_outline *child;
+	xps_outline *next;
+};
+
+struct xps_named_dest_s
+{
+	char *target;
+	int page;
+	fz_rect rect;
+	xps_named_dest *next;
+};
+
+xps_outline *xps_parse_outline(xps_context *ctx);
+void xps_free_outline(xps_outline *outline);
+xps_named_dest *xps_parse_named_dests(xps_context *ctx);
+void xps_free_named_dest(xps_named_dest *dest);
+
 #endif

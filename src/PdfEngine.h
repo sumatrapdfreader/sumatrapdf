@@ -64,15 +64,20 @@ class PdfEngine : public BaseEngine {
 public:
     // TODO: move any of the following into BaseEngine?
 
+    // caller must delete the result
     virtual Vec<PageElement *> *GetElements(int pageNo) = 0;
+    // caller must delete the result
     virtual PageElement *GetElementAtPos(int pageNo, PointD pt) = 0;
 
     virtual int FindPageNo(fz_obj *dest) = 0;
+    // caller must fz_drop_obj() the result
     virtual fz_obj *GetNamedDest(const TCHAR *name) = 0;
     virtual bool HasToCTree() const = 0;
+    // caller must delete the result (when no longer needed)
     virtual PdfTocItem *GetToCTree() = 0;
-    virtual bool SaveEmbedded(fz_obj *obj, LinkSaverUI& saveUI) = 0;
 
+    virtual bool SaveEmbedded(fz_obj *obj, LinkSaverUI& saveUI) = 0;
+    // caller must free() the result
     virtual char *GetDecryptionKey() const = 0;
     virtual void RunGC() = 0;
 
@@ -87,8 +92,17 @@ public:
 
 class XpsEngine : public BaseEngine {
 public:
+    // caller must delete the result
     virtual Vec<PageElement *> *GetElements(int pageNo) = 0;
+    // caller must delete the result
     virtual PageElement *GetElementAtPos(int pageNo, PointD pt) = 0;
+
+    virtual int FindPageNo(fz_obj *dest) = 0;
+    // caller must fz_drop_obj() the result
+    virtual fz_obj *GetNamedDest(const TCHAR *name) = 0;
+    virtual bool HasToCTree() const = 0;
+    // caller must delete the result (when no longer needed)
+    virtual PdfTocItem *GetToCTree() = 0;
 
 protected:
     virtual bool load(const TCHAR *fileName) = 0;

@@ -321,8 +321,10 @@ EXPORTS
 	pdf_needs_password
 	pdf_authenticate_password
 	pdf_has_permission
-	pdf_get_crypt_key
 	pdf_get_crypt_revision
+	pdf_get_crypt_method
+	pdf_get_crypt_length
+	pdf_get_crypt_key
 	pdf_debug_crypt
 	pdf_new_store
 	pdf_free_store
@@ -466,6 +468,10 @@ EXPORTS
 	xps_open_file
 	xps_open_stream
 	xps_free_context
+	xps_parse_outline
+	xps_free_outline
+	xps_parse_named_dests
+	xps_free_named_dest
 
 ; zlib exports
 
