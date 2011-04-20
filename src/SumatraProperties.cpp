@@ -204,35 +204,36 @@ static void UpdatePropertiesLayout(HWND hwnd, HDC hdc, RectI *rect) {
     Win::Font::Delete(fontRightTxt);
 }
 
-static void CreatePropertiesWindow(WindowInfo *win, PropertiesLayout *layoutData) {
-    win->hwndProperties = CreateWindow(
+static HWND CreatePropertiesWindow(PropertiesLayout& layoutData) {
+    HWND hwndProperties = CreateWindow(
            PROPERTIES_CLASS_NAME, PROPERTIES_WIN_TITLE,
            WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
            CW_USEDEFAULT, CW_USEDEFAULT,
            CW_USEDEFAULT, CW_USEDEFAULT,
            NULL, NULL,
            ghinst, NULL);
-    if (!win->hwndProperties)
-        return;
+    if (!hwndProperties)
+        return NULL;
 
-    assert(!GetWindowLongPtr(win->hwndProperties, GWLP_USERDATA));
-    SetWindowLongPtr(win->hwndProperties, GWLP_USERDATA, (LONG_PTR)layoutData);
+    assert(!GetWindowLongPtr(hwndProperties, GWLP_USERDATA));
+    SetWindowLongPtr(hwndProperties, GWLP_USERDATA, (LONG_PTR)&layoutData);
 
     // get the dimensions required for the about box's content
     RectI rc;
     PAINTSTRUCT ps;
-    HDC hdc = BeginPaint(win->hwndProperties, &ps);
-    UpdatePropertiesLayout(win->hwndProperties, hdc, &rc);
-    EndPaint(win->hwndProperties, &ps);
+    HDC hdc = BeginPaint(hwndProperties, &ps);
+    UpdatePropertiesLayout(hwndProperties, hdc, &rc);
+    EndPaint(hwndProperties, &ps);
 
     // resize the new window to just match these dimensions
-    WindowRect wRc(win->hwndProperties);
-    ClientRect cRc(win->hwndProperties);
+    WindowRect wRc(hwndProperties);
+    ClientRect cRc(hwndProperties);
     wRc.dx += rc.dx - cRc.dx;
     wRc.dy += rc.dy - cRc.dy;
-    MoveWindow(win->hwndProperties, wRc.x, wRc.y, wRc.dx, wRc.dy, FALSE);
+    MoveWindow(hwndProperties, wRc.x, wRc.y, wRc.dx, wRc.dy, FALSE);
 
-    ShowWindow(win->hwndProperties, SW_SHOW);
+    ShowWindow(hwndProperties, SW_SHOW);
+    return hwndProperties;
 }
 
 /*
@@ -253,16 +254,16 @@ Example xref->info ("Info") object:
 */
 
 // TODO: add information about fonts ?
-void OnMenuProperties(WindowInfo *win)
+void OnMenuProperties(WindowInfo& win)
 {
-    if (win->hwndProperties) {
-        SetActiveWindow(win->hwndProperties);
+    if (win.hwndProperties) {
+        SetActiveWindow(win.hwndProperties);
         return;
     }
 
-    if (!win->IsDocLoaded())
+    if (!win.IsDocLoaded())
         return;
-    BaseEngine *engine = win->dm->engine;
+    BaseEngine *engine = win.dm->engine;
 
     PropertiesLayout *layoutData = new PropertiesLayout();
     if (!layoutData)
@@ -281,12 +282,12 @@ void OnMenuProperties(WindowInfo *win)
     layoutData->AddProperty(_TR("Author:"), str);
 
     str = engine->GetProperty("CreationDate");
-    if (win->dm->pdfEngine)
+    if (win.dm->pdfEngine)
         PdfDateToDisplay(&str);
     layoutData->AddProperty(_TR("Created:"), str);
 
     str = engine->GetProperty("ModDate");
-    if (win->dm->pdfEngine)
+    if (win.dm->pdfEngine)
         PdfDateToDisplay(&str);
     layoutData->AddProperty(_TR("Modified:"), str);
 
@@ -312,7 +313,7 @@ void OnMenuProperties(WindowInfo *win)
     str = Str::Format(_T("%d"), engine->PageCount());
     layoutData->AddProperty(_TR("Number of Pages:"), str);
 
-    str = FormatPageSize(engine, win->dm->currentPageNo(), win->dm->rotation());
+    str = FormatPageSize(engine, win.dm->currentPageNo(), win.dm->rotation());
     layoutData->AddProperty(_TR("Page Size:"), str);
 
     str = FormatPermissions(engine);
@@ -328,7 +329,7 @@ void OnMenuProperties(WindowInfo *win)
     // http://www.adobe.com/devnet/acrobat/pdfs/PDF32000_2008.pdf
     // layoutData->AddProperty(_T("Tagged PDF:"), Str::Dup(_T("No")));
 
-    CreatePropertiesWindow(win, layoutData);
+    win.hwndProperties = CreatePropertiesWindow(*layoutData);
 }
 
 static void DrawProperties(HWND hwnd, HDC hdc)
@@ -432,8 +433,10 @@ LRESULT CALLBACK WndProcProperties(HWND hwnd, UINT message, WPARAM wParam, LPARA
 
         case WM_DESTROY:
             delete (PropertiesLayout *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
-            assert(win->hwndProperties);
-            win->hwndProperties = NULL;
+            if (win) {
+                assert(win->hwndProperties);
+                win->hwndProperties = NULL;
+            }
             break;
 
         /* TODO: handle mouse move/down/up so that links work (?) */

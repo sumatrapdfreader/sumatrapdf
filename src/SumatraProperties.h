@@ -35,7 +35,7 @@ public:
     void AddProperty(const TCHAR *key, TCHAR *value);
 };
 
-void OnMenuProperties(WindowInfo *win);
+void OnMenuProperties(WindowInfo& win);
 void CopyPropertiesToClipboard(HWND hwnd);
 LRESULT CALLBACK WndProcProperties(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 

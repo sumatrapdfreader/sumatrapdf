@@ -38,7 +38,7 @@ WindowInfo::WindowInfo(HWND hwnd) :
 
     buffer = new DoubleBuffer(hwndCanvas, canvasRc);
 
-    linkHandler = new PdfLinkHandler(this);
+    linkHandler = new PdfLinkHandler(*this);
     fwdsearchmark.show = false;
 }
 
@@ -218,8 +218,8 @@ void WindowInfo::ToggleZoom()
 
 void WindowInfo::ZoomToSelection(float factor, bool relative)
 {
-    assert(this->dm);
-    if (!this->IsDocLoaded()) return;
+    if (!this->IsDocLoaded())
+        return;
 
     PointI pt;
     bool zoomToPt = this->showSelection && this->selectionOnPage;

@@ -13,7 +13,7 @@
 void OnMenuAbout();
 LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 
-void  DrawAboutPage(WindowInfo *win, HDC hdc);
+void  DrawAboutPage(WindowInfo& win, HDC hdc);
 
 const TCHAR *GetStaticLink(Vec<StaticLinkInfo>& linkInfo, int x, int y, StaticLinkInfo *info=NULL);
 
@@ -28,10 +28,10 @@ const TCHAR *GetStaticLink(Vec<StaticLinkInfo>& linkInfo, int x, int y, StaticLi
 #define THUMBNAIL_DX        212
 #define THUMBNAIL_DY        150
 
-void    DrawStartPage(WindowInfo *win, HDC hdc, FileHistory& fileHistory);
+void    DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory);
 void    LoadThumbnails(FileHistory& fileHistory);
-bool    HasThumbnail(DisplayState *state);
-void    SaveThumbnail(DisplayState *state);
+bool    HasThumbnail(DisplayState& state);
+void    SaveThumbnail(DisplayState& state);
 
 #endif
 

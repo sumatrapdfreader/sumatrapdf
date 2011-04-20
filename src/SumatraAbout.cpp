@@ -20,6 +20,8 @@
 
 #define ABOUT_WIN_TITLE         _TR("About SumatraPDF")
 
+#define COL_BLUE_LINK           RGB(0x00, 0x20, 0xa0)
+
 #define SUMATRA_TXT_FONT        _T("Arial Black")
 #define SUMATRA_TXT_FONT_SIZE   24
 
@@ -493,15 +495,15 @@ LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
     return 0;
 }
 
-void DrawAboutPage(WindowInfo *win, HDC hdc)
+void DrawAboutPage(WindowInfo& win, HDC hdc)
 {
-    ClientRect rc(win->hwndCanvas);
-    UpdateAboutLayoutInfo(win->hwndCanvas, hdc, &rc);
-    DrawAbout(win->hwndCanvas, hdc, rc, win->staticLinks);
+    ClientRect rc(win.hwndCanvas);
+    UpdateAboutLayoutInfo(win.hwndCanvas, hdc, &rc);
+    DrawAbout(win.hwndCanvas, hdc, rc, win.staticLinks);
 #ifdef NEW_START_PAGE
     if (!gRestrictedUse && gGlobalPrefs.m_rememberOpenedFiles) {
-        RectI rect = DrawBottomRightLink(win->hwndCanvas, hdc, _TR("Show frequently read"));
-        win->staticLinks.Append(StaticLinkInfo(rect, SLINK_LIST_SHOW));
+        RectI rect = DrawBottomRightLink(win.hwndCanvas, hdc, _TR("Show frequently read"));
+        win.staticLinks.Append(StaticLinkInfo(rect, SLINK_LIST_SHOW));
     }
 #endif
 }
@@ -525,8 +527,9 @@ void DrawAboutPage(WindowInfo *win, HDC hdc)
 #define DOCLIST_MAX_THUMBNAILS_X    5
 #define DOCLIST_BOTTOM_BOX_DY      50
 
-void DrawStartPage(WindowInfo *win, HDC hdc, FileHistory& fileHistory)
+void DrawStartPage(WindowInfo& win2, HDC hdc, FileHistory& fileHistory)
 {
+    WindowInfo *win = &win2;
     HBRUSH brushBg = CreateSolidBrush(gGlobalPrefs.m_bgColor);
 
     HPEN penBorder = CreatePen(PS_SOLID, DOCLIST_SEPARATOR_DY, WIN_COL_BLACK);
@@ -713,31 +716,31 @@ void LoadThumbnails(FileHistory& fileHistory)
     CleanUpCache(fileHistory);
 }
 
-bool HasThumbnail(DisplayState *state)
+bool HasThumbnail(DisplayState& state)
 {
-    if (state->thumbnail) {
-        ScopedMem<TCHAR> bmpPath(GetThumbnailPath(state->filePath));
+    if (state.thumbnail) {
+        ScopedMem<TCHAR> bmpPath(GetThumbnailPath(state.filePath));
         FILETIME bmpTime = File::GetModificationTime(bmpPath);
-        FILETIME fileTime = File::GetModificationTime(state->filePath);
+        FILETIME fileTime = File::GetModificationTime(state.filePath);
         // delete the thumbnail if the file is newer than the thumbnail
         if (FileTimeDiffInSecs(fileTime, bmpTime) > 0) {
-            delete state->thumbnail;
-            state->thumbnail = NULL;
+            delete state.thumbnail;
+            state.thumbnail = NULL;
         }
     }
 
-    return state->thumbnail != NULL;
+    return state.thumbnail != NULL;
 }
 
-void SaveThumbnail(DisplayState *state)
+void SaveThumbnail(DisplayState& state)
 {
-    if (!state->thumbnail)
+    if (!state.thumbnail)
         return;
 
     size_t dataLen;
-    unsigned char *data = state->thumbnail->Serialize(&dataLen);
+    unsigned char *data = state.thumbnail->Serialize(&dataLen);
     if (data) {
-        ScopedMem<TCHAR> bmpPath(GetThumbnailPath(state->filePath));
+        ScopedMem<TCHAR> bmpPath(GetThumbnailPath(state.filePath));
         ScopedMem<TCHAR> thumbsPath(Path::GetDir(bmpPath));
         if (Dir::Create(thumbsPath))
             File::WriteAll(bmpPath, data, dataLen);

@@ -251,7 +251,7 @@ class PdfLinkHandler {
     void GotoPdfDest(fz_obj *dest);
 
 public:
-    PdfLinkHandler(WindowInfo *win) : owner(win) { }
+    PdfLinkHandler(WindowInfo& win) : owner(&win) { }
 
     void GotoPdfLink(PageDestination *link);
     void GotoNamedDest(const TCHAR *name);
