@@ -243,7 +243,7 @@ Created:
 Створено:
 
 Custom &Zoom...\tCtrl-Y
-Вказати масшта...\tCtrl-Y
+Вказати масштаб...\tCtrl-Y
 
 Default &Layout:
 Розташування за замовчуванням:
