@@ -4655,9 +4655,10 @@ static WNDPROC DefWndProcFindBox = NULL;
 static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     WindowInfo *win = FindWindowInfoByHwnd(hwnd);
-    if (!win) {
-        // just call the next window procedure
-    } else if (FocusUnselectedWndProc(hwnd, message)) {
+    if (!win || !win->IsDocLoaded())
+        return DefWindowProc(hwnd, message, wParam, lParam);
+
+    if (FocusUnselectedWndProc(hwnd, message)) {
         // select the whole find box on a non-selecting click
     } else if (WM_CHAR == message) {
         switch (wParam) {
@@ -4980,9 +4981,10 @@ static WNDPROC DefWndProcPageBox = NULL;
 static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     WindowInfo *win = FindWindowInfoByHwnd(hwnd);
-    if (!win) {
-        // just call the next window procedure
-    } if (FocusUnselectedWndProc(hwnd, message)) {
+    if (!win || !win->IsDocLoaded())
+        return DefWindowProc(hwnd, message, wParam, lParam);
+
+    if (FocusUnselectedWndProc(hwnd, message)) {
         // select the whole page box on a non-selecting click
     } else if (WM_CHAR == message) {
         switch (wParam) {
