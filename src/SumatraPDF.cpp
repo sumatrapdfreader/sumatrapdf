@@ -5964,15 +5964,11 @@ static bool gWheelMsgRedirect = false; // set when WM_MOUSEWHEEL has been passed
 
 static LRESULT OnMouseWheel(WindowInfo *win, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    POINT   pt;
-    int     currentScrollPos;
-
     if (!win->IsDocLoaded())
         return 0;
-    
+
     // Scroll the ToC sidebar, if it's visible and the cursor is in it
-    if (win->tocShow && IsCursorOverWindow(win->hwndTocTree) && !gWheelMsgRedirect)
-    {
+    if (win->tocShow && IsCursorOverWindow(win->hwndTocTree) && !gWheelMsgRedirect) {
         // Note: hwndTocTree's window procedure doesn't always handle
         //       WM_MOUSEWHEEL and when it's bubbling up, we'd return
         //       here recursively - prevent that
@@ -5981,41 +5977,50 @@ static LRESULT OnMouseWheel(WindowInfo *win, UINT message, WPARAM wParam, LPARAM
         gWheelMsgRedirect = false;
         return res;
     }
-    
+
     // Note: not all mouse drivers correctly report the Ctrl key's state
-    if ((LOWORD(wParam) & MK_CONTROL) || IsCtrlPressed() || (LOWORD(wParam) & MK_RBUTTON))
-    {
+    if ((LOWORD(wParam) & MK_CONTROL) || IsCtrlPressed() || (LOWORD(wParam) & MK_RBUTTON)) {
+        POINT pt;
         GetCursorPos(&pt);
         ScreenToClient(win->hwndCanvas, &pt);
-    
+
         short delta = GET_WHEEL_DELTA_WPARAM(wParam);
         float factor = delta < 0 ? ZOOM_OUT_FACTOR : ZOOM_IN_FACTOR;
         win->dm->zoomBy(factor, &PointI(pt.x, pt.y));
         win->UpdateToolbarState();
-    
+
         // don't show the context menu when zooming with the right mouse-button down
         if ((LOWORD(wParam) & MK_RBUTTON))
             win->dragStartPending = false;
-    
+
         return 0;
     }
     
+    // always scroll whole pages in Fit Page and Fit Content modes
+    if (ZOOM_FIT_PAGE == win->dm->zoomVirtual() ||
+        ZOOM_FIT_CONTENT == win->dm->zoomVirtual()) {
+        if (GET_WHEEL_DELTA_WPARAM(wParam) > 0)
+            win->dm->goToPrevPage(0);
+        else
+            win->dm->goToNextPage(0);
+        return 0;
+    }
+
     if (gDeltaPerLine == 0)
        return 0;
-    
+
     win->wheelAccumDelta += GET_WHEEL_DELTA_WPARAM(wParam);     // 120 or -120
-    currentScrollPos = GetScrollPos(win->hwndCanvas, SB_VERT);
-    
+    int currentScrollPos = GetScrollPos(win->hwndCanvas, SB_VERT);
+
     while (win->wheelAccumDelta >= gDeltaPerLine) {
         SendMessage(win->hwndCanvas, WM_VSCROLL, SB_LINEUP, 0);
         win->wheelAccumDelta -= gDeltaPerLine;
     }
-    
     while (win->wheelAccumDelta <= -gDeltaPerLine) {
         SendMessage(win->hwndCanvas, WM_VSCROLL, SB_LINEDOWN, 0);
         win->wheelAccumDelta += gDeltaPerLine;
     }
-    
+
     if (!displayModeContinuous(win->dm->displayMode()) &&
         GetScrollPos(win->hwndCanvas, SB_VERT) == currentScrollPos) {
         if (GET_WHEEL_DELTA_WPARAM(wParam) > 0)
@@ -6023,6 +6028,7 @@ static LRESULT OnMouseWheel(WindowInfo *win, UINT message, WPARAM wParam, LPARAM
         else
             win->dm->goToNextPage(0);
     }
+
     return 0;
 }
 
