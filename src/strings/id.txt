@@ -149,7 +149,10 @@ Advanced
 Lanjutan
 
 All files
-Semua berkas
+Semua Berkas
+
+All supported documents
+Semua Dokumen Yang Didukung
 
 Application:
 Aplikasi
@@ -161,7 +164,7 @@ Attachment: %s
 Lampiran: %s
 
 Author:
-Pengarang:
+Pencipta:
 
 Automatic
 Otomatis
@@ -174,6 +177,12 @@ Tampilan Buku
 
 Book&marks\tF12
 &Markah\tF12
+
+Bookmark Shortcuts
+Jalan Pintas Markah
+
+Bookmark shortcut to page %d of %s
+Jalan pintas markah ke halaman %d dari %s
 
 Bookmarks
 Markah
@@ -199,6 +208,9 @@ Ubah Bahasa (Change Language)
 Check for &Updates
 &Periksa Versi Terbaru
 
+Comic books
+Buku Komik
+
 Continuous
 Kontinu
 
@@ -209,7 +221,7 @@ Continuous Facing
 Dua Halaman Kontinu
 
 Contribute Translation
-Membantu Alihbahasa
+Bantu Alihbahasa
 
 Copy &Link Address
 Salin Alamat &Link
@@ -265,6 +277,9 @@ Masukkan kata kunci untuk %s
 Enter the command-line to invoke when you double-click on the PDF document:
 Masukkan baris perintah untuk dijalankan ketika Anda mengklik dua kali pada dokumen PDF:
 
+Error loading %s
+Kesalahan memuat %s
+
 F&orward\tAlt+Right Arrow
 Berikutnya\tAlt+->
 
@@ -299,7 +314,7 @@ Find:
 Temukan:
 
 Fit &Content\tCtrl-3
-Sesuaikan &Konten\tCtrl-3 
+Sesuaikan Dengan &Konten\tCtrl-3 
 
 Fit &Page\tCtrl-0
 Sesuaikan Dengan &Halaman\tCtrl-0
@@ -325,14 +340,26 @@ Sesuaikan Halaman Tunggal
 Found text at page %d
 Teks ditemukan pada halaman %d
 
+Found text at page %d (again)
+Teks ditemukan pada halaman %d (lagi)
+
+Frequently Read
+Yang Sering Dibaca
+
 GB
 GB
 
 Go to page
 Pergi ke halaman
 
+Hide frequently read
+Sembunyikan Yang Sering Dibaca
+
 Hint: Use the F3 key for finding again
 Tips : Gunakan tombol F3 untuk mengulangi pencarian
+
+Image files (*.%s)
+Berkas Gambar (*.%s)
 
 KB
 KB
@@ -378,6 +405,9 @@ OK
 
 Open
 Buka
+
+Open a document...
+Buka Dokumen...
 
 Open in &Adobe Reader
 Buka di &Adobe Reader
@@ -448,6 +478,9 @@ Putar Ke Kiri\tCtrl-Shift--
 Rotate &Right\tCtrl-Shift-+
 Putar Ke Kanan\tCtrl-Shift-+
 
+Save S&hortcut...\tCtrl-Shift-S
+Simpan &Jalan Pintas...\tCtrl-Shift-S
+
 Searching %d of %d...
 Sedang mencari %d dari %d
 
@@ -458,7 +491,7 @@ Select &All\tCtrl-A
 Pilih Semu&a\tCtrl-A
 
 Select content with Ctrl+left mouse button
-Pilih konten dengan tombol Ctrl+left pada mouse
+Pilih konten dengan tombol Ctrl+tombol kiri mouse 
 
 Send by &E-mail...
 Kirim Via &Email...
@@ -471,6 +504,9 @@ Tampilkan &Toolbar
 
 Show &pages continuously
 Tampilkan Halaman Secara &Kontinu
+
+Show frequently read
+Tampilkan Yang Sering Dibaca
 
 Show the &bookmarks sidebar when available
 Tampilkan kolom &markah jika tersedia
@@ -503,7 +539,7 @@ Synchronization file cannot be opened
 Berkas sinkronisasi tidak dapat dibuka
 
 Text documents
-Dokumen teks
+Dokumen Teks
 
 Title:
 Judul:
@@ -519,6 +555,9 @@ Visit &Website
 
 Warning
 Peringatan
+
+XPS documents
+Dokumen XPS
 
 You have the latest version.
 Anda telah memiliki versi terbaru
@@ -546,19 +585,4 @@ menyalin teks
 
 printing document
 mencetak dokumen
-
-# Untranslated:
-#All supported documents
-#Bookmark Shortcuts
-#Bookmark shortcut to page %d of %s
-#Comic books
-#Error loading %s
-#Found text at page %d (again)
-#Frequently Read
-#Hide frequently read
-#Image files (*.%s)
-#Open a document...
-#Save S&hortcut...\tCtrl-Shift-S
-#Show frequently read
-#XPS documents
 
