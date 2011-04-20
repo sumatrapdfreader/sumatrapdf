@@ -397,9 +397,9 @@ PdfEngine *PdfLinkHandler::engine()
 void PdfLinkHandler::GotoPdfLink(PageDestination *link)
 {
     assert(owner && owner->linkHandler == this);
-    if (!engine())
-        return;
     if (!link || !link->AsLink())
+        return;
+    if (!engine() && !(owner->dm->xpsEngine && Str::Eq(link->GetType(), "LaunchURL")))
         return;
 
     DisplayModel *dm = owner->dm;

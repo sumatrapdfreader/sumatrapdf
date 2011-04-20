@@ -893,7 +893,7 @@ RectD DisplayModel::CvtFromScreen(RectI r, int pageNo)
    */
 PageElement *DisplayModel::GetElementAtPos(PointI pt)
 {
-    if (!pdfEngine)
+    if (!pdfEngine && !xpsEngine)
         return NULL;
 
     int pageNo = GetPageNoByPoint(pt);
@@ -901,6 +901,8 @@ PageElement *DisplayModel::GetElementAtPos(PointI pt)
         return NULL;
 
     PointD pos = CvtFromScreen(pt, pageNo);
+    if (xpsEngine)
+        return xpsEngine->GetElementAtPos(pageNo, pos);
     return pdfEngine->GetElementAtPos(pageNo, pos);
 }
 

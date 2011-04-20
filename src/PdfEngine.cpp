@@ -507,6 +507,121 @@ public:
     }
 };
 
+static bool isMultilineLink(TCHAR *pageText, TCHAR *pos, RectI *coords)
+{
+    // multiline links end in a non-alphanumeric character and continue on a line
+    // that starts left and only slightly below where the current line ended
+    // (and that doesn't start with http itself)
+    return
+        '\n' == *pos && pos > pageText && !_istalnum(pos[-1]) && !_istspace(pos[1]) &&
+        coords[pos - pageText + 1].BR().y > coords[pos - pageText - 1].y &&
+        coords[pos - pageText + 1].y <= coords[pos - pageText - 1].BR().y &&
+        coords[pos - pageText + 1].x < coords[pos - pageText - 1].BR().x &&
+        !Str::StartsWith(pos + 1, _T("http"));
+}
+
+static TCHAR *findLinkEnd(TCHAR *start)
+{
+    TCHAR *end;
+
+    // look for the end of the URL (ends in a space preceded maybe by interpunctuation)
+    for (end = start; *end && !_istspace(*end); end++);
+    if (',' == end[-1] || '.' == end[-1])
+        end--;
+    // also ignore a closing parenthesis, if the URL doesn't contain any opening one
+    if (')' == end[-1] && (!_tcschr(start, '(') || _tcschr(start, '(') > end))
+        end--;
+
+    return end;
+}
+
+static TCHAR *parseMultilineLink(pdf_link *firstLink, TCHAR *pageText, TCHAR *start, RectI *coords)
+{
+    pdf_link *lastLink = firstLink;
+    char *uri = Str::Dup(fz_to_str_buf(firstLink->dest));
+    TCHAR *end = start;
+    bool multiline = false;
+
+    do {
+        end = findLinkEnd(start);
+        multiline = isMultilineLink(pageText, end, coords);
+        *end = 0;
+
+        // add a new link for this line
+        RectI bbox = coords[start - pageText].Union(coords[end - pageText - 1]);
+        ScopedMem<char> uriPart(Str::Conv::ToUtf8(start));
+        char *newUri = Str::Join(uri, uriPart);
+        free(uri);
+        uri = newUri;
+
+        pdf_link *link = pdf_new_link(NULL, PDF_LINK_URI);
+        link->rect = fz_RectD_to_rect(bbox.Convert<double>());
+        lastLink = lastLink->next = link;
+
+        start = end + 1;
+    } while (multiline);
+
+    // update the link URL for all partial links
+    fz_drop_obj(firstLink->dest);
+    firstLink->dest = fz_new_string(uri, (int)strlen(uri));
+    for (pdf_link *link = firstLink->next; link; link = link->next)
+        link->dest = fz_keep_obj(firstLink->dest);
+    free(uri);
+
+    return end;
+}
+
+static pdf_link *extractTextLinks(pdf_link *linkRoot, TCHAR *pageText, RectI *coords)
+{
+    pdf_link *linkTail = linkRoot;
+    while (linkTail && linkTail->next)
+        linkTail = linkTail->next;
+
+    for (TCHAR *start = pageText; *start; start++) {
+        // look for words starting with "http://", "https://" or "www."
+        if (('h' != *start || !Str::StartsWith(start, _T("http://")) &&
+                              !Str::StartsWith(start, _T("https://"))) &&
+            ('w' != *start || !Str::StartsWith(start, _T("www."))) ||
+            (start > pageText && (_istalnum(start[-1]) || '/' == start[-1])))
+            continue;
+
+        TCHAR *end = findLinkEnd(start);
+        bool multiline = isMultilineLink(pageText, end, coords);
+        *end = 0;
+
+        // make sure that no other link is associated with this area
+        fz_bbox bbox = fz_RectI_to_bbox(coords[start - pageText].Union(coords[end - pageText - 1]));
+        for (pdf_link *link = linkRoot; link && *start; link = link->next) {
+            fz_bbox isect = fz_intersect_bbox(bbox, fz_round_rect(link->rect));
+            if (!fz_is_empty_bbox(isect) && fz_sizeofrect(isect) >= 0.25 * fz_sizeofrect(link->rect))
+                start = end;
+        }
+
+        // add the link, if it's a new one (ignoring www. links without a toplevel domain)
+        if (*start && (Str::StartsWith(start, _T("http")) || _tcschr(start + 5, '.') != NULL)) {
+            char *uri = Str::Conv::ToUtf8(start);
+            char *httpUri = Str::StartsWith(uri, "http") ? uri : Str::Join("http://", uri);
+            fz_obj *dest = fz_new_string(httpUri, (int)strlen(httpUri));
+            pdf_link *link = pdf_new_link(dest, PDF_LINK_URI);
+            link->rect = fz_bbox_to_rect(bbox);
+            if (linkRoot)
+                linkTail = linkTail->next = link;
+            else
+                linkRoot = linkTail = link;
+            if (httpUri != uri)
+                free(httpUri);
+            free(uri);
+
+            if (multiline)
+                end = parseMultilineLink(linkTail, pageText, end + 1, coords);
+        }
+
+        start = end;
+    }
+
+    return linkRoot;
+}
+
 ///// Above are extensions to Fitz and MuPDF, now follows PdfEngine /////
 
 struct PdfPageRun {
@@ -1267,79 +1382,6 @@ Vec<PageElement *> *CPdfEngine::GetElements(int pageNo)
     return els;
 }
 
-static pdf_link *getLastLink(pdf_link *head)
-{
-    if (head)
-        while (head->next)
-            head = head->next;
-
-    return head;
-}
-
-static bool isMultilineLink(TCHAR *pageText, TCHAR *pos, RectI *coords)
-{
-    // multiline links end in a non-alphanumeric character and continue on a line
-    // that starts left and only slightly below where the current line ended
-    // (and that doesn't start with http itself)
-    return
-        '\n' == *pos && pos > pageText && !_istalnum(pos[-1]) && !_istspace(pos[1]) &&
-        coords[pos - pageText + 1].BR().y > coords[pos - pageText - 1].y &&
-        coords[pos - pageText + 1].y <= coords[pos - pageText - 1].BR().y &&
-        coords[pos - pageText + 1].x < coords[pos - pageText - 1].BR().x &&
-        !Str::StartsWith(pos + 1, _T("http"));
-}
-
-static TCHAR *findLinkEnd(TCHAR *start)
-{
-    TCHAR *end;
-
-    // look for the end of the URL (ends in a space preceded maybe by interpunctuation)
-    for (end = start; *end && !_istspace(*end); end++);
-    if (',' == end[-1] || '.' == end[-1])
-        end--;
-    // also ignore a closing parenthesis, if the URL doesn't contain any opening one
-    if (')' == end[-1] && (!_tcschr(start, '(') || _tcschr(start, '(') > end))
-        end--;
-
-    return end;
-}
-
-static TCHAR *parseMultilineLink(pdf_page *page, TCHAR *pageText, TCHAR *start, RectI *coords)
-{
-    pdf_link *firstLink = getLastLink(page->links);
-    char *uri = Str::Dup(fz_to_str_buf(firstLink->dest));
-    TCHAR *end = start;
-    bool multiline = false;
-
-    do {
-        end = findLinkEnd(start);
-        multiline = isMultilineLink(pageText, end, coords);
-        *end = 0;
-
-        // add a new link for this line
-        RectI bbox = coords[start - pageText].Union(coords[end - pageText - 1]);
-        ScopedMem<char> uriPart(Str::Conv::ToUtf8(start));
-        char *newUri = Str::Join(uri, uriPart);
-        free(uri);
-        uri = newUri;
-
-        pdf_link *link = pdf_new_link(NULL, PDF_LINK_URI);
-        link->rect = fz_RectD_to_rect(bbox.Convert<double>());
-        getLastLink(firstLink)->next = link;
-
-        start = end + 1;
-    } while (multiline);
-
-    // update the link URL for all partial links
-    fz_drop_obj(firstLink->dest);
-    firstLink->dest = fz_new_string(uri, (int)strlen(uri));
-    for (pdf_link *link = firstLink->next; link; link = link->next)
-        link->dest = fz_keep_obj(firstLink->dest);
-    free(uri);
-
-    return end;
-}
-
 static void FixupPageLinks(pdf_page *page)
 {
     // Links in PDF documents are added from bottom-most to top-most,
@@ -1375,47 +1417,8 @@ void CPdfEngine::linkifyPageText(pdf_page *page)
     if (!pageText)
         return;
 
-    for (TCHAR *start = pageText; *start; start++) {
-        // look for words starting with "http://", "https://" or "www."
-        if (('h' != *start || !Str::StartsWith(start, _T("http://")) &&
-                              !Str::StartsWith(start, _T("https://"))) &&
-            ('w' != *start || !Str::StartsWith(start, _T("www."))) ||
-            (start > pageText && (_istalnum(start[-1]) || '/' == start[-1])))
-            continue;
+    page->links = extractTextLinks(page->links, pageText, coords);
 
-        TCHAR *end = findLinkEnd(start);
-        bool multiline = isMultilineLink(pageText, end, coords);
-        *end = 0;
-
-        // make sure that no other link is associated with this area
-        fz_bbox bbox = fz_RectI_to_bbox(coords[start - pageText].Union(coords[end - pageText - 1]));
-        for (pdf_link *link = page->links; link && *start; link = link->next) {
-            fz_bbox isect = fz_intersect_bbox(bbox, fz_round_rect(link->rect));
-            if (!fz_is_empty_bbox(isect) && fz_sizeofrect(isect) >= 0.25 * fz_sizeofrect(link->rect))
-                start = end;
-        }
-
-        // add the link, if it's a new one (ignoring www. links without a toplevel domain)
-        if (*start && (Str::StartsWith(start, _T("http")) || _tcschr(start + 5, '.') != NULL)) {
-            char *uri = Str::Conv::ToUtf8(start);
-            char *httpUri = Str::StartsWith(uri, "http") ? uri : Str::Join("http://", uri);
-            fz_obj *dest = fz_new_string(httpUri, (int)strlen(httpUri));
-            pdf_link *link = pdf_new_link(dest, PDF_LINK_URI);
-            link->rect = fz_bbox_to_rect(bbox);
-            if (page->links)
-                getLastLink(page->links)->next = link;
-            else
-                page->links = link;
-            if (httpUri != uri)
-                free(httpUri);
-            free(uri);
-
-            if (multiline)
-                end = parseMultilineLink(page, pageText, end + 1, coords);
-        }
-
-        start = end;
-    }
     free(coords);
     free(pageText);
 }
@@ -1625,6 +1628,9 @@ public:
 
     virtual bool BenchLoadPage(int pageNo) { return getXpsPage(pageNo) != NULL; }
 
+    virtual Vec<PageElement *> *GetElements(int pageNo);
+    virtual PageElement *GetElementAtPos(int pageNo, PointD pt);
+
 protected:
     const TCHAR *_fileName;
 
@@ -1658,6 +1664,9 @@ protected:
                             fz_bbox clipbox=fz_infinite_bbox, bool cacheRun=true);
     void            dropPageRun(XpsPageRun *run, bool forceRemove=false);
 
+    void            linkifyPageText(xps_page *page, int pageNo);
+
+    pdf_link **     _links;
     fz_glyph_cache* _drawcache;
 };
 
@@ -1669,7 +1678,8 @@ xps_run_page(xps_context *ctx, xps_page *page, fz_device *dev, fz_matrix ctm)
     ctx->dev = NULL;
 }
 
-CXpsEngine::CXpsEngine() : _fileName(NULL), _ctx(NULL), _pages(NULL), _drawcache(NULL)
+CXpsEngine::CXpsEngine() : _fileName(NULL), _ctx(NULL), _pages(NULL),
+    _links(NULL), _drawcache(NULL)
 {
     InitializeCriticalSection(&_pagesAccess);
     InitializeCriticalSection(&_ctxAccess);
@@ -1682,11 +1692,17 @@ CXpsEngine::~CXpsEngine()
     EnterCriticalSection(&_ctxAccess);
 
     if (_pages) {
-        for (int i=0; i < PageCount(); i++) {
+        for (int i = 0; i < PageCount(); i++) {
             if (_pages[i])
                 xps_free_page(_ctx, _pages[i]);
         }
         free(_pages);
+    }
+    if (_links) {
+        for (int i = 0; i < PageCount(); i++)
+            if (_links[i])
+                pdf_free_link(_links[i]);
+        free(_links);
     }
 
     if (_ctx) {
@@ -1754,6 +1770,7 @@ bool CXpsEngine::load_from_stream(fz_stream *stm)
         return false;
 
     _pages = SAZA(xps_page *, PageCount());
+    _links = SAZA(pdf_link *, PageCount());
     // TODO: extract document properties from the "/docProps/core.xml" part
 
     return true;
@@ -1772,8 +1789,10 @@ xps_page *CXpsEngine::getXpsPage(int pageNo, bool failIfBusy)
     if (!page) {
         ScopedCritSec scope(&_ctxAccess);
         int error = xps_load_page(&page, _ctx, pageNo - 1);
-        if (!error)
+        if (!error) {
+            linkifyPageText(page, pageNo);
             _pages[pageNo-1] = page;
+        }
     }
 
     LeaveCriticalSection(&_pagesAccess);
@@ -2057,6 +2076,49 @@ unsigned char *CXpsEngine::GetFileData(size_t *cbCount)
 {
     ScopedCritSec scope(&_ctxAccess);
     return fz_extract_stream_data(_ctx->file, cbCount);
+}
+
+PageElement *CXpsEngine::GetElementAtPos(int pageNo, PointD pt)
+{
+    if (!_links)
+        return NULL;
+
+    fz_point p = { (float)pt.x, (float)pt.y };
+    for (pdf_link *link = _links[pageNo-1]; link; link = link->next)
+        if (fz_is_pt_in_rect(link->rect, p))
+            return new PdfLink(link, pageNo);
+
+    return NULL;
+}
+
+Vec<PageElement *> *CXpsEngine::GetElements(int pageNo)
+{
+    if (!_links)
+        return NULL;
+
+    Vec<PageElement *> *els = new Vec<PageElement *>();
+
+    for (pdf_link *link = _links[pageNo-1]; link; link = link->next)
+        els->Append(new PdfLink(link, pageNo));
+
+    return els;
+}
+
+void CXpsEngine::linkifyPageText(xps_page *page, int pageNo)
+{
+    assert(_links && !_links[pageNo-1]);
+    if (!_links)
+        return;
+
+    RectI *coords;
+    TCHAR *pageText = ExtractPageText(page, _T("\n"), &coords, true);
+    if (!pageText)
+        return;
+
+    _links[pageNo-1] = extractTextLinks(_links[pageNo-1], pageText, coords);
+
+    free(coords);
+    free(pageText);
 }
 
 XpsEngine *XpsEngine::CreateFromFileName(const TCHAR *fileName)

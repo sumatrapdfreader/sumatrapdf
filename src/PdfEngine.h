@@ -86,6 +86,10 @@ public:
 };
 
 class XpsEngine : public BaseEngine {
+public:
+    virtual Vec<PageElement *> *GetElements(int pageNo) = 0;
+    virtual PageElement *GetElementAtPos(int pageNo, PointD pt) = 0;
+
 protected:
     virtual bool load(const TCHAR *fileName) = 0;
     virtual bool load(IStream *stream) = 0;

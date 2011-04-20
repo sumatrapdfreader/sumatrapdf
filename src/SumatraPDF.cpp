@@ -2112,7 +2112,7 @@ static void DebugShowLinks(DisplayModel *dm, HDC hdc)
 {
     if (!gDebugShowLinks)
         return;
-    if (!dm || !dm->pdfEngine)
+    if (!dm || !dm->pdfEngine && !dm->xpsEngine)
         return;
 
     RectI viewPortRect(PointI(), dm->viewPortSize);
@@ -2124,7 +2124,11 @@ static void DebugShowLinks(DisplayModel *dm, HDC hdc)
         if (!pageInfo->shown || 0.0 == pageInfo->visibleRatio)
             continue;
 
-        Vec<PageElement *> *els = dm->pdfEngine->GetElements(pageNo);
+        Vec<PageElement *> *els;
+        if (dm->xpsEngine)
+            els = dm->xpsEngine->GetElements(pageNo);
+        else
+            els = dm->pdfEngine->GetElements(pageNo);
         for (size_t i = 0; i < els->Count(); i++) {
             RectI rect = dm->CvtToScreen(pageNo, els->At(i)->GetRect());
             RectI isect = viewPortRect.Intersect(rect);
