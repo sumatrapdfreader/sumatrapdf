@@ -27,25 +27,26 @@ public:
     virtual fz_obj *dest() const = 0;
 };
 
-class PdfTocItem {
+class DocToCItem {
 public:
     TCHAR *title;
     bool open;
     int pageNo;
     int id;
 
-    PdfTocItem *child;
-    PdfTocItem *next;
+    DocToCItem *child;
+    DocToCItem *next;
 
-    PdfTocItem(TCHAR *title) :
+    DocToCItem(TCHAR *title) :
         title(title), open(true), pageNo(0), id(0), child(NULL), next(NULL) { }
 
-    virtual ~PdfTocItem() {
+    virtual ~DocToCItem() {
         delete child;
         delete next;
         free(title);
     }
 
+    // caller MUST NOT delete the result
     virtual PageDestination *GetLink() = 0;
 };
 
@@ -74,7 +75,7 @@ public:
     virtual fz_obj *GetNamedDest(const TCHAR *name) = 0;
     virtual bool HasToCTree() const = 0;
     // caller must delete the result (when no longer needed)
-    virtual PdfTocItem *GetToCTree() = 0;
+    virtual DocToCItem *GetToCTree() = 0;
 
     virtual bool SaveEmbedded(fz_obj *obj, LinkSaverUI& saveUI) = 0;
     // caller must free() the result
@@ -102,7 +103,7 @@ public:
     virtual fz_obj *GetNamedDest(const TCHAR *name) = 0;
     virtual bool HasToCTree() const = 0;
     // caller must delete the result (when no longer needed)
-    virtual PdfTocItem *GetToCTree() = 0;
+    virtual DocToCItem *GetToCTree() = 0;
 
 protected:
     virtual bool load(const TCHAR *fileName) = 0;

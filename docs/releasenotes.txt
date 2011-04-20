@@ -3,7 +3,8 @@ the release notes, as we make them, to make the release process easier.
 
 Next version:
 
-* display Frequent Read list when no document is open
+* display Frequently Read list when no document is open
+* support clickable links and a Table of Content for XPS documents
 
 1.5 (2011-04-??)
 

@@ -157,7 +157,7 @@ public:
     // tocState is an array of ids for ToC items that have been expanded/collapsed
     // by the user (tocState[0] is the length of the list)
     int *           tocState;
-    PdfTocItem *    tocRoot;
+    DocToCItem *    tocRoot;
     bool            resizingTocBox;
 
     // synchronizer based on .pdfsync file

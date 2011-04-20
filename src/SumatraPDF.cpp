@@ -4525,10 +4525,10 @@ static void OnChar(WindowInfo& win, WPARAM key)
 
 class GoToTocLinkWorkItem : public UIThreadWorkItem
 {
-    PdfTocItem *tocItem;
+    DocToCItem *tocItem;
 
 public:
-    GoToTocLinkWorkItem(WindowInfo *win, PdfTocItem *ti) :
+    GoToTocLinkWorkItem(WindowInfo *win, DocToCItem *ti) :
         UIThreadWorkItem(win), tocItem(ti) {}
 
     virtual void Execute() {
@@ -4546,7 +4546,7 @@ static void GoToTocLinkForTVItem(WindowInfo& win, HWND hTV, HTREEITEM hItem=NULL
     item.hItem = hItem;
     item.mask = TVIF_PARAM;
     TreeView_GetItem(hTV, &item);
-    PdfTocItem *tocItem = (PdfTocItem *)item.lParam;
+    DocToCItem *tocItem = (DocToCItem *)item.lParam;
     if (win.IsDocLoaded() && tocItem &&
         (allowExternal || Str::Eq(tocItem->GetLink()->GetType(), "ScrollTo"))) {
         gUIThreadMarshaller.Queue(new GoToTocLinkWorkItem(&win, tocItem));
@@ -5491,7 +5491,7 @@ static void CreateTocBox(WindowInfo& win)
     SetWindowLongPtr(win.hwndTocBox, GWLP_WNDPROC, (LONG_PTR)WndProcTocBox);
 }
 
-static HTREEITEM AddTocItemToView(HWND hwnd, PdfTocItem *entry, HTREEITEM parent, bool toggleItem)
+static HTREEITEM AddTocItemToView(HWND hwnd, DocToCItem *entry, HTREEITEM parent, bool toggleItem)
 {
     TV_INSERTSTRUCT tvinsert;
     tvinsert.hParent = parent;
@@ -5515,7 +5515,7 @@ static HTREEITEM AddTocItemToView(HWND hwnd, PdfTocItem *entry, HTREEITEM parent
     return TreeView_InsertItem(hwnd, &tvinsert);
 }
 
-static bool WasItemToggled(PdfTocItem *entry, int *tocState)
+static bool WasItemToggled(DocToCItem *entry, int *tocState)
 {
     if (!tocState || tocState[0] <= 0)
         return false;
@@ -5527,7 +5527,7 @@ static bool WasItemToggled(PdfTocItem *entry, int *tocState)
     return false;
 }
 
-static void PopulateTocTreeView(HWND hwnd, PdfTocItem *entry, int *tocState, HTREEITEM parent = NULL)
+static void PopulateTocTreeView(HWND hwnd, DocToCItem *entry, int *tocState, HTREEITEM parent = NULL)
 {
     for (; entry; entry = entry->next) {
         bool toggleItem = WasItemToggled(entry, tocState);
@@ -5704,7 +5704,7 @@ void WindowInfo::ClearTocBox()
 
 static void CustomizeToCInfoTip(LPNMTVGETINFOTIP nmit)
 {
-    PdfTocItem *tocItem = (PdfTocItem *)nmit->lParam;
+    DocToCItem *tocItem = (DocToCItem *)nmit->lParam;
     ScopedMem<TCHAR> path(tocItem->GetLink()->GetValue());
     if (!path)
         return;

@@ -124,7 +124,7 @@ HTREEITEM WindowInfo::TreeItemForPageNo(HTREEITEM hItem, int pageNo)
 
         // return if this item is on the specified page (or on a latter page)
         if (item.lParam) {
-            int page = ((PdfTocItem *)item.lParam)->pageNo;
+            int page = ((DocToCItem *)item.lParam)->pageNo;
             if (1 <= page && page <= pageNo)
                 hCurrItem = hItem;
             if (page >= pageNo)
@@ -169,7 +169,7 @@ void WindowInfo::UpdateToCExpansionState(HTREEITEM hItem)
         TreeView_GetItem(this->hwndTocTree, &item);
 
         // add the ids of toggled items to tocState
-        PdfTocItem *tocItem = item.lParam ? (PdfTocItem *)item.lParam : NULL;
+        DocToCItem *tocItem = item.lParam ? (DocToCItem *)item.lParam : NULL;
         bool wasToggled = tocItem && !(item.state & TVIS_EXPANDED) == tocItem->open;
         if (wasToggled) {
             int *newState = (int *)realloc(this->tocState, (++this->tocState[0] + 1) * sizeof(int));

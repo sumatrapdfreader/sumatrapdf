@@ -31,8 +31,6 @@ bool fz_is_pt_in_rect(fz_rect rect, fz_point pt)
            MIN(rect.y0, rect.y1) <= pt.y && pt.y < MAX(rect.y0, rect.y1);
 }
 
-#define fz_sizeofrect(rect) (((rect).x1 - (rect).x0) * ((rect).y1 - (rect).y0))
-
 inline RectD fz_rect_to_RectD(fz_rect rect)
 {
     return RectD::FromXY(rect.x0, rect.y0, rect.x1, rect.y1);
@@ -53,6 +51,13 @@ inline fz_bbox fz_RectI_to_bbox(RectI bbox)
 {
     fz_bbox result = { bbox.x, bbox.y, bbox.x + bbox.dx, bbox.y + bbox.dy };
     return result;
+}
+
+inline bool fz_significantly_overlap(fz_rect r1, fz_rect r2)
+{
+    RectD rect1 = fz_rect_to_RectD(r1);
+    RectD isect = rect1.Intersect(fz_rect_to_RectD(r2));
+    return !isect.IsEmpty() && isect.dx * isect.dy >= 0.25 * rect1.dx * rect1.dy;
 }
 
 class RenderedFitzBitmap : public RenderedBitmap {
@@ -280,6 +285,99 @@ fz_stream *fz_open_istream(IStream *stream)
     return stm;
 }
 
+struct LinkRectList {
+    StrVec links;
+    Vec<fz_rect> coords;
+};
+
+static bool linkifyCheckMultiline(TCHAR *pageText, TCHAR *pos, RectI *coords)
+{
+    // multiline links end in a non-alphanumeric character and continue on a line
+    // that starts left and only slightly below where the current line ended
+    // (and that doesn't start with http itself)
+    return
+        '\n' == *pos && pos > pageText && !_istalnum(pos[-1]) && !_istspace(pos[1]) &&
+        coords[pos - pageText + 1].BR().y > coords[pos - pageText - 1].y &&
+        coords[pos - pageText + 1].y <= coords[pos - pageText - 1].BR().y &&
+        coords[pos - pageText + 1].x < coords[pos - pageText - 1].BR().x &&
+        !Str::StartsWith(pos + 1, _T("http"));
+}
+
+static TCHAR *linkifyFindEnd(TCHAR *start)
+{
+    TCHAR *end;
+
+    // look for the end of the URL (ends in a space preceded maybe by interpunctuation)
+    for (end = start; *end && !_istspace(*end); end++);
+    if (',' == end[-1] || '.' == end[-1])
+        end--;
+    // also ignore a closing parenthesis, if the URL doesn't contain any opening one
+    if (')' == end[-1] && (!_tcschr(start, '(') || _tcschr(start, '(') > end))
+        end--;
+
+    return end;
+}
+
+static TCHAR *linkifyMultilineText(LinkRectList *list, TCHAR *pageText, TCHAR *start, RectI *coords)
+{
+    size_t lastIx = list->coords.Count() - 1;
+    ScopedMem<TCHAR> uri(list->links[lastIx]);
+    TCHAR *end = start;
+    bool multiline = false;
+
+    do {
+        end = linkifyFindEnd(start);
+        multiline = linkifyCheckMultiline(pageText, end, coords);
+        *end = 0;
+
+        uri.Set(Str::Join(uri, start));
+        RectI bbox = coords[start - pageText].Union(coords[end - pageText - 1]);
+        list->coords.Append(fz_RectD_to_rect(bbox.Convert<double>()));
+
+        start = end + 1;
+    } while (multiline);
+
+    // update the link URL for all partial links
+    list->links[lastIx] = Str::Dup(uri);
+    for (size_t i = lastIx; i < list->coords.Count(); i++)
+        list->links.Append(Str::Dup(uri));
+
+    return end;
+}
+
+// caller needs to delete the result
+static LinkRectList *linkifyText(TCHAR *pageText, RectI *coords)
+{
+    LinkRectList *list = new LinkRectList;
+
+    for (TCHAR *start = pageText; *start; start++) {
+        // look for words starting with "http://", "https://" or "www."
+        if (('h' != *start || !Str::StartsWith(start, _T("http://")) &&
+                              !Str::StartsWith(start, _T("https://"))) &&
+            ('w' != *start || !Str::StartsWith(start, _T("www."))) ||
+            (start > pageText && (_istalnum(start[-1]) || '/' == start[-1])))
+            continue;
+
+        TCHAR *end = linkifyFindEnd(start);
+        bool multiline = linkifyCheckMultiline(pageText, end, coords);
+        *end = 0;
+
+        // add the link, if it's a new one (ignoring www. links without a toplevel domain)
+        if (*start && (Str::StartsWith(start, _T("http")) || _tcschr(start + 5, '.') != NULL)) {
+            TCHAR *uri = Str::StartsWith(start, _T("http")) ? Str::Dup(start) : Str::Join(_T("http://"), start);
+            list->links.Append(uri);
+            RectI bbox = coords[start - pageText].Union(coords[end - pageText - 1]);
+            list->coords.Append(fz_RectD_to_rect(bbox.Convert<double>()));
+            if (multiline)
+                end = linkifyMultilineText(list, pageText, end + 1, coords);
+        }
+
+        start = end;
+    }
+
+    return list;
+}
+
 // Ensure that fz_accelerate is called before using Fitz the first time.
 class FitzAccelerator { public: FitzAccelerator() { fz_accelerate(); } };
 FitzAccelerator _globalAccelerator;
@@ -309,13 +407,14 @@ inline char *ToPDF(TCHAR *tstr)
     }
 }
 
-pdf_link *pdf_new_link(fz_obj *dest, pdf_link_kind kind)
+pdf_link *pdf_new_link(fz_obj *dest, pdf_link_kind kind, fz_rect rect=fz_empty_rect)
 {
     pdf_link *link = (pdf_link *)fz_malloc(sizeof(pdf_link));
 
-    ZeroMemory(link, sizeof(pdf_link));
     link->dest = dest;
     link->kind = kind;
+    link->rect = rect;
+    link->next = NULL;
 
     return link;
 }
@@ -349,8 +448,7 @@ fz_error pdf_get_mediabox(fz_rect *mediabox, fz_obj *page)
 {
     fz_obj *obj = fz_dict_gets(page, "MediaBox");
     fz_bbox bbox = fz_round_rect(pdf_to_rect(obj));
-    if (fz_is_empty_rect(pdf_to_rect(obj)))
-    {
+    if (fz_is_empty_bbox(bbox)) {
         fz_warn("cannot find page bounds, guessing page bounds.");
         bbox.x0 = 0;
         bbox.y0 = 0;
@@ -359,20 +457,16 @@ fz_error pdf_get_mediabox(fz_rect *mediabox, fz_obj *page)
     }
 
     obj = fz_dict_gets(page, "CropBox");
-    if (fz_is_array(obj))
-    {
+    if (fz_is_array(obj)) {
         fz_bbox cropbox = fz_round_rect(pdf_to_rect(obj));
         bbox = fz_intersect_bbox(bbox, cropbox);
     }
 
-    mediabox->x0 = (float)MIN(bbox.x0, bbox.x1);
-    mediabox->y0 = (float)MIN(bbox.y0, bbox.y1);
-    mediabox->x1 = (float)MAX(bbox.x0, bbox.x1);
-    mediabox->y1 = (float)MAX(bbox.y0, bbox.y1);
-
-    if (mediabox->x1 - mediabox->x0 < 1 || mediabox->y1 - mediabox->y0 < 1)
+    RectD mbox = fz_bbox_to_RectI(bbox).Convert<double>();
+    if (mbox.IsEmpty())
         return fz_throw("invalid page size");
 
+    *mediabox = fz_RectD_to_rect(mbox);
     return fz_okay;
 }
 
@@ -384,7 +478,11 @@ public:
     PdfLink() : link(NULL), pageNo(-1) { }
     PdfLink(pdf_link *link, int pageNo=-1) : link(link), pageNo(pageNo) { }
 
-    virtual RectD GetRect() const;
+    virtual RectD GetRect() const {
+        if (!link)
+            return RectD();
+        return fz_rect_to_RectD(link->rect);
+    }
     virtual TCHAR *GetValue() const;
     virtual int GetPageNo() const { return pageNo; }
     virtual PageDestination *AsLink() { return this; }
@@ -392,27 +490,6 @@ public:
     virtual const char *GetType() const;
     virtual fz_obj *dest() const;
 };
-
-class CPdfTocItem : public PdfTocItem {
-    PdfLink link;
-
-public:
-    CPdfTocItem(TCHAR *title, PdfLink link) : PdfTocItem(title), link(link) { }
-
-    void AddSibling(PdfTocItem *sibling)
-    {
-        PdfTocItem *item;
-        for (item = this; item->next; item = item->next);
-        item->next = sibling;
-    }
-
-    virtual PageDestination *GetLink() { return &link; }
-};
-
-RectD PdfLink::GetRect() const
-{
-    return link ? fz_rect_to_RectD(link->rect) : RectD();
-}
 
 TCHAR *PdfLink::GetValue() const
 {
@@ -507,120 +584,21 @@ public:
     }
 };
 
-static bool isMultilineLink(TCHAR *pageText, TCHAR *pos, RectI *coords)
-{
-    // multiline links end in a non-alphanumeric character and continue on a line
-    // that starts left and only slightly below where the current line ended
-    // (and that doesn't start with http itself)
-    return
-        '\n' == *pos && pos > pageText && !_istalnum(pos[-1]) && !_istspace(pos[1]) &&
-        coords[pos - pageText + 1].BR().y > coords[pos - pageText - 1].y &&
-        coords[pos - pageText + 1].y <= coords[pos - pageText - 1].BR().y &&
-        coords[pos - pageText + 1].x < coords[pos - pageText - 1].BR().x &&
-        !Str::StartsWith(pos + 1, _T("http"));
-}
+class CPdfToCItem : public DocToCItem {
+    PdfLink link;
 
-static TCHAR *findLinkEnd(TCHAR *start)
-{
-    TCHAR *end;
+public:
+    CPdfToCItem(TCHAR *title, PdfLink link) : DocToCItem(title), link(link) { }
 
-    // look for the end of the URL (ends in a space preceded maybe by interpunctuation)
-    for (end = start; *end && !_istspace(*end); end++);
-    if (',' == end[-1] || '.' == end[-1])
-        end--;
-    // also ignore a closing parenthesis, if the URL doesn't contain any opening one
-    if (')' == end[-1] && (!_tcschr(start, '(') || _tcschr(start, '(') > end))
-        end--;
-
-    return end;
-}
-
-static TCHAR *parseMultilineLink(pdf_link *firstLink, TCHAR *pageText, TCHAR *start, RectI *coords)
-{
-    pdf_link *lastLink = firstLink;
-    char *uri = Str::Dup(fz_to_str_buf(firstLink->dest));
-    TCHAR *end = start;
-    bool multiline = false;
-
-    do {
-        end = findLinkEnd(start);
-        multiline = isMultilineLink(pageText, end, coords);
-        *end = 0;
-
-        // add a new link for this line
-        RectI bbox = coords[start - pageText].Union(coords[end - pageText - 1]);
-        ScopedMem<char> uriPart(Str::Conv::ToUtf8(start));
-        char *newUri = Str::Join(uri, uriPart);
-        free(uri);
-        uri = newUri;
-
-        pdf_link *link = pdf_new_link(NULL, PDF_LINK_URI);
-        link->rect = fz_RectD_to_rect(bbox.Convert<double>());
-        lastLink = lastLink->next = link;
-
-        start = end + 1;
-    } while (multiline);
-
-    // update the link URL for all partial links
-    fz_drop_obj(firstLink->dest);
-    firstLink->dest = fz_new_string(uri, (int)strlen(uri));
-    for (pdf_link *link = firstLink->next; link; link = link->next)
-        link->dest = fz_keep_obj(firstLink->dest);
-    free(uri);
-
-    return end;
-}
-
-static pdf_link *extractTextLinks(pdf_link *linkRoot, TCHAR *pageText, RectI *coords)
-{
-    pdf_link *linkTail = linkRoot;
-    while (linkTail && linkTail->next)
-        linkTail = linkTail->next;
-
-    for (TCHAR *start = pageText; *start; start++) {
-        // look for words starting with "http://", "https://" or "www."
-        if (('h' != *start || !Str::StartsWith(start, _T("http://")) &&
-                              !Str::StartsWith(start, _T("https://"))) &&
-            ('w' != *start || !Str::StartsWith(start, _T("www."))) ||
-            (start > pageText && (_istalnum(start[-1]) || '/' == start[-1])))
-            continue;
-
-        TCHAR *end = findLinkEnd(start);
-        bool multiline = isMultilineLink(pageText, end, coords);
-        *end = 0;
-
-        // make sure that no other link is associated with this area
-        fz_bbox bbox = fz_RectI_to_bbox(coords[start - pageText].Union(coords[end - pageText - 1]));
-        for (pdf_link *link = linkRoot; link && *start; link = link->next) {
-            fz_bbox isect = fz_intersect_bbox(bbox, fz_round_rect(link->rect));
-            if (!fz_is_empty_bbox(isect) && fz_sizeofrect(isect) >= 0.25 * fz_sizeofrect(link->rect))
-                start = end;
-        }
-
-        // add the link, if it's a new one (ignoring www. links without a toplevel domain)
-        if (*start && (Str::StartsWith(start, _T("http")) || _tcschr(start + 5, '.') != NULL)) {
-            char *uri = Str::Conv::ToUtf8(start);
-            char *httpUri = Str::StartsWith(uri, "http") ? uri : Str::Join("http://", uri);
-            fz_obj *dest = fz_new_string(httpUri, (int)strlen(httpUri));
-            pdf_link *link = pdf_new_link(dest, PDF_LINK_URI);
-            link->rect = fz_bbox_to_rect(bbox);
-            if (linkRoot)
-                linkTail = linkTail->next = link;
-            else
-                linkRoot = linkTail = link;
-            if (httpUri != uri)
-                free(httpUri);
-            free(uri);
-
-            if (multiline)
-                end = parseMultilineLink(linkTail, pageText, end + 1, coords);
-        }
-
-        start = end;
+    void AddSibling(DocToCItem *sibling)
+    {
+        DocToCItem *item;
+        for (item = this; item->next; item = item->next);
+        item->next = sibling;
     }
 
-    return linkRoot;
-}
+    virtual PageDestination *GetLink() { return &link; }
+};
 
 ///// Above are extensions to Fitz and MuPDF, now follows PdfEngine /////
 
@@ -683,7 +661,7 @@ public:
     virtual bool HasToCTree() const {
         return _outline != NULL || _attachments != NULL;
     }
-    virtual PdfTocItem *GetToCTree();
+    virtual DocToCItem *GetToCTree();
 
     virtual bool SaveEmbedded(fz_obj *obj, LinkSaverUI& saveUI);
     virtual char *GetDecryptionKey() const;
@@ -722,7 +700,7 @@ protected:
                             fz_bbox clipbox=fz_infinite_bbox, bool cacheRun=true);
     void            dropPageRun(PdfPageRun *run, bool forceRemove=false);
 
-    CPdfTocItem   * buildTocTree(pdf_outline *entry, int& idCounter);
+    CPdfToCItem   * buildTocTree(pdf_outline *entry, int& idCounter);
     void            linkifyPageText(pdf_page *page);
     bool            hasPermission(int permission);
 
@@ -979,10 +957,10 @@ bool CPdfEngine::finishLoading()
     return PageCount() > 0;
 }
 
-CPdfTocItem *CPdfEngine::buildTocTree(pdf_outline *entry, int& idCounter)
+CPdfToCItem *CPdfEngine::buildTocTree(pdf_outline *entry, int& idCounter)
 {
     TCHAR *name = entry->title ? Str::Conv::FromUtf8(entry->title) : Str::Dup(_T(""));
-    CPdfTocItem *node = new CPdfTocItem(name, PdfLink(entry->link));
+    CPdfToCItem *node = new CPdfToCItem(name, PdfLink(entry->link));
     node->open = entry->count >= 0;
     node->id = ++idCounter;
 
@@ -996,9 +974,9 @@ CPdfTocItem *CPdfEngine::buildTocTree(pdf_outline *entry, int& idCounter)
     return node;
 }
 
-PdfTocItem *CPdfEngine::GetToCTree()
+DocToCItem *CPdfEngine::GetToCTree()
 {
-    CPdfTocItem *node = NULL;
+    CPdfToCItem *node = NULL;
     int idCounter = 0;
 
     if (_outline) {
@@ -1031,7 +1009,7 @@ int CPdfEngine::FindPageNo(fz_obj *dest)
 fz_obj *CPdfEngine::GetNamedDest(const TCHAR *name)
 {
     ScopedMem<char> name_utf8(Str::Conv::ToUtf8(name));
-    fz_obj *nameobj = fz_new_string((char *)name_utf8, (int)strlen(name_utf8));
+    fz_obj *nameobj = fz_new_string((char *)name_utf8, (int)Str::Len(name_utf8));
     fz_obj *dest = pdf_lookup_dest(_xref, nameobj);
     fz_drop_obj(nameobj);
 
@@ -1410,16 +1388,29 @@ static pdf_link *FixupPageLinks(pdf_link *root)
 
 void CPdfEngine::linkifyPageText(pdf_page *page)
 {
-    page->links = FixupPageLinks(page->links);
-
     RectI *coords;
     TCHAR *pageText = ExtractPageText(page, _T("\n"), &coords, Target_View, true);
-    if (!pageText)
+    if (!pageText) {
+        page->links = FixupPageLinks(page->links);
         return;
+    }
 
-    page->links = extractTextLinks(page->links, pageText, coords);
+    LinkRectList *list = linkifyText(pageText, coords);
+    for (size_t i = 0; i < list->links.Count(); i++) {
+        bool overlaps = false;
+        for (pdf_link *next = page->links; next && !overlaps; next = next->next)
+            overlaps = fz_significantly_overlap(next->rect, list->coords[i]);
+        if (!overlaps) {
+            ScopedMem<char> uri(Str::Conv::ToUtf8(list->links[i]));
+            pdf_link *link = pdf_new_link(fz_new_string(uri, Str::Len(uri)), PDF_LINK_URI, list->coords[i]);
+            link->next = page->links;
+            page->links = link;
+        }
+    }
+    page->links = FixupPageLinks(page->links);
 
-    free(coords);
+    delete list;
+    delete[] coords;
     free(pageText);
 }
 
@@ -1584,13 +1575,83 @@ extern "C" {
 #include <muxps.h>
 }
 
-class CXpsTocItem : public CPdfTocItem {
-    pdf_link *_link;
+static bool IsUriTarget(const char *target)
+{
+    return Str::StartsWithI(target, "http:") || Str::StartsWithI(target, "https:");
+}
+
+static fz_obj *xps_new_destination(fz_obj *obj, fz_rect rect)
+{
+    fz_obj *dest = fz_new_array(4);
+
+    fz_array_push(dest, obj); fz_drop_obj(obj);
+    /* // TODO: destination rectangles seem wrongly placed (compared with the XPS Viewer)
+    obj = fz_new_name("XYZ"); fz_array_push(dest, obj); fz_drop_obj(obj);
+    obj = fz_new_real(rect.x0); fz_array_push(dest, obj); fz_drop_obj(obj);
+    obj = fz_new_real(rect.y0); fz_array_push(dest, obj); fz_drop_obj(obj);
+    // */
+
+    return dest;
+}
+
+class XpsLink : public PageDestination {
+    const char *target; // owned by either an xps_link or an xps_outline
+    fz_rect rect;
+    int pageNo;
+    fz_obj *destObj;
 
 public:
-    CXpsTocItem(TCHAR *title, PdfLink link, pdf_link *_link) :
-        CPdfTocItem(title, link), _link(_link) { }
-    virtual ~CXpsTocItem() { pdf_free_link(_link); }
+    XpsLink() : target(NULL), rect(fz_empty_rect), pageNo(-1), destObj(NULL) { }
+    XpsLink(char *target, fz_rect rect, int pageNo=-1) :
+        target(target), rect(rect), pageNo(pageNo) {
+        if (!target)
+            destObj = NULL;
+        else if (IsUriTarget(target))
+            destObj = fz_new_string(target, Str::Len(target));
+        else
+            destObj = xps_new_destination(fz_new_string(target, Str::Len(target)), rect);
+    }
+    XpsLink(const XpsLink& orig) : target(orig.target), rect(orig.rect), pageNo(orig.pageNo) {
+        destObj = orig.destObj ? fz_keep_obj(orig.destObj) : NULL;
+    }
+    virtual ~XpsLink() {
+        if (destObj)
+            fz_drop_obj(destObj);
+    }
+
+    virtual RectD GetRect() const { return fz_rect_to_RectD(rect); }
+    virtual TCHAR *GetValue() const {
+        if (!target || !IsUriTarget(target))
+            return NULL;
+        return Str::Conv::FromUtf8(target);
+    }
+    virtual int GetPageNo() const { return pageNo; }
+    virtual PageDestination *AsLink() { return this; }
+
+    virtual const char *GetType() const {
+        if (!target)
+            return NULL;
+        if (IsUriTarget(target))
+            return "LaunchURL";
+        return "ScrollTo";
+    }
+    virtual fz_obj *dest() const { return destObj; }
+};
+
+class CXpsToCItem : public DocToCItem {
+    XpsLink link;
+
+public:
+    CXpsToCItem(TCHAR *title, XpsLink link) : DocToCItem(title), link(link) { }
+
+    void AddSibling(DocToCItem *sibling)
+    {
+        DocToCItem *item;
+        for (item = this; item->next; item = item->next);
+        item->next = sibling;
+    }
+
+    virtual PageDestination *GetLink() { return &link; }
 };
 
 struct XpsPageRun {
@@ -1645,7 +1706,7 @@ public:
     virtual bool HasToCTree() const {
         return _outline != NULL;
     }
-    virtual PdfTocItem *GetToCTree();
+    virtual DocToCItem *GetToCTree();
 
 protected:
     const TCHAR *_fileName;
@@ -1680,23 +1741,34 @@ protected:
                             fz_bbox clipbox=fz_infinite_bbox, bool cacheRun=true);
     void            dropPageRun(XpsPageRun *run, bool forceRemove=false);
 
-    CPdfTocItem   * buildTocTree(xps_outline *entry, int& idCounter);
+    CXpsToCItem   * buildTocTree(xps_outline *entry, int& idCounter);
     void            linkifyPageText(xps_page *page, int pageNo);
 
     xps_outline   * _outline;
     xps_named_dest* _dests;
-    pdf_link     ** _links;
+    xps_link     ** _links;
     fz_glyph_cache* _drawcache;
 };
 
-static void
-xps_run_page(xps_context *ctx, xps_page *page, fz_device *dev, fz_matrix ctm, xps_link *extract=NULL)
+static void xps_run_page(xps_context *ctx, xps_page *page, fz_device *dev, fz_matrix ctm, xps_link *extract=NULL)
 {
     ctx->dev = dev;
     ctx->link_root = extract;
     xps_parse_fixed_page(ctx, ctm, page);
     ctx->link_root = NULL;
     ctx->dev = NULL;
+}
+
+static xps_link *xps_new_link(char *target, fz_rect rect=fz_empty_rect)
+{
+    xps_link *link = (xps_link *)fz_malloc(sizeof(xps_link));
+
+    link->target = fz_strdup(target);
+    link->rect = rect;
+    link->is_dest = 0;
+    link->next = NULL;
+
+    return link;
 }
 
 CXpsEngine::CXpsEngine() : _fileName(NULL), _ctx(NULL), _pages(NULL),
@@ -1722,7 +1794,7 @@ CXpsEngine::~CXpsEngine()
     if (_links) {
         for (int i = 0; i < PageCount(); i++)
             if (_links[i])
-                pdf_free_link(_links[i]);
+                xps_free_link(_links[i]);
         free(_links);
     }
 
@@ -1796,7 +1868,7 @@ bool CXpsEngine::load_from_stream(fz_stream *stm)
         return false;
 
     _pages = SAZA(xps_page *, PageCount());
-    _links = SAZA(pdf_link *, PageCount());
+    _links = SAZA(xps_link *, PageCount());
 
     _outline = xps_parse_outline(_ctx);
     _dests = xps_parse_named_dests(_ctx);
@@ -2115,9 +2187,9 @@ PageElement *CXpsEngine::GetElementAtPos(int pageNo, PointD pt)
         return NULL;
 
     fz_point p = { (float)pt.x, (float)pt.y };
-    for (pdf_link *link = _links[pageNo-1]; link; link = link->next)
-        if (fz_is_pt_in_rect(link->rect, p))
-            return new PdfLink(link, pageNo);
+    for (xps_link *link = _links[pageNo-1]; link; link = link->next)
+        if (!link->is_dest && fz_is_pt_in_rect(link->rect, p))
+            return new XpsLink(link->target, link->rect, pageNo);
 
     return NULL;
 }
@@ -2129,43 +2201,19 @@ Vec<PageElement *> *CXpsEngine::GetElements(int pageNo)
 
     Vec<PageElement *> *els = new Vec<PageElement *>();
 
-    for (pdf_link *link = _links[pageNo-1]; link; link = link->next)
-        els->Append(new PdfLink(link, pageNo));
+    for (xps_link *link = _links[pageNo-1]; link; link = link->next)
+        if (!link->is_dest)
+            els->Append(new XpsLink(link->target, link->rect, pageNo));
 
     return els;
 }
 
-static bool isSupportedUri(const char *target)
+static xps_named_dest *xps_find_destination(xps_named_dest *first, char *name)
 {
-    return Str::StartsWithI(target, "http:") || Str::StartsWithI(target, "https:");
-}
-
-static fz_obj *xps_new_destination(fz_obj *obj, fz_rect rect)
-{
-    fz_obj *dest = fz_new_array(4);
-
-    fz_array_push(dest, obj); fz_drop_obj(obj);
-    /* // TODO: destination rectangles seem wrongly placed (compared with the XPS Viewer)
-    obj = fz_new_name("XYZ"); fz_array_push(dest, obj); fz_drop_obj(obj);
-    obj = fz_new_real(rect.x0); fz_array_push(dest, obj); fz_drop_obj(obj);
-    obj = fz_new_real(rect.y0); fz_array_push(dest, obj); fz_drop_obj(obj);
-    // */
-
-    return dest;
-}
-
-static pdf_link *xps_to_pdf_link(xps_link *link)
-{
-    pdf_link *pdflink;
-    fz_obj *dest = fz_new_string(link->target, strlen(link->target));
-
-    if (isSupportedUri(link->target))
-        pdflink = pdf_new_link(dest, PDF_LINK_URI);
-    else
-        pdflink = pdf_new_link(xps_new_destination(dest, link->rect), PDF_LINK_GOTO);
-
-    pdflink->rect = link->rect;
-    return pdflink;
+    for (xps_named_dest *dest = first; dest; dest = dest->next)
+        if (Str::Eq(dest->target, name))
+            return dest;
+    return NULL;
 }
 
 void CXpsEngine::linkifyPageText(xps_page *page, int pageNo)
@@ -2181,48 +2229,50 @@ void CXpsEngine::linkifyPageText(xps_page *page, int pageNo)
     assert(run);
     if (run)
         dropPageRun(run);
+    _links[pageNo-1] = root.next;
 
     for (xps_link *link = root.next; link; link = link->next) {
-        // convert xps_link to pdf_link for now
-        if (!link->is_dest) {
-            pdf_link *pdflink = xps_to_pdf_link(link);
-            pdflink->next = _links[pageNo-1];
-            _links[pageNo-1] = pdflink;
-        }
-        // or update the named destination
-        else {
+        // updated named destinations
+        if (link->is_dest) {
             ScopedMem<char> target(Str::Format("%s#%s", page->name, link->target));
-            bool foundDest = false;
-            for (xps_named_dest *dest = _dests; dest && !foundDest; dest = dest->next) {
-                if (Str::Eq(dest->target, target.Get())) {
-                    dest->rect = link->rect;
-                    foundDest = true;
-                }
-            }
+            xps_named_dest *dest = xps_find_destination(_dests, target);
             // remember unknown destinations
-            if (!foundDest) {
-                xps_named_dest *dest = SAZA(xps_named_dest, 1);
+            if (!dest) {
+                dest = (xps_named_dest *)fz_malloc(sizeof(xps_named_dest));
                 dest->target = fz_strdup(target);
-                dest->rect = link->rect;
                 dest->page = pageNo;
                 dest->next = _dests;
                 _dests = dest;
             }
+            dest->rect = link->rect;
         }
     }
-    if (root.next)
-        xps_free_link(root.next);
-
-    _links[pageNo-1] = FixupPageLinks(_links[pageNo-1]);
 
     RectI *coords;
     TCHAR *pageText = ExtractPageText(page, _T("\n"), &coords, true);
     if (!pageText)
         return;
 
-    _links[pageNo-1] = extractTextLinks(_links[pageNo-1], pageText, coords);
+    xps_link *last;
+    for (last = &root; last->next; last = last->next);
+    LinkRectList *list = linkifyText(pageText, coords);
 
-    free(coords);
+    for (size_t i = 0; i < list->links.Count(); i++) {
+        bool overlaps = false;
+        for (xps_link *next = _links[pageNo-1]; next && !overlaps; next = next->next)
+            overlaps = fz_significantly_overlap(next->rect, list->coords[i]);
+        if (!overlaps) {
+            ScopedMem<char> uri(Str::Conv::ToUtf8(list->links[i]));
+            last = last->next = xps_new_link(uri, list->coords[i]);
+            assert(IsUriTarget(last->target));
+        }
+    }
+
+    // in case there were no native links
+    _links[pageNo-1] = root.next;
+
+    delete list;
+    delete[] coords;
     free(pageText);
 }
 
@@ -2240,10 +2290,8 @@ int CXpsEngine::FindPageNo(fz_obj *dest)
     if (Str::IsEmpty(target))
         return 0;
 
-    for (xps_named_dest *dest = _dests; dest; dest = dest->next)
-        if (Str::Eq(target, dest->target))
-            return dest->page;
-    return 0;
+    xps_named_dest *found = xps_find_destination(_dests, target);
+    return found ? found->page : 0;
 }
 
 fz_obj *CXpsEngine::GetNamedDest(const TCHAR *name)
@@ -2259,26 +2307,15 @@ fz_obj *CXpsEngine::GetNamedDest(const TCHAR *name)
     return NULL;
 }
 
-CPdfTocItem *CXpsEngine::buildTocTree(xps_outline *entry, int& idCounter)
+CXpsToCItem *CXpsEngine::buildTocTree(xps_outline *entry, int& idCounter)
 {
-    fz_obj *destObj = NULL;
-    if (!isSupportedUri(entry->target)) {
-        for (xps_named_dest *dest = _dests; dest; dest = dest->next)
-            if (Str::Eq(dest->target, entry->target))
-                destObj = xps_new_destination(fz_new_int(dest->page), dest->rect);
-    }
-    if (!destObj)
-        destObj = fz_new_string(entry->target, strlen(entry->target));
-    pdf_link_kind kind = isSupportedUri(entry->target) ? PDF_LINK_URI : PDF_LINK_GOTO;
-    pdf_link *link = pdf_new_link(destObj, kind);
-
     TCHAR *name = entry->title ? Str::Conv::FromUtf8(entry->title) : Str::Dup(_T(""));
-    CPdfTocItem *node = new CXpsTocItem(name, PdfLink(link), link);
+    CXpsToCItem *node = new CXpsToCItem(name, XpsLink(entry->target, fz_empty_rect));
     node->open = false;
     node->id = ++idCounter;
 
-    if (PDF_LINK_GOTO == kind)
-        node->pageNo = FindPageNo(destObj);
+    if (Str::Eq(node->GetLink()->GetType(), "ScrollTo"))
+        node->pageNo = FindPageNo(node->GetLink()->dest());
     if (entry->child)
         node->child = buildTocTree(entry->child, idCounter);
     if (entry->next)
@@ -2287,15 +2324,13 @@ CPdfTocItem *CXpsEngine::buildTocTree(xps_outline *entry, int& idCounter)
     return node;
 }
 
-PdfTocItem *CXpsEngine::GetToCTree()
+DocToCItem *CXpsEngine::GetToCTree()
 {
-    CPdfTocItem *node = NULL;
+    if (!_outline)
+        return NULL;
+    
     int idCounter = 0;
-
-    if (_outline)
-        node = buildTocTree(_outline, idCounter);
-
-    return node;
+    return buildTocTree(_outline, idCounter);
 }
 
 XpsEngine *XpsEngine::CreateFromFileName(const TCHAR *fileName)
