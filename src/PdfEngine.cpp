@@ -25,12 +25,6 @@ inline fz_rect fz_bbox_to_rect(fz_bbox bbox)
     return result;
 }
 
-bool fz_is_pt_in_rect(fz_rect rect, fz_point pt)
-{
-    return MIN(rect.x0, rect.x1) <= pt.x && pt.x < MAX(rect.x0, rect.x1) &&
-           MIN(rect.y0, rect.y1) <= pt.y && pt.y < MAX(rect.y0, rect.y1);
-}
-
 inline RectD fz_rect_to_RectD(fz_rect rect)
 {
     return RectD::FromXY(rect.x0, rect.y0, rect.x1, rect.y1);
@@ -51,6 +45,11 @@ inline fz_bbox fz_RectI_to_bbox(RectI bbox)
 {
     fz_bbox result = { bbox.x, bbox.y, bbox.x + bbox.dx, bbox.y + bbox.dy };
     return result;
+}
+
+inline bool fz_is_pt_in_rect(fz_rect rect, fz_point pt)
+{
+    return fz_rect_to_RectD(rect).Inside(PointD(pt.x, pt.y));
 }
 
 inline bool fz_significantly_overlap(fz_rect r1, fz_rect r2)
@@ -378,6 +377,19 @@ static LinkRectList *linkifyText(TCHAR *pageText, RectI *coords)
     return list;
 }
 
+class SimpleDest : public PageDestination {
+    int pageNo;
+    RectD rect;
+
+public:
+    SimpleDest(int pageNo, RectD rect) : pageNo(pageNo), rect(rect) { }
+
+    virtual const char *GetType() const { return NULL; }
+    virtual int GetDestPageNo() const { return pageNo; }
+    virtual RectD GetDestRect() const { return rect; }
+    virtual TCHAR *GetDestValue() const { return NULL; }
+};
+
 // Ensure that fz_accelerate is called before using Fitz the first time.
 class FitzAccelerator { public: FitzAccelerator() { fz_accelerate(); } };
 FitzAccelerator _globalAccelerator;
@@ -470,136 +482,6 @@ fz_error pdf_get_mediabox(fz_rect *mediabox, fz_obj *page)
     return fz_okay;
 }
 
-class PdfLink : public PageDestination {
-    pdf_link *link;
-    int pageNo;
-
-public:
-    PdfLink() : link(NULL), pageNo(-1) { }
-    PdfLink(pdf_link *link, int pageNo=-1) : link(link), pageNo(pageNo) { }
-
-    virtual RectD GetRect() const {
-        if (!link)
-            return RectD();
-        return fz_rect_to_RectD(link->rect);
-    }
-    virtual TCHAR *GetValue() const;
-    virtual int GetPageNo() const { return pageNo; }
-    virtual PageDestination *AsLink() { return this; }
-
-    virtual const char *GetType() const;
-    virtual fz_obj *dest() const;
-};
-
-TCHAR *PdfLink::GetValue() const
-{
-    TCHAR *path = NULL;
-    fz_obj *obj;
-
-    switch (link ? link->kind : -1) {
-        case PDF_LINK_URI:
-            path = Str::Conv::FromPdf(link->dest);
-            break;
-        case PDF_LINK_LAUNCH:
-            obj = fz_dict_gets(link->dest, "Type");
-            if (!fz_is_name(obj) || !Str::Eq(fz_to_name(obj), "Filespec"))
-                break;
-            obj = fz_dict_gets(link->dest, "UF"); 
-            if (!fz_is_string(obj))
-                obj = fz_dict_gets(link->dest, "F"); 
-
-            if (fz_is_string(obj)) {
-                path = Str::Conv::FromPdf(obj);
-                Str::TransChars(path, _T("/"), _T("\\"));
-            }
-            break;
-        case PDF_LINK_ACTION:
-            obj = fz_dict_gets(link->dest, "S");
-            if (!fz_is_name(obj))
-                break;
-            if (Str::Eq(fz_to_name(obj), "GoToR")) {
-                obj = fz_dict_gets(link->dest, "F");
-                // Note: this might not be per standard but is required to fix Nissan_Manual_370Z.pdf
-                // from http://fofou.appspot.com/sumatrapdf/topic?id=2018365
-                if (fz_is_dict(obj))
-                    obj = fz_dict_gets(obj, "F");
-                if (fz_is_string(obj)) {
-                    path = Str::Conv::FromPdf(obj);
-                    Str::TransChars(path, _T("/"), _T("\\"));
-                }
-            }
-            break;
-    }
-
-    return path;
-}
-
-const char *PdfLink::GetType() const
-{
-    switch (link ? link->kind : -1) {
-    case PDF_LINK_URI: return "LaunchURL";
-    case PDF_LINK_GOTO: return "ScrollTo";
-    case PDF_LINK_NAMED: return fz_to_name(link->dest);
-    case PDF_LINK_LAUNCH:
-        if (fz_dict_gets(link->dest, "EF"))
-            return "LaunchEmbedded";
-        return "LaunchFile";
-    case PDF_LINK_ACTION:
-        if (Str::Eq(fz_to_name(fz_dict_gets(link->dest, "S")), "GoToR") &&
-            fz_dict_gets(link->dest, "D")) {
-            return "ScrollToEx";
-        }
-        // fall through (unsupported action)
-    default:
-        return NULL;
-    }
-}
-
-fz_obj *PdfLink::dest() const
-{
-    if (!link)
-        return NULL;
-    if (PDF_LINK_ACTION == link->kind && Str::Eq(GetType(), "ScrollToEx"))
-        return fz_dict_gets(link->dest, "D");
-    if (PDF_LINK_LAUNCH == link->kind && Str::Eq(GetType(), "LaunchEmbedded"))
-        return fz_dict_getsa(fz_dict_gets(link->dest, "EF"), "UF", "F");
-    return link->dest;
-}
-
-class PdfComment : public PageElement {
-    pdf_annot *annot;
-    int pageNo;
-
-public:
-    PdfComment(pdf_annot *annot, int pageNo=-1) : annot(annot), pageNo(pageNo) { }
-
-    virtual RectD GetRect() const {
-        return fz_rect_to_RectD(annot->rect);
-    }
-    virtual TCHAR *GetValue() const {
-        return Str::Conv::FromUtf8(fz_to_str_buf(fz_dict_gets(annot->obj, "Contents")));
-    }
-    virtual int GetPageNo() const {
-        return pageNo;
-    }
-};
-
-class CPdfToCItem : public DocToCItem {
-    PdfLink link;
-
-public:
-    CPdfToCItem(TCHAR *title, PdfLink link) : DocToCItem(title), link(link) { }
-
-    void AddSibling(DocToCItem *sibling)
-    {
-        DocToCItem *item;
-        for (item = this; item->next; item = item->next);
-        item->next = sibling;
-    }
-
-    virtual PageDestination *GetLink() { return &link; }
-};
-
 ///// Above are extensions to Fitz and MuPDF, now follows PdfEngine /////
 
 struct PdfPageRun {
@@ -607,6 +489,8 @@ struct PdfPageRun {
     fz_display_list *list;
     int refs;
 };
+
+class CPdfToCItem;
 
 class CPdfEngine : public PdfEngine {
 public:
@@ -656,16 +540,17 @@ public:
     virtual Vec<PageElement *> *GetElements(int pageNo);
     virtual PageElement *GetElementAtPos(int pageNo, PointD pt);
 
-    virtual int FindPageNo(fz_obj *dest);
-    virtual fz_obj *GetNamedDest(const TCHAR *name);
+    virtual PageDestination *GetNamedDest(const TCHAR *name);
     virtual bool HasToCTree() const {
         return _outline != NULL || _attachments != NULL;
     }
     virtual DocToCItem *GetToCTree();
 
-    virtual bool SaveEmbedded(fz_obj *obj, LinkSaverUI& saveUI);
     virtual char *GetDecryptionKey() const;
     virtual void RunGC();
+
+    int FindPageNo(fz_obj *dest);
+    bool SaveEmbedded(fz_obj *obj, LinkSaverUI& saveUI);
 
 protected:
     const TCHAR *_fileName;
@@ -708,6 +593,69 @@ protected:
     pdf_outline   * _attachments;
     fz_obj        * _info;
     fz_glyph_cache* _drawcache;
+};
+
+class PdfLink : public PageElement, public PageDestination {
+    CPdfEngine *engine;
+    pdf_link *link;
+    int pageNo;
+
+    fz_obj *dest() const;
+
+public:
+    PdfLink() : engine(NULL), link(NULL), pageNo(-1) { }
+    PdfLink(CPdfEngine *engine, pdf_link *link, int pageNo=-1) :
+        engine(engine), link(link), pageNo(pageNo) { }
+
+    virtual int GetPageNo() const { return pageNo; }
+    virtual RectD GetRect() const {
+        if (!link)
+            return RectD();
+        return fz_rect_to_RectD(link->rect);
+    }
+    virtual TCHAR *GetValue() const;
+    virtual PageDestination *AsLink() { return this; }
+
+    virtual const char *GetType() const;
+    virtual int GetDestPageNo() const;
+    virtual RectD GetDestRect() const;
+    virtual TCHAR *GetDestValue() const { return GetValue(); }
+
+    virtual bool SaveEmbedded(LinkSaverUI& saveUI);
+};
+
+class PdfComment : public PageElement {
+    pdf_annot *annot;
+    int pageNo;
+
+public:
+    PdfComment(pdf_annot *annot, int pageNo=-1) : annot(annot), pageNo(pageNo) { }
+
+    virtual int GetPageNo() const {
+        return pageNo;
+    }
+    virtual RectD GetRect() const {
+        return fz_rect_to_RectD(annot->rect);
+    }
+    virtual TCHAR *GetValue() const {
+        return Str::Conv::FromUtf8(fz_to_str_buf(fz_dict_gets(annot->obj, "Contents")));
+    }
+};
+
+class CPdfToCItem : public DocToCItem {
+    PdfLink link;
+
+public:
+    CPdfToCItem(TCHAR *title, PdfLink link) : DocToCItem(title), link(link) { }
+
+    void AddSibling(DocToCItem *sibling)
+    {
+        DocToCItem *item;
+        for (item = this; item->next; item = item->next);
+        item->next = sibling;
+    }
+
+    virtual PageDestination *GetLink() { return &link; }
 };
 
 CPdfEngine::CPdfEngine() : 
@@ -960,7 +908,7 @@ bool CPdfEngine::finishLoading()
 CPdfToCItem *CPdfEngine::buildTocTree(pdf_outline *entry, int& idCounter)
 {
     TCHAR *name = entry->title ? Str::Conv::FromUtf8(entry->title) : Str::Dup(_T(""));
-    CPdfToCItem *node = new CPdfToCItem(name, PdfLink(entry->link));
+    CPdfToCItem *node = new CPdfToCItem(name, PdfLink(this, entry->link));
     node->open = entry->count >= 0;
     node->id = ++idCounter;
 
@@ -1006,7 +954,7 @@ int CPdfEngine::FindPageNo(fz_obj *dest)
     return pdf_find_page_number(_xref, dest) + 1;
 }
 
-fz_obj *CPdfEngine::GetNamedDest(const TCHAR *name)
+PageDestination *CPdfEngine::GetNamedDest(const TCHAR *name)
 {
     ScopedMem<char> name_utf8(Str::Conv::ToUtf8(name));
     fz_obj *nameobj = fz_new_string((char *)name_utf8, (int)Str::Len(name_utf8));
@@ -1016,9 +964,13 @@ fz_obj *CPdfEngine::GetNamedDest(const TCHAR *name)
     // names refer to either an array or a dictionary with an array /D
     if (fz_is_dict(dest))
         dest = fz_dict_gets(dest, "D");
-    if (fz_is_array(dest))
-        return fz_keep_obj(dest);
-    return NULL;
+    if (!fz_is_array(dest))
+        return NULL;
+
+    pdf_link link = { PDF_LINK_GOTO, fz_empty_rect, dest, NULL };
+    PdfLink tmp(this, &link);
+
+    return new SimpleDest(tmp.GetDestPageNo(), tmp.GetDestRect());
 }
 
 pdf_page *CPdfEngine::getPdfPage(int pageNo, bool failIfBusy)
@@ -1328,7 +1280,7 @@ PageElement *CPdfEngine::GetElementAtPos(int pageNo, PointD pt)
     fz_point p = { (float)pt.x, (float)pt.y };
     for (pdf_link *link = page->links; link; link = link->next)
         if (fz_is_pt_in_rect(link->rect, p))
-            return new PdfLink(link, pageNo);
+            return new PdfLink(this, link, pageNo);
 
     for (pdf_annot *annot = page->annots; annot; annot = annot->next)
         if (fz_is_pt_in_rect(annot->rect, p) &&
@@ -1349,7 +1301,7 @@ Vec<PageElement *> *CPdfEngine::GetElements(int pageNo)
         return els;
 
     for (pdf_link *link = page->links; link; link = link->next)
-        els->Append(new PdfLink(link, pageNo));
+        els->Append(new PdfLink(this, link, pageNo));
 
     for (pdf_annot *annot = page->annots; annot; annot = annot->next)
         if (Str::Eq(fz_to_name(fz_dict_gets(annot->obj, "Subtype")), "Text") &&
@@ -1549,6 +1501,133 @@ void CPdfEngine::RunGC()
     LeaveCriticalSection(&_xrefAccess);
 }
 
+TCHAR *PdfLink::GetValue() const
+{
+    TCHAR *path = NULL;
+    fz_obj *obj;
+
+    switch (link ? link->kind : -1) {
+    case PDF_LINK_URI:
+        path = Str::Conv::FromPdf(link->dest);
+        break;
+    case PDF_LINK_LAUNCH:
+        obj = fz_dict_gets(link->dest, "Type");
+        if (!fz_is_name(obj) || !Str::Eq(fz_to_name(obj), "Filespec"))
+            break;
+        obj = fz_dict_gets(link->dest, "UF"); 
+        if (!fz_is_string(obj))
+            obj = fz_dict_gets(link->dest, "F"); 
+
+        if (fz_is_string(obj)) {
+            path = Str::Conv::FromPdf(obj);
+            Str::TransChars(path, _T("/"), _T("\\"));
+        }
+
+        if (path && fz_dict_gets(link->dest, "EF") && Str::EndsWithI(path, _T(".pdf"))) {
+            fz_obj *embedded = dest();
+            free(path);
+            path = Str::Format(_T("%s:%d:%d"), engine->FileName(), fz_to_num(embedded), fz_to_gen(embedded));
+        }
+        break;
+    case PDF_LINK_ACTION:
+        obj = fz_dict_gets(link->dest, "S");
+        if (!fz_is_name(obj))
+            break;
+        if (Str::Eq(fz_to_name(obj), "GoToR")) {
+            obj = fz_dict_gets(link->dest, "F");
+            // Note: this might not be per standard but is required to fix Nissan_Manual_370Z.pdf
+            // from http://fofou.appspot.com/sumatrapdf/topic?id=2018365
+            if (fz_is_dict(obj))
+                obj = fz_dict_gets(obj, "F");
+            if (fz_is_string(obj)) {
+                path = Str::Conv::FromPdf(obj);
+                Str::TransChars(path, _T("/"), _T("\\"));
+            }
+        }
+        break;
+    }
+
+    return path;
+}
+
+const char *PdfLink::GetType() const
+{
+    switch (link ? link->kind : -1) {
+    case PDF_LINK_URI: return "LaunchURL";
+    case PDF_LINK_GOTO: return "ScrollTo";
+    case PDF_LINK_NAMED: return fz_to_name(link->dest);
+    case PDF_LINK_LAUNCH:
+        if (fz_dict_gets(link->dest, "EF"))
+            return "LaunchEmbedded";
+        return "LaunchFile";
+    case PDF_LINK_ACTION:
+        if (Str::Eq(fz_to_name(fz_dict_gets(link->dest, "S")), "GoToR") &&
+            fz_dict_gets(link->dest, "D")) {
+            return "ScrollToEx";
+        }
+        // fall through (unsupported action)
+    default:
+        return NULL;
+    }
+}
+
+fz_obj *PdfLink::dest() const
+{
+    if (!link)
+        return NULL;
+    if (PDF_LINK_ACTION == link->kind && Str::Eq(GetType(), "ScrollToEx"))
+        return fz_dict_gets(link->dest, "D");
+    if (PDF_LINK_LAUNCH == link->kind && Str::Eq(GetType(), "LaunchEmbedded"))
+        return fz_dict_getsa(fz_dict_gets(link->dest, "EF"), "UF", "F");
+    return link->dest;
+}
+
+int PdfLink::GetDestPageNo() const
+{
+    if (!link || !engine)
+        return 0;
+    return engine->FindPageNo(link->dest);
+}
+
+RectD PdfLink::GetDestRect() const
+{
+    RectD result(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
+    fz_obj *dest = this->dest();
+    fz_obj *obj = fz_array_get(dest, 1);
+    const char *type = fz_to_name(obj);
+
+    if (Str::Eq(type, "XYZ")) {
+        // NULL values for the coordinates mean: keep the current position
+        if (!fz_is_null(fz_array_get(dest, 2)))
+            result.x = fz_to_real(fz_array_get(dest, 2));
+        if (!fz_is_null(fz_array_get(dest, 3)))
+            result.y = fz_to_real(fz_array_get(dest, 3));
+        result.dx = result.dy = 0;
+    }
+    else if (Str::Eq(type, "FitR")) {
+        result = RectD::FromXY(fz_to_real(fz_array_get(dest, 2)),  // left
+                               fz_to_real(fz_array_get(dest, 5)),  // top
+                               fz_to_real(fz_array_get(dest, 4)),  // right
+                               fz_to_real(fz_array_get(dest, 3))); // bottom
+    }
+    else if (Str::Eq(type, "FitH") || Str::Eq(type, "FitBH")) {
+        result.y = fz_to_real(fz_array_get(dest, 2)); // top
+        // zoom = Str::Eq(type, "FitH") ? ZOOM_FIT_WIDTH : ZOOM_FIT_CONTENT;
+    }
+    else if (Str::Eq(type, "Fit") || Str::Eq(type, "FitV")) {
+        // zoom = ZOOM_FIT_PAGE;
+    }
+    else if (Str::Eq(type, "FitB") || Str::Eq(type, "FitBV")) {
+        // zoom = ZOOM_FIT_CONTENT;
+    }
+    return result;
+}
+
+bool PdfLink::SaveEmbedded(LinkSaverUI& saveUI)
+{
+    return engine->SaveEmbedded(dest(), saveUI);
+}
+
 PdfEngine *PdfEngine::CreateFromFileName(const TCHAR *fileName, PasswordUI *pwdUI)
 {
     PdfEngine *engine = new CPdfEngine();
@@ -1575,90 +1654,13 @@ extern "C" {
 #include <muxps.h>
 }
 
-static bool IsUriTarget(const char *target)
-{
-    return Str::StartsWithI(target, "http:") || Str::StartsWithI(target, "https:");
-}
-
-static fz_obj *xps_new_destination(fz_obj *obj, fz_rect rect)
-{
-    fz_obj *dest = fz_new_array(4);
-
-    fz_array_push(dest, obj); fz_drop_obj(obj);
-    /* // TODO: destination rectangles seem wrongly placed (compared with the XPS Viewer)
-    obj = fz_new_name("XYZ"); fz_array_push(dest, obj); fz_drop_obj(obj);
-    obj = fz_new_real(rect.x0); fz_array_push(dest, obj); fz_drop_obj(obj);
-    obj = fz_new_real(rect.y0); fz_array_push(dest, obj); fz_drop_obj(obj);
-    // */
-
-    return dest;
-}
-
-class XpsLink : public PageDestination {
-    const char *target; // owned by either an xps_link or an xps_outline
-    fz_rect rect;
-    int pageNo;
-    fz_obj *destObj;
-
-public:
-    XpsLink() : target(NULL), rect(fz_empty_rect), pageNo(-1), destObj(NULL) { }
-    XpsLink(char *target, fz_rect rect, int pageNo=-1) :
-        target(target), rect(rect), pageNo(pageNo) {
-        if (!target)
-            destObj = NULL;
-        else if (IsUriTarget(target))
-            destObj = fz_new_string(target, Str::Len(target));
-        else
-            destObj = xps_new_destination(fz_new_string(target, Str::Len(target)), rect);
-    }
-    XpsLink(const XpsLink& orig) : target(orig.target), rect(orig.rect), pageNo(orig.pageNo) {
-        destObj = orig.destObj ? fz_keep_obj(orig.destObj) : NULL;
-    }
-    virtual ~XpsLink() {
-        if (destObj)
-            fz_drop_obj(destObj);
-    }
-
-    virtual RectD GetRect() const { return fz_rect_to_RectD(rect); }
-    virtual TCHAR *GetValue() const {
-        if (!target || !IsUriTarget(target))
-            return NULL;
-        return Str::Conv::FromUtf8(target);
-    }
-    virtual int GetPageNo() const { return pageNo; }
-    virtual PageDestination *AsLink() { return this; }
-
-    virtual const char *GetType() const {
-        if (!target)
-            return NULL;
-        if (IsUriTarget(target))
-            return "LaunchURL";
-        return "ScrollTo";
-    }
-    virtual fz_obj *dest() const { return destObj; }
-};
-
-class CXpsToCItem : public DocToCItem {
-    XpsLink link;
-
-public:
-    CXpsToCItem(TCHAR *title, XpsLink link) : DocToCItem(title), link(link) { }
-
-    void AddSibling(DocToCItem *sibling)
-    {
-        DocToCItem *item;
-        for (item = this; item->next; item = item->next);
-        item->next = sibling;
-    }
-
-    virtual PageDestination *GetLink() { return &link; }
-};
-
 struct XpsPageRun {
     xps_page *page;
     fz_display_list *list;
     int refs;
 };
+
+class CXpsToCItem;
 
 class CXpsEngine : public XpsEngine {
 public:
@@ -1701,12 +1703,14 @@ public:
     virtual Vec<PageElement *> *GetElements(int pageNo);
     virtual PageElement *GetElementAtPos(int pageNo, PointD pt);
 
-    virtual int FindPageNo(fz_obj *dest);
-    virtual fz_obj *GetNamedDest(const TCHAR *name);
+    virtual PageDestination *GetNamedDest(const TCHAR *name);
     virtual bool HasToCTree() const {
         return _outline != NULL;
     }
     virtual DocToCItem *GetToCTree();
+
+    int FindPageNo(const char *target);
+    fz_rect FindDestRect(const char *target);
 
 protected:
     const TCHAR *_fileName;
@@ -1748,6 +1752,67 @@ protected:
     xps_named_dest* _dests;
     xps_link     ** _links;
     fz_glyph_cache* _drawcache;
+};
+
+static bool IsUriTarget(const char *target)
+{
+    return Str::StartsWithI(target, "http:") || Str::StartsWithI(target, "https:");
+}
+
+class XpsLink : public PageElement, public PageDestination {
+    CXpsEngine *engine;
+    const char *target; // owned by either an xps_link or an xps_outline
+    fz_rect rect;
+    int pageNo;
+
+public:
+    XpsLink() : engine(NULL), target(NULL), rect(fz_empty_rect), pageNo(-1) { }
+    XpsLink(CXpsEngine *engine, char *target, fz_rect rect, int pageNo=-1) :
+        engine(engine), target(target), rect(rect), pageNo(pageNo) { }
+
+    virtual int GetPageNo() const { return pageNo; }
+    virtual RectD GetRect() const { return fz_rect_to_RectD(rect); }
+    virtual TCHAR *GetValue() const {
+        if (!target || !IsUriTarget(target))
+            return NULL;
+        return Str::Conv::FromUtf8(target);
+    }
+    virtual PageDestination *AsLink() { return this; }
+
+    virtual const char *GetType() const {
+        if (!target)
+            return NULL;
+        if (IsUriTarget(target))
+            return "LaunchURL";
+        return "ScrollTo";
+    }
+    virtual int GetDestPageNo() const {
+        if (!target || !engine)
+            return 0;
+        return engine->FindPageNo(target);
+    }
+    virtual RectD GetDestRect() const {
+        if (!target || !engine)
+            return RectD(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
+        return fz_rect_to_RectD(engine->FindDestRect(target));
+    }
+    virtual TCHAR *GetDestValue() const { return GetValue(); }
+};
+
+class CXpsToCItem : public DocToCItem {
+    XpsLink link;
+
+public:
+    CXpsToCItem(TCHAR *title, XpsLink link) : DocToCItem(title), link(link) { }
+
+    void AddSibling(DocToCItem *sibling)
+    {
+        DocToCItem *item;
+        for (item = this; item->next; item = item->next);
+        item->next = sibling;
+    }
+
+    virtual PageDestination *GetLink() { return &link; }
 };
 
 static void xps_run_page(xps_context *ctx, xps_page *page, fz_device *dev, fz_matrix ctm, xps_link *extract=NULL)
@@ -2189,7 +2254,7 @@ PageElement *CXpsEngine::GetElementAtPos(int pageNo, PointD pt)
     fz_point p = { (float)pt.x, (float)pt.y };
     for (xps_link *link = _links[pageNo-1]; link; link = link->next)
         if (!link->is_dest && fz_is_pt_in_rect(link->rect, p))
-            return new XpsLink(link->target, link->rect, pageNo);
+            return new XpsLink(this, link->target, link->rect, pageNo);
 
     return NULL;
 }
@@ -2203,12 +2268,12 @@ Vec<PageElement *> *CXpsEngine::GetElements(int pageNo)
 
     for (xps_link *link = _links[pageNo-1]; link; link = link->next)
         if (!link->is_dest)
-            els->Append(new XpsLink(link->target, link->rect, pageNo));
+            els->Append(new XpsLink(this, link->target, link->rect, pageNo));
 
     return els;
 }
 
-static xps_named_dest *xps_find_destination(xps_named_dest *first, char *name)
+static xps_named_dest *xps_find_destination(xps_named_dest *first, const char *name)
 {
     for (xps_named_dest *dest = first; dest; dest = dest->next)
         if (Str::Eq(dest->target, name))
@@ -2276,17 +2341,8 @@ void CXpsEngine::linkifyPageText(xps_page *page, int pageNo)
     free(pageText);
 }
 
-int CXpsEngine::FindPageNo(fz_obj *dest)
+int CXpsEngine::FindPageNo(const char *target)
 {
-    // currently, the destination is produced above with either
-    // fz_new_string or xps_new_destination (which produces an
-    // array [ pageNo /XYZ x0 y0 ] )
-    if (fz_is_array(dest))
-        dest = fz_array_get(dest, 0);
-    if (fz_is_int(dest))
-        return fz_to_int(dest);
-
-    char *target = fz_to_str_buf(dest);
     if (Str::IsEmpty(target))
         return 0;
 
@@ -2294,7 +2350,16 @@ int CXpsEngine::FindPageNo(fz_obj *dest)
     return found ? found->page : 0;
 }
 
-fz_obj *CXpsEngine::GetNamedDest(const TCHAR *name)
+fz_rect CXpsEngine::FindDestRect(const char *target)
+{
+    if (Str::IsEmpty(target))
+        return fz_empty_rect;
+
+    xps_named_dest *found = xps_find_destination(_dests, target);
+    return found ? found->rect : fz_empty_rect;
+}
+
+PageDestination *CXpsEngine::GetNamedDest(const TCHAR *name)
 {
     ScopedMem<char> name_utf8(Str::Conv::ToUtf8(name));
     if (!Str::StartsWith(name_utf8.Get(), "#"))
@@ -2302,7 +2367,7 @@ fz_obj *CXpsEngine::GetNamedDest(const TCHAR *name)
 
     for (xps_named_dest *dest = _dests; dest; dest = dest->next)
         if (Str::EndsWithI(dest->target, name_utf8))
-            return xps_new_destination(fz_new_int(dest->page), dest->rect);
+            return new SimpleDest(dest->page, fz_rect_to_RectD(dest->rect));
 
     return NULL;
 }
@@ -2310,12 +2375,12 @@ fz_obj *CXpsEngine::GetNamedDest(const TCHAR *name)
 CXpsToCItem *CXpsEngine::buildTocTree(xps_outline *entry, int& idCounter)
 {
     TCHAR *name = entry->title ? Str::Conv::FromUtf8(entry->title) : Str::Dup(_T(""));
-    CXpsToCItem *node = new CXpsToCItem(name, XpsLink(entry->target, fz_empty_rect));
+    CXpsToCItem *node = new CXpsToCItem(name, XpsLink(this, entry->target, fz_empty_rect));
     node->open = false;
     node->id = ++idCounter;
 
     if (Str::Eq(node->GetLink()->GetType(), "ScrollTo"))
-        node->pageNo = FindPageNo(node->GetLink()->dest());
+        node->pageNo = FindPageNo(entry->target);
     if (entry->child)
         node->child = buildTocTree(entry->child, idCounter);
     if (entry->next)

@@ -1291,8 +1291,7 @@ static void MenuUpdateStateForWindow(WindowInfo& win) {
 
     MenuUpdatePrintItem(win, win.menu);
 
-    bool enabled = win.IsDocLoaded() && (win.dm->pdfEngine && win.dm->pdfEngine->HasToCTree() ||
-                                         win.dm->xpsEngine && win.dm->xpsEngine->HasToCTree());
+    bool enabled = win.IsDocLoaded() && win.dm->engine && win.dm->engine->HasToCTree();
     Win::Menu::Enable(win.menu, IDM_VIEW_BOOKMARKS, enabled);
 
     bool documentSpecific = win.IsDocLoaded();
@@ -1605,9 +1604,7 @@ Error:
         win.ClearTocBox();
     if (win.IsDocLoaded())
         win.dm->SetScrollState(ss);
-    if (win.IsDocLoaded() && win.tocShow &&
-        (win.dm->pdfEngine && win.dm->pdfEngine->HasToCTree() ||
-         win.dm->xpsEngine && win.dm->xpsEngine->HasToCTree())) {
+    if (win.IsDocLoaded() && win.tocShow && win.dm->engine && win.dm->engine->HasToCTree()) {
         win.ShowTocBox();
     } else if (oldTocShow) {
         // Hide the now useless ToC sidebar and force an update afterwards
@@ -2117,51 +2114,47 @@ static void PaintPageFrameAndShadow(HDC hdc, PageInfo *pageInfo, bool presentati
 #endif
 
 /* debug code to visualize links (can block while rendering) */
-static void DebugShowLinks(DisplayModel *dm, HDC hdc)
+static void DebugShowLinks(DisplayModel& dm, HDC hdc)
 {
     if (!gDebugShowLinks)
         return;
-    if (!dm || !dm->pdfEngine && !dm->xpsEngine)
-        return;
 
-    RectI viewPortRect(PointI(), dm->viewPortSize);
+    RectI viewPortRect(PointI(), dm.viewPortSize);
     HPEN pen = CreatePen(PS_SOLID, 1, RGB(0x00, 0xff, 0xff));
     HGDIOBJ oldPen = SelectObject(hdc, pen);
 
-    for (int pageNo = dm->pageCount(); pageNo >= 1; --pageNo) {
-        PageInfo *pageInfo = dm->getPageInfo(pageNo);
+    for (int pageNo = dm.pageCount(); pageNo >= 1; --pageNo) {
+        PageInfo *pageInfo = dm.getPageInfo(pageNo);
         if (!pageInfo->shown || 0.0 == pageInfo->visibleRatio)
             continue;
 
-        Vec<PageElement *> *els;
-        if (dm->xpsEngine)
-            els = dm->xpsEngine->GetElements(pageNo);
-        else
-            els = dm->pdfEngine->GetElements(pageNo);
-        for (size_t i = 0; i < els->Count(); i++) {
-            RectI rect = dm->CvtToScreen(pageNo, els->At(i)->GetRect());
-            RectI isect = viewPortRect.Intersect(rect);
-            if (!isect.IsEmpty())
-                PaintRect(hdc, isect);
+        Vec<PageElement *> *els = dm.engine->GetElements(pageNo);
+        if (els) {
+            for (size_t i = 0; i < els->Count(); i++) {
+                RectI rect = dm.CvtToScreen(pageNo, els->At(i)->GetRect());
+                RectI isect = viewPortRect.Intersect(rect);
+                if (!isect.IsEmpty())
+                    PaintRect(hdc, isect);
+            }
+            DeleteVecMembers(*els);
+            delete els;
         }
-        DeleteVecMembers(*els);
-        delete els;
     }
 
     DeletePen(SelectObject(hdc, oldPen));
 
-    if (dm->zoomVirtual() == ZOOM_FIT_CONTENT) {
+    if (dm.zoomVirtual() == ZOOM_FIT_CONTENT) {
         // also display the content box when fitting content
         pen = CreatePen(PS_SOLID, 1, RGB(0xff, 0x00, 0xff));
         oldPen = SelectObject(hdc, pen);
 
-        for (int pageNo = dm->pageCount(); pageNo >= 1; --pageNo) {
-            PageInfo *pageInfo = dm->getPageInfo(pageNo);
+        for (int pageNo = dm.pageCount(); pageNo >= 1; --pageNo) {
+            PageInfo *pageInfo = dm.getPageInfo(pageNo);
             if (!pageInfo->shown || 0.0 == pageInfo->visibleRatio)
                 continue;
 
-            RectI rect = dm->engine->PageContentBox(pageNo);
-            rect = dm->CvtToScreen(pageNo, rect.Convert<double>());
+            RectI rect = dm.engine->PageContentBox(pageNo);
+            rect = dm.CvtToScreen(pageNo, rect.Convert<double>());
             PaintRect(hdc, rect);
         }
 
@@ -2246,7 +2239,7 @@ static void DrawDocument(WindowInfo& win, HDC hdc, RECT *rcArea)
 
     DBG_OUT("\n");
     if (!rendering)
-        DebugShowLinks(dm, hdc);
+        DebugShowLinks(*dm, hdc);
 }
 
 static void CopySelectionToClipboard(WindowInfo& win)
@@ -2706,7 +2699,7 @@ static void OnMouseLeftButtonDown(WindowInfo& win, int x, int y, WPARAM key)
     assert(!win.linkOnLastButtonDown);
     PageElement *pageEl = win.dm->GetElementAtPos(PointI(x, y));
     if (pageEl && pageEl->AsLink())
-        win.linkOnLastButtonDown = pageEl->AsLink();
+        win.linkOnLastButtonDown = pageEl;
     else
         delete pageEl;
     win.dragStartPending = true;
@@ -2768,7 +2761,7 @@ static void OnMouseLeftButtonUp(WindowInfo& win, int x, int y, WPARAM key)
     if (didDragMouse)
         /* pass */;
     else if (win.linkOnLastButtonDown && win.linkOnLastButtonDown->GetRect().Inside(ptPage)) {
-        win.linkHandler->GotoPdfLink(win.linkOnLastButtonDown);
+        win.linkHandler->GotoLink(win.linkOnLastButtonDown->AsLink());
         SetCursor(gCursorArrow);
     }
     /* if we had a selection and this was just a click, hide the selection */
@@ -3493,7 +3486,7 @@ static void OnMenuSaveAs(WindowInfo& win)
         free(realDstFileName);
 }
 
-bool PdfLinkSaver::SaveEmbedded(unsigned char *data, int len)
+bool LinkSaver::SaveEmbedded(unsigned char *data, int len)
 {
     if (gRestrictedUse)
         return false;
@@ -4533,7 +4526,7 @@ public:
 
     virtual void Execute() {
         if (WindowInfoStillValid(win) && win->IsDocLoaded())
-            win->linkHandler->GotoPdfLink(tocItem->GetLink());
+            win->linkHandler->GotoLink(tocItem->GetLink());
     }
 };
 
@@ -5608,10 +5601,8 @@ void WindowInfo::LoadTocTree()
         return;
 
     tocRoot = NULL;
-    if (dm->pdfEngine)
-        tocRoot = dm->pdfEngine->GetToCTree();
-    else if (dm->xpsEngine)
-        tocRoot = dm->xpsEngine->GetToCTree();
+    if (dm->engine)
+        tocRoot = dm->engine->GetToCTree();
     if (tocRoot)
         PopulateTocTreeView(hwndTocTree, tocRoot, tocState);
 
@@ -5632,9 +5623,7 @@ void WindowInfo::ToggleTocBox()
 
 void WindowInfo::ShowTocBox()
 {
-    if (!dm->pdfEngine && !dm->xpsEngine ||
-        dm->pdfEngine && !dm->pdfEngine->HasToCTree() ||
-        dm->xpsEngine && !dm->xpsEngine->HasToCTree()) {
+    if (!dm->engine || !dm->engine->HasToCTree()) {
         tocShow = true;
         return;
     }
@@ -5705,7 +5694,7 @@ void WindowInfo::ClearTocBox()
 static void CustomizeToCInfoTip(LPNMTVGETINFOTIP nmit)
 {
     DocToCItem *tocItem = (DocToCItem *)nmit->lParam;
-    ScopedMem<TCHAR> path(tocItem->GetLink()->GetValue());
+    ScopedMem<TCHAR> path(tocItem->GetLink()->GetDestValue());
     if (!path)
         return;
 

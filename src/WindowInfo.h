@@ -12,7 +12,7 @@ class FileWatcher;
 class Synchronizer;
 class DoubleBuffer;
 class SelectionOnPage;
-class PdfLinkHandler;
+class LinkHandler;
 
 /* Describes actions which can be performed by mouse */
 enum MouseAction {
@@ -148,8 +148,8 @@ public:
 
     // the following properties only apply to PDF documents
 
-    PdfLinkHandler *linkHandler;
-    PageDestination *linkOnLastButtonDown;
+    LinkHandler *   linkHandler;
+    PageElement *   linkOnLastButtonDown;
     const TCHAR *   url;
 
     bool            tocLoaded;
@@ -244,28 +244,25 @@ public:
     static Vec<SelectionOnPage> *FromTextSelect(TextSel *textSel);
 };
 
-// despite the name, PdfLinkHandler also handles XPS links
-// TODO: generalize or split into two handlers
-class PdfLinkHandler {
+class LinkHandler {
     WindowInfo *owner;
-    PdfEngine *engine() const;
-    XpsEngine *engine2() const;
+    BaseEngine *engine() const;
 
-    void GotoPdfDest(fz_obj *dest);
+    void ScrollTo(PageDestination *dest);
 
 public:
-    PdfLinkHandler(WindowInfo& win) : owner(&win) { }
+    LinkHandler(WindowInfo& win) : owner(&win) { }
 
-    void GotoPdfLink(PageDestination *link);
+    void GotoLink(PageDestination *link);
     void GotoNamedDest(const TCHAR *name);
 };
 
-class PdfLinkSaver : public LinkSaverUI {
+class LinkSaver : public LinkSaverUI {
     HWND hwnd;
     const TCHAR *fileName;
 
 public:
-    PdfLinkSaver(HWND hwnd, const TCHAR *fileName) : hwnd(hwnd), fileName(fileName) { }
+    LinkSaver(HWND hwnd, const TCHAR *fileName) : hwnd(hwnd), fileName(fileName) { }
 
     virtual bool SaveEmbedded(unsigned char *data, int cbCount);
 };

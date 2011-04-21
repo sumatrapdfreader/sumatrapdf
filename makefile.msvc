@@ -296,7 +296,8 @@ $(O)\SumatraProperties.obj: src\DisplayState.h src\ImagesEngine.h src\PdfEngine.
 $(O)\SumatraProperties.obj: src\SumatraPDF.h src\SumatraProperties.h src\TextSearch.h
 $(O)\SumatraProperties.obj: src\TextSelection.h src\translations.h src\WindowInfo.h
 $(O)\TextSearch.obj: baseutils\BaseUtil.h baseutils\GeomUtil.h baseutils\StrUtil.h
-$(O)\TextSearch.obj: src\BaseEngine.h src\TextSearch.h src\TextSelection.h
+$(O)\TextSearch.obj: baseutils\Vec.h src\BaseEngine.h src\TextSearch.h
+$(O)\TextSearch.obj: src\TextSelection.h
 $(O)\TextSelection.obj: baseutils\BaseUtil.h baseutils\GeomUtil.h baseutils\StrUtil.h
 $(O)\TextSelection.obj: baseutils\Vec.h src\BaseEngine.h src\TextSelection.h
 $(O)\translations.obj: baseutils\BaseUtil.h baseutils\StrUtil.h src\translations.h
@@ -309,11 +310,11 @@ $(O)\UtilTests.obj: baseutils\GeomUtil.h baseutils\SimpleLog.h baseutils\StrUtil
 $(O)\UtilTests.obj: baseutils\Vec.h
 $(O)\WindowInfo.obj: baseutils\BaseUtil.h baseutils\FileUtil.h baseutils\GeomUtil.h
 $(O)\WindowInfo.obj: baseutils\StrUtil.h baseutils\Vec.h baseutils\WinUtil.h
-$(O)\WindowInfo.obj: mupdf\fitz\fitz.h src\AppPrefs.h src\BaseEngine.h
-$(O)\WindowInfo.obj: src\DisplayModel.h src\DisplayState.h src\FileWatch.h
-$(O)\WindowInfo.obj: src\ImagesEngine.h src\PdfEngine.h src\PdfSync.h
-$(O)\WindowInfo.obj: src\Resource.h src\SumatraPDF.h src\TextSearch.h
-$(O)\WindowInfo.obj: src\TextSelection.h src\WindowInfo.h
+$(O)\WindowInfo.obj: src\AppPrefs.h src\BaseEngine.h src\DisplayModel.h
+$(O)\WindowInfo.obj: src\DisplayState.h src\FileWatch.h src\ImagesEngine.h
+$(O)\WindowInfo.obj: src\PdfEngine.h src\PdfSync.h src\Resource.h
+$(O)\WindowInfo.obj: src\SumatraPDF.h src\TextSearch.h src\TextSelection.h
+$(O)\WindowInfo.obj: src\WindowInfo.h
 $(O)\WinUtil.obj: baseutils\BaseUtil.h baseutils\FileUtil.h baseutils\GeomUtil.h
 $(O)\WinUtil.obj: baseutils\StrUtil.h baseutils\WinUtil.h
 $(O)\ZipUtil.obj: baseutils\BaseUtil.h baseutils\FileUtil.h baseutils\StrUtil.h

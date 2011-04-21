@@ -893,17 +893,12 @@ RectD DisplayModel::CvtFromScreen(RectI r, int pageNo)
    */
 PageElement *DisplayModel::GetElementAtPos(PointI pt)
 {
-    if (!pdfEngine && !xpsEngine)
-        return NULL;
-
     int pageNo = GetPageNoByPoint(pt);
     if (!validPageNo(pageNo))
         return NULL;
 
     PointD pos = CvtFromScreen(pt, pageNo);
-    if (xpsEngine)
-        return xpsEngine->GetElementAtPos(pageNo, pos);
-    return pdfEngine->GetElementAtPos(pageNo, pos);
+    return engine->GetElementAtPos(pageNo, pos);
 }
 
 bool DisplayModel::IsOverText(PointI pt)
