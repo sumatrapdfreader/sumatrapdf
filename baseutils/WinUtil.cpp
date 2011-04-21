@@ -485,6 +485,11 @@ DoubleBuffer::DoubleBuffer(HWND hwnd, RectI rect) :
     if (!hdcBuffer)
         return;
 
+    if (rect.x != 0 || rect.y != 0) {
+        SetGraphicsMode(hdcBuffer, GM_ADVANCED);
+        XFORM ctm = { 1.0, 0, 0, 1.0, (float)-rect.x, (float)-rect.y };
+        SetWorldTransform(hdcBuffer, &ctm);
+    }
     DeleteObject(SelectObject(hdcBuffer, doubleBuffer));
 }
 
