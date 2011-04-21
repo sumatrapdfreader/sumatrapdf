@@ -725,7 +725,7 @@ pdf_load_windows_font(pdf_font_desc *font, char *fontname)
 fz_error
 pdf_load_similar_cjk_font(pdf_font_desc *font, int ros, int serif)
 {
-	if (!serif)
+	if (serif)
 	{
 		switch (ros)
 		{
