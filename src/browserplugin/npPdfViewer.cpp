@@ -472,11 +472,11 @@ static void RepaintOnProgressChange(InstanceData *data)
 }
 
 // To workaround Firefox bug https://bugzilla.mozilla.org/show_bug.cgi?id=644149
-// (our bug: http://code.google.com/p/sumatrapdf/issues/detail?id=1328)
 // if a file is big (not sure what the exact threshold should be, we use
-// conservative 6MB) we save it to a file ourselves instead of relying on the
-// browser to do it.
-#define BIG_FILE_THRESHOLD (6 * 1024 * 1024)
+// conservative 3MB) or of undetermined size, we save it to a temporary file
+// ourselves instead of relying on the browser to do it.
+// cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1328
+#define BIG_FILE_THRESHOLD (3 * 1024 * 1024)
 
 NPError NP_LOADDS NPP_NewStream(NPP instance, NPMIMEType type, NPStream* stream, NPBool seekable, uint16_t* stype)
 {
@@ -496,7 +496,7 @@ NPError NP_LOADDS NPP_NewStream(NPP instance, NPMIMEType type, NPStream* stream,
 	data->hFile = NULL;
 	// create a temporary file only for Gecko based browsers such as Firefox
 	const char *userAgent = gNPNFuncs.uagent(instance);
-	if (strstr(userAgent, "Gecko/") && stream->end > BIG_FILE_THRESHOLD)
+	if (strstr(userAgent, "Gecko/") && (stream->end > BIG_FILE_THRESHOLD || !stream->end))
 	{
 		data->hFile = CreateTempFile(data->filepath);
 		if (data->hFile)
