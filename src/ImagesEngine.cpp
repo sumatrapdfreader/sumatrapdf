@@ -36,6 +36,11 @@ Bitmap *BitmapFromData(void *data, size_t len)
         bmp = Bitmap::FromStream(stream);
     stream->Release();
 
+    if (bmp && bmp->GetLastStatus() != Ok) {
+        delete bmp;
+        bmp = NULL;
+    }
+
     return bmp;
 }
 
