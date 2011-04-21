@@ -19,7 +19,8 @@ WindowInfo::WindowInfo(HWND hwnd) :
     hwndPageText(NULL), hwndPageBox(NULL), hwndPageBg(NULL), hwndPageTotal(NULL),
     hwndTocBox(NULL), hwndTocTree(NULL), hwndSpliter(NULL),
     hwndInfotip(NULL), infotipVisible(false), hwndProperties(NULL),
-    findThread(NULL), findCanceled(false), findPercent(0), findStatusVisible(false),
+    findThread(NULL), findCanceled(false), printThread(NULL), printCanceled(false),
+    progressPercent(0), progressStatusVisible(false),
     findStatusThread(NULL), stopFindStatusThreadEvent(NULL), findStatusHighlight(false),
     showSelection(false), mouseAction(MA_IDLE),
     prevZoomVirtual(INVALID_ZOOM), prevDisplayMode(DM_AUTOMATIC),
@@ -44,6 +45,8 @@ WindowInfo::WindowInfo(HWND hwnd) :
 
 WindowInfo::~WindowInfo() {
     this->AbortFinding();
+    this->AbortPrinting();
+
     delete this->dm;
     delete this->watcher;
     delete this->pdfsync;
@@ -102,6 +105,15 @@ void WindowInfo::AbortFinding()
         WaitForSingleObject(this->findThread, INFINITE);
     }
     this->findCanceled = false;
+}
+
+void WindowInfo::AbortPrinting()
+{
+    if (this->printThread) {
+        this->printCanceled = true;
+        WaitForSingleObject(this->printThread, INFINITE);
+    }
+    this->printCanceled = false;
 }
 
 void WindowInfo::RedrawAll(bool update)

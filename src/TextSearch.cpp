@@ -12,7 +12,7 @@ enum { SEARCH_PAGE, SKIP_PAGE };
 // cf. http://code.google.com/p/sumatrapdf/issues/detail?id=959
 #define isnoncjkwordchar(c) (iswordchar(c) && (unsigned short)(c) < 0x2E80)
 
-TextSearch::TextSearch(BaseEngine *engine, TextSearchTracker *tracker) : TextSelection(engine),
+TextSearch::TextSearch(BaseEngine *engine, ProgressUpdateUI *tracker) : TextSelection(engine),
     tracker(tracker), findText(NULL), anchor(NULL), pageText(NULL),
     caseSensitive(false), wholeWords(false), forward(true),
     findPage(0), findIndex(0), lastText(NULL)

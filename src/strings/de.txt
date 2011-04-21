@@ -466,6 +466,12 @@ Previous Page
 Print range
 Druckbereich
 
+Printing is still in progress. Abort and start over?
+Bestehenden Druckvorgang abbrechen und neu beginnen?
+
+Printing page %d of %d...
+Drucke Seite %d von %d…
+
 Printing problem.
 Druckerproblem
 

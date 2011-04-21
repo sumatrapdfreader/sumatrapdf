@@ -584,3 +584,7 @@ copying text
 printing document
 đang in tập tin
 
+# Untranslated:
+#Printing is still in progress. Abort and start over?
+#Printing page %d of %d...
+

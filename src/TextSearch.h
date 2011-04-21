@@ -13,16 +13,16 @@ enum TextSearchDirection {
     FIND_FORWARD  = true
 };
 
-class TextSearchTracker
+class ProgressUpdateUI
 {
 public:
-    virtual bool FindUpdateStatus(int count, int total) = 0;
+    virtual bool ProgressUpdate(int count, int total) = 0;
 };
 
 class TextSearch : public TextSelection
 {
 public:
-    TextSearch(BaseEngine *engine, TextSearchTracker *tracker=NULL);
+    TextSearch(BaseEngine *engine, ProgressUpdateUI *tracker=NULL);
     ~TextSearch();
 
     void SetSensitive(bool sensitive);
@@ -34,7 +34,7 @@ public:
     int GetCurrentPageNo() { return findPage; }
 
 protected:
-    TextSearchTracker *tracker;
+    ProgressUpdateUI *tracker;
     TCHAR *findText;
     TCHAR *anchor;
     int findPage;
@@ -66,7 +66,7 @@ protected:
     {
         if (!tracker)
             return true;
-        return tracker->FindUpdateStatus(pageNo, total);
+        return tracker->ProgressUpdate(pageNo, total);
     }
 
 private:

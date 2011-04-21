@@ -432,6 +432,8 @@ dokumentua imprimatzen
 #Please wait - rendering...
 #Pr&esentation\tCtrl-L
 #Print range
+#Printing is still in progress. Abort and start over?
+#Printing page %d of %d...
 #Remember &opened files
 #Save S&hortcut...\tCtrl-Shift-S
 #Select &All

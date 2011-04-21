@@ -245,7 +245,10 @@ static void OnMenuFindMatchCase(WindowInfo& win);
 static bool LoadDocIntoWindow(const TCHAR *fileName, WindowInfo& win, 
     const DisplayState *state, bool isNewWindow, bool tryRepair, 
     bool showWin, bool placeWindow);
-static void WindowInfo_ShowMessage_Async(WindowInfo& win, const TCHAR *message, bool resize, bool highlight=false);
+
+static void WindowInfo_ShowMessage_Async(WindowInfo& win, const TCHAR *message, bool noProgressbar, bool highlight=false);
+static void WindowInfo_ShowFindStatus(WindowInfo& win);
+static void WindowInfo_HideFindStatus(WindowInfo& win, bool success=false, bool loopedAround=false);
 
 static void DeleteOldSelectionInfo(WindowInfo& win, bool alsoTextSel=false);
 static void ClearSearch(WindowInfo& win);
@@ -1135,7 +1138,6 @@ static void WindowInfo_Delete(WindowInfo *win)
         DestroyWindow(win->hwndProperties);
         assert(NULL == win->hwndProperties);
     }
-    win->AbortFinding();
     gWindows.Remove(win);
 
     ImageList_Destroy((HIMAGELIST)SendMessage(win->hwndToolbar, TB_GETIMAGELIST, 0, 0));
@@ -2934,8 +2936,10 @@ static void OnMenuExit()
     if (gPluginMode)
         return;
 
-    for (size_t i = 0; i < gWindows.Count(); i++)
+    for (size_t i = 0; i < gWindows.Count(); i++) {
         gWindows[i]->AbortFinding();
+        gWindows[i]->AbortPrinting();
+    }
 
     SavePrefs();
     PostQuitMessage(0);
@@ -3048,20 +3052,54 @@ static bool CheckPrinterStretchDibSupport(HWND hwndForMsgBox, HDC hdc)
 #endif
 }
 
-// TODO: make it run in a background thread
-static void PrintToDevice(BaseEngine *engine, HDC hdc, LPDEVMODE devMode,
-                          int nPageRanges, LPPRINTPAGERANGE pr,
-                          int dm_rotation=0,
-                          enum PrintRangeAdv rangeAdv=PrintRangeAll,
-                          enum PrintScaleAdv scaleAdv=PrintScaleShrink,
-                          Vec<SelectionOnPage> *sel=NULL) {
+struct PrintData {
+    HDC hdc; // owned by PrintData
 
-    assert(engine);
-    if (!engine) return;
+    BaseEngine *engine;
+    Vec<PRINTPAGERANGE> ranges; // empty when printing a selection
+    Vec<SelectionOnPage> sel;   // empty when printing a page range
+    int rotation;
+    PrintRangeAdv rangeAdv;
+    PrintScaleAdv scaleAdv;
+    short orientation;
 
-    DOCINFO di = {0};
+    PrintData(BaseEngine *engine, HDC hdc, DEVMODE *devMode,
+              Vec<PRINTPAGERANGE>& ranges, int rotation=0,
+              PrintRangeAdv rangeAdv=PrintRangeAll,
+              PrintScaleAdv scaleAdv=PrintScaleShrink,
+              Vec<SelectionOnPage> *sel=NULL) :
+        engine(NULL), hdc(hdc), rotation(rotation), rangeAdv(rangeAdv), scaleAdv(scaleAdv)
+    {
+        if (engine)
+            this->engine = engine->Clone();
+
+        if (!sel)
+            this->ranges = ranges;
+        else
+            this->sel = *sel;
+
+        orientation = 0;
+        if (devMode && (devMode->dmFields & DM_ORIENTATION))
+            orientation = devMode->dmOrientation;
+    }
+
+    ~PrintData() {
+        delete engine;
+        DeleteDC(hdc);
+    }
+};
+
+static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL)
+{
+    assert(pd.engine);
+    if (!pd.engine) return;
+
+    HDC hdc = pd.hdc;
+    BaseEngine& engine = *pd.engine;
+
+    DOCINFO di = { 0 };
     di.cbSize = sizeof (DOCINFO);
-    di.lpszDocName = engine->FileName();
+    di.lpszDocName = engine.FileName();
 
     if (StartDoc(hdc, &di) <= 0)
         return;
@@ -3076,64 +3114,75 @@ static void PrintToDevice(BaseEngine *engine, HDC hdc, LPDEVMODE devMode,
     int topMargin = GetDeviceCaps(hdc, PHYSICALOFFSETY);
     int rightMargin = paperWidth - printableWidth - leftMargin;
     int bottomMargin = paperHeight - printableHeight - topMargin;
-    float dpiFactor = min(GetDeviceCaps(hdc, LOGPIXELSX) / engine->GetFileDPI(),
-                          GetDeviceCaps(hdc, LOGPIXELSY) / engine->GetFileDPI());
+    float dpiFactor = min(GetDeviceCaps(hdc, LOGPIXELSX) / engine.GetFileDPI(),
+                          GetDeviceCaps(hdc, LOGPIXELSY) / engine.GetFileDPI());
     bool bPrintPortrait = paperWidth < paperHeight;
-    if (devMode && devMode->dmFields & DM_ORIENTATION)
-        bPrintPortrait = DMORIENT_PORTRAIT == devMode->dmOrientation;
+    if (pd.orientation)
+        bPrintPortrait = DMORIENT_PORTRAIT == pd.orientation;
 
-    // print all the pages the user requested
-    for (int i = 0; i < nPageRanges; i++) {
-        if (-1 == pr->nFromPage && -1 == pr->nToPage) {
-            assert(1 == nPageRanges && sel);
-            DBG_OUT(" printing:  drawing bitmap for selection\n");
+    int count = 0, total = 0;
+    for (size_t i = 0; i < pd.ranges.Count(); i++)
+        total += pd.ranges[i].nToPage - pd.ranges[i].nFromPage + 1;
+    total += pd.sel.Count();
 
-            for (size_t i = 0; i < sel->Count(); i++) {
-                StartPage(hdc);
+    if (pd.sel.Count() > 0) {
+        DBG_OUT(" printing:  drawing bitmap for selection\n");
 
-                RectD *clipRegion = &sel->At(i).rect;
+        for (size_t i = 0; i < pd.sel.Count(); i++) {
+            StartPage(hdc);
+            RectD *clipRegion = &pd.sel[i].rect;
 
-                Size<float> sSize = clipRegion->Size().Convert<float>();
-                // Swap width and height for rotated documents
-                int rotation = engine->PageRotation(sel->At(i).pageNo) + dm_rotation;
-                if (rotation % 180 != 0)
-                    swap(sSize.dx, sSize.dy);
+            Size<float> sSize = clipRegion->Size().Convert<float>();
+            // Swap width and height for rotated documents
+            int rotation = engine.PageRotation(pd.sel[i].pageNo) + pd.rotation;
+            if (rotation % 180 != 0)
+                swap(sSize.dx, sSize.dy);
 
-                float zoom = min((float)printableWidth / sSize.dx,
-                                 (float)printableHeight / sSize.dy);
-                // use the correct zoom values, if the page fits otherwise
-                // and the user didn't ask for anything else (default setting)
-                if (PrintScaleShrink == scaleAdv)
-                    zoom = min(dpiFactor, zoom);
-                else if (PrintScaleNone == scaleAdv)
-                    zoom = dpiFactor;
+            float zoom = min((float)printableWidth / sSize.dx,
+                             (float)printableHeight / sSize.dy);
+            // use the correct zoom values, if the page fits otherwise
+            // and the user didn't ask for anything else (default setting)
+            if (PrintScaleShrink == pd.scaleAdv)
+                zoom = min(dpiFactor, zoom);
+            else if (PrintScaleNone == pd.scaleAdv)
+                zoom = dpiFactor;
 
 #ifdef USE_GDI_FOR_PRINTING
-                RectI rc = RectI::FromXY((int)(printableWidth - sSize.dx * zoom) / 2,
-                                         (int)(printableHeight - sSize.dy * zoom) / 2,
-                                         paperWidth, paperHeight);
-                engine->RenderPage(hdc, sel->At(i).pageNo, rc, zoom, dm_rotation, clipRegion, Target_Print);
+            RectI rc = RectI::FromXY((int)(printableWidth - sSize.dx * zoom) / 2,
+                                     (int)(printableHeight - sSize.dy * zoom) / 2,
+                                     paperWidth, paperHeight);
+            engine.RenderPage(hdc, pd.sel[i].pageNo, rc, zoom, pd.rotation, clipRegion, Target_Print);
 #else
-                RenderedBitmap *bmp = engine->RenderBitmap(sel->At(i).pageNo, zoom, dm_rotation, clipRegion, Target_Print, gUseGdiRenderer);
-                if (bmp) {
-                    PointI TL((printableWidth - bmp->Size().dx) / 2,
-                              (printableHeight - bmp->Size().dy) / 2);
-                    bmp->StretchDIBits(hdc, RectI(TL, bmp->Size()));
-                    delete bmp;
-                }
-#endif
-                if (EndPage(hdc) <= 0) {
-                    AbortDoc(hdc);
-                    return;
-                }
+            RenderedBitmap *bmp = engine.RenderBitmap(pd.sel[i].pageNo, zoom, pd.rotation, clipRegion, Target_Print, gUseGdiRenderer);
+            if (bmp) {
+                PointI TL((printableWidth - bmp->Size().dx) / 2,
+                          (printableHeight - bmp->Size().dy) / 2);
+                bmp->StretchDIBits(hdc, RectI(TL, bmp->Size()));
+                delete bmp;
             }
-            break;
+#endif
+            if (EndPage(hdc) <= 0) {
+                AbortDoc(hdc);
+                return;
+            }
+
+            count++;
+            if (progressUI && !progressUI->ProgressUpdate(count, total)) {
+                AbortDoc(hdc);
+                return;
+            }
         }
 
-        assert(pr->nFromPage <= pr->nToPage);
-        for (DWORD pageNo = pr->nFromPage; pageNo <= pr->nToPage; pageNo++) {
-            if ((PrintRangeEven == rangeAdv && pageNo % 2 != 0) ||
-                (PrintRangeOdd == rangeAdv && pageNo % 2 == 0))
+        EndDoc(hdc);
+        return;
+    }
+
+    // print all the pages the user requested
+    for (size_t i = 0; i < pd.ranges.Count(); i++) {
+        assert(pd.ranges[i].nFromPage <= pd.ranges[i].nToPage);
+        for (DWORD pageNo = pd.ranges[i].nFromPage; pageNo <= pd.ranges[i].nToPage; pageNo++) {
+            if ((PrintRangeEven == pd.rangeAdv && pageNo % 2 != 0) ||
+                (PrintRangeOdd == pd.rangeAdv && pageNo % 2 == 0))
                 continue;
 
             DBG_OUT(" printing:  drawing bitmap for page %d\n", pageNo);
@@ -3142,8 +3191,8 @@ static void PrintToDevice(BaseEngine *engine, HDC hdc, LPDEVMODE devMode,
             // MM_TEXT: Each logical unit is mapped to one device pixel.
             // Positive x is to the right; positive y is down.
 
-            Size<float> pSize = engine->PageMediabox(pageNo).Size().Convert<float>();
-            int rotation = engine->PageRotation(pageNo);
+            Size<float> pSize = engine.PageMediabox(pageNo).Size().Convert<float>();
+            int rotation = engine.PageRotation(pageNo);
             // Turn the document by 90 deg if it isn't in portrait mode
             if (pSize.dx > pSize.dy) {
                 rotation += 90;
@@ -3168,18 +3217,18 @@ static void PrintToDevice(BaseEngine *engine, HDC hdc, LPDEVMODE devMode,
             int horizOffset = leftMargin + (printableWidth - paperWidth) / 2;
             int vertOffset = topMargin + (printableHeight - paperHeight) / 2;
 
-            if (scaleAdv != PrintScaleNone) {
+            if (pd.scaleAdv != PrintScaleNone) {
                 // make sure to fit all content into the printable area when scaling
                 // and the whole document page on the physical paper
-                RectD rect = engine->PageContentBox(pageNo, Target_Print).Convert<double>();
-                Rect<float> cbox = engine->Transform(rect, pageNo, 1.0, rotation).Convert<float>();
+                RectD rect = engine.PageContentBox(pageNo, Target_Print).Convert<double>();
+                Rect<float> cbox = engine.Transform(rect, pageNo, 1.0, rotation).Convert<float>();
                 zoom = min((float)printableWidth / cbox.dx,
                        min((float)printableHeight / cbox.dy,
                        min((float)paperWidth / pSize.dx,
                            (float)paperHeight / pSize.dy)));
                 // use the correct zoom values, if the page fits otherwise
                 // and the user didn't ask for anything else (default setting)
-                if (PrintScaleShrink == scaleAdv && dpiFactor < zoom)
+                if (PrintScaleShrink == pd.scaleAdv && dpiFactor < zoom)
                     zoom = dpiFactor;
                 // make sure that no content lies in the non-printable paper margins
                 if (leftMargin > cbox.x * zoom)
@@ -3196,9 +3245,9 @@ static void PrintToDevice(BaseEngine *engine, HDC hdc, LPDEVMODE devMode,
             RectI rc = RectI::FromXY((int)(printableWidth - pSize.dx * zoom) / 2 - horizOffset,
                                      (int)(printableHeight - pSize.dy * zoom) / 2 - vertOffset,
                                      paperWidth, paperHeight);
-            engine->RenderPage(hdc, pageNo, rc, zoom, rotation, NULL, Target_Print);
+            engine.RenderPage(hdc, pageNo, rc, zoom, rotation, NULL, Target_Print);
 #else
-            RenderedBitmap *bmp = engine->RenderBitmap(pageNo, zoom, rotation, NULL, Target_Print, gUseGdiRenderer);
+            RenderedBitmap *bmp = engine.RenderBitmap(pageNo, zoom, rotation, NULL, Target_Print, gUseGdiRenderer);
             if (bmp) {
                 PointI TL((printableWidth - bmp->Size().dx) / 2 - horizOffset,
                           (printableHeight - bmp->Size().dy) / 2 - vertOffset);
@@ -3210,11 +3259,86 @@ static void PrintToDevice(BaseEngine *engine, HDC hdc, LPDEVMODE devMode,
                 AbortDoc(hdc);
                 return;
             }
+
+            count++;
+            if (progressUI && !progressUI->ProgressUpdate(count, total)) {
+                AbortDoc(hdc);
+                return;
+            }
         }
-        pr++;
     }
 
     EndDoc(hdc);
+}
+
+class PrintThreadUpdateWorkItem : public UIThreadWorkItem
+{
+    int current;
+    int total;
+
+public:
+    PrintThreadUpdateWorkItem(WindowInfo *win, int current, int total)
+        : UIThreadWorkItem(win), current(current), total(total) { }
+
+    virtual void Execute() {
+        if (!WindowInfoStillValid(win))
+            return;
+
+        win->progressPercent = current * 100 / total;
+        if (!win->progressStatusVisible)
+            WindowInfo_ShowFindStatus(*win);
+
+        ScopedMem<TCHAR> buf(Str::Format(_TR("Printing page %d of %d..."), current, total));
+        Win::SetText(win->hwndFindStatus, buf);
+    }
+};
+
+class PrintThreadWorkItem : public ProgressUpdateUI, public UIThreadWorkItem
+{
+public:
+    // owned and deleted by PrintThreadWorkItem
+    PrintData *data;
+
+    PrintThreadWorkItem(WindowInfo *win, PrintData *data) :
+        UIThreadWorkItem(win), data(data) { }
+    ~PrintThreadWorkItem() { delete data; }
+
+    virtual bool ProgressUpdate(int count, int total) {
+        gUIThreadMarshaller.Queue(new PrintThreadUpdateWorkItem(win, count, total));
+        return WindowInfoStillValid(win) && !win->printCanceled;
+    }
+
+    void CleanUp() {
+        gUIThreadMarshaller.Queue(this);
+    }
+
+    virtual void Execute() {
+        if (!WindowInfoStillValid(win))
+            return;
+
+        HANDLE thread = win->printThread;
+        win->printThread = NULL;
+        CloseHandle(thread);
+
+        WindowInfo_HideFindStatus(*win);
+    }
+};
+
+static DWORD WINAPI PrintThread(LPVOID data)
+{
+    PrintThreadWorkItem *progressUI = (PrintThreadWorkItem *)data;
+    assert(progressUI && progressUI->data);
+    if (progressUI->data)
+        PrintToDevice(*progressUI->data, progressUI);
+    progressUI->CleanUp();
+
+    return 0;
+}
+
+static void PrintToDeviceOnThread(WindowInfo& win, PrintData *data)
+{
+    PrintThreadWorkItem *progressUI = new PrintThreadWorkItem(&win, data);
+    win.printThread = CreateThread(NULL, 0, PrintThread, progressUI, 0, NULL);
 }
 
 #ifndef ID_APPLY_NOW
@@ -3283,20 +3407,20 @@ static void OnMenuPrint(WindowInfo& win)
     // In order to print with Adobe Reader instead:
     // ViewWithAcrobat(win, _T("/P"));
 
-    PRINTDLGEX       pd;
-    LPPRINTPAGERANGE ppr = NULL;
-
     if (gRestrictedUse) return;
 
     DisplayModel *dm = win.dm;
     assert(dm);
     if (!dm) return;
 
-    /* printing uses the WindowInfo' dm that is created for the
-       screen, it may be possible to create a new BaseEngine
-       for printing so we don't mess with the screen one,
-       but the user is not inconvenienced too much, and this
-       way we only need to concern ourselves with one dm. */
+    if (win.printThread) {
+        int res = MessageBox(win.hwndFrame, _TR("Printing is still in progress. Abort and start over?"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_YESNO);
+        if (res == IDNO)
+            return;
+    }
+    win.AbortPrinting();
+
+    PRINTDLGEX pd;
     ZeroMemory(&pd, sizeof(PRINTDLGEX));
     pd.lStructSize = sizeof(PRINTDLGEX);
     pd.hwndOwner   = win.hwndFrame;
@@ -3309,7 +3433,7 @@ static void OnMenuPrint(WindowInfo& win)
     /* by default print all pages */
     pd.nPageRanges =1;
     pd.nMaxPageRanges = MAXPAGERANGES;
-    ppr = SAZA(PRINTPAGERANGE, MAXPAGERANGES);
+    PRINTPAGERANGE *ppr = SAZA(PRINTPAGERANGE, MAXPAGERANGES);
     pd.lpPageRanges = ppr;
     ppr->nFromPage = 1;
     ppr->nToPage = dm->pageCount();
@@ -3327,48 +3451,48 @@ static void OnMenuPrint(WindowInfo& win)
     if (PrintDlgEx(&pd) == S_OK) {
         if (pd.dwResultAction == PD_RESULT_PRINT) {
             if (CheckPrinterStretchDibSupport(win.hwndFrame, pd.hDC)) {
+                bool printSelection = false;
+                Vec<PRINTPAGERANGE> ranges;
                 if (pd.Flags & PD_CURRENTPAGE) {
-                    pd.nPageRanges=1;
-                    pd.lpPageRanges->nFromPage=dm->currentPageNo();
-                    pd.lpPageRanges->nToPage  =dm->currentPageNo();
+                    PRINTPAGERANGE pr = { dm->currentPageNo(), dm->currentPageNo() };
+                    ranges.Append(pr);
                 } else if (win.selectionOnPage && (pd.Flags & PD_SELECTION)) {
-                    pd.nPageRanges=1;
-                    pd.lpPageRanges->nFromPage=-1; // hint for PrintToDevice
-                    pd.lpPageRanges->nToPage  =-1;
+                    printSelection = true;
                 } else if (!(pd.Flags & PD_PAGENUMS)) {
-                    pd.nPageRanges=1;
-                    pd.lpPageRanges->nFromPage=1;
-                    pd.lpPageRanges->nToPage  =dm->pageCount();
+                    PRINTPAGERANGE pr = { 1, dm->pageCount() };
+                    ranges.Append(pr);
+                } else {
+                    assert(pd.nPageRanges > 0);
+                    for (DWORD i = 0; i < pd.nPageRanges; i++)
+                        ranges.Append(pd.lpPageRanges[i]);
                 }
+
                 LPDEVMODE devMode = (LPDEVMODE)GlobalLock(pd.hDevMode);
-                BaseEngine *engine = dm->engine->Clone();
-                if (!engine)
-                    engine = dm->engine;
-                PrintToDevice(engine, pd.hDC, devMode, pd.nPageRanges, pd.lpPageRanges,
-                              dm->rotation(), advanced.range, advanced.scale, win.selectionOnPage);
-                if (engine != dm->engine)
-                    delete engine;
+                PrintData *data = new PrintData(dm->engine, pd.hDC, devMode, ranges,
+                                                dm->rotation(), advanced.range, advanced.scale,
+                                                printSelection ? win.selectionOnPage : NULL);
+                pd.hDC = NULL; // deleted by PrintData
                 if (devMode)
                     GlobalUnlock(pd.hDevMode);
+
+                PrintToDeviceOnThread(win, data);
             }
         }
     }
-    else {
-        if (CommDlgExtendedError()) { 
-            /* if PrintDlg was cancelled then
-               CommDlgExtendedError is zero, otherwise it returns the
-               error code, which we could look at here if we wanted.
-               for now just warn the user that printing has stopped
-               becasue of an error */
-            MessageBox(win.hwndFrame, _TR("Couldn't initialize printer"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK);
-        }
+    else if (CommDlgExtendedError() != 0) { 
+        /* if PrintDlg was cancelled then
+           CommDlgExtendedError is zero, otherwise it returns the
+           error code, which we could look at here if we wanted.
+           for now just warn the user that printing has stopped
+           becasue of an error */
+        MessageBox(win.hwndFrame, _TR("Couldn't initialize printer"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK);
     }
 
     free(ppr);
     free(pd.lpCallback);
-    if (pd.hDC != NULL) DeleteDC(pd.hDC);
-    if (pd.hDevNames != NULL) GlobalFree(pd.hDevNames);
-    if (pd.hDevMode != NULL) GlobalFree(pd.hDevMode);
+    DeleteDC(pd.hDC);
+    GlobalFree(pd.hDevNames);
+    GlobalFree(pd.hDevMode);
 }
 
 static void OnMenuSaveAs(WindowInfo& win)
@@ -4098,7 +4222,7 @@ static DWORD WINAPI ShowMessageThread(LPVOID data)
     WindowInfo *win = (WindowInfo *)data;
     ShowWindowAsync(win->hwndFindStatus, SW_SHOWNA);
     WaitForSingleObject(win->stopFindStatusThreadEvent, 3000);
-    if (!win->findStatusVisible)
+    if (!win->progressStatusVisible)
         ShowWindowAsync(win->hwndFindStatus, SW_HIDE);
     return 0;
 }
@@ -4106,25 +4230,32 @@ static DWORD WINAPI ShowMessageThread(LPVOID data)
 // Display the message 'message' asynchronously
 // If resize = true then the window width is adjusted to the length of the text
 // if highlight = true the message text is displayed inverted in order to draw some attention
-static void WindowInfo_ShowMessage_Async(WindowInfo& win, const TCHAR *message, bool resize, bool highlight)
+static void WindowInfo_ShowMessage_Async(WindowInfo& win, const TCHAR *message, bool noProgressbar, bool highlight)
 {
     if (message)
         Win::SetText(win.hwndFindStatus, message);
-    if (resize) {
-        // compute the length of the message
-        RECT rc = RectI(0, 0, FIND_STATUS_WIDTH, 0).ToRECT();
-        HDC hdc = GetDC(win.hwndFindStatus);
-        HGDIOBJ oldFont = SelectObject(hdc, gDefaultGuiFont);
-        DrawText(hdc, message, -1, &rc, DT_CALCRECT | DT_SINGLELINE);
-        SelectObject(hdc, oldFont);
-        ReleaseDC(win.hwndFindStatus, hdc);
+
+    // compute the length of the message
+    RECT rc = RectI(0, 0, FIND_STATUS_WIDTH, 0).ToRECT();
+    HDC hdc = GetDC(win.hwndFindStatus);
+    HGDIOBJ oldFont = SelectObject(hdc, gDefaultGuiFont);
+    DrawText(hdc, message, -1, &rc, DT_CALCRECT | DT_SINGLELINE);
+    SelectObject(hdc, oldFont);
+    ReleaseDC(win.hwndFindStatus, hdc);
+    // adjust the window to fit the message (only shrink the window when there's no progress bar)
+    if (noProgressbar) {
         rc.right += MulDiv(15, win.dpi, USER_DEFAULT_SCREEN_DPI);
         rc.bottom = MulDiv(23, win.dpi, USER_DEFAULT_SCREEN_DPI);
         AdjustWindowRectEx(&rc, GetWindowLong(win.hwndFindStatus, GWL_STYLE), FALSE, GetWindowLong(win.hwndFindStatus, GWL_EXSTYLE));
         MoveWindow(win.hwndFindStatus, FIND_STATUS_MARGIN + rc.left, FIND_STATUS_MARGIN + rc.top, rc.right - rc.left + FIND_STATUS_MARGIN, rc.bottom - rc.top, TRUE);
+    } else {
+        RectI rect = WindowRect(win.hwndFindStatus);
+        RectI rectMsg = RectI::FromRECT(rc);
+        if (rectMsg.dx > FIND_STATUS_WIDTH - 2 * FIND_STATUS_MARGIN)
+            MoveWindow(win.hwndFindStatus, FIND_STATUS_MARGIN, FIND_STATUS_MARGIN, rect.dx + rectMsg.dx - (FIND_STATUS_WIDTH - 2 * FIND_STATUS_MARGIN), rect.dy, TRUE);
     }
 
-    win.findStatusVisible = false;
+    win.progressStatusVisible = false;
     win.findStatusHighlight = highlight;
     // if a thread has previously been started then make sure it has ended
     if (win.findStatusThread) {
@@ -4218,16 +4349,16 @@ static void WindowInfo_ShowFindStatus(WindowInfo& win)
     MoveWindow(win.hwndFindStatus, FIND_STATUS_MARGIN, FIND_STATUS_MARGIN,
                MulDiv(FIND_STATUS_WIDTH, win.dpi, USER_DEFAULT_SCREEN_DPI),
                MulDiv(23, win.dpi, USER_DEFAULT_SCREEN_DPI) + FIND_STATUS_PROGRESS_HEIGHT + 8,
-               false);
+               FALSE);
     ShowWindow(win.hwndFindStatus, SW_SHOWNA);
-    win.findStatusVisible = true;
+    win.progressStatusVisible = true;
 
     SendMessage(win.hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_PREV, disable);
     SendMessage(win.hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_NEXT, disable);
     SendMessage(win.hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_MATCH, disable);
 }
 
-static void WindowInfo_HideFindStatus(WindowInfo& win, bool success=false, bool loopedAround=false)
+static void WindowInfo_HideFindStatus(WindowInfo& win, bool success, bool loopedAround)
 {
     LPARAM enable = (LPARAM)MAKELONG(1, 0);
 
@@ -4814,18 +4945,18 @@ static LRESULT CALLBACK WndProcFindStatus(HWND hwnd, UINT message, WPARAM wParam
         return DefWindowProc(hwnd, message, wParam, lParam);
 
     if (WM_ERASEBKGND == message) {
-        ClientRect rect(hwnd);
-        DrawFrameControl((HDC)wParam, &rect.ToRECT(), DFC_BUTTON, DFCS_BUTTONPUSH);
+        // do nothing, helps to avoid flicker
         return TRUE;
     } else if (WM_PAINT == message) {
         PAINTSTRUCT ps;
-        HDC hdc = BeginPaint(hwnd, &ps);
-        HFONT oldfnt = SelectFont(hdc, gDefaultGuiFont);
-        TCHAR text[256];
+        HDC hdcWnd = BeginPaint(hwnd, &ps);
 
         ClientRect rect(hwnd);
-        GetWindowText(hwnd, text, 256);
+        DoubleBuffer buffer(hwnd, rect);
+        HDC hdc = buffer.GetDC();
+        HFONT oldfnt = SelectFont(hdc, gDefaultGuiFont);
 
+        DrawFrameControl(hdc, &rect.ToRECT(), DFC_BUTTON, DFCS_BUTTONPUSH);
         if (win->findStatusHighlight) {
             SetBkMode(hdc, OPAQUE);
             SetTextColor(hdc, GetSysColor(COLOR_HIGHLIGHTTEXT));
@@ -4834,6 +4965,8 @@ static LRESULT CALLBACK WndProcFindStatus(HWND hwnd, UINT message, WPARAM wParam
             SetBkMode(hdc, TRANSPARENT);
             SetTextColor(hdc, GetSysColor(COLOR_WINDOWTEXT));
         }
+
+        ScopedMem<TCHAR> text(Win::GetText(hwnd));
         rect.x += 10; rect.dx -= 10;
         rect.y += 4; rect.dy -= 4;
         DrawText(hdc, text, Str::Len(text), &rect.ToRECT(), DT_LEFT);
@@ -4844,7 +4977,7 @@ static LRESULT CALLBACK WndProcFindStatus(HWND hwnd, UINT message, WPARAM wParam
         rect.dy = FIND_STATUS_PROGRESS_HEIGHT;
         PaintRect(hdc, rect);
         
-        int percent = win->findPercent;
+        int percent = win->progressPercent;
         if (percent > 100)
             percent = 100;
         rect.x += 2;
@@ -4854,10 +4987,12 @@ static LRESULT CALLBACK WndProcFindStatus(HWND hwnd, UINT message, WPARAM wParam
         FillRect(hdc, &rect.ToRECT(), gBrushShadow);
 
         SelectFont(hdc, oldfnt);
+
+        buffer.Flush(hdcWnd);
         EndPaint(hwnd, &ps);
         return WM_PAINT_HANDLED;
     } else if (WM_SETTEXT == message) {
-        InvalidateRect(hwnd, NULL, true);
+        InvalidateRect(hwnd, NULL, TRUE);
     }
     return DefWindowProc(hwnd, message, wParam, lParam);
 }
@@ -5245,16 +5380,16 @@ class UpdateFindStatusWorkItem : public UIThreadWorkItem
 {
     int current;
     int total;
+
 public:
     UpdateFindStatusWorkItem(WindowInfo *win, int current, int total)
-        : UIThreadWorkItem(win), current(current), total(total)
-    {}
+        : UIThreadWorkItem(win), current(current), total(total) { }
 
     virtual void Execute() {
         if (!WindowInfoStillValid(win))
             return;
-        win->findPercent = current * 100 / total;
-        if (!win->findStatusVisible)
+        win->progressPercent = current * 100 / total;
+        if (!win->progressStatusVisible)
             WindowInfo_ShowFindStatus(*win);
 
         ScopedMem<TCHAR> buf(Str::Format(_TR("Searching %d of %d..."), current, total));
@@ -5262,7 +5397,7 @@ public:
     }
 };
 
-bool WindowInfo::FindUpdateStatus(int current, int total)
+bool WindowInfo::ProgressUpdate(int current, int total)
 {
     if (!findCanceled)
         gUIThreadMarshaller.Queue(new UpdateFindStatusWorkItem(this, current, total));
@@ -6612,7 +6747,12 @@ static bool PrintFile(const TCHAR *fileName, const TCHAR *printerName, bool disp
     }
     if (CheckPrinterStretchDibSupport(NULL, hdcPrint)) {
         PRINTPAGERANGE pr = { 1, engine->PageCount() };
-        PrintToDevice(engine, hdcPrint, devMode, 1, &pr);
+        Vec<PRINTPAGERANGE> ranges;
+        ranges.Append(pr);
+        PrintData pd(engine, hdcPrint, devMode, ranges);
+        hdcPrint = NULL; // deleted by PrintData
+
+        PrintToDevice(pd);
         ok = true;
     }
 Exit:

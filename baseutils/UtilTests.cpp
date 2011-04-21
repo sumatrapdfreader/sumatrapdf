@@ -282,6 +282,15 @@ static void StrVecTest()
     free(s);
 
     {
+        StrVec v2(v);
+        assert(Str::Eq(v2[1], _T("foo")));
+        TCHAR *bar = v2[0];
+        v2 = v;
+        assert(v2[0] != bar && v2[0] != v[0]);
+        assert(Str::Eq(v2[1], _T("foo")));
+    }
+
+    {
         StrVec v2;
         size_t count = v2.Split(_T("a,b,,c,"), _T(","));
         assert(count == 5 && v2.Find(_T("c")) == 3);
@@ -324,6 +333,16 @@ static void VecTest()
     assert(ints.Count() == 1000 && ints[500] == 500);
     ints.Remove(500);
     assert(ints.Count() == 999 && ints[500] == 501);
+
+    {
+        Vec<int> ints2(ints);
+        assert(ints2.Count() == 999);
+        assert(ints.LendData() != ints2.LendData());
+        ints.Remove(600);
+        assert(ints.Count() < ints2.Count());
+        ints2 = ints;
+        assert(ints2.Count() == 998);
+    }
 
     {
         char buf[2] = {'a', '\0'};

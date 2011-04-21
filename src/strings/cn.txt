@@ -523,6 +523,8 @@ printing document
 #P&roperties
 #Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L
+#Printing is still in progress. Abort and start over?
+#Printing page %d of %d...
 #Save S&hortcut...\tCtrl-Shift-S
 #Select &All
 #Select &All\tCtrl-A

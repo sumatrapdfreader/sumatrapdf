@@ -19,8 +19,8 @@ enum PrintRangeAdv { PrintRangeAll = 0, PrintRangeEven, PrintRangeOdd };
 enum PrintScaleAdv { PrintScaleNone = 0, PrintScaleShrink, PrintScaleFit };
 
 struct Print_Advanced_Data {
-    enum PrintRangeAdv range;
-    enum PrintScaleAdv scale;
+    PrintRangeAdv range;
+    PrintScaleAdv scale;
 };
 
 HPROPSHEETPAGE CreatePrintAdvancedPropSheet(HINSTANCE hInst, Print_Advanced_Data *data);

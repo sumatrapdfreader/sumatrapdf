@@ -585,3 +585,7 @@ copying text
 printing document
 штампање документа
 
+# Untranslated:
+#Printing is still in progress. Abort and start over?
+#Printing page %d of %d...
+

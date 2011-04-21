@@ -143,8 +143,10 @@ public:
 
     HANDLE          findThread;
     bool            findCanceled;
-    int             findPercent;
-    bool            findStatusVisible;
+    HANDLE          printThread;
+    bool            printCanceled;
+    int             progressPercent;
+    bool            progressStatusVisible;
 
     // the following properties only apply to PDF documents
 
@@ -190,6 +192,7 @@ public:
     void ZoomToSelection(float factor, bool relative);
     void SwitchToDisplayMode(DisplayMode displayMode, bool keepContinuous=false);
     void MoveDocBy(int dx, int dy);
+    void AbortPrinting();
 
     // the following methods only apply to PDF and XPS documents
 
@@ -215,11 +218,12 @@ public:
 
     void ShowForwardSearchResult(const TCHAR *fileName, UINT line, UINT col, UINT ret, UINT page, Vec<RectI>& rects);
 
-    // DisplayModelCallback implementation (incl. PasswordUI, TextSearchTracker)
+    // DisplayModelCallback implementation (incl. PasswordUI, ProgressUpdateUI)
 
-    virtual bool FindUpdateStatus(int count, int total);
     virtual TCHAR * GetPassword(const TCHAR *fileName, unsigned char *fileDigest,
                                 unsigned char decryptionKeyOut[32], bool *saveKey);
+    virtual bool ProgressUpdate(int count, int total);
+
     virtual void Repaint() { RepaintAsync(); };
     virtual void PageNoChanged(int pageNo);
     virtual void UpdateScrollbars(SizeI canvas);

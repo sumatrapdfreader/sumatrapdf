@@ -585,3 +585,7 @@ copiando texto
 printing document
 imprimindo documento
 
+# Untranslated:
+#Printing is still in progress. Abort and start over?
+#Printing page %d of %d...
+

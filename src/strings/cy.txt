@@ -536,6 +536,8 @@ argraffu dogfen
 #Image files (*.%s)
 #Open a document...
 #P&roperties
+#Printing is still in progress. Abort and start over?
+#Printing page %d of %d...
 #Save S&hortcut...\tCtrl-Shift-S
 #Select &All
 #Show frequently read
