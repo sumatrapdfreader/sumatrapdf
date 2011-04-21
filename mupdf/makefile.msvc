@@ -307,7 +307,7 @@ MUXPS_OBJS = \
 
 # Make it easy to compile a CJK font in
 !if "$(WITHCJKFONT)"==""
-MUPDF_CFLAGS = $(MUPDF_CFLAGS) /D "NOCJKFONT"
+MUPDF_CFLAGS = $(MUPDF_CFLAGS) /D "NOCJKFONT" /D "NODROIDFONT"
 !endif
 
 LIBS_OBJS = \
@@ -544,7 +544,7 @@ MUPDF_GEN_DIR = $(MUPDF_DIR)\generated
 $(MUPDF_GEN_DIR):
 	cd $(MUPDF_DIR) && win32\generate.bat
 $(OP)\pdf_fontfile.obj: $(MUPDF_GEN_DIR) \
-	$(MUPDF_GEN_DIR)\font_base14.h $(MUPDF_GEN_DIR)\font_cjk.h
+	$(MUPDF_GEN_DIR)\font_base14.h $(MUPDF_GEN_DIR)\font_droid.h $(MUPDF_GEN_DIR)\font_cjk.h
 $(OP)\pdf_cmap_tables.obj: $(MUPDF_GEN_DIR) \
 	$(MUPDF_GEN_DIR)\cmap_cns.h $(MUPDF_GEN_DIR)\cmap_gbs.h \
 	$(MUPDF_GEN_DIR)\cmap_japan.h $(MUPDF_GEN_DIR)\cmap_korea.h

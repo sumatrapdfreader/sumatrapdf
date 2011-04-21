@@ -7,16 +7,22 @@
 static void fz_finalize_freetype(void);
 
 static fz_font *
-fz_new_font(void)
+fz_new_font(char *name)
 {
 	fz_font *font;
 
 	font = fz_malloc(sizeof(fz_font));
 	font->refs = 1;
-	strcpy(font->name, "<unknown>");
+
+	if (name)
+		fz_strlcpy(font->name, name, sizeof font->name);
+	else
+		fz_strlcpy(font->name, "(null)", sizeof font->name);
 
 	font->ft_face = NULL;
 	font->ft_substitute = 0;
+	font->ft_bold = 0;
+	font->ft_italic = 0;
 	font->ft_hint = 0;
 
 	font->ft_file = NULL;
@@ -189,7 +195,7 @@ fz_new_font_from_file(fz_font **fontp, char *path, int index)
 	if (fterr)
 		return fz_throw("freetype: cannot load font: %s", ft_error_string(fterr));
 
-	font = fz_new_font();
+	font = fz_new_font(face->family_name);
 	font->ft_face = face;
 	font->bbox.x0 = face->bbox.xMin * 1000 / face->units_per_EM;
 	font->bbox.y0 = face->bbox.yMin * 1000 / face->units_per_EM;
@@ -216,7 +222,7 @@ fz_new_font_from_memory(fz_font **fontp, unsigned char *data, int len, int index
 	if (fterr)
 		return fz_throw("freetype: cannot load font: %s", ft_error_string(fterr));
 
-	font = fz_new_font();
+	font = fz_new_font(face->family_name);
 	font->ft_face = face;
 	font->bbox.x0 = face->bbox.xMin * 1000 / face->units_per_EM;
 	font->bbox.y0 = face->bbox.yMin * 1000 / face->units_per_EM;
@@ -314,6 +320,9 @@ fz_render_ft_glyph(fz_font *font, int gid, fz_matrix trm)
 
 	trm = fz_adjust_ft_glyph_width(font, gid, trm);
 
+	if (font->ft_italic)
+		trm = fz_concat(fz_shear(0.3f, 0), trm);
+
 	/*
 	Freetype mutilates complex glyphs if they are loaded
 	with FT_Set_Char_Size 1.0. it rounds the coordinates
@@ -349,7 +358,7 @@ fz_render_ft_glyph(fz_font *font, int gid, fz_matrix trm)
 		if (fterr)
 			fz_warn("freetype setting character size: %s", ft_error_string(fterr));
 		FT_Set_Transform(face, &m, &v);
-		fterr = FT_Load_Glyph(face, gid, FT_LOAD_NO_BITMAP);
+		fterr = FT_Load_Glyph(face, gid, FT_LOAD_NO_BITMAP | FT_LOAD_TARGET_MONO);
 		if (fterr)
 			fz_warn("freetype load glyph (gid %d): %s", gid, ft_error_string(fterr));
 	}
@@ -376,7 +385,14 @@ fz_render_ft_glyph(fz_font *font, int gid, fz_matrix trm)
 		}
 	}
 
-	fterr = FT_Render_Glyph(face->glyph, fz_get_aa_level() > 0 ? ft_render_mode_normal : ft_render_mode_mono);
+	if (font->ft_bold)
+	{
+		float strength = fz_matrix_expansion(trm) * 0.04f;
+		FT_Outline_Embolden(&face->glyph->outline, strength * 64);
+		FT_Outline_Translate(&face->glyph->outline, -strength * 32, -strength * 32);
+	}
+
+	fterr = FT_Render_Glyph(face->glyph, fz_get_aa_level() > 0 ? FT_RENDER_MODE_NORMAL : FT_RENDER_MODE_MONO);
 	if (fterr)
 	{
 		fz_warn("freetype render glyph (gid %d): %s", gid, ft_error_string(fterr));
@@ -401,6 +417,9 @@ fz_render_ft_stroked_glyph(fz_font *font, int gid, fz_matrix trm, fz_matrix ctm,
 	fz_pixmap *pixmap;
 
 	trm = fz_adjust_ft_glyph_width(font, gid, trm);
+
+	if (font->ft_italic)
+		trm = fz_concat(fz_shear(0.3f, 0), trm);
 
 	m.xx = trm.a * 64; /* should be 65536 */
 	m.yx = trm.b * 64;
@@ -453,7 +472,7 @@ fz_render_ft_stroked_glyph(fz_font *font, int gid, fz_matrix trm, fz_matrix ctm,
 
 	FT_Stroker_Done(stroker);
 
-	fterr = FT_Glyph_To_Bitmap(&glyph, fz_get_aa_level() > 0 ? ft_render_mode_normal : ft_render_mode_mono, 0, 1);
+	fterr = FT_Glyph_To_Bitmap(&glyph, fz_get_aa_level() > 0 ? FT_RENDER_MODE_NORMAL : FT_RENDER_MODE_MONO, 0, 1);
 	if (fterr)
 	{
 		fz_warn("FT_Glyph_To_Bitmap: %s", ft_error_string(fterr));
@@ -478,11 +497,10 @@ fz_new_type3_font(char *name, fz_matrix matrix)
 	fz_font *font;
 	int i;
 
-	font = fz_new_font();
+	font = fz_new_font(name);
 	font->t3procs = fz_calloc(256, sizeof(fz_buffer*));
 	font->t3widths = fz_calloc(256, sizeof(float));
 
-	fz_strlcpy(font->name, name, sizeof(font->name));
 	font->t3matrix = matrix;
 	for (i = 0; i < 256; i++)
 	{

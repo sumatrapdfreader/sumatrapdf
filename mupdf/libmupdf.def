@@ -39,6 +39,7 @@ EXPORTS
 	fz_hash_get_val
 	fz_concat
 	fz_scale
+	fz_shear
 	fz_rotate
 	fz_translate
 	fz_invert_matrix
@@ -383,7 +384,8 @@ EXPORTS
 	pdf_load_to_unicode
 	pdf_font_cid_to_gid
 	pdf_find_builtin_font
-	pdf_find_builtin_cjk_font
+	pdf_find_substitute_font
+	pdf_find_substitute_cjk_font
 	pdf_load_windows_font
 	pdf_load_similar_cjk_font
 	pdf_load_type3_font

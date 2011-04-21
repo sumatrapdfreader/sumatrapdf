@@ -84,6 +84,7 @@ CMAP_GB_SRC := $(wildcard cmaps/gb/*)
 CMAP_JAPAN_SRC := $(wildcard cmaps/japan/*)
 CMAP_KOREA_SRC := $(wildcard cmaps/korea/*)
 FONT_BASE14_SRC := $(wildcard fonts/*.cff)
+FONT_DROID_SRC := fonts/droid/DroidSans.ttf
 FONT_CJK_SRC := fonts/droid/DroidSansFallback.ttf
 
 $(GEN)/cmap_cns.h : $(CMAP_CNS_SRC)
@@ -97,11 +98,13 @@ $(GEN)/cmap_korea.h : $(CMAP_KOREA_SRC)
 
 $(GEN)/font_base14.h : $(FONT_BASE14_SRC)
 	$(QUIET_GEN) ./$(FONTDUMP) $@ $(FONT_BASE14_SRC)
+$(GEN)/font_droid.h : $(FONT_DROID_SRC)
+	$(QUIET_GEN) ./$(FONTDUMP) $@ $(FONT_DROID_SRC)
 $(GEN)/font_cjk.h : $(FONT_CJK_SRC)
 	$(QUIET_GEN) ./$(FONTDUMP) $@ $(FONT_CJK_SRC)
 
 CMAP_HDR := $(addprefix $(GEN)/, cmap_cns.h cmap_gb.h cmap_japan.h cmap_korea.h)
-FONT_HDR := $(GEN)/font_base14.h $(GEN)/font_cjk.h
+FONT_HDR := $(GEN)/font_base14.h $(GEN)/font_droid.h $(GEN)/font_cjk.h
 
 $(CMAP_HDR) : $(CMAPDUMP) | $(GEN)
 $(FONT_HDR) : $(FONTDUMP) | $(GEN)

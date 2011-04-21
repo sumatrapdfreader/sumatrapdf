@@ -31,6 +31,16 @@ fz_scale(float sx, float sy)
 }
 
 fz_matrix
+fz_shear(float h, float v)
+{
+	fz_matrix m;
+	m.a = 1; m.b = v;
+	m.c = h; m.d = 1;
+	m.e = 0; m.f = 0;
+	return m;
+}
+
+fz_matrix
 fz_rotate(float theta)
 {
 	fz_matrix m;

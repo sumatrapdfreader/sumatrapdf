@@ -391,11 +391,12 @@ fz_error pdf_load_to_unicode(pdf_font_desc *font, pdf_xref *xref, char **strings
 int pdf_font_cid_to_gid(pdf_font_desc *fontdesc, int cid);
 
 unsigned char *pdf_find_builtin_font(char *name, unsigned int *len);
-unsigned char *pdf_find_builtin_cjk_font(int ros, int gothic, unsigned int *len);
+unsigned char *pdf_find_substitute_font(int mono, int serif, int bold, int italic, unsigned int *len);
+unsigned char *pdf_find_substitute_cjk_font(int ros, int serif, unsigned int *len);
 
 /* SumatraPDF: use locally installed fonts */
 fz_error pdf_load_windows_font(pdf_font_desc *font, char *fontname);
-fz_error pdf_load_similar_cjk_font(pdf_font_desc *font, int ros, int gothic);
+fz_error pdf_load_similar_cjk_font(pdf_font_desc *font, int ros, int serif);
 
 fz_error pdf_load_type3_font(pdf_font_desc **fontp, pdf_xref *xref, fz_obj *rdb, fz_obj *obj);
 fz_error pdf_load_font(pdf_font_desc **fontp, pdf_xref *xref, fz_obj *rdb, fz_obj *obj);

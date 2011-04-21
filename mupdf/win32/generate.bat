@@ -11,6 +11,8 @@ if not exist cmapdump.exe goto usage
 
 if not exist generated/font_base14.h fontdump.exe generated/font_base14.h fonts/Dingbats.cff fonts/NimbusMonL-Bold.cff fonts/NimbusMonL-BoldObli.cff fonts/NimbusMonL-Regu.cff fonts/NimbusMonL-ReguObli.cff fonts/NimbusRomNo9L-Medi.cff fonts/NimbusRomNo9L-MediItal.cff fonts/NimbusRomNo9L-Regu.cff fonts/NimbusRomNo9L-ReguItal.cff fonts/NimbusSanL-Bold.cff fonts/NimbusSanL-BoldItal.cff fonts/NimbusSanL-Regu.cff fonts/NimbusSanL-ReguItal.cff fonts/StandardSymL.cff
 
+if not exist generated/font_droid.h fontdump.exe generated/font_droid.h fonts/droid/DroidSans.ttf
+
 if not exist generated/font_cjk.h fontdump.exe generated/font_cjk.h fonts/droid/DroidSansFallback.ttf
 
 if not exist generated/cmap_cns.h cmapdump.exe generated/cmap_cns.h cmaps/cns/Adobe-CNS1-UCS2 cmaps/cns/Adobe-CNS1-0 cmaps/cns/Adobe-CNS1-1 cmaps/cns/Adobe-CNS1-2 cmaps/cns/Adobe-CNS1-3 cmaps/cns/Adobe-CNS1-4 cmaps/cns/Adobe-CNS1-5 cmaps/cns/Adobe-CNS1-6 cmaps/cns/B5-H cmaps/cns/B5-V cmaps/cns/B5pc-H cmaps/cns/B5pc-V cmaps/cns/CNS-EUC-H cmaps/cns/CNS-EUC-V cmaps/cns/CNS1-H cmaps/cns/CNS1-V cmaps/cns/CNS2-H cmaps/cns/CNS2-V cmaps/cns/ETen-B5-H cmaps/cns/ETen-B5-V cmaps/cns/ETenms-B5-H cmaps/cns/ETenms-B5-V cmaps/cns/ETHK-B5-H cmaps/cns/ETHK-B5-V cmaps/cns/HKdla-B5-H cmaps/cns/HKdla-B5-V cmaps/cns/HKdlb-B5-H cmaps/cns/HKdlb-B5-V cmaps/cns/HKgccs-B5-H cmaps/cns/HKgccs-B5-V cmaps/cns/HKm314-B5-H cmaps/cns/HKm314-B5-V cmaps/cns/HKm471-B5-H cmaps/cns/HKm471-B5-V cmaps/cns/HKscs-B5-H cmaps/cns/HKscs-B5-V cmaps/cns/UniCNS-UCS2-H cmaps/cns/UniCNS-UCS2-V cmaps/cns/UniCNS-UTF16-H cmaps/cns/UniCNS-UTF16-V

@@ -258,6 +258,7 @@ extern const fz_matrix fz_identity;
 
 fz_matrix fz_concat(fz_matrix one, fz_matrix two);
 fz_matrix fz_scale(float sx, float sy);
+fz_matrix fz_shear(float sx, float sy);
 fz_matrix fz_rotate(float theta);
 fz_matrix fz_translate(float tx, float ty);
 fz_matrix fz_invert_matrix(fz_matrix m);
@@ -721,6 +722,8 @@ struct fz_font_s
 
 	void *ft_face; /* has an FT_Face if used */
 	int ft_substitute; /* ... substitute metrics */
+	int ft_bold; /* ... synthesize bold */
+	int ft_italic; /* ... synthesize italic */
 	int ft_hint; /* ... force hinting for DynaLab fonts */
 
 	/* origin of font data */
