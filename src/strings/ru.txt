@@ -465,6 +465,12 @@ Previous Page
 Print range
 Диапазон печати
 
+Printing is still in progress. Abort and start over?
+Продолжается печать документа. Отменить и начать заново?
+
+Printing page %d of %d...
+Печать страницы %d из %d...
+
 Printing problem.
 Ошибка при печати.
 
@@ -584,8 +590,4 @@ copying text
 
 printing document
 печатается документ
-
-# Untranslated:
-#Printing is still in progress. Abort and start over?
-#Printing page %d of %d...
 
