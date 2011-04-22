@@ -21,7 +21,7 @@ WindowInfo::WindowInfo(HWND hwnd) :
     hwndTocBox(NULL), hwndTocTree(NULL), hwndSpliter(NULL),
     hwndInfotip(NULL), infotipVisible(false), hwndProperties(NULL),
     findThread(NULL), findCanceled(false), printThread(NULL), printCanceled(false),
-    showSelection(false), mouseAction(MA_IDLE),
+    findCleanup(NULL), showSelection(false), mouseAction(MA_IDLE),
     prevZoomVirtual(INVALID_ZOOM), prevDisplayMode(DM_AUTOMATIC),
     loadedFilePath(NULL), currPageNo(0),
     xScrollSpeed(0), yScrollSpeed(0), wheelAccumDelta(0),
@@ -54,7 +54,9 @@ WindowInfo::~WindowInfo() {
     delete this->buffer;
     delete this->selectionOnPage;
     delete this->linkOnLastButtonDown;
+
     delete this->messages;
+    delete this->findCleanup;
 
     free(this->loadedFilePath);
 
@@ -95,12 +97,9 @@ SizeI WindowInfo::GetViewPortSize()
     return size;
 }
 
-void WindowInfo::ShowNotification(const TCHAR *message, bool highlight)
+void WindowInfo::ShowNotification(const TCHAR *message, bool autoDismiss, bool highlight)
 {
-    // TODO: ensure that all currently displayed notification are visible
-    //       (e.g. stacked beneath each other)
-    if (messages->IsEmpty())
-        messages->Add(new MessageWnd(this, message, 3000, highlight, messages));
+    messages->Add(new MessageWnd(this->hwndCanvas, message, autoDismiss ? 3000 : 0, highlight, messages));
 }
 
 void WindowInfo::AbortFinding()

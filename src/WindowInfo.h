@@ -13,7 +13,6 @@ class Synchronizer;
 class DoubleBuffer;
 class SelectionOnPage;
 class LinkHandler;
-class MessageWnd;
 class MessageWndList;
 
 /* Describes actions which can be performed by mouse */
@@ -137,6 +136,7 @@ public:
     bool            threadStressRunning;
 
     MessageWndList *messages;
+    CallbackFunc *  findCleanup; // set while there's a find notification to delete
 
     HANDLE          printThread;
     bool            printCanceled;
@@ -203,7 +203,7 @@ public:
     void CreateInfotip(const TCHAR *text, RectI& rc);
     void DeleteInfotip();
 
-    void ShowNotification(const TCHAR *message, bool highlight=false);
+    void ShowNotification(const TCHAR *message, bool autoDismiss=true, bool highlight=false);
     void ShowForwardSearchResult(const TCHAR *fileName, UINT line, UINT col, UINT ret, UINT page, Vec<RectI>& rects);
 
     // DisplayModelCallback implementation (incl. PasswordUI)

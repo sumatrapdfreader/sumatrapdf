@@ -13,7 +13,7 @@ class MessageWnd;
 
 class MessageWndCallback {
 public:
-    // called right before a MessageWnd is deleted
+    // called after a message has timed out or been canceled
     virtual void CleanUp(MessageWnd *wnd) = 0;
 };
 
@@ -21,32 +21,36 @@ class MessageWnd : public ProgressUpdateUI {
     static const int TIMEOUT_TIMER_ID = 1;
     static const int PROGRESS_WIDTH = 200;
     static const int PROGRESS_HEIGHT = 5;
-    static const int TL_MARGIN = 8;
     static const int PADDING = 6;
 
     HWND self;
     bool hasProgress;
-    bool highlight;
+    bool hasCancel;
+
     HFONT font;
+    bool highlight;
     MessageWndCallback *callback;
+
     // only used for progress notifications
     bool isCanceled;
     int progress;
     int progressWidth;
-    TCHAR *progressMsg;
+    TCHAR *progressMsg; // must contain two %d (for current and total)
 
-    void CreatePopup(HWND parent, const TCHAR *message, int dpi) {
+    void CreatePopup(HWND parent, const TCHAR *message) {
         NONCLIENTMETRICS ncm = { 0 };
         ncm.cbSize = sizeof(ncm);
         SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
         font = CreateFontIndirect(&ncm.lfMessageFont);
-        progressWidth = MulDiv(PROGRESS_WIDTH, dpi, USER_DEFAULT_SCREEN_DPI);
+
+        HDC hdc = GetDC(parent);
+        progressWidth = MulDiv(PROGRESS_WIDTH, GetDeviceCaps(hdc, LOGPIXELSX), USER_DEFAULT_SCREEN_DPI);
+        ReleaseDC(parent, hdc);
 
         self = CreateWindowEx(WS_EX_TOPMOST, MESSAGE_WND_CLASS_NAME, message, WS_CHILD | SS_CENTER,
                               TL_MARGIN, TL_MARGIN, 0, 0,
                               parent, (HMENU)0, ghinst, NULL);
         SetWindowLongPtr(self, GWLP_USERDATA, (LONG_PTR)this);
-        // TODO: add a Cancel button, if hasProgress
         UpdateWindowPosition(message, true);
         ShowWindow(self, SW_SHOW);
     }
@@ -61,6 +65,10 @@ class MessageWnd : public ProgressUpdateUI {
         ReleaseDC(self, hdc);
 
         RectI rectMsg = RectI::FromRECT(rc);
+        if (hasCancel) {
+            rectMsg.dy = max(rectMsg.dy, 16);
+            rectMsg.dx += 20;
+        }
         rectMsg.Inflate(PADDING, PADDING);
 
         // adjust the window to fit the message (only shrink the window when there's no progress bar)
@@ -77,29 +85,31 @@ class MessageWnd : public ProgressUpdateUI {
     }
 
 public:
-    MessageWnd(WindowInfo *win, const TCHAR *message, int timeoutInMS=0, bool highlight=false, MessageWndCallback *callback=NULL) :
-        hasProgress(false), callback(callback), highlight(highlight), progressMsg(NULL) {
-        CreatePopup(win->hwndCanvas, message, win->dpi);
+    static const int TL_MARGIN = 8;
+
+    MessageWnd(HWND parent, const TCHAR *message, int timeoutInMS=0, bool highlight=false, MessageWndCallback *callback=NULL) :
+        hasProgress(false), hasCancel(!timeoutInMS), callback(callback), highlight(highlight), progressMsg(NULL) {
+        CreatePopup(parent, message);
         if (timeoutInMS)
             SetTimer(self, TIMEOUT_TIMER_ID, timeoutInMS, NULL);
     }
-    MessageWnd(WindowInfo *win, const TCHAR *message, const TCHAR *progressMsg, MessageWndCallback *callback=NULL) :
-        hasProgress(true), callback(callback), highlight(false), isCanceled(false), progress(0) {
+    MessageWnd(HWND parent, const TCHAR *message, const TCHAR *progressMsg, MessageWndCallback *callback=NULL) :
+        hasProgress(true), hasCancel(true), callback(callback), highlight(false), isCanceled(false), progress(0) {
         this->progressMsg = progressMsg ? Str::Dup(progressMsg) : NULL;
-        CreatePopup(win->hwndCanvas, message, win->dpi);
+        CreatePopup(parent, message);
     }
     ~MessageWnd() {
-        if (callback)
-            callback->CleanUp(this);
         DestroyWindow(self);
         DeleteObject(font);
         free(progressMsg);
     }
 
-    virtual bool ProgressUpdate(int count, int total) {
-        progress = limitValue(100 * count / total, 0, 100);
+    HWND hwnd() { return self; }
+
+    virtual bool ProgressUpdate(int current, int total) {
+        progress = limitValue(100 * current / total, 0, 100);
         if (hasProgress && progressMsg) {
-            ScopedMem<TCHAR> message(Str::Format(progressMsg, count, total));
+            ScopedMem<TCHAR> message(Str::Format(progressMsg, current, total));
             MessageUpdate(message);
         }
         return isCanceled;
@@ -109,9 +119,15 @@ public:
         Win::SetText(self, message);
         UpdateWindowPosition(message);
         this->highlight = highlight;
-        InvalidateRect(self, NULL, TRUE);
-        if (timeoutInMS)
+        if (timeoutInMS) {
             SetTimer(self, TIMEOUT_TIMER_ID, timeoutInMS, NULL);
+            hasCancel = false;
+        }
+        InvalidateRect(self, NULL, TRUE);
+    }
+
+    static RectI GetCancelRect(HWND hwnd) {
+        return RectI(ClientRect(hwnd).dx - 16 - PADDING, PADDING, 16, 16);
     }
 
     static LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
@@ -121,7 +137,10 @@ public:
             return TRUE;
         }
         if (WM_TIMER == message && TIMEOUT_TIMER_ID == wParam) {
-            delete wnd;
+            if (wnd->callback)
+                wnd->callback->CleanUp(wnd);
+            else
+                delete wnd;
             return 0;
         }
         if (WM_PAINT == message && wnd) {
@@ -148,9 +167,13 @@ public:
             RectI rectMsg = rect;
             if (wnd->hasProgress)
                 rectMsg.dy -= PROGRESS_HEIGHT + PADDING / 2;
-
+            if (wnd->hasCancel)
+                rectMsg.dx -= 20;
             ScopedMem<TCHAR> text(Win::GetText(hwnd));
             DrawText(hdc, text, -1, &rectMsg.ToRECT(), DT_SINGLELINE);
+
+            if (wnd->hasCancel)
+                DrawFrameControl(hdc, &GetCancelRect(hwnd).ToRECT(), DFC_CAPTION, DFCS_CAPTIONCLOSE | DFCS_FLAT);
 
             if (wnd->hasProgress) {
                 rect.dx = wnd->progressWidth;
@@ -174,21 +197,68 @@ public:
             EndPaint(hwnd, &ps);
             return WM_PAINT_HANDLED;
         }
+        if (WM_SETCURSOR == message && wnd->hasCancel) {
+            POINT pt;
+            if (GetCursorPos(&pt) && ScreenToClient(hwnd, &pt) &&
+                GetCancelRect(hwnd).Inside(PointI(pt.x, pt.y))) {
+                SetCursor(LoadCursor(NULL, IDC_HAND));
+                return TRUE;
+            }
+        }
+        if (WM_LBUTTONUP == message && wnd->hasCancel) {
+            if (GetCancelRect(hwnd).Inside(PointI(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)))) {
+                if (wnd->callback)
+                    wnd->callback->CleanUp(wnd);
+                else
+                    delete wnd;
+                return 0;
+            }
+        }
         return DefWindowProc(hwnd, message, wParam, lParam);
     }
 };
 
-// TODO: display several windows beneath each other
 class MessageWndList : public MessageWndCallback {
     Vec<MessageWnd *> wnds;
+
+    void MoveBelow(MessageWnd *fix, MessageWnd *move) {
+        RectI rect = WindowRect(fix->hwnd());
+        rect = MapRectToWindow(rect, HWND_DESKTOP, GetParent(fix->hwnd()));
+        SetWindowPos(move->hwnd(), NULL,
+                     rect.x, rect.y + rect.dy + MessageWnd::TL_MARGIN,
+                     0, 0, SWP_NOSIZE | SWP_NOZORDER);
+    }
 
 public:
     ~MessageWndList() { DeleteVecMembers(wnds); }
 
-    void Add(MessageWnd *wnd) { wnds.Append(wnd); }
     bool Contains(MessageWnd *wnd) { return wnds.Find(wnd) != -1; }
-    void Remove(MessageWnd *wnd) { wnds.Remove(wnd); }
-    bool IsEmpty() { return wnds.Count() == 0; }
 
-    virtual void CleanUp(MessageWnd *wnd) { Remove(wnd); }
+    void Add(MessageWnd *wnd) {
+        if (wnds.Count() > 0)
+            MoveBelow(wnds[wnds.Count() - 1], wnd);
+        wnds.Append(wnd);
+    }
+
+    void Remove(MessageWnd *wnd) {
+        int ix = wnds.Find(wnd);
+        if (ix == -1)
+            return;
+        wnds.Remove(wnd);
+        if (ix == 0 && wnds.Count() > 0) {
+            SetWindowPos(wnds[0]->hwnd(), NULL,
+                         MessageWnd::TL_MARGIN, MessageWnd::TL_MARGIN,
+                         0, 0, SWP_NOSIZE | SWP_NOZORDER);
+            ix = 1;
+        }
+        for (; ix < (int)wnds.Count(); ix++)
+            MoveBelow(wnds[ix - 1], wnds[ix]);
+    }
+
+    virtual void CleanUp(MessageWnd *wnd) {
+        if (Contains(wnd)) {
+            Remove(wnd);
+            delete wnd;
+        }
+    }
 };

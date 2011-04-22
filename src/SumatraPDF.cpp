@@ -2959,12 +2959,14 @@ static void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose=false)
 
     if (lastWindow && !quitIfLast) {
         /* last window - don't delete it */
+        win->AbortFinding();
         delete win->watcher;
         win->watcher = NULL;
         if (win->tocShow)
             win->HideTocBox();
         win->ClearTocBox();
-        win->AbortFinding();
+        if (win->findCleanup)
+            win->findCleanup->Callback();
         delete win->dm;
         win->dm = NULL;
         free(win->loadedFilePath);
@@ -2981,6 +2983,7 @@ static void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose=false)
         DeleteOldSelectionInfo(*win, true);
         win->RedrawAll();
         UpdateFindbox(*win);
+        SetFocus(win->hwndFrame);
     } else {
         HWND hwndToDestroy = win->hwndFrame;
         DeleteWindowInfo(win);
@@ -3086,6 +3089,13 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL)
     di.cbSize = sizeof (DOCINFO);
     di.lpszDocName = engine.FileName();
 
+    int current = 0, total = 0;
+    for (size_t i = 0; i < pd.ranges.Count(); i++)
+        total += pd.ranges[i].nToPage - pd.ranges[i].nFromPage + 1;
+    total += pd.sel.Count();
+    if (progressUI)
+        progressUI->ProgressUpdate(current, total);
+
     if (StartDoc(hdc, &di) <= 0)
         return;
 
@@ -3104,11 +3114,6 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL)
     bool bPrintPortrait = paperWidth < paperHeight;
     if (pd.orientation)
         bPrintPortrait = DMORIENT_PORTRAIT == pd.orientation;
-
-    int count = 0, total = 0;
-    for (size_t i = 0; i < pd.ranges.Count(); i++)
-        total += pd.ranges[i].nToPage - pd.ranges[i].nFromPage + 1;
-    total += pd.sel.Count();
 
     if (pd.sel.Count() > 0) {
         DBG_OUT(" printing:  drawing bitmap for selection\n");
@@ -3151,8 +3156,8 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL)
                 return;
             }
 
-            count++;
-            if (progressUI && !progressUI->ProgressUpdate(count, total)) {
+            current++;
+            if (progressUI && !progressUI->ProgressUpdate(current, total)) {
                 AbortDoc(hdc);
                 return;
             }
@@ -3245,8 +3250,8 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL)
                 return;
             }
 
-            count++;
-            if (progressUI && !progressUI->ProgressUpdate(count, total)) {
+            current++;
+            if (progressUI && !progressUI->ProgressUpdate(current, total)) {
                 AbortDoc(hdc);
                 return;
             }
@@ -3258,15 +3263,15 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL)
 
 class PrintThreadUpdateWorkItem : public UIThreadWorkItem {
     MessageWnd *wnd;
-    int count, total;
+    int current, total;
 
 public:
-    PrintThreadUpdateWorkItem(WindowInfo *win, MessageWnd *wnd, int count, int total)
-        : UIThreadWorkItem(win), wnd(wnd), count(count), total(total) { }
+    PrintThreadUpdateWorkItem(WindowInfo *win, MessageWnd *wnd, int current, int total)
+        : UIThreadWorkItem(win), wnd(wnd), current(current), total(total) { }
 
     virtual void Execute() {
         if (WindowInfoStillValid(win) && win->messages->Contains(wnd))
-            wnd->ProgressUpdate(count, total);
+            wnd->ProgressUpdate(current, total);
     }
 };
 
@@ -3280,16 +3285,16 @@ public:
 
     PrintThreadWorkItem(WindowInfo *win, PrintData *data) :
         UIThreadWorkItem(win), data(data), isCanceled(false) { 
-        wnd = new MessageWnd(win, _T(""), _TR("Printing page %d of %d..."), this);
+        wnd = new MessageWnd(win->hwndCanvas, _T(""), _TR("Printing page %d of %d..."), this);
         win->messages->Add(wnd);
     }
     ~PrintThreadWorkItem() {
         delete data;
-        delete wnd;
+        CleanUp(wnd);
     }
 
-    virtual bool ProgressUpdate(int count, int total) {
-        gUIThreadMarshaller.Queue(new PrintThreadUpdateWorkItem(win, wnd, count, total));
+    virtual bool ProgressUpdate(int current, int total) {
+        gUIThreadMarshaller.Queue(new PrintThreadUpdateWorkItem(win, wnd, current, total));
         return WindowInfoStillValid(win) && !win->printCanceled && !isCanceled;
     }
 
@@ -3301,7 +3306,8 @@ public:
     virtual void CleanUp(MessageWnd *wnd) {
         isCanceled = true;
         this->wnd = NULL;
-        win->messages->CleanUp(wnd);
+        if (WindowInfoStillValid(win))
+            win->messages->CleanUp(wnd);
     }
 
     virtual void Execute() {
@@ -4723,41 +4729,37 @@ static void ClearSearchResult(WindowInfo& win)
 
 class UpdateFindStatusWorkItem : public UIThreadWorkItem {
     MessageWnd *wnd;
-    int count, total;
+    int current, total;
 
 public:
-    UpdateFindStatusWorkItem(WindowInfo *win, MessageWnd *wnd, int count, int total)
-        : UIThreadWorkItem(win), wnd(wnd), count(count), total(total) { }
+    UpdateFindStatusWorkItem(WindowInfo *win, MessageWnd *wnd, int current, int total)
+        : UIThreadWorkItem(win), wnd(wnd), current(current), total(total) { }
 
     virtual void Execute() {
-        if (WindowInfoStillValid(win) && win->messages->Contains(wnd) && !win->findCanceled)
-            wnd->ProgressUpdate(count, total);
+        if (WindowInfoStillValid(win) && !win->findCanceled && win->messages->Contains(wnd))
+            wnd->ProgressUpdate(current, total);
     }
 };
 
-class FindThreadData : public ProgressUpdateUI, public MessageWndCallback {
+class FindThreadData : public ProgressUpdateUI, public MessageWndCallback, public CallbackFunc, public UIThreadWorkItem {
 public:
-    WindowInfo *win;
     MessageWnd *wnd;
     TextSearchDirection direction;
     bool wasModified;
     TCHAR *text;
 
     FindThreadData(WindowInfo& win, TextSearchDirection direction, HWND findBox) :
-        win(&win), direction(direction), wnd(NULL) {
+        UIThreadWorkItem(&win), wnd(NULL), direction(direction) {
         text = Win::GetText(findBox);
         wasModified = Edit_GetModify(findBox);
     }
-    ~FindThreadData() {
-        delete wnd;
-        free(text);
-    }
+    ~FindThreadData() { free(text); }
 
     void ShowUI() {
         const LPARAM disable = (LPARAM)MAKELONG(0, 0);
 
-        assert(!wnd);
-        wnd = new MessageWnd(win, _T(""), _TR("Searching %d of %d..."), this);
+        wnd = new MessageWnd(win->hwndCanvas, _T(""), _TR("Searching %d of %d..."), this);
+        // let win->messages own the MessageWnd (we'll forward the CleanUp call)
         win->messages->Add(wnd);
 
         SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_PREV, disable);
@@ -4772,8 +4774,8 @@ public:
         SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_NEXT, enable);
         SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_MATCH, enable);
 
-        if (!success && !loopedAround) // i.e. canceled
-            delete wnd;
+        if (!success && !loopedAround || !win->messages->Contains(wnd)) // i.e. canceled
+            CleanUp(wnd);
         else if (!success && loopedAround)
             wnd->MessageUpdate(_TR("No matches were found"), 3000);
         else if (!loopedAround) {
@@ -4785,16 +4787,24 @@ public:
         }    
     }
 
-    virtual bool ProgressUpdate(int count, int total) {
-        if (!win->findCanceled)
-            gUIThreadMarshaller.Queue(new UpdateFindStatusWorkItem(win, wnd, count, total));
-        return !win->findCanceled;
+    virtual bool ProgressUpdate(int current, int total) {
+        gUIThreadMarshaller.Queue(new UpdateFindStatusWorkItem(win, wnd, current, total));
+        return WindowInfoStillValid(win) && !win->findCanceled && win->messages->Contains(wnd);
     }
 
     virtual void CleanUp(MessageWnd *wnd) {
+        if (!WindowInfoStillValid(win) || !this->wnd)
+            return;
+        win->findCleanup = NULL;
         this->wnd = NULL;
         win->messages->CleanUp(wnd);
+
+        gUIThreadMarshaller.Queue(this);
     }
+
+    virtual void Callback() { CleanUp(wnd); }
+
+    virtual void Execute() { }
 };
 
 class FindEndWorkItem : public UIThreadWorkItem {
@@ -4812,14 +4822,11 @@ public:
         UIThreadWorkItem(win), ftd(ftd), textSel(textSel),
             loopedAround(loopedAround),
             wasModifiedCanceled(wasModifiedCanceled) { }
-    ~FindEndWorkItem() { delete ftd; }
 
     virtual void Execute() {
-        if (!WindowInfoStillValid(win))
+        if (!WindowInfoStillValid(win) || !win->IsDocLoaded())
             return;
-        if (!win->IsDocLoaded()) {
-            // let FindThreadData's destructor hide the progress window
-        } else if (textSel) {
+        if (textSel) {
             ShowSearchResult(*win, textSel, wasModifiedCanceled);
             ftd->HideUI(true, loopedAround);
         } else {
@@ -4878,6 +4885,10 @@ static void FindTextOnThread(WindowInfo& win, TextSearchDirection direction)
         delete ftd;
         return;
     }
+
+    if (win.findCleanup)
+        win.findCleanup->Callback();
+    win.findCleanup = ftd;
     ftd->ShowUI();
     win.findThread = CreateThread(NULL, 0, FindThread, ftd, 0, 0);
 }

@@ -12,8 +12,8 @@ enum { SEARCH_PAGE, SKIP_PAGE };
 // cf. http://code.google.com/p/sumatrapdf/issues/detail?id=959
 #define isnoncjkwordchar(c) (iswordchar(c) && (unsigned short)(c) < 0x2E80)
 
-TextSearch::TextSearch(BaseEngine *engine, ProgressUpdateUI *tracker) : TextSelection(engine),
-    tracker(tracker), findText(NULL), anchor(NULL), pageText(NULL),
+TextSearch::TextSearch(BaseEngine *engine) : TextSelection(engine),
+    findText(NULL), anchor(NULL), pageText(NULL),
     caseSensitive(false), wholeWords(false), forward(true),
     findPage(0), findIndex(0), lastText(NULL)
 {
@@ -155,7 +155,8 @@ bool TextSearch::FindStartingAtPage(int pageNo, ProgressUpdateUI *tracker)
         return false;
 
     int total = engine->PageCount();
-    while (1 <= pageNo && pageNo <= total && CheckTracker(pageNo, total, tracker)) {
+    while (1 <= pageNo && pageNo <= total &&
+           (!tracker || tracker->ProgressUpdate(pageNo, total))) {
         if (SKIP_PAGE == findCache[pageNo - 1]) {
             pageNo += forward ? 1 : -1;
             continue;
@@ -198,6 +199,8 @@ TextSel *TextSearch::FindNext(ProgressUpdateUI *tracker)
 {
     assert(findText);
     if (!findText)
+        return NULL;
+    if (tracker && !tracker->ProgressUpdate(findPage, engine->PageCount()))
         return NULL;
 
     if (FindTextInPage())
