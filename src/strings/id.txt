@@ -466,6 +466,12 @@ Halaman Sebelumnya
 Print range
 Kisaran cetakan
 
+Printing is still in progress. Abort and start over?
+Proses pencetakan sedang dilaksanakan. Gagalkan dan ulangi lagi?
+
+Printing page %d of %d...
+Mencetak halaman %d dari %d...
+
 Printing problem.
 Masalah pencetakan.
 
@@ -585,8 +591,4 @@ menyalin teks
 
 printing document
 mencetak dokumen
-
-# Untranslated:
-#Printing is still in progress. Abort and start over?
-#Printing page %d of %d...
 
