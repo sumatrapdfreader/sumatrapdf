@@ -1724,7 +1724,6 @@ void WindowInfo::PageNoChanged(int pageNo)
             MessageWnd *wnd = pageInfoHelper->GetWnd();
             int total = dm->pageCount();
             ScopedMem<TCHAR> pageInfo(Str::Format(_T("%s %d / %d"), _TR("Page:"), pageNo, total));
-            wnd->ProgressUpdate(pageNo, total);
             wnd->MessageUpdate(pageInfo);
         }
     }
@@ -4515,10 +4514,8 @@ static void OnChar(WindowInfo& win, WPARAM key)
             int current = win.dm->currentPageNo(), total = win.dm->pageCount();
             ScopedMem<TCHAR> pageInfo(Str::Format(_T("%s %d / %d"), _TR("Page:"), current, total));
 
-            MessageWnd *wnd = new MessageWnd(win.hwndCanvas, pageInfo, (const TCHAR *)NULL, win.pageInfoHelper);
-            wnd->ProgressUpdate(current, total);
-            if (!IsShiftPressed())
-                wnd->MessageUpdate(pageInfo, 3000);
+            int timeout = !IsShiftPressed() ? 3000 : 0;
+            MessageWnd *wnd = new MessageWnd(win.hwndCanvas, pageInfo, timeout, false, win.pageInfoHelper);
             win.pageInfoHelper->SetUp(wnd);
         }
         break;

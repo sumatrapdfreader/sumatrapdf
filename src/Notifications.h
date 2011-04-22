@@ -278,7 +278,8 @@ public:
         if (this->wnd)
             list->CleanUp(this->wnd);
         this->wnd = wnd;
-        list->Add(wnd);
+        if (wnd)
+            list->Add(wnd);
     }
 
     virtual void CleanUp(MessageWnd *wnd) {
