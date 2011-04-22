@@ -90,7 +90,7 @@ public:
 
 class DisplayModel;
 
-class DisplayModelCallback : public PasswordUI, public ProgressUpdateUI {
+class DisplayModelCallback : public PasswordUI {
 public:
     virtual void Repaint() = 0;
     virtual void PageNoChanged(int pageNo) = 0;

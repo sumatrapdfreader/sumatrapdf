@@ -283,12 +283,12 @@ $(O)\SumatraPDF.obj: baseutils\Http.h baseutils\StrUtil.h baseutils\Vec.h
 $(O)\SumatraPDF.obj: baseutils\WinUtil.h src\AppPrefs.h src\AppTools.h
 $(O)\SumatraPDF.obj: src\BaseEngine.h src\Benchmark.h src\CrashHandler.h
 $(O)\SumatraPDF.obj: src\DisplayModel.h src\DisplayState.h src\FileHistory.h
-$(O)\SumatraPDF.obj: src\FileWatch.h src\ImagesEngine.h src\ParseCommandLine.h
-$(O)\SumatraPDF.obj: src\PdfEngine.h src\PdfSync.h src\RenderCache.h
-$(O)\SumatraPDF.obj: src\Resource.h src\SumatraAbout.h src\SumatraDialogs.h
-$(O)\SumatraPDF.obj: src\SumatraPDF.h src\SumatraProperties.h src\TextSearch.h
-$(O)\SumatraPDF.obj: src\TextSelection.h src\translations.h src\Version.h
-$(O)\SumatraPDF.obj: src\WindowInfo.h
+$(O)\SumatraPDF.obj: src\FileWatch.h src\ImagesEngine.h src\Notifications.h
+$(O)\SumatraPDF.obj: src\ParseCommandLine.h src\PdfEngine.h src\PdfSync.h
+$(O)\SumatraPDF.obj: src\RenderCache.h src\Resource.h src\SumatraAbout.h
+$(O)\SumatraPDF.obj: src\SumatraDialogs.h src\SumatraPDF.h src\SumatraProperties.h
+$(O)\SumatraPDF.obj: src\TextSearch.h src\TextSelection.h src\translations.h
+$(O)\SumatraPDF.obj: src\Version.h src\WindowInfo.h
 $(O)\SumatraProperties.obj: baseutils\BaseUtil.h baseutils\FileUtil.h baseutils\GeomUtil.h
 $(O)\SumatraProperties.obj: baseutils\StrUtil.h baseutils\Vec.h baseutils\WinUtil.h
 $(O)\SumatraProperties.obj: src\AppPrefs.h src\BaseEngine.h src\DisplayModel.h
@@ -312,9 +312,9 @@ $(O)\WindowInfo.obj: baseutils\BaseUtil.h baseutils\FileUtil.h baseutils\GeomUti
 $(O)\WindowInfo.obj: baseutils\StrUtil.h baseutils\Vec.h baseutils\WinUtil.h
 $(O)\WindowInfo.obj: src\AppPrefs.h src\BaseEngine.h src\DisplayModel.h
 $(O)\WindowInfo.obj: src\DisplayState.h src\FileWatch.h src\ImagesEngine.h
-$(O)\WindowInfo.obj: src\PdfEngine.h src\PdfSync.h src\Resource.h
-$(O)\WindowInfo.obj: src\SumatraPDF.h src\TextSearch.h src\TextSelection.h
-$(O)\WindowInfo.obj: src\WindowInfo.h
+$(O)\WindowInfo.obj: src\Notifications.h src\PdfEngine.h src\PdfSync.h
+$(O)\WindowInfo.obj: src\Resource.h src\SumatraPDF.h src\TextSearch.h
+$(O)\WindowInfo.obj: src\TextSelection.h src\WindowInfo.h
 $(O)\WinUtil.obj: baseutils\BaseUtil.h baseutils\FileUtil.h baseutils\GeomUtil.h
 $(O)\WinUtil.obj: baseutils\StrUtil.h baseutils\WinUtil.h
 $(O)\ZipUtil.obj: baseutils\BaseUtil.h baseutils\FileUtil.h baseutils\StrUtil.h

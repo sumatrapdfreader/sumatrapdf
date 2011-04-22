@@ -136,6 +136,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\Notifications.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\ParseCommandLine.cpp"
 				>
 			</File>

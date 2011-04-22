@@ -17,6 +17,7 @@
 #include "FileHistory.h"
 #include "FileWatch.h"
 #include "AppTools.h"
+#include "Notifications.h"
 
 #include "WinUtil.h"
 #include "Http.h"
@@ -108,7 +109,6 @@ bool                    gPluginMode = false;
 
 #define CANVAS_CLASS_NAME       _T("SUMATRA_PDF_CANVAS")
 #define SPLITER_CLASS_NAME      _T("Spliter")
-#define FINDSTATUS_CLASS_NAME   _T("FindStatus")
 #define PREFS_FILE_NAME         _T("sumatrapdfprefs.dat")
 
 #define SPLITTER_DX  5
@@ -123,10 +123,6 @@ bool                    gPluginMode = false;
 
 #define HIDE_CURSOR_TIMER_ID        3
 #define HIDE_CURSOR_DELAY_IN_MS     3000
-
-#define FIND_STATUS_WIDTH       200 // Default width for the find status window
-#define FIND_STATUS_MARGIN      8
-#define FIND_STATUS_PROGRESS_HEIGHT 5
 
 #define HIDE_FWDSRCHMARK_TIMER_ID                4
 #define HIDE_FWDSRCHMARK_DELAY_IN_MS             400
@@ -165,9 +161,6 @@ static RenderCache                  gRenderCache;
 static Vec<WindowInfo*>             gWindows;
 static FileHistory                  gFileHistory;
 static UIThreadWorkItemQueue        gUIThreadMarshaller;
-
-static int                          gReBarDy;
-static int                          gReBarDyFrame;
 
 // in restricted mode, all commands that could affect the OS are
 // disabled (such as opening files, printing, following URLs), so
@@ -246,14 +239,11 @@ static bool LoadDocIntoWindow(const TCHAR *fileName, WindowInfo& win,
     const DisplayState *state, bool isNewWindow, bool tryRepair, 
     bool showWin, bool placeWindow);
 
-static void WindowInfo_ShowMessage_Async(WindowInfo& win, const TCHAR *message, bool noProgressbar, bool highlight=false);
-static void WindowInfo_ShowFindStatus(WindowInfo& win);
-static void WindowInfo_HideFindStatus(WindowInfo& win, bool success=false, bool loopedAround=false);
-
 static void DeleteOldSelectionInfo(WindowInfo& win, bool alsoTextSel=false);
-static void ClearSearch(WindowInfo& win);
-static void WindowInfo_EnterFullscreen(WindowInfo& win, bool presentation=false);
-static void WindowInfo_ExitFullscreen(WindowInfo& win);
+static void ClearSearchResult(WindowInfo& win);
+static void EnterFullscreen(WindowInfo& win, bool presentation=false);
+static void ExitFullscreen(WindowInfo& win);
+static void FindTextOnThread(WindowInfo& win, TextSearchDirection direction=FIND_FORWARD);
 
 static bool CurrLangNameSet(const char *langName)
 {
@@ -717,23 +707,19 @@ static HMENU BuildMenu(HWND hWnd)
 
 WindowInfo *FindWindowInfoByHwnd(HWND hwnd)
 {
+    HWND parent = GetParent(hwnd);
     for (size_t i = 0; i < gWindows.Count(); i++) {
         WindowInfo *win = gWindows.At(i);
         if (hwnd == win->hwndFrame      ||
-            hwnd == win->hwndCanvas     ||
-            hwnd == win->hwndToolbar    ||
-            hwnd == win->hwndReBar      ||
-            hwnd == win->hwndFindText   ||
-            hwnd == win->hwndFindBox    ||
-            hwnd == win->hwndFindBg     ||
-            hwnd == win->hwndFindStatus ||
-            hwnd == win->hwndPageText   ||
-            hwnd == win->hwndPageBox    ||
-            hwnd == win->hwndTocBox     ||
-            hwnd == win->hwndTocTree    ||
-            hwnd == win->hwndSpliter    ||
-            hwnd == win->hwndInfotip    ||
-            hwnd == win->hwndProperties)
+            hwnd == win->hwndProperties ||
+            // canvas, toolbar, rebar, tocbox, spliter
+            parent == win->hwndFrame    ||
+            // infotips, message windows
+            parent == win->hwndCanvas   ||
+            // page and find labels and boxes
+            parent == win->hwndToolbar  ||
+            // ToC tree, sidebar title and close button
+            parent == win->hwndTocBox)
         {
             return win;
         }
@@ -1126,26 +1112,6 @@ void WindowInfo::Reload(bool autorefresh)
     }
 }
 
-static void WindowInfo_Delete(WindowInfo *win)
-{
-    assert(win);
-    if (!win) return;
-
-    // must DestroyWindow(win->hwndProperties) before removing win from
-    // the list of properties beacuse WM_DESTROY handler needs to find
-    // WindowInfo for its HWND
-    if (win->hwndProperties) {
-        DestroyWindow(win->hwndProperties);
-        assert(NULL == win->hwndProperties);
-    }
-    gWindows.Remove(win);
-
-    ImageList_Destroy((HIMAGELIST)SendMessage(win->hwndToolbar, TB_GETIMAGELIST, 0, 0));
-    DragAcceptFiles(win->hwndCanvas, FALSE);
-
-    delete win;
-}
-
 static void UpdateToolbarBg(HWND hwnd, bool enabled)
 {
     DWORD newStyle = GetWindowLong(hwnd, GWL_STYLE);
@@ -1156,12 +1122,12 @@ static void UpdateToolbarBg(HWND hwnd, bool enabled)
     SetWindowLong(hwnd, GWL_STYLE, newStyle);
 }
 
-static void WindowInfo_UpdateFindbox(WindowInfo& win)
+static void UpdateFindbox(WindowInfo& win)
 {
     UpdateToolbarBg(win.hwndFindBg, win.IsDocLoaded());
     UpdateToolbarBg(win.hwndPageBg, win.IsDocLoaded());
 
-    InvalidateRect(win.hwndToolbar, NULL, true);
+    InvalidateRect(win.hwndToolbar, NULL, TRUE);
     if (!win.IsDocLoaded()) {  // Avoid focus on Find box
         SetClassLongPtr(win.hwndFindBox, GCLP_HCURSOR, (LONG_PTR)gCursorArrow);
         HideCaret(NULL);
@@ -1366,7 +1332,7 @@ void EnsureWindowVisibility(RectI& rect)
         rect = RectI(work.TL(), rect.Size());
 }
 
-static WindowInfo* WindowInfo_CreateEmpty()
+static WindowInfo* CreateWindowInfo()
 {
     RectI windowPos;
     if (gGlobalPrefs.m_windowPos.IsEmpty()) {
@@ -1422,12 +1388,31 @@ static WindowInfo* WindowInfo_CreateEmpty()
 
     CreateToolbar(*win);
     CreateTocBox(*win);
-    WindowInfo_UpdateFindbox(*win);
+    UpdateFindbox(*win);
     DragAcceptFiles(win->hwndCanvas, TRUE);
 
-    win->stopFindStatusThreadEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
     gWindows.Append(win);
     return win;
+}
+
+static void DeleteWindowInfo(WindowInfo *win)
+{
+    assert(win);
+    if (!win) return;
+
+    // must DestroyWindow(win->hwndProperties) before removing win from
+    // the list of properties beacuse WM_DESTROY handler needs to find
+    // WindowInfo for its HWND
+    if (win->hwndProperties) {
+        DestroyWindow(win->hwndProperties);
+        assert(NULL == win->hwndProperties);
+    }
+    gWindows.Remove(win);
+
+    ImageList_Destroy((HIMAGELIST)SendMessage(win->hwndToolbar, TB_GETIMAGELIST, 0, 0));
+    DragAcceptFiles(win->hwndCanvas, FALSE);
+
+    delete win;
 }
 
 static void UpdateTocWidth(HWND hwndTocBox, const DisplayState *ds=NULL, int defaultDx=0)
@@ -1558,7 +1543,7 @@ static bool LoadDocIntoWindow(
         win.RedrawAll();
         OnMenuFindMatchCase(win);
     }
-    WindowInfo_UpdateFindbox(win);
+    UpdateFindbox(win);
 
     int pageCount = win.dm->pageCount();
     if (pageCount > 0) {
@@ -1621,7 +1606,7 @@ Error:
     }
     // This should only happen after everything else is ready
     if ((isNewWindow || placeWindow) && showWin && showAsFullScreen)
-        WindowInfo_EnterFullscreen(win);
+        EnterFullscreen(win);
     if (!isNewWindow && win.presentation && win.dm)
         win.dm->setPresentationMode(true);
 
@@ -1679,7 +1664,7 @@ WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin, b
         win = gWindows[0];
     }
     else if (!win || win->IsDocLoaded() && !forceReuse) {
-        win = WindowInfo_CreateEmpty();
+        win = CreateWindowInfo();
         if (!win)
             return NULL;
         isNewWindow = true;
@@ -2253,7 +2238,7 @@ static void CopySelectionToClipboard(WindowInfo& win)
     EmptyClipboard();
 
     if (!win.dm->engine->IsCopyingTextAllowed())
-        WindowInfo_ShowMessage_Async(win, _TR("Copying text was denied (copying as image only)"), true);
+        win.ShowNotification(_TR("Copying text was denied (copying as image only)"));
     else if (win.dm->engine->HasTextContent()) {
         ScopedMem<TCHAR> selText;
         bool isTextSelection = win.dm->textSelection->result.len > 0;
@@ -2422,12 +2407,12 @@ static bool OnInverseSearch(WindowInfo& win, int x, int y)
             // In order to avoid confusion for non-LaTeX users, we do not show
             // any error message if the SyncTeX enhancements are hidden from UI
             if (gGlobalPrefs.m_enableTeXEnhancements)
-                WindowInfo_ShowMessage_Async(win, _TR("No synchronization file found"), true);
+                win.ShowNotification(_TR("No synchronization file found"));
             return true;
         }
         if (err != PDFSYNCERR_SUCCESS) {
             DBG_OUT("Pdfsync: Sync file cannot be loaded!\n");
-            WindowInfo_ShowMessage_Async(win, _TR("Synchronization file cannot be opened"), true);
+            win.ShowNotification(_TR("Synchronization file cannot be opened"));
             return true;
         }
         gGlobalPrefs.m_enableTeXEnhancements = true;
@@ -2447,7 +2432,7 @@ static bool OnInverseSearch(WindowInfo& win, int x, int y)
     UINT err = win.pdfsync->pdf_to_source(pageNo, x, y, srcfilepath, dimof(srcfilepath),&line,&col); // record 101
     if (err != PDFSYNCERR_SUCCESS) {
         DBG_OUT("cannot sync from pdf to source!\n");
-        WindowInfo_ShowMessage_Async(win, _TR("No synchronization info at this position"), true);
+        win.ShowNotification(_TR("No synchronization info at this position"));
         return true;
     }
 
@@ -2469,11 +2454,11 @@ static bool OnInverseSearch(WindowInfo& win, int x, int y)
             CloseHandle(pi.hThread);
         } else {
             DBG_OUT("CreateProcess failed (%d): '%s'.\n", GetLastError(), cmdline);
-            WindowInfo_ShowMessage_Async(win, _TR("Cannot start inverse search command. Please check the command line in the settings."), true);
+            win.ShowNotification(_TR("Cannot start inverse search command. Please check the command line in the settings."));
         }
     }
     else if (gGlobalPrefs.m_enableTeXEnhancements)
-        WindowInfo_ShowMessage_Async(win, _TR("Cannot start inverse search command. Please check the command line in the settings."), true);
+        win.ShowNotification(_TR("Cannot start inverse search command. Please check the command line in the settings."));
     free(cmdline);
 
     if (inverseSearch != gGlobalPrefs.m_inverseSearchCmdLine)
@@ -2768,7 +2753,7 @@ static void OnMouseLeftButtonUp(WindowInfo& win, int x, int y, WPARAM key)
     }
     /* if we had a selection and this was just a click, hide the selection */
     else if (win.showSelection)
-        ClearSearch(win);
+        ClearSearchResult(win);
     /* in presentation mode, change pages on left/right-clicks */
     else if (win.fullScreen || PM_ENABLED == win.presentation) {
         if ((key & MK_SHIFT))
@@ -2961,7 +2946,7 @@ static void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose=false)
     if (win->IsDocLoaded())
         win->dm->_dontRenderFlag = true;
     if (win->presentation)
-        WindowInfo_ExitFullscreen(*win);
+        ExitFullscreen(*win);
 
     bool lastWindow = false;
     if (1 == gWindows.Count())
@@ -2995,10 +2980,10 @@ static void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose=false)
         UpdateToolbarFindText(*win);
         DeleteOldSelectionInfo(*win, true);
         win->RedrawAll();
-        WindowInfo_UpdateFindbox(*win);
+        UpdateFindbox(*win);
     } else {
         HWND hwndToDestroy = win->hwndFrame;
-        WindowInfo_Delete(win);
+        DeleteWindowInfo(win);
         DestroyWindow(hwndToDestroy);
     }
 
@@ -3271,45 +3256,52 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL)
     EndDoc(hdc);
 }
 
-class PrintThreadUpdateWorkItem : public UIThreadWorkItem
-{
-    int current;
-    int total;
+class PrintThreadUpdateWorkItem : public UIThreadWorkItem {
+    MessageWnd *wnd;
+    int count, total;
 
 public:
-    PrintThreadUpdateWorkItem(WindowInfo *win, int current, int total)
-        : UIThreadWorkItem(win), current(current), total(total) { }
+    PrintThreadUpdateWorkItem(WindowInfo *win, MessageWnd *wnd, int count, int total)
+        : UIThreadWorkItem(win), wnd(wnd), count(count), total(total) { }
 
     virtual void Execute() {
-        if (!WindowInfoStillValid(win))
-            return;
-
-        win->progressPercent = current * 100 / total;
-        if (!win->progressStatusVisible)
-            WindowInfo_ShowFindStatus(*win);
-
-        ScopedMem<TCHAR> buf(Str::Format(_TR("Printing page %d of %d..."), current, total));
-        Win::SetText(win->hwndFindStatus, buf);
+        if (WindowInfoStillValid(win) && win->messages->Contains(wnd))
+            wnd->ProgressUpdate(count, total);
     }
 };
 
-class PrintThreadWorkItem : public ProgressUpdateUI, public UIThreadWorkItem
-{
+class PrintThreadWorkItem : public ProgressUpdateUI, public UIThreadWorkItem, public MessageWndCallback {
+    MessageWnd *wnd;
+    bool isCanceled;
+
 public:
     // owned and deleted by PrintThreadWorkItem
     PrintData *data;
 
     PrintThreadWorkItem(WindowInfo *win, PrintData *data) :
-        UIThreadWorkItem(win), data(data) { }
-    ~PrintThreadWorkItem() { delete data; }
+        UIThreadWorkItem(win), data(data), isCanceled(false) { 
+        wnd = new MessageWnd(win, _T(""), _TR("Printing page %d of %d..."), this);
+        win->messages->Add(wnd);
+    }
+    ~PrintThreadWorkItem() {
+        delete data;
+        delete wnd;
+    }
 
     virtual bool ProgressUpdate(int count, int total) {
-        gUIThreadMarshaller.Queue(new PrintThreadUpdateWorkItem(win, count, total));
-        return WindowInfoStillValid(win) && !win->printCanceled;
+        gUIThreadMarshaller.Queue(new PrintThreadUpdateWorkItem(win, wnd, count, total));
+        return WindowInfoStillValid(win) && !win->printCanceled && !isCanceled;
     }
 
     void CleanUp() {
         gUIThreadMarshaller.Queue(this);
+    }
+
+    // called when printing has been canceled
+    virtual void CleanUp(MessageWnd *wnd) {
+        isCanceled = true;
+        this->wnd = NULL;
+        win->messages->CleanUp(wnd);
     }
 
     virtual void Execute() {
@@ -3319,8 +3311,6 @@ public:
         HANDLE thread = win->printThread;
         win->printThread = NULL;
         CloseHandle(thread);
-
-        WindowInfo_HideFindStatus(*win);
     }
 };
 
@@ -3916,7 +3906,7 @@ static void OnSize(WindowInfo& win, int dx, int dy)
     int rebBarDy = 0;
     if (gGlobalPrefs.m_showToolbar) {
         SetWindowPos(win.hwndReBar, NULL, 0, 0, dx, rebBarDy, SWP_NOZORDER);
-        rebBarDy = gReBarDy + gReBarDyFrame;
+        rebBarDy = WindowRect(win.hwndReBar).dy;
     }
 
     if (win.tocLoaded && win.tocShow)
@@ -4064,7 +4054,10 @@ static void OnMenuFind(WindowInfo& win)
 
     // Don't show a dialog if we don't have to - use the Toolbar instead
     if (gGlobalPrefs.m_showToolbar && !win.fullScreen && PM_DISABLED == win.presentation) {
-        win.FindStart();
+        if (GetFocus() == win.hwndFindBox)
+            SendMessage(win.hwndFindBox, WM_SETFOCUS, 0, 0);
+        else
+            SetFocus(win.hwndFindBox);
         return;
     }
 
@@ -4089,10 +4082,10 @@ static void OnMenuFind(WindowInfo& win)
         win.dm->textSearch->SetSensitive(matchCase);
     }
 
-    win.Find();
+    FindTextOnThread(win);
 }
 
-static void WindowInfo_EnterFullscreen(WindowInfo& win, bool presentation)
+static void EnterFullscreen(WindowInfo& win, bool presentation)
 {
     if ((presentation ? win.presentation : win.fullScreen) ||
         !IsWindowVisible(win.hwndFrame) || gPluginMode)
@@ -4151,7 +4144,7 @@ static void WindowInfo_EnterFullscreen(WindowInfo& win, bool presentation)
     SetFocus(win.hwndFrame);
 }
 
-static void WindowInfo_ExitFullscreen(WindowInfo& win)
+static void ExitFullscreen(WindowInfo& win)
 {
     if (!win.fullScreen && !win.presentation) 
         return;
@@ -4189,94 +4182,15 @@ static void OnMenuViewFullscreen(WindowInfo& win, bool presentation=false)
     if (!win.presentation && !win.fullScreen)
         RememberWindowPosition(win);
     else
-        WindowInfo_ExitFullscreen(win);
+        ExitFullscreen(win);
 
     if (enterFullscreen && (!presentation || win.IsDocLoaded()))
-        WindowInfo_EnterFullscreen(win, presentation);
+        EnterFullscreen(win, presentation);
 }
 
 static void OnMenuViewPresentation(WindowInfo& win)
 {
     OnMenuViewFullscreen(win, true);
-}
-
-static void WindowInfo_ShowSearchResult(WindowInfo& win, TextSel *result, bool wasModified)
-{
-    assert(result->len > 0);
-    win.dm->goToPage(result->pages[0], 0, wasModified);
-
-    TextSelection *sel = win.dm->textSelection;
-    sel->Reset();
-    sel->result.pages = (int *)memdup(result->pages, result->len * sizeof(int));
-    sel->result.rects = (RectI *)memdup(result->rects, result->len * sizeof(RectI));
-    sel->result.len = result->len;
-
-    UpdateTextSelection(win, false);
-    win.dm->ShowResultRectToScreen(result);
-    win.RepaintAsync();
-}
-
-// Show a message for 3000 millisecond at most
-static DWORD WINAPI ShowMessageThread(LPVOID data)
-{
-    WindowInfo *win = (WindowInfo *)data;
-    ShowWindowAsync(win->hwndFindStatus, SW_SHOWNA);
-    WaitForSingleObject(win->stopFindStatusThreadEvent, 3000);
-    if (!win->progressStatusVisible)
-        ShowWindowAsync(win->hwndFindStatus, SW_HIDE);
-    return 0;
-}
-
-// Display the message 'message' asynchronously
-// If resize = true then the window width is adjusted to the length of the text
-// if highlight = true the message text is displayed inverted in order to draw some attention
-static void WindowInfo_ShowMessage_Async(WindowInfo& win, const TCHAR *message, bool noProgressbar, bool highlight)
-{
-    if (message)
-        Win::SetText(win.hwndFindStatus, message);
-
-    // compute the length of the message
-    RECT rc = RectI(0, 0, FIND_STATUS_WIDTH, 0).ToRECT();
-    HDC hdc = GetDC(win.hwndFindStatus);
-    HGDIOBJ oldFont = SelectObject(hdc, gDefaultGuiFont);
-    DrawText(hdc, message, -1, &rc, DT_CALCRECT | DT_SINGLELINE);
-    SelectObject(hdc, oldFont);
-    ReleaseDC(win.hwndFindStatus, hdc);
-    // adjust the window to fit the message (only shrink the window when there's no progress bar)
-    if (noProgressbar) {
-        rc.right += MulDiv(15, win.dpi, USER_DEFAULT_SCREEN_DPI);
-        rc.bottom = MulDiv(23, win.dpi, USER_DEFAULT_SCREEN_DPI);
-        AdjustWindowRectEx(&rc, GetWindowLong(win.hwndFindStatus, GWL_STYLE), FALSE, GetWindowLong(win.hwndFindStatus, GWL_EXSTYLE));
-        MoveWindow(win.hwndFindStatus, FIND_STATUS_MARGIN + rc.left, FIND_STATUS_MARGIN + rc.top, rc.right - rc.left + FIND_STATUS_MARGIN, rc.bottom - rc.top, TRUE);
-    } else {
-        RectI rect = WindowRect(win.hwndFindStatus);
-        RectI rectMsg = RectI::FromRECT(rc);
-        if (rectMsg.dx > FIND_STATUS_WIDTH - 2 * FIND_STATUS_MARGIN)
-            MoveWindow(win.hwndFindStatus, FIND_STATUS_MARGIN, FIND_STATUS_MARGIN, rect.dx + rectMsg.dx - (FIND_STATUS_WIDTH - 2 * FIND_STATUS_MARGIN), rect.dy, TRUE);
-    }
-
-    win.progressStatusVisible = false;
-    win.findStatusHighlight = highlight;
-    // if a thread has previously been started then make sure it has ended
-    if (win.findStatusThread) {
-        SetEvent(win.stopFindStatusThreadEvent);
-        WaitForSingleObject(win.findStatusThread, INFINITE);
-        CloseHandle(win.findStatusThread);
-    }
-    ResetEvent(win.stopFindStatusThreadEvent);
-    win.findStatusThread = CreateThread(NULL, 0, ShowMessageThread, &win, 0, 0);
-}
-
-// hide the message
-static void WindowInfo_HideMessage(WindowInfo& win)
-{
-    if (!win.findStatusThread) 
-        return;
-
-    SetEvent(win.findStatusThread);
-    CloseHandle(win.findStatusThread);
-    win.findStatusThread = NULL;
-    ShowWindowAsync(win.hwndFindStatus, SW_HIDE);
 }
 
 // Show the result of a PDF forward-search synchronization (initiated by a DDE command)
@@ -4287,8 +4201,6 @@ void WindowInfo::ShowForwardSearchResult(const TCHAR *fileName, UINT line, UINT 
         // remember the position of the search result for drawing the rect later on
         const PageInfo *pi = this->dm->getPageInfo(page);
         if (pi) {
-            WindowInfo_HideMessage(*this);
-
             RectI overallrc;
             RectI rc = rects[0];
             this->pdfsync->convert_coord_from_internal(&rc, pi->page.Convert<int>().dy, BottomLeft);
@@ -4322,13 +4234,13 @@ void WindowInfo::ShowForwardSearchResult(const TCHAR *fileName, UINT line, UINT 
 
     TCHAR *buf = NULL;    
     if (ret == PDFSYNCERR_SYNCFILE_NOTFOUND )
-        buf = Str::Dup(_TR("No synchronization file found"));
+        ShowNotification(_TR("No synchronization file found"));
     else if (ret == PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED)
-        buf = Str::Dup(_TR("Synchronization file cannot be opened"));
+        ShowNotification(_TR("Synchronization file cannot be opened"));
     else if (ret == PDFSYNCERR_INVALID_PAGE_NUMBER)
         buf = Str::Format(_TR("Page number %u inexistant"), page);
     else if (ret == PDFSYNCERR_NO_SYNC_AT_LOCATION)
-        buf = Str::Dup(_TR("No synchronization info at this position"));
+        ShowNotification(_TR("No synchronization info at this position"));
     else if (ret == PDFSYNCERR_UNKNOWN_SOURCEFILE)
         buf = Str::Format(_TR("Unknown source file (%s)"), fileName);
     else if (ret == PDFSYNCERR_NORECORD_IN_SOURCEFILE)
@@ -4337,47 +4249,9 @@ void WindowInfo::ShowForwardSearchResult(const TCHAR *fileName, UINT line, UINT 
         buf = Str::Format(_TR("No result found around line %u in file %s"), line, fileName);
     else if (ret == PDFSYNCERR_NOSYNCPOINT_FOR_LINERECORD)
         buf = Str::Format(_TR("No result found around line %u in file %s"), line, fileName);
-
-    WindowInfo_ShowMessage_Async(*this, buf, true);
+    if (buf)
+        ShowNotification(buf);
     free(buf);
-}
-
-static void WindowInfo_ShowFindStatus(WindowInfo& win)
-{
-    LPARAM disable = (LPARAM)MAKELONG(0, 0);
-
-    MoveWindow(win.hwndFindStatus, FIND_STATUS_MARGIN, FIND_STATUS_MARGIN,
-               MulDiv(FIND_STATUS_WIDTH, win.dpi, USER_DEFAULT_SCREEN_DPI),
-               MulDiv(23, win.dpi, USER_DEFAULT_SCREEN_DPI) + FIND_STATUS_PROGRESS_HEIGHT + 8,
-               FALSE);
-    ShowWindow(win.hwndFindStatus, SW_SHOWNA);
-    win.progressStatusVisible = true;
-
-    SendMessage(win.hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_PREV, disable);
-    SendMessage(win.hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_NEXT, disable);
-    SendMessage(win.hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_MATCH, disable);
-}
-
-static void WindowInfo_HideFindStatus(WindowInfo& win, bool success, bool loopedAround)
-{
-    LPARAM enable = (LPARAM)MAKELONG(1, 0);
-
-    SendMessage(win.hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_PREV, enable);
-    SendMessage(win.hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_NEXT, enable);
-    SendMessage(win.hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_MATCH, enable);
-
-    // resize the window, in case another message has been displayed in the meantime
-    MoveWindow(win.hwndFindStatus, FIND_STATUS_MARGIN, FIND_STATUS_MARGIN, MulDiv(FIND_STATUS_WIDTH, win.dpi, USER_DEFAULT_SCREEN_DPI), MulDiv(23, win.dpi, USER_DEFAULT_SCREEN_DPI) + FIND_STATUS_PROGRESS_HEIGHT + 8, false);
-    if (!success && !loopedAround) // i.e. canceled
-        WindowInfo_ShowMessage_Async(win, NULL, false);
-    else if (!success && loopedAround)
-        WindowInfo_ShowMessage_Async(win, _TR("No matches were found"), false);
-    else {
-        ScopedMem<TCHAR> buf(Str::Format(_TR("Found text at page %d"), win.dm->currentPageNo()));
-        if (loopedAround)
-            buf.Set(Str::Format(_TR("Found text at page %d (again)"), win.dm->currentPageNo()));
-        WindowInfo_ShowMessage_Async(win, buf, false, loopedAround);
-    }    
 }
 
 static void OnMenuFindNext(WindowInfo& win)
@@ -4385,7 +4259,7 @@ static void OnMenuFindNext(WindowInfo& win)
     if (!NeedsFindUI(win))
         return;
     if (SendMessage(win.hwndToolbar, TB_ISBUTTONENABLED, IDM_FIND_NEXT, 0))
-        win.Find(FIND_FORWARD);
+        FindTextOnThread(win, FIND_FORWARD);
 }
 
 static void OnMenuFindPrev(WindowInfo& win)
@@ -4393,7 +4267,7 @@ static void OnMenuFindPrev(WindowInfo& win)
     if (!NeedsFindUI(win))
         return;
     if (SendMessage(win.hwndToolbar, TB_ISBUTTONENABLED, IDM_FIND_PREV, 0))
-        win.Find(FIND_BACKWARD);
+        FindTextOnThread(win, FIND_BACKWARD);
 }
 
 static void OnMenuFindMatchCase(WindowInfo& win)
@@ -4507,12 +4381,6 @@ static bool OnKeydown(WindowInfo& win, WPARAM key, LPARAM lparam, bool inTextfie
     return true;
 }
 
-static void ClearSearch(WindowInfo& win)
-{
-    DeleteOldSelectionInfo(win, true);
-    win.RepaintAsync();
-}
-
 static void OnChar(WindowInfo& win, WPARAM key)
 {
 //    DBG_OUT("char=%d,%c\n", key, (char)key);
@@ -4536,7 +4404,7 @@ static void OnChar(WindowInfo& win, WPARAM key)
         else if (win.fullScreen)
             OnMenuViewFullscreen(win);
         else if (win.showSelection)
-            ClearSearch(win);
+            ClearSearchResult(win);
         return;
     case 'q':
         DestroyWindow(win.hwndFrame);
@@ -4635,7 +4503,7 @@ static void OnChar(WindowInfo& win, WPARAM key)
         if (!gGlobalPrefs.m_showToolbar || win.fullScreen || PM_ENABLED == win.presentation) {
             int current = win.dm->currentPageNo(), total = win.dm->pageCount();
             ScopedMem<TCHAR> pageInfo(Str::Format(_T("%s %d / %d"), _TR("Page:"), current, total));
-            WindowInfo_ShowMessage_Async(win, pageInfo, true);
+            win.ShowNotification(pageInfo);
         }
         break;
 #ifdef DEBUG
@@ -4794,7 +4662,7 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, L
             return 1;
 
         case VK_RETURN:
-            win->Find();
+            FindTextOnThread(*win);
             return 1;
 
         case VK_TAB:
@@ -4831,42 +4699,139 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, L
     return ret;
 }
 
-class FindEndWorkItem : public UIThreadWorkItem
+static void ShowSearchResult(WindowInfo& win, TextSel *result, bool addNavPt)
 {
+    assert(result->len > 0);
+    win.dm->goToPage(result->pages[0], 0, addNavPt);
+
+    TextSelection *sel = win.dm->textSelection;
+    sel->Reset();
+    sel->result.pages = (int *)memdup(result->pages, result->len * sizeof(int));
+    sel->result.rects = (RectI *)memdup(result->rects, result->len * sizeof(RectI));
+    sel->result.len = result->len;
+
+    UpdateTextSelection(win, false);
+    win.dm->ShowResultRectToScreen(result);
+    win.RepaintAsync();
+}
+
+static void ClearSearchResult(WindowInfo& win)
+{
+    DeleteOldSelectionInfo(win, true);
+    win.RepaintAsync();
+}
+
+class UpdateFindStatusWorkItem : public UIThreadWorkItem {
+    MessageWnd *wnd;
+    int count, total;
+
+public:
+    UpdateFindStatusWorkItem(WindowInfo *win, MessageWnd *wnd, int count, int total)
+        : UIThreadWorkItem(win), wnd(wnd), count(count), total(total) { }
+
+    virtual void Execute() {
+        if (WindowInfoStillValid(win) && win->messages->Contains(wnd) && !win->findCanceled)
+            wnd->ProgressUpdate(count, total);
+    }
+};
+
+class FindThreadData : public ProgressUpdateUI, public MessageWndCallback {
+public:
+    WindowInfo *win;
+    MessageWnd *wnd;
+    TextSearchDirection direction;
+    bool wasModified;
+    TCHAR *text;
+
+    FindThreadData(WindowInfo& win, TextSearchDirection direction, HWND findBox) :
+        win(&win), direction(direction), wnd(NULL) {
+        text = Win::GetText(findBox);
+        wasModified = Edit_GetModify(findBox);
+    }
+    ~FindThreadData() {
+        delete wnd;
+        free(text);
+    }
+
+    void ShowUI() {
+        const LPARAM disable = (LPARAM)MAKELONG(0, 0);
+
+        assert(!wnd);
+        wnd = new MessageWnd(win, _T(""), _TR("Searching %d of %d..."), this);
+        win->messages->Add(wnd);
+
+        SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_PREV, disable);
+        SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_NEXT, disable);
+        SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_MATCH, disable);
+    }
+
+    void HideUI(bool success, bool loopedAround) {
+        LPARAM enable = (LPARAM)MAKELONG(1, 0);
+
+        SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_PREV, enable);
+        SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_NEXT, enable);
+        SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_MATCH, enable);
+
+        if (!success && !loopedAround) // i.e. canceled
+            delete wnd;
+        else if (!success && loopedAround)
+            wnd->MessageUpdate(_TR("No matches were found"), 3000);
+        else if (!loopedAround) {
+            ScopedMem<TCHAR> buf(Str::Format(_TR("Found text at page %d"), win->dm->currentPageNo()));
+            wnd->MessageUpdate(buf, 3000);
+        } else {
+            ScopedMem<TCHAR> buf(Str::Format(_TR("Found text at page %d (again)"), win->dm->currentPageNo()));
+            wnd->MessageUpdate(buf, 3000, true);
+        }    
+    }
+
+    virtual bool ProgressUpdate(int count, int total) {
+        if (!win->findCanceled)
+            gUIThreadMarshaller.Queue(new UpdateFindStatusWorkItem(win, wnd, count, total));
+        return !win->findCanceled;
+    }
+
+    virtual void CleanUp(MessageWnd *wnd) {
+        this->wnd = NULL;
+        win->messages->CleanUp(wnd);
+    }
+};
+
+class FindEndWorkItem : public UIThreadWorkItem {
+    FindThreadData *ftd;
     TextSel*textSel;
     bool    wasModifiedCanceled;
     bool    loopedAround;
 
 public:
-    FindEndWorkItem(WindowInfo *win, TextSel *textSel,
+    FindEndWorkItem(WindowInfo *win,
+                    FindThreadData *ftd,
+                    TextSel *textSel,
                     bool wasModifiedCanceled,
                     bool loopedAround=false) :
-        UIThreadWorkItem(win), textSel(textSel),
+        UIThreadWorkItem(win), ftd(ftd), textSel(textSel),
             loopedAround(loopedAround),
             wasModifiedCanceled(wasModifiedCanceled) { }
+    ~FindEndWorkItem() { delete ftd; }
 
     virtual void Execute() {
         if (!WindowInfoStillValid(win))
             return;
         if (!win->IsDocLoaded()) {
-            // the document was closed while finding
-            WindowInfo_ShowMessage_Async(*win, NULL, false);
+            // let FindThreadData's destructor hide the progress window
         } else if (textSel) {
-            WindowInfo_ShowSearchResult(*win, textSel, wasModifiedCanceled);
-            WindowInfo_HideFindStatus(*win, true, loopedAround);
+            ShowSearchResult(*win, textSel, wasModifiedCanceled);
+            ftd->HideUI(true, loopedAround);
         } else {
             // nothing found or search canceled
-            ClearSearch(*win);
-            WindowInfo_HideFindStatus(*win, false, !wasModifiedCanceled);
+            ClearSearchResult(*win);
+            ftd->HideUI(false, !wasModifiedCanceled);
         }
-    }
-};
 
-struct FindThreadData {
-    WindowInfo *win;
-    TextSearchDirection direction;
-    bool wasModified;
-    TCHAR text[256];
+        HANDLE hThread = win->findThread;
+        win->findThread = NULL;
+        CloseHandle(hThread);
+    }
 };
 
 static DWORD WINAPI FindThread(LPVOID data)
@@ -4879,9 +4844,9 @@ static DWORD WINAPI FindThread(LPVOID data)
     win->dm->textSearch->SetDirection(ftd->direction);
     if (ftd->wasModified || !win->dm->validPageNo(win->dm->textSearch->GetCurrentPageNo()) ||
         !win->dm->getPageInfo(win->dm->textSearch->GetCurrentPageNo())->visibleRatio)
-        rect = win->dm->textSearch->FindFirst(win->dm->currentPageNo(), ftd->text);
+        rect = win->dm->textSearch->FindFirst(win->dm->currentPageNo(), ftd->text, ftd);
     else
-        rect = win->dm->textSearch->FindNext();
+        rect = win->dm->textSearch->FindNext(ftd);
 
     bool loopedAround = false;
     if (!win->findCanceled && !rect) {
@@ -4890,41 +4855,31 @@ static DWORD WINAPI FindThread(LPVOID data)
         if (!ftd->wasModified || win->dm->currentPageNo() != startPage) {
             loopedAround = true;
             MessageBeep(MB_ICONINFORMATION);
-            rect = win->dm->textSearch->FindFirst(startPage, ftd->text);
+            rect = win->dm->textSearch->FindFirst(startPage, ftd->text, ftd);
         }
     }
 
-    if (rect && !win->findCanceled)
-        gUIThreadMarshaller.Queue(new FindEndWorkItem(win, rect, ftd->wasModified, loopedAround));
+    if (!win->findCanceled && rect)
+        gUIThreadMarshaller.Queue(new FindEndWorkItem(win, ftd, rect, ftd->wasModified, loopedAround));
     else
-        gUIThreadMarshaller.Queue(new FindEndWorkItem(win, NULL, win->findCanceled));
-
-    free(ftd);
-
-    HANDLE hThread = win->findThread;
-    win->findThread = NULL;
-    CloseHandle(hThread);
+        gUIThreadMarshaller.Queue(new FindEndWorkItem(win, ftd, NULL, win->findCanceled));
 
     return 0;
 }
 
-void WindowInfo::Find(TextSearchDirection direction)
+static void FindTextOnThread(WindowInfo& win, TextSearchDirection direction)
 {
-    AbortFinding();
+    win.AbortFinding();
 
-    FindThreadData ftd;
-    ftd.win = this;
-    ftd.direction = direction;
-    GetWindowText(hwndFindBox, ftd.text, dimof(ftd.text));
-    ftd.wasModified = Edit_GetModify(hwndFindBox);
-    Edit_SetModify(hwndFindBox, FALSE);
+    FindThreadData *ftd = new FindThreadData(win, direction, win.hwndFindBox);
+    Edit_SetModify(win.hwndFindBox, FALSE);
 
-    bool hasText = Str::Len(ftd.text) > 0;
-    if (hasText) {
-        LPVOID data = _memdup(&ftd);
-        if (data)
-            findThread = CreateThread(NULL, 0, FindThread, data, 0, 0);
+    if (Str::IsEmpty(ftd->text)) {
+        delete ftd;
+        return;
     }
+    ftd->ShowUI();
+    win.findThread = CreateThread(NULL, 0, FindThread, ftd, 0, 0);
 }
 
 static WNDPROC DefWndProcToolbar = NULL;
@@ -4936,65 +4891,6 @@ static LRESULT CALLBACK WndProcToolbar(HWND hwnd, UINT message, WPARAM wParam, L
         return 0;
     }
     return CallWindowProc(DefWndProcToolbar, hwnd, message, wParam, lParam);
-}
-
-static LRESULT CALLBACK WndProcFindStatus(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-    WindowInfo *win = FindWindowInfoByHwnd(hwnd);
-    if (!win)
-        return DefWindowProc(hwnd, message, wParam, lParam);
-
-    if (WM_ERASEBKGND == message) {
-        // do nothing, helps to avoid flicker
-        return TRUE;
-    } else if (WM_PAINT == message) {
-        PAINTSTRUCT ps;
-        HDC hdcWnd = BeginPaint(hwnd, &ps);
-
-        ClientRect rect(hwnd);
-        DoubleBuffer buffer(hwnd, rect);
-        HDC hdc = buffer.GetDC();
-        HFONT oldfnt = SelectFont(hdc, gDefaultGuiFont);
-
-        DrawFrameControl(hdc, &rect.ToRECT(), DFC_BUTTON, DFCS_BUTTONPUSH);
-        if (win->findStatusHighlight) {
-            SetBkMode(hdc, OPAQUE);
-            SetTextColor(hdc, GetSysColor(COLOR_HIGHLIGHTTEXT));
-            SetBkColor(hdc, GetSysColor(COLOR_HIGHLIGHT));
-        } else {
-            SetBkMode(hdc, TRANSPARENT);
-            SetTextColor(hdc, GetSysColor(COLOR_WINDOWTEXT));
-        }
-
-        ScopedMem<TCHAR> text(Win::GetText(hwnd));
-        rect.x += 10; rect.dx -= 10;
-        rect.y += 4; rect.dy -= 4;
-        DrawText(hdc, text, Str::Len(text), &rect.ToRECT(), DT_LEFT);
-        
-        int width = MulDiv(FIND_STATUS_WIDTH, win->dpi, USER_DEFAULT_SCREEN_DPI) - 20;
-        rect.dx = width;
-        rect.y += MulDiv(20, win->dpi, USER_DEFAULT_SCREEN_DPI);
-        rect.dy = FIND_STATUS_PROGRESS_HEIGHT;
-        PaintRect(hdc, rect);
-        
-        int percent = win->progressPercent;
-        if (percent > 100)
-            percent = 100;
-        rect.x += 2;
-        rect.dx = width * percent / 100 - 3;
-        rect.y += 2;
-        rect.dy -= 3;
-        FillRect(hdc, &rect.ToRECT(), gBrushShadow);
-
-        SelectFont(hdc, oldfnt);
-
-        buffer.Flush(hdcWnd);
-        EndPaint(hwnd, &ps);
-        return WM_PAINT_HANDLED;
-    } else if (WM_SETTEXT == message) {
-        InvalidateRect(hwnd, NULL, TRUE);
-    }
-    return DefWindowProc(hwnd, message, wParam, lParam);
 }
 
 /* Return size of a text <txt> in a given <hwnd>, taking into account its font */
@@ -5082,12 +4978,8 @@ static void CreateFindBox(WindowInfo& win)
     HWND label = CreateWindowEx(0, WC_STATIC, _T(""), WS_VISIBLE | WS_CHILD,
                             0, 1, 0, 0, win.hwndToolbar, (HMENU)0, ghinst, NULL);
 
-    HWND status = CreateWindowEx(WS_EX_TOPMOST, FINDSTATUS_CLASS_NAME, _T(""), WS_CHILD|SS_CENTER,
-                            0, 0, 0, 0, win.hwndCanvas, (HMENU)0, ghinst, NULL);
-
-    SetWindowFont(label, gDefaultGuiFont, true);
-    SetWindowFont(find, gDefaultGuiFont, true);
-    SetWindowFont(status, gDefaultGuiFont, true);
+    SetWindowFont(label, gDefaultGuiFont, FALSE);
+    SetWindowFont(find, gDefaultGuiFont, FALSE);
 
     if (!DefWndProcToolbar)
         DefWndProcToolbar = (WNDPROC)GetWindowLongPtr(win.hwndToolbar, GWLP_WNDPROC);
@@ -5100,7 +4992,6 @@ static void CreateFindBox(WindowInfo& win)
     win.hwndFindText = label;
     win.hwndFindBox = find;
     win.hwndFindBg = findBg;
-    win.hwndFindStatus = status;
 
     UpdateToolbarFindText(win);
 }
@@ -5209,9 +5100,9 @@ static void CreatePageBox(WindowInfo& win)
     HWND total = CreateWindowEx(0, WC_STATIC, _T(""), WS_VISIBLE | WS_CHILD,
                             0, 1, 0, 0, win.hwndToolbar, (HMENU)0, ghinst, NULL);
 
-    SetWindowFont(label, gDefaultGuiFont, true);
-    SetWindowFont(page, gDefaultGuiFont, true);
-    SetWindowFont(total, gDefaultGuiFont, true);
+    SetWindowFont(label, gDefaultGuiFont, FALSE);
+    SetWindowFont(page, gDefaultGuiFont, FALSE);
+    SetWindowFont(total, gDefaultGuiFont, FALSE);
 
     if (!DefWndProcPageBox)
         DefWndProcPageBox = (WNDPROC)GetWindowLongPtr(page, GWLP_WNDPROC);
@@ -5304,11 +5195,6 @@ static void CreateToolbar(WindowInfo& win) {
     lres = SendMessage(win.hwndReBar, RB_INSERTBAND, (WPARAM)-1, (LPARAM)&rbBand);
 
     SetWindowPos(win.hwndReBar, NULL, 0, 0, 0, 0, SWP_NOZORDER);
-    gReBarDy = WindowRect(win.hwndReBar).dy;
-    //TODO: this was inherited but doesn't seem to be right (makes toolbar
-    // partially unpainted if using classic scheme on xp or vista
-    //gReBarDyFrame = bIsAppThemed ? 0 : 2;
-    gReBarDyFrame = 0;
     
     CreatePageBox(win);
     CreateFindBox(win);
@@ -5346,7 +5232,7 @@ static LRESULT CALLBACK WndProcSpliter(HWND hwnd, UINT message, WPARAM wParam, L
 
                 int tocY = 0;
                 if (gGlobalPrefs.m_showToolbar && !win->fullScreen && !win->presentation) {
-                    tocY = gReBarDy + gReBarDyFrame;
+                    tocY = WindowRect(win->hwndReBar).dy;
                     height -= tocY;
                 }
 
@@ -5366,42 +5252,6 @@ static LRESULT CALLBACK WndProcSpliter(HWND hwnd, UINT message, WPARAM wParam, L
             break;
     }
     return DefWindowProc(hwnd, message, wParam, lParam);
-}
-
-void WindowInfo::FindStart()
-{
-    if (GetFocus() == hwndFindBox)
-        SendMessage(hwndFindBox, WM_SETFOCUS, 0, 0);
-    else
-        SetFocus(hwndFindBox);
-}
-
-class UpdateFindStatusWorkItem : public UIThreadWorkItem
-{
-    int current;
-    int total;
-
-public:
-    UpdateFindStatusWorkItem(WindowInfo *win, int current, int total)
-        : UIThreadWorkItem(win), current(current), total(total) { }
-
-    virtual void Execute() {
-        if (!WindowInfoStillValid(win))
-            return;
-        win->progressPercent = current * 100 / total;
-        if (!win->progressStatusVisible)
-            WindowInfo_ShowFindStatus(*win);
-
-        ScopedMem<TCHAR> buf(Str::Format(_TR("Searching %d of %d..."), current, total));
-        Win::SetText(win->hwndFindStatus, buf);
-    }
-};
-
-bool WindowInfo::ProgressUpdate(int current, int total)
-{
-    if (!findCanceled)
-        gUIThreadMarshaller.Queue(new UpdateFindStatusWorkItem(this, current, total));
-    return !findCanceled;
 }
 
 static void TreeView_ExpandRecursively(HWND hTree, HTREEITEM hItem, UINT flag, bool subtree=false)
@@ -5589,7 +5439,7 @@ static void CreateTocBox(WindowInfo& win)
                         0,0,gGlobalPrefs.m_tocDx,0, win.hwndFrame, (HMENU)IDC_PDF_TOC_TREE_TITLE, ghinst, NULL);
     HWND titleLabel = CreateWindow(WC_STATIC, _TR("Bookmarks"), WS_VISIBLE | WS_CHILD,
                         0,0,0,0, win.hwndTocBox, (HMENU)0, ghinst, NULL);
-    SetWindowFont(titleLabel, gDefaultGuiFont, true);
+    SetWindowFont(titleLabel, gDefaultGuiFont, FALSE);
 
     HWND closeToc = CreateWindow(WC_STATIC, _T(""),
                         SS_OWNERDRAW | SS_NOTIFY | WS_CHILD | WS_VISIBLE,
@@ -5774,7 +5624,7 @@ void WindowInfo::ShowTocBox()
     UpdateTocWidth(this->hwndTocBox, NULL, rframe.dx / 4);
 
     if (gGlobalPrefs.m_showToolbar && !fullScreen && !presentation)
-        cy = gReBarDy + gReBarDyFrame;
+        cy = WindowRect(this->hwndReBar).dy;
     else
         cy = 0;
     ch = rframe.dy - cy;
@@ -5801,7 +5651,7 @@ void WindowInfo::HideTocBox()
 {
     int cy = 0;
     if (gGlobalPrefs.m_showToolbar && !fullScreen && !presentation)
-        cy = gReBarDy + gReBarDyFrame;
+        cy = WindowRect(hwndReBar).dy;
 
     if (GetFocus() == hwndTocTree)
         SetFocus(hwndFrame);
@@ -6468,7 +6318,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                     else if (win->selectionOnPage)
                         CopySelectionToClipboard(*win);
                     else
-                        WindowInfo_ShowMessage_Async(*win, _TR("Select content with Ctrl+left mouse button"), true);
+                        win->ShowNotification(_TR("Select content with Ctrl+left mouse button"));
                     break;
 
                 case IDM_SELECT_ALL:
@@ -6619,10 +6469,10 @@ static bool RegisterWinClass(HINSTANCE hInstance)
         return false;
 
     FillWndClassEx(wcex, hInstance);
-    wcex.lpfnWndProc    = WndProcFindStatus;
+    wcex.lpfnWndProc    = MessageWnd::WndProc;
     wcex.hCursor        = LoadCursor(NULL, IDC_APPSTARTING);
     wcex.hbrBackground  = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
-    wcex.lpszClassName  = FINDSTATUS_CLASS_NAME;
+    wcex.lpszClassName  = MESSAGE_WND_CLASS_NAME;
     atom = RegisterClassEx(&wcex);
     if (!atom)
         return false;
@@ -6961,7 +6811,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
                 MakePluginWindow(*win, i.hwndPluginParent);
             if (win->IsDocLoaded() && !firstIsDocLoaded) {
                 if (i.enterPresentation || i.enterFullscreen)
-                    WindowInfo_EnterFullscreen(*win, i.enterPresentation);
+                    EnterFullscreen(*win, i.enterPresentation);
                 if (i.startView != DM_AUTOMATIC)
                     win->SwitchToDisplayMode(i.startView);
                 if (i.startZoom != INVALID_ZOOM)
@@ -6985,7 +6835,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
  
     if (!firstIsDocLoaded) {
         bool enterFullscreen = (WIN_STATE_FULLSCREEN == gGlobalPrefs.m_windowState);
-        win = WindowInfo_CreateEmpty();
+        win = CreateWindowInfo();
         if (!win) {
             msg.wParam = 1;
             goto Exit;
@@ -6999,7 +6849,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         UpdateWindow(win->hwndFrame);
 
         if (enterFullscreen)
-            WindowInfo_EnterFullscreen(*win);
+            EnterFullscreen(*win);
     }
 
     if (!firstIsDocLoaded)
@@ -7047,7 +6897,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     
 Exit:
     while (gWindows.Count() > 0)
-        WindowInfo_Delete(gWindows[0]);
+        DeleteWindowInfo(gWindows[0]);
     DeleteObject(gBrushNoDocBg);
     DeleteObject(gBrushWhite);
     DeleteObject(gBrushBlack);

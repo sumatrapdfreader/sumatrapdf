@@ -287,7 +287,7 @@ bool DisplayModel::load(const TCHAR *fileName, int startPage, SizeI viewPort)
         return false;
 
     textSelection = new TextSelection(engine);
-    textSearch = new TextSearch(engine, _callback);
+    textSearch = new TextSearch(engine);
     return true;
 }
 

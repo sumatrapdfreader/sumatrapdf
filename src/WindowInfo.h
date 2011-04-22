@@ -13,6 +13,8 @@ class Synchronizer;
 class DoubleBuffer;
 class SelectionOnPage;
 class LinkHandler;
+class MessageWnd;
+class MessageWndList;
 
 /* Describes actions which can be performed by mouse */
 enum MouseAction {
@@ -66,7 +68,6 @@ public:
     HWND            hwndFindText;
     HWND            hwndFindBox;
     HWND            hwndFindBg;
-    HWND            hwndFindStatus;
     HWND            hwndPageText;
     HWND            hwndPageBox;
     HWND            hwndPageBg;
@@ -135,20 +136,13 @@ public:
 
     bool            threadStressRunning;
 
-    // the following properties only apply to PDF and XPS documents
+    MessageWndList *messages;
 
-    bool            findStatusHighlight; // whether to highlight the status text
-    HANDLE          findStatusThread; // handle of the thread showing the status of the search result
-    HANDLE          stopFindStatusThreadEvent; // event raised to tell the findstatus thread to stop
+    HANDLE          printThread;
+    bool            printCanceled;
 
     HANDLE          findThread;
     bool            findCanceled;
-    HANDLE          printThread;
-    bool            printCanceled;
-    int             progressPercent;
-    bool            progressStatusVisible;
-
-    // the following properties only apply to PDF documents
 
     LinkHandler *   linkHandler;
     PageElement *   linkOnLastButtonDown;
@@ -193,14 +187,7 @@ public:
     void SwitchToDisplayMode(DisplayMode displayMode, bool keepContinuous=false);
     void MoveDocBy(int dx, int dy);
     void AbortPrinting();
-
-    // the following methods only apply to PDF and XPS documents
-
-    void Find(TextSearchDirection direction=FIND_FORWARD);
-    void FindStart();
     void AbortFinding();
-
-    // the following methods only apply to PDF documents
 
     void ShowTocBox();
     void HideTocBox();
@@ -216,14 +203,12 @@ public:
     void CreateInfotip(const TCHAR *text, RectI& rc);
     void DeleteInfotip();
 
+    void ShowNotification(const TCHAR *message, bool highlight=false);
     void ShowForwardSearchResult(const TCHAR *fileName, UINT line, UINT col, UINT ret, UINT page, Vec<RectI>& rects);
 
-    // DisplayModelCallback implementation (incl. PasswordUI, ProgressUpdateUI)
-
+    // DisplayModelCallback implementation (incl. PasswordUI)
     virtual TCHAR * GetPassword(const TCHAR *fileName, unsigned char *fileDigest,
                                 unsigned char decryptionKeyOut[32], bool *saveKey);
-    virtual bool ProgressUpdate(int count, int total);
-
     virtual void Repaint() { RepaintAsync(); };
     virtual void PageNoChanged(int pageNo);
     virtual void UpdateScrollbars(SizeI canvas);

@@ -149,13 +149,13 @@ bool TextSearch::FindTextInPage(int pageNo)
     return true;
 }
 
-bool TextSearch::FindStartingAtPage(int pageNo)
+bool TextSearch::FindStartingAtPage(int pageNo, ProgressUpdateUI *tracker)
 {
     if (Str::IsEmpty(anchor))
         return false;
 
     int total = engine->PageCount();
-    while (1 <= pageNo && pageNo <= total && CheckTracker(pageNo, total)) {
+    while (1 <= pageNo && pageNo <= total && CheckTracker(pageNo, total, tracker)) {
         if (SKIP_PAGE == findCache[pageNo - 1]) {
             pageNo += forward ? 1 : -1;
             continue;
@@ -185,16 +185,16 @@ bool TextSearch::FindStartingAtPage(int pageNo)
     return false;
 }
 
-TextSel *TextSearch::FindFirst(int page, TCHAR *text)
+TextSel *TextSearch::FindFirst(int page, TCHAR *text, ProgressUpdateUI *tracker)
 {
     SetText(text);
 
-    if (FindStartingAtPage(page))
+    if (FindStartingAtPage(page, tracker))
         return &result;
     return NULL;
 }
 
-TextSel *TextSearch::FindNext()
+TextSel *TextSearch::FindNext(ProgressUpdateUI *tracker)
 {
     assert(findText);
     if (!findText)
@@ -202,7 +202,7 @@ TextSel *TextSearch::FindNext()
 
     if (FindTextInPage())
         return &result;
-    if (FindStartingAtPage(findPage + (forward ? 1 : -1)))
+    if (FindStartingAtPage(findPage + (forward ? 1 : -1), tracker))
         return &result;
     return NULL;
 }

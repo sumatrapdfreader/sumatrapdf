@@ -8,6 +8,7 @@
 #include "PdfSync.h"
 #include "Resource.h"
 #include "FileWatch.h"
+#include "Notifications.h"
 
 WindowInfo::WindowInfo(HWND hwnd) :
     dm(NULL), menu(NULL), hwndFrame(hwnd),
@@ -20,8 +21,6 @@ WindowInfo::WindowInfo(HWND hwnd) :
     hwndTocBox(NULL), hwndTocTree(NULL), hwndSpliter(NULL),
     hwndInfotip(NULL), infotipVisible(false), hwndProperties(NULL),
     findThread(NULL), findCanceled(false), printThread(NULL), printCanceled(false),
-    progressPercent(0), progressStatusVisible(false),
-    findStatusThread(NULL), stopFindStatusThreadEvent(NULL), findStatusHighlight(false),
     showSelection(false), mouseAction(MA_IDLE),
     prevZoomVirtual(INVALID_ZOOM), prevDisplayMode(DM_AUTOMATIC),
     loadedFilePath(NULL), currPageNo(0),
@@ -38,8 +37,8 @@ WindowInfo::WindowInfo(HWND hwnd) :
     ReleaseDC(hwndFrame, hdcFrame);
 
     buffer = new DoubleBuffer(hwndCanvas, canvasRc);
-
     linkHandler = new LinkHandler(*this);
+    messages = new MessageWndList();
     fwdsearchmark.show = false;
 }
 
@@ -52,12 +51,10 @@ WindowInfo::~WindowInfo() {
     delete this->pdfsync;
     delete this->linkHandler;
 
-    CloseHandle(this->stopFindStatusThreadEvent);
-    CloseHandle(this->findStatusThread);
-
     delete this->buffer;
     delete this->selectionOnPage;
     delete this->linkOnLastButtonDown;
+    delete this->messages;
 
     free(this->loadedFilePath);
 
@@ -96,6 +93,14 @@ SizeI WindowInfo::GetViewPortSize()
         size.dy += GetSystemMetrics(SM_CYHSCROLL);
 
     return size;
+}
+
+void WindowInfo::ShowNotification(const TCHAR *message, bool highlight)
+{
+    // TODO: ensure that all currently displayed notification are visible
+    //       (e.g. stacked beneath each other)
+    if (messages->IsEmpty())
+        messages->Add(new MessageWnd(this, message, 3000, highlight, messages));
 }
 
 void WindowInfo::AbortFinding()

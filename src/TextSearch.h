@@ -27,8 +27,8 @@ public:
 
     void SetSensitive(bool sensitive);
     void SetDirection(TextSearchDirection direction);
-    TextSel *FindFirst(int page, TCHAR *text);
-    TextSel *FindNext();
+    TextSel *FindFirst(int page, TCHAR *text, ProgressUpdateUI *tracker=NULL);
+    TextSel *FindNext(ProgressUpdateUI *tracker=NULL);
 
     // note: the result might not be a valid page number!
     int GetCurrentPageNo() { return findPage; }
@@ -46,7 +46,7 @@ protected:
 
     void SetText(TCHAR *text);
     bool FindTextInPage(int pageNo = 0);
-    bool FindStartingAtPage(int pageNo);
+    bool FindStartingAtPage(int pageNo, ProgressUpdateUI *tracker=NULL);
     int MatchLen(TCHAR *start);
 
     void Clear()
@@ -62,8 +62,10 @@ protected:
     void Reset();
 
     // returns false, if the search has been canceled
-    bool CheckTracker(int pageNo, int total)
+    bool CheckTracker(int pageNo, int total, ProgressUpdateUI *tracker=NULL)
     {
+        if (!tracker)
+            tracker = this->tracker;
         if (!tracker)
             return true;
         return tracker->ProgressUpdate(pageNo, total);
