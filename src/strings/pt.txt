@@ -465,6 +465,12 @@ Página anterior
 Print range
 Intervalo de impressão
 
+Printing is still in progress. Abort and start over?
+A impressão está a decorrer. Cancelar e reiniciar?
+
+Printing page %d of %d...
+A imprimir página %d de %d...
+
 Printing problem.
 Erro de	impressão.
 
@@ -584,8 +590,4 @@ copiando texto
 
 printing document
 imprimindo documento
-
-# Untranslated:
-#Printing is still in progress. Abort and start over?
-#Printing page %d of %d...
 
