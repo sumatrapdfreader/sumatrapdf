@@ -25,6 +25,9 @@ Contributor: Гоце Митевски (http://www.nicer2.com)
 &Close\tCtrl-W
 &Затвори\tCtrl-W
 
+&Copy Selection
+&Копирај селекција
+
 &Copy Selection\tCtrl-C
 Копирај селекција\tCtrl-C
 
@@ -91,6 +94,9 @@ Contributor: Гоце Митевски (http://www.nicer2.com)
 &Previous Page\tLeft Arrow
 Претходна страница\t<-
 
+&Print...
+&Печати...
+
 &Print...\tCtrl-P
 &Печати\tCtrl-P
 
@@ -102,6 +108,9 @@ Contributor: Гоце Митевски (http://www.nicer2.com)
 
 &Remember these settings for each document
 &Запомни ги овие поставувања за секој документ
+
+&Save As...
+&Зачувај како...
 
 &Save As...\tCtrl-S
 &Зачувај како...\tCtrl-S
@@ -139,6 +148,9 @@ Advanced
 All files
 Сите датотеки
 
+All supported documents
+Сите поддражни документи
+
 Application:
 Апликација:
 
@@ -162,6 +174,12 @@ Book View
 
 Book&marks\tF12
 Обележувачи\tF12
+
+Bookmark Shortcuts
+Кратенки од обележувачи
+
+Bookmark shortcut to page %d of %s
+Кратенки од обележувачи за страница %d од %s
 
 Bookmarks
 Обележувачи
@@ -187,6 +205,9 @@ Change Language
 Check for &Updates
 &Провери за надградби
 
+Comic books
+Стрипови
+
 Continuous
 Непрекинат приказ
 
@@ -198,6 +219,12 @@ Continuous Facing
 
 Contribute Translation
 Учествувај во преведувањето на оваа апликација
+
+Copy &Link Address
+Копирај ја адресата на &врската
+
+Copy Co&mment
+Копирај коментар
 
 Copying text was denied (copying as image only)
 Копирањето на текстот беше одбиено (копирање само во вид на слика)
@@ -246,6 +273,9 @@ Enter password for %s
 
 Enter the command-line to invoke when you double-click on the PDF document:
 Внесете команда, за да се извршува при секое двојно кликнунвање на PDF документот:
+
+Error loading %s
+Грешка при вчитување %s
 
 F&orward\tAlt+Right Arrow
 Напред\tAlt+Right Arrow
@@ -307,14 +337,26 @@ Fit a Single Page
 Found text at page %d
 Пронајдов текст на страница %d
 
+Found text at page %d (again)
+Пронајдов текст на страница %d (повторно)
+
+Frequently Read
+Често читани
+
 GB
 GB
 
 Go to page
 Појди на страница
 
+Hide frequently read
+Сокриј често читани
+
 Hint: Use the F3 key for finding again
 Совет: За повторно пребарување користете F3 од тастатурата
+
+Image files (*.%s)
+Слики (*.%s)
 
 KB
 KB
@@ -361,6 +403,9 @@ OK
 Open
 Отвори
 
+Open a document...
+Отвори документ...
+
 Open in &Adobe Reader
 Отвори со &Adobe Reader
 
@@ -369,6 +414,9 @@ Open in &Foxit Reader
 
 Open in PDF-XChange
 Отвори со PDF-XChange
+
+P&roperties
+&Својства
 
 P&roperties\tCtrl-D
 С&војства...\tCtrl-D
@@ -415,6 +463,12 @@ Previous Page
 Print range
 Опсег за печатење
 
+Printing is still in progress. Abort and start over?
+Печатењето трае сè уште. Да го запрам и да почнам одново?
+
+Printing page %d of %d...
+Печатење на страница %d од %d...
+
 Printing problem.
 Проблем при печатење.
 
@@ -427,8 +481,14 @@ Rotate &Left\tCtrl-Shift--
 Rotate &Right\tCtrl-Shift-+
 Ротирај на десно\tCtrl-Shift-+
 
+Save S&hortcut...\tCtrl-Shift-S
+Зачувај &кратенка...\tCtrl-Shift-S
+
 Searching %d of %d...
 Пребарувам %d од %d страници...
+
+Select &All
+Избери сè
 
 Select &All\tCtrl-A
 Избери сè\tCtrl-A
@@ -447,6 +507,9 @@ Show &Toolbar
 
 Show &pages continuously
 Прикажувај страници непрекинато
+
+Show frequently read
+Прикажи често читани
 
 Show the &bookmarks sidebar when available
 Прикажи го алатникот со &обележувачи кога е достапен
@@ -496,6 +559,9 @@ Visit &Website
 Warning
 Предупредување
 
+XPS documents
+XPS документи
+
 You have the latest version.
 Ја имате најновата верзија.
 
@@ -522,28 +588,4 @@ copying text
 
 printing document
 печатам документ
-
-# Untranslated:
-#&Copy Selection
-#&Print...
-#&Save As...
-#All supported documents
-#Bookmark Shortcuts
-#Bookmark shortcut to page %d of %s
-#Comic books
-#Copy &Link Address
-#Copy Co&mment
-#Error loading %s
-#Found text at page %d (again)
-#Frequently Read
-#Hide frequently read
-#Image files (*.%s)
-#Open a document...
-#P&roperties
-#Printing is still in progress. Abort and start over?
-#Printing page %d of %d...
-#Save S&hortcut...\tCtrl-Shift-S
-#Select &All
-#Show frequently read
-#XPS documents
 
