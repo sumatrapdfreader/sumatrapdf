@@ -19,7 +19,7 @@ public:
 
 class MessageWnd : public ProgressUpdateUI {
     static const int TIMEOUT_TIMER_ID = 1;
-    static const int PROGRESS_WIDTH = 200;
+    static const int PROGRESS_WIDTH = 188;
     static const int PROGRESS_HEIGHT = 5;
     static const int PADDING = 6;
 
@@ -117,13 +117,13 @@ public:
 
     void MessageUpdate(const TCHAR *message, int timeoutInMS=0, bool highlight=false) {
         Win::SetText(self, message);
-        UpdateWindowPosition(message);
         this->highlight = highlight;
-        if (timeoutInMS) {
-            SetTimer(self, TIMEOUT_TIMER_ID, timeoutInMS, NULL);
+        if (timeoutInMS)
             hasCancel = false;
-        }
+        UpdateWindowPosition(message);
         InvalidateRect(self, NULL, TRUE);
+        if (timeoutInMS)
+            SetTimer(self, TIMEOUT_TIMER_ID, timeoutInMS, NULL);
     }
 
     static RectI GetCancelRect(HWND hwnd) {
@@ -182,7 +182,7 @@ public:
                 PaintRect(hdc, rect);
 
                 rect.x += 2;
-                rect.dx = wnd->progressWidth * wnd->progress / 100 - 3;
+                rect.dx = (wnd->progressWidth - 3) * wnd->progress / 100;
                 rect.y += 2;
                 rect.dy -= 3;
 
@@ -275,7 +275,8 @@ public:
     }
 
     void SetUp(MessageWnd *wnd) {
-        assert(!this->wnd);
+        if (this->wnd)
+            list->CleanUp(this->wnd);
         this->wnd = wnd;
         list->Add(wnd);
     }

@@ -39,6 +39,8 @@ WindowInfo::WindowInfo(HWND hwnd) :
     buffer = new DoubleBuffer(hwndCanvas, canvasRc);
     linkHandler = new LinkHandler(*this);
     messages = new MessageWndList();
+    notificationHelper = new MessageWndHolder(messages);
+    pageInfoHelper = new MessageWndHolder(messages);
     fwdsearchmark.show = false;
 }
 
@@ -55,7 +57,9 @@ WindowInfo::~WindowInfo() {
     delete this->selectionOnPage;
     delete this->linkOnLastButtonDown;
 
+    delete this->notificationHelper;
     delete this->findHelper;
+    delete this->pageInfoHelper;
     delete this->messages;
 
     free(this->loadedFilePath);
@@ -99,7 +103,8 @@ SizeI WindowInfo::GetViewPortSize()
 
 void WindowInfo::ShowNotification(const TCHAR *message, bool autoDismiss, bool highlight)
 {
-    messages->Add(new MessageWnd(this->hwndCanvas, message, autoDismiss ? 3000 : 0, highlight, messages));
+    MessageWnd *wnd = new MessageWnd(this->hwndCanvas, message, autoDismiss ? 3000 : 0, highlight, this->notificationHelper);
+    this->notificationHelper->SetUp(wnd);
 }
 
 void WindowInfo::AbortFinding(bool hideMessage)

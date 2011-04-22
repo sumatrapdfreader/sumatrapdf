@@ -137,6 +137,8 @@ public:
     bool            threadStressRunning;
 
     MessageWndList *messages;
+    MessageWndHolder *notificationHelper;
+    MessageWndHolder *pageInfoHelper;
     MessageWndHolder *findHelper;
 
     HANDLE          printThread;

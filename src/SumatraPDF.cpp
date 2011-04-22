@@ -1719,6 +1719,14 @@ void WindowInfo::PageNoChanged(int pageNo)
     if (pageNo != currPageNo) {
         UpdateTocSelection(pageNo);
         currPageNo = pageNo;
+
+        if (pageInfoHelper->GetWnd()) {
+            MessageWnd *wnd = pageInfoHelper->GetWnd();
+            int total = dm->pageCount();
+            ScopedMem<TCHAR> pageInfo(Str::Format(_T("%s %d / %d"), _TR("Page:"), pageNo, total));
+            wnd->ProgressUpdate(pageNo, total);
+            wnd->MessageUpdate(pageInfo);
+        }
     }
 }
 
@@ -2966,7 +2974,8 @@ static void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose=false)
         win->loadedFilePath = NULL;
         delete win->pdfsync;
         win->pdfsync = NULL;
-        // TODO: hide all document specific messages (also cancel printing?)
+        win->notificationHelper->SetUp(NULL);
+        win->pageInfoHelper->SetUp(NULL);
 
         if (win->hwndProperties) {
             DestroyWindow(win->hwndProperties);
@@ -4397,6 +4406,8 @@ static void OnChar(WindowInfo& win, WPARAM key)
     case VK_ESCAPE:
         if (win.findThread)
             win.AbortFinding();
+        else if (win.pageInfoHelper)
+            win.pageInfoHelper->SetUp(NULL);
         else if (win.presentation)
             OnMenuViewPresentation(win);
         else if (gGlobalPrefs.m_escToExit)
@@ -4503,7 +4514,12 @@ static void OnChar(WindowInfo& win, WPARAM key)
         if (!gGlobalPrefs.m_showToolbar || win.fullScreen || PM_ENABLED == win.presentation) {
             int current = win.dm->currentPageNo(), total = win.dm->pageCount();
             ScopedMem<TCHAR> pageInfo(Str::Format(_T("%s %d / %d"), _TR("Page:"), current, total));
-            win.ShowNotification(pageInfo);
+
+            MessageWnd *wnd = new MessageWnd(win.hwndCanvas, pageInfo, (const TCHAR *)NULL, win.pageInfoHelper);
+            wnd->ProgressUpdate(current, total);
+            if (!IsShiftPressed())
+                wnd->MessageUpdate(pageInfo, 3000);
+            win.pageInfoHelper->SetUp(wnd);
         }
         break;
 #ifdef DEBUG
