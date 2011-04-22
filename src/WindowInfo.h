@@ -14,6 +14,7 @@ class DoubleBuffer;
 class SelectionOnPage;
 class LinkHandler;
 class MessageWndList;
+class MessageWndHolder;
 
 /* Describes actions which can be performed by mouse */
 enum MouseAction {
@@ -136,7 +137,7 @@ public:
     bool            threadStressRunning;
 
     MessageWndList *messages;
-    CallbackFunc *  findCleanup; // set while there's a find notification to delete
+    MessageWndHolder *findHelper;
 
     HANDLE          printThread;
     bool            printCanceled;
@@ -187,7 +188,7 @@ public:
     void SwitchToDisplayMode(DisplayMode displayMode, bool keepContinuous=false);
     void MoveDocBy(int dx, int dy);
     void AbortPrinting();
-    void AbortFinding();
+    void AbortFinding(bool hideMessage=false);
 
     void ShowTocBox();
     void HideTocBox();

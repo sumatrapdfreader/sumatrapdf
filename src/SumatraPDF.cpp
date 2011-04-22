@@ -2959,20 +2959,19 @@ static void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose=false)
 
     if (lastWindow && !quitIfLast) {
         /* last window - don't delete it */
-        win->AbortFinding();
         delete win->watcher;
         win->watcher = NULL;
         if (win->tocShow)
             win->HideTocBox();
         win->ClearTocBox();
-        if (win->findCleanup)
-            win->findCleanup->Callback();
+        win->AbortFinding(true);
         delete win->dm;
         win->dm = NULL;
         free(win->loadedFilePath);
         win->loadedFilePath = NULL;
         delete win->pdfsync;
         win->pdfsync = NULL;
+        // TODO: hide all document specific messages (also cancel printing?)
 
         if (win->hwndProperties) {
             DestroyWindow(win->hwndProperties);
@@ -4741,41 +4740,42 @@ public:
     }
 };
 
-class FindThreadData : public ProgressUpdateUI, public MessageWndCallback, public CallbackFunc, public UIThreadWorkItem {
-public:
-    MessageWnd *wnd;
+struct FindThreadData : public ProgressUpdateUI {
+    WindowInfo *win;
     TextSearchDirection direction;
     bool wasModified;
     TCHAR *text;
 
     FindThreadData(WindowInfo& win, TextSearchDirection direction, HWND findBox) :
-        UIThreadWorkItem(&win), wnd(NULL), direction(direction) {
+        win(&win), direction(direction) {
         text = Win::GetText(findBox);
         wasModified = Edit_GetModify(findBox);
     }
     ~FindThreadData() { free(text); }
 
-    void ShowUI() {
+    void ShowUI() const {
         const LPARAM disable = (LPARAM)MAKELONG(0, 0);
 
-        wnd = new MessageWnd(win->hwndCanvas, _T(""), _TR("Searching %d of %d..."), this);
-        // let win->messages own the MessageWnd (we'll forward the CleanUp call)
-        win->messages->Add(wnd);
+        assert(!win->findHelper);
+        win->findHelper = new MessageWndHolder(win->messages);
+        MessageWnd *wnd = new MessageWnd(win->hwndCanvas, _T(""), _TR("Searching %d of %d..."), win->findHelper);
+        // let win->findHelper own the MessageWnd (FindThreadData might get deleted before)
+        win->findHelper->SetUp(wnd);
 
         SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_PREV, disable);
         SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_NEXT, disable);
         SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_MATCH, disable);
     }
 
-    void HideUI(bool success, bool loopedAround) {
+    void HideUI(MessageWnd *wnd, bool success, bool loopedAround) const {
         LPARAM enable = (LPARAM)MAKELONG(1, 0);
 
         SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_PREV, enable);
         SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_NEXT, enable);
         SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_MATCH, enable);
 
-        if (!success && !loopedAround || !win->messages->Contains(wnd)) // i.e. canceled
-            CleanUp(wnd);
+        if (!success && !loopedAround || !wnd) // i.e. canceled
+            win->findHelper->CleanUp(wnd);
         else if (!success && loopedAround)
             wnd->MessageUpdate(_TR("No matches were found"), 3000);
         else if (!loopedAround) {
@@ -4788,23 +4788,11 @@ public:
     }
 
     virtual bool ProgressUpdate(int current, int total) {
-        gUIThreadMarshaller.Queue(new UpdateFindStatusWorkItem(win, wnd, current, total));
-        return WindowInfoStillValid(win) && !win->findCanceled && win->messages->Contains(wnd);
+        if (!WindowInfoStillValid(win) || !win->findHelper || !win->findHelper->GetWnd() || win->findCanceled)
+            return false;
+        gUIThreadMarshaller.Queue(new UpdateFindStatusWorkItem(win, win->findHelper->GetWnd(), current, total));
+        return true;
     }
-
-    virtual void CleanUp(MessageWnd *wnd) {
-        if (!WindowInfoStillValid(win) || !this->wnd)
-            return;
-        win->findCleanup = NULL;
-        this->wnd = NULL;
-        win->messages->CleanUp(wnd);
-
-        gUIThreadMarshaller.Queue(this);
-    }
-
-    virtual void Callback() { CleanUp(wnd); }
-
-    virtual void Execute() { }
 };
 
 class FindEndWorkItem : public UIThreadWorkItem {
@@ -4814,25 +4802,24 @@ class FindEndWorkItem : public UIThreadWorkItem {
     bool    loopedAround;
 
 public:
-    FindEndWorkItem(WindowInfo *win,
-                    FindThreadData *ftd,
-                    TextSel *textSel,
-                    bool wasModifiedCanceled,
-                    bool loopedAround=false) :
+    FindEndWorkItem(WindowInfo *win, FindThreadData *ftd, TextSel *textSel,
+                    bool wasModifiedCanceled, bool loopedAround=false) :
         UIThreadWorkItem(win), ftd(ftd), textSel(textSel),
-            loopedAround(loopedAround),
-            wasModifiedCanceled(wasModifiedCanceled) { }
+        loopedAround(loopedAround), wasModifiedCanceled(wasModifiedCanceled) { }
+    ~FindEndWorkItem() { delete ftd; }
 
     virtual void Execute() {
-        if (!WindowInfoStillValid(win) || !win->IsDocLoaded())
+        if (!WindowInfoStillValid(win))
             return;
-        if (textSel) {
+        if (!win->IsDocLoaded() || !win->findHelper) {
+            // the UI has already been disabled and hidden
+        } else if (textSel) {
             ShowSearchResult(*win, textSel, wasModifiedCanceled);
-            ftd->HideUI(true, loopedAround);
+            ftd->HideUI(win->findHelper->GetWnd(), true, loopedAround);
         } else {
             // nothing found or search canceled
             ClearSearchResult(*win);
-            ftd->HideUI(false, !wasModifiedCanceled);
+            ftd->HideUI(win->findHelper->GetWnd(), false, !wasModifiedCanceled);
         }
 
         HANDLE hThread = win->findThread;
@@ -4876,7 +4863,7 @@ static DWORD WINAPI FindThread(LPVOID data)
 
 static void FindTextOnThread(WindowInfo& win, TextSearchDirection direction)
 {
-    win.AbortFinding();
+    win.AbortFinding(true);
 
     FindThreadData *ftd = new FindThreadData(win, direction, win.hwndFindBox);
     Edit_SetModify(win.hwndFindBox, FALSE);
@@ -4886,9 +4873,6 @@ static void FindTextOnThread(WindowInfo& win, TextSearchDirection direction)
         return;
     }
 
-    if (win.findCleanup)
-        win.findCleanup->Callback();
-    win.findCleanup = ftd;
     ftd->ShowUI();
     win.findThread = CreateThread(NULL, 0, FindThread, ftd, 0, 0);
 }

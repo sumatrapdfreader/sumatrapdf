@@ -21,7 +21,7 @@ WindowInfo::WindowInfo(HWND hwnd) :
     hwndTocBox(NULL), hwndTocTree(NULL), hwndSpliter(NULL),
     hwndInfotip(NULL), infotipVisible(false), hwndProperties(NULL),
     findThread(NULL), findCanceled(false), printThread(NULL), printCanceled(false),
-    findCleanup(NULL), showSelection(false), mouseAction(MA_IDLE),
+    findHelper(NULL), showSelection(false), mouseAction(MA_IDLE),
     prevZoomVirtual(INVALID_ZOOM), prevDisplayMode(DM_AUTOMATIC),
     loadedFilePath(NULL), currPageNo(0),
     xScrollSpeed(0), yScrollSpeed(0), wheelAccumDelta(0),
@@ -55,8 +55,8 @@ WindowInfo::~WindowInfo() {
     delete this->selectionOnPage;
     delete this->linkOnLastButtonDown;
 
+    delete this->findHelper;
     delete this->messages;
-    delete this->findCleanup;
 
     free(this->loadedFilePath);
 
@@ -102,13 +102,18 @@ void WindowInfo::ShowNotification(const TCHAR *message, bool autoDismiss, bool h
     messages->Add(new MessageWnd(this->hwndCanvas, message, autoDismiss ? 3000 : 0, highlight, messages));
 }
 
-void WindowInfo::AbortFinding()
+void WindowInfo::AbortFinding(bool hideMessage)
 {
     if (this->findThread) {
         this->findCanceled = true;
         WaitForSingleObject(this->findThread, INFINITE);
     }
     this->findCanceled = false;
+
+    if (hideMessage && this->findHelper) {
+        delete this->findHelper;
+        this->findHelper = NULL;
+    }
 }
 
 void WindowInfo::AbortPrinting()

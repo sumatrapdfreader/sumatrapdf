@@ -262,3 +262,28 @@ public:
         }
     }
 };
+
+class MessageWndHolder : public MessageWndCallback {
+    MessageWnd *wnd;
+    MessageWndList *list;
+
+public:
+    MessageWndHolder(MessageWndList *list) : list(list), wnd(NULL) { }
+    ~MessageWndHolder() {
+        if (wnd)
+            list->CleanUp(wnd);
+    }
+
+    void SetUp(MessageWnd *wnd) {
+        assert(!this->wnd);
+        this->wnd = wnd;
+        list->Add(wnd);
+    }
+
+    virtual void CleanUp(MessageWnd *wnd) {
+        this->wnd = NULL;
+        list->CleanUp(wnd);
+    }
+
+    MessageWnd *GetWnd() const { return wnd; }
+};
