@@ -129,7 +129,7 @@ public:
     DisplayMode     prevDisplayMode;
 
     RectI           canvasRc; // size of the canvas (excluding any scroll bars)
-    int             currPageNo;
+    int             currPageNo; // cached value, needed to determine when to auto-update the ToC selection
 
     int             wheelAccumDelta;
     UINT_PTR        delayedRepaintTimer;

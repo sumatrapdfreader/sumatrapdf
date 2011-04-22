@@ -1627,7 +1627,7 @@ public:
 
     virtual void Execute() {
         if (WindowInfoStillValid(win)) {
-            // delay the reload slightly, in case we get another request immediately ofter this one
+            // delay the reload slightly, in case we get another request immediately after this one
             SetTimer(win->hwndCanvas, AUTO_RELOAD_TIMER_ID, AUTO_RELOAD_DELAY_IN_MS, NULL);
         }
     }
@@ -1642,13 +1642,6 @@ static void RefreshUpdatedFiles() {
     }
 }
 #endif
-
-static void CheckPositionAndSize(DisplayState& ds)
-{
-    if (ds.windowPos.IsEmpty())
-        ds.windowPos = gGlobalPrefs.m_windowPos;
-    EnsureWindowVisibility(ds.windowPos);
-}
 
 WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin, bool forceReuse)
 {
@@ -1675,7 +1668,9 @@ WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin, b
     DisplayState *ds = gFileHistory.Find(fullpath);
     if (ds) {
         AdjustRemovableDriveLetter(fullpath);
-        CheckPositionAndSize(*ds);
+        if (ds->windowPos.IsEmpty())
+            ds->windowPos = gGlobalPrefs.m_windowPos;
+        EnsureWindowVisibility(ds->windowPos);
     }
 
     if (!LoadDocIntoWindow(fullpath, *win, ds, isNewWindow, true, showWin, true)) {
@@ -2805,8 +2800,8 @@ static void OnMouseMiddleButtonDown(WindowInfo& win, int x, int y, int key)
     case MA_IDLE:
         win.mouseAction = MA_SCROLLING;
 
-        // record current mouse position, distance mouse moves
-        // from this poition is speed to shift document
+        // record current mouse position, the farther the mouse is moved
+        // from this position, the faster we scroll the document
         win.dragStart = PointI(x, y);
         SetCursor(gCursorScroll);
         break;
