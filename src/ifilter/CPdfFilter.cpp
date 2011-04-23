@@ -31,7 +31,8 @@ HRESULT CPdfFilter::OnInit()
 }
 
 // adapted from SumatraProperties.cpp
-static bool PdfDateParse(WCHAR *pdfDate, SYSTEMTIME *timeOut) {
+static bool PdfDateParse(const WCHAR *pdfDate, SYSTEMTIME *timeOut)
+{
     ZeroMemory(timeOut, sizeof(SYSTEMTIME));
     // "D:" at the beginning is optional
     if (Str::StartsWith(pdfDate, L"D:"))

@@ -16,7 +16,8 @@
 // See: http://www.verypdf.com/pdfinfoeditor/pdf-date-format.htm
 // Format:  "D:YYYYMMDDHHMMSSxxxxxxx"
 // Example: "D:20091222171933-05'00'"
-static bool PdfDateParse(const TCHAR *pdfDate, SYSTEMTIME *timeOut) {
+static bool PdfDateParse(const TCHAR *pdfDate, SYSTEMTIME *timeOut)
+{
     ZeroMemory(timeOut, sizeof(SYSTEMTIME));
     // "D:" at the beginning is optional
     if (Str::StartsWith(pdfDate, _T("D:")))
@@ -30,7 +31,8 @@ static bool PdfDateParse(const TCHAR *pdfDate, SYSTEMTIME *timeOut) {
 // See: ISO 8601 specification
 // Format:  "YYYY-MM-DDTHH:MM:SSZ"
 // Example: "2011-04-19T22:10:48Z"
-static bool XpsDateParse(const TCHAR *xpsDate, SYSTEMTIME *timeOut) {
+static bool XpsDateParse(const TCHAR *xpsDate, SYSTEMTIME *timeOut)
+{
     ZeroMemory(timeOut, sizeof(SYSTEMTIME));
     const TCHAR *end = Str::Parse(xpsDate, _T("%4d-%2d-%2d"), &timeOut->wYear, &timeOut->wMonth, &timeOut->wDay);
     if (end) // time is optional
@@ -76,7 +78,8 @@ static void ConvDateToDisplay(TCHAR **s, bool (* DateParse)(const TCHAR *date, S
 // Format the file size in a short form that rounds to the largest size unit
 // e.g. "3.48 GB", "12.38 MB", "23 KB"
 // Caller needs to free the result.
-static TCHAR *FormatSizeSuccint(size_t size) {
+static TCHAR *FormatSizeSuccint(size_t size)
+{
     const TCHAR *unit = NULL;
     double s = (double)size;
 
@@ -97,7 +100,8 @@ static TCHAR *FormatSizeSuccint(size_t size) {
 // format file size in a readable way e.g. 1348258 is shown
 // as "1.29 MB (1,348,258 Bytes)"
 // Caller needs to free the result
-static TCHAR *FormatFileSize(size_t size) {
+static TCHAR *FormatFileSize(size_t size)
+{
     ScopedMem<TCHAR> n1(FormatSizeSuccint(size));
     ScopedMem<TCHAR> n2(Str::FormatNumWithThousandSep(size));
 
@@ -131,7 +135,8 @@ static TCHAR *FormatPageSize(BaseEngine *engine, int pageNo, int rotation)
 
 // returns a list of permissions denied by this document
 // Caller needs to free the result
-static TCHAR *FormatPermissions(BaseEngine *engine) {
+static TCHAR *FormatPermissions(BaseEngine *engine)
+{
     StrVec denials;
 
     if (!engine->IsPrintingAllowed())
@@ -151,7 +156,8 @@ void PropertiesLayout::AddProperty(const TCHAR *key, TCHAR *value)
         free(value);
 }
 
-static void UpdatePropertiesLayout(HWND hwnd, HDC hdc, RectI *rect) {
+static void UpdatePropertiesLayout(HWND hwnd, HDC hdc, RectI *rect)
+{
     SIZE            txtSize;
     int             totalDx, totalDy;
     int             leftMaxDx, rightMaxDx;
@@ -218,7 +224,8 @@ static void UpdatePropertiesLayout(HWND hwnd, HDC hdc, RectI *rect) {
     Win::Font::Delete(fontRightTxt);
 }
 
-static HWND CreatePropertiesWindow(PropertiesLayout& layoutData) {
+static HWND CreatePropertiesWindow(PropertiesLayout& layoutData)
+{
     HWND hwndProperties = CreateWindow(
            PROPERTIES_CLASS_NAME, PROPERTIES_WIN_TITLE,
            WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,

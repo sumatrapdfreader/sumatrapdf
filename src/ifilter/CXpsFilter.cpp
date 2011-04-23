@@ -30,15 +30,66 @@ HRESULT CXpsFilter::OnInit()
     return S_OK;
 }
 
+// adapted from SumatraProperties.cpp
+static bool XpsDateParse(const WCHAR *xpsDate, SYSTEMTIME *timeOut)
+{
+    ZeroMemory(timeOut, sizeof(SYSTEMTIME));
+    return 6 == swscanf(xpsDate, L"%4d-%2d-%2d" L"T%2d:%2d:%2dZ",
+        &timeOut->wYear, &timeOut->wMonth, &timeOut->wDay,
+        &timeOut->wHour, &timeOut->wMinute, &timeOut->wSecond) ||
+        swscanf(xpsDate, L"%4d-%2d-%2d", &timeOut->wYear, &timeOut->wMonth, &timeOut->wDay);
+    // don't bother about the day of week, we won't display it anyway
+}
+
 HRESULT CXpsFilter::GetNextChunkValue(CChunkValue &chunkValue)
 {
     WCHAR *str;
 
     switch (m_state) {
     case STATE_XPS_START:
-        m_state = STATE_XPS_CONTENT;
+        m_state = STATE_XPS_AUTHOR;
         chunkValue.SetTextValue(PKEY_PerceivedType, L"document");
         return S_OK;
+
+    case STATE_XPS_AUTHOR:
+        m_state = STATE_XPS_TITLE;
+        str = Str::Conv::ToWStrQ(m_xpsEngine->GetProperty("Author"));
+        if (!Str::IsEmpty(str)) {
+            chunkValue.SetTextValue(PKEY_Author, str);
+            free(str);
+            return S_OK;
+        }
+        free(str);
+        // fall through
+
+    case STATE_XPS_TITLE:
+        m_state = STATE_XPS_DATE;
+        str = Str::Conv::ToWStrQ(m_xpsEngine->GetProperty("Title"));
+        if (!str) str = Str::Conv::ToWStrQ(m_xpsEngine->GetProperty("Subject"));
+        if (!Str::IsEmpty(str)) {
+            chunkValue.SetTextValue(PKEY_Title, str);
+            free(str);
+            return S_OK;
+        }
+        free(str);
+        // fall through
+
+    case STATE_XPS_DATE:
+        m_state = STATE_XPS_CONTENT;
+        str = Str::Conv::ToWStrQ(m_xpsEngine->GetProperty("ModDate"));
+        if (!str) str = Str::Conv::ToWStrQ(m_xpsEngine->GetProperty("CreationDate"));
+        if (!Str::IsEmpty(str)) {
+            SYSTEMTIME systime;
+            if (XpsDateParse(str, &systime)) {
+                FILETIME filetime;
+                SystemTimeToFileTime(&systime, &filetime);
+                chunkValue.SetFileTimeValue(PKEY_ItemDate, filetime);
+                free(str);
+                return S_OK;
+            }
+        }
+        free(str);
+        // fall through
 
     case STATE_XPS_CONTENT:
         if (++m_iPageNo <= m_xpsEngine->PageCount()) {

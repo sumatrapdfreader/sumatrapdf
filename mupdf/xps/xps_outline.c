@@ -429,7 +429,7 @@ fz_obj *xps_extract_doc_props(xps_context *ctx)
 	xps_part *part;
 	fz_obj *dict;
 
-	if (!xps_find_doc_props_path(ctx, path))
+	if (xps_find_doc_props_path(ctx, path) != fz_okay)
 	{
 		fz_catch(-1, "couldn't find the exact part name for /docProps/core.xml");
 		fz_strlcpy(path, "/docProps/core.xml", sizeof(path));
