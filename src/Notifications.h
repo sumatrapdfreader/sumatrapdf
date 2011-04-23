@@ -86,6 +86,7 @@ class MessageWnd : public ProgressUpdateUI {
 
 public:
     static const int TL_MARGIN = 8;
+    int groupId; // for use by MessageWndList
 
     MessageWnd(HWND parent, const TCHAR *message, int timeoutInMS=0, bool highlight=false, MessageWndCallback *callback=NULL) :
         hasProgress(false), hasCancel(!timeoutInMS), callback(callback), highlight(highlight), progressMsg(NULL) {
@@ -229,17 +230,6 @@ class MessageWndList : public MessageWndCallback {
                      0, 0, SWP_NOSIZE | SWP_NOZORDER);
     }
 
-public:
-    ~MessageWndList() { DeleteVecMembers(wnds); }
-
-    bool Contains(MessageWnd *wnd) { return wnds.Find(wnd) != -1; }
-
-    void Add(MessageWnd *wnd) {
-        if (wnds.Count() > 0)
-            MoveBelow(wnds[wnds.Count() - 1], wnd);
-        wnds.Append(wnd);
-    }
-
     void Remove(MessageWnd *wnd) {
         int ix = wnds.Find(wnd);
         if (ix == -1)
@@ -255,37 +245,40 @@ public:
             MoveBelow(wnds[ix - 1], wnds[ix]);
     }
 
+public:
+    ~MessageWndList() { DeleteVecMembers(wnds); }
+
+    bool Contains(MessageWnd *wnd) { return wnds.Find(wnd) != -1; }
+
+    void Add(MessageWnd *wnd, int groupId=0) {
+        // use groupId to classify notifications and make a notification
+        // replace any other notification of the same class
+        if (groupId != 0)
+            CleanUp(groupId);
+        wnd->groupId = groupId;
+
+        if (wnds.Count() > 0)
+            MoveBelow(wnds[wnds.Count() - 1], wnd);
+        wnds.Append(wnd);
+    }
+
+    MessageWnd *GetFirst(int groupId) {
+        for (size_t i = 0; i < wnds.Count(); i++)
+            if (wnds[i]->groupId == groupId)
+                return wnds[i];
+        return NULL;
+    }
+
     virtual void CleanUp(MessageWnd *wnd) {
         if (Contains(wnd)) {
             Remove(wnd);
             delete wnd;
         }
     }
-};
 
-class MessageWndHolder : public MessageWndCallback {
-    MessageWnd *wnd;
-    MessageWndList *list;
-
-public:
-    MessageWndHolder(MessageWndList *list) : list(list), wnd(NULL) { }
-    ~MessageWndHolder() {
-        if (wnd)
-            list->CleanUp(wnd);
+    void CleanUp(int groupId) {
+        for (size_t i = wnds.Count(); i > 0; i--)
+            if (wnds[i-1]->groupId == groupId)
+                CleanUp(wnds[i-1]);
     }
-
-    void SetUp(MessageWnd *wnd) {
-        if (this->wnd)
-            list->CleanUp(this->wnd);
-        this->wnd = wnd;
-        if (wnd)
-            list->Add(wnd);
-    }
-
-    virtual void CleanUp(MessageWnd *wnd) {
-        this->wnd = NULL;
-        list->CleanUp(wnd);
-    }
-
-    MessageWnd *GetWnd() const { return wnd; }
 };

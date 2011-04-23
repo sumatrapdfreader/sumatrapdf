@@ -21,7 +21,7 @@ WindowInfo::WindowInfo(HWND hwnd) :
     hwndTocBox(NULL), hwndTocTree(NULL), hwndSpliter(NULL),
     hwndInfotip(NULL), infotipVisible(false), hwndProperties(NULL),
     findThread(NULL), findCanceled(false), printThread(NULL), printCanceled(false),
-    findHelper(NULL), showSelection(false), mouseAction(MA_IDLE),
+    showSelection(false), mouseAction(MA_IDLE),
     prevZoomVirtual(INVALID_ZOOM), prevDisplayMode(DM_AUTOMATIC),
     loadedFilePath(NULL), currPageNo(0),
     xScrollSpeed(0), yScrollSpeed(0), wheelAccumDelta(0),
@@ -39,8 +39,6 @@ WindowInfo::WindowInfo(HWND hwnd) :
     buffer = new DoubleBuffer(hwndCanvas, canvasRc);
     linkHandler = new LinkHandler(*this);
     messages = new MessageWndList();
-    notificationHelper = new MessageWndHolder(messages);
-    pageInfoHelper = new MessageWndHolder(messages);
     fwdsearchmark.show = false;
 }
 
@@ -56,10 +54,6 @@ WindowInfo::~WindowInfo() {
     delete this->buffer;
     delete this->selectionOnPage;
     delete this->linkOnLastButtonDown;
-
-    delete this->notificationHelper;
-    delete this->findHelper;
-    delete this->pageInfoHelper;
     delete this->messages;
 
     free(this->loadedFilePath);
@@ -101,10 +95,10 @@ SizeI WindowInfo::GetViewPortSize()
     return size;
 }
 
-void WindowInfo::ShowNotification(const TCHAR *message, bool autoDismiss, bool highlight)
+void WindowInfo::ShowNotification(const TCHAR *message, bool autoDismiss, bool highlight, NotificationGroup groupId)
 {
-    MessageWnd *wnd = new MessageWnd(this->hwndCanvas, message, autoDismiss ? 3000 : 0, highlight, this->notificationHelper);
-    this->notificationHelper->SetUp(wnd);
+    MessageWnd *wnd = new MessageWnd(this->hwndCanvas, message, autoDismiss ? 3000 : 0, highlight, this->messages);
+    this->messages->Add(wnd, groupId);
 }
 
 void WindowInfo::AbortFinding(bool hideMessage)
@@ -115,10 +109,8 @@ void WindowInfo::AbortFinding(bool hideMessage)
     }
     this->findCanceled = false;
 
-    if (hideMessage && this->findHelper) {
-        delete this->findHelper;
-        this->findHelper = NULL;
-    }
+    if (hideMessage)
+        this->messages->CleanUp(NG_FIND_PROGRESS);
 }
 
 void WindowInfo::AbortPrinting()

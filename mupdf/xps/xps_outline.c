@@ -378,7 +378,7 @@ xps_hacky_get_prop(char *data, fz_obj *dict, char *name, char *tag_name)
 		return;
 	end = strstr(start + 1, tag_name);
 	start = strchr(start, '>');
-	if (!start || !end || end[-2] != '<' || end[-1] != '/')
+	if (!start || !end || start >= end || end[-2] != '<' || end[-1] != '/')
 		return;
 
 	for (start++; iswhite(*start); start++);

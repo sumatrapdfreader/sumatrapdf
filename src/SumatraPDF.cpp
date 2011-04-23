@@ -1720,10 +1720,9 @@ void WindowInfo::PageNoChanged(int pageNo)
         UpdateTocSelection(pageNo);
         currPageNo = pageNo;
 
-        if (pageInfoHelper->GetWnd()) {
-            MessageWnd *wnd = pageInfoHelper->GetWnd();
-            int total = dm->pageCount();
-            ScopedMem<TCHAR> pageInfo(Str::Format(_T("%s %d / %d"), _TR("Page:"), pageNo, total));
+        MessageWnd *wnd = messages->GetFirst(NG_PAGE_INFO_HELPER);
+        if (wnd) {
+            ScopedMem<TCHAR> pageInfo(Str::Format(_T("%s %d / %d"), _TR("Page:"), pageNo, dm->pageCount()));
             wnd->MessageUpdate(pageInfo);
         }
     }
@@ -2973,8 +2972,8 @@ static void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose=false)
         win->loadedFilePath = NULL;
         delete win->pdfsync;
         win->pdfsync = NULL;
-        win->notificationHelper->SetUp(NULL);
-        win->pageInfoHelper->SetUp(NULL);
+        win->messages->CleanUp(NG_RESPONSE_TO_ACTION);
+        win->messages->CleanUp(NG_PAGE_INFO_HELPER);
 
         if (win->hwndProperties) {
             DestroyWindow(win->hwndProperties);
@@ -4405,8 +4404,8 @@ static void OnChar(WindowInfo& win, WPARAM key)
     case VK_ESCAPE:
         if (win.findThread)
             win.AbortFinding();
-        else if (win.pageInfoHelper)
-            win.pageInfoHelper->SetUp(NULL);
+        else if (win.messages->GetFirst(NG_PAGE_INFO_HELPER))
+            win.messages->CleanUp(NG_PAGE_INFO_HELPER);
         else if (win.presentation)
             OnMenuViewPresentation(win);
         else if (gGlobalPrefs.m_escToExit)
@@ -4513,10 +4512,8 @@ static void OnChar(WindowInfo& win, WPARAM key)
         if (!gGlobalPrefs.m_showToolbar || win.fullScreen || PM_ENABLED == win.presentation) {
             int current = win.dm->currentPageNo(), total = win.dm->pageCount();
             ScopedMem<TCHAR> pageInfo(Str::Format(_T("%s %d / %d"), _TR("Page:"), current, total));
-
-            int timeout = !IsShiftPressed() ? 3000 : 0;
-            MessageWnd *wnd = new MessageWnd(win.hwndCanvas, pageInfo, timeout, false, win.pageInfoHelper);
-            win.pageInfoHelper->SetUp(wnd);
+            bool autoDismiss = !IsShiftPressed();
+            win.ShowNotification(pageInfo, autoDismiss, false, NG_PAGE_INFO_HELPER);
         }
         break;
 #ifdef DEBUG
@@ -4764,11 +4761,9 @@ struct FindThreadData : public ProgressUpdateUI {
     void ShowUI() const {
         const LPARAM disable = (LPARAM)MAKELONG(0, 0);
 
-        assert(!win->findHelper);
-        win->findHelper = new MessageWndHolder(win->messages);
-        MessageWnd *wnd = new MessageWnd(win->hwndCanvas, _T(""), _TR("Searching %d of %d..."), win->findHelper);
-        // let win->findHelper own the MessageWnd (FindThreadData might get deleted before)
-        win->findHelper->SetUp(wnd);
+        MessageWnd *wnd = new MessageWnd(win->hwndCanvas, _T(""), _TR("Searching %d of %d..."), win->messages);
+        // let win->messages own the MessageWnd (FindThreadData might get deleted before)
+        win->messages->Add(wnd, NG_FIND_PROGRESS);
 
         SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_PREV, disable);
         SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_NEXT, disable);
@@ -4783,7 +4778,7 @@ struct FindThreadData : public ProgressUpdateUI {
         SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_MATCH, enable);
 
         if (!success && !loopedAround || !wnd) // i.e. canceled
-            win->findHelper->CleanUp(wnd);
+            win->messages->CleanUp(wnd);
         else if (!success && loopedAround)
             wnd->MessageUpdate(_TR("No matches were found"), 3000);
         else if (!loopedAround) {
@@ -4796,9 +4791,9 @@ struct FindThreadData : public ProgressUpdateUI {
     }
 
     virtual bool ProgressUpdate(int current, int total) {
-        if (!WindowInfoStillValid(win) || !win->findHelper || !win->findHelper->GetWnd() || win->findCanceled)
+        if (!WindowInfoStillValid(win) || !win->messages->GetFirst(NG_FIND_PROGRESS) || win->findCanceled)
             return false;
-        gUIThreadMarshaller.Queue(new UpdateFindStatusWorkItem(win, win->findHelper->GetWnd(), current, total));
+        gUIThreadMarshaller.Queue(new UpdateFindStatusWorkItem(win, win->messages->GetFirst(NG_FIND_PROGRESS), current, total));
         return true;
     }
 };
@@ -4819,15 +4814,15 @@ public:
     virtual void Execute() {
         if (!WindowInfoStillValid(win))
             return;
-        if (!win->IsDocLoaded() || !win->findHelper) {
+        if (!win->IsDocLoaded()) {
             // the UI has already been disabled and hidden
         } else if (textSel) {
             ShowSearchResult(*win, textSel, wasModifiedCanceled);
-            ftd->HideUI(win->findHelper->GetWnd(), true, loopedAround);
+            ftd->HideUI(win->messages->GetFirst(NG_FIND_PROGRESS), true, loopedAround);
         } else {
             // nothing found or search canceled
             ClearSearchResult(*win);
-            ftd->HideUI(win->findHelper->GetWnd(), false, !wasModifiedCanceled);
+            ftd->HideUI(win->messages->GetFirst(NG_FIND_PROGRESS), false, !wasModifiedCanceled);
         }
 
         HANDLE hThread = win->findThread;

@@ -14,7 +14,6 @@ class DoubleBuffer;
 class SelectionOnPage;
 class LinkHandler;
 class MessageWndList;
-class MessageWndHolder;
 
 /* Describes actions which can be performed by mouse */
 enum MouseAction {
@@ -31,6 +30,13 @@ enum PresentationMode {
     PM_ENABLED,
     PM_BLACK_SCREEN,
     PM_WHITE_SCREEN
+};
+
+enum NotificationGroup {
+    NG_RESPONSE_TO_ACTION = 1,
+    NG_FIND_PROGRESS,
+    NG_PRINT_PROGRESS,
+    NG_PAGE_INFO_HELPER
 };
 
 /* Describes position, the target (URL or file path) and infotip of a "hyperlink" */
@@ -137,9 +143,6 @@ public:
     bool            threadStressRunning;
 
     MessageWndList *messages;
-    MessageWndHolder *notificationHelper;
-    MessageWndHolder *pageInfoHelper;
-    MessageWndHolder *findHelper;
 
     HANDLE          printThread;
     bool            printCanceled;
@@ -206,7 +209,7 @@ public:
     void CreateInfotip(const TCHAR *text, RectI& rc);
     void DeleteInfotip();
 
-    void ShowNotification(const TCHAR *message, bool autoDismiss=true, bool highlight=false);
+    void ShowNotification(const TCHAR *message, bool autoDismiss=true, bool highlight=false, NotificationGroup groupId=NG_RESPONSE_TO_ACTION);
     void ShowForwardSearchResult(const TCHAR *fileName, UINT line, UINT col, UINT ret, UINT page, Vec<RectI>& rects);
 
     // DisplayModelCallback implementation (incl. PasswordUI)
