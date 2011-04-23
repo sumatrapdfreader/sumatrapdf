@@ -43,6 +43,9 @@ fz_draw_fill_path(void *user, fz_path *path, int even_odd, fz_matrix ctm,
 	fz_bbox bbox;
 	int i;
 
+	if (!path)
+		return;
+
 	fz_reset_gel(dev->gel, dev->scissor);
 	fz_flatten_fill_path(dev->gel, path, ctm, flatness);
 	fz_sort_gel(dev->gel);
