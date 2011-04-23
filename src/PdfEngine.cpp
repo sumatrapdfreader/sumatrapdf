@@ -1728,9 +1728,12 @@ protected:
 
     xps_page      * getXpsPage(int pageNo, bool failIfBusy=false);
     fz_matrix       viewctm(int pageNo, float zoom, int rotate) {
-        return viewctm(getXpsPage(pageNo), zoom, rotate);
+        return viewctm(PageMediabox(pageNo), zoom, rotate);
     }
-    fz_matrix       viewctm(xps_page *page, float zoom, int rotate);
+    fz_matrix       viewctm(xps_page *page, float zoom, int rotate) {
+        return viewctm(RectD(0, 0, page->width, page->height), zoom, rotate);
+    }
+    fz_matrix       viewctm(RectD mediabox, float zoom, int rotate);
     bool            renderPage(HDC hDC, xps_page *page, RectI screenRect,
                                fz_matrix *ctm=NULL, float zoom=0, int rotation=0,
                                RectD *pageRect=NULL);
@@ -1746,6 +1749,7 @@ protected:
     CXpsToCItem   * buildTocTree(xps_outline *entry, int& idCounter);
     void            linkifyPageText(xps_page *page, int pageNo);
 
+    RectD         * _mediaboxes;
     xps_outline   * _outline;
     xps_named_dest* _dests;
     xps_link     ** _links;
@@ -1835,7 +1839,7 @@ static xps_link *xps_new_link(char *target, fz_rect rect=fz_empty_rect)
     return link;
 }
 
-CXpsEngine::CXpsEngine() : _fileName(NULL), _ctx(NULL), _pages(NULL),
+CXpsEngine::CXpsEngine() : _fileName(NULL), _ctx(NULL), _pages(NULL), _mediaboxes(NULL),
     _outline(NULL), _dests(NULL), _links(NULL), _info(NULL), _drawcache(NULL)
 {
     InitializeCriticalSection(&_pagesAccess);
@@ -1866,6 +1870,8 @@ CXpsEngine::~CXpsEngine()
         xps_free_outline(_outline);
     if (_dests)
         xps_free_named_dest(_dests);
+    if (_mediaboxes)
+        delete[] _mediaboxes;
 
     if (_ctx) {
         xps_free_context(_ctx);
@@ -1935,6 +1941,7 @@ bool CXpsEngine::load_from_stream(fz_stream *stm)
 
     _pages = SAZA(xps_page *, PageCount());
     _links = SAZA(xps_link *, PageCount());
+    _mediaboxes = new RectD[PageCount()];
 
     _outline = xps_parse_outline(_ctx);
     _dests = xps_parse_named_dests(_ctx);
@@ -2044,14 +2051,79 @@ void CXpsEngine::dropPageRun(XpsPageRun *run, bool forceRemove)
     }
 }
 
+// <FixedPage xmlns="http://schemas.microsoft.com/xps/2005/06" Width="816" Height="1056" xml:lang="en-US">
+
+// MuPDF doesn't allow partial parsing of XML content, so try to
+// extract a page's root element manually before feeding it to the parser
+static RectI xps_extract_mediabox_quick_and_dirty(xps_context *ctx, int pageNo)
+{
+    xps_part *part = NULL;
+    for (xps_page *page = ctx->first_page; page && !part; page = page->next)
+        if (--pageNo == 0)
+            part = xps_read_part(ctx, page->name);
+    if (!part)
+        return RectI();
+
+    byte *end = NULL;
+    if (0xFF == part->data[0] && 0xFE == part->data[1]) {
+        const WCHAR *start = Str::Find((WCHAR *)part->data, L"<FixedPage");
+        if (start)
+            end = (byte *)Str::FindChar(start, '>');
+        if (end)
+            end += 2;
+    }
+    else {
+        const char *start = Str::Find((char *)part->data, "<FixedPage");
+        if (start)
+            end = (byte *)Str::FindChar(start, '>');
+        if (end)
+            // xml_parse_document ignores the length argument for UTF-8 data
+            *(++end) = '\0';
+    }
+    // we depend on the parser not validating its input (else we'd
+    // have to append a closing "</FixedPage>" to the byte data)
+    xml_element *root = end ? xml_parse_document(part->data, end - part->data) : NULL;
+    xps_free_part(ctx, part);
+    if (!root)
+        return RectI();
+
+    RectI rect;
+    if (root && Str::Eq(xml_tag(root), "FixedPage")) {
+        char *width = xml_att(root, "Width");
+        if (width)
+            rect.dx = atoi(width);
+        char *height = xml_att(root, "Height");
+        if (height)
+            rect.dy = atoi(height);
+    }
+
+    xml_free_element(root);
+    return rect;
+}
+
 RectD CXpsEngine::PageMediabox(int pageNo)
 {
     assert(1 <= pageNo && pageNo <= PageCount());
-    xps_page *page = getXpsPage(pageNo);
-    if (!page)
+    if (!_mediaboxes)
         return RectD();
 
-    return RectD(0, 0, page->width, page->height);
+    RectD mbox = _mediaboxes[pageNo-1];
+    if (!mbox.IsEmpty())
+        return mbox;
+
+    xps_page *page = getXpsPage(pageNo, true);
+    if (!page) {
+        RectI rect = xps_extract_mediabox_quick_and_dirty(_ctx, pageNo);
+        if (!rect.IsEmpty()) {
+            _mediaboxes[pageNo-1] = rect.Convert<double>();
+            return _mediaboxes[pageNo-1];
+        }
+        if (!(page = getXpsPage(pageNo)))
+            return RectD();
+    }
+
+    _mediaboxes[pageNo-1] = RectD(0, 0, page->width, page->height);
+    return _mediaboxes[pageNo-1];
 }
 
 RectI CXpsEngine::PageContentBox(int pageNo, RenderTarget target)
@@ -2070,20 +2142,19 @@ RectI CXpsEngine::PageContentBox(int pageNo, RenderTarget target)
     return bbox2.Intersect(PageMediabox(pageNo).Round());
 }
 
-fz_matrix CXpsEngine::viewctm(xps_page *page, float zoom, int rotate)
+fz_matrix CXpsEngine::viewctm(RectD mediabox, float zoom, int rotate)
 {
     fz_matrix ctm = fz_identity;
-    if (!page)
-        return ctm;
 
+    assert(0 == mediabox.x && 0 == mediabox.y);
     rotate = rotate % 360;
     if (rotate < 0) rotate = rotate + 360;
     if (90 == rotate)
-        ctm = fz_concat(ctm, fz_translate(0, (float)-page->height));
+        ctm = fz_concat(ctm, fz_translate(0, (float)-mediabox.dy));
     else if (180 == rotate)
-        ctm = fz_concat(ctm, fz_translate((float)-page->width, (float)-page->height));
+        ctm = fz_concat(ctm, fz_translate((float)-mediabox.dx, (float)-mediabox.dy));
     else if (270 == rotate)
-        ctm = fz_concat(ctm, fz_translate((float)-page->width, 0));
+        ctm = fz_concat(ctm, fz_translate((float)-mediabox.dx, 0));
     else // if (0 == rotate)
         ctm = fz_concat(ctm, fz_translate(0, 0));
 

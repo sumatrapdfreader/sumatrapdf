@@ -43,6 +43,8 @@ fz_draw_fill_path(void *user, fz_path *path, int even_odd, fz_matrix ctm,
 	fz_bbox bbox;
 	int i;
 
+	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1388 */
+	/* TODO: all code paths up to fz_fill_path already access path->len (?) */
 	if (!path)
 		return;
 
