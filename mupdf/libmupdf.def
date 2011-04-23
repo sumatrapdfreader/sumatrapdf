@@ -476,6 +476,7 @@ EXPORTS
 	xps_free_named_dest
 	xps_extract_link_info
 	xps_free_link
+	xps_extract_doc_props
 
 ; zlib exports
 

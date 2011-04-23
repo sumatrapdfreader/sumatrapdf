@@ -272,4 +272,7 @@ void xps_free_named_dest(xps_named_dest *dest);
 void xps_extract_link_info(xps_context *ctx, xml_element *node, fz_rect rect, char *base_uri);
 void xps_free_link(xps_link *link);
 
+/* SumatraPDF: extract document properties (hacky) */
+fz_obj *xps_extract_doc_props(xps_context *ctx);
+
 #endif

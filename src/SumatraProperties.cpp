@@ -16,7 +16,7 @@
 // See: http://www.verypdf.com/pdfinfoeditor/pdf-date-format.htm
 // Format:  "D:YYYYMMDDHHMMSSxxxxxxx"
 // Example: "D:20091222171933-05'00'"
-static bool PdfDateParse(TCHAR *pdfDate, SYSTEMTIME *timeOut) {
+static bool PdfDateParse(const TCHAR *pdfDate, SYSTEMTIME *timeOut) {
     ZeroMemory(timeOut, sizeof(SYSTEMTIME));
     // "D:" at the beginning is optional
     if (Str::StartsWith(pdfDate, _T("D:")))
@@ -27,22 +27,20 @@ static bool PdfDateParse(TCHAR *pdfDate, SYSTEMTIME *timeOut) {
     // don't bother about the day of week, we won't display it anyway
 }
 
-// Convert a date in PDF format, e.g. "D:20091222171933-05'00'" to a display
-// format e.g. "12/22/2009 5:19:33 PM"
-// See: http://www.verypdf.com/pdfinfoeditor/pdf-date-format.htm
-// The conversion happens in place
-static void PdfDateToDisplay(TCHAR **s) {
-    SYSTEMTIME date;
+// See: ISO 8601 specification
+// Format:  "YYYY-MM-DDTHH:MM:SSZ"
+// Example: "2011-04-19T22:10:48Z"
+static bool XpsDateParse(const TCHAR *xpsDate, SYSTEMTIME *timeOut) {
+    ZeroMemory(timeOut, sizeof(SYSTEMTIME));
+    const TCHAR *end = Str::Parse(xpsDate, _T("%4d-%2d-%2d"), &timeOut->wYear, &timeOut->wMonth, &timeOut->wDay);
+    if (end) // time is optional
+        Str::Parse(end, _T("T%2d:%2d:%2dZ"), &timeOut->wHour, &timeOut->wMinute, &timeOut->wSecond);
+    return end != NULL;
+    // don't bother about the day of week, we won't display it anyway
+}
 
-    bool ok = false;
-    if (*s) {
-        ok = PdfDateParse(*s, &date);
-        free(*s);
-    }
-    *s = NULL;
-    if (!ok)
-        return;
-
+static TCHAR *FormatSystemTime(SYSTEMTIME& date)
+{
     TCHAR buf[512];
     int cchBufLen = dimof(buf);
     int ret = GetDateFormat(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &date, NULL, buf, cchBufLen);
@@ -56,7 +54,23 @@ static void PdfDateToDisplay(TCHAR **s) {
     if (0 == ret) // GetTimeFormat() failed
         *tmp = '\0';
 
-    *s = Str::Dup(buf);
+    return Str::Dup(buf);
+}
+
+// Convert a date in PDF or XPS format, e.g. "D:20091222171933-05'00'" to a display
+// format e.g. "12/22/2009 5:19:33 PM"
+// See: http://www.verypdf.com/pdfinfoeditor/pdf-date-format.htm
+// The conversion happens in place
+static void ConvDateToDisplay(TCHAR **s, bool (* DateParse)(const TCHAR *date, SYSTEMTIME *timeOut))
+{
+    if (!s || !*s || !DateParse)
+        return;
+
+    SYSTEMTIME date;
+    bool ok = DateParse(*s, &date);
+    free(*s);
+
+    *s = ok ? FormatSystemTime(date) : NULL;
 }
 
 // Format the file size in a short form that rounds to the largest size unit
@@ -283,12 +297,16 @@ void OnMenuProperties(WindowInfo& win)
 
     str = engine->GetProperty("CreationDate");
     if (win.dm->pdfEngine)
-        PdfDateToDisplay(&str);
+        ConvDateToDisplay(&str, PdfDateParse);
+    else if (win.dm->xpsEngine)
+        ConvDateToDisplay(&str, XpsDateParse);
     layoutData->AddProperty(_TR("Created:"), str);
 
     str = engine->GetProperty("ModDate");
     if (win.dm->pdfEngine)
-        PdfDateToDisplay(&str);
+        ConvDateToDisplay(&str, PdfDateParse);
+    else if (win.dm->xpsEngine)
+        ConvDateToDisplay(&str, XpsDateParse);
     layoutData->AddProperty(_TR("Modified:"), str);
 
     str = engine->GetProperty("Creator");

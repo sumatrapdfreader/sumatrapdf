@@ -535,8 +535,6 @@ public:
 
     virtual bool BenchLoadPage(int pageNo) { return getPdfPage(pageNo) != NULL; }
 
-    // TODO: move any of the following into BaseEngine?
-
     virtual Vec<PageElement *> *GetElements(int pageNo);
     virtual PageElement *GetElementAtPos(int pageNo, PointD pt);
 
@@ -1693,7 +1691,7 @@ public:
     virtual TCHAR * ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_out=NULL,
                                     RenderTarget target=Target_View);
     virtual bool IsImagePage(int pageNo) { return false; }
-    virtual TCHAR *GetProperty(char *name) { return NULL; }
+    virtual TCHAR *GetProperty(char *name);
 
     virtual float GetFileDPI() const { return 96.0f; }
     virtual const TCHAR *GetDefaultFileExt() const { return _T(".xps"); }
@@ -1751,6 +1749,7 @@ protected:
     xps_outline   * _outline;
     xps_named_dest* _dests;
     xps_link     ** _links;
+    fz_obj        * _info;
     fz_glyph_cache* _drawcache;
 };
 
@@ -1837,7 +1836,7 @@ static xps_link *xps_new_link(char *target, fz_rect rect=fz_empty_rect)
 }
 
 CXpsEngine::CXpsEngine() : _fileName(NULL), _ctx(NULL), _pages(NULL),
-    _outline(NULL), _dests(NULL), _links(NULL), _drawcache(NULL)
+    _outline(NULL), _dests(NULL), _links(NULL), _info(NULL), _drawcache(NULL)
 {
     InitializeCriticalSection(&_pagesAccess);
     InitializeCriticalSection(&_ctxAccess);
@@ -1872,6 +1871,8 @@ CXpsEngine::~CXpsEngine()
         xps_free_context(_ctx);
         _ctx = NULL;
     }
+    if (_info)
+        fz_drop_obj(_info);
 
     if (_drawcache)
         fz_free_glyph_cache(_drawcache);
@@ -1937,9 +1938,7 @@ bool CXpsEngine::load_from_stream(fz_stream *stm)
 
     _outline = xps_parse_outline(_ctx);
     _dests = xps_parse_named_dests(_ctx);
-
-    // TODO: extract document properties from the "/docProps/core.xml" part
-    //       (or wherever /_rels/.rels points)
+    _info = xps_extract_doc_props(_ctx);
 
     return true;
 }
@@ -2245,6 +2244,19 @@ unsigned char *CXpsEngine::GetFileData(size_t *cbCount)
     ScopedCritSec scope(&_ctxAccess);
     return fz_extract_stream_data(_ctx->file, cbCount);
 }
+
+TCHAR *CXpsEngine::GetProperty(char *name)
+{
+    fz_obj *obj = fz_dict_gets(_info, name);
+    if (!obj)
+        return NULL;
+
+    char *utf8 = fz_to_str_buf(obj);
+    if (Str::IsEmpty(utf8))
+        return NULL;
+
+    return Str::Conv::FromUtf8(utf8);
+};
 
 PageElement *CXpsEngine::GetElementAtPos(int pageNo, PointD pt)
 {
