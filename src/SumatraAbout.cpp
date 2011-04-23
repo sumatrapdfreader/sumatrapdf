@@ -605,8 +605,12 @@ void DrawStartPage(WindowInfo& win2, HDC hdc, FileHistory& fileHistory)
             }
             RoundRect(hdc, page.x, page.y, page.x + page.dx, page.y + page.dy, 10, 10);
 
-            RectI rect(page.x, page.y + THUMBNAIL_DY + 3, THUMBNAIL_DX, 20);
-            DrawText(hdc, Path::GetBaseName(state->filePath), -1, &rect.ToRECT(), DT_LEFT | DT_END_ELLIPSIS);
+            RectI rect(page.x + 20, page.y + THUMBNAIL_DY + 3, THUMBNAIL_DX - 20, 20);
+            DrawText(hdc, Path::GetBaseName(state->filePath), -1, &rect.ToRECT(), DT_SINGLELINE | DT_END_ELLIPSIS);
+
+            SHFILEINFO sfi;
+            HIMAGELIST himl = (HIMAGELIST)SHGetFileInfo(state->filePath, 0, &sfi, sizeof(sfi), SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES);
+            ImageList_Draw(himl, sfi.iIcon, hdc, page.x, rect.y, ILD_TRANSPARENT);
 
             win->staticLinks.Append(StaticLinkInfo(rect.Union(page), state->filePath, state->filePath));
         }

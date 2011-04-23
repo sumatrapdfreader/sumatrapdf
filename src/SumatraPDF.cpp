@@ -6768,6 +6768,12 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         goto Exit;
     }
 
+    if (i.fileNames.Count() == 0 && gGlobalPrefs.m_rememberOpenedFiles && gGlobalPrefs.m_showStartPage) {
+        // make the shell prepare the image list, so that it's ready when the first window's loaded
+        SHFILEINFO sfi;
+        SHGetFileInfo(_T(".pdf"), 0, &sfi, sizeof(sfi), SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES);
+    }
+
     for (size_t n = 0; n < i.fileNames.Count(); n++) {
         if (i.reuseInstance && !i.printDialog) {
             // delegate file opening to a previously running instance by sending a DDE message 
