@@ -178,7 +178,7 @@ static bool LoadDbgHelpFuncs()
     Load(SymGetLineFromAddr64);
 #undef Load
 
-    return _MiniDumpWrite != NULL;
+    return _StackWalk64 != NULL;
 }
 
 static bool GetEnvOk(DWORD ret, DWORD cchBufSize)
@@ -849,7 +849,7 @@ static char *BuildCrashInfoText()
 
 static void SendCrashInfo(char *s)
 {
-    if (!s)
+    if (Str::IsEmpty(s))
         return;
 
     char *boundary = "0xKhTmLbOuNdArY";
@@ -1024,6 +1024,9 @@ Exit:
 
 static void WriteMiniDump()
 {
+    if (NULL == _MiniDumpWrite)
+        return;
+
     HANDLE dumpFile = CreateFile(gCrashDumpPath.Get(), GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH, NULL);
     if (INVALID_HANDLE_VALUE == dumpFile)
         return;
