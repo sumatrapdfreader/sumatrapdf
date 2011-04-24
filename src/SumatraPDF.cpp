@@ -3808,27 +3808,28 @@ static void BrowseFolder(WindowInfo& win, bool forward)
 
 static void OnVScroll(WindowInfo& win, WPARAM wParam)
 {
-    SCROLLINFO   si = {0};
-    int          iVertPos;
-    int          lineHeight = 16;
+    if (!win.IsDocLoaded())
+        return;
+    assert(win.dm);
 
+    SCROLLINFO si = { 0 };
     si.cbSize = sizeof (si);
     si.fMask  = SIF_ALL;
     GetScrollInfo(win.hwndCanvas, SB_VERT, &si);
 
-    iVertPos = si.nPos;
+    int iVertPos = si.nPos;
+    int lineHeight = 16;
     if (!displayModeContinuous(win.dm->displayMode()) && ZOOM_FIT_PAGE == win.dm->zoomVirtual())
         lineHeight = 1;
 
-    switch (LOWORD(wParam))
-    {
-        case SB_TOP:        si.nPos = si.nMin; break;
-        case SB_BOTTOM:     si.nPos = si.nMax; break;
-        case SB_LINEUP:     si.nPos -= lineHeight; break;
-        case SB_LINEDOWN:   si.nPos += lineHeight; break;
-        case SB_PAGEUP:     si.nPos -= si.nPage; break;
-        case SB_PAGEDOWN:   si.nPos += si.nPage; break;
-        case SB_THUMBTRACK: si.nPos = si.nTrackPos; break;
+    switch (LOWORD(wParam)) {
+    case SB_TOP:        si.nPos = si.nMin; break;
+    case SB_BOTTOM:     si.nPos = si.nMax; break;
+    case SB_LINEUP:     si.nPos -= lineHeight; break;
+    case SB_LINEDOWN:   si.nPos += lineHeight; break;
+    case SB_PAGEUP:     si.nPos -= si.nPage; break;
+    case SB_PAGEDOWN:   si.nPos += si.nPage; break;
+    case SB_THUMBTRACK: si.nPos = si.nTrackPos; break;
     }
 
     // Set the position and then retrieve it.  Due to adjustments
@@ -3838,24 +3839,23 @@ static void OnVScroll(WindowInfo& win, WPARAM wParam)
     GetScrollInfo(win.hwndCanvas, SB_VERT, &si);
 
     // If the position has changed, scroll the window and update it
-    if (win.IsDocLoaded() && (si.nPos != iVertPos)) {
+    if (win.IsDocLoaded() && (si.nPos != iVertPos))
         win.dm->scrollYTo(si.nPos);
-    }
 }
 
 static void OnHScroll(WindowInfo& win, WPARAM wParam)
 {
-    SCROLLINFO   si = {0};
-    int          iVertPos;
+    if (!win.IsDocLoaded())
+        return;
+    assert(win.dm);
 
+    SCROLLINFO si = { 0 };
     si.cbSize = sizeof (si);
     si.fMask  = SIF_ALL;
     GetScrollInfo(win.hwndCanvas, SB_HORZ, &si);
 
-    iVertPos = si.nPos;
-
-    switch (LOWORD(wParam))
-    {
+    int iVertPos = si.nPos;
+    switch (LOWORD(wParam)) {
     case SB_LEFT:       si.nPos = si.nMin; break;
     case SB_RIGHT:      si.nPos = si.nMax; break;
     case SB_LINELEFT:   si.nPos -= 16; break;
@@ -5893,8 +5893,7 @@ static LRESULT OnMouseWheel(WindowInfo& win, UINT message, WPARAM wParam, LPARAM
 static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     // messages that don't require win
-    switch (message)
-    {
+    switch (message) {
         case WM_DROPFILES:
             OnDropFiles((HDROP)wParam);
             break;
@@ -5909,8 +5908,7 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
         return DefWindowProc(hwnd, message, wParam, lParam);
 
     // messages that require win
-    switch (message)
-    {
+    switch (message) {
         case WM_VSCROLL:
             OnVScroll(*win, wParam);
             return WM_VSCROLL_HANDLED;
@@ -5936,8 +5934,7 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
             break;
 
         case WM_MBUTTONDOWN:
-            if (win->IsDocLoaded())
-            {
+            if (win->IsDocLoaded()) {
                 SetTimer(hwnd, SMOOTHSCROLL_TIMER_ID, SMOOTHSCROLL_DELAY_IN_MS, NULL);
                 // TODO: Create window that shows location of initial click for reference
                 OnMouseMiddleButtonDown(*win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);

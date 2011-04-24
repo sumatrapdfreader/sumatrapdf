@@ -284,9 +284,10 @@ static void StrVecTest()
     {
         StrVec v2(v);
         assert(Str::Eq(v2[1], _T("foo")));
-        TCHAR *bar = v2[0];
+        v2.Append(Str::Dup(_T("nobar")));
+        assert(Str::Eq(v2[3], _T("nobar")));
         v2 = v;
-        assert(v2[0] != bar && v2[0] != v[0]);
+        assert(v2.Count() == 3 && v2[0] != v[0]);
         assert(Str::Eq(v2[1], _T("foo")));
     }
 
