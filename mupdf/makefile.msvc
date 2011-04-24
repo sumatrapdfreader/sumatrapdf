@@ -32,6 +32,7 @@ OJB = $(O)\jbig2
 OFZ = $(O)\fitz
 OP  = $(O)\mupdf
 OX  = $(O)\muxps
+OS  = $(O)\sumatra
 
 # To over-ride location of fitz/mupdf sources, define MUPDF_DIR
 # e.g.:
@@ -381,6 +382,7 @@ $(O): force
 	@if not exist $(OFZ) mkdir $(OFZ)
 	@if not exist $(OP) mkdir $(OP)
 	@if not exist $(OX) mkdir $(OX)
+	@if not exist $(OS) mkdir $(OS)
 
 $(PDFAPP_RES): $(MUPDF_DIR)\apps\win_res.rc
 	rc /r /fo$@ $(MUPDF_DIR)\apps\win_res.rc
