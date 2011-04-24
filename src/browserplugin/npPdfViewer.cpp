@@ -212,7 +212,7 @@ bool GetExePath(LPWSTR lpPath, int len)
 	if (!File::Exists(args[0]))
 		return false;
 
-	ScopedMem<WCHAR> pathw(Str::Conv::ToWStr(path));
+	ScopedMem<WCHAR> pathw(Str::Conv::ToWStr(args[0]));
 	Str::BufSet(lpPath, len, pathw);
 	return true;
 }

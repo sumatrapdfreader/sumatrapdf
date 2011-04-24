@@ -2,8 +2,8 @@
 #include <winver.h>
 
 1 VERSIONINFO
-FILEVERSION 0,3,13,0
-PRODUCTVERSION 0,3,13,0
+FILEVERSION 0,3,14,0
+PRODUCTVERSION 0,3,14,0
 FILETYPE VFT_DLL
 {
 	BLOCK "StringFileInfo"
@@ -11,7 +11,7 @@ FILETYPE VFT_DLL
 		BLOCK "040904E4"
 		{
 			VALUE "FileDescription", "SumatraPDF Browser Plugin"
-			VALUE "FileVersion", "0.3.13"
+			VALUE "FileVersion", "0.3.14"
 			VALUE "LegalCopyright", "© 2010-2011 ~ Simon Bünzli"
 
 			VALUE "ProductName", "SumatraPDF Browser Plugin"
