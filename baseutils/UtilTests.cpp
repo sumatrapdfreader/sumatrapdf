@@ -595,9 +595,11 @@ static void BencTestParseString()
         }
     }
 
+#if 0
     BencRawString raw("a\x82");
     BencTestSerialization(&raw, "2:a\x82");
     assert(Str::Eq(raw.RawValue(), "a\x82"));
+#endif
 }
 
 static void BencTestParseArray(const char *benc, size_t expectedLen)

@@ -51,14 +51,12 @@ static const char *ParseBencInt(const char *bytes, int64_t& value)
 BencString::BencString(const TCHAR *value) : BencObj(BT_STRING)
 {
     assert(value);
-    if (!value) value = _T("<null>");
     this->value = Str::Conv::ToUtf8(value);
 }
 
 BencString::BencString(const char *rawValue, size_t len) : BencObj(BT_STRING)
 {
     assert(rawValue);
-    if (!rawValue) rawValue = "<null>";
     value = Str::DupN(rawValue, len);
 }
 

@@ -42,25 +42,21 @@ static BencDict* SerializeGlobalPrefs(SerializableGlobalPrefs& globalPrefs)
     prefs->Add(SHOW_RECENT_FILES_STR, globalPrefs.m_showStartPage);
 
     const TCHAR *mode = DisplayModeConv::NameFromEnum(globalPrefs.m_defaultDisplayMode);
-    prefs->Add(DISPLAY_MODE_STR, mode);
+    prefs->AddStr(DISPLAY_MODE_STR, mode);
 
     ScopedMem<char> zoom(Str::Format("%.4f", globalPrefs.m_defaultZoom));
-    if (zoom)
-        prefs->Add(ZOOM_VIRTUAL_STR, new BencRawString(zoom));
+    prefs->AddRawStr(ZOOM_VIRTUAL_STR, zoom);
     prefs->Add(WINDOW_STATE_STR, globalPrefs.m_windowState);
     prefs->Add(WINDOW_X_STR, globalPrefs.m_windowPos.x);
     prefs->Add(WINDOW_Y_STR, globalPrefs.m_windowPos.y);
     prefs->Add(WINDOW_DX_STR, globalPrefs.m_windowPos.dx);
     prefs->Add(WINDOW_DY_STR, globalPrefs.m_windowPos.dy);
 
-    if (globalPrefs.m_inverseSearchCmdLine)
-        prefs->Add(INVERSE_SEARCH_COMMANDLINE, globalPrefs.m_inverseSearchCmdLine);
+    prefs->AddStr(INVERSE_SEARCH_COMMANDLINE, globalPrefs.m_inverseSearchCmdLine);
     prefs->Add(ENABLE_TEX_ENHANCEMENTS_STR, globalPrefs.m_enableTeXEnhancements);
-    if (globalPrefs.m_versionToSkip)
-        prefs->Add(VERSION_TO_SKIP_STR, globalPrefs.m_versionToSkip);
-    if (globalPrefs.m_lastUpdateTime)
-        prefs->Add(LAST_UPDATE_STR, new BencRawString(globalPrefs.m_lastUpdateTime));
-    prefs->Add(UI_LANGUAGE_STR, new BencRawString(globalPrefs.m_currentLanguage));
+    prefs->AddStr(VERSION_TO_SKIP_STR, globalPrefs.m_versionToSkip);
+    prefs->AddRawStr(LAST_UPDATE_STR, globalPrefs.m_lastUpdateTime);
+    prefs->AddRawStr(UI_LANGUAGE_STR, globalPrefs.m_currentLanguage);
 
     if (!globalPrefs.m_openCountWeek)
         globalPrefs.m_openCountWeek = GetWeekCount();
@@ -80,9 +76,8 @@ static BencDict *DisplayState_Serialize(DisplayState *ds, bool globalPrefsOnly)
     if (!prefs)
         return NULL;
 
-    prefs->Add(FILE_STR, ds->filePath);
-    if (ds->decryptionKey)
-        prefs->Add(DECRYPTION_KEY_STR, new BencRawString(ds->decryptionKey));
+    prefs->AddStr(FILE_STR, ds->filePath);
+    prefs->AddRawStr(DECRYPTION_KEY_STR, ds->decryptionKey);
 
     prefs->Add(OPEN_COUNT_STR, ds->openCount);
     if (globalPrefsOnly || ds->useGlobalValues) {
@@ -91,7 +86,7 @@ static BencDict *DisplayState_Serialize(DisplayState *ds, bool globalPrefsOnly)
     }
 
     const TCHAR *mode = DisplayModeConv::NameFromEnum(ds->displayMode);
-    prefs->Add(DISPLAY_MODE_STR, mode);
+    prefs->AddStr(DISPLAY_MODE_STR, mode);
     prefs->Add(PAGE_NO_STR, ds->pageNo);
     prefs->Add(ROTATION_STR, ds->rotation);
     prefs->Add(SCROLL_X_STR, ds->scrollPos.x);
@@ -106,8 +101,7 @@ static BencDict *DisplayState_Serialize(DisplayState *ds, bool globalPrefsOnly)
     prefs->Add(TOC_DX_STR, ds->tocDx);
 
     ScopedMem<char> zoom(Str::Format("%.4f", ds->zoomVirtual));
-    if (zoom)
-        prefs->Add(ZOOM_VIRTUAL_STR, new BencRawString(zoom));
+    prefs->AddRawStr(ZOOM_VIRTUAL_STR, zoom);
 
     if (ds->tocState && ds->tocState[0] > 0) {
         BencArray *tocState = new BencArray();

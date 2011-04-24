@@ -32,14 +32,19 @@ public:
     static BencObj *Decode(const char *bytes, size_t *lenOut=NULL);
 };
 
+class BencDict;
+class BencArray;
+
 class BencString : public BencObj {
+    friend BencDict;
+    friend BencArray;
     char *value;
 
 protected:
     BencString(const char *rawValue, size_t len);
+    BencString(const TCHAR *value);
 
 public:
-    BencString(const TCHAR *value);
     virtual ~BencString() { free(value); }
 
     TCHAR *Value() const;
@@ -50,7 +55,9 @@ public:
 };
 
 class BencRawString : public BencString {
-public:
+    friend BencDict;
+    friend BencString;
+protected:
     BencRawString(const char *value, size_t len=-1);
 };
 
@@ -64,8 +71,6 @@ public:
     virtual char *Encode() const;
     static BencInt *Decode(const char *bytes, size_t *lenOut);
 };
-
-class BencDict;
 
 class BencArray : public BencObj {
     Vec<BencObj *> value;
@@ -123,9 +128,17 @@ public:
     size_t Length() const { return values.Count(); }
 
     void Add(const char *key, BencObj *obj);
-    void Add(const char *key, const TCHAR *string) {
-        Add(key, new BencString(string));
+
+    void AddStr(const char *key, const TCHAR *string) {
+        if (key && string)
+            Add(key, new BencString(string));
     }
+
+    void AddRawStr(const char *key, const char *string) {
+        if (key && string)
+            Add(key, new BencRawString(string));
+    }
+
     void Add(const char *key, int64_t val) {
         Add(key, new BencInt(val));
     }
