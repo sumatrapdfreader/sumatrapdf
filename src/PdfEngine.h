@@ -38,4 +38,6 @@ public:
     static XpsEngine *CreateFromStream(IStream *stream);
 };
 
+void CalcMD5Digest(void *data, size_t byteCount, unsigned char digest[16]);
+
 #endif

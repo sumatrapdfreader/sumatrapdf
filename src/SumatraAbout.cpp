@@ -651,13 +651,20 @@ void DrawStartPage(WindowInfo& win2, HDC hdc, FileHistory& fileHistory)
     DeleteObject(penLinkLine);
 }
 
-static char *PathFingerprint(const TCHAR *filePath);
-
 // TODO: create in TEMP directory instead?
 static TCHAR *GetThumbnailPath(const TCHAR *filePath)
 {
+    // create a fingerprint of a (normalized) path for the file name
+    // I'd have liked to also include the file's last modification time
+    // in the fingerprint (much quicker than hashing the entire file's
+    // content), but that's too expensive for files on slow drives
+    unsigned char digest[16];
+    ScopedMem<TCHAR> pathN(Path::Normalize(filePath));
+    ScopedMem<char> pathU(Str::Conv::ToUtf8(pathN));
+    CalcMD5Digest((unsigned char *)pathU.Get(), Str::Len(pathU), digest);
+    ScopedMem<char> fingerPrint(Str::MemToHex(digest, 16));
+
     ScopedMem<TCHAR> thumbsPath(AppGenDataFilename(THUMBNAILS_DIR_NAME));
-    ScopedMem<char> fingerPrint(PathFingerprint(filePath));
     ScopedMem<TCHAR> fname(Str::Conv::FromAnsi(fingerPrint));
 
     return Str::Format(_T("%s\\%s.bmp"), thumbsPath, fname);
@@ -682,7 +689,7 @@ static void CleanUpCache(FileHistory& fileHistory)
     FindClose(hfind);
 
     Vec<DisplayState *> *list = fileHistory.GetFrequencyOrder();
-    for (size_t i = 0; i < list->Count() && i < FILE_HISTORY_MAX_FREQUENT; i++) {
+    for (size_t i = 0; i < list->Count() && i < FILE_HISTORY_MAX_FREQUENT * 2; i++) {
         ScopedMem<TCHAR> bmpPath(GetThumbnailPath(list->At(i)->filePath));
         int idx = files.Find(Path::GetBaseName(bmpPath));
         if (idx != -1) {
@@ -750,31 +757,6 @@ void SaveThumbnail(DisplayState& state)
             File::WriteAll(bmpPath, data, dataLen);
         free(data);
     }
-}
-
-extern "C" {
-__pragma(warning(push))
-#include <fitz.h>
-__pragma(warning(pop))
-}
-
-// creates a fingerprint of a (normalized) path
-// I'd have liked to also include the file's last modification time
-// in the fingerprint (much quicker than hashing the entire file's
-// content), but that's too expensive for files on slow drives
-// caller needs to free() the result
-static char *PathFingerprint(const TCHAR *filePath)
-{
-    unsigned char digest[16];
-    ScopedMem<TCHAR> pathN(Path::Normalize(filePath));
-    ScopedMem<char> pathU(Str::Conv::ToUtf8(pathN));
-
-    fz_md5 md5;
-    fz_md5_init(&md5);
-    fz_md5_update(&md5, (unsigned char *)pathU.Get(), Str::Len(pathU));
-    fz_md5_final(&md5, digest);
-
-    return Str::MemToHex(digest, 16);
 }
 
 #endif

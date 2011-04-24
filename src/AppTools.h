@@ -59,7 +59,6 @@ int FileTimeDiffInSecs(FILETIME& ft1, FILETIME& ft2);
 
 TCHAR *GetExePath();
 bool IsRunningInPortableMode();
-TCHAR *AppGenDataDir();
 TCHAR *AppGenDataFilename(TCHAR *pFilename);
 void AdjustRemovableDriveLetter(TCHAR *path);
 

@@ -19,6 +19,14 @@ __pragma(warning(pop))
 // number of page content trees to cache for quicker rendering
 #define MAX_PAGE_RUN_CACHE  8
 
+void CalcMD5Digest(void *data, size_t byteCount, unsigned char digest[16])
+{
+    fz_md5 md5;
+    fz_md5_init(&md5);
+    fz_md5_update(&md5, (unsigned char *)data, byteCount);
+    fz_md5_final(&md5, digest);
+}
+
 inline fz_rect fz_bbox_to_rect(fz_bbox bbox)
 {
     fz_rect result = { (float)bbox.x0, (float)bbox.y0, (float)bbox.x1, (float)bbox.y1 };
@@ -189,7 +197,7 @@ unsigned char *fz_extract_stream_data(fz_stream *stream, size_t *cbCount)
     return data;
 }
 
-void fz_stream_fingerprint(fz_stream *file, unsigned char *digest)
+void fz_stream_fingerprint(fz_stream *file, unsigned char digest[16])
 {
     fz_seek(file, 0, 2);
     int fileLen = fz_tell(file);
@@ -199,10 +207,7 @@ void fz_stream_fingerprint(fz_stream *file, unsigned char *digest)
     fz_read_all(&buffer, file, fileLen);
     assert(fileLen == buffer->len);
 
-    fz_md5 md5;
-    fz_md5_init(&md5);
-    fz_md5_update(&md5, buffer->data, buffer->len);
-    fz_md5_final(&md5, digest);
+    CalcMD5Digest(buffer->data, buffer->len, digest);
 
     fz_drop_buffer(buffer);
 }

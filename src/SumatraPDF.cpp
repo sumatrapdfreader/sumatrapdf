@@ -197,6 +197,12 @@ SerializableGlobalPrefs             gGlobalPrefs = {
     { 0, 0 }, // FILETIME m_lastPrefUpdate
 };
 
+enum MenuToolbarFlags {
+    MF_NOT_IN_RESTRICTED = 1 << 0,
+    MF_NO_TRANSLATE      = 1 << 1,
+    MF_PLUGIN_MODE_ONLY  = 1 << 2,
+};
+
 struct ToolbarButtonInfo {
     /* index in the toolbar bitmap (-1 for separators) */
     int           bmpIndex;
@@ -205,25 +211,21 @@ struct ToolbarButtonInfo {
     int           flags;
 };
 
-enum ToolbarButtonFlag {
-    TBF_RESTRICTED = 0x1 
-};
-
 static ToolbarButtonInfo gToolbarButtons[] = {
-    { 0,   IDM_OPEN,              _TRN("Open"),           TBF_RESTRICTED },
-    { -1,  IDM_GOTO_PAGE,         NULL,                   0,             },
-    { 1,   IDM_GOTO_PREV_PAGE,    _TRN("Previous Page"),  0,             },
-    { 2,   IDM_GOTO_NEXT_PAGE,    _TRN("Next Page"),      0,             },
-    { -1,  NULL,                  NULL,                   0,             },
-    { 3,   IDT_VIEW_FIT_WIDTH,    _TRN("Fit Width and Show Pages Continuously"), 0, },
-    { 4,   IDT_VIEW_FIT_PAGE,     _TRN("Fit a Single Page"),    0,       },
-    { 5,   IDT_VIEW_ZOOMOUT,      _TRN("Zoom Out"),       0,             },
-    { 6,   IDT_VIEW_ZOOMIN,       _TRN("Zoom In"),        0,             },
-    { -1,  IDM_FIND_FIRST,        NULL,                   0,             },
-    { 7,   IDM_FIND_PREV,         _TRN("Find Previous"),  0,             },
-    { 8,   IDM_FIND_NEXT,         _TRN("Find Next"),      0,             },
+    { 0,   IDM_OPEN,              _TRN("Open"),           MF_NOT_IN_RESTRICTED },
+    { -1,  IDM_GOTO_PAGE,         NULL,                   0 },
+    { 1,   IDM_GOTO_PREV_PAGE,    _TRN("Previous Page"),  0 },
+    { 2,   IDM_GOTO_NEXT_PAGE,    _TRN("Next Page"),      0 },
+    { -1,  NULL,                  NULL,                   0 },
+    { 3,   IDT_VIEW_FIT_WIDTH,    _TRN("Fit Width and Show Pages Continuously"), 0 },
+    { 4,   IDT_VIEW_FIT_PAGE,     _TRN("Fit a Single Page"), 0 },
+    { 5,   IDT_VIEW_ZOOMOUT,      _TRN("Zoom Out"),       0 },
+    { 6,   IDT_VIEW_ZOOMIN,       _TRN("Zoom In"),        0 },
+    { -1,  IDM_FIND_FIRST,        NULL,                   0 },
+    { 7,   IDM_FIND_PREV,         _TRN("Find Previous"),  0 },
+    { 8,   IDM_FIND_NEXT,         _TRN("Find Next"),      0 },
     // TODO: is this button really used often enough?
-    { 9,   IDM_FIND_MATCH,        _TRN("Match Case"),     0,             },
+    { 9,   IDM_FIND_MATCH,        _TRN("Match Case"),     0 },
 };
 
 #define TOOLBAR_BUTTONS_COUNT dimof(gToolbarButtons)
@@ -256,15 +258,6 @@ static bool CurrLangNameSet(const char *langName)
     bool ok = Trans::SetCurrentLanguage(langCode);
     assert(ok);
     return ok;
-}
-
-/* Get current UTS cystem time as string.
-   Caller needs to free() the result. */
-char *GetSystemTimeAsStr()
-{
-    FILETIME ft;
-    GetSystemTimeAsFileTime(&ft);
-    return _MemToHex(&ft);
 }
 
 #ifndef SUMATRA_UPDATE_INFO_URL
@@ -489,12 +482,6 @@ void WindowInfo::SwitchToDisplayMode(DisplayMode displayMode, bool keepContinuou
 }
 
 #define SEP_ITEM "-----"
-
-enum menuFlags {
-    MF_NOT_IN_RESTRICTED = 1 << 0,
-    MF_NO_TRANSLATE      = 1 << 1,
-    MF_PLUGIN_MODE_ONLY  = 1 << 2,
-};
 
 struct MenuDef {
     const char *title;
@@ -1174,12 +1161,12 @@ static LPARAM ToolbarButtonEnabledState(WindowInfo& win, int buttonNo)
     int cmdId = gToolbarButtons[buttonNo].cmdId;
 
     // If restricted, disable
-    if (gRestrictedUse && gToolbarButtons[buttonNo].flags & TBF_RESTRICTED)
+    if (gRestrictedUse && (gToolbarButtons[buttonNo].flags & MF_NOT_IN_RESTRICTED))
         return disabled;
 
     // If no file open, only enable open button
     if (!win.IsDocLoaded())
-        return IDM_OPEN == cmdId;
+        return IDM_OPEN == cmdId ? enabled : disabled;
 
     switch (cmdId)
     {
@@ -1212,13 +1199,12 @@ static LPARAM ToolbarButtonEnabledState(WindowInfo& win, int buttonNo)
 static void ToolbarUpdateStateForWindow(WindowInfo& win) {
 
     for (int i = 0; i < TOOLBAR_BUTTONS_COUNT; i++) {
-        if (IsVisibleToolbarButton(win, i))
-            SendMessage(win.hwndToolbar, TB_HIDEBUTTON, gToolbarButtons[i].cmdId, FALSE);
-        else
-            SendMessage(win.hwndToolbar, TB_HIDEBUTTON, gToolbarButtons[i].cmdId, TRUE);
+        BOOL hide = !IsVisibleToolbarButton(win, i);
+        SendMessage(win.hwndToolbar, TB_HIDEBUTTON, gToolbarButtons[i].cmdId, hide);
 
         if (TbIsSeparator(gToolbarButtons[i]))
             continue;
+
         LPARAM buttonState = ToolbarButtonEnabledState(win, i);
         SendMessage(win.hwndToolbar, TB_ENABLEBUTTON, gToolbarButtons[i].cmdId, buttonState);
     }
@@ -1940,9 +1926,8 @@ static void DownloadSumatraUpdateInfo(WindowInfo& win, bool autoCheck)
 
     /* For auto-check, only check if at least a day passed since last check */
     if (autoCheck && gGlobalPrefs.m_lastUpdateTime) {
-        FILETIME lastUpdateTimeFt;
+        FILETIME lastUpdateTimeFt, currentTimeFt;
         _HexToMem(gGlobalPrefs.m_lastUpdateTime, &lastUpdateTimeFt);
-        FILETIME currentTimeFt;
         GetSystemTimeAsFileTime(&currentTimeFt);
         int secs = FileTimeDiffInSecs(currentTimeFt, lastUpdateTimeFt);
         assert(secs >= 0);
@@ -1954,8 +1939,10 @@ static void DownloadSumatraUpdateInfo(WindowInfo& win, bool autoCheck)
     const TCHAR *url = SUMATRA_UPDATE_INFO_URL _T("?v=") UPDATE_CHECK_VER;
     new HttpReqCtx(url, new UpdateDownloadWorkItem(&win, autoCheck));
 
+    FILETIME ft;
+    GetSystemTimeAsFileTime(&ft);
     free(gGlobalPrefs.m_lastUpdateTime);
-    gGlobalPrefs.m_lastUpdateTime = GetSystemTimeAsStr();
+    gGlobalPrefs.m_lastUpdateTime = _MemToHex(&ft);
 }
 
 static void PaintTransparentRectangle(HDC hdc, RectI screenRc, RectI *rect, COLORREF selectionColor, BYTE alpha = 0x5f, int margin = 1) {

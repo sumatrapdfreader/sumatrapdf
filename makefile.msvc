@@ -267,12 +267,11 @@ $(O)\SimpleLog.obj: baseutils\Vec.h
 $(O)\StrUtil.obj: baseutils\BaseUtil.h baseutils\StrUtil.h
 $(O)\SumatraAbout.obj: baseutils\BaseUtil.h baseutils\FileUtil.h baseutils\GeomUtil.h
 $(O)\SumatraAbout.obj: baseutils\StrUtil.h baseutils\Vec.h baseutils\WinUtil.h
-$(O)\SumatraAbout.obj: mupdf\fitz\fitz.h src\AppPrefs.h src\AppTools.h
-$(O)\SumatraAbout.obj: src\BaseEngine.h src\DisplayModel.h src\DisplayState.h
-$(O)\SumatraAbout.obj: src\FileHistory.h src\ImagesEngine.h src\PdfEngine.h
-$(O)\SumatraAbout.obj: src\SumatraAbout.h src\SumatraPDF.h src\TextSearch.h
-$(O)\SumatraAbout.obj: src\TextSelection.h src\translations.h src\Version.h
-$(O)\SumatraAbout.obj: src\WindowInfo.h
+$(O)\SumatraAbout.obj: src\AppPrefs.h src\AppTools.h src\BaseEngine.h
+$(O)\SumatraAbout.obj: src\DisplayModel.h src\DisplayState.h src\FileHistory.h
+$(O)\SumatraAbout.obj: src\ImagesEngine.h src\PdfEngine.h src\SumatraAbout.h
+$(O)\SumatraAbout.obj: src\SumatraPDF.h src\TextSearch.h src\TextSelection.h
+$(O)\SumatraAbout.obj: src\translations.h src\Version.h src\WindowInfo.h
 $(O)\SumatraDialogs.obj: baseutils\BaseUtil.h baseutils\DialogSizer.h baseutils\GeomUtil.h
 $(O)\SumatraDialogs.obj: baseutils\StrUtil.h baseutils\Vec.h baseutils\WinUtil.h
 $(O)\SumatraDialogs.obj: src\AppPrefs.h src\AppTools.h src\BaseEngine.h
