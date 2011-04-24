@@ -487,6 +487,18 @@ static void BencTestSerialization(BencObj *obj, const char *dataOrig)
     assert(Str::Eq(data, dataOrig));
 }
 
+static void BencTestRoundtrip(BencObj *obj)
+{
+    ScopedMem<char> encoded(obj->Encode());
+    assert(encoded);
+    size_t len;
+    BencObj *obj2 = BencObj::Decode(encoded, &len);
+    assert(obj2 && len == Str::Len(encoded));
+    ScopedMem<char> roundtrip(obj2->Encode());
+    assert(Str::Eq(encoded, roundtrip));
+    delete obj2;
+}
+
 static void BencTestParseInt()
 {
     struct {
@@ -667,6 +679,7 @@ static void BencTestArrayAppend()
     }
     assert(!array->GetInt(ITERATION_COUNT));
     assert(array->GetDict(ITERATION_COUNT));
+    BencTestRoundtrip(array);
     delete array;
 }
 
@@ -686,6 +699,7 @@ static void BencTestDictAppend()
     }
     BencInt *intObj = dict->GetInt("0123");
     assert(intObj && intObj->Value() == 123);
+    BencTestRoundtrip(dict);
     delete dict;
 
     /* test insertion in descending order */
@@ -700,6 +714,7 @@ static void BencTestDictAppend()
     }
     intObj = dict->GetInt("0123");
     assert(intObj && intObj->Value() == 123);
+    BencTestRoundtrip(dict);
     delete dict;
 
     dict = new BencDict();
