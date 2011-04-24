@@ -22,7 +22,7 @@
 
 #include "translations.h"
 
-#define DEBUG_CRASH_INFO 1
+//#define DEBUG_CRASH_INFO 1
 
 // TODO: maybe symbol directory should include build number, to disambiguate
 // them. On the other hand, dbghelp.dll doesn't seem to be confused and if
