@@ -129,6 +129,8 @@ static Color            COLOR_MSG_FAILED(gCol1);
 #define DISPLAY_VERSION _T("DisplayVersion")
 // REG_DWORD, get size of installed directory after copying files
 #define ESTIMATED_SIZE _T("EstimatedSize")
+// REG_SZ, the current date as YYYYMMDD
+#define INSTALL_DATE _T("InstallDate")
 // REG_DWORD, set to 1
 #define NO_MODIFY _T("NoModify")
 // REG_DWORD, set to 1
@@ -669,6 +671,14 @@ DWORD GetDirSize(TCHAR *dir)
     return totalSize;
 }
 
+// caller needs to free() the result
+TCHAR *GetInstallDate()
+{
+    SYSTEMTIME st;
+    GetSystemTime(&st);
+    return Str::Format(_T("%04d%02d%02d"), st.wYear, st.wMonth, st.wDay);
+}
+
 bool WriteUninstallerRegistryInfo(bool allUsers)
 {
     bool success = true;
@@ -678,10 +688,12 @@ bool WriteUninstallerRegistryInfo(bool allUsers)
 
     ScopedMem<TCHAR> uninstallerPath(GetUninstallerPath());
     ScopedMem<TCHAR> installedExePath(GetInstalledExePath());
+    ScopedMem<TCHAR> installDate(GetInstallDate());
     success &= WriteRegStr(hkey,   REG_PATH_UNINST, DISPLAY_ICON, installedExePath);
     success &= WriteRegStr(hkey,   REG_PATH_UNINST, DISPLAY_NAME, TAPP);
     success &= WriteRegStr(hkey,   REG_PATH_UNINST, DISPLAY_VERSION, CURR_VERSION_STR);
     success &= WriteRegDWORD(hkey, REG_PATH_UNINST, ESTIMATED_SIZE, GetDirSize(gGlobalData.installDir) / 1024);
+    success &= WriteRegStr(hkey,   REG_PATH_UNINST, INSTALL_DATE, installDate);
     success &= WriteRegDWORD(hkey, REG_PATH_UNINST, NO_MODIFY, 1);
     success &= WriteRegDWORD(hkey, REG_PATH_UNINST, NO_REPAIR, 1);
     success &= WriteRegStr(hkey,   REG_PATH_UNINST, PUBLISHER, _T("Krzysztof Kowalczyk"));
