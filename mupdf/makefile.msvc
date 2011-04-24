@@ -22,8 +22,6 @@ O = $(O)64
 !endif
 
 OZ  = $(O)\zlib
-OBZ = $(O)\bzip2
-OR =  $(O)\unrar
 OFT = $(O)\freetype
 OJ  = $(O)\jpeg
 OT  = $(O)\jpegturbo
@@ -32,7 +30,6 @@ OJB = $(O)\jbig2
 OFZ = $(O)\fitz
 OP  = $(O)\mupdf
 OX  = $(O)\muxps
-OS  = $(O)\sumatra
 
 # To over-ride location of fitz/mupdf sources, define MUPDF_DIR
 # e.g.:
@@ -47,8 +44,6 @@ EXTLIBSDIR=..\ext
 !endif
 
 ZLIB_DIR=$(EXTLIBSDIR)\zlib-1.2.5
-BZIP2_DIR=$(EXTLIBSDIR)\bzip2
-UNRAR_DIR=$(EXTLIBSDIR)\unrar
 FREETYPE_DIR=$(EXTLIBSDIR)\freetype2
 
 # if JPEG_TURBO_DIR is defined, we use libjpeg-turbo, otherwise we use libpjeg
@@ -123,15 +118,6 @@ CFLAGSOPT    = $(CFLAGSB) /Os /Ox /D "NDEBUG"
 !endif
 
 ZLIB_CFLAGS = $(CFLAGSOPT)
-BZIP2_CFLAGS = $(CFLAGSOPT) /D "BZ_NO_STDIO" /D "BZ_DEBUG=0"
-MINIZIP_CFLAGS = $(ZLIB_CFLAGS) /D "HAVE_BZIP2" /I$(ZLIB_DIR) /I$(BZIP2_DIR)
-
-UNRAR_CFLAGS = $(CFLAGSOPT) /D "UNRAR" /D "RARDLL"
-# a hack to enable C++ exception handling for UnRAR (without triggering a warning)
-UNRAR_CFLAGS = $(UNRAR_CFLAGS:/EHs-c-=/EHsc)
-# a hack to undo /D "UNICODE" since unrar defines it unconditionally, causing
-# compilation warnings
-UNRAR_CFLAGS = $(UNRAR_CFLAGS:UNICODE=IGNORE_THIS)
 
 FREETYPE_CFLAGS = $(CFLAGSOPT) /TC /I$(FREETYPE_DIR)/config /I$(FREETYPE_DIR)/include \
 	/D "FT2_BUILD_LIBRARY" /D "FT_OPTION_AUTOFIT2"
@@ -194,27 +180,6 @@ ZLIB_OBJS = \
 	$(OZ)\zutil.obj \
 	$(OZ)\gzlib.obj $(OZ)\gzread.obj $(OZ)\gzwrite.obj $(OZ)\gzclose.obj
 	# MuPDF also compiles $(OZ)\uncompr.obj
-
-BZIP2_OBJS = \
-	$(OBZ)\blocksort.obj $(OBZ)\bzlib.obj $(OBZ)\compress.obj $(OBZ)\crctable.obj \
-	$(OBZ)\decompress.obj $(OBZ)\huffman.obj $(OBZ)\randtable.obj
-
-MINIZIP_OBJS = \
-	$(OZ)\unzip.obj $(OZ)\ioapi.obj $(OZ)\iowin32.obj
-
-UNRAR_OBJS = \
-	$(OR)\archive.obj $(OR)\arcread.obj $(OR)\cmddata.obj \
-	$(OR)\consio.obj $(OR)\crc.obj $(OR)\crypt.obj $(OR)\encname.obj \
-	$(OR)\errhnd.obj $(OR)\extinfo.obj $(OR)\extract.obj $(OR)\filcreat.obj \
-	$(OR)\file.obj $(OR)\filefn.obj $(OR)\filestr.obj $(OR)\find.obj $(OR)\getbits.obj \
-	$(OR)\global.obj $(OR)\isnt.obj  $(OR)\list.obj $(OR)\match.obj \
-	$(OR)\pathfn.obj $(OR)\options.obj $(OR)\rar.obj $(OR)\rarvm.obj \
-	$(OR)\rawread.obj $(OR)\rdwrfn.obj $(OR)\recvol.obj \
-	$(OR)\resource.obj $(OR)\rijndael.obj $(OR)\rs.obj $(OR)\savepos.obj \
-	$(OR)\scantree.obj $(OR)\sha1.obj $(OR)\smallfn.obj $(OR)\strfn.obj \
-	$(OR)\strlist.obj $(OR)\system.obj $(OR)\timefn.obj \
-	$(OR)\ulinks.obj $(OR)\unicode.obj $(OR)\unpack.obj \
-	$(OR)\volume.obj $(OR)\dll.obj
 
 !if "$(JPEG_TURBO_DIR)"==""
 
@@ -371,8 +336,6 @@ cleanall: force
 
 $(O): force
 	@if not exist $(O) mkdir $(O)
-	@if not exist $(OBZ) mkdir $(OBZ)
-	@if not exist $(OR) mkdir $(OR)
 	@if not exist $(OZ) mkdir $(OZ)
 	@if not exist $(OFT) mkdir $(OFT)
 	@if not exist $(OJ) mkdir $(OJ)
@@ -382,7 +345,6 @@ $(O): force
 	@if not exist $(OFZ) mkdir $(OFZ)
 	@if not exist $(OP) mkdir $(OP)
 	@if not exist $(OX) mkdir $(OX)
-	@if not exist $(OS) mkdir $(OS)
 
 $(PDFAPP_RES): $(MUPDF_DIR)\apps\win_res.rc
 	rc /r /fo$@ $(MUPDF_DIR)\apps\win_res.rc
@@ -492,15 +454,6 @@ $(LIBMUPDF_DLL): $(LIBMUPDF_OBJS) $(LIBMUPDF_DEF) $(LIBMUPDF_RES)
 
 {$(ZLIB_DIR)}.c{$(OZ)}.obj::
 	$(CC) $(ZLIB_CFLAGS) /Fo$(OZ)\ /Fd$(O)\vc80.pdb $<
-
-{$(BZIP2_DIR)}.c{$(OBZ)}.obj::
-	$(CC) $(BZIP2_CFLAGS) /Fo$(OBZ)\ /Fd$(O)\vc80.pdb $<
-
-{$(UNRAR_DIR)}.cpp{$(OR)}.obj::
-	$(CC) $(UNRAR_CFLAGS) /Fo$(OR)\ /Fd$(O)\vc80.pdb $<
-
-{$(ZLIB_DIR)\minizip}.c{$(OZ)}.obj::
-	$(CC) $(MINIZIP_CFLAGS) /Fo$(OZ)\ /Fd$(O)\vc80.pdb $<
 
 !if "$(JPEG_TURBO_OBJS)"==""
 {$(JPEG_DIR)}.c{$(OJ)}.obj::

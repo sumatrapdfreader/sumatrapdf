@@ -61,7 +61,7 @@ def flattenDependencyList(dependencies):
 			filename = os.path.splitext(os.path.split(file)[1])[0]
 			deplist = sorted(dependencies[file], key=str.lower)
 			for depgroup in group(deplist, DEPENDENCIES_PER_LINE):
-				flatlist.append("$(O)\\%s.obj: %s" % (filename, " ".join(depgroup)))
+				flatlist.append("$(OS)\\%s.obj: %s" % (filename, " ".join(depgroup)))
 	return flatlist
 
 def injectDependencyList(flatlist):
