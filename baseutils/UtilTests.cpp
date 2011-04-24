@@ -594,12 +594,29 @@ static void BencTestParseString()
             assert(!obj);
         }
     }
+}
 
-#if 0
-    BencRawString raw("a\x82");
-    BencTestSerialization(&raw, "2:a\x82");
-    assert(Str::Eq(raw.RawValue(), "a\x82"));
-#endif
+static void BencTestParseRawStrings()
+{
+    BencArray array;
+    array.AddRaw("a\x82");
+    array.AddRaw("a\x82", 1);
+    BencString *raw = array.GetString(0);
+    assert(raw && Str::Eq(raw->RawValue(), "a\x82"));
+    BencTestSerialization(raw, "2:a\x82");
+    raw = array.GetString(1);
+    assert(raw && Str::Eq(raw->RawValue(), "a"));
+    BencTestSerialization(raw, "1:a");
+
+    BencDict dict;
+    dict.AddRaw("1", "a\x82");
+    dict.AddRaw("2", "a\x82", 1);
+    raw = dict.GetString("1");
+    assert(raw && Str::Eq(raw->RawValue(), "a\x82"));
+    BencTestSerialization(raw, "2:a\x82");
+    raw = dict.GetString("2");
+    assert(raw && Str::Eq(raw->RawValue(), "a"));
+    BencTestSerialization(raw, "1:a");
 }
 
 static void BencTestParseArray(const char *benc, size_t expectedLen)
@@ -740,6 +757,7 @@ void BaseUtils_UnitTests()
     LogTest();
     BencTestParseInt();
     BencTestParseString();
+    BencTestParseRawStrings();
     BencTestParseArrays();
     BencTestParseDicts();
     BencTestArrayAppend();

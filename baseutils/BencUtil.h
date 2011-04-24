@@ -12,7 +12,7 @@
    Note: As an exception to the above specifications, this implementation
          only handles zero-terminated strings (i.e. \0 may not appear within
          strings) and considers all encoded strings to be UTF-8 encoded
-         (unless handled as BencRawString and retrieved with RawValue()).
+         (unless added with AddRaw and retrieved with RawValue()).
 */
 
 #include <inttypes.h>
@@ -32,17 +32,18 @@ public:
     static BencObj *Decode(const char *bytes, size_t *lenOut=NULL);
 };
 
-class BencDict;
 class BencArray;
+class BencDict;
 
 class BencString : public BencObj {
-    friend BencDict;
     friend BencArray;
+    friend BencDict;
+
     char *value;
 
 protected:
-    BencString(const char *rawValue, size_t len);
     BencString(const TCHAR *value);
+    BencString(const char *rawValue, size_t len);
 
 public:
     virtual ~BencString() { free(value); }
@@ -52,13 +53,6 @@ public:
 
     virtual char *Encode() const;
     static BencString *Decode(const char *bytes, size_t *lenOut);
-};
-
-class BencRawString : public BencString {
-    friend BencDict;
-    friend BencString;
-protected:
-    BencRawString(const char *value, size_t len=-1);
 };
 
 class BencInt : public BencObj {
@@ -86,7 +80,14 @@ public:
         value.Append(obj);
     }
     void Add(const TCHAR *string) {
-        Add(new BencString(string));
+        assert(string);
+        if (string)
+            Add(new BencString(string));
+    }
+    void AddRaw(const char *string, size_t len=-1) {
+        assert(string);
+        if (string)
+            Add(new BencString(string, len));
     }
     void Add(int64_t val) {
         Add(new BencInt(val));
@@ -128,17 +129,16 @@ public:
     size_t Length() const { return values.Count(); }
 
     void Add(const char *key, BencObj *obj);
-
-    void AddStr(const char *key, const TCHAR *string) {
-        if (key && string)
+    void Add(const char *key, const TCHAR *string) {
+        assert(string);
+        if (string)
             Add(key, new BencString(string));
     }
-
-    void AddRawStr(const char *key, const char *string) {
-        if (key && string)
-            Add(key, new BencRawString(string));
+    void AddRaw(const char *key, const char *string, size_t len=-1) {
+        assert(string);
+        if (string)
+            Add(key, new BencString(string, len));
     }
-
     void Add(const char *key, int64_t val) {
         Add(key, new BencInt(val));
     }

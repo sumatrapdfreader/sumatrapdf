@@ -57,6 +57,8 @@ BencString::BencString(const TCHAR *value) : BencObj(BT_STRING)
 BencString::BencString(const char *rawValue, size_t len) : BencObj(BT_STRING)
 {
     assert(rawValue);
+    if (len == (size_t)-1)
+        len = Str::Len(rawValue);
     value = Str::DupN(rawValue, len);
 }
 
@@ -86,11 +88,8 @@ BencString *BencString::Decode(const char *bytes, size_t *lenOut)
 
     if (lenOut)
         *lenOut = (start - bytes) + (size_t)len;
-    return new BencRawString(start, (size_t)len);
+    return new BencString(start, (size_t)len);
 }
-
-BencRawString::BencRawString(const char *value, size_t len)
-    : BencString(value, len == (size_t)-1 ? Str::Len(value) : len) { }
 
 char *BencInt::Encode() const
 {
