@@ -30,6 +30,7 @@ OJB = $(O)\jbig2
 OFZ = $(O)\fitz
 OP  = $(O)\mupdf
 OX  = $(O)\muxps
+OA  = $(O)\muapps
 
 # To over-ride location of fitz/mupdf sources, define MUPDF_DIR
 # e.g.:
@@ -292,32 +293,32 @@ LIBS_OBJS = $(LIBS_OBJS) $(JPEG_OBJS)
 LIBS_OBJS = $(LIBS_OBJS) $(JPEG_TURBO_OBJS)
 !endif
 
-PDFAPP_RES = $(O)\pdfview.res
-PDFAPP_OBJS = $(LIBS_OBJS) $(O)\win_main.obj $(O)\pdfapp.obj $(PDFAPP_RES)
+PDFAPP_RES = $(OA)\pdfview.res
+PDFAPP_OBJS = $(LIBS_OBJS) $(OA)\win_main.obj $(OA)\pdfapp.obj $(PDFAPP_RES)
 PDFAPP_APP = $(O)\pdfview.exe
 
-PDFBENCH_OBJS = $(LIBS_OBJS) $(O)\pdfbench.obj
+PDFBENCH_OBJS = $(LIBS_OBJS) $(OA)\pdfbench.obj
 PDFBENCH_APP = $(O)\pdfbench.exe
 
-PDFDRAW_OBJS = $(LIBS_OBJS) $(O)\pdfdraw.obj
+PDFDRAW_OBJS = $(LIBS_OBJS) $(OA)\pdfdraw.obj
 PDFDRAW_APP = $(O)\pdfdraw.exe
 
-PDFSHOW_OBJS = $(LIBS_OBJS) $(O)\pdfshow.obj
+PDFSHOW_OBJS = $(LIBS_OBJS) $(OA)\pdfshow.obj
 PDFSHOW_APP = $(O)\pdfshow.exe
 
-PDFCLEAN_OBJS = $(LIBS_OBJS) $(O)\pdfclean.obj
+PDFCLEAN_OBJS = $(LIBS_OBJS) $(OA)\pdfclean.obj
 PDFCLEAN_APP = $(O)\pdfclean.exe
 
-PDFINFO_OBJS = $(LIBS_OBJS) $(O)\pdfinfo.obj
+PDFINFO_OBJS = $(LIBS_OBJS) $(OA)\pdfinfo.obj
 PDFINFO_APP = $(O)\pdfinfo.exe
 
-PDFEXTRACT_OBJS = $(LIBS_OBJS) $(O)\pdfextract.obj
+PDFEXTRACT_OBJS = $(LIBS_OBJS) $(OA)\pdfextract.obj
 PDFEXTRACT_APP = $(O)\pdfextract.exe
 
 FONTDUMP_OBJS = $(OP)\fontdump.obj
 FONTDUMP_APP = $(O)\fontdump.exe
 
-XPSDRAW_OBJS = $(LIBS_OBJS) $(O)\xpsdraw.obj
+XPSDRAW_OBJS = $(LIBS_OBJS) $(OA)\xpsdraw.obj
 XPSDRAW_APP = $(O)\xpsdraw.exe
 
 LIBMUPDF_LIB = $(O)\libmupdf.lib
@@ -345,6 +346,7 @@ $(O): force
 	@if not exist $(OFZ) mkdir $(OFZ)
 	@if not exist $(OP) mkdir $(OP)
 	@if not exist $(OX) mkdir $(OX)
+	@if not exist $(OA) mkdir $(OA)
 
 $(PDFAPP_RES): $(MUPDF_DIR)\apps\win_res.rc
 	rc /r /fo$@ $(MUPDF_DIR)\apps\win_res.rc
@@ -475,8 +477,8 @@ $(LIBMUPDF_DLL): $(LIBMUPDF_OBJS) $(LIBMUPDF_DEF) $(LIBMUPDF_RES)
 {$(JBIG2_DIR)}.c{$(OJB)}.obj::
 	$(CC) $(JBIG2_CFLAGS) /Fo$(OJB)\ /Fd$(O)\vc80.pdb $<
 
-{$(MUPDF_DIR)\apps}.c{$(O)}.obj::
-	$(CC) /TC $(MUPDF_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
+{$(MUPDF_DIR)\apps}.c{$(OA)}.obj::
+	$(CC) /TC $(MUPDF_CFLAGS) /Fo$(OA)\ /Fd$(O)\vc80.pdb $<
 
 {$(MUPDF_DIR)\pdf}.c{$(OP)}.obj::
 	$(CC) /TC $(MUPDF_CFLAGS) /Fo$(OP)\ /Fd$(O)\vc80.pdb $<

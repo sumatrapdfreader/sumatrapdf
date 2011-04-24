@@ -84,17 +84,17 @@ LIBS = $(LIBS) comctl32.lib Msimg32.lib Winspool.lib wininet.lib ole32.lib shlwa
 
 SUMATRA_APP = $(O)\SumatraPDF.exe
 SUMATRA_APP_NO_MUPDF = $(O)\SumatraPDF-no-MuPDF.exe
-SUMATRA_RES = $(O)\sumatrapdf.res
+SUMATRA_RES = $(OS)\sumatrapdf.res
 
 INSTALLER_APP = $(O)\Installer.exe
-INSTALLER_RES = $(O)\Installer.res
+INSTALLER_RES = $(OS)\Installer.res
 
 PDFFILTER_DLL = $(O)\PdfFilter.dll
-PDFFILTER_RES = $(O)\PdfFilter.res
+PDFFILTER_RES = $(OS)\PdfFilter.res
 PDFFILTER_CFLAGS = $(SUMATRA_CFLAGS)
 
 BROWSER_PLUGIN = $(O)\npPdfViewer.dll
-BROWSER_PLUGIN_RES = $(O)\npPdfViewer.res
+BROWSER_PLUGIN_RES = $(OS)\npPdfViewer.res
 BROWSER_PLUGIN_CFLAGS = $(CFLAGS) /Ibaseutils /Ibaseutils/msvc /wd4819
 
 BZIP2_DIR=$(EXTLIBSDIR)\bzip2
