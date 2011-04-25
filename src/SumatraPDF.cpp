@@ -3565,7 +3565,7 @@ static void OnMenuSaveAs(WindowInfo& win)
     // TODO: fix saving embedded PDF documents
     Str::TransChars(dstFileName, _T(":"), _T("_"));
     if (Str::EndsWithI(dstFileName, defExt))
-        dstFileName[Str::Len(dstFileName) - 4] = 0;
+        dstFileName[Str::Len(dstFileName) - Str::Len(defExt)] = '\0';
 
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = win.hwndFrame;
@@ -3676,7 +3676,7 @@ static void OnMenuSaveBookmark(WindowInfo& win)
     Str::BufSet(dstFileName, dimof(dstFileName), Path::GetBaseName(win.dm->fileName()));
     Str::TransChars(dstFileName, _T(":"), _T("_"));
     if (Str::EndsWithI(dstFileName, defExt))
-        dstFileName[Str::Len(dstFileName) - 4] = 0;
+        dstFileName[Str::Len(dstFileName) - Str::Len(defExt)] = '\0';
 
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling
