@@ -498,8 +498,13 @@ $(LIBMUPDF_DLL): $(LIBMUPDF_OBJS) $(LIBMUPDF_DEF) $(LIBMUPDF_RES)
 # files that might have to be generated first:
 
 MUPDF_GEN_DIR = $(MUPDF_DIR)\generated
+
 $(MUPDF_GEN_DIR):
 	cd $(MUPDF_DIR) && win32\generate.bat
+
+$(MUPDF_GEN_DIR)\font_droid.h:
+	cd $(MUPDF_DIR) && win32\generate.bat
+
 $(OP)\pdf_fontfile.obj: $(MUPDF_GEN_DIR) \
 	$(MUPDF_GEN_DIR)\font_base14.h $(MUPDF_GEN_DIR)\font_droid.h $(MUPDF_GEN_DIR)\font_cjk.h
 $(OP)\pdf_cmap_tables.obj: $(MUPDF_GEN_DIR) \
