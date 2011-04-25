@@ -261,6 +261,9 @@ Le lecteur de PDF ne peut être changé en mode portable
 Denied Permissions:
 Interdictions :
 
+DjVu documents
+Documents DjVu
+
 Document Properties
 Propriétés du document
 
@@ -468,6 +471,12 @@ Page précédente
 Print range
 Plage d'impression
 
+Printing is still in progress. Abort and start over?
+Une impression est déjà en cours. L'annuler et recommencer ?
+
+Printing page %d of %d...
+Impression de la page %d sur %d...
+
 Printing problem.
 Problème d'impression.
 
@@ -587,9 +596,4 @@ copie du texte
 
 printing document
 impression du document
-
-# Untranslated:
-#DjVu documents
-#Printing is still in progress. Abort and start over?
-#Printing page %d of %d...
 
