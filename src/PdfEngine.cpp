@@ -1219,6 +1219,7 @@ RenderedBitmap *CPdfEngine::RenderBitmap(
                            RectD *pageRect, RenderTarget target,
                            bool useGdi)
 {
+    
     pdf_page* page = getPdfPage(pageNo);
     if (!page)
         return NULL;

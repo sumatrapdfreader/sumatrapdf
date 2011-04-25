@@ -381,14 +381,14 @@ void RenderCache::Render(DisplayModel *dm, int pageNo, int rotation, float zoom,
         callback.Callback();
 }
 
-bool RenderCache::Render(DisplayModel *dm, int pageNo, int rotation, float zoom, TilePosition *tile, RectD *pageRect, RenderingCallback *callback)
+bool RenderCache::Render(DisplayModel *dm, int pageNo, int rotation, float zoom, TilePosition *tile, RectD *pageRect, RenderingCallback *renderCb)
 {
     assert(dm);
     if (!dm || dm->_dontRenderFlag)
         return false;
 
-    assert(tile || pageRect && callback);
-    if (!tile && !(pageRect && callback))
+    assert(tile || pageRect && renderCb);
+    if (!tile && !(pageRect && renderCb))
         return false;
 
     ScopedCritSec scope(&_requestAccess);
@@ -397,8 +397,8 @@ bool RenderCache::Render(DisplayModel *dm, int pageNo, int rotation, float zoom,
     /* add request to the queue */
     if (_requestCount == MAX_PAGE_REQUESTS) {
         /* queue is full -> remove the oldest items on the queue */
-        if (_requests[0].callback)
-            _requests[0].callback->Callback();
+        if (_requests[0].renderCb)
+            _requests[0].renderCb->Callback();
         memmove(&(_requests[0]), &(_requests[1]), sizeof(PageRenderRequest) * (MAX_PAGE_REQUESTS - 1));
         newRequest = &(_requests[MAX_PAGE_REQUESTS-1]);
     } else {
@@ -418,13 +418,13 @@ bool RenderCache::Render(DisplayModel *dm, int pageNo, int rotation, float zoom,
     else if (pageRect) {
         newRequest->pageRect = *pageRect;
         // can't cache bitmaps that aren't for a given tile
-        assert(callback);
+        assert(renderCb);
     }
     else
         assert(0);
     newRequest->abort = false;
     newRequest->timestamp = GetTickCount();
-    newRequest->callback = callback;
+    newRequest->renderCb = renderCb;
 
     SetEvent(startRendering);
 
@@ -509,8 +509,8 @@ void RenderCache::ClearQueueForDisplayModel(DisplayModel *dm, int pageNo, TilePo
         if (i != curPos)
             _requests[curPos] = _requests[i];
         if (shouldRemove) {
-            if (req->callback)
-                req->callback->Callback();
+            if (req->renderCb)
+                req->renderCb->Callback();
             _requestCount--;
         } else
             curPos++;
@@ -538,14 +538,14 @@ DWORD WINAPI RenderCache::RenderCacheThread(LPVOID data)
         if (!cache->GetNextRequest(&req))
             continue;
         DBG_OUT("RenderCacheThread(): dequeued %d\n", req.pageNo);
-        if (!req.dm->pageVisibleNearby(req.pageNo) && !req.callback) {
+        if (!req.dm->pageVisibleNearby(req.pageNo) && !req.renderCb) {
             DBG_OUT("RenderCacheThread(): not rendering because not visible\n");
             continue;
         }
         if (req.dm->_dontRenderFlag) {
             DBG_OUT("RenderCacheThread(): not rendering because of _dontRenderFlag\n");
-            if (req.callback)
-                req.callback->Callback();
+            if (req.renderCb)
+                req.renderCb->Callback();
             continue;
         }
 
@@ -553,8 +553,8 @@ DWORD WINAPI RenderCache::RenderCacheThread(LPVOID data)
                                            cache->useGdiRenderer && *cache->useGdiRenderer);
         if (req.abort) {
             delete bmp;
-            if (req.callback)
-                req.callback->Callback();
+            if (req.renderCb)
+                req.renderCb->Callback();
             continue;
         }
 
@@ -563,11 +563,11 @@ DWORD WINAPI RenderCache::RenderCacheThread(LPVOID data)
         if (bmp)
             DBG_OUT("RenderCacheThread(): finished rendering %d\n", req.pageNo);
         else
-            DBG_OUT("RenderCacheThread(): failed to render a bitmap of page %d\n", req.pageNo);
-        if (req.callback) {
+            DBG_OUT("renderCb(): failed to render a bitmap of page %d\n", req.pageNo);
+        if (req.renderCb) {
             // the callback must free the RenderedBitmap
-            req.callback->Callback(bmp);
-            req.callback = (RenderingCallback *)1; // will crash if accessed again, which should not happen
+            req.renderCb->Callback(bmp);
+            req.renderCb = (RenderingCallback *)1; // will crash if accessed again, which should not happen
         }
         else {
             cache->Add(req, bmp);

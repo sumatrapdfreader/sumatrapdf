@@ -55,7 +55,7 @@ struct PageRenderRequest {
     DWORD               timestamp;
     // owned by the PageRenderRequest (use it before reusing the request)
     // on rendering success, the callback gets handed the RenderedBitmap
-    RenderingCallback * callback;
+    RenderingCallback * renderCb;
 };
 
 #define MAX_PAGE_REQUESTS 8
