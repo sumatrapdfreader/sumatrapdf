@@ -498,6 +498,8 @@ struct PdfPageRun {
 class CPdfToCItem;
 
 class CPdfEngine : public PdfEngine {
+    friend PdfEngine;
+
 public:
     CPdfEngine();
     virtual ~CPdfEngine();
@@ -1634,7 +1636,7 @@ bool PdfLink::SaveEmbedded(LinkSaverUI& saveUI)
 
 PdfEngine *PdfEngine::CreateFromFileName(const TCHAR *fileName, PasswordUI *pwdUI)
 {
-    PdfEngine *engine = new CPdfEngine();
+    CPdfEngine *engine = new CPdfEngine();
     if (!engine || !fileName || !engine->load(fileName, pwdUI)) {
         delete engine;
         return NULL;
@@ -1644,7 +1646,7 @@ PdfEngine *PdfEngine::CreateFromFileName(const TCHAR *fileName, PasswordUI *pwdU
 
 PdfEngine *PdfEngine::CreateFromStream(IStream *stream, PasswordUI *pwdUI)
 {
-    PdfEngine *engine = new CPdfEngine();
+    CPdfEngine *engine = new CPdfEngine();
     if (!engine || !stream || !engine->load(stream, pwdUI)) {
         delete engine;
         return NULL;
@@ -1667,6 +1669,8 @@ struct XpsPageRun {
 class CXpsToCItem;
 
 class CXpsEngine : public XpsEngine {
+    friend XpsEngine;
+
 public:
     CXpsEngine();
     virtual ~CXpsEngine();
@@ -2489,7 +2493,7 @@ DocToCItem *CXpsEngine::GetToCTree()
 
 XpsEngine *XpsEngine::CreateFromFileName(const TCHAR *fileName)
 {
-    XpsEngine *engine = new CXpsEngine();
+    CXpsEngine *engine = new CXpsEngine();
     if (!engine || !fileName || !engine->load(fileName)) {
         delete engine;
         return NULL;
@@ -2499,7 +2503,7 @@ XpsEngine *XpsEngine::CreateFromFileName(const TCHAR *fileName)
 
 XpsEngine *XpsEngine::CreateFromStream(IStream *stream)
 {
-    XpsEngine *engine = new CXpsEngine();
+    CXpsEngine *engine = new CXpsEngine();
     if (!engine || !stream || !engine->load(stream)) {
         delete engine;
         return NULL;

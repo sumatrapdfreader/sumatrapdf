@@ -8,6 +8,7 @@
 
 #include "Benchmark.h"
 #include "PdfEngine.h"
+#include "DjVuEngine.h"
 
 static Log::Logger *gLog;
 #define logbench(msg, ...) gLog->LogFmt(_T(msg), __VA_ARGS__)
@@ -90,8 +91,10 @@ static void BenchFile(TCHAR *filePath, const TCHAR *pagesSpec)
     MillisecondTimer t;
     BaseEngine *engine;
     t.Start();
-    if (Str::EndsWithI(filePath, _T(".xps")))
+    if (XpsEngine::IsSupportedFile(filePath))
         engine = XpsEngine::CreateFromFileName(filePath);
+    if (DjVuEngine::IsSupportedFile(filePath))
+        engine = DjVuEngine::CreateFromFileName(filePath);
     else
         engine = PdfEngine::CreateFromFileName(filePath);
     t.Stop();

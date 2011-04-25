@@ -78,7 +78,6 @@ TIFF_OBJS = \
 DJVU_OBJS = \
 	$(ODV)\Arrays.obj $(ODV)\atomic.obj $(ODV)\BSByteStream.obj \
 	$(ODV)\BSEncodeByteStream.obj $(ODV)\ByteStream.obj $(ODV)\DataPool.obj \
-	$(ODV)\ddjvuapi.obj $(ODV)\debug.obj $(ODV)\DjVmDir.obj \
 	$(ODV)\DjVmDir0.obj $(ODV)\DjVmDoc.obj $(ODV)\DjVmNav.obj \
 	$(ODV)\DjVuAnno.obj $(ODV)\DjVuDocEditor.obj $(ODV)\DjVuDocument.obj \
 	$(ODV)\DjVuDumpHelper.obj $(ODV)\DjVuErrorList.obj $(ODV)\DjVuFile.obj \
@@ -92,9 +91,10 @@ DJVU_OBJS = \
 	$(ODV)\GSmartPointer.obj $(ODV)\GString.obj $(ODV)\GThreads.obj \
 	$(ODV)\GUnicode.obj $(ODV)\GURL.obj $(ODV)\IFFByteStream.obj \
 	$(ODV)\IW44EncodeCodec.obj $(ODV)\IW44Image.obj $(ODV)\JB2EncodeCodec.obj \
-	$(ODV)\JB2Image.obj $(ODV)\JPEGDecoder.obj $(ODV)\miniexp.obj \
+	$(ODV)\DjVmDir.obj $(ODV)\JB2Image.obj $(ODV)\JPEGDecoder.obj \
 	$(ODV)\MMRDecoder.obj $(ODV)\MMX.obj $(ODV)\UnicodeByteStream.obj \
 	$(ODV)\XMLParser.obj $(ODV)\XMLTags.obj $(ODV)\ZPCodec.obj
+#	$(ODV)\ddjvuapi.obj $(ODV)\debug.obj $(ODV)\miniexp.obj
 
 $(OE): force
 	@if not exist $(OE) mkdir $(OE)

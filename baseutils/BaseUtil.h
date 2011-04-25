@@ -12,6 +12,7 @@
 #endif
 
 #include <windows.h>
+#include <unknwn.h>
 #include <gdiplus.h>
 
 #ifdef DEBUG

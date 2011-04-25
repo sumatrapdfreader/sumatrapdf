@@ -116,6 +116,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\DjVuEngine.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\DjVuEngine.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\FileHistory.h"
 				>
 			</File>

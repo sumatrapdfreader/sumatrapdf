@@ -205,6 +205,7 @@ DisplayModel::DisplayModel(DisplayModelCallback *callback, DisplayMode displayMo
     engine = NULL;
     pdfEngine = NULL;
     xpsEngine = NULL;
+    djvuEngine = NULL;
     cbxEngine = NULL;
     imageEngine = NULL;
 
@@ -241,10 +242,12 @@ PageInfo *DisplayModel::getPageInfo(int pageNo) const
 bool DisplayModel::load(const TCHAR *fileName, int startPage, SizeI viewPort)
 { 
     assert(fileName);
-    if (Str::EndsWithI(fileName, _T(".pdf")))
+    if (PdfEngine::IsSupportedFile(fileName))
         engine = pdfEngine = PdfEngine::CreateFromFileName(fileName, _callback);
-    else if (Str::EndsWithI(fileName, _T(".xps")))
+    if (XpsEngine::IsSupportedFile(fileName))
         engine = xpsEngine = XpsEngine::CreateFromFileName(fileName);
+    if (DjVuEngine::IsSupportedFile(fileName))
+        engine = djvuEngine = DjVuEngine::CreateFromFileName(fileName);
     else if (CbxEngine::IsSupportedFile(fileName))
         engine = cbxEngine = CbxEngine::CreateFromFileName(fileName);
     else if (ImageEngine::IsSupportedFile(fileName))
@@ -255,6 +258,8 @@ bool DisplayModel::load(const TCHAR *fileName, int startPage, SizeI viewPort)
         engine = pdfEngine = PdfEngine::CreateFromFileName(fileName, _callback);
         if (!engine)
             engine = xpsEngine = XpsEngine::CreateFromFileName(fileName);
+        if (!engine)
+            engine = djvuEngine = DjVuEngine::CreateFromFileName(fileName);
     }
     if (!engine)
         return false;

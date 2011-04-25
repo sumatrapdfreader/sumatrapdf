@@ -18,22 +18,20 @@ public:
     virtual char *GetDecryptionKey() const = 0;
     virtual void RunGC() = 0;
 
-protected:
-    virtual bool load(const TCHAR *fileName, PasswordUI *pwdUI=NULL) = 0;
-    virtual bool load(IStream *stream, PasswordUI *pwdUI=NULL) = 0;
-
-public:
+    static bool IsSupportedFile(const TCHAR *fileName) {
+        // note: the plugin hands in files with a different extension (.tmp),
+        //       so callers may want to try to load even "unsupported" files
+        return Str::EndsWithI(fileName, _T(".pdf"));
+    }
     static PdfEngine *CreateFromFileName(const TCHAR *fileName, PasswordUI *pwdUI=NULL);
     static PdfEngine *CreateFromStream(IStream *stream, PasswordUI *pwdUI=NULL);
 };
 
 class XpsEngine : public BaseEngine {
 public:
-protected:
-    virtual bool load(const TCHAR *fileName) = 0;
-    virtual bool load(IStream *stream) = 0;
-
-public:
+    static bool IsSupportedFile(const TCHAR *fileName) {
+        return Str::EndsWithI(fileName, _T(".xps"));
+    }
     static XpsEngine *CreateFromFileName(const TCHAR *fileName);
     static XpsEngine *CreateFromStream(IStream *stream);
 };

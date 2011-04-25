@@ -6,6 +6,7 @@
 
 #include "DisplayState.h"
 #include "PdfEngine.h"
+#include "DjVuEngine.h"
 #include "ImagesEngine.h"
 #include "TextSearch.h"
 
@@ -137,6 +138,7 @@ public:
     BaseEngine *    engine;
     PdfEngine *     pdfEngine;
     XpsEngine *     xpsEngine;
+    DjVuEngine *    djvuEngine;
     CbxEngine *     cbxEngine;
     ImageEngine *   imageEngine;
 
