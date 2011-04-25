@@ -244,9 +244,9 @@ bool DisplayModel::load(const TCHAR *fileName, int startPage, SizeI viewPort)
     assert(fileName);
     if (PdfEngine::IsSupportedFile(fileName))
         engine = pdfEngine = PdfEngine::CreateFromFileName(fileName, _callback);
-    if (XpsEngine::IsSupportedFile(fileName))
+    else if (XpsEngine::IsSupportedFile(fileName))
         engine = xpsEngine = XpsEngine::CreateFromFileName(fileName);
-    if (DjVuEngine::IsSupportedFile(fileName))
+    else if (DjVuEngine::IsSupportedFile(fileName))
         engine = djvuEngine = DjVuEngine::CreateFromFileName(fileName);
     else if (CbxEngine::IsSupportedFile(fileName))
         engine = cbxEngine = CbxEngine::CreateFromFileName(fileName);
