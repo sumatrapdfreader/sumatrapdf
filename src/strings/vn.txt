@@ -257,6 +257,9 @@ Không thay đổi được trình đọc PDF chính ở chế độ di động
 Denied Permissions:
 Các quyền bị từ chối
 
+DjVu documents
+Tập tin Djvu
+
 Document Properties
 Thuộc tính tập tin
 
@@ -589,7 +592,4 @@ copying text
 
 printing document
 đang in tập tin
-
-# Untranslated:
-#DjVu documents
 
