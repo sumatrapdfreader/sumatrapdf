@@ -263,10 +263,10 @@ $(OS)\PdfSync.obj: src\DjVuEngine.h src\ImagesEngine.h src\PdfEngine.h
 $(OS)\PdfSync.obj: src\PdfSync.h src\TextSearch.h src\TextSelection.h
 $(OS)\PdfSync.obj: src\WindowInfo.h
 $(OS)\RenderCache.obj: baseutils\BaseUtil.h baseutils\GeomUtil.h baseutils\StrUtil.h
-$(OS)\RenderCache.obj: baseutils\Vec.h src\BaseEngine.h src\DisplayModel.h
-$(OS)\RenderCache.obj: src\DisplayState.h src\DjVuEngine.h src\ImagesEngine.h
-$(OS)\RenderCache.obj: src\PdfEngine.h src\RenderCache.h src\TextSearch.h
-$(OS)\RenderCache.obj: src\TextSelection.h
+$(OS)\RenderCache.obj: baseutils\Vec.h src\AppTools.h src\BaseEngine.h
+$(OS)\RenderCache.obj: src\DisplayModel.h src\DisplayState.h src\DjVuEngine.h
+$(OS)\RenderCache.obj: src\ImagesEngine.h src\PdfEngine.h src\RenderCache.h
+$(OS)\RenderCache.obj: src\TextSearch.h src\TextSelection.h
 $(OS)\SimpleLog.obj: baseutils\BaseUtil.h baseutils\SimpleLog.h baseutils\StrUtil.h
 $(OS)\SimpleLog.obj: baseutils\Vec.h
 $(OS)\StrUtil.obj: baseutils\BaseUtil.h baseutils\StrUtil.h

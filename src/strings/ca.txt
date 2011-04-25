@@ -531,6 +531,7 @@ s'està imprimint el document
 #Comic books
 #Copy &Link Address
 #Copy Co&mment
+#DjVu documents
 #Error loading %s
 #Found text at page %d (again)
 #Frequently Read

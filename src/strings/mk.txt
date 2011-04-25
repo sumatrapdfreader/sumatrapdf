@@ -589,3 +589,6 @@ copying text
 printing document
 печатам документ
 
+# Untranslated:
+#DjVu documents
+

@@ -259,6 +259,9 @@ Standardanwendung im portablen Modus nicht veränderbar
 Denied Permissions:
 Einschränkungen:
 
+DjVu documents
+DjVu-Dokumente
+
 Document Properties
 Dokumenteigenschaften
 

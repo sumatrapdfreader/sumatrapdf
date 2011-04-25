@@ -578,6 +578,7 @@ printing document
 bestand afdrukken
 
 # Untranslated:
+#DjVu documents
 #Frequently Read
 #Hide frequently read
 #Open a document...

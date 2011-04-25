@@ -256,6 +256,7 @@ Duputsa
 #Default &Zoom:
 #Default PDF reader can't be changed in portable mode
 #Denied Permissions:
+#DjVu documents
 #Document Properties
 #Download
 #Enter the command-line to invoke when you double-click on the PDF document:

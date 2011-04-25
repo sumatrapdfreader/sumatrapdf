@@ -378,6 +378,7 @@ Zoom Out
 #Created:
 #Custom &Zoom...\tCtrl-Y
 #Denied Permissions:
+#DjVu documents
 #Document Properties
 #Enter the command-line to invoke when you double-click on the PDF document:
 #Error loading %s

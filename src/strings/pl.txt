@@ -563,6 +563,7 @@ drukowanie dokumentu
 #Bookmark Shortcuts
 #Bookmark shortcut to page %d of %s
 #Copy &Link Address
+#DjVu documents
 #Frequently Read
 #Hide frequently read
 #Open a document...

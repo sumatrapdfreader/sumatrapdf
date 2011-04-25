@@ -589,6 +589,7 @@ printing document
 impression du document
 
 # Untranslated:
+#DjVu documents
 #Printing is still in progress. Abort and start over?
 #Printing page %d of %d...
 

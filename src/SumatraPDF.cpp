@@ -3544,7 +3544,7 @@ static void OnMenuSaveAs(WindowInfo& win)
     if (win.dm->xpsEngine)
         fileFilter.Append(_TR("XPS documents"));
     else if (win.dm->djvuEngine)
-        fileFilter.Append(_T("DjVu documents")); // TODO: translate
+        fileFilter.Append(_TR("DjVu documents"));
     else if (win.dm->cbxEngine)
         fileFilter.Append(_TR("Comic books"));
     else if (win.dm->imageEngine)
@@ -3759,8 +3759,7 @@ static void OnMenuOpen(WindowInfo& win)
     // double-zero terminated string isn't cut by the string handling
     // methods too early on)
     ScopedMem<TCHAR> fileFilter(Str::Format(_T("%s\1*.pdf;*.xps;*.djvu;*.cbz;*.cbr\1%s\1*.pdf\1%s\1*.xps\1%s\1*.djvu\1%s\1*.cbz;*.cbr\1%s\1*.*\1"),
-        _TR("All supported documents"), _TR("PDF documents"), _TR("XPS documents"), _TR("Comic books"), _TR("All files")));
-    // TODO: translate DjVu documents
+        _TR("All supported documents"), _TR("PDF documents"), _TR("XPS documents"), _TR("DjVu documents"), _TR("Comic books"), _TR("All files")));
     Str::TransChars(fileFilter, _T("\1"), _T("\0"));
 
     OPENFILENAME ofn = {0};

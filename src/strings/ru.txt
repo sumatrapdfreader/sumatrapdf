@@ -591,3 +591,6 @@ copying text
 printing document
 печатается документ
 
+# Untranslated:
+#DjVu documents
+

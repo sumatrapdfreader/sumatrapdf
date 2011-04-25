@@ -592,3 +592,6 @@ kopírování textu
 printing document
 tisk dokumentu
 
+# Untranslated:
+#DjVu documents
+

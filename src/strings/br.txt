@@ -573,6 +573,7 @@ printing document
 imprimindo documento
 
 # Untranslated:
+#DjVu documents
 #Frequently Read
 #Hide frequently read
 #Open a document...

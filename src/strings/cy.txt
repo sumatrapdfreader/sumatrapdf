@@ -528,6 +528,7 @@ argraffu dogfen
 #Comic books
 #Copy &Link Address
 #Copy Co&mment
+#DjVu documents
 #Enter the command-line to invoke when you double-click on the PDF document:
 #Error loading %s
 #Found text at page %d (again)

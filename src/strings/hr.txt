@@ -475,6 +475,7 @@ ispisujem dokument
 #Copy &Link Address
 #Copy Co&mment
 #Copying text was denied (copying as image only)
+#DjVu documents
 #Enter the command-line to invoke when you double-click on the PDF document:
 #Error loading %s
 #Fit &Content\tCtrl-3

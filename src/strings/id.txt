@@ -592,3 +592,6 @@ menyalin teks
 printing document
 mencetak dokumen
 
+# Untranslated:
+#DjVu documents
+

@@ -503,6 +503,7 @@ printing document
 #Comic books
 #Copy &Link Address
 #Copy Co&mment
+#DjVu documents
 #Error loading %s
 #Fit &Content\tCtrl-3
 #Fit Content

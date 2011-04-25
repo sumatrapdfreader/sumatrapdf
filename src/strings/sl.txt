@@ -551,6 +551,7 @@ tiskanje dokumenta
 #Bookmark Shortcuts
 #Bookmark shortcut to page %d of %s
 #Comic books
+#DjVu documents
 #Error loading %s
 #Found text at page %d (again)
 #Frequently Read

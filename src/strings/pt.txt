@@ -591,3 +591,6 @@ copiando texto
 printing document
 imprimindo documento
 
+# Untranslated:
+#DjVu documents
+

@@ -359,6 +359,7 @@ mencetak dokumen
 #Default &Layout:
 #Default &Zoom:
 #Denied Permissions:
+#DjVu documents
 #Document Properties
 #Enter the command-line to invoke when you double-click on the PDF document:
 #Error loading %s

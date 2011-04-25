@@ -530,6 +530,7 @@ skriver ut dokument
 #Comic books
 #Copy &Link Address
 #Copy Co&mment
+#DjVu documents
 #Error loading %s
 #Found text at page %d
 #Found text at page %d (again)

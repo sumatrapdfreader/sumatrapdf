@@ -410,6 +410,7 @@ Faktor uvećanja
 #Copying text was denied (copying as image only)
 #Created:
 #Denied Permissions:
+#DjVu documents
 #Document Properties
 #Enter the command-line to invoke when you double-click on the PDF document:
 #Error loading %s

@@ -410,6 +410,7 @@ dokumentua imprimatzen
 #Couldn't render the page
 #Default &Layout:
 #Default PDF reader can't be changed in portable mode
+#DjVu documents
 #Enter the command-line to invoke when you double-click on the PDF document:
 #Error loading %s
 #F&orward\tAlt+Right Arrow
