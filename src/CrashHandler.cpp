@@ -808,7 +808,7 @@ static void GetExceptionInfo(Str::Str<char>& s, EXCEPTION_POINTERS *excPointers)
     s.AppendFmt("\r\nRegisters:\r\n");
 
 #ifdef _WIN64
-    s.AppendFmt("RAX:%016I64X\r\nRBX:%016I64X\r\nRCX:%016I64X\r\nRDX:%016I64X\r\nRSI:%016I64X\r\nRDI:%016I64X\r\n"
+    s.AppendFmt("RAX:%016I64X  RBX:%016I64X  RCX:%016I64X\r\nRDX:%016I64X  RSI:%016I64X  RDI:%016I64X\r\n"
         "R8: %016I64X\r\nR9: %016I64X\r\nR10:%016I64X\r\nR11:%016I64X\r\nR12:%016I64X\r\nR13:%016I64X\r\nR14:%016I64X\r\nR15:%016I64X\r\n",
         ctx->Rax, ctx->Rbx, ctx->Rcx, ctx->Rdx, ctx->Rsi, ctx->Rdi,
         ctx->R9,ctx->R10,ctx->R11,ctx->R12,ctx->R13,ctx->R14,ctx->R15);
@@ -817,7 +817,7 @@ static void GetExceptionInfo(Str::Str<char>& s, EXCEPTION_POINTERS *excPointers)
     s.AppendFmt("DS:%04X  ES:%04X  FS:%04X  GS:%04X\r\n", ctx->SegDs, ctx->SegEs, ctx->SegFs, ctx->SegGs);
     s.AppendFmt("Flags:%08X\r\n", ctx->EFlags);
 #else
-    s.AppendFmt("EAX:%08X\r\nEBX:%08X\r\nECX:%08X\r\nEDX:%08X\r\nESI:%08X\r\nEDI:%08X\r\n",
+    s.AppendFmt("EAX:%08X  EBX:%08X  ECX:%08X\r\nEDX:%08X  ESI:%08X  EDI:%08X\r\n",
         ctx->Eax, ctx->Ebx, ctx->Ecx, ctx->Edx, ctx->Esi, ctx->Edi);
     s.AppendFmt("CS:EIP:%04X:%08X\r\n", ctx->SegCs, ctx->Eip);
     s.AppendFmt("SS:ESP:%04X:%08X  EBP:%08X\r\n", ctx->SegSs, ctx->Esp, ctx->Ebp);
@@ -853,12 +853,12 @@ static char *BuildCrashInfoText()
     GetOsVersion(s);
     GetSystemInfo(s);
     s.Append("\r\n");
-    GetModules(s);
-    s.Append("\r\n");
     GetExceptionInfo(s, gMei.ExceptionPointers);
     GetAllThreadsCallstacks(s);
     s.Append("\r\n");
     GetCurrentThreadCallstack(s);
+    s.Append("\r\n");
+    GetModules(s);
     return s.StealData();
 }
 
