@@ -5,6 +5,7 @@
 #define RenderCache_h
 
 #include "DisplayModel.h"
+#include "AppTools.h"
 
 #define RENDER_DELAY_UNDEFINED ((UINT)-1)
 #define RENDER_DELAY_FAILED    ((UINT)-2)
@@ -56,6 +57,9 @@ struct PageRenderRequest {
     // owned by the PageRenderRequest (use it before reusing the request)
     // on rendering success, the callback gets handed the RenderedBitmap
     RenderingCallback * renderCb;
+
+    // this is used for debugging
+    UIThreadWorkItem *renderingStartedWorkItem;
 };
 
 #define MAX_PAGE_REQUESTS 8
@@ -89,55 +93,59 @@ public:
     RenderCache();
     ~RenderCache();
 
-    void                Render(DisplayModel *dm, int pageNo, RenderingCallback *callback=NULL);
-    void                Render(DisplayModel *dm, int pageNo, int rotation, float zoom,
-                               RectD pageRect, RenderingCallback& callback);
-    void                CancelRendering(DisplayModel *dm);
-    bool                FreeForDisplayModel(DisplayModel *dm);
-    void                KeepForDisplayModel(DisplayModel *oldDm, DisplayModel *newDm);
-    UINT                Paint(HDC hdc, RectI *bounds, DisplayModel *dm, int pageNo,
-                              PageInfo *pageInfo, bool *renderOutOfDateCue);
+    void    Render(DisplayModel *dm, int pageNo, RenderingCallback *callback=NULL,
+                   UIThreadWorkItem *workItem=NULL);
+    void    Render(DisplayModel *dm, int pageNo, int rotation, float zoom,
+                   RectD pageRect, RenderingCallback& callback);
+    void    CancelRendering(DisplayModel *dm);
+    bool    FreeForDisplayModel(DisplayModel *dm);
+    void    KeepForDisplayModel(DisplayModel *oldDm, DisplayModel *newDm);
+    UINT    Paint(HDC hdc, RectI *bounds, DisplayModel *dm, int pageNo,
+                  PageInfo *pageInfo, bool *renderOutOfDateCue);
 
 public:
     /* Interface for page rendering thread */
-    HANDLE              startRendering;
+    HANDLE  startRendering;
 
-    bool                ClearCurrentRequest();
-    bool                GetNextRequest(PageRenderRequest *req);
-    void                Add(PageRenderRequest &req, RenderedBitmap *bitmap);
-    bool                FreeNotVisible();
+    bool    ClearCurrentRequest();
+    bool    GetNextRequest(PageRenderRequest *req);
+    void    Add(PageRenderRequest &req, RenderedBitmap *bitmap);
+    bool    FreeNotVisible();
 
 private:
-    USHORT              GetTileRes(DisplayModel *dm, int pageNo);
-    bool                ReduceTileSize();
+    USHORT  GetTileRes(DisplayModel *dm, int pageNo);
+    bool    ReduceTileSize();
 
-    bool                IsRenderQueueFull() const {
-                            return _requestCount == MAX_PAGE_REQUESTS;
-                        }
-    UINT                GetRenderDelay(DisplayModel *dm, int pageNo, TilePosition tile);
-    void                Render(DisplayModel *dm, int pageNo, TilePosition tile,
-                               bool clearQueue=true, RenderingCallback *callback=NULL);
-    bool                Render(DisplayModel *dm, int pageNo, int rotation, float zoom,
-                               TilePosition *tile=NULL, RectD *pageRect=NULL,
-                               RenderingCallback *callback=NULL);
-    void                ClearQueueForDisplayModel(DisplayModel *dm, int pageNo=INVALID_PAGE_NO,
-                                                  TilePosition *tile=NULL);
+    bool    IsRenderQueueFull() const {
+                return _requestCount == MAX_PAGE_REQUESTS;
+            }
+    UINT    GetRenderDelay(DisplayModel *dm, int pageNo, TilePosition tile);
+    void    Render(DisplayModel *dm, int pageNo, TilePosition tile,
+                   bool clearQueue=true, RenderingCallback *callback=NULL,
+                   UIThreadWorkItem *workItem=NULL);
+    bool    Render(DisplayModel *dm, int pageNo, int rotation, float zoom,
+                   TilePosition *tile=NULL, RectD *pageRect=NULL,
+                   RenderingCallback *callback=NULL, 
+                   UIThreadWorkItem *renderingStartedWorkItem=NULL);
+    void    ClearQueueForDisplayModel(DisplayModel *dm, int pageNo=INVALID_PAGE_NO,
+                                      TilePosition *tile=NULL);
 
     static DWORD WINAPI RenderCacheThread(LPVOID data);
 
     BitmapCacheEntry *  Find(DisplayModel *dm, int pageNo, int rotation,
                              float zoom=INVALID_ZOOM, TilePosition *tile=NULL);
-    void                DropCacheEntry(BitmapCacheEntry *entry);
-    bool                Exists(DisplayModel *dm, int pageNo, int rotation,
-                               float zoom=INVALID_ZOOM, TilePosition *tile=NULL);
-    bool                FreePage(DisplayModel *dm=NULL, int pageNo=-1, TilePosition *tile=NULL);
+    void    DropCacheEntry(BitmapCacheEntry *entry);
+    bool    Exists(DisplayModel *dm, int pageNo, int rotation,
+                   float zoom=INVALID_ZOOM, TilePosition *tile=NULL);
+    bool   FreePage(DisplayModel *dm=NULL, int pageNo=-1, TilePosition *tile=NULL);
 
-    UINT                PaintTile(HDC hdc, RectI *bounds, DisplayModel *dm, int pageNo,
-                                  TilePosition tile, RectI *tileOnScreen, bool renderMissing,
-                                  bool *renderOutOfDateCue, bool *renderedReplacement);
-    UINT                PaintTiles(HDC hdc, RectI *bounds, DisplayModel *dm, int pageNo,
-                                   RectI *pageOnScreen, USHORT tileRes, bool renderMissing,
-                                   bool *renderOutOfDateCue, bool *renderedReplacement);
+    UINT   PaintTile(HDC hdc, RectI *bounds, DisplayModel *dm, int pageNo,
+                     TilePosition tile, RectI *tileOnScreen, bool renderMissing,
+                     bool *renderOutOfDateCue, bool *renderedReplacement);
+    UINT   PaintTiles(HDC hdc, RectI *bounds, DisplayModel *dm, int pageNo,
+                     RectI *pageOnScreen, USHORT tileRes, bool renderMissing,
+                     bool *renderOutOfDateCue, bool *renderedReplacement);
+
 };
 
 #endif

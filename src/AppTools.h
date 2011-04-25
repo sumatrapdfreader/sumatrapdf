@@ -9,7 +9,7 @@
 class WindowInfo;
 
 // Base class for code that has to be executed on UI thread. Derive your class
-// from UIThreadWorkItem and call gUIThreadMarshaller.Queue() to schedule execution
+// from UIThreadWorkItem and call QueueWorkItem to schedule execution
 // of its Execute() method on UI thread.
 class UIThreadWorkItem
 {
@@ -20,6 +20,8 @@ public:
     virtual ~UIThreadWorkItem() {}
     virtual void Execute() = 0;
 };
+
+void QueueWorkItem(UIThreadWorkItem *wi);
 
 class UIThreadWorkItemQueue
 {

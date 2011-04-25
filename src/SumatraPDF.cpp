@@ -51,7 +51,7 @@
 
 /* Define if you want to display additional debug helpers in the Help menu */
 // #define SHOW_DEBUG_MENU_ITEMS
-#if defined(DEBUG)
+#if defined(DEBUG) || 1
 #ifndef SHOW_DEBUG_MENU_ITEMS
 #define SHOW_DEBUG_MENU_ITEMS
 #endif
@@ -131,6 +131,8 @@ bool                    gPluginMode = false;
 
 #define AUTO_RELOAD_TIMER_ID        5
 #define AUTO_RELOAD_DELAY_IN_MS     100
+
+#define STRESS_TIMER_ID             6
 
 #if !defined(THREAD_BASED_FILEWATCH)
 #define FILEWATCH_DELAY_IN_MS       1000
@@ -1001,6 +1003,11 @@ static bool ReloadPrefs()
     return true;
 }
 
+void QueueWorkItem(UIThreadWorkItem *wi)
+{
+    gUIThreadMarshaller.Queue(wi);
+}
+
 #ifdef NEW_START_PAGE
 class ThumbnailRenderingWorkItem : public UIThreadWorkItem, public RenderingCallback
 {
@@ -1019,7 +1026,7 @@ public:
     
     virtual void Callback(RenderedBitmap *bmp) {
         this->bmp = bmp;
-        gUIThreadMarshaller.Queue(this);
+        QueueWorkItem(this);
     }
 
     virtual void Execute() {
@@ -1049,6 +1056,27 @@ void CreateThumbnailForFile(WindowInfo& win, DisplayState& state)
     gRenderCache.Render(win.dm, 1, 0, zoom, pageRect, *callback);
 }
 #endif
+
+static void WindowRenderingOfPageStarted(WindowInfo *win, int pageNo)
+{
+    win->stressLastRenderedPage = pageNo;
+}
+
+class RenderingStartedWorkItem : public UIThreadWorkItem
+{
+public:
+    WindowInfo * win;
+    int          pageNo;
+
+    RenderingStartedWorkItem(WindowInfo *win, int pageNo) : 
+        UIThreadWorkItem(win), pageNo(pageNo)
+        {}
+    virtual void Execute() {
+        if (WindowInfoStillValid(win)) {
+            WindowRenderingOfPageStarted(win, pageNo);
+        }
+    }
+};
 
 void WindowInfo::Reload(bool autorefresh)
 {
@@ -1608,7 +1636,7 @@ public:
         // We cannot call win->Reload directly as it could cause race conditions
         // between the watching thread and the main thread (and only pass a copy of this
         // callback to the UIThreadMarshaller, as the object will be deleted after use)
-        gUIThreadMarshaller.Queue(new FileChangeCallback(win));
+        QueueWorkItem(new FileChangeCallback(win));
     }
 
     virtual void Execute() {
@@ -1726,7 +1754,12 @@ void WindowInfo::RenderPage(int pageNo)
     if (dm->cbxEngine || dm->imageEngine)
         return;
 
-    gRenderCache.Render(dm, pageNo);
+    UIThreadWorkItem *wi = NULL;
+    if (threadStressRunning) {
+        wi = new RenderingStartedWorkItem(this, pageNo);
+    }
+
+    gRenderCache.Render(dm, pageNo, NULL, wi);
 }
 
 void WindowInfo::CleanUp(DisplayModel *dm)
@@ -1903,7 +1936,7 @@ public:
 
     virtual void Callback(HttpReqCtx *ctx) {
         this->ctx = ctx;
-        gUIThreadMarshaller.Queue(this);
+        QueueWorkItem(this);
     }
 
     virtual void Execute() {
@@ -2306,7 +2339,7 @@ public:
             delete bmp;
             iterations++;
         }
-        gUIThreadMarshaller.Queue(this);
+        QueueWorkItem(this);
     }
 
     virtual void Execute() {
@@ -2318,8 +2351,10 @@ int StressTestPageRenderedWorkItem::iterations = 0;
 
 static void StartStressRenderingPage(WindowInfo& win, int pageNo)
 {
-    if (!win.IsDocLoaded() || win.dm->_dontRenderFlag)
+    if (!win.IsDocLoaded() || win.dm->_dontRenderFlag) {
         win.threadStressRunning = false;
+        KillTimer(win.hwndCanvas, STRESS_TIMER_ID);
+    }
     if (!win.threadStressRunning)
         return;
 
@@ -2328,7 +2363,8 @@ static void StartStressRenderingPage(WindowInfo& win, int pageNo)
         pageNo = 1;
     }
     RenderingCallback *callback = new StressTestPageRenderedWorkItem(&win, pageNo);
-    gRenderCache.Render(win.dm, pageNo, callback);
+    UIThreadWorkItem *wi = new RenderingStartedWorkItem(&win, pageNo);
+    gRenderCache.Render(win.dm, pageNo, callback, wi);
 }
 
 // TODO: start text search thread as well
@@ -2336,10 +2372,12 @@ static void ToggleThreadStress(WindowInfo& win)
 {
     if (win.threadStressRunning) {
         win.threadStressRunning = false;
+        KillTimer(win.hwndCanvas, STRESS_TIMER_ID);
         return;
     }
 
     win.threadStressRunning = true;
+    SetTimer(win.hwndCanvas, STRESS_TIMER_ID, USER_TIMER_MINIMUM, NULL);
     StartStressRenderingPage(win, 1);
 }
 
@@ -3282,12 +3320,12 @@ public:
     }
 
     virtual bool ProgressUpdate(int current, int total) {
-        gUIThreadMarshaller.Queue(new PrintThreadUpdateWorkItem(win, wnd, current, total));
+        QueueWorkItem(new PrintThreadUpdateWorkItem(win, wnd, current, total));
         return WindowInfoStillValid(win) && !win->printCanceled && !isCanceled;
     }
 
     void CleanUp() {
-        gUIThreadMarshaller.Queue(this);
+        QueueWorkItem(this);
     }
 
     // called when printing has been canceled
@@ -4538,7 +4576,7 @@ static void GoToTocLinkForTVItem(WindowInfo& win, HWND hTV, HTREEITEM hItem=NULL
     DocToCItem *tocItem = (DocToCItem *)item.lParam;
     if (win.IsDocLoaded() && tocItem &&
         (allowExternal || Str::Eq(tocItem->GetLink()->GetType(), "ScrollTo"))) {
-        gUIThreadMarshaller.Queue(new GoToTocLinkWorkItem(&win, tocItem));
+        QueueWorkItem(new GoToTocLinkWorkItem(&win, tocItem));
     }
 }
 
@@ -4780,7 +4818,7 @@ struct FindThreadData : public ProgressUpdateUI {
     virtual bool ProgressUpdate(int current, int total) {
         if (!WindowInfoStillValid(win) || !win->messages->GetFirst(NG_FIND_PROGRESS) || win->findCanceled)
             return false;
-        gUIThreadMarshaller.Queue(new UpdateFindStatusWorkItem(win, win->messages->GetFirst(NG_FIND_PROGRESS), current, total));
+        QueueWorkItem(new UpdateFindStatusWorkItem(win, win->messages->GetFirst(NG_FIND_PROGRESS), current, total));
         return true;
     }
 };
@@ -4844,9 +4882,9 @@ static DWORD WINAPI FindThread(LPVOID data)
     }
 
     if (!win->findCanceled && rect)
-        gUIThreadMarshaller.Queue(new FindEndWorkItem(win, ftd, rect, ftd->wasModified, loopedAround));
+        QueueWorkItem(new FindEndWorkItem(win, ftd, rect, ftd->wasModified, loopedAround));
     else
-        gUIThreadMarshaller.Queue(new FindEndWorkItem(win, ftd, NULL, win->findCanceled));
+        QueueWorkItem(new FindEndWorkItem(win, ftd, NULL, win->findCanceled));
 
     return 0;
 }
@@ -5759,18 +5797,18 @@ static LRESULT OnSetCursor(WindowInfo& win, HWND hwnd)
     return FALSE;
 }
 
-static void OnTimer(WindowInfo& win, HWND hwnd, WPARAM wParam)
+static void OnTimer(WindowInfo& win, HWND hwnd, WPARAM timerId)
 {
     POINT pt;
 
-    if (REPAINT_TIMER_ID == wParam) {
+    if (REPAINT_TIMER_ID == timerId) {
         win.delayedRepaintTimer = 0;
         KillTimer(hwnd, REPAINT_TIMER_ID);
         win.RedrawAll();
         return;
     }
 
-    if (SMOOTHSCROLL_TIMER_ID == wParam) {
+    if (SMOOTHSCROLL_TIMER_ID == timerId) {
         if (MA_SCROLLING == win.mouseAction)
             win.MoveDocBy(win.xScrollSpeed, win.yScrollSpeed);
         else if (MA_SELECTING == win.mouseAction || MA_SELECTING_TEXT == win.mouseAction) {
@@ -5786,14 +5824,14 @@ static void OnTimer(WindowInfo& win, HWND hwnd, WPARAM wParam)
         return;
     }
 
-    if (HIDE_CURSOR_TIMER_ID == wParam) {
+    if (HIDE_CURSOR_TIMER_ID == timerId) {
         KillTimer(hwnd, HIDE_CURSOR_TIMER_ID);
         if (win.presentation)
             SetCursor(NULL);
         return;
     }
 
-    if (HIDE_FWDSRCHMARK_TIMER_ID == wParam) {
+    if (HIDE_FWDSRCHMARK_TIMER_ID == timerId) {
         win.fwdsearchmark.hideStep++;
         if (1 == win.fwdsearchmark.hideStep) {
             SetTimer(hwnd, HIDE_FWDSRCHMARK_TIMER_ID, HIDE_FWDSRCHMARK_DECAYINTERVAL_IN_MS, NULL);
@@ -5809,12 +5847,24 @@ static void OnTimer(WindowInfo& win, HWND hwnd, WPARAM wParam)
         return;
     }
 
-    if (AUTO_RELOAD_TIMER_ID == wParam) {
+    if (AUTO_RELOAD_TIMER_ID == timerId) {
         KillTimer(hwnd, AUTO_RELOAD_TIMER_ID);
         win.Reload(true);
         return;
     }
-}    
+
+    if (STRESS_TIMER_ID == timerId) {
+        int pageNo = win.stressLastRenderedPage;
+        if (!win.dm->validPageNo(pageNo))
+            pageNo = 1;
+        if (!win.dm->validPageNo(pageNo))
+            return;
+        // try random position in the page
+        int x = rand() % 640;
+        int y = rand() % 480;
+        win.dm->textSelection->IsOverGlyph(pageNo, x, y);
+    }
+}
 
 // these can be global, as the mouse wheel can't affect more than one window at once
 static int  gDeltaPerLine = 0;         // for mouse wheel logic
@@ -6005,8 +6055,8 @@ void WindowInfo::RepaintAsync(UINT delay)
 {
     // even though RepaintAsync is mostly called from the UI thread,
     // we depend on the repaint message to happen asynchronously
-    // and let gUIThreadMarshaller.Queue call PostMessage for us
-    gUIThreadMarshaller.Queue(new RepaintCanvasWorkItem(this, delay));
+    // and let QueueWorkItem call PostMessage for us
+    QueueWorkItem(new RepaintCanvasWorkItem(this, delay));
 }
 
 static void UpdateMenu(WindowInfo *win, HMENU m)
@@ -6650,6 +6700,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     // that are not mounted (e.g. a: drive without floppy or cd rom drive
     // without a cd).
     SetErrorMode(SEM_NOOPENFILEERRORBOX | SEM_FAILCRITICALERRORS);
+    srand((unsigned int)time(NULL));
 
     ScopedMem<TCHAR> crashDumpPath(GetUniqueCrashDumpPath());
     InstallCrashHandler(crashDumpPath);

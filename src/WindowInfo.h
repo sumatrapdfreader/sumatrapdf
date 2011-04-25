@@ -141,6 +141,7 @@ public:
     UINT_PTR        delayedRepaintTimer;
 
     bool            threadStressRunning;
+    int             stressLastRenderedPage;
 
     MessageWndList *messages;
 
