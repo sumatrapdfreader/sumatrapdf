@@ -42,9 +42,8 @@ all_sumatrapdf: SumatraPDF Installer PDFFilter BrowserPlugin
 
 ##### add configuration changes that should NOT affect MuPDF after this line #####
 
-OS = $(O)\sumatrapdf
-OBZ= $(O)\bzip2
-OR = $(O)\unrar
+# include build data for the remaining third-party libraries
+!INCLUDE $(EXTLIBSDIR)\makefile.msvc
 
 # Modify the following defines if you have to target a platform prior to the ones specified below.
 # Their meaning: http://msdn.microsoft.com/en-us/library/aa383745(VS.85).aspx
@@ -65,22 +64,9 @@ SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "DEBUG" /D "_DEBUG"
 INSTALLER_CFLAGS = $(INSTALLER_CFLAGS) /D "DEBUG" /D "_DEBUG"
 !endif
 
-SYNCTEX_CFLAGS = $(CFLAGS) /I$(EXTLIBSDIR)/synctex /I$(ZLIB_DIR)
-!if "$(PLATFORM)"=="X64"
-SYNCTEX_CFLAGS = $(SYNCTEX_CFLAGS) /wd4244
-!endif
-
-BZIP2_CFLAGS = $(CFLAGSOPT) /D "BZ_NO_STDIO" /D "BZ_DEBUG=0"
-MINIZIP_CFLAGS = $(ZLIB_CFLAGS) /D "HAVE_BZIP2" /I$(ZLIB_DIR) /I$(BZIP2_DIR)
-
-UNRAR_CFLAGS = $(CFLAGSOPT) /D "UNRAR" /D "RARDLL"
-# a hack to enable C++ exception handling for UnRAR (without triggering a warning)
-UNRAR_CFLAGS = $(UNRAR_CFLAGS:/EHs-c-=/EHsc)
-# a hack to undo /D "UNICODE" since unrar defines it unconditionally, causing
-# compilation warnings
-UNRAR_CFLAGS = $(UNRAR_CFLAGS:UNICODE=IGNORE_THIS)
-
 LIBS = $(LIBS) comctl32.lib Msimg32.lib Winspool.lib wininet.lib ole32.lib shlwapi.lib version.lib
+
+OS = $(O)\sumatrapdf
 
 SUMATRA_APP = $(O)\SumatraPDF.exe
 SUMATRA_APP_NO_MUPDF = $(O)\SumatraPDF-no-MuPDF.exe
@@ -97,30 +83,6 @@ BROWSER_PLUGIN = $(O)\npPdfViewer.dll
 BROWSER_PLUGIN_RES = $(OS)\npPdfViewer.res
 BROWSER_PLUGIN_CFLAGS = $(CFLAGS) /Ibaseutils /Ibaseutils/msvc /wd4819
 
-BZIP2_DIR=$(EXTLIBSDIR)\bzip2
-UNRAR_DIR=$(EXTLIBSDIR)\unrar
-
-BZIP2_OBJS = \
-	$(OBZ)\blocksort.obj $(OBZ)\bzlib.obj $(OBZ)\compress.obj $(OBZ)\crctable.obj \
-	$(OBZ)\decompress.obj $(OBZ)\huffman.obj $(OBZ)\randtable.obj
-
-MINIZIP_OBJS = \
-	$(OZ)\unzip.obj $(OZ)\ioapi.obj $(OZ)\iowin32.obj
-
-UNRAR_OBJS = \
-	$(OR)\archive.obj $(OR)\arcread.obj $(OR)\cmddata.obj \
-	$(OR)\consio.obj $(OR)\crc.obj $(OR)\crypt.obj $(OR)\encname.obj \
-	$(OR)\errhnd.obj $(OR)\extinfo.obj $(OR)\extract.obj $(OR)\filcreat.obj \
-	$(OR)\file.obj $(OR)\filefn.obj $(OR)\filestr.obj $(OR)\find.obj $(OR)\getbits.obj \
-	$(OR)\global.obj $(OR)\isnt.obj  $(OR)\list.obj $(OR)\match.obj \
-	$(OR)\pathfn.obj $(OR)\options.obj $(OR)\rar.obj $(OR)\rarvm.obj \
-	$(OR)\rawread.obj $(OR)\rdwrfn.obj $(OR)\recvol.obj \
-	$(OR)\resource.obj $(OR)\rijndael.obj $(OR)\rs.obj $(OR)\savepos.obj \
-	$(OR)\scantree.obj $(OR)\sha1.obj $(OR)\smallfn.obj $(OR)\strfn.obj \
-	$(OR)\strlist.obj $(OR)\system.obj $(OR)\timefn.obj \
-	$(OR)\ulinks.obj $(OR)\unicode.obj $(OR)\unpack.obj \
-	$(OR)\volume.obj $(OR)\dll.obj
-
 BASEUTILS_OBJS = \
 	$(OS)\BencUtil.obj $(OS)\FileUtil.obj $(OS)\Http.obj $(OS)\SimpleLog.obj \
 	$(OS)\StrUtil.obj $(OS)\UtilTests.obj $(OS)\WinUtil.obj $(OS)\DialogSizer.obj \
@@ -129,11 +91,11 @@ BASEUTILS_OBJS = \
 SUMATRA_OBJS = \
 	$(OS)\AppPrefs.obj $(OS)\DisplayModel.obj $(OS)\CrashHandler.obj $(OS)\PdfEngine.obj \
 	$(OS)\TextSearch.obj $(OS)\SumatraAbout.obj $(OS)\SumatraDialogs.obj $(OS)\SumatraProperties.obj \
-	$(OS)\SumatraPDF.obj $(OS)\translations.obj \
-	$(OS)\FileWatch.obj $(OS)\PdfSync.obj $(OS)\synctex_parser.obj $(OS)\synctex_parser_utils.obj \
+	$(OS)\SumatraPDF.obj $(OS)\translations.obj $(OS)\FileWatch.obj $(OS)\PdfSync.obj \
 	$(OS)\RenderCache.obj $(OS)\TextSelection.obj $(OS)\WindowInfo.obj $(OS)\ParseCommandLine.obj \
 	$(OS)\Benchmark.obj $(OS)\UnitTests.obj $(OS)\AppTools.obj $(SUMATRA_RES) \
-	$(OS)\ImagesEngine.obj $(BASEUTILS_OBJS) $(BZIP2_OBJS) $(MINIZIP_OBJS) $(UNRAR_OBJS)
+	$(OS)\ImagesEngine.obj $(BASEUTILS_OBJS) $(BZIP2_OBJS) $(MINIZIP_OBJS) $(UNRAR_OBJS) \
+	$(SYNCTEX_OBJS) $(TIFF_OBJS) $(DJVU_OBJS)
 
 INSTALLER_OBJS = \
 	$(OS)\Installer.obj $(INSTALLER_RES)
@@ -161,7 +123,7 @@ PDFFILTER_CFLAGS = $(PDFFILTER_CFLAGS) /D "BUILD_TEX_IFILTER"
 rebuild: clean SumatraPDF
 
 cleanmupdf: force
-	-del $(FITZ_DRAW_OBJS) $(FITZ_OBJS) $(MUPDF_OBJS) $(FONT_OBJS) $(CMAP_OBJS)
+	-del $(FITZ_DRAW_OBJS) $(FITZ_OBJS) $(MUPDF_OBJS) $(MUXPS_OBJS)
 
 ## Note: the following command does not work on Windows
 cleanall: force
@@ -172,10 +134,8 @@ Installer:     $(OS) $(INSTALLER_APP)
 PDFFilter:     $(OS) $(LIBMUPDF_DLL) $(PDFFILTER_DLL)
 BrowserPlugin: $(OS) $(BROWSER_PLUGIN)
 
-$(OS): $(O)
+$(OS): $(O) $(OE)
 	@if not exist $(OS) mkdir $(OS)
-	@if not exist $(OBZ) mkdir $(OBZ)
-	@if not exist $(OR) mkdir $(OR)
 
 $(SUMATRA_RES): src\SumatraPDF.rc src\Resource.h src\Version.h
 	rc /r /fo$@ $(EXTCFLAGS) src\SumatraPDF.rc
@@ -207,20 +167,9 @@ $(BROWSER_PLUGIN_RES): src\browserplugin\npPdfViewer.rc
 $(BROWSER_PLUGIN): $(BROWSER_PLUGIN_OBJS)
 	$(LD) /DLL $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@
 
+# baseutils directory
 {baseutils}.cpp{$(OS)}.obj::
 	$(CC) $(SUMATRA_CFLAGS) /Fo$(OS)\ /Fd$(O)\vc80.pdb $<
-
-{$(BZIP2_DIR)}.c{$(OBZ)}.obj::
-	$(CC) $(BZIP2_CFLAGS) /Fo$(OBZ)\ /Fd$(O)\vc80.pdb $<
-
-{$(UNRAR_DIR)}.cpp{$(OR)}.obj::
-	$(CC) $(UNRAR_CFLAGS) /Fo$(OR)\ /Fd$(O)\vc80.pdb $<
-
-{$(ZLIB_DIR)\minizip}.c{$(OZ)}.obj::
-	$(CC) $(MINIZIP_CFLAGS) /Fo$(OZ)\ /Fd$(O)\vc80.pdb $<
-
-{$(EXTLIBSDIR)\synctex}.c{$(OS)}.obj::
-	$(CC) /TC $(SYNCTEX_CFLAGS) /Fo$(OS)\ /Fd$(O)\vc80.pdb $<
 
 # SumatraPDF app directory
 {src}.cpp{$(OS)}.obj::

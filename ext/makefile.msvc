@@ -1,0 +1,125 @@
+# include this after mupdf\makefile.msvc
+
+!if "$(O)"==""
+!error Include mupdf\makefile.msvc first (or build ..\makefile.msvc instead)
+!endif
+
+OE = $(O)\ext
+OBZ= $(O)\bzip2
+OR = $(O)\unrar
+OTI= $(O)\tiff
+ODV= $(O)\djvu
+
+SYNCTEX_CFLAGS = $(CFLAGS) /I$(EXTLIBSDIR)/synctex /I$(ZLIB_DIR) /TC
+!if "$(PLATFORM)"=="X64"
+SYNCTEX_CFLAGS = $(SYNCTEX_CFLAGS) /wd4244
+!endif
+
+BZIP2_CFLAGS = $(CFLAGSOPT) /D "BZ_NO_STDIO" /D "BZ_DEBUG=0"
+MINIZIP_CFLAGS = $(ZLIB_CFLAGS) /D "HAVE_BZIP2" /I$(ZLIB_DIR) /I$(EXTLIBSDIR)\bzip2
+
+UNRAR_CFLAGS = $(CFLAGSOPT) /D "UNRAR" /D "RARDLL"
+# a hack to enable C++ exception handling for UnRAR (without triggering a warning)
+UNRAR_CFLAGS = $(UNRAR_CFLAGS:/EHs-c-=/EHsc)
+# a hack to undo /D "UNICODE" since unrar defines it unconditionally, causing
+# compilation warnings
+UNRAR_CFLAGS = $(UNRAR_CFLAGS:UNICODE=IGNORE_THIS)
+
+TIFF_CFLAGS = $(CFLAGSOPT) /TC /wd4018
+# undo /D "UNICODE", as tif_win32.c uses LPTSTR for ANSI strings
+TIFF_CFLAGS = $(TIFF_CFLAGS:UNICODE=IGNORE_THIS)
+
+DJVU_CFLAGS = $(CFLAGSOPT) /D "DDJVUAPI=/**/" /D "MINILISPAPI=/**/"
+# a hack to enable C++ exception handling for libdjvu (without triggering a warning)
+DJVU_CFLAGS = $(DJVU_CFLAGS:/EHs-c-=/EHsc)
+# undo /D "UNICODE", as libdjvu uses TCHAR functions for char in several places
+DJVU_CFLAGS = $(DJVU_CFLAGS:UNICODE=IGNORE_THIS)
+
+SYNCTEX_OBJS = \
+	$(OE)\synctex_parser.obj $(OE)\synctex_parser_utils.obj
+
+BZIP2_OBJS = \
+	$(OBZ)\blocksort.obj $(OBZ)\bzlib.obj $(OBZ)\compress.obj $(OBZ)\crctable.obj \
+	$(OBZ)\decompress.obj $(OBZ)\huffman.obj $(OBZ)\randtable.obj
+
+MINIZIP_OBJS = \
+	$(OZ)\unzip.obj $(OZ)\ioapi.obj $(OZ)\iowin32.obj
+
+UNRAR_OBJS = \
+	$(OR)\archive.obj $(OR)\arcread.obj $(OR)\cmddata.obj \
+	$(OR)\consio.obj $(OR)\crc.obj $(OR)\crypt.obj $(OR)\encname.obj \
+	$(OR)\errhnd.obj $(OR)\extinfo.obj $(OR)\extract.obj $(OR)\filcreat.obj \
+	$(OR)\file.obj $(OR)\filefn.obj $(OR)\filestr.obj $(OR)\find.obj $(OR)\getbits.obj \
+	$(OR)\global.obj $(OR)\isnt.obj  $(OR)\list.obj $(OR)\match.obj \
+	$(OR)\pathfn.obj $(OR)\options.obj $(OR)\rar.obj $(OR)\rarvm.obj \
+	$(OR)\rawread.obj $(OR)\rdwrfn.obj $(OR)\recvol.obj \
+	$(OR)\resource.obj $(OR)\rijndael.obj $(OR)\rs.obj $(OR)\savepos.obj \
+	$(OR)\scantree.obj $(OR)\sha1.obj $(OR)\smallfn.obj $(OR)\strfn.obj \
+	$(OR)\strlist.obj $(OR)\system.obj $(OR)\timefn.obj \
+	$(OR)\ulinks.obj $(OR)\unicode.obj $(OR)\unpack.obj \
+	$(OR)\volume.obj $(OR)\dll.obj
+
+TIFF_OBJS = \
+	$(OTI)\tif_aux.obj $(OTI)\tif_close.obj \
+	$(OTI)\tif_codec.obj $(OTI)\tif_color.obj $(OTI)\tif_compress.obj \
+	$(OTI)\tif_dir.obj $(OTI)\tif_dirinfo.obj $(OTI)\tif_dirread.obj \
+	$(OTI)\tif_dirwrite.obj $(OTI)\tif_dumpmode.obj $(OTI)\tif_error.obj \
+	$(OTI)\tif_extension.obj $(OTI)\tif_fax3.obj $(OTI)\tif_fax3sm.obj \
+	$(OTI)\tif_flush.obj $(OTI)\tif_getimage.obj $(OTI)\tif_jbig.obj \
+	$(OTI)\tif_jpeg.obj $(OTI)\tif_luv.obj $(OTI)\tif_lzw.obj \
+	$(OTI)\tif_next.obj $(OTI)\tif_ojpeg.obj \
+	$(OTI)\tif_open.obj $(OTI)\tif_packbits.obj $(OTI)\tif_pixarlog.obj \
+	$(OTI)\tif_predict.obj $(OTI)\tif_print.obj $(OTI)\tif_read.obj \
+	$(OTI)\tif_strip.obj $(OTI)\tif_swab.obj $(OTI)\tif_thunder.obj \
+	$(OTI)\tif_tile.obj $(OTI)\tif_version.obj \
+	$(OTI)\tif_warning.obj $(OTI)\tif_win32.obj \
+	$(OTI)\tif_write.obj $(OTI)\tif_zip.obj
+
+DJVU_OBJS = \
+	$(ODV)\Arrays.obj $(ODV)\atomic.obj $(ODV)\BSByteStream.obj \
+	$(ODV)\BSEncodeByteStream.obj $(ODV)\ByteStream.obj $(ODV)\DataPool.obj \
+	$(ODV)\ddjvuapi.obj $(ODV)\debug.obj $(ODV)\DjVmDir.obj \
+	$(ODV)\DjVmDir0.obj $(ODV)\DjVmDoc.obj $(ODV)\DjVmNav.obj \
+	$(ODV)\DjVuAnno.obj $(ODV)\DjVuDocEditor.obj $(ODV)\DjVuDocument.obj \
+	$(ODV)\DjVuDumpHelper.obj $(ODV)\DjVuErrorList.obj $(ODV)\DjVuFile.obj \
+	$(ODV)\DjVuFileCache.obj $(ODV)\DjVuGlobal.obj $(ODV)\DjVuGlobalMemory.obj \
+	$(ODV)\DjVuImage.obj $(ODV)\DjVuInfo.obj $(ODV)\DjVuMessage.obj \
+	$(ODV)\DjVuMessageLite.obj $(ODV)\DjVuNavDir.obj $(ODV)\DjVuPalette.obj \
+	$(ODV)\DjVuPort.obj $(ODV)\DjVuText.obj $(ODV)\DjVuToPS.obj \
+	$(ODV)\GBitmap.obj $(ODV)\GContainer.obj $(ODV)\GException.obj \
+	$(ODV)\GIFFManager.obj $(ODV)\GMapAreas.obj $(ODV)\GOS.obj \
+	$(ODV)\GPixmap.obj $(ODV)\GRect.obj $(ODV)\GScaler.obj \
+	$(ODV)\GSmartPointer.obj $(ODV)\GString.obj $(ODV)\GThreads.obj \
+	$(ODV)\GUnicode.obj $(ODV)\GURL.obj $(ODV)\IFFByteStream.obj \
+	$(ODV)\IW44EncodeCodec.obj $(ODV)\IW44Image.obj $(ODV)\JB2EncodeCodec.obj \
+	$(ODV)\JB2Image.obj $(ODV)\JPEGDecoder.obj $(ODV)\miniexp.obj \
+	$(ODV)\MMRDecoder.obj $(ODV)\MMX.obj $(ODV)\UnicodeByteStream.obj \
+	$(ODV)\XMLParser.obj $(ODV)\XMLTags.obj $(ODV)\ZPCodec.obj
+
+$(OE): force
+	@if not exist $(OE) mkdir $(OE)
+	@if not exist $(OBZ) mkdir $(OBZ)
+	@if not exist $(OR) mkdir $(OR)
+	@if not exist $(OTI) mkdir $(OTI)
+	@if not exist $(ODV) mkdir $(ODV)
+
+{baseutils}.cpp{$(OS)}.obj::
+	$(CC) $(SUMATRA_CFLAGS) /Fo$(OS)\ /Fd$(O)\vc80.pdb $<
+
+{$(EXTLIBSDIR)\bzip2}.c{$(OBZ)}.obj::
+	$(CC) $(BZIP2_CFLAGS) /Fo$(OBZ)\ /Fd$(O)\vc80.pdb $<
+
+{$(EXTLIBSDIR)\unrar}.cpp{$(OR)}.obj::
+	$(CC) $(UNRAR_CFLAGS) /Fo$(OR)\ /Fd$(O)\vc80.pdb $<
+
+{$(ZLIB_DIR)\minizip}.c{$(OZ)}.obj::
+	$(CC) $(MINIZIP_CFLAGS) /Fo$(OZ)\ /Fd$(O)\vc80.pdb $<
+
+{$(EXTLIBSDIR)\synctex}.c{$(OE)}.obj::
+	$(CC) $(SYNCTEX_CFLAGS) /Fo$(OE)\ /Fd$(O)\vc80.pdb $<
+
+{$(EXTLIBSDIR)\libtiff}.c{$(OTI)}.obj::
+	$(CC) $(TIFF_CFLAGS) /Fo$(OTI)\ /Fd$(O)\vc80.pdb $<
+
+{$(EXTLIBSDIR)\libdjvu}.cpp{$(ODV)}.obj::
+	$(CC) $(DJVU_CFLAGS) /Fo$(ODV)\ /Fd$(O)\vc80.pdb $<

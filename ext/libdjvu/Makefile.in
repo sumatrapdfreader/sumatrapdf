@@ -1,0 +1,150 @@
+#C- This program is free software; you can redistribute it and/or 
+#C- modify it under the terms of the GNU General Public License, 
+#C- either Version 2 of the License or (at your option) any later
+#C- version.  The license should have accompanied the program 
+#C- or you may obtain a copy of the license from the Free Software
+#C- Foundation at http://www.fsf.org.
+#C- 
+#C- This program is distributed in the hope that it will be useful,
+#C- but WITHOUT ANY WARRANTY; without even the implied warranty of
+#C- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#C- GNU General Public License for more details.
+
+@SET_MAKE@
+SHELL = @SHELL@
+VPATH = @srcdir@
+PACKAGE_NAME = @PACKAGE_NAME@
+PACKAGE_VERSION = @PACKAGE_VERSION@
+
+srcdir = @srcdir@
+top_srcdir = @top_srcdir@
+top_builddir = ..
+
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+bindir = @bindir@
+datarootdir = @datarootdir@
+datadir = @datadir@
+libdir = @libdir@
+mandir = @mandir@
+includedir = @includedir@
+
+CC = @CC@
+CXX = @CXX@
+RM = @RM@
+AR = @AR@
+LN_S = @LN_S@
+TOUCH = @TOUCH@
+INSTALL = @INSTALL@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+INSTALL_DATA = @INSTALL_DATA@
+INSTALL_SHLIB = @INSTALL_SHLIB@
+LIBTOOL = @LIBTOOL@
+
+DEFS = @DEFS@
+OPTS = @OPTS@
+CXXRPOFLAGS = @CXXRPOFLAGS@
+JPEG_LIBS=@JPEG_LIBS@
+JPEG_CFLAGS=@JPEG_CFLAGS@
+THREAD_LIBS = @THREAD_LIBS@
+THREAD_CFLAGS = @THREAD_CFLAGS@
+
+LIBDJVU_LA = libdjvulibre.la
+LIBDJVU_VER = @LIBDJVU_VER@
+
+INCS = -I${top_builddir} -I${srcdir}
+FLAGS = ${DEFS} ${INCS} ${OPTS} ${JPEG_CFLAGS} ${THREAD_CFLAGS}
+LIBS= @LDFLAGS@ ${JPEG_LIBS} ${THREAD_LIBS} @LIBS@
+CFLAGS = ${FLAGS} @CPPFLAGS@ @CFLAGS@ 
+CXXFLAGS =  ${FLAGS} ${CXXPICFLAGS} ${CXXRPOFLAGS} @CPPFLAGS@ @CXXFLAGS@ 
+DLLFLAGS = @DLLFLAGS@
+
+all: ${LIBDJVU_LA} 
+
+install: install-lib install-data install-include install-pkgconfig
+
+OBJS =  DjVuGlobal.lo DjVuGlobalMemory.lo GOS.lo GException.lo GContainer.lo \
+        GString.lo GThreads.lo GRect.lo atomic.lo GSmartPointer.lo MMX.lo    \
+        Arrays.lo GBitmap.lo GPixmap.lo GScaler.lo DjVuPalette.lo	     \
+        ByteStream.lo IFFByteStream.lo BSByteStream.lo BSEncodeByteStream.lo \
+        ZPCodec.lo JB2Image.lo JB2EncodeCodec.lo IW44Image.lo		     \
+        IW44EncodeCodec.lo MMRDecoder.lo JPEGDecoder.lo DataPool.lo GURL.lo  \
+        DjVuFileCache.lo DjVuPort.lo GMapAreas.lo DjVuAnno.lo GIFFManager.lo \
+        DjVuText.lo DjVuInfo.lo DjVuFile.lo DjVuImage.lo DjVuDocument.lo     \
+        DjVmDir.lo DjVmDoc.lo DjVmDir0.lo DjVmNav.lo DjVuNavDir.lo	     \
+        DjVuErrorList.lo DjVuDocEditor.lo DjVuToPS.lo DjVuDumpHelper.lo	     \
+        DjVuMessageLite.lo DjVuMessage.lo GUnicode.lo UnicodeByteStream.lo   \
+        XMLParser.lo XMLTags.lo miniexp.lo ddjvuapi.lo debug.lo
+
+${LIBDJVU_LA} : ${OBJS}
+	@echo "[ generating $@ ... ]"
+	${LIBTOOL} --mode=link ${CXX} ${CXXFLAGS} -no-undefined \
+	    -rpath ${libdir} -version-info ${LIBDJVU_VER} ${DLLFLAGS} \
+	    ${OBJS} ${LIBS} -o ${LIBDJVU_LA}
+
+@RPO_YES@${LIBDJVU_LA} : libdjvu-rpo
+@RPO_YES@libdjvu-rpo : ${OBJS}
+@RPO_YES@	@echo "[ performing library closure ... ]"
+@RPO_YES@	@echo "int main() { return 0; }" > $@.cpp
+@RPO_YES@	${LIBTOOL} --mode=compile ${CXX} ${CXXFLAGS} -c $@.cpp
+@RPO_YES@	${LIBTOOL} --mode=link ${CXX} ${CXXFLAGS} -o $@ $@.lo ${OBJS} ${LIBS}
+
+install-data: FORCE
+	${INSTALL} -d ${DESTDIR}${datadir}/djvu
+	for n in `cd ${top_srcdir}/share && \
+	          find djvu -name '*.xml' -print` ; do \
+	  src="${top_srcdir}/share/$$n" ; \
+	  dir="`dirname ${datadir}/$$n`" ;\
+	  test -d ${DESTDIR}$$dir || ${INSTALL} -d ${DESTDIR}$$dir ; \
+	  ${INSTALL_DATA} $$src ${DESTDIR}$$dir || exit ; done
+
+install-lib: ${LIBDJVU_LA} FORCE
+	${INSTALL} -d ${DESTDIR}${libdir}
+	${LIBTOOL} --mode=install \
+	  ${INSTALL_SHLIB} ${LIBDJVU_LA} ${DESTDIR}${libdir}
+
+install-include: FORCE
+	${INSTALL} -d ${DESTDIR}${includedir}/libdjvu
+	${INSTALL_DATA} ${srcdir}/ddjvuapi.h ${DESTDIR}${includedir}/libdjvu
+	${INSTALL_DATA} ${srcdir}/miniexp.h ${DESTDIR}${includedir}/libdjvu
+
+install-pkgconfig: FORCE
+	${INSTALL} -d ${DESTDIR}${libdir}/pkgconfig
+	${INSTALL_DATA} ddjvuapi.pc ${DESTDIR}${libdir}/pkgconfig
+
+depend: FORCE
+	for n in ${srcdir}/*.cpp ; do \
+	  ${CXX} -MM ${CXXFLAGS} $$n | \
+	    sed -e 's/^\([^.]*\)\.o:/\1.lo \1.o:/'; \
+	done > Makefile.dep
+
+clean: FORCE
+	-${LIBTOOL} --mode=clean ${RM} 2>/dev/null *.lo *.la 
+	-${RM} 2>/dev/null libdjvu-rpo
+
+distclean: clean 
+	-${RM} -r 2>/dev/null Makefile *.rpo ii_files
+
+FORCE:
+.PHONY: FORCE
+.SUFFIXES: .c .cpp .lo .o
+
+.c.o:
+	${CC} ${CFLAGS} -c $<
+
+.cpp.o:
+	${CXX} ${CXXFLAGS} -c $<
+
+.c.lo:
+	${LIBTOOL} --mode=compile ${CC} ${CFLAGS} -c $<
+
+.cpp.lo:
+	${LIBTOOL} --mode=compile ${CXX} ${CXXFLAGS} -c $<
+
+# Dependencies
+
+Makefile.dep: ${srcdir}/Makefile.dep
+	cp ${srcdir}/Makefile.dep $@
+
+include Makefile.dep
+

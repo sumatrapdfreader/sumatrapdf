@@ -1,0 +1,13 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir = @libdir@
+includedir = @includedir@
+
+Name: ddjvuapi
+Description: DjVu decoding api.
+Version: @PACKAGE_VERSION@
+Requires:
+Conflicts:
+Libs: -L${libdir} -ldjvulibre 
+Libs.private: @JPEG_LIBS@ @PTHREAD_LIBS@ @LIBS@
+Cflags: -I${includedir} @JPEG_CFLAGS@ @PTHREAD_CFLAGS@
