@@ -1,20 +1,24 @@
 /* Copyright 2006-2011 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+#define HAVE_NAMESPACES
+
 #include <DjVuDocument.h>
 #include <DjVuImage.h>
 #include <GBitmap.h>
 #include "DjVuEngine.h"
 #include "FileUtil.h"
 
-// TODO: this code leaks memory!?
+using namespace DJVU;
+
+// TODO: this code leaks memory and corrupts the heap! why?
 
 class RenderedDjVuBitmap : public RenderedBitmap {
 public:
-    RenderedDjVuBitmap(GBitmap *bitmap, HDC hDC);
+    RenderedDjVuBitmap(GBitmap *bitmap);
 };
 
-RenderedDjVuBitmap::RenderedDjVuBitmap(GBitmap *bitmap, HDC hDC) :
+RenderedDjVuBitmap::RenderedDjVuBitmap(GBitmap *bitmap) :
     RenderedBitmap(NULL, bitmap->columns(), bitmap->rows())
 {
     int w = bitmap->columns();
@@ -41,7 +45,9 @@ RenderedDjVuBitmap::RenderedDjVuBitmap(GBitmap *bitmap, HDC hDC) :
     bmi->bmiHeader.biSizeImage = h * stride;
     bmi->bmiHeader.biClrUsed = grays;
 
+    HDC hDC = GetDC(NULL);
     _hbmp = CreateDIBitmap(hDC, &bmi->bmiHeader, CBM_INIT, bmpData, bmi, DIB_RGB_COLORS);
+    ReleaseDC(NULL, hDC);
 
     free(bmi);
     free(bmpData);
@@ -49,10 +55,10 @@ RenderedDjVuBitmap::RenderedDjVuBitmap(GBitmap *bitmap, HDC hDC) :
 
 class RenderedDjVuPixmap : public RenderedBitmap {
 public:
-    RenderedDjVuPixmap(GPixmap *pixmap, HDC hDC);
+    RenderedDjVuPixmap(GPixmap *pixmap);
 };
 
-RenderedDjVuPixmap::RenderedDjVuPixmap(GPixmap *pixmap, HDC hDC) :
+RenderedDjVuPixmap::RenderedDjVuPixmap(GPixmap *pixmap) :
     RenderedBitmap(NULL, pixmap->columns(), pixmap->rows())
 {
     int w = pixmap->columns();
@@ -65,9 +71,9 @@ RenderedDjVuPixmap::RenderedDjVuPixmap(GPixmap *pixmap, HDC hDC) :
     for (int y = 0; y < h; y++) {
         GPixel *row = pixmap->operator[](y);
         for (int x = 0; x < w; x++) {
-            bmpData[y * stride + x * 3 + 0] = row[x].r;
+            bmpData[y * stride + x * 3 + 0] = row[x].g;
             bmpData[y * stride + x * 3 + 1] = row[x].b;
-            bmpData[y * stride + x * 3 + 2] = row[x].g;
+            bmpData[y * stride + x * 3 + 2] = row[x].r;
         }
     }
 
@@ -80,7 +86,9 @@ RenderedDjVuPixmap::RenderedDjVuPixmap(GPixmap *pixmap, HDC hDC) :
     bmi->bmiHeader.biSizeImage = h * stride;
     bmi->bmiHeader.biClrUsed = 0;
 
+    HDC hDC = GetDC(NULL);
     _hbmp = CreateDIBitmap(hDC, &bmi->bmiHeader, CBM_INIT, bmpData, bmi, DIB_RGB_COLORS);
+    ReleaseDC(NULL, hDC);
 
     free(bmi);
     free(bmpData);
@@ -97,15 +105,11 @@ public:
     }
 
     virtual const TCHAR *FileName() const { return fileName; };
-    virtual int PageCount() const {
-        if (!pages)
-            return 0;
-        return doc->get_pages_num();
-    }
+    virtual int PageCount() const { return pageCount; }
 
     virtual RectD PageMediabox(int pageNo) {
         assert(1 <= pageNo && pageNo <= PageCount());
-        return RectD(0, 0, pages[pageNo-1]->get_real_width(), pages[pageNo-1]->get_real_height());
+        return boxes[pageNo-1];
     }
 
     virtual RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
@@ -138,7 +142,9 @@ public:
 protected:
     const TCHAR *fileName;
     GP<DjVuDocument> doc;
+    int pageCount;
     GP<DjVuImage> *pages;
+    RectD *boxes;
 
     CRITICAL_SECTION pagesAccess;
 
@@ -146,7 +152,7 @@ protected:
     bool Load(const TCHAR *fileName);
 };
 
-CDjVuEngine::CDjVuEngine() : fileName(NULL), pages(NULL)
+CDjVuEngine::CDjVuEngine() : fileName(NULL), pageCount(0), pages(NULL), boxes(NULL)
 {
     InitializeCriticalSection(&pagesAccess);
 }
@@ -156,6 +162,7 @@ CDjVuEngine::~CDjVuEngine()
     EnterCriticalSection(&pagesAccess);
 
     delete[] pages;
+    delete[] boxes;
     free((void *)fileName);
 
     LeaveCriticalSection(&pagesAccess);
@@ -172,10 +179,14 @@ bool CDjVuEngine::Load(const TCHAR *fileName)
     if (!doc->wait_for_complete_init() || !doc->is_init_ok())
         return false;
 
-    // TODO: load the pages lazily
-    pages = new GP<DjVuImage>[doc->get_pages_num()];
-    for (int i = 0; i < doc->get_pages_num(); i++)
+    // TODO: load the pages lazily for a significant speed up at initial loading
+    pageCount = doc->get_pages_num();
+    pages = new GP<DjVuImage>[pageCount];
+    boxes = new RectD[pageCount];
+    for (int i = 0; i < pageCount; i++) {
         pages[i] = doc->get_page(i);
+        boxes[i] = RectD(0, 0, pages[i]->get_real_width(), pages[i]->get_real_height());
+    }
 
     return true;
 }
@@ -188,32 +199,25 @@ RenderedBitmap *CDjVuEngine::RenderBitmap(int pageNo, float zoom, int rotation, 
     RectI screen = Transform(pageRc, pageNo, zoom, rotation).Round();
     RectI full = Transform(PageMediabox(pageNo), pageNo, zoom, rotation).Round();
     screen = full.Intersect(screen);
+
     int rotation4 = (((rotation / 90) % 4) + 4) % 4;
-    pages[pageNo-1]->set_rotate(rotation4);
-    if (!pages[pageNo-1]->wait_for_complete_decode())
+    GP<DjVuImage> page = pages[pageNo-1];
+    page->set_rotate(rotation4);
+    if (!page->wait_for_complete_decode())
         return NULL;
 
     GRect all(full.x, full.y, full.dx, full.dy);
     GRect rect(screen.x, full.y + full.y - screen.y + full.dy - screen.dy, screen.dx, screen.dy);
-#if 0
-    // TODO: we're supposed to call get_pixmap before get_bitmap,
-    //       but this leads to heap corruption!?
-    GP<GPixmap> pix = pages[pageNo-1]->get_pixmap(rect, all);
-    if (pix) {
-        HDC hDC = GetDC(NULL);
-        RenderedBitmap *bmp = new RenderedDjVuPixmap(pix, hDC);
-        ReleaseDC(NULL, hDC);
-        return bmp;
-    }
-#endif
-    GP<GBitmap> gray = pages[pageNo-1]->get_bitmap(rect, all);
-    if (!gray)
-        return NULL;
 
-    HDC hDC = GetDC(NULL);
-    RenderedBitmap *bmp = new RenderedDjVuBitmap(gray, hDC);
-    ReleaseDC(NULL, hDC);
-    return bmp;
+    GP<GPixmap> pix = page->get_pixmap(rect, all);
+    if (pix)
+        return new RenderedDjVuPixmap(pix);
+
+    GP<GBitmap> gray = page->get_bitmap(rect, all);
+    if (gray)
+        return new RenderedDjVuBitmap(gray);
+
+    return NULL;
 }
 
 bool CDjVuEngine::RenderPage(HDC hDC, int pageNo, RectI screenRect, float zoom, int rotation, RectD *pageRect, RenderTarget target)
