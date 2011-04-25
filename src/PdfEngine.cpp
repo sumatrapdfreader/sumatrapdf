@@ -1407,7 +1407,10 @@ TCHAR *CPdfEngine::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_ou
         return NULL;
 
     TCHAR *result = ExtractPageText(page, lineSep, coords_out, target);
+
+    EnterCriticalSection(&_xrefAccess);
     pdf_free_page(page);
+    LeaveCriticalSection(&_xrefAccess);
 
     return result;
 }
