@@ -1057,24 +1057,20 @@ void CreateThumbnailForFile(WindowInfo& win, DisplayState& state)
 }
 #endif
 
-static void WindowRenderingOfPageStarted(WindowInfo *win, int pageNo)
+// This callback is leaked whenever a rendering request is aborted prematurely
+// (doesn't really matter, though, as it's just for debugging)
+class RenderingStartedCallback : public CallbackFunc
 {
-    win->stressLastRenderedPage = pageNo;
-}
-
-class RenderingStartedWorkItem : public UIThreadWorkItem
-{
-public:
     WindowInfo * win;
     int          pageNo;
 
-    RenderingStartedWorkItem(WindowInfo *win, int pageNo) : 
-        UIThreadWorkItem(win), pageNo(pageNo)
-        {}
-    virtual void Execute() {
-        if (WindowInfoStillValid(win)) {
-            WindowRenderingOfPageStarted(win, pageNo);
-        }
+public:
+    RenderingStartedCallback(WindowInfo *win, int pageNo) : win(win), pageNo(pageNo) { }
+
+    virtual void Callback() {
+        // no need to marshal to the UI thread just for this one assignment
+        win->stressLastRenderedPage = pageNo;
+        delete this;
     }
 };
 
@@ -1754,12 +1750,11 @@ void WindowInfo::RenderPage(int pageNo)
     if (dm->cbxEngine || dm->imageEngine)
         return;
 
-    UIThreadWorkItem *wi = NULL;
-    if (threadStressRunning) {
-        wi = new RenderingStartedWorkItem(this, pageNo);
-    }
+    RenderingStartedCallback *cb = NULL;
+    if (threadStressRunning)
+        cb = new RenderingStartedCallback(this, pageNo);
 
-    gRenderCache.Render(dm, pageNo, NULL, wi);
+    gRenderCache.Render(dm, pageNo, NULL, cb);
 }
 
 void WindowInfo::CleanUp(DisplayModel *dm)
@@ -2363,8 +2358,8 @@ static void StartStressRenderingPage(WindowInfo& win, int pageNo)
         pageNo = 1;
     }
     RenderingCallback *callback = new StressTestPageRenderedWorkItem(&win, pageNo);
-    UIThreadWorkItem *wi = new RenderingStartedWorkItem(&win, pageNo);
-    gRenderCache.Render(win.dm, pageNo, callback, wi);
+    RenderingStartedCallback *cb = new RenderingStartedCallback(&win, pageNo);
+    gRenderCache.Render(win.dm, pageNo, callback, cb);
 }
 
 // TODO: start text search thread as well

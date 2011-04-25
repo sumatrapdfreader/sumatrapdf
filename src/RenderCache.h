@@ -5,7 +5,6 @@
 #define RenderCache_h
 
 #include "DisplayModel.h"
-#include "AppTools.h"
 
 #define RENDER_DELAY_UNDEFINED ((UINT)-1)
 #define RENDER_DELAY_FAILED    ((UINT)-2)
@@ -59,7 +58,7 @@ struct PageRenderRequest {
     RenderingCallback * renderCb;
 
     // this is used for debugging
-    UIThreadWorkItem *renderingStartedWorkItem;
+    CallbackFunc *      renderingStartedCb;
 };
 
 #define MAX_PAGE_REQUESTS 8
@@ -94,7 +93,7 @@ public:
     ~RenderCache();
 
     void    Render(DisplayModel *dm, int pageNo, RenderingCallback *callback=NULL,
-                   UIThreadWorkItem *workItem=NULL);
+                   CallbackFunc *debugCb=NULL);
     void    Render(DisplayModel *dm, int pageNo, int rotation, float zoom,
                    RectD pageRect, RenderingCallback& callback);
     void    CancelRendering(DisplayModel *dm);
@@ -122,11 +121,11 @@ private:
     UINT    GetRenderDelay(DisplayModel *dm, int pageNo, TilePosition tile);
     void    Render(DisplayModel *dm, int pageNo, TilePosition tile,
                    bool clearQueue=true, RenderingCallback *callback=NULL,
-                   UIThreadWorkItem *workItem=NULL);
+                   CallbackFunc *debugCb=NULL);
     bool    Render(DisplayModel *dm, int pageNo, int rotation, float zoom,
                    TilePosition *tile=NULL, RectD *pageRect=NULL,
                    RenderingCallback *callback=NULL, 
-                   UIThreadWorkItem *renderingStartedWorkItem=NULL);
+                   CallbackFunc *debugCb=NULL);
     void    ClearQueueForDisplayModel(DisplayModel *dm, int pageNo=INVALID_PAGE_NO,
                                       TilePosition *tile=NULL);
 
@@ -137,14 +136,14 @@ private:
     void    DropCacheEntry(BitmapCacheEntry *entry);
     bool    Exists(DisplayModel *dm, int pageNo, int rotation,
                    float zoom=INVALID_ZOOM, TilePosition *tile=NULL);
-    bool   FreePage(DisplayModel *dm=NULL, int pageNo=-1, TilePosition *tile=NULL);
+    bool    FreePage(DisplayModel *dm=NULL, int pageNo=-1, TilePosition *tile=NULL);
 
-    UINT   PaintTile(HDC hdc, RectI *bounds, DisplayModel *dm, int pageNo,
-                     TilePosition tile, RectI *tileOnScreen, bool renderMissing,
-                     bool *renderOutOfDateCue, bool *renderedReplacement);
-    UINT   PaintTiles(HDC hdc, RectI *bounds, DisplayModel *dm, int pageNo,
-                     RectI *pageOnScreen, USHORT tileRes, bool renderMissing,
-                     bool *renderOutOfDateCue, bool *renderedReplacement);
+    UINT    PaintTile(HDC hdc, RectI *bounds, DisplayModel *dm, int pageNo,
+                      TilePosition tile, RectI *tileOnScreen, bool renderMissing,
+                      bool *renderOutOfDateCue, bool *renderedReplacement);
+    UINT    PaintTiles(HDC hdc, RectI *bounds, DisplayModel *dm, int pageNo,
+                      RectI *pageOnScreen, USHORT tileRes, bool renderMissing,
+                      bool *renderOutOfDateCue, bool *renderedReplacement);
 
 };
 
