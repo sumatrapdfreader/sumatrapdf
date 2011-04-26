@@ -671,7 +671,7 @@ static TCHAR *GetThumbnailPath(const TCHAR *filePath)
 }
 
 // removes thumbnails that don't belong to any frequently used item in file history
-static void CleanUpCache(FileHistory& fileHistory)
+void CleanUpThumbnailCache(FileHistory& fileHistory)
 {
     ScopedMem<TCHAR> thumbsPath(AppGenDataFilename(THUMBNAILS_DIR_NAME));
     ScopedMem<TCHAR> pattern(Path::Join(thumbsPath, _T("*.bmp")));
@@ -724,7 +724,7 @@ void LoadThumbnails(FileHistory& fileHistory)
         state->thumbnail = new RenderedBitmap(hbmp, bmp.bmWidth, bmp.bmHeight);
     }
 
-    CleanUpCache(fileHistory);
+    CleanUpThumbnailCache(fileHistory);
 }
 
 bool HasThumbnail(DisplayState& state)

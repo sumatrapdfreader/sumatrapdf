@@ -29,6 +29,7 @@ const TCHAR *GetStaticLink(Vec<StaticLinkInfo>& linkInfo, int x, int y, StaticLi
 #define THUMBNAIL_DY        150
 
 void    DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory);
+void    CleanUpThumbnailCache(FileHistory& fileHistory);
 void    LoadThumbnails(FileHistory& fileHistory);
 bool    HasThumbnail(DisplayState& state);
 void    SaveThumbnail(DisplayState& state);

@@ -3979,8 +3979,12 @@ static void OnMenuSettings(WindowInfo& win)
     if (IDOK != Dialog_Settings(win.hwndFrame, &gGlobalPrefs))
         return;
 
-    if (!gGlobalPrefs.m_rememberOpenedFiles)
+    if (!gGlobalPrefs.m_rememberOpenedFiles) {
         gFileHistory.Clear();
+#ifdef NEW_START_PAGE
+        CleanUpThumbnailCache(gFileHistory);
+#endif
+    }
 #ifdef NEW_START_PAGE
     if (gWindows.Count() > 0 && gWindows[0]->IsAboutWindow())
         gWindows[0]->RedrawAll(true);
