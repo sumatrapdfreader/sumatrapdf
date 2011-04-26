@@ -944,12 +944,16 @@ void DisplayModel::RenderVisibleParts()
 
 void DisplayModel::ChangeViewPortSize(SizeI newViewPortSize)
 {
-    ScrollState ss = GetScrollState();
+    ScrollState ss;
 
-    bool isIsDocLoaded = validPageNo(_startPage) && _zoomReal != 0;
+    bool isDocReady = validPageNo(_startPage) && _zoomReal != 0;
+    if (isDocReady)
+        ss = GetScrollState();
+
     totalViewPortSize = newViewPortSize;
     Relayout(_zoomVirtual, _rotation);
-    if (isIsDocLoaded) {
+
+    if (isDocReady) {
         // when fitting to content, let goToPage do the necessary scrolling
         if (_zoomVirtual != ZOOM_FIT_CONTENT)
             SetScrollState(ss);
