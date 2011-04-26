@@ -1154,6 +1154,11 @@ fz_matrix CPdfEngine::viewctm(pdf_page *page, float zoom, int rotate)
 
     ctm = fz_concat(ctm, fz_scale(zoom, -zoom));
     ctm = fz_concat(ctm, fz_rotate((float)rotate));
+
+    assert(fz_matrix_expansion(ctm) > 0);
+    if (fz_matrix_expansion(ctm) == 0)
+        return fz_identity;
+
     return ctm;
 }
 
@@ -2173,6 +2178,11 @@ fz_matrix CXpsEngine::viewctm(RectD mediabox, float zoom, int rotate)
 
     ctm = fz_concat(ctm, fz_scale(zoom, zoom));
     ctm = fz_concat(ctm, fz_rotate((float)rotate));
+
+    assert(fz_matrix_expansion(ctm) > 0);
+    if (fz_matrix_expansion(ctm) == 0)
+        return fz_identity;
+
     return ctm;
 }
 
