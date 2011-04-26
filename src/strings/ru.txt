@@ -258,6 +258,9 @@ Default PDF reader can't be changed in portable mode
 Denied Permissions:
 Запрещённые права:
 
+DjVu documents
+Документы DjVu
+
 Document Properties
 Свойства документа
 
@@ -590,7 +593,4 @@ copying text
 
 printing document
 печатается документ
-
-# Untranslated:
-#DjVu documents
 
