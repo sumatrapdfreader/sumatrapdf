@@ -12,6 +12,7 @@
 using namespace DJVU;
 
 // TODO: this code leaks memory and corrupts the heap! why?
+//       only when compiling a debug build, though (caused by uninitialized memory?)
 
 class RenderedDjVuBitmap : public RenderedBitmap {
 public:
