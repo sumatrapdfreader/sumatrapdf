@@ -54,8 +54,7 @@ CFLAGS = $(CFLAGS) /D "WINVER=0x0500" /D "_WIN32_WINNT=0x0500"
 SUMATRA_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
 	/wd4800 \
 	/Ibaseutils /Ibaseutils/msvc /I$(MUPDF_DIR)\fitz /I$(MUPDF_DIR)\pdf /I$(MUPDF_DIR)\xps \
-	/Isrc /I$(EXTLIBSDIR)/synctex /D "SYNCTEX_FEATURE" /I$(ZLIB_DIR) /I$(ZLIB_DIR)/minizip \
-	/I$(EXTLIBSDIR)/libdjvu
+	/Isrc /I$(EXTLIBSDIR)/synctex /D "SYNCTEX_FEATURE" /I$(ZLIB_DIR) /I$(ZLIB_DIR)/minizip
 
 INSTALLER_CFLAGS = $(CFLAGS) $(EXTCFLAGS) /wd4800 \
 	/Ibaseutils /Ibaseutils/msvc /Isrc /Isrc/installer /I$(ZLIB_DIR) /I$(ZLIB_DIR)/minizip
@@ -95,9 +94,12 @@ SUMATRA_OBJS = \
 	$(OS)\SumatraPDF.obj $(OS)\translations.obj $(OS)\FileWatch.obj $(OS)\PdfSync.obj \
 	$(OS)\RenderCache.obj $(OS)\TextSelection.obj $(OS)\WindowInfo.obj $(OS)\ParseCommandLine.obj \
 	$(OS)\Benchmark.obj $(OS)\UnitTests.obj $(OS)\AppTools.obj $(SUMATRA_RES) \
-	$(OS)\ImagesEngine.obj $(OS)\DjVuEngine.obj $(BASEUTILS_OBJS) \
-	$(BZIP2_OBJS) $(MINIZIP_OBJS) $(UNRAR_OBJS) $(SYNCTEX_OBJS) $(DJVU_OBJS)
-# $(TIFF_OBJS) 
+	$(OS)\ImagesEngine.obj $(BASEUTILS_OBJS) \
+	$(BZIP2_OBJS) $(MINIZIP_OBJS) $(UNRAR_OBJS) $(SYNCTEX_OBJS) 
+!if "$(BUILD_DJVU_ENGINE)"!=""
+SUMATRA_OBJS = $(SUMATRA_OBJS) $(OS)\DjVuEngine.obj $(DJVU_OBJS) $(TIFF_OBJS)
+SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /I$(EXTLIBSDIR)/libdjvu /D "BUILD_DJVU_ENGINE"
+!endif 
 
 INSTALLER_OBJS = \
 	$(OS)\Installer.obj $(INSTALLER_RES)
