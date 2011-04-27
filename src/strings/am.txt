@@ -25,6 +25,9 @@ Contributor: Hrant Ohanyan »»» http://haysoft.org (hrantohanyan@mail.am)
 &Close\tCtrl-W
 &Փակել\tCtrl-W
 
+&Copy Selection
+&Պատճենել ընտրվածը
+
 &Copy Selection\tCtrl-C
 Պատճենել ընտրվածը\tCtrl-C
 
@@ -91,6 +94,9 @@ Contributor: Hrant Ohanyan »»» http://haysoft.org (hrantohanyan@mail.am)
 &Previous Page\tLeft Arrow
 Նախորդ էջը\t<-
 
+&Print...
+&Տպել...
+
 &Print...\tCtrl-P
 &Տպել\tCtrl-P
 
@@ -102,6 +108,9 @@ Contributor: Hrant Ohanyan »»» http://haysoft.org (hrantohanyan@mail.am)
 
 &Remember these settings for each document
 Հիշել այս կարգավորումները &բոլոր փաստաթղթերի համար
+
+&Save As...
+&Պահպանել որպես
 
 &Save As...\tCtrl-S
 &Պահպանել որպես\tCtrl-S
@@ -139,6 +148,9 @@ Advanced
 All files
 Բոլոր ֆայլերը
 
+All supported documents
+Բոլոր աջակցվող փասթաթղթերը
+
 Application:
 Ծրագիրը.
 
@@ -162,6 +174,12 @@ Book View
 
 Book&marks\tF12
 Էջերը\tF12
+
+Bookmark Shortcuts
+Էջանշել պիտակները
+
+Bookmark shortcut to page %d of %s
+Էջանշել %d էջից %s-ը
 
 Bookmarks
 Էջեր
@@ -187,6 +205,9 @@ Change Language
 Check for &Updates
 &Ստուգել նոր տարբերակը
 
+Comic books
+Հումորիստական գրքեր
+
 Continuous
 Անդադար
 
@@ -198,6 +219,12 @@ Continuous Facing
 
 Contribute Translation
 Օգնել թարգմանել
+
+Copy &Link Address
+Պատճենել &հղումը
+
+Copy Co&mment
+Պատճենել մեկ&նաբանությունը
 
 Copying text was denied (copying as image only)
 Տեքստի պատճենումը թույլատրված չէ (պատճենում է որպես պատկեր)
@@ -229,6 +256,9 @@ Default PDF reader can't be changed in portable mode
 Denied Permissions:
 Լիազորությունները մերժված են.
 
+DjVu documents
+DjVu փաստաթղթեր
+
 Document Properties
 Փաստաթղթի հատկությունները
 
@@ -246,6 +276,9 @@ Enter password for %s
 
 Enter the command-line to invoke when you double-click on the PDF document:
 Մուտքագրեք հրաման, որը կկատարվի PDF փաստաթղթում մկնիկի կրկնակի սեղման ժամանակ. 
+
+Error loading %s
+Բացման սխալ %s
 
 F&orward\tAlt+Right Arrow
 Առաջ\tAlt+->
@@ -307,14 +340,26 @@ Fit a Single Page
 Found text at page %d
 Տեքստը գտնվել է %d էջում
 
+Found text at page %d (again)
+Գտնել տեքստ %d էջում (կրկին)
+
+Frequently Read
+Կարդալու քանակը
+
 GB
 ԳԲ
 
 Go to page
 Անցնել էջին
 
+Hide frequently read
+Թաքցնել հաճախակի կարդացումը
+
 Hint: Use the F3 key for finding again
 Փնտրումը կրկնելու համար օգտագործեք F3 կոճակը
+
+Image files (*.%s)
+Նկարի ֆայլեր (*.%s)
 
 KB
 ԿԲ
@@ -358,6 +403,9 @@ OK
 Open
 Բացել
 
+Open a document...
+Բացել փաստաթուղթը...
+
 Open in &Adobe Reader
 Բացել &Adobe Reader-ում
 
@@ -366,6 +414,9 @@ Open in &Foxit Reader
 
 Open in PDF-XChange
 Բացել PDF-XChange-ում
+
+P&roperties
+Հ&ատկությունները
 
 P&roperties\tCtrl-D
 Հ&ատկություններ...\tCtrl-D
@@ -412,6 +463,12 @@ Previous Page
 Print range
 Տպելու կարգը
 
+Printing is still in progress. Abort and start over?
+Տպվում է։ Կանգնեցնե՞լ։
+
+Printing page %d of %d...
+Տպվում է %d էջը %d-ից...
+
 Printing problem.
 Սխալ տպելիս
 
@@ -424,8 +481,14 @@ Rotate &Left\tCtrl-Shift--
 Rotate &Right\tCtrl-Shift-+
 Շրջել աջ\tCtrl-Shift-+
 
+Save S&hortcut...\tCtrl-Shift-S
+Պահպանել պ&իտակը...\tCtrl-Shift-S
+
 Searching %d of %d...
 Փնտրվում է %d-ից %d
+
+Select &All
+Ընտրել &բոլորը
 
 Select &All\tCtrl-A
 Ընտրել &բոլորը\tCtrl-A
@@ -444,6 +507,9 @@ Show &Toolbar
 
 Show &pages continuously
 Էջերը &ցույց տալ շարունակական
+
+Show frequently read
+Ցուցադրել հաճախակի կարդալը
 
 Show the &bookmarks sidebar when available
 Հնարավորության դեպքում ցույց տալ &Էջերը
@@ -493,6 +559,9 @@ Visit &Website
 Warning
 Զգուշացում
 
+XPS documents
+XPS փաստաթուղթ
+
 You have the latest version.
 Սա վերջին տարբերակն է։
 
@@ -521,28 +590,5 @@ printing document
 փաստաթուղթը տպվում է
 
 # Untranslated:
-#&Copy Selection
-#&Print...
-#&Save As...
-#All supported documents
-#Bookmark Shortcuts
-#Bookmark shortcut to page %d of %s
-#Comic books
-#Copy &Link Address
-#Copy Co&mment
-#DjVu documents
-#Error loading %s
-#Found text at page %d (again)
-#Frequently Read
-#Hide frequently read
-#Image files (*.%s)
 #No result found around line %u in file %s
-#Open a document...
-#P&roperties
-#Printing is still in progress. Abort and start over?
-#Printing page %d of %d...
-#Save S&hortcut...\tCtrl-Shift-S
-#Select &All
-#Show frequently read
-#XPS documents
 
