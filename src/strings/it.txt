@@ -16,24 +16,28 @@ Contributor: Massimiliano Beltrando
 Contributor: Mirco Scottà
 Contributor: Cosimo Prete Damiano
 Contributor: Antonio Colombo
+Contributor: Roberto Boriotti
 
 &About
 &Informazioni
 
 &Actual Size\tCtrl-1
-Dimensioni re&ali\tCtrl-1
+Dimensioni re&ali\t<Ctrl>+1
 
 &All selected pages
 Tutte le p&agine selezionate
 
 &Back\tAlt+Left Arrow
-&Indietro\tAlt+Freccia sinistra
+&Indietro\t<Alt>+<Freccia sinistra>
 
 &Close\tCtrl-W
 &Chiudi\tCtrl-W
 
+&Copy Selection
+Selezione &copia
+
 &Copy Selection\tCtrl-C
-&Copia Selezione\tCtrl-C
+&Copia Selezione\t<Ctrl>+C
 
 &Don't ask me again
 Non chie&dermelo più
@@ -48,7 +52,7 @@ Solo pagin&e pari
 &Ricerca:
 
 &First Page\tHome
-&Prima pagina\tHome
+&Prima pagina\t<Home>
 
 &Fit pages to printable area
 &Adatta pagine alla zona stampabile
@@ -60,10 +64,10 @@ Solo pagin&e pari
 &Vai a pagina:
 
 &Help
-&Aiuto
+&Guida in linea
 
 &Last Page\tEnd
-&Ultima pagina\tEnd
+&Ultima pagina\t<Fine>
 
 &Magnification:
 &Ingrandimento:
@@ -75,7 +79,7 @@ Solo pagin&e pari
 &Maiuscole/minuscole
 
 &Next Page\tRight Arrow
-Pagi&na successiva\tFreccia destra
+Pagi&na successiva\t<Freccia destra>
 
 &No
 &No
@@ -96,7 +100,10 @@ S&olo pagine dispari
 &Password:
 
 &Previous Page\tLeft Arrow
-&Pagina Precedente\tFreccia sinistra
+&Pagina Precedente\t<Freccia sinistra>
+
+&Print...
+&Stampa
 
 &Print...\tCtrl-P
 Stam&pa\tCtrl-P
@@ -110,8 +117,11 @@ Stam&pa... (rifiutato)
 &Remember these settings for each document
 &Ricorda queste impostazioni per ogni documento
 
+&Save As...
+&Salva come...
+
 &Save As...\tCtrl-S
-&Salva Con Nome...\tCtrl-S
+&Salva con nome...\t<Ctrl>+S
 
 &Settings
 Impo&stazioni
@@ -146,6 +156,9 @@ Avanzate
 All files
 Tutti i file
 
+All supported documents
+Tutti i documenti supportati
+
 Application:
 Applicazione:
 
@@ -168,7 +181,10 @@ Book View
 Vista libro
 
 Book&marks\tF12
-Segna&libri\tF12
+Segna&libri\t<F12>
+
+Bookmark Shortcuts
+Scorciatoie segnalibro
 
 Bookmarks
 Segnalibri
@@ -177,7 +193,7 @@ Bytes
 Byte
 
 Can't connect to the Internet (error %#x).
-Impossibile connettersi a Internet (errore %#x).
+Impossibile connettersi a internet (errore %#x).
 
 Cancel
 Annulla
@@ -189,10 +205,13 @@ Cannot start inverse search command. Please check the command line in the settin
 Impossibile eseguire il comando di ricerca inversa. Controllare la riga di comando usata nelle impostazioni.
 
 Change Language
-Cambia lingua (Change Language)
+Cambia lingua (Change language)
 
 Check for &Updates
-Controlla &Aggiornamenti
+Controlla &aggiornamenti
+
+Comic books
+Fumetti
 
 Continuous
 Pagina continua
@@ -205,6 +224,12 @@ Pagine affiancate continue
 
 Contribute Translation
 Contribuisci alla traduzione
+
+Copy &Link Address
+Copia indirizzo co&llegamento
+
+Copy Co&mment
+Copia co&mmento
 
 Copying text was denied (copying as image only)
 Impossibile copiare il testo (copio solo come immagine)
@@ -222,19 +247,22 @@ Created:
 Creato:
 
 Custom &Zoom...\tCtrl-Y
-Ingrandimento personali&zzato\tCtrl-Y
+Ingrandimento personali&zzato\t<Ctrl>+Y
 
 Default &Layout:
 &Vista predefinita:
 
 Default &Zoom:
-&Ingrandimento predefinito
+&Ingrandimento predefinito:
 
 Default PDF reader can't be changed in portable mode
 Il lettore PDF predefinito non è modificabile in modalità "portable"
 
 Denied Permissions:
 Permessi rifiutati:
+
+DjVu documents
+Documenti DjVu
 
 Document Properties
 Proprietà del documento
@@ -243,7 +271,7 @@ Download
 Scarica
 
 E&xit\tCtrl-Q
-Es&ci\tCtrl-Q
+Es&ci\t<Ctrl>+Q
 
 Enter password
 Inserisci password
@@ -254,11 +282,14 @@ Inserisci password per %s
 Enter the command-line to invoke when you double-click on the PDF document:
 Inserire la linea di comando da eseguire quando fai doppio clic su un documento PDF:
 
+Error loading %s
+Errore nel caricamento di %s
+
 F&orward\tAlt+Right Arrow
-A&vanti\tAlt+Freccia Destra
+A&vanti\t<Alt>+<Freccia destra>
 
 F&ullscreen\tCtrl-Shift-L
-S&chermo intero\tCtrl-Shift-L
+S&chermo intero\t<Ctrl>+<Maiusc>+L
 
 Facing
 Pagine affiancate
@@ -273,7 +304,7 @@ File:
 File:
 
 Fin&d...\tCtrl-F
-Tro&va...\tCtrl-F
+Tro&va...\t<Ctrl>+F
 
 Find
 Trova
@@ -288,25 +319,25 @@ Find:
 Trova:
 
 Fit &Content\tCtrl-3
-&Contenuto\tCtrl-3
+&Contenuto\t<Ctrl>+3
 
 Fit &Page\tCtrl-0
-&Pagina intera\tCtrl-0
+&Pagina intera\t<Ctrl>+0
 
 Fit &Width\tCtrl-2
-&Larghezza pagina\tCtrl-2
+&Larghezza pagina\t<Ctrl>+2
 
 Fit Content
-Contenuto
+Adatta a contenuto
 
 Fit Page
-Pagina intera
+Adatta a pagina
 
 Fit Width
-Larghezza pagina
+Adatta a larghezza pagina
 
 Fit Width and Show Pages Continuously
-Adatta la larghezza e visualizza le pagine in modo continuo
+Adatta alla larghezza e visualizza le pagine in modo continuo
 
 Fit a Single Page
 Visualizza una pagina singola
@@ -314,14 +345,23 @@ Visualizza una pagina singola
 Found text at page %d
 Testo trovato a pagina %d
 
+Found text at page %d (again)
+Trovato testo alla pagina %d (ancora)
+
+Frequently Read
+Letto frequentemente
+
 GB
 GB
 
 Go to page
 Vai a pagina
 
+Hide frequently read
+Nascondi letto frequentemente
+
 Hint: Use the F3 key for finding again
-Consiglio: Usa F3 per trovare il successivo
+Consiglio: usare <F3> per trovare il successivo
 
 KB
 KB
@@ -345,7 +385,7 @@ New version %s is available. Download new version?
 È disponibile la versione %s. Scaricare la nuova versione?
 
 Next Page
-Pagina Successiva
+Pagina successiva
 
 No matches were found
 Nessuna corrispondenza trovata
@@ -360,13 +400,16 @@ No synchronization info at this position
 Nessuna informazione di sincronizzazione in questa posizione
 
 Number of Pages:
-Numero di Pagine:
+Numero di pagine:
 
 OK
 OK
 
 Open
 Apri
+
+Open a document...
+Apri documento...
 
 Open in &Adobe Reader
 Apri con &Adobe Reader
@@ -377,8 +420,11 @@ Apri con &Foxit Reader
 Open in PDF-XChange
 Apri con PDF-XChange
 
+P&roperties
+Proprietà
+
 P&roperties\tCtrl-D
-P&roprietà\tCtrl-D
+P&roprietà\t<Ctrl>+D
 
 PDF Document
 Documento PDF
@@ -393,7 +439,7 @@ PDF documents
 Documenti PDF
 
 Pa&ge...\tCtrl-G
-Pa&gina...\tCtrl-G
+Pa&gina...\t<Ctrl>+G
 
 Page Size:
 Dimensione pagina:
@@ -402,25 +448,31 @@ Page number %u inexistant
 Pagina numero %u inesistente
 
 Page scaling
-Dimensionamento pagina
+Adattamento pagina
 
 Page:
 Pagina:
 
 Please include the following file in your crash report:
-Includi questo file nella segnalazione del crash:
+Includi questo file nella segnalazione del blocco:
 
 Please wait - rendering...
-Rendering in corso - attendere prego...
+Rendering in corso - attendere...
 
 Pr&esentation\tCtrl-L
-Pr&esentazione\tCtrl-L
+Pr&esentazione\t<Ctrl>+L
 
 Previous Page
 Pagina precedente
 
 Print range
-Stampa serie
+Stampa intervallo
+
+Printing is still in progress. Abort and start over?
+La stampa è in corso. Interrompere e ricominciare?
+
+Printing page %d of %d...
+Stampa pagina %d di %d...
 
 Printing problem.
 Problemi di stampa.
@@ -429,34 +481,43 @@ Remember &opened files
 Ric&orda file aperti
 
 Rotate &Left\tCtrl-Shift--
-Ruota a &Sinistra\tCtrl-Shift--
+Ruota a &sinistra\t<Ctrl><Maiusc>-
 
 Rotate &Right\tCtrl-Shift-+
-Ruota a &Destra\tCtrl-Shift-+
+Ruota a &destra\t<Ctrl><Maiusc>+
+
+Save S&hortcut...\tCtrl-Shift-S
+Salva &collegamento\t<Ctrl>+<Maiusc>+S
 
 Searching %d of %d...
-Cercando: %d di %d...
+Ricerca: %d di %d...
+
+Select &All
+Seleziona &tutto
 
 Select &All\tCtrl-A
-Selezion&a Tutto\tCtrl-A
+Selezion&a tutto\t<Ctrl>+A
 
 Select content with Ctrl+left mouse button
-Seleziona contenuti con Ctrl+pulsante sinistro del mouse
+Seleziona contenuti con <Ctrl>+pulsante sinistro del mouse
 
 Send by &E-mail...
-Invia via &E-mail...
+Invia via &email...
 
 Set inverse search command-line
 Imposta la ricerca inversa via riga di comando
 
 Show &Toolbar
-Visualizza la &Toolbar
+Visualizza la &barar strumenti
 
 Show &pages continuously
 Visualizza le &pagine in modo continuo
 
+Show frequently read
+Visualizza letto frequentemente
+
 Show the &bookmarks sidebar when available
-Visualizza la side&bar dei segnalibri quando disponibile
+Visualizza la &barra laterale dei segnalibri quando disponibile
 
 Single Page
 Pagina singola
@@ -474,13 +535,13 @@ SumatraPDF Update
 Aggiornamento di SumatraPDF
 
 SumatraPDF crashed
-SumatraPDF ha avuto un errore irreparabile
+SumatraPDF ha incontrato un errore irreparabile
 
 SumatraPDF is your default PDF reader
-SumatraPDF è il tuo lettore PDF predefinito
+SumatraPDF è il lettore PDF predefinito
 
 SumatraPDF should now be your default PDF reader
-Ora SumatraPDF dovrebbe essere il tuo lettore PDF predefinito
+Ora SumatraPDF dovrebbe essere il lettore PDF predefinito
 
 Synchronization file cannot be opened
 Il file di sincronizzazione non può essere aperto
@@ -503,55 +564,37 @@ Visita il sito &web
 Warning
 Attenzione
 
+XPS documents
+Documenti XPS
+
 You have the latest version.
-Hai l'ultima versione.
+Il programma è aggiornato.
 
 You have version %s
-Hai la versione %s
+versione attuale: %s
 
 Zoom
 Zoom
 
 Zoom In
-Zoom In
+Ingrandimento
 
 Zoom Out
-Zoom Out
+Riduzione
 
 Zoom factor
-Fattore di Zoom
+Fattore di ingrandimento
 
 [Changes detected; refreshing] %s
 [Individuati cambiamenti; aggiornando] %s
 
 copying text
-sto copiando il testo
+copiando il testo...
 
 printing document
-documento in stampa
+documento in stampa...
 
 # Untranslated:
-#&Copy Selection
-#&Print...
-#&Save As...
-#All supported documents
-#Bookmark Shortcuts
 #Bookmark shortcut to page %d of %s
-#Comic books
-#Copy &Link Address
-#Copy Co&mment
-#DjVu documents
-#Error loading %s
-#Found text at page %d (again)
-#Frequently Read
-#Hide frequently read
 #Image files (*.%s)
-#Open a document...
-#P&roperties
-#Printing is still in progress. Abort and start over?
-#Printing page %d of %d...
-#Save S&hortcut...\tCtrl-Shift-S
-#Select &All
-#Show frequently read
-#XPS documents
 
