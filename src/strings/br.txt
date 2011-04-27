@@ -257,6 +257,9 @@ Não é possível alterar o leitor PDF padrão no modo portátil
 Denied Permissions:
 Permissões negadas:
 
+DjVu documents
+Documentos DjVu
+
 Document Properties
 Propriedades do Documento
 
@@ -341,11 +344,17 @@ Texto encontrado na página %d
 Found text at page %d (again)
 Texto encontrado (de novo) na página %d
 
+Frequently Read
+Lidos com frequência
+
 GB
 GB
 
 Go to page
 Ir para a página
+
+Hide frequently read
+Ocultar Lidos com frequência
 
 Hint: Use the F3 key for finding again
 Dica: tecle F3 para achar a próxima ocorrência
@@ -397,6 +406,9 @@ OK
 
 Open
 Abrir
+
+Open a document...
+Abrir um documento...
 
 Open in &Adobe Reader
 Abrir no &Adobe Reader
@@ -455,6 +467,12 @@ Página anterior
 Print range
 Intervalo de impressão
 
+Printing is still in progress. Abort and start over?
+A impressão está em andamento. Interromper e começar de novo?
+
+Printing page %d of %d...
+Imprimindo página %d de %d...
+
 Printing problem.
 Problema de impressão.
 
@@ -493,6 +511,9 @@ Mostrar barra de ferramentas
 
 Show &pages continuously
 Exibir páginas de modo contínuo
+
+Show frequently read
+Mostrar Lidos com frequência
 
 Show the &bookmarks sidebar when available
 Mostrar barra lateral de marcadores quando disponível
@@ -571,13 +592,4 @@ copiando texto
 
 printing document
 imprimindo documento
-
-# Untranslated:
-#DjVu documents
-#Frequently Read
-#Hide frequently read
-#Open a document...
-#Printing is still in progress. Abort and start over?
-#Printing page %d of %d...
-#Show frequently read
 
