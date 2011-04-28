@@ -11,6 +11,7 @@
 #include "FileUtil.h"
 
 // TODO: libdjvu seems to leak memory - where?
+//       maybe http://sourceforge.net/projects/djvu/forums/forum/103286/topic/3553602
 
 class RenderedDjVuPixmap : public RenderedBitmap {
 public:
@@ -44,6 +45,17 @@ RenderedDjVuPixmap::RenderedDjVuPixmap(char *data, int width, int height) :
 // at least when it's never been used at all
 class DjVuCleanUp { public: ~DjVuCleanUp() { minilisp_finish(); } };
 DjVuCleanUp _globalCleanup;
+
+class DjVuToCItem : public DocToCItem, public PageDestination {
+public:
+    DjVuToCItem(const char *title) : DocToCItem(Str::Conv::FromUtf8(title)) { }
+
+    virtual PageDestination *GetLink() { return this; }
+
+    virtual const char *GetType() const { return "ScrollTo"; }
+    virtual int GetDestPageNo() const { return pageNo; }
+    virtual RectD GetDestRect() const { return RectD(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT); }
+};
 
 class CDjVuEngine : public DjVuEngine {
     friend DjVuEngine;
@@ -87,6 +99,9 @@ public:
     // we currently don't load pages lazily, so there's nothing to do here
     virtual bool BenchLoadPage(int pageNo) { return true; }
 
+    virtual bool HasToCTree() const { return outline != miniexp_nil; }
+    virtual DocToCItem *GetToCTree();
+
 protected:
     const TCHAR *fileName;
 
@@ -95,10 +110,12 @@ protected:
 
     ddjvu_context_t *ctx;
     ddjvu_document_t *doc;
+    miniexp_t outline;
 
     CRITICAL_SECTION ctxAccess;
 
     void GetTransform(Gdiplus::Matrix& m, int pageNo, float zoom, int rotate);
+    DjVuToCItem *BuildToCTree(miniexp_t entry, int& idCounter);
     bool Load(const TCHAR *fileName);
 };
 
@@ -111,7 +128,7 @@ void SpinDdjvuMessageLoop(ddjvu_context_t *ctx, bool wait=true)
         ddjvu_message_pop(ctx);
 }
 
-CDjVuEngine::CDjVuEngine() : fileName(NULL), pageCount(0), mediaboxes(NULL)
+CDjVuEngine::CDjVuEngine() : fileName(NULL), pageCount(0), mediaboxes(NULL), outline(miniexp_nil)
 {
     InitializeCriticalSection(&ctxAccess);
 
@@ -130,6 +147,8 @@ CDjVuEngine::~CDjVuEngine()
     delete[] mediaboxes;
     free((void *)fileName);
 
+    if (outline != miniexp_nil)
+        ddjvu_miniexp_release(doc, outline);
     if (doc)
         ddjvu_document_release(doc);
     if (ctx)
@@ -167,6 +186,13 @@ bool CDjVuEngine::Load(const TCHAR *fileName)
 
         mediaboxes[i] = RectD(0, 0, info.width * GetFileDPI() / info.dpi,
                                     info.height * GetFileDPI() / info.dpi);
+    }
+
+    while ((outline = ddjvu_document_get_outline(doc)) == miniexp_dummy)
+        SpinDdjvuMessageLoop(ctx);
+    if (!miniexp_consp(outline) || miniexp_car(outline) != miniexp_symbol("bookmarks")) {
+        ddjvu_miniexp_release(doc, outline);
+        outline = miniexp_nil;
     }
 
     return true;
@@ -268,6 +294,44 @@ RectD CDjVuEngine::Transform(RectD rect, int pageNo, float zoom, int rotate, boo
 unsigned char *CDjVuEngine::GetFileData(size_t *cbCount)
 {
     return (unsigned char *)File::ReadAll(fileName, cbCount);
+}
+
+DjVuToCItem *CDjVuEngine::BuildToCTree(miniexp_t entry, int& idCounter)
+{
+    DjVuToCItem *node = NULL;
+    DocToCItem *last = node;
+
+    for (miniexp_t rest = miniexp_cdr(entry); miniexp_consp(rest); rest = miniexp_cdr(rest)) {
+        miniexp_t item = miniexp_car(rest);
+        if (!miniexp_consp(item) || !miniexp_consp(miniexp_cdr(item)) ||
+            !miniexp_stringp(miniexp_car(item)) || !miniexp_stringp(miniexp_cadr(item)))
+            continue;
+
+        const char *name = miniexp_to_str(miniexp_car(item));
+        const char *link = miniexp_to_str(miniexp_cadr(item));
+
+        if (!node)
+            last = node = new DjVuToCItem(name);
+        else
+            last = last->next = new DjVuToCItem(name);
+        last->id = ++idCounter;
+        // TODO: resolve all link types
+        if (Str::StartsWith(link, "#"))
+            last->pageNo = atoi(link + 1);
+
+        last->child = BuildToCTree(miniexp_cddr(item), idCounter);
+    }
+
+    return node;
+}
+
+DocToCItem *CDjVuEngine::GetToCTree()
+{
+    if (outline == miniexp_nil)
+        return NULL;
+
+    int idCounter = 0;
+    return BuildToCTree(outline, idCounter);
 }
 
 DjVuEngine *DjVuEngine::CreateFromFileName(const TCHAR *fileName)

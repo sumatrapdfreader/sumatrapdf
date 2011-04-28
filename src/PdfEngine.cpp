@@ -590,7 +590,7 @@ protected:
                             fz_bbox clipbox=fz_infinite_bbox, bool cacheRun=true);
     void            dropPageRun(PdfPageRun *run, bool forceRemove=false);
 
-    CPdfToCItem   * buildTocTree(pdf_outline *entry, int& idCounter);
+    CPdfToCItem   * BuildToCTree(pdf_outline *entry, int& idCounter);
     void            linkifyPageText(pdf_page *page);
     bool            hasPermission(int permission);
 
@@ -910,7 +910,7 @@ bool CPdfEngine::finishLoading()
     return PageCount() > 0;
 }
 
-CPdfToCItem *CPdfEngine::buildTocTree(pdf_outline *entry, int& idCounter)
+CPdfToCItem *CPdfEngine::BuildToCTree(pdf_outline *entry, int& idCounter)
 {
     TCHAR *name = entry->title ? Str::Conv::FromUtf8(entry->title) : Str::Dup(_T(""));
     CPdfToCItem *node = new CPdfToCItem(name, PdfLink(this, entry->link));
@@ -920,9 +920,9 @@ CPdfToCItem *CPdfEngine::buildTocTree(pdf_outline *entry, int& idCounter)
     if (entry->link && PDF_LINK_GOTO == entry->link->kind)
         node->pageNo = FindPageNo(entry->link->dest);
     if (entry->child)
-        node->child = buildTocTree(entry->child, idCounter);
+        node->child = BuildToCTree(entry->child, idCounter);
     if (entry->next)
-        node->next = buildTocTree(entry->next, idCounter);
+        node->next = BuildToCTree(entry->next, idCounter);
 
     return node;
 }
@@ -933,12 +933,12 @@ DocToCItem *CPdfEngine::GetToCTree()
     int idCounter = 0;
 
     if (_outline) {
-        node = buildTocTree(_outline, idCounter);
+        node = BuildToCTree(_outline, idCounter);
         if (_attachments)
-            node->AddSibling(buildTocTree(_attachments, idCounter));
+            node->AddSibling(BuildToCTree(_attachments, idCounter));
     }
     else if (_attachments)
-        node = buildTocTree(_attachments, idCounter);
+        node = BuildToCTree(_attachments, idCounter);
 
     return node;
 }
@@ -1720,9 +1720,7 @@ public:
     virtual PageElement *GetElementAtPos(int pageNo, PointD pt);
 
     virtual PageDestination *GetNamedDest(const TCHAR *name);
-    virtual bool HasToCTree() const {
-        return _outline != NULL;
-    }
+    virtual bool HasToCTree() const { return _outline != NULL; }
     virtual DocToCItem *GetToCTree();
 
     int FindPageNo(const char *target);
@@ -1764,7 +1762,7 @@ protected:
                             fz_bbox clipbox=fz_infinite_bbox, bool cacheRun=true);
     void            dropPageRun(XpsPageRun *run, bool forceRemove=false);
 
-    CXpsToCItem   * buildTocTree(xps_outline *entry, int& idCounter);
+    CXpsToCItem   * BuildToCTree(xps_outline *entry, int& idCounter);
     void            linkifyPageText(xps_page *page, int pageNo);
 
     RectD         * _mediaboxes;
@@ -2477,7 +2475,7 @@ PageDestination *CXpsEngine::GetNamedDest(const TCHAR *name)
     return NULL;
 }
 
-CXpsToCItem *CXpsEngine::buildTocTree(xps_outline *entry, int& idCounter)
+CXpsToCItem *CXpsEngine::BuildToCTree(xps_outline *entry, int& idCounter)
 {
     TCHAR *name = entry->title ? Str::Conv::FromUtf8(entry->title) : Str::Dup(_T(""));
     CXpsToCItem *node = new CXpsToCItem(name, XpsLink(this, entry->target, fz_empty_rect));
@@ -2487,9 +2485,9 @@ CXpsToCItem *CXpsEngine::buildTocTree(xps_outline *entry, int& idCounter)
     if (Str::Eq(node->GetLink()->GetType(), "ScrollTo"))
         node->pageNo = FindPageNo(entry->target);
     if (entry->child)
-        node->child = buildTocTree(entry->child, idCounter);
+        node->child = BuildToCTree(entry->child, idCounter);
     if (entry->next)
-        node->next = buildTocTree(entry->next, idCounter);
+        node->next = BuildToCTree(entry->next, idCounter);
 
     return node;
 }
@@ -2500,7 +2498,7 @@ DocToCItem *CXpsEngine::GetToCTree()
         return NULL;
     
     int idCounter = 0;
-    return buildTocTree(_outline, idCounter);
+    return BuildToCTree(_outline, idCounter);
 }
 
 XpsEngine *XpsEngine::CreateFromFileName(const TCHAR *fileName)
