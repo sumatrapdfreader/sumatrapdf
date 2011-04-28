@@ -186,6 +186,9 @@ Segna&libri\t<F12>
 Bookmark Shortcuts
 Scorciatoie segnalibro
 
+Bookmark shortcut to page %d of %s
+Segnalibro alla pagina %d di %s
+
 Bookmarks
 Segnalibri
 
@@ -362,6 +365,9 @@ Nascondi letto frequentemente
 
 Hint: Use the F3 key for finding again
 Consiglio: usare <F3> per trovare il successivo
+
+Image files (*.%s)
+File immagine (*.%s)
 
 KB
 KB
@@ -593,8 +599,4 @@ copiando il testo...
 
 printing document
 documento in stampa...
-
-# Untranslated:
-#Bookmark shortcut to page %d of %s
-#Image files (*.%s)
 
