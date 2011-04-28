@@ -763,7 +763,7 @@ const char *gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "&Amplia\303\247\303\243o por omiss\303\243o:",
   "No modo port\303\241til, n\303\243o \303\251 poss\303\255vel alterar o leitor de PDFs",
   "Permiss\303\265es recusadas:",
-  NULL,
+  "Documentos DjVu",
   "Propriedades do documento",
   "Transferir",
   "&Sair\tCtrl-Q",

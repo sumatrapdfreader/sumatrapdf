@@ -258,6 +258,9 @@ No modo portátil, não é possível alterar o leitor de PDFs
 Denied Permissions:
 Permissões recusadas:
 
+DjVu documents
+Documentos DjVu
+
 Document Properties
 Propriedades do documento
 
@@ -590,7 +593,4 @@ copiando texto
 
 printing document
 imprimindo documento
-
-# Untranslated:
-#DjVu documents
 
