@@ -4,6 +4,7 @@ the release notes, as we make them, to make the release process easier.
 Next version:
 
 * display Frequently Read list when no document is open
+* add support for displaying DjVu documents
 * support clickable links and a Table of Content for XPS documents
 * display printing progress and allow to cancel it
 * add Print toolbar button

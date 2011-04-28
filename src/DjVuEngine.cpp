@@ -1,99 +1,49 @@
 /* Copyright 2006-2011 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#define HAVE_NAMESPACES
+// hack to prevent libdjvu from being built as an export/import library
+#define DDJVUAPI /**/
+#define MINILISPAPI /**/
 
-#include <DjVuDocument.h>
-#include <DjVuImage.h>
-#include <GBitmap.h>
+#include <ddjvuapi.h>
+#include <miniexp.h>
 #include "DjVuEngine.h"
 #include "FileUtil.h"
 
-using namespace DJVU;
-
-// TODO: this code leaks memory and corrupts the heap! why?
-//       only when compiling a debug build, though (caused by uninitialized memory?)
-
-class RenderedDjVuBitmap : public RenderedBitmap {
-public:
-    RenderedDjVuBitmap(GBitmap *bitmap);
-};
-
-RenderedDjVuBitmap::RenderedDjVuBitmap(GBitmap *bitmap) :
-    RenderedBitmap(NULL, bitmap->columns(), bitmap->rows())
-{
-    int w = bitmap->columns();
-    int h = bitmap->rows();
-    int stride = ((w + 3) / 4) * 4;
-    int grays = bitmap->get_grays();
-
-    BITMAPINFO *bmi = (BITMAPINFO *)calloc(1, sizeof(BITMAPINFOHEADER) + grays * sizeof(RGBQUAD));
-    unsigned char *bmpData = (unsigned char *)calloc(stride, h);
-
-    for (int c = 0; c < grays; c++) {
-        int color = 255 * (grays - 1 - c) / (grays - 1);
-        bmi->bmiColors[c].rgbBlue = bmi->bmiColors[c].rgbGreen = bmi->bmiColors[c].rgbRed = color;
-    }
-    for (int y = 0; y < h; y++)
-        memcpy(bmpData + y * stride, bitmap->operator[](y), w);
-
-    bmi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-    bmi->bmiHeader.biWidth = w;
-    bmi->bmiHeader.biHeight = h;
-    bmi->bmiHeader.biPlanes = 1;
-    bmi->bmiHeader.biCompression = BI_RGB;
-    bmi->bmiHeader.biBitCount = 8;
-    bmi->bmiHeader.biSizeImage = h * stride;
-    bmi->bmiHeader.biClrUsed = grays;
-
-    HDC hDC = GetDC(NULL);
-    _hbmp = CreateDIBitmap(hDC, &bmi->bmiHeader, CBM_INIT, bmpData, bmi, DIB_RGB_COLORS);
-    ReleaseDC(NULL, hDC);
-
-    free(bmi);
-    free(bmpData);
-}
+// TODO: libdjvu seems to leak memory - where?
 
 class RenderedDjVuPixmap : public RenderedBitmap {
 public:
-    RenderedDjVuPixmap(GPixmap *pixmap);
+    RenderedDjVuPixmap(char *data, int width, int height);
 };
 
-RenderedDjVuPixmap::RenderedDjVuPixmap(GPixmap *pixmap) :
-    RenderedBitmap(NULL, pixmap->columns(), pixmap->rows())
+RenderedDjVuPixmap::RenderedDjVuPixmap(char *data, int width, int height) :
+    RenderedBitmap(NULL, width, height)
 {
-    int w = pixmap->columns();
-    int h = pixmap->rows();
-    int stride = ((w * 3 + 3) / 4) * 4;
+    int stride = ((width * 3 + 3) / 4) * 4;
 
     BITMAPINFO *bmi = (BITMAPINFO *)calloc(1, sizeof(BITMAPINFOHEADER));
-    unsigned char *bmpData = (unsigned char *)calloc(stride, h);
-
-    for (int y = 0; y < h; y++) {
-        GPixel *row = pixmap->operator[](y);
-        for (int x = 0; x < w; x++) {
-            bmpData[y * stride + x * 3 + 0] = row[x].g;
-            bmpData[y * stride + x * 3 + 1] = row[x].b;
-            bmpData[y * stride + x * 3 + 2] = row[x].r;
-        }
-    }
 
     bmi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-    bmi->bmiHeader.biWidth = w;
-    bmi->bmiHeader.biHeight = h;
+    bmi->bmiHeader.biWidth = width;
+    bmi->bmiHeader.biHeight = -height;
     bmi->bmiHeader.biPlanes = 1;
     bmi->bmiHeader.biCompression = BI_RGB;
     bmi->bmiHeader.biBitCount = 24;
-    bmi->bmiHeader.biSizeImage = h * stride;
+    bmi->bmiHeader.biSizeImage = height * stride;
     bmi->bmiHeader.biClrUsed = 0;
 
     HDC hDC = GetDC(NULL);
-    _hbmp = CreateDIBitmap(hDC, &bmi->bmiHeader, CBM_INIT, bmpData, bmi, DIB_RGB_COLORS);
+    _hbmp = CreateDIBitmap(hDC, &bmi->bmiHeader, CBM_INIT, data, bmi, DIB_RGB_COLORS);
     ReleaseDC(NULL, hDC);
 
     free(bmi);
-    free(bmpData);
 }
+
+// Ensure that libdjvu doesn't trigger the CRT's leak detection
+// at least when it's never been used at all
+class DjVuCleanUp { public: ~DjVuCleanUp() { minilisp_finish(); } };
+DjVuCleanUp _globalCleanup;
 
 class CDjVuEngine : public DjVuEngine {
     friend DjVuEngine;
@@ -110,7 +60,7 @@ public:
 
     virtual RectD PageMediabox(int pageNo) {
         assert(1 <= pageNo && pageNo <= PageCount());
-        return boxes[pageNo-1];
+        return mediaboxes[pageNo-1];
     }
 
     virtual RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
@@ -130,11 +80,8 @@ public:
     virtual bool IsImagePage(int pageNo) { return true; }
     virtual PageLayoutType PreferredLayout() { return Layout_Single; }
 
-    virtual float GetFileDPI() const {
-        if (pages && PageCount() > 0)
-            return (float)pages[0]->get_dpi();
-        return 300.0f;
-    }
+    // DPI isn't constant for all pages and thus premultiplied
+    virtual float GetFileDPI() const { return 300.0f; }
     virtual const TCHAR *GetDefaultFileExt() const { return _T(".djvu"); }
 
     // we currently don't load pages lazily, so there's nothing to do here
@@ -142,51 +89,84 @@ public:
 
 protected:
     const TCHAR *fileName;
-    GP<DjVuDocument> doc;
-    int pageCount;
-    GP<DjVuImage> *pages;
-    RectD *boxes;
 
-    CRITICAL_SECTION pagesAccess;
+    int pageCount;
+    RectD *mediaboxes;
+
+    ddjvu_context_t *ctx;
+    ddjvu_document_t *doc;
+
+    CRITICAL_SECTION ctxAccess;
 
     void GetTransform(Gdiplus::Matrix& m, int pageNo, float zoom, int rotate);
     bool Load(const TCHAR *fileName);
 };
 
-CDjVuEngine::CDjVuEngine() : fileName(NULL), pageCount(0), pages(NULL), boxes(NULL)
+void SpinDdjvuMessageLoop(ddjvu_context_t *ctx, bool wait=true)
 {
-    InitializeCriticalSection(&pagesAccess);
+    const ddjvu_message_t *msg;
+    if (wait)
+        msg = ddjvu_message_wait(ctx);
+    while ((msg = ddjvu_message_peek(ctx)))
+        ddjvu_message_pop(ctx);
+}
+
+CDjVuEngine::CDjVuEngine() : fileName(NULL), pageCount(0), mediaboxes(NULL)
+{
+    InitializeCriticalSection(&ctxAccess);
+
+    // for now, create one ddjvu context per document
+    // TODO: share between all DjVuEngines
+    FILETIME ft;
+    GetSystemTimeAsFileTime(&ft);
+    ScopedMem<char> unique(_MemToHex(&ft));
+    ctx = ddjvu_context_create(unique);
 }
 
 CDjVuEngine::~CDjVuEngine()
 {
-    EnterCriticalSection(&pagesAccess);
+    EnterCriticalSection(&ctxAccess);
 
-    delete[] pages;
-    delete[] boxes;
+    delete[] mediaboxes;
     free((void *)fileName);
 
-    LeaveCriticalSection(&pagesAccess);
-    DeleteCriticalSection(&pagesAccess);
+    if (doc)
+        ddjvu_document_release(doc);
+    if (ctx)
+        ddjvu_context_release(ctx);
+
+    LeaveCriticalSection(&ctxAccess);
+    DeleteCriticalSection(&ctxAccess);
 }
 
 bool CDjVuEngine::Load(const TCHAR *fileName)
 {
+    if (!ctx)
+        return false;
+
     this->fileName = Str::Dup(fileName);
 
     ScopedMem<char> fileNameUtf8(Str::Conv::ToUtf8(fileName));
-    GURL::Filename::UTF8 gurl(fileNameUtf8.Get());
-    doc = DjVuDocument::create_wait(gurl);
-    if (!doc->wait_for_complete_init() || !doc->is_init_ok())
+    doc = ddjvu_document_create_by_filename_utf8(ctx, fileNameUtf8, /* cache */ FALSE);
+    if (!doc)
         return false;
 
-    // TODO: load the pages lazily for a significant speed up at initial loading
-    pageCount = doc->get_pages_num();
-    pages = new GP<DjVuImage>[pageCount];
-    boxes = new RectD[pageCount];
+    while (!ddjvu_document_decoding_done(doc))
+        SpinDdjvuMessageLoop(ctx);
+
+    pageCount = ddjvu_document_get_pagenum(doc);
+    mediaboxes = new RectD[pageCount];
+
     for (int i = 0; i < pageCount; i++) {
-        pages[i] = doc->get_page(i);
-        boxes[i] = RectD(0, 0, pages[i]->get_real_width(), pages[i]->get_real_height());
+        ddjvu_status_t status;
+        ddjvu_pageinfo_t info;
+        while ((status = ddjvu_document_get_pageinfo(doc, i, &info)) < DDJVU_JOB_OK)
+            SpinDdjvuMessageLoop(ctx);
+        if (status != DDJVU_JOB_OK)
+            continue;
+
+        mediaboxes[i] = RectD(0, 0, info.width * GetFileDPI() / info.dpi,
+                                    info.height * GetFileDPI() / info.dpi);
     }
 
     return true;
@@ -194,31 +174,46 @@ bool CDjVuEngine::Load(const TCHAR *fileName)
 
 RenderedBitmap *CDjVuEngine::RenderBitmap(int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target, bool useGdi)
 {
-    ScopedCritSec scope(&pagesAccess);
+    ScopedCritSec scope(&ctxAccess);
 
     RectD pageRc = pageRect ? *pageRect : PageMediabox(pageNo);
     RectI screen = Transform(pageRc, pageNo, zoom, rotation).Round();
     RectI full = Transform(PageMediabox(pageNo), pageNo, zoom, rotation).Round();
     screen = full.Intersect(screen);
 
-    int rotation4 = (((rotation / 90) % 4) + 4) % 4;
-    GP<DjVuImage> page = pages[pageNo-1];
-    page->set_rotate(rotation4);
-    if (!page->wait_for_complete_decode())
+    ddjvu_page_t *page = ddjvu_page_create_by_pageno(doc, pageNo-1);
+    if (!page)
+        return NULL;
+    int rotation4 = (((-rotation / 90) % 4) + 4) % 4;
+    ddjvu_page_set_rotation(page, (ddjvu_page_rotation_t)rotation4);
+
+    while (!ddjvu_page_decoding_done(page))
+        SpinDdjvuMessageLoop(ctx);
+    if (ddjvu_page_decoding_error(page))
         return NULL;
 
-    GRect all(full.x, full.y, full.dx, full.dy);
-    GRect rect(screen.x, full.y + full.y - screen.y + full.dy - screen.dy, screen.dx, screen.dy);
+    ddjvu_format_t *fmt = ddjvu_format_create(DDJVU_FORMAT_BGR24, 0, NULL);
+    ddjvu_format_set_row_order(fmt, /* top_to_bottom */ TRUE);
+    ddjvu_rect_t prect = { full.x, full.y, full.dx, full.dy };
+    ddjvu_rect_t rrect = { screen.x, 2 * full.y + screen.y + full.dy - screen.dy, screen.dx, screen.dy };
 
-    GP<GPixmap> pix = page->get_pixmap(rect, all);
-    if (pix)
-        return new RenderedDjVuPixmap(pix);
+    RenderedBitmap *bmp = NULL;
+    int stride = ((screen.dx * 3 + 3) / 4) * 4;
+    ScopedMem<char> bmpData(SAZA(char, stride * (screen.dy + 5)));
+    if (bmpData) {
+#ifndef DEBUG
+        if (ddjvu_page_render(page, DDJVU_RENDER_COLOR, &prect, &rrect, fmt, stride, bmpData.Get()))
+#else
+        // TODO: there seems to be a heap corruption in IW44Image.cpp
+        //       in debug builds when passing in DDJVU_RENDER_COLOR
+        if (ddjvu_page_render(page, DDJVU_RENDER_MASKONLY, &prect, &rrect, fmt, stride, bmpData.Get()))
+#endif
+            bmp = new RenderedDjVuPixmap(bmpData, screen.dx, screen.dy);
+    }
 
-    GP<GBitmap> gray = page->get_bitmap(rect, all);
-    if (gray)
-        return new RenderedDjVuBitmap(gray);
-
-    return NULL;
+    ddjvu_format_release(fmt);
+    ddjvu_page_release(page);
+    return bmp;
 }
 
 bool CDjVuEngine::RenderPage(HDC hDC, int pageNo, RectI screenRect, float zoom, int rotation, RectD *pageRect, RenderTarget target)

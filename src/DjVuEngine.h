@@ -6,8 +6,6 @@
 
 #include "BaseEngine.h"
 
-#ifdef BUILD_DJVU_ENGINE
-
 class DjVuEngine : public BaseEngine {
 public:
     static bool IsSupportedFile(const TCHAR *fileName) {
@@ -15,15 +13,5 @@ public:
     }
     static DjVuEngine *CreateFromFileName(const TCHAR *fileName);
 };
-
-#else
-
-class DjVuEngine : public BaseEngine {
-public:
-    static bool IsSupportedFile(const TCHAR *fileName) { return false; }
-    static DjVuEngine *CreateFromFileName(const TCHAR *fileName) { return NULL; }
-};
-
-#endif
 
 #endif

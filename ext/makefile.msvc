@@ -29,7 +29,8 @@ TIFF_CFLAGS = $(CFLAGSOPT) /TC /wd4018
 # undo /D "UNICODE", as tif_win32.c uses LPTSTR for ANSI strings
 TIFF_CFLAGS = $(TIFF_CFLAGS:UNICODE=IGNORE_THIS)
 
-DJVU_CFLAGS = $(CFLAGSOPT) /D "NO_MMX" /D "HAVE_NAMESPACES" /D "NEED_JPEG_DECODER" /D "THREADMODEL=NOTHREADS" /I$(JPEG_TURBO_DIR) /D "DDJVUAPI=/**/" /D "MINILISPAPI=/**/"
+DJVU_CFLAGS = $(CFLAGSOPT) /D "NEED_JPEG_DECODER" /I$(JPEG_TURBO_DIR)
+DJVU_CFLAGS = $(DJVU_CFLAGS) /D "THREADMODEL=NOTHREADS" /D "DDJVUAPI=/**/" /D "MINILISPAPI=/**/"
 # a hack to enable C++ exception handling for libdjvu (without triggering a warning)
 DJVU_CFLAGS = $(DJVU_CFLAGS:/EHs-c-=/EHsc)
 # undo /D "UNICODE", as libdjvu uses TCHAR functions for char in several places
@@ -93,8 +94,8 @@ DJVU_OBJS = \
 	$(ODV)\IW44EncodeCodec.obj $(ODV)\IW44Image.obj $(ODV)\JB2EncodeCodec.obj \
 	$(ODV)\DjVmDir.obj $(ODV)\JB2Image.obj $(ODV)\JPEGDecoder.obj \
 	$(ODV)\MMRDecoder.obj $(ODV)\MMX.obj $(ODV)\UnicodeByteStream.obj \
-	$(ODV)\XMLParser.obj $(ODV)\XMLTags.obj $(ODV)\ZPCodec.obj
-#	$(ODV)\ddjvuapi.obj $(ODV)\debug.obj $(ODV)\miniexp.obj
+	$(ODV)\XMLParser.obj $(ODV)\XMLTags.obj $(ODV)\ZPCodec.obj \
+	$(ODV)\ddjvuapi.obj $(ODV)\debug.obj $(ODV)\miniexp.obj
 
 $(OE): force
 	@if not exist $(OE) mkdir $(OE)

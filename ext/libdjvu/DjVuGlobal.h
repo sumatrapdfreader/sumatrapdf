@@ -72,7 +72,7 @@ inline void * operator new(size_t, void * ptr) { return ptr; }
 # include <new.h>
 #endif
 
-#ifdef WIN32_NOPE
+#ifdef WIN32_BUT_NOT_SUMATRAPDF
 # ifdef DLL_EXPORT
 #  define DJVUAPI __declspec(dllexport)
 # else

@@ -305,7 +305,7 @@ bool ImageEngine::LoadSingleFile(const TCHAR *file)
     assert(IsSupportedFile(file));
 
     size_t len = 0;
-    ScopedMem<char> bmpData(File::ReadAll(fileName, &len));
+    ScopedMem<char> bmpData(File::ReadAll(file, &len));
     if (!bmpData)
         return false;
 
