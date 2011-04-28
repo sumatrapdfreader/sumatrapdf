@@ -660,6 +660,8 @@ static TCHAR *GetThumbnailPath(const TCHAR *filePath)
     // content), but that's too expensive for files on slow drives
     unsigned char digest[16];
     ScopedMem<TCHAR> pathN(Path::Normalize(filePath));
+    if (!pathN)
+        return NULL;
     ScopedMem<char> pathU(Str::Conv::ToUtf8(pathN));
     CalcMD5Digest((unsigned char *)pathU.Get(), Str::Len(pathU), digest);
     ScopedMem<char> fingerPrint(Str::MemToHex(digest, 16));
@@ -691,6 +693,8 @@ void CleanUpThumbnailCache(FileHistory& fileHistory)
     Vec<DisplayState *> *list = fileHistory.GetFrequencyOrder();
     for (size_t i = 0; i < list->Count() && i < FILE_HISTORY_MAX_FREQUENT * 2; i++) {
         ScopedMem<TCHAR> bmpPath(GetThumbnailPath(list->At(i)->filePath));
+        if (!bmpPath)
+            continue;
         int idx = files.Find(Path::GetBaseName(bmpPath));
         if (idx != -1) {
             free(files[idx]);
@@ -714,6 +718,8 @@ void LoadThumbnails(FileHistory& fileHistory)
         state->thumbnail = NULL;
 
         ScopedMem<TCHAR> bmpPath(GetThumbnailPath(state->filePath));
+        if (!bmpPath)
+            continue;
         HBITMAP hbmp = (HBITMAP)LoadImage(NULL, bmpPath, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
         if (!hbmp)
             continue;
@@ -731,6 +737,8 @@ bool HasThumbnail(DisplayState& state)
 {
     if (state.thumbnail) {
         ScopedMem<TCHAR> bmpPath(GetThumbnailPath(state.filePath));
+        if (!bmpPath)
+            return true;
         FILETIME bmpTime = File::GetModificationTime(bmpPath);
         FILETIME fileTime = File::GetModificationTime(state.filePath);
         // delete the thumbnail if the file is newer than the thumbnail
@@ -752,6 +760,8 @@ void SaveThumbnail(DisplayState& state)
     unsigned char *data = state.thumbnail->Serialize(&dataLen);
     if (data) {
         ScopedMem<TCHAR> bmpPath(GetThumbnailPath(state.filePath));
+        if (!bmpPath)
+            return;
         ScopedMem<TCHAR> thumbsPath(Path::GetDir(bmpPath));
         if (Dir::Create(thumbsPath))
             File::WriteAll(bmpPath, data, dataLen);
