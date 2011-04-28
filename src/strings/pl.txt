@@ -9,6 +9,7 @@
 Lang: pl Polish (Polski)
 
 Contributor: Skiff
+Contributor: Begina
 
 &About
 &O SumatraPDF
@@ -175,6 +176,12 @@ Widok odczytu
 Book&marks\tF12
 &Zakładki\tF12
 
+Bookmark Shortcuts
+Zaznacz Skróty
+
+Bookmark shortcut to page %d of %s
+Zaznacz skrót do strony %d z %s
+
 Bookmarks
 Zakładki
 
@@ -214,6 +221,9 @@ Wiele stron - układ ciągły
 Contribute Translation
 Dodaj swoje tłumaczenie
 
+Copy &Link Address
+Kopiuj adres z &Linku
+
 Copy Co&mment
 Kopiuj komentarz
 
@@ -246,6 +256,9 @@ Domyślna przeglądarka PDF nie może być zmieniona w trybie przenośnym
 
 Denied Permissions:
 Brak zezwoleń:
+
+DjVu documents
+Dokumenty DjVu
 
 Document Properties
 Właściwości dokumentu
@@ -331,11 +344,17 @@ Znaleziono tekst na stronie %d
 Found text at page %d (again)
 Znaleziono tekst na stronie %d (znowu)
 
+Frequently Read
+Często otwierane
+
 GB
 GB
 
 Go to page
 Przejdź do strony
+
+Hide frequently read
+Ukryj często otwierane
 
 Hint: Use the F3 key for finding again
 Wskazówka: użyj klawisza F3, aby szukać dalej
@@ -387,6 +406,9 @@ OK
 
 Open
 Otwórz
+
+Open a document...
+Otwórz dokument...
 
 Open in &Adobe Reader
 Otwórz w &Adobe Reader
@@ -445,6 +467,12 @@ Poprzednia strona
 Print range
 Zakres druku
 
+Printing is still in progress. Abort and start over?
+Jeszcze trwa drukowanie. Przerwać i zacząć od nowa?
+
+Printing page %d of %d...
+Drukowanie strony %d z %d...
+
 Printing problem.
 Problem z drukowaniem.
 
@@ -456,6 +484,9 @@ Obróć w &lewo\tCtrl+Shift+Minus
 
 Rotate &Right\tCtrl-Shift-+
 Obróć w &prawo\tCtrl+Shift+Plus
+
+Save S&hortcut...\tCtrl-Shift-S
+Utwórz skrót do dokumentu\Ctrl-Shift-S
 
 Searching %d of %d...
 Szukanie %d z %d...
@@ -480,6 +511,9 @@ Pokaż pasek &narzędzi
 
 Show &pages continuously
 Wyświetlaj strony w układzie &ciągłym
+
+Show frequently read
+Pokaż często otwierane
 
 Show the &bookmarks sidebar when available
 Pokaż panel za&kładek, gdy są dostępne
@@ -554,21 +588,8 @@ Współczynnik powiększenia
 [wykryto zmiany; odświeżanie] %s
 
 copying text
-Kopiowanie tekstu
+kopiowanie tekstu
 
 printing document
 drukowanie dokumentu
-
-# Untranslated:
-#Bookmark Shortcuts
-#Bookmark shortcut to page %d of %s
-#Copy &Link Address
-#DjVu documents
-#Frequently Read
-#Hide frequently read
-#Open a document...
-#Printing is still in progress. Abort and start over?
-#Printing page %d of %d...
-#Save S&hortcut...\tCtrl-Shift-S
-#Show frequently read
 
