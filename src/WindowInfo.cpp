@@ -361,7 +361,7 @@ RectI SelectionOnPage::GetRect(DisplayModel *dm)
 {
     // if the page is not visible, we return an empty rectangle
     PageInfo *pageInfo = dm->getPageInfo(pageNo);
-    if (pageInfo->visibleRatio <= 0.0)
+    if (!pageInfo || pageInfo->visibleRatio <= 0.0)
         return RectI();
 
     return dm->CvtToScreen(pageNo, rect);
