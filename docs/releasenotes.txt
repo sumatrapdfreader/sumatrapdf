@@ -7,6 +7,10 @@ Next version:
 * support clickable links and a Table of Content for XPS documents
 * display printing progress and allow to cancel it
 
+1.5.1 (2011-04-27)
+
+* fixes for crashes
+
 1.5 (2011-04-23)
 
 * add support for displaying XPS documents
