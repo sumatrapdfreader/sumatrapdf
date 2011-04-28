@@ -2034,9 +2034,8 @@ XpsPageRun *CXpsEngine::getPageRun(xps_page *page, bool tryOnly, xps_link *extra
 
 void CXpsEngine::runPage(xps_page *page, fz_device *dev, fz_matrix ctm, fz_bbox clipbox, bool cacheRun)
 {
-    XpsPageRun *run;
-
-    if ((run = getPageRun(page, !cacheRun))) {
+    XpsPageRun *run = getPageRun(page, !cacheRun);
+    if (run) {
         EnterCriticalSection(&_ctxAccess);
         fz_execute_display_list(run->list, dev, ctm, clipbox);
         LeaveCriticalSection(&_ctxAccess);
