@@ -519,6 +519,7 @@ printing document
 #Page scaling
 #Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L
+#Print
 #Print range
 #Printing is still in progress. Abort and start over?
 #Printing page %d of %d...

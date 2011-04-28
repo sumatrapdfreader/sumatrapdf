@@ -577,6 +577,7 @@ printing document
 #Frequently Read
 #Hide frequently read
 #Open a document...
+#Print
 #Printing is still in progress. Abort and start over?
 #Printing page %d of %d...
 #Show frequently read

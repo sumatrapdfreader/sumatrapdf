@@ -6,6 +6,7 @@ Next version:
 * display Frequently Read list when no document is open
 * support clickable links and a Table of Content for XPS documents
 * display printing progress and allow to cancel it
+* add Print toolbar button
 
 1.5.1 (2011-04-27)
 

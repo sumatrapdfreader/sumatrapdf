@@ -594,3 +594,6 @@ copying text
 printing document
 печатается документ
 
+# Untranslated:
+#Print
+

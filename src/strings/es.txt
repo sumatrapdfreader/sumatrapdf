@@ -560,6 +560,7 @@ impresión de documento
 #Hide frequently read
 #Image files (*.%s)
 #Open a document...
+#Print
 #Printing is still in progress. Abort and start over?
 #Printing page %d of %d...
 #Save S&hortcut...\tCtrl-Shift-S

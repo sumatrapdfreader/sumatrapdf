@@ -594,4 +594,5 @@ tisk dokumentu
 
 # Untranslated:
 #DjVu documents
+#Print
 

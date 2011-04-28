@@ -593,3 +593,6 @@ se copiază text
 printing document
 se imprimă documentul
 
+# Untranslated:
+#Print
+

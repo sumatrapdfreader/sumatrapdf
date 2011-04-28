@@ -591,4 +591,5 @@ printing document
 
 # Untranslated:
 #DjVu documents
+#Print
 

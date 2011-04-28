@@ -593,3 +593,6 @@ kopiowanie tekstu
 printing document
 drukowanie dokumentu
 
+# Untranslated:
+#Print
+

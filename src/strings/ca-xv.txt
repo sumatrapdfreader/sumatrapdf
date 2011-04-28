@@ -539,6 +539,7 @@ s'està imprimint el document
 #New version %s is available. Download new version?
 #Open a document...
 #P&roperties
+#Print
 #Printing is still in progress. Abort and start over?
 #Printing page %d of %d...
 #Save S&hortcut...\tCtrl-Shift-S

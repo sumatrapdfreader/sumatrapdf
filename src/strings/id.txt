@@ -594,4 +594,5 @@ mencetak dokumen
 
 # Untranslated:
 #DjVu documents
+#Print
 

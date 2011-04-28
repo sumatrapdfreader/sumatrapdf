@@ -466,6 +466,9 @@ Pr&esentation\tCtrl-L
 Previous Page
 &Vorherige Seite
 
+Print
+Drucken…
+
 Print range
 Druckbereich
 

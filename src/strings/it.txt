@@ -600,3 +600,6 @@ copiando il testo...
 printing document
 documento in stampa...
 
+# Untranslated:
+#Print
+
