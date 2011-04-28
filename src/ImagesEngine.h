@@ -9,23 +9,6 @@
 
 // TODO: support a directory of files
 
-class ImagesPage {
-public:
-    const TCHAR *       fileName; // for sorting image files
-    Gdiplus::Bitmap *   bmp;
-
-    ImagesPage(const TCHAR *fileName, Gdiplus::Bitmap *bmp) : bmp(bmp) {
-        this->fileName = Str::Dup(fileName);
-    }
-
-    ~ImagesPage() {
-        free((void*)fileName);
-        delete bmp;
-    }
-
-    SizeI size() { return SizeI(bmp->GetWidth(), bmp->GetHeight()); }
-};
-
 class ImagesEngine : public BaseEngine {
 public:
     ImagesEngine();
@@ -36,8 +19,7 @@ public:
 
     virtual RectD PageMediabox(int pageNo) {
         assert(1 <= pageNo && pageNo <= PageCount());
-        ImagesPage *page = pages[pageNo - 1];
-        return RectD(PointD(), page->size().Convert<double>());
+        return RectD(0, 0, pages[pageNo-1]->GetWidth(), pages[pageNo-1]->GetHeight());
     }
 
     virtual RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
@@ -59,17 +41,22 @@ public:
 
     virtual const TCHAR *GetDefaultFileExt() const { return fileExt; }
 
-    // we currently don't load pages lazily, so there's nothing to do here
-    virtual bool BenchLoadPage(int pageNo) { return true; }
+    virtual bool BenchLoadPage(int pageNo) { return LoadImage(pageNo) != NULL; }
 
 protected:
     const TCHAR *fileName;
     const TCHAR *fileExt;
-    Vec<ImagesPage *> pages;
+
+    int pageCount;
+    Vec<Gdiplus::Bitmap *> pages;
 
     void GetTransform(Gdiplus::Matrix& m, int pageNo, float zoom, int rotate);
 
-    static ImagesPage *LoadImage(const TCHAR *fileName);
+    // override for lazily loading images
+    virtual Gdiplus::Bitmap *LoadImage(int pageNo) {
+        assert(1 <= pageNo && pageNo <= PageCount());
+        return pages[pageNo - 1];
+    }
 };
 
 class ImageEngine : public ImagesEngine {
@@ -94,13 +81,26 @@ public:
 
 class CbxEngine : public ImagesEngine {
 public:
+    CbxEngine();
+    virtual ~CbxEngine();
+
     virtual CbxEngine *Clone() {
         return CreateFromFileName(fileName);
     }
+    virtual RectD PageMediabox(int pageNo);
 
 protected:
     bool LoadCbzFile(const TCHAR *fileName);
     bool LoadCbrFile(const TCHAR *fileName);
+
+    virtual Gdiplus::Bitmap *LoadImage(int pageNo);
+
+    Vec<RectD> mediaboxes;
+
+    // used for lazily loading page images (only supported for .cbz files)
+    CRITICAL_SECTION fileAccess;
+    StrVec pageFileNames;
+    void *libData;
 
 public:
     static bool IsSupportedFile(const TCHAR *fileName) {

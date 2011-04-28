@@ -22,6 +22,26 @@ void bz_internal_error(int errcode)
 
 using namespace Gdiplus;
 
+class ImagesPage {
+public:
+    const TCHAR *       fileName; // for sorting image files
+    Gdiplus::Bitmap *   bmp;
+
+    ImagesPage(const TCHAR *fileName, Gdiplus::Bitmap *bmp) : bmp(bmp) {
+        this->fileName = Str::Dup(fileName);
+    }
+    ~ImagesPage() {
+        free((void *)fileName);
+        delete bmp;
+    }
+
+    static int cmpPageByName(const void *o1, const void *o2) {
+        ImagesPage *p1 = *(ImagesPage **)o1;
+        ImagesPage *p2 = *(ImagesPage **)o2;
+        return Str::CmpNatural(p1->fileName, p2->fileName);
+    }
+};
+
 // cf. http://stackoverflow.com/questions/4598872/creating-hbitmap-from-memory-buffer/4616394#4616394
 Bitmap *BitmapFromData(void *data, size_t len)
 {
@@ -44,33 +64,105 @@ Bitmap *BitmapFromData(void *data, size_t len)
     return bmp;
 }
 
-static int cmpPageByName(const void *o1, const void *o2)
+// for converting between big- and little-endian values
+#define SWAPWORD(x)	MAKEWORD(HIBYTE(x), LOBYTE(x))
+#define SWAPLONG(x)	MAKELONG(SWAPWORD(HIWORD(x)), SWAPWORD(LOWORD(x)))
+
+// adapted from http://cpansearch.perl.org/src/RJRAY/Image-Size-3.230/lib/Image/Size.pm
+SizeI SizeFromData(char *data, size_t len)
 {
-    ImagesPage *p1 = *(ImagesPage **)o1;
-    ImagesPage *p2 = *(ImagesPage **)o2;
-    return Str::CmpNatural(p1->fileName, p2->fileName);
+    SizeI result;
+    // too short to contain magic number and image dimensions
+    if (len < 8) {
+    }
+    // Bitmap
+    else if (Str::StartsWith(data, "BM")) {
+        if (len >= sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER)) {
+            BITMAPINFOHEADER *bmi = (BITMAPINFOHEADER *)(data + sizeof(BITMAPFILEHEADER));
+            result = SizeI(bmi->biWidth, bmi->biHeight);
+        }
+    }
+    // PNG
+    else if (Str::StartsWith(data, "\x89PNG\x0D\x0A\x1A\x0A")) {
+        if (len >= 24 && Str::StartsWith(data + 12, "IHDR")) {
+            DWORD width = SWAPLONG(*(DWORD *)(data + 16));
+            DWORD height = SWAPLONG(*(DWORD *)(data + 20));
+            result = SizeI(width, height);
+        }
+    }
+    // JPEG
+    else if (Str::StartsWith(data, "\xFF\xD8")) {
+        // find the last start of frame marker for non-differential Huffman coding
+        for (size_t ix = 2; ix + 9 < len && data[ix] == '\xFF'; ) {
+            if ('\xC0' <= data[ix + 1] && data[ix + 1] <= '\xC3') {
+                WORD width = SWAPWORD(*(WORD *)(data + ix + 7));
+                WORD height = SWAPWORD(*(WORD *)(data + ix + 5));
+                result = SizeI(width, height);
+            }
+            ix += SWAPWORD(*(WORD *)(data + ix + 2)) + 2;
+        }
+    }
+    // GIF
+    else if (Str::StartsWith(data, "GIF87a") || Str::StartsWith(data, "GIF89a")) {
+        if (len >= 13) {
+            // find the first image's actual size instead of using the
+            // "logical screen" size which is sometimes too large
+            size_t ix = 13;
+            // skip the global color table
+            if ((data[10] & 0x80))
+                ix += 3 * (1 << ((data[10] & 0x07) + 1));
+            while (ix + 8 < len) {
+                if (data[ix] == '\x2c') {
+                    WORD width = *(WORD *)(data + ix + 5);
+                    WORD height = *(WORD *)(data + ix + 7);
+                    result = SizeI(width, height);
+                    break;
+                }
+                else if (data[ix] == '\x21' && data[ix + 1] == '\xF9')
+                    ix += 8;
+                else if (data[ix] == '\x21' && data[ix + 1] == '\xFE') {
+                    char *commentEnd = (char *)memchr(data + ix + 2, '\0', len - ix - 2);
+                    ix = commentEnd ? commentEnd - data + 1 : len;
+                }
+                else if (data[ix] == '\x21' && data[ix + 1] == '\x01' && ix + 15 < len) {
+                    char *textDataEnd = (char *)memchr(data + ix + 15, '\0', len - ix - 15);
+                    ix = textDataEnd ? textDataEnd - data + 1 : len;
+                }
+                else if (data[ix] == '\x21' && data[ix + 1] == '\xFF' && ix + 14 < len) {
+                    char *applicationDataEnd = (char *)memchr(data + ix + 14, '\0', len - ix - 14);
+                    ix = applicationDataEnd ? applicationDataEnd - data + 1 : len;
+                }
+                else
+                    break;
+            }
+        }
+    }
+
+    return result;
 }
 
-static ImagesPage *LoadCurrentCbzPage(unzFile& uf)
+static bool SetCurrentCbzPage(unzFile& uf, const TCHAR *fileName)
 {
-    char            fileName[MAX_PATH];
+    ScopedMem<char> fileNameUtf8(Str::Conv::ToUtf8(fileName));
+    int err = unzLocateFile(uf, fileNameUtf8, 0);
+    return err == UNZ_OK;
+}
+
+// caller must free() the result
+static char *LoadCurrentCbzData(unzFile& uf, size_t& len)
+{
     unz_file_info64 finfo;
-    ImagesPage *    page = NULL;
-    char *          bmpData = NULL;
+    char *bmpData = NULL;
 
-    int err = unzGetCurrentFileInfo64(uf, &finfo, fileName, dimof(fileName), NULL, 0, NULL, 0);
+    int err = unzGetCurrentFileInfo64(uf, &finfo, NULL, 0, NULL, 0, NULL, 0);
     if (err != UNZ_OK)
-        return NULL;
-
-    ScopedMem<TCHAR> fileName2(Str::Conv::FromUtf8(fileName));
-    if (!ImageEngine::IsSupportedFile(fileName2))
         return NULL;
 
     err = unzOpenCurrentFilePassword(uf, NULL);
     if (err != UNZ_OK)
         return NULL;
 
-    unsigned len = (unsigned)finfo.uncompressed_size;
+    len = (size_t)finfo.uncompressed_size;
     ZPOS64_T len2 = len;
     if (len2 != finfo.uncompressed_size) // overflow check
         goto Exit;
@@ -80,23 +172,14 @@ static ImagesPage *LoadCurrentCbzPage(unzFile& uf)
         goto Exit;
 
     unsigned int readBytes = unzReadCurrentFile(uf, bmpData, len);
-    if (readBytes != len)
-        goto Exit;
-
-    Bitmap *bmp = BitmapFromData(bmpData, len);
-    if (!bmp)
-        goto Exit;
-
-    page = new ImagesPage(fileName2, bmp);
+    if (readBytes != len) {
+        free(bmpData);
+        bmpData = NULL;
+    }
 
 Exit:
     unzCloseCurrentFile(uf); // ignoring error code
-    free(bmpData);
-    return page;
-}
-
-ImagesEngine::ImagesEngine() : fileName(NULL), fileExt(NULL)
-{
+    return bmpData;
 }
 
 struct RarDecompressData {
@@ -176,13 +259,21 @@ bool CbxEngine::LoadCbrFile(const TCHAR *file)
     assert(Str::EndsWithI(fileName, fileExt));
 
     RAROpenArchiveDataEx  arcData = { 0 };
+#ifdef UNICODE
     arcData.ArcNameW = (TCHAR*)file;
+#else
+    arcData.ArcName = (TCHAR*)file;
+#endif
     arcData.OpenMode = RAR_OM_EXTRACT;
 
     HANDLE hArc = RAROpenArchiveEx(&arcData);
     if (arcData.OpenResult != 0)
         return false;
 
+    // UnRAR does not seem to support extracting a single file by name,
+    // so lazy image loading doesn't seem possible
+
+    Vec<ImagesPage *> found;
     for (;;) {
         RARHeaderDataEx rarHeader;
         int res = RARReadHeaderEx(hArc, &rarHeader);
@@ -191,43 +282,46 @@ bool CbxEngine::LoadCbrFile(const TCHAR *file)
 
         ImagesPage *page = LoadCurrentCbrPage(hArc, rarHeader);
         if (page)
-            pages.Append(page);
+            found.Append(page);
     }
     RARCloseArchive(hArc);
 
-    if (pages.Count() == 0)
+    if (found.Count() == 0)
         return false;
-    pages.Sort(cmpPageByName);
+    found.Sort(ImagesPage::cmpPageByName);
+
+    for (size_t i = 0; i < found.Count(); i++) {
+        pages.Append(found[i]->bmp);
+        mediaboxes.Append(RectD(0, 0, pages[i]->GetWidth(),  pages[i]->GetHeight()));
+        found[i]->bmp = NULL;
+    }
+
+    DeleteVecMembers(found);
     return true;
-}
-
-ImagesPage *ImagesEngine::LoadImage(const TCHAR *fileName)
-{
-    size_t len = 0;
-    ScopedMem<char> bmpData(File::ReadAll(fileName, &len));
-    if (!bmpData)
-        return NULL;
-
-    Bitmap *bmp = BitmapFromData(bmpData, len);
-    if (!bmp)
-        return NULL;
-
-    return new ImagesPage(fileName, bmp);
 }
 
 bool ImageEngine::LoadSingleFile(const TCHAR *file)
 {
     assert(IsSupportedFile(file));
-    ImagesPage *page = LoadImage(file);
-    if (!page)
+
+    size_t len = 0;
+    ScopedMem<char> bmpData(File::ReadAll(fileName, &len));
+    if (!bmpData)
         return false;
 
-    pages.Append(page);
+    pages.Append(BitmapFromData(bmpData, len));
+
     fileName = Str::Dup(file);
     fileExt = _tcsrchr(fileName, '.');
     assert(fileExt);
-    return true;
+
+    return pages[0] != NULL;
 }
+
+struct CbzFileAccess {
+    zlib_filefunc64_def ffunc;
+    unzFile uf;
+};
 
 bool CbxEngine::LoadCbzFile(const TCHAR *file)
 {
@@ -237,46 +331,113 @@ bool CbxEngine::LoadCbzFile(const TCHAR *file)
     fileExt = _T(".cbz");
     assert(Str::EndsWithI(fileName, fileExt));
 
-    zlib_filefunc64_def ffunc;
-    fill_win32_filefunc64(&ffunc);
-    unzFile uf = unzOpen2_64(fileName, &ffunc);
-    if (!uf)
+    CbzFileAccess *fa = new CbzFileAccess;
+    libData = fa;
+
+    // only extract all image filenames for now
+    fill_win32_filefunc64(&fa->ffunc);
+    fa->uf = unzOpen2_64(fileName, &fa->ffunc);
+    if (!fa->uf)
         return false;
 
     unz_global_info64 ginfo;
-    int err = unzGetGlobalInfo64(uf, &ginfo);
-    if (err != UNZ_OK) {
-        unzClose(uf);
+    int err = unzGetGlobalInfo64(fa->uf, &ginfo);
+    if (err != UNZ_OK)
         return false;
-    }
-    unzGoToFirstFile(uf);
+    unzGoToFirstFile(fa->uf);
 
-    // extract all contained files one by one
-
-    // TODO: maybe lazy loading would be beneficial (but at least I would
-    // need to parse image headers to extract width/height information)
     for (int n = 0; n < ginfo.number_entry; n++) {
-        ImagesPage *page = LoadCurrentCbzPage(uf);
-        if (page)
-            pages.Append(page);
-        err = unzGoToNextFile(uf);
+        char fileName[MAX_PATH];
+        int err = unzGetCurrentFileInfo64(fa->uf, NULL, fileName, dimof(fileName), NULL, 0, NULL, 0);
+        if (err == UNZ_OK) {
+            ScopedMem<TCHAR> fileName2(Str::Conv::FromUtf8(fileName));
+            if (ImageEngine::IsSupportedFile(fileName2))
+                pageFileNames.Append(fileName2.StealData());
+        }
+        err = unzGoToNextFile(fa->uf);
         if (err != UNZ_OK)
             break;
     }
 
-    unzClose(uf);
     // TODO: any meta-information available?
 
-    if (pages.Count() == 0)
+    if (pageFileNames.Count() == 0)
         return false;
-    pages.Sort(cmpPageByName);
+    pageFileNames.Sort();
+
+    pages.MakeSpaceAt(0, pageFileNames.Count());
+    mediaboxes.MakeSpaceAt(0, pageFileNames.Count());
+
     return true;
+}
+
+ImagesEngine::ImagesEngine() : fileName(NULL), fileExt(NULL), pageCount(0), pages(NULL)
+{
 }
 
 ImagesEngine::~ImagesEngine()
 {
+    for (int i = 0; i < pageCount; i++)
+        delete pages[i];
     DeleteVecMembers(pages);
     free((void *)fileName);
+}
+
+CbxEngine::CbxEngine() : mediaboxes(NULL), libData(NULL)
+{
+    InitializeCriticalSection(&fileAccess);
+}
+
+CbxEngine::~CbxEngine()
+{
+    if (Str::EqI(fileExt, _T(".cbz"))) {
+        CbzFileAccess *fa = (CbzFileAccess *)libData;
+        unzClose(fa->uf);
+        delete fa;
+    }
+
+    DeleteCriticalSection(&fileAccess);
+}
+
+RectD CbxEngine::PageMediabox(int pageNo)
+{
+    assert(1 <= pageNo && pageNo <= PageCount());
+    if (!mediaboxes[pageNo-1].IsEmpty())
+        return mediaboxes[pageNo-1];
+
+    size_t len;
+    ScopedMem<char> bmpData;
+    if (Str::EqI(fileExt, _T(".cbz"))) {
+        ScopedCritSec scope(&fileAccess);
+        CbzFileAccess *fa = (CbzFileAccess *)libData;
+        if (SetCurrentCbzPage(fa->uf, pageFileNames[pageNo - 1]))
+            bmpData.Set(LoadCurrentCbzData(fa->uf, len));
+    }
+    if (bmpData) {
+        SizeI size = SizeFromData(bmpData, len);
+        mediaboxes[pageNo-1] = RectI(PointI(), size).Convert<double>();
+    }
+    return mediaboxes[pageNo-1];
+}
+
+Bitmap *CbxEngine::LoadImage(int pageNo)
+{
+    assert(1 <= pageNo && pageNo <= PageCount());
+    if (pages[pageNo-1])
+        return pages[pageNo-1];
+
+    size_t len;
+    ScopedMem<char> bmpData;
+    if (Str::EqI(fileExt, _T(".cbz"))) {
+        ScopedCritSec scope(&fileAccess);
+        CbzFileAccess *fa = (CbzFileAccess *)libData;
+        if (SetCurrentCbzPage(fa->uf, pageFileNames[pageNo-1]))
+            bmpData.Set(LoadCurrentCbzData(fa->uf, len));
+    }
+    if (bmpData)
+        pages[pageNo-1] = BitmapFromData(bmpData, len);
+
+    return pages[pageNo-1];
 }
 
 RenderedBitmap *ImagesEngine::RenderBitmap(int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target, bool useGdi)
@@ -303,6 +464,10 @@ RenderedBitmap *ImagesEngine::RenderBitmap(int pageNo, float zoom, int rotation,
 
 bool ImagesEngine::RenderPage(HDC hDC, int pageNo, RectI screenRect, float zoom, int rotation, RectD *pageRect, RenderTarget target)
 {
+    Bitmap *bmp = LoadImage(pageNo);
+    if (!bmp)
+        return false;
+
     RectD pageRc = pageRect ? *pageRect : PageMediabox(pageNo);
     RectI screen = Transform(pageRc, pageNo, zoom, rotation).Round();
 
@@ -312,7 +477,6 @@ bool ImagesEngine::RenderPage(HDC hDC, int pageNo, RectI screenRect, float zoom,
     g.SetPageUnit(UnitPixel);
     g.SetClip(Gdiplus::Rect(screenRect.x, screenRect.y, screenRect.dx, screenRect.dy));
 
-    Bitmap *bmp = pages[pageNo - 1]->bmp;
     REAL scaleX = 1.0f, scaleY = 1.0f;
     if (bmp->GetHorizontalResolution() != 0.f)
         scaleX = 1.0f * bmp->GetHorizontalResolution() / GetDeviceCaps(hDC, LOGPIXELSX);
