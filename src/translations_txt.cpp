@@ -10247,7 +10247,7 @@ const char *gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "Pami\304\231taj &otwierane pliki",
   "Obr\303\263\304\207 w &lewo\tCtrl+Shift+Minus",
   "Obr\303\263\304\207 w &prawo\tCtrl+Shift+Plus",
-  "Utw\303\263rz skr\303\263t do dokumentu\Ctrl-Shift-S",
+  "Utw\303\263rz skr\303\263t do dokumentu\tCtrl-Shift-S",
   "Szukanie %d z %d...",
   "Zaznacz wszystko",
   "Zaznacz &wszystko\tCtrl+A",

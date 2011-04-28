@@ -486,7 +486,7 @@ Rotate &Right\tCtrl-Shift-+
 Obróć w &prawo\tCtrl+Shift+Plus
 
 Save S&hortcut...\tCtrl-Shift-S
-Utwórz skrót do dokumentu\Ctrl-Shift-S
+Utwórz skrót do dokumentu\tCtrl-Shift-S
 
 Searching %d of %d...
 Szukanie %d z %d...

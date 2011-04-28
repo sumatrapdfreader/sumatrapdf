@@ -84,7 +84,7 @@ TCHAR *Normalize(const TCHAR *path)
     if (!cch)
         return NULL;
     TCHAR *normpath = SAZA(TCHAR, cch);
-    if (!path)
+    if (!normpath)
         return NULL;
     GetFullPathName(path, cch, normpath, NULL);
 
