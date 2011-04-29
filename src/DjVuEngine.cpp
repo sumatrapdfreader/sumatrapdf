@@ -114,7 +114,6 @@ protected:
 
     CRITICAL_SECTION ctxAccess;
 
-    void GetTransform(Gdiplus::Matrix& m, int pageNo, float zoom, int rotate);
     DjVuToCItem *BuildToCTree(miniexp_t entry, int& idCounter);
     bool Load(const TCHAR *fileName);
 };
@@ -166,7 +165,7 @@ bool CDjVuEngine::Load(const TCHAR *fileName)
     this->fileName = Str::Dup(fileName);
 
     ScopedMem<char> fileNameUtf8(Str::Conv::ToUtf8(fileName));
-    doc = ddjvu_document_create_by_filename_utf8(ctx, fileNameUtf8, /* cache */ FALSE);
+    doc = ddjvu_document_create_by_filename_utf8(ctx, fileNameUtf8, /* cache */ TRUE);
     if (!doc)
         return false;
 
@@ -252,43 +251,41 @@ bool CDjVuEngine::RenderPage(HDC hDC, int pageNo, RectI screenRect, float zoom, 
     return true;
 }
 
-void CDjVuEngine::GetTransform(Gdiplus::Matrix& m, int pageNo, float zoom, int rotate)
-{
-    SizeD size = PageMediabox(pageNo).Size();
-
-    rotate = rotate % 360;
-    if (rotate < 0) rotate = rotate + 360;
-    if (90 == rotate)
-        m.Translate(0, (float)-size.dy, Gdiplus::MatrixOrderAppend);
-    else if (180 == rotate)
-        m.Translate((float)-size.dx, (float)-size.dy, Gdiplus::MatrixOrderAppend);
-    else if (270 == rotate)
-        m.Translate((float)-size.dx, 0, Gdiplus::MatrixOrderAppend);
-    else // if (0 == rotate)
-        m.Translate(0, 0, Gdiplus::MatrixOrderAppend);
-
-    m.Scale(zoom, zoom, Gdiplus::MatrixOrderAppend);
-    m.Rotate((float)rotate, Gdiplus::MatrixOrderAppend);
-}
-
 PointD CDjVuEngine::Transform(PointD pt, int pageNo, float zoom, int rotate, bool inverse)
 {
-    RectD rect = Transform(RectD(pt, SizeD()), pageNo, zoom, rotate, inverse);
-    return PointD(rect.x, rect.y);
+    SizeD page = PageMediabox(pageNo).Size();
+
+    if (inverse) {
+        // transform the page size to get a correct frame of reference
+        page.dx *= zoom; page.dy *= zoom;
+        if (rotate % 180 != 0)
+            swap(page.dx, page.dy);
+        // invert rotation and zoom
+        rotate = -rotate;
+        zoom = 1.0f / zoom;
+    }
+
+    PointD res;
+    rotate = rotate % 360;
+    if (rotate < 0) rotate += 360;
+    if (90 == rotate)
+        res = PointD(page.dy - pt.y, pt.x);
+    else if (180 == rotate)
+        res = PointD(page.dx - pt.x, page.dy - pt.y);
+    else if (270 == rotate)
+        res = PointD(pt.y, page.dx - pt.x);
+    else // if (0 == rotate)
+        res = pt;
+
+    res.x *= zoom; res.y *= zoom;
+    return res;
 }
 
 RectD CDjVuEngine::Transform(RectD rect, int pageNo, float zoom, int rotate, bool inverse)
 {
-    Gdiplus::PointF pts[2] = {
-        Gdiplus::PointF((float)rect.x, (float)rect.y),
-        Gdiplus::PointF((float)(rect.x + rect.dx), (float)(rect.y + rect.dy))
-    };
-    Gdiplus::Matrix m;
-    GetTransform(m, pageNo, zoom, rotate);
-    if (inverse)
-        m.Invert();
-    m.TransformPoints(pts, 2);
-    return RectD::FromXY(pts[0].X, pts[0].Y, pts[1].X, pts[1].Y);
+    PointD TL = Transform(rect.TL(), pageNo, zoom, rotate, inverse);
+    PointD BR = Transform(rect.BR(), pageNo, zoom, rotate, inverse);
+    return RectD::FromXY(TL, BR);
 }
 
 unsigned char *CDjVuEngine::GetFileData(size_t *cbCount)
@@ -325,13 +322,29 @@ DjVuToCItem *CDjVuEngine::BuildToCTree(miniexp_t entry, int& idCounter)
     return node;
 }
 
+static DocToCItem *CleanOutTree(DocToCItem *root)
+{
+    if (!root)
+        return NULL;
+
+    root->child = CleanOutTree(root->child);
+    root->next = CleanOutTree(root->next);
+    // remove all leaf nodes without a destination
+    if (!root->child && !root->next && !root->pageNo) {
+        delete root;
+        return NULL;
+    }
+
+    return root;
+}
+
 DocToCItem *CDjVuEngine::GetToCTree()
 {
     if (outline == miniexp_nil)
         return NULL;
 
     int idCounter = 0;
-    return BuildToCTree(outline, idCounter);
+    return CleanOutTree(BuildToCTree(outline, idCounter));
 }
 
 DjVuEngine *DjVuEngine::CreateFromFileName(const TCHAR *fileName)

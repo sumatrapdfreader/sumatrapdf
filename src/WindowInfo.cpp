@@ -172,9 +172,10 @@ void WindowInfo::UpdateTocSelection(int currPageNo)
     HTREEITEM hRoot = TreeView_GetRoot(this->hwndTocTree);
     if (!hRoot)
         return;
+    // select the item closest to but not after the current page
+    // (or the root item, if there's no such item)
     HTREEITEM hCurrItem = this->TreeItemForPageNo(hRoot, currPageNo);
-    if (hCurrItem)
-        TreeView_SelectItem(this->hwndTocTree, hCurrItem);
+    TreeView_SelectItem(this->hwndTocTree, hCurrItem ? hCurrItem : hRoot);
 }
 
 void WindowInfo::UpdateToCExpansionState(HTREEITEM hItem)
