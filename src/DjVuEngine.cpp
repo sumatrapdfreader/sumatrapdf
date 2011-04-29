@@ -221,7 +221,7 @@ RenderedBitmap *CDjVuEngine::RenderBitmap(int pageNo, float zoom, int rotation, 
     ddjvu_format_t *fmt = ddjvu_format_create(DDJVU_FORMAT_BGR24, 0, NULL);
     ddjvu_format_set_row_order(fmt, /* top_to_bottom */ TRUE);
     ddjvu_rect_t prect = { full.x, full.y, full.dx, full.dy };
-    ddjvu_rect_t rrect = { screen.x, 2 * full.y + screen.y + full.dy - screen.dy, screen.dx, screen.dy };
+    ddjvu_rect_t rrect = { screen.x, 2 * full.y - screen.y + full.dy - screen.dy, screen.dx, screen.dy };
 
     RenderedBitmap *bmp = NULL;
     int stride = ((screen.dx * 3 + 3) / 4) * 4;
