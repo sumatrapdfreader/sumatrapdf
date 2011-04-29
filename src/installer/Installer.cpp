@@ -141,6 +141,8 @@ static Color            COLOR_MSG_FAILED(gCol1);
 #define UNINSTALL_STRING _T("UninstallString")
 // REG_SZ, e.g. "http://blog.kowalczyk.info/software/sumatrapdf/"
 #define URL_INFO_ABOUT _T("UrlInfoAbout")
+// REG_SZ, same as INSTALL_DIR below
+#define INSTALL_LOCATION _T("InstallLocation")
 
 // Installation directory (set in HKLM REG_PATH_SOFTWARE
 // for compatibility with the old NSIS installer)
@@ -593,8 +595,9 @@ bool IsUninstaller()
 static HFONT CreateDefaultGuiFont()
 {
     NONCLIENTMETRICS m = { sizeof (NONCLIENTMETRICS) };
-    if (SystemParametersInfo(SPI_GETNONCLIENTMETRICS, 0, &m, 0))
-    {
+    if (SystemParametersInfo(SPI_GETNONCLIENTMETRICS, 0, &m, 0)) {
+        // TODO: instead of reducing font size, enlarge the buttons, etc.
+        m.lfMessageFont.lfHeight = limitValue((int)m.lfMessageFont.lfHeight, -12, 16);
         // fonts: lfMenuFont, lfStatusFont, lfMessageFont, lfCaptionFont
         return CreateFontIndirect(&m.lfMessageFont);
     }
@@ -689,18 +692,20 @@ bool WriteUninstallerRegistryInfo(bool allUsers)
     ScopedMem<TCHAR> uninstallerPath(GetUninstallerPath());
     ScopedMem<TCHAR> installedExePath(GetInstalledExePath());
     ScopedMem<TCHAR> installDate(GetInstallDate());
+    ScopedMem<TCHAR> installDir(Path::GetDir(installedExePath));
+
     success &= WriteRegStr(hkey,   REG_PATH_UNINST, DISPLAY_ICON, installedExePath);
     success &= WriteRegStr(hkey,   REG_PATH_UNINST, DISPLAY_NAME, TAPP);
     success &= WriteRegStr(hkey,   REG_PATH_UNINST, DISPLAY_VERSION, CURR_VERSION_STR);
     success &= WriteRegDWORD(hkey, REG_PATH_UNINST, ESTIMATED_SIZE, GetDirSize(gGlobalData.installDir) / 1024);
     success &= WriteRegStr(hkey,   REG_PATH_UNINST, INSTALL_DATE, installDate);
+    success &= WriteRegStr(hkey,   REG_PATH_UNINST, INSTALL_LOCATION, installDir);
     success &= WriteRegDWORD(hkey, REG_PATH_UNINST, NO_MODIFY, 1);
     success &= WriteRegDWORD(hkey, REG_PATH_UNINST, NO_REPAIR, 1);
     success &= WriteRegStr(hkey,   REG_PATH_UNINST, PUBLISHER, _T("Krzysztof Kowalczyk"));
     success &= WriteRegStr(hkey,   REG_PATH_UNINST, UNINSTALL_STRING, uninstallerPath);
-    success &= WriteRegStr(hkey,   REG_PATH_UNINST, URL_INFO_ABOUT, _T("http://blog.kowalczyk/info/software/sumatrapdf/"));
+    success &= WriteRegStr(hkey,   REG_PATH_UNINST, URL_INFO_ABOUT, _T("http://blog.kowalczyk.info/software/sumatrapdf/"));
 
-    ScopedMem<TCHAR> installDir(Path::GetDir(installedExePath));
     success &= WriteRegStr(hkey,   REG_PATH_SOFTWARE, INSTALL_DIR, installDir);
 
     return success;
