@@ -9,6 +9,7 @@
 #include <miniexp.h>
 #include "DjVuEngine.h"
 #include "FileUtil.h"
+#include "Vec.h"
 
 // TODO: libdjvu leaks memory - among others
 //       DjVuPort::corpse_lock, DjVuPort::corpse_head, pcaster,
@@ -83,9 +84,9 @@ public:
     virtual RectD Transform(RectD rect, int pageNo, float zoom, int rotate, bool inverse=false);
 
     virtual unsigned char *GetFileData(size_t *cbCount);
-    virtual bool HasTextContent() { return false; }
+    virtual bool HasTextContent() { return true; }
     virtual TCHAR * ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_out=NULL,
-                                    RenderTarget target=Target_View) { return NULL; }
+                                    RenderTarget target=Target_View);
     virtual bool IsImagePage(int pageNo) { return true; }
     virtual PageLayoutType PreferredLayout() { return Layout_Single; }
 
@@ -111,6 +112,8 @@ protected:
 
     CRITICAL_SECTION ctxAccess;
 
+    bool ExtractPageText(miniexp_t item, const TCHAR *lineSep,
+                         Str::Str<TCHAR>& extracted, Vec<RectI>& coords);
     DjVuToCItem *BuildToCTree(miniexp_t entry, int& idCounter);
     bool Load(const TCHAR *fileName);
 };
@@ -161,6 +164,7 @@ bool CDjVuEngine::Load(const TCHAR *fileName)
 
     this->fileName = Str::Dup(fileName);
 
+    ScopedCritSec scope(&ctxAccess);
     ScopedMem<char> fileNameUtf8(Str::Conv::ToUtf8(fileName));
     doc = ddjvu_document_create_by_filename_utf8(ctx, fileNameUtf8, /* cache */ TRUE);
     if (!doc)
@@ -294,6 +298,83 @@ unsigned char *CDjVuEngine::GetFileData(size_t *cbCount)
     return (unsigned char *)File::ReadAll(fileName, cbCount);
 }
 
+bool CDjVuEngine::ExtractPageText(miniexp_t item, const TCHAR *lineSep, Str::Str<TCHAR>& extracted, Vec<RectI>& coords)
+{
+    miniexp_t type = miniexp_car(item);
+    if (!miniexp_symbolp(type))
+        return false;
+    item = miniexp_cdr(item);
+
+    if (!miniexp_numberp(miniexp_car(item))) return false;
+    int x0 = miniexp_to_int(miniexp_car(item)); item = miniexp_cdr(item);
+    if (!miniexp_numberp(miniexp_car(item))) return false;
+    int y0 = miniexp_to_int(miniexp_car(item)); item = miniexp_cdr(item);
+    if (!miniexp_numberp(miniexp_car(item))) return false;
+    int x1 = miniexp_to_int(miniexp_car(item)); item = miniexp_cdr(item);
+    if (!miniexp_numberp(miniexp_car(item))) return false;
+    int y1 = miniexp_to_int(miniexp_car(item)); item = miniexp_cdr(item);
+    RectI rect = RectI::FromXY(x0, y0, x1, y1);
+
+    miniexp_t str = miniexp_car(item);
+    if (miniexp_stringp(str) && !miniexp_cdr(item)) {
+        const char *content = miniexp_to_str(str);
+        TCHAR *value = Str::Conv::FromUtf8(content);
+        if (value) {
+            size_t len = Str::Len(value);
+            // TODO: split the rectangle into individual parts per glyph
+            for (size_t i = 0; i < len; i++)
+                coords.Append(RectI(rect.x, rect.y, rect.dx, rect.dy));
+            extracted.AppendAndFree(value);
+        }
+        if (miniexp_symbol("word") == type) {
+            extracted.Append(' ');
+            coords.Append(RectI(rect.x + rect.dx, rect.y, 2, rect.dy));
+        }
+        else if (miniexp_symbol("char") != type) {
+            extracted.Append(lineSep);
+            for (size_t i = 0; i < Str::Len(lineSep); i++)
+                coords.Append(RectI());
+        }
+        item = miniexp_cdr(item);
+    }
+    while (miniexp_consp(str)) {
+        ExtractPageText(str, lineSep, extracted, coords);
+        item = miniexp_cdr(item);
+        str = miniexp_car(item);
+    }
+    return !item;
+}
+
+TCHAR *CDjVuEngine::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_out, RenderTarget target)
+{
+    ScopedCritSec scope(&ctxAccess);
+
+    miniexp_t pagetext;
+    while ((pagetext = ddjvu_document_get_pagetext(doc, pageNo-1, NULL)) == miniexp_dummy)
+        SpinDdjvuMessageLoop(ctx);
+    if (miniexp_nil == pagetext)
+        return NULL;
+
+    Str::Str<TCHAR> extracted;
+    Vec<RectI> coords;
+    bool success = ExtractPageText(pagetext, lineSep, extracted, coords);
+    ddjvu_miniexp_release(doc, pagetext);
+    if (!success)
+        return NULL;
+
+    assert(Str::Len(extracted.Get()) == coords.Count());
+    if (coords_out) {
+        // TODO: the coordinates aren't completely correct yet
+        RectI page = PageMediabox(pageNo).Round();
+        for (size_t i = 0; i < coords.Count(); i++)
+            if (!coords[i].IsEmpty())
+                coords[i].y = 2 * page.y - coords[i].y + page.dy - coords[i].dy;
+        *coords_out = coords.StealData();
+    }
+
+    return extracted.StealData();
+}
+
 DjVuToCItem *CDjVuEngine::BuildToCTree(miniexp_t entry, int& idCounter)
 {
     DjVuToCItem *node = NULL;
@@ -357,3 +438,8 @@ DjVuEngine *DjVuEngine::CreateFromFileName(const TCHAR *fileName)
     }
     return engine;    
 }
+
+#ifdef DEBUG
+class MinilispCleanup { public: ~MinilispCleanup() { minilisp_finish(); } };
+MinilispCleanup cleanUpMinilispAtShutdownInOrderToPreventExcessiveLeakNotifications;
+#endif
