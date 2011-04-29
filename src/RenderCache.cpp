@@ -113,8 +113,8 @@ void RenderCache::Add(PageRenderRequest &req, RenderedBitmap *bitmap)
     else
         _cacheCount++;
     // allow rendering engines to free more memory needed for rendering
-    if (req.dm->pdfEngine)
-        req.dm->pdfEngine->RunGC();
+    if (req.dm->engine)
+        req.dm->engine->RunGC();
 }
 
 // get the (user) coordinates of a specific tile

@@ -14,10 +14,6 @@ public:
 
 class PdfEngine : public BaseEngine {
 public:
-    // caller must free() the result
-    virtual char *GetDecryptionKey() const = 0;
-    virtual void RunGC() = 0;
-
     static bool IsSupportedFile(const TCHAR *fileName) {
         // note: the plugin hands in files with a different extension (.tmp),
         //       so callers may want to try to load even "unsupported" files

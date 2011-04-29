@@ -138,7 +138,7 @@ bool DisplayModel::displayStateFromModel(DisplayState *ds)
         ds->scrollPos = PointD(ss.x, ss.y).Convert<int>();
 
     free(ds->decryptionKey);
-    ds->decryptionKey = pdfEngine ? pdfEngine->GetDecryptionKey() : NULL;
+    ds->decryptionKey = engine->GetDecryptionKey();
 
     return true;
 }

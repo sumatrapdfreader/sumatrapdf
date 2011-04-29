@@ -2482,7 +2482,7 @@ CXpsToCItem *CXpsEngine::BuildToCTree(xps_outline *entry, int& idCounter)
     node->open = false;
     node->id = ++idCounter;
 
-    if (Str::Eq(node->GetLink()->GetType(), "ScrollTo"))
+    if (node->GetLink() && Str::Eq(node->GetLink()->GetType(), "ScrollTo"))
         node->pageNo = FindPageNo(entry->target);
     if (entry->child)
         node->child = BuildToCTree(entry->child, idCounter);

@@ -265,6 +265,14 @@ public:
     // caller must delete the result (when no longer needed)
     virtual DocToCItem *GetToCTree() { return NULL; }
 
+    // returns a string to remember when the user wants to save a document's password
+    // (don't implement for document types that don't support password protection)
+    // caller must free() the result
+    virtual char *GetDecryptionKey() { return NULL; }
+    // tells the engine that this might be a good time to release some memory
+    // after having rendered a page (if the Engine caches e.g. shared objects)
+    virtual void RunGC() { }
+
     // loads the given page so that the time required can be measured
     // without also measuring rendering times
     virtual bool BenchLoadPage(int pageNo) = 0;

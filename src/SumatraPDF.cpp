@@ -1110,11 +1110,11 @@ void WindowInfo::Reload(bool autorefresh)
     }
 #endif
 
-    if (this->dm->pdfEngine) {
-        // save a newly remembered password into file history so that
-        // we don't ask again at the next refresh
+    // save a newly remembered password into file history so that
+    // we don't ask again at the next refresh
+    char *decryptionKey = this->dm->engine->GetDecryptionKey();
+    if (decryptionKey) {
         DisplayState *state = gFileHistory.Find(ds.filePath);
-        char *decryptionKey = this->dm->pdfEngine->GetDecryptionKey();
         if (state && !Str::Eq(state->decryptionKey, decryptionKey)) {
             free(state->decryptionKey);
             state->decryptionKey = decryptionKey;
@@ -4577,7 +4577,7 @@ static void GoToTocLinkForTVItem(WindowInfo& win, HWND hTV, HTREEITEM hItem=NULL
     TreeView_GetItem(hTV, &item);
     DocToCItem *tocItem = (DocToCItem *)item.lParam;
     if (win.IsDocLoaded() && tocItem &&
-        (allowExternal || Str::Eq(tocItem->GetLink()->GetType(), "ScrollTo"))) {
+        (allowExternal || tocItem->GetLink() && Str::Eq(tocItem->GetLink()->GetType(), "ScrollTo"))) {
         QueueWorkItem(new GoToTocLinkWorkItem(&win, tocItem));
     }
 }
@@ -5706,7 +5706,7 @@ void WindowInfo::ClearTocBox()
 static void CustomizeToCInfoTip(LPNMTVGETINFOTIP nmit)
 {
     DocToCItem *tocItem = (DocToCItem *)nmit->lParam;
-    ScopedMem<TCHAR> path(tocItem->GetLink()->GetDestValue());
+    ScopedMem<TCHAR> path(tocItem->GetLink() ? tocItem->GetLink()->GetDestValue() : NULL);
     if (!path)
         return;
 
@@ -5727,7 +5727,7 @@ static void CustomizeToCInfoTip(LPNMTVGETINFOTIP nmit)
         infotip.Append(_T("\r\n"));
     }
 
-    if (Str::Eq(tocItem->GetLink()->GetType(), "LaunchEmbedded"))
+    if (tocItem->GetLink() && Str::Eq(tocItem->GetLink()->GetType(), "LaunchEmbedded"))
         path.Set(Str::Format(_TR("Attachment: %s"), path));
 
     infotip.Append(path);
