@@ -3,6 +3,7 @@
 
 /*
 The installer is good enough for production but it doesn't mean it couldn't be improved:
+ * make it grow proportionally for DPI > 96
  * some more fanciful animations e.g.:
  * letters could drop down and back up when cursor is over it
  * messages could scroll-in
@@ -594,14 +595,10 @@ bool IsUninstaller()
 
 static HFONT CreateDefaultGuiFont()
 {
-    NONCLIENTMETRICS m = { sizeof (NONCLIENTMETRICS) };
-    if (SystemParametersInfo(SPI_GETNONCLIENTMETRICS, 0, &m, 0)) {
-        // TODO: instead of reducing font size, enlarge the buttons, etc.
-        m.lfMessageFont.lfHeight = limitValue((int)m.lfMessageFont.lfHeight, -12, 16);
-        // fonts: lfMenuFont, lfStatusFont, lfMessageFont, lfCaptionFont
-        return CreateFontIndirect(&m.lfMessageFont);
-    }
-    return NULL;
+    HDC hdc = GetDC(NULL);
+    HFONT font = Win::Font::GetSimple(hdc, _T("MS Shell Dlg"), 14);
+    ReleaseDC(NULL, hdc);
+    return font;
 }
 
 void InvalidateFrame()
@@ -1604,7 +1601,7 @@ void OnMouseMove(HWND hwnd, int x, int y)
 
 void OnCreateUninstaller(HWND hwnd)
 {
-    int     buttonDx = 128;
+    int     buttonDx = 140;
     int     buttonDy = 22;
 
     ClientRect r(hwnd);
@@ -1690,7 +1687,7 @@ static LRESULT CALLBACK UninstallerWndProcFrame(HWND hwnd, UINT message, WPARAM 
 
 void OnCreateInstaller(HWND hwnd)
 {
-    int     buttonDx = 120;
+    int     buttonDx = 128;
     int     buttonDy = 22;
 
     // TODO: determine the sizes of buttons by measuring their real size
