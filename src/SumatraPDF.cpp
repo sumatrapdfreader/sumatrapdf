@@ -38,9 +38,7 @@
 
 // Undefine any of these two, if you prefer MuPDF/Fitz to render the whole page
 // (using FreeType for fonts) at the expense of higher memory/spooler requirements.
-#if defined(DEBUG) || defined(SVN_PRE_RELEASE_VER)
 // #define USE_GDI_FOR_RENDERING
-#endif
 #define USE_GDI_FOR_PRINTING
 
 /* Define if you want page numbers to be displayed in the ToC sidebar */
@@ -51,7 +49,7 @@
 
 /* Define if you want to display additional debug helpers in the Help menu */
 // #define SHOW_DEBUG_MENU_ITEMS
-#if defined(DEBUG) || 1
+#if defined(DEBUG) || defined(SVN_PRE_RELEASE_VER) && !defined(DONT_SHOW_DEBUG_MENU_ITEMS)
 #ifndef SHOW_DEBUG_MENU_ITEMS
 #define SHOW_DEBUG_MENU_ITEMS
 #endif
