@@ -113,6 +113,7 @@ static Color            COLOR_MSG_FAILED(gCol1);
 
 #define REG_CLASSES_APP     _T("Software\\Classes\\") TAPP
 #define REG_CLASSES_PDF     _T("Software\\Classes\\.pdf")
+#define REG_CLASSES_APPS    _T("Software\\Classes\\Applications\\") EXENAME
 
 #define REG_EXPLORER_PDF_EXT  _T("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\.pdf")
 #define PROG_ID               _T("ProgId")
@@ -141,13 +142,21 @@ static Color            COLOR_MSG_FAILED(gCol1);
 // REG_SZ, path to uninstaller exe
 #define UNINSTALL_STRING _T("UninstallString")
 // REG_SZ, e.g. "http://blog.kowalczyk.info/software/sumatrapdf/"
-#define URL_INFO_ABOUT _T("UrlInfoAbout")
+#define URL_INFO_ABOUT _T("URLInfoAbout")
+// REG_SZ, e.g. "http://blog.kowalczyk.info/software/sumatrapdf/news.html"
+#define URL_UPDATE_INFO _T("URLUpdateInfo")
 // REG_SZ, same as INSTALL_DIR below
 #define INSTALL_LOCATION _T("InstallLocation")
 
 // Installation directory (set in HKLM REG_PATH_SOFTWARE
 // for compatibility with the old NSIS installer)
 #define INSTALL_DIR _T("Install_Dir")
+
+// list of supported file extensions for which SumatraPDF.exe will
+// be registered as a candidate for the Open With dialog's suggestions
+static TCHAR *gSupportedExts[] = {
+    _T(".pdf"), _T(".xps"), _T(".cbz"), _T(".cbr"), _T(".djvu")
+};
 
 // Note: UN_INST_MARK is converted from unicode to ascii at runtime to make sure
 //       that this sequence of bytes (i.e. ascii version) is not present in 
@@ -280,8 +289,9 @@ TCHAR *GetInstallationDir(bool forUninstallation=false)
 {
     // try the previous installation directory first
     ScopedMem<TCHAR> dir(ReadRegStr(HKEY_LOCAL_MACHINE, REG_PATH_SOFTWARE, INSTALL_DIR));
-    if (!dir)
-        dir.Set(ReadRegStr(HKEY_CURRENT_USER, REG_PATH_SOFTWARE, INSTALL_DIR));
+    if (!dir) dir.Set(ReadRegStr(HKEY_CURRENT_USER, REG_PATH_SOFTWARE, INSTALL_DIR));
+    if (!dir) dir.Set(ReadRegStr(HKEY_LOCAL_MACHINE, REG_PATH_UNINST, INSTALL_LOCATION));
+    if (!dir) dir.Set(ReadRegStr(HKEY_CURRENT_USER, REG_PATH_UNINST, INSTALL_LOCATION));
     if (dir) {
         if (Str::EndsWithI(dir, _T(".exe"))) {
             dir.Set(Path::GetDir(dir));
@@ -679,12 +689,9 @@ TCHAR *GetInstallDate()
     return Str::Format(_T("%04d%02d%02d"), st.wYear, st.wMonth, st.wDay);
 }
 
-bool WriteUninstallerRegistryInfo(bool allUsers)
+bool WriteUninstallerRegistryInfo(HKEY hkey)
 {
     bool success = true;
-    HKEY hkey = HKEY_LOCAL_MACHINE;
-    if (!allUsers)
-        hkey = HKEY_CURRENT_USER;
 
     ScopedMem<TCHAR> uninstallerPath(GetUninstallerPath());
     ScopedMem<TCHAR> installedExePath(GetInstalledExePath());
@@ -702,8 +709,44 @@ bool WriteUninstallerRegistryInfo(bool allUsers)
     success &= WriteRegStr(hkey,   REG_PATH_UNINST, PUBLISHER, _T("Krzysztof Kowalczyk"));
     success &= WriteRegStr(hkey,   REG_PATH_UNINST, UNINSTALL_STRING, uninstallerPath);
     success &= WriteRegStr(hkey,   REG_PATH_UNINST, URL_INFO_ABOUT, _T("http://blog.kowalczyk.info/software/sumatrapdf/"));
+    success &= WriteRegStr(hkey,   REG_PATH_UNINST, URL_UPDATE_INFO, _T("http://blog.kowalczyk.info/software/sumatrapdf/news.html"));
 
+    // TODO: stop writing this around version 1.8 and instead use INSTALL_LOCATION above
     success &= WriteRegStr(hkey,   REG_PATH_SOFTWARE, INSTALL_DIR, installDir);
+
+    return success;
+}
+
+// cf. http://msdn.microsoft.com/en-us/library/cc144148(v=vs.85).aspx
+bool WriteExtendedFileExtensionInfo(HKEY hkey)
+{
+    bool success = true;
+
+    ScopedMem<TCHAR> exePath(GetInstalledExePath());
+    if (HKEY_LOCAL_MACHINE == hkey)
+        success &= WriteRegStr(hkey, _T("Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\") EXENAME, NULL, exePath);
+
+    // mirroring some of what DoAssociateExeWithPdfExtension() does (cf. AppTools.cpp)
+    ScopedMem<TCHAR> iconPath(Str::Join(exePath, _T(",1")));
+    success &= WriteRegStr(hkey, REG_CLASSES_APPS _T("\\DefaultIcon"), NULL, iconPath);
+    ScopedMem<TCHAR> cmdPath(Str::Format(_T("\"%s\" \"%%1\""), exePath));
+    success &= WriteRegStr(hkey, REG_CLASSES_APPS _T("\\Shell\\Open\\Command"), NULL, cmdPath);
+    ScopedMem<TCHAR> printPath(Str::Format(_T("\"%s\" -print-to-default \"%%1\""), exePath));
+    success &= WriteRegStr(hkey, REG_CLASSES_APPS _T("\\Shell\\Print\\Command"), NULL, printPath);
+    ScopedMem<TCHAR> printToPath(Str::Format(_T("\"%s\" -print-to \"%%2\" \"%%1\""), exePath));
+    success &= WriteRegStr(hkey, REG_CLASSES_APPS _T("\\Shell\\PrintTo\\Command"), NULL, printToPath);
+    // don't add REG_CLASSES_APPS _T("\\SupportedTypes"), as that prevents SumatraPDF.exe to
+    // potentially appear in the Open With lists for other filetypes (such as single images)
+
+    // add the installed SumatraPDF.exe to the Open With lists of the supported file extensions
+    for (int i = 0; i < dimof(gSupportedExts); i++) {
+        ScopedMem<TCHAR> keyname(Str::Join(_T("Software\\Classes\\"), gSupportedExts[i], _T("\\OpenWithList\\") TAPP));
+        success &= WriteRegStr(hkey, keyname, NULL, _T(""));
+    }
+
+    // in case these values don't exist yet (we won't delete these at uninstallation)
+    success &= WriteRegStr(hkey, REG_CLASSES_PDF, _T("Content Type"), _T("application/pdf"));
+    success &= WriteRegStr(hkey, _T("Software\\Classes\\MIME\\Database\\Content Type\\application/pdf"), _T("Extension"), _T(".pdf"));
 
     return success;
 }
@@ -714,37 +757,29 @@ BOOL IsUninstallerNeeded()
     return File::Exists(exePath);
 }
 
-bool RemoveUninstallerRegistryInfo(bool allUsers)
+bool RemoveUninstallerRegistryInfo(HKEY hkey)
 {
-    HKEY hkey = HKEY_LOCAL_MACHINE;
-    if (!allUsers)
-        hkey = HKEY_CURRENT_USER;
     bool ok1 = DeleteRegKey(hkey, REG_PATH_UNINST);
     bool ok2 = DeleteRegKey(hkey, REG_PATH_SOFTWARE);
     return ok1 && ok2;
 }
 
 /* Undo what DoAssociateExeWithPdfExtension() in AppTools.cpp did */
-void UnregisterFromBeingDefaultViewer(bool allUsers)
+void UnregisterFromBeingDefaultViewer(HKEY hkey)
 {
-    HKEY hkey = HKEY_LOCAL_MACHINE;
-    if (!allUsers)
-        hkey = HKEY_CURRENT_USER;
+    ScopedMem<TCHAR> curr(ReadRegStr(hkey, REG_CLASSES_PDF, NULL));
     ScopedMem<TCHAR> prev(ReadRegStr(hkey, REG_CLASSES_APP, _T("previous.pdf")));
-    if (prev) {
+    if (!curr || !Str::Eq(curr, REG_CLASSES_APP)) {
+        // not the default, do nothing
+    } else if (prev) {
         WriteRegStr(hkey, REG_CLASSES_PDF, NULL, prev);
     } else {
         prev.Set(ReadRegStr(hkey, REG_CLASSES_PDF, NULL));
         if (Str::Eq(TAPP, prev))
             DeleteRegKey(hkey, REG_CLASSES_PDF);
     }
-}
 
-void RemoveOwnRegistryKeys()
-{
-    DeleteRegKey(HKEY_LOCAL_MACHINE, REG_CLASSES_APP);
-    DeleteRegKey(HKEY_CURRENT_USER, REG_CLASSES_APP);
-
+    // the following settings overrule HKEY_CLASSES_ROOT\.pdf
     ScopedMem<TCHAR> buf(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT, PROG_ID));
     if (Str::Eq(buf, TAPP)) {
         LONG res = SHDeleteValue(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT, PROG_ID);
@@ -754,6 +789,25 @@ void RemoveOwnRegistryKeys()
     buf.Set(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT _T("\\UserChoice"), PROG_ID));
     if (Str::Eq(buf, TAPP))
         DeleteRegKey(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT _T("\\UserChoice"), true);
+}
+
+void RemoveOwnRegistryKeys()
+{
+    HKEY keys[] = { HKEY_LOCAL_MACHINE, HKEY_CURRENT_USER };
+    // remove all keys from both HKLM and HKCU (wherever they exist)
+    for (int i = 0; i < dimof(keys); i++) {
+        UnregisterFromBeingDefaultViewer(keys[i]);
+        DeleteRegKey(keys[i], REG_CLASSES_APP);
+        DeleteRegKey(keys[i], REG_CLASSES_APPS);
+        SHDeleteValue(keys[i], REG_CLASSES_PDF _T("\\OpenWithProgids"), TAPP);
+
+        for (int i = 0; i < dimof(gSupportedExts); i++) {
+            ScopedMem<TCHAR> keyname(Str::Join(_T("Software\\Classes\\"), gSupportedExts[i], _T("\\OpenWithProgids")));
+            SHDeleteValue(keys[i], keyname, TAPP);
+            keyname.Set(Str::Join(_T("Software\\Classes\\"), gSupportedExts[i], _T("\\OpenWithList\\") TAPP));
+            DeleteRegKey(keys[i], keyname);
+        }
+    }
 }
 
 bool IsBrowserPluginInstalled()
@@ -800,6 +854,9 @@ void InstallPdfFilter()
 /* Caller needs to free() the result. */
 TCHAR *GetDefaultPdfViewer()
 {
+    ScopedMem<TCHAR> buf(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT _T("\\UserChoice"), PROG_ID));
+    if (buf)
+        return buf.StealData();
     return ReadRegStr(HKEY_CLASSES_ROOT, _T(".pdf"), NULL);
 }
 
@@ -965,8 +1022,13 @@ static DWORD WINAPI InstallerThread(LPVOID data)
     if (!CreateUninstaller())
         goto Error;
 
-    if (!WriteUninstallerRegistryInfo(true) && !WriteUninstallerRegistryInfo(false)) {
+    if (!WriteUninstallerRegistryInfo(HKEY_LOCAL_MACHINE) &&
+        !WriteUninstallerRegistryInfo(HKEY_CURRENT_USER)) {
         NotifyFailed(_T("Failed to write the uninstallation information to the registry"));
+    }
+    if (!WriteExtendedFileExtensionInfo(HKEY_LOCAL_MACHINE) &&
+        !WriteExtendedFileExtensionInfo(HKEY_CURRENT_USER)) {
+        NotifyFailed(_T("Failed to write the extended file extension information to the registry"));
     }
     ProgressStep();
 
@@ -1077,17 +1139,13 @@ static DWORD WINAPI UninstallerThread(LPVOID data)
         KillProcess(exePath, TRUE);
     free(exePath);
 
-    if (!RemoveUninstallerRegistryInfo(true) || !RemoveUninstallerRegistryInfo(false))
+    if (!RemoveUninstallerRegistryInfo(HKEY_LOCAL_MACHINE) ||
+        !RemoveUninstallerRegistryInfo(HKEY_CURRENT_USER)) {
         NotifyFailed(_T("Failed to delete uninstaller registry keys"));
+    }
 
     if (!RemoveShortcut(true) || !RemoveShortcut(false))
         NotifyFailed(_T("Couldn't remove the shortcut"));
-
-    ScopedMem<TCHAR> defaultViewer(GetDefaultPdfViewer());
-    if (Str::EqI(defaultViewer, TAPP)) {
-        UnregisterFromBeingDefaultViewer(true);
-        UnregisterFromBeingDefaultViewer(false);
-    }
 
     RemoveOwnRegistryKeys();
     UninstallBrowserPlugin();

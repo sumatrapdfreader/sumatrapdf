@@ -215,13 +215,21 @@ HKCU has precedence over HKLM.
 
 Software\Classes\.pdf default key is name of reg entry describing the app
   handling opening PDF files. In our case it's SumatraPDF
+Software\Classes\.pdf\OpenWithProgids
+  should contain SumatraPDF so that it's easier for the user to later
+  restore SumatraPDF to become the default app through Windows Explorer,
+  cf. http://msdn.microsoft.com/en-us/library/cc144148(v=vs.85).aspx
 
 Software\Classes\SumatraPDF\DefaultIcon = $exePath,1
   1 means the second icon resource within the executable
 Software\Classes\SumatraPDF\shell\open\command = "$exePath" "%1"
   tells how to call sumatra to open PDF file. %1 is replaced by PDF file path
+
 Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.pdf\Progid
   should be SumatraPDF (FoxIt takes it over); only needed for HKEY_CURRENT_USER
+  TODO: No other app seems to set this one, and only UserChoice seems to make
+        a difference - is this still required for Windows XP?
+
 Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.pdf\UserChoice\Progid
   should be SumatraPDF as well (also only needed for HKEY_CURRENT_USER);
   this key is used for remembering a user's choice with Explorer's Open With dialog
@@ -233,8 +241,9 @@ HKEY_CLASSES_ROOT\.pdf\OpenWithList
 HKEY_CLASSES_ROOT\.pdf default comes from either HKCU\Software\Classes\.pdf or
 HKLM\Software\Classes\.pdf (HKCU has priority over HKLM)
 
-Note: When making changes below, please also adjust
+Note: When making changes below, please also adjust WriteExtendedFileExtensionInfo(),
 UnregisterFromBeingDefaultViewer() and RemoveOwnRegistryKeys() in Installer.cpp.
+
 */
 #define REG_CLASSES_APP     _T("Software\\Classes\\") APP_NAME_STR
 #define REG_CLASSES_PDF     _T("Software\\Classes\\.pdf")
@@ -275,6 +284,8 @@ void DoAssociateExeWithPdfExtension(HKEY hkey)
     // Only change the association if we're confident, that we've registered ourselves well enough
     if (ok) {
         WriteRegStr(hkey, REG_CLASSES_PDF, NULL, APP_NAME_STR);
+        // TODO: also add SumatraPDF to the Open With lists for the other supported extensions?
+        WriteRegStr(hkey, REG_CLASSES_PDF _T("\\OpenWithProgids"), APP_NAME_STR, _T(""));
         if (hkey == HKEY_CURRENT_USER) {
             WriteRegStr(hkey, REG_EXPLORER_PDF_EXT, _T("Progid"), APP_NAME_STR);
             DeleteRegKey(hkey, REG_EXPLORER_PDF_EXT _T("\\UserChoice"), true);
