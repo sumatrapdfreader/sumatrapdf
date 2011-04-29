@@ -253,6 +253,10 @@ bool CDjVuEngine::RenderPage(HDC hDC, int pageNo, RectI screenRect, float zoom, 
 
 PointD CDjVuEngine::Transform(PointD pt, int pageNo, float zoom, int rotate, bool inverse)
 {
+    assert(zoom > 0);
+    if (zoom <= 0)
+        return pt;
+
     SizeD page = PageMediabox(pageNo).Size();
 
     if (inverse) {
