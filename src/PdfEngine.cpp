@@ -2494,7 +2494,7 @@ CXpsToCItem *CXpsEngine::BuildToCTree(xps_outline *entry, int& idCounter)
 
 DocToCItem *CXpsEngine::GetToCTree()
 {
-    if (!_outline)
+    if (!HasToCTree())
         return NULL;
     
     int idCounter = 0;

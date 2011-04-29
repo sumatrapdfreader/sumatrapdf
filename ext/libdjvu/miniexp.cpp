@@ -903,7 +903,8 @@ ministring_t::pname() const
 int 
 miniexp_stringp(miniexp_t p)
 {
-  return miniexp_isa(p, ministring_t::classname) ? 1 : 0;
+  // SumatraPDF: don't execute code until asked to
+  return miniexp_isa(p, miniexp_symbol("string")) ? 1 : 0;
 }
 
 const char *

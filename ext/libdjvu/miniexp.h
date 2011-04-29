@@ -618,11 +618,12 @@ miniobj_t {
           virtual bool isa(miniexp_t) const; 
 
 #define MINIOBJ_IMPLEMENT(cls, supercls, name)\
-  const miniexp_t cls::classname = miniexp_symbol(name);\
+  /* SumatraPDF: don't execute code until asked to */\
+  const miniexp_t cls::classname = 0;\
   miniexp_t cls::classof() const {\
-    return cls::classname; }\
+    return miniexp_symbol(name); }\
   bool cls::isa(miniexp_t n) const {\
-    return (cls::classname==n) || (supercls::isa(n)); }
+    return (classof()==n) || (supercls::isa(n)); }
 
 
 /* miniexp_to_obj --

@@ -72,7 +72,8 @@ inline void * operator new(size_t, void * ptr) { return ptr; }
 # include <new.h>
 #endif
 
-#ifdef WIN32_BUT_NOT_SUMATRAPDF
+// SumatraPDF: allow to build as a static library (built-in)
+#ifdef WIN32_AND_NOT_STATIC
 # ifdef DLL_EXPORT
 #  define DJVUAPI __declspec(dllexport)
 # else

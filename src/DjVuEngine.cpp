@@ -10,8 +10,10 @@
 #include "DjVuEngine.h"
 #include "FileUtil.h"
 
-// TODO: libdjvu seems to leak memory - where?
-//       maybe http://sourceforge.net/projects/djvu/forums/forum/103286/topic/3553602
+// TODO: libdjvu leaks memory - among others
+//       DjVuPort::corpse_lock, DjVuPort::corpse_head, pcaster,
+//       DataPool::OpenFiles::global_ptr, FCPools::global_ptr
+//       cf. http://sourceforge.net/projects/djvu/forums/forum/103286/topic/3553602
 
 class RenderedDjVuPixmap : public RenderedBitmap {
 public:
@@ -40,11 +42,6 @@ RenderedDjVuPixmap::RenderedDjVuPixmap(char *data, int width, int height) :
 
     free(bmi);
 }
-
-// Ensure that libdjvu doesn't trigger the CRT's leak detection
-// at least when it's never been used at all
-class DjVuCleanUp { public: ~DjVuCleanUp() { minilisp_finish(); } };
-DjVuCleanUp _globalCleanup;
 
 class DjVuToCItem : public DocToCItem, public PageDestination {
 public:
@@ -344,7 +341,7 @@ static DocToCItem *CleanOutTree(DocToCItem *root)
 
 DocToCItem *CDjVuEngine::GetToCTree()
 {
-    if (outline == miniexp_nil)
+    if (!HasToCTree())
         return NULL;
 
     int idCounter = 0;
