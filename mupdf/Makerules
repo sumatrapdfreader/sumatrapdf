@@ -43,3 +43,42 @@ CFLAGS += -m32
 LDFLAGS += -m32
 endif
 endif
+
+# The following section is an example of how to simply do cross-compilation
+# using these Makefiles. It builds for a beagleboard running ARM linux,
+# compiling on windows with the CodeSourcery G++ compilers.
+# Invoke this as:
+#      make OS=beagle-cross build=release
+# This does rely on the generated directory being populated with the cmap
+# files etc first. Either:
+#   1) do 'make generate' first (this relies on you having an appropriate host
+#   base C compiler set up - such as you would have on unix or in windows
+#   cygwin)
+#   2) do a non cross compile build (e.g. windows in MSVC) first.
+#   3) download the generated files from mupdf.com.
+ifeq "$(OS)" "beagle-cross"
+CC = arm-none-linux-gnueabi-gcc
+LD = arm-none-linux-gnueabi-gcc
+AR = arm-none-linux-gnueabi-ar
+CFLAGS += -O3 -mfpu=neon -mcpu=cortex-a8 -mfloat-abi=softfp -ftree-vectorize -ffast-math -fsingle-precision-constant
+CROSSCOMPILE=yes
+NOX11=yes
+endif
+
+ifeq "$(OS)" "webos-pre-cross"
+CC = arm-none-linux-gnueabi-gcc
+LD = arm-none-linux-gnueabi-gcc
+AR = arm-none-linux-gnueabi-ar
+CFLAGS += -O3 -mcpu=cortex-a8 -mfpu=neon -mfloat-abi=softfp -ftree-vectorize -ffast-math -fsingle-precision-constant
+CROSSCOMPILE=yes
+NOX11=yes
+endif
+
+ifeq "$(OS)" "webos-pixi-cross"
+CC = arm-none-linux-gnueabi-gcc
+LD = arm-none-linux-gnueabi-gcc
+AR = arm-none-linux-gnueabi-ar
+CFLAGS += -O3 -mcpu=arm1136jf-s -mfpu=vfp -mfloat-abi=softfp -ffast-math -fsingle-precision-constant
+CROSSCOMPILE=yes
+NOX11=yes
+endif

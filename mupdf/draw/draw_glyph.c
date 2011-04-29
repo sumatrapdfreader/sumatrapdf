@@ -17,7 +17,7 @@ struct fz_glyph_key_s
 	fz_font *font;
 	int a, b;
 	int c, d;
-	unsigned short cid;
+	unsigned short gid;
 	unsigned char e, f;
 };
 
@@ -64,15 +64,15 @@ fz_free_glyph_cache(fz_glyph_cache *cache)
 }
 
 fz_pixmap *
-fz_render_stroked_glyph(fz_glyph_cache *cache, fz_font *font, int cid, fz_matrix trm, fz_matrix ctm, fz_stroke_state *stroke)
+fz_render_stroked_glyph(fz_glyph_cache *cache, fz_font *font, int gid, fz_matrix trm, fz_matrix ctm, fz_stroke_state *stroke)
 {
 	if (font->ft_face)
-		return fz_render_ft_stroked_glyph(font, cid, trm, ctm, stroke);
-	return fz_render_glyph(cache, font, cid, trm);
+		return fz_render_ft_stroked_glyph(font, gid, trm, ctm, stroke);
+	return fz_render_glyph(cache, font, gid, trm);
 }
 
 fz_pixmap *
-fz_render_glyph(fz_glyph_cache *cache, fz_font *font, int cid, fz_matrix ctm)
+fz_render_glyph(fz_glyph_cache *cache, fz_font *font, int gid, fz_matrix ctm)
 {
 	fz_glyph_key key;
 	fz_pixmap *val;
@@ -87,7 +87,7 @@ fz_render_glyph(fz_glyph_cache *cache, fz_font *font, int cid, fz_matrix ctm)
 
 	memset(&key, 0, sizeof key);
 	key.font = font;
-	key.cid = cid;
+	key.gid = gid;
 	key.a = ctm.a * 65536;
 	key.b = ctm.b * 65536;
 	key.c = ctm.c * 65536;
@@ -104,11 +104,11 @@ fz_render_glyph(fz_glyph_cache *cache, fz_font *font, int cid, fz_matrix ctm)
 
 	if (font->ft_face)
 	{
-		val = fz_render_ft_glyph(font, cid, ctm);
+		val = fz_render_ft_glyph(font, gid, ctm);
 	}
 	else if (font->t3procs)
 	{
-		val = fz_render_t3_glyph(font, cid, ctm);
+		val = fz_render_t3_glyph(font, gid, ctm);
 	}
 	else
 	{

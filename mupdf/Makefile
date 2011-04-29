@@ -74,6 +74,9 @@ $(FITZ_LIB) : $(addprefix $(OUT)/, $(FITZ_SRC:%.c=%.o))
 $(MUPDF_LIB) : $(addprefix $(OUT)/, $(MUPDF_SRC:%.c=%.o))
 $(MUXPS_LIB) : $(addprefix $(OUT)/, $(MUXPS_SRC:%.c=%.o))
 
+libs: $(MUXPS_LIB) $(MUPDF_LIB) $(FITZ_LIB) $(THIRD_LIBS)
+	@ echo MuPDF/XPS and underlying libraries built
+
 # --- Generated CMAP and FONT files ---
 
 CMAPDUMP := $(OUT)/cmapdump
@@ -106,8 +109,12 @@ $(GEN)/font_cjk.h : $(FONT_CJK_SRC)
 CMAP_HDR := $(addprefix $(GEN)/, cmap_cns.h cmap_gb.h cmap_japan.h cmap_korea.h)
 FONT_HDR := $(GEN)/font_base14.h $(GEN)/font_droid.h $(GEN)/font_cjk.h
 
+ifeq "$(CROSSCOMPILE)" ""
 $(CMAP_HDR) : $(CMAPDUMP) | $(GEN)
 $(FONT_HDR) : $(FONTDUMP) | $(GEN)
+endif
+
+generate: $(CMAP_HDR) $(FONT_HDR)
 
 $(OUT)/pdf_cmap_table.o : $(CMAP_HDR)
 $(OUT)/pdf_fontfile.o : $(FONT_HDR)
@@ -123,8 +130,10 @@ $(XPS_APPS) : $(MUXPS_LIB) $(FITZ_LIB) $(THIRD_LIBS)
 
 MUPDF := $(OUT)/mupdf
 $(MUPDF) : $(MUXPS_LIB) $(MUPDF_LIB) $(FITZ_LIB) $(THIRD_LIBS)
+ifeq "$(NOX11)" ""
 $(MUPDF) : $(addprefix $(OUT)/, x11_main.o x11_image.o pdfapp.o)
 	$(LINK_CMD) $(X11_LIBS)
+endif
 
 # --- Install ---
 

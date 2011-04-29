@@ -721,7 +721,9 @@ pdf_crypt_obj_imp(pdf_crypt *crypt, fz_obj *obj, unsigned char *key, int keylen)
 
 		if (crypt->strf.method == PDF_CRYPT_AESV2 || crypt->strf.method == PDF_CRYPT_AESV3)
 		{
-			if (n >= 32)
+			if (n & 15 || n < 32)
+				fz_warn("invalid string length for aes encryption");
+			else
 			{
 				unsigned char iv[16];
 				fz_aes aes;
@@ -729,7 +731,10 @@ pdf_crypt_obj_imp(pdf_crypt *crypt, fz_obj *obj, unsigned char *key, int keylen)
 				aes_setkey_dec(&aes, key, keylen * 8);
 				aes_crypt_cbc(&aes, AES_DECRYPT, n - 16, iv, s + 16, s);
 				/* delete space used for iv and padding bytes at end */
-				fz_set_str_len(obj, n - 16 - s[n - 17]);
+				if (s[n - 17] < 1 || s[n - 17] > 16)
+					fz_warn("aes padding out of range");
+				else
+					fz_set_str_len(obj, n - 16 - s[n - 17]);
 			}
 		}
 	}

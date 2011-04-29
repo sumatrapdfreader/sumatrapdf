@@ -447,7 +447,7 @@ pdf_flush_text(pdf_csi *csi)
 }
 
 static void
-pdf_show_glyph(pdf_csi *csi, int cid)
+pdf_show_char(pdf_csi *csi, int cid)
 {
 	pdf_gstate *gstate = csi->gstate + csi->gtop;
 	pdf_font_desc *fontdesc = gstate->font;
@@ -574,7 +574,7 @@ pdf_show_string(pdf_csi *csi, unsigned char *buf, int len)
 		buf = pdf_decode_cmap(fontdesc->encoding, buf, &cpt);
 		cid = pdf_lookup_cmap(fontdesc->encoding, cpt);
 		if (cid >= 0)
-			pdf_show_glyph(csi, cid);
+			pdf_show_char(csi, cid);
 		else
 			fz_warn("cannot encode character with code point %#x", cpt);
 		if (cpt == 32)
