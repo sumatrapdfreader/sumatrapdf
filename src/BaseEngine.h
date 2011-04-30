@@ -122,6 +122,7 @@ public:
     // rectangle of the destination on the above returned page
     virtual RectD GetDestRect() const = 0;
     // string value associated with the destination (e.g. a path or a URL)
+    // caller must free() the result
     virtual TCHAR *GetDestValue() const { return NULL; }
 
     // if this destination's target is an embedded file, this allows to

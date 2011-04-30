@@ -44,6 +44,51 @@ RenderedDjVuPixmap::RenderedDjVuPixmap(char *data, int width, int height) :
     free(bmi);
 }
 
+class DjVuLink : public PageElement, public PageDestination {
+    int pageNo;
+    RectD rect;
+    // the url format can be any of
+    //   #<pageNo>  (e.g. #1 for FirstPage and #13 for page 13)
+    //   #+<pageCount>  or  #-<pageCount>  (e.g. #+1 for NextPage and #-1 for PrevPage)
+    //   #filename.djvu  (resolve the component name to a page)
+    //   http://example.net/#hyperlink
+    TCHAR *url;
+    TCHAR *value;
+
+public:
+    DjVuLink(int pageNo, RectI rect, const char *url, const char *comment) :
+        pageNo(pageNo), rect(rect.Convert<double>()), url(Str::Conv::FromUtf8(url)) {
+        if (!Str::IsEmpty(comment))
+            value = Str::Conv::FromUtf8(comment);
+        else
+            value = Str::Dup(this->url);
+    }
+    virtual ~DjVuLink() {
+        free(url);
+        free(value);
+    }
+
+    virtual int GetPageNo() const { return pageNo; }
+    virtual RectD GetRect() const { return rect; }
+    virtual TCHAR *GetValue() const { return value ? Str::Dup(value) : GetDestValue(); }
+
+    virtual PageDestination *AsLink() { return this; }
+
+    // TODO: not all links are hyperlinks (cf. ToC)
+    virtual const char *GetType() const {
+        if (Str::StartsWith(url, _T("#")))
+            return "ScrollTo";
+        return "LaunchURL";
+    }
+    virtual int GetDestPageNo() const {
+        if (Str::StartsWith(url, _T("#")))
+            return _ttoi(url + 1);
+        return 0;
+    }
+    virtual RectD GetDestRect() const { return RectD(); }
+    virtual TCHAR *GetDestValue() const { return Str::Dup(url); }
+};
+
 class DjVuToCItem : public DocToCItem, public PageDestination {
 public:
     DjVuToCItem(const char *title) : DocToCItem(Str::Conv::FromUtf8(title)) { }
@@ -52,7 +97,7 @@ public:
 
     virtual const char *GetType() const { return "ScrollTo"; }
     virtual int GetDestPageNo() const { return pageNo; }
-    virtual RectD GetDestRect() const { return RectD(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT); }
+    virtual RectD GetDestRect() const { return RectD(); }
 };
 
 class CDjVuEngine : public DjVuEngine {
@@ -97,6 +142,9 @@ public:
     // we currently don't load pages lazily, so there's nothing to do here
     virtual bool BenchLoadPage(int pageNo) { return true; }
 
+    virtual Vec<PageElement *> *GetElements(int pageNo);
+    virtual PageElement *GetElementAtPos(int pageNo, PointD pt);
+
     virtual bool HasToCTree() const { return outline != miniexp_nil; }
     virtual DocToCItem *GetToCTree();
 
@@ -109,6 +157,7 @@ protected:
     ddjvu_context_t *ctx;
     ddjvu_document_t *doc;
     miniexp_t outline;
+    miniexp_t *annos;
 
     CRITICAL_SECTION ctxAccess;
 
@@ -127,7 +176,8 @@ void SpinDdjvuMessageLoop(ddjvu_context_t *ctx, bool wait=true)
         ddjvu_message_pop(ctx);
 }
 
-CDjVuEngine::CDjVuEngine() : fileName(NULL), pageCount(0), mediaboxes(NULL), outline(miniexp_nil)
+CDjVuEngine::CDjVuEngine() : fileName(NULL), pageCount(0), mediaboxes(NULL),
+    outline(miniexp_nil), annos(NULL)
 {
     InitializeCriticalSection(&ctxAccess);
 
@@ -146,6 +196,12 @@ CDjVuEngine::~CDjVuEngine()
     delete[] mediaboxes;
     free((void *)fileName);
 
+    if (annos) {
+        for (int i = 0; i < pageCount; i++)
+            if (annos[i])
+                ddjvu_miniexp_release(doc, annos[i]);
+        free(annos);
+    }
     if (outline != miniexp_nil)
         ddjvu_miniexp_release(doc, outline);
     if (doc)
@@ -175,6 +231,7 @@ bool CDjVuEngine::Load(const TCHAR *fileName)
 
     pageCount = ddjvu_document_get_pagenum(doc);
     mediaboxes = new RectD[pageCount];
+    annos = SAZA(miniexp_t, pageCount);
 
     for (int i = 0; i < pageCount; i++) {
         ddjvu_status_t status;
@@ -186,6 +243,9 @@ bool CDjVuEngine::Load(const TCHAR *fileName)
 
         mediaboxes[i] = RectD(0, 0, info.width * GetFileDPI() / info.dpi,
                                     info.height * GetFileDPI() / info.dpi);
+
+        while ((annos[i] = ddjvu_document_get_pageanno(doc, i)) == miniexp_dummy)
+            SpinDdjvuMessageLoop(ctx);
     }
 
     while ((outline = ddjvu_document_get_outline(doc)) == miniexp_dummy)
@@ -368,11 +428,84 @@ TCHAR *CDjVuEngine::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_o
         RectI page = PageMediabox(pageNo).Round();
         for (size_t i = 0; i < coords.Count(); i++)
             if (!coords[i].IsEmpty())
-                coords[i].y = 2 * page.y - coords[i].y + page.dy - coords[i].dy;
+                coords[i].y = page.dy - coords[i].y - coords[i].dy;
         *coords_out = coords.StealData();
     }
 
     return extracted.StealData();
+}
+
+Vec<PageElement *> *CDjVuEngine::GetElements(int pageNo)
+{
+    assert(1 <= pageNo && pageNo <= PageCount());
+    if (!annos || !annos[pageNo-1])
+        return NULL;
+
+    Vec<PageElement *> *els = new Vec<PageElement *>();
+    RectI page = PageMediabox(pageNo).Round();
+
+    miniexp_t *links = ddjvu_anno_get_hyperlinks(annos[pageNo-1]);
+    for (int i = 0; links[i]; i++) {
+        miniexp_t anno = miniexp_cdr(links[i]);
+
+        miniexp_t url = miniexp_car(anno);
+        const char *urlUtf8 = NULL;
+        if (miniexp_stringp(url))
+            urlUtf8 = miniexp_to_str(url);
+        else if (miniexp_consp(url) && miniexp_car(url) == miniexp_symbol("url") &&
+                 miniexp_stringp(miniexp_cadr(url)) && miniexp_stringp(miniexp_caddr(url))) {
+            urlUtf8 = miniexp_to_str(miniexp_cadr(url));
+        }
+        if (!urlUtf8)
+            continue;
+
+        anno = miniexp_cdr(anno);
+        miniexp_t comment = miniexp_car(anno);
+        const char *commentUtf8 = NULL;
+        if (miniexp_stringp(comment))
+            commentUtf8 = miniexp_to_str(comment);
+
+        anno = miniexp_cdr(anno);
+        miniexp_t area = miniexp_car(anno);
+        miniexp_t type = miniexp_car(area);
+        if (type != miniexp_symbol("rect") && type != miniexp_symbol("oval") && type != miniexp_symbol("text"))
+            continue; // unsupported shape;
+
+        area = miniexp_cdr(area);
+        if (!miniexp_numberp(miniexp_car(area))) continue;
+        int x = miniexp_to_int(miniexp_car(area)); area = miniexp_cdr(area);
+        if (!miniexp_numberp(miniexp_car(area))) continue;
+        int y = miniexp_to_int(miniexp_car(area)); area = miniexp_cdr(area);
+        if (!miniexp_numberp(miniexp_car(area))) continue;
+        int w = miniexp_to_int(miniexp_car(area)); area = miniexp_cdr(area);
+        if (!miniexp_numberp(miniexp_car(area))) continue;
+        int h = miniexp_to_int(miniexp_car(area)); area = miniexp_cdr(area);
+        RectI rect(x, page.dy - y - h, w, h);
+
+        els->Append(new DjVuLink(pageNo, rect, urlUtf8, commentUtf8));
+    }
+    free(links);
+
+    return els;
+}
+
+PageElement *CDjVuEngine::GetElementAtPos(int pageNo, PointD pt)
+{
+    Vec<PageElement *> *els = GetElements(pageNo);
+    if (!els)
+        return NULL;
+
+    PageElement *el = NULL;
+    for (size_t i = 0; i < els->Count() && !el; i++)
+        if (els->At(i)->GetRect().Inside(pt))
+            el = els->At(i);
+
+    if (el)
+        els->Remove(el);
+    DeleteVecMembers(*els);
+    delete els;
+
+    return el;
 }
 
 DjVuToCItem *CDjVuEngine::BuildToCTree(miniexp_t entry, int& idCounter)
