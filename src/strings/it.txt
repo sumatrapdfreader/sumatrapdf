@@ -19,7 +19,7 @@ Contributor: Antonio Colombo
 Contributor: Roberto Boriotti
 
 &About
-&Informazioni
+&Informazioni su...
 
 &Actual Size\tCtrl-1
 Dimensioni re&ali\t<Ctrl>+1
@@ -37,7 +37,7 @@ Tutte le p&agine selezionate
 Selezione &copia
 
 &Copy Selection\tCtrl-C
-&Copia Selezione\t<Ctrl>+C
+&Copia selezione\t<Ctrl>+C
 
 &Don't ask me again
 Non chie&dermelo più
@@ -73,7 +73,7 @@ Solo pagin&e pari
 &Ingrandimento:
 
 &Manual
-&Manuale
+&Manuale in linea
 
 &Match case
 &Maiuscole/minuscole
@@ -100,7 +100,7 @@ S&olo pagine dispari
 &Password:
 
 &Previous Page\tLeft Arrow
-&Pagina Precedente\t<Freccia sinistra>
+&Pagina precedente\t<Freccia sinistra>
 
 &Print...
 &Stampa
@@ -160,7 +160,7 @@ All supported documents
 Tutti i documenti supportati
 
 Application:
-Applicazione:
+Creato con:
 
 Associate with PDF files?
 Associare ai file PDF?
@@ -172,7 +172,7 @@ Author:
 Autore:
 
 Automatic
-Automatico
+Automatica
 
 Automatically check for &updates
 Controlla a&utomaticamente aggiornamenti
@@ -208,7 +208,7 @@ Cannot start inverse search command. Please check the command line in the settin
 Impossibile eseguire il comando di ricerca inversa. Controllare la riga di comando usata nelle impostazioni.
 
 Change Language
-Cambia lingua (Change language)
+Lingua interfaccia (Change language)
 
 Check for &Updates
 Controlla &aggiornamenti
@@ -247,7 +247,7 @@ Couldn't render the page
 Impossibile renderizzare la pagina
 
 Created:
-Creato:
+Data creazione:
 
 Custom &Zoom...\tCtrl-Y
 Ingrandimento personali&zzato\t<Ctrl>+Y
@@ -301,7 +301,7 @@ Failed to save a file
 Salvataggio file non riuscito
 
 File Size:
-Dimensione del file:
+Dimensione file:
 
 File:
 File:
@@ -322,13 +322,13 @@ Find:
 Trova:
 
 Fit &Content\tCtrl-3
-&Contenuto\t<Ctrl>+3
+Adatta a &contenuto\t<Ctrl>+3
 
 Fit &Page\tCtrl-0
 &Pagina intera\t<Ctrl>+0
 
 Fit &Width\tCtrl-2
-&Larghezza pagina\t<Ctrl>+2
+Adatta a &larghezza pagina\t<Ctrl>+2
 
 Fit Content
 Adatta a contenuto
@@ -385,7 +385,7 @@ Match Case
 Maiuscole/minuscole
 
 Modified:
-Modificato:
+Data ultima modifica:
 
 New version %s is available. Download new version?
 È disponibile la versione %s. Scaricare la nuova versione?
@@ -406,7 +406,7 @@ No synchronization info at this position
 Nessuna informazione di sincronizzazione in questa posizione
 
 Number of Pages:
-Numero di pagine:
+Numero pagine:
 
 OK
 OK
@@ -448,7 +448,7 @@ Pa&ge...\tCtrl-G
 Pa&gina...\t<Ctrl>+G
 
 Page Size:
-Dimensione pagina:
+Formato pagina:
 
 Page number %u inexistant
 Pagina numero %u inesistente
@@ -471,6 +471,9 @@ Pr&esentazione\t<Ctrl>+L
 Previous Page
 Pagina precedente
 
+Print
+Stampa
+
 Print range
 Stampa intervallo
 
@@ -487,10 +490,10 @@ Remember &opened files
 Ric&orda file aperti
 
 Rotate &Left\tCtrl-Shift--
-Ruota a &sinistra\t<Ctrl><Maiusc>-
+Ruota a &sinistra\t<Ctrl> <Maiusc> -
 
 Rotate &Right\tCtrl-Shift-+
-Ruota a &destra\t<Ctrl><Maiusc>+
+Ruota a &destra\t<Ctrl> <Maiusc> +
 
 Save S&hortcut...\tCtrl-Shift-S
 Salva &collegamento\t<Ctrl>+<Maiusc>+S
@@ -514,10 +517,10 @@ Set inverse search command-line
 Imposta la ricerca inversa via riga di comando
 
 Show &Toolbar
-Visualizza la &barar strumenti
+&Barra strumenti
 
 Show &pages continuously
-Visualizza le &pagine in modo continuo
+&Pagine in modo continuo
 
 Show frequently read
 Visualizza letto frequentemente
@@ -577,7 +580,7 @@ You have the latest version.
 Il programma è aggiornato.
 
 You have version %s
-versione attuale: %s
+Versione attuale: %s
 
 Zoom
 Zoom
@@ -595,11 +598,8 @@ Fattore di ingrandimento
 [Individuati cambiamenti; aggiornando] %s
 
 copying text
-copiando il testo...
+Copia del testo...
 
 printing document
-documento in stampa...
-
-# Untranslated:
-#Print
+Stampa documento...
 
