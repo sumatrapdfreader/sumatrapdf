@@ -657,6 +657,8 @@ static TCHAR *GetThumbnailPath(const TCHAR *filePath)
     ScopedMem<TCHAR> pathN(Path::Normalize(filePath));
     if (!pathN)
         return NULL;
+    if (Path::IsOnRemovableDrive(pathN))
+        pathN[0] = '?'; // ignore the drive letter, if it might change
     ScopedMem<char> pathU(Str::Conv::ToUtf8(pathN));
     CalcMD5Digest((unsigned char *)pathU.Get(), Str::Len(pathU), digest);
     ScopedMem<char> fingerPrint(Str::MemToHex(digest, 16));

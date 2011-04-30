@@ -13,6 +13,7 @@ TCHAR *      GetDir(const TCHAR *path);
 TCHAR *      Join(const TCHAR *path, const TCHAR *filename);
 TCHAR *      Normalize(const TCHAR *path);
 bool         IsSame(const TCHAR *path1, const TCHAR *path2);
+bool         IsOnRemovableDrive(const TCHAR *path);
 
 }
 

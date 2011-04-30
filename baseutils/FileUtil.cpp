@@ -133,6 +133,20 @@ bool IsSame(const TCHAR *path1, const TCHAR *path2)
     return Str::EqI(npath1, npath2);
 }
 
+// returns true if the drive letter for this path might be variable
+bool IsOnRemovableDrive(const TCHAR *path)
+{
+    TCHAR root[] = _T("?:\\");
+    root[0] = _totupper(path[0]);
+    if (root[0] < 'A' || 'Z' < root[0])
+        return false;
+
+    UINT driveType = GetDriveType(root);
+    return DRIVE_REMOVABLE == driveType ||
+           DRIVE_CDROM == driveType ||
+           DRIVE_NO_ROOT_DIR == driveType;
+}
+
 }
 
 namespace File {
