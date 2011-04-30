@@ -2034,11 +2034,12 @@ int RunApp()
 
 void ShowUsage()
 {
-    MessageBox(NULL, TAPP _T("-install.exe [/s][/d <path>][/default]\n\
+    MessageBox(NULL, TAPP _T("-install.exe [/s][/d <path>][/default][/opt plugin][/opt pdffilter]\n\
     \n\
     /s\tinstalls ") TAPP _T(" silently (without user interaction).\n\
     /d\tchanges the directory where ") TAPP _T(" will be installed.\n\
-    /default\tinstalls ") TAPP _T(" as the default PDF viewer."), TAPP _T(" Installer Usage"), MB_OK | MB_ICONINFORMATION);
+    /default\tinstalls ") TAPP _T(" as the default PDF viewer.\n\
+    /opt\tenables optional components (currently: plugin, pdffilter)."), TAPP _T(" Installer Usage"), MB_OK | MB_ICONINFORMATION);
 }
 
 void ParseCommandLine(TCHAR *cmdLine)
@@ -2057,12 +2058,18 @@ void ParseCommandLine(TCHAR *cmdLine)
         if (is_arg("s"))
             gGlobalData.silent = true;
         else if (is_arg_with_param("d")) {
-            if (gGlobalData.installDir)
-                free(gGlobalData.installDir);
+            free(gGlobalData.installDir);
             gGlobalData.installDir = Str::Dup(argList[++i]);
         }
         else if (is_arg("register"))
             gGlobalData.registerAsDefault = true;
+        else if (is_arg_with_param("opt")) {
+            i++;
+            if (Str::EqI(argList[i], _T("plugin")))
+                gGlobalData.installBrowserPlugin = true;
+            else if (Str::EqI(argList[i], _T("pfdfilter")))
+                gGlobalData.installPdfFilter = true;
+        }
         else if (is_arg("h") || is_arg("help") || is_arg("?"))
             gGlobalData.showUsageAndQuit = true;
     }
@@ -2102,8 +2109,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
             UninstallerThread(NULL);
         } else {
             // make sure not to uninstall the plugins during silent installation
-            gGlobalData.installBrowserPlugin = IsBrowserPluginInstalled();
-            gGlobalData.installPdfFilter = IsPdfFilterInstalled();
+            if (!gGlobalData.installBrowserPlugin)
+                gGlobalData.installBrowserPlugin = IsBrowserPluginInstalled();
+            if (!gGlobalData.installPdfFilter)
+                gGlobalData.installPdfFilter = IsPdfFilterInstalled();
             InstallerThread(NULL);
         }
         ret = gGlobalData.success ? 0 : 1;
