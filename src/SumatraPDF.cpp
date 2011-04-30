@@ -96,7 +96,8 @@ bool                    gPluginMode = false;
 #else
 #define ABOUT_BG_COLOR          RGB(255,242,0)
 #endif
-#define ABOUT_BG_COLOR_DEFAULT  -1
+// for backward compatibility use a value that older versions will render as yellow
+#define ABOUT_BG_COLOR_DEFAULT  (RGB(255,242,0) - 0x80000000)
 
 #define COL_WINDOW_BG           RGB(0xcc, 0xcc, 0xcc)
 #define COL_WINDOW_SHADOW       RGB(0x40, 0x40, 0x40)

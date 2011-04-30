@@ -365,11 +365,11 @@ TCHAR *GetPDFXChangePath()
 // List of rules used to detect TeX editors.
 
 // type of path information retrieved from the registy
-typedef enum {
+enum EditorPathType {
     BinaryPath,         // full path to the editor's binary file
     BinaryDir,          // directory containing the editor's binary file
     SiblingPath,        // full path to a sibling file of the editor's binary file    
-} EditorPathType;
+};
 
 static struct {
     PTSTR          Name;                // Editor name

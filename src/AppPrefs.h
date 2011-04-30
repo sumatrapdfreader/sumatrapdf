@@ -8,10 +8,10 @@
 
 /* enum from m_windowState */
 enum {
-    WIN_STATE_NORMAL = 1 /* use remebered position and size */
-    ,WIN_STATE_MAXIMIZED /* ignore position and size, maximize the window */    
-    ,WIN_STATE_FULLSCREEN
-    ,WIN_STATE_MINIMIZED
+    WIN_STATE_NORMAL = 1, /* use remebered position and size */
+    WIN_STATE_MAXIMIZED,  /* ignore position and size, maximize the window */    
+    WIN_STATE_FULLSCREEN,
+    WIN_STATE_MINIMIZED,
 };
 
 /* Most of the global settings that we persist in preferences file. */
@@ -38,7 +38,8 @@ struct SerializableGlobalPrefs {
     /* if true, we remember which files we opened and their settings */
     bool m_rememberOpenedFiles;
 
-    /* used for the Start page, About page and Properties dialog (-1 means default color) */
+    /* used for the Start page, About page and Properties dialog
+       (negative values indicate that the default color will be used) */
     int  m_bgColor;
     bool m_escToExit;
 

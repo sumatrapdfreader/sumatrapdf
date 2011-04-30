@@ -18,7 +18,7 @@
 #include <inttypes.h>
 #include "Vec.h"
 
-typedef enum { BT_STRING, BT_INT, BT_ARRAY, BT_DICT } BencType;
+enum BencType { BT_STRING, BT_INT, BT_ARRAY, BT_DICT };
 
 class BencObj {
     BencType type;

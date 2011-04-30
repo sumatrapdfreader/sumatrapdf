@@ -75,9 +75,10 @@ typedef struct {
 #define PDFSYNC_EXTENSION _T(".PDFSYNC")
 
 // System of point coordinates
-typedef enum { TopLeft,    // origin at the top-left corner
-               BottomLeft, // origin at the bottom-left corner
-} CoordSystem;
+enum CoordSystem {
+    TopLeft,    // origin at the top-left corner
+    BottomLeft, // origin at the bottom-left corner
+};
 
 class Synchronizer
 {
