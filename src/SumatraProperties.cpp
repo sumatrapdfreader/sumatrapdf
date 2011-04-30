@@ -361,7 +361,6 @@ static void DrawProperties(HWND hwnd, HDC hdc)
 {
     WindowInfo * win = FindWindowInfoByHwnd(hwnd);
     PropertiesLayout *layoutData = (PropertiesLayout *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
-    HBRUSH brushBg = CreateSolidBrush(gGlobalPrefs.m_bgColor);
 #if 0
     HPEN penBorder = CreatePen(PS_SOLID, ABOUT_LINE_OUTER_SIZE, COL_BLACK);
 #endif
@@ -374,10 +373,10 @@ static void DrawProperties(HWND hwnd, HDC hdc)
     SetBkMode(hdc, TRANSPARENT);
 
     ClientRect rcClient(hwnd);
-    FillRect(hdc, &rcClient.ToRECT(), brushBg);
+    FillRect(hdc, &rcClient.ToRECT(), gBrushAboutBg);
 
 #if 0
-    SelectObject(hdc, brushBg);
+    SelectObject(hdc, gBrushAboutBg);
     SelectObject(hdc, penBorder);
 #endif
 
@@ -404,7 +403,6 @@ static void DrawProperties(HWND hwnd, HDC hdc)
     Win::Font::Delete(fontLeftTxt);
     Win::Font::Delete(fontRightTxt);
 
-    DeleteObject(brushBg);
 #if 0
     DeleteObject(penBorder);
 #endif

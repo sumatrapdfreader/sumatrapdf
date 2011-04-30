@@ -190,8 +190,6 @@ static RectI DrawBottomRightLink(HWND hwnd, HDC hdc, const TCHAR *txt)
    to understand without seeing the design. */
 static void DrawAbout(HWND hwnd, HDC hdc, RectI rect, Vec<StaticLinkInfo>& linkInfo)
 {
-    HBRUSH brushBg = CreateSolidBrush(gGlobalPrefs.m_bgColor);
-
     HPEN penBorder = CreatePen(PS_SOLID, ABOUT_LINE_OUTER_SIZE, WIN_COL_BLACK);
     HPEN penDivideLine = CreatePen(PS_SOLID, ABOUT_LINE_SEP_SIZE, WIN_COL_BLACK);
     HPEN penLinkLine = CreatePen(PS_SOLID, ABOUT_LINE_SEP_SIZE, COL_BLUE_LINK);
@@ -202,12 +200,12 @@ static void DrawAbout(HWND hwnd, HDC hdc, RectI rect, Vec<StaticLinkInfo>& linkI
     HGDIOBJ origFont = SelectObject(hdc, fontLeftTxt); /* Just to remember the orig font */
 
     ClientRect rc(hwnd);
-    FillRect(hdc, &rc.ToRECT(), brushBg);
+    FillRect(hdc, &rc.ToRECT(), gBrushAboutBg);
 
     /* render title */
     RectI titleRect(rect.TL(), CalcSumatraVersionSize(hdc));
 
-    SelectObject(hdc, brushBg);
+    SelectObject(hdc, gBrushAboutBg);
     SelectObject(hdc, penBorder);
     Rectangle(hdc, rect.x, rect.y + ABOUT_LINE_OUTER_SIZE, rect.x + rect.dx, rect.y + titleRect.dy + ABOUT_LINE_OUTER_SIZE);
 
@@ -248,7 +246,6 @@ static void DrawAbout(HWND hwnd, HDC hdc, RectI rect, Vec<StaticLinkInfo>& linkI
 
     SelectObject(hdc, origFont);
 
-    DeleteObject(brushBg);
     DeleteObject(penBorder);
     DeleteObject(penDivideLine);
     DeleteObject(penLinkLine);
@@ -527,11 +524,8 @@ void DrawAboutPage(WindowInfo& win, HDC hdc)
 #define DOCLIST_MAX_THUMBNAILS_X    5
 #define DOCLIST_BOTTOM_BOX_DY      50
 
-void DrawStartPage(WindowInfo& win2, HDC hdc, FileHistory& fileHistory)
+void DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory)
 {
-    WindowInfo *win = &win2;
-    HBRUSH brushBg = CreateSolidBrush(gGlobalPrefs.m_bgColor);
-
     HPEN penBorder = CreatePen(PS_SOLID, DOCLIST_SEPARATOR_DY, WIN_COL_BLACK);
     HPEN penThumbBorder = CreatePen(PS_SOLID, DOCLIST_THUMBNAIL_BORDER_W, WIN_COL_BLACK);
     HPEN penLinkLine = CreatePen(PS_SOLID, 1, COL_BLUE_LINK);
@@ -541,10 +535,10 @@ void DrawStartPage(WindowInfo& win2, HDC hdc, FileHistory& fileHistory)
 
     HGDIOBJ origFont = SelectObject(hdc, fontSumatraTxt); /* Just to remember the orig font */
 
-    ClientRect rc(win->hwndCanvas);
-    FillRect(hdc, &rc.ToRECT(), brushBg);
+    ClientRect rc(win.hwndCanvas);
+    FillRect(hdc, &rc.ToRECT(), gBrushAboutBg);
 
-    SelectObject(hdc, brushBg);
+    SelectObject(hdc, gBrushAboutBg);
     SelectObject(hdc, penBorder);
 
     /* render title */
@@ -583,7 +577,7 @@ void DrawStartPage(WindowInfo& win2, HDC hdc, FileHistory& fileHistory)
     SelectObject(hdc, fontLeftTxt);
     SelectObject(hdc, GetStockObject(NULL_BRUSH));
 
-    win->staticLinks.Reset();
+    win.staticLinks.Reset();
     for (int h = 0; h < height; h++) {
         for (int w = 0; w < width; w++) {
             if (h * width + w >= (int)list->Count()) {
@@ -612,7 +606,7 @@ void DrawStartPage(WindowInfo& win2, HDC hdc, FileHistory& fileHistory)
             HIMAGELIST himl = (HIMAGELIST)SHGetFileInfo(state->filePath, 0, &sfi, sizeof(sfi), SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES);
             ImageList_Draw(himl, sfi.iIcon, hdc, page.x, rect.y, ILD_TRANSPARENT);
 
-            win->staticLinks.Append(StaticLinkInfo(rect.Union(page), state->filePath, state->filePath));
+            win.staticLinks.Append(StaticLinkInfo(rect.Union(page), state->filePath, state->filePath));
         }
     }
     delete list;
@@ -624,7 +618,7 @@ void DrawStartPage(WindowInfo& win2, HDC hdc, FileHistory& fileHistory)
     SetTextColor(hdc, COL_BLUE_LINK);
     SelectObject(hdc, penLinkLine);
 
-    HIMAGELIST himl = (HIMAGELIST)SendMessage(win->hwndToolbar, TB_GETIMAGELIST, 0, 0);
+    HIMAGELIST himl = (HIMAGELIST)SendMessage(win.hwndToolbar, TB_GETIMAGELIST, 0, 0);
     RectI rectIcon(offset.x, rc.y, 0, 0);
     ImageList_GetIconSize(himl, &rectIcon.dx, &rectIcon.dy);
     rectIcon.y += (rc.dy - rectIcon.dy) / 2;
@@ -638,14 +632,13 @@ void DrawStartPage(WindowInfo& win2, HDC hdc, FileHistory& fileHistory)
     // make the click target larger
     rect = rect.Union(rectIcon);
     rect.Inflate(10, 10);
-    win->staticLinks.Append(StaticLinkInfo(rect, SLINK_OPEN_FILE));
+    win.staticLinks.Append(StaticLinkInfo(rect, SLINK_OPEN_FILE));
 
-    rect = DrawBottomRightLink(win->hwndCanvas, hdc, _TR("Hide frequently read"));
-    win->staticLinks.Append(StaticLinkInfo(rect, SLINK_LIST_HIDE));
+    rect = DrawBottomRightLink(win.hwndCanvas, hdc, _TR("Hide frequently read"));
+    win.staticLinks.Append(StaticLinkInfo(rect, SLINK_LIST_HIDE));
 
     SelectObject(hdc, origFont);
 
-    DeleteObject(brushBg);
     DeleteObject(penBorder);
     DeleteObject(penThumbBorder);
     DeleteObject(penLinkLine);

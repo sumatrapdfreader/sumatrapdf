@@ -96,6 +96,7 @@ bool                    gPluginMode = false;
 #else
 #define ABOUT_BG_COLOR          RGB(255,242,0)
 #endif
+#define ABOUT_BG_COLOR_DEFAULT  -1
 
 #define COL_WINDOW_BG           RGB(0xcc, 0xcc, 0xcc)
 #define COL_WINDOW_SHADOW       RGB(0x40, 0x40, 0x40)
@@ -151,6 +152,7 @@ static HCURSOR                      gCursorScroll;
 static HCURSOR                      gCursorSizeWE;
 static HCURSOR                      gCursorNo;
        HBRUSH                       gBrushNoDocBg;
+       HBRUSH                       gBrushAboutBg;
 static HBRUSH                       gBrushWhite;
 static HBRUSH                       gBrushBlack;
 static HBRUSH                       gBrushShadow;
@@ -175,7 +177,7 @@ SerializableGlobalPrefs             gGlobalPrefs = {
     false, // bool m_pdfAssociateShouldAssociate
     true, // bool m_enableAutoUpdate
     true, // bool m_rememberOpenedFiles
-    ABOUT_BG_COLOR, // int  m_bgColor
+    ABOUT_BG_COLOR_DEFAULT, // int m_bgColor
     false, // bool m_escToExit
     NULL, // TCHAR *m_inverseSearchCmdLine
     false, // bool m_enableTeXEnhancements
@@ -6530,6 +6532,10 @@ static bool InstanceInit(HINSTANCE hInstance, int nCmdShow)
     gCursorSizeWE   = LoadCursor(NULL, IDC_SIZEWE);
     gCursorNo       = LoadCursor(NULL, IDC_NO);
     gBrushNoDocBg   = CreateSolidBrush(COL_WINDOW_BG);
+    if (ABOUT_BG_COLOR_DEFAULT != gGlobalPrefs.m_bgColor)
+        gBrushAboutBg = CreateSolidBrush(gGlobalPrefs.m_bgColor);
+    else
+        gBrushAboutBg = CreateSolidBrush(ABOUT_BG_COLOR);
     gBrushWhite     = CreateSolidBrush(WIN_COL_WHITE);
     gBrushBlack     = CreateSolidBrush(WIN_COL_BLACK);
     gBrushShadow    = CreateSolidBrush(COL_WINDOW_SHADOW);
@@ -6940,6 +6946,7 @@ Exit:
     while (gWindows.Count() > 0)
         DeleteWindowInfo(gWindows[0]);
     DeleteObject(gBrushNoDocBg);
+    DeleteObject(gBrushAboutBg);
     DeleteObject(gBrushWhite);
     DeleteObject(gBrushBlack);
     DeleteObject(gBrushShadow);

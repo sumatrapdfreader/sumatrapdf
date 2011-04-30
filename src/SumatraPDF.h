@@ -21,6 +21,7 @@ extern HINSTANCE                ghinst;
 extern SerializableGlobalPrefs  gGlobalPrefs;
 extern HCURSOR                  gCursorHand;
 extern HBRUSH                   gBrushNoDocBg;
+extern HBRUSH                   gBrushAboutBg;
 extern bool                     gRestrictedUse;
 extern bool                     gPluginMode;
 

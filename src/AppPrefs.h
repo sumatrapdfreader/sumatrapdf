@@ -38,6 +38,7 @@ struct SerializableGlobalPrefs {
     /* if true, we remember which files we opened and their settings */
     bool m_rememberOpenedFiles;
 
+    /* used for the Start page, About page and Properties dialog (-1 means default color) */
     int  m_bgColor;
     bool m_escToExit;
 
