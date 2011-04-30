@@ -10,6 +10,8 @@
 #include "FileHistory.h"
 #include "translations.h"
 
+#define MAX_REMEMBERED_FILES 1000
+
 // number of weeks past since 2011-01-01
 static int GetWeekCount()
 {
@@ -135,7 +137,7 @@ static BencArray *SerializeFileHistory(FileHistory& fileHistory, bool globalPref
     }
 
     DisplayState *state;
-    for (int index = 0; (state = fileHistory.Get(index)); index++) {
+    for (int index = 0; (state = fileHistory.Get(index)) && index < MAX_REMEMBERED_FILES; index++) {
         if (state->openCount < minOpenCount && index > FILE_HISTORY_MAX_RECENT)
             continue;
         BencDict *obj = DisplayState_Serialize(state, globalPrefsOnly);

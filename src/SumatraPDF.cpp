@@ -991,7 +991,6 @@ static bool ReloadPrefs()
     gFileHistory.Clear();
     gFileHistory.ExtendWith(fileHistory);
 #ifdef NEW_START_PAGE
-    LoadThumbnails(gFileHistory);
     if (gWindows.Count() > 0 && gWindows[0]->IsAboutWindow())
         gWindows[0]->RedrawAll(true);
 #endif
@@ -1046,6 +1045,13 @@ public:
 
 void CreateThumbnailForFile(WindowInfo& win, DisplayState& state)
 {
+    // don't even create thumbnails for files that won't need them anytime soon
+    Vec<DisplayState *> *list = gFileHistory.GetFrequencyOrder();
+    int ix = list->Find(&state);
+    delete list;
+    if (ix < 0 || FILE_HISTORY_MAX_FREQUENT * 2 <= ix)
+        return;
+
     if (HasThumbnail(state))
         return;
 
@@ -6733,9 +6739,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         }
         else {
             CurrLangNameSet(gGlobalPrefs.m_currentLanguage);
-#ifdef NEW_START_PAGE
-            LoadThumbnails(gFileHistory);
-#endif
         }
     }
 
@@ -6947,7 +6950,11 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 #ifndef THREAD_BASED_FILEWATCH
     KillTimer(NULL, timerID);
 #endif
-    
+
+#ifdef NEW_START_PAGE
+    CleanUpThumbnailCache(gFileHistory);
+#endif
+
 Exit:
     while (gWindows.Count() > 0)
         DeleteWindowInfo(gWindows[0]);

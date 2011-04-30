@@ -524,6 +524,8 @@ void DrawAboutPage(WindowInfo& win, HDC hdc)
 #define DOCLIST_MAX_THUMBNAILS_X    5
 #define DOCLIST_BOTTOM_BOX_DY      50
 
+static bool LoadThumbnail(DisplayState& state);
+
 void DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory)
 {
     HPEN penBorder = CreatePen(PS_SOLID, DOCLIST_SEPARATOR_DY, WIN_COL_BLACK);
@@ -590,7 +592,7 @@ void DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory)
             RectI page(offset.x + w * (THUMBNAIL_DX + DOCLIST_MARGIN_BETWEEN_X),
                        offset.y + h * (THUMBNAIL_DY + DOCLIST_MARGIN_BETWEEN_Y),
                        THUMBNAIL_DX, THUMBNAIL_DY);
-            if (state->thumbnail) {
+            if (state->thumbnail || LoadThumbnail(*state)) {
                 HRGN clip = CreateRoundRectRgn(page.x, page.y, page.x + page.dx, page.y + page.dy, 10, 10);
                 SelectClipRgn(hdc, clip);
                 state->thumbnail->StretchDIBits(hdc, page);
@@ -702,43 +704,40 @@ void CleanUpThumbnailCache(FileHistory& fileHistory)
     }
 }
 
-void LoadThumbnails(FileHistory& fileHistory)
+static bool LoadThumbnail(DisplayState& state)
 {
-    DisplayState *state;
-    for (int i = 0; (state = fileHistory.Get(i)); i++) {
-        if (state->thumbnail)
-            delete state->thumbnail;
-        state->thumbnail = NULL;
+    if (state.thumbnail)
+        delete state.thumbnail;
+    state.thumbnail = NULL;
 
-        ScopedMem<TCHAR> bmpPath(GetThumbnailPath(state->filePath));
-        if (!bmpPath)
-            continue;
-        HBITMAP hbmp = (HBITMAP)LoadImage(NULL, bmpPath, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-        if (!hbmp)
-            continue;
+    ScopedMem<TCHAR> bmpPath(GetThumbnailPath(state.filePath));
+    if (!bmpPath)
+        return false;
+    HBITMAP hbmp = (HBITMAP)LoadImage(NULL, bmpPath, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    if (!hbmp)
+        return false;
 
-        BITMAP bmp;
-        GetObject(hbmp, sizeof(BITMAP), &bmp);
+    BITMAP bmp;
+    GetObject(hbmp, sizeof(BITMAP), &bmp);
 
-        state->thumbnail = new RenderedBitmap(hbmp, bmp.bmWidth, bmp.bmHeight);
-    }
-
-    CleanUpThumbnailCache(fileHistory);
+    state.thumbnail = new RenderedBitmap(hbmp, bmp.bmWidth, bmp.bmHeight);
+    return true;
 }
 
 bool HasThumbnail(DisplayState& state)
 {
-    if (state.thumbnail) {
-        ScopedMem<TCHAR> bmpPath(GetThumbnailPath(state.filePath));
-        if (!bmpPath)
-            return true;
-        FILETIME bmpTime = File::GetModificationTime(bmpPath);
-        FILETIME fileTime = File::GetModificationTime(state.filePath);
-        // delete the thumbnail if the file is newer than the thumbnail
-        if (FileTimeDiffInSecs(fileTime, bmpTime) > 0) {
-            delete state.thumbnail;
-            state.thumbnail = NULL;
-        }
+    if (!state.thumbnail && !LoadThumbnail(state))
+        return false;
+
+    ScopedMem<TCHAR> bmpPath(GetThumbnailPath(state.filePath));
+    if (!bmpPath)
+        return true;
+    FILETIME bmpTime = File::GetModificationTime(bmpPath);
+    FILETIME fileTime = File::GetModificationTime(state.filePath);
+    // delete the thumbnail if the file is newer than the thumbnail
+    if (FileTimeDiffInSecs(fileTime, bmpTime) > 0) {
+        delete state.thumbnail;
+        state.thumbnail = NULL;
     }
 
     return state.thumbnail != NULL;
