@@ -564,7 +564,7 @@ Warning
 Cảnh báo
 
 XPS documents
-Tài liệu XPS
+Tập tin XPS
 
 You have the latest version.
 Bạn đang dùng phiên bản mới nhất.
@@ -593,6 +593,5 @@ copying text
 printing document
 đang in tập tin
 
-# Untranslated:
-#Print
-
+Print
+In
