@@ -227,6 +227,9 @@ static void Retrieve(BencDict *dict, const char *key, float& value)
 {
     const char *string = GetRawString(dict, key);
     if (string)
+        // note: this might round the value for files produced with versions
+        //       prior to 1.6 and on a system where the decimal mark isn't a '.'
+        //       (the difference should be hardly notable, though)
         value = (float)atof(string);
 }
 

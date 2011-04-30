@@ -383,8 +383,10 @@ TCHAR *FormatNumWithThousandSep(size_t num, const TCHAR *sep)
 {
     TCHAR thousandSep[4];
     if (!sep) {
-        GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_STHOUSAND, thousandSep, dimof(thousandSep));
-        sep = thousandSep;
+        if (GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_STHOUSAND, thousandSep, dimof(thousandSep)))
+            sep = thousandSep;
+        else
+            sep = _T("");
     }
     ScopedMem<TCHAR> buf(Str::Format(_T("%Iu"), num));
 
@@ -410,7 +412,8 @@ TCHAR *FormatFloatWithThousandSep(double number, const TCHAR *unit)
 
     ScopedMem<TCHAR> tmp(FormatNumWithThousandSep(num / 100));
     TCHAR decimal[4];
-    GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, decimal, dimof(decimal));
+    if (!GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, decimal, dimof(decimal)))
+        Str::BufSet(decimal, dimof(decimal), _T("."));
 
     // always add between one and two decimals after the point
     ScopedMem<TCHAR> buf(Str::Format(_T("%s%s%02d"), tmp, decimal, num % 100));
