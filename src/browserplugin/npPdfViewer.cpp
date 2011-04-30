@@ -44,7 +44,7 @@ const TCHAR *DllMainReason(DWORD reason)
 	return _T("UNKNOWN");
 }
 #else
-  #define dbg(format, ...) ((void)0)
+#define dbg(format, ...) NoOp()
 #endif
 
 NPNetscapeFuncs gNPNFuncs;
@@ -120,7 +120,7 @@ DLLEXPORT NPError WINAPI NP_Shutdown(void)
 #define SHREGSET_FORCE_HKCU 2
 #define SHREGSET_HKLM 4
 #endif
-bool SetRegValueW(LPWSTR lpKey, LPWSTR lpName, LPWSTR lpValue)
+bool SetRegValueW(LPCWSTR lpKey, LPCWSTR lpName, LPCWSTR lpValue)
 {
 	SHRegSetUSValueW(lpKey, lpName, REG_SZ, lpValue, Str::Len(lpValue) * sizeof(WCHAR), SHREGSET_HKLM);
 	return SHRegSetUSValueW(lpKey, lpName, REG_SZ, lpValue, Str::Len(lpValue) * sizeof(WCHAR), SHREGSET_FORCE_HKCU) == ERROR_SUCCESS;
@@ -128,26 +128,30 @@ bool SetRegValueW(LPWSTR lpKey, LPWSTR lpName, LPWSTR lpValue)
 
 DLLEXPORT STDAPI DllRegisterServer(VOID)
 {
-	WCHAR szString[MAX_PATH], szPath[MAX_PATH];
+	WCHAR szPath[MAX_PATH];
 	HKEY hKey;
 	
-	lstrcpyW(szString, g_lpRegKey);
-	if (RegCreateKeyExW(HKEY_CURRENT_USER, szString, 0, NULL, 0, KEY_WRITE, NULL, &hKey, NULL) != ERROR_SUCCESS)
+	if (RegCreateKeyExW(HKEY_CURRENT_USER, g_lpRegKey, 0, NULL, 0, KEY_WRITE, NULL, &hKey, NULL) != ERROR_SUCCESS)
 	{
 		return E_UNEXPECTED;
 	}
 	RegCloseKey(hKey);
 	
 	GetModuleFileNameW(g_hInstance, szPath, MAX_PATH);
-	if (!SetRegValueW(szString, L"Description", L"SumatraPDF Browser Plugin") ||
-		!SetRegValueW(szString, L"Path", szPath) || !SetRegValueW(szString, L"Version", L"0") ||
-		!SetRegValueW(szString, L"ProductName", L"SumatraPDF Browser Plugin"))
+	if (!SetRegValueW(g_lpRegKey, L"Description", L"SumatraPDF Browser Plugin") ||
+		!SetRegValueW(g_lpRegKey, L"Path", szPath) || !SetRegValueW(g_lpRegKey, L"Version", L"0") ||
+		!SetRegValueW(g_lpRegKey, L"ProductName", L"SumatraPDF Browser Plugin"))
 	{
 		return E_UNEXPECTED;
 	}
 	
-	lstrcatW(szString, L"\\MimeTypes\\application/pdf");
-	if (RegCreateKeyExW(HKEY_CURRENT_USER, szString, 0, NULL, 0, KEY_WRITE, NULL, &hKey, NULL) == ERROR_SUCCESS)
+	ScopedMem<WCHAR> mimeType(Str::Join(g_lpRegKey, L"\\MimeTypes\\application/pdf"));
+	if (RegCreateKeyExW(HKEY_CURRENT_USER, mimeType, 0, NULL, 0, KEY_WRITE, NULL, &hKey, NULL) == ERROR_SUCCESS)
+	{
+		RegCloseKey(hKey);
+	}
+	mimeType.Set(Str::Join(g_lpRegKey, L"\\MimeTypes\\application/vnd.ms-xpsdocument"));
+	if (RegCreateKeyExW(HKEY_CURRENT_USER, mimeType, 0, NULL, 0, KEY_WRITE, NULL, &hKey, NULL) == ERROR_SUCCESS)
 	{
 		RegCloseKey(hKey);
 	}
