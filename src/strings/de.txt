@@ -1,4 +1,4 @@
-# Translations for German (Deutsch) (de) language
+﻿# Translations for German (Deutsch) (de) language
 
 # * Lines starting with # are comments (such as this).
 # * This file must be in UTF-8 encoding. Make sure you use a proper
