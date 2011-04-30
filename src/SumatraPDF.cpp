@@ -4,6 +4,7 @@
 #include "SumatraPDF.h"
 #include <shlobj.h>
 #include <wininet.h>
+#include <locale.h>
 
 #include "WindowInfo.h"
 #include "RenderCache.h"
@@ -6710,6 +6711,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     // without a cd).
     SetErrorMode(SEM_NOOPENFILEERRORBOX | SEM_FAILCRITICALERRORS);
     srand((unsigned int)time(NULL));
+    // ensure that C functions behave consistently under all OS locales
+    // (use Win32 functions where localized input or output is desired)
+    setlocale(LC_ALL, "C");
+    _locale_t t = _get_current_locale();
 
     ScopedMem<TCHAR> crashDumpPath(GetUniqueCrashDumpPath());
     InstallCrashHandler(crashDumpPath);
