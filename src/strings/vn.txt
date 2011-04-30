@@ -464,6 +464,9 @@ Trình chiếu\tCtrl-L
 Previous Page
 Trang trước
 
+Print
+In
+
 Print range
 Giới hạn vùng in
 
@@ -593,5 +596,3 @@ copying text
 printing document
 đang in tập tin
 
-Print
-In
