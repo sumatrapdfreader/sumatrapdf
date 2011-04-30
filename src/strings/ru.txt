@@ -465,6 +465,9 @@ Pr&esentation\tCtrl-L
 Previous Page
 Предыдущая страница
 
+Print
+Печать
+
 Print range
 Диапазон печати
 
@@ -593,7 +596,4 @@ copying text
 
 printing document
 печатается документ
-
-# Untranslated:
-#Print
 
