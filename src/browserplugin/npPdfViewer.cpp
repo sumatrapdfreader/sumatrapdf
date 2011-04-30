@@ -311,7 +311,7 @@ LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lPar
 		HDC hDCBuffer = CreateCompatibleDC(hDC);
 		HBITMAP hDoubleBuffer;
 		HWND hChild;
-		
+
 		// set up double buffering
 		GetClientRect(hWnd, &rcClient);
 		hDoubleBuffer = CreateCompatibleBitmap(hDC, rcClient.right - rcClient.left, rcClient.bottom - rcClient.top);
@@ -323,18 +323,15 @@ LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lPar
 		SetTextColor(hDCBuffer, RGB(0, 0, 0));
 		SetBkMode(hDCBuffer, TRANSPARENT);
 		DrawTextW(hDCBuffer, data->message, -1, &rcClient, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
-		
+
 		// draw a progress bar, if a download is in progress
 		if (0 < data->progress && data->progress <= 1)
 		{
-			ScopedMem<TCHAR> currSize(FormatSizeSuccint(data->currSize));
-			ScopedMem<TCHAR> totalSize(FormatSizeSuccint(data->totalSize));
-			ScopedMem<TCHAR> s(Str::Format(_T("%s of %s"), currSize, totalSize));
 			SIZE msgSize;
 			RECT rcProgress = rcClient;
 			RECT rcProgressAll;
+
 			HBRUSH brushProgress = CreateSolidBrush(RGB(0x80, 0x80, 0xff));
-			
 			GetTextExtentPoint32W(hDCBuffer, data->message, Str::Len(data->message), &msgSize);
 			InflateRect(&rcProgress, -(rcProgress.right - rcProgress.left - msgSize.cx) / 2, (-(rcProgress.bottom - rcProgress.top - msgSize.cy) / 2) + 2);
 			OffsetRect(&rcProgress, 0, msgSize.cy + 4 + 2);
@@ -342,12 +339,15 @@ LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lPar
 			rcProgressAll = rcProgress;
 			rcProgress.right = (LONG)(rcProgress.left + data->progress * (rcProgress.right - rcProgress.left));
 			FillRect(hDCBuffer, &rcProgress, brushProgress);
-			
 			DeleteObject(brushProgress);
-			
-			// don't display weird values (especially when totalSize is unknown)
-			if (data->currSize <= data->totalSize && 0 < data->totalSize)
-			{
+
+			ScopedMem<TCHAR> currSize(FormatSizeSuccint(data->currSize));
+			if (0 == data->totalSize || data->currSize > data->totalSize) {
+				// total size unknown or bogus => show just the current size
+				DrawTextW(hDCBuffer, currSize, -1, &rcProgressAll, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
+			} else {
+				ScopedMem<TCHAR> totalSize(FormatSizeSuccint(data->totalSize));
+				ScopedMem<TCHAR> s(Str::Format(_T("%s of %s"), currSize, totalSize));
 				DrawTextW(hDCBuffer, s, -1, &rcProgressAll, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
 			}
 		}
@@ -363,9 +363,7 @@ LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lPar
 		
 		hChild = FindWindowEx(hWnd, NULL, NULL, NULL);
 		if (hChild)
-		{
 			InvalidateRect(hChild, NULL, FALSE);
-		}
 	}
 	else if (uiMsg == WM_SIZE)
 	{
@@ -406,13 +404,9 @@ NPError NP_LOADDS NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, in
 	gNPNFuncs.setvalue(instance, NPPVpluginWindowBool, (void *)true);
 	
 	if (GetExePath(data->exepath, MAX_PATH + 2))
-	{
 		data->message = L"Opening PDF document in SumatraPDF...";
-	}
 	else
-	{
 		data->message = L"Error: SumatraPDF hasn't been found!";
-	}
 	
 	return NPERR_NO_ERROR;
 }
@@ -459,13 +453,12 @@ NPError NP_LOADDS NPP_SetWindow(NPP instance, NPWindow *npwin)
 	return NPERR_NO_ERROR;
 }
 
-static void RepaintOnProgressChange(InstanceData *data)
+static void TriggerRepaintOnProgressChange(InstanceData *data)
 {
-	FLOAT diff = data->progress - data->prevProgress;
-
 	if (!data || !data->npwin || !data->npwin->window)
 		return;
 
+	FLOAT diff = data->progress - data->prevProgress;
 	if (diff < 0 || diff > 0.01f)
 	{
 		HWND hwnd = (HWND)data->npwin->window;
@@ -513,7 +506,7 @@ NPError NP_LOADDS NPP_NewStream(NPP instance, NPMIMEType type, NPStream* stream,
 	data->currSize = 0;
 	data->progress = stream->end > 0 ? 0.01f : 0;
 	data->prevProgress = -.1f;
-	RepaintOnProgressChange(data);
+	TriggerRepaintOnProgressChange(data);
 	
 	return NPERR_NO_ERROR;
 }
@@ -546,7 +539,7 @@ int32_t NP_LOADDS NPP_Write(NPP instance, NPStream* stream, int32_t offset, int3
 
 	data->currSize = offset + bytesWritten;
 	data->progress = stream->end > 0 ? 1.0f * (offset + len) / stream->end : 0;
-	RepaintOnProgressChange(data);
+	TriggerRepaintOnProgressChange(data);
 
 	return bytesWritten;
 }
@@ -594,7 +587,7 @@ void NP_LOADDS NPP_StreamAsFile(NPP instance, NPStream* stream, const char* fnam
 
 	data->progress = 1.0f;
 	data->prevProgress = 0.0f; // force update
-	RepaintOnProgressChange(data);
+	TriggerRepaintOnProgressChange(data);
 
 	if (!MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, fname, -1, data->filepath, MAX_PATH))
 	{
