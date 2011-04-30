@@ -83,7 +83,7 @@ BencString *BencString::Decode(const char *bytes, size_t *lenOut)
         return NULL;
 
     start++;
-    if (Str::Len(start) < len)
+    if (memchr(start, '\0', (size_t)len))
         return NULL;
 
     if (lenOut)
