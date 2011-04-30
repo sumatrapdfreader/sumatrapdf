@@ -29,7 +29,7 @@
 				ReBuildCommandLine=".\scripts\build-release.bat -testinst"
 				CleanCommandLine="del /s obj-dbg"
 				Output="obj-dbg\SumatraPDF-install.exe"
-				PreprocessorDefinitions="WIN32;_DEBUG;UNICODE;_UNICODE"
+				PreprocessorDefinitions="WIN32;DEBUG;_DEBUG;UNICODE;_UNICODE"
 				IncludeSearchPath="baseutils"
 				ForcedIncludes=""
 				AssemblySearchPath=""

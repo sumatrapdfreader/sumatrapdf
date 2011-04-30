@@ -224,6 +224,16 @@ static void TStrTest()
         ScopedMem<TCHAR> tmp(Str::FormatNumWithThousandSep(formatNumData[i].number, _T("'")));
         assert(Str::Eq(tmp, formatNumData[i].result));
     }
+
+    {
+        char str[] = "aAbBcC... 1-9";
+        Str::ToLower(str);
+        assert(Str::Eq(str, "aabbcc... 1-9"));
+
+        WCHAR wstr[] = L"aAbBcC... 1-9";
+        Str::ToLower(wstr);
+        assert(Str::Eq(wstr, L"aabbcc... 1-9"));
+    }
 }
 
 static void FileUtilTest()

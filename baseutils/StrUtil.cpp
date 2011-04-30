@@ -157,10 +157,15 @@ WCHAR *DupN(const WCHAR *s, size_t lenCch)
 void ToLower(char *s)
 {
     if (!s) return;
-    while (*s) {
+    for (; *s; s++)
         *s = tolower(*s);
-        s++;
-    }
+}
+
+void ToLower(WCHAR *s)
+{
+    if (!s) return;
+    for (; *s; s++)
+        *s = towlower(*s);
 }
 
 /* Caller needs to free() the result */

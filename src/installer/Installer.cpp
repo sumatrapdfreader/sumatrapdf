@@ -2034,7 +2034,7 @@ int RunApp()
 
 void ShowUsage()
 {
-    MessageBox(NULL, TAPP _T("-install.exe [/s][/d <path>][/default][/opt plugin][/opt pdffilter]\n\
+    MessageBox(NULL, TAPP _T("-install.exe [/s][/d <path>][/default][/opt plugin,pdffilter]\n\
     \n\
     /s\tinstalls ") TAPP _T(" silently (without user interaction).\n\
     /d\tchanges the directory where ") TAPP _T(" will be installed.\n\
@@ -2064,10 +2064,14 @@ void ParseCommandLine(TCHAR *cmdLine)
         else if (is_arg("register"))
             gGlobalData.registerAsDefault = true;
         else if (is_arg_with_param("opt")) {
-            i++;
-            if (Str::EqI(argList[i], _T("plugin")))
+            TCHAR *opts = argList[++i];
+            Str::ToLower(opts);
+            Str::TransChars(opts, _T(" "), _T(","));
+            StrVec optlist;
+            optlist.Split(opts, _T(","), true);
+            if (optlist.Find(_T("plugin")) != -1)
                 gGlobalData.installBrowserPlugin = true;
-            else if (Str::EqI(argList[i], _T("pfdfilter")))
+            if (optlist.Find(_T("pdffilter")) != -1)
                 gGlobalData.installPdfFilter = true;
         }
         else if (is_arg("h") || is_arg("help") || is_arg("?"))

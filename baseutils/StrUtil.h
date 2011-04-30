@@ -43,6 +43,7 @@ char *  DupN(const char *s, size_t lenCch);
 WCHAR * DupN(const WCHAR *s, size_t lenCch);
 
 void ToLower(char *s);
+void ToLower(WCHAR *s);
 
 char *  ToMultiByte(const WCHAR *txt, UINT CodePage);
 char *  ToMultiByte(const char *src, UINT CodePageSrc, UINT CodePageDest);
