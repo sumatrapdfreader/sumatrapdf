@@ -1,6 +1,6 @@
 """
 Updates the dependency lists in makefile.msvc for all object files produced
-from sources in baseutils and src, so that changing a header file always leads
+from sources in utils and src, so that changing a header file always leads
 to the recompilation of all the files depending on this header.
 """
 
@@ -8,7 +8,7 @@ import os, re, fnmatch
 from util import verify_started_in_right_directory, group, uniquify
 pjoin = os.path.join
 
-DIRS = ["baseutils", "src", pjoin("src", "installer"), pjoin("src", "ifilter"), pjoin("src", "browserplugin")]
+DIRS = ["src", pjoin("src", "utils"), pjoin("src", "installer"), pjoin("src", "ifilter"), pjoin("src", "browserplugin")]
 INCLUDE_DIRS = DIRS + [pjoin("mupdf", "fitz"), pjoin("mupdf", "pdf"), pjoin("mupdf", "xps")]
 MAKEFILE = "makefile.msvc"
 DEPENDENCIES_PER_LINE = 3
