@@ -34,7 +34,7 @@ Tutte le p&agine selezionate
 &Chiudi\tCtrl-W
 
 &Copy Selection
-Selezione &copia
+&Copia selezione
 
 &Copy Selection\tCtrl-C
 &Copia selezione\t<Ctrl>+C
@@ -352,7 +352,7 @@ Found text at page %d (again)
 Trovato testo alla pagina %d (ancora)
 
 Frequently Read
-Letto frequentemente
+Aperti recentemente
 
 GB
 GB
