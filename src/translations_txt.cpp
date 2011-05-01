@@ -6548,7 +6548,7 @@ const char *gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "Patientez s'il vous pla\303\256t (g\303\251n\303\251ration...)",
   "P&r\303\251sentation\tCtrl-L",
   "Page pr\303\251c\303\251dente",
-  NULL,
+  "Imprimer",
   "Plage d'impression",
   "Une impression est d\303\251j\303\240 en cours. L'annuler et recommencer ?",
   "Impression de la page %d sur %d...",

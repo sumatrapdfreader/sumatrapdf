@@ -468,6 +468,9 @@ P&résentation\tCtrl-L
 Previous Page
 Page précédente
 
+Print
+Imprimer
+
 Print range
 Plage d'impression
 
@@ -596,7 +599,4 @@ copie du texte
 
 printing document
 impression du document
-
-# Untranslated:
-#Print
 
