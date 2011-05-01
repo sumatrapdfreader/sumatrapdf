@@ -152,6 +152,9 @@ Avanzado
 All files
 Todos los archivos
 
+All supported documents
+Todos los documentos soportados
+
 Application:
 Aplicación:
 
@@ -176,6 +179,12 @@ Vista de libro
 Book&marks\tF12
 Marcadores\tF12
 
+Bookmark Shortcuts
+arcar Atajos
+
+Bookmark shortcut to page %d of %s
+Marcar atajo a pagina %d de %s
+
 Bookmarks
 Marcadores
 
@@ -199,6 +208,9 @@ Cambiar Idioma (Change Language)
 
 Check for &Updates
 &Comprobar actualizaciones
+
+Comic books
+Libros de caricaturas
 
 Continuous
 Continua
@@ -248,6 +260,9 @@ No se puede cambiar el lector PDF por defecto en modo portátil
 Denied Permissions:
 Permisos Denegados
 
+DjVu documents
+Documentos DjVu
+
 Document Properties
 Propiedades del Documento
 
@@ -265,6 +280,9 @@ Introduzca contraseña para %s
 
 Enter the command-line to invoke when you double-click on the PDF document:
 Introduzca el comando para ejecutar al hacer doble-clic en el documento PDF:
+
+Error loading %s
+Error de carga %s
 
 F&orward\tAlt+Right Arrow
 Adelante\tAlt+->
@@ -326,11 +344,20 @@ Ajustar a una sola página
 Found text at page %d
 Se encontró el texto en la página %d
 
+Found text at page %d (again)
+Buscar texto en la pagina %d (de nuevo)
+
+Frequently Read
+Leido frecuentemente
+
 GB
 GB
 
 Go to page
 Ir a la página
+
+Hide frequently read
+Ocultar leido frecuentemente
 
 Hint: Use the F3 key for finding again
 Usar "F3" para mostrar el siguiente resultado
@@ -379,6 +406,9 @@ Aceptar
 
 Open
 Abrir
+
+Open a document...
+Abrir un documento ...
 
 Open in &Adobe Reader
 Abrir en &Adobe Reader
@@ -434,8 +464,17 @@ Pr&esentación\tCtrl-L
 Previous Page
 Página anterior
 
+Print
+Imprimir
+
 Print range
 Imprimir rango
+
+Printing is still in progress. Abort and start over?
+Se esta imprimiendo. ¿Abortar y empezar de nuevo?
+
+Printing page %d of %d...
+Imprimiendo pagina %d de %d...
 
 Printing problem.
 Problema de impresión.
@@ -448,6 +487,9 @@ Girar a la izquierda\tCtrl-Shift--
 
 Rotate &Right\tCtrl-Shift-+
 Girar a la derecha\tCtrl-Shift-+
+
+Save S&hortcut...\tCtrl-Shift-S
+Guardar A%tajo...\tCtrl-Shiftt-S
 
 Searching %d of %d...
 Buscando %d de %d…
@@ -472,6 +514,9 @@ Mostrar barra de herramientas
 
 Show &pages continuously
 Mostrar paginas continuamente
+
+Show frequently read
+Mostrar leido frecuentemente
 
 Show the &bookmarks sidebar when available
 Mostrar la barra de marcadores cuando esté disponible
@@ -521,6 +566,9 @@ Visit &Website
 Warning
 Advertencia
 
+XPS documents
+Documentos XPS
+
 You have the latest version.
 Usted tiene la última versión.
 
@@ -549,21 +597,5 @@ printing document
 impresión de documento
 
 # Untranslated:
-#All supported documents
-#Bookmark Shortcuts
-#Bookmark shortcut to page %d of %s
-#Comic books
-#DjVu documents
-#Error loading %s
-#Found text at page %d (again)
-#Frequently Read
-#Hide frequently read
 #Image files (*.%s)
-#Open a document...
-#Print
-#Printing is still in progress. Abort and start over?
-#Printing page %d of %d...
-#Save S&hortcut...\tCtrl-Shift-S
-#Show frequently read
-#XPS documents
 
