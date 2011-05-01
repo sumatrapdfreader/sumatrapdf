@@ -141,7 +141,6 @@
     <ClCompile Include="src\DisplayModel.cpp" />
     <ClCompile Include="src\DisplayState.cpp" />
     <ClCompile Include="src\FileWatch.cpp" />
-    <ClCompile Include="src\Http.cpp" />
     <ClCompile Include="src\ImagesEngine.cpp" />
     <ClCompile Include="src\LangMenuDef.cpp" />
     <ClCompile Include="src\PdfEngine.cpp" />
@@ -269,7 +268,6 @@
     <ClInclude Include="src\DisplayState.h" />
     <ClInclude Include="src\FileHistory.h" />
     <ClInclude Include="src\FileWatch.h" />
-    <ClInclude Include="src\Http.h" />
     <ClInclude Include="src\ImagesEngine.h" />
     <ClInclude Include="src\installer\Resource.h" />
     <ClInclude Include="src\LangMenuDef.h" />

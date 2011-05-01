@@ -260,9 +260,6 @@
     <ClCompile Include="src\FileWatch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Http.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\LangMenuDef.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -611,9 +608,6 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="src\FileWatch.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Http.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="src\LangMenuDef.h">

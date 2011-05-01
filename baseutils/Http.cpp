@@ -21,7 +21,8 @@ DWORD HttpGet(const TCHAR *url, Str::Str<char> *dataOut)
     if (!hInet)
         goto Error;
 
-    hFile = InternetOpenUrl(hInet, url, NULL, 0, 0, 0);
+    DWORD flags = INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_RELOAD;
+    hFile = InternetOpenUrl(hInet, url, NULL, 0, flags, 0);
     if (!hFile)
         goto Error;
 
