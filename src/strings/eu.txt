@@ -19,8 +19,14 @@ Ho&Ni buruz...
 &All selected pages
 Aukeratutako orri guztuak
 
+&Back\tAlt+Left Arrow
+&Atzera\tAlt+Gezia Ezkerrerantz
+
 &Close\tCtrl-W
 &Itxi\tCtrl-W
+
+&Copy Selection
+&Aukeratua Kopiatu
 
 &Copy Selection\tCtrl-C
 Aukeratua kopiatu\tCtrl-C
@@ -28,11 +34,20 @@ Aukeratua kopiatu\tCtrl-C
 &Don't ask me again
 Ez berriz galdetu
 
+&Even pages only
+&Orri bakoitiak soilik
+
 &File
 &Fitxategia
 
+&Find what:
+&Zera aurkitu:
+
 &First Page\tHome
 Lehendabiziko orria \tHome
+
+&Fit pages to printable area
+&Orriak azalera inprimagarrira egokitu
 
 &Go To
 ...ra &Joan
@@ -49,6 +64,12 @@ Azken orria\tEnd
 &Magnification:
 Handitzea:
 
+&Manual
+&Eskuliburua
+
+&Match case
+&Hizki handiz edo txikiz dagoen bezela bilatu
+
 &Next Page\tRight Arrow
 Hurrengo orria\t->
 
@@ -57,6 +78,9 @@ Ez
 
 &No, thanks
 Ez, Eskerrik Asko
+
+&Odd pages only
+&Orri bikoitiak soilik
 
 &Open\tCtrl-O
 Ireki\tCtrl-O
@@ -70,6 +94,9 @@ Pasahitza
 &Previous Page\tLeft Arrow
 Aurreko orria\t<-
 
+&Print...
+&Inprimatu...
+
 &Print...\tCtrl-P
 &Inprimatu\tCtrl-P
 
@@ -82,11 +109,17 @@ Orri honetako pasahitza gogoratu
 &Remember these settings for each document
 Aldaketak hauek gogoratu dokumentu guztietarako
 
+&Save As...
+&... bezala gorde
+
 &Save As...\tCtrl-S
 ... bezala &Gorde\tCtrl-S
 
 &Settings
 Aldaketak
+
+&Shrink pages to printable area (if necessary)
+&Orrien neurria azalera inprimagarriarenera txikitu (behar izanez gero)
 
 &Skip this version
 Bertsio berria saihestu
@@ -103,11 +136,20 @@ Bai
 &Zoom
 &Zoom-a
 
+(of %d)
+(%d-tik)
+
 About SumatraPDF
 SumatraPDF-taz
 
+Advanced
+Aurreratua
+
 All files
 Dokumentu guztiak
+
+All supported documents
+Documentu onargarri guztiak
 
 Application:
 Aplikazioa:
@@ -133,6 +175,12 @@ Liburu bezala ikusi
 Book&marks\tF12
 Markagailuak\tF12
 
+Bookmark Shortcuts
+Liburu-marken bide-laburrak
+
+Bookmarks
+Liburu-markak
+
 Bytes
 Byte
 
@@ -145,14 +193,23 @@ Ezeztatu
 Cannot print this file
 Ezinezkoa da artxiboa imprimatu
 
+Cannot start inverse search command. Please check the command line in the settings.
+Ezin alderantzizko bilaketa komandoa hasi. Mesedez, komando lerroa begiratu konfiguraketan.
+
 Change Language
 Hizkuntza aldatu (Change Language)
 
 Check for &Updates
 Bertsio berriagorik ba ote den begiratu
 
+Comic books
+Komiki liburuak
+
 Continuous
 Jarraian
+
+Continuous Book View
+Liburuaren ikuspegi jarraia
 
 Continuous Facing
 Bi aldetatik jarraian
@@ -160,8 +217,23 @@ Bi aldetatik jarraian
 Contribute Translation
 Lagun gaitzazu itzulpenekin
 
+Copy &Link Address
+Gakoaren helbidea kopiatu
+
+Copy Co&mment
+Iradokizuna kopiatu
+
+Copying text was denied (copying as image only)
+Testuaren kopiaketa eragotzia (soilik irudi bezela kopiatuz)
+
 Could not open Printer
 Ezin da inprimagailua ireki
+
+Couldn't initialize printer
+Inprimagailua ezin izan da hasieratu
+
+Couldn't render the page
+Orriaren render-a ezin izan da osatu
 
 Created:
 Sortua:
@@ -169,11 +241,20 @@ Sortua:
 Custom &Zoom...\tCtrl-Y
 Zooma Aldatu...\tCtrl-Y
 
+Default &Layout:
+Berezko &Egitura:
+
 Default &Zoom:
 Berezko zooma:
 
+Default PDF reader can't be changed in portable mode
+Defektuzko PDF irakurtzailea ezin da aldatu era/bertsi eramangarrian
+
 Denied Permissions:
 Baimen ezeztua:
+
+DjVu documents
+DjVu dokumentuak
 
 Document Properties
 Dokumentuaren Propietateak
@@ -189,6 +270,15 @@ Pasahitza sartu
 
 Enter password for %s
 %s-rentzat pasahitza sartu
+
+Enter the command-line to invoke when you double-click on the PDF document:
+PDF dokumentuak klik bikoitza egitean komando-lerroa sartu inbokatzeko.
+
+Error loading %s
+%s kargartzean errorea
+
+F&orward\tAlt+Right Arrow
+A&urrera\tAlt+Gezia eskubiruntz
 
 F&ullscreen\tCtrl-Shift-L
 Pantaila osoan\tCtrl-Shift-L
@@ -220,11 +310,17 @@ Aurrekoa bilatu
 Find:
 Bilatu:
 
+Fit &Content\tCtrl-3
+Edukia &Egokitu\tCtrl-3
+
 Fit &Page\tCtrl-0
 Orriaren neurria egokitu\tCtrl-O
 
 Fit &Width\tCtrl-2
 Orriaren zabalera egokitu\tCtrl-2
+
+Fit Content
+Edukia Egokitu
 
 Fit Page
 Orriaren neurria egokitu
@@ -232,14 +328,35 @@ Orriaren neurria egokitu
 Fit Width
 Orriaren zabalera egokitu
 
+Fit Width and Show Pages Continuously
+Zabalera egokitu eta orriak jarraian azaldu
+
+Fit a Single Page
+Orri bakar bat egokitu
+
 Found text at page %d
 Textua aurkito %d orrian
+
+Found text at page %d (again)
+%d orrian bilatu (berriz) testua
+
+Frequently Read
+Sarritan irakurriak
 
 GB
 GB
 
 Go to page
 ...garren orrira joan
+
+Hide frequently read
+Ezkutatu sarritan irakurriak
+
+Hint: Use the F3 key for finding again
+Oharra: F3 erabili berriz bilatzeko
+
+Image files (*.%s)
+Irudi fitxategiak (*.%s)
 
 KB
 KB
@@ -268,6 +385,12 @@ Hurrengo orria
 No matches were found
 Ez dira Aurkito amaitzik
 
+No synchronization file found
+Sinkronizazio fitxategirik ez da aurkitu
+
+No synchronization info at this position
+Ez dago sinkronizazio informaziorik toki horretan
+
 Number of Pages:
 Orri Kopurua:
 
@@ -277,6 +400,9 @@ Ondo
 Open
 Ireki
 
+Open a document...
+Dokumentu bat ireki...
+
 Open in &Adobe Reader
 Adobe Reader-ekin ireki
 
@@ -285,6 +411,9 @@ Foxit Reader-ekin ireki
 
 Open in PDF-XChange
 PDF-XChange-ekin ireki
+
+P&roperties
+P&ropietateak
 
 P&roperties\tCtrl-D
 Propietateak\tCtrl-D
@@ -310,14 +439,41 @@ Orri Tamaina:
 Page number %u inexistant
 Ez da %u zenbaki orririk existitzen
 
+Page scaling
+Orria eskalatzen
+
 Page:
 Orria
+
+Please include the following file in your crash report:
+Mesedez, ondorengo fitxategia zure arazoen txostenean sartu:
+
+Please wait - rendering...
+Itxaron mesedez - renderizatzen oraindik
+
+Pr&esentation\tCtrl-L
+Aurk&ezpena\tCtrl-L
 
 Previous Page
 Aurreko orria
 
+Print
+Inprimatu
+
+Print range
+Eremua inprimatu
+
+Printing is still in progress. Abort and start over?
+Oraindik ere inprimatzen. Ezeztatu eta berriz hasterik nahi?
+
+Printing page %d of %d...
+%d/%d orria inprimatzen...
+
 Printing problem.
 Arazoak inprimatze lanetan
+
+Remember &opened files
+Irekitako &orriak gogoratu
 
 Rotate &Left\tCtrl-Shift--
 Ezkerrerantz biratu\tCtrl-Shift--
@@ -325,8 +481,20 @@ Ezkerrerantz biratu\tCtrl-Shift--
 Rotate &Right\tCtrl-Shift-+
 Eskubirantz biratu\tCtrl-Shift-+
 
+Save S&hortcut...\tCtrl-Shift-S
+&Bide laburra gorde... \tCtrl-Shift-S
+
 Searching %d of %d...
 %d-tik %d Bilatzen...
+
+Select &All
+Guztia &Aukeratu
+
+Select &All\tCtrl-A
+Guztia &Aukeratu\tCtrl-A
+
+Select content with Ctrl+left mouse button
+Edukia Ctrl+saguaren ezker botoiarekin aukeratu
 
 Send by &E-mail...
 E-mailez bidali...
@@ -337,11 +505,41 @@ Alderantzizko bilaketa ezarri
 Show &Toolbar
 Lanabes barra azaldu
 
+Show &pages continuously
+Orriak &jarraian erakutsi
+
+Show frequently read
+Sarritan irakurriak erakutsi
+
+Show the &bookmarks sidebar when available
+Ahal denean li&buru-markak aldamenean erakutsi
+
 Single Page
 Orri bakarra
 
+Source file %s has no synchronization point
+%s Iturburu artxiboak ez dauka sinkronizazio punturik
+
 Subject:
 Gaia:
+
+SumatraPDF Options
+SumatraPDF Aukerak
+
+SumatraPDF Update
+SumatraPDF Eguneratu
+
+SumatraPDF crashed
+SumatraPDF-k arazo bat izan du
+
+SumatraPDF is your default PDF reader
+SumatraPDF zure hasiera bateko PDF irakurlea da
+
+SumatraPDF should now be your default PDF reader
+SumatraPDF-k orain zure hasiera bateko PDF irakurlea izan beharko luke
+
+Synchronization file cannot be opened
+Sinkronizazio fitxategia ezin da ireki
 
 Text documents
 Textu dokumentuak
@@ -361,6 +559,9 @@ Visit &Website
 Warning
 Oharra
 
+XPS documents
+XPS dokumentuak
+
 You have the latest version.
 Azkeneko bertsioa da daukazuna.
 
@@ -376,6 +577,12 @@ Zoom-a hurbildu
 Zoom Out
 Zoom-a urruneratu
 
+Zoom factor
+Zomm faktorea
+
+[Changes detected; refreshing] %s
+[Aldaketak fitxategian, eguneratzen...] %s
+
 copying text
 Textua Kopiatzen
 
@@ -383,75 +590,6 @@ printing document
 dokumentua imprimatzen
 
 # Untranslated:
-#&Back\tAlt+Left Arrow
-#&Copy Selection
-#&Even pages only
-#&Find what:
-#&Fit pages to printable area
-#&Manual
-#&Match case
-#&Odd pages only
-#&Print...
-#&Save As...
-#&Shrink pages to printable area (if necessary)
-#(of %d)
-#Advanced
-#All supported documents
-#Bookmark Shortcuts
 #Bookmark shortcut to page %d of %s
-#Bookmarks
-#Cannot start inverse search command. Please check the command line in the settings.
-#Comic books
-#Continuous Book View
-#Copy &Link Address
-#Copy Co&mment
-#Copying text was denied (copying as image only)
-#Couldn't initialize printer
-#Couldn't render the page
-#Default &Layout:
-#Default PDF reader can't be changed in portable mode
-#DjVu documents
-#Enter the command-line to invoke when you double-click on the PDF document:
-#Error loading %s
-#F&orward\tAlt+Right Arrow
-#Fit &Content\tCtrl-3
-#Fit Content
-#Fit Width and Show Pages Continuously
-#Fit a Single Page
-#Found text at page %d (again)
-#Frequently Read
-#Hide frequently read
-#Hint: Use the F3 key for finding again
-#Image files (*.%s)
 #No result found around line %u in file %s
-#No synchronization file found
-#No synchronization info at this position
-#Open a document...
-#P&roperties
-#Page scaling
-#Please include the following file in your crash report:
-#Please wait - rendering...
-#Pr&esentation\tCtrl-L
-#Print
-#Print range
-#Printing is still in progress. Abort and start over?
-#Printing page %d of %d...
-#Remember &opened files
-#Save S&hortcut...\tCtrl-Shift-S
-#Select &All
-#Select &All\tCtrl-A
-#Select content with Ctrl+left mouse button
-#Show &pages continuously
-#Show frequently read
-#Show the &bookmarks sidebar when available
-#Source file %s has no synchronization point
-#SumatraPDF Options
-#SumatraPDF Update
-#SumatraPDF crashed
-#SumatraPDF is your default PDF reader
-#SumatraPDF should now be your default PDF reader
-#Synchronization file cannot be opened
-#XPS documents
-#Zoom factor
-#[Changes detected; refreshing] %s
 
