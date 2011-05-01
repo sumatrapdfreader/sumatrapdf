@@ -15,6 +15,7 @@ Contributor: Barry Haveman
 Contributor: Marco La Fors
 Contributor: Stephan Paternotte
 Contributor: Ricki Yani Setiawan
+Contributor: Robbert Feunekes
 
 &About
 &Over
@@ -38,7 +39,7 @@ Selectie kopiëren
 Kopieer selectie\tCtrl-C
 
 &Don't ask me again
-Niet meer vragen
+Niet opnieuw vragen
 
 &Even pages only
 Alleen &Even pagina's
@@ -89,7 +90,7 @@ Volgende pagina\t->
 Alleen &Oneven pagina's
 
 &Open\tCtrl-O
-&Open\tCtrl-O
+&Openen\tCtrl-O
 
 &Options...
 &Opties...
@@ -104,7 +105,7 @@ Vorige pagina\t<-
 Afdrukken...
 
 &Print...\tCtrl-P
-&Afdrukken\tCtrl-P
+Afdrukken...\tCtrl-P
 
 &Print... (denied)
 Afdrukken... (niet toegestaan)
@@ -176,7 +177,7 @@ Automatically check for &updates
 Automatisch controleren op &updates
 
 Book View
-Boekaanzicht
+Boekweergave
 
 Book&marks\tF12
 Bladwijzers\tF12
@@ -209,7 +210,7 @@ Change Language
 Taal wijzigen (Change Language)
 
 Check for &Updates
-Controleren op &Updates
+Controleren op &updates
 
 Comic books
 Stripboeken
@@ -254,13 +255,16 @@ Default &Layout:
 Standaard opmaak:
 
 Default &Zoom:
-Standaard &Zoom:
+Standaard &zoom:
 
 Default PDF reader can't be changed in portable mode
 Standaard PDF-lezer kan niet worden aangepast in portable modus
 
 Denied Permissions:
 Niet toegestaan:
+
+DjVu documents
+DjVu-documenten
 
 Document Properties
 Bestandseigenschappen
@@ -346,11 +350,17 @@ Tekst gevonden op pagina %d
 Found text at page %d (again)
 Tekst gevonden op pagina %d (opnieuw)
 
+Frequently Read
+Vaak gelezen
+
 GB
 GB
 
 Go to page
 Ga naar pagina
+
+Hide frequently read
+'Vaak gelezen' verbergen
 
 Hint: Use the F3 key for finding again
 Tip: Gebruik de funtietoets F3 om verder te zoeken
@@ -402,6 +412,9 @@ OK
 
 Open
 Openen
+
+Open a document...
+Open een document...
 
 Open in &Adobe Reader
 Openen met &Adobe Reader
@@ -457,11 +470,20 @@ Pr&esentatie\tCtrl-L
 Previous Page
 Vorige pagina
 
+Print
+Afdrukken
+
 Print range
 Bereik afdrukken
 
+Printing is still in progress. Abort and start over?
+Afdrukken is nog niet voltooid. Afbreken en opnieuw beginnen?
+
+Printing page %d of %d...
+Paguna %d van %d afdrukken...
+
 Printing problem.
-Probleem bij het afdrukken.
+Probleem bij het afdrukken
 
 Remember &opened files
 Onthoud ge&opende bestanden
@@ -473,7 +495,7 @@ Rotate &Right\tCtrl-Shift-+
 Rechtsom draaien\tCtrl-Shift-+
 
 Save S&hortcut...\tCtrl-Shift-S
-Snelkoppeling opslaan...\tCtrl-Shift-s
+Snelkoppeling opslaan...\tCtrl-Shift-S
 
 Searching %d of %d...
 Zoek %d van %d...
@@ -482,7 +504,7 @@ Select &All
 &Alles selecteren
 
 Select &All\tCtrl-A
-Selecteer &Alles\tCtrl-A
+Selecteer &alles\tCtrl-A
 
 Select content with Ctrl+left mouse button
 Selecteer inhoud met Ctrl+linker muisknop
@@ -498,6 +520,9 @@ Werkbalk tonen
 
 Show &pages continuously
 Toon pagina's doorlopend
+
+Show frequently read
+'Vaak gelezen' weergeven
 
 Show the &bookmarks sidebar when available
 Toon de &bladwijzerwerkbalk indien beschikbaar
@@ -530,7 +555,7 @@ Synchronization file cannot be opened
 Het synchronisatiebestand kan niet worden geopend
 
 Text documents
-Tekstbestanden
+Tekstdocumenten
 
 Title:
 Titel:
@@ -566,7 +591,7 @@ Zoom Out
 Uitzoomen
 
 Zoom factor
-Zoomfactor
+Zoomniveau
 
 [Changes detected; refreshing] %s
 [Bestand gewijzigd; verversen] %s
@@ -576,14 +601,4 @@ tekst kopieren
 
 printing document
 bestand afdrukken
-
-# Untranslated:
-#DjVu documents
-#Frequently Read
-#Hide frequently read
-#Open a document...
-#Print
-#Printing is still in progress. Abort and start over?
-#Printing page %d of %d...
-#Show frequently read
 
