@@ -1,5 +1,5 @@
-/* Copyright 2006-2011 the SumatraPDF project authors (see ../AUTHORS file).
-   License: Simplified BSD (see ./COPYING) */
+/* Copyright 2006-2011 the SumatraPDF project authors (see AUTHORS file).
+   License: Simplified BSD (see COPYING) */
 
 #ifndef FileUtil_h
 #define FileUtil_h

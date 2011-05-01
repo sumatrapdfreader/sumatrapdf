@@ -1,5 +1,5 @@
-/* Copyright 2011 the SumatraPDF project authors (see ../AUTHORS file).
-   License: Simplified BSD (see ./COPYING) */
+/* Copyright 2011 the SumatraPDF project authors (see AUTHORS file).
+   License: Simplified BSD (see COPYING) */
 
 #include "ZipUtil.h"
 #include "StrUtil.h"

@@ -30,7 +30,7 @@
 				CleanCommandLine="del /s obj-dbg"
 				Output="obj-dbg\SumatraPDF-install.exe"
 				PreprocessorDefinitions="WIN32;DEBUG;_DEBUG;UNICODE;_UNICODE"
-				IncludeSearchPath="baseutils"
+				IncludeSearchPath="src\utils"
 				ForcedIncludes=""
 				AssemblySearchPath=""
 				ForcedUsingAssemblies=""
@@ -51,7 +51,7 @@
 				CleanCommandLine="del /s obj-dbg"
 				Output="obj-rel\SumatraPDF-install.exe"
 				PreprocessorDefinitions="WIN32;NDEBUG;UNICODE;_UNICODE"
-				IncludeSearchPath="baseutils"
+				IncludeSearchPath="src\utils"
 				ForcedIncludes=""
 				AssemblySearchPath=""
 				ForcedUsingAssemblies=""
@@ -66,79 +66,79 @@
 			Name="baseutils"
 			>
 			<File
-				RelativePath=".\baseutils\BaseUtil.h"
+				RelativePath=".\src\utils\BaseUtil.h"
 				>
 			</File>
 			<File
-				RelativePath=".\baseutils\BencUtil.cpp"
+				RelativePath=".\src\utils\BencUtil.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\baseutils\BencUtil.h"
+				RelativePath=".\src\utils\BencUtil.h"
 				>
 			</File>
 			<File
-				RelativePath=".\baseutils\CmdLineParser.h"
+				RelativePath=".\src\utils\CmdLineParser.h"
 				>
 			</File>
 			<File
-				RelativePath=".\baseutils\DialogSizer.cpp"
+				RelativePath=".\src\utils\DialogSizer.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\baseutils\DialogSizer.h"
+				RelativePath=".\src\utils\DialogSizer.h"
 				>
 			</File>
 			<File
-				RelativePath=".\baseutils\FileUtil.cpp"
+				RelativePath=".\src\utils\FileUtil.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\baseutils\FileUtil.h"
+				RelativePath=".\src\utils\FileUtil.h"
 				>
 			</File>
 			<File
-				RelativePath=".\baseutils\GeomUtil.h"
+				RelativePath=".\src\utils\GeomUtil.h"
 				>
 			</File>
 			<File
-				RelativePath=".\baseutils\Http.cpp"
+				RelativePath=".\src\utils\Http.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\baseutils\Http.h"
+				RelativePath=".\src\utils\Http.h"
 				>
 			</File>
 			<File
-				RelativePath=".\baseutils\SimpleLog.cpp"
+				RelativePath=".\src\utils\SimpleLog.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\baseutils\SimpleLog.h"
+				RelativePath=".\src\utils\SimpleLog.h"
 				>
 			</File>
 			<File
-				RelativePath=".\baseutils\StrUtil.cpp"
+				RelativePath=".\src\utils\StrUtil.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\baseutils\StrUtil.h"
+				RelativePath=".\src\utils\StrUtil.h"
 				>
 			</File>
 			<File
-				RelativePath=".\baseutils\UtilTests.cpp"
+				RelativePath=".\src\utils\UtilTests.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\baseutils\Vec.h"
+				RelativePath=".\src\utils\Vec.h"
 				>
 			</File>
 			<File
-				RelativePath=".\baseutils\WinUtil.cpp"
+				RelativePath=".\src\utils\WinUtil.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\baseutils\WinUtil.h"
+				RelativePath=".\src\utils\WinUtil.h"
 				>
 			</File>
 		</Filter>

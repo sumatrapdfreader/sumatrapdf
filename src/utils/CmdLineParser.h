@@ -1,5 +1,5 @@
-/* Copyright 2006-2011 the SumatraPDF project authors (see ../AUTHORS file).
-   License: FreeBSD (see ./COPYING) */
+/* Copyright 2006-2011 the SumatraPDF project authors (see AUTHORS file).
+   License: FreeBSD (see COPYING) */
 
 #ifndef CmdLineParser_h
 #define CmdLineParser_h
