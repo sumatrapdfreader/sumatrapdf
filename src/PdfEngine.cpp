@@ -1520,7 +1520,10 @@ TCHAR *PdfLink::GetValue() const
     TCHAR *path = NULL;
     fz_obj *obj;
 
-    switch (link ? link->kind : -1) {
+    if (!link)
+        return NULL;
+
+    switch (link->kind) {
     case PDF_LINK_URI:
         path = Str::Conv::FromPdf(link->dest);
         break;
