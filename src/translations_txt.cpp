@@ -10291,7 +10291,7 @@ const char *gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "Prosz\304\231 czeka\304\207 - renderowanie...",
   "&Prezentacja\tCtrl+L",
   "Poprzednia strona",
-  NULL,
+  "Drukuj",
   "Zakres druku",
   "Jeszcze trwa drukowanie. Przerwa\304\207 i zacz\304\205\304\207 od nowa?",
   "Drukowanie strony %d z %d...",

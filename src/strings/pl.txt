@@ -464,6 +464,9 @@ Pr&esentation\tCtrl-L
 Previous Page
 Poprzednia strona
 
+Print
+Drukuj
+
 Print range
 Zakres druku
 
@@ -592,7 +595,4 @@ kopiowanie tekstu
 
 printing document
 drukowanie dokumentu
-
-# Untranslated:
-#Print
 
