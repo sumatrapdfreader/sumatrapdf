@@ -153,7 +153,7 @@ def gen_js_data(strings_dict, langs, contributors):
         if DEFAULT_LANG == lang_iso: continue
         lang_name = lang_name.split(" (")[0]
         count = untranslated_count_for_lang(strings_dict, lang_iso)
-        svnurl = "http://sumatrapdf.googlecode.com/svn/trunk/src/strings/" + lang_iso + ".txt"
+        svnurl = "http://sumatrapdf.googlecode.com/svn/trunk/strings/" + lang_iso + ".txt"
         c = contributors_for_lang(contributors, lang_iso)
         res.append([lang_iso, lang_name, count, svnurl, c])
     return sorted(res, lambda x, y: cmp(y[2], x[2]) or cmp(x[1], y[1]))
