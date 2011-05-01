@@ -1683,6 +1683,8 @@ WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin, b
     }
 
     DeleteOldSelectionInfo(*win, true);
+    win->messages->CleanUp(NG_RESPONSE_TO_ACTION);
+    win->messages->CleanUp(NG_PAGE_INFO_HELPER);
 
     DisplayState *ds = gFileHistory.Find(fullpath);
     if (ds) {
