@@ -44,60 +44,89 @@ RenderedDjVuPixmap::RenderedDjVuPixmap(char *data, int width, int height) :
     free(bmi);
 }
 
-class DjVuLink : public PageElement, public PageDestination {
+class DjVuDestination : public PageDestination {
+    // the link format can be any of
+    //   #<pageNo>         e.g. #1 for FirstPage and #13 for page 13
+    //   #[+-]<pageCount>  e.g. #+1 for NextPage and #-1 for PrevPage
+    //   #filename.djvu    use ResolveNamedDest to get a link in #<pageNo> format
+    //   http://example.net/#hyperlink
+    char *link;
+
+public:
+    DjVuDestination(const char *link) : link(Str::Dup(link)) { }
+    ~DjVuDestination() { free(link); }
+
+    virtual const char *GetType() const {
+        if (Str::StartsWith(link, "#") && ChrIsDigit(link[1]))
+            return "ScrollTo";
+        if (Str::Eq(link, "#+1"))
+            return "NextPage";
+        if (Str::Eq(link, "#-1"))
+            return "PrevPage";
+        if (Str::StartsWithI(link, "http:") || Str::StartsWithI(link, "https:"))
+            return "LaunchURL";
+        return NULL;
+    }
+    virtual int GetDestPageNo() const {
+        if (Str::StartsWith(link, "#") && ChrIsDigit(link[1]))
+            return atoi(link + 1);
+        return 0;
+    }
+    virtual RectD GetDestRect() const {
+        return RectD();
+    }
+    virtual TCHAR *GetDestValue() const {
+        if (Str::Eq(GetType(), "LaunchURL"))
+            return Str::Conv::FromUtf8(link);
+        return NULL;
+    }
+};
+
+class DjVuLink : public PageElement {
+    DjVuDestination *dest;
     int pageNo;
     RectD rect;
-    // the url format can be any of
-    //   #<pageNo>  (e.g. #1 for FirstPage and #13 for page 13)
-    //   #+<pageCount>  or  #-<pageCount>  (e.g. #+1 for NextPage and #-1 for PrevPage)
-    //   #filename.djvu  (resolve the component name to a page)
-    //   http://example.net/#hyperlink
-    TCHAR *url;
     TCHAR *value;
 
 public:
-    DjVuLink(int pageNo, RectI rect, const char *url, const char *comment) :
-        pageNo(pageNo), rect(rect.Convert<double>()), url(Str::Conv::FromUtf8(url)) {
+    DjVuLink(int pageNo, RectI rect, const char *link, const char *comment) :
+        pageNo(pageNo), rect(rect.Convert<double>()), value(NULL) {
+        dest = new DjVuDestination(link);
         if (!Str::IsEmpty(comment))
             value = Str::Conv::FromUtf8(comment);
-        else
-            value = Str::Dup(this->url);
     }
     virtual ~DjVuLink() {
-        free(url);
+        delete dest;
         free(value);
     }
 
     virtual int GetPageNo() const { return pageNo; }
     virtual RectD GetRect() const { return rect; }
-    virtual TCHAR *GetValue() const { return value ? Str::Dup(value) : GetDestValue(); }
-
-    virtual PageDestination *AsLink() { return this; }
-
-    // TODO: not all links are hyperlinks (cf. ToC)
-    virtual const char *GetType() const {
-        if (Str::StartsWith(url, _T("#")))
-            return "ScrollTo";
-        return "LaunchURL";
+    virtual TCHAR *GetValue() const {
+        if (value)
+            return Str::Dup(value);
+        if (Str::Eq(dest->GetType(), "LaunchURL"))
+            return dest->GetDestValue();
+        return NULL;
     }
-    virtual int GetDestPageNo() const {
-        if (Str::StartsWith(url, _T("#")))
-            return _ttoi(url + 1);
-        return 0;
-    }
-    virtual RectD GetDestRect() const { return RectD(); }
-    virtual TCHAR *GetDestValue() const { return Str::Dup(url); }
+
+    virtual PageDestination *AsLink() { return dest; }
 };
 
-class DjVuToCItem : public DocToCItem, public PageDestination {
+class DjVuToCItem : public DocToCItem {
+    DjVuDestination *dest;
+
 public:
-    DjVuToCItem(const char *title) : DocToCItem(Str::Conv::FromUtf8(title)) { }
+    bool isGeneric;
 
-    virtual PageDestination *GetLink() { return this; }
+    DjVuToCItem(const char *title, const char *link) :
+        DocToCItem(Str::Conv::FromUtf8(title)), isGeneric(false) {
+        dest = new DjVuDestination(link);
+        pageNo = dest->GetDestPageNo();
+    }
+    virtual ~DjVuToCItem() { delete dest; }
 
-    virtual const char *GetType() const { return "ScrollTo"; }
-    virtual int GetDestPageNo() const { return pageNo; }
-    virtual RectD GetDestRect() const { return RectD(); }
+    virtual PageDestination *GetLink() { return dest; }
 };
 
 class CDjVuEngine : public DjVuEngine {
@@ -145,6 +174,7 @@ public:
     virtual Vec<PageElement *> *GetElements(int pageNo);
     virtual PageElement *GetElementAtPos(int pageNo, PointD pt);
 
+    virtual PageDestination *GetNamedDest(const TCHAR *name);
     virtual bool HasToCTree() const { return outline != miniexp_nil; }
     virtual DocToCItem *GetToCTree();
 
@@ -159,10 +189,13 @@ protected:
     miniexp_t outline;
     miniexp_t *annos;
 
+    Vec<ddjvu_fileinfo_t> fileInfo;
+
     CRITICAL_SECTION ctxAccess;
 
     bool ExtractPageText(miniexp_t item, const TCHAR *lineSep,
                          Str::Str<TCHAR>& extracted, Vec<RectI>& coords);
+    char *ResolveNamedDest(const char *name);
     DjVuToCItem *BuildToCTree(miniexp_t entry, int& idCounter);
     bool Load(const TCHAR *fileName);
 };
@@ -253,6 +286,16 @@ bool CDjVuEngine::Load(const TCHAR *fileName)
     if (!miniexp_consp(outline) || miniexp_car(outline) != miniexp_symbol("bookmarks")) {
         ddjvu_miniexp_release(doc, outline);
         outline = miniexp_nil;
+    }
+
+    int fileCount = ddjvu_document_get_filenum(doc);
+    for (int i = 0; i < fileCount; i++) {
+        ddjvu_status_t status;
+        ddjvu_fileinfo_s info;
+        while ((status = ddjvu_document_get_fileinfo(doc, i, &info)) < DDJVU_JOB_OK)
+            SpinDdjvuMessageLoop(ctx);
+        if (DDJVU_JOB_OK == status && info.type == 'P')
+            fileInfo.Append(info);
     }
 
     return true;
@@ -482,7 +525,8 @@ Vec<PageElement *> *CDjVuEngine::GetElements(int pageNo)
         int h = miniexp_to_int(miniexp_car(area)); area = miniexp_cdr(area);
         RectI rect(x, page.dy - y - h, w, h);
 
-        els->Append(new DjVuLink(pageNo, rect, urlUtf8, commentUtf8));
+        ScopedMem<char> link(ResolveNamedDest(urlUtf8));
+        els->Append(new DjVuLink(pageNo, rect, link ? link : urlUtf8, commentUtf8));
     }
     free(links);
 
@@ -508,6 +552,30 @@ PageElement *CDjVuEngine::GetElementAtPos(int pageNo, PointD pt)
     return el;
 }
 
+// returns a numeric DjVu link to a named page (if the name resolves)
+// caller needs to free() the result
+char *CDjVuEngine::ResolveNamedDest(const char *name)
+{
+    if (!Str::StartsWith(name, "#"))
+        return NULL;
+    for (size_t i = 0; i < fileInfo.Count(); i++)
+        if (fileInfo[i].pageno >= 0 && Str::EqI(name + 1, fileInfo[i].id))
+            return Str::Format("#%d", fileInfo[i].pageno + 1);
+    return NULL;
+}
+
+PageDestination *CDjVuEngine::GetNamedDest(const TCHAR *name)
+{
+    ScopedMem<char> nameUtf8(Str::Conv::ToUtf8(name));
+    if (!Str::StartsWith(nameUtf8.Get(), "#"))
+        nameUtf8.Set(Str::Join("#", nameUtf8));
+
+    ScopedMem<char> link(ResolveNamedDest(nameUtf8));
+    if (link)
+        return new DjVuDestination(link);
+    return NULL;
+}
+
 DjVuToCItem *CDjVuEngine::BuildToCTree(miniexp_t entry, int& idCounter)
 {
     DjVuToCItem *node = NULL;
@@ -522,35 +590,36 @@ DjVuToCItem *CDjVuEngine::BuildToCTree(miniexp_t entry, int& idCounter)
         const char *name = miniexp_to_str(miniexp_car(item));
         const char *link = miniexp_to_str(miniexp_cadr(item));
 
-        if (!node)
-            last = node = new DjVuToCItem(name);
-        else
-            last = last->next = new DjVuToCItem(name);
-        last->id = ++idCounter;
-        // TODO: resolve all link types
-        if (Str::StartsWith(link, "#"))
-            last->pageNo = atoi(link + 1);
+        DjVuToCItem *tocItem = NULL;
+        ScopedMem<char> linkNo(ResolveNamedDest(link));
+        if (!linkNo)
+            tocItem = new DjVuToCItem(name, link);
+        else if (!Str::IsEmpty(name) && !Str::Eq(name, link + 1))
+            tocItem = new DjVuToCItem(name, linkNo);
+        else {
+            ScopedMem<char> name(Str::Format("Page %d", atoi(linkNo + 1)));
+            tocItem = new DjVuToCItem(name, linkNo);
+            // don't display such generic items by default
+            tocItem->isGeneric = true;
+        }
 
-        last->child = BuildToCTree(miniexp_cddr(item), idCounter);
+        tocItem->id = ++idCounter;
+        tocItem->child = BuildToCTree(miniexp_cddr(item), idCounter);
+        if (tocItem->child) {
+            // close items that only contain generic page references
+            tocItem->open = false;
+            for (DocToCItem *n = tocItem->child; n && !tocItem->open; n = n->next)
+                if (!static_cast<DjVuToCItem *>(n)->isGeneric)
+                    tocItem->open = true;
+        }
+
+        if (!node)
+            last = node = tocItem;
+        else
+            last = last->next = tocItem;
     }
 
     return node;
-}
-
-static DocToCItem *CleanOutTree(DocToCItem *root)
-{
-    if (!root)
-        return NULL;
-
-    root->child = CleanOutTree(root->child);
-    root->next = CleanOutTree(root->next);
-    // remove all leaf nodes without a destination
-    if (!root->child && !root->next && !root->pageNo) {
-        delete root;
-        return NULL;
-    }
-
-    return root;
 }
 
 DocToCItem *CDjVuEngine::GetToCTree()
@@ -559,7 +628,7 @@ DocToCItem *CDjVuEngine::GetToCTree()
         return NULL;
 
     int idCounter = 0;
-    return CleanOutTree(BuildToCTree(outline, idCounter));
+    return BuildToCTree(outline, idCounter);
 }
 
 DjVuEngine *DjVuEngine::CreateFromFileName(const TCHAR *fileName)
