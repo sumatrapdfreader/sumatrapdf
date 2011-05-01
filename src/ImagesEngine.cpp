@@ -65,8 +65,21 @@ Bitmap *BitmapFromData(void *data, size_t len)
 }
 
 // for converting between big- and little-endian values
-#define SWAPWORD(x)	MAKEWORD(HIBYTE(x), LOBYTE(x))
-#define SWAPLONG(x)	MAKELONG(SWAPWORD(HIWORD(x)), SWAPWORD(LOWORD(x)))
+#define SWAPWORD(x)    MAKEWORD(HIBYTE(x), LOBYTE(x))
+#define SWAPLONG(x)    MAKELONG(SWAPWORD(HIWORD(x)), SWAPWORD(LOWORD(x)))
+
+#define PNG_SIGNATURE "\x89PNG\x0D\x0A\x1A\x0A"
+
+struct PngImageHeader {
+    // width and height are big-endian values, use SWAPLONG to convert
+    DWORD width;
+    DWORD height;
+    byte bitDepth;
+    byte colorType;
+    byte compression;
+    byte filter;
+    byte interlace;
+};
 
 // adapted from http://cpansearch.perl.org/src/RJRAY/Image-Size-3.230/lib/Image/Size.pm
 SizeI SizeFromData(char *data, size_t len)
@@ -83,11 +96,10 @@ SizeI SizeFromData(char *data, size_t len)
         }
     }
     // PNG
-    else if (Str::StartsWith(data, "\x89PNG\x0D\x0A\x1A\x0A")) {
-        if (len >= 24 && Str::StartsWith(data + 12, "IHDR")) {
-            DWORD width = SWAPLONG(*(DWORD *)(data + 16));
-            DWORD height = SWAPLONG(*(DWORD *)(data + 20));
-            result = SizeI(width, height);
+    else if (Str::StartsWith(data, PNG_SIGNATURE)) {
+        if (len >= 16 + sizeof(PngImageHeader) && Str::StartsWith(data + 12, "IHDR")) {
+            PngImageHeader *hdr = (PngImageHeader *)data + 16;
+            result = SizeI(SWAPLONG(hdr->width), SWAPLONG(hdr->height));
         }
     }
     // JPEG
@@ -351,8 +363,11 @@ bool CbxEngine::LoadCbzFile(const TCHAR *file)
         int err = unzGetCurrentFileInfo64(fa->uf, NULL, fileName, dimof(fileName), NULL, 0, NULL, 0);
         if (err == UNZ_OK) {
             ScopedMem<TCHAR> fileName2(Str::Conv::FromUtf8(fileName));
-            if (ImageEngine::IsSupportedFile(fileName2))
+            if (ImageEngine::IsSupportedFile(fileName2) &&
+                // OS X occasionally leaves metadata with image extensions
+                !Str::StartsWith(Path::GetBaseName(fileName2), _T("."))) {
                 pageFileNames.Append(fileName2.StealData());
+            }
         }
         err = unzGoToNextFile(fa->uf);
         if (err != UNZ_OK)
@@ -563,4 +578,106 @@ CbxEngine *CbxEngine::CreateFromFileName(const TCHAR *fileName)
         return NULL;
     }
     return engine;
+}
+
+RenderedBitmap *LoadRenderedBitmap(const TCHAR *filePath)
+{
+    if (Str::EndsWithI(filePath, _T(".bmp"))) {
+        HBITMAP hbmp = (HBITMAP)LoadImage(NULL, filePath, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+        if (!hbmp)
+            return NULL;
+
+        BITMAP bmp;
+        GetObject(hbmp, sizeof(BITMAP), &bmp);
+        return new RenderedBitmap(hbmp, bmp.bmWidth, bmp.bmHeight);
+    }
+
+    size_t len;
+    ScopedMem<char> data(File::ReadAll(filePath, &len));
+    if (!data)
+        return NULL;
+    Bitmap *bmp = BitmapFromData(data, len);
+    if (!bmp)
+        return NULL;
+
+    HBITMAP hbmp;
+    RenderedBitmap *rendered = NULL;
+    if (bmp->GetHBITMAP(Color(0xFF, 0xFF, 0xFF), &hbmp) == Ok)
+        rendered = new RenderedBitmap(hbmp, bmp->GetWidth(), bmp->GetHeight());
+    delete bmp;
+
+    return rendered;
+}
+
+#include <zlib.h>
+
+static void AppendPngChunk(Str::Str<char>& pngData, char *tag, void *data, DWORD size)
+{
+    unsigned char uint32[4];
+    *(DWORD *)uint32 = SWAPLONG(size);
+    pngData.Append((char *)uint32, 4);
+    pngData.Append(tag, 4);
+    pngData.Append((char *)data, size);
+
+    DWORD sum = crc32(0, NULL, 0);
+    sum = crc32(sum, (unsigned char *)tag, 4);
+    sum = crc32(sum, (unsigned char *)data, size);
+    *(DWORD *)uint32 = SWAPLONG(sum);
+    pngData.Append((char *)uint32, 4);
+}
+
+// saves to either a .bmp or a .png file
+bool SaveRenderedBitmap(RenderedBitmap *bmp, const TCHAR *filePath)
+{
+    if (!Str::EndsWithI(filePath, _T(".bmp")) && !Str::EndsWithI(filePath, _T(".png")))
+        return false;
+
+    size_t bmpDataLen;
+    ScopedMem<unsigned char> bmpData(bmp->Serialize(&bmpDataLen));
+    if (!bmpData)
+        return false;
+
+    if (Str::EndsWithI(filePath, _T(".bmp")))
+        return File::WriteAll(filePath, bmpData.Get(), bmpDataLen);
+
+    // save as PNG - adapted from mupdf/fitz/res_pixmap.c's fz_write_png()
+    SizeI size = bmp->Size();
+    int stride = ((size.dx * 3 + 3) / 4) * 4;
+    unsigned char *sp0 = bmpData + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFO);
+
+    // difference-encode the bitmap data
+    uLong usize = (size.dx * 3 + 1) * size.dy;
+    ScopedMem<unsigned char> udata(SAZA(unsigned char, usize));
+    unsigned char *dp = udata;
+    for (int y = 0; y < size.dy; y++) {
+        *dp++ = 1; /* sub prediction filter */
+        unsigned char *sp = &sp0[(size.dy - y - 1) * stride];
+        for (int x = 0; x < size.dx; x++) {
+            for (int k = 0; k < 3; k++)
+                dp[2-k] = sp[k] - (x > 0 ? sp[k-3] : 0);
+            sp += 3; dp += 3;
+        }
+    }
+
+    // compress the encoded data
+    uLong csize = compressBound(usize);
+    ScopedMem<unsigned char> cdata(SAZA(unsigned char, csize));
+    int err = compress(cdata, &csize, udata, usize);
+    if (err != Z_OK)
+        return false;
+
+    // put the image parts together and save the entire PNG
+    PngImageHeader head = { 0 };
+    head.width = SWAPLONG(size.dx);
+    head.height = SWAPLONG(size.dy);
+    head.bitDepth = 8;
+    head.colorType = 2; // RGB (24 bit)
+
+    Str::Str<char> pngData(csize + 64);
+    pngData.Append(PNG_SIGNATURE, 8);
+    AppendPngChunk(pngData, "IHDR", &head, 13);
+    AppendPngChunk(pngData, "IDAT", cdata, csize);
+    AppendPngChunk(pngData, "IEND", NULL, 0);
+
+    return File::WriteAll(filePath, pngData.Get(), pngData.Count());
 }

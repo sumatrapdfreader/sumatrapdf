@@ -666,14 +666,14 @@ static TCHAR *GetThumbnailPath(const TCHAR *filePath)
     ScopedMem<TCHAR> thumbsPath(AppGenDataFilename(THUMBNAILS_DIR_NAME));
     ScopedMem<TCHAR> fname(Str::Conv::FromAnsi(fingerPrint));
 
-    return Str::Format(_T("%s\\%s.bmp"), thumbsPath, fname);
+    return Str::Format(_T("%s\\%s.png"), thumbsPath, fname);
 }
 
 // removes thumbnails that don't belong to any frequently used item in file history
 void CleanUpThumbnailCache(FileHistory& fileHistory)
 {
     ScopedMem<TCHAR> thumbsPath(AppGenDataFilename(THUMBNAILS_DIR_NAME));
-    ScopedMem<TCHAR> pattern(Path::Join(thumbsPath, _T("*.bmp")));
+    ScopedMem<TCHAR> pattern(Path::Join(thumbsPath, _T("*.png")));
 
     StrVec files;
     WIN32_FIND_DATA fdata;
@@ -715,15 +715,9 @@ static bool LoadThumbnail(DisplayState& state)
     ScopedMem<TCHAR> bmpPath(GetThumbnailPath(state.filePath));
     if (!bmpPath)
         return false;
-    HBITMAP hbmp = (HBITMAP)LoadImage(NULL, bmpPath, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-    if (!hbmp)
-        return false;
 
-    BITMAP bmp;
-    GetObject(hbmp, sizeof(BITMAP), &bmp);
-
-    state.thumbnail = new RenderedBitmap(hbmp, bmp.bmWidth, bmp.bmHeight);
-    return true;
+    state.thumbnail = LoadRenderedBitmap(bmpPath);
+    return state.thumbnail != NULL;
 }
 
 bool HasThumbnail(DisplayState& state)
@@ -750,17 +744,12 @@ void SaveThumbnail(DisplayState& state)
     if (!state.thumbnail)
         return;
 
-    size_t dataLen;
-    unsigned char *data = state.thumbnail->Serialize(&dataLen);
-    if (data) {
-        ScopedMem<TCHAR> bmpPath(GetThumbnailPath(state.filePath));
-        if (!bmpPath)
-            return;
-        ScopedMem<TCHAR> thumbsPath(Path::GetDir(bmpPath));
-        if (Dir::Create(thumbsPath))
-            File::WriteAll(bmpPath, data, dataLen);
-        free(data);
-    }
+    ScopedMem<TCHAR> bmpPath(GetThumbnailPath(state.filePath));
+    if (!bmpPath)
+        return;
+    ScopedMem<TCHAR> thumbsPath(Path::GetDir(bmpPath));
+    if (Dir::Create(thumbsPath))
+        SaveRenderedBitmap(state.thumbnail, bmpPath);
 }
 
 #endif

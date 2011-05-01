@@ -110,4 +110,7 @@ public:
     static CbxEngine *CreateFromFileName(const TCHAR *fileName);
 };
 
+RenderedBitmap *LoadRenderedBitmap(const TCHAR *filePath);
+bool SaveRenderedBitmap(RenderedBitmap *bmp, const TCHAR *filePath);
+
 #endif

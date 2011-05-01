@@ -28,6 +28,17 @@ EXPORTS
 
 %(muxps_exports)s
 
+; jpeg exports
+
+	jpeg_resync_to_restart
+	jpeg_finish_decompress
+	jpeg_read_scanlines
+	jpeg_start_decompress
+	jpeg_read_header
+	jpeg_CreateDecompress
+	jpeg_destroy_decompress
+	jpeg_std_error
+
 ; zlib exports
 
 	gzerror
@@ -40,6 +51,8 @@ EXPORTS
 	inflateInit2_
 	inflate
 	inflateEnd
+	compress
+	compressBound
 	crc32
 """
 
