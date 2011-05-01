@@ -557,7 +557,7 @@ void DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory)
 
     rc.y += titleBox.dy;
     rc.dy -= titleBox.dy;
-    FillRect(hdc, &rc.ToRECT(), gBrushNoDocBg);
+    FillRect(hdc, &rc.ToRECT(), gBrushAboutBg);
     rc.dy -= DOCLIST_BOTTOM_BOX_DY;
 
     Vec<DisplayState *> *list = fileHistory.GetFrequencyOrder();

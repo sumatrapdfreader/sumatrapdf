@@ -24,8 +24,8 @@
     <Filter Include="jpeg">
       <UniqueIdentifier>{066558ef-98f1-4e63-b5d4-b5aaebd0d65e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="baseutils">
-      <UniqueIdentifier>{8f7c5754-2f23-4d99-81db-ee77bba94091}</UniqueIdentifier>
+    <Filter Include="utils">
+      <UniqueIdentifier>{88c95b88-1f3f-4262-835b-91b32349401b}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -491,23 +491,8 @@
     <ClCompile Include="src\UnitTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="baseutils\BencUtil.cpp">
-      <Filter>baseutils</Filter>
-    </ClCompile>
-    <ClCompile Include="baseutils\DialogSizer.cpp">
-      <Filter>baseutils</Filter>
-    </ClCompile>
-    <ClCompile Include="baseutils\FileUtil.cpp">
-      <Filter>baseutils</Filter>
-    </ClCompile>
-    <ClCompile Include="baseutils\StrUtil.cpp">
-      <Filter>baseutils</Filter>
-    </ClCompile>
     <ClCompile Include="baseutils\UtilTests.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="baseutils\WinUtil.cpp">
-      <Filter>baseutils</Filter>
     </ClCompile>
     <ClCompile Include="baseutils\strlist_util.cpp">
       <Filter>Source Files</Filter>
@@ -527,17 +512,35 @@
     <ClCompile Include="src\TextSelection.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="baseutils\Http.cpp">
-      <Filter>baseutils</Filter>
-    </ClCompile>
-    <ClCompile Include="baseutils\SimpleLog.cpp">
-      <Filter>baseutils</Filter>
-    </ClCompile>
-    <ClCompile Include="baseutils\ZipUtil.cpp">
-      <Filter>baseutils</Filter>
-    </ClCompile>
     <ClCompile Include="src\ImagesEngine.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\BencUtil.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\DialogSizer.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\FileUtil.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\Http.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\SimpleLog.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\StrUtil.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\UtilTests.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\WinUtil.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\ZipUtil.cpp">
+      <Filter>utils</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -691,30 +694,6 @@
     <ClInclude Include="src\WindowInfo.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="baseutils\BaseUtil.h">
-      <Filter>baseutils</Filter>
-    </ClInclude>
-    <ClInclude Include="baseutils\BencUtil.h">
-      <Filter>baseutils</Filter>
-    </ClInclude>
-    <ClInclude Include="baseutils\DialogSizer.h">
-      <Filter>baseutils</Filter>
-    </ClInclude>
-    <ClInclude Include="baseutils\FileUtil.h">
-      <Filter>baseutils</Filter>
-    </ClInclude>
-    <ClInclude Include="baseutils\GeomUtil.h">
-      <Filter>baseutils</Filter>
-    </ClInclude>
-    <ClInclude Include="baseutils\StrUtil.h">
-      <Filter>baseutils</Filter>
-    </ClInclude>
-    <ClInclude Include="baseutils\Vec.h">
-      <Filter>baseutils</Filter>
-    </ClInclude>
-    <ClInclude Include="baseutils\WinUtil.h">
-      <Filter>baseutils</Filter>
-    </ClInclude>
     <ClInclude Include="src\AppTools.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -733,20 +712,44 @@
     <ClInclude Include="src\TextSelection.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="baseutils\CmdLineParser.h">
-      <Filter>baseutils</Filter>
-    </ClInclude>
-    <ClInclude Include="baseutils\Http.h">
-      <Filter>baseutils</Filter>
-    </ClInclude>
-    <ClInclude Include="baseutils\SimpleLog.h">
-      <Filter>baseutils</Filter>
-    </ClInclude>
-    <ClInclude Include="baseutils\ZipUtil.h">
-      <Filter>baseutils</Filter>
-    </ClInclude>
     <ClInclude Include="src\ImagesEngine.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\ZipUtil.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\BaseUtil.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\BencUtil.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\CmdLineParser.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\DialogSizer.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\FileUtil.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\GeomUtil.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\Http.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\SimpleLog.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\StrUtil.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\Vec.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\WinUtil.h">
+      <Filter>utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

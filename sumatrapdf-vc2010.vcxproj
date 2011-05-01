@@ -42,7 +42,7 @@
     <NMakeCleanCommandLine Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">nmake -f makefile.msvc CFG=dbg  NASM=$(ProjectDir)bin\nasm.exe clean</NMakeCleanCommandLine>
     <NMakeOutput Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">obj-dbg\sumatrapdf.exe</NMakeOutput>
     <NMakePreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_DEBUG;SYNCTEX_FEATURE;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
-    <NMakeIncludeSearchPath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(NMakeIncludeSearchPath);$(ProjectDir)\baseutils;$(ProjectDir)\baseutils\msvc;$(ProjectDir)\mupdf\fitz;$(ProjectDir)\mupdf\xps;$(ProjectDir)\mupdf\pdf;$(ProjectDir)\ext\libjpeg-turbo;$(ProjectDir)\ext\zlib-1.2.5;$(ProjectDir)\ext\zlib-1.2.5\minizip</NMakeIncludeSearchPath>
+    <NMakeIncludeSearchPath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(NMakeIncludeSearchPath);$(ProjectDir)\src;$(ProjectDir)\src\utils;$(ProjectDir)\src\utils\msvc;$(ProjectDir)\mupdf\fitz;$(ProjectDir)\mupdf\pdf;$(ProjectDir)\mupdf\xps;$(ProjectDir)\ext\libjpeg-turbo;$(ProjectDir)\ext\zlib-1.2.5;$(ProjectDir)\ext\zlib-1.2.5\minizip</NMakeIncludeSearchPath>
     <NMakeForcedIncludes Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(NMakeForcedIncludes)</NMakeForcedIncludes>
     <NMakeAssemblySearchPath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(NMakeAssemblySearchPath)</NMakeAssemblySearchPath>
     <NMakeForcedUsingAssemblies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(NMakeForcedUsingAssemblies)</NMakeForcedUsingAssemblies>
@@ -53,7 +53,7 @@
     <NMakeCleanCommandLine Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">nmake -f makefile.msvc CFG=rel  NASM=$(ProjectDir)\bin\nasm.exe clean</NMakeCleanCommandLine>
     <NMakeOutput Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">obj-rel\sumatrapdf.exe</NMakeOutput>
     <NMakePreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIN32;NDEBUG;SYNCTEX_FEATURE;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
-    <NMakeIncludeSearchPath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(NMakeIncludeSearchPath);$(ProjectDir)\baseutils;$(ProjectDir)\baseutils\msvc;$(ProjectDir)\mupdf\fitz;$(ProjectDir)\mupdf\xps;$(ProjectDir)\mupdf\pdf;$(ProjectDir)\ext\libjpeg-turbo;$(ProjectDir)\ext\zlib-1.2.5;$(ProjectDir)\ext\zlib-1.2.5\minizip</NMakeIncludeSearchPath>
+    <NMakeIncludeSearchPath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(NMakeIncludeSearchPath);$(ProjectDir)\src;$(ProjectDir)\src\msvc;$(ProjectDir)\mupdf\fitz;$(ProjectDir)\mupdf\pdf;$(ProjectDir)\mupdf\xps;$(ProjectDir)\ext\libjpeg-turbo;$(ProjectDir)\ext\zlib-1.2.5;$(ProjectDir)\ext\zlib-1.2.5\minizip</NMakeIncludeSearchPath>
     <NMakeForcedIncludes Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(NMakeForcedIncludes)</NMakeForcedIncludes>
     <NMakeAssemblySearchPath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(NMakeAssemblySearchPath)</NMakeAssemblySearchPath>
     <NMakeForcedUsingAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(NMakeForcedUsingAssemblies)</NMakeForcedUsingAssemblies>
@@ -61,15 +61,7 @@
   <ItemDefinitionGroup>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="baseutils\BencUtil.cpp" />
-    <ClCompile Include="baseutils\DialogSizer.cpp" />
-    <ClCompile Include="baseutils\FileUtil.cpp" />
-    <ClCompile Include="baseutils\Http.cpp" />
-    <ClCompile Include="baseutils\SimpleLog.cpp" />
-    <ClCompile Include="baseutils\StrUtil.cpp" />
     <ClCompile Include="baseutils\UtilTests.cpp" />
-    <ClCompile Include="baseutils\WinUtil.cpp" />
-    <ClCompile Include="baseutils\ZipUtil.cpp" />
     <ClCompile Include="ext\libjpeg-turbo\jaricom.c" />
     <ClCompile Include="ext\libjpeg-turbo\jcapimin.c" />
     <ClCompile Include="ext\libjpeg-turbo\jcapistd.c" />
@@ -229,21 +221,18 @@
     <ClCompile Include="ext\jbig2dec\jbig2_symbol_dict.c" />
     <ClCompile Include="ext\jbig2dec\jbig2_text.c" />
     <ClCompile Include="src\UnitTests.cpp" />
+    <ClCompile Include="src\utils\BencUtil.cpp" />
+    <ClCompile Include="src\utils\DialogSizer.cpp" />
+    <ClCompile Include="src\utils\FileUtil.cpp" />
+    <ClCompile Include="src\utils\Http.cpp" />
+    <ClCompile Include="src\utils\SimpleLog.cpp" />
+    <ClCompile Include="src\utils\StrUtil.cpp" />
+    <ClCompile Include="src\utils\UtilTests.cpp" />
+    <ClCompile Include="src\utils\WinUtil.cpp" />
+    <ClCompile Include="src\utils\ZipUtil.cpp" />
     <ClCompile Include="src\WindowInfo.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="baseutils\BaseUtil.h" />
-    <ClInclude Include="baseutils\BencUtil.h" />
-    <ClInclude Include="baseutils\CmdLineParser.h" />
-    <ClInclude Include="baseutils\DialogSizer.h" />
-    <ClInclude Include="baseutils\FileUtil.h" />
-    <ClInclude Include="baseutils\GeomUtil.h" />
-    <ClInclude Include="baseutils\Http.h" />
-    <ClInclude Include="baseutils\SimpleLog.h" />
-    <ClInclude Include="baseutils\StrUtil.h" />
-    <ClInclude Include="baseutils\Vec.h" />
-    <ClInclude Include="baseutils\WinUtil.h" />
-    <ClInclude Include="baseutils\ZipUtil.h" />
     <ClInclude Include="ext\libjpeg-turbo\jchuff.h" />
     <ClInclude Include="ext\libjpeg-turbo\jconfig.h" />
     <ClInclude Include="ext\libjpeg-turbo\jdct.h" />
@@ -281,6 +270,18 @@
     <ClInclude Include="src\TextSelection.h" />
     <ClInclude Include="src\translations.h" />
     <ClInclude Include="src\translations_txt.h" />
+    <ClInclude Include="src\utils\BaseUtil.h" />
+    <ClInclude Include="src\utils\BencUtil.h" />
+    <ClInclude Include="src\utils\CmdLineParser.h" />
+    <ClInclude Include="src\utils\DialogSizer.h" />
+    <ClInclude Include="src\utils\FileUtil.h" />
+    <ClInclude Include="src\utils\GeomUtil.h" />
+    <ClInclude Include="src\utils\Http.h" />
+    <ClInclude Include="src\utils\SimpleLog.h" />
+    <ClInclude Include="src\utils\StrUtil.h" />
+    <ClInclude Include="src\utils\Vec.h" />
+    <ClInclude Include="src\utils\WinUtil.h" />
+    <ClInclude Include="src\utils\ZipUtil.h" />
     <ClInclude Include="src\Version.h" />
     <ClInclude Include="mupdf\fitz\fitz.h" />
     <ClInclude Include="mupdf\mupdf\mupdf.h" />
