@@ -262,6 +262,8 @@ bool CDjVuEngine::Load(const TCHAR *fileName)
 
     while (!ddjvu_document_decoding_done(doc))
         SpinDdjvuMessageLoop(ctx);
+    if (ddjvu_document_decoding_error(doc))
+        return false;
 
     pageCount = ddjvu_document_get_pagenum(doc);
     mediaboxes = new RectD[pageCount];
@@ -277,7 +279,6 @@ bool CDjVuEngine::Load(const TCHAR *fileName)
 
         mediaboxes[i] = RectD(0, 0, info.width * GetFileDPI() / info.dpi,
                                     info.height * GetFileDPI() / info.dpi);
-
         while ((annos[i] = ddjvu_document_get_pageanno(doc, i)) == miniexp_dummy)
             SpinDdjvuMessageLoop(ctx);
     }

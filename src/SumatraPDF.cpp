@@ -1720,7 +1720,8 @@ WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin, b
 
     // Add the file also to Windows' recently used documents (this doesn't
     // happen automatically on drag&drop, reopening from history, etc.)
-    SHAddToRecentDocs(SHARD_PATH, fullpath);
+    if (!gRestrictedUse && !gPluginMode)
+        SHAddToRecentDocs(SHARD_PATH, fullpath);
 
     return win;
 }

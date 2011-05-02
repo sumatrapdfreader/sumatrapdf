@@ -94,15 +94,22 @@ public:
 
     bool MarkFileInexistent(const TCHAR *filePath) {
         assert(filePath);
-        // move the file history entry to the very end of the list
-        // (if it exists at all), so that we don't completely forget
-        // the settings, should the file reappear later on - but
-        // make space for other documents first
         DisplayState *state = Find(filePath);
         if (!state)
             return false;
-        Remove(state);
-        Append(state);
+        // move the file history entry to the end of the list
+        // of recently opened documents (if it exists at all),
+        // so that the user could still try opening it again
+        // and so that we don't completely forget the settings,
+        // should the file reappear later on
+        int ix = states.Find(state);
+        if (ix < FILE_HISTORY_MAX_RECENT) {
+            states.Remove(state);
+            if (states.Count() < FILE_HISTORY_MAX_RECENT)
+                states.Append(state);
+            else
+                states.InsertAt(FILE_HISTORY_MAX_RECENT - 1, state);
+        }
         // also delete the thumbnail and move the link towards the
         // back in the Frequently Read list
         delete state->thumbnail;
