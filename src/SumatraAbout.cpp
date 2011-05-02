@@ -550,14 +550,17 @@ void DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory)
     PaintLine(hdc, RectI(0, titleBox.dy, rc.dx, 0));
 
     /* render recent files list */
-    SelectObject(hdc, gBrushNoDocBg);
     SelectObject(hdc, penThumbBorder);
     SetBkMode(hdc, TRANSPARENT);
     SetTextColor(hdc, WIN_COL_BLACK);
 
     rc.y += titleBox.dy;
     rc.dy -= titleBox.dy;
+#ifndef BLACK_ON_YELLOW
     FillRect(hdc, &rc.ToRECT(), gBrushAboutBg);
+#else
+    FillRect(hdc, &rc.ToRECT(), gBrushNoDocBg);
+#endif
     rc.dy -= DOCLIST_BOTTOM_BOX_DY;
 
     Vec<DisplayState *> *list = fileHistory.GetFrequencyOrder();
