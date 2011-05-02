@@ -512,7 +512,7 @@ public:
 
     virtual int PageRotation(int pageNo);
     virtual RectD PageMediabox(int pageNo);
-    virtual RectI PageContentBox(int pageNo, RenderTarget target=Target_View);
+    virtual RectD PageContentBox(int pageNo, RenderTarget target=Target_View);
 
     virtual RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
                          RectD *pageRect=NULL, /* if NULL: defaults to the page's mediabox */
@@ -1114,22 +1114,22 @@ RectD CPdfEngine::PageMediabox(int pageNo)
     return fz_rect_to_RectD(mediabox);
 }
 
-RectI CPdfEngine::PageContentBox(int pageNo, RenderTarget target)
+RectD CPdfEngine::PageContentBox(int pageNo, RenderTarget target)
 {
     assert(1 <= pageNo && pageNo <= PageCount());
     pdf_page *page = getPdfPage(pageNo);
     if (!page)
-        return RectI();
+        return RectD();
 
     fz_bbox bbox;
     fz_error error = runPage(page, fz_new_bbox_device(&bbox), fz_identity, target, fz_round_rect(page->mediabox), false);
     if (error != fz_okay)
-        return PageMediabox(pageNo).Round();
+        return PageMediabox(pageNo);
     if (fz_is_infinite_bbox(bbox))
-        return PageMediabox(pageNo).Round();
+        return PageMediabox(pageNo);
 
-    RectI bbox2 = fz_bbox_to_RectI(bbox);
-    return bbox2.Intersect(PageMediabox(pageNo).Round());
+    RectD bbox2 = fz_bbox_to_RectI(bbox).Convert<double>();
+    return bbox2.Intersect(PageMediabox(pageNo));
 }
 
 bool CPdfEngine::hasPermission(int permission)
@@ -1693,7 +1693,7 @@ public:
     }
 
     virtual RectD PageMediabox(int pageNo);
-    virtual RectI PageContentBox(int pageNo, RenderTarget target=Target_View);
+    virtual RectD PageContentBox(int pageNo, RenderTarget target=Target_View);
 
     virtual RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
                          RectD *pageRect=NULL, /* if NULL: defaults to the page's mediabox */
@@ -2144,20 +2144,20 @@ RectD CXpsEngine::PageMediabox(int pageNo)
     return _mediaboxes[pageNo-1];
 }
 
-RectI CXpsEngine::PageContentBox(int pageNo, RenderTarget target)
+RectD CXpsEngine::PageContentBox(int pageNo, RenderTarget target)
 {
     assert(1 <= pageNo && pageNo <= PageCount());
     xps_page *page = getXpsPage(pageNo);
     if (!page)
-        return RectI();
+        return RectD();
 
     fz_bbox bbox;
     runPage(page, fz_new_bbox_device(&bbox), fz_identity);
     if (fz_is_infinite_bbox(bbox))
-        return PageMediabox(pageNo).Round();
+        return PageMediabox(pageNo);
 
-    RectI bbox2 = fz_bbox_to_RectI(bbox);
-    return bbox2.Intersect(PageMediabox(pageNo).Round());
+    RectD bbox2 = fz_bbox_to_RectI(bbox).Convert<double>();
+    return bbox2.Intersect(PageMediabox(pageNo));
 }
 
 fz_matrix CXpsEngine::viewctm(RectD mediabox, float zoom, int rotate)

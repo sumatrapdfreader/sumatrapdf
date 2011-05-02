@@ -200,8 +200,8 @@ public:
     virtual RectD PageMediabox(int pageNo) = 0;
     // the box inside PageMediabox that actually contains any relevant content
     // (used for auto-cropping in Fit Content mode, can be PageMediabox)
-    virtual RectI PageContentBox(int pageNo, RenderTarget target=Target_View) {
-        return PageMediabox(pageNo).Round();
+    virtual RectD PageContentBox(int pageNo, RenderTarget target=Target_View) {
+        return PageMediabox(pageNo);
     }
 
     // renders a page into a cacheable RenderedBitmap

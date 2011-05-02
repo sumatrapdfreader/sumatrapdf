@@ -2167,8 +2167,7 @@ static void DebugShowLinks(DisplayModel& dm, HDC hdc)
             if (!pageInfo->shown || 0.0 == pageInfo->visibleRatio)
                 continue;
 
-            RectI rect = dm.engine->PageContentBox(pageNo);
-            rect = dm.CvtToScreen(pageNo, rect.Convert<double>());
+            RectI rect = dm.CvtToScreen(pageNo, dm.engine->PageContentBox(pageNo));
             PaintRect(hdc, rect);
         }
 
@@ -3242,7 +3241,7 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL)
             if (pd.scaleAdv != PrintScaleNone) {
                 // make sure to fit all content into the printable area when scaling
                 // and the whole document page on the physical paper
-                RectD rect = engine.PageContentBox(pageNo, Target_Print).Convert<double>();
+                RectD rect = engine.PageContentBox(pageNo, Target_Print);
                 Rect<float> cbox = engine.Transform(rect, pageNo, 1.0, rotation).Convert<float>();
                 zoom = min((float)printableWidth / cbox.dx,
                        min((float)printableHeight / cbox.dy,

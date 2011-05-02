@@ -154,7 +154,7 @@ SizeD DisplayModel::PageSizeAfterRotation(int pageNo, bool fitToContent)
 
     RectD box;
     if (fitToContent)
-        box = pageInfo->contentBox.Convert<double>();
+        box = pageInfo->contentBox;
     else
         box = RectD(PointD(), pageInfo->page);
 
@@ -409,11 +409,10 @@ float DisplayModel::zoomRealFromVirtualForPage(float zoomVirtual, int pageNo)
             pageInfo = getPageInfo(i);
             if (pageInfo->contentBox.IsEmpty())
                 pageInfo->contentBox = engine->PageContentBox(i);
-            RectD contentD = pageInfo->contentBox.Convert<double>();
-            RectD rotatedContent = engine->Transform(contentD, i, 1.0, _rotation);
-            if (i == first && !contentD.IsEmpty())
+            RectD rotatedContent = engine->Transform(pageInfo->contentBox, i, 1.0, _rotation);
+            if (i == first && !rotatedContent.IsEmpty())
                 row.dx -= (rotatedContent.x - pageBox.x);
-            if (i == last && !contentD.IsEmpty())
+            if (i == last && !rotatedContent.IsEmpty())
                 row.dx -= (pageBox.BR().x - rotatedContent.BR().x);
 
             SizeD pageSize = PageSizeAfterRotation(i, true);
@@ -961,7 +960,7 @@ void DisplayModel::ChangeViewPortSize(SizeI newViewPortSize)
 
 RectD DisplayModel::getContentBox(int pageNo, RenderTarget target)
 {
-    RectI cbox;
+    RectD cbox;
     // we cache the contentBox for the View target
     if (Target_View == target) {
         PageInfo *pageInfo = getPageInfo(pageNo);
@@ -972,7 +971,7 @@ RectD DisplayModel::getContentBox(int pageNo, RenderTarget target)
     else
         cbox = engine->PageContentBox(pageNo, target);
 
-    return engine->Transform(cbox.Convert<double>(), pageNo, _zoomReal, _rotation);
+    return engine->Transform(cbox, pageNo, _zoomReal, _rotation);
 }
 
 /* get the (screen) coordinates of the point where a page's actual

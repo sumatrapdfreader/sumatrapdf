@@ -54,7 +54,7 @@ struct PageInfo {
     SizeD           page;
 
     /* data that is calculated when needed. actual content size within a page (View target) */
-    RectI           contentBox;
+    RectD           contentBox;
 
     /* data that needs to be set before DisplayModel::Relayout().
        Determines whether a given page should be shown on the screen. */
