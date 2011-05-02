@@ -349,12 +349,30 @@ RenderedBitmap *CDjVuEngine::RenderBitmap(int pageNo, float zoom, int rotation, 
 
 bool CDjVuEngine::RenderPage(HDC hDC, int pageNo, RectI screenRect, float zoom, int rotation, RectD *pageRect, RenderTarget target)
 {
-    RenderedBitmap *bmp = RenderBitmap(pageNo, zoom, rotation, pageRect, target);
-    if (!bmp)
-        return false;
-    bmp->StretchDIBits(hDC, screenRect);
-    delete bmp;
-    return true;
+    bool success = true;
+    HRGN clip = CreateRectRgn(screenRect.x, screenRect.y, screenRect.x + screenRect.dx, screenRect.y + screenRect.dy);
+    SelectClipRgn(hDC, clip);
+
+    // render in 1 MB bands, as otherwise GDI can run out of memory
+    RectD rect = pageRect ? *pageRect : PageMediabox(pageNo);
+    int bandDy = (int)((1 << 20) / (rect.dy * zoom));
+    PointI pt = Transform(rect.TL(), pageNo, zoom, rotation).Convert<int>();
+
+    for (int y = 0; y * bandDy < rect.dy; y++) {
+        RectD pageBand(rect.x, y * bandDy, rect.dx, bandDy);
+        RectI screenBand = Transform(pageBand, pageNo, zoom, rotation).Round();
+        screenBand.Offset(screenRect.x - pt.x, screenRect.y - pt.y);
+
+        RenderedBitmap *bmp = RenderBitmap(pageNo, zoom, rotation, &pageBand, target);
+        if (bmp && bmp->GetBitmap())
+            bmp->StretchDIBits(hDC, screenBand);
+        else
+            success = false;
+        delete bmp;
+    }
+
+    SelectClipRgn(hDC, NULL);
+    return success;
 }
 
 RectD CDjVuEngine::PageContentBox(int pageNo, RenderTarget target)
