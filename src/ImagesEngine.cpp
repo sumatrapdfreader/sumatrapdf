@@ -149,6 +149,14 @@ SizeI SizeFromData(char *data, size_t len)
             }
         }
     }
+    // TIFF
+    else if (!memcmp(data, "MM\x00\x2A", 4) || !memcmp(data, "II\x2A\x00", 4)) {
+        // TODO: speed this up (if necessary)
+        Bitmap *bmp = BitmapFromData(data, len);
+        if (bmp)
+            result = SizeI(bmp->GetWidth(), bmp->GetHeight());
+        delete bmp;
+    }
 
     return result;
 }
@@ -324,8 +332,8 @@ bool ImageEngine::LoadSingleFile(const TCHAR *file)
     pages.Append(BitmapFromData(bmpData, len));
 
     fileName = Str::Dup(file);
-    fileExt = _tcsrchr(fileName, '.');
-    assert(fileExt);
+    fileExt = Path::GetExt(fileName);
+    assert(fileExt && *fileExt == '.');
 
     return pages[0] != NULL;
 }
@@ -609,75 +617,64 @@ RenderedBitmap *LoadRenderedBitmap(const TCHAR *filePath)
     return rendered;
 }
 
-#include <zlib.h>
-
-static void AppendPngChunk(Str::Str<char>& pngData, char *tag, void *data, DWORD size)
+static bool GetEncoderClsid(const TCHAR *format, CLSID& clsid)
 {
-    unsigned char uint32[4];
-    *(DWORD *)uint32 = SWAPLONG(size);
-    pngData.Append((char *)uint32, 4);
-    pngData.Append(tag, 4);
-    pngData.Append((char *)data, size);
-
-    DWORD sum = crc32(0, NULL, 0);
-    sum = crc32(sum, (unsigned char *)tag, 4);
-    sum = crc32(sum, (unsigned char *)data, size);
-    *(DWORD *)uint32 = SWAPLONG(sum);
-    pngData.Append((char *)uint32, 4);
-}
-
-// saves to either a .bmp or a .png file
-bool SaveRenderedBitmap(RenderedBitmap *bmp, const TCHAR *filePath)
-{
-    if (!Str::EndsWithI(filePath, _T(".bmp")) && !Str::EndsWithI(filePath, _T(".png")))
+    UINT numEncoders, size;
+    GetImageEncodersSize(&numEncoders, &size);
+    if (0 == size)
         return false;
 
+    ScopedMem<ImageCodecInfo> codecInfo((ImageCodecInfo *)malloc(size));
+    ScopedMem<WCHAR> formatW(Str::Conv::ToWStr(format));
+    if (!codecInfo || !formatW)
+        return false;
+
+    GetImageEncoders(numEncoders, size, codecInfo);
+    for (UINT j = 0; j < numEncoders; j++) {
+        if (Str::Eq(codecInfo[j].MimeType, formatW)) {
+            clsid = codecInfo[j].Clsid;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool SaveRenderedBitmap(RenderedBitmap *bmp, const TCHAR *filePath)
+{
     size_t bmpDataLen;
     ScopedMem<unsigned char> bmpData(bmp->Serialize(&bmpDataLen));
     if (!bmpData)
         return false;
 
-    if (Str::EndsWithI(filePath, _T(".bmp")))
+    const TCHAR *fileExt = Path::GetExt(filePath);
+    if (Str::EqI(fileExt, _T(".bmp")))
         return File::WriteAll(filePath, bmpData.Get(), bmpDataLen);
 
-    // save as PNG - adapted from mupdf/fitz/res_pixmap.c's fz_write_png()
-    SizeI size = bmp->Size();
-    int stride = ((size.dx * 3 + 3) / 4) * 4;
-    unsigned char *sp0 = bmpData + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFO);
+    const TCHAR *encoders[] = {
+        _T(".png"), _T("image/png"),
+        _T(".jpg"), _T("image/jpeg"),
+        _T(".jpeg"),_T("image/jpeg"),
+        _T(".gif"), _T("image/gif"),
+        _T(".tif"), _T("image/tiff"),
+        _T(".tiff"),_T("image/tiff"),
+    };
+    const TCHAR *encoder = NULL;
+    for (int i = 0; i < dimof(encoders) && !encoder; i += 2)
+        if (Str::EqI(fileExt, encoders[i]))
+            encoder = encoders[i+1];
 
-    // difference-encode the bitmap data
-    uLong usize = (size.dx * 3 + 1) * size.dy;
-    ScopedMem<unsigned char> udata(SAZA(unsigned char, usize));
-    unsigned char *dp = udata;
-    for (int y = 0; y < size.dy; y++) {
-        *dp++ = 1; /* sub prediction filter */
-        unsigned char *sp = &sp0[(size.dy - y - 1) * stride];
-        for (int x = 0; x < size.dx; x++) {
-            for (int k = 0; k < 3; k++)
-                dp[2-k] = sp[k] - (x > 0 ? sp[k-3] : 0);
-            sp += 3; dp += 3;
-        }
-    }
-
-    // compress the encoded data
-    uLong csize = compressBound(usize);
-    ScopedMem<unsigned char> cdata(SAZA(unsigned char, csize));
-    int err = compress(cdata, &csize, udata, usize);
-    if (err != Z_OK)
+    CLSID encClsid;
+    if (!encoder || !GetEncoderClsid(encoder, encClsid))
         return false;
 
-    // put the image parts together and save the entire PNG
-    PngImageHeader head = { 0 };
-    head.width = SWAPLONG(size.dx);
-    head.height = SWAPLONG(size.dy);
-    head.bitDepth = 8;
-    head.colorType = 2; // RGB (24 bit)
+    Bitmap *gbmp = BitmapFromData(bmpData, bmpDataLen);
+    if (!gbmp)
+        return false;
 
-    Str::Str<char> pngData(csize + 64);
-    pngData.Append(PNG_SIGNATURE, 8);
-    AppendPngChunk(pngData, "IHDR", &head, 13);
-    AppendPngChunk(pngData, "IDAT", cdata, csize);
-    AppendPngChunk(pngData, "IEND", NULL, 0);
+    ScopedMem<TCHAR> filePathW(Str::Conv::ToWStr(filePath));
+    Status status = gbmp->Save(filePathW, &encClsid);
+    delete gbmp;
 
-    return File::WriteAll(filePath, pngData.Get(), pngData.Count());
+    return status == Ok;
 }

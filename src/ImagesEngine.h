@@ -74,6 +74,8 @@ public:
                Str::EndsWithI(fileName, _T(".jpg"))  ||
                Str::EndsWithI(fileName, _T(".jpeg")) ||
                Str::EndsWithI(fileName, _T(".gif"))  ||
+               Str::EndsWithI(fileName, _T(".tif"))  ||
+               Str::EndsWithI(fileName, _T(".tiff")) ||
                Str::EndsWithI(fileName, _T(".bmp"));
     }
     static ImageEngine *CreateFromFileName(const TCHAR *fileName);

@@ -36,6 +36,16 @@ const char *GetBaseName(const char *path)
     return fileBaseName;
 }
 
+// Note: returns pointer inside <path>, do not free
+const TCHAR *GetExt(const TCHAR *path)
+{
+    const TCHAR *ext = path + Str::Len(path);
+    for (; ext > path && !IsSep(*ext); ext--)
+        if (*ext == '.')
+            return ext;
+    return path + Str::Len(path);
+}
+
 TCHAR *GetDir(const TCHAR *path)
 {
     const TCHAR *baseName = GetBaseName(path);

@@ -8,6 +8,7 @@ namespace Path {
 
 const WCHAR *GetBaseName(const WCHAR *path);
 const char * GetBaseName(const char *path);
+const TCHAR *GetExt(const TCHAR *path);
 
 TCHAR *      GetDir(const TCHAR *path);
 TCHAR *      Join(const TCHAR *path, const TCHAR *filename);
