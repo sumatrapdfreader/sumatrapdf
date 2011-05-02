@@ -97,7 +97,7 @@ SUMATRA_OBJS = \
 	$(OS)\Benchmark.obj $(OS)\UnitTests.obj $(OS)\AppTools.obj $(SUMATRA_RES) \
 	$(OS)\ImagesEngine.obj $(UTILS_OBJS) \
 	$(BZIP2_OBJS) $(MINIZIP_OBJS) $(UNRAR_OBJS) $(SYNCTEX_OBJS) \
-	$(OS)\DjVuEngine.obj $(DJVU_OBJS) $(TIFF_OBJS)
+	$(OS)\DjVuEngine.obj $(DJVU_OBJS)
 
 INSTALLER_OBJS = \
 	$(OS)\Installer.obj $(INSTALLER_RES)

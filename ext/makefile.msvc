@@ -7,7 +7,6 @@
 OE = $(O)\ext
 OBZ= $(O)\bzip2
 OR = $(O)\unrar
-OTI= $(O)\tiff
 ODV= $(O)\djvu
 
 SYNCTEX_CFLAGS = $(CFLAGS) /I$(EXTLIBSDIR)/synctex /I$(ZLIB_DIR) /TC
@@ -24,10 +23,6 @@ UNRAR_CFLAGS = $(UNRAR_CFLAGS:/EHs-c-=/EHsc)
 # a hack to undo /D "UNICODE" since unrar defines it unconditionally, causing
 # compilation warnings
 UNRAR_CFLAGS = $(UNRAR_CFLAGS:UNICODE=IGNORE_THIS)
-
-TIFF_CFLAGS = $(CFLAGSOPT) /TC /wd4018
-# undo /D "UNICODE", as tif_win32.c uses LPTSTR for ANSI strings
-TIFF_CFLAGS = $(TIFF_CFLAGS:UNICODE=IGNORE_THIS)
 
 DJVU_CFLAGS = $(CFLAGSOPT) /D "NEED_JPEG_DECODER" /I$(JPEG_TURBO_DIR)
 DJVU_CFLAGS = $(DJVU_CFLAGS) /D "THREADMODEL=NOTHREADS" /D "DDJVUAPI=/**/" /D "MINILISPAPI=/**/"
@@ -60,22 +55,6 @@ UNRAR_OBJS = \
 	$(OR)\ulinks.obj $(OR)\unicode.obj $(OR)\unpack.obj \
 	$(OR)\volume.obj $(OR)\dll.obj
 
-TIFF_OBJS = \
-	$(OTI)\tif_aux.obj $(OTI)\tif_close.obj \
-	$(OTI)\tif_codec.obj $(OTI)\tif_color.obj $(OTI)\tif_compress.obj \
-	$(OTI)\tif_dir.obj $(OTI)\tif_dirinfo.obj $(OTI)\tif_dirread.obj \
-	$(OTI)\tif_dirwrite.obj $(OTI)\tif_dumpmode.obj $(OTI)\tif_error.obj \
-	$(OTI)\tif_extension.obj $(OTI)\tif_fax3.obj $(OTI)\tif_fax3sm.obj \
-	$(OTI)\tif_flush.obj $(OTI)\tif_getimage.obj $(OTI)\tif_jbig.obj \
-	$(OTI)\tif_jpeg.obj $(OTI)\tif_luv.obj $(OTI)\tif_lzw.obj \
-	$(OTI)\tif_next.obj $(OTI)\tif_ojpeg.obj \
-	$(OTI)\tif_open.obj $(OTI)\tif_packbits.obj $(OTI)\tif_pixarlog.obj \
-	$(OTI)\tif_predict.obj $(OTI)\tif_print.obj $(OTI)\tif_read.obj \
-	$(OTI)\tif_strip.obj $(OTI)\tif_swab.obj $(OTI)\tif_thunder.obj \
-	$(OTI)\tif_tile.obj $(OTI)\tif_version.obj \
-	$(OTI)\tif_warning.obj $(OTI)\tif_win32.obj \
-	$(OTI)\tif_write.obj $(OTI)\tif_zip.obj
-
 DJVU_OBJS = \
 	$(ODV)\Arrays.obj $(ODV)\atomic.obj $(ODV)\BSByteStream.obj \
 	$(ODV)\BSEncodeByteStream.obj $(ODV)\ByteStream.obj $(ODV)\DataPool.obj \
@@ -101,7 +80,6 @@ $(OE): force
 	@if not exist $(OE) mkdir $(OE)
 	@if not exist $(OBZ) mkdir $(OBZ)
 	@if not exist $(OR) mkdir $(OR)
-	@if not exist $(OTI) mkdir $(OTI)
 	@if not exist $(ODV) mkdir $(ODV)
 
 {baseutils}.cpp{$(OS)}.obj::
@@ -118,9 +96,6 @@ $(OE): force
 
 {$(EXTLIBSDIR)\synctex}.c{$(OE)}.obj::
 	$(CC) $(SYNCTEX_CFLAGS) /Fo$(OE)\ /Fd$(O)\vc80.pdb $<
-
-{$(EXTLIBSDIR)\libtiff}.c{$(OTI)}.obj::
-	$(CC) $(TIFF_CFLAGS) /Fo$(OTI)\ /Fd$(O)\vc80.pdb $<
 
 {$(EXTLIBSDIR)\libdjvu}.cpp{$(ODV)}.obj::
 	$(CC) $(DJVU_CFLAGS) /Fo$(ODV)\ /Fd$(O)\vc80.pdb $<
