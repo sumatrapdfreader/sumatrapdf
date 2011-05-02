@@ -1121,8 +1121,10 @@ bool DisplayModel::goToPrevPage(int scrollY)
     DBG_OUT("DisplayModel::goToPrevPage(scrollY=%d), currPageNo=%d\n", scrollY, currPageNo);
 
     PointI top;
-    if ((0 == scrollY || -1 == scrollY) && _zoomVirtual == ZOOM_FIT_CONTENT)
+    if ((0 == scrollY || -1 == scrollY) && _zoomVirtual == ZOOM_FIT_CONTENT) {
+        currPageNo = firstVisiblePageNo();
         top = getContentStart(currPageNo);
+    }
 
     PageInfo * pageInfo = getPageInfo(currPageNo);
     if (_zoomVirtual == ZOOM_FIT_CONTENT && pageInfo->bitmap.y <= top.y)
