@@ -582,7 +582,7 @@ MenuDef menuDefHelp[] = {
     { _TRN("&About"),                       IDM_ABOUT,                  0  }
 #ifdef SHOW_DEBUG_MENU_ITEMS
     ,{ SEP_ITEM,                            0,                          MF_NOT_IN_RESTRICTED },
-    { "Crash me",                           IDM_CRASH_ME,               MF_NO_TRANSLATE  },
+//    { "Crash me",                           IDM_CRASH_ME,               MF_NO_TRANSLATE  },
     { "Stress test running",                IDM_THREAD_STRESS,          MF_NO_TRANSLATE  }
 #endif
 };

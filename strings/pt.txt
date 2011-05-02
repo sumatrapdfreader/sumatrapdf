@@ -465,6 +465,9 @@ Aprese&ntação\tCtrl-L
 Previous Page
 Página anterior
 
+Print
+Imprimir
+
 Print range
 Intervalo de impressão
 
@@ -593,7 +596,4 @@ copiando texto
 
 printing document
 imprimindo documento
-
-# Untranslated:
-#Print
 

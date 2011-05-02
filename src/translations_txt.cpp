@@ -835,7 +835,7 @@ const char *gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "Por favor, aguarde - a processar...",
   "Aprese&nta\303\247\303\243o\tCtrl-L",
   "P\303\241gina anterior",
-  NULL,
+  "Imprimir",
   "Intervalo de impress\303\243o",
   "A impress\303\243o est\303\241 a decorrer. Cancelar e reiniciar?",
   "A imprimir p\303\241gina %d de %d...",
