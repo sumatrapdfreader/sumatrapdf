@@ -178,24 +178,26 @@ bool Exists(const TCHAR *filePath)
 
 size_t GetSize(const TCHAR *filePath)
 {
-    WIN32_FILE_ATTRIBUTE_DATA   fileInfo;
-
-    if (NULL == filePath)
+    HANDLE h = CreateFile(filePath, GENERIC_READ, FILE_SHARE_READ, NULL,  
+                          OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL,  NULL); 
+    if (h == INVALID_HANDLE_VALUE)
         return INVALID_FILE_SIZE;
 
-    BOOL res = GetFileAttributesEx(filePath, GetFileExInfoStandard, &fileInfo);
-    if (0 == res)
+    // Don't use GetFileAttributesEx to retrieve the file size, as
+    // that function doesn't interact well with symlinks, etc.
+    LARGE_INTEGER lsize;
+    BOOL ok = GetFileSizeEx(h, &lsize);
+    CloseHandle(h);
+    if (!ok)
         return INVALID_FILE_SIZE;
 
-    size_t size = fileInfo.nFileSizeLow;
 #ifdef _WIN64
-    size += fileInfo.nFileSizeHigh << 32;
+    return lsize.QuadPart;
 #else
-    if (fileInfo.nFileSizeHigh > 0)
+    if (lsize.HighPart > 0)
         return INVALID_FILE_SIZE;
+    return lsize.LowPart;
 #endif
-
-    return size;
 }
 
 char *ReadAll(const TCHAR *filePath, size_t *fileSizeOut)
