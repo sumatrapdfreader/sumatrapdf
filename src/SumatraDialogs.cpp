@@ -646,6 +646,7 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT message, WPARAM wPa
             LRESULT ind = SendMessage(GetDlgItem(hDlg, IDC_CMDLINE), CB_FINDSTRINGEXACT, -1, (LPARAM) prefs->m_inverseSearchCmdLine);
             if (CB_ERR == ind) {            
                 // if no existing command was selected then set the user custom command in the combo
+                ComboBox_AddItemData(GetDlgItem(hDlg, IDC_CMDLINE), prefs->m_inverseSearchCmdLine);
                 SetDlgItemText(hDlg, IDC_CMDLINE, prefs->m_inverseSearchCmdLine);
             }
             else {
