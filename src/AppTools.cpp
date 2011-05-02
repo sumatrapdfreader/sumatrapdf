@@ -250,9 +250,8 @@ void DoAssociateExeWithPdfExtension(HKEY hkey)
     ScopedMem<TCHAR> prevHandler(NULL);
     // Remember the previous default app for the Uninstaller
     prevHandler.Set(ReadRegStr(hkey, REG_CLASSES_PDF, NULL));
-    if (prevHandler && !Str::Eq(prevHandler, APP_NAME_STR)) {
+    if (prevHandler && !Str::Eq(prevHandler, APP_NAME_STR))
         WriteRegStr(hkey, REG_CLASSES_APP, _T("previous.pdf"), prevHandler);
-    }
 
     WriteRegStr(hkey, REG_CLASSES_APP, NULL, _TR("PDF Document"));
     TCHAR *icon_path = Str::Join(exePath, _T(",1"));

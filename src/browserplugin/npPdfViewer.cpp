@@ -49,7 +49,7 @@ const TCHAR *DllMainReason(DWORD reason)
 
 NPNetscapeFuncs gNPNFuncs;
 HINSTANCE g_hInstance = NULL;
-const WCHAR *g_lpRegKey = L"Software\\MozillaPlugins\\@mozilla.zeniko.ch/SumatraPDF_Browser_Plugin";
+const TCHAR *g_lpRegKey = _T("Software\\MozillaPlugins\\@mozilla.zeniko.ch/SumatraPDF_Browser_Plugin");
 
 
 /* ::::: DLL Exports ::::: */
@@ -66,9 +66,7 @@ DLLEXPORT NPError WINAPI NP_GetEntryPoints(NPPluginFuncs *pFuncs)
 {
 	dbg("sp: NP_GetEntryPoints()");
 	if (!pFuncs || pFuncs->size < sizeof(NPPluginFuncs))
-	{
 		return NPERR_INVALID_FUNCTABLE_ERROR;
-	}
 	
 	pFuncs->size = sizeof(NPPluginFuncs);
 	pFuncs->version = (NP_VERSION_MAJOR << 8) | NP_VERSION_MINOR;
@@ -116,54 +114,48 @@ DLLEXPORT NPError WINAPI NP_Shutdown(void)
 	return NPERR_NO_ERROR;
 }
 
-#ifndef SHREGSET_FORCE_HKCU
-#define SHREGSET_FORCE_HKCU 2
-#define SHREGSET_HKLM 4
-#endif
-bool SetRegValueW(LPCWSTR lpKey, LPCWSTR lpName, LPCWSTR lpValue)
+bool EnsureRegKey(LPCTSTR lpKey)
 {
-	SHRegSetUSValueW(lpKey, lpName, REG_SZ, lpValue, Str::Len(lpValue) * sizeof(WCHAR), SHREGSET_HKLM);
-	return SHRegSetUSValueW(lpKey, lpName, REG_SZ, lpValue, Str::Len(lpValue) * sizeof(WCHAR), SHREGSET_FORCE_HKCU) == ERROR_SUCCESS;
+	CreateRegKey(HKEY_LOCAL_MACHINE, lpKey);
+	return CreateRegKey(HKEY_CURRENT_USER, lpKey);
+}
+
+bool SetRegValue(LPCTSTR lpKey, LPCTSTR lpName, LPCTSTR lpValue)
+{
+	WriteRegStr(HKEY_LOCAL_MACHINE, lpKey, lpName, lpValue);
+	return WriteRegStr(HKEY_CURRENT_USER, lpKey, lpName, lpValue);
 }
 
 DLLEXPORT STDAPI DllRegisterServer(VOID)
 {
-	WCHAR szPath[MAX_PATH];
-	HKEY hKey;
-	
-	if (RegCreateKeyExW(HKEY_CURRENT_USER, g_lpRegKey, 0, NULL, 0, KEY_WRITE, NULL, &hKey, NULL) != ERROR_SUCCESS)
-	{
+	if (!EnsureRegKey(g_lpRegKey))
 		return E_UNEXPECTED;
-	}
-	RegCloseKey(hKey);
 	
-	GetModuleFileNameW(g_hInstance, szPath, MAX_PATH);
-	if (!SetRegValueW(g_lpRegKey, L"Description", L"SumatraPDF Browser Plugin") ||
-		!SetRegValueW(g_lpRegKey, L"Path", szPath) || !SetRegValueW(g_lpRegKey, L"Version", L"0") ||
-		!SetRegValueW(g_lpRegKey, L"ProductName", L"SumatraPDF Browser Plugin"))
+	TCHAR szPath[MAX_PATH];
+	GetModuleFileName(g_hInstance, szPath, MAX_PATH);
+	if (!SetRegValue(g_lpRegKey, _T("Description"), _T("SumatraPDF Browser Plugin")) ||
+		!SetRegValue(g_lpRegKey, _T("Path"), szPath) ||
+		!SetRegValue(g_lpRegKey, _T("Version"), _T("0")) ||
+		!SetRegValue(g_lpRegKey, _T("ProductName"), _T("SumatraPDF Browser Plugin")))
 	{
 		return E_UNEXPECTED;
 	}
 	
-	ScopedMem<WCHAR> mimeType(Str::Join(g_lpRegKey, L"\\MimeTypes\\application/pdf"));
-	if (RegCreateKeyExW(HKEY_CURRENT_USER, mimeType, 0, NULL, 0, KEY_WRITE, NULL, &hKey, NULL) == ERROR_SUCCESS)
-	{
-		RegCloseKey(hKey);
-	}
-	mimeType.Set(Str::Join(g_lpRegKey, L"\\MimeTypes\\application/vnd.ms-xpsdocument"));
-	if (RegCreateKeyExW(HKEY_CURRENT_USER, mimeType, 0, NULL, 0, KEY_WRITE, NULL, &hKey, NULL) == ERROR_SUCCESS)
-	{
-		RegCloseKey(hKey);
-	}
+	ScopedMem<TCHAR> mimeType(Str::Join(g_lpRegKey, _T("\\MimeTypes\\application/pdf")));
+	EnsureRegKey(mimeType);
+	mimeType.Set(Str::Join(g_lpRegKey, _T("\\MimeTypes\\application/vnd.ms-xpsdocument")));
+	EnsureRegKey(mimeType);
+	mimeType.Set(Str::Join(g_lpRegKey, _T("\\MimeTypes\\image/vnd.djvu")));
+	EnsureRegKey(mimeType);
 	
 	// Work around Mozilla bug https://bugzilla.mozilla.org/show_bug.cgi?id=581848 which
 	// makes Firefox up to version 3.6.* ignore all but the first plugin for a given MIME type
 	// (per http://code.google.com/p/sumatrapdf/issues/detail?id=1254#c12 Foxit does the same)
-	*PathFindFileNameW(szPath) = L'\0';
-	if (SHGetValueW(HKEY_CURRENT_USER, L"Environment", L"MOZ_PLUGIN_PATH", NULL, NULL, NULL) == ERROR_FILE_NOT_FOUND)
+	*(TCHAR *)Path::GetBaseName(szPath) = '\0';
+	if (SHGetValue(HKEY_CURRENT_USER, _T("Environment"), _T("MOZ_PLUGIN_PATH"), NULL, NULL, NULL) == ERROR_FILE_NOT_FOUND)
 	{
-		SHSetValueW(HKEY_CURRENT_USER, L"Environment", L"MOZ_PLUGIN_PATH", REG_SZ, szPath, (Str::Len(szPath) + 1) * sizeof(WCHAR));
-		SendMessageTimeoutW(HWND_BROADCAST, WM_SETTINGCHANGE, 0, (LPARAM)L"Environment", SMTO_ABORTIFHUNG, 5000, NULL);
+		WriteRegStr(HKEY_CURRENT_USER, _T("Environment"), _T("MOZ_PLUGIN_PATH"), szPath);
+		SendMessageTimeout(HWND_BROADCAST, WM_SETTINGCHANGE, 0, (LPARAM)_T("Environment"), SMTO_ABORTIFHUNG, 5000, NULL);
 	}
 	
 	return S_OK;
@@ -171,42 +163,39 @@ DLLEXPORT STDAPI DllRegisterServer(VOID)
 
 DLLEXPORT STDAPI DllUnregisterServer(VOID)
 {
-	WCHAR szPluginPath[MAX_PATH];
-	DWORD dwSize = MAX_PATH * sizeof(WCHAR);
+	TCHAR szPluginPath[MAX_PATH];
+	DWORD dwSize = MAX_PATH * sizeof(TCHAR);
 	
-	if (SHGetValueW(HKEY_CURRENT_USER, L"Environment", L"MOZ_PLUGIN_PATH", NULL, szPluginPath, &dwSize) == ERROR_SUCCESS)
+	ScopedMem<TCHAR> mozPluginPath(ReadRegStr(HKEY_CURRENT_USER, _T("Environment"), _T("MOZ_PLUGIN_PATH")));
+	if (mozPluginPath)
 	{
-		WCHAR szModulePath[MAX_PATH];
-		GetModuleFileNameW(g_hInstance, szModulePath, MAX_PATH);
+		TCHAR szModulePath[MAX_PATH];
+		GetModuleFileName(g_hInstance, szModulePath, MAX_PATH);
 		if (Str::StartsWithI(szModulePath, szPluginPath))
-		{
-			SHDeleteValueW(HKEY_CURRENT_USER, L"Environment", L"MOZ_PLUGIN_PATH");
-		}
+			SHDeleteValue(HKEY_CURRENT_USER, _T("Environment"), _T("MOZ_PLUGIN_PATH"));
 	}
 	
-	SHDeleteKeyW(HKEY_LOCAL_MACHINE, g_lpRegKey);
-	if (SHDeleteKeyW(HKEY_CURRENT_USER, g_lpRegKey) != ERROR_SUCCESS)
-	{
+	DeleteRegKey(HKEY_LOCAL_MACHINE, g_lpRegKey);
+	if (!DeleteRegKey(HKEY_CURRENT_USER, g_lpRegKey))
 		return E_UNEXPECTED;
-	}
 	
 	return S_OK;
 }
 
 /* ::::: Auxiliary Methods ::::: */
 
-bool GetExePath(LPWSTR lpPath, int len)
+bool GetExePath(LPTSTR lpPath, int len)
 {
 	// Search the plugin's directory first
-	GetModuleFileNameW(g_hInstance, lpPath, len - 2);
-	lstrcpyW(PathFindFileNameW(lpPath), L"SumatraPDF.exe");
-	if (PathFileExistsW(lpPath))
+	GetModuleFileName(g_hInstance, lpPath, len - 2);
+	Str::BufSet((TCHAR *)Path::GetBaseName(lpPath), len - 2 - (Path::GetBaseName(lpPath) - lpPath), _T("SumatraPDF.exe"));
+	if (File::Exists(lpPath))
 	{
-		PathQuoteSpacesW(lpPath);
+		PathQuoteSpaces(lpPath);
 		return true;
 	}
 	
-	*lpPath = L'\0';
+	*lpPath = '\0';
 	// Try to get the path from the registry (set e.g. when making the default PDF viewer)
 	ScopedMem<TCHAR> path(ReadRegStr(HKEY_CURRENT_USER, _T("Software\\Classes\\SumatraPDF\\Shell\\Open\\Command"), NULL));
 	if (!path)
@@ -216,35 +205,30 @@ bool GetExePath(LPWSTR lpPath, int len)
 	if (!File::Exists(args[0]))
 		return false;
 
-	ScopedMem<WCHAR> pathw(Str::Conv::ToWStr(args[0]));
-	Str::BufSet(lpPath, len, pathw);
+	Str::BufSet(lpPath, len, args[0]);
 	return true;
 }
 
 // filePathBuf must be MAX_PATH in size
-HANDLE CreateTempFile(WCHAR *filePathBufOut)
+HANDLE CreateTempFile(TCHAR *filePathBufOut)
 {
-	DWORD		ret;
-	UINT		uret;
-	HANDLE		hFile;
-	WCHAR		pathBuf[MAX_PATH];
-
-	ret = GetTempPath(dimof(pathBuf), pathBuf);
+	TCHAR pathBuf[MAX_PATH];
+	DWORD ret = GetTempPath(dimof(pathBuf), pathBuf);
 	if (0 == ret || ret > dimof(pathBuf))
 	{
 		dbg("sp: CreateTempFile(): GetTempPath() failed");
 		return NULL;
 	}
 
-	uret = GetTempFileName(pathBuf, L"SPlugTmp", 0, filePathBufOut);
+	UINT uret = GetTempFileName(pathBuf, _T("SPT"), 0, filePathBufOut);
 	if (0 == uret)
 	{
 		dbg("sp: CreateTempFile(): GetTempFileName() failed");
 		return NULL;
 	}
 
-	hFile = CreateFile(filePathBufOut, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
-						FILE_ATTRIBUTE_NORMAL, NULL);
+	HANDLE hFile = CreateFile(filePathBufOut, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
+							FILE_ATTRIBUTE_NORMAL, NULL);
 	if (INVALID_HANDLE_VALUE == hFile)
 	{
 		dbg("sp: CreateTempFile(): CreateFile() failed");
@@ -257,12 +241,12 @@ HANDLE CreateTempFile(WCHAR *filePathBufOut)
 
 typedef struct {
 	NPWindow *	npwin;
-	LPCWSTR		message;
-	WCHAR		filepath[MAX_PATH];
-	HANDLE      hFile;
+	LPCTSTR		message;
+	TCHAR		filepath[MAX_PATH];
+	HANDLE		hFile;
 	HANDLE		hProcess;
-	WCHAR		exepath[MAX_PATH + 2];
-	FLOAT		progress, prevProgress;
+	TCHAR		exepath[MAX_PATH + 2];
+	float		progress, prevProgress;
 	uint32_t	totalSize, currSize;
 } InstanceData;
 
@@ -303,65 +287,60 @@ LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lPar
 	if (uiMsg == WM_PAINT)
 	{
 		PAINTSTRUCT ps;
-		RECT rcClient;
-		
 		HDC hDC = BeginPaint(hWnd, &ps);
 		HBRUSH brushBg = CreateSolidBrush(COL_WINDOW_BG);
-		HFONT hFont = CreateFontW(-MulDiv(14, GetDeviceCaps(hDC, LOGPIXELSY), 96), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, L"MS Shell Dlg");
-		HDC hDCBuffer = CreateCompatibleDC(hDC);
-		HBITMAP hDoubleBuffer;
-		HWND hChild;
-
+		HFONT hFont = Win::Font::GetSimple(hDC, _T("MS Shell Dlg"), 14);
+		
 		// set up double buffering
-		GetClientRect(hWnd, &rcClient);
-		hDoubleBuffer = CreateCompatibleBitmap(hDC, rcClient.right - rcClient.left, rcClient.bottom - rcClient.top);
-		SelectObject(hDCBuffer, hDoubleBuffer);
+		RectI rcClient = ClientRect(hWnd);
+		DoubleBuffer buffer(hWnd, rcClient);
+		HDC hDCBuffer = buffer.GetDC();
 		
 		// display message centered in the window
-		FillRect(hDCBuffer, &rcClient, brushBg);
+		FillRect(hDCBuffer, &rcClient.ToRECT(), brushBg);
 		hFont = (HFONT)SelectObject(hDCBuffer, hFont);
 		SetTextColor(hDCBuffer, RGB(0, 0, 0));
 		SetBkMode(hDCBuffer, TRANSPARENT);
-		DrawTextW(hDCBuffer, data->message, -1, &rcClient, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
-
+		DrawText(hDCBuffer, data->message, -1, &rcClient.ToRECT(), DT_CENTER | DT_SINGLELINE | DT_VCENTER);
+		
 		// draw a progress bar, if a download is in progress
 		if (0 < data->progress && data->progress <= 1)
 		{
 			SIZE msgSize;
-			RECT rcProgress = rcClient;
-			RECT rcProgressAll;
-
+			RECT rcProgress = rcClient.ToRECT();
+			
 			HBRUSH brushProgress = CreateSolidBrush(RGB(0x80, 0x80, 0xff));
-			GetTextExtentPoint32W(hDCBuffer, data->message, Str::Len(data->message), &msgSize);
+			GetTextExtentPoint32(hDCBuffer, data->message, Str::Len(data->message), &msgSize);
 			InflateRect(&rcProgress, -(rcProgress.right - rcProgress.left - msgSize.cx) / 2, (-(rcProgress.bottom - rcProgress.top - msgSize.cy) / 2) + 2);
 			OffsetRect(&rcProgress, 0, msgSize.cy + 4 + 2);
 			FillRect(hDCBuffer, &rcProgress, (HBRUSH)GetStockObject(WHITE_BRUSH));
-			rcProgressAll = rcProgress;
+			RECT rcProgressAll = rcProgress;
 			rcProgress.right = (LONG)(rcProgress.left + data->progress * (rcProgress.right - rcProgress.left));
 			FillRect(hDCBuffer, &rcProgress, brushProgress);
 			DeleteObject(brushProgress);
-
+			
 			ScopedMem<TCHAR> currSize(FormatSizeSuccint(data->currSize));
-			if (0 == data->totalSize || data->currSize > data->totalSize) {
+			if (0 == data->totalSize || data->currSize > data->totalSize)
+			{
 				// total size unknown or bogus => show just the current size
-				DrawTextW(hDCBuffer, currSize, -1, &rcProgressAll, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
-			} else {
+				DrawText(hDCBuffer, currSize, -1, &rcProgressAll, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
+			}
+			else
+			{
 				ScopedMem<TCHAR> totalSize(FormatSizeSuccint(data->totalSize));
 				ScopedMem<TCHAR> s(Str::Format(_T("%s of %s"), currSize, totalSize));
-				DrawTextW(hDCBuffer, s, -1, &rcProgressAll, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
+				DrawText(hDCBuffer, s, -1, &rcProgressAll, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
 			}
 		}
 		
 		// draw the buffer on screen
-		BitBlt(hDC, 0, 0, rcClient.right - rcClient.left, rcClient.bottom - rcClient.top, hDCBuffer, 0, 0, SRCCOPY);
+		buffer.Flush(hDC);
 		
 		DeleteObject(SelectObject(hDCBuffer, hFont));
 		DeleteObject(brushBg);
-		DeleteObject(hDoubleBuffer);
-		DeleteDC(hDCBuffer);
 		EndPaint(hWnd, &ps);
 		
-		hChild = FindWindowEx(hWnd, NULL, NULL, NULL);
+		HWND hChild = FindWindowEx(hWnd, NULL, NULL, NULL);
 		if (hChild)
 			InvalidateRect(hChild, NULL, FALSE);
 	}
@@ -370,9 +349,8 @@ LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lPar
 		HWND hChild = FindWindowEx(hWnd, NULL, NULL, NULL);
 		if (hChild)
 		{
-			RECT rcClient;
-			GetClientRect(hWnd, &rcClient);
-			MoveWindow(hChild, rcClient.left, rcClient.top, rcClient.right - rcClient.left, rcClient.bottom - rcClient.top, FALSE);
+			ClientRect rcClient(hWnd);
+			MoveWindow(hChild, rcClient.x, rcClient.y, rcClient.dx, rcClient.dy, FALSE);
 		}
 		
 	}
@@ -404,9 +382,9 @@ NPError NP_LOADDS NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, in
 	gNPNFuncs.setvalue(instance, NPPVpluginWindowBool, (void *)true);
 	
 	if (GetExePath(data->exepath, MAX_PATH + 2))
-		data->message = L"Opening PDF document in SumatraPDF...";
+		data->message = _T("Opening PDF document in SumatraPDF...");
 	else
-		data->message = L"Error: SumatraPDF hasn't been found!";
+		data->message = _T("Error: SumatraPDF hasn't been found!");
 	
 	return NPERR_NO_ERROR;
 }
@@ -444,9 +422,8 @@ NPError NP_LOADDS NPP_SetWindow(NPP instance, NPWindow *npwin)
 		
 		if (hChild)
 		{
-			RECT rcClient;
-			GetClientRect(hWnd, &rcClient);
-			MoveWindow(hChild, rcClient.left, rcClient.top, rcClient.right - rcClient.left, rcClient.bottom - rcClient.top, FALSE);
+			ClientRect rcClient(hWnd);
+			MoveWindow(hChild, rcClient.x, rcClient.y, rcClient.dx, rcClient.dy, FALSE);
 		}
 	}
 	
@@ -458,7 +435,7 @@ static void TriggerRepaintOnProgressChange(InstanceData *data)
 	if (!data || !data->npwin || !data->npwin->window)
 		return;
 
-	FLOAT diff = data->progress - data->prevProgress;
+	float diff = data->progress - data->prevProgress;
 	if (diff < 0 || diff > 0.01f)
 	{
 		HWND hwnd = (HWND)data->npwin->window;
@@ -493,7 +470,7 @@ NPError NP_LOADDS NPP_NewStream(NPP instance, NPMIMEType type, NPStream* stream,
 	data->hFile = NULL;
 	// create a temporary file only for Gecko based browsers such as Firefox
 	const char *userAgent = gNPNFuncs.uagent(instance);
-	if (strstr(userAgent, "Gecko/") && (stream->end > BIG_FILE_THRESHOLD || !stream->end))
+	if (Str::Find(userAgent, "Gecko/") && (stream->end > BIG_FILE_THRESHOLD || !stream->end))
 	{
 		data->hFile = CreateTempFile(data->filepath);
 		if (data->hFile)
@@ -549,13 +526,13 @@ static void LaunchWithSumatra(InstanceData *data)
 	PROCESS_INFORMATION pi = { 0 };
 	STARTUPINFOW si = { 0 };
 
-	if (!PathFileExistsW(data->filepath))
+	if (!File::Exists(data->filepath))
 		dbg("sp: NPP_StreamAsFile() error: file doesn't exist");
 
-	ScopedMem<WCHAR> cmdLine(Str::Format(L"%s -plugin %d \"%s\"", data->exepath, (HWND)data->npwin->window, data->filepath));
+	ScopedMem<TCHAR> cmdLine(Str::Format(_T("%s -plugin %d \"%s\""), data->exepath, (HWND)data->npwin->window, data->filepath));
 	
 	si.cb = sizeof(si);
-	if (CreateProcessW(NULL, cmdLine, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
+	if (CreateProcess(NULL, cmdLine, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
 	{
 		CloseHandle(pi.hThread);
 		data->hProcess = pi.hProcess;
@@ -563,7 +540,7 @@ static void LaunchWithSumatra(InstanceData *data)
 	else
 	{
 		dbg("sp: NPP_StreamAsFile() error: couldn't run SumatraPDF!");
-		data->message = L"Error: Couldn't run SumatraPDF!";
+		data->message = _T("Error: Couldn't run SumatraPDF!");
 	}
 }
 
@@ -574,7 +551,7 @@ void NP_LOADDS NPP_StreamAsFile(NPP instance, NPStream* stream, const char* fnam
 	if (!fname)
 	{
 		dbg("sp: NPP_StreamAsFile() error: fname is NULL");
-		data->message = L"Error: The PDF document couldn't be downloaded!";
+		data->message = _T("Error: The PDF document couldn't be downloaded!");
 		goto Exit;
 	}
 
@@ -666,21 +643,19 @@ NPError NP_LOADDS NPP_Destroy(NPP instance, NPSavedData** save)
 	}
 	if (data->hFile)
 	{
-		dbg("sp: NPP_Destroy(): deleting internal temporary file %s",
-			ScopedMem<TCHAR>(Str::Conv::FromWStr(data->filepath)));
-		DeleteFileW(data->filepath);
-		*data->filepath = 0;
+		dbg("sp: NPP_Destroy(): deleting internal temporary file %s", data->filepath);
+		DeleteFile(data->filepath);
+		*data->filepath = '\0';
 	}
 
 	if (*data->filepath)
 	{
-		WCHAR tempDir[MAX_PATH];
-		DWORD len = GetTempPathW(MAX_PATH, tempDir);
+		TCHAR tempDir[MAX_PATH];
+		DWORD len = GetTempPath(MAX_PATH, tempDir);
 		if (0 < len && len < MAX_PATH && Str::StartsWithI(data->filepath, tempDir))
 		{
-			dbg("sp: NPP_Destroy(): deleting browser temporary file %s",
-				ScopedMem<TCHAR>(Str::Conv::FromWStr(data->filepath)));
-			DeleteFileW(data->filepath);
+			dbg("sp: NPP_Destroy(): deleting browser temporary file %s", data->filepath);
+			DeleteFile(data->filepath);
 		}
 	}
 	free(data);

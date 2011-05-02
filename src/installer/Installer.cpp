@@ -741,7 +741,7 @@ bool WriteExtendedFileExtensionInfo(HKEY hkey)
     // add the installed SumatraPDF.exe to the Open With lists of the supported file extensions
     for (int i = 0; i < dimof(gSupportedExts); i++) {
         ScopedMem<TCHAR> keyname(Str::Join(_T("Software\\Classes\\"), gSupportedExts[i], _T("\\OpenWithList\\") TAPP));
-        success &= WriteRegStr(hkey, keyname, NULL, _T(""));
+        success &= CreateRegKey(hkey, keyname);
     }
 
     // in case these values don't exist yet (we won't delete these at uninstallation)
