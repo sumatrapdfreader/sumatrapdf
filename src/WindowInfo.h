@@ -60,7 +60,7 @@ public:
 
     // TODO: error windows currently have
     //       !IsAboutWindow() && !IsDocLoaded()
-    //       which doesn't allow distinction between PDF, XPS and ComicBook errors
+    //       which doesn't allow distinction between PDF, XPS, etc. errors
     bool IsAboutWindow() const { return !loadedFilePath; }
     bool IsDocLoaded() const { return this->dm != NULL; }
 

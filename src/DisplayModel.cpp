@@ -312,7 +312,6 @@ bool DisplayModel::buildPagesInfo()
     for (int pageNo = 1; pageNo <= _pageCount; pageNo++) {
         PageInfo *pageInfo = getPageInfo(pageNo);
         pageInfo->page = engine->PageMediabox(pageNo).Size();
-        pageInfo->rotation = engine->PageRotation(pageNo);
         pageInfo->visibleRatio = 0.0;
         pageInfo->shown = false;
         if (displayModeContinuous(_displayMode)) {
@@ -404,26 +403,20 @@ float DisplayModel::zoomRealFromVirtualForPage(float zoomVirtual, int pageNo)
         int first = FirstPageInARowNo(pageNo, columns, displayModeShowCover(displayMode()));
         int last = LastPageInARowNo(pageNo, columns, displayModeShowCover(displayMode()), pageCount());
         for (int i = first; i <= last; i++) {
-            SizeD pageSize = PageSizeAfterRotation(i);
-            row.dx += pageSize.dx;
+            RectD pageBox = engine->Transform(engine->PageMediabox(i), i, 1.0, _rotation);
+            row.dx += pageBox.dx;
 
             pageInfo = getPageInfo(i);
             if (pageInfo->contentBox.IsEmpty())
                 pageInfo->contentBox = engine->PageContentBox(i);
-            if (i == first && !pageInfo->contentBox.IsEmpty()) {
-                if ((pageInfo->rotation + _rotation) % 180 != 0)
-                    row.dx -= pageInfo->contentBox.y - engine->PageMediabox(first).y;
-                else
-                    row.dx -= pageInfo->contentBox.x - engine->PageMediabox(first).x;
-            }
-            if (i == last && !pageInfo->contentBox.IsEmpty()) {
-                if ((pageInfo->rotation + _rotation) % 180 != 0)
-                    row.dx -= engine->PageMediabox(last).BR().y - pageInfo->contentBox.BR().y;
-                else
-                    row.dx -= engine->PageMediabox(last).BR().x - pageInfo->contentBox.BR().x;
-            }
+            RectD contentD = pageInfo->contentBox.Convert<double>();
+            RectD rotatedContent = engine->Transform(contentD, i, 1.0, _rotation);
+            if (i == first && !contentD.IsEmpty())
+                row.dx -= (rotatedContent.x - pageBox.x);
+            if (i == last && !contentD.IsEmpty())
+                row.dx -= (pageBox.BR().x - rotatedContent.BR().x);
 
-            pageSize = PageSizeAfterRotation(i, true);
+            SizeD pageSize = PageSizeAfterRotation(i, true);
             if (row.dy < pageSize.dy)
                 row.dy = pageSize.dy;
         }
