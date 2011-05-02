@@ -130,7 +130,7 @@ Impo&stazioni
 Riduci pagine alla zona &stampabile (se necessario)
 
 &Skip this version
-&Salta questa versione
+&Ignora questa versione
 
 &Use original page sizes
 &Usa larghezza pagina originale

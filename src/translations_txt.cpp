@@ -2888,7 +2888,7 @@ const char *gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "&Salva con nome...\t<Ctrl>+S",
   "Impo&stazioni",
   "Riduci pagine alla zona &stampabile (se necessario)",
-  "&Salta questa versione",
+  "&Ignora questa versione",
   "&Usa larghezza pagina originale",
   "&Visualizza",
   "&S\303\254",
