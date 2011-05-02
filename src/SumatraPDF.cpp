@@ -50,10 +50,8 @@
 
 /* Define if you want to display additional debug helpers in the Help menu */
 // #define SHOW_DEBUG_MENU_ITEMS
-#if defined(DEBUG) || defined(SVN_PRE_RELEASE_VER) && !defined(DONT_SHOW_DEBUG_MENU_ITEMS)
-#ifndef SHOW_DEBUG_MENU_ITEMS
+#if defined(DEBUG) && !defined(SHOW_DEBUG_MENU_ITEMS)
 #define SHOW_DEBUG_MENU_ITEMS
-#endif
 #endif
 
 #define ZOOM_IN_FACTOR      1.2f
@@ -579,10 +577,10 @@ MenuDef menuDefHelp[] = {
     { _TRN("&Manual"),                      IDM_MANUAL,                 MF_NOT_IN_RESTRICTED },
     { _TRN("Check for &Updates"),           IDM_CHECK_UPDATE,           MF_NOT_IN_RESTRICTED },
     { SEP_ITEM,                             0,                          MF_NOT_IN_RESTRICTED },
-    { _TRN("&About"),                       IDM_ABOUT,                  0  }
+    { _TRN("&About"),                       IDM_ABOUT,                  0  },
 #ifdef SHOW_DEBUG_MENU_ITEMS
-    ,{ SEP_ITEM,                            0,                          MF_NOT_IN_RESTRICTED },
-//    { "Crash me",                           IDM_CRASH_ME,               MF_NO_TRANSLATE  },
+    { SEP_ITEM,                             0,                          0  },
+    { "Crash me",                           IDM_CRASH_ME,               MF_NO_TRANSLATE  },
     { "Stress test running",                IDM_THREAD_STRESS,          MF_NO_TRANSLATE  }
 #endif
 };
