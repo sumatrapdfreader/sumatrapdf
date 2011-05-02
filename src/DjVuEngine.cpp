@@ -146,6 +146,7 @@ public:
         assert(1 <= pageNo && pageNo <= PageCount());
         return mediaboxes[pageNo-1];
     }
+    virtual RectD PageContentBox(int pageNo, RenderTarget target=Target_View);
 
     virtual RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
                          RectD *pageRect=NULL, /* if NULL: defaults to the page's mediabox */
@@ -353,6 +354,64 @@ bool CDjVuEngine::RenderPage(HDC hDC, int pageNo, RectI screenRect, float zoom, 
     bmp->StretchDIBits(hDC, screenRect);
     delete bmp;
     return true;
+}
+
+RectD CDjVuEngine::PageContentBox(int pageNo, RenderTarget target)
+{
+    ScopedCritSec scope(&ctxAccess);
+
+    RectD pageRc = PageMediabox(pageNo);
+    ddjvu_page_t *page = ddjvu_page_create_by_pageno(doc, pageNo-1);
+    if (!page)
+        return pageRc;
+    ddjvu_page_set_rotation(page, DDJVU_ROTATE_0);
+
+    while (!ddjvu_page_decoding_done(page))
+        SpinDdjvuMessageLoop(ctx);
+    if (ddjvu_page_decoding_error(page))
+        return pageRc;
+
+    // render the page in 8-bit grayscale up to 250x250 px in size
+    ddjvu_format_t *fmt = ddjvu_format_create(DDJVU_FORMAT_GREY8, 0, NULL);
+    ddjvu_format_set_row_order(fmt, /* top_to_bottom */ TRUE);
+    double zoom = min(min(250.0 / pageRc.dx, 250.0 / pageRc.dy), 1.0);
+    RectI full = RectD(0, 0, pageRc.dx * zoom, pageRc.dy * zoom).Round();
+    ddjvu_rect_t prect = { full.x, full.y, full.dx, full.dy }, rrect = prect;
+
+    ScopedMem<char> bmpData(SAZA(char, full.dx * full.dy + 1));
+    if (bmpData && ddjvu_page_render(page, DDJVU_RENDER_MASKONLY, &prect, &rrect, fmt, full.dx, bmpData.Get())) {
+        // determine the content box by counting white pixels from the edges
+        RectD content(full.dx, -1, 0, 0);
+        for (int y = 0; y < full.dy; y++) {
+            int x;
+            for (x = 0; x < full.dx && bmpData[y * full.dx + x] == '\xFF'; x++);
+            if (x < full.dx) {
+                // narrow the left margin down (if necessary)
+                if (x < content.x)
+                    content.x = x;
+                // narrow the right margin down (if necessary)
+                for (x = full.dx - 1; x > content.x + content.dx && bmpData[y * full.dx + x] == '\xFF'; x--);
+                if (x > content.x + content.dx)
+                    content.dx = x - content.x + 1;
+                // narrow either the top or the bottom margin down
+                if (content.y == -1)
+                    content.y = y;
+                else
+                    content.dy = y - content.y + 1;
+            }
+        }
+        if (!content.IsEmpty()) {
+            // undo the zoom and round generously
+            content.x /= zoom; content.dx /= zoom;
+            content.y /= zoom; content.dy /= zoom;
+            pageRc = content.Round().Convert<double>();
+        }
+    }
+
+    ddjvu_format_release(fmt);
+    ddjvu_page_release(page);
+
+    return pageRc;
 }
 
 PointD CDjVuEngine::Transform(PointD pt, int pageNo, float zoom, int rotate, bool inverse)
