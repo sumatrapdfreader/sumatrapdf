@@ -489,7 +489,7 @@ Rotate &Right\tCtrl-Shift-+
 Girar a la derecha\tCtrl-Shift-+
 
 Save S&hortcut...\tCtrl-Shift-S
-Guardar A%tajo...\tCtrl-Shiftt-S
+Guardar A&tajo...\tCtrl-Shiftt-S
 
 Searching %d of %d...
 Buscando %d de %d…

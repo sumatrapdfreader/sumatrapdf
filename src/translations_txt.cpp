@@ -7147,7 +7147,7 @@ const char *gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "Recordar archiv&os abiertos",
   "Girar a la izquierda\tCtrl-Shift--",
   "Girar a la derecha\tCtrl-Shift-+",
-  "Guardar A%tajo...\tCtrl-Shiftt-S",
+  "Guardar A&tajo...\tCtrl-Shiftt-S",
   "Buscando %d de %d\342\200\246",
   "Seleccionar &todo",
   "Seleccionar &todo\tCtrl-A",
