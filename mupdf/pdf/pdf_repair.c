@@ -201,7 +201,7 @@ pdf_repair_xref(pdf_xref *xref, char *buf, int bufsize)
 	int stm_len, stm_ofs = 0;
 	int tok;
 	int next;
-	int i, n;
+	int i, n, c;
 
 	fz_seek(xref->file, 0, 0);
 
@@ -222,10 +222,17 @@ pdf_repair_xref(pdf_xref *xref, char *buf, int bufsize)
 	{
 		if (memcmp(buf + i, "%PDF", 4) == 0)
 		{
-			fz_seek(xref->file, i + 7, 0); /* skip "%PDF-X.Y" */
+			fz_seek(xref->file, i + 8, 0); /* skip "%PDF-X.Y" */
 			break;
 		}
 	}
+
+	/* skip comment line after version marker since some generators
+	 * forget to terminate the comment with a newline */
+	c = fz_read_byte(xref->file);
+	while (c >= 0 && (c == ' ' || c == '%'))
+		c = fz_read_byte(xref->file);
+	fz_unread_byte(xref->file);
 
 	while (1)
 	{

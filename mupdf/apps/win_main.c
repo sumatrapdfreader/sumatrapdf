@@ -10,11 +10,6 @@
 #define _UNICODE
 #endif
 #define WIN32_LEAN_AND_MEAN
-/* SumatraPDF: RegDeleteTree is only available under Windows Vista and later */
-#ifdef _WIN32_WINNT
-#undef _WIN32_WINNT
-#endif
-#define _WIN32_WINNT 0x0600
 #include <windows.h>
 #include <commdlg.h>
 #include <shellapi.h>
@@ -86,21 +81,6 @@ void install_app(char *argv0)
 	RegCloseKey(mupdf);
 	RegCloseKey(classes);
 	RegCloseKey(software);
-}
-
-void uninstall_app(void)
-{
-	HKEY software, classes;
-
-	RegOpenKeyExA(HKEY_CURRENT_USER, "Software", 0, KEY_ALL_ACCESS, &software);
-	RegOpenKeyExA(software, "Classes", 0, KEY_ALL_ACCESS, &classes);
-
-	RegDeleteTreeA(classes, "MuPDF");
-
-	RegCloseKey(classes);
-	RegCloseKey(software);
-
-	MessageBoxA(hwndframe, "MuPDF has been uninstalled.", "MuPDF", MB_ICONWARNING);
 }
 
 /*
@@ -871,11 +851,6 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShow
 
 	if (argc == 2)
 	{
-		if (argv[1][0] == '-' && argv[1][1] == 'u' && argv[1][2] == 0)
-		{
-			uninstall_app();
-			exit(0);
-		}
 		wcscpy(wbuf, argv[1]);
 	}
 	else
