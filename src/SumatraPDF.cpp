@@ -4028,7 +4028,7 @@ static void OnMenuViewContinuous(WindowInfo& win)
     win.SwitchToDisplayMode(newMode);
 }
 
-static void ToogleToolbarViewButton(WindowInfo& win, float newZoom, bool pagesContinuously)
+static void ToggleToolbarViewButton(WindowInfo& win, float newZoom, bool pagesContinuously)
 {
     if (!win.IsDocLoaded())
         return;
@@ -6170,11 +6170,11 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                     break;
 
                 case IDT_VIEW_FIT_WIDTH:
-                    ToogleToolbarViewButton(*win, ZOOM_FIT_WIDTH, true);
+                    ToggleToolbarViewButton(*win, ZOOM_FIT_WIDTH, true);
                     break;
 
                 case IDT_VIEW_FIT_PAGE:
-                    ToogleToolbarViewButton(*win, ZOOM_FIT_PAGE, false);
+                    ToggleToolbarViewButton(*win, ZOOM_FIT_PAGE, false);
                     break;
 
                 case IDT_VIEW_ZOOMIN:

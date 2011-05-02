@@ -1291,7 +1291,7 @@ void DisplayModel::zoomTo(float zoomVirtual, PointI *fixPt)
             fixPt = NULL;
     }
 
-    if (ZOOM_FIT_CONTENT == zoomVirtual) {
+    if (ZOOM_FIT_CONTENT == zoomVirtual || ZOOM_FIT_PAGE == zoomVirtual) {
         // SetScrollState's first call to goToPage will already scroll to fit
         ss.x = ss.y = -1;
         fixPt = NULL;
