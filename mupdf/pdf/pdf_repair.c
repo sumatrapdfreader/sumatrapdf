@@ -257,6 +257,12 @@ pdf_repair_xref(pdf_xref *xref, char *buf, int bufsize)
 			if (error)
 			{
 				error = fz_rethrow(error, "cannot parse object (%d %d R)", num, gen);
+				/* SumatraPDF: if we've seen a root, try to do with what we've got */
+				if (root)
+				{
+					fz_catch(error, "ignoring the rest of the file");
+					break;
+				}
 				goto cleanup;
 			}
 
@@ -284,6 +290,12 @@ pdf_repair_xref(pdf_xref *xref, char *buf, int bufsize)
 			if (error)
 			{
 				error = fz_rethrow(error, "cannot parse object");
+				/* SumatraPDF: if we've seen a root, try to do with what we've got */
+				if (root)
+				{
+					fz_catch(error, "ignoring the rest of the file");
+					break;
+				}
 				goto cleanup;
 			}
 
