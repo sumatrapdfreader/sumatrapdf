@@ -86,6 +86,7 @@ static BencDict *DisplayState_Serialize(DisplayState *ds, bool globalPrefsOnly)
         prefs->AddRaw(DECRYPTION_KEY_STR, ds->decryptionKey);
 
     prefs->Add(OPEN_COUNT_STR, ds->openCount);
+    prefs->Add(IS_PINNED_STR, ds->isPinned);
     if (globalPrefsOnly || ds->useGlobalValues) {
         prefs->Add(USE_GLOBAL_VALUES_STR, TRUE);
         return prefs;
@@ -137,8 +138,10 @@ static BencArray *SerializeFileHistory(FileHistory& fileHistory, bool globalPref
     }
 
     DisplayState *state;
-    for (int index = 0; (state = fileHistory.Get(index)) && index < MAX_REMEMBERED_FILES; index++) {
-        if (state->openCount < minOpenCount && index > FILE_HISTORY_MAX_RECENT)
+    for (int index = 0; (state = fileHistory.Get(index)); index++) {
+        if (index >= MAX_REMEMBERED_FILES && !state->isPinned)
+            continue;
+        if (state->openCount < minOpenCount && index > FILE_HISTORY_MAX_RECENT && !state->isPinned)
             continue;
         BencDict *obj = DisplayState_Serialize(state, globalPrefsOnly);
         if (!obj)
@@ -257,6 +260,7 @@ static DisplayState * DisplayState_Deserialize(BencDict *dict, bool globalPrefsO
 
     RetrieveRaw(dict, DECRYPTION_KEY_STR, ds->decryptionKey);
     Retrieve(dict, OPEN_COUNT_STR, ds->openCount);
+    Retrieve(dict, IS_PINNED_STR, ds->isPinned);
     if (globalPrefsOnly) {
         ds->useGlobalValues = TRUE;
         return ds;

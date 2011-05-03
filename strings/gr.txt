@@ -575,6 +575,9 @@ printing document
 εκτύπωση εγγράφου
 
 # Untranslated:
+#&Forget Document
+#&Open Document
+#&Pin Document
 #DjVu documents
 #Frequently Read
 #Hide frequently read

@@ -597,5 +597,8 @@ printing document
 impresión de documento
 
 # Untranslated:
+#&Forget Document
+#&Open Document
+#&Pin Document
 #Image files (*.%s)
 

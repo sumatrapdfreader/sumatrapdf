@@ -593,6 +593,9 @@ printing document
 tisk dokumentu
 
 # Untranslated:
+#&Forget Document
+#&Open Document
+#&Pin Document
 #DjVu documents
 #Print
 

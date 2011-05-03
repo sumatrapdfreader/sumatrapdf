@@ -593,6 +593,9 @@ printing document
 mencetak dokumen
 
 # Untranslated:
+#&Forget Document
+#&Open Document
+#&Pin Document
 #DjVu documents
 #Print
 

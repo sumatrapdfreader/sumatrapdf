@@ -600,3 +600,8 @@ copie du texte
 printing document
 impression du document
 
+# Untranslated:
+#&Forget Document
+#&Open Document
+#&Pin Document
+

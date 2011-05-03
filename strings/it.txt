@@ -603,3 +603,8 @@ Copia del testo...
 printing document
 Stampa documento...
 
+# Untranslated:
+#&Forget Document
+#&Open Document
+#&Pin Document
+

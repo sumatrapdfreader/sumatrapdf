@@ -586,6 +586,9 @@ printing document
 штампање документа
 
 # Untranslated:
+#&Forget Document
+#&Open Document
+#&Pin Document
 #DjVu documents
 #Print
 #Printing is still in progress. Abort and start over?

@@ -34,7 +34,7 @@ public:
     DisplayState() :
         filePath(NULL), useGlobalValues(false), openCount(0),
         displayMode(DM_AUTOMATIC), pageNo(1), zoomVirtual(100.0),
-        rotation(0), windowState(0), thumbnail(NULL),
+        rotation(0), windowState(0), thumbnail(NULL), isPinned(false),
         decryptionKey(NULL), showToc(true), tocDx(0), tocState(NULL) { }
 
     ~DisplayState() {
@@ -55,6 +55,9 @@ public:
     int                 openCount;
     size_t              _index;    // temporary value needed for FileHistory::cmpOpenCount
     RenderedBitmap *    thumbnail; // persisted separately
+    // a user can "pin" a preferred document to the Frequently Read list
+    // so that the document isn't replaced by more frequently used ones
+    bool                isPinned;
 
     bool                useGlobalValues;
 

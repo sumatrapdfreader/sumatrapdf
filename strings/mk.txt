@@ -590,6 +590,9 @@ printing document
 печатам документ
 
 # Untranslated:
+#&Forget Document
+#&Open Document
+#&Pin Document
 #DjVu documents
 #Print
 

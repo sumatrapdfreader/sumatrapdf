@@ -596,3 +596,8 @@ copying text
 printing document
 đang in tập tin
 
+# Untranslated:
+#&Forget Document
+#&Open Document
+#&Pin Document
+

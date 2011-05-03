@@ -210,14 +210,17 @@ Zoom Out
 #&Even pages only
 #&Find what:
 #&Fit pages to printable area
+#&Forget Document
 #&Go to page:
 #&Magnification:
 #&Match case
 #&No
 #&No, thanks
 #&Odd pages only
+#&Open Document
 #&Options...
 #&Password:
+#&Pin Document
 #&Print...
 #&Print... (denied)
 #&Remember the password for this document

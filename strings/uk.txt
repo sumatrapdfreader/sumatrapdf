@@ -573,6 +573,9 @@ printing document
 друк документа
 
 # Untranslated:
+#&Forget Document
+#&Open Document
+#&Pin Document
 #DjVu documents
 #Frequently Read
 #Hide frequently read

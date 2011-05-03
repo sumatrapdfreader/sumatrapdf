@@ -207,6 +207,7 @@ Duputsa
 #&Even pages only
 #&Find what:
 #&Fit pages to printable area
+#&Forget Document
 #&Go to page:
 #&Magnification:
 #&Manual
@@ -214,8 +215,10 @@ Duputsa
 #&No
 #&No, thanks
 #&Odd pages only
+#&Open Document
 #&Options...
 #&Password:
+#&Pin Document
 #&Print...
 #&Print... (denied)
 #&Remember the password for this document

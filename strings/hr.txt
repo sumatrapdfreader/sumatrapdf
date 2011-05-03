@@ -459,7 +459,10 @@ ispisujem dokument
 #&Copy Selection
 #&Even pages only
 #&Fit pages to printable area
+#&Forget Document
 #&Odd pages only
+#&Open Document
+#&Pin Document
 #&Print...
 #&Remember the password for this document
 #&Save As...

@@ -590,6 +590,9 @@ printing document
 dokumentua imprimatzen
 
 # Untranslated:
+#&Forget Document
+#&Open Document
+#&Pin Document
 #Bookmark shortcut to page %d of %s
 #No result found around line %u in file %s
 

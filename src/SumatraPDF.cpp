@@ -597,6 +597,15 @@ MenuDef menuDefContext[] = {
     { _TRN("P&roperties"),                  IDM_PROPERTIES,             MF_PLUGIN_MODE_ONLY },
 };
 
+#ifdef NEW_START_PAGE
+MenuDef menuDefContextStart[] = {
+    { _TRN("&Open Document"),               IDM_OPEN_SELECTED_DOCUMENT, 0 },
+    { _TRN("&Pin Document"),                IDM_PIN_SELECTED_DOCUMENT,  0 },
+    { SEP_ITEM,                             0,                          0 },
+    { _TRN("&Forget Document"),             IDM_FORGET_SELECTED_DOCUMENT, 0 },
+};
+#endif
+
 static void AddFileMenuItem(HMENU menuFile, const TCHAR *filePath, UINT index)
 {
     assert(filePath && menuFile);
@@ -2497,8 +2506,50 @@ static bool OnInverseSearch(WindowInfo& win, int x, int y)
     return true;
 }
 
+static void OnAboutContextMenu(WindowInfo& win, int x, int y)
+{
+#ifdef NEW_START_PAGE
+    if (gRestrictedUse || !gGlobalPrefs.m_rememberOpenedFiles || !gGlobalPrefs.m_showStartPage)
+        return;
+
+    const TCHAR *filePath = GetStaticLink(win.staticLinks, x, y);
+    if (!filePath || *filePath == '<')
+        return;
+
+    DisplayState *state = gFileHistory.Find(filePath);
+    assert(state);
+    if (!state)
+        return;
+
+    HMENU popup = BuildMenuFromMenuDef(menuDefContextStart, dimof(menuDefContextStart), CreatePopupMenu());
+    Win::Menu::Check(popup, IDM_PIN_SELECTED_DOCUMENT, state->isPinned);
+    POINT pt = { x, y };
+    MapWindowPoints(win.hwndCanvas, HWND_DESKTOP, &pt, 1);
+    INT cmd = TrackPopupMenu(popup, TPM_RETURNCMD | TPM_RIGHTBUTTON,
+                             pt.x, pt.y, 0, win.hwndFrame, NULL);
+    switch (cmd) {
+    case IDM_OPEN_SELECTED_DOCUMENT:
+        LoadDocument(filePath, &win);
+        break;
+
+    case IDM_PIN_SELECTED_DOCUMENT:
+        state->isPinned = !state->isPinned;
+        win.RedrawAll(true);
+        break;
+
+    case IDM_FORGET_SELECTED_DOCUMENT:
+        gFileHistory.Remove(state);
+        CleanUpThumbnailCache(gFileHistory);
+        win.RedrawAll(true);
+        break;
+    }
+    DestroyMenu(popup);
+#endif
+}
+
 static void OnContextMenu(WindowInfo& win, int x, int y)
 {
+    assert(win.IsDocLoaded());
     if (!win.IsDocLoaded())
         return;
 
@@ -2850,8 +2901,10 @@ static void OnMouseMiddleButtonDown(WindowInfo& win, int x, int y, int key)
 static void OnMouseRightButtonDown(WindowInfo& win, int x, int y, int key)
 {
     //DBG_OUT("Right button clicked on %d %d\n", x, y);
-    if (!win.IsDocLoaded())
+    if (!win.IsDocLoaded()) {
+        win.dragStart = PointI(x, y);
         return;
+    }
 
     if (MA_SCROLLING == win.mouseAction)
         win.mouseAction = MA_IDLE;
@@ -2869,8 +2922,14 @@ static void OnMouseRightButtonDown(WindowInfo& win, int x, int y, int key)
 
 static void OnMouseRightButtonUp(WindowInfo& win, int x, int y, WPARAM key)
 {
-    if (!win.IsDocLoaded())
+    if (!win.IsDocLoaded()) {
+        bool didDragMouse =
+            abs(x - win.dragStart.x) > GetSystemMetrics(SM_CXDRAG) ||
+            abs(y - win.dragStart.y) > GetSystemMetrics(SM_CYDRAG);
+        if (!didDragMouse)
+            OnAboutContextMenu(win, x, y);
         return;
+    }
 
     assert(win.dm);
     if (MA_DRAGGING_RIGHT != win.mouseAction)
@@ -6419,8 +6478,12 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
             break;
 
         case WM_CONTEXTMENU:
-            if (win)
-                OnContextMenu(*win, 0, 0);
+            if (win) {
+                if (win->IsDocLoaded())
+                    OnContextMenu(*win, 0, 0);
+                else
+                    OnAboutContextMenu(*win, 0, 0);
+            }
             break;
 
         case WM_SETTINGCHANGE:

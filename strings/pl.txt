@@ -596,3 +596,8 @@ kopiowanie tekstu
 printing document
 drukowanie dokumentu
 
+# Untranslated:
+#&Forget Document
+#&Open Document
+#&Pin Document
+

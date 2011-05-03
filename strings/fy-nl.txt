@@ -441,7 +441,10 @@ Zoomfaktor
 #&Copy Selection
 #&Even pages only
 #&Fit pages to printable area
+#&Forget Document
 #&Odd pages only
+#&Open Document
+#&Pin Document
 #&Print...
 #&Print... (denied)
 #&Remember the password for this document

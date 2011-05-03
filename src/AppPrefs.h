@@ -116,6 +116,7 @@ struct SerializableGlobalPrefs {
 #define DECRYPTION_KEY_STR          "Decryption Key"
 #define SHOW_RECENT_FILES_STR       "ShowStartPage"
 #define OPEN_COUNT_STR              "OpenCount"
+#define IS_PINNED_STR               "Pinned"
 #define OPEN_COUNT_WEEK_STR         "OpenCountWeek"
 #define FWDSEARCH_OFFSET            "ForwardSearch_HighlightOffset"
 #define FWDSEARCH_COLOR             "ForwardSearch_HighlightColor"

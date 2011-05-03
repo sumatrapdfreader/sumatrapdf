@@ -602,3 +602,8 @@ tekst kopieren
 printing document
 bestand afdrukken
 
+# Untranslated:
+#&Forget Document
+#&Open Document
+#&Pin Document
+

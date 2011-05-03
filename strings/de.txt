@@ -53,6 +53,9 @@ Nur &gerade Seiten
 &Fit pages to printable area
 Seiten in Druckbereich &einpassen
 
+&Forget Document
+Von dieser Seite &entfernen
+
 &Go To
 &Gehe zu
 
@@ -89,11 +92,17 @@ Nur &ungerade Seiten
 &Open\tCtrl-O
 Ö&ffnen…\tStrg+O
 
+&Open Document
+Ö&ffnen
+
 &Options...
 &Optionen…
 
 &Password:
 &Passwort:
+
+&Pin Document
+Auf dieser Seite &behalten
 
 &Previous Page\tLeft Arrow
 &Vorherige Seite\t<-

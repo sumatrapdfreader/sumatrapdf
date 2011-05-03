@@ -520,6 +520,9 @@ argraffu dogfen
 
 # Untranslated:
 #&Copy Selection
+#&Forget Document
+#&Open Document
+#&Pin Document
 #&Print...
 #&Save As...
 #All supported documents

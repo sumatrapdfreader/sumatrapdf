@@ -440,8 +440,11 @@ prebieha tlač dokumentu
 #&Copy Selection
 #&Even pages only
 #&Fit pages to printable area
+#&Forget Document
 #&Go to page:
 #&Odd pages only
+#&Open Document
+#&Pin Document
 #&Print...
 #&Remember the password for this document
 #&Save As...

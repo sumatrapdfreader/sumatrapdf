@@ -594,5 +594,8 @@ printing document
 se imprimă documentul
 
 # Untranslated:
+#&Forget Document
+#&Open Document
+#&Pin Document
 #Print
 

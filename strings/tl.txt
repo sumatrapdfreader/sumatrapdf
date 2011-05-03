@@ -546,6 +546,9 @@ printing document
 ipini-print ang dokumento
 
 # Untranslated:
+#&Forget Document
+#&Open Document
+#&Pin Document
 #All supported documents
 #Bookmark Shortcuts
 #Bookmark shortcut to page %d of %s

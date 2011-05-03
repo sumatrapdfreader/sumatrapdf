@@ -331,7 +331,10 @@ mencetak dokumen
 
 # Untranslated:
 #&Copy Selection
+#&Forget Document
 #&Match case
+#&Open Document
+#&Pin Document
 #&Print...
 #&Save As...
 #&Shrink pages to printable area (if necessary)

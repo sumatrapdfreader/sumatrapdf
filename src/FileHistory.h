@@ -6,6 +6,7 @@
 
 #include "DisplayState.h"
 #include "StrUtil.h"
+#include "FileUtil.h"
 #include "Vec.h"
 
 /* Handling of file history list.
@@ -47,6 +48,12 @@ class FileHistory {
     static int cmpOpenCount(const void *a, const void *b) {
         DisplayState *dsA = *(DisplayState **)a;
         DisplayState *dsB = *(DisplayState **)b;
+        // sort pinned documents before unpinned ones
+        if (dsA->isPinned != dsB->isPinned)
+            return dsA->isPinned ? -1 : 1;
+        // sort pinned documents alphabetically
+        if (dsA->isPinned && dsB->isPinned)
+            return Str::CmpNatural(Path::GetBaseName(dsA->filePath), Path::GetBaseName(dsB->filePath));
         if (dsA->openCount != dsB->openCount)
             return dsB->openCount - dsA->openCount;
         // use recency as the criterion in case of equal open counts

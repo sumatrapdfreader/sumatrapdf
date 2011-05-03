@@ -590,6 +590,9 @@ printing document
 փաստաթուղթը տպվում է
 
 # Untranslated:
+#&Forget Document
+#&Open Document
+#&Pin Document
 #No result found around line %u in file %s
 #Print
 
