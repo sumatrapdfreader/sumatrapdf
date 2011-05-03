@@ -460,6 +460,9 @@ Pr&esentation\tCtrl-L
 Previous Page
 Նախորդ էջը
 
+Print
+Տպել
+
 Print range
 Տպելու կարգը
 
@@ -594,5 +597,4 @@ printing document
 #&Open Document
 #&Pin Document
 #No result found around line %u in file %s
-#Print
 

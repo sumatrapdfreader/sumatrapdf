@@ -50,6 +50,9 @@ Trang đầu\tHome
 &Fit pages to printable area
 Vừa trang in
 
+&Forget Document
+Quên tập tin
+
 &Go To
 Nhảy đến
 
@@ -86,11 +89,17 @@ Chỉ những trang chẵn
 &Open\tCtrl-O
 Mở tập tin\tCtrl-O
 
+&Open Document
+Mở tập tin
+
 &Options...
 Tuỳ chọn
 
 &Password:
 Mật mã:
+
+&Pin Document
+Ghim tập tin
 
 &Previous Page\tLeft Arrow
 Trang trước\t<-
@@ -595,9 +604,4 @@ copying text
 
 printing document
 đang in tập tin
-
-# Untranslated:
-#&Forget Document
-#&Open Document
-#&Pin Document
 

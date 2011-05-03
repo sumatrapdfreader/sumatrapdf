@@ -259,6 +259,9 @@ Pembaca PDF utama tidak dapat diubah dalam mode portabel
 Denied Permissions:
 Izin Ditolak:
 
+DjVu documents
+Dokumen DjVu
+
 Document Properties
 Properti Dokumen
 
@@ -463,6 +466,9 @@ Presentasi\tCtrl-L
 Previous Page
 Halaman Sebelumnya
 
+Print
+Cetak
+
 Print range
 Kisaran cetakan
 
@@ -596,6 +602,4 @@ mencetak dokumen
 #&Forget Document
 #&Open Document
 #&Pin Document
-#DjVu documents
-#Print
 
