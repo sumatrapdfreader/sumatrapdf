@@ -2539,6 +2539,7 @@ static void OnAboutContextMenu(WindowInfo& win, int x, int y)
 
     case IDM_FORGET_SELECTED_DOCUMENT:
         gFileHistory.Remove(state);
+        delete state;
         CleanUpThumbnailCache(gFileHistory);
         win.RedrawAll(true);
         break;
