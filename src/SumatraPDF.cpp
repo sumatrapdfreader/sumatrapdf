@@ -1797,7 +1797,7 @@ void WindowInfo::UpdateScrollbars(SizeI canvas)
     si.cbSize = sizeof(si);
     si.fMask = SIF_ALL;
 
-    SizeI viewPort = dm->viewPortSize;
+    SizeI viewPort = dm->viewPort.Size();
 
     if (viewPort.dx >= canvas.dx) {
         si.nPos = 0;
@@ -1805,7 +1805,7 @@ void WindowInfo::UpdateScrollbars(SizeI canvas)
         si.nMax = 99;
         si.nPage = 100;
     } else {
-        si.nPos = dm->viewPortOffset.x;
+        si.nPos = dm->viewPort.x;
         si.nMin = 0;
         si.nMax = canvas.dx - 1;
         si.nPage = viewPort.dx;
@@ -1818,7 +1818,7 @@ void WindowInfo::UpdateScrollbars(SizeI canvas)
         si.nMax = 99;
         si.nPage = 100;
     } else {
-        si.nPos = dm->viewPortOffset.y;
+        si.nPos = dm->viewPort.y;
         si.nMin = 0;
         si.nMax = canvas.dy - 1;
         si.nPage = viewPort.dy;
@@ -2079,7 +2079,7 @@ static void PaintForwardSearchMark(WindowInfo& win, HDC hdc) {
         RectD recD = win.fwdsearchmark.rects[i].Convert<double>();
         RectI recI = win.dm->CvtToScreen(win.fwdsearchmark.page, recD);
         if (gGlobalPrefs.m_fwdsearchOffset > 0) {
-            recI.x = pageInfo->screen.x + (int)(gGlobalPrefs.m_fwdsearchOffset * win.dm->zoomReal());
+            recI.x = max(pageInfo->pageOnScreen.x, 0) + (int)(gGlobalPrefs.m_fwdsearchOffset * win.dm->zoomReal());
             recI.dx = (int)((gGlobalPrefs.m_fwdsearchWidth > 0 ? gGlobalPrefs.m_fwdsearchWidth : 15.0) * win.dm->zoomReal());
             recI.y -= 4;
             recI.dy += 8;
@@ -2142,7 +2142,7 @@ static void DebugShowLinks(DisplayModel& dm, HDC hdc)
     if (!gDebugShowLinks)
         return;
 
-    RectI viewPortRect(PointI(), dm.viewPortSize);
+    RectI viewPortRect(PointI(), dm.viewPort.Size());
     HPEN pen = CreatePen(PS_SOLID, 1, RGB(0x00, 0xff, 0xff));
     HGDIOBJ oldPen = SelectObject(hdc, pen);
 
@@ -2199,6 +2199,7 @@ static void DrawDocument(WindowInfo& win, HDC hdc, RECT *rcArea)
         FillRect(hdc, rcArea, gBrushNoDocBg);
 
     bool rendering = false;
+    RectI screen(PointI(), dm->viewPort.Size());
 
     DBG_OUT("DrawDocument() ");
     for (int pageNo = 1; pageNo <= dm->pageCount(); ++pageNo) {
@@ -2209,7 +2210,7 @@ static void DrawDocument(WindowInfo& win, HDC hdc, RECT *rcArea)
         if (!pageInfo->shown)
             continue;
 
-        RectI bounds = RectI(pageInfo->screen, pageInfo->bitmap.Size());
+        RectI bounds = pageInfo->pageOnScreen.Intersect(screen);
         PaintPageFrameAndShadow(hdc, pageInfo, paintOnBlackWithoutShadow, bounds);
 
         bool renderOutOfDateCue = false;
@@ -2636,11 +2637,11 @@ static void OnSelectionEdgeAutoscroll(WindowInfo& win, int x, int y)
         dy = SELECT_AUTOSCROLL_STEP_LENGTH;
 
     if (dx != 0 || dy != 0) {
-        PointI oldOffset = win.dm->viewPortOffset;
+        PointI oldOffset = win.dm->viewPort.TL();
         win.MoveDocBy(dx, dy);
 
-        dx = win.dm->viewPortOffset.x - oldOffset.x;
-        dy = win.dm->viewPortOffset.y - oldOffset.y;
+        dx = win.dm->viewPort.x - oldOffset.x;
+        dy = win.dm->viewPort.y - oldOffset.y;
         win.selectionRect.x -= dx;
         win.selectionRect.y -= dy;
         win.selectionRect.dx += dx;

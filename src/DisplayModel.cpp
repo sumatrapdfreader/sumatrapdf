@@ -2,7 +2,7 @@
    License: GPLv3 */
 
 /* How to think of display logic: physical screen of size
-   viewPortSize is a window into (possibly much larger)
+   viewPort.Size() is a window into (possibly much larger)
    total area (canvas) of size canvasSize.
 
    In DM_SINGLE_PAGE mode total area is the size of currently displayed page
@@ -314,11 +314,10 @@ bool DisplayModel::buildPagesInfo()
         pageInfo->page = engine->PageMediabox(pageNo).Size();
         pageInfo->visibleRatio = 0.0;
         pageInfo->shown = false;
-        if (displayModeContinuous(_displayMode)) {
+        if (displayModeContinuous(_displayMode))
             pageInfo->shown = true;
-        } else if (pageNo >= startPage && pageNo < startPage + columns) {
+        else if (startPage <= pageNo && pageNo < startPage + columns)
             pageInfo->shown = true;
-        }
     }
     return true;
 }
@@ -426,8 +425,8 @@ float DisplayModel::zoomRealFromVirtualForPage(float zoomVirtual, int pageNo)
 
     assert(!RectD(PointD(), row).IsEmpty());
 
-    int areaForPagesDx = viewPortSize.dx - padding->left - padding->right - padding->inBetweenX * (columns - 1);
-    int areaForPagesDy = viewPortSize.dy - padding->top - padding->bottom;
+    int areaForPagesDx = viewPort.dx - padding->left - padding->right - padding->inBetweenX * (columns - 1);
+    int areaForPagesDy = viewPort.dy - padding->top - padding->bottom;
     if (areaForPagesDx <= 0 || areaForPagesDy <= 0)
         return 0;
 
@@ -477,7 +476,7 @@ int DisplayModel::currentPageNo() const
     /* if no page is visible, default to either the first or the last one */
     if (INVALID_PAGE_NO == mostVisiblePage) {
         PageInfo *pageInfo = getPageInfo(1);
-        if (viewPortOffset.y > pageInfo->pos.y + pageInfo->pos.dy)
+        if (viewPort.y > pageInfo->pos.y + pageInfo->pos.dy)
             mostVisiblePage = pageCount();
         else
             mostVisiblePage = 1;
@@ -547,7 +546,7 @@ void DisplayModel::Relayout(float zoomVirtual, int rotation)
 
     bool needHScroll = false;
     bool needVScroll = false;
-    viewPortSize = totalViewPortSize;
+    viewPort = RectI(viewPort.TL(), totalViewPortSize);
 
 RestartLayout:
     int currPosY = padding->top;
@@ -558,8 +557,8 @@ RestartLayout:
 
     int newViewPortOffsetX = 0;
     if (0 != currZoomReal && INVALID_ZOOM != currZoomReal)
-        newViewPortOffsetX = (int)(viewPortOffset.x * _zoomReal / currZoomReal);
-    viewPortOffset.x = newViewPortOffsetX;
+        newViewPortOffsetX = (int)(viewPort.x * _zoomReal / currZoomReal);
+    viewPort.x = newViewPortOffsetX;
     /* calculate the position of each page on the canvas, given current zoom,
        rotation, columns parameters. You can think of it as a simple
        table layout i.e. rows with a fixed number of columns. */
@@ -583,9 +582,9 @@ RestartLayout:
         pos.y = currPosY;
 
         // restart the layout if we detect we need to show scrollbars
-        if (!needVScroll && viewPortSize.dy < currPosY + rowMaxPageDy) {
+        if (!needVScroll && viewPort.dy < currPosY + rowMaxPageDy) {
             needVScroll = true;
-            viewPortSize.dx -= GetSystemMetrics(SM_CXVSCROLL);
+            viewPort.dx -= GetSystemMetrics(SM_CXVSCROLL);
             goto RestartLayout;
         }
 
@@ -594,9 +593,9 @@ RestartLayout:
         if (columnMaxWidth[pageInARow] < pos.dx)
             columnMaxWidth[pageInARow] = pos.dx;
 
-        if (!needHScroll && viewPortSize.dx < padding->left + columnMaxWidth[0] + (columns == 2 ? padding->inBetweenX + columnMaxWidth[1] : 0) + padding->right) {
+        if (!needHScroll && viewPort.dx < padding->left + columnMaxWidth[0] + (columns == 2 ? padding->inBetweenX + columnMaxWidth[1] : 0) + padding->right) {
             needHScroll = true;
-            viewPortSize.dy -= GetSystemMetrics(SM_CYHSCROLL);
+            viewPort.dy -= GetSystemMetrics(SM_CYHSCROLL);
             goto RestartLayout;
         }
 
@@ -623,9 +622,9 @@ RestartLayout:
     // restart the layout if we detect we need to show scrollbars
     // (there are some edge cases we can't catch in the above loop)
     const int canvasDy = currPosY + padding->bottom - padding->inBetweenY;
-    if (!needVScroll && canvasDy > viewPortSize.dy) {
+    if (!needVScroll && canvasDy > viewPort.dy) {
         needVScroll = true;
-        viewPortSize.dx -= GetSystemMetrics(SM_CXVSCROLL);
+        viewPort.dx -= GetSystemMetrics(SM_CXVSCROLL);
         goto RestartLayout;
     }
 
@@ -640,18 +639,18 @@ RestartLayout:
     // restart the layout if we detect we need to show scrollbars
     // (there are some edge cases we can't catch in the above loop)
     int canvasDx = padding->left + columnMaxWidth[0] + (columns == 2 ? padding->inBetweenX + columnMaxWidth[1] : 0) + padding->right;
-    if (!needHScroll && canvasDx > viewPortSize.dx) {
+    if (!needHScroll && canvasDx > viewPort.dx) {
         needHScroll = true;
-        viewPortSize.dy -= GetSystemMetrics(SM_CYHSCROLL);
+        viewPort.dy -= GetSystemMetrics(SM_CYHSCROLL);
         goto RestartLayout;
     }
 
     /* since pages can be smaller than the drawing area, center them in x axis */
     int offX = 0;
-    if (canvasDx < viewPortSize.dx) {
-        viewPortOffset.x = 0;
-        offX = (viewPortSize.dx - canvasDx) / 2;
-        canvasDx = viewPortSize.dx;
+    if (canvasDx < viewPort.dx) {
+        viewPort.x = 0;
+        offX = (viewPort.dx - canvasDx) / 2;
+        canvasDx = viewPort.dx;
     }
 
     assert(offX >= 0);
@@ -684,14 +683,12 @@ RestartLayout:
 
     /* if after resizing we would have blank space on the right due to x offset
        being too much, make x offset smaller so that there's no blank space */
-    if (viewPortSize.dx - (canvasDx - newViewPortOffsetX) > 0) {
-        newViewPortOffsetX = canvasDx - viewPortSize.dx;
-        viewPortOffset.x = newViewPortOffsetX;
-    }
+    if (viewPort.dx - (canvasDx - newViewPortOffsetX) > 0)
+        viewPort.x = canvasDx - viewPort.dx;
 
     /* if a page is smaller than drawing area in y axis, y-center the page */
-    if (canvasDy < viewPortSize.dy) {
-        int offY = padding->top + (viewPortSize.dy - canvasDy) / 2;
+    if (canvasDy < viewPort.dy) {
+        int offY = padding->top + (viewPort.dy - canvasDy) / 2;
         DBG_OUT("  offY = %.2f\n", offY);
         assert(offY >= 0.0);
         for (int pageNo = 1; pageNo <= pageCount(); ++pageNo) {
@@ -707,7 +704,7 @@ RestartLayout:
         }
     }
 
-    canvasSize = SizeI(max(canvasDx, viewPortSize.dx), max(canvasDy, viewPortSize.dy));
+    canvasSize = SizeI(max(canvasDx, viewPort.dx), max(canvasDy, viewPort.dy));
 }
 
 void DisplayModel::changeStartPage(int startPage)
@@ -743,10 +740,8 @@ void DisplayModel::RecalcVisibleParts()
     if (!_pagesInfo)
         return;
 
-    RectI viewPortRect(viewPortOffset, viewPortSize);
-
 //    DBG_OUT("DisplayModel::RecalcVisibleParts() draw area         (x=%3d,y=%3d,dx=%4d,dy=%4d)\n",
-//        viewPortRect.x, viewPortRect.y, viewPortRect.dx, viewPortRect.dy);
+//        viewPort.x, viewPort.y, viewPort.dx, viewPort.dy);
     for (int pageNo = 1; pageNo <= pageCount(); ++pageNo) {
         PageInfo *pageInfo = getPageInfo(pageNo);
         if (!pageInfo->shown) {
@@ -755,35 +750,16 @@ void DisplayModel::RecalcVisibleParts()
         }
 
         RectI pageRect = pageInfo->pos;
-        pageInfo->visibleRatio = 0.0;
+        RectI visiblePart = pageRect.Intersect(viewPort);
 
-        RectI visiblePart = pageRect.Intersect(viewPortRect);
-        if (pageRect.dx > 0 && pageRect.dy > 0 && !visiblePart.IsEmpty()) {
+        pageInfo->visibleRatio = 0.0;
+        if (!visiblePart.IsEmpty()) {
+            assert(pageRect.dx > 0 && pageRect.dy > 0);
             // calculate with floating point precision to prevent an integer overflow
             pageInfo->visibleRatio = 1.0f * visiblePart.dx * visiblePart.dy / ((float)pageRect.dx * pageRect.dy);
-
-            pageInfo->bitmap = visiblePart;
-            pageInfo->bitmap.x -= pageRect.x;
-            assert(pageInfo->bitmap.x >= 0);
-            pageInfo->bitmap.y -= pageRect.y;
-            assert(pageInfo->bitmap.y >= 0);
-            pageInfo->screen.x = visiblePart.x - viewPortOffset.x;
-            assert(pageInfo->screen.x >= 0);
-            assert(pageInfo->screen.x <= viewPortSize.dx);
-            pageInfo->screen.y = visiblePart.y - viewPortOffset.y;
-            assert(pageInfo->screen.y >= 0);
-            assert(pageInfo->screen.y <= viewPortSize.dy);
-/*          DBG_OUT("                                  visible page = %d, (x=%3d,y=%3d,dx=%4d,dy=%4d) at (x=%d,y=%d)\n",
-                pageNo, pageInfo->bitmap.x, pageInfo->bitmap.y,
-                          pageInfo->bitmap.dx, pageInfo->bitmap.dy,
-                          pageInfo->screen.x, pageInfo->screen.y); */
         }
-
         pageInfo->pageOnScreen = pageRect;
-        pageInfo->pageOnScreen.x = pageInfo->pageOnScreen.x - viewPortOffset.x;
-        pageInfo->pageOnScreen.y = pageInfo->pageOnScreen.y - viewPortOffset.y;
-        assert(max(pageInfo->pageOnScreen.x, 0) == pageInfo->screen.x || 0.0 == pageInfo->visibleRatio);
-        assert(max(pageInfo->pageOnScreen.y, 0) == pageInfo->screen.y || 0.0 == pageInfo->visibleRatio);
+        pageInfo->pageOnScreen.Offset(-viewPort.x, -viewPort.y);
     }
 }
 
@@ -843,8 +819,8 @@ PointI DisplayModel::CvtToScreen(int pageNo, PointD pt)
         return PointI();
 
     PointD p = engine->Transform(pt, pageNo, _zoomReal, _rotation);
-    p.x += 0.5 + pageInfo->pos.x - viewPortOffset.x;
-    p.y += 0.5 + pageInfo->pos.y - viewPortOffset.y;
+    p.x += 0.5 + pageInfo->pageOnScreen.x;
+    p.y += 0.5 + pageInfo->pageOnScreen.y;
 
     return p.Convert<int>();
 }
@@ -866,8 +842,8 @@ PointD DisplayModel::CvtFromScreen(PointI pt, int pageNo)
     if (!pageInfo)
         return PointD();
 
-    PointD p = PointD(pt.x - 0.5 - pageInfo->pos.x + viewPortOffset.x,
-                      pt.y - 0.5 - pageInfo->pos.y + viewPortOffset.y);
+    PointD p = PointD(pt.x - 0.5 - pageInfo->pageOnScreen.x,
+                      pt.y - 0.5 - pageInfo->pageOnScreen.y);
     return engine->Transform(p, pageNo, _zoomReal, _rotation, true);
 }
 
@@ -1021,25 +997,25 @@ void DisplayModel::goToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
             PointI second = getContentStart(lastPageNo);
             scrollY = min(scrollY, second.y);
         }
-        viewPortOffset.x = scrollX + pageInfo->pos.x - padding->left;
+        viewPort.x = scrollX + pageInfo->pos.x - padding->left;
     }
     else if (-1 != scrollX)
-        viewPortOffset.x = scrollX;
+        viewPort.x = scrollX;
     // make sure to not display the blank space beside the first page in cover mode
     else if (-1 == scrollX && 1 == pageNo && displayModeShowCover(displayMode()))
-        viewPortOffset.x = pageInfo->pos.x - padding->left;
+        viewPort.x = pageInfo->pos.x - padding->left;
 
     /* Hack: if an image is smaller in Y axis than the draw area, then we center
        the image by setting pageInfo->currPos.y in RecalcPagesInfo. So we shouldn't
-       scroll (adjust viewPortOffset.y) there because it defeats the purpose.
+       scroll (adjust viewPort.y) there because it defeats the purpose.
        TODO: is there a better way of y-centering? */
-    viewPortOffset.y = scrollY;
+    viewPort.y = scrollY;
     // Move the next page to the top (unless the remaining pages fit onto a single screen)
     if (displayModeContinuous(displayMode()))
-        viewPortOffset.y = pageInfo->pos.y - padding->top + scrollY;
+        viewPort.y = pageInfo->pos.y - padding->top + scrollY;
 
-    viewPortOffset.x = limitValue(viewPortOffset.x, 0, canvasSize.dx - viewPortSize.dx);
-    viewPortOffset.y = limitValue(viewPortOffset.y, 0, canvasSize.dy - viewPortSize.dy);
+    viewPort.x = limitValue(viewPort.x, 0, canvasSize.dx - viewPort.dx);
+    viewPort.y = limitValue(viewPort.y, 0, canvasSize.dy - viewPort.dy);
 
     RecalcVisibleParts();
     RenderVisibleParts();
@@ -1107,10 +1083,10 @@ bool DisplayModel::goToNextPage(int scrollY)
 //    DBG_OUT("DisplayModel::goToNextPage(scrollY=%d), currPageNo=%d, firstPageInNewRow=%d\n", scrollY, currPageNo, firstPageInNewRow);
     if (firstPageInNewRow > pageCount()) {
         /* we're on a last row or after it, can't go any further */
-        return FALSE;
+        return false;
     }
     goToPage(firstPageInNewRow, scrollY);
-    return TRUE;
+    return true;
 }
 
 bool DisplayModel::goToPrevPage(int scrollY)
@@ -1126,9 +1102,9 @@ bool DisplayModel::goToPrevPage(int scrollY)
     }
 
     PageInfo * pageInfo = getPageInfo(currPageNo);
-    if (_zoomVirtual == ZOOM_FIT_CONTENT && pageInfo->bitmap.y <= top.y)
+    if (_zoomVirtual == ZOOM_FIT_CONTENT && -pageInfo->pageOnScreen.y <= top.y)
         scrollY = 0; // continue, even though the current page isn't fully visible
-    else if (pageInfo->bitmap.y > scrollY && displayModeContinuous(displayMode())) {
+    else if (max(-pageInfo->pageOnScreen.y, 0) > scrollY && displayModeContinuous(displayMode())) {
         /* the current page isn't fully visible, so show it first */
         goToPage(currPageNo, scrollY);
         return true;
@@ -1136,15 +1112,15 @@ bool DisplayModel::goToPrevPage(int scrollY)
     int firstPageInNewRow = FirstPageInARowNo(currPageNo - columns, columns, displayModeShowCover(displayMode()));
     if (firstPageInNewRow < 1) {
         /* we're on a first page, can't go back */
-        return FALSE;
+        return false;
     }
 
     // scroll to the bottom of the page
     if (-1 == scrollY)
-        scrollY = getPageInfo(firstPageInNewRow)->bitmap.dy;
+        scrollY = getPageInfo(firstPageInNewRow)->pageOnScreen.dy;
 
     goToPage(firstPageInNewRow, scrollY);
-    return TRUE;
+    return true;
 }
 
 bool DisplayModel::goToLastPage()
@@ -1167,7 +1143,7 @@ bool DisplayModel::goToFirstPage()
     DBG_OUT("DisplayModel::goToFirstPage()\n");
 
     if (displayModeContinuous(displayMode())) {
-        if (0 == viewPortOffset.y) {
+        if (0 == viewPort.y) {
             return FALSE;
         }
     } else {
@@ -1186,7 +1162,7 @@ void DisplayModel::scrollXTo(int xOff)
     DBG_OUT("DisplayModel::scrollXTo(xOff=%d)\n", xOff);
     
     int currPageNo = currentPageNo();
-    viewPortOffset.x = xOff;
+    viewPort.x = xOff;
     RecalcVisibleParts();
     _callback->UpdateScrollbars(canvasSize);
     
@@ -1199,8 +1175,8 @@ void DisplayModel::scrollXBy(int dx)
 {
     DBG_OUT("DisplayModel::scrollXBy(dx=%d)\n", dx);
 
-    int newOffX = limitValue(viewPortOffset.x + dx, 0, canvasSize.dx - viewPortSize.dx);
-    if (newOffX != viewPortOffset.x)
+    int newOffX = limitValue(viewPort.x + dx, 0, canvasSize.dx - viewPort.dx);
+    if (newOffX != viewPort.x)
         scrollXTo(newOffX);
 }
 
@@ -1209,7 +1185,7 @@ void DisplayModel::scrollYTo(int yOff)
     DBG_OUT("DisplayModel::scrollYTo(yOff=%d)\n", yOff);
 
     int currPageNo = currentPageNo();
-    viewPortOffset.y = yOff;
+    viewPort.y = yOff;
     RecalcVisibleParts();
     RenderVisibleParts();
 
@@ -1224,8 +1200,8 @@ void DisplayModel::scrollYTo(int yOff)
    of current page */
 void DisplayModel::scrollYBy(int dy, bool changePage)
 {
-    PageInfo *   pageInfo;
-    int             currYOff = viewPortOffset.y;
+    PageInfo *      pageInfo;
+    int             currYOff = viewPort.y;
     int             newPageNo;
     int             currPageNo;
 
@@ -1241,7 +1217,7 @@ void DisplayModel::scrollYBy(int dy, bool changePage)
                 newPageNo = _startPage-1;
                 assert(validPageNo(newPageNo));
                 pageInfo = getPageInfo(newPageNo);
-                newYOff = pageInfo->pos.dy - viewPortSize.dy;
+                newYOff = pageInfo->pos.dy - viewPort.dy;
                 if (newYOff < 0)
                     newYOff = 0; /* TODO: center instead? */
                 goToPrevPage(newYOff);
@@ -1251,7 +1227,7 @@ void DisplayModel::scrollYBy(int dy, bool changePage)
 
         /* see if we have to change page when scrolling forward */
         if ((dy > 0) && (_startPage < pageCount())) {
-            if (viewPortOffset.y + viewPortSize.dy >= canvasSize.dy) {
+            if (viewPort.y + viewPort.dy >= canvasSize.dy) {
                 goToNextPage(0);
                 return;
             }
@@ -1259,12 +1235,12 @@ void DisplayModel::scrollYBy(int dy, bool changePage)
     }
 
     newYOff += dy;
-    newYOff = limitValue(newYOff, 0, canvasSize.dy - viewPortSize.dy);
+    newYOff = limitValue(newYOff, 0, canvasSize.dy - viewPort.dy);
     if (newYOff == currYOff)
         return;
 
     currPageNo = currentPageNo();
-    viewPortOffset.y = newYOff;
+    viewPort.y = newYOff;
     RecalcVisibleParts();
     RenderVisibleParts();
     _callback->UpdateScrollbars(canvasSize);
@@ -1380,47 +1356,31 @@ bool DisplayModel::ShowResultRectToScreen(TextSel *res)
 
     PageInfo *pageInfo = getPageInfo(res->pages[0]);
     int sx = 0, sy = 0;
-    //
-    // Vertical scroll
-    //
 
     // scroll up to make top side of selection visible
-    if (extremes.y < 0) {
-        sy = extremes.y - 5;
-        if (sy + pageInfo->screen.y + pageInfo->bitmap.y < 0)
-            sy = -(pageInfo->screen.y + pageInfo->bitmap.y);
-    }
+    if (extremes.y < 0)
+        sy = max(extremes.y - 5, pageInfo->pageOnScreen.y);
     // scroll down to make top side of selection visible
-    else if (extremes.y >= viewPortSize.dy) {
-        sy = extremes.y - viewPortSize.dy + 5;
-    }
-
+    else if (extremes.y >= viewPort.dy)
+        sy = extremes.y - viewPort.dy + 5;
     // scroll up to make bottom side of selection visible
     // (if selection height fits in visible area)
-    if (extremes.y + extremes.dy > viewPortSize.dy
-        && extremes.dy <= viewPortSize.dy + 5) {
-        sy = extremes.y + extremes.dy - viewPortSize.dy + 5;
+    if (extremes.y + extremes.dy > viewPort.dy
+        && extremes.dy <= viewPort.dy + 5) {
+        sy = extremes.y + extremes.dy - viewPort.dy + 5;
     }
-
-    //
-    // Horizontal scroll
-    //
 
     // scroll left to make left side of selection visible
-    if (extremes.x < 0) {
-        sx = extremes.x - 5;
-        if (sx + pageInfo->screen.x + pageInfo->bitmap.x < 0)
-            sx = -(pageInfo->screen.x + pageInfo->bitmap.x);
-    }
+    if (extremes.x < 0)
+        sx = max(extremes.x - 5, pageInfo->pageOnScreen.x);
     // scroll right to make left side of selection visible
-    else if (extremes.x >= viewPortSize.dx) {
-        sx = extremes.x - viewPortSize.dx + 5;
-    }
+    else if (extremes.x >= viewPort.dx)
+        sx = extremes.x - viewPort.dx + 5;
     // scroll left to make right side of selection visible
     // (if selection width fits in visible area)
-    if (extremes.x + extremes.dx > viewPortSize.dx
-        && extremes.dx <= viewPortSize.dx - 5) {
-        sx = extremes.x + extremes.dx - viewPortSize.dx + 5;
+    if (extremes.x + extremes.dx > viewPort.dx
+        && extremes.dx <= viewPort.dx - 5) {
+        sx = extremes.x + extremes.dx - viewPort.dx + 5;
     }
 
     if (sx != 0)
@@ -1440,19 +1400,18 @@ ScrollState DisplayModel::GetScrollState()
     PageInfo *pageInfo = getPageInfo(state.page);
     // Shortcut: don't calculate precise positions, if the
     // page wasn't scrolled right/down at all
-    if (pageInfo->screen.x > 0 && pageInfo->screen.y > 0)
+    if (pageInfo->pageOnScreen.x > 0 && pageInfo->pageOnScreen.y > 0)
         return state;
 
-    PointI pt;
-    pt.x = max(pageInfo->screen.x - pageInfo->bitmap.x, 0);
-    pt.y = max(pageInfo->screen.y - pageInfo->bitmap.y, 0);
+    RectI screen(PointI(), viewPort.Size());
+    RectI pageVis = pageInfo->pageOnScreen.Intersect(screen);
+    state.page = GetPageNextToPoint(pageVis.TL());
+    PointD ptD = CvtFromScreen(pageVis.TL(), state.page);
 
-    state.page = GetPageNextToPoint(pt);
-    PointD ptD = CvtFromScreen(pt, state.page);
     // Remember to show the margin, if it's currently visible
-    if (pageInfo->screen.x <= 0)
+    if (pageInfo->pageOnScreen.x <= 0)
         state.x = ptD.x;
-    if (pageInfo->screen.y <= 0)
+    if (pageInfo->pageOnScreen.y <= 0)
         state.y = ptD.y;
 
     return state;
@@ -1473,7 +1432,7 @@ void DisplayModel::SetScrollState(ScrollState state)
     if (state.x < 0)
         newPt.x = -1;
     else
-        newPt.x += viewPortOffset.x;
+        newPt.x += viewPort.x;
     if (state.y < 0)
         newPt.y = 0;
     goToPage(state.page, newPt.y, false, newPt.x);

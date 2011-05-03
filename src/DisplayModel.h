@@ -65,13 +65,10 @@ struct PageInfo {
        Represents display rectangle for a given page.
        Calculated in DisplayModel::Relayout() */
     RectI           pos;
+
     /* data that changes due to scrolling. Calculated in DisplayModel::RecalcVisibleParts() */
     float           visibleRatio; /* (0.0 = invisible, 1.0 = fully visible) */
-    /* part of the image that should be shown */
-    RectI           bitmap;
-    /* where it should be blitted in the view port */
-    PointI          screen;
-    /* position of page relative to visible view port */
+    /* position of page relative to visible view port: pos.Offset(-viewPort.x, -viewPort.y) */
     RectI           pageOnScreen;
 };
 
@@ -145,20 +142,17 @@ public:
 
     PageInfo *      getPageInfo(int pageNo) const;
 
-    /* viewPortOffset is "polymorphic". If viewPortSize.dx > totalAreSize.dx then
-       viewPortOffset.x is offset of total area rect inside draw area, otherwise
-       an offset of draw area inside total area.
-       The same for viewPortOffset.y, except it's for dy */
-    PointI          viewPortOffset;
+    /* size and position of the viewport on the canvas (resp size of the visible
+       part of the canvase available for content (totalViewPortSize minus scroll bars)
+       (canvasSize is always at least as big as viewPort.Size()) */
+    RectI           viewPort;
 protected:
     /* total size of view port (draw area), including scroll bars */
     SizeI           totalViewPortSize;
-public:
-    /* size of view port available for content (totalViewPortSize minus scroll bars) */
-    SizeI           viewPortSize;
 
-    bool            needHScroll() const { return viewPortSize.dy < totalViewPortSize.dy; }
-    bool            needVScroll() const { return viewPortSize.dx < totalViewPortSize.dx; }
+public:
+    bool            needHScroll() const { return viewPort.dy < totalViewPortSize.dy; }
+    bool            needVScroll() const { return viewPort.dx < totalViewPortSize.dx; }
 
     void            ChangeViewPortSize(SizeI newViewPortSize);
 

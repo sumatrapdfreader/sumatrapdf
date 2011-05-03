@@ -157,7 +157,7 @@ static bool IsTileVisible(DisplayModel *dm, int pageNo, int rotation, float zoom
     tileOnScreen.dx = (int)(tileOnScreen.dx * (fuzz + 1));
     tileOnScreen.y -= (int)(tileOnScreen.dy * fuzz * 0.5);
     tileOnScreen.dy = (int)(tileOnScreen.dy * (fuzz + 1));
-    RectI screen(PointI(), dm->viewPortSize);
+    RectI screen(PointI(), dm->viewPort.Size());
     return !tileOnScreen.Intersect(screen).IsEmpty();
 }
 
@@ -257,7 +257,7 @@ USHORT RenderCache::GetTileRes(DisplayModel *dm, int pageNo)
     // containing a single image (MuPDF isn't that much faster for rendering
     // individual tiles than for rendering the whole image in a single pass)
     if (dm->zoomVirtual() == ZOOM_FIT_PAGE || dm->zoomVirtual() == ZOOM_FIT_WIDTH ||
-        pixelbox.dx <= dm->viewPortSize.dx || pixelbox.dy < dm->viewPortSize.dy ||
+        pixelbox.dx <= dm->viewPort.dx || pixelbox.dy < dm->viewPort.dy ||
         dm->engine->IsImagePage(pageNo)) {
         factorMax /= 2.0;
     }
