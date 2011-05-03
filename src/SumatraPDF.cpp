@@ -998,8 +998,10 @@ static bool ReloadPrefs()
     gFileHistory.Clear();
     gFileHistory.ExtendWith(fileHistory);
 #ifdef NEW_START_PAGE
-    if (gWindows.Count() > 0 && gWindows[0]->IsAboutWindow())
+    if (gWindows.Count() > 0 && gWindows[0]->IsAboutWindow()) {
+        gWindows[0]->DeleteInfotip();
         gWindows[0]->RedrawAll(true);
+    }
 #endif
     // update the current language
     if (!Str::Eq(currLang, gGlobalPrefs.m_currentLanguage)) {
@@ -2534,6 +2536,7 @@ static void OnAboutContextMenu(WindowInfo& win, int x, int y)
 
     case IDM_PIN_SELECTED_DOCUMENT:
         state->isPinned = !state->isPinned;
+        win.DeleteInfotip();
         win.RedrawAll(true);
         break;
 
@@ -2541,6 +2544,7 @@ static void OnAboutContextMenu(WindowInfo& win, int x, int y)
         gFileHistory.Remove(state);
         delete state;
         CleanUpThumbnailCache(gFileHistory);
+        win.DeleteInfotip();
         win.RedrawAll(true);
         break;
     }
