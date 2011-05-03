@@ -514,7 +514,7 @@ void DrawAboutPage(WindowInfo& win, HDC hdc)
 #include "FileHistory.h"
 
 #define DOCLIST_SEPARATOR_DY        2
-#define DOCLIST_THUMBNAIL_BORDER_W  2
+#define DOCLIST_THUMBNAIL_BORDER_W  1
 #define DOCLIST_MARGIN_LEFT        40
 #define DOCLIST_MARGIN_BETWEEN_X   30
 #define DOCLIST_MARGIN_RIGHT       40
