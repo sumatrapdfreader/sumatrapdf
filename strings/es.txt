@@ -53,6 +53,9 @@ Primera página\tInicio
 &Fit pages to printable area
 &Ajustar páginas al área de impresión
 
+&Forget Document
+Desechar Documento
+
 &Go To
 &Ir a
 
@@ -89,11 +92,17 @@ Página siguiente\t->
 &Open\tCtrl-O
 &Abrir\tCtrl-O
 
+&Open Document
+Abrir Documento
+
 &Options...
 &Opciones...
 
 &Password:
 &Contraseña:
+
+&Pin Document
+Marcar Documento
 
 &Previous Page\tLeft Arrow
 Página anterior\t<-
@@ -362,6 +371,9 @@ Ocultar leido frecuentemente
 Hint: Use the F3 key for finding again
 Usar "F3" para mostrar el siguiente resultado
 
+Image files (*.%s)
+Ficheros de imagen (*.%s)
+
 KB
 KB
 
@@ -595,10 +607,4 @@ copiado de texto
 
 printing document
 impresión de documento
-
-# Untranslated:
-#&Forget Document
-#&Open Document
-#&Pin Document
-#Image files (*.%s)
 
