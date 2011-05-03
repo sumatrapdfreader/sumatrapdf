@@ -19,6 +19,15 @@ __pragma(warning(pop))
 // number of page content trees to cache for quicker rendering
 #define MAX_PAGE_RUN_CACHE  8
 
+// when set, always uses GDI+ for rendering (else GDI+ is only used for
+// zoom levels above 4000% and for rendering directly into an HDC)
+static bool gDebugGdiPlusDevice = false;
+
+void DebugGdiPlusDevice(bool enable)
+{
+    gDebugGdiPlusDevice = enable;
+}
+
 void CalcMD5Digest(void *data, size_t byteCount, unsigned char digest[16])
 {
     fz_md5 md5;
@@ -516,15 +525,14 @@ public:
 
     virtual RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
                          RectD *pageRect=NULL, /* if NULL: defaults to the page's mediabox */
-                         RenderTarget target=Target_View, bool useGdi=false);
-    virtual bool RenderPage(HDC hDC, int pageNo, RectI screenRect,
-                         float zoom=0, int rotation=0,
+                         RenderTarget target=Target_View);
+    virtual bool RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, int rotation,
                          RectD *pageRect=NULL, RenderTarget target=Target_View) {
         return renderPage(hDC, getPdfPage(pageNo), screenRect, NULL, zoom, rotation, pageRect, target);
     }
 
-    virtual PointD Transform(PointD pt, int pageNo, float zoom, int rotate, bool inverse=false);
-    virtual RectD Transform(RectD rect, int pageNo, float zoom, int rotate, bool inverse=false);
+    virtual PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse=false);
+    virtual RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse=false);
 
     virtual unsigned char *GetFileData(size_t *cbCount);
     virtual bool HasTextContent() { return true; }
@@ -575,8 +583,8 @@ protected:
     bool            load_from_stream(fz_stream *stm, PasswordUI *pwdUI=NULL);
     bool            finishLoading();
     pdf_page      * getPdfPage(int pageNo, bool failIfBusy=false);
-    fz_matrix       viewctm(int pageNo, float zoom, int rotate);
-    fz_matrix       viewctm(pdf_page *page, float zoom, int rotate);
+    fz_matrix       viewctm(int pageNo, float zoom, int rotation);
+    fz_matrix       viewctm(pdf_page *page, float zoom, int rotation);
     bool            renderPage(HDC hDC, pdf_page *page, RectI screenRect,
                                fz_matrix *ctm=NULL, float zoom=0, int rotation=0,
                                RectD *pageRect=NULL, RenderTarget target=Target_View);
@@ -1137,23 +1145,23 @@ bool CPdfEngine::hasPermission(int permission)
     return (bool)pdf_has_permission(_xref, permission);
 }
 
-fz_matrix CPdfEngine::viewctm(pdf_page *page, float zoom, int rotate)
+fz_matrix CPdfEngine::viewctm(pdf_page *page, float zoom, int rotation)
 {
     fz_matrix ctm = fz_identity;
 
-    rotate = (rotate + page->rotate) % 360;
-    if (rotate < 0) rotate = rotate + 360;
-    if (90 == rotate)
+    rotation = (rotation + page->rotate) % 360;
+    if (rotation < 0) rotation = rotation + 360;
+    if (90 == rotation)
         ctm = fz_concat(ctm, fz_translate(-page->mediabox.x0, -page->mediabox.y0));
-    else if (180 == rotate)
+    else if (180 == rotation)
         ctm = fz_concat(ctm, fz_translate(-page->mediabox.x1, -page->mediabox.y0));
-    else if (270 == rotate)
+    else if (270 == rotation)
         ctm = fz_concat(ctm, fz_translate(-page->mediabox.x1, -page->mediabox.y1));
-    else // if (0 == rotate)
+    else // if (0 == rotation)
         ctm = fz_concat(ctm, fz_translate(-page->mediabox.x0, -page->mediabox.y1));
 
     ctm = fz_concat(ctm, fz_scale(zoom, -zoom));
-    ctm = fz_concat(ctm, fz_rotate((float)rotate));
+    ctm = fz_concat(ctm, fz_rotate((float)rotation));
 
     assert(fz_matrix_expansion(ctm) > 0);
     if (fz_matrix_expansion(ctm) == 0)
@@ -1162,7 +1170,7 @@ fz_matrix CPdfEngine::viewctm(pdf_page *page, float zoom, int rotate)
     return ctm;
 }
 
-fz_matrix CPdfEngine::viewctm(int pageNo, float zoom, int rotate)
+fz_matrix CPdfEngine::viewctm(int pageNo, float zoom, int rotation)
 {
     pdf_page partialPage;
     fz_obj *page = _xref->page_objs[pageNo-1];
@@ -1171,23 +1179,23 @@ fz_matrix CPdfEngine::viewctm(int pageNo, float zoom, int rotate)
         return fz_identity;
     partialPage.rotate = fz_to_int(fz_dict_gets(page, "Rotate"));
 
-    return viewctm(&partialPage, zoom, rotate);
+    return viewctm(&partialPage, zoom, rotation);
 }
 
-PointD CPdfEngine::Transform(PointD pt, int pageNo, float zoom, int rotate, bool inverse)
+PointD CPdfEngine::Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse)
 {
     fz_point pt2 = { (float)pt.x, (float)pt.y };
-    fz_matrix ctm = viewctm(pageNo, zoom, rotate);
+    fz_matrix ctm = viewctm(pageNo, zoom, rotation);
     if (inverse)
         ctm = fz_invert_matrix(ctm);
     pt2 = fz_transform_point(ctm, pt2);
     return PointD(pt2.x, pt2.y);
 }
 
-RectD CPdfEngine::Transform(RectD rect, int pageNo, float zoom, int rotate, bool inverse)
+RectD CPdfEngine::Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse)
 {
     fz_rect rect2 = fz_RectD_to_rect(rect);
-    fz_matrix ctm = viewctm(pageNo, zoom, rotate);
+    fz_matrix ctm = viewctm(pageNo, zoom, rotation);
     if (inverse)
         ctm = fz_invert_matrix(ctm);
     rect2 = fz_transform_rect(ctm, rect2);
@@ -1221,12 +1229,8 @@ bool CPdfEngine::renderPage(HDC hDC, pdf_page *page, RectI screenRect, fz_matrix
     return fz_okay == error;
 }
 
-RenderedBitmap *CPdfEngine::RenderBitmap(
-                           int pageNo, float zoom, int rotation,
-                           RectD *pageRect, RenderTarget target,
-                           bool useGdi)
-{
-    
+RenderedBitmap *CPdfEngine::RenderBitmap(int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target)
+{    
     pdf_page* page = getPdfPage(pageNo);
     if (!page)
         return NULL;
@@ -1236,10 +1240,7 @@ RenderedBitmap *CPdfEngine::RenderBitmap(
     fz_bbox bbox = fz_round_rect(fz_transform_rect(ctm, pRect));
 
     // GDI+ seems to render quicker and more reliable at high zoom levels
-    if (zoom > 40.0)
-        useGdi = true;
-
-    if (useGdi) {
+    if (zoom > 40.0 || gDebugGdiPlusDevice) {
         int w = bbox.x1 - bbox.x0, h = bbox.y1 - bbox.y0;
         ctm = fz_concat(ctm, fz_translate((float)-bbox.x0, (float)-bbox.y0));
 
@@ -1697,15 +1698,14 @@ public:
 
     virtual RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
                          RectD *pageRect=NULL, /* if NULL: defaults to the page's mediabox */
-                         RenderTarget target=Target_View, bool useGdi=false);
-    virtual bool RenderPage(HDC hDC, int pageNo, RectI screenRect,
-                         float zoom=0, int rotation=0,
+                         RenderTarget target=Target_View);
+    virtual bool RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, int rotation,
                          RectD *pageRect=NULL, RenderTarget target=Target_View) {
         return renderPage(hDC, getXpsPage(pageNo), screenRect, NULL, zoom, rotation, pageRect);
     }
 
-    virtual PointD Transform(PointD pt, int pageNo, float zoom, int rotate, bool inverse=false);
-    virtual RectD Transform(RectD rect, int pageNo, float zoom, int rotate, bool inverse=false);
+    virtual PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse=false);
+    virtual RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse=false);
 
     virtual unsigned char *GetFileData(size_t *cbCount);
     virtual bool HasTextContent() { return true; }
@@ -1746,13 +1746,13 @@ protected:
     bool            load_from_stream(fz_stream *stm);
 
     xps_page      * getXpsPage(int pageNo, bool failIfBusy=false);
-    fz_matrix       viewctm(int pageNo, float zoom, int rotate) {
-        return viewctm(PageMediabox(pageNo), zoom, rotate);
+    fz_matrix       viewctm(int pageNo, float zoom, int rotation) {
+        return viewctm(PageMediabox(pageNo), zoom, rotation);
     }
-    fz_matrix       viewctm(xps_page *page, float zoom, int rotate) {
-        return viewctm(RectD(0, 0, page->width, page->height), zoom, rotate);
+    fz_matrix       viewctm(xps_page *page, float zoom, int rotation) {
+        return viewctm(RectD(0, 0, page->width, page->height), zoom, rotation);
     }
-    fz_matrix       viewctm(RectD mediabox, float zoom, int rotate);
+    fz_matrix       viewctm(RectD mediabox, float zoom, int rotation);
     bool            renderPage(HDC hDC, xps_page *page, RectI screenRect,
                                fz_matrix *ctm=NULL, float zoom=0, int rotation=0,
                                RectD *pageRect=NULL);
@@ -2160,24 +2160,24 @@ RectD CXpsEngine::PageContentBox(int pageNo, RenderTarget target)
     return bbox2.Intersect(PageMediabox(pageNo));
 }
 
-fz_matrix CXpsEngine::viewctm(RectD mediabox, float zoom, int rotate)
+fz_matrix CXpsEngine::viewctm(RectD mediabox, float zoom, int rotation)
 {
     fz_matrix ctm = fz_identity;
 
     assert(0 == mediabox.x && 0 == mediabox.y);
-    rotate = rotate % 360;
-    if (rotate < 0) rotate = rotate + 360;
-    if (90 == rotate)
+    rotation = rotation % 360;
+    if (rotation < 0) rotation = rotation + 360;
+    if (90 == rotation)
         ctm = fz_concat(ctm, fz_translate(0, (float)-mediabox.dy));
-    else if (180 == rotate)
+    else if (180 == rotation)
         ctm = fz_concat(ctm, fz_translate((float)-mediabox.dx, (float)-mediabox.dy));
-    else if (270 == rotate)
+    else if (270 == rotation)
         ctm = fz_concat(ctm, fz_translate((float)-mediabox.dx, 0));
-    else // if (0 == rotate)
+    else // if (0 == rotation)
         ctm = fz_concat(ctm, fz_translate(0, 0));
 
     ctm = fz_concat(ctm, fz_scale(zoom, zoom));
-    ctm = fz_concat(ctm, fz_rotate((float)rotate));
+    ctm = fz_concat(ctm, fz_rotate((float)rotation));
 
     assert(fz_matrix_expansion(ctm) > 0);
     if (fz_matrix_expansion(ctm) == 0)
@@ -2186,20 +2186,20 @@ fz_matrix CXpsEngine::viewctm(RectD mediabox, float zoom, int rotate)
     return ctm;
 }
 
-PointD CXpsEngine::Transform(PointD pt, int pageNo, float zoom, int rotate, bool inverse)
+PointD CXpsEngine::Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse)
 {
     fz_point pt2 = { (float)pt.x, (float)pt.y };
-    fz_matrix ctm = viewctm(pageNo, zoom, rotate);
+    fz_matrix ctm = viewctm(pageNo, zoom, rotation);
     if (inverse)
         ctm = fz_invert_matrix(ctm);
     pt2 = fz_transform_point(ctm, pt2);
     return PointD(pt2.x, pt2.y);
 }
 
-RectD CXpsEngine::Transform(RectD rect, int pageNo, float zoom, int rotate, bool inverse)
+RectD CXpsEngine::Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse)
 {
     fz_rect rect2 = fz_RectD_to_rect(rect);
-    fz_matrix ctm = viewctm(pageNo, zoom, rotate);
+    fz_matrix ctm = viewctm(pageNo, zoom, rotation);
     if (inverse)
         ctm = fz_invert_matrix(ctm);
     rect2 = fz_transform_rect(ctm, rect2);
@@ -2234,10 +2234,7 @@ bool CXpsEngine::renderPage(HDC hDC, xps_page *page, RectI screenRect, fz_matrix
     return true;
 }
 
-RenderedBitmap *CXpsEngine::RenderBitmap(
-                           int pageNo, float zoom, int rotation,
-                           RectD *pageRect, RenderTarget target,
-                           bool useGdi)
+RenderedBitmap *CXpsEngine::RenderBitmap(int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target)
 {
     xps_page* page = getXpsPage(pageNo);
     if (!page)
@@ -2249,10 +2246,7 @@ RenderedBitmap *CXpsEngine::RenderBitmap(
     fz_bbox bbox = fz_round_rect(fz_transform_rect(ctm, pRect));
 
     // GDI+ seems to render quicker and more reliable at high zoom levels
-    if (zoom > 40.0)
-        useGdi = true;
-
-    if (useGdi) {
+    if (zoom > 40.0 || gDebugGdiPlusDevice) {
         int w = bbox.x1 - bbox.x0, h = bbox.y1 - bbox.y0;
         ctm = fz_concat(ctm, fz_translate((float)-bbox.x0, (float)-bbox.y0));
 

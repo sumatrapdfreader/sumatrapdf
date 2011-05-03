@@ -24,13 +24,12 @@ public:
 
     virtual RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
                          RectD *pageRect=NULL, /* if NULL: defaults to the page's mediabox */
-                         RenderTarget target=Target_View, bool useGdi=false);
-    virtual bool RenderPage(HDC hDC, int pageNo, RectI screenRect,
-                         float zoom=0, int rotation=0,
+                         RenderTarget target=Target_View);
+    virtual bool RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, int rotation,
                          RectD *pageRect=NULL, RenderTarget target=Target_View);
 
-    virtual PointD Transform(PointD pt, int pageNo, float zoom, int rotate, bool inverse=false);
-    virtual RectD Transform(RectD rect, int pageNo, float zoom, int rotate, bool inverse=false);
+    virtual PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse=false);
+    virtual RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse=false);
 
     virtual unsigned char *GetFileData(size_t *cbCount);
     virtual bool HasTextContent() { return false; }
@@ -50,7 +49,7 @@ protected:
     int pageCount;
     Vec<Gdiplus::Bitmap *> pages;
 
-    void GetTransform(Gdiplus::Matrix& m, int pageNo, float zoom, int rotate);
+    void GetTransform(Gdiplus::Matrix& m, int pageNo, float zoom, int rotation);
 
     // override for lazily loading images
     virtual Gdiplus::Bitmap *LoadImage(int pageNo) {

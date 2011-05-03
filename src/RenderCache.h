@@ -85,9 +85,8 @@ private:
     const SizeI         maxTileSize;
 
 public:
-    /* point these to the actual preferences for live updates */
-    bool              * invertColors;
-    bool              * useGdiRenderer;
+    /* invert all colors for accessibility reasons (experimental!) */
+    bool                invertColors;
 
     RenderCache();
     ~RenderCache();

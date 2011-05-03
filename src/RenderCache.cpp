@@ -10,7 +10,7 @@
 #define CONSERVE_MEMORY
 
 RenderCache::RenderCache()
-    : _cacheCount(0), _requestCount(0), invertColors(NULL), useGdiRenderer(NULL),
+    : _cacheCount(0), _requestCount(0), invertColors(false),
       maxTileSize(GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN))
 {
     InitializeCriticalSection(&_cacheAccess);
@@ -559,8 +559,7 @@ DWORD WINAPI RenderCache::RenderCacheThread(LPVOID data)
             req.renderingStartedCb = NULL;
         }
 
-        bmp = req.dm->engine->RenderBitmap(req.pageNo, req.zoom, req.rotation, &req.pageRect, Target_View,
-                                           cache->useGdiRenderer && *cache->useGdiRenderer);
+        bmp = req.dm->engine->RenderBitmap(req.pageNo, req.zoom, req.rotation, &req.pageRect);
         if (req.abort) {
             delete bmp;
             if (req.renderCb)
@@ -568,7 +567,7 @@ DWORD WINAPI RenderCache::RenderCacheThread(LPVOID data)
             continue;
         }
 
-        if (bmp && cache->invertColors && *cache->invertColors)
+        if (bmp && cache->invertColors)
             bmp->InvertColors();
         if (bmp)
             DBG_OUT("RenderCacheThread(): finished rendering %d\n", req.pageNo);

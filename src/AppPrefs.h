@@ -72,8 +72,6 @@ struct SerializableGlobalPrefs {
     bool m_fwdsearchPermanent; /* if false then highlights are hidden automatically after a short period of time,
                                   if true then highlights remain until the next forward search */
 
-    bool m_invertColors; /* invert all colors for accessibility reasons (experimental!) */
-
     bool m_showStartPage; /* whether to display Frequently Read documents or the About page in an empty window */
     int  m_openCountWeek; /* week count since 2011-01-01 needed to "age" openCount values in file history */
 

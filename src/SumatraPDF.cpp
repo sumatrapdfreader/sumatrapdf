@@ -193,7 +193,6 @@ SerializableGlobalPrefs             gGlobalPrefs = {
     COL_FWDSEARCH_BG, // int  m_fwdsearchColor
     15, // int  m_fwdsearchWidth
     0, // bool m_fwdsearchPermanent
-    false, // bool m_invertColors
     true, // bool m_showStartPage
     0, // int m_openCountWeek
     { 0, 0 }, // FILETIME m_lastPrefUpdate
@@ -2120,7 +2119,7 @@ static void PaintPageFrameAndShadow(HDC hdc, PageInfo * pageInfo, bool presentat
     // Draw frame
     HPEN pe = CreatePen(PS_SOLID, 1, presentation ? TRANSPARENT : COL_PAGE_FRAME);
     SelectObject(hdc, pe);
-    SelectObject(hdc, gGlobalPrefs.m_invertColors ? gBrushBlack : gBrushWhite);
+    SelectObject(hdc, gRenderCache.invertColors ? gBrushBlack : gBrushWhite);
     Rectangle(hdc, frame.x, frame.y, frame.x + frame.dx, frame.y + frame.dy);
     DeletePen(pe);
 }
@@ -2131,7 +2130,7 @@ static void PaintPageFrameAndShadow(HDC hdc, PageInfo *pageInfo, bool presentati
 
     HPEN pe = CreatePen(PS_NULL, 0, 0);
     SelectObject(hdc, pe);
-    SelectObject(hdc, gGlobalPrefs.m_invertColors ? gBrushBlack : gBrushWhite);
+    SelectObject(hdc, gRenderCache.invertColors ? gBrushBlack : gBrushWhite);
     Rectangle(hdc, frame.x, frame.y, frame.x + frame.dx + 1, frame.y + frame.dy + 1);
     DeletePen(pe);
 }
@@ -2216,14 +2215,14 @@ static void DrawDocument(WindowInfo& win, HDC hdc, RECT *rcArea)
         bool renderOutOfDateCue = false;
         UINT renderDelay = 0;
         if (dm->cbxEngine || dm->imageEngine)
-            dm->engine->RenderPage(hdc, pageNo, pageInfo->pageOnScreen, dm->zoomReal(pageNo), dm->rotation());
+            dm->engine->RenderPage(hdc, pageInfo->pageOnScreen, pageNo, dm->zoomReal(pageNo), dm->rotation());
         else
             renderDelay = gRenderCache.Paint(hdc, &bounds, dm, pageNo, pageInfo, &renderOutOfDateCue);
 
         if (renderDelay) {
             Win::Font::ScopedFont fontRightTxt(hdc, _T("MS Shell Dlg"), 14);
             Win::HdcScopedSelectFont scope(hdc, fontRightTxt);
-            SetTextColor(hdc, gGlobalPrefs.m_invertColors ? WIN_COL_WHITE : WIN_COL_BLACK);
+            SetTextColor(hdc, gRenderCache.invertColors ? WIN_COL_WHITE : WIN_COL_BLACK);
             if (renderDelay != RENDER_DELAY_FAILED) {
                 if (renderDelay < REPAINT_MESSAGE_DELAY_IN_MS)
                     win.RepaintAsync(REPAINT_MESSAGE_DELAY_IN_MS / 4);
@@ -2306,8 +2305,7 @@ static void CopySelectionToClipboard(WindowInfo& win)
     /* also copy a screenshot of the current selection to the clipboard */
     SelectionOnPage *selOnPage = &win.selectionOnPage->At(0);
     RenderedBitmap * bmp = win.dm->engine->RenderBitmap(selOnPage->pageNo,
-        win.dm->zoomReal(), win.dm->rotation(), &selOnPage->rect,
-        Target_Export, gUseGdiRenderer);
+        win.dm->zoomReal(), win.dm->rotation(), &selOnPage->rect, Target_Export);
     if (bmp) {
         if (!SetClipboardData(CF_BITMAP, bmp->GetBitmap()))
             SeeLastError();
@@ -3235,9 +3233,9 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL)
             RectI rc = RectI::FromXY((int)(printableWidth - sSize.dx * zoom) / 2,
                                      (int)(printableHeight - sSize.dy * zoom) / 2,
                                      paperWidth, paperHeight);
-            engine.RenderPage(hdc, pd.sel[i].pageNo, rc, zoom, pd.rotation, clipRegion, Target_Print);
+            engine.RenderPage(hdc, rc, pd.sel[i].pageNo, zoom, pd.rotation, clipRegion, Target_Print);
 #else
-            RenderedBitmap *bmp = engine.RenderBitmap(pd.sel[i].pageNo, zoom, pd.rotation, clipRegion, Target_Print, gUseGdiRenderer);
+            RenderedBitmap *bmp = engine.RenderBitmap(pd.sel[i].pageNo, zoom, pd.rotation, clipRegion, Target_Print);
             if (bmp) {
                 PointI TL((printableWidth - bmp->Size().dx) / 2,
                           (printableHeight - bmp->Size().dy) / 2);
@@ -3331,9 +3329,9 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL)
             RectI rc = RectI::FromXY((int)(paperWidth - pSize.dx * zoom) / 2 + horizOffset - leftMargin,
                                      (int)(paperHeight - pSize.dy * zoom) / 2 + vertOffset - topMargin,
                                      paperWidth, paperHeight);
-            engine.RenderPage(hdc, pageNo, rc, zoom, rotation, NULL, Target_Print);
+            engine.RenderPage(hdc, rc, pageNo, zoom, rotation, NULL, Target_Print);
 #else
-            RenderedBitmap *bmp = engine.RenderBitmap(pageNo, zoom, rotation, NULL, Target_Print, gUseGdiRenderer);
+            RenderedBitmap *bmp = engine.RenderBitmap(pageNo, zoom, rotation, NULL, Target_Print);
             if (bmp) {
                 PointI TL((paperWidth - bmp->Size().dx) / 2 + horizOffset - leftMargin,
                           (paperHeight - bmp->Size().dy) / 2 + vertOffset - topMargin);
@@ -4620,6 +4618,7 @@ static void OnChar(WindowInfo& win, WPARAM key)
 #ifdef DEBUG
     case '$':
         gUseGdiRenderer = !gUseGdiRenderer;
+        DebugGdiPlusDevice(gUseGdiRenderer);
         win.Reload();
         break;
 #endif
@@ -6820,7 +6819,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     i.fwdsearchColor = gGlobalPrefs.m_fwdsearchColor;
     i.fwdsearchPermanent = gGlobalPrefs.m_fwdsearchPermanent;
     i.escToExit = gGlobalPrefs.m_escToExit;
-    i.invertColors = gGlobalPrefs.m_invertColors;
 
     i.ParseCommandLine(GetCommandLine());
 
@@ -6843,11 +6841,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     gGlobalPrefs.m_fwdsearchColor = i.fwdsearchColor;
     gGlobalPrefs.m_fwdsearchPermanent = i.fwdsearchPermanent;
     gGlobalPrefs.m_escToExit = i.escToExit;
-    gGlobalPrefs.m_invertColors = i.invertColors;
     gRestrictedUse = i.restrictedUse;
-
-    gRenderCache.invertColors = &gGlobalPrefs.m_invertColors;
-    gRenderCache.useGdiRenderer = &gUseGdiRenderer;
+    gRenderCache.invertColors = i.invertColors;
+    DebugGdiPlusDevice(gUseGdiRenderer);
 
     if (i.inverseSearchCmdLine) {
         free(gGlobalPrefs.m_inverseSearchCmdLine);

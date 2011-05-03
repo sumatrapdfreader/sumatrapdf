@@ -33,5 +33,6 @@ public:
 };
 
 void CalcMD5Digest(void *data, size_t byteCount, unsigned char digest[16]);
+void DebugGdiPlusDevice(bool enable);
 
 #endif

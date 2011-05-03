@@ -194,8 +194,6 @@ public:
     // number of pages the loaded document contains
     virtual int PageCount() const = 0;
 
-    // the angle in degrees the given page is rotated natively (usually 0 deg)
-    virtual int PageRotation(int pageNo) { return 0; }
     // the box containing the visible page content (usually RectD(0, 0, pageWidth, pageHeight))
     virtual RectD PageMediabox(int pageNo) = 0;
     // the box inside PageMediabox that actually contains any relevant content
@@ -203,21 +201,22 @@ public:
     virtual RectD PageContentBox(int pageNo, RenderTarget target=Target_View) {
         return PageMediabox(pageNo);
     }
+    // the angle in degrees the given page is rotated natively (usually 0 deg)
+    virtual int PageRotation(int pageNo) { return 0; }
 
     // renders a page into a cacheable RenderedBitmap
     virtual RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
                          RectD *pageRect=NULL, /* if NULL: defaults to the page's mediabox */
-                         RenderTarget target=Target_View, bool useGdi=false) = 0;
+                         RenderTarget target=Target_View) = 0;
     // renders a page directly into an hDC (e.g. for printing)
-    virtual bool RenderPage(HDC hDC, int pageNo, RectI screenRect,
-                         float zoom=0, int rotation=0,
+    virtual bool RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, int rotation,
                          RectD *pageRect=NULL, /* if NULL: defaults to the page's mediabox */
                          RenderTarget target=Target_View) = 0;
 
     // applies zoom and rotation to a point in user/page space converting
     // it into device/screen space - or in the inverse direction
-    virtual PointD Transform(PointD pt, int pageNo, float zoom, int rotate, bool inverse=false) = 0;
-    virtual RectD Transform(RectD rect, int pageNo, float zoom, int rotate, bool inverse=false) = 0;
+    virtual PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse=false) = 0;
+    virtual RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse=false) = 0;
 
     // returns the binary data for the current file
     // (e.g. for saving again when the file has already been deleted)

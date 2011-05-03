@@ -463,7 +463,7 @@ Bitmap *CbxEngine::LoadImage(int pageNo)
     return pages[pageNo-1];
 }
 
-RenderedBitmap *ImagesEngine::RenderBitmap(int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target, bool useGdi)
+RenderedBitmap *ImagesEngine::RenderBitmap(int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target)
 {
     RectD pageRc = pageRect ? *pageRect : PageMediabox(pageNo);
     RectI screen = Transform(pageRc, pageNo, zoom, rotation).Round();
@@ -474,7 +474,7 @@ RenderedBitmap *ImagesEngine::RenderBitmap(int pageNo, float zoom, int rotation,
     HBITMAP hbmp = CreateCompatibleBitmap(hDC, screen.dx, screen.dy);
     DeleteObject(SelectObject(hDCMem, hbmp));
 
-    bool ok = RenderPage(hDCMem, pageNo, screen, zoom, rotation, pageRect, target);
+    bool ok = RenderPage(hDCMem, screen, pageNo, zoom, rotation, pageRect, target);
     DeleteDC(hDCMem);
     ReleaseDC(NULL, hDC);
     if (!ok) {
@@ -485,7 +485,7 @@ RenderedBitmap *ImagesEngine::RenderBitmap(int pageNo, float zoom, int rotation,
     return new RenderedBitmap(hbmp, screen.dx, screen.dy);
 }
 
-bool ImagesEngine::RenderPage(HDC hDC, int pageNo, RectI screenRect, float zoom, int rotation, RectD *pageRect, RenderTarget target)
+bool ImagesEngine::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target)
 {
     Bitmap *bmp = LoadImage(pageNo);
     if (!bmp)
@@ -517,39 +517,39 @@ bool ImagesEngine::RenderPage(HDC hDC, int pageNo, RectI screenRect, float zoom,
     return ok == Ok;
 }
 
-void ImagesEngine::GetTransform(Matrix& m, int pageNo, float zoom, int rotate)
+void ImagesEngine::GetTransform(Matrix& m, int pageNo, float zoom, int rotation)
 {
     SizeD size = PageMediabox(pageNo).Size();
 
-    rotate = rotate % 360;
-    if (rotate < 0) rotate = rotate + 360;
-    if (90 == rotate)
+    rotation = rotation % 360;
+    if (rotation < 0) rotation = rotation + 360;
+    if (90 == rotation)
         m.Translate(0, (REAL)-size.dy, MatrixOrderAppend);
-    else if (180 == rotate)
+    else if (180 == rotation)
         m.Translate((REAL)-size.dx, (REAL)-size.dy, MatrixOrderAppend);
-    else if (270 == rotate)
+    else if (270 == rotation)
         m.Translate((REAL)-size.dx, 0, MatrixOrderAppend);
-    else // if (0 == rotate)
+    else // if (0 == rotation)
         m.Translate(0, 0, MatrixOrderAppend);
 
     m.Scale(zoom, zoom, MatrixOrderAppend);
-    m.Rotate((REAL)rotate, MatrixOrderAppend);
+    m.Rotate((REAL)rotation, MatrixOrderAppend);
 }
 
-PointD ImagesEngine::Transform(PointD pt, int pageNo, float zoom, int rotate, bool inverse)
+PointD ImagesEngine::Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse)
 {
-    RectD rect = Transform(RectD(pt, SizeD()), pageNo, zoom, rotate, inverse);
+    RectD rect = Transform(RectD(pt, SizeD()), pageNo, zoom, rotation, inverse);
     return PointD(rect.x, rect.y);
 }
 
-RectD ImagesEngine::Transform(RectD rect, int pageNo, float zoom, int rotate, bool inverse)
+RectD ImagesEngine::Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse)
 {
     PointF pts[2] = {
         PointF((REAL)rect.x, (REAL)rect.y),
         PointF((REAL)(rect.x + rect.dx), (REAL)(rect.y + rect.dy))
     };
     Matrix m;
-    GetTransform(m, pageNo, zoom, rotate);
+    GetTransform(m, pageNo, zoom, rotation);
     if (inverse)
         m.Invert();
     m.TransformPoints(pts, 2);

@@ -150,13 +150,12 @@ public:
 
     virtual RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
                          RectD *pageRect=NULL, /* if NULL: defaults to the page's mediabox */
-                         RenderTarget target=Target_View, bool useGdi=false);
-    virtual bool RenderPage(HDC hDC, int pageNo, RectI screenRect,
-                         float zoom=0, int rotation=0,
+                         RenderTarget target=Target_View);
+    virtual bool RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, int rotation=0,
                          RectD *pageRect=NULL, RenderTarget target=Target_View);
 
-    virtual PointD Transform(PointD pt, int pageNo, float zoom, int rotate, bool inverse=false);
-    virtual RectD Transform(RectD rect, int pageNo, float zoom, int rotate, bool inverse=false);
+    virtual PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse=false);
+    virtual RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse=false);
 
     virtual unsigned char *GetFileData(size_t *cbCount);
     virtual bool HasTextContent() { return true; }
@@ -303,7 +302,7 @@ bool CDjVuEngine::Load(const TCHAR *fileName)
     return true;
 }
 
-RenderedBitmap *CDjVuEngine::RenderBitmap(int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target, bool useGdi)
+RenderedBitmap *CDjVuEngine::RenderBitmap(int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target)
 {
     ScopedCritSec scope(&ctxAccess);
 
@@ -347,7 +346,7 @@ RenderedBitmap *CDjVuEngine::RenderBitmap(int pageNo, float zoom, int rotation, 
     return bmp;
 }
 
-bool CDjVuEngine::RenderPage(HDC hDC, int pageNo, RectI screenRect, float zoom, int rotation, RectD *pageRect, RenderTarget target)
+bool CDjVuEngine::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target)
 {
     bool success = true;
     RectD mediabox = PageMediabox(pageNo);
@@ -435,7 +434,7 @@ RectD CDjVuEngine::PageContentBox(int pageNo, RenderTarget target)
     return pageRc;
 }
 
-PointD CDjVuEngine::Transform(PointD pt, int pageNo, float zoom, int rotate, bool inverse)
+PointD CDjVuEngine::Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse)
 {
     assert(zoom > 0);
     if (zoom <= 0)
@@ -446,33 +445,33 @@ PointD CDjVuEngine::Transform(PointD pt, int pageNo, float zoom, int rotate, boo
     if (inverse) {
         // transform the page size to get a correct frame of reference
         page.dx *= zoom; page.dy *= zoom;
-        if (rotate % 180 != 0)
+        if (rotation % 180 != 0)
             swap(page.dx, page.dy);
         // invert rotation and zoom
-        rotate = -rotate;
+        rotation = -rotation;
         zoom = 1.0f / zoom;
     }
 
     PointD res;
-    rotate = rotate % 360;
-    if (rotate < 0) rotate += 360;
-    if (90 == rotate)
+    rotation = rotation % 360;
+    if (rotation < 0) rotation += 360;
+    if (90 == rotation)
         res = PointD(page.dy - pt.y, pt.x);
-    else if (180 == rotate)
+    else if (180 == rotation)
         res = PointD(page.dx - pt.x, page.dy - pt.y);
-    else if (270 == rotate)
+    else if (270 == rotation)
         res = PointD(pt.y, page.dx - pt.x);
-    else // if (0 == rotate)
+    else // if (0 == rotation)
         res = pt;
 
     res.x *= zoom; res.y *= zoom;
     return res;
 }
 
-RectD CDjVuEngine::Transform(RectD rect, int pageNo, float zoom, int rotate, bool inverse)
+RectD CDjVuEngine::Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse)
 {
-    PointD TL = Transform(rect.TL(), pageNo, zoom, rotate, inverse);
-    PointD BR = Transform(rect.BR(), pageNo, zoom, rotate, inverse);
+    PointD TL = Transform(rect.TL(), pageNo, zoom, rotation, inverse);
+    PointD BR = Transform(rect.BR(), pageNo, zoom, rotation, inverse);
     return RectD::FromXY(TL, BR);
 }
 
