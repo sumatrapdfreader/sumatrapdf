@@ -3131,16 +3131,16 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL)
 
     SetMapMode(hdc, MM_TEXT);
 
-    int paperWidth = GetDeviceCaps(hdc, PHYSICALWIDTH);
-    int paperHeight = GetDeviceCaps(hdc, PHYSICALHEIGHT);
-    int printableWidth = GetDeviceCaps(hdc, HORZRES);
-    int printableHeight = GetDeviceCaps(hdc, VERTRES);
-    int leftMargin = GetDeviceCaps(hdc, PHYSICALOFFSETX);
-    int topMargin = GetDeviceCaps(hdc, PHYSICALOFFSETY);
-    int rightMargin = paperWidth - printableWidth - leftMargin;
-    int bottomMargin = paperHeight - printableHeight - topMargin;
-    float dpiFactor = min(GetDeviceCaps(hdc, LOGPIXELSX) / engine.GetFileDPI(),
-                          GetDeviceCaps(hdc, LOGPIXELSY) / engine.GetFileDPI());
+    const int paperWidth = GetDeviceCaps(hdc, PHYSICALWIDTH);
+    const int paperHeight = GetDeviceCaps(hdc, PHYSICALHEIGHT);
+    const int printableWidth = GetDeviceCaps(hdc, HORZRES);
+    const int printableHeight = GetDeviceCaps(hdc, VERTRES);
+    const int leftMargin = GetDeviceCaps(hdc, PHYSICALOFFSETX);
+    const int topMargin = GetDeviceCaps(hdc, PHYSICALOFFSETY);
+    const int rightMargin = paperWidth - printableWidth - leftMargin;
+    const int bottomMargin = paperHeight - printableHeight - topMargin;
+    const float dpiFactor = min(GetDeviceCaps(hdc, LOGPIXELSX) / engine.GetFileDPI(),
+                                GetDeviceCaps(hdc, LOGPIXELSY) / engine.GetFileDPI());
     bool bPrintPortrait = paperWidth < paperHeight;
     if (pd.orientation)
         bPrintPortrait = DMORIENT_PORTRAIT == pd.orientation;
@@ -3229,13 +3229,12 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL)
             // dpiFactor means no physical zoom
             float zoom = dpiFactor;
             // offset of the top-left corner of the page from the printable area
-            // (positive values move the page into the left/top margins, etc.);
+            // (negative values move the page into the left/top margins, etc.);
             // offset adjustments are needed because the GDI coordinate system
-            // starts at the corner of the printable area and because the page
-            // is consequently scaled from the center of the printable area;
-            // default to centering the document page on the paper page
-            int horizOffset = leftMargin + (printableWidth - paperWidth) / 2;
-            int vertOffset = topMargin + (printableHeight - paperHeight) / 2;
+            // starts at the corner of the printable area and we rather want to
+            // center the page on the physical paper (default behavior)
+            int horizOffset = (paperWidth - printableWidth) / 2 - leftMargin;
+            int vertOffset = (paperHeight - printableHeight) / 2 - topMargin;
 
             if (pd.scaleAdv != PrintScaleNone) {
                 // make sure to fit all content into the printable area when scaling
@@ -3251,26 +3250,29 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL)
                 if (PrintScaleShrink == pd.scaleAdv && dpiFactor < zoom)
                     zoom = dpiFactor;
                 // make sure that no content lies in the non-printable paper margins
-                if (leftMargin > cbox.x * zoom)
-                    horizOffset = (int)(horizOffset - leftMargin + cbox.x * zoom);
-                else if (rightMargin > (pSize.dx - (cbox.x + cbox.dx)) * zoom)
-                    horizOffset = (int)(horizOffset + rightMargin - (pSize.dx - (cbox.x + cbox.dx)) * zoom);
-                if (topMargin > cbox.y * zoom)
-                    vertOffset = (int)(vertOffset - topMargin + cbox.y * zoom);
-                else if (bottomMargin > (pSize.dy - (cbox.y + cbox.dy)) * zoom)
-                    vertOffset = (int)(vertOffset + bottomMargin - (pSize.dy - (cbox.y + cbox.dy)) * zoom);
+                Rect<float> onPaper((paperWidth - pSize.dx * zoom) / 2 + cbox.x * zoom,
+                                    (paperHeight - pSize.dy * zoom) / 2 + cbox.y * zoom,
+                                    cbox.dx * zoom, cbox.dy * zoom);
+                if (leftMargin > onPaper.x)
+                    horizOffset = (int)(horizOffset + leftMargin - onPaper.x);
+                else if (paperWidth - rightMargin < onPaper.BR().x)
+                    horizOffset = (int)(horizOffset - (paperWidth - rightMargin) + onPaper.BR().x);
+                if (topMargin > onPaper.y)
+                    vertOffset = (int)(vertOffset + topMargin - onPaper.y);
+                else if (paperHeight - bottomMargin < onPaper.BR().y)
+                    vertOffset = (int)(vertOffset - (paperHeight - bottomMargin) + onPaper.BR().y);
             }
 
 #ifdef USE_GDI_FOR_PRINTING
-            RectI rc = RectI::FromXY((int)(printableWidth - pSize.dx * zoom) / 2 - horizOffset,
-                                     (int)(printableHeight - pSize.dy * zoom) / 2 - vertOffset,
+            RectI rc = RectI::FromXY((int)(paperWidth - pSize.dx * zoom) / 2 + horizOffset - leftMargin,
+                                     (int)(paperHeight - pSize.dy * zoom) / 2 + vertOffset - topMargin,
                                      paperWidth, paperHeight);
             engine.RenderPage(hdc, pageNo, rc, zoom, rotation, NULL, Target_Print);
 #else
             RenderedBitmap *bmp = engine.RenderBitmap(pageNo, zoom, rotation, NULL, Target_Print, gUseGdiRenderer);
             if (bmp) {
-                PointI TL((printableWidth - bmp->Size().dx) / 2 - horizOffset,
-                          (printableHeight - bmp->Size().dy) / 2 - vertOffset);
+                PointI TL((paperWidth - bmp->Size().dx) / 2 + horizOffset - leftMargin,
+                          (paperHeight - bmp->Size().dy) / 2 + vertOffset - topMargin);
                 bmp->StretchDIBits(hdc, RectI(TL, bmp->Size()));
                 delete bmp;
             }
