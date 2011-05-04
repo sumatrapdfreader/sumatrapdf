@@ -13,6 +13,7 @@ Contributor: LinoSP [http://reactos.wordpress.com]
 Contributor: pragmart [http://putolinux.wordpress.com]
 Contributor: Pedro Sanchez
 Contributor: Carlos Luna
+Contributor: Juan Vílchez [http://www.juanvilchez.es]
 
 &About
 &Acerca de...
@@ -120,7 +121,7 @@ Página anterior\t<-
 &Recordar la contraseña para este documento
 
 &Remember these settings for each document
-&Recordar estas configuraciones para cada documento
+&Recordar estos ajustes para todos los documentos
 
 &Save As...
 &Guardar como...
@@ -162,13 +163,13 @@ All files
 Todos los archivos
 
 All supported documents
-Todos los documentos soportados
+Todos los documentos leíbles
 
 Application:
 Aplicación:
 
 Associate with PDF files?
-¿Asociar con archivos PDF?
+¿Asociar a archivos PDF?
 
 Attachment: %s
 Adjunto: %s
@@ -189,7 +190,7 @@ Book&marks\tF12
 Marcadores\tF12
 
 Bookmark Shortcuts
-arcar Atajos
+Marcar Atajos
 
 Bookmark shortcut to page %d of %s
 Marcar atajo a pagina %d de %s
@@ -219,7 +220,7 @@ Check for &Updates
 &Comprobar actualizaciones
 
 Comic books
-Libros de caricaturas
+Comics
 
 Continuous
 Continua
@@ -240,10 +241,10 @@ Copy Co&mment
 Copiar co&mentario
 
 Copying text was denied (copying as image only)
-Ha sido denegada la copia de texto (copiar solamente como imagen)
+Copiado de texto no permitido (copiando como imagen)
 
 Could not open Printer
-Impresora no accesible
+Impresora no disponible
 
 Couldn't initialize printer
 No se pudo inicializar la impresora
@@ -288,7 +289,7 @@ Enter password for %s
 Introduzca contraseña para %s
 
 Enter the command-line to invoke when you double-click on the PDF document:
-Introduzca el comando para ejecutar al hacer doble-clic en el documento PDF:
+Introduzca los modificadores de línea de comando que se ejecutarán al hacer doble-clic en el documento PDF:
 
 Error loading %s
 Error de carga %s
@@ -297,7 +298,7 @@ F&orward\tAlt+Right Arrow
 Adelante\tAlt+->
 
 F&ullscreen\tCtrl-Shift-L
-Pantalla completa\tCtrl-Shift-L
+Pantalla completa\tCtrl-Mayus-L
 
 Facing
 Página doble
@@ -357,7 +358,7 @@ Found text at page %d (again)
 Buscar texto en la pagina %d (de nuevo)
 
 Frequently Read
-Leido frecuentemente
+Lo más leído
 
 GB
 GB
@@ -366,7 +367,7 @@ Go to page
 Ir a la página
 
 Hide frequently read
-Ocultar leido frecuentemente
+Ocultar "lo más leído"
 
 Hint: Use the F3 key for finding again
 Usar "F3" para mostrar el siguiente resultado
@@ -435,7 +436,7 @@ P&roperties
 P&ropiedades
 
 P&roperties\tCtrl-D
-P&ropriedades...\tCtrl-D
+P&ropiedades...\tCtrl-D
 
 PDF Document
 Documento PDF
@@ -468,7 +469,7 @@ Please include the following file in your crash report:
 Por favor incluya el siguiente archivo en su reporte de error:
 
 Please wait - rendering...
-Renderizando - Espere por favor...
+Espere por favor - renderizando...
 
 Pr&esentation\tCtrl-L
 Pr&esentación\tCtrl-L
@@ -486,7 +487,7 @@ Printing is still in progress. Abort and start over?
 Se esta imprimiendo. ¿Abortar y empezar de nuevo?
 
 Printing page %d of %d...
-Imprimiendo pagina %d de %d...
+Imprimiendo página %d de %d...
 
 Printing problem.
 Problema de impresión.
@@ -495,13 +496,13 @@ Remember &opened files
 Recordar archiv&os abiertos
 
 Rotate &Left\tCtrl-Shift--
-Girar a la izquierda\tCtrl-Shift--
+Girar a la izquierda\tCtrl-Mayus--
 
 Rotate &Right\tCtrl-Shift-+
-Girar a la derecha\tCtrl-Shift-+
+Girar a la derecha\tCtrl-Mayus-+
 
 Save S&hortcut...\tCtrl-Shift-S
-Guardar A&tajo...\tCtrl-Shiftt-S
+Guardar A&tajo...\tCtrl-Mayus-S
 
 Searching %d of %d...
 Buscando %d de %d…
@@ -513,7 +514,7 @@ Select &All\tCtrl-A
 Seleccionar &todo\tCtrl-A
 
 Select content with Ctrl+left mouse button
-Seleccionar con Ctrl+Click
+Seleccionar con Ctrl+B. Izq. ratón
 
 Send by &E-mail...
 Enviar por correo electrónico
@@ -525,10 +526,10 @@ Show &Toolbar
 Mostrar barra de herramientas
 
 Show &pages continuously
-Mostrar paginas continuamente
+Mostrar páginas de forma continua
 
 Show frequently read
-Mostrar leido frecuentemente
+Mostrar "lo más leído"
 
 Show the &bookmarks sidebar when available
 Mostrar la barra de marcadores cuando esté disponible
@@ -549,13 +550,13 @@ SumatraPDF Update
 Actualizar SumatraPDF
 
 SumatraPDF crashed
-SumatraPDF falló
+SumatraPDF se ha reiniciado debido a un fallo
 
 SumatraPDF is your default PDF reader
 SumatraPDF es el lector PDF predeterminado
 
 SumatraPDF should now be your default PDF reader
-SumatraPDF debería ser ahora tu lector PDF por defecto
+SumatraPDF a partir de ahora será el lector PDF por defecto
 
 Synchronization file cannot be opened
 No se pudo abrir el archivo de sincronización
@@ -606,5 +607,5 @@ copying text
 copiado de texto
 
 printing document
-impresión de documento
+imprimimento documento
 
