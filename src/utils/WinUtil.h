@@ -25,6 +25,16 @@ public:
     void Start() { QueryPerformanceCounter(&start); }
     void Stop() { QueryPerformanceCounter(&end); }
 
+    double GetCurrTimeInMs()
+    {
+        LARGE_INTEGER curr;
+        LARGE_INTEGER freq;
+        QueryPerformanceFrequency(&freq);
+        QueryPerformanceCounter(&curr);
+        double timeInSecs = (double)(curr.QuadPart-start.QuadPart)/(double)freq.QuadPart;
+        return timeInSecs * 1000.0;
+    }
+
     double GetTimeInMs()
     {
         LARGE_INTEGER   freq;

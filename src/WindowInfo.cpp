@@ -26,7 +26,8 @@ WindowInfo::WindowInfo(HWND hwnd) :
     loadedFilePath(NULL), currPageNo(0),
     xScrollSpeed(0), yScrollSpeed(0), wheelAccumDelta(0),
     delayedRepaintTimer(0), resizingTocBox(false), watcher(NULL),
-    pdfsync(NULL), threadStressRunning(false), stressLastRenderedPage(-1)
+    pdfsync(NULL), threadStressRunning(false), stressLastRenderedPage(-1),
+    dirStressTest(NULL)
 {
     ZeroMemory(&selectionRect, sizeof(selectionRect));
 
@@ -43,6 +44,7 @@ WindowInfo::WindowInfo(HWND hwnd) :
 }
 
 WindowInfo::~WindowInfo() {
+
     this->AbortFinding();
     this->AbortPrinting();
 
@@ -60,6 +62,7 @@ WindowInfo::~WindowInfo() {
 
     delete this->tocRoot;
     free(this->tocState);
+
 }
 
 // Notify both display model and double-buffer (if they exist)

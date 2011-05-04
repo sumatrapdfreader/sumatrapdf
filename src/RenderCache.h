@@ -109,6 +109,8 @@ public:
     bool    GetNextRequest(PageRenderRequest *req);
     void    Add(PageRenderRequest &req, RenderedBitmap *bitmap);
     bool    FreeNotVisible();
+    BitmapCacheEntry *  Find(DisplayModel *dm, int pageNo, int rotation,
+                             float zoom=INVALID_ZOOM, TilePosition *tile=NULL);
 
 private:
     USHORT  GetTileRes(DisplayModel *dm, int pageNo);
@@ -130,11 +132,9 @@ private:
 
     static DWORD WINAPI RenderCacheThread(LPVOID data);
 
-    BitmapCacheEntry *  Find(DisplayModel *dm, int pageNo, int rotation,
-                             float zoom=INVALID_ZOOM, TilePosition *tile=NULL);
-    void    DropCacheEntry(BitmapCacheEntry *entry);
     bool    Exists(DisplayModel *dm, int pageNo, int rotation,
                    float zoom=INVALID_ZOOM, TilePosition *tile=NULL);
+    void    DropCacheEntry(BitmapCacheEntry *entry);
     bool    FreePage(DisplayModel *dm=NULL, int pageNo=-1, TilePosition *tile=NULL);
 
     UINT    PaintTile(HDC hdc, RectI *bounds, DisplayModel *dm, int pageNo,

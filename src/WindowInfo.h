@@ -14,6 +14,7 @@ class DoubleBuffer;
 class SelectionOnPage;
 class LinkHandler;
 class MessageWndList;
+class DirStressTest;
 
 /* Describes actions which can be performed by mouse */
 enum MouseAction {
@@ -175,6 +176,8 @@ public:
                         int page;
                         int hideStep;       // value used to gradually hide the markers
                     } fwdsearchmark;
+
+    DirStressTest * dirStressTest;
 
     void UpdateToolbarState();
 
