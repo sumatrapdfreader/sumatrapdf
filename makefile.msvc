@@ -243,9 +243,9 @@ $(OS)\npPdfViewer.obj: src\browserplugin\npapi\nptypes.h src\utils\BaseUtil.h sr
 $(OS)\npPdfViewer.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\SimpleLog.h
 $(OS)\npPdfViewer.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
 $(OS)\ParseCommandLine.obj: src\AppPrefs.h src\BaseEngine.h src\DisplayState.h
-$(OS)\ParseCommandLine.obj: src\ParseCommandLine.h src\SumatraPDF.h src\utils\BaseUtil.h
-$(OS)\ParseCommandLine.obj: src\utils\CmdLineParser.h src\utils\GeomUtil.h src\utils\StrUtil.h
-$(OS)\ParseCommandLine.obj: src\utils\Vec.h src\utils\WinUtil.h
+$(OS)\ParseCommandLine.obj: src\ParseCommandLine.h src\StressTesting.h src\SumatraPDF.h
+$(OS)\ParseCommandLine.obj: src\utils\BaseUtil.h src\utils\CmdLineParser.h src\utils\GeomUtil.h
+$(OS)\ParseCommandLine.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
 $(OS)\PdfEngine.obj: mupdf\fitz\fitz.h mupdf\pdf\mupdf.h mupdf\xps\muxps.h
 $(OS)\PdfEngine.obj: src\BaseEngine.h src\PdfEngine.h src\utils\BaseUtil.h
 $(OS)\PdfEngine.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\StrUtil.h
@@ -312,8 +312,8 @@ $(OS)\TextSelection.obj: src\utils\GeomUtil.h src\utils\StrUtil.h src\utils\Vec.
 $(OS)\translations.obj: src\translations.h src\translations_txt.cpp src\utils\BaseUtil.h
 $(OS)\translations.obj: src\utils\StrUtil.h
 $(OS)\UnitTests.obj: src\AppTools.h src\BaseEngine.h src\DisplayState.h
-$(OS)\UnitTests.obj: src\ParseCommandLine.h src\utils\BaseUtil.h src\utils\GeomUtil.h
-$(OS)\UnitTests.obj: src\utils\StrUtil.h src\utils\Vec.h
+$(OS)\UnitTests.obj: src\ParseCommandLine.h src\StressTesting.h src\utils\BaseUtil.h
+$(OS)\UnitTests.obj: src\utils\GeomUtil.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\UtilTests.obj: src\utils\BaseUtil.h src\utils\BencUtil.h src\utils\FileUtil.h
 $(OS)\UtilTests.obj: src\utils\GeomUtil.h src\utils\SimpleLog.h src\utils\StrUtil.h
 $(OS)\UtilTests.obj: src\utils\Vec.h

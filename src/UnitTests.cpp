@@ -7,7 +7,7 @@
 #include "StrUtil.h"
 #include "ParseCommandLine.h"
 #include "AppTools.h"
-#include "Benchmark.h"
+#include "StressTesting.h"
 
 static void hexstrTest()
 {

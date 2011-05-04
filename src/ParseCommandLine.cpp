@@ -7,7 +7,7 @@
 #include "WinUtil.h"
 #include "ParseCommandLine.h"
 #include "CmdLineParser.h"
-#include "Benchmark.h"
+#include "StressTesting.h"
 
 #ifdef DEBUG
 static void EnumeratePrinters()

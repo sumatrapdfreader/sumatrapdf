@@ -45,10 +45,9 @@ WindowInfo::WindowInfo(HWND hwnd) :
 
 WindowInfo::~WindowInfo() 
 {
-
-    // TODO: delete dirStressTest
     AbortFinding();
     AbortPrinting();
+    delete dirStressTest;
 
     delete dm;
     delete watcher;
@@ -64,7 +63,6 @@ WindowInfo::~WindowInfo()
 
     delete tocRoot;
     free(tocState);
-
 }
 
 // Notify both display model and double-buffer (if they exist)
