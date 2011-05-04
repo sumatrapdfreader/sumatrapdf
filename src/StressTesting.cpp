@@ -275,7 +275,8 @@ bool DirStressTest::GoToNextPage()
     // start text search when we're in the middle of the document, so that
     // search thread touches both pages that were already rendered and not yet
     // rendered
-    // TODO: it would be nice to also randomize search starting page
+    // TODO: it would be nice to also randomize search starting page but the
+    // current API doesn't make it easy
     if (currPage == pageForSearchStart) {
         // use text that is unlikely to be found, so that we search all pages
         Win::SetText(win->hwndFindBox, _T("!z_yt"));
@@ -316,11 +317,11 @@ bool DirStressTest::OpenFile(const TCHAR *fileName)
     // current one
     assert(this == win->dirStressTest);
     if (w != win) {
-        WindowInfo *toDelete = win;
+        WindowInfo *toClose = win;
         w->dirStressTest = win->dirStressTest;
         win->dirStressTest = NULL;
         win = w;
-        DeleteWindowInfo(toDelete);
+        CloseWindow(toClose, false);
     }
 
     win->dm->changeDisplayMode(DM_SINGLE_PAGE);

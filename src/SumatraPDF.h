@@ -32,5 +32,6 @@ void LaunchBrowser(const TCHAR *url);
 void AssociateExeWithPdfExtension();
 void FindTextOnThread(WindowInfo* win, TextSearchDirection direction=FIND_FORWARD);
 void DeleteWindowInfo(WindowInfo *win);
+void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose=false);
 
 #endif

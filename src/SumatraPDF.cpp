@@ -2945,7 +2945,7 @@ static void OnMenuExit()
    Closes the window unless this is the last window in which
    case it switches to empty window and disables the "File\Close"
    menu item. */
-static void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose=false)
+void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
 {
     assert(win);
     if (!win) return;
