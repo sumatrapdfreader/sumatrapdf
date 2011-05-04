@@ -3889,20 +3889,18 @@ static void BrowseFolder(WindowInfo& win, bool forward)
     if (!CollectPathsFromDirectory(pattern, files))
         return;
 
-    const TCHAR *baseName = Path::GetBaseName(win.loadedFilePath);
-    if (-1 == files.Find(baseName))
-        files.Append(Str::Dup(baseName));
+    if (-1 == files.Find(win.loadedFilePath))
+        files.Append(Str::Dup(win.loadedFilePath));
     files.Sort();
 
-    int index = files.Find(baseName);
+    int index = files.Find(win.loadedFilePath);
     if (forward)
         index = (index + 1) % files.Count();
     else
         index = (index + files.Count() - 1) % files.Count();
 
-    ScopedMem<TCHAR> fullpath(Path::Join(dir, files[index]));
     UpdateCurrentFileDisplayStateForWin(win);
-    LoadDocument(fullpath, &win, true, true);
+    LoadDocument(files[index], &win, true, true);
 }
 
 static void OnVScroll(WindowInfo& win, WPARAM wParam)
@@ -4561,14 +4559,12 @@ static void OnChar(WindowInfo& win, WPARAM key)
         OnMenuViewContinuous(win);
         break;
     case 'b':
-        {
+        if (displayModeFacing(win.dm->displayMode())) {
             // experimental "e-book view": flip a single page
             bool forward = !IsShiftPressed();
-            bool alreadyFacing = displayModeFacing(win.dm->displayMode());
             int currPage = win.dm->currentPageNo();
 
-            if (alreadyFacing && (forward ? win.dm->lastBookPageVisible()
-                                          : win.dm->firstBookPageVisible()))
+            if (forward ? win.dm->lastBookPageVisible() : win.dm->firstBookPageVisible())
                 break;
 
             DisplayMode newMode = DM_BOOK_VIEW;
@@ -4578,10 +4574,8 @@ static void OnChar(WindowInfo& win, WPARAM key)
                 newMode = DM_BOOK_VIEW == newMode ? DM_CONTINUOUS_BOOK_VIEW : DM_CONTINUOUS_FACING;
             win.SwitchToDisplayMode(newMode);
 
-            if (!alreadyFacing)
-                ; // don't do anything further
-            else if (forward && currPage >= win.dm->currentPageNo() &&
-                     (currPage > 1 || newMode == DM_BOOK_VIEW || newMode == DM_CONTINUOUS_BOOK_VIEW))
+            if (forward && currPage >= win.dm->currentPageNo() &&
+                (currPage > 1 || newMode == DM_BOOK_VIEW || newMode == DM_CONTINUOUS_BOOK_VIEW))
                 win.dm->goToNextPage(0);
             else if (!forward && currPage <= win.dm->currentPageNo())
                 win.dm->goToPrevPage(0);
