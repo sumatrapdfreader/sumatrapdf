@@ -421,7 +421,7 @@ void DirStressTest::Finished()
 void DirStressTest::AppendInfo(Str::Str<char>& s)
 {
     int secs = SecsSinceSystemTime(stressStartTime);
-    s.AppendFmt("stress test rendered %d files in ", filesCount);
+    s.AppendFmt(", stress test rendered %d files in ", filesCount);
     FormatTime(secs, s);
 }
 
