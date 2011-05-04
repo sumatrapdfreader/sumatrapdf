@@ -24,24 +24,11 @@
 
 //#define DEBUG_CRASH_INFO 1
 
-// TODO: maybe symbol directory should include build number, to disambiguate
-// them. On the other hand, dbghelp.dll doesn't seem to be confused and if
-// a .pdb file with correct name but from incorrect build is present, we'll
-// delete it and download a new one anyway
-
-/* Notes.
-
-1. Hard won wisdom: changing symbol path with SymSetSearchPath() after modules
-   have been loaded (invideProcess=TRUE in SymInitialize() or SymRefreshModuleList()).
-   I had to provide symbol path in SymInitialize() (and either invideProcess=TRUE
-   or invideProcess=FALSE but calls SymRefreshModuleList()). There's probably
-   a way to force it, but I'm happy I found a way that works.   
-
-2. For more reliability, instead of doing complicated things inside exception
-   handler, we could sublaunch ourselves in the "submit crash report for this
-   process" mode. External process should be able to walk our callstack etc.
-   (except maybe logging current exception ?)
-*/
+/* Hard won wisdom: changing symbol path with SymSetSearchPath() after modules
+have been loaded (invideProcess=TRUE in SymInitialize() or SymRefreshModuleList()).
+I had to provide symbol path in SymInitialize() (and either invideProcess=TRUE
+or invideProcess=FALSE but calls SymRefreshModuleList()). There's probably
+a way to force it, but I'm happy I found a way that works.    */
 
 typedef BOOL WINAPI MiniDumpWriteDumpProc(
     HANDLE hProcess,
@@ -854,6 +841,9 @@ static void GetProgramInfo(Str::Str<char>& s)
     s.AppendFmt("Browser plugin: %s\r\n", gPluginMode ? "yes" : "no");
 }
 
+// in SumatraPDF.cpp
+extern void GetFilesInfo(Str::Str<char>& s);
+
 static char *BuildCrashInfoText()
 {
     if (!gSymInitializeOk)
@@ -863,6 +853,7 @@ static char *BuildCrashInfoText()
     GetProgramInfo(s);
     GetOsVersion(s);
     GetSystemInfo(s);
+    GetFilesInfo(s);
     s.Append("\r\n");
     GetExceptionInfo(s, gMei.ExceptionPointers);
     GetAllThreadsCallstacks(s);

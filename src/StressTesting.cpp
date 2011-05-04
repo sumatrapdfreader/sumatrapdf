@@ -206,6 +206,20 @@ static TCHAR *FormatTime(int totalSecs)
     return Str::Format(_T("%d secs"), secs);
 }
 
+static void FormatTime(int totalSecs, Str::Str<char>& s)
+{
+    int secs = totalSecs % 60;
+    int totalMins = totalSecs / 60;
+    int mins = totalMins % 60;
+    int hrs = totalMins / 60;
+    if (hrs > 0)
+        s.AppendFmt("%d hrs %d mins %d secs", hrs, mins, secs);
+    else if (mins > 0)
+        s.AppendFmt("%d mins %d secs", mins, secs);
+    else
+        s.AppendFmt("%d secs", secs);
+}
+
 void RandomIsOverGlyph(DisplayModel *dm, int pageNo)
 {
     if (!dm->validPageNo(pageNo))
@@ -251,6 +265,7 @@ public:
         win(win), renderCache(renderCache), filesCount(0) { }
     virtual ~DirStressTest() { }
 
+    void AppendInfo(Str::Str<char>& s);
     void Start(const TCHAR *dirPath);
 
     virtual void Callback() { OnTimer(); }
@@ -403,6 +418,13 @@ void DirStressTest::Finished()
     delete this;
 }
 
+void DirStressTest::AppendInfo(Str::Str<char>& s)
+{
+    int secs = SecsSinceSystemTime(stressStartTime);
+    s.AppendFmt("stress test rendered %d files in ", filesCount);
+    FormatTime(secs, s);
+}
+
 void DirStressTest::Start(const TCHAR *dirPath)
 {
     if (!Dir::Exists(dirPath) || !OpenDir(dirPath)) {
@@ -418,6 +440,11 @@ void DirStressTest::Start(const TCHAR *dirPath)
         TickTimer();
     else
         Finished();
+}
+
+void AppendStressTestInfo(DirStressTest *dst, Str::Str<char>& s)
+{
+    dst->AppendInfo(s);
 }
 
 void StartDirStressTest(WindowInfo *win, const TCHAR *dir, RenderCache *renderCache)

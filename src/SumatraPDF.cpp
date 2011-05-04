@@ -2941,6 +2941,30 @@ static void OnMenuExit()
     PostQuitMessage(0);
 }
 
+// Note: not sure if this is a good idea, if gWindows or its WindowInfo objects
+// are corrupted, we might crash trying to access them. Maybe use IsBadReadPtr()
+// to test pointers (even if it's not advised in general)
+void GetFilesInfo(Str::Str<char>& s)
+{
+    for (size_t i=0; i<gWindows.Count(); i++) {
+        WindowInfo *w = gWindows.At(i);
+        if (!w)
+            continue;
+        if (!w->dm)
+            continue;
+        if (!w->loadedFilePath)
+            continue;
+        ScopedMem<char> f(Str::Conv::ToUtf8(w->loadedFilePath));
+        if (f) {
+            s.AppendFmt("File: %s", f);
+        }
+        if (w->dirStressTest) {
+            AppendStressTestInfo((DirStressTest*)w->dirStressTest, s);
+        }
+        s.Append("\r\n");
+    }
+}
+
 /* Close the document associated with window 'hwnd'.
    Closes the window unless this is the last window in which
    case it switches to empty window and disables the "File\Close"
