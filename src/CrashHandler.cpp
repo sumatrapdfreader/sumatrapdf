@@ -440,6 +440,16 @@ static void GetMachineName(Str::Str<char>& s)
     free(s2);
 }
 
+static void GetLanguage(Str::Str<char>& s)
+{
+    char country[32] = {0};
+    GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_SISO3166CTRYNAME, country, sizeof(country)-1);   
+
+    char lang[32] = {0};
+    GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_SISO639LANGNAME, lang, sizeof(lang)-1);
+    s.AppendFmt("Lang: %s %s\r\n", lang, country);
+}
+
 static void GetSystemInfo(Str::Str<char>& s)
 {
     SYSTEM_INFO si;
@@ -457,6 +467,7 @@ static void GetSystemInfo(Str::Str<char>& s)
     s.AppendFmt("Physical Memory: %.2f GB\r\nCommit Charge Limit: %.2f GB\r\nMemory Used: %d%%\r\n", physMemGB, totalPageGB, usedPerc);
 
     GetMachineName(s);
+    GetLanguage(s);
 
     // Note: maybe more information, like:
     // * amount of memory used by Sumatra,
