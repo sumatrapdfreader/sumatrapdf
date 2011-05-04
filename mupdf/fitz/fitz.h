@@ -145,6 +145,7 @@ char *fz_get_error_line(int n);
 /* memory allocation */
 void *fz_malloc(int size);
 void *fz_calloc(int count, int size);
+/* SumatraPDF: allow to failibly allocate memory */
 void *fz_calloc_no_abort(int count, int size);
 
 void *fz_realloc(void *p, int count, int size);

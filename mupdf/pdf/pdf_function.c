@@ -959,6 +959,7 @@ load_sample_func(pdf_function *func, pdf_xref *xref, fz_obj *dict, int num, int 
 	for (i = 0, samplecount = func->n; i < func->m; i++)
 		samplecount *= func->u.sa.size[i];
 
+	/* SumatraPDF: don't abort if samples couldn't be allocated */
 	func->u.sa.samples = fz_calloc_no_abort(samplecount, sizeof(float));
 	if (!func->u.sa.samples)
 		return fz_throw("cannot allocate memory for samples");
