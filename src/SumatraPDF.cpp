@@ -4086,13 +4086,14 @@ static void ToggleToolbarViewButton(WindowInfo& win, float newZoom, bool pagesCo
 
     float zoom = win.dm->zoomVirtual();
     DisplayMode mode = win.dm->displayMode();
+    DisplayMode newMode = pagesContinuously ? DM_CONTINUOUS : DM_SINGLE_PAGE;
 
-    if (displayModeContinuous(mode) != pagesContinuously || zoom != newZoom) {
+    if (mode != newMode || zoom != newZoom) {
         DisplayMode prevMode = win.prevDisplayMode;
         float prevZoom = win.prevZoomVirtual;
 
-        if (displayModeContinuous(mode) != pagesContinuously)
-            OnMenuViewContinuous(win);
+        if (mode != newMode)
+            win.SwitchToDisplayMode(newMode);
         OnMenuZoom(win, MenuIdFromVirtualZoom(newZoom));
 
         // remember the previous values for when the toolbar button is unchecked
