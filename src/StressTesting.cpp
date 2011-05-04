@@ -12,6 +12,7 @@
 #include "WindowInfo.h"
 #include "AppTools.h"
 #include "RenderCache.h"
+#include "SumatraPDF.h"
 
 static Log::Logger *gLog;
 #define logbench(msg, ...) gLog->LogFmt(_T(msg), __VA_ARGS__)
@@ -296,8 +297,10 @@ bool DirStressTest::OpenFile(const TCHAR *fileName)
     ScopedMem<TCHAR> tm(FormatTime(secs));
     ScopedMem<TCHAR> s(Str::Format(_T("File %d: %s, time: %s"), filesCount, fileName, tm));
     win->ShowNotification(s, false, false, NG_DIR_STRESS_NEW_FILE);
-    
-    // TODO: start a search too?
+
+    // use text that is unlikely to be found, so that we search all pages
+    Win::SetText(win->hwndFindBox, _T("!z_yt"));
+    FindTextOnThread(win);
     return true;
 }
 

@@ -6,6 +6,7 @@
 
 #include "BaseUtil.h"
 #include "AppPrefs.h"
+#include "TextSearch.h"
 
 #define FRAME_CLASS_NAME        _T("SUMATRA_PDF_FRAME")
 
@@ -25,7 +26,10 @@ extern HBRUSH                   gBrushAboutBg;
 extern bool                     gRestrictedUse;
 extern bool                     gPluginMode;
 
+class WindowInfo;
+
 void LaunchBrowser(const TCHAR *url);
 void AssociateExeWithPdfExtension();
+void FindTextOnThread(WindowInfo* win, TextSearchDirection direction=FIND_FORWARD);
 
 #endif

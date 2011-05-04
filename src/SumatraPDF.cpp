@@ -245,7 +245,6 @@ static void DeleteOldSelectionInfo(WindowInfo& win, bool alsoTextSel=false);
 static void ClearSearchResult(WindowInfo& win);
 static void EnterFullscreen(WindowInfo& win, bool presentation=false);
 static void ExitFullscreen(WindowInfo& win);
-static void FindTextOnThread(WindowInfo& win, TextSearchDirection direction=FIND_FORWARD);
 
 static bool CurrLangNameSet(const char *langName)
 {
@@ -4095,7 +4094,7 @@ static void OnMenuFind(WindowInfo& win)
         win.dm->textSearch->SetSensitive(matchCase);
     }
 
-    FindTextOnThread(win);
+    FindTextOnThread(&win);
 }
 
 static void EnterFullscreen(WindowInfo& win, bool presentation)
@@ -4272,7 +4271,7 @@ static void OnMenuFindNext(WindowInfo& win)
     if (!NeedsFindUI(win))
         return;
     if (SendMessage(win.hwndToolbar, TB_ISBUTTONENABLED, IDM_FIND_NEXT, 0))
-        FindTextOnThread(win, FIND_FORWARD);
+        FindTextOnThread(&win, FIND_FORWARD);
 }
 
 static void OnMenuFindPrev(WindowInfo& win)
@@ -4280,7 +4279,7 @@ static void OnMenuFindPrev(WindowInfo& win)
     if (!NeedsFindUI(win))
         return;
     if (SendMessage(win.hwndToolbar, TB_ISBUTTONENABLED, IDM_FIND_PREV, 0))
-        FindTextOnThread(win, FIND_BACKWARD);
+        FindTextOnThread(&win, FIND_BACKWARD);
 }
 
 static void OnMenuFindMatchCase(WindowInfo& win)
@@ -4671,7 +4670,7 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, L
             return 1;
 
         case VK_RETURN:
-            FindTextOnThread(*win);
+            FindTextOnThread(win);
             return 1;
 
         case VK_TAB:
@@ -4863,12 +4862,12 @@ static DWORD WINAPI FindThread(LPVOID data)
     return 0;
 }
 
-static void FindTextOnThread(WindowInfo& win, TextSearchDirection direction)
+void FindTextOnThread(WindowInfo* win, TextSearchDirection direction)
 {
-    win.AbortFinding(true);
+    win->AbortFinding(true);
 
-    FindThreadData *ftd = new FindThreadData(win, direction, win.hwndFindBox);
-    Edit_SetModify(win.hwndFindBox, FALSE);
+    FindThreadData *ftd = new FindThreadData(*win, direction, win->hwndFindBox);
+    Edit_SetModify(win->hwndFindBox, FALSE);
 
     if (Str::IsEmpty(ftd->text)) {
         delete ftd;
@@ -4876,7 +4875,7 @@ static void FindTextOnThread(WindowInfo& win, TextSearchDirection direction)
     }
 
     ftd->ShowUI();
-    win.findThread = CreateThread(NULL, 0, FindThread, ftd, 0, 0);
+    win->findThread = CreateThread(NULL, 0, FindThread, ftd, 0, 0);
 }
 
 static WNDPROC DefWndProcToolbar = NULL;
