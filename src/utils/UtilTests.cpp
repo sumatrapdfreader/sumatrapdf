@@ -318,6 +318,19 @@ static void StrVecTest()
     }
 }
 
+static size_t VecTestAppendFmt()
+{
+    Str::Str<char> v(256);
+    int64_t val = 1;
+    for (int i=0; i < 10000; i++) {
+        v.AppendFmt("i%" PRId64 "e", val);
+        val = (val * 3) / 2; // somewhat exponential growth
+        val += 15;
+    }
+    size_t l = v.Count();
+    return l;
+}
+
 static void VecTest()
 {
     Vec<int> ints;
@@ -415,6 +428,8 @@ static void VecTest()
         free(s);
         assert(v.Count() == 0);
     }
+
+    VecTestAppendFmt();
 
     {
         Vec<PointI *> v;
