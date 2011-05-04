@@ -275,6 +275,7 @@ bool DirStressTest::GoToNextPage()
     // start text search when we're in the middle of the document, so that
     // search thread touches both pages that were already rendered and not yet
     // rendered
+    // TODO: it would be nice to also randomize search starting page
     if (currPage == pageForSearchStart) {
         // use text that is unlikely to be found, so that we search all pages
         Win::SetText(win->hwndFindBox, _T("!z_yt"));
