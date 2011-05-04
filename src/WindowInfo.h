@@ -14,7 +14,6 @@ class DoubleBuffer;
 class SelectionOnPage;
 class LinkHandler;
 class MessageWndList;
-class DirStressTest;
 
 /* Describes actions which can be performed by mouse */
 enum MouseAction {
@@ -39,7 +38,7 @@ enum NotificationGroup {
     NG_PRINT_PROGRESS,
     NG_PAGE_INFO_HELPER,
     NG_DIR_STRESS_PAGE_TIMING,
-    NG_DIR_STRESS_NEW_FILE
+    NG_DIR_STRESS_NEW_FILE,
 };
 
 /* Describes position, the target (URL or file path) and infotip of a "hyperlink" */
@@ -179,7 +178,7 @@ public:
                         int hideStep;       // value used to gradually hide the markers
                     } fwdsearchmark;
 
-    DirStressTest * dirStressTest;
+    CallbackFunc *  dirStressTest;
 
     void UpdateToolbarState();
 

@@ -88,14 +88,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\Benchmark.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\Benchmark.h"
-				>
-			</File>
-			<File
 				RelativePath=".\src\CrashHandler.cpp"
 				>
 			</File>
@@ -181,6 +173,14 @@
 			</File>
 			<File
 				RelativePath=".\src\Resource.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\StressTesting.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\StressTesting.h"
 				>
 			</File>
 			<File

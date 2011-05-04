@@ -25,7 +25,7 @@
 #include "FileUtil.h"
 #include "CrashHandler.h"
 #include "ParseCommandLine.h"
-#include "Benchmark.h"
+#include "StressTesting.h"
 
 #include "translations.h"
 #include "Version.h"
@@ -132,7 +132,6 @@ bool                    gPluginMode = false;
 #define AUTO_RELOAD_DELAY_IN_MS     100
 
 #define STRESS_TIMER_ID             6
-#define DIR_STRESS_TIMER_ID         7
 
 #if !defined(THREAD_BASED_FILEWATCH)
 #define FILEWATCH_DELAY_IN_MS       1000
@@ -2396,259 +2395,6 @@ static void ToggleThreadStress(WindowInfo& win)
     StartStressRenderingPage(win, 1);
 }
 
-static void RandomIsOverGlyph(DisplayModel *dm, int pageNo)
-{
-    if (!dm->validPageNo(pageNo))
-        pageNo = 1;
-    if (!dm->validPageNo(pageNo))
-        return;
-    // try random position in the page
-    int x = rand() % 640;
-    int y = rand() % 480;
-    dm->textSelection->IsOverGlyph(pageNo, x, y);
-}
-
-/* The idea of DirStressTest is to render a lot of PDFs sequentially, simulating
-a human advancing one page at a time. This is mostly to run through a large number
-of PDFs before a release to make sure we're crash proof. */
-
-class DirStressTest {
-    WindowInfo *    win;
-    TCHAR *         currFile;
-    MillisecondTimer currPageRenderTime;
-    int             currPage;
-    int             filesCount; // number of files processed so far
-
-    SYSTEMTIME      stressStartTime;
-    // current state of directory traversal
-    TCHAR *         currDir;
-    HANDLE          currDirHandle;
-    WIN32_FIND_DATA fd;
-    
-    Vec<TCHAR*>     dirsToVisit;
-
-    bool OpenNextDir();
-    void Finished();
-
-public:
-    DirStressTest(const TCHAR *dir, WindowInfo *win) : win(win)
-    {
-        currFile = NULL;
-        filesCount = 0;
-        currDir = Str::Dup(dir);
-        currDirHandle = NULL;
-    }
-
-    ~DirStressTest()
-    {
-        free(currFile);
-        free(currDir);
-    }
-
-    bool OpenFile(const TCHAR *fileName);
-
-    bool GoToNextPage();
-    bool GoToNextFile();
-    bool OpenDir(const TCHAR *dir);
-    void Start();
-    void OnTimer();
-    void TickTimer();
-};
-
-bool DirStressTest::GoToNextPage()
-{
-    if (currPage < win->dm->pageCount()) {
-        ++currPage;
-        win->dm->goToPage(currPage, 0);
-        double pageRenderTime = currPageRenderTime.GetCurrTimeInMs();
-        ScopedMem<TCHAR> s(Str::Format(_T("Page %d rendered in %d milliseconds"), currPage-1, (int)pageRenderTime));
-        win->ShowNotification(s, true, false, NG_DIR_STRESS_PAGE_TIMING);
-        currPageRenderTime.Start();
-        return true;
-    }
-    if (!GoToNextFile()) {
-        return false;
-    }
-    return true;
-}
-
-bool DirStressTest::OpenNextDir()
-{
-    ScopedMem<TCHAR> s(Str::Format(_T("%s\\*"), currDir));
-    currDirHandle = FindFirstFile(s, &fd);
-    return (currDirHandle != NULL);   
-}
-
-// Note: a bit of a guess work based on msdn docs
-static bool IsRegularFile(DWORD attr)
-{
-    DWORD undesired = FILE_ATTRIBUTE_DEVICE | FILE_ATTRIBUTE_DIRECTORY |
-        FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_OFFLINE |
-        FILE_ATTRIBUTE_REPARSE_POINT | FILE_ATTRIBUTE_SPARSE_FILE |
-        FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_TEMPORARY | FILE_ATTRIBUTE_VIRTUAL;
-    return (attr & undesired) == 0;
-}
-
-// return t1 - t2 in seconds
-static int SystemTimeDiffInSecs(SYSTEMTIME& t1, SYSTEMTIME& t2)
-{
-    FILETIME ft1, ft2;
-    
-    SystemTimeToFileTime(&t1, &ft1);
-    SystemTimeToFileTime(&t2, &ft2);
-    return FileTimeDiffInSecs(ft1, ft2);
-
-}
-
-static TCHAR *FormatTime(int totalSecs)
-{
-    int secs = totalSecs % 60;
-    int totalMins = totalSecs / 60;
-    int mins = totalMins % 60;
-    int hrs = totalMins / 60;
-    if (hrs > 0)
-        return Str::Format(_T("%d hrs %d mins %d secs"), hrs, mins, secs);
-    if (mins > 0)
-        return Str::Format(_T("%d mins %d secs"), mins, secs);
-    return Str::Format(_T("%d secs"), secs);
-}
-
-bool DirStressTest::OpenFile(const TCHAR *fileName)
-{
-    if (!PdfEngine::IsSupportedFile(fileName))
-        return false;
-
-    WindowInfo *w = LoadDocument(fileName, win, true /* show */, true /* reuse */);
-    assert(win == w);
-    if (!w->dm) {
-        return false;
-    }
-    free(currFile);
-    currFile = Str::Dup(fileName);
-    win->dm->changeDisplayMode(DM_SINGLE_PAGE);
-    win->dm->zoomTo(ZOOM_FIT_PAGE);
-    win->dm->goToFirstPage();
-    if (win->tocShow)
-        win->HideTocBox();
-    currPage = 1;
-    currPageRenderTime.Start();
-    ++filesCount;
-    SYSTEMTIME currTime;    
-    GetSystemTime(&currTime);
-    int secs = SystemTimeDiffInSecs(currTime, stressStartTime);
-
-    ScopedMem<TCHAR> tm(FormatTime(secs));
-    ScopedMem<TCHAR> s(Str::Format(_T("File %d: %s, time: %s"), filesCount, currFile, tm));
-    win->ShowNotification(s, false, false, NG_DIR_STRESS_NEW_FILE);
-    
-    // TODO: start a search too?
-    return true;
-}
-
-void DirStressTest::TickTimer()
-{
-    SetTimer(win->hwndCanvas, DIR_STRESS_TIMER_ID, USER_TIMER_MINIMUM, NULL);
-}
-
-void DirStressTest::OnTimer()
-{
-    KillTimer(win->hwndCanvas, DIR_STRESS_TIMER_ID);
-    DisplayModel *dm = win->dm;
-    if (!dm)
-        return;
-    BitmapCacheEntry *entry = gRenderCache.Find(dm, currPage, dm->rotation());
-    if (entry) {
-        if (!GoToNextPage()) {
-            return;
-        }
-    } else {
-        // not sure how reliable gRenderCache.Find() is, don't wait more than
-        // 3 seconds for a single page to be rendered
-        double timeInMs = currPageRenderTime.GetCurrTimeInMs();
-        if (timeInMs > (double)3*1000) {
-            if (!GoToNextPage()) {
-                return;
-            }
-        }
-    }
-    RandomIsOverGlyph(win->dm, currPage); // as a bonus, try to trigger 
-    TickTimer();
-}
-
-static bool IsSpecialDir(const TCHAR *s)
-{
-    return Str::Eq(s, _T(".")) || Str::Eq(s, _T(".."));
-}
-
-bool DirStressTest::GoToNextFile()
-{
-NextDir:
-    if (!currDirHandle) {
-        OpenNextDir();
-    } else {
-        goto FindNext;
-    }
-
-NextFile:
-
-    if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-        if (!IsSpecialDir(fd.cFileName)) {
-            TCHAR *p = Path::Join(currDir, fd.cFileName);
-            if (p)
-                dirsToVisit.Push(p);
-        }
-    } else if (IsRegularFile(fd.dwFileAttributes)) {
-        ScopedMem<TCHAR> p(Path::Join(currDir, fd.cFileName));
-        if (OpenFile(p)) {
-            return true;
-        }
-    }
-FindNext:
-    if (0 != FindNextFile(currDirHandle, &fd))
-        goto NextFile;
-    
-    // Go to next directory
-    FindClose(currDirHandle);
-    currDirHandle = NULL;
-    free(currDir);
-    currDir = NULL;
-    if (dirsToVisit.Count() > 0) {
-        currDir = dirsToVisit.Pop();
-        goto NextDir;
-    }
-    return true;
-}
-
-void DirStressTest::Finished()
-{
-    delete this;
-    win->dirStressTest = NULL;
-}
-
-void DirStressTest::Start()
-{
-    if (!Dir::Exists(currDir)) {
-        // Note: dev only, don't translate
-        ScopedMem<TCHAR> s(Str::Format(_T("Directory '%s' doesn't exist"), currDir));
-        win->ShowNotification(s, true /* autoDismiss */);
-        Finished();
-        return;
-    }
-    GetSystemTime(&stressStartTime);
-    if (!GoToNextFile()) {
-        Finished();
-        return;
-    }    
-    TickTimer();
-}
-
-static void StartDirTest(WindowInfo *win, const TCHAR *dir)
-{
-    DirStressTest *dst = new DirStressTest(dir, win);
-    win->dirStressTest = dst;
-    dst->Start(); // will be deleted when the stress ends
-}
-
 static void OnSelectAll(WindowInfo& win, bool textOnly=false)
 {
     if (!win.IsDocLoaded())
@@ -4134,30 +3880,20 @@ static void BrowseFolder(WindowInfo& win, bool forward)
     if (win.IsAboutWindow()) return;
     if (gRestrictedUse || gPluginMode) return;
 
-    StrVec files;
-    WIN32_FIND_DATA fdata;
-    ScopedMem<TCHAR> dir(Path::GetDir(win.loadedFilePath));
-
     // TODO: browse through all supported file types at the same time?
     ScopedMem<TCHAR> pattern(Str::Format(_T("*%s"), win.dm->engine->GetDefaultFileExt()));
+    ScopedMem<TCHAR> dir(Path::GetDir(win.loadedFilePath));
     pattern.Set(Path::Join(dir, pattern));
 
-    HANDLE hfind = FindFirstFile(pattern, &fdata);
-    if (INVALID_HANDLE_VALUE == hfind)
+    StrVec files;
+    if (!CollectPathsFromDirectory(pattern, files))
         return;
-    do {
-        if (!(fdata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
-            files.Append(Str::Dup(fdata.cFileName));
-    } while (FindNextFile(hfind, &fdata));
-    FindClose(hfind);
 
     const TCHAR *baseName = Path::GetBaseName(win.loadedFilePath);
     if (-1 == files.Find(baseName))
         files.Append(Str::Dup(baseName));
-    if (1 == files.Count())
-        return;
-
     files.Sort();
+
     int index = files.Find(baseName);
     if (forward)
         index = (index + 1) % files.Count();
@@ -6134,14 +5870,14 @@ static void OnTimer(WindowInfo& win, HWND hwnd, WPARAM timerId)
 {
     POINT pt;
 
-    if (REPAINT_TIMER_ID == timerId) {
+    switch (timerId) {
+    case REPAINT_TIMER_ID:
         win.delayedRepaintTimer = 0;
         KillTimer(hwnd, REPAINT_TIMER_ID);
         win.RedrawAll();
-        return;
-    }
+        break;
 
-    if (SMOOTHSCROLL_TIMER_ID == timerId) {
+    case SMOOTHSCROLL_TIMER_ID:
         if (MA_SCROLLING == win.mouseAction)
             win.MoveDocBy(win.xScrollSpeed, win.yScrollSpeed);
         else if (MA_SELECTING == win.mouseAction || MA_SELECTING_TEXT == win.mouseAction) {
@@ -6154,17 +5890,15 @@ static void OnTimer(WindowInfo& win, HWND hwnd, WPARAM timerId)
             win.yScrollSpeed = 0;
             win.xScrollSpeed = 0;
         }
-        return;
-    }
+        break;
 
-    if (HIDE_CURSOR_TIMER_ID == timerId) {
+    case HIDE_CURSOR_TIMER_ID:
         KillTimer(hwnd, HIDE_CURSOR_TIMER_ID);
         if (win.presentation)
             SetCursor(NULL);
-        return;
-    }
+        break;
 
-    if (HIDE_FWDSRCHMARK_TIMER_ID == timerId) {
+    case HIDE_FWDSRCHMARK_TIMER_ID:
         win.fwdsearchmark.hideStep++;
         if (1 == win.fwdsearchmark.hideStep) {
             SetTimer(hwnd, HIDE_FWDSRCHMARK_TIMER_ID, HIDE_FWDSRCHMARK_DECAYINTERVAL_IN_MS, NULL);
@@ -6177,22 +5911,20 @@ static void OnTimer(WindowInfo& win, HWND hwnd, WPARAM timerId)
         }
         else
             win.RepaintAsync();
-        return;
-    }
+        break;
 
-    if (AUTO_RELOAD_TIMER_ID == timerId) {
+    case AUTO_RELOAD_TIMER_ID:
         KillTimer(hwnd, AUTO_RELOAD_TIMER_ID);
         win.Reload(true);
-        return;
-    }
+        break;
 
-    if (STRESS_TIMER_ID == timerId) {
-        int pageNo = win.stressLastRenderedPage;
-        RandomIsOverGlyph(win.dm, pageNo);
-    }
+    case STRESS_TIMER_ID:
+        RandomIsOverGlyph(win.dm, win.stressLastRenderedPage);
+        break;
 
-    if (DIR_STRESS_TIMER_ID == timerId) {
-        win.dirStressTest->OnTimer();
+    case DIR_STRESS_TIMER_ID:
+        win.dirStressTest->Callback();
+        break;
     }
 }
 
@@ -7243,9 +6975,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     const UINT_PTR timerID = SetTimer(NULL, -1, FILEWATCH_DELAY_IN_MS, NULL);
 #endif
 
-    if (i.stressTestDir) {
-        StartDirTest(win, i.stressTestDir);
-    }
+    if (i.stressTestDir)
+        StartDirStressTest(win, i.stressTestDir, &gRenderCache);
 
     while (GetMessage(&msg, NULL, 0, 0) > 0) {
 #ifndef THREAD_BASED_FILEWATCH
