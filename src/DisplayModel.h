@@ -272,6 +272,7 @@ public:
 };
 
 bool    displayModeContinuous(DisplayMode displayMode);
+bool    displayModeSingle(DisplayMode displayMode);
 bool    displayModeFacing(DisplayMode displayMode);
 bool    displayModeShowCover(DisplayMode displayMode);
 int     normalizeRotation(int rotation);

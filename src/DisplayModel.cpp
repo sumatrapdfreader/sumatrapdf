@@ -63,18 +63,23 @@ ScreenPagePadding gPagePadding = {
     PADDING_BETWEEN_PAGES_X_DEF, PADDING_BETWEEN_PAGES_X_DEF
 };
 
-bool displayModeFacing(DisplayMode displayMode)
-{
-    return DM_FACING == displayMode ||
-           DM_CONTINUOUS_FACING == displayMode ||
-           displayModeShowCover(displayMode);
-}
-
 bool displayModeContinuous(DisplayMode displayMode)
 {
     return DM_CONTINUOUS == displayMode ||
            DM_CONTINUOUS_FACING == displayMode ||
            DM_CONTINUOUS_BOOK_VIEW == displayMode;
+}
+
+bool displayModeSingle(DisplayMode displayMode)
+{
+    return DM_SINGLE_PAGE == displayMode ||
+           DM_CONTINUOUS == displayMode;
+}
+
+bool displayModeFacing(DisplayMode displayMode)
+{
+    return DM_FACING == displayMode ||
+           DM_CONTINUOUS_FACING == displayMode;
 }
 
 bool displayModeShowCover(DisplayMode displayMode)
@@ -85,7 +90,7 @@ bool displayModeShowCover(DisplayMode displayMode)
 
 int columnsFromDisplayMode(DisplayMode displayMode)
 {
-    if (displayModeFacing(displayMode))
+    if (!displayModeSingle(displayMode))
         return 2;
     return 1;
 }
@@ -372,7 +377,7 @@ bool DisplayModel::lastBookPageVisible()
 {
     int count = pageCount();
     DisplayMode mode = displayMode();
-    if (!displayModeFacing(mode))
+    if (displayModeSingle(mode))
         return false;
     if (currentPageNo() == count)
         return true;
@@ -522,7 +527,7 @@ float DisplayModel::zoomReal(int pageNo)
     DisplayMode mode = displayMode();
     if (displayModeContinuous(mode))
         return _zoomReal;
-    if (!displayModeFacing(mode))
+    if (displayModeSingle(mode))
         return zoomRealFromVirtualForPage(_zoomVirtual, pageNo);
     pageNo = FirstPageInARowNo(pageNo, columnsFromDisplayMode(mode), displayModeShowCover(mode));
     if (pageNo == pageCount() || pageNo == 1 && displayModeShowCover(mode))
@@ -970,7 +975,7 @@ void DisplayModel::goToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
 
     /* in facing mode only start at odd pages (odd because page
        numbering starts with 1, so odd is really an even page) */
-    if (displayModeFacing(displayMode()))
+    if (!displayModeSingle(displayMode()))
         pageNo = FirstPageInARowNo(pageNo, columnsFromDisplayMode(displayMode()), displayModeShowCover(displayMode()));
 
     if (!displayModeContinuous(displayMode())) {

@@ -4560,23 +4560,19 @@ static void OnChar(WindowInfo& win, WPARAM key)
         OnMenuViewContinuous(win);
         break;
     case 'b':
-        if (displayModeFacing(win.dm->displayMode())) {
-            // experimental "e-book view": flip a single page
+        if (!displayModeSingle(win.dm->displayMode())) {
+            // "e-book view": flip a single page
             bool forward = !IsShiftPressed();
             int currPage = win.dm->currentPageNo();
-
             if (forward ? win.dm->lastBookPageVisible() : win.dm->firstBookPageVisible())
                 break;
 
             DisplayMode newMode = DM_BOOK_VIEW;
             if (displayModeShowCover(win.dm->displayMode()))
                 newMode = DM_FACING;
-            if (displayModeContinuous(win.dm->displayMode()))
-                newMode = DM_BOOK_VIEW == newMode ? DM_CONTINUOUS_BOOK_VIEW : DM_CONTINUOUS_FACING;
-            win.SwitchToDisplayMode(newMode);
+            win.SwitchToDisplayMode(newMode, true);
 
-            if (forward && currPage >= win.dm->currentPageNo() &&
-                (currPage > 1 || newMode == DM_BOOK_VIEW || newMode == DM_CONTINUOUS_BOOK_VIEW))
+            if (forward && currPage >= win.dm->currentPageNo() && (currPage > 1 || newMode == DM_BOOK_VIEW))
                 win.dm->goToNextPage(0);
             else if (!forward && currPage <= win.dm->currentPageNo())
                 win.dm->goToPrevPage(0);
