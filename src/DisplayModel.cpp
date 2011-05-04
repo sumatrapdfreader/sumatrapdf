@@ -1405,7 +1405,7 @@ ScrollState DisplayModel::GetScrollState()
     PageInfo *pageInfo = getPageInfo(state.page);
     // Shortcut: don't calculate precise positions, if the
     // page wasn't scrolled right/down at all
-    if (pageInfo->pageOnScreen.x > 0 && pageInfo->pageOnScreen.y > 0)
+    if (!pageInfo || pageInfo->pageOnScreen.x > 0 && pageInfo->pageOnScreen.y > 0)
         return state;
 
     RectI screen(PointI(), viewPort.Size());
