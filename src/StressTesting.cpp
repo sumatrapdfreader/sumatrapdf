@@ -301,10 +301,24 @@ bool DirStressTest::OpenDir(const TCHAR *dirPath)
 
 bool DirStressTest::OpenFile(const TCHAR *fileName)
 {
-    WindowInfo *w = LoadDocument(fileName, win, true /* show */, true /* reuse */);
-    assert(win == w);
-    if (!w->dm)
+    WindowInfo *w = LoadDocument(fileName, NULL, true /* show */, false /* reuse */);
+    if (!w)
         return false;
+    if ((w != win) && !w->dm) {
+        delete w;
+        return false;
+    }
+
+    // transfer ownership of dirStressTest object to a new window and close the
+    // current one
+    assert(this == win->dirStressTest);
+    if (w != win) {
+        WindowInfo *toDelete = win;
+        w->dirStressTest = win->dirStressTest;
+        win->dirStressTest = NULL;
+        win = w;
+        delete toDelete;
+    }
 
     win->dm->changeDisplayMode(DM_SINGLE_PAGE);
     win->dm->zoomTo(ZOOM_FIT_PAGE);
