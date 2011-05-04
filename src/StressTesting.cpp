@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
+#include <time.h>
 #include "WinUtil.h"
 #include "FileUtil.h"
 #include "SimpleLog.h"
@@ -222,17 +223,18 @@ a human advancing one page at a time. This is mostly to run through a large numb
 of PDFs before a release to make sure we're crash proof. */
 
 class DirStressTest : public CallbackFunc {
-    WindowInfo *    win;
-    RenderCache *   renderCache;
-    MillisecondTimer currPageRenderTime;
-    int             currPage;
-    int             filesCount; // number of files processed so far
+    WindowInfo *      win;
+    RenderCache *     renderCache;
+    MillisecondTimer  currPageRenderTime;
+    int               currPage;
+    int               pageForSearchStart;
+    int               filesCount; // number of files processed so far
 
-    SYSTEMTIME      stressStartTime;
+    SYSTEMTIME        stressStartTime;
 
     // current state of directory traversal
-    StrVec          filesToOpen;
-    StrVec          dirsToVisit;
+    StrVec            filesToOpen;
+    StrVec            dirsToVisit;
 
     bool OpenDir(const TCHAR *dirPath);
     bool OpenFile(const TCHAR *fileName);
@@ -273,7 +275,7 @@ bool DirStressTest::GoToNextPage()
     // start text search when we're in the middle of the document, so that
     // search thread touches both pages that were already rendered and not yet
     // rendered
-    if (currPage == win->dm->pageCount() / 2) {
+    if (currPage == pageForSearchStart) {
         // use text that is unlikely to be found, so that we search all pages
         Win::SetText(win->hwndFindBox, _T("!z_yt"));
         FindTextOnThread(win);
@@ -329,6 +331,8 @@ bool DirStressTest::OpenFile(const TCHAR *fileName)
     currPage = 1;
     currPageRenderTime.Start();
     ++filesCount;
+
+    pageForSearchStart = (rand() % win->dm->pageCount()) + 1;
 
     int secs = SecsSinceSystemTime(stressStartTime);
     ScopedMem<TCHAR> tm(FormatTime(secs));
@@ -406,6 +410,7 @@ void DirStressTest::Start(const TCHAR *dirPath)
         Finished();
         return;
     }
+    srand((unsigned int)time(NULL));
     GetSystemTime(&stressStartTime);
     if (GoToNextFile())
         TickTimer();
