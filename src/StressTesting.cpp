@@ -150,6 +150,73 @@ void Bench(StrVec& filesToBench)
     // Log::Destroy();
 }
 
+inline bool IsSpecialDir(const TCHAR *s)
+{
+    return Str::Eq(s, _T(".")) || Str::Eq(s, _T(".."));
+}
+
+bool CollectPathsFromDirectory(const TCHAR *pattern, StrVec& paths, bool dirsInsteadOfFiles)
+{
+    ScopedMem<TCHAR> dirPath(Path::GetDir(pattern));
+
+    WIN32_FIND_DATA fdata;
+    HANDLE hfind = FindFirstFile(pattern, &fdata);
+    if (INVALID_HANDLE_VALUE == hfind)
+        return false;
+
+    do {
+        bool append = !dirsInsteadOfFiles;
+        if ((fdata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+            append = dirsInsteadOfFiles && !IsSpecialDir(fdata.cFileName);
+        if (append)
+            paths.Append(Path::Join(dirPath, fdata.cFileName));
+    } while (FindNextFile(hfind, &fdata));
+    FindClose(hfind);
+
+    return paths.Count() > 0;
+}
+
+// return t1 - t2 in seconds
+static int SystemTimeDiffInSecs(SYSTEMTIME& t1, SYSTEMTIME& t2)
+{
+    FILETIME ft1, ft2;
+    SystemTimeToFileTime(&t1, &ft1);
+    SystemTimeToFileTime(&t2, &ft2);
+    return FileTimeDiffInSecs(ft1, ft2);
+}
+
+static int SecsSinceSystemTime(SYSTEMTIME& time)
+{
+    SYSTEMTIME currTime;    
+    GetSystemTime(&currTime);
+    return SystemTimeDiffInSecs(currTime, time);
+}
+
+static TCHAR *FormatTime(int totalSecs)
+{
+    int secs = totalSecs % 60;
+    int totalMins = totalSecs / 60;
+    int mins = totalMins % 60;
+    int hrs = totalMins / 60;
+    if (hrs > 0)
+        return Str::Format(_T("%d hrs %d mins %d secs"), hrs, mins, secs);
+    if (mins > 0)
+        return Str::Format(_T("%d mins %d secs"), mins, secs);
+    return Str::Format(_T("%d secs"), secs);
+}
+
+void RandomIsOverGlyph(DisplayModel *dm, int pageNo)
+{
+    if (!dm->validPageNo(pageNo))
+        pageNo = 1;
+    if (!dm->validPageNo(pageNo))
+        return;
+    // try random position in the page
+    int x = rand() % 640;
+    int y = rand() % 480;
+    dm->textSelection->IsOverGlyph(pageNo, x, y);
+}
+
 /* The idea of DirStressTest is to render a lot of PDFs sequentially, simulating
 a human advancing one page at a time. This is mostly to run through a large number
 of PDFs before a release to make sure we're crash proof. */
@@ -187,32 +254,6 @@ public:
     virtual void Callback() { OnTimer(); }
 };
 
-inline bool IsSpecialDir(const TCHAR *s)
-{
-    return Str::Eq(s, _T(".")) || Str::Eq(s, _T(".."));
-}
-
-bool CollectPathsFromDirectory(const TCHAR *pattern, StrVec& paths, bool dirsInsteadOfFiles)
-{
-    ScopedMem<TCHAR> dirPath(Path::GetDir(pattern));
-
-    WIN32_FIND_DATA fdata;
-    HANDLE hfind = FindFirstFile(pattern, &fdata);
-    if (INVALID_HANDLE_VALUE == hfind)
-        return false;
-
-    do {
-        bool append = !dirsInsteadOfFiles;
-        if ((fdata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
-            append = dirsInsteadOfFiles && !IsSpecialDir(fdata.cFileName);
-        if (append)
-            paths.Append(Path::Join(dirPath, fdata.cFileName));
-    } while (FindNextFile(hfind, &fdata));
-    FindClose(hfind);
-
-    return paths.Count() > 0;
-}
-
 bool DirStressTest::GoToNextPage()
 {
     if (currPage >= win->dm->pageCount()) {
@@ -229,6 +270,14 @@ bool DirStressTest::GoToNextPage()
     win->ShowNotification(s, true, false, NG_DIR_STRESS_PAGE_TIMING);
     currPageRenderTime.Start();
 
+    // start text search when we're in the middle of the document, so that
+    // search thread touches both pages that were already rendered and not yet
+    // rendered
+    if (currPage == win->dm->pageCount() / 2) {
+        // use text that is unlikely to be found, so that we search all pages
+        Win::SetText(win->hwndFindBox, _T("!z_yt"));
+        FindTextOnThread(win);
+    }
     return true;
 }
 
@@ -248,35 +297,6 @@ bool DirStressTest::OpenDir(const TCHAR *dirPath)
     bool hasSubDirs = CollectPathsFromDirectory(pattern, dirsToVisit, true);
 
     return hasFiles || hasSubDirs;
-}
-
-// return t1 - t2 in seconds
-static int SystemTimeDiffInSecs(SYSTEMTIME& t1, SYSTEMTIME& t2)
-{
-    FILETIME ft1, ft2;
-    SystemTimeToFileTime(&t1, &ft1);
-    SystemTimeToFileTime(&t2, &ft2);
-    return FileTimeDiffInSecs(ft1, ft2);
-}
-
-static int SecsSinceSystemTime(SYSTEMTIME& time)
-{
-    SYSTEMTIME currTime;    
-    GetSystemTime(&currTime);
-    return SystemTimeDiffInSecs(currTime, time);
-}
-
-static TCHAR *FormatTime(int totalSecs)
-{
-    int secs = totalSecs % 60;
-    int totalMins = totalSecs / 60;
-    int mins = totalMins % 60;
-    int hrs = totalMins / 60;
-    if (hrs > 0)
-        return Str::Format(_T("%d hrs %d mins %d secs"), hrs, mins, secs);
-    if (mins > 0)
-        return Str::Format(_T("%d mins %d secs"), mins, secs);
-    return Str::Format(_T("%d secs"), secs);
 }
 
 bool DirStressTest::OpenFile(const TCHAR *fileName)
@@ -301,27 +321,12 @@ bool DirStressTest::OpenFile(const TCHAR *fileName)
     ScopedMem<TCHAR> s(Str::Format(_T("File %d: %s, time: %s"), filesCount, fileName, tm));
     win->ShowNotification(s, false, false, NG_DIR_STRESS_NEW_FILE);
 
-    // use text that is unlikely to be found, so that we search all pages
-    Win::SetText(win->hwndFindBox, _T("!z_yt"));
-    FindTextOnThread(win);
     return true;
 }
 
 void DirStressTest::TickTimer()
 {
     SetTimer(win->hwndCanvas, DIR_STRESS_TIMER_ID, USER_TIMER_MINIMUM, NULL);
-}
-
-void RandomIsOverGlyph(DisplayModel *dm, int pageNo)
-{
-    if (!dm->validPageNo(pageNo))
-        pageNo = 1;
-    if (!dm->validPageNo(pageNo))
-        return;
-    // try random position in the page
-    int x = rand() % 640;
-    int y = rand() % 480;
-    dm->textSelection->IsOverGlyph(pageNo, x, y);
 }
 
 void DirStressTest::OnTimer()
@@ -387,10 +392,10 @@ void DirStressTest::Start(const TCHAR *dirPath)
         Finished();
         return;
     }
-    if (GoToNextFile()) {
-        GetSystemTime(&stressStartTime);
+    GetSystemTime(&stressStartTime);
+    if (GoToNextFile())
         TickTimer();
-    } else
+    else
         Finished();
 }
 
