@@ -179,6 +179,7 @@
     <ClCompile Include="src\FileWatch.cpp" />
     <ClCompile Include="src\ImagesEngine.cpp" />
     <ClCompile Include="src\LangMenuDef.cpp" />
+    <ClCompile Include="src\ParseCommandLine.cpp" />
     <ClCompile Include="src\PdfEngine.cpp" />
     <ClCompile Include="src\PdfSync.cpp" />
     <ClCompile Include="src\RenderCache.cpp" />
@@ -276,6 +277,8 @@
     <ClInclude Include="src\ImagesEngine.h" />
     <ClInclude Include="src\installer\Resource.h" />
     <ClInclude Include="src\LangMenuDef.h" />
+    <ClInclude Include="src\Notifications.h" />
+    <ClInclude Include="src\ParseCommandLine.h" />
     <ClInclude Include="src\PdfEngine.h" />
     <ClInclude Include="src\PdfSync.h" />
     <ClInclude Include="src\RenderCache.h" />

@@ -42,6 +42,7 @@ public:
     HWND        hwndPluginParent;
     bool        exitImmediately;
     bool        silent;
+    TCHAR *     stressTestDir;
 
     CommandLineInfo() : makeDefault(false), exitOnPrint(false), printDialog(false),
         printerName(NULL), bgColor(-1), inverseSearchCmdLine(NULL),
@@ -51,7 +52,8 @@ public:
         restrictedUse(false), invertColors(FALSE),
         enterPresentation(false), enterFullscreen(false), hwndPluginParent(NULL),
         startView(DM_AUTOMATIC), startZoom(INVALID_ZOOM), startScroll(PointI(-1, -1)),
-        showConsole(false), exitImmediately(false), silent(false)
+        showConsole(false), exitImmediately(false), silent(false),
+        stressTestDir(NULL)
     { }
 
     ~CommandLineInfo() {
@@ -59,6 +61,7 @@ public:
         free(inverseSearchCmdLine);
         free(lang);
         free(destName);
+        free(stressTestDir);
     }
 
     void ParseCommandLine(TCHAR *cmdLine);

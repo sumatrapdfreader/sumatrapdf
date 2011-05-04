@@ -582,8 +582,6 @@ MenuDef menuDefHelp[] = {
     { SEP_ITEM,                             0,                          0  },
     { "Crash me",                           IDM_CRASH_ME,               MF_NO_TRANSLATE  },
     { "Stress test running",                IDM_THREAD_STRESS,          MF_NO_TRANSLATE  },
-    // TODO: temporary, this will be triggered via cmd-line option
-    { "Start dir test",                     IDM_DIR_TEST,               MF_NO_TRANSLATE }
 #endif
 };
 
@@ -2442,6 +2440,7 @@ public:
 
     ~DirStressTest()
     {
+        free(currFile);
         free(currDir);
     }
 
@@ -2460,6 +2459,9 @@ bool DirStressTest::GoToNextPage()
     if (currPage < win->dm->pageCount()) {
         ++currPage;
         win->dm->goToPage(currPage, 0);
+        double pageRenderTime = currPageRenderTime.GetCurrTimeInMs();
+        ScopedMem<TCHAR> s(Str::Format(_T("Page %d rendered in %d milliseconds"), currPage-1, (int)pageRenderTime));
+        win->ShowNotification(s, true);
         currPageRenderTime.Start();
         return true;
     }
@@ -2505,6 +2507,9 @@ bool DirStressTest::OpenFile(const TCHAR *fileName)
         win->HideTocBox();
     currPage = 1;
     currPageRenderTime.Start();
+    ++filesCount;
+    ScopedMem<TCHAR> s(Str::Format(_T("Opened file no %d"), filesCount));
+    win->ShowNotification(s, true);
     // TODO: start a search too?
     return true;
 }
@@ -2516,10 +2521,11 @@ void DirStressTest::TickTimer()
 
 void DirStressTest::OnTimer()
 {
-    BitmapCacheEntry *entry;
-    DisplayModel *dm = win->dm;
     KillTimer(win->hwndCanvas, DIR_STRESS_TIMER_ID);
-    entry = gRenderCache.Find(dm, currPage, dm->rotation());
+    DisplayModel *dm = win->dm;
+    if (!dm)
+        return;
+    BitmapCacheEntry *entry = gRenderCache.Find(dm, currPage, dm->rotation());
     if (entry) {
         if (!GoToNextPage()) {
             return;
@@ -2584,8 +2590,8 @@ FindNext:
 
 void DirStressTest::Finished()
 {
-    win->dirStressTest = NULL;
     delete this;
+    win->dirStressTest = NULL;
 }
 
 void DirStressTest::Start()
@@ -2604,10 +2610,8 @@ void DirStressTest::Start()
     TickTimer();
 }
 
-static void StartDirTest(WindowInfo *win)
+static void StartDirTest(WindowInfo *win, const TCHAR *dir)
 {
-    // TODO: this will passed in from cmd-line
-    TCHAR *dir = _T("C:\\Users\\kkowalczyk\\Downloads");
     DirStressTest *dst = new DirStressTest(dir, win);
     win->dirStressTest = dst;
     dst->Start(); // will be deleted when the stress ends
@@ -6659,10 +6663,6 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                     ToggleThreadStress(*win);
                     break;
 
-                case IDM_DIR_TEST:
-                    StartDirTest(win);
-                    break;
-
                 default:
                     return DefWindowProc(hwnd, message, wParam, lParam);
             }
@@ -7210,6 +7210,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 #ifndef THREAD_BASED_FILEWATCH
     const UINT_PTR timerID = SetTimer(NULL, -1, FILEWATCH_DELAY_IN_MS, NULL);
 #endif
+
+    if (i.stressTestDir) {
+        StartDirTest(win, i.stressTestDir);
+    }
 
     while (GetMessage(&msg, NULL, 0, 0) > 0) {
 #ifndef THREAD_BASED_FILEWATCH

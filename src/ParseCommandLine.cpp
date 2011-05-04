@@ -137,54 +137,54 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
             param = argList[n + 1];
 
         if (is_arg("-register-for-pdf")) {
-            this->makeDefault = true;
-            this->exitImmediately = true;
+            makeDefault = true;
+            exitImmediately = true;
             return;
         }
         else if (is_arg("-silent")) {
             // silences errors happening during -print-to and -print-to-default
-            this->silent = true;
+            silent = true;
         }
         else if (is_arg("-print-to-default")) {
             TCHAR *printerName = GetDefaultPrinterName();
             if (printerName) {
-                this->SetPrinterName(printerName);
+                SetPrinterName(printerName);
                 free(printerName);
             }
         }
         else if (is_arg_with_param("-print-to")) {
-            this->SetPrinterName(argList[++n]);
+            SetPrinterName(argList[++n]);
         }
         else if (is_arg("-print-dialog")) {
-            this->printDialog = true;
+            printDialog = true;
         }
         else if (is_arg("-exit-on-print")) {
             // only affects -print-dialog (-print-to and -print-to-default
             // always exit on print)
-            this->exitOnPrint = true;
+            exitOnPrint = true;
         }
         else if (is_arg_with_param("-bgcolor") || is_arg_with_param("-bg-color")) {
             // -bgcolor is for backwards compat (was used pre-1.3)
             // -bg-color is for consitency
-            ParseColor(&this->bgColor, argList[++n]);
+            ParseColor(&bgColor, argList[++n]);
         }
         else if (is_arg_with_param("-inverse-search")) {
-            this->SetInverseSearchCmdLine(argList[++n]);
+            SetInverseSearchCmdLine(argList[++n]);
         }
         else if (is_arg_with_param("-fwdsearch-offset")) {
-            this->fwdsearchOffset = _ttoi(argList[++n]);
+            fwdsearchOffset = _ttoi(argList[++n]);
         }
         else if (is_arg_with_param("-fwdsearch-width")) {
-            this->fwdsearchWidth = _ttoi(argList[++n]);
+            fwdsearchWidth = _ttoi(argList[++n]);
         }
         else if (is_arg_with_param("-fwdsearch-color")) {
-            ParseColor(&this->fwdsearchColor, argList[++n]);
+            ParseColor(&fwdsearchColor, argList[++n]);
         }
         else if (is_arg_with_param("-fwdsearch-permanent")) {
-            this->fwdsearchPermanent = _ttoi(argList[++n]);
+            fwdsearchPermanent = _ttoi(argList[++n]);
         }
         else if (is_arg("-esc-to-exit")) {
-            this->escToExit = true;
+            escToExit = true;
         }
         else if (is_arg("-reuse-instance")) {
             // find the window handle of a running instance of SumatraPDF
@@ -192,65 +192,68 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
             // race condition and having more than one copy launch because
             // FindWindow() in one process is called before a window is created
             // in another process
-            this->reuseInstance = (FindWindow(FRAME_CLASS_NAME, 0) != NULL);
+            reuseInstance = (FindWindow(FRAME_CLASS_NAME, 0) != NULL);
         }
         else if (is_arg_with_param("-lang")) {
-            this->SetLang(argList[++n]);
+            SetLang(argList[++n]);
         }
         else if (is_arg_with_param("-nameddest") || is_arg_with_param("-named-dest")) {
             // -nameddest is for backwards compat (was used pre-1.3)
             // -named-dest is for consitency
-            this->SetDestName(argList[++n]);
+            SetDestName(argList[++n]);
         }
         else if (is_arg_with_param("-page")) {
-            this->pageNumber = _ttoi(argList[++n]);
+            pageNumber = _ttoi(argList[++n]);
         }
         else if (is_arg("-restrict")) {
-            this->restrictedUse = true;
+            restrictedUse = true;
         }
         else if (is_arg("-invertcolors") || is_arg("-invert-colors")) {
             // -invertcolors is for backwards compat (was used pre-1.3)
             // -invert-colors is for consitency
-            this->invertColors = TRUE;
+            invertColors = TRUE;
         }
         else if (is_arg("-presentation")) {
-            this->enterPresentation = true;
+            enterPresentation = true;
         }
         else if (is_arg("-fullscreen")) {
-            this->enterFullscreen = true;
+            enterFullscreen = true;
         }
         else if (is_arg_with_param("-view")) {
-            ParseViewMode(&this->startView, argList[++n]);
+            ParseViewMode(&startView, argList[++n]);
         }
         else if (is_arg_with_param("-zoom")) {
-            ParseZoomValue(&this->startZoom, argList[++n]);
+            ParseZoomValue(&startZoom, argList[++n]);
         }
         else if (is_arg_with_param("-scroll")) {
-            ParseScrollValue(&this->startScroll, argList[++n]);
+            ParseScrollValue(&startScroll, argList[++n]);
         }
         else if (is_arg("-console")) {
-            this->showConsole = true;
+            showConsole = true;
         }
         else if (is_arg_with_param("-plugin")) {
             // the argument is a (nummeric) window handle to
             // become the parent of a frameless SumatraPDF
             // (used e.g. for embedding it into a browser plugin)
-            this->hwndPluginParent = (HWND)_ttol(argList[++n]);
+            hwndPluginParent = (HWND)_ttol(argList[++n]);
+        }
+        else if (is_arg_with_param("-stress-test-dir")) {
+            stressTestDir = Str::Dup(argList[++n]);
         }
         else if (is_arg_with_param("-bench")) {
             TCHAR *s = Str::Dup(argList[++n]);
-            this->filesToBenchmark.Push(s);
+            filesToBenchmark.Push(s);
             s = NULL;
             if ((n + 1 < argCount) && IsBenchPagesInfo(argList[n+1]))
                 s = Str::Dup(argList[++n]);
-            this->filesToBenchmark.Push(s);
-            this->exitImmediately = true;
+            filesToBenchmark.Push(s);
+            exitImmediately = true;
         }
 #ifdef DEBUG
         else if (is_arg("-enum-printers")) {
             EnumeratePrinters();
             /* this is for testing only, exit immediately */
-            this->exitImmediately = true;
+            exitImmediately = true;
             return;
         }
 #endif
@@ -261,7 +264,7 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
                 filepath = ResolveLnk(argList[n]);
             if (!filepath)
                 filepath = Str::Dup(argList[n]);
-            this->fileNames.Push(filepath);
+            fileNames.Push(filepath);
         }
     }
 #undef is_arg

@@ -581,6 +581,9 @@
     <ClCompile Include="mupdf\xps\xps_xml.c">
       <Filter>mupdf\xps</Filter>
     </ClCompile>
+    <ClCompile Include="src\ParseCommandLine.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ext\jbig2dec\config_win32.h">
@@ -798,6 +801,12 @@
     </ClInclude>
     <ClInclude Include="mupdf\xps\muxps.h">
       <Filter>mupdf\xps</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Notifications.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ParseCommandLine.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

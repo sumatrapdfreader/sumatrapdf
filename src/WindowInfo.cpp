@@ -43,25 +43,27 @@ WindowInfo::WindowInfo(HWND hwnd) :
     fwdsearchmark.show = false;
 }
 
-WindowInfo::~WindowInfo() {
+WindowInfo::~WindowInfo() 
+{
 
-    this->AbortFinding();
-    this->AbortPrinting();
+    // TODO: delete dirStressTest
+    AbortFinding();
+    AbortPrinting();
 
-    delete this->dm;
-    delete this->watcher;
-    delete this->pdfsync;
-    delete this->linkHandler;
+    delete dm;
+    delete watcher;
+    delete pdfsync;
+    delete linkHandler;
 
-    delete this->buffer;
-    delete this->selectionOnPage;
-    delete this->linkOnLastButtonDown;
-    delete this->messages;
+    delete buffer;
+    delete selectionOnPage;
+    delete linkOnLastButtonDown;
+    delete messages;
 
-    free(this->loadedFilePath);
+    free(loadedFilePath);
 
-    delete this->tocRoot;
-    free(this->tocState);
+    delete tocRoot;
+    free(tocState);
 
 }
 

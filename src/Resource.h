@@ -96,7 +96,6 @@
 #define IDM_GOTO_NAV_FORWARD            559
 #define IDM_CRASH_ME                    560
 #define IDM_THREAD_STRESS               561
-#define IDM_DIR_TEST                    562
 
 #define IDC_SUMATRAPDF                  600
 #define IDI_SMALL                       601
