@@ -2419,6 +2419,7 @@ class DirStressTest {
     int             currPage;
     int             filesCount; // number of files processed so far
 
+    SYSTEMTIME      stressStartTime;
     // current state of directory traversal
     TCHAR *         currDir;
     HANDLE          currDirHandle;
@@ -2488,6 +2489,30 @@ static bool IsRegularFile(DWORD attr)
     return (attr & undesired) == 0;
 }
 
+// return t1 - t2 in seconds
+static int SystemTimeDiffInSecs(SYSTEMTIME& t1, SYSTEMTIME& t2)
+{
+    FILETIME ft1, ft2;
+    
+    SystemTimeToFileTime(&t1, &ft1);
+    SystemTimeToFileTime(&t2, &ft2);
+    return FileTimeDiffInSecs(ft1, ft2);
+
+}
+
+static TCHAR *FormatTime(int totalSecs)
+{
+    int secs = totalSecs % 60;
+    int totalMins = totalSecs / 60;
+    int mins = totalMins % 60;
+    int hrs = totalMins / 60;
+    if (hrs > 0)
+        return Str::Format(_T("%d hrs %d mins %d secs"), hrs, mins, secs);
+    if (mins > 0)
+        return Str::Format(_T("%d mins %d secs"), mins, secs);
+    return Str::Format(_T("%d secs"), secs);
+}
+
 bool DirStressTest::OpenFile(const TCHAR *fileName)
 {
     if (!PdfEngine::IsSupportedFile(fileName))
@@ -2508,10 +2533,14 @@ bool DirStressTest::OpenFile(const TCHAR *fileName)
     currPage = 1;
     currPageRenderTime.Start();
     ++filesCount;
-    ScopedMem<TCHAR> s(Str::Format(_T("File %d: %s"), filesCount, currFile));
+    SYSTEMTIME currTime;    
+    GetSystemTime(&currTime);
+    int secs = SystemTimeDiffInSecs(currTime, stressStartTime);
+
+    ScopedMem<TCHAR> tm(FormatTime(secs));
+    ScopedMem<TCHAR> s(Str::Format(_T("File %d: %s, time: %s"), filesCount, currFile, tm));
     win->ShowNotification(s, false, false, NG_DIR_STRESS_NEW_FILE);
-    // TODO: also show how much time since starting stress test
-    // as a notification, in a human-readable way ("1 hr 15 min 38 s")
+    
     // TODO: start a search too?
     return true;
 }
@@ -2605,6 +2634,7 @@ void DirStressTest::Start()
         Finished();
         return;
     }
+    GetSystemTime(&stressStartTime);
     if (!GoToNextFile()) {
         Finished();
         return;
