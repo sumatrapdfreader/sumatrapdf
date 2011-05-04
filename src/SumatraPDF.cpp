@@ -1402,7 +1402,7 @@ static WindowInfo* CreateWindowInfo()
     return win;
 }
 
-static void DeleteWindowInfo(WindowInfo *win)
+void DeleteWindowInfo(WindowInfo *win)
 {
     assert(win);
     if (!win) return;

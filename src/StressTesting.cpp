@@ -317,7 +317,7 @@ bool DirStressTest::OpenFile(const TCHAR *fileName)
         w->dirStressTest = win->dirStressTest;
         win->dirStressTest = NULL;
         win = w;
-        delete toDelete;
+        DeleteWindowInfo(toDelete);
     }
 
     win->dm->changeDisplayMode(DM_SINGLE_PAGE);
