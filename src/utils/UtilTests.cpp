@@ -771,6 +771,112 @@ static void BencTestDictAppend()
     delete dict;
 }
 
+static void GenRandStr(char *buf, int bufLen)
+{
+    int l = rand() % (bufLen - 1);
+    for (int i=0; i<l; i++) {
+        char c = (char)(33 + (rand() % (174 - 33)));
+        buf[i] = c;
+    }
+    buf[l] = 0;
+}
+
+static void GenRandTStr(TCHAR *buf, int bufLen)
+{
+    int l = rand() % (bufLen - 1);
+    for (int i=0; i<l; i++) {
+        TCHAR c = (TCHAR)(33 + (rand() % (174 - 33)));
+        buf[i] = c;
+    }
+    buf[l] = 0;
+}
+
+static void BencTestStress()
+{
+    char key[64];
+    char val[64];
+    TCHAR tval[64];
+    Vec<BencObj*> stack(29);
+    BencDict *startDict = new BencDict();
+    BencDict *d = startDict;
+    BencArray *a = NULL;
+    srand((unsigned int)time(NULL));
+    // generate new dict or array with 5% probability each, close an array or
+    // dict with 8% probability (less than 10% probability of opening one, to
+    // encourage nesting), generate int, string or raw strings uniformly
+    // across the remaining 72% probability
+    for (int i=0; i<10000; i++)
+    {
+        int n = rand() % 100;
+        if (n < 5) {
+            BencDict *nd = new BencDict();
+            if (a) {
+                a->Add(nd);
+            } else {
+                GenRandStr(key, dimof(key));
+                d->Add(key, nd);
+            }
+            stack.Push(nd);
+            d = nd;
+            a = NULL;
+        } else if (n < 10) {
+            BencArray *na = new BencArray();
+            if (a) {
+                a->Add(na);
+            } else {
+                GenRandStr(key, dimof(key));
+                d->Add(key, na);
+            }
+            stack.Push(na);
+            d = NULL;
+            a = na;
+        } else if (n < 18) {
+            if (stack.Count() > 0) {
+                n = rand() % 100;
+                BencObj *o = stack.Pop();
+                o = startDict;
+                if (stack.Count() > 0) {
+                    o = stack.Last();
+                }
+                a = NULL; d = NULL;
+                if (BT_ARRAY == o->Type()) {
+                    a = (BencArray*)o;
+                } else {
+                    d = (BencDict*)o;
+                }
+            }
+        } else if (n < (18 + 24)) {
+            int64_t v = rand();
+            if (a) {
+                a->Add(v);
+            } else {
+                GenRandStr(key, dimof(key));
+                d->Add(key, v);
+            }
+        } else if (n < (18 + 24 + 24)) {
+            GenRandStr(val, dimof(val));
+            if (a) {
+                a->AddRaw((const char*)val);
+            } else {
+                GenRandStr(key, dimof(key));
+                d->AddRaw((const char*)key, val);
+            }
+        } else {
+            GenRandTStr(tval, dimof(tval));
+            if (a) {
+                a->Add(tval);
+            } else {
+                GenRandStr(key, dimof(key));
+                d->Add((const char*)key, (const TCHAR *)val);
+            }
+        }
+    }
+
+    char *s = startDict->Encode();
+    free(s);
+    delete startDict;
+}
+
 void BaseUtils_UnitTests()
 {
     DBG_OUT("Running BaseUtils unit tests\n");
@@ -787,6 +893,7 @@ void BaseUtils_UnitTests()
     BencTestParseDicts();
     BencTestArrayAppend();
     BencTestDictAppend();
+    BencTestStress();
 }
 
 #endif
