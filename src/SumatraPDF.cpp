@@ -2461,7 +2461,7 @@ bool DirStressTest::GoToNextPage()
         win->dm->goToPage(currPage, 0);
         double pageRenderTime = currPageRenderTime.GetCurrTimeInMs();
         ScopedMem<TCHAR> s(Str::Format(_T("Page %d rendered in %d milliseconds"), currPage-1, (int)pageRenderTime));
-        win->ShowNotification(s, true);
+        win->ShowNotification(s, true, false, NG_DIR_STRESS_PAGE_TIMING);
         currPageRenderTime.Start();
         return true;
     }
@@ -2508,8 +2508,10 @@ bool DirStressTest::OpenFile(const TCHAR *fileName)
     currPage = 1;
     currPageRenderTime.Start();
     ++filesCount;
-    ScopedMem<TCHAR> s(Str::Format(_T("Opened file no %d"), filesCount));
-    win->ShowNotification(s, true);
+    ScopedMem<TCHAR> s(Str::Format(_T("File %d: %s"), filesCount, currFile));
+    win->ShowNotification(s, false, false, NG_DIR_STRESS_NEW_FILE);
+    // TODO: also show how much time since starting stress test
+    // as a notification, in a human-readable way ("1 hr 15 min 38 s")
     // TODO: start a search too?
     return true;
 }

@@ -37,7 +37,9 @@ enum NotificationGroup {
     NG_RESPONSE_TO_ACTION = 1,
     NG_FIND_PROGRESS,
     NG_PRINT_PROGRESS,
-    NG_PAGE_INFO_HELPER
+    NG_PAGE_INFO_HELPER,
+    NG_DIR_STRESS_PAGE_TIMING,
+    NG_DIR_STRESS_NEW_FILE
 };
 
 /* Describes position, the target (URL or file path) and infotip of a "hyperlink" */
