@@ -1105,10 +1105,7 @@ static LONG WINAPI DumpExceptionHandler(EXCEPTION_POINTERS *exceptionInfo)
     SetEvent(gDumpEvent);
     WaitForSingleObject(gDumpThread, INFINITE);
 
-#if 0
-    ScopedMem<TCHAR> msg(Str::Format(_T("%s\n\n%s"), _TR("Please include the following file in your crash report:"), gCrashDumpPath.Get()));
-    MessageBox(NULL, msg.Get(), _TR("SumatraPDF crashed"), MB_ICONERROR | MB_OK);
-#endif
+    MessageBox(NULL, _TR("SumatraPDF crashed"), _TR("SumatraPDF crashed"), MB_ICONERROR | MB_OK);
 
     TerminateProcess(GetCurrentProcess(), 1);
 
