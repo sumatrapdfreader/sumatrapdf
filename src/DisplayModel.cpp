@@ -481,7 +481,7 @@ int DisplayModel::currentPageNo() const
     /* if no page is visible, default to either the first or the last one */
     if (INVALID_PAGE_NO == mostVisiblePage) {
         PageInfo *pageInfo = getPageInfo(1);
-        if (viewPort.y > pageInfo->pos.y + pageInfo->pos.dy)
+        if (pageInfo && viewPort.y > pageInfo->pos.y + pageInfo->pos.dy)
             mostVisiblePage = pageCount();
         else
             mostVisiblePage = 1;

@@ -234,12 +234,15 @@ bool DirStressTest::GoToNextPage()
 
 bool DirStressTest::OpenDir(const TCHAR *dirPath)
 {
+    assert(filesToOpen.Count() == 0);
+
     ScopedMem<TCHAR> pattern(Str::Format(_T("%s\\*.pdf"), dirPath));
     bool hasFiles = CollectPathsFromDirectory(pattern, filesToOpen);
     pattern.Set(Str::Format(_T("%s\\*.xps"), dirPath));
     hasFiles |= CollectPathsFromDirectory(pattern, filesToOpen);
     pattern.Set(Str::Format(_T("%s\\*.djvu"), dirPath));
     hasFiles |= CollectPathsFromDirectory(pattern, filesToOpen);
+    filesToOpen.Sort();
 
     pattern.Set(Str::Format(_T("%s\\*"), dirPath));
     bool hasSubDirs = CollectPathsFromDirectory(pattern, dirsToVisit, true);

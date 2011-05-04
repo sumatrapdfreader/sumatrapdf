@@ -43,7 +43,7 @@
    (except maybe logging current exception ?)
 */
 
-typedef BOOL WINAPI MiniDumpWriteProc(
+typedef BOOL WINAPI MiniDumpWriteDumpProc(
     HANDLE hProcess,
     DWORD ProcessId,
     HANDLE hFile,
@@ -118,7 +118,7 @@ typedef BOOL _stdcall SymGetLineFromAddr64Proc(
 typedef VOID _stdcall RtlCaptureContextProc(
     PCONTEXT ContextRecord);
 
-static MiniDumpWriteProc *              _MiniDumpWrite = NULL;
+static MiniDumpWriteDumpProc *          _MiniDumpWriteDump = NULL;
 static SymInitializeWProc *             _SymInitializeW;
 static SymInitializeProc *              _SymInitialize;
 static SymCleanupProc *                 _SymCleanup;
@@ -149,7 +149,7 @@ static Log::MemoryLogger gDbgLog;
 
 static bool LoadDbgHelpFuncs()
 {
-    if (_MiniDumpWrite)
+    if (_MiniDumpWriteDump)
         return true;
 #if 0
     TCHAR *dbghelpPath = _T("C:\\Program Files (x86)\\Microsoft Visual Studio 10.0\\Team Tools\\Performance Tools\\dbghelp.dll");
@@ -161,7 +161,7 @@ static bool LoadDbgHelpFuncs()
         return false;
 
 #define Load(func) _ ## func = (func ## Proc *)GetProcAddress(h, #func)
-    Load(MiniDumpWrite);
+    Load(MiniDumpWriteDump);
     Load(SymInitializeW);
     Load(SymInitialize);
     Load(SymCleanup);
@@ -1053,7 +1053,7 @@ Exit:
 
 static void WriteMiniDump()
 {
-    if (NULL == _MiniDumpWrite)
+    if (NULL == _MiniDumpWriteDump)
         return;
 
     HANDLE dumpFile = CreateFile(gCrashDumpPath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH, NULL);
@@ -1066,7 +1066,7 @@ static void WriteMiniDump()
         type = (MINIDUMP_TYPE)(type | MiniDumpWithDataSegs | MiniDumpWithHandleData | MiniDumpWithPrivateReadWriteMemory);
     MINIDUMP_CALLBACK_INFORMATION mci = { OpenMiniDumpCallback, NULL }; 
 
-    _MiniDumpWrite(GetCurrentProcess(), GetCurrentProcessId(), dumpFile, type, &gMei, NULL, &mci);
+    _MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), dumpFile, type, &gMei, NULL, &mci);
 
     CloseHandle(dumpFile);
 }
@@ -1099,7 +1099,7 @@ static LONG WINAPI DumpExceptionHandler(EXCEPTION_POINTERS *exceptionInfo)
 
     gMei.ThreadId = GetCurrentThreadId();
     gMei.ExceptionPointers = exceptionInfo;
-    // per msdn (which is backed by my experience), MiniDumpWrite() doesn't
+    // per msdn (which is backed by my experience), MiniDumpWriteDump() doesn't
     // write callstack for the calling thread correctly. We use msdn-recommended
     // work-around of spinning a thread to do the writing
     SetEvent(gDumpEvent);
