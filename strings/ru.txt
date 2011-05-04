@@ -51,6 +51,9 @@ Contributor: Victor Kozyakin
 &Fit pages to printable area
 Подо&гнать страницы под область печати
 
+&Forget Document
+&Удалить документ
+
 &Go To
 Пере&ход
 
@@ -87,11 +90,17 @@ Contributor: Victor Kozyakin
 &Open\tCtrl-O
 &Открыть\tCtrl-O
 
+&Open Document
+&Открыть документ
+
 &Options...
 &Параметры...
 
 &Password:
 &Пароль:
+
+&Pin Document
+&Запомнить документ
 
 &Previous Page\tLeft Arrow
 Пре&дыдущая страница\tСтрелка влево
@@ -597,8 +606,5 @@ printing document
 # Untranslated:
 #&Book View\tCtrl-8
 #&Facing\tCtrl-7
-#&Forget Document
-#&Open Document
-#&Pin Document
 #&Single Page\tCtrl-6
 

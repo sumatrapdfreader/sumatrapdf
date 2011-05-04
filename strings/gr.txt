@@ -25,6 +25,9 @@ Contributor: XhmikosR
 &Back\tAlt+Left Arrow
 &Πίσω\tAlt+<-
 
+&Book View\tCtrl-8
+&Προβολή Βιβλίου\tCtrl-8
+
 &Close\tCtrl-W
 &Κλείσιμο\tCtrl-W
 
@@ -51,6 +54,9 @@ Contributor: XhmikosR
 
 &Fit pages to printable area
 Προσαρμογή σελίδων σε &εκτυπώσιμη περιοχή
+
+&Forget Document
+&Απόκρυψη Εγγράφου
 
 &Go To
 &Μετάβαση
@@ -86,13 +92,19 @@ Contributor: XhmikosR
 &Μόνο οι ζυγές
 
 &Open\tCtrl-O
-&Άνοιγμα\tCtrl-O
+Ά&νοιγμα\tCtrl-O
+
+&Open Document
+Ά&νοιγμα Εγγράφου
 
 &Options...
 &Επιλογές...
 
 &Password:
 &Κωδικός:
+
+&Pin Document
+&Καρφίτσωμα Εγγράφου
 
 &Previous Page\tLeft Arrow
 &Προηγούμενη Σελίδα\t<-
@@ -123,6 +135,9 @@ Contributor: XhmikosR
 
 &Shrink pages to printable area (if necessary)
 Σμίκρυνση σελίδων σε &εκτυπώσιμη περιοχή (αν χρειάζεται)
+
+&Single Page\tCtrl-6
+&Μονή Σελίδα\tCtrl-6
 
 &Skip this version
 &Παράβλεψη αυτής της έκδοσης
@@ -259,6 +274,9 @@ Default PDF reader can't be changed in portable mode
 Denied Permissions:
 Απαγόρευση Δικαιωμάτων:
 
+DjVu documents
+Έγγραφα DjVu
+
 Document Properties
 Ιδιότητες Εγγράφου
 
@@ -343,11 +361,17 @@ Found text at page %d
 Found text at page %d (again)
 Το κείμενο βρέθηκε στη σελίδα %d (πάλι)
 
+Frequently Read
+Συχνά Αναγνωσμένα Αρχεία
+
 GB
 GB
 
 Go to page
 Μετάβαση στη σελίδα
+
+Hide frequently read
+Απόκρυψη συχνών αναγνωσμένων αρχείων
 
 Hint: Use the F3 key for finding again
 Συμβουλή: Χρησιμοποιήστε το F3 για εύρεση του επόμενου
@@ -400,6 +424,9 @@ OK
 Open
 Άνοιγμα
 
+Open a document...
+Άνοιγμα εγγράφου...
+
 Open in &Adobe Reader
 Άνοιγμα με &Adobe Reader
 
@@ -451,8 +478,17 @@ Pr&esentation\tCtrl-L
 Previous Page
 Προηγούμενη Σελίδα
 
+Print
+Εκτύπωση
+
 Print range
 Εύρος εκτύπωσης
+
+Printing is still in progress. Abort and start over?
+Η εκτύπωση βρίσκεται σε εξέλιξη. Να ακυρωθεί και να ξεκινήσει πάλι;
+
+Printing page %d of %d...
+Εκτύπωση σελίδας %d από %d...
 
 Printing problem.
 Πρόβλημα εκτύπωσης.
@@ -492,6 +528,9 @@ Show &Toolbar
 
 Show &pages continuously
 &Συνεχής εμφάνιση σελίδων
+
+Show frequently read
+Εμφάνιση συχνά αναγνωσμένων αρχείων
 
 Show the &bookmarks sidebar when available
 Εμφάνιση &πλευρικής στήλης σελιδοδεικτών όπου είναι δυνατόν
@@ -563,7 +602,7 @@ Zoom factor
 Ποσοστό μεγέθυνσης
 
 [Changes detected; refreshing] %s
-[Ανιχνεύτηκαν αλλαγές, ανανέωση…] %s
+[Ανιχνεύτηκαν αλλαγές, ανανέωση] %s
 
 copying text
 αντιγραφή κειμένου
@@ -572,18 +611,5 @@ printing document
 εκτύπωση εγγράφου
 
 # Untranslated:
-#&Book View\tCtrl-8
 #&Facing\tCtrl-7
-#&Forget Document
-#&Open Document
-#&Pin Document
-#&Single Page\tCtrl-6
-#DjVu documents
-#Frequently Read
-#Hide frequently read
-#Open a document...
-#Print
-#Printing is still in progress. Abort and start over?
-#Printing page %d of %d...
-#Show frequently read
 

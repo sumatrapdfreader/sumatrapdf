@@ -26,6 +26,9 @@ Contributor: Amos Kotter http://sites.google.com/site/hillasystem/
 &Close\tCtrl-W
 &סגור\tCtrl-W
 
+&Copy Selection
+העתק בחירה
+
 &Copy Selection\tCtrl-C
 העתק בחירה\tCtrl-C
 
@@ -46,6 +49,9 @@ Contributor: Amos Kotter http://sites.google.com/site/hillasystem/
 
 &Fit pages to printable area
 הגדל עמודים עד גודל אזור ההדפסה
+
+&Forget Document
+שכח מסמך
 
 &Go To
 לך ל
@@ -83,14 +89,23 @@ Contributor: Amos Kotter http://sites.google.com/site/hillasystem/
 &Open\tCtrl-O
 &פתח\tCtrl-O
 
+&Open Document
+פתח מסמך
+
 &Options...
 אפשרויות...
 
 &Password:
 סיסמה:
 
+&Pin Document
+רתק מסמך
+
 &Previous Page\tLeft Arrow
 דף קודם\t<-
+
+&Print...
+הדפס
 
 &Print...\tCtrl-P
 הדפס\tCtrl-P
@@ -103,6 +118,9 @@ Contributor: Amos Kotter http://sites.google.com/site/hillasystem/
 
 &Remember these settings for each document
 זכור הגדרות אלו לכל מסמך
+
+&Save As...
+בשמור בשם
 
 &Save As...\tCtrl-S
 שמירה בשם\tCtrl-S
@@ -140,11 +158,17 @@ Advanced
 All files
 כל הקבצים
 
+All supported documents
+כל המסמכים הנתמכים
+
 Application:
 יישום:
 
 Associate with PDF files?
 ?PDF לשייך לקבצי
+
+Attachment: %s
+נספח: %s
 
 Author:
 עורך:
@@ -160,6 +184,12 @@ Book View
 
 Book&marks\tF12
 סימניה\tF12
+
+Bookmark Shortcuts
+קיצורי דרך סימניה
+
+Bookmark shortcut to page %d of %s
+קיצור דרך לסימנה %d מתוך %s
 
 Bookmarks
 מועדפים
@@ -185,6 +215,9 @@ Change Language
 Check for &Updates
 בדוק לגרסה חדשה
 
+Comic books
+ספרי קומיקס
+
 Continuous
 רציף
 
@@ -196,6 +229,12 @@ Continuous Facing
 
 Contribute Translation
 עזור לתרגם
+
+Copy &Link Address
+העתק כתובת קישור
+
+Copy Co&mment
+העתק הערה
 
 Copying text was denied (copying as image only)
 העתקת טקסט נדחית (מועתק רק כתמונה)
@@ -227,6 +266,9 @@ PDF לא ניתן לשנות במצב נייד את קורא ה
 Denied Permissions:
 הרשאות חסרות:
 
+DjVu documents
+DjVu הערות
+
 Document Properties
 תכונות מסמך
 
@@ -241,6 +283,12 @@ Enter password
 
 Enter password for %s
 %s הכנס סיסמה עבור
+
+Enter the command-line to invoke when you double-click on the PDF document:
+הזן פקודה להפעלה בלחיצה כפולה על מסמך
+
+Error loading %s
+שגיאת טעינה %s
 
 F&orward\tAlt+Right Arrow
 קדימה\tAlt+ ?
@@ -293,8 +341,20 @@ Fit Page
 Fit Width
 התאם רוחב
 
+Fit Width and Show Pages Continuously
+התאם לרוחב והצג העמודים ברציפות
+
+Fit a Single Page
+התאם עמוד אחד
+
 Found text at page %d
 %d חפש מלל בעמוד
+
+Found text at page %d (again)
+טקסט נמצא בעמוד %d (שוב)
+
+Frequently Read
+נקרא תכופות
 
 GB
 GB
@@ -302,8 +362,14 @@ GB
 Go to page
 עבור לעמוד
 
+Hide frequently read
+הסתר נקרא תכופות
+
 Hint: Use the F3 key for finding again
 F3 רמז: לחיפוש הבא, השתמש במקש
+
+Image files (*.%s)
+קבצי תמונה (*.%s)
 
 KB
 KB
@@ -332,6 +398,9 @@ Next Page
 No matches were found
 לא נמצאו התאמות
 
+No result found around line %u in file %s
+לא נמצאה תוצאה בסביבות שורה %u בקובץ %s
+
 No synchronization file found
 לא נמצא קובץ סנכרון
 
@@ -347,6 +416,9 @@ OK
 Open
 פתח
 
+Open a document...
+פתח מסמך...
+
 Open in &Adobe Reader
 Adobe פתח בקורא
 
@@ -355,6 +427,9 @@ Foxit פתח בקורא
 
 Open in PDF-XChange
 PDF-XChange פתח בקורא
+
+P&roperties
+תכונות
 
 P&roperties\tCtrl-D
 תכונות...\tCtrl-D
@@ -389,11 +464,23 @@ Page:
 Please wait - rendering...
 אנא המתן – מבצע...
 
+Pr&esentation\tCtrl-L
+הצגה\tCtrl-L
+
 Previous Page
 דף קודם
 
+Print
+הדפסה
+
 Print range
 הדפס טווח
+
+Printing is still in progress. Abort and start over?
+הדפסה בתהליך. לבטל ולהתחיל מחדש?
+
+Printing page %d of %d...
+מדפיס עמוד %d מתוך %d...
 
 Printing problem.
 בעיית הדפסה
@@ -407,8 +494,17 @@ Rotate &Left\tCtrl-Shift--
 Rotate &Right\tCtrl-Shift-+
 סובב ימינה\tCtrl-Shift-+
 
+Save S&hortcut...\tCtrl-Shift-S
+קיצור שמירה...\tCtrl-Shift-S
+
 Searching %d of %d...
 %d מ %d מחפש...
+
+Select &All
+בחר הכל
+
+Select &All\tCtrl-A
+בחר הכל\tCtrl-A
 
 Select content with Ctrl+left mouse button
 וכפתור עכבר שמאל Ctrl בחר תוכן עם
@@ -424,6 +520,9 @@ Show &Toolbar
 
 Show &pages continuously
 הצג דפים ברציפות
+
+Show frequently read
+הצג נקרא תכופות
 
 Show the &bookmarks sidebar when available
 הצג סרגל-צד סימניות כשזמין
@@ -442,6 +541,9 @@ SumatraPDF אפשרויות
 
 SumatraPDF Update
 SumatraPDF עדכון
+
+SumatraPDF crashed
+SumatraPDF נפלה
 
 SumatraPDF is your default PDF reader
 SumatraPDF ראשי הינו PDF קורא
@@ -469,6 +571,9 @@ Visit &Website
 
 Warning
 אזהרה
+
+XPS documents
+XPS מסמכי
 
 You have the latest version.
 ברשותך המדורה האחרונה
@@ -499,41 +604,6 @@ printing document
 
 # Untranslated:
 #&Book View\tCtrl-8
-#&Copy Selection
 #&Facing\tCtrl-7
-#&Forget Document
-#&Open Document
-#&Pin Document
-#&Print...
-#&Save As...
 #&Single Page\tCtrl-6
-#All supported documents
-#Attachment: %s
-#Bookmark Shortcuts
-#Bookmark shortcut to page %d of %s
-#Comic books
-#Copy &Link Address
-#Copy Co&mment
-#DjVu documents
-#Enter the command-line to invoke when you double-click on the PDF document:
-#Error loading %s
-#Fit Width and Show Pages Continuously
-#Fit a Single Page
-#Found text at page %d (again)
-#Frequently Read
-#Hide frequently read
-#Image files (*.%s)
-#No result found around line %u in file %s
-#Open a document...
-#P&roperties
-#Pr&esentation\tCtrl-L
-#Print
-#Printing is still in progress. Abort and start over?
-#Printing page %d of %d...
-#Save S&hortcut...\tCtrl-Shift-S
-#Select &All
-#Select &All\tCtrl-A
-#Show frequently read
-#SumatraPDF crashed
-#XPS documents
 
