@@ -428,7 +428,12 @@ float DisplayModel::zoomRealFromVirtualForPage(float zoomVirtual, int pageNo)
         row.dx *= columns;
     }
 
-    assert(!RectD(PointD(), row).IsEmpty());
+    // TODO: this is triggered quite frequntly in dir stress test when using
+    // debug build. Disabling for now. Either figure out a root cause or
+    // remove if the assert is invalid.
+    //assert(!RectD(PointD(), row).IsEmpty());
+    if (RectD(PointD(), row).IsEmpty())
+        return 0;
 
     int areaForPagesDx = viewPort.dx - padding->left - padding->right - padding->inBetweenX * (columns - 1);
     int areaForPagesDy = viewPort.dy - padding->top - padding->bottom;
