@@ -293,11 +293,10 @@ bool RenderCache::ReduceTileSize()
     return true;
 }
 
-void RenderCache::Render(DisplayModel *dm, int pageNo, RenderingCallback *callback, 
-                         CallbackFunc *debugCb)
+void RenderCache::Render(DisplayModel *dm, int pageNo, RenderingCallback *callback)
 {
     TilePosition tile = { GetTileRes(dm, pageNo), 0, 0 };
-    Render(dm, pageNo, tile, true, callback, debugCb);
+    Render(dm, pageNo, tile, true, callback);
 
     // render both tiles of the first row when splitting a page in four
     // (which always happens on larger displays for Fit Width)
@@ -308,8 +307,7 @@ void RenderCache::Render(DisplayModel *dm, int pageNo, RenderingCallback *callba
 }
 
 /* Render a bitmap for page <pageNo> in <dm>. */
-void RenderCache::Render(DisplayModel *dm, int pageNo, TilePosition tile, bool clearQueue, 
-                         RenderingCallback *callback, CallbackFunc *debugCb)
+void RenderCache::Render(DisplayModel *dm, int pageNo, TilePosition tile, bool clearQueue, RenderingCallback *callback)
 {
     DBG_OUT("RenderCache::Render(pageNo=%d)\n", pageNo);
     assert(dm);
@@ -369,7 +367,7 @@ void RenderCache::Render(DisplayModel *dm, int pageNo, TilePosition tile, bool c
         goto Exit;
     }
 
-    ok = Render(dm, pageNo, rotation, zoom, &tile, NULL, callback, debugCb);
+    ok = Render(dm, pageNo, rotation, zoom, &tile, NULL, callback);
 
 Exit:
     if (!ok && callback)
@@ -384,8 +382,7 @@ void RenderCache::Render(DisplayModel *dm, int pageNo, int rotation, float zoom,
 }
 
 bool RenderCache::Render(DisplayModel *dm, int pageNo, int rotation, float zoom, 
-                         TilePosition *tile, RectD *pageRect, 
-                         RenderingCallback *renderCb, CallbackFunc *debugCb)
+                         TilePosition *tile, RectD *pageRect, RenderingCallback *renderCb)
 {
     assert(dm);
     if (!dm || dm->_dontRenderFlag)
@@ -429,7 +426,6 @@ bool RenderCache::Render(DisplayModel *dm, int pageNo, int rotation, float zoom,
     newRequest->abort = false;
     newRequest->timestamp = GetTickCount();
     newRequest->renderCb = renderCb;
-    newRequest->renderingStartedCb = debugCb;
 
     SetEvent(startRendering);
 
@@ -552,11 +548,6 @@ DWORD WINAPI RenderCache::RenderCacheThread(LPVOID data)
             if (req.renderCb)
                 req.renderCb->Callback();
             continue;
-        }
-
-        if (req.renderingStartedCb) {
-            req.renderingStartedCb->Callback();
-            req.renderingStartedCb = NULL;
         }
 
         bmp = req.dm->engine->RenderBitmap(req.pageNo, req.zoom, req.rotation, &req.pageRect);

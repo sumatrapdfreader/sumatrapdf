@@ -56,9 +56,6 @@ struct PageRenderRequest {
     // owned by the PageRenderRequest (use it before reusing the request)
     // on rendering success, the callback gets handed the RenderedBitmap
     RenderingCallback * renderCb;
-
-    // this is used for debugging
-    CallbackFunc *      renderingStartedCb;
 };
 
 #define MAX_PAGE_REQUESTS 8
@@ -91,8 +88,7 @@ public:
     RenderCache();
     ~RenderCache();
 
-    void    Render(DisplayModel *dm, int pageNo, RenderingCallback *callback=NULL,
-                   CallbackFunc *debugCb=NULL);
+    void    Render(DisplayModel *dm, int pageNo, RenderingCallback *callback=NULL);
     void    Render(DisplayModel *dm, int pageNo, int rotation, float zoom,
                    RectD pageRect, RenderingCallback& callback);
     void    CancelRendering(DisplayModel *dm);
@@ -121,12 +117,10 @@ private:
             }
     UINT    GetRenderDelay(DisplayModel *dm, int pageNo, TilePosition tile);
     void    Render(DisplayModel *dm, int pageNo, TilePosition tile,
-                   bool clearQueue=true, RenderingCallback *callback=NULL,
-                   CallbackFunc *debugCb=NULL);
+                   bool clearQueue=true, RenderingCallback *callback=NULL);
     bool    Render(DisplayModel *dm, int pageNo, int rotation, float zoom,
                    TilePosition *tile=NULL, RectD *pageRect=NULL,
-                   RenderingCallback *callback=NULL, 
-                   CallbackFunc *debugCb=NULL);
+                   RenderingCallback *callback=NULL);
     void    ClearQueueForDisplayModel(DisplayModel *dm, int pageNo=INVALID_PAGE_NO,
                                       TilePosition *tile=NULL);
 
