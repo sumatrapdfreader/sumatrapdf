@@ -419,9 +419,6 @@ Pagkalaki ng pahina
 Page:
 Pahina:
 
-Please include the following file in your crash report:
-Maaaring pakisama ang mga sumusunod na file sa iyong crash report:
-
 Please wait - rendering...
 Maghintay - pinapakita...
 
@@ -546,9 +543,12 @@ printing document
 ipini-print ang dokumento
 
 # Untranslated:
+#&Book View\tCtrl-8
+#&Facing\tCtrl-7
 #&Forget Document
 #&Open Document
 #&Pin Document
+#&Single Page\tCtrl-6
 #All supported documents
 #Bookmark Shortcuts
 #Bookmark shortcut to page %d of %s

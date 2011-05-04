@@ -509,9 +509,9 @@ MenuDef menuDefFile[] = {
 };
 
 MenuDef menuDefView[] = {
-    { _TRN("Single Page"),                  IDM_VIEW_SINGLE_PAGE,       0  },
-    { _TRN("Facing"),                       IDM_VIEW_FACING,            0  },
-    { _TRN("Book View"),                    IDM_VIEW_BOOK,              0  },
+    { _TRN("&Single Page\tCtrl-6"),         IDM_VIEW_SINGLE_PAGE,       0  },
+    { _TRN("&Facing\tCtrl-7"),              IDM_VIEW_FACING,            0  },
+    { _TRN("&Book View\tCtrl-8"),           IDM_VIEW_BOOK,              0  },
     { _TRN("Show &pages continuously"),     IDM_VIEW_CONTINUOUS,        0  },
     { SEP_ITEM, 0, 0  },
     { _TRN("Rotate &Left\tCtrl-Shift--"),   IDM_VIEW_ROTATE_LEFT,       0  },

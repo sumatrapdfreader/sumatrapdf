@@ -498,12 +498,15 @@ printing document
 מדפיס מסמך
 
 # Untranslated:
+#&Book View\tCtrl-8
 #&Copy Selection
+#&Facing\tCtrl-7
 #&Forget Document
 #&Open Document
 #&Pin Document
 #&Print...
 #&Save As...
+#&Single Page\tCtrl-6
 #All supported documents
 #Attachment: %s
 #Bookmark Shortcuts
@@ -523,7 +526,6 @@ printing document
 #No result found around line %u in file %s
 #Open a document...
 #P&roperties
-#Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L
 #Print
 #Printing is still in progress. Abort and start over?

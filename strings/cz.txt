@@ -451,9 +451,6 @@ Měřítko stránky
 Page:
 Stránka:
 
-Please include the following file in your crash report:
-Zahrňte následující soubor do zprávy o chybě:
-
 Please wait - rendering...
 Prosím čekejte, probíhá vykreslování...
 
@@ -593,9 +590,12 @@ printing document
 tisk dokumentu
 
 # Untranslated:
+#&Book View\tCtrl-8
+#&Facing\tCtrl-7
 #&Forget Document
 #&Open Document
 #&Pin Document
+#&Single Page\tCtrl-6
 #DjVu documents
 #Print
 

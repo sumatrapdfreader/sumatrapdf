@@ -403,9 +403,6 @@ Sideskalering
 Page:
 Side:
 
-Please include the following file in your crash report:
-Du bedes venligst inkludere følgende fil i din fejlrapport:
-
 Please wait - rendering...
 Vent venligst - renderer...
 
@@ -527,12 +524,15 @@ printing document
 printer dokument
 
 # Untranslated:
+#&Book View\tCtrl-8
 #&Copy Selection
+#&Facing\tCtrl-7
 #&Forget Document
 #&Open Document
 #&Pin Document
 #&Print...
 #&Save As...
+#&Single Page\tCtrl-6
 #All supported documents
 #Bookmark Shortcuts
 #Bookmark shortcut to page %d of %s

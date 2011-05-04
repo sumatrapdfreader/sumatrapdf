@@ -497,12 +497,15 @@ printing document
 ලේඛනය මුද්‍රණය
 
 # Untranslated:
+#&Book View\tCtrl-8
 #&Copy Selection
+#&Facing\tCtrl-7
 #&Forget Document
 #&Open Document
 #&Pin Document
 #&Print...
 #&Save As...
+#&Single Page\tCtrl-6
 #All supported documents
 #Bookmark Shortcuts
 #Bookmark shortcut to page %d of %s
@@ -519,7 +522,6 @@ printing document
 #Open a document...
 #P&roperties
 #Page scaling
-#Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L
 #Print
 #Print range

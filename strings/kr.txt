@@ -448,12 +448,15 @@ printing document
 문서 인쇄중
 
 # Untranslated:
+#&Book View\tCtrl-8
 #&Copy Selection
+#&Facing\tCtrl-7
 #&Forget Document
 #&Open Document
 #&Pin Document
 #&Print...
 #&Save As...
+#&Single Page\tCtrl-6
 #&Use original page sizes
 #All supported documents
 #Bookmark Shortcuts
@@ -483,7 +486,6 @@ printing document
 #No synchronization info at this position
 #Open a document...
 #P&roperties
-#Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L
 #Print
 #Printing is still in progress. Abort and start over?

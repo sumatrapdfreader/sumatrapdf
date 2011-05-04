@@ -452,9 +452,6 @@ Scalare pagină
 Page:
 Pagina:
 
-Please include the following file in your crash report:
-Vă rugăm să includeţi următorul fişier în raportul programului terminat incorect:
-
 Please wait - rendering...
 Vă rugăm aşteptaţi - afişare...
 
@@ -594,8 +591,11 @@ printing document
 se imprimă documentul
 
 # Untranslated:
+#&Book View\tCtrl-8
+#&Facing\tCtrl-7
 #&Forget Document
 #&Open Document
 #&Pin Document
+#&Single Page\tCtrl-6
 #Print
 

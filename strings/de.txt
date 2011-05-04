@@ -26,6 +26,9 @@ Contributor: Michael (quelbs@gmail.com)
 &Back\tAlt+Left Arrow
 &Zurück\tAlt+<-
 
+&Book View\tCtrl-8
+&Buchansicht\tStrg+8
+
 &Close\tCtrl-W
 &Schließen\tStrg+W
 
@@ -40,6 +43,9 @@ Nicht &wieder fragen.
 
 &Even pages only
 Nur &gerade Seiten
+
+&Facing\tCtrl-7
+&Doppelseite\tStrg+7
 
 &File
 &Datei
@@ -133,6 +139,9 @@ Speichern &unter…\tStrg+S
 
 &Shrink pages to printable area (if necessary)
 Seiten auf Druckbereich &verkleinern (falls nötig)
+
+&Single Page\tCtrl-6
+&Einzelne Seite\tStrg+6
 
 &Skip this version
 &Diese Version überspringen.
@@ -463,9 +472,6 @@ Anpassen der Seitengröße
 
 Page:
 Seite:
-
-Please include the following file in your crash report:
-Bitte diese Datei bei einer Absturz-Meldung beifügen:
 
 Please wait - rendering...
 Bitte einen Moment Geduld…

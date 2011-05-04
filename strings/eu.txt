@@ -445,9 +445,6 @@ Orria eskalatzen
 Page:
 Orria
 
-Please include the following file in your crash report:
-Mesedez, ondorengo fitxategia zure arazoen txostenean sartu:
-
 Please wait - rendering...
 Itxaron mesedez - renderizatzen oraindik
 
@@ -590,9 +587,12 @@ printing document
 dokumentua imprimatzen
 
 # Untranslated:
+#&Book View\tCtrl-8
+#&Facing\tCtrl-7
 #&Forget Document
 #&Open Document
 #&Pin Document
+#&Single Page\tCtrl-6
 #Bookmark shortcut to page %d of %s
 #No result found around line %u in file %s
 

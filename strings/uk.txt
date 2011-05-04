@@ -440,9 +440,6 @@ Page scaling
 Page:
 Сторінка:
 
-Please include the following file in your crash report:
-Будь-ласка вкладіть наступний файл у ваш звіт про падіння:
-
 Please wait - rendering...
 Зачекайте - генерується...
 
@@ -573,9 +570,12 @@ printing document
 друк документа
 
 # Untranslated:
+#&Book View\tCtrl-8
+#&Facing\tCtrl-7
 #&Forget Document
 #&Open Document
 #&Pin Document
+#&Single Page\tCtrl-6
 #DjVu documents
 #Frequently Read
 #Hide frequently read

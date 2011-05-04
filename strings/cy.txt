@@ -398,9 +398,6 @@ Graddio tudalen
 Page:
 Tudalen:
 
-Please include the following file in your crash report:
-Cofiwch gynnwys y ffeil ganlynol yn eich adroddiad chwalu:
-
 Please wait - rendering...
 Arhoswch, wrthi'n cyflwyno...
 
@@ -519,12 +516,15 @@ printing document
 argraffu dogfen
 
 # Untranslated:
+#&Book View\tCtrl-8
 #&Copy Selection
+#&Facing\tCtrl-7
 #&Forget Document
 #&Open Document
 #&Pin Document
 #&Print...
 #&Save As...
+#&Single Page\tCtrl-6
 #All supported documents
 #Bookmark Shortcuts
 #Bookmark shortcut to page %d of %s

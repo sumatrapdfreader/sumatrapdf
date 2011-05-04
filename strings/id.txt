@@ -454,9 +454,6 @@ Mengukur halaman
 Page:
 Halaman:
 
-Please include the following file in your crash report:
-Harap menyertakan berkas berikut ini di laporan crash Anda:
-
 Please wait - rendering...
 Harap tunggu - sedang proses rendering...
 
@@ -599,7 +596,10 @@ printing document
 mencetak dokumen
 
 # Untranslated:
+#&Book View\tCtrl-8
+#&Facing\tCtrl-7
 #&Forget Document
 #&Open Document
 #&Pin Document
+#&Single Page\tCtrl-6
 

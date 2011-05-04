@@ -442,9 +442,6 @@ Page scaling
 Page:
 Σελίδα:
 
-Please include the following file in your crash report:
-Παρακαλώ να συμπεριληφθεί το ακόλουθο αρχείο στην αναφορά κατάρρευσης:
-
 Please wait - rendering...
 Παρακαλώ περιμένετε - φόρτωση...
 
@@ -575,9 +572,12 @@ printing document
 εκτύπωση εγγράφου
 
 # Untranslated:
+#&Book View\tCtrl-8
+#&Facing\tCtrl-7
 #&Forget Document
 #&Open Document
 #&Pin Document
+#&Single Page\tCtrl-6
 #DjVu documents
 #Frequently Read
 #Hide frequently read

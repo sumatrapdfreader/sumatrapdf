@@ -212,9 +212,11 @@ Zoom Out
 # Untranslated:
 #&All selected pages
 #&Back\tAlt+Left Arrow
+#&Book View\tCtrl-8
 #&Copy Selection
 #&Copy Selection\tCtrl-C
 #&Even pages only
+#&Facing\tCtrl-7
 #&Find what:
 #&Fit pages to printable area
 #&Forget Document
@@ -235,6 +237,7 @@ Zoom Out
 #&Save As...
 #&Settings
 #&Shrink pages to printable area (if necessary)
+#&Single Page\tCtrl-6
 #&Use original page sizes
 #&Yes
 #(of %d)
@@ -307,7 +310,6 @@ Zoom Out
 #Page Size:
 #Page number %u inexistant
 #Page scaling
-#Please include the following file in your crash report:
 #Please wait - rendering...
 #Pr&esentation\tCtrl-L
 #Print

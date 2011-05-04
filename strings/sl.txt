@@ -420,9 +420,6 @@ Merilo strani
 Page:
 Stran:
 
-Please include the following file in your crash report:
-Prosim, vključite naslednjo datoteko v vaše poročilo o sesutju:
-
 Please wait - rendering...
 Počakajte trenutek, upodobitev poteka …
 
@@ -547,9 +544,12 @@ printing document
 tiskanje dokumenta
 
 # Untranslated:
+#&Book View\tCtrl-8
+#&Facing\tCtrl-7
 #&Forget Document
 #&Open Document
 #&Pin Document
+#&Single Page\tCtrl-6
 #All supported documents
 #Bookmark Shortcuts
 #Bookmark shortcut to page %d of %s

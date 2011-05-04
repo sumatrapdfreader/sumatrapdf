@@ -459,9 +459,6 @@ Adattamento pagina
 Page:
 Pagina:
 
-Please include the following file in your crash report:
-Includi questo file nella segnalazione del blocco:
-
 Please wait - rendering...
 Rendering in corso - attendere...
 
@@ -604,7 +601,10 @@ printing document
 Stampa documento...
 
 # Untranslated:
+#&Book View\tCtrl-8
+#&Facing\tCtrl-7
 #&Forget Document
 #&Open Document
 #&Pin Document
+#&Single Page\tCtrl-6
 

@@ -405,9 +405,6 @@ Skala om vid utskrift
 Page:
 Sida:
 
-Please include the following file in your crash report:
-Vid felrapportering bifoga följande fil:
-
 Please wait - rendering...
 Ett ögonblick - förbereder...
 
@@ -529,12 +526,15 @@ printing document
 skriver ut dokumentet
 
 # Untranslated:
+#&Book View\tCtrl-8
 #&Copy Selection
+#&Facing\tCtrl-7
 #&Forget Document
 #&Open Document
 #&Pin Document
 #&Print...
 #&Save As...
+#&Single Page\tCtrl-6
 #All supported documents
 #Bookmark Shortcuts
 #Bookmark shortcut to page %d of %s

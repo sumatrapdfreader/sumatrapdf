@@ -446,8 +446,10 @@ printing document
 
 # Untranslated:
 #&All selected pages
+#&Book View\tCtrl-8
 #&Copy Selection
 #&Even pages only
+#&Facing\tCtrl-7
 #&Fit pages to printable area
 #&Forget Document
 #&Odd pages only
@@ -457,6 +459,7 @@ printing document
 #&Remember the password for this document
 #&Save As...
 #&Shrink pages to printable area (if necessary)
+#&Single Page\tCtrl-6
 #&Use original page sizes
 #All supported documents
 #Attachment: %s
@@ -485,7 +488,6 @@ printing document
 #Open a document...
 #P&roperties
 #Page scaling
-#Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L
 #Print
 #Print range

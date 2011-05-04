@@ -465,9 +465,6 @@ Escalado de página
 Page:
 Página:
 
-Please include the following file in your crash report:
-Por favor incluya el siguiente archivo en su reporte de error:
-
 Please wait - rendering...
 Espere por favor - renderizando...
 
@@ -608,4 +605,9 @@ copiado de texto
 
 printing document
 imprimimento documento
+
+# Untranslated:
+#&Book View\tCtrl-8
+#&Facing\tCtrl-7
+#&Single Page\tCtrl-6
 

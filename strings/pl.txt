@@ -452,9 +452,6 @@ Skalowanie strony
 Page:
 Strona:
 
-Please include the following file in your crash report:
-Proszę dołączyć następujący plik do raportu awarii:
-
 Please wait - rendering...
 Proszę czekać - renderowanie...
 
@@ -597,7 +594,10 @@ printing document
 drukowanie dokumentu
 
 # Untranslated:
+#&Book View\tCtrl-8
+#&Facing\tCtrl-7
 #&Forget Document
 #&Open Document
 #&Pin Document
+#&Single Page\tCtrl-6
 

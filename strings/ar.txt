@@ -402,9 +402,6 @@ Page scaling
 Page:
 الصفحة
 
-Please include the following file in your crash report:
-يرجى تضمين (إرفاق) الملف التالي في تقرير المشكلة
-
 Please wait - rendering...
 الرجاء الانتظار ، جاري التجزئة
 
@@ -526,12 +523,15 @@ printing document
 تتم حالياً الطباعة
 
 # Untranslated:
+#&Book View\tCtrl-8
 #&Copy Selection
+#&Facing\tCtrl-7
 #&Forget Document
 #&Open Document
 #&Pin Document
 #&Print...
 #&Save As...
+#&Single Page\tCtrl-6
 #All supported documents
 #Bookmark Shortcuts
 #Bookmark shortcut to page %d of %s

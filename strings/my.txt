@@ -330,7 +330,9 @@ printing document
 mencetak dokumen
 
 # Untranslated:
+#&Book View\tCtrl-8
 #&Copy Selection
+#&Facing\tCtrl-7
 #&Forget Document
 #&Match case
 #&Open Document
@@ -338,6 +340,7 @@ mencetak dokumen
 #&Print...
 #&Save As...
 #&Shrink pages to printable area (if necessary)
+#&Single Page\tCtrl-6
 #&Use original page sizes
 #(of %d)
 #Advanced
@@ -392,7 +395,6 @@ mencetak dokumen
 #PDF Producer:
 #Page number %u inexistant
 #Page scaling
-#Please include the following file in your crash report:
 #Please wait - rendering...
 #Pr&esentation\tCtrl-L
 #Print

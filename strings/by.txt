@@ -344,9 +344,11 @@ Zoom Out
 # Untranslated:
 #&All selected pages
 #&Back\tAlt+Left Arrow
+#&Book View\tCtrl-8
 #&Copy Selection
 #&Copy Selection\tCtrl-C
 #&Even pages only
+#&Facing\tCtrl-7
 #&Fit pages to printable area
 #&Forget Document
 #&Magnification:
@@ -359,6 +361,7 @@ Zoom Out
 #&Remember the password for this document
 #&Save As...
 #&Shrink pages to printable area (if necessary)
+#&Single Page\tCtrl-6
 #&Use original page sizes
 #All supported documents
 #Application:
@@ -407,7 +410,6 @@ Zoom Out
 #PDF Version:
 #Page Size:
 #Page scaling
-#Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L
 #Print
 #Print range

@@ -448,9 +448,6 @@ Page scaling
 Page:
 Страница:
 
-Please include the following file in your crash report:
-Ве молам вклучете ја следната датотека во вашиот извештај за паѓање на апликацијата:
-
 Please wait - rendering...
 Ве молам почекајте - создавам приказ...
 
@@ -590,9 +587,12 @@ printing document
 печатам документ
 
 # Untranslated:
+#&Book View\tCtrl-8
+#&Facing\tCtrl-7
 #&Forget Document
 #&Open Document
 #&Pin Document
+#&Single Page\tCtrl-6
 #DjVu documents
 #Print
 

@@ -383,8 +383,10 @@ Faktor uvećanja
 # Untranslated:
 #&All selected pages
 #&Back\tAlt+Left Arrow
+#&Book View\tCtrl-8
 #&Copy Selection
 #&Even pages only
+#&Facing\tCtrl-7
 #&Fit pages to printable area
 #&Forget Document
 #&Odd pages only
@@ -395,6 +397,7 @@ Faktor uvećanja
 #&Remember the password for this document
 #&Save As...
 #&Shrink pages to printable area (if necessary)
+#&Single Page\tCtrl-6
 #&Use original page sizes
 #All supported documents
 #Application:
@@ -437,7 +440,6 @@ Faktor uvećanja
 #PDF Version:
 #Page Size:
 #Page scaling
-#Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L
 #Print
 #Print range

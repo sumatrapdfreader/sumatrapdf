@@ -458,9 +458,6 @@ Pagina schalen
 Page:
 Pagina:
 
-Please include the following file in your crash report:
-Voeg het volgende bestand toe aan uw foutrapportage:
-
 Please wait - rendering...
 Een ogenblik - weergeven...
 
@@ -603,7 +600,10 @@ printing document
 bestand afdrukken
 
 # Untranslated:
+#&Book View\tCtrl-8
+#&Facing\tCtrl-7
 #&Forget Document
 #&Open Document
 #&Pin Document
+#&Single Page\tCtrl-6
 

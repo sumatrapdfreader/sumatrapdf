@@ -448,9 +448,6 @@ Page scaling
 Page:
 Էջը.
 
-Please include the following file in your crash report:
-Ներառեք հետևյալ ֆայլը ձախողման հաշվետվության մեջ.
-
 Please wait - rendering...
 Խնդրում ենք սպասել...
 
@@ -593,8 +590,11 @@ printing document
 փաստաթուղթը տպվում է
 
 # Untranslated:
+#&Book View\tCtrl-8
+#&Facing\tCtrl-7
 #&Forget Document
 #&Open Document
 #&Pin Document
+#&Single Page\tCtrl-6
 #No result found around line %u in file %s
 

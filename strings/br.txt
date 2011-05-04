@@ -452,9 +452,6 @@ Ajuste da página
 Page:
 Página:
 
-Please include the following file in your crash report:
-Por favor, inclua o seguinte arquivo em seu relatório de travamento:
-
 Please wait - rendering...
 Por favor aguarde, renderizando...
 
@@ -594,8 +591,11 @@ printing document
 imprimindo documento
 
 # Untranslated:
+#&Book View\tCtrl-8
+#&Facing\tCtrl-7
 #&Forget Document
 #&Open Document
 #&Pin Document
+#&Single Page\tCtrl-6
 #Print
 

@@ -456,9 +456,6 @@ Mise à l'échelle
 Page:
 Page :
 
-Please include the following file in your crash report:
-Veuillez le fichier suivant dans votre rapport de plantage :
-
 Please wait - rendering...
 Patientez s'il vous plaît (génération...)
 
@@ -601,7 +598,10 @@ printing document
 impression du document
 
 # Untranslated:
+#&Book View\tCtrl-8
+#&Facing\tCtrl-7
 #&Forget Document
 #&Open Document
 #&Pin Document
+#&Single Page\tCtrl-6
 

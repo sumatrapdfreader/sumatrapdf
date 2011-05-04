@@ -461,9 +461,6 @@ Thước đo trang
 Page:
 Trang:
 
-Please include the following file in your crash report:
-Xin vui lòng thêm tập tin sau vào báo cáo ngưng hoạt động
-
 Please wait - rendering...
 Xin chờ đợi, đang hiện...
 
@@ -604,4 +601,9 @@ copying text
 
 printing document
 đang in tập tin
+
+# Untranslated:
+#&Book View\tCtrl-8
+#&Facing\tCtrl-7
+#&Single Page\tCtrl-6
 
