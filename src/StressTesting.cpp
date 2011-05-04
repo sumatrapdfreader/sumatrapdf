@@ -215,26 +215,34 @@ bool CollectPathsFromDirectory(const TCHAR *pattern, StrVec& paths, bool dirsIns
 
 bool DirStressTest::GoToNextPage()
 {
-    if (currPage < win->dm->pageCount()) {
-        ++currPage;
-        win->dm->goToPage(currPage, 0);
-        double pageRenderTime = currPageRenderTime.GetCurrTimeInMs();
-        ScopedMem<TCHAR> s(Str::Format(_T("Page %d rendered in %d milliseconds"), currPage-1, (int)pageRenderTime));
-        win->ShowNotification(s, true, false, NG_DIR_STRESS_PAGE_TIMING);
-        currPageRenderTime.Start();
-        return true;
+    if (currPage >= win->dm->pageCount()) {
+        if (GoToNextFile())
+            return true;
+        Finished();
+        return false;
     }
 
-    return GoToNextFile();
+    ++currPage;
+    win->dm->goToPage(currPage, 0);
+    double pageRenderTime = currPageRenderTime.GetCurrTimeInMs();
+    ScopedMem<TCHAR> s(Str::Format(_T("Page %d rendered in %d milliseconds"), currPage-1, (int)pageRenderTime));
+    win->ShowNotification(s, true, false, NG_DIR_STRESS_PAGE_TIMING);
+    currPageRenderTime.Start();
+
+    return true;
 }
 
 bool DirStressTest::OpenDir(const TCHAR *dirPath)
 {
-    ScopedMem<TCHAR> pdfs(Str::Format(_T("%s\\*.pdf"), dirPath));
-    bool hasFiles = CollectPathsFromDirectory(pdfs, filesToOpen);
+    ScopedMem<TCHAR> pattern(Str::Format(_T("%s\\*.pdf"), dirPath));
+    bool hasFiles = CollectPathsFromDirectory(pattern, filesToOpen);
+    pattern.Set(Str::Format(_T("%s\\*.xps"), dirPath));
+    hasFiles |= CollectPathsFromDirectory(pattern, filesToOpen);
+    pattern.Set(Str::Format(_T("%s\\*.djvu"), dirPath));
+    hasFiles |= CollectPathsFromDirectory(pattern, filesToOpen);
 
-    ScopedMem<TCHAR> dirs(Str::Format(_T("%s\\*"), dirPath));
-    bool hasSubDirs = CollectPathsFromDirectory(dirs, dirsToVisit, true);
+    pattern.Set(Str::Format(_T("%s\\*"), dirPath));
+    bool hasSubDirs = CollectPathsFromDirectory(pattern, dirsToVisit, true);
 
     return hasFiles || hasSubDirs;
 }
@@ -243,10 +251,16 @@ bool DirStressTest::OpenDir(const TCHAR *dirPath)
 static int SystemTimeDiffInSecs(SYSTEMTIME& t1, SYSTEMTIME& t2)
 {
     FILETIME ft1, ft2;
-    
     SystemTimeToFileTime(&t1, &ft1);
     SystemTimeToFileTime(&t2, &ft2);
     return FileTimeDiffInSecs(ft1, ft2);
+}
+
+static int SecsSinceSystemTime(SYSTEMTIME& time)
+{
+    SYSTEMTIME currTime;    
+    GetSystemTime(&currTime);
+    return SystemTimeDiffInSecs(currTime, time);
 }
 
 static TCHAR *FormatTime(int totalSecs)
@@ -279,9 +293,7 @@ bool DirStressTest::OpenFile(const TCHAR *fileName)
     currPageRenderTime.Start();
     ++filesCount;
 
-    SYSTEMTIME currTime;    
-    GetSystemTime(&currTime);
-    int secs = SystemTimeDiffInSecs(currTime, stressStartTime);
+    int secs = SecsSinceSystemTime(stressStartTime);
     ScopedMem<TCHAR> tm(FormatTime(secs));
     ScopedMem<TCHAR> s(Str::Format(_T("File %d: %s, time: %s"), filesCount, fileName, tm));
     win->ShowNotification(s, false, false, NG_DIR_STRESS_NEW_FILE);
@@ -352,31 +364,29 @@ bool DirStressTest::GoToNextFile()
 void DirStressTest::Finished()
 {
     win->dirStressTest = NULL;
+
+    int secs = SecsSinceSystemTime(stressStartTime);
+    ScopedMem<TCHAR> tm(FormatTime(secs));
+    ScopedMem<TCHAR> s(Str::Format(_T("Stress test complete, rendered %d files in %s"), filesCount, tm));
+    win->ShowNotification(s, false, false, NG_DIR_STRESS_NEW_FILE);
+
     delete this;
 }
 
 void DirStressTest::Start(const TCHAR *dirPath)
 {
-    if (!Dir::Exists(dirPath)) {
+    if (!Dir::Exists(dirPath) || !OpenDir(dirPath)) {
         // Note: dev only, don't translate
-        ScopedMem<TCHAR> s(Str::Format(_T("Directory '%s' doesn't exist"), dirPath));
+        ScopedMem<TCHAR> s(Str::Format(_T("Directory '%s' doesn't exist or is empty"), dirPath));
         win->ShowNotification(s, true /* autoDismiss */);
         Finished();
         return;
     }
-    if (!OpenDir(dirPath)) {
-        // Note: dev only, don't translate
-        ScopedMem<TCHAR> s(Str::Format(_T("Directory '%s' seems to be empty"), dirPath));
-        win->ShowNotification(s, true /* autoDismiss */);
+    if (GoToNextFile()) {
+        GetSystemTime(&stressStartTime);
+        TickTimer();
+    } else
         Finished();
-        return;
-    }
-    GetSystemTime(&stressStartTime);
-    if (!GoToNextFile()) {
-        Finished();
-        return;
-    }    
-    TickTimer();
 }
 
 void StartDirStressTest(WindowInfo *win, const TCHAR *dir, RenderCache *renderCache)
