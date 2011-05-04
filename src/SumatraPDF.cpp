@@ -131,8 +131,6 @@ bool                    gPluginMode = false;
 #define AUTO_RELOAD_TIMER_ID        5
 #define AUTO_RELOAD_DELAY_IN_MS     100
 
-#define STRESS_TIMER_ID             6
-
 #if !defined(THREAD_BASED_FILEWATCH)
 #define FILEWATCH_DELAY_IN_MS       1000
 #endif
@@ -580,7 +578,6 @@ MenuDef menuDefHelp[] = {
 #ifdef SHOW_DEBUG_MENU_ITEMS
     { SEP_ITEM,                             0,                          0  },
     { "Crash me",                           IDM_CRASH_ME,               MF_NO_TRANSLATE  },
-    { "Stress test running",                IDM_THREAD_STRESS,          MF_NO_TRANSLATE  },
 #endif
 };
 
@@ -1074,23 +1071,6 @@ void CreateThumbnailForFile(WindowInfo& win, DisplayState& state)
 }
 #endif
 
-// This callback is leaked whenever a rendering request is aborted prematurely
-// (doesn't really matter, though, as it's just for debugging)
-class RenderingStartedCallback : public CallbackFunc
-{
-    WindowInfo * win;
-    int          pageNo;
-
-public:
-    RenderingStartedCallback(WindowInfo *win, int pageNo) : win(win), pageNo(pageNo) { }
-
-    virtual void Callback() {
-        // no need to marshal to the UI thread just for this one assignment
-        win->stressLastRenderedPage = pageNo;
-        delete this;
-    }
-};
-
 void WindowInfo::Reload(bool autorefresh)
 {
     DisplayState ds;
@@ -1276,7 +1256,7 @@ static void MenuUpdateStateForWindow(WindowInfo& win) {
         IDM_GOTO_PAGE, IDM_FIND_FIRST, IDM_SAVEAS, IDM_SAVEAS_BOOKMARK, IDM_SEND_BY_EMAIL,
         IDM_VIEW_WITH_ACROBAT, IDM_VIEW_WITH_FOXIT, IDM_VIEW_WITH_PDF_XCHANGE, 
         IDM_SELECT_ALL, IDM_COPY_SELECTION, IDM_PROPERTIES, 
-        IDM_VIEW_PRESENTATION_MODE, IDM_THREAD_STRESS };
+        IDM_VIEW_PRESENTATION_MODE };
     static UINT menusToDisableIfNonPdf[] = {
         IDM_VIEW_WITH_ACROBAT, IDM_VIEW_WITH_FOXIT, IDM_VIEW_WITH_PDF_XCHANGE
     };
@@ -1296,7 +1276,6 @@ static void MenuUpdateStateForWindow(WindowInfo& win) {
     Win::Menu::Check(win.menu, IDM_VIEW_SHOW_HIDE_TOOLBAR, gGlobalPrefs.m_showToolbar);
     MenuUpdateDisplayMode(win);
     MenuUpdateZoom(win);
-    Win::Menu::Check(win.menu, IDM_THREAD_STRESS, win.threadStressRunning);
 
     if (win.IsDocLoaded()) {
         Win::Menu::Enable(win.menu, IDM_GOTO_NAV_BACK, win.dm->canNavigate(-1));
@@ -1770,11 +1749,7 @@ void WindowInfo::RenderPage(int pageNo)
     if (dm->cbxEngine || dm->imageEngine)
         return;
 
-    RenderingStartedCallback *cb = NULL;
-    if (threadStressRunning)
-        cb = new RenderingStartedCallback(this, pageNo);
-
-    gRenderCache.Render(dm, pageNo, NULL, cb);
+    gRenderCache.Render(dm, pageNo, NULL);
 }
 
 void WindowInfo::CleanUp(DisplayModel *dm)
@@ -2335,64 +2310,6 @@ static void CrashMe()
 #else
     SubmitCrashInfo();
 #endif
-}
-
-static void StartStressRenderingPage(WindowInfo& win, int pageNo);
-
-class StressTestPageRenderedWorkItem : public UIThreadWorkItem, public RenderingCallback
-{
-    int pageNo;
-    static int iterations;
-
-public:
-    StressTestPageRenderedWorkItem(WindowInfo *win, int pageNo) :
-        UIThreadWorkItem(win), pageNo(pageNo) { }
-    
-    virtual void Callback(RenderedBitmap *bmp) {
-        if (bmp) {
-            delete bmp;
-            iterations++;
-        }
-        QueueWorkItem(this);
-    }
-
-    virtual void Execute() {
-        if (WindowInfoStillValid(win))
-            StartStressRenderingPage(*win, pageNo + 1);
-    }
-};
-int StressTestPageRenderedWorkItem::iterations = 0;
-
-static void StartStressRenderingPage(WindowInfo& win, int pageNo)
-{
-    if (!win.IsDocLoaded() || win.dm->_dontRenderFlag) {
-        win.threadStressRunning = false;
-        KillTimer(win.hwndCanvas, STRESS_TIMER_ID);
-    }
-    if (!win.threadStressRunning)
-        return;
-
-    if (pageNo > win.dm->pageCount()) {
-        gRenderCache.FreeForDisplayModel(win.dm);
-        pageNo = 1;
-    }
-    RenderingCallback *callback = new StressTestPageRenderedWorkItem(&win, pageNo);
-    RenderingStartedCallback *cb = new RenderingStartedCallback(&win, pageNo);
-    gRenderCache.Render(win.dm, pageNo, callback, cb);
-}
-
-// TODO: start text search thread as well
-static void ToggleThreadStress(WindowInfo& win)
-{
-    if (win.threadStressRunning) {
-        win.threadStressRunning = false;
-        KillTimer(win.hwndCanvas, STRESS_TIMER_ID);
-        return;
-    }
-
-    win.threadStressRunning = true;
-    SetTimer(win.hwndCanvas, STRESS_TIMER_ID, USER_TIMER_MINIMUM, NULL);
-    StartStressRenderingPage(win, 1);
 }
 
 static void OnSelectAll(WindowInfo& win, bool textOnly=false)
@@ -5909,10 +5826,6 @@ static void OnTimer(WindowInfo& win, HWND hwnd, WPARAM timerId)
         win.Reload(true);
         break;
 
-    case STRESS_TIMER_ID:
-        RandomIsOverGlyph(win.dm, win.stressLastRenderedPage);
-        break;
-
     case DIR_STRESS_TIMER_ID:
         win.dirStressTest->Callback();
         break;
@@ -6412,10 +6325,6 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
 
                 case IDM_CRASH_ME:
                     CrashMe();
-                    break;
-
-                case IDM_THREAD_STRESS:
-                    ToggleThreadStress(*win);
                     break;
 
                 default:

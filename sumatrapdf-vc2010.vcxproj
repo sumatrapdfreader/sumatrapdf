@@ -183,6 +183,7 @@
     <ClCompile Include="src\PdfEngine.cpp" />
     <ClCompile Include="src\PdfSync.cpp" />
     <ClCompile Include="src\RenderCache.cpp" />
+    <ClCompile Include="src\StressTesting.cpp" />
     <ClCompile Include="src\SumatraAbout.cpp" />
     <ClCompile Include="src\SumatraDialogs.cpp" />
     <ClCompile Include="src\SumatraPDF.cpp" />
@@ -283,6 +284,7 @@
     <ClInclude Include="src\PdfSync.h" />
     <ClInclude Include="src\RenderCache.h" />
     <ClInclude Include="src\Resource.h" />
+    <ClInclude Include="src\StressTesting.h" />
     <ClInclude Include="src\SumatraDialogs.h" />
     <ClInclude Include="src\SumatraPDF.h" />
     <ClInclude Include="src\TextSearch.h" />

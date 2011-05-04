@@ -142,9 +142,6 @@ public:
     int             wheelAccumDelta;
     UINT_PTR        delayedRepaintTimer;
 
-    bool            threadStressRunning;
-    int             stressLastRenderedPage;
-
     MessageWndList *messages;
 
     HANDLE          printThread;

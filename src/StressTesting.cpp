@@ -9,6 +9,9 @@
 #include "StressTesting.h"
 #include "PdfEngine.h"
 #include "DjVuEngine.h"
+#include "WindowInfo.h"
+#include "AppTools.h"
+#include "RenderCache.h"
 
 static Log::Logger *gLog;
 #define logbench(msg, ...) gLog->LogFmt(_T(msg), __VA_ARGS__)
@@ -149,10 +152,6 @@ void Bench(StrVec& filesToBench)
 /* The idea of DirStressTest is to render a lot of PDFs sequentially, simulating
 a human advancing one page at a time. This is mostly to run through a large number
 of PDFs before a release to make sure we're crash proof. */
-
-#include "WindowInfo.h"
-#include "AppTools.h"
-#include "RenderCache.h"
 
 class DirStressTest : public CallbackFunc {
     WindowInfo *    win;

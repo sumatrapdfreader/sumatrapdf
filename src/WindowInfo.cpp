@@ -26,8 +26,7 @@ WindowInfo::WindowInfo(HWND hwnd) :
     loadedFilePath(NULL), currPageNo(0),
     xScrollSpeed(0), yScrollSpeed(0), wheelAccumDelta(0),
     delayedRepaintTimer(0), resizingTocBox(false), watcher(NULL),
-    pdfsync(NULL), threadStressRunning(false), stressLastRenderedPage(-1),
-    dirStressTest(NULL)
+    pdfsync(NULL), dirStressTest(NULL)
 {
     ZeroMemory(&selectionRect, sizeof(selectionRect));
 
