@@ -13,6 +13,21 @@ fz_malloc(int size)
 }
 
 void *
+fz_calloc_no_abort(int count, int size)
+{
+	void *p;
+
+	if (count == 0 || size == 0)
+		return 0;
+
+	if (count < 0 || size < 0 || count > INT_MAX / size)
+		return NULL;
+
+	p = malloc(count * size);
+	return p;
+}
+
+void *
 fz_calloc(int count, int size)
 {
 	void *p;
