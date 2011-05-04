@@ -404,9 +404,6 @@
     <ClCompile Include="baseutils\UtilTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="baseutils\strlist_util.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\AppTools.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

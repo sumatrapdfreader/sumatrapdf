@@ -190,7 +190,6 @@
     <ClCompile Include="src\TextSelection.cpp" />
     <ClCompile Include="src\translations.cpp" />
     <ClCompile Include="src\translations_txt.cpp" />
-    <ClCompile Include="baseutils\strlist_util.cpp" />
     <ClCompile Include="mupdf\fitz\base_error.c" />
     <ClCompile Include="mupdf\fitz\base_hash.c" />
     <ClCompile Include="mupdf\fitz\base_memory.c" />
