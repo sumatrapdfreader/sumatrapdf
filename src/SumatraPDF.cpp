@@ -1159,10 +1159,8 @@ bool TbIsSeparator(ToolbarButtonInfo& tbi)
 
 static BOOL IsVisibleToolbarButton(WindowInfo& win, int buttonNo)
 {
-    // Note: each test on a separate line so that crash report tells us which part crashed
-    if (!win.dm) return TRUE;
-    if (!win.dm->engine) return TRUE;
-    if (win.dm->engine->HasTextContent()) return TRUE;
+    if (!win.dm || !win.dm->engine || win.dm->engine->HasTextContent())
+        return TRUE;
 
     int cmdId = gToolbarButtons[buttonNo].cmdId;
     switch (cmdId) {
