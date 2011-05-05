@@ -423,6 +423,7 @@ void DirStressTest::AppendInfo(Str::Str<char>& s)
     int secs = SecsSinceSystemTime(stressStartTime);
     s.AppendFmt(", stress test rendered %d files in ", filesCount);
     FormatTime(secs, s);
+    s.AppendFmt(", currPage: %d", currPage);
 }
 
 void DirStressTest::Start(const TCHAR *dirPath)
