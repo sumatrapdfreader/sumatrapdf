@@ -218,7 +218,7 @@ TCHAR *ResolveLnk(const TCHAR * path)
     IPersistFile *file = NULL;
     TCHAR *resolvedPath = NULL;
 
-    ScopedMem<OLECHAR> olePath(str::Conv::ToWStr(path));
+    ScopedMem<OLECHAR> olePath(str::conv::ToWStr(path));
     if (!olePath)
         return NULL;
 
@@ -286,7 +286,7 @@ bool CreateShortcut(const TCHAR *shortcutPath, const TCHAR *exePath,
         lnk->SetDescription(description);
 
 #ifndef _UNICODE
-    hr = file->Save(ScopedMem<WCHAR>(str::Conv::ToWStr(shortcutPath)), TRUE);
+    hr = file->Save(ScopedMem<WCHAR>(str::conv::ToWStr(shortcutPath)), TRUE);
 #else
     hr = file->Save(shortcutPath, TRUE);
 #endif
@@ -312,7 +312,7 @@ IDataObject* GetDataObjectForFile(LPCTSTR filePath, HWND hwnd)
     if (FAILED(hr))
         return NULL;
 
-    LPWSTR lpWPath = str::Conv::ToWStr(filePath);
+    LPWSTR lpWPath = str::conv::ToWStr(filePath);
     LPITEMIDLIST pidl;
     hr = pDesktopFolder->ParseDisplayName(NULL, NULL, lpWPath, NULL, &pidl, NULL);
     if (SUCCEEDED(hr)) {

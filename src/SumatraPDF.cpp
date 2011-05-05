@@ -627,7 +627,7 @@ static HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuLen, HMENU menu)
         if (str::Eq(title, SEP_ITEM)) {
             AppendMenu(menu, MF_SEPARATOR, 0, NULL);
         } else if (MF_NO_TRANSLATE == (md.flags & MF_NO_TRANSLATE)) {
-            ScopedMem<TCHAR> tmp(str::Conv::FromUtf8(title));
+            ScopedMem<TCHAR> tmp(str::conv::FromUtf8(title));
             AppendMenu(menu, MF_STRING, (UINT_PTR)md.id, tmp);
         } else {
             const TCHAR *tmp = Trans::GetTranslation(title);
@@ -1883,7 +1883,7 @@ static DWORD OnUrlDownloaded(HWND hParent, HttpReqCtx *ctx, bool silent)
     if (!IsValidProgramVersion(txt))
         return ERROR_INTERNET_INVALID_URL;
 
-    ScopedMem<TCHAR> verTxt(str::Conv::FromAnsi(txt));
+    ScopedMem<TCHAR> verTxt(str::conv::FromAnsi(txt));
     /* reduce the string to a single line (resp. drop the newline) */
     str::TransChars(verTxt, _T("\r\n"), _T("\0\0"));
     if (CompareVersion(verTxt, UPDATE_CHECK_VER) <= 0) {
@@ -2952,7 +2952,7 @@ void GetFilesInfo(str::Str<char>& s)
             continue;
         if (!w->loadedFilePath)
             continue;
-        ScopedMem<char> f(str::Conv::ToUtf8(w->loadedFilePath));
+        ScopedMem<char> f(str::conv::ToUtf8(w->loadedFilePath));
         if (f) {
             s.AppendFmt("File: %s", f);
         }
@@ -3603,7 +3603,7 @@ static void OnMenuSaveAs(WindowInfo& win)
         for (int pageNo = 1; pageNo <= win.dm->pageCount(); pageNo++)
             text.AppendAndFree(win.dm->engine->ExtractPageText(pageNo, _T("\r\n"), NULL, Target_Export));
 
-        ScopedMem<char> textUTF8(str::Conv::ToUtf8(text.LendData()));
+        ScopedMem<char> textUTF8(str::conv::ToUtf8(text.LendData()));
         ScopedMem<char> textUTF8BOM(str::Join("\xEF\xBB\xBF", textUTF8));
         File::WriteAll(realDstFileName, textUTF8BOM, str::Len(textUTF8BOM));
     }

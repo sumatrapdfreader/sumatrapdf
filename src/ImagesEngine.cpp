@@ -163,7 +163,7 @@ SizeI SizeFromData(char *data, size_t len)
 
 static bool SetCurrentCbzPage(unzFile& uf, const TCHAR *fileName)
 {
-    ScopedMem<char> fileNameUtf8(str::Conv::ToUtf8(fileName));
+    ScopedMem<char> fileNameUtf8(str::conv::ToUtf8(fileName));
     int err = unzLocateFile(uf, fileNameUtf8, 0);
     return err == UNZ_OK;
 }
@@ -370,7 +370,7 @@ bool CbxEngine::LoadCbzFile(const TCHAR *file)
         char fileName[MAX_PATH];
         int err = unzGetCurrentFileInfo64(fa->uf, NULL, fileName, dimof(fileName), NULL, 0, NULL, 0);
         if (err == UNZ_OK) {
-            ScopedMem<TCHAR> fileName2(str::Conv::FromUtf8(fileName));
+            ScopedMem<TCHAR> fileName2(str::conv::FromUtf8(fileName));
             if (ImageEngine::IsSupportedFile(fileName2) &&
                 // OS X occasionally leaves metadata with image extensions
                 !str::StartsWith(Path::GetBaseName(fileName2), _T("."))) {
@@ -625,7 +625,7 @@ static bool GetEncoderClsid(const TCHAR *format, CLSID& clsid)
         return false;
 
     ScopedMem<ImageCodecInfo> codecInfo((ImageCodecInfo *)malloc(size));
-    ScopedMem<WCHAR> formatW(str::Conv::ToWStr(format));
+    ScopedMem<WCHAR> formatW(str::conv::ToWStr(format));
     if (!codecInfo || !formatW)
         return false;
 
@@ -672,7 +672,7 @@ bool SaveRenderedBitmap(RenderedBitmap *bmp, const TCHAR *filePath)
     if (!gbmp)
         return false;
 
-    ScopedMem<TCHAR> filePathW(str::Conv::ToWStr(filePath));
+    ScopedMem<TCHAR> filePathW(str::conv::ToWStr(filePath));
     Status status = gbmp->Save(filePathW, &encClsid);
     delete gbmp;
 

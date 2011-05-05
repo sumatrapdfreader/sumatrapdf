@@ -87,7 +87,7 @@ void    DbgOut(const TCHAR *format, ...);
 
 const TCHAR *   Parse(const TCHAR *str, const TCHAR *format, ...);
 
-namespace Conv {
+namespace conv {
 
 #ifdef _UNICODE
 inline TCHAR *  FromUtf8(const char *src) { return ToWideChar(src, CP_UTF8); }

@@ -212,7 +212,7 @@ static WCHAR *GetSymbolPath()
     }
 #endif
 
-    ScopedMem<WCHAR> symDir(str::Conv::ToWStrQ(GetCrashDumpDir()));
+    ScopedMem<WCHAR> symDir(str::conv::ToWStrQ(GetCrashDumpDir()));
     if (symDir) {
         path.Append(symDir);
         //path.Append(_T(";"));
@@ -228,7 +228,7 @@ static WCHAR *GetSymbolPath()
 #if 0
     // when running local builds, *.pdb is in the same dir as *.exe 
     ScopedMem<TCHAR> exePath(GetExePath());
-    ScopedMem<WCHAR> exeDir(str::Conv::ToWStrQ(Path::GetDir(exePath)));
+    ScopedMem<WCHAR> exeDir(str::conv::ToWStrQ(Path::GetDir(exePath)));
     path.AppendFmt(L"%s", exeDir);
 #endif
     return path.StealData();
@@ -249,13 +249,13 @@ static bool SetupSymbolPath()
     }
 
     BOOL ok = FALSE;
-    ScopedMem<TCHAR> tpath(str::Conv::FromWStr(path));
+    ScopedMem<TCHAR> tpath(str::conv::FromWStr(path));
     if (_SymSetSearchPathW) {
         ok = _SymSetSearchPathW(GetCurrentProcess(), path);
         if (!ok)
             LogDbg("_SymSetSearchPathW() failed, path='%s'", tpath);
     } else {
-        ScopedMem<char> tmp(str::Conv::ToAnsi(tpath));
+        ScopedMem<char> tmp(str::conv::ToAnsi(tpath));
         ok = _SymSetSearchPath(GetCurrentProcess(), tmp);
         if (!ok)
             LogDbg("_SymSetSearchPath() failed, path='%s'", tpath);
@@ -288,7 +288,7 @@ static bool InitializeDbgHelp()
     if (_SymInitializeW) {
         gSymInitializeOk = _SymInitializeW(GetCurrentProcess(), symPath, TRUE);
     } else {
-        ScopedMem<char> tmp(str::Conv::ToAnsi(symPath));
+        ScopedMem<char> tmp(str::conv::ToAnsi(symPath));
         if (tmp)
             gSymInitializeOk = _SymInitialize(GetCurrentProcess(), tmp, TRUE);
     }
@@ -402,7 +402,7 @@ static void GetProcessorName(str::Str<char>& s)
     if (!name)
         return;
 
-    ScopedMem<char> tmp(str::Conv::ToUtf8(name));
+    ScopedMem<char> tmp(str::conv::ToUtf8(name));
     s.AppendFmt("Processor: %s\r\n", tmp);
     free(name);
 }
@@ -411,8 +411,8 @@ static void GetMachineName(str::Str<char>& s)
 {
     TCHAR *s1 = ReadRegStr(HKEY_LOCAL_MACHINE, _T("HARDWARE\\DESCRIPTION\\System\\BIOS"), _T("SystemFamily"));
     TCHAR *s2 = ReadRegStr(HKEY_LOCAL_MACHINE, _T("HARDWARE\\DESCRIPTION\\System\\BIOS"), _T("SystemVersion"));
-    ScopedMem<char> s1u(s1 ? str::Conv::ToUtf8(s1) : NULL);
-    ScopedMem<char> s2u(s2 ? str::Conv::ToUtf8(s2) : NULL);
+    ScopedMem<char> s1u(s1 ? str::conv::ToUtf8(s1) : NULL);
+    ScopedMem<char> s2u(s2 ? str::conv::ToUtf8(s2) : NULL);
 
     if (!s1u && !s2u)
         ; // pass
@@ -493,8 +493,8 @@ static void GetModules(str::Str<char>& s)
     mod.dwSize = sizeof(mod);
     BOOL cont = Module32First(snap, &mod);
     while (cont) {
-        ScopedMem<char> nameA(str::Conv::ToUtf8(mod.szModule));
-        ScopedMem<char> pathA(str::Conv::ToUtf8(mod.szExePath));
+        ScopedMem<char> nameA(str::conv::ToUtf8(mod.szModule));
+        ScopedMem<char> pathA(str::conv::ToUtf8(mod.szExePath));
         s.AppendFmt("Module: %08X %06X %-16s %s\r\n", (DWORD)mod.modBaseAddr, (DWORD)mod.modBaseSize, nameA, pathA);
         cont = Module32Next(snap, &mod);
     }
@@ -1037,7 +1037,7 @@ void SubmitCrashInfo()
 Exit:
     free(s);
 #if defined(DEBUG_CRASH_INFO)
-    ScopedMem<char> log_utf8(str::Conv::ToUtf8(gDbgLog.GetData()));
+    ScopedMem<char> log_utf8(str::conv::ToUtf8(gDbgLog.GetData()));
     SendCrashInfo(log_utf8);
 #endif
 }

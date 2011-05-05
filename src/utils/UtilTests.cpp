@@ -188,9 +188,9 @@ static void TStrTest()
     // the test string should only contain ASCII characters,
     // as all others might not be available in all code pages
 #define TEST_STRING "aBc"
-    char *strA = str::Conv::ToAnsi(_T(TEST_STRING));
+    char *strA = str::conv::ToAnsi(_T(TEST_STRING));
     assert(str::Eq(strA, TEST_STRING));
-    str = str::Conv::FromAnsi(strA);
+    str = str::conv::FromAnsi(strA);
     free(strA);
     assert(str::Eq(str, _T(TEST_STRING)));
     free(str);

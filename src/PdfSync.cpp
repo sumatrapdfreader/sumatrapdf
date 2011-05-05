@@ -436,7 +436,7 @@ UINT Pdfsync::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR srcfilepath, UINT 
 
     // get the file name from the record section
     char *srcFilenameA = this->srcfiles[record_sections[sec].srcfile].filename;
-    ScopedMem<TCHAR> srcFilename(str::Conv::FromAnsi(srcFilenameA));
+    ScopedMem<TCHAR> srcFilename(str::conv::FromAnsi(srcFilenameA));
     // Convert the source filepath to an absolute path
     if (PathIsRelative(srcFilename))
         srcFilename.Set(Path::Join(this->dir, srcFilename));
@@ -481,7 +481,7 @@ UINT Pdfsync::source_to_record(FILE *fp, const TCHAR* srcfilename, UINT line, UI
     if (!srcfilename)
         return PDFSYNCERR_INVALID_ARGUMENT;
 
-    char *mb_srcfilename = str::Conv::ToAnsi(srcfilename);
+    char *mb_srcfilename = str::conv::ToAnsi(srcfilename);
     if (!mb_srcfilename)
         return PDFSYNCERR_OUTOFMEMORY;
 
@@ -623,7 +623,7 @@ int SyncTex::rebuild_index() {
     if (this->scanner)
         synctex_scanner_free(this->scanner);
 
-    char *mb_syncfname = str::Conv::ToAnsi(this->syncfilepath);
+    char *mb_syncfname = str::conv::ToAnsi(this->syncfilepath);
     if (mb_syncfname==NULL)
         return PDFSYNCERR_OUTOFMEMORY;
 
@@ -649,7 +649,7 @@ UINT SyncTex::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR srcfilepath, UINT 
         *line = synctex_node_line(node);
         *col = synctex_node_column(node);
         const char *name = synctex_scanner_get_name(this->scanner,synctex_node_tag(node));
-        ScopedMem<TCHAR> srcfilename(str::Conv::FromAnsi(name));
+        ScopedMem<TCHAR> srcfilename(str::conv::FromAnsi(name));
         if (!srcfilename)
             return PDFSYNCERR_OUTOFMEMORY;
 
@@ -679,7 +679,7 @@ UINT SyncTex::source_to_pdf(const TCHAR* srcfilename, UINT line, UINT col, UINT 
     else
         srcfilepath.Set(str::Dup(srcfilename));
 
-    char *mb_srcfilepath = str::Conv::ToAnsi(srcfilepath);
+    char *mb_srcfilepath = str::conv::ToAnsi(srcfilepath);
     if (!mb_srcfilepath)
         return PDFSYNCERR_OUTOFMEMORY;
     int ret = synctex_display_query(this->scanner,mb_srcfilepath,line,col);
@@ -940,10 +940,10 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
 
     if (IsWindowUnicode((HWND)wparam)) {
         DBG_OUT("The client window is UNICODE!\n");
-        cmd.Set(str::Conv::FromWStr((const WCHAR*)command));
+        cmd.Set(str::conv::FromWStr((const WCHAR*)command));
     } else {
         DBG_OUT("The client window is ANSI!\n");
-        cmd.Set(str::Conv::FromAnsi((const char*)command));
+        cmd.Set(str::conv::FromAnsi((const char*)command));
     }
 
     const TCHAR *currCmd = cmd;

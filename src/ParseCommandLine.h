@@ -79,7 +79,7 @@ protected:
 
     void SetLang(TCHAR *s) {
         free(lang);
-        lang = str::Conv::ToAnsi(s);
+        lang = str::conv::ToAnsi(s);
     }
     
     void SetDestName(TCHAR *s) {

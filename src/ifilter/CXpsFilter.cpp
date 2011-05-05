@@ -53,7 +53,7 @@ HRESULT CXpsFilter::GetNextChunkValue(CChunkValue &chunkValue)
 
     case STATE_XPS_AUTHOR:
         m_state = STATE_XPS_TITLE;
-        str = str::Conv::ToWStrQ(m_xpsEngine->GetProperty("Author"));
+        str = str::conv::ToWStrQ(m_xpsEngine->GetProperty("Author"));
         if (!str::IsEmpty(str)) {
             chunkValue.SetTextValue(PKEY_Author, str);
             free(str);
@@ -64,8 +64,8 @@ HRESULT CXpsFilter::GetNextChunkValue(CChunkValue &chunkValue)
 
     case STATE_XPS_TITLE:
         m_state = STATE_XPS_DATE;
-        str = str::Conv::ToWStrQ(m_xpsEngine->GetProperty("Title"));
-        if (!str) str = str::Conv::ToWStrQ(m_xpsEngine->GetProperty("Subject"));
+        str = str::conv::ToWStrQ(m_xpsEngine->GetProperty("Title"));
+        if (!str) str = str::conv::ToWStrQ(m_xpsEngine->GetProperty("Subject"));
         if (!str::IsEmpty(str)) {
             chunkValue.SetTextValue(PKEY_Title, str);
             free(str);
@@ -76,8 +76,8 @@ HRESULT CXpsFilter::GetNextChunkValue(CChunkValue &chunkValue)
 
     case STATE_XPS_DATE:
         m_state = STATE_XPS_CONTENT;
-        str = str::Conv::ToWStrQ(m_xpsEngine->GetProperty("ModDate"));
-        if (!str) str = str::Conv::ToWStrQ(m_xpsEngine->GetProperty("CreationDate"));
+        str = str::conv::ToWStrQ(m_xpsEngine->GetProperty("ModDate"));
+        if (!str) str = str::conv::ToWStrQ(m_xpsEngine->GetProperty("CreationDate"));
         if (!str::IsEmpty(str)) {
             SYSTEMTIME systime;
             if (XpsDateParse(str, &systime)) {
@@ -93,7 +93,7 @@ HRESULT CXpsFilter::GetNextChunkValue(CChunkValue &chunkValue)
 
     case STATE_XPS_CONTENT:
         if (++m_iPageNo <= m_xpsEngine->PageCount()) {
-            str = str::Conv::ToWStrQ(m_xpsEngine->ExtractPageText(m_iPageNo, _T("\r\n")));
+            str = str::conv::ToWStrQ(m_xpsEngine->ExtractPageText(m_iPageNo, _T("\r\n")));
             chunkValue.SetTextValue(PKEY_Search_Contents, str, CHUNK_TEXT);
             free(str);
             return S_OK;

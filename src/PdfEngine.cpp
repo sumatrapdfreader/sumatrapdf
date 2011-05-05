@@ -413,7 +413,7 @@ extern "C" {
 }
 
 namespace str {
-    namespace Conv {
+    namespace conv {
 
 inline TCHAR *FromPdf(fz_obj *obj)
 {
@@ -651,7 +651,7 @@ public:
         return fz_rect_to_RectD(annot->rect);
     }
     virtual TCHAR *GetValue() const {
-        return str::Conv::FromUtf8(fz_to_str_buf(fz_dict_gets(annot->obj, "Contents")));
+        return str::conv::FromUtf8(fz_to_str_buf(fz_dict_gets(annot->obj, "Contents")));
     }
 };
 
@@ -866,17 +866,17 @@ bool CPdfEngine::load_from_stream(fz_stream *stm, PasswordUI *pwdUI)
                 break;
             }
 
-            char *pwd_doc = str::Conv::ToPDF(pwd);
+            char *pwd_doc = str::conv::ToPDF(pwd);
             okay = pwd_doc && pdf_authenticate_password(_xref, pwd_doc);
             fz_free(pwd_doc);
             // try the UTF-8 password, if the PDFDocEncoding one doesn't work
             if (!okay) {
-                ScopedMem<char> pwd_utf8(str::Conv::ToUtf8(pwd));
+                ScopedMem<char> pwd_utf8(str::conv::ToUtf8(pwd));
                 okay = pwd_utf8 && pdf_authenticate_password(_xref, pwd_utf8);
             }
             // fall back to an ANSI-encoded password as a last measure
             if (!okay) {
-                ScopedMem<char> pwd_ansi(str::Conv::ToAnsi(pwd));
+                ScopedMem<char> pwd_ansi(str::conv::ToAnsi(pwd));
                 okay = pwd_ansi && pdf_authenticate_password(_xref, pwd_ansi);
             }
         }
@@ -920,7 +920,7 @@ bool CPdfEngine::finishLoading()
 
 CPdfToCItem *CPdfEngine::BuildToCTree(pdf_outline *entry, int& idCounter)
 {
-    TCHAR *name = entry->title ? str::Conv::FromUtf8(entry->title) : str::Dup(_T(""));
+    TCHAR *name = entry->title ? str::conv::FromUtf8(entry->title) : str::Dup(_T(""));
     CPdfToCItem *node = new CPdfToCItem(name, PdfLink(this, entry->link));
     node->open = entry->count >= 0;
     node->id = ++idCounter;
@@ -969,7 +969,7 @@ int CPdfEngine::FindPageNo(fz_obj *dest)
 
 PageDestination *CPdfEngine::GetNamedDest(const TCHAR *name)
 {
-    ScopedMem<char> name_utf8(str::Conv::ToUtf8(name));
+    ScopedMem<char> name_utf8(str::conv::ToUtf8(name));
     fz_obj *nameobj = fz_new_string((char *)name_utf8, (int)str::Len(name_utf8));
     fz_obj *dest = pdf_lookup_dest(_xref, nameobj);
     fz_drop_obj(nameobj);
@@ -1365,7 +1365,7 @@ void CPdfEngine::linkifyPageText(pdf_page *page)
         for (pdf_link *next = page->links; next && !overlaps; next = next->next)
             overlaps = fz_significantly_overlap(next->rect, list->coords[i]);
         if (!overlaps) {
-            ScopedMem<char> uri(str::Conv::ToUtf8(list->links[i]));
+            ScopedMem<char> uri(str::conv::ToUtf8(list->links[i]));
             pdf_link *link = pdf_new_link(fz_new_string(uri, str::Len(uri)), PDF_LINK_URI, list->coords[i]);
             link->next = page->links;
             page->links = link;
@@ -1397,7 +1397,7 @@ TCHAR *CPdfEngine::ExtractPageText(pdf_page *page, TCHAR *lineSep, RectI **coord
     fz_free_text_span(text);
     LeaveCriticalSection(&_xrefAccess);
 
-    return str::Conv::FromWStrQ(content);
+    return str::conv::FromWStrQ(content);
 }
 
 TCHAR *CPdfEngine::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_out, RenderTarget target)
@@ -1438,7 +1438,7 @@ TCHAR *CPdfEngine::GetProperty(char *name)
         return NULL;
 
     WCHAR *ucs2 = (WCHAR *)pdf_to_ucs2(obj);
-    TCHAR *tstr = str::Conv::FromWStr(ucs2);
+    TCHAR *tstr = str::conv::FromWStr(ucs2);
     fz_free(ucs2);
 
     return tstr;
@@ -1526,7 +1526,7 @@ TCHAR *PdfLink::GetValue() const
 
     switch (link->kind) {
     case PDF_LINK_URI:
-        path = str::Conv::FromPdf(link->dest);
+        path = str::conv::FromPdf(link->dest);
         break;
     case PDF_LINK_LAUNCH:
         obj = fz_dict_gets(link->dest, "Type");
@@ -1537,7 +1537,7 @@ TCHAR *PdfLink::GetValue() const
             obj = fz_dict_gets(link->dest, "F"); 
 
         if (fz_is_string(obj)) {
-            path = str::Conv::FromPdf(obj);
+            path = str::conv::FromPdf(obj);
             str::TransChars(path, _T("/"), _T("\\"));
         }
 
@@ -1558,7 +1558,7 @@ TCHAR *PdfLink::GetValue() const
             if (fz_is_dict(obj))
                 obj = fz_dict_gets(obj, "F");
             if (fz_is_string(obj)) {
-                path = str::Conv::FromPdf(obj);
+                path = str::conv::FromPdf(obj);
                 str::TransChars(path, _T("/"), _T("\\"));
             }
         }
@@ -1797,7 +1797,7 @@ public:
     virtual TCHAR *GetValue() const {
         if (!target || !IsUriTarget(target))
             return NULL;
-        return str::Conv::FromUtf8(target);
+        return str::conv::FromUtf8(target);
     }
     virtual PageDestination *AsLink() { return this; }
 
@@ -2303,7 +2303,7 @@ TCHAR *CXpsEngine::ExtractPageText(xps_page *page, TCHAR *lineSep, RectI **coord
     fz_free_text_span(text);
     LeaveCriticalSection(&_ctxAccess);
 
-    return str::Conv::FromWStrQ(content);
+    return str::conv::FromWStrQ(content);
 }
 
 TCHAR *CXpsEngine::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_out, RenderTarget target)
@@ -2343,7 +2343,7 @@ TCHAR *CXpsEngine::GetProperty(char *name)
     if (str::IsEmpty(utf8))
         return NULL;
 
-    return str::Conv::FromUtf8(utf8);
+    return str::conv::FromUtf8(utf8);
 };
 
 PageElement *CXpsEngine::GetElementAtPos(int pageNo, PointD pt)
@@ -2427,7 +2427,7 @@ void CXpsEngine::linkifyPageText(xps_page *page, int pageNo)
         for (xps_link *next = _links[pageNo-1]; next && !overlaps; next = next->next)
             overlaps = fz_significantly_overlap(next->rect, list->coords[i]);
         if (!overlaps) {
-            ScopedMem<char> uri(str::Conv::ToUtf8(list->links[i]));
+            ScopedMem<char> uri(str::conv::ToUtf8(list->links[i]));
             last = last->next = xps_new_link(uri, list->coords[i]);
             assert(IsUriTarget(last->target));
         }
@@ -2461,7 +2461,7 @@ fz_rect CXpsEngine::FindDestRect(const char *target)
 
 PageDestination *CXpsEngine::GetNamedDest(const TCHAR *name)
 {
-    ScopedMem<char> name_utf8(str::Conv::ToUtf8(name));
+    ScopedMem<char> name_utf8(str::conv::ToUtf8(name));
     if (!str::StartsWith(name_utf8.Get(), "#"))
         name_utf8.Set(str::Join("#", name_utf8));
 
@@ -2474,7 +2474,7 @@ PageDestination *CXpsEngine::GetNamedDest(const TCHAR *name)
 
 CXpsToCItem *CXpsEngine::BuildToCTree(xps_outline *entry, int& idCounter)
 {
-    TCHAR *name = entry->title ? str::Conv::FromUtf8(entry->title) : str::Dup(_T(""));
+    TCHAR *name = entry->title ? str::conv::FromUtf8(entry->title) : str::Dup(_T(""));
     CXpsToCItem *node = new CXpsToCItem(name, XpsLink(this, entry->target, fz_empty_rect));
     node->open = false;
     node->id = ++idCounter;

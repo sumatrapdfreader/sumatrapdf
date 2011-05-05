@@ -555,7 +555,7 @@ void NP_LOADDS NPP_StreamAsFile(NPP instance, NPStream* stream, const char* fnam
         goto Exit;
     }
 
-    dbg("sp: NPP_StreamAsFile() fname=%s", ScopedMem<TCHAR>(str::Conv::FromAnsi(fname)));
+    dbg("sp: NPP_StreamAsFile() fname=%s", ScopedMem<TCHAR>(str::conv::FromAnsi(fname)));
 
     if (data->hFile)
     {

@@ -662,12 +662,12 @@ static TCHAR *GetThumbnailPath(const TCHAR *filePath)
         return NULL;
     if (Path::IsOnRemovableDrive(pathN))
         pathN[0] = '?'; // ignore the drive letter, if it might change
-    ScopedMem<char> pathU(str::Conv::ToUtf8(pathN));
+    ScopedMem<char> pathU(str::conv::ToUtf8(pathN));
     CalcMD5Digest((unsigned char *)pathU.Get(), str::Len(pathU), digest);
     ScopedMem<char> fingerPrint(str::MemToHex(digest, 16));
 
     ScopedMem<TCHAR> thumbsPath(AppGenDataFilename(THUMBNAILS_DIR_NAME));
-    ScopedMem<TCHAR> fname(str::Conv::FromAnsi(fingerPrint));
+    ScopedMem<TCHAR> fname(str::conv::FromAnsi(fingerPrint));
 
     return str::Format(_T("%s\\%s.png"), thumbsPath, fname);
 }

@@ -77,7 +77,7 @@ public:
     }
     virtual TCHAR *GetDestValue() const {
         if (str::Eq(GetType(), "LaunchURL"))
-            return str::Conv::FromUtf8(link);
+            return str::conv::FromUtf8(link);
         return NULL;
     }
 };
@@ -93,7 +93,7 @@ public:
         pageNo(pageNo), rect(rect.Convert<double>()), value(NULL) {
         dest = new DjVuDestination(link);
         if (!str::IsEmpty(comment))
-            value = str::Conv::FromUtf8(comment);
+            value = str::conv::FromUtf8(comment);
     }
     virtual ~DjVuLink() {
         delete dest;
@@ -120,7 +120,7 @@ public:
     bool isGeneric;
 
     DjVuToCItem(const char *title, const char *link) :
-        DocToCItem(str::Conv::FromUtf8(title)), isGeneric(false) {
+        DocToCItem(str::conv::FromUtf8(title)), isGeneric(false) {
         dest = new DjVuDestination(link);
         pageNo = dest->GetDestPageNo();
     }
@@ -254,7 +254,7 @@ bool CDjVuEngine::Load(const TCHAR *fileName)
     this->fileName = str::Dup(fileName);
 
     ScopedCritSec scope(&ctxAccess);
-    ScopedMem<char> fileNameUtf8(str::Conv::ToUtf8(fileName));
+    ScopedMem<char> fileNameUtf8(str::conv::ToUtf8(fileName));
     doc = ddjvu_document_create_by_filename_utf8(ctx, fileNameUtf8, /* cache */ TRUE);
     if (!doc)
         return false;
@@ -500,7 +500,7 @@ bool CDjVuEngine::ExtractPageText(miniexp_t item, const TCHAR *lineSep, str::Str
     miniexp_t str = miniexp_car(item);
     if (miniexp_stringp(str) && !miniexp_cdr(item)) {
         const char *content = miniexp_to_str(str);
-        TCHAR *value = str::Conv::FromUtf8(content);
+        TCHAR *value = str::conv::FromUtf8(content);
         if (value) {
             size_t len = str::Len(value);
             // TODO: split the rectangle into individual parts per glyph
@@ -645,7 +645,7 @@ char *CDjVuEngine::ResolveNamedDest(const char *name)
 
 PageDestination *CDjVuEngine::GetNamedDest(const TCHAR *name)
 {
-    ScopedMem<char> nameUtf8(str::Conv::ToUtf8(name));
+    ScopedMem<char> nameUtf8(str::conv::ToUtf8(name));
     if (!str::StartsWith(nameUtf8.Get(), "#"))
         nameUtf8.Set(str::Join("#", nameUtf8));
 

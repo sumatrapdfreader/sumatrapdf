@@ -466,7 +466,7 @@ BOOL InstallCopyFiles()
             goto Error;
         }
 
-        TCHAR *inpath = str::Conv::FromAnsi(filename);
+        TCHAR *inpath = str::conv::FromAnsi(filename);
         TCHAR *extpath = Path::Join(gGlobalData.installDir, Path::GetBaseName(inpath));
 
         BOOL ok = File::WriteAll(extpath, data, (size_t)finfo.uncompressed_size);
@@ -823,7 +823,7 @@ bool IsPdfFilterInstalled()
     ScopedMem<TCHAR> buf(ReadRegStr(HKEY_CLASSES_ROOT, _T(".pdf\\PersistentHandler"), NULL));
     if (!buf)
         return false;
-    ScopedMem<WCHAR> handler_iid(str::Conv::ToWStr(buf));
+    ScopedMem<WCHAR> handler_iid(str::conv::ToWStr(buf));
     return str::EqI(handler_iid, SZ_PDF_FILTER_HANDLER);
 }
 
@@ -899,7 +899,7 @@ BOOL RemoveInstalledFiles()
     BOOL success = TRUE;
 
     for (int i = 0; i < dimof(gPayloadData); i++) {
-        ScopedMem<TCHAR> relPath(str::Conv::FromUtf8(gPayloadData[i].filepath));
+        ScopedMem<TCHAR> relPath(str::conv::FromUtf8(gPayloadData[i].filepath));
         ScopedMem<TCHAR> path(Path::Join(gGlobalData.installDir, relPath));
 
         if (File::Exists(path))
@@ -1525,7 +1525,7 @@ void CalcLettersLayout(Graphics& g, Font *f, int dx)
 
 REAL DrawMessage(Graphics &g, TCHAR *msg, REAL y, REAL dx, Color color)
 {
-    ScopedMem<WCHAR> s(str::Conv::ToWStr(msg));
+    ScopedMem<WCHAR> s(str::conv::ToWStr(msg));
 
     Font f(L"Impact", 16, FontStyleRegular);
     Gdiplus::RectF maxbox(0, y, dx, 0);
@@ -1580,7 +1580,7 @@ void DrawSumatraLetters(Graphics &g, Font *f, Font *fVer, REAL y)
     g.RotateTransform(45.f);
     REAL x2 = 15; REAL y2 = -34;
 
-    ScopedMem<WCHAR> ver_s(str::Conv::ToWStr(_T("v") CURR_VERSION_STR));
+    ScopedMem<WCHAR> ver_s(str::conv::ToWStr(_T("v") CURR_VERSION_STR));
 #ifdef DRAW_TEXT_SHADOW
     SolidBrush b1(Color(0,0,0));
     g.DrawString(ver_s, -1, fVer, Gdiplus::PointF(x2-2,y2-1), &b1);

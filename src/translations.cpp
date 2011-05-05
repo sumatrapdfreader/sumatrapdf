@@ -138,7 +138,7 @@ const TCHAR *GetTranslation(const char *txt)
         transIdx = idx;
 
     if (!gTranslationCache[transIdx])
-        gTranslationCache[transIdx] = str::Conv::FromUtf8(gTranslations[transIdx]);
+        gTranslationCache[transIdx] = str::conv::FromUtf8(gTranslations[transIdx]);
     return gTranslationCache[transIdx];
 }
 
@@ -181,7 +181,7 @@ TCHAR *GetLanguageName(int index)
 
     if (LANGS_COUNT <= index)
         return NULL;
-    return str::Conv::FromUtf8(gLangData[index].fullName);
+    return str::conv::FromUtf8(gLangData[index].fullName);
 }
 
 }
