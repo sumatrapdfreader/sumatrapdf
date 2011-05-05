@@ -126,7 +126,7 @@ inline bool IsShiftPressed() { return IsKeyPressed(VK_SHIFT); }
 inline bool IsAltPressed() { return IsKeyPressed(VK_MENU); }
 inline bool IsCtrlPressed() { return IsKeyPressed(VK_CONTROL); }
 
-namespace Win {
+namespace win {
 
 inline size_t GetTextLen(HWND hwnd)
 {
@@ -166,7 +166,7 @@ public:
     } 
 };
 
-namespace Menu {
+namespace menu {
 
 inline void Check(HMENU m, UINT id, bool check)
 {
@@ -190,7 +190,7 @@ inline void Empty(HMENU m)
 
 } // namespace Menu
 
-namespace Font {
+namespace font {
     
 HFONT GetSimple(HDC hdc, TCHAR *fontName, int fontSize);
 
@@ -211,9 +211,9 @@ public:
     operator HFONT() const { return font; }
 };
 
-}// namespace Font
+}// namespace font
 
-} // namespace Win
+} // namespace win
 
 #ifndef USER_DEFAULT_SCREEN_DPI
 // the following is only defined if _WIN32_WINNT >= 0x0600 and we use 0x0500

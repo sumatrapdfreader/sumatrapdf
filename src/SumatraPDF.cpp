@@ -445,7 +445,7 @@ static void MenuUpdateDisplayMode(WindowInfo& win)
     }
 
     for (int id = IDM_VIEW_LAYOUT_FIRST; id <= IDM_VIEW_LAYOUT_LAST; id++)
-        Win::Menu::Enable(win.menu, id, enabled);
+        win::menu::Enable(win.menu, id, enabled);
 
     UINT id = 0;
     switch (displayMode) {
@@ -460,7 +460,7 @@ static void MenuUpdateDisplayMode(WindowInfo& win)
 
     CheckMenuRadioItem(win.menu, IDM_VIEW_LAYOUT_FIRST, IDM_VIEW_LAYOUT_LAST, id, MF_BYCOMMAND);
     if (displayModeContinuous(displayMode))
-        Win::Menu::Check(win.menu, IDM_VIEW_CONTINUOUS, true);
+        win::menu::Check(win.menu, IDM_VIEW_CONTINUOUS, true);
 }
 
 void WindowInfo::SwitchToDisplayMode(DisplayMode displayMode, bool keepContinuous)
@@ -659,7 +659,7 @@ static void AppendRecentFilesToMenu(HMENU m)
 
 static HMENU RebuildFileMenu(HMENU menu)
 {
-    Win::Menu::Empty(menu);
+    win::menu::Empty(menu);
     BuildMenuFromMenuDef(menuDefFile, dimof(menuDefFile), menu);
     AppendRecentFilesToMenu(menu);
 
@@ -668,13 +668,13 @@ static HMENU RebuildFileMenu(HMENU menu)
     // (don't hide items here that won't always be hidden,
     // do that in MenuUpdateStateForWindow)
     if (!CanViewWithAcrobat())
-        Win::Menu::Hide(menu, IDM_VIEW_WITH_ACROBAT);
+        win::menu::Hide(menu, IDM_VIEW_WITH_ACROBAT);
     if (!CanViewWithFoxit())
-        Win::Menu::Hide(menu, IDM_VIEW_WITH_FOXIT);
+        win::menu::Hide(menu, IDM_VIEW_WITH_FOXIT);
     if (!CanViewWithPDFXChange())
-        Win::Menu::Hide(menu, IDM_VIEW_WITH_PDF_XCHANGE);
+        win::menu::Hide(menu, IDM_VIEW_WITH_PDF_XCHANGE);
     if (!CanSendAsEmailAttachment())
-        Win::Menu::Hide(menu, IDM_SEND_BY_EMAIL);
+        win::menu::Hide(menu, IDM_SEND_BY_EMAIL);
 
     return menu;
 }
@@ -856,7 +856,7 @@ static void ZoomMenuItemCheck(HMENU m, UINT menuItemId, bool canZoom)
     assert(IDM_ZOOM_FIRST <= menuItemId && menuItemId <= IDM_ZOOM_LAST);
 
     for (int i = 0; i < dimof(gZoomMenuIds); i++)
-        Win::Menu::Enable(m, gZoomMenuIds[i].itemId, canZoom);
+        win::menu::Enable(m, gZoomMenuIds[i].itemId, canZoom);
 
     if (IDM_ZOOM_100 == menuItemId)
         menuItemId = IDM_ZOOM_ACTUAL_SIZE;
@@ -1199,7 +1199,7 @@ static LPARAM ToolbarButtonEnabledState(WindowInfo& win, int buttonNo)
         case IDM_FIND_NEXT:
         case IDM_FIND_PREV:
             // TODO: Update on whether there's more to find, not just on whether there is text.
-            if (Win::GetTextLen(win.hwndFindBox) == 0)
+            if (win::GetTextLen(win.hwndFindBox) == 0)
                 return disabled;
             break;
 
@@ -1245,7 +1245,7 @@ static void MenuUpdatePrintItem(WindowInfo& win, HMENU menu, bool disableOnly=fa
             ModifyMenu(menu, IDM_PRINT, MF_BYCOMMAND | MF_STRING, IDM_PRINT, printItem);
     }
 
-    Win::Menu::Enable(menu, IDM_PRINT, filePrintEnabled && filePrintAllowed);
+    win::menu::Enable(menu, IDM_PRINT, filePrintEnabled && filePrintAllowed);
 }
 
 static void MenuUpdateStateForWindow(WindowInfo& win) {
@@ -1261,40 +1261,40 @@ static void MenuUpdateStateForWindow(WindowInfo& win) {
     };
 
     assert(FileCloseMenuEnabled() == !win.IsAboutWindow()); // TODO: ???
-    Win::Menu::Enable(win.menu, IDM_CLOSE, FileCloseMenuEnabled());
+    win::menu::Enable(win.menu, IDM_CLOSE, FileCloseMenuEnabled());
 
     MenuUpdatePrintItem(win, win.menu);
 
     bool enabled = win.IsDocLoaded() && win.dm->engine && win.dm->engine->HasToCTree();
-    Win::Menu::Enable(win.menu, IDM_VIEW_BOOKMARKS, enabled);
+    win::menu::Enable(win.menu, IDM_VIEW_BOOKMARKS, enabled);
 
     bool documentSpecific = win.IsDocLoaded();
     bool checked = documentSpecific ? win.tocShow : gGlobalPrefs.m_showToc;
-    Win::Menu::Check(win.menu, IDM_VIEW_BOOKMARKS, checked);
+    win::menu::Check(win.menu, IDM_VIEW_BOOKMARKS, checked);
 
-    Win::Menu::Check(win.menu, IDM_VIEW_SHOW_HIDE_TOOLBAR, gGlobalPrefs.m_showToolbar);
+    win::menu::Check(win.menu, IDM_VIEW_SHOW_HIDE_TOOLBAR, gGlobalPrefs.m_showToolbar);
     MenuUpdateDisplayMode(win);
     MenuUpdateZoom(win);
 
     if (win.IsDocLoaded()) {
-        Win::Menu::Enable(win.menu, IDM_GOTO_NAV_BACK, win.dm->canNavigate(-1));
-        Win::Menu::Enable(win.menu, IDM_GOTO_NAV_FORWARD, win.dm->canNavigate(1));
+        win::menu::Enable(win.menu, IDM_GOTO_NAV_BACK, win.dm->canNavigate(-1));
+        win::menu::Enable(win.menu, IDM_GOTO_NAV_FORWARD, win.dm->canNavigate(1));
     }
 
     for (int i = 0; i < dimof(menusToDisableIfNoPdf); i++) {
         UINT id = menusToDisableIfNoPdf[i];
-        Win::Menu::Enable(win.menu, id, win.IsDocLoaded());
+        win::menu::Enable(win.menu, id, win.IsDocLoaded());
     }
 
     if (IsNonPdfDocument(&win)) {
         for (int i = 0; i < dimof(menusToDisableIfNonPdf); i++) {
             UINT id = menusToDisableIfNonPdf[i];
-            Win::Menu::Enable(win.menu, id, false);
+            win::menu::Enable(win.menu, id, false);
         }
     }
 
     if (win.dm && win.dm->engine)
-        Win::Menu::Enable(win.menu, IDM_FIND_FIRST, win.dm->engine->HasTextContent());
+        win::menu::Enable(win.menu, IDM_FIND_FIRST, win.dm->engine->HasTextContent());
 }
 
 static void UpdateToolbarAndScrollbarsForAllWindows()
@@ -1306,7 +1306,7 @@ static void UpdateToolbarAndScrollbarsForAllWindows()
         if (!win->IsDocLoaded()) {
             ShowScrollBar(win->hwndCanvas, SB_BOTH, FALSE);
             if (win->IsAboutWindow())
-                Win::SetText(win->hwndFrame, SUMATRA_WINDOW_TITLE);
+                win::SetText(win->hwndFrame, SUMATRA_WINDOW_TITLE);
         }
     }
 }
@@ -1491,7 +1491,7 @@ static bool LoadDocIntoWindow(
         } else {
             delete prevModel;
             ScopedMem<TCHAR> title(str::Format(_T("%s - %s"), path::GetBaseName(fileName), SUMATRA_WINDOW_TITLE));
-            Win::SetText(win.hwndFrame, title);
+            win::SetText(win.hwndFrame, title);
             goto Error;
         }
     } else {
@@ -1563,7 +1563,7 @@ static bool LoadDocIntoWindow(
         free(title);
         title = msg;
     }
-    Win::SetText(win.hwndFrame, title);
+    win::SetText(win.hwndFrame, title);
     free(title);
 
     if (!gRestrictedUse && win.dm->pdfEngine) {
@@ -1721,7 +1721,7 @@ void WindowInfo::PageNoChanged(int pageNo)
 
     if (INVALID_PAGE_NO != pageNo) {
         ScopedMem<TCHAR> buf(str::Format(_T("%d"), pageNo));
-        Win::SetText(hwndPageBox, buf);
+        win::SetText(hwndPageBox, buf);
         ToolbarUpdateStateForWindow(*this);
     }
     if (pageNo != currPageNo) {
@@ -2195,8 +2195,8 @@ static void DrawDocument(WindowInfo& win, HDC hdc, RECT *rcArea)
             renderDelay = gRenderCache.Paint(hdc, &bounds, dm, pageNo, pageInfo, &renderOutOfDateCue);
 
         if (renderDelay) {
-            Win::Font::ScopedFont fontRightTxt(hdc, _T("MS Shell Dlg"), 14);
-            Win::HdcScopedSelectFont scope(hdc, fontRightTxt);
+            win::font::ScopedFont fontRightTxt(hdc, _T("MS Shell Dlg"), 14);
+            win::HdcScopedSelectFont scope(hdc, fontRightTxt);
             SetTextColor(hdc, gRenderCache.invertColors ? WIN_COL_WHITE : WIN_COL_BLACK);
             if (renderDelay != RENDER_DELAY_FAILED) {
                 if (renderDelay < REPAINT_MESSAGE_DELAY_IN_MS)
@@ -2439,7 +2439,7 @@ static void OnAboutContextMenu(WindowInfo& win, int x, int y)
         return;
 
     HMENU popup = BuildMenuFromMenuDef(menuDefContextStart, dimof(menuDefContextStart), CreatePopupMenu());
-    Win::Menu::Check(popup, IDM_PIN_SELECTED_DOCUMENT, state->isPinned);
+    win::menu::Check(popup, IDM_PIN_SELECTED_DOCUMENT, state->isPinned);
     POINT pt = { x, y };
     MapWindowPoints(win.hwndCanvas, HWND_DESKTOP, &pt, 1);
     INT cmd = TrackPopupMenu(popup, TPM_RETURNCMD | TPM_RIGHTBUTTON,
@@ -2478,12 +2478,12 @@ static void OnContextMenu(WindowInfo& win, int x, int y)
 
     HMENU popup = BuildMenuFromMenuDef(menuDefContext, dimof(menuDefContext), CreatePopupMenu());
     if (!value || NULL == pageEl->AsLink())
-        Win::Menu::Hide(popup, IDM_COPY_LINK_TARGET);
+        win::menu::Hide(popup, IDM_COPY_LINK_TARGET);
     if (!value || NULL != pageEl->AsLink())
-        Win::Menu::Hide(popup, IDM_COPY_COMMENT);
+        win::menu::Hide(popup, IDM_COPY_COMMENT);
 
     if (!win.selectionOnPage)
-        Win::Menu::Enable(popup, IDM_COPY_SELECTION, false);
+        win::menu::Enable(popup, IDM_COPY_SELECTION, false);
     MenuUpdatePrintItem(win, popup, true);
 
     POINT pt = { x, y };
@@ -2902,8 +2902,8 @@ static void OnPaint(WindowInfo& win)
         win.buffer->Flush(hdc);
     }
     else if (!win.IsDocLoaded()) {
-        Win::Font::ScopedFont fontRightTxt(hdc, _T("MS Shell Dlg"), 14);
-        Win::HdcScopedSelectFont scope(hdc, fontRightTxt);
+        win::font::ScopedFont fontRightTxt(hdc, _T("MS Shell Dlg"), 14);
+        win::HdcScopedSelectFont scope(hdc, fontRightTxt);
         SetBkMode(hdc, TRANSPARENT);
         FillRect(hdc, &ps.rcPaint, gBrushNoDocBg);
         ScopedMem<TCHAR> msg(str::Format(_TR("Error loading %s"), win.loadedFilePath));
@@ -4097,7 +4097,7 @@ static void OnMenuFind(WindowInfo& win)
         return;
     }
 
-    ScopedMem<TCHAR> previousFind(Win::GetText(win.hwndFindBox));
+    ScopedMem<TCHAR> previousFind(win::GetText(win.hwndFindBox));
     WORD state = (WORD)SendMessage(win.hwndToolbar, TB_GETSTATE, IDM_FIND_MATCH, 0);
     bool matchCase = (state & TBSTATE_CHECKED) != 0;
 
@@ -4105,7 +4105,7 @@ static void OnMenuFind(WindowInfo& win)
     if (!findString)
         return;
 
-    Win::SetText(win.hwndFindBox, findString);
+    win::SetText(win.hwndFindBox, findString);
     Edit_SetModify(win.hwndFindBox, TRUE);
 
     bool matchCaseChanged = matchCase != (0 != (state & TBSTATE_CHECKED));
@@ -4775,7 +4775,7 @@ struct FindThreadData : public ProgressUpdateUI {
 
     FindThreadData(WindowInfo& win, TextSearchDirection direction, HWND findBox) :
         win(&win), direction(direction) {
-        text = Win::GetText(findBox);
+        text = win::GetText(findBox);
         wasModified = Edit_GetModify(findBox);
     }
     ~FindThreadData() { free(text); }
@@ -4960,7 +4960,7 @@ static void UpdateToolbarFindText(WindowInfo& win)
     ShowWindow(win.hwndFindBox, SW_SHOW);
 
     const TCHAR *text = _TR("Find:");
-    Win::SetText(win.hwndFindText, text);
+    win::SetText(win.hwndFindText, text);
 
     WindowRect findWndRect(win.hwndFindBg);
 
@@ -5028,7 +5028,7 @@ static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT message, WPARAM wParam, L
     } else if (WM_CHAR == message) {
         switch (wParam) {
         case VK_RETURN: {
-            ScopedMem<TCHAR> buf(Win::GetText(win->hwndPageBox));
+            ScopedMem<TCHAR> buf(win::GetText(win->hwndPageBox));
             int newPageNo = _ttoi(buf);
             if (win->dm->validPageNo(newPageNo)) {
                 win->dm->goToPage(newPageNo, 0, true);
@@ -5066,7 +5066,7 @@ static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT message, WPARAM wParam, L
 void UpdateToolbarPageText(WindowInfo& win, int pageCount)
 {
     const TCHAR *text = _TR("Page:");
-    Win::SetText(win.hwndPageText, text);
+    win::SetText(win.hwndPageText, text);
     SIZE size = TextSizeInHwnd(win.hwndPageText, text);
     size.cx += 6;
 
@@ -5079,13 +5079,13 @@ void UpdateToolbarPageText(WindowInfo& win, int pageCount)
 
     TCHAR *buf;
     if (-1 == pageCount)
-        buf = Win::GetText(win.hwndPageTotal);
+        buf = win::GetText(win.hwndPageTotal);
     else if (0 != pageCount)
         buf = str::Format(_T(" / %d"), pageCount);
     else
         buf = str::Dup(_T(""));
 
-    Win::SetText(win.hwndPageTotal, buf);
+    win::SetText(win.hwndPageTotal, buf);
     SIZE size2 = TextSizeInHwnd(win.hwndPageTotal, buf);
     size2.cx += 6;
     free(buf);
@@ -5360,7 +5360,7 @@ static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT message, WPARAM wParam, LP
         WindowRect rc(hwnd);
 
         HWND titleLabel = GetDlgItem(hwnd, 0);
-        ScopedMem<TCHAR> text(Win::GetText(titleLabel));
+        ScopedMem<TCHAR> text(win::GetText(titleLabel));
         SIZE size = TextSizeInHwnd(titleLabel, text);
 
         int offset = (int)(2 * win->uiDPIFactor);

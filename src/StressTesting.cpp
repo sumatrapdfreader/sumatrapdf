@@ -294,7 +294,7 @@ bool DirStressTest::GoToNextPage()
     // current API doesn't make it easy
     if (currPage == pageForSearchStart) {
         // use text that is unlikely to be found, so that we search all pages
-        Win::SetText(win->hwndFindBox, _T("!z_yt"));
+        win::SetText(win->hwndFindBox, _T("!z_yt"));
         FindTextOnThread(win);
     }
     return true;

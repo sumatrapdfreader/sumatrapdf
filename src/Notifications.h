@@ -117,7 +117,7 @@ public:
     }
 
     void MessageUpdate(const TCHAR *message, int timeoutInMS=0, bool highlight=false) {
-        Win::SetText(self, message);
+        win::SetText(self, message);
         this->highlight = highlight;
         if (timeoutInMS)
             hasCancel = false;
@@ -170,7 +170,7 @@ public:
                 rectMsg.dy -= PROGRESS_HEIGHT + PADDING / 2;
             if (wnd->hasCancel)
                 rectMsg.dx -= 20;
-            ScopedMem<TCHAR> text(Win::GetText(hwnd));
+            ScopedMem<TCHAR> text(win::GetText(hwnd));
             DrawText(hdc, text, -1, &rectMsg.ToRECT(), DT_SINGLELINE);
 
             if (wnd->hasCancel)

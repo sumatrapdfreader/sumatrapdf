@@ -606,7 +606,7 @@ bool IsUninstaller()
 static HFONT CreateDefaultGuiFont()
 {
     HDC hdc = GetDC(NULL);
-    HFONT font = Win::Font::GetSimple(hdc, _T("MS Shell Dlg"), 14);
+    HFONT font = win::font::GetSimple(hdc, _T("MS Shell Dlg"), 14);
     ReleaseDC(NULL, hdc);
     return font;
 }
@@ -1050,7 +1050,7 @@ bool IsCheckboxChecked(HWND hwnd)
 
 void OnButtonInstall()
 {
-    TCHAR *userInstallDir = Win::GetText(gHwndTextboxInstDir);
+    TCHAR *userInstallDir = win::GetText(gHwndTextboxInstDir);
     if (!str::IsEmpty(userInstallDir)) {
         free(gGlobalData.installDir);
         gGlobalData.installDir = userInstallDir;
@@ -1215,7 +1215,7 @@ void OnButtonOptions()
     ShowWindow(gHwndCheckboxRegisterBrowserPlugin, nCmdShow);
     ShowWindow(gHwndCheckboxRegisterPdfFilter, nCmdShow);
 
-    Win::SetText(gHwndButtonOptions, gShowOptions ? _T("Hide &Options") : _T("&Options"));
+    win::SetText(gHwndButtonOptions, gShowOptions ? _T("Hide &Options") : _T("&Options"));
 
     ClientRect rc(gHwndFrame);
     rc.dy -= BOTTOM_PART_DY;
@@ -1279,7 +1279,7 @@ BOOL BrowseForFolder(HWND hwnd, LPCTSTR lpszInitialFolder, LPCTSTR lpszCaption, 
 
 void OnButtonBrowse()
 {
-    TCHAR *installDir = Win::GetText(gHwndTextboxInstDir);
+    TCHAR *installDir = win::GetText(gHwndTextboxInstDir);
     if (!dir::Exists(installDir)) {
         TCHAR *parentDir = path::GetDir(installDir);
         free(installDir);
@@ -1293,7 +1293,7 @@ void OnButtonBrowse()
         // to prevent unintended installations into e.g. %ProgramFiles% itself
         if (!str::EndsWithI(path, _T("\\") TAPP))
             installPath = path::Join(path, TAPP);
-        Win::SetText(gHwndTextboxInstDir, installPath);
+        win::SetText(gHwndTextboxInstDir, installPath);
         Edit_SetSel(gHwndTextboxInstDir, 0, -1);
         SetFocus(gHwndTextboxInstDir);
         if (installPath != path)

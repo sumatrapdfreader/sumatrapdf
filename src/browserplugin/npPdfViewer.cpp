@@ -289,7 +289,7 @@ LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lPar
         PAINTSTRUCT ps;
         HDC hDC = BeginPaint(hWnd, &ps);
         HBRUSH brushBg = CreateSolidBrush(COL_WINDOW_BG);
-        HFONT hFont = Win::Font::GetSimple(hDC, _T("MS Shell Dlg"), 14);
+        HFONT hFont = win::font::GetSimple(hDC, _T("MS Shell Dlg"), 14);
         
         // set up double buffering
         RectI rcClient = ClientRect(hWnd);
