@@ -97,6 +97,8 @@ def load_one_strings_file(file_path, lang_code, strings_dict, langs_dict, contri
             #print l
 
     if curr_orig:
+        if not curr_trans:
+            print("curr_orig: %s, line: %d in %s" % (curr_orig, line_no, os.path.basename(file_path)))
         assert curr_trans
         if curr_orig not in strings_dict:
             strings_dict[curr_orig] = [(lang_code, curr_trans)]

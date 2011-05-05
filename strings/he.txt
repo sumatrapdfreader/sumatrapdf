@@ -23,6 +23,9 @@ Contributor: Amos Kotter http://sites.google.com/site/hillasystem/
 &Back\tAlt+Left Arrow
 חזור\tAlt+<-
 
+&Book View\tCtrl-8
+תצוגת ספר\tCtrl-8
+
 &Close\tCtrl-W
 &סגור\tCtrl-W
 
@@ -37,6 +40,9 @@ Contributor: Amos Kotter http://sites.google.com/site/hillasystem/
 
 &Even pages only
 עמודים זוגיים בלבד
+
+&Facing\tCtrl-7
+עמוד ממול\tCtrl-7
 
 &File
 &קובץ
@@ -130,6 +136,9 @@ Contributor: Amos Kotter http://sites.google.com/site/hillasystem/
 
 &Shrink pages to printable area (if necessary)
 כווץ עמודים עד גודל אזור ההדפסה
+
+&Single Page\tCtrl-6
+עמוד יחיד\tCtrl-6
 
 &Skip this version
 דלג מהדורה זו
@@ -601,9 +610,4 @@ copying text
 
 printing document
 מדפיס מסמך
-
-# Untranslated:
-#&Book View\tCtrl-8
-#&Facing\tCtrl-7
-#&Single Page\tCtrl-6
 

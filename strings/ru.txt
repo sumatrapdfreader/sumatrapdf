@@ -24,6 +24,9 @@ Contributor: Victor Kozyakin
 &Back\tAlt+Left Arrow
 &Назад\tAlt+Стрелка влево
 
+&Book View\tCtrl-8
+В &разворот\tCtrl-8
+
 &Close\tCtrl-W
 &Закрыть\tCtrl-W
 
@@ -38,6 +41,9 @@ Contributor: Victor Kozyakin
 
 &Even pages only
 Только ч&ётные страницы
+
+&Facing\tCtrl-7
+По &две страницы\tCtrl-7
 
 &File
 &Файл
@@ -131,6 +137,9 @@ Contributor: Victor Kozyakin
 
 &Shrink pages to printable area (if necessary)
 Уменьшить страницы до области печати (если нужно)
+
+&Single Page\tCtrl-6
+&Постранично\tCtrl-6
 
 &Skip this version
 Пропустить эту версию
@@ -602,9 +611,4 @@ copying text
 
 printing document
 печатается документ
-
-# Untranslated:
-#&Book View\tCtrl-8
-#&Facing\tCtrl-7
-#&Single Page\tCtrl-6
 

@@ -24,6 +24,9 @@ Contributor: Sérgio Marques <smarquespt@gmail.com>, 2010-2011
 &Back\tAlt+Left Arrow
 V&oltar\tAlt + <-
 
+&Book View\tCtrl-8
+Como li&vro\tCtrl-8
+
 &Close\tCtrl-W
 &Fechar\tCtrl-W
 
@@ -39,6 +42,9 @@ V&oltar\tAlt + <-
 &Even pages only
 Apenas as páginas &pares
 
+&Facing\tCtrl-7
+Página d&upla\tCtrl-7
+
 &File
 &Ficheiro
 
@@ -50,6 +56,9 @@ Primeira &página\tHome
 
 &Fit pages to printable area
 A&justar páginas à área de impressão
+
+&Forget Document
+Esq&uecer documento
 
 &Go To
 Ir &para
@@ -87,11 +96,17 @@ Apenas páginas í&mpares
 &Open\tCtrl-O
 &Abrir\tCtrl-O
 
+&Open Document
+&Abrir documento
+
 &Options...
 &Opções...
 
 &Password:
 &Palavra passe:
+
+&Pin Document
+Fi&xar documento
 
 &Previous Page\tLeft Arrow
 Página &anterior\t<-
@@ -122,6 +137,9 @@ Página &anterior\t<-
 
 &Shrink pages to printable area (if necessary)
 &Reduzir páginas à área de impressão (se necessário)
+
+&Single Page\tCtrl-6
+&Página única\tCtrl-6
 
 &Skip this version
 Ignorar &esta versão
@@ -493,10 +511,10 @@ Searching %d of %d...
 Pesquisando %d de %d...
 
 Select &All
-Selecionar t&udo
+&Selecionar tudo
 
 Select &All\tCtrl-A
-Selecionar t&udo\tCtrl-A
+&Selecionar tudo\tCtrl-A
 
 Select content with Ctrl+left mouse button
 Selecione o conteúdo com Ctrl+botão esquerdo do rato
@@ -508,10 +526,10 @@ Set inverse search command-line
 Definir linha de comandos para procura inversa
 
 Show &Toolbar
-Mostrar barra de ferramen&tas
+Mostrar &barra de ferramentas
 
 Show &pages continuously
-Mostrar &páginas contínuas
+M&ostrar páginas contínuas
 
 Show frequently read
 Mostrar frequentes
@@ -593,12 +611,4 @@ copiando texto
 
 printing document
 imprimindo documento
-
-# Untranslated:
-#&Book View\tCtrl-8
-#&Facing\tCtrl-7
-#&Forget Document
-#&Open Document
-#&Pin Document
-#&Single Page\tCtrl-6
 

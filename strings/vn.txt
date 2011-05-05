@@ -23,6 +23,9 @@ Tất cả các tr&ang được chọn
 &Back\tAlt+Left Arrow
 Trở về\tAlt+<-
 
+&Book View\tCtrl-8
+Xem dạng sách\tCtrl-8
+
 &Close\tCtrl-W
 Đóng tập tin\tCtrl-W
 
@@ -37,6 +40,9 @@ Không hỏi lại
 
 &Even pages only
 Chỉ những trang lẻ
+
+&Facing\tCtrl-7
+Trang kép\tCtrl-7
 
 &File
 Tập tin
@@ -130,6 +136,9 @@ Cài đặt
 
 &Shrink pages to printable area (if necessary)
 Nén vừa trang in (nếu cần thiết)
+
+&Single Page\tCtrl-6
+Trang đơn\tCtrl-6
 
 &Skip this version
 Bỏ qua phiên bản này.
@@ -601,9 +610,4 @@ copying text
 
 printing document
 đang in tập tin
-
-# Untranslated:
-#&Book View\tCtrl-8
-#&Facing\tCtrl-7
-#&Single Page\tCtrl-6
 
