@@ -18,6 +18,7 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include <Tlhelp32.h>
 #include <Shlwapi.h>
 #include <objidl.h>
+#include <WinSafer.h>
 
 #include <ioapi.h>
 #include <iowin32.h>
@@ -621,13 +622,13 @@ void InvalidateFrame()
     InvalidateRect(gHwndFrame, &rc.ToRECT(), FALSE);
 }
 
-HANDLE CreateProcessHelper(TCHAR *exe, TCHAR *args=NULL)
+HANDLE CreateProcessHelper(const TCHAR *exe, const TCHAR *args=NULL)
 {
     PROCESS_INFORMATION pi;
     STARTUPINFO si = {0};
     si.cb = sizeof(si);
     // per msdn, cmd has to be writeable
-    ScopedMem<TCHAR> cmd(str::Format(_T("%s %s"), exe, args ? args : _T("")));
+    ScopedMem<TCHAR> cmd(str::Format(_T("\"%s\" %s"), exe, args ? args : _T("")));
     if (!CreateProcess(NULL, cmd, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
         SeeLastError();
         return NULL;
@@ -1194,10 +1195,56 @@ void OnButtonExit()
     SendMessage(gHwndFrame, WM_CLOSE, 0, 0);
 }
 
+typedef BOOL WINAPI SaferCreateLevelProc(DWORD dwScopeId, DWORD dwLevelId, DWORD OpenFlags, SAFER_LEVEL_HANDLE *pLevelHandle, LPVOID lpReserved);
+typedef BOOL WINAPI SaferComputeTokenFromLevelProc(SAFER_LEVEL_HANDLE LevelHandle, HANDLE InAccessToken, PHANDLE OutAccessToken, DWORD dwFlags, LPVOID lpReserved);
+typedef BOOL WINAPI SaferCloseLevelProc(SAFER_LEVEL_HANDLE hLevelHandle);
+
+static HANDLE CreateProcessAtLevel(const TCHAR *exe, const TCHAR *args=NULL, DWORD level=SAFER_LEVELID_NORMALUSER)
+{
+    HMODULE h = SafeLoadLibrary(_T("Advapi32.dll"));
+    if (!h)
+        return NULL;
+#define ImportProc(func) func ## Proc *_ ## func = (func ## Proc *)GetProcAddress(h, #func)
+    ImportProc(SaferCreateLevel);
+    ImportProc(SaferComputeTokenFromLevel);
+    ImportProc(SaferCloseLevel);
+#undef ImportProc
+    if (!_SaferCreateLevel || !_SaferComputeTokenFromLevel || !_SaferCloseLevel)
+        return NULL;
+
+    SAFER_LEVEL_HANDLE slh;
+    if (!_SaferCreateLevel(SAFER_SCOPEID_USER, level, 0, &slh, NULL))
+        return NULL;
+
+    ScopedMem<TCHAR> cmd(str::Format(_T("\"%s\" %s"), exe, args ? args : _T("")));
+    PROCESS_INFORMATION pi;
+    STARTUPINFO si = { 0 };
+    si.cb = sizeof(si);
+
+    HANDLE token;
+    if (!_SaferComputeTokenFromLevel(slh, NULL, &token, 0, NULL))
+        goto Error;
+    if (!CreateProcessAsUser(token, NULL, cmd, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
+        goto Error;
+
+    CloseHandle(pi.hThread);
+    _SaferCloseLevel(slh);
+    return pi.hProcess;
+
+Error:
+    SeeLastError();
+    _SaferCloseLevel(slh);
+    return NULL;
+}
+
 void OnButtonStartSumatra()
 {
     ScopedMem<TCHAR> exePath(GetInstalledExePath());
-    HANDLE h = CreateProcessHelper(exePath);
+    // try to create the process as a normal user
+    HANDLE h = CreateProcessAtLevel(exePath);
+    // create the process as is (mainly for Windows 2000 compatibility)
+    if (!h)
+        h = CreateProcessHelper(exePath);
     CloseHandle(h);
 
     OnButtonExit();
