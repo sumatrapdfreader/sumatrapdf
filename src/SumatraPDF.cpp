@@ -49,8 +49,7 @@
 #define THREAD_BASED_FILEWATCH
 
 /* Define if you want to display additional debug helpers in the Help menu */
-// #define SHOW_DEBUG_MENU_ITEMS
-#if defined(DEBUG) && !defined(SHOW_DEBUG_MENU_ITEMS)
+#if 0
 #define SHOW_DEBUG_MENU_ITEMS
 #endif
 
