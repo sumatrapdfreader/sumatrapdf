@@ -208,6 +208,7 @@ DisplayModel::DisplayModel(DisplayModelCallback *callback, DisplayMode displayMo
     djvuEngine = NULL;
     cbxEngine = NULL;
     imageEngine = NULL;
+    imageDirEngine = NULL;
 
     textSelection = NULL;
     textSearch = NULL;
@@ -252,6 +253,8 @@ bool DisplayModel::load(const TCHAR *fileName, int startPage, SizeI viewPort)
         engine = cbxEngine = CbxEngine::CreateFromFileName(fileName);
     else if (ImageEngine::IsSupportedFile(fileName))
         engine = imageEngine = ImageEngine::CreateFromFileName(fileName);
+    else if (ImageDirEngine::IsSupportedFile(fileName))
+        engine = imageDirEngine = ImageDirEngine::CreateFromFileName(fileName);
     else {
         // try loading as either supported file format
         // TODO: sniff the file content instead
@@ -264,7 +267,7 @@ bool DisplayModel::load(const TCHAR *fileName, int startPage, SizeI viewPort)
     if (!engine)
         return false;
 
-    if (cbxEngine || imageEngine)
+    if (cbxEngine || imageEngine || imageDirEngine)
         padding = &gImagePadding;
 
     _dpiFactor = 1.0f * _callback->GetScreenDPI() / engine->GetFileDPI();
@@ -1074,7 +1077,7 @@ void DisplayModel::setPresentationMode(bool enable)
     }
     else {
         padding = &gPagePadding;
-        if (cbxEngine || imageEngine)
+        if (cbxEngine || imageEngine || imageDirEngine)
             padding = &gImagePadding;
         changeDisplayMode(_presDisplayMode);
         if (!ValidZoomVirtual(_presZoomVirtual))

@@ -7,8 +7,6 @@
 #include "BaseEngine.h"
 #include "Vec.h"
 
-// TODO: support a directory of files
-
 class ImagesEngine : public BaseEngine {
 public:
     ImagesEngine();
@@ -46,7 +44,6 @@ protected:
     const TCHAR *fileName;
     const TCHAR *fileExt;
 
-    int pageCount;
     Vec<Gdiplus::Bitmap *> pages;
 
     void GetTransform(Gdiplus::Matrix& m, int pageNo, float zoom, int rotation);
@@ -80,6 +77,28 @@ public:
     static ImageEngine *CreateFromFileName(const TCHAR *fileName);
 };
 
+class ImageDirEngine : public ImagesEngine {
+public:
+    virtual ImageDirEngine *Clone() {
+        return CreateFromFileName(fileName);
+    }
+    virtual RectD PageMediabox(int pageNo);
+
+    virtual unsigned char *GetFileData(size_t *cbCount) { return NULL; }
+
+protected:
+    bool LoadImageDir(const TCHAR *dirName);
+
+    virtual Gdiplus::Bitmap *LoadImage(int pageNo);
+
+    Vec<RectD> mediaboxes;
+    StrVec pageFileNames;
+
+public:
+    static bool IsSupportedFile(const TCHAR *fileName);
+    static ImageDirEngine *CreateFromFileName(const TCHAR *fileName);
+};
+
 class CbxEngine : public ImagesEngine {
 public:
     CbxEngine();
@@ -95,6 +114,7 @@ protected:
     bool LoadCbrFile(const TCHAR *fileName);
 
     virtual Gdiplus::Bitmap *LoadImage(int pageNo);
+    char *GetImageData(int pageNo, size_t& len);
 
     Vec<RectD> mediaboxes;
 

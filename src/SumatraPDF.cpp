@@ -1265,6 +1265,9 @@ static void MenuUpdateStateForWindow(WindowInfo& win) {
     static UINT menusToDisableIfNonPdf[] = {
         IDM_VIEW_WITH_ACROBAT, IDM_VIEW_WITH_FOXIT, IDM_VIEW_WITH_PDF_XCHANGE
     };
+    static UINT menusToDisableIfDirectory[] = {
+        IDM_SAVEAS, IDM_SEND_BY_EMAIL
+    };
 
     assert(FileCloseMenuEnabled() == !win.IsAboutWindow()); // TODO: ???
     win::menu::Enable(win.menu, IDM_CLOSE, FileCloseMenuEnabled());
@@ -1295,6 +1298,13 @@ static void MenuUpdateStateForWindow(WindowInfo& win) {
     if (IsNonPdfDocument(&win)) {
         for (int i = 0; i < dimof(menusToDisableIfNonPdf); i++) {
             UINT id = menusToDisableIfNonPdf[i];
+            win::menu::Enable(win.menu, id, false);
+        }
+    }
+
+    if (win.dm && win.dm->imageDirEngine) {
+        for (int i = 0; i < dimof(menusToDisableIfDirectory); i++) {
+            UINT id = menusToDisableIfDirectory[i];
             win::menu::Enable(win.menu, id, false);
         }
     }
@@ -1752,7 +1762,7 @@ void WindowInfo::RenderPage(int pageNo)
     // don't render any plain images on the rendering thread,
     // they'll be rendered directly in DrawDocument during
     // WM_PAINT on the UI thread
-    if (dm->cbxEngine || dm->imageEngine)
+    if (dm->cbxEngine || dm->imageEngine || dm->imageDirEngine)
         return;
 
     gRenderCache.Render(dm, pageNo, NULL);
@@ -2173,7 +2183,7 @@ static void DrawDocument(WindowInfo& win, HDC hdc, RECT *rcArea)
 
     bool paintOnBlackWithoutShadow = win.presentation ||
     // draw comic books and single images on a black background (without frame and shadow)
-                                     dm->cbxEngine || dm->imageEngine;
+                                     dm->cbxEngine || dm->imageEngine || dm->imageDirEngine;
     if (paintOnBlackWithoutShadow)
         FillRect(hdc, rcArea, gBrushBlack);
     else
@@ -2196,7 +2206,7 @@ static void DrawDocument(WindowInfo& win, HDC hdc, RECT *rcArea)
 
         bool renderOutOfDateCue = false;
         UINT renderDelay = 0;
-        if (dm->cbxEngine || dm->imageEngine)
+        if (dm->cbxEngine || dm->imageEngine || dm->imageDirEngine)
             dm->engine->RenderPage(hdc, pageInfo->pageOnScreen, pageNo, dm->zoomReal(pageNo), dm->rotation());
         else
             renderDelay = gRenderCache.Paint(hdc, &bounds, dm, pageNo, pageInfo, &renderOutOfDateCue);

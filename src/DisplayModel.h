@@ -136,6 +136,7 @@ public:
     DjVuEngine *    djvuEngine;
     CbxEngine *     cbxEngine;
     ImageEngine *   imageEngine;
+    ImageDirEngine *imageDirEngine;
 
     TextSelection * textSelection;
     TextSearch *    textSearch;

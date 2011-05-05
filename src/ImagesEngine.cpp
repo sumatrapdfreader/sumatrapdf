@@ -14,33 +14,12 @@
 
 extern "C" {
 // needed because we compile bzip2 with #define BZ_NO_STDIO
-void bz_internal_error(int errcode)
-{
-    // do nothing
-}
+void bz_internal_error(int errcode) { /* do nothing */ }
 }
 
 using namespace Gdiplus;
 
-class ImagesPage {
-public:
-    const TCHAR *       fileName; // for sorting image files
-    Gdiplus::Bitmap *   bmp;
-
-    ImagesPage(const TCHAR *fileName, Gdiplus::Bitmap *bmp) : bmp(bmp) {
-        this->fileName = str::Dup(fileName);
-    }
-    ~ImagesPage() {
-        free((void *)fileName);
-        delete bmp;
-    }
-
-    static int cmpPageByName(const void *o1, const void *o2) {
-        ImagesPage *p1 = *(ImagesPage **)o1;
-        ImagesPage *p2 = *(ImagesPage **)o2;
-        return str::CmpNatural(p1->fileName, p2->fileName);
-    }
-};
+///// Helper methods for handling image files of the most common types /////
 
 // cf. http://stackoverflow.com/questions/4598872/creating-hbitmap-from-memory-buffer/4616394#4616394
 Bitmap *BitmapFromData(void *data, size_t len)
@@ -68,19 +47,6 @@ Bitmap *BitmapFromData(void *data, size_t len)
 #define SWAPWORD(x)    MAKEWORD(HIBYTE(x), LOBYTE(x))
 #define SWAPLONG(x)    MAKELONG(SWAPWORD(HIWORD(x)), SWAPWORD(LOWORD(x)))
 
-#define PNG_SIGNATURE "\x89PNG\x0D\x0A\x1A\x0A"
-
-struct PngImageHeader {
-    // width and height are big-endian values, use SWAPLONG to convert
-    DWORD width;
-    DWORD height;
-    byte bitDepth;
-    byte colorType;
-    byte compression;
-    byte filter;
-    byte interlace;
-};
-
 // adapted from http://cpansearch.perl.org/src/RJRAY/Image-Size-3.230/lib/Image/Size.pm
 SizeI SizeFromData(char *data, size_t len)
 {
@@ -96,10 +62,11 @@ SizeI SizeFromData(char *data, size_t len)
         }
     }
     // PNG
-    else if (str::StartsWith(data, PNG_SIGNATURE)) {
-        if (len >= 16 + sizeof(PngImageHeader) && str::StartsWith(data + 12, "IHDR")) {
-            PngImageHeader *hdr = (PngImageHeader *)data + 16;
-            result = SizeI(SWAPLONG(hdr->width), SWAPLONG(hdr->height));
+    else if (str::StartsWith(data, "\x89PNG\x0D\x0A\x1A\x0A")) {
+        if (len >= 24 && str::StartsWith(data + 12, "IHDR")) {
+            DWORD width = SWAPLONG(*(DWORD *)(data + 16));
+            DWORD height = SWAPLONG(*(DWORD *)(data + 20));
+            result = SizeI(width, height);
         }
     }
     // JPEG
@@ -161,6 +128,367 @@ SizeI SizeFromData(char *data, size_t len)
     return result;
 }
 
+RenderedBitmap *LoadRenderedBitmap(const TCHAR *filePath)
+{
+    if (str::EndsWithI(filePath, _T(".bmp"))) {
+        HBITMAP hbmp = (HBITMAP)LoadImage(NULL, filePath, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+        if (!hbmp)
+            return NULL;
+
+        BITMAP bmp;
+        GetObject(hbmp, sizeof(BITMAP), &bmp);
+        return new RenderedBitmap(hbmp, bmp.bmWidth, bmp.bmHeight);
+    }
+
+    size_t len;
+    ScopedMem<char> data(file::ReadAll(filePath, &len));
+    if (!data)
+        return NULL;
+    Bitmap *bmp = BitmapFromData(data, len);
+    if (!bmp)
+        return NULL;
+
+    HBITMAP hbmp;
+    RenderedBitmap *rendered = NULL;
+    if (bmp->GetHBITMAP(Color(0xFF, 0xFF, 0xFF), &hbmp) == Ok)
+        rendered = new RenderedBitmap(hbmp, bmp->GetWidth(), bmp->GetHeight());
+    delete bmp;
+
+    return rendered;
+}
+
+static bool GetEncoderClsid(const TCHAR *format, CLSID& clsid)
+{
+    UINT numEncoders, size;
+    GetImageEncodersSize(&numEncoders, &size);
+    if (0 == size)
+        return false;
+
+    ScopedMem<ImageCodecInfo> codecInfo((ImageCodecInfo *)malloc(size));
+    ScopedMem<WCHAR> formatW(str::conv::ToWStr(format));
+    if (!codecInfo || !formatW)
+        return false;
+
+    GetImageEncoders(numEncoders, size, codecInfo);
+    for (UINT j = 0; j < numEncoders; j++) {
+        if (str::Eq(codecInfo[j].MimeType, formatW)) {
+            clsid = codecInfo[j].Clsid;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool SaveRenderedBitmap(RenderedBitmap *bmp, const TCHAR *filePath)
+{
+    size_t bmpDataLen;
+    ScopedMem<unsigned char> bmpData(bmp->Serialize(&bmpDataLen));
+    if (!bmpData)
+        return false;
+
+    const TCHAR *fileExt = path::GetExt(filePath);
+    if (str::EqI(fileExt, _T(".bmp")))
+        return file::WriteAll(filePath, bmpData.Get(), bmpDataLen);
+
+    const TCHAR *encoders[] = {
+        _T(".png"), _T("image/png"),
+        _T(".jpg"), _T("image/jpeg"),
+        _T(".jpeg"),_T("image/jpeg"),
+        _T(".gif"), _T("image/gif"),
+        _T(".tif"), _T("image/tiff"),
+        _T(".tiff"),_T("image/tiff"),
+    };
+    const TCHAR *encoder = NULL;
+    for (int i = 0; i < dimof(encoders) && !encoder; i += 2)
+        if (str::EqI(fileExt, encoders[i]))
+            encoder = encoders[i+1];
+
+    CLSID encClsid;
+    if (!encoder || !GetEncoderClsid(encoder, encClsid))
+        return false;
+
+    Bitmap *gbmp = BitmapFromData(bmpData, bmpDataLen);
+    if (!gbmp)
+        return false;
+
+    ScopedMem<TCHAR> filePathW(str::conv::ToWStr(filePath));
+    Status status = gbmp->Save(filePathW, &encClsid);
+    delete gbmp;
+
+    return status == Ok;
+}
+
+///// ImagesEngine methods apply to all types of engines handling full-page images /////
+
+ImagesEngine::ImagesEngine() : fileName(NULL), fileExt(NULL)
+{
+}
+
+ImagesEngine::~ImagesEngine()
+{
+    DeleteVecMembers(pages);
+    free((void *)fileName);
+}
+
+RenderedBitmap *ImagesEngine::RenderBitmap(int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target)
+{
+    RectD pageRc = pageRect ? *pageRect : PageMediabox(pageNo);
+    RectI screen = Transform(pageRc, pageNo, zoom, rotation).Round();
+    screen.Offset(-screen.x, -screen.y);
+
+    HDC hDC = GetDC(NULL);
+    HDC hDCMem = CreateCompatibleDC(hDC);
+    HBITMAP hbmp = CreateCompatibleBitmap(hDC, screen.dx, screen.dy);
+    DeleteObject(SelectObject(hDCMem, hbmp));
+
+    bool ok = RenderPage(hDCMem, screen, pageNo, zoom, rotation, pageRect, target);
+    DeleteDC(hDCMem);
+    ReleaseDC(NULL, hDC);
+    if (!ok) {
+        DeleteObject(hbmp);
+        return NULL;
+    }
+
+    return new RenderedBitmap(hbmp, screen.dx, screen.dy);
+}
+
+bool ImagesEngine::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target)
+{
+    Bitmap *bmp = LoadImage(pageNo);
+    if (!bmp)
+        return false;
+
+    RectD pageRc = pageRect ? *pageRect : PageMediabox(pageNo);
+    RectI screen = Transform(pageRc, pageNo, zoom, rotation).Round();
+
+    Graphics g(hDC);
+    g.SetCompositingQuality(CompositingQualityHighQuality);
+    g.SetSmoothingMode(SmoothingModeAntiAlias);
+    g.SetPageUnit(UnitPixel);
+    g.SetClip(Gdiplus::Rect(screenRect.x, screenRect.y, screenRect.dx, screenRect.dy));
+
+    REAL scaleX = 1.0f, scaleY = 1.0f;
+    if (bmp->GetHorizontalResolution() != 0.f)
+        scaleX = 1.0f * bmp->GetHorizontalResolution() / GetDeviceCaps(hDC, LOGPIXELSX);
+    if (bmp->GetVerticalResolution() != 0.f)
+        scaleY = 1.0f * bmp->GetVerticalResolution() / GetDeviceCaps(hDC, LOGPIXELSY);
+
+    Matrix m;
+    GetTransform(m, pageNo, zoom, rotation);
+    m.Translate((REAL)(screenRect.x - screen.x), (REAL)(screenRect.y - screen.y), MatrixOrderAppend);
+    if (scaleX != 1.0f || scaleY != 1.0f)
+        m.Scale(scaleX, scaleY, MatrixOrderPrepend);
+    g.SetTransform(&m);
+
+    Status ok = g.DrawImage(bmp, 0, 0);
+    return ok == Ok;
+}
+
+void ImagesEngine::GetTransform(Matrix& m, int pageNo, float zoom, int rotation)
+{
+    SizeD size = PageMediabox(pageNo).Size();
+
+    rotation = rotation % 360;
+    if (rotation < 0) rotation = rotation + 360;
+    if (90 == rotation)
+        m.Translate(0, (REAL)-size.dy, MatrixOrderAppend);
+    else if (180 == rotation)
+        m.Translate((REAL)-size.dx, (REAL)-size.dy, MatrixOrderAppend);
+    else if (270 == rotation)
+        m.Translate((REAL)-size.dx, 0, MatrixOrderAppend);
+    else // if (0 == rotation)
+        m.Translate(0, 0, MatrixOrderAppend);
+
+    m.Scale(zoom, zoom, MatrixOrderAppend);
+    m.Rotate((REAL)rotation, MatrixOrderAppend);
+}
+
+PointD ImagesEngine::Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse)
+{
+    RectD rect = Transform(RectD(pt, SizeD()), pageNo, zoom, rotation, inverse);
+    return PointD(rect.x, rect.y);
+}
+
+RectD ImagesEngine::Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse)
+{
+    PointF pts[2] = {
+        PointF((REAL)rect.x, (REAL)rect.y),
+        PointF((REAL)(rect.x + rect.dx), (REAL)(rect.y + rect.dy))
+    };
+    Matrix m;
+    GetTransform(m, pageNo, zoom, rotation);
+    if (inverse)
+        m.Invert();
+    m.TransformPoints(pts, 2);
+    return RectD::FromXY(pts[0].X, pts[0].Y, pts[1].X, pts[1].Y);
+}
+
+unsigned char *ImagesEngine::GetFileData(size_t *cbCount)
+{
+    return (unsigned char *)file::ReadAll(fileName, cbCount);
+}
+
+///// ImageEngine handles a single image file /////
+
+bool ImageEngine::LoadSingleFile(const TCHAR *file)
+{
+    assert(IsSupportedFile(file));
+
+    size_t len = 0;
+    ScopedMem<char> bmpData(file::ReadAll(file, &len));
+    if (!bmpData)
+        return false;
+
+    pages.Append(BitmapFromData(bmpData, len));
+
+    fileName = str::Dup(file);
+    fileExt = path::GetExt(fileName);
+    assert(fileExt && *fileExt == '.');
+
+    return pages[0] != NULL;
+}
+
+ImageEngine *ImageEngine::CreateFromFileName(const TCHAR *fileName)
+{
+    assert(IsSupportedFile(fileName));
+    ImageEngine *engine = new ImageEngine();
+    if (!engine->LoadSingleFile(fileName)) {
+        delete engine;
+        return NULL;
+    }
+    return engine;    
+}
+
+///// ImageDirEngine handles a directory full of image files /////
+
+bool ImageDirEngine::LoadImageDir(const TCHAR *dirName)
+{
+    fileName = str::Dup(dirName);
+    fileExt = _T("");
+
+    ScopedMem<TCHAR> pattern(path::Join(dirName, _T("*")));
+
+    WIN32_FIND_DATA fdata;
+    HANDLE hfind = FindFirstFile(pattern, &fdata);
+    if (INVALID_HANDLE_VALUE == hfind)
+        return false;
+
+    do {
+        if (!(fdata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+            if (ImageEngine::IsSupportedFile(fdata.cFileName))
+                pageFileNames.Append(path::Join(dirName, fdata.cFileName));
+    } while (FindNextFile(hfind, &fdata));
+    FindClose(hfind);
+
+    if (pageFileNames.Count() == 0)
+        return false;
+    pageFileNames.Sort();
+
+    pages.MakeSpaceAt(0, pageFileNames.Count());
+    mediaboxes.MakeSpaceAt(0, pageFileNames.Count());
+
+    return true;
+}
+
+RectD ImageDirEngine::PageMediabox(int pageNo)
+{
+    assert(1 <= pageNo && pageNo <= PageCount());
+    if (!mediaboxes[pageNo-1].IsEmpty())
+        return mediaboxes[pageNo-1];
+
+    size_t len;
+    ScopedMem<char> bmpData(file::ReadAll(pageFileNames[pageNo-1], &len));
+    if (bmpData) {
+        SizeI size = SizeFromData(bmpData, len);
+        mediaboxes[pageNo-1] = RectI(PointI(), size).Convert<double>();
+    }
+    return mediaboxes[pageNo-1];
+}
+
+Bitmap *ImageDirEngine::LoadImage(int pageNo)
+{
+    assert(1 <= pageNo && pageNo <= PageCount());
+    if (pages[pageNo-1])
+        return pages[pageNo-1];
+
+    size_t len;
+    ScopedMem<char> bmpData(file::ReadAll(pageFileNames[pageNo-1], &len));
+    if (bmpData)
+        pages[pageNo-1] = BitmapFromData(bmpData, len);
+
+    return pages[pageNo-1];
+}
+
+bool ImageDirEngine::IsSupportedFile(const TCHAR *fileName)
+{
+    // whether it actually contains images will be checked in LoadImageDir
+    return dir::Exists(fileName);
+}
+
+ImageDirEngine *ImageDirEngine::CreateFromFileName(const TCHAR *fileName)
+{
+    assert(dir::Exists(fileName));
+    ImageDirEngine *engine = new ImageDirEngine();
+    if (!engine->LoadImageDir(fileName)) {
+        delete engine;
+        return NULL;
+    }
+    return engine;
+}
+
+///// CbxEngine handles comic book files (either .cbz or .cbr) /////
+
+struct CbzFileAccess {
+    zlib_filefunc64_def ffunc;
+    unzFile uf;
+};
+
+CbxEngine::CbxEngine() : libData(NULL)
+{
+    InitializeCriticalSection(&fileAccess);
+}
+
+CbxEngine::~CbxEngine()
+{
+    if (libData) {
+        CbzFileAccess *fa = (CbzFileAccess *)libData;
+        unzClose(fa->uf);
+        delete fa;
+    }
+
+    DeleteCriticalSection(&fileAccess);
+}
+
+RectD CbxEngine::PageMediabox(int pageNo)
+{
+    assert(1 <= pageNo && pageNo <= PageCount());
+    if (!mediaboxes[pageNo-1].IsEmpty())
+        return mediaboxes[pageNo-1];
+
+    size_t len;
+    ScopedMem<char> bmpData(GetImageData(pageNo, len));
+    if (bmpData) {
+        SizeI size = SizeFromData(bmpData, len);
+        mediaboxes[pageNo-1] = RectI(PointI(), size).Convert<double>();
+    }
+    return mediaboxes[pageNo-1];
+}
+
+Bitmap *CbxEngine::LoadImage(int pageNo)
+{
+    assert(1 <= pageNo && pageNo <= PageCount());
+    if (pages[pageNo-1])
+        return pages[pageNo-1];
+
+    size_t len;
+    ScopedMem<char> bmpData(GetImageData(pageNo, len));
+    if (bmpData)
+        pages[pageNo-1] = BitmapFromData(bmpData, len);
+
+    return pages[pageNo-1];
+}
+
 static bool SetCurrentCbzPage(unzFile& uf, const TCHAR *fileName)
 {
     ScopedMem<char> fileNameUtf8(str::conv::ToUtf8(fileName));
@@ -201,6 +529,77 @@ Exit:
     unzCloseCurrentFile(uf); // ignoring error code
     return bmpData;
 }
+
+bool CbxEngine::LoadCbzFile(const TCHAR *file)
+{
+    if (!file)
+        return false;
+    fileName = str::Dup(file);
+    fileExt = _T(".cbz");
+    assert(str::EndsWithI(fileName, fileExt));
+
+    CbzFileAccess *fa = new CbzFileAccess;
+    libData = fa;
+
+    // only extract all image filenames for now
+    fill_win32_filefunc64(&fa->ffunc);
+    fa->uf = unzOpen2_64(fileName, &fa->ffunc);
+    if (!fa->uf)
+        return false;
+
+    unz_global_info64 ginfo;
+    int err = unzGetGlobalInfo64(fa->uf, &ginfo);
+    if (err != UNZ_OK)
+        return false;
+    unzGoToFirstFile(fa->uf);
+
+    for (int n = 0; n < ginfo.number_entry; n++) {
+        char fileName[MAX_PATH];
+        int err = unzGetCurrentFileInfo64(fa->uf, NULL, fileName, dimof(fileName), NULL, 0, NULL, 0);
+        if (err == UNZ_OK) {
+            ScopedMem<TCHAR> fileName2(str::conv::FromUtf8(fileName));
+            if (ImageEngine::IsSupportedFile(fileName2) &&
+                // OS X occasionally leaves metadata with image extensions
+                !str::StartsWith(path::GetBaseName(fileName2), _T("."))) {
+                pageFileNames.Append(fileName2.StealData());
+            }
+        }
+        err = unzGoToNextFile(fa->uf);
+        if (err != UNZ_OK)
+            break;
+    }
+
+    // TODO: any meta-information available?
+
+    if (pageFileNames.Count() == 0)
+        return false;
+    pageFileNames.Sort();
+
+    pages.MakeSpaceAt(0, pageFileNames.Count());
+    mediaboxes.MakeSpaceAt(0, pageFileNames.Count());
+
+    return true;
+}
+
+class ImagesPage {
+public:
+    const TCHAR *       fileName; // for sorting image files
+    Gdiplus::Bitmap *   bmp;
+
+    ImagesPage(const TCHAR *fileName, Gdiplus::Bitmap *bmp) : bmp(bmp) {
+        this->fileName = str::Dup(fileName);
+    }
+    ~ImagesPage() {
+        free((void *)fileName);
+        delete bmp;
+    }
+
+    static int cmpPageByName(const void *o1, const void *o2) {
+        ImagesPage *p1 = *(ImagesPage **)o1;
+        ImagesPage *p2 = *(ImagesPage **)o2;
+        return str::CmpNatural(p1->fileName, p2->fileName);
+    }
+};
 
 struct RarDecompressData {
     unsigned    totalSize;
@@ -320,256 +719,15 @@ bool CbxEngine::LoadCbrFile(const TCHAR *file)
     return true;
 }
 
-bool ImageEngine::LoadSingleFile(const TCHAR *file)
+char *CbxEngine::GetImageData(int pageNo, size_t& len)
 {
-    assert(IsSupportedFile(file));
-
-    size_t len = 0;
-    ScopedMem<char> bmpData(file::ReadAll(file, &len));
-    if (!bmpData)
-        return false;
-
-    pages.Append(BitmapFromData(bmpData, len));
-
-    fileName = str::Dup(file);
-    fileExt = path::GetExt(fileName);
-    assert(fileExt && *fileExt == '.');
-
-    return pages[0] != NULL;
-}
-
-struct CbzFileAccess {
-    zlib_filefunc64_def ffunc;
-    unzFile uf;
-};
-
-bool CbxEngine::LoadCbzFile(const TCHAR *file)
-{
-    if (!file)
-        return false;
-    fileName = str::Dup(file);
-    fileExt = _T(".cbz");
-    assert(str::EndsWithI(fileName, fileExt));
-
-    CbzFileAccess *fa = new CbzFileAccess;
-    libData = fa;
-
-    // only extract all image filenames for now
-    fill_win32_filefunc64(&fa->ffunc);
-    fa->uf = unzOpen2_64(fileName, &fa->ffunc);
-    if (!fa->uf)
-        return false;
-
-    unz_global_info64 ginfo;
-    int err = unzGetGlobalInfo64(fa->uf, &ginfo);
-    if (err != UNZ_OK)
-        return false;
-    unzGoToFirstFile(fa->uf);
-
-    for (int n = 0; n < ginfo.number_entry; n++) {
-        char fileName[MAX_PATH];
-        int err = unzGetCurrentFileInfo64(fa->uf, NULL, fileName, dimof(fileName), NULL, 0, NULL, 0);
-        if (err == UNZ_OK) {
-            ScopedMem<TCHAR> fileName2(str::conv::FromUtf8(fileName));
-            if (ImageEngine::IsSupportedFile(fileName2) &&
-                // OS X occasionally leaves metadata with image extensions
-                !str::StartsWith(path::GetBaseName(fileName2), _T("."))) {
-                pageFileNames.Append(fileName2.StealData());
-            }
-        }
-        err = unzGoToNextFile(fa->uf);
-        if (err != UNZ_OK)
-            break;
-    }
-
-    // TODO: any meta-information available?
-
-    if (pageFileNames.Count() == 0)
-        return false;
-    pageFileNames.Sort();
-
-    pages.MakeSpaceAt(0, pageFileNames.Count());
-    mediaboxes.MakeSpaceAt(0, pageFileNames.Count());
-
-    return true;
-}
-
-ImagesEngine::ImagesEngine() : fileName(NULL), fileExt(NULL), pageCount(0), pages(NULL)
-{
-}
-
-ImagesEngine::~ImagesEngine()
-{
-    for (int i = 0; i < pageCount; i++)
-        delete pages[i];
-    DeleteVecMembers(pages);
-    free((void *)fileName);
-}
-
-CbxEngine::CbxEngine() : mediaboxes(NULL), libData(NULL)
-{
-    InitializeCriticalSection(&fileAccess);
-}
-
-CbxEngine::~CbxEngine()
-{
-    if (str::EqI(fileExt, _T(".cbz"))) {
-        CbzFileAccess *fa = (CbzFileAccess *)libData;
-        unzClose(fa->uf);
-        delete fa;
-    }
-
-    DeleteCriticalSection(&fileAccess);
-}
-
-RectD CbxEngine::PageMediabox(int pageNo)
-{
-    assert(1 <= pageNo && pageNo <= PageCount());
-    if (!mediaboxes[pageNo-1].IsEmpty())
-        return mediaboxes[pageNo-1];
-
-    size_t len;
-    ScopedMem<char> bmpData;
-    if (str::EqI(fileExt, _T(".cbz"))) {
-        ScopedCritSec scope(&fileAccess);
-        CbzFileAccess *fa = (CbzFileAccess *)libData;
-        if (SetCurrentCbzPage(fa->uf, pageFileNames[pageNo - 1]))
-            bmpData.Set(LoadCurrentCbzData(fa->uf, len));
-    }
-    if (bmpData) {
-        SizeI size = SizeFromData(bmpData, len);
-        mediaboxes[pageNo-1] = RectI(PointI(), size).Convert<double>();
-    }
-    return mediaboxes[pageNo-1];
-}
-
-Bitmap *CbxEngine::LoadImage(int pageNo)
-{
-    assert(1 <= pageNo && pageNo <= PageCount());
-    if (pages[pageNo-1])
-        return pages[pageNo-1];
-
-    size_t len;
-    ScopedMem<char> bmpData;
-    if (str::EqI(fileExt, _T(".cbz"))) {
+    if (libData) {
         ScopedCritSec scope(&fileAccess);
         CbzFileAccess *fa = (CbzFileAccess *)libData;
         if (SetCurrentCbzPage(fa->uf, pageFileNames[pageNo-1]))
-            bmpData.Set(LoadCurrentCbzData(fa->uf, len));
+            return LoadCurrentCbzData(fa->uf, len);
     }
-    if (bmpData)
-        pages[pageNo-1] = BitmapFromData(bmpData, len);
-
-    return pages[pageNo-1];
-}
-
-RenderedBitmap *ImagesEngine::RenderBitmap(int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target)
-{
-    RectD pageRc = pageRect ? *pageRect : PageMediabox(pageNo);
-    RectI screen = Transform(pageRc, pageNo, zoom, rotation).Round();
-    screen.Offset(-screen.x, -screen.y);
-
-    HDC hDC = GetDC(NULL);
-    HDC hDCMem = CreateCompatibleDC(hDC);
-    HBITMAP hbmp = CreateCompatibleBitmap(hDC, screen.dx, screen.dy);
-    DeleteObject(SelectObject(hDCMem, hbmp));
-
-    bool ok = RenderPage(hDCMem, screen, pageNo, zoom, rotation, pageRect, target);
-    DeleteDC(hDCMem);
-    ReleaseDC(NULL, hDC);
-    if (!ok) {
-        DeleteObject(hbmp);
-        return NULL;
-    }
-
-    return new RenderedBitmap(hbmp, screen.dx, screen.dy);
-}
-
-bool ImagesEngine::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target)
-{
-    Bitmap *bmp = LoadImage(pageNo);
-    if (!bmp)
-        return false;
-
-    RectD pageRc = pageRect ? *pageRect : PageMediabox(pageNo);
-    RectI screen = Transform(pageRc, pageNo, zoom, rotation).Round();
-
-    Graphics g(hDC);
-    g.SetCompositingQuality(CompositingQualityHighQuality);
-    g.SetSmoothingMode(SmoothingModeAntiAlias);
-    g.SetPageUnit(UnitPixel);
-    g.SetClip(Gdiplus::Rect(screenRect.x, screenRect.y, screenRect.dx, screenRect.dy));
-
-    REAL scaleX = 1.0f, scaleY = 1.0f;
-    if (bmp->GetHorizontalResolution() != 0.f)
-        scaleX = 1.0f * bmp->GetHorizontalResolution() / GetDeviceCaps(hDC, LOGPIXELSX);
-    if (bmp->GetVerticalResolution() != 0.f)
-        scaleY = 1.0f * bmp->GetVerticalResolution() / GetDeviceCaps(hDC, LOGPIXELSY);
-
-    Matrix m;
-    GetTransform(m, pageNo, zoom, rotation);
-    m.Translate((REAL)(screenRect.x - screen.x), (REAL)(screenRect.y - screen.y), MatrixOrderAppend);
-    if (scaleX != 1.0f || scaleY != 1.0f)
-        m.Scale(scaleX, scaleY, MatrixOrderPrepend);
-    g.SetTransform(&m);
-
-    Status ok = g.DrawImage(bmp, 0, 0);
-    return ok == Ok;
-}
-
-void ImagesEngine::GetTransform(Matrix& m, int pageNo, float zoom, int rotation)
-{
-    SizeD size = PageMediabox(pageNo).Size();
-
-    rotation = rotation % 360;
-    if (rotation < 0) rotation = rotation + 360;
-    if (90 == rotation)
-        m.Translate(0, (REAL)-size.dy, MatrixOrderAppend);
-    else if (180 == rotation)
-        m.Translate((REAL)-size.dx, (REAL)-size.dy, MatrixOrderAppend);
-    else if (270 == rotation)
-        m.Translate((REAL)-size.dx, 0, MatrixOrderAppend);
-    else // if (0 == rotation)
-        m.Translate(0, 0, MatrixOrderAppend);
-
-    m.Scale(zoom, zoom, MatrixOrderAppend);
-    m.Rotate((REAL)rotation, MatrixOrderAppend);
-}
-
-PointD ImagesEngine::Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse)
-{
-    RectD rect = Transform(RectD(pt, SizeD()), pageNo, zoom, rotation, inverse);
-    return PointD(rect.x, rect.y);
-}
-
-RectD ImagesEngine::Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse)
-{
-    PointF pts[2] = {
-        PointF((REAL)rect.x, (REAL)rect.y),
-        PointF((REAL)(rect.x + rect.dx), (REAL)(rect.y + rect.dy))
-    };
-    Matrix m;
-    GetTransform(m, pageNo, zoom, rotation);
-    if (inverse)
-        m.Invert();
-    m.TransformPoints(pts, 2);
-    return RectD::FromXY(pts[0].X, pts[0].Y, pts[1].X, pts[1].Y);
-}
-
-unsigned char *ImagesEngine::GetFileData(size_t *cbCount)
-{
-    return (unsigned char *)file::ReadAll(fileName, cbCount);
-}
-
-ImageEngine *ImageEngine::CreateFromFileName(const TCHAR *fileName)
-{
-    assert(IsSupportedFile(fileName));
-    ImageEngine *engine = new ImageEngine();
-    if (!engine->LoadSingleFile(fileName)) {
-        delete engine;
-        return NULL;
-    }
-    return engine;    
+    return NULL;
 }
 
 CbxEngine *CbxEngine::CreateFromFileName(const TCHAR *fileName)
@@ -586,95 +744,4 @@ CbxEngine *CbxEngine::CreateFromFileName(const TCHAR *fileName)
         return NULL;
     }
     return engine;
-}
-
-RenderedBitmap *LoadRenderedBitmap(const TCHAR *filePath)
-{
-    if (str::EndsWithI(filePath, _T(".bmp"))) {
-        HBITMAP hbmp = (HBITMAP)LoadImage(NULL, filePath, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-        if (!hbmp)
-            return NULL;
-
-        BITMAP bmp;
-        GetObject(hbmp, sizeof(BITMAP), &bmp);
-        return new RenderedBitmap(hbmp, bmp.bmWidth, bmp.bmHeight);
-    }
-
-    size_t len;
-    ScopedMem<char> data(file::ReadAll(filePath, &len));
-    if (!data)
-        return NULL;
-    Bitmap *bmp = BitmapFromData(data, len);
-    if (!bmp)
-        return NULL;
-
-    HBITMAP hbmp;
-    RenderedBitmap *rendered = NULL;
-    if (bmp->GetHBITMAP(Color(0xFF, 0xFF, 0xFF), &hbmp) == Ok)
-        rendered = new RenderedBitmap(hbmp, bmp->GetWidth(), bmp->GetHeight());
-    delete bmp;
-
-    return rendered;
-}
-
-static bool GetEncoderClsid(const TCHAR *format, CLSID& clsid)
-{
-    UINT numEncoders, size;
-    GetImageEncodersSize(&numEncoders, &size);
-    if (0 == size)
-        return false;
-
-    ScopedMem<ImageCodecInfo> codecInfo((ImageCodecInfo *)malloc(size));
-    ScopedMem<WCHAR> formatW(str::conv::ToWStr(format));
-    if (!codecInfo || !formatW)
-        return false;
-
-    GetImageEncoders(numEncoders, size, codecInfo);
-    for (UINT j = 0; j < numEncoders; j++) {
-        if (str::Eq(codecInfo[j].MimeType, formatW)) {
-            clsid = codecInfo[j].Clsid;
-            return true;
-        }
-    }
-
-    return false;
-}
-
-bool SaveRenderedBitmap(RenderedBitmap *bmp, const TCHAR *filePath)
-{
-    size_t bmpDataLen;
-    ScopedMem<unsigned char> bmpData(bmp->Serialize(&bmpDataLen));
-    if (!bmpData)
-        return false;
-
-    const TCHAR *fileExt = path::GetExt(filePath);
-    if (str::EqI(fileExt, _T(".bmp")))
-        return file::WriteAll(filePath, bmpData.Get(), bmpDataLen);
-
-    const TCHAR *encoders[] = {
-        _T(".png"), _T("image/png"),
-        _T(".jpg"), _T("image/jpeg"),
-        _T(".jpeg"),_T("image/jpeg"),
-        _T(".gif"), _T("image/gif"),
-        _T(".tif"), _T("image/tiff"),
-        _T(".tiff"),_T("image/tiff"),
-    };
-    const TCHAR *encoder = NULL;
-    for (int i = 0; i < dimof(encoders) && !encoder; i += 2)
-        if (str::EqI(fileExt, encoders[i]))
-            encoder = encoders[i+1];
-
-    CLSID encClsid;
-    if (!encoder || !GetEncoderClsid(encoder, encClsid))
-        return false;
-
-    Bitmap *gbmp = BitmapFromData(bmpData, bmpDataLen);
-    if (!gbmp)
-        return false;
-
-    ScopedMem<TCHAR> filePathW(str::conv::ToWStr(filePath));
-    Status status = gbmp->Save(filePathW, &encClsid);
-    delete gbmp;
-
-    return status == Ok;
 }
