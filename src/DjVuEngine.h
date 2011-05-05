@@ -12,6 +12,7 @@ public:
         return str::EndsWithI(fileName, _T(".djvu"));
     }
     static DjVuEngine *CreateFromFileName(const TCHAR *fileName);
+    static DjVuEngine *CreateFromStream(IStream *stream) { return NULL; }
 };
 
 #endif

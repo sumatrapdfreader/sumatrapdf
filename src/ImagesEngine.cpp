@@ -4,6 +4,7 @@
 #include "ImagesEngine.h"
 #include "StrUtil.h"
 #include "FileUtil.h"
+#include "Vec.h"
 
 // mini(un)zip
 #include <ioapi.h>
@@ -16,6 +17,10 @@ extern "C" {
 // needed because we compile bzip2 with #define BZ_NO_STDIO
 void bz_internal_error(int errcode) { /* do nothing */ }
 }
+
+// disable warning C4250 which is wrongly issued due to a compiler bug; cf.
+// http://connect.microsoft.com/VisualStudio/feedback/details/101259/disable-warning-c4250-class1-inherits-class2-member-via-dominance-when-weak-member-is-a-pure-virtual-function
+#pragma warning( disable: 4250 ) /* 'class1' : inherits 'class2::member' via dominance */
 
 using namespace Gdiplus;
 
@@ -221,15 +226,58 @@ bool SaveRenderedBitmap(RenderedBitmap *bmp, const TCHAR *filePath)
 
 ///// ImagesEngine methods apply to all types of engines handling full-page images /////
 
-ImagesEngine::ImagesEngine() : fileName(NULL), fileExt(NULL)
-{
-}
+class ImagesEngine : public virtual BaseEngine {
+public:
+    ImagesEngine() : fileName(NULL), fileExt(NULL) { }
+    virtual ~ImagesEngine() {
+        DeleteVecMembers(pages);
+        free((void *)fileName);
+    }
 
-ImagesEngine::~ImagesEngine()
-{
-    DeleteVecMembers(pages);
-    free((void *)fileName);
-}
+    virtual const TCHAR *FileName() const { return fileName; };
+    virtual int PageCount() const { return pages.Count(); }
+
+    virtual RectD PageMediabox(int pageNo) {
+        assert(1 <= pageNo && pageNo <= PageCount());
+        return RectD(0, 0, pages[pageNo-1]->GetWidth(), pages[pageNo-1]->GetHeight());
+    }
+
+    virtual RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
+                         RectD *pageRect=NULL, /* if NULL: defaults to the page's mediabox */
+                         RenderTarget target=Target_View);
+    virtual bool RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, int rotation,
+                         RectD *pageRect=NULL, RenderTarget target=Target_View);
+
+    virtual PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse=false);
+    virtual RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse=false);
+
+    virtual unsigned char *GetFileData(size_t *cbCount) {
+        return (unsigned char *)file::ReadAll(fileName, cbCount);
+    }
+    virtual bool HasTextContent() { return false; }
+    virtual TCHAR * ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_out=NULL,
+                                    RenderTarget target=Target_View) { return NULL; }
+    virtual bool IsImagePage(int pageNo) { return true; }
+    virtual PageLayoutType PreferredLayout() { return Layout_NonContinuous; }
+
+    virtual const TCHAR *GetDefaultFileExt() const { return fileExt; }
+
+    virtual bool BenchLoadPage(int pageNo) { return LoadImage(pageNo) != NULL; }
+
+protected:
+    const TCHAR *fileName;
+    const TCHAR *fileExt;
+
+    Vec<Bitmap *> pages;
+
+    void GetTransform(Matrix& m, int pageNo, float zoom, int rotation);
+
+    // override for lazily loading images
+    virtual Bitmap *LoadImage(int pageNo) {
+        assert(1 <= pageNo && pageNo <= PageCount());
+        return pages[pageNo - 1];
+    }
+};
 
 RenderedBitmap *ImagesEngine::RenderBitmap(int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target)
 {
@@ -324,14 +372,19 @@ RectD ImagesEngine::Transform(RectD rect, int pageNo, float zoom, int rotation, 
     return RectD::FromXY(pts[0].X, pts[0].Y, pts[1].X, pts[1].Y);
 }
 
-unsigned char *ImagesEngine::GetFileData(size_t *cbCount)
-{
-    return (unsigned char *)file::ReadAll(fileName, cbCount);
-}
-
 ///// ImageEngine handles a single image file /////
 
-bool ImageEngine::LoadSingleFile(const TCHAR *file)
+class CImageEngine : public ImagesEngine, public ImageEngine {
+    friend ImageEngine;
+
+public:
+    virtual ImageEngine *Clone() { return CreateFromFileName(fileName); }
+
+protected:
+    bool LoadSingleFile(const TCHAR *fileName);
+};
+
+bool CImageEngine::LoadSingleFile(const TCHAR *file)
 {
     assert(IsSupportedFile(file));
 
@@ -352,7 +405,7 @@ bool ImageEngine::LoadSingleFile(const TCHAR *file)
 ImageEngine *ImageEngine::CreateFromFileName(const TCHAR *fileName)
 {
     assert(IsSupportedFile(fileName));
-    ImageEngine *engine = new ImageEngine();
+    CImageEngine *engine = new CImageEngine();
     if (!engine->LoadSingleFile(fileName)) {
         delete engine;
         return NULL;
@@ -362,7 +415,25 @@ ImageEngine *ImageEngine::CreateFromFileName(const TCHAR *fileName)
 
 ///// ImageDirEngine handles a directory full of image files /////
 
-bool ImageDirEngine::LoadImageDir(const TCHAR *dirName)
+class CImageDirEngine : public ImagesEngine, public ImageDirEngine {
+    friend ImageDirEngine;
+
+public:
+    virtual ImageDirEngine *Clone() { return CreateFromFileName(fileName); }
+    virtual RectD PageMediabox(int pageNo);
+
+    virtual unsigned char *GetFileData(size_t *cbCount) { return NULL; }
+
+protected:
+    bool LoadImageDir(const TCHAR *dirName);
+
+    virtual Bitmap *LoadImage(int pageNo);
+
+    Vec<RectD> mediaboxes;
+    StrVec pageFileNames;
+};
+
+bool CImageDirEngine::LoadImageDir(const TCHAR *dirName)
 {
     fileName = str::Dup(dirName);
     fileExt = _T("");
@@ -391,7 +462,7 @@ bool ImageDirEngine::LoadImageDir(const TCHAR *dirName)
     return true;
 }
 
-RectD ImageDirEngine::PageMediabox(int pageNo)
+RectD CImageDirEngine::PageMediabox(int pageNo)
 {
     assert(1 <= pageNo && pageNo <= PageCount());
     if (!mediaboxes[pageNo-1].IsEmpty())
@@ -406,7 +477,7 @@ RectD ImageDirEngine::PageMediabox(int pageNo)
     return mediaboxes[pageNo-1];
 }
 
-Bitmap *ImageDirEngine::LoadImage(int pageNo)
+Bitmap *CImageDirEngine::LoadImage(int pageNo)
 {
     assert(1 <= pageNo && pageNo <= PageCount());
     if (pages[pageNo-1])
@@ -429,7 +500,7 @@ bool ImageDirEngine::IsSupportedFile(const TCHAR *fileName)
 ImageDirEngine *ImageDirEngine::CreateFromFileName(const TCHAR *fileName)
 {
     assert(dir::Exists(fileName));
-    ImageDirEngine *engine = new ImageDirEngine();
+    CImageDirEngine *engine = new CImageDirEngine();
     if (!engine->LoadImageDir(fileName)) {
         delete engine;
         return NULL;
@@ -444,23 +515,44 @@ struct CbzFileAccess {
     unzFile uf;
 };
 
-CbxEngine::CbxEngine() : libData(NULL)
-{
-    InitializeCriticalSection(&fileAccess);
-}
+class CCbxEngine : public ImagesEngine, public CbxEngine {
+    friend CbxEngine;
 
-CbxEngine::~CbxEngine()
+public:
+    CCbxEngine() : cbzData(NULL) {
+        InitializeCriticalSection(&fileAccess);
+    }
+    virtual ~CCbxEngine();
+
+    virtual CbxEngine *Clone() { return CreateFromFileName(fileName); }
+    virtual RectD PageMediabox(int pageNo);
+
+protected:
+    bool LoadCbzFile(const TCHAR *fileName);
+    bool LoadCbrFile(const TCHAR *fileName);
+
+    virtual Bitmap *LoadImage(int pageNo);
+    char *GetImageData(int pageNo, size_t& len);
+
+    Vec<RectD> mediaboxes;
+
+    // used for lazily loading page images (only supported for .cbz files)
+    CRITICAL_SECTION fileAccess;
+    StrVec pageFileNames;
+    CbzFileAccess *cbzData;
+};
+
+CCbxEngine::~CCbxEngine()
 {
-    if (libData) {
-        CbzFileAccess *fa = (CbzFileAccess *)libData;
-        unzClose(fa->uf);
-        delete fa;
+    if (cbzData) {
+        unzClose(cbzData->uf);
+        delete cbzData;
     }
 
     DeleteCriticalSection(&fileAccess);
 }
 
-RectD CbxEngine::PageMediabox(int pageNo)
+RectD CCbxEngine::PageMediabox(int pageNo)
 {
     assert(1 <= pageNo && pageNo <= PageCount());
     if (!mediaboxes[pageNo-1].IsEmpty())
@@ -475,7 +567,7 @@ RectD CbxEngine::PageMediabox(int pageNo)
     return mediaboxes[pageNo-1];
 }
 
-Bitmap *CbxEngine::LoadImage(int pageNo)
+Bitmap *CCbxEngine::LoadImage(int pageNo)
 {
     assert(1 <= pageNo && pageNo <= PageCount());
     if (pages[pageNo-1])
@@ -530,7 +622,7 @@ Exit:
     return bmpData;
 }
 
-bool CbxEngine::LoadCbzFile(const TCHAR *file)
+bool CCbxEngine::LoadCbzFile(const TCHAR *file)
 {
     if (!file)
         return false;
@@ -538,24 +630,23 @@ bool CbxEngine::LoadCbzFile(const TCHAR *file)
     fileExt = _T(".cbz");
     assert(str::EndsWithI(fileName, fileExt));
 
-    CbzFileAccess *fa = new CbzFileAccess;
-    libData = fa;
+    cbzData = new CbzFileAccess;
 
     // only extract all image filenames for now
-    fill_win32_filefunc64(&fa->ffunc);
-    fa->uf = unzOpen2_64(fileName, &fa->ffunc);
-    if (!fa->uf)
+    fill_win32_filefunc64(&cbzData->ffunc);
+    cbzData->uf = unzOpen2_64(fileName, &cbzData->ffunc);
+    if (!cbzData->uf)
         return false;
 
     unz_global_info64 ginfo;
-    int err = unzGetGlobalInfo64(fa->uf, &ginfo);
+    int err = unzGetGlobalInfo64(cbzData->uf, &ginfo);
     if (err != UNZ_OK)
         return false;
-    unzGoToFirstFile(fa->uf);
+    unzGoToFirstFile(cbzData->uf);
 
     for (int n = 0; n < ginfo.number_entry; n++) {
         char fileName[MAX_PATH];
-        int err = unzGetCurrentFileInfo64(fa->uf, NULL, fileName, dimof(fileName), NULL, 0, NULL, 0);
+        int err = unzGetCurrentFileInfo64(cbzData->uf, NULL, fileName, dimof(fileName), NULL, 0, NULL, 0);
         if (err == UNZ_OK) {
             ScopedMem<TCHAR> fileName2(str::conv::FromUtf8(fileName));
             if (ImageEngine::IsSupportedFile(fileName2) &&
@@ -564,7 +655,7 @@ bool CbxEngine::LoadCbzFile(const TCHAR *file)
                 pageFileNames.Append(fileName2.StealData());
             }
         }
-        err = unzGoToNextFile(fa->uf);
+        err = unzGoToNextFile(cbzData->uf);
         if (err != UNZ_OK)
             break;
     }
@@ -583,10 +674,10 @@ bool CbxEngine::LoadCbzFile(const TCHAR *file)
 
 class ImagesPage {
 public:
-    const TCHAR *       fileName; // for sorting image files
-    Gdiplus::Bitmap *   bmp;
+    const TCHAR *   fileName; // for sorting image files
+    Bitmap *        bmp;
 
-    ImagesPage(const TCHAR *fileName, Gdiplus::Bitmap *bmp) : bmp(bmp) {
+    ImagesPage(const TCHAR *fileName, Bitmap *bmp) : bmp(bmp) {
         this->fileName = str::Dup(fileName);
     }
     ~ImagesPage() {
@@ -669,7 +760,7 @@ Exit:
     return page;
  }
 
-bool CbxEngine::LoadCbrFile(const TCHAR *file)
+bool CCbxEngine::LoadCbrFile(const TCHAR *file)
 {
     if (!file)
         return false;
@@ -719,13 +810,12 @@ bool CbxEngine::LoadCbrFile(const TCHAR *file)
     return true;
 }
 
-char *CbxEngine::GetImageData(int pageNo, size_t& len)
+char *CCbxEngine::GetImageData(int pageNo, size_t& len)
 {
-    if (libData) {
+    if (cbzData) {
         ScopedCritSec scope(&fileAccess);
-        CbzFileAccess *fa = (CbzFileAccess *)libData;
-        if (SetCurrentCbzPage(fa->uf, pageFileNames[pageNo-1]))
-            return LoadCurrentCbzData(fa->uf, len);
+        if (SetCurrentCbzPage(cbzData->uf, pageFileNames[pageNo-1]))
+            return LoadCurrentCbzData(cbzData->uf, len);
     }
     return NULL;
 }
@@ -733,7 +823,7 @@ char *CbxEngine::GetImageData(int pageNo, size_t& len)
 CbxEngine *CbxEngine::CreateFromFileName(const TCHAR *fileName)
 {
     assert(IsSupportedFile(fileName));
-    CbxEngine *engine = new CbxEngine();
+    CCbxEngine *engine = new CCbxEngine();
     bool ok = false;
     if (str::EndsWithI(fileName, _T(".cbz")))
         ok = engine->LoadCbzFile(fileName);
