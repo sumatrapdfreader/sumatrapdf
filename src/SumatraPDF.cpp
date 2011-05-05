@@ -289,7 +289,7 @@ static bool CanViewExternally(WindowInfo *win=NULL)
         return false;
     if (!win || win->IsAboutWindow())
         return true;
-    return File::Exists(win->loadedFilePath);
+    return file::Exists(win->loadedFilePath);
 }
 
 static bool IsNonPdfDocument(WindowInfo *win=NULL)
@@ -606,7 +606,7 @@ static void AddFileMenuItem(HMENU menuFile, const TCHAR *filePath, UINT index)
     assert(filePath && menuFile);
     if (!filePath || !menuFile) return;
 
-    ScopedMem<TCHAR> menuString(str::Format(_T("&%d) %s"), (index + 1) % 10, Path::GetBaseName(filePath)));
+    ScopedMem<TCHAR> menuString(str::Format(_T("&%d) %s"), (index + 1) % 10, path::GetBaseName(filePath)));
     UINT menuId = IDM_FILE_HISTORY_FIRST + index;
     InsertMenu(menuFile, IDM_EXIT, MF_BYCOMMAND | MF_ENABLED | MF_STRING, menuId, menuString);
 }
@@ -729,13 +729,13 @@ static bool WindowInfoStillValid(WindowInfo *win)
 // Find the first windows showing a given PDF file 
 WindowInfo* FindWindowInfoByFile(TCHAR *file)
 {
-    ScopedMem<TCHAR> normFile(Path::Normalize(file));
+    ScopedMem<TCHAR> normFile(path::Normalize(file));
     if (!normFile)
         return NULL;
 
     for (size_t i = 0; i < gWindows.Count(); i++) {
         WindowInfo *win = gWindows.At(i);
-        if (!win->IsAboutWindow() && Path::IsSame(win->loadedFilePath, normFile))
+        if (!win->IsAboutWindow() && path::IsSame(win->loadedFilePath, normFile))
             return win;
     }
 
@@ -757,7 +757,7 @@ TCHAR *WindowInfo::GetPassword(const TCHAR *fileName, unsigned char *fileDigest,
     }
 
     *saveKey = false;
-    fileName = Path::GetBaseName(fileName);
+    fileName = path::GetBaseName(fileName);
     return Dialog_GetPassword(this->hwndFrame, fileName, gGlobalPrefs.m_rememberOpenedFiles ? saveKey : NULL);
 }
 
@@ -780,7 +780,7 @@ static TCHAR *GetUniqueCrashDumpPath()
         }
         path = AppGenDataFilename(fileName);
         free(fileName);
-        if (!File::Exists(path) || (n==20))
+        if (!file::Exists(path) || (n==20))
             return path;
         free(path);
     }
@@ -800,7 +800,7 @@ static TCHAR *GetUniqueCrashTextPath()
         }
         path = AppGenDataFilename(fileName);
         free(fileName);
-        if (!File::Exists(path) || (n==20))
+        if (!file::Exists(path) || (n==20))
             return path;
         free(path);
     }
@@ -977,7 +977,7 @@ static bool ReloadPrefs()
 {
     ScopedMem<TCHAR> path(GetPrefsFileName());
 
-    FILETIME time = File::GetModificationTime(path);
+    FILETIME time = file::GetModificationTime(path);
     if (time.dwLowDateTime == gGlobalPrefs.m_lastPrefUpdate.dwLowDateTime &&
         time.dwHighDateTime == gGlobalPrefs.m_lastPrefUpdate.dwHighDateTime) {
         return true;
@@ -1490,7 +1490,7 @@ static bool LoadDocIntoWindow(
             win.dm = prevModel;
         } else {
             delete prevModel;
-            ScopedMem<TCHAR> title(str::Format(_T("%s - %s"), Path::GetBaseName(fileName), SUMATRA_WINDOW_TITLE));
+            ScopedMem<TCHAR> title(str::Format(_T("%s - %s"), path::GetBaseName(fileName), SUMATRA_WINDOW_TITLE));
             Win::SetText(win.hwndFrame, title);
             goto Error;
         }
@@ -1556,7 +1556,7 @@ static bool LoadDocIntoWindow(
         UpdateToolbarFindText(win);
     }
 
-    const TCHAR *baseName = Path::GetBaseName(win.dm->fileName());
+    const TCHAR *baseName = path::GetBaseName(win.dm->fileName());
     TCHAR *title = str::Format(_T("%s - %s"), baseName, SUMATRA_WINDOW_TITLE);
     if (needrefresh) {
         TCHAR *msg = str::Format(_TR("[Changes detected; refreshing] %s"), title);
@@ -1653,7 +1653,7 @@ WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin, b
     assert(fileName);
     if (!fileName) return NULL;
 
-    ScopedMem<TCHAR> fullpath(Path::Normalize(fileName));
+    ScopedMem<TCHAR> fullpath(path::Normalize(fileName));
     if (!fullpath)
         return win;
 
@@ -3570,7 +3570,7 @@ static void OnMenuSaveAs(WindowInfo& win)
     str::TransChars(fileFilter.Get(), _T("\1"), _T("\0"));
 
     // Remove the extension so that it can be re-added depending on the chosen filter
-    str::BufSet(dstFileName, dimof(dstFileName), Path::GetBaseName(srcFileName));
+    str::BufSet(dstFileName, dimof(dstFileName), path::GetBaseName(srcFileName));
     // TODO: fix saving embedded PDF documents
     str::TransChars(dstFileName, _T(":"), _T("_"));
     if (str::EndsWithI(dstFileName, defExt))
@@ -3605,14 +3605,14 @@ static void OnMenuSaveAs(WindowInfo& win)
 
         ScopedMem<char> textUTF8(str::conv::ToUtf8(text.LendData()));
         ScopedMem<char> textUTF8BOM(str::Join("\xEF\xBB\xBF", textUTF8));
-        File::WriteAll(realDstFileName, textUTF8BOM, str::Len(textUTF8BOM));
+        file::WriteAll(realDstFileName, textUTF8BOM, str::Len(textUTF8BOM));
     }
     // Recreate inexistant PDF files from memory...
-    else if (!File::Exists(srcFileName)) {
+    else if (!file::Exists(srcFileName)) {
         size_t dataLen;
         unsigned char *data = win.dm->engine->GetFileData(&dataLen);
         if (data) {
-            File::WriteAll(realDstFileName, data, dataLen);
+            file::WriteAll(realDstFileName, data, dataLen);
             free(data);
         } else {
             MessageBox(win.hwndFrame, _TR("Failed to save a file"), _TR("Warning"), MB_OK | MB_ICONEXCLAMATION);
@@ -3669,7 +3669,7 @@ bool LinkSaver::SaveEmbedded(unsigned char *data, int len)
 
     if (FALSE == GetSaveFileName(&ofn))
         return false;
-    return File::WriteAll(dstFileName, data, len);
+    return file::WriteAll(dstFileName, data, len);
 }
 
 static void OnMenuSaveBookmark(WindowInfo& win)
@@ -3682,7 +3682,7 @@ static void OnMenuSaveBookmark(WindowInfo& win)
 
     TCHAR dstFileName[MAX_PATH] = { 0 };
     // Remove the extension so that it can be re-added depending on the chosen filter
-    str::BufSet(dstFileName, dimof(dstFileName), Path::GetBaseName(win.dm->fileName()));
+    str::BufSet(dstFileName, dimof(dstFileName), path::GetBaseName(win.dm->fileName()));
     str::TransChars(dstFileName, _T(":"), _T("_"));
     if (str::EndsWithI(dstFileName, defExt))
         dstFileName[str::Len(dstFileName) - str::Len(defExt)] = '\0';
@@ -3724,7 +3724,7 @@ static void OnMenuSaveBookmark(WindowInfo& win)
                           win.dm->fileName(), ss.page, viewMode, zoomVirtual, (int)ss.x, (int)ss.y));
     ScopedMem<TCHAR> exePath(GetExePath());
     ScopedMem<TCHAR> desc(str::Format(_TR("Bookmark shortcut to page %d of %s"),
-                          ss.page, Path::GetBaseName(win.dm->fileName())));
+                          ss.page, path::GetBaseName(win.dm->fileName())));
 
     CreateShortcut(filename, exePath, args, desc, 1);
 }
@@ -3807,7 +3807,7 @@ static void OnMenuOpen(WindowInfo& win)
     }
 
     while (*fileName) {
-        ScopedMem<TCHAR> filePath(Path::Join(ofn.lpstrFile, fileName));
+        ScopedMem<TCHAR> filePath(path::Join(ofn.lpstrFile, fileName));
         if (filePath)
             LoadDocument(filePath, &win);
         fileName += str::Len(fileName) + 1;
@@ -3822,8 +3822,8 @@ static void BrowseFolder(WindowInfo& win, bool forward)
 
     // TODO: browse through all supported file types at the same time?
     ScopedMem<TCHAR> pattern(str::Format(_T("*%s"), win.dm->engine->GetDefaultFileExt()));
-    ScopedMem<TCHAR> dir(Path::GetDir(win.loadedFilePath));
-    pattern.Set(Path::Join(dir, pattern));
+    ScopedMem<TCHAR> dir(path::GetDir(win.loadedFilePath));
+    pattern.Set(path::Join(dir, pattern));
 
     StrVec files;
     if (!CollectPathsFromDirectory(pattern, files))
@@ -6542,7 +6542,7 @@ static bool PrintFile(const TCHAR *fileName, const TCHAR *printerName, bool disp
     DWORD       structSize, returnCode;
     bool        ok = false;
 
-    ScopedMem<TCHAR> fileName2(Path::Normalize(fileName));
+    ScopedMem<TCHAR> fileName2(path::Normalize(fileName));
     BaseEngine *engine = PdfEngine::CreateFromFileName(fileName2);
 
     if (!engine || !engine->IsPrintingAllowed()) {

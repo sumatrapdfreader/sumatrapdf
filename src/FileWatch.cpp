@@ -53,7 +53,7 @@ void FileWatcher::Init(LPCTSTR filefullpath)
 
     free(szFilepath);
     szFilepath = str::Dup(filefullpath);
-    TCHAR *dirPath = Path::GetDir(szFilepath);
+    TCHAR *dirPath = path::GetDir(szFilepath);
     
     hDir = CreateFile(
         dirPath, // pointer to the directory containing the tex files
@@ -145,7 +145,7 @@ bool FileWatcher::NotifyChange()
     for (;;) {
         ScopedMem<WCHAR> filenameW(str::DupN(pFileNotify->FileName, pFileNotify->FileNameLength / sizeof(WCHAR)));
         ScopedMem<TCHAR> ptNotifyFilename(str::conv::FromWStr(filenameW));
-        bool isWatchedFile = str::EqI(ptNotifyFilename, Path::GetBaseName(szFilepath));
+        bool isWatchedFile = str::EqI(ptNotifyFilename, path::GetBaseName(szFilepath));
 
         // is it the file that is being watched?
         if (isWatchedFile && pFileNotify->Action == FILE_ACTION_MODIFIED) {

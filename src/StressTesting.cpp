@@ -83,7 +83,7 @@ bool IsBenchPagesInfo(const TCHAR *s)
 
 static void BenchFile(TCHAR *filePath, const TCHAR *pagesSpec)
 {
-    if (!File::Exists(filePath)) {
+    if (!file::Exists(filePath)) {
         logbench("Error: file %s doesn't exist", filePath);
         return;
     }
@@ -158,7 +158,7 @@ inline bool IsSpecialDir(const TCHAR *s)
 
 bool CollectPathsFromDirectory(const TCHAR *pattern, StrVec& paths, bool dirsInsteadOfFiles)
 {
-    ScopedMem<TCHAR> dirPath(Path::GetDir(pattern));
+    ScopedMem<TCHAR> dirPath(path::GetDir(pattern));
 
     WIN32_FIND_DATA fdata;
     HANDLE hfind = FindFirstFile(pattern, &fdata);
@@ -170,7 +170,7 @@ bool CollectPathsFromDirectory(const TCHAR *pattern, StrVec& paths, bool dirsIns
         if ((fdata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
             append = dirsInsteadOfFiles && !IsSpecialDir(fdata.cFileName);
         if (append)
-            paths.Append(Path::Join(dirPath, fdata.cFileName));
+            paths.Append(path::Join(dirPath, fdata.cFileName));
     } while (FindNextFile(hfind, &fdata));
     FindClose(hfind);
 
@@ -432,7 +432,7 @@ void DirStressTest::AppendInfo(str::Str<char>& s)
 
 void DirStressTest::Start(const TCHAR *dirPath)
 {
-    if (!Dir::Exists(dirPath) || !OpenDir(dirPath)) {
+    if (!dir::Exists(dirPath) || !OpenDir(dirPath)) {
         // Note: dev only, don't translate
         ScopedMem<TCHAR> s(str::Format(_T("Directory '%s' doesn't exist or is empty"), dirPath));
         win->ShowNotification(s, true /* autoDismiss */);

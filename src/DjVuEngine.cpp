@@ -477,7 +477,7 @@ RectD CDjVuEngine::Transform(RectD rect, int pageNo, float zoom, int rotation, b
 
 unsigned char *CDjVuEngine::GetFileData(size_t *cbCount)
 {
-    return (unsigned char *)File::ReadAll(fileName, cbCount);
+    return (unsigned char *)file::ReadAll(fileName, cbCount);
 }
 
 bool CDjVuEngine::ExtractPageText(miniexp_t item, const TCHAR *lineSep, str::Str<TCHAR>& extracted, Vec<RectI>& coords)

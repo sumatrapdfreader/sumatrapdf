@@ -276,7 +276,7 @@ bool CreateShortcut(const TCHAR *shortcutPath, const TCHAR *exePath,
     if (FAILED(hr))
         goto Exit;
 
-    lnk->SetWorkingDirectory(ScopedMem<TCHAR>(Path::GetDir(exePath)));
+    lnk->SetWorkingDirectory(ScopedMem<TCHAR>(path::GetDir(exePath)));
     // lnk->SetShowCmd(SW_SHOWNORMAL);
     // lnk->SetHotkey(0);
     lnk->SetIconLocation(exePath, iconIndex);
@@ -516,8 +516,8 @@ void DoubleBuffer::Flush(HDC hdc)
         BitBlt(hdc, rect.x, rect.y, rect.dx, rect.dy, hdcBuffer, 0, 0, SRCCOPY);
 }
 
-namespace Win {
-    namespace Font {
+namespace win {
+    namespace font {
 
 HFONT GetSimple(HDC hdc, TCHAR *fontName, int fontSize)
 {

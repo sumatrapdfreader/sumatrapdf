@@ -325,14 +325,14 @@ bool ImageEngine::LoadSingleFile(const TCHAR *file)
     assert(IsSupportedFile(file));
 
     size_t len = 0;
-    ScopedMem<char> bmpData(File::ReadAll(file, &len));
+    ScopedMem<char> bmpData(file::ReadAll(file, &len));
     if (!bmpData)
         return false;
 
     pages.Append(BitmapFromData(bmpData, len));
 
     fileName = str::Dup(file);
-    fileExt = Path::GetExt(fileName);
+    fileExt = path::GetExt(fileName);
     assert(fileExt && *fileExt == '.');
 
     return pages[0] != NULL;
@@ -373,7 +373,7 @@ bool CbxEngine::LoadCbzFile(const TCHAR *file)
             ScopedMem<TCHAR> fileName2(str::conv::FromUtf8(fileName));
             if (ImageEngine::IsSupportedFile(fileName2) &&
                 // OS X occasionally leaves metadata with image extensions
-                !str::StartsWith(Path::GetBaseName(fileName2), _T("."))) {
+                !str::StartsWith(path::GetBaseName(fileName2), _T("."))) {
                 pageFileNames.Append(fileName2.StealData());
             }
         }
@@ -558,7 +558,7 @@ RectD ImagesEngine::Transform(RectD rect, int pageNo, float zoom, int rotation, 
 
 unsigned char *ImagesEngine::GetFileData(size_t *cbCount)
 {
-    return (unsigned char *)File::ReadAll(fileName, cbCount);
+    return (unsigned char *)file::ReadAll(fileName, cbCount);
 }
 
 ImageEngine *ImageEngine::CreateFromFileName(const TCHAR *fileName)
@@ -601,7 +601,7 @@ RenderedBitmap *LoadRenderedBitmap(const TCHAR *filePath)
     }
 
     size_t len;
-    ScopedMem<char> data(File::ReadAll(filePath, &len));
+    ScopedMem<char> data(file::ReadAll(filePath, &len));
     if (!data)
         return NULL;
     Bitmap *bmp = BitmapFromData(data, len);
@@ -647,9 +647,9 @@ bool SaveRenderedBitmap(RenderedBitmap *bmp, const TCHAR *filePath)
     if (!bmpData)
         return false;
 
-    const TCHAR *fileExt = Path::GetExt(filePath);
+    const TCHAR *fileExt = path::GetExt(filePath);
     if (str::EqI(fileExt, _T(".bmp")))
-        return File::WriteAll(filePath, bmpData.Get(), bmpDataLen);
+        return file::WriteAll(filePath, bmpData.Get(), bmpDataLen);
 
     const TCHAR *encoders[] = {
         _T(".png"), _T("image/png"),

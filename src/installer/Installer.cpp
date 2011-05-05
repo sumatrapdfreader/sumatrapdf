@@ -234,7 +234,7 @@ BOOL KillProcIdWithName(DWORD processId, TCHAR *processPath, BOOL waitUntilTermi
     me32.dwSize = sizeof(me32);
     if (!Module32First(hModSnapshot, &me32))
         goto Exit;
-    if (!Path::IsSame(processPath, me32.szExePath))
+    if (!path::IsSame(processPath, me32.szExePath))
         goto Exit;
 
     killed = TerminateProcess(hProcess, 0);
@@ -294,15 +294,15 @@ TCHAR *GetInstallationDir(bool forUninstallation=false)
     if (!dir) dir.Set(ReadRegStr(HKEY_CURRENT_USER, REG_PATH_UNINST, INSTALL_LOCATION));
     if (dir) {
         if (str::EndsWithI(dir, _T(".exe"))) {
-            dir.Set(Path::GetDir(dir));
+            dir.Set(path::GetDir(dir));
         }
-        if (!str::IsEmpty(dir.Get()) && Dir::Exists(dir))
+        if (!str::IsEmpty(dir.Get()) && dir::Exists(dir))
             return dir.StealData();
     }
 
     if (forUninstallation) {
         // fall back to the uninstaller's path
-        return Path::GetDir(GetOwnPath());
+        return path::GetDir(GetOwnPath());
     }
 
     // fall back to %ProgramFiles%
@@ -310,7 +310,7 @@ TCHAR *GetInstallationDir(bool forUninstallation=false)
     BOOL ok = SHGetSpecialFolderPath(NULL, buf, CSIDL_PROGRAM_FILES, FALSE);
     if (!ok)
         return NULL;
-    return Path::Join(buf, TAPP);
+    return path::Join(buf, TAPP);
 }
 
 // Try harder getting temporary directory
@@ -335,7 +335,7 @@ TCHAR *GetValidTempDir()
 
 TCHAR *GetUninstallerPath()
 {
-    return Path::Join(gGlobalData.installDir, _T("uninstall.exe"));
+    return path::Join(gGlobalData.installDir, _T("uninstall.exe"));
 }
 
 TCHAR *GetTempUninstallerPath()
@@ -345,22 +345,22 @@ TCHAR *GetTempUninstallerPath()
         return NULL;
     // Using fixed (unlikely) name instead of GetTempFileName()
     // so that we don't litter temp dir with copies of ourselves
-    return Path::Join(tempDir, _T("sum~inst.exe"));
+    return path::Join(tempDir, _T("sum~inst.exe"));
 }
 
 TCHAR *GetInstalledExePath()
 {
-    return Path::Join(gGlobalData.installDir, EXENAME);
+    return path::Join(gGlobalData.installDir, EXENAME);
 }
 
 TCHAR *GetBrowserPluginPath()
 {
-    return Path::Join(gGlobalData.installDir, _T("npPdfViewer.dll"));
+    return path::Join(gGlobalData.installDir, _T("npPdfViewer.dll"));
 }
 
 TCHAR *GetPdfFilterPath()
 {
-    return Path::Join(gGlobalData.installDir, _T("PdfFilter.dll"));
+    return path::Join(gGlobalData.installDir, _T("PdfFilter.dll"));
 }
 
 TCHAR *GetStartMenuProgramsPath(bool allUsers)
@@ -375,7 +375,7 @@ TCHAR *GetStartMenuProgramsPath(bool allUsers)
 
 TCHAR *GetShortcutPath(bool allUsers)
 {
-    return Path::Join(GetStartMenuProgramsPath(allUsers), TAPP _T(".lnk"));
+    return path::Join(GetStartMenuProgramsPath(allUsers), TAPP _T(".lnk"));
 }
 
 int GetInstallationStepCount()
@@ -467,9 +467,9 @@ BOOL InstallCopyFiles()
         }
 
         TCHAR *inpath = str::conv::FromAnsi(filename);
-        TCHAR *extpath = Path::Join(gGlobalData.installDir, Path::GetBaseName(inpath));
+        TCHAR *extpath = path::Join(gGlobalData.installDir, path::GetBaseName(inpath));
 
-        BOOL ok = File::WriteAll(extpath, data, (size_t)finfo.uncompressed_size);
+        BOOL ok = file::WriteAll(extpath, data, (size_t)finfo.uncompressed_size);
         if (ok) {
             // set modification time to original value
             HANDLE hFile = CreateFile(extpath, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
@@ -539,7 +539,7 @@ void bz_internal_error(int errcode)
 BOOL CreateUninstaller()
 {
     size_t installerSize;
-    char *installerData = File::ReadAll(GetOwnPath(), &installerSize);
+    char *installerData = file::ReadAll(GetOwnPath(), &installerSize);
     if (!installerData) {
         NotifyFailed(_T("Couldn't access installer for uninstaller extraction"));
         return FALSE;
@@ -570,7 +570,7 @@ BOOL CreateUninstaller()
     }
 
     ScopedMem<TCHAR> uninstallerPath(GetUninstallerPath());
-    BOOL ok = File::WriteAll(uninstallerPath, installerData, installerSize);
+    BOOL ok = file::WriteAll(uninstallerPath, installerData, installerSize);
     free(installerData);
 
     if (!ok)
@@ -582,7 +582,7 @@ BOOL CreateUninstaller()
 bool IsUninstaller()
 {
     ScopedMem<TCHAR> tempUninstaller(GetTempUninstallerPath());
-    BOOL isTempUninstaller = Path::IsSame(GetOwnPath(), tempUninstaller);
+    BOOL isTempUninstaller = path::IsSame(GetOwnPath(), tempUninstaller);
     if (isTempUninstaller)
         return true;
 
@@ -592,7 +592,7 @@ bool IsUninstaller()
     size_t markSize = str::Len(gUnInstMark);
 
     size_t uninstallerSize;
-    ScopedMem<char> uninstallerData(File::ReadAll(GetOwnPath(), &uninstallerSize));
+    ScopedMem<char> uninstallerData(file::ReadAll(GetOwnPath(), &uninstallerSize));
     if (!uninstallerData) {
         NotifyFailed(_T("Couldn't open myself for reading"));
         return false;
@@ -659,7 +659,7 @@ BOOL RegisterServerDLL(TCHAR *dllPath, BOOL unregister=FALSE)
 // Note: doesn't handle (total) sizes above 4GB
 DWORD GetDirSize(TCHAR *dir)
 {
-    ScopedMem<TCHAR> dirPattern(Path::Join(dir, _T("*")));
+    ScopedMem<TCHAR> dirPattern(path::Join(dir, _T("*")));
     WIN32_FIND_DATA findData;
 
     HANDLE h = FindFirstFile(dirPattern, &findData);
@@ -672,7 +672,7 @@ DWORD GetDirSize(TCHAR *dir)
             totalSize += findData.nFileSizeLow;
         }
         else if (!str::Eq(findData.cFileName, _T(".")) && !str::Eq(findData.cFileName, _T(".."))) {
-            ScopedMem<TCHAR> subdir(Path::Join(dir, findData.cFileName));
+            ScopedMem<TCHAR> subdir(path::Join(dir, findData.cFileName));
             totalSize += GetDirSize(subdir);
         }
     } while (FindNextFile(h, &findData) != 0);
@@ -696,7 +696,7 @@ bool WriteUninstallerRegistryInfo(HKEY hkey)
     ScopedMem<TCHAR> uninstallerPath(GetUninstallerPath());
     ScopedMem<TCHAR> installedExePath(GetInstalledExePath());
     ScopedMem<TCHAR> installDate(GetInstallDate());
-    ScopedMem<TCHAR> installDir(Path::GetDir(installedExePath));
+    ScopedMem<TCHAR> installDir(path::GetDir(installedExePath));
 
     success &= WriteRegStr(hkey,   REG_PATH_UNINST, DISPLAY_ICON, installedExePath);
     success &= WriteRegStr(hkey,   REG_PATH_UNINST, DISPLAY_NAME, TAPP);
@@ -754,7 +754,7 @@ bool WriteExtendedFileExtensionInfo(HKEY hkey)
 BOOL IsUninstallerNeeded()
 {
     ScopedMem<TCHAR> exePath(GetInstalledExePath());
-    return File::Exists(exePath);
+    return file::Exists(exePath);
 }
 
 bool RemoveUninstallerRegistryInfo(HKEY hkey)
@@ -815,7 +815,7 @@ bool IsBrowserPluginInstalled()
     ScopedMem<TCHAR> buf(ReadRegStr(HKEY_LOCAL_MACHINE, REG_PATH_PLUGIN, PLUGIN_PATH));
     if (!buf)
         buf.Set(ReadRegStr(HKEY_CURRENT_USER, REG_PATH_PLUGIN, PLUGIN_PATH));
-    return File::Exists(buf);
+    return file::Exists(buf);
 }
 
 bool IsPdfFilterInstalled()
@@ -865,12 +865,12 @@ BOOL RemoveEmptyDirectory(TCHAR *dir)
     WIN32_FIND_DATA findData;
     BOOL success = TRUE;
 
-    ScopedMem<TCHAR> dirPattern(Path::Join(dir, _T("*")));
+    ScopedMem<TCHAR> dirPattern(path::Join(dir, _T("*")));
     HANDLE h = FindFirstFile(dirPattern, &findData);
     if (h != INVALID_HANDLE_VALUE)
     {
         do {
-            ScopedMem<TCHAR> path(Path::Join(dir, findData.cFileName));
+            ScopedMem<TCHAR> path(path::Join(dir, findData.cFileName));
             DWORD attrs = findData.dwFileAttributes;
             // filter out directories. Even though there shouldn't be any
             // subdirectories, it also filters out the standard "." and ".."
@@ -900,9 +900,9 @@ BOOL RemoveInstalledFiles()
 
     for (int i = 0; i < dimof(gPayloadData); i++) {
         ScopedMem<TCHAR> relPath(str::conv::FromUtf8(gPayloadData[i].filepath));
-        ScopedMem<TCHAR> path(Path::Join(gGlobalData.installDir, relPath));
+        ScopedMem<TCHAR> path(path::Join(gGlobalData.installDir, relPath));
 
-        if (File::Exists(path))
+        if (file::Exists(path))
             success &= DeleteFile(path);
     }
 
@@ -1135,7 +1135,7 @@ static DWORD WINAPI UninstallerThread(LPVOID data)
     // also kill any the original uninstaller, if it's just spawned
     // a DELETE_ON_CLOSE copy from the temp directory
     exePath = GetUninstallerPath();
-    if (!Path::IsSame(exePath, GetOwnPath()))
+    if (!path::IsSame(exePath, GetOwnPath()))
         KillProcess(exePath, TRUE);
     free(exePath);
 
@@ -1280,8 +1280,8 @@ BOOL BrowseForFolder(HWND hwnd, LPCTSTR lpszInitialFolder, LPCTSTR lpszCaption, 
 void OnButtonBrowse()
 {
     TCHAR *installDir = Win::GetText(gHwndTextboxInstDir);
-    if (!Dir::Exists(installDir)) {
-        TCHAR *parentDir = Path::GetDir(installDir);
+    if (!dir::Exists(installDir)) {
+        TCHAR *parentDir = path::GetDir(installDir);
         free(installDir);
         installDir = parentDir;
     }
@@ -1292,7 +1292,7 @@ void OnButtonBrowse()
         // force paths that aren't entered manually to end in ...\SumatraPDF
         // to prevent unintended installations into e.g. %ProgramFiles% itself
         if (!str::EndsWithI(path, _T("\\") TAPP))
-            installPath = Path::Join(path, TAPP);
+            installPath = path::Join(path, TAPP);
         Win::SetText(gHwndTextboxInstDir, installPath);
         Edit_SetSel(gHwndTextboxInstDir, 0, -1);
         SetFocus(gHwndTextboxInstDir);
@@ -1973,7 +1973,7 @@ static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
 bool ExecuteUninstallerFromTempDir()
 {
     // only need to sublaunch if running from installation dir
-    ScopedMem<TCHAR> ownDir(Path::GetDir(GetOwnPath()));
+    ScopedMem<TCHAR> ownDir(path::GetDir(GetOwnPath()));
     ScopedMem<TCHAR> tempPath(GetTempUninstallerPath());
 
     // no temp directory available?
@@ -1982,11 +1982,11 @@ bool ExecuteUninstallerFromTempDir()
 
     // not running from the installation directory?
     // (likely a test uninstaller that shouldn't be removed anyway)
-    if (!Path::IsSame(ownDir, gGlobalData.installDir))
+    if (!path::IsSame(ownDir, gGlobalData.installDir))
         return false;
 
     // already running from temp directory?
-    if (Path::IsSame(GetOwnPath(), tempPath))
+    if (path::IsSame(GetOwnPath(), tempPath))
         return false;
 
     if (!CopyFile(GetOwnPath(), tempPath, FALSE)) {

@@ -325,7 +325,7 @@ void OnMenuProperties(WindowInfo& win)
     str = engine->GetProperty("PdfVersion");
     layoutData->AddProperty(_TR("PDF Version:"), str);
 
-    size_t fileSize = File::GetSize(engine->FileName());
+    size_t fileSize = file::GetSize(engine->FileName());
     if (fileSize == INVALID_FILE_SIZE) {
         unsigned char *data = engine->GetFileData(&fileSize);
         free(data);

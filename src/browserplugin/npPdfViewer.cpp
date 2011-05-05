@@ -151,7 +151,7 @@ DLLEXPORT STDAPI DllRegisterServer(VOID)
     // Work around Mozilla bug https://bugzilla.mozilla.org/show_bug.cgi?id=581848 which
     // makes Firefox up to version 3.6.* ignore all but the first plugin for a given MIME type
     // (per http://code.google.com/p/sumatrapdf/issues/detail?id=1254#c12 Foxit does the same)
-    *(TCHAR *)Path::GetBaseName(szPath) = '\0';
+    *(TCHAR *)path::GetBaseName(szPath) = '\0';
     if (SHGetValue(HKEY_CURRENT_USER, _T("Environment"), _T("MOZ_PLUGIN_PATH"), NULL, NULL, NULL) == ERROR_FILE_NOT_FOUND)
     {
         WriteRegStr(HKEY_CURRENT_USER, _T("Environment"), _T("MOZ_PLUGIN_PATH"), szPath);
@@ -188,8 +188,8 @@ bool GetExePath(LPTSTR lpPath, int len)
 {
     // Search the plugin's directory first
     GetModuleFileName(g_hInstance, lpPath, len - 2);
-    str::BufSet((TCHAR *)Path::GetBaseName(lpPath), len - 2 - (Path::GetBaseName(lpPath) - lpPath), _T("SumatraPDF.exe"));
-    if (File::Exists(lpPath))
+    str::BufSet((TCHAR *)path::GetBaseName(lpPath), len - 2 - (path::GetBaseName(lpPath) - lpPath), _T("SumatraPDF.exe"));
+    if (file::Exists(lpPath))
     {
         PathQuoteSpaces(lpPath);
         return true;
@@ -202,7 +202,7 @@ bool GetExePath(LPTSTR lpPath, int len)
         return false;
 
     CmdLineParser args(path);
-    if (!File::Exists(args[0]))
+    if (!file::Exists(args[0]))
         return false;
 
     str::BufSet(lpPath, len, args[0]);
@@ -526,7 +526,7 @@ static void LaunchWithSumatra(InstanceData *data)
     PROCESS_INFORMATION pi = { 0 };
     STARTUPINFOW si = { 0 };
 
-    if (!File::Exists(data->filepath))
+    if (!file::Exists(data->filepath))
         dbg("sp: NPP_StreamAsFile() error: file doesn't exist");
 
     ScopedMem<TCHAR> cmdLine(str::Format(_T("%s -plugin %d \"%s\""), data->exepath, (HWND)data->npwin->window, data->filepath));

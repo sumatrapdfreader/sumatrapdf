@@ -91,7 +91,7 @@ Exit:
     InternetCloseHandle(hFile);
     InternetCloseHandle(hInet);
     if (!ok)
-        File::Delete(destFilePath);
+        file::Delete(destFilePath);
     return ok;
 }
 

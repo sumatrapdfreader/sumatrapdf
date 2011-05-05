@@ -176,7 +176,7 @@ static bool GetEnvOk(DWORD ret, DWORD cchBufSize)
 static TCHAR *GetCrashDumpDir()
 {
     TCHAR *symDir = AppGenDataFilename(_T("symbols"));
-    if (symDir && !Dir::Create(symDir)) {
+    if (symDir && !dir::Create(symDir)) {
         free(symDir);
         return NULL;
     }
@@ -228,7 +228,7 @@ static WCHAR *GetSymbolPath()
 #if 0
     // when running local builds, *.pdb is in the same dir as *.exe 
     ScopedMem<TCHAR> exePath(GetExePath());
-    ScopedMem<WCHAR> exeDir(str::conv::ToWStrQ(Path::GetDir(exePath)));
+    ScopedMem<WCHAR> exeDir(str::conv::ToWStrQ(path::GetDir(exePath)));
     path.AppendFmt(L"%s", exeDir);
 #endif
     return path.StealData();
@@ -590,7 +590,7 @@ static void GetAddressInfo(str::Str<char>& s, DWORD64 addr)
     DWORD section, offset;
     if (GetAddrInfo((void*)addr, module, sizeof(module), section, offset)) {
         str::ToLower(module);
-        const char *moduleShort = Path::GetBaseName(module);
+        const char *moduleShort = path::GetBaseName(module);
         AppendAddress(s, addr);
         s.AppendFmt(" %02X:", section);
         AppendAddress(s, offset);
@@ -891,11 +891,11 @@ static void SendCrashInfo(char *s)
 // Returns false if files were there but we couldn't delete them
 static bool DeleteSymbolsIfExist(const TCHAR *symDir)
 {
-    ScopedMem<TCHAR> path(Path::Join(symDir, _T("libmupdf.pdb")));
-    if (!File::Delete(path))
+    ScopedMem<TCHAR> path(path::Join(symDir, _T("libmupdf.pdb")));
+    if (!file::Delete(path))
         return false;
-    path.Set(Path::Join(symDir, _T("SumatraPDF.pdb")));
-    return File::Delete(path);
+    path.Set(path::Join(symDir, _T("SumatraPDF.pdb")));
+    return file::Delete(path);
 }
 
 // In static (single executable) pre-release build, the pdb file inside 
@@ -939,7 +939,7 @@ static bool UnpackLibSymbols(const TCHAR *symbolsZipPath, const TCHAR *symDir)
 static bool DownloadPreReleaseSymbols(const TCHAR *symDir)
 {
     TCHAR *url = _T("http://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-") _T(QM(SVN_PRE_RELEASE_VER)) _T(".pdb.zip");
-    ScopedMem<TCHAR> symbolsZipPath(Path::Join(symDir, _T("symbols_tmp.zip")));
+    ScopedMem<TCHAR> symbolsZipPath(path::Join(symDir, _T("symbols_tmp.zip")));
     if (!HttpGetToFile(url, symbolsZipPath))
         return false;
     bool ok = false;
@@ -952,14 +952,14 @@ static bool DownloadPreReleaseSymbols(const TCHAR *symDir)
         if (!ok)
             LogDbg("Couldn't unpack pre-release symbols for lib build");
     }
-    File::Delete(symbolsZipPath);
+    file::Delete(symbolsZipPath);
     return ok;
 }
 
 static bool DownloadReleaseSymbols(const TCHAR *symDir)
 {
     TCHAR *url = _T("http://kjkpub.s3.amazonaws.com/sumatrapdf/rel/SumatraPDF-") _T(QM(CURR_VERSION)) _T(".pdb.zip");
-    ScopedMem<TCHAR> symbolsZipPath(Path::Join(symDir, _T("symbols_tmp.zip")));
+    ScopedMem<TCHAR> symbolsZipPath(path::Join(symDir, _T("symbols_tmp.zip")));
     if (!HttpGetToFile(url, symbolsZipPath)) {
         LogDbg("Couldn't download release symbols");
         return false;
@@ -974,7 +974,7 @@ static bool DownloadReleaseSymbols(const TCHAR *symDir)
         if (!ok)
             LogDbg("Couldn't unpack release symbols for lib build");
     }
-    File::Delete(symbolsZipPath);
+    file::Delete(symbolsZipPath);
     return ok;
 }
 
@@ -982,7 +982,7 @@ static bool DownloadReleaseSymbols(const TCHAR *symDir)
 // in symbol path to get meaningful callstacks 
 static bool DownloadSymbols(const TCHAR *symDir)
 {
-    if (!symDir || !Dir::Exists(symDir)) return false;
+    if (!symDir || !dir::Exists(symDir)) return false;
     if (!DeleteSymbolsIfExist(symDir))
         return false;
 

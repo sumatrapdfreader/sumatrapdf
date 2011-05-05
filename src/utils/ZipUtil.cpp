@@ -51,12 +51,12 @@ static void UnzipFileIfStartsWith(unzFile& uf,  FileToUnzip *files, const TCHAR 
         goto Exit;
 
     if (files[fileIdx].unzippedName) {
-        filePath = Path::Join(dir, files[fileIdx].unzippedName);
+        filePath = path::Join(dir, files[fileIdx].unzippedName);
     } else {
         fileName2 = str::conv::FromAnsi(fileName); // Note: maybe FromUtf8?
-        filePath = Path::Join(dir, fileName2);
+        filePath = path::Join(dir, fileName2);
     }
-    if (!File::WriteAll(filePath, data, len))
+    if (!file::WriteAll(filePath, data, len))
         goto Exit;
 
     files[fileIdx].wasUnzipped = true;

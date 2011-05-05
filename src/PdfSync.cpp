@@ -93,7 +93,7 @@ int Synchronizer::Create(const TCHAR *pdffilename, Synchronizer **sync)
 
     // Check if a PDFSYNC file is present
     ScopedMem<TCHAR> syncFile(str::Join(baseName, PDFSYNC_EXTENSION));
-    if (File::Exists(syncFile)) {
+    if (file::Exists(syncFile)) {
         *sync = new Pdfsync(syncFile);
         return *sync ? PDFSYNCERR_SUCCESS : PDFSYNCERR_OUTOFMEMORY;
     }
@@ -103,7 +103,7 @@ int Synchronizer::Create(const TCHAR *pdffilename, Synchronizer **sync)
     ScopedMem<TCHAR> texGzFile(str::Join(baseName, SYNCTEXGZ_EXTENSION));
     ScopedMem<TCHAR> texFile(str::Join(baseName, SYNCTEX_EXTENSION));
 
-    if (File::Exists(texGzFile) || File::Exists(texFile)) {
+    if (file::Exists(texGzFile) || file::Exists(texFile)) {
         // due to a bug with synctex_parser.c, this must always be 
         // the path to the .synctex file (even if a .synctex.gz file is used instead)
         *sync = new SyncTex(texFile);
@@ -439,7 +439,7 @@ UINT Pdfsync::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR srcfilepath, UINT 
     ScopedMem<TCHAR> srcFilename(str::conv::FromAnsi(srcFilenameA));
     // Convert the source filepath to an absolute path
     if (PathIsRelative(srcFilename))
-        srcFilename.Set(Path::Join(this->dir, srcFilename));
+        srcFilename.Set(path::Join(this->dir, srcFilename));
     str::BufSet(srcfilepath, cchFilepath, srcFilename);
 
     // find the record declaration in the section
@@ -657,7 +657,7 @@ UINT SyncTex::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR srcfilepath, UINT 
         str::TransChars(srcfilename, _T("*/"), _T(" \\"));
         // Convert the source filepath to an absolute path
         if (PathIsRelative(srcfilename))
-            srcfilename.Set(Path::Join(this->dir, srcfilename));
+            srcfilename.Set(path::Join(this->dir, srcfilename));
 
         str::BufSet(srcfilepath, cchFilepath, srcfilename);
         return PDFSYNCERR_SUCCESS;
@@ -675,7 +675,7 @@ UINT SyncTex::source_to_pdf(const TCHAR* srcfilename, UINT line, UINT col, UINT 
 
     // convert the source file to an absolute path
     if (PathIsRelative(srcfilename))
-        srcfilepath.Set(Path::Join(dir, srcfilename));
+        srcfilepath.Set(path::Join(dir, srcfilename));
     else
         srcfilepath.Set(str::Dup(srcfilename));
 

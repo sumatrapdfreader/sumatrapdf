@@ -440,8 +440,8 @@ void LinkHandler::GotoLink(PageDestination *link)
         /* for safety, only handle relative PDF paths and only open them in SumatraPDF */
         if (!str::StartsWith(path.Get(), _T("\\")) &&
             str::EndsWithI(path.Get(), _T(".pdf"))) {
-            ScopedMem<TCHAR> basePath(Path::GetDir(dm->fileName()));
-            ScopedMem<TCHAR> combinedPath(Path::Join(basePath, path));
+            ScopedMem<TCHAR> basePath(path::GetDir(dm->fileName()));
+            ScopedMem<TCHAR> combinedPath(path::Join(basePath, path));
             // TODO: respect fz_to_bool(fz_dict_gets(link->dest, "NewWindow")) for ScrollToEx
             WindowInfo *newWin = LoadDocument(combinedPath);
 

@@ -385,11 +385,11 @@ bool Load(TCHAR *filepath, SerializableGlobalPrefs& globalPrefs, FileHistory& fi
         return false;
 
     size_t prefsFileLen;
-    ScopedMem<char> prefsTxt(File::ReadAll(filepath, &prefsFileLen));
+    ScopedMem<char> prefsTxt(file::ReadAll(filepath, &prefsFileLen));
     if (!str::IsEmpty(prefsTxt.Get())) {
         ok = DeserializePrefs(prefsTxt, globalPrefs, fileHistory);
         assert(ok);
-        globalPrefs.m_lastPrefUpdate = File::GetModificationTime(filepath);
+        globalPrefs.m_lastPrefUpdate = file::GetModificationTime(filepath);
     }
 
     // TODO: add a check if a file exists, to filter out deleted files
@@ -399,7 +399,7 @@ bool Load(TCHAR *filepath, SerializableGlobalPrefs& globalPrefs, FileHistory& fi
 #if 0
     for (int index = 0; fileHistory.Get(index); index++) {
         DisplayState *state = fileHistory.Get(index);
-        if (!File::Exists(state->filePath)) {
+        if (!file::Exists(state->filePath)) {
             DBG_OUT("Prefs_Load() file '%s' doesn't exist anymore\n", state->filePath);
             fileHistory.Remove(state);
             delete state;
@@ -425,9 +425,9 @@ bool Save(TCHAR *filepath, SerializableGlobalPrefs& globalPrefs, FileHistory& fi
     /* TODO: consider 2-step process:
         * write to a temp file
         * rename temp file to final file */
-    bool ok = File::WriteAll(filepath, (void*)data.Get(), dataLen);
+    bool ok = file::WriteAll(filepath, (void*)data.Get(), dataLen);
     if (ok)
-        globalPrefs.m_lastPrefUpdate = File::GetModificationTime(filepath);
+        globalPrefs.m_lastPrefUpdate = file::GetModificationTime(filepath);
     return ok;
 }
 

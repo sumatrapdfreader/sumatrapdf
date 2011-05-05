@@ -88,7 +88,7 @@ TCHAR *GetExePath()
     TCHAR buf[MAX_PATH];
     buf[0] = 0;
     GetModuleFileName(NULL, buf, dimof(buf));
-    return Path::Normalize(buf);
+    return path::Normalize(buf);
 }
 
 /* Return false if this program has been started from "Program Files" directory
@@ -113,8 +113,8 @@ bool IsRunningInPortableMode()
         installedPath.Set(ReadRegStr(HKEY_CURRENT_USER, _T("Software\\") APP_NAME_STR, _T("Install_Dir")));
     if (installedPath) {
         if (!str::EndsWithI(installedPath.Get(), _T(".exe")))
-            installedPath.Set(Path::Join(installedPath.Get(), Path::GetBaseName(exePath)));
-        if (Path::IsSame(installedPath, exePath)) {
+            installedPath.Set(path::Join(installedPath.Get(), path::GetBaseName(exePath)));
+        if (path::IsSame(installedPath, exePath)) {
             sCacheIsPortable = 0;
             return false;
         }
@@ -129,9 +129,9 @@ bool IsRunningInPortableMode()
     // check if one of the exePath's parent directories is "Program Files"
     // (or a junction to it)
     TCHAR *baseName;
-    while ((baseName = (TCHAR*)Path::GetBaseName(exePath)) > exePath) {
+    while ((baseName = (TCHAR*)path::GetBaseName(exePath)) > exePath) {
         baseName[-1] = '\0';
-        if (Path::IsSame(programFilesDir, exePath)) {
+        if (path::IsSame(programFilesDir, exePath)) {
             sCacheIsPortable = 0;
             return false;
         }
@@ -150,7 +150,7 @@ TCHAR *AppGenDataFilename(TCHAR *pFilename)
         TCHAR *exePath = GetExePath();
         if (exePath) {
             assert(exePath[0]);
-            path.Set(Path::GetDir(exePath));
+            path.Set(path::GetDir(exePath));
             free(exePath);
         }
     } else {
@@ -159,8 +159,8 @@ TCHAR *AppGenDataFilename(TCHAR *pFilename)
         dir[0] = '\0';
         BOOL ok = SHGetSpecialFolderPath(NULL, dir, CSIDL_APPDATA, TRUE);
         if (ok) {
-            path.Set(Path::Join(dir, APP_NAME_STR));
-            if (path && !Dir::Create(path))
+            path.Set(path::Join(dir, APP_NAME_STR));
+            if (path && !dir::Create(path))
                 path.Set(NULL);
         }
     }
@@ -169,7 +169,7 @@ TCHAR *AppGenDataFilename(TCHAR *pFilename)
     if (!path || !pFilename)
         return NULL;
 
-    return Path::Join(path, pFilename);
+    return path::Join(path, pFilename);
 }
 
 // Updates the drive letter for a path that could have been on a removable drive,
@@ -177,19 +177,19 @@ TCHAR *AppGenDataFilename(TCHAR *pFilename)
 void AdjustRemovableDriveLetter(TCHAR *path)
 {
     // Don't bother if the file path is still valid
-    if (File::Exists(path))
+    if (file::Exists(path))
         return;
     // Don't bother for files on non-removable drives
-    if (!Path::IsOnRemovableDrive(path))
+    if (!path::IsOnRemovableDrive(path))
         return;
 
     // Iterate through all (other) removable drives and try to find the file there
     TCHAR szDrive[] = _T("A:\\");
     TCHAR origDrive = path[0];
     for (DWORD driveMask = GetLogicalDrives(); driveMask; driveMask >>= 1) {
-        if ((driveMask & 1) && szDrive[0] != origDrive && Path::IsOnRemovableDrive(szDrive)) {
+        if ((driveMask & 1) && szDrive[0] != origDrive && path::IsOnRemovableDrive(szDrive)) {
             path[0] = szDrive[0];
-            if (File::Exists(path))
+            if (file::Exists(path))
                 return;
         }
         szDrive[0]++;
@@ -317,7 +317,7 @@ bool IsExeAssociatedWithPdfExtension()
     if (!exePath || !argList.Find(_T("%1")))
         return false;
 
-    return Path::IsSame(exePath, argList[0]);
+    return path::IsSame(exePath, argList[0]);
 }
 
 TCHAR *GetAcrobatPath()
@@ -326,7 +326,7 @@ TCHAR *GetAcrobatPath()
     ScopedMem<TCHAR> path(ReadRegStr(HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\AcroRd32.exe"), NULL));
     if (!path)
         path.Set(ReadRegStr(HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\Acrobat.exe"), NULL));
-    if (path && File::Exists(path))
+    if (path && file::Exists(path))
         return path.StealData();
     return NULL;
 }
@@ -334,7 +334,7 @@ TCHAR *GetAcrobatPath()
 TCHAR *GetFoxitPath()
 {
     ScopedMem<TCHAR> path(ReadRegStr(HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Foxit Reader"), _T("DisplayIcon")));
-    if (path && File::Exists(path))
+    if (path && file::Exists(path))
         return path.StealData();
     return NULL;
 }
@@ -346,8 +346,8 @@ TCHAR *GetPDFXChangePath()
         path.Set(ReadRegStr(HKEY_CURRENT_USER,  _T("Software\\Tracker Software\\PDFViewer"), _T("InstallPath")));
     if (!path)
         return false;
-    ScopedMem<TCHAR> exePath(Path::Join(path, _T("PDFXCview.exe")));
-    if (File::Exists(exePath))
+    ScopedMem<TCHAR> exePath(path::Join(path, _T("PDFXCview.exe")));
+    if (file::Exists(exePath))
         return exePath.StealData();
     return NULL;
 }
@@ -437,10 +437,10 @@ LPTSTR AutoDetectInverseSearchCommands(HWND hwndCombo)
         TCHAR *exePath;
         if (editor_rules[i].Type == SiblingPath) {
             // remove file part
-            ScopedMem<TCHAR> dir(Path::GetDir(path));
-            exePath = Path::Join(dir, editor_rules[i].BinaryFilename);
+            ScopedMem<TCHAR> dir(path::GetDir(path));
+            exePath = path::Join(dir, editor_rules[i].BinaryFilename);
         } else if (editor_rules[i].Type == BinaryDir)
-            exePath = Path::Join(path, editor_rules[i].BinaryFilename);
+            exePath = path::Join(path, editor_rules[i].BinaryFilename);
         else // if (editor_rules[i].Type == BinaryPath)
             exePath = str::Dup(path);
 

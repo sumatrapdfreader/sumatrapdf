@@ -4,7 +4,7 @@
 #ifndef FileUtil_h
 #define FileUtil_h
 
-namespace Path {
+namespace path {
 
 const WCHAR *GetBaseName(const WCHAR *path);
 const char * GetBaseName(const char *path);
@@ -18,7 +18,7 @@ bool         IsOnRemovableDrive(const TCHAR *path);
 
 }
 
-namespace File {
+namespace file {
 
 bool         Exists(const TCHAR *filePath);
 char *       ReadAll(const TCHAR *filePath, size_t *fileSizeOut);
@@ -30,7 +30,7 @@ FILETIME     GetModificationTime(const TCHAR *filePath);
 
 }
 
-namespace Dir {
+namespace dir {
 
 bool         Exists(const TCHAR *dir);
 bool         Create(const TCHAR *dir);

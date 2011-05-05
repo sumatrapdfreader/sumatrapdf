@@ -605,7 +605,7 @@ void DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory)
             RoundRect(hdc, page.x, page.y, page.x + page.dx, page.y + page.dy, 10, 10);
 
             RectI rect(page.x + 20, page.y + THUMBNAIL_DY + 3, THUMBNAIL_DX - 20, 20);
-            DrawText(hdc, Path::GetBaseName(state->filePath), -1, &rect.ToRECT(), DT_SINGLELINE | DT_END_ELLIPSIS);
+            DrawText(hdc, path::GetBaseName(state->filePath), -1, &rect.ToRECT(), DT_SINGLELINE | DT_END_ELLIPSIS);
 
             SHFILEINFO sfi;
             HIMAGELIST himl = (HIMAGELIST)SHGetFileInfo(state->filePath, 0, &sfi, sizeof(sfi), SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES);
@@ -657,10 +657,10 @@ static TCHAR *GetThumbnailPath(const TCHAR *filePath)
     // in the fingerprint (much quicker than hashing the entire file's
     // content), but that's too expensive for files on slow drives
     unsigned char digest[16];
-    ScopedMem<TCHAR> pathN(Path::Normalize(filePath));
+    ScopedMem<TCHAR> pathN(path::Normalize(filePath));
     if (!pathN)
         return NULL;
-    if (Path::IsOnRemovableDrive(pathN))
+    if (path::IsOnRemovableDrive(pathN))
         pathN[0] = '?'; // ignore the drive letter, if it might change
     ScopedMem<char> pathU(str::conv::ToUtf8(pathN));
     CalcMD5Digest((unsigned char *)pathU.Get(), str::Len(pathU), digest);
@@ -676,7 +676,7 @@ static TCHAR *GetThumbnailPath(const TCHAR *filePath)
 void CleanUpThumbnailCache(FileHistory& fileHistory)
 {
     ScopedMem<TCHAR> thumbsPath(AppGenDataFilename(THUMBNAILS_DIR_NAME));
-    ScopedMem<TCHAR> pattern(Path::Join(thumbsPath, _T("*.png")));
+    ScopedMem<TCHAR> pattern(path::Join(thumbsPath, _T("*.png")));
 
     StrVec files;
     WIN32_FIND_DATA fdata;
@@ -695,7 +695,7 @@ void CleanUpThumbnailCache(FileHistory& fileHistory)
         ScopedMem<TCHAR> bmpPath(GetThumbnailPath(list->At(i)->filePath));
         if (!bmpPath)
             continue;
-        int idx = files.Find(Path::GetBaseName(bmpPath));
+        int idx = files.Find(path::GetBaseName(bmpPath));
         if (idx != -1) {
             free(files[idx]);
             files.RemoveAt(idx);
@@ -704,8 +704,8 @@ void CleanUpThumbnailCache(FileHistory& fileHistory)
     delete list;
 
     for (size_t i = 0; i < files.Count(); i++) {
-        ScopedMem<TCHAR> bmpPath(Path::Join(thumbsPath, files[i]));
-        File::Delete(bmpPath);
+        ScopedMem<TCHAR> bmpPath(path::Join(thumbsPath, files[i]));
+        file::Delete(bmpPath);
     }
 }
 
@@ -731,8 +731,8 @@ bool HasThumbnail(DisplayState& state)
     ScopedMem<TCHAR> bmpPath(GetThumbnailPath(state.filePath));
     if (!bmpPath)
         return true;
-    FILETIME bmpTime = File::GetModificationTime(bmpPath);
-    FILETIME fileTime = File::GetModificationTime(state.filePath);
+    FILETIME bmpTime = file::GetModificationTime(bmpPath);
+    FILETIME fileTime = file::GetModificationTime(state.filePath);
     // delete the thumbnail if the file is newer than the thumbnail
     if (FileTimeDiffInSecs(fileTime, bmpTime) > 0) {
         delete state.thumbnail;
@@ -750,8 +750,8 @@ void SaveThumbnail(DisplayState& state)
     ScopedMem<TCHAR> bmpPath(GetThumbnailPath(state.filePath));
     if (!bmpPath)
         return;
-    ScopedMem<TCHAR> thumbsPath(Path::GetDir(bmpPath));
-    if (Dir::Create(thumbsPath))
+    ScopedMem<TCHAR> thumbsPath(path::GetDir(bmpPath));
+    if (dir::Create(thumbsPath))
         SaveRenderedBitmap(state.thumbnail, bmpPath);
 }
 

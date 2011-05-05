@@ -5,7 +5,7 @@
 #include "StrUtil.h"
 #include "FileUtil.h"
 
-namespace Path {
+namespace path {
 
 static inline bool IsSep(WCHAR c)
 {
@@ -159,7 +159,7 @@ bool IsOnRemovableDrive(const TCHAR *path)
 
 }
 
-namespace File {
+namespace file {
 
 bool Exists(const TCHAR *filePath)
 {
@@ -275,7 +275,7 @@ FILETIME GetModificationTime(const TCHAR *filePath)
 
 }
 
-namespace Dir {
+namespace dir {
 
 bool Exists(const TCHAR *dir)
 {

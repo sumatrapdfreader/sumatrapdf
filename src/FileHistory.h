@@ -53,7 +53,7 @@ class FileHistory {
             return dsA->isPinned ? -1 : 1;
         // sort pinned documents alphabetically
         if (dsA->isPinned && dsB->isPinned)
-            return str::CmpNatural(Path::GetBaseName(dsA->filePath), Path::GetBaseName(dsB->filePath));
+            return str::CmpNatural(path::GetBaseName(dsA->filePath), path::GetBaseName(dsB->filePath));
         if (dsA->openCount != dsB->openCount)
             return dsB->openCount - dsA->openCount;
         // use recency as the criterion in case of equal open counts
