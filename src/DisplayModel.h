@@ -10,6 +10,8 @@
 #include "ImagesEngine.h"
 #include "TextSearch.h"
 
+extern bool gSupressPasswordUI;
+
 // define the following if you want shadows drawn around the pages
 // #define DRAW_PAGE_SHADOWS
 

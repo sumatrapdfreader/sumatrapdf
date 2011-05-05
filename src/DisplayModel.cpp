@@ -45,6 +45,9 @@
 
 #include "DisplayModel.h"
 
+// a bit of a hack: ability to suppress password ui when running stress test
+bool gSupressPasswordUI = false;
+
 // define the following if you want the pages right before and after
 // the visible ones to be pre-rendered
 #define PREDICTIVE_RENDER 1
@@ -255,7 +258,10 @@ bool DisplayModel::load(const TCHAR *fileName, int startPage, SizeI viewPort)
     else {
         // try loading as either supported file format
         // TODO: sniff the file content instead
-        engine = pdfEngine = PdfEngine::CreateFromFileName(fileName, _callback);
+        if (gSupressPasswordUI)
+            engine = pdfEngine = PdfEngine::CreateFromFileName(fileName, NULL);
+        else
+            engine = pdfEngine = PdfEngine::CreateFromFileName(fileName, _callback);
         if (!engine)
             engine = xpsEngine = XpsEngine::CreateFromFileName(fileName);
         if (!engine)

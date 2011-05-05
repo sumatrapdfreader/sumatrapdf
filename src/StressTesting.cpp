@@ -432,6 +432,8 @@ void DirStressTest::AppendInfo(str::Str<char>& s)
 
 void DirStressTest::Start(const TCHAR *dirPath)
 {
+    gSupressPasswordUI = true;
+
     if (!dir::Exists(dirPath) || !OpenDir(dirPath)) {
         // Note: dev only, don't translate
         ScopedMem<TCHAR> s(str::Format(_T("Directory '%s' doesn't exist or is empty"), dirPath));
