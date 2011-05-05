@@ -206,20 +206,6 @@ static TCHAR *FormatTime(int totalSecs)
     return str::Format(_T("%d secs"), secs);
 }
 
-static void FormatTime(int totalSecs, str::Str<char>& s)
-{
-    int secs = totalSecs % 60;
-    int totalMins = totalSecs / 60;
-    int mins = totalMins % 60;
-    int hrs = totalMins / 60;
-    if (hrs > 0)
-        s.AppendFmt("%d hrs %d mins %d secs", hrs, mins, secs);
-    else if (mins > 0)
-        s.AppendFmt("%d mins %d secs", mins, secs);
-    else
-        s.AppendFmt("%d secs", secs);
-}
-
 void RandomIsOverGlyph(DisplayModel *dm, int pageNo)
 {
     if (!dm->validPageNo(pageNo))
@@ -265,7 +251,7 @@ public:
         win(win), renderCache(renderCache), filesCount(0) { }
     virtual ~DirStressTest() { }
 
-    void AppendInfo(str::Str<char>& s);
+    char *GetLogInfo();
     void Start(const TCHAR *dirPath);
 
     virtual void Callback() { OnTimer(); }
@@ -310,6 +296,7 @@ bool DirStressTest::OpenDir(const TCHAR *dirPath)
     hasFiles |= CollectPathsFromDirectory(pattern, filesToOpen);
     pattern.Set(str::Format(_T("%s\\*.djvu"), dirPath));
     hasFiles |= CollectPathsFromDirectory(pattern, filesToOpen);
+    // NTFS returns files sorted anyway, maybe an explicit randomization would be better, though
     filesToOpen.Sort();
 
     pattern.Set(str::Format(_T("%s\\*"), dirPath));
@@ -320,7 +307,8 @@ bool DirStressTest::OpenDir(const TCHAR *dirPath)
 
 bool DirStressTest::OpenFile(const TCHAR *fileName)
 {
-    WindowInfo *w = LoadDocument(fileName, NULL, true /* show */, false /* reuse */);
+    bool reuse = rand() % 3 != 1;
+    WindowInfo *w = LoadDocument(fileName, NULL, true /* show */, reuse, true /* suppressPwdUI */);
     if (!w)
         return false;
 
@@ -328,7 +316,7 @@ bool DirStressTest::OpenFile(const TCHAR *fileName)
         if (!win->dm)
             return false;
     } else if (!w->dm) { // new WindowInfo
-        delete w;
+        CloseWindow(w, false, true);
         return false;
     }
 
@@ -422,18 +410,16 @@ void DirStressTest::Finished()
     delete this;
 }
 
-void DirStressTest::AppendInfo(str::Str<char>& s)
+char *DirStressTest::GetLogInfo()
 {
     int secs = SecsSinceSystemTime(stressStartTime);
-    s.AppendFmt(", stress test rendered %d files in ", filesCount);
-    FormatTime(secs, s);
-    s.AppendFmt(", currPage: %d", currPage);
+    ScopedMem<TCHAR> st(FormatTime(secs));
+    ScopedMem<char> su(str::conv::ToUtf8(st));
+    return str::Format(", stress test rendered %d files in %s, currPage: %d", filesCount, su, currPage);
 }
 
 void DirStressTest::Start(const TCHAR *dirPath)
 {
-    gSupressPasswordUI = true;
-
     if (!dir::Exists(dirPath) || !OpenDir(dirPath)) {
         // Note: dev only, don't translate
         ScopedMem<TCHAR> s(str::Format(_T("Directory '%s' doesn't exist or is empty"), dirPath));
@@ -449,9 +435,9 @@ void DirStressTest::Start(const TCHAR *dirPath)
         Finished();
 }
 
-void AppendStressTestInfo(DirStressTest *dst, str::Str<char>& s)
+char *GetStressTestInfo(DirStressTest *dst)
 {
-    dst->AppendInfo(s);
+    return dst->GetLogInfo();
 }
 
 void StartDirStressTest(WindowInfo *win, const TCHAR *dir, RenderCache *renderCache)

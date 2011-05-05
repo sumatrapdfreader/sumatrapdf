@@ -176,6 +176,7 @@ public:
                     } fwdsearchmark;
 
     CallbackFunc *  dirStressTest;
+    bool            suppressPwdUI;
 
     void UpdateToolbarState();
 
@@ -266,6 +267,7 @@ public:
 
 WindowInfo* FindWindowInfoByFile(TCHAR *file);
 WindowInfo* FindWindowInfoByHwnd(HWND hwnd);
-WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win=NULL, bool showWin=true, bool forceReuse=false);
+WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win=NULL,
+                         bool showWin=true, bool forceReuse=false, bool suppressPwdUI=false);
 
 #endif

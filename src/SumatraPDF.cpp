@@ -757,6 +757,9 @@ TCHAR *WindowInfo::GetPassword(const TCHAR *fileName, unsigned char *fileDigest,
     }
 
     *saveKey = false;
+    if (suppressPwdUI)
+        return NULL;
+
     fileName = path::GetBaseName(fileName);
     return Dialog_GetPassword(this->hwndFrame, fileName, gGlobalPrefs.m_rememberOpenedFiles ? saveKey : NULL);
 }
@@ -1651,7 +1654,7 @@ static void RefreshUpdatedFiles() {
 }
 #endif
 
-WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin, bool forceReuse)
+WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin, bool forceReuse, bool suppressPwdUI)
 {
     assert(fileName);
     if (!fileName) return NULL;
@@ -1683,6 +1686,7 @@ WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin, b
         EnsureWindowVisibility(ds->windowPos);
     }
 
+    win->suppressPwdUI = suppressPwdUI;
     if (!LoadDocIntoWindow(fullpath, *win, ds, isNewWindow, true, showWin, true)) {
         /* failed to open */
         if (gFileHistory.MarkFileInexistent(fullpath))
@@ -2947,7 +2951,7 @@ static void OnMenuExit()
 // to test pointers (even if it's not advised in general)
 void GetFilesInfo(str::Str<char>& s)
 {
-    for (size_t i=0; i<gWindows.Count(); i++) {
+    for (size_t i = 0; i < gWindows.Count(); i++) {
         WindowInfo *w = gWindows.At(i);
         if (!w)
             continue;
@@ -2955,13 +2959,15 @@ void GetFilesInfo(str::Str<char>& s)
             continue;
         if (!w->loadedFilePath)
             continue;
-        ScopedMem<char> f(str::conv::ToUtf8(w->loadedFilePath));
-        if (f) {
-            s.AppendFmt("File: %s", f);
-        }
-        if (w->dirStressTest) {
-            AppendStressTestInfo((DirStressTest*)w->dirStressTest, s);
-        }
+        // only add paths to files encountered during an explicit stress test
+        // (for privacy reasons, users should be able to decide themselves
+        // whether they want to share what files they had opened during a crash)
+        if (!w->dirStressTest)
+            continue;
+
+        s.Append("File: ");
+        s.AppendAndFree(str::conv::ToUtf8(w->loadedFilePath));
+        s.AppendAndFree(GetStressTestInfo((DirStressTest *)w->dirStressTest));
         s.Append("\r\n");
     }
 }
