@@ -30,6 +30,9 @@ Tutte le p&agine selezionate
 &Back\tAlt+Left Arrow
 &Indietro\t<Alt>+<Freccia sinistra>
 
+&Book View\tCtrl-8
+Vista &libro\t<Ctrl>+8
+
 &Close\tCtrl-W
 &Chiudi\tCtrl-W
 
@@ -45,6 +48,9 @@ Non chie&dermelo più
 &Even pages only
 Solo pagin&e pari
 
+&Facing\tCtrl-7
+Pagine &affiancate\t<Ctrl>+7
+
 &File
 &File
 
@@ -56,6 +62,9 @@ Solo pagin&e pari
 
 &Fit pages to printable area
 &Adatta pagine alla zona stampabile
+
+&Forget Document
+&Non ricordare documento
 
 &Go To
 &Vai a
@@ -93,11 +102,17 @@ S&olo pagine dispari
 &Open\tCtrl-O
 &Apri\tCtrl-O
 
+&Open Document
+&Apri documento
+
 &Options...
 &Opzioni...
 
 &Password:
 &Password:
+
+&Pin Document
+&PIN documento
 
 &Previous Page\tLeft Arrow
 &Pagina precedente\t<Freccia sinistra>
@@ -128,6 +143,9 @@ Impo&stazioni
 
 &Shrink pages to printable area (if necessary)
 Riduci pagine alla zona &stampabile (se necessario)
+
+&Single Page\tCtrl-6
+Pagina &singola\t<Ctrl>+6
 
 &Skip this version
 &Ignora questa versione
@@ -562,7 +580,7 @@ Unknown source file (%s)
 File sorgente sconosciuto (%s)
 
 View
-Vista
+Visualizza
 
 Visit &Website
 Visita il sito &web
@@ -592,19 +610,11 @@ Zoom factor
 Fattore di ingrandimento
 
 [Changes detected; refreshing] %s
-[Individuati cambiamenti; aggiornando] %s
+[Individuati cambiamenti; aggiornmento] %s
 
 copying text
 Copia del testo...
 
 printing document
 Stampa documento...
-
-# Untranslated:
-#&Book View\tCtrl-8
-#&Facing\tCtrl-7
-#&Forget Document
-#&Open Document
-#&Pin Document
-#&Single Page\tCtrl-6
 
