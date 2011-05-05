@@ -51,7 +51,7 @@ struct ScreenPagePadding {
 /* Describes many attributes of one page in one, convenient place */
 struct PageInfo {
     /* data that is constant for a given page. page size in document units */
-    SizeD           page;
+    RectD           page;
 
     /* data that is calculated when needed. actual content size within a page (View target) */
     RectD           contentBox;

@@ -157,12 +157,7 @@ SizeD DisplayModel::PageSizeAfterRotation(int pageNo, bool fitToContent)
             return PageSizeAfterRotation(pageNo);
     }
 
-    RectD box;
-    if (fitToContent)
-        box = pageInfo->contentBox;
-    else
-        box = RectD(PointD(), pageInfo->page);
-
+    RectD box = fitToContent ? pageInfo->contentBox : pageInfo->page;
     return engine->Transform(box, pageNo, 1.0, _rotation).Size();
 }
 
@@ -310,13 +305,24 @@ bool DisplayModel::buildPagesInfo()
     if (!_pagesInfo)
         return false;
 
+    TCHAR unitSystem[2];
+    GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_IMEASURE, unitSystem, dimof(unitSystem));
+    RectD defaultRect;
+    if (unitSystem[0] == '0') // metric A4 size
+        defaultRect = RectD(0, 0, 21.0 / 2.54 * engine->GetFileDPI(), 29.7 / 2.54 * engine->GetFileDPI());
+    else // imperial letter size
+        defaultRect = RectD(0, 0, 8.5 * engine->GetFileDPI(), 11 * engine->GetFileDPI());
+
     int columns = columnsFromDisplayMode(_displayMode);
     int startPage = _startPage;
     if (displayModeShowCover(_displayMode) && startPage == 1 && columns > 1)
         startPage--;
     for (int pageNo = 1; pageNo <= _pageCount; pageNo++) {
         PageInfo *pageInfo = getPageInfo(pageNo);
-        pageInfo->page = engine->PageMediabox(pageNo).Size();
+        pageInfo->page = engine->PageMediabox(pageNo);
+        // layout pages with an empty mediabox as A4 size (resp. letter size)
+        if (pageInfo->page.IsEmpty())
+            pageInfo->page = defaultRect;
         pageInfo->visibleRatio = 0.0;
         pageInfo->shown = false;
         if (displayModeContinuous(_displayMode))
@@ -407,7 +413,8 @@ float DisplayModel::zoomRealFromVirtualForPage(float zoomVirtual, int pageNo)
         int first = FirstPageInARowNo(pageNo, columns, displayModeShowCover(displayMode()));
         int last = LastPageInARowNo(pageNo, columns, displayModeShowCover(displayMode()), pageCount());
         for (int i = first; i <= last; i++) {
-            RectD pageBox = engine->Transform(engine->PageMediabox(i), i, 1.0, _rotation);
+            PageInfo *pageInfo = getPageInfo(i);
+            RectD pageBox = engine->Transform(pageInfo->page, i, 1.0, _rotation);
             row.dx += pageBox.dx;
 
             pageInfo = getPageInfo(i);

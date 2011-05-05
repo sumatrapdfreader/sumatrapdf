@@ -1060,6 +1060,9 @@ void CreateThumbnailForFile(WindowInfo& win, DisplayState& state)
         return;
 
     RectD pageRect = win.dm->engine->PageMediabox(1);
+    if (pageRect.IsEmpty())
+        return;
+
     pageRect = win.dm->engine->Transform(pageRect, 1, 1.0f, 0);
     float zoom = THUMBNAIL_DX / (float)pageRect.dx;
     pageRect.dy = (float)THUMBNAIL_DY / zoom;
