@@ -323,7 +323,11 @@ bool DirStressTest::OpenFile(const TCHAR *fileName)
     WindowInfo *w = LoadDocument(fileName, NULL, true /* show */, false /* reuse */);
     if (!w)
         return false;
-    if ((w != win) && !w->dm) {
+
+    if (w == win) { // WindowInfo reused
+        if (!win->dm)
+            return false;
+    } else if (!w->dm) { // new WindowInfo
         delete w;
         return false;
     }
