@@ -69,13 +69,13 @@ protected:
 
 public:
     static bool IsSupportedFile(const TCHAR *fileName) {
-        return Str::EndsWithI(fileName, _T(".png"))  ||
-               Str::EndsWithI(fileName, _T(".jpg"))  ||
-               Str::EndsWithI(fileName, _T(".jpeg")) ||
-               Str::EndsWithI(fileName, _T(".gif"))  ||
-               Str::EndsWithI(fileName, _T(".tif"))  ||
-               Str::EndsWithI(fileName, _T(".tiff")) ||
-               Str::EndsWithI(fileName, _T(".bmp"));
+        return str::EndsWithI(fileName, _T(".png"))  ||
+               str::EndsWithI(fileName, _T(".jpg"))  ||
+               str::EndsWithI(fileName, _T(".jpeg")) ||
+               str::EndsWithI(fileName, _T(".gif"))  ||
+               str::EndsWithI(fileName, _T(".tif"))  ||
+               str::EndsWithI(fileName, _T(".tiff")) ||
+               str::EndsWithI(fileName, _T(".bmp"));
     }
     static ImageEngine *CreateFromFileName(const TCHAR *fileName);
 };
@@ -105,8 +105,8 @@ protected:
 
 public:
     static bool IsSupportedFile(const TCHAR *fileName) {
-        return Str::EndsWithI(fileName, _T(".cbz")) ||
-               Str::EndsWithI(fileName, _T(".cbr"));
+        return str::EndsWithI(fileName, _T(".cbz")) ||
+               str::EndsWithI(fileName, _T(".cbr"));
     }
     static CbxEngine *CreateFromFileName(const TCHAR *fileName);
 };

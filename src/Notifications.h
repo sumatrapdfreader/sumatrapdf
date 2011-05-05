@@ -96,7 +96,7 @@ public:
     }
     MessageWnd(HWND parent, const TCHAR *message, const TCHAR *progressMsg, MessageWndCallback *callback=NULL) :
         hasProgress(true), hasCancel(true), callback(callback), highlight(false), isCanceled(false), progress(0) {
-        this->progressMsg = progressMsg ? Str::Dup(progressMsg) : NULL;
+        this->progressMsg = progressMsg ? str::Dup(progressMsg) : NULL;
         CreatePopup(parent, message);
     }
     ~MessageWnd() {
@@ -110,7 +110,7 @@ public:
     virtual bool ProgressUpdate(int current, int total) {
         progress = limitValue(100 * current / total, 0, 100);
         if (hasProgress && progressMsg) {
-            ScopedMem<TCHAR> message(Str::Format(progressMsg, current, total));
+            ScopedMem<TCHAR> message(str::Format(progressMsg, current, total));
             MessageUpdate(message);
         }
         return isCanceled;

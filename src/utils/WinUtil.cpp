@@ -114,7 +114,7 @@ TryAgainWOW64:
 
 bool WriteRegStr(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, const TCHAR *value)
 {
-    LSTATUS res = SHSetValue(keySub, keyName, valName, REG_SZ, (const VOID *)value, (DWORD)(Str::Len(value) + 1) * sizeof(TCHAR));
+    LSTATUS res = SHSetValue(keySub, keyName, valName, REG_SZ, (const VOID *)value, (DWORD)(str::Len(value) + 1) * sizeof(TCHAR));
     if (ERROR_SUCCESS != res)
         SeeLastError(res);
     return ERROR_SUCCESS == res;
@@ -218,7 +218,7 @@ TCHAR *ResolveLnk(const TCHAR * path)
     IPersistFile *file = NULL;
     TCHAR *resolvedPath = NULL;
 
-    ScopedMem<OLECHAR> olePath(Str::Conv::ToWStr(path));
+    ScopedMem<OLECHAR> olePath(str::Conv::ToWStr(path));
     if (!olePath)
         return NULL;
 
@@ -244,7 +244,7 @@ TCHAR *ResolveLnk(const TCHAR * path)
     if (FAILED(hRes))
         goto Exit;
 
-    resolvedPath = Str::Dup(newPath);
+    resolvedPath = str::Dup(newPath);
 
 Exit:
     if (file)
@@ -286,7 +286,7 @@ bool CreateShortcut(const TCHAR *shortcutPath, const TCHAR *exePath,
         lnk->SetDescription(description);
 
 #ifndef _UNICODE
-    hr = file->Save(ScopedMem<WCHAR>(Str::Conv::ToWStr(shortcutPath)), TRUE);
+    hr = file->Save(ScopedMem<WCHAR>(str::Conv::ToWStr(shortcutPath)), TRUE);
 #else
     hr = file->Save(shortcutPath, TRUE);
 #endif
@@ -312,7 +312,7 @@ IDataObject* GetDataObjectForFile(LPCTSTR filePath, HWND hwnd)
     if (FAILED(hr))
         return NULL;
 
-    LPWSTR lpWPath = Str::Conv::ToWStr(filePath);
+    LPWSTR lpWPath = str::Conv::ToWStr(filePath);
     LPITEMIDLIST pidl;
     hr = pDesktopFolder->ParseDisplayName(NULL, NULL, lpWPath, NULL, &pidl, NULL);
     if (SUCCEEDED(hr)) {
@@ -447,7 +447,7 @@ TCHAR *GetDefaultPrinterName()
     TCHAR buf[512];
     DWORD bufSize = dimof(buf);
     if (GetDefaultPrinter(buf, &bufSize))
-        return Str::Dup(buf);
+        return str::Dup(buf);
     return NULL;
 }
 
@@ -462,7 +462,7 @@ bool CopyTextToClipboard(const TCHAR *text, bool appendOnly)
         EmptyClipboard();
     }
 
-    HGLOBAL handle = GlobalAlloc(GMEM_MOVEABLE, (Str::Len(text) + 1) * sizeof(TCHAR));
+    HGLOBAL handle = GlobalAlloc(GMEM_MOVEABLE, (str::Len(text) + 1) * sizeof(TCHAR));
     if (handle) {
         TCHAR *globalText = (TCHAR *)GlobalLock(handle);
         lstrcpy(globalText, text);
@@ -532,7 +532,7 @@ HFONT GetSimple(HDC hdc, TCHAR *fontName, int fontSize)
     lf.lfOutPrecision = OUT_TT_PRECIS;
     lf.lfQuality = DEFAULT_QUALITY;
     lf.lfPitchAndFamily = DEFAULT_PITCH;    
-    Str::BufSet(lf.lfFaceName, dimof(lf.lfFaceName), fontName);
+    str::BufSet(lf.lfFaceName, dimof(lf.lfFaceName), fontName);
     lf.lfWeight = FW_DONTCARE;
     lf.lfClipPrecision = CLIP_DEFAULT_PRECIS;
     lf.lfEscapement = 0;

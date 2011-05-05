@@ -53,8 +53,8 @@ HRESULT CXpsFilter::GetNextChunkValue(CChunkValue &chunkValue)
 
     case STATE_XPS_AUTHOR:
         m_state = STATE_XPS_TITLE;
-        str = Str::Conv::ToWStrQ(m_xpsEngine->GetProperty("Author"));
-        if (!Str::IsEmpty(str)) {
+        str = str::Conv::ToWStrQ(m_xpsEngine->GetProperty("Author"));
+        if (!str::IsEmpty(str)) {
             chunkValue.SetTextValue(PKEY_Author, str);
             free(str);
             return S_OK;
@@ -64,9 +64,9 @@ HRESULT CXpsFilter::GetNextChunkValue(CChunkValue &chunkValue)
 
     case STATE_XPS_TITLE:
         m_state = STATE_XPS_DATE;
-        str = Str::Conv::ToWStrQ(m_xpsEngine->GetProperty("Title"));
-        if (!str) str = Str::Conv::ToWStrQ(m_xpsEngine->GetProperty("Subject"));
-        if (!Str::IsEmpty(str)) {
+        str = str::Conv::ToWStrQ(m_xpsEngine->GetProperty("Title"));
+        if (!str) str = str::Conv::ToWStrQ(m_xpsEngine->GetProperty("Subject"));
+        if (!str::IsEmpty(str)) {
             chunkValue.SetTextValue(PKEY_Title, str);
             free(str);
             return S_OK;
@@ -76,9 +76,9 @@ HRESULT CXpsFilter::GetNextChunkValue(CChunkValue &chunkValue)
 
     case STATE_XPS_DATE:
         m_state = STATE_XPS_CONTENT;
-        str = Str::Conv::ToWStrQ(m_xpsEngine->GetProperty("ModDate"));
-        if (!str) str = Str::Conv::ToWStrQ(m_xpsEngine->GetProperty("CreationDate"));
-        if (!Str::IsEmpty(str)) {
+        str = str::Conv::ToWStrQ(m_xpsEngine->GetProperty("ModDate"));
+        if (!str) str = str::Conv::ToWStrQ(m_xpsEngine->GetProperty("CreationDate"));
+        if (!str::IsEmpty(str)) {
             SYSTEMTIME systime;
             if (XpsDateParse(str, &systime)) {
                 FILETIME filetime;
@@ -93,7 +93,7 @@ HRESULT CXpsFilter::GetNextChunkValue(CChunkValue &chunkValue)
 
     case STATE_XPS_CONTENT:
         if (++m_iPageNo <= m_xpsEngine->PageCount()) {
-            str = Str::Conv::ToWStrQ(m_xpsEngine->ExtractPageText(m_iPageNo, _T("\r\n")));
+            str = str::Conv::ToWStrQ(m_xpsEngine->ExtractPageText(m_iPageNo, _T("\r\n")));
             chunkValue.SetTextValue(PKEY_Search_Contents, str, CHUNK_TEXT);
             free(str);
             return S_OK;

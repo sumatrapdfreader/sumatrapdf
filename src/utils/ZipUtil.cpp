@@ -24,7 +24,7 @@ static void UnzipFileIfStartsWith(unzFile& uf,  FileToUnzip *files, const TCHAR 
 
     int fileIdx = -1;
     for (int i=0; files[i].fileNamePrefix; i++) {
-        if (Str::StartsWithI(fileName, files[i].fileNamePrefix)) {
+        if (str::StartsWithI(fileName, files[i].fileNamePrefix)) {
             fileIdx = i;
             break;
         }
@@ -53,7 +53,7 @@ static void UnzipFileIfStartsWith(unzFile& uf,  FileToUnzip *files, const TCHAR 
     if (files[fileIdx].unzippedName) {
         filePath = Path::Join(dir, files[fileIdx].unzippedName);
     } else {
-        fileName2 = Str::Conv::FromAnsi(fileName); // Note: maybe FromUtf8?
+        fileName2 = str::Conv::FromAnsi(fileName); // Note: maybe FromUtf8?
         filePath = Path::Join(dir, fileName2);
     }
     if (!File::WriteAll(filePath, data, len))

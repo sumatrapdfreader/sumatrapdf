@@ -13,7 +13,7 @@ class Pdfsync : public Synchronizer
 public:
     Pdfsync(const TCHAR* _syncfilename) : Synchronizer(_syncfilename)
     {
-        assert(Str::EndsWithI(_syncfilename, PDFSYNC_EXTENSION));
+        assert(str::EndsWithI(_syncfilename, PDFSYNC_EXTENSION));
         this->coordsys = BottomLeft;
     }
 
@@ -46,8 +46,8 @@ class SyncTex : public Synchronizer
 public:
     SyncTex(const TCHAR* _syncfilename) : Synchronizer(_syncfilename)
     {
-        assert(Str::EndsWithI(_syncfilename, SYNCTEX_EXTENSION) ||
-               Str::EndsWithI(_syncfilename, SYNCTEXGZ_EXTENSION));
+        assert(str::EndsWithI(_syncfilename, SYNCTEX_EXTENSION) ||
+               str::EndsWithI(_syncfilename, SYNCTEXGZ_EXTENSION));
         
         scanner = NULL;
         coordsys = TopLeft;
@@ -83,16 +83,16 @@ int Synchronizer::Create(const TCHAR *pdffilename, Synchronizer **sync)
     if (!sync)
         return PDFSYNCERR_INVALID_ARGUMENT;
 
-    if (!Str::EndsWithI(pdffilename, PDF_EXTENSION)) {
+    if (!str::EndsWithI(pdffilename, PDF_EXTENSION)) {
         DBG_OUT("Bad PDF filename! (%s)\n", pdffilename);
         return PDFSYNCERR_INVALID_ARGUMENT;
     }
 
-    size_t baseLen = Str::Len(pdffilename) - Str::Len(PDF_EXTENSION);
-    ScopedMem<TCHAR> baseName(Str::DupN(pdffilename, baseLen));
+    size_t baseLen = str::Len(pdffilename) - str::Len(PDF_EXTENSION);
+    ScopedMem<TCHAR> baseName(str::DupN(pdffilename, baseLen));
 
     // Check if a PDFSYNC file is present
-    ScopedMem<TCHAR> syncFile(Str::Join(baseName, PDFSYNC_EXTENSION));
+    ScopedMem<TCHAR> syncFile(str::Join(baseName, PDFSYNC_EXTENSION));
     if (File::Exists(syncFile)) {
         *sync = new Pdfsync(syncFile);
         return *sync ? PDFSYNCERR_SUCCESS : PDFSYNCERR_OUTOFMEMORY;
@@ -100,8 +100,8 @@ int Synchronizer::Create(const TCHAR *pdffilename, Synchronizer **sync)
 
 #ifdef SYNCTEX_FEATURE
     // check if SYNCTEX or compressed SYNCTEX file is present
-    ScopedMem<TCHAR> texGzFile(Str::Join(baseName, SYNCTEXGZ_EXTENSION));
-    ScopedMem<TCHAR> texFile(Str::Join(baseName, SYNCTEX_EXTENSION));
+    ScopedMem<TCHAR> texGzFile(str::Join(baseName, SYNCTEXGZ_EXTENSION));
+    ScopedMem<TCHAR> texFile(str::Join(baseName, SYNCTEX_EXTENSION));
 
     if (File::Exists(texGzFile) || File::Exists(texFile)) {
         // due to a bug with synctex_parser.c, this must always be 
@@ -119,9 +119,9 @@ int Synchronizer::Create(const TCHAR *pdffilename, Synchronizer **sync)
 TCHAR * Synchronizer::prepare_commandline(const TCHAR* pattern, const TCHAR* filename, UINT line, UINT col)
 {
     const TCHAR* perc;
-    Str::Str<TCHAR> cmdline(256);
+    str::Str<TCHAR> cmdline(256);
 
-    while ((perc = Str::FindChar(pattern, '%'))) {
+    while ((perc = str::FindChar(pattern, '%'))) {
         cmdline.Append(pattern, perc - pattern);
         pattern = perc + 2;
         perc++;
@@ -182,7 +182,7 @@ char* fgetline(char* dst, size_t cchDst, FILE *fp)
     if (!fgets(dst, (int)cchDst, fp))
         return NULL;
 
-    Str::TransChars(dst, "\r\n", "\0\0");
+    str::TransChars(dst, "\r\n", "\0\0");
     return dst;
 }
 
@@ -192,8 +192,8 @@ int Pdfsync::scan_and_build_index(FILE *fp)
     
     fgetline(buf, dimof(buf), fp); // get the job name from the first line
     // replace star by spaces (somehow tex replaces spaces by stars in the jobname)
-    Str::TransChars(buf, "*", " ");
-    ScopedMem<char> jobName(Str::Join(buf, ".tex"));
+    str::TransChars(buf, "*", " ");
+    ScopedMem<char> jobName(str::Join(buf, ".tex"));
 
     UINT versionNumber = 0;
     int ret = fscanf(fp, "version %u\n", &versionNumber);
@@ -208,7 +208,7 @@ int Pdfsync::scan_and_build_index(FILE *fp)
     src_file s;
     s.first_recordsection = (size_t)-1;
     s.last_recordsection = (size_t)-1;
-    Str::BufSet(s.filename, dimof(s.filename), jobName);
+    str::BufSet(s.filename, dimof(s.filename), jobName);
 #ifndef NDEBUG    
     s.closeline_pos = -1;
     fgetpos(fp, &s.openline_pos);
@@ -254,7 +254,7 @@ int Pdfsync::scan_and_build_index(FILE *fp)
                 // if the filename contains quotes then remove them
                 PathUnquoteSpacesA(s.filename);
                 // if the file name extension is not specified then add the suffix '.tex'
-                if (!Str::FindChar(s.filename, '.'))
+                if (!str::FindChar(s.filename, '.'))
                     PathAddExtensionA(s.filename, ".tex");
 #ifndef NDEBUG
                 s.openline_pos = linepos;
@@ -436,11 +436,11 @@ UINT Pdfsync::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR srcfilepath, UINT 
 
     // get the file name from the record section
     char *srcFilenameA = this->srcfiles[record_sections[sec].srcfile].filename;
-    ScopedMem<TCHAR> srcFilename(Str::Conv::FromAnsi(srcFilenameA));
+    ScopedMem<TCHAR> srcFilename(str::Conv::FromAnsi(srcFilenameA));
     // Convert the source filepath to an absolute path
     if (PathIsRelative(srcFilename))
         srcFilename.Set(Path::Join(this->dir, srcFilename));
-    Str::BufSet(srcfilepath, cchFilepath, srcFilename);
+    str::BufSet(srcfilepath, cchFilepath, srcFilename);
 
     // find the record declaration in the section
     fsetpos(fp, &record_sections[sec].startpos);
@@ -481,14 +481,14 @@ UINT Pdfsync::source_to_record(FILE *fp, const TCHAR* srcfilename, UINT line, UI
     if (!srcfilename)
         return PDFSYNCERR_INVALID_ARGUMENT;
 
-    char *mb_srcfilename = Str::Conv::ToAnsi(srcfilename);
+    char *mb_srcfilename = str::Conv::ToAnsi(srcfilename);
     if (!mb_srcfilename)
         return PDFSYNCERR_OUTOFMEMORY;
 
     // find the source file entry
     size_t isrc = (size_t)-1;
     for (size_t i = 0; i < this->srcfiles.Count(); i++) {
-        if (Str::EqI(mb_srcfilename, this->srcfiles[i].filename)) {
+        if (str::EqI(mb_srcfilename, this->srcfiles[i].filename)) {
             isrc = i;
             break;
         }
@@ -623,7 +623,7 @@ int SyncTex::rebuild_index() {
     if (this->scanner)
         synctex_scanner_free(this->scanner);
 
-    char *mb_syncfname = Str::Conv::ToAnsi(this->syncfilepath);
+    char *mb_syncfname = str::Conv::ToAnsi(this->syncfilepath);
     if (mb_syncfname==NULL)
         return PDFSYNCERR_OUTOFMEMORY;
 
@@ -649,17 +649,17 @@ UINT SyncTex::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR srcfilepath, UINT 
         *line = synctex_node_line(node);
         *col = synctex_node_column(node);
         const char *name = synctex_scanner_get_name(this->scanner,synctex_node_tag(node));
-        ScopedMem<TCHAR> srcfilename(Str::Conv::FromAnsi(name));
+        ScopedMem<TCHAR> srcfilename(str::Conv::FromAnsi(name));
         if (!srcfilename)
             return PDFSYNCERR_OUTOFMEMORY;
 
         // undecorate the filepath: replace * by space and / by \ 
-        Str::TransChars(srcfilename, _T("*/"), _T(" \\"));
+        str::TransChars(srcfilename, _T("*/"), _T(" \\"));
         // Convert the source filepath to an absolute path
         if (PathIsRelative(srcfilename))
             srcfilename.Set(Path::Join(this->dir, srcfilename));
 
-        Str::BufSet(srcfilepath, cchFilepath, srcfilename);
+        str::BufSet(srcfilepath, cchFilepath, srcfilename);
         return PDFSYNCERR_SUCCESS;
     }
     return PDFSYNCERR_NO_SYNC_AT_LOCATION;
@@ -677,9 +677,9 @@ UINT SyncTex::source_to_pdf(const TCHAR* srcfilename, UINT line, UINT col, UINT 
     if (PathIsRelative(srcfilename))
         srcfilepath.Set(Path::Join(dir, srcfilename));
     else
-        srcfilepath.Set(Str::Dup(srcfilename));
+        srcfilepath.Set(str::Dup(srcfilename));
 
-    char *mb_srcfilepath = Str::Conv::ToAnsi(srcfilepath);
+    char *mb_srcfilepath = str::Conv::ToAnsi(srcfilepath);
     if (!mb_srcfilepath)
         return PDFSYNCERR_OUTOFMEMORY;
     int ret = synctex_display_query(this->scanner,mb_srcfilepath,line,col);
@@ -751,10 +751,10 @@ static const TCHAR *HandleSyncCmd(const TCHAR *cmd, DDEACK& ack)
 {
     ScopedMem<TCHAR> pdfFile, srcFile;
     BOOL line = 0, col = 0, newWindow = 0, setFocus = 0;
-    const TCHAR *next = Str::Parse(cmd, _T("[") DDECOMMAND_SYNC _T("(\"%S\",%? \"%S\",%u,%u)]"),
+    const TCHAR *next = str::Parse(cmd, _T("[") DDECOMMAND_SYNC _T("(\"%S\",%? \"%S\",%u,%u)]"),
                                    &pdfFile, &srcFile, &line, &col);
     if (!next)
-        next = Str::Parse(cmd, _T("[") DDECOMMAND_SYNC _T("(\"%S\",%? \"%S\",%u,%u,%u,%u)]"),
+        next = str::Parse(cmd, _T("[") DDECOMMAND_SYNC _T("(\"%S\",%? \"%S\",%u,%u,%u,%u)]"),
                           &pdfFile, &srcFile, &line, &col, &newWindow, &setFocus);
     if (!next)
         return NULL;
@@ -792,9 +792,9 @@ static const TCHAR *HandleOpenCmd(const TCHAR *cmd, DDEACK& ack)
 {
     ScopedMem<TCHAR> pdfFile;
     BOOL newWindow = 0, setFocus = 0, forceRefresh = 0;
-    const TCHAR *next = Str::Parse(cmd, _T("[") DDECOMMAND_OPEN _T("(\"%S\")]"), &pdfFile);
+    const TCHAR *next = str::Parse(cmd, _T("[") DDECOMMAND_OPEN _T("(\"%S\")]"), &pdfFile);
     if (!next)
-        next = Str::Parse(cmd, _T("[") DDECOMMAND_OPEN _T("(\"%S\",%u,%u,%u)]"),
+        next = str::Parse(cmd, _T("[") DDECOMMAND_OPEN _T("(\"%S\",%u,%u,%u)]"),
                           &pdfFile, &newWindow, &setFocus, &forceRefresh);
     if (!next)
         return NULL;
@@ -825,7 +825,7 @@ static const TCHAR *HandleOpenCmd(const TCHAR *cmd, DDEACK& ack)
 static const TCHAR *HandleGotoCmd(const TCHAR *cmd, DDEACK& ack)
 {
     ScopedMem<TCHAR> pdfFile, destName;
-    const TCHAR *next = Str::Parse(cmd, _T("[") DDECOMMAND_GOTO _T("(\"%S\",%? \"%S\")]"),
+    const TCHAR *next = str::Parse(cmd, _T("[") DDECOMMAND_GOTO _T("(\"%S\",%? \"%S\")]"),
                                    &pdfFile, &destName);
     if (!next)
         return NULL;
@@ -851,7 +851,7 @@ static const TCHAR *HandlePageCmd(const TCHAR *cmd, DDEACK& ack)
 {
     ScopedMem<TCHAR> pdfFile;
     UINT page;
-    const TCHAR *next = Str::Parse(cmd, _T("[") DDECOMMAND_PAGE _T("(\"%S\",%u)]"),
+    const TCHAR *next = str::Parse(cmd, _T("[") DDECOMMAND_PAGE _T("(\"%S\",%u)]"),
                                    &pdfFile, &page);
     if (!next)
         return false;
@@ -882,10 +882,10 @@ static const TCHAR *HandleSetViewCmd(const TCHAR *cmd, DDEACK& ack)
     ScopedMem<TCHAR> pdfFile, viewMode;
     float zoom = INVALID_ZOOM;
     PointI scroll(-1, -1);
-    const TCHAR *next = Str::Parse(cmd, _T("[") DDECOMMAND_SETVIEW _T("(\"%S\",%? \"%S\",%f)]"),
+    const TCHAR *next = str::Parse(cmd, _T("[") DDECOMMAND_SETVIEW _T("(\"%S\",%? \"%S\",%f)]"),
                                    &pdfFile, &viewMode, &zoom);
     if (!next)
-        next = Str::Parse(cmd, _T("[") DDECOMMAND_SETVIEW _T("(\"%S\",%? \"%S\",%f,%d,%d)]"),
+        next = str::Parse(cmd, _T("[") DDECOMMAND_SETVIEW _T("(\"%S\",%? \"%S\",%f,%d,%d)]"),
                           &pdfFile, &viewMode, &zoom, &scroll.x, &scroll.y);
     if (!next)
         return NULL;
@@ -940,14 +940,14 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
 
     if (IsWindowUnicode((HWND)wparam)) {
         DBG_OUT("The client window is UNICODE!\n");
-        cmd.Set(Str::Conv::FromWStr((const WCHAR*)command));
+        cmd.Set(str::Conv::FromWStr((const WCHAR*)command));
     } else {
         DBG_OUT("The client window is ANSI!\n");
-        cmd.Set(Str::Conv::FromAnsi((const char*)command));
+        cmd.Set(str::Conv::FromAnsi((const char*)command));
     }
 
     const TCHAR *currCmd = cmd;
-    while (!Str::IsEmpty(currCmd)) {
+    while (!str::IsEmpty(currCmd)) {
         const TCHAR *nextCmd = NULL;
         if (!nextCmd) nextCmd = HandleSyncCmd(currCmd, ack);
         if (!nextCmd) nextCmd = HandleOpenCmd(currCmd, ack);
@@ -957,7 +957,7 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
         if (!nextCmd) {
             DBG_OUT("WM_DDE_EXECUTE: unknown DDE command or bad command format\n");
             ScopedMem<TCHAR> tmp;
-            nextCmd = Str::Parse(currCmd, _T("%S]"), &tmp);
+            nextCmd = str::Parse(currCmd, _T("%S]"), &tmp);
         }
         currCmd = nextCmd;
     }

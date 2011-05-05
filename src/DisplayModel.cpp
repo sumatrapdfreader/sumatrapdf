@@ -122,8 +122,8 @@ static bool ValidZoomVirtual(float zoomVirtual)
 
 bool DisplayModel::displayStateFromModel(DisplayState *ds)
 {
-    if (!ds->filePath || !Str::Eq(ds->filePath, fileName())) {
-        TCHAR *filePath = Str::Dup(fileName());
+    if (!ds->filePath || !str::Eq(ds->filePath, fileName())) {
+        TCHAR *filePath = str::Dup(fileName());
         if (!filePath)
             return false;
 
@@ -1329,7 +1329,7 @@ TCHAR *DisplayModel::getTextInRegion(int pageNo, RectD region)
         return NULL;
 
     RectI regionI = region.Round();
-    TCHAR *result = SAZA(TCHAR, Str::Len(pageText) + 1), *dest = result;
+    TCHAR *result = SAZA(TCHAR, str::Len(pageText) + 1), *dest = result;
     for (TCHAR *src = pageText; *src; src++) {
         if (*src != '\r' && *src != '\n') {
             RectI rect = coords[src - pageText];

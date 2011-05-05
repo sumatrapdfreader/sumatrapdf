@@ -141,11 +141,11 @@ DLLEXPORT STDAPI DllRegisterServer(VOID)
         return E_UNEXPECTED;
     }
     
-    ScopedMem<TCHAR> mimeType(Str::Join(g_lpRegKey, _T("\\MimeTypes\\application/pdf")));
+    ScopedMem<TCHAR> mimeType(str::Join(g_lpRegKey, _T("\\MimeTypes\\application/pdf")));
     EnsureRegKey(mimeType);
-    mimeType.Set(Str::Join(g_lpRegKey, _T("\\MimeTypes\\application/vnd.ms-xpsdocument")));
+    mimeType.Set(str::Join(g_lpRegKey, _T("\\MimeTypes\\application/vnd.ms-xpsdocument")));
     EnsureRegKey(mimeType);
-    mimeType.Set(Str::Join(g_lpRegKey, _T("\\MimeTypes\\image/vnd.djvu")));
+    mimeType.Set(str::Join(g_lpRegKey, _T("\\MimeTypes\\image/vnd.djvu")));
     EnsureRegKey(mimeType);
     
     // Work around Mozilla bug https://bugzilla.mozilla.org/show_bug.cgi?id=581848 which
@@ -171,7 +171,7 @@ DLLEXPORT STDAPI DllUnregisterServer(VOID)
     {
         TCHAR szModulePath[MAX_PATH];
         GetModuleFileName(g_hInstance, szModulePath, MAX_PATH);
-        if (Str::StartsWithI(szModulePath, szPluginPath))
+        if (str::StartsWithI(szModulePath, szPluginPath))
             SHDeleteValue(HKEY_CURRENT_USER, _T("Environment"), _T("MOZ_PLUGIN_PATH"));
     }
     
@@ -188,7 +188,7 @@ bool GetExePath(LPTSTR lpPath, int len)
 {
     // Search the plugin's directory first
     GetModuleFileName(g_hInstance, lpPath, len - 2);
-    Str::BufSet((TCHAR *)Path::GetBaseName(lpPath), len - 2 - (Path::GetBaseName(lpPath) - lpPath), _T("SumatraPDF.exe"));
+    str::BufSet((TCHAR *)Path::GetBaseName(lpPath), len - 2 - (Path::GetBaseName(lpPath) - lpPath), _T("SumatraPDF.exe"));
     if (File::Exists(lpPath))
     {
         PathQuoteSpaces(lpPath);
@@ -205,7 +205,7 @@ bool GetExePath(LPTSTR lpPath, int len)
     if (!File::Exists(args[0]))
         return false;
 
-    Str::BufSet(lpPath, len, args[0]);
+    str::BufSet(lpPath, len, args[0]);
     return true;
 }
 
@@ -277,7 +277,7 @@ static TCHAR *FormatSizeSuccint(size_t size) {
         unit = _T("KB");
     }
     
-    return Str::FormatFloatWithThousandSep(s, unit);
+    return str::FormatFloatWithThousandSep(s, unit);
 }
 
 LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lParam)
@@ -310,7 +310,7 @@ LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lPar
             RECT rcProgress = rcClient.ToRECT();
             
             HBRUSH brushProgress = CreateSolidBrush(RGB(0x80, 0x80, 0xff));
-            GetTextExtentPoint32(hDCBuffer, data->message, Str::Len(data->message), &msgSize);
+            GetTextExtentPoint32(hDCBuffer, data->message, str::Len(data->message), &msgSize);
             InflateRect(&rcProgress, -(rcProgress.right - rcProgress.left - msgSize.cx) / 2, (-(rcProgress.bottom - rcProgress.top - msgSize.cy) / 2) + 2);
             OffsetRect(&rcProgress, 0, msgSize.cy + 4 + 2);
             FillRect(hDCBuffer, &rcProgress, (HBRUSH)GetStockObject(WHITE_BRUSH));
@@ -328,7 +328,7 @@ LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lPar
             else
             {
                 ScopedMem<TCHAR> totalSize(FormatSizeSuccint(data->totalSize));
-                ScopedMem<TCHAR> s(Str::Format(_T("%s of %s"), currSize, totalSize));
+                ScopedMem<TCHAR> s(str::Format(_T("%s of %s"), currSize, totalSize));
                 DrawText(hDCBuffer, s, -1, &rcProgressAll, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
             }
         }
@@ -470,7 +470,7 @@ NPError NP_LOADDS NPP_NewStream(NPP instance, NPMIMEType type, NPStream* stream,
     data->hFile = NULL;
     // create a temporary file only for Gecko based browsers such as Firefox
     const char *userAgent = gNPNFuncs.uagent(instance);
-    if (Str::Find(userAgent, "Gecko/") && (stream->end > BIG_FILE_THRESHOLD || !stream->end))
+    if (str::Find(userAgent, "Gecko/") && (stream->end > BIG_FILE_THRESHOLD || !stream->end))
     {
         data->hFile = CreateTempFile(data->filepath);
         if (data->hFile)
@@ -529,7 +529,7 @@ static void LaunchWithSumatra(InstanceData *data)
     if (!File::Exists(data->filepath))
         dbg("sp: NPP_StreamAsFile() error: file doesn't exist");
 
-    ScopedMem<TCHAR> cmdLine(Str::Format(_T("%s -plugin %d \"%s\""), data->exepath, (HWND)data->npwin->window, data->filepath));
+    ScopedMem<TCHAR> cmdLine(str::Format(_T("%s -plugin %d \"%s\""), data->exepath, (HWND)data->npwin->window, data->filepath));
     
     si.cb = sizeof(si);
     if (CreateProcess(NULL, cmdLine, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
@@ -555,7 +555,7 @@ void NP_LOADDS NPP_StreamAsFile(NPP instance, NPStream* stream, const char* fnam
         goto Exit;
     }
 
-    dbg("sp: NPP_StreamAsFile() fname=%s", ScopedMem<TCHAR>(Str::Conv::FromAnsi(fname)));
+    dbg("sp: NPP_StreamAsFile() fname=%s", ScopedMem<TCHAR>(str::Conv::FromAnsi(fname)));
 
     if (data->hFile)
     {
@@ -652,7 +652,7 @@ NPError NP_LOADDS NPP_Destroy(NPP instance, NPSavedData** save)
     {
         TCHAR tempDir[MAX_PATH];
         DWORD len = GetTempPath(MAX_PATH, tempDir);
-        if (0 < len && len < MAX_PATH && Str::StartsWithI(data->filepath, tempDir))
+        if (0 < len && len < MAX_PATH && str::StartsWithI(data->filepath, tempDir))
         {
             dbg("sp: NPP_Destroy(): deleting browser temporary file %s", data->filepath);
             DeleteFile(data->filepath);

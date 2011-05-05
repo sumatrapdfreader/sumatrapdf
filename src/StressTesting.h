@@ -19,5 +19,5 @@ class DirStressTest;
 bool CollectPathsFromDirectory(const TCHAR *pattern, StrVec& paths, bool dirsInsteadOfFiles=false);
 void StartDirStressTest(WindowInfo *win, const TCHAR *dir, RenderCache *renderCache);
 void RandomIsOverGlyph(DisplayModel *dm, int pageNo);
-void AppendStressTestInfo(DirStressTest *, Str::Str<char>&);
+void AppendStressTestInfo(DirStressTest *, str::Str<char>&);
 #endif

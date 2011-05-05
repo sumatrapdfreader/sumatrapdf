@@ -20,7 +20,7 @@ static inline bool IsSep(char c)
 // Note: returns pointer inside <path>, do not free
 const WCHAR *GetBaseName(const WCHAR *path)
 {
-    const WCHAR *fileBaseName = path + Str::Len(path);
+    const WCHAR *fileBaseName = path + str::Len(path);
     for (; fileBaseName > path; fileBaseName--)
         if (IsSep(fileBaseName[-1]))
             break;
@@ -29,7 +29,7 @@ const WCHAR *GetBaseName(const WCHAR *path)
 
 const char *GetBaseName(const char *path)
 {
-    const char *fileBaseName = path + Str::Len(path);
+    const char *fileBaseName = path + str::Len(path);
     for (; fileBaseName > path; fileBaseName--)
         if (IsSep(fileBaseName[-1]))
             break;
@@ -39,11 +39,11 @@ const char *GetBaseName(const char *path)
 // Note: returns pointer inside <path>, do not free
 const TCHAR *GetExt(const TCHAR *path)
 {
-    const TCHAR *ext = path + Str::Len(path);
+    const TCHAR *ext = path + str::Len(path);
     for (; ext > path && !IsSep(*ext); ext--)
         if (*ext == '.')
             return ext;
-    return path + Str::Len(path);
+    return path + str::Len(path);
 }
 
 TCHAR *GetDir(const TCHAR *path)
@@ -51,12 +51,12 @@ TCHAR *GetDir(const TCHAR *path)
     const TCHAR *baseName = GetBaseName(path);
     int dirLen;
     if (baseName <= path + 1)
-        dirLen = Str::Len(path);
+        dirLen = str::Len(path);
     else if (baseName[-2] == ':')
         dirLen = baseName - path;
     else
         dirLen = baseName - path - 1;
-    return Str::DupN(path, dirLen);
+    return str::DupN(path, dirLen);
 }
 
 TCHAR *Join(const TCHAR *path, const TCHAR *filename)
@@ -64,9 +64,9 @@ TCHAR *Join(const TCHAR *path, const TCHAR *filename)
     if (IsSep(*filename))
         filename++;
     TCHAR *sep = NULL;
-    if (!IsSep(path[Str::Len(path) - 1]))
+    if (!IsSep(path[str::Len(path) - 1]))
         sep = _T("\\");
-    return Str::Join(path, sep, filename);
+    return str::Join(path, sep, filename);
 }
 
 // Normalize a file path.
@@ -140,7 +140,7 @@ bool IsSame(const TCHAR *path1, const TCHAR *path2)
     // consider the files different, if their paths can't be normalized
     if (!npath1 || !npath2)
         return false;
-    return Str::EqI(npath1, npath2);
+    return str::EqI(npath1, npath2);
 }
 
 // returns true if the drive letter for this path might be variable

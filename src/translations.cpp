@@ -59,7 +59,7 @@ const char *GuessLanguage()
 static int GetLangOrderIndex(const char *code)
 {
     for (size_t i = 0; i < dimof(gLangOrder); i++)
-        if (Str::Eq(code, gLangOrder[i]))
+        if (str::Eq(code, gLangOrder[i]))
             return i;
     return -1;
 }
@@ -138,7 +138,7 @@ const TCHAR *GetTranslation(const char *txt)
         transIdx = idx;
 
     if (!gTranslationCache[transIdx])
-        gTranslationCache[transIdx] = Str::Conv::FromUtf8(gTranslations[transIdx]);
+        gTranslationCache[transIdx] = str::Conv::FromUtf8(gTranslations[transIdx]);
     return gTranslationCache[transIdx];
 }
 
@@ -154,7 +154,7 @@ int GetLanguageIndex(const char *code)
 
     for (int i = 0; i < LANGS_COUNT; i++) {
         const char *langCode = gLangData[i].code;
-        if (Str::Eq(code, langCode))
+        if (str::Eq(code, langCode))
             return i;
     }
     return -1;
@@ -181,7 +181,7 @@ TCHAR *GetLanguageName(int index)
 
     if (LANGS_COUNT <= index)
         return NULL;
-    return Str::Conv::FromUtf8(gLangData[index].fullName);
+    return str::Conv::FromUtf8(gLangData[index].fullName);
 }
 
 }

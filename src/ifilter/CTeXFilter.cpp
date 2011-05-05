@@ -30,7 +30,7 @@ HRESULT CTeXFilter::OnInit()
         }
         data[min(stat.cbSize.LowPart, read)] = '\0';
 
-        m_pData = Str::ToWideChar(data, CP_ACP);
+        m_pData = str::ToWideChar(data, CP_ACP);
         m_pBuffer = SAZA(WCHAR, stat.cbSize.LowPart + 1);
         free(data);
 
@@ -81,14 +81,14 @@ WCHAR *CTeXFilter::ExtractBracedBlock()
             // skip all LaTeX/TeX commands
             if (iscmdchar(*m_pPtr)) {
                 // ignore the content of \begin{...} and \end{...}
-                if (Str::StartsWith(m_pPtr, L"begin{") || Str::StartsWith(m_pPtr, L"end{")) {
+                if (str::StartsWith(m_pPtr, L"begin{") || str::StartsWith(m_pPtr, L"end{")) {
                     m_pPtr = wcschr(m_pPtr, '{') + 1;
                     ExtractBracedBlock();
                     addsingleNL(result, &rptr);
                     break;
                 }
                 // convert \item to a single dash
-                if (Str::StartsWith(m_pPtr, L"item") && !iscmdchar(*(m_pPtr + 4))) {
+                if (str::StartsWith(m_pPtr, L"item") && !iscmdchar(*(m_pPtr + 4))) {
                     m_pPtr += 4;
                     addsingleNL(result, &rptr);
                     *rptr++ = '-';
@@ -107,9 +107,9 @@ WCHAR *CTeXFilter::ExtractBracedBlock()
             if (*m_pPtr == ',')  { addsinglespace(result, &rptr); m_pPtr++; break; }
             if (*m_pPtr == '>')  { *rptr++ = '\t'; m_pPtr++; break; }
             // TODO: handle more international characters
-            if (Str::StartsWith(m_pPtr, L"'e")) { *rptr++ = L'é'; m_pPtr += 2; break; }
-            if (Str::StartsWith(m_pPtr, L"`e")) { *rptr++ = L'è'; m_pPtr += 2; break; }
-            if (Str::StartsWith(m_pPtr, L"`a")) { *rptr++ = L'à'; m_pPtr += 2; break; }
+            if (str::StartsWith(m_pPtr, L"'e")) { *rptr++ = L'é'; m_pPtr += 2; break; }
+            if (str::StartsWith(m_pPtr, L"`e")) { *rptr++ = L'è'; m_pPtr += 2; break; }
+            if (str::StartsWith(m_pPtr, L"`a")) { *rptr++ = L'à'; m_pPtr += 2; break; }
             if (*m_pPtr != '"')
                 break;
             m_pPtr++;
@@ -142,7 +142,7 @@ WCHAR *CTeXFilter::ExtractBracedBlock()
             break;
         case '%':
             // ignore comments until the end of line
-            m_pPtr = wcschr(m_pPtr, '\n') ? wcschr(m_pPtr, '\n') + 1 : m_pPtr + Str::Len(m_pPtr);
+            m_pPtr = wcschr(m_pPtr, '\n') ? wcschr(m_pPtr, '\n') + 1 : m_pPtr + str::Len(m_pPtr);
             break;
         case '&':
             *rptr++ = '\t';
@@ -228,7 +228,7 @@ ContinueParsing:
             return S_OK;
         }
 
-        if (!wcsncmp(start, L"begin", end - start) && Str::Eq(ExtractBracedBlock(), L"document"))
+        if (!wcsncmp(start, L"begin", end - start) && str::Eq(ExtractBracedBlock(), L"document"))
             m_state = STATE_TEX_CONTENT;
         goto ContinueParsing;
     case STATE_TEX_CONTENT:

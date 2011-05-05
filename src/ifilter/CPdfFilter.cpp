@@ -35,7 +35,7 @@ static bool PdfDateParse(const WCHAR *pdfDate, SYSTEMTIME *timeOut)
 {
     ZeroMemory(timeOut, sizeof(SYSTEMTIME));
     // "D:" at the beginning is optional
-    if (Str::StartsWith(pdfDate, L"D:"))
+    if (str::StartsWith(pdfDate, L"D:"))
         pdfDate += 2;
     return 6 == swscanf(pdfDate, L"%4d%2d%2d" L"%2d%2d%2d",
         &timeOut->wYear, &timeOut->wMonth, &timeOut->wDay,
@@ -55,8 +55,8 @@ HRESULT CPdfFilter::GetNextChunkValue(CChunkValue &chunkValue)
 
     case STATE_PDF_AUTHOR:
         m_state = STATE_PDF_TITLE;
-        str = Str::Conv::ToWStrQ(m_pdfEngine->GetProperty("Author"));
-        if (!Str::IsEmpty(str)) {
+        str = str::Conv::ToWStrQ(m_pdfEngine->GetProperty("Author"));
+        if (!str::IsEmpty(str)) {
             chunkValue.SetTextValue(PKEY_Author, str);
             free(str);
             return S_OK;
@@ -66,9 +66,9 @@ HRESULT CPdfFilter::GetNextChunkValue(CChunkValue &chunkValue)
 
     case STATE_PDF_TITLE:
         m_state = STATE_PDF_DATE;
-        str = Str::Conv::ToWStrQ(m_pdfEngine->GetProperty("Title"));
-        if (!str) str = Str::Conv::ToWStrQ(m_pdfEngine->GetProperty("Subject"));
-        if (!Str::IsEmpty(str)) {
+        str = str::Conv::ToWStrQ(m_pdfEngine->GetProperty("Title"));
+        if (!str) str = str::Conv::ToWStrQ(m_pdfEngine->GetProperty("Subject"));
+        if (!str::IsEmpty(str)) {
             chunkValue.SetTextValue(PKEY_Title, str);
             free(str);
             return S_OK;
@@ -78,9 +78,9 @@ HRESULT CPdfFilter::GetNextChunkValue(CChunkValue &chunkValue)
 
     case STATE_PDF_DATE:
         m_state = STATE_PDF_CONTENT;
-        str = Str::Conv::ToWStrQ(m_pdfEngine->GetProperty("ModDate"));
-        if (!str) str = Str::Conv::ToWStrQ(m_pdfEngine->GetProperty("CreationDate"));
-        if (!Str::IsEmpty(str)) {
+        str = str::Conv::ToWStrQ(m_pdfEngine->GetProperty("ModDate"));
+        if (!str) str = str::Conv::ToWStrQ(m_pdfEngine->GetProperty("CreationDate"));
+        if (!str::IsEmpty(str)) {
             SYSTEMTIME systime;
             if (PdfDateParse(str, &systime)) {
                 FILETIME filetime;
@@ -95,7 +95,7 @@ HRESULT CPdfFilter::GetNextChunkValue(CChunkValue &chunkValue)
 
     case STATE_PDF_CONTENT:
         if (++m_iPageNo <= m_pdfEngine->PageCount()) {
-            str = Str::Conv::ToWStrQ(m_pdfEngine->ExtractPageText(m_iPageNo, _T("\r\n")));
+            str = str::Conv::ToWStrQ(m_pdfEngine->ExtractPageText(m_iPageNo, _T("\r\n")));
             chunkValue.SetTextValue(PKEY_Search_Contents, str, CHUNK_TEXT);
             free(str);
             return S_OK;

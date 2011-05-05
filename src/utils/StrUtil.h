@@ -4,7 +4,7 @@
 #ifndef StrUtil_h
 #define StrUtil_h
 
-namespace Str {
+namespace str {
 
 inline size_t Len(const char *s) { return strlen(s); }
 inline size_t Len(const WCHAR *s) { return wcslen(s); }
@@ -128,15 +128,15 @@ inline bool ChrIsDigit(const WCHAR c)
     return '0' <= c && c <= '9';
 }
 
-#define _MemToHex(ptr) Str::MemToHex((const unsigned char *)(ptr), sizeof(*ptr))
-#define _HexToMem(str, ptr) Str::HexToMem(str, (unsigned char *)(ptr), sizeof(*ptr))
+#define _MemToHex(ptr) str::MemToHex((const unsigned char *)(ptr), sizeof(*ptr))
+#define _HexToMem(txt, ptr) str::HexToMem(txt, (unsigned char *)(ptr), sizeof(*ptr))
 
 #ifndef DEBUG
   #define DBG_OUT(format, ...) NoOp()
 #elif UNICODE
-  #define DBG_OUT(format, ...) Str::DbgOut(L##format, __VA_ARGS__)
+  #define DBG_OUT(format, ...) str::DbgOut(L##format, __VA_ARGS__)
 #else
-  #define DBG_OUT(format, ...) Str::DbgOut(format, __VA_ARGS__)
+  #define DBG_OUT(format, ...) str::DbgOut(format, __VA_ARGS__)
 #endif
 
 #ifdef _UNICODE

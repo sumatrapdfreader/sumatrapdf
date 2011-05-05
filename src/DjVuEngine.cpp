@@ -53,22 +53,22 @@ class DjVuDestination : public PageDestination {
     char *link;
 
 public:
-    DjVuDestination(const char *link) : link(Str::Dup(link)) { }
+    DjVuDestination(const char *link) : link(str::Dup(link)) { }
     ~DjVuDestination() { free(link); }
 
     virtual const char *GetType() const {
-        if (Str::StartsWith(link, "#") && ChrIsDigit(link[1]))
+        if (str::StartsWith(link, "#") && ChrIsDigit(link[1]))
             return "ScrollTo";
-        if (Str::Eq(link, "#+1"))
+        if (str::Eq(link, "#+1"))
             return "NextPage";
-        if (Str::Eq(link, "#-1"))
+        if (str::Eq(link, "#-1"))
             return "PrevPage";
-        if (Str::StartsWithI(link, "http:") || Str::StartsWithI(link, "https:"))
+        if (str::StartsWithI(link, "http:") || str::StartsWithI(link, "https:"))
             return "LaunchURL";
         return NULL;
     }
     virtual int GetDestPageNo() const {
-        if (Str::StartsWith(link, "#") && ChrIsDigit(link[1]))
+        if (str::StartsWith(link, "#") && ChrIsDigit(link[1]))
             return atoi(link + 1);
         return 0;
     }
@@ -76,8 +76,8 @@ public:
         return RectD();
     }
     virtual TCHAR *GetDestValue() const {
-        if (Str::Eq(GetType(), "LaunchURL"))
-            return Str::Conv::FromUtf8(link);
+        if (str::Eq(GetType(), "LaunchURL"))
+            return str::Conv::FromUtf8(link);
         return NULL;
     }
 };
@@ -92,8 +92,8 @@ public:
     DjVuLink(int pageNo, RectI rect, const char *link, const char *comment) :
         pageNo(pageNo), rect(rect.Convert<double>()), value(NULL) {
         dest = new DjVuDestination(link);
-        if (!Str::IsEmpty(comment))
-            value = Str::Conv::FromUtf8(comment);
+        if (!str::IsEmpty(comment))
+            value = str::Conv::FromUtf8(comment);
     }
     virtual ~DjVuLink() {
         delete dest;
@@ -104,8 +104,8 @@ public:
     virtual RectD GetRect() const { return rect; }
     virtual TCHAR *GetValue() const {
         if (value)
-            return Str::Dup(value);
-        if (Str::Eq(dest->GetType(), "LaunchURL"))
+            return str::Dup(value);
+        if (str::Eq(dest->GetType(), "LaunchURL"))
             return dest->GetDestValue();
         return NULL;
     }
@@ -120,7 +120,7 @@ public:
     bool isGeneric;
 
     DjVuToCItem(const char *title, const char *link) :
-        DocToCItem(Str::Conv::FromUtf8(title)), isGeneric(false) {
+        DocToCItem(str::Conv::FromUtf8(title)), isGeneric(false) {
         dest = new DjVuDestination(link);
         pageNo = dest->GetDestPageNo();
     }
@@ -194,7 +194,7 @@ protected:
     CRITICAL_SECTION ctxAccess;
 
     bool ExtractPageText(miniexp_t item, const TCHAR *lineSep,
-                         Str::Str<TCHAR>& extracted, Vec<RectI>& coords);
+                         str::Str<TCHAR>& extracted, Vec<RectI>& coords);
     char *ResolveNamedDest(const char *name);
     DjVuToCItem *BuildToCTree(miniexp_t entry, int& idCounter);
     bool Load(const TCHAR *fileName);
@@ -251,10 +251,10 @@ bool CDjVuEngine::Load(const TCHAR *fileName)
     if (!ctx)
         return false;
 
-    this->fileName = Str::Dup(fileName);
+    this->fileName = str::Dup(fileName);
 
     ScopedCritSec scope(&ctxAccess);
-    ScopedMem<char> fileNameUtf8(Str::Conv::ToUtf8(fileName));
+    ScopedMem<char> fileNameUtf8(str::Conv::ToUtf8(fileName));
     doc = ddjvu_document_create_by_filename_utf8(ctx, fileNameUtf8, /* cache */ TRUE);
     if (!doc)
         return false;
@@ -480,7 +480,7 @@ unsigned char *CDjVuEngine::GetFileData(size_t *cbCount)
     return (unsigned char *)File::ReadAll(fileName, cbCount);
 }
 
-bool CDjVuEngine::ExtractPageText(miniexp_t item, const TCHAR *lineSep, Str::Str<TCHAR>& extracted, Vec<RectI>& coords)
+bool CDjVuEngine::ExtractPageText(miniexp_t item, const TCHAR *lineSep, str::Str<TCHAR>& extracted, Vec<RectI>& coords)
 {
     miniexp_t type = miniexp_car(item);
     if (!miniexp_symbolp(type))
@@ -500,9 +500,9 @@ bool CDjVuEngine::ExtractPageText(miniexp_t item, const TCHAR *lineSep, Str::Str
     miniexp_t str = miniexp_car(item);
     if (miniexp_stringp(str) && !miniexp_cdr(item)) {
         const char *content = miniexp_to_str(str);
-        TCHAR *value = Str::Conv::FromUtf8(content);
+        TCHAR *value = str::Conv::FromUtf8(content);
         if (value) {
-            size_t len = Str::Len(value);
+            size_t len = str::Len(value);
             // TODO: split the rectangle into individual parts per glyph
             for (size_t i = 0; i < len; i++)
                 coords.Append(RectI(rect.x, rect.y, rect.dx, rect.dy));
@@ -514,7 +514,7 @@ bool CDjVuEngine::ExtractPageText(miniexp_t item, const TCHAR *lineSep, Str::Str
         }
         else if (miniexp_symbol("char") != type) {
             extracted.Append(lineSep);
-            for (size_t i = 0; i < Str::Len(lineSep); i++)
+            for (size_t i = 0; i < str::Len(lineSep); i++)
                 coords.Append(RectI());
         }
         item = miniexp_cdr(item);
@@ -537,14 +537,14 @@ TCHAR *CDjVuEngine::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_o
     if (miniexp_nil == pagetext)
         return NULL;
 
-    Str::Str<TCHAR> extracted;
+    str::Str<TCHAR> extracted;
     Vec<RectI> coords;
     bool success = ExtractPageText(pagetext, lineSep, extracted, coords);
     ddjvu_miniexp_release(doc, pagetext);
     if (!success)
         return NULL;
 
-    assert(Str::Len(extracted.Get()) == coords.Count());
+    assert(str::Len(extracted.Get()) == coords.Count());
     if (coords_out) {
         // TODO: the coordinates aren't completely correct yet
         RectI page = PageMediabox(pageNo).Round();
@@ -635,19 +635,19 @@ PageElement *CDjVuEngine::GetElementAtPos(int pageNo, PointD pt)
 // caller needs to free() the result
 char *CDjVuEngine::ResolveNamedDest(const char *name)
 {
-    if (!Str::StartsWith(name, "#"))
+    if (!str::StartsWith(name, "#"))
         return NULL;
     for (size_t i = 0; i < fileInfo.Count(); i++)
-        if (fileInfo[i].pageno >= 0 && Str::EqI(name + 1, fileInfo[i].id))
-            return Str::Format("#%d", fileInfo[i].pageno + 1);
+        if (fileInfo[i].pageno >= 0 && str::EqI(name + 1, fileInfo[i].id))
+            return str::Format("#%d", fileInfo[i].pageno + 1);
     return NULL;
 }
 
 PageDestination *CDjVuEngine::GetNamedDest(const TCHAR *name)
 {
-    ScopedMem<char> nameUtf8(Str::Conv::ToUtf8(name));
-    if (!Str::StartsWith(nameUtf8.Get(), "#"))
-        nameUtf8.Set(Str::Join("#", nameUtf8));
+    ScopedMem<char> nameUtf8(str::Conv::ToUtf8(name));
+    if (!str::StartsWith(nameUtf8.Get(), "#"))
+        nameUtf8.Set(str::Join("#", nameUtf8));
 
     ScopedMem<char> link(ResolveNamedDest(nameUtf8));
     if (link)
@@ -673,10 +673,10 @@ DjVuToCItem *CDjVuEngine::BuildToCTree(miniexp_t entry, int& idCounter)
         ScopedMem<char> linkNo(ResolveNamedDest(link));
         if (!linkNo)
             tocItem = new DjVuToCItem(name, link);
-        else if (!Str::IsEmpty(name) && !Str::Eq(name, link + 1))
+        else if (!str::IsEmpty(name) && !str::Eq(name, link + 1))
             tocItem = new DjVuToCItem(name, linkNo);
         else {
-            ScopedMem<char> name(Str::Format("Page %d", atoi(linkNo + 1)));
+            ScopedMem<char> name(str::Format("Page %d", atoi(linkNo + 1)));
             tocItem = new DjVuToCItem(name, linkNo);
             // don't display such generic items by default
             tocItem->isGeneric = true;

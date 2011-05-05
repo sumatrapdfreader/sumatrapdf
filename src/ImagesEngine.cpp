@@ -28,7 +28,7 @@ public:
     Gdiplus::Bitmap *   bmp;
 
     ImagesPage(const TCHAR *fileName, Gdiplus::Bitmap *bmp) : bmp(bmp) {
-        this->fileName = Str::Dup(fileName);
+        this->fileName = str::Dup(fileName);
     }
     ~ImagesPage() {
         free((void *)fileName);
@@ -38,7 +38,7 @@ public:
     static int cmpPageByName(const void *o1, const void *o2) {
         ImagesPage *p1 = *(ImagesPage **)o1;
         ImagesPage *p2 = *(ImagesPage **)o2;
-        return Str::CmpNatural(p1->fileName, p2->fileName);
+        return str::CmpNatural(p1->fileName, p2->fileName);
     }
 };
 
@@ -89,21 +89,21 @@ SizeI SizeFromData(char *data, size_t len)
     if (len < 8) {
     }
     // Bitmap
-    else if (Str::StartsWith(data, "BM")) {
+    else if (str::StartsWith(data, "BM")) {
         if (len >= sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER)) {
             BITMAPINFOHEADER *bmi = (BITMAPINFOHEADER *)(data + sizeof(BITMAPFILEHEADER));
             result = SizeI(bmi->biWidth, bmi->biHeight);
         }
     }
     // PNG
-    else if (Str::StartsWith(data, PNG_SIGNATURE)) {
-        if (len >= 16 + sizeof(PngImageHeader) && Str::StartsWith(data + 12, "IHDR")) {
+    else if (str::StartsWith(data, PNG_SIGNATURE)) {
+        if (len >= 16 + sizeof(PngImageHeader) && str::StartsWith(data + 12, "IHDR")) {
             PngImageHeader *hdr = (PngImageHeader *)data + 16;
             result = SizeI(SWAPLONG(hdr->width), SWAPLONG(hdr->height));
         }
     }
     // JPEG
-    else if (Str::StartsWith(data, "\xFF\xD8")) {
+    else if (str::StartsWith(data, "\xFF\xD8")) {
         // find the last start of frame marker for non-differential Huffman coding
         for (size_t ix = 2; ix + 9 < len && data[ix] == '\xFF'; ) {
             if ('\xC0' <= data[ix + 1] && data[ix + 1] <= '\xC3') {
@@ -115,7 +115,7 @@ SizeI SizeFromData(char *data, size_t len)
         }
     }
     // GIF
-    else if (Str::StartsWith(data, "GIF87a") || Str::StartsWith(data, "GIF89a")) {
+    else if (str::StartsWith(data, "GIF87a") || str::StartsWith(data, "GIF89a")) {
         if (len >= 13) {
             // find the first image's actual size instead of using the
             // "logical screen" size which is sometimes too large
@@ -163,7 +163,7 @@ SizeI SizeFromData(char *data, size_t len)
 
 static bool SetCurrentCbzPage(unzFile& uf, const TCHAR *fileName)
 {
-    ScopedMem<char> fileNameUtf8(Str::Conv::ToUtf8(fileName));
+    ScopedMem<char> fileNameUtf8(str::Conv::ToUtf8(fileName));
     int err = unzLocateFile(uf, fileNameUtf8, 0);
     return err == UNZ_OK;
 }
@@ -274,9 +274,9 @@ bool CbxEngine::LoadCbrFile(const TCHAR *file)
 {
     if (!file)
         return false;
-    fileName = Str::Dup(file);
+    fileName = str::Dup(file);
     fileExt = _T(".cbr");
-    assert(Str::EndsWithI(fileName, fileExt));
+    assert(str::EndsWithI(fileName, fileExt));
 
     RAROpenArchiveDataEx  arcData = { 0 };
 #ifdef UNICODE
@@ -331,7 +331,7 @@ bool ImageEngine::LoadSingleFile(const TCHAR *file)
 
     pages.Append(BitmapFromData(bmpData, len));
 
-    fileName = Str::Dup(file);
+    fileName = str::Dup(file);
     fileExt = Path::GetExt(fileName);
     assert(fileExt && *fileExt == '.');
 
@@ -347,9 +347,9 @@ bool CbxEngine::LoadCbzFile(const TCHAR *file)
 {
     if (!file)
         return false;
-    fileName = Str::Dup(file);
+    fileName = str::Dup(file);
     fileExt = _T(".cbz");
-    assert(Str::EndsWithI(fileName, fileExt));
+    assert(str::EndsWithI(fileName, fileExt));
 
     CbzFileAccess *fa = new CbzFileAccess;
     libData = fa;
@@ -370,10 +370,10 @@ bool CbxEngine::LoadCbzFile(const TCHAR *file)
         char fileName[MAX_PATH];
         int err = unzGetCurrentFileInfo64(fa->uf, NULL, fileName, dimof(fileName), NULL, 0, NULL, 0);
         if (err == UNZ_OK) {
-            ScopedMem<TCHAR> fileName2(Str::Conv::FromUtf8(fileName));
+            ScopedMem<TCHAR> fileName2(str::Conv::FromUtf8(fileName));
             if (ImageEngine::IsSupportedFile(fileName2) &&
                 // OS X occasionally leaves metadata with image extensions
-                !Str::StartsWith(Path::GetBaseName(fileName2), _T("."))) {
+                !str::StartsWith(Path::GetBaseName(fileName2), _T("."))) {
                 pageFileNames.Append(fileName2.StealData());
             }
         }
@@ -413,7 +413,7 @@ CbxEngine::CbxEngine() : mediaboxes(NULL), libData(NULL)
 
 CbxEngine::~CbxEngine()
 {
-    if (Str::EqI(fileExt, _T(".cbz"))) {
+    if (str::EqI(fileExt, _T(".cbz"))) {
         CbzFileAccess *fa = (CbzFileAccess *)libData;
         unzClose(fa->uf);
         delete fa;
@@ -430,7 +430,7 @@ RectD CbxEngine::PageMediabox(int pageNo)
 
     size_t len;
     ScopedMem<char> bmpData;
-    if (Str::EqI(fileExt, _T(".cbz"))) {
+    if (str::EqI(fileExt, _T(".cbz"))) {
         ScopedCritSec scope(&fileAccess);
         CbzFileAccess *fa = (CbzFileAccess *)libData;
         if (SetCurrentCbzPage(fa->uf, pageFileNames[pageNo - 1]))
@@ -451,7 +451,7 @@ Bitmap *CbxEngine::LoadImage(int pageNo)
 
     size_t len;
     ScopedMem<char> bmpData;
-    if (Str::EqI(fileExt, _T(".cbz"))) {
+    if (str::EqI(fileExt, _T(".cbz"))) {
         ScopedCritSec scope(&fileAccess);
         CbzFileAccess *fa = (CbzFileAccess *)libData;
         if (SetCurrentCbzPage(fa->uf, pageFileNames[pageNo-1]))
@@ -577,9 +577,9 @@ CbxEngine *CbxEngine::CreateFromFileName(const TCHAR *fileName)
     assert(IsSupportedFile(fileName));
     CbxEngine *engine = new CbxEngine();
     bool ok = false;
-    if (Str::EndsWithI(fileName, _T(".cbz")))
+    if (str::EndsWithI(fileName, _T(".cbz")))
         ok = engine->LoadCbzFile(fileName);
-    else if (Str::EndsWithI(fileName, _T(".cbr")))
+    else if (str::EndsWithI(fileName, _T(".cbr")))
         ok = engine->LoadCbrFile(fileName);
     if (!ok) {
         delete engine;
@@ -590,7 +590,7 @@ CbxEngine *CbxEngine::CreateFromFileName(const TCHAR *fileName)
 
 RenderedBitmap *LoadRenderedBitmap(const TCHAR *filePath)
 {
-    if (Str::EndsWithI(filePath, _T(".bmp"))) {
+    if (str::EndsWithI(filePath, _T(".bmp"))) {
         HBITMAP hbmp = (HBITMAP)LoadImage(NULL, filePath, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
         if (!hbmp)
             return NULL;
@@ -625,13 +625,13 @@ static bool GetEncoderClsid(const TCHAR *format, CLSID& clsid)
         return false;
 
     ScopedMem<ImageCodecInfo> codecInfo((ImageCodecInfo *)malloc(size));
-    ScopedMem<WCHAR> formatW(Str::Conv::ToWStr(format));
+    ScopedMem<WCHAR> formatW(str::Conv::ToWStr(format));
     if (!codecInfo || !formatW)
         return false;
 
     GetImageEncoders(numEncoders, size, codecInfo);
     for (UINT j = 0; j < numEncoders; j++) {
-        if (Str::Eq(codecInfo[j].MimeType, formatW)) {
+        if (str::Eq(codecInfo[j].MimeType, formatW)) {
             clsid = codecInfo[j].Clsid;
             return true;
         }
@@ -648,7 +648,7 @@ bool SaveRenderedBitmap(RenderedBitmap *bmp, const TCHAR *filePath)
         return false;
 
     const TCHAR *fileExt = Path::GetExt(filePath);
-    if (Str::EqI(fileExt, _T(".bmp")))
+    if (str::EqI(fileExt, _T(".bmp")))
         return File::WriteAll(filePath, bmpData.Get(), bmpDataLen);
 
     const TCHAR *encoders[] = {
@@ -661,7 +661,7 @@ bool SaveRenderedBitmap(RenderedBitmap *bmp, const TCHAR *filePath)
     };
     const TCHAR *encoder = NULL;
     for (int i = 0; i < dimof(encoders) && !encoder; i += 2)
-        if (Str::EqI(fileExt, encoders[i]))
+        if (str::EqI(fileExt, encoders[i]))
             encoder = encoders[i+1];
 
     CLSID encClsid;
@@ -672,7 +672,7 @@ bool SaveRenderedBitmap(RenderedBitmap *bmp, const TCHAR *filePath)
     if (!gbmp)
         return false;
 
-    ScopedMem<TCHAR> filePathW(Str::Conv::ToWStr(filePath));
+    ScopedMem<TCHAR> filePathW(str::Conv::ToWStr(filePath));
     Status status = gbmp->Save(filePathW, &encClsid);
     delete gbmp;
 

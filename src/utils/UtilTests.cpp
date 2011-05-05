@@ -87,91 +87,91 @@ static void TStrTest()
 {
     TCHAR buf[32];
     TCHAR *str = _T("a string");
-    assert(Str::Len(str) == 8);
-    assert(Str::Eq(str, _T("a string")) && Str::Eq(str, str));
-    assert(!Str::Eq(str, NULL) && !Str::Eq(str, _T("A String")));
-    assert(Str::EqI(str, _T("A String")) && Str::EqI(str, str));
-    assert(!Str::EqI(str, NULL) && Str::EqI((char*)NULL, (char*)NULL));
-    assert(Str::StartsWith(str, _T("a s")) && Str::StartsWithI(str, _T("A Str")));
-    assert(!Str::StartsWith(str, _T("Astr")));
-    assert(Str::EndsWith(str, _T("ing")) && Str::EndsWithI(str, _T("ING")));
-    assert(!Str::EndsWith(str, _T("ung")));
-    assert(Str::IsEmpty((char*)NULL) && Str::IsEmpty((WCHAR*)NULL)&& Str::IsEmpty(_T("")) && !Str::IsEmpty(str));
-    assert(Str::FindChar(str, _T('s')) && !Str::FindChar(str, _T('S')));
-    size_t len = Str::BufSet(buf, dimof(buf), str);
-    assert(len == Str::Len(buf) && Str::Eq(buf, str));
-    len = Str::BufSet(buf, 6, str);
-    assert(len == 5 && Str::Eq(buf, _T("a str")));
+    assert(str::Len(str) == 8);
+    assert(str::Eq(str, _T("a string")) && str::Eq(str, str));
+    assert(!str::Eq(str, NULL) && !str::Eq(str, _T("A String")));
+    assert(str::EqI(str, _T("A String")) && str::EqI(str, str));
+    assert(!str::EqI(str, NULL) && str::EqI((char*)NULL, (char*)NULL));
+    assert(str::StartsWith(str, _T("a s")) && str::StartsWithI(str, _T("A Str")));
+    assert(!str::StartsWith(str, _T("Astr")));
+    assert(str::EndsWith(str, _T("ing")) && str::EndsWithI(str, _T("ING")));
+    assert(!str::EndsWith(str, _T("ung")));
+    assert(str::IsEmpty((char*)NULL) && str::IsEmpty((WCHAR*)NULL)&& str::IsEmpty(_T("")) && !str::IsEmpty(str));
+    assert(str::FindChar(str, _T('s')) && !str::FindChar(str, _T('S')));
+    size_t len = str::BufSet(buf, dimof(buf), str);
+    assert(len == str::Len(buf) && str::Eq(buf, str));
+    len = str::BufSet(buf, 6, str);
+    assert(len == 5 && str::Eq(buf, _T("a str")));
 
-    str = Str::Dup(buf);
-    assert(Str::Eq(str, buf));
+    str = str::Dup(buf);
+    assert(str::Eq(str, buf));
     free(str);
-    str = Str::DupN(buf, 4);
-    assert(Str::Eq(str, _T("a st")));
+    str = str::DupN(buf, 4);
+    assert(str::Eq(str, _T("a st")));
     free(str);
-    str = Str::Format(_T("%s"), buf);
-    assert(Str::Eq(str, buf));
+    str = str::Format(_T("%s"), buf);
+    assert(str::Eq(str, buf));
     free(str);
-    str = Str::Join(buf, buf);
-    assert(Str::Len(str) == 2 * Str::Len(buf));
+    str = str::Join(buf, buf);
+    assert(str::Len(str) == 2 * str::Len(buf));
     free(str);
-    str = Str::Join(NULL, _T("ab"));
-    assert(Str::Eq(str, _T("ab")));
+    str = str::Join(NULL, _T("ab"));
+    assert(str::Eq(str, _T("ab")));
     free(str);
 
-    Str::BufSet(buf, dimof(buf), _T("abc\1efg\1"));
-    size_t count = Str::TransChars(buf, _T("ace"), _T("ACE"));
-    assert(Str::Eq(buf, _T("AbC\1Efg\1")) && count == 3);
-    count = Str::TransChars(buf, _T("\1"), _T("\0"));
-    assert(Str::Eq(buf, _T("AbC")) && Str::Eq(buf + 4, _T("Efg")) && count == 2);
-    count = Str::TransChars(buf, _T(""), _T("X"));
-    assert(Str::Eq(buf, _T("AbC")) && count == 0);
+    str::BufSet(buf, dimof(buf), _T("abc\1efg\1"));
+    size_t count = str::TransChars(buf, _T("ace"), _T("ACE"));
+    assert(str::Eq(buf, _T("AbC\1Efg\1")) && count == 3);
+    count = str::TransChars(buf, _T("\1"), _T("\0"));
+    assert(str::Eq(buf, _T("AbC")) && str::Eq(buf + 4, _T("Efg")) && count == 2);
+    count = str::TransChars(buf, _T(""), _T("X"));
+    assert(str::Eq(buf, _T("AbC")) && count == 0);
 
     str = _T("[Open(\"filename.pdf\",0,1,0)]");
     {
         UINT u1 = 0;
         TCHAR *str1 = NULL;
-        const TCHAR *end = Str::Parse(str, _T("[Open(\"%s\",%? 0,%u,0)]"), &str1, &u1);
+        const TCHAR *end = str::Parse(str, _T("[Open(\"%s\",%? 0,%u,0)]"), &str1, &u1);
         assert(end && !*end);
-        assert(u1 == 1 && Str::Eq(str1, _T("filename.pdf")));
+        assert(u1 == 1 && str::Eq(str1, _T("filename.pdf")));
         free(str1);
     }
 
     {
         UINT u1 = 0;
         ScopedMem<TCHAR> str1;
-        const TCHAR *end = Str::Parse(str, _T("[Open(\"%S\",0%?,%u,0)]"), &str1, &u1);
+        const TCHAR *end = str::Parse(str, _T("[Open(\"%S\",0%?,%u,0)]"), &str1, &u1);
         assert(end && !*end);
-        assert(u1 == 1 && Str::Eq(str1, _T("filename.pdf")));
+        assert(u1 == 1 && str::Eq(str1, _T("filename.pdf")));
 
-        assert(Str::Parse(_T("0xABCD"), _T("%x"), &u1));
+        assert(str::Parse(_T("0xABCD"), _T("%x"), &u1));
         assert(u1 == 0xABCD);
-        assert(Str::Parse(_T("ABCD"), _T("%2x%S"), &u1, &str1));
-        assert(u1 == 0xAB && Str::Eq(str1, _T("CD")));
+        assert(str::Parse(_T("ABCD"), _T("%2x%S"), &u1, &str1));
+        assert(u1 == 0xAB && str::Eq(str1, _T("CD")));
     }
 
     {
         int i1, i2;
-        const TCHAR *end = Str::Parse(_T("1, 2+3"), _T("%d,%d"), &i1, &i2);
-        assert(end && Str::Eq(end, _T("+3")));
+        const TCHAR *end = str::Parse(_T("1, 2+3"), _T("%d,%d"), &i1, &i2);
+        assert(end && str::Eq(end, _T("+3")));
         assert(i1 == 1 && i2 == 2);
-        end = Str::Parse(end, _T("+3"));
+        end = str::Parse(end, _T("+3"));
         assert(end && !*end);
 
-        assert(Str::Parse(_T(" -2"), _T("%d"), &i1));
+        assert(str::Parse(_T(" -2"), _T("%d"), &i1));
         assert(i1 == -2);
-        assert(Str::Parse(_T(" 2"), _T(" %u"), &i1));
+        assert(str::Parse(_T(" 2"), _T(" %u"), &i1));
         assert(i1 == 2);
-        assert(Str::Parse(_T("123-456"), _T("%3d%3d6"), &i1, &i2));
+        assert(str::Parse(_T("123-456"), _T("%3d%3d6"), &i1, &i2));
         assert(i1 == 123 && i2 == -45);
-        assert(!Str::Parse(_T("123"), _T("%4d"), &i1));
-        assert(Str::Parse(_T("654"), _T("%3d"), &i1));
+        assert(!str::Parse(_T("123"), _T("%4d"), &i1));
+        assert(str::Parse(_T("654"), _T("%3d"), &i1));
         assert(i1 == 654);
     }
 
     {
         float f1, f2;
-        const TCHAR *end = Str::Parse(_T("%1.23y -2e-3z"), _T("%%%fy%fz"), &f1, &f2);
+        const TCHAR *end = str::Parse(_T("%1.23y -2e-3z"), _T("%%%fy%fz"), &f1, &f2);
         assert(end && !*end);
         assert(f1 == 1.23f && f2 == -2e-3f);
     }
@@ -179,32 +179,32 @@ static void TStrTest()
     {
         TCHAR *str1 = NULL;
         TCHAR c1;
-        assert(!Str::Parse(_T("no exclamation mark?"), _T("%s!"), &str1));
+        assert(!str::Parse(_T("no exclamation mark?"), _T("%s!"), &str1));
         assert(!str1);
-        assert(Str::Parse(_T("xyz"), _T("x%cz"), &c1));
+        assert(str::Parse(_T("xyz"), _T("x%cz"), &c1));
         assert(c1 == 'y');
     }
 
     // the test string should only contain ASCII characters,
     // as all others might not be available in all code pages
 #define TEST_STRING "aBc"
-    char *strA = Str::Conv::ToAnsi(_T(TEST_STRING));
-    assert(Str::Eq(strA, TEST_STRING));
-    str = Str::Conv::FromAnsi(strA);
+    char *strA = str::Conv::ToAnsi(_T(TEST_STRING));
+    assert(str::Eq(strA, TEST_STRING));
+    str = str::Conv::FromAnsi(strA);
     free(strA);
-    assert(Str::Eq(str, _T(TEST_STRING)));
+    assert(str::Eq(str, _T(TEST_STRING)));
     free(str);
 #undef TEST_STRING
 
     assert(ChrIsDigit('0') && ChrIsDigit(_T('5')) && ChrIsDigit(L'9'));
     assert(iswdigit(L'\xB2') && !ChrIsDigit(L'\xB2'));
 
-    assert(Str::CmpNatural(_T(".hg"), _T("2.pdf")) < 0);
-    assert(Str::CmpNatural(_T("100.pdf"), _T("2.pdf")) > 0);
-    assert(Str::CmpNatural(_T("2.pdf"), _T("zzz")) < 0);
-    assert(Str::CmpNatural(_T("abc"), _T(".svn")) > 0);
-    assert(Str::CmpNatural(_T("ab0200"), _T("AB333")) < 0);
-    assert(Str::CmpNatural(_T("a b"), _T("a  c")) < 0);
+    assert(str::CmpNatural(_T(".hg"), _T("2.pdf")) < 0);
+    assert(str::CmpNatural(_T("100.pdf"), _T("2.pdf")) > 0);
+    assert(str::CmpNatural(_T("2.pdf"), _T("zzz")) < 0);
+    assert(str::CmpNatural(_T("abc"), _T(".svn")) > 0);
+    assert(str::CmpNatural(_T("ab0200"), _T("AB333")) < 0);
+    assert(str::CmpNatural(_T("a b"), _T("a  c")) < 0);
 
     struct {
         size_t number;
@@ -221,18 +221,18 @@ static void TStrTest()
     };
 
     for (int i = 0; i < dimof(formatNumData); i++) {
-        ScopedMem<TCHAR> tmp(Str::FormatNumWithThousandSep(formatNumData[i].number, _T("'")));
-        assert(Str::Eq(tmp, formatNumData[i].result));
+        ScopedMem<TCHAR> tmp(str::FormatNumWithThousandSep(formatNumData[i].number, _T("'")));
+        assert(str::Eq(tmp, formatNumData[i].result));
     }
 
     {
         char str[] = "aAbBcC... 1-9";
-        Str::ToLower(str);
-        assert(Str::Eq(str, "aabbcc... 1-9"));
+        str::ToLower(str);
+        assert(str::Eq(str, "aabbcc... 1-9"));
 
         WCHAR wstr[] = L"aAbBcC... 1-9";
-        Str::ToLower(wstr);
-        assert(Str::Eq(wstr, L"aabbcc... 1-9"));
+        str::ToLower(wstr);
+        assert(str::Eq(wstr, L"aabbcc... 1-9"));
     }
 }
 
@@ -241,64 +241,64 @@ static void FileUtilTest()
     TCHAR *path1 = _T("C:\\Program Files\\SumatraPDF\\SumatraPDF.exe");
 
     const TCHAR *baseName = Path::GetBaseName(path1);
-    assert(Str::Eq(baseName, _T("SumatraPDF.exe")));
+    assert(str::Eq(baseName, _T("SumatraPDF.exe")));
 
     TCHAR *dirName = Path::GetDir(path1);
-    assert(Str::Eq(dirName, _T("C:\\Program Files\\SumatraPDF")));
+    assert(str::Eq(dirName, _T("C:\\Program Files\\SumatraPDF")));
     baseName = Path::GetBaseName(dirName);
-    assert(Str::Eq(baseName, _T("SumatraPDF")));
+    assert(str::Eq(baseName, _T("SumatraPDF")));
     free(dirName);
 
     path1 = _T("C:\\Program Files");
     dirName = Path::GetDir(path1);
-    assert(Str::Eq(dirName, _T("C:\\")));
+    assert(str::Eq(dirName, _T("C:\\")));
     free(dirName);
 
     TCHAR *path2 = Path::Join(_T("C:\\"), _T("Program Files"));
-    assert(Str::Eq(path1, path2));
+    assert(str::Eq(path1, path2));
     free(path2);
     path2 = Path::Join(path1, _T("SumatraPDF"));
-    assert(Str::Eq(path2, _T("C:\\Program Files\\SumatraPDF")));
+    assert(str::Eq(path2, _T("C:\\Program Files\\SumatraPDF")));
     free(path2);
     path2 = Path::Join(_T("C:\\"), _T("\\Windows"));
-    assert(Str::Eq(path2, _T("C:\\Windows")));
+    assert(str::Eq(path2, _T("C:\\Windows")));
     free(path2);
 }
 
 static void StrVecTest()
 {
     StrVec v;
-    v.Append(Str::Dup(_T("foo")));
-    v.Append(Str::Dup(_T("bar")));
+    v.Append(str::Dup(_T("foo")));
+    v.Append(str::Dup(_T("bar")));
     TCHAR *s = v.Join();
     assert(v.Count() == 2);
-    assert(Str::Eq(_T("foobar"), s));
+    assert(str::Eq(_T("foobar"), s));
     free(s);
 
     s = v.Join(_T(";"));
     assert(v.Count() == 2);
-    assert(Str::Eq(_T("foo;bar"), s));
+    assert(str::Eq(_T("foo;bar"), s));
     free(s);
 
-    v.Append(Str::Dup(_T("glee")));
+    v.Append(str::Dup(_T("glee")));
     s = v.Join(_T("_ _"));
     assert(v.Count() == 3);
-    assert(Str::Eq(_T("foo_ _bar_ _glee"), s));
+    assert(str::Eq(_T("foo_ _bar_ _glee"), s));
     free(s);
 
     v.Sort();
     s = v.Join();
-    assert(Str::Eq(_T("barfooglee"), s));
+    assert(str::Eq(_T("barfooglee"), s));
     free(s);
 
     {
         StrVec v2(v);
-        assert(Str::Eq(v2[1], _T("foo")));
-        v2.Append(Str::Dup(_T("nobar")));
-        assert(Str::Eq(v2[3], _T("nobar")));
+        assert(str::Eq(v2[1], _T("foo")));
+        v2.Append(str::Dup(_T("nobar")));
+        assert(str::Eq(v2[3], _T("nobar")));
         v2 = v;
         assert(v2.Count() == 3 && v2[0] != v[0]);
-        assert(Str::Eq(v2[1], _T("foo")));
+        assert(str::Eq(v2[1], _T("foo")));
     }
 
     {
@@ -306,7 +306,7 @@ static void StrVecTest()
         size_t count = v2.Split(_T("a,b,,c,"), _T(","));
         assert(count == 5 && v2.Find(_T("c")) == 3);
         ScopedMem<TCHAR> joined(v2.Join(_T(";")));
-        assert(Str::Eq(joined, _T("a;b;;c;")));
+        assert(str::Eq(joined, _T("a;b;;c;")));
     }
 
     {
@@ -314,13 +314,13 @@ static void StrVecTest()
         size_t count = v2.Split(_T("a,b,,c,"), _T(","), true);
         assert(count == 3 && v2.Find(_T("c")) == 2);
         ScopedMem<TCHAR> joined(v2.Join(_T(";")));
-        assert(Str::Eq(joined, _T("a;b;c")));
+        assert(str::Eq(joined, _T("a;b;c")));
     }
 }
 
 static size_t VecTestAppendFmt()
 {
-    Str::Str<char> v(256);
+    str::Str<char> v(256);
     int64_t val = 1;
     for (int i=0; i < 10000; i++) {
         v.AppendFmt("i%" PRId64 "e", val);
@@ -370,41 +370,41 @@ static void VecTest()
 
     {
         char buf[2] = {'a', '\0'};
-        Str::Str<char> v(0);
+        str::Str<char> v(0);
         for (int i=0; i<7; i++) {
             v.Append(buf, 1);
             buf[0] = buf[0] + 1;
         }
         char *s = v.LendData();
-        assert(Str::Eq("abcdefg", s));
+        assert(str::Eq("abcdefg", s));
         assert(7 == v.Count());
         v.Set("helo");
         assert(4 == v.Count());
-        assert(Str::Eq("helo", v.LendData()));
+        assert(str::Eq("helo", v.LendData()));
     }
 
     {
-        Str::Str<char> v(128);
+        str::Str<char> v(128);
         v.Append("boo", 3);
-        assert(Str::Eq("boo", v.LendData()));
+        assert(str::Eq("boo", v.LendData()));
         assert(v.Count() == 3);
         v.Append("fop");
-        assert(Str::Eq("boofop", v.LendData()));
+        assert(str::Eq("boofop", v.LendData()));
         assert(v.Count() == 6);
         v.RemoveAt(2, 3);
         assert(v.Count() == 3);
-        assert(Str::Eq("bop", v.LendData()));
+        assert(str::Eq("bop", v.LendData()));
         v.Append('a');
         assert(v.Count() == 4);
-        assert(Str::Eq("bopa", v.LendData()));
+        assert(str::Eq("bopa", v.LendData()));
         char *s = v.StealData();
-        assert(Str::Eq("bopa", s));
+        assert(str::Eq("bopa", s));
         free(s);
         assert(v.Count() == 0);
     }
 
     {
-        Str::Str<char> v(0);
+        str::Str<char> v(0);
         for (int i=0; i<32; i++) {
             assert(v.Count() == i * 6);
             v.Append("lambd", 5);
@@ -422,9 +422,9 @@ static void VecTest()
         v.RemoveAt(0, 6 * 15);
         assert(v.Count() == 6);
         char *s = v.LendData();
-        assert(Str::Eq(s, "lambda"));
+        assert(str::Eq(s, "lambda"));
         s = v.StealData();
-        assert(Str::Eq(s, "lambda"));
+        assert(str::Eq(s, "lambda"));
         free(s);
         assert(v.Count() == 0);
     }
@@ -461,7 +461,7 @@ static void VecTest()
 static void LogTest()
 {
     Log::MultiLogger log;
-    log.LogAndFree(Str::Dup(_T("Don't leak me!")));
+    log.LogAndFree(str::Dup(_T("Don't leak me!")));
 
     Log::MemoryLogger logAll;
     log.AddLogger(&logAll);
@@ -474,7 +474,7 @@ static void LogTest()
         ml.LogFmt(_T("%s : %d"), _T("filen\xE4me.pdf"), 25);
         log.RemoveLogger(&ml);
 
-        assert(Str::Eq(ml.GetData(), _T("Test1\r\nML\r\nfilen\xE4me.pdf : 25\r\n")));
+        assert(str::Eq(ml.GetData(), _T("Test1\r\nML\r\nfilen\xE4me.pdf : 25\r\n")));
     }
 
     {
@@ -491,13 +491,13 @@ static void LogTest()
         char *expected = "Test2\r\nFL\r\nfilen\xC3\xA4me.pdf : 25\r\n";
         DWORD len;
         BOOL ok = ReadFile(hRead, pipeData, sizeof(pipeData), &len, NULL);
-        assert(ok && len == Str::Len(expected));
+        assert(ok && len == str::Len(expected));
         pipeData[len] = '\0';
-        assert(Str::Eq(pipeData, expected));
+        assert(str::Eq(pipeData, expected));
         CloseHandle(hRead);
     }
 
-    assert(Str::Eq(logAll.GetData(), _T("Test1\r\nTest2\r\nfilen\xE4me.pdf : 25\r\n")));
+    assert(str::Eq(logAll.GetData(), _T("Test1\r\nTest2\r\nfilen\xE4me.pdf : 25\r\n")));
     log.RemoveLogger(&logAll);
 
     // don't leak the logger, don't crash on logging NULL
@@ -509,7 +509,7 @@ static void BencTestSerialization(BencObj *obj, const char *dataOrig)
 {
     ScopedMem<char> data(obj->Encode());
     assert(data);
-    assert(Str::Eq(data, dataOrig));
+    assert(str::Eq(data, dataOrig));
 }
 
 static void BencTestRoundtrip(BencObj *obj)
@@ -518,9 +518,9 @@ static void BencTestRoundtrip(BencObj *obj)
     assert(encoded);
     size_t len;
     BencObj *obj2 = BencObj::Decode(encoded, &len);
-    assert(obj2 && len == Str::Len(encoded));
+    assert(obj2 && len == str::Len(encoded));
     ScopedMem<char> roundtrip(obj2->Encode());
-    assert(Str::Eq(encoded, roundtrip));
+    assert(str::Eq(encoded, roundtrip));
     delete obj2;
 }
 
@@ -612,7 +612,7 @@ static void BencTestParseString()
             assert(obj);
             assert(obj->Type() == BT_STRING);
             ScopedMem<TCHAR> value(static_cast<BencString *>(obj)->Value());
-            assert(Str::Eq(value, testData[i].value));
+            assert(str::Eq(value, testData[i].value));
             BencTestSerialization(obj, testData[i].benc);
             delete obj;
         } else {
@@ -627,20 +627,20 @@ static void BencTestParseRawStrings()
     array.AddRaw("a\x82");
     array.AddRaw("a\x82", 1);
     BencString *raw = array.GetString(0);
-    assert(raw && Str::Eq(raw->RawValue(), "a\x82"));
+    assert(raw && str::Eq(raw->RawValue(), "a\x82"));
     BencTestSerialization(raw, "2:a\x82");
     raw = array.GetString(1);
-    assert(raw && Str::Eq(raw->RawValue(), "a"));
+    assert(raw && str::Eq(raw->RawValue(), "a"));
     BencTestSerialization(raw, "1:a");
 
     BencDict dict;
     dict.AddRaw("1", "a\x82");
     dict.AddRaw("2", "a\x82", 1);
     raw = dict.GetString("1");
-    assert(raw && Str::Eq(raw->RawValue(), "a\x82"));
+    assert(raw && str::Eq(raw->RawValue(), "a\x82"));
     BencTestSerialization(raw, "2:a\x82");
     raw = dict.GetString("2");
-    assert(raw && Str::Eq(raw->RawValue(), "a"));
+    assert(raw && str::Eq(raw->RawValue(), "a"));
     BencTestSerialization(raw, "1:a");
 }
 
@@ -732,8 +732,8 @@ static void BencTestDictAppend()
     /* test insertion in ascending order */
     BencDict *dict = new BencDict();
     for (size_t i = 1; i <= ITERATION_COUNT; i++) {
-        ScopedMem<char> key(Str::Format("%04u", i));
-        assert(Str::Len(key) == 4);
+        ScopedMem<char> key(str::Format("%04u", i));
+        assert(str::Len(key) == 4);
         dict->Add(key, i);
         assert(dict->Length() == i);
         assert(dict->GetInt(key));
@@ -749,8 +749,8 @@ static void BencTestDictAppend()
     /* test insertion in descending order */
     dict = new BencDict();
     for (size_t i = ITERATION_COUNT; i > 0; i--) {
-        ScopedMem<char> key(Str::Format("%04u", i));
-        assert(Str::Len(key) == 4);
+        ScopedMem<char> key(str::Format("%04u", i));
+        assert(str::Len(key) == 4);
         BencObj *obj = new BencInt(i);
         dict->Add(key, obj);
         assert(dict->Length() == ITERATION_COUNT + 1 - i);

@@ -326,7 +326,7 @@ void WindowInfo::MoveDocBy(int dx, int dy)
 
 void WindowInfo::CreateInfotip(const TCHAR *text, RectI& rc)
 {
-    if (Str::IsEmpty(text)) {
+    if (str::IsEmpty(text)) {
         this->DeleteInfotip();
         return;
     }
@@ -338,7 +338,7 @@ void WindowInfo::CreateInfotip(const TCHAR *text, RectI& rc)
     ti.lpszText = (TCHAR *)text;
     ti.rect = rc.ToRECT();
 
-    if (Str::FindChar(text, '\n'))
+    if (str::FindChar(text, '\n'))
         SendMessage(this->hwndInfotip, TTM_SETMAXTIPWIDTH, 0, MULTILINE_INFOTIP_WIDTH_PX);
     else
         SendMessage(this->hwndInfotip, TTM_SETMAXTIPWIDTH, 0, -1);
@@ -420,56 +420,56 @@ void LinkHandler::GotoLink(PageDestination *link)
     DisplayModel *dm = owner->dm;
     ScopedMem<TCHAR> path(link->GetDestValue());
     const char *type = link->GetType();
-    if (Str::Eq(type, "ScrollTo")) {
+    if (str::Eq(type, "ScrollTo")) {
         ScrollTo(link);
     }
-    else if (Str::Eq(type, "LaunchURL") && path) {
-        if (Str::StartsWithI(path, _T("http:")) || Str::StartsWithI(path, _T("https:")))
+    else if (str::Eq(type, "LaunchURL") && path) {
+        if (str::StartsWithI(path, _T("http:")) || str::StartsWithI(path, _T("https:")))
             LaunchBrowser(path);
         /* else: unsupported uri type */
     }
-    else if (Str::Eq(type, "LaunchEmbedded")) {
+    else if (str::Eq(type, "LaunchEmbedded")) {
         // open embedded PDF documents in a new window
-        if (path && Str::StartsWith(path.Get(), dm->fileName()))
+        if (path && str::StartsWith(path.Get(), dm->fileName()))
             LoadDocument(path);
         // offer to save other attachments to a file
         else
             link->SaveEmbedded(LinkSaver(owner->hwndFrame, path));
     }
-    else if ((Str::Eq(type, "LaunchFile") || Str::Eq(type, "ScrollToEx")) && path) {
+    else if ((str::Eq(type, "LaunchFile") || str::Eq(type, "ScrollToEx")) && path) {
         /* for safety, only handle relative PDF paths and only open them in SumatraPDF */
-        if (!Str::StartsWith(path.Get(), _T("\\")) &&
-            Str::EndsWithI(path.Get(), _T(".pdf"))) {
+        if (!str::StartsWith(path.Get(), _T("\\")) &&
+            str::EndsWithI(path.Get(), _T(".pdf"))) {
             ScopedMem<TCHAR> basePath(Path::GetDir(dm->fileName()));
             ScopedMem<TCHAR> combinedPath(Path::Join(basePath, path));
             // TODO: respect fz_to_bool(fz_dict_gets(link->dest, "NewWindow")) for ScrollToEx
             WindowInfo *newWin = LoadDocument(combinedPath);
 
-            if (Str::Eq(type, "ScrollToEx") && newWin && newWin->IsDocLoaded())
+            if (str::Eq(type, "ScrollToEx") && newWin && newWin->IsDocLoaded())
                 newWin->linkHandler->ScrollTo(link);
         }
     }
     // predefined named actions
-    else if (Str::Eq(type, "NextPage"))
+    else if (str::Eq(type, "NextPage"))
         dm->goToNextPage(0);
-    else if (Str::Eq(type, "PrevPage"))
+    else if (str::Eq(type, "PrevPage"))
         dm->goToPrevPage(0);
-    else if (Str::Eq(type, "FirstPage"))
+    else if (str::Eq(type, "FirstPage"))
         dm->goToFirstPage();
-    else if (Str::Eq(type, "LastPage"))
+    else if (str::Eq(type, "LastPage"))
         dm->goToLastPage();
     // Adobe Reader extensions to the spec, cf. http://www.tug.org/applications/hyperref/manual.html
-    else if (Str::Eq(type, "FullScreen"))
+    else if (str::Eq(type, "FullScreen"))
         PostMessage(owner->hwndFrame, WM_COMMAND, IDM_VIEW_PRESENTATION_MODE, 0);
-    else if (Str::Eq(type, "GoBack"))
+    else if (str::Eq(type, "GoBack"))
         dm->navigate(-1);
-    else if (Str::Eq(type, "GoForward"))
+    else if (str::Eq(type, "GoForward"))
         dm->navigate(1);
-    else if (Str::Eq(type, "Print"))
+    else if (str::Eq(type, "Print"))
         PostMessage(owner->hwndFrame, WM_COMMAND, IDM_PRINT, 0);
-    else if (Str::Eq(type, "SaveAs"))
+    else if (str::Eq(type, "SaveAs"))
         PostMessage(owner->hwndFrame, WM_COMMAND, IDM_SAVEAS, 0);
-    else if (Str::Eq(type, "ZoomTo"))
+    else if (str::Eq(type, "ZoomTo"))
         PostMessage(owner->hwndFrame, WM_COMMAND, IDM_ZOOM_CUSTOM, 0);
 }
 

@@ -42,7 +42,7 @@ private:
         assert(arg && '"' == *arg);
         arg++;
 
-        Str::Str<TCHAR> txt(Str::Len(arg) / 2);
+        str::Str<TCHAR> txt(str::Len(arg) / 2);
         const TCHAR *next;
         for (next = arg; *next && *next != '"'; next++) {
             // skip escaped quotation marks according to
@@ -68,7 +68,7 @@ private:
         // we don't treat quotation marks or backslashes in non-quoted
         // arguments in any special way
         for (next = arg; *next && !_istspace(*next); next++);
-        this->Append(Str::DupN(arg, next - arg));
+        this->Append(str::DupN(arg, next - arg));
 
         return next;
     }

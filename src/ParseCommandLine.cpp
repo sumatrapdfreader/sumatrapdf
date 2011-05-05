@@ -50,17 +50,17 @@ static void ParseColor(int *destColor, const TCHAR* txt)
 {
     if (!destColor)
         return;
-    if (Str::StartsWith(txt, _T("0x")))
+    if (str::StartsWith(txt, _T("0x")))
         txt += 2;
-    else if (Str::StartsWith(txt, _T("#")))
+    else if (str::StartsWith(txt, _T("#")))
         txt += 1;
 
     unsigned int r, g, b;
-    if (Str::Parse(txt, _T("%2x%2x%2x"), &r, &g, &b))
+    if (str::Parse(txt, _T("%2x%2x%2x"), &r, &g, &b))
         *destColor = RGB(r, g, b);
 }
 
-namespace Str {
+namespace str {
 
 // compares two strings ignoring case and whitespace
 static bool EqIS(const TCHAR *s1, const TCHAR *s2)
@@ -81,7 +81,7 @@ static bool EqIS(const TCHAR *s1, const TCHAR *s2)
 }
 
 #define IS_STR_ENUM(enumName) \
-    if (Str::EqIS(txt, _T(enumName##_STR))) { \
+    if (str::EqIS(txt, _T(enumName##_STR))) { \
         *mode = enumName; \
         return; \
     }
@@ -95,7 +95,7 @@ static void ParseViewMode(DisplayMode *mode, const TCHAR *txt)
     IS_STR_ENUM(DM_CONTINUOUS_FACING);
     IS_STR_ENUM(DM_BOOK_VIEW);
     IS_STR_ENUM(DM_CONTINUOUS_BOOK_VIEW);
-    if (Str::EqIS(txt, _T("continuous single page"))) {
+    if (str::EqIS(txt, _T("continuous single page"))) {
         *mode = DM_CONTINUOUS;
         return;
     }
@@ -104,21 +104,21 @@ static void ParseViewMode(DisplayMode *mode, const TCHAR *txt)
 // -zoom [fitwidth|fitpage|fitcontent|100%] (with 100% meaning actual size)
 static void ParseZoomValue(float *zoom, const TCHAR *txt)
 {
-    if (Str::EqIS(txt, _T("fit page")))
+    if (str::EqIS(txt, _T("fit page")))
         *zoom = ZOOM_FIT_PAGE;
-    else if (Str::EqIS(txt, _T("fit width")))
+    else if (str::EqIS(txt, _T("fit width")))
         *zoom = ZOOM_FIT_WIDTH;
-    else if (Str::EqIS(txt, _T("fit content")))
+    else if (str::EqIS(txt, _T("fit content")))
         *zoom = ZOOM_FIT_CONTENT;
     else
-        Str::Parse(txt, _T("%f"), zoom);
+        str::Parse(txt, _T("%f"), zoom);
 }
 
 // -scroll x,y
 static void ParseScrollValue(PointI *scroll, const TCHAR *txt)
 {
     int x, y;
-    if (Str::Parse(txt, _T("%d,%d"), &x, &y))
+    if (str::Parse(txt, _T("%d,%d"), &x, &y))
         *scroll = PointI(x, y);
 }
 
@@ -128,7 +128,7 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
     CmdLineParser argList(cmdLine);
     size_t argCount = argList.Count();
 
-#define is_arg(txt) Str::EqI(_T(txt), argument)
+#define is_arg(txt) str::EqI(_T(txt), argument)
 #define is_arg_with_param(txt) (is_arg(txt) && param != NULL)
 
     for (size_t n = 1; n < argCount; n++) {
@@ -238,14 +238,14 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
             hwndPluginParent = (HWND)_ttol(argList[++n]);
         }
         else if (is_arg_with_param("-stress-test-dir")) {
-            stressTestDir = Str::Dup(argList[++n]);
+            stressTestDir = str::Dup(argList[++n]);
         }
         else if (is_arg_with_param("-bench")) {
-            TCHAR *s = Str::Dup(argList[++n]);
+            TCHAR *s = str::Dup(argList[++n]);
             filesToBenchmark.Push(s);
             s = NULL;
             if ((n + 1 < argCount) && IsBenchPagesInfo(argList[n+1]))
-                s = Str::Dup(argList[++n]);
+                s = str::Dup(argList[++n]);
             filesToBenchmark.Push(s);
             exitImmediately = true;
         }
@@ -260,10 +260,10 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
         else {
             // Remember this argument as a filename to open
             TCHAR *filepath = NULL;
-            if (Str::EndsWithI(argList[n], _T(".lnk")))
+            if (str::EndsWithI(argList[n], _T(".lnk")))
                 filepath = ResolveLnk(argList[n]);
             if (!filepath)
-                filepath = Str::Dup(argList[n]);
+                filepath = str::Dup(argList[n]);
             fileNames.Push(filepath);
         }
     }

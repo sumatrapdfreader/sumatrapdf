@@ -20,9 +20,9 @@ static bool PdfDateParse(const TCHAR *pdfDate, SYSTEMTIME *timeOut)
 {
     ZeroMemory(timeOut, sizeof(SYSTEMTIME));
     // "D:" at the beginning is optional
-    if (Str::StartsWith(pdfDate, _T("D:")))
+    if (str::StartsWith(pdfDate, _T("D:")))
         pdfDate += 2;
-    return Str::Parse(pdfDate, _T("%4d%2d%2d") _T("%2d%2d%2d"),
+    return str::Parse(pdfDate, _T("%4d%2d%2d") _T("%2d%2d%2d"),
         &timeOut->wYear, &timeOut->wMonth, &timeOut->wDay,
         &timeOut->wHour, &timeOut->wMinute, &timeOut->wSecond) != NULL;
     // don't bother about the day of week, we won't display it anyway
@@ -34,9 +34,9 @@ static bool PdfDateParse(const TCHAR *pdfDate, SYSTEMTIME *timeOut)
 static bool XpsDateParse(const TCHAR *xpsDate, SYSTEMTIME *timeOut)
 {
     ZeroMemory(timeOut, sizeof(SYSTEMTIME));
-    const TCHAR *end = Str::Parse(xpsDate, _T("%4d-%2d-%2d"), &timeOut->wYear, &timeOut->wMonth, &timeOut->wDay);
+    const TCHAR *end = str::Parse(xpsDate, _T("%4d-%2d-%2d"), &timeOut->wYear, &timeOut->wMonth, &timeOut->wDay);
     if (end) // time is optional
-        Str::Parse(end, _T("T%2d:%2d:%2dZ"), &timeOut->wHour, &timeOut->wMinute, &timeOut->wSecond);
+        str::Parse(end, _T("T%2d:%2d:%2dZ"), &timeOut->wHour, &timeOut->wMinute, &timeOut->wSecond);
     return end != NULL;
     // don't bother about the day of week, we won't display it anyway
 }
@@ -56,7 +56,7 @@ static TCHAR *FormatSystemTime(SYSTEMTIME& date)
     if (0 == ret) // GetTimeFormat() failed
         *tmp = '\0';
 
-    return Str::Dup(buf);
+    return str::Dup(buf);
 }
 
 // Convert a date in PDF or XPS format, e.g. "D:20091222171933-05'00'" to a display
@@ -94,7 +94,7 @@ static TCHAR *FormatSizeSuccint(size_t size)
         unit = _TR("KB");
     }
 
-    return Str::FormatFloatWithThousandSep(s, unit);
+    return str::FormatFloatWithThousandSep(s, unit);
 }
 
 // format file size in a readable way e.g. 1348258 is shown
@@ -103,9 +103,9 @@ static TCHAR *FormatSizeSuccint(size_t size)
 static TCHAR *FormatFileSize(size_t size)
 {
     ScopedMem<TCHAR> n1(FormatSizeSuccint(size));
-    ScopedMem<TCHAR> n2(Str::FormatNumWithThousandSep(size));
+    ScopedMem<TCHAR> n2(str::FormatNumWithThousandSep(size));
 
-    return Str::Format(_T("%s (%s %s)"), n1, n2, _TR("Bytes"));
+    return str::Format(_T("%s (%s %s)"), n1, n2, _TR("Bytes"));
 }
 
 // format page size according to locale (e.g. "29.7 x 20.9 cm" or "11.69 x 8.23 in")
@@ -127,10 +127,10 @@ static TCHAR *FormatPageSize(BaseEngine *engine, int pageNo, int rotation)
     if (((int)(height * 100)) % 100 == 99)
         height += 0.01;
 
-    ScopedMem<TCHAR> strWidth(Str::FormatFloatWithThousandSep(width));
-    ScopedMem<TCHAR> strHeight(Str::FormatFloatWithThousandSep(height, isMetric ? _T("cm") : _T("in")));
+    ScopedMem<TCHAR> strWidth(str::FormatFloatWithThousandSep(width));
+    ScopedMem<TCHAR> strHeight(str::FormatFloatWithThousandSep(height, isMetric ? _T("cm") : _T("in")));
 
-    return Str::Format(_T("%s x %s"), strWidth, strHeight);
+    return str::Format(_T("%s x %s"), strWidth, strHeight);
 }
 
 // returns a list of permissions denied by this document
@@ -140,9 +140,9 @@ static TCHAR *FormatPermissions(BaseEngine *engine)
     StrVec denials;
 
     if (!engine->IsPrintingAllowed())
-        denials.Push(Str::Dup(_TR("printing document")));
+        denials.Push(str::Dup(_TR("printing document")));
     if (!engine->IsCopyingTextAllowed())
-        denials.Push(Str::Dup(_TR("copying text")));
+        denials.Push(str::Dup(_TR("copying text")));
 
     return denials.Join(_T(", "));
 }
@@ -150,7 +150,7 @@ static TCHAR *FormatPermissions(BaseEngine *engine)
 void PropertiesLayout::AddProperty(const TCHAR *key, TCHAR *value)
 {
     // don't display value-less properties
-    if (!Str::IsEmpty(value))
+    if (!str::IsEmpty(value))
         Append(new PropertyEl(key, value));
     else
         free(value);
@@ -173,7 +173,7 @@ static void UpdatePropertiesLayout(HWND hwnd, HDC hdc, RectI *rect)
     leftMaxDx = 0;
     for (size_t i = 0; i < layoutData->Count(); i++) {
         PropertyEl *el = layoutData->At(i);
-        GetTextExtentPoint32(hdc, el->leftTxt, Str::Len(el->leftTxt), &txtSize);
+        GetTextExtentPoint32(hdc, el->leftTxt, str::Len(el->leftTxt), &txtSize);
         el->leftPos.dx = txtSize.cx;
         el->leftPos.dy = txtSize.cy;
 
@@ -188,7 +188,7 @@ static void UpdatePropertiesLayout(HWND hwnd, HDC hdc, RectI *rect)
     int lineCount = 0;
     for (size_t i = 0; i < layoutData->Count(); i++) {
         PropertyEl *el = layoutData->At(i);
-        GetTextExtentPoint32(hdc, el->rightTxt, Str::Len(el->rightTxt), &txtSize);
+        GetTextExtentPoint32(hdc, el->rightTxt, str::Len(el->rightTxt), &txtSize);
         el->rightPos.dx = txtSize.cx;
         el->rightPos.dy = txtSize.cy;
 
@@ -290,7 +290,7 @@ void OnMenuProperties(WindowInfo& win)
     if (!layoutData)
         return;
 
-    TCHAR *str = Str::Dup(engine->FileName());
+    TCHAR *str = str::Dup(engine->FileName());
     layoutData->AddProperty(_TR("File:"), str);
 
     str = engine->GetProperty("Title");
@@ -335,7 +335,7 @@ void OnMenuProperties(WindowInfo& win)
         layoutData->AddProperty(_TR("File Size:"), str);
     }
 
-    str = Str::Format(_T("%d"), engine->PageCount());
+    str = str::Format(_T("%d"), engine->PageCount());
     layoutData->AddProperty(_TR("Number of Pages:"), str);
 
     str = FormatPageSize(engine, win.dm->currentPageNo(), win.dm->rotation());
@@ -347,12 +347,12 @@ void OnMenuProperties(WindowInfo& win)
     // TODO: this is about linearlized PDF. Looks like mupdf would
     // have to be extended to detect linearlized PDF. The rules are described
     // in F3.3 of http://www.adobe.com/devnet/acrobat/pdfs/PDF32000_2008.pdf
-    // layoutData->AddProperty(_T("Fast Web View:"), Str::Dup(_T("No")));
+    // layoutData->AddProperty(_T("Fast Web View:"), str::Dup(_T("No")));
 
     // TODO: probably needs to extend mupdf to get this information.
     // Tagged PDF rules are described in 14.8.2 of
     // http://www.adobe.com/devnet/acrobat/pdfs/PDF32000_2008.pdf
-    // layoutData->AddProperty(_T("Tagged PDF:"), Str::Dup(_T("No")));
+    // layoutData->AddProperty(_T("Tagged PDF:"), str::Dup(_T("No")));
 
     win.hwndProperties = CreatePropertiesWindow(*layoutData);
 }
@@ -423,7 +423,7 @@ void CopyPropertiesToClipboard(HWND hwnd)
     // just concatenate all the properties into a multi-line string
     PropertiesLayout *layoutData = (PropertiesLayout *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
 
-    Str::Str<TCHAR> lines(256);
+    str::Str<TCHAR> lines(256);
     for (size_t i = 0; i < layoutData->Count(); i++) {
         PropertyEl *el = layoutData->At(i);
         lines.AppendFmt(_T("%s %s\r\n"), el->leftTxt, el->rightTxt);

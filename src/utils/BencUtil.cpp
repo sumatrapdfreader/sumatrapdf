@@ -51,25 +51,25 @@ static const char *ParseBencInt(const char *bytes, int64_t& value)
 BencString::BencString(const TCHAR *value) : BencObj(BT_STRING)
 {
     assert(value);
-    this->value = Str::Conv::ToUtf8(value);
+    this->value = str::Conv::ToUtf8(value);
 }
 
 BencString::BencString(const char *rawValue, size_t len) : BencObj(BT_STRING)
 {
     assert(rawValue);
     if (len == (size_t)-1)
-        len = Str::Len(rawValue);
-    value = Str::DupN(rawValue, len);
+        len = str::Len(rawValue);
+    value = str::DupN(rawValue, len);
 }
 
 TCHAR *BencString::Value() const
 {
-    return Str::Conv::FromUtf8(value);
+    return str::Conv::FromUtf8(value);
 }
 
 char *BencString::Encode() const
 {
-    return Str::Format("%" PRIuPTR ":%s", Str::Len(value), value);
+    return str::Format("%" PRIuPTR ":%s", str::Len(value), value);
 }
 
 BencString *BencString::Decode(const char *bytes, size_t *lenOut)
@@ -93,7 +93,7 @@ BencString *BencString::Decode(const char *bytes, size_t *lenOut)
 
 char *BencInt::Encode() const
 {
-    return Str::Format("i%" PRId64 "e", value);
+    return str::Format("i%" PRId64 "e", value);
 }
 
 BencInt *BencInt::Decode(const char *bytes, size_t *lenOut)
@@ -119,7 +119,7 @@ BencDict *BencArray::GetDict(size_t index) const {
 
 char *BencArray::Encode() const
 {
-    Str::Str<char> bytes(256);
+    str::Str<char> bytes(256);
     bytes.Append('l');
     for (size_t i = 0; i < Length(); i++) {
         ScopedMem<char> objBytes(value[i]->Encode());
@@ -183,26 +183,26 @@ void BencDict::Add(const char *key, BencObj *obj)
         if (strcmp(keys[oix], key) >= 0)
             break;
 
-    if (oix < keys.Count() && Str::Eq(keys[oix], key)) {
+    if (oix < keys.Count() && str::Eq(keys[oix], key)) {
         // overwrite a previous value
         delete values[oix];
         values[oix] = obj;
     }
     else {
-        keys.InsertAt(oix, Str::Dup(key));
+        keys.InsertAt(oix, str::Dup(key));
         values.InsertAt(oix, obj);
     }
 }
 
 char *BencDict::Encode() const
 {
-    Str::Str<char> bytes(256);
+    str::Str<char> bytes(256);
     bytes.Append('d');
     for (size_t i = 0; i < Length(); i++) {
         char *key = keys[i];
         BencObj *val = values[i];
         if (key && val) {
-            bytes.AppendFmt("%" PRIuPTR ":%s", Str::Len(key), key);
+            bytes.AppendFmt("%" PRIuPTR ":%s", str::Len(key), key);
             bytes.AppendAndFree(val->Encode());
         }
     }

@@ -46,7 +46,7 @@ static BencDict* SerializeGlobalPrefs(SerializableGlobalPrefs& globalPrefs)
     const TCHAR *mode = DisplayModeConv::NameFromEnum(globalPrefs.m_defaultDisplayMode);
     prefs->Add(DISPLAY_MODE_STR, mode);
 
-    ScopedMem<char> zoom(Str::Format("%.4f", globalPrefs.m_defaultZoom));
+    ScopedMem<char> zoom(str::Format("%.4f", globalPrefs.m_defaultZoom));
     prefs->AddRaw(ZOOM_VIRTUAL_STR, zoom);
     prefs->Add(WINDOW_STATE_STR, globalPrefs.m_windowState);
     prefs->Add(WINDOW_X_STR, globalPrefs.m_windowPos.x);
@@ -107,7 +107,7 @@ static BencDict *DisplayState_Serialize(DisplayState *ds, bool globalPrefsOnly)
     prefs->Add(SHOW_TOC_STR, ds->showToc);
     prefs->Add(TOC_DX_STR, ds->tocDx);
 
-    ScopedMem<char> zoom(Str::Format("%.4f", ds->zoomVirtual));
+    ScopedMem<char> zoom(str::Format("%.4f", ds->zoomVirtual));
     prefs->AddRaw(ZOOM_VIRTUAL_STR, zoom);
 
     if (ds->tocState && ds->tocState[0] > 0) {
@@ -172,7 +172,7 @@ static const char *SerializePrefs(SerializableGlobalPrefs& globalPrefs, FileHist
     prefs->Add(FILE_HISTORY_STR, fileHistory);
 
     data = prefs->Encode();
-    *lenOut = Str::Len(data);
+    *lenOut = str::Len(data);
 
 Error:
     delete prefs;
@@ -206,7 +206,7 @@ static void RetrieveRaw(BencDict *dict, const char *key, char *& value)
 {
     const char *string = GetRawString(dict, key);
     if (string) {
-        char *str = Str::Dup(string);
+        char *str = str::Dup(string);
         if (str) {
             free(value);
             value = str;
@@ -386,7 +386,7 @@ bool Load(TCHAR *filepath, SerializableGlobalPrefs& globalPrefs, FileHistory& fi
 
     size_t prefsFileLen;
     ScopedMem<char> prefsTxt(File::ReadAll(filepath, &prefsFileLen));
-    if (!Str::IsEmpty(prefsTxt.Get())) {
+    if (!str::IsEmpty(prefsTxt.Get())) {
         ok = DeserializePrefs(prefsTxt, globalPrefs, fileHistory);
         assert(ok);
         globalPrefs.m_lastPrefUpdate = File::GetModificationTime(filepath);
@@ -454,7 +454,7 @@ const TCHAR *NameFromEnum(DisplayMode var)
 #undef STR_FROM_ENUM
 
 #define IS_STR_ENUM(enumName) \
-    if (Str::Eq(txt, _T(enumName##_STR))) { \
+    if (str::Eq(txt, _T(enumName##_STR))) { \
         *resOut = enumName; \
         return true; \
     }

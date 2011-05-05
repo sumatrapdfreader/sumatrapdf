@@ -5,7 +5,7 @@
 #include "BaseUtil.h"
 #include "StrUtil.h"
 
-namespace Str {
+namespace str {
 
 #define EntryCheck(arg1, arg2) \
     if (arg1 == arg2) \
@@ -53,14 +53,14 @@ bool EqN(const WCHAR *s1, const WCHAR *s2, size_t len)
 bool StartsWithI(const char *str, const char *txt)
 {
     EntryCheck(str, txt);
-    return 0 == _strnicmp(str, txt, Str::Len(txt));
+    return 0 == _strnicmp(str, txt, str::Len(txt));
 }
 
 /* return true if 'str' starts with 'txt', NOT case-sensitive */
 bool StartsWithI(const WCHAR *str, const WCHAR *txt)
 {
     EntryCheck(str, txt);
-    return 0 == _wcsnicmp(str, txt, Str::Len(txt));
+    return 0 == _wcsnicmp(str, txt, str::Len(txt));
 }
 
 #undef EntryCheck
@@ -72,44 +72,44 @@ bool EndsWith(const char *txt, const char *end)
 {
     if (!txt || !end)
         return false;
-    size_t txtLen = Str::Len(txt);
-    size_t endLen = Str::Len(end);
+    size_t txtLen = str::Len(txt);
+    size_t endLen = str::Len(end);
     if (endLen > txtLen)
         return false;
-    return Str::Eq(txt + txtLen - endLen, end);
+    return str::Eq(txt + txtLen - endLen, end);
 }
 
 bool EndsWith(const WCHAR *txt, const WCHAR *end)
 {
     if (!txt || !end)
         return false;
-    size_t txtLen = Str::Len(txt);
-    size_t endLen = Str::Len(end);
+    size_t txtLen = str::Len(txt);
+    size_t endLen = str::Len(end);
     if (endLen > txtLen)
         return false;
-    return Str::Eq(txt + txtLen - endLen, end);
+    return str::Eq(txt + txtLen - endLen, end);
 }
 
 bool EndsWithI(const char *txt, const char *end)
 {
     if (!txt || !end)
         return false;
-    size_t txtLen = Str::Len(txt);
-    size_t endLen = Str::Len(end);
+    size_t txtLen = str::Len(txt);
+    size_t endLen = str::Len(end);
     if (endLen > txtLen)
         return false;
-    return Str::EqI(txt + txtLen - endLen, end);
+    return str::EqI(txt + txtLen - endLen, end);
 }
 
 bool EndsWithI(const WCHAR *txt, const WCHAR *end)
 {
     if (!txt || !end)
         return false;
-    size_t txtLen = Str::Len(txt);
-    size_t endLen = Str::Len(end);
+    size_t txtLen = str::Len(txt);
+    size_t endLen = str::Len(end);
     if (endLen > txtLen)
         return false;
-    return Str::EqI(txt + txtLen - endLen, end);
+    return str::EqI(txt + txtLen - endLen, end);
 }
 
 /* Concatenate 2 strings. Any string can be NULL.
@@ -189,7 +189,7 @@ char *ToMultiByte(const char *src, UINT CodePageSrc, UINT CodePageDest)
     if (!src) return NULL;
 
     if (CodePageSrc == CodePageDest)
-        return Str::Dup(src);
+        return str::Dup(src);
 
     ScopedMem<WCHAR> tmp(ToWideChar(src, CodePageSrc));
     if (!tmp)
@@ -236,7 +236,7 @@ char *FmtV(const char *fmt, va_list args)
     }
 
     if (buf == message)
-        buf = Str::Dup(message);
+        buf = str::Dup(message);
 
     return buf;
 }
@@ -273,7 +273,7 @@ WCHAR *FmtV(const WCHAR *fmt, va_list args)
             break;
     }
     if (buf == message)
-        buf = Str::Dup(message);
+        buf = str::Dup(message);
 
     return buf;
 }
@@ -295,7 +295,7 @@ size_t TransChars(char *str, const char *oldChars, const char *newChars)
     size_t findCount = 0;
 
     for (char *c = str; *c; c++) {
-        const char *found = Str::FindChar(oldChars, *c);
+        const char *found = str::FindChar(oldChars, *c);
         if (found) {
             *c = newChars[found - oldChars];
             findCount++;
@@ -310,7 +310,7 @@ size_t TransChars(WCHAR *str, const WCHAR *oldChars, const WCHAR *newChars)
     size_t findCount = 0;
 
     for (WCHAR *c = str; *c; c++) {
-        const WCHAR *found = Str::FindChar(oldChars, *c);
+        const WCHAR *found = str::FindChar(oldChars, *c);
         if (found) {
             *c = newChars[found - oldChars];
             findCount++;
@@ -327,7 +327,7 @@ size_t BufSet(char *dst, size_t dstCchSize, const char *src)
 {
     if (0 == dstCchSize) return 0;
 
-    size_t srcCchSize = Str::Len(src);
+    size_t srcCchSize = str::Len(src);
     size_t size = min(dstCchSize - 1, srcCchSize);
 
     strncpy(dst, src, size + 1);
@@ -340,7 +340,7 @@ size_t BufSet(WCHAR *dst, size_t dstCchSize, const WCHAR *src)
 {
     if (0 == dstCchSize) return 0;
 
-    size_t srcCchSize = Str::Len(src);
+    size_t srcCchSize = str::Len(src);
     size_t size = min(dstCchSize - 1, srcCchSize);
 
     wcsncpy(dst, src, size + 1);
@@ -388,16 +388,16 @@ TCHAR *FormatNumWithThousandSep(size_t num, const TCHAR *sep)
         else
             sep = _T("");
     }
-    ScopedMem<TCHAR> buf(Str::Format(_T("%Iu"), num));
+    ScopedMem<TCHAR> buf(str::Format(_T("%Iu"), num));
 
-    size_t resLen = Str::Len(buf) + Str::Len(sep) * (Str::Len(buf) + 3) / 3 + 1;
+    size_t resLen = str::Len(buf) + str::Len(sep) * (str::Len(buf) + 3) / 3 + 1;
     TCHAR *res = SAZA(TCHAR, resLen);
     TCHAR *next = res;
-    int i = 3 - (Str::Len(buf) % 3);
+    int i = 3 - (str::Len(buf) % 3);
     for (TCHAR *src = buf.Get(); *src; ) {
         *next++ = *src++;
         if (*src && i == 2)
-            next += Str::BufSet(next, resLen - (next - res), sep);
+            next += str::BufSet(next, resLen - (next - res), sep);
         i = (i + 1) % 3;
     }
 
@@ -413,14 +413,14 @@ TCHAR *FormatFloatWithThousandSep(double number, const TCHAR *unit)
     ScopedMem<TCHAR> tmp(FormatNumWithThousandSep(num / 100));
     TCHAR decimal[4];
     if (!GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, decimal, dimof(decimal)))
-        Str::BufSet(decimal, dimof(decimal), _T("."));
+        str::BufSet(decimal, dimof(decimal), _T("."));
 
     // always add between one and two decimals after the point
-    ScopedMem<TCHAR> buf(Str::Format(_T("%s%s%02d"), tmp, decimal, num % 100));
-    if (Str::EndsWith(buf, _T("0")))
-        buf[Str::Len(buf) - 1] = '\0';
+    ScopedMem<TCHAR> buf(str::Format(_T("%s%s%02d"), tmp, decimal, num % 100));
+    if (str::EndsWith(buf, _T("0")))
+        buf[str::Len(buf) - 1] = '\0';
 
-    return unit ? Str::Format(_T("%s %s"), buf, unit) : Str::Dup(buf);
+    return unit ? str::Format(_T("%s %s"), buf, unit) : str::Dup(buf);
 }
 
 /* compares two strings "naturally" by sorting numbers within a string
@@ -492,7 +492,7 @@ static TCHAR *ExtractUntil(const TCHAR *pos, TCHAR c, const TCHAR **endOut)
     *endOut = FindChar(pos, c);
     if (!*endOut)
         return NULL;
-    return Str::DupN(pos, *endOut - pos);
+    return str::DupN(pos, *endOut - pos);
 }
 
 static const TCHAR *ParseLimitedNumber(const TCHAR *str, const TCHAR *format,

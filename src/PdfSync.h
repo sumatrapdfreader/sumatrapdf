@@ -87,7 +87,7 @@ public:
         this->index_discarded = true;
         this->coordsys = BottomLeft; // by default set the internal coordinate system to bottom-left
         this->dir = Path::GetDir(_syncfilepath);
-        Str::BufSet(this->syncfilepath, dimof(this->syncfilepath), _syncfilepath);
+        str::BufSet(this->syncfilepath, dimof(this->syncfilepath), _syncfilepath);
         _tstat(_syncfilepath, &syncfileTimestamp);
     }
     virtual ~Synchronizer() {

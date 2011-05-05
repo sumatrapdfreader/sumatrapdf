@@ -222,7 +222,7 @@ inline void DeleteVecMembers(Vec<T>& v)
 }
 
 
-namespace Str {
+namespace str {
 template <typename T>
 
 class Str : public Vec<T> {
@@ -281,7 +281,7 @@ public:
         // make sure not to share string pointers between StrVecs
         for (size_t i = 0; i < len; i++)
             if (At(i))
-                At(i) = Str::Dup(At(i));
+                At(i) = str::Dup(At(i));
     }
     ~StrVec() {
         FreeVecMembers(*this);
@@ -293,14 +293,14 @@ public:
             Vec::operator=(that);
             for (size_t i = 0; i < that.len; i++)
                 if (At(i))
-                    At(i) = Str::Dup(At(i));
+                    At(i) = str::Dup(At(i));
         }
         return *this;
     }
 
     TCHAR *Join(const TCHAR *joint=NULL) {
-        Str::Str<TCHAR> tmp(256);
-        size_t jointLen = joint ? Str::Len(joint) : 0;
+        str::Str<TCHAR> tmp(256);
+        size_t jointLen = joint ? str::Len(joint) : 0;
         for (size_t i = 0; i < Count(); i++) {
             TCHAR *s = At(i);
             if (i > 0 && jointLen > 0)
@@ -314,7 +314,7 @@ public:
         size_t n = Count();
         for (size_t i = 0; i < n; i++) {
             TCHAR *item = At(i);
-            if (Str::Eq(string, item))
+            if (str::Eq(string, item))
                 return (int)i;
         }
         return -1;
@@ -328,13 +328,13 @@ public:
         size_t start = Count();
         const TCHAR *next;
 
-        while ((next = Str::Find(string, separator))) {
+        while ((next = str::Find(string, separator))) {
             if (!collapse || next > string)
-                Append(Str::DupN(string, next - string));
-            string = next + Str::Len(separator);
+                Append(str::DupN(string, next - string));
+            string = next + str::Len(separator);
         }
         if (!collapse || *string)
-            Append(Str::Dup(string));
+            Append(str::Dup(string));
 
         return Count() - start;
     }
@@ -343,7 +343,7 @@ public:
 
 private:
     static int cmpNatural(const void *a, const void *b) {
-        return Str::CmpNatural(*(const TCHAR **)a, *(const TCHAR **)b);
+        return str::CmpNatural(*(const TCHAR **)a, *(const TCHAR **)b);
     }
 };
 

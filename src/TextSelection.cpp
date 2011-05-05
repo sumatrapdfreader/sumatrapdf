@@ -53,11 +53,11 @@ int TextSelection::FindClosestGlyph(int pageNo, double x, double y)
     if (!text[pageNo - 1]) {
         text[pageNo - 1] = engine->ExtractPageText(pageNo, _T("\n"), &coords[pageNo - 1]);
         if (!text[pageNo - 1]) {
-            text[pageNo - 1] = Str::Dup(_T(""));
+            text[pageNo - 1] = str::Dup(_T(""));
             lens[pageNo - 1] = 0;
             return 0;
         }
-        lens[pageNo - 1] = Str::Len(text[pageNo - 1]);
+        lens[pageNo - 1] = str::Len(text[pageNo - 1]);
     }
 
     double maxDist = -1;
@@ -108,7 +108,7 @@ void TextSelection::FillResultRects(int pageNo, int glyph, int length, StrVec *l
             continue;
 
         if (lines) {
-            lines->Push(Str::DupN(text[pageNo - 1] + (c0p - coords[pageNo - 1]), c - c0p + 1));
+            lines->Push(str::DupN(text[pageNo - 1] + (c0p - coords[pageNo - 1]), c - c0p + 1));
             continue;
         }
 

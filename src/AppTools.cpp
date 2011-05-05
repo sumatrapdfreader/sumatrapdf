@@ -38,8 +38,8 @@ bool IsValidProgramVersion(char *txt)
 static unsigned int ExtractNextNumber(TCHAR **txt)
 {
     unsigned int val = 0;
-    const TCHAR *next = Str::Parse(*txt, _T("%u%?."), &val);
-    *txt = next ? (TCHAR *)next : *txt + Str::Len(*txt);
+    const TCHAR *next = str::Parse(*txt, _T("%u%?."), &val);
+    *txt = next ? (TCHAR *)next : *txt + str::Len(*txt);
     return val;
 }
 
@@ -112,7 +112,7 @@ bool IsRunningInPortableMode()
     if (!installedPath)
         installedPath.Set(ReadRegStr(HKEY_CURRENT_USER, _T("Software\\") APP_NAME_STR, _T("Install_Dir")));
     if (installedPath) {
-        if (!Str::EndsWithI(installedPath.Get(), _T(".exe")))
+        if (!str::EndsWithI(installedPath.Get(), _T(".exe")))
             installedPath.Set(Path::Join(installedPath.Get(), Path::GetBaseName(exePath)));
         if (Path::IsSame(installedPath, exePath)) {
             sCacheIsPortable = 0;
@@ -250,25 +250,25 @@ void DoAssociateExeWithPdfExtension(HKEY hkey)
     ScopedMem<TCHAR> prevHandler(NULL);
     // Remember the previous default app for the Uninstaller
     prevHandler.Set(ReadRegStr(hkey, REG_CLASSES_PDF, NULL));
-    if (prevHandler && !Str::Eq(prevHandler, APP_NAME_STR))
+    if (prevHandler && !str::Eq(prevHandler, APP_NAME_STR))
         WriteRegStr(hkey, REG_CLASSES_APP, _T("previous.pdf"), prevHandler);
 
     WriteRegStr(hkey, REG_CLASSES_APP, NULL, _TR("PDF Document"));
-    TCHAR *icon_path = Str::Join(exePath, _T(",1"));
+    TCHAR *icon_path = str::Join(exePath, _T(",1"));
     WriteRegStr(hkey, REG_CLASSES_APP _T("\\DefaultIcon"), NULL, icon_path);
     free(icon_path);
 
     WriteRegStr(hkey, REG_CLASSES_APP _T("\\shell"), NULL, _T("open"));
 
-    ScopedMem<TCHAR> cmdPath(Str::Format(_T("\"%s\" \"%%1\""), exePath)); // "${exePath}" "%1"
+    ScopedMem<TCHAR> cmdPath(str::Format(_T("\"%s\" \"%%1\""), exePath)); // "${exePath}" "%1"
     bool ok = WriteRegStr(hkey, REG_CLASSES_APP _T("\\shell\\open\\command"), NULL, cmdPath);
 
     // also register for printing
-    ScopedMem<TCHAR> printPath(Str::Format(_T("\"%s\" -print-to-default \"%%1\""), exePath)); // "${exePath}" -print-to-default "%1"
+    ScopedMem<TCHAR> printPath(str::Format(_T("\"%s\" -print-to-default \"%%1\""), exePath)); // "${exePath}" -print-to-default "%1"
     WriteRegStr(hkey, REG_CLASSES_APP _T("\\shell\\print\\command"), NULL, printPath);
 
     // also register for printing to specific printer
-    ScopedMem<TCHAR> printToPath(Str::Format(_T("\"%s\" -print-to \"%%2\" \"%%1\""), exePath)); // "${exePath}" -print-to "%2" "%1"
+    ScopedMem<TCHAR> printToPath(str::Format(_T("\"%s\" -print-to \"%%2\" \"%%1\""), exePath)); // "${exePath}" -print-to "%2" "%1"
     WriteRegStr(hkey, REG_CLASSES_APP _T("\\shell\\printto\\command"), NULL, printToPath);
 
     // Only change the association if we're confident, that we've registered ourselves well enough
@@ -289,22 +289,22 @@ bool IsExeAssociatedWithPdfExtension()
 {
     // this one doesn't have to exist but if it does, it must be APP_NAME_STR
     ScopedMem<TCHAR> tmp(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT, _T("Progid")));
-    if (tmp && !Str::Eq(tmp, APP_NAME_STR))
+    if (tmp && !str::Eq(tmp, APP_NAME_STR))
         return false;
 
     // this one doesn't have to exist but if it does, it must be APP_NAME_STR
     tmp.Set(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT _T("\\UserChoice"), _T("Progid")));
-    if (tmp && !Str::Eq(tmp, APP_NAME_STR))
+    if (tmp && !str::Eq(tmp, APP_NAME_STR))
         return false;
 
     // HKEY_CLASSES_ROOT\.pdf default key must exist and be equal to APP_NAME_STR
     tmp.Set(ReadRegStr(HKEY_CLASSES_ROOT, _T(".pdf"), NULL));
-    if (!Str::Eq(tmp, APP_NAME_STR))
+    if (!str::Eq(tmp, APP_NAME_STR))
         return false;
 
     // HKEY_CLASSES_ROOT\SumatraPDF\shell\open default key must be: open
     tmp.Set(ReadRegStr(HKEY_CLASSES_ROOT, _T("SumatraPDF\\shell"), NULL));
-    if (!Str::EqI(tmp, _T("open")))
+    if (!str::EqI(tmp, _T("open")))
         return false;
 
     // HKEY_CLASSES_ROOT\SumatraPDF\shell\open\command default key must be: "${exe_path}" "%1"
@@ -442,9 +442,9 @@ LPTSTR AutoDetectInverseSearchCommands(HWND hwndCombo)
         } else if (editor_rules[i].Type == BinaryDir)
             exePath = Path::Join(path, editor_rules[i].BinaryFilename);
         else // if (editor_rules[i].Type == BinaryPath)
-            exePath = Str::Dup(path);
+            exePath = str::Dup(path);
 
-        TCHAR *editorCmd = Str::Format(_T("\"%s\" %s"), exePath, editor_rules[i].InverseSearchArgs);
+        TCHAR *editorCmd = str::Format(_T("\"%s\" %s"), exePath, editor_rules[i].InverseSearchArgs);
         free(exePath);
 
         if (!hwndCombo) {
@@ -453,18 +453,18 @@ LPTSTR AutoDetectInverseSearchCommands(HWND hwndCombo)
         }
 
         if (!firstEditor)
-            firstEditor = Str::Dup(editorCmd);
+            firstEditor = str::Dup(editorCmd);
         ComboBox_AddString(hwndCombo, editorCmd);
         free(editorCmd);
 
         // skip the remaining rules for this editor
-        while (i + 1 < dimof(editor_rules) && Str::Eq(editor_rules[i].Name, editor_rules[i+1].Name))
+        while (i + 1 < dimof(editor_rules) && str::Eq(editor_rules[i].Name, editor_rules[i+1].Name))
             i++;
     }
 
     // Fall back to notepad as a default handler
     if (!firstEditor) {
-        firstEditor = Str::Dup(_T("notepad %f"));
+        firstEditor = str::Dup(_T("notepad %f"));
         if (hwndCombo)
             ComboBox_AddString(hwndCombo, firstEditor);
     }
@@ -505,7 +505,7 @@ void DDEExecute(LPCTSTR server, LPCTSTR topic, LPCTSTR command)
         DBG_OUT("DDE communication could not be initiated %u\n.", DdeGetLastError(inst));
         goto exit;
     }
-    hddedata = DdeCreateDataHandle(inst, (BYTE*)command, (DWORD)(Str::Len(command) + 1) * sizeof(TCHAR), 0, 0, CF_T_TEXT, 0);
+    hddedata = DdeCreateDataHandle(inst, (BYTE*)command, (DWORD)(str::Len(command) + 1) * sizeof(TCHAR), 0, 0, CF_T_TEXT, 0);
     if (!hddedata) {
         DBG_OUT("DDE communication could not be initiated %u.\n", DdeGetLastError(inst));
         goto exit;

@@ -39,30 +39,30 @@ void TextSearch::SetText(TCHAR *text)
     SkipWhitespace(text);
 
     // don't reset anything if the search text hasn't changed at all
-    if (Str::Eq(this->lastText, text))
+    if (str::Eq(this->lastText, text))
         return;
 
     this->Clear();
-    this->lastText = Str::Dup(text);
-    this->findText = Str::Dup(text);
+    this->lastText = str::Dup(text);
+    this->findText = str::Dup(text);
 
     // extract anchor string (the first word or the first symbol) for faster searching
     if (isnoncjkwordchar(*text)) {
         TCHAR *end;
         for (end = text; isnoncjkwordchar(*end); end++)
             ;
-        anchor = Str::DupN(text, end - text);
+        anchor = str::DupN(text, end - text);
     }
     else
-        anchor = Str::DupN(text, 1);
+        anchor = str::DupN(text, 1);
 
     // search text ending in a single space enables the 'Whole words' option
     // (that behavior already "kind of" exists without special treatment, but
     // usually is not quite what a user expects, so let's try to be cleverer)
     this->wholeWords = false;
-    if (Str::EndsWith(text, _T(" "))) {
-        this->wholeWords = !Str::EndsWith(text, _T("  "));
-        this->findText[Str::Len(this->findText) - 1] = '\0';
+    if (str::EndsWith(text, _T(" "))) {
+        this->wholeWords = !str::EndsWith(text, _T("  "));
+        this->findText[str::Len(this->findText) - 1] = '\0';
     }
 
     memset(this->findCache, SEARCH_PAGE, this->engine->PageCount());
@@ -84,7 +84,7 @@ void TextSearch::SetDirection(TextSearchDirection direction)
         return;
     this->forward = forward;
     if (findText)
-        findIndex += Str::Len(findText) * (forward ? 1 : -1);
+        findIndex += str::Len(findText) * (forward ? 1 : -1);
 }
 
 // try to match "findText" from "start" with whitespace tolerance
@@ -118,7 +118,7 @@ int TextSearch::MatchLen(TCHAR *start)
 
 bool TextSearch::FindTextInPage(int pageNo)
 {
-    if (Str::IsEmpty(anchor))
+    if (str::IsEmpty(anchor))
         return false;
     if (!pageNo)
         pageNo = findPage;
@@ -151,7 +151,7 @@ bool TextSearch::FindTextInPage(int pageNo)
 
 bool TextSearch::FindStartingAtPage(int pageNo, ProgressUpdateUI *tracker)
 {
-    if (Str::IsEmpty(anchor))
+    if (str::IsEmpty(anchor))
         return false;
 
     int total = engine->PageCount();

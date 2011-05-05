@@ -9,7 +9,7 @@
 class DjVuEngine : public BaseEngine {
 public:
     static bool IsSupportedFile(const TCHAR *fileName) {
-        return Str::EndsWithI(fileName, _T(".djvu"));
+        return str::EndsWithI(fileName, _T(".djvu"));
     }
     static DjVuEngine *CreateFromFileName(const TCHAR *fileName);
 };

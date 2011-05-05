@@ -195,7 +195,7 @@ to scan?
 */
 static WCHAR *GetSymbolPath()
 {
-    Str::Str<WCHAR> path(1024);
+    str::Str<WCHAR> path(1024);
 
 #if 0
     WCHAR buf[512];
@@ -212,7 +212,7 @@ static WCHAR *GetSymbolPath()
     }
 #endif
 
-    ScopedMem<WCHAR> symDir(Str::Conv::ToWStrQ(GetCrashDumpDir()));
+    ScopedMem<WCHAR> symDir(str::Conv::ToWStrQ(GetCrashDumpDir()));
     if (symDir) {
         path.Append(symDir);
         //path.Append(_T(";"));
@@ -228,7 +228,7 @@ static WCHAR *GetSymbolPath()
 #if 0
     // when running local builds, *.pdb is in the same dir as *.exe 
     ScopedMem<TCHAR> exePath(GetExePath());
-    ScopedMem<WCHAR> exeDir(Str::Conv::ToWStrQ(Path::GetDir(exePath)));
+    ScopedMem<WCHAR> exeDir(str::Conv::ToWStrQ(Path::GetDir(exePath)));
     path.AppendFmt(L"%s", exeDir);
 #endif
     return path.StealData();
@@ -249,13 +249,13 @@ static bool SetupSymbolPath()
     }
 
     BOOL ok = FALSE;
-    ScopedMem<TCHAR> tpath(Str::Conv::FromWStr(path));
+    ScopedMem<TCHAR> tpath(str::Conv::FromWStr(path));
     if (_SymSetSearchPathW) {
         ok = _SymSetSearchPathW(GetCurrentProcess(), path);
         if (!ok)
             LogDbg("_SymSetSearchPathW() failed, path='%s'", tpath);
     } else {
-        ScopedMem<char> tmp(Str::Conv::ToAnsi(tpath));
+        ScopedMem<char> tmp(str::Conv::ToAnsi(tpath));
         ok = _SymSetSearchPath(GetCurrentProcess(), tmp);
         if (!ok)
             LogDbg("_SymSetSearchPath() failed, path='%s'", tpath);
@@ -288,7 +288,7 @@ static bool InitializeDbgHelp()
     if (_SymInitializeW) {
         gSymInitializeOk = _SymInitializeW(GetCurrentProcess(), symPath, TRUE);
     } else {
-        ScopedMem<char> tmp(Str::Conv::ToAnsi(symPath));
+        ScopedMem<char> tmp(str::Conv::ToAnsi(symPath));
         if (tmp)
             gSymInitializeOk = _SymInitialize(GetCurrentProcess(), tmp, TRUE);
     }
@@ -369,7 +369,7 @@ static bool IsWow64()
     return isWow;
 }
 
-static void GetOsVersion(Str::Str<char>& s)
+static void GetOsVersion(str::Str<char>& s)
 {
     OSVERSIONINFOEX ver;
     ZeroMemory(&ver, sizeof(ver));
@@ -394,7 +394,7 @@ static void GetOsVersion(Str::Str<char>& s)
         s.AppendFmt("OS: Windows %s %d.%d build %d %s\r\n", os, servicePackMajor, servicePackMinor, buildNumber, arch);
 }
 
-static void GetProcessorName(Str::Str<char>& s)
+static void GetProcessorName(str::Str<char>& s)
 {
     TCHAR *name = ReadRegStr(HKEY_LOCAL_MACHINE, _T("HARDWARE\\DESCRIPTION\\System\\CentralProcessor"), _T("ProcessorNameString"));
     if (!name) // if more than one processor
@@ -402,23 +402,23 @@ static void GetProcessorName(Str::Str<char>& s)
     if (!name)
         return;
 
-    ScopedMem<char> tmp(Str::Conv::ToUtf8(name));
+    ScopedMem<char> tmp(str::Conv::ToUtf8(name));
     s.AppendFmt("Processor: %s\r\n", tmp);
     free(name);
 }
 
-static void GetMachineName(Str::Str<char>& s)
+static void GetMachineName(str::Str<char>& s)
 {
     TCHAR *s1 = ReadRegStr(HKEY_LOCAL_MACHINE, _T("HARDWARE\\DESCRIPTION\\System\\BIOS"), _T("SystemFamily"));
     TCHAR *s2 = ReadRegStr(HKEY_LOCAL_MACHINE, _T("HARDWARE\\DESCRIPTION\\System\\BIOS"), _T("SystemVersion"));
-    ScopedMem<char> s1u(s1 ? Str::Conv::ToUtf8(s1) : NULL);
-    ScopedMem<char> s2u(s2 ? Str::Conv::ToUtf8(s2) : NULL);
+    ScopedMem<char> s1u(s1 ? str::Conv::ToUtf8(s1) : NULL);
+    ScopedMem<char> s2u(s2 ? str::Conv::ToUtf8(s2) : NULL);
 
     if (!s1u && !s2u)
         ; // pass
     else if (!s1u)
         s.AppendFmt("Machine: %s\r\n", s2u.Get());
-    else if (!s2u || Str::EqI(s1u, s2u))
+    else if (!s2u || str::EqI(s1u, s2u))
         s.AppendFmt("Machine: %s\r\n", s1u.Get());
     else
         s.AppendFmt("Machine: %s %s\r\n", s1u.Get(), s2u.Get());
@@ -427,7 +427,7 @@ static void GetMachineName(Str::Str<char>& s)
     free(s2);
 }
 
-static void GetLanguage(Str::Str<char>& s)
+static void GetLanguage(str::Str<char>& s)
 {
     char country[32] = {0};
     GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_SISO3166CTRYNAME, country, sizeof(country)-1);   
@@ -437,7 +437,7 @@ static void GetLanguage(Str::Str<char>& s)
     s.AppendFmt("Lang: %s %s\r\n", lang, country);
 }
 
-static void GetSystemInfo(Str::Str<char>& s)
+static void GetSystemInfo(str::Str<char>& s)
 {
     SYSTEM_INFO si;
     GetSystemInfo(&si);
@@ -474,7 +474,7 @@ static bool IsStaticBuild()
     bool isStatic = true;
     while (cont) {
         TCHAR *name = mod.szModule;
-        if (Str::EqI(name, _T("libmupdf.dll"))) {
+        if (str::EqI(name, _T("libmupdf.dll"))) {
             isStatic = false;
             break;
         }
@@ -484,7 +484,7 @@ static bool IsStaticBuild()
     return isStatic;
 }
 
-static void GetModules(Str::Str<char>& s)
+static void GetModules(str::Str<char>& s)
 {
     HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, GetCurrentProcessId());
     if (snap == INVALID_HANDLE_VALUE) return;
@@ -493,8 +493,8 @@ static void GetModules(Str::Str<char>& s)
     mod.dwSize = sizeof(mod);
     BOOL cont = Module32First(snap, &mod);
     while (cont) {
-        ScopedMem<char> nameA(Str::Conv::ToUtf8(mod.szModule));
-        ScopedMem<char> pathA(Str::Conv::ToUtf8(mod.szExePath));
+        ScopedMem<char> nameA(str::Conv::ToUtf8(mod.szModule));
+        ScopedMem<char> pathA(str::Conv::ToUtf8(mod.szExePath));
         s.AppendFmt("Module: %08X %06X %-16s %s\r\n", (DWORD)mod.modBaseAddr, (DWORD)mod.modBaseSize, nameA, pathA);
         cont = Module32Next(snap, &mod);
     }
@@ -560,7 +560,7 @@ static bool HasOwnSymbols()
     return HasSymbolsForAddress(addr);
 }
 
-static void AppendAddress(Str::Str<char>& s, DWORD64 addr)
+static void AppendAddress(str::Str<char>& s, DWORD64 addr)
 {
 #ifdef _WIN64
     s.AppendFmt("%016I64X", addr);
@@ -569,7 +569,7 @@ static void AppendAddress(Str::Str<char>& s, DWORD64 addr)
 #endif
 }
 
-static void GetAddressInfo(Str::Str<char>& s, DWORD64 addr)
+static void GetAddressInfo(str::Str<char>& s, DWORD64 addr)
 {
     static const int MAX_SYM_LEN = 512;
 
@@ -589,7 +589,7 @@ static void GetAddressInfo(Str::Str<char>& s, DWORD64 addr)
     char module[MAX_PATH] = { 0 };
     DWORD section, offset;
     if (GetAddrInfo((void*)addr, module, sizeof(module), section, offset)) {
-        Str::ToLower(module);
+        str::ToLower(module);
         const char *moduleShort = Path::GetBaseName(module);
         AppendAddress(s, addr);
         s.AppendFmt(" %02X:", section);
@@ -610,7 +610,7 @@ static void GetAddressInfo(Str::Str<char>& s, DWORD64 addr)
     s.Append("\r\n");
 }
 
-static bool GetStackFrameInfo(Str::Str<char>& s, STACKFRAME64 *stackFrame,
+static bool GetStackFrameInfo(str::Str<char>& s, STACKFRAME64 *stackFrame,
                               CONTEXT *ctx, HANDLE hThread)
 {
 #if defined(_WIN64)
@@ -636,7 +636,7 @@ static bool GetStackFrameInfo(Str::Str<char>& s, STACKFRAME64 *stackFrame,
     return true;
 }
 
-static void GetCallstack(Str::Str<char>& s, CONTEXT& ctx, HANDLE hThread)
+static void GetCallstack(str::Str<char>& s, CONTEXT& ctx, HANDLE hThread)
 {
     if (!CanStackWalk()) {
         s.Append("GetCallstack(): CanStackWalk() returned false");
@@ -671,7 +671,7 @@ static void GetCallstack(Str::Str<char>& s, CONTEXT& ctx, HANDLE hThread)
     }
 }
 
-static void GetCurrentThreadCallstack(Str::Str<char>&s)
+static void GetCurrentThreadCallstack(str::Str<char>&s)
 {
     // not available under Win2000
     RtlCaptureContextProc *RtlCaptureContext = (RtlCaptureContextProc *)LoadDllFunc(_T("kernel32.dll"), "RtlCaptureContext");
@@ -684,7 +684,7 @@ static void GetCurrentThreadCallstack(Str::Str<char>&s)
     GetCallstack(s, ctx, GetCurrentThread());
 }
 
-static void GetThreadCallstack(Str::Str<char>& s, DWORD threadId)
+static void GetThreadCallstack(str::Str<char>& s, DWORD threadId)
 {
     if (threadId == GetCurrentThreadId())
         return;
@@ -715,7 +715,7 @@ static void GetThreadCallstack(Str::Str<char>& s, DWORD threadId)
     CloseHandle(hThread);
 }
 
-static void GetAllThreadsCallstacks(Str::Str<char>& s)
+static void GetAllThreadsCallstacks(str::Str<char>& s)
 {
     HANDLE threadSnap = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
     if (threadSnap == INVALID_HANDLE_VALUE)
@@ -775,7 +775,7 @@ static char *ExceptionNameFromCode(DWORD excCode)
     return buf;
 }
 
-static void GetExceptionInfo(Str::Str<char>& s, EXCEPTION_POINTERS *excPointers)
+static void GetExceptionInfo(str::Str<char>& s, EXCEPTION_POINTERS *excPointers)
 {
     if (!excPointers)
         return;
@@ -828,7 +828,7 @@ static void GetExceptionInfo(Str::Str<char>& s, EXCEPTION_POINTERS *excPointers)
     GetCallstack(s, *ctx, GetCurrentThread());
 }
 
-static void GetProgramInfo(Str::Str<char>& s)
+static void GetProgramInfo(str::Str<char>& s)
 {
     s.AppendFmt("Ver: %s", QM(CURR_VERSION));
 #ifdef SVN_PRE_RELEASE_VER
@@ -842,14 +842,14 @@ static void GetProgramInfo(Str::Str<char>& s)
 }
 
 // in SumatraPDF.cpp
-extern void GetFilesInfo(Str::Str<char>& s);
+extern void GetFilesInfo(str::Str<char>& s);
 
 static char *BuildCrashInfoText()
 {
     if (!gSymInitializeOk)
         return NULL;
 
-    Str::Str<char> s(16 * 1024);
+    str::Str<char> s(16 * 1024);
     GetProgramInfo(s);
     GetOsVersion(s);
     GetSystemInfo(s);
@@ -869,14 +869,14 @@ static char *BuildCrashInfoText()
 
 static void SendCrashInfo(char *s)
 {
-    if (Str::IsEmpty(s))
+    if (str::IsEmpty(s))
         return;
 
     char *boundary = "0xKhTmLbOuNdArY";
-    Str::Str<char> headers(256);
+    str::Str<char> headers(256);
     headers.AppendFmt("Content-Type: multipart/form-data; boundary=%s", boundary);
 
-    Str::Str<char> data(2048);
+    str::Str<char> data(2048);
     data.AppendFmt("--%s\r\n", boundary);
     data.Append("Content-Disposition: form-data; name=\"file\"; filename=\"test.bin\"\r\n\r\n");
     data.Append(s);
@@ -1037,7 +1037,7 @@ void SubmitCrashInfo()
 Exit:
     free(s);
 #if defined(DEBUG_CRASH_INFO)
-    ScopedMem<char> log_utf8(Str::Conv::ToUtf8(gDbgLog.GetData()));
+    ScopedMem<char> log_utf8(str::Conv::ToUtf8(gDbgLog.GetData()));
     SendCrashInfo(log_utf8);
 #endif
 }
@@ -1108,7 +1108,7 @@ void InstallCrashHandler(const TCHAR *crashDumpPath)
     if (NULL == crashDumpPath)
         return;
 
-    gCrashDumpPath.Set(Str::Dup(crashDumpPath));
+    gCrashDumpPath.Set(str::Dup(crashDumpPath));
     if (!gDumpEvent && !gDumpThread) {
         gDumpEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
         gDumpThread = CreateThread(NULL, 0, CrashDumpThread, NULL, 0, 0);

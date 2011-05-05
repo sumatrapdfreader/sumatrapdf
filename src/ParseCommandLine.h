@@ -69,22 +69,22 @@ public:
 protected:
     void SetPrinterName(TCHAR *s) {
         free(printerName);
-        printerName = Str::Dup(s);
+        printerName = str::Dup(s);
     }
 
     void SetInverseSearchCmdLine(TCHAR *s) {
         free(inverseSearchCmdLine);
-        inverseSearchCmdLine = Str::Dup(s);
+        inverseSearchCmdLine = str::Dup(s);
     }
 
     void SetLang(TCHAR *s) {
         free(lang);
-        lang = Str::Conv::ToAnsi(s);
+        lang = str::Conv::ToAnsi(s);
     }
     
     void SetDestName(TCHAR *s) {
         free(destName);
-        destName = Str::Dup(s);
+        destName = str::Dup(s);
     }
 };
 

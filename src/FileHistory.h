@@ -53,7 +53,7 @@ class FileHistory {
             return dsA->isPinned ? -1 : 1;
         // sort pinned documents alphabetically
         if (dsA->isPinned && dsB->isPinned)
-            return Str::CmpNatural(Path::GetBaseName(dsA->filePath), Path::GetBaseName(dsB->filePath));
+            return str::CmpNatural(Path::GetBaseName(dsA->filePath), Path::GetBaseName(dsB->filePath));
         if (dsA->openCount != dsB->openCount)
             return dsB->openCount - dsA->openCount;
         // use recency as the criterion in case of equal open counts
@@ -78,7 +78,7 @@ public:
 
     DisplayState *Find(const TCHAR *filePath) const {
         for (size_t i = 0; i < states.Count(); i++)
-            if (Str::EqI(states[i]->filePath, filePath))
+            if (str::EqI(states[i]->filePath, filePath))
                 return states[i];
         return NULL;
     }
@@ -91,7 +91,7 @@ public:
         DisplayState *state = Find(filePath);
         if (!state) {
             state = new DisplayState();
-            state->filePath = Str::Dup(filePath);
+            state->filePath = str::Dup(filePath);
         }
         else
             Remove(state);

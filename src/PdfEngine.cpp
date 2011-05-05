@@ -223,7 +223,7 @@ void fz_stream_fingerprint(fz_stream *file, unsigned char digest[16])
 
 WCHAR *fz_span_to_wchar(fz_text_span *text, TCHAR *lineSep, RectI **coords_out=NULL)
 {
-    int lineSepLen = Str::Len(lineSep);
+    int lineSepLen = str::Len(lineSep);
     size_t textLen = 0;
     for (fz_text_span *span = text; span; span = span->next)
         textLen += span->len + lineSepLen;
@@ -313,7 +313,7 @@ static bool linkifyCheckMultiline(TCHAR *pageText, TCHAR *pos, RectI *coords)
         coords[pos - pageText + 1].BR().y > coords[pos - pageText - 1].y &&
         coords[pos - pageText + 1].y <= coords[pos - pageText - 1].BR().y &&
         coords[pos - pageText + 1].x < coords[pos - pageText - 1].BR().x &&
-        !Str::StartsWith(pos + 1, _T("http"));
+        !str::StartsWith(pos + 1, _T("http"));
 }
 
 static TCHAR *linkifyFindEnd(TCHAR *start)
@@ -343,7 +343,7 @@ static TCHAR *linkifyMultilineText(LinkRectList *list, TCHAR *pageText, TCHAR *s
         multiline = linkifyCheckMultiline(pageText, end, coords);
         *end = 0;
 
-        uri.Set(Str::Join(uri, start));
+        uri.Set(str::Join(uri, start));
         RectI bbox = coords[start - pageText].Union(coords[end - pageText - 1]);
         list->coords.Append(fz_RectD_to_rect(bbox.Convert<double>()));
 
@@ -351,9 +351,9 @@ static TCHAR *linkifyMultilineText(LinkRectList *list, TCHAR *pageText, TCHAR *s
     } while (multiline);
 
     // update the link URL for all partial links
-    list->links[lastIx] = Str::Dup(uri);
+    list->links[lastIx] = str::Dup(uri);
     for (size_t i = lastIx; i < list->coords.Count(); i++)
-        list->links.Append(Str::Dup(uri));
+        list->links.Append(str::Dup(uri));
 
     return end;
 }
@@ -365,9 +365,9 @@ static LinkRectList *linkifyText(TCHAR *pageText, RectI *coords)
 
     for (TCHAR *start = pageText; *start; start++) {
         // look for words starting with "http://", "https://" or "www."
-        if (('h' != *start || !Str::StartsWith(start, _T("http://")) &&
-                              !Str::StartsWith(start, _T("https://"))) &&
-            ('w' != *start || !Str::StartsWith(start, _T("www."))) ||
+        if (('h' != *start || !str::StartsWith(start, _T("http://")) &&
+                              !str::StartsWith(start, _T("https://"))) &&
+            ('w' != *start || !str::StartsWith(start, _T("www."))) ||
             (start > pageText && (_istalnum(start[-1]) || '/' == start[-1])))
             continue;
 
@@ -376,8 +376,8 @@ static LinkRectList *linkifyText(TCHAR *pageText, RectI *coords)
         *end = 0;
 
         // add the link, if it's a new one (ignoring www. links without a toplevel domain)
-        if (*start && (Str::StartsWith(start, _T("http")) || _tcschr(start + 5, '.') != NULL)) {
-            TCHAR *uri = Str::StartsWith(start, _T("http")) ? Str::Dup(start) : Str::Join(_T("http://"), start);
+        if (*start && (str::StartsWith(start, _T("http")) || _tcschr(start + 5, '.') != NULL)) {
+            TCHAR *uri = str::StartsWith(start, _T("http")) ? str::Dup(start) : str::Join(_T("http://"), start);
             list->links.Append(uri);
             RectI bbox = coords[start - pageText].Union(coords[end - pageText - 1]);
             list->coords.Append(fz_RectD_to_rect(bbox.Convert<double>()));
@@ -412,7 +412,7 @@ extern "C" {
 #include <mupdf.h>
 }
 
-namespace Str {
+namespace str {
     namespace Conv {
 
 inline TCHAR *FromPdf(fz_obj *obj)
@@ -461,7 +461,7 @@ pdf_outline *pdf_loadattachments(pdf_xref *xref)
         fz_obj *type = fz_dict_gets(dest, "Type");
 
         node->title = fz_strdup(fz_to_name(name));
-        if (fz_is_name(type) && Str::Eq(fz_to_name(type), "Filespec"))
+        if (fz_is_name(type) && str::Eq(fz_to_name(type), "Filespec"))
             node->link = pdf_new_link(fz_keep_obj(dest), PDF_LINK_LAUNCH);
     }
     fz_drop_obj(dict);
@@ -651,7 +651,7 @@ public:
         return fz_rect_to_RectD(annot->rect);
     }
     virtual TCHAR *GetValue() const {
-        return Str::Conv::FromUtf8(fz_to_str_buf(fz_dict_gets(annot->obj, "Contents")));
+        return str::Conv::FromUtf8(fz_to_str_buf(fz_dict_gets(annot->obj, "Contents")));
     }
 };
 
@@ -760,7 +760,7 @@ CPdfEngine *CPdfEngine::Clone()
     }
 
     if (_fileName)
-        clone->_fileName = Str::Dup(_fileName);
+        clone->_fileName = str::Dup(_fileName);
     if (!_decryptionKey && _xref->crypt) {
         delete clone->_decryptionKey;
         clone->_decryptionKey = NULL;
@@ -772,7 +772,7 @@ CPdfEngine *CPdfEngine::Clone()
 bool CPdfEngine::load(const TCHAR *fileName, PasswordUI *pwdUI)
 {
     assert(!_fileName && !_xref);
-    _fileName = Str::Dup(fileName);
+    _fileName = str::Dup(fileName);
     if (!_fileName)
         return false;
 
@@ -780,7 +780,7 @@ bool CPdfEngine::load(const TCHAR *fileName, PasswordUI *pwdUI)
     // embedded PDF documents (the digits are :<num>:<gen> of the embedded file stream)
     TCHAR *embedMarks = NULL;
     int colonCount = 0;
-    for (TCHAR *c = (TCHAR *)_fileName + Str::Len(_fileName) - 1; c > _fileName; c--) {
+    for (TCHAR *c = (TCHAR *)_fileName + str::Len(_fileName) - 1; c > _fileName; c--) {
         if (*c == ':') {
             if (!ChrIsDigit(*(c + 1)))
                 break;
@@ -801,11 +801,11 @@ OpenEmbeddedFile:
     if (!load_from_stream(file, pwdUI))
         return false;
 
-    if (Str::IsEmpty(embedMarks))
+    if (str::IsEmpty(embedMarks))
         return finishLoading();
 
     int num, gen;
-    embedMarks = (TCHAR *)Str::Parse(embedMarks, _T(":%d:%d"), &num, &gen);
+    embedMarks = (TCHAR *)str::Parse(embedMarks, _T(":%d:%d"), &num, &gen);
     assert(embedMarks);
     if (!embedMarks || !pdf_is_stream(_xref, num, gen))
         return false;
@@ -866,17 +866,17 @@ bool CPdfEngine::load_from_stream(fz_stream *stm, PasswordUI *pwdUI)
                 break;
             }
 
-            char *pwd_doc = Str::Conv::ToPDF(pwd);
+            char *pwd_doc = str::Conv::ToPDF(pwd);
             okay = pwd_doc && pdf_authenticate_password(_xref, pwd_doc);
             fz_free(pwd_doc);
             // try the UTF-8 password, if the PDFDocEncoding one doesn't work
             if (!okay) {
-                ScopedMem<char> pwd_utf8(Str::Conv::ToUtf8(pwd));
+                ScopedMem<char> pwd_utf8(str::Conv::ToUtf8(pwd));
                 okay = pwd_utf8 && pdf_authenticate_password(_xref, pwd_utf8);
             }
             // fall back to an ANSI-encoded password as a last measure
             if (!okay) {
-                ScopedMem<char> pwd_ansi(Str::Conv::ToAnsi(pwd));
+                ScopedMem<char> pwd_ansi(str::Conv::ToAnsi(pwd));
                 okay = pwd_ansi && pdf_authenticate_password(_xref, pwd_ansi);
             }
         }
@@ -920,7 +920,7 @@ bool CPdfEngine::finishLoading()
 
 CPdfToCItem *CPdfEngine::BuildToCTree(pdf_outline *entry, int& idCounter)
 {
-    TCHAR *name = entry->title ? Str::Conv::FromUtf8(entry->title) : Str::Dup(_T(""));
+    TCHAR *name = entry->title ? str::Conv::FromUtf8(entry->title) : str::Dup(_T(""));
     CPdfToCItem *node = new CPdfToCItem(name, PdfLink(this, entry->link));
     node->open = entry->count >= 0;
     node->id = ++idCounter;
@@ -969,8 +969,8 @@ int CPdfEngine::FindPageNo(fz_obj *dest)
 
 PageDestination *CPdfEngine::GetNamedDest(const TCHAR *name)
 {
-    ScopedMem<char> name_utf8(Str::Conv::ToUtf8(name));
-    fz_obj *nameobj = fz_new_string((char *)name_utf8, (int)Str::Len(name_utf8));
+    ScopedMem<char> name_utf8(str::Conv::ToUtf8(name));
+    fz_obj *nameobj = fz_new_string((char *)name_utf8, (int)str::Len(name_utf8));
     fz_obj *dest = pdf_lookup_dest(_xref, nameobj);
     fz_drop_obj(nameobj);
 
@@ -1296,8 +1296,8 @@ PageElement *CPdfEngine::GetElementAtPos(int pageNo, PointD pt)
 
     for (pdf_annot *annot = page->annots; annot; annot = annot->next)
         if (fz_is_pt_in_rect(annot->rect, p) &&
-            Str::Eq(fz_to_name(fz_dict_gets(annot->obj, "Subtype")), "Text") &&
-            !Str::IsEmpty(fz_to_str_buf(fz_dict_gets(annot->obj, "Contents")))) {
+            str::Eq(fz_to_name(fz_dict_gets(annot->obj, "Subtype")), "Text") &&
+            !str::IsEmpty(fz_to_str_buf(fz_dict_gets(annot->obj, "Contents")))) {
             return new PdfComment(annot, pageNo);
         }
 
@@ -1316,8 +1316,8 @@ Vec<PageElement *> *CPdfEngine::GetElements(int pageNo)
         els->Append(new PdfLink(this, link, pageNo));
 
     for (pdf_annot *annot = page->annots; annot; annot = annot->next)
-        if (Str::Eq(fz_to_name(fz_dict_gets(annot->obj, "Subtype")), "Text") &&
-            !Str::IsEmpty(fz_to_str_buf(fz_dict_gets(annot->obj, "Contents")))) {
+        if (str::Eq(fz_to_name(fz_dict_gets(annot->obj, "Subtype")), "Text") &&
+            !str::IsEmpty(fz_to_str_buf(fz_dict_gets(annot->obj, "Contents")))) {
             els->Append(new PdfComment(annot, pageNo));
         }
 
@@ -1365,8 +1365,8 @@ void CPdfEngine::linkifyPageText(pdf_page *page)
         for (pdf_link *next = page->links; next && !overlaps; next = next->next)
             overlaps = fz_significantly_overlap(next->rect, list->coords[i]);
         if (!overlaps) {
-            ScopedMem<char> uri(Str::Conv::ToUtf8(list->links[i]));
-            pdf_link *link = pdf_new_link(fz_new_string(uri, Str::Len(uri)), PDF_LINK_URI, list->coords[i]);
+            ScopedMem<char> uri(str::Conv::ToUtf8(list->links[i]));
+            pdf_link *link = pdf_new_link(fz_new_string(uri, str::Len(uri)), PDF_LINK_URI, list->coords[i]);
             link->next = page->links;
             page->links = link;
         }
@@ -1397,7 +1397,7 @@ TCHAR *CPdfEngine::ExtractPageText(pdf_page *page, TCHAR *lineSep, RectI **coord
     fz_free_text_span(text);
     LeaveCriticalSection(&_xrefAccess);
 
-    return Str::Conv::FromWStrQ(content);
+    return str::Conv::FromWStrQ(content);
 }
 
 TCHAR *CPdfEngine::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_out, RenderTarget target)
@@ -1426,11 +1426,11 @@ TCHAR *CPdfEngine::GetProperty(char *name)
     if (!_xref)
         return NULL;
 
-    if (Str::Eq(name, "PdfVersion")) {
+    if (str::Eq(name, "PdfVersion")) {
         int major = _xref->version / 10, minor = _xref->version % 10;
         if (1 == major && 7 == minor && 5 == pdf_get_crypt_revision(_xref))
-            return Str::Format(_T("%d.%d Adobe Extension Level %d"), major, minor, 3);
-        return Str::Format(_T("%d.%d"), major, minor);
+            return str::Format(_T("%d.%d Adobe Extension Level %d"), major, minor, 3);
+        return str::Format(_T("%d.%d"), major, minor);
     }
 
     fz_obj *obj = fz_dict_gets(_info, name);
@@ -1438,7 +1438,7 @@ TCHAR *CPdfEngine::GetProperty(char *name)
         return NULL;
 
     WCHAR *ucs2 = (WCHAR *)pdf_to_ucs2(obj);
-    TCHAR *tstr = Str::Conv::FromWStr(ucs2);
+    TCHAR *tstr = str::Conv::FromWStr(ucs2);
     fz_free(ucs2);
 
     return tstr;
@@ -1448,7 +1448,7 @@ char *CPdfEngine::GetDecryptionKey() const
 {
     if (!_decryptionKey)
         return NULL;
-    return Str::Dup(_decryptionKey);
+    return str::Dup(_decryptionKey);
 }
 
 PageLayoutType CPdfEngine::PreferredLayout()
@@ -1459,14 +1459,14 @@ PageLayoutType CPdfEngine::PreferredLayout()
     fz_obj *root = fz_dict_gets(_xref->trailer, "Root");
 
     char *name = fz_to_name(fz_dict_gets(root, "PageLayout"));
-    if (Str::EndsWith(name, "Right"))
+    if (str::EndsWith(name, "Right"))
         layout = Layout_Book;
-    else if (Str::StartsWith(name, "Two"))
+    else if (str::StartsWith(name, "Two"))
         layout = Layout_Facing;
 
     fz_obj *prefs = fz_dict_gets(root, "ViewerPreferences");
     char *direction = fz_to_name(fz_dict_gets(prefs, "Direction"));
-    if (Str::Eq(direction, "R2L"))
+    if (str::Eq(direction, "R2L"))
         layout = (PageLayoutType)(layout | Layout_R2L);
 
     return layout;
@@ -1526,40 +1526,40 @@ TCHAR *PdfLink::GetValue() const
 
     switch (link->kind) {
     case PDF_LINK_URI:
-        path = Str::Conv::FromPdf(link->dest);
+        path = str::Conv::FromPdf(link->dest);
         break;
     case PDF_LINK_LAUNCH:
         obj = fz_dict_gets(link->dest, "Type");
-        if (!fz_is_name(obj) || !Str::Eq(fz_to_name(obj), "Filespec"))
+        if (!fz_is_name(obj) || !str::Eq(fz_to_name(obj), "Filespec"))
             break;
         obj = fz_dict_gets(link->dest, "UF"); 
         if (!fz_is_string(obj))
             obj = fz_dict_gets(link->dest, "F"); 
 
         if (fz_is_string(obj)) {
-            path = Str::Conv::FromPdf(obj);
-            Str::TransChars(path, _T("/"), _T("\\"));
+            path = str::Conv::FromPdf(obj);
+            str::TransChars(path, _T("/"), _T("\\"));
         }
 
-        if (path && fz_dict_gets(link->dest, "EF") && Str::EndsWithI(path, _T(".pdf"))) {
+        if (path && fz_dict_gets(link->dest, "EF") && str::EndsWithI(path, _T(".pdf"))) {
             fz_obj *embedded = dest();
             free(path);
-            path = Str::Format(_T("%s:%d:%d"), engine->FileName(), fz_to_num(embedded), fz_to_gen(embedded));
+            path = str::Format(_T("%s:%d:%d"), engine->FileName(), fz_to_num(embedded), fz_to_gen(embedded));
         }
         break;
     case PDF_LINK_ACTION:
         obj = fz_dict_gets(link->dest, "S");
         if (!fz_is_name(obj))
             break;
-        if (Str::Eq(fz_to_name(obj), "GoToR")) {
+        if (str::Eq(fz_to_name(obj), "GoToR")) {
             obj = fz_dict_gets(link->dest, "F");
             // Note: this might not be per standard but is required to fix Nissan_Manual_370Z.pdf
             // from http://fofou.appspot.com/sumatrapdf/topic?id=2018365
             if (fz_is_dict(obj))
                 obj = fz_dict_gets(obj, "F");
             if (fz_is_string(obj)) {
-                path = Str::Conv::FromPdf(obj);
-                Str::TransChars(path, _T("/"), _T("\\"));
+                path = str::Conv::FromPdf(obj);
+                str::TransChars(path, _T("/"), _T("\\"));
             }
         }
         break;
@@ -1579,7 +1579,7 @@ const char *PdfLink::GetType() const
             return "LaunchEmbedded";
         return "LaunchFile";
     case PDF_LINK_ACTION:
-        if (Str::Eq(fz_to_name(fz_dict_gets(link->dest, "S")), "GoToR") &&
+        if (str::Eq(fz_to_name(fz_dict_gets(link->dest, "S")), "GoToR") &&
             fz_dict_gets(link->dest, "D")) {
             return "ScrollToEx";
         }
@@ -1593,9 +1593,9 @@ fz_obj *PdfLink::dest() const
 {
     if (!link)
         return NULL;
-    if (PDF_LINK_ACTION == link->kind && Str::Eq(GetType(), "ScrollToEx"))
+    if (PDF_LINK_ACTION == link->kind && str::Eq(GetType(), "ScrollToEx"))
         return fz_dict_gets(link->dest, "D");
-    if (PDF_LINK_LAUNCH == link->kind && Str::Eq(GetType(), "LaunchEmbedded"))
+    if (PDF_LINK_LAUNCH == link->kind && str::Eq(GetType(), "LaunchEmbedded"))
         return fz_dict_getsa(fz_dict_gets(link->dest, "EF"), "UF", "F");
     return link->dest;
 }
@@ -1614,7 +1614,7 @@ RectD PdfLink::GetDestRect() const
     fz_obj *obj = fz_array_get(dest, 1);
     const char *type = fz_to_name(obj);
 
-    if (Str::Eq(type, "XYZ")) {
+    if (str::Eq(type, "XYZ")) {
         // NULL values for the coordinates mean: keep the current position
         if (!fz_is_null(fz_array_get(dest, 2)))
             result.x = fz_to_real(fz_array_get(dest, 2));
@@ -1622,20 +1622,20 @@ RectD PdfLink::GetDestRect() const
             result.y = fz_to_real(fz_array_get(dest, 3));
         result.dx = result.dy = 0;
     }
-    else if (Str::Eq(type, "FitR")) {
+    else if (str::Eq(type, "FitR")) {
         result = RectD::FromXY(fz_to_real(fz_array_get(dest, 2)),  // left
                                fz_to_real(fz_array_get(dest, 5)),  // top
                                fz_to_real(fz_array_get(dest, 4)),  // right
                                fz_to_real(fz_array_get(dest, 3))); // bottom
     }
-    else if (Str::Eq(type, "FitH") || Str::Eq(type, "FitBH")) {
+    else if (str::Eq(type, "FitH") || str::Eq(type, "FitBH")) {
         result.y = fz_to_real(fz_array_get(dest, 2)); // top
-        // zoom = Str::Eq(type, "FitH") ? ZOOM_FIT_WIDTH : ZOOM_FIT_CONTENT;
+        // zoom = str::Eq(type, "FitH") ? ZOOM_FIT_WIDTH : ZOOM_FIT_CONTENT;
     }
-    else if (Str::Eq(type, "Fit") || Str::Eq(type, "FitV")) {
+    else if (str::Eq(type, "Fit") || str::Eq(type, "FitV")) {
         // zoom = ZOOM_FIT_PAGE;
     }
-    else if (Str::Eq(type, "FitB") || Str::Eq(type, "FitBV")) {
+    else if (str::Eq(type, "FitB") || str::Eq(type, "FitBV")) {
         // zoom = ZOOM_FIT_CONTENT;
     }
     return result;
@@ -1778,7 +1778,7 @@ protected:
 
 static bool IsUriTarget(const char *target)
 {
-    return Str::StartsWithI(target, "http:") || Str::StartsWithI(target, "https:");
+    return str::StartsWithI(target, "http:") || str::StartsWithI(target, "https:");
 }
 
 class XpsLink : public PageElement, public PageDestination {
@@ -1797,7 +1797,7 @@ public:
     virtual TCHAR *GetValue() const {
         if (!target || !IsUriTarget(target))
             return NULL;
-        return Str::Conv::FromUtf8(target);
+        return str::Conv::FromUtf8(target);
     }
     virtual PageDestination *AsLink() { return this; }
 
@@ -1922,7 +1922,7 @@ CXpsEngine *CXpsEngine::Clone()
     }
 
     if (_fileName)
-        clone->_fileName = Str::Dup(_fileName);
+        clone->_fileName = str::Dup(_fileName);
 
     return clone;
 }
@@ -1930,7 +1930,7 @@ CXpsEngine *CXpsEngine::Clone()
 bool CXpsEngine::load(const TCHAR *fileName)
 {
     assert(!_fileName && !_ctx);
-    _fileName = Str::Dup(fileName);
+    _fileName = str::Dup(fileName);
     if (!_fileName)
         return false;
     return load_from_stream(fz_open_file2(_fileName));
@@ -2084,16 +2084,16 @@ static RectI xps_extract_mediabox_quick_and_dirty(xps_context *ctx, int pageNo)
 
     byte *end = NULL;
     if (0xFF == part->data[0] && 0xFE == part->data[1]) {
-        const WCHAR *start = Str::Find((WCHAR *)part->data, L"<FixedPage");
+        const WCHAR *start = str::Find((WCHAR *)part->data, L"<FixedPage");
         if (start)
-            end = (byte *)Str::FindChar(start, '>');
+            end = (byte *)str::FindChar(start, '>');
         if (end)
             end += 2;
     }
     else {
-        const char *start = Str::Find((char *)part->data, "<FixedPage");
+        const char *start = str::Find((char *)part->data, "<FixedPage");
         if (start)
-            end = (byte *)Str::FindChar(start, '>');
+            end = (byte *)str::FindChar(start, '>');
         if (end)
             // xml_parse_document ignores the length argument for UTF-8 data
             *(++end) = '\0';
@@ -2106,7 +2106,7 @@ static RectI xps_extract_mediabox_quick_and_dirty(xps_context *ctx, int pageNo)
         return RectI();
 
     RectI rect;
-    if (root && Str::Eq(xml_tag(root), "FixedPage")) {
+    if (root && str::Eq(xml_tag(root), "FixedPage")) {
         char *width = xml_att(root, "Width");
         if (width)
             rect.dx = atoi(width);
@@ -2303,7 +2303,7 @@ TCHAR *CXpsEngine::ExtractPageText(xps_page *page, TCHAR *lineSep, RectI **coord
     fz_free_text_span(text);
     LeaveCriticalSection(&_ctxAccess);
 
-    return Str::Conv::FromWStrQ(content);
+    return str::Conv::FromWStrQ(content);
 }
 
 TCHAR *CXpsEngine::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_out, RenderTarget target)
@@ -2340,10 +2340,10 @@ TCHAR *CXpsEngine::GetProperty(char *name)
         return NULL;
 
     char *utf8 = fz_to_str_buf(obj);
-    if (Str::IsEmpty(utf8))
+    if (str::IsEmpty(utf8))
         return NULL;
 
-    return Str::Conv::FromUtf8(utf8);
+    return str::Conv::FromUtf8(utf8);
 };
 
 PageElement *CXpsEngine::GetElementAtPos(int pageNo, PointD pt)
@@ -2376,7 +2376,7 @@ Vec<PageElement *> *CXpsEngine::GetElements(int pageNo)
 static xps_named_dest *xps_find_destination(xps_named_dest *first, const char *name)
 {
     for (xps_named_dest *dest = first; dest; dest = dest->next)
-        if (Str::Eq(dest->target, name))
+        if (str::Eq(dest->target, name))
             return dest;
     return NULL;
 }
@@ -2399,7 +2399,7 @@ void CXpsEngine::linkifyPageText(xps_page *page, int pageNo)
     for (xps_link *link = root.next; link; link = link->next) {
         // updated named destinations
         if (link->is_dest) {
-            ScopedMem<char> target(Str::Format("%s#%s", page->name, link->target));
+            ScopedMem<char> target(str::Format("%s#%s", page->name, link->target));
             xps_named_dest *dest = xps_find_destination(_dests, target);
             // remember unknown destinations
             if (!dest) {
@@ -2427,7 +2427,7 @@ void CXpsEngine::linkifyPageText(xps_page *page, int pageNo)
         for (xps_link *next = _links[pageNo-1]; next && !overlaps; next = next->next)
             overlaps = fz_significantly_overlap(next->rect, list->coords[i]);
         if (!overlaps) {
-            ScopedMem<char> uri(Str::Conv::ToUtf8(list->links[i]));
+            ScopedMem<char> uri(str::Conv::ToUtf8(list->links[i]));
             last = last->next = xps_new_link(uri, list->coords[i]);
             assert(IsUriTarget(last->target));
         }
@@ -2443,7 +2443,7 @@ void CXpsEngine::linkifyPageText(xps_page *page, int pageNo)
 
 int CXpsEngine::FindPageNo(const char *target)
 {
-    if (Str::IsEmpty(target))
+    if (str::IsEmpty(target))
         return 0;
 
     xps_named_dest *found = xps_find_destination(_dests, target);
@@ -2452,7 +2452,7 @@ int CXpsEngine::FindPageNo(const char *target)
 
 fz_rect CXpsEngine::FindDestRect(const char *target)
 {
-    if (Str::IsEmpty(target))
+    if (str::IsEmpty(target))
         return fz_empty_rect;
 
     xps_named_dest *found = xps_find_destination(_dests, target);
@@ -2461,12 +2461,12 @@ fz_rect CXpsEngine::FindDestRect(const char *target)
 
 PageDestination *CXpsEngine::GetNamedDest(const TCHAR *name)
 {
-    ScopedMem<char> name_utf8(Str::Conv::ToUtf8(name));
-    if (!Str::StartsWith(name_utf8.Get(), "#"))
-        name_utf8.Set(Str::Join("#", name_utf8));
+    ScopedMem<char> name_utf8(str::Conv::ToUtf8(name));
+    if (!str::StartsWith(name_utf8.Get(), "#"))
+        name_utf8.Set(str::Join("#", name_utf8));
 
     for (xps_named_dest *dest = _dests; dest; dest = dest->next)
-        if (Str::EndsWithI(dest->target, name_utf8))
+        if (str::EndsWithI(dest->target, name_utf8))
             return new SimpleDest(dest->page, fz_rect_to_RectD(dest->rect));
 
     return NULL;
@@ -2474,12 +2474,12 @@ PageDestination *CXpsEngine::GetNamedDest(const TCHAR *name)
 
 CXpsToCItem *CXpsEngine::BuildToCTree(xps_outline *entry, int& idCounter)
 {
-    TCHAR *name = entry->title ? Str::Conv::FromUtf8(entry->title) : Str::Dup(_T(""));
+    TCHAR *name = entry->title ? str::Conv::FromUtf8(entry->title) : str::Dup(_T(""));
     CXpsToCItem *node = new CXpsToCItem(name, XpsLink(this, entry->target, fz_empty_rect));
     node->open = false;
     node->id = ++idCounter;
 
-    if (node->GetLink() && Str::Eq(node->GetLink()->GetType(), "ScrollTo"))
+    if (node->GetLink() && str::Eq(node->GetLink()->GetType(), "ScrollTo"))
         node->pageNo = FindPageNo(entry->target);
     if (entry->child)
         node->child = BuildToCTree(entry->child, idCounter);

@@ -42,7 +42,7 @@ void LogFmt(TCHAR *fmt, ...)
 
     va_list args;
     va_start(args, fmt);
-    TCHAR *s = Str::FmtV(fmt, args);
+    TCHAR *s = str::FmtV(fmt, args);
     gLogger->LogAndFree(s);
     va_end(args);
 }

@@ -17,7 +17,7 @@ public:
     {
         va_list args;
         va_start(args, fmt);
-        ScopedMem<TCHAR> s(Str::FmtV(fmt, args));
+        ScopedMem<TCHAR> s(str::FmtV(fmt, args));
         Log(s);
         va_end(args);
     }
@@ -43,10 +43,10 @@ public:
 
     virtual void Log(TCHAR *s)
     {
-        ScopedMem<char> utf8s(Str::Conv::ToUtf8(s));
+        ScopedMem<char> utf8s(str::Conv::ToUtf8(s));
         if (utf8s && INVALID_HANDLE_VALUE != fh) {
             DWORD len;
-            BOOL ok = WriteFile(fh, utf8s.Get(), Str::Len(utf8s), &len, NULL);
+            BOOL ok = WriteFile(fh, utf8s.Get(), str::Len(utf8s), &len, NULL);
             if (ok)
                 WriteFile(fh, "\r\n", 2, &len, NULL);
         }
@@ -54,7 +54,7 @@ public:
 };
 
 class MemoryLogger : public Logger {
-    Str::Str<TCHAR> log;
+    str::Str<TCHAR> log;
 
 public:
     virtual void Log(TCHAR *s)
@@ -66,7 +66,7 @@ public:
     }
 
     // caller MUST NOT free the result
-    // (Str::Dup data, if the logger is in use)
+    // (str::Dup data, if the logger is in use)
     TCHAR *GetData() { return log.LendData(); }
 };
 

@@ -163,7 +163,7 @@ static TCHAR *gSupportedExts[] = {
 //       the executable, since it's appended to the end of executable to mark
 //       it as uninstaller. An alternative would be search for it from the end.
 #define UN_INST_MARK L"!uninst_end!"
-static char *gUnInstMark = NULL; // Str::ToMultiByte(UN_INST_MARK, CP_UTF8)
+static char *gUnInstMark = NULL; // str::ToMultiByte(UN_INST_MARK, CP_UTF8)
 
 // The following list is used to verify that all the required files have been
 // installed (install flag set) and to know what files are to be removed at
@@ -212,7 +212,7 @@ struct {
 void NotifyFailed(TCHAR *msg)
 {
     if (!gGlobalData.firstError)
-        gGlobalData.firstError = Str::Dup(msg);
+        gGlobalData.firstError = str::Dup(msg);
     // MessageBox(gHwndFrame, msg, _T("Installation failed"),  MB_ICONEXCLAMATION | MB_OK);
 }
 
@@ -293,10 +293,10 @@ TCHAR *GetInstallationDir(bool forUninstallation=false)
     if (!dir) dir.Set(ReadRegStr(HKEY_LOCAL_MACHINE, REG_PATH_UNINST, INSTALL_LOCATION));
     if (!dir) dir.Set(ReadRegStr(HKEY_CURRENT_USER, REG_PATH_UNINST, INSTALL_LOCATION));
     if (dir) {
-        if (Str::EndsWithI(dir, _T(".exe"))) {
+        if (str::EndsWithI(dir, _T(".exe"))) {
             dir.Set(Path::GetDir(dir));
         }
-        if (!Str::IsEmpty(dir.Get()) && Dir::Exists(dir))
+        if (!str::IsEmpty(dir.Get()) && Dir::Exists(dir))
             return dir.StealData();
     }
 
@@ -330,7 +330,7 @@ TCHAR *GetValidTempDir()
         NotifyFailed(_T("Couldn't create temporary directory"));
         return NULL;
     }
-    return Str::Dup(d);
+    return str::Dup(d);
 }
 
 TCHAR *GetUninstallerPath()
@@ -466,7 +466,7 @@ BOOL InstallCopyFiles()
             goto Error;
         }
 
-        TCHAR *inpath = Str::Conv::FromAnsi(filename);
+        TCHAR *inpath = str::Conv::FromAnsi(filename);
         TCHAR *extpath = Path::Join(gGlobalData.installDir, Path::GetBaseName(inpath));
 
         BOOL ok = File::WriteAll(extpath, data, (size_t)finfo.uncompressed_size);
@@ -498,7 +498,7 @@ BOOL InstallCopyFiles()
         }
 
         for (int i = 0; i < dimof(gPayloadData); i++) {
-            if (success && gPayloadData[i].install && Str::EqI(filename, gPayloadData[i].filepath)) {
+            if (success && gPayloadData[i].install && str::EqI(filename, gPayloadData[i].filepath)) {
                 gPayloadData[i].install = false;
                 break;
             }
@@ -546,8 +546,8 @@ BOOL CreateUninstaller()
     }
 
     if (!gUnInstMark)
-        gUnInstMark = Str::ToMultiByte(UN_INST_MARK, CP_UTF8);
-    int markSize = Str::Len(gUnInstMark);
+        gUnInstMark = str::ToMultiByte(UN_INST_MARK, CP_UTF8);
+    int markSize = str::Len(gUnInstMark);
 
     // find the end of the (un)installer
     char *end = (char *)memchr(installerData, *gUnInstMark, installerSize);
@@ -588,8 +588,8 @@ bool IsUninstaller()
 
     char *data = NULL;
     if (!gUnInstMark)
-        gUnInstMark = Str::ToMultiByte(UN_INST_MARK, CP_UTF8);
-    size_t markSize = Str::Len(gUnInstMark);
+        gUnInstMark = str::ToMultiByte(UN_INST_MARK, CP_UTF8);
+    size_t markSize = str::Len(gUnInstMark);
 
     size_t uninstallerSize;
     ScopedMem<char> uninstallerData(File::ReadAll(GetOwnPath(), &uninstallerSize));
@@ -627,7 +627,7 @@ HANDLE CreateProcessHelper(TCHAR *exe, TCHAR *args=NULL)
     STARTUPINFO si = {0};
     si.cb = sizeof(si);
     // per msdn, cmd has to be writeable
-    ScopedMem<TCHAR> cmd(Str::Format(_T("%s %s"), exe, args ? args : _T("")));
+    ScopedMem<TCHAR> cmd(str::Format(_T("%s %s"), exe, args ? args : _T("")));
     if (!CreateProcess(NULL, cmd, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
         SeeLastError();
         return NULL;
@@ -671,7 +671,7 @@ DWORD GetDirSize(TCHAR *dir)
         if (!(findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
             totalSize += findData.nFileSizeLow;
         }
-        else if (!Str::Eq(findData.cFileName, _T(".")) && !Str::Eq(findData.cFileName, _T(".."))) {
+        else if (!str::Eq(findData.cFileName, _T(".")) && !str::Eq(findData.cFileName, _T(".."))) {
             ScopedMem<TCHAR> subdir(Path::Join(dir, findData.cFileName));
             totalSize += GetDirSize(subdir);
         }
@@ -686,7 +686,7 @@ TCHAR *GetInstallDate()
 {
     SYSTEMTIME st;
     GetSystemTime(&st);
-    return Str::Format(_T("%04d%02d%02d"), st.wYear, st.wMonth, st.wDay);
+    return str::Format(_T("%04d%02d%02d"), st.wYear, st.wMonth, st.wDay);
 }
 
 bool WriteUninstallerRegistryInfo(HKEY hkey)
@@ -727,20 +727,20 @@ bool WriteExtendedFileExtensionInfo(HKEY hkey)
         success &= WriteRegStr(hkey, _T("Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\") EXENAME, NULL, exePath);
 
     // mirroring some of what DoAssociateExeWithPdfExtension() does (cf. AppTools.cpp)
-    ScopedMem<TCHAR> iconPath(Str::Join(exePath, _T(",1")));
+    ScopedMem<TCHAR> iconPath(str::Join(exePath, _T(",1")));
     success &= WriteRegStr(hkey, REG_CLASSES_APPS _T("\\DefaultIcon"), NULL, iconPath);
-    ScopedMem<TCHAR> cmdPath(Str::Format(_T("\"%s\" \"%%1\""), exePath));
+    ScopedMem<TCHAR> cmdPath(str::Format(_T("\"%s\" \"%%1\""), exePath));
     success &= WriteRegStr(hkey, REG_CLASSES_APPS _T("\\Shell\\Open\\Command"), NULL, cmdPath);
-    ScopedMem<TCHAR> printPath(Str::Format(_T("\"%s\" -print-to-default \"%%1\""), exePath));
+    ScopedMem<TCHAR> printPath(str::Format(_T("\"%s\" -print-to-default \"%%1\""), exePath));
     success &= WriteRegStr(hkey, REG_CLASSES_APPS _T("\\Shell\\Print\\Command"), NULL, printPath);
-    ScopedMem<TCHAR> printToPath(Str::Format(_T("\"%s\" -print-to \"%%2\" \"%%1\""), exePath));
+    ScopedMem<TCHAR> printToPath(str::Format(_T("\"%s\" -print-to \"%%2\" \"%%1\""), exePath));
     success &= WriteRegStr(hkey, REG_CLASSES_APPS _T("\\Shell\\PrintTo\\Command"), NULL, printToPath);
     // don't add REG_CLASSES_APPS _T("\\SupportedTypes"), as that prevents SumatraPDF.exe to
     // potentially appear in the Open With lists for other filetypes (such as single images)
 
     // add the installed SumatraPDF.exe to the Open With lists of the supported file extensions
     for (int i = 0; i < dimof(gSupportedExts); i++) {
-        ScopedMem<TCHAR> keyname(Str::Join(_T("Software\\Classes\\"), gSupportedExts[i], _T("\\OpenWithList\\") TAPP));
+        ScopedMem<TCHAR> keyname(str::Join(_T("Software\\Classes\\"), gSupportedExts[i], _T("\\OpenWithList\\") TAPP));
         success &= CreateRegKey(hkey, keyname);
     }
 
@@ -769,25 +769,25 @@ void UnregisterFromBeingDefaultViewer(HKEY hkey)
 {
     ScopedMem<TCHAR> curr(ReadRegStr(hkey, REG_CLASSES_PDF, NULL));
     ScopedMem<TCHAR> prev(ReadRegStr(hkey, REG_CLASSES_APP, _T("previous.pdf")));
-    if (!curr || !Str::Eq(curr, REG_CLASSES_APP)) {
+    if (!curr || !str::Eq(curr, REG_CLASSES_APP)) {
         // not the default, do nothing
     } else if (prev) {
         WriteRegStr(hkey, REG_CLASSES_PDF, NULL, prev);
     } else {
         prev.Set(ReadRegStr(hkey, REG_CLASSES_PDF, NULL));
-        if (Str::Eq(TAPP, prev))
+        if (str::Eq(TAPP, prev))
             DeleteRegKey(hkey, REG_CLASSES_PDF);
     }
 
     // the following settings overrule HKEY_CLASSES_ROOT\.pdf
     ScopedMem<TCHAR> buf(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT, PROG_ID));
-    if (Str::Eq(buf, TAPP)) {
+    if (str::Eq(buf, TAPP)) {
         LONG res = SHDeleteValue(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT, PROG_ID);
         if (res != ERROR_SUCCESS)
             SeeLastError(res);
     }
     buf.Set(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT _T("\\UserChoice"), PROG_ID));
-    if (Str::Eq(buf, TAPP))
+    if (str::Eq(buf, TAPP))
         DeleteRegKey(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT _T("\\UserChoice"), true);
 }
 
@@ -802,9 +802,9 @@ void RemoveOwnRegistryKeys()
         SHDeleteValue(keys[i], REG_CLASSES_PDF _T("\\OpenWithProgids"), TAPP);
 
         for (int i = 0; i < dimof(gSupportedExts); i++) {
-            ScopedMem<TCHAR> keyname(Str::Join(_T("Software\\Classes\\"), gSupportedExts[i], _T("\\OpenWithProgids")));
+            ScopedMem<TCHAR> keyname(str::Join(_T("Software\\Classes\\"), gSupportedExts[i], _T("\\OpenWithProgids")));
             SHDeleteValue(keys[i], keyname, TAPP);
-            keyname.Set(Str::Join(_T("Software\\Classes\\"), gSupportedExts[i], _T("\\OpenWithList\\") TAPP));
+            keyname.Set(str::Join(_T("Software\\Classes\\"), gSupportedExts[i], _T("\\OpenWithList\\") TAPP));
             DeleteRegKey(keys[i], keyname);
         }
     }
@@ -823,8 +823,8 @@ bool IsPdfFilterInstalled()
     ScopedMem<TCHAR> buf(ReadRegStr(HKEY_CLASSES_ROOT, _T(".pdf\\PersistentHandler"), NULL));
     if (!buf)
         return false;
-    ScopedMem<WCHAR> handler_iid(Str::Conv::ToWStr(buf));
-    return Str::EqI(handler_iid, SZ_PDF_FILTER_HANDLER);
+    ScopedMem<WCHAR> handler_iid(str::Conv::ToWStr(buf));
+    return str::EqI(handler_iid, SZ_PDF_FILTER_HANDLER);
 }
 
 void InstallBrowserPlugin()
@@ -875,8 +875,8 @@ BOOL RemoveEmptyDirectory(TCHAR *dir)
             // filter out directories. Even though there shouldn't be any
             // subdirectories, it also filters out the standard "." and ".."
             if ((attrs & FILE_ATTRIBUTE_DIRECTORY) &&
-                !Str::Eq(findData.cFileName, _T(".")) &&
-                !Str::Eq(findData.cFileName, _T(".."))) {
+                !str::Eq(findData.cFileName, _T(".")) &&
+                !str::Eq(findData.cFileName, _T(".."))) {
                 success &= RemoveEmptyDirectory(path);
             }
         } while (FindNextFile(h, &findData) != 0);
@@ -899,7 +899,7 @@ BOOL RemoveInstalledFiles()
     BOOL success = TRUE;
 
     for (int i = 0; i < dimof(gPayloadData); i++) {
-        ScopedMem<TCHAR> relPath(Str::Conv::FromUtf8(gPayloadData[i].filepath));
+        ScopedMem<TCHAR> relPath(str::Conv::FromUtf8(gPayloadData[i].filepath));
         ScopedMem<TCHAR> path(Path::Join(gGlobalData.installDir, relPath));
 
         if (File::Exists(path))
@@ -1051,7 +1051,7 @@ bool IsCheckboxChecked(HWND hwnd)
 void OnButtonInstall()
 {
     TCHAR *userInstallDir = Win::GetText(gHwndTextboxInstDir);
-    if (!Str::IsEmpty(userInstallDir)) {
+    if (!str::IsEmpty(userInstallDir)) {
         free(gGlobalData.installDir);
         gGlobalData.installDir = userInstallDir;
     }
@@ -1228,7 +1228,7 @@ static int CALLBACK BrowseCallbackProc(HWND hwnd, UINT msg, LPARAM lParam, LPARA
 {
     switch (msg) {
     case BFFM_INITIALIZED:
-        if (!Str::IsEmpty((TCHAR *)lpData))
+        if (!str::IsEmpty((TCHAR *)lpData))
             SendMessage(hwnd, BFFM_SETSELECTION, TRUE, lpData);
         break;
 
@@ -1291,7 +1291,7 @@ void OnButtonBrowse()
         TCHAR *installPath = path;
         // force paths that aren't entered manually to end in ...\SumatraPDF
         // to prevent unintended installations into e.g. %ProgramFiles% itself
-        if (!Str::EndsWithI(path, _T("\\") TAPP))
+        if (!str::EndsWithI(path, _T("\\") TAPP))
             installPath = Path::Join(path, TAPP);
         Win::SetText(gHwndTextboxInstDir, installPath);
         Edit_SetSel(gHwndTextboxInstDir, 0, -1);
@@ -1525,7 +1525,7 @@ void CalcLettersLayout(Graphics& g, Font *f, int dx)
 
 REAL DrawMessage(Graphics &g, TCHAR *msg, REAL y, REAL dx, Color color)
 {
-    ScopedMem<WCHAR> s(Str::Conv::ToWStr(msg));
+    ScopedMem<WCHAR> s(str::Conv::ToWStr(msg));
 
     Font f(L"Impact", 16, FontStyleRegular);
     Gdiplus::RectF maxbox(0, y, dx, 0);
@@ -1580,7 +1580,7 @@ void DrawSumatraLetters(Graphics &g, Font *f, Font *fVer, REAL y)
     g.RotateTransform(45.f);
     REAL x2 = 15; REAL y2 = -34;
 
-    ScopedMem<WCHAR> ver_s(Str::Conv::ToWStr(_T("v") CURR_VERSION_STR));
+    ScopedMem<WCHAR> ver_s(str::Conv::ToWStr(_T("v") CURR_VERSION_STR));
 #ifdef DRAW_TEXT_SHADOW
     SolidBrush b1(Color(0,0,0));
     g.DrawString(ver_s, -1, fVer, Gdiplus::PointF(x2-2,y2-1), &b1);
@@ -1784,7 +1784,7 @@ void OnCreateInstaller(HWND hwnd)
     y += 40;
 
     ScopedMem<TCHAR> defaultViewer(GetDefaultPdfViewer());
-    BOOL hasOtherViewer = !Str::EqI(defaultViewer, TAPP);
+    BOOL hasOtherViewer = !str::EqI(defaultViewer, TAPP);
     BOOL isSumatraDefaultViewer = defaultViewer && !hasOtherViewer;
 
     // only show the checbox if Sumatra is not already a default viewer.
@@ -1994,7 +1994,7 @@ bool ExecuteUninstallerFromTempDir()
         return false;
     }
 
-    ScopedMem<TCHAR> args(Str::Format(_T("/d \"%s\" %s"), gGlobalData.installDir, gGlobalData.silent ? _T("/s") : _T("")));
+    ScopedMem<TCHAR> args(str::Format(_T("/d \"%s\" %s"), gGlobalData.installDir, gGlobalData.silent ? _T("/s") : _T("")));
     HANDLE h = CreateProcessHelper(tempPath, args);
     CloseHandle(h);
 
@@ -2046,7 +2046,7 @@ void ParseCommandLine(TCHAR *cmdLine)
 {
     CmdLineParser argList(cmdLine);
 
-#define is_arg(param) Str::EqI(arg + 1, _T(param))
+#define is_arg(param) str::EqI(arg + 1, _T(param))
 #define is_arg_with_param(param) (is_arg(param) && i < argList.Count() - 1)
 
     // skip the first arg (exe path)
@@ -2059,14 +2059,14 @@ void ParseCommandLine(TCHAR *cmdLine)
             gGlobalData.silent = true;
         else if (is_arg_with_param("d")) {
             free(gGlobalData.installDir);
-            gGlobalData.installDir = Str::Dup(argList[++i]);
+            gGlobalData.installDir = str::Dup(argList[++i]);
         }
         else if (is_arg("register"))
             gGlobalData.registerAsDefault = true;
         else if (is_arg_with_param("opt")) {
             TCHAR *opts = argList[++i];
-            Str::ToLower(opts);
-            Str::TransChars(opts, _T(" "), _T(","));
+            str::ToLower(opts);
+            str::TransChars(opts, _T(" "), _T(","));
             StrVec optlist;
             optlist.Split(opts, _T(","), true);
             if (optlist.Find(_T("plugin")) != -1)

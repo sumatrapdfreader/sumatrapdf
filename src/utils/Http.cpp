@@ -12,7 +12,7 @@
 #define USER_AGENT _T("BaseHTTP")
 
 // returns ERROR_SUCCESS or an error code
-DWORD HttpGet(const TCHAR *url, Str::Str<char> *dataOut)
+DWORD HttpGet(const TCHAR *url, str::Str<char> *dataOut)
 {
     DWORD error = ERROR_SUCCESS;
 
@@ -95,9 +95,9 @@ Exit:
     return ok;
 }
 
-bool HttpPost(const TCHAR *server, const TCHAR *url, Str::Str<char> *headers, Str::Str<char> *data)
+bool HttpPost(const TCHAR *server, const TCHAR *url, str::Str<char> *headers, str::Str<char> *data)
 {
-    Str::Str<char> resp(2048);
+    str::Str<char> resp(2048);
     bool ok = false;
     HINTERNET hInet = NULL, hConn = NULL, hReq = NULL;
     hInet = InternetOpen(USER_AGENT, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
@@ -182,8 +182,8 @@ HttpReqCtx::HttpReqCtx(const TCHAR *url, HttpReqCallback *callback)
     : callback(callback), error(0)
 {
     assert(url);
-    this->url = Str::Dup(url);
-    data = new Str::Str<char>(256);
+    this->url = str::Dup(url);
+    data = new str::Str<char>(256);
     if (callback)
         hThread = CreateThread(NULL, 0, HttpDownloadThread, this, 0, 0);
     else

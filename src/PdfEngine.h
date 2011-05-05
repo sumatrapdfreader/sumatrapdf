@@ -17,7 +17,7 @@ public:
     static bool IsSupportedFile(const TCHAR *fileName) {
         // note: the plugin hands in files with a different extension (.tmp),
         //       so callers may want to try to load even "unsupported" files
-        return Str::EndsWithI(fileName, _T(".pdf"));
+        return str::EndsWithI(fileName, _T(".pdf"));
     }
     static PdfEngine *CreateFromFileName(const TCHAR *fileName, PasswordUI *pwdUI=NULL);
     static PdfEngine *CreateFromStream(IStream *stream, PasswordUI *pwdUI=NULL);
@@ -26,7 +26,7 @@ public:
 class XpsEngine : public BaseEngine {
 public:
     static bool IsSupportedFile(const TCHAR *fileName) {
-        return Str::EndsWithI(fileName, _T(".xps"));
+        return str::EndsWithI(fileName, _T(".xps"));
     }
     static XpsEngine *CreateFromFileName(const TCHAR *fileName);
     static XpsEngine *CreateFromStream(IStream *stream);

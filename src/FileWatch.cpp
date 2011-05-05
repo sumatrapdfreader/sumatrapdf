@@ -52,7 +52,7 @@ void FileWatcher::Init(LPCTSTR filefullpath)
         SynchronousAbort();
 
     free(szFilepath);
-    szFilepath = Str::Dup(filefullpath);
+    szFilepath = str::Dup(filefullpath);
     TCHAR *dirPath = Path::GetDir(szFilepath);
     
     hDir = CreateFile(
@@ -143,9 +143,9 @@ bool FileWatcher::NotifyChange()
 
     // Note: the ReadDirectoryChangesW API fills the buffer with WCHAR strings.
     for (;;) {
-        ScopedMem<WCHAR> filenameW(Str::DupN(pFileNotify->FileName, pFileNotify->FileNameLength / sizeof(WCHAR)));
-        ScopedMem<TCHAR> ptNotifyFilename(Str::Conv::FromWStr(filenameW));
-        bool isWatchedFile = Str::EqI(ptNotifyFilename, Path::GetBaseName(szFilepath));
+        ScopedMem<WCHAR> filenameW(str::DupN(pFileNotify->FileName, pFileNotify->FileNameLength / sizeof(WCHAR)));
+        ScopedMem<TCHAR> ptNotifyFilename(str::Conv::FromWStr(filenameW));
+        bool isWatchedFile = str::EqI(ptNotifyFilename, Path::GetBaseName(szFilepath));
 
         // is it the file that is being watched?
         if (isWatchedFile && pFileNotify->Action == FILE_ACTION_MODIFIED) {

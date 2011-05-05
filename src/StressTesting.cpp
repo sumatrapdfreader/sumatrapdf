@@ -52,9 +52,9 @@ static void BenchLoadRender(BaseEngine *engine, int pagenum)
 // is returned (or NULL in case of a parsing error).
 static const TCHAR *GetRange(const TCHAR *s, int *start, int *end)
 {
-    const TCHAR *next = Str::Parse(s, _T("%d-%d%?,"), start, end);
+    const TCHAR *next = str::Parse(s, _T("%d-%d%?,"), start, end);
     if (!next) {
-        next = Str::Parse(s, _T("%d%?,"), start);
+        next = str::Parse(s, _T("%d%?,"), start);
         if (next)
             *end = *start;
     }
@@ -66,12 +66,12 @@ static const TCHAR *GetRange(const TCHAR *s, int *start, int *end)
 // * description of page ranges e.g. "1", "1-5", "2-3,6,8-10"
 bool IsBenchPagesInfo(const TCHAR *s)
 {
-    if (Str::IsEmpty(s))
+    if (str::IsEmpty(s))
         return false;
-    if (Str::EqI(s, _T("loadonly")))
+    if (str::EqI(s, _T("loadonly")))
         return true;
 
-    while (!Str::IsEmpty(s)) {
+    while (!str::IsEmpty(s)) {
         int start, end;
         s = GetRange(s, &start, &end);
         if (!s || start < 0 || end < 0 || start > end)
@@ -120,7 +120,7 @@ static void BenchFile(TCHAR *filePath, const TCHAR *pagesSpec)
     }
 
     assert(!pagesSpec || IsBenchPagesInfo(pagesSpec));
-    while (!Str::IsEmpty(pagesSpec)) {
+    while (!str::IsEmpty(pagesSpec)) {
         int start, end;
         pagesSpec = GetRange(pagesSpec, &start, &end);
         for (int j = start; j <= end; j++) {
@@ -153,7 +153,7 @@ void Bench(StrVec& filesToBench)
 
 inline bool IsSpecialDir(const TCHAR *s)
 {
-    return Str::Eq(s, _T(".")) || Str::Eq(s, _T(".."));
+    return str::Eq(s, _T(".")) || str::Eq(s, _T(".."));
 }
 
 bool CollectPathsFromDirectory(const TCHAR *pattern, StrVec& paths, bool dirsInsteadOfFiles)
@@ -200,13 +200,13 @@ static TCHAR *FormatTime(int totalSecs)
     int mins = totalMins % 60;
     int hrs = totalMins / 60;
     if (hrs > 0)
-        return Str::Format(_T("%d hrs %d mins %d secs"), hrs, mins, secs);
+        return str::Format(_T("%d hrs %d mins %d secs"), hrs, mins, secs);
     if (mins > 0)
-        return Str::Format(_T("%d mins %d secs"), mins, secs);
-    return Str::Format(_T("%d secs"), secs);
+        return str::Format(_T("%d mins %d secs"), mins, secs);
+    return str::Format(_T("%d secs"), secs);
 }
 
-static void FormatTime(int totalSecs, Str::Str<char>& s)
+static void FormatTime(int totalSecs, str::Str<char>& s)
 {
     int secs = totalSecs % 60;
     int totalMins = totalSecs / 60;
@@ -265,7 +265,7 @@ public:
         win(win), renderCache(renderCache), filesCount(0) { }
     virtual ~DirStressTest() { }
 
-    void AppendInfo(Str::Str<char>& s);
+    void AppendInfo(str::Str<char>& s);
     void Start(const TCHAR *dirPath);
 
     virtual void Callback() { OnTimer(); }
@@ -283,7 +283,7 @@ bool DirStressTest::GoToNextPage()
     ++currPage;
     win->dm->goToPage(currPage, 0);
     double pageRenderTime = currPageRenderTime.GetCurrTimeInMs();
-    ScopedMem<TCHAR> s(Str::Format(_T("Page %d rendered in %d milliseconds"), currPage-1, (int)pageRenderTime));
+    ScopedMem<TCHAR> s(str::Format(_T("Page %d rendered in %d milliseconds"), currPage-1, (int)pageRenderTime));
     win->ShowNotification(s, true, false, NG_DIR_STRESS_PAGE_TIMING);
     currPageRenderTime.Start();
 
@@ -304,15 +304,15 @@ bool DirStressTest::OpenDir(const TCHAR *dirPath)
 {
     assert(filesToOpen.Count() == 0);
 
-    ScopedMem<TCHAR> pattern(Str::Format(_T("%s\\*.pdf"), dirPath));
+    ScopedMem<TCHAR> pattern(str::Format(_T("%s\\*.pdf"), dirPath));
     bool hasFiles = CollectPathsFromDirectory(pattern, filesToOpen);
-    pattern.Set(Str::Format(_T("%s\\*.xps"), dirPath));
+    pattern.Set(str::Format(_T("%s\\*.xps"), dirPath));
     hasFiles |= CollectPathsFromDirectory(pattern, filesToOpen);
-    pattern.Set(Str::Format(_T("%s\\*.djvu"), dirPath));
+    pattern.Set(str::Format(_T("%s\\*.djvu"), dirPath));
     hasFiles |= CollectPathsFromDirectory(pattern, filesToOpen);
     filesToOpen.Sort();
 
-    pattern.Set(Str::Format(_T("%s\\*"), dirPath));
+    pattern.Set(str::Format(_T("%s\\*"), dirPath));
     bool hasSubDirs = CollectPathsFromDirectory(pattern, dirsToVisit, true);
 
     return hasFiles || hasSubDirs;
@@ -357,7 +357,7 @@ bool DirStressTest::OpenFile(const TCHAR *fileName)
 
     int secs = SecsSinceSystemTime(stressStartTime);
     ScopedMem<TCHAR> tm(FormatTime(secs));
-    ScopedMem<TCHAR> s(Str::Format(_T("File %d: %s, time: %s"), filesCount, fileName, tm));
+    ScopedMem<TCHAR> s(str::Format(_T("File %d: %s, time: %s"), filesCount, fileName, tm));
     win->ShowNotification(s, false, false, NG_DIR_STRESS_NEW_FILE);
 
     return true;
@@ -416,13 +416,13 @@ void DirStressTest::Finished()
 
     int secs = SecsSinceSystemTime(stressStartTime);
     ScopedMem<TCHAR> tm(FormatTime(secs));
-    ScopedMem<TCHAR> s(Str::Format(_T("Stress test complete, rendered %d files in %s"), filesCount, tm));
+    ScopedMem<TCHAR> s(str::Format(_T("Stress test complete, rendered %d files in %s"), filesCount, tm));
     win->ShowNotification(s, false, false, NG_DIR_STRESS_NEW_FILE);
 
     delete this;
 }
 
-void DirStressTest::AppendInfo(Str::Str<char>& s)
+void DirStressTest::AppendInfo(str::Str<char>& s)
 {
     int secs = SecsSinceSystemTime(stressStartTime);
     s.AppendFmt(", stress test rendered %d files in ", filesCount);
@@ -434,7 +434,7 @@ void DirStressTest::Start(const TCHAR *dirPath)
 {
     if (!Dir::Exists(dirPath) || !OpenDir(dirPath)) {
         // Note: dev only, don't translate
-        ScopedMem<TCHAR> s(Str::Format(_T("Directory '%s' doesn't exist or is empty"), dirPath));
+        ScopedMem<TCHAR> s(str::Format(_T("Directory '%s' doesn't exist or is empty"), dirPath));
         win->ShowNotification(s, true /* autoDismiss */);
         Finished();
         return;
@@ -447,7 +447,7 @@ void DirStressTest::Start(const TCHAR *dirPath)
         Finished();
 }
 
-void AppendStressTestInfo(DirStressTest *dst, Str::Str<char>& s)
+void AppendStressTestInfo(DirStressTest *dst, str::Str<char>& s)
 {
     dst->AppendInfo(s);
 }
