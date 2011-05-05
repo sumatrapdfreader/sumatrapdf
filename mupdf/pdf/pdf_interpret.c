@@ -747,6 +747,7 @@ pdf_gsave(pdf_csi *csi)
 		fz_warn("gstate overflow in content stream");
 		csi->gcap *= 2;
 		csi->gstate = fz_realloc(csi->gstate, csi->gcap, sizeof(pdf_gstate));
+		gs = csi->gstate + csi->gtop;
 	}
 
 	memcpy(&csi->gstate[csi->gtop + 1], &csi->gstate[csi->gtop], sizeof(pdf_gstate));
