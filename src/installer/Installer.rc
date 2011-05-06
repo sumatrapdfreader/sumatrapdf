@@ -35,3 +35,6 @@ END
 IDI_SUMATRAPDF          ICON                    "..\SumatraPDF-smaller.ico"
 
 1                       RT_MANIFEST             "Installer.exe.manifest"
+
+// TODO: temporary, for testing pefile.cpp code for removal of binary data 
+2						RCDATA                  "Installer.rc"

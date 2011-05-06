@@ -102,6 +102,10 @@ SUMATRA_OBJS = \
 INSTALLER_OBJS = \
 	$(OS)\Installer.obj $(INSTALLER_RES)
 
+!if "$(CFG)"=="dbg"
+INSTALLER_OBJS = $(INSTALLER_OBJS) $(OS)\peutil.obj
+!endif
+
 PDFFILTER_OBJS = \
 	$(OS)\PdfFilterDll.obj $(OS)\CPdfFilter.obj $(PDFFILTER_RES) \
 	$(OS)\StrUtil.obj $(OS)\FileUtil.obj \
