@@ -90,10 +90,8 @@ TryAgainWOW64:
         if (ERROR_SUCCESS == res) {
             val = SAZA(TCHAR, valLen / sizeof(TCHAR) + 1);
             res = RegQueryValueEx(hKey, valName, NULL, NULL, (LPBYTE)val, &valLen);
-            if (ERROR_SUCCESS != res) {
-                free(val);
-                val = NULL;
-            }
+            if (ERROR_SUCCESS != res)
+                str::ReplacePtr(&val, NULL);
         }
         RegCloseKey(hKey);
     }

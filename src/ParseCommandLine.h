@@ -66,12 +66,6 @@ public:
     }
 
     void ParseCommandLine(TCHAR *cmdLine);
-
-protected:
-    void SetLang(const TCHAR *s) {
-        free(lang);
-        lang = str::conv::ToAnsi(s);
-    }
 };
 
 #endif

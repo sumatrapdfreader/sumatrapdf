@@ -168,7 +168,7 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
         }
         else if (is_arg_with_param("-bgcolor") || is_arg_with_param("-bg-color")) {
             // -bgcolor is for backwards compat (was used pre-1.3)
-            // -bg-color is for consitency
+            // -bg-color is for consistency
             ParseColor(&bgColor, argList[++n]);
         }
         else if (is_arg_with_param("-inverse-search")) {
@@ -198,11 +198,11 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
             reuseInstance = (FindWindow(FRAME_CLASS_NAME, 0) != NULL);
         }
         else if (is_arg_with_param("-lang")) {
-            SetLang(argList[++n]);
+            str::ReplacePtr(&lang, str::conv::ToAnsi(argList[++n]));
         }
         else if (is_arg_with_param("-nameddest") || is_arg_with_param("-named-dest")) {
             // -nameddest is for backwards compat (was used pre-1.3)
-            // -named-dest is for consitency
+            // -named-dest is for consistency
             str::ReplacePtr(&destName, argList[++n]);
         }
         else if (is_arg_with_param("-page")) {
@@ -213,7 +213,7 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
         }
         else if (is_arg("-invertcolors") || is_arg("-invert-colors")) {
             // -invertcolors is for backwards compat (was used pre-1.3)
-            // -invert-colors is for consitency
+            // -invert-colors is for consistency
             invertColors = TRUE;
         }
         else if (is_arg("-presentation")) {
@@ -242,7 +242,7 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
         }
         else if (is_arg_with_param("-stress-test")) {
             // -stress-test <file or dir path> [<cycle count>x]
-            // e.g. -stress-test file.pdf 25x   is the same as   -stress-test-file file.pdf
+            // e.g. -stress-test file.pdf 25x   for rendering file.pdf 25 times
             str::ReplacePtr(&stressTestPath, argList[++n]);
             int cycles;
             if (has_second_param() && str::Parse(second_param(), _T("%dx%$"), &cycles) && cycles > 0) {
@@ -281,4 +281,6 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
     }
 #undef is_arg
 #undef is_arg_with_param
+#undef second_param
+#undef has_second_param
 }

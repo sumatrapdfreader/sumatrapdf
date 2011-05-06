@@ -122,9 +122,8 @@ static bool ValidZoomVirtual(float zoomVirtual)
 
 bool DisplayModel::displayStateFromModel(DisplayState *ds)
 {
-    if (!ds->filePath || !str::Eq(ds->filePath, fileName())) {
+    if (!ds->filePath || !str::Eq(ds->filePath, fileName()))
         str::ReplacePtr(&ds->filePath, fileName());
-    }
 
     ds->displayMode = _presentationMode ? _presDisplayMode : displayMode();
     ds->rotation = _rotation;
@@ -137,8 +136,7 @@ bool DisplayModel::displayStateFromModel(DisplayState *ds)
     else
         ds->scrollPos = PointD(ss.x, ss.y).Convert<int>();
 
-    free(ds->decryptionKey);
-    ds->decryptionKey = engine->GetDecryptionKey();
+    str::ReplacePtr(&ds->decryptionKey, engine->GetDecryptionKey());
 
     return true;
 }
