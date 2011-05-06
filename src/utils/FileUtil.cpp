@@ -46,6 +46,7 @@ const TCHAR *GetExt(const TCHAR *path)
     return path + str::Len(path);
 }
 
+// Caller has to free
 TCHAR *GetDir(const TCHAR *path)
 {
     const TCHAR *baseName = GetBaseName(path);

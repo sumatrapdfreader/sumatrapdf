@@ -49,7 +49,7 @@
 #define THREAD_BASED_FILEWATCH
 
 /* Define if you want to display additional debug helpers in the Help menu */
-#if 0
+#if defined(DEBUG)
 #define SHOW_DEBUG_MENU_ITEMS
 #endif
 
@@ -575,6 +575,7 @@ MenuDef menuDefHelp[] = {
     { _TRN("&About"),                       IDM_ABOUT,                  0  },
 #ifdef SHOW_DEBUG_MENU_ITEMS
     { SEP_ITEM,                             0,                          0  },
+    { "Test PE rewrite",                    IDM_TEST_PE_REWRITE,        MF_NO_TRANSLATE  },
     { "Crash me",                           IDM_CRASH_ME,               MF_NO_TRANSLATE  },
 #endif
 };
@@ -2312,6 +2313,18 @@ static void DeleteOldSelectionInfo(WindowInfo& win, bool alsoTextSel)
 
     if (alsoTextSel && win.IsDocLoaded())
         win.dm->textSelection->Reset();
+}
+
+// TODO: temporary
+#include "PEUtil.h"
+
+static void TestPeRewrite()
+{
+    ScopedMem<TCHAR> exePath(GetExePath());
+    ScopedMem<TCHAR> exeDir(path::GetDir(exePath));
+    ScopedMem<TCHAR> installerPath(path::Join(exeDir, _T("Installer.exe")));
+    ScopedMem<TCHAR> rewrittenPath(path::Join(exeDir, _T("Installer-rewritten.exe")));
+    RemoveDataResource(installerPath, rewrittenPath);
 }
 
 // for testing only
@@ -6364,6 +6377,11 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
 
                 case IDM_CRASH_ME:
                     CrashMe();
+                    break;
+
+                // TODO: temporary
+                case IDM_TEST_PE_REWRITE:
+                    TestPeRewrite();
                     break;
 
                 default:
