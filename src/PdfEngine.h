@@ -14,20 +14,14 @@ public:
 
 class PdfEngine : public BaseEngine {
 public:
-    static bool IsSupportedFile(const TCHAR *fileName) {
-        // note: the plugin hands in files with a different extension (.tmp),
-        //       so callers may want to try to load even "unsupported" files
-        return str::EndsWithI(fileName, _T(".pdf"));
-    }
+    static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false);
     static PdfEngine *CreateFromFileName(const TCHAR *fileName, PasswordUI *pwdUI=NULL);
     static PdfEngine *CreateFromStream(IStream *stream, PasswordUI *pwdUI=NULL);
 };
 
 class XpsEngine : public BaseEngine {
 public:
-    static bool IsSupportedFile(const TCHAR *fileName) {
-        return str::EndsWithI(fileName, _T(".xps"));
-    }
+    static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false);
     static XpsEngine *CreateFromFileName(const TCHAR *fileName);
     static XpsEngine *CreateFromStream(IStream *stream);
 };

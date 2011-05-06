@@ -8,9 +8,7 @@
 
 class DjVuEngine : public BaseEngine {
 public:
-    static bool IsSupportedFile(const TCHAR *fileName) {
-        return str::EndsWithI(fileName, _T(".djvu"));
-    }
+    static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false);
     static DjVuEngine *CreateFromFileName(const TCHAR *fileName);
     static DjVuEngine *CreateFromStream(IStream *stream) { return NULL; }
 };

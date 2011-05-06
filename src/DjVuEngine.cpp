@@ -713,6 +713,17 @@ DocToCItem *CDjVuEngine::GetToCTree()
     return BuildToCTree(outline, idCounter);
 }
 
+bool DjVuEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
+{
+    if (sniff) {
+        char header[4] = { 0 };
+        file::ReadAll(fileName, header, sizeof(header));
+        return str::EqN(header, "AT&T", sizeof(header));
+    }
+
+    return str::EndsWithI(fileName, _T(".djvu"));
+}
+
 DjVuEngine *DjVuEngine::CreateFromFileName(const TCHAR *fileName)
 {
     CDjVuEngine *engine = new CDjVuEngine();

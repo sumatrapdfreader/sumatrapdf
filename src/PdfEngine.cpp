@@ -1654,6 +1654,22 @@ bool PdfLink::SaveEmbedded(LinkSaverUI& saveUI)
     return engine->SaveEmbedded(dest(), saveUI);
 }
 
+bool PdfEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
+{
+    if (sniff) {
+        char header[1024];
+        ZeroMemory(header, sizeof(header));
+        file::ReadAll(fileName, header, sizeof(header));
+
+        for (int i = 0; i < sizeof(header) - 4; i++)
+            if (str::EqN(header + i, "%PDF", 4))
+                return true;
+        return false;
+    }
+
+    return str::EndsWithI(fileName, _T(".pdf"));
+}
+
 PdfEngine *PdfEngine::CreateFromFileName(const TCHAR *fileName, PasswordUI *pwdUI)
 {
     CPdfEngine *engine = new CPdfEngine();
@@ -2506,6 +2522,19 @@ DocToCItem *CXpsEngine::GetToCTree()
     
     int idCounter = 0;
     return BuildToCTree(_outline, idCounter);
+}
+
+bool XpsEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
+{
+    if (sniff) {
+        char header[4] = { 0 };
+        file::ReadAll(fileName, header, sizeof(header));
+        // this check is technically not correct (ZIP files are read from back to front),
+        // but it should catch all but specially crafted ZIP files anyway
+        return str::EqN(header, "PK\x03\x04", sizeof(header));
+    }
+
+    return str::EndsWithI(fileName, _T(".xps"));
 }
 
 XpsEngine *XpsEngine::CreateFromFileName(const TCHAR *fileName)

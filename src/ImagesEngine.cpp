@@ -491,7 +491,7 @@ Bitmap *CImageDirEngine::LoadImage(int pageNo)
     return pages[pageNo-1];
 }
 
-bool ImageDirEngine::IsSupportedFile(const TCHAR *fileName)
+bool ImageDirEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
 {
     // whether it actually contains images will be checked in LoadImageDir
     return dir::Exists(fileName);

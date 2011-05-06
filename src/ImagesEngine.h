@@ -8,7 +8,7 @@
 
 class ImageEngine : public virtual BaseEngine {
 public:
-    static bool IsSupportedFile(const TCHAR *fileName) {
+    static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false) {
         return str::EndsWithI(fileName, _T(".png")) ||
                str::EndsWithI(fileName, _T(".jpg")) || str::EndsWithI(fileName, _T(".jpeg")) ||
                str::EndsWithI(fileName, _T(".gif")) ||
@@ -21,14 +21,14 @@ public:
 
 class ImageDirEngine : public virtual BaseEngine {
 public:
-    static bool IsSupportedFile(const TCHAR *fileName); // return dir::Exists(fileName);
+    static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false); // return dir::Exists(fileName);
     static ImageDirEngine *CreateFromFileName(const TCHAR *fileName);
     static ImageDirEngine *CreateFromStream(IStream *stream) { return NULL; }
 };
 
 class CbxEngine : public virtual BaseEngine {
 public:
-    static bool IsSupportedFile(const TCHAR *fileName) {
+    static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false) {
         return str::EndsWithI(fileName, _T(".cbz")) ||
                str::EndsWithI(fileName, _T(".cbr"));
     }
