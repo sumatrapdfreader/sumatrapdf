@@ -327,6 +327,9 @@ public:
 
 	void drawPixmap(fz_pixmap *image, fz_matrix ctm, float alpha=1.0, Graphics *graphics=NULL)
 	{
+		if (!image->samples)
+			return;
+
 		if (!graphics)
 		{
 			graphics = this->graphics;
