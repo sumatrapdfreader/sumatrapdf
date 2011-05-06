@@ -57,9 +57,6 @@ Primeira &página\tHome
 &Fit pages to printable area
 A&justar páginas à área de impressão
 
-&Forget Document
-Esq&uecer documento
-
 &Go To
 Ir &para
 
@@ -125,6 +122,9 @@ Página &anterior\t<-
 
 &Remember these settings for each document
 &Lembrar estas definições para todos os documentos
+
+&Remove Document
+Esq&uecer documento
 
 &Save As...
 &Gravar como...

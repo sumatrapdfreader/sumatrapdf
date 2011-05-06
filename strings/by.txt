@@ -350,7 +350,6 @@ Zoom Out
 #&Even pages only
 #&Facing\tCtrl-7
 #&Fit pages to printable area
-#&Forget Document
 #&Magnification:
 #&Manual
 #&Odd pages only
@@ -359,6 +358,7 @@ Zoom Out
 #&Print...
 #&Print... (denied)
 #&Remember the password for this document
+#&Remove Document
 #&Save As...
 #&Shrink pages to printable area (if necessary)
 #&Single Page\tCtrl-6

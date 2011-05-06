@@ -63,9 +63,6 @@ Pagine &affiancate\t<Ctrl>+7
 &Fit pages to printable area
 &Adatta pagine alla zona stampabile
 
-&Forget Document
-&Non ricordare documento
-
 &Go To
 &Vai a
 
@@ -131,6 +128,9 @@ Stam&pa... (rifiutato)
 
 &Remember these settings for each document
 &Ricorda queste impostazioni per ogni documento
+
+&Remove Document
+&Non ricordare documento
 
 &Save As...
 &Salva come...

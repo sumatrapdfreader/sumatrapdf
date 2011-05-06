@@ -55,9 +55,6 @@ Contributor: XhmikosR
 &Fit pages to printable area
 Προσαρμογή σελίδων σε &εκτυπώσιμη περιοχή
 
-&Forget Document
-&Απόκρυψη Εγγράφου
-
 &Go To
 &Μετάβαση
 
@@ -123,6 +120,9 @@ Contributor: XhmikosR
 
 &Remember these settings for each document
 &Απομνημόνευση ρυθμίσεων για κάθε έγγραφο
+
+&Remove Document
+&Απόκρυψη Εγγράφου
 
 &Save As...
 &Αποθήκευση ως...

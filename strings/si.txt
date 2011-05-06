@@ -500,10 +500,10 @@ printing document
 #&Book View\tCtrl-8
 #&Copy Selection
 #&Facing\tCtrl-7
-#&Forget Document
 #&Open Document
 #&Pin Document
 #&Print...
+#&Remove Document
 #&Save As...
 #&Single Page\tCtrl-6
 #All supported documents

@@ -60,9 +60,6 @@ Primera página\tInicio
 &Fit pages to printable area
 &Ajustar páginas al área de impresión
 
-&Forget Document
-Desechar Documento
-
 &Go To
 &Ir a
 
@@ -128,6 +125,9 @@ Página anterior\t<-
 
 &Remember these settings for each document
 &Recordar estos ajustes para todos los documentos
+
+&Remove Document
+Desechar Documento
 
 &Save As...
 &Guardar como...

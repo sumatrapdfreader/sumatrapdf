@@ -56,9 +56,6 @@ Trang đầu\tHome
 &Fit pages to printable area
 Vừa trang in
 
-&Forget Document
-Quên tập tin
-
 &Go To
 Nhảy đến
 
@@ -124,6 +121,9 @@ Nhớ mật khẩu cho tập tin này
 
 &Remember these settings for each document
 Nhớ cài đặt này cho mọi tập tin
+
+&Remove Document
+Quên tập tin
 
 &Save As...
 Lưu thành...

@@ -333,11 +333,11 @@ mencetak dokumen
 #&Book View\tCtrl-8
 #&Copy Selection
 #&Facing\tCtrl-7
-#&Forget Document
 #&Match case
 #&Open Document
 #&Pin Document
 #&Print...
+#&Remove Document
 #&Save As...
 #&Shrink pages to printable area (if necessary)
 #&Single Page\tCtrl-6

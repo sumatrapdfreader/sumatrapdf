@@ -56,9 +56,6 @@ Contributor: Amos Kotter http://sites.google.com/site/hillasystem/
 &Fit pages to printable area
 הגדל עמודים עד גודל אזור ההדפסה
 
-&Forget Document
-שכח מסמך
-
 &Go To
 לך ל
 
@@ -124,6 +121,9 @@ Contributor: Amos Kotter http://sites.google.com/site/hillasystem/
 
 &Remember these settings for each document
 זכור הגדרות אלו לכל מסמך
+
+&Remove Document
+שכח מסמך
 
 &Save As...
 בשמור בשם

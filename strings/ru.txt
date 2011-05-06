@@ -57,9 +57,6 @@ Contributor: Victor Kozyakin
 &Fit pages to printable area
 Подо&гнать страницы под область печати
 
-&Forget Document
-&Удалить документ
-
 &Go To
 Пере&ход
 
@@ -125,6 +122,9 @@ Contributor: Victor Kozyakin
 
 &Remember these settings for each document
 Запомнит&ь эти параметры для каждого документа
+
+&Remove Document
+&Удалить документ
 
 &Save As...
 Сохранить &как...

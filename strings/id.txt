@@ -598,9 +598,9 @@ mencetak dokumen
 # Untranslated:
 #&Book View\tCtrl-8
 #&Facing\tCtrl-7
-#&Forget Document
 #&Open Document
 #&Pin Document
+#&Remove Document
 #&Single Page\tCtrl-6
 #Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
 

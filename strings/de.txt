@@ -59,9 +59,6 @@ Nur &gerade Seiten
 &Fit pages to printable area
 Seiten in Druckbereich &einpassen
 
-&Forget Document
-Von dieser Seite &entfernen
-
 &Go To
 &Gehe zu
 
@@ -127,6 +124,9 @@ Passwort für dieses Dokument &merken
 
 &Remember these settings for each document
 Ansicht-&Einstellungen für jedes Dokument einzeln merken
+
+&Remove Document
+Von dieser Seite &entfernen
 
 &Save As...
 &Speichern unter…

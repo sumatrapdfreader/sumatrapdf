@@ -596,7 +596,7 @@ MenuDef menuDefContextStart[] = {
     { _TRN("&Open Document"),               IDM_OPEN_SELECTED_DOCUMENT, 0 },
     { _TRN("&Pin Document"),                IDM_PIN_SELECTED_DOCUMENT,  0 },
     { SEP_ITEM,                             0,                          0 },
-    { _TRN("&Forget Document"),             IDM_FORGET_SELECTED_DOCUMENT, 0 },
+    { _TRN("&Remove Document"),             IDM_FORGET_SELECTED_DOCUMENT, 0 },
 };
 #endif
 

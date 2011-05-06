@@ -450,12 +450,12 @@ printing document
 #&Even pages only
 #&Facing\tCtrl-7
 #&Fit pages to printable area
-#&Forget Document
 #&Odd pages only
 #&Open Document
 #&Pin Document
 #&Print...
 #&Remember the password for this document
+#&Remove Document
 #&Save As...
 #&Shrink pages to printable area (if necessary)
 #&Single Page\tCtrl-6

@@ -219,7 +219,6 @@ Zoom Out
 #&Facing\tCtrl-7
 #&Find what:
 #&Fit pages to printable area
-#&Forget Document
 #&Go to page:
 #&Magnification:
 #&Match case
@@ -234,6 +233,7 @@ Zoom Out
 #&Print... (denied)
 #&Remember the password for this document
 #&Remember these settings for each document
+#&Remove Document
 #&Save As...
 #&Settings
 #&Shrink pages to printable area (if necessary)

@@ -589,9 +589,9 @@ dokumentua imprimatzen
 # Untranslated:
 #&Book View\tCtrl-8
 #&Facing\tCtrl-7
-#&Forget Document
 #&Open Document
 #&Pin Document
+#&Remove Document
 #&Single Page\tCtrl-6
 #Bookmark shortcut to page %d of %s
 #No result found around line %u in file %s

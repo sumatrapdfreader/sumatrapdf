@@ -546,9 +546,9 @@ tiskanje dokumenta
 # Untranslated:
 #&Book View\tCtrl-8
 #&Facing\tCtrl-7
-#&Forget Document
 #&Open Document
 #&Pin Document
+#&Remove Document
 #&Single Page\tCtrl-6
 #All supported documents
 #Bookmark Shortcuts
