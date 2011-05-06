@@ -1,8 +1,6 @@
-#ifndef peutil_h
-#define peutil_h
+#ifndef PEUtil_h
+#define PEUtil_h
 
 bool RemoveDataResource(const TCHAR *srcFile, const TCHAR *dstFile);
 
-
 #endif
-

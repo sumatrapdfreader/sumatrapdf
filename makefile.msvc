@@ -103,7 +103,7 @@ INSTALLER_OBJS = \
 	$(OS)\Installer.obj $(INSTALLER_RES)
 
 !if "$(CFG)"=="dbg"
-INSTALLER_OBJS = $(INSTALLER_OBJS) $(OS)\peutil.obj
+INSTALLER_OBJS = $(INSTALLER_OBJS) $(OS)\PEUtil.obj
 !endif
 
 PDFFILTER_OBJS = \
@@ -264,8 +264,8 @@ $(OS)\PdfSync.obj: src\PdfEngine.h src\PdfSync.h src\TextSearch.h
 $(OS)\PdfSync.obj: src\TextSelection.h src\utils\BaseUtil.h src\utils\FileUtil.h
 $(OS)\PdfSync.obj: src\utils\GeomUtil.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\PdfSync.obj: src\WindowInfo.h
-$(OS)\peutil.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\peutil.h
-$(OS)\peutil.obj: src\utils\StrUtil.h
+$(OS)\PEUtil.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\PEUtil.h
+$(OS)\PEUtil.obj: src\utils\StrUtil.h
 $(OS)\RenderCache.obj: src\BaseEngine.h src\DisplayModel.h src\DisplayState.h
 $(OS)\RenderCache.obj: src\DjVuEngine.h src\ImagesEngine.h src\PdfEngine.h
 $(OS)\RenderCache.obj: src\RenderCache.h src\TextSearch.h src\TextSelection.h

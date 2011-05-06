@@ -1,5 +1,5 @@
 #include "BaseUtil.h"
-#include "peutil.h"
+#include "PEUtil.h"
 #include "FileUtil.h"
 #include "StrUtil.h"
 
