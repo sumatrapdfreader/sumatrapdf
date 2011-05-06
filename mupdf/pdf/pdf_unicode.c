@@ -52,6 +52,9 @@ pdf_load_to_unicode(pdf_font_desc *font, pdf_xref *xref,
 			error = pdf_load_system_cmap(&font->to_unicode, "Adobe-Japan1-UCS2");
 		else if (!strcmp(collection, "Adobe-Korea1"))
 			error = pdf_load_system_cmap(&font->to_unicode, "Adobe-Korea1-UCS2");
+		/* SumatraPDF: load an identity cmap (until a ToUnicode is synthesized below) */
+		else if (!strcmp(collection, "Adobe-Identity") && !(font->flags & PDF_FD_SYMBOLIC))
+			font->to_unicode = pdf_new_identity_cmap(font->wmode, 2);
 
 		if (error)
 			return fz_rethrow(error, "cannot load ToUnicode system cmap %s-UCS2", collection);
