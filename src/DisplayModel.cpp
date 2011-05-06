@@ -136,7 +136,8 @@ bool DisplayModel::displayStateFromModel(DisplayState *ds)
     else
         ds->scrollPos = PointD(ss.x, ss.y).Convert<int>();
 
-    str::ReplacePtr(&ds->decryptionKey, engine->GetDecryptionKey());
+    free(ds->decryptionKey);
+    ds->decryptionKey = engine->GetDecryptionKey();
 
     return true;
 }

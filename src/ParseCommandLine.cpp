@@ -198,7 +198,8 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
             reuseInstance = (FindWindow(FRAME_CLASS_NAME, 0) != NULL);
         }
         else if (is_arg_with_param("-lang")) {
-            str::ReplacePtr(&lang, str::conv::ToAnsi(argList[++n]));
+            free(lang);
+            lang = str::conv::ToAnsi(argList[++n]);
         }
         else if (is_arg_with_param("-nameddest") || is_arg_with_param("-named-dest")) {
             // -nameddest is for backwards compat (was used pre-1.3)

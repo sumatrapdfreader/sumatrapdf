@@ -308,8 +308,9 @@ $(OS)\SumatraPDF.obj: src\Resource.h src\StressTesting.h src\SumatraAbout.h
 $(OS)\SumatraPDF.obj: src\SumatraDialogs.h src\SumatraPDF.h src\SumatraProperties.h
 $(OS)\SumatraPDF.obj: src\TextSearch.h src\TextSelection.h src\translations.h
 $(OS)\SumatraPDF.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
-$(OS)\SumatraPDF.obj: src\utils\Http.h src\utils\StrUtil.h src\utils\Vec.h
-$(OS)\SumatraPDF.obj: src\utils\WinUtil.h src\Version.h src\WindowInfo.h
+$(OS)\SumatraPDF.obj: src\utils\Http.h src\utils\PEUtil.h src\utils\StrUtil.h
+$(OS)\SumatraPDF.obj: src\utils\Vec.h src\utils\WinUtil.h src\Version.h
+$(OS)\SumatraPDF.obj: src\WindowInfo.h
 $(OS)\SumatraProperties.obj: src\AppPrefs.h src\BaseEngine.h src\DisplayModel.h
 $(OS)\SumatraProperties.obj: src\DisplayState.h src\DjVuEngine.h src\ImagesEngine.h
 $(OS)\SumatraProperties.obj: src\PdfEngine.h src\SumatraPDF.h src\SumatraProperties.h

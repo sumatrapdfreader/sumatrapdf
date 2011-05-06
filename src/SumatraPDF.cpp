@@ -1920,9 +1920,8 @@ static DWORD OnUrlDownloaded(HWND hParent, HttpReqCtx *ctx, bool silent)
     // this update ever again
     bool skipThisVersion = false;
     INT_PTR res = Dialog_NewVersionAvailable(hParent, UPDATE_CHECK_VER, verTxt, &skipThisVersion);
-    if (skipThisVersion) {
+    if (skipThisVersion)
         str::ReplacePtr(&gGlobalPrefs.m_versionToSkip, verTxt);
-    }
     if (IDYES == res)
         LaunchBrowser(SVN_UPDATE_LINK);
 
@@ -2316,6 +2315,7 @@ static void DeleteOldSelectionInfo(WindowInfo& win, bool alsoTextSel)
 }
 
 // TODO: temporary
+#ifdef DEBUG
 #include "PEUtil.h"
 
 static void TestPeRewrite()
@@ -2326,6 +2326,9 @@ static void TestPeRewrite()
     ScopedMem<TCHAR> rewrittenPath(path::Join(exeDir, _T("Installer-rewritten.exe")));
     RemoveDataResource(installerPath, rewrittenPath);
 }
+#else
+static void TestPeRewrite() { }
+#endif
 
 // for testing only
 static void CrashMe()
