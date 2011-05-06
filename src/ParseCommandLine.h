@@ -42,8 +42,8 @@ public:
     HWND        hwndPluginParent;
     bool        exitImmediately;
     bool        silent;
-    TCHAR *     stressTestDir;
-    TCHAR *     stressTestFile;
+    TCHAR *     stressTestPath;
+    int         stressTestCycles;
 
     CommandLineInfo() : makeDefault(false), exitOnPrint(false), printDialog(false),
         printerName(NULL), bgColor(-1), inverseSearchCmdLine(NULL),
@@ -54,7 +54,7 @@ public:
         enterPresentation(false), enterFullscreen(false), hwndPluginParent(NULL),
         startView(DM_AUTOMATIC), startZoom(INVALID_ZOOM), startScroll(PointI(-1, -1)),
         showConsole(false), exitImmediately(false), silent(false),
-        stressTestDir(NULL), stressTestFile(NULL)
+        stressTestPath(NULL), stressTestCycles(1)
     { }
 
     ~CommandLineInfo() {
@@ -62,31 +62,35 @@ public:
         free(inverseSearchCmdLine);
         free(lang);
         free(destName);
-        free(stressTestDir);
-        free(stressTestFile);
+        free(stressTestPath);
     }
 
     void ParseCommandLine(TCHAR *cmdLine);
 
 protected:
-    void SetPrinterName(TCHAR *s) {
+    void SetPrinterName(const TCHAR *s) {
         free(printerName);
         printerName = str::Dup(s);
     }
 
-    void SetInverseSearchCmdLine(TCHAR *s) {
+    void SetInverseSearchCmdLine(const TCHAR *s) {
         free(inverseSearchCmdLine);
         inverseSearchCmdLine = str::Dup(s);
     }
 
-    void SetLang(TCHAR *s) {
+    void SetLang(const TCHAR *s) {
         free(lang);
         lang = str::conv::ToAnsi(s);
     }
     
-    void SetDestName(TCHAR *s) {
+    void SetDestName(const TCHAR *s) {
         free(destName);
         destName = str::Dup(s);
+    }
+
+    void SetStressTestPath(const TCHAR *s) {
+        free(stressTestPath);
+        stressTestPath = str::Dup(s);
     }
 };
 

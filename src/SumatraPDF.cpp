@@ -2971,12 +2971,12 @@ void GetFilesInfo(str::Str<char>& s)
         // only add paths to files encountered during an explicit stress test
         // (for privacy reasons, users should be able to decide themselves
         // whether they want to share what files they had opened during a crash)
-        if (!w->dirStressTest)
+        if (!w->stressTest)
             continue;
 
         s.Append("File: ");
         s.AppendAndFree(str::conv::ToUtf8(w->loadedFilePath));
-        s.AppendAndFree(GetStressTestInfo((StressTest *)w->dirStressTest));
+        s.AppendAndFree(GetStressTestInfo((StressTest *)w->stressTest));
         s.Append("\r\n");
     }
 }
@@ -5868,7 +5868,7 @@ static void OnTimer(WindowInfo& win, HWND hwnd, WPARAM timerId)
         break;
 
     case DIR_STRESS_TIMER_ID:
-        win.dirStressTest->Callback();
+        win.stressTest->Callback();
         break;
     }
 }
@@ -6916,10 +6916,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     const UINT_PTR timerID = SetTimer(NULL, -1, FILEWATCH_DELAY_IN_MS, NULL);
 #endif
 
-    if (i.stressTestDir)
-        StartDirStressTest(win, i.stressTestDir, &gRenderCache);
-    else if (i.stressTestFile)
-        StartFileStressTest(win, i.stressTestFile, &gRenderCache, 24);
+    if (i.stressTestPath)
+        StartStressTest(win, i.stressTestPath, i.stressTestCycles, &gRenderCache);
 
     while (GetMessage(&msg, NULL, 0, 0) > 0) {
 #ifndef THREAD_BASED_FILEWATCH

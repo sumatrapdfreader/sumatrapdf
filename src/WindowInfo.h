@@ -37,9 +37,8 @@ enum NotificationGroup {
     NG_FIND_PROGRESS,
     NG_PRINT_PROGRESS,
     NG_PAGE_INFO_HELPER,
-    NG_DIR_STRESS_PAGE_TIMING,
-    NG_DIR_STRESS_NEW_FILE,
-    NG_ERROR
+    NG_STRESS_TEST_BENCHMARK,
+    NG_STRESS_TEST_SUMMARY,
 };
 
 /* Describes position, the target (URL or file path) and infotip of a "hyperlink" */
@@ -176,7 +175,7 @@ public:
                         int hideStep;       // value used to gradually hide the markers
                     } fwdsearchmark;
 
-    CallbackFunc *  dirStressTest;
+    CallbackFunc *  stressTest;
     bool            suppressPwdUI;
 
     void UpdateToolbarState();

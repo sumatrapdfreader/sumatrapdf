@@ -169,9 +169,13 @@ static void TStrTest()
         assert(i1 == 654);
     }
 
+    assert(str::Parse(_T("abc"), _T("abc%$")));
+    assert(str::Parse(_T("abc"), _T("a%?bc%?d%$")));
+    assert(!str::Parse(_T("abc"), _T("ab%$")));
+
     {
         float f1, f2;
-        const TCHAR *end = str::Parse(_T("%1.23y -2e-3z"), _T("%%%fy%fz"), &f1, &f2);
+        const TCHAR *end = str::Parse(_T("%1.23y -2e-3z"), _T("%%%fy%fz%$"), &f1, &f2);
         assert(end && !*end);
         assert(f1 == 1.23f && f2 == -2e-3f);
     }

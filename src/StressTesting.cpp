@@ -206,16 +206,20 @@ static TCHAR *FormatTime(int totalSecs)
     return str::Format(_T("%d secs"), secs);
 }
 
-void RandomIsOverGlyph(DisplayModel *dm, int pageNo)
+static void MakeRandomSelection(DisplayModel *dm, int pageNo)
 {
     if (!dm->validPageNo(pageNo))
         pageNo = 1;
     if (!dm->validPageNo(pageNo))
         return;
-    // try random position in the page
+
+    // try a random position in the page
     int x = rand() % 640;
     int y = rand() % 480;
-    dm->textSelection->IsOverGlyph(pageNo, x, y);
+    if (dm->textSelection->IsOverGlyph(pageNo, x, y)) {
+        dm->textSelection->StartAt(pageNo, x, y);
+        dm->textSelection->SelectUpTo(pageNo, rand() % 640, rand() % 480);
+    }
 }
 
 /* The idea of StressTest is to render a lot of PDFs sequentially, simulating
@@ -231,14 +235,12 @@ class StressTest : public CallbackFunc {
     int               filesCount; // number of files processed so far
 
     SYSTEMTIME        stressStartTime;
+    int               cycles;
+    TCHAR *           basePath;
 
     // current state of directory traversal
     StrVec            filesToOpen;
     StrVec            dirsToVisit;
-
-    // for file stress
-    int               repCount;
-    TCHAR *           fileToTest;
 
     bool OpenDir(const TCHAR *dirPath);
     bool OpenFile(const TCHAR *fileName);
@@ -248,20 +250,19 @@ class StressTest : public CallbackFunc {
 
     void OnTimer();
     void TickTimer();
-    void Finished();
+    void Finished(bool success);
 
 public:
     StressTest(WindowInfo *win, RenderCache *renderCache) :
         win(win), renderCache(renderCache), filesCount(0), 
-        repCount(0), fileToTest(NULL)
+        cycles(1), basePath(NULL)
         { }
     virtual ~StressTest() {
-        free(fileToTest);
+        free(basePath);
     }
 
     char *GetLogInfo();
-    void StartDirStress(const TCHAR *dirPath);
-    void StartFileStress(const TCHAR *filePath, int repCount);
+    void Start(const TCHAR *dirPath, int cycles);
 
     virtual void Callback() { OnTimer(); }
 };
@@ -271,7 +272,7 @@ bool StressTest::GoToNextPage()
     if (currPage >= win->dm->pageCount()) {
         if (GoToNextFile())
             return true;
-        Finished();
+        Finished(true);
         return false;
     }
 
@@ -279,7 +280,7 @@ bool StressTest::GoToNextPage()
     win->dm->goToPage(currPage, 0);
     double pageRenderTime = currPageRenderTime.GetCurrTimeInMs();
     ScopedMem<TCHAR> s(str::Format(_T("Page %d rendered in %d milliseconds"), currPage-1, (int)pageRenderTime));
-    win->ShowNotification(s, true, false, NG_DIR_STRESS_PAGE_TIMING);
+    win->ShowNotification(s, true, false, NG_STRESS_TEST_BENCHMARK);
     currPageRenderTime.Start();
 
     // start text search when we're in the middle of the document, so that
@@ -329,13 +330,13 @@ bool StressTest::OpenFile(const TCHAR *fileName)
         return false;
     }
 
-    // transfer ownership of dirStressTest object to a new window and close the
+    // transfer ownership of stressTest object to a new window and close the
     // current one
-    assert(this == win->dirStressTest);
+    assert(this == win->stressTest);
     if (w != win) {
         WindowInfo *toClose = win;
-        w->dirStressTest = win->dirStressTest;
-        win->dirStressTest = NULL;
+        w->stressTest = win->stressTest;
+        win->stressTest = NULL;
         win = w;
         CloseWindow(toClose, false);
     }
@@ -355,7 +356,7 @@ bool StressTest::OpenFile(const TCHAR *fileName)
     int secs = SecsSinceSystemTime(stressStartTime);
     ScopedMem<TCHAR> tm(FormatTime(secs));
     ScopedMem<TCHAR> s(str::Format(_T("File %d: %s, time: %s"), filesCount, fileName, tm));
-    win->ShowNotification(s, false, false, NG_DIR_STRESS_NEW_FILE);
+    win->ShowNotification(s, false, false, NG_STRESS_TEST_SUMMARY);
 
     return true;
 }
@@ -387,46 +388,50 @@ void StressTest::OnTimer()
         if (!GoToNextPage())
             return;
     }
-    RandomIsOverGlyph(win->dm, currPage); // as a bonus, try to trigger ...
+    MakeRandomSelection(win->dm, currPage); // as a bonus, try to trigger ...
     TickTimer();
 }
 
 bool StressTest::GoToNextFile()
 {
-    // a case of testing just one file repeateadly
-    if (fileToTest) {
-        if (--repCount < 0)
-            return false;
-        return OpenFile(fileToTest);
-    }
-
-    // a case of testing all files in a directory
     for (;;) {
         while (filesToOpen.Count() > 0) {
+            // test next file
             ScopedMem<TCHAR> path(filesToOpen[0]);
             filesToOpen.RemoveAt(0);
             if (OpenFile(path))
                 return true;
         }
 
-        if (dirsToVisit.Count() == 0)
-            return false;
+        if (dirsToVisit.Count() > 0) {
+            // test next directory
+            ScopedMem<TCHAR> path(dirsToVisit[0]);
+            dirsToVisit.RemoveAt(0);
+            OpenDir(path);
+            continue;
+        }
 
-        // Go to next directory
-        ScopedMem<TCHAR> path(dirsToVisit[0]);
-        dirsToVisit.RemoveAt(0);
-        OpenDir(path);
+        if (--cycles <= 0)
+            return false;
+        // start next cycle
+        if (file::Exists(basePath))
+            filesToOpen.Append(str::Dup(basePath));
+        else
+            OpenDir(basePath);
     }
 }
 
-void StressTest::Finished()
+void StressTest::Finished(bool success)
 {
-    win->dirStressTest = NULL;
+    win->stressTest = NULL;
 
-    int secs = SecsSinceSystemTime(stressStartTime);
-    ScopedMem<TCHAR> tm(FormatTime(secs));
-    ScopedMem<TCHAR> s(str::Format(_T("Stress test complete, rendered %d files in %s"), filesCount, tm));
-    win->ShowNotification(s, false, false, NG_DIR_STRESS_NEW_FILE);
+    if (success) {
+        int secs = SecsSinceSystemTime(stressStartTime);
+        ScopedMem<TCHAR> tm(FormatTime(secs));
+        ScopedMem<TCHAR> s(str::Format(_T("Stress test complete, rendered %d files in %s"), filesCount, tm));
+        win->ShowNotification(s, false, false, NG_STRESS_TEST_SUMMARY);
+    }
+
     CloseWindow(win, false);
     delete this;
 }
@@ -439,42 +444,29 @@ char *StressTest::GetLogInfo()
     return str::Format(", stress test rendered %d files in %s, currPage: %d", filesCount, su, currPage);
 }
 
-void StressTest::StartDirStress(const TCHAR *dirPath)
+void StressTest::Start(const TCHAR *path, int cycles)
 {
     srand((unsigned int)time(NULL));
     GetSystemTime(&stressStartTime);
 
-    if (!dir::Exists(dirPath) || !OpenDir(dirPath)) {
+    basePath = str::Dup(path);
+    if (file::Exists(basePath))
+        filesToOpen.Append(str::Dup(basePath));
+    else if (dir::Exists(basePath))
+        OpenDir(basePath);
+    else {
         // Note: dev only, don't translate
-        ScopedMem<TCHAR> s(str::Format(_T("Directory '%s' doesn't exist or is empty"), dirPath));
-        win->ShowNotification(s, false /* autoDismiss */, false, NG_ERROR);
-        Finished();
+        ScopedMem<TCHAR> s(str::Format(_T("Path '%s' doesn't exist"), path));
+        win->ShowNotification(s, false /* autoDismiss */, true, NG_STRESS_TEST_SUMMARY);
+        Finished(false);
         return;
     }
+
+    this->cycles = cycles;
     if (GoToNextFile())
         TickTimer();
     else
-        Finished();
-}
-
-void StressTest::StartFileStress(const TCHAR *filePath, int repCount)
-{
-    srand((unsigned int)time(NULL));
-    GetSystemTime(&stressStartTime);
-
-    if (!file::Exists(filePath)) {
-        // Note: dev only, don't translate
-        ScopedMem<TCHAR> s(str::Format(_T("File '%s' doesn't exist"), filePath));
-        win->ShowNotification(s, false /* autoDismiss */, false, NG_ERROR);
-        Finished();
-        return;
-    }
-    fileToTest = str::Dup(filePath);
-    this->repCount = repCount;
-    if (GoToNextFile())
-        TickTimer();
-    else
-        Finished();
+        Finished(true);
 }
 
 char *GetStressTestInfo(StressTest *dst)
@@ -482,19 +474,10 @@ char *GetStressTestInfo(StressTest *dst)
     return dst->GetLogInfo();
 }
 
-void StartDirStressTest(WindowInfo *win, const TCHAR *dir, RenderCache *renderCache)
+void StartStressTest(WindowInfo *win, const TCHAR *path, int cycles, RenderCache *renderCache)
 {
     // dst will be deleted when the stress ends
     StressTest *dst = new StressTest(win, renderCache);
-    win->dirStressTest = dst;
-    dst->StartDirStress(dir);
+    win->stressTest = dst;
+    dst->Start(path, cycles);
 }
-
-void StartFileStressTest(WindowInfo *win, const TCHAR *filePath, RenderCache *renderCache, int repCount)
-{
-    // dst will be deleted when the stress ends
-    StressTest *dst = new StressTest(win, renderCache);
-    win->dirStressTest = dst;
-    dst->StartFileStress(filePath, repCount);
-}
-

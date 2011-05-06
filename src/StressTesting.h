@@ -17,9 +17,7 @@ class DisplayModel;
 class StressTest;
 
 bool CollectPathsFromDirectory(const TCHAR *pattern, StrVec& paths, bool dirsInsteadOfFiles=false);
-void StartDirStressTest(WindowInfo *win, const TCHAR *dir, RenderCache *renderCache);
-void StartFileStressTest(WindowInfo *win, const TCHAR *dir, RenderCache *renderCache, int repCount);
-void RandomIsOverGlyph(DisplayModel *dm, int pageNo);
+void StartStressTest(WindowInfo *win, const TCHAR *path, int cycles, RenderCache *renderCache);
 char *GetStressTestInfo(StressTest *);
 
 #endif

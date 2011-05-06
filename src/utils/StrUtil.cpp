@@ -523,6 +523,7 @@ static const TCHAR *ParseLimitedNumber(const TCHAR *str, const TCHAR *format,
      %s - parses a string (pass in a TCHAR**, free after use)
      %S - parses a string into a ScopedMem<TCHAR>
      %? - makes the next single character optional (e.g. "x%?,y" parses both "xy" and "x,y")
+     %$ - causes the parsing to fail if it's encountered when not at the end of the string
      %% - parses a single '%'
 
    %u, %d and %x accept an optional width argument, indicating exactly how many
@@ -557,6 +558,8 @@ const TCHAR *Parse(const TCHAR *str, const TCHAR *format, ...)
             *va_arg(args, TCHAR **) = ExtractUntil(str, *(f + 1), (const TCHAR **)&end);
         else if ('S' == *f)
             va_arg(args, ScopedMem<TCHAR> *)->Set(ExtractUntil(str, *(f + 1), (const TCHAR **)&end));
+        else if ('$' == *f && !*str)
+            continue; // don't fail, if we're indeed at the end of the string
         else if ('%' == *f && *f == *str)
             end = (TCHAR *)str + 1;
         else if ('?' == *f && *(f + 1)) {

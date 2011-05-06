@@ -56,7 +56,7 @@ static void ParseColor(int *destColor, const TCHAR* txt)
         txt += 1;
 
     unsigned int r, g, b;
-    if (str::Parse(txt, _T("%2x%2x%2x"), &r, &g, &b))
+    if (str::Parse(txt, _T("%2x%2x%2x%$"), &r, &g, &b))
         *destColor = RGB(r, g, b);
 }
 
@@ -118,7 +118,7 @@ static void ParseZoomValue(float *zoom, const TCHAR *txt)
 static void ParseScrollValue(PointI *scroll, const TCHAR *txt)
 {
     int x, y;
-    if (str::Parse(txt, _T("%d,%d"), &x, &y))
+    if (str::Parse(txt, _T("%d,%d%$"), &x, &y))
         *scroll = PointI(x, y);
 }
 
@@ -237,11 +237,23 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
             // (used e.g. for embedding it into a browser plugin)
             hwndPluginParent = (HWND)_ttol(argList[++n]);
         }
+        else if (is_arg_with_param("-stress-test")) {
+            // -stress-test <file or dir path> [<cycle count>x]
+            // e.g. -stress-test file.pdf 25x   is the same as   -stress-test-file file.pdf
+            SetStressTestPath(argList[++n]);
+            int cycles;
+            if ((n + 1 < argCount) && str::Parse(argList[n+1], _T("%dx%$"), &cycles) && cycles > 0) {
+                stressTestCycles = cycles;
+                n++;
+            }
+        }
+        // TODO: remove -stress-test-dir and -stress-test-file (superseded by -stress-test)
         else if (is_arg_with_param("-stress-test-dir")) {
-            stressTestDir = str::Dup(argList[++n]);
+            SetStressTestPath(argList[++n]);
         }
         else if (is_arg_with_param("-stress-test-file")) {
-            stressTestFile = str::Dup(argList[++n]);
+            SetStressTestPath(argList[++n]);
+            stressTestCycles = 25;
         }
         else if (is_arg_with_param("-bench")) {
             TCHAR *s = str::Dup(argList[++n]);
