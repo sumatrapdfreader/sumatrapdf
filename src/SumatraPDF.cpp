@@ -2976,7 +2976,7 @@ void GetFilesInfo(str::Str<char>& s)
 
         s.Append("File: ");
         s.AppendAndFree(str::conv::ToUtf8(w->loadedFilePath));
-        s.AppendAndFree(GetStressTestInfo((DirStressTest *)w->dirStressTest));
+        s.AppendAndFree(GetStressTestInfo((StressTest *)w->dirStressTest));
         s.Append("\r\n");
     }
 }
@@ -6146,7 +6146,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
 
                 case IDT_FILE_EXIT:
                 case IDM_CLOSE:
-                    CloseWindow(win, FALSE);
+                    CloseWindow(win, false);
                     break;
 
                 case IDM_EXIT:
@@ -6918,6 +6918,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
     if (i.stressTestDir)
         StartDirStressTest(win, i.stressTestDir, &gRenderCache);
+    else if (i.stressTestFile)
+        StartFileStressTest(win, i.stressTestFile, &gRenderCache, 24);
 
     while (GetMessage(&msg, NULL, 0, 0) > 0) {
 #ifndef THREAD_BASED_FILEWATCH

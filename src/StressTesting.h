@@ -14,11 +14,12 @@ void Bench(StrVec& filesToBench);
 class WindowInfo;
 class RenderCache;
 class DisplayModel;
-class DirStressTest;
+class StressTest;
 
 bool CollectPathsFromDirectory(const TCHAR *pattern, StrVec& paths, bool dirsInsteadOfFiles=false);
 void StartDirStressTest(WindowInfo *win, const TCHAR *dir, RenderCache *renderCache);
+void StartFileStressTest(WindowInfo *win, const TCHAR *dir, RenderCache *renderCache, int repCount);
 void RandomIsOverGlyph(DisplayModel *dm, int pageNo);
-char *GetStressTestInfo(DirStressTest *);
+char *GetStressTestInfo(StressTest *);
 
 #endif

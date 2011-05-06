@@ -240,6 +240,9 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
         else if (is_arg_with_param("-stress-test-dir")) {
             stressTestDir = str::Dup(argList[++n]);
         }
+        else if (is_arg_with_param("-stress-test-file")) {
+            stressTestFile = str::Dup(argList[++n]);
+        }
         else if (is_arg_with_param("-bench")) {
             TCHAR *s = str::Dup(argList[++n]);
             filesToBenchmark.Push(s);

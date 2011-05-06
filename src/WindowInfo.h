@@ -39,6 +39,7 @@ enum NotificationGroup {
     NG_PAGE_INFO_HELPER,
     NG_DIR_STRESS_PAGE_TIMING,
     NG_DIR_STRESS_NEW_FILE,
+    NG_ERROR
 };
 
 /* Describes position, the target (URL or file path) and infotip of a "hyperlink" */
