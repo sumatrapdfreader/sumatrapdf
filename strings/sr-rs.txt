@@ -593,4 +593,5 @@ printing document
 #Print
 #Printing is still in progress. Abort and start over?
 #Printing page %d of %d...
+#Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
 

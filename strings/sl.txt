@@ -566,5 +566,6 @@ tiskanje dokumenta
 #Printing page %d of %d...
 #Save S&hortcut...\tCtrl-Shift-S
 #Show frequently read
+#Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
 #XPS documents
 

@@ -464,6 +464,7 @@ Faktor-zoum
 #Select &All
 #Select &All\tCtrl-A
 #Show frequently read
+#Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
 #Subject:
 #SumatraPDF Update
 #SumatraPDF crashed

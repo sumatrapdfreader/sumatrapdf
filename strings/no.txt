@@ -548,6 +548,7 @@ skriver ut dokument
 #Save S&hortcut...\tCtrl-Shift-S
 #Select &All
 #Show frequently read
+#Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
 #Unknown source file (%s)
 #XPS documents
 

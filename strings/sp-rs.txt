@@ -450,6 +450,7 @@ Faktor uvećanja
 #Select &All\tCtrl-A
 #Send by &E-mail...
 #Show frequently read
+#Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
 #Source file %s has no synchronization point
 #Subject:
 #SumatraPDF Update

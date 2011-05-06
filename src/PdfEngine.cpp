@@ -233,8 +233,13 @@ WCHAR *fz_span_to_wchar(fz_text_span *text, TCHAR *lineSep, RectI **coords_out=N
         return NULL;
 
     RectI *destRect = NULL;
-    if (coords_out)
+    if (coords_out) {
         destRect = *coords_out = new RectI[textLen];
+        if (!*coords_out) {
+            free(content);
+            return NULL;
+        }
+    }
 
     WCHAR *dest = content;
     for (fz_text_span *span = text; span; span = span->next) {
@@ -246,7 +251,7 @@ WCHAR *fz_span_to_wchar(fz_text_span *text, TCHAR *lineSep, RectI **coords_out=N
             if (destRect)
                 *destRect++ = fz_bbox_to_RectI(span->text[i].bbox);
         }
-        if (!span->eol)
+        if (!span->eol && span->next)
             continue;
 #ifdef UNICODE
         lstrcpy(dest, lineSep);
@@ -325,7 +330,7 @@ static TCHAR *linkifyFindEnd(TCHAR *start)
     if (',' == end[-1] || '.' == end[-1])
         end--;
     // also ignore a closing parenthesis, if the URL doesn't contain any opening one
-    if (')' == end[-1] && (!_tcschr(start, '(') || _tcschr(start, '(') > end))
+    if (')' == end[-1] && (!str::FindChar(start, '(') || str::FindChar(start, '(') >= end))
         end--;
 
     return end;

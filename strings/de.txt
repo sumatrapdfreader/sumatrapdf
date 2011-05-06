@@ -542,6 +542,9 @@ Show the &bookmarks sidebar when available
 Single Page
 Einzelne Seite
 
+Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
+Entschuldigen Sie bitte dieses unerwartete Missgeschick!\n\nBitte drücken Sie 'Abbrechen', wenn Sie uns beim Beheben dieses Fehlers behilflich sein möchten.
+
 Source file %s has no synchronization point
 %s hat keinen Synchronisations-Punkt
 

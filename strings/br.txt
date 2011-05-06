@@ -598,4 +598,5 @@ imprimindo documento
 #&Pin Document
 #&Single Page\tCtrl-6
 #Print
+#Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
 

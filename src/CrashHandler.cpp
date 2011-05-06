@@ -22,6 +22,10 @@
 
 #include "translations.h"
 
+#ifndef CRASH_REPORT_URL
+#define CRASH_REPORT_URL _T("http://blog.kowalczyk.info/software/sumatrapdf/develop.html")
+#endif
+
 //#define DEBUG_CRASH_INFO 1
 
 /* Hard won wisdom: changing symbol path with SymSetSearchPath() after modules
@@ -1096,7 +1100,15 @@ static LONG WINAPI DumpExceptionHandler(EXCEPTION_POINTERS *exceptionInfo)
     SetEvent(gDumpEvent);
     WaitForSingleObject(gDumpThread, INFINITE);
 
-    MessageBox(NULL, _TR("SumatraPDF crashed"), _TR("SumatraPDF crashed"), MB_ICONERROR | MB_OK);
+    // don't show a message box in restricted use, as the user most likely won't be
+    // able to do anything about it anyway and it's up to the application provider
+    // to fix the unexpected behavior (of which for a restricted set of documents
+    // there should be much less, anyway)
+    if (!gRestrictedUse) {
+        int res = MessageBox(NULL, _TR("Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash."), _TR("SumatraPDF crashed"), MB_ICONERROR | MB_OKCANCEL);
+        if (IDCANCEL == res)
+            LaunchBrowser(CRASH_REPORT_URL);
+    }
 
     TerminateProcess(GetCurrentProcess(), 1);
 

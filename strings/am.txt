@@ -597,4 +597,5 @@ printing document
 #&Pin Document
 #&Single Page\tCtrl-6
 #No result found around line %u in file %s
+#Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
 

@@ -612,4 +612,5 @@ printing document
 
 # Untranslated:
 #&Facing\tCtrl-7
+#Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
 
