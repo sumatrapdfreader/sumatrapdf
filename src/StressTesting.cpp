@@ -370,6 +370,10 @@ void StressTest::OnTimer()
     KillTimer(win->hwndCanvas, DIR_STRESS_TIMER_ID);
     if (!win->dm)
         return;
+
+    // forbid entering sleep mode during tests
+    SetThreadExecutionState(ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED);
+
     BitmapCacheEntry *entry = renderCache->Find(win->dm, currPage, win->dm->rotation());
     if (!entry) {
         // not sure how reliable renderCache.Find() is, don't wait more than
@@ -478,9 +482,6 @@ char *GetStressTestInfo(StressTest *dst)
     return dst->GetLogInfo();
 }
 
-// TODO: don't allow entering standby mode during stress test so that
-// on a laptop test isn't interrupted
-// http://stackoverflow.com/questions/629240/prevent-windows-from-going-into-sleep-when-my-program-is-running ??
 void StartDirStressTest(WindowInfo *win, const TCHAR *dir, RenderCache *renderCache)
 {
     // dst will be deleted when the stress ends
