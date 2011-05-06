@@ -314,7 +314,8 @@ static bool linkifyCheckMultiline(TCHAR *pageText, TCHAR *pos, RectI *coords)
     // that starts left and only slightly below where the current line ended
     // (and that doesn't start with http itself)
     return
-        '\n' == *pos && pos > pageText && !_istalnum(pos[-1]) && !_istspace(pos[1]) &&
+        '\n' == *pos && pos > pageText && *(pos + 1) &&
+        !_istalnum(pos[-1]) && !_istspace(pos[1]) &&
         coords[pos - pageText + 1].BR().y > coords[pos - pageText - 1].y &&
         coords[pos - pageText + 1].y <= coords[pos - pageText - 1].BR().y &&
         coords[pos - pageText + 1].x < coords[pos - pageText - 1].BR().x &&
