@@ -12,6 +12,20 @@ inline size_t Len(const WCHAR *s) { return wcslen(s); }
 inline char *  Dup(const char *s) { return _strdup(s); }
 inline WCHAR * Dup(const WCHAR *s) { return _wcsdup(s); }
 
+inline void ReplacePtr(char **s, const char *snew) {
+    free(*s);
+    *s = NULL;
+    if (snew)
+        *s = str::Dup(snew);
+}
+
+inline void ReplacePtr(WCHAR **s, const WCHAR *snew) {
+    free(*s);
+    *s = NULL;
+    if (snew)
+        *s = str::Dup(snew);
+}
+
 char *  Join(const char *s1, const char *s2, const char *s3=NULL);
 WCHAR * Join(const WCHAR *s1, const WCHAR *s2, const WCHAR *s3=NULL);
 

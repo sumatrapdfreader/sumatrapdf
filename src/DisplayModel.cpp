@@ -123,12 +123,7 @@ static bool ValidZoomVirtual(float zoomVirtual)
 bool DisplayModel::displayStateFromModel(DisplayState *ds)
 {
     if (!ds->filePath || !str::Eq(ds->filePath, fileName())) {
-        TCHAR *filePath = str::Dup(fileName());
-        if (!filePath)
-            return false;
-
-        free(ds->filePath);
-        ds->filePath = filePath;
+        str::ReplacePtr(&ds->filePath, fileName());
     }
 
     ds->displayMode = _presentationMode ? _presDisplayMode : displayMode();

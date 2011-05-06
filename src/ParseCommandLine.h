@@ -68,29 +68,9 @@ public:
     void ParseCommandLine(TCHAR *cmdLine);
 
 protected:
-    void SetPrinterName(const TCHAR *s) {
-        free(printerName);
-        printerName = str::Dup(s);
-    }
-
-    void SetInverseSearchCmdLine(const TCHAR *s) {
-        free(inverseSearchCmdLine);
-        inverseSearchCmdLine = str::Dup(s);
-    }
-
     void SetLang(const TCHAR *s) {
         free(lang);
         lang = str::conv::ToAnsi(s);
-    }
-    
-    void SetDestName(const TCHAR *s) {
-        free(destName);
-        destName = str::Dup(s);
-    }
-
-    void SetStressTestPath(const TCHAR *s) {
-        free(stressTestPath);
-        stressTestPath = str::Dup(s);
     }
 };
 

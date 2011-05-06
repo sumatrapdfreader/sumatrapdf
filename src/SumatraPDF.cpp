@@ -1489,8 +1489,7 @@ static bool LoadDocIntoWindow(
     delete win.pdfsync;
     win.pdfsync = NULL;
 
-    free(win.loadedFilePath);
-    win.loadedFilePath = str::Dup(fileName);
+    str::ReplacePtr(&win.loadedFilePath, fileName);
     win.dm = DisplayModel::CreateFromFileName(&win, fileName, displayMode,
         startPage, win.GetViewPortSize());
     bool needrefresh = !win.dm;
@@ -1921,8 +1920,7 @@ static DWORD OnUrlDownloaded(HWND hParent, HttpReqCtx *ctx, bool silent)
     bool skipThisVersion = false;
     INT_PTR res = Dialog_NewVersionAvailable(hParent, UPDATE_CHECK_VER, verTxt, &skipThisVersion);
     if (skipThisVersion) {
-        free(gGlobalPrefs.m_versionToSkip);
-        gGlobalPrefs.m_versionToSkip = str::Dup(verTxt);
+        str::ReplacePtr(&gGlobalPrefs.m_versionToSkip, verTxt);
     }
     if (IDYES == res)
         LaunchBrowser(SVN_UPDATE_LINK);

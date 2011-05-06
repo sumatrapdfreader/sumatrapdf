@@ -50,16 +50,10 @@ public:
 
     VOID CleanUp()
     {
-        if (m_pData)
-        {
-            free(m_pData);
-            m_pData = NULL;
-        }
-        if (m_pBuffer)
-        {
-            free(m_pBuffer);
-            m_pBuffer = NULL;
-        }
+        free(m_pData);
+        m_pData = NULL;
+        free(m_pBuffer);
+        m_pBuffer = NULL;
     }
     WCHAR *ExtractBracedBlock();
 

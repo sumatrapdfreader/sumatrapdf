@@ -149,14 +149,14 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
             silent = true;
         }
         else if (is_arg("-print-to-default")) {
-            TCHAR *printerName = GetDefaultPrinterName();
-            if (printerName) {
-                SetPrinterName(printerName);
-                free(printerName);
+            TCHAR *name = GetDefaultPrinterName();
+            if (name) {
+                str::ReplacePtr(&printerName, name);
+                free(name);
             }
         }
         else if (is_arg_with_param("-print-to")) {
-            SetPrinterName(argList[++n]);
+            str::ReplacePtr(&printerName, argList[++n]);
         }
         else if (is_arg("-print-dialog")) {
             printDialog = true;
@@ -172,7 +172,7 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
             ParseColor(&bgColor, argList[++n]);
         }
         else if (is_arg_with_param("-inverse-search")) {
-            SetInverseSearchCmdLine(argList[++n]);
+            str::ReplacePtr(&inverseSearchCmdLine, argList[++n]);
         }
         else if (is_arg_with_param("-fwdsearch-offset")) {
             fwdsearchOffset = _ttoi(argList[++n]);
@@ -203,7 +203,7 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
         else if (is_arg_with_param("-nameddest") || is_arg_with_param("-named-dest")) {
             // -nameddest is for backwards compat (was used pre-1.3)
             // -named-dest is for consitency
-            SetDestName(argList[++n]);
+            str::ReplacePtr(&destName, argList[++n]);
         }
         else if (is_arg_with_param("-page")) {
             pageNumber = _ttoi(argList[++n]);
@@ -243,7 +243,7 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
         else if (is_arg_with_param("-stress-test")) {
             // -stress-test <file or dir path> [<cycle count>x]
             // e.g. -stress-test file.pdf 25x   is the same as   -stress-test-file file.pdf
-            SetStressTestPath(argList[++n]);
+            str::ReplacePtr(&stressTestPath, argList[++n]);
             int cycles;
             if (has_second_param() && str::Parse(second_param(), _T("%dx%$"), &cycles) && cycles > 0) {
                 stressTestCycles = cycles;

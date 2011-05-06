@@ -50,12 +50,9 @@ protected:
 
     void Clear()
     {
-        free(findText);
-        findText = NULL;
-        free(anchor);
-        anchor = NULL;
-        free(lastText);
-        lastText = NULL;
+        str::ReplacePtr(&findText, NULL);
+        str::ReplacePtr(&anchor, NULL);
+        str::ReplacePtr(&lastText, NULL);
         Reset();
     }
     void Reset();
