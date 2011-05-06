@@ -420,10 +420,10 @@ bool IsCursorOverWindow(HWND hwnd)
     return rcWnd.Inside(PointI(pt.x, pt.y));
 }
 
-void CenterDialog(HWND hDlg)
+void CenterDialog(HWND hDlg, HWND hParent)
 {
-    // RECT rcDialog, rcOwner, rcRect;
-    HWND hParent = GetParent(hDlg);
+    if (!hParent)
+        hParent = GetParent(hDlg);
 
     RectI rcDialog = WindowRect(hDlg);
     rcDialog.Offset(-rcDialog.x, -rcDialog.y);

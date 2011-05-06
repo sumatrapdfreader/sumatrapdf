@@ -264,7 +264,7 @@ void    PaintLine(HDC hdc, RectI& rect);
 void    DrawCenteredText(HDC hdc, RectI& r, const TCHAR *txt);
 
 bool    IsCursorOverWindow(HWND hwnd);
-void    CenterDialog(HWND hDlg);
+void    CenterDialog(HWND hDlg, HWND hParent=NULL);
 TCHAR * GetDefaultPrinterName();
 bool    CopyTextToClipboard(const TCHAR *text, bool appendOnly=false);
 

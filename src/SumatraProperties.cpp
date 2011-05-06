@@ -224,7 +224,7 @@ static void UpdatePropertiesLayout(HWND hwnd, HDC hdc, RectI *rect)
     win::font::Delete(fontRightTxt);
 }
 
-static HWND CreatePropertiesWindow(PropertiesLayout& layoutData)
+static HWND CreatePropertiesWindow(HWND hParent, PropertiesLayout& layoutData)
 {
     HWND hwndProperties = CreateWindow(
            PROPERTIES_CLASS_NAME, PROPERTIES_WIN_TITLE,
@@ -252,6 +252,7 @@ static HWND CreatePropertiesWindow(PropertiesLayout& layoutData)
     wRc.dx += rc.dx - cRc.dx;
     wRc.dy += rc.dy - cRc.dy;
     MoveWindow(hwndProperties, wRc.x, wRc.y, wRc.dx, wRc.dy, FALSE);
+    CenterDialog(hwndProperties, hParent);
 
     ShowWindow(hwndProperties, SW_SHOW);
     return hwndProperties;
@@ -354,7 +355,7 @@ void OnMenuProperties(WindowInfo& win)
     // http://www.adobe.com/devnet/acrobat/pdfs/PDF32000_2008.pdf
     // layoutData->AddProperty(_T("Tagged PDF:"), str::Dup(_T("No")));
 
-    win.hwndProperties = CreatePropertiesWindow(*layoutData);
+    win.hwndProperties = CreatePropertiesWindow(win.hwndFrame, *layoutData);
 }
 
 static void DrawProperties(HWND hwnd, HDC hdc)
