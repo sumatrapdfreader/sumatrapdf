@@ -296,6 +296,9 @@ extern "C" static void close_istream(fz_stream *stm)
 
 fz_stream *fz_open_istream(IStream *stream)
 {
+    if (!stream)
+        return NULL;
+
     stream->AddRef();
 
     fz_stream *stm = fz_new_stream(stream, read_istream, close_istream);
@@ -1683,7 +1686,7 @@ PdfEngine *PdfEngine::CreateFromFileName(const TCHAR *fileName, PasswordUI *pwdU
 PdfEngine *PdfEngine::CreateFromStream(IStream *stream, PasswordUI *pwdUI)
 {
     CPdfEngine *engine = new CPdfEngine();
-    if (!engine || !stream || !engine->load(stream, pwdUI)) {
+    if (!engine->load(stream, pwdUI)) {
         delete engine;
         return NULL;
     }
@@ -2550,7 +2553,7 @@ XpsEngine *XpsEngine::CreateFromFileName(const TCHAR *fileName)
 XpsEngine *XpsEngine::CreateFromStream(IStream *stream)
 {
     CXpsEngine *engine = new CXpsEngine();
-    if (!engine || !stream || !engine->load(stream)) {
+    if (!engine->load(stream)) {
         delete engine;
         return NULL;
     }

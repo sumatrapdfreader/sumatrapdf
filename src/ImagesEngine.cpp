@@ -378,11 +378,28 @@ class CImageEngine : public ImagesEngine, public ImageEngine {
     friend ImageEngine;
 
 public:
-    virtual ImageEngine *Clone() { return CreateFromFileName(fileName); }
+    virtual ImageEngine *Clone();
+
+    virtual unsigned char *GetFileData(size_t *cbCount);
 
 protected:
     bool LoadSingleFile(const TCHAR *fileName);
+    bool LoadFromStream(IStream *stream);
 };
+
+ImageEngine *CImageEngine::Clone()
+{
+    Bitmap *bmp = pages[0]->Clone(0, 0, pages[0]->GetWidth(), pages[0]->GetHeight(), PixelFormat32bppARGB);
+    if (!bmp)
+        return NULL;
+
+    CImageEngine *clone = new CImageEngine();
+    clone->pages.Append(bmp);
+    clone->fileName = fileName ? str::Dup(fileName) : NULL;
+    clone->fileExt = clone->fileName ? path::GetExt(clone->fileName) : _T(".png");
+
+    return clone;
+}
 
 bool CImageEngine::LoadSingleFile(const TCHAR *file)
 {
@@ -402,6 +419,26 @@ bool CImageEngine::LoadSingleFile(const TCHAR *file)
     return pages[0] != NULL;
 }
 
+bool CImageEngine::LoadFromStream(IStream *stream)
+{
+    if (!stream)
+        return false;
+    
+    pages.Append(Bitmap::FromStream(stream));
+    // could sniff instead, but GDI+ allows us to convert the image format anyway
+    fileExt = _T(".png");
+
+    return pages[0] != NULL;
+}
+
+unsigned char *CImageEngine::GetFileData(size_t *cbCount) {
+    if (fileName)
+        return (unsigned char *)file::ReadAll(fileName, cbCount);
+
+    // TODO: convert Bitmap to PNG and return its data (saving to/reading from a stream)
+    return NULL;
+}
+
 ImageEngine *ImageEngine::CreateFromFileName(const TCHAR *fileName)
 {
     assert(IsSupportedFile(fileName));
@@ -411,6 +448,16 @@ ImageEngine *ImageEngine::CreateFromFileName(const TCHAR *fileName)
         return NULL;
     }
     return engine;    
+}
+
+ImageEngine *ImageEngine::CreateFromStream(IStream *stream)
+{
+    CImageEngine *engine = new CImageEngine();
+    if (!engine->LoadFromStream(stream)) {
+        delete engine;
+        return NULL;
+    }
+    return engine;
 }
 
 ///// ImageDirEngine handles a directory full of image files /////

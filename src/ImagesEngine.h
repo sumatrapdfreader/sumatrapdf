@@ -16,12 +16,12 @@ public:
                str::EndsWithI(fileName, _T(".bmp"));
     }
     static ImageEngine *CreateFromFileName(const TCHAR *fileName);
-    static ImageEngine *CreateFromStream(IStream *stream) { return NULL; }
+    static ImageEngine *CreateFromStream(IStream *stream);
 };
 
 class ImageDirEngine : public virtual BaseEngine {
 public:
-    static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false); // return dir::Exists(fileName);
+    static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false);
     static ImageDirEngine *CreateFromFileName(const TCHAR *fileName);
     static ImageDirEngine *CreateFromStream(IStream *stream) { return NULL; }
 };
