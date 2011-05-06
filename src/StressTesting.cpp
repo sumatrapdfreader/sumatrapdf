@@ -460,7 +460,7 @@ void StressTest::StartFileStress(const TCHAR *filePath, int repCount)
 
     if (!file::Exists(filePath)) {
         // Note: dev only, don't translate
-        ScopedMem<TCHAR> s(str::Format(_T("File '%s' doesn't exist or is empty"), filePath));
+        ScopedMem<TCHAR> s(str::Format(_T("File '%s' doesn't exist"), filePath));
         win->ShowNotification(s, false /* autoDismiss */, false, NG_ERROR);
         Finished();
         return;
@@ -478,6 +478,9 @@ char *GetStressTestInfo(StressTest *dst)
     return dst->GetLogInfo();
 }
 
+// TODO: don't allow entering standby mode during stress test so that
+// on a laptop test isn't interrupted
+// http://stackoverflow.com/questions/629240/prevent-windows-from-going-into-sleep-when-my-program-is-running ??
 void StartDirStressTest(WindowInfo *win, const TCHAR *dir, RenderCache *renderCache)
 {
     // dst will be deleted when the stress ends
