@@ -130,10 +130,13 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
 
 #define is_arg(txt) str::EqI(_T(txt), argument)
 #define is_arg_with_param(txt) (is_arg(txt) && param != NULL)
+#define second_param() argList[n+1]
+#define has_second_param() ((argCount > n + 1) && ('-' != second_param()[0]))
 
     for (size_t n = 1; n < argCount; n++) {
-        TCHAR *argument = argList[n], *param = NULL;
-        if (n < argCount - 1)
+        TCHAR *argument = argList[n];
+        TCHAR *param = NULL;
+        if (argCount > n + 1)
             param = argList[n + 1];
 
         if (is_arg("-register-for-pdf")) {
@@ -242,25 +245,19 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
             // e.g. -stress-test file.pdf 25x   is the same as   -stress-test-file file.pdf
             SetStressTestPath(argList[++n]);
             int cycles;
-            if ((n + 1 < argCount) && str::Parse(argList[n+1], _T("%dx%$"), &cycles) && cycles > 0) {
+            if (has_second_param() && str::Parse(second_param(), _T("%dx%$"), &cycles) && cycles > 0) {
                 stressTestCycles = cycles;
                 n++;
             }
-        }
-        // TODO: remove -stress-test-dir and -stress-test-file (superseded by -stress-test)
-        else if (is_arg_with_param("-stress-test-dir")) {
-            SetStressTestPath(argList[++n]);
-        }
-        else if (is_arg_with_param("-stress-test-file")) {
-            SetStressTestPath(argList[++n]);
-            stressTestCycles = 25;
         }
         else if (is_arg_with_param("-bench")) {
             TCHAR *s = str::Dup(argList[++n]);
             filesToBenchmark.Push(s);
             s = NULL;
-            if ((n + 1 < argCount) && IsBenchPagesInfo(argList[n+1]))
-                s = str::Dup(argList[++n]);
+            if (has_second_param() && IsBenchPagesInfo(second_param())) {
+                s = str::Dup(second_param());
+                n++;
+            }
             filesToBenchmark.Push(s);
             exitImmediately = true;
         }
