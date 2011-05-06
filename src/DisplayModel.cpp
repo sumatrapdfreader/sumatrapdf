@@ -273,6 +273,7 @@ bool DisplayModel::load(const TCHAR *fileName, int startPage, SizeI viewPort)
     _dpiFactor = 1.0f * _callback->GetScreenDPI() / engine->GetFileDPI();
     totalViewPortSize = viewPort;
 
+    assert(engine->PageCount() > 0);
     if (validPageNo(startPage))
         _startPage = startPage;
     else

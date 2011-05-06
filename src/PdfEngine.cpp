@@ -903,6 +903,10 @@ bool CPdfEngine::finishLoading()
     fz_error error = pdf_load_page_tree(_xref);
     if (error)
         return false;
+    if (PageCount() == 0)
+        return false;
+
+    _pages = SAZA(pdf_page *, PageCount());
 
     EnterCriticalSection(&_xrefAccess);
     _outline = pdf_load_outline(_xref);
@@ -919,9 +923,7 @@ bool CPdfEngine::finishLoading()
         _info = fz_copy_dict(pdf_resolve_indirect(_info));
     LeaveCriticalSection(&_xrefAccess);
 
-    _pages = SAZA(pdf_page *, PageCount());
-
-    return PageCount() > 0;
+    return true;
 }
 
 CPdfToCItem *CPdfEngine::BuildToCTree(pdf_outline *entry, int& idCounter)
@@ -1962,6 +1964,8 @@ bool CXpsEngine::load_from_stream(fz_stream *stm)
     xps_open_stream(&_ctx, stm);
     fz_close(stm);
     if (!_ctx)
+        return false;
+    if (PageCount() == 0)
         return false;
 
     _pages = SAZA(xps_page *, PageCount());

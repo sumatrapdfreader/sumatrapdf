@@ -265,6 +265,9 @@ bool CDjVuEngine::Load(const TCHAR *fileName)
         return false;
 
     pageCount = ddjvu_document_get_pagenum(doc);
+    if (0 == pageCount)
+        return false;
+
     mediaboxes = new RectD[pageCount];
     annos = SAZA(miniexp_t, pageCount);
 
