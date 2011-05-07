@@ -293,6 +293,19 @@ bool StressTest::GoToNextPage()
         win::SetText(win->hwndFindBox, _T("!z_yt"));
         FindTextOnThread(win);
     }
+
+    if (1 == rand() % 3) {
+        ClientRect rect(win->hwndFrame);
+        int deltaX = (rand() % 40) - 23;
+        rect.dx += deltaX;
+        if (rect.dx < 300)
+            rect.dx += (abs(deltaX) * 3);
+        int deltaY = (rand() % 40) - 23;
+        rect.dy += deltaY;
+        if (rect.dy < 300)
+            rect.dy += (abs(deltaY) * 3);
+        SendMessage(win->hwndFrame, WM_SIZE, 0, MAKELONG(rect.dx, rect.dy));
+    }
     return true;
 }
 
@@ -341,7 +354,7 @@ bool StressTest::OpenFile(const TCHAR *fileName)
         CloseWindow(toClose, false);
     }
 
-    win->dm->changeDisplayMode(DM_SINGLE_PAGE);
+    win->dm->changeDisplayMode(DM_CONTINUOUS);
     win->dm->zoomTo(ZOOM_FIT_PAGE);
     win->dm->goToFirstPage();
     if (win->tocShow)
@@ -476,7 +489,7 @@ char *GetStressTestInfo(StressTest *dst)
 
 void StartStressTest(WindowInfo *win, const TCHAR *path, int cycles, RenderCache *renderCache)
 {
-    gPredictiveRender = false;
+    //gPredictiveRender = false;
 
     // dst will be deleted when the stress ends
     StressTest *dst = new StressTest(win, renderCache);
