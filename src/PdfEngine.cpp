@@ -424,6 +424,7 @@ extern "C" {
 namespace str {
     namespace conv {
 
+// note: make sure to only call with _xrefAccess
 inline TCHAR *FromPdf(fz_obj *obj)
 {
     WCHAR *ucs2 = (WCHAR *)pdf_to_ucs2(obj);
@@ -454,6 +455,7 @@ pdf_link *pdf_new_link(fz_obj *dest, pdf_link_kind kind, fz_rect rect=fz_empty_r
     return link;
 }
 
+// note: make sure to only call with _xrefAccess
 pdf_outline *pdf_loadattachments(pdf_xref *xref)
 {
     fz_obj *dict = pdf_load_name_tree(xref, "EmbeddedFiles");
@@ -478,33 +480,6 @@ pdf_outline *pdf_loadattachments(pdf_xref *xref)
     return root.next;
 }
 
-// adapted from pdf_page.c's pdf_load_page_info
-fz_error pdf_get_mediabox(fz_rect *mediabox, fz_obj *page)
-{
-    fz_obj *obj = fz_dict_gets(page, "MediaBox");
-    fz_bbox bbox = fz_round_rect(pdf_to_rect(obj));
-    if (fz_is_empty_bbox(bbox)) {
-        fz_warn("cannot find page bounds, guessing page bounds.");
-        bbox.x0 = 0;
-        bbox.y0 = 0;
-        bbox.x1 = 612;
-        bbox.y1 = 792;
-    }
-
-    obj = fz_dict_gets(page, "CropBox");
-    if (fz_is_array(obj)) {
-        fz_bbox cropbox = fz_round_rect(pdf_to_rect(obj));
-        bbox = fz_intersect_bbox(bbox, cropbox);
-    }
-
-    RectD mbox = fz_bbox_to_RectI(bbox).Convert<double>();
-    if (mbox.IsEmpty())
-        return fz_throw("invalid page size");
-
-    *mediabox = fz_RectD_to_rect(mbox);
-    return fz_okay;
-}
-
 ///// Above are extensions to Fitz and MuPDF, now follows PdfEngine /////
 
 struct PdfPageRun {
@@ -514,9 +489,11 @@ struct PdfPageRun {
 };
 
 class CPdfToCItem;
+class PdfLink;
 
 class CPdfEngine : public PdfEngine {
     friend PdfEngine;
+    friend PdfLink;
 
 public:
     CPdfEngine();
@@ -571,9 +548,6 @@ public:
     virtual char *GetDecryptionKey() const;
     virtual void RunGC();
 
-    int FindPageNo(fz_obj *dest);
-    bool SaveEmbedded(fz_obj *obj, LinkSaverUI& saveUI);
-
 protected:
     const TCHAR *_fileName;
     char *_decryptionKey;
@@ -611,6 +585,9 @@ protected:
     void            linkifyPageText(pdf_page *page);
     bool            hasPermission(int permission);
 
+    int             FindPageNo(fz_obj *dest);
+    bool            SaveEmbedded(fz_obj *obj, LinkSaverUI& saveUI);
+
     pdf_outline   * _outline;
     pdf_outline   * _attachments;
     fz_obj        * _info;
@@ -647,21 +624,20 @@ public:
 };
 
 class PdfComment : public PageElement {
-    pdf_annot *annot;
+    TCHAR *content;
+    RectD rect;
     int pageNo;
 
 public:
-    PdfComment(pdf_annot *annot, int pageNo=-1) : annot(annot), pageNo(pageNo) { }
+    PdfComment(const TCHAR *content, RectD rect, int pageNo=-1) :
+        content(str::Dup(content)), rect(rect), pageNo(pageNo) { }
+    virtual ~PdfComment() {
+        free(content);
+    }
 
-    virtual int GetPageNo() const {
-        return pageNo;
-    }
-    virtual RectD GetRect() const {
-        return fz_rect_to_RectD(annot->rect);
-    }
-    virtual TCHAR *GetValue() const {
-        return str::conv::FromUtf8(fz_to_str_buf(fz_dict_gets(annot->obj, "Contents")));
-    }
+    virtual int GetPageNo() const { return pageNo; }
+    virtual RectD GetRect() const { return rect; }
+    virtual TCHAR *GetValue() const { return str::Dup(content); }
 };
 
 class CPdfToCItem : public DocToCItem {
@@ -964,6 +940,8 @@ DocToCItem *CPdfEngine::GetToCTree()
 
 int CPdfEngine::FindPageNo(fz_obj *dest)
 {
+    ScopedCritSec scope(&_xrefAccess);
+
     if (fz_is_dict(dest)) {
         // The destination is linked from a Go-To action's D array
         fz_obj * D = fz_dict_gets(dest, "D");
@@ -980,6 +958,8 @@ int CPdfEngine::FindPageNo(fz_obj *dest)
 
 PageDestination *CPdfEngine::GetNamedDest(const TCHAR *name)
 {
+    ScopedCritSec scope(&_xrefAccess);
+
     ScopedMem<char> name_utf8(str::conv::ToUtf8(name));
     fz_obj *nameobj = fz_new_string((char *)name_utf8, (int)str::Len(name_utf8));
     fz_obj *dest = pdf_lookup_dest(_xref, nameobj);
@@ -1114,6 +1094,8 @@ void CPdfEngine::dropPageRun(PdfPageRun *run, bool forceRemove)
 
 int CPdfEngine::PageRotation(int pageNo)
 {
+    ScopedCritSec scope(&_xrefAccess);
+
     assert(1 <= pageNo && pageNo <= PageCount());
     fz_obj *page = _xref->page_objs[pageNo-1];
     if (!page)
@@ -1127,10 +1109,29 @@ int CPdfEngine::PageRotation(int pageNo)
 RectD CPdfEngine::PageMediabox(int pageNo)
 {
     assert(1 <= pageNo && pageNo <= PageCount());
-    fz_rect mediabox;
-    if (pdf_get_mediabox(&mediabox, _xref->page_objs[pageNo-1]) != fz_okay)
+    fz_obj *page = _xref->page_objs[pageNo-1];
+    if (!page)
         return RectD();
-    return fz_rect_to_RectD(mediabox);
+
+    ScopedCritSec scope(&_xrefAccess);
+
+    // cf. pdf_page.c's pdf_load_page_info
+    fz_obj *obj = fz_dict_gets(page, "MediaBox");
+    RectI mbox = fz_rect_to_RectD(pdf_to_rect(obj)).Round();
+    if (mbox.IsEmpty()) {
+        fz_warn("cannot find page bounds, guessing page bounds.");
+        mbox = RectI(0, 0, 612, 792);
+    }
+
+    obj = fz_dict_gets(page, "CropBox");
+    if (fz_is_array(obj)) {
+        RectI cbox = fz_rect_to_RectD(pdf_to_rect(obj)).Round();
+        mbox = mbox.Intersect(cbox);
+    }
+
+    if (mbox.IsEmpty())
+        return RectD();
+    return mbox.Convert<double>();
 }
 
 RectD CPdfEngine::PageContentBox(int pageNo, RenderTarget target)
@@ -1183,11 +1184,15 @@ fz_matrix CPdfEngine::viewctm(pdf_page *page, float zoom, int rotation)
 
 fz_matrix CPdfEngine::viewctm(int pageNo, float zoom, int rotation)
 {
-    pdf_page partialPage;
     fz_obj *page = _xref->page_objs[pageNo-1];
-
-    if (!page || pdf_get_mediabox(&partialPage.mediabox, page) != fz_okay)
+    RectD mediabox = PageMediabox(pageNo);
+    if (!page || mediabox.IsEmpty())
         return fz_identity;
+
+    ScopedCritSec scope(&_xrefAccess);
+
+    pdf_page partialPage;
+    partialPage.mediabox = fz_RectD_to_rect(mediabox);
     partialPage.rotate = fz_to_int(fz_dict_gets(page, "Rotate"));
 
     return viewctm(&partialPage, zoom, rotation);
@@ -1305,11 +1310,14 @@ PageElement *CPdfEngine::GetElementAtPos(int pageNo, PointD pt)
         if (fz_is_pt_in_rect(link->rect, p))
             return new PdfLink(this, link, pageNo);
 
+    ScopedCritSec scope(&_xrefAccess);
+
     for (pdf_annot *annot = page->annots; annot; annot = annot->next)
         if (fz_is_pt_in_rect(annot->rect, p) &&
             str::Eq(fz_to_name(fz_dict_gets(annot->obj, "Subtype")), "Text") &&
             !str::IsEmpty(fz_to_str_buf(fz_dict_gets(annot->obj, "Contents")))) {
-            return new PdfComment(annot, pageNo);
+            ScopedMem<TCHAR> contents(str::conv::FromUtf8(fz_to_str_buf(fz_dict_gets(annot->obj, "Contents"))));
+            return new PdfComment(contents, fz_rect_to_RectD(annot->rect), pageNo);
         }
 
     return NULL;
@@ -1326,10 +1334,13 @@ Vec<PageElement *> *CPdfEngine::GetElements(int pageNo)
     for (pdf_link *link = page->links; link; link = link->next)
         els->Append(new PdfLink(this, link, pageNo));
 
+    ScopedCritSec scope(&_xrefAccess);
+
     for (pdf_annot *annot = page->annots; annot; annot = annot->next)
         if (str::Eq(fz_to_name(fz_dict_gets(annot->obj, "Subtype")), "Text") &&
             !str::IsEmpty(fz_to_str_buf(fz_dict_gets(annot->obj, "Contents")))) {
-            els->Append(new PdfComment(annot, pageNo));
+            ScopedMem<TCHAR> contents(str::conv::FromUtf8(fz_to_str_buf(fz_dict_gets(annot->obj, "Contents"))));
+            els->Append(new PdfComment(contents, fz_rect_to_RectD(annot->rect), pageNo));
         }
 
     return els;
@@ -1444,6 +1455,7 @@ TCHAR *CPdfEngine::GetProperty(char *name)
         return str::Format(_T("%d.%d"), major, minor);
     }
 
+    // _info is guaranteed not to be an indirect reference, so no need for _xrefAccess
     fz_obj *obj = fz_dict_gets(_info, name);
     if (!obj)
         return NULL;
@@ -1491,6 +1503,8 @@ unsigned char *CPdfEngine::GetFileData(size_t *cbCount)
 
 bool CPdfEngine::SaveEmbedded(fz_obj *obj, LinkSaverUI& saveUI)
 {
+    ScopedCritSec (&_xrefAccess);
+
     fz_buffer *data = NULL;
     fz_error error = pdf_load_stream(&data, _xref, fz_to_num(obj), fz_to_gen(obj));
     if (error != fz_okay)
@@ -1529,11 +1543,13 @@ void CPdfEngine::RunGC()
 
 TCHAR *PdfLink::GetValue() const
 {
-    TCHAR *path = NULL;
-    fz_obj *obj;
-
     if (!link)
         return NULL;
+
+    ScopedCritSec scope(&engine->_xrefAccess);
+
+    TCHAR *path = NULL;
+    fz_obj *obj;
 
     switch (link->kind) {
     case PDF_LINK_URI:
@@ -1581,7 +1597,12 @@ TCHAR *PdfLink::GetValue() const
 
 const char *PdfLink::GetType() const
 {
-    switch (link ? link->kind : -1) {
+    if (!link)
+        return NULL;
+
+    ScopedCritSec scope(&engine->_xrefAccess);
+
+    switch (link->kind) {
     case PDF_LINK_URI: return "LaunchURL";
     case PDF_LINK_GOTO: return "ScrollTo";
     case PDF_LINK_NAMED: return fz_to_name(link->dest);
@@ -1600,6 +1621,7 @@ const char *PdfLink::GetType() const
     }
 }
 
+// note: make sure to only call with _xrefAccess
 fz_obj *PdfLink::dest() const
 {
     if (!link)
@@ -1620,6 +1642,8 @@ int PdfLink::GetDestPageNo() const
 
 RectD PdfLink::GetDestRect() const
 {
+    ScopedCritSec scope(&engine->_xrefAccess);
+
     RectD result(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
     fz_obj *dest = this->dest();
     fz_obj *obj = fz_array_get(dest, 1);
@@ -1654,6 +1678,7 @@ RectD PdfLink::GetDestRect() const
 
 bool PdfLink::SaveEmbedded(LinkSaverUI& saveUI)
 {
+    ScopedCritSec scope(&engine->_xrefAccess);
     return engine->SaveEmbedded(dest(), saveUI);
 }
 
