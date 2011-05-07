@@ -539,6 +539,9 @@ Hiện chỉ dấu sách nếu có
 Single Page
 Trang đơn
 
+Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
+Xin lỗi, điều đó không nên xảy ra!\n\nVui lòng bấm 'Hủy', nếu bạn muốn giúp chúng tôi sửa chữa lý do của trường hợp lỗi này.
+
 Source file %s has no synchronization point
 Tập tin nguồn %s không có điểm đồng bộ
 
@@ -610,7 +613,4 @@ copying text
 
 printing document
 đang in tập tin
-
-# Untranslated:
-#Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
 

@@ -23,6 +23,9 @@ Tod&as as páginas selecionadas
 &Back\tAlt+Left Arrow
 Voltar\tAlt+<-
 
+&Book View\tCtrl-8
+Visualizar como livro\tCtrl-8
+
 &Close\tCtrl-W
 &Fechar\tCtrl-W
 
@@ -37,6 +40,9 @@ Não perguntar novamente
 
 &Even pages only
 Apenas as páginas par&es
+
+&Facing\tCtrl-7
+Página dupla\tCtrl-7
 
 &File
 &Arquivo
@@ -86,11 +92,17 @@ Apenas as páginas ímpares
 &Open\tCtrl-O
 A&brir\tCtrl-O
 
+&Open Document
+Abrir d&ocumento
+
 &Options...
 &Opções...
 
 &Password:
 &Senha:
+
+&Pin Document
+Fixar documento
 
 &Previous Page\tLeft Arrow
 Página anterior\t<-
@@ -110,6 +122,9 @@ Lembra&r a senha deste documento
 &Remember these settings for each document
 Lembrar estas preferências para cada documento
 
+&Remove Document
+&Remover documento
+
 &Save As...
 &Salvar como...
 
@@ -121,6 +136,9 @@ Lembrar estas preferências para cada documento
 
 &Shrink pages to printable area (if necessary)
 Reduzir página&s à área de impressão (se necessário)
+
+&Single Page\tCtrl-6
+Página única\tCtrl-6
 
 &Skip this version
 Ignorar esta versão
@@ -461,6 +479,9 @@ Apr&esentação\tCtrl-L
 Previous Page
 Página anterior
 
+Print
+Imprimir
+
 Print range
 Intervalo de impressão
 
@@ -517,6 +538,9 @@ Mostrar barra lateral de marcadores quando disponível
 
 Single Page
 Página única
+
+Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
+Desculpe, isso não deveria ter acontecido!\n\Aperte 'Cancelar' se quiser nos ajudar a corrigir a causa deste erro.
 
 Source file %s has no synchronization point
 O arquivo fonte %s não tem ponto de sincronização
@@ -589,14 +613,4 @@ copiando texto
 
 printing document
 imprimindo documento
-
-# Untranslated:
-#&Book View\tCtrl-8
-#&Facing\tCtrl-7
-#&Open Document
-#&Pin Document
-#&Remove Document
-#&Single Page\tCtrl-6
-#Print
-#Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
 
