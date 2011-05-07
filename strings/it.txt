@@ -79,7 +79,7 @@ Pagine &affiancate\t<Ctrl>+7
 &Ingrandimento:
 
 &Manual
-&Manuale in linea
+&Manuale in linea (in inglese)
 
 &Match case
 &Maiuscole/minuscole
@@ -546,6 +546,9 @@ Visualizza la &barra laterale dei segnalibri quando disponibile
 Single Page
 Pagina singola
 
+Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
+Questo non doveva succedere!\n\nSe vuoi aiutarci a capire la causa del blocco del programma seleziona <Annulla>.
+
 Source file %s has no synchronization point
 Il file sorgente %s non ha nessun punto di sincronizzazione
 
@@ -617,7 +620,4 @@ Copia del testo...
 
 printing document
 Stampa documento...
-
-# Untranslated:
-#Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
 

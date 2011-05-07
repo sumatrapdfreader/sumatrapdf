@@ -376,7 +376,7 @@ Hide frequently read
 Скрыть часто используемые документы
 
 Hint: Use the F3 key for finding again
-Для повторного поиска используйте клавишу F3
+Для повторного поиска нажмите <F3>
 
 Image files (*.%s)
 Файлы изображений (*.%s)
@@ -487,7 +487,7 @@ Print range
 Диапазон печати
 
 Printing is still in progress. Abort and start over?
-Продолжается печать документа. Отменить и начать заново?
+Печать ещё не завершена. Отменить и начать заново?
 
 Printing page %d of %d...
 Печать страницы %d из %d...
@@ -517,7 +517,7 @@ Select &All\tCtrl-A
 В&ыделить все\tCtrl-A
 
 Select content with Ctrl+left mouse button
-Выберите содержимое, нажав Ctrl и левую кнопку мыши
+Выберите содержимое, нажав <Ctrl> и левую кнопку мыши
 
 Send by &E-mail...
 Отправить по &электронной почте...
@@ -539,6 +539,9 @@ Show the &bookmarks sidebar when available
 
 Single Page
 Постранично
+
+Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
+Извините, произошло что-то непредвиденное.\n\nНажмите 'Отмена', если хотите помочь нам устранить причину этого сбоя.
 
 Source file %s has no synchronization point
 Нет точки синхронизации в исходном файле %s
@@ -611,7 +614,4 @@ copying text
 
 printing document
 печатается документ
-
-# Untranslated:
-#Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
 

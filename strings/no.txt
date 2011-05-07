@@ -25,8 +25,14 @@ Fak&tisk størrelse\tCtrl+1
 &Back\tAlt+Left Arrow
 Tilbake\tAlt+Pil venstre
 
+&Book View\tCtrl-8
+&Bokvisning\tCtrl-8
+
 &Close\tCtrl-W
 &Lukk\tCtrl+W
+
+&Copy Selection
+&Kopier valgt område
 
 &Copy Selection\tCtrl-C
 Kopier merket tekst\tCtrl+C
@@ -36,6 +42,9 @@ Kopier merket tekst\tCtrl+C
 
 &Even pages only
 Bare &partallssider
+
+&Facing\tCtrl-7
+&Vendt\tCtrl-7
 
 &File
 &Fil
@@ -85,14 +94,23 @@ Bare &oddetallssider
 &Open\tCtrl-O
 &Åpne...\tCtrl+O
 
+&Open Document
+&Åpne dokument
+
 &Options...
 &Innstillinger...
 
 &Password:
 &Passord:
 
+&Pin Document
+Fes&t dokument
+
 &Previous Page\tLeft Arrow
 Forrige side\tPil venstre
+
+&Print...
+&Skriv ut...
 
 &Print...\tCtrl-P
 &Skriv ut...\tCtrl+P
@@ -106,6 +124,12 @@ Forrige side\tPil venstre
 &Remember these settings for each document
 &Husk disse innstillingene for hvert dokument
 
+&Remove Document
+&Fjern dokument
+
+&Save As...
+&Lagre som...
+
 &Save As...\tCtrl-S
 Lagre &som...\tCtrl+S
 
@@ -114,6 +138,9 @@ Lagre &som...\tCtrl+S
 
 &Shrink pages to printable area (if necessary)
 &Krymp sider til utskriftsområde (om nødvendig)
+
+&Single Page\tCtrl-6
+&Enkeltside\tCtrl-6
 
 &Skip this version
 &Ignorer denne versjonen
@@ -142,6 +169,9 @@ Avansert
 All files
 Alle filer (*.*)
 
+All supported documents
+Alle støttede dokumenter
+
 Application:
 Program:
 
@@ -165,6 +195,12 @@ Bokvisning
 
 Book&marks\tF12
 Bokmerker\tF12
+
+Bookmark Shortcuts
+Bokmerk snarveier
+
+Bookmark shortcut to page %d of %s
+Bokmerk snarvei til side %d av %s
 
 Bookmarks
 Bokmerker
@@ -190,6 +226,9 @@ Endre språk (Change Language)
 Check for &Updates
 &Se etter ny versjon...
 
+Comic books
+Tegneserier
+
 Continuous
 Kontinuerlig
 
@@ -201,6 +240,12 @@ Kontinuerlig - motst&ående
 
 Contribute Translation
 Bidra med oversetting
+
+Copy &Link Address
+Kopier &lenkeadresse
+
+Copy Co&mment
+Kopier ko&mmentar
 
 Copying text was denied (copying as image only)
 Mangler tillatelse til kopiering av tekst (kopierer kun som bilde)
@@ -232,6 +277,9 @@ Standard PDF-leser kan ikke endres i flyttbar modus
 Denied Permissions:
 Manglende tillatelser:
 
+DjVu documents
+DjVu-dokumenter
+
 Document Properties
 Dokumentegenskaper
 
@@ -249,6 +297,9 @@ Skriv inn passord for %s
 
 Enter the command-line to invoke when you double-click on the PDF document:
 Skriv inn kommandolinjen som skal kjøres når du dobbeltklikker på PDF-dokumentet:
+
+Error loading %s
+Feil under lasting %s
 
 F&orward\tAlt+Right Arrow
 Fremover\tAlt+Pil høyre
@@ -307,14 +358,29 @@ Tilpass bredde og vis sider kontinuerlig
 Fit a Single Page
 Tilpass til enkeltside
 
+Found text at page %d
+Fant tekst på side %d
+
+Found text at page %d (again)
+Fant tekst på side %d (igjen)
+
+Frequently Read
+Ofte leste
+
 GB
 GB
 
 Go to page
 Gå til side
 
+Hide frequently read
+Skjult ofte leste
+
 Hint: Use the F3 key for finding again
 Tips: Bruk F3 tasten for søk etter neste
+
+Image files (*.%s)
+Bildefiler (*.%s)
 
 KB
 KB
@@ -361,6 +427,9 @@ OK
 Open
 Åpne
 
+Open a document...
+Åpne et dokument...
+
 Open in &Adobe Reader
 Åpne i &Adobe Reader
 
@@ -369,6 +438,9 @@ Open in &Foxit Reader
 
 Open in PDF-XChange
 Åpne i PDF-XChange
+
+P&roperties
+E&genskaper
 
 P&roperties\tCtrl-D
 E&genskaper...\tCtrl-D
@@ -409,8 +481,17 @@ Pr&esentasjon\tCtrl-L
 Previous Page
 Forrige side
 
+Print
+Skriv ut
+
 Print range
 Utskriftsområde
+
+Printing is still in progress. Abort and start over?
+Utskriften pågår fortsatt. Avbryte og starte på nytt?
+
+Printing page %d of %d...
+Skriver ut side %d av %d...
 
 Printing problem.
 Problem med utskrift.
@@ -424,8 +505,14 @@ Roter mot klokken\tCtrl+Shift+Minus
 Rotate &Right\tCtrl-Shift-+
 Roter med klokken\tCtrl+Shift+Pluss
 
+Save S&hortcut...\tCtrl-Shift-S
+Lagre s&narvei...\tCtrl-Shift-S
+
 Searching %d of %d...
 Søker %d av %d...
+
+Select &All
+Merk &alt
 
 Select &All\tCtrl-A
 Merk &alle\tCtrl-A
@@ -445,11 +532,17 @@ Vis verktøylinje
 Show &pages continuously
 Vis sider kontinuerlig
 
+Show frequently read
+Vis ofte leste
+
 Show the &bookmarks sidebar when available
 Vis &bokmerker-fanen når tilgjengelig
 
 Single Page
 Enkeltside
+
+Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
+Beklager, men dette burde ikke ha skjedd!\n\nVennligst trykk 'Avbryt' hvis du ønsker å hjelpe oss med å fikse dette problemet.
 
 Source file %s has no synchronization point
 Kildefilen %s har ingen synkroniseringspunkt
@@ -481,14 +574,20 @@ Tekstdokumenter
 Title:
 Tittel:
 
+Unknown source file (%s)
+Ukjent kildefil (%s)
+
 View
 Vis
 
 Visit &Website
-&Besøk hjemmeside
+Åpne &hjemmesiden
 
 Warning
 Advarsel
+
+XPS documents
+XPS-dokumenter
 
 You have the latest version.
 Du har den siste versjonen.
@@ -516,39 +615,4 @@ kopierer tekst
 
 printing document
 skriver ut dokument
-
-# Untranslated:
-#&Book View\tCtrl-8
-#&Copy Selection
-#&Facing\tCtrl-7
-#&Open Document
-#&Pin Document
-#&Print...
-#&Remove Document
-#&Save As...
-#&Single Page\tCtrl-6
-#All supported documents
-#Bookmark Shortcuts
-#Bookmark shortcut to page %d of %s
-#Comic books
-#Copy &Link Address
-#Copy Co&mment
-#DjVu documents
-#Error loading %s
-#Found text at page %d
-#Found text at page %d (again)
-#Frequently Read
-#Hide frequently read
-#Image files (*.%s)
-#Open a document...
-#P&roperties
-#Print
-#Printing is still in progress. Abort and start over?
-#Printing page %d of %d...
-#Save S&hortcut...\tCtrl-Shift-S
-#Select &All
-#Show frequently read
-#Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
-#Unknown source file (%s)
-#XPS documents
 
