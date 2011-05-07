@@ -3847,7 +3847,7 @@ static void BrowseFolder(WindowInfo& win, bool forward)
 
     if (-1 == files.Find(win.loadedFilePath))
         files.Append(str::Dup(win.loadedFilePath));
-    files.Sort();
+    files.SortNatural();
 
     int index = files.Find(win.loadedFilePath);
     if (forward)

@@ -320,7 +320,7 @@ bool StressTest::OpenDir(const TCHAR *dirPath)
     pattern.Set(str::Format(_T("%s\\*.djvu"), dirPath));
     hasFiles |= CollectPathsFromDirectory(pattern, filesToOpen);
     // NTFS returns files sorted anyway, maybe an explicit randomization would be better, though
-    filesToOpen.Sort();
+    filesToOpen.SortNatural();
 
     pattern.Set(str::Format(_T("%s\\*"), dirPath));
     bool hasSubDirs = CollectPathsFromDirectory(pattern, dirsToVisit, true);

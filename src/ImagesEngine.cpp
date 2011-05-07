@@ -501,7 +501,7 @@ bool CImageDirEngine::LoadImageDir(const TCHAR *dirName)
 
     if (pageFileNames.Count() == 0)
         return false;
-    pageFileNames.Sort();
+    pageFileNames.SortNatural();
 
     pages.MakeSpaceAt(0, pageFileNames.Count());
     mediaboxes.MakeSpaceAt(0, pageFileNames.Count());
@@ -735,7 +735,7 @@ public:
     static int cmpPageByName(const void *o1, const void *o2) {
         ImagesPage *p1 = *(ImagesPage **)o1;
         ImagesPage *p2 = *(ImagesPage **)o2;
-        return str::CmpNatural(p1->fileName, p2->fileName);
+        return _tcscmp(p1->fileName, p2->fileName);
     }
 };
 

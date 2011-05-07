@@ -339,11 +339,16 @@ public:
         return Count() - start;
     }
 
-    void Sort() { Vec::Sort(cmpNatural); }
+    void Sort() { Vec::Sort(cmpAscii); }
+    void SortNatural() { Vec::Sort(cmpNatural); }
 
 private:
     static int cmpNatural(const void *a, const void *b) {
         return str::CmpNatural(*(const TCHAR **)a, *(const TCHAR **)b);
+    }
+
+    static int cmpAscii(const void *a, const void *b) {
+        return _tcscmp(*(const TCHAR **)a, *(const TCHAR **)b);
     }
 };
 
