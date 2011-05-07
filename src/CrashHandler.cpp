@@ -292,7 +292,8 @@ static bool InitializeDbgHelp()
     if (_SymInitializeW) {
         gSymInitializeOk = _SymInitializeW(GetCurrentProcess(), symPath, TRUE);
     } else {
-        ScopedMem<char> tmp(str::conv::ToAnsi(symPath));
+        ScopedMem<TCHAR> tstr(str::conv::FromWStr(symPath));
+        ScopedMem<char> tmp(str::conv::ToAnsi(tstr));
         if (tmp)
             gSymInitializeOk = _SymInitialize(GetCurrentProcess(), tmp, TRUE);
     }

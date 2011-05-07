@@ -129,7 +129,7 @@ bool WriteRegDWORD(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, DWOR
 bool CreateRegKey(HKEY keySub, const TCHAR *keyName)
 {
     HKEY hKey;
-    if (RegCreateKeyExW(keySub, keyName, 0, NULL, 0, KEY_WRITE, NULL, &hKey, NULL) != ERROR_SUCCESS)
+    if (RegCreateKeyEx(keySub, keyName, 0, NULL, 0, KEY_WRITE, NULL, &hKey, NULL) != ERROR_SUCCESS)
         return false;
     RegCloseKey(hKey);
     return true;

@@ -217,7 +217,7 @@ bool SaveRenderedBitmap(RenderedBitmap *bmp, const TCHAR *filePath)
     if (!gbmp)
         return false;
 
-    ScopedMem<TCHAR> filePathW(str::conv::ToWStr(filePath));
+    ScopedMem<WCHAR> filePathW(str::conv::ToWStr(filePath));
     Status status = gbmp->Save(filePathW, &encClsid);
     delete gbmp;
 

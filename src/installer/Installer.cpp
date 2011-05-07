@@ -19,6 +19,7 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include <Shlwapi.h>
 #include <objidl.h>
 #include <WinSafer.h>
+#include <io.h>
 
 #include <ioapi.h>
 #include <iowin32.h>
