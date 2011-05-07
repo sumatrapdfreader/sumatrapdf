@@ -540,7 +540,7 @@ Single Page
 Página única
 
 Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
-Desculpe, isso não deveria ter acontecido!\n\Aperte 'Cancelar' se quiser nos ajudar a corrigir a causa deste erro.
+Desculpe, isso não deveria ter acontecido!\n\nAperte 'Cancelar' se quiser nos ajudar a corrigir a causa deste erro.
 
 Source file %s has no synchronization point
 O arquivo fonte %s não tem ponto de sincronização

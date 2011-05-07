@@ -1081,7 +1081,7 @@ const char *gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "Mostrar Lidos com frequ\303\252ncia",
   "Mostrar barra lateral de marcadores quando dispon\303\255vel",
   "P\303\241gina \303\272nica",
-  "Desculpe, isso n\303\243o deveria ter acontecido!\n\Aperte 'Cancelar' se quiser nos ajudar a corrigir a causa deste erro.",
+  "Desculpe, isso n\303\243o deveria ter acontecido!\n\nAperte 'Cancelar' se quiser nos ajudar a corrigir a causa deste erro.",
   "O arquivo fonte %s n\303\243o tem ponto de sincroniza\303\247\303\243o",
   "Assunto:",
   "Op\303\247\303\265es do SumatraPDF",
