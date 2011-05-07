@@ -385,9 +385,6 @@ void StressTest::OnTimer()
     if (!win->dm)
         return;
 
-    // forbid entering sleep mode during tests
-    SetThreadExecutionState(ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED);
-
     BitmapCacheEntry *entry = renderCache->Find(win->dm, currPage, win->dm->rotation());
     if (!entry) {
         // not sure how reliable renderCache.Find() is, don't wait more than
@@ -437,6 +434,7 @@ bool StressTest::GoToNextFile()
 void StressTest::Finished(bool success)
 {
     win->stressTest = NULL;
+    SetThreadExecutionState(ES_CONTINUOUS);
 
     if (success) {
         int secs = SecsSinceSystemTime(stressStartTime);
@@ -461,6 +459,9 @@ void StressTest::Start(const TCHAR *path, int cycles)
 {
     srand((unsigned int)time(NULL));
     GetSystemTime(&stressStartTime);
+
+    // forbid entering sleep mode during tests
+    SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED);
 
     basePath = str::Dup(path);
     if (file::Exists(basePath))
