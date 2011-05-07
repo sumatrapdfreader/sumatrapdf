@@ -476,6 +476,8 @@ char *GetStressTestInfo(StressTest *dst)
 
 void StartStressTest(WindowInfo *win, const TCHAR *path, int cycles, RenderCache *renderCache)
 {
+    gPredictiveRender = false;
+
     // dst will be deleted when the stress ends
     StressTest *dst = new StressTest(win, renderCache);
     win->stressTest = dst;

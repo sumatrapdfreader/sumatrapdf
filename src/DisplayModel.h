@@ -16,6 +16,8 @@
 #define INVALID_PAGE_NO     -1
 #define INVALID_ROTATION    -1
 
+extern bool gPredictiveRender;
+
 struct ScreenPagePadding {
     // padding around the whole canvas
     int top, left;

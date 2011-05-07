@@ -45,9 +45,8 @@
 
 #include "DisplayModel.h"
 
-// define the following if you want the pages right before and after
-// the visible ones to be pre-rendered
-#define PREDICTIVE_RENDER 1
+// if true, we pre-render the pages right before and after the visible pages
+bool gPredictiveRender = true;
 
 ScreenPagePadding gPagePadding = {
     PADDING_PAGE_BORDER_TOP_DEF, PADDING_PAGE_BORDER_LEFT_DEF,
@@ -911,14 +910,14 @@ void DisplayModel::RenderVisibleParts()
         }
     }
 
-#ifdef PREDICTIVE_RENDER
-    // as a trade-off, we don't prerender two pages each in Facing
-    // and Book View modes (else 4 of 8 potential request slots would be taken)
-    if (lastVisible < pageCount())
-        _callback->RenderPage(lastVisible + 1);
-    if (firstVisible > 1)
-        _callback->RenderPage(firstVisible - 1);
-#endif
+    if (gPredictiveRender) {
+        // as a trade-off, we don't prerender two pages each in Facing
+        // and Book View modes (else 4 of 8 potential request slots would be taken)
+        if (lastVisible < pageCount())
+            _callback->RenderPage(lastVisible + 1);
+        if (firstVisible > 1)
+            _callback->RenderPage(firstVisible - 1);
+    }
 }
 
 void DisplayModel::ChangeViewPortSize(SizeI newViewPortSize)
