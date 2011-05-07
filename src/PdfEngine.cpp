@@ -1503,7 +1503,7 @@ unsigned char *CPdfEngine::GetFileData(size_t *cbCount)
 
 bool CPdfEngine::SaveEmbedded(fz_obj *obj, LinkSaverUI& saveUI)
 {
-    ScopedCritSec (&_xrefAccess);
+    ScopedCritSec scope(&_xrefAccess);
 
     fz_buffer *data = NULL;
     fz_error error = pdf_load_stream(&data, _xref, fz_to_num(obj), fz_to_gen(obj));

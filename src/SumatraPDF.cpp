@@ -3825,16 +3825,19 @@ static void OnMenuOpen(WindowInfo& win)
         ofn.Flags &= ~OFN_ENABLEHOOK;
         ofn.nMaxFile = MAX_PATH * 100;
     }
-    ScopedMem<TCHAR> file(SAZA(TCHAR, ofn.nMaxFile));
-    ofn.lpstrFile = file;
+    // note: ofn.lpstrFile can be reallocated elsewhere by GetOpenFileName -> FileOpenHook
+    ofn.lpstrFile = SAZA(TCHAR, ofn.nMaxFile);
 
-    if (!GetOpenFileName(&ofn))
+    if (!GetOpenFileName(&ofn)) {
+        free(ofn.lpstrFile);
         return;
+    }
 
     TCHAR *fileName = ofn.lpstrFile + ofn.nFileOffset;
     if (*(fileName - 1)) {
         // special case: single filename without NULL separator
         LoadDocument(ofn.lpstrFile, &win);
+        free(ofn.lpstrFile);
         return;
     }
 
@@ -3844,6 +3847,7 @@ static void OnMenuOpen(WindowInfo& win)
             LoadDocument(filePath, &win);
         fileName += str::Len(fileName) + 1;
     }
+    free(ofn.lpstrFile);
 }
 
 static void BrowseFolder(WindowInfo& win, bool forward)
