@@ -592,14 +592,12 @@ MenuDef menuDefContext[] = {
     { _TRN("P&roperties"),                  IDM_PROPERTIES,             MF_PLUGIN_MODE_ONLY },
 };
 
-#ifdef NEW_START_PAGE
 MenuDef menuDefContextStart[] = {
     { _TRN("&Open Document"),               IDM_OPEN_SELECTED_DOCUMENT, 0 },
     { _TRN("&Pin Document"),                IDM_PIN_SELECTED_DOCUMENT,  0 },
     { SEP_ITEM,                             0,                          0 },
     { _TRN("&Remove Document"),             IDM_FORGET_SELECTED_DOCUMENT, 0 },
 };
-#endif
 
 static void AddFileMenuItem(HMENU menuFile, const TCHAR *filePath, UINT index)
 {
@@ -995,12 +993,11 @@ static bool ReloadPrefs()
 
     gFileHistory.Clear();
     gFileHistory.ExtendWith(fileHistory);
-#ifdef NEW_START_PAGE
     if (gWindows.Count() > 0 && gWindows[0]->IsAboutWindow()) {
         gWindows[0]->DeleteInfotip();
         gWindows[0]->RedrawAll(true);
     }
-#endif
+
     // update the current language
     if (!str::Eq(currLang, gGlobalPrefs.m_currentLanguage)) {
         CurrLangNameSet(gGlobalPrefs.m_currentLanguage);
@@ -1017,7 +1014,6 @@ void QueueWorkItem(UIThreadWorkItem *wi)
     gUIThreadMarshaller.Queue(wi);
 }
 
-#ifdef NEW_START_PAGE
 class ThumbnailRenderingWorkItem : public UIThreadWorkItem, public RenderingCallback
 {
     const TCHAR *filePath;
@@ -1025,8 +1021,7 @@ class ThumbnailRenderingWorkItem : public UIThreadWorkItem, public RenderingCall
 
 public:
     ThumbnailRenderingWorkItem(WindowInfo *win, const TCHAR *filePath) :
-        UIThreadWorkItem(win), bmp(NULL) {
-        this->filePath = str::Dup(filePath);
+        UIThreadWorkItem(win), filePath(str::Dup(filePath)), bmp(NULL) {
     }
     ~ThumbnailRenderingWorkItem() {
         free((void *)filePath);
@@ -1074,7 +1069,6 @@ void CreateThumbnailForFile(WindowInfo& win, DisplayState& state)
     RenderingCallback *callback = new ThumbnailRenderingWorkItem(&win, win.loadedFilePath);
     gRenderCache.Render(win.dm, 1, 0, zoom, pageRect, *callback);
 }
-#endif
 
 void WindowInfo::Reload(bool autorefresh)
 {
@@ -1102,26 +1096,20 @@ void WindowInfo::Reload(bool autorefresh)
     if (!LoadDocIntoWindow(path, *this, &ds, false, tryRepair, true, false))
         return;
 
-#ifdef NEW_START_PAGE
     if (gGlobalPrefs.m_showStartPage) {
         // refresh the thumbnail for this file
         DisplayState *state = gFileHistory.Find(ds.filePath);
         if (state)
             CreateThumbnailForFile(*this, *state);
     }
-#endif
 
     // save a newly remembered password into file history so that
     // we don't ask again at the next refresh
-    char *decryptionKey = this->dm->engine->GetDecryptionKey();
+    ScopedMem<char> decryptionKey(this->dm->engine->GetDecryptionKey());
     if (decryptionKey) {
         DisplayState *state = gFileHistory.Find(ds.filePath);
-        if (state && !str::Eq(state->decryptionKey, decryptionKey)) {
-            free(state->decryptionKey);
-            state->decryptionKey = decryptionKey;
-        }
-        else
-            free(decryptionKey);
+        if (state && !str::Eq(state->decryptionKey, decryptionKey))
+            str::ReplacePtr(&state->decryptionKey, decryptionKey);
     }
 }
 
@@ -1535,10 +1523,9 @@ static bool LoadDocIntoWindow(
 
         win.tocShow = state->showToc;
         free(win.tocState);
+        win.tocState = NULL;
         if (state->tocState)
             win.tocState = (int *)memdup(state->tocState, (state->tocState[0] + 1) * sizeof(int));
-        else
-            win.tocState = NULL;
     }
     else {
         win.tocShow = gGlobalPrefs.m_showToc;
@@ -1713,10 +1700,8 @@ WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin, b
     if (gGlobalPrefs.m_rememberOpenedFiles) {
         assert(str::Eq(fullpath, win->loadedFilePath));
         gFileHistory.MarkFileLoaded(fullpath);
-#ifdef NEW_START_PAGE
         if (gGlobalPrefs.m_showStartPage)
             CreateThumbnailForFile(*win, *gFileHistory.Get(0));
-#endif
         SavePrefs();
     }
 
@@ -2455,7 +2440,6 @@ static bool OnInverseSearch(WindowInfo& win, int x, int y)
 
 static void OnAboutContextMenu(WindowInfo& win, int x, int y)
 {
-#ifdef NEW_START_PAGE
     if (gRestrictedUse || !gGlobalPrefs.m_rememberOpenedFiles || !gGlobalPrefs.m_showStartPage)
         return;
 
@@ -2494,7 +2478,6 @@ static void OnAboutContextMenu(WindowInfo& win, int x, int y)
         break;
     }
     DestroyMenu(popup);
-#endif
 }
 
 static void OnContextMenu(WindowInfo& win, int x, int y)
@@ -2740,7 +2723,6 @@ static void OnMouseLeftButtonUp(WindowInfo& win, int x, int y, WPARAM key)
     if (win.IsAboutWindow()) {
         const TCHAR *url = GetStaticLink(win.staticLinks, x, y);
         if (url && url == win.url) {
-#ifdef NEW_START_PAGE
             if (str::Eq(url, SLINK_OPEN_FILE))
                 SendMessage(win.hwndFrame, WM_COMMAND, IDM_OPEN, 0);
             else if (str::Eq(url, SLINK_LIST_HIDE)) {
@@ -2753,7 +2735,6 @@ static void OnMouseLeftButtonUp(WindowInfo& win, int x, int y, WPARAM key)
                        !str::StartsWithI(url, _T("https:")))
                 LoadDocument(url, &win);
             else
-#endif
                 LaunchBrowser(url);
         }
         win.url = NULL;
@@ -3032,8 +3013,7 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
         win->AbortFinding(true);
         delete win->dm;
         win->dm = NULL;
-        free(win->loadedFilePath);
-        win->loadedFilePath = NULL;
+        str::ReplacePtr(&win->loadedFilePath, NULL);
         delete win->pdfsync;
         win->pdfsync = NULL;
         win->messages->CleanUp(NG_RESPONSE_TO_ACTION);
@@ -3642,13 +3622,11 @@ static void OnMenuSaveAs(WindowInfo& win)
     // Recreate inexistant PDF files from memory...
     else if (!file::Exists(srcFileName)) {
         size_t dataLen;
-        unsigned char *data = win.dm->engine->GetFileData(&dataLen);
-        if (data) {
+        ScopedMem<unsigned char> data(win.dm->engine->GetFileData(&dataLen));
+        if (data)
             file::WriteAll(realDstFileName, data, dataLen);
-            free(data);
-        } else {
+        else
             MessageBox(win.hwndFrame, _TR("Failed to save a file"), _TR("Warning"), MB_OK | MB_ICONEXCLAMATION);
-        }
     }
     // ... else just copy the file
     else {
@@ -3998,10 +3976,8 @@ static void OnMenuChangeLanguage(WindowInfo& win)
         CurrLangNameSet(langName);
         RebuildMenuBar();
         UpdateToolbarToolText();
-#ifdef NEW_START_PAGE
         if (gWindows.Count() > 0 && gWindows[0]->IsAboutWindow())
             gWindows[0]->RedrawAll(true);
-#endif
         SavePrefs();
     }
 }
@@ -4021,14 +3997,10 @@ static void OnMenuSettings(WindowInfo& win)
 
     if (!gGlobalPrefs.m_rememberOpenedFiles) {
         gFileHistory.Clear();
-#ifdef NEW_START_PAGE
         CleanUpThumbnailCache(gFileHistory);
-#endif
     }
-#ifdef NEW_START_PAGE
     if (gWindows.Count() > 0 && gWindows[0]->IsAboutWindow())
         gWindows[0]->RedrawAll(true);
-#endif
 
     SavePrefs();
 }
@@ -5545,10 +5517,9 @@ static HTREEITEM AddTocItemToView(HWND hwnd, DocToCItem *entry, HTREEITEM parent
 
 #ifdef DISPLAY_TOC_PAGE_NUMBERS
     if (entry->pageNo) {
-        tvinsert.itemex.pszText = str::Format(_T("%s  %d"), entry->title, entry->pageNo);
-        HTREEITEM hItem = TreeView_InsertItem(hwnd, &tvinsert);
-        free(tvinsert.itemex.pszText);
-        return hItem;
+        ScopedMem<TCHAR> text(str::Format(_T("%s  %d"), entry->title, entry->pageNo));
+        tvinsert.itemex.pszText = text;
+        return TreeView_InsertItem(hwnd, &tvinsert);
     }
 #endif
     return TreeView_InsertItem(hwnd, &tvinsert);
@@ -6797,9 +6768,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     DebugGdiPlusDevice(gUseGdiRenderer);
 
     if (i.inverseSearchCmdLine) {
-        free(gGlobalPrefs.m_inverseSearchCmdLine);
-        gGlobalPrefs.m_inverseSearchCmdLine = i.inverseSearchCmdLine;
-        i.inverseSearchCmdLine = NULL;
+        str::ReplacePtr(&gGlobalPrefs.m_inverseSearchCmdLine, i.inverseSearchCmdLine);
         gGlobalPrefs.m_enableTeXEnhancements = true;
     }
     CurrLangNameSet(i.lang);
@@ -6974,9 +6943,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     KillTimer(NULL, timerID);
 #endif
 
-#ifdef NEW_START_PAGE
     CleanUpThumbnailCache(gFileHistory);
-#endif
 
 Exit:
     while (gWindows.Count() > 0)
