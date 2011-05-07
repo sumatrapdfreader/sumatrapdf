@@ -3761,6 +3761,7 @@ static void OnMenuSaveBookmark(WindowInfo& win)
     CreateShortcut(filename, exePath, args, desc, 1);
 }
 
+#if 0
 // code adapted from http://support.microsoft.com/kb/131462/en-us
 static UINT_PTR CALLBACK FileOpenHook(HWND hDlg, UINT uiMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -3787,7 +3788,8 @@ static UINT_PTR CALLBACK FileOpenHook(HWND hDlg, UINT uiMsg, WPARAM wParam, LPAR
     }
 
     return 0;
-} 
+}
+#endif
 
 static void OnMenuOpen(WindowInfo& win)
 {
@@ -3803,7 +3805,7 @@ static void OnMenuOpen(WindowInfo& win)
         _TR("All supported documents"), _TR("PDF documents"), _TR("XPS documents"), _TR("DjVu documents"), _TR("Comic books"), _TR("All files")));
     str::TransChars(fileFilter, _T("\1"), _T("\0"));
 
-    OPENFILENAME ofn = {0};
+    OPENFILENAME ofn = { 0 };
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = win.hwndFrame;
 
@@ -3812,32 +3814,33 @@ static void OnMenuOpen(WindowInfo& win)
     ofn.lpstrFileTitle = NULL;
     ofn.nMaxFileTitle = 0;
     ofn.lpstrInitialDir = NULL;
-    ofn.lpfnHook = FileOpenHook;
     ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY |
-                OFN_ALLOWMULTISELECT | OFN_EXPLORER | OFN_ENABLEHOOK;
+                OFN_ALLOWMULTISELECT | OFN_EXPLORER;
 
-    ofn.nMaxFile = MAX_PATH / 2;
-    if (WindowsVerVistaOrGreater()) {
-        // OFN_ENABLEHOOK disables the new Open File dialog under Windows Vista
-        // and later, so don't use it and just allocate enough memory to contain
-        // several dozen file paths and hope that this is enough
-        // TODO: Use IFileOpenDialog instead (requires a Vista SDK, though)
-        ofn.Flags &= ~OFN_ENABLEHOOK;
-        ofn.nMaxFile = MAX_PATH * 100;
+    // OFN_ENABLEHOOK disables the new Open File dialog under Windows Vista
+    // and later, so don't use it and just allocate enough memory to contain
+    // several dozen file paths and hope that this is enough
+    // TODO: Use IFileOpenDialog instead (requires a Vista SDK, though)
+    ofn.nMaxFile = MAX_PATH * 100;
+#if 0
+    if (!WindowsVerVistaOrGreater())
+    {
+        ofn.lpfnHook = FileOpenHook;
+        ofn.Flags |= OFN_ENABLEHOOK;
+        ofn.nMaxFile = MAX_PATH / 2;
     }
-    // note: ofn.lpstrFile can be reallocated elsewhere by GetOpenFileName -> FileOpenHook
-    ofn.lpstrFile = SAZA(TCHAR, ofn.nMaxFile);
+    // note: ofn.lpstrFile can be reallocated by GetOpenFileName -> FileOpenHook
+#endif
+    ScopedMem<TCHAR> file(SAZA(TCHAR, ofn.nMaxFile));
+    ofn.lpstrFile = file;
 
-    if (!GetOpenFileName(&ofn)) {
-        free(ofn.lpstrFile);
+    if (!GetOpenFileName(&ofn))
         return;
-    }
 
     TCHAR *fileName = ofn.lpstrFile + ofn.nFileOffset;
     if (*(fileName - 1)) {
         // special case: single filename without NULL separator
         LoadDocument(ofn.lpstrFile, &win);
-        free(ofn.lpstrFile);
         return;
     }
 
@@ -3847,7 +3850,6 @@ static void OnMenuOpen(WindowInfo& win)
             LoadDocument(filePath, &win);
         fileName += str::Len(fileName) + 1;
     }
-    free(ofn.lpstrFile);
 }
 
 static void BrowseFolder(WindowInfo& win, bool forward)
