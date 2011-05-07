@@ -4483,7 +4483,8 @@ static void OnChar(WindowInfo& win, WPARAM key)
             ClearSearchResult(win);
         return;
     case 'q':
-        DestroyWindow(win.hwndFrame);
+        if (!gPluginMode)
+            DestroyWindow(win.hwndFrame);
         return;
     case 'r':
         win.Reload();
@@ -6820,6 +6821,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         i.reuseInstance = i.exitOnPrint = false;
         // always display the toolbar when embedded (as there's no menubar in that case)
         gGlobalPrefs.m_showToolbar = true;
+        // never allow esc as a shortcut to quit
+        gGlobalPrefs.m_escToExit = false;
     }
 
     WindowInfo *win = NULL;
