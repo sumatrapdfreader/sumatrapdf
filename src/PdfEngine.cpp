@@ -588,6 +588,7 @@ protected:
     int             FindPageNo(fz_obj *dest);
     bool            SaveEmbedded(fz_obj *obj, LinkSaverUI& saveUI);
 
+    RectD         * _mediaboxes;
     pdf_outline   * _outline;
     pdf_outline   * _attachments;
     fz_obj        * _info;
@@ -656,15 +657,9 @@ public:
     virtual PageDestination *GetLink() { return &link; }
 };
 
-CPdfEngine::CPdfEngine() : 
-        _fileName(NULL)
-        , _xref(NULL)
-        , _outline(NULL)
-        , _attachments(NULL)
-        , _info(NULL)
-        , _pages(NULL)
-        , _drawcache(NULL)
-        , _decryptionKey(NULL)
+CPdfEngine::CPdfEngine() : _fileName(NULL), _xref(NULL), _mediaboxes(NULL),
+    _outline(NULL), _attachments(NULL), _info(NULL), _pages(NULL),
+    _drawcache(NULL), _decryptionKey(NULL)
 {
     InitializeCriticalSection(&_pagesAccess);
     InitializeCriticalSection(&_xrefAccess);
@@ -684,6 +679,8 @@ CPdfEngine::~CPdfEngine()
         free(_pages);
     }
 
+    if (_mediaboxes)
+        delete[] _mediaboxes;
     if (_outline)
         pdf_free_outline(_outline);
     if (_attachments)
@@ -886,6 +883,7 @@ bool CPdfEngine::finishLoading()
         return false;
 
     _pages = SAZA(pdf_page *, PageCount());
+    _mediaboxes = new RectD[PageCount()];
 
     EnterCriticalSection(&_xrefAccess);
     _outline = pdf_load_outline(_xref);
@@ -1094,13 +1092,20 @@ void CPdfEngine::dropPageRun(PdfPageRun *run, bool forceRemove)
 
 int CPdfEngine::PageRotation(int pageNo)
 {
-    ScopedCritSec scope(&_xrefAccess);
-
     assert(1 <= pageNo && pageNo <= PageCount());
     fz_obj *page = _xref->page_objs[pageNo-1];
     if (!page)
         return 0;
-    int rotation = fz_to_int(fz_dict_gets(page, "Rotate"));
+
+    int rotation;
+    // use a lock, if indirect references are involved, else don't block for speed
+    if (fz_is_indirect(page) || fz_is_indirect(fz_dict_gets(page, "Rotate"))) {
+        ScopedCritSec scope(&_xrefAccess);
+        rotation = fz_to_int(fz_dict_gets(page, "Rotate"));
+    }
+    else
+        rotation = fz_to_int(fz_dict_gets(page, "Rotate"));
+
     if ((rotation % 90) != 0)
         return 0;
     return rotation;
@@ -1109,6 +1114,9 @@ int CPdfEngine::PageRotation(int pageNo)
 RectD CPdfEngine::PageMediabox(int pageNo)
 {
     assert(1 <= pageNo && pageNo <= PageCount());
+    if (!_mediaboxes[pageNo-1].IsEmpty())
+        return _mediaboxes[pageNo-1];
+
     fz_obj *page = _xref->page_objs[pageNo-1];
     if (!page)
         return RectD();
@@ -1131,7 +1139,9 @@ RectD CPdfEngine::PageMediabox(int pageNo)
 
     if (mbox.IsEmpty())
         return RectD();
-    return mbox.Convert<double>();
+
+    _mediaboxes[pageNo-1] = mbox.Convert<double>();
+    return _mediaboxes[pageNo-1];
 }
 
 RectD CPdfEngine::PageContentBox(int pageNo, RenderTarget target)
@@ -1184,17 +1194,12 @@ fz_matrix CPdfEngine::viewctm(pdf_page *page, float zoom, int rotation)
 
 fz_matrix CPdfEngine::viewctm(int pageNo, float zoom, int rotation)
 {
-    fz_obj *page = _xref->page_objs[pageNo-1];
-    RectD mediabox = PageMediabox(pageNo);
-    if (!page || mediabox.IsEmpty())
-        return fz_identity;
-
-    ScopedCritSec scope(&_xrefAccess);
-
     pdf_page partialPage;
-    partialPage.mediabox = fz_RectD_to_rect(mediabox);
-    partialPage.rotate = fz_to_int(fz_dict_gets(page, "Rotate"));
+    partialPage.mediabox = fz_RectD_to_rect(PageMediabox(pageNo));
+    partialPage.rotate = PageRotation(pageNo);
 
+    if (fz_is_empty_rect(partialPage.mediabox))
+        return fz_identity;
     return viewctm(&partialPage, zoom, rotation);
 }
 
