@@ -353,6 +353,8 @@ bool StressTest::OpenFile(const TCHAR *fileName)
         win = w;
         CloseWindow(toClose, false);
     }
+    if (!win->dm)
+        return false;
 
     win->dm->changeDisplayMode(DM_CONTINUOUS);
     win->dm->zoomTo(ZOOM_FIT_PAGE);
