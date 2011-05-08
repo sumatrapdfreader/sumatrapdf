@@ -2065,7 +2065,7 @@ static void PaintForwardSearchMark(WindowInfo& win, HDC hdc) {
 #ifdef DRAW_PAGE_SHADOWS
 #define BORDER_SIZE   1
 #define SHADOW_OFFSET 4
-static void PaintPageFrameAndShadow(HDC hdc, PageInfo * pageInfo, bool presentation, RectI& bounds)
+static void PaintPageFrameAndShadow(HDC hdc, RectI& bounds, RectI& pageRect, bool presentation)
 {
     // Frame info
     RectI frame = bounds;
@@ -2076,12 +2076,12 @@ static void PaintPageFrameAndShadow(HDC hdc, PageInfo * pageInfo, bool presentat
     shadow.Offset(SHADOW_OFFSET, SHADOW_OFFSET);
     if (frame.x < 0) {
         // the left of the page isn't visible, so start the shadow at the left
-        int diff = min(pageInfo->bitmap.x, SHADOW_OFFSET);
+        int diff = min(-pageRect.x, SHADOW_OFFSET);
         shadow.x -= diff; shadow.dx += diff;
     }
     if (frame.y < 0) {
         // the top of the page isn't visible, so start the shadow at the top
-        int diff = min(pageInfo->bitmap.y, SHADOW_OFFSET);
+        int diff = min(-pageRect.y, SHADOW_OFFSET);
         shadow.y -= diff; shadow.dy += diff;
     }
 
@@ -2097,7 +2097,7 @@ static void PaintPageFrameAndShadow(HDC hdc, PageInfo * pageInfo, bool presentat
     DeletePen(pe);
 }
 #else
-static void PaintPageFrameAndShadow(HDC hdc, PageInfo *pageInfo, bool presentation, RectI& bounds)
+static void PaintPageFrameAndShadow(HDC hdc, RectI& bounds, RectI& pageRect, bool presentation)
 {
     RectI frame = bounds;
 
@@ -2184,7 +2184,7 @@ static void DrawDocument(WindowInfo& win, HDC hdc, RECT *rcArea)
             continue;
 
         RectI bounds = pageInfo->pageOnScreen.Intersect(screen);
-        PaintPageFrameAndShadow(hdc, pageInfo, paintOnBlackWithoutShadow, bounds);
+        PaintPageFrameAndShadow(hdc, bounds, pageInfo->pageOnScreen, paintOnBlackWithoutShadow);
 
         bool renderOutOfDateCue = false;
         UINT renderDelay = 0;
