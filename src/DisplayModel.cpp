@@ -1351,10 +1351,8 @@ bool DisplayModel::ShowResultRectToScreen(TextSel *res)
         sy = extremes.y - viewPort.dy + 5;
     // scroll up to make bottom side of selection visible
     // (if selection height fits in visible area)
-    if (extremes.y + extremes.dy > viewPort.dy
-        && extremes.dy <= viewPort.dy + 5) {
+    if (extremes.y + extremes.dy > viewPort.dy && extremes.dy <= viewPort.dy + 5)
         sy = extremes.y + extremes.dy - viewPort.dy + 5;
-    }
 
     // scroll left to make left side of selection visible
     if (extremes.x < 0)
@@ -1364,10 +1362,8 @@ bool DisplayModel::ShowResultRectToScreen(TextSel *res)
         sx = extremes.x - viewPort.dx + 5;
     // scroll left to make right side of selection visible
     // (if selection width fits in visible area)
-    if (extremes.x + extremes.dx > viewPort.dx
-        && extremes.dx <= viewPort.dx - 5) {
+    if (extremes.x + extremes.dx > viewPort.dx && extremes.dx <= viewPort.dx - 5)
         sx = extremes.x + extremes.dx - viewPort.dx + 5;
-    }
 
     if (sx != 0)
         scrollXBy(sx);

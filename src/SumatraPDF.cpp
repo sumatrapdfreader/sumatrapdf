@@ -4767,7 +4767,9 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, L
 static void ShowSearchResult(WindowInfo& win, TextSel *result, bool addNavPt)
 {
     assert(result->len > 0);
-    win.dm->goToPage(result->pages[0], 0, addNavPt);
+    if (addNavPt || !win.dm->pageShown(result->pages[0]) ||
+        (win.dm->zoomVirtual() == ZOOM_FIT_PAGE || win.dm->zoomVirtual() == ZOOM_FIT_CONTENT))
+        win.dm->goToPage(result->pages[0], 0, addNavPt);
 
     TextSelection *sel = win.dm->textSelection;
     sel->Reset();
