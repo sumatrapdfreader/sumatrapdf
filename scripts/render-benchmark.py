@@ -1,10 +1,33 @@
 """
-Takes files containing output from SumatraPDF.exe's -bench command and
-summarizes the data in tabular form, calculating average load and render
-times over several runs for the same file(s).
+Runs a loading and rendering benchmark for a given number of files
+(10 times each).
+
+Note: If SumatraPDF.exe can't be found in the path, pass a path to
+      it as the first argument.
+
+render-benchmark.py obj-dbg\SumatraPDF.exe file1.pdf file2.xps
 """
 
 import os, re, sys
+import tempfile, subprocess
+
+def log(str):
+	sys.stderr.write(str + "\n")
+
+def getTempFile():
+	file = tempfile.NamedTemporaryFile(delete=False)
+	name = file.name
+	file.close()
+	return name
+
+def runBenchmark(SumatraPDF, file, logfile, repeats):
+	try:
+		log("-> %s (%d times)" % (file, repeats))
+		subprocess.call([SumatraPDF, "-console-file", logfile] + ["-bench", file] * repeats)
+		return True
+	except WindowsError:
+		print SumatraPDF, "not found!"
+		return False
 
 def matchLine(line, regex, result=None):
 	match = re.findall(regex, line)
@@ -14,8 +37,10 @@ def matchLine(line, regex, result=None):
 		result.extend(match[0])
 	return match
 
-def parseBenchOutput(file, result):
+def parseBenchOutput(file):
+	result = {}
 	current, data = None, []
+	
 	for line in open(file).xreadlines():
 		match = []
 		if matchLine(line, r"Starting: (.*)", match):
@@ -47,9 +72,11 @@ def parseBenchOutput(file, result):
 			data[0] = (data[0][0], float(match[0]))
 			result[current].append(data)
 			current, data = None, []
+	
+	return result
 
 def displayBenchResults(result):
-	print "Filename\tRuns\tLoad time (in ms)\tRender time (in ms)"
+	print "Filename\tLoad time (in ms)\tRender time (in ms)\tRuns"
 	for (file, data) in result.items():
 		count = len(data)
 		
@@ -59,17 +86,27 @@ def displayBenchResults(result):
 		rendering = [item[0][1] for item in data]
 		renderMin = min(rendering)
 		
-		print "%(file)s\t%(count)d\t%(loadMin).2f\t%(renderMin).2f " % locals()
+		print "%(file)s\t%(loadMin).2f\t%(renderMin).2f\t%(count)d" % locals()
 
 def main():
 	if not sys.argv[1:]:
-		print "Usage: %s <bench1.log> [<bench2.log> ...]" % (os.path.split(sys.argv[0])[1])
+		print "Usage: %s [<SumatraPDF.exe>] <file1.pdf> [<file2.pdf> ...]" % (os.path.split(sys.argv[0])[1])
 		sys.exit(0)
 	
-	result = { }
+	if sys.argv[1].lower().endswith(".exe"):
+		SumatraPDF = sys.argv.pop(1)
+	else:
+		SumatraPDF = "SumatraPDF.exe"
+	
+	log("Running benchmark with %s..." % SumatraPDF)
+	logfile = getTempFile()
 	for file in sys.argv[1:]:
-		parseBenchOutput(file, result)
-	displayBenchResults(result)
+		if not runBenchmark(SumatraPDF, file, logfile, 10):
+			os.remove(logfile)
+			return
+	log("")
+	displayBenchResults(parseBenchOutput(logfile))
+	os.remove(logfile)
 
 if __name__ == "__main__":
 	main()

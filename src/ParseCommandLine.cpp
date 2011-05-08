@@ -234,6 +234,11 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
         }
         else if (is_arg("-console")) {
             showConsole = true;
+            str::ReplacePtr(&consoleFile, NULL);
+        }
+        else if (is_arg_with_param("-console-file")) {
+            showConsole = false;
+            str::ReplacePtr(&consoleFile, argList[++n]);
         }
         else if (is_arg_with_param("-plugin")) {
             // the argument is a (nummeric) window handle to

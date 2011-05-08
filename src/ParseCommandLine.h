@@ -39,6 +39,7 @@ public:
     float       startZoom;
     PointI      startScroll;
     bool        showConsole;
+    TCHAR *     consoleFile;
     HWND        hwndPluginParent;
     bool        exitImmediately;
     bool        silent;
@@ -55,7 +56,8 @@ public:
         enterPresentation(false), enterFullscreen(false), hwndPluginParent(NULL),
         startView(DM_AUTOMATIC), startZoom(INVALID_ZOOM), startScroll(PointI(-1, -1)),
         showConsole(false), exitImmediately(false), silent(false),
-        stressTestPath(NULL), stressTestRanges(NULL), stressTestCycles(1)
+        stressTestPath(NULL), stressTestRanges(NULL), stressTestCycles(1),
+        consoleFile(NULL)
     { }
 
     ~CommandLineInfo() {
@@ -65,6 +67,7 @@ public:
         free(destName);
         free(stressTestPath);
         free(stressTestRanges);
+        free(consoleFile);
     }
 
     void ParseCommandLine(TCHAR *cmdLine);

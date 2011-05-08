@@ -195,19 +195,32 @@ void RedirectIOToConsole()
     SetConsoleScreenBufferSize(GetStdHandle(STD_OUTPUT_HANDLE), coninfo.dwSize);
 
     // redirect unbuffered STDOUT to the console
-    hConHandle = _open_osfhandle((long)GetStdHandle(STD_OUTPUT_HANDLE), _O_TEXT);
+    hConHandle = _open_osfhandle((intptr_t)GetStdHandle(STD_OUTPUT_HANDLE), _O_TEXT);
     *stdout = *(FILE *)_fdopen(hConHandle, "w");
     setvbuf(stdout, NULL, _IONBF, 0);
 
     // redirect unbuffered STDERR to the console
-    hConHandle = _open_osfhandle((long)GetStdHandle(STD_ERROR_HANDLE), _O_TEXT);
+    hConHandle = _open_osfhandle((intptr_t)GetStdHandle(STD_ERROR_HANDLE), _O_TEXT);
     *stderr = *(FILE *)_fdopen(hConHandle, "w");
     setvbuf(stderr, NULL, _IONBF, 0);
 
     // redirect unbuffered STDIN to the console
-    hConHandle = _open_osfhandle((long)GetStdHandle(STD_INPUT_HANDLE), _O_TEXT);
+    hConHandle = _open_osfhandle((intptr_t)GetStdHandle(STD_INPUT_HANDLE), _O_TEXT);
     *stdin = *(FILE *)_fdopen(hConHandle, "r");
     setvbuf(stdin, NULL, _IONBF, 0);
+}
+
+void RedirectIOToFile(const TCHAR *path, bool append)
+{
+    FILE *file = _tfopen(path, append ? _T("a") : _T("w"));
+    if (!file)
+        return;
+
+    *stdout = *file;
+    setvbuf(stdout, NULL, _IONBF, 0);
+
+    *stderr = *file;
+    setvbuf(stderr, NULL, _IONBF, 0);
 }
 
 TCHAR *ResolveLnk(const TCHAR * path)

@@ -6769,11 +6769,12 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
     if (i.showConsole)
         RedirectIOToConsole();
+    else if (i.consoleFile)
+        RedirectIOToFile(i.consoleFile, true);
     if (i.makeDefault)
         AssociateExeWithPdfExtension();
     if (i.filesToBenchmark.Count() > 0) {
         Bench(i.filesToBenchmark);
-        // TODO: allow to redirect stdout/stderr to file
         if (i.showConsole)
             system("pause");
     }
