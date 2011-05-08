@@ -5,15 +5,15 @@
 
 class MappedFile {
 
-    HANDLE      hFile;
-    HANDLE      hMapping;
+    HANDLE hFile;
+    HANDLE hMapping;
 
     MappedFile() : hFile(NULL), hMapping(NULL), data(NULL)
     {}
 
 public:
-    unsigned char *  data;
-    size_t           size;
+    unsigned char * data;
+    size_t size;
 
     static MappedFile *Create(const TCHAR *filePath);
     ~MappedFile() {
@@ -51,6 +51,19 @@ Error:
 
 #define InFilePtr(type, offset) (type*)(mf->data + offset)
 
+bool IsValidSecondHdr(IMAGE_NT_HEADERS *hdr)
+{
+    if (IMAGE_NT_SIGNATURE != hdr->Signature)
+        return false;
+
+    // IMAGE_NT_HEADERS are slightly different for 32bit and 64bit,
+    // we only support 32bit executables
+    if (IMAGE_FILE_MACHINE_I386 != hdr->FileHeader.Machine)
+        return false;
+
+    return true;
+}
+
 // Write dstFile as srcFile with all binary data resources (RCDATA)
 // removed. Used for creating uninstaller from installer.
 bool RemoveDataResource(const TCHAR *srcFile, const TCHAR *dstFile)
@@ -58,6 +71,7 @@ bool RemoveDataResource(const TCHAR *srcFile, const TCHAR *dstFile)
     MappedFile *mf = MappedFile::Create(srcFile);
     if (!mf)
         return false;
+
     if (mf->size < sizeof(IMAGE_DOS_HEADER))
         goto Error;
 
@@ -72,15 +86,13 @@ bool RemoveDataResource(const TCHAR *srcFile, const TCHAR *dstFile)
         goto Error;
 
     IMAGE_NT_HEADERS *secondHdr = InFilePtr(IMAGE_NT_HEADERS, dosHdr->e_lfanew);
-    if (IMAGE_NT_SIGNATURE != secondHdr->Signature)
+    if (!IsValidSecondHdr(secondHdr))
         goto Error;
 
-    // IMAGE_NT_HEADERS are slightly different for 32bit and 64bit,
-    // we only support 32bit executables
-    if (IMAGE_FILE_MACHINE_I386 != secondHdr->FileHeader.Machine)
-        goto Error;
+    delete mf;
+    return true;
+
 Error:
     delete mf;
     return false;
 }
-

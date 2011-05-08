@@ -242,12 +242,13 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
             hwndPluginParent = (HWND)_ttol(argList[++n]);
         }
         else if (is_arg_with_param("-stress-test")) {
-            // -stress-test <file or dir path> [<cycle count>x]
-            // e.g. -stress-test file.pdf 25x   for rendering file.pdf 25 times
+            // -stress-test <file or dir path> [<cycle count or skip count>]
+            // e.g. -stress-test file.pdf 25   for rendering file.pdf 25 times
+            //      -stress-test dir 300       render all files in dir, skipping first 300
             str::ReplacePtr(&stressTestPath, argList[++n]);
-            int cycles;
-            if (has_second_param() && str::Parse(second_param(), _T("%dx%$"), &cycles) && cycles > 0) {
-                stressTestCycles = cycles;
+            int num;
+            if (has_second_param() && str::Parse(second_param(), _T("%d"), &num) && num > 0) {
+                stressTestCyclesOrSkips = num;
                 n++;
             }
         }
