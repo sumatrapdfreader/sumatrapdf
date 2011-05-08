@@ -560,6 +560,7 @@ ipini-print ang dokumento
 #Hide frequently read
 #Image files (*.%s)
 #Open a document...
+#Postscript documents
 #Print
 #Printing is still in progress. Abort and start over?
 #Printing page %d of %d...

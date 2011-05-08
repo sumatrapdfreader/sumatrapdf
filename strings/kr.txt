@@ -486,6 +486,7 @@ printing document
 #No synchronization info at this position
 #Open a document...
 #P&roperties
+#Postscript documents
 #Pr&esentation\tCtrl-L
 #Print
 #Printing is still in progress. Abort and start over?

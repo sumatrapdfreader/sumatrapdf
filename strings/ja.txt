@@ -539,6 +539,7 @@ printing document
 #No result found around line %u in file %s
 #Open a document...
 #P&roperties
+#Postscript documents
 #Print
 #Printing is still in progress. Abort and start over?
 #Printing page %d of %d...

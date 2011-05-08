@@ -202,6 +202,7 @@ DisplayModel::DisplayModel(DisplayModelCallback *callback, DisplayMode displayMo
     cbxEngine = NULL;
     imageEngine = NULL;
     imageDirEngine = NULL;
+    psEngine = NULL;
 
     textSelection = NULL;
     textSearch = NULL;
@@ -250,6 +251,8 @@ RetryCheck:
         engine = imageEngine = ImageEngine::CreateFromFileName(fileName);
     else if (ImageDirEngine::IsSupportedFile(fileName, sniff))
         engine = imageDirEngine = ImageDirEngine::CreateFromFileName(fileName);
+    else if (PsEngine::IsSupportedFile(fileName, sniff))
+        engine = psEngine = PsEngine::CreateFromFileName(fileName);
     if (!engine) {
         // try sniffing the file instead
         if (!sniff) {

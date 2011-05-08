@@ -3570,6 +3570,8 @@ static void OnMenuSaveAs(WindowInfo& win)
         fileFilter.Append(_TR("Comic books"));
     else if (win.dm->imageEngine)
         fileFilter.AppendFmt(_TR("Image files (*.%s)"), defExt + 1);
+    else if (win.dm->psEngine)
+        fileFilter.AppendFmt(_TR("Postscript documents"));
     else
         fileFilter.Append(_TR("PDF documents"));
     fileFilter.AppendFmt(_T("\1*%s\1"), defExt);
@@ -3776,18 +3778,42 @@ static void OnMenuOpen(WindowInfo& win)
     if (gPluginMode)
         return;
 
+    struct {
+        const TCHAR *name;
+        TCHAR *filter;
+        bool available;
+    } fileFormats[] = {
+        { _TR("PDF documents"),         _T("*.pdf"),        true },
+        { _TR("XPS documents"),         _T("*.xps"),        true },
+        { _TR("DjVu documents"),        _T("*.djvu"),       true },
+        { _TR("Postscript documents"),  _T("*.ps"),         PsEngine::IsAvailable() },
+        { _TR("Comic books"),           _T("*.cbz;*.cbr"),  true },
+    };
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling
     // methods too early on)
-    ScopedMem<TCHAR> fileFilter(str::Format(_T("%s\1*.pdf;*.xps;*.djvu;*.cbz;*.cbr\1%s\1*.pdf\1%s\1*.xps\1%s\1*.djvu\1%s\1*.cbz;*.cbr\1%s\1*.*\1"),
-        _TR("All supported documents"), _TR("PDF documents"), _TR("XPS documents"), _TR("DjVu documents"), _TR("Comic books"), _TR("All files")));
-    str::TransChars(fileFilter, _T("\1"), _T("\0"));
+    str::Str<TCHAR> fileFilter;
+    StrVec filters;
+    for (int i = 0; i < dimof(fileFormats); i++)
+        if (fileFormats[i].available)
+            filters.Append(fileFormats[i].filter);
+    fileFilter.Append(_TR("All supported documents"));
+    fileFilter.Append('\1');
+    fileFilter.AppendAndFree(filters.Join(_T(";")));
+    fileFilter.Append('\1');
+    filters.Reset();
+
+    for (int i = 0; i < dimof(fileFormats); i++)
+        if (fileFormats[i].available)
+            fileFilter.AppendAndFree(str::Format(_T("%s\1%s\1"), fileFormats[i].name, fileFormats[i].filter));
+    fileFilter.AppendAndFree(str::Format(_T("%s\1*.*\1"), _TR("All files")));
+    str::TransChars(fileFilter.Get(), _T("\1"), _T("\0"));
 
     OPENFILENAME ofn = { 0 };
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = win.hwndFrame;
 
-    ofn.lpstrFilter = fileFilter;
+    ofn.lpstrFilter = fileFilter.Get();
     ofn.nFilterIndex = 1;
     ofn.lpstrFileTitle = NULL;
     ofn.nMaxFileTitle = 0;
@@ -6557,8 +6583,29 @@ static bool PrintFile(const TCHAR *fileName, const TCHAR *printerName, bool disp
     DWORD       structSize, returnCode;
     bool        ok = false;
 
+    // TODO: move engine detection elsewhere (cf. DisplayModel::Load)
+    BaseEngine *engine = NULL;
+    bool sniff = false;
+RetrySniffing:
     ScopedMem<TCHAR> fileName2(path::Normalize(fileName));
-    BaseEngine *engine = PdfEngine::CreateFromFileName(fileName2);
+    if (PdfEngine::IsSupportedFile(fileName2, sniff))
+        engine = PdfEngine::CreateFromFileName(fileName2);
+    else if (XpsEngine::IsSupportedFile(fileName2, sniff))
+        engine = XpsEngine::CreateFromFileName(fileName2);
+    else if (DjVuEngine::IsSupportedFile(fileName2, sniff))
+        engine = DjVuEngine::CreateFromFileName(fileName2);
+    else if (CbxEngine::IsSupportedFile(fileName2, sniff))
+        engine = CbxEngine::CreateFromFileName(fileName2);
+    else if (ImageEngine::IsSupportedFile(fileName2, sniff))
+        engine = ImageEngine::CreateFromFileName(fileName2);
+    else if (ImageDirEngine::IsSupportedFile(fileName2, sniff))
+        engine = ImageDirEngine::CreateFromFileName(fileName2);
+    else if (PsEngine::IsSupportedFile(fileName2, sniff))
+        engine = PsEngine::CreateFromFileName(fileName2);
+    if (!engine && !sniff) {
+        sniff = true;
+        goto RetrySniffing;
+    }
 
     if (!engine || !engine->IsPrintingAllowed()) {
         if (displayErrors)

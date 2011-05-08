@@ -476,6 +476,9 @@ Seite:
 Please wait - rendering...
 Bitte einen Moment Geduld…
 
+Postscript documents
+Postscript-Dokumente
+
 Pr&esentation\tCtrl-L
 &Präsentation\tStrg+L
 

@@ -616,3 +616,6 @@ kopierer tekst
 printing document
 skriver ut dokument
 
+# Untranslated:
+#Postscript documents
+

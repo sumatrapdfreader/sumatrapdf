@@ -440,6 +440,7 @@ Faktor uvećanja
 #PDF Version:
 #Page Size:
 #Page scaling
+#Postscript documents
 #Pr&esentation\tCtrl-L
 #Print
 #Print range

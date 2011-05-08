@@ -8,6 +8,7 @@
 #include "PdfEngine.h"
 #include "DjVuEngine.h"
 #include "ImagesEngine.h"
+#include "PsEngine.h"
 #include "TextSearch.h"
 
 // define the following if you want shadows drawn around the pages
@@ -139,6 +140,7 @@ public:
     CbxEngine *     cbxEngine;
     ImageEngine *   imageEngine;
     ImageDirEngine *imageDirEngine;
+    PsEngine *      psEngine;
 
     TextSelection * textSelection;
     TextSearch *    textSearch;

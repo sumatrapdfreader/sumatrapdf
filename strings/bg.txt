@@ -523,6 +523,7 @@ printing document
 #P&roperties
 #Page number %u inexistant
 #Page scaling
+#Postscript documents
 #Pr&esentation\tCtrl-L
 #Print
 #Print range

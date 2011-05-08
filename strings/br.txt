@@ -614,3 +614,6 @@ copiando texto
 printing document
 imprimindo documento
 
+# Untranslated:
+#Postscript documents
+

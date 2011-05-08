@@ -84,10 +84,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\BaseEngine.h"
-				>
-			</File>
-			<File
 				RelativePath=".\src\CrashHandler.cpp"
 				>
 			</File>
@@ -108,14 +104,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\DjVuEngine.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\DjVuEngine.h"
-				>
-			</File>
-			<File
 				RelativePath=".\src\FileHistory.h"
 				>
 			</File>
@@ -128,14 +116,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\ImagesEngine.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\ImagesEngine.h"
-				>
-			</File>
-			<File
 				RelativePath=".\src\Notifications.h"
 				>
 			</File>
@@ -145,14 +125,6 @@
 			</File>
 			<File
 				RelativePath=".\src\ParseCommandLine.h"
-				>
-			</File>
-			<File
-				RelativePath=".\src\PdfEngine.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\PdfEngine.h"
 				>
 			</File>
 			<File
@@ -259,6 +231,46 @@
 				RelativePath=".\src\WindowInfo.h"
 				>
 			</File>
+			<Filter
+				Name="Engines"
+				>
+				<File
+					RelativePath=".\src\BaseEngine.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\DjVuEngine.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\DjVuEngine.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\ImagesEngine.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\ImagesEngine.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\PdfEngine.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\PdfEngine.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\PsEngine.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\PsEngine.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Resource Files"

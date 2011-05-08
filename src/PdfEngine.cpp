@@ -300,6 +300,8 @@ fz_stream *fz_open_istream(IStream *stream)
         return NULL;
 
     stream->AddRef();
+    LARGE_INTEGER zero = { 0 };
+    stream->Seek(zero, STREAM_SEEK_SET, NULL);
 
     fz_stream *stm = fz_new_stream(stream, read_istream, close_istream);
     stm->seek = seek_istream;

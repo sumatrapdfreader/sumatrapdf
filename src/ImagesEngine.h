@@ -23,7 +23,6 @@ class ImageDirEngine : public virtual BaseEngine {
 public:
     static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false);
     static ImageDirEngine *CreateFromFileName(const TCHAR *fileName);
-    static ImageDirEngine *CreateFromStream(IStream *stream) { return NULL; }
 };
 
 class CbxEngine : public virtual BaseEngine {
@@ -33,7 +32,6 @@ public:
                str::EndsWithI(fileName, _T(".cbr"));
     }
     static CbxEngine *CreateFromFileName(const TCHAR *fileName);
-    static CbxEngine *CreateFromStream(IStream *stream) { return NULL; }
 };
 
 RenderedBitmap *LoadRenderedBitmap(const TCHAR *filePath);

@@ -549,6 +549,7 @@ skriver ut dokumentet
 #Image files (*.%s)
 #Open a document...
 #P&roperties
+#Postscript documents
 #Print
 #Printing is still in progress. Abort and start over?
 #Printing page %d of %d...

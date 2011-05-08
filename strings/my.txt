@@ -396,6 +396,7 @@ mencetak dokumen
 #Page number %u inexistant
 #Page scaling
 #Please wait - rendering...
+#Postscript documents
 #Pr&esentation\tCtrl-L
 #Print
 #Print range

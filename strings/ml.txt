@@ -273,6 +273,7 @@ Zoom Out
 #Page scaling
 #Page:
 #Please wait - rendering...
+#Postscript documents
 #Pr&esentation\tCtrl-L
 #Print
 #Print range

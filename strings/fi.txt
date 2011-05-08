@@ -496,6 +496,7 @@ tulostetaan asiakirjaa
 #Open a document...
 #P&roperties
 #Page scaling
+#Postscript documents
 #Pr&esentation\tCtrl-L
 #Print
 #Print range
