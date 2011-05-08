@@ -254,11 +254,11 @@ public:
     virtual unsigned char *GetFileData(size_t *cbCount) {
         return (unsigned char *)file::ReadAll(fileName, cbCount);
     }
-    virtual bool HasTextContent() { return false; }
     virtual TCHAR * ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_out=NULL,
                                     RenderTarget target=Target_View) { return NULL; }
     virtual bool IsImagePage(int pageNo) { return true; }
     virtual PageLayoutType PreferredLayout() { return Layout_NonContinuous; }
+    virtual bool IsImageCollection() { return true; }
 
     virtual const TCHAR *GetDefaultFileExt() const { return fileExt; }
 

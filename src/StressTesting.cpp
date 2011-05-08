@@ -8,9 +8,7 @@
 #include "SimpleLog.h"
 
 #include "StressTesting.h"
-#include "PdfEngine.h"
-#include "DjVuEngine.h"
-#include "PsEngine.h"
+#include "EngineManager.h"
 #include "WindowInfo.h"
 #include "AppTools.h"
 #include "RenderCache.h"
@@ -95,16 +93,8 @@ static void BenchFile(TCHAR *filePath, const TCHAR *pagesSpec)
     logbench("Starting: %s", filePath);
 
     MillisecondTimer t;
-    BaseEngine *engine;
     t.Start();
-    if (XpsEngine::IsSupportedFile(filePath))
-        engine = XpsEngine::CreateFromFileName(filePath);
-    else if (DjVuEngine::IsSupportedFile(filePath))
-        engine = DjVuEngine::CreateFromFileName(filePath);
-    else if (PsEngine::IsSupportedFile(filePath))
-        engine = PsEngine::CreateFromFileName(filePath);
-    else
-        engine = PdfEngine::CreateFromFileName(filePath);
+    BaseEngine *engine = EngineManager::CreateEngine(filePath);
     t.Stop();
 
     if (!engine) {

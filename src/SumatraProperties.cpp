@@ -304,16 +304,16 @@ void OnMenuProperties(WindowInfo& win)
     layoutData->AddProperty(_TR("Author:"), str);
 
     str = engine->GetProperty("CreationDate");
-    if (win.dm->pdfEngine || win.dm->psEngine)
+    if (Engine_PDF == win.dm->engineType)
         ConvDateToDisplay(&str, PdfDateParse);
-    else if (win.dm->xpsEngine)
+    else if (Engine_XPS == win.dm->engineType)
         ConvDateToDisplay(&str, XpsDateParse);
     layoutData->AddProperty(_TR("Created:"), str);
 
     str = engine->GetProperty("ModDate");
-    if (win.dm->pdfEngine || win.dm->psEngine)
+    if (Engine_PDF == win.dm->engineType)
         ConvDateToDisplay(&str, PdfDateParse);
-    else if (win.dm->xpsEngine)
+    else if (Engine_XPS == win.dm->engineType)
         ConvDateToDisplay(&str, XpsDateParse);
     layoutData->AddProperty(_TR("Modified:"), str);
 

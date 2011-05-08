@@ -247,6 +247,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\src\EngineManager.h"
+					>
+				</File>
+				<File
 					RelativePath=".\src\ImagesEngine.cpp"
 					>
 				</File>

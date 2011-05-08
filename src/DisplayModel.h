@@ -5,10 +5,7 @@
 #define DisplayModel_h
 
 #include "DisplayState.h"
-#include "PdfEngine.h"
-#include "DjVuEngine.h"
-#include "ImagesEngine.h"
-#include "PsEngine.h"
+#include "EngineManager.h"
 #include "TextSearch.h"
 
 // define the following if you want shadows drawn around the pages
@@ -134,13 +131,7 @@ public:
     int currentPageNo() const;
 
     BaseEngine *    engine;
-    PdfEngine *     pdfEngine;
-    XpsEngine *     xpsEngine;
-    DjVuEngine *    djvuEngine;
-    CbxEngine *     cbxEngine;
-    ImageEngine *   imageEngine;
-    ImageDirEngine *imageDirEngine;
-    PsEngine *      psEngine;
+    EngineType      engineType;
 
     TextSelection * textSelection;
     TextSearch *    textSearch;

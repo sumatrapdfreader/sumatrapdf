@@ -295,7 +295,7 @@ static bool IsNonPdfDocument(WindowInfo *win=NULL)
 {
     if (!win || !win->dm)
         return false;
-    return !win->dm->pdfEngine;
+    return win->dm->engineType != Engine_PDF;
 }
 
 static bool CanViewWithFoxit(WindowInfo *win=NULL)
@@ -1153,7 +1153,7 @@ bool TbIsSeparator(ToolbarButtonInfo& tbi)
 
 static BOOL IsVisibleToolbarButton(WindowInfo& win, int buttonNo)
 {
-    if (!win.dm || !win.dm->engine || win.dm->engine->HasTextContent())
+    if (!win.dm || !win.dm->engine || !win.dm->engine->IsImageCollection())
         return TRUE;
 
     int cmdId = gToolbarButtons[buttonNo].cmdId;
@@ -1290,7 +1290,7 @@ static void MenuUpdateStateForWindow(WindowInfo& win) {
         }
     }
 
-    if (win.dm && win.dm->imageDirEngine) {
+    if (win.dm && Engine_ImageDir == win.dm->engineType) {
         for (int i = 0; i < dimof(menusToDisableIfDirectory); i++) {
             UINT id = menusToDisableIfDirectory[i];
             win::menu::Enable(win.menu, id, false);
@@ -1298,7 +1298,7 @@ static void MenuUpdateStateForWindow(WindowInfo& win) {
     }
 
     if (win.dm && win.dm->engine)
-        win::menu::Enable(win.menu, IDM_FIND_FIRST, win.dm->engine->HasTextContent());
+        win::menu::Enable(win.menu, IDM_FIND_FIRST, !win.dm->engine->IsImageCollection());
 }
 
 static void UpdateToolbarAndScrollbarsForAllWindows()
@@ -1568,7 +1568,7 @@ static bool LoadDocIntoWindow(
     win::SetText(win.hwndFrame, title);
     free(title);
 
-    if (!gRestrictedUse && win.dm->pdfEngine) {
+    if (!gRestrictedUse && Engine_PDF == win.dm->engineType) {
         int res = Synchronizer::Create(fileName, &win.pdfsync);
         // expose SyncTeX in the UI
         if (PDFSYNCERR_SUCCESS == res)
@@ -1746,7 +1746,7 @@ void WindowInfo::RenderPage(int pageNo)
     // don't render any plain images on the rendering thread,
     // they'll be rendered directly in DrawDocument during
     // WM_PAINT on the UI thread
-    if (dm->cbxEngine || dm->imageEngine || dm->imageDirEngine)
+    if (dm->engine && dm->engine->IsImageCollection())
         return;
 
     gRenderCache.Render(dm, pageNo, NULL);
@@ -2165,7 +2165,7 @@ static void DrawDocument(WindowInfo& win, HDC hdc, RECT *rcArea)
 
     bool paintOnBlackWithoutShadow = win.presentation ||
     // draw comic books and single images on a black background (without frame and shadow)
-                                     dm->cbxEngine || dm->imageEngine || dm->imageDirEngine;
+                                     dm->engine && dm->engine->IsImageCollection();
     if (paintOnBlackWithoutShadow)
         FillRect(hdc, rcArea, gBrushBlack);
     else
@@ -2188,7 +2188,7 @@ static void DrawDocument(WindowInfo& win, HDC hdc, RECT *rcArea)
 
         bool renderOutOfDateCue = false;
         UINT renderDelay = 0;
-        if (dm->cbxEngine || dm->imageEngine || dm->imageDirEngine)
+        if (dm->engine && dm->engine->IsImageCollection())
             dm->engine->RenderPage(hdc, pageInfo->pageOnScreen, pageNo, dm->zoomReal(pageNo), dm->rotation());
         else
             renderDelay = gRenderCache.Paint(hdc, &bounds, dm, pageNo, pageInfo, &renderOutOfDateCue);
@@ -2248,7 +2248,7 @@ static void CopySelectionToClipboard(WindowInfo& win)
 
     if (!win.dm->engine->IsCopyingTextAllowed())
         win.ShowNotification(_TR("Copying text was denied (copying as image only)"));
-    else if (win.dm->engine->HasTextContent()) {
+    else if (!win.dm->engine->IsImageCollection()) {
         ScopedMem<TCHAR> selText;
         bool isTextSelection = win.dm->textSelection->result.len > 0;
         if (isTextSelection) {
@@ -2359,7 +2359,7 @@ static void OnSelectAll(WindowInfo& win, bool textOnly=false)
 static bool OnInverseSearch(WindowInfo& win, int x, int y)
 {
     if (gRestrictedUse || gPluginMode) return false;
-    if (!win.IsDocLoaded() || !win.dm->pdfEngine) return false;
+    if (!win.IsDocLoaded() || win.dm->engineType != Engine_PDF) return false;
 
     // Clear the last forward-search result
     win.fwdsearchmark.rects.Reset();
@@ -3552,8 +3552,8 @@ static void OnMenuSaveAs(WindowInfo& win)
     assert(srcFileName);
     if (!srcFileName) return;
 
-    // Can't save a document's content as a plain text if text copying isn't allowed
-    bool hasCopyPerm = win.dm->engine->HasTextContent() &&
+    // Can't save a document's content as plain text if text copying isn't allowed
+    bool hasCopyPerm = !win.dm->engine->IsImageCollection() &&
                        win.dm->engine->IsCopyingTextAllowed();
 
     const TCHAR *defExt = win.dm->engine->GetDefaultFileExt();
@@ -3562,18 +3562,14 @@ static void OnMenuSaveAs(WindowInfo& win)
     // double-zero terminated string isn't cut by the string handling
     // methods too early on)
     str::Str<TCHAR> fileFilter(256);
-    if (win.dm->xpsEngine)
-        fileFilter.Append(_TR("XPS documents"));
-    else if (win.dm->djvuEngine)
-        fileFilter.Append(_TR("DjVu documents"));
-    else if (win.dm->cbxEngine)
-        fileFilter.Append(_TR("Comic books"));
-    else if (win.dm->imageEngine)
-        fileFilter.AppendFmt(_TR("Image files (*.%s)"), defExt + 1);
-    else if (win.dm->psEngine)
-        fileFilter.AppendFmt(_TR("Postscript documents"));
-    else
-        fileFilter.Append(_TR("PDF documents"));
+    switch (win.dm->engineType) {
+    case Engine_XPS:    fileFilter.Append(_TR("XPS documents")); break;
+    case Engine_DjVu:   fileFilter.Append(_TR("DjVu documents")); break;
+    case Engine_ComicBook: fileFilter.Append(_TR("Comic books")); break;
+    case Engine_Image:  fileFilter.AppendFmt(_TR("Image files (*.%s)"), defExt + 1); break;
+    case Engine_PS:     fileFilter.AppendFmt(_TR("Postscript documents")); break;
+    default:            fileFilter.Append(_TR("PDF documents")); break;
+    }
     fileFilter.AppendFmt(_T("\1*%s\1"), defExt);
     if (hasCopyPerm) {
         fileFilter.Append(_TR("Text documents"));
@@ -4116,7 +4112,7 @@ static void OnMenuGoToPage(WindowInfo& win)
 
 static bool NeedsFindUI(WindowInfo& win)
 {
-    return !win.IsDocLoaded() || win.dm->engine && win.dm->engine->HasTextContent();
+    return !win.IsDocLoaded() || win.dm->engine && !win.dm->engine->IsImageCollection();
 }
 
 static void OnMenuFind(WindowInfo& win)
@@ -6583,30 +6579,8 @@ static bool PrintFile(const TCHAR *fileName, const TCHAR *printerName, bool disp
     DWORD       structSize, returnCode;
     bool        ok = false;
 
-    // TODO: move engine detection elsewhere (cf. DisplayModel::Load)
-    BaseEngine *engine = NULL;
-    bool sniff = false;
-RetrySniffing:
     ScopedMem<TCHAR> fileName2(path::Normalize(fileName));
-    if (PdfEngine::IsSupportedFile(fileName2, sniff))
-        engine = PdfEngine::CreateFromFileName(fileName2);
-    else if (XpsEngine::IsSupportedFile(fileName2, sniff))
-        engine = XpsEngine::CreateFromFileName(fileName2);
-    else if (DjVuEngine::IsSupportedFile(fileName2, sniff))
-        engine = DjVuEngine::CreateFromFileName(fileName2);
-    else if (CbxEngine::IsSupportedFile(fileName2, sniff))
-        engine = CbxEngine::CreateFromFileName(fileName2);
-    else if (ImageEngine::IsSupportedFile(fileName2, sniff))
-        engine = ImageEngine::CreateFromFileName(fileName2);
-    else if (ImageDirEngine::IsSupportedFile(fileName2, sniff))
-        engine = ImageDirEngine::CreateFromFileName(fileName2);
-    else if (PsEngine::IsSupportedFile(fileName2, sniff))
-        engine = PsEngine::CreateFromFileName(fileName2);
-    if (!engine && !sniff) {
-        sniff = true;
-        goto RetrySniffing;
-    }
-
+    BaseEngine *engine = EngineManager::CreateEngine(fileName2);
     if (!engine || !engine->IsPrintingAllowed()) {
         if (displayErrors)
             MessageBox(NULL, _TR("Cannot print this file"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK);

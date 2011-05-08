@@ -196,13 +196,7 @@ DisplayModel::DisplayModel(DisplayModelCallback *callback, DisplayMode displayMo
     _callback = callback;
 
     engine = NULL;
-    pdfEngine = NULL;
-    xpsEngine = NULL;
-    djvuEngine = NULL;
-    cbxEngine = NULL;
-    imageEngine = NULL;
-    imageDirEngine = NULL;
-    psEngine = NULL;
+    engineType = Engine_None;
 
     textSelection = NULL;
     textSearch = NULL;
@@ -237,32 +231,11 @@ PageInfo *DisplayModel::getPageInfo(int pageNo) const
 bool DisplayModel::load(const TCHAR *fileName, int startPage, SizeI viewPort)
 { 
     assert(fileName);
-    bool sniff = false;
-RetryCheck:
-    if (PdfEngine::IsSupportedFile(fileName, sniff))
-        engine = pdfEngine = PdfEngine::CreateFromFileName(fileName, _callback);
-    else if (XpsEngine::IsSupportedFile(fileName, sniff))
-        engine = xpsEngine = XpsEngine::CreateFromFileName(fileName);
-    else if (DjVuEngine::IsSupportedFile(fileName, sniff))
-        engine = djvuEngine = DjVuEngine::CreateFromFileName(fileName);
-    else if (CbxEngine::IsSupportedFile(fileName, sniff))
-        engine = cbxEngine = CbxEngine::CreateFromFileName(fileName);
-    else if (ImageEngine::IsSupportedFile(fileName, sniff))
-        engine = imageEngine = ImageEngine::CreateFromFileName(fileName);
-    else if (ImageDirEngine::IsSupportedFile(fileName, sniff))
-        engine = imageDirEngine = ImageDirEngine::CreateFromFileName(fileName);
-    else if (PsEngine::IsSupportedFile(fileName, sniff))
-        engine = psEngine = PsEngine::CreateFromFileName(fileName);
-    if (!engine) {
-        // try sniffing the file instead
-        if (!sniff) {
-            sniff = true;
-            goto RetryCheck;
-        }
+    engine = EngineManager::CreateEngine(fileName, _callback, &engineType);
+    if (!engine)
         return false;
-    }
 
-    if (cbxEngine || imageEngine || imageDirEngine)
+    if (engine->IsImageCollection())
         padding = &gImagePadding;
 
     _dpiFactor = 1.0f * _callback->GetScreenDPI() / engine->GetFileDPI();
@@ -1070,7 +1043,7 @@ void DisplayModel::setPresentationMode(bool enable)
     }
     else {
         padding = &gPagePadding;
-        if (cbxEngine || imageEngine || imageDirEngine)
+        if (engine && engine->IsImageCollection())
             padding = &gImagePadding;
         changeDisplayMode(_presDisplayMode);
         if (!ValidZoomVirtual(_presZoomVirtual))

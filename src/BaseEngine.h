@@ -222,8 +222,6 @@ public:
     // (e.g. for saving again when the file has already been deleted)
     // caller needs to free() the result
     virtual unsigned char *GetFileData(size_t *cbCount) { return NULL; }
-    // whether a document has text content at all (e.g. for hiding search UI)
-    virtual bool HasTextContent() = 0;
     // extracts all text found in the given page (and optionally also the
     // coordinates of the individual glyphs)
     // caller needs to free() the result
@@ -233,6 +231,9 @@ public:
     virtual bool IsImagePage(int pageNo) = 0;
     // the layout type this document's author suggests (if the user doesn't care)
     virtual PageLayoutType PreferredLayout() { return Layout_Single; }
+    // whether the content should be displayed as images instead of as document pages
+    // (e.g. with a black background and less padding in between and without search UI)
+    virtual bool IsImageCollection() { return false; }
 
     // access to various document properties (such as Author, Title, etc.)
     virtual TCHAR *GetProperty(char *name) { return NULL; }

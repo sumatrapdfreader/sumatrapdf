@@ -227,10 +227,10 @@ $(OS)\CXpsFilter.obj: src\utils\GeomUtil.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\DialogSizer.obj: src\utils\BaseUtil.h src\utils\DialogSizer.h src\utils\GeomUtil.h
 $(OS)\DialogSizer.obj: src\utils\WinUtil.h
 $(OS)\DisplayModel.obj: src\BaseEngine.h src\DisplayModel.h src\DisplayState.h
-$(OS)\DisplayModel.obj: src\DjVuEngine.h src\ImagesEngine.h src\PdfEngine.h
-$(OS)\DisplayModel.obj: src\PsEngine.h src\TextSearch.h src\TextSelection.h
-$(OS)\DisplayModel.obj: src\utils\BaseUtil.h src\utils\GeomUtil.h src\utils\StrUtil.h
-$(OS)\DisplayModel.obj: src\utils\Vec.h
+$(OS)\DisplayModel.obj: src\DjVuEngine.h src\EngineManager.h src\ImagesEngine.h
+$(OS)\DisplayModel.obj: src\PdfEngine.h src\PsEngine.h src\TextSearch.h
+$(OS)\DisplayModel.obj: src\TextSelection.h src\utils\BaseUtil.h src\utils\GeomUtil.h
+$(OS)\DisplayModel.obj: src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\DjVuEngine.obj: src\BaseEngine.h src\DjVuEngine.h src\utils\BaseUtil.h
 $(OS)\DjVuEngine.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\StrUtil.h
 $(OS)\DjVuEngine.obj: src\utils\Vec.h
@@ -264,40 +264,40 @@ $(OS)\PdfEngine.obj: src\utils\Vec.h
 $(OS)\PdfFilterDll.obj: src\ifilter\CPdfFilter.h src\ifilter\CTeXFilter.h src\ifilter\CXpsFilter.h
 $(OS)\PdfFilterDll.obj: src\ifilter\FilterBase.h src\ifilter\PdfFilter.h
 $(OS)\PdfSync.obj: src\AppPrefs.h src\BaseEngine.h src\DisplayModel.h
-$(OS)\PdfSync.obj: src\DisplayState.h src\DjVuEngine.h src\ImagesEngine.h
-$(OS)\PdfSync.obj: src\PdfEngine.h src\PdfSync.h src\PsEngine.h
-$(OS)\PdfSync.obj: src\TextSearch.h src\TextSelection.h src\utils\BaseUtil.h
-$(OS)\PdfSync.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\StrUtil.h
-$(OS)\PdfSync.obj: src\utils\Vec.h src\WindowInfo.h
+$(OS)\PdfSync.obj: src\DisplayState.h src\DjVuEngine.h src\EngineManager.h
+$(OS)\PdfSync.obj: src\ImagesEngine.h src\PdfEngine.h src\PdfSync.h
+$(OS)\PdfSync.obj: src\PsEngine.h src\TextSearch.h src\TextSelection.h
+$(OS)\PdfSync.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
+$(OS)\PdfSync.obj: src\utils\StrUtil.h src\utils\Vec.h src\WindowInfo.h
 $(OS)\PEUtil.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\PEUtil.h
 $(OS)\PEUtil.obj: src\utils\StrUtil.h
 $(OS)\PsEngine.obj: src\BaseEngine.h src\PdfEngine.h src\PsEngine.h
 $(OS)\PsEngine.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
 $(OS)\PsEngine.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
 $(OS)\RenderCache.obj: src\BaseEngine.h src\DisplayModel.h src\DisplayState.h
-$(OS)\RenderCache.obj: src\DjVuEngine.h src\ImagesEngine.h src\PdfEngine.h
-$(OS)\RenderCache.obj: src\PsEngine.h src\RenderCache.h src\TextSearch.h
-$(OS)\RenderCache.obj: src\TextSelection.h src\utils\BaseUtil.h src\utils\GeomUtil.h
-$(OS)\RenderCache.obj: src\utils\StrUtil.h src\utils\Vec.h
+$(OS)\RenderCache.obj: src\DjVuEngine.h src\EngineManager.h src\ImagesEngine.h
+$(OS)\RenderCache.obj: src\PdfEngine.h src\PsEngine.h src\RenderCache.h
+$(OS)\RenderCache.obj: src\TextSearch.h src\TextSelection.h src\utils\BaseUtil.h
+$(OS)\RenderCache.obj: src\utils\GeomUtil.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\SimpleLog.obj: src\utils\BaseUtil.h src\utils\SimpleLog.h src\utils\StrUtil.h
 $(OS)\SimpleLog.obj: src\utils\Vec.h
 $(OS)\StressTesting.obj: src\AppPrefs.h src\AppTools.h src\BaseEngine.h
 $(OS)\StressTesting.obj: src\DisplayModel.h src\DisplayState.h src\DjVuEngine.h
-$(OS)\StressTesting.obj: src\ImagesEngine.h src\PdfEngine.h src\PsEngine.h
-$(OS)\StressTesting.obj: src\RenderCache.h src\StressTesting.h src\SumatraPDF.h
-$(OS)\StressTesting.obj: src\TextSearch.h src\TextSelection.h src\utils\BaseUtil.h
-$(OS)\StressTesting.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\SimpleLog.h
-$(OS)\StressTesting.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
-$(OS)\StressTesting.obj: src\WindowInfo.h
+$(OS)\StressTesting.obj: src\EngineManager.h src\ImagesEngine.h src\PdfEngine.h
+$(OS)\StressTesting.obj: src\PsEngine.h src\RenderCache.h src\StressTesting.h
+$(OS)\StressTesting.obj: src\SumatraPDF.h src\TextSearch.h src\TextSelection.h
+$(OS)\StressTesting.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
+$(OS)\StressTesting.obj: src\utils\SimpleLog.h src\utils\StrUtil.h src\utils\Vec.h
+$(OS)\StressTesting.obj: src\utils\WinUtil.h src\WindowInfo.h
 $(OS)\StrUtil.obj: src\utils\BaseUtil.h src\utils\StrUtil.h
 $(OS)\SumatraAbout.obj: src\AppPrefs.h src\AppTools.h src\BaseEngine.h
 $(OS)\SumatraAbout.obj: src\DisplayModel.h src\DisplayState.h src\DjVuEngine.h
-$(OS)\SumatraAbout.obj: src\FileHistory.h src\ImagesEngine.h src\PdfEngine.h
-$(OS)\SumatraAbout.obj: src\PsEngine.h src\SumatraAbout.h src\SumatraPDF.h
-$(OS)\SumatraAbout.obj: src\TextSearch.h src\TextSelection.h src\translations.h
-$(OS)\SumatraAbout.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
-$(OS)\SumatraAbout.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
-$(OS)\SumatraAbout.obj: src\Version.h src\WindowInfo.h
+$(OS)\SumatraAbout.obj: src\EngineManager.h src\FileHistory.h src\ImagesEngine.h
+$(OS)\SumatraAbout.obj: src\PdfEngine.h src\PsEngine.h src\SumatraAbout.h
+$(OS)\SumatraAbout.obj: src\SumatraPDF.h src\TextSearch.h src\TextSelection.h
+$(OS)\SumatraAbout.obj: src\translations.h src\utils\BaseUtil.h src\utils\FileUtil.h
+$(OS)\SumatraAbout.obj: src\utils\GeomUtil.h src\utils\StrUtil.h src\utils\Vec.h
+$(OS)\SumatraAbout.obj: src\utils\WinUtil.h src\Version.h src\WindowInfo.h
 $(OS)\SumatraDialogs.obj: src\AppPrefs.h src\AppTools.h src\BaseEngine.h
 $(OS)\SumatraDialogs.obj: src\DisplayState.h src\Resource.h src\SumatraDialogs.h
 $(OS)\SumatraDialogs.obj: src\SumatraPDF.h src\TextSearch.h src\TextSelection.h
@@ -306,23 +306,23 @@ $(OS)\SumatraDialogs.obj: src\utils\GeomUtil.h src\utils\StrUtil.h src\utils\Vec
 $(OS)\SumatraDialogs.obj: src\utils\WinUtil.h
 $(OS)\SumatraPDF.obj: src\AppPrefs.h src\AppTools.h src\BaseEngine.h
 $(OS)\SumatraPDF.obj: src\CrashHandler.h src\DisplayModel.h src\DisplayState.h
-$(OS)\SumatraPDF.obj: src\DjVuEngine.h src\FileHistory.h src\FileWatch.h
-$(OS)\SumatraPDF.obj: src\ImagesEngine.h src\Notifications.h src\ParseCommandLine.h
-$(OS)\SumatraPDF.obj: src\PdfEngine.h src\PdfSync.h src\PsEngine.h
-$(OS)\SumatraPDF.obj: src\RenderCache.h src\Resource.h src\StressTesting.h
-$(OS)\SumatraPDF.obj: src\SumatraAbout.h src\SumatraDialogs.h src\SumatraPDF.h
-$(OS)\SumatraPDF.obj: src\SumatraProperties.h src\TextSearch.h src\TextSelection.h
-$(OS)\SumatraPDF.obj: src\translations.h src\utils\BaseUtil.h src\utils\FileUtil.h
-$(OS)\SumatraPDF.obj: src\utils\GeomUtil.h src\utils\Http.h src\utils\PEUtil.h
-$(OS)\SumatraPDF.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
-$(OS)\SumatraPDF.obj: src\Version.h src\WindowInfo.h
+$(OS)\SumatraPDF.obj: src\DjVuEngine.h src\EngineManager.h src\FileHistory.h
+$(OS)\SumatraPDF.obj: src\FileWatch.h src\ImagesEngine.h src\Notifications.h
+$(OS)\SumatraPDF.obj: src\ParseCommandLine.h src\PdfEngine.h src\PdfSync.h
+$(OS)\SumatraPDF.obj: src\PsEngine.h src\RenderCache.h src\Resource.h
+$(OS)\SumatraPDF.obj: src\StressTesting.h src\SumatraAbout.h src\SumatraDialogs.h
+$(OS)\SumatraPDF.obj: src\SumatraPDF.h src\SumatraProperties.h src\TextSearch.h
+$(OS)\SumatraPDF.obj: src\TextSelection.h src\translations.h src\utils\BaseUtil.h
+$(OS)\SumatraPDF.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\Http.h
+$(OS)\SumatraPDF.obj: src\utils\PEUtil.h src\utils\StrUtil.h src\utils\Vec.h
+$(OS)\SumatraPDF.obj: src\utils\WinUtil.h src\Version.h src\WindowInfo.h
 $(OS)\SumatraProperties.obj: src\AppPrefs.h src\BaseEngine.h src\DisplayModel.h
-$(OS)\SumatraProperties.obj: src\DisplayState.h src\DjVuEngine.h src\ImagesEngine.h
-$(OS)\SumatraProperties.obj: src\PdfEngine.h src\PsEngine.h src\SumatraPDF.h
-$(OS)\SumatraProperties.obj: src\SumatraProperties.h src\TextSearch.h src\TextSelection.h
-$(OS)\SumatraProperties.obj: src\translations.h src\utils\BaseUtil.h src\utils\FileUtil.h
-$(OS)\SumatraProperties.obj: src\utils\GeomUtil.h src\utils\StrUtil.h src\utils\Vec.h
-$(OS)\SumatraProperties.obj: src\utils\WinUtil.h src\WindowInfo.h
+$(OS)\SumatraProperties.obj: src\DisplayState.h src\DjVuEngine.h src\EngineManager.h
+$(OS)\SumatraProperties.obj: src\ImagesEngine.h src\PdfEngine.h src\PsEngine.h
+$(OS)\SumatraProperties.obj: src\SumatraPDF.h src\SumatraProperties.h src\TextSearch.h
+$(OS)\SumatraProperties.obj: src\TextSelection.h src\translations.h src\utils\BaseUtil.h
+$(OS)\SumatraProperties.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\StrUtil.h
+$(OS)\SumatraProperties.obj: src\utils\Vec.h src\utils\WinUtil.h src\WindowInfo.h
 $(OS)\TextSearch.obj: src\BaseEngine.h src\TextSearch.h src\TextSelection.h
 $(OS)\TextSearch.obj: src\utils\BaseUtil.h src\utils\GeomUtil.h src\utils\StrUtil.h
 $(OS)\TextSearch.obj: src\utils\Vec.h
@@ -337,13 +337,13 @@ $(OS)\UtilTests.obj: src\utils\BaseUtil.h src\utils\BencUtil.h src\utils\FileUti
 $(OS)\UtilTests.obj: src\utils\GeomUtil.h src\utils\SimpleLog.h src\utils\StrUtil.h
 $(OS)\UtilTests.obj: src\utils\Vec.h
 $(OS)\WindowInfo.obj: src\AppPrefs.h src\BaseEngine.h src\DisplayModel.h
-$(OS)\WindowInfo.obj: src\DisplayState.h src\DjVuEngine.h src\FileWatch.h
-$(OS)\WindowInfo.obj: src\ImagesEngine.h src\Notifications.h src\PdfEngine.h
-$(OS)\WindowInfo.obj: src\PdfSync.h src\PsEngine.h src\Resource.h
-$(OS)\WindowInfo.obj: src\SumatraPDF.h src\TextSearch.h src\TextSelection.h
-$(OS)\WindowInfo.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
-$(OS)\WindowInfo.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
-$(OS)\WindowInfo.obj: src\WindowInfo.h
+$(OS)\WindowInfo.obj: src\DisplayState.h src\DjVuEngine.h src\EngineManager.h
+$(OS)\WindowInfo.obj: src\FileWatch.h src\ImagesEngine.h src\Notifications.h
+$(OS)\WindowInfo.obj: src\PdfEngine.h src\PdfSync.h src\PsEngine.h
+$(OS)\WindowInfo.obj: src\Resource.h src\SumatraPDF.h src\TextSearch.h
+$(OS)\WindowInfo.obj: src\TextSelection.h src\utils\BaseUtil.h src\utils\FileUtil.h
+$(OS)\WindowInfo.obj: src\utils\GeomUtil.h src\utils\StrUtil.h src\utils\Vec.h
+$(OS)\WindowInfo.obj: src\utils\WinUtil.h src\WindowInfo.h
 $(OS)\WinUtil.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
 $(OS)\WinUtil.obj: src\utils\StrUtil.h src\utils\WinUtil.h
 $(OS)\ZipUtil.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\StrUtil.h
