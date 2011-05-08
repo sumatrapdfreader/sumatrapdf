@@ -2,6 +2,11 @@
 #include "PEUtil.h"
 #include "FileUtil.h"
 #include "StrUtil.h"
+#include "Version.h"
+
+#define TQM(x) _T(_QUOTEME(x))
+
+#define dbg(format, ...) str::DbgOut(format, __VA_ARGS__)
 
 class MappedFile {
 
@@ -63,6 +68,30 @@ bool IsValidSecondHdr(IMAGE_NT_HEADERS *hdr)
 
     return true;
 }
+/*
+#define IMAGE_DIRECTORY_ENTRY_EXPORT          0   // Export Directory
+#define IMAGE_DIRECTORY_ENTRY_IMPORT          1   // Import Directory
+#define IMAGE_DIRECTORY_ENTRY_RESOURCE        2   // Resource Directory
+#define IMAGE_DIRECTORY_ENTRY_EXCEPTION       3   // Exception Directory
+#define IMAGE_DIRECTORY_ENTRY_SECURITY        4   // Security Directory
+#define IMAGE_DIRECTORY_ENTRY_BASERELOC       5   // Base Relocation Table
+#define IMAGE_DIRECTORY_ENTRY_DEBUG           6   // Debug Directory
+//      IMAGE_DIRECTORY_ENTRY_COPYRIGHT       7   // (X86 usage)
+#define IMAGE_DIRECTORY_ENTRY_ARCHITECTURE    7   // Architecture Specific Data
+#define IMAGE_DIRECTORY_ENTRY_GLOBALPTR       8   // RVA of GP
+#define IMAGE_DIRECTORY_ENTRY_TLS             9   // TLS Directory
+#define IMAGE_DIRECTORY_ENTRY_LOAD_CONFIG    10   // Load Configuration Directory
+#define IMAGE_DIRECTORY_ENTRY_BOUND_IMPORT   11   // Bound Import Directory in headers
+#define IMAGE_DIRECTORY_ENTRY_IAT            12   // Import Address Table
+#define IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT   13   // Delay Load Import Descriptors
+#define IMAGE_DIRECTORY_ENTRY_COM_DESCRIPTOR 14   // COM Runtime descriptor
+*/
+
+void DumpDataDir(IMAGE_NT_HEADERS *hdr, int dirIdx, TCHAR *dirName)
+{
+    IMAGE_DATA_DIRECTORY dataDir = hdr->OptionalHeader.DataDirectory[dirIdx];
+    dbg(_T("% 38s: 0x%06x 0x%04x\n"), dirName, dataDir.VirtualAddress, dataDir.Size);
+}
 
 // Write dstFile as srcFile with all binary data resources (RCDATA)
 // removed. Used for creating uninstaller from installer.
@@ -89,6 +118,22 @@ bool RemoveDataResource(const TCHAR *srcFile, const TCHAR *dstFile)
     if (!IsValidSecondHdr(secondHdr))
         goto Error;
 
+    DumpDataDir(secondHdr, IMAGE_DIRECTORY_ENTRY_EXPORT, _T("IMAGE_DIRECTORY_ENTRY_EXPORT"));
+    DumpDataDir(secondHdr, IMAGE_DIRECTORY_ENTRY_IMPORT, _T("IMAGE_DIRECTORY_ENTRY_IMPORT"));
+    DumpDataDir(secondHdr, IMAGE_DIRECTORY_ENTRY_RESOURCE, _T("IMAGE_DIRECTORY_ENTRY_RESOURCE"));
+    DumpDataDir(secondHdr, IMAGE_DIRECTORY_ENTRY_EXCEPTION, _T("IMAGE_DIRECTORY_ENTRY_EXCEPTION"));
+    DumpDataDir(secondHdr, IMAGE_DIRECTORY_ENTRY_SECURITY, _T("IMAGE_DIRECTORY_ENTRY_SECURITY"));
+    DumpDataDir(secondHdr, IMAGE_DIRECTORY_ENTRY_BASERELOC, _T("IMAGE_DIRECTORY_ENTRY_BASERELOC"));
+    DumpDataDir(secondHdr, IMAGE_DIRECTORY_ENTRY_DEBUG, _T("IMAGE_DIRECTORY_ENTRY_DEBUG"));
+    DumpDataDir(secondHdr, IMAGE_DIRECTORY_ENTRY_ARCHITECTURE, _T("IMAGE_DIRECTORY_ENTRY_ARCHITECTURE"));
+    DumpDataDir(secondHdr, IMAGE_DIRECTORY_ENTRY_GLOBALPTR, _T("IMAGE_DIRECTORY_ENTRY_GLOBALPTR"));
+    DumpDataDir(secondHdr, IMAGE_DIRECTORY_ENTRY_TLS, _T("IMAGE_DIRECTORY_ENTRY_TLS"));
+    DumpDataDir(secondHdr, IMAGE_DIRECTORY_ENTRY_LOAD_CONFIG, _T("IMAGE_DIRECTORY_ENTRY_LOAD_CONFIG"));
+    DumpDataDir(secondHdr, IMAGE_DIRECTORY_ENTRY_BOUND_IMPORT, _T("IMAGE_DIRECTORY_ENTRY_BOUND_IMPORT"));
+    DumpDataDir(secondHdr, IMAGE_DIRECTORY_ENTRY_IAT, _T("IMAGE_DIRECTORY_ENTRY_IAT"));
+    DumpDataDir(secondHdr, IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT, _T("IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT"));
+    DumpDataDir(secondHdr, IMAGE_DIRECTORY_ENTRY_COM_DESCRIPTOR, _T("IMAGE_DIRECTORY_ENTRY_COM_DESCRIPTOR"));
+
     delete mf;
     return true;
 
@@ -96,3 +141,4 @@ Error:
     delete mf;
     return false;
 }
+

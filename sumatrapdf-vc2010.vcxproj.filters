@@ -587,6 +587,9 @@
     <ClCompile Include="src\StressTesting.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\utils\PEUtil.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ext\jbig2dec\config_win32.h">
@@ -813,6 +816,9 @@
     </ClInclude>
     <ClInclude Include="src\StressTesting.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\PEUtil.h">
+      <Filter>utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

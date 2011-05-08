@@ -95,9 +95,7 @@ TCHAR * FormatNumWithThousandSep(size_t num, const TCHAR *sep=NULL);
 
 int     CmpNatural(const TCHAR *a, const TCHAR *b);
 
-#ifdef DEBUG
 void    DbgOut(const TCHAR *format, ...);
-#endif
 
 const TCHAR *   Parse(const TCHAR *str, const TCHAR *format, ...);
 
