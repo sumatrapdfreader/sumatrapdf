@@ -2,11 +2,15 @@
 #include "PEUtil.h"
 #include "FileUtil.h"
 #include "StrUtil.h"
-#include "Version.h"
 
+#define _QUOTEME(x) #x
 #define TQM(x) _T(_QUOTEME(x))
 
-#define dbg(format, ...) str::DbgOut(format, __VA_ARGS__)
+/* To get debug outputs in release builds as well:
+#include "SimpleLog.h"
+static Log::DebugLogger gLog;
+#define dbg(msg, ...) gLog.LogFmt(_T(msg), __VA_ARGS__)
+*/
 
 class MappedFile {
 
@@ -90,7 +94,7 @@ bool IsValidSecondHdr(IMAGE_NT_HEADERS *hdr)
 void DumpDataDir(IMAGE_NT_HEADERS *hdr, int dirIdx, TCHAR *dirName)
 {
     IMAGE_DATA_DIRECTORY dataDir = hdr->OptionalHeader.DataDirectory[dirIdx];
-    dbg(_T("% 38s: 0x%06x 0x%04x\n"), dirName, dataDir.VirtualAddress, dataDir.Size);
+    DBG_OUT("% 38s: 0x%06x 0x%04x\n", dirName, dataDir.VirtualAddress, dataDir.Size);
 }
 
 // Write dstFile as srcFile with all binary data resources (RCDATA)

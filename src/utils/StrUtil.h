@@ -95,7 +95,12 @@ TCHAR * FormatNumWithThousandSep(size_t num, const TCHAR *sep=NULL);
 
 int     CmpNatural(const TCHAR *a, const TCHAR *b);
 
+#ifdef DEBUG
+// don't call this directly, use DBG_OUT if the info is just for debug builds
+// or a SimpleLog/DebugLogger if it's indeed wanted in release builds as well
+// (as these are easier to redirect e.g. to the console or a file)
 void    DbgOut(const TCHAR *format, ...);
+#endif
 
 const TCHAR *   Parse(const TCHAR *str, const TCHAR *format, ...);
 
