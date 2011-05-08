@@ -54,14 +54,12 @@ def displayBenchResults(result):
 		count = len(data)
 		
 		loading = [item[0][0] for item in data]
-		loadAvg = sum(loading) / count
-		loadVar = (sum((time - loadAvg) ** 2 for time in loading) / count) ** 0.5
+		loadMin = min(loading)
 		
 		rendering = [item[0][1] for item in data]
-		renderAvg = sum(rendering) / count
-		renderVar = (sum((time - renderAvg) ** 2 for time in rendering) / count) ** 0.5
+		renderMin = min(rendering)
 		
-		print "%(file)s\t%(count)d\t%(loadAvg).2f +/- %(loadVar).2f\t%(renderAvg).2f +/- %(renderVar).2f" % locals()
+		print "%(file)s\t%(count)d\t%(loadMin).2f\t%(renderMin).2f " % locals()
 
 def main():
 	if not sys.argv[1:]:
