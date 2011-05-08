@@ -228,9 +228,9 @@ class StressTest : public CallbackFunc {
     int               filesCount; // number of files processed so far
 
     SYSTEMTIME        stressStartTime;
-    int               cyclesOrSkips;
+    int               cycles;
+    int               skips; // only makes sense for directory stress tests
     TCHAR *           basePath;
-    bool              dirTest;
 
     // current state of directory traversal
     StrVec            filesToOpen;
@@ -241,7 +241,6 @@ class StressTest : public CallbackFunc {
 
     bool GoToNextPage();
     bool GoToNextFile();
-    bool GoToNextFileInDir();
 
     void OnTimer();
     void TickTimer();
@@ -250,14 +249,14 @@ class StressTest : public CallbackFunc {
 public:
     StressTest(WindowInfo *win, RenderCache *renderCache) :
         win(win), renderCache(renderCache), filesCount(0), 
-        cyclesOrSkips(-1), basePath(NULL)
+        cycles(1), skips(0), basePath(NULL)
         { }
     virtual ~StressTest() {
         free(basePath);
     }
 
     char *GetLogInfo();
-    void Start(const TCHAR *dirPath, int cycles);
+    void Start(const TCHAR *path, int cycles, int skips);
 
     virtual void Callback() { OnTimer(); }
 };
@@ -399,17 +398,15 @@ void StressTest::OnTimer()
     TickTimer();
 }
 
-bool StressTest::GoToNextFileInDir()
+bool StressTest::GoToNextFile()
 {
     for (;;) {
         while (filesToOpen.Count() > 0) {
             // test next file
             ScopedMem<TCHAR> path(filesToOpen[0]);
             filesToOpen.RemoveAt(0);
-            if (cyclesOrSkips > 0) {
-                --cyclesOrSkips;
+            if (skips-- > 0)
                 continue;
-            }
             if (OpenFile(path))
                 return true;
         }
@@ -421,19 +418,15 @@ bool StressTest::GoToNextFileInDir()
             OpenDir(path);
             continue;
         }
+
+        if (--cycles <= 0)
+            return false;
+        // start next cycle
+        if (file::Exists(basePath))
+            filesToOpen.Append(str::Dup(basePath));
+        else
+            OpenDir(basePath);
     }
-
-}
-
-bool StressTest::GoToNextFile()
-{
-    if (dirTest)
-        return GoToNextFileInDir();
-
-    if (--cyclesOrSkips < 0)
-        return false;
-
-    return OpenFile(basePath);
 }
 
 void StressTest::Finished(bool success)
@@ -460,7 +453,7 @@ char *StressTest::GetLogInfo()
     return str::Format(", stress test rendered %d files in %s, currPage: %d", filesCount, su, currPage);
 }
 
-void StressTest::Start(const TCHAR *path, int cyclesOrSkips)
+void StressTest::Start(const TCHAR *path, int cycles, int skips)
 {
     srand((unsigned int)time(NULL));
     GetSystemTime(&stressStartTime);
@@ -469,18 +462,11 @@ void StressTest::Start(const TCHAR *path, int cyclesOrSkips)
     SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED);
 
     basePath = str::Dup(path);
-    if (file::Exists(basePath)) {
-        if (-1 == cyclesOrSkips)
-            cyclesOrSkips = 1;
+    if (file::Exists(basePath))
         filesToOpen.Append(str::Dup(basePath));
-        dirTest = false;
-    }
-    else if (dir::Exists(basePath)) {
-        if (-1 == cyclesOrSkips)
-            cyclesOrSkips = 0;
+    else if (dir::Exists(basePath))
         OpenDir(basePath);
-        dirTest = true;
-    } else {
+    else {
         // Note: dev only, don't translate
         ScopedMem<TCHAR> s(str::Format(_T("Path '%s' doesn't exist"), path));
         win->ShowNotification(s, false /* autoDismiss */, true, NG_STRESS_TEST_SUMMARY);
@@ -488,7 +474,8 @@ void StressTest::Start(const TCHAR *path, int cyclesOrSkips)
         return;
     }
 
-    this->cyclesOrSkips = cyclesOrSkips;
+    this->cycles = cycles;
+    this->skips = skips;
     if (GoToNextFile())
         TickTimer();
     else
@@ -500,12 +487,12 @@ char *GetStressTestInfo(StressTest *dst)
     return dst->GetLogInfo();
 }
 
-void StartStressTest(WindowInfo *win, const TCHAR *path, int cyclesOrSkips, RenderCache *renderCache)
+void StartStressTest(WindowInfo *win, const TCHAR *path, int cycles, int skips, RenderCache *renderCache)
 {
     //gPredictiveRender = false;
 
     // dst will be deleted when the stress ends
     StressTest *dst = new StressTest(win, renderCache);
     win->stressTest = dst;
-    dst->Start(path, cyclesOrSkips);
+    dst->Start(path, cycles, skips);
 }

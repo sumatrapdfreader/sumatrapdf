@@ -130,8 +130,8 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
 
 #define is_arg(txt) str::EqI(_T(txt), argument)
 #define is_arg_with_param(txt) (is_arg(txt) && param != NULL)
-#define second_param() argList[n+1]
-#define has_second_param() ((argCount > n + 1) && ('-' != second_param()[0]))
+#define additional_param() argList[n+1]
+#define has_additional_param() ((argCount > n + 1) && ('-' != additional_param()[0]))
 
     for (size_t n = 1; n < argCount; n++) {
         TCHAR *argument = argList[n];
@@ -242,13 +242,17 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
             hwndPluginParent = (HWND)_ttol(argList[++n]);
         }
         else if (is_arg_with_param("-stress-test")) {
-            // -stress-test <file or dir path> [<cycle count or skip count>]
-            // e.g. -stress-test file.pdf 25   for rendering file.pdf 25 times
-            //      -stress-test dir 300       render all files in dir, skipping first 300
+            // -stress-test <file or dir path> [<cycle count>x] [skip<skip count>]
+            // e.g. -stress-test file.pdf 25x  for rendering file.pdf 25 times
+            //      -stress-test dir skip300   render all files in dir, skipping first 300
             str::ReplacePtr(&stressTestPath, argList[++n]);
             int num;
-            if (has_second_param() && str::Parse(second_param(), _T("%d"), &num) && num > 0) {
-                stressTestCyclesOrSkips = num;
+            if (has_additional_param() && str::Parse(additional_param(), _T("%dx%$"), &num) && num > 0) {
+                stressTestCycles = num;
+                n++;
+            }
+            if (has_additional_param() && str::Parse(additional_param(), _T("skip%d%$"), &num) && num > 0) {
+                stressTestSkips = num;
                 n++;
             }
         }
@@ -256,8 +260,8 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
             TCHAR *s = str::Dup(argList[++n]);
             filesToBenchmark.Push(s);
             s = NULL;
-            if (has_second_param() && IsBenchPagesInfo(second_param())) {
-                s = str::Dup(second_param());
+            if (has_additional_param() && IsBenchPagesInfo(additional_param())) {
+                s = str::Dup(additional_param());
                 n++;
             }
             filesToBenchmark.Push(s);
@@ -283,6 +287,6 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
     }
 #undef is_arg
 #undef is_arg_with_param
-#undef second_param
-#undef has_second_param
+#undef additional_param
+#undef has_additional_param
 }

@@ -43,7 +43,8 @@ public:
     bool        exitImmediately;
     bool        silent;
     TCHAR *     stressTestPath;
-    int         stressTestCyclesOrSkips;
+    int         stressTestCycles;
+    int         stressTestSkips;
 
     CommandLineInfo() : makeDefault(false), exitOnPrint(false), printDialog(false),
         printerName(NULL), bgColor(-1), inverseSearchCmdLine(NULL),
@@ -54,7 +55,7 @@ public:
         enterPresentation(false), enterFullscreen(false), hwndPluginParent(NULL),
         startView(DM_AUTOMATIC), startZoom(INVALID_ZOOM), startScroll(PointI(-1, -1)),
         showConsole(false), exitImmediately(false), silent(false),
-        stressTestPath(NULL), stressTestCyclesOrSkips(-1)
+        stressTestPath(NULL), stressTestCycles(1), stressTestSkips(0)
     { }
 
     ~CommandLineInfo() {

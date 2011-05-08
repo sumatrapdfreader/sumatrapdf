@@ -6935,7 +6935,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 #endif
 
     if (i.stressTestPath)
-        StartStressTest(win, i.stressTestPath, i.stressTestCyclesOrSkips, &gRenderCache);
+        StartStressTest(win, i.stressTestPath, i.stressTestCycles, i.stressTestSkips, &gRenderCache);
 
     while (GetMessage(&msg, NULL, 0, 0) > 0) {
 #ifndef THREAD_BASED_FILEWATCH
