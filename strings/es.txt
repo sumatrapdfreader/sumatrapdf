@@ -615,7 +615,8 @@ copiado de texto
 printing document
 imprimimendo documento
 
-# Untranslated:
-#Postscript documents
-#Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
+Postscript documents
+Documentos Postscript
 
+Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
+Lo sentimos, ¡eso no debería haber pasado!\n\nPresione 'Cancelar', si quiere ayudarnos a arreglar la causa del fallo.

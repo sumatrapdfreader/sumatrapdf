@@ -474,6 +474,9 @@ Page:
 Please wait - rendering...
 Формируется изображение, подождите...
 
+Postscript documents
+Документы Postscript
+
 Pr&esentation\tCtrl-L
 Пр&езентация\tCtrl-L
 
@@ -614,7 +617,4 @@ copying text
 
 printing document
 печатается документ
-
-# Untranslated:
-#Postscript documents
 
