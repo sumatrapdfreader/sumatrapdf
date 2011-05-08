@@ -470,7 +470,12 @@ NPError NP_LOADDS NPP_NewStream(NPP instance, NPMIMEType type, NPStream* stream,
     data->hFile = NULL;
     // create a temporary file only for Gecko based browsers such as Firefox
     const char *userAgent = gNPNFuncs.uagent(instance);
-    if (str::Find(userAgent, "Gecko/") && (stream->end > BIG_FILE_THRESHOLD || !stream->end))
+
+    // TODO: make this permament as people seem to be having trouble with
+    // small files too. Firefox simply seems unreliable
+    // http://forums.fofou.org/sumatrapdf/topic?id=2067366&comments=13
+    //if (str::Find(userAgent, "Gecko/") && (stream->end > BIG_FILE_THRESHOLD || !stream->end))
+    if (str::Find(userAgent, "Gecko/"))
     {
         data->hFile = CreateTempFile(data->filepath);
         if (data->hFile)
