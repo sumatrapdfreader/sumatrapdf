@@ -289,50 +289,57 @@ public:
     virtual void Callback() { OnTimer(); }
 };
 
-bool StressTest::GoToNextPage()
+void StressTest::Start(const TCHAR *path, const TCHAR *ranges, int cycles)
 {
-    double pageRenderTime = currPageRenderTime.GetCurrTimeInMs();
-    ScopedMem<TCHAR> s(str::Format(_T("Page %d rendered in %d milliseconds"), currPage, (int)pageRenderTime));
-    win->ShowNotification(s, true, false, NG_STRESS_TEST_BENCHMARK);
+    srand((unsigned int)time(NULL));
+    GetSystemTime(&stressStartTime);
 
-    ++currPage;
-    while (!IsInRange(pageRanges, currPage) && currPage <= win->dm->pageCount())
-        currPage++;
+    // forbid entering sleep mode during tests
+    SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED);
 
-    if (currPage > win->dm->pageCount()) {
-        if (GoToNextFile())
-            return true;
+    basePath = str::Dup(path);
+    if (file::Exists(basePath)) {
+        filesToOpen.Append(str::Dup(basePath));
+        ParsePageRanges(ranges, pageRanges);
+    }
+    else if (dir::Exists(basePath)) {
+        OpenDir(basePath);
+        ParsePageRanges(ranges, fileRanges);
+    }
+    else {
+        // Note: dev only, don't translate
+        ScopedMem<TCHAR> s(str::Format(_T("Path '%s' doesn't exist"), path));
+        win->ShowNotification(s, false /* autoDismiss */, true, NG_STRESS_TEST_SUMMARY);
+        Finished(false);
+        return;
+    }
+
+    this->cycles = cycles;
+    if (pageRanges.Count() == 0)
+        pageRanges.Append(PageRange());
+    if (fileRanges.Count() == 0)
+        fileRanges.Append(PageRange());
+
+    if (GoToNextFile())
+        TickTimer();
+    else
         Finished(true);
-        return false;
+}
+
+void StressTest::Finished(bool success)
+{
+    win->stressTest = NULL;
+    SetThreadExecutionState(ES_CONTINUOUS);
+
+    if (success) {
+        int secs = SecsSinceSystemTime(stressStartTime);
+        ScopedMem<TCHAR> tm(FormatTime(secs));
+        ScopedMem<TCHAR> s(str::Format(_T("Stress test complete, rendered %d files in %s"), filesCount, tm));
+        win->ShowNotification(s, false, false, NG_STRESS_TEST_SUMMARY);
     }
 
-    win->dm->goToPage(currPage, 0);
-    currPageRenderTime.Start();
-
-    // start text search when we're in the middle of the document, so that
-    // search thread touches both pages that were already rendered and not yet
-    // rendered
-    // TODO: it would be nice to also randomize search starting page but the
-    // current API doesn't make it easy
-    if (currPage == pageForSearchStart) {
-        // use text that is unlikely to be found, so that we search all pages
-        win::SetText(win->hwndFindBox, _T("!z_yt"));
-        FindTextOnThread(win);
-    }
-
-    if (1 == rand() % 3) {
-        ClientRect rect(win->hwndFrame);
-        int deltaX = (rand() % 40) - 23;
-        rect.dx += deltaX;
-        if (rect.dx < 300)
-            rect.dx += (abs(deltaX) * 3);
-        int deltaY = (rand() % 40) - 23;
-        rect.dy += deltaY;
-        if (rect.dy < 300)
-            rect.dy += (abs(deltaY) * 3);
-        SendMessage(win->hwndFrame, WM_SIZE, 0, MAKELONG(rect.dx, rect.dy));
-    }
-    return true;
+    CloseWindow(win, false);
+    delete this;
 }
 
 bool StressTest::OpenDir(const TCHAR *dirPath)
@@ -352,6 +359,37 @@ bool StressTest::OpenDir(const TCHAR *dirPath)
     bool hasSubDirs = CollectPathsFromDirectory(pattern, dirsToVisit, true);
 
     return hasFiles || hasSubDirs;
+}
+
+bool StressTest::GoToNextFile()
+{
+    for (;;) {
+        while (filesToOpen.Count() > 0) {
+            // test next file
+            ScopedMem<TCHAR> path(filesToOpen[0]);
+            filesToOpen.RemoveAt(0);
+            if (!IsInRange(fileRanges, ++fileIndex))
+                continue;
+            if (OpenFile(path))
+                return true;
+        }
+
+        if (dirsToVisit.Count() > 0) {
+            // test next directory
+            ScopedMem<TCHAR> path(dirsToVisit[0]);
+            dirsToVisit.RemoveAt(0);
+            OpenDir(path);
+            continue;
+        }
+
+        if (--cycles <= 0)
+            return false;
+        // start next cycle
+        if (file::Exists(basePath))
+            filesToOpen.Append(str::Dup(basePath));
+        else
+            OpenDir(basePath);
+    }
 }
 
 bool StressTest::OpenFile(const TCHAR *fileName)
@@ -403,6 +441,52 @@ bool StressTest::OpenFile(const TCHAR *fileName)
     return true;
 }
 
+bool StressTest::GoToNextPage()
+{
+    double pageRenderTime = currPageRenderTime.GetCurrTimeInMs();
+    ScopedMem<TCHAR> s(str::Format(_T("Page %d rendered in %d milliseconds"), currPage, (int)pageRenderTime));
+    win->ShowNotification(s, true, false, NG_STRESS_TEST_BENCHMARK);
+
+    ++currPage;
+    while (!IsInRange(pageRanges, currPage) && currPage <= win->dm->pageCount())
+        currPage++;
+
+    if (currPage > win->dm->pageCount()) {
+        if (GoToNextFile())
+            return true;
+        Finished(true);
+        return false;
+    }
+
+    win->dm->goToPage(currPage, 0);
+    currPageRenderTime.Start();
+
+    // start text search when we're in the middle of the document, so that
+    // search thread touches both pages that were already rendered and not yet
+    // rendered
+    // TODO: it would be nice to also randomize search starting page but the
+    // current API doesn't make it easy
+    if (currPage == pageForSearchStart) {
+        // use text that is unlikely to be found, so that we search all pages
+        win::SetText(win->hwndFindBox, _T("!z_yt"));
+        FindTextOnThread(win);
+    }
+
+    if (1 == rand() % 3) {
+        ClientRect rect(win->hwndFrame);
+        int deltaX = (rand() % 40) - 23;
+        rect.dx += deltaX;
+        if (rect.dx < 300)
+            rect.dx += (abs(deltaX) * 3);
+        int deltaY = (rand() % 40) - 23;
+        rect.dy += deltaY;
+        if (rect.dy < 300)
+            rect.dy += (abs(deltaY) * 3);
+        SendMessage(win->hwndFrame, WM_SIZE, 0, MAKELONG(rect.dx, rect.dy));
+    }
+    return true;
+}
+
 void StressTest::TickTimer()
 {
     SetTimer(win->hwndCanvas, DIR_STRESS_TIMER_ID, USER_TIMER_MINIMUM, NULL);
@@ -431,53 +515,6 @@ void StressTest::OnTimer()
     TickTimer();
 }
 
-bool StressTest::GoToNextFile()
-{
-    for (;;) {
-        while (filesToOpen.Count() > 0) {
-            // test next file
-            ScopedMem<TCHAR> path(filesToOpen[0]);
-            filesToOpen.RemoveAt(0);
-            if (!IsInRange(fileRanges, ++fileIndex))
-                continue;
-            if (OpenFile(path))
-                return true;
-        }
-
-        if (dirsToVisit.Count() > 0) {
-            // test next directory
-            ScopedMem<TCHAR> path(dirsToVisit[0]);
-            dirsToVisit.RemoveAt(0);
-            OpenDir(path);
-            continue;
-        }
-
-        if (--cycles <= 0)
-            return false;
-        // start next cycle
-        if (file::Exists(basePath))
-            filesToOpen.Append(str::Dup(basePath));
-        else
-            OpenDir(basePath);
-    }
-}
-
-void StressTest::Finished(bool success)
-{
-    win->stressTest = NULL;
-    SetThreadExecutionState(ES_CONTINUOUS);
-
-    if (success) {
-        int secs = SecsSinceSystemTime(stressStartTime);
-        ScopedMem<TCHAR> tm(FormatTime(secs));
-        ScopedMem<TCHAR> s(str::Format(_T("Stress test complete, rendered %d files in %s"), filesCount, tm));
-        win->ShowNotification(s, false, false, NG_STRESS_TEST_SUMMARY);
-    }
-
-    CloseWindow(win, false);
-    delete this;
-}
-
 char *StressTest::GetLogInfo()
 {
     int secs = SecsSinceSystemTime(stressStartTime);
@@ -486,52 +523,14 @@ char *StressTest::GetLogInfo()
     return str::Format(", stress test rendered %d files in %s, currPage: %d", filesCount, su, currPage);
 }
 
-void StressTest::Start(const TCHAR *path, const TCHAR *ranges, int cycles)
-{
-    srand((unsigned int)time(NULL));
-    GetSystemTime(&stressStartTime);
-
-    // forbid entering sleep mode during tests
-    SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED);
-
-    basePath = str::Dup(path);
-    if (file::Exists(basePath)) {
-        filesToOpen.Append(str::Dup(basePath));
-        ParsePageRanges(ranges, pageRanges);
-    }
-    else if (dir::Exists(basePath)) {
-        OpenDir(basePath);
-        ParsePageRanges(ranges, fileRanges);
-    }
-    else {
-        // Note: dev only, don't translate
-        ScopedMem<TCHAR> s(str::Format(_T("Path '%s' doesn't exist"), path));
-        win->ShowNotification(s, false /* autoDismiss */, true, NG_STRESS_TEST_SUMMARY);
-        Finished(false);
-        return;
-    }
-
-    this->cycles = cycles;
-    if (pageRanges.Count() == 0)
-        pageRanges.Append(PageRange());
-    if (fileRanges.Count() == 0)
-        fileRanges.Append(PageRange());
-
-    if (GoToNextFile())
-        TickTimer();
-    else
-        Finished(true);
-}
-
 char *GetStressTestInfo(StressTest *dst)
 {
     return dst->GetLogInfo();
 }
 
-// 
 void StartStressTest(WindowInfo *win, const TCHAR *path, const TCHAR *ranges, int cycles, RenderCache *renderCache)
 {
-    //gPredictiveRender = false;
+    // gPredictiveRender = false;
 
     // dst will be deleted when the stress ends
     StressTest *dst = new StressTest(win, renderCache);
