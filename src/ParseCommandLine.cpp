@@ -242,17 +242,18 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
             hwndPluginParent = (HWND)_ttol(argList[++n]);
         }
         else if (is_arg_with_param("-stress-test")) {
-            // -stress-test <file or dir path> [<cycle count>x] [skip<skip count>]
+            // -stress-test <file or dir path> [<page/file range(s)>] [<cycle count>x]
             // e.g. -stress-test file.pdf 25x  for rendering file.pdf 25 times
-            //      -stress-test dir skip300   render all files in dir, skipping first 300
+            //      -stress-test file.pdf 1-3  render only pages 1, 2 and 3 of file.pdf
+            //      -stress-test dir 301- 2x   render all files in dir twice, skipping first 300
             str::ReplacePtr(&stressTestPath, argList[++n]);
             int num;
-            if (has_additional_param() && str::Parse(additional_param(), _T("%dx%$"), &num) && num > 0) {
-                stressTestCycles = num;
+            if (has_additional_param() && IsValidPageRange(additional_param())) {
+                str::ReplacePtr(&stressTestRanges, additional_param());
                 n++;
             }
-            if (has_additional_param() && str::Parse(additional_param(), _T("skip%d%$"), &num) && num > 0) {
-                stressTestSkips = num;
+            if (has_additional_param() && str::Parse(additional_param(), _T("%dx%$"), &num) && num > 0) {
+                stressTestCycles = num;
                 n++;
             }
         }

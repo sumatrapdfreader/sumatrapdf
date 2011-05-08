@@ -150,10 +150,10 @@ static void BenchRangeTest()
     assert(IsBenchPagesInfo(_T("5,7")));
     assert(IsBenchPagesInfo(_T("6,8,")));
     assert(IsBenchPagesInfo(_T("1-3,4,6-9,13")));
+    assert(IsBenchPagesInfo(_T("2-")));
     assert(IsBenchPagesInfo(_T("loadonly")));
 
     assert(!IsBenchPagesInfo(_T("")));
-    assert(!IsBenchPagesInfo(_T("2-")));
     assert(!IsBenchPagesInfo(_T("-2")));
     assert(!IsBenchPagesInfo(_T("2--4")));
     assert(!IsBenchPagesInfo(_T("4-2")));

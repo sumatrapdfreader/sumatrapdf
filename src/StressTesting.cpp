@@ -18,6 +18,57 @@ static Log::Logger *gLog;
 #define logbench(msg, ...) gLog->LogFmt(_T(msg), __VA_ARGS__)
 // #define logbench(msg, ...) Log::LogFmt(_T(msg), __VA_ARGS__)
 
+struct PageRange {
+    PageRange() : start(1), end(INT_MAX) { }
+    PageRange(int start, int end) : start(start), end(end) { }
+
+    int start, end; // end == INT_MAX means to the last page
+};
+
+// parses a list of page ranges such as 1,3-5,7- (i..e all but pages 2 and 6)
+// into an interable list (returns NULL on parsing errors)
+// caller must delete the result
+static bool ParsePageRanges(const TCHAR *ranges, Vec<PageRange>& result)
+{
+    if (!ranges)
+        return false;
+
+    StrVec rangeList;
+    rangeList.Split(ranges, _T(","), true);
+    rangeList.SortNatural();
+
+    for (size_t i = 0; i < rangeList.Count(); i++) {
+        int start, end;
+        if (str::Parse(rangeList[i], _T("%d-%d%$"), &start, &end) && 0 < start && start <= end)
+            result.Append(PageRange(start, end));
+        else if (str::Parse(rangeList[i], _T("%d-%$"), &start) && 0 < start)
+            result.Append(PageRange(start, INT_MAX));
+        else if (str::Parse(rangeList[i], _T("%d%$"), &start) && 0 < start)
+            result.Append(PageRange(start, start));
+        else
+            return false;
+    }
+
+    return result.Count() > 0;
+}
+
+// a valid page range is a non-empty, comma separated list of either
+// single page ("3") numbers, closed intervals "2-4" or intervals
+// unlimited to the right ("5-")
+bool IsValidPageRange(const TCHAR *ranges)
+{
+    Vec<PageRange> rangeList;
+    return ParsePageRanges(ranges, rangeList);
+}
+
+inline bool IsInRange(Vec<PageRange>& ranges, int pageNo)
+{
+    for (size_t i = 0; i < ranges.Count(); i++)
+        if (ranges[i].start <= pageNo && pageNo <= ranges[i].end)
+            return true;
+    return false;
+}
+
 static void BenchLoadRender(BaseEngine *engine, int pagenum)
 {
     MillisecondTimer t;
@@ -46,38 +97,12 @@ static void BenchLoadRender(BaseEngine *engine, int pagenum)
     logbench("pagerender %3d: %.2f ms", pagenum, timems);
 }
 
-// <s> can be in form "1" or "3-58". If the range is followed
-// by a comma, that's skipped. The end of the parsed string
-// is returned (or NULL in case of a parsing error).
-static const TCHAR *GetRange(const TCHAR *s, int *start, int *end)
-{
-    const TCHAR *next = str::Parse(s, _T("%d-%d%?,"), start, end);
-    if (!next) {
-        next = str::Parse(s, _T("%d%?,"), start);
-        if (next)
-            *end = *start;
-    }
-    return next;
-}
-
 // <s> can be:
 // * "loadonly"
 // * description of page ranges e.g. "1", "1-5", "2-3,6,8-10"
 bool IsBenchPagesInfo(const TCHAR *s)
 {
-    if (str::IsEmpty(s))
-        return false;
-    if (str::EqI(s, _T("loadonly")))
-        return true;
-
-    while (!str::IsEmpty(s)) {
-        int start, end;
-        s = GetRange(s, &start, &end);
-        if (!s || start < 0 || end < 0 || start > end)
-            return false;
-    }
-
-    return true;
+    return str::EqI(s, _T("loadonly")) || IsValidPageRange(s);
 }
 
 static void BenchFile(TCHAR *filePath, const TCHAR *pagesSpec)
@@ -113,12 +138,12 @@ static void BenchFile(TCHAR *filePath, const TCHAR *pagesSpec)
     }
 
     assert(!pagesSpec || IsBenchPagesInfo(pagesSpec));
-    while (!str::IsEmpty(pagesSpec)) {
-        int start, end;
-        pagesSpec = GetRange(pagesSpec, &start, &end);
-        for (int j = start; j <= end; j++) {
-            if (1 <= j && j <= pages)
-                BenchLoadRender(engine, j);
+    Vec<PageRange> ranges;
+    if (ParsePageRanges(pagesSpec, ranges)) {
+        for (size_t i = 0; i < ranges.Count(); i++) {
+            for (int j = ranges[i].start; j <= ranges[i].end; j++)
+                if (1 <= j && j <= pages)
+                    BenchLoadRender(engine, j);
         }
     }
 
@@ -229,8 +254,11 @@ class StressTest : public CallbackFunc {
 
     SYSTEMTIME        stressStartTime;
     int               cycles;
-    int               skips; // only makes sense for directory stress tests
+    Vec<PageRange>    pageRanges;
     TCHAR *           basePath;
+    // range of files to render (files get a new index when going through several cycles)
+    Vec<PageRange>    fileRanges;
+    int               fileIndex;
 
     // current state of directory traversal
     StrVec            filesToOpen;
@@ -249,32 +277,36 @@ class StressTest : public CallbackFunc {
 public:
     StressTest(WindowInfo *win, RenderCache *renderCache) :
         win(win), renderCache(renderCache), filesCount(0), 
-        cycles(1), skips(0), basePath(NULL)
+        cycles(1), basePath(NULL), fileIndex(0)
         { }
     virtual ~StressTest() {
         free(basePath);
     }
 
     char *GetLogInfo();
-    void Start(const TCHAR *path, int cycles, int skips);
+    void Start(const TCHAR *path, const TCHAR *ranges, int cycles);
 
     virtual void Callback() { OnTimer(); }
 };
 
 bool StressTest::GoToNextPage()
 {
-    if (currPage >= win->dm->pageCount()) {
+    double pageRenderTime = currPageRenderTime.GetCurrTimeInMs();
+    ScopedMem<TCHAR> s(str::Format(_T("Page %d rendered in %d milliseconds"), currPage, (int)pageRenderTime));
+    win->ShowNotification(s, true, false, NG_STRESS_TEST_BENCHMARK);
+
+    ++currPage;
+    while (!IsInRange(pageRanges, currPage) && currPage <= win->dm->pageCount())
+        currPage++;
+
+    if (currPage > win->dm->pageCount()) {
         if (GoToNextFile())
             return true;
         Finished(true);
         return false;
     }
 
-    ++currPage;
     win->dm->goToPage(currPage, 0);
-    double pageRenderTime = currPageRenderTime.GetCurrTimeInMs();
-    ScopedMem<TCHAR> s(str::Format(_T("Page %d rendered in %d milliseconds"), currPage-1, (int)pageRenderTime));
-    win->ShowNotification(s, true, false, NG_STRESS_TEST_BENCHMARK);
     currPageRenderTime.Start();
 
     // start text search when we're in the middle of the document, so that
@@ -356,7 +388,8 @@ bool StressTest::OpenFile(const TCHAR *fileName)
     if (win->tocShow)
         win->HideTocBox();
 
-    currPage = 1;
+    currPage = pageRanges[0].start;
+    win->dm->goToPage(currPage, 0);
     currPageRenderTime.Start();
     ++filesCount;
 
@@ -405,7 +438,7 @@ bool StressTest::GoToNextFile()
             // test next file
             ScopedMem<TCHAR> path(filesToOpen[0]);
             filesToOpen.RemoveAt(0);
-            if (skips-- > 0)
+            if (!IsInRange(fileRanges, ++fileIndex))
                 continue;
             if (OpenFile(path))
                 return true;
@@ -453,7 +486,7 @@ char *StressTest::GetLogInfo()
     return str::Format(", stress test rendered %d files in %s, currPage: %d", filesCount, su, currPage);
 }
 
-void StressTest::Start(const TCHAR *path, int cycles, int skips)
+void StressTest::Start(const TCHAR *path, const TCHAR *ranges, int cycles)
 {
     srand((unsigned int)time(NULL));
     GetSystemTime(&stressStartTime);
@@ -462,10 +495,14 @@ void StressTest::Start(const TCHAR *path, int cycles, int skips)
     SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED);
 
     basePath = str::Dup(path);
-    if (file::Exists(basePath))
+    if (file::Exists(basePath)) {
         filesToOpen.Append(str::Dup(basePath));
-    else if (dir::Exists(basePath))
+        ParsePageRanges(ranges, pageRanges);
+    }
+    else if (dir::Exists(basePath)) {
         OpenDir(basePath);
+        ParsePageRanges(ranges, fileRanges);
+    }
     else {
         // Note: dev only, don't translate
         ScopedMem<TCHAR> s(str::Format(_T("Path '%s' doesn't exist"), path));
@@ -475,7 +512,11 @@ void StressTest::Start(const TCHAR *path, int cycles, int skips)
     }
 
     this->cycles = cycles;
-    this->skips = skips;
+    if (pageRanges.Count() == 0)
+        pageRanges.Append(PageRange());
+    if (fileRanges.Count() == 0)
+        fileRanges.Append(PageRange());
+
     if (GoToNextFile())
         TickTimer();
     else
@@ -487,12 +528,13 @@ char *GetStressTestInfo(StressTest *dst)
     return dst->GetLogInfo();
 }
 
-void StartStressTest(WindowInfo *win, const TCHAR *path, int cycles, int skips, RenderCache *renderCache)
+// 
+void StartStressTest(WindowInfo *win, const TCHAR *path, const TCHAR *ranges, int cycles, RenderCache *renderCache)
 {
     //gPredictiveRender = false;
 
     // dst will be deleted when the stress ends
     StressTest *dst = new StressTest(win, renderCache);
     win->stressTest = dst;
-    dst->Start(path, cycles, skips);
+    dst->Start(path, ranges, cycles);
 }

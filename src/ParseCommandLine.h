@@ -43,8 +43,8 @@ public:
     bool        exitImmediately;
     bool        silent;
     TCHAR *     stressTestPath;
+    TCHAR *     stressTestRanges;
     int         stressTestCycles;
-    int         stressTestSkips;
 
     CommandLineInfo() : makeDefault(false), exitOnPrint(false), printDialog(false),
         printerName(NULL), bgColor(-1), inverseSearchCmdLine(NULL),
@@ -55,7 +55,7 @@ public:
         enterPresentation(false), enterFullscreen(false), hwndPluginParent(NULL),
         startView(DM_AUTOMATIC), startZoom(INVALID_ZOOM), startScroll(PointI(-1, -1)),
         showConsole(false), exitImmediately(false), silent(false),
-        stressTestPath(NULL), stressTestCycles(1), stressTestSkips(0)
+        stressTestPath(NULL), stressTestRanges(NULL), stressTestCycles(1)
     { }
 
     ~CommandLineInfo() {
@@ -64,6 +64,7 @@ public:
         free(lang);
         free(destName);
         free(stressTestPath);
+        free(stressTestRanges);
     }
 
     void ParseCommandLine(TCHAR *cmdLine);
