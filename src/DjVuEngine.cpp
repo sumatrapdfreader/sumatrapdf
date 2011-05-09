@@ -168,6 +168,8 @@ public:
     ddjvu_document_t *OpenFile(const TCHAR *fileName) {
         ScopedCritSec scope(&lock);
         ScopedMem<char> fileNameUtf8(str::conv::ToUtf8(fileName));
+        // TODO: libdjvu sooner or later crashes inside its caching code; cf.
+        //       http://code.google.com/p/sumatrapdf/issues/detail?id=1434
         return ddjvu_document_create_by_filename_utf8(ctx, fileNameUtf8, /* cache */ FALSE);
     }
 };
