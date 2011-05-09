@@ -567,11 +567,27 @@ TCHAR *CDjVuEngine::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_o
 
     assert(str::Len(extracted.Get()) == coords.Count());
     if (coords_out) {
+        ddjvu_status_t status;
+        ddjvu_pageinfo_t info;
+        while ((status = ddjvu_document_get_pageinfo(doc, pageNo-1, &info)) < DDJVU_JOB_OK)
+            gDjVuContext.SpinMessageLoop();
+        float dpiFactor = 1.0;
+        if (DDJVU_JOB_OK == status)
+            dpiFactor = GetFileDPI() / info.dpi;
+
         // TODO: the coordinates aren't completely correct yet
         RectI page = PageMediabox(pageNo).Round();
-        for (size_t i = 0; i < coords.Count(); i++)
-            if (!coords[i].IsEmpty())
+        for (size_t i = 0; i < coords.Count(); i++) {
+            if (!coords[i].IsEmpty()) {
+                if (dpiFactor != 1.0) {
+                    Rect<float> pageF = coords[i].Convert<float>();
+                    pageF.x *= dpiFactor; pageF.dx *= dpiFactor;
+                    pageF.y *= dpiFactor; pageF.dy *= dpiFactor;
+                    coords[i] = pageF.Round();
+                }
                 coords[i].y = page.dy - coords[i].y - coords[i].dy;
+            }
+        }
         *coords_out = coords.StealData();
     }
 
@@ -584,8 +600,18 @@ Vec<PageElement *> *CDjVuEngine::GetElements(int pageNo)
     if (!annos || !annos[pageNo-1])
         return NULL;
 
+    ScopedCritSec(&gDjVuContext.lock);
+
     Vec<PageElement *> *els = new Vec<PageElement *>();
     RectI page = PageMediabox(pageNo).Round();
+
+    ddjvu_status_t status;
+    ddjvu_pageinfo_t info;
+    while ((status = ddjvu_document_get_pageinfo(doc, pageNo-1, &info)) < DDJVU_JOB_OK)
+        gDjVuContext.SpinMessageLoop();
+    float dpiFactor = 1.0;
+    if (DDJVU_JOB_OK == status)
+        dpiFactor = GetFileDPI() / info.dpi;
 
     miniexp_t *links = ddjvu_anno_get_hyperlinks(annos[pageNo-1]);
     for (int i = 0; links[i]; i++) {
@@ -623,6 +649,10 @@ Vec<PageElement *> *CDjVuEngine::GetElements(int pageNo)
         int w = miniexp_to_int(miniexp_car(area)); area = miniexp_cdr(area);
         if (!miniexp_numberp(miniexp_car(area))) continue;
         int h = miniexp_to_int(miniexp_car(area)); area = miniexp_cdr(area);
+        if (dpiFactor != 1.0) {
+            x = (int)(x * dpiFactor); w = (int)(w * dpiFactor);
+            y = (int)(y * dpiFactor); h = (int)(h * dpiFactor);
+        }
         RectI rect(x, page.dy - y - h, w, h);
 
         ScopedMem<char> link(ResolveNamedDest(urlUtf8));
@@ -727,6 +757,7 @@ DocToCItem *CDjVuEngine::GetToCTree()
     if (!HasToCTree())
         return NULL;
 
+    ScopedCritSec(&gDjVuContext.lock);
     int idCounter = 0;
     return BuildToCTree(outline, idCounter);
 }
