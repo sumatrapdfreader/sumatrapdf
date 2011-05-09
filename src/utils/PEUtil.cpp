@@ -102,6 +102,30 @@ IMAGE_SECTION_HEADER
     WORD    NumberOfRelocations;
     WORD    NumberOfLinenumbers;
     DWORD   Characteristics;
+
+Resources section format:
+
+IMAGE_RESOURCE_DIRECTORY
+    WORD    NumberOfNamedEntries;
+    WORD    NumberOfIdEntries;
+
+IMAGE_RESOURCE_DIRECTORY_ENTRY * (NumberOfNamedEntries + NumberOfIdEntries)
+    union {
+        struct {
+            DWORD NameOffset:31;
+            DWORD NameIsString:1;
+        } DUMMYSTRUCTNAME;
+        DWORD   Name;
+        WORD    Id;
+    } DUMMYUNIONNAME;
+    union {
+        DWORD   OffsetToData;
+        struct {
+            DWORD   OffsetToDirectory:31;
+            DWORD   DataIsDirectory:1;
+        } DUMMYSTRUCTNAME2;
+    } DUMMYUNIONNAME2;
+
 */
 
 #define InFilePtr(type, offset) (type*)(mf->data + offset)
@@ -117,6 +141,49 @@ bool IsValidSecondHdr(IMAGE_NT_HEADERS *hdr)
         return false;
 
     return true;
+}
+
+#define Offs(type, start, size) (type*)((char*)start + size)
+
+#define RT(t) \
+    if (type == (DWORD)t) \
+        return #t;
+
+static char *ResType(DWORD type)
+{
+    RT(RT_CURSOR);
+    RT(RT_BITMAP);
+    RT(RT_ICON);
+    RT(RT_MENU);
+    RT(RT_DIALOG);
+    RT(RT_STRING);
+    RT(RT_RCDATA);
+    RT(RT_GROUP_ICON);
+    RT(RT_VERSION);
+    RT(RT_MANIFEST);
+    return "Unknown Res";
+}
+
+static void DumpResources(IMAGE_RESOURCE_DIRECTORY *rd)
+{
+    d("NumberOfNamedEntries: %d\n", (int)rd->NumberOfNamedEntries);
+    d("NumberOfIdEntries : %d\n", (int)rd->NumberOfIdEntries);
+    int entries = (int)(rd->NumberOfNamedEntries + rd->NumberOfIdEntries);
+    IMAGE_RESOURCE_DIRECTORY_ENTRY *firstResource = Offs(IMAGE_RESOURCE_DIRECTORY_ENTRY, rd, sizeof(IMAGE_RESOURCE_DIRECTORY));
+    IMAGE_RESOURCE_DIRECTORY_ENTRY *res = firstResource;
+    for (int i=0; i<entries; i++) {
+        DWORD isStr = res->NameIsString;
+        DWORD nameOff = res->NameOffset;
+        DWORD isDir = res->DataIsDirectory;
+        DWORD dataOff = isDir ? res->OffsetToDirectory : res->OffsetToData;
+        DWORD id = res->Id;
+        char *type = ResType(id);
+        d("dir: %d str: %d id: %02d %s nameOff: 0x%04x dataOff: 0x%04x\n", (int)isDir, (int)isStr, id, type, nameOff, dataOff);
+        //if (isDir) {
+        //    DumpResources(Offs(IMAGE_RESOURCE_DIRECTORY, firstResource, dataOff));
+        //}
+        ++res;
+    }
 }
 
 void DumpDataDir(IMAGE_NT_HEADERS *hdr, int dirIdx, char *dirName)
@@ -202,9 +269,9 @@ bool RemoveDataResource(const TCHAR *srcFile, const TCHAR *dstFile)
     int off = FileOffsetFromVirtAddr(dataDir.VirtualAddress, firstSection, sectionsCount);
 
     IMAGE_RESOURCE_DIRECTORY *rd = InFilePtr(IMAGE_RESOURCE_DIRECTORY, off);
-    d("NumberOfNamedEntries: %d\n", (int)rd->NumberOfNamedEntries);
-    d("NumberOfIdEntries : %d\n", (int)rd->NumberOfIdEntries );
 
+    IMAGE_RESOURCE_DIRECTORY_ENTRY *firstRes = InFilePtr(IMAGE_RESOURCE_DIRECTORY_ENTRY, off + sizeof(IMAGE_RESOURCE_DIRECTORY));
+    DumpResources(rd);
     delete mf;
     return true;
 
