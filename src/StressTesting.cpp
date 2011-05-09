@@ -195,6 +195,35 @@ bool CollectPathsFromDirectory(const TCHAR *pattern, StrVec& paths, bool dirsIns
     return paths.Count() > 0;
 }
 
+static bool IsStressTestSupportedFile(const TCHAR *fileName)
+{
+    return  DjVuEngine::IsSupportedFile(fileName) ||
+            PdfEngine::IsSupportedFile(fileName) ||
+            XpsEngine::IsSupportedFile(fileName) ||
+            CbxEngine::IsSupportedFile(fileName);
+}
+
+static bool CollectStressTestSupportedFilesFromDirectory(const TCHAR *dirPath, StrVec& paths)
+{
+    ScopedMem<TCHAR> pattern(path::Join(dirPath, _T("*")));
+
+    WIN32_FIND_DATA fdata;
+    HANDLE hfind = FindFirstFile(pattern, &fdata);
+    if (INVALID_HANDLE_VALUE == hfind)
+        return false;
+
+    do {
+        if (!(fdata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
+            if (IsStressTestSupportedFile(fdata.cFileName)) {
+                paths.Append(path::Join(dirPath, fdata.cFileName));
+            }
+        }
+    } while (FindNextFile(hfind, &fdata));
+    FindClose(hfind);
+
+    return paths.Count() > 0;
+}
+
 // return t1 - t2 in seconds
 static int SystemTimeDiffInSecs(SYSTEMTIME& t1, SYSTEMTIME& t2)
 {
@@ -346,16 +375,10 @@ bool StressTest::OpenDir(const TCHAR *dirPath)
 {
     assert(filesToOpen.Count() == 0);
 
-    ScopedMem<TCHAR> pattern(str::Format(_T("%s\\*.pdf"), dirPath));
-    bool hasFiles = CollectPathsFromDirectory(pattern, filesToOpen);
-    pattern.Set(str::Format(_T("%s\\*.xps"), dirPath));
-    hasFiles |= CollectPathsFromDirectory(pattern, filesToOpen);
-    pattern.Set(str::Format(_T("%s\\*.djvu"), dirPath));
-    hasFiles |= CollectPathsFromDirectory(pattern, filesToOpen);
-    // NTFS returns files sorted anyway, maybe an explicit randomization would be better, though
+    bool hasFiles = CollectStressTestSupportedFilesFromDirectory(dirPath, filesToOpen);
     filesToOpen.SortNatural();
 
-    pattern.Set(str::Format(_T("%s\\*"), dirPath));
+    ScopedMem<TCHAR> pattern(str::Format(_T("%s\\*"), dirPath));
     bool hasSubDirs = CollectPathsFromDirectory(pattern, dirsToVisit, true);
 
     return hasFiles || hasSubDirs;
@@ -511,7 +534,7 @@ void StressTest::OnTimer()
         if (!GoToNextPage())
             return;
     }
-    MakeRandomSelection(win->dm, currPage); // as a bonus, try to trigger ...
+    MakeRandomSelection(win->dm, currPage);
     TickTimer();
 }
 
