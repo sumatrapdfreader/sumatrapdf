@@ -9,25 +9,15 @@ render-benchmark.py obj-dbg\SumatraPDF.exe file1.pdf file2.xps
 """
 
 import os, re, sys
-import tempfile, subprocess
+from subprocess import Popen, PIPE
 
 def log(str):
 	sys.stderr.write(str + "\n")
 
-def getTempFile():
-	file = tempfile.NamedTemporaryFile(delete=False)
-	name = file.name
-	file.close()
-	return name
-
-def runBenchmark(SumatraPDF, file, logfile, repeats):
-	try:
-		log("-> %s (%d times)" % (file, repeats))
-		subprocess.call([SumatraPDF, "-console-file", logfile] + ["-bench", file] * repeats)
-		return True
-	except WindowsError:
-		print SumatraPDF, "not found!"
-		return False
+def runBenchmark(SumatraPDF, file, repeats):
+	log("-> %s (%d times)" % (file, repeats))
+	proc = Popen([SumatraPDF] + ["-bench", file] * repeats, stdout=PIPE, stderr=PIPE)
+	return proc.communicate()[1]
 
 def matchLine(line, regex, result=None):
 	match = re.findall(regex, line)
@@ -37,39 +27,26 @@ def matchLine(line, regex, result=None):
 		result.extend(match[0])
 	return match
 
-def parseBenchOutput(file):
+def parseBenchOutput(output):
 	result = {}
 	current, data = None, []
 	
-	for line in open(file).xreadlines():
+	for line in output.replace("\r", "\n").split("\n"):
 		match = []
 		if matchLine(line, r"Starting: (.*)", match):
 			if current or data:
-				print "Ignoring data for failed run for %s" % (current)
+				log("Ignoring data for failed run for %s" % (current))
 			current, data = match[0], []
 			if not current in result:
 				result[current] = []
 		
 		elif matchLine(line, r"load: (\d+(?:\.\d+)?) ms", match):
 			assert not data
-			data.append((float(match[0]), None))
+			data.append(float(match[0]))
 		
-		elif matchLine(line, r"page count: (\d+)", match):
-			assert len(data) == 1
-			data += [(0, 0)] * int(match[0])
-		
-		elif matchLine(line, r"pageload +(\d+): (\d+(?:\.\d+)?) ms", match):
-			pageNo = int(match[0])
-			assert 0 < pageNo <= len(data)
-			data[pageNo] = (float(match[1]), data[pageNo][1])
-		
-		elif matchLine(line, r"pagerender +(\d+): (\d+(?:\.\d+)?) ms", match):
-			pageNo = int(match[0])
-			assert 0 < pageNo <= len(data)
-			data[pageNo] = (data[pageNo][0], float(match[1]))
-			
 		elif matchLine(line, r"Finished \(in (\d+(?:\.\d+)?) ms\): (.*)", match):
-			data[0] = (data[0][0], float(match[0]))
+			assert len(data) == 1
+			data.append(float(match[0]))
 			result[current].append(data)
 			current, data = None, []
 	
@@ -80,17 +57,14 @@ def displayBenchResults(result):
 	for (file, data) in result.items():
 		count = len(data)
 		
-		loading = [item[0][0] for item in data]
-		loadMin = min(loading)
-		
-		rendering = [item[0][1] for item in data]
-		renderMin = min(rendering)
+		loadMin = min([item[0] for item in data])
+		renderMin = min([item[1] for item in data])
 		
 		print "%(file)s\t%(loadMin).2f\t%(renderMin).2f\t%(count)d" % locals()
 
 def main():
 	if not sys.argv[1:]:
-		print "Usage: %s [<SumatraPDF.exe>] <file1.pdf> [<file2.pdf> ...]" % (os.path.split(sys.argv[0])[1])
+		log("Usage: %s [<SumatraPDF.exe>] <file1.pdf> [<file2.pdf> ...]" % (os.path.split(sys.argv[0])[1]))
 		sys.exit(0)
 	
 	if sys.argv[1].lower().endswith(".exe"):
@@ -98,15 +72,17 @@ def main():
 	else:
 		SumatraPDF = "SumatraPDF.exe"
 	
+	benchData = ""
 	log("Running benchmark with %s..." % SumatraPDF)
-	logfile = getTempFile()
 	for file in sys.argv[1:]:
-		if not runBenchmark(SumatraPDF, file, logfile, 10):
-			os.remove(logfile)
+		try:
+			benchData += runBenchmark(SumatraPDF, file, 10) + "\n"
+		except:
+			log("Error: %s not found" % SumatraPDF)
 			return
 	log("")
-	displayBenchResults(parseBenchOutput(logfile))
-	os.remove(logfile)
+	
+	displayBenchResults(parseBenchOutput(benchData))
 
 if __name__ == "__main__":
 	main()
