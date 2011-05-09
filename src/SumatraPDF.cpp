@@ -6937,10 +6937,12 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     const UINT_PTR timerID = SetTimer(NULL, -1, FILEWATCH_DELAY_IN_MS, NULL);
 #endif
 
-    if (i.stressTestPath)
-		StartStressTest(win, i.stressTestPath, i.stressTestRanges, i.stressTestCycles, &gRenderCache, i.disableDjvu, i.disablePdf);
+    if (i.stressTestPath) {
+		StartStressTest(win, i.stressTestPath, i.stressTestRanges, i.stressTestCycles, &gRenderCache,
+						i.disableDjvu, i.disablePdf, i.disableCbx);
+	}
 
-    while (GetMessage(&msg, NULL, 0, 0) > 0) {
+	while (GetMessage(&msg, NULL, 0, 0) > 0) {
 #ifndef THREAD_BASED_FILEWATCH
         if (NULL == msg.hwnd && WM_TIMER == msg.message && timerID == msg.wParam) {
             RefreshUpdatedFiles();

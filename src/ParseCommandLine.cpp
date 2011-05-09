@@ -268,6 +268,9 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
         else if (is_arg("-no-pdf")) {
             disablePdf = true;
         }
+        else if (is_arg("-no-cbx")) {
+            disableCbx = true;
+        }
         else if (is_arg_with_param("-bench")) {
             TCHAR *s = str::Dup(argList[++n]);
             filesToBenchmark.Push(s);

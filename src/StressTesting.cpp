@@ -16,6 +16,7 @@
 
 static bool gStressTestDisableDjvu = false;
 static bool gStressTestDisablePdf = false;
+static bool gStressTestDisableCbx = false;
 
 static Log::Logger *gLog;
 #define logbench(msg, ...) gLog->LogFmt(_T(msg), __VA_ARGS__)
@@ -203,7 +204,7 @@ static bool IsStressTestSupportedFile(const TCHAR *fileName)
     return  (!gStressTestDisableDjvu && DjVuEngine::IsSupportedFile(fileName)) ||
             (!gStressTestDisablePdf && PdfEngine::IsSupportedFile(fileName)) ||
             XpsEngine::IsSupportedFile(fileName) ||
-            CbxEngine::IsSupportedFile(fileName);
+            (!gStressTestDisableCbx && CbxEngine::IsSupportedFile(fileName));
 }
 
 static bool CollectStressTestSupportedFilesFromDirectory(const TCHAR *dirPath, StrVec& paths)
@@ -295,6 +296,8 @@ class StressTest : public CallbackFunc {
     // current state of directory traversal
     StrVec            filesToOpen;
     StrVec            dirsToVisit;
+
+    bool              isCurrentFileCbx;
 
     bool OpenDir(const TCHAR *dirPath);
     bool OpenFile(const TCHAR *fileName);
@@ -433,6 +436,8 @@ bool StressTest::OpenFile(const TCHAR *fileName)
         return false;
     }
 
+    isCurrentFileCbx = CbxEngine::IsSupportedFile(fileName);
+
     // transfer ownership of stressTest object to a new window and close the
     // current one
     assert(this == win->stressTest);
@@ -524,10 +529,12 @@ void StressTest::OnTimer()
     if (!win->dm)
         return;
 
+	// For non-cbx files, we detect if a page was rendered by checking the cache
+	// (but we don't wait more than 3 seconds).
+	// Cbx files are always fully rendered in WM_PAINT, so we know the page
+	// has already been rendered.
     BitmapCacheEntry *entry = renderCache->Find(win->dm, currPage, win->dm->rotation());
-    if (!entry) {
-        // not sure how reliable renderCache.Find() is, don't wait more than
-        // 3 seconds for a single page to be rendered
+    if (!isCurrentFileCbx && !entry) {
         double timeInMs = currPageRenderTime.GetCurrTimeInMs();
         if (timeInMs > (double)3 * 1000) {
             if (!GoToNextPage())
@@ -555,11 +562,13 @@ char *GetStressTestInfo(StressTest *dst)
 }
 
 void StartStressTest(WindowInfo *win, const TCHAR *path, const TCHAR *ranges, 
-    int cycles, RenderCache *renderCache, bool disableDjvu, bool disablePdf)
+    int cycles, RenderCache *renderCache, bool disableDjvu, bool disablePdf,
+    bool disableCbx)
 {
     // gPredictiveRender = false;
     gStressTestDisableDjvu = disableDjvu;
     gStressTestDisablePdf = disablePdf;
+    gStressTestDisableCbx = disableCbx;
 
     // dst will be deleted when the stress ends
     StressTest *dst = new StressTest(win, renderCache);
