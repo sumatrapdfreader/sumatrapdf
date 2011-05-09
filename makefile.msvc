@@ -269,7 +269,7 @@ $(OS)\PdfSync.obj: src\PsEngine.h src\TextSearch.h src\TextSelection.h
 $(OS)\PdfSync.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
 $(OS)\PdfSync.obj: src\utils\StrUtil.h src\utils\Vec.h src\WindowInfo.h
 $(OS)\PEUtil.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\PEUtil.h
-$(OS)\PEUtil.obj: src\utils\SimpleLog.h src\utils\StrUtil.h src\utils\Vec.h
+$(OS)\PEUtil.obj: src\utils\StrUtil.h
 $(OS)\PsEngine.obj: src\BaseEngine.h src\PdfEngine.h src\PsEngine.h
 $(OS)\PsEngine.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
 $(OS)\PsEngine.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h

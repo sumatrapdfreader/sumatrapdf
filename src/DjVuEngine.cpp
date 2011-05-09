@@ -168,7 +168,7 @@ public:
     ddjvu_document_t *OpenFile(const TCHAR *fileName) {
         ScopedCritSec scope(&lock);
         ScopedMem<char> fileNameUtf8(str::conv::ToUtf8(fileName));
-        return ddjvu_document_create_by_filename_utf8(ctx, fileNameUtf8, /* cache */ TRUE);
+        return ddjvu_document_create_by_filename_utf8(ctx, fileNameUtf8, /* cache */ FALSE);
     }
 };
 
