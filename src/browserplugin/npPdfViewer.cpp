@@ -445,13 +445,6 @@ static void TriggerRepaintOnProgressChange(InstanceData *data)
     }
 }
 
-// To workaround Firefox bug https://bugzilla.mozilla.org/show_bug.cgi?id=644149
-// if a file is big (not sure what the exact threshold should be, we use
-// conservative 3MB) or of undetermined size, we save it to a temporary file
-// ourselves instead of relying on the browser to do it.
-// cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1328
-#define BIG_FILE_THRESHOLD (3 * 1024 * 1024)
-
 NPError NP_LOADDS NPP_NewStream(NPP instance, NPMIMEType type, NPStream* stream, NPBool seekable, uint16_t* stype)
 {
     InstanceData *data = (InstanceData *)instance->pdata;
@@ -468,13 +461,13 @@ NPError NP_LOADDS NPP_NewStream(NPP instance, NPMIMEType type, NPStream* stream,
     *stype = NP_ASFILE;
 
     data->hFile = NULL;
-    // create a temporary file only for Gecko based browsers such as Firefox
-    const char *userAgent = gNPNFuncs.uagent(instance);
 
-    // TODO: make this permament as people seem to be having trouble with
-    // small files too. Firefox simply seems unreliable
-    // http://forums.fofou.org/sumatrapdf/topic?id=2067366&comments=13
-    //if (str::Find(userAgent, "Gecko/") && (stream->end > BIG_FILE_THRESHOLD || !stream->end))
+    // Firefox has a bug https://bugzilla.mozilla.org/show_bug.cgi?id=644149
+    // where it's internal caching doesn't work for large files and is flaky
+    // for small files. As a workaround, we do file downloading ourselves.
+    // cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1328
+    // and http://fofou.appspot.com/sumatrapdf/topic?id=2067366&comments=16
+    const char *userAgent = gNPNFuncs.uagent(instance);
     if (str::Find(userAgent, "Gecko/"))
     {
         data->hFile = CreateTempFile(data->filepath);

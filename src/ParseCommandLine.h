@@ -49,6 +49,7 @@ public:
     TCHAR *     stressTestRanges;
     int         stressTestCycles;
     bool        disableDjvu;
+    bool        disablePdf;
 
     CommandLineInfo() : makeDefault(false), exitOnPrint(false), printDialog(false),
         printerName(NULL), bgColor(-1), inverseSearchCmdLine(NULL),
@@ -60,7 +61,7 @@ public:
         startView(DM_AUTOMATIC), startZoom(INVALID_ZOOM), startScroll(PointI(-1, -1)),
         showConsole(false), exitImmediately(false), silent(false),
         stressTestPath(NULL), stressTestRanges(NULL), stressTestCycles(1),
-        consoleFile(NULL), disableDjvu(false)
+        consoleFile(NULL), disableDjvu(false), disablePdf(false)
     { }
 
     ~CommandLineInfo() {
