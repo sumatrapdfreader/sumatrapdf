@@ -480,6 +480,9 @@ Pagina:
 Please wait - rendering...
 Rendering in corso - attendere...
 
+Postscript documents
+Documenti PostScript
+
 Pr&esentation\tCtrl-L
 Pr&esentazione\t<Ctrl>+L
 
@@ -620,7 +623,4 @@ Copia del testo...
 
 printing document
 Stampa documento...
-
-# Untranslated:
-#Postscript documents
 

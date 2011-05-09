@@ -474,6 +474,9 @@ Página:
 Please wait - rendering...
 Por favor, aguarde - a processar...
 
+Postscript documents
+Documentos Postscript
+
 Pr&esentation\tCtrl-L
 Aprese&ntação\tCtrl-L
 
@@ -539,6 +542,9 @@ Show the &bookmarks sidebar when available
 
 Single Page
 Página única
+
+Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
+Isto não devia ter ocorrido!\n\nPrima "Cancelar", se nos quiser ajudar a corrigir a origem deste erro.
 
 Source file %s has no synchronization point
 O ficheiro %s não tem ponto de sincronização
@@ -611,8 +617,4 @@ copiando texto
 
 printing document
 imprimindo documento
-
-# Untranslated:
-#Postscript documents
-#Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
 
