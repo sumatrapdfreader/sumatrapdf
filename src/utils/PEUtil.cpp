@@ -6,14 +6,15 @@
 #include "FileUtil.h"
 #include "StrUtil.h"
 
-#define _QUOTEME(x) #x
-#define TQM(x) _T(_QUOTEME(x))
-
-/* To get debug outputs in release builds as well:
-#include "SimpleLog.h"
-static Log::DebugLogger gLog;
-#define dbg(msg, ...) gLog.LogFmt(_T(msg), __VA_ARGS__)
-*/
+// Note: temporary
+void d(const char *format, ...)
+{
+    va_list args;
+    va_start(args, format);
+    ScopedMem<char> buf(str::FmtV(format, args));
+    OutputDebugStringA(buf);
+    va_end(args);
+}
 
 class MappedFile {
 
@@ -61,6 +62,48 @@ Error:
     return NULL;
 }
 
+/* Layout of PE file, address 0 at the top. Only important fields listed.
+
+IMAGE_DOS_HEADER
+  WORD  e_magic
+  LONG  e_lfanew - offset of IMAGE_NT_HEADERS
+
+IMAGE_NT_HEADERS
+  DWORD Signature;
+  IMAGE_FILE_HEADER FileHeader;
+    WORD   Machine
+    WORD   NumberOfSections
+    DWORD  PointerToSymbolTable;
+    DWORD  NumberOfSymbols;
+    WORD   SizeOfOptionalHeader; 
+  IMAGE_OPTIONAL_HEADER32 OptionalHeader
+    WORD    Magic;
+    DWORD   SizeOfCode;
+    DWORD   ImageBase;
+    DWORD   SectionAlignment;
+    DWORD   FileAlignment;
+    DWORD   SizeOfImage;
+    DWORD   SizeOfHeaders;
+    DWORD   CheckSum;
+    DWORD   NumberOfRvaAndSizes;
+    IMAGE_DATA_DIRECTORY DataDirectory[IMAGE_NUMBEROF_DIRECTORY_ENTRIES];
+
+IMAGE_SECTION_HEADER
+    BYTE    Name[IMAGE_SIZEOF_SHORT_NAME];
+    union {
+            DWORD   PhysicalAddress;
+            DWORD   VirtualSize;
+    } Misc;
+    DWORD   VirtualAddress;
+    DWORD   SizeOfRawData;
+    DWORD   PointerToRawData;
+    DWORD   PointerToRelocations;
+    DWORD   PointerToLinenumbers;
+    WORD    NumberOfRelocations;
+    WORD    NumberOfLinenumbers;
+    DWORD   Characteristics;
+*/
+
 #define InFilePtr(type, offset) (type*)(mf->data + offset)
 
 bool IsValidSecondHdr(IMAGE_NT_HEADERS *hdr)
@@ -75,35 +118,43 @@ bool IsValidSecondHdr(IMAGE_NT_HEADERS *hdr)
 
     return true;
 }
-/*
-#define IMAGE_DIRECTORY_ENTRY_EXPORT          0   // Export Directory
-#define IMAGE_DIRECTORY_ENTRY_IMPORT          1   // Import Directory
-#define IMAGE_DIRECTORY_ENTRY_RESOURCE        2   // Resource Directory
-#define IMAGE_DIRECTORY_ENTRY_EXCEPTION       3   // Exception Directory
-#define IMAGE_DIRECTORY_ENTRY_SECURITY        4   // Security Directory
-#define IMAGE_DIRECTORY_ENTRY_BASERELOC       5   // Base Relocation Table
-#define IMAGE_DIRECTORY_ENTRY_DEBUG           6   // Debug Directory
-//      IMAGE_DIRECTORY_ENTRY_COPYRIGHT       7   // (X86 usage)
-#define IMAGE_DIRECTORY_ENTRY_ARCHITECTURE    7   // Architecture Specific Data
-#define IMAGE_DIRECTORY_ENTRY_GLOBALPTR       8   // RVA of GP
-#define IMAGE_DIRECTORY_ENTRY_TLS             9   // TLS Directory
-#define IMAGE_DIRECTORY_ENTRY_LOAD_CONFIG    10   // Load Configuration Directory
-#define IMAGE_DIRECTORY_ENTRY_BOUND_IMPORT   11   // Bound Import Directory in headers
-#define IMAGE_DIRECTORY_ENTRY_IAT            12   // Import Address Table
-#define IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT   13   // Delay Load Import Descriptors
-#define IMAGE_DIRECTORY_ENTRY_COM_DESCRIPTOR 14   // COM Runtime descriptor
-*/
 
-void DumpDataDir(IMAGE_NT_HEADERS *hdr, int dirIdx, TCHAR *dirName)
+void DumpDataDir(IMAGE_NT_HEADERS *hdr, int dirIdx, char *dirName)
 {
     IMAGE_DATA_DIRECTORY dataDir = hdr->OptionalHeader.DataDirectory[dirIdx];
-    DBG_OUT("% 38s: 0x%06x 0x%04x\n", dirName, dataDir.VirtualAddress, dataDir.Size);
+    d("% 38s: 0x%06x 0x%04x\n", dirName, dataDir.VirtualAddress, dataDir.Size);
+}
+
+static void DumpSections(IMAGE_SECTION_HEADER *firstSection, int sectionsCount)
+{
+    IMAGE_SECTION_HEADER *section = firstSection;
+    for (int i=0; i < sectionsCount; i++)
+    {
+        d("% 6s, phys or size: 0x%06x virt: 0x%06x size raw: 0x%06x ptr to raw: 0x%06x\n", section->Name, section->Misc.VirtualSize, section->VirtualAddress, section->SizeOfRawData, section->PointerToRawData);
+        section += 1;
+    }
+}
+
+static int FileOffsetFromVirtAddr(DWORD virtAddr, IMAGE_SECTION_HEADER *firstSection, int sectionsCount)
+{
+    IMAGE_SECTION_HEADER *sec = firstSection;
+    for (int i = 0; i < sectionsCount; i++)
+    {
+        if ((virtAddr >= sec->VirtualAddress) && 
+            (virtAddr <  sec->VirtualAddress + sec->SizeOfRawData)) {
+            return (int)(virtAddr - sec->VirtualAddress + sec->PointerToRawData);
+        }
+        ++sec;
+    }
+    return -1;
 }
 
 // Write dstFile as srcFile with all binary data resources (RCDATA)
 // removed. Used for creating uninstaller from installer.
 bool RemoveDataResource(const TCHAR *srcFile, const TCHAR *dstFile)
 {
+    IMAGE_DATA_DIRECTORY dataDir;
+
     MappedFile *mf = MappedFile::Create(srcFile);
     if (!mf)
         return false;
@@ -121,25 +172,38 @@ bool RemoveDataResource(const TCHAR *srcFile, const TCHAR *dstFile)
     if ((size_t)dosHdr->e_lfanew > mf->size)
         goto Error;
 
-    IMAGE_NT_HEADERS *secondHdr = InFilePtr(IMAGE_NT_HEADERS, dosHdr->e_lfanew);
-    if (!IsValidSecondHdr(secondHdr))
+    IMAGE_NT_HEADERS *hdr = InFilePtr(IMAGE_NT_HEADERS, dosHdr->e_lfanew);
+    if (!IsValidSecondHdr(hdr))
         goto Error;
 
-    DumpDataDir(secondHdr, IMAGE_DIRECTORY_ENTRY_EXPORT, _T("IMAGE_DIRECTORY_ENTRY_EXPORT"));
-    DumpDataDir(secondHdr, IMAGE_DIRECTORY_ENTRY_IMPORT, _T("IMAGE_DIRECTORY_ENTRY_IMPORT"));
-    DumpDataDir(secondHdr, IMAGE_DIRECTORY_ENTRY_RESOURCE, _T("IMAGE_DIRECTORY_ENTRY_RESOURCE"));
-    DumpDataDir(secondHdr, IMAGE_DIRECTORY_ENTRY_EXCEPTION, _T("IMAGE_DIRECTORY_ENTRY_EXCEPTION"));
-    DumpDataDir(secondHdr, IMAGE_DIRECTORY_ENTRY_SECURITY, _T("IMAGE_DIRECTORY_ENTRY_SECURITY"));
-    DumpDataDir(secondHdr, IMAGE_DIRECTORY_ENTRY_BASERELOC, _T("IMAGE_DIRECTORY_ENTRY_BASERELOC"));
-    DumpDataDir(secondHdr, IMAGE_DIRECTORY_ENTRY_DEBUG, _T("IMAGE_DIRECTORY_ENTRY_DEBUG"));
-    DumpDataDir(secondHdr, IMAGE_DIRECTORY_ENTRY_ARCHITECTURE, _T("IMAGE_DIRECTORY_ENTRY_ARCHITECTURE"));
-    DumpDataDir(secondHdr, IMAGE_DIRECTORY_ENTRY_GLOBALPTR, _T("IMAGE_DIRECTORY_ENTRY_GLOBALPTR"));
-    DumpDataDir(secondHdr, IMAGE_DIRECTORY_ENTRY_TLS, _T("IMAGE_DIRECTORY_ENTRY_TLS"));
-    DumpDataDir(secondHdr, IMAGE_DIRECTORY_ENTRY_LOAD_CONFIG, _T("IMAGE_DIRECTORY_ENTRY_LOAD_CONFIG"));
-    DumpDataDir(secondHdr, IMAGE_DIRECTORY_ENTRY_BOUND_IMPORT, _T("IMAGE_DIRECTORY_ENTRY_BOUND_IMPORT"));
-    DumpDataDir(secondHdr, IMAGE_DIRECTORY_ENTRY_IAT, _T("IMAGE_DIRECTORY_ENTRY_IAT"));
-    DumpDataDir(secondHdr, IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT, _T("IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT"));
-    DumpDataDir(secondHdr, IMAGE_DIRECTORY_ENTRY_COM_DESCRIPTOR, _T("IMAGE_DIRECTORY_ENTRY_COM_DESCRIPTOR"));
+    DumpDataDir(hdr, IMAGE_DIRECTORY_ENTRY_EXPORT, "IMAGE_DIRECTORY_ENTRY_EXPORT");
+    DumpDataDir(hdr, IMAGE_DIRECTORY_ENTRY_IMPORT, "IMAGE_DIRECTORY_ENTRY_IMPORT");
+    DumpDataDir(hdr, IMAGE_DIRECTORY_ENTRY_RESOURCE, "IMAGE_DIRECTORY_ENTRY_RESOURCE");
+    DumpDataDir(hdr, IMAGE_DIRECTORY_ENTRY_EXCEPTION, "IMAGE_DIRECTORY_ENTRY_EXCEPTION");
+    DumpDataDir(hdr, IMAGE_DIRECTORY_ENTRY_SECURITY, "IMAGE_DIRECTORY_ENTRY_SECURITY");
+    DumpDataDir(hdr, IMAGE_DIRECTORY_ENTRY_BASERELOC, "IMAGE_DIRECTORY_ENTRY_BASERELOC");
+    DumpDataDir(hdr, IMAGE_DIRECTORY_ENTRY_DEBUG, "IMAGE_DIRECTORY_ENTRY_DEBUG");
+    DumpDataDir(hdr, IMAGE_DIRECTORY_ENTRY_ARCHITECTURE, "IMAGE_DIRECTORY_ENTRY_ARCHITECTURE");
+    DumpDataDir(hdr, IMAGE_DIRECTORY_ENTRY_GLOBALPTR, "IMAGE_DIRECTORY_ENTRY_GLOBALPTR");
+    DumpDataDir(hdr, IMAGE_DIRECTORY_ENTRY_TLS, "IMAGE_DIRECTORY_ENTRY_TLS");
+    DumpDataDir(hdr, IMAGE_DIRECTORY_ENTRY_LOAD_CONFIG, "IMAGE_DIRECTORY_ENTRY_LOAD_CONFIG");
+    DumpDataDir(hdr, IMAGE_DIRECTORY_ENTRY_BOUND_IMPORT, "IMAGE_DIRECTORY_ENTRY_BOUND_IMPORT");
+    DumpDataDir(hdr, IMAGE_DIRECTORY_ENTRY_IAT, "IMAGE_DIRECTORY_ENTRY_IAT");
+    DumpDataDir(hdr, IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT, "IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT");
+    DumpDataDir(hdr, IMAGE_DIRECTORY_ENTRY_COM_DESCRIPTOR, "IMAGE_DIRECTORY_ENTRY_COM_DESCRIPTOR");
+
+    int sectionsCount = (int)hdr->FileHeader.NumberOfSections;
+    d("NumberOfSections: %d\n", sectionsCount);
+
+    IMAGE_SECTION_HEADER *firstSection = IMAGE_FIRST_SECTION(hdr);
+    DumpSections(firstSection, sectionsCount);
+
+    dataDir = hdr->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_RESOURCE];
+    int off = FileOffsetFromVirtAddr(dataDir.VirtualAddress, firstSection, sectionsCount);
+
+    IMAGE_RESOURCE_DIRECTORY *rd = InFilePtr(IMAGE_RESOURCE_DIRECTORY, off);
+    d("NumberOfNamedEntries: %d\n", (int)rd->NumberOfNamedEntries);
+    d("NumberOfIdEntries : %d\n", (int)rd->NumberOfIdEntries );
 
     delete mf;
     return true;
