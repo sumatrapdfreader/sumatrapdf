@@ -43,9 +43,12 @@ public:
     HWND        hwndPluginParent;
     bool        exitImmediately;
     bool        silent;
+
+    // stress-testing related
     TCHAR *     stressTestPath;
     TCHAR *     stressTestRanges;
     int         stressTestCycles;
+    bool        disableDjvu;
 
     CommandLineInfo() : makeDefault(false), exitOnPrint(false), printDialog(false),
         printerName(NULL), bgColor(-1), inverseSearchCmdLine(NULL),
@@ -57,7 +60,7 @@ public:
         startView(DM_AUTOMATIC), startZoom(INVALID_ZOOM), startScroll(PointI(-1, -1)),
         showConsole(false), exitImmediately(false), silent(false),
         stressTestPath(NULL), stressTestRanges(NULL), stressTestCycles(1),
-        consoleFile(NULL)
+        consoleFile(NULL), disableDjvu(false)
     { }
 
     ~CommandLineInfo() {

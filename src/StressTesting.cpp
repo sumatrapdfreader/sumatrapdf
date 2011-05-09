@@ -14,6 +14,8 @@
 #include "RenderCache.h"
 #include "SumatraPDF.h"
 
+static bool gStressTestDisableDjvu = false;
+
 static Log::Logger *gLog;
 #define logbench(msg, ...) gLog->LogFmt(_T(msg), __VA_ARGS__)
 // #define logbench(msg, ...) Log::LogFmt(_T(msg), __VA_ARGS__)
@@ -197,7 +199,7 @@ bool CollectPathsFromDirectory(const TCHAR *pattern, StrVec& paths, bool dirsIns
 
 static bool IsStressTestSupportedFile(const TCHAR *fileName)
 {
-    return  DjVuEngine::IsSupportedFile(fileName) ||
+    return  (!gStressTestDisableDjvu && DjVuEngine::IsSupportedFile(fileName)) ||
             PdfEngine::IsSupportedFile(fileName) ||
             XpsEngine::IsSupportedFile(fileName) ||
             CbxEngine::IsSupportedFile(fileName);
@@ -551,9 +553,10 @@ char *GetStressTestInfo(StressTest *dst)
     return dst->GetLogInfo();
 }
 
-void StartStressTest(WindowInfo *win, const TCHAR *path, const TCHAR *ranges, int cycles, RenderCache *renderCache)
+void StartStressTest(WindowInfo *win, const TCHAR *path, const TCHAR *ranges, int cycles, RenderCache *renderCache, bool disableDjvu)
 {
     // gPredictiveRender = false;
+    gStressTestDisableDjvu = disableDjvu;
 
     // dst will be deleted when the stress ends
     StressTest *dst = new StressTest(win, renderCache);
