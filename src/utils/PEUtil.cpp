@@ -143,7 +143,7 @@ bool IsValidSecondHdr(IMAGE_NT_HEADERS *hdr)
     return true;
 }
 
-#define Offs(type, start, size) (type*)((char*)start + size)
+#define CastOff(type, start, size) (type*)((char*)start + size)
 
 #define RT(t) \
     if (type == (DWORD)t) \
@@ -164,24 +164,100 @@ static char *ResType(DWORD type)
     return "Unknown Res";
 }
 
-static void DumpResources(IMAGE_RESOURCE_DIRECTORY *rd)
+// at this level, we get resource data for a given code page
+static void DumpResourceLevel3(IMAGE_RESOURCE_DIRECTORY *root, IMAGE_RESOURCE_DIRECTORY_ENTRY *res)
 {
-    d("NumberOfNamedEntries: %d\n", (int)rd->NumberOfNamedEntries);
-    d("NumberOfIdEntries : %d\n", (int)rd->NumberOfIdEntries);
-    int entries = (int)(rd->NumberOfNamedEntries + rd->NumberOfIdEntries);
-    IMAGE_RESOURCE_DIRECTORY_ENTRY *firstResource = Offs(IMAGE_RESOURCE_DIRECTORY_ENTRY, rd, sizeof(IMAGE_RESOURCE_DIRECTORY));
-    IMAGE_RESOURCE_DIRECTORY_ENTRY *res = firstResource;
-    for (int i=0; i<entries; i++) {
-        DWORD isStr = res->NameIsString;
-        DWORD nameOff = res->NameOffset;
-        DWORD isDir = res->DataIsDirectory;
-        DWORD dataOff = isDir ? res->OffsetToDirectory : res->OffsetToData;
-        DWORD id = res->Id;
-        char *type = ResType(id);
-        d("dir: %d str: %d id: %02d %s nameOff: 0x%04x dataOff: 0x%04x\n", (int)isDir, (int)isStr, id, type, nameOff, dataOff);
-        //if (isDir) {
-        //    DumpResources(Offs(IMAGE_RESOURCE_DIRECTORY, firstResource, dataOff));
-        //}
+#if 0
+    DWORD isDir = res->DataIsDirectory;
+    assert(isDir && "must be dir at this level");
+    DWORD isStr = res->NameIsString;
+    assert(!isStr && "shouldn't be string");
+    DWORD dataOff = isDir ? res->OffsetToDirectory : res->OffsetToData;
+    DWORD id = res->Id;
+    char *idName = ResType(id);
+    d("          ResDir %d, dataOff: 0x%x\n", id, dataOff);
+#endif
+}
+
+static void DumpResourceDirLevel3(IMAGE_RESOURCE_DIRECTORY *root, IMAGE_RESOURCE_DIRECTORY *rd)
+{
+    int namedCount = (int)rd->NumberOfNamedEntries;
+    int idCount =  (int)rd->NumberOfIdEntries;
+    int total = namedCount + idCount;
+    // TODO: this doesn't seem right
+    d("        ResDir %d entries (%d ID, %d named)\n", total, idCount, namedCount);
+    IMAGE_RESOURCE_DIRECTORY_ENTRY *res = CastOff(IMAGE_RESOURCE_DIRECTORY_ENTRY, rd, sizeof(IMAGE_RESOURCE_DIRECTORY));
+    for (int i=0; i<total; i++) {
+        DumpResourceLevel3(rd, res);
+        ++res;
+    }
+
+}
+
+static void DumpResourceDataEntry(IMAGE_RESOURCE_DIRECTORY *root, IMAGE_RESOURCE_DATA_ENTRY *de)
+{
+    int size = de->Size;
+    int dataOff = de->OffsetToData;
+    int codePage = de->CodePage;
+    d("      Res size: 0x%x, dataOff: 0x%x, codePage: %d\n", size, dataOff, codePage);
+}
+
+// at this level, we get on of (possibly) many resources for a given resource type
+static void DumpResourceLevel2(IMAGE_RESOURCE_DIRECTORY *root, IMAGE_RESOURCE_DIRECTORY_ENTRY *res)
+{
+    DWORD isDir = res->DataIsDirectory;
+    assert(isDir && "must be dir at this level");
+    DWORD isStr = res->NameIsString;
+    assert(!isStr && "shouldn't be string");
+    DWORD dataOff = isDir ? res->OffsetToDirectory : res->OffsetToData;
+    DWORD id = res->Id;
+    char *idName = ResType(id);
+    d("      ResDir %d, dataOff: 0x%x\n", id, dataOff);
+    IMAGE_RESOURCE_DATA_ENTRY *de = CastOff(IMAGE_RESOURCE_DATA_ENTRY, root, dataOff);
+    DumpResourceDataEntry(root, de);
+//    IMAGE_RESOURCE_DIRECTORY *rd = CastOff(IMAGE_RESOURCE_DIRECTORY, root, dataOff);
+//    DumpResourceDirLevel3(root, rd);
+}
+
+static void DumpResourceDirLevel2(IMAGE_RESOURCE_DIRECTORY *root, IMAGE_RESOURCE_DIRECTORY *rd)
+{
+    int namedCount = (int)rd->NumberOfNamedEntries;
+    int idCount =  (int)rd->NumberOfIdEntries;
+    int total = namedCount + idCount;
+    d("    ResDir %d entries (%d ID, %d named)\n", total, idCount, namedCount);
+    IMAGE_RESOURCE_DIRECTORY_ENTRY *res = CastOff(IMAGE_RESOURCE_DIRECTORY_ENTRY, rd, sizeof(IMAGE_RESOURCE_DIRECTORY));
+    for (int i=0; i<total; i++) {
+        DumpResourceLevel2(rd, res);
+        ++res;
+    }
+
+}
+
+// at this level resources represent resource groups (ICON, STRING, MANIFEST etc.)
+static void DumpResourceLevel1(IMAGE_RESOURCE_DIRECTORY *root, IMAGE_RESOURCE_DIRECTORY_ENTRY *res)
+{
+    DWORD isStr = res->NameIsString;
+    assert(!isStr && "shouldn't be string");
+    //DWORD nameOff = res->NameOffset;
+    DWORD isDir = res->DataIsDirectory;
+    assert(isDir && "must be dir at this level");
+    DWORD dataOff = isDir ? res->OffsetToDirectory : res->OffsetToData;
+    DWORD id = res->Id;
+    char *idName = ResType(id);
+    d("  ResDir %s (%d) dataOff: 0x%x\n", idName, id, dataOff);
+    IMAGE_RESOURCE_DIRECTORY *rd = CastOff(IMAGE_RESOURCE_DIRECTORY, root, dataOff);
+    DumpResourceDirLevel2(root, rd);
+}
+
+static void DumpResourceDirLevel1(IMAGE_RESOURCE_DIRECTORY *rd)
+{
+    int namedCount = (int)rd->NumberOfNamedEntries;
+    int idCount =  (int)rd->NumberOfIdEntries;
+    int total = namedCount + idCount;
+    d("ResDir %d entries (%d ID, %d named)\n", total, idCount, namedCount);
+    IMAGE_RESOURCE_DIRECTORY_ENTRY *res = CastOff(IMAGE_RESOURCE_DIRECTORY_ENTRY, rd, sizeof(IMAGE_RESOURCE_DIRECTORY));
+    for (int i=0; i<total; i++) {
+        DumpResourceLevel1(rd, res);
         ++res;
     }
 }
@@ -271,7 +347,7 @@ bool RemoveDataResource(const TCHAR *srcFile, const TCHAR *dstFile)
     IMAGE_RESOURCE_DIRECTORY *rd = InFilePtr(IMAGE_RESOURCE_DIRECTORY, off);
 
     IMAGE_RESOURCE_DIRECTORY_ENTRY *firstRes = InFilePtr(IMAGE_RESOURCE_DIRECTORY_ENTRY, off + sizeof(IMAGE_RESOURCE_DIRECTORY));
-    DumpResources(rd);
+    DumpResourceDirLevel1(rd);
     delete mf;
     return true;
 
