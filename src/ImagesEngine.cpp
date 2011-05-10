@@ -765,46 +765,44 @@ static int CALLBACK unrarCallback(UINT msg, LPARAM userData, LPARAM rarBuffer, L
 
 static ImagesPage *LoadCurrentCbrPage(HANDLE hArc, RARHeaderDataEx& rarHeader)
 {
-    char *       bmpData = NULL;
-    ImagesPage * page = NULL;
-
+    ScopedMem<char> bmpData;
 #ifdef UNICODE
     TCHAR *fileName = rarHeader.FileNameW;
 #else
     TCHAR *fileName = rarHeader.FileName;
 #endif
+
     if (!ImageEngine::IsSupportedFile(fileName))
-        return NULL;
-
+        goto SkipFile;
     if (rarHeader.UnpSizeHigh != 0)
-        return NULL;
+        goto SkipFile;
     if (rarHeader.UnpSize == 0)
-        return NULL;
+        goto SkipFile;
 
-    RarDecompressData rdd = { 0, 0, 0 };
+    RarDecompressData rdd;
     rdd.totalSize = rarHeader.UnpSize;
-    bmpData = SAZA(char, rdd.totalSize);
+    bmpData.Set(SAZA(char, rdd.totalSize));
     if (!bmpData)
-        return NULL;
+        goto SkipFile;
 
     rdd.buf = bmpData;
+    rdd.currSize = 0;
     RARSetCallback(hArc, unrarCallback, (LPARAM)&rdd);
     int res = RARProcessFile(hArc, RAR_TEST, NULL, NULL);
     if (0 != res)
-        goto Exit;
-
+        return NULL;
     if (rdd.totalSize != rdd.currSize)
-        goto Exit;
+        return NULL;
 
     Bitmap *bmp = BitmapFromData(bmpData, rdd.totalSize);
     if (!bmp)
-        goto Exit;
+        return NULL;
 
-    page = new ImagesPage(fileName, bmp);
+    return new ImagesPage(fileName, bmp);
 
-Exit:
-    free(bmpData);
-    return page;
+SkipFile:
+    RARProcessFile(hArc, RAR_SKIP, NULL, NULL);
+    return NULL;
  }
 
 bool CCbxEngine::LoadCbrFile(const TCHAR *file)
