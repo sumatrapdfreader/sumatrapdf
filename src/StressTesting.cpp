@@ -297,8 +297,6 @@ class StressTest : public CallbackFunc {
     StrVec            filesToOpen;
     StrVec            dirsToVisit;
 
-    bool              isCurrentFileCbx;
-
     bool OpenDir(const TCHAR *dirPath);
     bool OpenFile(const TCHAR *fileName);
 
@@ -436,8 +434,6 @@ bool StressTest::OpenFile(const TCHAR *fileName)
         return false;
     }
 
-    isCurrentFileCbx = CbxEngine::IsSupportedFile(fileName);
-
     // transfer ownership of stressTest object to a new window and close the
     // current one
     assert(this == win->stressTest);
@@ -526,15 +522,15 @@ void StressTest::TickTimer()
 void StressTest::OnTimer()
 {
     KillTimer(win->hwndCanvas, DIR_STRESS_TIMER_ID);
-    if (!win->dm)
+    if (!win->dm || !win->dm->engine)
         return;
 
-	// For non-cbx files, we detect if a page was rendered by checking the cache
-	// (but we don't wait more than 3 seconds).
-	// Cbx files are always fully rendered in WM_PAINT, so we know the page
-	// has already been rendered.
+    // For non-image files, we detect if a page was rendered by checking the cache
+    // (but we don't wait more than 3 seconds).
+    // Image files are always fully rendered in WM_PAINT, so we know the page
+    // has already been rendered.
     BitmapCacheEntry *entry = renderCache->Find(win->dm, currPage, win->dm->rotation());
-    if (!isCurrentFileCbx && !entry) {
+    if (!win->dm->engine->IsImageCollection() && !entry) {
         double timeInMs = currPageRenderTime.GetCurrTimeInMs();
         if (timeInMs > (double)3 * 1000) {
             if (!GoToNextPage())

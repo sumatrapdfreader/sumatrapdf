@@ -3862,7 +3862,7 @@ static void BrowseFolder(WindowInfo& win, bool forward)
     const TCHAR *fileExt = path::GetExt(win.loadedFilePath);
     if (win.IsDocLoaded())
         fileExt = win.dm->engine->GetDefaultFileExt();
-    ScopedMem<TCHAR> pattern(str::Format(_T("*%s"), ext));
+    ScopedMem<TCHAR> pattern(str::Format(_T("*%s"), fileExt));
     ScopedMem<TCHAR> dir(path::GetDir(win.loadedFilePath));
     pattern.Set(path::Join(dir, pattern));
 
@@ -6959,11 +6959,11 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 #endif
 
     if (i.stressTestPath) {
-		StartStressTest(win, i.stressTestPath, i.stressTestRanges, i.stressTestCycles, &gRenderCache,
-						i.disableDjvu, i.disablePdf, i.disableCbx);
-	}
+        StartStressTest(win, i.stressTestPath, i.stressTestRanges, i.stressTestCycles, &gRenderCache,
+                        i.disableDjvu, i.disablePdf, i.disableCbx);
+    }
 
-	while (GetMessage(&msg, NULL, 0, 0) > 0) {
+    while (GetMessage(&msg, NULL, 0, 0) > 0) {
 #ifndef THREAD_BASED_FILEWATCH
         if (NULL == msg.hwnd && WM_TIMER == msg.message && timerID == msg.wParam) {
             RefreshUpdatedFiles();
