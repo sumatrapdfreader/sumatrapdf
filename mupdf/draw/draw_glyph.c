@@ -1,6 +1,7 @@
 #include "fitz.h"
 
-#define MAX_FONT_SIZE 1000
+/* SumatraPDF: changed max font size from 1000 to 3000 */
+#define MAX_FONT_SIZE 3000
 #define MAX_GLYPH_SIZE 256
 #define MAX_CACHE_SIZE (1024*1024)
 
