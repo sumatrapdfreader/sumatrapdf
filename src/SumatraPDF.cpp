@@ -3859,7 +3859,10 @@ static void BrowseFolder(WindowInfo& win, bool forward)
     if (gRestrictedUse || gPluginMode) return;
 
     // TODO: browse through all supported file types at the same time?
-    ScopedMem<TCHAR> pattern(str::Format(_T("*%s"), win.dm->engine->GetDefaultFileExt()));
+    const TCHAR *fileExt = path::GetExt(win.loadedFilePath);
+    if (win.IsDocLoaded())
+        fileExt = win.dm->engine->GetDefaultFileExt();
+    ScopedMem<TCHAR> pattern(str::Format(_T("*%s"), ext));
     ScopedMem<TCHAR> dir(path::GetDir(win.loadedFilePath));
     pattern.Set(path::Join(dir, pattern));
 
@@ -4391,6 +4394,15 @@ static void AdvanceFocus(WindowInfo& win)
 
 static bool OnKeydown(WindowInfo& win, WPARAM key, LPARAM lparam, bool inTextfield=false)
 {
+    if ((VK_LEFT == key || VK_RIGHT == key) &&
+        IsShiftPressed() && IsCtrlPressed() &&
+        win.loadedFilePath && !inTextfield) {
+        // folder browsing should also work when an error page is displayed,
+        // so special-case it before the win.IsDocLoaded() check
+        BrowseFolder(win, VK_RIGHT == key);
+        return true;
+    }
+
     if (!win.IsDocLoaded())
         return false;
     
@@ -4425,16 +4437,12 @@ static bool OnKeydown(WindowInfo& win, WPARAM key, LPARAM lparam, bool inTextfie
         // The remaining keys have a different meaning
         return false;
     } else if (VK_LEFT == key) {
-        if (IsShiftPressed() && IsCtrlPressed())
-            BrowseFolder(win, false);
-        else if (win.dm->needHScroll())
+        if (win.dm->needHScroll())
             SendMessage(win.hwndCanvas, WM_HSCROLL, IsShiftPressed() ? SB_PAGELEFT : SB_LINELEFT, 0);
         else
             win.dm->goToPrevPage(0);
     } else if (VK_RIGHT == key) {
-        if (IsShiftPressed() && IsCtrlPressed())
-            BrowseFolder(win, true);
-        else if (win.dm->needHScroll())
+        if (win.dm->needHScroll())
             SendMessage(win.hwndCanvas, WM_HSCROLL, IsShiftPressed() ? SB_PAGERIGHT : SB_LINERIGHT, 0);
         else
             win.dm->goToNextPage(0);
