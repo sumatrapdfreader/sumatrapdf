@@ -5909,13 +5909,14 @@ static LRESULT OnMouseWheel(WindowInfo& win, UINT message, WPARAM wParam, LPARAM
         return res;
     }
 
+    short delta = GET_WHEEL_DELTA_WPARAM(wParam);
+
     // Note: not all mouse drivers correctly report the Ctrl key's state
     if ((LOWORD(wParam) & MK_CONTROL) || IsCtrlPressed() || (LOWORD(wParam) & MK_RBUTTON)) {
         POINT pt;
         GetCursorPos(&pt);
         ScreenToClient(win.hwndCanvas, &pt);
 
-        short delta = GET_WHEEL_DELTA_WPARAM(wParam);
         float factor = delta < 0 ? ZOOM_OUT_FACTOR : ZOOM_IN_FACTOR;
         win.dm->zoomBy(factor, &PointI(pt.x, pt.y));
         win.UpdateToolbarState();
@@ -5930,7 +5931,7 @@ static LRESULT OnMouseWheel(WindowInfo& win, UINT message, WPARAM wParam, LPARAM
     // always scroll whole pages in Fit Page and Fit Content modes
     if (ZOOM_FIT_PAGE == win.dm->zoomVirtual() ||
         ZOOM_FIT_CONTENT == win.dm->zoomVirtual()) {
-        if (GET_WHEEL_DELTA_WPARAM(wParam) > 0)
+        if (delta > 0)
             win.dm->goToPrevPage(0);
         else
             win.dm->goToNextPage(0);
@@ -5940,7 +5941,17 @@ static LRESULT OnMouseWheel(WindowInfo& win, UINT message, WPARAM wParam, LPARAM
     if (gDeltaPerLine == 0)
        return 0;
 
-    win.wheelAccumDelta += GET_WHEEL_DELTA_WPARAM(wParam);     // 120 or -120
+    if (gDeltaPerLine < 0) {
+        // scroll by (fraction of a) page
+        SCROLLINFO si = { 0 };
+        si.cbSize = sizeof(si);
+        si.fMask  = SIF_PAGE;
+        GetScrollInfo(win.hwndCanvas, SB_VERT, &si);
+        win.dm->scrollYBy(-MulDiv(si.nPage, delta, WHEEL_DELTA), true);
+        return 0;
+    }
+
+    win.wheelAccumDelta += delta;
     int currentScrollPos = GetScrollPos(win.hwndCanvas, SB_VERT);
 
     while (win.wheelAccumDelta >= gDeltaPerLine) {
@@ -5954,7 +5965,7 @@ static LRESULT OnMouseWheel(WindowInfo& win, UINT message, WPARAM wParam, LPARAM
 
     if (!displayModeContinuous(win.dm->displayMode()) &&
         GetScrollPos(win.hwndCanvas, SB_VERT) == currentScrollPos) {
-        if (GET_WHEEL_DELTA_WPARAM(wParam) > 0)
+        if (delta > 0)
             win.dm->goToPrevPage(-1);
         else
             win.dm->goToNextPage(0);
@@ -6439,9 +6450,11 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
         case WM_SETTINGCHANGE:
 InitMouseWheelInfo:
             SystemParametersInfo(SPI_GETWHEELSCROLLLINES, 0, &ulScrollLines, 0);
-            // ulScrollLines usually equals 3 or 0 (for no scrolling)
+            // ulScrollLines usually equals 3 or 0 (for no scrolling) or -1 (for page scrolling)
             // WHEEL_DELTA equals 120, so iDeltaPerLine will be 40
-            if (ulScrollLines)
+            if (ulScrollLines == (ULONG)-1)
+                gDeltaPerLine = -1;
+            else if (ulScrollLines != 0)
                 gDeltaPerLine = WHEEL_DELTA / ulScrollLines;
             else
                 gDeltaPerLine = 0;
