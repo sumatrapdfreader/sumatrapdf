@@ -467,8 +467,9 @@ NPError NP_LOADDS NPP_NewStream(NPP instance, NPMIMEType type, NPStream* stream,
     // for small files. As a workaround, we do file downloading ourselves.
     // cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1328
     // and http://fofou.appspot.com/sumatrapdf/topic?id=2067366&comments=16
+    // Opera disabled the cache for private tabs, so we have to do the caching ourselves, too
     const char *userAgent = gNPNFuncs.uagent(instance);
-    if (str::Find(userAgent, "Gecko/"))
+    if (str::Find(userAgent, "Gecko/") || str::StartsWith(userAgent, "Opera/"))
     {
         data->hFile = CreateTempFile(data->filepath);
         if (data->hFile)
