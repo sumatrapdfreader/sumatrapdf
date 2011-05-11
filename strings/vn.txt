@@ -363,7 +363,7 @@ Found text at page %d (again)
 Tìm thấy đoạn văn bản tại trang %d (lần nữa)
 
 Frequently Read
-Tần suất đọc
+Đọc thường xuyên
 
 GB
 GB
@@ -372,7 +372,7 @@ Go to page
 Nhảy đến trang
 
 Hide frequently read
-Ẩn tần suất đọc
+Ẩn đọc thường xuyên
 
 Hint: Use the F3 key for finding again
 Gợi ý: Nhấn phím F3 để tìm lại
@@ -399,7 +399,7 @@ Modified:
 Ngày chỉnh sửa
 
 New version %s is available. Download new version?
-Đã có phiên bản mới %s. Download phiên bản mới?
+Đã có phiên bản mới %s. Tải về phiên bản mới?
 
 Next Page
 Trang sau
@@ -408,7 +408,7 @@ No matches were found
 Không tìm thấy
 
 No result found around line %u in file %s
-Không tìm thấy quanh dòng %u trong tập tin %s
+Không tìm thấy gì quanh dòng %u trong tập tin %s
 
 No synchronization file found
 Không tìm thấy tập tin đồng bộ nào
@@ -426,7 +426,7 @@ Open
 Mở tập tin
 
 Open a document...
-Mở một tài liệu...
+Mở một tập tin...
 
 Open in &Adobe Reader
 Mở bằng Adobe Reader
@@ -534,7 +534,7 @@ Show &pages continuously
 Xem trang liên tiếp
 
 Show frequently read
-Hiện tần suất đọc
+Hiện đọc thường xuyên
 
 Show the &bookmarks sidebar when available
 Hiện chỉ dấu sách nếu có
