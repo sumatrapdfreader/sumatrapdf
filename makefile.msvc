@@ -34,7 +34,7 @@ EXTLIBSDIR=ext
 LIBMUPDF_RES = $(O)\libmupdf.res
 
 # default target
-all_sumatrapdf: SumatraPDF Installer PDFFilter BrowserPlugin
+all_sumatrapdf: SumatraPDF Installer PDFFilter PdfPreview BrowserPlugin
 
 ##### add configuration changes that should also affect MuPDF before this line #####
 
@@ -80,6 +80,10 @@ PDFFILTER_DLL = $(O)\PdfFilter.dll
 PDFFILTER_RES = $(OS)\PdfFilter.res
 PDFFILTER_CFLAGS = $(SUMATRA_CFLAGS)
 
+PDFPREVIEW_DLL = $(O)\PdfPreview.dll
+PDFPREVIEW_RES = $(OS)\PdfPreview.res
+PDFPREVIEW_CFLAGS = $(SUMATRA_CFLAGS)
+
 BROWSER_PLUGIN = $(O)\npPdfViewer.dll
 BROWSER_PLUGIN_RES = $(OS)\npPdfViewer.res
 BROWSER_PLUGIN_CFLAGS = $(CFLAGS) /Isrc/utils /Isrc/utils/msvc /wd4819
@@ -114,6 +118,11 @@ PDFFILTER_OBJS = \
 	$(OS)\StrUtil.obj $(OS)\FileUtil.obj \
 	$(LIBMUPDF_LIB) $(OS)\MuPDF_Exports.obj $(OS)\PdfEngine.obj
 
+PDFPREVIEW_OBJS = \
+	$(OS)\PdfPreviewDll.obj $(OS)\PdfPreview.obj $(PDFFILTER_RES) \
+	$(OS)\StrUtil.obj $(OS)\FileUtil.obj \
+	$(LIBMUPDF_LIB) $(OS)\MuPDF_Exports.obj $(OS)\PdfEngine.obj
+
 BROWSER_PLUGIN_OBJS = \
 	$(OS)\npPdfViewer.obj $(BROWSER_PLUGIN_RES) \
 	$(OS)\StrUtil.obj $(OS)\FileUtil.obj $(OS)\WinUtil.obj
@@ -141,6 +150,7 @@ cleanall: force
 SumatraPDF:    $(OS) $(LIBMUPDF_DLL) $(SUMATRA_APP) $(SUMATRA_APP_NO_MUPDF)
 Installer:     $(OS) $(INSTALLER_APP)
 PDFFilter:     $(OS) $(LIBMUPDF_DLL) $(PDFFILTER_DLL)
+PdfPreview:    $(OS) $(LIBMUPDF_DLL) $(PDFPREVIEW_DLL)
 BrowserPlugin: $(OS) $(BROWSER_PLUGIN)
 
 $(OS): $(O) $(OE)
@@ -170,6 +180,12 @@ $(PDFFILTER_RES): src\ifilter\PdfFilter.rc src\Version.h
 $(PDFFILTER_DLL): $(PDFFILTER_OBJS)
 	$(LD) /DLL $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@
 
+$(PDFPREVIEW_RES): src\previewer\PdfPreview.rc src\Version.h
+	rc /r /fo$@ $(EXTCFLAGS) src\previewer\PdfPreview.rc
+
+$(PDFPREVIEW_DLL): $(PDFPREVIEW_OBJS)
+	$(LD) /DLL $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@
+
 $(BROWSER_PLUGIN_RES): src\browserplugin\npPdfViewer.rc
 	rc /r /fo$@ $(EXTCFLAGS) src\browserplugin\npPdfViewer.rc
 
@@ -191,6 +207,10 @@ $(BROWSER_PLUGIN): $(BROWSER_PLUGIN_OBJS)
 # IFilter directory
 {src\ifilter}.cpp{$(OS)}.obj::
 	$(CC) $(PDFFILTER_CFLAGS) /Fo$(OS)\ /Fd$(O)\vc80.pdb $<
+
+# previewer directory
+{src\previewer}.cpp{$(OS)}.obj::
+	$(CC) $(PDFPREVIEW_CFLAGS) /Fo$(OS)\ /Fd$(O)\vc80.pdb $<
 
 # Installer directory
 {src\installer}.cpp{$(OS)}.obj::
@@ -262,6 +282,12 @@ $(OS)\PdfEngine.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\StrUtil
 $(OS)\PdfEngine.obj: src\utils\Vec.h
 $(OS)\PdfFilterDll.obj: src\ifilter\CPdfFilter.h src\ifilter\CTeXFilter.h src\ifilter\CXpsFilter.h
 $(OS)\PdfFilterDll.obj: src\ifilter\FilterBase.h src\ifilter\PdfFilter.h
+$(OS)\PdfPreview.obj: src\BaseEngine.h src\PdfEngine.h src\previewer\PdfPreview.h
+$(OS)\PdfPreview.obj: src\utils\BaseUtil.h src\utils\GeomUtil.h src\utils\StrUtil.h
+$(OS)\PdfPreview.obj: src\utils\Vec.h
+$(OS)\PdfPreviewDll.obj: src\BaseEngine.h src\PdfEngine.h src\previewer\PdfPreview.h
+$(OS)\PdfPreviewDll.obj: src\utils\BaseUtil.h src\utils\GeomUtil.h src\utils\StrUtil.h
+$(OS)\PdfPreviewDll.obj: src\utils\Vec.h
 $(OS)\PdfSync.obj: src\AppPrefs.h src\BaseEngine.h src\DisplayModel.h
 $(OS)\PdfSync.obj: src\DisplayState.h src\DjVuEngine.h src\EngineManager.h
 $(OS)\PdfSync.obj: src\ImagesEngine.h src\PdfEngine.h src\PdfSync.h

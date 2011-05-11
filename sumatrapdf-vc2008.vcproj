@@ -874,6 +874,26 @@
 				>
 			</File>
 		</Filter>
+		<Filter
+			Name="Preview DLL"
+			>
+			<File
+				RelativePath=".\src\previewer\PdfPreview.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\previewer\PdfPreview.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\previewer\PdfPreview.rc"
+				>
+			</File>
+			<File
+				RelativePath=".\src\previewer\PdfPreviewDll.cpp"
+				>
+			</File>
+		</Filter>
 		<File
 			RelativePath=".\docs\releasenotes.txt"
 			>
