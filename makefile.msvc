@@ -120,7 +120,7 @@ PDFFILTER_OBJS = \
 
 PDFPREVIEW_OBJS = \
 	$(OS)\PdfPreviewDll.obj $(OS)\PdfPreview.obj $(PDFFILTER_RES) \
-	$(OS)\StrUtil.obj $(OS)\FileUtil.obj \
+	$(OS)\StrUtil.obj $(OS)\FileUtil.obj $(OS)\WinUtil.obj \
 	$(LIBMUPDF_LIB) $(OS)\MuPDF_Exports.obj $(OS)\PdfEngine.obj
 
 BROWSER_PLUGIN_OBJS = \
@@ -284,7 +284,7 @@ $(OS)\PdfFilterDll.obj: src\ifilter\CPdfFilter.h src\ifilter\CTeXFilter.h src\if
 $(OS)\PdfFilterDll.obj: src\ifilter\FilterBase.h src\ifilter\PdfFilter.h
 $(OS)\PdfPreview.obj: src\BaseEngine.h src\PdfEngine.h src\previewer\PdfPreview.h
 $(OS)\PdfPreview.obj: src\utils\BaseUtil.h src\utils\GeomUtil.h src\utils\StrUtil.h
-$(OS)\PdfPreview.obj: src\utils\Vec.h
+$(OS)\PdfPreview.obj: src\utils\Vec.h src\utils\WinUtil.h
 $(OS)\PdfPreviewDll.obj: src\BaseEngine.h src\PdfEngine.h src\previewer\PdfPreview.h
 $(OS)\PdfPreviewDll.obj: src\utils\BaseUtil.h src\utils\GeomUtil.h src\utils\StrUtil.h
 $(OS)\PdfPreviewDll.obj: src\utils\Vec.h
