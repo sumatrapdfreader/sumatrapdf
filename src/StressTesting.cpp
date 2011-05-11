@@ -529,8 +529,8 @@ void StressTest::OnTimer()
     // (but we don't wait more than 3 seconds).
     // Image files are always fully rendered in WM_PAINT, so we know the page
     // has already been rendered.
-    BitmapCacheEntry *entry = renderCache->Find(win->dm, currPage, win->dm->rotation());
-    if (!win->dm->engine->IsImageCollection() && !entry) {
+    bool didRender = renderCache->Exists(win->dm, currPage, win->dm->rotation());
+    if (!didRender && !win->dm->engine->IsImageCollection()) {
         double timeInMs = currPageRenderTime.GetCurrTimeInMs();
         if (timeInMs > (double)3 * 1000) {
             if (!GoToNextPage())
