@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 #include "PdfPreview.h"
+#include "WinUtil.h"
 
 HINSTANCE g_hInstance = NULL;
 long g_lRefCount = 0;
@@ -130,6 +131,20 @@ HRESULT CreateRegKeyAndSetValue(HKEY hKeyRoot, const REGISTRY_ENTRY *pRegistryEn
     return hr;
 }
 
+static bool IsWow64()
+{
+#ifndef _WIN64
+    typedef BOOL (WINAPI *IsWow64ProcessProc)(HANDLE, PBOOL);
+    IsWow64ProcessProc _IsWow64Process = (IsWow64ProcessProc)LoadDllFunc(_T("kernel32.dll"), "IsWow64Process");
+    BOOL isWow = FALSE;
+    if (_IsWow64Process)
+        _IsWow64Process(GetCurrentProcess(), &isWow);
+    return isWow;
+#else
+    return false;
+#endif
+}
+
 STDAPI DllRegisterServer()
 {
     WCHAR szModuleName[MAX_PATH];
@@ -146,8 +161,7 @@ STDAPI DllRegisterServer()
         // IPreviewHandler
         { L"Software\\Classes\\SumatraPDF\\shellex\\{8895b1c6-b41f-4c1c-a562-0d564250836f}",      NULL,               SZ_PDF_PREVIEW_CLSID },
         { L"Software\\Microsoft\\Windows\\CurrentVersion\\PreviewHandlers",                       SZ_PDF_PREVIEW_CLSID, L"SumatraPDF Preview Handler" },
-        // Note: {534A1E02-D58F-44f0-B58B-36CBED287C7C} would be the AppId for the 32-bit host on 64-bit systems
-        { L"Software\\Classes\\CLSID\\" SZ_PDF_PREVIEW_CLSID,                                     L"AppId",           L"{6d2b5079-2f0b-48dd-ab7f-97cec514d30b}" },
+        { L"Software\\Classes\\CLSID\\" SZ_PDF_PREVIEW_CLSID,                                     L"AppId",           IsWow64() ? L"{534A1E02-D58F-44f0-B58B-36CBED287C7C}" : L"{6d2b5079-2f0b-48dd-ab7f-97cec514d30b}" },
     };
 
     HRESULT hr = S_OK;
