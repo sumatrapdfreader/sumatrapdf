@@ -29,6 +29,9 @@ W&are grootte\tCtrl-1
 &Back\tAlt+Left Arrow
 Terug\tAlt+<-
 
+&Book View\tCtrl-8
+&Boekweergave\tCtrl-8
+
 &Close\tCtrl-W
 &Sluiten\tCtrl-W
 
@@ -43,6 +46,9 @@ Niet opnieuw vragen
 
 &Even pages only
 Alleen &Even pagina's
+
+&Facing\tCtrl-7
+&Dubbele pagina\tCtrl-7
 
 &File
 &Bestand
@@ -92,6 +98,9 @@ Alleen &Oneven pagina's
 &Open\tCtrl-O
 &Openen\tCtrl-O
 
+&Open Document
+Bestand &Openen
+
 &Options...
 &Opties...
 
@@ -116,6 +125,9 @@ Wachtwoord onthouden voor dit bestand
 &Remember these settings for each document
 &Bewaar deze instellingen voor elk bestand
 
+&Remove Document
+Bestand ve&rwijderen
+
 &Save As...
 Op&slaan als...
 
@@ -127,6 +139,9 @@ Op&slaan als...
 
 &Shrink pages to printable area (if necessary)
 Pagina's verkleinen tot afdrukgebied (indien nodig)
+
+&Single Page\tCtrl-6
+&Enkele pagina\Ctrl-6
 
 &Skip this version
 Deze versie overslaan
@@ -461,6 +476,9 @@ Pagina:
 Please wait - rendering...
 Een ogenblik - weergeven...
 
+Postscript documents
+Postscript bestanden
+
 Pr&esentation\tCtrl-L
 Pr&esentatie\tCtrl-L
 
@@ -526,6 +544,9 @@ Toon de &bladwijzerwerkbalk indien beschikbaar
 
 Single Page
 Enkele pagina
+
+Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
+Sorry, dit had niet mogen gebeuren!\n\nDruk 'Annuleren', als je wilt helpen de oorzaak van deze fout te vinden.
 
 Source file %s has no synchronization point
 Bestand %s heeft geen synchronisatiepunt
@@ -600,12 +621,5 @@ printing document
 bestand afdrukken
 
 # Untranslated:
-#&Book View\tCtrl-8
-#&Facing\tCtrl-7
-#&Open Document
 #&Pin Document
-#&Remove Document
-#&Single Page\tCtrl-6
-#Postscript documents
-#Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
 

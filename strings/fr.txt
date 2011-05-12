@@ -477,6 +477,9 @@ Page :
 Please wait - rendering...
 Patientez s'il vous plaît (génération...)
 
+Postscript documents
+Documents Posrscript
+
 Pr&esentation\tCtrl-L
 P&résentation\tCtrl-L
 
@@ -617,7 +620,4 @@ copie du texte
 
 printing document
 impression du document
-
-# Untranslated:
-#Postscript documents
 
