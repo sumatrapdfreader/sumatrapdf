@@ -1016,6 +1016,8 @@ void DisplayModel::changeDisplayMode(DisplayMode displayMode)
         return;
 
     int currPageNo = currentPageNo();
+    if (displayModeFacing(displayMode) && displayModeShowCover(_displayMode) && currPageNo < pageCount())
+        currPageNo++;
     _displayMode = displayMode;
     if (displayModeContinuous(displayMode)) {
         /* mark all pages as shown but not yet visible. The equivalent code
