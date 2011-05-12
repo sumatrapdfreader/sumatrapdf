@@ -18,8 +18,8 @@ IFACEMETHODIMP PreviewBase::GetThumbnail(UINT cx, HBITMAP *phbmp, WTS_ALPHATYPE 
 
     BITMAPINFO bmi = { 0 };
     bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
-    bmi.bmiHeader.biHeight = thumb.dx;
-    bmi.bmiHeader.biWidth = thumb.dy;
+    bmi.bmiHeader.biHeight = thumb.dy;
+    bmi.bmiHeader.biWidth = thumb.dx;
     bmi.bmiHeader.biPlanes = 1;
     bmi.bmiHeader.biBitCount = 32;
     bmi.bmiHeader.biCompression = BI_RGB;
@@ -29,13 +29,11 @@ IFACEMETHODIMP PreviewBase::GetThumbnail(UINT cx, HBITMAP *phbmp, WTS_ALPHATYPE 
     if (!hthumb)
         return E_OUTOFMEMORY;
 
-    HDC hDC = GetDC(NULL);
-    HDC hDCMem = CreateCompatibleDC(hDC);
-    HBITMAP hbmp = CreateCompatibleBitmap(hDC, thumb.dx, thumb.dy);
-    DeleteObject(SelectObject(hDCMem, hbmp));
-    bool ok = engine->RenderPage(hDCMem, thumb, 1, zoom, 0);
+    page = engine->Transform(thumb.Convert<double>(), 1, zoom, 0, true);
+    RenderedBitmap *bmp = engine->RenderBitmap(1, zoom, 0, &page);
 
-    if (ok && GetDIBits(hDC, hbmp, 0, thumb.dy, bmpData, &bmi, DIB_RGB_COLORS)) {
+    HDC hdc = GetDC(NULL);
+    if (bmp && GetDIBits(hdc, bmp->GetBitmap(), 0, thumb.dy, bmpData, &bmi, DIB_RGB_COLORS)) {
         // cf. http://msdn.microsoft.com/en-us/library/bb774612(v=VS.85).aspx
         for (int i = 0; i < thumb.dx * thumb.dy; i++)
             bmpData[4 * i + 3] = 255;
@@ -48,9 +46,8 @@ IFACEMETHODIMP PreviewBase::GetThumbnail(UINT cx, HBITMAP *phbmp, WTS_ALPHATYPE 
         hthumb = NULL;
     }
 
-    DeleteObject(hbmp);
-    DeleteDC(hDCMem);
-    ReleaseDC(NULL, hDC);
+    ReleaseDC(NULL, hdc);
+    delete bmp;
 
     return hthumb ? S_OK : E_FAIL;
 }
