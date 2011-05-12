@@ -141,7 +141,7 @@ Op&slaan als...
 Pagina's verkleinen tot afdrukgebied (indien nodig)
 
 &Single Page\tCtrl-6
-&Enkele pagina\Ctrl-6
+&Enkele pagina\tCtrl-6
 
 &Skip this version
 Deze versie overslaan
