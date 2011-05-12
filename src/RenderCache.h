@@ -99,7 +99,7 @@ public:
     UINT    Paint(HDC hdc, RectI *bounds, DisplayModel *dm, int pageNo,
                   PageInfo *pageInfo, bool *renderOutOfDateCue);
 
-public:
+protected:
     /* Interface for page rendering thread */
     HANDLE  startRendering;
 

@@ -10,9 +10,7 @@ IFACEMETHODIMP PreviewBase::GetThumbnail(UINT cx, HBITMAP *phbmp, WTS_ALPHATYPE 
     if (!engine)
         return E_FAIL;
 
-    RectD page = engine->PageMediabox(1);
-    if (engine->PageRotation(1) % 180 != 0)
-        swap(page.dx, page.dy);
+    RectD page = engine->Transform(engine->PageMediabox(1), 1, 1.0, 0);
     float zoom = cx / (float)page.dx;
     RectI thumb = RectD(0, 0, cx, page.dy * zoom).Round();
     if ((UINT)thumb.dy > cx)
@@ -57,8 +55,66 @@ IFACEMETHODIMP PreviewBase::GetThumbnail(UINT cx, HBITMAP *phbmp, WTS_ALPHATYPE 
     return hthumb ? S_OK : E_FAIL;
 }
 
-#define COL_WINDOW_BG RGB(0xcc, 0xcc, 0xcc)
+#define COL_WINDOW_BG   RGB(0xcc, 0xcc, 0xcc)
 #define PREVIEW_MARGIN  2
+#define UWM_PAINT_AGAIN (WM_USER + 1)
+
+class PageRenderer {
+    BaseEngine *engine;
+    HWND hwnd;
+
+    int currPage;
+    RenderedBitmap *currBmp;
+    int reqPage;
+    float reqZoom;
+
+    CRITICAL_SECTION currAccess;
+    HANDLE thread;
+
+public:
+    PageRenderer(BaseEngine *engine, HWND hwnd) : engine(engine), hwnd(hwnd),
+        currPage(0), currBmp(NULL), thread(NULL) {
+        InitializeCriticalSection(&currAccess);
+    }
+    ~PageRenderer() {
+        if (thread)
+            WaitForSingleObject(thread, INFINITE);
+        delete currBmp;
+        DeleteCriticalSection(&currAccess);
+    }
+
+    BaseEngine *GetEngine() const { return engine; }
+
+    void Render(HDC hdc, RectI target, int pageNo, float zoom) {
+        ScopedCritSec scope(&currAccess);
+        if (currPage == pageNo && currBmp && currBmp->Size() == target.Size())
+            currBmp->StretchDIBits(hdc, target);
+        else if (!thread) {
+            reqPage = pageNo;
+            reqZoom = zoom;
+            thread = CreateThread(NULL, 0, RenderThread, this, 0, 0);
+        }
+    }
+
+protected:
+    static DWORD WINAPI RenderThread(LPVOID data) {
+        PageRenderer *pr = (PageRenderer *)data;
+        RenderedBitmap *bmp = pr->engine->RenderBitmap(pr->reqPage, pr->reqZoom, 0);
+
+        ScopedCritSec scope(&pr->currAccess);
+
+        delete pr->currBmp;
+        pr->currBmp = bmp;
+        pr->currPage = pr->reqPage;;
+
+        HANDLE thread = pr->thread;
+        pr->thread = NULL;
+        PostMessage(pr->hwnd, UWM_PAINT_AGAIN, 0, 0);
+
+        CloseHandle(thread);
+        return 0;
+    }
+};
 
 static LRESULT OnPaint(HWND hwnd)
 {
@@ -66,27 +122,25 @@ static LRESULT OnPaint(HWND hwnd)
     DoubleBuffer buffer(hwnd, rect);
     HDC hdc = buffer.GetDC();
     HBRUSH brushBg = CreateSolidBrush(COL_WINDOW_BG);
+    HBRUSH brushWhite = CreateSolidBrush(WIN_COL_WHITE);
     FillRect(hdc, &rect.ToRECT(), brushBg);
 
     PreviewBase *preview = (PreviewBase *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
-    if (preview) {
-        BaseEngine *engine = preview->GetEngine();
-        if (engine) {
-            int pageNo = GetScrollPos(hwnd, SB_VERT);
-            rect.Inflate(-PREVIEW_MARGIN, -PREVIEW_MARGIN);
-            RectD page = engine->PageMediabox(pageNo);
-            if (engine->PageRotation(pageNo) % 180 != 0)
-                swap(page.dx, page.dy);
-            float zoom = (float)min(rect.dx / page.dx, rect.dy / page.dy);
-            RectI onScreen = RectD(rect.x, rect.y, page.dx * zoom, page.dy * zoom).Round();
-            onScreen.Offset((rect.dx - onScreen.dx) / 2, (rect.dy - onScreen.dy) / 2);
+    if (preview && preview->renderer) {
+        BaseEngine *engine = preview->renderer->GetEngine();
+        int pageNo = GetScrollPos(hwnd, SB_VERT);
+        rect.Inflate(-PREVIEW_MARGIN, -PREVIEW_MARGIN);
+        RectD page = engine->Transform(engine->PageMediabox(pageNo), pageNo, 1.0, 0);
+        float zoom = (float)min(rect.dx / page.dx, rect.dy / page.dy);
+        RectI onScreen = RectD(rect.x, rect.y, page.dx * zoom, page.dy * zoom).Round();
+        onScreen.Offset((rect.dx - onScreen.dx) / 2, (rect.dy - onScreen.dy) / 2);
 
-            // TODO: rendering can be quite slow - move to a separate thread?
-            engine->RenderPage(hdc, onScreen, pageNo, zoom, 0);
-        }
+        FillRect(hdc, &onScreen.ToRECT(), brushWhite);
+        preview->renderer->Render(hdc, onScreen, pageNo, zoom);
     }
 
     DeleteObject(brushBg);
+    DeleteObject(brushWhite);
 
     PAINTSTRUCT ps;
     buffer.Flush(BeginPaint(hwnd, &ps));
@@ -134,6 +188,16 @@ static LRESULT OnKeydown(HWND hwnd, int key)
     }
 }
 
+static LRESULT OnDestroy(HWND hwnd)
+{
+    PreviewBase *preview = (PreviewBase *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+    if (preview) {
+        delete preview->renderer;
+        preview->renderer = NULL;
+    }
+    return 0;
+}
+
 static LRESULT CALLBACK PreviewWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message) {
@@ -143,6 +207,12 @@ static LRESULT CALLBACK PreviewWndProc(HWND hwnd, UINT message, WPARAM wParam, L
         return OnVScroll(hwnd, wParam);
     case WM_KEYDOWN:
         return OnKeydown(hwnd, wParam);
+    case WM_DESTROY:
+        return OnDestroy(hwnd);
+    case UWM_PAINT_AGAIN:
+        InvalidateRect(hwnd, NULL, TRUE);
+        UpdateWindow(hwnd);
+        return 0;
     default:
         return DefWindowProc(hwnd, message, wParam, lParam);
     }
@@ -166,6 +236,7 @@ IFACEMETHODIMP PreviewBase::DoPreview()
 
     SetWindowLongPtr(m_hwnd, GWLP_USERDATA, (LONG_PTR)this);
     BaseEngine *engine = GetEngine();
+    this->renderer = engine ? new PageRenderer(engine, m_hwnd) : NULL;
 
     SCROLLINFO si = { 0 };
     si.cbSize = sizeof(si);

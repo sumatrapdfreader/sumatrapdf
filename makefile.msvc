@@ -186,7 +186,7 @@ $(PDFPREVIEW_RES): src\previewer\PdfPreview.rc src\Version.h
 $(PDFPREVIEW_DLL): $(PDFPREVIEW_OBJS)
 	$(LD) /DLL $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@
 
-$(BROWSER_PLUGIN_RES): src\browserplugin\npPdfViewer.rc
+$(BROWSER_PLUGIN_RES): src\browserplugin\npPdfViewer.rc src\Version.h
 	rc /r /fo$@ $(EXTCFLAGS) src\browserplugin\npPdfViewer.rc
 
 $(BROWSER_PLUGIN): $(BROWSER_PLUGIN_OBJS)

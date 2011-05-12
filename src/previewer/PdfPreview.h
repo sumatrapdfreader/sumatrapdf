@@ -12,12 +12,14 @@
 #include <shlwapi.h>
 #include <Thumbcache.h>
 
+class PageRenderer;
+
 class PreviewBase : public IThumbnailProvider, public IInitializeWithStream,
     public IObjectWithSite, public IPreviewHandler, public IOleWindow
 {
 public:
     PreviewBase(long *plRefCount) : m_lRef(1), m_plModuleRef(plRefCount),
-        m_pStream(NULL), m_engine(NULL),
+        m_pStream(NULL), m_engine(NULL), renderer(NULL),
         m_site(NULL), m_hwnd(NULL), m_hwndParent(NULL) {
         InterlockedIncrement(m_plModuleRef);
     }
@@ -135,7 +137,7 @@ public:
             // stream, leading to WM_PAINT messages after WM_DESTROY
             IStream *clone;
             if (SUCCEEDED(CreateStreamOnHGlobal(NULL, TRUE, &clone))) {
-                byte buffer[1024];
+                byte buffer[(1 << 16)];
                 ULONG read, written;
                 // note: m_pStream->CopyTo returns E_NOTIMPL
                 while (SUCCEEDED(m_pStream->Read(buffer, sizeof(buffer), &read))) {
@@ -149,6 +151,8 @@ public:
         }
         return m_engine;
     }
+
+    PageRenderer *renderer;
 
 protected:
     long m_lRef, * m_plModuleRef;
