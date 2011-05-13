@@ -95,6 +95,8 @@ public:
 
 protected:
     static DWORD WINAPI RenderThread(LPVOID data) {
+        ScopedCom comScope; // because the engine reads data from a COM IStream
+
         PageRenderer *pr = (PageRenderer *)data;
         RenderedBitmap *bmp = pr->engine->RenderBitmap(pr->reqPage, pr->reqZoom, 0);
 
@@ -217,17 +219,17 @@ static LRESULT CALLBACK PreviewWndProc(HWND hwnd, UINT message, WPARAM wParam, L
 
 IFACEMETHODIMP PreviewBase::DoPreview()
 {
-    WNDCLASSEXW wcex = { 0 };
+    WNDCLASSEX wcex = { 0 };
     wcex.cbSize = sizeof(wcex);
     wcex.lpfnWndProc = PreviewWndProc;
     wcex.hCursor = LoadCursor(NULL, IDC_ARROW);
-    wcex.lpszClassName = L"SumatraPDF_PreviewPane";
+    wcex.lpszClassName = _T("SumatraPDF_PreviewPane");
     wcex.style = CS_HREDRAW | CS_VREDRAW;
     RegisterClassEx(&wcex);
 
-    m_hwnd = CreateWindowW(wcex.lpszClassName, NULL, WS_CHILD | WS_VSCROLL | WS_VISIBLE,
-                           m_rcParent.x, m_rcParent.x, m_rcParent.dx, m_rcParent.dy,
-                           m_hwndParent, NULL, NULL, NULL);
+    m_hwnd = CreateWindow(wcex.lpszClassName, NULL, WS_CHILD | WS_VSCROLL | WS_VISIBLE,
+                          m_rcParent.x, m_rcParent.x, m_rcParent.dx, m_rcParent.dy,
+                          m_hwndParent, NULL, NULL, NULL);
     if (!m_hwnd)
         return HRESULT_FROM_WIN32(GetLastError());
 

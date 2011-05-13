@@ -4,7 +4,7 @@
 #ifndef PdfPreview_h
 #define PdfPreview_h
 
-#define SZ_PDF_PREVIEW_CLSID    L"{3D3B1846-CC43-42ae-BFF9-D914083C2BA3}"
+#define SZ_PDF_PREVIEW_CLSID    _T("{3D3B1846-CC43-42ae-BFF9-D914083C2BA3}")
 
 #include "BaseUtil.h"
 #include "PdfEngine.h"
@@ -131,27 +131,8 @@ public:
     IFACEMETHODIMP ContextSensitiveHelp(BOOL fEnterMode) { return E_NOTIMPL; }
 
     BaseEngine *GetEngine() {
-        if (!m_engine && m_pStream) {
-            // clone the stream into memory, as else the preview's window
-            // procedure is called recursively while data is read from the
-            // stream, leading to WM_PAINT messages after WM_DESTROY
-            IStream *clone;
-            if (SUCCEEDED(CreateStreamOnHGlobal(NULL, TRUE, &clone))) {
-                byte buffer[(1 << 16)];
-                ULONG read, written, total = 0;
-                // note: m_pStream->CopyTo returns E_NOTIMPL
-                while (SUCCEEDED(m_pStream->Read(buffer, sizeof(buffer), &read))) {
-                    clone->Write(buffer, read, &written);
-                    total += read;
-                    // don't read more than 10 MB so as to not hang the shell
-                    // TODO: linearized PDF documents should be repairable
-                    if (read < sizeof(buffer) || total > 10 * 1024 * 1024)
-                        break;
-                }
-                m_engine = LoadEngine(clone);
-                clone->Release();
-            }
-        }
+        if (!m_engine && m_pStream)
+            m_engine = LoadEngine(m_pStream);
         return m_engine;
     }
 
@@ -165,7 +146,6 @@ protected:
     IUnknown *  m_site;
     HWND        m_hwnd, m_hwndParent;
     RectI       m_rcParent;
-    int         m_accessRecursion;
 
     virtual BaseEngine *LoadEngine(IStream *stream) = 0;
 };

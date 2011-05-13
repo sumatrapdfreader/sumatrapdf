@@ -52,14 +52,19 @@ public:
         IInitializeWithStream *pObject = NULL;
         
         CLSID clsid;
-        if (SUCCEEDED(CLSIDFromString(SZ_PDF_PREVIEW_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid))
+#ifdef UNICODE
+        HRESULT hr = CLSIDFromString(SZ_PDF_PREVIEW_CLSID, &clsid);
+#else
+        HRESULT hr = CLSIDFromString(ScopedMem<WCHAR>(str::conv::ToWStr(SZ_PDF_PREVIEW_CLSID)), &clsid);
+#endif
+        if (SUCCEEDED(hr) && IsEqualCLSID(m_clsid, clsid))
             pObject = new /*(std::nothrow)*/ CPdfPreview(&g_lRefCount);
         else
             return CLASS_E_CLASSNOTAVAILABLE;
         if (!pObject)
             return E_OUTOFMEMORY;
         
-        HRESULT hr = pObject->QueryInterface(riid, ppv);
+        hr = pObject->QueryInterface(riid, ppv);
         pObject->Release();
         return hr;
     }
@@ -105,32 +110,6 @@ STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
     return hr;
 }
 
-struct REGISTRY_ENTRY {
-    LPWSTR pszKeyName;
-    LPWSTR pszValueName;
-    LPWSTR pszData;
-};
-
-HRESULT CreateRegKeyAndSetValue(HKEY hKeyRoot, const REGISTRY_ENTRY *pRegistryEntry)
-{
-    HRESULT hr;
-    HKEY hKey;
-
-    LONG lRet = RegCreateKeyExW(hKeyRoot, pRegistryEntry->pszKeyName,
-                                0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hKey, NULL);
-    if (lRet != ERROR_SUCCESS)
-        return HRESULT_FROM_WIN32(lRet);
-
-    lRet = RegSetValueExW(hKey, pRegistryEntry->pszValueName, 0, REG_SZ,
-                          (LPBYTE)pRegistryEntry->pszData,
-                          ((DWORD)lstrlenW(pRegistryEntry->pszData) + 1) * sizeof(WCHAR));
-
-    hr = HRESULT_FROM_WIN32(lRet);
-    RegCloseKey(hKey);
-
-    return hr;
-}
-
 static bool IsWow64()
 {
 #ifndef _WIN64
@@ -147,53 +126,60 @@ static bool IsWow64()
 
 STDAPI DllRegisterServer()
 {
-    WCHAR szModuleName[MAX_PATH];
+    TCHAR path[MAX_PATH];
 
-    if (!GetModuleFileNameW(g_hInstance, szModuleName, ARRAYSIZE(szModuleName)))
+    if (!GetModuleFileName(g_hInstance, path, dimof(path)))
         return HRESULT_FROM_WIN32(GetLastError());
 
-    const REGISTRY_ENTRY rgRegistryEntries[] = {
-        { L"Software\\Classes\\CLSID\\" SZ_PDF_PREVIEW_CLSID,                                     NULL,               L"SumatraPDF Preview Handler" },
-        { L"Software\\Classes\\CLSID\\" SZ_PDF_PREVIEW_CLSID L"\\InProcServer32",                 NULL,               szModuleName },
-        { L"Software\\Classes\\CLSID\\" SZ_PDF_PREVIEW_CLSID L"\\InProcServer32",                 L"ThreadingModel",  L"Apartment" },
+    struct {
+        TCHAR *key, *value, *data;
+    } regVals[] = {
+        { _T("Software\\Classes\\CLSID\\") SZ_PDF_PREVIEW_CLSID,
+                NULL,                   _T("SumatraPDF Preview Handler") },
+        { _T("Software\\Classes\\CLSID\\") SZ_PDF_PREVIEW_CLSID _T("\\InProcServer32"),
+                NULL,                   path },
+        { _T("Software\\Classes\\CLSID\\") SZ_PDF_PREVIEW_CLSID _T("\\InProcServer32"),
+                _T("ThreadingModel"),   _T("Apartment") },
         // IThumbnailProvider
-        { L"Software\\Classes\\.pdf\\shellex\\{e357fccd-a995-4576-b01f-234630154e96}",            NULL,               SZ_PDF_PREVIEW_CLSID },
+        { _T("Software\\Classes\\.pdf\\shellex\\{e357fccd-a995-4576-b01f-234630154e96}"),
+                NULL,                   SZ_PDF_PREVIEW_CLSID },
         // IPreviewHandler
-        { L"Software\\Classes\\.pdf\\shellex\\{8895b1c6-b41f-4c1c-a562-0d564250836f}",            NULL,               SZ_PDF_PREVIEW_CLSID },
-        { L"Software\\Microsoft\\Windows\\CurrentVersion\\PreviewHandlers",                       SZ_PDF_PREVIEW_CLSID, L"SumatraPDF Preview Handler" },
-        { L"Software\\Classes\\CLSID\\" SZ_PDF_PREVIEW_CLSID,                                     L"AppId",           IsWow64() ? L"{534A1E02-D58F-44f0-B58B-36CBED287C7C}" : L"{6d2b5079-2f0b-48dd-ab7f-97cec514d30b}" },
+        { _T("Software\\Classes\\.pdf\\shellex\\{8895b1c6-b41f-4c1c-a562-0d564250836f}"),
+                NULL,                   SZ_PDF_PREVIEW_CLSID },
+        { _T("Software\\Microsoft\\Windows\\CurrentVersion\\PreviewHandlers"),
+                SZ_PDF_PREVIEW_CLSID,   _T("SumatraPDF Preview Handler") },
+        { _T("Software\\Classes\\CLSID\\") SZ_PDF_PREVIEW_CLSID,
+                _T("AppId"),            IsWow64() ? _T("{534A1E02-D58F-44f0-B58B-36CBED287C7C}") : _T("{6d2b5079-2f0b-48dd-ab7f-97cec514d30b}") },
     };
 
-    HRESULT hr = S_OK;
-
-    for (int i = 0; i < ARRAYSIZE(rgRegistryEntries) && SUCCEEDED(hr); i++) {
-        hr = CreateRegKeyAndSetValue(HKEY_LOCAL_MACHINE, &rgRegistryEntries[i]);
-        hr = CreateRegKeyAndSetValue(HKEY_CURRENT_USER, &rgRegistryEntries[i]);
+    for (int i = 0; i < dimof(regVals); i++) {
+        WriteRegStr(HKEY_LOCAL_MACHINE, regVals[i].key, regVals[i].value, regVals[i].data);
+        bool ok = WriteRegStr(HKEY_CURRENT_USER, regVals[i].key, regVals[i].value, regVals[i].data);
+        if (!ok)
+            return E_FAIL;
     }
 
-    return hr;
+    return S_OK;
 }
 
 STDAPI DllUnregisterServer()
 {
-    const LPWSTR rgpszKeys[] = {
-        L"Software\\Classes\\CLSID\\" SZ_PDF_PREVIEW_CLSID,
-        L"Software\\Classes\\.pdf\\shellex\\{e357fccd-a995-4576-b01f-234630154e96}",
-        L"Software\\Classes\\.pdf\\shellex\\{8895b1c6-b41f-4c1c-a562-0d564250836f}",
+    const TCHAR *regKeys[] = {
+        _T("Software\\Classes\\CLSID\\") SZ_PDF_PREVIEW_CLSID,
+        _T("Software\\Classes\\.pdf\\shellex\\{e357fccd-a995-4576-b01f-234630154e96}"),
+        _T("Software\\Classes\\.pdf\\shellex\\{8895b1c6-b41f-4c1c-a562-0d564250836f}"),
     };
 
     HRESULT hr = S_OK;
 
-    for (int i = 0; i < ARRAYSIZE(rgpszKeys) && SUCCEEDED(hr); i++) {
-        DWORD dwError = SHDeleteKeyW(HKEY_LOCAL_MACHINE, rgpszKeys[i]);
-        dwError = SHDeleteKeyW(HKEY_CURRENT_USER, rgpszKeys[i]);
-        if (ERROR_FILE_NOT_FOUND == dwError)
-            hr = S_OK;
-        else
-            hr = HRESULT_FROM_WIN32(dwError);
+    for (int i = 0; i < dimof(regKeys); i++) {
+        DeleteRegKey(HKEY_LOCAL_MACHINE, regKeys[i]);
+        bool ok = DeleteRegKey(HKEY_CURRENT_USER, regKeys[i]);
+        if (!ok)
+            hr = E_FAIL;
     }
-    SHDeleteValueW(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\PreviewHandlers", SZ_PDF_PREVIEW_CLSID);
-    SHDeleteValueW(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\PreviewHandlers", SZ_PDF_PREVIEW_CLSID);
+    SHDeleteValue(HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\PreviewHandlers"), SZ_PDF_PREVIEW_CLSID);
+    SHDeleteValue(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\CurrentVersion\\PreviewHandlers"), SZ_PDF_PREVIEW_CLSID);
 
     return hr;
 }
