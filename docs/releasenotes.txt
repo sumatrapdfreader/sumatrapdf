@@ -3,6 +3,8 @@ the release notes, as we make them, to make the release process easier.
 
 Next version:
 
+* optional previewing of PDF documents in Windows Vista and 7 (creates
+  thumbnails and displays documents in Explorer's Preview pane)
 * display Frequently Read list when no document is open
 * add support for displaying DjVu documents
 * add support for displaying Postscript documents
