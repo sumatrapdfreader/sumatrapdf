@@ -159,7 +159,7 @@ STDAPI DllRegisterServer()
         // IThumbnailProvider
         { L"Software\\Classes\\.pdf\\shellex\\{e357fccd-a995-4576-b01f-234630154e96}",            NULL,               SZ_PDF_PREVIEW_CLSID },
         // IPreviewHandler
-        { L"Software\\Classes\\SumatraPDF\\shellex\\{8895b1c6-b41f-4c1c-a562-0d564250836f}",      NULL,               SZ_PDF_PREVIEW_CLSID },
+        { L"Software\\Classes\\.pdf\\shellex\\{8895b1c6-b41f-4c1c-a562-0d564250836f}",            NULL,               SZ_PDF_PREVIEW_CLSID },
         { L"Software\\Microsoft\\Windows\\CurrentVersion\\PreviewHandlers",                       SZ_PDF_PREVIEW_CLSID, L"SumatraPDF Preview Handler" },
         { L"Software\\Classes\\CLSID\\" SZ_PDF_PREVIEW_CLSID,                                     L"AppId",           IsWow64() ? L"{534A1E02-D58F-44f0-B58B-36CBED287C7C}" : L"{6d2b5079-2f0b-48dd-ab7f-97cec514d30b}" },
     };

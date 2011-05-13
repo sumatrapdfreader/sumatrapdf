@@ -138,11 +138,14 @@ public:
             IStream *clone;
             if (SUCCEEDED(CreateStreamOnHGlobal(NULL, TRUE, &clone))) {
                 byte buffer[(1 << 16)];
-                ULONG read, written;
+                ULONG read, written, total = 0;
                 // note: m_pStream->CopyTo returns E_NOTIMPL
                 while (SUCCEEDED(m_pStream->Read(buffer, sizeof(buffer), &read))) {
                     clone->Write(buffer, read, &written);
-                    if (read < sizeof(buffer))
+                    total += read;
+                    // don't read more than 10 MB so as to not hang the shell
+                    // TODO: linearized PDF documents should be repairable
+                    if (read < sizeof(buffer) || total > 10 * 1024 * 1024)
                         break;
                 }
                 m_engine = LoadEngine(clone);
