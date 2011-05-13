@@ -650,23 +650,25 @@ HANDLE CreateProcessHelper(const TCHAR *exe, const TCHAR *args=NULL)
 }
 
 // cf. http://support.microsoft.com/default.aspx?scid=kb;en-us;207132
-BOOL RegisterServerDLL(TCHAR *dllPath, BOOL unregister=FALSE)
+bool RegisterServerDLL(TCHAR *dllPath, bool unregister=false)
 {
     if (FAILED(OleInitialize(NULL)))
-        return FALSE;
+        return false;
 
-    BOOL success = FALSE;
+    bool ok = false;
+    // TODO: LoadLibrary seems to fail during uninstallation(?)
     HMODULE lib = LoadLibrary(dllPath);
     if (lib) {
-        FARPROC CallDLL = GetProcAddress(lib, unregister ? "DllUnregisterServer" : "DllRegisterServer");
+        typedef HRESULT (WINAPI *DllInitProc)(VOID);
+        DllInitProc CallDLL = (DllInitProc)GetProcAddress(lib, unregister ? "DllUnregisterServer" : "DllRegisterServer");
         if (CallDLL)
-            success = SUCCEEDED(CallDLL());
+            ok = SUCCEEDED(CallDLL());
         FreeLibrary(lib);
     }
 
     OleUninitialize();
 
-    return success;
+    return ok;
 }
 
 // Note: doesn't handle (total) sizes above 4GB
@@ -850,37 +852,40 @@ bool IsPdfPreviewerInstalled()
 void InstallBrowserPlugin()
 {
     ScopedMem<TCHAR> dllPath(GetBrowserPluginPath());
-    RegisterServerDLL(dllPath);
+    if (!RegisterServerDLL(dllPath))
+        NotifyFailed(_T("Couldn't install browser plugin"));
 }
 
 void UninstallBrowserPlugin()
 {
     ScopedMem<TCHAR> dllPath(GetBrowserPluginPath());
-    RegisterServerDLL(dllPath, TRUE);
+    RegisterServerDLL(dllPath, true);
 }
 
 void InstallPdfFilter()
 {
     ScopedMem<TCHAR> dllPath(GetPdfFilterPath());
-    RegisterServerDLL(dllPath);
+    if (!RegisterServerDLL(dllPath))
+        NotifyFailed(_T("Couldn't install PDF search filter"));
 }
 
 void UninstallPdfFilter()
 {
     ScopedMem<TCHAR> dllPath(GetPdfFilterPath());
-    RegisterServerDLL(dllPath, TRUE);
+    RegisterServerDLL(dllPath, true);
 }
 
 void InstallPdfPreviewer()
 {
     ScopedMem<TCHAR> dllPath(GetPdfPreviewerPath());
-    RegisterServerDLL(dllPath);
+    if (!RegisterServerDLL(dllPath))
+        NotifyFailed(_T("Couldn't install PDF previewer"));
 }
 
 void UninstallPdfPreviewer()
 {
     ScopedMem<TCHAR> dllPath(GetPdfPreviewerPath());
-    RegisterServerDLL(dllPath, TRUE);
+    RegisterServerDLL(dllPath, true);
 }
 
 /* Caller needs to free() the result. */
@@ -1098,7 +1103,7 @@ void OnButtonInstall()
     gGlobalData.installBrowserPlugin = IsCheckboxChecked(gHwndCheckboxRegisterBrowserPlugin);
     gGlobalData.installPdfFilter = IsCheckboxChecked(gHwndCheckboxRegisterPdfFilter);
     // note: this checkbox isn't created on Windows 2000 and XP
-    gGlobalData.installPdfPreviewer = gHwndCheckboxRegisterDefault != NULL &&
+    gGlobalData.installPdfPreviewer = gHwndCheckboxRegisterPdfPreviewer != NULL &&
                                       IsCheckboxChecked(gHwndCheckboxRegisterPdfPreviewer);
 
     if (gShowOptions)
@@ -1169,7 +1174,7 @@ static DWORD WINAPI UninstallerThread(LPVOID data)
     KillProcess(exePath, TRUE);
     free(exePath);
 
-    // also kill any the original uninstaller, if it's just spawned
+    // also kill the original uninstaller, if it's just spawned
     // a DELETE_ON_CLOSE copy from the temp directory
     exePath = GetUninstallerPath();
     if (!path::IsSame(exePath, GetOwnPath()))

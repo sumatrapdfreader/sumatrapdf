@@ -46,9 +46,9 @@
 			>
 			<Tool
 				Name="VCNMakeTool"
-				BuildCommandLine=".\scripts\build-release.bat -testinst"
-				ReBuildCommandLine=".\scripts\build-release.bat -testinst"
-				CleanCommandLine="del /s obj-dbg"
+				BuildCommandLine=".\scripts\build-release.bat -testinst -prerelease"
+				ReBuildCommandLine=".\scripts\build-release.bat -testinst -prerelease"
+				CleanCommandLine="del /s obj-rel"
 				Output="obj-rel\SumatraPDF-install.exe"
 				PreprocessorDefinitions="WIN32;NDEBUG;UNICODE;_UNICODE"
 				IncludeSearchPath="src\utils"

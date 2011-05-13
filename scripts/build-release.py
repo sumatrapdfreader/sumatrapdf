@@ -70,8 +70,9 @@ def main():
   verify_started_in_right_directory()
 
   if build_test_installer:
-    run_cmd_throw("nmake", "-f", "makefile.msvc", "CFG=dbg")
-    build_installer_native("obj-dbg", None)
+    config = build_prerelease and "rel" or "dbg"
+    run_cmd_throw("nmake", "-f", "makefile.msvc", "CFG=" + config)
+    build_installer_native("obj-" + config, None)
     sys.exit(0)
 
   if build_prerelease:
