@@ -158,11 +158,9 @@ def build_installer_native(dir, nameprefix):
     exe = os.path.join(dir, "SumatraPDF.exe")
 
   exe = os.path.join(dir, "SumatraPDF-no-MuPDF.exe")
-  lib = os.path.join(dir, "libmupdf.dll")
-  plugin = os.path.join(dir, "npPdfViewer.dll")
+  dll_names = ["libmupdf.dll", "npPdfViewer.dll", "PdfFilter.dll", "PdfPreview.dll"]
   font_name =  "DroidSansFallback.ttf"
   font_path = os.path.join("mupdf", "fonts", "droid", font_name)
-  ifilter = os.path.join(dir, "PdfFilter.dll")
 
   shutil.copy(installer_template_exe, installer_exe)
 
@@ -173,10 +171,9 @@ def build_installer_native(dir, nameprefix):
 
   zf = zipfile.ZipFile(installer_exe, "a", zipfile.ZIP_BZIP2)
   zf.write(exe, "SumatraPDF.exe")
-  zf.write(lib, "libmupdf.dll")
+  for name in dll_names:
+    zf.write(os.path.join(dir, name), name)
   zf.write(font_path, font_name)
-  zf.write(plugin, "npPdfViewer.dll")
-  zf.write(ifilter, "PdfFilter.dll")
   zf.close()
 
   print("Built installer at " + installer_exe)

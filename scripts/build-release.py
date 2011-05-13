@@ -129,14 +129,10 @@ def main():
   exe_no_mupdf = os.path.join(builds_dir, "SumatraPDF-no-MuPDF.exe")
   copy_from_obj_rel("SumatraPDF-no-MuPDF.exe", exe_no_mupdf)
 
-  libmupdf = os.path.join(builds_dir, "libmupdf.dll")
-  copy_from_obj_rel("libmupdf.dll", libmupdf)
-
-  plugin = os.path.join(builds_dir, "npPdfViewer.dll")
-  copy_from_obj_rel("npPdfViewer.dll", plugin)
-
-  pdffilter = os.path.join(builds_dir, "PdfFilter.dll")
-  copy_from_obj_rel("PdfFilter.dll", pdffilter)
+  dll_names = ["libmupdf.dll", "npPdfViewer.dll", "PdfFilter.dll", "PdfPreview.dll"]
+  dll_paths = [os.path.join(builds_dir, name) for name in dll_names]
+  for i in range(len(dll_names)):
+    copy_from_obj_rel(dll_names[i], dll_paths[i])
 
   pdb_zip = os.path.join(builds_dir, "%s.pdb.zip" % filename_base)
   zip_file(pdb_zip, os.path.join("obj-rel", "libmupdf.pdb"))
@@ -183,7 +179,7 @@ def main():
     # manually to: "%s\n" % ver
 
   # temporary files that were in builds_dir to make creating other files possible
-  temp = [installer_stub, installer_stub + ".bak", exe_no_mupdf, libmupdf, plugin, pdffilter]
+  temp = [installer_stub, installer_stub + ".bak", exe_no_mupdf] + dll_paths
   map(os.remove, temp)
 
 

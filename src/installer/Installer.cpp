@@ -35,6 +35,7 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 
 #include "CmdLineParser.h"
 #include "../ifilter/PdfFilter.h"
+#include "../previewer/PdfPreview.h"
 
 // define for testing the uninstaller
 // #define TEST_UNINSTALLER
@@ -47,9 +48,9 @@ using namespace Gdiplus;
 #define INSTALLER_FRAME_CLASS_NAME    _T("SUMATRA_PDF_INSTALLER_FRAME")
 
 #define INSTALLER_WIN_DX    420
-#define INSTALLER_WIN_DY    320
+#define INSTALLER_WIN_DY    340
 #define UNINSTALLER_WIN_DX  420
-#define UNINSTALLER_WIN_DY  320
+#define UNINSTALLER_WIN_DY  340
 
 #define ID_BUTTON_INSTALL             11
 #define ID_BUTTON_UNINSTALL           12
@@ -60,6 +61,7 @@ using namespace Gdiplus;
 #define ID_BUTTON_OPTIONS             17
 #define ID_BUTTON_BROWSE              18
 #define ID_CHECKBOX_PDF_FILTER        19
+#define ID_CHECKBOX_PDF_PREVIEWER     20
 
 #define WM_APP_INSTALLATION_FINISHED        (WM_APP + 1)
 
@@ -84,6 +86,7 @@ static HWND             gHwndButtonBrowseDir = NULL;
 static HWND             gHwndCheckboxRegisterDefault = NULL;
 static HWND             gHwndCheckboxRegisterBrowserPlugin = NULL;
 static HWND             gHwndCheckboxRegisterPdfFilter = NULL;
+static HWND             gHwndCheckboxRegisterPdfPreviewer = NULL;
 static HWND             gHwndButtonUninstall = NULL;
 static HWND             gHwndProgressBar = NULL;
 static HFONT            gFontDefault;
@@ -182,6 +185,7 @@ struct {
     { "DroidSansFallback.ttf",  true    },
     { "npPdfViewer.dll",        true    },
     { "PdfFilter.dll",          true    },
+    { "PdfPreview.dll",         true    },
     { "uninstall.exe",          false   },
 };
 
@@ -193,6 +197,7 @@ struct {
     bool registerAsDefault;
     bool installBrowserPlugin;
     bool installPdfFilter;
+    bool installPdfPreviewer;
 
     TCHAR *firstError;
     HANDLE hThread;
@@ -205,6 +210,7 @@ struct {
     false, /* bool registerAsDefault */
     false, /* bool installBrowserPlugin */
     false, /* bool installPdfFilter */
+    false, /* bool installPdfPreviewer */
 
     NULL,  /* TCHAR *firstError */
     NULL,  /* HANDLE hThread */
@@ -363,6 +369,11 @@ TCHAR *GetBrowserPluginPath()
 TCHAR *GetPdfFilterPath()
 {
     return path::Join(gGlobalData.installDir, _T("PdfFilter.dll"));
+}
+
+TCHAR *GetPdfPreviewerPath()
+{
+    return path::Join(gGlobalData.installDir, _T("PdfPreview.dll"));
 }
 
 TCHAR *GetStartMenuProgramsPath(bool allUsers)
@@ -822,11 +833,18 @@ bool IsBrowserPluginInstalled()
 
 bool IsPdfFilterInstalled()
 {
-    ScopedMem<TCHAR> buf(ReadRegStr(HKEY_CLASSES_ROOT, _T(".pdf\\PersistentHandler"), NULL));
-    if (!buf)
+    ScopedMem<TCHAR> handler_iid(ReadRegStr(HKEY_CLASSES_ROOT, _T(".pdf\\PersistentHandler"), NULL));
+    if (!handler_iid)
         return false;
-    ScopedMem<WCHAR> handler_iid(str::conv::ToWStr(buf));
     return str::EqI(handler_iid, SZ_PDF_FILTER_HANDLER);
+}
+
+bool IsPdfPreviewerInstalled()
+{
+    ScopedMem<TCHAR> handler_iid(ReadRegStr(HKEY_CLASSES_ROOT, _T(".pdf\\shellex\\{8895b1c6-b41f-4c1c-a562-0d564250836f}"), NULL));
+    if (!handler_iid)
+        return false;
+    return str::EqI(handler_iid, SZ_PDF_PREVIEW_CLSID);
 }
 
 void InstallBrowserPlugin()
@@ -841,16 +859,28 @@ void UninstallBrowserPlugin()
     RegisterServerDLL(dllPath, TRUE);
 }
 
+void InstallPdfFilter()
+{
+    ScopedMem<TCHAR> dllPath(GetPdfFilterPath());
+    RegisterServerDLL(dllPath);
+}
+
 void UninstallPdfFilter()
 {
     ScopedMem<TCHAR> dllPath(GetPdfFilterPath());
     RegisterServerDLL(dllPath, TRUE);
 }
 
-void InstallPdfFilter()
+void InstallPdfPreviewer()
 {
-    ScopedMem<TCHAR> dllPath(GetPdfFilterPath());
+    ScopedMem<TCHAR> dllPath(GetPdfPreviewerPath());
     RegisterServerDLL(dllPath);
+}
+
+void UninstallPdfPreviewer()
+{
+    ScopedMem<TCHAR> dllPath(GetPdfPreviewerPath());
+    RegisterServerDLL(dllPath, TRUE);
 }
 
 /* Caller needs to free() the result. */
@@ -1000,17 +1030,20 @@ static DWORD WINAPI InstallerThread(LPVOID data)
         CloseHandle(h);
     }
 
-    if (gGlobalData.installBrowserPlugin) {
+    if (gGlobalData.installBrowserPlugin)
         InstallBrowserPlugin();
-    } else if (IsBrowserPluginInstalled()) {
+    else if (IsBrowserPluginInstalled())
         UninstallBrowserPlugin();
-    }
 
-    if (gGlobalData.installPdfFilter) {
+    if (gGlobalData.installPdfFilter)
         InstallPdfFilter();
-    } else if (IsPdfFilterInstalled()) {
+    else if (IsPdfFilterInstalled())
         UninstallPdfFilter();
-    }
+
+    if (gGlobalData.installPdfPreviewer)
+        InstallPdfPreviewer();
+    else if (IsPdfPreviewerInstalled())
+        UninstallPdfPreviewer();
 
     if (!CreateAppShortcut(true) && !CreateAppShortcut(false)) {
         NotifyFailed(_T("Failed to create a shortcut"));
@@ -1053,12 +1086,9 @@ bool IsCheckboxChecked(HWND hwnd)
 void OnButtonInstall()
 {
     TCHAR *userInstallDir = win::GetText(gHwndTextboxInstDir);
-    if (!str::IsEmpty(userInstallDir)) {
-        free(gGlobalData.installDir);
-        gGlobalData.installDir = userInstallDir;
-    }
-    else
-        free(userInstallDir);
+    if (!str::IsEmpty(userInstallDir))
+        str::ReplacePtr(&gGlobalData.installDir, userInstallDir);
+    free(userInstallDir);
 
     // note: this checkbox isn't created if we're already registered as default
     //       (in which case we're just going to re-register)
@@ -1067,6 +1097,9 @@ void OnButtonInstall()
 
     gGlobalData.installBrowserPlugin = IsCheckboxChecked(gHwndCheckboxRegisterBrowserPlugin);
     gGlobalData.installPdfFilter = IsCheckboxChecked(gHwndCheckboxRegisterPdfFilter);
+    // note: this checkbox isn't created on Windows 2000 and XP
+    gGlobalData.installPdfPreviewer = gHwndCheckboxRegisterDefault != NULL &&
+                                      IsCheckboxChecked(gHwndCheckboxRegisterPdfPreviewer);
 
     if (gShowOptions)
         OnButtonOptions();
@@ -1093,6 +1126,8 @@ void OnButtonInstall()
     gHwndCheckboxRegisterBrowserPlugin = NULL;
     DestroyWindow(gHwndCheckboxRegisterPdfFilter);
     gHwndCheckboxRegisterPdfFilter = NULL;
+    DestroyWindow(gHwndCheckboxRegisterPdfPreviewer);
+    gHwndCheckboxRegisterPdfPreviewer = NULL;
     DestroyWindow(gHwndButtonOptions);
     gHwndButtonOptions = NULL;
 
@@ -1152,6 +1187,7 @@ static DWORD WINAPI UninstallerThread(LPVOID data)
     RemoveOwnRegistryKeys();
     UninstallBrowserPlugin();
     UninstallPdfFilter();
+    UninstallPdfPreviewer();
 
     if (!RemoveInstalledFiles())
         NotifyFailed(_T("Couldn't remove installation directory"));
@@ -1262,6 +1298,7 @@ void OnButtonOptions()
     ShowWindow(gHwndCheckboxRegisterDefault, nCmdShow);
     ShowWindow(gHwndCheckboxRegisterBrowserPlugin, nCmdShow);
     ShowWindow(gHwndCheckboxRegisterPdfFilter, nCmdShow);
+    ShowWindow(gHwndCheckboxRegisterPdfPreviewer, nCmdShow);
 
     win::SetText(gHwndButtonOptions, gShowOptions ? _T("Hide &Options") : _T("&Options"));
 
@@ -1863,6 +1900,17 @@ void OnCreateInstaller(HWND hwnd)
         x, y, r.dx - 2 * x, 22, hwnd, (HMENU)ID_CHECKBOX_PDF_FILTER, ghinst, NULL);
     SetWindowFont(gHwndCheckboxRegisterPdfFilter, gFontDefault, TRUE);
     Button_SetCheck(gHwndCheckboxRegisterPdfFilter, gGlobalData.installPdfFilter || IsPdfFilterInstalled());
+    y += 22;
+
+    if (WindowsVerVistaOrGreater()) {
+        gHwndCheckboxRegisterPdfPreviewer = CreateWindow(
+            WC_BUTTON, _T("Let Windows show &previews of PDF documents"),
+            WS_CHILD | BS_AUTOCHECKBOX | WS_TABSTOP,
+            x, y, r.dx - 2 * x, 22, hwnd, (HMENU)ID_CHECKBOX_PDF_PREVIEWER, ghinst, NULL);
+        SetWindowFont(gHwndCheckboxRegisterPdfPreviewer, gFontDefault, TRUE);
+        Button_SetCheck(gHwndCheckboxRegisterPdfPreviewer, gGlobalData.installPdfPreviewer || IsPdfPreviewerInstalled());
+        y += 22;
+    }
 
     gShowOptions = !gShowOptions;
     OnButtonOptions();
@@ -2082,12 +2130,12 @@ int RunApp()
 
 void ShowUsage()
 {
-    MessageBox(NULL, TAPP _T("-install.exe [/s][/d <path>][/default][/opt plugin,pdffilter]\n\
+    MessageBox(NULL, TAPP _T("-install.exe [/s][/d <path>][/default][/opt plugin,...]\n\
     \n\
     /s\tinstalls ") TAPP _T(" silently (without user interaction).\n\
     /d\tchanges the directory where ") TAPP _T(" will be installed.\n\
     /default\tinstalls ") TAPP _T(" as the default PDF viewer.\n\
-    /opt\tenables optional components (currently: plugin, pdffilter)."), TAPP _T(" Installer Usage"), MB_OK | MB_ICONINFORMATION);
+    /opt\tenables optional components (currently: plugin, pdffilter, pdfpreviewer)."), TAPP _T(" Installer Usage"), MB_OK | MB_ICONINFORMATION);
 }
 
 void ParseCommandLine(TCHAR *cmdLine)
@@ -2121,6 +2169,8 @@ void ParseCommandLine(TCHAR *cmdLine)
                 gGlobalData.installBrowserPlugin = true;
             if (optlist.Find(_T("pdffilter")) != -1)
                 gGlobalData.installPdfFilter = true;
+            if (optlist.Find(_T("pdfpreviewer")) != -1)
+                gGlobalData.installPdfPreviewer = true;
         }
         else if (is_arg("h") || is_arg("help") || is_arg("?"))
             gGlobalData.showUsageAndQuit = true;
@@ -2165,6 +2215,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
                 gGlobalData.installBrowserPlugin = IsBrowserPluginInstalled();
             if (!gGlobalData.installPdfFilter)
                 gGlobalData.installPdfFilter = IsPdfFilterInstalled();
+            if (!gGlobalData.installPdfPreviewer)
+                gGlobalData.installPdfPreviewer = IsPdfPreviewerInstalled();
             InstallerThread(NULL);
         }
         ret = gGlobalData.success ? 0 : 1;

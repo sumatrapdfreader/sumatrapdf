@@ -259,10 +259,11 @@ $(OS)\FileWatch.obj: src\utils\StrUtil.h
 $(OS)\Http.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
 $(OS)\Http.obj: src\utils\Http.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\Http.obj: src\utils\WinUtil.h
-$(OS)\ImagesEngine.obj: src\..\ext\unrar\dll.hpp src\BaseEngine.h src\ImagesEngine.h
+$(OS)\ImagesEngine.obj: ext\unrar\dll.hpp src\BaseEngine.h src\ImagesEngine.h
 $(OS)\ImagesEngine.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
 $(OS)\ImagesEngine.obj: src\utils\StrUtil.h src\utils\Vec.h
-$(OS)\Installer.obj: src\installer\..\ifilter\PdfFilter.h src\installer\Resource.h src\utils\BaseUtil.h
+$(OS)\Installer.obj: src\BaseEngine.h src\ifilter\PdfFilter.h src\previewer\PdfPreview.h
+$(OS)\Installer.obj: src\installer\Resource.h src\PdfEngine.h src\utils\BaseUtil.h
 $(OS)\Installer.obj: src\utils\CmdLineParser.h src\utils\FileUtil.h src\utils\GeomUtil.h
 $(OS)\Installer.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
 $(OS)\Installer.obj: src\Version.h
