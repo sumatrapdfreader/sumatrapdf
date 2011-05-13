@@ -231,7 +231,6 @@ $(OS)\BencUtil.obj: src\utils\Vec.h
 $(OS)\CPdfFilter.obj: src\BaseEngine.h src\ifilter\CPdfFilter.h src\ifilter\FilterBase.h
 $(OS)\CPdfFilter.obj: src\ifilter\PdfFilter.h src\PdfEngine.h src\utils\BaseUtil.h
 $(OS)\CPdfFilter.obj: src\utils\GeomUtil.h src\utils\StrUtil.h src\utils\Vec.h
-$(OS)\CPdfFilter.obj: src\utils\WinUtil.h
 $(OS)\CrashHandler.obj: src\AppPrefs.h src\AppTools.h src\BaseEngine.h
 $(OS)\CrashHandler.obj: src\CrashHandler.h src\DisplayState.h src\SumatraPDF.h
 $(OS)\CrashHandler.obj: src\TextSearch.h src\TextSelection.h src\translations.h
@@ -240,12 +239,10 @@ $(OS)\CrashHandler.obj: src\utils\Http.h src\utils\SimpleLog.h src\utils\StrUtil
 $(OS)\CrashHandler.obj: src\utils\Vec.h src\utils\WinUtil.h src\utils\ZipUtil.h
 $(OS)\CrashHandler.obj: src\Version.h
 $(OS)\CTeXFilter.obj: src\ifilter\CTeXFilter.h src\ifilter\FilterBase.h src\ifilter\PdfFilter.h
-$(OS)\CTeXFilter.obj: src\utils\BaseUtil.h src\utils\GeomUtil.h src\utils\StrUtil.h
-$(OS)\CTeXFilter.obj: src\utils\WinUtil.h
+$(OS)\CTeXFilter.obj: src\utils\BaseUtil.h src\utils\StrUtil.h
 $(OS)\CXpsFilter.obj: src\BaseEngine.h src\ifilter\CXpsFilter.h src\ifilter\FilterBase.h
 $(OS)\CXpsFilter.obj: src\ifilter\PdfFilter.h src\PdfEngine.h src\utils\BaseUtil.h
 $(OS)\CXpsFilter.obj: src\utils\GeomUtil.h src\utils\StrUtil.h src\utils\Vec.h
-$(OS)\CXpsFilter.obj: src\utils\WinUtil.h
 $(OS)\DialogSizer.obj: src\utils\BaseUtil.h src\utils\DialogSizer.h src\utils\GeomUtil.h
 $(OS)\DialogSizer.obj: src\utils\WinUtil.h
 $(OS)\DisplayModel.obj: src\BaseEngine.h src\DisplayModel.h src\DisplayState.h

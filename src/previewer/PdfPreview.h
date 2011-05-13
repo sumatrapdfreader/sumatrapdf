@@ -7,7 +7,6 @@
 #define SZ_PDF_PREVIEW_CLSID    _T("{3D3B1846-CC43-42ae-BFF9-D914083C2BA3}")
 
 #include "BaseUtil.h"
-#include "WinUtil.h"
 #include "PdfEngine.h"
 
 #include <shlwapi.h>
@@ -32,15 +31,15 @@ public:
 
     // IUnknown
     IFACEMETHODIMP QueryInterface(REFIID riid, void **ppv) {
-        const IID *iids[] = {
-            &IID_IInitializeWithStream,
-            &IID_IThumbnailProvider,
-            &IID_IObjectWithSite,
-            &IID_IPreviewHandler,
-            &IID_IOleWindow,
-            NULL
+        static const QITAB qit[] = {
+            QITABENT(PreviewBase, IInitializeWithStream),
+            QITABENT(PreviewBase, IThumbnailProvider),
+            QITABENT(PreviewBase, IObjectWithSite),
+            QITABENT(PreviewBase, IPreviewHandler),
+            QITABENT(PreviewBase, IOleWindow),
+            { 0 }
         };
-        return QIImpl(this, iids, riid, ppv);
+        return QISearch(this, qit, riid, ppv);
     }
     IFACEMETHODIMP_(ULONG) AddRef() {
         return InterlockedIncrement(&m_lRef);

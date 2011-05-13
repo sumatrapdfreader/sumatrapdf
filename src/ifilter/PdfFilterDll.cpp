@@ -2,13 +2,13 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
+#include "WinUtil.h"
 #ifndef DEBUG
 #include <new>
 #define NOTHROW (std::nothrow)
 #else
 #define NOTHROW
 #endif
-#include <shlwapi.h>
 #include "CPdfFilter.h"
 #ifdef BUILD_XPS_IFILTER
 #include "CXpsFilter.h"
@@ -34,8 +34,12 @@ public:
     // IUnknown
     IFACEMETHODIMP QueryInterface(REFIID riid, void **ppv)
     {
-        const IID *iids[] = { &IID_IClassFactory, NULL };
-        return QIImpl(this, iids, riid, ppv);
+        static const QITAB qit[] =
+        {
+            QITABENT(CClassFactory, IClassFactory),
+            { 0 }
+        };
+        return QISearch(this, qit, riid, ppv);
     }
 
     IFACEMETHODIMP_(ULONG) AddRef()

@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 #include "PdfPreview.h"
+#include "WinUtil.h"
 #ifndef DEBUG
 #include <new>
 #define NOTHROW (std::nothrow)
@@ -26,8 +27,12 @@ public:
     // IUnknown
     IFACEMETHODIMP QueryInterface(REFIID riid, void **ppv)
     {
-        const IID *iids[] = { &IID_IClassFactory, NULL };
-        return QIImpl(this, iids, riid, ppv);
+        static const QITAB qit[] =
+        {
+            QITABENT(CClassFactory, IClassFactory),
+            { 0 }
+        };
+        return QISearch(this, qit, riid, ppv);
     }
 
     IFACEMETHODIMP_(ULONG) AddRef()

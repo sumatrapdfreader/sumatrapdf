@@ -14,7 +14,6 @@
 #include <propsys.h>
 #include <filter.h>
 #include <filterr.h>
-#include "WinUtil.h"
 
 class CChunkValue
 {
@@ -165,23 +164,26 @@ protected:
 
 public:
     CFilterBase(long *plRefCount) : m_lRef(1), m_plModuleRef(plRefCount),
-        m_dwChunkId(0), m_iText(0), m_pStream(NULL) { }
+        m_dwChunkId(0), m_iText(0), m_pStream(NULL) {
+        InterlockedIncrement(m_plModuleRef);
+    }
 
     virtual ~CFilterBase() {
         if (m_pStream)
             m_pStream->Release();
+        InterlockedDecrement(m_plModuleRef);
     }
 
     // IUnknown
     IFACEMETHODIMP QueryInterface(REFIID riid, void **ppv) {
-        const IID *iids[] = {
-            &IID_IPersistStream,
-            &IID_IPersistFile,
-            &IID_IInitializeWithStream,
-            &IID_IFilter,
-            NULL
+        static const QITAB qit[] = {
+            QITABENT(CFilterBase, IPersistStream),
+            QITABENT(CFilterBase, IPersistFile),
+            QITABENT(CFilterBase, IInitializeWithStream),
+            QITABENT(CFilterBase, IFilter),
+            { 0 }
         };
-        return QIImpl(this, iids, riid, ppv);
+        return QISearch(this, qit, riid, ppv);
     }
     IFACEMETHODIMP_(ULONG) AddRef() {
         return InterlockedIncrement(&m_lRef);

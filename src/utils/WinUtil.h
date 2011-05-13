@@ -217,25 +217,6 @@ public:
 
 } // namespace win
 
-// IUnknown::QueryInterface implementation that just has to be passed an
-// object, a NULL terminated list of interfaces it implements and the
-// parameters to QueryInterface
-template <typename Q>
-HRESULT QIImpl(Q *obj, const IID **iids0, REFIID riid, void **ppv)
-{
-    if (!ppv || !iids0) return E_INVALIDARG;
-    *ppv = NULL;
-
-    for (int i = 0; iids0[i] != NULL; i++) {
-        if (IsEqualIID(riid, *iids0[i])) {
-            obj->AddRef();
-            *ppv = obj;
-            return S_OK;
-        }
-    }
-    return E_NOINTERFACE;
-}
-
 #ifndef USER_DEFAULT_SCREEN_DPI
 // the following is only defined if _WIN32_WINNT >= 0x0600 and we use 0x0500
 #define USER_DEFAULT_SCREEN_DPI 96
