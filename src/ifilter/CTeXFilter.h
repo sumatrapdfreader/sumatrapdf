@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 #include "FilterBase.h"
+#include "PdfFilter.h"
 
 enum TEX_FILTER_STATE { STATE_TEX_START, STATE_TEX_PREAMBLE, STATE_TEX_CONTENT, STATE_TEX_END };
 
@@ -23,6 +24,11 @@ public:
         m_pBuffer = NULL;
     }
     WCHAR *ExtractBracedBlock();
+
+    // IPersist
+    IFACEMETHODIMP GetClassID(CLSID *pClassID) {
+        return CLSIDFromTString(SZ_TEX_FILTER_HANDLER, pClassID);
+    }
 
 private:
     TEX_FILTER_STATE m_state;

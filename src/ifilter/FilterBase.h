@@ -14,7 +14,6 @@
 #include <propsys.h>
 #include <filter.h>
 #include <filterr.h>
-#include "PdfFilter.h"
 #include "WinUtil.h"
 
 class CChunkValue
@@ -276,10 +275,6 @@ public:
         return S_OK;
     };
 
-    // IPersist
-    IFACEMETHODIMP GetClassID(CLSID *pClassID) {
-        return CLSIDFromString(SZ_PDF_FILTER_HANDLER, pClassID);
-    }
     // IPersistStream
     IFACEMETHODIMP IsDirty(void) { return E_NOTIMPL; }
     IFACEMETHODIMP Load(IStream *pStm) { return Initialize(pStm, 0); }
@@ -319,5 +314,14 @@ private:
 
     CChunkValue                 m_currentChunk;
 };
+
+inline HRESULT CLSIDFromTString(TCHAR *string, CLSID *clsid)
+{
+#ifdef UNICODE
+    return CLSIDFromString(string, clsid);
+#else
+    return CLSIDFromString(ScopedMem<WCHAR>(str::conv::ToWStr(string)), clsid);
+#endif
+}
 
 #endif

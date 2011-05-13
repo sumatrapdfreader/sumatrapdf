@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 #include "FilterBase.h"
+#include "PdfFilter.h"
 
 enum XPS_FILTER_STATE { STATE_XPS_START, STATE_XPS_AUTHOR, STATE_XPS_TITLE, STATE_XPS_DATE, STATE_XPS_CONTENT, STATE_XPS_END };
 
@@ -18,6 +19,11 @@ public:
     virtual HRESULT GetNextChunkValue(CChunkValue &chunkValue);
 
     VOID CleanUp();
+
+    // IPersist
+    IFACEMETHODIMP GetClassID(CLSID *pClassID) {
+        return CLSIDFromTString(SZ_XPS_FILTER_HANDLER, pClassID);
+    }
 
 private:
 	XPS_FILTER_STATE m_state;

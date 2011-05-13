@@ -128,7 +128,6 @@ static bool IsWow64()
 STDAPI DllRegisterServer()
 {
     TCHAR path[MAX_PATH];
-
     if (!GetModuleFileName(g_hInstance, path, dimof(path)))
         return HRESULT_FROM_WIN32(GetLastError());
 

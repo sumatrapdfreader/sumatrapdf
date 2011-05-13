@@ -61,14 +61,14 @@ public:
         IFilter *pFilter = NULL;
         
         CLSID clsid;
-        if (SUCCEEDED(CLSIDFromString(SZ_PDF_FILTER_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid))
+        if (SUCCEEDED(CLSIDFromTString(SZ_PDF_FILTER_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid))
             pFilter = new NOTHROW CPdfFilter(&g_lRefCount);
 #ifdef BUILD_XPS_IFILTER
-        else if (SUCCEEDED(CLSIDFromString(SZ_XPS_FILTER_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid))
+        else if (SUCCEEDED(CLSIDFromTString(SZ_XPS_FILTER_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid))
             pFilter = new NOTHROW CXpsFilter(&g_lRefCount);
 #endif
 #ifdef BUILD_TEX_IFILTER
-        else if (SUCCEEDED(CLSIDFromString(SZ_TEX_FILTER_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid))
+        else if (SUCCEEDED(CLSIDFromTString(SZ_TEX_FILTER_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid))
             pFilter = new NOTHROW CTeXFilter(&g_lRefCount);
 #endif
         else
@@ -122,108 +122,100 @@ STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
     return hr;
 }
 
-struct REGISTRY_ENTRY {
-    LPWSTR pszKeyName;
-    LPWSTR pszValueName;
-    LPWSTR pszData;
-};
-
-HRESULT CreateRegKeyAndSetValue(HKEY hKeyRoot, const REGISTRY_ENTRY *pRegistryEntry)
-{
-    HRESULT hr;
-    HKEY hKey;
-
-    LONG lRet = RegCreateKeyExW(hKeyRoot, pRegistryEntry->pszKeyName,
-                                0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hKey, NULL);
-    if (lRet != ERROR_SUCCESS)
-        return HRESULT_FROM_WIN32(lRet);
-
-    lRet = RegSetValueExW(hKey, pRegistryEntry->pszValueName, 0, REG_SZ,
-                          (LPBYTE)pRegistryEntry->pszData,
-                          ((DWORD)lstrlenW(pRegistryEntry->pszData) + 1) * sizeof(WCHAR));
-
-    hr = HRESULT_FROM_WIN32(lRet);
-    RegCloseKey(hKey);
-
-    return hr;
-}
-
 STDAPI DllRegisterServer()
 {
-    HRESULT hr;
-
-    WCHAR szModuleName[MAX_PATH];
-
-    if (!GetModuleFileNameW(g_hInstance, szModuleName, ARRAYSIZE(szModuleName)))
+    WCHAR path[MAX_PATH];
+    if (!GetModuleFileName(g_hInstance, path, dimof(path)))
         return HRESULT_FROM_WIN32(GetLastError());
 
-    const REGISTRY_ENTRY rgRegistryEntries[] = {
-        { L"Software\\Classes\\CLSID\\" SZ_PDF_FILTER_CLSID,                                     NULL,               L"SumatraPDF IFilter"},
-        { L"Software\\Classes\\CLSID\\" SZ_PDF_FILTER_CLSID L"\\InProcServer32",                 NULL,               szModuleName},
-        { L"Software\\Classes\\CLSID\\" SZ_PDF_FILTER_CLSID L"\\InProcServer32",                 L"ThreadingModel",  L"Both"},
-        { L"Software\\Classes\\CLSID\\" SZ_PDF_FILTER_HANDLER,                                   NULL,               L"SumatraPDF IFilter Persistent Handler"},
-        { L"Software\\Classes\\CLSID\\" SZ_PDF_FILTER_HANDLER L"\\PersistentAddinsRegistered",   NULL,               L""},
-        { L"Software\\Classes\\CLSID\\" SZ_PDF_FILTER_HANDLER L"\\PersistentAddinsRegistered\\{89BCB740-6119-101A-BCB7-00DD010655AF}", NULL, SZ_PDF_FILTER_CLSID},
-        { L"Software\\Classes\\.pdf\\PersistentHandler",                                         NULL,               SZ_PDF_FILTER_HANDLER},
+    struct {
+        TCHAR *key, *value, *data;
+    } regVals[] = {
+        { _T("Software\\Classes\\CLSID\\") SZ_PDF_FILTER_CLSID,
+                NULL,                   _T("SumatraPDF IFilter") },
+        { _T("Software\\Classes\\CLSID\\") SZ_PDF_FILTER_CLSID _T("\\InProcServer32"),
+                NULL,                   path },
+        { _T("Software\\Classes\\CLSID\\") SZ_PDF_FILTER_CLSID _T("\\InProcServer32"),
+                _T("ThreadingModel"),   _T("Both") },
+        { _T("Software\\Classes\\CLSID\\") SZ_PDF_FILTER_HANDLER,
+                NULL,                   _T("SumatraPDF IFilter Persistent Handler") },
+        { _T("Software\\Classes\\CLSID\\") SZ_PDF_FILTER_HANDLER _T("\\PersistentAddinsRegistered"),
+                NULL,                   _T("") },
+        { _T("Software\\Classes\\CLSID\\") SZ_PDF_FILTER_HANDLER _T("\\PersistentAddinsRegistered\\{89BCB740-6119-101A-BCB7-00DD010655AF}"),
+                NULL,                   SZ_PDF_FILTER_CLSID },
+        { _T("Software\\Classes\\.pdf\\PersistentHandler"),
+                NULL,                   SZ_PDF_FILTER_HANDLER },
 #ifdef BUILD_XPS_IFILTER
-        { L"Software\\Classes\\CLSID\\" SZ_XPS_FILTER_CLSID,                                     NULL,               L"SumatraPDF IFilter"},
-        { L"Software\\Classes\\CLSID\\" SZ_XPS_FILTER_CLSID L"\\InProcServer32",                 NULL,               szModuleName},
-        { L"Software\\Classes\\CLSID\\" SZ_XPS_FILTER_CLSID L"\\InProcServer32",                 L"ThreadingModel",  L"Both"},
-        { L"Software\\Classes\\CLSID\\" SZ_XPS_FILTER_HANDLER,                                   NULL,               L"SumatraPDF XPS IFilter Persistent Handler"},
-        { L"Software\\Classes\\CLSID\\" SZ_XPS_FILTER_HANDLER L"\\PersistentAddinsRegistered",   NULL,               L""},
-        { L"Software\\Classes\\CLSID\\" SZ_XPS_FILTER_HANDLER L"\\PersistentAddinsRegistered\\{89BCB740-6119-101A-BCB7-00DD010655AF}", NULL, SZ_XPS_FILTER_CLSID},
-        { L"Software\\Classes\\.xps\\PersistentHandler",                                         NULL,               SZ_XPS_FILTER_HANDLER},
+        { _T("Software\\Classes\\CLSID\\") SZ_XPS_FILTER_CLSID,
+                NULL,                   _T("SumatraPDF IFilter") },
+        { _T("Software\\Classes\\CLSID\\") SZ_XPS_FILTER_CLSID _T("\\InProcServer32"),
+                NULL,                   path },
+        { _T("Software\\Classes\\CLSID\\") SZ_XPS_FILTER_CLSID _T("\\InProcServer32"),
+                _T("ThreadingModel"),   _T("Both") },
+        { _T("Software\\Classes\\CLSID\\") SZ_XPS_FILTER_HANDLER,
+                NULL,                   _T("SumatraPDF XPS IFilter Persistent Handler") },
+        { _T("Software\\Classes\\CLSID\\") SZ_XPS_FILTER_HANDLER _T("\\PersistentAddinsRegistered"),
+                NULL,                   _T("") },
+        { _T("Software\\Classes\\CLSID\\") SZ_XPS_FILTER_HANDLER _T("\\PersistentAddinsRegistered\\{89BCB740-6119-101A-BCB7-00DD010655AF}"),
+                NULL, SZ_XPS_FILTER_CLSID },
+        { _T("Software\\Classes\\.xps\\PersistentHandler"),
+                NULL,                   SZ_XPS_FILTER_HANDLER },
 #endif
 #ifdef BUILD_TEX_IFILTER
-        { L"Software\\Classes\\CLSID\\" SZ_TEX_FILTER_CLSID,                                     NULL,               L"SumatraPDF IFilter"},
-        { L"Software\\Classes\\CLSID\\" SZ_TEX_FILTER_CLSID L"\\InProcServer32",                 NULL,               szModuleName},
-        { L"Software\\Classes\\CLSID\\" SZ_TEX_FILTER_CLSID L"\\InProcServer32",                 L"ThreadingModel",  L"Both"},
-        { L"Software\\Classes\\CLSID\\" SZ_TEX_FILTER_HANDLER,                                   NULL,               L"SumatraPDF LaTeX IFilter Persistent Handler"},
-        { L"Software\\Classes\\CLSID\\" SZ_TEX_FILTER_HANDLER L"\\PersistentAddinsRegistered",   NULL,               L""},
-        { L"Software\\Classes\\CLSID\\" SZ_TEX_FILTER_HANDLER L"\\PersistentAddinsRegistered\\{89BCB740-6119-101A-BCB7-00DD010655AF}", NULL, SZ_TEX_FILTER_CLSID},
-        { L"Software\\Classes\\.tex\\PersistentHandler",                                         NULL,               SZ_TEX_FILTER_HANDLER},
+        { _T("Software\\Classes\\CLSID\\") SZ_TEX_FILTER_CLSID,
+                NULL,                   _T("SumatraPDF IFilter") },
+        { _T("Software\\Classes\\CLSID\\") SZ_TEX_FILTER_CLSID _T("\\InProcServer32"),
+                NULL,                   path },
+        { _T("Software\\Classes\\CLSID\\") SZ_TEX_FILTER_CLSID _T("\\InProcServer32"),
+                _T("ThreadingModel"),  _T("Both") },
+        { _T("Software\\Classes\\CLSID\\") SZ_TEX_FILTER_HANDLER,
+                NULL,                   _T("SumatraPDF LaTeX IFilter Persistent Handler") },
+        { _T("Software\\Classes\\CLSID\\") SZ_TEX_FILTER_HANDLER _T("\\PersistentAddinsRegistered"),
+                NULL,                   _T("") },
+        { _T("Software\\Classes\\CLSID\\") SZ_TEX_FILTER_HANDLER _T("\\PersistentAddinsRegistered\\{89BCB740-6119-101A-BCB7-00DD010655AF}"),
+                NULL,                   SZ_TEX_FILTER_CLSID },
+        { _T("Software\\Classes\\.tex\\PersistentHandler"),
+                NULL,                   SZ_TEX_FILTER_HANDLER },
 #endif
     };
 
-    hr = S_OK;
-
-    for (int i = 0; i < ARRAYSIZE(rgRegistryEntries) && SUCCEEDED(hr); i++)
-    {
-        hr = CreateRegKeyAndSetValue(HKEY_LOCAL_MACHINE, &rgRegistryEntries[i]);
-        hr = CreateRegKeyAndSetValue(HKEY_CURRENT_USER, &rgRegistryEntries[i]);
+    for (int i = 0; i < dimof(regVals); i++) {
+        WriteRegStr(HKEY_LOCAL_MACHINE, regVals[i].key, regVals[i].value, regVals[i].data);
+        bool ok = WriteRegStr(HKEY_CURRENT_USER, regVals[i].key, regVals[i].value, regVals[i].data);
+        if (!ok)
+            return E_FAIL;
     }
 
-    return hr;
+    return S_OK;
 }
 
 STDAPI DllUnregisterServer()
 {
-    HRESULT hr = S_OK;
-
-    const LPWSTR rgpszKeys[] = {
-        L"Software\\Classes\\CLSID\\" SZ_PDF_FILTER_CLSID,
-        L"Software\\Classes\\CLSID\\" SZ_PDF_FILTER_HANDLER,
-        L"Software\\Classes\\.pdf\\PersistentHandler",
+    const TCHAR *regKeys[] = {
+        _T("Software\\Classes\\CLSID\\") SZ_PDF_FILTER_CLSID,
+        _T("Software\\Classes\\CLSID\\") SZ_PDF_FILTER_HANDLER,
+        _T("Software\\Classes\\.pdf\\PersistentHandler"),
 #ifdef BUILD_XPS_IFILTER
-        L"Software\\Classes\\CLSID\\" SZ_XPS_FILTER_CLSID,
-        L"Software\\Classes\\CLSID\\" SZ_XPS_FILTER_HANDLER,
-        L"Software\\Classes\\.xps\\PersistentHandler",
+        _T("Software\\Classes\\CLSID\\") SZ_XPS_FILTER_CLSID,
+        _T("Software\\Classes\\CLSID\\") SZ_XPS_FILTER_HANDLER,
+        _T("Software\\Classes\\.xps\\PersistentHandler"),
 #endif
 #ifdef BUILD_TEX_IFILTER
-        L"Software\\Classes\\CLSID\\" SZ_TEX_FILTER_CLSID,
-        L"Software\\Classes\\CLSID\\" SZ_TEX_FILTER_HANDLER,
-        L"Software\\Classes\\.tex\\PersistentHandler",
+        _T("Software\\Classes\\CLSID\\") SZ_TEX_FILTER_CLSID,
+        _T("Software\\Classes\\CLSID\\") SZ_TEX_FILTER_HANDLER,
+        _T("Software\\Classes\\.tex\\PersistentHandler"),
 #endif
     };
 
-    for (int i = 0; i < ARRAYSIZE(rgpszKeys) && SUCCEEDED(hr); i++) {
-        DWORD dwError = SHDeleteKeyW(HKEY_LOCAL_MACHINE, rgpszKeys[i]);
-        dwError = SHDeleteKeyW(HKEY_CURRENT_USER, rgpszKeys[i]);
-        if (ERROR_FILE_NOT_FOUND == dwError)
-            hr = S_OK;
-        else
-            hr = HRESULT_FROM_WIN32(dwError);
+    HRESULT hr = S_OK;
+
+    for (int i = 0; i < dimof(regKeys); i++) {
+        DeleteRegKey(HKEY_LOCAL_MACHINE, regKeys[i]);
+        bool ok = DeleteRegKey(HKEY_CURRENT_USER, regKeys[i]);
+        if (!ok)
+            hr = E_FAIL;
     }
+
     return hr;
 }
 
