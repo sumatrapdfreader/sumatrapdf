@@ -249,16 +249,3 @@ IFACEMETHODIMP PreviewBase::DoPreview()
     ShowWindow(m_hwnd, SW_SHOW);
     return S_OK;
 }
-
-IFACEMETHODIMP PreviewBase::QueryInterface(REFIID riid, void **ppv)
-{
-    static const QITAB qit[] = {
-        QITABENT(PreviewBase, IInitializeWithStream),
-        QITABENT(PreviewBase, IThumbnailProvider),
-        QITABENT(PreviewBase, IObjectWithSite),
-        QITABENT(PreviewBase, IPreviewHandler),
-        QITABENT(PreviewBase, IOleWindow),
-        { 0 }
-    };
-    return QISearch(this, qit, riid, ppv);
-}

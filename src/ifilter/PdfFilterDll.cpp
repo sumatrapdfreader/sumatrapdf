@@ -1,10 +1,14 @@
 /* Copyright 2011 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include <windows.h>
+#include "BaseUtil.h"
+#ifndef DEBUG
 #include <new>
+#define NOTHROW (std::nothrow)
+#else
+#define NOTHROW
+#endif
 #include <shlwapi.h>
-#include <tchar.h>
 #include "CPdfFilter.h"
 #ifdef BUILD_XPS_IFILTER
 #include "CXpsFilter.h"
@@ -30,12 +34,8 @@ public:
     // IUnknown
     IFACEMETHODIMP QueryInterface(REFIID riid, void **ppv)
     {
-        static const QITAB qit[] =
-        {
-            QITABENT(CClassFactory, IClassFactory),
-            { 0 }
-        };
-        return QISearch(this, qit, riid, ppv);
+        const IID *iids[] = { &IID_IClassFactory, NULL };
+        return QIImpl(this, iids, riid, ppv);
     }
 
     IFACEMETHODIMP_(ULONG) AddRef()
@@ -62,14 +62,14 @@ public:
         
         CLSID clsid;
         if (SUCCEEDED(CLSIDFromString(SZ_PDF_FILTER_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid))
-            pFilter = new (std::nothrow) CPdfFilter(&g_lRefCount);
+            pFilter = new NOTHROW CPdfFilter(&g_lRefCount);
 #ifdef BUILD_XPS_IFILTER
         else if (SUCCEEDED(CLSIDFromString(SZ_XPS_FILTER_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid))
-            pFilter = new (std::nothrow) CXpsFilter(&g_lRefCount);
+            pFilter = new NOTHROW CXpsFilter(&g_lRefCount);
 #endif
 #ifdef BUILD_TEX_IFILTER
         else if (SUCCEEDED(CLSIDFromString(SZ_TEX_FILTER_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid))
-            pFilter = new (std::nothrow) CTeXFilter(&g_lRefCount);
+            pFilter = new NOTHROW CTeXFilter(&g_lRefCount);
 #endif
         else
             return CLASS_E_CLASSNOTAVAILABLE;
@@ -114,7 +114,7 @@ STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 {
     HRESULT hr = E_OUTOFMEMORY;
     *ppv = NULL;
-    CClassFactory *pClassFactory = new (std::nothrow) CClassFactory(rclsid);
+    CClassFactory *pClassFactory = new NOTHROW CClassFactory(rclsid);
     if (pClassFactory) {
         hr = pClassFactory->QueryInterface(riid, ppv);
         pClassFactory->Release();

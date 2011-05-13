@@ -10,43 +10,9 @@ class XpsEngine;
 class CXpsFilter : public CFilterBase
 {
 public:
-    CXpsFilter(long *plRefCount) : m_lRef(1), m_plModuleRef(plRefCount),
-        m_state(STATE_XPS_END), m_iPageNo(-1), m_xpsEngine(NULL)
-    {
-        InterlockedIncrement(m_plModuleRef);
-    }
-
-    ~CXpsFilter()
-    {
-        CleanUp();
-        InterlockedDecrement(m_plModuleRef);
-    }
-
-    // IUnknown
-    IFACEMETHODIMP QueryInterface(REFIID riid, void **ppv)
-    {
-        static const QITAB qit[] = {
-            QITABENT(CXpsFilter, IPersistStream),
-            QITABENT(CXpsFilter, IPersistFile),
-            QITABENT(CXpsFilter, IInitializeWithStream),
-            QITABENT(CXpsFilter, IFilter),
-            { 0 }
-        };
-        return QISearch(this, qit, riid, ppv);
-    }
-
-    IFACEMETHODIMP_(ULONG) AddRef()
-    {
-        return InterlockedIncrement(&m_lRef);
-    }
-
-    IFACEMETHODIMP_(ULONG) Release()
-    {
-        long cRef = InterlockedDecrement(&m_lRef);
-        if (cRef == 0)
-            delete this;
-        return cRef;
-    }
+    CXpsFilter(long *plRefCount) : CFilterBase(plRefCount),
+        m_state(STATE_XPS_END), m_iPageNo(-1), m_xpsEngine(NULL) { }
+    virtual ~CXpsFilter() { CleanUp(); }
 
     virtual HRESULT OnInit();
     virtual HRESULT GetNextChunkValue(CChunkValue &chunkValue);
@@ -54,7 +20,6 @@ public:
     VOID CleanUp();
 
 private:
-    long m_lRef, * m_plModuleRef;
 	XPS_FILTER_STATE m_state;
     int m_iPageNo;
     XpsEngine *m_xpsEngine;

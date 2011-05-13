@@ -7,6 +7,7 @@
 #define SZ_PDF_PREVIEW_CLSID    _T("{3D3B1846-CC43-42ae-BFF9-D914083C2BA3}")
 
 #include "BaseUtil.h"
+#include "WinUtil.h"
 #include "PdfEngine.h"
 
 #include <shlwapi.h>
@@ -30,7 +31,17 @@ public:
     }
 
     // IUnknown
-    IFACEMETHODIMP QueryInterface(REFIID riid, void **ppv);
+    IFACEMETHODIMP QueryInterface(REFIID riid, void **ppv) {
+        const IID *iids[] = {
+            &IID_IInitializeWithStream,
+            &IID_IThumbnailProvider,
+            &IID_IObjectWithSite,
+            &IID_IPreviewHandler,
+            &IID_IOleWindow,
+            NULL
+        };
+        return QIImpl(this, iids, riid, ppv);
+    }
     IFACEMETHODIMP_(ULONG) AddRef() {
         return InterlockedIncrement(&m_lRef);
     }
@@ -65,6 +76,7 @@ public:
         return punkSite->QueryInterface(&m_site);
     }
     IFACEMETHODIMP GetSite(REFIID riid, void **ppv) {
+        if (!ppv) return E_INVALIDARG;
         *ppv = NULL;
         return m_site ? m_site->QueryInterface(riid, ppv) : E_FAIL;
     }
@@ -124,7 +136,7 @@ public:
 
     // IOleWindow
     IFACEMETHODIMP GetWindow(HWND *phwnd) {
-        if (!m_hwnd) return E_INVALIDARG;
+        if (!m_hwndParent || !phwnd) return E_INVALIDARG;
         *phwnd = m_hwndParent;
         return S_OK;
     }

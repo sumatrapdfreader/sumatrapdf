@@ -2,7 +2,12 @@
    License: GPLv3 */
 
 #include "PdfPreview.h"
-#include "WinUtil.h"
+#ifndef DEBUG
+#include <new>
+#define NOTHROW (std::nothrow)
+#else
+#define NOTHROW
+#endif
 
 HINSTANCE g_hInstance = NULL;
 long g_lRefCount = 0;
@@ -21,12 +26,8 @@ public:
     // IUnknown
     IFACEMETHODIMP QueryInterface(REFIID riid, void **ppv)
     {
-        static const QITAB qit[] =
-        {
-            QITABENT(CClassFactory, IClassFactory),
-            { 0 }
-        };
-        return QISearch(this, qit, riid, ppv);
+        const IID *iids[] = { &IID_IClassFactory, NULL };
+        return QIImpl(this, iids, riid, ppv);
     }
 
     IFACEMETHODIMP_(ULONG) AddRef()
@@ -58,7 +59,7 @@ public:
         HRESULT hr = CLSIDFromString(ScopedMem<WCHAR>(str::conv::ToWStr(SZ_PDF_PREVIEW_CLSID)), &clsid);
 #endif
         if (SUCCEEDED(hr) && IsEqualCLSID(m_clsid, clsid))
-            pObject = new /*(std::nothrow)*/ CPdfPreview(&g_lRefCount);
+            pObject = new NOTHROW CPdfPreview(&g_lRefCount);
         else
             return CLASS_E_CLASSNOTAVAILABLE;
         if (!pObject)
@@ -102,7 +103,7 @@ STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 {
     HRESULT hr = E_OUTOFMEMORY;
     *ppv = NULL;
-    CClassFactory *pClassFactory = new /*(std::nothrow)*/ CClassFactory(rclsid);
+    CClassFactory *pClassFactory = new NOTHROW CClassFactory(rclsid);
     if (pClassFactory) {
         hr = pClassFactory->QueryInterface(riid, ppv);
         pClassFactory->Release();

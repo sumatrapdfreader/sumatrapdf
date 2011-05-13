@@ -15,6 +15,7 @@
 #include <filter.h>
 #include <filterr.h>
 #include "PdfFilter.h"
+#include "WinUtil.h"
 
 class CChunkValue
 {
@@ -164,11 +165,33 @@ protected:
     inline DWORD GetChunkId() const { return m_dwChunkId; }
 
 public:
-    CFilterBase() : m_dwChunkId(0), m_iText(0), m_pStream(NULL) { }
+    CFilterBase(long *plRefCount) : m_lRef(1), m_plModuleRef(plRefCount),
+        m_dwChunkId(0), m_iText(0), m_pStream(NULL) { }
 
     virtual ~CFilterBase() {
         if (m_pStream)
             m_pStream->Release();
+    }
+
+    // IUnknown
+    IFACEMETHODIMP QueryInterface(REFIID riid, void **ppv) {
+        const IID *iids[] = {
+            &IID_IPersistStream,
+            &IID_IPersistFile,
+            &IID_IInitializeWithStream,
+            &IID_IFilter,
+            NULL
+        };
+        return QIImpl(this, iids, riid, ppv);
+    }
+    IFACEMETHODIMP_(ULONG) AddRef() {
+        return InterlockedIncrement(&m_lRef);
+    }
+    IFACEMETHODIMP_(ULONG) Release() {
+        long cRef = InterlockedDecrement(&m_lRef);
+        if (cRef == 0)
+            delete this;
+        return cRef;
     }
 
     // IFilter
@@ -289,6 +312,8 @@ protected:
     IStream*                    m_pStream;
 
 private:
+    long                        m_lRef, * m_plModuleRef;
+
     DWORD                       m_dwChunkId;
     DWORD                       m_iText;
 
