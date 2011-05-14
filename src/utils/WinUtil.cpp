@@ -560,3 +560,50 @@ HFONT GetSimple(HDC hdc, TCHAR *fontName, int fontSize)
 
     }
 }
+
+IStream *CreateStreamFromData(void *data, size_t len)
+{
+    IStream *stream;
+    if (FAILED(CreateStreamOnHGlobal(NULL, TRUE, &stream)))
+        return NULL;
+
+    ULONG written;
+    if (FAILED(stream->Write(data, (ULONG)len, &written)) || written != len) {
+        stream->Release();
+        return NULL;
+    }
+
+    return stream;
+}
+
+HRESULT GetDataFromStream(IStream *stream, void **data, size_t *len)
+{
+    STATSTG stat;
+    HRESULT res = stream->Stat(&stat, STATFLAG_NONAME);
+    if (FAILED(res))
+        return res;
+    assert(0 == stat.cbSize.HighPart);
+    if (stat.cbSize.HighPart > 0)
+        return E_OUTOFMEMORY;
+
+    // zero terminate the stream's content, so that it could be
+    // used directly as either a char* or a WCHAR* string
+    *len = stat.cbSize.LowPart;
+    *data = malloc(*len + 2);
+    if (!*data)
+        return E_OUTOFMEMORY;
+
+    ULONG read;
+    LARGE_INTEGER zero = { 0 };
+    stream->Seek(zero, STREAM_SEEK_SET, NULL);
+    res = stream->Read(*data, stat.cbSize.LowPart, &read);
+    if (FAILED(res) || read != *len) {
+        free(*data);
+        return res;
+    }
+
+    ((char *)*data)[*len] = '\0';
+    ((char *)*data)[*len + 1] = '\0';
+
+    return S_OK;
+}

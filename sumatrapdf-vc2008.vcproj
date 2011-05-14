@@ -850,14 +850,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\ifilter\CXpsFilter.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\ifilter\CXpsFilter.h"
-				>
-			</File>
-			<File
 				RelativePath=".\src\ifilter\FilterBase.h"
 				>
 			</File>

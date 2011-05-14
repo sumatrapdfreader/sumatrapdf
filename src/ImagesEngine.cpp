@@ -4,6 +4,7 @@
 #include "ImagesEngine.h"
 #include "StrUtil.h"
 #include "FileUtil.h"
+#include "WinUtil.h"
 #include "Vec.h"
 
 // mini(un)zip
@@ -29,15 +30,11 @@ using namespace Gdiplus;
 // cf. http://stackoverflow.com/questions/4598872/creating-hbitmap-from-memory-buffer/4616394#4616394
 Bitmap *BitmapFromData(void *data, size_t len)
 {
-    IStream *stream;
-    HRESULT res = CreateStreamOnHGlobal(NULL, TRUE, &stream);
-    if (FAILED(res))
+    IStream *stream = CreateStreamFromData(data, len);
+    if (!stream)
         return NULL;
 
-    Bitmap *bmp = NULL;
-    res = stream->Write(data, len, NULL);
-    if (SUCCEEDED(res))
-        bmp = Bitmap::FromStream(stream);
+    Bitmap *bmp = Bitmap::FromStream(stream);
     stream->Release();
 
     if (bmp && bmp->GetLastStatus() != Ok) {

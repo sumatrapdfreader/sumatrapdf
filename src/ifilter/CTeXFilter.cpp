@@ -3,35 +3,21 @@
 
 #include "BaseUtil.h"
 #include "StrUtil.h"
+#include "WinUtil.h"
 #include "CTeXFilter.h"
 
 HRESULT CTeXFilter::OnInit()
 {
     if (!m_pData) {
         // load content of LaTeX file into m_pData
-        STATSTG stat;
-        HRESULT res = m_pStream->Stat(&stat, STATFLAG_NONAME);
+        void *data;
+        size_t len;
+        HRESULT res = GetDataFromStream(m_pStream, &data, &len);
         if (FAILED(res))
             return res;
-        if (stat.cbSize.QuadPart >= UINT_MAX)
-            return E_OUTOFMEMORY;
 
-        char *data = (char *)malloc(stat.cbSize.LowPart + 1);
-        if (!data)
-            return E_OUTOFMEMORY;
-
-        ULONG read;
-        LARGE_INTEGER zero = { 0 };
-        m_pStream->Seek(zero, STREAM_SEEK_SET, NULL);
-        res = m_pStream->Read(data, stat.cbSize.LowPart, &read);
-        if (FAILED(res)) {
-            free(data);
-            return res;
-        }
-        data[min(stat.cbSize.LowPart, read)] = '\0';
-
-        m_pData = str::ToWideChar(data, CP_ACP);
-        m_pBuffer = SAZA(WCHAR, stat.cbSize.LowPart + 1);
+        m_pData = str::ToWideChar((char *)data, CP_ACP);
+        m_pBuffer = SAZA(WCHAR, len + 1);
         free(data);
 
         if (!m_pData || !m_pBuffer) {

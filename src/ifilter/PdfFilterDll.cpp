@@ -10,9 +10,6 @@
 #define NOTHROW
 #endif
 #include "CPdfFilter.h"
-#ifdef BUILD_XPS_IFILTER
-#include "CXpsFilter.h"
-#endif
 #ifdef BUILD_TEX_IFILTER
 #include "CTeXFilter.h"
 #endif
@@ -67,10 +64,6 @@ public:
         CLSID clsid;
         if (SUCCEEDED(CLSIDFromTString(SZ_PDF_FILTER_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid))
             pFilter = new NOTHROW CPdfFilter(&g_lRefCount);
-#ifdef BUILD_XPS_IFILTER
-        else if (SUCCEEDED(CLSIDFromTString(SZ_XPS_FILTER_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid))
-            pFilter = new NOTHROW CXpsFilter(&g_lRefCount);
-#endif
 #ifdef BUILD_TEX_IFILTER
         else if (SUCCEEDED(CLSIDFromTString(SZ_TEX_FILTER_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid))
             pFilter = new NOTHROW CTeXFilter(&g_lRefCount);
@@ -149,22 +142,6 @@ STDAPI DllRegisterServer()
                 NULL,                   SZ_PDF_FILTER_CLSID },
         { _T("Software\\Classes\\.pdf\\PersistentHandler"),
                 NULL,                   SZ_PDF_FILTER_HANDLER },
-#ifdef BUILD_XPS_IFILTER
-        { _T("Software\\Classes\\CLSID\\") SZ_XPS_FILTER_CLSID,
-                NULL,                   _T("SumatraPDF IFilter") },
-        { _T("Software\\Classes\\CLSID\\") SZ_XPS_FILTER_CLSID _T("\\InProcServer32"),
-                NULL,                   path },
-        { _T("Software\\Classes\\CLSID\\") SZ_XPS_FILTER_CLSID _T("\\InProcServer32"),
-                _T("ThreadingModel"),   _T("Both") },
-        { _T("Software\\Classes\\CLSID\\") SZ_XPS_FILTER_HANDLER,
-                NULL,                   _T("SumatraPDF XPS IFilter Persistent Handler") },
-        { _T("Software\\Classes\\CLSID\\") SZ_XPS_FILTER_HANDLER _T("\\PersistentAddinsRegistered"),
-                NULL,                   _T("") },
-        { _T("Software\\Classes\\CLSID\\") SZ_XPS_FILTER_HANDLER _T("\\PersistentAddinsRegistered\\{89BCB740-6119-101A-BCB7-00DD010655AF}"),
-                NULL, SZ_XPS_FILTER_CLSID },
-        { _T("Software\\Classes\\.xps\\PersistentHandler"),
-                NULL,                   SZ_XPS_FILTER_HANDLER },
-#endif
 #ifdef BUILD_TEX_IFILTER
         { _T("Software\\Classes\\CLSID\\") SZ_TEX_FILTER_CLSID,
                 NULL,                   _T("SumatraPDF IFilter") },
@@ -199,11 +176,6 @@ STDAPI DllUnregisterServer()
         _T("Software\\Classes\\CLSID\\") SZ_PDF_FILTER_CLSID,
         _T("Software\\Classes\\CLSID\\") SZ_PDF_FILTER_HANDLER,
         _T("Software\\Classes\\.pdf\\PersistentHandler"),
-#ifdef BUILD_XPS_IFILTER
-        _T("Software\\Classes\\CLSID\\") SZ_XPS_FILTER_CLSID,
-        _T("Software\\Classes\\CLSID\\") SZ_XPS_FILTER_HANDLER,
-        _T("Software\\Classes\\.xps\\PersistentHandler"),
-#endif
 #ifdef BUILD_TEX_IFILTER
         _T("Software\\Classes\\CLSID\\") SZ_TEX_FILTER_CLSID,
         _T("Software\\Classes\\CLSID\\") SZ_TEX_FILTER_HANDLER,

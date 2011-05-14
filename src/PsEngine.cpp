@@ -100,11 +100,10 @@ static PdfEngine *ps2pdf(const TCHAR *fileName)
     if (!pdfData)
         return NULL;
 
-    IStream *stream;
-    if (FAILED(CreateStreamOnHGlobal(NULL, TRUE, &stream)))
+    IStream *stream = CreateStreamFromData(pdfData, len);
+    if (!stream)
         return NULL;
 
-    stream->Write(pdfData, len, NULL);
     PdfEngine *engine = PdfEngine::CreateFromStream(stream);
     stream->Release();
 

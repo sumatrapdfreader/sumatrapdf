@@ -3,6 +3,7 @@
 
 #include "BaseUtil.h"
 #include "StrUtil.h"
+#include "WinUtil.h"
 #include "CPdfFilter.h"
 #include "PdfEngine.h"
 
@@ -21,7 +22,23 @@ HRESULT CPdfFilter::OnInit()
 {
     CleanUp();
 
-    m_pdfEngine = PdfEngine::CreateFromStream(m_pStream);
+    // TODO: PdfEngine::CreateFromStream never returns with
+    //       m_pStream instead of a clone - why?
+
+    // load content of PDF document into a seekable stream
+    void *data;
+    size_t len;
+    HRESULT res = GetDataFromStream(m_pStream, &data, &len);
+    if (FAILED(res))
+        return res;
+
+    IStream *stream = CreateStreamFromData(data, len);
+    free(data);
+    if (!stream)
+        return E_FAIL;
+
+    m_pdfEngine = PdfEngine::CreateFromStream(stream);
+    stream->Release();
     if (!m_pdfEngine)
         return E_FAIL;
 
@@ -45,7 +62,7 @@ static bool PdfDateParse(const WCHAR *pdfDate, SYSTEMTIME *timeOut)
 
 HRESULT CPdfFilter::GetNextChunkValue(CChunkValue &chunkValue)
 {
-    WCHAR *str;
+    ScopedMem<WCHAR> str;
 
     switch (m_state) {
     case STATE_PDF_START:
@@ -55,49 +72,44 @@ HRESULT CPdfFilter::GetNextChunkValue(CChunkValue &chunkValue)
 
     case STATE_PDF_AUTHOR:
         m_state = STATE_PDF_TITLE;
-        str = str::conv::ToWStrQ(m_pdfEngine->GetProperty("Author"));
-        if (!str::IsEmpty(str)) {
+        str.Set(str::conv::ToWStrQ(m_pdfEngine->GetProperty("Author")));
+        if (!str::IsEmpty(str.Get())) {
             chunkValue.SetTextValue(PKEY_Author, str);
-            free(str);
             return S_OK;
         }
-        free(str);
         // fall through
 
     case STATE_PDF_TITLE:
         m_state = STATE_PDF_DATE;
-        str = str::conv::ToWStrQ(m_pdfEngine->GetProperty("Title"));
-        if (!str) str = str::conv::ToWStrQ(m_pdfEngine->GetProperty("Subject"));
-        if (!str::IsEmpty(str)) {
+        str.Set(str::conv::ToWStrQ(m_pdfEngine->GetProperty("Title")));
+        if (!str) str.Set(str::conv::ToWStrQ(m_pdfEngine->GetProperty("Subject")));
+        if (!str::IsEmpty(str.Get())) {
             chunkValue.SetTextValue(PKEY_Title, str);
-            free(str);
             return S_OK;
         }
-        free(str);
         // fall through
 
     case STATE_PDF_DATE:
         m_state = STATE_PDF_CONTENT;
-        str = str::conv::ToWStrQ(m_pdfEngine->GetProperty("ModDate"));
-        if (!str) str = str::conv::ToWStrQ(m_pdfEngine->GetProperty("CreationDate"));
-        if (!str::IsEmpty(str)) {
+        str.Set(str::conv::ToWStrQ(m_pdfEngine->GetProperty("ModDate")));
+        if (!str) str.Set(str::conv::ToWStrQ(m_pdfEngine->GetProperty("CreationDate")));
+        if (!str::IsEmpty(str.Get())) {
             SYSTEMTIME systime;
             if (PdfDateParse(str, &systime)) {
                 FILETIME filetime;
                 SystemTimeToFileTime(&systime, &filetime);
                 chunkValue.SetFileTimeValue(PKEY_ItemDate, filetime);
-                free(str);
                 return S_OK;
             }
         }
-        free(str);
         // fall through
 
     case STATE_PDF_CONTENT:
-        if (++m_iPageNo <= m_pdfEngine->PageCount()) {
-            str = str::conv::ToWStrQ(m_pdfEngine->ExtractPageText(m_iPageNo, _T("\r\n")));
+        while (++m_iPageNo <= m_pdfEngine->PageCount()) {
+            str.Set(str::conv::ToWStrQ(m_pdfEngine->ExtractPageText(m_iPageNo, _T("\r\n"))));
+            if (str::IsEmpty(str.Get()))
+                continue;
             chunkValue.SetTextValue(PKEY_Search_Contents, str, CHUNK_TEXT);
-            free(str);
             return S_OK;
         }
         m_state = STATE_PDF_END;
