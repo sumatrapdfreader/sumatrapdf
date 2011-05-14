@@ -107,6 +107,9 @@ Bestand &Openen
 &Password:
 &Wachtwoord:
 
+&Pin Document
+Document &Vastmaken
+
 &Previous Page\tLeft Arrow
 Vorige pagina\t<-
 
@@ -141,7 +144,7 @@ Op&slaan als...
 Pagina's verkleinen tot afdrukgebied (indien nodig)
 
 &Single Page\tCtrl-6
-&Enkele pagina\tCtrl-6
+&Enkele pagina\Ctrl-6
 
 &Skip this version
 Deze versie overslaan
@@ -619,7 +622,4 @@ tekst kopieren
 
 printing document
 bestand afdrukken
-
-# Untranslated:
-#&Pin Document
 

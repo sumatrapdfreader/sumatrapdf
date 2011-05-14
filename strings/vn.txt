@@ -21,7 +21,7 @@ Kích thướ&c thật\tCtrl-1
 Tất cả các tr&ang được chọn
 
 &Back\tAlt+Left Arrow
-Trở về\tAlt+<-
+Trở ve\tAlt+<-
 
 &Book View\tCtrl-8
 Xem dạng sách\tCtrl-8
@@ -30,10 +30,10 @@ Xem dạng sách\tCtrl-8
 Đóng tập tin\tCtrl-W
 
 &Copy Selection
-&Chép phần chọn
+&Chép phần đã chọn
 
 &Copy Selection\tCtrl-C
-Chép phần đánh dấu
+&Chép phần đã chọn\tCtrl-C
 
 &Don't ask me again
 Không hỏi lại
@@ -99,7 +99,7 @@ Mở tập tin
 Tuỳ chọn
 
 &Password:
-Mật mã:
+Mật khẩu:
 
 &Pin Document
 Ghim tập tin
@@ -120,10 +120,10 @@ In\tCtrl-P
 Nhớ mật khẩu cho tập tin này
 
 &Remember these settings for each document
-Nhớ cài đặt này cho mọi tập tin
+Nhớ các cài đặt này cho từng tập tin
 
 &Remove Document
-Quên tập tin
+Xóa tập tin
 
 &Save As...
 Lưu thành...
@@ -168,7 +168,7 @@ All files
 Mọi tập tin
 
 All supported documents
-Tất cả các tài liệu được hỗ trợ
+Tất cả các định dạng được hỗ trợ
 
 Application:
 Ứng dụng:
@@ -186,7 +186,7 @@ Automatic
 Tự động
 
 Automatically check for &updates
-Tự động kiểm tra có phiên bản mới
+Tự động kiểm tra cập nhật
 
 Book View
 Xem dạng sách
@@ -219,10 +219,10 @@ Cannot start inverse search command. Please check the command line in the settin
 Không thể bắt đầu lệnh tìm kiếm ngược. Xin kiểm tra phần dòng lệnh trong Cài đặt.
 
 Change Language
-Đổi ngôn ngữ (Change Language)
+Đổi ngôn ngữ
 
 Check for &Updates
-Kiểm tra có phiên bản mới
+Kiểm tra cập nhật
 
 Comic books
 Truyện tranh comic
@@ -276,7 +276,7 @@ Denied Permissions:
 Các quyền bị từ chối
 
 DjVu documents
-Tập tin Djvu
+Tập tin DjVu
 
 Document Properties
 Thuộc tính tập tin
@@ -297,7 +297,7 @@ Enter the command-line to invoke when you double-click on the PDF document:
 Nhập dòng lệnh gọi khi bạn nhấp đúp vào tập tin PDF:
 
 Error loading %s
-Lỗi tải %s
+Không mở %s được
 
 F&orward\tAlt+Right Arrow
 Tiếp tục\tAlt+->
@@ -372,7 +372,7 @@ Go to page
 Nhảy đến trang
 
 Hide frequently read
-Ẩn đọc thường xuyên
+Ẩn Đọc thường xuyên
 
 Hint: Use the F3 key for finding again
 Gợi ý: Nhấn phím F3 để tìm lại
@@ -534,7 +534,7 @@ Show &pages continuously
 Xem trang liên tiếp
 
 Show frequently read
-Hiện đọc thường xuyên
+Hiện Đọc thường xuyên
 
 Show the &bookmarks sidebar when available
 Hiện chỉ dấu sách nếu có
@@ -582,7 +582,7 @@ View
 Hiển thị
 
 Visit &Website
-Thăm &website
+Trang chủ
 
 Warning
 Cảnh báo
