@@ -163,15 +163,12 @@ DLLEXPORT STDAPI DllRegisterServer(VOID)
 
 DLLEXPORT STDAPI DllUnregisterServer(VOID)
 {
-    TCHAR szPluginPath[MAX_PATH];
-    DWORD dwSize = MAX_PATH * sizeof(TCHAR);
-    
     ScopedMem<TCHAR> mozPluginPath(ReadRegStr(HKEY_CURRENT_USER, _T("Environment"), _T("MOZ_PLUGIN_PATH")));
     if (mozPluginPath)
     {
         TCHAR szModulePath[MAX_PATH];
         GetModuleFileName(g_hInstance, szModulePath, MAX_PATH);
-        if (str::StartsWithI(szModulePath, szPluginPath))
+        if (str::StartsWithI(szModulePath, mozPluginPath))
             SHDeleteValue(HKEY_CURRENT_USER, _T("Environment"), _T("MOZ_PLUGIN_PATH"));
     }
     
