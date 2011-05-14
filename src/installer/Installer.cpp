@@ -655,8 +655,20 @@ bool RegisterServerDLL(TCHAR *dllPath, bool unregister=false)
     if (FAILED(OleInitialize(NULL)))
         return false;
 
+    // make sure that the DLL can find any DLLs it depends on and
+    // which reside in the same directory (in this case: libmupdf.dll)
+    typedef BOOL (WINAPI *SetDllDirectoryProc)(LPCTSTR);
+#ifdef UNICODE
+    SetDllDirectoryProc _SetDllDirectory = (SetDllDirectoryProc)LoadDllFunc(_T("Kernel32.dll"), "SetDllDirectoryW");
+#else
+    SetDllDirectoryProc _SetDllDirectory = (SetDllDirectoryProc)LoadDllFunc(_T("Kernel32.dll"), "SetDllDirectoryA");
+#endif
+    if (_SetDllDirectory) {
+        ScopedMem<TCHAR> dllDir(path::GetDir(dllPath));
+        _SetDllDirectory(dllDir);
+    }
+
     bool ok = false;
-    // TODO: LoadLibrary seems to fail during uninstallation(?)
     HMODULE lib = LoadLibrary(dllPath);
     if (lib) {
         typedef HRESULT (WINAPI *DllInitProc)(VOID);
@@ -665,6 +677,9 @@ bool RegisterServerDLL(TCHAR *dllPath, bool unregister=false)
             ok = SUCCEEDED(CallDLL());
         FreeLibrary(lib);
     }
+
+    if (_SetDllDirectory)
+        _SetDllDirectory(_T(""));
 
     OleUninitialize();
 
@@ -859,7 +874,8 @@ void InstallBrowserPlugin()
 void UninstallBrowserPlugin()
 {
     ScopedMem<TCHAR> dllPath(GetBrowserPluginPath());
-    RegisterServerDLL(dllPath, true);
+    if (!RegisterServerDLL(dllPath, true))
+        NotifyFailed(_T("Couldn't uninstall browser plugin"));
 }
 
 void InstallPdfFilter()
@@ -872,7 +888,8 @@ void InstallPdfFilter()
 void UninstallPdfFilter()
 {
     ScopedMem<TCHAR> dllPath(GetPdfFilterPath());
-    RegisterServerDLL(dllPath, true);
+    if (!RegisterServerDLL(dllPath, true))
+        NotifyFailed(_T("Couldn't uninstall PDF search filter"));
 }
 
 void InstallPdfPreviewer()
@@ -885,7 +902,8 @@ void InstallPdfPreviewer()
 void UninstallPdfPreviewer()
 {
     ScopedMem<TCHAR> dllPath(GetPdfPreviewerPath());
-    RegisterServerDLL(dllPath, true);
+    if (!RegisterServerDLL(dllPath, true))
+        NotifyFailed(_T("Couldn't uninstall PDF previewer"));
 }
 
 /* Caller needs to free() the result. */
