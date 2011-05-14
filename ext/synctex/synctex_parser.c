@@ -1419,6 +1419,9 @@ next_character:
 			 *  where we have assumed that len<UINT_MAX */
 			if((* value_ref = realloc(* value_ref,new_size+1)) != NULL) {
 				if(memcpy((*value_ref)+current_size,SYNCTEX_CUR,len)) {
+					/* SumatraPDF: fix reading files with DOS line endings*/
+					if (new_size > 0 && (* value_ref)[new_size - 1] == '\r')
+						new_size--;
 					(* value_ref)[new_size]='\0'; /*  Terminate the string */
 					SYNCTEX_CUR += len;/*  Advance to the terminating '\n' */
 					return SYNCTEX_STATUS_OK;
