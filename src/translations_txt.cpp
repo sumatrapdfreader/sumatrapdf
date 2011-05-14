@@ -3195,7 +3195,7 @@ const char *gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "&Opslaan als...\tCtrl-S",
   "&Instellingen",
   "Pagina's verkleinen tot afdrukgebied (indien nodig)",
-  "&Enkele pagina\Ctrl-6",
+  NULL,
   "Deze versie overslaan",
   "Originele paginagrootte gebruiken",
   "&Beeld",

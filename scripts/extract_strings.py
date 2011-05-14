@@ -63,6 +63,8 @@ def load_one_strings_file(file_path, lang_code, strings_dict, langs_dict, contri
             assert curr_trans is not None, "File %s, line %d" % (file_path, line_no)
             if re.findall(r"%#?[sdux]", curr_orig) != re.findall(r"%#?[sdux]", curr_trans):
                 pass # ignore translation with different variable configuration
+            elif re.search(r"\\(?![\\tn])", curr_trans):
+                pass # ignore translation with unexpected (and maybe invalid) escapes
             elif curr_orig not in strings_dict:
                 strings_dict[curr_orig] = [(lang_code, curr_trans)]
             else:

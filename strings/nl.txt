@@ -143,9 +143,6 @@ Op&slaan als...
 &Shrink pages to printable area (if necessary)
 Pagina's verkleinen tot afdrukgebied (indien nodig)
 
-&Single Page\tCtrl-6
-&Enkele pagina\Ctrl-6
-
 &Skip this version
 Deze versie overslaan
 
@@ -622,4 +619,7 @@ tekst kopieren
 
 printing document
 bestand afdrukken
+
+# Untranslated:
+#&Single Page\tCtrl-6
 
