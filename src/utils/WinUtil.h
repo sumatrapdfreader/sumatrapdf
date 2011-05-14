@@ -101,6 +101,7 @@ inline void FillWndClassEx(WNDCLASSEX &wcex, HINSTANCE hInstance)
 
 bool IsAppThemed();
 bool WindowsVerVistaOrGreater();
+bool IsRunningInWow64();
 
 void SeeLastError(DWORD err=0);
 TCHAR *ReadRegStr(HKEY keySub, const TCHAR *keyName, const TCHAR *valName);

@@ -116,20 +116,6 @@ STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
     return hr;
 }
 
-static bool IsWow64()
-{
-#ifndef _WIN64
-    typedef BOOL (WINAPI *IsWow64ProcessProc)(HANDLE, PBOOL);
-    IsWow64ProcessProc _IsWow64Process = (IsWow64ProcessProc)LoadDllFunc(_T("kernel32.dll"), "IsWow64Process");
-    BOOL isWow = FALSE;
-    if (_IsWow64Process)
-        _IsWow64Process(GetCurrentProcess(), &isWow);
-    return isWow;
-#else
-    return false;
-#endif
-}
-
 STDAPI DllRegisterServer()
 {
     TCHAR path[MAX_PATH];
@@ -154,7 +140,7 @@ STDAPI DllRegisterServer()
         { _T("Software\\Microsoft\\Windows\\CurrentVersion\\PreviewHandlers"),
                 SZ_PDF_PREVIEW_CLSID,   _T("SumatraPDF Preview Handler") },
         { _T("Software\\Classes\\CLSID\\") SZ_PDF_PREVIEW_CLSID,
-                _T("AppId"),            IsWow64() ? _T("{534A1E02-D58F-44f0-B58B-36CBED287C7C}") : _T("{6d2b5079-2f0b-48dd-ab7f-97cec514d30b}") },
+                _T("AppId"),            IsRunningInWow64() ? _T("{534A1E02-D58F-44f0-B58B-36CBED287C7C}") : _T("{6d2b5079-2f0b-48dd-ab7f-97cec514d30b}") },
     };
 
     for (int i = 0; i < dimof(regVals); i++) {

@@ -1119,7 +1119,9 @@ void OnButtonInstall()
                                     IsCheckboxChecked(gHwndCheckboxRegisterDefault);
 
     gGlobalData.installBrowserPlugin = IsCheckboxChecked(gHwndCheckboxRegisterBrowserPlugin);
-    gGlobalData.installPdfFilter = IsCheckboxChecked(gHwndCheckboxRegisterPdfFilter);
+    // note: this checkbox isn't created when running inside Wow64
+    gGlobalData.installPdfFilter = gHwndCheckboxRegisterPdfFilter != NULL &&
+                                   IsCheckboxChecked(gHwndCheckboxRegisterPdfFilter);
     // note: this checkbox isn't created on Windows 2000 and XP
     gGlobalData.installPdfPreviewer = gHwndCheckboxRegisterPdfPreviewer != NULL &&
                                       IsCheckboxChecked(gHwndCheckboxRegisterPdfPreviewer);
@@ -1917,14 +1919,23 @@ void OnCreateInstaller(HWND hwnd)
     Button_SetCheck(gHwndCheckboxRegisterBrowserPlugin, gGlobalData.installBrowserPlugin || IsBrowserPluginInstalled());
     y += 22;
 
-    gHwndCheckboxRegisterPdfFilter = CreateWindow(
-        WC_BUTTON, _T("Let Windows Desktop Search &search PDF documents"),
-        WS_CHILD | BS_AUTOCHECKBOX | WS_TABSTOP,
-        x, y, r.dx - 2 * x, 22, hwnd, (HMENU)ID_CHECKBOX_PDF_FILTER, ghinst, NULL);
-    SetWindowFont(gHwndCheckboxRegisterPdfFilter, gFontDefault, TRUE);
-    Button_SetCheck(gHwndCheckboxRegisterPdfFilter, gGlobalData.installPdfFilter || IsPdfFilterInstalled());
-    y += 22;
+    // only show this checkbox if the bitness of DLL and OS match
+    // (assuming that the installer has the same bitness as its content!)
+#ifndef _WIN64
+    if (!IsRunningInWow64())
+#endif
+    {
+        gHwndCheckboxRegisterPdfFilter = CreateWindow(
+            WC_BUTTON, _T("Let Windows Desktop Search &search PDF documents"),
+            WS_CHILD | BS_AUTOCHECKBOX | WS_TABSTOP,
+            x, y, r.dx - 2 * x, 22, hwnd, (HMENU)ID_CHECKBOX_PDF_FILTER, ghinst, NULL);
+        SetWindowFont(gHwndCheckboxRegisterPdfFilter, gFontDefault, TRUE);
+        Button_SetCheck(gHwndCheckboxRegisterPdfFilter, gGlobalData.installPdfFilter || IsPdfFilterInstalled());
+        y += 22;
+    }
 
+    // only show this checkbox on systems that actually support
+    // IThumbnailProvider and IPreviewHandler
     if (WindowsVerVistaOrGreater()) {
         gHwndCheckboxRegisterPdfPreviewer = CreateWindow(
             WC_BUTTON, _T("Let Windows show &previews of PDF documents"),

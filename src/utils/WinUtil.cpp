@@ -44,23 +44,29 @@ bool IsAppThemed()
     return false;
 }
 
-static int WindowsVerMajor()
+WORD GetWindowsVersion()
 {
     DWORD version = GetVersion();
-    return LOBYTE(version);
-}
-
-static int WindowsVerMinor()
-{
-    DWORD version = GetVersion();
-    return HIBYTE(version);
+    return MAKEWORD(HIBYTE(version), LOBYTE(version));
 }
 
 bool WindowsVerVistaOrGreater()
 {
-    if (WindowsVerMajor() >= 6)
-        return true;
+    return GetWindowsVersion() >= 0x0600;
+}
+
+bool IsRunningInWow64()
+{
+#ifndef _WIN64
+    typedef BOOL (WINAPI *IsWow64ProcessProc)(HANDLE, PBOOL);
+    IsWow64ProcessProc _IsWow64Process = (IsWow64ProcessProc)LoadDllFunc(_T("kernel32.dll"), "IsWow64Process");
+    BOOL isWow = FALSE;
+    if (_IsWow64Process)
+        _IsWow64Process(GetCurrentProcess(), &isWow);
+    return isWow;
+#else
     return false;
+#endif
 }
 
 void SeeLastError(DWORD err)

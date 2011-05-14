@@ -361,19 +361,6 @@ static char *OsNameFromVer(OSVERSIONINFOEX ver)
     return osVerStr;
 }
 
-static bool IsWow64()
-{
-    typedef BOOL (WINAPI *IsWow64ProcessProc)(HANDLE, PBOOL);
-    IsWow64ProcessProc _IsWow64Process;
-
-    _IsWow64Process = (IsWow64ProcessProc)LoadDllFunc(_T("kernel32.dll"), "IsWow64Process");
-    if (!_IsWow64Process)
-        return false;
-    BOOL isWow = FALSE;
-    _IsWow64Process(GetCurrentProcess(), &isWow);
-    return isWow;
-}
-
 static void GetOsVersion(str::Str<char>& s)
 {
     OSVERSIONINFOEX ver;
@@ -389,7 +376,7 @@ static void GetOsVersion(str::Str<char>& s)
 #ifdef _WIN64
     char *arch = "64-bit";
 #else
-    char *arch = IsWow64() ? "Wow64" : "32-bit";
+    char *arch = IsRunningInWow64() ? "Wow64" : "32-bit";
 #endif
     if (0 == servicePackMajor)
         s.AppendFmt("OS: Windows %s build %d %s\r\n", os, buildNumber, arch);
