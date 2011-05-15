@@ -578,12 +578,14 @@ IStream *CreateStreamFromData(void *data, size_t len)
 
 HRESULT GetDataFromStream(IStream *stream, void **data, size_t *len)
 {
+    if (!data || !len) return E_INVALIDARG;
+
     STATSTG stat;
     HRESULT res = stream->Stat(&stat, STATFLAG_NONAME);
     if (FAILED(res))
         return res;
     assert(0 == stat.cbSize.HighPart);
-    if (stat.cbSize.HighPart > 0)
+    if (stat.cbSize.HighPart > 0 || stat.cbSize.LowPart > UINT_MAX - 2)
         return E_OUTOFMEMORY;
 
     // zero terminate the stream's content, so that it could be
