@@ -1909,6 +1909,7 @@ static DWORD OnUrlDownloaded(HWND hParent, HttpReqCtx *ctx, bool silent)
         str::ReplacePtr(&gGlobalPrefs.m_versionToSkip, verTxt);
     if (IDYES == res)
         LaunchBrowser(SVN_UPDATE_LINK);
+    SavePrefs();
 
     return 0;
 }
