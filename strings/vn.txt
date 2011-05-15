@@ -21,7 +21,7 @@ Kích thướ&c thật\tCtrl-1
 Tất cả các tr&ang được chọn
 
 &Back\tAlt+Left Arrow
-Trở ve\tAlt+<-
+Trở về\tAlt+Mũi tên trái
 
 &Book View\tCtrl-8
 Xem dạng sách\tCtrl-8
@@ -48,7 +48,7 @@ Trang kép\tCtrl-7
 Tập tin
 
 &Find what:
-Tìm cái gì:
+Tìm (các) từ sau:
 
 &First Page\tHome
 Trang đầu\tHome
@@ -78,7 +78,7 @@ Hướng dẫn sử dụng
 Phân biệt &HOA-thường
 
 &Next Page\tRight Arrow
-Trang sau\t->
+Trang sau\tMũi tên phải
 
 &No
 Không
@@ -105,7 +105,7 @@ Mật khẩu:
 Ghim tập tin
 
 &Previous Page\tLeft Arrow
-Trang trước\t<-
+Trang trước\tMũi tên trái
 
 &Print...
 In...
@@ -300,7 +300,7 @@ Error loading %s
 Không mở %s được
 
 F&orward\tAlt+Right Arrow
-Tiếp tục\tAlt+->
+Tiếp tục\tAlt+Mũi tên phải
 
 F&ullscreen\tCtrl-Shift-L
 Toàn màn hình\tCtrl-Shift-L
@@ -441,7 +441,7 @@ P&roperties
 Thuộc tính
 
 P&roperties\tCtrl-D
-Thuộc tính
+Thuộc tính\tCtrl-D
 
 PDF Document
 Tập tin PDF
