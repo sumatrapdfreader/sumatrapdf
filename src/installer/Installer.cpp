@@ -168,7 +168,7 @@ static TCHAR *gSupportedExts[] = {
 //       the executable, since it's appended to the end of executable to mark
 //       it as uninstaller. An alternative would be search for it from the end.
 #define UN_INST_MARK L"!uninst_end!"
-static char *gUnInstMark = NULL; // str::ToMultiByte(UN_INST_MARK, CP_UTF8)
+static ScopedMem<char> gUnInstMark; // str::ToMultiByte(UN_INST_MARK, CP_UTF8)
 
 // The following list is used to verify that all the required files have been
 // installed (install flag set) and to know what files are to be removed at
@@ -558,8 +558,7 @@ BOOL CreateUninstaller()
         return FALSE;
     }
 
-    if (!gUnInstMark)
-        gUnInstMark = str::ToMultiByte(UN_INST_MARK, CP_UTF8);
+    gUnInstMark.Set(str::ToMultiByte(UN_INST_MARK, CP_UTF8));
     int markSize = str::Len(gUnInstMark);
 
     // find the end of the (un)installer
@@ -575,6 +574,7 @@ BOOL CreateUninstaller()
             free(installerData);
             return FALSE;
         }
+        installerData = extData;
         memcpy(installerData + installerSize, gUnInstMark, markSize);
         installerSize += markSize;
     }
@@ -599,9 +599,7 @@ bool IsUninstaller()
     if (isTempUninstaller)
         return true;
 
-    char *data = NULL;
-    if (!gUnInstMark)
-        gUnInstMark = str::ToMultiByte(UN_INST_MARK, CP_UTF8);
+    gUnInstMark.Set(str::ToMultiByte(UN_INST_MARK, CP_UTF8));
     size_t markSize = str::Len(gUnInstMark);
 
     size_t uninstallerSize;
@@ -1389,12 +1387,10 @@ BOOL BrowseForFolder(HWND hwnd, LPCTSTR lpszInitialFolder, LPCTSTR lpszCaption, 
 
 void OnButtonBrowse()
 {
-    TCHAR *installDir = win::GetText(gHwndTextboxInstDir);
-    if (!dir::Exists(installDir)) {
-        TCHAR *parentDir = path::GetDir(installDir);
-        free(installDir);
-        installDir = parentDir;
-    }
+    ScopedMem<TCHAR> installDir(win::GetText(gHwndTextboxInstDir));
+    // strip a trailing "\SumatraPDF" if that directory doesn't exist (yet)
+    if (!dir::Exists(installDir))
+        installDir.Set(path::GetDir(installDir));
 
     TCHAR path[MAX_PATH];
     if (BrowseForFolder(gHwndFrame, installDir, _T("Select the folder into which ") TAPP _T(" should be installed:"), path, dimof(path))) {
@@ -1411,8 +1407,6 @@ void OnButtonBrowse()
     }
     else
         SetFocus(gHwndButtonBrowseDir);
-
-    free(installDir);
 }
 
 // This display is inspired by http://letteringjs.com/
@@ -2187,10 +2181,8 @@ void ParseCommandLine(TCHAR *cmdLine)
 
         if (is_arg("s"))
             gGlobalData.silent = true;
-        else if (is_arg_with_param("d")) {
-            free(gGlobalData.installDir);
-            gGlobalData.installDir = str::Dup(argList[++i]);
-        }
+        else if (is_arg_with_param("d"))
+            str::ReplacePtr(&gGlobalData.installDir, argList[++i]);
         else if (is_arg("register"))
             gGlobalData.registerAsDefault = true;
         else if (is_arg_with_param("opt")) {
@@ -2266,10 +2258,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     ret = RunApp();
 
 Exit:
-    free(gUnInstMark);
     free(gGlobalData.installDir);
     free(gGlobalData.firstError);
-    CoUninitialize();
 
     return ret;
 }
