@@ -24,6 +24,9 @@ Contributor: Damjan Gerl
 &Back\tAlt+Left Arrow
 &Nazaj\tAlt+Leva puščica
 
+&Book View\tCtrl-8
+Knjižni pogled\tCtrl-8
+
 &Close\tCtrl-W
 &Zapri\tCtrl-W
 
@@ -38,6 +41,9 @@ Kopiraj izbor\tCtrl-C
 
 &Even pages only
 Samo &parne strani
+
+&Facing\tCtrl-7
+Dvostransko\tCtrl-7
 
 &File
 &Datoteka
@@ -87,11 +93,17 @@ Samo &lihe strani
 &Open\tCtrl-O
 &Odpri\tCtrl-O
 
+&Open Document
+&Odpri dokument
+
 &Options...
 &Možnosti …
 
 &Password:
 &Geslo:
+
+&Pin Document
+&Pritrdi dokument
 
 &Previous Page\tLeft Arrow
 Predhodna stran\tPuščica levo
@@ -111,6 +123,9 @@ Predhodna stran\tPuščica levo
 &Remember these settings for each document
 Zapomni si te &nastavitve za vsak dokument
 
+&Remove Document
+Odstrani dokument
+
 &Save As...
 Shrani &kot …
 
@@ -122,6 +137,9 @@ Shrani &kot …\tCtrl-S
 
 &Shrink pages to printable area (if necessary)
 &Skrči strani na področje tiskanja (če potrebno)
+
+&Single Page\tCtrl-6
+&Enostransko\tCtrl-6
 
 &Skip this version
 &Preskoči to različico
@@ -150,6 +168,9 @@ Napredno
 All files
 Vse datoteke
 
+All supported documents
+Vse podprte dokumente
+
 Application:
 Aplikacija:
 
@@ -174,6 +195,12 @@ Knjižni pogled
 Book&marks\tF12
 Zaznamki\tF12
 
+Bookmark Shortcuts
+Zaznamki bližnjic
+
+Bookmark shortcut to page %d of %s
+Zaznamek bližnjice na stran %d od %s
+
 Bookmarks
 Zaznamki
 
@@ -197,6 +224,9 @@ Spremeni jezik (Change Language)
 
 Check for &Updates
 &Preveri za posodobitve
+
+Comic books
+Comic books
 
 Continuous
 Nepretrgano
@@ -246,6 +276,9 @@ Glavnega bralnika PDF ni mogoče spremeniti v prenosnem načinu
 Denied Permissions:
 Zavrnjena dovoljenja:
 
+DjVu documents
+DjVu dokumenti
+
 Document Properties
 Lastnosti dokumenta
 
@@ -263,6 +296,9 @@ Vnesite geslo za %s
 
 Enter the command-line to invoke when you double-click on the PDF document:
 Vnesite ukazno vrstico, ki se bo izvedla, ko boste dvokliknili na PDF dokument:
+
+Error loading %s
+Napaka pri nalaganju %s
 
 F&orward\tAlt+Right Arrow
 Naprej\tAlt+Desna puščica
@@ -324,14 +360,26 @@ Prilagodi enostransko
 Found text at page %d
 Besedilo najdeno na strani %d
 
+Found text at page %d (again)
+Besedilo najdeno na strani %d (ponovno)
+
+Frequently Read
+Pogosto brani
+
 GB
 GB
 
 Go to page
 Pojdi na stran
 
+Hide frequently read
+Skrij pogosto brane
+
 Hint: Use the F3 key for finding again
 Namig: Uporabite tipko F3 za ponovno iskanje
+
+Image files (*.%s)
+Slikovne datoteke (*.%s)
 
 KB
 KB
@@ -378,6 +426,9 @@ V redu
 Open
 Odpri
 
+Open a document...
+Odpri dokument …
+
 Open in &Adobe Reader
 Odpri s programom &Adobe Reader
 
@@ -423,14 +474,26 @@ Stran:
 Please wait - rendering...
 Počakajte trenutek, upodobitev poteka …
 
+Postscript documents
+Postscript dokument
+
 Pr&esentation\tCtrl-L
 Pr&edstavitev\tCtrl-L
 
 Previous Page
 Predhodna stran
 
+Print
+Natisni
+
 Print range
 Natisni razpon
+
+Printing is still in progress. Abort and start over?
+Tiskanje je še vedno v teku. Prekinem in začnem znova?
+
+Printing page %d of %d...
+Tiskanje strani %d od %d …
 
 Printing problem.
 Težave pri tiskanju.
@@ -443,6 +506,9 @@ Zasukaj v levo\tCtrl-Shift--
 
 Rotate &Right\tCtrl-Shift-+
 Zasukaj v desno\tCtrl-Shift-+
+
+Save S&hortcut...\tCtrl-Shift-S
+S&hrani bližnjico …\tCtrl-Shift-S
 
 Searching %d of %d...
 Preiskovanje strani %d od %d …
@@ -468,11 +534,17 @@ Pokaži orodno vrstico
 Show &pages continuously
 &Prikaži strani nepretrgano
 
+Show frequently read
+Prikaži pogosto brane
+
 Show the &bookmarks sidebar when available
 Pokaži podokno z &zaznamki, če so na voljo
 
 Single Page
 Enostransko
+
+Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
+Oprostite, to se ne bi smelo zgoditi!\n\nPritisnite 'Prekliči', če želite pomagati pri določitvi vzroka za sesutje.
 
 Source file %s has no synchronization point
 Izvorna datoteka %s nima točke sinhronizacije
@@ -516,6 +588,9 @@ Ob&išči domačo stran
 Warning
 Opozorilo
 
+XPS documents
+XPS dokumenti
+
 You have the latest version.
 Imate najnovejšo različico.
 
@@ -542,31 +617,4 @@ kopiranje besedila
 
 printing document
 tiskanje dokumenta
-
-# Untranslated:
-#&Book View\tCtrl-8
-#&Facing\tCtrl-7
-#&Open Document
-#&Pin Document
-#&Remove Document
-#&Single Page\tCtrl-6
-#All supported documents
-#Bookmark Shortcuts
-#Bookmark shortcut to page %d of %s
-#Comic books
-#DjVu documents
-#Error loading %s
-#Found text at page %d (again)
-#Frequently Read
-#Hide frequently read
-#Image files (*.%s)
-#Open a document...
-#Postscript documents
-#Print
-#Printing is still in progress. Abort and start over?
-#Printing page %d of %d...
-#Save S&hortcut...\tCtrl-Shift-S
-#Show frequently read
-#Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
-#XPS documents
 
