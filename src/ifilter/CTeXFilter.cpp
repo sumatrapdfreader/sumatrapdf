@@ -35,6 +35,7 @@ HRESULT CTeXFilter::OnInit()
 
 #define iscmdchar(c) (iswalnum(c) || (c) == '_')
 #define skipspace(pc) for (; iswspace(*(pc)) && *(pc) != '\n'; (pc)++)
+#define skipcomment(pc) while (*(pc) && *(pc)++ != '\n')
 
 // appends a new line, if the last character isn't one already
 static inline void addsingleNL(WCHAR *base, WCHAR **cur)
@@ -92,6 +93,7 @@ WCHAR *CTeXFilter::ExtractBracedBlock()
             if (*m_pPtr == '\\') { addsingleNL(result, &rptr); m_pPtr++; break; }
             if (*m_pPtr == ',')  { addsinglespace(result, &rptr); m_pPtr++; break; }
             if (*m_pPtr == '>')  { *rptr++ = '\t'; m_pPtr++; break; }
+            if (*m_pPtr == '%')  { *rptr++ = '%'; m_pPtr++; break; }
             // TODO: handle more international characters
             if (str::StartsWith(m_pPtr, L"'e")) { *rptr++ = L'é'; m_pPtr += 2; break; }
             if (str::StartsWith(m_pPtr, L"`e")) { *rptr++ = L'è'; m_pPtr += 2; break; }
@@ -127,8 +129,7 @@ WCHAR *CTeXFilter::ExtractBracedBlock()
                 m_pPtr = wcschr(m_pPtr, ']') + 1;
             break;
         case '%':
-            // ignore comments until the end of line
-            m_pPtr = wcschr(m_pPtr, '\n') ? wcschr(m_pPtr, '\n') + 1 : m_pPtr + str::Len(m_pPtr);
+            skipcomment(m_pPtr);
             break;
         case '&':
             *rptr++ = '\t';
@@ -199,6 +200,9 @@ ContinueParsing:
                 break;
             case '{':
                 ExtractBracedBlock();
+                break;
+            case '%':
+                skipcomment(m_pPtr);
                 break;
             }
         }

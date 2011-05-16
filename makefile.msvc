@@ -357,7 +357,7 @@ $(OS)\UnitTests.obj: src\ParseCommandLine.h src\StressTesting.h src\utils\BaseUt
 $(OS)\UnitTests.obj: src\utils\GeomUtil.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\UtilTests.obj: src\utils\BaseUtil.h src\utils\BencUtil.h src\utils\FileUtil.h
 $(OS)\UtilTests.obj: src\utils\GeomUtil.h src\utils\SimpleLog.h src\utils\StrUtil.h
-$(OS)\UtilTests.obj: src\utils\Vec.h
+$(OS)\UtilTests.obj: src\utils\Vec.h src\utils\WinUtil.h
 $(OS)\WindowInfo.obj: src\AppPrefs.h src\BaseEngine.h src\DisplayModel.h
 $(OS)\WindowInfo.obj: src\DisplayState.h src\DjVuEngine.h src\EngineManager.h
 $(OS)\WindowInfo.obj: src\FileWatch.h src\ImagesEngine.h src\Notifications.h
