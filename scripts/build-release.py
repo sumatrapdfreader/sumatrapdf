@@ -31,13 +31,10 @@ def usage():
 # Building release version:
 #   * extract version from Version.h
 #   * build with nmake, sending version as argument
-#   * compress with mpress
 #   * build an installer
 #   * upload to s3 kjkpub bucket. Uploaded files:
 #       sumatrapdf/rel/SumatraPDF-<ver>.exe
 #          uncompressed portable executable, for archival
-#       sumatrapdf/rel/SumatraPDF-<ver>.zip
-#          mpress-compressed portable executable inside zip
 #       sumatrapdf/rel/SumatraPDF-<ver>.pdb.zip
 #          pdb symbols for libmupdf.dll, and Sumatra's static and library builds
 #       sumatrapdf/rel/SumatraPDF-<ver>-install.exe
@@ -48,7 +45,6 @@ def usage():
 # Building pre-release version:
 #   * get svn version
 #   * build with nmake, sending svn version as argument
-#   * compress with mpress
 #   * build an installer
 #   * upload to s3 kjkpub bucket. Uploaded files:
 #       sumatrapdf/prerel/SumatraPDF-prerelease-<svnrev>.exe
@@ -143,7 +139,7 @@ def main():
   installer_stub = os.path.join(builds_dir, "Installer.exe")
   copy_from_obj_rel("Installer.exe", installer_stub)
 
-  # run mpress and StripReloc from inside builds_dir for better
+  # run StripReloc from inside builds_dir for better
   # compat across python version
   prevdir = os.getcwd(); os.chdir(builds_dir)
   run_cmd_throw("StripReloc", "Installer.exe")
