@@ -23,7 +23,6 @@ O = $(O)64
 
 OZ  = $(O)\zlib
 OFT = $(O)\freetype
-OJ  = $(O)\jpeg
 OT  = $(O)\jpegturbo
 OOJ = $(O)\openjpeg
 OJB = $(O)\jbig2
@@ -46,17 +45,7 @@ EXTLIBSDIR=..\ext
 
 ZLIB_DIR=$(EXTLIBSDIR)\zlib-1.2.5
 FREETYPE_DIR=$(EXTLIBSDIR)\freetype2
-
-# if JPEG_TURBO_DIR is defined, we use libjpeg-turbo, otherwise we use libpjeg
-#JPEG_DIR=$(EXTLIBSDIR)\libjpeg
 JPEG_TURBO_DIR=$(EXTLIBSDIR)\libjpeg-turbo
-
-!if "$(JPEG_DIR)" != ""
-!if "$(JPEG_TURBO_DIR)"!=""
-!error Can't set both JPEG_DIR and JPEG_TURBO_DIR
-!endif
-!endif
-
 OPENJPEG_DIR=$(EXTLIBSDIR)\openjpeg
 JBIG2_DIR=$(EXTLIBSDIR)\jbig2dec
 
@@ -127,9 +116,6 @@ JBIG2_CFLAGS = $(CFLAGSOPT) /TC /D "HAVE_STRING_H=1" /I$(JBIG2_DIR) /wd4018
 
 OPENJPEG_CFLAGS = $(CFLAGSOPT) /TC /D "OPJ_STATIC" /D "OPJ_EXPORTS" /I$(OPENJPEG_DIR) /wd4819
 
-!if "$(JPEG_TURBO_DIR)"==""
-JPEG_CFLAGS = $(CFLAGSOPT) /I$(JPEG_DIR)
-!else
 JPEG_TURBO_CFLAGS = $(CFLAGS) /I$(JPEG_TURBO_DIR) /I$(JPEG_TURBO_DIR)\simd
 JPEG_TURBO_CFLAGS = $(JPEG_TURBO_CFLAGS) /wd4101 /wd4018
 JPEG_TURBO_NASM_FLAGS = -I $(JPEG_TURBO_DIR)\simd\ -I $(JPEG_TURBO_DIR)\win\ 
@@ -137,7 +123,6 @@ JPEG_TURBO_NASM_FLAGS = -I $(JPEG_TURBO_DIR)\simd\ -I $(JPEG_TURBO_DIR)\win\
 JPEG_TURBO_NASM_FLAGS = $(JPEG_TURBO_NASM_FLAGS) -f win64 -D__x86_64__ -DWIN64 -DMSVC
 !else
 JPEG_TURBO_NASM_FLAGS = $(JPEG_TURBO_NASM_FLAGS) -f win32
-!endif
 !endif
 
 # also use $(CFLAGSOPT) for mupdf ?
@@ -147,13 +132,8 @@ MUPDF_CFLAGS = $(MUPDF_CFLAGS) /D "HAVE_OPENJPEG" /I$(OPENJPEG_DIR)
 
 MUPDF_CFLAGS = $(MUPDF_CFLAGS) \
 	/I$(MUPDF_DIR)/fitz /I$(MUPDF_DIR)/pdf /I$(MUPDF_DIR)/xps /I$(MUPDF_DIR)/apps \
-	/I$(FREETYPE_DIR)/config /I$(FREETYPE_DIR)/include /I$(ZLIB_DIR) /I$(JBIG2_DIR)
-
-!if "$(JPEG_TURBO_DIR)"==""
-MUPDF_CFLAGS = $(MUPDF_CFLAGS) /I$(JPEG_DIR)
-!else
-MUPDF_CFLAGS = $(MUPDF_CFLAGS) /I$(JPEG_TURBO_DIR)
-!endif
+	/I$(FREETYPE_DIR)/config /I$(FREETYPE_DIR)/include /I$(ZLIB_DIR) \
+	/I$(JBIG2_DIR) /I$(JPEG_TURBO_DIR)
 
 # disable warning C4244: conversion from 'type1' to 'type2', possible loss of data
 !if "$(PLATFORM)"=="X64"
@@ -182,19 +162,6 @@ ZLIB_OBJS = \
 	$(OZ)\gzlib.obj $(OZ)\gzread.obj $(OZ)\gzwrite.obj $(OZ)\gzclose.obj
 	# MuPDF also compiles $(OZ)\uncompr.obj
 
-!if "$(JPEG_TURBO_DIR)"==""
-
-JPEG_OBJS = \
-	$(OJ)\jaricom.obj $(OJ)\jcomapi.obj $(OJ)\jutils.obj $(OJ)\jerror.obj $(OJ)\jmemmgr.obj \
-	$(OJ)\jdatadst.obj $(OJ)\jfdctfst.obj $(OJ)\jfdctflt.obj $(OJ)\jfdctint.obj \
-	$(OJ)\jdapimin.obj $(OJ)\jdapistd.obj $(OJ)\jdarith.obj $(OJ)\jdtrans.obj $(OJ)\jdatasrc.obj \
-	$(OJ)\jdmaster.obj $(OJ)\jdinput.obj $(OJ)\jdmarker.obj $(OJ)\jdhuff.obj $(OJ)\jdmainct.obj \
-	$(OJ)\jdcoefct.obj $(OJ)\jdpostct.obj $(OJ)\jddctmgr.obj $(OJ)\jidctfst.obj $(OJ)\jidctflt.obj \
-	$(OJ)\jidctint.obj $(OJ)\jdsample.obj $(OJ)\jdcolor.obj $(OJ)\jquant1.obj $(OJ)\jquant2.obj \
-	$(OJ)\jdmerge.obj $(OJ)\jmemnobs.obj # should I use jmemansi.obj or jmemname.obj ?
-
-!else
-
 JPEG_TURBO_OBJS = \
 	$(OT)\jcomapi.obj $(OT)\jdapimin.obj $(OT)\jdapistd.obj \
 	$(OT)\jdatadst.obj $(OT)\jdatasrc.obj $(OT)\jdcoefct.obj $(OT)\jdcolor.obj $(OT)\jddctmgr.obj \
@@ -220,8 +187,6 @@ JPEG_TURBO_OBJS = $(JPEG_TURBO_OBJS) \
 	$(OT)\jdcolss2.obj $(OT)\jcsamss2.obj $(OT)\jdsamss2.obj $(OT)\jdmerss2.obj $(OT)\jcqnts2i.obj \
 	$(OT)\jfss2fst.obj $(OT)\jfss2int.obj $(OT)\jiss2red.obj $(OT)\jiss2int.obj $(OT)\jiss2fst.obj \
 	$(OT)\jcqnts2f.obj $(OT)\jiss2flt.obj $(OT)\jsimd_i386.obj $(OT)\jdphuff.obj
-!endif
-
 !endif
 
 JBIG2_OBJS = \
@@ -280,18 +245,13 @@ MUPDF_CFLAGS = $(MUPDF_CFLAGS) /D "NOCJKFONT" /D "NODROIDFONT"
 LIBS_OBJS = \
 	$(ZLIB_OBJS) \
 	$(FT_OBJS) \
+	$(JPEG_TURBO_OBJS) \
 	$(JBIG2_OBJS) \
 	$(OPENJPEG_OBJS) \
 	$(FITZ_DRAW_OBJS) \
 	$(FITZ_OBJS) \
 	$(MUPDF_OBJS) \
 	$(MUXPS_OBJS)
-
-!if "$(JPEG_TURBO_DIR)"==""
-LIBS_OBJS = $(LIBS_OBJS) $(JPEG_OBJS)
-!else
-LIBS_OBJS = $(LIBS_OBJS) $(JPEG_TURBO_OBJS)
-!endif
 
 PDFAPP_RES = $(OA)\pdfview.res
 PDFAPP_OBJS = $(LIBS_OBJS) $(OA)\win_main.obj $(OA)\pdfapp.obj $(PDFAPP_RES)
@@ -339,7 +299,6 @@ $(O): force
 	@if not exist $(O) mkdir $(O)
 	@if not exist $(OZ) mkdir $(OZ)
 	@if not exist $(OFT) mkdir $(OFT)
-	@if not exist $(OJ) mkdir $(OJ)
 	@if not exist $(OT) mkdir $(OT)
 	@if not exist $(OOJ) mkdir $(OOJ)
 	@if not exist $(OJB) mkdir $(OJB)
@@ -457,10 +416,6 @@ $(LIBMUPDF_DLL): $(LIBMUPDF_OBJS) $(LIBMUPDF_DEF) $(LIBMUPDF_RES)
 {$(ZLIB_DIR)}.c{$(OZ)}.obj::
 	$(CC) $(ZLIB_CFLAGS) /Fo$(OZ)\ /Fd$(O)\vc80.pdb $<
 
-!if "$(JPEG_TURBO_OBJS)"==""
-{$(JPEG_DIR)}.c{$(OJ)}.obj::
-	$(CC) $(JPEG_CFLAGS) /Fo$(OJ)\ /Fd$(O)\vc80.pdb $<
-!else
 {$(JPEG_TURBO_DIR)}.c{$(OT)}.obj::
 	$(CC) $(JPEG_TURBO_CFLAGS) /Fo$(OT)\ /Fd$(O)\vc80.pdb $<
 
@@ -469,7 +424,6 @@ $(LIBMUPDF_DLL): $(LIBMUPDF_OBJS) $(LIBMUPDF_DEF) $(LIBMUPDF_RES)
 
 {$(JPEG_TURBO_DIR)\simd}.asm{$(OT)}.obj:
 	$(NASM) $(JPEG_TURBO_NASM_FLAGS) -o $@ $< 
-!endif
 
 {$(OPENJPEG_DIR)}.c{$(OOJ)}.obj::
 	$(CC) $(OPENJPEG_CFLAGS) /Fo$(OOJ)\ /Fd$(O)\vc80.pdb $<
@@ -507,6 +461,7 @@ $(MUPDF_GEN_DIR)\font_droid.h:
 
 $(OP)\pdf_fontfile.obj: $(MUPDF_GEN_DIR) \
 	$(MUPDF_GEN_DIR)\font_base14.h $(MUPDF_GEN_DIR)\font_droid.h $(MUPDF_GEN_DIR)\font_cjk.h
+
 $(OP)\pdf_cmap_tables.obj: $(MUPDF_GEN_DIR) \
 	$(MUPDF_GEN_DIR)\cmap_cns.h $(MUPDF_GEN_DIR)\cmap_gbs.h \
 	$(MUPDF_GEN_DIR)\cmap_japan.h $(MUPDF_GEN_DIR)\cmap_korea.h
