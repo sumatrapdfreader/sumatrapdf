@@ -11671,7 +11671,7 @@ const char *gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "Sideskalering",
   "Side:",
   "Vennligst vent - arbeider...",
-  NULL,
+  "Postscript-dokumenter",
   "Pr&esentasjon\tCtrl-L",
   "Forrige side",
   "Skriv ut",

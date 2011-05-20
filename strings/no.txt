@@ -475,6 +475,9 @@ Side:
 Please wait - rendering...
 Vennligst vent - arbeider...
 
+Postscript documents
+Postscript-dokumenter
+
 Pr&esentation\tCtrl-L
 Pr&esentasjon\tCtrl-L
 
@@ -615,7 +618,4 @@ kopierer tekst
 
 printing document
 skriver ut dokument
-
-# Untranslated:
-#Postscript documents
 
