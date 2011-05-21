@@ -872,8 +872,7 @@ scale_single_row(unsigned char *dst, unsigned char *src, fz_weights *weights, in
 			}
 			dst -= 2*n;
 		}
-		dst += n;
-		dst += n * weights->count; /* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1431 */
+		dst += n * (weights->count+1);
 	}
 	else
 	{
