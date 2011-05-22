@@ -746,7 +746,7 @@ static void SetFocusHelper(HWND hwnd)
 }
 
 // Synchronization command format:
-// [<DDECOMMAND_SYNC>("<pdffile>","<srcfile>",<line>,<col>[,<newwindow>,<setfocus>])]
+// [<DDECOMMAND_SYNC>(["<pdffile>",]"<srcfile>",<line>,<col>[,<newwindow>,<setfocus>])]
 static const TCHAR *HandleSyncCmd(const TCHAR *cmd, DDEACK& ack)
 {
     ScopedMem<TCHAR> pdfFile, srcFile;
@@ -756,16 +756,38 @@ static const TCHAR *HandleSyncCmd(const TCHAR *cmd, DDEACK& ack)
     if (!next)
         next = str::Parse(cmd, _T("[") DDECOMMAND_SYNC _T("(\"%S\",%? \"%S\",%u,%u,%u,%u)]"),
                           &pdfFile, &srcFile, &line, &col, &newWindow, &setFocus);
+    // allow to omit the pdffile path, so that editors don't have to know about
+    // multi-file projects (requires that the PDF has already been opened)
+    if (!next) {
+        pdfFile.Set(NULL);
+        next = str::Parse(cmd, _T("[") DDECOMMAND_SYNC _T("(\"%S\",%u,%u)]"),
+                          &srcFile, &line, &col);
+        if (!next)
+            next = str::Parse(cmd, _T("[") DDECOMMAND_SYNC _T("(\"%S\",%u,%u,%u,%u)]"),
+                              &srcFile, &line, &col, &newWindow, &setFocus);
+    }
+
     if (!next)
         return NULL;
 
-    // check if the PDF is already opened
-    WindowInfo *win = FindWindowInfoByFile(pdfFile);
-    // if not then open it
-    if (newWindow || !win)
-        win = LoadDocument(pdfFile, !newWindow ? win : NULL);
-    else if (win && !win->IsDocLoaded())
-        win->Reload();
+    WindowInfo *win = NULL;
+    if (pdfFile) {
+        // check if the PDF is already opened
+        win = FindWindowInfoByFile(pdfFile);
+        // if not then open it
+        if (newWindow || !win)
+            win = LoadDocument(pdfFile, !newWindow ? win : NULL);
+        else if (win && !win->IsDocLoaded())
+            win->Reload();
+    }
+    else {
+        // check if any opened PDF has sync information for the source file
+        win = FindWindowInfoBySyncFile(srcFile);
+        if (!win)
+            DBG_OUT("PdfSync: No open PDF file found for %s!", srcFile);
+        else if (newWindow)
+            win = LoadDocument(win->loadedFilePath);
+    }
     
     if (!win || !win->IsDocLoaded())
         return next;

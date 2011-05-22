@@ -178,7 +178,8 @@ public:
 #define PDFSYNC_DDE_TOPIC     _T("control")
 
 // forward-search command
-//  format: [ForwardSearch("<pdffilepath>","<sourcefilepath>",<line>,<column>[,<newwindow>, <setfocus>])]
+//  format: [ForwardSearch(["<pdffilepath>",]"<sourcefilepath>",<line>,<column>[,<newwindow>, <setfocus>])]
+//    if pdffilepath is provided, the file will be opened if no open window can be found for it
 //    if newwindow = 1 then a new window is created even if the file is already open
 //    if focus = 1 then the focus is set to the window
 //  eg: [ForwardSearch("c:\file.pdf","c:\folder\source.tex",298,0)]

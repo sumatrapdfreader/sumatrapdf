@@ -724,7 +724,7 @@ static bool WindowInfoStillValid(WindowInfo *win)
     return gWindows.Find(win) != -1;
 }
 
-// Find the first windows showing a given PDF file 
+// Find the first window showing a given PDF file 
 WindowInfo* FindWindowInfoByFile(TCHAR *file)
 {
     ScopedMem<TCHAR> normFile(path::Normalize(file));
@@ -737,6 +737,19 @@ WindowInfo* FindWindowInfoByFile(TCHAR *file)
             return win;
     }
 
+    return NULL;
+}
+
+// Find the first window that has been produced from <file>
+WindowInfo* FindWindowInfoBySyncFile(TCHAR *file)
+{
+    for (size_t i = 0; i < gWindows.Count(); i++) {
+        WindowInfo *win = gWindows.At(i);
+        Vec<RectI> rects;
+        UINT page;
+        if (win->pdfsync && win->pdfsync->source_to_pdf(file, 0, 0, &page, rects) != PDFSYNCERR_UNKNOWN_SOURCEFILE)
+            return win;
+    }
     return NULL;
 }
 

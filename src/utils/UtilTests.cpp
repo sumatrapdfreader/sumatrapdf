@@ -188,6 +188,8 @@ static void TStrTest()
         assert(!str1);
         assert(str::Parse(_T("xyz"), _T("x%cz"), &c1));
         assert(c1 == 'y');
+        assert(!str::Parse(_T("leaks memory!?"), _T("%s!%$"), &str1));
+        free(str1);
     }
 
     // the test string should only contain ASCII characters,

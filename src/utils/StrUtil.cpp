@@ -520,7 +520,7 @@ static const TCHAR *ParseLimitedNumber(const TCHAR *str, const TCHAR *format,
      %x - parses an unsigned hex-int
      %f - parses a float
      %c - parses a single TCHAR
-     %s - parses a string (pass in a TCHAR**, free after use)
+     %s - parses a string (pass in a TCHAR**, free after use - also on failure!)
      %S - parses a string into a ScopedMem<TCHAR>
      %? - makes the next single character optional (e.g. "x%?,y" parses both "xy" and "x,y")
      %$ - causes the parsing to fail if it's encountered when not at the end of the string

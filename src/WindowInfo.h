@@ -267,6 +267,7 @@ public:
 
 WindowInfo* FindWindowInfoByFile(TCHAR *file);
 WindowInfo* FindWindowInfoByHwnd(HWND hwnd);
+WindowInfo* FindWindowInfoBySyncFile(TCHAR *file);
 WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win=NULL,
                          bool showWin=true, bool forceReuse=false, bool suppressPwdUI=false);
 
