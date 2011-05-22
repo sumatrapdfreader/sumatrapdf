@@ -526,13 +526,58 @@ void LinkHandler::ScrollTo(PageDestination *dest)
     dm->goToPage(pageNo, scroll.y, true, scroll.x);
 }
 
+// normalizes case and whitespace in the string
+// caller needs to free() the result
+static TCHAR *NormalizeFuzzy(const TCHAR *str)
+{
+    ScopedMem<TCHAR> dup(str::Dup(str));
+    CharLower(dup);
+
+    // cf. AddTocItemToView in SumatraPDF.cpp
+    str::TransChars(dup, _T("\t\n\v\f\r"), _T("     "));
+    StrVec parts;
+    parts.Split(dup, _T(" "), true);
+    return parts.Join(_T(" "));
+}
+
+// finds the first ToC entry that (partially) matches a given normalized name
+// (ignoring case and whitespace differences)
+PageDestination *LinkHandler::FindToCItem(DocToCItem *item, const TCHAR *name, bool partially)
+{
+    for (; item; item = item->next) {
+        ScopedMem<TCHAR> fuzTitle(NormalizeFuzzy(item->title));
+        if (partially ? str::Find(fuzTitle, name) : str::Eq(fuzTitle, name))
+            return item->GetLink();
+        PageDestination *dest = FindToCItem(item->child, name, partially);
+        if (dest)
+            return dest;
+    }
+    return NULL;
+}
+
 void LinkHandler::GotoNamedDest(const TCHAR *name)
 {
     assert(owner && owner->linkHandler == this);
-    PageDestination *dest = engine() ? engine()->GetNamedDest(name) : NULL;
-    if (!dest)
+    if (!engine())
         return;
 
-    ScrollTo(dest);
-    delete dest;
+    // Match order:
+    // 1. Exact match on internal destination name
+    // 2. Fuzzy match on full ToC item title
+    // 3. Fuzzy match on a part of a ToC item title
+    PageDestination *dest = engine()->GetNamedDest(name);
+    if (dest) {
+        ScrollTo(dest);
+        delete dest;
+    }
+    else if (engine()->HasToCTree()) {
+        DocToCItem *root = engine()->GetToCTree();
+        ScopedMem<TCHAR> fuzName(NormalizeFuzzy(name));
+        dest = FindToCItem(root, fuzName);
+        if (!dest)
+            dest = FindToCItem(root, fuzName, true);
+        if (dest)
+            ScrollTo(dest);
+        delete root;
+    }
 }

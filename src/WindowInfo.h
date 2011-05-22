@@ -247,6 +247,7 @@ class LinkHandler {
     BaseEngine *engine() const;
 
     void ScrollTo(PageDestination *dest);
+    PageDestination *FindToCItem(DocToCItem *item, const TCHAR *name, bool partially=false);
 
 public:
     LinkHandler(WindowInfo& win) : owner(&win) { }
