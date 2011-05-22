@@ -1426,9 +1426,10 @@ static void DeleteWindowInfo(WindowInfo *win)
 
 static void UpdateTocWidth(HWND hwndTocBox, const DisplayState *ds=NULL, int defaultDx=0)
 {
-    WindowRect rc(hwndTocBox);
+    RectI rc = WindowRect(hwndTocBox);
     if (rc.IsEmpty())
         return;
+    rc = MapRectToWindow(rc, HWND_DESKTOP, GetParent(hwndTocBox));
 
     if (ds && !gGlobalPrefs.m_globalPrefsOnly)
         rc.dx = ds->tocDx;
@@ -1482,26 +1483,31 @@ static bool LoadDocIntoWindow(
     win.dm = DisplayModel::CreateFromFileName(&win, fileName, displayMode,
         startPage, win.GetViewPortSize());
     bool needrefresh = !win.dm;
-    bool oldTocShow = win.tocShow;
 
-    if (!win.dm) {
-        assert(!win.IsDocLoaded() && !win.IsAboutWindow());
-        DBG_OUT("failed to load file %s\n", fileName);
-        // if there is an error while reading the document and a repair is not requested
-        // then fallback to the previous state
-        if (!tryRepair) {
-            win.dm = prevModel;
-        } else {
-            delete prevModel;
-            ScopedMem<TCHAR> title(str::Format(_T("%s - %s"), path::GetBaseName(fileName), SUMATRA_WINDOW_TITLE));
-            win::SetText(win.hwndFrame, title);
-            goto Error;
-        }
-    } else {
-        assert(win.IsDocLoaded());
+    bool oldTocShow = win.tocShow;
+    // ToC items might hold a reference to an Engine, so make sure to
+    // delete them before destroying the whole DisplayModel
+    if (win.dm || tryRepair)
+        win.ClearTocBox();
+
+    assert(!win.IsAboutWindow() && win.IsDocLoaded() == (win.dm != NULL));
+    if (win.dm) {
         if (prevModel && str::Eq(win.dm->fileName(), prevModel->fileName()))
             gRenderCache.KeepForDisplayModel(prevModel, win.dm);
         delete prevModel;
+    }
+    else if (tryRepair) {
+        DBG_OUT("failed to load file %s\n", fileName);
+        delete prevModel;
+        ScopedMem<TCHAR> title(str::Format(_T("%s - %s"), path::GetBaseName(fileName), SUMATRA_WINDOW_TITLE));
+        win::SetText(win.hwndFrame, title);
+        goto Error;
+    }
+    else {
+        // if there is an error while reading the document and a repair is not requested
+        // then fallback to the previous state
+        DBG_OUT("failed to load file %s, falling back to previous DisplayModel\n", fileName);
+        win.dm = prevModel;
     }
 
     float zoomVirtual = gGlobalPrefs.m_defaultZoom;
@@ -1594,8 +1600,6 @@ Error:
         }
         UpdateWindow(win.hwndFrame);
     }
-    if (win.tocLoaded)
-        win.ClearTocBox();
     if (win.IsDocLoaded())
         win.dm->SetScrollState(ss);
     if (win.IsDocLoaded() && win.tocShow && win.dm->engine && win.dm->engine->HasToCTree()) {
@@ -1603,7 +1607,6 @@ Error:
     } else if (oldTocShow) {
         // Hide the now useless ToC sidebar and force an update afterwards
         win.HideTocBox();
-        win.ClearTocBox();
         win.RedrawAll(true);
     }
     UpdateToolbarAndScrollbarsForAllWindows();
@@ -5653,8 +5656,12 @@ void WindowInfo::LoadTocTree()
     tocRoot = NULL;
     if (dm->engine)
         tocRoot = dm->engine->GetToCTree();
-    if (tocRoot)
+    if (tocRoot) {
+        SendMessage(hwndTocTree, WM_SETREDRAW, FALSE, 0);
         PopulateTocTreeView(hwndTocTree, tocRoot, tocState);
+        SendMessage(hwndTocTree, WM_SETREDRAW, TRUE, 0);
+        RedrawWindow(hwndTocTree, NULL, NULL, RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
+    }
 
     tocLoaded = true;
 }
@@ -5733,7 +5740,11 @@ void WindowInfo::ClearTocBox()
 {
     if (!tocLoaded) return;
 
+    SendMessage(hwndTocTree, WM_SETREDRAW, FALSE, 0);
     TreeView_DeleteAllItems(hwndTocTree);
+    SendMessage(hwndTocTree, WM_SETREDRAW, TRUE, 0);
+    RedrawWindow(hwndTocTree, NULL, NULL, RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
+
     delete tocRoot;
     tocRoot = NULL;
 
