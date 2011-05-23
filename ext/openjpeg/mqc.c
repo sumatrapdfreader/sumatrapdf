@@ -521,22 +521,21 @@ void mqc_init_dec(opj_mqc_t *mqc, unsigned char *bp, int len) {
 		unsigned int c;
 		unsigned int *ip;
 		unsigned char *end = mqc->end - 1;
-		mqc->buffer = opj_realloc(mqc->buffer, (2 * len + 1) * sizeof(unsigned int));
+		mqc->buffer = opj_realloc(mqc->buffer, (len + 1) * sizeof(unsigned int));
 		ip = (unsigned int *) mqc->buffer;
 
-		while (bp != end) {
+		while (bp < end) {
 			c = *(bp + 1);
 			if (*bp == 0xff) {
 				if (c > 0x8f) {
-					*ip = 0x0000ff18;
+					break;
 				} else {
-					bp++;
 					*ip = 0x00000017 | (c << 9);
 				}
 			} else {
-				bp++;
 				*ip = 0x00000018 | (c << 8);
 			}
+			bp++;
 			ip++;
 		}
 

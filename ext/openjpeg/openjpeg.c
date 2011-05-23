@@ -160,7 +160,7 @@ opj_image_t* OPJ_CALLCONV opj_decode_with_info(opj_dinfo_t *dinfo, opj_cio_t *ci
 			case CODEC_JPT:
 				return j2k_decode_jpt_stream((opj_j2k_t*)dinfo->j2k_handle, cio, cstr_info);
 			case CODEC_JP2:
-				return jp2_decode((opj_jp2_t*)dinfo->jp2_handle, cio, cstr_info);
+				return opj_jp2_decode((opj_jp2_t*)dinfo->jp2_handle, cio, cstr_info);
 			case CODEC_UNKNOWN:
 			default:
 				break;
@@ -311,7 +311,7 @@ bool OPJ_CALLCONV opj_encode_with_info(opj_cinfo_t *cinfo, opj_cio_t *cio, opj_i
 			case CODEC_J2K:
 				return j2k_encode((opj_j2k_t*)cinfo->j2k_handle, cio, image, cstr_info);
 			case CODEC_JP2:
-				return jp2_encode((opj_jp2_t*)cinfo->jp2_handle, cio, image, cstr_info);
+				return opj_jp2_encode((opj_jp2_t*)cinfo->jp2_handle, cio, image, cstr_info);
 			case CODEC_JPT:
 			case CODEC_UNKNOWN:
 			default:

@@ -570,7 +570,7 @@ static void v4dwt_interleave_h(v4dwt_t* restrict w, float* restrict a, int x, in
 	int count = w->sn;
 	int i, k;
 	for(k = 0; k < 2; ++k){
-		if (count + 3 * x < size && ((int) a & 0x0f) == 0 && ((int) bi & 0x0f) == 0 && (x & 0x0f) == 0) {
+		if (count + 3 * x < size && ((size_t) a & 0x0f) == 0 && ((size_t) bi & 0x0f) == 0 && (x & 0x0f) == 0) {
 			/* Fast code path */
 			for(i = 0; i < count; ++i){
 				int j = i;

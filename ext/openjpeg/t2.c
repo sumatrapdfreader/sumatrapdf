@@ -730,6 +730,7 @@ int t2_decode_packets(opj_t2_t *t2, unsigned char *src, int len, int tileno, opj
 					info_PK->start_pos = info_TL->end_header + 1;
 				} else if (info_TL->packet[cstr_info->packno-1].end_pos >= (int)cstr_info->tile[tileno].tp[curtp].tp_end_pos){ // New tile part
 					info_TL->tp[curtp].tp_numpacks = cstr_info->packno - tp_start_packno; // Number of packets in previous tile-part
+          info_TL->tp[curtp].tp_start_pack = tp_start_packno;
 					tp_start_packno = cstr_info->packno;
 					curtp++;
 					info_PK->start_pos = cstr_info->tile[tileno].tp[curtp].tp_end_header+1;
@@ -753,6 +754,7 @@ int t2_decode_packets(opj_t2_t *t2, unsigned char *src, int len, int tileno, opj
 	/* INDEX >> */
 	if(cstr_info) {
 		cstr_info->tile[tileno].tp[curtp].tp_numpacks = cstr_info->packno - tp_start_packno; // Number of packets in last tile-part
+    cstr_info->tile[tileno].tp[curtp].tp_start_pack = tp_start_packno;
 	}
 	/* << INDEX */
 

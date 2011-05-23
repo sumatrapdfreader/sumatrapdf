@@ -193,7 +193,7 @@ Decode an image from a JPEG-2000 file stream
 @param cstr_info Codestream information structure if required, NULL otherwise
 @return Returns a decoded image if successful, returns NULL otherwise
 */
-opj_image_t* jp2_decode(opj_jp2_t *jp2, opj_cio_t *cio, opj_codestream_info_t *cstr_info);
+opj_image_t* opj_jp2_decode(opj_jp2_t *jp2, opj_cio_t *cio, opj_codestream_info_t *cstr_info);
 /**
 Creates a JP2 compression structure
 @param cinfo Codec context info
@@ -221,7 +221,7 @@ Encode an image into a JPEG-2000 file stream
 @param cstr_info Codestream information structure if required, NULL otherwise
 @return Returns true if successful, returns false otherwise
 */
-bool jp2_encode(opj_jp2_t *jp2, opj_cio_t *cio, opj_image_t *image, opj_codestream_info_t *cstr_info);
+bool opj_jp2_encode(opj_jp2_t *jp2, opj_cio_t *cio, opj_image_t *image, opj_codestream_info_t *cstr_info);
 /* ----------------------------------------------------------------------- */
 /*@}*/
 

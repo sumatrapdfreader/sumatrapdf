@@ -1280,6 +1280,11 @@ static void j2k_read_sot(opj_j2k_t *j2k) {
 	
 	partno = cio_read(cio, 1);
 	numparts = cio_read(cio, 1);
+  
+  if (partno >= numparts) {
+    opj_event_msg(j2k->cinfo, EVT_WARNING, "SOT marker inconsistency in tile %d: tile-part index greater than number of tile-parts\n", tileno);
+    numparts = partno+1;
+  }
 	
 	j2k->curtileno = tileno;
 	j2k->cur_tp_num = partno;
@@ -1295,15 +1300,14 @@ static void j2k_read_sot(opj_j2k_t *j2k) {
 			j2k->cstr_info->tile[tileno].tileno = tileno;
 			j2k->cstr_info->tile[tileno].start_pos = cio_tell(cio) - 12;
 			j2k->cstr_info->tile[tileno].end_pos = j2k->cstr_info->tile[tileno].start_pos + totlen - 1;				
-			j2k->cstr_info->tile[tileno].num_tps = numparts;
-			if (numparts)
-				j2k->cstr_info->tile[tileno].tp = (opj_tp_info_t *) opj_malloc(numparts * sizeof(opj_tp_info_t));
-			else
-				j2k->cstr_info->tile[tileno].tp = (opj_tp_info_t *) opj_malloc(10 * sizeof(opj_tp_info_t)); // Fixme (10)
-		}
-		else {
+    } else {
 			j2k->cstr_info->tile[tileno].end_pos += totlen;
-		}		
+		}
+    j2k->cstr_info->tile[tileno].num_tps = numparts;
+    if (numparts)
+      j2k->cstr_info->tile[tileno].tp = (opj_tp_info_t *) opj_realloc(j2k->cstr_info->tile[tileno].tp, numparts * sizeof(opj_tp_info_t));
+    else
+      j2k->cstr_info->tile[tileno].tp = (opj_tp_info_t *) opj_realloc(j2k->cstr_info->tile[tileno].tp, 10 * sizeof(opj_tp_info_t)); // Fixme (10)
 		j2k->cstr_info->tile[tileno].tp[partno].tp_start_pos = cio_tell(cio) - 12;
 		j2k->cstr_info->tile[tileno].tp[partno].tp_end_pos = 
 			j2k->cstr_info->tile[tileno].tp[partno].tp_start_pos + totlen - 1;

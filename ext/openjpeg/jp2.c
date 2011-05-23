@@ -593,7 +593,7 @@ static bool jp2_read_colr(opj_jp2_t *jp2, opj_cio_t *cio,
 bool jp2_read_jp2h(opj_jp2_t *jp2, opj_cio_t *cio, opj_jp2_color_t *color) 
 {
 	opj_jp2_box_t box;
-	unsigned int jp2h_end;
+	int jp2h_end;
 
 	opj_common_ptr cinfo = jp2->cinfo;
 
@@ -626,7 +626,7 @@ bool jp2_read_jp2h(opj_jp2_t *jp2, opj_cio_t *cio, opj_jp2_color_t *color)
    }
 	jp2_read_boxhdr(cinfo, cio, &box);
 
-	while((unsigned int)cio_tell(cio) < jp2h_end)
+	while(cio_tell(cio) < jp2h_end)
    {
 	if(box.type == JP2_COLR)
   {
@@ -681,7 +681,7 @@ bool jp2_read_jp2h(opj_jp2_t *jp2, opj_cio_t *cio, opj_jp2_color_t *color)
 
 }/* jp2_read_jp2h() */
 
-opj_image_t* jp2_decode(opj_jp2_t *jp2, opj_cio_t *cio, 
+opj_image_t* opj_jp2_decode(opj_jp2_t *jp2, opj_cio_t *cio, 
 	opj_codestream_info_t *cstr_info) 
 {
 	opj_common_ptr cinfo;
@@ -743,7 +743,7 @@ opj_image_t* jp2_decode(opj_jp2_t *jp2, opj_cio_t *cio,
    }
 	return image;
 
-}/* jp2_decode() */
+}/* opj_jp2_decode() */
 
 
 void jp2_write_jp2h(opj_jp2_t *jp2, opj_cio_t *cio) {
@@ -1052,7 +1052,7 @@ void jp2_setup_encoder(opj_jp2_t *jp2, opj_cparameters_t *parameters, opj_image_
 	}
 	if (jp2->meth == 1) {
 		if (image->color_space == 1)
-			jp2->enumcs = 16;	/* sRGB as defined by IEC 61966𣇻 */
+			jp2->enumcs = 16;	/* sRGB as defined by IEC 61966-2.1 */
 		else if (image->color_space == 2)
 			jp2->enumcs = 17;	/* greyscale */
 		else if (image->color_space == 3)
@@ -1065,7 +1065,7 @@ void jp2_setup_encoder(opj_jp2_t *jp2, opj_cparameters_t *parameters, opj_image_
 
 }
 
-bool jp2_encode(opj_jp2_t *jp2, opj_cio_t *cio, opj_image_t *image, opj_codestream_info_t *cstr_info) {
+bool opj_jp2_encode(opj_jp2_t *jp2, opj_cio_t *cio, opj_image_t *image, opj_codestream_info_t *cstr_info) {
 
 	/* JP2 encoding */
 
