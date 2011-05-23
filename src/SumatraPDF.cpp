@@ -5961,8 +5961,8 @@ static LRESULT OnMouseWheel(WindowInfo& win, UINT message, WPARAM wParam, LPARAM
         return 0;
     }
     
-    // always scroll whole pages in Fit Page and Fit Content modes
-    if (ZOOM_FIT_PAGE == win.dm->zoomVirtual() ||
+    // make sure to scroll whole pages in non-continuous Fit Content mode
+    if (!displayModeContinuous(win.dm->displayMode()) &&
         ZOOM_FIT_CONTENT == win.dm->zoomVirtual()) {
         if (delta > 0)
             win.dm->goToPrevPage(0);

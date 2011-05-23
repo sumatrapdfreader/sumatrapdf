@@ -143,6 +143,10 @@ static void TStrTest()
     assert(5 == count);
     assert(str::Eq(buf, _T("one two three")));
 
+    count = str::NormalizeWS(buf);
+    assert(0 == count);
+    assert(str::Eq(buf, _T("one two three")));
+
     str = _T("[Open(\"filename.pdf\",0,1,0)]");
     {
         UINT u1 = 0;
