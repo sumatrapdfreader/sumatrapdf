@@ -320,21 +320,46 @@ size_t TransChars(WCHAR *str, const WCHAR *oldChars, const WCHAR *newChars)
     return findCount;
 }
 
-// Remove all characters in "toRemove" from "str", in place.
-// Returns number of removed characters.
-size_t RemoveChars(WCHAR *str, const WCHAR *toRemove)
+// replaces all whitespace characters with spaces, collapses several
+// consecutive spaces into one and strips heading/trailing ones
+// returns the number of removed characters
+size_t NormalizeWS(TCHAR *str)
 {
-    size_t removed = 0;
-    WCHAR *dst = str;
-    while (*str) {
-        WCHAR c = *str++;
-        if (str::FindChar(toRemove, c) == NULL) {
-            *dst++ = c;
-        } else {
-            ++removed;
+    TCHAR *src = str, *dst = str;
+    bool addedSpace = true;
+
+    for (; *src; src++) {
+        if (!_istspace(*src)) {
+            *dst++ = *src;
+            addedSpace = false;
+        }
+        else if (!addedSpace) {
+            *dst++ = ' ';
+            addedSpace = true;
         }
     }
-    *dst = 0;
+
+    if (dst > str && _istspace(*(dst - 1)))
+        dst--;
+    *dst = '\0';
+
+    return src - dst;
+}
+
+// Remove all characters in "toRemove" from "str", in place.
+// Returns number of removed characters.
+size_t RemoveChars(TCHAR *str, const TCHAR *toRemove)
+{
+    size_t removed = 0;
+    TCHAR *dst = str;
+    while (*str) {
+        TCHAR c = *str++;
+        if (!str::FindChar(toRemove, c))
+            *dst++ = c;
+        else
+            ++removed;
+    }
+    *dst = '\0';
     return removed;
 }
 

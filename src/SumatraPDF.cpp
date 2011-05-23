@@ -5561,7 +5561,7 @@ static HTREEITEM AddTocItemToView(HWND hwnd, DocToCItem *entry, HTREEITEM parent
     tvinsert.itemex.stateMask = TVIS_EXPANDED;
     tvinsert.itemex.lParam = (LPARAM)entry;
     // Replace unprintable whitespace with regular spaces
-    str::TransChars(entry->title, _T("\t\n\v\f\r"), _T("     "));
+    str::NormalizeWS(entry->title);
     tvinsert.itemex.pszText = entry->title;
 
 #ifdef DISPLAY_TOC_PAGE_NUMBERS

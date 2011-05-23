@@ -530,14 +530,23 @@ void LinkHandler::ScrollTo(PageDestination *dest)
 // caller needs to free() the result
 static TCHAR *NormalizeFuzzy(const TCHAR *str)
 {
-    ScopedMem<TCHAR> dup(str::Dup(str));
+    TCHAR *dup = str::Dup(str);
     CharLower(dup);
-
     // cf. AddTocItemToView in SumatraPDF.cpp
-    str::TransChars(dup, _T("\t\n\v\f\r"), _T("     "));
-    StrVec parts;
-    parts.Split(dup, _T(" "), true);
-    return parts.Join(_T(" "));
+    str::NormalizeWS(dup);
+    return dup;
+}
+
+static bool MatchFuzzy(const TCHAR *s1, const TCHAR *s2, bool partially=false)
+{
+    if (!partially)
+        return str::Eq(s1, s2);
+
+    // only match at the start of a word (at the beginning and after a space)
+    for (const TCHAR *last = s1; (last = str::Find(last, s2)); last++)
+        if (last == s1 || *(last - 1) == ' ')
+            return true;
+    return false;
 }
 
 // finds the first ToC entry that (partially) matches a given normalized name
@@ -546,7 +555,7 @@ PageDestination *LinkHandler::FindToCItem(DocToCItem *item, const TCHAR *name, b
 {
     for (; item; item = item->next) {
         ScopedMem<TCHAR> fuzTitle(NormalizeFuzzy(item->title));
-        if (partially ? str::Find(fuzTitle, name) : str::Eq(fuzTitle, name))
+        if (MatchFuzzy(fuzTitle, name, partially))
             return item->GetLink();
         PageDestination *dest = FindToCItem(item->child, name, partially);
         if (dest)
