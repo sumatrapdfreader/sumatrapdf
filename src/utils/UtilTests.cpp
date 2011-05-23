@@ -128,6 +128,11 @@ static void TStrTest()
     count = str::TransChars(buf, _T(""), _T("X"));
     assert(str::Eq(buf, _T("AbC")) && count == 0);
 
+    str::BufSet(buf, dimof(buf), _T("blogarapato"));
+    count = str::RemoveChars(buf, _T("bo"));
+    assert(3 == count);
+    assert(str::Eq(buf, _T("lgarapat")));
+
     str = _T("[Open(\"filename.pdf\",0,1,0)]");
     {
         UINT u1 = 0;

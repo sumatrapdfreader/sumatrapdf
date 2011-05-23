@@ -84,6 +84,8 @@ WCHAR * Format(const WCHAR *fmt, ...);
 size_t  TransChars(char *str, const char *oldChars, const char *newChars);
 size_t  TransChars(WCHAR *str, const WCHAR *oldChars, const WCHAR *newChars);
 
+size_t  RemoveChars(WCHAR *str, const WCHAR *toRemove);
+
 size_t  BufSet(char *dst, size_t dstCchSize, const char *src);
 size_t  BufSet(WCHAR *dst, size_t dstCchSize, const WCHAR *src);
 

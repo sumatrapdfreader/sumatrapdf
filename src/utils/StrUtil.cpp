@@ -320,6 +320,24 @@ size_t TransChars(WCHAR *str, const WCHAR *oldChars, const WCHAR *newChars)
     return findCount;
 }
 
+// Remove all characters in "toRemove" from "str", in place.
+// Returns number of removed characters.
+size_t RemoveChars(WCHAR *str, const WCHAR *toRemove)
+{
+    size_t removed = 0;
+    WCHAR *dst = str;
+    while (*str) {
+        WCHAR c = *str++;
+        if (str::FindChar(toRemove, c) == NULL) {
+            *dst++ = c;
+        } else {
+            ++removed;
+        }
+    }
+    *dst = 0;
+    return removed;
+}
+
 // Note: BufSet() should only be used when absolutely necessary (e.g. when
 // handling buffers in OS-defined structures)
 // returns the number of characters written (without the terminating \0)

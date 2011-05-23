@@ -3,6 +3,10 @@ the release notes, as we make them, to make the release process easier.
 
 Next version:
 
+* -named-dest also matches strings in table of contents 
+
+1.7 (2011-??)
+
 * optional previewing of PDF documents in Windows Vista and 7 (creates
   thumbnails and displays documents in Explorer's Preview pane)
 * display Frequently Read list when no document is open
