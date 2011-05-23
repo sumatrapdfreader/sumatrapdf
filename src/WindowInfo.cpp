@@ -530,12 +530,14 @@ void LinkHandler::ScrollTo(PageDestination *dest)
 // caller needs to free() the result
 static TCHAR *NormalizeFuzzy(const TCHAR *str)
 {
-    TCHAR *res = str::Dup(str);
-    CharLower(res);
+    ScopedMem<TCHAR> dup(str::Dup(str));
+    CharLower(dup);
 
     // cf. AddTocItemToView in SumatraPDF.cpp
-    str::RemoveChars(res, _T(" \t\n\v\f\r"));
-    return res;
+    str::TransChars(dup, _T("\t\n\v\f\r"), _T("     "));
+    StrVec parts;
+    parts.Split(dup, _T(" "), true);
+    return parts.Join(_T(" "));
 }
 
 // finds the first ToC entry that (partially) matches a given normalized name
