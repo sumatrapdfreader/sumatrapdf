@@ -25,6 +25,9 @@ Contributor: Tri R.A. Wibowo
 &Back\tAlt+Left Arrow
 Kembali\tAlt+<-
 
+&Book View\tCtrl-8
+Tampilan &Buku\tCtrl-8
+
 &Close\tCtrl-W
 &Tutup\tCtrl-W
 
@@ -39,6 +42,9 @@ Salin Hasil Seleksi\tCtrl-C
 
 &Even pages only
 Hanya halaman gena&p
+
+&Facing\tCtrl-7
+Meng&hadap\tCtrl-7
 
 &File
 &Berkas
@@ -88,11 +94,17 @@ Hanya halaman ganji&l
 &Open\tCtrl-O
 &Buka\tCtrl-O
 
+&Open Document
+Buka D&okumen
+
 &Options...
 &Pilihan...
 
 &Password:
 &Kata kunci:
+
+&Pin Document
+&Pin Dokumen
 
 &Previous Page\tLeft Arrow
 Halaman Sebelumnya\t<-
@@ -112,6 +124,9 @@ Halaman Sebelumnya\t<-
 &Remember these settings for each document
 &Ingat pengaturan ini untuk setiap dokumen
 
+&Remove Document
+&Singkirkan Dokumen
+
 &Save As...
 Si&mpan Sebagai...
 
@@ -123,6 +138,9 @@ Si&mpan Sebagai...
 
 &Shrink pages to printable area (if necessary)
 &Perkecil halaman ke area cetakan (jika dibutuhkan)
+
+&Single Page\tCtrl-6
+Halaman &Tunggal\tCtrl-6
 
 &Skip this version
 &Lewatkan versi ini
@@ -457,6 +475,9 @@ Halaman:
 Please wait - rendering...
 Harap tunggu - sedang proses rendering...
 
+Postscript documents
+Dokumen Postscript
+
 Pr&esentation\tCtrl-L
 Presentasi\tCtrl-L
 
@@ -522,6 +543,9 @@ Tampilkan kolom &markah jika tersedia
 
 Single Page
 Halaman Tunggal
+
+Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
+Maaf, itu tidak boleh terjadi!\n\nHarap tekan 'Batalkan', jika Anda ingin membantu kami membetulkan penyebab crash ini.
 
 Source file %s has no synchronization point
 Berkas asal %s tidak mempunyai titik sinkronisasi
@@ -594,14 +618,4 @@ menyalin teks
 
 printing document
 mencetak dokumen
-
-# Untranslated:
-#&Book View\tCtrl-8
-#&Facing\tCtrl-7
-#&Open Document
-#&Pin Document
-#&Remove Document
-#&Single Page\tCtrl-6
-#Postscript documents
-#Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
 
