@@ -496,7 +496,7 @@ Printing page %d of %d...
 A imprimir página %d de %d...
 
 Printing problem.
-Erro de	impressão.
+Erro de impressão.
 
 Remember &opened files
 Lembrar ficheiros abert&os

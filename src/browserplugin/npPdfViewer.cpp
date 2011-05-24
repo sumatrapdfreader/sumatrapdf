@@ -237,14 +237,14 @@ HANDLE CreateTempFile(TCHAR *filePathBufOut)
 /* ::::: Plugin Window Procedure ::::: */
 
 typedef struct {
-    NPWindow *	npwin;
-    LPCTSTR		message;
-    TCHAR		filepath[MAX_PATH];
-    HANDLE		hFile;
-    HANDLE		hProcess;
-    TCHAR		exepath[MAX_PATH + 2];
-    float		progress, prevProgress;
-    uint32_t	totalSize, currSize;
+    NPWindow *  npwin;
+    LPCTSTR     message;
+    TCHAR       filepath[MAX_PATH];
+    HANDLE      hFile;
+    HANDLE      hProcess;
+    TCHAR       exepath[MAX_PATH + 2];
+    float       progress, prevProgress;
+    uint32_t    totalSize, currSize;
 } InstanceData;
 
 #define COL_WINDOW_BG RGB(0xcc, 0xcc, 0xcc)

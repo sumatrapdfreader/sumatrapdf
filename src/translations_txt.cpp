@@ -866,7 +866,7 @@ const char *gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "Intervalo de impress\303\243o",
   "A impress\303\243o est\303\241 a decorrer. Cancelar e reiniciar?",
   "A imprimir p\303\241gina %d de %d...",
-  "Erro de	impress\303\243o.",
+  "Erro de impress\303\243o.",
   "Lembrar ficheiros abert&os",
   "Rodar \303\240 &esquerda\tCtrl-Shift--",
   "Rodar \303\240 &direita\tCtrl-Shift-+",

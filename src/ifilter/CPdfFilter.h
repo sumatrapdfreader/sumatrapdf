@@ -26,7 +26,7 @@ public:
     }
 
 private:
-	PDF_FILTER_STATE m_state;
+    PDF_FILTER_STATE m_state;
     int m_iPageNo;
     PdfEngine *m_pdfEngine;
 };
