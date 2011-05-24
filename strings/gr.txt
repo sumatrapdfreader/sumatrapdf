@@ -43,6 +43,9 @@ Contributor: XhmikosR
 &Even pages only
 &Μόνο οι μονές σελίδες
 
+&Facing\tCtrl-7
+&Αντικριστές σελίδες\tCtrl-7
+
 &File
 &Αρχείο
 
@@ -472,6 +475,9 @@ Page:
 Please wait - rendering...
 Παρακαλώ περιμένετε - φόρτωση...
 
+Postscript documents
+Έγγραφα Postscript
+
 Pr&esentation\tCtrl-L
 &Παρουσίαση\tCtrl-L
 
@@ -537,6 +543,9 @@ Show the &bookmarks sidebar when available
 
 Single Page
 Μονή Σελίδα
+
+Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
+Μας συγχωρείτε για το αναπάντεχο σφάλμα που συνέβη!\n\nΑν θέλετε να μας βοηθήσετε να αντιμετωπίσουμε το προβλήμα, παρακαλούμε πατήστε 'Άκυρο'.
 
 Source file %s has no synchronization point
 Το αρχείο προέλευσης %s δεν έχει σημείο συγχρονισμού
@@ -609,9 +618,4 @@ copying text
 
 printing document
 εκτύπωση εγγράφου
-
-# Untranslated:
-#&Facing\tCtrl-7
-#Postscript documents
-#Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
 

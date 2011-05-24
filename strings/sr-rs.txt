@@ -24,6 +24,9 @@ Contributor: Милан Гашић
 &Back\tAlt+Left Arrow
 Назад\tAlt+<-
 
+&Book View\tCtrl-8
+Изглед књиге\tCtrl-8
+
 &Close\tCtrl-W
 Затвори\tCtrl-W
 
@@ -39,6 +42,9 @@ Contributor: Милан Гашић
 &Even pages only
 Само лица страница
 
+&Facing\tCtrl-7
+Две странице\tCtrl-7
+
 &File
 Датотека
 
@@ -46,7 +52,7 @@ Contributor: Милан Гашић
 Појам:
 
 &First Page\tHome
-Прва страна\tHome
+Прва страница\tHome
 
 &Fit pages to printable area
 Подеси странице на област штампања
@@ -61,7 +67,7 @@ Contributor: Милан Гашић
 Помоћ
 
 &Last Page\tEnd
-Последња страна\tEnd
+Последња страница\tEnd
 
 &Magnification:
 Увећање:
@@ -73,7 +79,7 @@ Contributor: Милан Гашић
 Разликуј мала и велика слова
 
 &Next Page\tRight Arrow
-Следећа страна\t->
+Следећа страница\t->
 
 &No
 Не
@@ -87,14 +93,20 @@ Contributor: Милан Гашић
 &Open\tCtrl-O
 Отвори\tCtrl-O
 
+&Open Document
+Отвори документ
+
 &Options...
 Опције
 
 &Password:
 Лозинка
 
+&Pin Document
+Прикачи документ
+
 &Previous Page\tLeft Arrow
-Претходна страна\t<-
+Претходна страница\t<-
 
 &Print...
 Штампај...
@@ -103,13 +115,16 @@ Contributor: Милан Гашић
 Штампај\tCtrl-P
 
 &Print... (denied)
-Штампање... (одбијено)
+Штампај... (одбијено)
 
 &Remember the password for this document
 Запамти лозинку за овај документ
 
 &Remember these settings for each document
 Запамти ова подешавања за сваки појединачни документ
+
+&Remove Document
+Уклони документ
 
 &Save As...
 Сачувај као...
@@ -121,7 +136,10 @@ Contributor: Милан Гашић
 Подешавања
 
 &Shrink pages to printable area (if necessary)
-Скупи страницу на област штампања (уколико је неопходно)
+Скупи странице на област штампања (уколико је неопходно)
+
+&Single Page\tCtrl-6
+Појединачна страница\tCtrl-6
 
 &Skip this version
 Прескочи ову верзију
@@ -217,7 +235,7 @@ Continuous Book View
 Нерекидни изглед књиге
 
 Continuous Facing
-Непрекидно, две стране
+Непрекидно, две странице
 
 Contribute Translation
 Помози у превођењу овог програма
@@ -238,7 +256,7 @@ Couldn't initialize printer
 Није могуће покренути штампач
 
 Couldn't render the page
-Немогуће приказивање стране
+Немогуће приказивање странице
 
 Created:
 Израђено:
@@ -253,10 +271,13 @@ Default &Zoom:
 Подразумевано увећање
 
 Default PDF reader can't be changed in portable mode
-Главни PDF читач не може бити промењен у преносивном м?ду
+Главни PDF читач не може бити промењен у преносивном моду
 
 Denied Permissions:
 Није допуштено:
+
+DjVu documents
+DjVu документи
 
 Document Properties
 Особине документа
@@ -286,7 +307,7 @@ F&ullscreen\tCtrl-Shift-L
 Цео екран\tCtrl-Shift-L
 
 Facing
-Две стране
+Две странице
 
 Failed to save a file
 Грешка при снимању PDF документа
@@ -316,7 +337,7 @@ Fit &Content\tCtrl-3
 Прилагоди садржају\tCtrl-3
 
 Fit &Page\tCtrl-0
-Прилагоди страни\tCtrl-0
+Прилагоди страници\tCtrl-0
 
 Fit &Width\tCtrl-2
 Прилагоди ширини\tCtrl-2
@@ -325,7 +346,7 @@ Fit Content
 Прилагоди садржају
 
 Fit Page
-Прилагоди страни
+Прилагоди страници
 
 Fit Width
 Прилагоди ширини
@@ -349,7 +370,7 @@ GB
 GB
 
 Go to page
-Иди на страну
+Иди на страницу
 
 Hide frequently read
 Сакриј често читано
@@ -382,7 +403,7 @@ New version %s is available. Download new version?
 Доступна је верзија %s. Преузети нову верзију?
 
 Next Page
-Следећа страна
+Следећа страница
 
 No matches were found
 Појам није пронађен
@@ -436,7 +457,7 @@ PDF documents
 PDF документи
 
 Pa&ge...\tCtrl-G
-Страна...\tCtrl-G
+Страница...\tCtrl-G
 
 Page Size:
 Величина странице
@@ -448,19 +469,31 @@ Page scaling
 Размеравање странице
 
 Page:
-Страна:
+Страница:
 
 Please wait - rendering...
 Молимо сачекајте - спремам приказ...
+
+Postscript documents
+Postscript документи
 
 Pr&esentation\tCtrl-L
 Презентација\tCtrl-L
 
 Previous Page
-Претходна страна
+Претходна страница
+
+Print
+Штампај
 
 Print range
 Опсег штампања
+
+Printing is still in progress. Abort and start over?
+Штампање је још увек у току. Прекини и поново почни?
+
+Printing page %d of %d...
+Штампање стране %d од %d...
 
 Printing problem.
 Проблем при штампању
@@ -478,7 +511,7 @@ Save S&hortcut...\tCtrl-Shift-S
 Сачувај пречицу...\tCtrl-Shift-S
 
 Searching %d of %d...
-Претражујем страну %d од %d...
+Претражујем страницу %d од %d...
 
 Select &All
 Изабери све
@@ -499,7 +532,7 @@ Show &Toolbar
 Прикажи траку са алатима
 
 Show &pages continuously
-Непрекидни приказ страна
+Непрекидни приказ страница
 
 Show frequently read
 Прикажи често читано
@@ -508,7 +541,10 @@ Show the &bookmarks sidebar when available
 Прикажи траку са белешкама када је доступна
 
 Single Page
-Једна страна
+Појединачна страница
+
+Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
+Извини, ово се није требало догодити!\n\nмолим притисни 'Одустани', уколико желиш да нам помогнеш да решимо узрок овог рушења.
 
 Source file %s has no synchronization point
 Изворна датотека %s нема тачку синхронизације
@@ -547,7 +583,7 @@ View
 Приказ
 
 Visit &Website
-Посети Интернет страну
+Посети Интернет страницу
 
 Warning
 Упозорење
@@ -581,18 +617,4 @@ copying text
 
 printing document
 штампање документа
-
-# Untranslated:
-#&Book View\tCtrl-8
-#&Facing\tCtrl-7
-#&Open Document
-#&Pin Document
-#&Remove Document
-#&Single Page\tCtrl-6
-#DjVu documents
-#Postscript documents
-#Print
-#Printing is still in progress. Abort and start over?
-#Printing page %d of %d...
-#Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
 
