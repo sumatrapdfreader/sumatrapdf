@@ -6070,6 +6070,13 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
             OnMouseRightButtonUp(*win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
             break;
 
+        case WM_CONTEXTMENU:
+            if (win->IsDocLoaded())
+                OnContextMenu(*win, 0, 0);
+            else
+                OnAboutContextMenu(*win, 0, 0);
+            break;
+
         case WM_SETCURSOR:
             if (OnSetCursor(*win, hwnd))
                 return TRUE;
@@ -6472,13 +6479,12 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
             break;
 
         case WM_CONTEXTMENU:
-            if (win) {
-                if (win->IsDocLoaded())
-                    OnContextMenu(*win, 0, 0);
-                else
-                    OnAboutContextMenu(*win, 0, 0);
-            }
-            break;
+            // opening the context menu with a keyboard doesn't call the canvas'
+            // WM_CONTEXTMENU, as it never has the focus (mouse right-clicks are
+            // handled as expected)
+            if (win && GET_X_LPARAM(lParam) == -1 && GET_Y_LPARAM(lParam) == -1 && GetFocus() != win->hwndTocTree)
+                return SendMessage(win->hwndCanvas, WM_CONTEXTMENU, wParam, lParam);
+            return DefWindowProc(hwnd, message, wParam, lParam);
 
         case WM_SETTINGCHANGE:
 InitMouseWheelInfo:
