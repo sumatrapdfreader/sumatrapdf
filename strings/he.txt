@@ -473,6 +473,9 @@ Page:
 Please wait - rendering...
 אנא המתן – מבצע...
 
+Postscript documents
+מסמכי פוסטקריפט
+
 Pr&esentation\tCtrl-L
 הצגה\tCtrl-L
 
@@ -538,6 +541,9 @@ Show the &bookmarks sidebar when available
 
 Single Page
 דף יחיד
+
+Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
+מצטער זה לא היה צריך לקרות!\n\nאנא הקלד בטל אם ברצונך לעזור לנו לתקן תקלה זו.
 
 Source file %s has no synchronization point
 %s אין נקודת סנכרון לקובץ מקור
@@ -610,8 +616,4 @@ copying text
 
 printing document
 מדפיס מסמך
-
-# Untranslated:
-#Postscript documents
-#Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
 
