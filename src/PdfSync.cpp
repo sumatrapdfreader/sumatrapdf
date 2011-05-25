@@ -26,7 +26,7 @@ private:
     int scan_and_build_index(FILE *fp);
     UINT source_to_record(FILE *fp, const TCHAR* srcfilename, UINT line, UINT col, Vec<size_t>& records);
     FILE *opensyncfile();
-    void make_abs_path(char *path, size_t maxPathLen);
+    void make_abs_path(TCHAR *path, size_t maxPathLen);
 
 private:
     Vec<size_t> pdfsheet_index; // pdfsheet_index[i] contains the index in pline_sections of the first pline section for that sheet
@@ -168,13 +168,12 @@ int Pdfsync::get_record_section(int record_index)
     return -1;
 }
 
-void Pdfsync::make_abs_path(char *path, size_t maxPathLen)
+void Pdfsync::make_abs_path(TCHAR *path, size_t maxPathLen)
 {
-    if (PathIsRelativeA(path)) {
-        ScopedMem<TCHAR> tpath(str::conv::FromAnsi(path));
-        ScopedMem<TCHAR> absPath(path::Join(dir, tpath));
-        ScopedMem<char> apath(str::conv::ToAnsi(absPath));
-        str::BufSet(path, maxPathLen, apath);
+    if (PathIsRelative(path)) {
+        ScopedMem<TCHAR> absPath(path::Join(dir, path));
+        if (absPath)
+            str::BufSet(path, maxPathLen, absPath);
     }
 }
 
@@ -204,7 +203,8 @@ int Pdfsync::scan_and_build_index(FILE *fp)
     fgetline(buf, dimof(buf), fp); // get the job name from the first line
     // replace star by spaces (somehow tex replaces spaces by stars in the jobname)
     str::TransChars(buf, "*", " ");
-    ScopedMem<char> jobName(str::Join(buf, ".tex"));
+    ScopedMem<TCHAR> jobName(str::conv::FromAnsi(buf));
+    jobName.Set(str::Join(jobName, _T(".tex")));
 
     UINT versionNumber = 0;
     int ret = fscanf(fp, "version %u\n", &versionNumber);
@@ -260,14 +260,16 @@ int Pdfsync::scan_and_build_index(FILE *fp)
                 s.last_recordsection = (size_t)-1;
 
                 // read the filename
-                fgetline(s.filename, dimof(s.filename), fp);
+                fgetline(buf, dimof(buf), fp);
+                ScopedMem<TCHAR> filename(str::conv::FromAnsi(buf));
+                str::BufSet(s.filename, dimof(s.filename), filename);
 
-                CASSERT(sizeof(s.filename) == MAX_PATH, sufficient_path_length);
+                CASSERT(dimof(s.filename) == MAX_PATH, sufficient_path_length);
                 // if the filename contains quotes then remove them
-                PathUnquoteSpacesA(s.filename);
+                PathUnquoteSpaces(s.filename);
                 // if the file name extension is not specified then add the suffix '.tex'
-                if (!str::FindChar(s.filename, '.'))
-                    PathAddExtensionA(s.filename, ".tex");
+                if (str::IsEmpty(path::GetExt(s.filename)))
+                    PathAddExtension(s.filename, _T(".tex"));
                 // ensure that the path is absolute
                 make_abs_path(s.filename, dimof(s.filename));
 #ifndef NDEBUG
@@ -449,8 +451,7 @@ UINT Pdfsync::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR srcfilepath, UINT 
     int sec = this->get_record_section(selected_record);
 
     // get the file name from the record section
-    char *srcFilenameA = this->srcfiles[record_sections[sec].srcfile].filename;
-    ScopedMem<TCHAR> srcFilename(str::conv::FromAnsi(srcFilenameA));
+    TCHAR *srcFilename = this->srcfiles[record_sections[sec].srcfile].filename;
     str::BufSet(srcfilepath, cchFilepath, srcFilename);
 
     // find the record declaration in the section
@@ -491,19 +492,23 @@ UINT Pdfsync::source_to_record(FILE *fp, const TCHAR* srcfilename, UINT line, UI
     if (!srcfilename)
         return PDFSYNCERR_INVALID_ARGUMENT;
 
-    char *mb_srcfilename = str::conv::ToAnsi(srcfilename);
-    if (!mb_srcfilename)
+    ScopedMem<TCHAR> srcfilepath;
+    // convert the source file to an absolute path
+    if (PathIsRelative(srcfilename))
+        srcfilepath.Set(path::Join(dir, srcfilename));
+    else
+        srcfilepath.Set(str::Dup(srcfilename));
+    if (!srcfilepath)
         return PDFSYNCERR_OUTOFMEMORY;
 
     // find the source file entry
     size_t isrc = (size_t)-1;
     for (size_t i = 0; i < this->srcfiles.Count(); i++) {
-        if (str::EqI(mb_srcfilename, this->srcfiles[i].filename)) {
+        if (path::IsSame(srcfilepath, this->srcfiles[i].filename)) {
             isrc = i;
             break;
         }
     }
-    free(mb_srcfilename);
     if (isrc == (size_t)-1)
         return PDFSYNCERR_UNKNOWN_SOURCEFILE;
 
@@ -633,13 +638,11 @@ int SyncTex::rebuild_index() {
     if (this->scanner)
         synctex_scanner_free(this->scanner);
 
-    char *mb_syncfname = str::conv::ToAnsi(this->syncfilepath);
-    if (mb_syncfname==NULL)
+    ScopedMem<char> syncfname(str::conv::ToAnsi(syncfilepath));
+    if (!syncfname)
         return PDFSYNCERR_OUTOFMEMORY;
 
-    this->scanner = synctex_scanner_new_with_output_file(mb_syncfname, NULL, 1);
-    free(mb_syncfname);
-
+    scanner = synctex_scanner_new_with_output_file(syncfname, NULL, 1);
     if (!scanner)
         return 1; // cannot rebuild the index
     return Synchronizer::rebuild_index();
@@ -653,7 +656,7 @@ UINT SyncTex::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR srcfilepath, UINT 
 
     if (synctex_edit_query(this->scanner, sheet, (float)x, (float)y) < 0)
         return PDFSYNCERR_NO_SYNC_AT_LOCATION;
-        
+
     synctex_node_t node;
     while (node = synctex_next_result(this->scanner)) {
         *line = synctex_node_line(node);
@@ -681,13 +684,14 @@ UINT SyncTex::source_to_pdf(const TCHAR* srcfilename, UINT line, UINT col, UINT 
         if (rebuild_index())
             return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
 
-    ScopedMem<TCHAR> srcfilepath(NULL);
-
+    ScopedMem<TCHAR> srcfilepath;
     // convert the source file to an absolute path
     if (PathIsRelative(srcfilename))
         srcfilepath.Set(path::Join(dir, srcfilename));
     else
         srcfilepath.Set(str::Dup(srcfilename));
+    if (!srcfilepath)
+        return PDFSYNCERR_OUTOFMEMORY;
 
     char *mb_srcfilepath = str::conv::ToAnsi(srcfilepath);
     if (!mb_srcfilepath)

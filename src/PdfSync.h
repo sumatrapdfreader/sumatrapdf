@@ -40,7 +40,7 @@ enum {  PDFSYNCERR_SUCCESS,                   // the synchronization succeeded
 };
 
 typedef struct {
-    char filename[_MAX_PATH]; // source file name
+    TCHAR filename[MAX_PATH]; // source file name
 #ifndef NDEBUG
     fpos_t openline_pos;    // start of the scope in the sync file
     fpos_t closeline_pos;   // end of the scope
