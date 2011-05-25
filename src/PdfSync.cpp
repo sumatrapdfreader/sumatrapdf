@@ -26,6 +26,7 @@ private:
     int scan_and_build_index(FILE *fp);
     UINT source_to_record(FILE *fp, const TCHAR* srcfilename, UINT line, UINT col, Vec<size_t>& records);
     FILE *opensyncfile();
+    void make_abs_path(char *path, size_t maxPathLen);
 
 private:
     Vec<size_t> pdfsheet_index; // pdfsheet_index[i] contains the index in pline_sections of the first pline section for that sheet
@@ -167,6 +168,16 @@ int Pdfsync::get_record_section(int record_index)
     return -1;
 }
 
+void Pdfsync::make_abs_path(char *path, size_t maxPathLen)
+{
+    if (PathIsRelativeA(path)) {
+        ScopedMem<TCHAR> tpath(str::conv::FromAnsi(path));
+        ScopedMem<TCHAR> absPath(path::Join(dir, tpath));
+        ScopedMem<char> apath(str::conv::ToAnsi(absPath));
+        str::BufSet(path, maxPathLen, apath);
+    }
+}
+
 // TODO: maybe would be easier to load into memory and parse from there
 FILE *Pdfsync::opensyncfile()
 {
@@ -209,6 +220,7 @@ int Pdfsync::scan_and_build_index(FILE *fp)
     s.first_recordsection = (size_t)-1;
     s.last_recordsection = (size_t)-1;
     str::BufSet(s.filename, dimof(s.filename), jobName);
+    make_abs_path(s.filename, dimof(s.filename));
 #ifndef NDEBUG    
     s.closeline_pos = -1;
     fgetpos(fp, &s.openline_pos);
@@ -256,6 +268,8 @@ int Pdfsync::scan_and_build_index(FILE *fp)
                 // if the file name extension is not specified then add the suffix '.tex'
                 if (!str::FindChar(s.filename, '.'))
                     PathAddExtensionA(s.filename, ".tex");
+                // ensure that the path is absolute
+                make_abs_path(s.filename, dimof(s.filename));
 #ifndef NDEBUG
                 s.openline_pos = linepos;
                 s.closeline_pos = -1;
@@ -437,9 +451,6 @@ UINT Pdfsync::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR srcfilepath, UINT 
     // get the file name from the record section
     char *srcFilenameA = this->srcfiles[record_sections[sec].srcfile].filename;
     ScopedMem<TCHAR> srcFilename(str::conv::FromAnsi(srcFilenameA));
-    // Convert the source filepath to an absolute path
-    if (PathIsRelative(srcFilename))
-        srcFilename.Set(path::Join(this->dir, srcFilename));
     str::BufSet(srcfilepath, cchFilepath, srcFilename);
 
     // find the record declaration in the section
@@ -460,7 +471,6 @@ UINT Pdfsync::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR srcfilepath, UINT 
     }
     assert(found);
 
-    
     fclose(fp);
     return PDFSYNCERR_SUCCESS;
 }
@@ -549,8 +559,8 @@ read_linerecords:
         recordNumber = 0;
         fscanf(fp, "%c %u %u %u\n", &c, &recordNumber, &lineNumber, &columnNumber);
     } while (c == 'l' && !feof(fp) && (lineNumber == closestrecline));
-    return PDFSYNCERR_SUCCESS;
 
+    return PDFSYNCERR_SUCCESS;
 }
 
 UINT Pdfsync::source_to_pdf(const TCHAR* srcfilename, UINT line, UINT col, UINT *page, Vec<RectI> &rects)
