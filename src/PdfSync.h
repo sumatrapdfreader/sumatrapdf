@@ -12,19 +12,6 @@
 #include "Vec.h"
 #include <time.h>
 
-// size of the mark highlighting the location calculated by forward-search
-#define MARK_SIZE                            10 
-
-// maximum error in the source file line number when doing forward-search
-#define EPSILON_LINE                         5  
-
-// Minimal error distance^2 between a point clicked by the user and a PDF mark
-#define PDFSYNC_EPSILON_SQUARE               800
-
-// Minimal vertical distance
-#define PDFSYNC_EPSILON_Y                    20
-
-//////
 // Error codes returned by the synchronization functions
 enum {  PDFSYNCERR_SUCCESS,                   // the synchronization succeeded
         PDFSYNCERR_SYNCFILE_NOTFOUND,         // no sync file found
@@ -39,41 +26,6 @@ enum {  PDFSYNCERR_SUCCESS,                   // the synchronization succeeded
         PDFSYNCERR_INVALID_ARGUMENT
 };
 
-typedef struct {
-    TCHAR filename[MAX_PATH]; // source file name
-#ifndef NDEBUG
-    fpos_t openline_pos;    // start of the scope in the sync file
-    fpos_t closeline_pos;   // end of the scope
-#endif
-    size_t first_recordsection; // index of the first record section of that file
-    size_t last_recordsection;  // index of the last record section of that file
-} src_file;
-
-
-// a plines_section is a section of consecutive lines of the form "p ..."
-typedef struct {
-    fpos_t startpos; // position of the first "p ..." line
-#ifndef NDEBUG
-    fpos_t endpos;
-#endif
-} plines_section;
-
-
-// a section of consecutive records declarations in the syncfile ('l' lines)
-typedef struct {
-    size_t srcfile;           // index of the `scoping' source file 
-    fpos_t startpos;       // start position in the sync file
-    UINT firstrecord;      // number of the first record in the section
-#ifndef NDEBUG
-    fpos_t endpos;         // end position in the sync file
-    int highestrecord;      // highest record #
-#endif
-} record_section;
-
-
-#define PDF_EXTENSION     _T(".PDF")
-#define PDFSYNC_EXTENSION _T(".PDFSYNC")
-
 // System of point coordinates
 enum CoordSystem {
     TopLeft,    // origin at the top-left corner
@@ -83,15 +35,14 @@ enum CoordSystem {
 class Synchronizer
 {
 public:
-    Synchronizer(const TCHAR* _syncfilepath) {
-        this->index_discarded = true;
-        this->coordsys = BottomLeft; // by default set the internal coordinate system to bottom-left
-        this->dir = path::GetDir(_syncfilepath);
-        str::BufSet(this->syncfilepath, dimof(this->syncfilepath), _syncfilepath);
+    Synchronizer(const TCHAR* _syncfilepath, CoordSystem coordsys=BottomLeft) :
+        index_discarded(true), coordsys(coordsys),
+        syncfilepath(str::Dup(_syncfilepath)), dir(path::GetDir(_syncfilepath)) {
         _tstat(_syncfilepath, &syncfileTimestamp);
     }
     virtual ~Synchronizer() {
         free(dir);
+        free(syncfilepath);
     }
 
     // conversion from one coordinate system to another
@@ -100,12 +51,6 @@ public:
         if (src != this->coordsys)
             *y = pageHeight - *y;
     }
-    void convert_coord_from_internal(int *x, int *y, int pageHeight, CoordSystem dst)
-    {
-        if (dst != this->coordsys)
-            *y = pageHeight - *y;
-    }
-
     void convert_coord_from_internal(RectI *rc, int pageHeight, CoordSystem dst)
     {
         if (dst != this->coordsys)
@@ -129,11 +74,11 @@ public:
     // coordinate system.
     virtual UINT source_to_pdf(const TCHAR* srcfilename, UINT line, UINT col, UINT *page, Vec<RectI>& rects) = 0;
 
-    void discard_index() { this->index_discarded = true; }
+    void discard_index() { index_discarded = true; }
     bool is_index_discarded() const
     {
         // was the index manually discarded?
-        if (this->index_discarded)
+        if (index_discarded)
             return true;
 
         // has the synchronization file been changed on disk?
@@ -151,10 +96,10 @@ public:
 
     int rebuild_index()
     {
-        this->index_discarded = false;
+        index_discarded = false;
         // save sync file timestamp
         _tstat(syncfilepath, &syncfileTimestamp);
-        return 0;
+        return PDFSYNCERR_SUCCESS;
     }
 
     // the caller must free() the command line
@@ -165,7 +110,7 @@ private:
     struct _stat syncfileTimestamp; // time stamp of sync file when index was last built
 
 protected:
-    TCHAR syncfilepath[MAX_PATH]; // path  to the synchronization file
+    TCHAR * syncfilepath; // path to the synchronization file
     CoordSystem coordsys; // system used internally by the syncfile for the PDF coordinates
     TCHAR * dir;          // directory where the syncfile lies
 
