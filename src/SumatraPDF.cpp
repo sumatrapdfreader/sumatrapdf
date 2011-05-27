@@ -3555,7 +3555,7 @@ static void OnMenuPrint(WindowInfo& win)
 static void OnMenuSaveAs(WindowInfo& win)
 {
     OPENFILENAME   ofn = {0};
-    TCHAR          dstFileName[MAX_PATH] = {0};
+    TCHAR          dstFileName[MAX_PATH];
     const TCHAR *  srcFileName = NULL;
 
     if (gRestrictedUse) return;
@@ -3670,9 +3670,8 @@ bool LinkSaver::SaveEmbedded(unsigned char *data, int len)
     if (gRestrictedUse)
         return false;
 
-    TCHAR dstFileName[MAX_PATH] = { 0 };
-    if (fileName)
-        str::BufSet(dstFileName, dimof(dstFileName), this->fileName);
+    TCHAR dstFileName[MAX_PATH];
+    str::BufSet(dstFileName, dimof(dstFileName), fileName ? fileName : _T(""));
 
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling
@@ -3702,7 +3701,7 @@ static void OnMenuSaveBookmark(WindowInfo& win)
 
     const TCHAR *defExt = win.dm->engine->GetDefaultFileExt();
 
-    TCHAR dstFileName[MAX_PATH] = { 0 };
+    TCHAR dstFileName[MAX_PATH];
     // Remove the extension so that it can be re-added depending on the chosen filter
     str::BufSet(dstFileName, dimof(dstFileName), path::GetBaseName(win.dm->fileName()));
     str::TransChars(dstFileName, _T(":"), _T("_"));
@@ -6616,12 +6615,6 @@ static bool InstanceInit(HINSTANCE hInstance, int nCmdShow)
 
 static bool PrintFile(const TCHAR *fileName, const TCHAR *printerName, bool displayErrors=true)
 {
-    TCHAR       devstring[256];      // array for WIN.INI data 
-    HANDLE      printer;
-    LPDEVMODE   devMode = NULL;
-    DWORD       structSize, returnCode;
-    bool        ok = false;
-
     ScopedMem<TCHAR> fileName2(path::Normalize(fileName));
     BaseEngine *engine = EngineManager::CreateEngine(fileName2);
     if (!engine || !engine->IsPrintingAllowed()) {
@@ -6630,47 +6623,46 @@ static bool PrintFile(const TCHAR *fileName, const TCHAR *printerName, bool disp
         return false;
     }
 
-    // Retrieve the printer, printer driver, and 
-    // output-port names from WIN.INI. 
+    // Retrieve the printer, printer driver, and output-port names from WIN.INI. 
+    TCHAR devstring[256];
     GetProfileString(_T("Devices"), printerName, _T(""), devstring, dimof(devstring));
 
-    // Parse the string of names, setting ptrs as required 
-    // If the string contains the required names, use them to 
-    // create a device context. 
-    TCHAR *driver = _tcstok (devstring, (const TCHAR *)_T(","));
-    TCHAR *port = _tcstok((TCHAR *) NULL, (const TCHAR *)_T(","));
-
-    if (!driver || !port) {
+    // Parse the string of names
+    // If the string contains the required names, use them to
+    // create a device context.
+    ScopedMem<TCHAR> driver, port;
+    if (!str::Parse(devstring, _T("%S,%S,"), &driver, &port) &&
+        !str::Parse(devstring, _T("%S,%S"), &driver, &port) || !driver || !port) {
         if (displayErrors)
             MessageBox(NULL, _T("Printer with given name doesn't exist"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK);
         return false;
     }
-    
-    bool fOk = OpenPrinter((LPTSTR)printerName, &printer, NULL);
-    if (!fOk) {
+
+    HANDLE printer;
+    bool ok = OpenPrinter((LPTSTR)printerName, &printer, NULL);
+    if (!ok) {
         if (displayErrors)
             MessageBox(NULL, _TR("Could not open Printer"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK);
         return false;
     }
 
-    HDC  hdcPrint = NULL;
-    structSize = DocumentProperties(NULL,
+    DWORD structSize = DocumentProperties(NULL,
         printer,                /* Handle to our printer. */ 
         (LPTSTR)printerName,    /* Name of the printer. */ 
         NULL,                   /* Asking for size, so */ 
         NULL,                   /* these are not used. */ 
         0);                     /* Zero returns buffer size. */
-    devMode = (LPDEVMODE)malloc(structSize);
+    LPDEVMODE devMode = (LPDEVMODE)malloc(structSize);
+    HDC hdcPrint = NULL;
     if (!devMode) goto Exit;
 
     // Get the default DevMode for the printer and modify it for your needs.
-    returnCode = DocumentProperties(NULL,
+    DWORD returnCode = DocumentProperties(NULL,
         printer,
         (LPTSTR)printerName,
         devMode,        /* The address of the buffer to fill. */ 
         NULL,           /* Not using the input buffer. */ 
         DM_OUT_BUFFER); /* Have the output buffer filled. */ 
-
     if (IDOK != returnCode) {
         // If failure, inform the user, cleanup and return failure.
         if (displayErrors)

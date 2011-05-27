@@ -833,11 +833,7 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
     DBG_OUT("%08lx => lo %04x hi %04x\n", lparam, lo, hi);
 
     ScopedMem<TCHAR> cmd;
-    DDEACK ack;
-    ack.bAppReturnCode = 0;
-    ack.reserved = 0;
-    ack.fBusy = 0;
-    ack.fAck = 0;
+    DDEACK ack = { 0 };
 
     LPVOID command = GlobalLock((HGLOBAL)hi);
     if (!command) {
