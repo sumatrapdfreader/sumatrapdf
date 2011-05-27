@@ -5,6 +5,7 @@
 #include <shlobj.h>
 #include <wininet.h>
 #include <locale.h>
+#include <time.h>
 
 #include "WindowInfo.h"
 #include "RenderCache.h"
@@ -1588,7 +1589,7 @@ static bool LoadDocIntoWindow(
     free(title);
 
     if (!gRestrictedUse && Engine_PDF == win.dm->engineType) {
-        int res = Synchronizer::Create(fileName, &win.pdfsync);
+        int res = Synchronizer::Create(fileName, win.dm, &win.pdfsync);
         // expose SyncTeX in the UI
         if (PDFSYNCERR_SUCCESS == res)
             gGlobalPrefs.m_enableTeXEnhancements = true;
@@ -2385,7 +2386,7 @@ static bool OnInverseSearch(WindowInfo& win, int x, int y)
     // On double-clicking error message will be shown to the user
     // if the PDF does not have a synchronization file
     if (!win.pdfsync) {
-        int err = Synchronizer::Create(win.loadedFilePath, &win.pdfsync);
+        int err = Synchronizer::Create(win.loadedFilePath, win.dm, &win.pdfsync);
         if (err == PDFSYNCERR_SYNCFILE_NOTFOUND) {
             DBG_OUT("Pdfsync: Sync file not found!\n");
             // Fall back to selecting a word when double-clicking over text in
@@ -2410,14 +2411,10 @@ static bool OnInverseSearch(WindowInfo& win, int x, int y)
     if (!win.dm->validPageNo(pageNo))
         return false;
 
-    PointD pt = win.dm->CvtFromScreen(PointI(x, y), pageNo);
-    x = (int)pt.x; y = (int)pt.y;
-
-    const PageInfo *pageInfo = win.dm->getPageInfo(pageNo);
-    TCHAR srcfilepath[MAX_PATH];
-    win.pdfsync->convert_coord_to_internal(&x, &y, pageInfo->page.Convert<int>().dy, BottomLeft);
+    PointI pt = win.dm->CvtFromScreen(PointI(x, y), pageNo).Convert<int>();
+    ScopedMem<TCHAR> srcfilepath;
     UINT line, col;
-    UINT err = win.pdfsync->pdf_to_source(pageNo, x, y, srcfilepath, dimof(srcfilepath),&line,&col); // record 101
+    int err = win.pdfsync->pdf_to_source(pageNo, pt, srcfilepath, &line, &col);
     if (err != PDFSYNCERR_SUCCESS) {
         DBG_OUT("cannot sync from pdf to source!\n");
         win.ShowNotification(_TR("No synchronization info at this position"));
@@ -4285,30 +4282,23 @@ static void OnMenuViewPresentation(WindowInfo& win)
 void WindowInfo::ShowForwardSearchResult(const TCHAR *fileName, UINT line, UINT col, UINT ret, UINT page, Vec<RectI> &rects)
 {
     this->fwdsearchmark.rects.Reset();
-    if (ret == PDFSYNCERR_SUCCESS && rects.Count() > 0 ) {
+    if (ret == PDFSYNCERR_SUCCESS && rects.Count() > 0) {
         // remember the position of the search result for drawing the rect later on
         const PageInfo *pi = this->dm->getPageInfo(page);
         if (pi) {
-            RectI overallrc;
-            RectI rc = rects[0];
-            this->pdfsync->convert_coord_from_internal(&rc, pi->page.Convert<int>().dy, BottomLeft);
-
-            overallrc = rc;
-            for (size_t i = 0; i < rects.Count(); i++) {
-                rc = rects[i];
-                this->pdfsync->convert_coord_from_internal(&rc, pi->page.Convert<int>().dy, BottomLeft);
-                overallrc = overallrc.Union(rc);
-                this->fwdsearchmark.rects.Push(rc);
-            }
+            this->fwdsearchmark.rects = rects;
             this->fwdsearchmark.page = page;
             this->fwdsearchmark.show = true;
             if (!gGlobalPrefs.m_fwdsearchPermanent)  {
                 this->fwdsearchmark.hideStep = 0;
                 SetTimer(this->hwndCanvas, HIDE_FWDSRCHMARK_TIMER_ID, HIDE_FWDSRCHMARK_DELAY_IN_MS, NULL);
             }
-            
+
             // Scroll to show the overall highlighted zone
             int pageNo = page;
+            RectI overallrc = rects[0];
+            for (size_t i = 1; i < rects.Count(); i++)
+                overallrc = overallrc.Union(rects[i]);
             TextSel res = { 1, &pageNo, &overallrc };
             if (!this->dm->pageVisible(page))
                 this->dm->goToPage(page, 0, true);
@@ -4320,26 +4310,25 @@ void WindowInfo::ShowForwardSearchResult(const TCHAR *fileName, UINT line, UINT 
         }
     }
 
-    TCHAR *buf = NULL;    
+    ScopedMem<TCHAR> buf;
     if (ret == PDFSYNCERR_SYNCFILE_NOTFOUND )
         ShowNotification(_TR("No synchronization file found"));
     else if (ret == PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED)
         ShowNotification(_TR("Synchronization file cannot be opened"));
     else if (ret == PDFSYNCERR_INVALID_PAGE_NUMBER)
-        buf = str::Format(_TR("Page number %u inexistant"), page);
+        buf.Set(str::Format(_TR("Page number %u inexistant"), page));
     else if (ret == PDFSYNCERR_NO_SYNC_AT_LOCATION)
         ShowNotification(_TR("No synchronization info at this position"));
     else if (ret == PDFSYNCERR_UNKNOWN_SOURCEFILE)
-        buf = str::Format(_TR("Unknown source file (%s)"), fileName);
+        buf.Set(str::Format(_TR("Unknown source file (%s)"), fileName));
     else if (ret == PDFSYNCERR_NORECORD_IN_SOURCEFILE)
-        buf = str::Format(_TR("Source file %s has no synchronization point"), fileName);
+        buf.Set(str::Format(_TR("Source file %s has no synchronization point"), fileName));
     else if (ret == PDFSYNCERR_NORECORD_FOR_THATLINE)
-        buf = str::Format(_TR("No result found around line %u in file %s"), line, fileName);
+        buf.Set(str::Format(_TR("No result found around line %u in file %s"), line, fileName));
     else if (ret == PDFSYNCERR_NOSYNCPOINT_FOR_LINERECORD)
-        buf = str::Format(_TR("No result found around line %u in file %s"), line, fileName);
+        buf.Set(str::Format(_TR("No result found around line %u in file %s"), line, fileName));
     if (buf)
         ShowNotification(buf);
-    free(buf);
 }
 
 static void OnMenuFindNext(WindowInfo& win)
