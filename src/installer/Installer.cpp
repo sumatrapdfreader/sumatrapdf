@@ -11,19 +11,19 @@ The installer is good enough for production but it doesn't mean it couldn't be i
  * show fireworks on successful installation/uninstallation
 */
 
+// define for testing the uninstaller
+// #define TEST_UNINSTALLER
+#if defined(TEST_UNINSTALLER) && !defined(BUILD_UNINSTALLER)
+#define BUILD_UNINSTALLER
+#endif
+
 #include <windows.h>
 #include <GdiPlus.h>
-#include <tchar.h>
 #include <shlobj.h>
 #include <Tlhelp32.h>
 #include <Shlwapi.h>
 #include <objidl.h>
-#include <WinSafer.h>
 #include <io.h>
-
-#include <ioapi.h>
-#include <iowin32.h>
-#include <unzip.h>
 
 #include "Resource.h"
 #include "BaseUtil.h"
@@ -32,13 +32,18 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include "WinUtil.h"
 #include "Version.h"
 #include "Vec.h"
-
 #include "CmdLineParser.h"
+
+#ifndef BUILD_UNINSTALLER
+#include <WinSafer.h>
+
+#include <ioapi.h>
+#include <iowin32.h>
+#include <unzip.h>
+
 #include "../ifilter/PdfFilter.h"
 #include "../previewer/PdfPreview.h"
-
-// define for testing the uninstaller
-// #define TEST_UNINSTALLER
+#endif
 
 using namespace Gdiplus;
 
@@ -49,19 +54,20 @@ using namespace Gdiplus;
 
 #define INSTALLER_WIN_DX    420
 #define INSTALLER_WIN_DY    340
-#define UNINSTALLER_WIN_DX  420
-#define UNINSTALLER_WIN_DY  340
 
-#define ID_BUTTON_INSTALL             11
-#define ID_BUTTON_UNINSTALL           12
-#define ID_CHECKBOX_MAKE_DEFAULT      13
-#define ID_CHECKBOX_BROWSER_PLUGIN    14
-#define ID_BUTTON_START_SUMATRA       15
-#define ID_BUTTON_EXIT                16
+#define ID_BUTTON_EXIT                11
+#ifndef BUILD_UNINSTALLER
+#define ID_CHECKBOX_MAKE_DEFAULT      14
+#define ID_CHECKBOX_BROWSER_PLUGIN    15
+#define ID_BUTTON_START_SUMATRA       16
 #define ID_BUTTON_OPTIONS             17
 #define ID_BUTTON_BROWSE              18
 #define ID_CHECKBOX_PDF_FILTER        19
 #define ID_CHECKBOX_PDF_PREVIEWER     20
+#else
+#define UNINSTALLER_WIN_DX  INSTALLER_WIN_DX
+#define UNINSTALLER_WIN_DY  INSTALLER_WIN_DY
+#endif
 
 #define WM_APP_INSTALLATION_FINISHED        (WM_APP + 1)
 
@@ -76,9 +82,10 @@ using namespace Gdiplus;
 
 static HINSTANCE        ghinst;
 static HWND             gHwndFrame = NULL;
+static HWND             gHwndButtonExit = NULL;
+#ifndef BUILD_UNINSTALLER
 static HWND             gHwndButtonInstall = NULL;
 static HWND             gHwndButtonOptions = NULL;
-static HWND             gHwndButtonExit = NULL;
 static HWND             gHwndButtonRunSumatra = NULL;
 static HWND             gHwndStaticInstDir = NULL;
 static HWND             gHwndTextboxInstDir = NULL;
@@ -87,8 +94,10 @@ static HWND             gHwndCheckboxRegisterDefault = NULL;
 static HWND             gHwndCheckboxRegisterBrowserPlugin = NULL;
 static HWND             gHwndCheckboxRegisterPdfFilter = NULL;
 static HWND             gHwndCheckboxRegisterPdfPreviewer = NULL;
-static HWND             gHwndButtonUninstall = NULL;
 static HWND             gHwndProgressBar = NULL;
+#else
+static HWND             gHwndButtonUninstall = NULL;
+#endif
 static HFONT            gFontDefault;
 static bool             gShowOptions = false;
 
@@ -163,13 +172,6 @@ static TCHAR *gSupportedExts[] = {
     _T(".pdf"), _T(".xps"), _T(".cbz"), _T(".cbr"), _T(".djvu")
 };
 
-// Note: UN_INST_MARK is converted from unicode to ascii at runtime to make sure
-//       that this sequence of bytes (i.e. ascii version) is not present in 
-//       the executable, since it's appended to the end of executable to mark
-//       it as uninstaller. An alternative would be search for it from the end.
-#define UN_INST_MARK L"!uninst_end!"
-static ScopedMem<char> gUnInstMark; // str::ToMultiByte(UN_INST_MARK, CP_UTF8)
-
 // The following list is used to verify that all the required files have been
 // installed (install flag set) and to know what files are to be removed at
 // uninstallation (all listed files that actually exist).
@@ -186,31 +188,33 @@ struct {
     { "npPdfViewer.dll",        true    },
     { "PdfFilter.dll",          true    },
     { "PdfPreview.dll",         true    },
-    { "uninstall.exe",          false   },
+    { "uninstall.exe",          true    },
 };
 
 struct {
-    bool uninstall;
     bool silent;
     bool showUsageAndQuit;
     TCHAR *installDir;
+#ifndef BUILD_UNINSTALLER
     bool registerAsDefault;
     bool installBrowserPlugin;
     bool installPdfFilter;
     bool installPdfPreviewer;
+#endif
 
     TCHAR *firstError;
     HANDLE hThread;
     bool success;
 } gGlobalData = {
-    false, /* bool uninstall */
     false, /* bool silent */
     false, /* bool showUsageAndQuit */
     NULL,  /* TCHAR *installDir */
+#ifndef BUILD_UNINSTALLER
     false, /* bool registerAsDefault */
     false, /* bool installBrowserPlugin */
     false, /* bool installPdfFilter */
     false, /* bool installPdfPreviewer */
+#endif
 
     NULL,  /* TCHAR *firstError */
     NULL,  /* HANDLE hThread */
@@ -293,13 +297,13 @@ TCHAR *GetOwnPath()
     return exePath;
 }
 
-TCHAR *GetInstallationDir(bool forUninstallation=false)
+TCHAR *GetInstallationDir()
 {
     // try the previous installation directory first
-    ScopedMem<TCHAR> dir(ReadRegStr(HKEY_LOCAL_MACHINE, REG_PATH_SOFTWARE, INSTALL_DIR));
-    if (!dir) dir.Set(ReadRegStr(HKEY_CURRENT_USER, REG_PATH_SOFTWARE, INSTALL_DIR));
-    if (!dir) dir.Set(ReadRegStr(HKEY_LOCAL_MACHINE, REG_PATH_UNINST, INSTALL_LOCATION));
+    ScopedMem<TCHAR> dir(ReadRegStr(HKEY_CURRENT_USER, REG_PATH_SOFTWARE, INSTALL_DIR));
+    if (!dir) dir.Set(ReadRegStr(HKEY_LOCAL_MACHINE, REG_PATH_SOFTWARE, INSTALL_DIR));
     if (!dir) dir.Set(ReadRegStr(HKEY_CURRENT_USER, REG_PATH_UNINST, INSTALL_LOCATION));
+    if (!dir) dir.Set(ReadRegStr(HKEY_LOCAL_MACHINE, REG_PATH_UNINST, INSTALL_LOCATION));
     if (dir) {
         if (str::EndsWithI(dir, _T(".exe"))) {
             dir.Set(path::GetDir(dir));
@@ -308,52 +312,22 @@ TCHAR *GetInstallationDir(bool forUninstallation=false)
             return dir.StealData();
     }
 
-    if (forUninstallation) {
-        // fall back to the uninstaller's path
-        return path::GetDir(GetOwnPath());
-    }
-
+#ifndef BUILD_UNINSTALLER
     // fall back to %ProgramFiles%
     TCHAR buf[MAX_PATH] = {0};
     BOOL ok = SHGetSpecialFolderPath(NULL, buf, CSIDL_PROGRAM_FILES, FALSE);
     if (!ok)
         return NULL;
     return path::Join(buf, TAPP);
-}
-
-// Try harder getting temporary directory
-// Caller needs to free() the result.
-// Returns NULL if fails for any reason.
-TCHAR *GetValidTempDir()
-{
-    TCHAR d[MAX_PATH];
-    DWORD res = GetTempPath(dimof(d), d);
-    if ((0 == res) || (res >= MAX_PATH)) {
-        NotifyFailed(_T("Couldn't obtain temporary directory"));
-        return NULL;
-    }
-    BOOL success = CreateDirectory(d, NULL);
-    if (!success && (ERROR_ALREADY_EXISTS != GetLastError())) {
-        SeeLastError();
-        NotifyFailed(_T("Couldn't create temporary directory"));
-        return NULL;
-    }
-    return str::Dup(d);
+#else
+    // fall back to the uninstaller's path
+    return path::GetDir(GetOwnPath());
+#endif
 }
 
 TCHAR *GetUninstallerPath()
 {
     return path::Join(gGlobalData.installDir, _T("uninstall.exe"));
-}
-
-TCHAR *GetTempUninstallerPath()
-{
-    ScopedMem<TCHAR> tempDir(GetValidTempDir());
-    if (!tempDir)
-        return NULL;
-    // Using fixed (unlikely) name instead of GetTempFileName()
-    // so that we don't litter temp dir with copies of ourselves
-    return path::Join(tempDir, _T("sum~inst.exe"));
 }
 
 TCHAR *GetInstalledExePath()
@@ -391,13 +365,95 @@ TCHAR *GetShortcutPath(bool allUsers)
     return path::Join(GetStartMenuProgramsPath(allUsers), TAPP _T(".lnk"));
 }
 
+static HFONT CreateDefaultGuiFont()
+{
+    HDC hdc = GetDC(NULL);
+    HFONT font = win::font::GetSimple(hdc, _T("MS Shell Dlg"), 14);
+    ReleaseDC(NULL, hdc);
+    return font;
+}
+
+void InvalidateFrame()
+{
+    ClientRect rc(gHwndFrame);
+    if (gShowOptions)
+        rc.dy = TITLE_PART_DY;
+    else
+        rc.dy -= BOTTOM_PART_DY;
+    InvalidateRect(gHwndFrame, &rc.ToRECT(), FALSE);
+}
+
+HANDLE CreateProcessHelper(const TCHAR *exe, const TCHAR *args=NULL)
+{
+    PROCESS_INFORMATION pi;
+    STARTUPINFO si = {0};
+    si.cb = sizeof(si);
+    // per msdn, cmd has to be writeable
+    ScopedMem<TCHAR> cmd(str::Format(_T("\"%s\" %s"), exe, args ? args : _T("")));
+    if (!CreateProcess(NULL, cmd, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
+        SeeLastError();
+        return NULL;
+    }
+    CloseHandle(pi.hThread);
+    return pi.hProcess;
+}
+
+// cf. http://support.microsoft.com/default.aspx?scid=kb;en-us;207132
+bool RegisterServerDLL(TCHAR *dllPath, bool unregister=false)
+{
+    if (FAILED(OleInitialize(NULL)))
+        return false;
+
+    // make sure that the DLL can find any DLLs it depends on and
+    // which reside in the same directory (in this case: libmupdf.dll)
+    typedef BOOL (WINAPI *SetDllDirectoryProc)(LPCTSTR);
+#ifdef UNICODE
+    SetDllDirectoryProc _SetDllDirectory = (SetDllDirectoryProc)LoadDllFunc(_T("Kernel32.dll"), "SetDllDirectoryW");
+#else
+    SetDllDirectoryProc _SetDllDirectory = (SetDllDirectoryProc)LoadDllFunc(_T("Kernel32.dll"), "SetDllDirectoryA");
+#endif
+    if (_SetDllDirectory) {
+        ScopedMem<TCHAR> dllDir(path::GetDir(dllPath));
+        _SetDllDirectory(dllDir);
+    }
+
+    bool ok = false;
+    HMODULE lib = LoadLibrary(dllPath);
+    if (lib) {
+        typedef HRESULT (WINAPI *DllInitProc)(VOID);
+        DllInitProc CallDLL = (DllInitProc)GetProcAddress(lib, unregister ? "DllUnregisterServer" : "DllRegisterServer");
+        if (CallDLL)
+            ok = SUCCEEDED(CallDLL());
+        FreeLibrary(lib);
+    }
+
+    if (_SetDllDirectory)
+        _SetDllDirectory(_T(""));
+
+    OleUninitialize();
+
+    return ok;
+}
+
+#if !defined(BUILD_UNINSTALLER) || defined(TEST_UNINSTALLER)
+extern "C" {
+// needed because we compile bzip2 with #define BZ_NO_STDIO
+void bz_internal_error(int errcode)
+{
+    NotifyFailed(_T("fatal error: bz_internal_error()"));
+}
+}
+#endif
+
+#ifndef BUILD_UNINSTALLER
+
 int GetInstallationStepCount()
 {
     /* Installation steps
      * - Create directory
      * - One per file to be copied (count extracted from gPayloadData)
      * - Optional registration (default viewer, browser plugin),
-     *   Shortcut and Uninstaller
+     *   Shortcut and Registry keys
      * 
      * Most time is taken by file extraction/copying, so we just add
      * one step before - so that we start with some initial progress
@@ -541,147 +597,37 @@ Error:
     return FALSE;
 }
 
-extern "C" {
-// needed because we compile bzip2 with #define BZ_NO_STDIO
-void bz_internal_error(int errcode)
+/* Caller needs to free() the result. */
+TCHAR *GetDefaultPdfViewer()
 {
-    NotifyFailed(_T("fatal error: bz_internal_error()"));
-}
-}
-
-BOOL CreateUninstaller()
-{
-    size_t installerSize;
-    char *installerData = file::ReadAll(GetOwnPath(), &installerSize);
-    if (!installerData) {
-        NotifyFailed(_T("Couldn't access installer for uninstaller extraction"));
-        return FALSE;
-    }
-
-    gUnInstMark.Set(str::ToMultiByte(UN_INST_MARK, CP_UTF8));
-    int markSize = str::Len(gUnInstMark);
-
-    // find the end of the (un)installer
-    char *end = (char *)memchr(installerData, *gUnInstMark, installerSize);
-    while (end && memcmp(end, gUnInstMark, markSize) != 0)
-        end = (char *)memchr(end + 1, *gUnInstMark, installerSize - (end - installerData) - 1);
-
-    // if it's not found, append a new uninstaller marker to the end of the executable
-    if (!end) {
-        char *extData = (char *)realloc(installerData, installerSize + markSize);
-        if (!extData) {
-            NotifyFailed(_T("Couldn't write uninstaller to disk"));
-            free(installerData);
-            return FALSE;
-        }
-        installerData = extData;
-        memcpy(installerData + installerSize, gUnInstMark, markSize);
-        installerSize += markSize;
-    }
-    else {
-        installerSize = end - installerData + markSize;
-    }
-
-    ScopedMem<TCHAR> uninstallerPath(GetUninstallerPath());
-    BOOL ok = file::WriteAll(uninstallerPath, installerData, installerSize);
-    free(installerData);
-
-    if (!ok)
-        NotifyFailed(_T("Couldn't write uninstaller to disk"));
-
-    return ok;
+    ScopedMem<TCHAR> buf(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT _T("\\UserChoice"), PROG_ID));
+    if (buf)
+        return buf.StealData();
+    return ReadRegStr(HKEY_CLASSES_ROOT, _T(".pdf"), NULL);
 }
 
-bool IsUninstaller()
+bool IsBrowserPluginInstalled()
 {
-    ScopedMem<TCHAR> tempUninstaller(GetTempUninstallerPath());
-    BOOL isTempUninstaller = path::IsSame(GetOwnPath(), tempUninstaller);
-    if (isTempUninstaller)
-        return true;
+    ScopedMem<TCHAR> buf(ReadRegStr(HKEY_LOCAL_MACHINE, REG_PATH_PLUGIN, PLUGIN_PATH));
+    if (!buf)
+        buf.Set(ReadRegStr(HKEY_CURRENT_USER, REG_PATH_PLUGIN, PLUGIN_PATH));
+    return file::Exists(buf);
+}
 
-    gUnInstMark.Set(str::ToMultiByte(UN_INST_MARK, CP_UTF8));
-    size_t markSize = str::Len(gUnInstMark);
-
-    size_t uninstallerSize;
-    ScopedMem<char> uninstallerData(file::ReadAll(GetOwnPath(), &uninstallerSize));
-    if (!uninstallerData) {
-        NotifyFailed(_T("Couldn't open myself for reading"));
+bool IsPdfFilterInstalled()
+{
+    ScopedMem<TCHAR> handler_iid(ReadRegStr(HKEY_CLASSES_ROOT, _T(".pdf\\PersistentHandler"), NULL));
+    if (!handler_iid)
         return false;
-    }
-
-    bool isUninstaller = uninstallerSize > markSize &&
-                         !memcmp(uninstallerData + uninstallerSize - markSize, gUnInstMark, markSize);
-    return isUninstaller;
+    return str::EqI(handler_iid, SZ_PDF_FILTER_HANDLER);
 }
 
-static HFONT CreateDefaultGuiFont()
+bool IsPdfPreviewerInstalled()
 {
-    HDC hdc = GetDC(NULL);
-    HFONT font = win::font::GetSimple(hdc, _T("MS Shell Dlg"), 14);
-    ReleaseDC(NULL, hdc);
-    return font;
-}
-
-void InvalidateFrame()
-{
-    ClientRect rc(gHwndFrame);
-    if (gShowOptions)
-        rc.dy = TITLE_PART_DY;
-    else
-        rc.dy -= BOTTOM_PART_DY;
-    InvalidateRect(gHwndFrame, &rc.ToRECT(), FALSE);
-}
-
-HANDLE CreateProcessHelper(const TCHAR *exe, const TCHAR *args=NULL)
-{
-    PROCESS_INFORMATION pi;
-    STARTUPINFO si = {0};
-    si.cb = sizeof(si);
-    // per msdn, cmd has to be writeable
-    ScopedMem<TCHAR> cmd(str::Format(_T("\"%s\" %s"), exe, args ? args : _T("")));
-    if (!CreateProcess(NULL, cmd, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
-        SeeLastError();
-        return NULL;
-    }
-    CloseHandle(pi.hThread);
-    return pi.hProcess;
-}
-
-// cf. http://support.microsoft.com/default.aspx?scid=kb;en-us;207132
-bool RegisterServerDLL(TCHAR *dllPath, bool unregister=false)
-{
-    if (FAILED(OleInitialize(NULL)))
+    ScopedMem<TCHAR> handler_iid(ReadRegStr(HKEY_CLASSES_ROOT, _T(".pdf\\shellex\\{8895b1c6-b41f-4c1c-a562-0d564250836f}"), NULL));
+    if (!handler_iid)
         return false;
-
-    // make sure that the DLL can find any DLLs it depends on and
-    // which reside in the same directory (in this case: libmupdf.dll)
-    typedef BOOL (WINAPI *SetDllDirectoryProc)(LPCTSTR);
-#ifdef UNICODE
-    SetDllDirectoryProc _SetDllDirectory = (SetDllDirectoryProc)LoadDllFunc(_T("Kernel32.dll"), "SetDllDirectoryW");
-#else
-    SetDllDirectoryProc _SetDllDirectory = (SetDllDirectoryProc)LoadDllFunc(_T("Kernel32.dll"), "SetDllDirectoryA");
-#endif
-    if (_SetDllDirectory) {
-        ScopedMem<TCHAR> dllDir(path::GetDir(dllPath));
-        _SetDllDirectory(dllDir);
-    }
-
-    bool ok = false;
-    HMODULE lib = LoadLibrary(dllPath);
-    if (lib) {
-        typedef HRESULT (WINAPI *DllInitProc)(VOID);
-        DllInitProc CallDLL = (DllInitProc)GetProcAddress(lib, unregister ? "DllUnregisterServer" : "DllRegisterServer");
-        if (CallDLL)
-            ok = SUCCEEDED(CallDLL());
-        FreeLibrary(lib);
-    }
-
-    if (_SetDllDirectory)
-        _SetDllDirectory(_T(""));
-
-    OleUninitialize();
-
-    return ok;
+    return str::EqI(handler_iid, SZ_PDF_PREVIEW_CLSID);
 }
 
 // Note: doesn't handle (total) sizes above 4GB
@@ -779,6 +725,49 @@ bool WriteExtendedFileExtensionInfo(HKEY hkey)
     return success;
 }
 
+bool CreateInstallationDirectory()
+{
+    bool ok = CreateDirectory(gGlobalData.installDir, NULL);
+    if (!ok && (GetLastError() != ERROR_ALREADY_EXISTS)) {
+        SeeLastError();
+        NotifyFailed(_T("Couldn't create installation directory"));
+        return false;
+    }
+    return true;
+}
+
+#else
+
+// Try harder getting temporary directory
+// Caller needs to free() the result.
+// Returns NULL if fails for any reason.
+TCHAR *GetValidTempDir()
+{
+    TCHAR d[MAX_PATH];
+    DWORD res = GetTempPath(dimof(d), d);
+    if ((0 == res) || (res >= MAX_PATH)) {
+        NotifyFailed(_T("Couldn't obtain temporary directory"));
+        return NULL;
+    }
+    BOOL success = CreateDirectory(d, NULL);
+    if (!success && (ERROR_ALREADY_EXISTS != GetLastError())) {
+        SeeLastError();
+        NotifyFailed(_T("Couldn't create temporary directory"));
+        return NULL;
+    }
+    return str::Dup(d);
+}
+
+TCHAR *GetTempUninstallerPath()
+{
+    ScopedMem<TCHAR> tempDir(GetValidTempDir());
+    if (!tempDir)
+        return NULL;
+    // Using fixed (unlikely) name instead of GetTempFileName()
+    // so that we don't litter temp dir with copies of ourselves
+    return path::Join(tempDir, _T("sum~inst.exe"));
+}
+
 BOOL IsUninstallerNeeded()
 {
     ScopedMem<TCHAR> exePath(GetInstalledExePath());
@@ -838,81 +827,6 @@ void RemoveOwnRegistryKeys()
     }
 }
 
-bool IsBrowserPluginInstalled()
-{
-    ScopedMem<TCHAR> buf(ReadRegStr(HKEY_LOCAL_MACHINE, REG_PATH_PLUGIN, PLUGIN_PATH));
-    if (!buf)
-        buf.Set(ReadRegStr(HKEY_CURRENT_USER, REG_PATH_PLUGIN, PLUGIN_PATH));
-    return file::Exists(buf);
-}
-
-bool IsPdfFilterInstalled()
-{
-    ScopedMem<TCHAR> handler_iid(ReadRegStr(HKEY_CLASSES_ROOT, _T(".pdf\\PersistentHandler"), NULL));
-    if (!handler_iid)
-        return false;
-    return str::EqI(handler_iid, SZ_PDF_FILTER_HANDLER);
-}
-
-bool IsPdfPreviewerInstalled()
-{
-    ScopedMem<TCHAR> handler_iid(ReadRegStr(HKEY_CLASSES_ROOT, _T(".pdf\\shellex\\{8895b1c6-b41f-4c1c-a562-0d564250836f}"), NULL));
-    if (!handler_iid)
-        return false;
-    return str::EqI(handler_iid, SZ_PDF_PREVIEW_CLSID);
-}
-
-void InstallBrowserPlugin()
-{
-    ScopedMem<TCHAR> dllPath(GetBrowserPluginPath());
-    if (!RegisterServerDLL(dllPath))
-        NotifyFailed(_T("Couldn't install browser plugin"));
-}
-
-void UninstallBrowserPlugin()
-{
-    ScopedMem<TCHAR> dllPath(GetBrowserPluginPath());
-    if (!RegisterServerDLL(dllPath, true))
-        NotifyFailed(_T("Couldn't uninstall browser plugin"));
-}
-
-void InstallPdfFilter()
-{
-    ScopedMem<TCHAR> dllPath(GetPdfFilterPath());
-    if (!RegisterServerDLL(dllPath))
-        NotifyFailed(_T("Couldn't install PDF search filter"));
-}
-
-void UninstallPdfFilter()
-{
-    ScopedMem<TCHAR> dllPath(GetPdfFilterPath());
-    if (!RegisterServerDLL(dllPath, true))
-        NotifyFailed(_T("Couldn't uninstall PDF search filter"));
-}
-
-void InstallPdfPreviewer()
-{
-    ScopedMem<TCHAR> dllPath(GetPdfPreviewerPath());
-    if (!RegisterServerDLL(dllPath))
-        NotifyFailed(_T("Couldn't install PDF previewer"));
-}
-
-void UninstallPdfPreviewer()
-{
-    ScopedMem<TCHAR> dllPath(GetPdfPreviewerPath());
-    if (!RegisterServerDLL(dllPath, true))
-        NotifyFailed(_T("Couldn't uninstall PDF previewer"));
-}
-
-/* Caller needs to free() the result. */
-TCHAR *GetDefaultPdfViewer()
-{
-    ScopedMem<TCHAR> buf(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT _T("\\UserChoice"), PROG_ID));
-    if (buf)
-        return buf.StealData();
-    return ReadRegStr(HKEY_CLASSES_ROOT, _T(".pdf"), NULL);
-}
-
 BOOL RemoveEmptyDirectory(TCHAR *dir)
 {
     WIN32_FIND_DATA findData;
@@ -963,6 +877,50 @@ BOOL RemoveInstalledFiles()
     return success;
 }
 
+#endif
+
+void InstallBrowserPlugin()
+{
+    ScopedMem<TCHAR> dllPath(GetBrowserPluginPath());
+    if (!RegisterServerDLL(dllPath))
+        NotifyFailed(_T("Couldn't install browser plugin"));
+}
+
+void UninstallBrowserPlugin()
+{
+    ScopedMem<TCHAR> dllPath(GetBrowserPluginPath());
+    if (!RegisterServerDLL(dllPath, true))
+        NotifyFailed(_T("Couldn't uninstall browser plugin"));
+}
+
+void InstallPdfFilter()
+{
+    ScopedMem<TCHAR> dllPath(GetPdfFilterPath());
+    if (!RegisterServerDLL(dllPath))
+        NotifyFailed(_T("Couldn't install PDF search filter"));
+}
+
+void UninstallPdfFilter()
+{
+    ScopedMem<TCHAR> dllPath(GetPdfFilterPath());
+    if (!RegisterServerDLL(dllPath, true))
+        NotifyFailed(_T("Couldn't uninstall PDF search filter"));
+}
+
+void InstallPdfPreviewer()
+{
+    ScopedMem<TCHAR> dllPath(GetPdfPreviewerPath());
+    if (!RegisterServerDLL(dllPath))
+        NotifyFailed(_T("Couldn't install PDF previewer"));
+}
+
+void UninstallPdfPreviewer()
+{
+    ScopedMem<TCHAR> dllPath(GetPdfPreviewerPath());
+    if (!RegisterServerDLL(dllPath, true))
+        NotifyFailed(_T("Couldn't uninstall PDF previewer"));
+}
+
 bool CreateAppShortcut(bool allUsers)
 {
     ScopedMem<TCHAR> installedExePath(GetInstalledExePath());
@@ -976,17 +934,6 @@ bool RemoveShortcut(bool allUsers)
     bool ok = DeleteFile(p);
     if (!ok && (ERROR_FILE_NOT_FOUND != GetLastError())) {
         SeeLastError();
-        return false;
-    }
-    return true;
-}
-
-bool CreateInstallationDirectory()
-{
-    bool ok = CreateDirectory(gGlobalData.installDir, NULL);
-    if (!ok && (GetLastError() != ERROR_ALREADY_EXISTS)) {
-        SeeLastError();
-        NotifyFailed(_T("Couldn't create installation directory"));
         return false;
     }
     return true;
@@ -1009,6 +956,13 @@ void CreateButtonExit(HWND hwndParent)
                         ghinst, NULL);
     SetWindowFont(gHwndButtonExit, gFontDefault, TRUE);
 }
+
+void OnButtonExit()
+{
+    SendMessage(gHwndFrame, WM_CLOSE, 0, 0);
+}
+
+#ifndef BUILD_UNINSTALLER
 
 void CreateButtonRunSumatra(HWND hwndParent)
 {
@@ -1074,9 +1028,6 @@ static DWORD WINAPI InstallerThread(LPVOID data)
     // consider installation a success from here on
     // (still warn, if we've failed to create the uninstaller, though)
     gGlobalData.success = true;
-
-    if (!CreateUninstaller())
-        goto Error;
 
     if (!WriteUninstallerRegistryInfo(HKEY_LOCAL_MACHINE) &&
         !WriteUninstallerRegistryInfo(HKEY_CURRENT_USER)) {
@@ -1183,76 +1134,6 @@ void OnInstallationFinished()
     InvalidateFrame();
 
     CloseHandle(gGlobalData.hThread);
-}
-
-static DWORD WINAPI UninstallerThread(LPVOID data)
-{
-    /* if the app is running, we have to kill it to delete the files */
-    TCHAR *exePath = GetInstalledExePath();
-    KillProcess(exePath, TRUE);
-    free(exePath);
-
-    // also kill the original uninstaller, if it's just spawned
-    // a DELETE_ON_CLOSE copy from the temp directory
-    exePath = GetUninstallerPath();
-    if (!path::IsSame(exePath, GetOwnPath()))
-        KillProcess(exePath, TRUE);
-    free(exePath);
-
-    if (!RemoveUninstallerRegistryInfo(HKEY_LOCAL_MACHINE) ||
-        !RemoveUninstallerRegistryInfo(HKEY_CURRENT_USER)) {
-        NotifyFailed(_T("Failed to delete uninstaller registry keys"));
-    }
-
-    if (!RemoveShortcut(true) || !RemoveShortcut(false))
-        NotifyFailed(_T("Couldn't remove the shortcut"));
-
-    RemoveOwnRegistryKeys();
-    UninstallBrowserPlugin();
-    UninstallPdfFilter();
-    UninstallPdfPreviewer();
-
-    if (!RemoveInstalledFiles())
-        NotifyFailed(_T("Couldn't remove installation directory"));
-
-    // always succeed, even for partial uninstallations
-    gGlobalData.success = true;
-
-    if (!gGlobalData.silent)
-        PostMessage(gHwndFrame, WM_APP_INSTALLATION_FINISHED, 0, 0);
-    return 0;
-}
-
-void OnButtonUninstall()
-{
-    // disable the button during uninstallation
-    EnableWindow(gHwndButtonUninstall, FALSE);
-    gMsg = _T("Uninstallation in progress...");
-    gMsgColor = COLOR_MSG_INSTALLATION;
-    InvalidateFrame();
-
-    gGlobalData.hThread = CreateThread(NULL, 0, UninstallerThread, NULL, 0, 0);
-}
-
-void OnUninstallationFinished()
-{
-    DestroyWindow(gHwndButtonUninstall);
-    gHwndButtonUninstall = NULL;
-    CreateButtonExit(gHwndFrame);
-    gMsg = TAPP _T(" has been uninstalled.");
-    gMsgError = gGlobalData.firstError;
-    if (!gMsgError)
-        gMsgColor = COLOR_MSG_OK;
-    else
-        gMsgColor = COLOR_MSG_FAILED;
-    InvalidateFrame();
-
-    CloseHandle(gGlobalData.hThread);
-}
-
-void OnButtonExit()
-{
-    SendMessage(gHwndFrame, WM_CLOSE, 0, 0);
 }
 
 typedef BOOL WINAPI SaferCreateLevelProc(DWORD dwScopeId, DWORD dwLevelId, DWORD OpenFlags, SAFER_LEVEL_HANDLE *pLevelHandle, LPVOID lpReserved);
@@ -1409,6 +1290,75 @@ void OnButtonBrowse()
         SetFocus(gHwndButtonBrowseDir);
 }
 
+#else
+
+static DWORD WINAPI UninstallerThread(LPVOID data)
+{
+    /* if the app is running, we have to kill it to delete the files */
+    TCHAR *exePath = GetInstalledExePath();
+    KillProcess(exePath, TRUE);
+    free(exePath);
+
+    // also kill the original uninstaller, if it's just spawned
+    // a DELETE_ON_CLOSE copy from the temp directory
+    exePath = GetUninstallerPath();
+    if (!path::IsSame(exePath, GetOwnPath()))
+        KillProcess(exePath, TRUE);
+    free(exePath);
+
+    if (!RemoveUninstallerRegistryInfo(HKEY_LOCAL_MACHINE) &&
+        !RemoveUninstallerRegistryInfo(HKEY_CURRENT_USER)) {
+        NotifyFailed(_T("Failed to delete uninstaller registry keys"));
+    }
+
+    if (!RemoveShortcut(true) && !RemoveShortcut(false))
+        NotifyFailed(_T("Couldn't remove the shortcut"));
+
+    RemoveOwnRegistryKeys();
+    UninstallBrowserPlugin();
+    UninstallPdfFilter();
+    UninstallPdfPreviewer();
+
+    if (!RemoveInstalledFiles())
+        NotifyFailed(_T("Couldn't remove installation directory"));
+
+    // always succeed, even for partial uninstallations
+    gGlobalData.success = true;
+
+    if (!gGlobalData.silent)
+        PostMessage(gHwndFrame, WM_APP_INSTALLATION_FINISHED, 0, 0);
+    return 0;
+}
+
+void OnButtonUninstall()
+{
+    // disable the button during uninstallation
+    EnableWindow(gHwndButtonUninstall, FALSE);
+    gMsg = _T("Uninstallation in progress...");
+    gMsgColor = COLOR_MSG_INSTALLATION;
+    InvalidateFrame();
+
+    gGlobalData.hThread = CreateThread(NULL, 0, UninstallerThread, NULL, 0, 0);
+}
+
+void OnUninstallationFinished()
+{
+    DestroyWindow(gHwndButtonUninstall);
+    gHwndButtonUninstall = NULL;
+    CreateButtonExit(gHwndFrame);
+    gMsg = TAPP _T(" has been uninstalled.");
+    gMsgError = gGlobalData.firstError;
+    if (!gMsgError)
+        gMsgColor = COLOR_MSG_OK;
+    else
+        gMsgColor = COLOR_MSG_FAILED;
+    InvalidateFrame();
+
+    CloseHandle(gGlobalData.hThread);
+}
+
+#endif
+
 // This display is inspired by http://letteringjs.com/
 typedef struct {
     // part that doesn't change
@@ -1515,36 +1465,6 @@ public:
     }
 };
 
-// an animation that 'rotates' random letters 
-static FrameTimeoutCalculator *gRotatingLettersAnim = NULL;
-
-void RotatingLettersAnimStart()
-{
-    gRotatingLettersAnim = new FrameTimeoutCalculator(20);
-}
-
-void RotatingLettersAnimStop()
-{
-    delete gRotatingLettersAnim;
-    gRotatingLettersAnim = NULL;
-    SetLettersSumatra();
-    InvalidateFrame();
-}
-
-void RotatingLettersAnim()
-{
-    if (gRotatingLettersAnim->ElapsedTotal() > 3) {
-        RotatingLettersAnimStop();
-        return;
-    }
-    DWORD timeOut = gRotatingLettersAnim->GetTimeoutInMilliseconds();
-    if (timeOut != 0)
-        return;
-    RandomizeLetters();
-    InvalidateFrame();
-    gRotatingLettersAnim->Step();
-}
-
 // an animation that reveals letters one by one
 
 // how long the animation lasts, in seconds
@@ -1585,9 +1505,6 @@ void RevealingLettersAnim()
 }
 
 void AnimStep() {
-    if (gRotatingLettersAnim) {
-        RotatingLettersAnim();
-    }
     if (gRevealingLettersAnim) {
         RevealingLettersAnim();
     }
@@ -1622,7 +1539,6 @@ void CalcLettersLayout(Graphics& g, Font *f, int dx)
         x += li->dx;
         x += letterSpacing;
     }
-    //RotatingLettersAnimStart();
     RevealingLettersAnimStart();
     didLayout = TRUE;
 }
@@ -1756,98 +1672,9 @@ void OnPaintFrame(HWND hwnd)
     EndPaint(hwnd, &ps);
 }
 
-void OnMouseMove(HWND hwnd, int x, int y)
-{
-    // nothing so far
-}
+#ifndef BUILD_UNINSTALLER
 
-void OnCreateUninstaller(HWND hwnd)
-{
-    int     buttonDx = 140;
-    int     buttonDy = 22;
-
-    ClientRect r(hwnd);
-    int x = r.dx - buttonDx - 8;
-    int y = r.dy - buttonDy - 8;
-    // TODO: determine the sizes of buttons by measuring their real size
-    // and adjust size of the window appropriately
-    gHwndButtonUninstall = CreateWindow(WC_BUTTON, _T("Uninstall ") TAPP,
-                        BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
-                        x, y, buttonDx, buttonDy, hwnd,
-                        (HMENU)ID_BUTTON_UNINSTALL, ghinst, NULL);
-    SetWindowFont(gHwndButtonUninstall, gFontDefault, TRUE);
-}
-
-static LRESULT CALLBACK UninstallerWndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-    int         wmId;
-    int         x, y;
-
-    switch (message)
-    {
-        case WM_CREATE:
-            if (!IsUninstallerNeeded()) {
-                MessageBox(NULL, _T("No installation has been found. Please install ") TAPP _T(" first before uninstalling it..."), _T("Uninstallation failed"),  MB_ICONEXCLAMATION | MB_OK);
-                PostQuitMessage(0);
-                return -1;
-            }
-            OnCreateUninstaller(hwnd);
-            break;
-
-        case WM_DESTROY:
-            PostQuitMessage(0);
-            break;
-
-        case WM_ERASEBKGND:
-            return TRUE;
-
-        case WM_PAINT:
-            OnPaintFrame(hwnd);
-            break;
-
-        case WM_COMMAND:
-            wmId = LOWORD(wParam);
-            switch (wmId)
-            {
-                case IDOK:
-                    if (gHwndButtonUninstall)
-                        OnButtonUninstall();
-                    else if (gHwndButtonExit)
-                        OnButtonExit();
-                    break;
-
-                case ID_BUTTON_UNINSTALL:
-                    OnButtonUninstall();
-                    break;
-
-                case ID_BUTTON_EXIT:
-                case IDCANCEL:
-                    OnButtonExit();
-                    break;
-
-                default:
-                    return DefWindowProc(hwnd, message, wParam, lParam);
-            }
-            break;
-
-        case WM_MOUSEMOVE:
-            x = GET_X_LPARAM(lParam); y = GET_Y_LPARAM(lParam);
-            OnMouseMove(hwnd, x, y);
-            break;
-
-        case WM_APP_INSTALLATION_FINISHED:
-            OnUninstallationFinished();
-            SetFocus(gHwndButtonExit);
-            break;
-
-        default:
-            return DefWindowProc(hwnd, message, wParam, lParam);
-    }
-
-    return 0;
-}
-
-void OnCreateInstaller(HWND hwnd)
+void OnCreateWindow(HWND hwnd)
 {
     int     buttonDx = 128;
     int     buttonDy = 22;
@@ -1860,7 +1687,7 @@ void OnCreateInstaller(HWND hwnd)
     gHwndButtonInstall = CreateWindow(WC_BUTTON, _T("Install ") TAPP,
                         BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
                         x, y, buttonDx, buttonDy, hwnd, 
-                        (HMENU)ID_BUTTON_INSTALL, ghinst, NULL);
+                        (HMENU)IDOK, ghinst, NULL);
     SetWindowFont(gHwndButtonInstall, gFontDefault, TRUE);
 
     x = 8;
@@ -1946,20 +1773,46 @@ void OnCreateInstaller(HWND hwnd)
     SetFocus(gHwndButtonInstall);
 }
 
-static LRESULT CALLBACK InstallerWndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-    int         wmId;
-    int         x, y;
+#else
 
+void OnCreateWindow(HWND hwnd)
+{
+    int     buttonDx = 140;
+    int     buttonDy = 22;
+
+    ClientRect r(hwnd);
+    int x = r.dx - buttonDx - 8;
+    int y = r.dy - buttonDy - 8;
+    // TODO: determine the sizes of buttons by measuring their real size
+    // and adjust size of the window appropriately
+    gHwndButtonUninstall = CreateWindow(WC_BUTTON, _T("Uninstall ") TAPP,
+                        BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
+                        x, y, buttonDx, buttonDy, hwnd,
+                        (HMENU)IDOK, ghinst, NULL);
+    SetWindowFont(gHwndButtonUninstall, gFontDefault, TRUE);
+}
+
+#endif
+
+static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
     switch (message)
     {
         case WM_CREATE:
+#ifndef BUILD_UNINSTALLER
             if (!IsValidInstaller()) {
                 MessageBox(NULL, _T("The installer has been corrupted. Please download it again.\nSorry for the inconvenience!"), _T("Installation failed"),  MB_ICONEXCLAMATION | MB_OK);
                 PostQuitMessage(0);
                 return -1;
             }
-            OnCreateInstaller(hwnd);
+#else
+            if (!IsUninstallerNeeded()) {
+                MessageBox(NULL, _T("No installation has been found. Please install ") TAPP _T(" first before uninstalling it..."), _T("Uninstallation failed"),  MB_ICONEXCLAMATION | MB_OK);
+                PostQuitMessage(0);
+                return -1;
+            }
+#endif
+            OnCreateWindow(hwnd);
             break;
 
         case WM_DESTROY:
@@ -1974,9 +1827,9 @@ static LRESULT CALLBACK InstallerWndProcFrame(HWND hwnd, UINT message, WPARAM wP
             break;
 
         case WM_COMMAND:
-            wmId = LOWORD(wParam);
-            switch (wmId)
+            switch (LOWORD(wParam))
             {
+#ifndef BUILD_UNINSTALLER
                 case IDOK:
                     if (gHwndButtonInstall)
                         OnButtonInstall();
@@ -1986,17 +1839,8 @@ static LRESULT CALLBACK InstallerWndProcFrame(HWND hwnd, UINT message, WPARAM wP
                         OnButtonExit();
                     break;
 
-                case ID_BUTTON_INSTALL:
-                    OnButtonInstall();
-                    break;
-
                 case ID_BUTTON_START_SUMATRA:
                     OnButtonStartSumatra();
-                    break;
-
-                case ID_BUTTON_EXIT:
-                case IDCANCEL:
-                    OnButtonExit();
                     break;
 
                 case ID_BUTTON_OPTIONS:
@@ -2006,87 +1850,93 @@ static LRESULT CALLBACK InstallerWndProcFrame(HWND hwnd, UINT message, WPARAM wP
                 case ID_BUTTON_BROWSE:
                     OnButtonBrowse();
                     break;
+#else
+                case IDOK:
+                    if (gHwndButtonUninstall)
+                        OnButtonUninstall();
+                    else if (gHwndButtonExit)
+                        OnButtonExit();
+                    break;
+#endif
+
+                case ID_BUTTON_EXIT:
+                case IDCANCEL:
+                    OnButtonExit();
+                    break;
 
                 default:
                     return DefWindowProc(hwnd, message, wParam, lParam);
             }
             break;
 
-        case WM_MOUSEMOVE:
-            x = GET_X_LPARAM(lParam); y = GET_Y_LPARAM(lParam);
-            OnMouseMove(hwnd, x, y);
-            break;
-
         case WM_APP_INSTALLATION_FINISHED:
+#ifndef BUILD_UNINSTALLER
             OnInstallationFinished();
             if (gHwndButtonRunSumatra)
                 SetFocus(gHwndButtonRunSumatra);
-            else if (gHwndButtonExit)
+#else
+            OnUninstallationFinished();
+#endif
+            if (gHwndButtonExit)
                 SetFocus(gHwndButtonExit);
             break;
 
         default:
             return DefWindowProc(hwnd, message, wParam, lParam);
     }
+
     return 0;
 }
 
 static BOOL RegisterWinClass(HINSTANCE hInstance)
 {
     WNDCLASSEX  wcex;
-    ATOM        atom;
 
     FillWndClassEx(wcex, hInstance);
     wcex.lpszClassName  = INSTALLER_FRAME_CLASS_NAME;
     wcex.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_SUMATRAPDF));
+    wcex.lpfnWndProc    = WndProcFrame;
 
-    if (gGlobalData.uninstall)
-        wcex.lpfnWndProc    = UninstallerWndProcFrame;
-    else
-        wcex.lpfnWndProc    = InstallerWndProcFrame;
-
-    atom = RegisterClassEx(&wcex);
-    if (!atom)
-        return FALSE;
-
-    return TRUE;
+    ATOM atom = RegisterClassEx(&wcex);
+    return atom != NULL;
 }
 
 static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
 {
     ghinst = hInstance;
-    
     gFontDefault = CreateDefaultGuiFont();
 
-    if (gGlobalData.uninstall) {
-        gHwndFrame = CreateWindow(
-                INSTALLER_FRAME_CLASS_NAME, TAPP _T(" ") CURR_VERSION_STR _T(" Uninstaller"),
-                WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
-                CW_USEDEFAULT, CW_USEDEFAULT, 
-                UNINSTALLER_WIN_DX, UNINSTALLER_WIN_DY,
-                NULL, NULL,
-                ghinst, NULL);
-        gMsg = _T("Are you sure that you want to uninstall ") TAPP _T("?");
-        gMsgColor = COLOR_MSG_WELCOME;
-    } else {
-        gHwndFrame = CreateWindow(
-                INSTALLER_FRAME_CLASS_NAME, TAPP _T(" ") CURR_VERSION_STR _T(" Installer"),
-                WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
-                CW_USEDEFAULT, CW_USEDEFAULT,                
-                INSTALLER_WIN_DX, INSTALLER_WIN_DY,
-                NULL, NULL,
-                ghinst, NULL);
-        gMsg = _T("Thank you for downloading ") TAPP _T("!");
-        gMsgColor = COLOR_MSG_WELCOME;
-    }
+#ifdef BUILD_UNINSTALLER
+    gHwndFrame = CreateWindow(
+            INSTALLER_FRAME_CLASS_NAME, TAPP _T(" ") CURR_VERSION_STR _T(" Uninstaller"),
+            WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
+            CW_USEDEFAULT, CW_USEDEFAULT, 
+            UNINSTALLER_WIN_DX, UNINSTALLER_WIN_DY,
+            NULL, NULL,
+            ghinst, NULL);
+    gMsg = _T("Are you sure that you want to uninstall ") TAPP _T("?");
+#else
+    gHwndFrame = CreateWindow(
+            INSTALLER_FRAME_CLASS_NAME, TAPP _T(" ") CURR_VERSION_STR _T(" Installer"),
+            WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
+            CW_USEDEFAULT, CW_USEDEFAULT,                
+            INSTALLER_WIN_DX, INSTALLER_WIN_DY,
+            NULL, NULL,
+            ghinst, NULL);
+    gMsg = _T("Thank you for downloading ") TAPP _T("!");
+#endif
     if (!gHwndFrame)
         return FALSE;
+
+    gMsgColor = COLOR_MSG_WELCOME;
 
     CenterDialog(gHwndFrame);
     ShowWindow(gHwndFrame, SW_SHOW);
 
     return TRUE;
 }
+
+#ifdef BUILD_UNINSTALLER
 
 // If this is uninstaller and we're running from installation directory,
 // copy uninstaller to temp directory and execute from there, exiting
@@ -2128,6 +1978,28 @@ bool ExecuteUninstallerFromTempDir()
     return h != NULL;
 }
 
+void ShowUsage()
+{
+    MessageBox(NULL, _T("uninstall.exe [/s][/d <path>]\n\
+    \n\
+    /s\tuninstalls ") TAPP _T(" silently (without user interaction).\n\
+    /d\tchanges the directory from where ") TAPP _T(" will be uninstalled."), TAPP _T(" Uninstaller Usage"), MB_OK | MB_ICONINFORMATION);
+}
+
+#else
+
+void ShowUsage()
+{
+    MessageBox(NULL, TAPP _T("-install.exe [/s][/d <path>][/default][/opt plugin,...]\n\
+    \n\
+    /s\tinstalls ") TAPP _T(" silently (without user interaction).\n\
+    /d\tchanges the directory where ") TAPP _T(" will be installed.\n\
+    /default\tinstalls ") TAPP _T(" as the default PDF viewer.\n\
+    /opt\tenables optional components (currently: plugin, pdffilter, pdfpreviewer)."), TAPP _T(" Installer Usage"), MB_OK | MB_ICONINFORMATION);
+}
+
+#endif
+
 // inspired by http://engineering.imvu.com/2010/11/24/how-to-write-an-interactive-60-hz-desktop-application/
 int RunApp()
 {
@@ -2156,16 +2028,6 @@ int RunApp()
     }
 }
 
-void ShowUsage()
-{
-    MessageBox(NULL, TAPP _T("-install.exe [/s][/d <path>][/default][/opt plugin,...]\n\
-    \n\
-    /s\tinstalls ") TAPP _T(" silently (without user interaction).\n\
-    /d\tchanges the directory where ") TAPP _T(" will be installed.\n\
-    /default\tinstalls ") TAPP _T(" as the default PDF viewer.\n\
-    /opt\tenables optional components (currently: plugin, pdffilter, pdfpreviewer)."), TAPP _T(" Installer Usage"), MB_OK | MB_ICONINFORMATION);
-}
-
 void ParseCommandLine(TCHAR *cmdLine)
 {
     CmdLineParser argList(cmdLine);
@@ -2183,6 +2045,7 @@ void ParseCommandLine(TCHAR *cmdLine)
             gGlobalData.silent = true;
         else if (is_arg_with_param("d"))
             str::ReplacePtr(&gGlobalData.installDir, argList[++i]);
+#ifndef BUILD_UNINSTALLER
         else if (is_arg("register"))
             gGlobalData.registerAsDefault = true;
         else if (is_arg_with_param("opt")) {
@@ -2198,6 +2061,7 @@ void ParseCommandLine(TCHAR *cmdLine)
             if (optlist.Find(_T("pdfpreviewer")) != -1)
                 gGlobalData.installPdfPreviewer = true;
         }
+#endif
         else if (is_arg("h") || is_arg("help") || is_arg("?"))
             gGlobalData.showUsageAndQuit = true;
     }
@@ -2219,32 +2083,27 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         ret = 0;
         goto Exit;
     }
-#ifdef TEST_UNINSTALLER
-    gGlobalData.uninstall = true;
-#endif
-    if (!gGlobalData.uninstall)
-        gGlobalData.uninstall = IsUninstaller();
     if (!gGlobalData.installDir)
-        gGlobalData.installDir = GetInstallationDir(gGlobalData.uninstall);
+        gGlobalData.installDir = GetInstallationDir();
 
-#ifndef TEST_UNINSTALLER
-    if (gGlobalData.uninstall && ExecuteUninstallerFromTempDir())
+#if defined(BUILD_UNINSTALLER) && !defined(TEST_UNINSTALLER)
+    if (ExecuteUninstallerFromTempDir())
         return 0;
 #endif
 
     if (gGlobalData.silent) {
-        if (gGlobalData.uninstall) {
-            UninstallerThread(NULL);
-        } else {
-            // make sure not to uninstall the plugins during silent installation
-            if (!gGlobalData.installBrowserPlugin)
-                gGlobalData.installBrowserPlugin = IsBrowserPluginInstalled();
-            if (!gGlobalData.installPdfFilter)
-                gGlobalData.installPdfFilter = IsPdfFilterInstalled();
-            if (!gGlobalData.installPdfPreviewer)
-                gGlobalData.installPdfPreviewer = IsPdfPreviewerInstalled();
-            InstallerThread(NULL);
-        }
+#ifdef BUILD_UNINSTALLER
+        UninstallerThread(NULL);
+#else
+        // make sure not to uninstall the plugins during silent installation
+        if (!gGlobalData.installBrowserPlugin)
+            gGlobalData.installBrowserPlugin = IsBrowserPluginInstalled();
+        if (!gGlobalData.installPdfFilter)
+            gGlobalData.installPdfFilter = IsPdfFilterInstalled();
+        if (!gGlobalData.installPdfPreviewer)
+            gGlobalData.installPdfPreviewer = IsPdfPreviewerInstalled();
+        InstallerThread(NULL);
+#endif
         ret = gGlobalData.success ? 0 : 1;
         goto Exit;
     }

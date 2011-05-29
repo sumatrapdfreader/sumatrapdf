@@ -139,10 +139,14 @@ def main():
   installer_stub = os.path.join(builds_dir, "Installer.exe")
   copy_from_obj_rel("Installer.exe", installer_stub)
 
+  uninstaller = os.path.join(builds_dir, "uninstall.exe")
+  copy_from_obj_rel("uninstall.exe", uninstaller)
+
   # run StripReloc from inside builds_dir for better
   # compat across python version
   prevdir = os.getcwd(); os.chdir(builds_dir)
   run_cmd_throw("StripReloc", "Installer.exe")
+  run_cmd_throw("StripReloc", "uninstall.exe")
   os.chdir(prevdir)
 
   installer = build_installer_native(builds_dir, filename_base)
@@ -176,7 +180,7 @@ def main():
     # manually to: "%s\n" % ver
 
   # temporary files that were in builds_dir to make creating other files possible
-  temp = [installer_stub, installer_stub + ".bak", exe_no_mupdf] + dll_paths
+  temp = [installer_stub, installer_stub + ".bak", exe_no_mupdf, uninstaller] + dll_paths
   map(os.remove, temp)
 
 

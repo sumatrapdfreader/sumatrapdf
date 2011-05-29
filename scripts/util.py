@@ -161,19 +161,16 @@ def build_installer_native(dir, nameprefix):
   dll_names = ["libmupdf.dll", "npPdfViewer.dll", "PdfFilter.dll", "PdfPreview.dll"]
   font_name =  "DroidSansFallback.ttf"
   font_path = os.path.join("mupdf", "fonts", "droid", font_name)
+  uninstaller_exe = os.path.join(dir, "uninstall.exe")
 
+  # append the payload in ZIP format at the end of the installer exe
   shutil.copy(installer_template_exe, installer_exe)
-
-  # write the marker where the (un)installer ends and the ZIP file begins
-  fo = open(installer_exe, "ab")
-  fo.write("!uninst_end!")
-  fo.close()
-
   zf = zipfile.ZipFile(installer_exe, "a", zipfile.ZIP_BZIP2)
   zf.write(exe, "SumatraPDF.exe")
   for name in dll_names:
     zf.write(os.path.join(dir, name), name)
   zf.write(font_path, font_name)
+  zf.write(uninstaller_exe, "uninstall.exe")
   zf.close()
 
   print("Built installer at " + installer_exe)

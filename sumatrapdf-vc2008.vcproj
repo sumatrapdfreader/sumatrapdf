@@ -358,14 +358,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\utils\PEUtil.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\utils\PEUtil.h"
-				>
-			</File>
-			<File
 				RelativePath=".\src\utils\SimpleLog.cpp"
 				>
 			</File>

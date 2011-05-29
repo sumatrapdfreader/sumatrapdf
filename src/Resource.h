@@ -95,7 +95,6 @@
 #define IDM_GOTO_NAV_BACK               558
 #define IDM_GOTO_NAV_FORWARD            559
 #define IDM_CRASH_ME                    560
-#define IDM_TEST_PE_REWRITE             561
 
 #define IDC_SUMATRAPDF                  600
 #define IDI_SMALL                       601

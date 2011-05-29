@@ -110,14 +110,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\utils\PEUtil.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\utils\PEUtil.h"
-				>
-			</File>
-			<File
 				RelativePath=".\src\utils\SimpleLog.cpp"
 				>
 			</File>
@@ -147,6 +139,14 @@
 			</File>
 			<File
 				RelativePath=".\src\utils\WinUtil.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\utils\ZipUtil.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\utils\ZipUtil.h"
 				>
 			</File>
 		</Filter>
