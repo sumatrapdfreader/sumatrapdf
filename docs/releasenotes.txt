@@ -5,10 +5,8 @@ Next version:
 
 * -named-dest also matches strings in table of contents 
 
-1.7 (2011-??)
+1.6 (2011-05-30)
 
-* optional previewing of PDF documents in Windows Vista and 7 (creates
-  thumbnails and displays documents in Explorer's Preview pane)
 * display Frequently Read list when no document is open
 * add support for displaying DjVu documents
 * add support for displaying Postscript documents
@@ -16,6 +14,8 @@ Next version:
 * add support for displaying a folder containing images
   (to display it, drag the folder over SumatraPDF)
 * support clickable links and a Table of Content for XPS documents
+* optional previewing of PDF documents in Windows Vista and 7 (creates
+  thumbnails and displays documents in Explorer's Preview pane)
 * display printing progress and allow to cancel it
 * add Print toolbar button
 
