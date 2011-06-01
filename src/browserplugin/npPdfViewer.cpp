@@ -187,10 +187,7 @@ bool GetExePath(LPTSTR lpPath, int len)
     GetModuleFileName(g_hInstance, lpPath, len - 2);
     str::BufSet((TCHAR *)path::GetBaseName(lpPath), len - 2 - (path::GetBaseName(lpPath) - lpPath), _T("SumatraPDF.exe"));
     if (file::Exists(lpPath))
-    {
-        PathQuoteSpaces(lpPath);
         return true;
-    }
     
     *lpPath = '\0';
     // Try to get the path from the registry (set e.g. when making the default PDF viewer)
@@ -242,7 +239,7 @@ struct InstanceData {
     TCHAR       filepath[MAX_PATH];
     HANDLE      hFile;
     HANDLE      hProcess;
-    TCHAR       exepath[MAX_PATH + 2];
+    TCHAR       exepath[MAX_PATH];
     float       progress, prevProgress;
     uint32_t    totalSize, currSize;
 };
@@ -377,7 +374,7 @@ NPError NP_LOADDS NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, in
     data = (InstanceData *)instance->pdata;
     gNPNFuncs.setvalue(instance, NPPVpluginWindowBool, (void *)true);
     
-    if (GetExePath(data->exepath, MAX_PATH + 2))
+    if (GetExePath(data->exepath, dimof(data->exepath)))
         data->message = _T("Opening PDF document in SumatraPDF...");
     else
         data->message = _T("Error: SumatraPDF hasn't been found!");
