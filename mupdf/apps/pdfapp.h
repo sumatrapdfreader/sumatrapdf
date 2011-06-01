@@ -69,6 +69,13 @@ struct pdfapp_s
 
 	int iscopying;
 	int selx, sely;
+	/* TODO - While sely keeps track of the relative change in
+	 * cursor position between two ticks/events, beyondy shall keep
+	 * track of the relative change in cursor position from the
+	 * point where the user hits a scrolling limit. This is ugly.
+	 * Used in pdfapp.c:pdfapp_onmouse.
+	 */
+	int beyondy;
 	fz_bbox selr;
 
 	/* search state */

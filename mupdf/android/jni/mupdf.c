@@ -64,9 +64,9 @@ Java_com_artifex_mupdf_MuPDFCore_openFile(JNIEnv * env, jobject thiz, jstring jf
 		LOGE("Cannot load page tree: '%s'\n", filename);
 		return 0;
 	}
-	LOGE("Done! %d pages", pdf_get_page_count(xref));
+	LOGE("Done! %d pages", pdf_count_pages(xref));
 
-	return pdf_get_page_count(xref);
+	return pdf_count_pages(xref);
 }
 
 JNIEXPORT void JNICALL
@@ -74,7 +74,6 @@ Java_com_artifex_mupdf_MuPDFCore_gotoPageInternal(JNIEnv *env, jobject thiz, int
 {
 	float zoom;
 	fz_matrix ctm;
-	fz_obj *pageobj;
 	fz_bbox bbox;
 	fz_error error;
 	fz_device *dev;
@@ -91,10 +90,7 @@ Java_com_artifex_mupdf_MuPDFCore_gotoPageInternal(JNIEnv *env, jobject thiz, int
 		currentPageList = NULL;
 	}
 	pagenum = page;
-	pageobj = pdf_get_page_object(xref, pagenum);
-	if (pageobj == NULL)
-		return;
-	error = pdf_load_page(&currentPage, xref, pageobj);
+	error = pdf_load_page(&currentPage, xref, pagenum);
 	if (error)
 		return;
 	zoom = resolution / 72;
@@ -144,6 +140,7 @@ Java_com_artifex_mupdf_MuPDFCore_drawPage(JNIEnv *env, jobject thiz, jobject bit
 	fz_bbox bbox;
 	fz_pixmap *pix;
 	float xscale, yscale;
+	fz_bbox rect;
 
 	LOGI("In native method\n");
 	if ((ret = AndroidBitmap_getInfo(env, bitmap, &info)) < 0) {
@@ -167,12 +164,11 @@ Java_com_artifex_mupdf_MuPDFCore_drawPage(JNIEnv *env, jobject thiz, jobject bit
 	LOGE("Rendering page=%dx%d patch=[%d,%d,%d,%d]",
 			pageW, pageH, patchX, patchY, patchW, patchH);
 
-	pix = fz_new_pixmap_with_data(colorspace,
-			patchX,
-			patchY,
-			patchW,
-			patchH,
-			pixels);
+	rect.x0 = patchX;
+	rect.y0 = patchY;
+	rect.x1 = patchX + patchW;
+	rect.y1 = patchY + patchH;
+	pix = fz_new_pixmap_with_rect_and_data(colorspace, rect, pixels);
 	if (currentPageList == NULL)
 	{
 		fz_clear_pixmap_with_color(pix, 0xd0);
@@ -191,7 +187,7 @@ Java_com_artifex_mupdf_MuPDFCore_drawPage(JNIEnv *env, jobject thiz, jobject bit
 	yscale = (float)pageH/(float)(bbox.y1-bbox.y0);
 	ctm = fz_concat(ctm, fz_scale(xscale, yscale));
 	dev = fz_new_draw_device(glyphcache, pix);
-	fz_execute_display_list(currentPageList, dev, ctm);
+	fz_execute_display_list(currentPageList, dev, ctm, fz_infinite_bbox);
 	fz_free_device(dev);
 	fz_drop_pixmap(pix);
 	LOGE("Rendered");

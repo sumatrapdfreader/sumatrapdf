@@ -57,7 +57,7 @@ xps_parse_gradient_stops(xps_context *ctx, char *base_uri, xml_element *node,
 			char *color = xml_att(node, "Color");
 			if (offset && color)
 			{
-				stops[count].offset = atof(offset);
+				stops[count].offset = fz_atof(offset);
 
 				xps_parse_color(ctx, base_uri, color, &colorspace, sample);
 
@@ -317,9 +317,9 @@ xps_draw_radial_gradient(xps_context *ctx, fz_matrix ctm,
 	if (center_att)
 		sscanf(center_att, "%g,%g", &x1, &y1);
 	if (radius_x_att)
-		xrad = atof(radius_x_att);
+		xrad = fz_atof(radius_x_att);
 	if (radius_y_att)
-		yrad = atof(radius_y_att);
+		yrad = fz_atof(radius_y_att);
 
 	/* scale the ctm to make ellipses */
 	ctm = fz_concat(fz_scale(1, yrad / xrad), ctm);

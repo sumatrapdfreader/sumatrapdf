@@ -6,13 +6,14 @@ MY_ROOT := ../..
 
 LOCAL_C_INCLUDES := \
 	../thirdparty/jbig2dec \
-	../thirdparty/openjpeg/libopenjpeg \
-	../thirdparty/jpeg \
-	../thirdparty/zlib \
-	../thirdparty/freetype/include \
+	../thirdparty/openjpeg-1.4/libopenjpeg \
+	../thirdparty/jpeg-8c \
+	../thirdparty/zlib-1.2.5 \
+	../thirdparty/freetype-2.4.4/include \
 	../draw \
 	../fitz \
-	../mupdf \
+	../pdf \
+	../scripts \
 	..
 
 LOCAL_MODULE    := mupdfcore
@@ -22,13 +23,14 @@ LOCAL_SRC_FILES := \
 	$(MY_ROOT)/fitz/base_getopt.c \
 	$(MY_ROOT)/fitz/base_hash.c \
 	$(MY_ROOT)/fitz/base_memory.c \
+	$(MY_ROOT)/fitz/base_object.c \
 	$(MY_ROOT)/fitz/base_string.c \
 	$(MY_ROOT)/fitz/base_time.c \
 	$(MY_ROOT)/fitz/crypt_aes.c \
 	$(MY_ROOT)/fitz/crypt_arc4.c \
 	$(MY_ROOT)/fitz/crypt_md5.c \
+	$(MY_ROOT)/fitz/crypt_sha2.c \
 	$(MY_ROOT)/fitz/dev_bbox.c \
-	$(MY_ROOT)/fitz/dev_draw.c \
 	$(MY_ROOT)/fitz/dev_list.c \
 	$(MY_ROOT)/fitz/dev_null.c \
 	$(MY_ROOT)/fitz/dev_text.c \
@@ -41,10 +43,7 @@ LOCAL_SRC_FILES := \
 	$(MY_ROOT)/fitz/filt_jpxd.c \
 	$(MY_ROOT)/fitz/filt_lzwd.c \
 	$(MY_ROOT)/fitz/filt_predict.c \
-	$(MY_ROOT)/fitz/obj_array.c \
-	$(MY_ROOT)/fitz/obj_dict.c \
 	$(MY_ROOT)/fitz/obj_print.c \
-	$(MY_ROOT)/fitz/obj_simple.c \
 	$(MY_ROOT)/fitz/res_colorspace.c \
 	$(MY_ROOT)/fitz/res_font.c \
 	$(MY_ROOT)/fitz/res_path.c \
@@ -54,57 +53,46 @@ LOCAL_SRC_FILES := \
 	$(MY_ROOT)/fitz/stm_buffer.c \
 	$(MY_ROOT)/fitz/stm_open.c \
 	$(MY_ROOT)/fitz/stm_read.c \
-	$(MY_ROOT)/draw/archport.c \
-	$(MY_ROOT)/draw/blendmodes.c \
-	$(MY_ROOT)/draw/glyphcache.c \
-	$(MY_ROOT)/draw/imagedraw.c \
-	$(MY_ROOT)/draw/imagescale.c \
-	$(MY_ROOT)/draw/imagesmooth.c \
-	$(MY_ROOT)/draw/imageunpack.c \
-	$(MY_ROOT)/draw/meshdraw.c \
-	$(MY_ROOT)/draw/pathfill.c \
-	$(MY_ROOT)/draw/pathscan.c \
-	$(MY_ROOT)/draw/pathstroke.c \
-	$(MY_ROOT)/draw/porterduff.c \
-	$(MY_ROOT)/mupdf/pdf_annot.c \
-	$(MY_ROOT)/mupdf/pdf_build.c \
-	$(MY_ROOT)/mupdf/pdf_cmap.c \
-	$(MY_ROOT)/mupdf/pdf_cmap_load.c \
-	$(MY_ROOT)/mupdf/pdf_cmap_parse.c \
-	$(MY_ROOT)/mupdf/pdf_cmap_table.c \
-	$(MY_ROOT)/mupdf/pdf_colorspace.c \
-	$(MY_ROOT)/mupdf/pdf_crypt.c \
-	$(MY_ROOT)/mupdf/pdf_debug.c \
-	$(MY_ROOT)/mupdf/pdf_font.c \
-	$(MY_ROOT)/mupdf/pdf_fontagl.c \
-	$(MY_ROOT)/mupdf/pdf_fontenc.c \
-	$(MY_ROOT)/mupdf/pdf_fontfile.c \
-	$(MY_ROOT)/mupdf/pdf_fontmtx.c \
-	$(MY_ROOT)/mupdf/pdf_function.c \
-	$(MY_ROOT)/mupdf/pdf_image.c \
-	$(MY_ROOT)/mupdf/pdf_interpret.c \
-	$(MY_ROOT)/mupdf/pdf_lex.c \
-	$(MY_ROOT)/mupdf/pdf_nametree.c \
-	$(MY_ROOT)/mupdf/pdf_outline.c \
-	$(MY_ROOT)/mupdf/pdf_page.c \
-	$(MY_ROOT)/mupdf/pdf_pagetree.c \
-	$(MY_ROOT)/mupdf/pdf_parse.c \
-	$(MY_ROOT)/mupdf/pdf_pattern.c \
-	$(MY_ROOT)/mupdf/pdf_repair.c \
-	$(MY_ROOT)/mupdf/pdf_shade.c \
-	$(MY_ROOT)/mupdf/pdf_store.c \
-	$(MY_ROOT)/mupdf/pdf_stream.c \
-	$(MY_ROOT)/mupdf/pdf_type3.c \
-	$(MY_ROOT)/mupdf/pdf_unicode.c \
-	$(MY_ROOT)/mupdf/pdf_xobject.c \
-	$(MY_ROOT)/mupdf/pdf_xref.c \
-	$(MY_ROOT)/pregen/cmap_unicode.c \
-	$(MY_ROOT)/pregen/cmap_cns.c \
-	$(MY_ROOT)/pregen/cmap_gb.c \
-	$(MY_ROOT)/pregen/cmap_japan.c \
-	$(MY_ROOT)/pregen/cmap_korea.c \
-	$(MY_ROOT)/pregen/font_base14.c \
-	$(MY_ROOT)/pregen/font_cjk.c
+	$(MY_ROOT)/draw/arch_arm.c \
+	$(MY_ROOT)/draw/arch_port.c \
+	$(MY_ROOT)/draw/draw_affine.c \
+	$(MY_ROOT)/draw/draw_blend.c \
+	$(MY_ROOT)/draw/draw_device.c \
+	$(MY_ROOT)/draw/draw_edge.c \
+	$(MY_ROOT)/draw/draw_glyph.c \
+	$(MY_ROOT)/draw/draw_mesh.c \
+	$(MY_ROOT)/draw/draw_paint.c \
+	$(MY_ROOT)/draw/draw_path.c \
+	$(MY_ROOT)/draw/draw_scale.c \
+	$(MY_ROOT)/draw/draw_unpack.c \
+	$(MY_ROOT)/pdf/pdf_annot.c \
+	$(MY_ROOT)/pdf/pdf_cmap.c \
+	$(MY_ROOT)/pdf/pdf_cmap_load.c \
+	$(MY_ROOT)/pdf/pdf_cmap_parse.c \
+	$(MY_ROOT)/pdf/pdf_cmap_table.c \
+	$(MY_ROOT)/pdf/pdf_colorspace.c \
+	$(MY_ROOT)/pdf/pdf_crypt.c \
+	$(MY_ROOT)/pdf/pdf_encoding.c \
+	$(MY_ROOT)/pdf/pdf_font.c \
+	$(MY_ROOT)/pdf/pdf_fontfile.c \
+	$(MY_ROOT)/pdf/pdf_function.c \
+	$(MY_ROOT)/pdf/pdf_image.c \
+	$(MY_ROOT)/pdf/pdf_interpret.c \
+	$(MY_ROOT)/pdf/pdf_lex.c \
+	$(MY_ROOT)/pdf/pdf_metrics.c \
+	$(MY_ROOT)/pdf/pdf_nametree.c \
+	$(MY_ROOT)/pdf/pdf_outline.c \
+	$(MY_ROOT)/pdf/pdf_page.c \
+	$(MY_ROOT)/pdf/pdf_parse.c \
+	$(MY_ROOT)/pdf/pdf_pattern.c \
+	$(MY_ROOT)/pdf/pdf_repair.c \
+	$(MY_ROOT)/pdf/pdf_shade.c \
+	$(MY_ROOT)/pdf/pdf_store.c \
+	$(MY_ROOT)/pdf/pdf_stream.c \
+	$(MY_ROOT)/pdf/pdf_type3.c \
+	$(MY_ROOT)/pdf/pdf_unicode.c \
+	$(MY_ROOT)/pdf/pdf_xobject.c \
+	$(MY_ROOT)/pdf/pdf_xref.c
 
 LOCAL_LDLIBS    := -lm -llog -ljnigraphics
 

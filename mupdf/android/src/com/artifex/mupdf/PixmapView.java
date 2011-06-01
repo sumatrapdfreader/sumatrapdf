@@ -209,16 +209,16 @@ public class PixmapView extends SurfaceView implements SurfaceHolder.Callback
 		{
 			action = GOTOPAGE;
 			if (delta == Integer.MIN_VALUE)
-				actionPageNum = 1;
+				actionPageNum = 0;
 			else if (delta == Integer.MAX_VALUE)
-				actionPageNum = core.numPages;
+				actionPageNum = core.numPages-1;
 			else
 			{
 				actionPageNum += delta;
-				if (actionPageNum < 1)
-					actionPageNum = 1;
-				if (actionPageNum > core.numPages)
-					actionPageNum = core.numPages;
+				if (actionPageNum < 0)
+					actionPageNum = 0;
+				if (actionPageNum > core.numPages-1)
+					actionPageNum = core.numPages-1;
 			}
 			if (wakeMe)
 			{

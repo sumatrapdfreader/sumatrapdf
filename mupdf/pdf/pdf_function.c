@@ -714,7 +714,7 @@ parse_code(pdf_function *func, fz_stream *stream, int *codeptr)
 		case PDF_TOK_REAL:
 			resize_code(func, *codeptr);
 			func->u.p.code[*codeptr].type = PS_REAL;
-			func->u.p.code[*codeptr].u.f = atof(buf);
+			func->u.p.code[*codeptr].u.f = fz_atof(buf);
 			++*codeptr;
 			break;
 

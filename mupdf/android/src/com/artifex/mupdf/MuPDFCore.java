@@ -31,16 +31,16 @@ public class MuPDFCore
 		{
 			throw new Exception("Failed to open "+filename);
 		}
-		pageNum = 1;
+		pageNum = 0;
 	}
 
 	/* Shim function */
 	public void gotoPage(int page)
 	{
-		if (page > numPages)
-			page = numPages;
-		else if (page < 1)
-			page = 1;
+		if (page > numPages-1)
+			page = numPages-1;
+		else if (page < 0)
+			page = 0;
 		gotoPageInternal(page);
 		this.pageNum = page;
 		this.pageWidth = getPageWidth();

@@ -210,7 +210,7 @@ xps_parse_real_num(char *s, float *number)
 		*p++ = *s++;
 	*p = 0;
 	if (buf[0])
-		*number = atof(buf);
+		*number = fz_atof(buf);
 	return s;
 }
 
@@ -531,10 +531,10 @@ xps_parse_glyphs(xps_context *ctx, fz_matrix ctm,
 	if (clip_att || clip_tag)
 		xps_clip(ctx, ctm, dict, clip_att, clip_tag);
 
-	font_size = atof(font_size_att);
+	font_size = fz_atof(font_size_att);
 
 	text = xps_parse_glyphs_imp(ctx, ctm, font, font_size,
-			atof(origin_x_att), atof(origin_y_att),
+			fz_atof(origin_x_att), fz_atof(origin_y_att),
 			is_sideways, bidi_level, indices_att, unicode_att);
 
 	area = fz_bound_text(text, ctm);
@@ -560,7 +560,7 @@ xps_parse_glyphs(xps_context *ctx, fz_matrix ctm,
 
 		xps_parse_color(ctx, base_uri, fill_att, &colorspace, samples);
 		if (fill_opacity_att)
-			samples[0] = atof(fill_opacity_att);
+			samples[0] = fz_atof(fill_opacity_att);
 		xps_set_color(ctx, colorspace, samples);
 
 		fz_fill_text(ctx->dev, text, ctm,

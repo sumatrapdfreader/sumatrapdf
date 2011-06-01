@@ -251,7 +251,7 @@ pdf_parse_array(fz_obj **op, pdf_xref *xref, fz_stream *file, char *buf, int cap
 			fz_drop_obj(obj);
 			break;
 		case PDF_TOK_REAL:
-			obj = fz_new_real(atof(buf));
+			obj = fz_new_real(fz_atof(buf));
 			fz_array_push(ary, obj);
 			fz_drop_obj(obj);
 			break;
@@ -358,7 +358,7 @@ skip:
 			break;
 
 		case PDF_TOK_NAME: val = fz_new_name(buf); break;
-		case PDF_TOK_REAL: val = fz_new_real(atof(buf)); break;
+		case PDF_TOK_REAL: val = fz_new_real(fz_atof(buf)); break;
 		case PDF_TOK_STRING: val = fz_new_string(buf, len); break;
 		case PDF_TOK_TRUE: val = fz_new_bool(1); break;
 		case PDF_TOK_FALSE: val = fz_new_bool(0); break;
@@ -439,7 +439,7 @@ pdf_parse_stm_obj(fz_obj **op, pdf_xref *xref, fz_stream *file, char *buf, int c
 			return fz_rethrow(error, "cannot parse object stream");
 		break;
 	case PDF_TOK_NAME: *op = fz_new_name(buf); break;
-	case PDF_TOK_REAL: *op = fz_new_real(atof(buf)); break;
+	case PDF_TOK_REAL: *op = fz_new_real(fz_atof(buf)); break;
 	case PDF_TOK_STRING: *op = fz_new_string(buf, len); break;
 	case PDF_TOK_TRUE: *op = fz_new_bool(1); break;
 	case PDF_TOK_FALSE: *op = fz_new_bool(0); break;
@@ -502,7 +502,7 @@ pdf_parse_ind_obj(fz_obj **op, pdf_xref *xref,
 		break;
 
 	case PDF_TOK_NAME: obj = fz_new_name(buf); break;
-	case PDF_TOK_REAL: obj = fz_new_real(atof(buf)); break;
+	case PDF_TOK_REAL: obj = fz_new_real(fz_atof(buf)); break;
 	case PDF_TOK_STRING: obj = fz_new_string(buf, len); break;
 	case PDF_TOK_TRUE: obj = fz_new_bool(1); break;
 	case PDF_TOK_FALSE: obj = fz_new_bool(0); break;

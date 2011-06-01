@@ -22,7 +22,7 @@ pdf_load_version(pdf_xref *xref)
 	if (memcmp(buf, "%PDF-", 5) != 0)
 		return fz_throw("cannot recognize version marker");
 
-	xref->version = atof(buf + 5) * 10;
+	xref->version = fz_atof(buf + 5) * 10;
 
 	return fz_okay;
 }
@@ -923,7 +923,7 @@ pdf_update_object(pdf_xref *xref, int num, int gen, fz_obj *newobj)
  */
 
 fz_error
-pdf_open_xref(pdf_xref **xrefp, char *filename, char *password)
+pdf_open_xref(pdf_xref **xrefp, const char *filename, char *password)
 {
 	fz_error error;
 	fz_stream *file;

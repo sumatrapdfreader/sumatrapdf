@@ -11,7 +11,7 @@ include $(CLEAR_VARS)
 LOCAL_C_INCLUDES := \
 	$(MUPDF_ROOT)/draw \
 	$(MUPDF_ROOT)/fitz \
-	$(MUPDF_ROOT)/mupdf
+	$(MUPDF_ROOT)/pdf
 LOCAL_CFLAGS :=
 LOCAL_MODULE    := mupdf
 LOCAL_SRC_FILES := mupdf.c

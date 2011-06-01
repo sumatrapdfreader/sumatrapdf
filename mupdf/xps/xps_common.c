@@ -49,14 +49,14 @@ xps_begin_opacity(xps_context *ctx, fz_matrix ctm, fz_rect area,
 
 	opacity = 1;
 	if (opacity_att)
-		opacity = atof(opacity_att);
+		opacity = fz_atof(opacity_att);
 
 	if (opacity_mask_tag && !strcmp(xml_tag(opacity_mask_tag), "SolidColorBrush"))
 	{
 		char *scb_opacity_att = xml_att(opacity_mask_tag, "Opacity");
 		char *scb_color_att = xml_att(opacity_mask_tag, "Color");
 		if (scb_opacity_att)
-			opacity = opacity * atof(scb_opacity_att);
+			opacity = opacity * fz_atof(scb_opacity_att);
 		if (scb_color_att)
 		{
 			fz_colorspace *colorspace;
@@ -111,7 +111,7 @@ xps_parse_render_transform(xps_context *ctx, char *transform, fz_matrix *matrix)
 
 	for (i = 0; i < 6 && *s; i++)
 	{
-		args[i] = atof(s);
+		args[i] = fz_atof(s);
 		while (*s && *s != ',')
 			s++;
 		if (*s == ',')
@@ -150,7 +150,7 @@ xps_parse_rectangle(xps_context *ctx, char *text, fz_rect *rect)
 
 	for (i = 0; i < 4 && *s; i++)
 	{
-		args[i] = atof(s);
+		args[i] = fz_atof(s);
 		while (*s && *s != ',')
 			s++;
 		if (*s == ',')
@@ -247,7 +247,7 @@ xps_parse_color(xps_context *ctx, char *base_uri, char *string,
 		i = 0;
 		while (i < n)
 		{
-			samples[i++] = atof(p);
+			samples[i++] = fz_atof(p);
 			p = strchr(p, ',');
 			if (!p)
 				break;

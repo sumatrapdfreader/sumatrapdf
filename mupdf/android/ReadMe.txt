@@ -50,14 +50,11 @@ Click 'Create AVD' and wait for a minute or so while it is prepared. Now
 you can exit the GUI.
 
 6) Now we are ready to build mupdf for Android. Check out a copy of MuPDF
-(but you've done that already, cos you're reading this, right?). Get the
-thirdparty package from mupdf.com and unpack that into mupdf/thirdparty.
-Also get the pregen package from the same place and unpack that into
-mupdf/pregen.
+(but you've done that already, cos you're reading this, right?).
 
-7) Load local.properties into your favourite editor, and edit the sdk
-path there as appropriate. This should be the only bit of localisation
-you need to do.
+7) Change into the android directory, and edit local.properties into your
+favourite editor. Change the sdk path there as appropriate. This should be
+the only bit of localisation you need to do.
 
 8) Change into the android directory, and execute (in a Cygwin window on
 Windows!):
@@ -67,6 +64,10 @@ Windows!):
 This should build the native code portion. Then execute:
 
        ant debug
+
+or on windows under cygwin:
+
+       ant.bat debug
 
 This should build the java wrapper.
 
@@ -83,7 +84,7 @@ done once). With the emulator running type:
        adb push ../../MyTests/pdf_reference17.pdf /mnt/sdcard/Download/test.pdf
 
 (where obviously ../../MyTests/pdf_reference17.pdf is altered for your
-machine).
+machine). (adb lives in <sdk>/platform-tools if it's not on your path).
 
 11) With the emulator running (see step 9), execute
 

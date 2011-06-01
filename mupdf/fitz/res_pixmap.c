@@ -76,6 +76,16 @@ fz_new_pixmap_with_rect(fz_colorspace *colorspace, fz_bbox r)
 }
 
 fz_pixmap *
+fz_new_pixmap_with_rect_and_data(fz_colorspace *colorspace, fz_bbox r, unsigned char *samples)
+{
+	fz_pixmap *pixmap;
+	pixmap = fz_new_pixmap_with_data(colorspace, r.x1 - r.x0, r.y1 - r.y0, samples);
+	pixmap->x = r.x0;
+	pixmap->y = r.y0;
+	return pixmap;
+}
+
+fz_pixmap *
 fz_keep_pixmap(fz_pixmap *pix)
 {
 	pix->refs++;

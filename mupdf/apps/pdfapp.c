@@ -6,6 +6,7 @@
 #include <ctype.h> /* for tolower() */
 
 #define ZOOMSTEP 1.142857
+#define BEYOND_THRESHHOLD 40
 
 enum panning
 {
@@ -987,6 +988,7 @@ void pdfapp_onmouse(pdfapp_t *app, int x, int y, int btn, int modifiers, int sta
 			app->ispanning = 1;
 			app->selx = x;
 			app->sely = y;
+			app->beyondy = 0;
 		}
 		if (btn == 3 && !app->ispanning)
 		{
@@ -1048,7 +1050,55 @@ void pdfapp_onmouse(pdfapp_t *app, int x, int y, int btn, int modifiers, int sta
 	{
 		int newx = app->panx + x - app->selx;
 		int newy = app->pany + y - app->sely;
+		/* Scrolling beyond limits implies flipping pages */
+		/* Are we requested to scroll beyond limits? */
+		if (newy + app->image->h < app->winh || newy > 0)
+		{
+			/* Yes. We can assume that deltay != 0 */
+			int deltay = y - app->sely;
+			/* Check whether the panning has occured in the
+			 * direction that we are already crossing the
+			 * limit it. If not, we can conclude that we
+			 * have switched ends of the page and will thus
+			 * start over counting.
+			 */
+			if( app->beyondy == 0 || (app->beyondy ^ deltay) >= 0 )
+			{
+				/* Updating how far we are beyond and
+				 * flipping pages if beyond threshhold
+				 */
+				app->beyondy += deltay;
+				if (app->beyondy > BEYOND_THRESHHOLD)
+				{
+					if( app->pageno > 1 )
+					{
+						app->pageno--;
+						pdfapp_showpage(app, 1, 1, 1);
+						newy = -app->image->h;
+					}
+					app->beyondy = 0;
+				}
+				else if (app->beyondy < -BEYOND_THRESHHOLD)
+				{
+					if( app->pageno < app->pagecount )
+					{
+						app->pageno++;
+						pdfapp_showpage(app, 1, 1, 1);
+						newy = 0;
+					}
+					app->beyondy = 0;
+				}
+			}
+			else
+				app->beyondy = 0;
+		}
+		/* Although at this point we've already determined that
+		 * or that no scrolling will be performed in
+		 * y-direction, the x-direction has not yet been taken
+		 * care off. Therefore
+		 */
 		pdfapp_panview(app, newx, newy);
+
 		app->selx = x;
 		app->sely = y;
 	}

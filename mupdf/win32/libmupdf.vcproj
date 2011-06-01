@@ -147,6 +147,14 @@
 			Name="pdf"
 			>
 			<File
+				RelativePath="..\pdf\data_encodings.h"
+				>
+			</File>
+			<File
+				RelativePath="..\pdf\data_glyphlist.h"
+				>
+			</File>
+			<File
 				RelativePath="..\pdf\mupdf.h"
 				>
 			</File>
