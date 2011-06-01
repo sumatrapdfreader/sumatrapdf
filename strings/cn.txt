@@ -22,8 +22,14 @@ Contributor: WangKing (http://wkismet.spaces.live.com)
 &Back\tAlt+Left Arrow
 上一视图(&B)\tAlt+Left Arrow
 
+&Book View\tCtrl-8
+书籍视图(&B)\tCtrl-8
+
 &Close\tCtrl-W
 关闭(&C)\tCtrl-W
+
+&Copy Selection
+复制选择内容(&C)\tCtrl-C
 
 &Copy Selection\tCtrl-C
 复制选择内容\tCtrl-C
@@ -33,6 +39,9 @@ Contributor: WangKing (http://wkismet.spaces.live.com)
 
 &Even pages only
 仅偶数页(&E)
+
+&Facing\tCtrl-7
+双页视图(&F)\tCtrl-7
 
 &File
 文件(&F)
@@ -82,14 +91,23 @@ Contributor: WangKing (http://wkismet.spaces.live.com)
 &Open\tCtrl-O
 打开(&O)\tCtrl-O
 
+&Open Document
+打开文件(&O)
+
 &Options...
 选项(&O)...
 
 &Password:
 密码(&P)
 
+&Pin Document
+别住文件(&P)
+
 &Previous Page\tLeft Arrow
 上一页\t<-
+
+&Print...
+打印(&P)...
 
 &Print...\tCtrl-P
 打印(&P)...\tCtrl-P
@@ -103,6 +121,12 @@ Contributor: WangKing (http://wkismet.spaces.live.com)
 &Remember these settings for each document
 为每一个文档记住这些设置(&R)
 
+&Remove Document
+删除文件(&R)
+
+&Save As...
+另存为(&S)...
+
 &Save As...\tCtrl-S
 另存为(&S)...\tCtrl-S
 
@@ -111,6 +135,9 @@ Contributor: WangKing (http://wkismet.spaces.live.com)
 
 &Shrink pages to printable area (if necessary)
 缩小页面到可打印区域 (如果需要) (&S)
+
+&Single Page\tCtrl-6
+单页视图(&S)\tCtrl-6
 
 &Skip this version
 跳过此版本
@@ -139,6 +166,9 @@ Advanced
 All files
 所有文件
 
+All supported documents
+所有支持文件类型
+
 Application:
 应用程序:
 
@@ -162,6 +192,12 @@ Book View
 
 Book&marks\tF12
 书签(&M)\tF12
+
+Bookmark Shortcuts
+书签快捷方式
+
+Bookmark shortcut to page %d of %s
+书签%d页/共%s页
 
 Bookmarks
 书签
@@ -187,6 +223,9 @@ Change Language
 Check for &Updates
 检查是否有新版本(&U)
 
+Comic books
+漫画书
+
 Continuous
 连续页面
 
@@ -198,6 +237,12 @@ Continuous Facing
 
 Contribute Translation
 提供翻译
+
+Copy &Link Address
+复制链接地址(&L)
+
+Copy Co&mment
+复制注释(&m)
 
 Copying text was denied (copying as image only)
 无法复制文本 (只能作为图像复制)
@@ -229,6 +274,9 @@ Default PDF reader can't be changed in portable mode
 Denied Permissions:
 权限不足:
 
+DjVu documents
+DjVu文件
+
 Document Properties
 文档属性:
 
@@ -246,6 +294,9 @@ Enter password for %s
 
 Enter the command-line to invoke when you double-click on the PDF document:
 双击PDF文档时输入命令行调用
+
+Error loading %s
+载入错误 %s
 
 F&orward\tAlt+Right Arrow
 下一视图(&O)\tAlt+Right Arrow
@@ -298,8 +349,20 @@ Fit Page
 Fit Width
 适合宽度
 
+Fit Width and Show Pages Continuously
+自适应宽度连续模式
+
+Fit a Single Page
+自适应单页模式
+
 Found text at page %d
 在第%d页找到文本
+
+Found text at page %d (again)
+在第%d页找到文本(再一次)
+
+Frequently Read
+最近阅读
 
 GB
 GB
@@ -307,8 +370,14 @@ GB
 Go to page
 转到页面
 
+Hide frequently read
+隐藏最近阅读
+
 Hint: Use the F3 key for finding again
 提示：按F3键再次查找
+
+Image files (*.%s)
+图片文件(*.%s)
 
 KB
 KB
@@ -355,6 +424,9 @@ OK
 Open
 打开
 
+Open a document...
+打开一个文件...
+
 Open in &Adobe Reader
 在&Adobe Reader中打开
 
@@ -363,6 +435,9 @@ Open in &Foxit Reader
 
 Open in PDF-XChange
 在PDF-XChange中打开
+
+P&roperties
+属性(&R)
 
 P&roperties\tCtrl-D
 属性(&R)\tCtrl-D
@@ -397,11 +472,26 @@ Page:
 Please wait - rendering...
 请耐心等待，正在渲染中...
 
+Postscript documents
+Postscript 文件
+
+Pr&esentation\tCtrl-L
+幻灯片(&E)\tCtrl-L
+
 Previous Page
 上一页
 
+Print
+打印
+
 Print range
 打印范围
+
+Printing is still in progress. Abort and start over?
+仍然在打印.中断并重新开始?
+
+Printing page %d of %d...
+正在打印第 %d 页 共 %d页
 
 Printing problem.
 打印问题。
@@ -415,8 +505,17 @@ Rotate &Left\tCtrl-Shift--
 Rotate &Right\tCtrl-Shift-+
 向右旋转(&R)\tCtrl-Shift-+
 
+Save S&hortcut...\tCtrl-Shift-S
+保存快捷方式(&H)...\tCtrl-Shift-S
+
 Searching %d of %d...
 正在搜索第%d页/共%d页
+
+Select &All
+全选(&A)
+
+Select &All\tCtrl-A
+全选(&A)\tCtrl-A
 
 Select content with Ctrl+left mouse button
 使用Ctrl+鼠标左键选择内容
@@ -433,11 +532,17 @@ Show &Toolbar
 Show &pages continuously
 连续显示页面(&P)
 
+Show frequently read
+显示最常阅读
+
 Show the &bookmarks sidebar when available
 若可用则显示书签侧边栏(&B)
 
 Single Page
 单个页面
+
+Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
+抱歉, 本不应该发生的!\n\n如果你希望帮助我们修复这个崩溃问题, 请点击'取消'.
 
 Source file %s has no synchronization point
 源文件 %s 没有同步点
@@ -447,6 +552,12 @@ Subject:
 
 SumatraPDF Options
 SumatraPDF 选项
+
+SumatraPDF Update
+升级SumatraPDF
+
+SumatraPDF crashed
+SumatraPDF 崩溃了
 
 SumatraPDF is your default PDF reader
 SumatraPDF 是默认 PDF 阅读器
@@ -475,6 +586,9 @@ Visit &Website
 Warning
 警告
 
+XPS documents
+XPS 文件
+
 You have the latest version.
 您的版本已经是最新版。
 
@@ -501,44 +615,4 @@ copying text
 
 printing document
 正在打印文档
-
-# Untranslated:
-#&Book View\tCtrl-8
-#&Copy Selection
-#&Facing\tCtrl-7
-#&Open Document
-#&Pin Document
-#&Print...
-#&Remove Document
-#&Save As...
-#&Single Page\tCtrl-6
-#All supported documents
-#Bookmark Shortcuts
-#Bookmark shortcut to page %d of %s
-#Comic books
-#Copy &Link Address
-#Copy Co&mment
-#DjVu documents
-#Error loading %s
-#Fit Width and Show Pages Continuously
-#Fit a Single Page
-#Found text at page %d (again)
-#Frequently Read
-#Hide frequently read
-#Image files (*.%s)
-#Open a document...
-#P&roperties
-#Postscript documents
-#Pr&esentation\tCtrl-L
-#Print
-#Printing is still in progress. Abort and start over?
-#Printing page %d of %d...
-#Save S&hortcut...\tCtrl-Shift-S
-#Select &All
-#Select &All\tCtrl-A
-#Show frequently read
-#Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
-#SumatraPDF Update
-#SumatraPDF crashed
-#XPS documents
 
