@@ -383,19 +383,12 @@ void InvalidateFrame()
     InvalidateRect(gHwndFrame, &rc.ToRECT(), FALSE);
 }
 
-HANDLE CreateProcessHelper(const TCHAR *exe, const TCHAR *args=NULL)
+bool CreateProcessHelper(const TCHAR *exe, const TCHAR *args=NULL)
 {
-    PROCESS_INFORMATION pi;
-    STARTUPINFO si = {0};
-    si.cb = sizeof(si);
-    // per msdn, cmd has to be writeable
     ScopedMem<TCHAR> cmd(str::Format(_T("\"%s\" %s"), exe, args ? args : _T("")));
-    if (!CreateProcess(NULL, cmd, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
-        SeeLastError();
-        return NULL;
-    }
-    CloseHandle(pi.hThread);
-    return pi.hProcess;
+    HANDLE process = LaunchProcess(cmd);
+    CloseHandle(process);
+    return process != NULL;
 }
 
 // cf. http://support.microsoft.com/default.aspx?scid=kb;en-us;207132
@@ -1001,8 +994,7 @@ static DWORD WINAPI InstallerThread(LPVOID data)
         // need to sublaunch SumatraPDF.exe instead of replicating the code
         // because registration uses translated strings
         ScopedMem<TCHAR> installedExePath(GetInstalledExePath());
-        HANDLE h = CreateProcessHelper(installedExePath, _T("-register-for-pdf"));
-        CloseHandle(h);
+        CreateProcessHelper(installedExePath, _T("-register-for-pdf"));
     }
 
     if (gGlobalData.installBrowserPlugin)
@@ -1185,7 +1177,7 @@ void OnButtonStartSumatra()
     HANDLE h = CreateProcessAtLevel(exePath);
     // create the process as is (mainly for Windows 2000 compatibility)
     if (!h)
-        h = CreateProcessHelper(exePath);
+        CreateProcessHelper(exePath);
     CloseHandle(h);
 
     OnButtonExit();
@@ -1969,13 +1961,12 @@ bool ExecuteUninstallerFromTempDir()
     }
 
     ScopedMem<TCHAR> args(str::Format(_T("/d \"%s\" %s"), gGlobalData.installDir, gGlobalData.silent ? _T("/s") : _T("")));
-    HANDLE h = CreateProcessHelper(tempPath, args);
-    CloseHandle(h);
+    bool ok = CreateProcessHelper(tempPath, args);
 
     // mark the uninstaller for removal at shutdown (note: works only for administrators)
     MoveFileEx(tempPath, NULL, MOVEFILE_DELAY_UNTIL_REBOOT);
 
-    return h != NULL;
+    return ok;
 }
 
 void ShowUsage()

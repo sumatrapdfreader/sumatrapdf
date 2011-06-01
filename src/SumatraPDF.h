@@ -25,6 +25,7 @@ extern HBRUSH                   gBrushNoDocBg;
 extern HBRUSH                   gBrushAboutBg;
 extern bool                     gRestrictedUse;
 extern bool                     gPluginMode;
+extern TCHAR *                  gPluginURL;
 
 class WindowInfo;
 

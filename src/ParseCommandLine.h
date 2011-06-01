@@ -41,6 +41,7 @@ public:
     bool        showConsole;
     TCHAR *     consoleFile;
     HWND        hwndPluginParent;
+    TCHAR *     pluginURL;
     bool        exitImmediately;
     bool        silent;
 
@@ -57,7 +58,7 @@ public:
         fwdsearchOffset(-1), fwdsearchWidth(-1), fwdsearchColor(-1),
         fwdsearchPermanent(FALSE), escToExit(FALSE),
         reuseInstance(false), lang(NULL), destName(NULL), pageNumber(-1),
-        restrictedUse(false), invertColors(FALSE),
+        restrictedUse(false), invertColors(FALSE), pluginURL(NULL),
         enterPresentation(false), enterFullscreen(false), hwndPluginParent(NULL),
         startView(DM_AUTOMATIC), startZoom(INVALID_ZOOM), startScroll(PointI(-1, -1)),
         showConsole(false), exitImmediately(false), silent(false),
@@ -73,6 +74,7 @@ public:
         free(stressTestPath);
         free(stressTestRanges);
         free(consoleFile);
+        free(pluginURL);
     }
 
     void ParseCommandLine(TCHAR *cmdLine);

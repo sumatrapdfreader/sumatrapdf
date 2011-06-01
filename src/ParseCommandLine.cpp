@@ -241,7 +241,10 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
             str::ReplacePtr(&consoleFile, argList[++n]);
         }
         else if (is_arg_with_param("-plugin")) {
-            // the argument is a (nummeric) window handle to
+            // -plugin [<URL>] <parent HWND>
+            if (!ChrIsDigit(*param) && has_additional_param())
+                str::ReplacePtr(&pluginURL, argList[++n]);
+            // the argument is a (numeric) window handle to
             // become the parent of a frameless SumatraPDF
             // (used e.g. for embedding it into a browser plugin)
             hwndPluginParent = (HWND)_ttol(argList[++n]);

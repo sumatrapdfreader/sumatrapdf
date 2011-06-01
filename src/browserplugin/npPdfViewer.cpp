@@ -236,7 +236,7 @@ HANDLE CreateTempFile(TCHAR *filePathBufOut)
 
 /* ::::: Plugin Window Procedure ::::: */
 
-typedef struct {
+struct InstanceData {
     NPWindow *  npwin;
     LPCTSTR     message;
     TCHAR       filepath[MAX_PATH];
@@ -245,7 +245,7 @@ typedef struct {
     TCHAR       exepath[MAX_PATH + 2];
     float       progress, prevProgress;
     uint32_t    totalSize, currSize;
-} InstanceData;
+};
 
 #define COL_WINDOW_BG RGB(0xcc, 0xcc, 0xcc)
 
@@ -349,7 +349,6 @@ LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lPar
             ClientRect rcClient(hWnd);
             MoveWindow(hChild, rcClient.x, rcClient.y, rcClient.dx, rcClient.dy, FALSE);
         }
-        
     }
     
     return DefWindowProc(hWnd, uiMsg, wParam, lParam);
@@ -517,23 +516,17 @@ int32_t NP_LOADDS NPP_Write(NPP instance, NPStream* stream, int32_t offset, int3
     return bytesWritten;
 }
 
-static void LaunchWithSumatra(InstanceData *data)
+static void LaunchWithSumatra(InstanceData *data, const char *url_utf8)
 {
-    PROCESS_INFORMATION pi = { 0 };
-    STARTUPINFO si = { 0 };
-
     if (!file::Exists(data->filepath))
         dbg("sp: NPP_StreamAsFile() error: file doesn't exist");
 
-    ScopedMem<TCHAR> cmdLine(str::Format(_T("%s -plugin %d \"%s\""), data->exepath, (HWND)data->npwin->window, data->filepath));
-    
-    si.cb = sizeof(si);
-    if (CreateProcess(NULL, cmdLine, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
-    {
-        CloseHandle(pi.hThread);
-        data->hProcess = pi.hProcess;
-    }
-    else
+    ScopedMem<TCHAR> url(str::conv::FromUtf8(url_utf8));
+    ScopedMem<TCHAR> cmdLine(str::Format(_T("\"%s\" -plugin \"%s\" %d \"%s\""),
+        data->exepath, url ? url : _T(""), (HWND)data->npwin->window, data->filepath));
+
+    data->hProcess = LaunchProcess(cmdLine);
+    if (!data->hProcess)
     {
         dbg("sp: NPP_StreamAsFile() error: couldn't run SumatraPDF!");
         data->message = _T("Error: Couldn't run SumatraPDF!");
@@ -569,7 +562,7 @@ void NP_LOADDS NPP_StreamAsFile(NPP instance, NPStream* stream, const char* fnam
     str::BufSet(data->filepath, dimof(data->filepath), fname);
 #endif
 
-    LaunchWithSumatra(data);
+    LaunchWithSumatra(data, stream->url);
 
 Exit:
     if (data->npwin)
@@ -608,7 +601,7 @@ NPError NP_LOADDS NPP_DestroyStream(NPP instance, NPStream* stream, NPReason rea
         goto Exit;
 
     CloseHandle(data->hFile);
-    LaunchWithSumatra(data);
+    LaunchWithSumatra(data, stream->url);
 
 Exit:
     if (data->npwin)
@@ -661,7 +654,9 @@ NPError NP_LOADDS NPP_Destroy(NPP instance, NPSavedData** save)
     return NPERR_NO_ERROR;
 }
 
-// TODO: NPP_Print seems to never be called by Google Chrome
+// Note: NPP_Print is never called by Google Chrome or Firefox 4
+//       cf. http://code.google.com/p/chromium/issues/detail?id=83341
+//       and https://bugzilla.mozilla.org/show_bug.cgi?id=638796
 
 #define IDM_PRINT 403
 

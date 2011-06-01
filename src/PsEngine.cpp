@@ -81,19 +81,16 @@ static PdfEngine *ps2pdf(const TCHAR *fileName)
     ScopedMem<TCHAR> gswin32c(GetGhostscriptPath());
     if (!tmpFile || !gswin32c)
         return NULL;
-    ScopedMem<TCHAR> args(str::Format(_T("-q -dSAFER -dNOPAUSE -dBATCH -sOutputFile=\"%s\" -sDEVICE=pdfwrite -c .setpdfwrite -f \"%s\""), tmpFile, fileName));
+    ScopedMem<TCHAR> cmdLine(str::Format(_T("\"%s\" -q -dSAFER -dNOPAUSE -dBATCH -sOutputFile=\"%s\" -sDEVICE=pdfwrite -c .setpdfwrite -f \"%s\""), gswin32c, tmpFile, fileName));
 
     // TODO: the PS-to-PDF conversion can hang the UI for several seconds
-    PROCESS_INFORMATION pi = { 0 };
-    STARTUPINFO si = { 0 };    
-    si.cb = sizeof(si);
-    if (!CreateProcess(gswin32c, args, NULL, NULL, FALSE, CREATE_NO_WINDOW, NULL, NULL, &si, &pi))
+    HANDLE process = LaunchProcess(cmdLine, CREATE_NO_WINDOW);
+    if (!process)
         return NULL;
 
-    CloseHandle(pi.hThread);
-    WaitForSingleObject(pi.hProcess, 10000);
-    TerminateProcess(pi.hProcess, 1);
-    CloseHandle(pi.hProcess);
+    WaitForSingleObject(process, 10000);
+    TerminateProcess(process, 1);
+    CloseHandle(process);
 
     size_t len;
     ScopedMem<char> pdfData(file::ReadAll(tmpFile, &len));

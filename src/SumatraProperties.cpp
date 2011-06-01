@@ -291,7 +291,7 @@ void OnMenuProperties(WindowInfo& win)
     if (!layoutData)
         return;
 
-    TCHAR *str = str::Dup(engine->FileName());
+    TCHAR *str = str::Dup(gPluginMode ? gPluginURL : engine->FileName());
     layoutData->AddProperty(_TR("File:"), str);
 
     str = engine->GetProperty("Title");

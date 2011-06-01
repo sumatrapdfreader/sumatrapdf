@@ -79,6 +79,7 @@ static bool             gUseGdiRenderer = false;
 // fullscreen are disabled, so that SumatraPDF can be displayed
 // embedded (e.g. in a web browser)
 bool                    gPluginMode = false;
+TCHAR *                 gPluginURL = NULL; // owned by CommandLineInfo in WinMain
 
 /* default UI settings */
 
@@ -2411,25 +2412,18 @@ static bool OnInverseSearch(WindowInfo& win, int x, int y)
         // Detect a text editor and use it as the default inverse search handler for now
         inverseSearch = AutoDetectInverseSearchCommands();
 
-    TCHAR *cmdline = NULL;
+    ScopedMem<TCHAR> cmdline;
     if (inverseSearch)
-        cmdline = win.pdfsync->prepare_commandline(inverseSearch, srcfilepath, line, col);
-    if (!str::IsEmpty(cmdline)) {
-        //ShellExecute(NULL, NULL, cmdline, cmdline, NULL, SW_SHOWNORMAL);
-        STARTUPINFO si = {0};
-        PROCESS_INFORMATION pi = {0};
-        si.cb = sizeof(si);
-        if (CreateProcess(NULL, cmdline, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
-            CloseHandle(pi.hProcess);
-            CloseHandle(pi.hThread);
-        } else {
-            DBG_OUT("CreateProcess failed (%d): '%s'.\n", GetLastError(), cmdline);
+        cmdline.Set(win.pdfsync->prepare_commandline(inverseSearch, srcfilepath, line, col));
+    if (!str::IsEmpty(cmdline.Get())) {
+        HANDLE process = LaunchProcess(cmdline);
+        if (process)
+            CloseHandle(process);
+        else
             win.ShowNotification(_TR("Cannot start inverse search command. Please check the command line in the settings."));
-        }
     }
     else if (gGlobalPrefs.m_enableTeXEnhancements)
         win.ShowNotification(_TR("Cannot start inverse search command. Please check the command line in the settings."));
-    free(cmdline);
 
     if (inverseSearch != gGlobalPrefs.m_inverseSearchCmdLine)
         free(inverseSearch);
@@ -3539,15 +3533,24 @@ static void OnMenuPrint(WindowInfo& win)
 
 static void OnMenuSaveAs(WindowInfo& win)
 {
-    OPENFILENAME   ofn = {0};
-    TCHAR          dstFileName[MAX_PATH];
-    const TCHAR *  srcFileName = NULL;
-
     if (gRestrictedUse) return;
     assert(win.dm);
     if (!win.IsDocLoaded()) return;
 
-    srcFileName = win.dm->fileName();
+    const TCHAR *srcFileName = win.dm->fileName();
+    ScopedMem<TCHAR> urlName;
+
+    if (gPluginMode) {
+        urlName.Set(str::Dup(gPluginURL));
+        // try to extract the file name from the URL (last path component before query or hash)
+        str::TransChars(urlName, _T("/?#"), _T("\\\0\0"));
+        urlName.Set(str::Dup(path::GetBaseName(urlName)));
+        // fall back to a generic "filename" instead of the more confusing temporary filename
+        if (str::IsEmpty(urlName.Get()))
+            urlName.Set(str::Dup(_T("filename")));
+        srcFileName = urlName;
+    }
+
     assert(srcFileName);
     if (!srcFileName) return;
 
@@ -3578,13 +3581,15 @@ static void OnMenuSaveAs(WindowInfo& win)
     fileFilter.Append(_T("\1*.*\1"));
     str::TransChars(fileFilter.Get(), _T("\1"), _T("\0"));
 
-    // Remove the extension so that it can be re-added depending on the chosen filter
+    TCHAR dstFileName[MAX_PATH];
     str::BufSet(dstFileName, dimof(dstFileName), path::GetBaseName(srcFileName));
     // TODO: fix saving embedded PDF documents
     str::TransChars(dstFileName, _T(":"), _T("_"));
+    // Remove the extension so that it can be re-added depending on the chosen filter
     if (str::EndsWithI(dstFileName, defExt))
         dstFileName[str::Len(dstFileName) - str::Len(defExt)] = '\0';
 
+    OPENFILENAME ofn = { 0 };
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = win.hwndFrame;
     ofn.lpstrFile = dstFileName;
@@ -3680,7 +3685,7 @@ bool LinkSaver::SaveEmbedded(unsigned char *data, int len)
 
 static void OnMenuSaveBookmark(WindowInfo& win)
 {
-    if (gRestrictedUse) return;
+    if (gRestrictedUse || gPluginMode) return;
     assert(win.dm);
     if (!win.IsDocLoaded()) return;
 
@@ -3726,9 +3731,9 @@ static void OnMenuSaveBookmark(WindowInfo& win)
     else if (ZOOM_FIT_CONTENT == win.dm->zoomVirtual())
         zoomVirtual.Set(str::Dup(_T("fitcontent")));
 
+    ScopedMem<TCHAR> exePath(GetExePath());
     ScopedMem<TCHAR> args(str::Format(_T("\"%s\" -page %d -view \"%s\" -zoom %s -scroll %d,%d -reuse-instance"),
                           win.dm->fileName(), ss.page, viewMode, zoomVirtual, (int)ss.x, (int)ss.y));
-    ScopedMem<TCHAR> exePath(GetExePath());
     ScopedMem<TCHAR> desc(str::Format(_TR("Bookmark shortcut to page %d of %s"),
                           ss.page, path::GetBaseName(win.dm->fileName())));
 
@@ -6833,6 +6838,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
             goto Exit;
 
         gPluginMode = true;
+        gPluginURL = i.pluginURL;
+        if (!gPluginURL)
+            gPluginURL = i.fileNames[0];
+
         assert(i.fileNames.Count() == 1);
         while (i.fileNames.Count() > 1)
             free(i.fileNames.Pop());

@@ -382,6 +382,22 @@ void LaunchFile(const TCHAR *path, const TCHAR *params, const TCHAR *verb, bool 
     ShellExecuteEx(&sei);
 }
 
+HANDLE LaunchProcess(TCHAR *cmdLine, DWORD flags)
+{
+    PROCESS_INFORMATION pi = { 0 };
+    STARTUPINFO si = { 0 };
+    si.cb = sizeof(si);
+
+    // per msdn, cmdLine has to be writeable
+    if (!CreateProcess(NULL, cmdLine, NULL, NULL, FALSE, flags, NULL, NULL, &si, &pi)) {
+        SeeLastError();
+        return NULL;
+    }
+
+    CloseHandle(pi.hThread);
+    return pi.hProcess;
+}
+
 /* Ensure that the rectangle is at least partially in the work area on a
    monitor. The rectangle is shifted into the work area if necessary. */
 RectI ShiftRectToWorkArea(RectI rect, bool bFully)
