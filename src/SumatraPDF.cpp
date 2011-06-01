@@ -1142,6 +1142,8 @@ static void UpdateFindbox(WindowInfo& win)
     UpdateToolbarBg(win.hwndPageBg, win.IsDocLoaded());
 
     InvalidateRect(win.hwndToolbar, NULL, TRUE);
+    UpdateWindow(win.hwndToolbar);
+
     if (!win.IsDocLoaded()) {  // Avoid focus on Find box
         SetClassLongPtr(win.hwndFindBox, GCLP_HCURSOR, (LONG_PTR)gCursorArrow);
         HideCaret(NULL);
@@ -4648,6 +4650,16 @@ static void UpdateToolbarButtonsToolTipsForWindow(WindowInfo& win)
     }
 }
 
+static void UpdateToCBoxTitle(WindowInfo& win)
+{
+    HWND tocTitle = GetDlgItem(win.hwndTocBox, 0);
+    win::SetText(tocTitle, _TR("Bookmarks"));
+    if (win.tocShow) {
+        InvalidateRect(win.hwndTocBox, NULL, TRUE);
+        UpdateWindow(win.hwndTocBox);
+    }
+}
+
 static void UpdateToolbarToolText()
 {
     for (size_t i = 0; i < gWindows.Count(); i++) {
@@ -4655,6 +4667,7 @@ static void UpdateToolbarToolText()
         UpdateToolbarPageText(*win, -1);
         UpdateToolbarFindText(*win);
         UpdateToolbarButtonsToolTipsForWindow(*win);
+        UpdateToCBoxTitle(*win);
     }        
 }
 
@@ -5490,9 +5503,10 @@ static void CreateTocBox(WindowInfo& win)
     
     win.hwndTocBox = CreateWindow(WC_STATIC, _T(""), WS_CHILD,
                         0,0,gGlobalPrefs.m_tocDx,0, win.hwndFrame, (HMENU)IDC_PDF_TOC_TREE_TITLE, ghinst, NULL);
-    HWND titleLabel = CreateWindow(WC_STATIC, _TR("Bookmarks"), WS_VISIBLE | WS_CHILD,
+    HWND titleLabel = CreateWindow(WC_STATIC, _T(""), WS_VISIBLE | WS_CHILD,
                         0,0,0,0, win.hwndTocBox, (HMENU)0, ghinst, NULL);
     SetWindowFont(titleLabel, gDefaultGuiFont, FALSE);
+    UpdateToCBoxTitle(win);
 
     HWND closeToc = CreateWindow(WC_STATIC, _T(""),
                         SS_OWNERDRAW | SS_NOTIFY | WS_CHILD | WS_VISIBLE,
