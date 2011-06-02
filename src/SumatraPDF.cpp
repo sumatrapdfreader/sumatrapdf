@@ -1690,6 +1690,7 @@ WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin, b
     }
 
     DeleteOldSelectionInfo(*win, true);
+    win->fwdsearchmark.show = false;
     win->messages->CleanUp(NG_RESPONSE_TO_ACTION);
     win->messages->CleanUp(NG_PAGE_INFO_HELPER);
 
@@ -2064,7 +2065,7 @@ static void PaintSelection(WindowInfo& win, HDC hdc) {
 
 static void PaintForwardSearchMark(WindowInfo& win, HDC hdc) {
     PageInfo *pageInfo = win.dm->getPageInfo(win.fwdsearchmark.page);
-    if (0.0 == pageInfo->visibleRatio)
+    if (!pageInfo || 0.0 == pageInfo->visibleRatio)
         return;
     
     // Draw the rectangles highlighting the forward search results
