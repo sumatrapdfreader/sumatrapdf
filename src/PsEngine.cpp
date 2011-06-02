@@ -45,6 +45,20 @@ static TCHAR *GetGhostscriptPath()
         }
     }
 
+    // if Ghostscript isn't found in the Registry, try finding it in the %PATH%
+    DWORD size = GetEnvironmentVariable(_T("PATH"), NULL, 0);
+    ScopedMem<TCHAR> envpath(SAZA(TCHAR, size));
+    if (size > 0 && envpath) {
+        GetEnvironmentVariable(_T("PATH"), envpath, size);
+        StrVec paths;
+        paths.Split(envpath, _T(";"), true);
+        for (size_t ix = 0; ix < paths.Count(); ix++) {
+            ScopedMem<TCHAR> exe(path::Join(paths[ix], _T("gswin32c.exe")));
+            if (file::Exists(exe))
+                return exe.StealData();
+        }
+    }
+
     return NULL;
 }
 

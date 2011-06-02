@@ -172,11 +172,6 @@ static bool LoadDbgHelpFuncs()
     return _StackWalk64 != NULL;
 }
 
-static bool GetEnvOk(DWORD ret, DWORD cchBufSize)
-{
-    return cchBufSize == ret;
-}
-
 static TCHAR *GetCrashDumpDir()
 {
     TCHAR *symDir = AppGenDataFilename(_T("symbols"));
@@ -203,14 +198,13 @@ static WCHAR *GetSymbolPath()
 
 #if 0
     WCHAR buf[512];
-    DWORD cchBuf = dimof(buf);
-    DWORD res = GetEnvironmentVariableW(L"_NT_SYMBOL_PATH", buf, cchBuf);
-    if (GetEnvOk(res, cchBuf)) {
+    DWORD res = GetEnvironmentVariableW(L"_NT_SYMBOL_PATH", buf, dimof(buf));
+    if (0 < res && res < dimof(buf)) {
         path.Append(buf);
         path.Append(L";");
     }
-    res = GetEnvironmentVariableW(L"_NT_ALTERNATE_SYMBOL_PATH", buf, cchBuf);
-    if (GetEnvOk(res, cchBuf)) {
+    res = GetEnvironmentVariableW(L"_NT_ALTERNATE_SYMBOL_PATH", buf, dimof(buf));
+    if (0 < res && res < dimof(buf)) {
         path.Append(buf);
         path.Append(L";");
     }
