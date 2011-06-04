@@ -23,6 +23,9 @@ Toate paginile selectate
 &Back\tAlt+Left Arrow
 Înapoi\tAlt+Left Arrow
 
+&Book View\tCtrl-8
+Format carte\tCtrl-8
+
 &Close\tCtrl-W
 Înc&hidere\tCtrl-W
 
@@ -30,7 +33,7 @@ Toate paginile selectate
 &Copiază selecția
 
 &Copy Selection\tCtrl-C
-&Copiere selecţie\tCtrl-C
+&Copiere selecție\tCtrl-C
 
 &Don't ask me again
 Nu mă întreba din nou
@@ -38,8 +41,11 @@ Nu mă întreba din nou
 &Even pages only
 Doar paginile pare
 
+&Facing\tCtrl-7
+Două pagini\tCtrl-7
+
 &File
-&Fişier
+&Fișier
 
 &Find what:
 Obiect căutare:
@@ -69,7 +75,7 @@ Factor mărire:
 Manual
 
 &Match case
-Diferenţiază litere mari şi mici
+Diferențiază litere mari și mici
 
 &Next Page\tRight Arrow
 Pagina următoare\t->
@@ -78,7 +84,7 @@ Pagina următoare\t->
 &Nu
 
 &No, thanks
-&Nu, mulţumesc
+&Nu, mulțumesc
 
 &Odd pages only
 Doar paginile impare
@@ -86,11 +92,17 @@ Doar paginile impare
 &Open\tCtrl-O
 &Deschidere\tCtrl-O
 
+&Open Document
+Deschide d&ocument
+
 &Options...
-&Opţiuni...
+&Opțiuni...
 
 &Password:
 &Parola:
+
+&Pin Document
+Fixează document
 
 &Previous Page\tLeft Arrow
 Pagina anterioară\t<-
@@ -105,10 +117,13 @@ I&mprimare\tCtrl-P
 &Imprimare... (interzisă)
 
 &Remember the password for this document
-&Reţine parola acestui document
+&Reține parola acestui document
 
 &Remember these settings for each document
-&Reţine aceste opţiuni pentru fiecare document
+&Reține aceste opțiuni pentru fiecare document
+
+&Remove Document
+Înlătu&ră document
 
 &Save As...
 &Salvează ca...
@@ -117,10 +132,13 @@ I&mprimare\tCtrl-P
 Salvare c&a...\tCtrl-S
 
 &Settings
-&Opţiuni
+&Opțiuni
 
 &Shrink pages to printable area (if necessary)
-&Micşorează paginile la aria de imprimare (dacă e necesar)
+&Micșorează paginile la aria de imprimare (dacă e necesar)
+
+&Single Page\tCtrl-6
+O &singură pagină\tCtrl-6
 
 &Skip this version
 &Sari peste această versiune
@@ -147,7 +165,7 @@ Advanced
 Avansat
 
 All files
-Toate fişierele
+Toate fișierele
 
 All supported documents
 Toate formatele suportate
@@ -156,10 +174,10 @@ Application:
 Program:
 
 Associate with PDF files?
-Asociază cu fişiere PDF?
+Asociază cu fișiere PDF?
 
 Attachment: %s
-Fişier ataşat: %s
+Fișier atașat: %s
 
 Author:
 Autor:
@@ -168,7 +186,7 @@ Automatic
 Automat
 
 Automatically check for &updates
-Urmăreşte automat versiuni noi
+Urmărește automat versiuni noi
 
 Book View
 Vedere în format carte
@@ -186,25 +204,25 @@ Bookmarks
 Marcaje
 
 Bytes
-Octeţi
+Octeți
 
 Can't connect to the Internet (error %#x).
-Conectare la Internet eşuată (eroare %#x).
+Conectare la Internet eșuată (eroare %#x).
 
 Cancel
 Anulare
 
 Cannot print this file
-Nu pot imprima acest fişier
+Nu pot imprima acest fișier
 
 Cannot start inverse search command. Please check the command line in the settings.
-Nu pot lansa comanda de căutare inversă. Verificaţi va rog linia de comandă la opţiuni.
+Nu pot lansa comanda de căutare inversă. Verificați, vă rog, opțiunile din linia de comandă.
 
 Change Language
 Schimbare limbă (Change Language)
 
 Check for &Updates
-Verifică apariţia unei versiuni noi
+Verifică apariția unei versiuni noi
 
 Comic books
 Benzi desenate
@@ -234,10 +252,10 @@ Could not open Printer
 Imprimantă inaccesibilă
 
 Couldn't initialize printer
-Nu s-a putut iniţializa imprimanta
+Nu s-a putut inițializa imprimanta
 
 Couldn't render the page
-Nu s-a putut afişa pagina
+Nu s-a putut afișa pagina
 
 Created:
 Creat:
@@ -267,16 +285,16 @@ Download
 Descarcă
 
 E&xit\tCtrl-Q
-&Ieşire\tCtrl-Q
+&Ieșire\tCtrl-Q
 
 Enter password
-Introduceţi parola
+Introduceți parola
 
 Enter password for %s
-Introduceţi parola pentru %s
+Introduceți parola pentru %s
 
 Enter the command-line to invoke when you double-click on the PDF document:
-Introduceţi comanda invocată la dublu click pe documentul PDF:
+Introduceți comanda invocată la dublu click pe documentul PDF:
 
 Error loading %s
 Eroare la încărcarea %s
@@ -291,13 +309,13 @@ Facing
 Două pagini
 
 Failed to save a file
-Eroare la salvarea unui fişier
+Eroare la salvarea unui fișier
 
 File Size:
-Mărime fişier:
+Mărime fișier:
 
 File:
-Fişier:
+Fișier:
 
 Fin&d...\tCtrl-F
 Caută...\tCtrl-F
@@ -315,25 +333,25 @@ Find:
 Caută:
 
 Fit &Content\tCtrl-3
-Potrivire după conţinut\tCtrl-3
+Potrivire după conținut\tCtrl-3
 
 Fit &Page\tCtrl-0
 &Pagină întreagă\tCtrl-0
 
 Fit &Width\tCtrl-2
-Lăţime pagină
+Lățime pagină
 
 Fit Content
-Potrivire după conţinut
+Potrivire după conținut
 
 Fit Page
 Pagină întreagă
 
 Fit Width
-Lăţime pagină
+Lățime pagină
 
 Fit Width and Show Pages Continuously
-Potrivire după lăţime şi afişare continuă a paginilor
+Potrivire după lățime și afișare continuă a paginilor
 
 Fit a Single Page
 Potrivire pentru o singură pagină
@@ -357,7 +375,7 @@ Hide frequently read
 Ascunde paginile citite frecvent
 
 Hint: Use the F3 key for finding again
-Sugestie: Utilizaţi tasta F3 pentru a căuta mai departe
+Sugestie: Utilizați tasta F3 pentru a căuta mai departe
 
 Image files (*.%s)
 Fișiere-imagine (*.%s)
@@ -369,19 +387,19 @@ MB
 MB
 
 Make SumatraPDF default application for PDF files?
-Faceţi SumatraPDF programul implicit pentru fişiere PDF?
+Faceți SumatraPDF programul implicit pentru fișiere PDF?
 
 Make SumatraPDF my default PDF reader
-Faceţi SumatraPDF cititorul implicit de PDF
+Faceți SumatraPDF cititorul implicit de PDF
 
 Match Case
-Potrivire litere mari şi mici
+Potrivire litere mari și mici
 
 Modified:
 Modificat:
 
 New version %s is available. Download new version?
-O nouă versiune %s este disponibilă. Descărcaţi versiunea nouă?
+O nouă versiune %s este disponibilă. Descărcați versiunea nouă?
 
 Next Page
 Pagina următoare
@@ -390,13 +408,13 @@ No matches were found
 Nu s-au găsit rezultate
 
 No result found around line %u in file %s
-Nici un rezultat în jurul liniei %u în fişierul %s
+Nici un rezultat în jurul liniei %u în fișierul %s
 
 No synchronization file found
-Nu s-a găsit fişier de sincronizare
+Nu s-a găsit fișier de sincronizare
 
 No synchronization info at this position
-Nu există informaţie de sincronizare la această poziţie
+Nu există informație de sincronizare la această poziție
 
 Number of Pages:
 Număr de pagini:
@@ -423,7 +441,7 @@ P&roperties
 P&roprietăți
 
 P&roperties\tCtrl-D
-P&roprietăţi\tCtrl-D
+P&roprietăți\tCtrl-D
 
 PDF Document
 Document PDF
@@ -453,13 +471,19 @@ Page:
 Pagina:
 
 Please wait - rendering...
-Vă rugăm aşteptaţi - afişare...
+Vă rugăm așteptați - afișare...
+
+Postscript documents
+Documente Postscript
 
 Pr&esentation\tCtrl-L
 Pr&ezentare\tCtrl-L
 
 Previous Page
 Pagina anterioară
+
+Print
+Imprimare
 
 Print range
 Interval imprimare
@@ -474,13 +498,13 @@ Printing problem.
 Problemă la imprimare.
 
 Remember &opened files
-Ţine minte fişierele deschise
+ține minte fișierele deschise
 
 Rotate &Left\tCtrl-Shift--
-Roteşte spre stânga\tCtrl-Shift--
+Rotește spre stânga\tCtrl-Shift--
 
 Rotate &Right\tCtrl-Shift-+
-Roteşte spre dreapta\tCtrl-Shift-+
+Rotește spre dreapta\tCtrl-Shift-+
 
 Save S&hortcut...\tCtrl-Shift-S
 Salvează legătura...\tCtrl-Shift-S
@@ -495,13 +519,13 @@ Select &All\tCtrl-A
 Selectează to&ate\tCtrl-A
 
 Select content with Ctrl+left mouse button
-Selectaţi conţinut cu Ctrl+buton stânga maus
+Selectați conținut cu Ctrl+buton stânga maus
 
 Send by &E-mail...
 Trimite pe &E-mail...
 
 Set inverse search command-line
-Setaţi comandă pentru căutare inversă
+Setați comandă pentru căutare inversă
 
 Show &Toolbar
 Arată bara de instrumente
@@ -518,14 +542,17 @@ Arată bara laterală pentru &marcaje, când există
 Single Page
 O singură pagină
 
+Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
+Scuze, acest eveniment nu ar fi trebuit să aibă loc!\n\nVă rugăm apăsați „Renunță”, dacă doriți să ne ajutați să îndreptăm cauza erorii.
+
 Source file %s has no synchronization point
-Fişierul sursă %s nu are punct de sincronizare
+Fișierul sursă %s nu are punct de sincronizare
 
 Subject:
 Subiect:
 
 SumatraPDF Options
-Opţiuni SumatraPDF
+Opțiuni SumatraPDF
 
 SumatraPDF Update
 Versiune nouă SumatraPDF
@@ -540,16 +567,16 @@ SumatraPDF should now be your default PDF reader
 SumatraPDF ar trebui să fie acum cititorul PDF implicit
 
 Synchronization file cannot be opened
-Fişierul de sincronizare nu poate fi deschis
+Fișierul de sincronizare nu poate fi deschis
 
 Text documents
-Fişiere text
+Fișiere text
 
 Title:
 Titlu:
 
 Unknown source file (%s)
-Fişier sursă necunoscut (%s)
+Fișier sursă necunoscut (%s)
 
 View
 Vizualizare
@@ -564,19 +591,19 @@ XPS documents
 Documente XPS
 
 You have the latest version.
-Aveţi ultima versiune.
+Aveți ultima versiune.
 
 You have version %s
-Aveţi versiunea %s
+Aveți versiunea %s
 
 Zoom
 Mărire
 
 Zoom In
-Măreşte
+Mărește
 
 Zoom Out
-Micşorează
+Micșorează
 
 Zoom factor
 Factor de mărire
@@ -589,15 +616,4 @@ se copiază text
 
 printing document
 se imprimă documentul
-
-# Untranslated:
-#&Book View\tCtrl-8
-#&Facing\tCtrl-7
-#&Open Document
-#&Pin Document
-#&Remove Document
-#&Single Page\tCtrl-6
-#Postscript documents
-#Print
-#Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
 

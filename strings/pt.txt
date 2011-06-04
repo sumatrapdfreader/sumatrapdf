@@ -613,8 +613,8 @@ Ampliação
 [Mudanças detetadas; atualizando] %s
 
 copying text
-copiando texto
+cópia de texto
 
 printing document
-imprimindo documento
+impressão de documento
 
