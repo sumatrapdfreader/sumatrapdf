@@ -707,8 +707,11 @@ bool WriteExtendedFileExtensionInfo(HKEY hkey)
 
     // add the installed SumatraPDF.exe to the Open With lists of the supported file extensions
     for (int i = 0; i < dimof(gSupportedExts); i++) {
-        ScopedMem<TCHAR> keyname(str::Join(_T("Software\\Classes\\"), gSupportedExts[i], _T("\\OpenWithList\\") TAPP));
+        ScopedMem<TCHAR> keyname(str::Join(_T("Software\\Classes\\"), gSupportedExts[i], _T("\\OpenWithList\\") EXENAME));
         success &= CreateRegKey(hkey, keyname);
+        // TODO: stop removing this after version 1.8 (was wrongly created for version 1.6)
+        keyname.Set(str::Join(_T("Software\\Classes\\"), gSupportedExts[i], _T("\\OpenWithList\\") TAPP));
+        DeleteRegKey(hkey, keyname);
     }
 
     // in case these values don't exist yet (we won't delete these at uninstallation)
@@ -814,7 +817,7 @@ void RemoveOwnRegistryKeys()
         for (int i = 0; i < dimof(gSupportedExts); i++) {
             ScopedMem<TCHAR> keyname(str::Join(_T("Software\\Classes\\"), gSupportedExts[i], _T("\\OpenWithProgids")));
             SHDeleteValue(keys[i], keyname, TAPP);
-            keyname.Set(str::Join(_T("Software\\Classes\\"), gSupportedExts[i], _T("\\OpenWithList\\") TAPP));
+            keyname.Set(str::Join(_T("Software\\Classes\\"), gSupportedExts[i], _T("\\OpenWithList\\") EXENAME));
             DeleteRegKey(keys[i], keyname);
         }
     }
