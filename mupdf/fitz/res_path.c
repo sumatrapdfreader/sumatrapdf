@@ -85,8 +85,12 @@ fz_curveto(fz_path *path,
 void
 fz_curvetov(fz_path *path, float x2, float y2, float x3, float y3)
 {
-	float x1 = path->items[path->len-2].v;
-	float y1 = path->items[path->len-1].v;
+	float x1, y1;
+	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1474 */
+	if (path->len == 0)
+		fz_moveto(path, 0, 0);
+	x1 = path->items[path->len-2].v;
+	y1 = path->items[path->len-1].v;
 	fz_curveto(path, x1, y1, x2, y2, x3, y3);
 }
 
