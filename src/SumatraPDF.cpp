@@ -1805,6 +1805,7 @@ void WindowInfo::UpdateScrollbars(SizeI canvas)
         si.nMax = canvas.dx - 1;
         si.nPage = viewPort.dx;
     }
+    ShowScrollBar(hwndCanvas, SB_HORZ, viewPort.dx < canvas.dx);
     SetScrollInfo(hwndCanvas, SB_HORZ, &si, TRUE);
 
     if (viewPort.dy >= canvas.dy) {
@@ -1824,6 +1825,7 @@ void WindowInfo::UpdateScrollbars(SizeI canvas)
             si.nMax -= viewPort.dy - si.nPage;
         }
     }
+    ShowScrollBar(hwndCanvas, SB_VERT, viewPort.dy < canvas.dy);
     SetScrollInfo(hwndCanvas, SB_VERT, &si, TRUE);
 }
 
