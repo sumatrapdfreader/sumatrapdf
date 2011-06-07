@@ -1,8 +1,30 @@
 #include "fitz.h"
 
-/* SumatraPDF: use max. 512 MB for images (originally 256 MB) */
-static int fz_memory_limit = 512 << 20;
+/* SumatraPDF: use between 512 MB and up to 60% of physical RAM for images */
+#ifndef _WIN32
+static int fz_memory_limit = 256 << 20;
 static int fz_memory_used = 0;
+
+static int fz_get_memory_limit() { return fz_memory_limit; }
+#else
+#include <windows.h>
+static DWORDLONG fz_memory_used = 0;
+
+static DWORDLONG fz_get_memory_limit()
+{
+	static DWORDLONG memory_limit = 0;
+
+	if (memory_limit == 0)
+	{
+		MEMORYSTATUSEX ms;
+		ms.dwLength = sizeof(ms);
+		GlobalMemoryStatusEx(&ms);
+		memory_limit = max(ms.ullTotalPhys / 5 * 3, 512 << 20);
+	}
+
+	return memory_limit;
+}
+#endif
 
 fz_pixmap *
 fz_new_pixmap_with_data(fz_colorspace *colorspace, int w, int h, unsigned char *samples)
@@ -50,10 +72,10 @@ fz_new_pixmap_with_limit(fz_colorspace *colorspace, int w, int h)
 {
 	int n = colorspace ? colorspace->n + 1 : 1;
 	int size = w * h * n;
-	if (fz_memory_used + size > fz_memory_limit || h != 0 && INT_MAX / h / n < w)
+	if (fz_memory_used + size > fz_get_memory_limit() || h != 0 && INT_MAX / h / n < w)
 	{
 		fz_warn("pixmap memory exceeds soft limit %dM + %dM > %dM",
-			fz_memory_used/(1<<20), size/(1<<20), fz_memory_limit/(1<<20));
+			fz_memory_used/(1<<20), size/(1<<20), fz_get_memory_limit()/(1<<20));
 		return NULL;
 	}
 	return fz_new_pixmap_with_data(colorspace, w, h, NULL);
