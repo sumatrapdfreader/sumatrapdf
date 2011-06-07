@@ -5694,30 +5694,32 @@ void WindowInfo::ShowTocBox()
 
     LoadTocTree();
 
-    int cw, ch, cx, cy;
-
     ClientRect rframe(hwndFrame);
+    if (rframe.IsEmpty() && tocShow) {
+        // don't adjust the ToC sidebar size while the window is minimized
+        this->UpdateTocSelection(dm->currentPageNo());
+        return;
+    }
     UpdateTocWidth(this->hwndTocBox, NULL, rframe.dx / 4);
 
+    RectI box;
     if (gGlobalPrefs.m_showToolbar && !fullScreen && !presentation)
-        cy = WindowRect(this->hwndReBar).dy;
-    else
-        cy = 0;
-    ch = rframe.dy - cy;
+        box.y = WindowRect(this->hwndReBar).dy;
+    box.dy = rframe.dy - box.y;
 
     // make sure that the sidebar is never too wide or too narrow
-    cx = WindowRect(hwndTocBox).dx;
+    box.x = WindowRect(hwndTocBox).dx;
     if (rframe.dx <= 2 * SPLITTER_MIN_WIDTH)
-        cx = rframe.dx / 2;
-    else if (cx >= rframe.dx - SPLITTER_MIN_WIDTH)
-        cx = rframe.dx - SPLITTER_MIN_WIDTH;
-    else if (cx < SPLITTER_MIN_WIDTH)
-        cx = SPLITTER_MIN_WIDTH;
-    cw = rframe.dx - cx - SPLITTER_DX;
+        box.x = rframe.dx / 2;
+    else if (box.x >= rframe.dx - SPLITTER_MIN_WIDTH)
+        box.x = rframe.dx - SPLITTER_MIN_WIDTH;
+    else if (box.x < SPLITTER_MIN_WIDTH)
+        box.x = SPLITTER_MIN_WIDTH;
+    box.dx = rframe.dx - box.x - SPLITTER_DX;
 
-    SetWindowPos(hwndTocBox, NULL, 0, cy, cx, ch, SWP_NOZORDER|SWP_SHOWWINDOW);
-    SetWindowPos(hwndSpliter, NULL, cx, cy, SPLITTER_DX, ch, SWP_NOZORDER|SWP_SHOWWINDOW);
-    SetWindowPos(hwndCanvas, NULL, cx + SPLITTER_DX, cy, cw, ch, SWP_NOZORDER|SWP_SHOWWINDOW);
+    SetWindowPos(hwndTocBox, NULL, 0, box.y, box.x, box.dy, SWP_NOZORDER|SWP_SHOWWINDOW);
+    SetWindowPos(hwndSpliter, NULL, box.x, box.y, SPLITTER_DX, box.dy, SWP_NOZORDER|SWP_SHOWWINDOW);
+    SetWindowPos(hwndCanvas, NULL, box.x + SPLITTER_DX, box.y, box.dx, box.dy, SWP_NOZORDER|SWP_SHOWWINDOW);
 
     tocShow = true;
     this->UpdateTocSelection(dm->currentPageNo());
@@ -6082,7 +6084,8 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
             break;
 
         case WM_SIZE:
-            win->UpdateCanvasSize();
+            if (!IsIconic(win->hwndFrame))
+                win->UpdateCanvasSize();
             break;
 
         case WM_MOUSEWHEEL:
