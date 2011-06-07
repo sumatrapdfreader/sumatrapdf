@@ -139,9 +139,11 @@ static BencArray *SerializeFileHistory(FileHistory& fileHistory, bool globalPref
 
     DisplayState *state;
     for (int index = 0; (state = fileHistory.Get(index)); index++) {
-        if (index >= MAX_REMEMBERED_FILES && !state->isPinned)
+        // never forget pinned documents and documents we've remembered a password for
+        bool forceSave = state->isPinned || state->decryptionKey != NULL;
+        if (index >= MAX_REMEMBERED_FILES && !forceSave)
             continue;
-        if (state->openCount < minOpenCount && index > FILE_HISTORY_MAX_RECENT && !state->isPinned)
+        if (state->openCount < minOpenCount && index > FILE_HISTORY_MAX_RECENT && !forceSave)
             continue;
         BencDict *obj = DisplayState_Serialize(state, globalPrefsOnly);
         if (!obj)
