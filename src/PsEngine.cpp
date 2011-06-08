@@ -259,7 +259,7 @@ bool PsEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
                str::StartsWith(header, "\x1B%-12345X@PJL") && str::Find(header, "\n%!PS-Adobe-");
     }
 
-    return str::EndsWithI(fileName, _T(".ps"));
+    return str::EndsWithI(fileName, _T(".ps")) && file::Exists(fileName);
 }
 
 PsEngine *PsEngine::CreateFromFileName(const TCHAR *fileName)
