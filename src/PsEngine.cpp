@@ -89,6 +89,11 @@ static TCHAR *GetTempFileName(const TCHAR *prefix=_T("PsE"))
 
 static PdfEngine *ps2pdf(const TCHAR *fileName)
 {
+    // Ghostscript produces a document with a single empty page
+    // for invalid paths instead of failing
+    if (!file::Exists(fileName))
+        return NULL;
+
     // TODO: read from gswin32c's stdout instead of using a TEMP file
     ScopedMem<TCHAR> tmpFile(GetTempFileName());
     ScopedFile tmpFileScope(tmpFile);
@@ -254,12 +259,12 @@ bool PsEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
         char header[1024];
         ZeroMemory(header, sizeof(header));
         file::ReadAll(fileName, header, sizeof(header));
-        return str::EqN(header, "%!", sizeof(header)) ||
+        return str::StartsWith(header, "%!") ||
                // also sniff PJL (Printer Job Language) files containing Postscript data
                str::StartsWith(header, "\x1B%-12345X@PJL") && str::Find(header, "\n%!PS-Adobe-");
     }
 
-    return str::EndsWithI(fileName, _T(".ps")) && file::Exists(fileName);
+    return str::EndsWithI(fileName, _T(".ps"));
 }
 
 PsEngine *PsEngine::CreateFromFileName(const TCHAR *fileName)
