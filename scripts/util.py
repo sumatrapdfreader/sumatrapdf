@@ -113,17 +113,10 @@ def run_cmd_throw(*args):
 # Parse output of svn info and return revision number indicated by
 # "Last Changed Rev" field or, if that doesn't exist, by "Revision" field
 def parse_svninfo_out(txt):
-  revision_num = None
-  for l in txt.split("\n"):
-    l = l.strip()
-    if 0 == len(l): continue
-    (name, val) = l.split(": ")
-    if name == "Last Changed Rev":
-      return int(val)
-    if name == "Revision":
-      revision_num = int(val)
-  if revision_num is not None:
-    return revision_num
+  ver = re.findall(r'(?m)^Last Changed Rev: (\d+)', txt)
+  if ver: return ver[0]
+  ver = re.findall(r'(?m)^Revision: (\d+)', txt)
+  if ver: return ver[0]
   raise Exception("parse_svn_info_out() failed to parse '%s'" % txt)
 
 # version line is in the format:

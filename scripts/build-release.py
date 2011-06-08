@@ -70,9 +70,14 @@ def main():
   verify_started_in_right_directory()
 
   if build_prerelease:
-    run_cmd_throw("svn", "update")
-    (out, err) = run_cmd_throw("svn", "info")
-    ver = str(parse_svninfo_out(out))
+    if os.environ["SVN_REVISION"]:
+      # allow to pass in an SVN revision, in case SVN itself isn't available
+      # TODO: make this a command line option to build-release.py
+      ver = os.environ["SVN_REVISION"]
+    else:
+      run_cmd_throw("svn", "update")
+      (out, err) = run_cmd_throw("svn", "info")
+      ver = str(parse_svninfo_out(out))
   else:
     ver = extract_sumatra_version(os.path.join("src", "Version.h"))
   log("Version: '%s'" % ver)
@@ -103,7 +108,7 @@ def main():
   if upload:
     map(ensure_s3_doesnt_exist, s3_files)
 
-  if not testing:
+  if not testing and not build_test_installer:
     shutil.rmtree("obj-rel", ignore_errors=True)
 
   builds_dir = os.path.join("builds", ver)
@@ -112,11 +117,15 @@ def main():
   os.makedirs(builds_dir)
 
   obj_dir = "obj-rel"
+  config = "CFG=rel"
+  if build_test_installer and not build_prerelease:
+    obj_dir = "obj-dbg"
+    config = "CFG=dbg"
 
   extcflags = ""
   if build_prerelease:
     extcflags = "EXTCFLAGS=-DSVN_PRE_RELEASE_VER=%s" % ver
-  run_cmd_throw("nmake", "-f", "makefile.msvc", "CFG=rel", extcflags,"all_sumatrapdf")
+  run_cmd_throw("nmake", "-f", "makefile.msvc", config, extcflags, "all_sumatrapdf")
 
   exe = os.path.join(obj_dir, "SumatraPDF.exe")
   installer = os.path.join(obj_dir, "Installer.exe")
@@ -127,7 +136,7 @@ def main():
   zip_file(pdb_zip, os.path.join(obj_dir, "SumatraPDF.pdb"), "%s.pdb" % filename_base, append=True)
 
   build_installer_data(obj_dir)
-  run_cmd_throw("nmake", "-f", "makefile.msvc", "Installer", "CFG=rel", extcflags)
+  run_cmd_throw("nmake", "-f", "makefile.msvc", "Installer", config, extcflags)
 
   if build_test_installer:
     sys.exit(0)
