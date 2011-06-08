@@ -25,28 +25,28 @@ public:
         if (!filePath) return NULL;
 
         BaseEngine *engine = NULL;
-        EngineType engineType;
+        EngineType engineType = Engine_None;
         bool sniff = false;
 RetrySniffing:
-        if (PdfEngine::IsSupportedFile(filePath, sniff)) {
+        if (PdfEngine::IsSupportedFile(filePath, sniff) && engineType != Engine_PDF) {
             engine = PdfEngine::CreateFromFileName(filePath, pwdUI);
             engineType = Engine_PDF;
-        } else if (XpsEngine::IsSupportedFile(filePath, sniff)) {
+        } else if (XpsEngine::IsSupportedFile(filePath, sniff) && engineType != Engine_XPS) {
             engine = XpsEngine::CreateFromFileName(filePath);
             engineType = Engine_XPS;
-        } else if (DjVuEngine::IsSupportedFile(filePath, sniff)) {
+        } else if (DjVuEngine::IsSupportedFile(filePath, sniff) && engineType != Engine_DjVu) {
             engine = DjVuEngine::CreateFromFileName(filePath);
             engineType = Engine_DjVu;
-        } else if (CbxEngine::IsSupportedFile(filePath, sniff)) {
+        } else if (CbxEngine::IsSupportedFile(filePath, sniff) && engineType != Engine_ComicBook) {
             engine = CbxEngine::CreateFromFileName(filePath);
             engineType = Engine_ComicBook;
-        } else if (ImageEngine::IsSupportedFile(filePath, sniff)) {
+        } else if (ImageEngine::IsSupportedFile(filePath, sniff) && engineType != Engine_Image) {
             engine = ImageEngine::CreateFromFileName(filePath);
             engineType = Engine_Image;
-        } else if (ImageDirEngine::IsSupportedFile(filePath, sniff)) {
+        } else if (ImageDirEngine::IsSupportedFile(filePath, sniff) && engineType != Engine_ImageDir) {
             engine = ImageDirEngine::CreateFromFileName(filePath);
             engineType = Engine_ImageDir;
-        } else if (PsEngine::IsSupportedFile(filePath, sniff)) {
+        } else if (PsEngine::IsSupportedFile(filePath, sniff) && engineType != Engine_PS) {
             engine = PsEngine::CreateFromFileName(filePath);
             engineType = Engine_PS;
         }
@@ -55,11 +55,9 @@ RetrySniffing:
             sniff = true;
             goto RetrySniffing;
         }
-        if (!engine)
-            engineType = Engine_None;
 
         if (type_out)
-            *type_out = engineType;
+            *type_out = engine ? engineType : Engine_None;
         return engine;
     }
 };
