@@ -34,7 +34,7 @@ EXTLIBSDIR=ext
 LIBMUPDF_RES = $(O)\libmupdf.res
 
 # default target
-all_sumatrapdf: SumatraPDF Installer PDFFilter PdfPreview BrowserPlugin
+all_sumatrapdf: SumatraPDF Uninstaller PDFFilter PdfPreview BrowserPlugin
 
 ##### add configuration changes that should also affect MuPDF before this line #####
 
@@ -78,9 +78,10 @@ SUMATRA_APP = $(O)\SumatraPDF.exe
 SUMATRA_APP_NO_MUPDF = $(O)\SumatraPDF-no-MuPDF.exe
 SUMATRA_RES = $(OS)\sumatrapdf.res
 
-INSTALLER_APP = $(O)\Installer.exe
-INSTALLER_RES = $(OS)\Installer.res
+INSTALLER_APP   = $(O)\Installer.exe
+INSTALLER_RES   = $(OS)\Installer.res
 UNINSTALLER_APP = $(O)\uninstall.exe
+UNINSTALLER_RES = $(OS)\Uninstaller.res
 
 PDFFILTER_DLL = $(O)\PdfFilter.dll
 PDFFILTER_RES = $(OS)\PdfFilter.res
@@ -112,7 +113,7 @@ INSTALLER_OBJS = \
 	$(OS)\Installer.obj $(INSTALLER_RES)
 
 UNINSTALLER_OBJS = \
-	$(OS)\Uninstaller.obj $(INSTALLER_RES)
+	$(OS)\Uninstaller.obj $(UNINSTALLER_RES)
 
 PDFFILTER_OBJS = \
 	$(OS)\PdfFilterDll.obj $(OS)\CPdfFilter.obj $(PDFFILTER_RES) \
@@ -145,7 +146,8 @@ cleanall: force
 	-rmdir /S /Q obj-*
 
 SumatraPDF:    $(OS) $(LIBMUPDF_DLL) $(SUMATRA_APP) $(SUMATRA_APP_NO_MUPDF)
-Installer:     $(OS) $(INSTALLER_APP) $(UNINSTALLER_APP)
+Installer:     $(OS) $(INSTALLER_APP)
+Uninstaller:   $(OS) $(UNINSTALLER_APP)
 PDFFilter:     $(OS) $(LIBMUPDF_DLL) $(PDFFILTER_DLL)
 PdfPreview:    $(OS) $(LIBMUPDF_DLL) $(PDFPREVIEW_DLL)
 BrowserPlugin: $(OS) $(BROWSER_PLUGIN)
@@ -167,6 +169,9 @@ $(LIBMUPDF_RES): src\libmupdf.rc src\Version.h
 
 $(INSTALLER_RES): src\installer\Installer.rc src\installer\Resource.h src\Version.h
 	rc /r /fo$@ $(EXTCFLAGS) src\installer\Installer.rc
+
+$(UNINSTALLER_RES): src\installer\Installer.rc src\installer\Resource.h src\Version.h
+	rc /r /fo$@ $(EXTCFLAGS) /D "BUILD_UNINSTALLER" src\installer\Installer.rc
 
 $(INSTALLER_APP): $(ZLIB_OBJS) $(MINIZIP_OBJS) $(BZIP2_OBJS) $(UTILS_OBJS) $(INSTALLER_OBJS)
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@

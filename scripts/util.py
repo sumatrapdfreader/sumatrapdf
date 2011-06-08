@@ -133,7 +133,6 @@ def extract_sumatra_version(file_path):
   ver = re.findall(r'CURR_VERSION (\d+(?:\.\d+)*)', content)[0]
   return ver
 
-# doesn't really belong here, but have no better place
 def zip_file(dst_zip_file, src, src_name=None, compress=True, append=False):
   mode = "w"
   if append: mode = "a"
@@ -146,33 +145,15 @@ def zip_file(dst_zip_file, src, src_name=None, compress=True, append=False):
   zf.write(src, src_name)
   zf.close()
 
-# construct a full installer by appending data at the end of installer executable
-# in ZIP format with BZIP2 compression
-def build_installer_native(dir, nameprefix):
-  installer_template_exe = os.path.join(dir, "Installer.exe")
-  if nameprefix is not None:
-    installer_exe = os.path.join(dir, "%s-install.exe" % nameprefix)
-    exe = os.path.join(dir, "%s-uncompr.exe" % nameprefix)
-  else:
-    installer_exe = os.path.join(dir, "SumatraPDF-install.exe")
-    exe = os.path.join(dir, "SumatraPDF.exe")
-
+# build the .zip with with installer data, will be included as part of 
+# Installer.exe resources
+def build_installer_data(dir):
+  zf = zipfile.ZipFile(os.path.join(dir, "InstallerData.zip"), "w", zipfile.ZIP_BZIP2)
   exe = os.path.join(dir, "SumatraPDF-no-MuPDF.exe")
-  dll_names = ["libmupdf.dll", "npPdfViewer.dll", "PdfFilter.dll", "PdfPreview.dll"]
-  font_name =  "DroidSansFallback.ttf"
-  font_path = os.path.join("mupdf", "fonts", "droid", font_name)
-  uninstaller_exe = os.path.join(dir, "uninstall.exe")
-
-  # append the payload in ZIP format at the end of the installer exe
-  shutil.copy(installer_template_exe, installer_exe)
-  zf = zipfile.ZipFile(installer_exe, "a", zipfile.ZIP_BZIP2)
   zf.write(exe, "SumatraPDF.exe")
-  for name in dll_names:
-    zf.write(os.path.join(dir, name), name)
-  zf.write(font_path, font_name)
-  zf.write(uninstaller_exe, "uninstall.exe")
+  for f in ["libmupdf.dll", "npPdfViewer.dll", "PdfFilter.dll", "PdfPreview.dll", "uninstall.exe"]:
+    zf.write(os.path.join(dir, f), f)
+  font_path = os.path.join("mupdf", "fonts", "droid", "DroidSansFallback.ttf")
+  zf.write(font_path, "DroidSansFallback.ttf")
   zf.close()
 
-  print("Built installer at " + installer_exe)
-
-  return installer_exe

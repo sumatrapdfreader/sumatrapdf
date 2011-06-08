@@ -35,3 +35,12 @@ END
 IDI_SUMATRAPDF          ICON                    "..\SumatraPDF-smaller.ico"
 
 1                       RT_MANIFEST             "Installer.exe.manifest"
+
+#ifndef BUILD_UNINSTALLER
+  #ifdef DEBUG
+	1           RT_RCDATA               "..\..\obj-dbg\InstallerData.zip"
+  #else
+	1           RT_RCDATA               "..\..\obj-rel\InstallerData.zip"
+  #endif
+#endif
+

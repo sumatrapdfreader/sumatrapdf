@@ -10,7 +10,10 @@ import sys
 import time
 import re
 
-from util import log, run_cmd_throw, test_for_flag, s3UploadFilePublic, s3UploadDataPublic, ensure_s3_doesnt_exist, ensure_path_exists, zip_file, extract_sumatra_version, verify_started_in_right_directory, build_installer_native, parse_svninfo_out
+from util import log, run_cmd_throw, test_for_flag, s3UploadFilePublic
+from util import s3UploadDataPublic, ensure_s3_doesnt_exist, ensure_path_exists
+from util import zip_file, extract_sumatra_version, verify_started_in_right_directory
+from util import build_installer_data, parse_svninfo_out
 
 args = sys.argv
 upload               = test_for_flag(args, "-upload")
@@ -56,20 +59,15 @@ def usage():
 #       sumatrapdf/sumatralatest.js
 #       sumatrapdf/sumpdf-prerelease-latest.txt
 
-def copy_from_obj_rel(name_in_obj_rel, dst_path):
-  src_path = os.path.join("obj-rel", name_in_obj_rel)
+def copy_to_dst_dir(src_path, dst_dir):
+  name_in_obj_rel = os.path.basename(src_path)
+  dst_path = os.path.join(dst_dir, name_in_obj_rel)
   shutil.copy(src_path, dst_path)
 
 def main():
   if len(args) != 1:
     usage()
   verify_started_in_right_directory()
-
-  if build_test_installer:
-    config = build_prerelease and "rel" or "dbg"
-    run_cmd_throw("nmake", "-f", "makefile.msvc", "CFG=" + config)
-    build_installer_native("obj-" + config, None)
-    sys.exit(0)
 
   if build_prerelease:
     run_cmd_throw("svn", "update")
@@ -111,50 +109,38 @@ def main():
   builds_dir = os.path.join("builds", ver)
   if os.path.exists(builds_dir):
     shutil.rmtree(builds_dir)
-  if not os.path.exists(builds_dir):
-    os.makedirs(builds_dir)
+  os.makedirs(builds_dir)
 
+  obj_dir = "obj-rel"
+
+  extcflags = ""
   if build_prerelease:
     extcflags = "EXTCFLAGS=-DSVN_PRE_RELEASE_VER=%s" % ver
-    run_cmd_throw("nmake", "-f", "makefile.msvc", "CFG=rel", extcflags)
-  else:
-    run_cmd_throw("nmake", "-f", "makefile.msvc", "CFG=rel")
+  run_cmd_throw("nmake", "-f", "makefile.msvc", "CFG=rel", extcflags,"all_sumatrapdf")
 
-  exe_uncompressed = os.path.join(builds_dir, "%s-uncompr.exe" % filename_base)
-  copy_from_obj_rel("SumatraPDF.exe", exe_uncompressed)
+  exe = os.path.join(obj_dir, "SumatraPDF.exe")
+  installer = os.path.join(obj_dir, "Installer.exe")
+  pdb_zip = os.path.join(obj_dir, "%s.pdb.zip" % filename_base)
 
-  exe_no_mupdf = os.path.join(builds_dir, "SumatraPDF-no-MuPDF.exe")
-  copy_from_obj_rel("SumatraPDF-no-MuPDF.exe", exe_no_mupdf)
+  zip_file(pdb_zip, os.path.join(obj_dir, "libmupdf.pdb"))
+  zip_file(pdb_zip, os.path.join(obj_dir, "SumatraPDF-no-MuPDF.pdb"), append=True)
+  zip_file(pdb_zip, os.path.join(obj_dir, "SumatraPDF.pdb"), "%s.pdb" % filename_base, append=True)
 
-  dll_names = ["libmupdf.dll", "npPdfViewer.dll", "PdfFilter.dll", "PdfPreview.dll"]
-  dll_paths = [os.path.join(builds_dir, name) for name in dll_names]
-  for i in range(len(dll_names)):
-    copy_from_obj_rel(dll_names[i], dll_paths[i])
+  build_installer_data(obj_dir)
+  run_cmd_throw("nmake", "-f", "makefile.msvc", "Installer", "CFG=rel", extcflags)
 
-  pdb_zip = os.path.join(builds_dir, "%s.pdb.zip" % filename_base)
-  zip_file(pdb_zip, os.path.join("obj-rel", "libmupdf.pdb"))
-  zip_file(pdb_zip, os.path.join("obj-rel", "SumatraPDF-no-MuPDF.pdb"), append=True)
-  zip_file(pdb_zip, os.path.join("obj-rel", "SumatraPDF.pdb"), "%s.pdb" % filename_base, append=True)
+  if build_test_installer:
+    sys.exit(0)
 
-  installer_stub = os.path.join(builds_dir, "Installer.exe")
-  copy_from_obj_rel("Installer.exe", installer_stub)
-
-  uninstaller = os.path.join(builds_dir, "uninstall.exe")
-  copy_from_obj_rel("uninstall.exe", uninstaller)
-
-  # run StripReloc from inside builds_dir for better
-  # compat across python version
-  prevdir = os.getcwd(); os.chdir(builds_dir)
-  run_cmd_throw("StripReloc", "Installer.exe")
-  run_cmd_throw("StripReloc", "uninstall.exe")
-  os.chdir(prevdir)
-
-  installer = build_installer_native(builds_dir, filename_base)
+  copy_to_dst_dir(exe, builds_dir)
+  copy_to_dst_dir(installer, builds_dir)
+  copy_to_dst_dir(pdb_zip, builds_dir)
 
   if not build_prerelease:
-    exe_zip = os.path.join(builds_dir, "%s.zip" % filename_base)
-    zip_file(exe_zip, exe_uncompressed, "SumatraPDF.exe", compress=True)
+    exe_zip = os.path.join(obj_dir, "%s.zip" % filename_base)
+    zip_file(exe_zip, exe, "SumatraPDF.exe", compress=True)
     ensure_path_exists(exe_zip)
+    copy_to_dst_dir(exe_zip, builds_dir)
 
   if upload or upload_tmp:
     if build_prerelease:
@@ -167,7 +153,7 @@ def main():
 
     s3UploadFilePublic(installer, s3_installer)
     s3UploadFilePublic(pdb_zip, s3_pdb_zip)
-    s3UploadFilePublic(exe_uncompressed, s3_exe)
+    s3UploadFilePublic(exe, s3_exe)
 
     if build_prerelease:
       s3UploadDataPublic(jstxt, "sumatrapdf/sumatralatest.js")
@@ -178,11 +164,6 @@ def main():
 
     # Note: for release builds, must update sumatrapdf/sumpdf-latest.txt in s3
     # manually to: "%s\n" % ver
-
-  # temporary files that were in builds_dir to make creating other files possible
-  temp = [installer_stub, installer_stub + ".bak", exe_no_mupdf, uninstaller] + dll_paths
-  map(os.remove, temp)
-
 
 if __name__ == "__main__":
   main()
