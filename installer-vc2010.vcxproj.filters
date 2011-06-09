@@ -18,12 +18,18 @@
     <ClCompile Include="src\installer\Installer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\utils\FileUtil.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\installer\Resource.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="src\installer\Version.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\FileUtil.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

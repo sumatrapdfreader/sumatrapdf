@@ -239,7 +239,6 @@
     <ClCompile Include="src\utils\DialogSizer.cpp" />
     <ClCompile Include="src\utils\FileUtil.cpp" />
     <ClCompile Include="src\utils\Http.cpp" />
-    <ClCompile Include="src\utils\PEUtil.cpp" />
     <ClCompile Include="src\utils\SimpleLog.cpp" />
     <ClCompile Include="src\utils\StrUtil.cpp" />
     <ClCompile Include="src\utils\UtilTests.cpp" />
@@ -299,7 +298,6 @@
     <ClInclude Include="src\utils\FileUtil.h" />
     <ClInclude Include="src\utils\GeomUtil.h" />
     <ClInclude Include="src\utils\Http.h" />
-    <ClInclude Include="src\utils\PEUtil.h" />
     <ClInclude Include="src\utils\SimpleLog.h" />
     <ClInclude Include="src\utils\StrUtil.h" />
     <ClInclude Include="src\utils\Vec.h" />

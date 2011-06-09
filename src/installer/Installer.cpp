@@ -440,6 +440,52 @@ void bz_internal_error(int errcode)
 
 #ifndef BUILD_UNINSTALLER
 
+static bool IsRunningBrowserPlugin(DWORD procId)
+{
+    HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, procId);
+    if (snap == INVALID_HANDLE_VALUE) return false;
+    MODULEENTRY32 mod;
+    mod.dwSize = sizeof(mod);
+    BOOL cont = Module32First(snap, &mod);
+    bool hasBrowserPlugin = false;
+    while (cont) {
+        TCHAR *name = mod.szModule;
+        if (str::EqI(name, _T("npPdfViewer.dll"))) {
+            hasBrowserPlugin = true;
+            break;
+        }
+        cont = Module32Next(snap, &mod);
+    }
+    CloseHandle(snap);
+    return hasBrowserPlugin;
+}
+
+// return names of processes that are running browser plugin
+// (i.e. have npPdfViewer.dll loaded)
+static void ProcessesWithBrowserPlugin(Vec<TCHAR*>& names)
+{
+    PROCESSENTRY32 proc;
+    BOOL ok;
+    names.Reset();
+    HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if (INVALID_HANDLE_VALUE == snap)
+        goto Exit;
+
+    proc.dwSize = sizeof(proc);
+    ok = Process32First(snap, &proc);
+    while (ok) {
+        if (IsRunningBrowserPlugin(proc.th32ProcessID)) {
+            const TCHAR *name = path::GetBaseName(proc.szExeFile);
+            names.Append(str::Dup(name));
+        }
+        proc.dwSize = sizeof(proc);
+        ok = Process32Next(snap, &proc);
+    }
+
+Exit:
+    CloseHandle(snap);
+}
+
 int GetInstallationStepCount()
 {
     /* Installation steps
