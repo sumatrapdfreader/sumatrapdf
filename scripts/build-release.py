@@ -70,7 +70,7 @@ def main():
   verify_started_in_right_directory()
 
   if build_prerelease:
-    if os.environ["SVN_REVISION"]:
+    if "SVN_REVISION" in os.environ:
       # allow to pass in an SVN revision, in case SVN itself isn't available
       # TODO: make this a command line option to build-release.py
       ver = os.environ["SVN_REVISION"]
