@@ -258,7 +258,7 @@ bool PsEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
     if (sniff) {
         char header[1024];
         ZeroMemory(header, sizeof(header));
-        file::ReadAll(fileName, header, sizeof(header));
+        file::ReadAll(fileName, header, sizeof(header) - 1);
         return str::StartsWith(header, "%!") ||
                // also sniff PJL (Printer Job Language) files containing Postscript data
                str::StartsWith(header, "\x1B%-12345X@PJL") && str::Find(header, "\n%!PS-Adobe-");
