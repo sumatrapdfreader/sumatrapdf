@@ -17,17 +17,32 @@ Contributor: theowoo (http://grnrnat.net.ru/)
 &Actual Size\tCtrl-1
 實際大小(&U)\tCtrl-1
 
+&All selected pages
+所有已選取的頁面(&A)
+
 &Back\tAlt+Left Arrow
 上一停頓頁面\tAlt+<-
 
+&Book View\tCtrl-8
+書本模式(&B)\tCtrl-8
+
 &Close\tCtrl-W
 關閉(&C)\tCtrl-W
+
+&Copy Selection
+複製選取的範圍(&C)
 
 &Copy Selection\tCtrl-C
 截取範圍\tCtrl-C
 
 &Don't ask me again
 不要再問我
+
+&Even pages only
+只有偶數頁(&E)
+
+&Facing\tCtrl-7
+雙頁模式(&F)
 
 &File
 檔案(&F)
@@ -37,6 +52,9 @@ Contributor: theowoo (http://grnrnat.net.ru/)
 
 &First Page\tHome
 首頁\tHome
+
+&Fit pages to printable area
+縮小或放大頁面以符合可列印區域(&F)
 
 &Go To
 移至(&G)
@@ -62,11 +80,20 @@ Contributor: theowoo (http://grnrnat.net.ru/)
 &Next Page\tRight Arrow
 下一頁\t->
 
+&No
+否(&N)
+
 &No, thanks
 不用了，謝謝(&N)
 
+&Odd pages only
+只有奇數頁(&O)
+
 &Open\tCtrl-O
 開啟\tCtrl-O
+
+&Open Document
+開啟此文件(&O)
 
 &Options...
 選項(&O)...
@@ -74,8 +101,14 @@ Contributor: theowoo (http://grnrnat.net.ru/)
 &Password:
 密碼: (&P)
 
+&Pin Document
+固定此縮圖(&P)
+
 &Previous Page\tLeft Arrow
 上一頁\t<-
+
+&Print...
+列印...(&P)
 
 &Print...\tCtrl-P
 列印(&P)\tCtrl-P
@@ -83,8 +116,17 @@ Contributor: theowoo (http://grnrnat.net.ru/)
 &Print... (denied)
 列印... (已中斷)
 
+&Remember the password for this document
+記住此文件的密碼(&R)
+
 &Remember these settings for each document
 儲存檔案檢視設定(&R)
+
+&Remove Document
+移除此縮圖(&R)
+
+&Save As...
+另存新檔(&S)
 
 &Save As...\tCtrl-S
 另存新檔(&S)\tCtrl-S
@@ -92,14 +134,29 @@ Contributor: theowoo (http://grnrnat.net.ru/)
 &Settings
 設定
 
+&Shrink pages to printable area (if necessary)
+如有需要，縮小頁面以符合可列印區域(&S)
+
+&Single Page\tCtrl-6
+單頁模式(&S)\tCtrl-6
+
 &Skip this version
 略過此版本(&S)
+
+&Use original page sizes
+使用頁面原始大小(&S)
 
 &View
 檢視(&V)
 
+&Yes
+是(&Y)
+
 &Zoom
 縮放(&Z)
+
+(of %d)
+（共 %d 頁）
 
 About SumatraPDF
 關於 SumatraPDF
@@ -110,11 +167,17 @@ Advanced
 All files
 全部檔案
 
+All supported documents
+所有支援的檔案格式
+
 Application:
 程式：
 
 Associate with PDF files?
 設定 PDF 檔關聯?
+
+Attachment: %s
+附件：%s
 
 Author:
 作者：
@@ -131,8 +194,20 @@ Book View
 Book&marks\tF12
 書籤\tF12
 
+Bookmark Shortcuts
+書籤捷徑
+
+Bookmark shortcut to page %d of %s
+書籤捷徑指向第 %d 頁（檔案 %s）
+
+Bookmarks
+書籤
+
 Bytes
 字節
+
+Can't connect to the Internet (error %#x).
+無法連結網際網路（錯誤：%#x）。
 
 Cancel
 取消
@@ -149,6 +224,9 @@ Change Language
 Check for &Updates
 檢查是否有新版本(&C)
 
+Comic books
+漫畫文件
+
 Continuous
 連續頁面
 
@@ -160,6 +238,15 @@ Continuous Facing
 
 Contribute Translation
 提供翻譯
+
+Copy &Link Address
+複製連結位址(&L)
+
+Copy Co&mment
+複製註解(&M)
+
+Copying text was denied (copying as image only)
+複製文字失敗（只能複製為圖片）
 
 Could not open Printer
 無法開啟印表機。
@@ -188,6 +275,9 @@ Default PDF reader can't be changed in portable mode
 Denied Permissions:
 權限不足：
 
+DjVu documents
+DjVu 文件
+
 Document Properties
 文件屬性
 
@@ -202,6 +292,12 @@ Enter password
 
 Enter password for %s
 輸入 %s 的密碼
+
+Enter the command-line to invoke when you double-click on the PDF document:
+輸入當以滑鼠雙擊 PDF 文件時應執行的指令：
+
+Error loading %s
+載入 %s 時發生錯誤
 
 F&orward\tAlt+Right Arrow
 下一停頓頁面\tAlt+->
@@ -236,11 +332,17 @@ Find Previous
 Find:
 尋找：
 
+Fit &Content\tCtrl-3
+合適內容(&C)\tCtrl-3
+
 Fit &Page\tCtrl-0
 合適頁面(&P)\tCtrl-0
 
 Fit &Width\tCtrl-2
 合適寬度(&H)\tCtrl-2
+
+Fit Content
+合適內容
 
 Fit Page
 合適頁面
@@ -248,8 +350,20 @@ Fit Page
 Fit Width
 合適寬度
 
+Fit Width and Show Pages Continuously
+合適寬度且連續顯示頁面
+
+Fit a Single Page
+合適單頁
+
 Found text at page %d
 於第 %d 頁找到目標
+
+Found text at page %d (again)
+於第 %d 頁找到目標（已從頭尋找）
+
+Frequently Read
+經常開啟的檔案
 
 GB
 GB
@@ -257,8 +371,14 @@ GB
 Go to page
 移至頁面
 
+Hide frequently read
+隱藏經常開啟的檔案
+
 Hint: Use the F3 key for finding again
 提示：按F3重新尋找
+
+Image files (*.%s)
+圖片檔案 (*.%s)
 
 KB
 KB
@@ -287,6 +407,9 @@ Next Page
 No matches were found
 找不到結果
 
+No result found around line %u in file %s
+在第 %u 行附近（檔案 %s）找不到目標
+
 No synchronization file found
 找不到同步檔案
 
@@ -302,6 +425,9 @@ OK
 Open
 開啟
 
+Open a document...
+開啟檔案...
+
 Open in &Adobe Reader
 以 Adobe Reader 開啟(&A)
 
@@ -310,6 +436,9 @@ Open in &Foxit Reader
 
 Open in PDF-XChange
 以 PDF-XChange 開啟(&A)
+
+P&roperties
+內容(&R)
 
 P&roperties\tCtrl-D
 屬性...(&R)\tCtrl-D
@@ -335,14 +464,35 @@ Page Size:
 Page number %u inexistant
 第 %u 頁不存在
 
+Page scaling
+頁面縮放
+
 Page:
 頁面：
 
 Please wait - rendering...
 請稍等——產生中
 
+Postscript documents
+Postscript 文件
+
+Pr&esentation\tCtrl-L
+投影片顯示(&E)\tCtrl-L
+
 Previous Page
 上一頁
+
+Print
+列印
+
+Print range
+列印範圍
+
+Printing is still in progress. Abort and start over?
+正在列印，是否要放棄並重新設定？
+
+Printing page %d of %d...
+列印第 %d 頁（共 %d 頁）
 
 Printing problem.
 列印問題
@@ -355,6 +505,18 @@ Rotate &Left\tCtrl-Shift--
 
 Rotate &Right\tCtrl-Shift-+
 頁面右旋\tCtrl-Shift-+
+
+Save S&hortcut...\tCtrl-Shift-S
+儲存為捷徑...(&H)\tCtrl-Shift-S
+
+Searching %d of %d...
+搜尋第 %d 頁（共 %d 頁）
+
+Select &All
+全選(&A)
+
+Select &All\tCtrl-A
+全選(&A)\tCtrl-A
 
 Select content with Ctrl+left mouse button
 按 Ctrl+滑鼠左鍵截取內容
@@ -371,11 +533,17 @@ Show &Toolbar
 Show &pages continuously
 連續顯示頁面
 
+Show frequently read
+顯示經常開啟的檔案
+
 Show the &bookmarks sidebar when available
 顯示書籤欄(&B)
 
 Single Page
 單頁模式
+
+Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
+噢，抱歉，這不該發生的！\n\n如果你希望協助我們修正這個錯誤，請點選「取消」。
 
 Source file %s has no synchronization point
 參考檔案 %s 沒有同步點
@@ -385,6 +553,12 @@ Subject:
 
 SumatraPDF Options
 SumatraPDF 選項
+
+SumatraPDF Update
+SumatraPDF 更新
+
+SumatraPDF crashed
+SumatraPDF 發生錯誤
 
 SumatraPDF is your default PDF reader
 SumatraPDF 已是你的預設 PDF 閱讀器
@@ -413,6 +587,9 @@ Visit &Website
 Warning
 警告
 
+XPS documents
+XPS 文件
+
 You have the latest version.
 目前使用的版本為最新版。
 
@@ -439,65 +616,4 @@ copying text
 
 printing document
 文件列印中
-
-# Untranslated:
-#&All selected pages
-#&Book View\tCtrl-8
-#&Copy Selection
-#&Even pages only
-#&Facing\tCtrl-7
-#&Fit pages to printable area
-#&No
-#&Odd pages only
-#&Open Document
-#&Pin Document
-#&Print...
-#&Remember the password for this document
-#&Remove Document
-#&Save As...
-#&Shrink pages to printable area (if necessary)
-#&Single Page\tCtrl-6
-#&Use original page sizes
-#&Yes
-#(of %d)
-#All supported documents
-#Attachment: %s
-#Bookmark Shortcuts
-#Bookmark shortcut to page %d of %s
-#Bookmarks
-#Can't connect to the Internet (error %#x).
-#Comic books
-#Copy &Link Address
-#Copy Co&mment
-#Copying text was denied (copying as image only)
-#DjVu documents
-#Enter the command-line to invoke when you double-click on the PDF document:
-#Error loading %s
-#Fit &Content\tCtrl-3
-#Fit Content
-#Fit Width and Show Pages Continuously
-#Fit a Single Page
-#Found text at page %d (again)
-#Frequently Read
-#Hide frequently read
-#Image files (*.%s)
-#No result found around line %u in file %s
-#Open a document...
-#P&roperties
-#Page scaling
-#Postscript documents
-#Pr&esentation\tCtrl-L
-#Print
-#Print range
-#Printing is still in progress. Abort and start over?
-#Printing page %d of %d...
-#Save S&hortcut...\tCtrl-Shift-S
-#Searching %d of %d...
-#Select &All
-#Select &All\tCtrl-A
-#Show frequently read
-#Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
-#SumatraPDF Update
-#SumatraPDF crashed
-#XPS documents
 

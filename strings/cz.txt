@@ -25,6 +25,9 @@ Vše&chny vybrané stránky
 &Back\tAlt+Left Arrow
 Z&pět\tAlt+Šipka vlevo
 
+&Book View\tCtrl-8
+K&niha\tCtrl+8
+
 &Close\tCtrl-W
 &Zavřít\tCtrl+W
 
@@ -39,6 +42,9 @@ Z&pět\tAlt+Šipka vlevo
 
 &Even pages only
 Pouz&e sudé stránky
+
+&Facing\tCtrl-7
+&Dvojstránky\tCtrl+7
 
 &File
 &Soubor
@@ -88,11 +94,17 @@ Další strá&nka\tŠipka vpravo
 &Open\tCtrl-O
 &Otevřít...\tCtrl+O
 
+&Open Document
+&Otevřít dokument
+
 &Options...
 &Možnosti...
 
 &Password:
 &Heslo:
+
+&Pin Document
+&Připnout dokument
 
 &Previous Page\tLeft Arrow
 &Předchozí stránka\tŠipka vlevo
@@ -112,6 +124,9 @@ P&amatovat si heslo tohoto dokumentu
 &Remember these settings for each document
 &Pamatovat si tato nastavení pro každý dokument
 
+&Remove Document
+Odeb&rat dokument
+
 &Save As...
 &Uložit jako...
 
@@ -123,6 +138,9 @@ P&amatovat si heslo tohoto dokumentu
 
 &Shrink pages to printable area (if necessary)
 &Zmenšit stránky na tisknutelnou plochu (v případě potřeby)
+
+&Single Page\tCtrl-6
+&Jedna stránka\tCtrl+6
 
 &Skip this version
 &Přeskočit tuto verzi
@@ -259,6 +277,9 @@ V přenosném režimu nelze měnit výchozí PDF prohlížeč
 Denied Permissions:
 Odepřená oprávnění:
 
+DjVu documents
+DjVu dokumenty
+
 Document Properties
 Vlastnosti dokumentu
 
@@ -284,7 +305,7 @@ F&orward\tAlt+Right Arrow
 V&před\tAlt+Šipka vpravo
 
 F&ullscreen\tCtrl-Shift-L
-Celá obrazo&vka\tCtrl+Shift+L
+&Celá obrazovka\tCtrl+Shift+L
 
 Facing
 Dvojstránky
@@ -454,11 +475,17 @@ Stránka:
 Please wait - rendering...
 Prosím čekejte, probíhá vykreslování...
 
+Postscript documents
+PostScript dokumenty
+
 Pr&esentation\tCtrl-L
 Pr&ezentace\tCtrl+L
 
 Previous Page
 Předchozí stránka
+
+Print
+Tisk
 
 Print range
 Rozsah tisku
@@ -516,6 +543,9 @@ Zo&brazit záložky v postranním panelu, jsou-li dostupné
 
 Single Page
 Jedna stránka
+
+Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
+To se nemělo stát, omlouváme se.\n\nPokud nám chcete pomoci vyřešit příčinu tohoto pádu, klikněte na tlačítko Storno.
 
 Source file %s has no synchronization point
 Zdrojový soubor %s nemá bod synchronizace
@@ -588,16 +618,4 @@ kopírování textu
 
 printing document
 tisk dokumentu
-
-# Untranslated:
-#&Book View\tCtrl-8
-#&Facing\tCtrl-7
-#&Open Document
-#&Pin Document
-#&Remove Document
-#&Single Page\tCtrl-6
-#DjVu documents
-#Postscript documents
-#Print
-#Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
 
