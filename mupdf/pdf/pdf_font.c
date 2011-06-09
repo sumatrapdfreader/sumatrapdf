@@ -1115,7 +1115,9 @@ pdf_make_width_table(pdf_font_desc *fontdesc)
 		{
 			cid = pdf_lookup_cmap(fontdesc->encoding, k);
 			gid = pdf_font_cid_to_gid(fontdesc, cid);
-			if (gid >= 0 && gid < font->width_count)
+			/* SumatraPDF: Widths are per cid, so there could be clashes, if two cids
+			               map to the same gid (for now, prefer the non-zero width) */
+			if (gid >= 0 && gid < font->width_count && fontdesc->hmtx[i].w != 0)
 				font->width_table[gid] = fontdesc->hmtx[i].w;
 		}
 	}
