@@ -138,8 +138,11 @@ pdf_begin_group(pdf_csi *csi, fz_rect bbox)
 	if (gstate->softmask)
 	{
 		pdf_xobject *softmask = gstate->softmask;
-		fz_rect bbox = fz_transform_rect(gstate->ctm, softmask->bbox);
+		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1485 */
+		fz_rect bbox = fz_transform_rect(gstate->softmask_ctm, softmask->bbox);
+		fz_matrix prevCtm = gstate->ctm;
 
+		gstate->ctm = gstate->softmask_ctm; /* SumatraPDF: don't use an image's ctm for softmasks */
 		gstate->softmask = NULL;
 
 		fz_begin_mask(csi->dev, bbox, gstate->luminosity,
@@ -149,6 +152,7 @@ pdf_begin_group(pdf_csi *csi, fz_rect bbox)
 			fz_catch(error, "cannot run softmask");
 		fz_end_mask(csi->dev);
 
+		gstate->ctm = prevCtm; /* SumatraPDF: don't use an image's ctm for softmasks */
 		gstate->softmask = softmask;
 	}
 
