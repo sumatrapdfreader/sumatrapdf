@@ -3,7 +3,6 @@
 
 /*
 The installer is good enough for production but it doesn't mean it couldn't be improved:
- * make it grow proportionally for DPI > 96
  * some more fanciful animations e.g.:
  * letters could drop down and back up when cursor is over it
  * messages could scroll-in
@@ -71,14 +70,16 @@ using namespace Gdiplus;
 
 #define WM_APP_INSTALLATION_FINISHED        (WM_APP + 1)
 
+#define PUSH_BUTTON_DY  dpiAdjust(22)
+#define WINDOW_MARGIN   8
 // The window is divided in three parts:
 // * top part, where we display nice graphics
 // * middle part, where we either display messages or advanced options
 // * bottom part, with install/uninstall button
 // This is the height of the top part
-#define TITLE_PART_DY  110
+#define TITLE_PART_DY  dpiAdjust(110)
 // This is the height of the lower part
-#define BOTTOM_PART_DY 40
+#define BOTTOM_PART_DY (PUSH_BUTTON_DY + 2 * WINDOW_MARGIN)
 
 static HINSTANCE        ghinst;
 static HWND             gHwndFrame = NULL;
@@ -100,6 +101,8 @@ static HWND             gHwndButtonUninstall = NULL;
 #endif
 static HFONT            gFontDefault;
 static bool             gShowOptions = false;
+
+static float            gUiDPIFactor = 1.0f;
 
 static TCHAR *          gMsg;
 static TCHAR *          gMsgError = NULL;
@@ -371,6 +374,22 @@ static HFONT CreateDefaultGuiFont()
     HFONT font = win::font::GetSimple(hdc, _T("MS Shell Dlg"), 14);
     ReleaseDC(NULL, hdc);
     return font;
+}
+
+float GetWindowDPIFactor()
+{
+    HDC hdc = GetDC(NULL);
+    int dpi = GetDeviceCaps(hdc, LOGPIXELSY);
+    // round untypical resolutions up to the nearest quarter
+    float factor = ceil(dpi * 4.0f / USER_DEFAULT_SCREEN_DPI) / 4.0f;
+    ReleaseDC(NULL, hdc);
+
+    return factor;
+}
+
+inline int dpiAdjust(int value)
+{
+    return (int)(value * gUiDPIFactor);
 }
 
 void InvalidateFrame()
@@ -981,22 +1000,27 @@ bool RemoveShortcut(bool allUsers)
     return true;
 }
 
-void CreateButtonExit(HWND hwndParent)
+HWND CreateDefaultButton(HWND hwndParent, const TCHAR *label, int width, int id=IDOK)
 {
-    int     buttonDx = 80;
-    int     buttonDy = 22;
+    RectI rc(0, 0, dpiAdjust(width), PUSH_BUTTON_DY);
 
     // TODO: determine the sizes of buttons by measuring their real size
     // and adjust size of the window appropriately
     ClientRect r(hwndParent);
-    int x = r.dx - buttonDx - 8;
-    int y = r.dy - buttonDy - 8;
-    gHwndButtonExit = CreateWindow(WC_BUTTON, _T("Close"),
+    rc.x = r.dx - rc.dx - WINDOW_MARGIN;
+    rc.y = r.dy - rc.dy - WINDOW_MARGIN;
+    HWND button = CreateWindow(WC_BUTTON, label,
                         BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
-                        x, y, buttonDx, buttonDy, hwndParent, 
-                        (HMENU)ID_BUTTON_EXIT,
-                        ghinst, NULL);
-    SetWindowFont(gHwndButtonExit, gFontDefault, TRUE);
+                        rc.x, rc.y, rc.dx, rc.dy, hwndParent,
+                        (HMENU)id, ghinst, NULL);
+    SetWindowFont(button, gFontDefault, TRUE);
+
+    return button;
+}
+
+void CreateButtonExit(HWND hwndParent)
+{
+    gHwndButtonExit = CreateDefaultButton(hwndParent, _T("Close"), 80, ID_BUTTON_EXIT);
 }
 
 void OnButtonExit()
@@ -1008,20 +1032,7 @@ void OnButtonExit()
 
 void CreateButtonRunSumatra(HWND hwndParent)
 {
-    int     buttonDx = 120;
-    int     buttonDy = 22;
-
-    // TODO: determine the sizes of buttons by measuring their real size
-    // and adjust size of the window appropriately
-    ClientRect r(hwndParent);
-    int x = r.dx - buttonDx - 8;
-    int y = r.dy - buttonDy - 8;
-    gHwndButtonRunSumatra= CreateWindow(WC_BUTTON, _T("Start ") TAPP,
-                        BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
-                        x, y, buttonDx, buttonDy, hwndParent, 
-                        (HMENU)ID_BUTTON_START_SUMATRA,
-                        ghinst, NULL);
-    SetWindowFont(gHwndButtonRunSumatra, gFontDefault, TRUE);
+    gHwndButtonRunSumatra = CreateDefaultButton(hwndParent, _T("Start ") TAPP, 120, ID_BUTTON_START_SUMATRA);
 }
 
 static DWORD WINAPI InstallerThread(LPVOID data)
@@ -1120,7 +1131,7 @@ void OnButtonInstall()
         OnButtonOptions();
 
     // create a progress bar in place of the Options button
-    RectI rc(0, 0, INSTALLER_WIN_DX / 2, 22);
+    RectI rc(0, 0, dpiAdjust(INSTALLER_WIN_DX / 2), PUSH_BUTTON_DY);
     rc = MapRectToWindow(rc, gHwndButtonOptions, gHwndFrame);
     gHwndProgressBar = CreateWindow(PROGRESS_CLASS, NULL, WS_CHILD | WS_VISIBLE,
                                     rc.x, rc.y, rc.dx, rc.dy,
@@ -1717,43 +1728,38 @@ void OnPaintFrame(HWND hwnd)
 
 void OnCreateWindow(HWND hwnd)
 {
-    int     buttonDx = 128;
-    int     buttonDy = 22;
+    gHwndButtonInstall = CreateDefaultButton(hwnd, _T("Install ") TAPP, 140);
 
-    // TODO: determine the sizes of buttons by measuring their real size
-    // and adjust size of the window appropriately
+    RectI rc(WINDOW_MARGIN, 0, dpiAdjust(96), PUSH_BUTTON_DY);
     ClientRect r(hwnd);
-    int x = r.dx - buttonDx - 8;
-    int y = r.dy - buttonDy - 8;
-    gHwndButtonInstall = CreateWindow(WC_BUTTON, _T("Install ") TAPP,
-                        BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
-                        x, y, buttonDx, buttonDy, hwnd, 
-                        (HMENU)IDOK, ghinst, NULL);
-    SetWindowFont(gHwndButtonInstall, gFontDefault, TRUE);
+    rc.y = r.dy - rc.dy - WINDOW_MARGIN;
 
-    x = 8;
     gHwndButtonOptions = CreateWindow(WC_BUTTON, _T("&Options"),
                         BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
-                        x, y, 96, buttonDy, hwnd, 
+                        rc.x, rc.y, rc.dx, rc.dy, hwnd,
                         (HMENU)ID_BUTTON_OPTIONS, ghinst, NULL);
     SetWindowFont(gHwndButtonOptions, gFontDefault, TRUE);
 
-    y = TITLE_PART_DY + x;
+    int staticDy = dpiAdjust(20);
+    rc.y = TITLE_PART_DY + rc.x;
     gHwndStaticInstDir = CreateWindow(WC_STATIC, _T("Install ") TAPP _T(" into the following &folder:"),
                                       WS_CHILD,
-                                      x, y, r.dx - 2 * x, 20, hwnd, 0, ghinst, NULL);
+                                      rc.x, rc.y, r.dx - 2 * rc.x, staticDy,
+                                      hwnd, NULL, ghinst, NULL);
     SetWindowFont(gHwndStaticInstDir, gFontDefault, TRUE);
-    y += 20;
+    rc.y += staticDy;
 
     gHwndTextboxInstDir = CreateWindow(WC_EDIT, gGlobalData.installDir,
                                        WS_CHILD | WS_TABSTOP | WS_BORDER | ES_LEFT | ES_AUTOHSCROLL,
-                                       x, y, r.dx - 3 * x - 20, 20, hwnd, 0, ghinst, NULL);
+                                       rc.x, rc.y, r.dx - 3 * rc.x - staticDy, staticDy,
+                                       hwnd, NULL, ghinst, NULL);
     SetWindowFont(gHwndTextboxInstDir, gFontDefault, TRUE);
     gHwndButtonBrowseDir = CreateWindow(WC_BUTTON, _T("&..."),
                                         BS_PUSHBUTTON | WS_CHILD | WS_TABSTOP,
-                                        r.dx - x - 20, y, 20, 20, hwnd, (HMENU)ID_BUTTON_BROWSE, ghinst, NULL);
+                                        r.dx - rc.x - staticDy, rc.y, staticDy, staticDy,
+                                        hwnd, (HMENU)ID_BUTTON_BROWSE, ghinst, NULL);
     SetWindowFont(gHwndButtonBrowseDir, gFontDefault, TRUE);
-    y += 40;
+    rc.y += 2 * staticDy;
 
     ScopedMem<TCHAR> defaultViewer(GetDefaultPdfViewer());
     BOOL hasOtherViewer = !str::EqI(defaultViewer, TAPP);
@@ -1765,21 +1771,23 @@ void OnCreateWindow(HWND hwnd)
         gHwndCheckboxRegisterDefault = CreateWindow(
             WC_BUTTON, _T("Use ") TAPP _T(" as the &default PDF reader"),
             WS_CHILD | BS_AUTOCHECKBOX | WS_TABSTOP,
-            x, y, r.dx - 2 * x, 22, hwnd, (HMENU)ID_CHECKBOX_MAKE_DEFAULT, ghinst, NULL);
+            rc.x, rc.y, r.dx - 2 * rc.x, staticDy,
+            hwnd, (HMENU)ID_CHECKBOX_MAKE_DEFAULT, ghinst, NULL);
         SetWindowFont(gHwndCheckboxRegisterDefault, gFontDefault, TRUE);
         // only check the "Use as default" checkbox when no other PDF viewer
         // is currently selected (not going to intrude)
         Button_SetCheck(gHwndCheckboxRegisterDefault, !hasOtherViewer || gGlobalData.registerAsDefault);
-        y += 22;
+        rc.y += staticDy;
     }
 
     gHwndCheckboxRegisterBrowserPlugin = CreateWindow(
         WC_BUTTON, _T("Install PDF &browser plugin for Firefox, Chrome and Opera"),
         WS_CHILD | BS_AUTOCHECKBOX | WS_TABSTOP,
-        x, y, r.dx - 2 * x, 22, hwnd, (HMENU)ID_CHECKBOX_BROWSER_PLUGIN, ghinst, NULL);
+        rc.x, rc.y, r.dx - 2 * rc.x, staticDy,
+        hwnd, (HMENU)ID_CHECKBOX_BROWSER_PLUGIN, ghinst, NULL);
     SetWindowFont(gHwndCheckboxRegisterBrowserPlugin, gFontDefault, TRUE);
     Button_SetCheck(gHwndCheckboxRegisterBrowserPlugin, gGlobalData.installBrowserPlugin || IsBrowserPluginInstalled());
-    y += 22;
+    rc.y += staticDy;
 
     // only show this checkbox if the bitness of DLL and OS match
     // (assuming that the installer has the same bitness as its content!)
@@ -1790,10 +1798,11 @@ void OnCreateWindow(HWND hwnd)
         gHwndCheckboxRegisterPdfFilter = CreateWindow(
             WC_BUTTON, _T("Let Windows Desktop Search &search PDF documents"),
             WS_CHILD | BS_AUTOCHECKBOX | WS_TABSTOP,
-            x, y, r.dx - 2 * x, 22, hwnd, (HMENU)ID_CHECKBOX_PDF_FILTER, ghinst, NULL);
+            rc.x, rc.y, r.dx - 2 * rc.x, staticDy,
+            hwnd, (HMENU)ID_CHECKBOX_PDF_FILTER, ghinst, NULL);
         SetWindowFont(gHwndCheckboxRegisterPdfFilter, gFontDefault, TRUE);
         Button_SetCheck(gHwndCheckboxRegisterPdfFilter, gGlobalData.installPdfFilter || IsPdfFilterInstalled());
-        y += 22;
+        rc.y += staticDy;
     }
 
     // only show this checkbox on systems that actually support
@@ -1802,10 +1811,11 @@ void OnCreateWindow(HWND hwnd)
         gHwndCheckboxRegisterPdfPreviewer = CreateWindow(
             WC_BUTTON, _T("Let Windows show &previews of PDF documents"),
             WS_CHILD | BS_AUTOCHECKBOX | WS_TABSTOP,
-            x, y, r.dx - 2 * x, 22, hwnd, (HMENU)ID_CHECKBOX_PDF_PREVIEWER, ghinst, NULL);
+            rc.x, rc.y, r.dx - 2 * rc.x, staticDy,
+            hwnd, (HMENU)ID_CHECKBOX_PDF_PREVIEWER, ghinst, NULL);
         SetWindowFont(gHwndCheckboxRegisterPdfPreviewer, gFontDefault, TRUE);
         Button_SetCheck(gHwndCheckboxRegisterPdfPreviewer, gGlobalData.installPdfPreviewer || IsPdfPreviewerInstalled());
-        y += 22;
+        rc.y += staticDy;
     }
 
     gShowOptions = !gShowOptions;
@@ -1818,19 +1828,7 @@ void OnCreateWindow(HWND hwnd)
 
 void OnCreateWindow(HWND hwnd)
 {
-    int     buttonDx = 140;
-    int     buttonDy = 22;
-
-    ClientRect r(hwnd);
-    int x = r.dx - buttonDx - 8;
-    int y = r.dy - buttonDy - 8;
-    // TODO: determine the sizes of buttons by measuring their real size
-    // and adjust size of the window appropriately
-    gHwndButtonUninstall = CreateWindow(WC_BUTTON, _T("Uninstall ") TAPP,
-                        BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
-                        x, y, buttonDx, buttonDy, hwnd,
-                        (HMENU)IDOK, ghinst, NULL);
-    SetWindowFont(gHwndButtonUninstall, gFontDefault, TRUE);
+    gHwndButtonUninstall = CreateDefaultButton(hwnd, _T("Uninstall ") TAPP, 150);
 }
 
 #endif
@@ -1946,13 +1944,14 @@ static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
 {
     ghinst = hInstance;
     gFontDefault = CreateDefaultGuiFont();
+    gUiDPIFactor = GetWindowDPIFactor();
 
 #ifdef BUILD_UNINSTALLER
     gHwndFrame = CreateWindow(
             INSTALLER_FRAME_CLASS_NAME, TAPP _T(" ") CURR_VERSION_STR _T(" Uninstaller"),
             WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
-            CW_USEDEFAULT, CW_USEDEFAULT, 
-            UNINSTALLER_WIN_DX, UNINSTALLER_WIN_DY,
+            CW_USEDEFAULT, CW_USEDEFAULT,
+            dpiAdjust(INSTALLER_WIN_DX), dpiAdjust(INSTALLER_WIN_DY),
             NULL, NULL,
             ghinst, NULL);
     gMsg = _T("Are you sure that you want to uninstall ") TAPP _T("?");
@@ -1960,8 +1959,8 @@ static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
     gHwndFrame = CreateWindow(
             INSTALLER_FRAME_CLASS_NAME, TAPP _T(" ") CURR_VERSION_STR _T(" Installer"),
             WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
-            CW_USEDEFAULT, CW_USEDEFAULT,                
-            INSTALLER_WIN_DX, INSTALLER_WIN_DY,
+            CW_USEDEFAULT, CW_USEDEFAULT,
+            dpiAdjust(INSTALLER_WIN_DX), dpiAdjust(INSTALLER_WIN_DY),
             NULL, NULL,
             ghinst, NULL);
     gMsg = _T("Thank you for downloading ") TAPP _T("!");

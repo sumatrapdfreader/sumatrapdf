@@ -588,8 +588,8 @@ void DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory)
             }
             DisplayState *state = list->At(h * width + w);
 
-            RectI page(offset.x + w * (THUMBNAIL_DX + DOCLIST_MARGIN_BETWEEN_X),
-                       offset.y + h * (THUMBNAIL_DY + DOCLIST_MARGIN_BETWEEN_Y),
+            RectI page(offset.x + w * (int)(THUMBNAIL_DX + DOCLIST_MARGIN_BETWEEN_X * win.uiDPIFactor),
+                       offset.y + h * (int)(THUMBNAIL_DY + DOCLIST_MARGIN_BETWEEN_Y * win.uiDPIFactor),
                        THUMBNAIL_DX, THUMBNAIL_DY);
             if (state->thumbnail || LoadThumbnail(*state)) {
                 HRGN clip = CreateRoundRectRgn(page.x, page.y, page.x + page.dx, page.y + page.dy, 10, 10);
@@ -600,7 +600,8 @@ void DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory)
             }
             RoundRect(hdc, page.x, page.y, page.x + page.dx, page.y + page.dy, 10, 10);
 
-            RectI rect(page.x + 20, page.y + THUMBNAIL_DY + 3, THUMBNAIL_DX - 20, 20);
+            int iconSpace = (int)(20 * win.uiDPIFactor);
+            RectI rect(page.x + iconSpace, page.y + THUMBNAIL_DY + 3, THUMBNAIL_DX - iconSpace, iconSpace);
             DrawText(hdc, path::GetBaseName(state->filePath), -1, &rect.ToRECT(), DT_SINGLELINE | DT_END_ELLIPSIS);
 
             SHFILEINFO sfi;
