@@ -9,120 +9,148 @@
 Lang: bg Bulgarian (Български)
 
 Contributor: Христо Бенев (http://hbcom.info)
+Contributor: Nikolay Ikonomov
 
 &About
-Относно програмата...
+&За програмата...
 
 &Actual Size\tCtrl-1
-Едно към едно\tCtrl-1
+&Оригинален размер\tCtrl-1
 
 &All selected pages
-Всички избрани страници
+&Всички избрани страници
 
 &Back\tAlt+Left Arrow
-Назад\tAlt+<-
+На&зад\tAlt+Лява стрелка
+
+&Book View\tCtrl-8
+&Изглед като книга\tCtrl-8
 
 &Close\tCtrl-W
-Затвори\tCtrl-W
+&Затвори\tCtrl-W
+
+&Copy Selection
+&Копирай избраното
 
 &Copy Selection\tCtrl-C
-Копирай избраното\tCtrl-C
+&Копирай избраното\tCtrl-C
 
 &Don't ask me again
-Не питай отново
+&Не питай отново
 
 &Even pages only
-Само четни страници
+Само &четни страници
+
+&Facing\tCtrl-7
+&Срещуположни страници\tCtrl-7
 
 &File
 &Файл
 
 &Find what:
-Търсене на:
+&Търсене на:
 
 &First Page\tHome
-Начална страница\tHome
+&Начална страница\tHome
 
 &Fit pages to printable area
-Нагласи в мястото за отпечатване
+&Оразмери страниците в полето за отпечатване
 
 &Go To
-Отиди &на
+&Отиди на
 
 &Go to page:
-Отиди на страница:
+Отиди на &страница:
 
 &Help
-Помо&щ
+&Помощ
 
 &Last Page\tEnd
-Последна страница\tEnd
+&Последна страница\tEnd
 
 &Magnification:
-Увеличение:
+&Увеличение:
 
 &Manual
-Ръководство
+&Ръководство
 
 &Match case
-Същия текст
+&Същия текст
 
 &Next Page\tRight Arrow
-Следваща страница\t->
+&Следваща страница\tДясна стрелка
 
 &No
-Не
+&Не
 
 &No, thanks
-Не, благодаря
+&Не, благодаря
 
 &Odd pages only
-Само нечетни страници
+Само &нечетни страници
 
 &Open\tCtrl-O
 &Отвори\tCtrl-O
 
+&Open Document
+&Отвори документ
+
 &Options...
-Параметри
+&Настройки
 
 &Password:
-Парола
+&Парола
+
+&Pin Document
+&Закачи документ
 
 &Previous Page\tLeft Arrow
-Предишна страница\t<-
+&Предишна страница\tЛява стрелка
+
+&Print...
+&Отпечатване...
 
 &Print...\tCtrl-P
 От&печатай\tCtrl-P
 
 &Print... (denied)
-Отпечатване... (отказано)
+От&печатване... (отказано)
 
 &Remember the password for this document
-Запомни паролата за този документ
+Запомни &паролата за този документ
 
 &Remember these settings for each document
-Запази настройките за всеки документ
+Запази &настройките за всеки документ
+
+&Remove Document
+&Премахни документ
+
+&Save As...
+&Запамети като...
 
 &Save As...\tCtrl-S
-&Запиши като...\tCtrl-S
+&Запамети като...\tCtrl-S
 
 &Settings
-Настройки
+&Настройки
 
 &Shrink pages to printable area (if necessary)
-Намали страниците в мястото за отпечатване (при необходимост)
+&Намали страниците в мястото за отпечатване (при необходимост)
+
+&Single Page\tCtrl-6
+&Една страница\tCtrl-6
 
 &Skip this version
-Пропусни тази версия.
+&Пропусни тази версия
 
 &Use original page sizes
-Използвай оригиналната големина
+Използвай &оригиналната големина
 
 &View
-&Виж
+&Изглед
 
 &Yes
-Да
+&Да
 
 &Zoom
 &Мащаб
@@ -131,7 +159,7 @@ Contributor: Христо Бенев (http://hbcom.info)
 (от %d)
 
 About SumatraPDF
-Относно SumatraPDF
+За SumatraPDF
 
 Advanced
 Допълнителни
@@ -139,32 +167,41 @@ Advanced
 All files
 Всички файлове
 
+All supported documents
+Всички поддържани документи
+
 Application:
-Приложение
+Приложение:
 
 Associate with PDF files?
-Асоцииране с PDF файлове?
+По подразбиране за PDF файлове?
 
 Attachment: %s
 Прикрепен: %s
 
 Author:
-Автор
+Автор:
 
 Automatic
 Автоматично
 
 Automatically check for &updates
-Автоматично проверявай за обновления
+Автоматично проверявай за &обновления
 
 Book View
-Като книга
+Изглед като книга
 
 Book&marks\tF12
-Етикети\tF12
+&Отметки\tF12
+
+Bookmark Shortcuts
+Кратък път към отметки
+
+Bookmark shortcut to page %d of %s
+Кратък път към отметка на страница %d от %s
 
 Bookmarks
-Показалец
+Отметки
 
 Bytes
 Байтове
@@ -176,7 +213,7 @@ Cancel
 Откажи
 
 Cannot print this file
-Файла не може да бъде отпечатан
+Файлът не може да бъде отпечатан
 
 Cannot start inverse search command. Please check the command line in the settings.
 Обратното търсене не може да започне. Моля проверете параметрите в настройките.
@@ -185,28 +222,37 @@ Change Language
 Смени езика (Change Language)
 
 Check for &Updates
-Проверка за нова версия
+Проверка за нова &версия
+
+Comic books
+Книжки с картинки
 
 Continuous
-Непрекъснати
+Непрекъснати страници
 
 Continuous Book View
-Като книга - непрекъснати
+Непрекъснат изглед като книга
 
 Continuous Facing
-Две непрекъснати
+Непрекъснати срещуположни страници
 
 Contribute Translation
 Допринеси за превода
 
+Copy &Link Address
+Копирай Интернет &адреса
+
+Copy Co&mment
+Копирай &коментара
+
 Copying text was denied (copying as image only)
-Текста не може да бъде копиран (копиране само като картинка)
+Текстът не може да бъде копиран (копиране само като картинка)
 
 Could not open Printer
-Принтера не е достъпен
+Принтерът не е достъпен
 
 Couldn't initialize printer
-Принтера не може да бъде инициализиран
+Принтерът не може да бъде инициализиран
 
 Couldn't render the page
 Страницата не може да се изобрази
@@ -215,19 +261,22 @@ Created:
 Създаден:
 
 Custom &Zoom...\tCtrl-Y
-Увеличение по избор...\tCtrl-Y
+Увеличение по &избор...\tCtrl-Y
 
 Default &Layout:
-Раположение по подразбиране
+&Разположение по подразбиране:
 
 Default &Zoom:
-Увеличение по подразбиране
+&Увеличение по подразбиране:
 
 Default PDF reader can't be changed in portable mode
 PDF четеца не може да бъде сменен в преносим режим
 
 Denied Permissions:
-Отказан достъп
+Достъпът отказан:
+
+DjVu documents
+DjVu документи
 
 Document Properties
 Свойства на документа
@@ -245,19 +294,22 @@ Enter password for %s
 Въведете парола за %s
 
 Enter the command-line to invoke when you double-click on the PDF document:
-Въведете командата, която ще бъде изпълнена при двоен клик на PDF документа:
+Въведете командата, която ще бъде изпълнена при двоен клик върху PDF документа:
+
+Error loading %s
+Грешка при зареждане на %s
 
 F&orward\tAlt+Right Arrow
-Напред\tAlt+->
+На&пред\tAlt+Дясна стрелка
 
 F&ullscreen\tCtrl-Shift-L
-Цял Екран\tCtrl-Shift-L
+&Цял Екран\tCtrl-Shift-L
 
 Facing
-Две страници
+Срещуположни страници
 
 Failed to save a file
-Грешка при записване на файла
+Грешка при запаметяване на файла
 
 File Size:
 Размер на файла:
@@ -266,7 +318,7 @@ File:
 Файл:
 
 Fin&d...\tCtrl-F
-Търси...\tCtrl-F
+&Търси...\tCtrl-F
 
 Find
 Търси
@@ -280,29 +332,53 @@ Find Previous
 Find:
 Търси:
 
+Fit &Content\tCtrl-3
+Оразмери по &съдържание\tCtrl-3
+
 Fit &Page\tCtrl-0
-Оразмери страницата\tCtrl-0
+Оразмери по &височина\tCtrl-0
 
 Fit &Width\tCtrl-2
-Оразмери по ширина\tCtrl-2
+Оразмери по &ширина\tCtrl-2
+
+Fit Content
+Оразмери по съдържание
 
 Fit Page
-Оразмери страницата
+Оразмери по &височина
 
 Fit Width
-Оразмери по ширина
+Оразмери по &ширина
+
+Fit Width and Show Pages Continuously
+Оразмери по широчина и покажи страниците непрекъснато
+
+Fit a Single Page
+Оразмери една страница
 
 Found text at page %d
-Текста е намерен на страница %d
+Текстът е намерен на страница %d
+
+Found text at page %d (again)
+Текстът е намерен на страница %d (отново)
+
+Frequently Read
+Често четени
 
 GB
 GB
 
 Go to page
-Към страница
+Отиди на страница
+
+Hide frequently read
+Скрий често четените
 
 Hint: Use the F3 key for finding again
 Съвет: Използвайте F3 за повторно търсене
+
+Image files (*.%s)
+Изображения (*.%s)
 
 KB
 KB
@@ -317,7 +393,7 @@ Make SumatraPDF my default PDF reader
 Направи SumatraPDF четец на PDF по подразбиране
 
 Match Case
-Точно същите букви
+Същия текст
 
 Modified:
 Модифициран:
@@ -332,10 +408,10 @@ No matches were found
 Няма съвпадения
 
 No result found around line %u in file %s
-Няма резултати около линия %u във файла %s
+Няма резултати около ред %u във файла %s
 
 No synchronization file found
-Синфронизационния файл не е намерен
+Файлът за синхронизация не е намерен
 
 No synchronization info at this position
 В тази позиция няма информация за синхронизация
@@ -344,10 +420,13 @@ Number of Pages:
 Брой страници:
 
 OK
-Съгласен
+Приеми
 
 Open
 Отвори
+
+Open a document...
+Отвори документ...
 
 Open in &Adobe Reader
 Отвори с &Adobe Reader
@@ -358,8 +437,11 @@ Open in &Foxit Reader
 Open in PDF-XChange
 Отвори с PDF-XChange
 
+P&roperties
+&Свойства
+
 P&roperties\tCtrl-D
-Свойства
+&Свойства
 
 PDF Document
 PDF документ
@@ -374,10 +456,16 @@ PDF documents
 PDF документи
 
 Pa&ge...\tCtrl-G
-Страница...\tCtrl-G
+&Страница...\tCtrl-G
 
 Page Size:
 Размер на страницата:
+
+Page number %u inexistant
+Страница с номер %u не съществува
+
+Page scaling
+Мащабиране на страницата
 
 Page:
 Страница:
@@ -385,26 +473,50 @@ Page:
 Please wait - rendering...
 Моля изчакайте - изображението се създава
 
+Postscript documents
+Postscript документи
+
+Pr&esentation\tCtrl-L
+&Презентация\tCtrl-L
+
 Previous Page
 Предишна страница
+
+Print
+Отпечатване
+
+Print range
+Отпечатване на някои страници
+
+Printing is still in progress. Abort and start over?
+Отпечатването се извършва. Прекъсни и започни отначало?
+
+Printing page %d of %d...
+Отпечатване на страница %d от %d...
 
 Printing problem.
 Проблем при печатане.
 
 Remember &opened files
-Запомни отворените файлове
+&Запомни отворените файлове
 
 Rotate &Left\tCtrl-Shift--
-Завърти наляво\tCtrl-Shift--
+Завърти на&ляво\tCtrl-Shift--
 
 Rotate &Right\tCtrl-Shift-+
-Завърти надясно\tCtrl-Shift-+
+Завърти на&дясно\tCtrl-Shift-+
+
+Save S&hortcut...\tCtrl-Shift-S
+Запамети кратък път към файла...\tCtrl-Shift-S
 
 Searching %d of %d...
 Търсене в страница %d от %d...
 
-Select &All\tCtrl-A
+Select &All
 Избери всичко
+
+Select &All\tCtrl-A
+Избери &всичко\tCtrl-A
 
 Select content with Ctrl+left mouse button
 Изберете съдържание с Ctrl и левия бутон на мишката
@@ -413,40 +525,49 @@ Send by &E-mail...
 Изпрати по емайл
 
 Set inverse search command-line
-Активирай обратно търсене
+Въведи параметри за обратно търсене
 
 Show &Toolbar
-Покажи лентата с инструменти
+Покажи лентата с &инструменти
 
 Show &pages continuously
-Непрекъснати
+&Непрекъснати страници
+
+Show frequently read
+Покажи често четените
 
 Show the &bookmarks sidebar when available
-Покажи показалеца в станичната колона когато е възможно
+Покажи &показалеца в страничната колона когато е възможно
 
 Single Page
-Единична страница
+Една страница
+
+Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
+Извинете, това не би трябвало да се случва!\n\nНатиснете 'Откажи', ако искате да ни помогнете да поправим причината за това спиране.
 
 Source file %s has no synchronization point
-Източника %s няма синхронизационна точка
+Източникът %s няма точка на синхронизация
 
 Subject:
 Относно:
 
 SumatraPDF Options
-Опции на SumatraPDF
+Настройки на SumatraPDF
 
 SumatraPDF Update
 Обновяване на SumatraPDF
 
+SumatraPDF crashed
+SumatraPDF спря
+
 SumatraPDF is your default PDF reader
-SumatraPDF е вашия PDF четец
+SumatraPDF е вашият PDF четец
 
 SumatraPDF should now be your default PDF reader
 SumatraPDF вече трябва да е четец на PDF по подразбиране
 
 Synchronization file cannot be opened
-Синхронизационния файл не може да бъде отворен
+Файлът за синхронизация не може да бъде отворен
 
 Text documents
 Текстов документ
@@ -455,16 +576,19 @@ Title:
 Заглавие:
 
 Unknown source file (%s)
-Непознат файл източник (%s)
+Непознат файлов източник (%s)
 
 View
-Виж
+Изглед
 
 Visit &Website
-Посетете сайта
+Посетете &сайта
 
 Warning
 Внимание
+
+XPS documents
+XPS документи
 
 You have the latest version.
 Имате последната версия.
@@ -491,48 +615,5 @@ copying text
 копиране на текст
 
 printing document
-Отпечатване на документ
-
-# Untranslated:
-#&Book View\tCtrl-8
-#&Copy Selection
-#&Facing\tCtrl-7
-#&Open Document
-#&Pin Document
-#&Print...
-#&Remove Document
-#&Save As...
-#&Single Page\tCtrl-6
-#All supported documents
-#Bookmark Shortcuts
-#Bookmark shortcut to page %d of %s
-#Comic books
-#Copy &Link Address
-#Copy Co&mment
-#DjVu documents
-#Error loading %s
-#Fit &Content\tCtrl-3
-#Fit Content
-#Fit Width and Show Pages Continuously
-#Fit a Single Page
-#Found text at page %d (again)
-#Frequently Read
-#Hide frequently read
-#Image files (*.%s)
-#Open a document...
-#P&roperties
-#Page number %u inexistant
-#Page scaling
-#Postscript documents
-#Pr&esentation\tCtrl-L
-#Print
-#Print range
-#Printing is still in progress. Abort and start over?
-#Printing page %d of %d...
-#Save S&hortcut...\tCtrl-Shift-S
-#Select &All
-#Show frequently read
-#Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
-#SumatraPDF crashed
-#XPS documents
+отпечатване на документ
 
