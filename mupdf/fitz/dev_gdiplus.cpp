@@ -708,25 +708,21 @@ gdiplus_get_pen(Brush *brush, fz_matrix ctm, fz_stroke_state *stroke)
 	Pen *pen = new Pen(brush, stroke->linewidth * fz_matrix_expansion(ctm));
 	
 	pen->SetMiterLimit(stroke->miterlimit);
-	switch (stroke->start_cap)
-	{
-	case 0: pen->SetStartCap(LineCapFlat); pen->SetEndCap(LineCapFlat); break;
-	case 1: pen->SetStartCap(LineCapRound); pen->SetEndCap(LineCapRound); break;
-	case 2: pen->SetStartCap(LineCapSquare); pen->SetEndCap(LineCapSquare); break;
-	}
-	switch (stroke->linejoin)
-	{
-	case 0: pen->SetLineJoin(LineJoinMiter); break;
-	case 1: pen->SetLineJoin(LineJoinRound); break;
-	case 2: pen->SetLineJoin(LineJoinBevel); break;
-	}
+	pen->SetLineCap(stroke->start_cap == 1 ? LineCapRound : stroke->start_cap == 2 ? LineCapSquare : LineCapFlat,
+		stroke->end_cap == 1 ? LineCapRound : stroke->end_cap == 2 ? LineCapSquare : LineCapFlat,
+		stroke->dash_cap == 1 ? DashCapRound : DashCapFlat);
+	pen->SetLineJoin(stroke->linejoin == 1 ? LineJoinRound : stroke->linejoin == 2 ? LineJoinBevel : LineJoinMiter);
 	
 	if (stroke->dash_len > 0)
 	{
 		REAL dashlist[nelem(stroke->dash_list) + 1];
 		int dashCount = stroke->dash_len;
 		for (int i = 0; i < dashCount; i++)
+		{
 			dashlist[i] = stroke->dash_list[i] ? stroke->dash_list[i] / stroke->linewidth : 0.1 /* ??? */;
+			if (stroke->dash_cap != 0)
+				dashlist[i] += (i % 2 == 0) ? 1 : -1;
+		}
 		if (dashCount % 2 == 1)
 		{
 			dashlist[dashCount] = dashlist[dashCount - 1];
@@ -734,7 +730,6 @@ gdiplus_get_pen(Brush *brush, fz_matrix ctm, fz_stroke_state *stroke)
 		}
 		pen->SetDashPattern(dashlist, dashCount);
 		pen->SetDashOffset(stroke->dash_phase);
-		pen->SetDashCap(DashCapFlat);
 	}
 	
 	return pen;
