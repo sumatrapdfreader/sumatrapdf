@@ -3267,11 +3267,11 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL)
                 if (leftMargin > onPaper.x)
                     horizOffset = (int)(horizOffset + leftMargin - onPaper.x);
                 else if (paperWidth - rightMargin < onPaper.BR().x)
-                    horizOffset = (int)(horizOffset - (paperWidth - rightMargin) + onPaper.BR().x);
+                    horizOffset = (int)(horizOffset - onPaper.BR().x + (paperWidth - rightMargin));
                 if (topMargin > onPaper.y)
                     vertOffset = (int)(vertOffset + topMargin - onPaper.y);
                 else if (paperHeight - bottomMargin < onPaper.BR().y)
-                    vertOffset = (int)(vertOffset - (paperHeight - bottomMargin) + onPaper.BR().y);
+                    vertOffset = (int)(vertOffset - onPaper.BR().y + (paperHeight - bottomMargin));
             }
 
 #ifdef USE_GDI_FOR_PRINTING
