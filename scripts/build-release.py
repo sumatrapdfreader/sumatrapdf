@@ -15,19 +15,20 @@ from util import s3UploadDataPublic, ensure_s3_doesnt_exist, ensure_path_exists
 from util import zip_file, extract_sumatra_version, verify_started_in_right_directory
 from util import build_installer_data, parse_svninfo_out
 
-args = sys.argv
+args = sys.argv[1:]
 upload               = test_for_flag(args, "-upload")
 upload_tmp           = test_for_flag(args, "-uploadtmp")
 testing              = test_for_flag(args, "-test") or test_for_flag(args, "-testing")
 build_test_installer = test_for_flag(args, "-test-installer") or test_for_flag(args, "-testinst") or test_for_flag(args, "-testinstaller")
 build_prerelease     = test_for_flag(args, "-prerelease")
+svn_revision         = test_for_flag(args, "-svn-revision", True)
 
 def usage():
   print("build-release.py [-upload][-uploadtmp][-test][-test-installer][-prerelease]")
   sys.exit(1)
 
 # Terms:
-#  static build  - SumatraPDF.exe single executable with mupdf code staticall
+#  static build  - SumatraPDF.exe single executable with mupdf code statically
 #                  linked in
 #  library build - SumatraPDF.exe executable that uses libmupdf.dll
 
@@ -65,19 +66,18 @@ def copy_to_dst_dir(src_path, dst_dir):
   shutil.copy(src_path, dst_path)
 
 def main():
-  if len(args) != 1:
+  if len(args) != 0:
     usage()
   verify_started_in_right_directory()
 
   if build_prerelease:
-    if "SVN_REVISION" in os.environ:
-      # allow to pass in an SVN revision, in case SVN itself isn't available
-      # TODO: make this a command line option to build-release.py
-      ver = os.environ["SVN_REVISION"]
-    else:
+    if svn_revision is None:
       run_cmd_throw("svn", "update")
       (out, err) = run_cmd_throw("svn", "info")
       ver = str(parse_svninfo_out(out))
+    else:
+      # allow to pass in an SVN revision, in case SVN itself isn't available
+      ver = svn_revision
   else:
     ver = extract_sumatra_version(os.path.join("src", "Version.h"))
   log("Version: '%s'" % ver)

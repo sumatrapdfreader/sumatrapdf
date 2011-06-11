@@ -37,11 +37,20 @@ def group(list, size):
 def uniquify(array):
   return list(set(array))
 
-def test_for_flag(args, arg):
+def test_for_flag(args, arg, has_data=False):
   if arg not in args:
-    return False
-  args.remove(arg)
-  return True
+    return None if has_data else False
+  if not has_data:
+    args.remove(arg)
+    return True
+
+  ix = args.index(arg)
+  if ix == len(args) - 1:
+    return None
+  data = args[ix + 1]
+  args.pop(ix + 1)
+  args.pop(ix)
+  return data
 
 S3_BUCKET = "kjkpub"
 g_s3conn = None
