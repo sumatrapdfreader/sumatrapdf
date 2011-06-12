@@ -29,7 +29,7 @@ extern TCHAR *                  gPluginURL;
 
 class WindowInfo;
 
-void LaunchBrowser(const TCHAR *url);
+bool LaunchBrowser(const TCHAR *url);
 void AssociateExeWithPdfExtension();
 void FindTextOnThread(WindowInfo* win, TextSearchDirection direction=FIND_FORWARD);
 void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose=false);

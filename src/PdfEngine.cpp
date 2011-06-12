@@ -369,32 +369,82 @@ static TCHAR *linkifyMultilineText(LinkRectList *list, TCHAR *pageText, TCHAR *s
     return end;
 }
 
+// cf. http://weblogs.mozillazine.org/gerv/archives/2011/05/html5_email_address_regexp.html
+inline bool isEmailUsernameChar(TCHAR c)
+{
+    return _istalnum(c) || str::FindChar(_T(".!#$%&'*+-/=?^`{|}~"), c);
+}
+inline bool isEmailDomainChar(TCHAR c)
+{
+    return _istalnum(c) || '-' == c;
+}
+
+static TCHAR *linkifyFindEmail(TCHAR *pageText, TCHAR *at)
+{
+    TCHAR *start;
+    for (start = at; start > pageText && isEmailUsernameChar(*(start - 1)); start--);
+    return start != at ? start : NULL;
+}
+
+static TCHAR *linkifyEmailAddress(TCHAR *start)
+{
+    TCHAR *end;
+    for (end = start; isEmailUsernameChar(*end); end++);
+    if (end == start || *end != '@' || !isEmailDomainChar(*(end + 1)))
+        return NULL;
+    do {
+        for (end++; isEmailDomainChar(*end); end++);
+    } while ('.' == *end && isEmailDomainChar(*(end + 1)));
+    return end;
+}
+
 // caller needs to delete the result
 static LinkRectList *linkifyText(TCHAR *pageText, RectI *coords)
 {
     LinkRectList *list = new LinkRectList;
 
     for (TCHAR *start = pageText; *start; start++) {
-        // look for words starting with "http://", "https://" or "www."
-        if (('h' != *start || !str::StartsWith(start, _T("http://")) &&
-                              !str::StartsWith(start, _T("https://"))) &&
-            ('w' != *start || !str::StartsWith(start, _T("www."))) ||
-            (start > pageText && (_istalnum(start[-1]) || '/' == start[-1])))
+        TCHAR *end = NULL;
+        bool multiline = false;
+        const TCHAR *protocol = NULL;
+
+        if ('@' == *start) {
+            // potential email address without mailto:
+            TCHAR *email = linkifyFindEmail(pageText, start);
+            end = email ? linkifyEmailAddress(email) : NULL;
+            protocol = _T("mailto:");
+            if (end != NULL)
+                start = email;
+        }
+        else if (start > pageText && ('/' == start[-1]) || _istalnum(start[-1])) {
+            // hyperlinks must not be preceded by a slash (indicates a different protocol)
+            // or an alphanumeric character (indicates part of a different protocol)
+        }
+        else if ('h' == *start && str::Parse(start, _T("http%?s://"))) {
+            end = linkifyFindEnd(start);
+            multiline = linkifyCheckMultiline(pageText, end, coords);
+        }
+        else if ('w' == *start && str::StartsWith(start, _T("www."))) {
+            end = linkifyFindEnd(start);
+            multiline = linkifyCheckMultiline(pageText, end, coords);
+            protocol = _T("http://");
+            // ignore www. links without a top-level domain
+            if (end - start <= 4 || !multiline && (!_tcschr(start + 5, '.') || _tcschr(start + 5, '.') > end))
+                end = NULL;
+        }
+        else if ('m' == *start && str::StartsWith(start, _T("mailto:"))) {
+            end = linkifyEmailAddress(start + 7);
+        }
+        if (!end)
             continue;
 
-        TCHAR *end = linkifyFindEnd(start);
-        bool multiline = linkifyCheckMultiline(pageText, end, coords);
         *end = 0;
-
-        // add the link, if it's a new one (ignoring www. links without a toplevel domain)
-        if (*start && (str::StartsWith(start, _T("http")) || _tcschr(start + 5, '.') != NULL)) {
-            TCHAR *uri = str::StartsWith(start, _T("http")) ? str::Dup(start) : str::Join(_T("http://"), start);
-            list->links.Append(uri);
-            RectI bbox = coords[start - pageText].Union(coords[end - pageText - 1]);
-            list->coords.Append(fz_RectD_to_rect(bbox.Convert<double>()));
-            if (multiline)
-                end = linkifyMultilineText(list, pageText, end + 1, coords);
-        }
+        TCHAR *uri = protocol ? str::Join(protocol, start) : str::Dup(start);
+        list->links.Append(uri);
+        RectI bbox = coords[start - pageText].Union(coords[end - pageText - 1]);
+        list->coords.Append(fz_RectD_to_rect(bbox.Convert<double>()));
+        if (multiline)
+            end = linkifyMultilineText(list, pageText, end + 1, coords);
 
         start = end;
     }
@@ -1835,7 +1885,9 @@ protected:
 
 static bool IsUriTarget(const char *target)
 {
-    return str::StartsWithI(target, "http:") || str::StartsWithI(target, "https:");
+    return str::StartsWithI(target, "http:") ||
+           str::StartsWithI(target, "https:") ||
+           str::StartsWithI(target, "mailto:");
 }
 
 class XpsLink : public PageElement, public PageDestination {

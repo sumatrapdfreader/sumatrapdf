@@ -424,9 +424,8 @@ void LinkHandler::GotoLink(PageDestination *link)
         ScrollTo(link);
     }
     else if (str::Eq(type, "LaunchURL") && path) {
-        if (str::StartsWithI(path, _T("http:")) || str::StartsWithI(path, _T("https:")))
-            LaunchBrowser(path);
-        /* else: unsupported uri type */
+        // LaunchBrowser will reject unsupported URI schemes
+        LaunchBrowser(path);
     }
     else if (str::Eq(type, "LaunchEmbedded")) {
         // open embedded PDF documents in a new window

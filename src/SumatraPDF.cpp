@@ -278,10 +278,18 @@ static bool CurrLangNameSet(const char *langName)
 
 #define SECS_IN_DAY 60*60*24
 
-void LaunchBrowser(const TCHAR *url)
+// lets the shell open a URI for any supported scheme in
+// the appropriate application (web browser, mail client, etc.)
+bool LaunchBrowser(const TCHAR *url)
 {
-    if (gRestrictedUse) return;
+    if (gRestrictedUse) return false;
+    if (!str::StartsWithI(url, _T("http:")) &&
+        !str::StartsWithI(url, _T("https:")) &&
+        !str::StartsWithI(url, _T("mailto:"))) {
+        return false;
+    }
     LaunchFile(url, NULL, _T("open"));
+    return true;
 }
 
 static bool CanViewExternally(WindowInfo *win=NULL)
@@ -1616,8 +1624,10 @@ Error:
         }
         UpdateWindow(win.hwndFrame);
     }
-    if (win.IsDocLoaded())
+    if (win.IsDocLoaded()) {
         win.dm->SetScrollState(ss);
+        win.UpdateToolbarState();
+    }
     if (win.IsDocLoaded() && win.tocShow && win.dm->engine && win.dm->engine->HasToCTree()) {
         win.ShowTocBox();
     } else if (oldTocShow) {
@@ -2728,7 +2738,8 @@ static void OnMouseLeftButtonUp(WindowInfo& win, int x, int y, WPARAM key)
                 gGlobalPrefs.m_showStartPage = true;
                 win.RedrawAll(true);
             } else if (!str::StartsWithI(url, _T("http:")) &&
-                       !str::StartsWithI(url, _T("https:")))
+                       !str::StartsWithI(url, _T("https:")) &&
+                       !str::StartsWithI(url, _T("mailto:")))
                 LoadDocument(url, &win);
             else
                 LaunchBrowser(url);

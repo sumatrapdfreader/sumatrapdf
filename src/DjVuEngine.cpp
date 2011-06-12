@@ -63,7 +63,7 @@ public:
             return "NextPage";
         if (str::Eq(link, "#-1"))
             return "PrevPage";
-        if (str::StartsWithI(link, "http:") || str::StartsWithI(link, "https:"))
+        if (str::StartsWithI(link, "http:") || str::StartsWithI(link, "https:") || str::StartsWithI(link, "mailto:"))
             return "LaunchURL";
         return NULL;
     }
