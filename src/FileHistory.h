@@ -138,7 +138,7 @@ public:
     // by open count (which has a pre-multiplied recency factor)
     // caller needs to delete the result (but not the contained states)
     Vec<DisplayState *> *GetFrequencyOrder() {
-        Vec<DisplayState *> *list = states.Clone();
+        Vec<DisplayState *> *list = new Vec<DisplayState *>(states);
         for (size_t i = 0; i < list->Count(); i++)
             list->At(i)->_index = i;
         list->Sort(cmpOpenCount);

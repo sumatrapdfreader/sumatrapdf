@@ -388,6 +388,7 @@ Vec<SelectionOnPage> *SelectionOnPage::FromRectangle(DisplayModel *dm, RectI rec
         RectD isectD = dm->CvtFromScreen(intersect, pageNo);
         sel->Append(SelectionOnPage(pageNo, &isectD));
     }
+    sel->Reverse();
 
     return sel;
 }
@@ -398,6 +399,7 @@ Vec<SelectionOnPage> *SelectionOnPage::FromTextSelect(TextSel *textSel)
 
     for (int i = textSel->len - 1; i >= 0; i--)
         sel->Append(SelectionOnPage(textSel->pages[i], &textSel->rects[i].Convert<double>()));
+    sel->Reverse();
 
     return sel;
 }

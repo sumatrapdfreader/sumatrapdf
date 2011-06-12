@@ -193,11 +193,9 @@ public:
         qsort(els, len, sizeof(T), cmpFunc);
     }
 
-    Vec<T> *Clone() const {
-        Vec<T> *clone = new Vec<T>(len);
-        for (size_t i = 0; i < len; i++)
-            clone->Append(At(i));
-        return clone;
+    void Reverse() {
+        for (size_t i = 0; i < len / 2; i++)
+            swap(els[i], els[len - i - 1]);
     }
 };
 

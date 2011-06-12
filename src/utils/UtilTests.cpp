@@ -477,10 +477,14 @@ static void VecTest()
     {
         Vec<int> v;
         v.Append(2);
-        v.Append(4);
-        Vec<int> *v2 = v.Clone();
-        assert(v2->Count() == 2 && v2->At(0) == 2 && v2->At(1) == 4);
-        delete v2;
+        for (int i = 0; i < 500; i++)
+            v.Append(4);
+        v[250] = 5;
+        v.Reverse();
+        assert(v.Count() == 501 && v[0] == 4 && v[249] == v[251] && v[250] == 5 && v[500] == 2);
+        v.Remove(4);
+        v.Reverse();
+        assert(v.Count() == 500 && v[0] == 2 && v[249] == v[251] && v[250] == 5 && v[499] == 4);
     }
 }
 
