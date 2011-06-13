@@ -16,17 +16,32 @@ Contributor: Krunoslav Tomorad (cygnus77@gmail.com)
 &Actual Size\tCtrl-1
 Stvarna veličina\tCtrl-1
 
+&All selected pages
+Sve obilježene str&anice
+
 &Back\tAlt+Left Arrow
 Natrag\tAlt+<-
 
+&Book View\tCtrl-8
+&Knjiški pregled\tCtrl-8
+
 &Close\tCtrl-W
 &Zatvori\tCtrl-W
+
+&Copy Selection
+&Kopiraj obilježeno
 
 &Copy Selection\tCtrl-C
 Kopiraj odabir\tCtrl-C
 
 &Don't ask me again
 Ubuduće nemoj pitati
+
+&Even pages only
+Samo &parne stranice
+
+&Facing\tCtrl-7
+&Dvije stranice\tCtrl-7
 
 &File
 &Datoteka
@@ -36,6 +51,9 @@ Ubuduće nemoj pitati
 
 &First Page\tHome
 Prva stranica\tHome
+
+&Fit pages to printable area
+Namjesti stranice do područja za ispis
 
 &Go To
 Idi na
@@ -47,7 +65,7 @@ Idi na
 &Pomoć
 
 &Last Page\tEnd
-Poslijednja stranica\tEnd
+Posljednja stranica\tEnd
 
 &Magnification:
 &Uvećanje:
@@ -67,26 +85,47 @@ Sljedeća stranica\t->
 &No, thanks
 &Ne, hvala
 
+&Odd pages only
+Samo &neparne stranice
+
 &Open\tCtrl-O
 &Otvori\tCtrl-O
+
+&Open Document
+&Otvori dokument
 
 &Options...
 Mogućnosti...
 
 &Password:
-&Zaporka:
+&Lozinka:
+
+&Pin Document
+&Pričvrsti dokument
 
 &Previous Page\tLeft Arrow
 Prethodna stranica\t<-
 
+&Print...
+Is&pis...
+
 &Print...\tCtrl-P
-&Ispiši\tCtrl-P
+&Ispiši...\tCtrl-P
 
 &Print... (denied)
 &Ispis... (nije dopušteno)
 
+&Remember the password for this document
+&Zapamti lozinku za ovaj dokument
+
 &Remember these settings for each document
 &Upamti ove postavke za svaki pojedini dokument
+
+&Remove Document
+&Ukloni dokument
+
+&Save As...
+&Spremi kao...
 
 &Save As...\tCtrl-S
 &Spremi kao...\tCtrl-S
@@ -94,8 +133,17 @@ Prethodna stranica\t<-
 &Settings
 &Postavke
 
+&Shrink pages to printable area (if necessary)
+Smanji stranice do područja za ispis (ako je potrebno)
+
+&Single Page\tCtrl-6
+&Jedna stranica\tCtrl-6
+
 &Skip this version
 &Propusti ovu inačicu.
+
+&Use original page sizes
+Koristi &originalne veličine stranica
 
 &View
 &Pogled
@@ -118,14 +166,20 @@ Napredno
 All files
 Sve datoteke
 
+All supported documents
+Svi podržani dokumenti
+
 Application:
 Aplikacija:
 
 Associate with PDF files?
 Asocirati sa PDF datotekama?
 
+Attachment: %s
+Prilog: %s
+
 Author:
-Autor
+Autor:
 
 Automatic
 Automatsko
@@ -134,13 +188,25 @@ Automatically check for &updates
 Provjeravaj &nadogradnje automatski
 
 Book View
-Knjiški pogled
+Knjiški pregled
 
 Book&marks\tF12
 Straničnik\tF12
 
+Bookmark Shortcuts
+Prečaci oznaka
+
+Bookmark shortcut to page %d of %s
+Prečac oznake do stranice %d of %s
+
+Bookmarks
+Oznake
+
 Bytes
-Okteta
+Bajtova
+
+Can't connect to the Internet (error %#x).
+Internet nedostupan (greška %#x)
 
 Cancel
 Odustani
@@ -155,7 +221,10 @@ Change Language
 Promijeni jezik (Change Language)
 
 Check for &Updates
-Provjeri dostupnost nove inačice
+Provjeri ažuriranje
+
+Comic books
+Stripovi
 
 Continuous
 Slijedno
@@ -168,6 +237,15 @@ Dvije stranice slijedno
 
 Contribute Translation
 Pomozi prijevodom
+
+Copy &Link Address
+Kopiraj adresu &linka
+
+Copy Co&mment
+Kopiraj ko&mentar
+
+Copying text was denied (copying as image only)
+Kopiranje teksta je nemoguće (kopirano kao slika)
 
 Could not open Printer
 Ne mogu pristupiti pisaču
@@ -196,6 +274,9 @@ Glavni preglednik PDF datoteka se ne može mijenjati u prenosivom načinu
 Denied Permissions:
 Dozvole ograničenja:
 
+DjVu documents
+DjVu dokumenti
+
 Document Properties
 Svojstva dokumenta
 
@@ -206,10 +287,16 @@ E&xit\tCtrl-Q
 &Izađi\tCtrl-Q
 
 Enter password
-Unesi zaporku
+Unesi lozinku
 
 Enter password for %s
-Unesi zaporku za %s
+Unesi lozinku za %s
+
+Enter the command-line to invoke when you double-click on the PDF document:
+Unesite naredbenu liniju za pokretanje kod dvostrukog klika na PDF dokumentu:
+
+Error loading %s
+Greška kod pokretanja %s
 
 F&orward\tAlt+Right Arrow
 Naprijed\tAlt+->
@@ -244,11 +331,17 @@ Pronađi prethodno
 Find:
 Pronađi:
 
+Fit &Content\tCtrl-3
+Namjesti po &sadržaju\tCtrl-3
+
 Fit &Page\tCtrl-0
 Prilagodi &stranici\tCtrl-0
 
 Fit &Width\tCtrl-2
 &Namjesti po širini\tCtrl-2
+
+Fit Content
+Namjesti po sadržaju
 
 Fit Page
 Prilagodi stranici
@@ -256,8 +349,20 @@ Prilagodi stranici
 Fit Width
 Namjesti po širini
 
+Fit Width and Show Pages Continuously
+Namjesti po širini i prikaži stranice slijedno
+
+Fit a Single Page
+Namjesti po jednoj stranici
+
 Found text at page %d
 Tekst je pronađen na %d. stranici
+
+Found text at page %d (again)
+Tekst pronađen na stranici %d (opet)
+
+Frequently Read
+Najčešće čitano
 
 GB
 GiB
@@ -265,8 +370,14 @@ GiB
 Go to page
 Idi na stranicu
 
+Hide frequently read
+Sakrij najčešće čitano
+
 Hint: Use the F3 key for finding again
 Pomoć: upotrijebite tipku F3 za ponovnu pretragu
+
+Image files (*.%s)
+Slikovne datoteke (*.%s)
 
 KB
 KiB
@@ -313,6 +424,9 @@ U redu
 Open
 Otvori
 
+Open a document...
+Otvori dokument...
+
 Open in &Adobe Reader
 Otvori u programu &Adobe Reader
 
@@ -321,6 +435,9 @@ Otvori u programu &Foxit Reader
 
 Open in PDF-XChange
 Otvori u programu PDF-XChange
+
+P&roperties
+&Svojstva
 
 P&roperties\tCtrl-D
 S&vojstva...\tCtrl-D
@@ -346,14 +463,35 @@ Veličina stranice:
 Page number %u inexistant
 Stranica %u ne postoji
 
+Page scaling
+Skaliranje stranice
+
 Page:
 Stranica:
 
 Please wait - rendering...
 Molim pričekajte, iscrtavam...
 
+Postscript documents
+Postscript dokumenti
+
+Pr&esentation\tCtrl-L
+Pr&ezentacija\tCtrl-L
+
 Previous Page
 Prethodna stranica
+
+Print
+Ispis
+
+Print range
+Ispiši raspon
+
+Printing is still in progress. Abort and start over?
+Ispis je još u tijeku. Prekini i započni ponovno?
+
+Printing page %d of %d...
+Ispis stranice %d od %d...
 
 Printing problem.
 Problem prilikom ispisivanja.
@@ -367,8 +505,17 @@ Zaokreni nalijevo\tCtrl-Shift--
 Rotate &Right\tCtrl-Shift-+
 Zaokreni nadesno\tCtrl-Shift-+
 
+Save S&hortcut...\tCtrl-Shift-S
+Spremi p&rečac...\tCtrl-Shift-S
+
 Searching %d of %d...
 Pretražujem %d. stranicu (od %d)...
+
+Select &All
+Obilježi &sve
+
+Select &All\tCtrl-A
+Obilježi &sve\tCtrl-A
 
 Select content with Ctrl+left mouse button
 Odaberi sadržaj pomoću Ctrl+lijeva tipka miša
@@ -385,11 +532,17 @@ Prikaži alatnu traku
 Show &pages continuously
 Prikaži stranice slijedno
 
+Show frequently read
+Prikaži najčešće čitano
+
 Show the &bookmarks sidebar when available
-Prikaži traku &straničnika kad je dostupna
+Prikaži traku &oznaka kad je dostupna
 
 Single Page
 Jedna stranica
+
+Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
+Isprika, ovo se nije trebalo dogoditi!\n\nMolimo kliknite 'Otkaži' ako nam želite pomoći ispraviti uzrok ovog rušenja.
 
 Source file %s has no synchronization point
 Izvorna datoteka %s nema točke usklađivanja
@@ -399,6 +552,12 @@ Tema:
 
 SumatraPDF Options
 Mogućnosti programa
+
+SumatraPDF Update
+SumatraPDF ažuriranje
+
+SumatraPDF crashed
+SumatraPDF se srušio
 
 SumatraPDF is your default PDF reader
 SumatraPDF je vaš glavni glavni preglednik PDF datoteka
@@ -427,6 +586,9 @@ Visit &Website
 Warning
 Upozorenje
 
+XPS documents
+XPS dokumenti
+
 You have the latest version.
 Imate najnoviju inačicu.
 
@@ -453,60 +615,4 @@ kopiram tekst
 
 printing document
 ispisujem dokument
-
-# Untranslated:
-#&All selected pages
-#&Book View\tCtrl-8
-#&Copy Selection
-#&Even pages only
-#&Facing\tCtrl-7
-#&Fit pages to printable area
-#&Odd pages only
-#&Open Document
-#&Pin Document
-#&Print...
-#&Remember the password for this document
-#&Remove Document
-#&Save As...
-#&Shrink pages to printable area (if necessary)
-#&Single Page\tCtrl-6
-#&Use original page sizes
-#All supported documents
-#Attachment: %s
-#Bookmark Shortcuts
-#Bookmark shortcut to page %d of %s
-#Bookmarks
-#Can't connect to the Internet (error %#x).
-#Comic books
-#Copy &Link Address
-#Copy Co&mment
-#Copying text was denied (copying as image only)
-#DjVu documents
-#Enter the command-line to invoke when you double-click on the PDF document:
-#Error loading %s
-#Fit &Content\tCtrl-3
-#Fit Content
-#Fit Width and Show Pages Continuously
-#Fit a Single Page
-#Found text at page %d (again)
-#Frequently Read
-#Hide frequently read
-#Image files (*.%s)
-#Open a document...
-#P&roperties
-#Page scaling
-#Postscript documents
-#Pr&esentation\tCtrl-L
-#Print
-#Print range
-#Printing is still in progress. Abort and start over?
-#Printing page %d of %d...
-#Save S&hortcut...\tCtrl-Shift-S
-#Select &All
-#Select &All\tCtrl-A
-#Show frequently read
-#Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
-#SumatraPDF Update
-#SumatraPDF crashed
-#XPS documents
 
