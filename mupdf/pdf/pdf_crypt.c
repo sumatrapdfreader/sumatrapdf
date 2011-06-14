@@ -40,7 +40,7 @@ struct pdf_crypt_s
 	unsigned char key[32]; /* decryption key generated from password */
 };
 
-static fz_error pdf_parse_crypt_filter(pdf_crypt_filter *cf, fz_obj *dict, int defaultlength);
+static fz_error pdf_parse_crypt_filter(pdf_crypt_filter *cf, fz_obj *dict, char *name, int defaultlength);
 
 /*
  * Create crypt object for decrypting strings and streams
@@ -129,43 +129,37 @@ pdf_new_crypt(pdf_crypt **cryptp, fz_obj *dict, fz_obj *id)
 		if (fz_is_dict(obj))
 		{
 			crypt->cf = fz_keep_obj(obj);
-
-			obj = fz_dict_gets(dict, "StmF");
-			if (fz_is_name(obj))
-			{
-				/* should verify that it is either Identity or StdCF */
-				obj = fz_dict_gets(crypt->cf, fz_to_name(obj));
-				if (fz_is_dict(obj))
-				{
-					error = pdf_parse_crypt_filter(&crypt->stmf, obj, crypt->length);
-					if (error)
-					{
-						pdf_free_crypt(crypt);
-						return fz_rethrow(error, "cannot parse stream crypt filter (%d %d R)", fz_to_num(obj), fz_to_gen(obj));
-					}
-				}
-			}
-
-			obj = fz_dict_gets(dict, "StrF");
-			if (fz_is_name(obj))
-			{
-				/* should verify that it is either Identity or StdCF */
-				obj = fz_dict_gets(crypt->cf, fz_to_name(obj));
-				if (fz_is_dict(obj))
-				{
-					error = pdf_parse_crypt_filter(&crypt->strf, obj, crypt->length);
-					if (error)
-					{
-						pdf_free_crypt(crypt);
-						return fz_rethrow(error, "cannot parse string crypt filter (%d %d R)", fz_to_num(obj), fz_to_gen(obj));
-					}
-				}
-			}
-
-			/* in crypt revision 4, the crypt filter determines the key length */
-			if (crypt->strf.method != PDF_CRYPT_NONE)
-				crypt->length = crypt->stmf.length;
 		}
+		else
+		{
+			crypt->cf = NULL;
+		}
+
+		obj = fz_dict_gets(dict, "StmF");
+		if (fz_is_name(obj))
+		{
+			error = pdf_parse_crypt_filter(&crypt->stmf, crypt->cf, fz_to_name(obj), crypt->length);
+			if (error)
+			{
+				pdf_free_crypt(crypt);
+				return fz_rethrow(error, "cannot parse stream crypt filter (%d %d R)", fz_to_num(obj), fz_to_gen(obj));
+			}
+		}
+
+		obj = fz_dict_gets(dict, "StrF");
+		if (fz_is_name(obj))
+		{
+			error = pdf_parse_crypt_filter(&crypt->strf, crypt->cf, fz_to_name(obj), crypt->length);
+			if (error)
+			{
+				pdf_free_crypt(crypt);
+				return fz_rethrow(error, "cannot parse string crypt filter (%d %d R)", fz_to_num(obj), fz_to_gen(obj));
+			}
+		}
+
+		/* in crypt revision 4, the crypt filter determines the key length */
+		if (crypt->strf.method != PDF_CRYPT_NONE)
+			crypt->length = crypt->stmf.length;
 	}
 
 	/* Standard security handler (PDF 1.7 table 3.19) */
@@ -270,13 +264,31 @@ pdf_free_crypt(pdf_crypt *crypt)
  */
 
 static fz_error
-pdf_parse_crypt_filter(pdf_crypt_filter *cf, fz_obj *dict, int defaultlength)
+pdf_parse_crypt_filter(pdf_crypt_filter *cf, fz_obj *cf_obj, char *name, int defaultlength)
 {
 	fz_obj *obj;
+	fz_obj *dict;
+	int is_identity = (strcmp(name, "Identity") == 0);
+	int is_stdcf = (!is_identity && (strcmp(name, "StdCF") == 0));
 
+	if (!is_identity && !is_stdcf)
+	{
+		return fz_throw("Crypt Filter not Identity or StdCF (%d %d R)", fz_to_num(cf_obj), fz_to_gen(cf_obj));
+	}
 	cf->method = PDF_CRYPT_NONE;
 	cf->length = defaultlength;
 
+	if (cf_obj == NULL)
+	{
+		cf->method = (is_identity ? PDF_CRYPT_NONE : PDF_CRYPT_RC4);
+		return fz_okay;
+	}
+
+	dict = fz_dict_gets(cf_obj, name);
+	if (!fz_is_dict(dict))
+	{
+		return fz_throw("cannot parse crypt filter (%d %d R)", fz_to_num(cf_obj), fz_to_gen(cf_obj));
+	}
 	obj = fz_dict_gets(dict, "CFM");
 	if (fz_is_name(obj))
 	{
@@ -805,15 +817,11 @@ pdf_open_crypt_with_filter(fz_stream *chain, pdf_crypt *crypt, char *name, int n
 
 	if (strcmp(name, "Identity"))
 	{
-		fz_obj *obj = fz_dict_gets(crypt->cf, name);
-		if (fz_is_dict(obj))
-		{
-			error = pdf_parse_crypt_filter(&cf, obj, crypt->length);
-			if (error)
-				fz_catch(error, "cannot parse crypt filter (%d %d R)", fz_to_num(obj), fz_to_gen(obj));
-			else
-				return pdf_open_crypt_imp(chain, crypt, &cf, num, gen);
-		}
+		error = pdf_parse_crypt_filter(&cf, crypt->cf, name, crypt->length);
+		if (error)
+			fz_catch(error, "cannot parse crypt filter (%d %d R)", num, gen);
+		else
+			return pdf_open_crypt_imp(chain, crypt, &cf, num, gen);
 	}
 	return chain;
 }
