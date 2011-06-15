@@ -259,9 +259,12 @@ bool PsEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
         char header[1024];
         ZeroMemory(header, sizeof(header));
         file::ReadAll(fileName, header, sizeof(header) - 1);
+        if (str::StartsWith(header, "\xC5\xD0\xD3\xC6")) {
+            // Windows-format EPS file - cf. http://partners.adobe.com/public/developer/en/ps/5002.EPSF_Spec.pdf
+            DWORD psStart = *(DWORD *)(header + 4);
+            return psStart < sizeof(header) && str::StartsWith(header + psStart, "%!PS-Adobe-");
+        }
         return str::StartsWith(header, "%!") ||
-               // also sniff Windows-format EPS files containing Postscript data (32-byte header only)
-               !memcmp(header, "\xC5\xD0\xD3\xC6" "\x20\x00\x00\x00", 8) && str::StartsWith(header + 0x20, "%!PS-Adobe-") ||
                // also sniff PJL (Printer Job Language) files containing Postscript data
                str::StartsWith(header, "\x1B%-12345X@PJL") && str::Find(header, "\n%!PS-Adobe-");
     }
