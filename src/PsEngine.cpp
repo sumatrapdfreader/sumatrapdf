@@ -100,7 +100,7 @@ static PdfEngine *ps2pdf(const TCHAR *fileName)
     ScopedMem<TCHAR> gswin32c(GetGhostscriptPath());
     if (!tmpFile || !gswin32c)
         return NULL;
-    ScopedMem<TCHAR> cmdLine(str::Format(_T("\"%s\" -q -dSAFER -dNOPAUSE -dBATCH -sOutputFile=\"%s\" -sDEVICE=pdfwrite -c .setpdfwrite -f \"%s\""), gswin32c, tmpFile, fileName));
+    ScopedMem<TCHAR> cmdLine(str::Format(_T("\"%s\" -q -dSAFER -dNOPAUSE -dBATCH -dEPSCrop -sOutputFile=\"%s\" -sDEVICE=pdfwrite -c .setpdfwrite -f \"%s\""), gswin32c, tmpFile, fileName));
 
     // TODO: the PS-to-PDF conversion can hang the UI for several seconds
     HANDLE process = LaunchProcess(cmdLine, CREATE_NO_WINDOW);
@@ -260,8 +260,8 @@ bool PsEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
         ZeroMemory(header, sizeof(header));
         file::ReadAll(fileName, header, sizeof(header) - 1);
         return str::StartsWith(header, "%!") ||
-               // also sniff Windows-format EPS files
-               str::StartsWith(header, "\xC5\xD0\xD3\xC6") && str::StartsWith(header + 32, "%!PS-Adobe-") ||
+               // also sniff Windows-format EPS files containing Postscript data (32-byte header only)
+               !memcmp(header, "\xC5\xD0\xD3\xC6" "\x20\x00\x00\x00", 8) && str::StartsWith(header + 0x20, "%!PS-Adobe-") ||
                // also sniff PJL (Printer Job Language) files containing Postscript data
                str::StartsWith(header, "\x1B%-12345X@PJL") && str::Find(header, "\n%!PS-Adobe-");
     }
