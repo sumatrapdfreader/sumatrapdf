@@ -260,6 +260,8 @@ bool PsEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
         ZeroMemory(header, sizeof(header));
         file::ReadAll(fileName, header, sizeof(header) - 1);
         return str::StartsWith(header, "%!") ||
+               // also sniff Windows-format EPS files
+               str::StartsWith(header, "\xC5\xD0\xD3\xC6") && str::StartsWith(header + 32, "%!PS-Adobe-") ||
                // also sniff PJL (Printer Job Language) files containing Postscript data
                str::StartsWith(header, "\x1B%-12345X@PJL") && str::Find(header, "\n%!PS-Adobe-");
     }
