@@ -2159,7 +2159,11 @@ pdf_run_stream(pdf_csi *csi, fz_obj *rdb, fz_stream *file, char *buf, int buflen
 			}
 			else if (tok == PDF_TOK_STRING)
 			{
-				pdf_show_string(csi, (unsigned char *)buf, len);
+				/* SumatraPDF: the scratch buffer can be overwritten by Type 3 glyphs */
+				unsigned char *string = fz_malloc(len);
+				memcpy(string, buf, len);
+				pdf_show_string(csi, string, len);
+				free(string);
 			}
 			else if (tok == PDF_TOK_KEYWORD)
 			{
