@@ -125,6 +125,9 @@ gdiplus_transform_point(fz_matrix ctm, float x, float y)
 	return PointF(point.x, point.y);
 }
 
+inline float round(float x) { return floorf(x + 0.5); }
+inline float roundup(float x) { return x < 0 ? floorf(x) : ceilf(x); }
+
 class userData
 {
 	userDataStackItem *stack;
@@ -336,6 +339,17 @@ public:
 			alpha = getAlpha(alpha);
 		}
 		
+		// grid fit the image similar to draw_affine.c's fz_paint_image_imp
+		if (fz_is_rectilinear(ctm))
+		{
+			ctm.a = roundup(ctm.a);
+			ctm.b = roundup(ctm.b);
+			ctm.c = roundup(ctm.c);
+			ctm.d = roundup(ctm.d);
+			ctm.e = round(ctm.e);
+			ctm.f = round(ctm.f);
+		}
+		
 		if (_hasSingleColor(image))
 		{
 			PointF corners[4] = {
@@ -377,13 +391,13 @@ public:
 		{
 			GraphicsState state = graphics->Save();
 			graphics->SetInterpolationMode(InterpolationModeNearestNeighbor);
-			graphics->DrawImage(&PixmapBitmap(image), corners, 3, 0., 0., image->w, image->h, UnitPixel, &imgAttrs);
+			graphics->DrawImage(&PixmapBitmap(image), corners, 3, 0, 0, image->w, image->h, UnitPixel, &imgAttrs);
 			graphics->Restore(state);
 		}
 		else if (scale < 1.0 && MIN(image->w, image->h) > 10)
 		{
-			int w = ceilf(image->w * scale);
-			int h = ceilf(image->h * scale);
+			int w = round(image->w * scale);
+			int h = round(image->h * scale);
 			
 			Bitmap *scaled = new Bitmap(w, h);
 			Graphics g2(scaled);
@@ -394,7 +408,7 @@ public:
 			delete scaled;
 		}
 		else
-			graphics->DrawImage(&PixmapBitmap(image), corners, 3, 0., 0., image->w, image->h, UnitPixel, &imgAttrs);
+			graphics->DrawImage(&PixmapBitmap(image), corners, 3, 0, 0, image->w, image->h, UnitPixel, &imgAttrs);
 	}
 
 	float getAlpha(float alpha=1.0) { return stack->alpha * alpha; }
