@@ -479,6 +479,11 @@ protected:
 				boundsBg.Intersect(si->bounds);
 		
 		Bitmap *backdrop = _flattenBlendBackdrop(bgStack, boundsBg);
+		if (!backdrop)
+		{
+			fz_warn("OOM while flatting blend backdrop");
+			return;
+		}
 		
 		Rect bounds(boundsBg);
 		bounds.Offset(-clipBounds.X, -clipBounds.Y);
@@ -505,6 +510,8 @@ protected:
 		}
 		
 		Bitmap *backdrop = _flattenBlendBackdrop(bgStack, clipBounds);
+		if (!backdrop)
+			return NULL;
 		
 		Rect bounds(clipBounds);
 		bounds.Offset(-group->bounds.X, -group->bounds.Y);
