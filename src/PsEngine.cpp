@@ -231,6 +231,10 @@ public:
         if (pdfEngine) pdfEngine->RunGC();
     }
 
+    virtual unsigned char *GetPDFData(size_t *cbCount) {
+        return pdfEngine->GetFileData(cbCount);
+    }
+
 protected:
     const TCHAR *fileName;
     PdfEngine *pdfEngine;

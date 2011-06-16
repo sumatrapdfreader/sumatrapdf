@@ -3531,6 +3531,7 @@ static void OnMenuSaveAs(WindowInfo& win)
     // Can't save a document's content as plain text if text copying isn't allowed
     bool hasCopyPerm = !win.dm->engine->IsImageCollection() &&
                        win.dm->engine->IsCopyingTextAllowed();
+    bool canConvertToPDF = Engine_PS == win.dm->engineType;
 
     const TCHAR *defExt = win.dm->engine->GetDefaultFileExt();
 
@@ -3550,6 +3551,10 @@ static void OnMenuSaveAs(WindowInfo& win)
     if (hasCopyPerm) {
         fileFilter.Append(_TR("Text documents"));
         fileFilter.Append(_T("\1*.txt\1"));
+    }
+    if (canConvertToPDF) {
+        fileFilter.Append(_TR("PDF documents"));
+        fileFilter.Append(_T("\1*.pdf\1"));
     }
     fileFilter.Append(_TR("All files"));
     fileFilter.Append(_T("\1*.*\1"));
@@ -3581,9 +3586,14 @@ static void OnMenuSaveAs(WindowInfo& win)
 
     TCHAR * realDstFileName = dstFileName;
     // Make sure that the file has a valid ending
-    if (!str::EndsWithI(dstFileName, defExt) && !(hasCopyPerm && str::EndsWithI(dstFileName, _T(".txt")))) {
-        TCHAR *defaultExt = hasCopyPerm && 2 == ofn.nFilterIndex ? _T(".txt") : defExt;
-        realDstFileName = str::Format(_T("%s%s"), dstFileName, defaultExt);
+    if (!str::EndsWithI(dstFileName, defExt) &&
+        !(hasCopyPerm && str::EndsWithI(dstFileName, _T(".txt"))) &&
+        !(canConvertToPDF && str::EndsWithI(dstFileName, _T(".pdf")))) {
+        if (hasCopyPerm && 2 == ofn.nFilterIndex)
+            defExt = _T(".txt");
+        else if (canConvertToPDF && (hasCopyPerm ? 3 : 2) == ofn.nFilterIndex)
+            defExt = _T(".pdf");
+        realDstFileName = str::Format(_T("%s%s"), dstFileName, defExt);
     }
     // Extract all text when saving as a plain text file
     if (hasCopyPerm && str::EndsWithI(realDstFileName, _T(".txt"))) {
@@ -3594,6 +3604,15 @@ static void OnMenuSaveAs(WindowInfo& win)
         ScopedMem<char> textUTF8(str::conv::ToUtf8(text.LendData()));
         ScopedMem<char> textUTF8BOM(str::Join("\xEF\xBB\xBF", textUTF8));
         file::WriteAll(realDstFileName, textUTF8BOM, str::Len(textUTF8BOM));
+    }
+    // Convert the Postscript file into a PDF one
+    else if (canConvertToPDF && str::EndsWithI(realDstFileName, _T(".pdf"))) {
+        size_t dataLen;
+        ScopedMem<unsigned char> data(static_cast<PsEngine *>(win.dm->engine)->GetPDFData(&dataLen));
+        if (data)
+            file::WriteAll(realDstFileName, data, dataLen);
+        else
+            MessageBox(win.hwndFrame, _TR("Failed to save a file"), _TR("Warning"), MB_OK | MB_ICONEXCLAMATION);
     }
     // Recreate inexistant PDF files from memory...
     else if (!file::Exists(srcFileName)) {
