@@ -143,6 +143,10 @@ xps_parse_resource_dictionary(xps_context *ctx, xps_resource **dictp, char *base
 		}
 	}
 
+	/* SumatraPDF: callers expect head to be non-NULL on success */
+	if (!head)
+		return fz_throw("empty resource dictionary");
+
 	if (head)
 	{
 		head->base_uri = fz_strdup(base_uri);
