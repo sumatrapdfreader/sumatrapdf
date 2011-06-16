@@ -110,6 +110,7 @@ TCHAR *                 gPluginURL = NULL; // owned by CommandLineInfo in WinMai
 #define CANVAS_CLASS_NAME       _T("SUMATRA_PDF_CANVAS")
 #define SPLITER_CLASS_NAME      _T("Spliter")
 #define PREFS_FILE_NAME         _T("sumatrapdfprefs.dat")
+#define CRASH_DUMP_FILE_NAME    _T("sumatrapdfcrash.dmp")
 
 #define SPLITTER_DX  5
 #define SPLITTER_MIN_WIDTH 150
@@ -789,47 +790,6 @@ static TCHAR *GetPrefsFileName()
 {
     return AppGenDataFilename(PREFS_FILE_NAME);
 }
-
-/* Caller needs to free() the result */
-static TCHAR *GetUniqueCrashDumpPath()
-{
-    TCHAR *path;
-    TCHAR *fileName;
-    for (int n = 0; n <= 20; n++) {
-        if (n == 0) {
-            fileName = str::Dup(_T("SumatraPDF.dmp"));
-        } else {
-            fileName = str::Format(_T("SumatraPDF-%d.dmp"), n);
-        }
-        path = AppGenDataFilename(fileName);
-        free(fileName);
-        if (!file::Exists(path) || (n==20))
-            return path;
-        free(path);
-    }
-    return NULL;
-}
-
-#if 0
-static TCHAR *GetUniqueCrashTextPath()
-{
-    TCHAR *path;
-    TCHAR *fileName;
-    for (int n = 0; n <= 20; n++) {
-        if (n == 0) {
-            fileName = str::Dup(_T("SumatraPDF-crash.txt"));
-        } else {
-            fileName = str::Format(_T("SumatraPDF-crash-%d.txt"), n);
-        }
-        path = AppGenDataFilename(fileName);
-        free(fileName);
-        if (!file::Exists(path) || (n==20))
-            return path;
-        free(path);
-    }
-    return NULL;
-}
-#endif
 
 static struct {
     unsigned short itemId;
@@ -6784,7 +6744,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     SetErrorMode(SEM_NOOPENFILEERRORBOX | SEM_FAILCRITICALERRORS);
     srand((unsigned int)time(NULL));
 
-    ScopedMem<TCHAR> crashDumpPath(GetUniqueCrashDumpPath());
+    ScopedMem<TCHAR> crashDumpPath(AppGenDataFilename(CRASH_DUMP_FILE_NAME));
     InstallCrashHandler(crashDumpPath);
 
     ScopedCom com;
