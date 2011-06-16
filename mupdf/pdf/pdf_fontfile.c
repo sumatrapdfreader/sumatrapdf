@@ -680,7 +680,7 @@ pdf_load_windows_font(pdf_font_desc *font, char *fontname)
 		printf("pdf_load_windows_font: looking for font '%s'\n", fontname);
 
 	// work on a normalized copy of the font name
-	fontname = strdup(fontname);
+	fontname = fz_strdup(fontname);
 	removespaces(fontname);
 
 	// first, try to find the exact font name (including appended style information)
@@ -704,7 +704,7 @@ pdf_load_windows_font(pdf_font_desc *font, char *fontname)
 	// third, search for the font name without additional style information
 	if (!found)
 		found = bsearch(fontname, fontlistMS.fontmap, fontlistMS.len, sizeof(pdf_fontmapMS), lookupcompare);
-	free(fontname);
+	fz_free(fontname);
 
 	if (!found)
 		return !fz_okay;

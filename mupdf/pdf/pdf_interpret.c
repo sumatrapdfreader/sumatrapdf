@@ -2163,7 +2163,7 @@ pdf_run_stream(pdf_csi *csi, fz_obj *rdb, fz_stream *file, char *buf, int buflen
 				unsigned char *string = fz_malloc(len);
 				memcpy(string, buf, len);
 				pdf_show_string(csi, string, len);
-				free(string);
+				fz_free(string);
 			}
 			else if (tok == PDF_TOK_KEYWORD)
 			{
