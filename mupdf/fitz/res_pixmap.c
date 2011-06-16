@@ -18,8 +18,13 @@ static DWORDLONG fz_get_memory_limit()
 	{
 		MEMORYSTATUSEX ms;
 		ms.dwLength = sizeof(ms);
-		GlobalMemoryStatusEx(&ms);
-		memory_limit = max(ms.ullTotalPhys / 5 * 3, 512 << 20);
+		if (!getenv("MUPDF_MEMORY_LIMIT") ||
+			!(ms.ullTotalPhys = (DWORDLONG)atoi(getenv("MUPDF_MEMORY_LIMIT")) << 20))
+		{
+			GlobalMemoryStatusEx(&ms);
+			ms.ullTotalPhys = ms.ullTotalPhys / 5 * 3;
+		}
+		memory_limit = max(ms.ullTotalPhys, 512 << 20);
 	}
 
 	return memory_limit;
