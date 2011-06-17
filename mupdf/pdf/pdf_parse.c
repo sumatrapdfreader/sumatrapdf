@@ -58,6 +58,24 @@ pdf_to_utf8(fz_obj *src)
 		}
 	}
 
+	/* SumatraPDF: also handle little-endian UTF-16 strings */
+	else if (srclen >= 2 && srcptr[0] == 0xFF && srcptr[1] == 0xFE)
+	{
+		for (i = 2; i < srclen; i += 2)
+		{
+			ucs = srcptr[i] | (srcptr[i+1] << 8);
+			dstlen += runelen(ucs);
+		}
+
+		dstptr = dst = fz_malloc(dstlen + 1);
+
+		for (i = 2; i < srclen; i += 2)
+		{
+			ucs = srcptr[i] | (srcptr[i+1] << 8);
+			dstptr += runetochar(dstptr, &ucs);
+		}
+	}
+
 	else
 	{
 		for (i = 0; i < srclen; i++)
@@ -91,6 +109,14 @@ pdf_to_ucs2(fz_obj *src)
 		dstptr = dst = fz_calloc((srclen - 2) / 2 + 1, sizeof(short));
 		for (i = 2; i < srclen; i += 2)
 			*dstptr++ = (srcptr[i] << 8) | srcptr[i+1];
+	}
+
+	/* SumatraPDF: also handle little-endian UTF-16 strings */
+	else if (srclen >= 2 && srcptr[0] == 0xFF && srcptr[1] == 0xFE)
+	{
+		dstptr = dst = fz_calloc((srclen - 2) / 2 + 1, sizeof(short));
+		for (i = 2; i < srclen; i += 2)
+			*dstptr++ = srcptr[i] | (srcptr[i+1] << 8);
 	}
 
 	else
