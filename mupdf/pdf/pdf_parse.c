@@ -40,7 +40,8 @@ pdf_to_utf8(fz_obj *src)
 	int ucs;
 	int i;
 
-	if (srclen > 2 && srcptr[0] == 254 && srcptr[1] == 255)
+	/* SumatraPDF: correctly handle empty UTF-16 strings */
+	if (srclen >= 2 && srcptr[0] == 254 && srcptr[1] == 255)
 	{
 		for (i = 2; i < srclen; i += 2)
 		{
@@ -84,7 +85,8 @@ pdf_to_ucs2(fz_obj *src)
 	int srclen = fz_to_str_len(src);
 	int i;
 
-	if (srclen > 2 && srcptr[0] == 254 && srcptr[1] == 255)
+	/* SumatraPDF: correctly handle empty UTF-16 strings */
+	if (srclen >= 2 && srcptr[0] == 254 && srcptr[1] == 255)
 	{
 		dstptr = dst = fz_calloc((srclen - 2) / 2 + 1, sizeof(short));
 		for (i = 2; i < srclen; i += 2)

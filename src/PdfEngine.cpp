@@ -1517,11 +1517,7 @@ TCHAR *CPdfEngine::GetProperty(char *name)
     if (!obj)
         return NULL;
 
-    WCHAR *ucs2 = (WCHAR *)pdf_to_ucs2(obj);
-    TCHAR *tstr = str::conv::FromWStr(ucs2);
-    fz_free(ucs2);
-
-    return tstr;
+    return str::conv::FromPdf(obj);
 };
 
 char *CPdfEngine::GetDecryptionKey() const

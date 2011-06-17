@@ -50,13 +50,14 @@ static TCHAR *FormatSystemTime(SYSTEMTIME& date)
         ret = 1;
 
     TCHAR *tmp = buf + ret - 1;
-    *tmp++ = _T(' ');
+    if (ret > 1)
+        *tmp++ = _T(' ');
     cchBufLen -= ret;
     ret = GetTimeFormat(LOCALE_USER_DEFAULT, 0, &date, NULL, tmp, cchBufLen);
     if (0 == ret) // GetTimeFormat() failed
         *tmp = '\0';
 
-    return str::Dup(buf);
+    return tmp > buf ? str::Dup(buf) : NULL;
 }
 
 // Convert a date in PDF or XPS format, e.g. "D:20091222171933-05'00'" to a display
