@@ -49,8 +49,8 @@
 /* Define THREAD_BASED_FILEWATCH to use the thread-based implementation of file change detection. */
 #define THREAD_BASED_FILEWATCH
 
-/* Define if you want to display additional debug helpers in the Help menu */
-#if defined(DEBUG)
+/* Define if you want to display an additional debug menu */
+#ifdef DEBUG
 #define SHOW_DEBUG_MENU_ITEMS
 #endif
 
@@ -58,9 +58,8 @@
 #define ZOOM_OUT_FACTOR     1.0f / ZOOM_IN_FACTOR
 
 /* if TRUE, we're in debug mode where we show links as blue rectangle on
-   the screen. Makes debugging code related to links easier.
-   TODO: make a menu item in DEBUG build to turn it on/off. */
-#if defined(DEBUG)
+   the screen. Makes debugging code related to links easier. */
+#ifdef DEBUG
 static bool             gDebugShowLinks = true;
 #else
 static bool             gDebugShowLinks = false;
@@ -69,7 +68,7 @@ static bool             gDebugShowLinks = false;
 /* if true, we're rendering everything with the GDI+ back-end,
    otherwise Fitz is used at least for screen rendering.
    In Debug builds, you can switch between the two by hitting the '$' key */
-#if defined(USE_GDI_FOR_RENDERING)
+#ifdef USE_GDI_FOR_RENDERING
 static bool             gUseGdiRenderer = true;
 #else
 static bool             gUseGdiRenderer = false;
@@ -583,12 +582,17 @@ MenuDef menuDefHelp[] = {
     { _TRN("&Manual"),                      IDM_MANUAL,                 MF_NOT_IN_RESTRICTED },
     { _TRN("Check for &Updates"),           IDM_CHECK_UPDATE,           MF_NOT_IN_RESTRICTED },
     { SEP_ITEM,                             0,                          MF_NOT_IN_RESTRICTED },
-    { _TRN("&About"),                       IDM_ABOUT,                  0  },
-#ifdef SHOW_DEBUG_MENU_ITEMS
-    { SEP_ITEM,                             0,                          0  },
-    { "Crash me",                           IDM_CRASH_ME,               MF_NO_TRANSLATE  },
-#endif
+    { _TRN("&About"),                       IDM_ABOUT,                  0 },
 };
+
+#ifdef SHOW_DEBUG_MENU_ITEMS
+MenuDef menuDefDebug[] = {
+    { "Highlight links",                    IDM_DEBUG_SHOW_LINKS,       MF_NO_TRANSLATE },
+    { "Use GDI+ renderer",                  IDM_DEBUG_GDI_RENDERER,     MF_NO_TRANSLATE },
+    { SEP_ITEM,                             0,                          0 },
+    { "Crash me",                           IDM_DEBUG_CRASH_ME,         MF_NO_TRANSLATE },
+};
+#endif
 
 MenuDef menuDefContext[] = {
     { _TRN("&Copy Selection"),              IDM_COPY_SELECTION,         0 },
@@ -702,6 +706,10 @@ static HMENU BuildMenu(HWND hWnd)
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Settings"));
     m = BuildMenuFromMenuDef(menuDefHelp, dimof(menuDefHelp), CreateMenu());
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Help"));
+#ifdef SHOW_DEBUG_MENU_ITEMS
+    m = BuildMenuFromMenuDef(menuDefDebug, dimof(menuDefDebug), CreateMenu());
+    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _T("Debug"));
+#endif
 
     SetMenu(hWnd, mainMenu);
     return mainMenu;
@@ -1283,6 +1291,11 @@ static void MenuUpdateStateForWindow(WindowInfo& win) {
 
     if (win.dm && win.dm->engine)
         win::menu::Enable(win.menu, IDM_FIND_FIRST, !win.dm->engine->IsImageCollection());
+
+#ifdef SHOW_DEBUG_MENU_ITEMS
+    win::menu::Check(win.menu, IDM_DEBUG_SHOW_LINKS, gDebugShowLinks);
+    win::menu::Check(win.menu, IDM_DEBUG_GDI_RENDERER, gUseGdiRenderer);
+#endif
 }
 
 static void UpdateToolbarAndScrollbarsForAllWindows()
@@ -2301,6 +2314,21 @@ static void CrashMe()
 #else
     SubmitCrashInfo();
 #endif
+}
+
+static void ToggleGdiDebugging()
+{
+    gUseGdiRenderer = !gUseGdiRenderer;
+    DebugGdiPlusDevice(gUseGdiRenderer);
+
+    for (size_t i = 0; i < gWindows.Count(); i++) {
+        DisplayModel *dm = gWindows[i]->dm;
+        if (dm) {
+            gRenderCache.CancelRendering(dm);
+            gRenderCache.KeepForDisplayModel(dm, dm);
+            gWindows[i]->RedrawAll(true);
+        }
+    }
 }
 
 static void OnSelectAll(WindowInfo& win, bool textOnly=false)
@@ -4568,9 +4596,7 @@ static void OnChar(WindowInfo& win, WPARAM key)
         break;
 #ifdef DEBUG
     case '$':
-        gUseGdiRenderer = !gUseGdiRenderer;
-        DebugGdiPlusDevice(gUseGdiRenderer);
-        win.Reload();
+        ToggleGdiDebugging();
         break;
 #endif
     }
@@ -6417,7 +6443,17 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                     OnSelectAll(*win);
                     break;
 
-                case IDM_CRASH_ME:
+                case IDM_DEBUG_SHOW_LINKS:
+                    gDebugShowLinks = !gDebugShowLinks;
+                    for (size_t i = 0; i < gWindows.Count(); i++)
+                        gWindows[i]->RedrawAll(true);
+                    break;
+
+                case IDM_DEBUG_GDI_RENDERER:
+                    ToggleGdiDebugging();
+                    break;
+
+                case IDM_DEBUG_CRASH_ME:
                     CrashMe();
                     break;
 

@@ -94,10 +94,14 @@
 #define IDM_MOVE_FRAME_FOCUS            557
 #define IDM_GOTO_NAV_BACK               558
 #define IDM_GOTO_NAV_FORWARD            559
-#define IDM_CRASH_ME                    560
+
+#define IDM_DEBUG_SHOW_LINKS            590
+#define IDM_DEBUG_GDI_RENDERER          591
+#define IDM_DEBUG_CRASH_ME              592
 
 #define IDC_SUMATRAPDF                  600
 #define IDI_SMALL                       601
+
 #define IDC_GOTO_PAGE_EDIT              1000
 #define IDC_GOTO_PAGE_GO                1001
 #define IDC_BUTTON2                     1002

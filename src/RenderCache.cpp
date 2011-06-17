@@ -219,8 +219,10 @@ void RenderCache::KeepForDisplayModel(DisplayModel *oldDm, DisplayModel *newDm)
     ScopedCritSec scope(&_cacheAccess);
     for (int i = 0; i < _cacheCount; i++) {
         // keep the cached bitmaps for visible pages to avoid flickering during a reload
-        if (_cache[i]->dm == oldDm && oldDm->pageVisible(_cache[i]->pageNo) && _cache[i]->bitmap) {
-            _cache[i]->dm = newDm;
+        // (mark invisible pages as out-of-date as well, to prevent inconsistencies)
+        if (_cache[i]->dm == oldDm && _cache[i]->bitmap) {
+            if (oldDm->pageVisible(_cache[i]->pageNo))
+                _cache[i]->dm = newDm;
             // make sure that the page is rerendered eventually
             _cache[i]->zoom = INVALID_ZOOM;
             _cache[i]->bitmap->outOfDate = true;
