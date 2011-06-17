@@ -44,6 +44,7 @@ EXPORTS
 	gzerror
 	gzprintf
 	gzopen
+	gzwopen
 	gzseek
 	gztell
 	gzread

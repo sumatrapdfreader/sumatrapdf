@@ -6,6 +6,9 @@
 #include "FileUtil.h"
 #include "WinUtil.h"
 
+#include <zlib.h>
+extern "C" gzFile ZEXPORT gzwopen(const wchar_t *path, const char *mode);
+
 static TCHAR *GetGhostscriptPath()
 {
     TCHAR *gsProducts[] = {
@@ -66,7 +69,7 @@ class ScopedFile {
     TCHAR *path;
 
 public:
-    ScopedFile(const TCHAR *path) : path(str::Dup(path)) { }
+    ScopedFile(const TCHAR *path) : path(path ? str::Dup(path) : NULL) { }
     ~ScopedFile() {
         if (path)
             file::Delete(path);
@@ -74,7 +77,8 @@ public:
     }
 };
 
-static TCHAR *GetTempFileName(const TCHAR *prefix=_T("PsE"))
+// caller must free() the result
+static TCHAR *GetTempFilePath(const TCHAR *prefix=_T("PsE"))
 {
     TCHAR path[MAX_PATH], shortPath[MAX_PATH];
     DWORD res = GetTempPath(MAX_PATH - 14, shortPath);
@@ -89,13 +93,8 @@ static TCHAR *GetTempFileName(const TCHAR *prefix=_T("PsE"))
 
 static PdfEngine *ps2pdf(const TCHAR *fileName)
 {
-    // Ghostscript produces a document with a single empty page
-    // for invalid paths instead of failing
-    if (!file::Exists(fileName))
-        return NULL;
-
     // TODO: read from gswin32c's stdout instead of using a TEMP file
-    ScopedMem<TCHAR> tmpFile(GetTempFileName());
+    ScopedMem<TCHAR> tmpFile(GetTempFilePath());
     ScopedFile tmpFileScope(tmpFile);
     ScopedMem<TCHAR> gswin32c(GetGhostscriptPath());
     if (!tmpFile || !gswin32c)
@@ -107,9 +106,13 @@ static PdfEngine *ps2pdf(const TCHAR *fileName)
     if (!process)
         return NULL;
 
+    DWORD exitCode = EXIT_FAILURE;
     WaitForSingleObject(process, 10000);
+    GetExitCodeProcess(process, &exitCode);
     TerminateProcess(process, 1);
     CloseHandle(process);
+    if (exitCode != EXIT_SUCCESS)
+        return NULL;
 
     size_t len;
     ScopedMem<char> pdfData(file::ReadAll(tmpFile, &len));
@@ -124,6 +127,46 @@ static PdfEngine *ps2pdf(const TCHAR *fileName)
     stream->Release();
 
     return engine;
+}
+
+inline bool isgzipped(const TCHAR *fileName)
+{
+    char header[2] = { 0 };
+    file::ReadAll(fileName, header, sizeof(header));
+    return str::EqN(header, "\x1F\x8B", sizeof(header));
+}
+
+static PdfEngine *psgz2pdf(const TCHAR *fileName)
+{
+    ScopedMem<TCHAR> tmpFile(GetTempFilePath());
+    ScopedFile tmpFileScope(tmpFile);
+    if (!tmpFile)
+        return NULL;
+
+#ifdef UNICODE
+    gzFile inFile = gzwopen(fileName, "rb");
+#else
+    gzFile inFile = gzopen(fileName, "rb");
+#endif
+    if (!inFile)
+        return NULL;
+    FILE *outFile = _tfopen(tmpFile, _T("wb"));
+    if (!outFile) {
+        gzclose(inFile);
+        return NULL;
+    }
+
+    char buffer[1 << 14];
+    for (;;) {
+        int len = gzread(inFile, buffer, sizeof(buffer));
+        if (len <= 0)
+            break;
+        fwrite(buffer, 1, len, outFile);
+    }
+    fclose(outFile);
+    gzclose(inFile);
+
+    return ps2pdf(tmpFile);
 }
 
 // CPsEngine is mostly a proxy for a PdfEngine that's fed whatever
@@ -241,9 +284,13 @@ protected:
 
     bool Load(const TCHAR *fileName) {
         assert(!this->fileName && !pdfEngine);
-        if (fileName)
-            this->fileName = str::Dup(fileName);
-        pdfEngine = ps2pdf(fileName);
+        if (!fileName)
+            return false;
+        this->fileName = str::Dup(fileName);
+        if (isgzipped(fileName))
+            pdfEngine = psgz2pdf(fileName);
+        else
+            pdfEngine = ps2pdf(fileName);
         return pdfEngine != NULL;
     }
 };
@@ -273,7 +320,7 @@ bool PsEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
                str::StartsWith(header, "\x1B%-12345X@PJL") && str::Find(header, "\n%!PS-Adobe-");
     }
 
-    return str::EndsWithI(fileName, _T(".ps"));
+    return str::EndsWithI(fileName, _T(".ps")) || str::EndsWithI(fileName, _T(".ps.gz"));
 }
 
 PsEngine *PsEngine::CreateFromFileName(const TCHAR *fileName)
