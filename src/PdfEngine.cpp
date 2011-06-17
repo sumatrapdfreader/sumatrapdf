@@ -86,7 +86,6 @@ RenderedFitzBitmap::RenderedFitzBitmap(fz_pixmap *pixmap, HDC hDC) :
 {
     int paletteSize = 0;
     bool hasPalette = false;
-    unsigned char *bmpData = NULL;
     
     int w = pixmap->w;
     int h = pixmap->h;
@@ -104,8 +103,10 @@ RenderedFitzBitmap::RenderedFitzBitmap(fz_pixmap *pixmap, HDC hDC) :
     BITMAPINFO *bmi = (BITMAPINFO *)calloc(1, sizeof(BITMAPINFOHEADER) + 256 * sizeof(RGBQUAD));
     
     // always try to produce an 8-bit palette for saving some memory
+    unsigned char *bmpData = (unsigned char *)calloc(rows8, h);
+    if (bmpData)
     {
-        unsigned char *dest = bmpData = (unsigned char *)calloc(rows8, h);
+        unsigned char *dest = bmpData;
         unsigned char *source = bgrPixmap->samples;
         
         for (int j = 0; j < h; j++)
