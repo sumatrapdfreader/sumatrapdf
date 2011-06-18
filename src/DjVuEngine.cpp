@@ -606,7 +606,7 @@ Vec<PageElement *> *CDjVuEngine::GetElements(int pageNo)
     if (!annos || !annos[pageNo-1])
         return NULL;
 
-    ScopedCritSec(&gDjVuContext.lock);
+    ScopedCritSec scope(&gDjVuContext.lock);
 
     Vec<PageElement *> *els = new Vec<PageElement *>();
     RectI page = PageMediabox(pageNo).Round();
@@ -763,7 +763,7 @@ DocToCItem *CDjVuEngine::GetToCTree()
     if (!HasToCTree())
         return NULL;
 
-    ScopedCritSec(&gDjVuContext.lock);
+    ScopedCritSec scope(&gDjVuContext.lock);
     int idCounter = 0;
     return BuildToCTree(outline, idCounter);
 }
