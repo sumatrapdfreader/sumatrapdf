@@ -244,7 +244,9 @@ public:
     virtual float GetFileDPI() const {
         return pdfEngine ? pdfEngine->GetFileDPI() : 72.0f;
     }
-    virtual const TCHAR *GetDefaultFileExt() const { return _T(".ps"); }
+    virtual const TCHAR *GetDefaultFileExt() const {
+        return !fileName || !str::EndsWithI(fileName, _T(".eps")) ? _T(".ps") : _T(".eps");
+    }
 
     virtual bool BenchLoadPage(int pageNo) {
         return pdfEngine ? pdfEngine->BenchLoadPage(pageNo) : false;
@@ -313,14 +315,16 @@ bool PsEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
         if (str::StartsWith(header, "\xC5\xD0\xD3\xC6")) {
             // Windows-format EPS file - cf. http://partners.adobe.com/public/developer/en/ps/5002.EPSF_Spec.pdf
             DWORD psStart = *(DWORD *)(header + 4);
-            return psStart < sizeof(header) && str::StartsWith(header + psStart, "%!PS-Adobe-");
+            return psStart >= sizeof(header) || str::StartsWith(header + psStart, "%!PS-Adobe-");
         }
         return str::StartsWith(header, "%!") ||
                // also sniff PJL (Printer Job Language) files containing Postscript data
                str::StartsWith(header, "\x1B%-12345X@PJL") && str::Find(header, "\n%!PS-Adobe-");
     }
 
-    return str::EndsWithI(fileName, _T(".ps")) || str::EndsWithI(fileName, _T(".ps.gz"));
+    return str::EndsWithI(fileName, _T(".ps")) ||
+           str::EndsWithI(fileName, _T(".ps.gz")) ||
+           str::EndsWithI(fileName, _T(".eps"));
 }
 
 PsEngine *PsEngine::CreateFromFileName(const TCHAR *fileName)

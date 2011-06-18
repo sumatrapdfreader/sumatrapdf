@@ -38,9 +38,9 @@ IDI_SUMATRAPDF          ICON                    "..\SumatraPDF-smaller.ico"
 
 #ifndef BUILD_UNINSTALLER
   #ifdef DEBUG
-	1           RT_RCDATA               "..\..\obj-dbg\InstallerData.zip"
+    1           RT_RCDATA               "..\..\obj-dbg\InstallerData.zip"
   #else
-	1           RT_RCDATA               "..\..\obj-rel\InstallerData.zip"
+    1           RT_RCDATA               "..\..\obj-rel\InstallerData.zip"
   #endif
 #endif
 

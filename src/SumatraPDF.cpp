@@ -3806,7 +3806,7 @@ static void OnMenuOpen(WindowInfo& win)
         { _TR("PDF documents"),         _T("*.pdf"),        true },
         { _TR("XPS documents"),         _T("*.xps"),        true },
         { _TR("DjVu documents"),        _T("*.djvu"),       true },
-        { _TR("Postscript documents"),  _T("*.ps"),         PsEngine::IsAvailable() },
+        { _TR("Postscript documents"),  _T("*.ps;*.eps"),   PsEngine::IsAvailable() },
         { _TR("Comic books"),           _T("*.cbz;*.cbr"),  true },
     };
     // Prepare the file filters (use \1 instead of \0 so that the
