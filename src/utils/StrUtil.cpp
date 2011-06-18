@@ -466,6 +466,35 @@ TCHAR *FormatFloatWithThousandSep(double number, const TCHAR *unit)
     return unit ? str::Format(_T("%s %s"), buf, unit) : str::Dup(buf);
 }
 
+// cf. http://rosettacode.org/wiki/Roman_numerals/Encode#C.2B.2B
+TCHAR *FormatRomanNumeral(int number)
+{
+    if (number < 1)
+        return NULL;
+
+    static struct {
+        int value;
+        const TCHAR *numeral;
+    } romandata[] = {
+        { 1000, _T("M") }, { 900, _T("CM") }, { 500, _T("D") }, { 400, _T("CD") },
+        {  100, _T("C") }, {  90, _T("XC") }, {  50, _T("L") }, {  40, _T("XL") },
+        {   10, _T("X") }, {   9, _T("IX") }, {   5, _T("V") }, {   4, _T("IV") }, { 1, _T("I") }
+    };
+
+    size_t len = 0;
+    for (int num = number, i = 0; i < dimof(romandata); i++)
+        for (; num >= romandata[i].value; num -= romandata[i].value)
+            len += romandata[i].numeral[1] ? 2 : 1;
+    assert(len > 0);
+
+    TCHAR *roman = SAZA(TCHAR, len + 1), *c = roman;
+    for (int num = number, i = 0; i < dimof(romandata); i++)
+        for (; num >= romandata[i].value; num -= romandata[i].value)
+            c += str::BufSet(c, romandata[i].numeral[1] ? 3 : 2, romandata[i].numeral);
+
+    return roman;
+}
+
 /* compares two strings "naturally" by sorting numbers within a string
    numerically instead of by pure ASCII order; we imitate Windows Explorer
    by sorting special characters before alphanumeric characters

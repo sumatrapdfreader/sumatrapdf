@@ -266,6 +266,15 @@ public:
     // caller must delete the result (when no longer needed)
     virtual DocToCItem *GetToCTree() { return NULL; }
 
+    // checks whether this document has explicit labels for pages (such as
+    // roman numerals) instead of the default plain arabic numbering
+    virtual bool HasPageLabels() { return false; }
+    // returns a label to be displayed instead of the page number
+    // caller must free() the result
+    virtual TCHAR *GetPageLabel(int pageNo) { return str::Format(_T("%d"), pageNo); }
+    // reverts GetPageLabel by returning the first page number having the given label
+    virtual int GetPageByLabel(const TCHAR *label) { return _ttoi(label); }
+
     // returns a string to remember when the user wants to save a document's password
     // (don't implement for document types that don't support password protection)
     // caller must free() the result

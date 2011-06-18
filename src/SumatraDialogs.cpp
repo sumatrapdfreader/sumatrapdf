@@ -94,15 +94,15 @@ TCHAR *Dialog_GetPassword(HWND hwndParent, const TCHAR *fileName, bool *remember
 
 /* For passing data to/from GoToPage dialog */
 struct Dialog_GoToPage_Data {
-    int     currPageNo;      /* currently shown page number */
-    int     pageCount;       /* total number of pages */
-    int     pageEnteredOut;  /* page number entered by user */
+    const TCHAR *   currPageLabel;  // currently shown page label
+    int             pageCount;      // total number of pages
+    bool            onlyNumeric;    // whether the page label must be numeric
+    TCHAR *         newPageLabel;   // page number entered by user
 };
 
 static INT_PTR CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
     HWND                    editPageNo;
-    TCHAR *                 newPageNoTxt;
     Dialog_GoToPage_Data *  data;
 
     if (WM_INITDIALOG == message)
@@ -110,17 +110,22 @@ static INT_PTR CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT message, WPARAM wPa
         data = (Dialog_GoToPage_Data*)lParam;
         assert(data);
         SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
-        assert(1 <= data->currPageNo && data->currPageNo <= data->pageCount);
         win::SetText(hDlg, _TR("Go to page"));
 
-        newPageNoTxt = str::Format(_T("%d"), data->currPageNo);
-        SetDlgItemText(hDlg, IDC_GOTO_PAGE_EDIT, newPageNoTxt);
-        free(newPageNoTxt);
-        newPageNoTxt = str::Format(_TR("(of %d)"), data->pageCount);
-        SetDlgItemText(hDlg, IDC_GOTO_PAGE_LABEL_OF, newPageNoTxt);
-        free(newPageNoTxt);
-
         editPageNo = GetDlgItem(hDlg, IDC_GOTO_PAGE_EDIT);
+        if (!data->onlyNumeric)
+            SetWindowLong(editPageNo, GWL_STYLE, GetWindowLong(editPageNo, GWL_STYLE) & ~ES_NUMBER);
+        if (data->currPageLabel) {
+            assert(!data->onlyNumeric);
+            SetDlgItemText(hDlg, IDC_GOTO_PAGE_EDIT, data->currPageLabel);
+        }
+        else {
+            ScopedMem<TCHAR> pageNo(str::Format(_T("%d")));
+            SetDlgItemText(hDlg, IDC_GOTO_PAGE_EDIT, pageNo);
+        }
+        ScopedMem<TCHAR> totalCount(str::Format(_TR("(of %d)"), data->pageCount));
+        SetDlgItemText(hDlg, IDC_GOTO_PAGE_LABEL_OF, totalCount);
+
         Edit_SelectAll(editPageNo);
         SetDlgItemText(hDlg, IDC_STATIC, _TR("&Go to page:"));
         SetDlgItemText(hDlg, IDOK, _TR("Go to page"));
@@ -139,13 +144,8 @@ static INT_PTR CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT message, WPARAM wPa
                 case IDOK:
                     data = (Dialog_GoToPage_Data*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
                     assert(data);
-                    data->pageEnteredOut = 0;
                     editPageNo = GetDlgItem(hDlg, IDC_GOTO_PAGE_EDIT);
-                    newPageNoTxt = win::GetText(editPageNo);
-                    if (newPageNoTxt) {
-                        data->pageEnteredOut = _ttoi(newPageNoTxt);
-                        free(newPageNoTxt);
-                    }
+                    data->newPageLabel = win::GetText(editPageNo);
                     EndDialog(hDlg, IDOK);
                     return TRUE;
 
@@ -158,18 +158,19 @@ static INT_PTR CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT message, WPARAM wPa
     return FALSE;
 }
 
-/* Shows a 'go to page' dialog and returns a page number entered by the user
-   or an invalid page number if user clicked "cancel" button or there was an error. */
-int Dialog_GoToPage(HWND hwnd, int currentPageNo, int pageCount)
+/* Shows a 'go to page' dialog and returns the page label entered by the user
+   or NULL if user clicked the "cancel" button or there was an error.
+   The caller must free() the result. */
+TCHAR *Dialog_GoToPage(HWND hwnd, const TCHAR *currentPageLabel, int pageCount, bool onlyNumeric)
 {
-    Dialog_GoToPage_Data    data;
-    
-    data.currPageNo = currentPageNo;
+    Dialog_GoToPage_Data data;
+    data.currPageLabel = currentPageLabel;
     data.pageCount = pageCount;
-    INT_PTR dialogResult = DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_DIALOG_GOTO_PAGE), hwnd, Dialog_GoToPage_Proc, (LPARAM)&data);
-    if (IDOK == dialogResult)
-        return data.pageEnteredOut;
-    return 0;
+    data.onlyNumeric = onlyNumeric;
+    data.newPageLabel = NULL;
+
+    DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_DIALOG_GOTO_PAGE), hwnd, Dialog_GoToPage_Proc, (LPARAM)&data);
+    return data.newPageLabel;
 }
 
 /* For passing data to/from Find dialog */

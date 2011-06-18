@@ -1598,6 +1598,13 @@ Error:
         UpdateWindow(win.hwndFrame);
     }
     if (win.IsDocLoaded()) {
+        DWORD style = GetWindowLong(win.hwndPageBox, GWL_STYLE);
+        if (win.dm->engine && win.dm->engine->HasPageLabels())
+            style &= ~ES_NUMBER;
+        else
+            style |= ES_NUMBER;
+        SetWindowLong(win.hwndPageBox, GWL_STYLE, style);
+
         win.dm->SetScrollState(ss);
         win.UpdateToolbarState();
     }
@@ -1724,9 +1731,11 @@ void WindowInfo::PageNoChanged(int pageNo)
         return;
 
     if (INVALID_PAGE_NO != pageNo) {
-        ScopedMem<TCHAR> buf(str::Format(_T("%d"), pageNo));
+        ScopedMem<TCHAR> buf(dm->engine->GetPageLabel(pageNo));
         win::SetText(hwndPageBox, buf);
         ToolbarUpdateStateForWindow(*this);
+        if (dm->engine && dm->engine->HasPageLabels())
+            UpdateToolbarPageText(*this, dm->pageCount());
     }
     if (pageNo != currPageNo) {
         UpdateTocSelection(pageNo);
@@ -4132,7 +4141,13 @@ static void OnMenuGoToPage(WindowInfo& win)
         return;
     }
 
-    int newPageNo = Dialog_GoToPage(win.hwndFrame, win.dm->currentPageNo(), win.dm->pageCount());
+    ScopedMem<TCHAR> label(win.dm->engine->GetPageLabel(win.dm->currentPageNo()));
+    ScopedMem<TCHAR> newPageLabel(Dialog_GoToPage(win.hwndFrame, label, win.dm->pageCount(),
+                                                  !win.dm->engine->HasPageLabels()));
+    if (!newPageLabel)
+        return;
+
+    int newPageNo = win.dm->engine->GetPageByLabel(newPageLabel);
     if (win.dm->validPageNo(newPageNo))
         win.dm->goToPage(newPageNo, 0, true);
 }
@@ -5097,7 +5112,7 @@ static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT message, WPARAM wParam, L
         switch (wParam) {
         case VK_RETURN: {
             ScopedMem<TCHAR> buf(win::GetText(win->hwndPageBox));
-            int newPageNo = _ttoi(buf);
+            int newPageNo = win->dm->engine->GetPageByLabel(buf);
             if (win->dm->validPageNo(newPageNo)) {
                 win->dm->goToPage(newPageNo, 0, true);
                 SetFocus(win->hwndFrame);
@@ -5146,15 +5161,22 @@ void UpdateToolbarPageText(WindowInfo& win, int pageCount)
     int pos_y = (r.bottom - pageWndRect.dy) / 2;
 
     TCHAR *buf;
+    SIZE size2 = { 0 };
     if (-1 == pageCount)
         buf = win::GetText(win.hwndPageTotal);
-    else if (0 != pageCount)
-        buf = str::Format(_T(" / %d"), pageCount);
-    else
+    else if (!pageCount)
         buf = str::Dup(_T(""));
+    else if (!win.dm || !win.dm->engine || !win.dm->engine->HasPageLabels())
+        buf = str::Format(_T(" / %d"), pageCount);
+    else {
+        buf = str::Format(_T(" (%d / %d)"), win.dm->currentPageNo(), pageCount);
+        ScopedMem<TCHAR> buf2(str::Format(_T(" (%d / %d)"), pageCount, pageCount));
+        size2 = TextSizeInHwnd(win.hwndPageTotal, buf2);
+    }
 
     win::SetText(win.hwndPageTotal, buf);
-    SIZE size2 = TextSizeInHwnd(win.hwndPageTotal, buf);
+    if (0 == size2.cx)
+        size2 = TextSizeInHwnd(win.hwndPageTotal, buf);
     size2.cx += 6;
     free(buf);
 

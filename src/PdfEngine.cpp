@@ -533,6 +533,90 @@ pdf_outline *pdf_loadattachments(pdf_xref *xref)
     return root.next;
 }
 
+struct PageLabelInfo {
+    int startAt, countFrom;
+    const char *type;
+    fz_obj *prefix;
+};
+
+int cmpPageLabelInfo(const void *a, const void *b)
+{
+    return ((PageLabelInfo *)a)->startAt - ((PageLabelInfo *)b)->startAt;
+}
+
+TCHAR *FormatPageLabel(const char *type, int pageNo, const TCHAR *prefix)
+{
+    if (str::Eq(type, "D"))
+        return str::Format(_T("%s%d"), prefix, pageNo);
+    if (str::EqI(type, "R")) {
+        // roman numbering style
+        ScopedMem<TCHAR> number(str::FormatRomanNumeral(pageNo));
+        if (*type == 'r')
+            str::ToLower(number.Get());
+        return str::Format(_T("%s%s"), prefix, number);
+    }
+    if (str::EqI(type, "A")) {
+        // alphabetic numbering style (A..Z, AA..ZZ, AAA..ZZZ, ...)
+        str::Str<TCHAR> number;
+        number.Append('A' + (pageNo - 1) % 26);
+        for (int i = 1; i < (pageNo - 1) / 26; i++)
+            number.Append(number[0]);
+        if (*type == 'a')
+            str::ToLower(number.Get());
+        return str::Format(_T("%s%s"), prefix, number);
+    }
+    return str::Dup(prefix);
+}
+
+void BuildPageLabelRec(fz_obj *node, int pageCount, Vec<PageLabelInfo>& data)
+{
+    fz_obj *obj;
+    if ((obj = fz_dict_gets(node, "Kids"))) {
+        for (int i = 0; i < fz_array_len(obj); i++)
+            BuildPageLabelRec(fz_array_get(obj, i), pageCount, data);
+    }
+    else if ((obj = fz_dict_gets(node, "Nums"))) {
+        for (int i = 0; i < fz_array_len(obj); i += 2) {
+            fz_obj *info = fz_array_get(obj, i + 1);
+            PageLabelInfo pli;
+            pli.startAt = fz_to_int(fz_array_get(obj, i)) + 1;
+            if (pli.startAt < 1)
+                continue;
+            pli.type = fz_to_name(fz_dict_gets(info, "S"));
+            pli.prefix = fz_dict_gets(info, "P");
+            pli.countFrom = fz_to_int(fz_dict_gets(info, "St"));
+            if (pli.countFrom < 1)
+                pli.countFrom = 1;
+            data.Append(pli);
+        }
+    }
+}
+
+StrVec *BuildPageLabelVec(fz_obj *root, int pageCount)
+{
+    Vec<PageLabelInfo> data;
+    BuildPageLabelRec(root, pageCount, data);
+    data.Sort(cmpPageLabelInfo);
+
+    StrVec *labels = new StrVec();
+    labels->MakeSpaceAt(0, pageCount);
+
+    for (size_t i = 0; i < data.Count(); i++) {
+        int secLen = (i < data.Count() - 1 ? data[i + 1].startAt : pageCount + 1) - data[i].startAt;
+        ScopedMem<TCHAR> prefix(str::conv::FromPdf(data[i].prefix));
+        for (int j = 0; j < secLen; j++) {
+            free(labels->At(data[i].startAt + j - 1));
+            labels->At(data[i].startAt + j - 1) = FormatPageLabel(data[i].type, data[i].countFrom + j, prefix);
+        }
+    }
+
+    for (int i = 0; i < pageCount; i++)
+        if (!labels->At(i))
+            labels->At(i) = str::Dup(_T(""));
+
+    return labels;
+}
+
 ///// Above are extensions to Fitz and MuPDF, now follows PdfEngine /////
 
 struct PdfPageRun {
@@ -597,6 +681,10 @@ public:
     }
     virtual DocToCItem *GetToCTree();
 
+    virtual bool HasPageLabels() { return _pagelabels != NULL; }
+    virtual TCHAR *GetPageLabel(int pageNo);
+    virtual int GetPageByLabel(const TCHAR *label);
+
     virtual char *GetDecryptionKey() const;
     virtual void RunGC();
 
@@ -645,6 +733,7 @@ protected:
     pdf_outline   * _attachments;
     fz_obj        * _info;
     fz_glyph_cache* _drawcache;
+    StrVec        * _pagelabels;
 };
 
 class PdfLink : public PageElement, public PageDestination {
@@ -711,7 +800,7 @@ public:
 
 CPdfEngine::CPdfEngine() : _fileName(NULL), _xref(NULL), _mediaboxes(NULL),
     _outline(NULL), _attachments(NULL), _info(NULL), _pages(NULL),
-    _drawcache(NULL), _decryptionKey(NULL)
+    _drawcache(NULL), _pagelabels(NULL), _decryptionKey(NULL)
 {
     InitializeCriticalSection(&_pagesAccess);
     InitializeCriticalSection(&_xrefAccess);
@@ -731,8 +820,6 @@ CPdfEngine::~CPdfEngine()
         free(_pages);
     }
 
-    if (_mediaboxes)
-        delete[] _mediaboxes;
     if (_outline)
         pdf_free_outline(_outline);
     if (_attachments)
@@ -751,6 +838,9 @@ CPdfEngine::~CPdfEngine()
         assert(_runCache[0]->refs == 1);
         dropPageRun(_runCache[0], true);
     }
+
+    delete[] _mediaboxes;
+    delete _pagelabels;
     free((void*)_fileName);
     free(_decryptionKey);
 
@@ -950,6 +1040,9 @@ bool CPdfEngine::finishLoading()
     _info = fz_dict_gets(_xref->trailer, "Info");
     if (_info)
         _info = fz_copy_dict(pdf_resolve_indirect(_info));
+    fz_obj *pagelabels = fz_dict_gets(fz_dict_gets(_xref->trailer, "Root"), "PageLabels");
+    if (pagelabels)
+        _pagelabels = BuildPageLabelVec(pagelabels, PageCount());
     LeaveCriticalSection(&_xrefAccess);
 
     return true;
@@ -1584,6 +1677,23 @@ bool CPdfEngine::IsImagePage(int pageNo)
     dropPageRun(run);
 
     return hasSingleImage;
+}
+
+TCHAR *CPdfEngine::GetPageLabel(int pageNo)
+{
+    if (!_pagelabels || pageNo < 1 || PageCount() < pageNo)
+        return BaseEngine::GetPageLabel(pageNo);
+
+    return str::Dup(_pagelabels->At(pageNo - 1));
+}
+
+int CPdfEngine::GetPageByLabel(const TCHAR *label)
+{
+    int pageNo = _pagelabels ? _pagelabels->Find(label) + 1 : 0;
+    if (!pageNo)
+        return BaseEngine::GetPageByLabel(label);
+
+    return pageNo;
 }
 
 void CPdfEngine::RunGC()

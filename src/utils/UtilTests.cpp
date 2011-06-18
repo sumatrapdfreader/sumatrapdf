@@ -260,6 +260,29 @@ static void TStrTest()
         str::ToLower(wstr);
         assert(str::Eq(wstr, L"aabbcc... 1-9"));
     }
+
+    struct {
+        int number;
+        const TCHAR *result;
+    } formatRomanData[] = {
+        { 1,    _T("I") },
+        { 3,    _T("III") },
+        { 6,    _T("VI") },
+        { 14,   _T("XIV") },
+        { 49,   _T("XLIX") },
+        { 176,  _T("CLXXVI") },
+        { 499,  _T("CDXCIX") },
+        { 1666, _T("MDCLXVI") },
+        { 2011, _T("MMXI") },
+        { 12345,_T("MMMMMMMMMMMMCCCXLV") },
+        { 0,    NULL },
+        { -133, NULL },
+    };
+
+    for (int i = 0; i < dimof(formatNumData); i++) {
+        ScopedMem<TCHAR> tmp(str::FormatRomanNumeral(formatRomanData[i].number));
+        assert(str::Eq(tmp, formatRomanData[i].result));
+    }
 }
 
 static void FileUtilTest()
