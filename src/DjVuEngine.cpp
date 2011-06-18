@@ -46,18 +46,22 @@ RenderedDjVuPixmap::RenderedDjVuPixmap(char *data, int width, int height) :
 
 class DjVuDestination : public PageDestination {
     // the link format can be any of
-    //   #<pageNo>         e.g. #1 for FirstPage and #13 for page 13
+    //   #[ ]<pageNo>      e.g. #1 for FirstPage and # 13 for page 13
     //   #[+-]<pageCount>  e.g. #+1 for NextPage and #-1 for PrevPage
     //   #filename.djvu    use ResolveNamedDest to get a link in #<pageNo> format
     //   http://example.net/#hyperlink
     char *link;
+
+    bool IsPageLink(const char *link) const {
+        return link[0] == '#' && (ChrIsDigit(link[1]) || link[1] == ' ' && ChrIsDigit(link[2]));
+    }
 
 public:
     DjVuDestination(const char *link) : link(str::Dup(link)) { }
     ~DjVuDestination() { free(link); }
 
     virtual const char *GetType() const {
-        if (str::StartsWith(link, "#") && ChrIsDigit(link[1]))
+        if (IsPageLink(link))
             return "ScrollTo";
         if (str::Eq(link, "#+1"))
             return "NextPage";
@@ -68,7 +72,7 @@ public:
         return NULL;
     }
     virtual int GetDestPageNo() const {
-        if (str::StartsWith(link, "#") && ChrIsDigit(link[1]))
+        if (IsPageLink(link))
             return atoi(link + 1);
         return 0;
     }
