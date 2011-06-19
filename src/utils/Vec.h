@@ -176,8 +176,8 @@ public:
         return els;
     }
 
-    int Find(T el) const {
-        for (size_t i = 0; i < len; i++)
+    int Find(T el, size_t startAt=0) const {
+        for (size_t i = startAt; i < len; i++)
             if (els[i] == el)
                 return (int)i;
         return -1;
@@ -299,7 +299,7 @@ public:
     TCHAR *Join(const TCHAR *joint=NULL) {
         str::Str<TCHAR> tmp(256);
         size_t jointLen = joint ? str::Len(joint) : 0;
-        for (size_t i = 0; i < Count(); i++) {
+        for (size_t i = 0; i < len; i++) {
             TCHAR *s = At(i);
             if (i > 0 && jointLen > 0)
                 tmp.Append(joint, jointLen);
@@ -308,9 +308,8 @@ public:
         return tmp.StealData();
     }
 
-    int Find(const TCHAR *string) const {
-        size_t n = Count();
-        for (size_t i = 0; i < n; i++) {
+    int Find(const TCHAR *string, size_t startAt=0) const {
+        for (size_t i = startAt; i < len; i++) {
             TCHAR *item = At(i);
             if (str::Eq(string, item))
                 return (int)i;
@@ -323,7 +322,7 @@ public:
        e.g. splitting "a,b,,c," by "," results in the list "a", "b", "", "c", ""
        (resp. "a", "b", "c" if separators are collapsed) */
     size_t Split(const TCHAR *string, const TCHAR *separator, bool collapse=false) {
-        size_t start = Count();
+        size_t start = len;
         const TCHAR *next;
 
         while ((next = str::Find(string, separator))) {
@@ -334,7 +333,7 @@ public:
         if (!collapse || *string)
             Append(str::Dup(string));
 
-        return Count() - start;
+        return len - start;
     }
 
     void Sort() { Vec::Sort(cmpAscii); }

@@ -610,9 +610,25 @@ StrVec *BuildPageLabelVec(fz_obj *root, int pageCount)
         }
     }
 
-    for (int i = 0; i < pageCount; i++)
-        if (!labels->At(i))
-            labels->At(i) = str::Dup(_T(""));
+    for (int ix = 0; (ix = labels->Find(NULL, ix)) != -1; ix++)
+        labels->At(ix) = str::Dup(_T(""));
+
+    // ensure that all page labels are unique (by appending a number to duplicates)
+    StrVec dups(*labels);
+    dups.Sort();
+    for (size_t i = 1; i < dups.Count(); i++) {
+        if (!str::Eq(dups[i], dups[i-1]))
+            continue;
+        int ix = labels->Find(dups[i]), counter = 0;
+        while ((ix = labels->Find(dups[i], ix + 1)) != -1) {
+            ScopedMem<TCHAR> unique;
+            do {
+                unique.Set(str::Format(_T("%s.%d"), dups[i], ++counter));
+            } while (labels->Find(unique) != -1);
+            str::ReplacePtr(&labels->At(ix), unique);
+        }
+        for (; i + 1 < dups.Count() && str::Eq(dups[i], dups[i+1]); i++);
+    }
 
     return labels;
 }
