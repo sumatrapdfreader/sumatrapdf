@@ -691,6 +691,12 @@ pdf_load_simple_font(pdf_font_desc **fontdescp, pdf_xref *xref, fz_obj *dict)
 		}
 	}
 
+	/* SumatraPDF: handle symbolic Type 1 fonts with an implicit encoding similar to Adobe Reader*/
+	if (kind == TYPE1 && symbolic)
+		for (i = 0; i < 256; i++)
+			if (etable[i] && estrings[i] && !pdf_lookup_agl(estrings[i]))
+				estrings[i] = (char *)pdf_standard[i];
+
 	fontdesc->encoding = pdf_new_identity_cmap(0, 1);
 	fontdesc->cid_to_gid_len = 256;
 	fontdesc->cid_to_gid = etable;
