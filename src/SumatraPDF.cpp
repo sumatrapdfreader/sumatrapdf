@@ -1744,6 +1744,10 @@ void WindowInfo::PageNoChanged(int pageNo)
         MessageWnd *wnd = messages->GetFirst(NG_PAGE_INFO_HELPER);
         if (wnd) {
             ScopedMem<TCHAR> pageInfo(str::Format(_T("%s %d / %d"), _TR("Page:"), pageNo, dm->pageCount()));
+            if (dm->engine && dm->engine->HasPageLabels()) {
+                ScopedMem<TCHAR> label(dm->engine->GetPageLabel(pageNo));
+                pageInfo.Set(str::Format(_T("%s %s (%d / %d)"), _TR("Page:"), label, pageNo, dm->pageCount()));
+            }
             wnd->MessageUpdate(pageInfo);
         }
     }
@@ -4605,6 +4609,10 @@ static void OnChar(WindowInfo& win, WPARAM key)
         if (!gGlobalPrefs.m_showToolbar || win.fullScreen || PM_ENABLED == win.presentation) {
             int current = win.dm->currentPageNo(), total = win.dm->pageCount();
             ScopedMem<TCHAR> pageInfo(str::Format(_T("%s %d / %d"), _TR("Page:"), current, total));
+            if (win.dm->engine && win.dm->engine->HasPageLabels()) {
+                ScopedMem<TCHAR> label(win.dm->engine->GetPageLabel(current));
+                pageInfo.Set(str::Format(_T("%s %s (%d / %d)"), _TR("Page:"), label, current, total));
+            }
             bool autoDismiss = !IsShiftPressed();
             win.ShowNotification(pageInfo, autoDismiss, false, NG_PAGE_INFO_HELPER);
         }
@@ -5596,12 +5604,15 @@ static HTREEITEM AddTocItemToView(HWND hwnd, DocToCItem *entry, HTREEITEM parent
     tvinsert.itemex.pszText = entry->title;
 
 #ifdef DISPLAY_TOC_PAGE_NUMBERS
-    if (entry->pageNo) {
-        ScopedMem<TCHAR> text(str::Format(_T("%s  %d"), entry->title, entry->pageNo));
+    WindowInfo *win = FindWindowInfoByHwnd(hwnd);
+    if (entry->pageNo && win && win->IsDocLoaded() && win->dm->engine) {
+        ScopedMem<TCHAR> label(win->dm->engine->GetPageLabel(entry->pageNo));
+        ScopedMem<TCHAR> text(str::Format(_T("%s  %s"), entry->title, label));
         tvinsert.itemex.pszText = text;
         return TreeView_InsertItem(hwnd, &tvinsert);
     }
 #endif
+
     return TreeView_InsertItem(hwnd, &tvinsert);
 }
 
@@ -5652,29 +5663,34 @@ static void RelayoutTocItem(LPNMTVCUSTOMDRAW ntvcd)
     TCHAR szText[MAX_PATH];
     TVITEM item;
     item.hItem = hItem;
-    item.mask = TVIF_TEXT;
+    item.mask = TVIF_TEXT | TVIF_PARAM;
     item.pszText = szText;
     item.cchTextMax = MAX_PATH;
     TreeView_GetItem(hTV, &item);
 
     // Draw the page number right-aligned (if there is one)
-    TCHAR *lpPageNo = item.pszText + str::Len(item.pszText);
-    for (lpPageNo--; lpPageNo > item.pszText && ChrIsDigit(*lpPageNo); lpPageNo--);
-    if (lpPageNo > item.pszText && ' ' == *lpPageNo && *(lpPageNo + 1) && ' ' == *--lpPageNo) {
+    WindowInfo *win = FindWindowInfoByHwnd(hTV);
+    DocToCItem *tocItem = (DocToCItem *)item.lParam;
+    ScopedMem<TCHAR> label;
+    if (tocItem->pageNo && win && win->IsDocLoaded() && win->dm->engine) {
+        label.Set(win->dm->engine->GetPageLabel(tocItem->pageNo));
+        label.Set(str::Join(_T("  "), label));
+    }
+    if (label && str::EndsWith(item.pszText, label)) {
         RECT rcPageNo = rcFullWidth;
         InflateRect(&rcPageNo, -2, -1);
 
         SIZE txtSize;
-        GetTextExtentPoint32(ncd->hdc, lpPageNo, str::Len(lpPageNo), &txtSize);
+        GetTextExtentPoint32(ncd->hdc, label, str::Len(label), &txtSize);
         rcPageNo.left = rcPageNo.right - txtSize.cx;
 
         SetTextColor(ncd->hdc, GetSysColor(COLOR_WINDOWTEXT));
         SetBkColor(ncd->hdc, GetSysColor(COLOR_WINDOW));
-        DrawText(ncd->hdc, lpPageNo, -1, &rcPageNo, DT_SINGLELINE | DT_VCENTER);
+        DrawText(ncd->hdc, label, -1, &rcPageNo, DT_SINGLELINE | DT_VCENTER);
 
         // Reduce the size of the label and cut off the page number
         rcItem.right = max(rcItem.right - txtSize.cx, 0);
-        *lpPageNo = 0;
+        szText[str::Len(szText) - str::Len(label)] = '\0';
     }
 
     SetTextColor(ncd->hdc, ntvcd->clrText);
@@ -5688,7 +5704,7 @@ static void RelayoutTocItem(LPNMTVCUSTOMDRAW ntvcd)
         DrawFocusRect(ncd->hdc, &rcItem);
 
     InflateRect(&rcItem, -2, -1);
-    DrawText(ncd->hdc, item.pszText, -1, &rcItem, DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_WORD_ELLIPSIS);
+    DrawText(ncd->hdc, szText, -1, &rcItem, DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_WORD_ELLIPSIS);
 }
 #endif
 
