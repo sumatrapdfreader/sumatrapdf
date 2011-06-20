@@ -77,8 +77,8 @@ jdiv_round_up (long a, long b)
 }
 
 
-GLOBAL(size_t)
-jround_up (size_t a, size_t b)
+GLOBAL(long)
+jround_up (long a, long b)
 /* Compute a rounded up to next multiple of b, ie, ceil(a/b)*b */
 /* Assumes a >= 0, b > 0 */
 {

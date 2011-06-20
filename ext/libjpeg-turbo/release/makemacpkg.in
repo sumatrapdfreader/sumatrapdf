@@ -26,8 +26,8 @@ UNIVERSAL=0
 PACKAGE_NAME=@PACKAGE_NAME@
 VERSION=@VERSION@
 BUILD=@BUILD@
-SRCDIR=@srcdir@
-BUILDDIR32=@srcdir@/osxx86
+SRCDIR=@abs_top_srcdir@
+BUILDDIR32=@abs_top_srcdir@/osxx86
 if [ $# -gt 0 ]; then
 	if [ "$1" = "universal" ]; then
 		UNIVERSAL=1
@@ -36,8 +36,8 @@ if [ $# -gt 0 ]; then
 fi
 PACKAGEMAKER=/Developer/Applications/Utilities/PackageMaker.app/Contents/MacOS/PackageMaker
 
-if [ -f $PACKAGE_NAME.dmg ]; then
-	rm -f $PACKAGE_NAME.dmg
+if [ -f $PACKAGE_NAME-$VERSION.dmg ]; then
+	rm -f $PACKAGE_NAME-$VERSION.dmg
 fi
 
 umask 022
@@ -134,15 +134,9 @@ chmod 1775 $PKGROOT/Library
 chmod 775 $PKGROOT/Library/Documentation 
 mkdir -p $TMPDIR/pkg/Resources 
 
-(cat $SRCDIR/release/Description.plist.tmpl | sed s/{__VERSION}/$VERSION/g \
-	| sed s/{__APPNAME}/$PACKAGE_NAME/g \
-	> $TMPDIR/pkg/Description.plist) 
-(cat $SRCDIR/release/Info.plist.tmpl | sed s/{__VERSION}/$VERSION/g	\
-	| sed s/{__BUILD}/$BUILD/g > $TMPDIR/pkg/Info.plist) 
-(cat $SRCDIR/release/uninstall.sh.tmpl \
-	| sed s/{__APPNAME}/$PACKAGE_NAME/g \
-	> $PKGROOT/opt/$PACKAGE_NAME/bin/uninstall) 
-chmod 755 $PKGROOT/opt/$PACKAGE_NAME/bin/uninstall
+cp pkgscripts/Description.plist $TMPDIR/pkg/
+cp pkgscripts/Info.plist $TMPDIR/pkg/
+install -m 755 pkgscripts/uninstall $PKGROOT/opt/$PACKAGE_NAME/bin/
 
 install -m 644 $SRCDIR/LICENSE.txt $PKGROOT/Library/Documentation/$PACKAGE_NAME/LICENSE.txt 
 install -m 644 $SRCDIR/LGPL.txt $PKGROOT/Library/Documentation/$PACKAGE_NAME/LGPL.txt 
@@ -163,8 +157,7 @@ install -m 644 $SRCDIR/release/uninstall.applescript $TMPDIR
 sudo osacompile -t APPL -o "$TMPDIR/dmg/Uninstall $PACKAGE_NAME.app" $TMPDIR/uninstall.applescript 
 sudo chown -R $USER "$TMPDIR/dmg/Uninstall $PACKAGE_NAME.app" 
 hdiutil create -fs HFS+ -volname $PACKAGE_NAME-$VERSION \
-	-srcfolder "$TMPDIR/dmg" \
-	$TMPDIR/$PACKAGE_NAME.dmg 
-cp $TMPDIR/$PACKAGE_NAME.dmg . 
+	-srcfolder "$TMPDIR/dmg" $TMPDIR/$PACKAGE_NAME-$VERSION.dmg 
+cp $TMPDIR/$PACKAGE_NAME-$VERSION.dmg . 
 
 exit

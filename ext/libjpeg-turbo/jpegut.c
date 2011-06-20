@@ -219,7 +219,7 @@ int checkbuf(unsigned char *buf, int w, int h, int ps, int subsamp, int flags)
 	}}
 
 #define checkval255(v) { \
-	if(v<254 && !(v==217 && i==0 && j==21)) { \
+	if(v<254) { \
 		printf("\nComp. %s at %d,%d should be 255, not %d\n", #v, i, j, v); \
 		retval=0;  goto bailout; \
 	}}

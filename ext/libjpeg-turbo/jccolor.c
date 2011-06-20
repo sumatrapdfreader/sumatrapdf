@@ -3,7 +3,7 @@
  *
  * Copyright (C) 1991-1996, Thomas G. Lane.
  * Copyright 2009 Pierre Ossman <ossman@cendio.se> for Cendio AB
- * Copyright 2009 D. R. Commander
+ * Copyright 2009-2011 D. R. Commander
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -259,6 +259,7 @@ rgb_gray_convert (j_compress_ptr cinfo,
 		  JDIMENSION output_row, int num_rows)
 {
   #if BITS_IN_JSAMPLE != 8
+  my_cconvert_ptr cconvert = (my_cconvert_ptr) cinfo->cconvert;
   register INT32 * ctab = cconvert->rgb_ycc_tab;
   #endif
   register JSAMPROW inptr;

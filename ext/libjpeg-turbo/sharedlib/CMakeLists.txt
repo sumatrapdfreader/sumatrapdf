@@ -40,13 +40,13 @@ endif()
 add_executable(cjpeg ../cjpeg.c ../cdjpeg.c ../rdbmp.c ../rdgif.c ../rdppm.c
   ../rdswitch.c ../rdtarga.c)
 set_property(TARGET cjpeg PROPERTY COMPILE_FLAGS
-  "-DBMP_SUPPORTED -DGIF_SUPPORTED -DPPM_SUPPORTED -DTARGA_SUPPORTED")
+  "-DBMP_SUPPORTED -DGIF_SUPPORTED -DPPM_SUPPORTED -DTARGA_SUPPORTED -DUSE_SETMODE")
 target_link_libraries(cjpeg jpeg)
 
 add_executable(djpeg ../djpeg.c ../cdjpeg.c ../rdcolmap.c ../rdswitch.c
   ../wrbmp.c ../wrgif.c ../wrppm.c ../wrtarga.c)
 set_property(TARGET djpeg PROPERTY COMPILE_FLAGS
-  "-DBMP_SUPPORTED -DGIF_SUPPORTED -DPPM_SUPPORTED -DTARGA_SUPPORTED")
+  "-DBMP_SUPPORTED -DGIF_SUPPORTED -DPPM_SUPPORTED -DTARGA_SUPPORTED -DUSE_SETMODE")
 target_link_libraries(djpeg jpeg)
 
 add_executable(jpegtran ../jpegtran.c ../cdjpeg.c ../rdswitch.c ../transupp.c)

@@ -8,7 +8,7 @@ Summary: A SIMD-accelerated JPEG codec which provides both the libjpeg and Turbo
 Name: @PACKAGE_NAME@
 Version: @VERSION@
 Vendor: The libjpeg-turbo Project
-URL: http://libjpeg-turbo.VirtualGL.org
+URL: http://www.libjpeg-turbo.org
 Group: System Environment/Libraries
 #-->Source0: http://prdownloads.sourceforge.net/libjpeg-turbo/libjpeg-turbo-%{version}.tar.gz
 Release: @BUILD@
@@ -43,7 +43,7 @@ available to a broader range of users and developers.
 #-->%setup -q
 
 #-->%build
-#-->configure libdir=/opt/%{name}/%{__lib} mandir=/opt/%{name}/man JPEG_LIB_VERSION=@JPEG_LIB_VERSION@ SO_MAJOR_VERSION=@SO_MAJOR_VERSION@ SO_MINOR_VERSION=@SO_MINOR_VERSION@ --with-pic
+#-->./configure libdir=/opt/%{name}/%{__lib} mandir=/opt/%{name}/man JPEG_LIB_VERSION=@JPEG_LIB_VERSION@ SO_MAJOR_VERSION=@SO_MAJOR_VERSION@ SO_MINOR_VERSION=@SO_MINOR_VERSION@ --with-pic
 #-->make DESTDIR=$RPM_BUILD_ROOT libdir=/opt/%{name}/%{__lib} mandir=/opt/%{name}/man
 
 %install

@@ -623,6 +623,7 @@ decode_mcu_slow (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
   if (val0 == 0xFF) {                                   \
     buffer++;                                           \
     if (val1 != 0) {                                    \
+      cinfo->unread_marker = val1;                      \
       buffer   -= 2;                                    \
       get_buffer      &= ~0xFF;                         \
     }                                                   \
@@ -739,6 +740,11 @@ decode_mcu_fast (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
     }
   }
 
+  if (cinfo->unread_marker != 0) {
+    cinfo->unread_marker = 0;
+    return FALSE;
+  }
+
   br_state.bytes_in_buffer -= (buffer - br_state.next_input_byte);
   br_state.next_input_byte = buffer;
   BITREAD_SAVE_STATE(cinfo,entropy->bitstate);
@@ -778,7 +784,8 @@ decode_mcu (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
     usefast = 0;
   }
 
-  if (cinfo->src->bytes_in_buffer < BUFSIZE * cinfo->blocks_in_MCU)
+  if (cinfo->src->bytes_in_buffer < BUFSIZE * cinfo->blocks_in_MCU
+    || cinfo->unread_marker != 0)
     usefast = 0;
 
   /* If we've run out of data, just leave the MCU set to zeroes.
@@ -787,9 +794,10 @@ decode_mcu (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
   if (! entropy->pub.insufficient_data) {
 
     if (usefast) {
-      if (!decode_mcu_fast(cinfo, MCU_data)) return FALSE;
+      if (!decode_mcu_fast(cinfo, MCU_data)) goto use_slow;
     }
     else {
+      use_slow:
       if (!decode_mcu_slow(cinfo, MCU_data)) return FALSE;
     }
 

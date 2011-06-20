@@ -27,8 +27,8 @@ PACKAGE_NAME=@PACKAGE_NAME@
 VERSION=@VERSION@
 BUILD=@BUILD@
 PKGARCH=@DEBARCH@
-SRCDIR=@srcdir@
-BUILDDIR32=@srcdir@/solx86
+SRCDIR=@abs_top_srcdir@
+BUILDDIR32=@abs_top_srcdir@/solx86
 if [ $# -gt 0 ]; then
 	if [ "$1" = "combined" ]; then
 		COMBINED=1
@@ -41,9 +41,7 @@ TMPDIR=`mktemp -d /tmp/$PACKAGE_NAME-build.XXXXXX`
 rm -f $PACKAGE_NAME.pkg.bz2
 cp $SRCDIR/release/copyright $TMPDIR
 touch $TMPDIR/depend
-cat $SRCDIR/release/pkginfo.tmpl | sed s/{__VERSION}/$VERSION/g \
-	| sed s/{__BUILD}/$BUILD/g | sed s/{__APPNAME}/$PACKAGE_NAME/g \
-	| sed s/{__PKGNAME}/$PACKAGE_NAME/g > $TMPDIR/pkginfo 
+cp pkgscripts/pkginfo $TMPDIR/pkginfo 
 
 if [ "$PKGARCH" = "i386" ]; then
 	__LIB=lib
@@ -132,8 +130,8 @@ f none $PACKAGE_NAME/doc/usage.txt 0644 root bin
 EOF
 
 pkgmk -o -r $TMPDIR/opt -d $TMPDIR -a i386 -f $TMPDIR/proto
-pkgtrans -s $TMPDIR $TMPDIR/$PACKAGE_NAME.pkg $PACKAGE_NAME
-bzip2 $TMPDIR/$PACKAGE_NAME.pkg
-cp $TMPDIR/$PACKAGE_NAME.pkg.bz2 . 
+pkgtrans -s $TMPDIR $TMPDIR/$PACKAGE_NAME-$VERSION.pkg $PACKAGE_NAME
+bzip2 $TMPDIR/$PACKAGE_NAME-$VERSION.pkg
+cp $TMPDIR/$PACKAGE_NAME-$VERSION.pkg.bz2 . 
 
 exit

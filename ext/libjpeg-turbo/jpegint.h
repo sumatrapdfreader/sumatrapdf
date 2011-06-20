@@ -375,7 +375,7 @@ EXTERN(void) jinit_memory_mgr JPP((j_common_ptr cinfo));
 
 /* Utility routines in jutils.c */
 EXTERN(long) jdiv_round_up JPP((long a, long b));
-EXTERN(size_t) jround_up JPP((size_t a, size_t b));
+EXTERN(long) jround_up JPP((long a, long b));
 EXTERN(void) jcopy_sample_rows JPP((JSAMPARRAY input_array, int source_row,
 				    JSAMPARRAY output_array, int dest_row,
 				    int num_rows, JDIMENSION num_cols));

@@ -1,7 +1,7 @@
 !include x64.nsh
 Name "@CMAKE_PROJECT_NAME@ SDK for @INST_PLATFORM@"
 OutFile "@CMAKE_BINARY_DIR@\${BUILDDIR}@INST_NAME@.exe"
-InstallDir c:\@INST_NAME@
+InstallDir c:\@INST_DIR@
 
 SetCompressor bzip2
 
@@ -45,12 +45,12 @@ Section "@CMAKE_PROJECT_NAME@ SDK for @INST_PLATFORM@ (required)"
 !else
 	File "@CMAKE_BINARY_DIR@\sharedlib\${BUILDDIR}jpeg@DLL_VERSION@.dll"
 !endif
-	File "@CMAKE_BINARY_DIR@\sharedlib\cjpeg.exe"
-	File "@CMAKE_BINARY_DIR@\sharedlib\djpeg.exe"
-	File "@CMAKE_BINARY_DIR@\sharedlib\jpegtran.exe"
-	File "@CMAKE_BINARY_DIR@\jpgtest.exe"
-	File "@CMAKE_BINARY_DIR@\rdjpgcom.exe"
-	File "@CMAKE_BINARY_DIR@\wrjpgcom.exe"
+	File "@CMAKE_BINARY_DIR@\sharedlib\${BUILDDIR}cjpeg.exe"
+	File "@CMAKE_BINARY_DIR@\sharedlib\${BUILDDIR}djpeg.exe"
+	File "@CMAKE_BINARY_DIR@\sharedlib\${BUILDDIR}jpegtran.exe"
+	File "@CMAKE_BINARY_DIR@\${BUILDDIR}jpgtest.exe"
+	File "@CMAKE_BINARY_DIR@\${BUILDDIR}rdjpgcom.exe"
+	File "@CMAKE_BINARY_DIR@\${BUILDDIR}wrjpgcom.exe"
 	SetOutPath $INSTDIR\lib
 !ifdef GCC
 	File "@CMAKE_BINARY_DIR@\libturbojpeg.dll.a"
@@ -77,12 +77,12 @@ Section "@CMAKE_PROJECT_NAME@ SDK for @INST_PLATFORM@ (required)"
 	File "@CMAKE_SOURCE_DIR@\LICENSE.txt"
 	File "@CMAKE_SOURCE_DIR@\usage.txt"
 
-	WriteRegStr HKLM "SOFTWARE\@INST_NAME@ @VERSION@" "Install_Dir" "$INSTDIR"
+	WriteRegStr HKLM "SOFTWARE\@INST_DIR@ @VERSION@" "Install_Dir" "$INSTDIR"
 
-	WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\@INST_NAME@ @VERSION@" "DisplayName" "@CMAKE_PROJECT_NAME@ SDK v@VERSION@ for @INST_PLATFORM@"
-	WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\@INST_NAME@ @VERSION@" "UninstallString" '"$INSTDIR\uninstall_@VERSION@.exe"'
-	WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\@INST_NAME@ @VERSION@" "NoModify" 1
-	WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\@INST_NAME@ @VERSION@" "NoRepair" 1
+	WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\@INST_DIR@ @VERSION@" "DisplayName" "@CMAKE_PROJECT_NAME@ SDK v@VERSION@ for @INST_PLATFORM@"
+	WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\@INST_DIR@ @VERSION@" "UninstallString" '"$INSTDIR\uninstall_@VERSION@.exe"'
+	WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\@INST_DIR@ @VERSION@" "NoModify" 1
+	WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\@INST_DIR@ @VERSION@" "NoRepair" 1
 	WriteUninstaller "uninstall_@VERSION@.exe"
 SectionEnd
 
@@ -95,8 +95,8 @@ Section "Uninstall"
 
 	SetShellVarContext all
 
-	DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\@INST_NAME@ @VERSION@"
-	DeleteRegKey HKLM "SOFTWARE\@INST_NAME@ @VERSION@"
+	DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\@INST_DIR@ @VERSION@"
+	DeleteRegKey HKLM "SOFTWARE\@INST_DIR@ @VERSION@"
 
 !ifdef GCC
 	Delete $INSTDIR\bin\libjpeg-@DLL_VERSION@.dll

@@ -10,10 +10,6 @@ else()
     -I${CMAKE_CURRENT_SOURCE_DIR}/)
 endif()
 
-if(MSVC)
-  set(NAFLAGS ${NAFLAGS} -DMSVC)
-endif()
-
 # This only works if building from the command line.  There is currently no way
 # to set a variable's value based on the build type when using the MSVC IDE.
 if(CMAKE_BUILD_TYPE STREQUAL "Debug"
@@ -36,7 +32,7 @@ else()
 endif()
 
 if(MSVC_IDE)
-  set(OBJDIR "${CMAKE_CURRENT_BINARY_DIR}/$(OutDir)")
+  set(OBJDIR "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}")
 else()
   set(OBJDIR ${CMAKE_CURRENT_BINARY_DIR})
 endif()

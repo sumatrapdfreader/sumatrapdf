@@ -300,6 +300,7 @@ DLLEXPORT int DLLCALL tjCompress(tjhandle h,
 		}
 		*size=yuvsize;
 		cinfo->next_scanline+=height;
+		jpeg_abort_compress(&j->cinfo);
 	}
 	else
 	{
@@ -315,11 +316,10 @@ DLLEXPORT int DLLCALL tjCompress(tjhandle h,
 			jpeg_write_scanlines(&j->cinfo, &row_pointer[j->cinfo.next_scanline],
 				j->cinfo.image_height-j->cinfo.next_scanline);
 		}
-	}
-	jpeg_finish_compress(&j->cinfo);
-	if(!(flags&TJ_YUV))
+		jpeg_finish_compress(&j->cinfo);
 		*size=TJBUFSIZE(j->cinfo.image_width, j->cinfo.image_height)
 			-(unsigned long)(j->jdms.free_in_buffer);
+	}
 
 	bailout:
 	if(j->cinfo.global_state>CSTATE_START) jpeg_abort_compress(&j->cinfo);

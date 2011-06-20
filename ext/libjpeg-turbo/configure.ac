@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.56])
-AC_INIT([libjpeg-turbo], [1.1.0])
+AC_INIT([libjpeg-turbo], [1.1.1])
 BUILD=`date +%Y%m%d`
 
 AM_INIT_AUTOMAKE([-Wall foreign dist-bzip2])
@@ -97,14 +97,6 @@ AC_TRY_LINK(
 AC_CHECK_FUNCS([memset memcpy], [],
 	[AC_DEFINE([NEED_BSD_STRINGS], 1,
 		   [Define if you have BSD-like bzero and bcopy])])
-
-# Set flags to indicate platform
-case "$host_os" in
-  cygwin* | mingw* | pw32* | interix*)
-    is_win32=1
-  ;;
-esac
-AM_CONDITIONAL([IS_WIN32], [test "x$is_win32" = "x1"])
 
 AC_MSG_CHECKING([libjpeg API version])
 AC_ARG_VAR(JPEG_LIB_VERSION, [libjpeg API version (62, 70, or 80)])
@@ -206,7 +198,7 @@ AM_CONDITIONAL([WITH_ARITH], [test "x$with_arith_dec" != "xno" -o "x$with_arith_
 
 # SIMD is optional
 AC_ARG_WITH([simd],
-    AC_HELP_STRING([--without-simd],[Omit accelerated SIMD routines.]))
+    AC_HELP_STRING([--without-simd],[Omit SIMD extensions.]))
 if test "x${with_simd}" != "xno"; then
   # Check if we're on a supported CPU
   AC_MSG_CHECKING([if we have SIMD optimisations for cpu type])
@@ -260,9 +252,16 @@ AC_DEFINE_UNQUOTED([BUILD], "$BUILD", [Build number])
 # jconfig.h is a minimal version that allows this package to be built
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_HEADERS([jconfig.h])
-AC_CONFIG_FILES([libjpeg-turbo.spec:release/libjpeg-turbo.spec.in])
-AC_CONFIG_FILES([makemacpkg:release/makemacpkg.in])
-AC_CONFIG_FILES([makesunpkg:release/makesunpkg.in])
+AC_CONFIG_FILES([pkgscripts/libjpeg-turbo.spec:release/libjpeg-turbo.spec.in])
+AC_CONFIG_FILES([pkgscripts/makecygwinpkg:release/makecygwinpkg.in])
+AC_CONFIG_FILES([pkgscripts/makedpkg:release/makedpkg.in])
+AC_CONFIG_FILES([pkgscripts/deb-control:release/deb-control.in])
+AC_CONFIG_FILES([pkgscripts/makemacpkg:release/makemacpkg.in])
+AC_CONFIG_FILES([pkgscripts/Description.plist:release/Description.plist.in])
+AC_CONFIG_FILES([pkgscripts/Info.plist:release/Info.plist.in])
+AC_CONFIG_FILES([pkgscripts/uninstall:release/uninstall.in])
+AC_CONFIG_FILES([pkgscripts/makesunpkg:release/makesunpkg.in])
+AC_CONFIG_FILES([pkgscripts/pkginfo:release/pkginfo.in])
 AC_CONFIG_FILES([libjpeg.map])
 AC_CONFIG_FILES([Makefile simd/Makefile])
 AC_OUTPUT

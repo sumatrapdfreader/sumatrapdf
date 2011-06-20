@@ -12,21 +12,25 @@ Build Requirements
 -- libtool 1.4 or later
 
 -- NASM
-   * 0.98 or later is required for a 32-bit build
-   * NASM 2.05 or later is required for a 64-bit build
+   * 0.98, or 2.01 or later is required for a 32-bit build
+   * NASM 2.00 or later is required for a 64-bit build
    * NASM 2.07 or later is required for a 64-bit build on OS X.  This can be
      obtained from MacPorts (http://www.macports.org/).
 
-   The NASM 2.05 RPMs do not work on older Linux systems, such as Red Hat
-   Enterprise Linux 4.  On such systems, you can easily build and install NASM
-   2.05 from the source RPM by executing the following as root:
+   The binary RPMs released by the NASM project do not work on older Linux
+   systems, such as Red Hat Enterprise Linux 4.  On such systems, you can
+   easily build and install NASM from a source RPM by downloading one of the
+   SRPMs from
+
+   http://www.nasm.us/pub/nasm/releasebuilds
+
+   and executing the following as root:
 
      ARCH=`uname -m`
-     wget http://www.nasm.us/pub/nasm/releasebuilds/2.05.01/nasm-2.05.01-1.src.rpm
-     rpmbuild --rebuild nasm-2.05.01-1.src.rpm
-     rpm -Uvh /usr/src/redhat/RPMS/$ARCH/nasm-2.05.01-1.$ARCH.rpm
+     rpmbuild --rebuild nasm-{version}.src.rpm
+     rpm -Uvh /usr/src/redhat/RPMS/$ARCH/nasm-{version}.$ARCH.rpm
 
-   NOTE: NASM build will fail if texinfo is not installed.
+   NOTE: the NASM build will fail if texinfo is not installed.
 
 -- GCC v4.1 or later recommended for best performance
 

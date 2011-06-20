@@ -5,7 +5,7 @@
 cmake_minimum_required(VERSION 2.6)
 
 project(libjpeg-turbo C)
-set(VERSION 1.1.0)
+set(VERSION 1.1.1)
 
 if(MINGW OR CYGWIN)
   execute_process(COMMAND "date" "+%Y%m%d" OUTPUT_VARIABLE BUILD)
@@ -32,17 +32,11 @@ endif()
 
 message(STATUS "VERSION = ${VERSION}, BUILD = ${BUILD}")
 
-if(NOT DEFINED WITH_SIMD)
-  set(WITH_SIMD 1)
-endif()
-
-if(NOT DEFINED WITH_ARITH_ENC)
-  set(WITH_ARITH_ENC 1)
-endif()
-
-if(NOT DEFINED WITH_ARITH_DEC)
-  set(WITH_ARITH_DEC 1)
-endif()
+option(WITH_SIMD "Include SIMD extensions" TRUE)
+option(WITH_ARITH_ENC "Include arithmetic encoding support" TRUE)
+option(WITH_ARITH_DEC "Include arithmetic decoding support" TRUE)
+option(WITH_JPEG7 "Emulate libjpeg v7 API/ABI (this makes libjpeg-turbo backward incompatible with libjpeg v6b)" FALSE)
+option(WITH_JPEG8 "Emulate libjpeg v8 API/ABI (this makes libjpeg-turbo backward incompatible with libjpeg v6b)" FALSE)
 
 if(WITH_ARITH_ENC)
   set(C_ARITH_CODING_SUPPORTED 1)
@@ -184,13 +178,13 @@ target_link_libraries(jpgtest-static turbojpeg-static)
 add_executable(cjpeg-static cjpeg.c cdjpeg.c rdbmp.c rdgif.c rdppm.c rdswitch.c
   rdtarga.c)
 set_property(TARGET cjpeg-static PROPERTY COMPILE_FLAGS
-  "-DBMP_SUPPORTED -DGIF_SUPPORTED -DPPM_SUPPORTED -DTARGA_SUPPORTED")
+  "-DBMP_SUPPORTED -DGIF_SUPPORTED -DPPM_SUPPORTED -DTARGA_SUPPORTED -DUSE_SETMODE")
 target_link_libraries(cjpeg-static jpeg-static)
 
 add_executable(djpeg-static djpeg.c cdjpeg.c rdcolmap.c rdswitch.c wrbmp.c wrgif.c
   wrppm.c wrtarga.c)
 set_property(TARGET djpeg-static PROPERTY COMPILE_FLAGS
-  "-DBMP_SUPPORTED -DGIF_SUPPORTED -DPPM_SUPPORTED -DTARGA_SUPPORTED")
+  "-DBMP_SUPPORTED -DGIF_SUPPORTED -DPPM_SUPPORTED -DTARGA_SUPPORTED -DUSE_SETMODE")
 target_link_libraries(djpeg-static jpeg-static)
 
 add_executable(jpegtran-static jpegtran.c cdjpeg.c rdswitch.c transupp.c)
@@ -301,24 +295,26 @@ add_test(jpegtran-static-crop-cmp ${CMAKE_COMMAND} -E compare_files ${CMAKE_SOUR
 # Installer
 #
 
-set(INST_NAME ${CMAKE_PROJECT_NAME})
-
 if(MSVC)
   set(INST_PLATFORM "Visual C++")
+  set(INST_NAME ${CMAKE_PROJECT_NAME}-${VERSION}-vc)
+  set(INST_DIR ${CMAKE_PROJECT_NAME})
 elseif(MINGW)
   set(INST_PLATFORM GCC)
-  set(INST_NAME ${INST_NAME}-gcc)
+  set(INST_NAME ${CMAKE_PROJECT_NAME}-${VERSION}-gcc)
+  set(INST_DIR ${CMAKE_PROJECT_NAME}-gcc)
   set(INST_DEFS -DGCC)
 endif()
 
 if(64BIT)
   set(INST_PLATFORM "${INST_PLATFORM} 64-bit")
   set(INST_NAME ${INST_NAME}64)
+  set(INST_DIR ${INST_DIR}64)
   set(INST_DEFS ${INST_DEFS} -DWIN64)
 endif()
 
 if(MSVC_IDE)
-  set(INST_DEFS ${INST_DEFS} "-DBUILDDIR=$(OutDir)\\")
+  set(INST_DEFS ${INST_DEFS} "-DBUILDDIR=${CMAKE_CFG_INTDIR}\\")
 else()
   set(INST_DEFS ${INST_DEFS} "-DBUILDDIR=")
 endif()
@@ -327,7 +323,8 @@ configure_file(release/libjpeg-turbo.nsi.in libjpeg-turbo.nsi @ONLY)
 
 add_custom_target(installer
   makensis -nocd ${INST_DEFS} libjpeg-turbo.nsi
-  DEPENDS jpeg jpeg-static turbojpeg turbojpeg-static
+  DEPENDS jpeg jpeg-static turbojpeg turbojpeg-static rdjpgcom wrjpgcom
+    cjpeg djpeg jpegtran jpgtest
   SOURCES libjpeg-turbo.nsi)
 
 install(TARGETS jpeg-static turbojpeg turbojpeg-static rdjpgcom wrjpgcom jpgtest

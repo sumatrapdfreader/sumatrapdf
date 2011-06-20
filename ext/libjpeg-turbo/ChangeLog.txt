@@ -1,3 +1,39 @@
+1.1.1
+=====
+
+[1] Fixed a 1-pixel error in row 0, column 21 of the luminance plane generated
+by tjEncodeYUV().
+
+[2] libjpeg-turbo's accelerated Huffman decoder previously ignored unexpected
+markers found in the middle of the JPEG data stream during decompression.  It
+will now hand off decoding of a particular block to the unaccelerated Huffman
+decoder if an unexpected marker is found, so that the unaccelerated Huffman
+decoder can generate an appropriate warning.
+
+[3] Older versions of MinGW64 prefixed symbol names with underscores by
+default, which differed from the behavior of 64-bit Visual C++.  MinGW64 1.0
+has adopted the behavior of 64-bit Visual C++ as the default, so to accommodate
+this, the libjpeg-turbo SIMD function names are no longer prefixed with an
+underscore when building with MinGW64.  This means that, when building
+libjpeg-turbo with older versions of MinGW64, you will now have to add
+-fno-leading-underscore to the CFLAGS.
+
+[4] Fixed a regression bug in the NSIS script that caused the Windows installer
+build to fail when using the Visual Studio IDE.
+
+[5] Fixed a bug in jpeg_read_coefficients() whereby it would not initialize
+cinfo->image_width and cinfo->image_height if libjpeg v7 or v8 emulation was
+enabled.  This specifically caused the jpegoptim program to fail if it was
+linked against a version of libjpeg-turbo that was built with libjpeg v7 or v8
+emulation.
+
+[6] Eliminated excessive I/O overhead that occurred when reading BMP files in
+cjpeg.
+
+[7] Eliminated errors in the output of cjpeg on Windows that occurred when the
+application was invoked using I/O redirection (cjpeg <inputfile >output.jpg).
+
+
 1.1.0
 =====
 
@@ -18,7 +54,7 @@ It also ensures that the library can avoid the performance pitfall created by
 [3] Ported jpgtest.cxx to pure C to avoid the need for a C++ compiler.
 
 [4] Fixed visual artifacts in grayscale JPEG compression caused by a typo in
-the RGB-to-chrominance lookup tables.
+the RGB-to-luminance lookup tables.
 
 [5] The Windows distribution packages now include the libjpeg run-time programs
 (cjpeg, etc.)

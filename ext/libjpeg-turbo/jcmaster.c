@@ -75,7 +75,9 @@ initial_setup (j_compress_ptr cinfo, boolean transcode_only)
   JDIMENSION jd_samplesperrow;
 
 #if JPEG_LIB_VERSION >= 70
+#if JPEG_LIB_VERSION >= 80
   if (!transcode_only)
+#endif
     jpeg_calc_jpeg_dimensions(cinfo);
 #endif
 

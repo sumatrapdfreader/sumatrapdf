@@ -48,9 +48,7 @@
 ;
 %define SEG_TEXT    .text  align=16 public use64 class=CODE
 %define SEG_CONST   .rdata align=16 public use64 class=CONST
-%ifdef MSVC
 %define EXTN(name)  name			; foo() -> foo
-%endif
 
 %elifdef OBJ32	; ----(nasm -fobj -DOBJ32 ...)----------
 ; * Borland C++ (Win32)

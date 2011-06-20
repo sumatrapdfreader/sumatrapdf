@@ -169,15 +169,19 @@ testclean:
 	rm -f *_GRAYQ[0-9]*.bmp
 	rm -f *_GRAYQ[0-9]*.ppm
 	rm -f *_GRAYQ[0-9]*.jpg
+	rm -f *_GRAY.yuv
 	rm -f *_420Q[0-9]*.bmp
 	rm -f *_420Q[0-9]*.ppm
 	rm -f *_420Q[0-9]*.jpg
+	rm -f *_420.yuv
 	rm -f *_422Q[0-9]*.bmp
 	rm -f *_422Q[0-9]*.ppm
 	rm -f *_422Q[0-9]*.jpg
+	rm -f *_422.yuv
 	rm -f *_444Q[0-9]*.bmp
 	rm -f *_444Q[0-9]*.ppm
 	rm -f *_444Q[0-9]*.jpg
+	rm -f *_444.yuv
 
 if X86_64
 
@@ -207,11 +211,12 @@ rpm: all
 	TMPDIR=`mktemp -d /tmp/${PACKAGE_NAME}-build.XXXXXX`; \
 	mkdir -p $$TMPDIR/RPMS; \
 	ln -fs `pwd` $$TMPDIR/BUILD; \
-	rm -f ${PACKAGE_NAME}.${RPMARCH}.rpm; \
+	rm -f ${PACKAGE_NAME}-${VERSION}.${RPMARCH}.rpm; \
 	rpmbuild -bb --define "_blddir $$TMPDIR/buildroot"  \
 		--define "_topdir $$TMPDIR" --define "_srcdir ${srcdir}" \
-		--target ${RPMARCH} libjpeg-turbo.spec; \
-	cp $$TMPDIR/RPMS/${RPMARCH}/${PACKAGE_NAME}-${VERSION}-${BUILD}.${RPMARCH}.rpm ${PACKAGE_NAME}.${RPMARCH}.rpm; \
+		--target ${RPMARCH} pkgscripts/libjpeg-turbo.spec; \
+	cp $$TMPDIR/RPMS/${RPMARCH}/${PACKAGE_NAME}-${VERSION}-${BUILD}.${RPMARCH}.rpm \
+		${PACKAGE_NAME}-${VERSION}.${RPMARCH}.rpm; \
 	rm -rf $$TMPDIR
 
 srpm: dist-gzip
@@ -221,38 +226,38 @@ srpm: dist-gzip
 	mkdir -p $$TMPDIR/BUILD; \
 	mkdir -p $$TMPDIR/SOURCES; \
 	mkdir -p $$TMPDIR/SPECS; \
-	rm -f ${PACKAGE_NAME}.src.rpm; \
+	rm -f ${PACKAGE_NAME}-${VERSION}.src.rpm; \
 	cp ${PACKAGE_NAME}-${VERSION}.tar.gz $$TMPDIR/SOURCES; \
-	cat libjpeg-turbo.spec | sed s/%{_blddir}/%{_tmppath}/g \
+	cat pkgscripts/libjpeg-turbo.spec | sed s/%{_blddir}/%{_tmppath}/g \
 		| sed s@%{_srcdir}/@@g | sed s/#--\>//g \
-		>$$TMPDIR/SPECS/libjpeg-turbo.spec; \
+		> $$TMPDIR/SPECS/libjpeg-turbo.spec; \
 	rpmbuild -bs --define "_topdir $$TMPDIR" $$TMPDIR/SPECS/libjpeg-turbo.spec; \
-	cp $$TMPDIR/SRPMS/${PACKAGE_NAME}-${VERSION}-${BUILD}.src.rpm ${PACKAGE_NAME}.src.rpm; \
+	cp $$TMPDIR/SRPMS/${PACKAGE_NAME}-${VERSION}-${BUILD}.src.rpm \
+		${PACKAGE_NAME}-${VERSION}.src.rpm; \
 	rm -rf $$TMPDIR
 
 deb: all
-	sh $(srcdir)/release/makedpkg ${PACKAGE_NAME} ${VERSION} ${BUILD} \
-		${DEBARCH} ${srcdir}
+	sh pkgscripts/makedpkg
 
 if X86_64
 
 udmg: all
-	sh makemacpkg universal ${BUILDDIR32}
+	sh pkgscripts/makemacpkg universal ${BUILDDIR32}
 
 endif
 
 dmg: all
-	sh makemacpkg
+	sh pkgscripts/makemacpkg
 
 if X86_64
 
 csunpkg: all
-	sh makesunpkg combined ${BUILDDIR32}
+	sh pkgscripts/makesunpkg combined ${BUILDDIR32}
 
 endif
 
 sunpkg: all
-	sh makesunpkg
+	sh pkgscripts/makesunpkg
 
 cygwinpkg: all
-	sh $(srcdir)/release/makecygwinpkg ${PACKAGE_NAME} ${VERSION} ${srcdir}
+	sh pkgscripts/makecygwinpkg
