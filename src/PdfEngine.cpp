@@ -559,11 +559,11 @@ TCHAR *FormatPageLabel(const char *type, int pageNo, const TCHAR *prefix)
         // alphabetic numbering style (A..Z, AA..ZZ, AAA..ZZZ, ...)
         str::Str<TCHAR> number;
         number.Append('A' + (pageNo - 1) % 26);
-        for (int i = 1; i < (pageNo - 1) / 26; i++)
+        for (int i = 0; i < (pageNo - 1) / 26; i++)
             number.Append(number[0]);
         if (*type == 'a')
             str::ToLower(number.Get());
-        return str::Format(_T("%s%s"), prefix, number);
+        return str::Format(_T("%s%s"), prefix, number.Get());
     }
     return str::Dup(prefix);
 }
