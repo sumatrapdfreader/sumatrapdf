@@ -3,7 +3,10 @@ the release notes, as we make them, to make the release process easier.
 
 Next version:
 
-* -named-dest also matches strings in table of contents 
+* -named-dest also matches strings in table of contents
+* logical page numbers are displayed and used, if a document
+  provides them (such as i, ii, iii, etc.)
+* improved support for EPS files (requires Ghostscript)
 
 1.6 (2011-05-30)
 
