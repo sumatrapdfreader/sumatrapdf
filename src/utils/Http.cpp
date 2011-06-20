@@ -116,13 +116,13 @@ bool HttpPost(const TCHAR *server, const TCHAR *url, str::Str<char> *headers, st
     DWORD hdrLen = 0;
     if (headers && headers->Count() > 0) {
         hdr = headers->Get();
-        hdrLen = headers->Count();
+        hdrLen = (DWORD)headers->Count();
     }
     void *d = NULL;
     DWORD dLen = 0;
     if (data && data->Count() > 0) {
         d = data->Get();
-        dLen = data->Count();
+        dLen = (DWORD)data->Count();
     }
 
     unsigned int timeoutMs = 15 * 1000;

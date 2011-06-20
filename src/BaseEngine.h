@@ -72,8 +72,8 @@ public:
     // can be deserialized with LoadImage(NULL, ..., LD_LOADFROMFILE) and its
     // dimensions determined with GetObject(hbmp, sizeof(BITMAP), ...) )
     unsigned char *Serialize(size_t *cbCount) {
-        size_t bmpHeaderLen = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFO);
-        size_t bmpDataLen = ((_width * 3 + 3) / 4) * 4 * _height + bmpHeaderLen;
+        DWORD bmpHeaderLen = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFO);
+        DWORD bmpDataLen = ((_width * 3 + 3) / 4) * 4 * _height + bmpHeaderLen;
         unsigned char *bmpData = SAZA(unsigned char, bmpDataLen);
         if (!bmpData)
             return NULL;

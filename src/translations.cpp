@@ -60,7 +60,7 @@ static int GetLangOrderIndex(const char *code)
 {
     for (size_t i = 0; i < dimof(gLangOrder); i++)
         if (str::Eq(code, gLangOrder[i]))
-            return i;
+            return (int)i;
     return -1;
 }
 

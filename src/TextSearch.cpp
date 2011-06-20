@@ -84,7 +84,7 @@ void TextSearch::SetDirection(TextSearchDirection direction)
         return;
     this->forward = forward;
     if (findText)
-        findIndex += str::Len(findText) * (forward ? 1 : -1);
+        findIndex += (int)str::Len(findText) * (forward ? 1 : -1);
 }
 
 // try to match "findText" from "start" with whitespace tolerance

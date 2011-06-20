@@ -171,7 +171,7 @@ static LRESULT OnVScroll(HWND hwnd, WPARAM wParam)
     return 0;
 }
 
-static LRESULT OnKeydown(HWND hwnd, int key)
+static LRESULT OnKeydown(HWND hwnd, WPARAM key)
 {
     switch (key) {
     case VK_DOWN: case VK_RIGHT: case VK_NEXT:

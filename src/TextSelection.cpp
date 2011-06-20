@@ -56,7 +56,7 @@ int TextSelection::FindClosestGlyph(int pageNo, double x, double y)
             lens[pageNo - 1] = 0;
             return 0;
         }
-        lens[pageNo - 1] = str::Len(text[pageNo - 1]);
+        lens[pageNo - 1] = (int)str::Len(text[pageNo - 1]);
     }
 
     double maxDist = -1;

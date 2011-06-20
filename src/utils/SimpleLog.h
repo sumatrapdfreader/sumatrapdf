@@ -46,7 +46,7 @@ public:
         ScopedMem<char> utf8s(str::conv::ToUtf8(s));
         if (utf8s && INVALID_HANDLE_VALUE != fh) {
             DWORD len;
-            BOOL ok = WriteFile(fh, utf8s.Get(), str::Len(utf8s), &len, NULL);
+            BOOL ok = WriteFile(fh, utf8s.Get(), (DWORD)str::Len(utf8s), &len, NULL);
             if (ok)
                 WriteFile(fh, "\r\n", 2, &len, NULL);
         }

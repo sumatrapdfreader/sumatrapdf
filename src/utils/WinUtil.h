@@ -141,8 +141,8 @@ inline size_t GetTextLen(HWND hwnd)
    caller needs to free() the text */
 inline TCHAR *GetText(HWND hwnd)
 {
-    int     cchTxtLen = GetTextLen(hwnd);
-    TCHAR * txt = (TCHAR*)calloc((size_t)cchTxtLen + 1, sizeof(TCHAR));
+    size_t  cchTxtLen = GetTextLen(hwnd);
+    TCHAR * txt = (TCHAR*)calloc(cchTxtLen + 1, sizeof(TCHAR));
     if (NULL == txt)
         return NULL;
     SendMessage(hwnd, WM_GETTEXT, cchTxtLen + 1, (LPARAM)txt);

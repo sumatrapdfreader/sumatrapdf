@@ -50,7 +50,7 @@ const TCHAR *GetExt(const TCHAR *path)
 TCHAR *GetDir(const TCHAR *path)
 {
     const TCHAR *baseName = GetBaseName(path);
-    int dirLen;
+    size_t dirLen;
     if (baseName <= path + 1)
         dirLen = str::Len(path);
     else if (baseName[-2] == ':')
@@ -247,10 +247,10 @@ bool WriteAll(const TCHAR *filePath, void *data, size_t dataLen)
 
     DWORD size;
     BOOL ok = WriteFile(h, data, (DWORD)dataLen, &size, NULL);
-    assert(!ok || (dataLen == size));
+    assert(!ok || (dataLen == (size_t)size));
     CloseHandle(h);
 
-    return ok && dataLen == size;
+    return ok && dataLen == (size_t)size;
 }
 
 // Return true if the file wasn't there or was successfully deleted

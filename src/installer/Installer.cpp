@@ -2057,7 +2057,7 @@ int RunApp()
 
         while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
             if (msg.message == WM_QUIT) {
-                return msg.wParam;
+                return (int)msg.wParam;
             }
             if (!IsDialogMessage(gHwndFrame, &msg)) {
                 TranslateMessage(&msg);

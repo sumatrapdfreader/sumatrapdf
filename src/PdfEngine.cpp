@@ -28,11 +28,15 @@ void DebugGdiPlusDevice(bool enable)
     gDebugGdiPlusDevice = enable;
 }
 
-void CalcMD5Digest(void *data, size_t byteCount, unsigned char digest[16])
+void CalcMD5Digest(unsigned char *data, size_t byteCount, unsigned char digest[16])
 {
     fz_md5 md5;
     fz_md5_init(&md5);
-    fz_md5_update(&md5, (unsigned char *)data, byteCount);
+#ifdef _WIN64
+    for (; byteCount > UINT_MAX; data += UINT_MAX, byteCount -= UINT_MAX)
+        fz_md5_update(&md5, data, UINT_MAX);
+#endif
+    fz_md5_update(&md5, data, (unsigned int)byteCount);
     fz_md5_final(&md5, digest);
 }
 
@@ -169,7 +173,7 @@ fz_stream *fz_open_file2(const TCHAR *filePath)
     if (fileSize < MAX_MEMORY_FILE_SIZE) {
         fz_buffer *data = fz_new_buffer((int)fileSize);
         if (data) {
-            if (file::ReadAll(filePath, (char *)data->data, (data->len = fileSize)))
+            if (file::ReadAll(filePath, (char *)data->data, (data->len = (int)fileSize)))
                 file = fz_open_buffer(data);
             fz_drop_buffer(data);
         }
@@ -224,7 +228,7 @@ void fz_stream_fingerprint(fz_stream *file, unsigned char digest[16])
 
 WCHAR *fz_span_to_wchar(fz_text_span *text, TCHAR *lineSep, RectI **coords_out=NULL)
 {
-    int lineSepLen = str::Len(lineSep);
+    size_t lineSepLen = str::Len(lineSep);
     size_t textLen = 0;
     for (fz_text_span *span = text; span; span = span->next)
         textLen += span->len + lineSepLen;
@@ -1555,7 +1559,7 @@ void CPdfEngine::linkifyPageText(pdf_page *page)
         if (!overlaps) {
             ScopedMem<char> uri(str::conv::ToUtf8(list->links[i]));
             if (!uri) continue;
-            pdf_link *link = pdf_new_link(fz_new_string(uri, str::Len(uri)), PDF_LINK_URI, list->coords[i]);
+            pdf_link *link = pdf_new_link(fz_new_string(uri, (int)str::Len(uri)), PDF_LINK_URI, list->coords[i]);
             link->next = page->links;
             page->links = link;
         }
@@ -2335,7 +2339,7 @@ static RectI xps_extract_mediabox_quick_and_dirty(xps_context *ctx, int pageNo)
     }
     // we depend on the parser not validating its input (else we'd
     // have to append a closing "</FixedPage>" to the byte data)
-    xml_element *root = end ? xml_parse_document(part->data, end - part->data) : NULL;
+    xml_element *root = end ? xml_parse_document(part->data, (int)(end - part->data)) : NULL;
     xps_free_part(ctx, part);
     if (!root)
         return RectI();

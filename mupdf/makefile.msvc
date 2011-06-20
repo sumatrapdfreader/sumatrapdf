@@ -135,12 +135,14 @@ MUPDF_CFLAGS = $(MUPDF_CFLAGS) \
 	/I$(FREETYPE_DIR)/config /I$(FREETYPE_DIR)/include /I$(ZLIB_DIR) \
 	/I$(JBIG2_DIR) /I$(JPEG_TURBO_DIR)
 
+!if "$(PLATFORM)"=="X64"
 # disable warning C4244: conversion from 'type1' to 'type2', possible loss of data
 #     and warning C4267: conversion from 'size_t' to 'type', possible loss of data
-!if "$(PLATFORM)"=="X64"
 FREETYPE_CFLAGS = $(FREETYPE_CFLAGS) /wd4244 /wd4267
-JBIG2_CFLAGS = $(JBIG2_CFLAGS) /wd4244
-OPENJPEG_CFLAGS = $(OPENJPEG_CFLAGS) /wd4244
+JBIG2_CFLAGS = $(JBIG2_CFLAGS) /wd4244 /wd4267
+OPENJPEG_CFLAGS = $(OPENJPEG_CFLAGS) /wd4244 /wd4267
+JPEG_TURBO_CFLAGS = $(JPEG_TURBO_CFLAGS) /wd4244 /wd4267
+MUPDF_CFLAGS  = $(MUPDF_CFLAGS ) /wd4267
 !endif
 
 LIBS = $(LIBS) advapi32.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib shell32.lib gdiplus.lib

@@ -174,7 +174,7 @@ static void UpdatePropertiesLayout(HWND hwnd, HDC hdc, RectI *rect)
     leftMaxDx = 0;
     for (size_t i = 0; i < layoutData->Count(); i++) {
         PropertyEl *el = layoutData->At(i);
-        GetTextExtentPoint32(hdc, el->leftTxt, str::Len(el->leftTxt), &txtSize);
+        GetTextExtentPoint32(hdc, el->leftTxt, (int)str::Len(el->leftTxt), &txtSize);
         el->leftPos.dx = txtSize.cx;
         el->leftPos.dy = txtSize.cy;
 
@@ -189,7 +189,7 @@ static void UpdatePropertiesLayout(HWND hwnd, HDC hdc, RectI *rect)
     int lineCount = 0;
     for (size_t i = 0; i < layoutData->Count(); i++) {
         PropertyEl *el = layoutData->At(i);
-        GetTextExtentPoint32(hdc, el->rightTxt, str::Len(el->rightTxt), &txtSize);
+        GetTextExtentPoint32(hdc, el->rightTxt, (int)str::Len(el->rightTxt), &txtSize);
         el->rightPos.dx = txtSize.cx;
         el->rightPos.dy = txtSize.cy;
 

@@ -232,7 +232,7 @@ public:
     }
 
     virtual const TCHAR *FileName() const { return fileName; };
-    virtual int PageCount() const { return pages.Count(); }
+    virtual int PageCount() const { return (int)pages.Count(); }
 
     virtual RectD PageMediabox(int pageNo) {
         assert(1 <= pageNo && pageNo <= PageCount());
@@ -655,7 +655,7 @@ static char *LoadCurrentCbzData(unzFile& uf, size_t& len)
     if (!bmpData)
         goto Exit;
 
-    unsigned int readBytes = unzReadCurrentFile(uf, bmpData, len);
+    unsigned int readBytes = unzReadCurrentFile(uf, bmpData, (unsigned int)len);
     if (readBytes != len) {
         free(bmpData);
         bmpData = NULL;
@@ -756,7 +756,7 @@ static int CALLBACK unrarCallback(UINT msg, LPARAM userData, LPARAM rarBuffer, L
 
     char *buf = rrd->buf + rrd->currSize;
     memcpy(buf, (char *)rarBuffer, bytesProcessed);
-    rrd->currSize += bytesProcessed;        
+    rrd->currSize += (unsigned int)bytesProcessed;
     return 1;
 }
 

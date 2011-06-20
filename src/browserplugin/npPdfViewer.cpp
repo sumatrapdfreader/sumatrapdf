@@ -312,7 +312,7 @@ LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lPar
             RECT rcProgress = rcClient.ToRECT();
             
             HBRUSH brushProgress = CreateSolidBrush(RGB(0x80, 0x80, 0xff));
-            GetTextExtentPoint32(hDCBuffer, data->message, str::Len(data->message), &msgSize);
+            GetTextExtentPoint32(hDCBuffer, data->message, (int)str::Len(data->message), &msgSize);
             InflateRect(&rcProgress, -(rcProgress.right - rcProgress.left - msgSize.cx) / 2, (-(rcProgress.bottom - rcProgress.top - msgSize.cy) / 2) + 2);
             OffsetRect(&rcProgress, 0, msgSize.cy + 4 + 2);
             FillRect(hDCBuffer, &rcProgress, (HBRUSH)GetStockObject(WHITE_BRUSH));

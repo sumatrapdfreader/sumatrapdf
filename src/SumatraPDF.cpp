@@ -2817,7 +2817,7 @@ static void OnMouseLeftButtonDblClk(WindowInfo& win, int x, int y, WPARAM key)
     win.RepaintAsync();
 }
 
-static void OnMouseMiddleButtonDown(WindowInfo& win, int x, int y, int key)
+static void OnMouseMiddleButtonDown(WindowInfo& win, int x, int y, WPARAM key)
 {
     // Handle message by recording placement then moving document as mouse moves.
 
@@ -2837,7 +2837,7 @@ static void OnMouseMiddleButtonDown(WindowInfo& win, int x, int y, int key)
     }
 }
 
-static void OnMouseRightButtonDown(WindowInfo& win, int x, int y, int key)
+static void OnMouseRightButtonDown(WindowInfo& win, int x, int y, WPARAM key)
 {
     //DBG_OUT("Right button clicked on %d %d\n", x, y);
     if (!win.IsDocLoaded()) {
@@ -2898,7 +2898,7 @@ static void OnMouseRightButtonUp(WindowInfo& win, int x, int y, WPARAM key)
     win.mouseAction = MA_IDLE;
 }
 
-static void OnMouseRightButtonDblClick(WindowInfo& win, int x, int y, int key)
+static void OnMouseRightButtonDblClick(WindowInfo& win, int x, int y, WPARAM key)
 {
     if ((win.fullScreen || win.presentation) && !(key & ~MK_RBUTTON)) {
         // in presentation and fullscreen modes, right clicks turn the page,
@@ -3142,7 +3142,7 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL)
     di.cbSize = sizeof (DOCINFO);
     di.lpszDocName = engine.FileName();
 
-    int current = 0, total = 0;
+    size_t current = 0, total = 0;
     for (size_t i = 0; i < pd.ranges.Count(); i++)
         total += pd.ranges[i].nToPage - pd.ranges[i].nFromPage + 1;
     total += pd.sel.Count();
@@ -3915,7 +3915,7 @@ static void BrowseFolder(WindowInfo& win, bool forward)
     if (forward)
         index = (index + 1) % files.Count();
     else
-        index = (index + files.Count() - 1) % files.Count();
+        index = (int)(index + files.Count() - 1) % files.Count();
 
     UpdateCurrentFileDisplayStateForWin(win);
     LoadDocument(files[index], &win, true, true);
@@ -5010,7 +5010,7 @@ SIZE TextSizeInHwnd(HWND hwnd, const TCHAR *txt)
        window's current font into dc */
     HFONT f = (HFONT)SendMessage(hwnd, WM_GETFONT, 0, 0);
     HGDIOBJ prev = SelectObject(dc, f);
-    GetTextExtentPoint32(dc, txt, txtLen, &sz);
+    GetTextExtentPoint32(dc, txt, (int)txtLen, &sz);
     SelectObject(dc, prev);
     ReleaseDC(hwnd, dc);
     return sz;

@@ -88,11 +88,10 @@ public:
     T *MakeSpaceAtNoLenIncrease(size_t idx, size_t count=1) {
         EnsureCap(len + count);
         T* res = &(els[idx]);
-        int tomove = len - idx;
-        if (tomove > 0) {
+        if (len > idx) {
             T* src = els + idx;
             T* dst = els + idx + count;
-            memmove(dst, src, tomove * sizeof(T));
+            memmove(dst, src, (len - idx) * sizeof(T));
         }
         return res;
     }
@@ -133,11 +132,10 @@ public:
     }
 
     void RemoveAt(size_t idx, size_t count=1) {
-        int tomove = len - idx - count;
-        if (tomove > 0) {
+        if (len > idx + count) {
             T *dst = els + idx;
             T *src = els + idx + count;
-            memmove(dst, src, tomove * sizeof(T));
+            memmove(dst, src, (len - idx - count) * sizeof(T));
         }
         len -= count;
         memset(els + len, 0, count * sizeof(T));

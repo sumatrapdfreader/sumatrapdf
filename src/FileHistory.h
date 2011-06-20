@@ -57,7 +57,7 @@ class FileHistory {
         if (dsA->openCount != dsB->openCount)
             return dsB->openCount - dsA->openCount;
         // use recency as the criterion in case of equal open counts
-        return dsA->_index - dsB->_index;
+        return dsA->_index < dsB->_index ? -1 : 1;
     }
 
 public:
