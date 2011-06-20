@@ -30,6 +30,10 @@ DJVU_CFLAGS = $(DJVU_CFLAGS) /D "THREADMODEL=NOTHREADS" /D "DDJVUAPI=/**/" /D "M
 DJVU_CFLAGS = $(DJVU_CFLAGS:/EHs-c-=/EHsc)
 # undo /D "UNICODE", as libdjvu uses TCHAR functions for char in several places
 DJVU_CFLAGS = $(DJVU_CFLAGS:UNICODE=IGNORE_THIS)
+!if "$(PLATFORM)"=="X64"
+# libdjvu doesn't know about WIN64 and expects WIN32 at least in GString.h
+DJVU_CFLAGS = /D "WIN32"
+!endif
 
 SYNCTEX_OBJS = \
 	$(OE)\synctex_parser.obj $(OE)\synctex_parser_utils.obj

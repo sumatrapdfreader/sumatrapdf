@@ -17,11 +17,19 @@
 #define NP_END_MACRO } __pragma(warning(push)) __pragma(warning(disable:4127)) while (0) __pragma(warning(pop))
 
 #define DLLEXPORT extern "C"
+#ifdef _WIN64
+#pragma comment(linker, "/EXPORT:NP_GetEntryPoints=NP_GetEntryPoints,PRIVATE")
+#pragma comment(linker, "/EXPORT:NP_Initialize=NP_Initialize,PRIVATE")
+#pragma comment(linker, "/EXPORT:NP_Shutdown=NP_Shutdown,PRIVATE")
+#pragma comment(linker, "/EXPORT:DllRegisterServer=DllRegisterServer,PRIVATE")
+#pragma comment(linker, "/EXPORT:DllUnregisterServer=DllUnregisterServer,PRIVATE")
+#else
 #pragma comment(linker, "/EXPORT:NP_GetEntryPoints=_NP_GetEntryPoints@4,PRIVATE")
 #pragma comment(linker, "/EXPORT:NP_Initialize=_NP_Initialize@4,PRIVATE")
 #pragma comment(linker, "/EXPORT:NP_Shutdown=_NP_Shutdown@0,PRIVATE")
 #pragma comment(linker, "/EXPORT:DllRegisterServer=_DllRegisterServer@0,PRIVATE")
 #pragma comment(linker, "/EXPORT:DllUnregisterServer=_DllUnregisterServer@0,PRIVATE")
+#endif
 
 /* Allow logging plugin activity with OutputDebugString(). This can be viewed
    with DebugView http://technet.microsoft.com/en-us/sysinternals/bb896647

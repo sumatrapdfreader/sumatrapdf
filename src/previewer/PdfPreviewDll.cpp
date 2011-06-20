@@ -175,7 +175,14 @@ STDAPI DllUnregisterServer()
     return hr;
 }
 
+#ifdef _WIN64
+#pragma comment(linker, "/EXPORT:DllCanUnloadNow=DllCanUnloadNow,PRIVATE")
+#pragma comment(linker, "/EXPORT:DllGetClassObject=DllGetClassObject,PRIVATE")
+#pragma comment(linker, "/EXPORT:DllRegisterServer=DllRegisterServer,PRIVATE")
+#pragma comment(linker, "/EXPORT:DllUnregisterServer=DllUnregisterServer,PRIVATE")
+#else
 #pragma comment(linker, "/EXPORT:DllCanUnloadNow=_DllCanUnloadNow@0,PRIVATE")
 #pragma comment(linker, "/EXPORT:DllGetClassObject=_DllGetClassObject@12,PRIVATE")
 #pragma comment(linker, "/EXPORT:DllRegisterServer=_DllRegisterServer@0,PRIVATE")
 #pragma comment(linker, "/EXPORT:DllUnregisterServer=_DllUnregisterServer@0,PRIVATE")
+#endif
