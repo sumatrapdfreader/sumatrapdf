@@ -4827,11 +4827,7 @@ static void ShowSearchResult(WindowInfo& win, TextSel *result, bool addNavPt)
         (win.dm->zoomVirtual() == ZOOM_FIT_PAGE || win.dm->zoomVirtual() == ZOOM_FIT_CONTENT))
         win.dm->goToPage(result->pages[0], 0, addNavPt);
 
-    TextSelection *sel = win.dm->textSelection;
-    sel->Reset();
-    sel->result.pages = (int *)memdup(result->pages, result->len * sizeof(int));
-    sel->result.rects = (RectI *)memdup(result->rects, result->len * sizeof(RectI));
-    sel->result.len = result->len;
+    win.dm->textSelection->CopySelection(win.dm->textSearch);
 
     UpdateTextSelection(win, false);
     win.dm->ShowResultRectToScreen(result);

@@ -32,6 +32,7 @@ public:
         SelectUpTo(pageNo, FindClosestGlyph(pageNo, x, y));
     }
     void SelectWordAt(int pageNo, double x, double y);
+    void CopySelection(TextSelection *orig);
     TCHAR *ExtractText(TCHAR *lineSep);
     void Reset();
 

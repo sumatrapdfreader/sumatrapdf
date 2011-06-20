@@ -193,6 +193,13 @@ void TextSelection::SelectWordAt(int pageNo, double x, double y)
     SelectUpTo(pageNo, ix);
 }
 
+void TextSelection::CopySelection(TextSelection *orig)
+{
+    Reset();
+    StartAt(orig->startPage, orig->startGlyph);
+    SelectUpTo(orig->endPage, orig->endGlyph);
+}
+
 TCHAR *TextSelection::ExtractText(TCHAR *lineSep)
 {
     StrVec lines;
