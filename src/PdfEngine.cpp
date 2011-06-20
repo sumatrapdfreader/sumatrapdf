@@ -1554,6 +1554,7 @@ void CPdfEngine::linkifyPageText(pdf_page *page)
             overlaps = fz_significantly_overlap(next->rect, list->coords[i]);
         if (!overlaps) {
             ScopedMem<char> uri(str::conv::ToUtf8(list->links[i]));
+            if (!uri) continue;
             pdf_link *link = pdf_new_link(fz_new_string(uri, str::Len(uri)), PDF_LINK_URI, list->coords[i]);
             link->next = page->links;
             page->links = link;
@@ -2662,6 +2663,7 @@ void CXpsEngine::linkifyPageText(xps_page *page, int pageNo)
             overlaps = fz_significantly_overlap(next->rect, list->coords[i]);
         if (!overlaps) {
             ScopedMem<char> uri(str::conv::ToUtf8(list->links[i]));
+            if (!uri) continue;
             last = last->next = xps_new_link(uri, list->coords[i]);
             assert(IsUriTarget(last->target));
         }
