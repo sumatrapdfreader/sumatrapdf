@@ -711,7 +711,7 @@ static HMENU RebuildFavMenu(WindowInfo *win, HMENU menu)
             ScopedMem<TCHAR> s(str::Format(_T("Add page %d to favorites"), pageNo));
             win::menu::SetText(menu, IDM_FAV_ADD, s);
             // TODO: for some reason this doesn't work here
-            win::menu::Enable(menu, IDM_FAV_DEL, true);
+            win::menu::Enable(menu, IDM_FAV_DEL, false);
         }
     }
     return menu;
