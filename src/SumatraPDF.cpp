@@ -6199,9 +6199,289 @@ static void UpdateMenu(WindowInfo *win, HMENU m)
         MenuUpdateStateForWindow(*win);
 }
 
+static LRESULT OnCommand(WindowInfo *win, HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    int wmId = LOWORD(wParam);
+
+    // check if the menuId belongs to an entry in the list of
+    // recently opened files and load the referenced file if it does
+    if (IDM_FILE_HISTORY_FIRST <= wmId && wmId <= IDM_FILE_HISTORY_LAST)
+    {
+        DisplayState *state = gFileHistory.Get(wmId - IDM_FILE_HISTORY_FIRST);
+        if (state) {
+            LoadDocument(state->filePath, win);
+            return 0;
+        }
+    }
+    
+    if (!win)
+        return DefWindowProc(hwnd, message, wParam, lParam);
+    
+    // most of them require a win, the few exceptions are no-ops without
+    switch (wmId)
+    {
+        case IDM_OPEN:
+        case IDT_FILE_OPEN:
+            OnMenuOpen(*win);
+            break;
+        case IDM_SAVEAS:
+            OnMenuSaveAs(*win);
+            break;
+    
+        case IDT_FILE_PRINT:
+        case IDM_PRINT:
+            OnMenuPrint(*win);
+            break;
+    
+        case IDT_FILE_EXIT:
+        case IDM_CLOSE:
+            CloseWindow(win, false);
+            break;
+    
+        case IDM_EXIT:
+            OnMenuExit();
+            break;
+    
+        case IDM_REFRESH:
+            win->Reload();
+            break;
+    
+        case IDM_SAVEAS_BOOKMARK:
+            OnMenuSaveBookmark(*win);
+            break;
+    
+        case IDT_VIEW_FIT_WIDTH:
+            ToggleToolbarViewButton(*win, ZOOM_FIT_WIDTH, true);
+            break;
+    
+        case IDT_VIEW_FIT_PAGE:
+            ToggleToolbarViewButton(*win, ZOOM_FIT_PAGE, false);
+            break;
+    
+        case IDT_VIEW_ZOOMIN:
+            win->ZoomToSelection(ZOOM_IN_FACTOR, true);
+            break;
+    
+        case IDT_VIEW_ZOOMOUT:
+            win->ZoomToSelection(ZOOM_OUT_FACTOR, true);
+            break;
+    
+        case IDM_ZOOM_6400:
+        case IDM_ZOOM_3200:
+        case IDM_ZOOM_1600:
+        case IDM_ZOOM_800:
+        case IDM_ZOOM_400:
+        case IDM_ZOOM_200:
+        case IDM_ZOOM_150:
+        case IDM_ZOOM_125:
+        case IDM_ZOOM_100:
+        case IDM_ZOOM_50:
+        case IDM_ZOOM_25:
+        case IDM_ZOOM_12_5:
+        case IDM_ZOOM_8_33:
+        case IDM_ZOOM_FIT_PAGE:
+        case IDM_ZOOM_FIT_WIDTH:
+        case IDM_ZOOM_FIT_CONTENT:
+        case IDM_ZOOM_ACTUAL_SIZE:
+            OnMenuZoom(*win, wmId);
+            break;
+    
+        case IDM_ZOOM_CUSTOM:
+            OnMenuCustomZoom(*win);
+            break;
+    
+        case IDM_VIEW_SINGLE_PAGE:
+            win->SwitchToDisplayMode(DM_SINGLE_PAGE, true);
+            break;
+    
+        case IDM_VIEW_FACING:
+            win->SwitchToDisplayMode(DM_FACING, true);
+            break;
+    
+        case IDM_VIEW_BOOK:
+            win->SwitchToDisplayMode(DM_BOOK_VIEW, true);
+            break;
+    
+        case IDM_VIEW_CONTINUOUS:
+            OnMenuViewContinuous(*win);
+            break;
+    
+        case IDM_VIEW_SHOW_HIDE_TOOLBAR:
+            OnMenuViewShowHideToolbar();
+            break;
+    
+        case IDM_CHANGE_LANGUAGE:
+            OnMenuChangeLanguage(*win);
+            break;
+    
+        case IDM_VIEW_BOOKMARKS:
+            win->ToggleTocBox();
+            break;
+    
+        case IDM_GOTO_NEXT_PAGE:
+            if (win->IsDocLoaded())
+                win->dm->goToNextPage(0);
+            break;
+    
+        case IDM_GOTO_PREV_PAGE:
+            if (win->IsDocLoaded())
+                win->dm->goToPrevPage(0);
+            break;
+    
+        case IDM_GOTO_FIRST_PAGE:
+            if (win->IsDocLoaded())
+                win->dm->goToFirstPage();
+            break;
+    
+        case IDM_GOTO_LAST_PAGE:
+            if (win->IsDocLoaded())
+                win->dm->goToLastPage();
+            break;
+    
+        case IDM_GOTO_PAGE:
+            OnMenuGoToPage(*win);
+            break;
+    
+        case IDM_VIEW_PRESENTATION_MODE:
+            OnMenuViewPresentation(*win);
+            break;
+    
+        case IDM_VIEW_FULLSCREEN:
+            OnMenuViewFullscreen(*win);
+            break;
+    
+        case IDM_VIEW_ROTATE_LEFT:
+            if (win->IsDocLoaded())
+                win->dm->rotateBy(-90);
+            break;
+    
+        case IDM_VIEW_ROTATE_RIGHT:
+            if (win->IsDocLoaded())
+                win->dm->rotateBy(90);
+            break;
+    
+        case IDM_FIND_FIRST:
+            OnMenuFind(*win);
+            break;
+    
+        case IDM_FIND_NEXT:
+            OnMenuFindNext(*win);
+            break;
+    
+        case IDM_FIND_PREV:
+            OnMenuFindPrev(*win);
+            break;
+    
+        case IDM_FIND_MATCH:
+            OnMenuFindMatchCase(*win);
+            break;
+    
+        case IDM_VISIT_WEBSITE:
+            LaunchBrowser(_T("http://blog.kowalczyk.info/software/sumatrapdf/"));
+            break;
+    
+        case IDM_MANUAL:
+            LaunchBrowser(_T("http://blog.kowalczyk.info/software/sumatrapdf/manual.html"));
+            break;
+            
+        case IDM_CONTRIBUTE_TRANSLATION:
+            LaunchBrowser(_T("http://blog.kowalczyk.info/software/sumatrapdf/translations.html"));
+            break;
+    
+        case IDM_ABOUT:
+            OnMenuAbout();
+            break;
+    
+        case IDM_CHECK_UPDATE:
+            DownloadSumatraUpdateInfo(*win, false);
+            break;
+    
+        case IDM_SETTINGS:
+            OnMenuSettings(*win);
+            break;
+    
+        case IDM_VIEW_WITH_ACROBAT:
+            ViewWithAcrobat(win);
+            break;
+    
+        case IDM_VIEW_WITH_FOXIT:
+            ViewWithFoxit(win);
+            break;
+    
+        case IDM_VIEW_WITH_PDF_XCHANGE:
+            ViewWithPDFXChange(win);
+            break;
+    
+        case IDM_SEND_BY_EMAIL:
+            SendAsEmailAttachment(win);
+            break;
+    
+        case IDM_PROPERTIES:
+            OnMenuProperties(*win);
+            break;
+    
+        case IDM_MOVE_FRAME_FOCUS:
+            if (win->hwndFrame != GetFocus())
+                SetFocus(win->hwndFrame);
+            else if (win->tocShow)
+                SetFocus(win->hwndTocTree);
+            break;
+    
+        case IDM_GOTO_NAV_BACK:
+            if (win->IsDocLoaded())
+                win->dm->navigate(-1);
+            break;
+            
+        case IDM_GOTO_NAV_FORWARD:
+            if (win->IsDocLoaded())
+                win->dm->navigate(1);
+            break;
+    
+        case IDM_COPY_SELECTION:
+            // Don't break the shortcut for text boxes
+            if (win->hwndFindBox == GetFocus() || win->hwndPageBox == GetFocus())
+                SendMessage(GetFocus(), WM_COPY, 0, 0);
+            else if (win->hwndProperties == GetForegroundWindow())
+                CopyPropertiesToClipboard(win->hwndProperties);
+            else if (win->selectionOnPage)
+                CopySelectionToClipboard(*win);
+            else
+                win->ShowNotification(_TR("Select content with Ctrl+left mouse button"));
+            break;
+    
+        case IDM_SELECT_ALL:
+            OnSelectAll(*win);
+            break;
+    
+        case IDM_DEBUG_SHOW_LINKS:
+            gDebugShowLinks = !gDebugShowLinks;
+            for (size_t i = 0; i < gWindows.Count(); i++)
+                gWindows[i]->RedrawAll(true);
+            break;
+    
+        case IDM_DEBUG_GDI_RENDERER:
+            ToggleGdiDebugging();
+            break;
+    
+        case IDM_DEBUG_CRASH_ME:
+            CrashMe();
+            break;
+    
+        case IDM_FAV_ADD:
+        case IDM_FAV_DEL:
+        case IDM_FAV_MANAGE:
+            MessageBox(NULL, _T("Not implemented yet!"), _T("Not implemented yet."), MB_ICONEXCLAMATION | MB_OK);
+            break;
+    
+        default:
+            return DefWindowProc(hwnd, message, wParam, lParam);
+    }
+
+    return 0;
+}
+
 static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    int             wmId;
     WindowInfo *    win;
     ULONG           ulScrollLines;                   // for mouse wheel logic
 
@@ -6236,282 +6516,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
             break;
 
         case WM_COMMAND:
-            wmId = LOWORD(wParam);
-
-            // check if the menuId belongs to an entry in the list of
-            // recently opened files and load the referenced file if it does
-            if (IDM_FILE_HISTORY_FIRST <= wmId && wmId <= IDM_FILE_HISTORY_LAST)
-            {
-                DisplayState *state = gFileHistory.Get(wmId - IDM_FILE_HISTORY_FIRST);
-                if (state) {
-                    LoadDocument(state->filePath, win);
-                    break;
-                }
-            }
-
-            if (!win)
-                return DefWindowProc(hwnd, message, wParam, lParam);
-
-            // most of them require a win, the few exceptions are no-ops without
-            switch (wmId)
-            {
-                case IDM_OPEN:
-                case IDT_FILE_OPEN:
-                    OnMenuOpen(*win);
-                    break;
-                case IDM_SAVEAS:
-                    OnMenuSaveAs(*win);
-                    break;
-
-                case IDT_FILE_PRINT:
-                case IDM_PRINT:
-                    OnMenuPrint(*win);
-                    break;
-
-                case IDT_FILE_EXIT:
-                case IDM_CLOSE:
-                    CloseWindow(win, false);
-                    break;
-
-                case IDM_EXIT:
-                    OnMenuExit();
-                    break;
-
-                case IDM_REFRESH:
-                    win->Reload();
-                    break;
-
-                case IDM_SAVEAS_BOOKMARK:
-                    OnMenuSaveBookmark(*win);
-                    break;
-
-                case IDT_VIEW_FIT_WIDTH:
-                    ToggleToolbarViewButton(*win, ZOOM_FIT_WIDTH, true);
-                    break;
-
-                case IDT_VIEW_FIT_PAGE:
-                    ToggleToolbarViewButton(*win, ZOOM_FIT_PAGE, false);
-                    break;
-
-                case IDT_VIEW_ZOOMIN:
-                    win->ZoomToSelection(ZOOM_IN_FACTOR, true);
-                    break;
-
-                case IDT_VIEW_ZOOMOUT:
-                    win->ZoomToSelection(ZOOM_OUT_FACTOR, true);
-                    break;
-
-                case IDM_ZOOM_6400:
-                case IDM_ZOOM_3200:
-                case IDM_ZOOM_1600:
-                case IDM_ZOOM_800:
-                case IDM_ZOOM_400:
-                case IDM_ZOOM_200:
-                case IDM_ZOOM_150:
-                case IDM_ZOOM_125:
-                case IDM_ZOOM_100:
-                case IDM_ZOOM_50:
-                case IDM_ZOOM_25:
-                case IDM_ZOOM_12_5:
-                case IDM_ZOOM_8_33:
-                case IDM_ZOOM_FIT_PAGE:
-                case IDM_ZOOM_FIT_WIDTH:
-                case IDM_ZOOM_FIT_CONTENT:
-                case IDM_ZOOM_ACTUAL_SIZE:
-                    OnMenuZoom(*win, wmId);
-                    break;
-
-                case IDM_ZOOM_CUSTOM:
-                    OnMenuCustomZoom(*win);
-                    break;
-
-                case IDM_VIEW_SINGLE_PAGE:
-                    win->SwitchToDisplayMode(DM_SINGLE_PAGE, true);
-                    break;
-
-                case IDM_VIEW_FACING:
-                    win->SwitchToDisplayMode(DM_FACING, true);
-                    break;
-
-                case IDM_VIEW_BOOK:
-                    win->SwitchToDisplayMode(DM_BOOK_VIEW, true);
-                    break;
-
-                case IDM_VIEW_CONTINUOUS:
-                    OnMenuViewContinuous(*win);
-                    break;
-
-                case IDM_VIEW_SHOW_HIDE_TOOLBAR:
-                    OnMenuViewShowHideToolbar();
-                    break;
-
-                case IDM_CHANGE_LANGUAGE:
-                    OnMenuChangeLanguage(*win);
-                    break;
-
-                case IDM_VIEW_BOOKMARKS:
-                    win->ToggleTocBox();
-                    break;
-
-                case IDM_GOTO_NEXT_PAGE:
-                    if (win->IsDocLoaded())
-                        win->dm->goToNextPage(0);
-                    break;
-
-                case IDM_GOTO_PREV_PAGE:
-                    if (win->IsDocLoaded())
-                        win->dm->goToPrevPage(0);
-                    break;
-
-                case IDM_GOTO_FIRST_PAGE:
-                    if (win->IsDocLoaded())
-                        win->dm->goToFirstPage();
-                    break;
-
-                case IDM_GOTO_LAST_PAGE:
-                    if (win->IsDocLoaded())
-                        win->dm->goToLastPage();
-                    break;
-
-                case IDM_GOTO_PAGE:
-                    OnMenuGoToPage(*win);
-                    break;
-
-                case IDM_VIEW_PRESENTATION_MODE:
-                    OnMenuViewPresentation(*win);
-                    break;
-
-                case IDM_VIEW_FULLSCREEN:
-                    OnMenuViewFullscreen(*win);
-                    break;
-
-                case IDM_VIEW_ROTATE_LEFT:
-                    if (win->IsDocLoaded())
-                        win->dm->rotateBy(-90);
-                    break;
-
-                case IDM_VIEW_ROTATE_RIGHT:
-                    if (win->IsDocLoaded())
-                        win->dm->rotateBy(90);
-                    break;
-
-                case IDM_FIND_FIRST:
-                    OnMenuFind(*win);
-                    break;
-
-                case IDM_FIND_NEXT:
-                    OnMenuFindNext(*win);
-                    break;
-
-                case IDM_FIND_PREV:
-                    OnMenuFindPrev(*win);
-                    break;
-
-                case IDM_FIND_MATCH:
-                    OnMenuFindMatchCase(*win);
-                    break;
-
-                case IDM_VISIT_WEBSITE:
-                    LaunchBrowser(_T("http://blog.kowalczyk.info/software/sumatrapdf/"));
-                    break;
-
-                case IDM_MANUAL:
-                    LaunchBrowser(_T("http://blog.kowalczyk.info/software/sumatrapdf/manual.html"));
-                    break;
-                    
-                case IDM_CONTRIBUTE_TRANSLATION:
-                    LaunchBrowser(_T("http://blog.kowalczyk.info/software/sumatrapdf/translations.html"));
-                    break;
-
-                case IDM_ABOUT:
-                    OnMenuAbout();
-                    break;
-
-                case IDM_CHECK_UPDATE:
-                    DownloadSumatraUpdateInfo(*win, false);
-                    break;
-
-                case IDM_SETTINGS:
-                    OnMenuSettings(*win);
-                    break;
-
-                case IDM_VIEW_WITH_ACROBAT:
-                    ViewWithAcrobat(win);
-                    break;
-
-                case IDM_VIEW_WITH_FOXIT:
-                    ViewWithFoxit(win);
-                    break;
-
-                case IDM_VIEW_WITH_PDF_XCHANGE:
-                    ViewWithPDFXChange(win);
-                    break;
-
-                case IDM_SEND_BY_EMAIL:
-                    SendAsEmailAttachment(win);
-                    break;
-
-                case IDM_PROPERTIES:
-                    OnMenuProperties(*win);
-                    break;
-
-                case IDM_MOVE_FRAME_FOCUS:
-                    if (win->hwndFrame != GetFocus())
-                        SetFocus(win->hwndFrame);
-                    else if (win->tocShow)
-                        SetFocus(win->hwndTocTree);
-                    break;
-
-                case IDM_GOTO_NAV_BACK:
-                    if (win->IsDocLoaded())
-                        win->dm->navigate(-1);
-                    break;
-                    
-                case IDM_GOTO_NAV_FORWARD:
-                    if (win->IsDocLoaded())
-                        win->dm->navigate(1);
-                    break;
-
-                case IDM_COPY_SELECTION:
-                    // Don't break the shortcut for text boxes
-                    if (win->hwndFindBox == GetFocus() || win->hwndPageBox == GetFocus())
-                        SendMessage(GetFocus(), WM_COPY, 0, 0);
-                    else if (win->hwndProperties == GetForegroundWindow())
-                        CopyPropertiesToClipboard(win->hwndProperties);
-                    else if (win->selectionOnPage)
-                        CopySelectionToClipboard(*win);
-                    else
-                        win->ShowNotification(_TR("Select content with Ctrl+left mouse button"));
-                    break;
-
-                case IDM_SELECT_ALL:
-                    OnSelectAll(*win);
-                    break;
-
-                case IDM_DEBUG_SHOW_LINKS:
-                    gDebugShowLinks = !gDebugShowLinks;
-                    for (size_t i = 0; i < gWindows.Count(); i++)
-                        gWindows[i]->RedrawAll(true);
-                    break;
-
-                case IDM_DEBUG_GDI_RENDERER:
-                    ToggleGdiDebugging();
-                    break;
-
-                case IDM_DEBUG_CRASH_ME:
-                    CrashMe();
-                    break;
-
-                case IDM_FAV_ADD:
-                case IDM_FAV_DEL:
-                case IDM_FAV_MANAGE:
-                    MessageBox(NULL, _T("Not implemented yet!"), _T("Not implemented yet."), MB_ICONEXCLAMATION | MB_OK);
-                    break;
-
-                default:
-                    return DefWindowProc(hwnd, message, wParam, lParam);
-            }
-            break;
+            return OnCommand(win, hwnd, message, wParam, lParam);
 
         case WM_APPCOMMAND:
             // both keyboard and mouse drivers should produce WM_APPCOMMAND
