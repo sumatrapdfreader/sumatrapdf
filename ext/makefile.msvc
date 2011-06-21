@@ -35,7 +35,7 @@ DJVU_CFLAGS = $(DJVU_CFLAGS:/EHs-c-=/EHsc)
 DJVU_CFLAGS = $(DJVU_CFLAGS:UNICODE=IGNORE_THIS)
 !if "$(PLATFORM)"=="X64"
 # libdjvu doesn't know about WIN64 and expects WIN32 at least in GString.h
-DJVU_CFLAGS = $(DJVU_CFLAGS) /D "WIN32" /wd4244
+DJVU_CFLAGS = $(DJVU_CFLAGS) /D "WIN32" /wd4244 /wd4267
 !endif
 
 SYNCTEX_OBJS = \

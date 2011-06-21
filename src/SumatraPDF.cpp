@@ -3194,10 +3194,10 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL)
     di.cbSize = sizeof (DOCINFO);
     di.lpszDocName = engine.FileName();
 
-    size_t current = 0, total = 0;
+    int current = 0, total = 0;
     for (size_t i = 0; i < pd.ranges.Count(); i++)
         total += pd.ranges[i].nToPage - pd.ranges[i].nFromPage + 1;
-    total += pd.sel.Count();
+    total += (int)pd.sel.Count();
     if (progressUI)
         progressUI->ProgressUpdate(current, total);
 

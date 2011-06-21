@@ -200,7 +200,7 @@ inline void SetText(HMENU m, UINT id, TCHAR *s)
     mii.fMask = MIIM_STRING;
     mii.fType = MFT_STRING;
     mii.dwTypeData = s;
-    mii.cch = str::Len(s);
+    mii.cch = (UINT)str::Len(s);
     SetMenuItemInfo(m, id, FALSE, &mii);
 }
 

@@ -112,17 +112,17 @@ static SizeI CalcSumatraVersionSize(HDC hdc)
     SIZE txtSize;
     /* calculate minimal top box size */
     const TCHAR *txt = APP_NAME_STR;
-    GetTextExtentPoint32(hdc, txt, str::Len(txt), &txtSize);
+    GetTextExtentPoint32(hdc, txt, (int)str::Len(txt), &txtSize);
     result.dy = txtSize.cy + ABOUT_BOX_MARGIN_DY * 2;
     result.dx = txtSize.cx;
 
     /* consider version and version-sub strings */
     SelectObject(hdc, fontVersionTxt);
     txt = VERSION_TXT;
-    GetTextExtentPoint32(hdc, txt, str::Len(txt), &txtSize);
+    GetTextExtentPoint32(hdc, txt, (int)str::Len(txt), &txtSize);
     int minWidth = txtSize.cx;
     txt = VERSION_SUB_TXT;
-    GetTextExtentPoint32(hdc, txt, str::Len(txt), &txtSize);
+    GetTextExtentPoint32(hdc, txt, (int)str::Len(txt), &txtSize);
     txtSize.cx = max(txtSize.cx, minWidth);
     result.dx += 2 * (txtSize.cx + ABOUT_INNER_PADDING);
 
@@ -141,7 +141,7 @@ static void DrawSumatraVersion(HDC hdc, RectI rect)
 
     SIZE txtSize;
     const TCHAR *txt = APP_NAME_STR;
-    GetTextExtentPoint32(hdc, txt, str::Len(txt), &txtSize);
+    GetTextExtentPoint32(hdc, txt, (int)str::Len(txt), &txtSize);
     RectI mainRect(rect.x + (rect.dx - txtSize.cx) / 2,
                    rect.y + (rect.dy - txtSize.cy) / 2, txtSize.cx, txtSize.cy);
     DrawSumatraPDF(hdc, mainRect.TL());
@@ -150,9 +150,9 @@ static void DrawSumatraVersion(HDC hdc, RectI rect)
     SelectObject(hdc, fontVersionTxt);
     PointI pt(mainRect.x + mainRect.dx + ABOUT_INNER_PADDING, mainRect.y);
     txt = VERSION_TXT;
-    TextOut(hdc, pt.x, pt.y, txt, str::Len(txt));
+    TextOut(hdc, pt.x, pt.y, txt, (int)str::Len(txt));
     txt = VERSION_SUB_TXT;
-    TextOut(hdc, pt.x, pt.y + 16, txt, str::Len(txt));
+    TextOut(hdc, pt.x, pt.y + 16, txt, (int)str::Len(txt));
 
     SelectObject(hdc, oldFont);
 }
@@ -169,7 +169,7 @@ static RectI DrawBottomRightLink(HWND hwnd, HDC hdc, const TCHAR *txt)
     ClientRect rc(hwnd);
 
     SIZE txtSize;
-    GetTextExtentPoint32(hdc, txt, str::Len(txt), &txtSize);
+    GetTextExtentPoint32(hdc, txt, (int)str::Len(txt), &txtSize);
     RectI rect(rc.dx - txtSize.cx - ABOUT_INNER_PADDING,
                rc.y + rc.dy - txtSize.cy - ABOUT_INNER_PADDING, txtSize.cx, txtSize.cy);
     DrawText(hdc, txt, -1, &rect.ToRECT(), DT_LEFT);
@@ -221,7 +221,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, RectI rect, Vec<StaticLinkInfo>& linkI
     /* render text on the left*/
     SelectObject(hdc, fontLeftTxt);
     for (AboutLayoutInfoEl *el = gAboutLayoutInfo; el->leftTxt; el++)
-        TextOut(hdc, el->leftPos.x, el->leftPos.y, el->leftTxt, str::Len(el->leftTxt));
+        TextOut(hdc, el->leftPos.x, el->leftPos.y, el->leftTxt, (int)str::Len(el->leftTxt));
 
     /* render text on the right */
     SelectObject(hdc, fontRightTxt);
@@ -230,7 +230,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, RectI rect, Vec<StaticLinkInfo>& linkI
     for (AboutLayoutInfoEl *el = gAboutLayoutInfo; el->leftTxt; el++) {
         bool hasUrl = !gRestrictedUse && el->url;
         SetTextColor(hdc, hasUrl ? COL_BLUE_LINK : ABOUT_BORDER_COL);
-        TextOut(hdc, el->rightPos.x, el->rightPos.y, el->rightTxt, str::Len(el->rightTxt));
+        TextOut(hdc, el->rightPos.x, el->rightPos.y, el->rightTxt, (int)str::Len(el->rightTxt));
 
         if (hasUrl) {
             int underlineY = el->rightPos.y + el->rightPos.dy - 3;
@@ -274,7 +274,7 @@ static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, RectI *rect)
     int leftDy = 0;
     for (AboutLayoutInfoEl *el = gAboutLayoutInfo; el->leftTxt; el++) {
         SIZE txtSize;
-        GetTextExtentPoint32(hdc, el->leftTxt, str::Len(el->leftTxt), &txtSize);
+        GetTextExtentPoint32(hdc, el->leftTxt, (int)str::Len(el->leftTxt), &txtSize);
         el->leftPos.dx = txtSize.cx;
         el->leftPos.dy = txtSize.cy;
 
@@ -292,7 +292,7 @@ static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, RectI *rect)
     int rightDy = 0;
     for (AboutLayoutInfoEl *el = gAboutLayoutInfo; el->leftTxt; el++) {
         SIZE txtSize;
-        GetTextExtentPoint32(hdc, el->rightTxt, str::Len(el->rightTxt), &txtSize);
+        GetTextExtentPoint32(hdc, el->rightTxt, (int)str::Len(el->rightTxt), &txtSize);
         el->rightPos.dx = txtSize.cx;
         el->rightPos.dy = txtSize.cy;
 
@@ -572,8 +572,8 @@ void DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory)
     SelectObject(hdc, fontSumatraTxt);
     SIZE txtSize;
     const TCHAR *txt = _TR("Frequently Read");
-    GetTextExtentPoint32(hdc, txt, str::Len(txt), &txtSize);
-    TextOut(hdc, offset.x, rc.y + (DOCLIST_MARGIN_TOP - txtSize.cy) / 2, txt, str::Len(txt));
+    GetTextExtentPoint32(hdc, txt, (int)str::Len(txt), &txtSize);
+    TextOut(hdc, offset.x, rc.y + (DOCLIST_MARGIN_TOP - txtSize.cy) / 2, txt, (int)str::Len(txt));
 
     SelectObject(hdc, fontLeftTxt);
     SelectObject(hdc, GetStockObject(NULL_BRUSH));
@@ -627,7 +627,7 @@ void DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory)
     ImageList_Draw(himl, 0, hdc, rectIcon.x, rectIcon.y, ILD_NORMAL);
 
     txt = _TR("Open a document...");
-    GetTextExtentPoint32(hdc, txt, str::Len(txt), &txtSize);
+    GetTextExtentPoint32(hdc, txt, (int)str::Len(txt), &txtSize);
     RectI rect(offset.x + rectIcon.dx + 3, rc.y + (rc.dy - txtSize.cy) / 2, txtSize.cx, txtSize.cy);
     DrawText(hdc, txt, -1, &rect.ToRECT(), DT_LEFT);
     PaintLine(hdc, RectI(rect.x, rect.y + rect.dy, rect.dx, 0));

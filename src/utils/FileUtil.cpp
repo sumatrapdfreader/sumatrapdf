@@ -232,7 +232,7 @@ bool ReadAll(const TCHAR *filePath, char *buffer, size_t bufferLen)
         return false;
 
     DWORD sizeRead;
-    BOOL ok = ReadFile(h, buffer, bufferLen, &sizeRead, NULL);
+    BOOL ok = ReadFile(h, buffer, (DWORD)bufferLen, &sizeRead, NULL);
     CloseHandle(h);
 
     return ok && sizeRead == bufferLen;
