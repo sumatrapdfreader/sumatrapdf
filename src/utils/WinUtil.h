@@ -180,7 +180,9 @@ inline void Check(HMENU m, UINT id, bool check)
 inline bool Enable(HMENU m, UINT id, bool enable)
 {
     BOOL ret = EnableMenuItem(m, id, MF_BYCOMMAND | (enable ? MF_ENABLED : MF_GRAYED));
-    assert(ret != -1);
+    // TODO: this assertion doesn't hold for menu items that might be dynamically
+    //       added (such as "Open with Foxit" on systems without Foxit installed)
+    // assert(ret != -1);
     return ret != -1;
 }
 
