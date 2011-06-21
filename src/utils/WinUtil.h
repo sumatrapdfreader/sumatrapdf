@@ -172,21 +172,18 @@ public:
 
 namespace menu {
 
-inline void Check(HMENU m, UINT id, bool check)
+inline void SetChecked(HMENU m, UINT id, bool isChecked)
 {
-    CheckMenuItem(m, id, MF_BYCOMMAND | (check ? MF_CHECKED : MF_UNCHECKED));
+    CheckMenuItem(m, id, MF_BYCOMMAND | (isChecked ? MF_CHECKED : MF_UNCHECKED));
 }
 
-inline bool Enable(HMENU m, UINT id, bool enable)
+inline bool SetEnabled(HMENU m, UINT id, bool isEnabled)
 {
-    BOOL ret = EnableMenuItem(m, id, MF_BYCOMMAND | (enable ? MF_ENABLED : MF_GRAYED));
-    // TODO: this assertion doesn't hold for menu items that might be dynamically
-    //       added (such as "Open with Foxit" on systems without Foxit installed)
-    // assert(ret != -1);
+    BOOL ret = EnableMenuItem(m, id, MF_BYCOMMAND | (isEnabled ? MF_ENABLED : MF_GRAYED));
     return ret != -1;
 }
 
-inline void Hide(HMENU m, UINT id)
+inline void Remove(HMENU m, UINT id)
 {
     RemoveMenu(m, id, MF_BYCOMMAND);
 }

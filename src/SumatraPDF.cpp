@@ -455,7 +455,7 @@ static void MenuUpdateDisplayMode(WindowInfo& win)
     }
 
     for (int id = IDM_VIEW_LAYOUT_FIRST; id <= IDM_VIEW_LAYOUT_LAST; id++)
-        win::menu::Enable(win.menu, id, enabled);
+        win::menu::SetEnabled(win.menu, id, enabled);
 
     UINT id = 0;
     switch (displayMode) {
@@ -470,7 +470,7 @@ static void MenuUpdateDisplayMode(WindowInfo& win)
 
     CheckMenuRadioItem(win.menu, IDM_VIEW_LAYOUT_FIRST, IDM_VIEW_LAYOUT_LAST, id, MF_BYCOMMAND);
     if (displayModeContinuous(displayMode))
-        win::menu::Check(win.menu, IDM_VIEW_CONTINUOUS, true);
+        win::menu::SetChecked(win.menu, IDM_VIEW_CONTINUOUS, true);
 }
 
 void WindowInfo::SwitchToDisplayMode(DisplayMode displayMode, bool keepContinuous)
@@ -690,10 +690,10 @@ static HMENU RebuildFavMenu(WindowInfo *win, HMENU menu)
     win::menu::Empty(menu);
     BuildMenuFromMenuDef(menuDefFavorites, dimof(menuDefFavorites), menu);
     if (!win->IsDocLoaded()) {
-        win::menu::Enable(menu, IDM_FAV_ADD, false);
-        win::menu::Enable(menu, IDM_FAV_DEL, false);
+        win::menu::SetEnabled(menu, IDM_FAV_ADD, false);
+        win::menu::SetEnabled(menu, IDM_FAV_DEL, false);
         // TODO: this will probably be enabled
-        win::menu::Enable(menu, IDM_FAV_MANAGE, false);
+        win::menu::SetEnabled(menu, IDM_FAV_MANAGE, false);
     } else {
         int pageNo = win->currPageNo;
         TCHAR *filePath = win->loadedFilePath;
@@ -703,7 +703,7 @@ static HMENU RebuildFavMenu(WindowInfo *win, HMENU menu)
             // TODO: translate when finalized
             ScopedMem<TCHAR> s(str::Format(_T("Remove page %d from favorites"), pageNo));
             win::menu::SetText(menu, IDM_FAV_DEL, s);
-            win::menu::Enable(menu, IDM_FAV_ADD, false);
+            win::menu::SetEnabled(menu, IDM_FAV_ADD, false);
         }
         else
         {
@@ -711,7 +711,7 @@ static HMENU RebuildFavMenu(WindowInfo *win, HMENU menu)
             ScopedMem<TCHAR> s(str::Format(_T("Add page %d to favorites"), pageNo));
             win::menu::SetText(menu, IDM_FAV_ADD, s);
             // TODO: for some reason this doesn't work here
-            win::menu::Enable(menu, IDM_FAV_DEL, false);
+            win::menu::SetEnabled(menu, IDM_FAV_DEL, false);
         }
     }
     return menu;
@@ -728,13 +728,13 @@ static HMENU RebuildFileMenu(HMENU menu)
     // (don't hide items here that won't always be hidden,
     // do that in MenuUpdateStateForWindow)
     if (!CanViewWithAcrobat())
-        win::menu::Hide(menu, IDM_VIEW_WITH_ACROBAT);
+        win::menu::Remove(menu, IDM_VIEW_WITH_ACROBAT);
     if (!CanViewWithFoxit())
-        win::menu::Hide(menu, IDM_VIEW_WITH_FOXIT);
+        win::menu::Remove(menu, IDM_VIEW_WITH_FOXIT);
     if (!CanViewWithPDFXChange())
-        win::menu::Hide(menu, IDM_VIEW_WITH_PDF_XCHANGE);
+        win::menu::Remove(menu, IDM_VIEW_WITH_PDF_XCHANGE);
     if (!CanSendAsEmailAttachment())
-        win::menu::Hide(menu, IDM_SEND_BY_EMAIL);
+        win::menu::Remove(menu, IDM_SEND_BY_EMAIL);
 
     return menu;
 }
@@ -899,7 +899,7 @@ static void ZoomMenuItemCheck(HMENU m, UINT menuItemId, bool canZoom)
     assert(IDM_ZOOM_FIRST <= menuItemId && menuItemId <= IDM_ZOOM_LAST);
 
     for (int i = 0; i < dimof(gZoomMenuIds); i++)
-        win::menu::Enable(m, gZoomMenuIds[i].itemId, canZoom);
+        win::menu::SetEnabled(m, gZoomMenuIds[i].itemId, canZoom);
 
     if (IDM_ZOOM_100 == menuItemId)
         menuItemId = IDM_ZOOM_ACTUAL_SIZE;
@@ -1283,7 +1283,7 @@ static void MenuUpdatePrintItem(WindowInfo& win, HMENU menu, bool disableOnly=fa
             ModifyMenu(menu, IDM_PRINT, MF_BYCOMMAND | MF_STRING, IDM_PRINT, printItem);
     }
 
-    win::menu::Enable(menu, IDM_PRINT, filePrintEnabled && filePrintAllowed);
+    win::menu::SetEnabled(menu, IDM_PRINT, filePrintEnabled && filePrintAllowed);
 }
 
 static void MenuUpdateStateForWindow(WindowInfo& win) {
@@ -1302,51 +1302,51 @@ static void MenuUpdateStateForWindow(WindowInfo& win) {
     };
 
     assert(FileCloseMenuEnabled() == !win.IsAboutWindow()); // TODO: ???
-    win::menu::Enable(win.menu, IDM_CLOSE, FileCloseMenuEnabled());
+    win::menu::SetEnabled(win.menu, IDM_CLOSE, FileCloseMenuEnabled());
 
     MenuUpdatePrintItem(win, win.menu);
 
     bool enabled = win.IsDocLoaded() && win.dm->engine && win.dm->engine->HasToCTree();
-    win::menu::Enable(win.menu, IDM_VIEW_BOOKMARKS, enabled);
+    win::menu::SetEnabled(win.menu, IDM_VIEW_BOOKMARKS, enabled);
 
     bool documentSpecific = win.IsDocLoaded();
     bool checked = documentSpecific ? win.tocShow : gGlobalPrefs.m_showToc;
-    win::menu::Check(win.menu, IDM_VIEW_BOOKMARKS, checked);
+    win::menu::SetChecked(win.menu, IDM_VIEW_BOOKMARKS, checked);
 
-    win::menu::Check(win.menu, IDM_VIEW_SHOW_HIDE_TOOLBAR, gGlobalPrefs.m_showToolbar);
+    win::menu::SetChecked(win.menu, IDM_VIEW_SHOW_HIDE_TOOLBAR, gGlobalPrefs.m_showToolbar);
     MenuUpdateDisplayMode(win);
     MenuUpdateZoom(win);
 
     if (win.IsDocLoaded()) {
-        win::menu::Enable(win.menu, IDM_GOTO_NAV_BACK, win.dm->canNavigate(-1));
-        win::menu::Enable(win.menu, IDM_GOTO_NAV_FORWARD, win.dm->canNavigate(1));
+        win::menu::SetEnabled(win.menu, IDM_GOTO_NAV_BACK, win.dm->canNavigate(-1));
+        win::menu::SetEnabled(win.menu, IDM_GOTO_NAV_FORWARD, win.dm->canNavigate(1));
     }
 
     for (int i = 0; i < dimof(menusToDisableIfNoDocument); i++) {
         UINT id = menusToDisableIfNoDocument[i];
-        win::menu::Enable(win.menu, id, win.IsDocLoaded());
+        win::menu::SetEnabled(win.menu, id, win.IsDocLoaded());
     }
 
     if (IsNonPdfDocument(&win)) {
         for (int i = 0; i < dimof(menusToDisableIfNotPdfDocument); i++) {
             UINT id = menusToDisableIfNotPdfDocument[i];
-            win::menu::Enable(win.menu, id, false);
+            win::menu::SetEnabled(win.menu, id, false);
         }
     }
 
     if (win.dm && Engine_ImageDir == win.dm->engineType) {
         for (int i = 0; i < dimof(menusToDisableIfDirectory); i++) {
             UINT id = menusToDisableIfDirectory[i];
-            win::menu::Enable(win.menu, id, false);
+            win::menu::SetEnabled(win.menu, id, false);
         }
     }
 
     if (win.dm && win.dm->engine)
-        win::menu::Enable(win.menu, IDM_FIND_FIRST, !win.dm->engine->IsImageCollection());
+        win::menu::SetEnabled(win.menu, IDM_FIND_FIRST, !win.dm->engine->IsImageCollection());
 
 #ifdef SHOW_DEBUG_MENU_ITEMS
-    win::menu::Check(win.menu, IDM_DEBUG_SHOW_LINKS, gDebugShowLinks);
-    win::menu::Check(win.menu, IDM_DEBUG_GDI_RENDERER, gUseGdiRenderer);
+    win::menu::SetChecked(win.menu, IDM_DEBUG_SHOW_LINKS, gDebugShowLinks);
+    win::menu::SetChecked(win.menu, IDM_DEBUG_GDI_RENDERER, gUseGdiRenderer);
 #endif
 }
 
@@ -2512,7 +2512,7 @@ static void OnAboutContextMenu(WindowInfo& win, int x, int y)
         return;
 
     HMENU popup = BuildMenuFromMenuDef(menuDefContextStart, dimof(menuDefContextStart), CreatePopupMenu());
-    win::menu::Check(popup, IDM_PIN_SELECTED_DOCUMENT, state->isPinned);
+    win::menu::SetChecked(popup, IDM_PIN_SELECTED_DOCUMENT, state->isPinned);
     POINT pt = { x, y };
     MapWindowPoints(win.hwndCanvas, HWND_DESKTOP, &pt, 1);
     INT cmd = TrackPopupMenu(popup, TPM_RETURNCMD | TPM_RIGHTBUTTON,
@@ -2550,12 +2550,12 @@ static void OnContextMenu(WindowInfo& win, int x, int y)
 
     HMENU popup = BuildMenuFromMenuDef(menuDefContext, dimof(menuDefContext), CreatePopupMenu());
     if (!value || NULL == pageEl->AsLink())
-        win::menu::Hide(popup, IDM_COPY_LINK_TARGET);
+        win::menu::Remove(popup, IDM_COPY_LINK_TARGET);
     if (!value || NULL != pageEl->AsLink())
-        win::menu::Hide(popup, IDM_COPY_COMMENT);
+        win::menu::Remove(popup, IDM_COPY_COMMENT);
 
     if (!win.selectionOnPage)
-        win::menu::Enable(popup, IDM_COPY_SELECTION, false);
+        win::menu::SetEnabled(popup, IDM_COPY_SELECTION, false);
     MenuUpdatePrintItem(win, popup, true);
 
     POINT pt = { x, y };
