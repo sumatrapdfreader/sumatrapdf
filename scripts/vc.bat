@@ -28,6 +28,10 @@ REM Note: Visual Studio 2010 doesn't support Windows 2000
 CALL "%ProgramFiles%\Microsoft Visual Studio 10.0\Common7\Tools\vsvars32.bat" 2>NUL
 IF NOT ERRORLEVEL 1 EXIT /B
 
+:TRY_VS10_X86
+CALL "%ProgramFiles(x86)%\Microsoft Visual Studio 10.0\Common7\Tools\vsvars32.bat" 2>NUL
+IF NOT ERRORLEVEL 1 EXIT /B
+
 REM Fail, if no Visual Studio installation has been found
 ECHO Visual Studio 2010, 2008 or 2005 doesn't seem to be installed
 EXIT /B 1
