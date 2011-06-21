@@ -7,6 +7,7 @@
 #include "BaseUtil.h"
 #include <WindowsX.h>
 #include <CommCtrl.h>
+#include "StrUtil.h"
 #include "GeomUtil.h"
 
 HMODULE SafeLoadLibrary(const TCHAR *dllName);
@@ -176,9 +177,11 @@ inline void Check(HMENU m, UINT id, bool check)
     CheckMenuItem(m, id, MF_BYCOMMAND | (check ? MF_CHECKED : MF_UNCHECKED));
 }
 
-inline void Enable(HMENU m, UINT id, bool enable)
+inline bool Enable(HMENU m, UINT id, bool enable)
 {
-    EnableMenuItem(m, id, MF_BYCOMMAND | (enable ? MF_ENABLED : MF_GRAYED));
+    BOOL ret = EnableMenuItem(m, id, MF_BYCOMMAND | (enable ? MF_ENABLED : MF_GRAYED));
+    assert(ret != -1);
+    return ret != -1;
 }
 
 inline void Hide(HMENU m, UINT id)
@@ -189,6 +192,17 @@ inline void Hide(HMENU m, UINT id)
 inline void Empty(HMENU m)
 {
     while (RemoveMenu(m, 0, MF_BYPOSITION));
+}
+
+inline void SetText(HMENU m, UINT id, TCHAR *s)
+{
+    MENUITEMINFO mii = { 0 };
+    mii.cbSize = sizeof(mii);
+    mii.fMask = MIIM_STRING;
+    mii.fType = MFT_STRING;
+    mii.dwTypeData = s;
+    mii.cch = str::Len(s);
+    SetMenuItemInfo(m, id, FALSE, &mii);
 }
 
 } // namespace Menu

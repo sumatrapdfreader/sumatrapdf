@@ -161,6 +161,7 @@ static HBITMAP                      gBitmapReloadingCue;
 static RenderCache                  gRenderCache;
 static Vec<WindowInfo*>             gWindows;
 static FileHistory                  gFileHistory;
+static Favorites                    gFavorites;
 static UIThreadWorkItemQueue        gUIThreadMarshaller;
 
 // in restricted mode, all commands that could affect the OS are
@@ -676,6 +677,46 @@ static void AppendRecentFilesToMenu(HMENU m)
     InsertMenu(m, IDM_EXIT, MF_BYCOMMAND | MF_SEPARATOR, 0, NULL);
 }
 
+// Called when a user opens "Favorites" top-level menu. We need to construct
+// the menu:
+// - disable add/remove menu items if no document is opened
+// - if a document is opened and the page is already bookmarked,
+//   disable "add" menu item and enable "remove" menu item
+// - if a document is opened and the page is not bookmarked,
+//   enable "add" menu item and disable "remoev" menu item
+//   Also make "add" text more explicit: "Add page %n to favorites"
+static HMENU RebuildFavMenu(WindowInfo *win, HMENU menu)
+{
+    win::menu::Empty(menu);
+    BuildMenuFromMenuDef(menuDefFavorites, dimof(menuDefFavorites), menu);
+    if (!win->IsDocLoaded()) {
+        win::menu::Enable(menu, IDM_FAV_ADD, false);
+        win::menu::Enable(menu, IDM_FAV_DEL, false);
+        // TODO: this will probably be enabled
+        win::menu::Enable(menu, IDM_FAV_MANAGE, false);
+    } else {
+        int pageNo = win->currPageNo;
+        TCHAR *filePath = win->loadedFilePath;
+        bool isBookmarked = gFavorites.IsPageInFavorites(filePath, pageNo);
+        if (isBookmarked)
+        {
+            // TODO: translate when finalized
+            ScopedMem<TCHAR> s(str::Format(_T("Remove page %d from favorites"), pageNo));
+            win::menu::SetText(menu, IDM_FAV_DEL, s);
+            win::menu::Enable(menu, IDM_FAV_ADD, false);
+        }
+        else
+        {
+            // TODO: translate when finalized
+            ScopedMem<TCHAR> s(str::Format(_T("Add page %d to favorites"), pageNo));
+            win::menu::SetText(menu, IDM_FAV_ADD, s);
+            // TODO: for some reason this doesn't work here
+            win::menu::Enable(menu, IDM_FAV_DEL, true);
+        }
+    }
+    return menu;
+}
+
 static HMENU RebuildFileMenu(HMENU menu)
 {
     win::menu::Empty(menu);
@@ -698,7 +739,7 @@ static HMENU RebuildFileMenu(HMENU menu)
     return menu;
 }
 
-static HMENU BuildMenu(HWND hWnd)
+static HMENU BuildMenu(WindowInfo *win)
 {
     HMENU mainMenu = CreateMenu();
     HMENU m = RebuildFileMenu(CreateMenu());
@@ -710,7 +751,7 @@ static HMENU BuildMenu(HWND hWnd)
     m = BuildMenuFromMenuDef(menuDefZoom, dimof(menuDefZoom), CreateMenu());
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Zoom"));
 
-    m = BuildMenuFromMenuDef(menuDefFavorites, dimof(menuDefFavorites), CreateMenu());
+    m = RebuildFavMenu(win, CreateMenu());
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _T("F&avorites")); // TODO: translate when finalized
 
     m = BuildMenuFromMenuDef(menuDefSettings, dimof(menuDefSettings), CreateMenu());
@@ -722,7 +763,7 @@ static HMENU BuildMenu(HWND hWnd)
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _T("Debug"));
 #endif
 
-    SetMenu(hWnd, mainMenu);
+    SetMenu(win->hwndFrame, mainMenu);
     return mainMenu;
 }
 
@@ -1392,7 +1433,7 @@ static WindowInfo* CreateWindowInfo()
     ShowScrollBar(hwndCanvas, SB_BOTH, FALSE);
 
     assert(NULL == win->menu);
-    win->menu = BuildMenu(win->hwndFrame);
+    win->menu = BuildMenu(win);
 
     win->hwndCanvas = hwndCanvas;
     ShowWindow(win->hwndCanvas, SW_SHOW);
@@ -4734,7 +4775,7 @@ static void RebuildMenuBar()
     for (size_t i = 0; i < gWindows.Count(); i++) {
         WindowInfo *win = gWindows[i];
         HMENU oldMenu = win->menu;
-        win->menu = BuildMenu(win->hwndFrame);
+        win->menu = BuildMenu(win);
         DestroyMenu(oldMenu);
     }
 }
@@ -6195,6 +6236,8 @@ static void UpdateMenu(WindowInfo *win, HMENU m)
     UINT id = GetMenuItemID(m, 0);
     if (id == menuDefFile[0].id)
         RebuildFileMenu(m);
+    else if (id == menuDefFavorites[0].id)
+        RebuildFavMenu(win, m);
     if (win)
         MenuUpdateStateForWindow(*win);
 }
