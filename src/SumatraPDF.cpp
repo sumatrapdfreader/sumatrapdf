@@ -568,7 +568,7 @@ MenuDef menuDefZoom[] = {
     { "8.33%",                              IDM_ZOOM_8_33,              MF_NO_TRANSLATE  },
 };
 
-MenuDef menuDefLang[] = {
+MenuDef menuDefSettings[] = {
     { _TRN("Change Language"),              IDM_CHANGE_LANGUAGE,        0  },
 #if 0
     { _TRN("Contribute Translation"),       IDM_CONTRIBUTE_TRANSLATION, MF_NOT_IN_RESTRICTED },
@@ -702,7 +702,7 @@ static HMENU BuildMenu(HWND hWnd)
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Go To"));
     m = BuildMenuFromMenuDef(menuDefZoom, dimof(menuDefZoom), CreateMenu());
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Zoom"));
-    m = BuildMenuFromMenuDef(menuDefLang, dimof(menuDefLang), CreateMenu());
+    m = BuildMenuFromMenuDef(menuDefSettings, dimof(menuDefSettings), CreateMenu());
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Settings"));
     m = BuildMenuFromMenuDef(menuDefHelp, dimof(menuDefHelp), CreateMenu());
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Help"));
