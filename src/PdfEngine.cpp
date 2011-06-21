@@ -919,18 +919,12 @@ CPdfEngine *CPdfEngine::Clone()
     return clone;
 }
 
-bool CPdfEngine::load(const TCHAR *fileName, PasswordUI *pwdUI)
+static const TCHAR *findEmbedMarks(const TCHAR *fileName)
 {
-    assert(!_fileName && !_xref);
-    _fileName = str::Dup(fileName);
-    if (!_fileName)
-        return false;
+    const TCHAR *embedMarks = NULL;
 
-    // File names ending in :<digits>:<digits> are interpreted as containing
-    // embedded PDF documents (the digits are :<num>:<gen> of the embedded file stream)
-    TCHAR *embedMarks = NULL;
     int colonCount = 0;
-    for (TCHAR *c = (TCHAR *)_fileName + str::Len(_fileName) - 1; c > _fileName; c--) {
+    for (const TCHAR *c = fileName + str::Len(fileName) - 1; c > fileName; c--) {
         if (*c == ':') {
             if (!ChrIsDigit(*(c + 1)))
                 break;
@@ -941,6 +935,19 @@ bool CPdfEngine::load(const TCHAR *fileName, PasswordUI *pwdUI)
             break;
     }
 
+    return embedMarks;
+}
+
+bool CPdfEngine::load(const TCHAR *fileName, PasswordUI *pwdUI)
+{
+    assert(!_fileName && !_xref);
+    _fileName = str::Dup(fileName);
+    if (!_fileName)
+        return false;
+
+    // File names ending in :<digits>:<digits> are interpreted as containing
+    // embedded PDF documents (the digits are :<num>:<gen> of the embedded file stream)
+    TCHAR *embedMarks = (TCHAR *)findEmbedMarks(_fileName);
     if (embedMarks)
         *embedMarks = '\0';
     fz_stream *file = fz_open_file2(_fileName);
@@ -1885,7 +1892,7 @@ bool PdfEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
         return false;
     }
 
-    return str::EndsWithI(fileName, _T(".pdf"));
+    return str::EndsWithI(fileName, _T(".pdf")) || findEmbedMarks(fileName);
 }
 
 PdfEngine *PdfEngine::CreateFromFileName(const TCHAR *fileName, PasswordUI *pwdUI)
