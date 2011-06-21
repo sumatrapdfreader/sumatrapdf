@@ -95,6 +95,10 @@
 #define IDM_GOTO_NAV_BACK               558
 #define IDM_GOTO_NAV_FORWARD            559
 
+#define IDM_FAV_ADD                     560
+#define IDM_FAV_DEL                     561
+#define IDM_FAV_MANAGE                  562
+
 #define IDM_DEBUG_SHOW_LINKS            590
 #define IDM_DEBUG_GDI_RENDERER          591
 #define IDM_DEBUG_CRASH_ME              592

@@ -114,6 +114,11 @@ public:
         return els[idx];
     }
 
+    // helpful if T is a struct
+    T* AtPtr(size_t idx) const {
+        return &els[idx];
+    }
+
     size_t Count() const {
         return len;
     }

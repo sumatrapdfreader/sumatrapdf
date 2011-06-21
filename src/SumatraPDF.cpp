@@ -568,6 +568,13 @@ MenuDef menuDefZoom[] = {
     { "8.33%",                              IDM_ZOOM_8_33,              MF_NO_TRANSLATE  },
 };
 
+MenuDef menuDefFavorites[] = {
+    // TODO: translate when finalized
+    { "Add to favorites",                  IDM_FAV_ADD,                MF_NO_TRANSLATE },
+    { "Remove from favorites",             IDM_FAV_DEL,                MF_NO_TRANSLATE },
+    { "Manage favorites",                  IDM_FAV_MANAGE,             MF_NO_TRANSLATE },
+};
+
 MenuDef menuDefSettings[] = {
     { _TRN("Change Language"),              IDM_CHANGE_LANGUAGE,        0  },
 #if 0
@@ -702,6 +709,10 @@ static HMENU BuildMenu(HWND hWnd)
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Go To"));
     m = BuildMenuFromMenuDef(menuDefZoom, dimof(menuDefZoom), CreateMenu());
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Zoom"));
+
+    m = BuildMenuFromMenuDef(menuDefFavorites, dimof(menuDefFavorites), CreateMenu());
+    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _T("F&avorites")); // TODO: translate when finalized
+
     m = BuildMenuFromMenuDef(menuDefSettings, dimof(menuDefSettings), CreateMenu());
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Settings"));
     m = BuildMenuFromMenuDef(menuDefHelp, dimof(menuDefHelp), CreateMenu());
@@ -1235,14 +1246,14 @@ static void MenuUpdatePrintItem(WindowInfo& win, HMENU menu, bool disableOnly=fa
 }
 
 static void MenuUpdateStateForWindow(WindowInfo& win) {
-    static UINT menusToDisableIfNoPdf[] = {
+    static UINT menusToDisableIfNoDocument[] = {
         IDM_VIEW_ROTATE_LEFT, IDM_VIEW_ROTATE_RIGHT, IDM_GOTO_NEXT_PAGE, IDM_GOTO_PREV_PAGE,
         IDM_GOTO_FIRST_PAGE, IDM_GOTO_LAST_PAGE, IDM_GOTO_NAV_BACK, IDM_GOTO_NAV_FORWARD,
         IDM_GOTO_PAGE, IDM_FIND_FIRST, IDM_SAVEAS, IDM_SAVEAS_BOOKMARK, IDM_SEND_BY_EMAIL,
         IDM_VIEW_WITH_ACROBAT, IDM_VIEW_WITH_FOXIT, IDM_VIEW_WITH_PDF_XCHANGE, 
         IDM_SELECT_ALL, IDM_COPY_SELECTION, IDM_PROPERTIES, 
-        IDM_VIEW_PRESENTATION_MODE };
-    static UINT menusToDisableIfNonPdf[] = {
+        IDM_VIEW_PRESENTATION_MODE, IDM_FAV_ADD, IDM_FAV_DEL, IDM_FAV_MANAGE};
+    static UINT menusToDisableIfNotPdfDocument[] = {
         IDM_VIEW_WITH_ACROBAT, IDM_VIEW_WITH_FOXIT, IDM_VIEW_WITH_PDF_XCHANGE
     };
     static UINT menusToDisableIfDirectory[] = {
@@ -1270,14 +1281,14 @@ static void MenuUpdateStateForWindow(WindowInfo& win) {
         win::menu::Enable(win.menu, IDM_GOTO_NAV_FORWARD, win.dm->canNavigate(1));
     }
 
-    for (int i = 0; i < dimof(menusToDisableIfNoPdf); i++) {
-        UINT id = menusToDisableIfNoPdf[i];
+    for (int i = 0; i < dimof(menusToDisableIfNoDocument); i++) {
+        UINT id = menusToDisableIfNoDocument[i];
         win::menu::Enable(win.menu, id, win.IsDocLoaded());
     }
 
     if (IsNonPdfDocument(&win)) {
-        for (int i = 0; i < dimof(menusToDisableIfNonPdf); i++) {
-            UINT id = menusToDisableIfNonPdf[i];
+        for (int i = 0; i < dimof(menusToDisableIfNotPdfDocument); i++) {
+            UINT id = menusToDisableIfNotPdfDocument[i];
             win::menu::Enable(win.menu, id, false);
         }
     }
@@ -6489,6 +6500,12 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
 
                 case IDM_DEBUG_CRASH_ME:
                     CrashMe();
+                    break;
+
+                case IDM_FAV_ADD:
+                case IDM_FAV_DEL:
+                case IDM_FAV_MANAGE:
+                    MessageBox(NULL, _T("Not implemented yet!"), _T("Not implemented yet."), MB_ICONEXCLAMATION | MB_OK);
                     break;
 
                 default:

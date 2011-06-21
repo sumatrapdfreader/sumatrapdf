@@ -146,4 +146,79 @@ public:
     }
 };
 
+/*
+A favorite is a bookmark (we call it a favorite, like Internet Explorer, because
+we have to differentiate from bookmarks inside a PDF file (which really are
+table of content)).
+
+We can have multiple favorites per file.
+
+Favorites are accurate to a page - it's simple and should be good enough
+for the user.
+
+A favorite is identified by a (mandatory) page number and (optional) name
+(provided by the user).
+
+Favorites do not remember presentation settings like zoom or viewing mode. 
+Favorites are for navigation only. Presentation settings are remembered on a
+per-file basis in FileHistory.
+*/
+
+struct FavName {
+    int     pageNo;
+    TCHAR * name;
+};
+
+class Fav {
+public:
+    TCHAR *         filePath;
+    Vec<FavName>    favNames;
+};
+
+class Favorites {
+    Vec<Fav> favs;
+
+    // filePathCache points to a string inside Fav, so doesn't need to free()d
+    TCHAR *  filePathCache;
+    size_t   idxCache;
+
+public:
+    Favorites() : filePathCache(NULL)
+    {}
+    ~Favorites() {}
+
+    bool IsPageInFavorites(const TCHAR *filePath, int pageNo) {
+        // it's likely that we'll ask about the info for the same
+        // file as in previous call, so use one element cache
+        Fav *fav = NULL;
+        bool found = false;
+        if (str::Eq(filePath, filePathCache)) {
+            fav = favs.AtPtr(idxCache);
+            found = true;
+        } else {
+            for (size_t i=0; i<favs.Count(); i++)
+            {
+                fav = favs.AtPtr(i);
+                if (str::Eq(filePath, fav->filePath))
+                {
+                    idxCache = i;
+                    filePathCache = fav->filePath;
+                    found = true;
+                    break;
+                }
+            }
+        }
+        if (!found)
+            return false;
+
+        for (size_t i=0; i<fav->favNames.Count(); i++)
+        {
+            FavName *fn = fav->favNames.AtPtr(i);
+            if (fn->pageNo == pageNo)
+                return true;
+        }
+        return false;
+    }
+};
+
 #endif
