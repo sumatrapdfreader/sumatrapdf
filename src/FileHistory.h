@@ -190,7 +190,7 @@ class Fav {
 
     Vec<FavName *>  favNames;
 
-    FavName *FindByPage(int pageNo, size_t *idx=NULL)
+    FavName *FindByPage(int pageNo, size_t *idx=NULL) const
     {
         for (size_t i=0; i<favNames.Count(); i++)
         {
@@ -218,6 +218,11 @@ public:
         free(filePath);
     }
 
+    size_t Count() const
+    {
+        return favNames.Count();
+    }
+
     bool Remove(int pageNo)
     {
         size_t idx;
@@ -231,7 +236,7 @@ public:
         return false;
     }
 
-    bool Exists(int pageNo)
+    bool Exists(int pageNo) const
     {
         FavName *fn = FindByPage(pageNo);
         return fn != NULL;
@@ -269,8 +274,6 @@ public:
         bool found = false;
         if (str::Eq(filePath, filePathCache)) {
             fav = favs.At(idxCache);
-            if (idx)
-                *idx = idxCache;
             found = true;
         } else {
             for (size_t i=0; i<favs.Count(); i++)
@@ -321,7 +324,7 @@ public:
         if (!fav)
             return;
         fav->Remove(pageNo);
-        if (0 == favs.Count())
+        if (0 == fav->Count())
             favs.RemoveAt(idx);
     }
 

@@ -6231,6 +6231,24 @@ void WindowInfo::RepaintAsync(UINT delay)
     QueueWorkItem(new RepaintCanvasWorkItem(this, delay));
 }
 
+void FavoriteAdd(WindowInfo *win)
+{
+    int pageNo = win->currPageNo;
+    TCHAR *filePath = win->loadedFilePath;
+    // TODO: show the dialog asking the user to provide (optional)
+    // title for the favorite
+    gFavorites.AddOrReplace(filePath, pageNo, NULL);
+    // TODO: show notification that a favorite was deleted?
+}
+
+void FavoriteDel(WindowInfo *win)
+{
+    int pageNo = win->currPageNo;
+    TCHAR *filePath = win->loadedFilePath;
+    gFavorites.Remove(filePath, pageNo);
+    // TODO: show notification that a favorite was deleted?
+}
+
 static void UpdateMenu(WindowInfo *win, HMENU m)
 {
     UINT id = GetMenuItemID(m, 0);
@@ -6511,7 +6529,13 @@ static LRESULT OnCommand(WindowInfo *win, HWND hwnd, UINT message, WPARAM wParam
             break;
     
         case IDM_FAV_ADD:
+            FavoriteAdd(win);
+            break;
+
         case IDM_FAV_DEL:
+            FavoriteDel(win);
+            break;
+
         case IDM_FAV_MANAGE:
             MessageBox(NULL, _T("Not implemented yet!"), _T("Not implemented yet."), MB_ICONEXCLAMATION | MB_OK);
             break;
