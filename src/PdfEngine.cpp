@@ -218,7 +218,12 @@ void fz_stream_fingerprint(fz_stream *file, unsigned char digest[16])
 
     fz_buffer *buffer;
     fz_seek(file, 0, 0);
-    fz_read_all(&buffer, file, fileLen);
+    fz_error error = fz_read_all(&buffer, file, fileLen);
+    if (error) {
+        fz_catch(error, "couldn't read stream data, using a NULL fingerprint instead");
+        memset(digest, 0, 16);
+        return;
+    }
     assert(fileLen == buffer->len);
 
     CalcMD5Digest(buffer->data, buffer->len, digest);
