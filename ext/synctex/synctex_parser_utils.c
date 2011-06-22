@@ -158,6 +158,9 @@ next_character:
 		if(!SYNCTEX_IS_PATH_SEPARATOR(*rhs)) {/*  but not rhs */
 			return synctex_NO;
 		}
+		/* SumatraPDF: ignore spurious /./ parts (caused by TeXlive 2011) */
+		for (; *(lhs + 1) == '.' && SYNCTEX_IS_PATH_SEPARATOR(*(lhs + 2)); lhs += 2);
+		for (; *(rhs + 1) == '.' && SYNCTEX_IS_PATH_SEPARATOR(*(rhs + 2)); rhs += 2);
 	} else if(SYNCTEX_IS_PATH_SEPARATOR(*rhs)) {/*  rhs points to a path separator but not lhs */
 		return synctex_NO;
 	}
