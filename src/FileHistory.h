@@ -164,75 +164,93 @@ Favorites are for navigation only. Presentation settings are remembered on a
 per-file basis in FileHistory.
 */
 
-struct FavName {
+class FavName {
+public:
+    FavName(int pageNo, const TCHAR *name) : pageNo(pageNo), name(NULL)
+    {
+        SetName(name);
+    }
+
+    ~FavName()
+    {
+        free(name);
+    }
+
+    void SetName(const TCHAR *name)
+    {
+        free(this->name);
+        this->name = (name == NULL) ? NULL : str::Dup(name);
+    }
+
     int     pageNo;
     TCHAR * name;
 };
 
 class Fav {
 
-    void RemoveAll()
+    Vec<FavName *>  favNames;
+
+    FavName *FindByPage(int pageNo, size_t *idx=NULL)
     {
         for (size_t i=0; i<favNames.Count(); i++)
         {
-            FavName *fn = favNames.AtPtr(i);
-            free(fn->name);
-        }        
+            FavName *fn = favNames.At(i);
+            if (fn->pageNo == pageNo)
+            {
+                if (idx)
+                    *idx = i;
+                return fn;
+            }
+        }
+        return NULL;
     }
 
 public:
     TCHAR *         filePath;
-    Vec<FavName>    favNames;
 
-    ~Fav() { RemoveAll(); }
+    Fav(const TCHAR *fp)
+    {
+        filePath = str::Dup(fp);
+    }
+
+    ~Fav() {
+        DeleteVecMembers(favNames);
+        free(filePath);
+    }
 
     bool Remove(int pageNo)
     {
-        for (size_t i=0; i<favNames.Count(); i++)
+        size_t idx;
+        FavName *fn = FindByPage(pageNo, &idx);
+        if (fn)
         {
-            FavName *fn = favNames.AtPtr(i);
-            if (fn->pageNo == pageNo)
-            {
-                free(fn->name);
-                favNames.RemoveAt(i);
-                return true;
-            }
+            delete fn;
+            favNames.RemoveAt(idx);
+            return true;
         }
         return false;
     }
 
     bool Exists(int pageNo)
     {
-        for (size_t i=0; i<favNames.Count(); i++)
-        {
-            FavName *fn = favNames.AtPtr(i);
-            if (fn->pageNo == pageNo)
-                return true;
-        }
-        return false;
+        FavName *fn = FindByPage(pageNo);
+        return fn != NULL;
     }
 
     void AddOrReplace(int pageNo, const TCHAR *name)
     {
-        for (size_t i=0; i<favNames.Count(); i++)
-        {
-            FavName *fn = favNames.AtPtr(i);
-            if (fn->pageNo == pageNo)
-            {
-                free(fn->name);
-                fn->name = (name == NULL) ? NULL : str::Dup(name);
-                return;
-            }
+        FavName *fn = FindByPage(pageNo);
+        if (fn) {
+            fn->SetName(name);
+            return;
         }
-        FavName fn = { 0 };
-        fn.pageNo = pageNo;
-        fn.name = (name == NULL) ? NULL : str::Dup(name);
+        fn = new FavName(pageNo, name);
         favNames.Append(fn);
     }
 };
 
 class Favorites {
-    Vec<Fav> favs;
+    Vec<Fav*> favs;
 
     // filePathCache points to a string inside Fav, so doesn't need to free()d
     TCHAR *  filePathCache;
@@ -243,19 +261,21 @@ public:
     {}
     ~Favorites() {}
 
-    Fav *GetFavByFilePath(const TCHAR *filePath, bool createIfNotExist=false)
+    Fav *GetFavByFilePath(const TCHAR *filePath, bool createIfNotExist=false, size_t *idx=NULL)
     {
         // it's likely that we'll ask about the info for the same
         // file as in previous call, so use one element cache
         Fav *fav = NULL;
         bool found = false;
         if (str::Eq(filePath, filePathCache)) {
-            fav = favs.AtPtr(idxCache);
+            fav = favs.At(idxCache);
+            if (idx)
+                *idx = idxCache;
             found = true;
         } else {
             for (size_t i=0; i<favs.Count(); i++)
             {
-                fav = favs.AtPtr(i);
+                fav = favs.At(i);
                 if (str::Eq(filePath, fav->filePath))
                 {
                     idxCache = i;
@@ -268,9 +288,13 @@ public:
         if (!found) {
             if (!createIfNotExist)
                 return NULL;
-            // TODO: write me
-            return NULL;
+            fav = new Fav(filePath);
+            favs.Append(fav);
+            filePathCache = fav->filePath;
+            idxCache = favs.Count() - 1;
         }
+        if (idx)
+            *idx = idxCache;
         assert(fav != NULL);
         return fav;
     }
@@ -292,11 +316,13 @@ public:
 
     void Remove(const TCHAR *filePath, int pageNo)
     {
-        Fav *fav = GetFavByFilePath(filePath, false);
+        size_t idx;
+        Fav *fav = GetFavByFilePath(filePath, false, &idx);
         if (!fav)
             return;
         fav->Remove(pageNo);
-        // TODO: remove Fav completely if number of bookmarks drop to 0
+        if (0 == favs.Count())
+            favs.RemoveAt(idx);
     }
 
 };
