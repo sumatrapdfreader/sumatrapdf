@@ -13,28 +13,48 @@ namespace str {
     if (!arg1 || !arg2) \
         return false
 
+// return true if s1 == s2, case sensitive
 bool Eq(const char *s1, const char *s2)
 {
     EntryCheck(s1, s2);
     return 0 == strcmp(s1, s2);
 }
 
+// return true if s1 == s2, case sensitive
 bool Eq(const WCHAR *s1, const WCHAR *s2)
 {
     EntryCheck(s1, s2);
     return 0 == wcscmp(s1, s2);
 }
 
+// return true if s1 == s2, case insensitive
 bool EqI(const char *s1, const char *s2)
 {
     EntryCheck(s1, s2);
     return 0 == _stricmp(s1, s2);
 }
 
+// return true if s1 == s2, case insensitive
 bool EqI(const WCHAR *s1, const WCHAR *s2)
 {
     EntryCheck(s1, s2);
     return 0 == _wcsicmp(s1, s2);
+}
+
+// compares two strings ignoring case and whitespace
+bool EqIS(const TCHAR *s1, const TCHAR *s2)
+{
+    while (*s1 && *s2) {
+        // skip whitespace
+        for (; _istspace(*s1); s1++);
+        for (; _istspace(*s2); s2++);
+
+        if (_totlower(*s1) != _totlower(*s2))
+            return false;
+        if (*s1) { s1++; s2++; }
+    }
+
+    return !*s1 && !*s2;
 }
 
 bool EqN(const char *s1, const char *s2, size_t len)

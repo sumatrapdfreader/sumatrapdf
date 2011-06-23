@@ -5,6 +5,7 @@
 #include "BaseUtil.h"
 #include "StrUtil.h"
 #include "WinUtil.h"
+#include "AppPrefs.h"
 #include "ParseCommandLine.h"
 #include "CmdLineParser.h"
 #include "StressTesting.h"
@@ -58,47 +59,6 @@ static void ParseColor(int *destColor, const TCHAR* txt)
     unsigned int r, g, b;
     if (str::Parse(txt, _T("%2x%2x%2x%$"), &r, &g, &b))
         *destColor = RGB(r, g, b);
-}
-
-namespace str {
-
-// compares two strings ignoring case and whitespace
-static bool EqIS(const TCHAR *s1, const TCHAR *s2)
-{
-    while (*s1 && *s2) {
-        // skip whitespace
-        for (; _istspace(*s1); s1++);
-        for (; _istspace(*s2); s2++);
-
-        if (_totlower(*s1) != _totlower(*s2))
-            return false;
-        if (*s1) { s1++; s2++; }
-    }
-
-    return !*s1 && !*s2;
-}
-
-}
-
-#define IS_STR_ENUM(enumName) \
-    if (str::EqIS(txt, _T(enumName##_STR))) { \
-        *mode = enumName; \
-        return; \
-    }
-
-// -view [continuous][singlepage|facing|bookview]
-static void ParseViewMode(DisplayMode *mode, const TCHAR *txt)
-{
-    IS_STR_ENUM(DM_SINGLE_PAGE);
-    IS_STR_ENUM(DM_CONTINUOUS);
-    IS_STR_ENUM(DM_FACING);
-    IS_STR_ENUM(DM_CONTINUOUS_FACING);
-    IS_STR_ENUM(DM_BOOK_VIEW);
-    IS_STR_ENUM(DM_CONTINUOUS_BOOK_VIEW);
-    if (str::EqIS(txt, _T("continuous single page"))) {
-        *mode = DM_CONTINUOUS;
-        return;
-    }
 }
 
 // -zoom [fitwidth|fitpage|fitcontent|100%] (with 100% meaning actual size)

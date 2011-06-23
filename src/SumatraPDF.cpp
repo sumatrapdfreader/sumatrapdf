@@ -1005,7 +1005,7 @@ static bool SavePrefs()
         UpdateCurrentFileDisplayStateForWin(*gWindows[i]);
 
     ScopedMem<TCHAR> path(GetPrefsFileName());
-    bool ok = Prefs::Save(path, gGlobalPrefs, gFileHistory);
+    bool ok = Prefs::Save(path, gGlobalPrefs, gFileHistory, gFavorites);
     if (ok) {
         // notify all SumatraPDF instances about the updated prefs file
         HWND hwnd = NULL;
@@ -1030,11 +1030,14 @@ static bool ReloadPrefs()
     bool showToolbar = gGlobalPrefs.m_showToolbar;
 
     FileHistory fileHistory;
-    if (!Prefs::Load(path, gGlobalPrefs, fileHistory))
+    Favorites favs;
+    if (!Prefs::Load(path, gGlobalPrefs, fileHistory, favs))
         return false;
 
     gFileHistory.Clear();
     gFileHistory.ExtendWith(fileHistory);
+    gFavorites.ReplaceWith(favs);
+
     if (gWindows.Count() > 0 && gWindows[0]->IsAboutWindow()) {
         gWindows[0]->DeleteInfotip();
         gWindows[0]->RedrawAll(true);
@@ -6931,7 +6934,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
     {
         ScopedMem<TCHAR> prefsFilename(GetPrefsFileName());
-        if (!Prefs::Load(prefsFilename, gGlobalPrefs, gFileHistory)) {
+        if (!Prefs::Load(prefsFilename, gGlobalPrefs, gFileHistory, gFavorites)) {
             // assume that this is because prefs file didn't exist
             // i.e. this could be the first time Sumatra is launched.
             const char *lang = Trans::GuessLanguage();
