@@ -429,7 +429,7 @@ namespace Prefs {
 /* Load preferences from the preferences file.
    Returns true if preferences file was loaded, false if there was an error.
 */
-bool Load(TCHAR *filepath, SerializableGlobalPrefs& globalPrefs, FileHistory& fileHistory, Favorites& favs)
+bool Load(TCHAR *filepath, SerializableGlobalPrefs& globalPrefs, FileHistory& fileHistory, Favorites **favs)
 {
     bool            ok = false;
 
@@ -463,7 +463,7 @@ bool Load(TCHAR *filepath, SerializableGlobalPrefs& globalPrefs, FileHistory& fi
     return ok;
 }
 
-bool Save(TCHAR *filepath, SerializableGlobalPrefs& globalPrefs, FileHistory& fileHistory, Favorites& favs)
+bool Save(TCHAR *filepath, SerializableGlobalPrefs& globalPrefs, FileHistory& fileHistory, Favorites* favs)
 {
     assert(filepath);
     if (!filepath)

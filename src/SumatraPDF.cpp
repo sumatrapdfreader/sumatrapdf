@@ -161,7 +161,7 @@ static HBITMAP                      gBitmapReloadingCue;
 static RenderCache                  gRenderCache;
 static Vec<WindowInfo*>             gWindows;
 static FileHistory                  gFileHistory;
-static Favorites                    gFavorites;
+static Favorites *                  gFavorites;
 static UIThreadWorkItemQueue        gUIThreadMarshaller;
 
 // in restricted mode, all commands that could affect the OS are
@@ -697,7 +697,7 @@ static HMENU RebuildFavMenu(WindowInfo *win, HMENU menu)
     } else {
         int pageNo = win->currPageNo;
         TCHAR *filePath = win->loadedFilePath;
-        bool isBookmarked = gFavorites.IsPageInFavorites(filePath, pageNo);
+        bool isBookmarked = gFavorites->IsPageInFavorites(filePath, pageNo);
         if (isBookmarked)
         {
             // TODO: translate when finalized
@@ -1030,13 +1030,16 @@ static bool ReloadPrefs()
     bool showToolbar = gGlobalPrefs.m_showToolbar;
 
     FileHistory fileHistory;
-    Favorites favs;
-    if (!Prefs::Load(path, gGlobalPrefs, fileHistory, favs))
+    Favorites *favs = NULL;
+    if (!Prefs::Load(path, gGlobalPrefs, fileHistory, &favs))
         return false;
 
     gFileHistory.Clear();
     gFileHistory.ExtendWith(fileHistory);
-    gFavorites.ReplaceWith(favs);
+    if (favs) {
+        delete gFavorites;
+        gFavorites = favs;
+    }
 
     if (gWindows.Count() > 0 && gWindows[0]->IsAboutWindow()) {
         gWindows[0]->DeleteInfotip();
@@ -6240,7 +6243,7 @@ void FavoriteAdd(WindowInfo *win)
     TCHAR *filePath = win->loadedFilePath;
     // TODO: show the dialog asking the user to provide (optional)
     // title for the favorite
-    gFavorites.AddOrReplace(filePath, pageNo, NULL);
+    gFavorites->AddOrReplace(filePath, pageNo, NULL);
     // TODO: show notification that a favorite was deleted?
 }
 
@@ -6248,7 +6251,7 @@ void FavoriteDel(WindowInfo *win)
 {
     int pageNo = win->currPageNo;
     TCHAR *filePath = win->loadedFilePath;
-    gFavorites.Remove(filePath, pageNo);
+    gFavorites->Remove(filePath, pageNo);
     // TODO: show notification that a favorite was deleted?
 }
 
@@ -6934,13 +6937,15 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
     {
         ScopedMem<TCHAR> prefsFilename(GetPrefsFileName());
-        if (!Prefs::Load(prefsFilename, gGlobalPrefs, gFileHistory, gFavorites)) {
+        if (!Prefs::Load(prefsFilename, gGlobalPrefs, gFileHistory, &gFavorites)) {
             // assume that this is because prefs file didn't exist
             // i.e. this could be the first time Sumatra is launched.
             const char *lang = Trans::GuessLanguage();
             CurrLangNameSet(lang);
         }
         else {
+            assert(gFavorites == NULL);
+            gFavorites = new Favorites();
             CurrLangNameSet(gGlobalPrefs.m_currentLanguage);
         }
     }

@@ -327,13 +327,6 @@ public:
         if (0 == fav->Count())
             favs.RemoveAt(idx);
     }
-
-    void ReplaceWith(Favorites& f)
-    {
-        // TODO: write me
-        assert(0);
-    }
-
 };
 
 #endif
