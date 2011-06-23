@@ -6938,13 +6938,15 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     {
         ScopedMem<TCHAR> prefsFilename(GetPrefsFileName());
         if (!Prefs::Load(prefsFilename, gGlobalPrefs, gFileHistory, &gFavorites)) {
+            assert(gFavorites == NULL);
+            gFavorites = new Favorites();
             // assume that this is because prefs file didn't exist
             // i.e. this could be the first time Sumatra is launched.
             const char *lang = Trans::GuessLanguage();
             CurrLangNameSet(lang);
         }
         else {
-            assert(gFavorites == NULL);
+            // TODO: remove this once Prefs::Load actually loads gFavorites
             gFavorites = new Favorites();
             CurrLangNameSet(gGlobalPrefs.m_currentLanguage);
         }
@@ -7178,6 +7180,8 @@ Exit:
     DeleteObject(gBrushShadow);
     DeleteObject(gDefaultGuiFont);
     DeleteBitmap(gBitmapReloadingCue);
+
+    delete gFavorites;
 
     return (int)msg.wParam;
 }

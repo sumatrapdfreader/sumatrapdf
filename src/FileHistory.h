@@ -264,7 +264,7 @@ class Favorites {
 public:
     Favorites() : filePathCache(NULL)
     {}
-    ~Favorites() {}
+    ~Favorites() { DeleteVecMembers(favs); }
 
     Fav *GetFavByFilePath(const TCHAR *filePath, bool createIfNotExist=false, size_t *idx=NULL)
     {

@@ -336,14 +336,14 @@ static BOOL CALLBACK OpenMiniDumpCallback(void* /*param*/, PMINIDUMP_CALLBACK_IN
 static char *OsNameFromVer(OSVERSIONINFOEX ver)
 {
     if (VER_PLATFORM_WIN32_NT != ver.dwPlatformId)
-        return "No NT";
+        return "9x";
 
     if (ver.dwMajorVersion == 6 && ver.dwMinorVersion == 1)
         return "7"; // or Server 2008
     if (ver.dwMajorVersion == 6 && ver.dwMinorVersion == 0)
         return "Vista";
     if (ver.dwMajorVersion == 5 && ver.dwMinorVersion == 2)
-        return "Sever 2003";
+        return "Server 2003";
     if (ver.dwMajorVersion == 5 && ver.dwMinorVersion == 1)
         return "XP";
     if (ver.dwMajorVersion == 5 && ver.dwMinorVersion == 0)
