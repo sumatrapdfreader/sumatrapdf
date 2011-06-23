@@ -1,5 +1,5 @@
 /* Copyright 2006-2011 the SumatraPDF project authors (see AUTHORS file).
-   License: GPLv3 */
+   License: Simplified BSD */
 
 #include <windows.h>
 #include <dbghelp.h>
@@ -29,10 +29,11 @@
 //#define DEBUG_CRASH_INFO 1
 
 /* Hard won wisdom: changing symbol path with SymSetSearchPath() after modules
-have been loaded (invideProcess=TRUE in SymInitialize() or SymRefreshModuleList()).
+have been loaded (invideProcess=TRUE in SymInitialize() or SymRefreshModuleList())
+doesn't work.
 I had to provide symbol path in SymInitialize() (and either invideProcess=TRUE
-or invideProcess=FALSE but calls SymRefreshModuleList()). There's probably
-a way to force it, but I'm happy I found a way that works.    */
+or invideProcess=FALSE and call SymRefreshModuleList()). There's probably
+a way to force it, but I'm happy I found a way that works. */
 
 typedef BOOL WINAPI MiniDumpWriteDumpProc(
     HANDLE hProcess,
