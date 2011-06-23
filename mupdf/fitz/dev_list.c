@@ -463,12 +463,16 @@ fz_execute_display_list(fz_display_list *list, fz_device *dev, fz_matrix top_ctm
 			{
 			case FZ_CMD_CLIP_PATH:
 			case FZ_CMD_CLIP_STROKE_PATH:
-			case FZ_CMD_CLIP_TEXT:
 			case FZ_CMD_CLIP_STROKE_TEXT:
 			case FZ_CMD_CLIP_IMAGE_MASK:
 			case FZ_CMD_BEGIN_MASK:
 			case FZ_CMD_BEGIN_GROUP:
 				clipped++;
+				continue;
+			/* SumatraPDF: accumulated text clipping is only matched by a single pop */
+			case FZ_CMD_CLIP_TEXT:
+				if (node->flag != 2)
+					clipped++;
 				continue;
 			case FZ_CMD_POP_CLIP:
 			case FZ_CMD_END_GROUP:
