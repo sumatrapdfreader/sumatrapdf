@@ -157,6 +157,12 @@ fz_round_rect(fz_rect f)
 	i.y0 = floorf(f.y0 + 0.001f);
 	i.x1 = ceilf(f.x1 - 0.001f);
 	i.y1 = ceilf(f.y1 - 0.001f);
+	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1522 */
+#define FIX_EXTREMES(val_i, val_f) if (val_f > INT_MAX) val_i = INT_MAX; else if (val_f < INT_MIN) val_i = INT_MIN; else 0
+	FIX_EXTREMES(i.x0, f.x0);
+	FIX_EXTREMES(i.y0, f.y0);
+	FIX_EXTREMES(i.x1, f.x1);
+	FIX_EXTREMES(i.y1, f.y1);
 	return i;
 }
 
