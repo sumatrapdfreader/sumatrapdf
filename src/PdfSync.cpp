@@ -42,11 +42,11 @@ class Pdfsync : public Synchronizer
 public:
     Pdfsync(const TCHAR* _syncfilename, DisplayModel *dm) : Synchronizer(_syncfilename, dm) { }
 
-    int rebuild_index();
     virtual int pdf_to_source(UINT pageNo, PointI pt, ScopedMem<TCHAR>& filename, UINT *line, UINT *col);
     virtual int source_to_pdf(const TCHAR* srcfilename, UINT line, UINT col, UINT *page, Vec<RectI>& rects);
 
 private:
+    int rebuild_index();
     UINT source_to_record(const TCHAR* srcfilename, UINT line, UINT col, Vec<size_t>& records);
 
 private:
@@ -67,22 +67,23 @@ private:
 class SyncTex : public Synchronizer
 {
 public:
-    SyncTex(const TCHAR* _syncfilename, DisplayModel *dm) : Synchronizer(_syncfilename, dm)
+    SyncTex(const TCHAR* _syncfilename, DisplayModel *dm) :
+        Synchronizer(_syncfilename, dm), scanner(NULL)
     {
         assert(str::EndsWithI(_syncfilename, SYNCTEX_EXTENSION) ||
                str::EndsWithI(_syncfilename, SYNCTEXGZ_EXTENSION));
-        scanner = NULL;
     }
     virtual ~SyncTex()
     {
         synctex_scanner_free(scanner);
     }
 
-    int rebuild_index();
     virtual int pdf_to_source(UINT pageNo, PointI pt, ScopedMem<TCHAR>& filename, UINT *line, UINT *col);
     virtual int source_to_pdf(const TCHAR* srcfilename, UINT line, UINT col, UINT *page, Vec<RectI> &rects);
 
 private:
+    int rebuild_index();
+
     synctex_scanner_t scanner;
 };
 #endif
@@ -489,8 +490,8 @@ int Pdfsync::source_to_pdf(const TCHAR* srcfilename, UINT line, UINT col, UINT *
 #ifdef SYNCTEX_FEATURE
 
 int SyncTex::rebuild_index() {
-    if (this->scanner)
-        synctex_scanner_free(this->scanner);
+    synctex_scanner_free(this->scanner);
+    this->scanner = NULL;
 
     ScopedMem<char> syncfname(str::conv::ToAnsi(syncfilepath));
     if (!syncfname)
@@ -498,7 +499,8 @@ int SyncTex::rebuild_index() {
 
     scanner = synctex_scanner_new_with_output_file(syncfname, NULL, 1);
     if (!scanner)
-        return 1; // cannot rebuild the index
+        return PDFSYNCERR_SYNCFILE_NOTFOUND; // cannot rebuild the index
+
     return Synchronizer::rebuild_index();
 }
 
@@ -507,6 +509,7 @@ int SyncTex::pdf_to_source(UINT pageNo, PointI pt, ScopedMem<TCHAR>& filename, U
     if (this->is_index_discarded())
         if (rebuild_index() != PDFSYNCERR_SUCCESS)
             return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
+    assert(this->scanner);
 
     if (!dm->validPageNo(pageNo))
         return PDFSYNCERR_INVALID_PAGE_NUMBER;
@@ -546,6 +549,7 @@ int SyncTex::source_to_pdf(const TCHAR* srcfilename, UINT line, UINT col, UINT *
     if (this->is_index_discarded())
         if (rebuild_index() != PDFSYNCERR_SUCCESS)
             return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
+    assert(this->scanner);
 
     ScopedMem<TCHAR> srcfilepath;
     // convert the source file to an absolute path

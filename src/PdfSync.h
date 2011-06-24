@@ -45,9 +45,6 @@ public:
     // The result is returned in page and rects (list of rectangles to highlight).
     virtual int source_to_pdf(const TCHAR* srcfilename, UINT line, UINT col, UINT *page, Vec<RectI>& rects) = 0;
 
-    bool is_index_discarded() const;
-    int rebuild_index();
-
     // the caller must free() the command line
     TCHAR * prepare_commandline(const TCHAR* pattern, const TCHAR* filename, UINT line, UINT col);
 
@@ -56,6 +53,9 @@ private:
     struct _stat syncfileTimestamp; // time stamp of sync file when index was last built
 
 protected:
+    bool is_index_discarded() const;
+    int rebuild_index();
+
     ScopedMem<TCHAR> syncfilepath;  // path to the synchronization file
     ScopedMem<TCHAR> dir;           // directory where the syncfile lies
     DisplayModel * dm;  // needed for converting between coordinate systems
