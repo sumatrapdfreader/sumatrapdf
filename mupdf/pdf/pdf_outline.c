@@ -10,6 +10,13 @@ pdf_load_outline_imp(pdf_xref *xref, fz_obj *dict)
 	if (fz_is_null(dict))
 		return NULL;
 
+	/* SumatraPDF: prevent cyclic outlines */
+	if (fz_dict_gets(dict, ".seen"))
+		return NULL;
+	obj = fz_new_null();
+	fz_dict_puts(dict, ".seen", obj);
+	fz_drop_obj(obj);
+
 	node = fz_malloc(sizeof(pdf_outline));
 	node->title = NULL;
 	node->link = NULL;
@@ -35,6 +42,8 @@ pdf_load_outline_imp(pdf_xref *xref, fz_obj *dict)
 	obj = fz_dict_gets(dict, "Next");
 	if (obj)
 		node->next = pdf_load_outline_imp(xref, obj);
+
+	fz_dict_dels(dict, ".seen"); /* SumatraPDF: prevent cyclic outlines */
 
 	return node;
 }

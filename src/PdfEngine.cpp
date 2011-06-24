@@ -221,7 +221,7 @@ void fz_stream_fingerprint(fz_stream *file, unsigned char digest[16])
     fz_error error = fz_read_all(&buffer, file, fileLen);
     if (error) {
         fz_catch(error, "couldn't read stream data, using a NULL fingerprint instead");
-        memset(digest, 0, 16);
+        ZeroMemory(digest, 16);
         return;
     }
     assert(fileLen == buffer->len);
@@ -580,9 +580,14 @@ TCHAR *FormatPageLabel(const char *type, int pageNo, const TCHAR *prefix)
 void BuildPageLabelRec(fz_obj *node, int pageCount, Vec<PageLabelInfo>& data)
 {
     fz_obj *obj;
-    if ((obj = fz_dict_gets(node, "Kids"))) {
+    if ((obj = fz_dict_gets(node, "Kids")) && !fz_dict_gets(node, ".seen")) {
+        fz_obj *flag = fz_new_null();
+        fz_dict_puts(node, ".seen", flag);
+        fz_drop_obj(flag);
+
         for (int i = 0; i < fz_array_len(obj); i++)
             BuildPageLabelRec(fz_array_get(obj, i), pageCount, data);
+        fz_dict_dels(node, ".seen");
     }
     else if ((obj = fz_dict_gets(node, "Nums"))) {
         for (int i = 0; i < fz_array_len(obj); i += 2) {
@@ -591,6 +596,7 @@ void BuildPageLabelRec(fz_obj *node, int pageCount, Vec<PageLabelInfo>& data)
             pli.startAt = fz_to_int(fz_array_get(obj, i)) + 1;
             if (pli.startAt < 1)
                 continue;
+
             pli.type = fz_to_name(fz_dict_gets(info, "S"));
             pli.prefix = fz_dict_gets(info, "P");
             pli.countFrom = fz_to_int(fz_dict_gets(info, "St"));

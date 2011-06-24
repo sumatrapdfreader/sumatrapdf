@@ -24,8 +24,18 @@ pdf_lookup_name_imp(fz_obj *node, fz_obj *needle)
 				r = m - 1;
 			else if (fz_objcmp(needle, last) > 0)
 				l = m + 1;
+			/* SumatraPDF: prevent a cycle */
+			else if (fz_dict_gets(node, ".seen"))
+				break;
 			else
-				return pdf_lookup_name_imp(kid, needle);
+			{
+				fz_obj *obj, *tmp = fz_new_null();
+				fz_dict_puts(node, ".seen", tmp);
+				fz_drop_obj(tmp);
+				obj = pdf_lookup_name_imp(kid, needle);
+				fz_dict_dels(node, ".seen");
+				return obj;
+			}
 		}
 	}
 
@@ -97,10 +107,16 @@ pdf_load_name_tree_imp(fz_obj *dict, pdf_xref *xref, fz_obj *node)
 	fz_obj *names = fz_dict_gets(node, "Names");
 	int i;
 
-	if (kids)
+	/* SumatraPDF: prevent a cycle */
+	if (kids && !fz_dict_gets(node, ".seen"))
 	{
+		fz_obj *tmp = fz_new_null();
+		fz_dict_puts(node, ".seen", tmp);
+		fz_drop_obj(tmp);
+
 		for (i = 0; i < fz_array_len(kids); i++)
 			pdf_load_name_tree_imp(dict, xref, fz_array_get(kids, i));
+		fz_dict_dels(node, ".seen");
 	}
 
 	if (names)
