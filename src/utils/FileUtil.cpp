@@ -274,6 +274,18 @@ FILETIME GetModificationTime(const TCHAR *filePath)
     return lastMod;
 }
 
+bool StartsWith(const TCHAR *filePath, const char *magicNumber, size_t len)
+{
+    if (len == (size_t)-1)
+        len = str::Len(magicNumber);
+    ScopedMem<char> header(SAZA(char, len));
+    if (!header)
+        return false;
+
+    ReadAll(filePath, header, len);
+    return !memcmp(header, magicNumber, len);
+}
+
 }
 
 namespace dir {

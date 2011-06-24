@@ -8,13 +8,7 @@
 
 class ImageEngine : public virtual BaseEngine {
 public:
-    static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false) {
-        return str::EndsWithI(fileName, _T(".png")) ||
-               str::EndsWithI(fileName, _T(".jpg")) || str::EndsWithI(fileName, _T(".jpeg")) ||
-               str::EndsWithI(fileName, _T(".gif")) ||
-               str::EndsWithI(fileName, _T(".tif")) || str::EndsWithI(fileName, _T(".tiff")) ||
-               str::EndsWithI(fileName, _T(".bmp"));
-    }
+    static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false);
     static ImageEngine *CreateFromFileName(const TCHAR *fileName);
     static ImageEngine *CreateFromStream(IStream *stream);
 };
@@ -27,10 +21,7 @@ public:
 
 class CbxEngine : public virtual BaseEngine {
 public:
-    static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false) {
-        return str::EndsWithI(fileName, _T(".cbz")) ||
-               str::EndsWithI(fileName, _T(".cbr"));
-    }
+    static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false);
     static CbxEngine *CreateFromFileName(const TCHAR *fileName);
 };
 

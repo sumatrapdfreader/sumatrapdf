@@ -2757,11 +2757,9 @@ DocToCItem *CXpsEngine::GetToCTree()
 bool XpsEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
 {
     if (sniff) {
-        char header[4] = { 0 };
-        file::ReadAll(fileName, header, sizeof(header));
         // this check is technically not correct (ZIP files are read from back to front),
         // but it should catch all but specially crafted ZIP files anyway
-        return str::EqN(header, "PK\x03\x04", sizeof(header));
+        return file::StartsWith(fileName, "PK\x03\x04");
     }
 
     return str::EndsWithI(fileName, _T(".xps"));

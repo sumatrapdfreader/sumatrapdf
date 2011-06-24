@@ -27,6 +27,7 @@ bool         WriteAll(const TCHAR *filePath, void *data, size_t dataLen);
 size_t       GetSize(const TCHAR *filePath);
 bool         Delete(const TCHAR *filePath);
 FILETIME     GetModificationTime(const TCHAR *filePath);
+bool         StartsWith(const TCHAR *filePath, const char *magicNumber, size_t len=-1);
 
 }
 

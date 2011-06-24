@@ -45,6 +45,24 @@ Bitmap *BitmapFromData(void *data, size_t len)
     return bmp;
 }
 
+const TCHAR *FileExtFromData(char *data, size_t len)
+{
+    char header[9] = { 0 };
+    memcpy(header, data, min(len, sizeof(header)));
+
+    if (str::StartsWith(header, "BM"))
+        return _T(".bmp");
+    if (str::StartsWith(header, "\x89PNG\x0D\x0A\x1A\x0A"))
+        return _T(".png");
+    if (str::StartsWith(header, "\xFF\xD8"))
+        return _T(".jpg");
+    if (str::StartsWith(header, "GIF87a") || str::StartsWith(header, "GIF89a"))
+        return _T(".gif");
+    if (!memcmp(header, "MM\x00\x2A", 4) || !memcmp(header, "II\x2A\x00", 4))
+        return _T(".tif");
+    return NULL;
+}
+
 // for converting between big- and little-endian values
 #define SWAPWORD(x)    MAKEWORD(HIBYTE(x), LOBYTE(x))
 #define SWAPLONG(x)    MAKELONG(SWAPWORD(HIWORD(x)), SWAPWORD(LOWORD(x)))
@@ -400,8 +418,6 @@ ImageEngine *CImageEngine::Clone()
 
 bool CImageEngine::LoadSingleFile(const TCHAR *file)
 {
-    assert(IsSupportedFile(file));
-
     size_t len = 0;
     ScopedMem<char> bmpData(file::ReadAll(file, &len));
     if (!bmpData)
@@ -410,8 +426,9 @@ bool CImageEngine::LoadSingleFile(const TCHAR *file)
     pages.Append(BitmapFromData(bmpData, len));
 
     fileName = str::Dup(file);
-    fileExt = path::GetExt(fileName);
-    assert(fileExt && *fileExt == '.');
+    fileExt = FileExtFromData(bmpData, len);
+    assert(fileExt);
+    if (!fileExt) fileExt = _T(".png");
 
     return pages[0] != NULL;
 }
@@ -436,9 +453,24 @@ unsigned char *CImageEngine::GetFileData(size_t *cbCount) {
     return NULL;
 }
 
+bool ImageEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
+{
+    if (sniff) {
+        char header[9] = { 0 };
+        file::ReadAll(fileName, header, sizeof(header));
+        fileName = FileExtFromData(header, sizeof(header));
+    }
+
+    return str::EndsWithI(fileName, _T(".png")) ||
+           str::EndsWithI(fileName, _T(".jpg")) || str::EndsWithI(fileName, _T(".jpeg")) ||
+           str::EndsWithI(fileName, _T(".gif")) ||
+           str::EndsWithI(fileName, _T(".tif")) || str::EndsWithI(fileName, _T(".tiff")) ||
+           str::EndsWithI(fileName, _T(".bmp"));
+}
+
 ImageEngine *ImageEngine::CreateFromFileName(const TCHAR *fileName)
 {
-    assert(IsSupportedFile(fileName));
+    assert(IsSupportedFile(fileName) || IsSupportedFile(fileName, true));
     CImageEngine *engine = new CImageEngine();
     if (!engine->LoadSingleFile(fileName)) {
         delete engine;
@@ -672,7 +704,6 @@ bool CCbxEngine::LoadCbzFile(const TCHAR *file)
         return false;
     fileName = str::Dup(file);
     fileExt = _T(".cbz");
-    assert(str::EndsWithI(fileName, fileExt));
 
     cbzData = new CbzFileAccess;
 
@@ -808,7 +839,6 @@ bool CCbxEngine::LoadCbrFile(const TCHAR *file)
         return false;
     fileName = str::Dup(file);
     fileExt = _T(".cbr");
-    assert(str::EndsWithI(fileName, fileExt));
 
     RAROpenArchiveDataEx  arcData = { 0 };
 #ifdef UNICODE
@@ -862,15 +892,30 @@ char *CCbxEngine::GetImageData(int pageNo, size_t& len)
     return NULL;
 }
 
+bool CbxEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
+{
+    if (sniff) {
+        // we don't also sniff for ZIP files, as these could also
+        // be broken XPS files for which failure is expected
+        return file::StartsWith(fileName, "Rar!\x1A\x07\x00", 7);
+    }
+
+    return str::EndsWithI(fileName, _T(".cbz")) ||
+           str::EndsWithI(fileName, _T(".cbr"));
+}
+
 CbxEngine *CbxEngine::CreateFromFileName(const TCHAR *fileName)
 {
-    assert(IsSupportedFile(fileName));
+    assert(IsSupportedFile(fileName) || IsSupportedFile(fileName, true));
     CCbxEngine *engine = new CCbxEngine();
     bool ok = false;
-    if (str::EndsWithI(fileName, _T(".cbz")))
+    if (str::EndsWithI(fileName, _T(".cbz"))) {
         ok = engine->LoadCbzFile(fileName);
-    else if (str::EndsWithI(fileName, _T(".cbr")))
+    }
+    else if (str::EndsWithI(fileName, _T(".cbr")) ||
+             file::StartsWith(fileName, "Rar!\x1A\x07\x00", 7)) {
         ok = engine->LoadCbrFile(fileName);
+    }
     if (!ok) {
         delete engine;
         return NULL;

@@ -770,11 +770,8 @@ DocToCItem *CDjVuEngine::GetToCTree()
 
 bool DjVuEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
 {
-    if (sniff) {
-        char header[4] = { 0 };
-        file::ReadAll(fileName, header, sizeof(header));
-        return str::EqN(header, "AT&T", sizeof(header));
-    }
+    if (sniff)
+        return file::StartsWith(fileName, "AT&T");
 
     return str::EndsWithI(fileName, _T(".djvu"));
 }
