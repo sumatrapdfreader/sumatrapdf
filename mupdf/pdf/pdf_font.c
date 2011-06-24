@@ -309,6 +309,8 @@ pdf_load_system_font(pdf_font_desc *fontdesc, char *fontname, char *collection)
 			return pdf_load_substitute_cjk_font(fontdesc, PDF_ROS_JAPAN, serif);
 		else if (!strcmp(collection, "Adobe-Korea1"))
 			return pdf_load_substitute_cjk_font(fontdesc, PDF_ROS_KOREA, serif);
+		/* SumatraPDF: use a standard font for Adobe-Identity fonts */
+		else if (strcmp(collection, "Adobe-Identity") != 0)
 		return fz_throw("unknown cid collection: %s", collection);
 	}
 
@@ -691,7 +693,7 @@ pdf_load_simple_font(pdf_font_desc **fontdescp, pdf_xref *xref, fz_obj *dict)
 		}
 	}
 
-	/* SumatraPDF: handle symbolic Type 1 fonts with an implicit encoding similar to Adobe Reader*/
+	/* SumatraPDF: handle symbolic Type 1 fonts with an implicit encoding similar to Adobe Reader */
 	if (kind == TYPE1 && symbolic)
 		for (i = 0; i < 256; i++)
 			if (etable[i] && estrings[i] && !pdf_lookup_agl(estrings[i]))

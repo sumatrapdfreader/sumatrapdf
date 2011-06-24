@@ -241,14 +241,14 @@ static pdf_fontlistMS fontlistMS =
 static int
 lookupcompare(const void *elem1, const void *elem2)
 {
-	char *val1 = (char *)elem1;
-	char *val2 = (char *)elem2;
+	const char *val1 = elem1;
+	const char *val2 = elem2;
 	int len1 = strlen(val1);
 	int len2 = strlen(val2);
 
 	if (len1 != len2)
 	{
-		char *rest = len1 > len2 ? val1 + len2 : val2 + len1;
+		const char *rest = len1 > len2 ? val1 + len2 : val2 + len1;
 		if (',' == *rest || !_stricmp(rest, "-roman"))
 			return _strnicmp(val1, val2, MIN(len1, len2));
 	}
@@ -264,25 +264,42 @@ removespaces(char *srcDest)
 	for (dest = srcDest; *srcDest; srcDest++)
 		if (*srcDest != ' ')
 			*dest++ = *srcDest;
-	*dest = 0;
+	*dest = '\0';
+}
+
+static int
+strendswith(const char *str, const char *end)
+{
+	size_t len1 = strlen(str);
+	size_t len2 = strlen(end);
+
+	return len1 >= len2 && !strcmp(str + len1 - len2, end);
+}
+
+static pdf_fontmapMS*
+pdf_find_windows_font_path(const char *fontname)
+{
+	return bsearch(fontname, fontlistMS.fontmap, fontlistMS.len, sizeof(pdf_fontmapMS), lookupcompare);
 }
 
 /* source and dest can be same */
 static fz_error
-decodeunicodeBMP(char* source, int sourcelen, char* dest, int destlen)
+decodeunicodeBE(char* source, int sourcelen, char* dest, int destlen)
 {
-	wchar_t tmp[1024 * 2];
+	WCHAR *tmp;
 	int converted, i;
 
 	if (sourcelen % 2 != 0)
 		return fz_throw("fonterror : invalid unicode string");
 
-	memset(tmp, 0, sizeof(tmp));
+	tmp = fz_calloc(sourcelen / 2 + 1, sizeof(WCHAR));
 	for (i = 0; i < sourcelen / 2; i++)
-		tmp[i] = SWAPWORD(((wchar_t *)source)[i]);
+		tmp[i] = SWAPWORD(((WCHAR *)source)[i]);
+	tmp[sourcelen / 2] = '\0';
 
 	converted = WideCharToMultiByte(CP_UTF8, 0, tmp, -1, dest, destlen, NULL, NULL);
-	if (converted == 0)
+	fz_free(tmp);
+	if (!converted)
 		return fz_throw("fonterror : invalid unicode string");
 
 	return fz_okay;
@@ -298,7 +315,7 @@ decodeplatformstring(int platform, int enctype, char* source, int sourcelen, cha
 		{
 		case TT_APPLE_ID_DEFAULT:
 		case TT_APPLE_ID_UNICODE_2_0:
-			return decodeunicodeBMP(source, sourcelen, dest, destlen);
+			return decodeunicodeBE(source, sourcelen, dest, destlen);
 		}
 		return fz_throw("fonterror : unsupported encoding");
 	case TT_PLATFORM_MACINTOSH:
@@ -319,7 +336,7 @@ decodeplatformstring(int platform, int enctype, char* source, int sourcelen, cha
 		case TT_MS_ID_SYMBOL_CS:
 		case TT_MS_ID_UNICODE_CS:
 		case TT_MS_ID_UCS_4:
-			return decodeunicodeBMP(source, sourcelen, dest, destlen);
+			return decodeunicodeBE(source, sourcelen, dest, destlen);
 		}
 		return fz_throw("fonterror : unsupported encoding");
 	default:
@@ -688,24 +705,35 @@ pdf_load_windows_font(pdf_font_desc *font, char *fontname)
 	if (comma)
 	{
 		*comma = '-';
-		found = bsearch(fontname, fontlistMS.fontmap, fontlistMS.len, sizeof(pdf_fontmapMS), lookupcompare);
+		found = pdf_find_windows_font_path(fontname);
 		*comma = ',';
 	}
 	// second, substitute the font name with a known PostScript name
-	if (!found)
+	else
 	{
 		int i;
-		for (i = 0; i < _countof(baseSubstitutes); i++)
+		for (i = 0; i < _countof(baseSubstitutes) && !found; i++)
 			if (!strcmp(fontname, baseSubstitutes[i].name))
-				break;
-		if (i < _countof(baseSubstitutes))
-			found = bsearch(baseSubstitutes[i].pattern, fontlistMS.fontmap, fontlistMS.len, sizeof(pdf_fontmapMS), lookupcompare);
+				found = pdf_find_windows_font_path(baseSubstitutes[i].pattern);
 	}
 	// third, search for the font name without additional style information
 	if (!found)
-		found = bsearch(fontname, fontlistMS.fontmap, fontlistMS.len, sizeof(pdf_fontmapMS), lookupcompare);
-	fz_free(fontname);
+		found = pdf_find_windows_font_path(fontname);
+	// fourth, try to separate style from basename for prestyled fonts (e.g. "ArialBold")
+	if (!found && !comma && (strendswith(fontname, "Bold") || strendswith(fontname, "Italic")))
+	{
+		int styleLen = strendswith(fontname, "Bold") ? 4 : strendswith(fontname, "BoldItalic") ? 10 : 6;
+		fontname = fz_realloc(fontname, strlen(fontname) + 2, sizeof(char));
+		comma = fontname + strlen(fontname) - styleLen;
+		memmove(comma + 1, comma, styleLen + 1);
+		*comma = '-';
+		found = pdf_find_windows_font_path(fontname);
+		*comma = ',';
+		if (!found)
+			found = pdf_find_windows_font_path(fontname);
+	}
 
+	fz_free(fontname);
 	if (!found)
 		return !fz_okay;
 
