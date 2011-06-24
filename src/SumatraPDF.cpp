@@ -609,8 +609,8 @@ MenuDef menuDefContext[] = {
     { SEP_ITEM,                             0,                          0 },
     { _TRN("Select &All"),                  IDM_SELECT_ALL,             0 },
     { SEP_ITEM,                             0,                          MF_PLUGIN_MODE_ONLY },
-    { _TRN("&Save As..."),                  IDM_SAVEAS,                 MF_PLUGIN_MODE_ONLY },
-    { _TRN("&Print..."),                    IDM_PRINT,                  MF_PLUGIN_MODE_ONLY },
+    { _TRN("&Save As..."),                  IDM_SAVEAS,                 MF_PLUGIN_MODE_ONLY | MF_NOT_IN_RESTRICTED },
+    { _TRN("&Print..."),                    IDM_PRINT,                  MF_PLUGIN_MODE_ONLY | MF_NOT_IN_RESTRICTED },
     { _TRN("P&roperties"),                  IDM_PROPERTIES,             MF_PLUGIN_MODE_ONLY },
 };
 
@@ -2776,8 +2776,7 @@ static void OnMouseLeftButtonDown(WindowInfo& win, int x, int y, WPARAM key)
     // - pressing Shift forces dragging
     // - pressing Ctrl forces a rectangular selection
     // - pressing Ctrl+Shift forces text selection
-    // - in restricted mode, selections aren't allowed
-    if (gRestrictedUse || ((key & MK_SHIFT) || !win.dm->IsOverText(PointI(x, y))) && !(key & MK_CONTROL))
+    if (((key & MK_SHIFT) || !win.dm->IsOverText(PointI(x, y))) && !(key & MK_CONTROL))
         OnDraggingStart(win, x, y);
     else
         OnSelectionStart(win, x, y, key);
