@@ -187,6 +187,18 @@ public:
     int     menuId; // assigned in AppendFavMenuItems()
 };
 
+static inline int sortByPageNo(const void *a, const void *b)
+{
+    FavName *na = *(FavName**)a;
+    FavName *nb = *(FavName**)b;
+    if (na->pageNo > nb->pageNo)
+        return 1;
+    else if (na->pageNo == nb->pageNo)
+        return 0;
+    else
+        return -1;
+}
+
 class Fav {
 
     FavName *FindByPage(int pageNo, size_t *idx=NULL) const
@@ -273,6 +285,7 @@ public:
         }
         fn = new FavName(pageNo, name);
         favNames.Append(fn);
+        favNames.Sort(sortByPageNo);
     }
 };
 
