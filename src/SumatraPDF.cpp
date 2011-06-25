@@ -676,6 +676,8 @@ static void AppendRecentFilesToMenu(HMENU m)
     InsertMenu(m, IDM_EXIT, MF_BYCOMMAND | MF_SEPARATOR, 0, NULL);
 }
 
+#define ALWAYS_SUBMENUS 1
+
 // Note: those might be too big
 #define MAX_FAV_SUBMENUS 10
 #define MAX_FAV_MENUS 10
@@ -717,18 +719,24 @@ static void AppendFavMenus(HMENU m, const TCHAR *currFilePath)
 {
     bool needsShowMore = false;
     UINT idx = IDM_FAV_FIRST;
-    Fav *currFileFavs = NULL;
+    Fav *currFileFav = NULL;
     gFavorites->ResetMenuIds();
     size_t submenus = gFavorites->favs.Count();
     bool addedSep = false;
     if (NULL != currFilePath)
     {
-        currFileFavs = gFavorites->GetFavByFilePath(currFilePath);
-        if (currFileFavs && currFileFavs->Count() > 0) {
+        currFileFav = gFavorites->GetFavByFilePath(currFilePath);
+        if (currFileFav && currFileFav->Count() > 0) {
             AppendMenu(m, MF_SEPARATOR, 0, NULL);
             addedSep = true;
-            AppendFavMenuItems(m, currFileFavs, idx, needsShowMore);
             submenus--; // exclude current file
+#if ALWAYS_SUBMENUS
+            HMENU sub = CreateMenu();
+            AppendFavMenuItems(sub, currFileFav, idx, needsShowMore);
+            AppendMenu(m, MF_POPUP | MF_STRING, (UINT_PTR)sub, _T("Current file"));
+#else
+            AppendFavMenuItems(m, currFileFav, idx, needsShowMore);
+#endif
         }
     }
     if (submenus > MAX_FAV_SUBMENUS) {
@@ -743,7 +751,7 @@ static void AppendFavMenus(HMENU m, const TCHAR *currFilePath)
     for (size_t i=0; n<submenus; i++)
     {
         Fav *f = gFavorites->favs.At(i);
-        if (f == currFileFavs)
+        if (f == currFileFav)
             continue;
         n++;
         HMENU sub = CreateMenu();
