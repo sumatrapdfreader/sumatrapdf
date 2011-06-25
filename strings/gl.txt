@@ -181,6 +181,9 @@ Xirar á esquerda\tCtrl-Shift--
 Rotate &Right\tCtrl-Shift-+
 Xirar á dereita\tCtrl-Shift-+
 
+Save As
+Salvar como
+
 Set inverse search command-line
 Establecer procura inversa
 

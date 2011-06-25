@@ -512,6 +512,9 @@ Linksom draaien\tCtrl-Shift--
 Rotate &Right\tCtrl-Shift-+
 Rechtsom draaien\tCtrl-Shift-+
 
+Save As
+Opslaan als
+
 Save S&hortcut...\tCtrl-Shift-S
 Snelkoppeling opslaan...\tCtrl-Shift-S
 

@@ -421,6 +421,9 @@ Rotate &Left\tCtrl-Shift--
 Rotate &Right\tCtrl-Shift-+
 右に回転(&R)\tCtrl-Shift-+
 
+Save As
+名前を付けて保存
+
 Searching %d of %d...
 %d (%d 中) を検索しています...
 

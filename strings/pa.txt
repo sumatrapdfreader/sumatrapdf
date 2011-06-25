@@ -179,6 +179,9 @@ Rotate &Left\tCtrl-Shift--
 Rotate &Right\tCtrl-Shift-+
 ਖੱਬੇ ਪਾਸੇ ਘੁਮਾਓ\tCtrl-Shift-+
 
+Save As
+ਇੰਝ ਸੰਬਾਲੋ
+
 Set inverse search command-line
 ਪੁੱਠੀ command-line ਖੋਜ ਸੈਟ ਕਰੋ
 

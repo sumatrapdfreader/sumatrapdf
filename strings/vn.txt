@@ -506,6 +506,9 @@ Quay trái\tCtrl-Shift--
 Rotate &Right\tCtrl-Shift-+
 Quay phải\tCtrl-Shift-+
 
+Save As
+Lưu thành
+
 Save S&hortcut...\tCtrl-Shift-S
 Lưu lối tắt...\tCtrl-Shift-S
 

@@ -368,6 +368,9 @@ Käännä vasemmalle\tCtrl-Shift--
 Rotate &Right\tCtrl-Shift-+
 Käännä oikealle\tCtrl-Shift-+
 
+Save As
+Tallenna nimellä
+
 Searching %d of %d...
 Etsitään %d/%d...
 

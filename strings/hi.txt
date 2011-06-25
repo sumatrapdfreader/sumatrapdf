@@ -179,6 +179,9 @@ Rotate &Left\tCtrl-Shift--
 Rotate &Right\tCtrl-Shift-+
 दांयी ओर घूमाओ\tCtrl-Shift-+
 
+Save As
+इस तरह संभालें
+
 Set inverse search command-line
 उलटी command-line खोज सैट करें
 

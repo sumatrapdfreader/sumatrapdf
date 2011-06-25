@@ -179,6 +179,9 @@ Rothlaigh Tuathalach\tCtrl-Shift--
 Rotate &Right\tCtrl-Shift-+
 Rothlaigh Deiseal\tCtrl-Shift-+
 
+Save As
+Cuir i dtaisce mar
+
 Set inverse search command-line
 Socruigh líne na n-orduithe cuardaigh inbhéarta
 

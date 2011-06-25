@@ -287,6 +287,9 @@ Ubah ke kiri\tCtrl-Shift--
 Rotate &Right\tCtrl-Shift-+
 Ubah ke kanan\tCtrl-Shift-+
 
+Save As
+Simpan sebagai
+
 Show &Toolbar
 Tunjukkan Bar Alat
 

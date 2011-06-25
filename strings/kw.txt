@@ -324,6 +324,9 @@ Treylya a-gledh\tCtrl-Shift--
 Rotate &Right\tCtrl-Shift-+
 Treylya a-dhyhow\tCtrl-Shift-+
 
+Save As
+Gwitha avel
+
 Searching %d of %d...
 Ow hwilas %d a %d...
 

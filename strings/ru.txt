@@ -507,6 +507,9 @@ Rotate &Left\tCtrl-Shift--
 Rotate &Right\tCtrl-Shift-+
 Повернуть в&право\tCtrl-Shift-+
 
+Save As
+Сохранить как
+
 Save S&hortcut...\tCtrl-Shift-S
 Сохранить &ярлык…\tCtrl-Shift-S
 

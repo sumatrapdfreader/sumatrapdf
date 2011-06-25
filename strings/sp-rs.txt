@@ -311,6 +311,9 @@ Rotiraj ulevo\tCtrl-Shift--
 Rotate &Right\tCtrl-Shift-+
 Rotiraj udesno\tCtrl-Shift-+
 
+Save As
+Sačuvaj kao
+
 Searching %d of %d...
 Pretražujem stranu %d od %d...
 

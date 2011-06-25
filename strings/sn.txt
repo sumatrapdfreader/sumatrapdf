@@ -175,6 +175,9 @@ Tenderedza kuruboshwe\tCtrl-Shift--
 Rotate &Right\tCtrl-Shift-+
 Tenderedza kurudyi\tCtrl-Shift-+
 
+Save As
+Sevha se
+
 Show &Toolbar
 Ratidza Toolbar
 

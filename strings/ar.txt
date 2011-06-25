@@ -426,6 +426,9 @@ Rotate &Left\tCtrl-Shift--
 Rotate &Right\tCtrl-Shift-+
 دوران لليمين\tCtrl-Shift-+
 
+Save As
+حفظ باسم
+
 Searching %d of %d...
 يتم البحث %d من %d...
 

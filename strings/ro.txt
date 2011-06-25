@@ -506,6 +506,9 @@ Rotește spre stânga\tCtrl-Shift--
 Rotate &Right\tCtrl-Shift-+
 Rotește spre dreapta\tCtrl-Shift-+
 
+Save As
+Salvează ca
+
 Save S&hortcut...\tCtrl-Shift-S
 Salvează legătura...\tCtrl-Shift-S
 

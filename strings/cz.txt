@@ -508,6 +508,9 @@ Otočit do&leva\tCtrl+Shift+Num-
 Rotate &Right\tCtrl-Shift-+
 Otočit dop&rava\tCtrl+Shift+Num+
 
+Save As
+Uložit jako
+
 Save S&hortcut...\tCtrl-Shift-S
 U&ložit zástupce...\tCtrl+Shift+S
 

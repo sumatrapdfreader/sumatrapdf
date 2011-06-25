@@ -508,6 +508,9 @@ Roter mot klokken\tCtrl+Shift+Minus
 Rotate &Right\tCtrl-Shift-+
 Roter med klokken\tCtrl+Shift+Pluss
 
+Save As
+Lagre som
+
 Save S&hortcut...\tCtrl-Shift-S
 Lagre s&narvei...\tCtrl-Shift-S
 

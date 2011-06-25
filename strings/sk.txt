@@ -354,6 +354,9 @@ Otočiť vľavo\tCtrl-Shift--
 Rotate &Right\tCtrl-Shift-+
 Otočiť vpravo\tCtrl-Shift-+
 
+Save As
+Uložiť ako
+
 Searching %d of %d...
 Vyhľadáva sa %d z/zo %d...
 

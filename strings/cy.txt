@@ -422,6 +422,9 @@ Troi i'r chwith\tCtrl-Shift--
 Rotate &Right\tCtrl-Shift-+
 Troi i'r dde\tCtrl-Shift-+
 
+Save As
+Cadw fel
+
 Searching %d of %d...
 Chwilio am %d o %d...
 

@@ -507,6 +507,9 @@ Zasukaj v levo\tCtrl-Shift--
 Rotate &Right\tCtrl-Shift-+
 Zasukaj v desno\tCtrl-Shift-+
 
+Save As
+Shrani kot …
+
 Save S&hortcut...\tCtrl-Shift-S
 S&hrani bližnjico …\tCtrl-Shift-S
 

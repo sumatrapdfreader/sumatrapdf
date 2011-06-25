@@ -182,6 +182,9 @@ Rotate &Left\tCtrl-Shift--
 Rotate &Right\tCtrl-Shift-+
 ডানদিকে বিবর্তন\tCtrl-Shift-+
 
+Save As
+সংরক্ষণ এই রূপে
+
 Set inverse search command-line
 সমাদেশ-পংক্তিতে বিলোম অনুসন্ধান নির্ধারণ করুন
 

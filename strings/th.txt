@@ -163,6 +163,9 @@ Rotate &Left\tCtrl-Shift--
 Rotate &Right\tCtrl-Shift-+
 หมุนขวา\tCtrl-Shift-+
 
+Save As
+บันทึกเป็น
+
 Set inverse search command-line
 ตั้งค่าตรงกันข้ามในการค้นหาในโหมด command-line
 

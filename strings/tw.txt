@@ -506,6 +506,9 @@ Rotate &Left\tCtrl-Shift--
 Rotate &Right\tCtrl-Shift-+
 頁面右旋\tCtrl-Shift-+
 
+Save As
+另存新檔
+
 Save S&hortcut...\tCtrl-Shift-S
 儲存為捷徑...(&H)\tCtrl-Shift-S
 

@@ -410,6 +410,9 @@ Pasukti į &kairę\tCtrl-Shift--
 Rotate &Right\tCtrl-Shift-+
 Pasukti į &dešinę\tCtrl-Shift-+
 
+Save As
+Įrašyti kaip
+
 Searching %d of %d...
 Ieškoma %d iš %d...
 

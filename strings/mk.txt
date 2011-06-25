@@ -478,6 +478,9 @@ Rotate &Left\tCtrl-Shift--
 Rotate &Right\tCtrl-Shift-+
 Ротирај на десно\tCtrl-Shift-+
 
+Save As
+Зачувај како
+
 Save S&hortcut...\tCtrl-Shift-S
 Зачувај &кратенка...\tCtrl-Shift-S
 

@@ -508,6 +508,9 @@ Putar Ke Kiri\tCtrl-Shift--
 Rotate &Right\tCtrl-Shift-+
 Putar Ke Kanan\tCtrl-Shift-+
 
+Save As
+Simpan Sebagai
+
 Save S&hortcut...\tCtrl-Shift-S
 Simpan &Jalan Pintas...\tCtrl-Shift-S
 

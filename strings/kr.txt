@@ -378,6 +378,9 @@ Rotate &Left\tCtrl-Shift--
 Rotate &Right\tCtrl-Shift-+
 오른쪽으로 회전\tCtrl-Shift-+
 
+Save As
+다른 이름으로 저장
+
 Searching %d of %d...
 (%d / %d) 를 검색하고 있습니다...
 

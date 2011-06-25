@@ -499,6 +499,9 @@ Rotate &Left\tCtrl-Shift--
 Rotate &Right\tCtrl-Shift-+
 Շրջել աջ\tCtrl-Shift-+
 
+Save As
+Պահպանել որպես
+
 Save S&hortcut...\tCtrl-Shift-S
 Պահպանել պ&իտակը...\tCtrl-Shift-S
 

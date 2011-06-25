@@ -284,6 +284,9 @@ Rotate &Left\tCtrl-Shift--
 Rotate &Right\tCtrl-Shift-+
 Павярнуць направа\tCtrl-Shift-+
 
+Save As
+Захаваць як
+
 Searching %d of %d...
 Апрацоўка старонкі %d з %d...
 

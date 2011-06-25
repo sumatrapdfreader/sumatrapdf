@@ -139,6 +139,9 @@ Rotate &Left\tCtrl-Shift--
 Rotate &Right\tCtrl-Shift-+
 വലത്തേക്കു ചരിക്കുക\tCtrl-Shift-+
 
+Save As
+എന്ന പേരില്‍ സൂക്ഷിക്കുക
+
 Show &Toolbar
 റ്റുള്‍ബാര്‍  കാണിക്കുക
 

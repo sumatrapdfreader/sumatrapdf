@@ -505,6 +505,9 @@ Rotate &Left\tCtrl-Shift--
 Rotate &Right\tCtrl-Shift-+
 向右旋转(&R)\tCtrl-Shift-+
 
+Save As
+另存为
+
 Save S&hortcut...\tCtrl-Shift-S
 保存快捷方式(&H)...\tCtrl-Shift-S
 

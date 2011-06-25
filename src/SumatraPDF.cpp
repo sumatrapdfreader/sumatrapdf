@@ -214,6 +214,8 @@ struct ToolbarButtonInfo {
 
 static ToolbarButtonInfo gToolbarButtons[] = {
     { 0,   IDM_OPEN,              _TRN("Open"),           MF_NOT_IN_RESTRICTED },
+// the Open button is replaced with a Save As button in Plugin mode:
+//  { 12,  IDM_SAVEAS,            _TRN("Save As"),        MF_NOT_IN_RESTRICTED },
     { 1,   IDM_PRINT,             _TRN("Print"),          MF_NOT_IN_RESTRICTED },
     { -1,  IDM_GOTO_PAGE,         NULL,                   0 },
     { 2,   IDM_GOTO_PREV_PAGE,    _TRN("Previous Page"),  0 },
@@ -5439,9 +5441,9 @@ static void CreateToolbar(WindowInfo& win) {
     GetObject(hbmp, sizeof(BITMAP), &bmp);
     // stretch the toolbar bitmaps for higher DPI settings
     // TODO: get nicely interpolated versions of the toolbar icons for higher resolutions
-    if (win.uiDPIFactor > 1 && bmp.bmHeight < TOOLBAR_MIN_ICON_SIZE * win.uiDPIFactor) {
-        bmp.bmWidth = (LONG)(bmp.bmWidth * win.uiDPIFactor);
-        bmp.bmHeight = (LONG)(bmp.bmHeight * win.uiDPIFactor);
+    if (bmp.bmHeight < TOOLBAR_MIN_ICON_SIZE * win.uiDPIFactor) {
+        bmp.bmWidth *= (LONG)(win.uiDPIFactor + 0.5f);
+        bmp.bmHeight *= (LONG)(win.uiDPIFactor + 0.5f);
         hbmp = (HBITMAP)CopyImage(hbmp, IMAGE_BITMAP, bmp.bmWidth, bmp.bmHeight, LR_COPYDELETEORG);
     }
     // Assume square icons
@@ -5449,11 +5451,17 @@ static void CreateToolbar(WindowInfo& win) {
     ImageList_AddMasked(himl, hbmp, RGB(255, 0, 255));
     DeleteObject(hbmp);
 
+    // in Plugin mode, replace the Open with a Save As button
+    if (gPluginMode && bmp.bmWidth / bmp.bmHeight == 13) {
+        gToolbarButtons[0].bmpIndex = 12;
+        gToolbarButtons[0].cmdId = IDM_SAVEAS;
+        gToolbarButtons[0].toolTip = _TRN("Save As");
+        gToolbarButtons[0].flags = MF_NOT_IN_RESTRICTED;
+    }
     for (int i = 0; i < TOOLBAR_BUTTONS_COUNT; i++) {
         tbButtons[i] = TbButtonFromButtonInfo(i);
-        if (gToolbarButtons[i].cmdId == IDM_FIND_MATCH) {
+        if (gToolbarButtons[i].cmdId == IDM_FIND_MATCH)
             tbButtons[i].fsStyle = BTNS_CHECK;
-        }
     }
     lres = SendMessage(hwndToolbar, TB_SETIMAGELIST, 0, (LPARAM)himl);
 

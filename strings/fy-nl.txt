@@ -358,6 +358,9 @@ Linksom draaie\tCtrl-Shift--
 Rotate &Right\tCtrl-Shift-+
 Rjochtsom draaie\tCtrl-Shift-+
 
+Save As
+Bewarje as
+
 Searching %d of %d...
 Sykje %d fan %d...
 

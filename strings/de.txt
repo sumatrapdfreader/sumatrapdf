@@ -426,7 +426,7 @@ OK
 OK
 
 Open
-Ö&ffnen…
+Öffnen…
 
 Open a document...
 Dokument öffnen…
@@ -508,6 +508,9 @@ Drehung &links\tStrg+Umschalt+-
 
 Rotate &Right\tCtrl-Shift-+
 Drehung &rechts\tStrg+Umschalt++
+
+Save As
+Speichern unter…
 
 Save S&hortcut...\tCtrl-Shift-S
 &Verknüpfung speichern…\tStrg+Umschalt+S

@@ -421,6 +421,9 @@ S&ola çevir\tCtrl-Shift--
 Rotate &Right\tCtrl-Shift-+
 &Sağa çevir\tCtrl-Shift-+
 
+Save As
+Farklı kaydet
+
 Searching %d of %d...
 %d sayfa (toplam %d sayfa) taranıyor...
 

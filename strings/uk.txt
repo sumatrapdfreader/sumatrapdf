@@ -464,6 +464,9 @@ Rotate &Left\tCtrl-Shift--
 Rotate &Right\tCtrl-Shift-+
 Повернути праворуч\tCtrl-Shift-+
 
+Save As
+Зберегти як
+
 Save S&hortcut...\tCtrl-Shift-S
 Зберегти ярлик...\tCtrl-Shift-S
 

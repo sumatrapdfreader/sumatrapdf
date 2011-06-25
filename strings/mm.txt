@@ -175,6 +175,9 @@ Rotate &Left\tCtrl-Shift--
 Rotate &Right\tCtrl-Shift-+
 ညာသို့ လှဲ့\tCtrl-Shift-+
 
+Save As
+ကဲ့သို့ သိမ်းပါ..
+
 Set inverse search command-line
 command line ဗြောင်းပြန်ရှာကို သတ်မှတ်ရန်
 

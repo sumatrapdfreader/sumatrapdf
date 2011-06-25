@@ -506,6 +506,9 @@ Rotate &Left\tCtrl-Shift--
 Rotate &Right\tCtrl-Shift-+
 Завърти на&дясно\tCtrl-Shift-+
 
+Save As
+Запамети като
+
 Save S&hortcut...\tCtrl-Shift-S
 Запамети кратък път към файла...\tCtrl-Shift-S
 

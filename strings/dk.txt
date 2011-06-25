@@ -427,6 +427,9 @@ Roter mod &venstre\tCtrl-Shift--
 Rotate &Right\tCtrl-Shift-+
 Roter mod &højre\tCtrl-Shift-+
 
+Save As
+Gem som
+
 Searching %d of %d...
 Søgning %d af %d...
 

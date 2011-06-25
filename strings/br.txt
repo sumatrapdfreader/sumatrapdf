@@ -503,6 +503,9 @@ Girar à esquerda\tCtrl-Shift--
 Rotate &Right\tCtrl-Shift-+
 Girar à direita\tCtrl-Shift-+
 
+Save As
+Salvar como
+
 Save S&hortcut...\tCtrl-Shift-S
 S&alvar atalho...\tCtrl-Shift-S
 

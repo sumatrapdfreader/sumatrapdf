@@ -427,6 +427,9 @@ Forgatás balra\tCtrl-Shift--
 Rotate &Right\tCtrl-Shift-+
 Forgatás jobbra\tCtrl-Shift-+
 
+Save As
+Mentés másként
+
 Searching %d of %d...
 Keresés a(z) %d./%d oldalon
 

@@ -513,6 +513,9 @@ Ruota a &sinistra\t<Ctrl> <Maiusc> -
 Rotate &Right\tCtrl-Shift-+
 Ruota a &destra\t<Ctrl> <Maiusc> +
 
+Save As
+Salva come
+
 Save S&hortcut...\tCtrl-Shift-S
 Salva &collegamento\t<Ctrl>+<Maiusc>+S
 

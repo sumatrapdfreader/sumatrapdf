@@ -178,6 +178,9 @@ Roter til venstre\tCtrl-Shift--
 Rotate &Right\tCtrl-Shift-+
 Roter til høgre\tCtrl-Shift-+
 
+Save As
+Lagre som
+
 Set inverse search command-line
 Velg motsatt søk-kommandolinje
 

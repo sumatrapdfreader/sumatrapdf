@@ -510,6 +510,9 @@ Rotation &antihoraire\tCtrl-Shift--
 Rotate &Right\tCtrl-Shift-+
 Rotation &horaire\tCtrl-Shift-+
 
+Save As
+Enregistrer sous
+
 Save S&hortcut...\tCtrl-Shift-S
 Enregistrer le raccourci... \tCtrl-Maj-S
 

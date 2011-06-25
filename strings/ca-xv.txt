@@ -421,6 +421,9 @@ Gira a l'esquerra\tCtrl-Shift--
 Rotate &Right\tCtrl-Shift-+
 Gira a la dreta\tCtrl-Shift-+
 
+Save As
+Anomena i alça
+
 Searching %d of %d...
 S'està cercant %d de %d...
 

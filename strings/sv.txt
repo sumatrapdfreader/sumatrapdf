@@ -429,6 +429,9 @@ Rotera åt vänster\tCtrl-Shift--
 Rotate &Right\tCtrl-Shift-+
 Rotera åt höger\tCtrl-Shift-+
 
+Save As
+Spara som
+
 Searching %d of %d...
 Söker %d av %d...
 

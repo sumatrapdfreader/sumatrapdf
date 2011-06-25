@@ -485,6 +485,9 @@ Obróć w &lewo\tCtrl+Shift+Minus
 Rotate &Right\tCtrl-Shift-+
 Obróć w &prawo\tCtrl+Shift+Plus
 
+Save As
+Zapisz jako
+
 Save S&hortcut...\tCtrl-Shift-S
 Utwórz skrót do dokumentu\tCtrl-Shift-S
 

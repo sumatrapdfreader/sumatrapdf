@@ -412,6 +412,9 @@ Rotate &Left\tCtrl-Shift--
 Rotate &Right\tCtrl-Shift-+
 &දකුණට හරවන්න\tCtrl-Shift-+
 
+Save As
+ලෙස සුරකින්න
+
 Searching %d of %d...
 සොයමින් %d of %d...
 

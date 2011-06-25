@@ -506,6 +506,9 @@ Rotate &Left\tCtrl-Shift--
 Rotate &Right\tCtrl-Shift-+
 סובב ימינה\tCtrl-Shift-+
 
+Save As
+בשמור בשם
+
 Save S&hortcut...\tCtrl-Shift-S
 קיצור שמירה...\tCtrl-Shift-S
 

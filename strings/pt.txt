@@ -507,6 +507,9 @@ Rodar à &esquerda\tCtrl-Shift--
 Rotate &Right\tCtrl-Shift-+
 Rodar à &direita\tCtrl-Shift-+
 
+Save As
+Gravar como
+
 Save S&hortcut...\tCtrl-Shift-S
 Criar atal&ho...\tCtrl-Shift-S
 

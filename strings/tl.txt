@@ -443,6 +443,9 @@ Iikot Pakaliwa\tCtrl-Shift--
 Rotate &Right\tCtrl-Shift-+
 Iikot Pakanan\tCtrl-Shift-+
 
+Save As
+I-save bilang
+
 Searching %d of %d...
 Hinahanap ang %d ng %dâ€¦
 

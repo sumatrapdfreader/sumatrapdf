@@ -181,6 +181,9 @@ Draai Links\tCtrl-Shift--
 Rotate &Right\tCtrl-Shift-+
 Draai Regs\tCtrl-Shift-+
 
+Save As
+Stoor As
+
 Set inverse search command-line
 Stel Die Teenoorgestelde Soek Command-Line
 

@@ -505,6 +505,9 @@ Zaokreni nalijevo\tCtrl-Shift--
 Rotate &Right\tCtrl-Shift-+
 Zaokreni nadesno\tCtrl-Shift-+
 
+Save As
+Spremi kao
+
 Save S&hortcut...\tCtrl-Shift-S
 Spremi p&rečac...\tCtrl-Shift-S
 

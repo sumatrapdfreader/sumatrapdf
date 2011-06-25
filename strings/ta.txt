@@ -362,6 +362,9 @@ Rotate &Left\tCtrl-Shift--
 Rotate &Right\tCtrl-Shift-+
 வலப்புறம் சுழற்று\tCtrl-Shift-+
 
+Save As
+எனச் சேமி
+
 Searching %d of %d...
 %d இல் %d தேடப்படுகிறது....
 

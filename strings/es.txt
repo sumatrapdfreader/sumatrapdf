@@ -510,6 +510,9 @@ Girar a la izquierda\tCtrl-Mayus--
 Rotate &Right\tCtrl-Shift-+
 Girar a la derecha\tCtrl-Mayus-+
 
+Save As
+Guardar como
+
 Save S&hortcut...\tCtrl-Shift-S
 Guardar A&cceso directo...\tCtrl-Mayus-S
 

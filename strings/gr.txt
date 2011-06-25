@@ -508,6 +508,9 @@ Rotate &Left\tCtrl-Shift--
 Rotate &Right\tCtrl-Shift-+
 Περιστροφή Δεξιά\tCtrl-Shift-+
 
+Save As
+Αποθήκευση ως
+
 Save S&hortcut...\tCtrl-Shift-S
 Αποθήκευση &Συντόμευσης...\tCtrl-Shift-S
 
