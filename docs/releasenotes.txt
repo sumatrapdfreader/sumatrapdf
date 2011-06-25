@@ -7,6 +7,8 @@ Next version:
 * logical page numbers are displayed and used, if a document
   provides them (such as i, ii, iii, etc.)
 * improved support for EPS files (requires Ghostscript)
+* allow to restrict SumatraPDF's features with more granularity; see
+  http://code.google.com/p/sumatrapdf/source/browse/trunk/docs/sumatrapdfrestrict.ini
 
 1.6 (2011-05-30)
 

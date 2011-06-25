@@ -109,6 +109,7 @@ TCHAR *                 gPluginURL = NULL; // owned by CommandLineInfo in WinMai
 #define CANVAS_CLASS_NAME       _T("SUMATRA_PDF_CANVAS")
 #define SPLITER_CLASS_NAME      _T("Spliter")
 #define PREFS_FILE_NAME         _T("sumatrapdfprefs.dat")
+#define RESTRICTIONS_FILE_NAME  _T("sumatrapdfrestrict.ini")
 #define CRASH_DUMP_FILE_NAME    _T("sumatrapdfcrash.dmp")
 
 #define SPLITTER_DX  5
@@ -1174,29 +1175,6 @@ static bool ReloadPrefs()
     return true;
 }
 
-// see ../doc/sumatrapdfrestrict.ini for the
-// format of the restriction configuration file
-static TCHAR *GetRestrictFilePath()
-{
-    ScopedMem<TCHAR> path(GetExePath());
-    if (!path)
-        return NULL;
-    path.Set(path::GetDir(path));
-    return path::Join(path, _T("sumatrapdfrestrict.ini"));
-}
-
-/* Group Policies can be set by adding the following DWORD values to either
- * HKLM\Software\Policies\SumatraPDF or HKCU\Software\Policies\SumatraPDF
- * (the HKCU value will only be used if the HKLM value is missing):
- *
- * InternetAccess, DiskAccess, SavePreferences, RegistryAccess, PrinterAccess, CopySelection
- *
- * If either SumatraPDF is run with -restrict or additionally the "AlwaysApplyPolicy"
- * value exists and is non-zero, these permissions are only granted if they're
- * explicitly enabled (i.e. they exist and are non-zero) - with the exception of
- * CopySelection, which is implicitly granted if the value is missing.
- */
-
 static int GetPolicies(bool isRestricted)
 {
     static struct {
@@ -1214,8 +1192,12 @@ static int GetPolicies(bool isRestricted)
 
     // allow to restrict SumatraPDF's functionality from an INI file in the
     // same directory as SumatraPDF.exe (cf. ../docs/sumatrapdfrestrict.ini )
-    ScopedMem<TCHAR> restrictPath(GetRestrictFilePath());
-    if (restrictPath && file::Exists(restrictPath)) {
+    ScopedMem<TCHAR> restrictPath(GetExePath());
+    if (restrictPath) {
+        restrictPath.Set(path::GetDir(restrictPath));
+        restrictPath.Set(path::Join(restrictPath, RESTRICTIONS_FILE_NAME));
+    }
+    if (file::Exists(restrictPath)) {
         int policy = Perm_RestrictedUse;
         for (size_t i = 0; i < dimof(policies); i++) {
             int check = GetPrivateProfileInt(_T("Policies"), policies[i].name, policies[i].allowForRestrict, restrictPath);
@@ -1225,29 +1207,14 @@ static int GetPolicies(bool isRestricted)
         return policy;
     }
 
-    // TODO: The above solution can replace both the -restrict command line argument
-    //       and Group Policies. Is there (still) any need for either alternative?
-
-    // make it possible to apply Group Policies only when SumatraPDF is run with -restrict
-    bool alwaysApply = CheckPolicyPermission(_T("AlwaysApplyPolicy")) == 1;
-    if (!alwaysApply && !isRestricted)
+    if (!isRestricted)
         return Perm_All;
 
-    int policy = isRestricted ? Perm_RestrictedUse : 0;
-    for (size_t i = 0; i < dimof(policies); i++) {
-        int check = CheckPolicyPermission(policies[i].name);
-        if (1 == check || (-1 == check && (!isRestricted || policies[i].allowForRestrict)))
+    int policy = Perm_RestrictedUse;
+    for (size_t i = 0; i < dimof(policies); i++)
+        if (policies[i].allowForRestrict)
             policy = policy | policies[i].perm;
-    }
-
     return policy;
-}
-
-static void RefreshPolicies()
-{
-    gPolicyRestrictions = GetPolicies(HasPermission(Perm_RestrictedUse));
-    RebuildMenuBar();
-    UpdateToolbarAndScrollbarsForAllWindows();
 }
 
 void QueueWorkItem(UIThreadWorkItem *wi)
@@ -6885,10 +6852,6 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
             return DefWindowProc(hwnd, message, wParam, lParam);
 
         case WM_SETTINGCHANGE:
-            if (lParam && str::Eq((LPTSTR)lParam, _T("Policy"))) {
-                RefreshPolicies();
-                return 0;
-            }
 InitMouseWheelInfo:
             SystemParametersInfo(SPI_GETWHEELSCROLLLINES, 0, &ulScrollLines, 0);
             // ulScrollLines usually equals 3 or 0 (for no scrolling) or -1 (for page scrolling)
