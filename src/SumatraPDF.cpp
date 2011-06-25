@@ -1174,6 +1174,17 @@ static bool ReloadPrefs()
     return true;
 }
 
+// see ../doc/sumatrapdfrestrict.ini for the
+// format of the restriction configuration file
+static TCHAR *GetRestrictFilePath()
+{
+    ScopedMem<TCHAR> path(GetExePath());
+    if (!path)
+        return NULL;
+    path.Set(path::GetDir(path));
+    return path::Join(path, _T("sumatrapdfrestrict.ini"));
+}
+
 /* Group Policies can be set by adding the following DWORD values to either
  * HKLM\Software\Policies\SumatraPDF or HKCU\Software\Policies\SumatraPDF
  * (the HKCU value will only be used if the HKLM value is missing):
@@ -1200,6 +1211,22 @@ static int GetPolicies(bool isRestricted)
         { _T("PrinterAccess"),  Perm_PrinterAccess,   false },
         { _T("CopySelection"),  Perm_CopySelection,   true },
     };
+
+    // allow to restrict SumatraPDF's functionality from an INI file in the
+    // same directory as SumatraPDF.exe (cf. ../docs/sumatrapdfrestrict.ini )
+    ScopedMem<TCHAR> restrictPath(GetRestrictFilePath());
+    if (restrictPath && file::Exists(restrictPath)) {
+        int policy = Perm_RestrictedUse;
+        for (size_t i = 0; i < dimof(policies); i++) {
+            int check = GetPrivateProfileInt(_T("Policies"), policies[i].name, policies[i].allowForRestrict, restrictPath);
+            if (check)
+                policy = policy | policies[i].perm;
+        }
+        return policy;
+    }
+
+    // TODO: The above solution can replace both the -restrict command line argument
+    //       and Group Policies. Is there (still) any need for either alternative?
 
     // make it possible to apply Group Policies only when SumatraPDF is run with -restrict
     bool alwaysApply = CheckPolicyPermission(_T("AlwaysApplyPolicy")) == 1;
@@ -2051,6 +2078,8 @@ void WindowInfo::UpdateScrollbars(SizeI canvas)
 
 void AssociateExeWithPdfExtension()
 {
+    if (!HasPermission(Perm_RegistryAccess)) return;
+
     DoAssociateExeWithPdfExtension(HKEY_CURRENT_USER);
     DoAssociateExeWithPdfExtension(HKEY_LOCAL_MACHINE);
 
@@ -7000,6 +7029,9 @@ static bool InstanceInit(HINSTANCE hInstance, int nCmdShow)
 
 static bool PrintFile(const TCHAR *fileName, const TCHAR *printerName, bool displayErrors=true)
 {
+    if (!HasPermission(Perm_PrinterAccess))
+        return false;
+
     ScopedMem<TCHAR> fileName2(path::Normalize(fileName));
     BaseEngine *engine = EngineManager::CreateEngine(fileName2);
     if (!engine || !engine->IsPrintingAllowed()) {
