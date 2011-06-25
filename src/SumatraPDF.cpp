@@ -847,13 +847,16 @@ static HMENU BuildMenu(WindowInfo *win)
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Go To"));
     m = BuildMenuFromMenuDef(menuDefZoom, dimof(menuDefZoom), CreateMenu());
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Zoom"));
+#ifndef HIDE_FAVORITES_MENU
     if (!gRestrictedUse) {
         // I think it makes sense to disable favorites in restricted mode
+        // because they wouldn't be persisted, anyway
         m = CreateMenu();
         RebuildFavMenu(win, m);
         // TODO: translate when finalized
         AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _T("F&avorites"));
     }
+#endif
     m = BuildMenuFromMenuDef(menuDefSettings, dimof(menuDefSettings), CreateMenu());
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Settings"));
     m = BuildMenuFromMenuDef(menuDefHelp, dimof(menuDefHelp), CreateMenu());
