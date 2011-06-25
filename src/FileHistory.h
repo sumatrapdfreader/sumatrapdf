@@ -184,6 +184,7 @@ public:
 
     int     pageNo;
     TCHAR * name;
+    UINT    menuId; // assigned in AppendFavMenuItems()
 };
 
 class Fav {

@@ -573,7 +573,7 @@ MenuDef menuDefFavorites[] = {
     // TODO: translate when finalized
     { "Add to favorites",                  IDM_FAV_ADD,                MF_NO_TRANSLATE },
     { "Remove from favorites",             IDM_FAV_DEL,                MF_NO_TRANSLATE },
-    { "Manage favorites",                  IDM_FAV_MANAGE,             MF_NO_TRANSLATE },
+    { "Show all",                          IDM_FAV_SHOW_ALL,           MF_NO_TRANSLATE },
 };
 
 MenuDef menuDefSettings[] = {
@@ -676,14 +676,88 @@ static void AppendRecentFilesToMenu(HMENU m)
     InsertMenu(m, IDM_EXIT, MF_BYCOMMAND | MF_SEPARATOR, 0, NULL);
 }
 
+// Note: those might be too big
+#define MAX_FAV_SUBMENUS 10
+#define MAX_FAV_MENUS 10
+
+static void AppendFavMenuItems(HMENU m, Fav *f, UINT& idx, bool& needsShowMore)
+{
+    size_t items = f->favNames.Count();
+    if (items > MAX_FAV_MENUS) {
+        needsShowMore = true;
+        items = MAX_FAV_MENUS;
+    }
+    for (size_t i=0; i<items; i++)
+    {
+        FavName *fn = f->favNames.At(i);
+        fn->menuId = idx++;
+        TCHAR *menuTitle = NULL;
+        if (fn->name) {
+            menuTitle = str::Format(_T("%s (page %d)"), fn->name, fn->pageNo);
+        } else {
+            menuTitle = str::Format(_T("Page %d"), fn->pageNo);
+        }
+        AppendMenu(m, MF_STRING, (UINT_PTR)fn->menuId, menuTitle);
+        free(menuTitle);
+    }
+}
+
+// For easey access, we try to show favorites in the menu, similar to a list of
+// recently opened files.
+// The first menu items are for currently opened file (up to MAX_FAV_MENUS), based
+// on the assumption that user is usually interested in navigating current file.
+// Then we have a submenu for each file for which there are bookmarks (up to
+// MAX_FAV_SUBMENUS), each having up to MAX_FAV_MENUS menu items.
+// If not all favorites can be shown, we also enable "Show all favorites" menu which
+// will provide a way to see all favorites.
+static void AppendFavMenus(HMENU m, const TCHAR *currFilePath)
+{
+    bool needsShowMore = false;
+    UINT idx = IDM_FAV_FIRST;
+    Fav *currFileFavs = NULL;
+    size_t submenus = gFavorites->favs.Count();
+    bool addedSep = false;
+    if (NULL != currFilePath)
+    {
+        currFileFavs = gFavorites->GetFavByFilePath(currFilePath);
+        if (currFileFavs && currFileFavs->Count() > 0) {
+            AppendMenu(m, MF_SEPARATOR, 0, NULL);
+            addedSep = true;
+            AppendFavMenuItems(m, currFileFavs, idx, needsShowMore);
+            submenus--; // exclude current file
+        }
+    }
+    if (submenus > MAX_FAV_SUBMENUS) {
+        submenus = MAX_FAV_SUBMENUS;
+        needsShowMore = true;
+    }
+    if (submenus > 0 && !addedSep)    
+        AppendMenu(m, MF_SEPARATOR, 0, NULL);            
+
+    // TODO: sort by file name, alphabetically, to make it a stable order
+    int n = 0;
+    for (size_t i=0; i<submenus; i++)
+    {
+        Fav *f = gFavorites->favs.At(n++);
+        if (f == currFileFavs)
+            continue;
+        HMENU sub = CreateMenu();
+        AppendFavMenuItems(sub, f, idx, needsShowMore);
+        const TCHAR *filePath = f->filePath;
+        const TCHAR *fileName = path::GetBaseName(filePath);
+        AppendMenu(m, MF_POPUP | MF_STRING, (UINT_PTR)sub, fileName);
+    }
+
+    win::menu::SetEnabled(m, IDM_FAV_SHOW_ALL, needsShowMore);
+}
+
 // Called when a user opens "Favorites" top-level menu. We need to construct
 // the menu:
 // - disable add/remove menu items if no document is opened
 // - if a document is opened and the page is already bookmarked,
 //   disable "add" menu item and enable "remove" menu item
 // - if a document is opened and the page is not bookmarked,
-//   enable "add" menu item and disable "remoev" menu item
-//   Also make "add" text more explicit: "Add page %n to favorites"
+//   enable "add" menu item and disable "remove" menu item
 static void RebuildFavMenu(WindowInfo *win, HMENU menu)
 {
     win::menu::Empty(menu);
@@ -691,8 +765,7 @@ static void RebuildFavMenu(WindowInfo *win, HMENU menu)
     if (!win->IsDocLoaded()) {
         win::menu::SetEnabled(menu, IDM_FAV_ADD, false);
         win::menu::SetEnabled(menu, IDM_FAV_DEL, false);
-        // TODO: this will probably be enabled
-        win::menu::SetEnabled(menu, IDM_FAV_MANAGE, false);
+        AppendFavMenus(menu, NULL);
     } else {
         int pageNo = win->currPageNo;
         TCHAR *filePath = win->loadedFilePath;
@@ -703,16 +776,13 @@ static void RebuildFavMenu(WindowInfo *win, HMENU menu)
             // TODO: translate when finalized
             ScopedMem<TCHAR> s(str::Format(_T("Remove page %d from favorites"), pageNo));
             win::menu::SetText(menu, IDM_FAV_DEL, s);
-            win::menu::SetEnabled(menu, IDM_FAV_MANAGE, false);
-        }
-        else
-        {
+        } else {
             win::menu::SetEnabled(menu, IDM_FAV_DEL, false);
             // TODO: translate when finalized
             ScopedMem<TCHAR> s(str::Format(_T("Add page %d to favorites"), pageNo));
             win::menu::SetText(menu, IDM_FAV_ADD, s);
-            win::menu::SetEnabled(menu, IDM_FAV_MANAGE, false);
         }
+        AppendFavMenus(menu, filePath);
     }
 }
 
@@ -6543,7 +6613,7 @@ static LRESULT OnCommand(WindowInfo *win, HWND hwnd, UINT message, WPARAM wParam
             FavoriteDel(win);
             break;
 
-        case IDM_FAV_MANAGE:
+        case IDM_FAV_SHOW_ALL:
             MessageBox(NULL, _T("Not implemented yet!"), _T("Not implemented yet."), MB_ICONEXCLAMATION | MB_OK);
             break;
     

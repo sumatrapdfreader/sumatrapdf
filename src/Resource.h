@@ -2,6 +2,8 @@
 // Microsoft Visual C++ generated include file.
 // Used by SumatraPDF.rc
 //
+#define IDC_STATIC                      -1
+
 #define IDI_SUMATRAPDF                  1
 #define IDI_PDFDOC                      2
 #define IDD_DIALOG_GOTO_PAGE            129
@@ -97,14 +99,15 @@
 
 #define IDM_FAV_ADD                     560
 #define IDM_FAV_DEL                     561
-#define IDM_FAV_MANAGE                  562
+#define IDM_FAV_SHOW_ALL                562
 
 #define IDM_DEBUG_SHOW_LINKS            590
 #define IDM_DEBUG_GDI_RENDERER          591
 #define IDM_DEBUG_CRASH_ME              592
 
-#define IDC_SUMATRAPDF                  600
-#define IDI_SMALL                       601
+#define IDM_FAV_FIRST                   600
+// 10 submenus max with 10 items each max (=100) plus generous buffer => 200
+#define IDM_FAV_LAST                    800
 
 #define IDC_GOTO_PAGE_EDIT              1000
 #define IDC_GOTO_PAGE_GO                1001
@@ -180,7 +183,9 @@
 #define IDT_FILE_ADDTOFAV               3025
 #define IDT_VIEW_FIT_WIDTH              3026
 #define IDT_VIEW_FIT_PAGE               3027
-#define IDC_STATIC                      -1
+
+#define IDC_SUMATRAPDF                  4000
+#define IDI_SMALL                       4001
 
 // Next default values for new objects
 // 
