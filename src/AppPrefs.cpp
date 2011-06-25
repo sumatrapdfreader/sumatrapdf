@@ -64,8 +64,6 @@
 #define DM_CONTINUOUS_FACING_STR    "continuous facing"
 #define DM_CONTINUOUS_BOOK_VIEW_STR "continuous book view"
 
-#define FAV_FAVS_STR                "Favs"
-
 // number of weeks past since 2011-01-01
 static int GetWeekCount()
 {

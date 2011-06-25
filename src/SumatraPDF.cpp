@@ -747,7 +747,7 @@ static void AppendFavMenus(HMENU m, const TCHAR *currFilePath)
     if (NULL != currFilePath)
     {
         currFileFav = gFavorites->GetFavByFilePath(currFilePath);
-        if (currFileFav && currFileFav->Count() > 0) {
+        if (currFileFav && !currFileFav->IsEmpty()) {
             AppendMenu(m, MF_SEPARATOR, 0, NULL);
             addedSep = true;
             submenus--; // exclude current file
@@ -6461,6 +6461,8 @@ static void UpdateMenu(WindowInfo *win, HMENU m)
 // Going to a bookmark within current file scrolls to a given page.
 // Going to a bookmark in another file, loads the file and scrolls to a page
 // (similar to how invoking one of the recently opened files works)
+// TODO: if the file has already been opened in another window,
+//       why not bring that window to the foreground instead?
 static void GoToFavorite(WindowInfo *win, int wmId)
 {
     size_t idx;

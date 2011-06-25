@@ -178,8 +178,7 @@ public:
 
     void SetName(const TCHAR *name)
     {
-        free(this->name);
-        this->name = (name == NULL) ? NULL : str::Dup(name);
+        str::ReplacePtr(&this->name, name);
     }
 
     int     pageNo;
@@ -187,52 +186,38 @@ public:
     int     menuId; // assigned in AppendFavMenuItems()
 };
 
-static inline int sortByPageNo(const void *a, const void *b)
-{
-    FavName *na = *(FavName**)a;
-    FavName *nb = *(FavName**)b;
-    if (na->pageNo > nb->pageNo)
-        return 1;
-    else if (na->pageNo == nb->pageNo)
-        return 0;
-    else
-        return -1;
-}
-
 class Fav {
 
-    FavName *FindByPage(int pageNo, size_t *idx=NULL) const
+    int FindByPage(int pageNo) const
     {
-        for (size_t i=0; i<favNames.Count(); i++)
-        {
-            FavName *fn = favNames.At(i);
-            if (fn->pageNo == pageNo)
-            {
-                if (idx)
-                    *idx = i;
-                return fn;
-            }
-        }
-        return NULL;
+        for (size_t i = 0; i < favNames.Count(); i++)
+            if (favNames.At(i)->pageNo == pageNo)
+                return (int)i;
+        return -1;
+    }
+
+    static int sortByPageNo(const void *a, const void *b)
+    {
+        FavName *na = *(FavName **)a;
+        FavName *nb = *(FavName **)b;
+        // sort lower page numbers first
+        return na->pageNo - nb->pageNo;
     }
 
 public:
     TCHAR *         filePath;
     Vec<FavName *>  favNames;
 
-    Fav(const TCHAR *fp)
-    {
-        filePath = str::Dup(fp);
-    }
+    Fav(const TCHAR *fp) : filePath(str::Dup(fp)) { }
 
     ~Fav() {
         DeleteVecMembers(favNames);
         free(filePath);
     }
 
-    size_t Count() const
+    bool IsEmpty() const
     {
-        return favNames.Count();
+        return favNames.Count() == 0;
     }
 
     void ResetMenuIds()
@@ -259,31 +244,29 @@ public:
 
     bool Remove(int pageNo)
     {
-        size_t idx;
-        FavName *fn = FindByPage(pageNo, &idx);
-        if (fn)
-        {
-            delete fn;
-            favNames.RemoveAt(idx);
-            return true;
-        }
-        return false;
+        int idx = FindByPage(pageNo);
+        if (-1 == idx)
+            return false;
+
+        delete favNames.At(idx);
+        favNames.RemoveAt(idx);
+        return true;
     }
 
     bool Exists(int pageNo) const
     {
-        FavName *fn = FindByPage(pageNo);
-        return fn != NULL;
+        int idx = FindByPage(pageNo);
+        return idx != -1;
     }
 
     void AddOrReplace(int pageNo, const TCHAR *name)
     {
-        FavName *fn = FindByPage(pageNo);
-        if (fn) {
-            fn->SetName(name);
+        int idx = FindByPage(pageNo);
+        if (idx != -1) {
+            favNames.At(idx)->SetName(name);
             return;
         }
-        fn = new FavName(pageNo, name);
+        FavName *fn = new FavName(pageNo, name);
         favNames.Append(fn);
         favNames.Sort(sortByPageNo);
     }
@@ -298,8 +281,7 @@ class Favorites {
 public:
     Vec<Fav*> favs;
 
-    Favorites() : filePathCache(NULL)
-    {}
+    Favorites() : filePathCache(NULL) { }
     ~Favorites() { DeleteVecMembers(favs); }
 
     Fav *GetByMenuId(int menuId, size_t& idx)
@@ -380,7 +362,7 @@ public:
         if (!fav)
             return;
         fav->Remove(pageNo);
-        if (0 == fav->Count()) {
+        if (fav->IsEmpty()) {
             favs.RemoveAt(idx);
             delete fav;
             if (idx == idxCache)
