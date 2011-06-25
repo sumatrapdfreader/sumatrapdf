@@ -702,7 +702,7 @@ static void AppendFavMenuItems(HMENU m, Fav *f, UINT& idx, bool& needsShowMore)
     }
 }
 
-// For easey access, we try to show favorites in the menu, similar to a list of
+// For easy access, we try to show favorites in the menu, similar to a list of
 // recently opened files.
 // The first menu items are for currently opened file (up to MAX_FAV_MENUS), based
 // on the assumption that user is usually interested in navigating current file.
@@ -710,11 +710,15 @@ static void AppendFavMenuItems(HMENU m, Fav *f, UINT& idx, bool& needsShowMore)
 // MAX_FAV_SUBMENUS), each having up to MAX_FAV_MENUS menu items.
 // If not all favorites can be shown, we also enable "Show all favorites" menu which
 // will provide a way to see all favorites.
+// Note: not sure if that's the best layout. Maybe we should always use submenu and
+// put the submenu for current file as the first one (potentially named as "Current file"
+// or some such, to make it stand out from other submenus)
 static void AppendFavMenus(HMENU m, const TCHAR *currFilePath)
 {
     bool needsShowMore = false;
     UINT idx = IDM_FAV_FIRST;
     Fav *currFileFavs = NULL;
+    gFavorites->ResetMenuIds();
     size_t submenus = gFavorites->favs.Count();
     bool addedSep = false;
     if (NULL != currFilePath)
@@ -731,16 +735,17 @@ static void AppendFavMenus(HMENU m, const TCHAR *currFilePath)
         submenus = MAX_FAV_SUBMENUS;
         needsShowMore = true;
     }
-    if (submenus > 0 && !addedSep)    
-        AppendMenu(m, MF_SEPARATOR, 0, NULL);            
+    if (submenus > 0 && !addedSep)
+        AppendMenu(m, MF_SEPARATOR, 0, NULL);
 
     // TODO: sort by file name, alphabetically, to make it a stable order
-    int n = 0;
-    for (size_t i=0; i<submenus; i++)
+    size_t n = 0;
+    for (size_t i=0; n<submenus; i++)
     {
-        Fav *f = gFavorites->favs.At(n++);
+        Fav *f = gFavorites->favs.At(i);
         if (f == currFileFavs)
             continue;
+        n++;
         HMENU sub = CreateMenu();
         AppendFavMenuItems(sub, f, idx, needsShowMore);
         const TCHAR *filePath = f->filePath;
@@ -6337,19 +6342,44 @@ static void UpdateMenu(WindowInfo *win, HMENU m)
         MenuUpdateStateForWindow(*win);
 }
 
+// Going to a bookmark within current file scrolls to a given page.
+// Going to a bookmark in another file, loads the file and scrolls to a page
+// (similar to how invoking one of the recently opened files works)
+static void GoToFavorite(WindowInfo *win, int wmId)
+{
+    size_t idx;
+    Fav *f = gFavorites->GetByMenuId(wmId, idx);
+    FavName *fn = f->favNames.At(idx);
+    if (str::Eq(win->loadedFilePath, f->filePath)) {
+        // bookmark within current file - just go to that page
+        win->dm->goToPage(fn->pageNo, 0);
+        return;
+    }
+    DisplayState *state = gFileHistory.Find(f->filePath);
+    win = LoadDocument(state->filePath, win);
+    if (!win || !win->IsDocLoaded())
+        return;
+    win->dm->goToPage(fn->pageNo, 0);    
+}
+
 static LRESULT OnCommand(WindowInfo *win, HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     int wmId = LOWORD(wParam);
 
     // check if the menuId belongs to an entry in the list of
     // recently opened files and load the referenced file if it does
-    if (IDM_FILE_HISTORY_FIRST <= wmId && wmId <= IDM_FILE_HISTORY_LAST)
+    if ((wmId >= IDM_FILE_HISTORY_FIRST) && (wmId <= IDM_FILE_HISTORY_LAST))
     {
         DisplayState *state = gFileHistory.Get(wmId - IDM_FILE_HISTORY_FIRST);
         if (state) {
             LoadDocument(state->filePath, win);
             return 0;
         }
+    }
+
+    if ((wmId >= IDM_FAV_FIRST) && (wmId <= IDM_FAV_LAST))
+    {
+        GoToFavorite(win, wmId);
     }
     
     if (!win)

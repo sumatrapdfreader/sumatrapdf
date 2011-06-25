@@ -184,7 +184,7 @@ public:
 
     int     pageNo;
     TCHAR * name;
-    UINT    menuId; // assigned in AppendFavMenuItems()
+    int     menuId; // assigned in AppendFavMenuItems()
 };
 
 class Fav {
@@ -221,6 +221,28 @@ public:
     size_t Count() const
     {
         return favNames.Count();
+    }
+
+    void ResetMenuIds()
+    {
+        for (size_t i=0; i<favNames.Count(); i++)
+        {
+            FavName *fn = favNames.At(i);
+            fn->menuId = 0;
+        }
+    }
+
+    bool GetByMenuId(int menuId, size_t& idx)
+    {
+        for (size_t i=0; i<favNames.Count(); i++)
+        {
+            FavName *fn = favNames.At(i);
+            if (fn->menuId == menuId) {
+                idx = i;
+                return true;
+            }
+        }
+        return false;
     }
 
     bool Remove(int pageNo)
@@ -266,6 +288,26 @@ public:
     Favorites() : filePathCache(NULL)
     {}
     ~Favorites() { DeleteVecMembers(favs); }
+
+    Fav *GetByMenuId(int menuId, size_t& idx)
+    {
+        for (size_t i=0; i<favs.Count(); i++)
+        {
+            Fav *fav = favs.At(i);
+            if (fav->GetByMenuId(menuId, idx))
+                return fav;
+        }
+        return NULL;
+    }
+
+    void ResetMenuIds()
+    {
+        for (size_t i=0; i<favs.Count(); i++)
+        {
+            Fav *fav = favs.At(i);
+            fav->ResetMenuIds();
+        }
+    }
 
     Fav *GetFavByFilePath(const TCHAR *filePath, bool createIfNotExist=false, size_t *idx=NULL)
     {
