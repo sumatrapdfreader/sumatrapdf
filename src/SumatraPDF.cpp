@@ -634,7 +634,6 @@ static void AddFileMenuItem(HMENU menuFile, const TCHAR *filePath, UINT index)
 static HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuLen, HMENU menu)
 {
     assert(menu);
-    if (!menu) return NULL;
 
     for (int i = 0; i < menuLen; i++) {
         MenuDef md = menuDefs[i];
@@ -685,7 +684,7 @@ static void AppendRecentFilesToMenu(HMENU m)
 // - if a document is opened and the page is not bookmarked,
 //   enable "add" menu item and disable "remoev" menu item
 //   Also make "add" text more explicit: "Add page %n to favorites"
-static HMENU RebuildFavMenu(WindowInfo *win, HMENU menu)
+static void RebuildFavMenu(WindowInfo *win, HMENU menu)
 {
     win::menu::Empty(menu);
     BuildMenuFromMenuDef(menuDefFavorites, dimof(menuDefFavorites), menu);
@@ -700,24 +699,24 @@ static HMENU RebuildFavMenu(WindowInfo *win, HMENU menu)
         bool isBookmarked = gFavorites->IsPageInFavorites(filePath, pageNo);
         if (isBookmarked)
         {
+            win::menu::SetEnabled(menu, IDM_FAV_ADD, false);
             // TODO: translate when finalized
             ScopedMem<TCHAR> s(str::Format(_T("Remove page %d from favorites"), pageNo));
             win::menu::SetText(menu, IDM_FAV_DEL, s);
-            win::menu::SetEnabled(menu, IDM_FAV_ADD, false);
+            win::menu::SetEnabled(menu, IDM_FAV_MANAGE, false);
         }
         else
         {
+            win::menu::SetEnabled(menu, IDM_FAV_DEL, false);
             // TODO: translate when finalized
             ScopedMem<TCHAR> s(str::Format(_T("Add page %d to favorites"), pageNo));
             win::menu::SetText(menu, IDM_FAV_ADD, s);
-            // TODO: for some reason this doesn't work here
-            win::menu::SetEnabled(menu, IDM_FAV_DEL, false);
+            win::menu::SetEnabled(menu, IDM_FAV_MANAGE, false);
         }
     }
-    return menu;
 }
 
-static HMENU RebuildFileMenu(HMENU menu)
+static void RebuildFileMenu(HMENU menu)
 {
     win::menu::Empty(menu);
     BuildMenuFromMenuDef(menuDefFile, dimof(menuDefFile), menu);
@@ -735,14 +734,13 @@ static HMENU RebuildFileMenu(HMENU menu)
         win::menu::Remove(menu, IDM_VIEW_WITH_PDF_XCHANGE);
     if (!CanSendAsEmailAttachment())
         win::menu::Remove(menu, IDM_SEND_BY_EMAIL);
-
-    return menu;
 }
 
 static HMENU BuildMenu(WindowInfo *win)
 {
     HMENU mainMenu = CreateMenu();
-    HMENU m = RebuildFileMenu(CreateMenu());
+    HMENU m = CreateMenu();
+    RebuildFileMenu(m);
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&File"));
     m = BuildMenuFromMenuDef(menuDefView, dimof(menuDefView), CreateMenu());
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&View"));
@@ -750,10 +748,13 @@ static HMENU BuildMenu(WindowInfo *win)
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Go To"));
     m = BuildMenuFromMenuDef(menuDefZoom, dimof(menuDefZoom), CreateMenu());
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Zoom"));
-#ifndef HIDE_FAVORITES_MENU
-    m = RebuildFavMenu(win, CreateMenu());
-    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _T("F&avorites")); // TODO: translate when finalized
-#endif
+    if (!gRestrictedUse) {
+        // I think it makes sense to disable favorites in restricted mode
+        m = CreateMenu();
+        RebuildFavMenu(win, m);
+        // TODO: translate when finalized
+        AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _T("F&avorites"));
+    }
     m = BuildMenuFromMenuDef(menuDefSettings, dimof(menuDefSettings), CreateMenu());
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Settings"));
     m = BuildMenuFromMenuDef(menuDefHelp, dimof(menuDefHelp), CreateMenu());
@@ -1294,13 +1295,13 @@ static void MenuUpdatePrintItem(WindowInfo& win, HMENU menu, bool disableOnly=fa
 }
 
 static void MenuUpdateStateForWindow(WindowInfo& win) {
+    // those menu items will be disabled if no document is opened, enabled otherwise
     static UINT menusToDisableIfNoDocument[] = {
         IDM_VIEW_ROTATE_LEFT, IDM_VIEW_ROTATE_RIGHT, IDM_GOTO_NEXT_PAGE, IDM_GOTO_PREV_PAGE,
         IDM_GOTO_FIRST_PAGE, IDM_GOTO_LAST_PAGE, IDM_GOTO_NAV_BACK, IDM_GOTO_NAV_FORWARD,
         IDM_GOTO_PAGE, IDM_FIND_FIRST, IDM_SAVEAS, IDM_SAVEAS_BOOKMARK, IDM_SEND_BY_EMAIL,
         IDM_VIEW_WITH_ACROBAT, IDM_VIEW_WITH_FOXIT, IDM_VIEW_WITH_PDF_XCHANGE, 
-        IDM_SELECT_ALL, IDM_COPY_SELECTION, IDM_PROPERTIES, 
-        IDM_VIEW_PRESENTATION_MODE, IDM_FAV_ADD, IDM_FAV_DEL, IDM_FAV_MANAGE};
+        IDM_SELECT_ALL, IDM_COPY_SELECTION, IDM_PROPERTIES, IDM_VIEW_PRESENTATION_MODE };
     static UINT menusToDisableIfNotPdfDocument[] = {
         IDM_VIEW_WITH_ACROBAT, IDM_VIEW_WITH_FOXIT, IDM_VIEW_WITH_PDF_XCHANGE
     };
