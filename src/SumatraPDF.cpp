@@ -1031,8 +1031,9 @@ static bool ReloadPrefs()
 
     FileHistory fileHistory;
     Favorites *favs = NULL;
-    if (!Prefs::Load(path, gGlobalPrefs, fileHistory, &favs))
-        return false;
+    Prefs::Load(path, gGlobalPrefs, fileHistory, &favs);
+    delete gFavorites;
+    gFavorites = favs;
 
     gFileHistory.Clear();
     gFileHistory.ExtendWith(fileHistory);
@@ -6936,17 +6937,13 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
     {
         ScopedMem<TCHAR> prefsFilename(GetPrefsFileName());
-        if (!Prefs::Load(prefsFilename, gGlobalPrefs, gFileHistory, &gFavorites)) {
+        if (!file::Exists(prefsFilename)) {
+            // guess the ui language on first start
+            CurrLangNameSet(Trans::GuessLanguage());
+            gFavorites = new Favorites();
+        } else {
             assert(gFavorites == NULL);
-            gFavorites = new Favorites();
-            // assume that this is because prefs file didn't exist
-            // i.e. this could be the first time Sumatra is launched.
-            const char *lang = Trans::GuessLanguage();
-            CurrLangNameSet(lang);
-        }
-        else {
-            // TODO: remove this once Prefs::Load actually loads gFavorites
-            gFavorites = new Favorites();
+            Prefs::Load(prefsFilename, gGlobalPrefs, gFileHistory, &gFavorites);
             CurrLangNameSet(gGlobalPrefs.m_currentLanguage);
         }
     }

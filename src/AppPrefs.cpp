@@ -14,6 +14,7 @@
 
 #define GLOBAL_PREFS_STR            "gp"
 #define FILE_HISTORY_STR            "File History"
+#define FAVS_STR                    "Favorites"
 
 #define FILE_STR                    "File"
 #define DISPLAY_MODE_STR            "Display Mode"
@@ -62,6 +63,8 @@
 #define DM_CONTINUOUS_STR           "continuous"
 #define DM_CONTINUOUS_FACING_STR    "continuous facing"
 #define DM_CONTINUOUS_BOOK_VIEW_STR "continuous book view"
+
+#define FAV_FAVS_STR                "Favs"
 
 // number of weeks past since 2011-01-01
 static int GetWeekCount()
@@ -176,8 +179,6 @@ static BencDict *DisplayState_Serialize(DisplayState *ds, bool globalPrefsOnly)
 static BencArray *SerializeFileHistory(FileHistory& fileHistory, bool globalPrefsOnly)
 {
     BencArray *arr = new BencArray();
-    if (!arr)
-        goto Error;
 
     // Don't save more file entries than will be useful
     int minOpenCount = 0;
@@ -208,21 +209,65 @@ Error:
     return NULL;      
 }
 
-static const char *SerializePrefs(SerializableGlobalPrefs& globalPrefs, FileHistory& root, size_t* lenOut)
+static inline const TCHAR *NullToEmpty(const TCHAR *s)
+{
+    return s == NULL ? _T("") : s;
+}
+
+static inline const TCHAR *EmptyToNull(const TCHAR *s)
+{
+    return str::IsEmpty(s) ? NULL : s;
+}
+
+static BencArray *SerializeFavData(Fav *fav)
+{
+    BencArray *res = new BencArray();
+    for (size_t i=0; i<fav->favNames.Count(); i++)
+    {
+        FavName *fn = fav->favNames.At(i);
+        res->Add(fn->pageNo);
+        res->Add(NullToEmpty(fn->name));
+    }
+    return res;
+}
+
+// for simplicity, favorites are serialized as an array. Element 2*i is
+// a name of the file, for favorite i, element 2*i+1 is an array of
+// page number integer/name string pairs
+static BencArray *SerializeFavorites(Favorites *favs)
+{
+    BencArray *res = new BencArray();
+    for (size_t i=0; i < favs->favs.Count(); i++)
+    {
+        Fav *fav = favs->favs.At(i);
+        res->Add(fav->filePath);
+        res->Add(SerializeFavData(fav));
+    }
+    return res;
+}
+
+static const char *SerializePrefs(SerializableGlobalPrefs& globalPrefs, FileHistory& root, Favorites *favs, size_t* lenOut)
 {
     const char *data = NULL;
 
     BencDict *prefs = new BencDict();
     if (!prefs)
         goto Error;
+
     BencDict* global = SerializeGlobalPrefs(globalPrefs);
     if (!global)
         goto Error;
     prefs->Add(GLOBAL_PREFS_STR, global);
+
     BencArray *fileHistory = SerializeFileHistory(root, globalPrefs.m_globalPrefsOnly);
     if (!fileHistory)
         goto Error;
     prefs->Add(FILE_HISTORY_STR, fileHistory);
+
+    BencArray *favsArr = SerializeFavorites(favs);
+    if (!favsArr)
+        goto Error;
+    prefs->Add(FAVS_STR, favsArr);
 
     data = prefs->Encode();
     *lenOut = str::Len(data);
@@ -231,7 +276,6 @@ Error:
     delete prefs;
     return data;
 }
-
 
 static void Retrieve(BencDict *dict, const char *key, int& value)
 {
@@ -282,11 +326,12 @@ static void Retrieve(BencDict *dict, const char *key, TCHAR *& value)
 static void Retrieve(BencDict *dict, const char *key, float& value)
 {
     const char *string = GetRawString(dict, key);
-    if (string)
+    if (string) {
         // note: this might round the value for files produced with versions
         //       prior to 1.6 and on a system where the decimal mark isn't a '.'
         //       (the difference should be hardly notable, though)
         value = (float)atof(string);
+    }
 }
 
 static void Retrieve(BencDict *dict, const char *key, DisplayMode& value)
@@ -299,7 +344,7 @@ static void Retrieve(BencDict *dict, const char *key, DisplayMode& value)
     }
 }
 
-static DisplayState * DisplayState_Deserialize(BencDict *dict, bool globalPrefsOnly)
+static DisplayState * DeserializeDisplayState(BencDict *dict, bool globalPrefsOnly)
 {
     DisplayState *ds = new DisplayState();
     if (!ds)
@@ -351,15 +396,16 @@ static DisplayState * DisplayState_Deserialize(BencDict *dict, bool globalPrefsO
     return ds;
 }
 
-static bool DeserializePrefs(const char *prefsTxt, SerializableGlobalPrefs& globalPrefs, FileHistory& fh)
+static void DeserializePrefs(const char *prefsTxt, SerializableGlobalPrefs& globalPrefs, 
+    FileHistory& fh, Favorites **favsOut)
 {
-    BencObj *obj = BencObj::Decode(prefsTxt);
-    if (!obj || obj->Type() != BT_DICT)
-        goto Error;
-    BencDict *prefs = static_cast<BencDict *>(obj);
+    ScopedPtr<BencObj> obj(BencObj::Decode(prefsTxt));
+    if (!obj || obj.Get()->Type() != BT_DICT)
+        goto Exit;
+    BencDict *prefs = static_cast<BencDict *>(obj.Get());
     BencDict *global = prefs->GetDict(GLOBAL_PREFS_STR);
     if (!global)
-        goto Error;
+        goto Exit;
 
     Retrieve(global, SHOW_TOOLBAR_STR, globalPrefs.m_showToolbar);
     Retrieve(global, SHOW_TOC_STR, globalPrefs.m_showToc);
@@ -403,47 +449,71 @@ static bool DeserializePrefs(const char *prefsTxt, SerializableGlobalPrefs& glob
 
     BencArray *fileHistory = prefs->GetArray(FILE_HISTORY_STR);
     if (!fileHistory)
-        goto Error;
+        goto Exit;
     size_t dlen = fileHistory->Length();
     for (size_t i = 0; i < dlen; i++) {
         BencDict *dict = fileHistory->GetDict(i);
         assert(dict);
         if (!dict) continue;
-        DisplayState *state = DisplayState_Deserialize(dict, globalPrefs.m_globalPrefsOnly);
+        DisplayState *state = DeserializeDisplayState(dict, globalPrefs.m_globalPrefsOnly);
         if (state) {
             // "age" openCount statistics (cut in in half after every week)
             state->openCount >>= weekDiff;
             fh.Append(state);
         }
     }
-    delete obj;
-    return true;
 
-Error:
-    delete obj;
-    return false;
+    Favorites *favs = new Favorites();
+    *favsOut = favs;
+
+    BencArray *favsArr = prefs->GetArray(FAVS_STR);
+    if (!favsArr)
+        goto Exit;
+    for (size_t i=0; i<favsArr->Length(); i+=2)
+    {
+        BencString *filePathBenc = favsArr->GetString(i);
+        if (!filePathBenc)
+            break;
+        BencArray *favData = favsArr->GetArray(i+1);
+        if (!favData)
+            break;
+        const TCHAR *filePath = filePathBenc->Value();
+        for (size_t j=0; j<favData->Length(); j+=2)
+        {
+            // we're lenient about errors
+            BencInt *pageNoBenc = favData->GetInt(j);
+            if (!pageNoBenc)
+                break;
+            BencString *nameBenc = favData->GetString(j+1);
+            if (!nameBenc)
+                break;
+            int pageNo = (int)pageNoBenc->Value();
+            const TCHAR *name = nameBenc->Value();
+            favs->AddOrReplace(filePath, pageNo, EmptyToNull(name));
+            free((void*)name);
+        }
+        free((void*)filePath);
+    }
+
+Exit:
+    return;
 }
 
 namespace Prefs {
 
-/* Load preferences from the preferences file.
-   Returns true if preferences file was loaded, false if there was an error.
-*/
-bool Load(TCHAR *filepath, SerializableGlobalPrefs& globalPrefs, FileHistory& fileHistory, Favorites **favs)
+/* Load preferences from the preferences file. */
+void Load(TCHAR *filepath, SerializableGlobalPrefs& globalPrefs,
+          FileHistory& fileHistory, Favorites **favs)
 {
-    bool            ok = false;
-
-    assert(filepath);
-    if (!filepath)
-        return false;
-
     size_t prefsFileLen;
     ScopedMem<char> prefsTxt(file::ReadAll(filepath, &prefsFileLen));
     if (!str::IsEmpty(prefsTxt.Get())) {
-        ok = DeserializePrefs(prefsTxt, globalPrefs, fileHistory);
-        assert(ok);
+        DeserializePrefs(prefsTxt, globalPrefs, fileHistory, favs);
         globalPrefs.m_lastPrefUpdate = file::GetModificationTime(filepath);
     }
+
+    if (!*favs)
+        *favs = new Favorites();
 
     // TODO: add a check if a file exists, to filter out deleted files
     // but only if a file is on a non-network drive (because
@@ -459,8 +529,6 @@ bool Load(TCHAR *filepath, SerializableGlobalPrefs& globalPrefs, FileHistory& fi
         }
     }
 #endif
-
-    return ok;
 }
 
 bool Save(TCHAR *filepath, SerializableGlobalPrefs& globalPrefs, FileHistory& fileHistory, Favorites* favs)
@@ -470,7 +538,7 @@ bool Save(TCHAR *filepath, SerializableGlobalPrefs& globalPrefs, FileHistory& fi
         return false;
 
     size_t dataLen;
-    ScopedMem<const char> data(SerializePrefs(globalPrefs, fileHistory, &dataLen));
+    ScopedMem<const char> data(SerializePrefs(globalPrefs, fileHistory, favs, &dataLen));
     if (!data)
         return false;
 

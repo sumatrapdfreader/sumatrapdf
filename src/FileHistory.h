@@ -147,9 +147,9 @@ public:
 };
 
 /*
-A favorite is a bookmark (we call it a favorite, like Internet Explorer, because
-we have to differentiate from bookmarks inside a PDF file (which really are
-table of content)).
+A favorite is a bookmark (we call it a favorite, like Internet Explorer, to
+differentiate from bookmarks inside a PDF file (which really are
+table of contents)).
 
 We can have multiple favorites per file.
 
@@ -159,8 +159,8 @@ for the user.
 A favorite is identified by a (mandatory) page number and (optional) name
 (provided by the user).
 
-Favorites do not remember presentation settings like zoom or viewing mode. 
-Favorites are for navigation only. Presentation settings are remembered on a
+Favorites do not remember presentation settings like zoom or viewing mode -
+they are for navigation only. Presentation settings are remembered on a
 per-file basis in FileHistory.
 */
 
@@ -188,8 +188,6 @@ public:
 
 class Fav {
 
-    Vec<FavName *>  favNames;
-
     FavName *FindByPage(int pageNo, size_t *idx=NULL) const
     {
         for (size_t i=0; i<favNames.Count(); i++)
@@ -207,6 +205,7 @@ class Fav {
 
 public:
     TCHAR *         filePath;
+    Vec<FavName *>  favNames;
 
     Fav(const TCHAR *fp)
     {
@@ -255,13 +254,14 @@ public:
 };
 
 class Favorites {
-    Vec<Fav*> favs;
 
     // filePathCache points to a string inside Fav, so doesn't need to free()d
     TCHAR *  filePathCache;
     size_t   idxCache;
 
 public:
+    Vec<Fav*> favs;
+
     Favorites() : filePathCache(NULL)
     {}
     ~Favorites() { DeleteVecMembers(favs); }

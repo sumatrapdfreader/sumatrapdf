@@ -108,6 +108,23 @@ public:
     operator T*() const { return obj; }
 };
 
+// auto-delete arbitrary object of class T*
+template <class T>
+class ScopedPtr
+{
+    T *obj;
+public:
+    ScopedPtr() : obj(NULL) {}
+    explicit ScopedPtr(T* obj) : obj(obj) {}
+    ~ScopedPtr() { delete obj; }
+    void Set(T *o) {
+        delete obj;
+        obj = o;
+    }
+    T *Get() const { return obj; }
+    operator T*() const { return obj; }
+};
+
 class CallbackFunc {
 public:
     virtual ~CallbackFunc() { }
