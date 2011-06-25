@@ -704,6 +704,13 @@ static void AppendFavMenuItems(HMENU m, Fav *f, UINT& idx, bool& needsShowMore)
     }
 }
 
+static int sortByBaseFileName(const void *a, const void *b)
+{
+    TCHAR *filePathA = *(TCHAR**)a;
+    TCHAR *filePathB = *(TCHAR**)b;
+    return str::CmpNatural(path::GetBaseName(filePathA), path::GetBaseName(filePathB));
+}
+
 // For easy access, we try to show favorites in the menu, similar to a list of
 // recently opened files.
 // The first menu items are for currently opened file (up to MAX_FAV_MENUS), based
@@ -739,24 +746,33 @@ static void AppendFavMenus(HMENU m, const TCHAR *currFilePath)
 #endif
         }
     }
-    if (submenus > MAX_FAV_SUBMENUS) {
-        submenus = MAX_FAV_SUBMENUS;
-        needsShowMore = true;
-    }
+
     if (submenus > 0 && !addedSep)
         AppendMenu(m, MF_SEPARATOR, 0, NULL);
 
-    // TODO: sort by file name, alphabetically, to make it a stable order
-    size_t n = 0;
-    for (size_t i=0; n<submenus; i++)
+    // sort the files with favorites by base file name of file path
+    Vec<TCHAR*> filePathsSorted;
+    for (size_t i = 0; i < gFavorites->favs.Count(); i++)
     {
         Fav *f = gFavorites->favs.At(i);
         if (f == currFileFav)
             continue;
-        n++;
+        filePathsSorted.Append(f->filePath);
+    }
+    filePathsSorted.Sort(sortByBaseFileName);
+
+    submenus = filePathsSorted.Count();
+    if (submenus > MAX_FAV_SUBMENUS) {
+        submenus = MAX_FAV_SUBMENUS;
+        needsShowMore = true;
+    }
+
+    for (size_t i=0; i<submenus; i++)
+    {
+        TCHAR *filePath = filePathsSorted.At(i);
+        Fav *f = gFavorites->GetFavByFilePath(filePath);
         HMENU sub = CreateMenu();
         AppendFavMenuItems(sub, f, idx, needsShowMore);
-        const TCHAR *filePath = f->filePath;
         const TCHAR *fileName = path::GetBaseName(filePath);
         AppendMenu(m, MF_POPUP | MF_STRING, (UINT_PTR)sub, fileName);
     }
