@@ -2,7 +2,8 @@
 
     FreeType font driver for pcf files
 
-    Copyright (C) 2000, 2001, 2002, 2003, 2004, 2006, 2007, 2008, 2009 by
+    Copyright (C) 2000, 2001, 2002, 2003, 2004, 2006, 2007, 2008, 2009,
+                  2010 by
     Francesco Zappa Nardelli
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -32,6 +33,7 @@ THE SOFTWARE.
 #include FT_INTERNAL_OBJECTS_H
 #include FT_GZIP_H
 #include FT_LZW_H
+#include FT_BZIP2_H
 #include FT_ERRORS_H
 #include FT_BDF_H
 #include FT_TRUETYPE_IDS_H 
@@ -248,11 +250,11 @@ THE SOFTWARE.
 
     FT_TRACE4(( "PCF_Face_Done: done face\n" ));
 
-    /* close gzip/LZW stream if any */
-    if ( pcfface->stream == &face->gzip_stream )
+    /* close compressed stream if any */
+    if ( pcfface->stream == &face->comp_stream )
     {
-      FT_Stream_Close( &face->gzip_stream );
-      pcfface->stream = face->gzip_source;
+      FT_Stream_Close( &face->comp_stream );
+      pcfface->stream = face->comp_source;
     }
   }
 
@@ -277,8 +279,9 @@ THE SOFTWARE.
     {
       PCF_Face_Done( pcfface );
 
-#if defined( FT_CONFIG_OPTION_USE_ZLIB ) || \
-    defined( FT_CONFIG_OPTION_USE_LZW )
+#if defined( FT_CONFIG_OPTION_USE_ZLIB )  || \
+    defined( FT_CONFIG_OPTION_USE_LZW )   || \
+    defined( FT_CONFIG_OPTION_USE_BZIP2 )
 
 #ifdef FT_CONFIG_OPTION_USE_ZLIB
       {
@@ -286,7 +289,7 @@ THE SOFTWARE.
 
 
         /* this didn't work, try gzip support! */
-        error2 = FT_Stream_OpenGzip( &face->gzip_stream, stream );
+        error2 = FT_Stream_OpenGzip( &face->comp_stream, stream );
         if ( FT_ERROR_BASE( error2 ) == FT_Err_Unimplemented_Feature )
           goto Fail;
 
@@ -301,7 +304,7 @@ THE SOFTWARE.
 
 
         /* this didn't work, try LZW support! */
-        error3 = FT_Stream_OpenLZW( &face->gzip_stream, stream );
+        error3 = FT_Stream_OpenLZW( &face->comp_stream, stream );
         if ( FT_ERROR_BASE( error3 ) == FT_Err_Unimplemented_Feature )
           goto Fail;
 
@@ -309,11 +312,26 @@ THE SOFTWARE.
       }
 #endif /* FT_CONFIG_OPTION_USE_LZW */
 
+#ifdef FT_CONFIG_OPTION_USE_BZIP2
+      if ( error )
+      {
+        FT_Error  error4;
+
+
+        /* this didn't work, try Bzip2 support! */
+        error4 = FT_Stream_OpenBzip2( &face->comp_stream, stream );
+        if ( FT_ERROR_BASE( error4 ) == FT_Err_Unimplemented_Feature )
+          goto Fail;
+
+        error = error4;
+      }
+#endif /* FT_CONFIG_OPTION_USE_BZIP2 */
+
       if ( error )
         goto Fail;
 
-      face->gzip_source = stream;
-      pcfface->stream   = &face->gzip_stream;
+      face->comp_source = stream;
+      pcfface->stream   = &face->comp_stream;
 
       stream = pcfface->stream;
 
@@ -321,7 +339,9 @@ THE SOFTWARE.
       if ( error )
         goto Fail;
 
-#else /* !(FT_CONFIG_OPTION_USE_ZLIB || FT_CONFIG_OPTION_USE_LZW) */
+#else /* !(FT_CONFIG_OPTION_USE_ZLIB ||
+           FT_CONFIG_OPTION_USE_LZW ||
+           FT_CONFIG_OPTION_USE_BZIP2) */
 
       goto Fail;
 

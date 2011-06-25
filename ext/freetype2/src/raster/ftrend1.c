@@ -161,10 +161,18 @@
     /* compute the control box, and grid fit it */
     FT_Outline_Get_CBox( outline, &cbox );
 
+    /* undocumented but confirmed: bbox values get rounded */
+#if 1
+    cbox.xMin = FT_PIX_ROUND( cbox.xMin );
+    cbox.yMin = FT_PIX_ROUND( cbox.yMin );
+    cbox.xMax = FT_PIX_ROUND( cbox.xMax );
+    cbox.yMax = FT_PIX_ROUND( cbox.yMax );
+#else
     cbox.xMin = FT_PIX_FLOOR( cbox.xMin );
     cbox.yMin = FT_PIX_FLOOR( cbox.yMin );
     cbox.xMax = FT_PIX_CEIL( cbox.xMax );
     cbox.yMax = FT_PIX_CEIL( cbox.yMax );
+#endif
 
     width  = (FT_UInt)( ( cbox.xMax - cbox.xMin ) >> 6 );
     height = (FT_UInt)( ( cbox.yMax - cbox.yMin ) >> 6 );

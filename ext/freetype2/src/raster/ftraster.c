@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    The FreeType glyph rasterizer (body).                                */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2005, 2007, 2008, 2009, 2010 by       */
+/*  Copyright 1996-2001, 2002, 2003, 2005, 2007, 2008, 2009, 2010, 2011 by */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -651,11 +651,33 @@
   static void
   Set_High_Precision( RAS_ARGS Int  High )
   {
+    /*
+     * `precision_step' is used in `Bezier_Up' to decide when to split a
+     * given y-monotonous Bezier arc that crosses a scanline before
+     * approximating it as a straight segment.  The default value of 32 (for
+     * low accuracy) corresponds to
+     *
+     *   32 / 64 == 0.5 pixels ,
+     *
+     * while for the high accuracy case we have
+     *
+     *   256/ (1 << 12) = 0.0625 pixels .
+     *
+     * `precision_jitter' is an epsilon threshold used in
+     * `Vertical_Sweep_Span' to deal with small imperfections in the Bezier
+     * decomposition (after all, we are working with approximations only);
+     * it avoids switching on additional pixels which would cause artifacts
+     * otherwise.
+     *
+     * The value of `precision_jitter' has been determined heuristically.
+     *
+     */
+
     if ( High )
     {
       ras.precision_bits   = 12;
       ras.precision_step   = 256;
-      ras.precision_jitter = 50;
+      ras.precision_jitter = 30;
     }
     else
     {
@@ -2403,6 +2425,14 @@
           return;  /* no drop-out control */
         }
 
+        /* undocumented but confirmed: If the drop-out would result in a  */
+        /* pixel outside of the bounding box, use the pixel inside of the */
+        /* bounding box instead                                           */
+        if ( pxl < 0 )
+          pxl = e1;
+        else if ( TRUNC( pxl ) >= ras.bWidth )
+          pxl = e2;
+
         /* check that the other pixel isn't set */
         e1 = pxl == e1 ? e2 : e1;
 
@@ -2578,6 +2608,14 @@
         default: /* modes 2, 3, 6, 7 */
           return;  /* no drop-out control */
         }
+
+        /* undocumented but confirmed: If the drop-out would result in a  */
+        /* pixel outside of the bounding box, use the pixel inside of the */
+        /* bounding box instead                                           */
+        if ( pxl < 0 )
+          pxl = e1;
+        else if ( TRUNC( pxl ) >= ras.target.rows )
+          pxl = e2;
 
         /* check that the other pixel isn't set */
         e1 = pxl == e1 ? e2 : e1;

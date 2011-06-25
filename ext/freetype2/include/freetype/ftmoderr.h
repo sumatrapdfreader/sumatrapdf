@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType module error offsets (specification).                       */
 /*                                                                         */
-/*  Copyright 2001, 2002, 2003, 2004, 2005 by                              */
+/*  Copyright 2001, 2002, 2003, 2004, 2005, 2010 by                        */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -105,24 +105,25 @@
   FT_MODERRDEF( Base,      0x000, "base module" )
   FT_MODERRDEF( Autofit,   0x100, "autofitter module" )
   FT_MODERRDEF( BDF,       0x200, "BDF module" )
-  FT_MODERRDEF( Cache,     0x300, "cache module" )
-  FT_MODERRDEF( CFF,       0x400, "CFF module" )
-  FT_MODERRDEF( CID,       0x500, "CID module" )
-  FT_MODERRDEF( Gzip,      0x600, "Gzip module" )
-  FT_MODERRDEF( LZW,       0x700, "LZW module" )
-  FT_MODERRDEF( OTvalid,   0x800, "OpenType validation module" )
-  FT_MODERRDEF( PCF,       0x900, "PCF module" )
-  FT_MODERRDEF( PFR,       0xA00, "PFR module" )
-  FT_MODERRDEF( PSaux,     0xB00, "PS auxiliary module" )
-  FT_MODERRDEF( PShinter,  0xC00, "PS hinter module" )
-  FT_MODERRDEF( PSnames,   0xD00, "PS names module" )
-  FT_MODERRDEF( Raster,    0xE00, "raster module" )
-  FT_MODERRDEF( SFNT,      0xF00, "SFNT module" )
-  FT_MODERRDEF( Smooth,   0x1000, "smooth raster module" )
-  FT_MODERRDEF( TrueType, 0x1100, "TrueType module" )
-  FT_MODERRDEF( Type1,    0x1200, "Type 1 module" )
-  FT_MODERRDEF( Type42,   0x1300, "Type 42 module" )
-  FT_MODERRDEF( Winfonts, 0x1400, "Windows FON/FNT module" )
+  FT_MODERRDEF( Bzip2,     0x300, "Bzip2 module" )
+  FT_MODERRDEF( Cache,     0x400, "cache module" )
+  FT_MODERRDEF( CFF,       0x500, "CFF module" )
+  FT_MODERRDEF( CID,       0x600, "CID module" )
+  FT_MODERRDEF( Gzip,      0x700, "Gzip module" )
+  FT_MODERRDEF( LZW,       0x800, "LZW module" )
+  FT_MODERRDEF( OTvalid,   0x900, "OpenType validation module" )
+  FT_MODERRDEF( PCF,       0xA00, "PCF module" )
+  FT_MODERRDEF( PFR,       0xB00, "PFR module" )
+  FT_MODERRDEF( PSaux,     0xC00, "PS auxiliary module" )
+  FT_MODERRDEF( PShinter,  0xD00, "PS hinter module" )
+  FT_MODERRDEF( PSnames,   0xE00, "PS names module" )
+  FT_MODERRDEF( Raster,    0xF00, "raster module" )
+  FT_MODERRDEF( SFNT,     0x1000, "SFNT module" )
+  FT_MODERRDEF( Smooth,   0x1100, "smooth raster module" )
+  FT_MODERRDEF( TrueType, 0x1200, "TrueType module" )
+  FT_MODERRDEF( Type1,    0x1300, "Type 1 module" )
+  FT_MODERRDEF( Type42,   0x1400, "Type 42 module" )
+  FT_MODERRDEF( Winfonts, 0x1500, "Windows FON/FNT module" )
 
 
 #ifdef FT_MODERR_END_LIST

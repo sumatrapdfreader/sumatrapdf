@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auto-fitter routines to compute global hinting values (body).        */
 /*                                                                         */
-/*  Copyright 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010 by            */
+/*  Copyright 2003-2011 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -31,8 +31,8 @@
 
 #ifndef FT_CONFIG_OPTION_PIC
 
-/* when updating this table, don't forget to update 
-  AF_SCRIPT_CLASSES_COUNT and autofit_module_class_pic_init */
+  /* when updating this table, don't forget to update          */
+  /* AF_SCRIPT_CLASSES_COUNT and autofit_module_class_pic_init */
 
   /* populate this list when you add new scripts */
   static AF_ScriptClass const  af_script_classes[] =
@@ -47,7 +47,7 @@
     NULL  /* do not remove */
   };
 
-#endif /* FT_CONFIG_OPTION_PIC */
+#endif /* !FT_CONFIG_OPTION_PIC */
 
   /* index of default script in `af_script_classes' */
 #define AF_SCRIPT_LIST_DEFAULT  2
@@ -85,7 +85,7 @@
     FT_UInt     ss, i;
 
 
-    /* the value 255 means `uncovered glyph' */
+    /* the value AF_SCRIPT_LIST_NONE means `uncovered glyph' */
     FT_MEM_SET( globals->glyph_scripts,
                 AF_SCRIPT_LIST_NONE,
                 globals->glyph_count );
@@ -126,9 +126,7 @@
         if ( gindex != 0                             &&
              gindex < (FT_ULong)globals->glyph_count &&
              gscripts[gindex] == AF_SCRIPT_LIST_NONE )
-        {
           gscripts[gindex] = (FT_Byte)ss;
-        }
 
         for (;;)
         {
@@ -139,9 +137,7 @@
 
           if ( gindex < (FT_ULong)globals->glyph_count &&
                gscripts[gindex] == AF_SCRIPT_LIST_NONE )
-          {
             gscripts[gindex] = (FT_Byte)ss;
-          }
         }
       }
     }

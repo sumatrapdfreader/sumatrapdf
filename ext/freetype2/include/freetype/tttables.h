@@ -5,7 +5,7 @@
 /*    Basic SFNT/TrueType tables definitions and interface                 */
 /*    (specification only).                                                */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2008, 2009, 2010 by       */
+/*  Copyright 1996-2005, 2008-2011 by                                      */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -687,12 +687,16 @@ FT_BEGIN_HEADER
   *     The index of an SFNT table.  The function returns
   *     FT_Err_Table_Missing for an invalid value.
   *
-  * @output:
+  * @inout:
   *   tag ::
-  *     The name tag of the SFNT table.
+  *     The name tag of the SFNT table.  If the value is NULL, `table_index'
+  *     is ignored, and `length' returns the number of SFNT tables in the
+  *     font.
   *
+  * @output:
   *   length ::
-  *     The length of the SFNT table.
+  *     The length of the SFNT table (or the number of SFNT tables, depending
+  *     on `tag').
   *
   * @return:
   *   FreeType error code.  0~means success.

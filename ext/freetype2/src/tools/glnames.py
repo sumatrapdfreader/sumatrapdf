@@ -6,7 +6,7 @@
 #
 
 
-# Copyright 1996-2000, 2003, 2005, 2007, 2008 by
+# Copyright 1996-2000, 2003, 2005, 2007, 2008, 2011 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -151,7 +151,7 @@ mac_standard_names = \
 # The list of standard `SID' glyph names.  For the official list,
 # see Annex A of document at
 #
-#   http://partners.adobe.com/asn/developer/pdfs/tn/5176.CFF.pdf.
+#   http://partners.adobe.com/public/developer/en/font/5176.CFF.pdf  .
 #
 sid_standard_names = \
 [
@@ -415,8 +415,7 @@ t1_expert_encoding = \
 # This data has been taken literally from the file `glyphlist.txt',
 # version 2.0, 22 Sept 2002.  It is available from
 #
-#   http://partners.adobe.com/asn/developer/typeforum/unicodegn.html
-#   http://partners.adobe.com/public/developer/en/opentype/glyphlist.txt
+#   http://sourceforge.net/adobe/aglfn/
 #
 adobe_glyph_list = """\
 A;0041

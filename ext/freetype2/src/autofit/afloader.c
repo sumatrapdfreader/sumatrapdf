@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auto-fitter glyph loading routines (body).                           */
 /*                                                                         */
-/*  Copyright 2003, 2004, 2005, 2006, 2007, 2008, 2009 by                  */
+/*  Copyright 2003-2009, 2011 by                                           */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -22,6 +22,8 @@
 #include "aferrors.h"
 
 
+  /* Initialize glyph loader. */
+
   FT_LOCAL_DEF( FT_Error )
   af_loader_init( AF_Loader  loader,
                   FT_Memory  memory )
@@ -29,12 +31,14 @@
     FT_ZERO( loader );
 
     af_glyph_hints_init( &loader->hints, memory );
-#ifdef AF_DEBUG
+#ifdef FT_DEBUG_AUTOFIT
     _af_debug_hints = &loader->hints;
 #endif
     return FT_GlyphLoader_New( memory, &loader->gloader );
   }
 
+
+  /* Reset glyph loader and compute globals if necessary. */
 
   FT_LOCAL_DEF( FT_Error )
   af_loader_reset( AF_Loader  loader,
@@ -64,6 +68,8 @@
   }
 
 
+  /* Finalize glyph loader. */
+
   FT_LOCAL_DEF( void )
   af_loader_done( AF_Loader  loader )
   {
@@ -72,13 +78,17 @@
     loader->face    = NULL;
     loader->globals = NULL;
 
-#ifdef AF_DEBUG
+#ifdef FT_DEBUG_AUTOFIT
     _af_debug_hints = NULL;
 #endif
     FT_GlyphLoader_Done( loader->gloader );
     loader->gloader = NULL;
   }
 
+
+  /* Load a single glyph component.  This routine calls itself */
+  /* recursively, if necessary, and does the main work of      */
+  /* `af_loader_load_glyph.'                                   */
 
   static FT_Error
   af_loader_load_g( AF_Loader  loader,
@@ -169,8 +179,8 @@
                                             &gloader->current.outline,
                                             metrics );
 
-      /* we now need to hint the metrics according to the change in */
-      /* width/positioning that occurred during the hinting process */
+      /* we now need to adjust the metrics according to the change in */
+      /* width/positioning that occurred during the hinting process   */
       if ( scaler->render_mode != FT_RENDER_MODE_LIGHT )
       {
         FT_Pos        old_rsb, old_lsb, new_lsb;
@@ -265,7 +275,7 @@
         gloader->current.num_subglyphs = num_subglyphs;
         num_base_subgs                 = gloader->base.num_subglyphs;
 
-        /* now, read each subglyph independently */
+        /* now read each subglyph independently */
         for ( nn = 0; nn < num_subglyphs; nn++ )
         {
           FT_Vector  pp1, pp2;
@@ -305,7 +315,7 @@
           num_points     = gloader->base.outline.n_points;
           num_new_points = num_points - num_base_points;
 
-          /* now perform the transform required for this subglyph */
+          /* now perform the transformation required for this subglyph */
 
           if ( subglyph->flags & ( FT_SUBGLYPH_FLAG_SCALE    |
                                    FT_SUBGLYPH_FLAG_XY_SCALE |
@@ -444,7 +454,7 @@
 #endif
 
       slot->metrics.vertAdvance = FT_MulFix( slot->metrics.vertAdvance,
-                                              metrics->scaler.y_scale );
+                                             metrics->scaler.y_scale );
 
       slot->metrics.horiAdvance = FT_PIX_ROUND( slot->metrics.horiAdvance );
       slot->metrics.vertAdvance = FT_PIX_ROUND( slot->metrics.vertAdvance );
@@ -459,14 +469,12 @@
       slot->format  = FT_GLYPH_FORMAT_OUTLINE;
     }
 
-#ifdef DEBUG_HINTER
-    af_debug_hinter = hinter;
-#endif
-
   Exit:
     return error;
   }
 
+
+  /* Load a glyph. */
 
   FT_LOCAL_DEF( FT_Error )
   af_loader_load_glyph( AF_Loader  loader,

@@ -328,7 +328,7 @@
     if ( cff && cff->font_info == NULL )
     {
       CFF_FontRecDict  dict   = &cff->top_font.font_dict;
-      PS_FontInfoRec  *font_info;
+      PS_FontInfoRec  *font_info = NULL;
       FT_Memory        memory = face->root.memory;
 
 

@@ -5,7 +5,7 @@
 /*    Routines used to compute vector angles with limited accuracy         */
 /*    and very high speed.  It also contains sorting routines (body).      */
 /*                                                                         */
-/*  Copyright 2003, 2004, 2005, 2006 by                                    */
+/*  Copyright 2003-2006, 2011 by                                           */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -77,7 +77,7 @@
       return 1 - 2 * ( delta < 0 );
   }
 
-#endif
+#endif /* 0 */
 
 
   /*

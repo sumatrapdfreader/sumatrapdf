@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Objects manager (specification).                                     */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 by */
+/*  Copyright 1996-2009, 2011 by                                           */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -390,13 +390,16 @@ FT_BEGIN_HEADER
 #ifdef TT_USE_BYTECODE_INTERPRETER
 
   FT_LOCAL( FT_Error )
-  tt_size_run_fpgm( TT_Size  size );
+  tt_size_run_fpgm( TT_Size  size,
+                    FT_Bool  pedantic );
 
   FT_LOCAL( FT_Error )
-  tt_size_run_prep( TT_Size  size );
+  tt_size_run_prep( TT_Size  size,
+                    FT_Bool  pedantic );
 
   FT_LOCAL( FT_Error )
-  tt_size_ready_bytecode( TT_Size  size );
+  tt_size_ready_bytecode( TT_Size  size,
+                          FT_Bool  pedantic );
 
 #endif /* TT_USE_BYTECODE_INTERPRETER */
 

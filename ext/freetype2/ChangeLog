@@ -1,3 +1,1167 @@
+2011-06-24  Werner Lemberg  <wl@gnu.org>
+
+	* Version 2.4.5 released.
+	=========================
+
+
+	Tag sources with `VER-2-4-5'.
+
+	* docs/CHANGES: Updated.
+
+	* docs/VERSION.DLL: Update documentation and bump version number to
+	2.4.5
+
+	* README, Jamfile (RefDoc),
+	builds/win32/vc2005/freetype.vcproj, builds/win32/vc2005/index.html,
+	builds/win32/vc2008/freetype.vcproj, builds/win32/vc2008/index.html,
+	builds/win32/vc2010/freetype.vcxproj, builds/win32/vc2010/index.html,
+	builds/win32/visualc/freetype.dsp,
+	builds/win32/visualc/freetype.vcproj,
+	builds/win32/visualc/index.html, builds/win32/visualce/freetype.dsp,
+	builds/win32/visualce/freetype.vcproj,
+	builds/win32/visualce/index.html,
+	builds/wince/vc2005-ce/freetype.vcproj,
+	builds/wince/vc2005-ce/index.html,
+	builds/wince/vc2008-ce/freetype.vcproj,
+	builds/wince/vc2008-ce/index.html: s/2.4.4/2.4.5/, s/244/245/.
+
+	* include/freetype/freetype.h (FREETYPE_PATCH): Set to 5.
+
+	* builds/unix/configure.raw (version_info): Set to 13:0:7.
+
+2011-06-20  Werner Lemberg  <wl@gnu.org>
+
+	* src/autofit/aflatin.c (af_latin_metrics_scale_dim): Fix change
+	from 2011-05-04.
+
+2011-06-19  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[gxvalid] make the `prop' validation tracing verbose.
+
+	* src/gxvalid/gxvprop.c: Add tracing messages for errors.
+
+2011-06-19  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[autogen.sh] Reflect environment variable LIBTOOLIZE.
+
+2011-06-18  Werner Lemberg <wl@gnu.org>
+
+	Update license documentation.
+
+	* docs/GPL.TXT: Renamed to...
+	* docs/GPLv2.TXT: This.
+
+	* docs/LICENSE.TXT: Updated.
+
+2011-06-14  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	Fix g++4.6 compiler warnings in module drivers.
+
+	The background is same with previous commit.
+
+	* src/truetype/ttgxvar.c (ft_var_readpackedpoints):
+	Init `points'.  (TT_Vary_Get_Glyph_Deltas): Init
+	`delta_xy'.  (TT_Get_MM_Var): Init `mmvar'.
+	* src/type1/t1load.c (T1_Get_MM_Var): Ditto.
+	* src/cff/cffdrivr.c (cff_ps_get_font_info): Init
+	`font_info'.
+	* src/cff/cffload.c (cff_index_get_pointers): Init `t'.
+	(cff_font_load): Init `sub'.
+	* src/cff/cffobjs.c (cff_size_init): Init `internal'.
+	(cff_face_init): Init `cff'.
+	* src/pfr/pfrload.c (pfr_extra_item_load_stem_snaps):
+	Init `snaps'.
+	* src/pcf/pcfread.c (pcf_get_properties): Init `properties'.
+	(pcf_get_bitmaps): Init `offsets'.  (pcf_get_encodings):
+	Init `tmpEncoding'.
+	* src/sfnt/ttload.c (tt_face_load_gasp): Init `gaspranges'.
+	* src/sfnt/ttsbit.c (Load_SBit_Image): Init `components'.
+	* src/cache/ftcmru.c (FTC_MruList_New): Init `node'.
+	* src/gzip/ftgzip.c (FT_Stream_OpenGzip): Init `zip' and
+	`zip_buff'.
+	* src/lzw/ftlzw.c (FT_Stream_OpenLZW): Init `zip'.
+	* src/bzip2/ftbzip2.c (FT_Stream_OpenBzip2): Init `zip'.
+
+2011-06-14  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[base] Fix g++4.6 compiler warnings in src/base/*.c.
+
+	Passing uninitialized pointer to FT_NEW() families is
+	not problematic theoretically (as far as the returned
+	pointer is checked before writing), but g++4.6 dislikes
+	it and warns by -Wuninitialized.  Initialize them by NULL.
+
+	* src/base/ftobjs.c (FT_Stream_New): Init `stream'.
+	(new_memory_stream): Ditto.
+	(FT_New_GlyphSlot): Init `slot'.
+	(FT_CMap_New): Init `cmap'.
+	(open_face_PS_from_sfnt_stream): Init `sfnt_ps'.
+	(Mac_Read_POST_Resource): Init `pfb_data'.
+	(Mac_Read_sfnt_Resource): Init `sfnt_data'.
+	* src/base/ftrfork.c (FT_Raccess_Get_DataOffsets):
+	Init `offsets_internal' and `ref'.
+	(raccess_guess_darwin_hfsplus): Init `newpath'.
+	(raccess_guess_darwin_newvfs): Ditto.
+	* src/base/ftbitmap.c (ft_bitmap_assure_buffer):
+	Init `buffer'.
+	* src/base/ftstroke.c (FT_Stroker_New): Init `stroker'.
+
+2011-06-14  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[gxvalid] Cleanup.
+
+	Some invalid, overrunning, unrecommended non-zero values
+	are cared in paranoid validation mode only.  There are
+	many lines looking like:
+
+	  if ( valid->root->level >= FT_VALIDATE_PARANOID )
+	    FT_INVALID_xxx;
+
+	To simplify them, GXV_SET_ERR_IF_PARANOID( err ) is
+	introduced for more paranoid validation in future.
+
+	* src/gxvalid/gxvcommn.h (IS_PARANOID_VALIDATION):
+	New macro to assure valid->root->level is more or
+	equal to FT_VALIDATE_PARANOID.  (GXV_SET_ERR_IF_PARANOID):
+	New macro to raise an error if in paranoid validation.
+	* src/gxvalid/gxvcommn.c: Use GXV_SET_ERR_IF_PARANOID().
+	* src/gxvalid/gxvfeat.c: Ditto.
+	* src/gxvalid/gxvjust.c: Ditto.
+	* src/gxvalid/gxvkern.c: Ditto.
+	* src/gxvalid/gxvmort.c: Ditto.
+	* src/gxvalid/gxvmort0.c: Ditto.
+	* src/gxvalid/gxvmort1.c: Ditto.
+	* src/gxvalid/gxvmort2.c: Ditto.
+	* src/gxvalid/gxvmorx1.c: Ditto.
+	* src/gxvalid/gxvmorx2.c: Ditto.
+
+2011-06-14  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[gxvalid] Fix gcc4.6 compiler warnings in gxvtrak.c.
+
+	* src/gxvalid/gxvtrak.c (gxv_trak_trackTable_validate):
+	Check different entries pointing same traking value.
+	(gxv_trak_validate): Remove unused variable `table_size'.
+
+2011-06-14  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[gxvalid] Fix gcc4.6 compiler warnings in gxvmorx*.c.
+
+	* src/gxvalid/gxvmorx.c (gxv_morx_subtables_validate):
+	Conditionalize unvalidated variable `subFeatureFlags'.
+	(gxv_morx_chain_validate): Conditionalize unvalidated
+	variable `defaultFlags'.
+
+	* src/gxvalid/gxmorx0.c
+	(gxv_morx_subtable_type0_entry_validate):
+	Conditionalize unvalidated variables; `markFirst',
+	`dontAdvance', `markLast', `verb'.
+
+	* src/gxvalid/gxmorx1.c
+	(gxv_morx_subtable_type1_entry_validate): Conditionalize
+	unvalidated variables; `setMark', `dontAdvance'.
+
+	* src/gxvalid/gxvmorx2.c
+	(gxv_morx_subtable_type2_ligActionOffset_validate):
+	Conditionalize unvalidated variables; `last', `store'.
+	Checking for overrunning offset is added.
+	(gxv_morx_subtable_type2_entry_validate):
+	Conditionalize unvalidated variables; `setComponent',
+	`dontAdvance', `performAction'.
+	(gxv_morx_subtable_type2_ligatureTable_validate):
+	Check if the GID for ligature does not exceed the
+	max GID in `maxp' table.
+
+	* src/gxvalid/gxvmort5.c
+	(gxv_morx_subtable_type5_InsertList_validate):
+	Conditionalize unvalidated loading of `insert_glyphID'
+	array.  (gxv_morx_subtable_type5_entry_validate):
+	Conditionalize unvalidated variables; `setMark',
+	`dontAdvance', `currentIsKashidaLike',
+	`markedIsKashidaLike', `currentInsertBefore',
+	`markedInsertBefore'.
+
+2011-06-14  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[gxvalid] Fix gcc4.6 compiler warnings in gxvmort*.c.
+
+	* src/gxvalid/gxvmort.c (gxv_mort_subtables_validate):
+	Conditionalize unvalidated variable `subFeatureFlags'.
+	(gxv_mort_chain_validate): Conditionalize unvalidated
+	variable `defaultFlags'.
+
+	* src/gxvalid/gxmort0.c
+	(gxv_mort_subtable_type0_entry_validate): Check the
+	conflict of the marks for the glyphs.
+
+	* src/gxvalid/gxmort1.c
+	(gxv_mort_subtable_type1_offset_to_subst_validate):
+	Local variables `min_gid', `max_gid' are replaced by
+	variables in the validator.
+	(gxv_mort_subtable_type1_entry_validate): Conditionalize
+	unvalidated variables; `setMark', `dontAdvance'.
+	(gxv_mort_subtable_type1_substTable_validate):
+	Validate the GID by the min/max GIDs in the validator.
+
+	* src/gxvalid/gxvmort2.c
+	(gxv_mort_subtable_type2_ligActionOffset_validate):
+	Conditionalize unvalidated variables; `last', `store'.
+	Checking for overrunning offset is added.
+	(gxv_mort_subtable_type2_entry_validate):
+	Conditionalize unvalidated variables; `setComponent',
+	`dontAdvance'.
+	(gxv_mort_subtable_type2_ligatureTable_validate):
+	Check if the GID for ligature does not exceed the
+	max GID in `maxp' table.
+
+	* src/gxvalid/gxvmort5.c
+	(gxv_mort_subtable_type5_InsertList_validate):
+	Conditionalize unvalidated loading of `insert_glyphID'
+	array.  (gxv_mort_subtable_type5_entry_validate):
+	Conditionalize unvalidated variables; `setMark',
+	`dontAdvance', `currentIsKashidaLike',
+	`markedIsKashidaLike', `currentInsertBefore',
+	`markedInsertBefore'.
+
+2011-06-14  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[gxvalid] Fix gcc4.6 compiler warnings in gxvkern.c.
+
+	* src/gxvalid/gxvkern.c
+	(gxv_kern_subtable_fmt0_pairs_validate): Conditionalize
+	unvalidated variable `kernValue'.
+	(gxv_kern_subtable_fmt1_entry_validate): Conditionalize
+	unvalidated variables; `push', `dontAdvance', `kernAction',
+	`kernValue'.
+	(gxv_kern_coverage_new_apple_validate): Conditionalize
+	trace-only variables; `kernVertical', `kernCrossStream',
+	`kernVariation'.
+	(gxv_kern_coverage_classic_apple_validate): Conditionalize
+	trace-only variables; `horizontal', `cross_stream'.
+	(gxv_kern_coverage_classic_microsoft_validate):
+	Conditionalize trace-only variables; `horizontal',
+	`minimum', `cross_stream', `override'.
+	(gxv_kern_subtable_validate): Conditionalize trace-only
+	variables; `version', `tupleIndex'.
+
+2011-06-14  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[gxvalid] Fix gcc4.6 compiler warnings in gxvjust.c.
+
+	* src/gxvalid/gxvjust.c (gxv_just_check_max_gid):
+	New function to unify the checks of too large GID.
+	(gxv_just_wdp_entry_validate): Conditionalize unvalidated
+	variables; `beforeGrowLimit', `beforeShrinkGrowLimit',
+	`afterGrowLimit', `afterShrinkGrowLimit', `growFlags',
+	`shrinkFlags'.  Additional check for non-zero values in
+	unused storage `justClass' is added.
+	(gxv_just_actSubrecord_type0_validate): Conditionalize
+	unvalidated variable `order'.  GID is checked by
+	gxv_just_check_max_gid().  Additional check for upside-down
+	relationship between `lowerLimit' and `upperLimit' is added.
+	(gxv_just_actSubrecord_type1_validate): GID is checked by
+	gxv_just_check_max_gid().
+	(gxv_just_actSubrecord_type2_validate): Conditionalize
+	unvalidated variable `substThreshhold'.  GID is checked by
+	gxv_just_check_max_gid().
+	(gxv_just_actSubrecord_type5_validate): GID is checked by
+	gxv_just_check_max_gid().
+	(gxv_just_classTable_entry_validate): Conditionalize
+	unvalidated variables; `setMark', `dontAdvance',
+	`markClass', `currentClass'.
+
+2011-06-14  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[gxvalid] Preparation to fix gcc4.6 compiler warnings.
+
+	* src/gxvalid/gxvcommn.h (GXV_LOAD_TRACE_VARS): New macro to
+	conditionalize the variable which is only used for trace messages.
+	Automatically set by FT_DEBUG_LEVEL_TRACE.
+	(GXV_LOAD_UNUSED_VARS): New macro to conditionalize the loading of
+	unvalidated variables.  Undefined by default to calm gcc4.6 warning.
+	(GXV_ValidatorRec.{min_gid,max_gid}): New variables to hold defined
+	GID ranges, for the comparison of GID ranges in different subtables.
+
+2011-06-08  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Remove unused structure member.
+
+	* src/autofit/afhints.h (AF_SegmentRec): Remove `contour'. 
+	* src/autofit/aflatin.c (af_latin_hints_compute_segments),
+	src/autofit/aflatin2.c (af_latin2_hints_compute_segments): Updated.
+
+2011-05-30  Werner Lemberg  <wl@gnu.org>
+
+	Fix g++ 4.6 compilation.
+
+	* src/autofit/afhints.c (af_glyph_hints_dump_segments,
+	af_glyph_hints_dump_edges): Use cast.
+
+2011-05-30  Werner Lemberg  <wl@gnu.org>
+
+	Fix gcc 4.6 compiler warnings.
+
+	* src/autofit/afcjk.c (af_cjk_metrics_init_blues): Use casts and
+	remove unused variables.
+	* src/autofit/aflatin.c (af_latin_hints_compute_edges): Comment out
+	`up_dir'.
+	* src/smooth/ftsmooth.c (ft_smooth_render_generic): Use `height_org'
+	and `width_org' conditionalized.
+
+2011-05-28  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[mac] Conditionalize the inclusion of `AvailabilityMacros.h'.
+
+	The native SDK on earliest Mac OS X (10.0-10.1) did not have 
+	`AvailabilityMacros.h'.  To prevent the inclusion of missing
+	header file, ECANCELED (introduced in 10.2) in POSIX header
+	file <errno.h> is checked to detect the system version.
+
+	* include/freetype/config/ftconfig.h: Conditionalize the
+	inclusion of `AvailabilityMacros.h'.
+	* builds/unix/ftconfig.in: Ditto.
+	* builds/vms/ftconfig.h: Ditto.
+
+2011-05-27  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Improve tracing of hinting process.
+
+	* src/autofit/aflatin.c (af_latin_hint_edges): Add tracing message
+	`ADJUST'.
+
+2011-05-26  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Fix trace message.
+
+	* src/autofit/aflatin.c (af_latin_hint_edges): Show correct value in
+	tracing message.
+
+2011-05-24  Daniel Zimmermann  <netzimme@googlemail.com>
+
+	Reduce warnings for MS Visual Studio 2010.
+
+	* src/autofit/afhints.c (af_glyph_hints_get_num_segments,
+	af_glyph_hints_get_segment_offset) [!FT_DEBUG_AUTOFIT]: Provide
+	return value.
+	* src/cff/cffgload.c (cff_slot_load): Add cast.
+	* src/truetype/ttobjs.c (tt_check_trickyness_sfnt_ids): Use proper
+	loop variable type.
+
+2011-05-16  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	Automake component `builds/unix/install-sh' is removed.
+
+	* builds/unix/install-sh: Removed.  It is not needed to
+	include repository, because autogen.sh installs it.
+	* builds/unix/.gitignore: Register install-sh.
+
+2011-05-12  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[autofit] Make trace message for CJK bluezone more verbose.
+
+2011-05-08  Just Fill Bugs  <mozbugbox@yahoo.com.au>
+            suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[autofit] Add bluezones for CJK Ideographs.
+
+	To remove extremas of vertical strokes of CJK Ideographs at
+	low resolution and make the top and bottom horizontal stems
+	aligned, bluezones for CJK Ideographs are calculated from
+	sample glyphs.  At present, vertical bluezones (bluezones
+	to align vertical stems) are disabled by default.  For detail, see
+	http://lists.gnu.org/archive/html/freetype-devel/2011-04/msg00070.html
+	http://lists.gnu.org/archive/html/freetype-devel/2011-04/msg00092.html
+	http://lists.gnu.org/archive/html/freetype-devel/2011-05/msg00001.html
+
+	* include/freetype/internal/fttrace.h: New trace component `afcjk'.
+	* src/autofit/afcjk.h (AF_CJK{Blue,Axis,Metric}Rec): Add CJK version
+	for AF_Latin{Blue,Axis,Metric}Rec.
+	(af_cjk_metrics_check_digits): Ditto, shared with Indic module.
+	(af_cjk_metrics_init_widths): Ditto.
+	(af_cjk_metrics_init): Take AF_CJKMetric instead of AF_LatinMetric.
+	(af_cjk_metrics_scale): Ditto (declaration).
+	(af_cjk_hints_init): Ditto (declaration).
+	(af_cjk_hints_apply): Ditto (declaration).
+	* src/autofit/afcjk.c (af_cjk_metrics_scale): Ditto (body).
+	(af_cjk_hints_init): Ditto (body).
+	(af_cjk_hints_apply): Ditto (body).
+	(af_cjk_metrics_init_widths): Duplicate af_latin_metrics_init_widths.
+	(af_cjk_metrics_check_digits): Duplicate af_latin_metrics_check_digits.
+	(af_cjk_metrics_init): Call CJK bluezone initializer.
+	(af_cjk_metrics_scale_dim): Add code to scale bluezones.  
+	(af_cjk_hints_compute_blue_edges): New function, CJK version of
+	af_latin_hints_compute_blue_edges.
+	(af_cjk_metrics_init_blues): New function, CJK version of
+	af_latin_metrics_init_blues.
+	(af_cjk_hints_edges): Add code to align the edge stems to blue zones.
+
+	* src/autofit/afindic.c (af_indic_metrics_init): Take AF_CJKMetric
+	instead of AF_LatinMetric, and initialize as af_cjk_metrics_init.
+	However bluezones are not initialized.
+	(af_indic_metrics_scale): Take AF_CJKMetric instead of AF_LatinMetric.
+	(af_indic_hints_init): Ditto.
+	(af_indic_hints_apply): Ditto.
+
+	* docs/CHANGES: Note about CJK bluezone support.
+
+2011-05-06  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Remove unused struct member.
+
+	* src/autofit/aflatin.h (AF_LatinAxis): Remove `control_overshoot'.
+
+2011-05-04  Werner Lemberg  <wl@gnu.org>
+
+	* src/autofit/aflatin.c (af_latin_metrics_scale_dim): Simplify.
+
+2011-05-01  Just Fill Bugs  <mozbugbox@yahoo.com.au>
+            Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Add more debugging functions.
+
+	* src/autofit/afhints.c (af_glyph_hints_get_num_segments,
+	af_glyph_hints_get_segment_offset): New functions.
+
+2011-05-01  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	Add new option `--disable-mmap' to configure script.
+
+	* builds/unix/configure.raw: New option `--disable-mmap' 
+	is added.  It is for the developers to simulate the systems
+	without mmap() (like 4.3BSD, minix etc) on POSIX systems.
+
+2011-04-30  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[truetype] Always recalculate the sfnt table checksum.
+
+	* src/truetype/ttobjs.c (tt_get_sfnt_checksum): Recalculate
+	the sfnt table checksum even if non-zero value is written in
+	the TrueType font header.  Some bad PDF generators write
+	wrong values.  For details see examples and benchmark tests
+	of the latency by recalculation:
+	http://lists.gnu.org/archive/html/freetype-devel/2011-04/msg00091.html
+	http://lists.gnu.org/archive/html/freetype-devel/2011-04/msg00096.html
+
+2011-04-30  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[truetype] Register a set of tricky fonts, NEC FA family.
+
+	* src/truetype/ttobjs.c (tt_check_trickyness_sfnt_ids):
+	Add 8 checksum sets for NEC FA family.  For the tricky fonts
+	without some tables (e.g. NEC FA fonts lack cvt table),
+	extra check is added to assure that a zero-length table in the
+	registry is not included in the font.
+
+2011-04-29  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[truetype] Fix a bug in the sfnt table checksum getter.
+
+	* src/truetype/ttobjs.c (tt_get_sfnt_checksum): Check the
+	return value of face->goto_table() correctly.
+
+2011-04-28  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Improve tracing messages.
+
+	* src/autofit/aflatin.c (af_latin_metrics_init_blues,
+	af_latin_align_linked_edge, af_latin_hint_edges): Do it.
+
+2011-04-25  Kan-Ru Chen  <kanru@kanru.info>
+
+	[truetype] Always check the checksum to identify tricky fonts.
+
+	Because some PDF generators mangle the family name badly,
+	the trickyness check by the checksum should be invoked always.
+	For sample PDF, see
+	http://lists.gnu.org/archive/html/freetype-devel/2011-04/msg00073.html
+
+	* src/truetype/ttobjs.c (tt_check_trickyness): Even when
+	tt_check_trickyness_family() finds no trickyness,
+	tt_check_trickyness_sfnt_ids() is invoked.
+
+2011-04-22  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[autofit] Add more Indic scripts with hanging baseline.
+
+	* src/autofit/afindic.c (af_indic_uniranges): Tibetan, Limbu,
+	Sundanese, Meetei Mayak, Syloti Nagri and Sharada scripts are
+	added.
+
+2011-04-21  Behdad Esfahbod  <behdad@behdad.org>
+
+	Always ignore global advance.
+
+	This makes FT_LOAD_IGNORE_GLOBAL_ADVANCE_WIDTH redundant,
+	deprecated, and ignored.  The new behavior is what every major user
+	of FreeType has been requesting.  Global advance is broken in many
+	CJK fonts.  Just ignoring it by default makes most sense.
+
+	* src/truetype/ttdriver.c (tt_get_advances),
+	src/truetype/ttgload.c (TT_Get_HMetrics, TT_Get_VMetrics,
+	tt_get_metrics, compute_glyph_metrics, TT_Load_Glyph),
+	src/truetype/ttgload.h: Implement it.
+
+	* docs/CHANGES: Updated.
+
+2011-04-21  rainy6144  <rainy6144@gmail.com>
+
+	[autofit] Blur CJK stems if too many to preserve their gaps.
+
+	When there are too many stems to preserve their gaps in the
+	rasterization of CJK Ideographs at a low resolution, blur the
+	stems instead of showing clumped stems.  See
+	http://lists.gnu.org/archive/html/freetype-devel/2011-02/msg00011.html
+	http://lists.gnu.org/archive/html/freetype-devel/2011-04/msg00046.html
+	for details.
+
+	* src/autofit/afcjk.c (af_cjk_hint_edges): Store the position of
+	the previous stem by `has_last_stem' and `last_stem_pos', and skip
+	a stem if the current and previous stem are too near to preserve
+	the gap.
+
+2011-04-18  Werner Lemberg  <wl@gnu.org>
+
+	Integrate autofitter debugging stuff.
+
+	* devel/ftoption.h, include/freetype/config/ftoption.h
+	(FT_DEBUG_AUTOFIT): New macro.
+
+	* include/freetype/internal/fttrace.h: Add trace components for
+	autofitter.
+
+	* src/autofit/aftypes.h (AF_LOG): Removed.
+	(_af_debug): Removed.
+
+	* src/autofit/*: s/AF_DEBUG/FT_DEBUG_AUTOFIT/.
+	s/AF_LOG/FT_TRACE5/.
+	Define FT_COMPONENT where necessary.
+
+2011-04-18  Werner Lemberg  <wl@gnu.org>
+
+	Synchronize config files.
+
+	* builds/unix/ftconfig.in: Copy missing assembler routines from
+	include/freetype/config/ftconfig.h.
+
+2011-04-13  Werner Lemberg  <wl@gnu.org>
+
+	Fix Savannah bug #33047.
+
+	Patch submitted by anonymous reporter.
+
+	* src/psaux/psobjs.c (ps_table_add): Use FT_PtrDist for pointer
+	difference.
+
+2011-04-11  Kan-Ru Chen  <kanru@kanru.info>
+
+	Fix reading of signed integers from files on 64bit platforms.
+
+	Previously, signed integers were converted to unsigned integers, but
+	this can fail because of sign extension.  For example, 0xa344a1eb
+	becomes 0xffffffffa344a1eb.
+
+	We now do the reverse which is always correct because the integer
+	size is the same during the cast from unsigned to signed.
+
+	* include/freetype/internal/ftstream.h, src/base/ftstream.c
+	(FT_Stream_Get*): Replace with...
+	(FT_Stream_GetU*): Functions which read unsigned integers.
+	Update all macros accordingly.
+
+	* src/gzip/ftgzip.c (ft_gzip_get_uncompressed_size): Updated.
+
+2011-04-07  Werner Lemberg  <wl@gnu.org>
+
+	Update Unicode ranges for CJK autofitter; in particular, add Hangul.
+
+	* src/autofit/afcjk.c (af_cjk_uniranges): Update to Unicode 6.0.
+
+2011-04-04  Werner Lemberg  <wl@gnu.org>
+
+	Fix formatting of autofit debug dumps.
+
+	* src/autofit/afhints.c (af_glyph_hints_dump_points,
+	af_glyph_hints_dump_segments, af_glyph_hints_dump_edges): Adjust
+	column widths.
+
+2011-03-30  Werner Lemberg  <wl@gnu.org>
+
+	* src/autofit/aftypes.h (AF_OutlineRec): Removed, unused.
+
+2011-03-24  Werner Lemberg  <wl@gnu.org>
+
+	* src/cff/cfftypes.h (CFF_MAX_CID_FONTS): Increase to 256.
+	This limit is given on p. 37 of Adobe Technical Note #5014.
+
+2011-03-23  Werner Lemberg  <wl@gnu.org>
+
+	* src/truetype/ttpload.c (tt_face_load_loca): Fix mismatch warning.
+
+2011-03-20  Werner Lemberg  <wl@gnu.org>
+
+	* src/sfnt/sfobjs.c (sfnt_open_font): Check number of TTC subfonts.
+
+2011-03-19  Werner Lemberg  <wl@gnu.org>
+
+	More C++ compilation fixes.
+
+	* src/autofit/afhints.c (af_glyph_hints_dump_points,
+	af_glyph_hints_dump_segments, af_glyph_hints_dump_edges)
+	[__cplusplus]: Protect with `extern "C"'.
+
+2011-03-18  Werner Lemberg  <wl@gnu.org>
+
+	C++ compilation fixes.
+
+	* src/autofit/aflatin.c (af_latin_hints_apply), src/autofit/afcjk.c
+	(af_cjk_hints_apply): Use cast for `dim'.
+
+2011-03-17  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	A better fix for Savannah bug #32671.
+
+	* src/smooth/ftgrays.c (gray_render_conic): Clean up code and
+	replace WHILE loop with a more natural DO-WHILE construct.
+
+2011-03-16  Werner Lemberg  <wl@gnu.org>.
+
+	* src/base/ftstroke.c (FT_StrokerRec): Remove unused `valid' field.
+	Suggested by Graham Asher.
+
+2011-03-09  Werner Lemberg  <wl@gnu.org>
+
+	Make FT_Sfnt_Table_Info return the number of SFNT tables.
+
+	* src/sfnt/sfdriver.c (sfnt_table_info): Implement it.
+	* include/freetype/tttables.h: Update documentation.
+	* docs/CHANGES: Updated.
+
+2011-03-07  Bram Tassyns  <bramt@enfocus.be>
+
+	Fix Savannah bug #27988.
+
+	* src/cff/cffobjs.c (remove_style): New function.
+	(cff_face_init): Use it to strip off the style part of the family
+	name.
+
+2011-03-07  Werner Lemberg  <wl@gnu.org>
+
+	* docs/CHANGES: Updated.
+
+2011-03-07  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	Quick fix for Savannah bug #32671.
+
+	This isn't the optimal solution yet, but it restores the previous
+	rendering quality (more or less).
+
+	* src/smooth/ftgrays.c (gray_render_conic): Do more splitting.
+
+2011-03-06  Werner Lemberg  <wl@gnu.org>
+
+	Fix autohinting fallback.
+
+	* src/base/ftobjs.c (FT_Load_Glyph): Assure that we only check TTFs,
+	ignoring CFF-based OTFs.
+
+2011-02-27  Werner Lemberg  <wl@gnu.org>
+
+	Add AF_CONFIG_OPTION_USE_WARPER to control the autofit warper.
+
+	* devel/ftoption.h, include/freetype/config/ftoption.h
+	(AF_CONFIG_OPTION_USE_WARPER): New macro.
+	* src/autofit/aftypes.h (AF_USE_WARPER): Remove.
+
+	* src/autofit/*: s/AF_USE_WARPER/AF_CONFIG_OPTION_USE_WARPER/.
+
+	* src/autofit/afwarp.c [!AF_CONFIG_OPTION_USE_WARPER]: Replace dummy
+	variable assignment with a typedef.
+
+2011-02-26  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Slight simplifications.
+
+	* src/autofit/aflatin.c (af_latin_hints_link_segments): Remove
+	test which always returns false.
+	(af_latin_hints_compute_blue_edges): Remove redundant assignment.
+
+2011-02-24  Werner Lemberg  <wl@gnu.org>
+
+	* docs/PROBLEMS: Mention rendering differences on different
+	platforms.
+	Suggested and worded by Jason Owen <jason.a.owen@gmail.com>.
+
+2011-02-24  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Comment out unused code.
+
+	* src/autofit/aflatin.c, src/autofit/aflatin2.c
+	(af_latin_hints_compute_edges): Do it.
+
+2011-02-24  Werner Lemberg  <wl@gnu.org>
+
+	* src/autofit/afhints.h (AF_GlyphHints): Remove unused field.
+
+2011-02-20  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[cache] Fix an off-by-one bug in `FTC_Manager_RemoveFaceID'.
+	Found by <ychen1392001@yahoo.com.cn>, see detail in
+
+	  http://lists.gnu.org/archive/html/freetype/2011-01/msg00023.html
+
+	* src/cache/ftccache.c (FTC_Cache_RemoveFaceID): Check the node
+	buckets[cache->p + cache->mask] too.
+
+2011-02-19  Kevin Kofler  <kevin.kofler@chello.at>
+
+	Fall back to autohinting if a TTF/OTF doesn't contain any bytecode.
+	This is Savannah patch #7471.
+
+	* src/base/ftobjs.c (FT_Load_Glyph): Implement it.
+
+2011-02-19  John Tytgat  <John.Tytgat@esko.com>
+
+	[cff] Fix subset prefix removal.
+	This is Savannah patch #7465.
+
+	* src/cff/cffobjs.c (remove_subset_prefix): Update length after
+	subset prefix removal.
+
+2011-02-13  Bradley Grainger  <bgrainger@logos.com>
+
+	Add inline assembly version of FT_MulFix for MSVC.
+
+	* include/freetype/config/ftconfig.h: Ported the FT_MulFix_i386
+	function from GNU inline assembly syntax (see #ifdef __GNUC__ block
+	above) to MASM syntax for Microsoft Visual C++.
+
+2011-02-13  Bradley Grainger  <bgrainger@logos.com>
+
+	Add project and solution files in Visual Studio 2010 format.
+
+	* builds/win32/.gitignore: Ignore user-specific cache files.
+	* builds/win32/vc2010/: Add VS2010 project & solution files, created
+	by upgrading builds/win32/vc2008/freetype.vcproj.
+	* objs/.gitignore: Ignore Visual Studio output files.
+
+2011-02-01  Werner Lemberg  <wl@gnu.org>
+
+	* src/autofit/afdummy.c: Include `aferrors.h'.
+	Problem reported by Chris Liddell <chris.liddell@artifex.com>.
+
+2011-02-01  Werner Lemberg  <wl@gnu.org>
+
+	[cff] Ignore unknown operators in charstrings.
+	Patch suggested by Miles.Lau <sunliang_liu@foxitsoftware.com>.
+
+	* src/cff/cffgload.c (cff_decoder_parse_charstrings): Emit tracing
+	message for unknown operators and continue instead of exiting with a
+	syntax error.
+
+2011-02-01  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] FT_LOAD_PEDANTIC now affects `prep' and `fpgm' also.
+
+	* src/truetype/ttgload.c (tt_loader_init): Handle
+	`FT_LOAD_PEDANTIC'.
+	* src/truetype/ttobjs.c (tt_size_run_fpgm, tt_size_run_prep,
+	tt_size_init_bytecode, tt_size_ready_bytecode): New argument to
+	handle pedantic mode.
+	* src/truetype/ttobjs.h: Updated.
+
+2011-01-31  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] Protect jump instructions against endless loops.
+
+	* src/truetype/interp.c (DO_JROT, DO_JMPR, DO_JROF): Exit with error
+	if offset is zero.
+
+2011-01-31  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] Improve handling of invalid references.
+
+	* src/truetype/interp.c: Set even more TT_Err_Invalid_Reference
+	error codes only if pedantic hinting is active.  At the same time,
+	try to provide sane values which hopefully allow useful
+	continuation.  Exception to this is CALL and LOOPCALL – due to
+	possible stack corruption it is necessary to bail out.
+
+2011-01-31  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] Improve handling of stack underflow.
+
+	* src/truetype/ttinterp.c (TT_RunIns, Ins_FLIPPT, Ins_DELTAP,
+	Ins_DELTAC): Exit with error only if `pedantic_hinting' is set.
+	Otherwise, try to do something sane.
+
+2011-01-30  Werner Lemberg  <wl@gnu.org>
+
+	* src/sfnt/ttmtx.c (tt_face_load_hmtx): Fix tracing message.
+
+2011-01-30  LIU Sun-Liang  <sunliang_liu@foxitsoftware.com>
+
+	[truetype]: Fix behaviour of MIAP for invalid arguments.
+
+	* src/truetype/ttinterp.c (Ins_MIAP): Set reference points even in
+	case of error.
+
+2011-01-18  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] Fix handling of MIRP instruction.
+
+	Thanks to Greg Hitchcock who explained the issue.
+
+	* src/truetype/ttinterp.c (Ins_MIRP): Replace a `>=' operator with
+	`>' since the description in the specification is incorrect.
+	This fixes, for example, glyph `two' in font `Helvetica Neue LT Com
+	65 medium' at 15ppem.
+
+2011-01-15  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	Fix ARM assembly code in include/freetype/config/ftconfig.h.
+
+	* include/freetype/config/ftconfig.h (FT_MulFix_arm):
+	Copy the maintained code from builds/unix/ftconfig.in.
+	Old GNU binutils could not accept the reduced syntax
+	`orr %0, %2, lsl #16'.  Un-omitted syntax like RVCT,
+	`orr %0, %0, %2, lsl #16' is better.  Reported by
+	Johnson Y. Yan.  The bug report by Qt developers is
+	considered too.
+
+	http://bugreports.qt.nokia.com/browse/QTBUG-6521
+
+2011-01-15  Werner Lemberg  <wl@gnu.org>
+
+	[raster] Make bbox handling the same as with Microsoft's rasterizer.
+
+	Right before B/W rasterizing, the bbox gets simply rounded to
+	integers.  This fixes, for example, glyph `three' in font `Helvetica
+	Neue LT Com 65 Medium' at 11ppem.
+
+	Thanks to Greg Hitchcock who explained this behaviour.
+
+	* src/raster/ftrend1.c (ft_raster1_render): Implement it.
+
+2011-01-15  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	Copy -mcpu=* & -march=* options from CFLAGS to LDFLAGS.
+
+	* builds/unix/configure.raw: Consider recent gcc-standard
+	flags to specify architecture in CFLAGS & LDFLAGS
+	harmonization.  Requested by Savannah bug #32114, to
+	support multilib feature of BuildRoot SDK correctly.
+
+2011-01-15  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	Fix off-by-one bug in CFLAGS & LDFLAGS harmonizer.
+
+	* builds/unix/configure.raw: Some important options that
+	included in CFLAGS but not in LDFLAGS are copied to
+	LDFLAGS, but the last option in CFLAGS was not checked.
+
+2011-01-13  Werner Lemberg  <wl@gnu.org>
+
+	[raster] Add undocumented drop-out rule to the other bbox side also.
+
+	* src/raster/ftraster.c (Vertical_Sweep_Drop,
+	Horizontal_Sweep_Drop): Implement it.
+
+2011-01-13  Werner Lemberg  <wl@gnu.org>
+
+	[raster] Reduce jitter value.
+
+	This catches a rendering problem with glyph `x' from Tahoma at
+	10ppem.  It seems that the increase of the precision in the change
+	from 2009-06-11 makes a larger jitter value unnecessary.
+
+	* src/raster/ftraster.c (Set_High_Precision): Implement it.
+
+2011-01-13  Werner Lemberg  <wl@gnu.org>
+
+	[raster] Handle drop-outs at glyph borders according to Microsoft.
+
+	If a drop-out rule would switch on a pixel outside of the glyph's
+	bounding box, use the right (or top) pixel instead.  This is an
+	undocumented feature, but some fonts like `Helvetica Neue LT Com 65
+	Medium' heavily rely on it.
+
+	Thanks to Greg Hitchcock who explained this behaviour.
+
+	* src/raster/ftraster.c (Vertical_Sweep_Drop,
+	Horizontal_Sweep_Drop): Implement it.
+
+2011-01-09  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[cache] Fix Savannah bug #31923, patch drafted by Harsha.
+
+	When a node comparator changes the cached nodes during the
+	search of a node matching with queried properties, the
+	pointers obtained before the function should be updated to
+	prevent the dereference to freed or reallocated nodes.
+	To minimize the rescan of the linked list, the update is
+	executed when the comparator notifies the change of cached
+	nodes. This change depends previous change:
+	38b272ffbbdaae276d636aec4ef84af407d16181
+
+	* src/cache/ftccache.h (FTC_CACHE_LOOKUP_CMP): Rescan the
+	top node if the cached nodes are changed.
+	* src/cache/ftccache.c (FTC_Cache_Lookup): Ditto.
+
+2011-01-09  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[cache] Notice if a cache query induced the node list change.
+
+	Some node comparators (comparing the cache node contents and the
+	properties specified by the query) can flush the cache node to
+	prevent the cache inflation.  The change may invalidate the pointers
+	to the node obtained before the node comparison, so it should be
+	noticed to the caller.  The problem caused by the cache node
+	changing is reported by Harsha, see Savannah bug #31923.
+
+	* src/cache/ftccache.h (FTC_Node_CompareFunc): Add new argument
+	`FT_Bool* list_changed' to indicate the change of the cached nodes
+	to the caller.
+	(FTC_CACHE_LOOKUP_CMP): Watch the change of the cached nodes by
+	`_list_changed'.
+	(FTC_CACHE_TRYLOOP_END): Take new macro argument `_list_changed'
+	and update it when `FTC_Manager_FlushN' flushes any nodes.
+
+	* src/cache/ftccback.h (ftc_snode_compare): Updated to fit with new
+	FTC_Node_CompareFunc type.
+	(ftc_gnode_compare): Ditto.
+
+	* src/cache/ftcbasic.c: Include FT_INTERNAL_OBJECTS_H to use
+	TRUE/FALSE macros.
+	(ftc_basic_gnode_compare_faceid): New argument `FT_Bool*
+	list_changed' to indicate the change of the cache nodes (anyway, it
+	is always FALSE).
+
+	* src/cache/ftccmap.c: Include FT_INTERNAL_OBJECTS_H to use
+	TRUE/FALSE macros.
+	(ftc_cmap_node_compare): New argument `FT_Bool* list_changed' to
+	indicate the change of the cache nodes (anyway, it is always FALSE).
+	(ftc_cmap_node_remove_faceid): Ditto.
+
+	* src/cache/ftccache.c (FTC_Cache_NewNode): Pass a NULL pointer to
+	`FTC_CACHE_TRYLOOP_END', because the result is not needed.
+	(FTC_Cache_Lookup): Watch the change of the cache nodes by
+	`list_changed'.
+	(FTC_Cache_RemoveFaceID): Ditto.
+
+	* src/cache/ftcglyph.c: Include FT_INTERNAL_OBJECTS_H to use
+	TRUE/FALSE macros.
+	(ftc_gnode_compare): New argument `FT_Bool* list_changed' to
+	indicate the change of the cache nodes (anyway, it is always FALSE).
+	(FTC_GNode_Compare): New argument `FT_Bool* list_changed' to be
+	passed to `ftc_gnode_compare'.
+	* src/cache/ftcglyph.h (FTC_GNode_Compare): Ditto.
+
+	* src/cache/ftcsbits.c (ftc_snode_compare): New argument `FT_Bool*
+	list_changed' to indicate the change of the cache nodes, anyway.  It
+	is updated by `FTC_CACHE_TRYLOOP'.
+	(FTC_SNode_Compare): New argument `FT_Bool* list_changed' to be
+	passed to `ftc_snode_compare'.
+	* src/cache/ftcsbits.h (FTC_SNode_Compare): Ditto.
+
+2011-01-09  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[cache] Fit `FTC_GNode_Compare' to `FTC_Node_CompareFunc'.
+
+	* src/cache/ftcglyph.h (FTC_GNode_Compare): Add the 3rd
+	argument `FTC_Cache  cache' to fit FTC_Node_CompareFunc
+	prototype.
+	* src/cache/ftcglyph.c (FTC_GNode_Compare): Ditto. Anyway,
+	`cache' is not used by its child `ftc_gnode_compare'.
+
+2011-01-09  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[cache] Deduplicate the code to get the top node by a hash.
+
+	There are several duplicated code fragments getting the top node
+	from a cache by a given hash, like:
+
+	    idx = hash & cache->mask;
+	    if ( idx < cache->p )
+	      idx = hash & ( cache->mask * 2 + 1 );
+	    pnode = cache->buckets + idx;
+
+	To remove duplication, a cpp-macro to do same work
+	`FTC_NODE__TOP_FOR_HASH' is introduced.  For non-inlined
+	configuration, non-`ftc_get_top_node_for_hash' is also introduced.
+
+	* src/cache/ftccache.h (FTC_NODE__TOP_FOR_HASH): Declare
+	and implement inlined version.
+	(FTC_CACHE_LOOKUP_CMP): Use `FTC_NODE__TOP_FOR_HASH'.
+	* src/cache/ftccache.c (ftc_get_top_node_for_hash): Non-inlined
+	version.
+	(ftc_node_hash_unlink): Use `FTC_NODE__TOP_FOR_HASH'.
+	(ftc_node_hash_link): Ditto.
+	(FTC_Cache_Lookup): Ditto.
+
+2011-01-09  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[cache] inline-specific functions are conditionalized.
+
+	* src/cache/ftcglyph.c (FTC_GNode_Compare): Conditionalized for
+	inlined configuration.  This function is a thin wrapper of
+	`ftc_gnode_compare' for inlined `FTC_CACHE_LOOKUP_CMP' (see
+	`nodecmp' argument).  Under non-inlined configuration,
+	`ftc_gnode_compare' is invoked by `FTC_Cache_Lookup', via
+	`FTC_Cache->clazz.node_compare'.
+
+	* src/cache/ftcglyph.h (FTC_GNode_Compare): Ditto.
+	* src/cache/ftcsbits.c (FTC_SNode_Compare): Ditto, for
+	`ftc_snode_compare'.
+	* src/cache/ftcsbits.h (FTC_SNode_Compare): Ditto.
+
+2011-01-09  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[cache] Correct a type mismatch under non-inlined config.
+
+	* src/cache/ftcglyph.h (FTC_GCACHE_LOOKUP_CMP): `FTC_GCache_Lookup'
+	takes the node via a pointer `FTC_Node*', differently from cpp-macro
+	`FTC_CACHE_LOOKUP_CMP'.
+
+2011-01-06  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	Update Jamfile to include Bzip2 support.
+
+	* Jamfile: Include src/bzip2 to project.
+	Comments for lzw, gzip, bzip2 are changed to clarify that
+	they are for compressed PCF fonts, not others.
+	(e.g. compressed BDF fonts are not supported yet)
+
+2011-01-05  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	Update Symbian project files to include Bzip2 support.
+
+	Currently, it provides `FT_Stream_OpenBzip2' that returns
+	unimplemented error always, to prevent unresolved symbol
+	error for the applications designed for Unix systems.
+
+	* builds/symbian/bld.inf: Include ftbzip2.h.
+	* builds/symbian/freetype.mmp: Include ftbzip2.c.
+
+2011-01-05  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	Update classic MacOS makefiles to include Bzip2 support.
+
+	Currently, it provides `FT_Stream_OpenBzip2' that returns
+	unimplemented error always, to prevent unresolved symbol
+	error for the applications designed for Unix systems.
+
+	* builds/mac/FreeType.m68k_cfm.make.txt: Include ftbzip2.c.o.
+	* builds/mac/FreeType.m68k_far.make.txt: Ditto.
+	* builds/mac/FreeType.ppc_carbon.make.txt: Include ftbzip2.c.x.
+	* builds/mac/FreeType.ppc_classic.make.txt: Ditto.
+
+2011-01-05  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	Update Amiga makefiles to include Bzip2 support.
+
+	Currently, it provides `FT_Stream_OpenBzip2' that returns
+	unimplemented error always, to prevent unresolved symbol
+	error for the applications designed for Unix systems.
+
+	* builds/amiga/makefile: Include bzip2.ppc.o built from ftbzip2.c.
+	* builds/amiga/makefile.os4: Include bzip2.o built from ftbzip2.c.
+	* builds/amiga/smakefile: Ditto.
+
+2011-01-05  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	Update pkg-config tools to reflect Bzip2 support.
+
+	* builds/unix/freetype-config.in: Include `-lbz2' to
+	--libs output, if built with Bzip2 support.
+	* builds/unix/freetype2.in: Ditto.
+
+2011-01-05  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	* builds/unix/configure.raw: Remove `SYSTEM_BZ2LIB' macro.
+
+	SYSTEM_ZLIB is used to switch the builtin zlib source
+	or system zlib source out of FreeType2.  But ftbzip2
+	module has no builtin bzip2 library and always requires
+	system bzip2 library.  Thus SYSTEM_BZ2LIB is always yes,
+	it is not used.
+
+2011-01-03  Werner Lemberg  <wl@gnu.org>
+
+	*/rules.mk: Handle `*pic.c' files.
+
+2010-12-31  Werner Lemberg  <wl@gnu.org>
+
+	* src/cff/cfftypes.h (CFF_MAX_CID_FONTS): Increase to 64.
+	Problem reported by Tom Bishop <wenlin@wenlin.com>.
+
+2010-12-31  Werner Lemberg  <wl@gnu.org>
+
+	Improve bzip2 support.
+
+	* include/freetype/ftmoderr.h: Add bzip2.
+
+	* docs/INSTALL.ANY, docs/CHANGES: Updated.
+
+	* src/pcf/README: Updated.
+	* include/freetype/internal/pcftypes.h: Obsolete, removed.
+
+2010-12-31  Joel Klinghed  <the_jk@yahoo.com>
+
+	Add bzip2 compression support to handle *.pcf.bz2 files.
+
+	* builds/unix/configure.raw: Test for libbz2 library.
+
+	* devel/ftoption.h, include/freetype/config/ftoption.h
+	(FT_CONFIG_OPTION_USE_BZIP2): Define.
+	* include/freetype/config/ftheader.h (FT_BZIP2_H): Define.
+
+	* include/freetype/ftbzip2.h: New file.
+
+	* src/bzip2/*: New files.
+
+	* src/pcf/pcf.h: s/gzip_/comp_/.
+	* src/pcf/pcfdrvr.c: Include FT_BZIP2_H.
+	s/gzip_/comp_/.
+	(PCF_Face_Init): Handle bzip2 compressed files.
+
+	* docs/formats.txt, modules.cfg: Updated.
+
+2010-12-25  Harsha  <mm.harsha@gmail.com>
+
+	Apply Savannah patch #7422.
+
+	If we encounter a space in a string then the sbit buffer is NULL,
+	height and width are 0s.  So the check in ftc_snode_compare will
+	always pass for spaces (comparision with 255).  Here the comments
+	above the condition are proper but the implementation is not.  When
+	we create an snode I think it is the proper way to initialize the
+	width to 255 and then put a check for being equal to 255 in snode
+	compare function.
+
+	* src/cache/ftcsbits.c (FTC_SNode_New): Initialize sbit widths with
+	value 255.
+	(ftc_snode_compare): Fix condition.
+
+2010-12-13  Werner Lemberg  <wl@gnu.org>
+
+	Fix parameter handling of `FT_Set_Renderer'.
+	Reported by Kirill Tishin <siege@bk.ru>.
+
+	* src/base/ftobjs.c (FT_Set_Renderer): Increment `parameters'.
+
+2010-12-09  Werner Lemberg  <wl@gnu.org>
+
+	[cff] Allow `hlineto' and `vlineto' without arguments.
+
+	We simply ignore such instructions.  This is invalid, but it doesn't
+	harm; and indeed, there exist such subsetted fonts in PDFs.
+
+	Reported by Albert Astals Cid <aacid@kde.org>.
+
+	* src/cff/cffgload.c (cff_decoder_parse_charstrings)
+	[cff_op_hlineto]: Ignore instruction if there aren't any arguments
+	on the stack.
+
 2010-11-28  Werner Lemberg  <wl@gnu.org>
 
 	* Version 2.4.4 released.
@@ -102,9 +1266,9 @@
 
 2010-11-04  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
 
-	[UVS] Fix find_variant_selector_charmap(), Savannah bug #31545.
+	[UVS] Fix `find_variant_selector_charmap', Savannah bug #31545.
 
-	Since 2010-07-04, find_variant_selector_charmap() returns
+	Since 2010-07-04, `find_variant_selector_charmap' returns
 	the first cmap subtable always under rogue-compatible
 	configuration, it causes NULL pointer dereference and
 	make UVS-related functions crashed.
@@ -150,7 +1314,7 @@
 
 2010-10-25  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
 
-	Revert a change of `_idx' type in FTC_CACHE_LOOKUP_CMP().
+	Revert a change of `_idx' type in `FTC_CACHE_LOOKUP_CMP'.
 
 	* src/cache/ftccache.h (FTC_CACHE_LOOKUP_CMP): Revert
 	the type of `_idx' from FT_PtrDist (by previous change)
@@ -162,7 +1326,7 @@
 
 	On LLP64 platforms (e.g. Win64), FT_ULong (32-bit)
 	variables are inappropriate to calculate hash values
-	from the memory address (64-bit).  The hash variables  
+	from the memory address (64-bit).  The hash variables
 	are extended from FT_ULong to FT_PtrDist and new
 	hashing macro functions are introduced.  The hash
 	values on 16-bit memory platforms are changed, but
@@ -171,9 +1335,9 @@
 	address, so using signed type FT_PtrDist is safe.
 
 	* src/cache/ftccache.h (_FTC_FACE_ID_HASH): New hash
-	function to replace FTC_FACE_ID_HASH() for portability.
-	* src/cache/ftcmanag.h (FTC_SCALER_HASH): Replace 
-	FTC_FACE_ID_HASH() by _FTC_FACE_ID_HASH().
+	function to replace `FTC_FACE_ID_HASH' for portability.
+	* src/cache/ftcmanag.h (FTC_SCALER_HASH): Replace
+	`FTC_FACE_ID_HASH' by `_FTC_FACE_ID_HASH'.
 	* src/cache/ftccmap.c (FTC_CMAP_HASH): Ditto.
 
 	* src/cache/ftccache.h (FTC_NodeRec): The type of the
@@ -196,13 +1360,13 @@
 	* src/cache/ftccache.h (FTC_CACHE_LOOKUP_CMP): Ditto.
 	Also the type of the internal variable `_idx' is changed to
 	FT_PtrDist from FT_UFast for better pointer calculation.
-	
+
 2010-10-24  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
 
 	[cache] Hide internal macros incompatible with LLP64.
 
-	FT_POINTER_TO_ULONG(), FTC_FACE_ID_HASH() and
-	FTC_IMAGE_TYPE_HASH() are enclosed by
+	`FT_POINTER_TO_ULONG', `FTC_FACE_ID_HASH', and
+	`FTC_IMAGE_TYPE_HASH' are enclosed by
 	FT_CONFIG_OPTION_OLD_INTERNALS and hidden from
 	normal clients.
 
@@ -211,10 +1375,10 @@
 
 2010-10-24  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
 
-	Change the type of FT_MEM_VAL() from FT_ULong to FT_PtrDist.
+	Change the type of `FT_MEM_VAL' from FT_ULong to FT_PtrDist.
 
 	On LLP64 platforms (e.g. Win64), unsigned long (32-bit)
-	cannot cover the memory address (64-bit).  FT_MEM_VAL() is
+	cannot cover the memory address (64-bit).  `FT_MEM_VAL' is
 	used for hashing only and not dereferred, so using signed
 	type FT_PtrDist is safe.
 
@@ -257,9 +1421,9 @@
 		http://trac.macports.org/ticket/18859
 
 	* src/base/ftobjs.c (load_face_in_embedded_rfork):
-	When FT_Stream_New() returns FT_Err_Cannot_Open_Stream, it
-	means that the file is possible to be fopen()-ed but zero-sized.
-	Also there is a case that the resource fork is not zero-sized, 
+	When `FT_Stream_New' returns FT_Err_Cannot_Open_Stream, it
+	means that the file is possible to be `fopen'-ed but zero-sized.
+	Also there is a case that the resource fork is not zero-sized,
 	but no supported font exists in it.  If a rule by Darwin VFS
 	falls into such cases, there is no need to try other Darwin VFS
 	rules anymore.  Such cases are marked by vfs_rfork_has_no_font.
@@ -273,9 +1437,9 @@
 	a resource fork via ANSI C or POSIX interface.  Current resource
 	fork accessor tries all possible methods to support all kernels.
 	But if a method could open a resource fork but no font is found,
-	there is no need to try other methods older than tested method. 
+	there is no need to try other methods older than tested method.
 	To determine whether the rule index is for Darwin VFS, a local
-	function ftrfork.c::raccess_rule_by_darwin_vfs() is introduced.
+	function `ftrfork.c::raccess_rule_by_darwin_vfs' is introduced.
 	To use this function in ftobjs.c etc but it should be inlined,
 	it is exposed by ftbase.h.
 
@@ -440,7 +1604,7 @@
 	* src/cff/cffload.c (cff_index_access_element): `off2', the offset
 	to the next element is truncated at the end of the stream to prevent
 	invalid I/O.  As `off1', the offset to the requested element has
-	been checked by FT_STREAM_SEEK(), `off2' should be checked
+	been checked by `FT_STREAM_SEEK', `off2' should be checked
 	similarly.
 
 2010-09-19  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
@@ -455,7 +1619,7 @@
 
 2010-09-19  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
 
-	[cff] Make trace message in cff_charset_load() verbose.
+	[cff] Make trace message in` cff_charset_load' verbose.
 	See Savannah bug #30975.
 
 	* src/cff/cffload.c (cff_charset_load): Report the original `nleft'
@@ -491,8 +1655,8 @@
 	See Savannah bug #31040.
 
 	* src/sfnt/ttpost.c (load_post_names): Get the length of `post'
-	table and pass the limit of `post' table to load_format_20() and
-	load_format_25().
+	table and pass the limit of `post' table to `load_format_20' and
+	`load_format_25'.
 	(load_format_20): Stop the parsing when we reached at the limit of
 	`post' table.  If more glyph names are required, they are filled by
 	NULL names.
@@ -504,9 +1668,9 @@
 
 	* src/truetype/ttinterp.c (free_buffer_in_size): Don't duplicate
 	FT_GlyphZoneRec size->twilight to be freed.  If duplicated,
-	FT_FREE() erases the duplicated pointers only and leave original
+	`FT_FREE' erases the duplicated pointers only and leave original
 	pointers.  They can cause the double-free crash when the burst
-	errors occur in TrueType interpreter and free_buffer_in_size() is
+	errors occur in TrueType interpreter and `free_buffer_in_size' is
 	invoked repeatedly.
 
 2010-09-15  Werner Lemberg  <wl@gnu.org>
@@ -563,7 +1727,7 @@
 
 	* src/truetype/ttinterp.c (TT_RunIns): Decrease the trace level
 	showing the error when the interpreter returns with an error,
-	from FT_TRACE7() to FT_TRACE1().
+	from` FT_TRACE7' to `FT_TRACE1'.
 
 2010-08-30  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
 
@@ -720,7 +1884,7 @@
 	[cff] Don't use any values in decoder after parsing error.
 
 	* src/cff/cffgload.c (cff_slot_load): Skip the evaluations
-	of the values in decoder, if cff_decoder_parse_charstrings()
+	of the values in decoder, if `cff_decoder_parse_charstrings'
 	returns any error.
 
 2010-08-04  Werner Lemberg  <wl@gnu.org>
@@ -1544,7 +2708,7 @@
 
 ----------------------------------------------------------------------------
 
-Copyright 2010 by
+Copyright 2010-2011 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This file is part of the FreeType project, and may only be used, modified,

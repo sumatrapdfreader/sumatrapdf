@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    SFNT object management (base).                                       */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2010 by */
+/*  Copyright 1996-2008, 2010-2011 by                                      */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -356,7 +356,7 @@
 
       FT_FRAME_START( 8 ),
         FT_FRAME_LONG( version ),
-        FT_FRAME_LONG( count   ),
+        FT_FRAME_LONG( count   ),  /* this is ULong in the specs */
       FT_FRAME_END
     };
 
@@ -389,6 +389,17 @@
 
       if ( FT_STREAM_READ_FIELDS( ttc_header_fields, &face->ttc_header ) )
         return error;
+
+      if ( face->ttc_header.count == 0 )
+        return SFNT_Err_Invalid_Table;
+
+      /* a rough size estimate: let's conservatively assume that there   */
+      /* is just a single table info in each subfont header (12 + 16*1 = */
+      /* 28 bytes), thus we have (at least) `12 + 4*count' bytes for the */
+      /* size of the TTC header plus `28*count' bytes for all subfont    */
+      /* headers                                                         */
+      if ( (FT_ULong)face->ttc_header.count > stream->size / ( 28 + 4 ) )
+        return SFNT_Err_Array_Too_Large;
 
       /* now read the offsets of each font in the file */
       if ( FT_NEW_ARRAY( face->ttc_header.offsets, face->ttc_header.count ) )
@@ -536,7 +547,7 @@
     FT_UNUSED( face_index );
 
     /* Check parameters */
-    
+
     {
       FT_Int  i;
 

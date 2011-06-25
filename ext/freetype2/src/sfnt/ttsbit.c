@@ -1343,7 +1343,7 @@
     /* All right, we have a compound format.  First of all, read */
     /* the array of elements.                                    */
     {
-      TT_SBit_Component  components;
+      TT_SBit_Component  components = NULL;
       TT_SBit_Component  comp;
       FT_UShort          num_components, count;
 

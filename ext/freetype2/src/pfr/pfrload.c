@@ -476,7 +476,7 @@
                                   PFR_PhyFont  phy_font )
   {
     FT_UInt    count, num_vert, num_horz;
-    FT_Int*    snaps;
+    FT_Int*    snaps  = NULL;
     FT_Error   error  = PFR_Err_Ok;
     FT_Memory  memory = phy_font->memory;
 

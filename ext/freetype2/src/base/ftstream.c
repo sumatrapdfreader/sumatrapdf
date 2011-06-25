@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    I/O stream support (body).                                           */
 /*                                                                         */
-/*  Copyright 2000-2001, 2002, 2004, 2005, 2006, 2008, 2009, 2010 by       */
+/*  Copyright 2000-2002, 2004-2006, 2008-2011 by                           */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -354,8 +354,8 @@
   }
 
 
-  FT_BASE_DEF( FT_Short )
-  FT_Stream_GetShort( FT_Stream  stream )
+  FT_BASE_DEF( FT_UShort )
+  FT_Stream_GetUShort( FT_Stream  stream )
   {
     FT_Byte*  p;
     FT_Short  result;
@@ -366,15 +366,15 @@
     result         = 0;
     p              = stream->cursor;
     if ( p + 1 < stream->limit )
-      result       = FT_NEXT_SHORT( p );
+      result       = FT_NEXT_USHORT( p );
     stream->cursor = p;
 
     return result;
   }
 
 
-  FT_BASE_DEF( FT_Short )
-  FT_Stream_GetShortLE( FT_Stream  stream )
+  FT_BASE_DEF( FT_UShort )
+  FT_Stream_GetUShortLE( FT_Stream  stream )
   {
     FT_Byte*  p;
     FT_Short  result;
@@ -385,15 +385,15 @@
     result         = 0;
     p              = stream->cursor;
     if ( p + 1 < stream->limit )
-      result       = FT_NEXT_SHORT_LE( p );
+      result       = FT_NEXT_USHORT_LE( p );
     stream->cursor = p;
 
     return result;
   }
 
 
-  FT_BASE_DEF( FT_Long )
-  FT_Stream_GetOffset( FT_Stream  stream )
+  FT_BASE_DEF( FT_ULong )
+  FT_Stream_GetUOffset( FT_Stream  stream )
   {
     FT_Byte*  p;
     FT_Long   result;
@@ -404,14 +404,14 @@
     result         = 0;
     p              = stream->cursor;
     if ( p + 2 < stream->limit )
-      result       = FT_NEXT_OFF3( p );
+      result       = FT_NEXT_UOFF3( p );
     stream->cursor = p;
     return result;
   }
 
 
-  FT_BASE_DEF( FT_Long )
-  FT_Stream_GetLong( FT_Stream  stream )
+  FT_BASE_DEF( FT_ULong )
+  FT_Stream_GetULong( FT_Stream  stream )
   {
     FT_Byte*  p;
     FT_Long   result;
@@ -422,14 +422,14 @@
     result         = 0;
     p              = stream->cursor;
     if ( p + 3 < stream->limit )
-      result       = FT_NEXT_LONG( p );
+      result       = FT_NEXT_ULONG( p );
     stream->cursor = p;
     return result;
   }
 
 
-  FT_BASE_DEF( FT_Long )
-  FT_Stream_GetLongLE( FT_Stream  stream )
+  FT_BASE_DEF( FT_ULong )
+  FT_Stream_GetULongLE( FT_Stream  stream )
   {
     FT_Byte*  p;
     FT_Long   result;
@@ -440,7 +440,7 @@
     result         = 0;
     p              = stream->cursor;
     if ( p + 3 < stream->limit )
-      result       = FT_NEXT_LONG_LE( p );
+      result       = FT_NEXT_ULONG_LE( p );
     stream->cursor = p;
     return result;
   }
@@ -483,8 +483,8 @@
   }
 
 
-  FT_BASE_DEF( FT_Short )
-  FT_Stream_ReadShort( FT_Stream  stream,
+  FT_BASE_DEF( FT_UShort )
+  FT_Stream_ReadUShort( FT_Stream  stream,
                        FT_Error*  error )
   {
     FT_Byte   reads[2];
@@ -511,7 +511,7 @@
       }
 
       if ( p )
-        result = FT_NEXT_SHORT( p );
+        result = FT_NEXT_USHORT( p );
     }
     else
       goto Fail;
@@ -522,7 +522,7 @@
 
   Fail:
     *error = FT_Err_Invalid_Stream_Operation;
-    FT_ERROR(( "FT_Stream_ReadShort:"
+    FT_ERROR(( "FT_Stream_ReadUShort:"
                " invalid i/o; pos = 0x%lx, size = 0x%lx\n",
                stream->pos, stream->size ));
 
@@ -530,8 +530,8 @@
   }
 
 
-  FT_BASE_DEF( FT_Short )
-  FT_Stream_ReadShortLE( FT_Stream  stream,
+  FT_BASE_DEF( FT_UShort )
+  FT_Stream_ReadUShortLE( FT_Stream  stream,
                          FT_Error*  error )
   {
     FT_Byte   reads[2];
@@ -558,7 +558,7 @@
       }
 
       if ( p )
-        result = FT_NEXT_SHORT_LE( p );
+        result = FT_NEXT_USHORT_LE( p );
     }
     else
       goto Fail;
@@ -569,7 +569,7 @@
 
   Fail:
     *error = FT_Err_Invalid_Stream_Operation;
-    FT_ERROR(( "FT_Stream_ReadShortLE:"
+    FT_ERROR(( "FT_Stream_ReadUShortLE:"
                " invalid i/o; pos = 0x%lx, size = 0x%lx\n",
                stream->pos, stream->size ));
 
@@ -577,8 +577,8 @@
   }
 
 
-  FT_BASE_DEF( FT_Long )
-  FT_Stream_ReadOffset( FT_Stream  stream,
+  FT_BASE_DEF( FT_ULong )
+  FT_Stream_ReadUOffset( FT_Stream  stream,
                         FT_Error*  error )
   {
     FT_Byte   reads[3];
@@ -605,7 +605,7 @@
       }
 
       if ( p )
-        result = FT_NEXT_OFF3( p );
+        result = FT_NEXT_UOFF3( p );
     }
     else
       goto Fail;
@@ -616,7 +616,7 @@
 
   Fail:
     *error = FT_Err_Invalid_Stream_Operation;
-    FT_ERROR(( "FT_Stream_ReadOffset:"
+    FT_ERROR(( "FT_Stream_ReadUOffset:"
                " invalid i/o; pos = 0x%lx, size = 0x%lx\n",
                stream->pos, stream->size ));
 
@@ -624,8 +624,8 @@
   }
 
 
-  FT_BASE_DEF( FT_Long )
-  FT_Stream_ReadLong( FT_Stream  stream,
+  FT_BASE_DEF( FT_ULong )
+  FT_Stream_ReadULong( FT_Stream  stream,
                       FT_Error*  error )
   {
     FT_Byte   reads[4];
@@ -652,7 +652,7 @@
       }
 
       if ( p )
-        result = FT_NEXT_LONG( p );
+        result = FT_NEXT_ULONG( p );
     }
     else
       goto Fail;
@@ -663,7 +663,7 @@
 
   Fail:
     *error = FT_Err_Invalid_Stream_Operation;
-    FT_ERROR(( "FT_Stream_ReadLong:"
+    FT_ERROR(( "FT_Stream_ReadULong:"
                " invalid i/o; pos = 0x%lx, size = 0x%lx\n",
                stream->pos, stream->size ));
 
@@ -671,8 +671,8 @@
   }
 
 
-  FT_BASE_DEF( FT_Long )
-  FT_Stream_ReadLongLE( FT_Stream  stream,
+  FT_BASE_DEF( FT_ULong )
+  FT_Stream_ReadULongLE( FT_Stream  stream,
                         FT_Error*  error )
   {
     FT_Byte   reads[4];
@@ -699,7 +699,7 @@
       }
 
       if ( p )
-        result = FT_NEXT_LONG_LE( p );
+        result = FT_NEXT_ULONG_LE( p );
     }
     else
       goto Fail;
@@ -710,7 +710,7 @@
 
   Fail:
     *error = FT_Err_Invalid_Stream_Operation;
-    FT_ERROR(( "FT_Stream_ReadLongLE:"
+    FT_ERROR(( "FT_Stream_ReadULongLE:"
                " invalid i/o; pos = 0x%lx, size = 0x%lx\n",
                stream->pos, stream->size ));
 

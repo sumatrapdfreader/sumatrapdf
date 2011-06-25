@@ -4,8 +4,7 @@
 /*                                                                         */
 /*    OpenType objects manager (body).                                     */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009,   */
-/*            2010 by                                                      */
+/*  Copyright 1996-2011 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -162,7 +161,7 @@
     {
       CFF_Face      face     = (CFF_Face)cffsize->face;
       CFF_Font      font     = (CFF_Font)face->extra.data;
-      CFF_Internal  internal;
+      CFF_Internal  internal = NULL;
 
       PS_PrivateRec  priv;
       FT_Memory      memory = cffsize->face->memory;
@@ -421,10 +420,56 @@
         {
           for ( idx = 7; idx < length; idx++ )
             name[idx - 7] = name[idx];
+          length -= 7;
         }
       }
       else
         continue_search = 0;
+    }
+  }
+
+
+  /* Remove the style part from the family name (if present). */
+
+  static void
+  remove_style( FT_String*        family_name,
+                const FT_String*  style_name )
+  {
+    FT_Int32  family_name_length, style_name_length;
+
+
+    family_name_length = strlen( family_name );
+    style_name_length  = strlen( style_name );
+
+    if ( family_name_length > style_name_length )
+    {
+      FT_Int  idx;
+
+
+      for ( idx = 1; idx <= style_name_length; ++idx )
+      {
+        if ( family_name[family_name_length - idx] !=
+             style_name[style_name_length - idx] )
+          break;
+      }
+
+      if ( idx > style_name_length )
+      {
+        /* family_name ends with style_name; remove it */
+        idx = family_name_length - style_name_length - 1;
+
+        /* also remove special characters     */
+        /* between real family name and style */
+        while ( idx > 0                     &&
+                ( family_name[idx] == '-' ||
+                  family_name[idx] == ' ' ||
+                  family_name[idx] == '_' ||
+                  family_name[idx] == '+' ) )
+          --idx;
+
+        if ( idx > 0 )
+          family_name[idx + 1] = '\0';
+      }
     }
   }
 
@@ -436,14 +481,14 @@
                  FT_Int         num_params,
                  FT_Parameter*  params )
   {
-    CFF_Face            face = (CFF_Face)cffface;
+    CFF_Face            face        = (CFF_Face)cffface;
     FT_Error            error;
     SFNT_Service        sfnt;
     FT_Service_PsCMaps  psnames;
     PSHinter_Service    pshinter;
     FT_Bool             pure_cff    = 1;
     FT_Bool             sfnt_format = 0;
-    FT_Library library = cffface->driver->root.library;
+    FT_Library          library     = cffface->driver->root.library;
 
 
     sfnt = (SFNT_Service)FT_Get_Module_Interface(
@@ -523,7 +568,7 @@
 
     /* now load and parse the CFF table in the file */
     {
-      CFF_Font         cff;
+      CFF_Font         cff = NULL;
       CFF_FontRecDict  dict;
       FT_Memory        memory = cffface->memory;
       FT_Int32         flags;
@@ -758,6 +803,9 @@
                 /* case, the remaining string in `fullp' will be used as */
                 /* the style name.                                       */
                 style_name = cff_strcpy( memory, fullp );
+
+                /* remove the style part from the family name (if present) */
+                remove_style( cffface->family_name, style_name ); 
               }
               break;
             }

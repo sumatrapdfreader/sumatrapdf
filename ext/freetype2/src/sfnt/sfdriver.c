@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    High-level SFNT driver interface (body).                             */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007, 2009, 2010 by */
+/*  Copyright 1996-2007, 2009-2011 by                                      */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -117,15 +117,20 @@
                    FT_ULong  *offset,
                    FT_ULong  *length )
   {
-    if ( !tag || !offset || !length )
+    if ( !offset || !length )
       return SFNT_Err_Invalid_Argument;
 
-    if ( idx >= face->num_tables )
-      return SFNT_Err_Table_Missing;
+    if ( !tag )
+      *length = face->num_tables;
+    else
+    {
+      if ( idx >= face->num_tables )
+        return SFNT_Err_Table_Missing;
 
-    *tag    = face->dir_tables[idx].Tag;
-    *offset = face->dir_tables[idx].Offset;
-    *length = face->dir_tables[idx].Length;
+      *tag    = face->dir_tables[idx].Tag;
+      *offset = face->dir_tables[idx].Offset;
+      *length = face->dir_tables[idx].Length;
+    }
 
     return SFNT_Err_Ok;
   }

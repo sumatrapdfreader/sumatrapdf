@@ -123,7 +123,7 @@
   ft_var_readpackedpoints( FT_Stream  stream,
                            FT_UInt   *point_cnt )
   {
-    FT_UShort *points;
+    FT_UShort *points = NULL;
     FT_Int     n;
     FT_Int     runcnt;
     FT_Int     i;
@@ -622,7 +622,7 @@
     FT_Error             error  = TT_Err_Ok;
     FT_ULong             fvar_start;
     FT_Int               i, j;
-    FT_MM_Var*           mmvar;
+    FT_MM_Var*           mmvar = NULL;
     FT_Fixed*            next_coords;
     FT_String*           next_name;
     FT_Var_Axis*         a;
@@ -1325,7 +1325,7 @@
     FT_Stream   stream = face->root.stream;
     FT_Memory   memory = stream->memory;
     GX_Blend    blend  = face->blend;
-    FT_Vector*  delta_xy;
+    FT_Vector*  delta_xy = NULL;
 
     FT_Error    error;
     FT_ULong    glyph_start;

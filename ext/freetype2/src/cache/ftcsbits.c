@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType sbits manager (body).                                       */
 /*                                                                         */
-/*  Copyright 2000-2001, 2002, 2003, 2004, 2005, 2006, 2009, 2010 by       */
+/*  Copyright 2000-2001, 2002, 2003, 2004, 2005, 2006, 2009, 2010, 2011 by */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -217,6 +217,7 @@
 
     FTC_SFamilyClass  clazz = FTC_CACHE__SFAMILY_CLASS( cache );
     FT_UInt           total;
+    FT_UInt           node_count;
 
 
     total = clazz->family_get_count( family, cache->manager );
@@ -239,6 +240,10 @@
       FTC_GNode_Init( FTC_GNODE( snode ), start, family );
 
       snode->count = count;
+      for ( node_count = 0; node_count < count; node_count++ )
+      {
+        snode->sbits[node_count].width = 255;
+      }
 
       error = ftc_snode_load( snode,
                               cache->manager,
@@ -319,7 +324,8 @@
   FT_LOCAL_DEF( FT_Bool )
   ftc_snode_compare( FTC_Node    ftcsnode,
                      FT_Pointer  ftcgquery,
-                     FTC_Cache   cache )
+                     FTC_Cache   cache,
+                     FT_Bool*    list_changed )
   {
     FTC_SNode   snode  = (FTC_SNode)ftcsnode;
     FTC_GQuery  gquery = (FTC_GQuery)ftcgquery;
@@ -328,6 +334,8 @@
     FT_Bool     result;
 
 
+    if (list_changed)
+      *list_changed = FALSE;
     result = FT_BOOL( gnode->family == gquery->family                    &&
                       (FT_UInt)( gindex - gnode->gindex ) < snode->count );
     if ( result )
@@ -368,7 +376,7 @@
        *
        */
 
-      if ( sbit->buffer == NULL && sbit->width != 255 )
+      if ( sbit->buffer == NULL && sbit->width == 255 )
       {
         FT_ULong  size;
         FT_Error  error;
@@ -381,7 +389,7 @@
         {
           error = ftc_snode_load( snode, cache->manager, gindex, &size );
         }
-        FTC_CACHE_TRYLOOP_END();
+        FTC_CACHE_TRYLOOP_END( list_changed );
 
         ftcsnode->ref_count--;  /* unlock the node */
 
@@ -396,13 +404,18 @@
   }
 
 
+#ifdef FTC_INLINE
+
   FT_LOCAL_DEF( FT_Bool )
   FTC_SNode_Compare( FTC_SNode   snode,
                      FTC_GQuery  gquery,
-                     FTC_Cache   cache )
+                     FTC_Cache   cache,
+                     FT_Bool*    list_changed )
   {
-    return ftc_snode_compare( FTC_NODE( snode ), gquery, cache );
+    return ftc_snode_compare( FTC_NODE( snode ), gquery,
+                              cache, list_changed );
   }
 
+#endif
 
 /* END */

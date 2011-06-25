@@ -387,7 +387,7 @@
   {
     FT_Error   error     = CFF_Err_Ok;
     FT_Memory  memory    = idx->stream->memory;
-    FT_Byte**  t;
+    FT_Byte**  t = NULL;
     FT_Byte*   new_bytes = NULL;
 
 
@@ -1514,7 +1514,7 @@
     if ( dict->cid_registry != 0xFFFFU )
     {
       CFF_IndexRec  fd_index;
-      CFF_SubFont   sub;
+      CFF_SubFont   sub = NULL;
       FT_UInt       idx;
 
 

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auto-fitter module implementation (body).                            */
 /*                                                                         */
-/*  Copyright 2003, 2004, 2005, 2006 by                                    */
+/*  Copyright 2003-2006, 2009, 2011 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -20,8 +20,7 @@
 #include "afloader.h"
 #include "afpic.h"
 
-#ifdef AF_DEBUG
-  int    _af_debug;
+#ifdef FT_DEBUG_AUTOFIT
   int    _af_debug_disable_horz_hints;
   int    _af_debug_disable_vert_hints;
   int    _af_debug_disable_blue_hints;
@@ -67,14 +66,15 @@
   }
 
 
-  FT_DEFINE_AUTOHINTER_SERVICE(af_autofitter_service,
+  FT_DEFINE_AUTOHINTER_SERVICE(
+    af_autofitter_service,
     NULL,
     NULL,
     NULL,
-    (FT_AutoHinter_GlyphLoadFunc)af_autofitter_load_glyph
-  )
+    (FT_AutoHinter_GlyphLoadFunc)af_autofitter_load_glyph )
 
-  FT_DEFINE_MODULE(autofit_module_class,
+  FT_DEFINE_MODULE(
+    autofit_module_class,
 
     FT_MODULE_HINTER,
     sizeof ( FT_AutofitterRec ),
@@ -87,8 +87,7 @@
 
     (FT_Module_Constructor)af_autofitter_init,
     (FT_Module_Destructor) af_autofitter_done,
-    (FT_Module_Requester)  NULL
-  )
+    (FT_Module_Requester)  NULL )
 
 
 /* END */

@@ -349,7 +349,7 @@
   {
     FT_Error    error;
     FT_Memory   memory = source->memory;
-    FT_LZWFile  zip;
+    FT_LZWFile  zip = NULL;
 
 
     /*

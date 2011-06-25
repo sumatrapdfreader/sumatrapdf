@@ -1213,7 +1213,7 @@
     FT_Memory  memory = stream->memory;
 
     FT_UInt        j,num_ranges;
-    TT_GaspRange   gaspranges;
+    TT_GaspRange   gaspranges = NULL;
 
 
     /* the gasp table is optional */

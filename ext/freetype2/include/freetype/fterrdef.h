@@ -214,7 +214,6 @@
   FT_ERRORDEF_( No_Unicode_Glyph_Name,                       0xA3, \
                 "no Unicode glyph name found" )
 
-
   /* BDF errors */
 
   FT_ERRORDEF_( Missing_Startfont_Field,                     0xB0, \

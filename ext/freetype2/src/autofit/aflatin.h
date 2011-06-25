@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auto-fitter hinting routines for latin script (specification).       */
 /*                                                                         */
-/*  Copyright 2003, 2004, 2005, 2006, 2007, 2009 by                        */
+/*  Copyright 2003-2007, 2009, 2011 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -30,8 +30,8 @@ FT_BEGIN_HEADER
   AF_DECLARE_SCRIPT_CLASS(af_latin_script_class)
 
 
-/* constants are given with units_per_em == 2048 in mind */
-#define AF_LATIN_CONSTANT( metrics, c ) \
+  /* constants are given with units_per_em == 2048 in mind */
+#define AF_LATIN_CONSTANT( metrics, c )                                      \
   ( ( (c) * (FT_Long)( (AF_LatinMetrics)(metrics) )->units_per_em ) / 2048 )
 
 
@@ -76,10 +76,10 @@ FT_BEGIN_HEADER
 
   enum
   {
-    AF_LATIN_BLUE_ACTIVE     = 1 << 0,
-    AF_LATIN_BLUE_TOP        = 1 << 1,
-    AF_LATIN_BLUE_ADJUSTMENT = 1 << 2,  /* used for scale adjustment */
-                                        /* optimization              */
+    AF_LATIN_BLUE_ACTIVE     = 1 << 0,  /* set if zone height is <= 3/4px */
+    AF_LATIN_BLUE_TOP        = 1 << 1,  /* result of AF_LATIN_IS_TOP_BLUE */
+    AF_LATIN_BLUE_ADJUSTMENT = 1 << 2,  /* used for scale adjustment      */
+                                        /* optimization                   */
     AF_LATIN_BLUE_FLAG_MAX
   };
 
@@ -98,14 +98,13 @@ FT_BEGIN_HEADER
     FT_Fixed         scale;
     FT_Pos           delta;
 
-    FT_UInt          width_count;
-    AF_WidthRec      widths[AF_LATIN_MAX_WIDTHS];
-    FT_Pos           edge_distance_threshold;
-    FT_Pos           standard_width;
-    FT_Bool          extra_light;
+    FT_UInt          width_count;                 /* number of used widths */
+    AF_WidthRec      widths[AF_LATIN_MAX_WIDTHS]; /* widths array          */
+    FT_Pos           edge_distance_threshold;   /* used for creating edges */
+    FT_Pos           standard_width;         /* the default stem thickness */
+    FT_Bool          extra_light;         /* is standard width very light? */
 
     /* ignored for horizontal metrics */
-    FT_Bool          control_overshoot;
     FT_UInt          blue_count;
     AF_LatinBlueRec  blues[AF_LATIN_BLUE_MAX];
 

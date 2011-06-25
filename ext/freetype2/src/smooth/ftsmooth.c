@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Anti-aliasing renderer interface (body).                             */
 /*                                                                         */
-/*  Copyright 2000-2001, 2002, 2003, 2004, 2005, 2006, 2009, 2010 by       */
+/*  Copyright 2000-2006, 2009-2011 by                                      */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -105,7 +105,10 @@
     FT_Error     error;
     FT_Outline*  outline = NULL;
     FT_BBox      cbox;
-    FT_UInt      width, height, height_org, width_org, pitch;
+    FT_UInt      width, height, pitch;
+#ifndef FT_CONFIG_OPTION_SUBPIXEL_RENDERING
+    FT_UInt      height_org, width_org;
+#endif
     FT_Bitmap*   bitmap;
     FT_Memory    memory;
     FT_Int       hmul = mode == FT_RENDER_MODE_LCD;
@@ -163,8 +166,10 @@
     bitmap = &slot->bitmap;
     memory = render->root.memory;
 
+#ifndef FT_CONFIG_OPTION_SUBPIXEL_RENDERING
     width_org  = width;
     height_org = height;
+#endif
 
     /* release old bitmap buffer */
     if ( slot->internal->flags & FT_GLYPH_OWN_BITMAP )

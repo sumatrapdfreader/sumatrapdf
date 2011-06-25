@@ -5,7 +5,7 @@
 /*    Auto-fitter routines to compute global hinting values                */
 /*    (specification).                                                     */
 /*                                                                         */
-/*  Copyright 2003, 2004, 2005, 2007, 2009 by                              */
+/*  Copyright 2003-2005, 2007, 2009, 2011 by                               */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -17,8 +17,8 @@
 /***************************************************************************/
 
 
-#ifndef __AF_GLOBAL_H__
-#define __AF_GLOBAL_H__
+#ifndef __AFGLOBAL_H__
+#define __AFGLOBAL_H__
 
 
 #include "aftypes.h"
@@ -65,7 +65,7 @@ FT_BEGIN_HEADER
 
 FT_END_HEADER
 
-#endif /* __AF_GLOBALS_H__ */
+#endif /* __AFGLOBAL_H__ */
 
 
 /* END */

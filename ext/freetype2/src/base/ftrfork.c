@@ -159,8 +159,8 @@
     FT_Long       tag_internal, rpos;
     FT_Memory     memory = library->memory;
     FT_Long       temp;
-    FT_Long       *offsets_internal;
-    FT_RFork_Ref  *ref;
+    FT_Long       *offsets_internal = NULL;
+    FT_RFork_Ref  *ref = NULL;
 
 
     error = FT_Stream_Seek( stream, map_offset );
@@ -527,7 +527,7 @@
       Only meaningful on systems with hfs+ drivers (or Macs).
      */
     FT_Error   error;
-    char*      newpath;
+    char*      newpath = NULL;
     FT_Memory  memory;
     FT_Long    base_file_len = ft_strlen( base_file_name );
 
@@ -563,7 +563,7 @@
       Only meaningful on systems with Mac OS X (> 10.1).
      */
     FT_Error   error;
-    char*      newpath;
+    char*      newpath = NULL;
     FT_Memory  memory;
     FT_Long    base_file_len = ft_strlen( base_file_name );
 
