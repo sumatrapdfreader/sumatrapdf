@@ -228,7 +228,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, RectI rect, Vec<StaticLinkInfo>& linkI
     SelectObject(hdc, penLinkLine);
     linkInfo.Reset();
     for (AboutLayoutInfoEl *el = gAboutLayoutInfo; el->leftTxt; el++) {
-        bool hasUrl = !gRestrictedUse && el->url;
+        bool hasUrl = HasPermission(Perm_InternetAccess) && el->url;
         SetTextColor(hdc, hasUrl ? COL_BLUE_LINK : ABOUT_BORDER_COL);
         TextOut(hdc, el->rightPos.x, el->rightPos.y, el->rightTxt, (int)str::Len(el->rightTxt));
 
@@ -351,7 +351,7 @@ static void OnPaintAbout(HWND hwnd)
 
 const TCHAR *GetStaticLink(Vec<StaticLinkInfo>& linkInfo, int x, int y, StaticLinkInfo *info)
 {
-    if (gRestrictedUse)
+    if (!HasPermission(Perm_InternetAccess))
         return NULL;
 
     PointI pt(x, y);
@@ -497,7 +497,7 @@ void DrawAboutPage(WindowInfo& win, HDC hdc)
     ClientRect rc(win.hwndCanvas);
     UpdateAboutLayoutInfo(win.hwndCanvas, hdc, &rc);
     DrawAbout(win.hwndCanvas, hdc, rc, win.staticLinks);
-    if (!gRestrictedUse && gGlobalPrefs.m_rememberOpenedFiles) {
+    if (HasPermission(Perm_SavePreferences) && gGlobalPrefs.m_rememberOpenedFiles) {
         RectI rect = DrawBottomRightLink(win.hwndCanvas, hdc, _TR("Show frequently read"));
         win.staticLinks.Append(StaticLinkInfo(rect, SLINK_LIST_SHOW));
     }

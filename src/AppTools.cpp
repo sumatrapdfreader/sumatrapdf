@@ -10,6 +10,7 @@
 #include "CmdLineParser.h"
 #include "Version.h"
 #include <shlobj.h>
+#include <shlwapi.h>
 
 // the only valid chars are 0-9, . and newlines.
 // a valid version has to match the regex /^\d+(\.\d+)*(\r?\n)?$/
@@ -197,6 +198,25 @@ void AdjustRemovableDriveLetter(TCHAR *path)
     path[0] = origDrive;
 }
 
+
+// cf. http://msdn.microsoft.com/en-us/library/aa374292(v=vs.85).aspx
+#define REG_POLICIES_KEY    _T("Software\\Policies\\") APP_NAME_STR
+
+// returns 1 (permission granted), 0 (permission revoked) or -1 (not configured)
+int CheckPolicyPermission(const TCHAR *name)
+{
+    DWORD type, value, size = sizeof(value);
+    // check the computer policy first
+    LRESULT res = SHGetValue(HKEY_LOCAL_MACHINE, REG_POLICIES_KEY, name, &type, &value, &size);
+    if (ERROR_SUCCESS == res)
+        return value ? 1 : 0;
+    // if that's not configured, check the user policy
+    res = SHGetValue(HKEY_CURRENT_USER, REG_POLICIES_KEY, name, &type, &value, &size);
+    if (ERROR_SUCCESS == res)
+        return value ? 1 : 0;
+    // if both are not configured, it's up to the application
+    return -1;
+}
 
 /*
 Structure of registry entries for associating Sumatra with PDF files.

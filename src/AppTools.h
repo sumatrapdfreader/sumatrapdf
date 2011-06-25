@@ -64,6 +64,7 @@ bool IsRunningInPortableMode();
 TCHAR *AppGenDataFilename(TCHAR *pFilename);
 void AdjustRemovableDriveLetter(TCHAR *path);
 
+int CheckPolicyPermission(const TCHAR *name);
 void DoAssociateExeWithPdfExtension(HKEY hkey);
 bool IsExeAssociatedWithPdfExtension();
 

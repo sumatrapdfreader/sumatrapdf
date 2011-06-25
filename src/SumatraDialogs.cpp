@@ -605,6 +605,7 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT message, WPARAM wPa
             EnableWindow(GetDlgItem(hDlg, IDC_SET_DEFAULT_READER), FALSE);
         } else {
             SetDlgItemText(hDlg, IDC_SET_DEFAULT_READER, _TR("Make SumatraPDF my default PDF reader"));
+            EnableWindow(GetDlgItem(hDlg, IDC_SET_DEFAULT_READER), HasPermission(Perm_RegistryAccess));
         }
 
         win::SetText(hDlg, _TR("SumatraPDF Options"));
@@ -619,7 +620,7 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT message, WPARAM wPa
         SetDlgItemText(hDlg, IDOK, _TR("OK"));
         SetDlgItemText(hDlg, IDCANCEL, _TR("Cancel"));
 
-        if (prefs->m_enableTeXEnhancements) {
+        if (prefs->m_enableTeXEnhancements && HasPermission(Perm_DiskAccess)) {
             // Fit the additional section into the dialog
             // (this should rather happen in SumatraPDF.rc, but the resource
             // editor tends to overwrite conditional stuff which isn't its own)
@@ -681,7 +682,7 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT message, WPARAM wPa
             prefs->m_globalPrefsOnly = (BST_CHECKED != IsDlgButtonChecked(hDlg, IDC_GLOBAL_PREFS_ONLY));
             prefs->m_enableAutoUpdate = (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_AUTO_UPDATE_CHECKS));
             prefs->m_rememberOpenedFiles = (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_REMEMBER_OPENED_FILES));
-            if (prefs->m_enableTeXEnhancements) {
+            if (prefs->m_enableTeXEnhancements && HasPermission(Perm_DiskAccess)) {
                 free(prefs->m_inverseSearchCmdLine);
                 prefs->m_inverseSearchCmdLine = win::GetText(GetDlgItem(hDlg, IDC_CMDLINE));
             }
@@ -705,6 +706,8 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT message, WPARAM wPa
             return TRUE;
 
         case IDC_SET_DEFAULT_READER:
+            if (!HasPermission(Perm_RegistryAccess))
+                return TRUE;
             AssociateExeWithPdfExtension();
             if (IsExeAssociatedWithPdfExtension()) {
                 SetDlgItemText(hDlg, IDC_SET_DEFAULT_READER, _TR("SumatraPDF is your default PDF reader"));

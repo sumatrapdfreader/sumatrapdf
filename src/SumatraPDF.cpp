@@ -167,7 +167,7 @@ static UIThreadWorkItemQueue        gUIThreadMarshaller;
 // in restricted mode, all commands that could affect the OS are
 // disabled (such as opening files, printing, following URLs), so
 // that SumatraPDF can be used as a PDF reader on locked down systems
-       bool                         gRestrictedUse = false;
+static int                          gPolicyRestrictions = Perm_All;
 
 SerializableGlobalPrefs             gGlobalPrefs = {
     false, // bool m_globalPrefsOnly
@@ -199,9 +199,14 @@ SerializableGlobalPrefs             gGlobalPrefs = {
 };
 
 enum MenuToolbarFlags {
-    MF_NOT_IN_RESTRICTED = 1 << 0,
-    MF_NO_TRANSLATE      = 1 << 1,
-    MF_PLUGIN_MODE_ONLY  = 1 << 2,
+    MF_NO_TRANSLATE      = 1 << 0,
+    MF_PLUGIN_MODE_ONLY  = 1 << 1,
+#define PERM_FLAG_OFFSET 2
+    MF_REQ_INET_ACCESS   = Perm_InternetAccess << PERM_FLAG_OFFSET,
+    MF_REQ_DISK_ACCESS   = Perm_DiskAccess << PERM_FLAG_OFFSET,
+    MF_REQ_PREF_ACCESS   = Perm_SavePreferences << PERM_FLAG_OFFSET,
+    MF_REQ_PRINTER_ACCESS= Perm_PrinterAccess << PERM_FLAG_OFFSET,
+    MF_REQ_ALLOW_COPY    = Perm_CopySelection << PERM_FLAG_OFFSET,
 };
 
 struct ToolbarButtonInfo {
@@ -213,10 +218,10 @@ struct ToolbarButtonInfo {
 };
 
 static ToolbarButtonInfo gToolbarButtons[] = {
-    { 0,   IDM_OPEN,              _TRN("Open"),           MF_NOT_IN_RESTRICTED },
+    { 0,   IDM_OPEN,              _TRN("Open"),           MF_REQ_DISK_ACCESS },
 // the Open button is replaced with a Save As button in Plugin mode:
-//  { 12,  IDM_SAVEAS,            _TRN("Save As"),        MF_NOT_IN_RESTRICTED },
-    { 1,   IDM_PRINT,             _TRN("Print"),          MF_NOT_IN_RESTRICTED },
+//  { 12,  IDM_SAVEAS,            _TRN("Save As"),        MF_REQ_DISK_ACCESS },
+    { 1,   IDM_PRINT,             _TRN("Print"),          MF_REQ_PRINTER_ACCESS },
     { -1,  IDM_GOTO_PAGE,         NULL,                   0 },
     { 2,   IDM_GOTO_PREV_PAGE,    _TRN("Previous Page"),  0 },
     { 3,   IDM_GOTO_NEXT_PAGE,    _TRN("Next Page"),      0 },
@@ -239,6 +244,7 @@ static void CreateTocBox(WindowInfo& win);
 static void UpdateToolbarFindText(WindowInfo& win);
 static void UpdateToolbarPageText(WindowInfo& win, int pageCount);
 static void UpdateToolbarToolText();
+static void UpdateToolbarAndScrollbarsForAllWindows();
 static void RebuildMenuBar();
 static void OnMenuFindMatchCase(WindowInfo& win);
 static bool LoadDocIntoWindow(const TCHAR *fileName, WindowInfo& win, 
@@ -249,6 +255,11 @@ static void DeleteOldSelectionInfo(WindowInfo& win, bool alsoTextSel=false);
 static void ClearSearchResult(WindowInfo& win);
 static void EnterFullscreen(WindowInfo& win, bool presentation=false);
 static void ExitFullscreen(WindowInfo& win);
+
+bool HasPermission(int permission)
+{
+    return (permission & gPolicyRestrictions) == permission;
+}
 
 static bool CurrLangNameSet(const char *langName)
 {
@@ -285,7 +296,7 @@ static bool CurrLangNameSet(const char *langName)
 // the appropriate application (web browser, mail client, etc.)
 bool LaunchBrowser(const TCHAR *url)
 {
-    if (gRestrictedUse) return false;
+    if (!HasPermission(Perm_InternetAccess)) return false;
     if (!str::StartsWithI(url, _T("http:")) &&
         !str::StartsWithI(url, _T("https:")) &&
         !str::StartsWithI(url, _T("mailto:"))) {
@@ -297,7 +308,7 @@ bool LaunchBrowser(const TCHAR *url)
 
 static bool CanViewExternally(WindowInfo *win=NULL)
 {
-    if (gRestrictedUse)
+    if (!HasPermission(Perm_DiskAccess))
         return false;
     if (!win || win->IsAboutWindow())
         return true;
@@ -501,19 +512,19 @@ struct MenuDef {
 };
 
 MenuDef menuDefFile[] = {
-    { _TRN("&Open\tCtrl-O"),                IDM_OPEN ,                  MF_NOT_IN_RESTRICTED },
-    { _TRN("&Close\tCtrl-W"),               IDM_CLOSE,                  MF_NOT_IN_RESTRICTED },
-    { _TRN("&Save As...\tCtrl-S"),          IDM_SAVEAS,                 MF_NOT_IN_RESTRICTED },
-    { _TRN("&Print...\tCtrl-P"),            IDM_PRINT,                  MF_NOT_IN_RESTRICTED },
-    { SEP_ITEM,                             0,                          MF_NOT_IN_RESTRICTED },
-    { _TRN("Save S&hortcut...\tCtrl-Shift-S"), IDM_SAVEAS_BOOKMARK,     MF_NOT_IN_RESTRICTED },
-    { _TRN("Open in &Adobe Reader"),        IDM_VIEW_WITH_ACROBAT,      MF_NOT_IN_RESTRICTED },
-    { _TRN("Open in &Foxit Reader"),        IDM_VIEW_WITH_FOXIT,        MF_NOT_IN_RESTRICTED },
-    { _TRN("Open in PDF-XChange"),          IDM_VIEW_WITH_PDF_XCHANGE,  MF_NOT_IN_RESTRICTED },
-    { _TRN("Send by &E-mail..."),           IDM_SEND_BY_EMAIL,          MF_NOT_IN_RESTRICTED },
-    { SEP_ITEM,                             0,                          MF_NOT_IN_RESTRICTED },
+    { _TRN("&Open\tCtrl-O"),                IDM_OPEN ,                  MF_REQ_DISK_ACCESS },
+    { _TRN("&Close\tCtrl-W"),               IDM_CLOSE,                  MF_REQ_DISK_ACCESS },
+    { _TRN("&Save As...\tCtrl-S"),          IDM_SAVEAS,                 MF_REQ_DISK_ACCESS },
+    { _TRN("&Print...\tCtrl-P"),            IDM_PRINT,                  MF_REQ_PRINTER_ACCESS },
+    { SEP_ITEM,                             0,                          MF_REQ_DISK_ACCESS },
+    { _TRN("Save S&hortcut...\tCtrl-Shift-S"), IDM_SAVEAS_BOOKMARK,     MF_REQ_DISK_ACCESS },
+    { _TRN("Open in &Adobe Reader"),        IDM_VIEW_WITH_ACROBAT,      MF_REQ_DISK_ACCESS },
+    { _TRN("Open in &Foxit Reader"),        IDM_VIEW_WITH_FOXIT,        MF_REQ_DISK_ACCESS },
+    { _TRN("Open in PDF-XChange"),          IDM_VIEW_WITH_PDF_XCHANGE,  MF_REQ_DISK_ACCESS },
+    { _TRN("Send by &E-mail..."),           IDM_SEND_BY_EMAIL,          MF_REQ_DISK_ACCESS },
+    { SEP_ITEM,                             0,                          MF_REQ_DISK_ACCESS },
     { _TRN("P&roperties\tCtrl-D"),          IDM_PROPERTIES,             0 },
-    { SEP_ITEM,                             0,                          MF_NOT_IN_RESTRICTED },
+    { SEP_ITEM,                             0,                          0 },
     { _TRN("E&xit\tCtrl-Q"),                IDM_EXIT,                   0 }
 };
 
@@ -531,9 +542,9 @@ MenuDef menuDefView[] = {
     { SEP_ITEM, 0, 0  },
     { _TRN("Book&marks\tF12"),              IDM_VIEW_BOOKMARKS,         0  },
     { _TRN("Show &Toolbar"),                IDM_VIEW_SHOW_HIDE_TOOLBAR, 0  },
-    { SEP_ITEM, 0, 0  },
-    { _TRN("Select &All\tCtrl-A"),          IDM_SELECT_ALL,             0  },
-    { _TRN("&Copy Selection\tCtrl-C"),      IDM_COPY_SELECTION,         0  },
+    { SEP_ITEM,                             0,                          MF_REQ_ALLOW_COPY },
+    { _TRN("Select &All\tCtrl-A"),          IDM_SELECT_ALL,             MF_REQ_ALLOW_COPY },
+    { _TRN("&Copy Selection\tCtrl-C"),      IDM_COPY_SELECTION,         MF_REQ_ALLOW_COPY },
 };
 
 MenuDef menuDefGoTo[] = {
@@ -581,17 +592,17 @@ MenuDef menuDefFavorites[] = {
 MenuDef menuDefSettings[] = {
     { _TRN("Change Language"),              IDM_CHANGE_LANGUAGE,        0  },
 #if 0
-    { _TRN("Contribute Translation"),       IDM_CONTRIBUTE_TRANSLATION, MF_NOT_IN_RESTRICTED },
-    { SEP_ITEM,                             0,                          MF_NOT_IN_RESTRICTED },
+    { _TRN("Contribute Translation"),       IDM_CONTRIBUTE_TRANSLATION, MF_REQ_INET_ACCESS },
+    { SEP_ITEM,                             0,                          MF_REQ_INET_ACCESS },
 #endif
-    { _TRN("&Options..."),                  IDM_SETTINGS,               MF_NOT_IN_RESTRICTED }
+    { _TRN("&Options..."),                  IDM_SETTINGS,               MF_REQ_PREF_ACCESS },
 };
 
 MenuDef menuDefHelp[] = {
-    { _TRN("Visit &Website"),               IDM_VISIT_WEBSITE,          MF_NOT_IN_RESTRICTED },
-    { _TRN("&Manual"),                      IDM_MANUAL,                 MF_NOT_IN_RESTRICTED },
-    { _TRN("Check for &Updates"),           IDM_CHECK_UPDATE,           MF_NOT_IN_RESTRICTED },
-    { SEP_ITEM,                             0,                          MF_NOT_IN_RESTRICTED },
+    { _TRN("Visit &Website"),               IDM_VISIT_WEBSITE,          MF_REQ_INET_ACCESS },
+    { _TRN("&Manual"),                      IDM_MANUAL,                 MF_REQ_INET_ACCESS },
+    { _TRN("Check for &Updates"),           IDM_CHECK_UPDATE,           MF_REQ_INET_ACCESS },
+    { SEP_ITEM,                             0,                          MF_REQ_INET_ACCESS },
     { _TRN("&About"),                       IDM_ABOUT,                  0 },
 };
 
@@ -605,14 +616,14 @@ MenuDef menuDefDebug[] = {
 #endif
 
 MenuDef menuDefContext[] = {
-    { _TRN("&Copy Selection"),              IDM_COPY_SELECTION,         0 },
-    { _TRN("Copy &Link Address"),           IDM_COPY_LINK_TARGET,       0 },
-    { _TRN("Copy Co&mment"),                IDM_COPY_COMMENT,           0 },
-    { SEP_ITEM,                             0,                          0 },
-    { _TRN("Select &All"),                  IDM_SELECT_ALL,             0 },
-    { SEP_ITEM,                             0,                          MF_PLUGIN_MODE_ONLY },
-    { _TRN("&Save As..."),                  IDM_SAVEAS,                 MF_PLUGIN_MODE_ONLY | MF_NOT_IN_RESTRICTED },
-    { _TRN("&Print..."),                    IDM_PRINT,                  MF_PLUGIN_MODE_ONLY | MF_NOT_IN_RESTRICTED },
+    { _TRN("&Copy Selection"),              IDM_COPY_SELECTION,         MF_REQ_ALLOW_COPY },
+    { _TRN("Copy &Link Address"),           IDM_COPY_LINK_TARGET,       MF_REQ_ALLOW_COPY },
+    { _TRN("Copy Co&mment"),                IDM_COPY_COMMENT,           MF_REQ_ALLOW_COPY },
+    { SEP_ITEM,                             0,                          MF_REQ_ALLOW_COPY },
+    { _TRN("Select &All"),                  IDM_SELECT_ALL,             MF_REQ_ALLOW_COPY },
+    { SEP_ITEM,                             0,                          MF_PLUGIN_MODE_ONLY | MF_REQ_ALLOW_COPY },
+    { _TRN("&Save As..."),                  IDM_SAVEAS,                 MF_PLUGIN_MODE_ONLY | MF_REQ_DISK_ACCESS },
+    { _TRN("&Print..."),                    IDM_PRINT,                  MF_PLUGIN_MODE_ONLY | MF_REQ_PRINTER_ACCESS },
     { _TRN("P&roperties"),                  IDM_PROPERTIES,             MF_PLUGIN_MODE_ONLY },
 };
 
@@ -640,7 +651,7 @@ static HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuLen, HMENU menu)
     for (int i = 0; i < menuLen; i++) {
         MenuDef md = menuDefs[i];
         const char *title = md.title;
-        if (gRestrictedUse && (md.flags & MF_NOT_IN_RESTRICTED))
+        if (!HasPermission(md.flags >> PERM_FLAG_OFFSET))
             continue;
         if (!gPluginMode && (md.flags & MF_PLUGIN_MODE_ONLY))
             continue;
@@ -661,7 +672,7 @@ static HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuLen, HMENU menu)
 
 static void AppendRecentFilesToMenu(HMENU m)
 {
-    if (gRestrictedUse) return;
+    if (!HasPermission(Perm_SavePreferences)) return;
     if (gFileHistory.IsEmpty()) return;
 
     for (int index = 0; index < FILE_HISTORY_MAX_RECENT; index++) {
@@ -850,7 +861,7 @@ static HMENU BuildMenu(WindowInfo *win)
     m = BuildMenuFromMenuDef(menuDefZoom, dimof(menuDefZoom), CreateMenu());
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Zoom"));
 #ifndef HIDE_FAVORITES_MENU
-    if (!gRestrictedUse) {
+    if (HasPermission(Perm_SavePreferences)) {
         // I think it makes sense to disable favorites in restricted mode
         // because they wouldn't be persisted, anyway
         m = CreateMenu();
@@ -1163,6 +1174,55 @@ static bool ReloadPrefs()
     return true;
 }
 
+/* Group Policies can be set by adding the following DWORD values to either
+ * HKLM\Software\Policies\SumatraPDF or HKCU\Software\Policies\SumatraPDF
+ * (the HKCU value will only be used if the HKLM value is missing):
+ *
+ * InternetAccess, DiskAccess, SavePreferences, RegistryAccess, PrinterAccess, CopySelection
+ *
+ * If either SumatraPDF is run with -restrict or additionally the "AlwaysApplyPolicy"
+ * value exists and is non-zero, these permissions are only granted if they're
+ * explicitly enabled (i.e. they exist and are non-zero) - with the exception of
+ * CopySelection, which is implicitly granted if the value is missing.
+ */
+
+static int GetPolicies(bool isRestricted)
+{
+    static struct {
+        const TCHAR *name;
+        int perm;
+        bool allowForRestrict;
+    } policies[] = {
+        { _T("InternetAccess"), Perm_InternetAccess,  false },
+        { _T("DiskAccess"),     Perm_DiskAccess,      false },
+        { _T("SavePreferences"),Perm_SavePreferences, false },
+        { _T("RegistryAccess"), Perm_RegistryAccess,  false },
+        { _T("PrinterAccess"),  Perm_PrinterAccess,   false },
+        { _T("CopySelection"),  Perm_CopySelection,   true },
+    };
+
+    // make it possible to apply Group Policies only when SumatraPDF is run with -restrict
+    bool alwaysApply = CheckPolicyPermission(_T("AlwaysApplyPolicy")) == 1;
+    if (!alwaysApply && !isRestricted)
+        return Perm_All;
+
+    int policy = isRestricted ? Perm_RestrictedUse : 0;
+    for (size_t i = 0; i < dimof(policies); i++) {
+        int check = CheckPolicyPermission(policies[i].name);
+        if (1 == check || (-1 == check && (!isRestricted || policies[i].allowForRestrict)))
+            policy = policy | policies[i].perm;
+    }
+
+    return policy;
+}
+
+static void RefreshPolicies()
+{
+    gPolicyRestrictions = GetPolicies(HasPermission(Perm_RestrictedUse));
+    RebuildMenuBar();
+    UpdateToolbarAndScrollbarsForAllWindows();
+}
+
 void QueueWorkItem(UIThreadWorkItem *wi)
 {
     gUIThreadMarshaller.Queue(wi);
@@ -1331,7 +1391,7 @@ static LPARAM ToolbarButtonEnabledState(WindowInfo& win, int buttonNo)
     int cmdId = gToolbarButtons[buttonNo].cmdId;
 
     // If restricted, disable
-    if (gRestrictedUse && (gToolbarButtons[buttonNo].flags & MF_NOT_IN_RESTRICTED))
+    if (!HasPermission(gToolbarButtons[buttonNo].flags >> PERM_FLAG_OFFSET))
         return disabled;
 
     // If no file open, only enable open button
@@ -1735,7 +1795,7 @@ static bool LoadDocIntoWindow(
     win::SetText(win.hwndFrame, title);
     free(title);
 
-    if (!gRestrictedUse && Engine_PDF == win.dm->engineType) {
+    if (HasPermission(Perm_DiskAccess) && Engine_PDF == win.dm->engineType) {
         int res = Synchronizer::Create(fileName, win.dm, &win.pdfsync);
         // expose SyncTeX in the UI
         if (PDFSYNCERR_SUCCESS == res)
@@ -1881,7 +1941,7 @@ WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin, b
 
     // Add the file also to Windows' recently used documents (this doesn't
     // happen automatically on drag&drop, reopening from history, etc.)
-    if (!gRestrictedUse && !gPluginMode)
+    if (HasPermission(Perm_DiskAccess) && !gPluginMode)
         SHAddToRecentDocs(SHARD_PATH, fullpath);
 
     return win;
@@ -2005,7 +2065,7 @@ void AssociateExeWithPdfExtension()
 // here we just make sure that we're still registered
 static bool RegisterForPdfExtentions(HWND hwnd)
 {
-    if (IsRunningInPortableMode() || gRestrictedUse || gPluginMode)
+    if (IsRunningInPortableMode() || !HasPermission(Perm_RegistryAccess) || gPluginMode)
         return false;
 
     if (IsExeAssociatedWithPdfExtension())
@@ -2125,7 +2185,7 @@ public:
 
 static void DownloadSumatraUpdateInfo(WindowInfo& win, bool autoCheck)
 {
-    if (gRestrictedUse || gPluginMode)
+    if (!HasPermission(Perm_InternetAccess) || gPluginMode)
         return;
 
     /* For auto-check, only check if at least a day passed since last check */
@@ -2510,6 +2570,8 @@ static void ToggleGdiDebugging()
 
 static void OnSelectAll(WindowInfo& win, bool textOnly=false)
 {
+    if (!HasPermission(Perm_CopySelection))
+        return;
     if (!win.IsDocLoaded())
         return;
 
@@ -2540,7 +2602,7 @@ static void OnSelectAll(WindowInfo& win, bool textOnly=false)
 // returns true if the double-click was handled and false if it wasn't
 static bool OnInverseSearch(WindowInfo& win, int x, int y)
 {
-    if (gRestrictedUse || gPluginMode) return false;
+    if (!HasPermission(Perm_DiskAccess) || gPluginMode) return false;
     if (!win.IsDocLoaded() || win.dm->engineType != Engine_PDF) return false;
 
     // Clear the last forward-search result
@@ -2611,7 +2673,7 @@ static bool OnInverseSearch(WindowInfo& win, int x, int y)
 
 static void OnAboutContextMenu(WindowInfo& win, int x, int y)
 {
-    if (gRestrictedUse || !gGlobalPrefs.m_rememberOpenedFiles || !gGlobalPrefs.m_showStartPage)
+    if (!HasPermission(Perm_SavePreferences) || !gGlobalPrefs.m_rememberOpenedFiles || !gGlobalPrefs.m_showStartPage)
         return;
 
     const TCHAR *filePath = GetStaticLink(win.staticLinks, x, y);
@@ -2882,7 +2944,8 @@ static void OnMouseLeftButtonDown(WindowInfo& win, int x, int y, WPARAM key)
     // - pressing Shift forces dragging
     // - pressing Ctrl forces a rectangular selection
     // - pressing Ctrl+Shift forces text selection
-    if (((key & MK_SHIFT) || !win.dm->IsOverText(PointI(x, y))) && !(key & MK_CONTROL))
+    // - not having CopySelection permission forces dragging
+    if (!HasPermission(Perm_CopySelection) || ((key & MK_SHIFT) || !win.dm->IsOverText(PointI(x, y))) && !(key & MK_CONTROL))
         OnDraggingStart(win, x, y);
     else
         OnSelectionStart(win, x, y, key);
@@ -3077,7 +3140,7 @@ static void OnPaint(WindowInfo& win)
     HDC hdc = BeginPaint(win.hwndCanvas, &ps);
 
     if (win.IsAboutWindow()) {
-        if (!gRestrictedUse && gGlobalPrefs.m_rememberOpenedFiles && gGlobalPrefs.m_showStartPage)
+        if (HasPermission(Perm_SavePreferences) && gGlobalPrefs.m_rememberOpenedFiles && gGlobalPrefs.m_showStartPage)
             DrawStartPage(win, win.buffer->GetDC(), gFileHistory);
         else
             DrawAboutPage(win, win.buffer->GetDC());
@@ -3621,7 +3684,7 @@ static void OnMenuPrint(WindowInfo& win)
     // In order to print with Adobe Reader instead:
     // ViewWithAcrobat(win, _T("/P"));
 
-    if (gRestrictedUse) return;
+    if (!HasPermission(Perm_PrinterAccess)) return;
 
     DisplayModel *dm = win.dm;
     assert(dm);
@@ -3740,7 +3803,7 @@ static TCHAR *ExtractFilenameFromURL(const TCHAR *url)
 
 static void OnMenuSaveAs(WindowInfo& win)
 {
-    if (gRestrictedUse) return;
+    if (!HasPermission(Perm_DiskAccess)) return;
     assert(win.dm);
     if (!win.IsDocLoaded()) return;
 
@@ -3876,7 +3939,7 @@ static void OnMenuSaveAs(WindowInfo& win)
 
 bool LinkSaver::SaveEmbedded(unsigned char *data, int len)
 {
-    if (gRestrictedUse)
+    if (!HasPermission(Perm_DiskAccess))
         return false;
 
     TCHAR dstFileName[MAX_PATH];
@@ -3904,7 +3967,7 @@ bool LinkSaver::SaveEmbedded(unsigned char *data, int len)
 
 static void OnMenuSaveBookmark(WindowInfo& win)
 {
-    if (gRestrictedUse || gPluginMode) return;
+    if (!HasPermission(Perm_DiskAccess) || gPluginMode) return;
     assert(win.dm);
     if (!win.IsDocLoaded()) return;
 
@@ -3991,7 +4054,7 @@ static UINT_PTR CALLBACK FileOpenHook(HWND hDlg, UINT uiMsg, WPARAM wParam, LPAR
 
 static void OnMenuOpen(WindowInfo& win)
 {
-    if (gRestrictedUse) return;
+    if (!HasPermission(Perm_DiskAccess)) return;
     // don't allow opening different files in plugin mode
     if (gPluginMode)
         return;
@@ -4078,7 +4141,7 @@ static void BrowseFolder(WindowInfo& win, bool forward)
 {
     assert(win.loadedFilePath);
     if (win.IsAboutWindow()) return;
-    if (gRestrictedUse || gPluginMode) return;
+    if (!HasPermission(Perm_DiskAccess) || gPluginMode) return;
 
     // TODO: browse through all supported file types at the same time?
     const TCHAR *fileExt = path::GetExt(win.loadedFilePath);
@@ -4237,7 +4300,7 @@ static void OnMenuViewShowHideToolbar()
 
 static void OnMenuSettings(WindowInfo& win)
 {
-    if (gRestrictedUse) return;
+    if (!HasPermission(Perm_SavePreferences)) return;
 
     if (IDOK != Dialog_Settings(win.hwndFrame, &gGlobalPrefs))
         return;
@@ -5456,7 +5519,7 @@ static void CreateToolbar(WindowInfo& win) {
         gToolbarButtons[0].bmpIndex = 12;
         gToolbarButtons[0].cmdId = IDM_SAVEAS;
         gToolbarButtons[0].toolTip = _TRN("Save As");
-        gToolbarButtons[0].flags = MF_NOT_IN_RESTRICTED;
+        gToolbarButtons[0].flags = MF_REQ_DISK_ACCESS;
     }
     for (int i = 0; i < TOOLBAR_BUTTONS_COUNT; i++) {
         tbButtons[i] = TbButtonFromButtonInfo(i);
@@ -6668,6 +6731,8 @@ static LRESULT OnCommand(WindowInfo *win, HWND hwnd, UINT message, WPARAM wParam
                 SendMessage(GetFocus(), WM_COPY, 0, 0);
             else if (win->hwndProperties == GetForegroundWindow())
                 CopyPropertiesToClipboard(win->hwndProperties);
+            else if (!HasPermission(Perm_CopySelection))
+                break;
             else if (win->selectionOnPage)
                 CopySelectionToClipboard(*win);
             else
@@ -6791,6 +6856,10 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
             return DefWindowProc(hwnd, message, wParam, lParam);
 
         case WM_SETTINGCHANGE:
+            if (lParam && str::Eq((LPTSTR)lParam, _T("Policy"))) {
+                RefreshPolicies();
+                return 0;
+            }
 InitMouseWheelInfo:
             SystemParametersInfo(SPI_GETWHEELSCROLLLINES, 0, &ulScrollLines, 0);
             // ulScrollLines usually equals 3 or 0 (for no scrolling) or -1 (for page scrolling)
@@ -7136,7 +7205,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     gGlobalPrefs.m_fwdsearchColor = i.fwdsearchColor;
     gGlobalPrefs.m_fwdsearchPermanent = i.fwdsearchPermanent;
     gGlobalPrefs.m_escToExit = i.escToExit;
-    gRestrictedUse = i.restrictedUse;
+    gPolicyRestrictions = GetPolicies(i.restrictedUse);
     gRenderCache.invertColors = i.invertColors;
     DebugGdiPlusDevice(gUseGdiRenderer);
 
