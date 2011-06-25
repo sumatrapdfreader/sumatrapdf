@@ -380,8 +380,12 @@ public:
         if (!fav)
             return;
         fav->Remove(pageNo);
-        if (0 == fav->Count())
+        if (0 == fav->Count()) {
             favs.RemoveAt(idx);
+            delete fav;
+            if (idx == idxCache)
+                filePathCache = NULL;
+        }
     }
 };
 
