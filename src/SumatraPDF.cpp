@@ -1161,15 +1161,11 @@ static bool ReloadPrefs()
     FileHistory fileHistory;
     Favorites *favs = NULL;
     Prefs::Load(path, gGlobalPrefs, fileHistory, &favs);
-    delete gFavorites;
-    gFavorites = favs;
 
     gFileHistory.Clear();
     gFileHistory.ExtendWith(fileHistory);
-    if (favs) {
-        delete gFavorites;
-        gFavorites = favs;
-    }
+    delete gFavorites;
+    gFavorites = favs;
 
     if (gWindows.Count() > 0 && gWindows[0]->IsAboutWindow()) {
         gWindows[0]->DeleteInfotip();
