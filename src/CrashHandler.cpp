@@ -1089,7 +1089,7 @@ static LONG WINAPI DumpExceptionHandler(EXCEPTION_POINTERS *exceptionInfo)
     // able to do anything about it anyway and it's up to the application provider
     // to fix the unexpected behavior (of which for a restricted set of documents
     // there should be much less, anyway)
-    if (HasPermission(Perm_InternetAccess)) {
+    if (HasPermission(Perm_DiskAccess)) {
         int res = MessageBox(NULL, _TR("Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash."), _TR("SumatraPDF crashed"), MB_ICONERROR | MB_OKCANCEL);
         if (IDCANCEL == res)
             LaunchBrowser(CRASH_REPORT_URL);

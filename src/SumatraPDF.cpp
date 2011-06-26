@@ -112,6 +112,8 @@ TCHAR *                 gPluginURL = NULL; // owned by CommandLineInfo in WinMai
 #define RESTRICTIONS_FILE_NAME  _T("sumatrapdfrestrict.ini")
 #define CRASH_DUMP_FILE_NAME    _T("sumatrapdfcrash.dmp")
 
+#define DEFAULT_LINK_PROTOCOLS  _T("http,https,mailto")
+
 #define SPLITTER_DX  5
 #define SPLITTER_MIN_WIDTH 150
 
@@ -165,10 +167,14 @@ static FileHistory                  gFileHistory;
 static Favorites *                  gFavorites;
 static UIThreadWorkItemQueue        gUIThreadMarshaller;
 
-// in restricted mode, all commands that could affect the OS are
-// disabled (such as opening files, printing, following URLs), so
-// that SumatraPDF can be used as a PDF reader on locked down systems
+// in restricted mode, some features can be disabled (such as
+// opening files, printing, following URLs), so that SumatraPDF
+// can be used as a PDF reader on locked down systems
 static int                          gPolicyRestrictions = Perm_All;
+// only the listed protocols will be passed to the OS for
+// opening in e.g. a browser or an email client (ignored,
+// if gPolicyRestrictions doesn't contain Perm_DiskAccess)
+static StrVec                       gAllowedLinkProtocols;
 
 SerializableGlobalPrefs             gGlobalPrefs = {
     false, // bool m_globalPrefsOnly
@@ -297,12 +303,18 @@ static bool CurrLangNameSet(const char *langName)
 // the appropriate application (web browser, mail client, etc.)
 bool LaunchBrowser(const TCHAR *url)
 {
-    if (!HasPermission(Perm_InternetAccess)) return false;
-    if (!str::StartsWithI(url, _T("http:")) &&
-        !str::StartsWithI(url, _T("https:")) &&
-        !str::StartsWithI(url, _T("mailto:"))) {
+    if (!HasPermission(Perm_DiskAccess))
         return false;
-    }
+
+    // check if this URL's protocol is allowed
+    const TCHAR *colon = str::FindChar(url, ':');
+    if (!colon)
+        return false;
+    ScopedMem<TCHAR> protocol(str::DupN(url, colon - url));
+    str::ToLower(protocol);
+    if (gAllowedLinkProtocols.Find(protocol) == -1)
+        return false;
+
     LaunchFile(url, NULL, _T("open"));
     return true;
 }
@@ -593,17 +605,17 @@ MenuDef menuDefFavorites[] = {
 MenuDef menuDefSettings[] = {
     { _TRN("Change Language"),              IDM_CHANGE_LANGUAGE,        0  },
 #if 0
-    { _TRN("Contribute Translation"),       IDM_CONTRIBUTE_TRANSLATION, MF_REQ_INET_ACCESS },
-    { SEP_ITEM,                             0,                          MF_REQ_INET_ACCESS },
+    { _TRN("Contribute Translation"),       IDM_CONTRIBUTE_TRANSLATION, MF_REQ_DISK_ACCESS },
+    { SEP_ITEM,                             0,                          MF_REQ_DISK_ACCESS },
 #endif
     { _TRN("&Options..."),                  IDM_SETTINGS,               MF_REQ_PREF_ACCESS },
 };
 
 MenuDef menuDefHelp[] = {
-    { _TRN("Visit &Website"),               IDM_VISIT_WEBSITE,          MF_REQ_INET_ACCESS },
-    { _TRN("&Manual"),                      IDM_MANUAL,                 MF_REQ_INET_ACCESS },
+    { _TRN("Visit &Website"),               IDM_VISIT_WEBSITE,          MF_REQ_DISK_ACCESS },
+    { _TRN("&Manual"),                      IDM_MANUAL,                 MF_REQ_DISK_ACCESS },
     { _TRN("Check for &Updates"),           IDM_CHECK_UPDATE,           MF_REQ_INET_ACCESS },
-    { SEP_ITEM,                             0,                          MF_REQ_INET_ACCESS },
+    { SEP_ITEM,                             0,                          MF_REQ_DISK_ACCESS },
     { _TRN("&About"),                       IDM_ABOUT,                  0 },
 };
 
@@ -1180,14 +1192,13 @@ static int GetPolicies(bool isRestricted)
     static struct {
         const TCHAR *name;
         int perm;
-        bool allowForRestrict;
     } policies[] = {
-        { _T("InternetAccess"), Perm_InternetAccess,  false },
-        { _T("DiskAccess"),     Perm_DiskAccess,      false },
-        { _T("SavePreferences"),Perm_SavePreferences, false },
-        { _T("RegistryAccess"), Perm_RegistryAccess,  false },
-        { _T("PrinterAccess"),  Perm_PrinterAccess,   false },
-        { _T("CopySelection"),  Perm_CopySelection,   true },
+        { _T("InternetAccess"), Perm_InternetAccess },
+        { _T("DiskAccess"),     Perm_DiskAccess },
+        { _T("SavePreferences"),Perm_SavePreferences },
+        { _T("RegistryAccess"), Perm_RegistryAccess },
+        { _T("PrinterAccess"),  Perm_PrinterAccess },
+        { _T("CopySelection"),  Perm_CopySelection },
     };
 
     // allow to restrict SumatraPDF's functionality from an INI file in the
@@ -1200,21 +1211,30 @@ static int GetPolicies(bool isRestricted)
     if (file::Exists(restrictPath)) {
         int policy = Perm_RestrictedUse;
         for (size_t i = 0; i < dimof(policies); i++) {
-            int check = GetPrivateProfileInt(_T("Policies"), policies[i].name, policies[i].allowForRestrict, restrictPath);
+            int check = GetPrivateProfileInt(_T("Policies"), policies[i].name, 0, restrictPath);
             if (check)
                 policy = policy | policies[i].perm;
         }
+
+        // determine the list of allowed link protocols
+        gAllowedLinkProtocols.Reset();
+        if ((policy & Perm_DiskAccess)) {
+            TCHAR protocols[200];
+            ZeroMemory(protocols, sizeof(protocols));
+            GetPrivateProfileString(_T("Policies"), _T("LinkProtocols"), DEFAULT_LINK_PROTOCOLS, protocols, dimof(protocols), restrictPath);
+            str::ToLower(protocols);
+            str::TransChars(protocols, _T(":; "), _T(",,,"));
+            gAllowedLinkProtocols.Split(protocols, _T(","), true);
+        }
+
         return policy;
     }
 
+    gAllowedLinkProtocols.Reset();
     if (!isRestricted)
-        return Perm_All;
+        gAllowedLinkProtocols.Split(DEFAULT_LINK_PROTOCOLS, _T(","));
 
-    int policy = Perm_RestrictedUse;
-    for (size_t i = 0; i < dimof(policies); i++)
-        if (policies[i].allowForRestrict)
-            policy = policy | policies[i].perm;
-    return policy;
+    return isRestricted ? Perm_RestrictedUse : Perm_All;
 }
 
 void QueueWorkItem(UIThreadWorkItem *wi)

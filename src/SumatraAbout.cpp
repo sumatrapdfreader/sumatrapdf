@@ -228,7 +228,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, RectI rect, Vec<StaticLinkInfo>& linkI
     SelectObject(hdc, penLinkLine);
     linkInfo.Reset();
     for (AboutLayoutInfoEl *el = gAboutLayoutInfo; el->leftTxt; el++) {
-        bool hasUrl = HasPermission(Perm_InternetAccess) && el->url;
+        bool hasUrl = HasPermission(Perm_DiskAccess) && el->url;
         SetTextColor(hdc, hasUrl ? COL_BLUE_LINK : ABOUT_BORDER_COL);
         TextOut(hdc, el->rightPos.x, el->rightPos.y, el->rightTxt, (int)str::Len(el->rightTxt));
 
@@ -351,7 +351,7 @@ static void OnPaintAbout(HWND hwnd)
 
 const TCHAR *GetStaticLink(Vec<StaticLinkInfo>& linkInfo, int x, int y, StaticLinkInfo *info)
 {
-    if (!HasPermission(Perm_InternetAccess))
+    if (!HasPermission(Perm_DiskAccess))
         return NULL;
 
     PointI pt(x, y);
