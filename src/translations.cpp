@@ -184,4 +184,15 @@ TCHAR *GetLanguageName(int index)
     return str::conv::FromUtf8(gLangData[index].fullName);
 }
 
+bool IsLanguageRtL(int index)
+{
+    assert(index >= 0);
+    if (index < 0)
+        return false;
+
+    if (LANGS_COUNT <= index)
+        return NULL;
+    return gLangData[index].isRTL != 0;
+}
+
 }

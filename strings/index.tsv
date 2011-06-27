@@ -9,7 +9,7 @@
 # The language order is the same as will be used for generating translations_txt.c
 # (changing it will thus generate a huge changeset)
 
-# code	Language	Sublanguage/Variant/Dialect (empty if neutral)
+# code	Language	Sublanguage/Variant/Dialect (empty if neutral)	Layout (RTL or empty)
 en	English	# keep default language on first line
 am	Armenian	
 af	Afrikaans	
@@ -23,7 +23,7 @@ hu	Hungarian
 lt	Lithuanian	
 my	Malay	
 ja	Japanese	
-fa	Farsi	
+fa	Farsi		RTL
 it	Italian	
 nl	Dutch	
 fi	Finnish	
@@ -32,7 +32,7 @@ ca-xv	#Catalan Valencian
 sl	Slovenian	
 sr-rs	Serbian	Cyrillic
 ml	Malayalam	
-he	Hebrew	
+he	Hebrew		RTL
 sp-rs	Serbian	Latin
 id	Indonesian	
 mk	Macedonian	
@@ -46,7 +46,7 @@ fr	French
 ru	Russian	
 gl	Galician	
 es	Spanish	
-ar	Arabic	
+ar	Arabic		RTL
 uk	Ukrainian	
 eu	Basque	
 gr	Greek	

@@ -39,6 +39,7 @@ typedef struct {
     const char *code;
     const char *fullName;
     LANGID id;
+    BOOL isRTL;
 } LangDef;
 
 #define _LANGID(lang) MAKELANGID(lang, SUBLANG_NEUTRAL)
@@ -112,6 +113,12 @@ def make_lang_ids(langs, lang_index):
 
     return lang_ids
 
+def make_lang_layouts(lang_index):
+    lang_layouts = {}
+    for cols in lang_index:
+        lang_layouts[cols[0]] = cols[3] == "RTL" and 1 or 0
+    return lang_layouts
+
 def gen_c_code(langs_ex, strings_dict, file_name, lang_index):
     # This is just to make the order the same as the old code that was parsing
     # just one translation file, to avoid a diff in generated c code when switching
@@ -138,7 +145,8 @@ def gen_c_code(langs_ex, strings_dict, file_name, lang_index):
     
     langs_ex.sort(lang_sort_func)
     lang_ids = make_lang_ids(langs_ex, lang_index)
-    lang_names = ['{ "%s", %s, %s },' % (lang[0], c_escape(lang[1]), lang_ids[lang[0]]) for lang in langs_ex]
+    lang_layouts = make_lang_layouts(lang_index)
+    lang_names = ['{ "%s", %s, %s, %d },' % (lang[0], c_escape(lang[1]), lang_ids[lang[0]], lang_layouts[lang[0]]) for lang in langs_ex]
     lang_names = "\n    ".join(lang_names)
     
     file_content = TRANSLATIONS_TXT_C % locals()

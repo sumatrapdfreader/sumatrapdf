@@ -14,6 +14,7 @@ const TCHAR *GetTranslation(const char *txt);
 int          GetLanguageIndex(const char *code);
 const char * GetLanguageCode(int index);
 TCHAR       *GetLanguageName(int index);
+bool         IsLanguageRtL(int index);
 
 }
 

@@ -16,12 +16,9 @@ C_FILES_TO_PROCESS = [os.path.join("..", "src", f) for f in C_FILES_TO_PROCESS]
 STRINGS_PATH = os.path.join("..", "strings")
 TRANSLATION_PATTERN = r'\b_TRN?\("(.*?)"\)'
 
-LANG_TXT = "Lang:"
-CONTRIBUTOR_TXT = "Contributor:"
-
-def is_lang_line(l): return l.startswith(LANG_TXT)
 def is_comment_line(l): return l.startswith("#")
-def is_contributor_line(l): return l.startswith(CONTRIBUTOR_TXT)
+def is_lang_line(l): return l.startswith("Lang:")
+def is_contributor_line(l): return l.startswith("Contributor:")
 
 def parse_lang_line(l):
     assert is_lang_line(l)
@@ -33,7 +30,7 @@ def parse_lang_line(l):
 
 def parse_contrib_line(l):
     assert is_contributor_line(l)
-    return l[len(CONTRIBUTOR_TXT):].strip()
+    return l[12:].strip()
 
 # Extract language code (e.g. "br") from language translation file name
 # (e.g. "br.txt" or "sr-sr.txt"). Returns None if file name doesn't fit expected pattern
@@ -266,7 +263,7 @@ def untranslated_count_for_lang(strings_dict, lang):
 def load_lang_index():
     index = open(os.path.join(STRINGS_PATH, "index.tsv"), "r").read()
     index = re.sub(r"#.*", "", index)
-    return re.findall("^(\S+)\t([^\t\r\n]*)(?:\t(.*))?", index, re.M)
+    return re.findall("^(\S+)\t([^\t\r\n]*)(?:\t([^\t\r\n]*))?(?:\t(.*))?", index, re.M)
 
 def main_obsolete():
     (strings_dict, langs, contributors) = load_strings_file()

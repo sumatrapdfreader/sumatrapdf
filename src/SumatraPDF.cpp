@@ -1120,6 +1120,36 @@ static void ShowOrHideToolbarGlobally()
     }
 }
 
+static void ToggleWindowStyle(HWND hwnd, DWORD flag, bool enable, int type=GWL_STYLE)
+{
+    DWORD style = GetWindowLong(hwnd, type);
+    if (enable)
+        style = style | flag;
+    else
+        style = style & ~flag;
+    SetWindowLong(hwnd, type, style);
+}
+
+static void UpdateWindowLayout(WindowInfo *win=NULL)
+{
+    int ix = Trans::GetLanguageIndex(gGlobalPrefs.m_currentLanguage);
+    bool isRTL = Trans::IsLanguageRtL(ix);
+
+    // cf. http://www.microsoft.com/middleeast/msdn/mirror.aspx
+    // TODO: also update the toolbar's layout
+    // TODO: also correctly lay out dialog boxes (cf. http://www.ureader.com/msg/1484387.aspx )
+
+    if (win) {
+        ToggleWindowStyle(win->hwndFrame, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
+        return;
+    }
+
+    for (size_t i = 0; i < gWindows.Count(); i++) {
+        WindowInfo *win = gWindows[i];
+        ToggleWindowStyle(win->hwndFrame, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
+    }
+}
+
 // called whenever global preferences change or a file is
 // added or removed from gFileHistory (in order to keep
 // the list of recently opened documents in sync)
@@ -1175,6 +1205,7 @@ static bool ReloadPrefs()
     // update the current language
     if (!str::Eq(currLang, gGlobalPrefs.m_currentLanguage)) {
         CurrLangNameSet(gGlobalPrefs.m_currentLanguage);
+        UpdateWindowLayout();
         RebuildMenuBar();
         UpdateToolbarToolText();
     }
@@ -1339,12 +1370,7 @@ void WindowInfo::Reload(bool autorefresh)
 
 static void UpdateToolbarBg(HWND hwnd, bool enabled)
 {
-    DWORD newStyle = GetWindowLong(hwnd, GWL_STYLE);
-    if (enabled)
-        newStyle |= SS_WHITERECT;
-    else
-        newStyle &= ~SS_WHITERECT;
-    SetWindowLong(hwnd, GWL_STYLE, newStyle);
+    ToggleWindowStyle(hwnd, SS_WHITERECT, enabled);
 }
 
 static void UpdateFindbox(WindowInfo& win)
@@ -1632,6 +1658,7 @@ static WindowInfo* CreateWindowInfo()
     DragAcceptFiles(win->hwndCanvas, TRUE);
 
     gWindows.Append(win);
+    UpdateWindowLayout(win);
     return win;
 }
 
@@ -1832,13 +1859,7 @@ Error:
         UpdateWindow(win.hwndFrame);
     }
     if (win.IsDocLoaded()) {
-        DWORD style = GetWindowLong(win.hwndPageBox, GWL_STYLE);
-        if (win.dm->engine && win.dm->engine->HasPageLabels())
-            style &= ~ES_NUMBER;
-        else
-            style |= ES_NUMBER;
-        SetWindowLong(win.hwndPageBox, GWL_STYLE, style);
-
+        ToggleWindowStyle(win.hwndPageBox, ES_NUMBER, !win.dm->engine || !win.dm->engine->HasPageLabels());
         win.dm->SetScrollState(ss);
         win.UpdateToolbarState();
     }
@@ -4296,6 +4317,7 @@ static void OnMenuChangeLanguage(WindowInfo& win)
             return;
 
         CurrLangNameSet(langName);
+        UpdateWindowLayout();
         RebuildMenuBar();
         UpdateToolbarToolText();
         if (gWindows.Count() > 0 && gWindows[0]->IsAboutWindow())
