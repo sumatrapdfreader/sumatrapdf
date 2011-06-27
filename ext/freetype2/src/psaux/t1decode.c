@@ -395,6 +395,9 @@
     /* its values first is buggy, but ...               */
     FT_ASSERT( ( decoder->len_buildchar == 0 ) ==
                ( decoder->buildchar == NULL )  );
+    /* SumatraPDF: fix a potential NULL pointer dereference*/
+    if (!decoder->buildchar && decoder->len_buildchar > 0)
+        decoder->len_buildchar = 0;
 
     if ( decoder->len_buildchar > 0 )
       ft_memset( &decoder->buildchar[0],
