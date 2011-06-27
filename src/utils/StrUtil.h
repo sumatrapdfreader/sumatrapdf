@@ -42,6 +42,15 @@ inline bool IsEmpty(T *s) {
     return !s || (0 == *s);
 }
 
+inline bool IsEmptyOrWs(const TCHAR *s) {
+    if (!s) return true;
+    while (*s) {
+        if (!_istspace(*s++))
+            return false;
+    }
+    return true;
+}
+
 template <typename T>
 inline bool StartsWith(const T* str, const T* txt) {
     return EqN(str, txt, Len(txt));

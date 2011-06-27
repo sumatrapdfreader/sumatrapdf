@@ -999,6 +999,15 @@
     <None Include="ext\libjpeg-turbo\simd\jsimdcpu.asm">
       <Filter>jpeg</Filter>
     </None>
+    <None Include="src\SumatraPDF-smaller.ico">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="src\toolbar_11.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="src\reloading.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="src\SumatraPDF.rc">

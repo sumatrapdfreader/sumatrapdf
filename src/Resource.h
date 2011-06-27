@@ -2,8 +2,6 @@
 // Microsoft Visual C++ generated include file.
 // Used by SumatraPDF.rc
 //
-#define IDC_STATIC                      -1
-
 #define IDI_SUMATRAPDF                  1
 #define IDI_PDFDOC                      2
 #define IDD_DIALOG_GOTO_PAGE            129
@@ -16,7 +14,7 @@
 #define IDD_DIALOG_FIND                 137
 #define IDD_DIALOG_CUSTOM_ZOOM          138
 #define IDD_PROPSHEET_PRINT_ADVANCED    139
-
+#define IDD_DIALOG_FAV_ADD              140
 #define IDM_OPEN                        400
 #define IDM_CLOSE                       401
 #define IDM_SAVEAS                      402
@@ -26,13 +24,10 @@
 #define IDM_SAVEAS_BOOKMARK             407
 #define IDM_SEND_BY_EMAIL               408
 #define IDM_PROPERTIES                  409
-
-/* IDM_VIEW_SINGLE_PAGE - IDM_VIEW_CONTINUOUS must be in a continous range */
 #define IDM_VIEW_SINGLE_PAGE            410
 #define IDM_VIEW_FACING                 411
 #define IDM_VIEW_BOOK                   412
 #define IDM_VIEW_CONTINUOUS             413
-
 #define IDM_VIEW_ROTATE_LEFT            415
 #define IDM_VIEW_ROTATE_RIGHT           416
 #define IDM_VIEW_BOOKMARKS              417
@@ -43,7 +38,6 @@
 #define IDM_SELECT_ALL                  422
 #define IDM_COPY_LINK_TARGET            428
 #define IDM_COPY_COMMENT                429
-
 #define IDM_GOTO_NEXT_PAGE              430
 #define IDM_GOTO_PREV_PAGE              431
 #define IDM_GOTO_FIRST_PAGE             432
@@ -53,8 +47,6 @@
 #define IDM_FIND_NEXT                   436
 #define IDM_FIND_PREV                   437
 #define IDM_FIND_MATCH                  438
-
-/* IDM_ZOOM_FIT_PAGE - IDM_ZOOM_CUSTOM must be in a continous range */
 #define IDM_ZOOM_FIT_PAGE               440
 #define IDM_ZOOM_ACTUAL_SIZE            441
 #define IDM_ZOOM_FIT_WIDTH              442
@@ -73,20 +65,15 @@
 #define IDM_ZOOM_8_33                   455
 #define IDM_ZOOM_FIT_CONTENT            456
 #define IDM_ZOOM_CUSTOM                 457
-
 #define IDM_CONTRIBUTE_TRANSLATION      460
-
 #define IDM_VIEW_WITH_ACROBAT           470
 #define IDM_VIEW_WITH_FOXIT             471
 #define IDM_VIEW_WITH_PDF_XCHANGE       472
-
 #define IDM_OPEN_SELECTED_DOCUMENT      480
 #define IDM_PIN_SELECTED_DOCUMENT       481
 #define IDM_FORGET_SELECTED_DOCUMENT    482
-
 #define IDM_FILE_HISTORY_FIRST          510
 #define IDM_FILE_HISTORY_LAST           519
-
 #define IDM_VISIT_WEBSITE               550
 #define IDM_ABOUT                       551
 #define IDM_SETTINGS                    552
@@ -96,19 +83,14 @@
 #define IDM_MOVE_FRAME_FOCUS            557
 #define IDM_GOTO_NAV_BACK               558
 #define IDM_GOTO_NAV_FORWARD            559
-
 #define IDM_FAV_ADD                     560
 #define IDM_FAV_DEL                     561
 #define IDM_FAV_SHOW_ALL                562
-
 #define IDM_DEBUG_SHOW_LINKS            590
 #define IDM_DEBUG_GDI_RENDERER          591
 #define IDM_DEBUG_CRASH_ME              592
-
 #define IDM_FAV_FIRST                   600
-// 10 submenus max with 10 items each max (=100) plus generous buffer => 200
 #define IDM_FAV_LAST                    800
-
 #define IDC_GOTO_PAGE_EDIT              1000
 #define IDC_GOTO_PAGE_GO                1001
 #define IDC_BUTTON2                     1002
@@ -121,7 +103,10 @@
 #define IDC_REMEMBER_PASSWORD           1006
 #define IDC_TOOLBAR                     1006
 #define IDC_REBAR                       1007
+#define IDC_EDIT1                       1007
+#define IDC_FAV_NAME_EDIT               1007
 #define IDC_DONT_ASK_ME_AGAIN           1008
+#define IDC_ADD_PAGE_STATIC             1008
 #define IDC_PDF_TOC_TREE                1009
 #define IDC_CHANGE_LANG_LANG_LIST       1010
 #define IDC_YOU_HAVE                    1011
@@ -183,18 +168,18 @@
 #define IDT_FILE_ADDTOFAV               3025
 #define IDT_VIEW_FIT_WIDTH              3026
 #define IDT_VIEW_FIT_PAGE               3027
-
 #define IDC_SUMATRAPDF                  4000
 #define IDI_SMALL                       4001
+#define IDC_STATIC                      -1
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NO_MFC                     1
-#define _APS_NEXT_RESOURCE_VALUE        134
+#define _APS_NEXT_RESOURCE_VALUE        141
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1007
+#define _APS_NEXT_CONTROL_VALUE         1009
 #define _APS_NEXT_SYMED_VALUE           110
 #endif
 #endif

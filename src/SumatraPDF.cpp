@@ -6449,9 +6449,13 @@ void FavoriteAdd(WindowInfo *win)
 {
     int pageNo = win->currPageNo;
     TCHAR *filePath = win->loadedFilePath;
-    // TODO: show the dialog asking the user to provide (optional)
-    // title for the favorite
-    gFavorites->AddOrReplace(filePath, pageNo, NULL);
+    TCHAR *name = NULL;
+    bool shouldAdd = Dialog_AddFavorite(win->hwndFrame, pageNo, &name);
+    if (!shouldAdd)
+        return;
+    // TODO: trim whitespace from name ?
+    gFavorites->AddOrReplace(filePath, pageNo, name);
+    free(name);
     // TODO: show notification that a favorite was deleted?
 }
 

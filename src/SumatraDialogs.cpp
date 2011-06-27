@@ -17,11 +17,11 @@ struct Dialog_GetPassword_Data {
     bool *         remember;   /* remember the password (encrypted) or ask again? */
 };
 
-static INT_PTR CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+static INT_PTR CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     Dialog_GetPassword_Data *  data;
 
-    if (WM_INITDIALOG == message)
+    if (WM_INITDIALOG == msg)
     {
         data = (Dialog_GetPassword_Data*)lParam;
         assert(data);
@@ -45,7 +45,7 @@ static INT_PTR CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT message, WPARAM 
         return FALSE;
     }
 
-    switch (message)
+    switch (msg)
     {
         case WM_COMMAND:
             switch (LOWORD(wParam))
@@ -100,12 +100,12 @@ struct Dialog_GoToPage_Data {
     TCHAR *         newPageLabel;   // page number entered by user
 };
 
-static INT_PTR CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+static INT_PTR CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     HWND                    editPageNo;
     Dialog_GoToPage_Data *  data;
 
-    if (WM_INITDIALOG == message)
+    if (WM_INITDIALOG == msg)
     {
         data = (Dialog_GoToPage_Data*)lParam;
         assert(data);
@@ -136,7 +136,7 @@ static INT_PTR CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT message, WPARAM wPa
         return FALSE;
     }
 
-    switch (message)
+    switch (msg)
     {
         case WM_COMMAND:
             switch (LOWORD(wParam))
@@ -179,11 +179,11 @@ struct Dialog_Find_Data {
     bool    matchCase;
 };
 
-static INT_PTR CALLBACK Dialog_Find_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+static INT_PTR CALLBACK Dialog_Find_Proc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     Dialog_Find_Data * data;
 
-    switch (message)
+    switch (msg)
     {
     case WM_INITDIALOG:
         data = (Dialog_Find_Data*)lParam;
@@ -247,11 +247,11 @@ struct Dialog_PdfAssociate_Data {
     bool dontAskAgain;
 };
 
-static INT_PTR CALLBACK Dialog_PdfAssociate_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+static INT_PTR CALLBACK Dialog_PdfAssociate_Proc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     Dialog_PdfAssociate_Data *  data;
 
-    if (WM_INITDIALOG == message)
+    if (WM_INITDIALOG == msg)
     {
         data = (Dialog_PdfAssociate_Data*)lParam;
         assert(data);
@@ -268,7 +268,7 @@ static INT_PTR CALLBACK Dialog_PdfAssociate_Proc(HWND hDlg, UINT message, WPARAM
         return FALSE;
     }
 
-    switch (message)
+    switch (msg)
     {
         case WM_COMMAND:
             data = (Dialog_PdfAssociate_Data*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
@@ -316,12 +316,12 @@ struct Dialog_ChangeLanguage_Data {
     int langId;
 };
 
-static INT_PTR CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+static INT_PTR CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     Dialog_ChangeLanguage_Data *  data;
     HWND                          langList;
 
-    if (WM_INITDIALOG == message)
+    if (WM_INITDIALOG == msg)
     {
         DIALOG_SIZER_START(sz)
             DIALOG_SIZER_ENTRY(IDOK, DS_MoveX | DS_MoveY)
@@ -351,7 +351,7 @@ static INT_PTR CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT message, WPAR
         return FALSE;
     }
 
-    switch (message)
+    switch (msg)
     {
         case WM_COMMAND:
             data = (Dialog_ChangeLanguage_Data*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
@@ -402,12 +402,12 @@ struct Dialog_NewVersion_Data {
     bool skipThisVersion;
 };
 
-static INT_PTR CALLBACK Dialog_NewVersion_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+static INT_PTR CALLBACK Dialog_NewVersion_Proc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     Dialog_NewVersion_Data *  data;
     TCHAR *txt;
 
-    if (WM_INITDIALOG == message)
+    if (WM_INITDIALOG == msg)
     {
         data = (Dialog_NewVersion_Data*)lParam;
         assert(NULL != data);
@@ -432,7 +432,7 @@ static INT_PTR CALLBACK Dialog_NewVersion_Proc(HWND hDlg, UINT message, WPARAM w
         return FALSE;
     }
 
-    switch (message)
+    switch (msg)
     {
         case WM_COMMAND:
             data = (Dialog_NewVersion_Data*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
@@ -524,11 +524,11 @@ static float GetZoomComboBoxValue(HWND hDlg, UINT idComboBox, float defaultZoom)
     return newZoom;
 }
 
-static INT_PTR CALLBACK Dialog_CustomZoom_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+static INT_PTR CALLBACK Dialog_CustomZoom_Proc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     float *currZoom;
 
-    switch (message)
+    switch (msg)
     {
     case WM_INITDIALOG:
         currZoom = (float *)lParam;
@@ -569,11 +569,11 @@ INT_PTR Dialog_CustomZoom(HWND hwnd, float *currZoom)
     return DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_DIALOG_CUSTOM_ZOOM), hwnd, Dialog_CustomZoom_Proc, (LPARAM)currZoom);
 }
 
-static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     SerializableGlobalPrefs *prefs;
 
-    switch (message)
+    switch (msg)
     {
     case WM_INITDIALOG:
         prefs = (SerializableGlobalPrefs *)lParam;
@@ -730,11 +730,11 @@ INT_PTR Dialog_Settings(HWND hwnd, SerializableGlobalPrefs *prefs)
     return DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_DIALOG_SETTINGS), hwnd, Dialog_Settings_Proc, (LPARAM)prefs);
 }
 
-static INT_PTR CALLBACK Sheet_Print_Advanced_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+static INT_PTR CALLBACK Sheet_Print_Advanced_Proc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     Print_Advanced_Data *data;
 
-    switch (message)
+    switch (msg)
     {
     case WM_INITDIALOG:
         data = (Print_Advanced_Data *)((PROPSHEETPAGE *)lParam)->lParam;
@@ -797,3 +797,77 @@ HPROPSHEETPAGE CreatePrintAdvancedPropSheet(HINSTANCE hInst, Print_Advanced_Data
 
     return CreatePropertySheetPage(&psp);
 }
+
+struct Dialog_AddFav_Data {
+    // in
+    int pageNo;
+    // out
+    TCHAR *favName;
+};
+
+static INT_PTR CALLBACK Dialog_AddFav_Proc(HWND hDlg, UINT msg, WPARAM wParam,
+    LPARAM lParam)
+{
+    Dialog_AddFav_Data *  data;
+    HWND w;
+
+    if (WM_INITDIALOG == msg)
+    {
+        data = (Dialog_AddFav_Data*)lParam;
+        assert(data);
+        SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
+        // TODO: should I add a sizer for Ok/Cancel buttons?
+        // TODO: translate when finalized
+        ScopedMem<TCHAR> s(str::Format(_T("Add page %d to favorites with (optional) name:"), data->pageNo));
+        SetDlgItemText(hDlg, IDC_ADD_PAGE_STATIC, s);
+        SetDlgItemText(hDlg, IDOK, _TR("OK"));
+        SetDlgItemText(hDlg, IDCANCEL, _TR("Cancel"));
+        CenterDialog(hDlg);
+        SetFocus(GetDlgItem(hDlg, IDC_FAV_NAME_EDIT));
+        return FALSE;
+    }
+
+    if (WM_COMMAND == msg)
+    {
+        data = (Dialog_AddFav_Data*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
+        assert(data);
+        WORD cmd = LOWORD(wParam);
+        if (IDOK == cmd)
+        {
+            w = GetDlgItem(hDlg, IDC_FAV_NAME_EDIT);
+            TCHAR *s = win::GetText(w);
+            if (str::IsEmptyOrWs(s)) {
+                free(s);
+            } else {
+                data->favName = s;
+            }
+            EndDialog(hDlg, IDOK);
+            return TRUE;
+        } else if (IDCANCEL == cmd) {
+                EndDialog(hDlg, IDCANCEL);
+                return TRUE;
+        }
+    }
+
+    return FALSE;
+}
+
+// pageNo is the page we're adding to favorites
+// returns true if the user wants to add a favorite.
+// favNameOut, if not NULL, is the name the user wants the favorite to have
+// (must be free()d by the caller)
+bool Dialog_AddFavorite(HWND hwnd, int pageNo, TCHAR **favNameOut)
+{
+    Dialog_AddFav_Data data = {0};
+    data.pageNo = pageNo;
+
+    LPCTSTR id = MAKEINTRESOURCE(IDD_DIALOG_FAV_ADD);
+    INT_PTR res = DialogBoxParam(NULL, id, hwnd, Dialog_AddFav_Proc, (LPARAM)&data);
+    if (IDCANCEL == res) {
+        assert(data.favName == NULL);
+        return false;
+    }
+    *favNameOut = data.favName;
+    return true;
+}
+

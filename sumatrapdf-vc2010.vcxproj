@@ -382,7 +382,10 @@
     <None Include="src\closetoc.bmp" />
     <None Include="src\dragcursor.cur" />
     <None Include="src\PdfDoc.ico" />
+    <None Include="src\reloading.bmp" />
+    <None Include="src\SumatraPDF-smaller.ico" />
     <None Include="src\SumatraPDF.ico" />
+    <None Include="src\toolbar_11.bmp" />
     <None Include="src\toolbar_8.bmp" />
   </ItemGroup>
   <ItemGroup>
