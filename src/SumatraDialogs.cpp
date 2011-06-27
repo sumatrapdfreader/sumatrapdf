@@ -19,15 +19,11 @@ struct Dialog_GetPassword_Data {
 
 static INT_PTR CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-    Dialog_GetPassword_Data *  data;
+    Dialog_GetPassword_Data *data;
 
     if (WM_INITDIALOG == msg)
     {
         data = (Dialog_GetPassword_Data*)lParam;
-        assert(data);
-        assert(data->fileName);
-        assert(!data->pwdOut);
-
         win::SetText(hDlg, _TR("Enter password"));
         SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
         EnableWindow(GetDlgItem(hDlg, IDC_REMEMBER_PASSWORD), data->remember != NULL);
@@ -76,19 +72,15 @@ static INT_PTR CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT msg, WPARAM wPar
 TCHAR *Dialog_GetPassword(HWND hwndParent, const TCHAR *fileName, bool *rememberPassword)
 {
     Dialog_GetPassword_Data data = { 0 };
-    
-    assert(fileName);
-    if (!fileName) return NULL;
-
     data.fileName = fileName;
     data.remember = rememberPassword;
 
-    INT_PTR dialogResult = DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_DIALOG_GET_PASSWORD), hwndParent, Dialog_GetPassword_Proc, (LPARAM)&data);
-    if (IDOK != dialogResult) {
+    LPCTSTR id = MAKEINTRESOURCE(IDD_DIALOG_GET_PASSWORD);
+    INT_PTR res = DialogBoxParam(NULL, id, hwndParent, Dialog_GetPassword_Proc, (LPARAM)&data);
+    if (IDOK != res) {
         free((void*)data.pwdOut);
         return NULL;
     }
-
     return data.pwdOut;
 }
 
@@ -169,7 +161,8 @@ TCHAR *Dialog_GoToPage(HWND hwnd, const TCHAR *currentPageLabel, int pageCount, 
     data.onlyNumeric = onlyNumeric;
     data.newPageLabel = NULL;
 
-    DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_DIALOG_GOTO_PAGE), hwnd, Dialog_GoToPage_Proc, (LPARAM)&data);
+    LPCTSTR id = MAKEINTRESOURCE(IDD_DIALOG_GOTO_PAGE);
+    DialogBoxParam(NULL, id, hwnd, Dialog_GoToPage_Proc, (LPARAM)&data);
     return data.newPageLabel;
 }
 
@@ -233,8 +226,9 @@ TCHAR * Dialog_Find(HWND hwnd, const TCHAR *previousSearch, bool *matchCase)
     data.searchTerm = (TCHAR *)previousSearch;
     data.matchCase = matchCase ? *matchCase : false;
 
-    INT_PTR dialogResult = DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_DIALOG_FIND), hwnd, Dialog_Find_Proc, (LPARAM)&data);
-    if (dialogResult != IDOK)
+    LPCTSTR id = MAKEINTRESOURCE(IDD_DIALOG_FIND);
+    INT_PTR res = DialogBoxParam(NULL, id, hwnd, Dialog_Find_Proc, (LPARAM)&data);
+    if (res != IDOK)
         return NULL;
 
     if (matchCase)
@@ -305,10 +299,11 @@ INT_PTR Dialog_PdfAssociate(HWND hwnd, bool *dontAskAgainOut)
     assert(dontAskAgainOut);
 
     Dialog_PdfAssociate_Data data;
-    INT_PTR dialogResult = DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_DIALOG_PDF_ASSOCIATE), hwnd, Dialog_PdfAssociate_Proc, (LPARAM)&data);
+    LPCTSTR id = MAKEINTRESOURCE(IDD_DIALOG_PDF_ASSOCIATE);
+    INT_PTR res = DialogBoxParam(NULL, id, hwnd, Dialog_PdfAssociate_Proc, (LPARAM)&data);
     if (dontAskAgainOut)
         *dontAskAgainOut = data.dontAskAgain;
-    return dialogResult;
+    return res;
 }
 
 /* For passing data to/from ChangeLanguage dialog */
@@ -389,8 +384,9 @@ int Dialog_ChangeLanguge(HWND hwnd, int currLangId)
 {
     Dialog_ChangeLanguage_Data data;
     data.langId = currLangId;
-    INT_PTR dialogResult = DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_DIALOG_CHANGE_LANGUAGE), hwnd, Dialog_ChangeLanguage_Proc, (LPARAM)&data);
-    if (IDCANCEL == dialogResult)
+    LPCTSTR id = MAKEINTRESOURCE(IDD_DIALOG_CHANGE_LANGUAGE);
+    INT_PTR res = DialogBoxParam(NULL, id, hwnd, Dialog_ChangeLanguage_Proc, (LPARAM)&data);
+    if (IDCANCEL == res)
         return -1;
     return data.langId;
 }
@@ -467,7 +463,8 @@ INT_PTR Dialog_NewVersionAvailable(HWND hwnd, const TCHAR *currentVersion, const
     data.newVersion = newVersion;
     data.skipThisVersion = false;
 
-    INT_PTR res = DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_DIALOG_NEW_VERSION), hwnd, Dialog_NewVersion_Proc, (LPARAM)&data);
+    LPCTSTR id = MAKEINTRESOURCE(IDD_DIALOG_NEW_VERSION);
+    INT_PTR res = DialogBoxParam(NULL, id, hwnd, Dialog_NewVersion_Proc, (LPARAM)&data);
     if (skipThisVersion)
         *skipThisVersion = data.skipThisVersion;
 
@@ -566,7 +563,8 @@ static INT_PTR CALLBACK Dialog_CustomZoom_Proc(HWND hDlg, UINT msg, WPARAM wPara
 
 INT_PTR Dialog_CustomZoom(HWND hwnd, float *currZoom)
 {
-    return DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_DIALOG_CUSTOM_ZOOM), hwnd, Dialog_CustomZoom_Proc, (LPARAM)currZoom);
+    LPCTSTR id = MAKEINTRESOURCE(IDD_DIALOG_CUSTOM_ZOOM);
+    return DialogBoxParam(NULL, id, hwnd, Dialog_CustomZoom_Proc, (LPARAM)currZoom);
 }
 
 static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -727,7 +725,8 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wParam,
 
 INT_PTR Dialog_Settings(HWND hwnd, SerializableGlobalPrefs *prefs)
 {
-    return DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_DIALOG_SETTINGS), hwnd, Dialog_Settings_Proc, (LPARAM)prefs);
+    LPCTSTR id = MAKEINTRESOURCE(IDD_DIALOG_SETTINGS);
+    return DialogBoxParam(NULL, id, hwnd, Dialog_Settings_Proc, (LPARAM)prefs);
 }
 
 static INT_PTR CALLBACK Sheet_Print_Advanced_Proc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
