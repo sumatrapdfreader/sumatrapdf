@@ -1,6 +1,7 @@
 // Microsoft Visual C++ generated resource script.
 //
 #include "resource.h"
+#include "Version.h"
 
 #define APSTUDIO_READONLY_SYMBOLS
 /////////////////////////////////////////////////////////////////////////////
@@ -27,8 +28,8 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,7,0,0
- PRODUCTVERSION 1,7,0,0
+ FILEVERSION VER_RESOURCE
+ PRODUCTVERSION VER_RESOURCE
  FILEFLAGSMASK 0x0L
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -44,11 +45,11 @@ BEGIN
         BLOCK "040904E4"
         BEGIN
             VALUE "FileDescription", "SumatraPDF"
-            VALUE "FileVersion", "1.7.0.0"
-            VALUE "LegalCopyright", "Copyright 2006-2011 all authors (GPLv3)"
+            VALUE "FileVersion", VER_RESOURCE_STR
+            VALUE "LegalCopyright", "Copyright 2006-2011 SumatraPDF authors (GPLv3)"
             VALUE "OriginalFilename", "SumatraPDF.exe"
             VALUE "ProductName", "SumatraPDF"
-            VALUE "ProductVersion", "1.7.0.0"
+            VALUE "ProductVersion", VER_RESOURCE_STR
             VALUE "Comments", "SumatraPDF viewer"
             VALUE "CompanyName", "Krzysztof Kowalczyk"
         END

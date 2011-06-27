@@ -10,6 +10,7 @@ Next version:
   http://code.google.com/p/sumatrapdf/source/browse/trunk/docs/sumatrapdfrestrict.ini
 * -named-dest also matches strings in table of contents
 * improved support for EPS files (requires Ghostscript)
+* improved support for right-to-left languages
 
 1.6 (2011-05-30)
 
