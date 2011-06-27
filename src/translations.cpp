@@ -152,10 +152,15 @@ int GetLanguageIndex(const char *code)
     if (!code)
         return -1;
 
+    // optimize for the case where mostly only a single language is used
+    static int ixCache = -1;
+    if (ixCache != -1 && str::Eq(code, gLangData[ixCache].code))
+        return ixCache;
+
     for (int i = 0; i < LANGS_COUNT; i++) {
         const char *langCode = gLangData[i].code;
         if (str::Eq(code, langCode))
-            return i;
+            return (ixCache = i);
     }
     return -1;
 }

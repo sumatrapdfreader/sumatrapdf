@@ -284,6 +284,7 @@ bool    IsCursorOverWindow(HWND hwnd);
 void    CenterDialog(HWND hDlg, HWND hParent=NULL);
 TCHAR * GetDefaultPrinterName();
 bool    CopyTextToClipboard(const TCHAR *text, bool appendOnly=false);
+void    ToggleWindowStyle(HWND hwnd, DWORD flag, bool enable, int type=GWL_STYLE);
 
 IStream*CreateStreamFromData(void *data, size_t len);
 HRESULT GetDataFromStream(IStream *stream, void **data, size_t *len);

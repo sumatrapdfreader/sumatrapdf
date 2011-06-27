@@ -1120,33 +1120,44 @@ static void ShowOrHideToolbarGlobally()
     }
 }
 
-static void ToggleWindowStyle(HWND hwnd, DWORD flag, bool enable, int type=GWL_STYLE)
-{
-    DWORD style = GetWindowLong(hwnd, type);
-    if (enable)
-        style = style | flag;
-    else
-        style = style & ~flag;
-    SetWindowLong(hwnd, type, style);
-}
-
+// updates the layout for a window to either left-to-right or right-to-left
+// depending on the currently used language (cf. Trans::IsLanguageRtL)
 static void UpdateWindowLayout(WindowInfo *win=NULL)
 {
-    int ix = Trans::GetLanguageIndex(gGlobalPrefs.m_currentLanguage);
-    bool isRTL = Trans::IsLanguageRtL(ix);
-
-    // cf. http://www.microsoft.com/middleeast/msdn/mirror.aspx
-    // TODO: also update the toolbar's layout
-    // TODO: also correctly lay out dialog boxes (cf. http://www.ureader.com/msg/1484387.aspx )
-
-    if (win) {
-        ToggleWindowStyle(win->hwndFrame, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
+    if (!win) {
+        for (size_t i = 0; i < gWindows.Count(); i++)
+            UpdateWindowLayout(gWindows[i]);
         return;
     }
 
-    for (size_t i = 0; i < gWindows.Count(); i++) {
-        WindowInfo *win = gWindows[i];
-        ToggleWindowStyle(win->hwndFrame, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
+    int langIx = Trans::GetLanguageIndex(gGlobalPrefs.m_currentLanguage);
+    bool isRTL = Trans::IsLanguageRtL(langIx);
+    bool wasRTL = (GetWindowLong(win->hwndFrame, GWL_EXSTYLE) & WS_EX_LAYOUTRTL) != 0;
+
+    bool showToC = false;
+    if (isRTL != wasRTL && win->tocShow) {
+        showToC = true;
+        win->HideTocBox();
+    }
+
+    // cf. http://www.microsoft.com/middleeast/msdn/mirror.aspx
+    ToggleWindowStyle(win->hwndFrame, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
+    ToggleWindowStyle(win->hwndTocBox, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
+    HWND tocBoxTitle = GetDlgItem(win->hwndTocBox, 0);
+    ToggleWindowStyle(tocBoxTitle, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
+    // TODO: what about the ToC tree itself?
+
+    ToggleWindowStyle(win->hwndReBar, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
+    ToggleWindowStyle(win->hwndToolbar, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
+
+    // TODO: also update the Frequently Read list
+    // TODO: also update the canvas scrollbars
+
+    // ensure that the ToC sidebar is on the correct side and that its
+    // title and close button are also correctly layed out
+    if (showToC) {
+        win->ShowTocBox();
+        SendMessage(win->hwndTocBox, WM_SIZE, 0, 0);
     }
 }
 
@@ -3754,7 +3765,8 @@ static void OnMenuPrint(WindowInfo& win)
 
     // TODO: remember these (and maybe all of PRINTDLGEX) at least for this document/WindowInfo?
     Print_Advanced_Data advanced = { PrintRangeAll, PrintScaleShrink };
-    HPROPSHEETPAGE hPsp = CreatePrintAdvancedPropSheet(ghinst, &advanced);
+    ScopedMem<DLGTEMPLATE> dlgTemplate; // needed for RTL languages
+    HPROPSHEETPAGE hPsp = CreatePrintAdvancedPropSheet(&advanced, dlgTemplate);
     pd.lphPropertyPages = &hPsp;
     pd.nPropertyPages = 1;
 
@@ -4953,7 +4965,7 @@ static TBBUTTON TbButtonFromButtonInfo(int i) {
 
 #define WS_TOOLBAR (WS_CHILD | WS_CLIPSIBLINGS | \
                     TBSTYLE_TOOLTIPS | TBSTYLE_FLAT | \
-                    TBSTYLE_LIST | CCS_NODIVIDER | CCS_NOPARENTALIGN )
+                    TBSTYLE_LIST | CCS_NODIVIDER | CCS_NOPARENTALIGN)
 
 static void BuildTBBUTTONINFO(TBBUTTONINFO& info, TCHAR *txt) {
     info.cbSize = sizeof(TBBUTTONINFO);
@@ -4974,7 +4986,7 @@ static void UpdateToolbarButtonsToolTipsForWindow(WindowInfo& win)
             continue;
         const TCHAR *translation = Trans::GetTranslation(txt);
         BuildTBBUTTONINFO(buttonInfo, (TCHAR *)translation);
-        res = SendMessage(hwnd, TB_SETBUTTONINFOW, buttonId, (LPARAM)&buttonInfo);
+        res = SendMessage(hwnd, TB_SETBUTTONINFO, buttonId, (LPARAM)&buttonInfo);
         assert(0 != res);
     }
 }
@@ -5750,7 +5762,7 @@ static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT message, WPARAM wParam, LP
         size.cy += 2 * offset;
 
         HWND closeIcon = GetDlgItem(hwnd, 1);
-        MoveWindow(titleLabel, offset, offset, rc.dx - 2 * offset, size.cy - 2 * offset, true);
+        MoveWindow(titleLabel, offset, offset, rc.dx - 2 * offset - 16, size.cy - 2 * offset, true);
         MoveWindow(closeIcon, rc.dx - 16, (size.cy - 16) / 2, 16, 16, true);
         MoveWindow(win->hwndTocTree, 0, size.cy, rc.dx, rc.dy - size.cy, true);
         break;
@@ -7382,6 +7394,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
             EnterFullscreen(*win);
     }
 
+    UpdateToolbarToolText(); // needed for RTL languages
     if (!firstIsDocLoaded)
         UpdateToolbarAndScrollbarsForAllWindows();
 

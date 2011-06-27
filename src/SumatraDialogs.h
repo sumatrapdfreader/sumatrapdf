@@ -24,6 +24,6 @@ struct Print_Advanced_Data {
     PrintScaleAdv scale;
 };
 
-HPROPSHEETPAGE CreatePrintAdvancedPropSheet(HINSTANCE hInst, Print_Advanced_Data *data);
+HPROPSHEETPAGE CreatePrintAdvancedPropSheet(Print_Advanced_Data *data, ScopedMem<DLGTEMPLATE>& dlgTemplate);
 
 #endif

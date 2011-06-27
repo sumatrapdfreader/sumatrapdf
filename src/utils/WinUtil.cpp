@@ -511,6 +511,16 @@ bool CopyTextToClipboard(const TCHAR *text, bool appendOnly)
     return handle != NULL;
 }
 
+void ToggleWindowStyle(HWND hwnd, DWORD flag, bool enable, int type)
+{
+    DWORD style = GetWindowLong(hwnd, type);
+    if (enable)
+        style = style | flag;
+    else
+        style = style & ~flag;
+    SetWindowLong(hwnd, type, style);
+}
+
 DoubleBuffer::DoubleBuffer(HWND hwnd, RectI rect) :
     hTarget(hwnd), rect(rect), hdcBuffer(NULL), doubleBuffer(NULL)
 {

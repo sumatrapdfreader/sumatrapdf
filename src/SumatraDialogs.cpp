@@ -10,6 +10,49 @@
 #include "DialogSizer.h"
 #include "translations.h"
 
+// cf. http://msdn.microsoft.com/en-us/library/ms645398(v=VS.85).aspx
+struct DLGTEMPLATEEX {
+    WORD      dlgVer;   // 0x0001
+    WORD      signature;// 0xFFFF
+    DWORD     helpID;
+    DWORD     exStyle;
+    DWORD     style;
+    WORD      cDlgItems;
+    short     x, y, cx, cy;
+    /* ... */
+};
+
+// gets a dialog template from the resources and sets the RTL flag
+// cf. http://www.ureader.com/msg/1484387.aspx
+static DLGTEMPLATE *GetRtLDlgTemplate(int dlgId)
+{
+    HRSRC dialogRC = FindResource(NULL, MAKEINTRESOURCE(dlgId), RT_DIALOG);
+    HGLOBAL dlgTemplate = LoadResource(NULL, dialogRC);
+    void *origDlgTemplate = LockResource(dlgTemplate);
+    size_t size = SizeofResource(NULL, dialogRC);
+
+    DLGTEMPLATE *rtlDlgTemplate = (DLGTEMPLATE *)memdup(origDlgTemplate, size);
+    if (rtlDlgTemplate->style == MAKELONG(0x0001, 0xFFFF))
+        ((DLGTEMPLATEEX *)rtlDlgTemplate)->exStyle |= WS_EX_LAYOUTRTL;
+    else
+        rtlDlgTemplate->dwExtendedStyle |= WS_EX_LAYOUTRTL;
+    UnlockResource(dlgTemplate);
+
+    return rtlDlgTemplate;
+}
+
+// creates a dialog box that dynamically gets a right-to-left layout if needed
+static INT_PTR CreateDialogBox(int dlgId, HWND parent, DLGPROC DlgProc, LPARAM data)
+{
+    int langIx = Trans::GetLanguageIndex(gGlobalPrefs.m_currentLanguage);
+    if (!Trans::IsLanguageRtL(langIx))
+        return DialogBoxParam(NULL, MAKEINTRESOURCE(dlgId), parent, DlgProc, data);
+
+    ScopedMem<DLGTEMPLATE> rtlDlgTemplate(GetRtLDlgTemplate(dlgId));
+    return DialogBoxIndirectParam(NULL, rtlDlgTemplate, parent, DlgProc, data);
+}
+
+
 /* For passing data to/from GetPassword dialog */
 struct Dialog_GetPassword_Data {
     const TCHAR *  fileName;   /* name of the file for which we need the password */
@@ -75,8 +118,8 @@ TCHAR *Dialog_GetPassword(HWND hwndParent, const TCHAR *fileName, bool *remember
     data.fileName = fileName;
     data.remember = rememberPassword;
 
-    LPCTSTR id = MAKEINTRESOURCE(IDD_DIALOG_GET_PASSWORD);
-    INT_PTR res = DialogBoxParam(NULL, id, hwndParent, Dialog_GetPassword_Proc, (LPARAM)&data);
+    INT_PTR res = CreateDialogBox(IDD_DIALOG_GET_PASSWORD, hwndParent,
+                                  Dialog_GetPassword_Proc, (LPARAM)&data);
     if (IDOK != res) {
         free((void*)data.pwdOut);
         return NULL;
@@ -161,8 +204,8 @@ TCHAR *Dialog_GoToPage(HWND hwnd, const TCHAR *currentPageLabel, int pageCount, 
     data.onlyNumeric = onlyNumeric;
     data.newPageLabel = NULL;
 
-    LPCTSTR id = MAKEINTRESOURCE(IDD_DIALOG_GOTO_PAGE);
-    DialogBoxParam(NULL, id, hwnd, Dialog_GoToPage_Proc, (LPARAM)&data);
+    CreateDialogBox(IDD_DIALOG_GOTO_PAGE, hwnd,
+                    Dialog_GoToPage_Proc, (LPARAM)&data);
     return data.newPageLabel;
 }
 
@@ -226,8 +269,8 @@ TCHAR * Dialog_Find(HWND hwnd, const TCHAR *previousSearch, bool *matchCase)
     data.searchTerm = (TCHAR *)previousSearch;
     data.matchCase = matchCase ? *matchCase : false;
 
-    LPCTSTR id = MAKEINTRESOURCE(IDD_DIALOG_FIND);
-    INT_PTR res = DialogBoxParam(NULL, id, hwnd, Dialog_Find_Proc, (LPARAM)&data);
+    INT_PTR res = CreateDialogBox(IDD_DIALOG_FIND, hwnd,
+                                  Dialog_Find_Proc, (LPARAM)&data);
     if (res != IDOK)
         return NULL;
 
@@ -299,8 +342,8 @@ INT_PTR Dialog_PdfAssociate(HWND hwnd, bool *dontAskAgainOut)
     assert(dontAskAgainOut);
 
     Dialog_PdfAssociate_Data data;
-    LPCTSTR id = MAKEINTRESOURCE(IDD_DIALOG_PDF_ASSOCIATE);
-    INT_PTR res = DialogBoxParam(NULL, id, hwnd, Dialog_PdfAssociate_Proc, (LPARAM)&data);
+    INT_PTR res = CreateDialogBox(IDD_DIALOG_PDF_ASSOCIATE, hwnd,
+                                  Dialog_PdfAssociate_Proc, (LPARAM)&data);
     if (dontAskAgainOut)
         *dontAskAgainOut = data.dontAskAgain;
     return res;
@@ -338,6 +381,8 @@ static INT_PTR CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT msg, WPARAM w
             ListBox_AppendString_NoSort(langList, langName);
         }
         ListBox_SetCurSel(langList, data->langId);
+        // the language list is meant to be layed out left-to-right
+        ToggleWindowStyle(langList, WS_EX_LAYOUTRTL, false, GWL_EXSTYLE);
         SetDlgItemText(hDlg, IDOK, _TR("OK"));
         SetDlgItemText(hDlg, IDCANCEL, _TR("Cancel"));
 
@@ -384,8 +429,9 @@ int Dialog_ChangeLanguge(HWND hwnd, int currLangId)
 {
     Dialog_ChangeLanguage_Data data;
     data.langId = currLangId;
-    LPCTSTR id = MAKEINTRESOURCE(IDD_DIALOG_CHANGE_LANGUAGE);
-    INT_PTR res = DialogBoxParam(NULL, id, hwnd, Dialog_ChangeLanguage_Proc, (LPARAM)&data);
+
+    INT_PTR res = CreateDialogBox(IDD_DIALOG_CHANGE_LANGUAGE, hwnd,
+                                  Dialog_ChangeLanguage_Proc, (LPARAM)&data);
     if (IDCANCEL == res)
         return -1;
     return data.langId;
@@ -463,8 +509,8 @@ INT_PTR Dialog_NewVersionAvailable(HWND hwnd, const TCHAR *currentVersion, const
     data.newVersion = newVersion;
     data.skipThisVersion = false;
 
-    LPCTSTR id = MAKEINTRESOURCE(IDD_DIALOG_NEW_VERSION);
-    INT_PTR res = DialogBoxParam(NULL, id, hwnd, Dialog_NewVersion_Proc, (LPARAM)&data);
+    INT_PTR res = CreateDialogBox(IDD_DIALOG_NEW_VERSION, hwnd,
+                                  Dialog_NewVersion_Proc, (LPARAM)&data);
     if (skipThisVersion)
         *skipThisVersion = data.skipThisVersion;
 
@@ -563,8 +609,8 @@ static INT_PTR CALLBACK Dialog_CustomZoom_Proc(HWND hDlg, UINT msg, WPARAM wPara
 
 INT_PTR Dialog_CustomZoom(HWND hwnd, float *currZoom)
 {
-    LPCTSTR id = MAKEINTRESOURCE(IDD_DIALOG_CUSTOM_ZOOM);
-    return DialogBoxParam(NULL, id, hwnd, Dialog_CustomZoom_Proc, (LPARAM)currZoom);
+    return CreateDialogBox(IDD_DIALOG_CUSTOM_ZOOM, hwnd,
+                           Dialog_CustomZoom_Proc, (LPARAM)currZoom);
 }
 
 static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -725,8 +771,8 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wParam,
 
 INT_PTR Dialog_Settings(HWND hwnd, SerializableGlobalPrefs *prefs)
 {
-    LPCTSTR id = MAKEINTRESOURCE(IDD_DIALOG_SETTINGS);
-    return DialogBoxParam(NULL, id, hwnd, Dialog_Settings_Proc, (LPARAM)prefs);
+    return CreateDialogBox(IDD_DIALOG_SETTINGS, hwnd,
+                           Dialog_Settings_Proc, (LPARAM)prefs);
 }
 
 static INT_PTR CALLBACK Sheet_Print_Advanced_Proc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -781,18 +827,24 @@ static INT_PTR CALLBACK Sheet_Print_Advanced_Proc(HWND hDlg, UINT msg, WPARAM wP
     return FALSE;
 }
 
-HPROPSHEETPAGE CreatePrintAdvancedPropSheet(HINSTANCE hInst, Print_Advanced_Data *data)
+HPROPSHEETPAGE CreatePrintAdvancedPropSheet(Print_Advanced_Data *data, ScopedMem<DLGTEMPLATE>& dlgTemplate)
 {
     PROPSHEETPAGE psp;
     ZeroMemory(&psp, sizeof(PROPSHEETPAGE));
 
     psp.dwSize = sizeof(PROPSHEETPAGE);
     psp.dwFlags = PSP_USETITLE | PSP_PREMATURE;
-    psp.hInstance = hInst;
     psp.pszTemplate = MAKEINTRESOURCE(IDD_PROPSHEET_PRINT_ADVANCED);
     psp.pfnDlgProc = Sheet_Print_Advanced_Proc;
     psp.lParam = (LPARAM)data;
     psp.pszTitle = _TR("Advanced");
+
+    int langIx = Trans::GetLanguageIndex(gGlobalPrefs.m_currentLanguage);
+    if (Trans::IsLanguageRtL(langIx)) {
+        dlgTemplate.Set(GetRtLDlgTemplate(IDD_PROPSHEET_PRINT_ADVANCED));
+        psp.pResource = dlgTemplate.Get();
+        psp.dwFlags |= PSP_DLGINDIRECT;
+    }
 
     return CreatePropertySheetPage(&psp);
 }
@@ -857,11 +909,12 @@ static INT_PTR CALLBACK Dialog_AddFav_Proc(HWND hDlg, UINT msg, WPARAM wParam,
 // (must be free()d by the caller)
 bool Dialog_AddFavorite(HWND hwnd, int pageNo, TCHAR **favNameOut)
 {
-    Dialog_AddFav_Data data = {0};
+    Dialog_AddFav_Data data;
     data.pageNo = pageNo;
+    data.favName = NULL;
 
-    LPCTSTR id = MAKEINTRESOURCE(IDD_DIALOG_FAV_ADD);
-    INT_PTR res = DialogBoxParam(NULL, id, hwnd, Dialog_AddFav_Proc, (LPARAM)&data);
+    INT_PTR res = CreateDialogBox(IDD_DIALOG_FAV_ADD, hwnd,
+                                  Dialog_AddFav_Proc, (LPARAM)&data);
     if (IDCANCEL == res) {
         assert(data.favName == NULL);
         return false;
