@@ -3,12 +3,13 @@ the release notes, as we make them, to make the release process easier.
 
 Next version:
 
-* -named-dest also matches strings in table of contents
+* favorites
 * logical page numbers are displayed and used, if a document
   provides them (such as i, ii, iii, etc.)
-* improved support for EPS files (requires Ghostscript)
 * allow to restrict SumatraPDF's features with more granularity; see
   http://code.google.com/p/sumatrapdf/source/browse/trunk/docs/sumatrapdfrestrict.ini
+* -named-dest also matches strings in table of contents
+* improved support for EPS files (requires Ghostscript)
 
 1.6 (2011-05-30)
 
