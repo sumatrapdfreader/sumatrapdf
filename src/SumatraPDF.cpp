@@ -1154,16 +1154,17 @@ static void UpdateWindowLayout(WindowInfo *win=NULL)
     ToggleWindowStyle(win->hwndTocBox, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
     HWND tocBoxTitle = GetDlgItem(win->hwndTocBox, 0);
     ToggleWindowStyle(tocBoxTitle, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
-    // TODO: what about the ToC tree itself?
+    // TODO: make the ToC tree's layout depend on (win->dm->engine->PreferredLayout() & Layout_R2L)
 
     ToggleWindowStyle(win->hwndReBar, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
     ToggleWindowStyle(win->hwndToolbar, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
-    // TODO: this looks wrong for LTR languages
+    // TODO: this looks wrong for LTR input
     ToggleWindowStyle(win->hwndFindBox, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
 
     // TODO: also update the Frequently Read list
     // TODO: also update the canvas scrollbars
-    // TODO: the main window title is LTR and looks wrong when mirrored
+    // TODO: also update the Properties window
+    // TODO: also update all notifications (including their placement)
 
     // ensure that the ToC sidebar is on the correct side and that its
     // title and close button are also correctly layed out
@@ -1847,6 +1848,13 @@ static bool LoadDocIntoWindow(
 
     const TCHAR *baseName = path::GetBaseName(win.dm->fileName());
     TCHAR *title = str::Format(_T("%s - %s"), baseName, SUMATRA_WINDOW_TITLE);
+#ifdef UNICODE
+    if (IsUIRightToLeft()) {
+        free(title);
+        // explicitly revert the title, so that filenames aren't garbled
+        title = str::Format(_T("\u202A%s - %s\u202C"), SUMATRA_WINDOW_TITLE, baseName);
+    }
+#endif
     if (needrefresh) {
         TCHAR *msg = str::Format(_TR("[Changes detected; refreshing] %s"), title);
         free(title);
