@@ -386,7 +386,6 @@
     <None Include="src\SumatraPDF-smaller.ico" />
     <None Include="src\SumatraPDF.ico" />
     <None Include="src\toolbar_11.bmp" />
-    <None Include="src\toolbar_8.bmp" />
   </ItemGroup>
   <ItemGroup>
     <Manifest Include="src\SumatraPDF.exe.manifest" />

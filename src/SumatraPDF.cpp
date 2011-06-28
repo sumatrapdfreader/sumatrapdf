@@ -31,12 +31,16 @@
 #include "translations.h"
 #include "Version.h"
 
-// those are defined here instead of Resource.h to avoid
+// those are defined here instead of resource.h to avoid
 // having them overwritten by dialog editor
 #define IDM_VIEW_LAYOUT_FIRST           IDM_VIEW_SINGLE_PAGE
 #define IDM_VIEW_LAYOUT_LAST            IDM_VIEW_CONTINUOUS
 #define IDM_ZOOM_FIRST                  IDM_ZOOM_FIT_PAGE
 #define IDM_ZOOM_LAST                   IDM_ZOOM_CUSTOM
+// note: IDM_VIEW_SINGLE_PAGE - IDM_VIEW_CONTINUOUS and also
+//       IDM_ZOOM_FIT_PAGE - IDM_ZOOM_CUSTOM must be in a continuous range!
+CASSERT(IDM_VIEW_LAYOUT_LAST - IDM_VIEW_LAYOUT_FIRST == 3, view_layout_range);
+CASSERT(IDM_ZOOM_LAST - IDM_ZOOM_FIRST == 17, zoom_range);
 
 // Undefine any of these two, if you prefer MuPDF/Fitz to render the whole page
 // (using FreeType for fonts) at the expense of higher memory/spooler requirements.
@@ -6549,6 +6553,8 @@ static LRESULT OnCommand(WindowInfo *win, HWND hwnd, UINT message, WPARAM wParam
         }
     }
 
+    // 10 submenus max with 10 items each max (=100) plus generous buffer => 200
+    CASSERT(IDM_FAV_LAST - IDM_FAV_FIRST == 200, enough_fav_menu_ids);
     if ((wmId >= IDM_FAV_FIRST) && (wmId <= IDM_FAV_LAST))
     {
         GoToFavorite(win, wmId);

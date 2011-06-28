@@ -144,7 +144,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\Resource.h"
+				RelativePath=".\src\resource.h"
 				>
 			</File>
 			<File

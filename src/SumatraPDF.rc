@@ -46,7 +46,7 @@ BEGIN
         BEGIN
             VALUE "FileDescription", "SumatraPDF"
             VALUE "FileVersion", VER_RESOURCE_STR
-            VALUE "LegalCopyright", "Copyright 2006-2011 SumatraPDF authors (GPLv3)"
+            VALUE "LegalCopyright", COPYRIGHT_STR
             VALUE "OriginalFilename", "SumatraPDF.exe"
             VALUE "ProductName", "SumatraPDF"
             VALUE "ProductVersion", VER_RESOURCE_STR
