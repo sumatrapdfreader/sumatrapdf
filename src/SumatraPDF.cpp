@@ -1124,8 +1124,14 @@ static void ShowOrHideToolbarGlobally()
     }
 }
 
+bool IsUIRightToLeft()
+{
+    int langIx = Trans::GetLanguageIndex(gGlobalPrefs.m_currentLanguage);
+    return Trans::IsLanguageRtL(langIx);
+}
+
 // updates the layout for a window to either left-to-right or right-to-left
-// depending on the currently used language (cf. Trans::IsLanguageRtL)
+// depending on the currently used language (cf. IsUIRightToLeft)
 static void UpdateWindowLayout(WindowInfo *win=NULL)
 {
     if (!win) {
@@ -1134,8 +1140,7 @@ static void UpdateWindowLayout(WindowInfo *win=NULL)
         return;
     }
 
-    int langIx = Trans::GetLanguageIndex(gGlobalPrefs.m_currentLanguage);
-    bool isRTL = Trans::IsLanguageRtL(langIx);
+    bool isRTL = IsUIRightToLeft();
     bool wasRTL = (GetWindowLong(win->hwndFrame, GWL_EXSTYLE) & WS_EX_LAYOUTRTL) != 0;
 
     bool showToC = false;
@@ -1153,9 +1158,12 @@ static void UpdateWindowLayout(WindowInfo *win=NULL)
 
     ToggleWindowStyle(win->hwndReBar, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
     ToggleWindowStyle(win->hwndToolbar, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
+    // TODO: this looks wrong for LTR languages
+    ToggleWindowStyle(win->hwndFindBox, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
 
     // TODO: also update the Frequently Read list
     // TODO: also update the canvas scrollbars
+    // TODO: the main window title is LTR and looks wrong when mirrored
 
     // ensure that the ToC sidebar is on the correct side and that its
     // title and close button are also correctly layed out
@@ -2181,7 +2189,7 @@ static DWORD OnUrlDownloaded(HWND hParent, HttpReqCtx *ctx, bool silent)
         /* if automated => don't notify that there is no new version */
         if (!silent) {
             MessageBox(hParent, _TR("You have the latest version."),
-                       _TR("SumatraPDF Update"), MB_ICONINFORMATION | MB_OK);
+                       _TR("SumatraPDF Update"), MB_ICONINFORMATION | MB_OK | (IsUIRightToLeft() ? MB_RTLREADING : 0));
         }
         return 0;
     }
@@ -2224,7 +2232,7 @@ public:
             if (error && !autoCheck) {
                 // notify the user about the error during a manual update check
                 ScopedMem<TCHAR> msg(str::Format(_TR("Can't connect to the Internet (error %#x)."), error));
-                MessageBox(win->hwndFrame, msg, _TR("SumatraPDF Update"), MB_ICONEXCLAMATION | MB_OK);
+                MessageBox(win->hwndFrame, msg, _TR("SumatraPDF Update"), MB_ICONEXCLAMATION | MB_OK | (IsUIRightToLeft() ? MB_RTLREADING : 0));
             }
         }
         delete ctx;
@@ -3739,7 +3747,7 @@ static void OnMenuPrint(WindowInfo& win)
     if (!dm) return;
 
     if (win.printThread) {
-        int res = MessageBox(win.hwndFrame, _TR("Printing is still in progress. Abort and start over?"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_YESNO);
+        int res = MessageBox(win.hwndFrame, _TR("Printing is still in progress. Abort and start over?"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_YESNO | (IsUIRightToLeft() ? MB_RTLREADING : 0));
         if (res == IDNO)
             return;
     }
@@ -3811,7 +3819,7 @@ static void OnMenuPrint(WindowInfo& win)
            error code, which we could look at here if we wanted.
            for now just warn the user that printing has stopped
            becasue of an error */
-        MessageBox(win.hwndFrame, _TR("Couldn't initialize printer"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK);
+        MessageBox(win.hwndFrame, _TR("Couldn't initialize printer"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK | (IsUIRightToLeft() ? MB_RTLREADING : 0));
     }
 
     free(ppr);
@@ -3950,7 +3958,7 @@ static void OnMenuSaveAs(WindowInfo& win)
         if (data)
             file::WriteAll(realDstFileName, data, dataLen);
         else
-            MessageBox(win.hwndFrame, _TR("Failed to save a file"), _TR("Warning"), MB_OK | MB_ICONEXCLAMATION);
+            MessageBox(win.hwndFrame, _TR("Failed to save a file"), _TR("Warning"), MB_OK | MB_ICONEXCLAMATION | (IsUIRightToLeft() ? MB_RTLREADING : 0));
     }
     // Recreate inexistant PDF files from memory...
     else if (!file::Exists(srcFileName)) {
@@ -3959,7 +3967,7 @@ static void OnMenuSaveAs(WindowInfo& win)
         if (data)
             file::WriteAll(realDstFileName, data, dataLen);
         else
-            MessageBox(win.hwndFrame, _TR("Failed to save a file"), _TR("Warning"), MB_OK | MB_ICONEXCLAMATION);
+            MessageBox(win.hwndFrame, _TR("Failed to save a file"), _TR("Warning"), MB_OK | MB_ICONEXCLAMATION | (IsUIRightToLeft() ? MB_RTLREADING : 0));
     }
     // ... else just copy the file
     else {
@@ -3978,7 +3986,7 @@ static void OnMenuSaveAs(WindowInfo& win)
             } else {
                 errorMsg = str::Dup(_TR("Failed to save a file"));
             }
-            MessageBox(win.hwndFrame, errorMsg, _TR("Warning"), MB_OK | MB_ICONEXCLAMATION);
+            MessageBox(win.hwndFrame, errorMsg, _TR("Warning"), MB_OK | MB_ICONEXCLAMATION | (IsUIRightToLeft() ? MB_RTLREADING : 0));
             free(errorMsg);
         }
     }
@@ -7061,7 +7069,7 @@ static bool PrintFile(const TCHAR *fileName, const TCHAR *printerName, bool disp
     BaseEngine *engine = EngineManager::CreateEngine(fileName2);
     if (!engine || !engine->IsPrintingAllowed()) {
         if (displayErrors)
-            MessageBox(NULL, _TR("Cannot print this file"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK);
+            MessageBox(NULL, _TR("Cannot print this file"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK | (IsUIRightToLeft() ? MB_RTLREADING : 0));
         return false;
     }
 
@@ -7076,7 +7084,7 @@ static bool PrintFile(const TCHAR *fileName, const TCHAR *printerName, bool disp
     if (!str::Parse(devstring, _T("%S,%S,"), &driver, &port) &&
         !str::Parse(devstring, _T("%S,%S"), &driver, &port) || !driver || !port) {
         if (displayErrors)
-            MessageBox(NULL, _T("Printer with given name doesn't exist"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK);
+            MessageBox(NULL, _T("Printer with given name doesn't exist"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK | (IsUIRightToLeft() ? MB_RTLREADING : 0));
         return false;
     }
 
@@ -7084,7 +7092,7 @@ static bool PrintFile(const TCHAR *fileName, const TCHAR *printerName, bool disp
     bool ok = OpenPrinter((LPTSTR)printerName, &printer, NULL);
     if (!ok) {
         if (displayErrors)
-            MessageBox(NULL, _TR("Could not open Printer"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK);
+            MessageBox(NULL, _TR("Could not open Printer"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK | (IsUIRightToLeft() ? MB_RTLREADING : 0));
         return false;
     }
 
@@ -7108,7 +7116,7 @@ static bool PrintFile(const TCHAR *fileName, const TCHAR *printerName, bool disp
     if (IDOK != returnCode) {
         // If failure, inform the user, cleanup and return failure.
         if (displayErrors)
-            MessageBox(NULL, _T("Could not obtain Printer properties"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK);
+            MessageBox(NULL, _T("Could not obtain Printer properties"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK | (IsUIRightToLeft() ? MB_RTLREADING : 0));
         goto Exit;
     }
 
@@ -7130,7 +7138,7 @@ static bool PrintFile(const TCHAR *fileName, const TCHAR *printerName, bool disp
     hdcPrint = CreateDC(driver, printerName, port, devMode); 
     if (!hdcPrint) {
         if (displayErrors)
-            MessageBox(NULL, _TR("Couldn't initialize printer"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK);
+            MessageBox(NULL, _TR("Couldn't initialize printer"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK | (IsUIRightToLeft() ? MB_RTLREADING : 0));
         goto Exit;
     }
     if (CheckPrinterStretchDibSupport(NULL, hdcPrint)) {

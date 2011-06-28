@@ -44,8 +44,7 @@ static DLGTEMPLATE *GetRtLDlgTemplate(int dlgId)
 // creates a dialog box that dynamically gets a right-to-left layout if needed
 static INT_PTR CreateDialogBox(int dlgId, HWND parent, DLGPROC DlgProc, LPARAM data)
 {
-    int langIx = Trans::GetLanguageIndex(gGlobalPrefs.m_currentLanguage);
-    if (!Trans::IsLanguageRtL(langIx))
+    if (!IsUIRightToLeft())
         return DialogBoxParam(NULL, MAKEINTRESOURCE(dlgId), parent, DlgProc, data);
 
     ScopedMem<DLGTEMPLATE> rtlDlgTemplate(GetRtLDlgTemplate(dlgId));
@@ -839,8 +838,7 @@ HPROPSHEETPAGE CreatePrintAdvancedPropSheet(Print_Advanced_Data *data, ScopedMem
     psp.lParam = (LPARAM)data;
     psp.pszTitle = _TR("Advanced");
 
-    int langIx = Trans::GetLanguageIndex(gGlobalPrefs.m_currentLanguage);
-    if (Trans::IsLanguageRtL(langIx)) {
+    if (IsUIRightToLeft()) {
         dlgTemplate.Set(GetRtLDlgTemplate(IDD_PROPSHEET_PRINT_ADVANCED));
         psp.pResource = dlgTemplate.Get();
         psp.dwFlags |= PSP_DLGINDIRECT;

@@ -49,6 +49,7 @@ extern TCHAR *                  gPluginURL;
 class WindowInfo;
 
 bool HasPermission(int permission);
+bool IsUIRightToLeft();
 bool LaunchBrowser(const TCHAR *url);
 void AssociateExeWithPdfExtension();
 void FindTextOnThread(WindowInfo* win, TextSearchDirection direction=FIND_FORWARD);
