@@ -1103,8 +1103,6 @@ pdf_run_xobject(pdf_csi *csi, fz_obj *resources, pdf_xobject *xobj, fz_matrix tr
 		resources = xobj->resources;
 
 	error = pdf_run_buffer(csi, resources, xobj->contents);
-	if (error)
-		return fz_rethrow(error, "cannot interpret XObject stream");
 
 	csi->top_ctm = oldtopctm;
 
@@ -1122,6 +1120,9 @@ pdf_run_xobject(pdf_csi *csi, fz_obj *resources, pdf_xobject *xobj, fz_matrix tr
 			fz_pop_clip(csi->dev);
 	}
 
+	/* SumatraPDF: wrap up all stacks before throwing an error */
+	if (error)
+		return fz_rethrow(error, "cannot interpret XObject stream");
 	return fz_okay;
 }
 
