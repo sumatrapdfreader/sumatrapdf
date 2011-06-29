@@ -2162,7 +2162,10 @@ pdf_run_stream(pdf_csi *csi, fz_obj *rdb, fz_stream *file, char *buf, int buflen
 				/* SumatraPDF: the scratch buffer can be overwritten by Type 3 glyphs */
 				unsigned char *string = fz_malloc(len);
 				memcpy(string, buf, len);
+				/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692312 */
+				csi->in_array = 0;
 				pdf_show_string(csi, string, len);
+				csi->in_array = 1;
 				fz_free(string);
 			}
 			else if (tok == PDF_TOK_KEYWORD)
