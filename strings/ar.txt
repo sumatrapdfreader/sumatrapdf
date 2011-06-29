@@ -11,6 +11,7 @@ Lang: ar Arabic (الْعَرَبيّة)
 Contributor: Mohammed Al-Foulad (http://www.mbsee.info)
 Contributor: Boubker Talibi
 Contributor: Felark (felark@hotmail.com)
+Contributor: Abu Abdullah (falcon.sheep@gmail.com)
 
 &About
 حول البرنامج
@@ -22,19 +23,28 @@ Contributor: Felark (felark@hotmail.com)
 &كل الصفحات المحددة
 
 &Back\tAlt+Left Arrow
-الخلف\tAlt+السهم الأيسر
+&الخلف\tAlt+السهم الأيسر
+
+&Book View\tCtrl-8
+&عرض الكتاب
 
 &Close\tCtrl-W
 &إنهاء\tCtrl-W
 
+&Copy Selection
+&نسخ المحدد
+
 &Copy Selection\tCtrl-C
-نسخ المحدد\tCtrl-C
+&نسخ المحدد\tCtrl-C
 
 &Don't ask me again
 &لا تسألني مرةً أخرى
 
 &Even pages only
-وحتى الصفحات فقط
+&الصفحات الزوجية فقط
+
+&Facing\tCtrl-7
+&متقابل\tCtrl-7
 
 &File
 &ملف
@@ -43,10 +53,10 @@ Contributor: Felark (felark@hotmail.com)
 &ابحث عن:
 
 &First Page\tHome
-الصفحة الأولى\tHome
+&الصفحة الأولى\tHome
 
 &Fit pages to printable area
-&محاذاة الصفحات لناحية الطباعة
+&محاذاة الصفحات لموافقة مساحة الطباعة
 
 &Go To
 &الذهاب إلى
@@ -58,19 +68,19 @@ Contributor: Felark (felark@hotmail.com)
 &مساعدة
 
 &Last Page\tEnd
-الصفحة الأخيرة\tEnd
+&الصفحة الأخيرة\tEnd
 
 &Magnification:
 &التقريب
 
 &Manual
-&يدوي
+&التعليمات
 
 &Match case
 &مطابقة
 
 &Next Page\tRight Arrow
-الصفحة التالية\t->
+&الصفحة التالية\t->
 
 &No
 &كلا
@@ -84,26 +94,41 @@ Contributor: Felark (felark@hotmail.com)
 &Open\tCtrl-O
 &فتح\tCtrl-O
 
+&Open Document
+&فتح مستند
+
 &Options...
 &خيارات...
 
 &Password:
 &كلمة المرور:
 
+&Pin Document
+&علّم مستند
+
 &Previous Page\tLeft Arrow
-الصفحة السابقة\t<-
+&الصفحة السابقة\t<-
+
+&Print...
+&طباعة...
 
 &Print...\tCtrl-P
-&طباعة\tCtrl-P
+&طباعة...\tCtrl-P
 
 &Print... (denied)
 &تم رفض الطباعة
 
 &Remember the password for this document
-&تذكر كلمة المرور لهذا المستند
+&حفظ كلمة المرور لهذا المستند
 
 &Remember these settings for each document
-&تذكر هذه الإعدادات لكل مستند
+&حفظ هذه الإعدادات لكل مستند
+
+&Remove Document
+&إزالة مستند
+
+&Save As...
+&حفظ باسم...
 
 &Save As...\tCtrl-S
 &حفظ باسم...\tCtrl-S
@@ -112,13 +137,16 @@ Contributor: Felark (felark@hotmail.com)
 &الإعدادات
 
 &Shrink pages to printable area (if necessary)
-&مناسبة الصفحات لناحية الطباعة (عند الضرورة)
+&تعديل الصفحات لموافقة مساحة الطباعة (عند الضرورة)
+
+&Single Page\tCtrl-6
+&صفحة واحدة\tCtrl-6
 
 &Skip this version
 &تخطي هذا الإصدار
 
 &Use original page sizes
-استخدام الحجم الأصلي للصفحة
+&استخدام الحجم الأصلي للصفحة
 
 &View
 &العرض
@@ -127,7 +155,7 @@ Contributor: Felark (felark@hotmail.com)
 &نعم
 
 &Zoom
-التقريب
+&التقريب
 
 (of %d)
 (من %d)
@@ -140,6 +168,9 @@ Advanced
 
 All files
 كل الملفات
+
+All supported documents
+كل المستندات المدعومة
 
 Application:
 التطبيق
@@ -165,11 +196,17 @@ Book View
 Book&marks\tF12
 المفضلة\tF12
 
+Bookmark Shortcuts
+اختصارات المفضلة
+
+Bookmark shortcut to page %d of %s
+اختصار المفضلة للصفحة %d من %s
+
 Bookmarks
 العلامات
 
 Bytes
-بايتات
+بايت
 
 Can't connect to the Internet (error %#x).
 لم يتم التمكن من الإتصال بالإنترنت (%#x خطأ).
@@ -187,19 +224,28 @@ Change Language
 تغيير اللغة
 
 Check for &Updates
-&تحقق من وجود تحديثات
+تحقق من وجود &تحديثات
+
+Comic books
+كتب فكاهية
 
 Continuous
 صفحات متتالية
 
 Continuous Book View
-عرض الكتاب باستمرار
+عرض مستمر للكتاب
 
 Continuous Facing
 صفحات متقابلة متتالية
 
 Contribute Translation
 ساهم في ترجمة البرنامج
+
+Copy &Link Address
+نسخ &رابط العنوان
+
+Copy Co&mment
+نسخ الملحوظة
 
 Copying text was denied (copying as image only)
 تعذر نسخ النص (النسخ كصورة فقط)
@@ -208,19 +254,19 @@ Could not open Printer
 تعذر فتح الطابعة
 
 Couldn't initialize printer
-لايمكن تشغيل الطابعة
+لا يمكن تشغيل الطابعة
 
 Couldn't render the page
-لايمكن تجزئة هذه الصفحة
+لا يمكن عرض هذه الصفحة
 
 Created:
 الإنشاء
 
 Custom &Zoom...\tCtrl-Y
-&تنسيق التقريب\tCtrl-Y
+تنسيق &التقريب\tCtrl-Y
 
 Default &Layout:
-الشكل الافتراضي
+الشكل &الافتراضي
 
 Default &Zoom:
 التقريب الافتراضي
@@ -230,6 +276,9 @@ Default PDF reader can't be changed in portable mode
 
 Denied Permissions:
 لاتوجد امتيازات
+
+DjVu documents
+ملفات DjVu
 
 Document Properties
 خصائص المستند
@@ -247,7 +296,10 @@ Enter password for %s
 كلمة المرور لـ %s
 
 Enter the command-line to invoke when you double-click on the PDF document:
-الدخول لاستدعاء سطر الأوامر عند النقر المزدوج على المستند
+أدخل سطر الأوامر لاستدعائه عند النقر المزدوج على المستند
+
+Error loading %s
+خطأ في تحميل %s
 
 F&orward\tAlt+Right Arrow
 الأمام\tAlt+السهم الأيمن
@@ -259,7 +311,7 @@ Facing
 صفحتان متقابلتان
 
 Failed to save a file
-فشل حفظ الملف
+فشل في حفظ الملف
 
 File Size:
 حجم الملف
@@ -309,14 +361,26 @@ Fit a Single Page
 Found text at page %d
 تم العثور على النص في صفحة %d
 
+Found text at page %d (again)
+وُجد النص في الصفحة %d (مرة أخرى)
+
+Frequently Read
+قُرأ تكرارا
+
 GB
 ج.ب
 
 Go to page
 اذهب لصفحة
 
+Hide frequently read
+إخفاء الأكثر قراءة
+
 Hint: Use the F3 key for finding again
 للبحث مرةً أخرى ، اضغط F3
+
+Image files (*.%s)
+ملفات الصور (*.%s)
 
 KB
 ك.ب
@@ -363,6 +427,9 @@ OK
 Open
 فتح
 
+Open a document...
+فتح مستند...
+
 Open in &Adobe Reader
 فتح الملف بـ Adobe Reader
 
@@ -371,6 +438,9 @@ Open in &Foxit Reader
 
 Open in PDF-XChange
 فتح الملف بـ PDF-XChange
+
+P&roperties
+الخصائص
 
 P&roperties\tCtrl-D
 الخصائص...\tCtrl-D
@@ -405,14 +475,26 @@ Page:
 Please wait - rendering...
 الرجاء الانتظار ، جاري التجزئة
 
+Postscript documents
+ملفات Postscript
+
 Pr&esentation\tCtrl-L
 عرض ملء الشاشة \tCtrl-L
 
 Previous Page
 الصفحة السابقة
 
+Print
+طباعة
+
 Print range
 نطاق الطباعة
+
+Printing is still in progress. Abort and start over?
+الطباعة جارية. أوقفها وأعدها مرة أخرى؟
+
+Printing page %d of %d...
+طباعة الصفحة %d من %d...
 
 Printing problem.
 يوجد مشكلة في الطباعة
@@ -429,11 +511,17 @@ Rotate &Right\tCtrl-Shift-+
 Save As
 حفظ باسم
 
+Save S&hortcut...\tCtrl-Shift-S
+حفظ الاختصار...\tCtrl-Shift-S
+
 Searching %d of %d...
 يتم البحث %d من %d...
 
+Select &All
+حدد الكل
+
 Select &All\tCtrl-A
-اختيار الكل &All\tCtrl-A
+اختيار &الكل\tCtrl-A
 
 Select content with Ctrl+left mouse button
 اختر المحتوى بالضغط على زر الفأرة الأيسر و Ctrl
@@ -450,11 +538,17 @@ Show &Toolbar
 Show &pages continuously
 عرض الصفحات باستمرار
 
+Show frequently read
+إظهار الأكثر قراءة
+
 Show the &bookmarks sidebar when available
 عرض المفضلة في الشريط الجانبي عند وجودها
 
 Single Page
 صفحة واحدة
+
+Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
+عذرا, لا يجدر أن يحدث ما حدث!\n\n الرجاء الضغط على 'إلغاء', إذا كنت تريد مساعدتنا في حل هذه المشكلة
 
 Source file %s has no synchronization point
 الملف المصدر %s لم تتم مزامنته عند هذه النقطة
@@ -498,6 +592,9 @@ Visit &Website
 Warning
 تحذير
 
+XPS documents
+ملفات XPS
+
 You have the latest version.
 لديك آخر نسخة
 
@@ -524,38 +621,4 @@ copying text
 
 printing document
 تتم حالياً الطباعة
-
-# Untranslated:
-#&Book View\tCtrl-8
-#&Copy Selection
-#&Facing\tCtrl-7
-#&Open Document
-#&Pin Document
-#&Print...
-#&Remove Document
-#&Save As...
-#&Single Page\tCtrl-6
-#All supported documents
-#Bookmark Shortcuts
-#Bookmark shortcut to page %d of %s
-#Comic books
-#Copy &Link Address
-#Copy Co&mment
-#DjVu documents
-#Error loading %s
-#Found text at page %d (again)
-#Frequently Read
-#Hide frequently read
-#Image files (*.%s)
-#Open a document...
-#P&roperties
-#Postscript documents
-#Print
-#Printing is still in progress. Abort and start over?
-#Printing page %d of %d...
-#Save S&hortcut...\tCtrl-Shift-S
-#Select &All
-#Show frequently read
-#Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
-#XPS documents
 
