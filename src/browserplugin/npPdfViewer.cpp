@@ -279,7 +279,11 @@ static TCHAR *FormatSizeSuccint(size_t size) {
         unit = _T("KB");
     }
     
-    return str::FormatFloatWithThousandSep(s, unit);
+    ScopedMem<TCHAR> sizestr(str::FormatFloatWithThousandSep(s));
+    if (!unit)
+        return sizestr.StealData();
+    
+    return str::Format(_T("%s %s"), sizestr, unit);
 }
 
 LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lParam)

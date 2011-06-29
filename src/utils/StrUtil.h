@@ -103,7 +103,7 @@ size_t  BufSet(WCHAR *dst, size_t dstCchSize, const WCHAR *src);
 char *  MemToHex(const unsigned char *buf, int len);
 bool    HexToMem(const char *s, unsigned char *buf, int bufLen);
 
-TCHAR * FormatFloatWithThousandSep(double number, const TCHAR *unit=NULL);
+TCHAR * FormatFloatWithThousandSep(double number);
 TCHAR * FormatNumWithThousandSep(size_t num, const TCHAR *sep=NULL);
 TCHAR * FormatRomanNumeral(int number);
 

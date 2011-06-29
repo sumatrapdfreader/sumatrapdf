@@ -469,9 +469,9 @@ TCHAR *FormatNumWithThousandSep(size_t num, const TCHAR *sep)
 
 // Format a floating point number with at most two decimal after the point
 // Caller needs to free the result.
-TCHAR *FormatFloatWithThousandSep(double number, const TCHAR *unit)
+TCHAR *FormatFloatWithThousandSep(double number)
 {
-    size_t num = (size_t)(number * 100);
+    size_t num = (size_t)(number * 100 + 0.5);
 
     ScopedMem<TCHAR> tmp(FormatNumWithThousandSep(num / 100));
     TCHAR decimal[4];
@@ -483,7 +483,7 @@ TCHAR *FormatFloatWithThousandSep(double number, const TCHAR *unit)
     if (str::EndsWith(buf, _T("0")))
         buf[str::Len(buf) - 1] = '\0';
 
-    return unit ? str::Format(_T("%s %s"), buf, unit) : str::Dup(buf);
+    return buf.StealData();
 }
 
 // cf. http://rosettacode.org/wiki/Roman_numerals/Encode#C.2B.2B

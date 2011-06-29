@@ -95,7 +95,10 @@ static TCHAR *FormatSizeSuccint(size_t size)
         unit = _TR("KB");
     }
 
-    return str::FormatFloatWithThousandSep(s, unit);
+    ScopedMem<TCHAR> sizestr(str::FormatFloatWithThousandSep(s));
+    if (!unit)
+        return sizestr.StealData();
+    return str::Format(_T("%s %s"), sizestr, unit);
 }
 
 // format file size in a readable way e.g. 1348258 is shown
@@ -129,9 +132,9 @@ static TCHAR *FormatPageSize(BaseEngine *engine, int pageNo, int rotation)
         height += 0.01;
 
     ScopedMem<TCHAR> strWidth(str::FormatFloatWithThousandSep(width));
-    ScopedMem<TCHAR> strHeight(str::FormatFloatWithThousandSep(height, isMetric ? _T("cm") : _T("in")));
+    ScopedMem<TCHAR> strHeight(str::FormatFloatWithThousandSep(height));
 
-    return str::Format(_T("%s x %s"), strWidth, strHeight);
+    return str::Format(_T("%s x %s %s"), strWidth, strHeight, isMetric ? _T("cm") : _T("in"));
 }
 
 // returns a list of permissions denied by this document
@@ -239,6 +242,7 @@ static HWND CreatePropertiesWindow(HWND hParent, PropertiesLayout& layoutData)
 
     assert(!GetWindowLongPtr(hwndProperties, GWLP_USERDATA));
     SetWindowLongPtr(hwndProperties, GWLP_USERDATA, (LONG_PTR)&layoutData);
+    ToggleWindowStyle(hwndProperties, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, IsUIRightToLeft(), GWL_EXSTYLE);
 
     // get the dimensions required for the about box's content
     RectI rc;
@@ -341,6 +345,13 @@ void OnMenuProperties(WindowInfo& win)
     layoutData->AddProperty(_TR("Number of Pages:"), str);
 
     str = FormatPageSize(engine, win.dm->currentPageNo(), win.dm->rotation());
+#ifdef UNICODE
+    if (IsUIRightToLeft()) {
+        ScopedMem<TCHAR> tmp(str);
+        // ensure that the size remains ungarbled left-to-right
+        str = str::Format(_T("\u202A%s\u202C"), tmp);
+    }
+#endif
     layoutData->AddProperty(_TR("Page Size:"), str);
 
     str = FormatPermissions(engine);

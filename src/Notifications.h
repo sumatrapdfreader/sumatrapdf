@@ -51,6 +51,7 @@ class MessageWnd : public ProgressUpdateUI {
                               TL_MARGIN, TL_MARGIN, 0, 0,
                               parent, (HMENU)0, ghinst, NULL);
         SetWindowLongPtr(self, GWLP_USERDATA, (LONG_PTR)this);
+        ToggleWindowStyle(self, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, IsUIRightToLeft(), GWL_EXSTYLE);
         UpdateWindowPosition(message, true);
         ShowWindow(self, SW_SHOW);
     }

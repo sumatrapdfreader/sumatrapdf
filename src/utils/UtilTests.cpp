@@ -256,6 +256,23 @@ static void TStrTest()
         assert(str::Eq(tmp, formatNumData[i].result));
     }
 
+    struct {
+        double number;
+        const TCHAR *result;
+    } formatFloatData[] = {
+        { 1,        _T("1.0") },
+        { 1.2,      _T("1.2") },
+        { 1.23,     _T("1.23") },
+        { 1.234,    _T("1.23") },
+        { 12.345,   _T("12.35") },
+        { 123.456,  _T("123.46") },
+    };
+
+    for (int i = 0; i < dimof(formatFloatData); i++) {
+        ScopedMem<TCHAR> tmp(str::FormatFloatWithThousandSep(formatFloatData[i].number));
+        assert(str::Eq(tmp, formatFloatData[i].result));
+    }
+
     {
         char str[] = "aAbBcC... 1-9";
         str::ToLower(str);
@@ -284,7 +301,7 @@ static void TStrTest()
         { -133, NULL },
     };
 
-    for (int i = 0; i < dimof(formatNumData); i++) {
+    for (int i = 0; i < dimof(formatRomanData); i++) {
         ScopedMem<TCHAR> tmp(str::FormatRomanNumeral(formatRomanData[i].number));
         assert(str::Eq(tmp, formatRomanData[i].result));
     }

@@ -1163,7 +1163,6 @@ static void UpdateWindowLayout(WindowInfo *win=NULL)
 
     // TODO: also update the Frequently Read list
     // TODO: also update the canvas scrollbars
-    // TODO: also update the Properties window
     // TODO: also update all notifications (including their placement)
 
     // ensure that the ToC sidebar is on the correct side and that its
