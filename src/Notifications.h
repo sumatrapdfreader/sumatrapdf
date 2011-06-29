@@ -109,6 +109,9 @@ public:
     HWND hwnd() { return self; }
 
     virtual bool ProgressUpdate(int current, int total) {
+        assert(total > 0);
+        if (total <= 0)
+            total = 1;
         progress = limitValue(100 * current / total, 0, 100);
         if (hasProgress && progressMsg) {
             ScopedMem<TCHAR> message(str::Format(progressMsg, current, total));

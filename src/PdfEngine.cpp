@@ -622,8 +622,10 @@ StrVec *BuildPageLabelVec(fz_obj *root, int pageCount)
     StrVec *labels = new StrVec();
     labels->MakeSpaceAt(0, pageCount);
 
-    for (size_t i = 0; i < data.Count(); i++) {
-        int secLen = (i < data.Count() - 1 ? data[i + 1].startAt : pageCount + 1) - data[i].startAt;
+    for (size_t i = 0; i < data.Count() && data[i].startAt <= pageCount; i++) {
+        int secLen = pageCount + 1 - data[i].startAt;
+        if (i < data.Count() - 1 && data[i + 1].startAt <= pageCount)
+            secLen = data[i + 1].startAt - data[i].startAt;
         ScopedMem<TCHAR> prefix(str::conv::FromPdf(data[i].prefix));
         for (int j = 0; j < secLen; j++) {
             free(labels->At(data[i].startAt + j - 1));

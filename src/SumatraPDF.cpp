@@ -3432,8 +3432,12 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL)
     di.lpszDocName = engine.FileName();
 
     int current = 0, total = 0;
-    for (size_t i = 0; i < pd.ranges.Count(); i++)
-        total += pd.ranges[i].nToPage - pd.ranges[i].nFromPage + 1;
+    for (size_t i = 0; i < pd.ranges.Count(); i++) {
+        if (pd.ranges[i].nToPage < pd.ranges[i].nFromPage)
+            total += pd.ranges[i].nFromPage - pd.ranges[i].nToPage + 1;
+        else
+            total += pd.ranges[i].nToPage - pd.ranges[i].nFromPage + 1;
+    }
     total += (int)pd.sel.Count();
     if (progressUI)
         progressUI->ProgressUpdate(current, total);
@@ -3511,8 +3515,8 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL)
 
     // print all the pages the user requested
     for (size_t i = 0; i < pd.ranges.Count(); i++) {
-        assert(pd.ranges[i].nFromPage <= pd.ranges[i].nToPage);
-        for (DWORD pageNo = pd.ranges[i].nFromPage; pageNo <= pd.ranges[i].nToPage; pageNo++) {
+        int dir = pd.ranges[i].nFromPage > pd.ranges[i].nToPage ? -1 : 1;
+        for (DWORD pageNo = pd.ranges[i].nFromPage; pageNo != pd.ranges[i].nToPage + dir; pageNo += dir) {
             if ((PrintRangeEven == pd.rangeAdv && pageNo % 2 != 0) ||
                 (PrintRangeOdd == pd.rangeAdv && pageNo % 2 == 0))
                 continue;
