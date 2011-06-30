@@ -1341,7 +1341,8 @@ void CreateThumbnailForFile(WindowInfo& win, DisplayState& state)
 
     pageRect = win.dm->engine->Transform(pageRect, 1, 1.0f, 0);
     float zoom = THUMBNAIL_DX / (float)pageRect.dx;
-    pageRect.dy = (float)THUMBNAIL_DY / zoom;
+    if (pageRect.dy > (float)THUMBNAIL_DY / zoom)
+        pageRect.dy = (float)THUMBNAIL_DY / zoom;
     pageRect = win.dm->engine->Transform(pageRect, 1, 1.0f, 0, true);
 
     RenderingCallback *callback = new ThumbnailRenderingWorkItem(&win, win.loadedFilePath);

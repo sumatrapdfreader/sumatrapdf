@@ -594,7 +594,9 @@ void DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory)
             if (state->thumbnail || LoadThumbnail(*state)) {
                 HRGN clip = CreateRoundRectRgn(page.x, page.y, page.x + page.dx, page.y + page.dy, 10, 10);
                 SelectClipRgn(hdc, clip);
-                state->thumbnail->StretchDIBits(hdc, page);
+                RectI thumb(page.TL(), state->thumbnail->Size());
+                assert(thumb.dx == page.dx);
+                state->thumbnail->StretchDIBits(hdc, thumb);
                 SelectClipRgn(hdc, NULL);
                 DeleteObject(clip);
             }
