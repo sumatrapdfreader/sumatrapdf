@@ -3769,8 +3769,8 @@ static void OnMenuPrint(WindowInfo& win)
     ZeroMemory(&pd, sizeof(PRINTDLGEX));
     pd.lStructSize = sizeof(PRINTDLGEX);
     pd.hwndOwner   = win.hwndFrame;
-    pd.hDevMode    = NULL;   
-    pd.hDevNames   = NULL;   
+    pd.hDevMode    = NULL;
+    pd.hDevNames   = NULL;
     pd.Flags       = PD_RETURNDC | PD_USEDEVMODECOPIESANDCOLLATE | PD_COLLATE;
     if (!win.selectionOnPage)
         pd.Flags |= PD_NOSELECTION;
@@ -4745,6 +4745,10 @@ static void AdvanceFocus(WindowInfo& win)
     SetFocus(tabOrder[ix].hwnd);
 }
 
+// allow to distinguish a '/' caused by VK_DIVIDE (rotates a document)
+// from one typed on the main keyboard (focuses the find textbox)
+static bool gIsDivideKeyDown = false;
+
 static bool OnKeydown(WindowInfo& win, WPARAM key, LPARAM lparam, bool inTextfield=false)
 {
     if ((VK_LEFT == key || VK_RIGHT == key) &&
@@ -4802,7 +4806,12 @@ static bool OnKeydown(WindowInfo& win, WPARAM key, LPARAM lparam, bool inTextfie
     } else if (VK_HOME == key) {
         win.dm->goToFirstPage();
     } else if (VK_END == key) {
-        win.dm->goToLastPage();    
+        win.dm->goToLastPage();
+    } else if (VK_MULTIPLY == key) {
+        win.dm->rotateBy(90);
+    } else if (VK_DIVIDE == key) {
+        win.dm->rotateBy(-90);
+        gIsDivideKeyDown = true;
     } else {
         return false;
     }
@@ -4888,7 +4897,9 @@ static void OnChar(WindowInfo& win, WPARAM key)
         win.ZoomToSelection(ZOOM_OUT_FACTOR, true);
         break;
     case '/':
-        OnMenuFind(win);
+        if (!gIsDivideKeyDown)
+            OnMenuFind(win);
+        gIsDivideKeyDown = false;
         break;
     case 'c':
         OnMenuViewContinuous(win);
@@ -6555,7 +6566,7 @@ static void GoToFavorite(WindowInfo *win, int wmId)
     win = LoadDocument(state->filePath, win);
     if (!win || !win->IsDocLoaded())
         return;
-    win->dm->goToPage(fn->pageNo, 0);    
+    win->dm->goToPage(fn->pageNo, 0);
 }
 
 static LRESULT OnCommand(WindowInfo *win, HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
