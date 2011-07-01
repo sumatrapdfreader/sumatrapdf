@@ -1142,19 +1142,18 @@ static void UpdateWindowLayout(WindowInfo *win=NULL)
 
     bool isRTL = IsUIRightToLeft();
     bool wasRTL = (GetWindowLong(win->hwndFrame, GWL_EXSTYLE) & WS_EX_LAYOUTRTL) != 0;
+    if (wasRTL == isRTL)
+        return;
 
-    bool showToC = false;
-    if (isRTL != wasRTL && win->tocShow) {
-        showToC = true;
+    bool showToC = win->tocShow;
+    if (showToC)
         win->HideTocBox();
-    }
 
     // cf. http://www.microsoft.com/middleeast/msdn/mirror.aspx
     ToggleWindowStyle(win->hwndFrame, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
     ToggleWindowStyle(win->hwndTocBox, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
     HWND tocBoxTitle = GetDlgItem(win->hwndTocBox, 0);
     ToggleWindowStyle(tocBoxTitle, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
-    // TODO: make the ToC tree's layout depend on (win->dm->engine->PreferredLayout() & Layout_R2L)
 
     ToggleWindowStyle(win->hwndReBar, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
     ToggleWindowStyle(win->hwndToolbar, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
@@ -6049,6 +6048,7 @@ void WindowInfo::LoadTocTree()
         tocRoot = dm->engine->GetToCTree();
     if (tocRoot) {
         SendMessage(hwndTocTree, WM_SETREDRAW, FALSE, 0);
+        ToggleWindowStyle(hwndTocTree, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, (dm->engine->PreferredLayout() & Layout_R2L), GWL_EXSTYLE);
         PopulateTocTreeView(hwndTocTree, tocRoot, tocState);
         SendMessage(hwndTocTree, WM_SETREDRAW, TRUE, 0);
         RedrawWindow(hwndTocTree, NULL, NULL, RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
