@@ -85,14 +85,23 @@ Csak a páratlan oldalak
 &Open\tCtrl-O
 Megny&itás\tCtrl-O
 
+&Open Document
+&Fájl Megnyitása
+
 &Options...
 &Beállítások
 
 &Password:
 &Jelszó:
 
+&Pin Document
+Lista elejére
+
 &Previous Page\tLeft Arrow
 Előző oldal\t<-
+
+&Print...
+&Nyomtatás
 
 &Print...\tCtrl-P
 Nyomt&atás\tCtrl-P
@@ -105,6 +114,12 @@ Jelszó megjegyzése a dokumentumhoz
 
 &Remember these settings for each document
 Eltérő nézet-beállítások megjegyzése dokumentumonként
+
+&Remove Document
+&Eltávolítás a listából
+
+&Save As...
+&Mentés másként...
 
 &Save As...\tCtrl-S
 Ment&és másként...\tCtrl-S
@@ -141,6 +156,9 @@ További programbeállítások
 
 All files
 Minden fájl
+
+All supported documents
+Minden támogatott fájltípus
 
 Application:
 Alkalmazás:
@@ -190,6 +208,9 @@ Nyelv kiválasztása (Change Language)
 Check for &Updates
 Újabb &verzió keresése
 
+Comic books
+Képregény fájlok
+
 Continuous
 Folyamatos
 
@@ -231,6 +252,9 @@ Nem tehető alapértelmezett PDF-olvasóvá hordozható módban
 
 Denied Permissions:
 Tiltott műveletek:
+
+DjVu documents
+DjVu fájlok
 
 Document Properties
 A dokumentum tulajdonságai
@@ -310,14 +334,23 @@ Teljes oldalankénti nézet
 Found text at page %d
 Találat a(z) %d. oldalon
 
+Frequently Read
+Leggyakrabban olvasott fájlok
+
 GB
 Gb
 
 Go to page
 Ugrás adott oldalra
 
+Hide frequently read
+Leggyakrabban olvasottak elrejtése
+
 Hint: Use the F3 key for finding again
 Tipp: Nyomja meg az F3-at a következő találathoz
+
+Image files (*.%s)
+Képfájlok (*.%s)
 
 KB
 Kb
@@ -364,6 +397,9 @@ OK
 Open
 Megny&itás
 
+Open a document...
+Fájl megnyitása...
+
 Open in &Adobe Reader
 Megnyitás &Adobe Acrobat-ban
 
@@ -372,6 +408,9 @@ Megnyitás &Foxit Readerben
 
 Open in PDF-XChange
 Megnyitás PDF-XChangeben
+
+P&roperties
+&Tulajdonságok
 
 P&roperties\tCtrl-D
 &Tulajdonságok\tCtrl-D
@@ -386,7 +425,7 @@ PDF Version:
 PDF verzió:
 
 PDF documents
-PDF dokumentumok
+PDF fájlok
 
 Pa&ge...\tCtrl-G
 Megadott oldal...\tCtrl-G
@@ -406,14 +445,23 @@ Oldal:
 Please wait - rendering...
 Feldolgozás, kérem várjon
 
+Postscript documents
+Postscript fájlok
+
 Pr&esentation\tCtrl-L
 Bemutató\tCtrl-L
 
 Previous Page
 Előző oldal
 
+Print
+Nyomtatás
+
 Print range
 Nyomtatási tartomány
+
+Printing is still in progress. Abort and start over?
+A nyomtatás még folyamatban van. Megszakítás vagy újrakezdés?
 
 Printing problem.
 Nyomtatási probléma.
@@ -430,8 +478,14 @@ Forgatás jobbra\tCtrl-Shift-+
 Save As
 Mentés másként
 
+Save S&hortcut...\tCtrl-Shift-S
+Parancsikon készítése...\tCtrl-Shift-S
+
 Searching %d of %d...
 Keresés a(z) %d./%d oldalon
+
+Select &All
+&Összes kijelölése
 
 Select &All\tCtrl-A
 Összes &kijelölése\tCtrl-A
@@ -450,6 +504,9 @@ Eszköztár
 
 Show &pages continuously
 Folyamatos nézet
+
+Show frequently read
+Leggyakrabban olvasott fájlok mutatása
 
 Show the &bookmarks sidebar when available
 Dokumentumba ágyazott könyvjelzők mutatása
@@ -499,6 +556,9 @@ Visit &Website
 Warning
 Figyelmeztetés
 
+XPS documents
+XPS fájlok
+
 You have the latest version.
 Önnél a legfrissebb verzió van telepítve.
 
@@ -530,33 +590,13 @@ Nyomtatás
 #&Book View\tCtrl-8
 #&Copy Selection
 #&Facing\tCtrl-7
-#&Open Document
-#&Pin Document
-#&Print...
-#&Remove Document
-#&Save As...
 #&Single Page\tCtrl-6
-#All supported documents
 #Bookmark Shortcuts
 #Bookmark shortcut to page %d of %s
-#Comic books
 #Copy &Link Address
 #Copy Co&mment
-#DjVu documents
 #Error loading %s
 #Found text at page %d (again)
-#Frequently Read
-#Hide frequently read
-#Image files (*.%s)
-#Open a document...
-#P&roperties
-#Postscript documents
-#Print
-#Printing is still in progress. Abort and start over?
 #Printing page %d of %d...
-#Save S&hortcut...\tCtrl-Shift-S
-#Select &All
-#Show frequently read
 #Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
-#XPS documents
 
