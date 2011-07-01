@@ -168,7 +168,7 @@ $(LIBMUPDF_RES): src\libmupdf.rc src\Version.h
 	rc /r /fo$@ $(EXTCFLAGS) src\libmupdf.rc
 
 $(INSTALLER_RES): src\installer\Installer.rc src\installer\Resource.h src\Version.h
-	rc /r /fo$@ $(EXTCFLAGS) src\installer\Installer.rc
+	rc /r /fo$@ $(EXTCFLAGS) /D "INSTALL_PAYLOAD_ZIP=..\..\$(O)\InstallerData.zip" src\installer\Installer.rc
 
 $(UNINSTALLER_RES): src\installer\Installer.rc src\installer\Resource.h src\Version.h
 	rc /r /fo$@ $(EXTCFLAGS) /D "BUILD_UNINSTALLER" src\installer\Installer.rc

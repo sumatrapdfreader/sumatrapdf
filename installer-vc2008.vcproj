@@ -46,8 +46,8 @@
 			>
 			<Tool
 				Name="VCNMakeTool"
-				BuildCommandLine=".\scripts\build-release.bat -testinst -prerelease"
-				ReBuildCommandLine=".\scripts\build-release.bat -testinst -prerelease"
+				BuildCommandLine=".\scripts\build-release.bat -testinst -prerelease -svn-revision 9999"
+				ReBuildCommandLine=".\scripts\build-release.bat -testinst -prerelease -svn-revision 9999"
 				CleanCommandLine="del /s obj-rel"
 				Output="obj-rel\Installer.exe"
 				PreprocessorDefinitions="WIN32;NDEBUG;UNICODE;_UNICODE"
