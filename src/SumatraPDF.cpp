@@ -5030,8 +5030,6 @@ static void UpdateToolbarButtonsToolTipsForWindow(WindowInfo& win)
     }
 }
 
-/*
-TODO: probably remove this
 static void UpdateToCBoxTitle(WindowInfo& win)
 {
     HWND tocTitle = GetDlgItem(win.hwndTocBox, 0);
@@ -5041,8 +5039,8 @@ static void UpdateToCBoxTitle(WindowInfo& win)
         UpdateWindow(win.hwndTocBox);
     }
 }
-*/
 
+// TODO: rename function to UpdateUITextForLanguage ?
 static void UpdateToolbarToolText()
 {
     for (size_t i = 0; i < gWindows.Count(); i++) {
@@ -5050,8 +5048,8 @@ static void UpdateToolbarToolText()
         UpdateToolbarPageText(*win, -1);
         UpdateToolbarFindText(*win);
         UpdateToolbarButtonsToolTipsForWindow(*win);
-        // TODO: it's not part of the toolbar and not sure if necessary
-        //UpdateToCBoxTitle(*win);
+        // also update the sidebar title at this point
+        UpdateToCBoxTitle(*win);
     }        
 }
 
