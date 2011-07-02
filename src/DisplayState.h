@@ -35,7 +35,7 @@ public:
         filePath(NULL), useGlobalValues(false), openCount(0),
         displayMode(DM_AUTOMATIC), pageNo(1), zoomVirtual(100.0),
         rotation(0), windowState(0), thumbnail(NULL), isPinned(false),
-        decryptionKey(NULL), showToc(true), tocDx(0), tocState(NULL) { }
+        decryptionKey(NULL), showToc(true), panelDx(0), tocState(NULL) { }
 
     ~DisplayState() {
         free(filePath);
@@ -74,7 +74,7 @@ public:
     char *              decryptionKey;
 
     bool                showToc;
-    int                 tocDx;
+    int                 panelDx;
     int *               tocState;
 };
 

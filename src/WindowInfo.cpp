@@ -13,20 +13,21 @@
 WindowInfo::WindowInfo(HWND hwnd) :
     dm(NULL), menu(NULL), hwndFrame(hwnd),
     linkOnLastButtonDown(NULL), url(NULL), selectionOnPage(NULL),
-    tocLoaded(false), tocShow(false), tocState(NULL), tocRoot(NULL),
+    tocLoaded(false), tocVisible(false), tocState(NULL), tocRoot(NULL),
     fullScreen(false), presentation(PM_DISABLED),
     hwndCanvas(NULL), hwndToolbar(NULL), hwndReBar(NULL),
     hwndFindText(NULL), hwndFindBox(NULL), hwndFindBg(NULL),
     hwndPageText(NULL), hwndPageBox(NULL), hwndPageBg(NULL), hwndPageTotal(NULL),
-    hwndTocBox(NULL), hwndTocTree(NULL), hwndSpliter(NULL),
+    hwndTocBox(NULL), hwndTocTree(NULL), hwndPanelSpliter(NULL),
     hwndInfotip(NULL), infotipVisible(false), hwndProperties(NULL),
     findThread(NULL), findCanceled(false), printThread(NULL), printCanceled(false),
     showSelection(false), mouseAction(MA_IDLE),
     prevZoomVirtual(INVALID_ZOOM), prevDisplayMode(DM_AUTOMATIC),
     loadedFilePath(NULL), currPageNo(0),
     xScrollSpeed(0), yScrollSpeed(0), wheelAccumDelta(0),
-    delayedRepaintTimer(0), resizingTocBox(false), watcher(NULL),
-    pdfsync(NULL), stressTest(NULL), suppressPwdUI(false)
+    delayedRepaintTimer(0), panelBeingResized(false), watcher(NULL),
+    pdfsync(NULL), stressTest(NULL), suppressPwdUI(false),
+    hwndFavBox(NULL), hwndFavTree(NULL), favVisible(false)
 {
     ZeroMemory(&selectionRect, sizeof(selectionRect));
 
@@ -61,7 +62,6 @@ WindowInfo::~WindowInfo()
     free(loadedFilePath);
 
     delete tocRoot;
-    free(tocState);
 }
 
 // Notify both display model and double-buffer (if they exist)
@@ -166,7 +166,7 @@ HTREEITEM WindowInfo::TreeItemForPageNo(HTREEITEM hItem, int pageNo)
 
 void WindowInfo::UpdateTocSelection(int currPageNo)
 {
-    if (!this->tocLoaded || !this->tocShow)
+    if (!this->tocLoaded || !this->tocVisible)
         return;
     if (GetFocus() == this->hwndTocTree)
         return;
@@ -187,41 +187,41 @@ void WindowInfo::UpdateToCExpansionState(HTREEITEM hItem)
         item.hItem = hItem;
         item.mask = TVIF_PARAM | TVIF_STATE;
         item.stateMask = TVIS_EXPANDED;
-        TreeView_GetItem(this->hwndTocTree, &item);
+        TreeView_GetItem(hwndTocTree, &item);
 
         // add the ids of toggled items to tocState
         DocToCItem *tocItem = item.lParam ? (DocToCItem *)item.lParam : NULL;
         bool wasToggled = tocItem && !(item.state & TVIS_EXPANDED) == tocItem->open;
-        if (wasToggled) {
-            int *newState = (int *)realloc(this->tocState, (++this->tocState[0] + 1) * sizeof(int));
-            if (newState) {
-                this->tocState = newState;
-                this->tocState[this->tocState[0]] = tocItem->id;
-            }
-        }
+        if (wasToggled)
+            tocState.Append(tocItem->id);
 
         if (tocItem && tocItem->child)
-            this->UpdateToCExpansionState(TreeView_GetChild(this->hwndTocTree, hItem));
-        hItem = TreeView_GetNextSibling(this->hwndTocTree, hItem);
+            UpdateToCExpansionState(TreeView_GetChild(hwndTocTree, hItem));
+        hItem = TreeView_GetNextSibling(hwndTocTree, hItem);
     }
 }
 
 void WindowInfo::DisplayStateFromToC(DisplayState *ds)
 {
-    ds->showToc = this->tocShow;
+    ds->showToc = tocVisible;
 
-    if (this->tocLoaded) {
-        free(this->tocState);
-        this->tocState = SAZA(int, 1);
-        HTREEITEM hRoot = TreeView_GetRoot(this->hwndTocTree);
-        if (this->tocState && hRoot)
-            this->UpdateToCExpansionState(hRoot);
+    if (tocLoaded) {
+        tocState.Reset();
+        HTREEITEM hRoot = TreeView_GetRoot(hwndTocTree);
+        if (hRoot)
+            UpdateToCExpansionState(hRoot);
     }
 
     free(ds->tocState);
     ds->tocState = NULL;
-    if (this->tocState)
-        ds->tocState = (int *)memdup(this->tocState, (this->tocState[0] + 1) * sizeof(int));
+    if (tocState.Count() > 0) {
+        size_t len = tocState.Count();
+        ds->tocState = SAZA(int, len+1);
+        ds->tocState[0] = (int)len;
+        for (size_t i=0; i<len; i++) {
+            ds->tocState[1+i] = tocState.At(i);
+        }
+    }
 }
 
 void WindowInfo::ToggleZoom()

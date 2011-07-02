@@ -295,6 +295,10 @@ public:
         return NULL;
     }
 
+    size_t Count() const {
+        return favs.Count();
+    }
+
     void ResetMenuIds()
     {
         for (size_t i=0; i<favs.Count(); i++)

@@ -80,9 +80,25 @@ public:
     HWND            hwndPageBox;
     HWND            hwndPageBg;
     HWND            hwndPageTotal;
+
+    // state related to PDF bookmarks (aka. table of contents)
     HWND            hwndTocBox;
     HWND            hwndTocTree;
-    HWND            hwndSpliter;
+    bool            tocLoaded;
+    bool            tocVisible;
+    // an array of ids for ToC items that have been expanded/collapsed by user
+    Vec<int>        tocState;
+    DocToCItem *    tocRoot;
+
+    // state related to favorites
+    HWND            hwndFavBox;
+    HWND            hwndFavTree;
+    bool            favVisible;
+
+    // vertical splitter for resizing left side panel
+    HWND            hwndPanelSpliter;
+    bool            panelBeingResized;
+
     HWND            hwndInfotip;
     HWND            hwndProperties;
 
@@ -153,14 +169,6 @@ public:
     LinkHandler *   linkHandler;
     PageElement *   linkOnLastButtonDown;
     const TCHAR *   url;
-
-    bool            tocLoaded;
-    bool            tocShow;
-    // tocState is an array of ids for ToC items that have been expanded/collapsed
-    // by the user (tocState[0] is the length of the list)
-    int *           tocState;
-    DocToCItem *    tocRoot;
-    bool            resizingTocBox;
 
     // synchronizer based on .pdfsync file
     Synchronizer *  pdfsync;

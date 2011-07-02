@@ -85,7 +85,7 @@
 #define IDM_GOTO_NAV_FORWARD            559
 #define IDM_FAV_ADD                     560
 #define IDM_FAV_DEL                     561
-#define IDM_FAV_SHOW_ALL                562
+#define IDM_FAV_SHOW                    562
 #define IDM_DEBUG_SHOW_LINKS            590
 #define IDM_DEBUG_GDI_RENDERER          591
 #define IDM_DEBUG_CRASH_ME              592
@@ -129,7 +129,6 @@
 #define IDC_SECTION_INVERSESEARCH       1040
 #define IDC_CMDLINE_LABEL               1041
 #define IDC_CMDLINE                     1042
-#define IDC_PDF_TOC_TREE_TITLE          1043
 #define IDC_SECTION_PRINT_RANGE         1050
 #define IDC_PRINT_RANGE_ALL             1051
 #define IDC_PRINT_RANGE_EVEN            1052
