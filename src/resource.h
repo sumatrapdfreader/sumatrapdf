@@ -85,7 +85,7 @@
 #define IDM_GOTO_NAV_FORWARD            559
 #define IDM_FAV_ADD                     560
 #define IDM_FAV_DEL                     561
-#define IDM_FAV_SHOW                    562
+#define IDM_FAV_TOGGLE                  562
 #define IDM_DEBUG_SHOW_LINKS            590
 #define IDM_DEBUG_GDI_RENDERER          591
 #define IDM_DEBUG_CRASH_ME              592
@@ -126,6 +126,7 @@
 #define IDC_FIND_EDIT                   1032
 #define IDC_MATCH_CASE                  1033
 #define IDC_FIND_NEXT_HINT              1034
+#define IDC_FAV_TREE                    1035
 #define IDC_SECTION_INVERSESEARCH       1040
 #define IDC_CMDLINE_LABEL               1041
 #define IDC_CMDLINE                     1042

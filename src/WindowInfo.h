@@ -96,8 +96,8 @@ public:
     bool            favVisible;
 
     // vertical splitter for resizing left side panel
-    HWND            hwndPanelSpliter;
-    bool            panelBeingResized;
+    HWND            hwndSidebarSpliter;
+    bool            sidebarBeingResized;
 
     HWND            hwndInfotip;
     HWND            hwndProperties;
@@ -206,11 +206,7 @@ public:
     void AbortPrinting();
     void AbortFinding(bool hideMessage=false);
 
-    void ShowTocBox();
-    void HideTocBox();
-    void ClearTocBox();
     void LoadTocTree();
-    void ToggleTocBox();
 
     HTREEITEM TreeItemForPageNo(HTREEITEM hItem, int pageNo);
     void UpdateTocSelection(int currPageNo);

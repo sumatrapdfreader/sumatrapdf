@@ -35,7 +35,7 @@
 #define SHOW_TOC_STR                "ShowToc"
 // for backwards compatibility, the serialized name is "Toc DX" and not
 // (more apropriate now) "Panel DX".
-#define PANEL_DX_STR                "Toc DX"
+#define SIDEBAR_DX_STR                "Toc DX"
 #define TOC_STATE_STR               "TocToggles"
 #define BG_COLOR_STR                "BgColor"
 #define ESC_TO_EXIT_STR             "EscToExit"
@@ -86,7 +86,7 @@ static BencDict* SerializeGlobalPrefs(SerializableGlobalPrefs& globalPrefs)
 
     prefs->Add(SHOW_TOOLBAR_STR, globalPrefs.showToolbar);
     prefs->Add(SHOW_TOC_STR, globalPrefs.showToc);
-    prefs->Add(PANEL_DX_STR, globalPrefs.panelDx);
+    prefs->Add(SIDEBAR_DX_STR, globalPrefs.sidebarDx);
     prefs->Add(PDF_ASSOCIATE_DONT_ASK_STR, globalPrefs.pdfAssociateDontAskAgain);
     prefs->Add(PDF_ASSOCIATE_ASSOCIATE_STR, globalPrefs.pdfAssociateShouldAssociate);
 
@@ -160,7 +160,7 @@ static BencDict *DisplayState_Serialize(DisplayState *ds, bool globalPrefsOnly)
 
     prefs->Add(SHOW_TOC_STR, ds->showToc);
     // for backwards compatibility, serialized name 
-    prefs->Add(PANEL_DX_STR, ds->panelDx);
+    prefs->Add(SIDEBAR_DX_STR, ds->sidebarDx);
 
     ScopedMem<char> zoom(str::Format("%.4f", ds->zoomVirtual));
     prefs->AddRaw(ZOOM_VIRTUAL_STR, zoom);
@@ -376,7 +376,7 @@ static DisplayState * DeserializeDisplayState(BencDict *dict, bool globalPrefsOn
     Retrieve(dict, WINDOW_DX_STR, ds->windowPos.dx);
     Retrieve(dict, WINDOW_DY_STR, ds->windowPos.dy);
     Retrieve(dict, SHOW_TOC_STR, ds->showToc);
-    Retrieve(dict, PANEL_DX_STR, ds->panelDx);
+    Retrieve(dict, SIDEBAR_DX_STR, ds->sidebarDx);
     Retrieve(dict, ZOOM_VIRTUAL_STR, ds->zoomVirtual);
     Retrieve(dict, USE_GLOBAL_VALUES_STR, ds->useGlobalValues);
 
@@ -410,7 +410,7 @@ static void DeserializePrefs(const char *prefsTxt, SerializableGlobalPrefs& glob
 
     Retrieve(global, SHOW_TOOLBAR_STR, globalPrefs.showToolbar);
     Retrieve(global, SHOW_TOC_STR, globalPrefs.showToc);
-    Retrieve(global, PANEL_DX_STR, globalPrefs.panelDx);
+    Retrieve(global, SIDEBAR_DX_STR, globalPrefs.sidebarDx);
     Retrieve(global, PDF_ASSOCIATE_DONT_ASK_STR, globalPrefs.pdfAssociateDontAskAgain);
     Retrieve(global, PDF_ASSOCIATE_ASSOCIATE_STR, globalPrefs.pdfAssociateShouldAssociate);
     Retrieve(global, ESC_TO_EXIT_STR, globalPrefs.escToExit);

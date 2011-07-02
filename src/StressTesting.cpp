@@ -451,7 +451,7 @@ bool StressTest::OpenFile(const TCHAR *fileName)
     win->dm->zoomTo(ZOOM_FIT_PAGE);
     win->dm->goToFirstPage();
     if (win->tocVisible)
-        win->HideTocBox();
+        HideTocBox(win);
 
     currPage = pageRanges[0].start;
     win->dm->goToPage(currPage, 0);

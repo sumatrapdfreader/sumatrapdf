@@ -119,7 +119,7 @@ TCHAR *                 gPluginURL = NULL; // owned by CommandLineInfo in WinMai
 #define DEFAULT_LINK_PROTOCOLS  _T("http,https,mailto")
 
 #define SPLITTER_DX  5
-#define PANEL_MIN_WIDTH 150
+#define SIDEBAR_MIN_WIDTH 150
 
 #define REPAINT_TIMER_ID            1
 #define REPAINT_MESSAGE_DELAY_IN_MS 1000
@@ -251,7 +251,10 @@ static ToolbarButtonInfo gToolbarButtons[] = {
 #define TOOLBAR_BUTTONS_COUNT dimof(gToolbarButtons)
 
 static void CreateToolbar(WindowInfo& win);
-static void CreateTocBox(WindowInfo& win);
+static void CreateSidebar(WindowInfo* win);
+static void ToggleTocBox(WindowInfo *win);
+static void ShowTocBox(WindowInfo *win);
+static void ClearTocBox(WindowInfo *win);
 static void UpdateToolbarFindText(WindowInfo& win);
 static void UpdateToolbarPageText(WindowInfo& win, int pageCount);
 static void UpdateToolbarToolText();
@@ -608,7 +611,7 @@ MenuDef menuDefFavorites[] = {
     // TODO: translate when finalized
     { "Add to favorites",                  IDM_FAV_ADD,                MF_NO_TRANSLATE },
     { "Remove from favorites",             IDM_FAV_DEL,                MF_NO_TRANSLATE },
-    { "Show all",                          IDM_FAV_SHOW,               MF_NO_TRANSLATE },
+    { "Show Favorites",                    IDM_FAV_TOGGLE,             MF_NO_TRANSLATE },
 };
 
 MenuDef menuDefSettings[] = {
@@ -804,7 +807,7 @@ static void AppendFavMenus(HMENU m, const TCHAR *currFilePath)
         AppendMenu(m, MF_POPUP | MF_STRING, (UINT_PTR)sub, fileName);
     }
 
-    win::menu::SetEnabled(m, IDM_FAV_SHOW, HasFavorites());
+    win::menu::SetEnabled(m, IDM_FAV_TOGGLE, HasFavorites());
 }
 
 // Called when a user opens "Favorites" top-level menu. We need to construct
@@ -1062,7 +1065,7 @@ static void RememberWindowPosition(WindowInfo& win)
     else if (!IsIconic(win.hwndFrame))
         gGlobalPrefs.windowState = WIN_STATE_NORMAL;
 
-    gGlobalPrefs.panelDx = WindowRect(win.hwndTocBox).dx;
+    gGlobalPrefs.sidebarDx = WindowRect(win.hwndTocBox).dx;
 
     /* don't update the window's dimensions if it is maximized, mimimized or fullscreened */
     if (WIN_STATE_NORMAL == gGlobalPrefs.windowState &&
@@ -1080,7 +1083,7 @@ static void UpdateDisplayStateWindowRect(WindowInfo& win, DisplayState& ds, bool
 
     ds.windowState = gGlobalPrefs.windowState;
     ds.windowPos = gGlobalPrefs.windowPos;
-    ds.panelDx = gGlobalPrefs.panelDx;
+    ds.sidebarDx = gGlobalPrefs.sidebarDx;
 }
 
 static void UpdateCurrentFileDisplayStateForWin(WindowInfo& win)
@@ -1140,7 +1143,7 @@ static void UpdateWindowRtlLayout(WindowInfo *win)
 
     bool showToC = win->tocVisible;
     if (showToC)
-        win->HideTocBox();
+        HideTocBox(win);
 
     // cf. http://www.microsoft.com/middleeast/msdn/mirror.aspx
     ToggleWindowStyle(win->hwndFrame, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
@@ -1160,7 +1163,7 @@ static void UpdateWindowRtlLayout(WindowInfo *win)
     // ensure that the ToC sidebar is on the correct side and that its
     // title and close button are also correctly laid out
     if (showToC) {
-        win->ShowTocBox();
+        ShowTocBox(win);
         SendMessage(win->hwndTocBox, WM_SIZE, 0, 0);
     }
 }
@@ -1396,19 +1399,19 @@ static void UpdateToolbarBg(HWND hwnd, bool enabled)
     ToggleWindowStyle(hwnd, SS_WHITERECT, enabled);
 }
 
-static void UpdateFindbox(WindowInfo& win)
+static void UpdateFindbox(WindowInfo* win)
 {
-    UpdateToolbarBg(win.hwndFindBg, win.IsDocLoaded());
-    UpdateToolbarBg(win.hwndPageBg, win.IsDocLoaded());
+    UpdateToolbarBg(win->hwndFindBg, win->IsDocLoaded());
+    UpdateToolbarBg(win->hwndPageBg, win->IsDocLoaded());
 
-    InvalidateRect(win.hwndToolbar, NULL, TRUE);
-    UpdateWindow(win.hwndToolbar);
+    InvalidateRect(win->hwndToolbar, NULL, TRUE);
+    UpdateWindow(win->hwndToolbar);
 
-    if (!win.IsDocLoaded()) {  // Avoid focus on Find box
-        SetClassLongPtr(win.hwndFindBox, GCLP_HCURSOR, (LONG_PTR)gCursorArrow);
+    if (!win->IsDocLoaded()) {  // Avoid focus on Find box
+        SetClassLongPtr(win->hwndFindBox, GCLP_HCURSOR, (LONG_PTR)gCursorArrow);
         HideCaret(NULL);
     } else {
-        SetClassLongPtr(win.hwndFindBox, GCLP_HCURSOR, (LONG_PTR)gCursorIBeam);
+        SetClassLongPtr(win->hwndFindBox, GCLP_HCURSOR, (LONG_PTR)gCursorIBeam);
         ShowCaret(NULL);
     }
 }
@@ -1676,8 +1679,8 @@ static WindowInfo* CreateWindowInfo()
         win->hwndCanvas, NULL, ghinst, NULL);
 
     CreateToolbar(*win);
-    CreateTocBox(*win);
-    UpdateFindbox(*win);
+    CreateSidebar(win);
+    UpdateFindbox(win);
     DragAcceptFiles(win->hwndCanvas, TRUE);
 
     gWindows.Append(win);
@@ -1713,9 +1716,9 @@ static void UpdateTocWidth(HWND hwndTocBox, const DisplayState *ds=NULL, int def
     rc = MapRectToWindow(rc, HWND_DESKTOP, GetParent(hwndTocBox));
 
     if (ds && !gGlobalPrefs.globalPrefsOnly)
-        rc.dx = ds->panelDx;
+        rc.dx = ds->sidebarDx;
     else if (!defaultDx)
-        rc.dx = gGlobalPrefs.panelDx;
+        rc.dx = gGlobalPrefs.sidebarDx;
     // else assume the correct width has been set previously
     if (!rc.dx) // first time
         rc.dx = defaultDx;
@@ -1769,7 +1772,7 @@ static bool LoadDocIntoWindow(
     // ToC items might hold a reference to an Engine, so make sure to
     // delete them before destroying the whole DisplayModel
     if (win.dm || tryRepair)
-        win.ClearTocBox();
+        ClearTocBox(&win);
 
     assert(!win.IsAboutWindow() && win.IsDocLoaded() == (win.dm != NULL));
     if (win.dm) {
@@ -1839,7 +1842,7 @@ static bool LoadDocIntoWindow(
         win.RedrawAll();
         OnMenuFindMatchCase(win);
     }
-    UpdateFindbox(win);
+    UpdateFindbox(&win);
 
     int pageCount = win.dm->pageCount();
     if (pageCount > 0) {
@@ -1896,10 +1899,10 @@ Error:
         win.UpdateToolbarState();
     }
     if (win.IsDocLoaded() && win.tocVisible && win.dm->engine && win.dm->engine->HasToCTree()) {
-        win.ShowTocBox();
+        ShowTocBox(&win);
     } else if (oldTocShow) {
         // Hide the now useless ToC sidebar and force an update afterwards
-        win.HideTocBox();
+        HideTocBox(&win);
         win.RedrawAll(true);
     }
     UpdateToolbarAndScrollbarsForAllWindows();
@@ -3307,8 +3310,8 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
         delete win->watcher;
         win->watcher = NULL;
         if (win->tocVisible)
-            win->HideTocBox();
-        win->ClearTocBox();
+            HideTocBox(win);
+        ClearTocBox(win);
         win->AbortFinding(true);
         delete win->dm;
         win->dm = NULL;
@@ -3326,7 +3329,7 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
         UpdateToolbarFindText(*win);
         DeleteOldSelectionInfo(*win, true);
         win->RedrawAll();
-        UpdateFindbox(*win);
+        UpdateFindbox(win);
         SetFocus(win->hwndFrame);
     } else {
         HWND hwndToDestroy = win->hwndFrame;
@@ -4337,7 +4340,7 @@ static void OnSize(WindowInfo& win, int dx, int dy)
     }
 
     if (win.tocLoaded && win.tocVisible)
-        win.ShowTocBox();
+        ShowTocBox(&win);
     else
         SetWindowPos(win.hwndCanvas, NULL, 0, rebBarDy, dx, dy - rebBarDy, SWP_NOZORDER);
 }
@@ -4546,7 +4549,7 @@ static void EnterFullscreen(WindowInfo& win, bool presentation)
 
     // Remove TOC from full screen, add back later on exit fullscreen
     if (win.tocVisible)
-        win.HideTocBox();
+        HideTocBox(&win);
 
     RectI rect;
     MONITORINFOEX mi;
@@ -4596,7 +4599,7 @@ static void ExitFullscreen(WindowInfo& win)
     }
 
     if (win.IsDocLoaded() && win.tocBeforeFullScreen)
-        win.ShowTocBox();
+        ShowTocBox(&win);
 
     if (gGlobalPrefs.showToolbar)
         ShowWindow(win.hwndReBar, SW_SHOW);
@@ -5027,6 +5030,8 @@ static void UpdateToolbarButtonsToolTipsForWindow(WindowInfo& win)
     }
 }
 
+/*
+TODO: probably remove this
 static void UpdateToCBoxTitle(WindowInfo& win)
 {
     HWND tocTitle = GetDlgItem(win.hwndTocBox, 0);
@@ -5036,6 +5041,7 @@ static void UpdateToCBoxTitle(WindowInfo& win)
         UpdateWindow(win.hwndTocBox);
     }
 }
+*/
 
 static void UpdateToolbarToolText()
 {
@@ -5044,7 +5050,8 @@ static void UpdateToolbarToolText()
         UpdateToolbarPageText(*win, -1);
         UpdateToolbarFindText(*win);
         UpdateToolbarButtonsToolTipsForWindow(*win);
-        UpdateToCBoxTitle(*win);
+        // TODO: it's not part of the toolbar and not sure if necessary
+        //UpdateToCBoxTitle(*win);
     }        
 }
 
@@ -5652,7 +5659,7 @@ static void CreateToolbar(WindowInfo& win) {
     CreateFindBox(win);
 }
 
-static void ResizePanel(WindowInfo *win)
+static void ResizeSidebar(WindowInfo *win)
 {
     POINT pcur;
     GetCursorPos(&pcur);
@@ -5667,8 +5674,8 @@ static void ResizePanel(WindowInfo *win)
     int height = r.dy;
 
     // TODO: ensure that the window is always wide enough for both
-    if (tocWidth < min(PANEL_MIN_WIDTH, prevTocWidth) ||
-        width < min(PANEL_MIN_WIDTH, prevCanvasWidth)) {
+    if (tocWidth < min(SIDEBAR_MIN_WIDTH, prevTocWidth) ||
+        width < min(SIDEBAR_MIN_WIDTH, prevCanvasWidth)) {
         SetCursor(gCursorNo);
         return;
     }
@@ -5682,7 +5689,7 @@ static void ResizePanel(WindowInfo *win)
 
     MoveWindow(win->hwndTocBox, 0, tocY, tocWidth, height, true);
     MoveWindow(win->hwndCanvas, tocWidth + SPLITTER_DX, tocY, width, height, true);
-    MoveWindow(win->hwndPanelSpliter, tocWidth, tocY, SPLITTER_DX, height, true);
+    MoveWindow(win->hwndSidebarSpliter, tocWidth, tocY, SPLITTER_DX, height, true);
 }
 
 static LRESULT CALLBACK WndProcSpliter(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -5694,18 +5701,18 @@ static LRESULT CALLBACK WndProcSpliter(HWND hwnd, UINT message, WPARAM wParam, L
     switch (message)
     {
         case WM_MOUSEMOVE:
-            if (win->panelBeingResized) {
-                ResizePanel(win);
+            if (win->sidebarBeingResized) {
+                ResizeSidebar(win);
                 return 0;
             }
             break;
         case WM_LBUTTONDOWN:
             SetCapture(hwnd);
-            win->panelBeingResized = true;
+            win->sidebarBeingResized = true;
             break;
         case WM_LBUTTONUP:
             ReleaseCapture();
-            win->panelBeingResized = false;
+            win->sidebarBeingResized = false;
             break;
     }
     return DefWindowProc(hwnd, message, wParam, lParam);
@@ -5817,7 +5824,7 @@ static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT message, WPARAM wParam, LP
         break;
     case WM_COMMAND:
         if (HIWORD(wParam) == STN_CLICKED)
-            win->ToggleTocBox();
+            ToggleTocBox(win);
         break;
     case WM_NOTIFY:
         if (LOWORD(wParam) == IDC_PDF_TOC_TREE) {
@@ -5886,41 +5893,72 @@ static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT message, WPARAM wParam, LP
     return CallWindowProc(DefWndProcTocBox, hwnd, message, wParam, lParam);
 }
 
-static void CreateTocBox(WindowInfo& win)
+static void CreateSidebar(WindowInfo* win)
 {
-    HWND tmp = CreateWindow(SPLITER_CLASS_NAME, _T(""), WS_CHILDWINDOW, 0, 0, 0, 0,
-                                win.hwndFrame, (HMENU)0, ghinst, NULL);
-    win.hwndPanelSpliter = tmp;
-    
-    win.hwndTocBox = CreateWindow(WC_STATIC, _T(""), WS_CHILD,
-                        0,0,gGlobalPrefs.panelDx,0, win.hwndFrame, (HMENU)0, ghinst, NULL);
-    tmp = CreateWindow(WC_STATIC, _T(""), WS_VISIBLE | WS_CHILD,
-                        0,0,0,0, win.hwndTocBox, (HMENU)0, ghinst, NULL);
-    SetWindowFont(tmp, gDefaultGuiFont, FALSE);
-    UpdateToCBoxTitle(win);
+    HWND tmp, title, closeToc;
 
-    HWND closeToc = CreateWindow(WC_STATIC, _T(""),
+    tmp = CreateWindow(SPLITER_CLASS_NAME, _T(""), WS_CHILDWINDOW, 0, 0, 0, 0,
+                       win->hwndFrame, (HMENU)0, ghinst, NULL);
+    win->hwndSidebarSpliter = tmp;
+    win->hwndTocBox = CreateWindow(WC_STATIC, _T(""), WS_CHILD,
+                        0,0,gGlobalPrefs.sidebarDx,0, win->hwndFrame, (HMENU)0, ghinst, NULL);
+    title = CreateWindow(WC_STATIC, _T(""), WS_VISIBLE | WS_CHILD,
+                         0,0,0,0, win->hwndTocBox, (HMENU)0, ghinst, NULL);
+    SetWindowFont(title, gDefaultGuiFont, FALSE);
+    win::SetText(title, _TR("Bookmarks"));
+    closeToc = CreateWindow(WC_STATIC, _T(""),
                         SS_OWNERDRAW | SS_NOTIFY | WS_CHILD | WS_VISIBLE,
-                        0, 0, 16, 16, win.hwndTocBox, (HMENU)1, ghinst, NULL);
+                        0, 0, 16, 16, win->hwndTocBox, (HMENU)1, ghinst, NULL);
     SetClassLongPtr(closeToc, GCLP_HCURSOR, (LONG_PTR)gCursorHand);
 
-    win.hwndTocTree = CreateWindowEx(WS_EX_STATICEDGE, WC_TREEVIEW, _T("TOC"),
+    win->hwndTocTree = CreateWindowEx(WS_EX_STATICEDGE, WC_TREEVIEW, _T("TOC"),
                         TVS_HASBUTTONS|TVS_HASLINES|TVS_LINESATROOT|TVS_SHOWSELALWAYS|
                         TVS_TRACKSELECT|TVS_DISABLEDRAGDROP|TVS_NOHSCROLL|TVS_INFOTIP|
                         WS_TABSTOP|WS_VISIBLE|WS_CHILD,
-                        0,0,0,0, win.hwndTocBox, (HMENU)IDC_PDF_TOC_TREE, ghinst, NULL);
+                        0,0,0,0, win->hwndTocBox, (HMENU)IDC_PDF_TOC_TREE, ghinst, NULL);
 
 #ifdef UNICODE
-    TreeView_SetUnicodeFormat(win.hwndTocTree, true);
+    TreeView_SetUnicodeFormat(win->hwndTocTree, true);
 #endif
 
     if (NULL == DefWndProcTocTree)
-        DefWndProcTocTree = (WNDPROC)GetWindowLongPtr(win.hwndTocTree, GWLP_WNDPROC);
-    SetWindowLongPtr(win.hwndTocTree, GWLP_WNDPROC, (LONG_PTR)WndProcTocTree);
+        DefWndProcTocTree = (WNDPROC)GetWindowLongPtr(win->hwndTocTree, GWLP_WNDPROC);
+    SetWindowLongPtr(win->hwndTocTree, GWLP_WNDPROC, (LONG_PTR)WndProcTocTree);
 
     if (NULL == DefWndProcTocBox)
-        DefWndProcTocBox = (WNDPROC)GetWindowLongPtr(win.hwndTocBox, GWLP_WNDPROC);
-    SetWindowLongPtr(win.hwndTocBox, GWLP_WNDPROC, (LONG_PTR)WndProcTocBox);
+        DefWndProcTocBox = (WNDPROC)GetWindowLongPtr(win->hwndTocBox, GWLP_WNDPROC);
+    SetWindowLongPtr(win->hwndTocBox, GWLP_WNDPROC, (LONG_PTR)WndProcTocBox);
+
+    win->hwndFavBox = CreateWindow(WC_STATIC, _T(""), WS_CHILD,
+                        0,0,gGlobalPrefs.sidebarDx,0, win->hwndFrame, (HMENU)0, ghinst, NULL);
+    title = CreateWindow(WC_STATIC, _T(""), WS_VISIBLE | WS_CHILD,
+                         0,0,0,0, win->hwndFavBox, (HMENU)0, ghinst, NULL);
+    SetWindowFont(title, gDefaultGuiFont, FALSE);
+    win::SetText(title, _T("Favorites")); // TODO: translate
+    closeToc = CreateWindow(WC_STATIC, _T(""),
+                        SS_OWNERDRAW | SS_NOTIFY | WS_CHILD | WS_VISIBLE,
+                        0, 0, 16, 16, win->hwndFavBox, (HMENU)1, ghinst, NULL);
+    SetClassLongPtr(closeToc, GCLP_HCURSOR, (LONG_PTR)gCursorHand);
+
+    win->hwndFavTree = CreateWindowEx(WS_EX_STATICEDGE, WC_TREEVIEW, _T("Fav"),
+                        TVS_HASBUTTONS|TVS_HASLINES|TVS_LINESATROOT|TVS_SHOWSELALWAYS|
+                        TVS_TRACKSELECT|TVS_DISABLEDRAGDROP|TVS_NOHSCROLL|TVS_INFOTIP|
+                        WS_TABSTOP|WS_VISIBLE|WS_CHILD,
+                        0,0,0,0, win->hwndFavBox, (HMENU)IDC_FAV_TREE, ghinst, NULL);
+    
+#ifdef UNICODE
+    TreeView_SetUnicodeFormat(win->hwndFavTree, true);
+#endif
+
+    if (win->tocVisible) {
+        InvalidateRect(win->hwndTocBox, NULL, TRUE);
+        UpdateWindow(win->hwndTocBox);
+    }
+
+    if (win->favVisible) {
+        InvalidateRect(win->hwndFavBox, NULL, TRUE);
+        UpdateWindow(win->hwndFavBox);
+    }
 }
 
 static HTREEITEM AddTocItemToView(HWND hwnd, DocToCItem *entry, HTREEITEM parent, bool toggleItem)
@@ -6056,92 +6094,122 @@ void WindowInfo::LoadTocTree()
     tocLoaded = true;
 }
 
-void WindowInfo::ToggleTocBox()
+static void SetSidebarVisibility(WindowInfo *win, bool tocVisible, bool favVisible)
 {
-    if (!IsDocLoaded())
+    bool sidebarVisible = tocVisible || favVisible;
+    // TODO: implement me
+    win->tocVisible = tocVisible;
+    win->favVisible = favVisible;
+}
+
+static void ToggleTocBox(WindowInfo *win)
+{
+    if (!win->IsDocLoaded())
         return;
-    if (!tocVisible) {
-        ShowTocBox();
-        SetFocus(hwndTocTree);
+    if (win->tocVisible) {
+        HideTocBox(win);
+        //SetSidebarVisibility(win, false, win->favVisible);
     } else {
-        HideTocBox();
+        ShowTocBox(win);
+        //SetSidebarVisibility(win, true, win->favVisible);
+        SetFocus(win->hwndTocTree);
     }
 }
 
-void WindowInfo::ShowTocBox()
+static void ShowTocBox(WindowInfo *win)
 {
-    if (!dm->engine || !dm->engine->HasToCTree()) {
-        tocVisible = true;
+    if (!win->dm->engine || !win->dm->engine->HasToCTree()) {
+        win->tocVisible = true;
         return;
     }
 
-    if (PM_BLACK_SCREEN == presentation || PM_WHITE_SCREEN == presentation)
+    if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation)
         return;
 
-    LoadTocTree();
+    win->LoadTocTree();
 
-    ClientRect rframe(hwndFrame);
-    if (rframe.IsEmpty() && tocVisible) {
+    ClientRect rframe(win->hwndFrame);
+    if (rframe.IsEmpty() && win->tocVisible) {
         // don't adjust the ToC sidebar size while the window is minimized
-        this->UpdateTocSelection(dm->currentPageNo());
+        win->UpdateTocSelection(win->dm->currentPageNo());
         return;
     }
-    UpdateTocWidth(hwndTocBox, NULL, rframe.dx / 4);
+    UpdateTocWidth(win->hwndTocBox, NULL, rframe.dx / 4);
 
     RectI box;
-    if (gGlobalPrefs.showToolbar && !fullScreen && !presentation)
-        box.y = WindowRect(hwndReBar).dy;
+    if (gGlobalPrefs.showToolbar && !win->fullScreen && !win->presentation)
+        box.y = WindowRect(win->hwndReBar).dy;
     box.dy = rframe.dy - box.y;
 
     // make sure that the sidebar is never too wide or too narrow
-    box.x = WindowRect(hwndTocBox).dx;
-    if (rframe.dx <= 2 * PANEL_MIN_WIDTH)
+    box.x = WindowRect(win->hwndTocBox).dx;
+    if (rframe.dx <= 2 * SIDEBAR_MIN_WIDTH)
         box.x = rframe.dx / 2;
-    else if (box.x >= rframe.dx - PANEL_MIN_WIDTH)
-        box.x = rframe.dx - PANEL_MIN_WIDTH;
-    else if (box.x < PANEL_MIN_WIDTH)
-        box.x = PANEL_MIN_WIDTH;
+    else if (box.x >= rframe.dx - SIDEBAR_MIN_WIDTH)
+        box.x = rframe.dx - SIDEBAR_MIN_WIDTH;
+    else if (box.x < SIDEBAR_MIN_WIDTH)
+        box.x = SIDEBAR_MIN_WIDTH;
     box.dx = rframe.dx - box.x - SPLITTER_DX;
 
-    SetWindowPos(hwndTocBox, NULL, 0, box.y, box.x, box.dy, SWP_NOZORDER|SWP_SHOWWINDOW);
-    SetWindowPos(hwndPanelSpliter, NULL, box.x, box.y, SPLITTER_DX, box.dy, SWP_NOZORDER|SWP_SHOWWINDOW);
-    SetWindowPos(hwndCanvas, NULL, box.x + SPLITTER_DX, box.y, box.dx, box.dy, SWP_NOZORDER|SWP_SHOWWINDOW);
+    SetWindowPos(win->hwndTocBox, NULL, 0, box.y, box.x, box.dy, SWP_NOZORDER|SWP_SHOWWINDOW);
+    SetWindowPos(win->hwndSidebarSpliter, NULL, box.x, box.y, SPLITTER_DX, box.dy, SWP_NOZORDER|SWP_SHOWWINDOW);
+    SetWindowPos(win->hwndCanvas, NULL, box.x + SPLITTER_DX, box.y, box.dx, box.dy, SWP_NOZORDER|SWP_SHOWWINDOW);
 
-    tocVisible = true;
-    UpdateTocSelection(dm->currentPageNo());
+    win->tocVisible = true;
+    win->UpdateTocSelection(win->dm->currentPageNo());
 }
 
-void WindowInfo::HideTocBox()
+void HideTocBox(WindowInfo *win)
 {
     int cy = 0;
-    if (gGlobalPrefs.showToolbar && !fullScreen && !presentation)
-        cy = WindowRect(hwndReBar).dy;
+    if (gGlobalPrefs.showToolbar && !win->fullScreen && !win->presentation)
+        cy = WindowRect(win->hwndReBar).dy;
 
-    if (GetFocus() == hwndTocTree)
-        SetFocus(hwndFrame);
+    if (GetFocus() == win->hwndTocTree)
+        SetFocus(win->hwndFrame);
 
-    ClientRect r(hwndFrame);
-    SetWindowPos(hwndCanvas, NULL, 0, cy, r.dx, r.dy - cy, SWP_NOZORDER);
-    ShowWindow(hwndTocBox, SW_HIDE);
-    ShowWindow(hwndPanelSpliter, SW_HIDE);
+    ClientRect r(win->hwndFrame);
+    SetWindowPos(win->hwndCanvas, NULL, 0, cy, r.dx, r.dy - cy, SWP_NOZORDER);
+    ShowWindow(win->hwndTocBox, SW_HIDE);
+    ShowWindow(win->hwndSidebarSpliter, SW_HIDE);
 
-    tocVisible = false;
+    win->tocVisible = false;
 }
 
-void WindowInfo::ClearTocBox()
+static void ClearTocBox(WindowInfo *win)
 {
-    if (!tocLoaded) return;
+    if (!win->tocLoaded) return;
 
-    SendMessage(hwndTocTree, WM_SETREDRAW, FALSE, 0);
-    TreeView_DeleteAllItems(hwndTocTree);
-    SendMessage(hwndTocTree, WM_SETREDRAW, TRUE, 0);
-    RedrawWindow(hwndTocTree, NULL, NULL, RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
+    SendMessage(win->hwndTocTree, WM_SETREDRAW, FALSE, 0);
+    TreeView_DeleteAllItems(win->hwndTocTree);
+    SendMessage(win->hwndTocTree, WM_SETREDRAW, TRUE, 0);
+    RedrawWindow(win->hwndTocTree, NULL, NULL, RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
 
-    delete tocRoot;
-    tocRoot = NULL;
+    delete win->tocRoot;
+    win->tocRoot = NULL;
 
-    tocLoaded = false;
-    currPageNo = 0;
+    win->tocLoaded = false;
+    win->currPageNo = 0;
+}
+
+static void ShowFavBox(WindowInfo *win)
+{
+
+}
+
+static void HideFavBox(WindowInfo *win)
+{
+
+}
+
+static void ToggleFavorites(WindowInfo *win)
+{
+    if (win->favVisible) {
+        HideFavBox(win);
+    } else {
+        ShowFavBox(win);
+        SetFocus(win->hwndFavTree);
+    }
 }
 
 static void CustomizeToCInfoTip(LPNMTVGETINFOTIP nmit)
@@ -6513,7 +6581,7 @@ void WindowInfo::RepaintAsync(UINT delay)
     QueueWorkItem(new RepaintCanvasWorkItem(this, delay));
 }
 
-static void FavoriteAdd(WindowInfo *win)
+static void AddFavorite(WindowInfo *win)
 {
     int pageNo = win->currPageNo;
     TCHAR *filePath = win->loadedFilePath;
@@ -6527,17 +6595,12 @@ static void FavoriteAdd(WindowInfo *win)
     // TODO: show notification that a favorite was deleted?
 }
 
-static void FavoriteDel(WindowInfo *win)
+static void DelFavorite(WindowInfo *win)
 {
     int pageNo = win->currPageNo;
     TCHAR *filePath = win->loadedFilePath;
     gFavorites->Remove(filePath, pageNo);
     // TODO: show notification that a favorite was deleted?
-}
-
-static void FavoritesToggle(WindowInfo *win)
-{
-    // TODO: implement me
 }
 
 static void UpdateMenu(WindowInfo *win, HMENU m)
@@ -6696,7 +6759,7 @@ static LRESULT OnCommand(WindowInfo *win, HWND hwnd, UINT message, WPARAM wParam
             break;
     
         case IDM_VIEW_BOOKMARKS:
-            win->ToggleTocBox();
+            ToggleTocBox(win);
             break;
     
         case IDM_GOTO_NEXT_PAGE:
@@ -6851,15 +6914,15 @@ static LRESULT OnCommand(WindowInfo *win, HWND hwnd, UINT message, WPARAM wParam
             break;
     
         case IDM_FAV_ADD:
-            FavoriteAdd(win);
+            AddFavorite(win);
             break;
 
         case IDM_FAV_DEL:
-            FavoriteDel(win);
+            DelFavorite(win);
             break;
 
-        case IDM_FAV_SHOW:
-            FavoritesToggle(win);
+        case IDM_FAV_TOGGLE:
+            ToggleFavorites(win);
             break;
     
         default:

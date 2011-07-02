@@ -35,7 +35,7 @@ public:
         filePath(NULL), useGlobalValues(false), openCount(0),
         displayMode(DM_AUTOMATIC), pageNo(1), zoomVirtual(100.0),
         rotation(0), windowState(0), thumbnail(NULL), isPinned(false),
-        decryptionKey(NULL), showToc(true), panelDx(0), tocState(NULL) { }
+        decryptionKey(NULL), showToc(true), sidebarDx(0), tocState(NULL) { }
 
     ~DisplayState() {
         free(filePath);
@@ -74,7 +74,7 @@ public:
     char *              decryptionKey;
 
     bool                showToc;
-    int                 panelDx;
+    int                 sidebarDx;
     // tocState is an array of ids for ToC items that have been expanded/collapsed
     // by the user (tocState[0] is the length of the list)
     int *               tocState;

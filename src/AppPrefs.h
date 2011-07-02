@@ -65,7 +65,7 @@ struct SerializableGlobalPrefs {
     RectI windowPos;
 
     bool showToc;
-    int  panelDx;
+    int  sidebarDx;
 
     /* Forward search highlighting settings  */
     int  fwdSearchOffset;    /* if <=0 then use the standard (inline) highlighting style, otherwise use the margin highlight (i.e., coloured block on the left side of the page) */
