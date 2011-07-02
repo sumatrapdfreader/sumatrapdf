@@ -143,9 +143,9 @@ public:
 
     bool            fullScreen;
     PresentationMode presentation;
-    bool            _tocBeforeFullScreen;
-    bool            _tocBeforePresentation;
-    int             _windowStateBeforePresentation;
+    bool            tocBeforeFullScreen;
+    bool            tocBeforePresentation;
+    int             windowStateBeforePresentation;
 
     long            prevStyle;
     RectI           frameRc; // window position before entering presentation/fullscreen mode

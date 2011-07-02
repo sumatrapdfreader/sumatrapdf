@@ -1054,7 +1054,7 @@ static void RememberWindowPosition(WindowInfo& win)
     // update global windowState for next default launch when either
     // no pdf is opened or a document without window dimension information
     if (win.presentation)
-        gGlobalPrefs.m_windowState = win._windowStateBeforePresentation;
+        gGlobalPrefs.m_windowState = win.windowStateBeforePresentation;
     else if (win.fullScreen)
         gGlobalPrefs.m_windowState = WIN_STATE_FULLSCREEN;
     else if (IsZoomed(win.hwndFrame))
@@ -4531,17 +4531,17 @@ static void EnterFullscreen(WindowInfo& win, bool presentation)
             return;
 
         if (IsZoomed(win.hwndFrame))
-            win._windowStateBeforePresentation = WIN_STATE_MAXIMIZED;
+            win.windowStateBeforePresentation = WIN_STATE_MAXIMIZED;
         else
-            win._windowStateBeforePresentation = WIN_STATE_NORMAL;
+            win.windowStateBeforePresentation = WIN_STATE_NORMAL;
         win.presentation = PM_ENABLED;
-        win._tocBeforePresentation = win.tocVisible;
+        win.tocBeforePresentation = win.tocVisible;
 
         SetTimer(win.hwndCanvas, HIDE_CURSOR_TIMER_ID, HIDE_CURSOR_DELAY_IN_MS, NULL);
     }
     else {
         win.fullScreen = true;
-        win._tocBeforeFullScreen = win.IsDocLoaded() ? win.tocVisible : false;
+        win.tocBeforeFullScreen = win.IsDocLoaded() ? win.tocVisible : false;
     }
 
     // Remove TOC from full screen, add back later on exit fullscreen
@@ -4595,7 +4595,7 @@ static void ExitFullscreen(WindowInfo& win)
         SetCursor(gCursorArrow);
     }
 
-    if (win.IsDocLoaded() && (wasPresentation ? win._tocBeforePresentation : win._tocBeforeFullScreen))
+    if (win.IsDocLoaded() && (wasPresentation ? win.tocBeforePresentation : win.tocBeforeFullScreen))
         win.ShowTocBox();
 
     if (gGlobalPrefs.m_showToolbar)
