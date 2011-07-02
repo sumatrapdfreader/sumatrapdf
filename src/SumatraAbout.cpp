@@ -172,7 +172,9 @@ static RectI DrawBottomRightLink(HWND hwnd, HDC hdc, const TCHAR *txt)
     GetTextExtentPoint32(hdc, txt, (int)str::Len(txt), &txtSize);
     RectI rect(rc.dx - txtSize.cx - ABOUT_INNER_PADDING,
                rc.y + rc.dy - txtSize.cy - ABOUT_INNER_PADDING, txtSize.cx, txtSize.cy);
-    DrawText(hdc, txt, -1, &rect.ToRECT(), DT_LEFT);
+    if (IsUIRightToLeft())
+        rect.x = ABOUT_INNER_PADDING;
+    DrawText(hdc, txt, -1, &rect.ToRECT(), IsUIRightToLeft() ? DT_RTLREADING : DT_LEFT);
 
     SelectObject(hdc, penLinkLine);
     PaintLine(hdc, RectI(rect.x, rect.y + rect.dy, rect.dx, 0));
@@ -539,6 +541,8 @@ void DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory)
     SelectObject(hdc, gBrushAboutBg);
     SelectObject(hdc, penBorder);
 
+    bool isRtl = IsUIRightToLeft();
+
     /* render title */
     RectI titleBox = RectI(PointI(0, 0), CalcSumatraVersionSize(hdc));
     titleBox.x = rc.dx - titleBox.dx - 3;
@@ -573,7 +577,10 @@ void DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory)
     SIZE txtSize;
     const TCHAR *txt = _TR("Frequently Read");
     GetTextExtentPoint32(hdc, txt, (int)str::Len(txt), &txtSize);
-    TextOut(hdc, offset.x, rc.y + (DOCLIST_MARGIN_TOP - txtSize.cy) / 2, txt, (int)str::Len(txt));
+    RectI headerRect(offset.x, rc.y + (DOCLIST_MARGIN_TOP - txtSize.cy) / 2, txtSize.cx, txtSize.cy);
+    if (isRtl)
+        headerRect.x = rc.dx - offset.x - headerRect.dx;
+    DrawText(hdc, txt, -1, &headerRect.ToRECT(), isRtl ? DT_RTLREADING : DT_LEFT);
 
     SelectObject(hdc, fontLeftTxt);
     SelectObject(hdc, GetStockObject(NULL_BRUSH));
@@ -591,6 +598,8 @@ void DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory)
             RectI page(offset.x + w * (int)(THUMBNAIL_DX + DOCLIST_MARGIN_BETWEEN_X * win.uiDPIFactor),
                        offset.y + h * (int)(THUMBNAIL_DY + DOCLIST_MARGIN_BETWEEN_Y * win.uiDPIFactor),
                        THUMBNAIL_DX, THUMBNAIL_DY);
+            if (isRtl)
+                page.x = rc.dx - page.x - page.dx;
             if (state->thumbnail || LoadThumbnail(*state)) {
                 HRGN clip = CreateRoundRectRgn(page.x, page.y, page.x + page.dx, page.y + page.dy, 10, 10);
                 SelectClipRgn(hdc, clip);
@@ -604,11 +613,15 @@ void DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory)
 
             int iconSpace = (int)(20 * win.uiDPIFactor);
             RectI rect(page.x + iconSpace, page.y + THUMBNAIL_DY + 3, THUMBNAIL_DX - iconSpace, iconSpace);
-            DrawText(hdc, path::GetBaseName(state->filePath), -1, &rect.ToRECT(), DT_SINGLELINE | DT_END_ELLIPSIS);
+            if (isRtl)
+                rect.x -= iconSpace;
+            DrawText(hdc, path::GetBaseName(state->filePath), -1, &rect.ToRECT(), DT_SINGLELINE | DT_END_ELLIPSIS | (isRtl ? DT_RIGHT : DT_LEFT));
 
             SHFILEINFO sfi;
             HIMAGELIST himl = (HIMAGELIST)SHGetFileInfo(state->filePath, 0, &sfi, sizeof(sfi), SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES);
-            ImageList_Draw(himl, sfi.iIcon, hdc, page.x, rect.y, ILD_TRANSPARENT);
+            ImageList_Draw(himl, sfi.iIcon, hdc,
+                           isRtl ? page.x + page.dx - (int)(16 * win.uiDPIFactor) : page.x,
+                           rect.y, ILD_TRANSPARENT);
 
             win.staticLinks.Append(StaticLinkInfo(rect.Union(page), state->filePath, state->filePath));
         }
@@ -626,12 +639,16 @@ void DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory)
     RectI rectIcon(offset.x, rc.y, 0, 0);
     ImageList_GetIconSize(himl, &rectIcon.dx, &rectIcon.dy);
     rectIcon.y += (rc.dy - rectIcon.dy) / 2;
-    ImageList_Draw(himl, 0, hdc, rectIcon.x, rectIcon.y, ILD_NORMAL);
+    if (isRtl)
+        rectIcon.x = rc.dx - offset.x - rectIcon.dx;
+    ImageList_Draw(himl, 0 /* index of Open icon */, hdc, rectIcon.x, rectIcon.y, ILD_NORMAL);
 
     txt = _TR("Open a document...");
     GetTextExtentPoint32(hdc, txt, (int)str::Len(txt), &txtSize);
     RectI rect(offset.x + rectIcon.dx + 3, rc.y + (rc.dy - txtSize.cy) / 2, txtSize.cx, txtSize.cy);
-    DrawText(hdc, txt, -1, &rect.ToRECT(), DT_LEFT);
+    if (isRtl)
+        rect.x = rectIcon.x - rect.dx - 3;
+    DrawText(hdc, txt, -1, &rect.ToRECT(), isRtl ? DT_RTLREADING : DT_LEFT);
     PaintLine(hdc, RectI(rect.x, rect.y + rect.dy, rect.dx, 0));
     // make the click target larger
     rect = rect.Union(rectIcon);

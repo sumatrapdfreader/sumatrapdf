@@ -83,6 +83,14 @@ class MessageWnd : public ProgressUpdateUI {
         } else if (rectMsg.dx > progressWidth + 2 * PADDING) {
             SetWindowPos(self, NULL, 0, 0, rectMsg.dx, WindowRect(self).dy, SWP_NOMOVE | SWP_NOZORDER);
         }
+
+        // move the window to the right for a right-to-left layout
+        if (IsUIRightToLeft()) {
+            HWND parent = GetParent(self);
+            RectI rect = MapRectToWindow(WindowRect(self), HWND_DESKTOP, parent);
+            rect.x = WindowRect(parent).dx - rect.dx - TL_MARGIN - GetSystemMetrics(SM_CXVSCROLL);
+            SetWindowPos(self, NULL, rect.x, rect.y, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+        }
     }
 
 public:
@@ -226,11 +234,17 @@ public:
 class MessageWndList : public MessageWndCallback {
     Vec<MessageWnd *> wnds;
 
+    int GetWndX(MessageWnd *wnd) {
+        RectI rect = WindowRect(wnd->hwnd());
+        rect = MapRectToWindow(rect, HWND_DESKTOP, GetParent(wnd->hwnd()));
+        return rect.x;
+    }
+
     void MoveBelow(MessageWnd *fix, MessageWnd *move) {
         RectI rect = WindowRect(fix->hwnd());
         rect = MapRectToWindow(rect, HWND_DESKTOP, GetParent(fix->hwnd()));
         SetWindowPos(move->hwnd(), NULL,
-                     rect.x, rect.y + rect.dy + MessageWnd::TL_MARGIN,
+                     GetWndX(move), rect.y + rect.dy + MessageWnd::TL_MARGIN,
                      0, 0, SWP_NOSIZE | SWP_NOZORDER);
     }
 
@@ -241,12 +255,12 @@ class MessageWndList : public MessageWndCallback {
         wnds.Remove(wnd);
         if (ix == 0 && wnds.Count() > 0) {
             SetWindowPos(wnds[0]->hwnd(), NULL,
-                         MessageWnd::TL_MARGIN, MessageWnd::TL_MARGIN,
+                         GetWndX(wnds[0]), MessageWnd::TL_MARGIN,
                          0, 0, SWP_NOSIZE | SWP_NOZORDER);
             ix = 1;
         }
-        for (; ix < (int)wnds.Count(); ix++)
-            MoveBelow(wnds[ix - 1], wnds[ix]);
+        for (size_t i = ix; i < wnds.Count(); i++)
+            MoveBelow(wnds[i - 1], wnds[i]);
     }
 
 public:

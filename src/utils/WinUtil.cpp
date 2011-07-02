@@ -439,10 +439,10 @@ void PaintLine(HDC hdc, RectI& rect)
     LineTo(hdc, rect.x + rect.dx, rect.y + rect.dy);
 }
 
-void DrawCenteredText(HDC hdc, RectI& r, const TCHAR *txt)
+void DrawCenteredText(HDC hdc, RectI& r, const TCHAR *txt, bool isRTL)
 {    
     SetBkMode(hdc, TRANSPARENT);
-    DrawText(hdc, txt, -1, &r.ToRECT(), DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+    DrawText(hdc, txt, -1, &r.ToRECT(), DT_CENTER | DT_VCENTER | DT_SINGLELINE | (isRTL ? DT_RTLREADING : 0));
 }
 
 bool IsCursorOverWindow(HWND hwnd)

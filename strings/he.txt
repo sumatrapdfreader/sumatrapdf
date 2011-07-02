@@ -219,7 +219,7 @@ Cannot start inverse search command. Please check the command line in the settin
 לא ניתן להריץ פקודת חיפוש הפוך. אנא בדוק הפקודה בהגדרות
 
 Change Language
-שנה שפה
+שנה שפה (Change language)
 
 Check for &Updates
 בדוק לגרסה חדשה

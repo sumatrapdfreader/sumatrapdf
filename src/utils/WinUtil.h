@@ -278,7 +278,7 @@ HANDLE  LaunchProcess(TCHAR *cmdLine, DWORD flags=0);
 
 void    PaintRect(HDC hdc, RectI& rect);
 void    PaintLine(HDC hdc, RectI& rect);
-void    DrawCenteredText(HDC hdc, RectI& r, const TCHAR *txt);
+void    DrawCenteredText(HDC hdc, RectI& r, const TCHAR *txt, bool isRTL=false);
 
 bool    IsCursorOverWindow(HWND hwnd);
 void    CenterDialog(HWND hDlg, HWND hParent=NULL);

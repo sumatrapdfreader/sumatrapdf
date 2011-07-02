@@ -221,7 +221,7 @@ Cannot start inverse search command. Please check the command line in the settin
 لايمكن البدء في البحث في الاتجاه المعاكس. يرجى التحقق من الأمر في الإعدادات
 
 Change Language
-تغيير اللغة
+تغيير اللغة (Change language)
 
 Check for &Updates
 تحقق من وجود &تحديثات

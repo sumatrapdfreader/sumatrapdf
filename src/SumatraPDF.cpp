@@ -1150,26 +1150,25 @@ static void UpdateWindowRtlLayout(WindowInfo *win)
     ToggleWindowStyle(win->hwndTocBox, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
     HWND tocBoxTitle = GetDlgItem(win->hwndTocBox, 0);
     ToggleWindowStyle(tocBoxTitle, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
+    HWND favBoxTitle = GetDlgItem(win->hwndFavBox, 0);
+    ToggleWindowStyle(favBoxTitle, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
 
     ToggleWindowStyle(win->hwndReBar, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
     ToggleWindowStyle(win->hwndToolbar, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
-    // TODO: this looks wrong for LTR input
     ToggleWindowStyle(win->hwndFindBox, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
+    ToggleWindowStyle(win->hwndFindText, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
+    ToggleWindowStyle(win->hwndPageText, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
 
-    // TODO: also update the Frequently Read list
-    // TODO: also update the canvas scrollbars
-    // TODO: also update all notifications (including their placement)
+    // TODO: also update the canvas scrollbars (?)
 
     // ensure that the ToC sidebar is on the correct side and that its
     // title and close button are also correctly laid out
-    SetSidebarVisibility(win, showToC, showFav);
-
-    if (showToC) {
-        SendMessage(win->hwndTocBox, WM_SIZE, 0, 0);
-    }
-
-    if (showFav) {
-        SendMessage(win->hwndFavBox, WM_SIZE, 0, 0);
+    if (showToC || showFav) {
+        SetSidebarVisibility(win, showToC, showFav);
+        if (showToC)
+            SendMessage(win->hwndTocBox, WM_SIZE, 0, 0);
+        if (showFav)
+            SendMessage(win->hwndFavBox, WM_SIZE, 0, 0);
     }
 }
 
@@ -2501,11 +2500,11 @@ static void DrawDocument(WindowInfo& win, HDC hdc, RECT *rcArea)
                 if (renderDelay < REPAINT_MESSAGE_DELAY_IN_MS)
                     win.RepaintAsync(REPAINT_MESSAGE_DELAY_IN_MS / 4);
                 else
-                    DrawCenteredText(hdc, bounds, _TR("Please wait - rendering..."));
+                    DrawCenteredText(hdc, bounds, _TR("Please wait - rendering..."), IsUIRightToLeft());
                 DBG_OUT("drawing empty %d ", pageNo);
                 rendering = true;
             } else {
-                DrawCenteredText(hdc, bounds, _TR("Couldn't render the page"));
+                DrawCenteredText(hdc, bounds, _TR("Couldn't render the page"), IsUIRightToLeft());
                 DBG_OUT("   missing bitmap on visible page %d\n", pageNo);
             }
             continue;
@@ -3209,7 +3208,7 @@ static void OnPaint(WindowInfo& win)
         SetBkMode(hdc, TRANSPARENT);
         FillRect(hdc, &ps.rcPaint, gBrushNoDocBg);
         ScopedMem<TCHAR> msg(str::Format(_TR("Error loading %s"), win.loadedFilePath));
-        DrawCenteredText(hdc, ClientRect(win.hwndCanvas), msg);
+        DrawCenteredText(hdc, ClientRect(win.hwndCanvas), msg, IsUIRightToLeft());
     } else {
         switch (win.presentation) {
         case PM_BLACK_SCREEN:
@@ -5025,13 +5024,20 @@ static void UpdateToolbarButtonsToolTipsForWindow(WindowInfo& win)
     }
 }
 
-static void UpdateToCBoxTitle(WindowInfo& win)
+static void UpdateSidebarTitles(WindowInfo& win)
 {
     HWND tocTitle = GetDlgItem(win.hwndTocBox, 0);
     win::SetText(tocTitle, _TR("Bookmarks"));
     if (win.tocVisible) {
         InvalidateRect(win.hwndTocBox, NULL, TRUE);
         UpdateWindow(win.hwndTocBox);
+    }
+
+    HWND favTitle = GetDlgItem(win.hwndFavBox, 0);
+    win::SetText(tocTitle, _T("Favorites")); // TODO: translate
+    if (win.favVisible) {
+        InvalidateRect(win.hwndFavBox, NULL, TRUE);
+        UpdateWindow(win.hwndFavBox);
     }
 }
 
@@ -5044,7 +5050,7 @@ static void UpdateToolbarToolText()
         UpdateToolbarFindText(*win);
         UpdateToolbarButtonsToolTipsForWindow(*win);
         // also update the sidebar title at this point
-        UpdateToCBoxTitle(*win);
+        UpdateSidebarTitles(*win);
     }        
 }
 
@@ -5516,10 +5522,18 @@ void UpdateToolbarPageText(WindowInfo& win, int pageCount)
 
     int padding = GetSystemMetrics(SM_CXEDGE);
     MoveWindow(win.hwndPageText, pos_x, (pageWndRect.dy - size.cy + 1) / 2 + pos_y, size.cx, size.cy, true);
+    if (IsUIRightToLeft())
+        pos_x += size2.cx - 6;
     MoveWindow(win.hwndPageBg, pos_x + size.cx, pos_y, pageWndRect.dx, pageWndRect.dy, false);
     MoveWindow(win.hwndPageBox, pos_x + size.cx + padding, (pageWndRect.dy - size.cy + 1) / 2 + pos_y,
         pageWndRect.dx - 2 * padding, size.cy, false);
-    MoveWindow(win.hwndPageTotal, pos_x + size.cx + pageWndRect.dx, (pageWndRect.dy - size.cy + 1) / 2 + pos_y, size2.cx, size.cy, false);
+    // in right-to-left layout, the total comes "before" the current page number
+    if (IsUIRightToLeft()) {
+        pos_x -= size2.cx;
+        MoveWindow(win.hwndPageTotal, pos_x + size.cx, (pageWndRect.dy - size.cy + 1) / 2 + pos_y, size2.cx, size.cy, false);
+    }
+    else
+        MoveWindow(win.hwndPageTotal, pos_x + size.cx + pageWndRect.dx, (pageWndRect.dy - size.cy + 1) / 2 + pos_y, size2.cx, size.cy, false);
 
     TBBUTTONINFO bi;
     bi.cbSize = sizeof(bi);
