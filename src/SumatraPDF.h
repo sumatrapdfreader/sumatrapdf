@@ -54,6 +54,6 @@ bool LaunchBrowser(const TCHAR *url);
 void AssociateExeWithPdfExtension();
 void FindTextOnThread(WindowInfo* win, TextSearchDirection direction=FIND_FORWARD);
 void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose=false);
-void HideTocBox(WindowInfo *win);
+void SetSidebarVisibility(WindowInfo *win, bool tocVisible, bool favVisible);
 
 #endif

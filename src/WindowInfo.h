@@ -145,6 +145,8 @@ public:
     PresentationMode presentation;
     // were we showing toc before entering full screen or presentation mode
     bool            tocBeforeFullScreen;
+    // were we showing fav before entering full screen or presentation mode
+    bool            favBeforeFullScreen;
     int             windowStateBeforePresentation;
 
     long            prevStyle;

@@ -253,7 +253,6 @@ static ToolbarButtonInfo gToolbarButtons[] = {
 static void CreateToolbar(WindowInfo& win);
 static void CreateSidebar(WindowInfo* win);
 static void ToggleTocBox(WindowInfo *win);
-static void ShowTocBox(WindowInfo *win);
 static void ClearTocBox(WindowInfo *win);
 static void UpdateToolbarFindText(WindowInfo& win);
 static void UpdateToolbarPageText(WindowInfo& win, int pageCount);
@@ -1142,8 +1141,9 @@ static void UpdateWindowRtlLayout(WindowInfo *win)
         return;
 
     bool showToC = win->tocVisible;
-    if (showToC)
-        HideTocBox(win);
+    bool showFav = win->favVisible;
+    if (showToC || showFav)
+        SetSidebarVisibility(win, false, false);
 
     // cf. http://www.microsoft.com/middleeast/msdn/mirror.aspx
     ToggleWindowStyle(win->hwndFrame, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
@@ -1162,9 +1162,14 @@ static void UpdateWindowRtlLayout(WindowInfo *win)
 
     // ensure that the ToC sidebar is on the correct side and that its
     // title and close button are also correctly laid out
+    SetSidebarVisibility(win, showToC, showFav);
+
     if (showToC) {
-        ShowTocBox(win);
         SendMessage(win->hwndTocBox, WM_SIZE, 0, 0);
+    }
+
+    if (showFav) {
+        SendMessage(win->hwndFavBox, WM_SIZE, 0, 0);
     }
 }
 
@@ -1540,7 +1545,7 @@ static void MenuUpdateStateForWindow(WindowInfo& win) {
 
     MenuUpdatePrintItem(win, win.menu);
 
-    bool enabled = win.IsDocLoaded() && win.dm->engine && win.dm->engine->HasToCTree();
+    bool enabled = win.IsDocLoaded() && win.dm->HasTocTree();
     win::menu::SetEnabled(win.menu, IDM_VIEW_BOOKMARKS, enabled);
 
     bool documentSpecific = win.IsDocLoaded();
@@ -1708,24 +1713,6 @@ static void DeleteWindowInfo(WindowInfo *win)
     delete win;
 }
 
-static void UpdateTocWidth(HWND hwndTocBox, const DisplayState *ds=NULL, int defaultDx=0)
-{
-    RectI rc = WindowRect(hwndTocBox);
-    if (rc.IsEmpty())
-        return;
-    rc = MapRectToWindow(rc, HWND_DESKTOP, GetParent(hwndTocBox));
-
-    if (ds && !gGlobalPrefs.globalPrefsOnly)
-        rc.dx = ds->sidebarDx;
-    else if (!defaultDx)
-        rc.dx = gGlobalPrefs.sidebarDx;
-    // else assume the correct width has been set previously
-    if (!rc.dx) // first time
-        rc.dx = defaultDx;
-
-    SetWindowPos(hwndTocBox, NULL, rc.x, rc.y, rc.dx, rc.dy, SWP_NOZORDER);
-}
-
 static bool LoadDocIntoWindow(
     const TCHAR *fileName, // path to the document
     WindowInfo& win,       // destination window
@@ -1822,7 +1809,7 @@ static bool LoadDocIntoWindow(
     else {
         win.tocVisible = gGlobalPrefs.showToc;
     }
-    UpdateTocWidth(win.hwndTocBox, state);
+    //SidebarDxFromDisplayState(state);
 
     // Review needed: Is the following block really necessary?
     /*
@@ -1898,11 +1885,13 @@ Error:
         win.dm->SetScrollState(ss);
         win.UpdateToolbarState();
     }
-    if (win.IsDocLoaded() && win.tocVisible && win.dm->engine && win.dm->engine->HasToCTree()) {
-        ShowTocBox(&win);
+
+    bool showToc = win.IsDocLoaded() && win.tocVisible && win.dm->HasTocTree();
+    if (showToc) {
+        SetSidebarVisibility(&win, true, false);
     } else if (oldTocShow) {
         // Hide the now useless ToC sidebar and force an update afterwards
-        HideTocBox(&win);
+        SetSidebarVisibility(&win, false, false);
         win.RedrawAll(true);
     }
     UpdateToolbarAndScrollbarsForAllWindows();
@@ -3309,8 +3298,8 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
         /* last window - don't delete it */
         delete win->watcher;
         win->watcher = NULL;
-        if (win->tocVisible)
-            HideTocBox(win);
+        if (win->tocVisible || win->favVisible)
+            SetSidebarVisibility(win, win->tocVisible, win->favVisible);
         ClearTocBox(win);
         win->AbortFinding(true);
         delete win->dm;
@@ -4331,18 +4320,20 @@ static void AdjustWindowEdge(WindowInfo& win)
     }
 }
 
-static void OnSize(WindowInfo& win, int dx, int dy)
+static void OnSize(WindowInfo* win, int dx, int dy)
 {
     int rebBarDy = 0;
     if (gGlobalPrefs.showToolbar) {
-        SetWindowPos(win.hwndReBar, NULL, 0, 0, dx, rebBarDy, SWP_NOZORDER);
-        rebBarDy = WindowRect(win.hwndReBar).dy;
+        SetWindowPos(win->hwndReBar, NULL, 0, 0, dx, rebBarDy, SWP_NOZORDER);
+        rebBarDy = WindowRect(win->hwndReBar).dy;
     }
 
-    if (win.tocLoaded && win.tocVisible)
-        ShowTocBox(&win);
+    bool showToc = win->tocLoaded && win->tocVisible;
+    bool showFav = win->favVisible;
+    if (showToc || showFav)
+        SetSidebarVisibility(win, showToc, showFav);
     else
-        SetWindowPos(win.hwndCanvas, NULL, 0, rebBarDy, dx, dy - rebBarDy, SWP_NOZORDER);
+        SetWindowPos(win->hwndCanvas, NULL, 0, rebBarDy, dx, dy - rebBarDy, SWP_NOZORDER);
 }
 
 static void OnMenuChangeLanguage(WindowInfo& win)
@@ -4539,17 +4530,19 @@ static void EnterFullscreen(WindowInfo& win, bool presentation)
             win.windowStateBeforePresentation = WIN_STATE_NORMAL;
         win.presentation = PM_ENABLED;
         win.tocBeforeFullScreen = win.tocVisible;
+        win.favBeforeFullScreen = win.favVisible;
 
         SetTimer(win.hwndCanvas, HIDE_CURSOR_TIMER_ID, HIDE_CURSOR_DELAY_IN_MS, NULL);
     }
     else {
         win.fullScreen = true;
         win.tocBeforeFullScreen = win.IsDocLoaded() ? win.tocVisible : false;
+        win.favBeforeFullScreen = win.favVisible;
     }
 
     // Remove TOC from full screen, add back later on exit fullscreen
-    if (win.tocVisible)
-        HideTocBox(&win);
+    if (win.tocVisible || win.favVisible)
+        SetSidebarVisibility(&win, win.tocVisible, win.favVisible);
 
     RectI rect;
     MONITORINFOEX mi;
@@ -4598,8 +4591,10 @@ static void ExitFullscreen(WindowInfo& win)
         SetCursor(gCursorArrow);
     }
 
-    if (win.IsDocLoaded() && win.tocBeforeFullScreen)
-        ShowTocBox(&win);
+    bool showToc = win.IsDocLoaded() && win.tocBeforeFullScreen;
+    bool showFav = win.favBeforeFullScreen;
+    if (showToc || showFav)
+        SetSidebarVisibility(&win, showToc, showFav);
 
     if (gGlobalPrefs.showToolbar)
         ShowWindow(win.hwndReBar, SW_SHOW);
@@ -6092,12 +6087,130 @@ void WindowInfo::LoadTocTree()
     tocLoaded = true;
 }
 
-static void SetSidebarVisibility(WindowInfo *win, bool tocVisible, bool favVisible)
+/*
+static int SidebarDxFromDisplayState(const DisplayState *ds=NULL, int defaultDx=0)
 {
+    if (ds && !gGlobalPrefs.globalPrefsOnly)
+        return ds->sidebarDx;
+    if (!defaultDx)
+        return gGlobalPrefs.sidebarDx;
+    return defaultDx;
+}*/
+
+static void SetWinPos(HWND hwnd, RectI r, bool isVisible)
+{
+    UINT flags = SWP_NOZORDER;
+    if (isVisible)
+        flags |= SWP_SHOWWINDOW;
+    else
+        flags |= SWP_HIDEWINDOW;
+    SetWindowPos(hwnd, NULL, r.x, r.y, r.dx, r.dy, flags);
+}
+
+void SetSidebarVisibility(WindowInfo *win, bool tocVisible, bool favVisible)
+{
+    assert(win->dm->HasTocTree()); // TODO: can this ever happen?
+    if (!win->dm->HasTocTree())
+        tocVisible = false;
+
+    if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation)
+    {
+        assert(0); // TODO: is this possible
+        tocVisible = false;
+        favVisible = false;
+    }
+
     bool sidebarVisible = tocVisible || favVisible;
-    // TODO: implement me
+
+    if (tocVisible)
+        win->LoadTocTree();
+
     win->tocVisible = tocVisible;
     win->favVisible = favVisible;
+
+    ClientRect rFrame(win->hwndFrame);
+    int toolbarDy = 0;
+    if (gGlobalPrefs.showToolbar && !win->fullScreen && !win->presentation)
+        toolbarDy = WindowRect(win->hwndReBar).dy;
+    int dy = rFrame.dy - toolbarDy;
+
+    if (!sidebarVisible) {
+        if (GetFocus() == win->hwndTocTree || GetFocus() == win->hwndFavTree)
+            SetFocus(win->hwndFrame);
+        
+        SetWindowPos(win->hwndCanvas, NULL, 0, toolbarDy, rFrame.dx, dy, SWP_NOZORDER);
+        ShowWindow(win->hwndSidebarSpliter, SW_HIDE);
+        ShowWindow(win->hwndTocBox, SW_HIDE);
+        ShowWindow(win->hwndFavBox, SW_HIDE);
+        return;
+    }
+
+    if (rFrame.IsEmpty()) {
+        // don't adjust the ToC sidebar size while the window is minimized
+        if (win->tocVisible)
+            win->UpdateTocSelection(win->dm->currentPageNo());
+        return;
+    }
+    ClientRect sidebarRc(win->hwndTocBox);
+    int sidebarDx = sidebarRc.dx;
+    if (sidebarDx == 0) {
+        // TODO: use saved panelDx from saved preferences
+        sidebarDx = rFrame.dx / 4;
+    }
+    //int dx = SidebarDxFromDisplayState(NULL, rc.dx / 4);
+
+    // make sure that the sidebar is never too wide or too narrow
+    if (sidebarDx < SIDEBAR_MIN_WIDTH)
+        sidebarDx = SIDEBAR_MIN_WIDTH;
+    if (sidebarDx > rFrame.dx / 2)
+        sidebarDx = rFrame.dx / 2;
+
+    RectI rToc, rFav, rSplitter, rCanvas;
+    int tocDx = sidebarDx - SPLITTER_DX;
+
+    rSplitter.x = tocDx;
+    rSplitter.dx = SPLITTER_DX;
+    rSplitter.y = toolbarDy;
+    rSplitter.dy = dy;
+
+    rCanvas.x = sidebarDx;
+    rCanvas.dx = rFrame.dx - sidebarDx;
+    rCanvas.y = toolbarDy;
+    rCanvas.dy = dy;
+
+    rToc.x = 0;
+    rToc.dx = tocDx;
+    rFav.x = 0;
+    rFav.dx = tocDx;
+
+    int y = toolbarDy;
+    if (tocVisible && favVisible) {
+        dy = dy / 2;
+        rToc.y = y;
+        rToc.dy = dy;
+        rFav.y = y + dy;
+        rFav.dy = dy;
+    } else {
+        if (tocVisible) {
+            rToc.y = y;
+            rToc.dy = dy;
+            rFav.y = y;
+            rFav.dy = 0;
+        } else {
+            rFav.y = y;
+            rFav.dy = dy;
+            rToc.y = y;
+            rToc.dy = 0;
+        }
+    }
+    
+    SetWinPos(win->hwndTocBox, rToc, tocVisible);
+    SetWinPos(win->hwndFavBox, rFav, favVisible);
+    SetWinPos(win->hwndSidebarSpliter, rSplitter, true);
+    SetWinPos(win->hwndCanvas, rCanvas, true);
+
+    if (tocVisible)
+        win->UpdateTocSelection(win->dm->currentPageNo());
 }
 
 static void ToggleTocBox(WindowInfo *win)
@@ -6105,73 +6218,11 @@ static void ToggleTocBox(WindowInfo *win)
     if (!win->IsDocLoaded())
         return;
     if (win->tocVisible) {
-        HideTocBox(win);
-        //SetSidebarVisibility(win, false, win->favVisible);
+        SetSidebarVisibility(win, false, win->favVisible);
     } else {
-        ShowTocBox(win);
-        //SetSidebarVisibility(win, true, win->favVisible);
+        SetSidebarVisibility(win, true,  win->favVisible);
         SetFocus(win->hwndTocTree);
     }
-}
-
-static void ShowTocBox(WindowInfo *win)
-{
-    if (!win->dm->engine || !win->dm->engine->HasToCTree()) {
-        win->tocVisible = true;
-        return;
-    }
-
-    if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation)
-        return;
-
-    win->LoadTocTree();
-
-    ClientRect rframe(win->hwndFrame);
-    if (rframe.IsEmpty() && win->tocVisible) {
-        // don't adjust the ToC sidebar size while the window is minimized
-        win->UpdateTocSelection(win->dm->currentPageNo());
-        return;
-    }
-    UpdateTocWidth(win->hwndTocBox, NULL, rframe.dx / 4);
-
-    RectI box;
-    if (gGlobalPrefs.showToolbar && !win->fullScreen && !win->presentation)
-        box.y = WindowRect(win->hwndReBar).dy;
-    box.dy = rframe.dy - box.y;
-
-    // make sure that the sidebar is never too wide or too narrow
-    box.x = WindowRect(win->hwndTocBox).dx;
-    if (rframe.dx <= 2 * SIDEBAR_MIN_WIDTH)
-        box.x = rframe.dx / 2;
-    else if (box.x >= rframe.dx - SIDEBAR_MIN_WIDTH)
-        box.x = rframe.dx - SIDEBAR_MIN_WIDTH;
-    else if (box.x < SIDEBAR_MIN_WIDTH)
-        box.x = SIDEBAR_MIN_WIDTH;
-    box.dx = rframe.dx - box.x - SPLITTER_DX;
-
-    SetWindowPos(win->hwndTocBox, NULL, 0, box.y, box.x, box.dy, SWP_NOZORDER|SWP_SHOWWINDOW);
-    SetWindowPos(win->hwndSidebarSpliter, NULL, box.x, box.y, SPLITTER_DX, box.dy, SWP_NOZORDER|SWP_SHOWWINDOW);
-    SetWindowPos(win->hwndCanvas, NULL, box.x + SPLITTER_DX, box.y, box.dx, box.dy, SWP_NOZORDER|SWP_SHOWWINDOW);
-
-    win->tocVisible = true;
-    win->UpdateTocSelection(win->dm->currentPageNo());
-}
-
-void HideTocBox(WindowInfo *win)
-{
-    int cy = 0;
-    if (gGlobalPrefs.showToolbar && !win->fullScreen && !win->presentation)
-        cy = WindowRect(win->hwndReBar).dy;
-
-    if (GetFocus() == win->hwndTocTree)
-        SetFocus(win->hwndFrame);
-
-    ClientRect r(win->hwndFrame);
-    SetWindowPos(win->hwndCanvas, NULL, 0, cy, r.dx, r.dy - cy, SWP_NOZORDER);
-    ShowWindow(win->hwndTocBox, SW_HIDE);
-    ShowWindow(win->hwndSidebarSpliter, SW_HIDE);
-
-    win->tocVisible = false;
 }
 
 static void ClearTocBox(WindowInfo *win)
@@ -6190,22 +6241,12 @@ static void ClearTocBox(WindowInfo *win)
     win->currPageNo = 0;
 }
 
-static void ShowFavBox(WindowInfo *win)
-{
-
-}
-
-static void HideFavBox(WindowInfo *win)
-{
-
-}
-
 static void ToggleFavorites(WindowInfo *win)
 {
     if (win->favVisible) {
-        HideFavBox(win);
+        SetSidebarVisibility(win, win->tocVisible, false);
     } else {
-        ShowFavBox(win);
+        SetSidebarVisibility(win, win->tocVisible, true);
         SetFocus(win->hwndFavTree);
     }
 }
@@ -6950,7 +6991,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
 
                 int dx = LOWORD(lParam);
                 int dy = HIWORD(lParam);
-                OnSize(*win, dx, dy);
+                OnSize(win, dx, dy);
             }
             break;
 

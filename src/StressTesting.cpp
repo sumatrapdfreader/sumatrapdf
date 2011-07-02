@@ -450,8 +450,8 @@ bool StressTest::OpenFile(const TCHAR *fileName)
     win->dm->changeDisplayMode(DM_CONTINUOUS);
     win->dm->zoomTo(ZOOM_FIT_PAGE);
     win->dm->goToFirstPage();
-    if (win->tocVisible)
-        HideTocBox(win);
+    if (win->tocVisible || win->favVisible)
+        SetSidebarVisibility(win, win->tocVisible, win->favVisible);
 
     currPage = pageRanges[0].start;
     win->dm->goToPage(currPage, 0);

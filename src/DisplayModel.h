@@ -128,6 +128,9 @@ public:
     float zoomReal() const { return _zoomReal; }
     float zoomReal(int pageNo);
 
+    bool HasTocTree() const {
+        return engine && engine->HasToCTree();
+    }
     int currentPageNo() const;
 
     BaseEngine *    engine;
