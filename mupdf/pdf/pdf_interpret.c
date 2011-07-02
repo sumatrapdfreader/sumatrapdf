@@ -80,6 +80,7 @@ struct pdf_csi_s
 	int xbalance;
 	int in_text;
 	int in_array;
+	int in_hidden_ocg; /* SumatraPDF: support inline OCGs */
 
 	/* path object state */
 	fz_path *path;
@@ -105,6 +106,50 @@ static fz_error pdf_run_buffer(pdf_csi *csi, fz_obj *rdb, fz_buffer *contents);
 static fz_error pdf_run_xobject(pdf_csi *csi, fz_obj *resources, pdf_xobject *xobj, fz_matrix transform);
 static void pdf_show_pattern(pdf_csi *csi, pdf_pattern *pat, fz_rect area, int what);
 
+
+/* SumatraPDF: support inline OCGs */
+static int
+fz_is_in_array(fz_obj *arr, fz_obj *obj)
+{
+	int i;
+
+	for (i = 0; i < fz_array_len(arr); i++)
+		if (!fz_objcmp(fz_array_get(arr, i), obj))
+			return 1;
+
+	return 0;
+}
+
+static int
+pdf_is_ocg_hidden(fz_obj *ocg, pdf_xref *xref, char *target)
+{
+	char target_state[16];
+	fz_obj *obj;
+	int defaultOff;
+
+	fz_strlcpy(target_state, target, sizeof target_state);
+	fz_strlcat(target_state, "State", sizeof target_state);
+
+	obj = fz_dict_gets(ocg, "Usage");
+	obj = fz_dict_gets(obj, target);
+	obj = fz_dict_gets(obj, target_state);
+	if (!strcmp(fz_to_name(obj), "OFF"))
+		return 1;
+
+	obj = fz_dict_gets(ocg, "Intent");
+	if (fz_is_name(obj) && strcmp(fz_to_name(obj), "View") != 0)
+		return 1;
+
+	obj = fz_dict_gets(xref->trailer, "Root");
+	obj = fz_dict_gets(obj, "OCProperties");
+	obj = fz_dict_gets(obj, "D");
+	defaultOff = !strcmp(fz_to_name(fz_dict_gets(obj, "BaseState")), "OFF");
+	obj = fz_dict_gets(obj, defaultOff ? "ON" : "OFF");
+	if (fz_is_array(obj))
+		return !fz_is_in_array(obj, ocg) == defaultOff;
+
+	return 0;
+}
 
 static int
 pdf_is_hidden_ocg(fz_obj *xobj, char *target)
@@ -178,6 +223,10 @@ pdf_show_shade(pdf_csi *csi, fz_shade *shd)
 	pdf_gstate *gstate = csi->gstate + csi->gtop;
 	fz_rect bbox;
 
+	/* SumatraPDF: support inline OCGs */
+	if (csi->in_hidden_ocg > 0)
+		return;
+
 	bbox = fz_bound_shade(shd, gstate->ctm);
 
 	pdf_begin_group(csi, bbox);
@@ -192,6 +241,10 @@ pdf_show_image(pdf_csi *csi, fz_pixmap *image)
 {
 	pdf_gstate *gstate = csi->gstate + csi->gtop;
 	fz_rect bbox;
+
+	/* SumatraPDF: support inline OCGs */
+	if (csi->in_hidden_ocg > 0)
+		return;
 
 	bbox = fz_transform_rect(gstate->ctm, fz_unit_rect);
 
@@ -273,6 +326,10 @@ pdf_show_path(pdf_csi *csi, int doclose, int dofill, int dostroke, int even_odd)
 		fz_clip_path(csi->dev, path, even_odd, gstate->ctm);
 		csi->clip = 0;
 	}
+
+	/* SumatraPDF: support inline OCGs */
+	if (csi->in_hidden_ocg > 0)
+		dofill = dostroke = 0;
 
 	pdf_begin_group(csi, bbox);
 
@@ -371,6 +428,10 @@ pdf_flush_text(pdf_csi *csi)
 	case 6: dofill = dostroke = doclip = 1; break;
 	case 7: doclip = 1; break;
 	}
+
+	/* SumatraPDF: support inline OCGs */
+	if (csi->in_hidden_ocg > 0)
+		dofill = dostroke = 0;
 
 	bbox = fz_bound_text(text, gstate->ctm);
 
@@ -677,6 +738,7 @@ pdf_new_csi(pdf_xref *xref, fz_device *dev, fz_matrix ctm, char *target)
 	csi->xbalance = 0;
 	csi->in_text = 0;
 	csi->in_array = 0;
+	csi->in_hidden_ocg = 0; /* SumatraPDF: support inline OCGs */
 
 	csi->path = fz_new_path();
 	csi->clip = 0;
@@ -1272,8 +1334,17 @@ pdf_run_extgstate(pdf_csi *csi, fz_obj *rdb, fz_obj *extgstate)
  * Operators
  */
 
-static void pdf_run_BDC(pdf_csi *csi)
+/* SumatraPDF: support inline OCGs */
+static void pdf_run_BDC(pdf_csi *csi, fz_obj *rdb)
 {
+	if (csi->in_hidden_ocg > 0)
+		csi->in_hidden_ocg++;
+	else
+	{
+		fz_obj *ocg = fz_dict_gets(fz_dict_gets(rdb, "Properties"), csi->name);
+		if (ocg && !strcmp(fz_to_name(fz_dict_gets(ocg, "Type")), "OCG") && pdf_is_ocg_hidden(ocg, csi->xref, csi->target))
+			csi->in_hidden_ocg++;
+	}
 }
 
 static fz_error pdf_run_BI(pdf_csi *csi, fz_obj *rdb, fz_stream *file)
@@ -1322,6 +1393,9 @@ static void pdf_run_B(pdf_csi *csi)
 
 static void pdf_run_BMC(pdf_csi *csi)
 {
+	/* SumatraPDF: support inline OCGs */
+	if (csi->in_hidden_ocg > 0)
+		csi->in_hidden_ocg++;
 }
 
 static void pdf_run_BT(pdf_csi *csi)
@@ -1471,6 +1545,9 @@ static fz_error pdf_run_Do(pdf_csi *csi, fz_obj *rdb)
 
 static void pdf_run_EMC(pdf_csi *csi)
 {
+	/* SumatraPDF: support inline OCGs */
+	if (csi->in_hidden_ocg > 0)
+		csi->in_hidden_ocg--;
 }
 
 static void pdf_run_ET(pdf_csi *csi)
@@ -2033,7 +2110,7 @@ pdf_run_keyword(pdf_csi *csi, fz_obj *rdb, fz_stream *file, char *buf)
 	case A('\''): pdf_run_squote(csi); break;
 	case A('B'): pdf_run_B(csi); break;
 	case B('B','*'): pdf_run_Bstar(csi); break;
-	case C('B','D','C'): pdf_run_BDC(csi); break;
+	case C('B','D','C'): pdf_run_BDC(csi, rdb); break; /* SumatraPDF: support inline OCGs */
 	case B('B','I'):
 		error = pdf_run_BI(csi, rdb, file);
 		if (error)
