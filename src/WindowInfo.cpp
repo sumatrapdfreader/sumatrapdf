@@ -40,7 +40,7 @@ WindowInfo::WindowInfo(HWND hwnd) :
     buffer = new DoubleBuffer(hwndCanvas, canvasRc);
     linkHandler = new LinkHandler(*this);
     messages = new MessageWndList();
-    fwdsearchmark.show = false;
+    fwdSearchMark.show = false;
 }
 
 WindowInfo::~WindowInfo() 

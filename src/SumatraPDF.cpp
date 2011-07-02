@@ -1967,7 +1967,7 @@ WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin, b
     }
 
     DeleteOldSelectionInfo(*win, true);
-    win->fwdsearchmark.show = false;
+    win->fwdSearchMark.show = false;
     win->messages->CleanUp(NG_RESPONSE_TO_ACTION);
     win->messages->CleanUp(NG_PAGE_INFO_HELPER);
 
@@ -2351,21 +2351,21 @@ static void PaintSelection(WindowInfo& win, HDC hdc) {
 }
 
 static void PaintForwardSearchMark(WindowInfo& win, HDC hdc) {
-    PageInfo *pageInfo = win.dm->getPageInfo(win.fwdsearchmark.page);
+    PageInfo *pageInfo = win.dm->getPageInfo(win.fwdSearchMark.page);
     if (!pageInfo || 0.0 == pageInfo->visibleRatio)
         return;
     
     // Draw the rectangles highlighting the forward search results
-    for (UINT i = 0; i < win.fwdsearchmark.rects.Count(); i++) {
-        RectD recD = win.fwdsearchmark.rects[i].Convert<double>();
-        RectI recI = win.dm->CvtToScreen(win.fwdsearchmark.page, recD);
+    for (UINT i = 0; i < win.fwdSearchMark.rects.Count(); i++) {
+        RectD recD = win.fwdSearchMark.rects[i].Convert<double>();
+        RectI recI = win.dm->CvtToScreen(win.fwdSearchMark.page, recD);
         if (gGlobalPrefs.m_fwdsearchOffset > 0) {
             recI.x = max(pageInfo->pageOnScreen.x, 0) + (int)(gGlobalPrefs.m_fwdsearchOffset * win.dm->zoomReal());
             recI.dx = (int)((gGlobalPrefs.m_fwdsearchWidth > 0 ? gGlobalPrefs.m_fwdsearchWidth : 15.0) * win.dm->zoomReal());
             recI.y -= 4;
             recI.dy += 8;
         }
-        BYTE alpha = (BYTE)(0x5f * 1.0f * (HIDE_FWDSRCHMARK_STEPS - win.fwdsearchmark.hideStep) / HIDE_FWDSRCHMARK_STEPS);
+        BYTE alpha = (BYTE)(0x5f * 1.0f * (HIDE_FWDSRCHMARK_STEPS - win.fwdSearchMark.hideStep) / HIDE_FWDSRCHMARK_STEPS);
         PaintTransparentRectangle(hdc, win.canvasRc, &recI, gGlobalPrefs.m_fwdsearchColor, alpha, 0);
     }
 }
@@ -2538,7 +2538,7 @@ static void DrawDocument(WindowInfo& win, HDC hdc, RECT *rcArea)
     if (win.showSelection)
         PaintSelection(win, hdc);
     
-    if (win.fwdsearchmark.show)
+    if (win.fwdSearchMark.show)
         PaintForwardSearchMark(win, hdc);
 
     DBG_OUT("\n");
@@ -2671,7 +2671,7 @@ static bool OnInverseSearch(WindowInfo& win, int x, int y)
     if (!win.IsDocLoaded() || win.dm->engineType != Engine_PDF) return false;
 
     // Clear the last forward-search result
-    win.fwdsearchmark.rects.Reset();
+    win.fwdSearchMark.rects.Reset();
     InvalidateRect(win.hwndCanvas, NULL, FALSE);
 
     // On double-clicking error message will be shown to the user
@@ -4629,16 +4629,16 @@ static void OnMenuViewPresentation(WindowInfo& win)
 // Show the result of a PDF forward-search synchronization (initiated by a DDE command)
 void WindowInfo::ShowForwardSearchResult(const TCHAR *fileName, UINT line, UINT col, UINT ret, UINT page, Vec<RectI> &rects)
 {
-    this->fwdsearchmark.rects.Reset();
+    this->fwdSearchMark.rects.Reset();
     if (ret == PDFSYNCERR_SUCCESS && rects.Count() > 0) {
         // remember the position of the search result for drawing the rect later on
         const PageInfo *pi = this->dm->getPageInfo(page);
         if (pi) {
-            this->fwdsearchmark.rects = rects;
-            this->fwdsearchmark.page = page;
-            this->fwdsearchmark.show = true;
+            fwdSearchMark.rects = rects;
+            fwdSearchMark.page = page;
+            fwdSearchMark.show = true;
             if (!gGlobalPrefs.m_fwdsearchPermanent)  {
-                this->fwdsearchmark.hideStep = 0;
+                fwdSearchMark.hideStep = 0;
                 SetTimer(this->hwndCanvas, HIDE_FWDSRCHMARK_TIMER_ID, HIDE_FWDSRCHMARK_DELAY_IN_MS, NULL);
             }
 
@@ -6277,14 +6277,14 @@ static void OnTimer(WindowInfo& win, HWND hwnd, WPARAM timerId)
         break;
 
     case HIDE_FWDSRCHMARK_TIMER_ID:
-        win.fwdsearchmark.hideStep++;
-        if (1 == win.fwdsearchmark.hideStep) {
+        win.fwdSearchMark.hideStep++;
+        if (1 == win.fwdSearchMark.hideStep) {
             SetTimer(hwnd, HIDE_FWDSRCHMARK_TIMER_ID, HIDE_FWDSRCHMARK_DECAYINTERVAL_IN_MS, NULL);
         }
-        else if (win.fwdsearchmark.hideStep >= HIDE_FWDSRCHMARK_STEPS) {
+        else if (win.fwdSearchMark.hideStep >= HIDE_FWDSRCHMARK_STEPS) {
             KillTimer(hwnd, HIDE_FWDSRCHMARK_TIMER_ID);
-            win.fwdsearchmark.show = false;
-            win.fwdsearchmark.hideStep = 0;
+            win.fwdSearchMark.show = false;
+            win.fwdSearchMark.hideStep = 0;
             win.RepaintAsync();
         }
         else

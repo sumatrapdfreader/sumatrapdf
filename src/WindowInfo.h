@@ -176,12 +176,12 @@ public:
     /* when doing a forward search, the result location is highlighted with
      * rectangular marks in the document. These variables indicate the position of the markers
      * and whether they should be shown. */
-    struct          {
-                        bool show;          // are the markers visible?
-                        Vec<RectI> rects;   // location of the markers in user coordinates
-                        int page;
-                        int hideStep;       // value used to gradually hide the markers
-                    } fwdsearchmark;
+    struct {
+        bool show;          // are the markers visible?
+        Vec<RectI> rects;   // location of the markers in user coordinates
+        int page;
+        int hideStep;       // value used to gradually hide the markers
+    } fwdSearchMark;
 
     CallbackFunc *  stressTest;
     bool            suppressPwdUI;
