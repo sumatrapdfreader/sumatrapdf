@@ -2372,8 +2372,8 @@ pdf_run_page_with_usage(pdf_xref *xref, pdf_page *page, fz_device *dev, fz_matri
 		/* SumatraPDF: don't print annotations unless explicitly asked to */
 		if (!(flags & (1 << 2)) /* Print */ && !strcmp(target, "Print"))
 			continue;
-		else
-		if (flags & (1 << 5)) /* NoView */
+		/* SumatraPDF: only consider the NoView flag for the View target */
+		if ((flags & (1 << 5)) /* NoView */ && !strcmp(target, "View"))
 			continue;
 
 		if (pdf_is_hidden_ocg(annot->obj, target))
