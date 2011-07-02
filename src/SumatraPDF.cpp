@@ -181,32 +181,32 @@ static int                          gPolicyRestrictions = Perm_All;
 static StrVec                       gAllowedLinkProtocols;
 
 SerializableGlobalPrefs             gGlobalPrefs = {
-    false, // bool m_globalPrefsOnly
-    DEFAULT_LANGUAGE, // const char *m_currentLanguage
-    true, // bool m_showToolbar
-    false, // bool m_pdfAssociateDontAskAgain
-    false, // bool m_pdfAssociateShouldAssociate
-    true, // bool m_enableAutoUpdate
-    true, // bool m_rememberOpenedFiles
-    ABOUT_BG_COLOR_DEFAULT, // int m_bgColor
-    false, // bool m_escToExit
-    NULL, // TCHAR *m_inverseSearchCmdLine
-    false, // bool m_enableTeXEnhancements
-    NULL, // TCHAR *m_versionToSkip
-    NULL, // char *m_lastUpdateTime
-    DEFAULT_DISPLAY_MODE, // DisplayMode m_defaultDisplayMode
-    DEFAULT_ZOOM, // float m_defaultZoom
-    WIN_STATE_NORMAL, // int  m_windowState
-    RectI(), // RectI m_windowPos
-    true, // bool m_showToc
+    false, // bool globalPrefsOnly
+    DEFAULT_LANGUAGE, // const char *currentLanguage
+    true, // bool showToolbar
+    false, // bool pdfAssociateDontAskAgain
+    false, // bool pdfAssociateShouldAssociate
+    true, // bool enableAutoUpdate
+    true, // bool rememberOpenedFiles
+    ABOUT_BG_COLOR_DEFAULT, // int bgColor
+    false, // bool escToExit
+    NULL, // TCHAR *inverseSearchCmdLine
+    false, // bool enableTeXEnhancements
+    NULL, // TCHAR *versionToSkip
+    NULL, // char *lastUpdateTime
+    DEFAULT_DISPLAY_MODE, // DisplayMode defaultDisplayMode
+    DEFAULT_ZOOM, // float defaultZoom
+    WIN_STATE_NORMAL, // int  windowState
+    RectI(), // RectI windowPos
+    true, // bool showToc
     0, // int  m_tocDx
-    0, // int  m_fwdsearchOffset
-    COL_FWDSEARCH_BG, // int  m_fwdsearchColor
-    15, // int  m_fwdsearchWidth
-    0, // bool m_fwdsearchPermanent
-    true, // bool m_showStartPage
-    0, // int m_openCountWeek
-    { 0, 0 }, // FILETIME m_lastPrefUpdate
+    0, // int  fwdSearchOffset
+    COL_FWDSEARCH_BG, // int  fwdSearchColor
+    15, // int  fwdSearchWidth
+    0, // bool fwdSearchPermanent
+    true, // bool showStartPage
+    0, // int openCountWeek
+    { 0, 0 }, // FILETIME lastPrefUpdate
 };
 
 enum MenuToolbarFlags {
@@ -278,7 +278,7 @@ static bool CurrLangNameSet(const char *langName)
     if (!langCode)
         return false;
 
-    gGlobalPrefs.m_currentLanguage = langCode;
+    gGlobalPrefs.currentLanguage = langCode;
 
     bool ok = Trans::SetCurrentLanguage(langCode);
     assert(ok);
@@ -483,7 +483,7 @@ static bool SendAsEmailAttachment(WindowInfo *win)
 static void MenuUpdateDisplayMode(WindowInfo& win)
 {
     bool enabled = false;
-    DisplayMode displayMode = gGlobalPrefs.m_defaultDisplayMode;
+    DisplayMode displayMode = gGlobalPrefs.defaultDisplayMode;
     if (win.IsDocLoaded()) {
         enabled = true;
         displayMode = win.dm->displayMode();
@@ -974,7 +974,7 @@ TCHAR *WindowInfo::GetPassword(const TCHAR *fileName, unsigned char *fileDigest,
         return NULL;
 
     fileName = path::GetBaseName(fileName);
-    return Dialog_GetPassword(this->hwndFrame, fileName, gGlobalPrefs.m_rememberOpenedFiles ? saveKey : NULL);
+    return Dialog_GetPassword(this->hwndFrame, fileName, gGlobalPrefs.rememberOpenedFiles ? saveKey : NULL);
 }
 
 /* Caller needs to free() the result. */
@@ -1042,7 +1042,7 @@ static void ZoomMenuItemCheck(HMENU m, UINT menuItemId, bool canZoom)
 
 static void MenuUpdateZoom(WindowInfo& win)
 {
-    float zoomVirtual = gGlobalPrefs.m_defaultZoom;
+    float zoomVirtual = gGlobalPrefs.defaultZoom;
     if (win.IsDocLoaded())
         zoomVirtual = win.dm->zoomVirtual();
     UINT menuId = MenuIdFromVirtualZoom(zoomVirtual);
@@ -1054,22 +1054,22 @@ static void RememberWindowPosition(WindowInfo& win)
     // update global windowState for next default launch when either
     // no pdf is opened or a document without window dimension information
     if (win.presentation)
-        gGlobalPrefs.m_windowState = win.windowStateBeforePresentation;
+        gGlobalPrefs.windowState = win.windowStateBeforePresentation;
     else if (win.fullScreen)
-        gGlobalPrefs.m_windowState = WIN_STATE_FULLSCREEN;
+        gGlobalPrefs.windowState = WIN_STATE_FULLSCREEN;
     else if (IsZoomed(win.hwndFrame))
-        gGlobalPrefs.m_windowState = WIN_STATE_MAXIMIZED;
+        gGlobalPrefs.windowState = WIN_STATE_MAXIMIZED;
     else if (!IsIconic(win.hwndFrame))
-        gGlobalPrefs.m_windowState = WIN_STATE_NORMAL;
+        gGlobalPrefs.windowState = WIN_STATE_NORMAL;
 
     gGlobalPrefs.panelDx = WindowRect(win.hwndTocBox).dx;
 
     /* don't update the window's dimensions if it is maximized, mimimized or fullscreened */
-    if (WIN_STATE_NORMAL == gGlobalPrefs.m_windowState &&
+    if (WIN_STATE_NORMAL == gGlobalPrefs.windowState &&
         !IsIconic(win.hwndFrame) && !win.presentation) {
         // TODO: Use Get/SetWindowPlacement (otherwise we'd have to separately track
         //       the non-maximized dimensions for proper restoration)
-        gGlobalPrefs.m_windowPos = WindowRect(win.hwndFrame);
+        gGlobalPrefs.windowPos = WindowRect(win.hwndFrame);
     }
 }
 
@@ -1078,8 +1078,8 @@ static void UpdateDisplayStateWindowRect(WindowInfo& win, DisplayState& ds, bool
     if (updateGlobal)
         RememberWindowPosition(win);
 
-    ds.windowState = gGlobalPrefs.m_windowState;
-    ds.windowPos = gGlobalPrefs.m_windowPos;
+    ds.windowState = gGlobalPrefs.windowState;
+    ds.windowPos = gGlobalPrefs.windowPos;
     ds.panelDx = gGlobalPrefs.panelDx;
 }
 
@@ -1095,13 +1095,13 @@ static void UpdateCurrentFileDisplayStateForWin(WindowInfo& win)
         return;
 
     DisplayState *state = gFileHistory.Find(fileName);
-    assert(state || !gGlobalPrefs.m_rememberOpenedFiles);
+    assert(state || !gGlobalPrefs.rememberOpenedFiles);
     if (!state)
         return;
 
     if (!win.dm->displayStateFromModel(state))
         return;
-    state->useGlobalValues = gGlobalPrefs.m_globalPrefsOnly;
+    state->useGlobalValues = gGlobalPrefs.globalPrefsOnly;
     UpdateDisplayStateWindowRect(win, *state, false);
     win.DisplayStateFromToC(state);
 }
@@ -1110,7 +1110,7 @@ static void ShowOrHideToolbarGlobally()
 {
     for (size_t i = 0; i < gWindows.Count(); i++) {
         WindowInfo *win = gWindows[i];
-        if (gGlobalPrefs.m_showToolbar) {
+        if (gGlobalPrefs.showToolbar) {
             ShowWindow(win->hwndReBar, SW_SHOW);
         } else {
             // Move the focus out of the toolbar
@@ -1125,7 +1125,7 @@ static void ShowOrHideToolbarGlobally()
 
 bool IsUIRightToLeft()
 {
-    int langIx = Trans::GetLanguageIndex(gGlobalPrefs.m_currentLanguage);
+    int langIx = Trans::GetLanguageIndex(gGlobalPrefs.currentLanguage);
     return Trans::IsLanguageRtL(langIx);
 }
 
@@ -1202,13 +1202,13 @@ static bool ReloadPrefs()
     ScopedMem<TCHAR> path(GetPrefsFileName());
 
     FILETIME time = file::GetModificationTime(path);
-    if (time.dwLowDateTime == gGlobalPrefs.m_lastPrefUpdate.dwLowDateTime &&
-        time.dwHighDateTime == gGlobalPrefs.m_lastPrefUpdate.dwHighDateTime) {
+    if (time.dwLowDateTime == gGlobalPrefs.lastPrefUpdate.dwLowDateTime &&
+        time.dwHighDateTime == gGlobalPrefs.lastPrefUpdate.dwHighDateTime) {
         return true;
     }
 
-    const char *currLang = gGlobalPrefs.m_currentLanguage;
-    bool showToolbar = gGlobalPrefs.m_showToolbar;
+    const char *currLang = gGlobalPrefs.currentLanguage;
+    bool showToolbar = gGlobalPrefs.showToolbar;
 
     FileHistory fileHistory;
     Favorites *favs = NULL;
@@ -1225,13 +1225,13 @@ static bool ReloadPrefs()
     }
 
     // update the current language
-    if (!str::Eq(currLang, gGlobalPrefs.m_currentLanguage)) {
-        CurrLangNameSet(gGlobalPrefs.m_currentLanguage);
+    if (!str::Eq(currLang, gGlobalPrefs.currentLanguage)) {
+        CurrLangNameSet(gGlobalPrefs.currentLanguage);
         UpdateRtlLayoutForAllWindows();
         RebuildMenuBar();
         UpdateToolbarToolText();
     }
-    if (gGlobalPrefs.m_showToolbar != showToolbar)
+    if (gGlobalPrefs.showToolbar != showToolbar)
         ShowOrHideToolbarGlobally();
     return true;
 }
@@ -1351,7 +1351,7 @@ void CreateThumbnailForFile(WindowInfo& win, DisplayState& state)
 void WindowInfo::Reload(bool autorefresh)
 {
     DisplayState ds;
-    ds.useGlobalValues = gGlobalPrefs.m_globalPrefsOnly;
+    ds.useGlobalValues = gGlobalPrefs.globalPrefsOnly;
     if (!this->IsDocLoaded() || !this->dm->displayStateFromModel(&ds)) {
         if (!autorefresh && !this->IsDocLoaded() && !this->IsAboutWindow())
             LoadDocument(this->loadedFilePath, this);
@@ -1374,7 +1374,7 @@ void WindowInfo::Reload(bool autorefresh)
     if (!LoadDocIntoWindow(path, *this, &ds, false, tryRepair, true, false))
         return;
 
-    if (gGlobalPrefs.m_showStartPage) {
+    if (gGlobalPrefs.showStartPage) {
         // refresh the thumbnail for this file
         DisplayState *state = gFileHistory.Find(ds.filePath);
         if (state)
@@ -1541,10 +1541,10 @@ static void MenuUpdateStateForWindow(WindowInfo& win) {
     win::menu::SetEnabled(win.menu, IDM_VIEW_BOOKMARKS, enabled);
 
     bool documentSpecific = win.IsDocLoaded();
-    bool checked = documentSpecific ? win.tocVisible : gGlobalPrefs.m_showToc;
+    bool checked = documentSpecific ? win.tocVisible : gGlobalPrefs.showToc;
     win::menu::SetChecked(win.menu, IDM_VIEW_BOOKMARKS, checked);
 
-    win::menu::SetChecked(win.menu, IDM_VIEW_SHOW_HIDE_TOOLBAR, gGlobalPrefs.m_showToolbar);
+    win::menu::SetChecked(win.menu, IDM_VIEW_SHOW_HIDE_TOOLBAR, gGlobalPrefs.showToolbar);
     MenuUpdateDisplayMode(win);
     MenuUpdateZoom(win);
 
@@ -1624,7 +1624,7 @@ void EnsureWindowVisibility(RectI& rect)
 static WindowInfo* CreateWindowInfo()
 {
     RectI windowPos;
-    if (gGlobalPrefs.m_windowPos.IsEmpty()) {
+    if (gGlobalPrefs.windowPos.IsEmpty()) {
         // center the window on the primary monitor
         RECT workArea;
         SystemParametersInfo(SPI_GETWORKAREA, 0, &workArea, 0);
@@ -1635,7 +1635,7 @@ static WindowInfo* CreateWindowInfo()
         windowPos.x = (work.dx - windowPos.dx) / 2;
     }
     else {
-        windowPos = gGlobalPrefs.m_windowPos;
+        windowPos = gGlobalPrefs.windowPos;
         EnsureWindowVisibility(windowPos);
     }
 
@@ -1712,7 +1712,7 @@ static void UpdateTocWidth(HWND hwndTocBox, const DisplayState *ds=NULL, int def
         return;
     rc = MapRectToWindow(rc, HWND_DESKTOP, GetParent(hwndTocBox));
 
-    if (ds && !gGlobalPrefs.m_globalPrefsOnly)
+    if (ds && !gGlobalPrefs.globalPrefsOnly)
         rc.dx = ds->panelDx;
     else if (!defaultDx)
         rc.dx = gGlobalPrefs.panelDx;
@@ -1734,14 +1734,14 @@ static bool LoadDocIntoWindow(
 {
     // Never load settings from a preexisting state if the user doesn't wish to
     // (unless we're just refreshing the document, i.e. only if placeWindow == true)
-    if (placeWindow && (gGlobalPrefs.m_globalPrefsOnly || state && state->useGlobalValues))
+    if (placeWindow && (gGlobalPrefs.globalPrefsOnly || state && state->useGlobalValues))
         state = NULL;
 
-    DisplayMode displayMode = gGlobalPrefs.m_defaultDisplayMode;
+    DisplayMode displayMode = gGlobalPrefs.defaultDisplayMode;
     int startPage = 1;
     ScrollState ss(1, -1, -1);
-    bool showAsFullScreen = WIN_STATE_FULLSCREEN == gGlobalPrefs.m_windowState;
-    int showType = gGlobalPrefs.m_windowState == WIN_STATE_MAXIMIZED || showAsFullScreen ? SW_MAXIMIZE : SW_NORMAL;
+    bool showAsFullScreen = WIN_STATE_FULLSCREEN == gGlobalPrefs.windowState;
+    int showType = gGlobalPrefs.windowState == WIN_STATE_MAXIMIZED || showAsFullScreen ? SW_MAXIMIZE : SW_NORMAL;
 
     if (state) {
         startPage = state->pageNo;
@@ -1791,7 +1791,7 @@ static bool LoadDocIntoWindow(
         win.dm = prevModel;
     }
 
-    float zoomVirtual = gGlobalPrefs.m_defaultZoom;
+    float zoomVirtual = gGlobalPrefs.defaultZoom;
     int rotation = DEFAULT_ROTATION;
 
     if (state) {
@@ -1817,7 +1817,7 @@ static bool LoadDocIntoWindow(
         }
     }
     else {
-        win.tocVisible = gGlobalPrefs.m_showToc;
+        win.tocVisible = gGlobalPrefs.showToc;
     }
     UpdateTocWidth(win.hwndTocBox, state);
 
@@ -1868,7 +1868,7 @@ static bool LoadDocIntoWindow(
         int res = Synchronizer::Create(fileName, win.dm, &win.pdfsync);
         // expose SyncTeX in the UI
         if (PDFSYNCERR_SUCCESS == res)
-            gGlobalPrefs.m_enableTeXEnhancements = true;
+            gGlobalPrefs.enableTeXEnhancements = true;
     }
 
 Error:
@@ -1975,7 +1975,7 @@ WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin, b
     if (ds) {
         AdjustRemovableDriveLetter(fullpath);
         if (ds->windowPos.IsEmpty())
-            ds->windowPos = gGlobalPrefs.m_windowPos;
+            ds->windowPos = gGlobalPrefs.windowPos;
         EnsureWindowVisibility(ds->windowPos);
     }
 
@@ -1994,10 +1994,10 @@ WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin, b
     win->watcher->StartWatchThread();
 #endif
 
-    if (gGlobalPrefs.m_rememberOpenedFiles) {
+    if (gGlobalPrefs.rememberOpenedFiles) {
         assert(str::Eq(fullpath, win->loadedFilePath));
         gFileHistory.MarkFileLoaded(fullpath);
-        if (gGlobalPrefs.m_showStartPage)
+        if (gGlobalPrefs.showStartPage)
             CreateThumbnailForFile(*win, *gFileHistory.Get(0));
         SavePrefs();
     }
@@ -2122,8 +2122,8 @@ void AssociateExeWithPdfExtension()
     SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST | SHCNF_FLUSHNOWAIT, 0, 0);
 
     // Remind the user, when a different application takes over
-    gGlobalPrefs.m_pdfAssociateShouldAssociate = TRUE;
-    gGlobalPrefs.m_pdfAssociateDontAskAgain = FALSE;
+    gGlobalPrefs.pdfAssociateShouldAssociate = TRUE;
+    gGlobalPrefs.pdfAssociateDontAskAgain = FALSE;
 }
 
 // Registering happens either through the Installer or the Options dialog;
@@ -2138,17 +2138,17 @@ static bool RegisterForPdfExtentions(HWND hwnd)
 
     /* Ask user for permission, unless he previously said he doesn't want to
        see this dialog */
-    if (!gGlobalPrefs.m_pdfAssociateDontAskAgain) {
-        INT_PTR result = Dialog_PdfAssociate(hwnd, &gGlobalPrefs.m_pdfAssociateDontAskAgain);
+    if (!gGlobalPrefs.pdfAssociateDontAskAgain) {
+        INT_PTR result = Dialog_PdfAssociate(hwnd, &gGlobalPrefs.pdfAssociateDontAskAgain);
         if (IDNO == result) {
-            gGlobalPrefs.m_pdfAssociateShouldAssociate = FALSE;
+            gGlobalPrefs.pdfAssociateShouldAssociate = FALSE;
         } else {
             assert(IDYES == result);
-            gGlobalPrefs.m_pdfAssociateShouldAssociate = TRUE;
+            gGlobalPrefs.pdfAssociateShouldAssociate = TRUE;
         }
     }
 
-    if (!gGlobalPrefs.m_pdfAssociateShouldAssociate)
+    if (!gGlobalPrefs.pdfAssociateShouldAssociate)
         return false;
 
     AssociateExeWithPdfExtension();
@@ -2203,8 +2203,8 @@ static DWORD OnUrlDownloaded(HWND hParent, HttpReqCtx *ctx, bool silent)
         return 0;
     }
 
-    // if automated, respect gGlobalPrefs.m_versionToSkip
-    if (silent && str::EqI(gGlobalPrefs.m_versionToSkip, verTxt))
+    // if automated, respect gGlobalPrefs.versionToSkip
+    if (silent && str::EqI(gGlobalPrefs.versionToSkip, verTxt))
         return 0;
 
     // ask whether to download the new version and allow the user to
@@ -2213,7 +2213,7 @@ static DWORD OnUrlDownloaded(HWND hParent, HttpReqCtx *ctx, bool silent)
     bool skipThisVersion = false;
     INT_PTR res = Dialog_NewVersionAvailable(hParent, UPDATE_CHECK_VER, verTxt, &skipThisVersion);
     if (skipThisVersion)
-        str::ReplacePtr(&gGlobalPrefs.m_versionToSkip, verTxt);
+        str::ReplacePtr(&gGlobalPrefs.versionToSkip, verTxt);
     if (IDYES == res)
         LaunchBrowser(SVN_UPDATE_LINK);
     SavePrefs();
@@ -2254,9 +2254,9 @@ static void DownloadSumatraUpdateInfo(WindowInfo& win, bool autoCheck)
         return;
 
     /* For auto-check, only check if at least a day passed since last check */
-    if (autoCheck && gGlobalPrefs.m_lastUpdateTime) {
+    if (autoCheck && gGlobalPrefs.lastUpdateTime) {
         FILETIME lastUpdateTimeFt, currentTimeFt;
-        _HexToMem(gGlobalPrefs.m_lastUpdateTime, &lastUpdateTimeFt);
+        _HexToMem(gGlobalPrefs.lastUpdateTime, &lastUpdateTimeFt);
         GetSystemTimeAsFileTime(&currentTimeFt);
         int secs = FileTimeDiffInSecs(currentTimeFt, lastUpdateTimeFt);
         assert(secs >= 0);
@@ -2270,8 +2270,8 @@ static void DownloadSumatraUpdateInfo(WindowInfo& win, bool autoCheck)
 
     FILETIME ft;
     GetSystemTimeAsFileTime(&ft);
-    free(gGlobalPrefs.m_lastUpdateTime);
-    gGlobalPrefs.m_lastUpdateTime = _MemToHex(&ft);
+    free(gGlobalPrefs.lastUpdateTime);
+    gGlobalPrefs.lastUpdateTime = _MemToHex(&ft);
 }
 
 static void PaintTransparentRectangle(HDC hdc, RectI screenRc, RectI *rect, COLORREF selectionColor, BYTE alpha = 0x5f, int margin = 1) {
@@ -2359,14 +2359,14 @@ static void PaintForwardSearchMark(WindowInfo& win, HDC hdc) {
     for (UINT i = 0; i < win.fwdSearchMark.rects.Count(); i++) {
         RectD recD = win.fwdSearchMark.rects[i].Convert<double>();
         RectI recI = win.dm->CvtToScreen(win.fwdSearchMark.page, recD);
-        if (gGlobalPrefs.m_fwdsearchOffset > 0) {
-            recI.x = max(pageInfo->pageOnScreen.x, 0) + (int)(gGlobalPrefs.m_fwdsearchOffset * win.dm->zoomReal());
-            recI.dx = (int)((gGlobalPrefs.m_fwdsearchWidth > 0 ? gGlobalPrefs.m_fwdsearchWidth : 15.0) * win.dm->zoomReal());
+        if (gGlobalPrefs.fwdSearchOffset > 0) {
+            recI.x = max(pageInfo->pageOnScreen.x, 0) + (int)(gGlobalPrefs.fwdSearchOffset * win.dm->zoomReal());
+            recI.dx = (int)((gGlobalPrefs.fwdSearchWidth > 0 ? gGlobalPrefs.fwdSearchWidth : 15.0) * win.dm->zoomReal());
             recI.y -= 4;
             recI.dy += 8;
         }
         BYTE alpha = (BYTE)(0x5f * 1.0f * (HIDE_FWDSRCHMARK_STEPS - win.fwdSearchMark.hideStep) / HIDE_FWDSRCHMARK_STEPS);
-        PaintTransparentRectangle(hdc, win.canvasRc, &recI, gGlobalPrefs.m_fwdsearchColor, alpha, 0);
+        PaintTransparentRectangle(hdc, win.canvasRc, &recI, gGlobalPrefs.fwdSearchColor, alpha, 0);
     }
 }
 
@@ -2686,7 +2686,7 @@ static bool OnInverseSearch(WindowInfo& win, int x, int y)
                 return false;
             // In order to avoid confusion for non-LaTeX users, we do not show
             // any error message if the SyncTeX enhancements are hidden from UI
-            if (gGlobalPrefs.m_enableTeXEnhancements)
+            if (gGlobalPrefs.enableTeXEnhancements)
                 win.ShowNotification(_TR("No synchronization file found"));
             return true;
         }
@@ -2695,7 +2695,7 @@ static bool OnInverseSearch(WindowInfo& win, int x, int y)
             win.ShowNotification(_TR("Synchronization file cannot be opened"));
             return true;
         }
-        gGlobalPrefs.m_enableTeXEnhancements = true;
+        gGlobalPrefs.enableTeXEnhancements = true;
     }
 
     int pageNo = win.dm->GetPageNoByPoint(PointI(x, y));
@@ -2712,7 +2712,7 @@ static bool OnInverseSearch(WindowInfo& win, int x, int y)
         return true;
     }
 
-    TCHAR *inverseSearch = gGlobalPrefs.m_inverseSearchCmdLine;
+    TCHAR *inverseSearch = gGlobalPrefs.inverseSearchCmdLine;
     if (!inverseSearch)
         // Detect a text editor and use it as the default inverse search handler for now
         inverseSearch = AutoDetectInverseSearchCommands();
@@ -2727,10 +2727,10 @@ static bool OnInverseSearch(WindowInfo& win, int x, int y)
         else
             win.ShowNotification(_TR("Cannot start inverse search command. Please check the command line in the settings."));
     }
-    else if (gGlobalPrefs.m_enableTeXEnhancements)
+    else if (gGlobalPrefs.enableTeXEnhancements)
         win.ShowNotification(_TR("Cannot start inverse search command. Please check the command line in the settings."));
 
-    if (inverseSearch != gGlobalPrefs.m_inverseSearchCmdLine)
+    if (inverseSearch != gGlobalPrefs.inverseSearchCmdLine)
         free(inverseSearch);
 
     return true;
@@ -2738,7 +2738,7 @@ static bool OnInverseSearch(WindowInfo& win, int x, int y)
 
 static void OnAboutContextMenu(WindowInfo& win, int x, int y)
 {
-    if (!HasPermission(Perm_SavePreferences) || !gGlobalPrefs.m_rememberOpenedFiles || !gGlobalPrefs.m_showStartPage)
+    if (!HasPermission(Perm_SavePreferences) || !gGlobalPrefs.rememberOpenedFiles || !gGlobalPrefs.showStartPage)
         return;
 
     const TCHAR *filePath = GetStaticLink(win.staticLinks, x, y);
@@ -3024,10 +3024,10 @@ static void OnMouseLeftButtonUp(WindowInfo& win, int x, int y, WPARAM key)
             if (str::Eq(url, SLINK_OPEN_FILE))
                 SendMessage(win.hwndFrame, WM_COMMAND, IDM_OPEN, 0);
             else if (str::Eq(url, SLINK_LIST_HIDE)) {
-                gGlobalPrefs.m_showStartPage = false;
+                gGlobalPrefs.showStartPage = false;
                 win.RedrawAll(true);
             } else if (str::Eq(url, SLINK_LIST_SHOW)) {
-                gGlobalPrefs.m_showStartPage = true;
+                gGlobalPrefs.showStartPage = true;
                 win.RedrawAll(true);
             } else if (!str::StartsWithI(url, _T("http:")) &&
                        !str::StartsWithI(url, _T("https:")) &&
@@ -3092,7 +3092,7 @@ static void OnMouseLeftButtonDblClk(WindowInfo& win, int x, int y, WPARAM key)
     }
 
     bool dontSelect = false;
-    if (gGlobalPrefs.m_enableTeXEnhancements && !(key & ~MK_LBUTTON))
+    if (gGlobalPrefs.enableTeXEnhancements && !(key & ~MK_LBUTTON))
         dontSelect = OnInverseSearch(win, x, y);
 
     if (dontSelect || !win.IsDocLoaded() || !win.dm->IsOverText(PointI(x, y)))
@@ -3205,7 +3205,7 @@ static void OnPaint(WindowInfo& win)
     HDC hdc = BeginPaint(win.hwndCanvas, &ps);
 
     if (win.IsAboutWindow()) {
-        if (HasPermission(Perm_SavePreferences) && gGlobalPrefs.m_rememberOpenedFiles && gGlobalPrefs.m_showStartPage)
+        if (HasPermission(Perm_SavePreferences) && gGlobalPrefs.rememberOpenedFiles && gGlobalPrefs.showStartPage)
             DrawStartPage(win, win.buffer->GetDC(), gFileHistory);
         else
             DrawAboutPage(win, win.buffer->GetDC());
@@ -4331,7 +4331,7 @@ static void AdjustWindowEdge(WindowInfo& win)
 static void OnSize(WindowInfo& win, int dx, int dy)
 {
     int rebBarDy = 0;
-    if (gGlobalPrefs.m_showToolbar) {
+    if (gGlobalPrefs.showToolbar) {
         SetWindowPos(win.hwndReBar, NULL, 0, 0, dx, rebBarDy, SWP_NOZORDER);
         rebBarDy = WindowRect(win.hwndReBar).dy;
     }
@@ -4344,7 +4344,7 @@ static void OnSize(WindowInfo& win, int dx, int dy)
 
 static void OnMenuChangeLanguage(WindowInfo& win)
 {
-    int langId = Trans::GetLanguageIndex(gGlobalPrefs.m_currentLanguage);
+    int langId = Trans::GetLanguageIndex(gGlobalPrefs.currentLanguage);
     int newLangId = Dialog_ChangeLanguge(win.hwndFrame, langId);
 
     if (newLangId != -1 && langId != newLangId) {
@@ -4365,7 +4365,7 @@ static void OnMenuChangeLanguage(WindowInfo& win)
 
 static void OnMenuViewShowHideToolbar()
 {
-    gGlobalPrefs.m_showToolbar = !gGlobalPrefs.m_showToolbar;
+    gGlobalPrefs.showToolbar = !gGlobalPrefs.showToolbar;
     ShowOrHideToolbarGlobally();
 }
 
@@ -4376,7 +4376,7 @@ static void OnMenuSettings(WindowInfo& win)
     if (IDOK != Dialog_Settings(win.hwndFrame, &gGlobalPrefs))
         return;
 
-    if (!gGlobalPrefs.m_rememberOpenedFiles) {
+    if (!gGlobalPrefs.rememberOpenedFiles) {
         gFileHistory.Clear();
         CleanUpThumbnailCache(gFileHistory);
     }
@@ -4459,7 +4459,7 @@ static void OnMenuGoToPage(WindowInfo& win)
         return;
 
     // Don't show a dialog if we don't have to - use the Toolbar instead
-    if (gGlobalPrefs.m_showToolbar && !win.fullScreen && PM_DISABLED == win.presentation) {
+    if (gGlobalPrefs.showToolbar && !win.fullScreen && PM_DISABLED == win.presentation) {
         FocusPageNoEdit(win.hwndPageBox);
         return;
     }
@@ -4486,7 +4486,7 @@ static void OnMenuFind(WindowInfo& win)
         return;
 
     // Don't show a dialog if we don't have to - use the Toolbar instead
-    if (gGlobalPrefs.m_showToolbar && !win.fullScreen && PM_DISABLED == win.presentation) {
+    if (gGlobalPrefs.showToolbar && !win.fullScreen && PM_DISABLED == win.presentation) {
         if (GetFocus() == win.hwndFindBox)
             SendMessage(win.hwndFindBox, WM_SETFOCUS, 0, 0);
         else
@@ -4598,7 +4598,7 @@ static void ExitFullscreen(WindowInfo& win)
     if (win.IsDocLoaded() && win.tocBeforeFullScreen)
         win.ShowTocBox();
 
-    if (gGlobalPrefs.m_showToolbar)
+    if (gGlobalPrefs.showToolbar)
         ShowWindow(win.hwndReBar, SW_SHOW);
     SetMenu(win.hwndFrame, win.menu);
     SetWindowLong(win.hwndFrame, GWL_STYLE, win.prevStyle);
@@ -4637,7 +4637,7 @@ void WindowInfo::ShowForwardSearchResult(const TCHAR *fileName, UINT line, UINT 
             fwdSearchMark.rects = rects;
             fwdSearchMark.page = page;
             fwdSearchMark.show = true;
-            if (!gGlobalPrefs.m_fwdsearchPermanent)  {
+            if (!gGlobalPrefs.fwdSearchPermanent)  {
                 fwdSearchMark.hideStep = 0;
                 SetTimer(this->hwndCanvas, HIDE_FWDSRCHMARK_TIMER_ID, HIDE_FWDSRCHMARK_DELAY_IN_MS, NULL);
             }
@@ -4708,7 +4708,7 @@ static void AdvanceFocus(WindowInfo& win)
 {
     // Tab order: Frame -> Page -> Find -> ToC -> Frame -> ...
 
-    bool hasToolbar = !win.fullScreen && !win.presentation && gGlobalPrefs.m_showToolbar;
+    bool hasToolbar = !win.fullScreen && !win.presentation && gGlobalPrefs.showToolbar;
     int direction = IsShiftPressed() ? -1 : 1;
 
     struct {
@@ -4840,7 +4840,7 @@ static void OnChar(WindowInfo& win, WPARAM key)
             win.messages->CleanUp(NG_PAGE_INFO_HELPER);
         else if (win.presentation)
             OnMenuViewPresentation(win);
-        else if (gGlobalPrefs.m_escToExit)
+        else if (gGlobalPrefs.escToExit)
             DestroyWindow(win.hwndFrame);
         else if (win.fullScreen)
             OnMenuViewFullscreen(win);
@@ -4936,7 +4936,7 @@ static void OnChar(WindowInfo& win, WPARAM key)
     case 'i':
         // experimental "page info" tip: make figuring out current page and
         // total pages count a one-key action (unless they're already visible)
-        if (!gGlobalPrefs.m_showToolbar || win.fullScreen || PM_ENABLED == win.presentation) {
+        if (!gGlobalPrefs.showToolbar || win.fullScreen || PM_ENABLED == win.presentation) {
             int current = win.dm->currentPageNo(), total = win.dm->pageCount();
             ScopedMem<TCHAR> pageInfo(str::Format(_T("%s %d / %d"), _TR("Page:"), current, total));
             if (win.dm->engine && win.dm->engine->HasPageLabels()) {
@@ -5675,7 +5675,7 @@ static void ResizePanel(WindowInfo *win)
     SetCursor(gCursorSizeWE);
 
     int tocY = 0;
-    if (gGlobalPrefs.m_showToolbar && !win->fullScreen && !win->presentation) {
+    if (gGlobalPrefs.showToolbar && !win->fullScreen && !win->presentation) {
         tocY = WindowRect(win->hwndReBar).dy;
         height -= tocY;
     }
@@ -5737,7 +5737,7 @@ static LRESULT CALLBACK WndProcTocTree(HWND hwnd, UINT message, WPARAM wParam, L
 
     switch (message) {
         case WM_CHAR:
-            if (VK_ESCAPE == wParam && gGlobalPrefs.m_escToExit)
+            if (VK_ESCAPE == wParam && gGlobalPrefs.escToExit)
                 DestroyWindow(win->hwndFrame);
             break;
         case WM_KEYDOWN:
@@ -6090,7 +6090,7 @@ void WindowInfo::ShowTocBox()
     UpdateTocWidth(hwndTocBox, NULL, rframe.dx / 4);
 
     RectI box;
-    if (gGlobalPrefs.m_showToolbar && !fullScreen && !presentation)
+    if (gGlobalPrefs.showToolbar && !fullScreen && !presentation)
         box.y = WindowRect(hwndReBar).dy;
     box.dy = rframe.dy - box.y;
 
@@ -6115,7 +6115,7 @@ void WindowInfo::ShowTocBox()
 void WindowInfo::HideTocBox()
 {
     int cy = 0;
-    if (gGlobalPrefs.m_showToolbar && !fullScreen && !presentation)
+    if (gGlobalPrefs.showToolbar && !fullScreen && !presentation)
         cy = WindowRect(hwndReBar).dy;
 
     if (GetFocus() == hwndTocTree)
@@ -7071,8 +7071,8 @@ static bool InstanceInit(HINSTANCE hInstance, int nCmdShow)
     gCursorSizeWE   = LoadCursor(NULL, IDC_SIZEWE);
     gCursorNo       = LoadCursor(NULL, IDC_NO);
     gBrushNoDocBg   = CreateSolidBrush(COL_WINDOW_BG);
-    if (ABOUT_BG_COLOR_DEFAULT != gGlobalPrefs.m_bgColor)
-        gBrushAboutBg = CreateSolidBrush(gGlobalPrefs.m_bgColor);
+    if (ABOUT_BG_COLOR_DEFAULT != gGlobalPrefs.bgColor)
+        gBrushAboutBg = CreateSolidBrush(gGlobalPrefs.bgColor);
     else
         gBrushAboutBg = CreateSolidBrush(ABOUT_BG_COLOR);
     gBrushWhite     = CreateSolidBrush(WIN_COL_WHITE);
@@ -7264,17 +7264,17 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         } else {
             assert(gFavorites == NULL);
             Prefs::Load(prefsFilename, gGlobalPrefs, gFileHistory, &gFavorites);
-            CurrLangNameSet(gGlobalPrefs.m_currentLanguage);
+            CurrLangNameSet(gGlobalPrefs.currentLanguage);
         }
     }
 
     CommandLineInfo i;
-    i.bgColor = gGlobalPrefs.m_bgColor;
-    i.fwdsearchOffset = gGlobalPrefs.m_fwdsearchOffset;
-    i.fwdsearchWidth = gGlobalPrefs.m_fwdsearchWidth;
-    i.fwdsearchColor = gGlobalPrefs.m_fwdsearchColor;
-    i.fwdsearchPermanent = gGlobalPrefs.m_fwdsearchPermanent;
-    i.escToExit = gGlobalPrefs.m_escToExit;
+    i.bgColor = gGlobalPrefs.bgColor;
+    i.fwdsearchOffset = gGlobalPrefs.fwdSearchOffset;
+    i.fwdsearchWidth = gGlobalPrefs.fwdSearchWidth;
+    i.fwdsearchColor = gGlobalPrefs.fwdSearchColor;
+    i.fwdsearchPermanent = gGlobalPrefs.fwdSearchPermanent;
+    i.escToExit = gGlobalPrefs.escToExit;
 
     i.ParseCommandLine(GetCommandLine());
 
@@ -7292,19 +7292,19 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     if (i.exitImmediately)
         goto Exit;
 
-    gGlobalPrefs.m_bgColor = i.bgColor;
-    gGlobalPrefs.m_fwdsearchOffset = i.fwdsearchOffset;
-    gGlobalPrefs.m_fwdsearchWidth = i.fwdsearchWidth;
-    gGlobalPrefs.m_fwdsearchColor = i.fwdsearchColor;
-    gGlobalPrefs.m_fwdsearchPermanent = i.fwdsearchPermanent;
-    gGlobalPrefs.m_escToExit = i.escToExit;
+    gGlobalPrefs.bgColor = i.bgColor;
+    gGlobalPrefs.fwdSearchOffset = i.fwdsearchOffset;
+    gGlobalPrefs.fwdSearchWidth = i.fwdsearchWidth;
+    gGlobalPrefs.fwdSearchColor = i.fwdsearchColor;
+    gGlobalPrefs.fwdSearchPermanent = i.fwdsearchPermanent;
+    gGlobalPrefs.escToExit = i.escToExit;
     gPolicyRestrictions = GetPolicies(i.restrictedUse);
     gRenderCache.invertColors = i.invertColors;
     DebugGdiPlusDevice(gUseGdiRenderer);
 
     if (i.inverseSearchCmdLine) {
-        str::ReplacePtr(&gGlobalPrefs.m_inverseSearchCmdLine, i.inverseSearchCmdLine);
-        gGlobalPrefs.m_enableTeXEnhancements = true;
+        str::ReplacePtr(&gGlobalPrefs.inverseSearchCmdLine, i.inverseSearchCmdLine);
+        gGlobalPrefs.enableTeXEnhancements = true;
     }
     CurrLangNameSet(i.lang);
 
@@ -7328,9 +7328,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
             free(i.fileNames.Pop());
         i.reuseInstance = i.exitOnPrint = false;
         // always display the toolbar when embedded (as there's no menubar in that case)
-        gGlobalPrefs.m_showToolbar = true;
+        gGlobalPrefs.showToolbar = true;
         // never allow esc as a shortcut to quit
-        gGlobalPrefs.m_escToExit = false;
+        gGlobalPrefs.escToExit = false;
     }
 
     WindowInfo *win = NULL;
@@ -7348,7 +7348,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         goto Exit;
     }
 
-    if (i.fileNames.Count() == 0 && gGlobalPrefs.m_rememberOpenedFiles && gGlobalPrefs.m_showStartPage) {
+    if (i.fileNames.Count() == 0 && gGlobalPrefs.rememberOpenedFiles && gGlobalPrefs.showStartPage) {
         // make the shell prepare the image list, so that it's ready when the first window's loaded
         SHFILEINFO sfi;
         SHGetFileInfo(_T(".pdf"), 0, &sfi, sizeof(sfi), SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES);
@@ -7418,15 +7418,15 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         goto Exit;
  
     if (!firstIsDocLoaded) {
-        bool enterFullscreen = (WIN_STATE_FULLSCREEN == gGlobalPrefs.m_windowState);
+        bool enterFullscreen = (WIN_STATE_FULLSCREEN == gGlobalPrefs.windowState);
         win = CreateWindowInfo();
         if (!win) {
             msg.wParam = 1;
             goto Exit;
         }
 
-        if (WIN_STATE_FULLSCREEN == gGlobalPrefs.m_windowState ||
-            WIN_STATE_MAXIMIZED == gGlobalPrefs.m_windowState)
+        if (WIN_STATE_FULLSCREEN == gGlobalPrefs.windowState ||
+            WIN_STATE_MAXIMIZED == gGlobalPrefs.windowState)
             ShowWindow(win->hwndFrame, SW_MAXIMIZE);
         else
             ShowWindow(win->hwndFrame, SW_SHOW);
@@ -7442,10 +7442,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
     // Make sure that we're still registered as default,
     // if the user has explicitly told us to be
-    if (gGlobalPrefs.m_pdfAssociateShouldAssociate && win)
+    if (gGlobalPrefs.pdfAssociateShouldAssociate && win)
         RegisterForPdfExtentions(win->hwndFrame);
 
-    if (gGlobalPrefs.m_enableAutoUpdate && gWindows.Count() > 0)
+    if (gGlobalPrefs.enableAutoUpdate && gWindows.Count() > 0)
         DownloadSumatraUpdateInfo(*gWindows[0], true);
 
     HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_SUMATRAPDF));

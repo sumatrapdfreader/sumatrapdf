@@ -67,7 +67,7 @@ static AboutLayoutInfoEl gAboutLayoutInfo[] = {
     { _T("toolbar icons"),  _T("Yusuke Kamiyamane"),    _T("http://p.yusukekamiyamane.com/") },
     { _T("translators"),    _T("The Translators"),      _T("http://blog.kowalczyk.info/software/sumatrapdf/translators.html") },
     { _T("translations"),   _T("Contribute translation"), _T("http://blog.kowalczyk.info/software/sumatrapdf/translations.html") },
-    // Note: Must be on the last line, as it's dynamically hidden based on m_enableTeXEnhancements
+    // Note: Must be on the last line, as it's dynamically hidden based on enableTeXEnhancements
     { _T("synctex"),        _T("J\xE9rome Laurens"),    _T("http://itexmac.sourceforge.net/SyncTeX.html") },
     { NULL, NULL, NULL }
 };
@@ -260,7 +260,7 @@ static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, RectI *rect)
 
     /* show/hide the SyncTeX attribution line */
     assert(!gAboutLayoutInfo[dimof(gAboutLayoutInfo) - 2].leftTxt || str::Eq(gAboutLayoutInfo[dimof(gAboutLayoutInfo) - 2].leftTxt, _T("synctex")));
-    if (gGlobalPrefs.m_enableTeXEnhancements)
+    if (gGlobalPrefs.enableTeXEnhancements)
         gAboutLayoutInfo[dimof(gAboutLayoutInfo) - 2].leftTxt = _T("synctex");
     else
         gAboutLayoutInfo[dimof(gAboutLayoutInfo) - 2].leftTxt = NULL;
@@ -497,7 +497,7 @@ void DrawAboutPage(WindowInfo& win, HDC hdc)
     ClientRect rc(win.hwndCanvas);
     UpdateAboutLayoutInfo(win.hwndCanvas, hdc, &rc);
     DrawAbout(win.hwndCanvas, hdc, rc, win.staticLinks);
-    if (HasPermission(Perm_SavePreferences) && gGlobalPrefs.m_rememberOpenedFiles) {
+    if (HasPermission(Perm_SavePreferences) && gGlobalPrefs.rememberOpenedFiles) {
         RectI rect = DrawBottomRightLink(win.hwndCanvas, hdc, _TR("Show frequently read"));
         win.staticLinks.Append(StaticLinkInfo(rect, SLINK_LIST_SHOW));
     }

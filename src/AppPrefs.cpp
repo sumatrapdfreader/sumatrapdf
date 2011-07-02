@@ -84,47 +84,47 @@ static BencDict* SerializeGlobalPrefs(SerializableGlobalPrefs& globalPrefs)
     if (!prefs)
         return NULL;
 
-    prefs->Add(SHOW_TOOLBAR_STR, globalPrefs.m_showToolbar);
-    prefs->Add(SHOW_TOC_STR, globalPrefs.m_showToc);
+    prefs->Add(SHOW_TOOLBAR_STR, globalPrefs.showToolbar);
+    prefs->Add(SHOW_TOC_STR, globalPrefs.showToc);
     prefs->Add(PANEL_DX_STR, globalPrefs.panelDx);
-    prefs->Add(PDF_ASSOCIATE_DONT_ASK_STR, globalPrefs.m_pdfAssociateDontAskAgain);
-    prefs->Add(PDF_ASSOCIATE_ASSOCIATE_STR, globalPrefs.m_pdfAssociateShouldAssociate);
+    prefs->Add(PDF_ASSOCIATE_DONT_ASK_STR, globalPrefs.pdfAssociateDontAskAgain);
+    prefs->Add(PDF_ASSOCIATE_ASSOCIATE_STR, globalPrefs.pdfAssociateShouldAssociate);
 
-    prefs->Add(BG_COLOR_STR, globalPrefs.m_bgColor);
-    prefs->Add(ESC_TO_EXIT_STR, globalPrefs.m_escToExit);
-    prefs->Add(ENABLE_AUTO_UPDATE_STR, globalPrefs.m_enableAutoUpdate);
-    prefs->Add(REMEMBER_OPENED_FILES_STR, globalPrefs.m_rememberOpenedFiles);
-    prefs->Add(GLOBAL_PREFS_ONLY_STR, globalPrefs.m_globalPrefsOnly);
-    prefs->Add(SHOW_RECENT_FILES_STR, globalPrefs.m_showStartPage);
+    prefs->Add(BG_COLOR_STR, globalPrefs.bgColor);
+    prefs->Add(ESC_TO_EXIT_STR, globalPrefs.escToExit);
+    prefs->Add(ENABLE_AUTO_UPDATE_STR, globalPrefs.enableAutoUpdate);
+    prefs->Add(REMEMBER_OPENED_FILES_STR, globalPrefs.rememberOpenedFiles);
+    prefs->Add(GLOBAL_PREFS_ONLY_STR, globalPrefs.globalPrefsOnly);
+    prefs->Add(SHOW_RECENT_FILES_STR, globalPrefs.showStartPage);
 
-    const TCHAR *mode = DisplayModeConv::NameFromEnum(globalPrefs.m_defaultDisplayMode);
+    const TCHAR *mode = DisplayModeConv::NameFromEnum(globalPrefs.defaultDisplayMode);
     prefs->Add(DISPLAY_MODE_STR, mode);
 
-    ScopedMem<char> zoom(str::Format("%.4f", globalPrefs.m_defaultZoom));
+    ScopedMem<char> zoom(str::Format("%.4f", globalPrefs.defaultZoom));
     prefs->AddRaw(ZOOM_VIRTUAL_STR, zoom);
-    prefs->Add(WINDOW_STATE_STR, globalPrefs.m_windowState);
-    prefs->Add(WINDOW_X_STR, globalPrefs.m_windowPos.x);
-    prefs->Add(WINDOW_Y_STR, globalPrefs.m_windowPos.y);
-    prefs->Add(WINDOW_DX_STR, globalPrefs.m_windowPos.dx);
-    prefs->Add(WINDOW_DY_STR, globalPrefs.m_windowPos.dy);
+    prefs->Add(WINDOW_STATE_STR, globalPrefs.windowState);
+    prefs->Add(WINDOW_X_STR, globalPrefs.windowPos.x);
+    prefs->Add(WINDOW_Y_STR, globalPrefs.windowPos.y);
+    prefs->Add(WINDOW_DX_STR, globalPrefs.windowPos.dx);
+    prefs->Add(WINDOW_DY_STR, globalPrefs.windowPos.dy);
 
-    if (globalPrefs.m_inverseSearchCmdLine)
-        prefs->Add(INVERSE_SEARCH_COMMANDLINE, globalPrefs.m_inverseSearchCmdLine);
-    prefs->Add(ENABLE_TEX_ENHANCEMENTS_STR, globalPrefs.m_enableTeXEnhancements);
-    if (globalPrefs.m_versionToSkip)
-        prefs->Add(VERSION_TO_SKIP_STR, globalPrefs.m_versionToSkip);
-    if (globalPrefs.m_lastUpdateTime)
-        prefs->AddRaw(LAST_UPDATE_STR, globalPrefs.m_lastUpdateTime);
-    prefs->AddRaw(UI_LANGUAGE_STR, globalPrefs.m_currentLanguage);
+    if (globalPrefs.inverseSearchCmdLine)
+        prefs->Add(INVERSE_SEARCH_COMMANDLINE, globalPrefs.inverseSearchCmdLine);
+    prefs->Add(ENABLE_TEX_ENHANCEMENTS_STR, globalPrefs.enableTeXEnhancements);
+    if (globalPrefs.versionToSkip)
+        prefs->Add(VERSION_TO_SKIP_STR, globalPrefs.versionToSkip);
+    if (globalPrefs.lastUpdateTime)
+        prefs->AddRaw(LAST_UPDATE_STR, globalPrefs.lastUpdateTime);
+    prefs->AddRaw(UI_LANGUAGE_STR, globalPrefs.currentLanguage);
 
-    if (!globalPrefs.m_openCountWeek)
-        globalPrefs.m_openCountWeek = GetWeekCount();
-    prefs->Add(OPEN_COUNT_WEEK_STR, globalPrefs.m_openCountWeek);
+    if (!globalPrefs.openCountWeek)
+        globalPrefs.openCountWeek = GetWeekCount();
+    prefs->Add(OPEN_COUNT_WEEK_STR, globalPrefs.openCountWeek);
 
-    prefs->Add(FWDSEARCH_OFFSET, globalPrefs.m_fwdsearchOffset);
-    prefs->Add(FWDSEARCH_COLOR, globalPrefs.m_fwdsearchColor);
-    prefs->Add(FWDSEARCH_WIDTH, globalPrefs.m_fwdsearchWidth);
-    prefs->Add(FWDSEARCH_PERMANENT, globalPrefs.m_fwdsearchPermanent);
+    prefs->Add(FWDSEARCH_OFFSET, globalPrefs.fwdSearchOffset);
+    prefs->Add(FWDSEARCH_COLOR, globalPrefs.fwdSearchColor);
+    prefs->Add(FWDSEARCH_WIDTH, globalPrefs.fwdSearchWidth);
+    prefs->Add(FWDSEARCH_PERMANENT, globalPrefs.fwdSearchPermanent);
 
     return prefs;
 }
@@ -260,7 +260,7 @@ static const char *SerializePrefs(SerializableGlobalPrefs& globalPrefs, FileHist
         goto Error;
     prefs->Add(GLOBAL_PREFS_STR, global);
 
-    BencArray *fileHistory = SerializeFileHistory(root, globalPrefs.m_globalPrefsOnly);
+    BencArray *fileHistory = SerializeFileHistory(root, globalPrefs.globalPrefsOnly);
     if (!fileHistory)
         goto Error;
     prefs->Add(FILE_HISTORY_STR, fileHistory);
@@ -408,45 +408,45 @@ static void DeserializePrefs(const char *prefsTxt, SerializableGlobalPrefs& glob
     if (!global)
         goto Exit;
 
-    Retrieve(global, SHOW_TOOLBAR_STR, globalPrefs.m_showToolbar);
-    Retrieve(global, SHOW_TOC_STR, globalPrefs.m_showToc);
+    Retrieve(global, SHOW_TOOLBAR_STR, globalPrefs.showToolbar);
+    Retrieve(global, SHOW_TOC_STR, globalPrefs.showToc);
     Retrieve(global, PANEL_DX_STR, globalPrefs.panelDx);
-    Retrieve(global, PDF_ASSOCIATE_DONT_ASK_STR, globalPrefs.m_pdfAssociateDontAskAgain);
-    Retrieve(global, PDF_ASSOCIATE_ASSOCIATE_STR, globalPrefs.m_pdfAssociateShouldAssociate);
-    Retrieve(global, ESC_TO_EXIT_STR, globalPrefs.m_escToExit);
-    Retrieve(global, BG_COLOR_STR, globalPrefs.m_bgColor);
-    Retrieve(global, ENABLE_AUTO_UPDATE_STR, globalPrefs.m_enableAutoUpdate);
-    Retrieve(global, REMEMBER_OPENED_FILES_STR, globalPrefs.m_rememberOpenedFiles);
-    Retrieve(global, GLOBAL_PREFS_ONLY_STR, globalPrefs.m_globalPrefsOnly);
-    Retrieve(global, SHOW_RECENT_FILES_STR, globalPrefs.m_showStartPage);
+    Retrieve(global, PDF_ASSOCIATE_DONT_ASK_STR, globalPrefs.pdfAssociateDontAskAgain);
+    Retrieve(global, PDF_ASSOCIATE_ASSOCIATE_STR, globalPrefs.pdfAssociateShouldAssociate);
+    Retrieve(global, ESC_TO_EXIT_STR, globalPrefs.escToExit);
+    Retrieve(global, BG_COLOR_STR, globalPrefs.bgColor);
+    Retrieve(global, ENABLE_AUTO_UPDATE_STR, globalPrefs.enableAutoUpdate);
+    Retrieve(global, REMEMBER_OPENED_FILES_STR, globalPrefs.rememberOpenedFiles);
+    Retrieve(global, GLOBAL_PREFS_ONLY_STR, globalPrefs.globalPrefsOnly);
+    Retrieve(global, SHOW_RECENT_FILES_STR, globalPrefs.showStartPage);
 
-    Retrieve(global, DISPLAY_MODE_STR, globalPrefs.m_defaultDisplayMode);
-    Retrieve(global, ZOOM_VIRTUAL_STR, globalPrefs.m_defaultZoom);
-    Retrieve(global, WINDOW_STATE_STR, globalPrefs.m_windowState);
+    Retrieve(global, DISPLAY_MODE_STR, globalPrefs.defaultDisplayMode);
+    Retrieve(global, ZOOM_VIRTUAL_STR, globalPrefs.defaultZoom);
+    Retrieve(global, WINDOW_STATE_STR, globalPrefs.windowState);
 
-    Retrieve(global, WINDOW_X_STR, globalPrefs.m_windowPos.x);
-    Retrieve(global, WINDOW_Y_STR, globalPrefs.m_windowPos.y);
-    Retrieve(global, WINDOW_DX_STR, globalPrefs.m_windowPos.dx);
-    Retrieve(global, WINDOW_DY_STR, globalPrefs.m_windowPos.dy);
+    Retrieve(global, WINDOW_X_STR, globalPrefs.windowPos.x);
+    Retrieve(global, WINDOW_Y_STR, globalPrefs.windowPos.y);
+    Retrieve(global, WINDOW_DX_STR, globalPrefs.windowPos.dx);
+    Retrieve(global, WINDOW_DY_STR, globalPrefs.windowPos.dy);
 
-    Retrieve(global, INVERSE_SEARCH_COMMANDLINE, globalPrefs.m_inverseSearchCmdLine);
-    Retrieve(global, ENABLE_TEX_ENHANCEMENTS_STR, globalPrefs.m_enableTeXEnhancements);
-    Retrieve(global, VERSION_TO_SKIP_STR, globalPrefs.m_versionToSkip);
-    RetrieveRaw(global, LAST_UPDATE_STR, globalPrefs.m_lastUpdateTime);
+    Retrieve(global, INVERSE_SEARCH_COMMANDLINE, globalPrefs.inverseSearchCmdLine);
+    Retrieve(global, ENABLE_TEX_ENHANCEMENTS_STR, globalPrefs.enableTeXEnhancements);
+    Retrieve(global, VERSION_TO_SKIP_STR, globalPrefs.versionToSkip);
+    RetrieveRaw(global, LAST_UPDATE_STR, globalPrefs.lastUpdateTime);
 
     const char *lang = GetRawString(global, UI_LANGUAGE_STR);
     const char *langCode = Trans::ConfirmLanguage(lang);
     if (langCode)
-        globalPrefs.m_currentLanguage = langCode;
+        globalPrefs.currentLanguage = langCode;
 
-    Retrieve(global, FWDSEARCH_OFFSET, globalPrefs.m_fwdsearchOffset);
-    Retrieve(global, FWDSEARCH_COLOR, globalPrefs.m_fwdsearchColor);
-    Retrieve(global, FWDSEARCH_WIDTH, globalPrefs.m_fwdsearchWidth);
-    Retrieve(global, FWDSEARCH_PERMANENT, globalPrefs.m_fwdsearchPermanent);
+    Retrieve(global, FWDSEARCH_OFFSET, globalPrefs.fwdSearchOffset);
+    Retrieve(global, FWDSEARCH_COLOR, globalPrefs.fwdSearchColor);
+    Retrieve(global, FWDSEARCH_WIDTH, globalPrefs.fwdSearchWidth);
+    Retrieve(global, FWDSEARCH_PERMANENT, globalPrefs.fwdSearchPermanent);
 
-    Retrieve(global, OPEN_COUNT_WEEK_STR, globalPrefs.m_openCountWeek);
-    int weekDiff = GetWeekCount() - globalPrefs.m_openCountWeek;
-    globalPrefs.m_openCountWeek = GetWeekCount();
+    Retrieve(global, OPEN_COUNT_WEEK_STR, globalPrefs.openCountWeek);
+    int weekDiff = GetWeekCount() - globalPrefs.openCountWeek;
+    globalPrefs.openCountWeek = GetWeekCount();
 
     BencArray *fileHistory = prefs->GetArray(FILE_HISTORY_STR);
     if (!fileHistory)
@@ -456,7 +456,7 @@ static void DeserializePrefs(const char *prefsTxt, SerializableGlobalPrefs& glob
         BencDict *dict = fileHistory->GetDict(i);
         assert(dict);
         if (!dict) continue;
-        DisplayState *state = DeserializeDisplayState(dict, globalPrefs.m_globalPrefsOnly);
+        DisplayState *state = DeserializeDisplayState(dict, globalPrefs.globalPrefsOnly);
         if (state) {
             // "age" openCount statistics (cut in in half after every week)
             state->openCount >>= weekDiff;
@@ -510,7 +510,7 @@ void Load(TCHAR *filepath, SerializableGlobalPrefs& globalPrefs,
     ScopedMem<char> prefsTxt(file::ReadAll(filepath, &prefsFileLen));
     if (!str::IsEmpty(prefsTxt.Get())) {
         DeserializePrefs(prefsTxt, globalPrefs, fileHistory, favs);
-        globalPrefs.m_lastPrefUpdate = file::GetModificationTime(filepath);
+        globalPrefs.lastPrefUpdate = file::GetModificationTime(filepath);
     }
 
     if (!*favs)
@@ -549,7 +549,7 @@ bool Save(TCHAR *filepath, SerializableGlobalPrefs& globalPrefs, FileHistory& fi
         * rename temp file to final file */
     bool ok = file::WriteAll(filepath, (void*)data.Get(), dataLen);
     if (ok)
-        globalPrefs.m_lastPrefUpdate = file::GetModificationTime(filepath);
+        globalPrefs.lastPrefUpdate = file::GetModificationTime(filepath);
     return ok;
 }
 

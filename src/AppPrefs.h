@@ -8,7 +8,7 @@
 
 bool ParseViewMode(DisplayMode *mode, const TCHAR *txt);
 
-/* enum from m_windowState */
+/* enum from windowState */
 enum {
     WIN_STATE_NORMAL = 1, /* use remebered position and size */
     WIN_STATE_MAXIMIZED,  /* ignore position and size, maximize the window */    
@@ -19,65 +19,65 @@ enum {
 /* Most of the global settings that we persist in preferences file. */
 struct SerializableGlobalPrefs {
     ~SerializableGlobalPrefs() {
-        free(m_versionToSkip);
-        free(m_inverseSearchCmdLine);
-        free(m_lastUpdateTime);
+        free(versionToSkip);
+        free(inverseSearchCmdLine);
+        free(lastUpdateTime);
     }
 
-    bool m_globalPrefsOnly;
+    bool globalPrefsOnly;
     /* pointer to a static string returned by Trans::ConfirmLanguage, don't free */
-    const char *m_currentLanguage;
+    const char *currentLanguage;
 
-    bool m_showToolbar;
+    bool showToolbar;
     /* If false, we won't ask the user if he wants Sumatra to handle PDF files */
-    bool m_pdfAssociateDontAskAgain;
-    /* If m_pdfAssociateDontAskAgain is TRUE, says whether we should 
+    bool pdfAssociateDontAskAgain;
+    /* If pdfAssociateDontAskAgain is TRUE, says whether we should 
        silently associate or not */
-    bool m_pdfAssociateShouldAssociate;
+    bool pdfAssociateShouldAssociate;
 
-    bool m_enableAutoUpdate;
+    bool enableAutoUpdate;
 
     /* if true, we remember which files we opened and their settings */
-    bool m_rememberOpenedFiles;
+    bool rememberOpenedFiles;
 
     /* used for the Start page, About page and Properties dialog
        (negative values indicate that the default color will be used) */
-    int  m_bgColor;
-    bool m_escToExit;
+    int  bgColor;
+    bool escToExit;
 
     /* pattern used to launch the editor when doing inverse search */
-    TCHAR *m_inverseSearchCmdLine;
+    TCHAR *inverseSearchCmdLine;
     /* whether to expose the SyncTeX enhancements to the user */
-    bool m_enableTeXEnhancements;
+    bool enableTeXEnhancements;
 
     /* When we show 'new version available', user has an option to check
        'skip this version'. This remembers which version is to be skipped.
        If NULL - don't skip */
-    TCHAR *m_versionToSkip;
+    TCHAR *versionToSkip;
 
-    char *m_lastUpdateTime;
+    char *lastUpdateTime;
 
-    DisplayMode m_defaultDisplayMode;
-    float m_defaultZoom;
+    DisplayMode defaultDisplayMode;
+    float defaultZoom;
     /* Default state of Sumatra window */
-    int   m_windowState;
+    int   windowState;
     /* Default position (can be on any monitor) */
-    RectI m_windowPos;
+    RectI windowPos;
 
-    bool m_showToc;
+    bool showToc;
     int  panelDx;
 
     /* Forward search highlighting settings  */
-    int  m_fwdsearchOffset;    /* if <=0 then use the standard (inline) highlighting style, otherwise use the margin highlight (i.e., coloured block on the left side of the page) */
-    int  m_fwdsearchColor;     /* highlight color of the forward-search for both the standard and margin style*/
-    int  m_fwdsearchWidth;     /* width of the coloured blocks for the margin style */
-    bool m_fwdsearchPermanent; /* if false then highlights are hidden automatically after a short period of time,
+    int  fwdSearchOffset;    /* if <=0 then use the standard (inline) highlighting style, otherwise use the margin highlight (i.e., coloured block on the left side of the page) */
+    int  fwdSearchColor;     /* highlight color of the forward-search for both the standard and margin style*/
+    int  fwdSearchWidth;     /* width of the coloured blocks for the margin style */
+    bool fwdSearchPermanent; /* if false then highlights are hidden automatically after a short period of time,
                                   if true then highlights remain until the next forward search */
 
-    bool m_showStartPage; /* whether to display Frequently Read documents or the About page in an empty window */
-    int  m_openCountWeek; /* week count since 2011-01-01 needed to "age" openCount values in file history */
+    bool showStartPage; /* whether to display Frequently Read documents or the About page in an empty window */
+    int  openCountWeek; /* week count since 2011-01-01 needed to "age" openCount values in file history */
 
-    FILETIME m_lastPrefUpdate; /* modification time of the preferences file when it was last read */
+    FILETIME lastPrefUpdate; /* modification time of the preferences file when it was last read */
 };
 
 class FileHistory;

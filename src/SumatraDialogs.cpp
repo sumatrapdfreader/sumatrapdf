@@ -631,16 +631,16 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wParam,
         SendDlgItemMessage(hDlg, IDC_DEFAULT_LAYOUT, CB_ADDSTRING, 0, (LPARAM)_TR("Continuous"));
         SendDlgItemMessage(hDlg, IDC_DEFAULT_LAYOUT, CB_ADDSTRING, 0, (LPARAM)_TR("Continuous Facing"));
         SendDlgItemMessage(hDlg, IDC_DEFAULT_LAYOUT, CB_ADDSTRING, 0, (LPARAM)_TR("Continuous Book View"));
-        SendDlgItemMessage(hDlg, IDC_DEFAULT_LAYOUT, CB_SETCURSEL, prefs->m_defaultDisplayMode - DM_FIRST, 0);
+        SendDlgItemMessage(hDlg, IDC_DEFAULT_LAYOUT, CB_SETCURSEL, prefs->defaultDisplayMode - DM_FIRST, 0);
 
-        SetupZoomComboBox(hDlg, IDC_DEFAULT_ZOOM, prefs->m_defaultZoom);
+        SetupZoomComboBox(hDlg, IDC_DEFAULT_ZOOM, prefs->defaultZoom);
 
-        CheckDlgButton(hDlg, IDC_DEFAULT_SHOW_TOC, prefs->m_showToc ? BST_CHECKED : BST_UNCHECKED);
-        CheckDlgButton(hDlg, IDC_GLOBAL_PREFS_ONLY, !prefs->m_globalPrefsOnly ? BST_CHECKED : BST_UNCHECKED);
-        EnableWindow(GetDlgItem(hDlg, IDC_GLOBAL_PREFS_ONLY), prefs->m_rememberOpenedFiles);
-        CheckDlgButton(hDlg, IDC_AUTO_UPDATE_CHECKS, prefs->m_enableAutoUpdate ? BST_CHECKED : BST_UNCHECKED);
+        CheckDlgButton(hDlg, IDC_DEFAULT_SHOW_TOC, prefs->showToc ? BST_CHECKED : BST_UNCHECKED);
+        CheckDlgButton(hDlg, IDC_GLOBAL_PREFS_ONLY, !prefs->globalPrefsOnly ? BST_CHECKED : BST_UNCHECKED);
+        EnableWindow(GetDlgItem(hDlg, IDC_GLOBAL_PREFS_ONLY), prefs->rememberOpenedFiles);
+        CheckDlgButton(hDlg, IDC_AUTO_UPDATE_CHECKS, prefs->enableAutoUpdate ? BST_CHECKED : BST_UNCHECKED);
         EnableWindow(GetDlgItem(hDlg, IDC_AUTO_UPDATE_CHECKS), HasPermission(Perm_InternetAccess));
-        CheckDlgButton(hDlg, IDC_REMEMBER_OPENED_FILES, prefs->m_rememberOpenedFiles ? BST_CHECKED : BST_UNCHECKED);
+        CheckDlgButton(hDlg, IDC_REMEMBER_OPENED_FILES, prefs->rememberOpenedFiles ? BST_CHECKED : BST_UNCHECKED);
         if (IsExeAssociatedWithPdfExtension()) {
             SetDlgItemText(hDlg, IDC_SET_DEFAULT_READER, _TR("SumatraPDF is your default PDF reader"));
             EnableWindow(GetDlgItem(hDlg, IDC_SET_DEFAULT_READER), FALSE);
@@ -664,7 +664,7 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wParam,
         SetDlgItemText(hDlg, IDOK, _TR("OK"));
         SetDlgItemText(hDlg, IDCANCEL, _TR("Cancel"));
 
-        if (prefs->m_enableTeXEnhancements && HasPermission(Perm_DiskAccess)) {
+        if (prefs->enableTeXEnhancements && HasPermission(Perm_DiskAccess)) {
             // Fit the additional section into the dialog
             // (this should rather happen in SumatraPDF.rc, but the resource
             // editor tends to overwrite conditional stuff which isn't its own)
@@ -686,21 +686,21 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wParam,
             // Fill the combo with the list of possible inverse search commands
             TCHAR *inverseSearch = AutoDetectInverseSearchCommands(GetDlgItem(hDlg, IDC_CMDLINE));
             // Try to select a correct default when first showing this dialog
-            if (!prefs->m_inverseSearchCmdLine)
-                prefs->m_inverseSearchCmdLine = inverseSearch;
+            if (!prefs->inverseSearchCmdLine)
+                prefs->inverseSearchCmdLine = inverseSearch;
             // Find the index of the active command line    
-            LRESULT ind = SendMessage(GetDlgItem(hDlg, IDC_CMDLINE), CB_FINDSTRINGEXACT, -1, (LPARAM) prefs->m_inverseSearchCmdLine);
+            LRESULT ind = SendMessage(GetDlgItem(hDlg, IDC_CMDLINE), CB_FINDSTRINGEXACT, -1, (LPARAM) prefs->inverseSearchCmdLine);
             if (CB_ERR == ind) {            
                 // if no existing command was selected then set the user custom command in the combo
-                ComboBox_AddItemData(GetDlgItem(hDlg, IDC_CMDLINE), prefs->m_inverseSearchCmdLine);
-                SetDlgItemText(hDlg, IDC_CMDLINE, prefs->m_inverseSearchCmdLine);
+                ComboBox_AddItemData(GetDlgItem(hDlg, IDC_CMDLINE), prefs->inverseSearchCmdLine);
+                SetDlgItemText(hDlg, IDC_CMDLINE, prefs->inverseSearchCmdLine);
             }
             else {
                 // select the active command
                 SendMessage(GetDlgItem(hDlg, IDC_CMDLINE), CB_SETCURSEL, (WPARAM) ind , 0);
             }
-            if (prefs->m_inverseSearchCmdLine == inverseSearch)
-                prefs->m_inverseSearchCmdLine = NULL;
+            if (prefs->inverseSearchCmdLine == inverseSearch)
+                prefs->inverseSearchCmdLine = NULL;
             free(inverseSearch);
         }
         else
@@ -719,16 +719,16 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wParam,
         case IDOK:
             prefs = (SerializableGlobalPrefs *)GetWindowLongPtr(hDlg, GWLP_USERDATA);
             assert(prefs);
-            prefs->m_defaultDisplayMode = (DisplayMode)(SendDlgItemMessage(hDlg, IDC_DEFAULT_LAYOUT, CB_GETCURSEL, 0, 0) + DM_FIRST);
-            prefs->m_defaultZoom = GetZoomComboBoxValue(hDlg, IDC_DEFAULT_ZOOM, prefs->m_defaultZoom);
+            prefs->defaultDisplayMode = (DisplayMode)(SendDlgItemMessage(hDlg, IDC_DEFAULT_LAYOUT, CB_GETCURSEL, 0, 0) + DM_FIRST);
+            prefs->defaultZoom = GetZoomComboBoxValue(hDlg, IDC_DEFAULT_ZOOM, prefs->defaultZoom);
 
-            prefs->m_showToc = (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_DEFAULT_SHOW_TOC));
-            prefs->m_globalPrefsOnly = (BST_CHECKED != IsDlgButtonChecked(hDlg, IDC_GLOBAL_PREFS_ONLY));
-            prefs->m_enableAutoUpdate = (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_AUTO_UPDATE_CHECKS));
-            prefs->m_rememberOpenedFiles = (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_REMEMBER_OPENED_FILES));
-            if (prefs->m_enableTeXEnhancements && HasPermission(Perm_DiskAccess)) {
-                free(prefs->m_inverseSearchCmdLine);
-                prefs->m_inverseSearchCmdLine = win::GetText(GetDlgItem(hDlg, IDC_CMDLINE));
+            prefs->showToc = (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_DEFAULT_SHOW_TOC));
+            prefs->globalPrefsOnly = (BST_CHECKED != IsDlgButtonChecked(hDlg, IDC_GLOBAL_PREFS_ONLY));
+            prefs->enableAutoUpdate = (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_AUTO_UPDATE_CHECKS));
+            prefs->rememberOpenedFiles = (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_REMEMBER_OPENED_FILES));
+            if (prefs->enableTeXEnhancements && HasPermission(Perm_DiskAccess)) {
+                free(prefs->inverseSearchCmdLine);
+                prefs->inverseSearchCmdLine = win::GetText(GetDlgItem(hDlg, IDC_CMDLINE));
             }
             EndDialog(hDlg, IDOK);
             return TRUE;
