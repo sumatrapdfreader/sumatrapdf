@@ -2369,6 +2369,10 @@ pdf_run_page_with_usage(pdf_xref *xref, pdf_page *page, fz_device *dev, fz_matri
 			continue;
 		if (flags & (1 << 1)) /* Hidden */
 			continue;
+		/* SumatraPDF: don't print annotations unless explicitly asked to */
+		if (!(flags & (1 << 2)) /* Print */ && !strcmp(target, "Print"))
+			continue;
+		else
 		if (flags & (1 << 5)) /* NoView */
 			continue;
 
