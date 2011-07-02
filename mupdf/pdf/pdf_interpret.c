@@ -2332,6 +2332,9 @@ pdf_run_buffer(pdf_csi *csi, fz_obj *rdb, fz_buffer *contents)
 {
 	fz_stream *file;
 	fz_error error;
+	/* SumatraPDF: be slightly more defensive */
+	if (!contents)
+		return fz_throw("cannot run NULL content stream");
 	file = fz_open_buffer(contents);
 	error = pdf_run_stream(csi, rdb, file, csi->xref->scratch, sizeof csi->xref->scratch);
 	fz_close(file);
