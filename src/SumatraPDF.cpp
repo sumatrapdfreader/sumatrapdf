@@ -5665,37 +5665,50 @@ static void CreateToolbar(WindowInfo& win) {
     CreateFindBox(win);
 }
 
+// TODO: the layout logic here is similar to what we do in SetSidebarVisibility()
+// would be nice to consolidate.
 static void ResizeSidebar(WindowInfo *win)
 {
     POINT pcur;
     GetCursorPos(&pcur);
     ScreenToClient(win->hwndFrame, &pcur);
-    int tocWidth = pcur.x;
+    int sidebarDx = pcur.x; // without splitter
 
-    ClientRect r(win->hwndTocBox);
-    int prevTocWidth = r.dx;
-    r = ClientRect(win->hwndFrame);
-    int width = r.dx - tocWidth - SPLITTER_DX;
-    int prevCanvasWidth = r.dx - prevTocWidth - SPLITTER_DX;
-    int height = r.dy;
+    ClientRect rToc(win->hwndTocBox);
+    ClientRect rFav(win->hwndFavBox);
+    assert(rToc.dx == rFav.dx);
+    ClientRect rFrame(win->hwndFrame);
+    ClientRect rCanvas(win->hwndCanvas);
+    int sidebarDxPrev = rToc.dx;
+    int canvasDxPrev = rFrame.dx - sidebarDxPrev - SPLITTER_DX;
 
-    // TODO: ensure that the window is always wide enough for both
-    if (tocWidth < min(SIDEBAR_MIN_WIDTH, prevTocWidth) ||
-        width < min(SIDEBAR_MIN_WIDTH, prevCanvasWidth)) {
+    if (sidebarDx < min(SIDEBAR_MIN_WIDTH, sidebarDxPrev) ||
+        sidebarDx < min(SIDEBAR_MIN_WIDTH, canvasDxPrev)) {
         SetCursor(gCursorNo);
         return;
     }
-    SetCursor(gCursorSizeWE);
 
-    int tocY = 0;
-    if (gGlobalPrefs.showToolbar && !win->fullScreen && !win->presentation) {
-        tocY = WindowRect(win->hwndReBar).dy;
-        height -= tocY;
+    int canvasDx = rFrame.dx - sidebarDx - SPLITTER_DX;    
+    if (canvasDx < 120) {
+        SetCursor(gCursorNo);
+        return;
     }
 
-    MoveWindow(win->hwndTocBox, 0, tocY, tocWidth, height, true);
-    MoveWindow(win->hwndCanvas, tocWidth + SPLITTER_DX, tocY, width, height, true);
-    MoveWindow(win->hwndSidebarSpliter, tocWidth, tocY, SPLITTER_DX, height, true);
+    SetCursor(gCursorSizeWE);
+
+    int y = 0;
+    int totalDy = rFrame.dy;
+    if (gGlobalPrefs.showToolbar && !win->fullScreen && !win->presentation) {
+        y = WindowRect(win->hwndReBar).dy;
+        totalDy -= y;
+    }
+    //assert(y == rToc.y); // TODO: why not? Would simplify code if true
+    assert(totalDy == (rToc.dy + rFav.dy));
+
+    MoveWindow(win->hwndTocBox, 0, y,           sidebarDx, rToc.dy, true);
+    MoveWindow(win->hwndFavBox, 0, y + rToc.dy, sidebarDx, rFav.dy, true);
+    MoveWindow(win->hwndSidebarSpliter, sidebarDx, y, SPLITTER_DX, totalDy, true);
+    MoveWindow(win->hwndCanvas, sidebarDx + SPLITTER_DX, y, canvasDx, totalDy, true);
 }
 
 static LRESULT CALLBACK WndProcSpliter(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -6122,8 +6135,7 @@ static void SetWinPos(HWND hwnd, RectI r, bool isVisible)
 
 void SetSidebarVisibility(WindowInfo *win, bool tocVisible, bool favVisible)
 {
-    assert(win->dm->HasTocTree()); // TODO: can this ever happen?
-    if (!win->dm->HasTocTree())
+    if (!win->IsDocLoaded() || !win->dm->HasTocTree())
         tocVisible = false;
 
     if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation)
