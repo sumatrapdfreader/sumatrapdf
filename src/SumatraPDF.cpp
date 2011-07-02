@@ -3297,8 +3297,7 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
         /* last window - don't delete it */
         delete win->watcher;
         win->watcher = NULL;
-        if (win->tocVisible || win->favVisible)
-            SetSidebarVisibility(win, win->tocVisible, win->favVisible);
+        SetSidebarVisibility(win, false, win->favVisible);
         ClearTocBox(win);
         win->AbortFinding(true);
         delete win->dm;
@@ -6129,7 +6128,7 @@ void SetSidebarVisibility(WindowInfo *win, bool tocVisible, bool favVisible)
 
     if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation)
     {
-        assert(0); // TODO: is this possible
+        assert(0); // TODO: is this possible?
         tocVisible = false;
         favVisible = false;
     }
