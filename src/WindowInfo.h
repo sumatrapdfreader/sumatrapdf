@@ -143,8 +143,8 @@ public:
 
     bool            fullScreen;
     PresentationMode presentation;
+    // were we showing toc before entering full screen or presentation mode
     bool            tocBeforeFullScreen;
-    bool            tocBeforePresentation;
     int             windowStateBeforePresentation;
 
     long            prevStyle;

@@ -4535,7 +4535,7 @@ static void EnterFullscreen(WindowInfo& win, bool presentation)
         else
             win.windowStateBeforePresentation = WIN_STATE_NORMAL;
         win.presentation = PM_ENABLED;
-        win.tocBeforePresentation = win.tocVisible;
+        win.tocBeforeFullScreen = win.tocVisible;
 
         SetTimer(win.hwndCanvas, HIDE_CURSOR_TIMER_ID, HIDE_CURSOR_DELAY_IN_MS, NULL);
     }
@@ -4595,7 +4595,7 @@ static void ExitFullscreen(WindowInfo& win)
         SetCursor(gCursorArrow);
     }
 
-    if (win.IsDocLoaded() && (wasPresentation ? win.tocBeforePresentation : win.tocBeforeFullScreen))
+    if (win.IsDocLoaded() && win.tocBeforeFullScreen)
         win.ShowTocBox();
 
     if (gGlobalPrefs.m_showToolbar)
