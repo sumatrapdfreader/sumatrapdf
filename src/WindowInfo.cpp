@@ -13,7 +13,7 @@
 WindowInfo::WindowInfo(HWND hwnd) :
     dm(NULL), menu(NULL), hwndFrame(hwnd),
     linkOnLastButtonDown(NULL), url(NULL), selectionOnPage(NULL),
-    tocLoaded(false), tocVisible(false), tocState(NULL), tocRoot(NULL),
+    tocLoaded(false), tocVisible(false), tocRoot(NULL),
     fullScreen(false), presentation(PM_DISABLED),
     hwndCanvas(NULL), hwndToolbar(NULL), hwndReBar(NULL),
     hwndFindText(NULL), hwndFindBox(NULL), hwndFindBg(NULL),
@@ -216,11 +216,9 @@ void WindowInfo::DisplayStateFromToC(DisplayState *ds)
     ds->tocState = NULL;
     if (tocState.Count() > 0) {
         size_t len = tocState.Count();
-        ds->tocState = SAZA(int, len+1);
+        ds->tocState = SAZA(int, len + 1);
         ds->tocState[0] = (int)len;
-        for (size_t i=0; i<len; i++) {
-            ds->tocState[1+i] = tocState.At(i);
-        }
+        memcpy(ds->tocState + 1, tocState.LendData(), len * sizeof(int));
     }
 }
 

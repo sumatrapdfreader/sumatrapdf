@@ -1811,9 +1811,9 @@ static bool LoadDocIntoWindow(
         win.tocVisible = state->showToc;
         win.tocState.Reset();
         if (state->tocState) {
-            for (int i=0; i<state->tocState[0]; i++) {
-                win.tocState.Append(state->tocState[i+1]);
-            }
+            int len = state->tocState[0];
+            win.tocState.MakeSpaceAt(0, len);
+            memcpy(win.tocState.LendData(), state->tocState + 1, len * sizeof(int));
         }
     }
     else {
@@ -5951,10 +5951,9 @@ static HTREEITEM AddTocItemToView(HWND hwnd, DocToCItem *entry, HTREEITEM parent
 
 static bool WasItemToggled(DocToCItem *entry, Vec<int>& tocState)
 {
-    for (size_t i = 1; i <= tocState.Count(); i++) {
-        if (tocState.At(i) == entry->id)
+    for (size_t i = 0; i < tocState.Count(); i++)
+        if (tocState[i] == entry->id)
             return true;
-    }
     return false;
 }
 
