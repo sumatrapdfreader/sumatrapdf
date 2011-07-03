@@ -20,15 +20,26 @@ static TCHAR *GetGhostscriptPath()
 
     // find all installed Ghostscript versions
     StrVec versions;
+    REGSAM access = KEY_READ | KEY_WOW64_32KEY;
+TryAgain64Bit:
     for (int i = 0; i < dimof(gsProducts); i++) {
         HKEY hkey;
         ScopedMem<TCHAR> keyName(str::Join(_T("Software\\"), gsProducts[i]));
-        if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, keyName, 0, KEY_READ, &hkey) != ERROR_SUCCESS)
+        if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, keyName, 0, access, &hkey) != ERROR_SUCCESS)
             continue;
         TCHAR subkey[32];
         for (DWORD ix = 0; RegEnumKey(hkey, ix, subkey, dimof(subkey)) == ERROR_SUCCESS; ix++)
             versions.Append(str::Dup(subkey));
         RegCloseKey(hkey);
+    }
+    if ((access & KEY_WOW64_32KEY)) {
+        // also look for 64-bit Ghostscript versions under 64-bit Windows
+        access = KEY_READ | KEY_WOW64_64KEY;
+#ifndef _WIN64
+        // (unless this is 32-bit Windows)
+        if (IsRunningInWow64())
+#endif
+        goto TryAgain64Bit;
     }
     versions.SortNatural();
 
