@@ -4705,10 +4705,9 @@ static void OnMenuFindMatchCase(WindowInfo& win)
     Edit_SetModify(win.hwndFindBox, TRUE);
 }
 
-// TODO: also needs to handle favorites
 static void AdvanceFocus(WindowInfo* win)
 {
-    // Tab order: Frame -> Page -> Find -> ToC -> Frame -> ...
+    // Tab order: Frame -> Page -> Find -> ToC -> Favorites -> Frame -> ...
 
     bool hasToolbar = !win->fullScreen && !win->presentation && gGlobalPrefs.showToolbar;
     int direction = IsShiftPressed() ? -1 : 1;
@@ -4717,10 +4716,11 @@ static void AdvanceFocus(WindowInfo* win)
         HWND hwnd;
         bool isAvailable;
     } tabOrder[] = {
-        { win->hwndFrame,    true                              },
-        { win->hwndPageBox,  hasToolbar                        },
-        { win->hwndFindBox,  hasToolbar && NeedsFindUI(*win)    },
-        { win->hwndTocTree,  win->tocLoaded && win->tocVisible },
+        { win->hwndFrame,   true                                },
+        { win->hwndPageBox, hasToolbar                          },
+        { win->hwndFindBox, hasToolbar && NeedsFindUI(*win)     },
+        { win->hwndTocTree, win->tocLoaded && win->tocVisible   },
+        { win->hwndFavTree, win->favVisible                     },
     };
 
     /* // make sure that at least one element is available
@@ -5031,15 +5031,15 @@ static void UpdateToolbarButtonsToolTipsForWindow(WindowInfo& win)
 
 static void UpdateSidebarTitles(WindowInfo& win)
 {
-    HWND tocTitle = GetDlgItem(win.hwndTocBox, 0);
+    HWND tocTitle = GetDlgItem(win.hwndTocBox, IDC_TOC_TITLE);
     win::SetText(tocTitle, _TR("Bookmarks"));
     if (win.tocVisible) {
         InvalidateRect(win.hwndTocBox, NULL, TRUE);
         UpdateWindow(win.hwndTocBox);
     }
 
-    HWND favTitle = GetDlgItem(win.hwndFavBox, 0);
-    win::SetText(tocTitle, _T("Favorites")); // TODO: translate
+    HWND favTitle = GetDlgItem(win.hwndFavBox, IDC_FAV_TITLE);
+    win::SetText(favTitle, _T("Favorites")); // TODO: translate
     if (win.favVisible) {
         InvalidateRect(win.hwndFavBox, NULL, TRUE);
         UpdateWindow(win.hwndFavBox);
@@ -5684,31 +5684,28 @@ static void ResizeSidebar(WindowInfo *win)
     ClientRect rFav(win->hwndFavBox);
     assert(rToc.dx == rFav.dx);
     ClientRect rFrame(win->hwndFrame);
-    ClientRect rCanvas(win->hwndCanvas);
-    int sidebarDxPrev = rToc.dx;
-    int canvasDxPrev = rFrame.dx - sidebarDxPrev - SPLITTER_DX;
 
-    if (sidebarDx < min(SIDEBAR_MIN_WIDTH, sidebarDxPrev) ||
-        sidebarDx < min(SIDEBAR_MIN_WIDTH, canvasDxPrev)) {
-        SetCursor(gCursorNo);
-        return;
-    }
-
-    int canvasDx = rFrame.dx - sidebarDx - SPLITTER_DX;    
-    if (canvasDx < 120) {
+    // make sure to keep this in sync with the calculations in SetSidebarVisibility
+    // note: without the min/max(..., rToc.dx), the sidebar will be
+    //       stuck at its width if it accidentally got too wide or too narrow
+    if (sidebarDx < min(SIDEBAR_MIN_WIDTH, rToc.dx) ||
+        sidebarDx > max(rFrame.dx / 2, rToc.dx)) {
         SetCursor(gCursorNo);
         return;
     }
 
     SetCursor(gCursorSizeWE);
 
+    int canvasDx = rFrame.dx - sidebarDx - SPLITTER_DX;
     int y = 0;
     int totalDy = rFrame.dy;
     if (gGlobalPrefs.showToolbar && !win->fullScreen && !win->presentation) {
         y = WindowRect(win->hwndReBar).dy;
         totalDy -= y;
     }
-    //assert(y == rToc.y); // TODO: why not? Would simplify code if true
+    // rToc.y is always 0, as rToc is a ClientRect, so we first have
+    // to convert it into coordinates relative to hwndFrame:
+    assert(MapRectToWindow(rToc, win->hwndTocBox, win->hwndFrame).y == y);
     //assert(totalDy == (rToc.dy + rFav.dy));
 
     MoveWindow(win->hwndTocBox, 0, y,           sidebarDx, rToc.dy, true);
@@ -5919,11 +5916,11 @@ static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT message, WPARAM wParam, LP
 
     switch (message) {
         case WM_SIZE:
-            LayoutTreeContainer(hwnd, IDC_PDF_TOC_BOX);
+            LayoutTreeContainer(hwnd, IDC_TOC_BOX);
             break;
 
         case WM_DRAWITEM:
-            if (IDC_PDF_TOC_CLOSE == wParam) {
+            if (IDC_TOC_CLOSE == wParam) {
                 DRAWITEMSTRUCT *dis = (DRAWITEMSTRUCT *)lParam;
                 DrawFrameControl(dis->hDC, &dis->rcItem, DFC_CAPTION, DFCS_CAPTIONCLOSE | DFCS_FLAT);
                 return TRUE;
@@ -5936,7 +5933,7 @@ static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT message, WPARAM wParam, LP
             break;
 
         case WM_NOTIFY:
-            if (LOWORD(wParam) == IDC_PDF_TOC_TREE) {
+            if (LOWORD(wParam) == IDC_TOC_TREE) {
                 LPNMTREEVIEW pnmtv = (LPNMTREEVIEW) lParam;
                 LRESULT res = OnTocTreeNotify(win, pnmtv);
                 if (res != -1)
@@ -6110,24 +6107,24 @@ static void CreateSidebar(WindowInfo* win)
     win->hwndTocBox = CreateWindow(WC_STATIC, _T(""), WS_CHILD,
                         0,0,gGlobalPrefs.sidebarDx,0, win->hwndFrame, (HMENU)0, ghinst, NULL);
     title = CreateWindow(WC_STATIC, _T(""), WS_VISIBLE | WS_CHILD,
-                         0,0,0,0, win->hwndTocBox, (HMENU)IDC_PDF_TOC_TITLE, ghinst, NULL);
+                         0,0,0,0, win->hwndTocBox, (HMENU)IDC_TOC_TITLE, ghinst, NULL);
     SetWindowFont(title, gDefaultGuiFont, FALSE);
     win::SetText(title, _TR("Bookmarks"));
     hwndClose = CreateWindow(WC_STATIC, _T(""),
                         SS_OWNERDRAW | SS_NOTIFY | WS_CHILD | WS_VISIBLE,
-                        0, 0, 16, 16, win->hwndTocBox, (HMENU)IDC_PDF_TOC_CLOSE, ghinst, NULL);
+                        0, 0, 16, 16, win->hwndTocBox, (HMENU)IDC_TOC_CLOSE, ghinst, NULL);
     SetClassLongPtr(hwndClose, GCLP_HCURSOR, (LONG_PTR)gCursorHand);
 
     win->hwndTocTree = CreateWindowEx(WS_EX_STATICEDGE, WC_TREEVIEW, _T("TOC"),
                         TVS_HASBUTTONS|TVS_HASLINES|TVS_LINESATROOT|TVS_SHOWSELALWAYS|
                         TVS_TRACKSELECT|TVS_DISABLEDRAGDROP|TVS_NOHSCROLL|TVS_INFOTIP|
                         WS_TABSTOP|WS_VISIBLE|WS_CHILD,
-                        0,0,0,0, win->hwndTocBox, (HMENU)IDC_PDF_TOC_TREE, ghinst, NULL);
+                        0,0,0,0, win->hwndTocBox, (HMENU)IDC_TOC_TREE, ghinst, NULL);
 
     // Note: those must be consecutive numbers and in title/close/tree order
-    CASSERT(IDC_PDF_TOC_BOX + 1 == IDC_PDF_TOC_TITLE &&
-            IDC_PDF_TOC_BOX + 2 == IDC_PDF_TOC_CLOSE &&
-            IDC_PDF_TOC_BOX + 3 == IDC_PDF_TOC_TREE, consecutive_toc_box_ids);
+    CASSERT(IDC_TOC_BOX + 1 == IDC_TOC_TITLE &&
+            IDC_TOC_BOX + 2 == IDC_TOC_CLOSE &&
+            IDC_TOC_BOX + 3 == IDC_TOC_TREE, consecutive_toc_ids);
 
 #ifdef UNICODE
     TreeView_SetUnicodeFormat(win->hwndTocTree, true);
@@ -6460,58 +6457,27 @@ void SetSidebarVisibility(WindowInfo *win, bool tocVisible, bool favVisible)
             win->UpdateTocSelection(win->dm->currentPageNo());
         return;
     }
+
+    int y = toolbarDy;
     ClientRect sidebarRc(win->hwndTocBox);
-    int sidebarDx = sidebarRc.dx;
-    if (sidebarDx == 0) {
+    int tocDx = sidebarRc.dx;
+    if (tocDx == 0) {
         // TODO: use saved panelDx from saved preferences
-        sidebarDx = rFrame.dx / 4;
+        tocDx = rFrame.dx / 4;
     }
     //int dx = SidebarDxFromDisplayState(NULL, rc.dx / 4);
 
     // make sure that the sidebar is never too wide or too narrow
-    if (sidebarDx < SIDEBAR_MIN_WIDTH)
-        sidebarDx = SIDEBAR_MIN_WIDTH;
-    if (sidebarDx > rFrame.dx / 2)
-        sidebarDx = rFrame.dx / 2;
+    // (when changing these values, also adjust ResizeSidebar)
+    tocDx = limitValue(tocDx, SIDEBAR_MIN_WIDTH, rFrame.dx / 2);
 
-    RectI rToc, rFav, rSplitter, rCanvas;
-    int tocDx = sidebarDx - SPLITTER_DX;
+    int tocDy = !tocVisible ? 0 : !favVisible ? dy : dy / 2;
+    int canvasX = tocDx + SPLITTER_DX;
 
-    rSplitter.x = tocDx;
-    rSplitter.dx = SPLITTER_DX;
-    rSplitter.y = toolbarDy;
-    rSplitter.dy = dy;
-
-    rCanvas.x = sidebarDx;
-    rCanvas.dx = rFrame.dx - sidebarDx;
-    rCanvas.y = toolbarDy;
-    rCanvas.dy = dy;
-
-    rToc.x = 0;
-    rToc.dx = tocDx;
-    rFav.x = 0;
-    rFav.dx = tocDx;
-
-    int y = toolbarDy;
-    if (tocVisible && favVisible) {
-        dy = dy / 2;
-        rToc.y = y;
-        rToc.dy = dy;
-        rFav.y = y + dy;
-        rFav.dy = dy;
-    } else {
-        if (tocVisible) {
-            rToc.y = y;
-            rToc.dy = dy;
-            rFav.y = y;
-            rFav.dy = 0;
-        } else {
-            rFav.y = y;
-            rFav.dy = dy;
-            rToc.y = y;
-            rToc.dy = 0;
-        }
-    }
+    RectI rToc(0, y, tocDx, tocDy);
+    RectI rFav(0, y + tocDy, tocDx, dy - tocDy);
+    RectI rSplitter(tocDx, y, SPLITTER_DX, dy);
+    RectI rCanvas(canvasX, y, rFrame.dx - canvasX, dy);
     
     SetWinPos(win->hwndTocBox, rToc, tocVisible);
     SetWinPos(win->hwndFavBox, rFav, favVisible);

@@ -136,10 +136,10 @@
 #define IDC_PRINT_SCALE_SHRINK          1061
 #define IDC_PRINT_SCALE_FIT             1062
 #define IDC_PRINT_SCALE_NONE            1063
-#define IDC_PDF_TOC_BOX                 1070
-#define IDC_PDF_TOC_TITLE               1071
-#define IDC_PDF_TOC_CLOSE               1072
-#define IDC_PDF_TOC_TREE                1073
+#define IDC_TOC_BOX                     1070
+#define IDC_TOC_TITLE                   1071
+#define IDC_TOC_CLOSE                   1072
+#define IDC_TOC_TREE                    1073
 #define IDC_FAV_BOX                     1075
 #define IDC_FAV_TITLE                   1076
 #define IDC_FAV_CLOSE                   1077
