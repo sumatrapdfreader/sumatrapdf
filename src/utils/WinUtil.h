@@ -10,6 +10,11 @@
 #include "StrUtil.h"
 #include "GeomUtil.h"
 
+#ifndef USER_DEFAULT_SCREEN_DPI
+// the following is only defined if _WIN32_WINNT >= 0x0600 and we use 0x0500
+#define USER_DEFAULT_SCREEN_DPI 96
+#endif
+
 HMODULE SafeLoadLibrary(const TCHAR *dllName);
 FARPROC LoadDllFunc(TCHAR *dllName, const char *funcName);
 
@@ -170,6 +175,16 @@ public:
     } 
 };
 
+inline int GetHwndDpi(HWND hwnd, float& uiDPIFactor)
+{
+    HDC dc = GetDC(hwnd);
+    int dpi = GetDeviceCaps(dc, LOGPIXELSY);
+    // round untypical resolutions up to the nearest quarter
+    uiDPIFactor = ceil(dpi * 4.0f / USER_DEFAULT_SCREEN_DPI) / 4.0f;
+    ReleaseDC(hwnd, dc);
+    return dpi;
+}
+
 namespace menu {
 
 inline void SetChecked(HMENU m, UINT id, bool isChecked)
@@ -230,11 +245,6 @@ public:
 }// namespace font
 
 } // namespace win
-
-#ifndef USER_DEFAULT_SCREEN_DPI
-// the following is only defined if _WIN32_WINNT >= 0x0600 and we use 0x0500
-#define USER_DEFAULT_SCREEN_DPI 96
-#endif
 
 /* Utilities to help in common windows programming tasks */
 

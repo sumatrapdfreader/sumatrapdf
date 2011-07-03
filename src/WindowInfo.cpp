@@ -31,11 +31,7 @@ WindowInfo::WindowInfo(HWND hwnd) :
 {
     ZeroMemory(&selectionRect, sizeof(selectionRect));
 
-    HDC hdcFrame = GetDC(hwndFrame);
-    dpi = GetDeviceCaps(hdcFrame, LOGPIXELSY);
-    // round untypical resolutions up to the nearest quarter
-    uiDPIFactor = ceil(dpi * 4.0f / USER_DEFAULT_SCREEN_DPI) / 4.0f;
-    ReleaseDC(hwndFrame, hdcFrame);
+    dpi = win::GetHwndDpi(hwndFrame, uiDPIFactor);
 
     buffer = new DoubleBuffer(hwndCanvas, canvasRc);
     linkHandler = new LinkHandler(*this);

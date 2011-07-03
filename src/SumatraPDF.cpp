@@ -254,6 +254,7 @@ static void CreateToolbar(WindowInfo& win);
 static void CreateSidebar(WindowInfo* win);
 static void ToggleTocBox(WindowInfo *win);
 static void ClearTocBox(WindowInfo *win);
+static void ToggleFavorites(WindowInfo *win);
 static void UpdateToolbarFindText(WindowInfo& win);
 static void UpdateToolbarPageText(WindowInfo& win, int pageCount);
 static void UpdateToolbarToolText();
@@ -1551,6 +1552,7 @@ static void MenuUpdateStateForWindow(WindowInfo& win) {
     bool checked = documentSpecific ? win.tocVisible : gGlobalPrefs.showToc;
     win::menu::SetChecked(win.menu, IDM_VIEW_BOOKMARKS, checked);
 
+    win::menu::SetChecked(win.menu, IDM_FAV_TOGGLE, win.favVisible);
     win::menu::SetChecked(win.menu, IDM_VIEW_SHOW_HIDE_TOOLBAR, gGlobalPrefs.showToolbar);
     MenuUpdateDisplayMode(win);
     MenuUpdateZoom(win);
@@ -5809,6 +5811,33 @@ static void CustomizeToCInfoTip(LPNMTVGETINFOTIP nmit);
 static void RelayoutTocItem(LPNMTVCUSTOMDRAW ntvcd);
 #endif
 
+// A tree container, used for toc and favorites, is a window with following children:
+// - title (id == firstControlId)
+// - close button (id == firstControlId+1)
+// - tree window (id == firstControlId+2)
+// This function lays out the child windows inside the container based
+// on the container size.
+static void LayoutTreeContainer(HWND hwndContainer, int firstControlId)
+{
+    HWND hwndTitle = GetDlgItem(hwndContainer, firstControlId);
+    HWND hwndClose = GetDlgItem(hwndContainer, firstControlId+1);
+    HWND hwndTree  = GetDlgItem(hwndContainer, firstControlId+2);
+
+    ScopedMem<TCHAR> title(win::GetText(hwndTitle));
+    SIZE size = TextSizeInHwnd(hwndTitle, title);
+
+    float uiDPIFactor;
+    win::GetHwndDpi(hwndContainer, uiDPIFactor);
+    int offset = (int)(2 * uiDPIFactor);
+    if (size.cy < 16) size.cy = 16;
+    size.cy += 2 * offset;
+
+    WindowRect rc(hwndContainer);   
+    MoveWindow(hwndTitle, offset, offset, rc.dx - 2 * offset - 16, size.cy - 2 * offset, true);
+    MoveWindow(hwndClose, rc.dx - 16, (size.cy - 16) / 2, 16, 16, true);
+    MoveWindow(hwndTree, 0, size.cy, rc.dx, rc.dy - size.cy, true);
+}
+
 static WNDPROC DefWndProcTocBox = NULL;
 static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -5818,24 +5847,11 @@ static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT message, WPARAM wParam, LP
 
     switch (message) {
     case WM_SIZE: {
-        WindowRect rc(hwnd);
-
-        HWND titleLabel = GetDlgItem(hwnd, 0);
-        ScopedMem<TCHAR> text(win::GetText(titleLabel));
-        SIZE size = TextSizeInHwnd(titleLabel, text);
-
-        int offset = (int)(2 * win->uiDPIFactor);
-        if (size.cy < 16) size.cy = 16;
-        size.cy += 2 * offset;
-
-        HWND closeIcon = GetDlgItem(hwnd, 1);
-        MoveWindow(titleLabel, offset, offset, rc.dx - 2 * offset - 16, size.cy - 2 * offset, true);
-        MoveWindow(closeIcon, rc.dx - 16, (size.cy - 16) / 2, 16, 16, true);
-        MoveWindow(win->hwndTocTree, 0, size.cy, rc.dx, rc.dy - size.cy, true);
+        LayoutTreeContainer(hwnd, IDC_PDF_TOC_FIRST);
         break;
     }
     case WM_DRAWITEM:
-        if (1 == wParam) { // close button
+        if (IDC_PDF_TOC_CLOSE== wParam) {
             DRAWITEMSTRUCT *dis = (DRAWITEMSTRUCT *)lParam;
             DrawFrameControl(dis->hDC, &dis->rcItem, DFC_CAPTION, DFCS_CAPTIONCLOSE | DFCS_FLAT);
             return TRUE;
@@ -5912,23 +5928,59 @@ static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT message, WPARAM wParam, LP
     return CallWindowProc(DefWndProcTocBox, hwnd, message, wParam, lParam);
 }
 
+static WNDPROC DefWndProcFavTree = NULL;
+static LRESULT CALLBACK WndProcFavTree(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    WindowInfo *win = FindWindowInfoByHwnd(hwnd);
+    if (!win)
+        return CallWindowProc(DefWndProcFavTree, hwnd, message, wParam, lParam);
+    return CallWindowProc(DefWndProcFavTree, hwnd, message, wParam, lParam);
+}
+
+static WNDPROC DefWndProcFavBox = NULL;
+static LRESULT CALLBACK WndProcFavBox(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    WindowInfo *win = FindWindowInfoByHwnd(hwnd);
+    if (!win)
+        return CallWindowProc(DefWndProcFavBox, hwnd, message, wParam, lParam);
+    switch (message) {
+    case WM_SIZE: {
+        LayoutTreeContainer(hwnd, IDC_FAV_FIRST);
+        break;
+    }
+    case WM_DRAWITEM:
+        if (IDC_FAV_CLOSE == wParam) {
+            DRAWITEMSTRUCT *dis = (DRAWITEMSTRUCT *)lParam;
+            DrawFrameControl(dis->hDC, &dis->rcItem, DFC_CAPTION, DFCS_CAPTIONCLOSE | DFCS_FLAT);
+            return TRUE;
+        }
+        break;
+    case WM_COMMAND:
+        if (HIWORD(wParam) == STN_CLICKED)
+            ToggleFavorites(win);
+        break;
+    }
+    return CallWindowProc(DefWndProcFavBox, hwnd, message, wParam, lParam);
+}
+
 static void CreateSidebar(WindowInfo* win)
 {
-    HWND tmp, title, closeToc;
+    HWND tmp, title, hwndClose;
 
+    // toc windows
     tmp = CreateWindow(SPLITER_CLASS_NAME, _T(""), WS_CHILDWINDOW, 0, 0, 0, 0,
                        win->hwndFrame, (HMENU)0, ghinst, NULL);
     win->hwndSidebarSpliter = tmp;
     win->hwndTocBox = CreateWindow(WC_STATIC, _T(""), WS_CHILD,
                         0,0,gGlobalPrefs.sidebarDx,0, win->hwndFrame, (HMENU)0, ghinst, NULL);
     title = CreateWindow(WC_STATIC, _T(""), WS_VISIBLE | WS_CHILD,
-                         0,0,0,0, win->hwndTocBox, (HMENU)0, ghinst, NULL);
+                         0,0,0,0, win->hwndTocBox, (HMENU)IDC_PDF_TOC_TITLE, ghinst, NULL);
     SetWindowFont(title, gDefaultGuiFont, FALSE);
     win::SetText(title, _TR("Bookmarks"));
-    closeToc = CreateWindow(WC_STATIC, _T(""),
+    hwndClose = CreateWindow(WC_STATIC, _T(""),
                         SS_OWNERDRAW | SS_NOTIFY | WS_CHILD | WS_VISIBLE,
-                        0, 0, 16, 16, win->hwndTocBox, (HMENU)1, ghinst, NULL);
-    SetClassLongPtr(closeToc, GCLP_HCURSOR, (LONG_PTR)gCursorHand);
+                        0, 0, 16, 16, win->hwndTocBox, (HMENU)IDC_PDF_TOC_CLOSE, ghinst, NULL);
+    SetClassLongPtr(hwndClose, GCLP_HCURSOR, (LONG_PTR)gCursorHand);
 
     win->hwndTocTree = CreateWindowEx(WS_EX_STATICEDGE, WC_TREEVIEW, _T("TOC"),
                         TVS_HASBUTTONS|TVS_HASLINES|TVS_LINESATROOT|TVS_SHOWSELALWAYS|
@@ -5948,16 +6000,17 @@ static void CreateSidebar(WindowInfo* win)
         DefWndProcTocBox = (WNDPROC)GetWindowLongPtr(win->hwndTocBox, GWLP_WNDPROC);
     SetWindowLongPtr(win->hwndTocBox, GWLP_WNDPROC, (LONG_PTR)WndProcTocBox);
 
+    // favorites windows
     win->hwndFavBox = CreateWindow(WC_STATIC, _T(""), WS_CHILD,
                         0,0,gGlobalPrefs.sidebarDx,0, win->hwndFrame, (HMENU)0, ghinst, NULL);
     title = CreateWindow(WC_STATIC, _T(""), WS_VISIBLE | WS_CHILD,
-                         0,0,0,0, win->hwndFavBox, (HMENU)0, ghinst, NULL);
+                         0,0,0,0, win->hwndFavBox, (HMENU)IDC_FAV_TITLE, ghinst, NULL);
     SetWindowFont(title, gDefaultGuiFont, FALSE);
     win::SetText(title, _T("Favorites")); // TODO: translate
-    closeToc = CreateWindow(WC_STATIC, _T(""),
+    hwndClose = CreateWindow(WC_STATIC, _T(""),
                         SS_OWNERDRAW | SS_NOTIFY | WS_CHILD | WS_VISIBLE,
-                        0, 0, 16, 16, win->hwndFavBox, (HMENU)1, ghinst, NULL);
-    SetClassLongPtr(closeToc, GCLP_HCURSOR, (LONG_PTR)gCursorHand);
+                        0, 0, 16, 16, win->hwndFavBox, (HMENU)IDC_FAV_CLOSE, ghinst, NULL);
+    SetClassLongPtr(hwndClose, GCLP_HCURSOR, (LONG_PTR)gCursorHand);
 
     win->hwndFavTree = CreateWindowEx(WS_EX_STATICEDGE, WC_TREEVIEW, _T("Fav"),
                         TVS_HASBUTTONS|TVS_HASLINES|TVS_LINESATROOT|TVS_SHOWSELALWAYS|
@@ -5968,6 +6021,14 @@ static void CreateSidebar(WindowInfo* win)
 #ifdef UNICODE
     TreeView_SetUnicodeFormat(win->hwndFavTree, true);
 #endif
+
+    if (NULL == DefWndProcFavTree)
+        DefWndProcFavTree = (WNDPROC)GetWindowLongPtr(win->hwndFavTree, GWLP_WNDPROC);
+    SetWindowLongPtr(win->hwndFavTree, GWLP_WNDPROC, (LONG_PTR)WndProcFavTree);
+
+    if (NULL == DefWndProcFavBox)
+        DefWndProcFavBox = (WNDPROC)GetWindowLongPtr(win->hwndFavBox, GWLP_WNDPROC);
+    SetWindowLongPtr(win->hwndFavBox, GWLP_WNDPROC, (LONG_PTR)WndProcFavBox);
 
     if (win->tocVisible) {
         InvalidateRect(win->hwndTocBox, NULL, TRUE);

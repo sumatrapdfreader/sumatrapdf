@@ -107,7 +107,6 @@
 #define IDC_FAV_NAME_EDIT               1013
 #define IDC_DONT_ASK_ME_AGAIN           1014
 #define IDC_ADD_PAGE_STATIC             1015
-#define IDC_PDF_TOC_TREE                1016
 #define IDC_CHANGE_LANG_LANG_LIST       1017
 #define IDC_YOU_HAVE                    1018
 #define IDC_NEW_AVAILABLE               1019
@@ -126,10 +125,22 @@
 #define IDC_FIND_EDIT                   1032
 #define IDC_MATCH_CASE                  1033
 #define IDC_FIND_NEXT_HINT              1034
-#define IDC_FAV_TREE                    1035
 #define IDC_SECTION_INVERSESEARCH       1040
 #define IDC_CMDLINE_LABEL               1041
 #define IDC_CMDLINE                     1042
+
+// Note: those must be consecutive numbers and in title/close/tree order
+#define IDC_PDF_TOC_TITLE               1044
+#define IDC_PDF_TOC_CLOSE               1045
+#define IDC_PDF_TOC_TREE                1046
+#define IDC_PDF_TOC_FIRST IDC_PDF_TOC_TITLE
+
+// Note: those must be consecutive numbers and in title/close/tree order
+#define IDC_FAV_TITLE                   1047
+#define IDC_FAV_CLOSE                   1048
+#define IDC_FAV_TREE                    1049
+#define IDC_FAV_FIRST IDC_FAV_TITLE
+
 #define IDC_SECTION_PRINT_RANGE         1050
 #define IDC_PRINT_RANGE_ALL             1051
 #define IDC_PRINT_RANGE_EVEN            1052
