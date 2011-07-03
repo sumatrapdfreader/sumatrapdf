@@ -175,12 +175,13 @@ public:
     } 
 };
 
-inline int GetHwndDpi(HWND hwnd, float& uiDPIFactor)
+inline int GetHwndDpi(HWND hwnd, float *uiDPIFactor)
 {
     HDC dc = GetDC(hwnd);
     int dpi = GetDeviceCaps(dc, LOGPIXELSY);
     // round untypical resolutions up to the nearest quarter
-    uiDPIFactor = ceil(dpi * 4.0f / USER_DEFAULT_SCREEN_DPI) / 4.0f;
+    if (uiDPIFactor)
+        *uiDPIFactor = ceil(dpi * 4.0f / USER_DEFAULT_SCREEN_DPI) / 4.0f;
     ReleaseDC(hwnd, dc);
     return dpi;
 }

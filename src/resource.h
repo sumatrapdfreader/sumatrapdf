@@ -128,19 +128,6 @@
 #define IDC_SECTION_INVERSESEARCH       1040
 #define IDC_CMDLINE_LABEL               1041
 #define IDC_CMDLINE                     1042
-
-// Note: those must be consecutive numbers and in title/close/tree order
-#define IDC_PDF_TOC_TITLE               1044
-#define IDC_PDF_TOC_CLOSE               1045
-#define IDC_PDF_TOC_TREE                1046
-#define IDC_PDF_TOC_FIRST IDC_PDF_TOC_TITLE
-
-// Note: those must be consecutive numbers and in title/close/tree order
-#define IDC_FAV_TITLE                   1047
-#define IDC_FAV_CLOSE                   1048
-#define IDC_FAV_TREE                    1049
-#define IDC_FAV_FIRST IDC_FAV_TITLE
-
 #define IDC_SECTION_PRINT_RANGE         1050
 #define IDC_PRINT_RANGE_ALL             1051
 #define IDC_PRINT_RANGE_EVEN            1052
@@ -149,6 +136,14 @@
 #define IDC_PRINT_SCALE_SHRINK          1061
 #define IDC_PRINT_SCALE_FIT             1062
 #define IDC_PRINT_SCALE_NONE            1063
+#define IDC_PDF_TOC_BOX                 1070
+#define IDC_PDF_TOC_TITLE               1071
+#define IDC_PDF_TOC_CLOSE               1072
+#define IDC_PDF_TOC_TREE                1073
+#define IDC_FAV_BOX                     1075
+#define IDC_FAV_TITLE                   1076
+#define IDC_FAV_CLOSE                   1077
+#define IDC_FAV_TREE                    1078
 #define IDB_TOOLBAR                     2000
 #define IDB_RELOADING_CUE               2010
 #define IDT_FILE_NEW                    3000
@@ -190,7 +185,7 @@
 #define _APS_NO_MFC                     1
 #define _APS_NEXT_RESOURCE_VALUE        141
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1070
+#define _APS_NEXT_CONTROL_VALUE         1080
 #define _APS_NEXT_SYMED_VALUE           110
 #endif
 #endif

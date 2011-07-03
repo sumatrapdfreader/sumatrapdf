@@ -5816,24 +5816,25 @@ static void RelayoutTocItem(LPNMTVCUSTOMDRAW ntvcd);
 #endif
 
 // A tree container, used for toc and favorites, is a window with following children:
-// - title (id == firstControlId)
-// - close button (id == firstControlId+1)
-// - tree window (id == firstControlId+2)
+// - title (id + 1)
+// - close button (id + 2)
+// - tree window (id + 3)
 // This function lays out the child windows inside the container based
 // on the container size.
-static void LayoutTreeContainer(HWND hwndContainer, int firstControlId)
+static void LayoutTreeContainer(HWND hwndContainer, int id)
 {
-    HWND hwndTitle = GetDlgItem(hwndContainer, firstControlId);
-    HWND hwndClose = GetDlgItem(hwndContainer, firstControlId+1);
-    HWND hwndTree  = GetDlgItem(hwndContainer, firstControlId+2);
+    HWND hwndTitle = GetDlgItem(hwndContainer, id + 1);
+    HWND hwndClose = GetDlgItem(hwndContainer, id + 2);
+    HWND hwndTree  = GetDlgItem(hwndContainer, id + 3);
 
     ScopedMem<TCHAR> title(win::GetText(hwndTitle));
     SIZE size = TextSizeInHwnd(hwndTitle, title);
 
-    float uiDPIFactor;
-    win::GetHwndDpi(hwndContainer, uiDPIFactor);
-    int offset = (int)(2 * uiDPIFactor);
-    if (size.cy < 16) size.cy = 16;
+    WindowInfo *win = FindWindowInfoByHwnd(hwndContainer);
+    assert(win);
+    int offset = win ? (int)(2 * win->uiDPIFactor) : 2;
+    if (size.cy < 16)
+        size.cy = 16;
     size.cy += 2 * offset;
 
     WindowRect rc(hwndContainer);   
@@ -5918,11 +5919,11 @@ static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT message, WPARAM wParam, LP
 
     switch (message) {
         case WM_SIZE:
-            LayoutTreeContainer(hwnd, IDC_PDF_TOC_FIRST);
+            LayoutTreeContainer(hwnd, IDC_PDF_TOC_BOX);
             break;
 
         case WM_DRAWITEM:
-            if (IDC_PDF_TOC_CLOSE== wParam) {
+            if (IDC_PDF_TOC_CLOSE == wParam) {
                 DRAWITEMSTRUCT *dis = (DRAWITEMSTRUCT *)lParam;
                 DrawFrameControl(dis->hDC, &dis->rcItem, DFC_CAPTION, DFCS_CAPTIONCLOSE | DFCS_FLAT);
                 return TRUE;
@@ -6040,7 +6041,7 @@ static LRESULT CALLBACK WndProcFavBox(HWND hwnd, UINT message, WPARAM wParam, LP
     switch (message) {
 
         case WM_SIZE:
-            LayoutTreeContainer(hwnd, IDC_FAV_FIRST);
+            LayoutTreeContainer(hwnd, IDC_FAV_BOX);
             break;
 
         case WM_DRAWITEM:
@@ -6093,6 +6094,11 @@ static void CreateSidebar(WindowInfo* win)
                         WS_TABSTOP|WS_VISIBLE|WS_CHILD,
                         0,0,0,0, win->hwndTocBox, (HMENU)IDC_PDF_TOC_TREE, ghinst, NULL);
 
+    // Note: those must be consecutive numbers and in title/close/tree order
+    CASSERT(IDC_PDF_TOC_BOX + 1 == IDC_PDF_TOC_TITLE &&
+            IDC_PDF_TOC_BOX + 2 == IDC_PDF_TOC_CLOSE &&
+            IDC_PDF_TOC_BOX + 3 == IDC_PDF_TOC_TREE, consecutive_toc_box_ids);
+
 #ifdef UNICODE
     TreeView_SetUnicodeFormat(win->hwndTocTree, true);
 #endif
@@ -6123,6 +6129,11 @@ static void CreateSidebar(WindowInfo* win)
                         WS_TABSTOP|WS_VISIBLE|WS_CHILD,
                         0,0,0,0, win->hwndFavBox, (HMENU)IDC_FAV_TREE, ghinst, NULL);
     
+    // Note: those must be consecutive numbers and in title/close/tree order
+    CASSERT(IDC_FAV_BOX + 1 == IDC_FAV_TITLE &&
+            IDC_FAV_BOX + 2 == IDC_FAV_CLOSE &&
+            IDC_FAV_BOX + 3 == IDC_FAV_TREE, consecutive_fav_ids);
+
 #ifdef UNICODE
     TreeView_SetUnicodeFormat(win->hwndFavTree, true);
 #endif

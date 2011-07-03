@@ -31,7 +31,7 @@ WindowInfo::WindowInfo(HWND hwnd) :
 {
     ZeroMemory(&selectionRect, sizeof(selectionRect));
 
-    dpi = win::GetHwndDpi(hwndFrame, uiDPIFactor);
+    dpi = win::GetHwndDpi(hwndFrame, &uiDPIFactor);
 
     buffer = new DoubleBuffer(hwndCanvas, canvasRc);
     linkHandler = new LinkHandler(*this);
