@@ -4323,7 +4323,7 @@ static void AdjustWindowEdge(WindowInfo& win)
     }
 }
 
-static void OnSize(WindowInfo* win, int dx, int dy)
+static void OnFrameSize(WindowInfo* win, int dx, int dy)
 {
     int rebBarDy = 0;
     if (gGlobalPrefs.showToolbar) {
@@ -5708,7 +5708,7 @@ static void ResizeSidebar(WindowInfo *win)
         totalDy -= y;
     }
     //assert(y == rToc.y); // TODO: why not? Would simplify code if true
-    assert(totalDy == (rToc.dy + rFav.dy));
+    //assert(totalDy == (rToc.dy + rFav.dy));
 
     MoveWindow(win->hwndTocBox, 0, y,           sidebarDx, rToc.dy, true);
     MoveWindow(win->hwndFavBox, 0, y + rToc.dy, sidebarDx, rFav.dy, true);
@@ -6261,7 +6261,6 @@ void SetSidebarVisibility(WindowInfo *win, bool tocVisible, bool favVisible)
 
     if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation)
     {
-        assert(0); // TODO: is this possible?
         tocVisible = false;
         favVisible = false;
     }
@@ -7139,7 +7138,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
 
                 int dx = LOWORD(lParam);
                 int dy = HIWORD(lParam);
-                OnSize(win, dx, dy);
+                OnFrameSize(win, dx, dy);
             }
             break;
 
