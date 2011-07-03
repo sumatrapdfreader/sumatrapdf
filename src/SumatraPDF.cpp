@@ -5969,6 +5969,33 @@ static LRESULT CALLBACK WndProcFavTree(HWND hwnd, UINT message, WPARAM wParam, L
     return CallWindowProc(DefWndProcFavTree, hwnd, message, wParam, lParam);
 }
 
+// Going to a bookmark within current file scrolls to a given page.
+// Going to a bookmark in another file, loads the file and scrolls to a page
+// (similar to how invoking one of the recently opened files works)
+static void GoToFavorite(WindowInfo *win, FileFavs *f, FavName *fn)
+{
+    WindowInfo *existingWin = FindWindowInfoByFile(f->filePath);
+    if (existingWin) {
+        // bookmark within current file - just go to that page
+        existingWin->dm->goToPage(fn->pageNo, 0);
+        // TODO: bring the window to foreground
+        return;
+    }
+    DisplayState *state = gFileHistory.Find(f->filePath);
+    win = LoadDocument(state->filePath, win);
+    if (!win || !win->IsDocLoaded())
+        return;
+    win->dm->goToPage(fn->pageNo, 0);
+}
+
+static void GoToFavoriteByMenuId(WindowInfo *win, int wmId)
+{
+    size_t idx;
+    FileFavs *f = gFavorites->GetByMenuId(wmId, idx);
+    FavName *fn = f->favNames.At(idx);
+    GoToFavorite(win, f, fn);
+}
+
 static void GoToFavForTVItem(WindowInfo* win, HWND hTV, HTREEITEM hItem=NULL)
 {
     if (NULL == hItem)
@@ -5979,8 +6006,11 @@ static void GoToFavForTVItem(WindowInfo* win, HWND hTV, HTREEITEM hItem=NULL)
     item.mask = TVIF_PARAM;
     TreeView_GetItem(hTV, &item);
 
-    // TODO: write me
-    //DocToCItem *tocItem = (DocToCItem *)item.lParam;
+    FavName *fn = (FavName*)item.lParam;
+    if (!fn)
+        return;
+    FileFavs *f = gFavorites->GetByFavName(fn);
+    GoToFavorite(win, f, fn);
 }
 
 static LRESULT OnFavTreeNotify(WindowInfo *win, LPNMTREEVIEW pnmtv)
@@ -6297,10 +6327,10 @@ static HTREEITEM InsertFavSecondLevelNode(HWND hwnd, HTREEITEM parent, FavName *
     TV_INSERTSTRUCT tvinsert;
     tvinsert.hParent = parent;
     tvinsert.hInsertAfter = TVI_LAST;
-    tvinsert.itemex.mask = TVIF_TEXT | TVIF_STATE; // TVIF_PARAM
+    tvinsert.itemex.mask = TVIF_TEXT | TVIF_STATE | TVIF_PARAM;
     tvinsert.itemex.state = 0;
     tvinsert.itemex.stateMask = TVIS_EXPANDED;
-    //tvinsert.itemex.lParam = (LPARAM)entry;
+    tvinsert.itemex.lParam = (LPARAM)f;
     ScopedMem<TCHAR> s(FavReadableName(f));
     tvinsert.itemex.pszText = s;
     return TreeView_InsertItem(hwnd, &tvinsert);
@@ -6319,10 +6349,9 @@ static HTREEITEM InsertFavTopLevelNode(HWND hwnd, FileFavs *fav, bool isExpanded
     TV_INSERTSTRUCT tvinsert;
     tvinsert.hParent = NULL;
     tvinsert.hInsertAfter = TVI_LAST;
-    tvinsert.itemex.mask = TVIF_TEXT | TVIF_STATE; // TVIF_PARAM
+    tvinsert.itemex.mask = TVIF_TEXT | TVIF_STATE;
     tvinsert.itemex.state = isExpanded ? TVIS_EXPANDED : 0;
     tvinsert.itemex.stateMask = TVIS_EXPANDED;
-    //tvinsert.itemex.lParam = (LPARAM)entry;
     tvinsert.itemex.pszText = (TCHAR*)path::GetBaseName(fav->filePath);
     return TreeView_InsertItem(hwnd, &tvinsert);
 }
@@ -6913,28 +6942,6 @@ static void UpdateMenu(WindowInfo *win, HMENU m)
         MenuUpdateStateForWindow(*win);
 }
 
-// Going to a bookmark within current file scrolls to a given page.
-// Going to a bookmark in another file, loads the file and scrolls to a page
-// (similar to how invoking one of the recently opened files works)
-// TODO: if the file has already been opened in another window,
-//       why not bring that window to the foreground instead?
-static void GoToFavorite(WindowInfo *win, int wmId)
-{
-    size_t idx;
-    FileFavs *f = gFavorites->GetByMenuId(wmId, idx);
-    FavName *fn = f->favNames.At(idx);
-    if (str::Eq(win->loadedFilePath, f->filePath)) {
-        // bookmark within current file - just go to that page
-        win->dm->goToPage(fn->pageNo, 0);
-        return;
-    }
-    DisplayState *state = gFileHistory.Find(f->filePath);
-    win = LoadDocument(state->filePath, win);
-    if (!win || !win->IsDocLoaded())
-        return;
-    win->dm->goToPage(fn->pageNo, 0);
-}
-
 static LRESULT OnCommand(WindowInfo *win, HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     int wmId = LOWORD(wParam);
@@ -6954,7 +6961,7 @@ static LRESULT OnCommand(WindowInfo *win, HWND hwnd, UINT message, WPARAM wParam
     CASSERT(IDM_FAV_LAST - IDM_FAV_FIRST == 200, enough_fav_menu_ids);
     if ((wmId >= IDM_FAV_FIRST) && (wmId <= IDM_FAV_LAST))
     {
-        GoToFavorite(win, wmId);
+        GoToFavoriteByMenuId(win, wmId);
     }
     
     if (!win)

@@ -245,6 +245,17 @@ public:
         return false;
     }
 
+    bool HasFavName(FavName *fn)
+    {
+        for (size_t i=0; i<favNames.Count(); i++)
+        {
+            if (fn == favNames.At(i))
+                return true;
+        }
+        return false;
+
+    }
+
     bool Remove(int pageNo)
     {
         int idx = FindByPage(pageNo);
@@ -293,6 +304,17 @@ public:
         {
             FileFavs *fav = favs.At(i);
             if (fav->GetByMenuId(menuId, idx))
+                return fav;
+        }
+        return NULL;
+    }
+
+    FileFavs *GetByFavName(FavName *fn)
+    {
+        for (size_t i=0; i<favs.Count(); i++)
+        {
+            FileFavs *fav = favs.At(i);
+            if (fav->HasFavName(fn))
                 return fav;
         }
         return NULL;
