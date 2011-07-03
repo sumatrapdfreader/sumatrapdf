@@ -6023,6 +6023,32 @@ static void GoToFavForTVItem(WindowInfo* win, HWND hTV, HTREEITEM hItem=NULL)
     GoToFavorite(win, f, fn);
 }
 
+static void RememberFavTreeExpansionState(WindowInfo *win)
+{
+    win->expandedFavorites.Reset();
+    // TODO: write me
+
+/*
+    while (hItem) {
+        TVITEM item;
+        item.hItem = hItem;
+        item.mask = TVIF_PARAM | TVIF_STATE;
+        item.stateMask = TVIS_EXPANDED;
+        TreeView_GetItem(hwndTocTree, &item);
+
+        // add the ids of toggled items to tocState
+        DocToCItem *tocItem = item.lParam ? (DocToCItem *)item.lParam : NULL;
+        bool wasExpanded = tocItem && !(item.state & TVIS_EXPANDED) == tocItem->open;
+        if (wasExpanded)
+            tocState.Append(tocItem->id);
+
+        if (tocItem && tocItem->child)
+            UpdateToCExpansionState(TreeView_GetChild(hwndTocTree, hItem));
+        hItem = TreeView_GetNextSibling(hwndTocTree, hItem);
+    }
+    */
+}
+
 static LRESULT OnFavTreeNotify(WindowInfo *win, LPNMTREEVIEW pnmtv)
 {
     switch (pnmtv->hdr.code) 
@@ -6187,13 +6213,13 @@ static void CreateSidebar(WindowInfo* win)
     }
 }
 
-static HTREEITEM AddTocItemToView(HWND hwnd, DocToCItem *entry, HTREEITEM parent, bool toggleItem)
+static HTREEITEM AddTocItemToView(HWND hwnd, DocToCItem *entry, HTREEITEM parent, bool expandItem)
 {
     TV_INSERTSTRUCT tvinsert;
     tvinsert.hParent = parent;
     tvinsert.hInsertAfter = TVI_LAST;
     tvinsert.itemex.mask = TVIF_TEXT | TVIF_PARAM | TVIF_STATE;
-    tvinsert.itemex.state = entry->open != toggleItem ? TVIS_EXPANDED : 0;
+    tvinsert.itemex.state = entry->open != expandItem ? TVIS_EXPANDED : 0;
     tvinsert.itemex.stateMask = TVIS_EXPANDED;
     tvinsert.itemex.lParam = (LPARAM)entry;
     // Replace unprintable whitespace with regular spaces
@@ -6213,7 +6239,7 @@ static HTREEITEM AddTocItemToView(HWND hwnd, DocToCItem *entry, HTREEITEM parent
     return TreeView_InsertItem(hwnd, &tvinsert);
 }
 
-static bool WasItemToggled(DocToCItem *entry, Vec<int>& tocState)
+static bool WasTocItemExpanded(DocToCItem *entry, Vec<int>& tocState)
 {
     for (size_t i = 0; i < tocState.Count(); i++)
         if (tocState[i] == entry->id)
@@ -6224,8 +6250,8 @@ static bool WasItemToggled(DocToCItem *entry, Vec<int>& tocState)
 static void PopulateTocTreeView(HWND hwnd, DocToCItem *entry, Vec<int>& tocState, HTREEITEM parent = NULL)
 {
     for (; entry; entry = entry->next) {
-        bool toggleItem = WasItemToggled(entry, tocState);
-        HTREEITEM node = AddTocItemToView(hwnd, entry, parent, toggleItem);
+        bool expand = WasTocItemExpanded(entry, tocState);
+        HTREEITEM node = AddTocItemToView(hwnd, entry, parent, expand);
         PopulateTocTreeView(hwnd, entry->child, tocState, node);
     }
 }
@@ -6366,7 +6392,7 @@ static void PopulateFavTreeIfNeeded(WindowInfo *win)
     for (size_t i=0; i<gFavorites->Count(); i++)
     {
         FileFavs *f = gFavorites->favs.At(i);
-        bool isExpanded = false; // TODO: write me
+        bool isExpanded = (win->expandedFavorites.Find(f->filePath) != -1);
         HTREEITEM node = InsertFavTopLevelNode(hwndTree, f, isExpanded);
         InsertFavSecondLevelNodes(hwndTree, node, f);
     }

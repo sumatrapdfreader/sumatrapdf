@@ -94,6 +94,7 @@ public:
     HWND            hwndFavBox;
     HWND            hwndFavTree;
     bool            favVisible;
+    StrVec          expandedFavorites;
 
     // vertical splitter for resizing left side panel
     HWND            hwndSidebarSpliter;

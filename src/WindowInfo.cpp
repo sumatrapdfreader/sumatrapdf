@@ -187,8 +187,8 @@ void WindowInfo::UpdateToCExpansionState(HTREEITEM hItem)
 
         // add the ids of toggled items to tocState
         DocToCItem *tocItem = item.lParam ? (DocToCItem *)item.lParam : NULL;
-        bool wasToggled = tocItem && !(item.state & TVIS_EXPANDED) == tocItem->open;
-        if (wasToggled)
+        bool wasExpanded = tocItem && !(item.state & TVIS_EXPANDED) == tocItem->open;
+        if (wasExpanded)
             tocState.Append(tocItem->id);
 
         if (tocItem && tocItem->child)
