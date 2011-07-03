@@ -4705,21 +4705,22 @@ static void OnMenuFindMatchCase(WindowInfo& win)
     Edit_SetModify(win.hwndFindBox, TRUE);
 }
 
-static void AdvanceFocus(WindowInfo& win)
+// TODO: also needs to handle favorites
+static void AdvanceFocus(WindowInfo* win)
 {
     // Tab order: Frame -> Page -> Find -> ToC -> Frame -> ...
 
-    bool hasToolbar = !win.fullScreen && !win.presentation && gGlobalPrefs.showToolbar;
+    bool hasToolbar = !win->fullScreen && !win->presentation && gGlobalPrefs.showToolbar;
     int direction = IsShiftPressed() ? -1 : 1;
 
     struct {
         HWND hwnd;
         bool isAvailable;
     } tabOrder[] = {
-        { win.hwndFrame,    true                            },
-        { win.hwndPageBox,  hasToolbar                      },
-        { win.hwndFindBox,  hasToolbar && NeedsFindUI(win)  },
-        { win.hwndTocTree,  win.tocLoaded && win.tocVisible },
+        { win->hwndFrame,    true                              },
+        { win->hwndPageBox,  hasToolbar                        },
+        { win->hwndFindBox,  hasToolbar && NeedsFindUI(*win)    },
+        { win->hwndTocTree,  win->tocLoaded && win->tocVisible },
     };
 
     /* // make sure that at least one element is available
@@ -4862,7 +4863,7 @@ static void OnChar(WindowInfo& win, WPARAM key)
 
     switch (key) {
     case VK_TAB:
-        AdvanceFocus(win);
+        AdvanceFocus(&win);
         break;
     case VK_SPACE:
     case VK_RETURN:
@@ -4970,7 +4971,7 @@ public:
     }
 };
 
-static void GoToTocLinkForTVItem(WindowInfo& win, HWND hTV, HTREEITEM hItem=NULL, bool allowExternal=true)
+static void GoToTocLinkForTVItem(WindowInfo* win, HWND hTV, HTREEITEM hItem=NULL, bool allowExternal=true)
 {
     if (!hItem)
         hItem = TreeView_GetSelection(hTV);
@@ -4980,9 +4981,9 @@ static void GoToTocLinkForTVItem(WindowInfo& win, HWND hTV, HTREEITEM hItem=NULL
     item.mask = TVIF_PARAM;
     TreeView_GetItem(hTV, &item);
     DocToCItem *tocItem = (DocToCItem *)item.lParam;
-    if (win.IsDocLoaded() && tocItem &&
+    if (win->IsDocLoaded() && tocItem &&
         (allowExternal || tocItem->GetLink() && str::Eq(tocItem->GetLink()->GetType(), "ScrollTo"))) {
-        QueueWorkItem(new GoToTocLinkWorkItem(&win, tocItem));
+        QueueWorkItem(new GoToTocLinkWorkItem(win, tocItem));
     }
 }
 
@@ -5127,7 +5128,7 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, L
             return 1;
 
         case VK_TAB:
-            AdvanceFocus(*win);
+            AdvanceFocus(win);
             return 1;
         }
     }
@@ -5468,7 +5469,7 @@ static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT message, WPARAM wParam, L
             return 1;
 
         case VK_TAB:
-            AdvanceFocus(*win);
+            AdvanceFocus(win);
             return 1;
         }
     } else if (WM_ERASEBKGND == message) {
@@ -5842,6 +5843,73 @@ static void LayoutTreeContainer(HWND hwndContainer, int firstControlId)
 }
 
 static WNDPROC DefWndProcTocBox = NULL;
+
+static LRESULT OnTocTreeNotify(WindowInfo *win, LPNMTREEVIEW pnmtv)
+{
+    switch (pnmtv->hdr.code) 
+    {
+        case TVN_SELCHANGED: 
+            // When the focus is set to the toc window the first item in the treeview is automatically
+            // selected and a TVN_SELCHANGEDW notification message is sent with the special code pnmtv->action == 0x00001000.
+            // We have to ignore this message to prevent the current page to be changed.
+            if (TVC_BYKEYBOARD == pnmtv->action || TVC_BYMOUSE == pnmtv->action)
+                GoToTocLinkForTVItem(win, pnmtv->hdr.hwndFrom, pnmtv->itemNew.hItem, TVC_BYMOUSE == pnmtv->action);
+            // The case pnmtv->action==TVC_UNKNOWN is ignored because 
+            // it corresponds to a notification sent by
+            // the function TreeView_DeleteAllItems after deletion of the item.
+            break;
+
+        case TVN_KEYDOWN: {
+            TV_KEYDOWN *ptvkd = (TV_KEYDOWN *)pnmtv;
+            if (VK_TAB == ptvkd->wVKey) {
+                AdvanceFocus(win);
+                return 1;
+            }
+            break;
+        }
+        case NM_CLICK: {
+            // Determine which item has been clicked (if any)
+            TVHITTESTINFO ht = {0};
+            DWORD pos = GetMessagePos();
+            ht.pt.x = GET_X_LPARAM(pos);
+            ht.pt.y = GET_Y_LPARAM(pos);
+            MapWindowPoints(HWND_DESKTOP, pnmtv->hdr.hwndFrom, &ht.pt, 1);
+            TreeView_HitTest(pnmtv->hdr.hwndFrom, &ht);
+
+            // let TVN_SELCHANGED handle the click, if it isn't on the already selected item
+            if ((ht.flags & TVHT_ONITEM) && TreeView_GetSelection(pnmtv->hdr.hwndFrom) == ht.hItem)
+                GoToTocLinkForTVItem(win, pnmtv->hdr.hwndFrom, ht.hItem);
+            break;
+        }
+        case NM_RETURN:
+            GoToTocLinkForTVItem(win, pnmtv->hdr.hwndFrom);
+            break;
+
+        case NM_CUSTOMDRAW:
+#ifdef DISPLAY_TOC_PAGE_NUMBERS
+            switch (((LPNMCUSTOMDRAW)pnmtv)->dwDrawStage) {
+                case CDDS_PREPAINT:
+                    return CDRF_NOTIFYITEMDRAW;
+                case CDDS_ITEMPREPAINT:
+                    return CDRF_DODEFAULT | CDRF_NOTIFYPOSTPAINT;
+                case CDDS_ITEMPOSTPAINT:
+                    RelayoutTocItem((LPNMTVCUSTOMDRAW)pnmtv);
+                    // fall through
+                default:
+                    return CDRF_DODEFAULT;
+            }
+            break;
+#else
+            return CDRF_DODEFAULT;
+#endif
+
+        case TVN_GETINFOTIP:
+            CustomizeToCInfoTip((LPNMTVGETINFOTIP)pnmtv);
+            break;
+    }
+    return -1;
+}
+
 static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     WindowInfo *win = FindWindowInfoByHwnd(hwnd);
@@ -5849,84 +5917,31 @@ static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT message, WPARAM wParam, LP
         return CallWindowProc(DefWndProcTocBox, hwnd, message, wParam, lParam);
 
     switch (message) {
-    case WM_SIZE: {
-        LayoutTreeContainer(hwnd, IDC_PDF_TOC_FIRST);
-        break;
-    }
-    case WM_DRAWITEM:
-        if (IDC_PDF_TOC_CLOSE== wParam) {
-            DRAWITEMSTRUCT *dis = (DRAWITEMSTRUCT *)lParam;
-            DrawFrameControl(dis->hDC, &dis->rcItem, DFC_CAPTION, DFCS_CAPTIONCLOSE | DFCS_FLAT);
-            return TRUE;
-        }
-        break;
-    case WM_COMMAND:
-        if (HIWORD(wParam) == STN_CLICKED)
-            ToggleTocBox(win);
-        break;
-    case WM_NOTIFY:
-        if (LOWORD(wParam) == IDC_PDF_TOC_TREE) {
-            LPNMTREEVIEW pnmtv = (LPNMTREEVIEW) lParam;
-            switch (pnmtv->hdr.code) 
-            {
-            case TVN_SELCHANGED: 
-                // When the focus is set to the toc window the first item in the treeview is automatically
-                // selected and a TVN_SELCHANGEDW notification message is sent with the special code pnmtv->action == 0x00001000.
-                // We have to ignore this message to prevent the current page to be changed.
-                if (TVC_BYKEYBOARD == pnmtv->action || TVC_BYMOUSE == pnmtv->action)
-                    GoToTocLinkForTVItem(*win, pnmtv->hdr.hwndFrom, pnmtv->itemNew.hItem, TVC_BYMOUSE == pnmtv->action);
-                // The case pnmtv->action==TVC_UNKNOWN is ignored because 
-                // it corresponds to a notification sent by
-                // the function TreeView_DeleteAllItems after deletion of the item.
-                break;
-            case TVN_KEYDOWN: {
-                TV_KEYDOWN *ptvkd = (TV_KEYDOWN *)lParam;
-                if (VK_TAB == ptvkd->wVKey) {
-                    AdvanceFocus(*win);
-                    return 1;
-                }
-                break;
-            }
-            case NM_CLICK: {
-                // Determine which item has been clicked (if any)
-                TVHITTESTINFO ht = {0};
-                DWORD pos = GetMessagePos();
-                ht.pt.x = GET_X_LPARAM(pos);
-                ht.pt.y = GET_Y_LPARAM(pos);
-                MapWindowPoints(HWND_DESKTOP, pnmtv->hdr.hwndFrom, &ht.pt, 1);
-                TreeView_HitTest(pnmtv->hdr.hwndFrom, &ht);
+        case WM_SIZE:
+            LayoutTreeContainer(hwnd, IDC_PDF_TOC_FIRST);
+            break;
 
-                // let TVN_SELCHANGED handle the click, if it isn't on the already selected item
-                if ((ht.flags & TVHT_ONITEM) && TreeView_GetSelection(pnmtv->hdr.hwndFrom) == ht.hItem)
-                    GoToTocLinkForTVItem(*win, pnmtv->hdr.hwndFrom, ht.hItem);
-                break;
+        case WM_DRAWITEM:
+            if (IDC_PDF_TOC_CLOSE== wParam) {
+                DRAWITEMSTRUCT *dis = (DRAWITEMSTRUCT *)lParam;
+                DrawFrameControl(dis->hDC, &dis->rcItem, DFC_CAPTION, DFCS_CAPTIONCLOSE | DFCS_FLAT);
+                return TRUE;
             }
-            case NM_RETURN:
-                GoToTocLinkForTVItem(*win, pnmtv->hdr.hwndFrom);
-                break;
-            case NM_CUSTOMDRAW:
-#ifdef DISPLAY_TOC_PAGE_NUMBERS
-                switch (((LPNMCUSTOMDRAW)lParam)->dwDrawStage) {
-                    case CDDS_PREPAINT:
-                        return CDRF_NOTIFYITEMDRAW;
-                    case CDDS_ITEMPREPAINT:
-                        return CDRF_DODEFAULT | CDRF_NOTIFYPOSTPAINT;
-                    case CDDS_ITEMPOSTPAINT:
-                        RelayoutTocItem((LPNMTVCUSTOMDRAW)lParam);
-                        // fall through
-                    default:
-                        return CDRF_DODEFAULT;
-                }
-                break;
-#else
-                return CDRF_DODEFAULT;
-#endif
-            case TVN_GETINFOTIP:
-                CustomizeToCInfoTip((LPNMTVGETINFOTIP)lParam);
-                break;
+            break;
+
+        case WM_COMMAND:
+            if (HIWORD(wParam) == STN_CLICKED)
+                ToggleTocBox(win);
+            break;
+
+        case WM_NOTIFY:
+            if (LOWORD(wParam) == IDC_PDF_TOC_TREE) {
+                LPNMTREEVIEW pnmtv = (LPNMTREEVIEW) lParam;
+                LRESULT res = OnTocTreeNotify(win, pnmtv);
+                if (res != -1)
+                    return res;
             }
-        }
-        break;
+            break;
     }
     return CallWindowProc(DefWndProcTocBox, hwnd, message, wParam, lParam);
 }
@@ -5937,7 +5952,83 @@ static LRESULT CALLBACK WndProcFavTree(HWND hwnd, UINT message, WPARAM wParam, L
     WindowInfo *win = FindWindowInfoByHwnd(hwnd);
     if (!win)
         return CallWindowProc(DefWndProcFavTree, hwnd, message, wParam, lParam);
+
+    switch (message) {
+        case WM_CHAR:
+            if (VK_ESCAPE == wParam && gGlobalPrefs.escToExit)
+                DestroyWindow(win->hwndFrame);
+            break;
+        case WM_MOUSEWHEEL:
+            // scroll the canvas if the cursor isn't over the ToC tree
+            if (!IsCursorOverWindow(win->hwndFavTree))
+                return SendMessage(win->hwndCanvas, message, wParam, lParam);
+            break;
+    }
+
     return CallWindowProc(DefWndProcFavTree, hwnd, message, wParam, lParam);
+}
+
+static void GoToFavForTVItem(WindowInfo* win, HWND hTV, HTREEITEM hItem=NULL)
+{
+    if (NULL == hItem)
+        hItem = TreeView_GetSelection(hTV);
+
+    TVITEM item;
+    item.hItem = hItem;
+    item.mask = TVIF_PARAM;
+    TreeView_GetItem(hTV, &item);
+
+    // TODO: write me
+    //DocToCItem *tocItem = (DocToCItem *)item.lParam;
+}
+
+static LRESULT OnFavTreeNotify(WindowInfo *win, LPNMTREEVIEW pnmtv)
+{
+    switch (pnmtv->hdr.code) 
+    {
+        case TVN_SELCHANGED: 
+            // When the focus is set to the fav window the first item in the treeview is automatically
+            // selected and a TVN_SELCHANGEDW notification message is sent with the special code pnmtv->action == 0x00001000.
+            // We have to ignore this message
+            if (TVC_BYKEYBOARD == pnmtv->action || TVC_BYMOUSE == pnmtv->action) {
+                GoToFavForTVItem(win, pnmtv->hdr.hwndFrom, pnmtv->itemNew.hItem);
+            }
+            // The case pnmtv->action==TVC_UNKNOWN is ignored because 
+            // it corresponds to a notification sent by
+            // the function TreeView_DeleteAllItems after deletion of the item.
+            break;
+
+        case TVN_KEYDOWN: {
+            TV_KEYDOWN *ptvkd = (TV_KEYDOWN *)pnmtv;
+            if (VK_TAB == ptvkd->wVKey) {
+                AdvanceFocus(win);
+                return 1;
+            }
+            break;
+        }
+        case NM_CLICK: {
+            // Determine which item has been clicked (if any)
+            TVHITTESTINFO ht = {0};
+            DWORD pos = GetMessagePos();
+            ht.pt.x = GET_X_LPARAM(pos);
+            ht.pt.y = GET_Y_LPARAM(pos);
+            MapWindowPoints(HWND_DESKTOP, pnmtv->hdr.hwndFrom, &ht.pt, 1);
+            TreeView_HitTest(pnmtv->hdr.hwndFrom, &ht);
+
+            // let TVN_SELCHANGED handle the click, if it isn't on the already selected item
+            if ((ht.flags & TVHT_ONITEM) && TreeView_GetSelection(pnmtv->hdr.hwndFrom) == ht.hItem)
+                GoToFavForTVItem(win, pnmtv->hdr.hwndFrom, ht.hItem);
+            break;
+        }
+
+        case NM_RETURN:
+            GoToFavForTVItem(win, pnmtv->hdr.hwndFrom);
+            break;
+
+        case NM_CUSTOMDRAW:
+            return CDRF_DODEFAULT;
+    }
+    return -1;
 }
 
 static WNDPROC DefWndProcFavBox = NULL;
@@ -5947,21 +6038,32 @@ static LRESULT CALLBACK WndProcFavBox(HWND hwnd, UINT message, WPARAM wParam, LP
     if (!win)
         return CallWindowProc(DefWndProcFavBox, hwnd, message, wParam, lParam);
     switch (message) {
-    case WM_SIZE: {
-        LayoutTreeContainer(hwnd, IDC_FAV_FIRST);
-        break;
-    }
-    case WM_DRAWITEM:
-        if (IDC_FAV_CLOSE == wParam) {
-            DRAWITEMSTRUCT *dis = (DRAWITEMSTRUCT *)lParam;
-            DrawFrameControl(dis->hDC, &dis->rcItem, DFC_CAPTION, DFCS_CAPTIONCLOSE | DFCS_FLAT);
-            return TRUE;
-        }
-        break;
-    case WM_COMMAND:
-        if (HIWORD(wParam) == STN_CLICKED)
-            ToggleFavorites(win);
-        break;
+
+        case WM_SIZE:
+            LayoutTreeContainer(hwnd, IDC_FAV_FIRST);
+            break;
+
+        case WM_DRAWITEM:
+            if (IDC_FAV_CLOSE == wParam) {
+                DRAWITEMSTRUCT *dis = (DRAWITEMSTRUCT *)lParam;
+                DrawFrameControl(dis->hDC, &dis->rcItem, DFC_CAPTION, DFCS_CAPTIONCLOSE | DFCS_FLAT);
+                return TRUE;
+            }
+            break;
+
+        case WM_COMMAND:
+            if (HIWORD(wParam) == STN_CLICKED)
+                ToggleFavorites(win);
+            break;
+
+        case WM_NOTIFY:
+            if (LOWORD(wParam) == IDC_FAV_TREE) {
+                LPNMTREEVIEW pnmtv = (LPNMTREEVIEW) lParam;
+                LRESULT res = OnFavTreeNotify(win, pnmtv);
+                if (res != -1)
+                    return res;
+            }
+            break;
     }
     return CallWindowProc(DefWndProcFavBox, hwnd, message, wParam, lParam);
 }
