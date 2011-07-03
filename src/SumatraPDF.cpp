@@ -5976,9 +5976,9 @@ static void GoToFavorite(WindowInfo *win, FileFavs *f, FavName *fn)
 {
     WindowInfo *existingWin = FindWindowInfoByFile(f->filePath);
     if (existingWin) {
-        // bookmark within current file - just go to that page
         existingWin->dm->goToPage(fn->pageNo, 0);
-        // TODO: bring the window to foreground
+        // TODO: BringWindowToTop() doesn't seem to work 
+        BringWindowToTop(win->hwndFrame);
         return;
     }
     DisplayState *state = gFileHistory.Find(f->filePath);
@@ -6374,6 +6374,26 @@ static void PopulateFavTreeIfNeeded(WindowInfo *win)
     SendMessage(hwndTree, WM_SETREDRAW, TRUE, 0);
     UINT fl = RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN;
     RedrawWindow(hwndTree, NULL, NULL, fl);
+}
+
+// TODO: what to do if we the last favorite is removed? Hide favorites?
+static void UpdateFavortesTreeIfNecessary(WindowInfo *win)
+{
+    HWND hwndTree = win->hwndFavTree;
+    if (0 == TreeView_GetCount(hwndTree))
+        return;
+
+    SendMessage(hwndTree, WM_SETREDRAW, FALSE, 0);
+    TreeView_DeleteAllItems(hwndTree);
+    PopulateFavTreeIfNeeded(win);
+}
+
+static void UpdateFavoritesTreeForAllWindows()
+{
+    for (size_t i=0; i<gWindows.Count(); i++)
+    {
+        UpdateFavortesTreeIfNecessary(gWindows.At(i));
+    }
 }
 
 /*
@@ -6921,6 +6941,7 @@ static void AddFavorite(WindowInfo *win)
     gFavorites->AddOrReplace(filePath, pageNo, name);
     free(name);
     // TODO: show notification that a favorite was deleted?
+    UpdateFavoritesTreeForAllWindows();
 }
 
 static void DelFavorite(WindowInfo *win)
@@ -6929,6 +6950,7 @@ static void DelFavorite(WindowInfo *win)
     TCHAR *filePath = win->loadedFilePath;
     gFavorites->Remove(filePath, pageNo);
     // TODO: show notification that a favorite was deleted?
+    UpdateFavoritesTreeForAllWindows();
 }
 
 static void UpdateMenu(WindowInfo *win, HMENU m)
