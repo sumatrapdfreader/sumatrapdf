@@ -5868,7 +5868,7 @@ static LRESULT OnTocTreeNotify(WindowInfo *win, LPNMTREEVIEW pnmtv)
         }
         case NM_CLICK: {
             // Determine which item has been clicked (if any)
-            TVHITTESTINFO ht = {0};
+            TVHITTESTINFO ht = { 0 };
             DWORD pos = GetMessagePos();
             ht.pt.x = GET_X_LPARAM(pos);
             ht.pt.y = GET_Y_LPARAM(pos);
@@ -5929,7 +5929,7 @@ static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT message, WPARAM wParam, LP
             break;
 
         case WM_COMMAND:
-            if (HIWORD(wParam) == STN_CLICKED)
+            if (LOWORD(wParam) == IDC_TOC_CLOSE && HIWORD(wParam) == STN_CLICKED)
                 ToggleTocBox(win);
             break;
 
@@ -6067,14 +6067,15 @@ static LRESULT OnFavTreeNotify(WindowInfo *win, LPNMTREEVIEW pnmtv)
 
         case NM_CLICK: {
             // Determine which item has been clicked (if any)
-            TVHITTESTINFO ht = {0};
+            TVHITTESTINFO ht = { 0 };
             DWORD pos = GetMessagePos();
             ht.pt.x = GET_X_LPARAM(pos);
             ht.pt.y = GET_Y_LPARAM(pos);
             MapWindowPoints(HWND_DESKTOP, pnmtv->hdr.hwndFrom, &ht.pt, 1);
             TreeView_HitTest(pnmtv->hdr.hwndFrom, &ht);
 
-            GoToFavForTVItem(win, pnmtv->hdr.hwndFrom, ht.hItem);
+            if ((ht.flags & TVHT_ONITEM))
+                GoToFavForTVItem(win, pnmtv->hdr.hwndFrom, ht.hItem);
             break;
         }
 
@@ -6109,7 +6110,7 @@ static LRESULT CALLBACK WndProcFavBox(HWND hwnd, UINT message, WPARAM wParam, LP
             break;
 
         case WM_COMMAND:
-            if (HIWORD(wParam) == STN_CLICKED)
+            if (LOWORD(wParam) == IDC_FAV_CLOSE && HIWORD(wParam) == STN_CLICKED)
                 ToggleFavorites(win);
             break;
 
@@ -6402,8 +6403,11 @@ static void PopulateFavTreeIfNeeded(WindowInfo *win)
     RedrawWindow(hwndTree, NULL, NULL, fl);
 }
 
-// TODO: what to do if we the last favorite is removed? Hide favorites?
-static void UpdateFavortesTreeIfNecessary(WindowInfo *win)
+// TODO: what to do if the last favorite is removed? Hide favorites?
+// TODO: if removing the last favorite hides the sidebar, make sure to
+//       disable the menu item in that case so that an empty sidebar
+//       can never be displayed
+static void UpdateFavoritesTreeIfNecessary(WindowInfo *win)
 {
     HWND hwndTree = win->hwndFavTree;
     if (0 == TreeView_GetCount(hwndTree))
@@ -6418,7 +6422,7 @@ static void UpdateFavoritesTreeForAllWindows()
 {
     for (size_t i=0; i<gWindows.Count(); i++)
     {
-        UpdateFavortesTreeIfNecessary(gWindows.At(i));
+        UpdateFavoritesTreeIfNecessary(gWindows.At(i));
     }
 }
 
