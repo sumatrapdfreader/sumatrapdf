@@ -720,7 +720,7 @@ static void AppendRecentFilesToMenu(HMENU m)
 #define MAX_FAV_SUBMENUS 10
 #define MAX_FAV_MENUS 10
 
-static void AppendFavMenuItems(HMENU m, Fav *f, UINT& idx)
+static void AppendFavMenuItems(HMENU m, FileFavs *f, UINT& idx)
 {
     size_t items = f->favNames.Count();
     if (items > MAX_FAV_MENUS) {
@@ -762,7 +762,7 @@ static int sortByBaseFileName(const void *a, const void *b)
 static void AppendFavMenus(HMENU m, const TCHAR *currFilePath)
 {
     UINT idx = IDM_FAV_FIRST;
-    Fav *currFileFav = NULL;
+    FileFavs *currFileFav = NULL;
     gFavorites->ResetMenuIds();
     size_t submenus = gFavorites->favs.Count();
     bool addedSep = false;
@@ -790,7 +790,7 @@ static void AppendFavMenus(HMENU m, const TCHAR *currFilePath)
     Vec<TCHAR*> filePathsSorted;
     for (size_t i = 0; i < gFavorites->favs.Count(); i++)
     {
-        Fav *f = gFavorites->favs.At(i);
+        FileFavs *f = gFavorites->favs.At(i);
         if (f == currFileFav)
             continue;
         filePathsSorted.Append(f->filePath);
@@ -800,7 +800,7 @@ static void AppendFavMenus(HMENU m, const TCHAR *currFilePath)
     for (size_t i=0; i<filePathsSorted.Count(); i++)
     {
         TCHAR *filePath = filePathsSorted.At(i);
-        Fav *f = gFavorites->GetFavByFilePath(filePath);
+        FileFavs *f = gFavorites->GetFavByFilePath(filePath);
         HMENU sub = CreateMenu();
         AppendFavMenuItems(sub, f, idx);
         const TCHAR *fileName = path::GetBaseName(filePath);
@@ -6747,7 +6747,7 @@ static void UpdateMenu(WindowInfo *win, HMENU m)
 static void GoToFavorite(WindowInfo *win, int wmId)
 {
     size_t idx;
-    Fav *f = gFavorites->GetByMenuId(wmId, idx);
+    FileFavs *f = gFavorites->GetByMenuId(wmId, idx);
     FavName *fn = f->favNames.At(idx);
     if (str::Eq(win->loadedFilePath, f->filePath)) {
         // bookmark within current file - just go to that page

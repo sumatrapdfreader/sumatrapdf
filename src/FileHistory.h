@@ -146,6 +146,8 @@ public:
     }
 };
 
+// TODO: move to a separate Favorites.[h|cpp] files
+
 /*
 A favorite is a bookmark (we call it a favorite, like Internet Explorer, to
 differentiate from bookmarks inside a PDF file (which really are
@@ -186,7 +188,8 @@ public:
     int     menuId; // assigned in AppendFavMenuItems()
 };
 
-class Fav {
+// list of favorites for one file
+class FileFavs {
 
     int FindByPage(int pageNo) const
     {
@@ -208,9 +211,9 @@ public:
     TCHAR *         filePath;
     Vec<FavName *>  favNames;
 
-    Fav(const TCHAR *fp) : filePath(str::Dup(fp)) { }
+    FileFavs(const TCHAR *fp) : filePath(str::Dup(fp)) { }
 
-    ~Fav() {
+    ~FileFavs() {
         DeleteVecMembers(favNames);
         free(filePath);
     }
@@ -274,21 +277,21 @@ public:
 
 class Favorites {
 
-    // filePathCache points to a string inside Fav, so doesn't need to free()d
+    // filePathCache points to a string inside FileFavs, so doesn't need to free()d
     TCHAR *  filePathCache;
     size_t   idxCache;
 
 public:
-    Vec<Fav*> favs;
+    Vec<FileFavs*> favs;
 
     Favorites() : filePathCache(NULL) { }
     ~Favorites() { DeleteVecMembers(favs); }
 
-    Fav *GetByMenuId(int menuId, size_t& idx)
+    FileFavs *GetByMenuId(int menuId, size_t& idx)
     {
         for (size_t i=0; i<favs.Count(); i++)
         {
-            Fav *fav = favs.At(i);
+            FileFavs *fav = favs.At(i);
             if (fav->GetByMenuId(menuId, idx))
                 return fav;
         }
@@ -303,16 +306,16 @@ public:
     {
         for (size_t i=0; i<favs.Count(); i++)
         {
-            Fav *fav = favs.At(i);
+            FileFavs *fav = favs.At(i);
             fav->ResetMenuIds();
         }
     }
 
-    Fav *GetFavByFilePath(const TCHAR *filePath, bool createIfNotExist=false, size_t *idx=NULL)
+    FileFavs *GetFavByFilePath(const TCHAR *filePath, bool createIfNotExist=false, size_t *idx=NULL)
     {
         // it's likely that we'll ask about the info for the same
         // file as in previous call, so use one element cache
-        Fav *fav = NULL;
+        FileFavs *fav = NULL;
         bool found = false;
         if (str::Eq(filePath, filePathCache)) {
             fav = favs.At(idxCache);
@@ -333,7 +336,7 @@ public:
         if (!found) {
             if (!createIfNotExist)
                 return NULL;
-            fav = new Fav(filePath);
+            fav = new FileFavs(filePath);
             favs.Append(fav);
             filePathCache = fav->filePath;
             idxCache = favs.Count() - 1;
@@ -346,7 +349,7 @@ public:
 
     bool IsPageInFavorites(const TCHAR *filePath, int pageNo) 
     {
-        Fav *fav = GetFavByFilePath(filePath);
+        FileFavs *fav = GetFavByFilePath(filePath);
         if (!fav)
             return false;
         return fav->Exists(pageNo);
@@ -354,15 +357,14 @@ public:
 
     void AddOrReplace(const TCHAR *filePath, int pageNo, const TCHAR *name)
     {
-        Fav *fav = GetFavByFilePath(filePath, true);
-        assert(fav);
+        FileFavs *fav = GetFavByFilePath(filePath, true);
         fav->AddOrReplace(pageNo, name);
     }
 
     void Remove(const TCHAR *filePath, int pageNo)
     {
         size_t idx;
-        Fav *fav = GetFavByFilePath(filePath, false, &idx);
+        FileFavs *fav = GetFavByFilePath(filePath, false, &idx);
         if (!fav)
             return;
         fav->Remove(pageNo);

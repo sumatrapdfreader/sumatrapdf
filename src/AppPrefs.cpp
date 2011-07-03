@@ -220,7 +220,7 @@ static inline const TCHAR *EmptyToNull(const TCHAR *s)
     return str::IsEmpty(s) ? NULL : s;
 }
 
-static BencArray *SerializeFavData(Fav *fav)
+static BencArray *SerializeFavData(FileFavs *fav)
 {
     BencArray *res = new BencArray();
     for (size_t i=0; i<fav->favNames.Count(); i++)
@@ -240,7 +240,7 @@ static BencArray *SerializeFavorites(Favorites *favs)
     BencArray *res = new BencArray();
     for (size_t i=0; i < favs->favs.Count(); i++)
     {
-        Fav *fav = favs->favs.At(i);
+        FileFavs *fav = favs->favs.At(i);
         res->Add(fav->filePath);
         res->Add(SerializeFavData(fav));
     }
