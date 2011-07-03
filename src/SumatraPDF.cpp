@@ -720,6 +720,15 @@ static void AppendRecentFilesToMenu(HMENU m)
 #define MAX_FAV_SUBMENUS 10
 #define MAX_FAV_MENUS 10
 
+static TCHAR *FavReadableName(FavName *fn)
+{
+    if (fn->name) {
+        return str::Format(_T("%s (page %d)"), fn->name, fn->pageNo);
+    } else {
+        return str::Format(_T("Page %d"), fn->pageNo);
+    }
+}
+
 static void AppendFavMenuItems(HMENU m, FileFavs *f, UINT& idx)
 {
     size_t items = f->favNames.Count();
@@ -730,14 +739,8 @@ static void AppendFavMenuItems(HMENU m, FileFavs *f, UINT& idx)
     {
         FavName *fn = f->favNames.At(i);
         fn->menuId = idx++;
-        TCHAR *menuTitle = NULL;
-        if (fn->name) {
-            menuTitle = str::Format(_T("%s (page %d)"), fn->name, fn->pageNo);
-        } else {
-            menuTitle = str::Format(_T("Page %d"), fn->pageNo);
-        }
-        AppendMenu(m, MF_STRING, (UINT_PTR)fn->menuId, menuTitle);
-        free(menuTitle);
+        ScopedMem<TCHAR> s(FavReadableName(fn));
+        AppendMenu(m, MF_STRING, (UINT_PTR)fn->menuId, s);
     }
 }
 
@@ -6159,19 +6162,76 @@ void WindowInfo::LoadTocTree()
 {
     if (tocLoaded)
         return;
+    tocLoaded = true;
 
     tocRoot = NULL;
     if (dm->engine)
         tocRoot = dm->engine->GetToCTree();
-    if (tocRoot) {
-        SendMessage(hwndTocTree, WM_SETREDRAW, FALSE, 0);
-        ToggleWindowStyle(hwndTocTree, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, (dm->engine->PreferredLayout() & Layout_R2L), GWL_EXSTYLE);
-        PopulateTocTreeView(hwndTocTree, tocRoot, tocState);
-        SendMessage(hwndTocTree, WM_SETREDRAW, TRUE, 0);
-        RedrawWindow(hwndTocTree, NULL, NULL, RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
+    if (!tocRoot)
+        return;
+
+    SendMessage(hwndTocTree, WM_SETREDRAW, FALSE, 0);
+    bool enable = dm->engine->PreferredLayout() & Layout_R2L;
+    ToggleWindowStyle(hwndTocTree, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, enable, GWL_EXSTYLE);
+    PopulateTocTreeView(hwndTocTree, tocRoot, tocState);
+    SendMessage(hwndTocTree, WM_SETREDRAW, TRUE, 0);
+    UINT fl = RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN;
+    RedrawWindow(hwndTocTree, NULL, NULL, fl);
+}
+
+static HTREEITEM InsertFavSecondLevelNode(HWND hwnd, HTREEITEM parent, FavName *f)
+{
+    TV_INSERTSTRUCT tvinsert;
+    tvinsert.hParent = parent;
+    tvinsert.hInsertAfter = TVI_LAST;
+    tvinsert.itemex.mask = TVIF_TEXT | TVIF_STATE; // TVIF_PARAM
+    tvinsert.itemex.state = 0;
+    tvinsert.itemex.stateMask = TVIS_EXPANDED;
+    //tvinsert.itemex.lParam = (LPARAM)entry;
+    ScopedMem<TCHAR> s(FavReadableName(f));
+    tvinsert.itemex.pszText = s;
+    return TreeView_InsertItem(hwnd, &tvinsert);
+}
+
+static void InsertFavSecondLevelNodes(HWND hwnd, HTREEITEM parent, FileFavs *f)
+{
+    for (size_t i = 0; i < f->favNames.Count(); i++)
+    {
+        InsertFavSecondLevelNode(hwnd, parent, f->favNames.At(i));
+    }
+}
+
+static HTREEITEM InsertFavTopLevelNode(HWND hwnd, FileFavs *fav, bool isExpanded)
+{
+    TV_INSERTSTRUCT tvinsert;
+    tvinsert.hParent = NULL;
+    tvinsert.hInsertAfter = TVI_LAST;
+    tvinsert.itemex.mask = TVIF_TEXT | TVIF_STATE; // TVIF_PARAM
+    tvinsert.itemex.state = isExpanded ? TVIS_EXPANDED : 0;
+    tvinsert.itemex.stateMask = TVIS_EXPANDED;
+    //tvinsert.itemex.lParam = (LPARAM)entry;
+    tvinsert.itemex.pszText = (TCHAR*)path::GetBaseName(fav->filePath);
+    return TreeView_InsertItem(hwnd, &tvinsert);
+}
+
+static void PopulateFavTreeIfNeeded(WindowInfo *win)
+{
+    HWND hwndTree = win->hwndFavTree;
+    if (TreeView_GetCount(hwndTree) > 0)
+        return;
+
+    SendMessage(hwndTree, WM_SETREDRAW, FALSE, 0);
+    for (size_t i=0; i<gFavorites->Count(); i++)
+    {
+        FileFavs *f = gFavorites->favs.At(i);
+        bool isExpanded = false; // TODO: write me
+        HTREEITEM node = InsertFavTopLevelNode(hwndTree, f, isExpanded);
+        InsertFavSecondLevelNodes(hwndTree, node, f);
     }
 
-    tocLoaded = true;
+    SendMessage(hwndTree, WM_SETREDRAW, TRUE, 0);
+    UINT fl = RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN;
+    RedrawWindow(hwndTree, NULL, NULL, fl);
 }
 
 /*
@@ -6210,6 +6270,8 @@ void SetSidebarVisibility(WindowInfo *win, bool tocVisible, bool favVisible)
 
     if (tocVisible)
         win->LoadTocTree();
+    if (favVisible)
+        PopulateFavTreeIfNeeded(win);
 
     win->tocVisible = tocVisible;
     win->favVisible = favVisible;
