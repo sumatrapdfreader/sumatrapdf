@@ -40,7 +40,7 @@ public:
     ~DisplayState() {
         free(filePath);
         free(decryptionKey);
-        free(tocState);
+        delete tocState;
         delete thumbnail;
     }
 
@@ -75,9 +75,9 @@ public:
 
     bool                showToc;
     int                 sidebarDx;
-    // tocState is an array of ids for ToC items that have been expanded/collapsed
-    // by the user (tocState[0] is the length of the list)
-    int *               tocState;
+    // tocState is an array of ids for ToC items that have been
+    // toggled by the user (i.e. aren't in their default expansion state)
+    Vec<int> *          tocState;
 };
 
 #endif

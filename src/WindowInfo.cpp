@@ -187,8 +187,8 @@ void WindowInfo::UpdateToCExpansionState(HTREEITEM hItem)
 
         // add the ids of toggled items to tocState
         DocToCItem *tocItem = item.lParam ? (DocToCItem *)item.lParam : NULL;
-        bool wasExpanded = tocItem && !(item.state & TVIS_EXPANDED) == tocItem->open;
-        if (wasExpanded)
+        bool wasToggled = tocItem && !(item.state & TVIS_EXPANDED) == tocItem->open;
+        if (wasToggled)
             tocState.Append(tocItem->id);
 
         if (tocItem && tocItem->child)
@@ -208,14 +208,10 @@ void WindowInfo::DisplayStateFromToC(DisplayState *ds)
             UpdateToCExpansionState(hRoot);
     }
 
-    free(ds->tocState);
+    delete ds->tocState;
     ds->tocState = NULL;
-    if (tocState.Count() > 0) {
-        size_t len = tocState.Count();
-        ds->tocState = SAZA(int, len + 1);
-        ds->tocState[0] = (int)len;
-        memcpy(ds->tocState + 1, tocState.LendData(), len * sizeof(int));
-    }
+    if (tocState.Count() > 0)
+        ds->tocState = new Vec<int>(tocState);
 }
 
 void WindowInfo::ToggleZoom()

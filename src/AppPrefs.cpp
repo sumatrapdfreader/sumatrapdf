@@ -165,11 +165,11 @@ static BencDict *DisplayState_Serialize(DisplayState *ds, bool globalPrefsOnly)
     ScopedMem<char> zoom(str::Format("%.4f", ds->zoomVirtual));
     prefs->AddRaw(ZOOM_VIRTUAL_STR, zoom);
 
-    if (ds->tocState && ds->tocState[0] > 0) {
+    if (ds->tocState && ds->tocState->Count() > 0) {
         BencArray *tocState = new BencArray();
         if (tocState) {
-            for (int i = 1; i <= ds->tocState[0]; i++)
-                tocState->Add(ds->tocState[i]);
+            for (size_t i = 0; i < ds->tocState->Count(); i++)
+                tocState->Add(ds->tocState->At(i));
             prefs->Add(TOC_STATE_STR, tocState);
         }
     }
@@ -383,13 +383,12 @@ static DisplayState * DeserializeDisplayState(BencDict *dict, bool globalPrefsOn
     BencArray *tocState = dict->GetArray(TOC_STATE_STR);
     if (tocState) {
         size_t len = tocState->Length();
-        ds->tocState = SAZA(int, len + 1);
+        ds->tocState = new Vec<int>(len);
         if (ds->tocState) {
-            ds->tocState[0] = (int)len;
             for (size_t i = 0; i < len; i++) {
                 BencInt *intObj = tocState->GetInt(i);
                 if (intObj)
-                    ds->tocState[i + 1] = (int)intObj->Value();
+                    ds->tocState->Append((int)intObj->Value());
             }
         }
     }

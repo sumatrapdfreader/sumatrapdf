@@ -1804,11 +1804,8 @@ static bool LoadDocIntoWindow(
 
         win.tocVisible = state->showToc;
         win.tocState.Reset();
-        if (state->tocState) {
-            int len = state->tocState[0];
-            win.tocState.MakeSpaceAt(0, len);
-            memcpy(win.tocState.LendData(), state->tocState + 1, len * sizeof(int));
-        }
+        if (state->tocState)
+            win.tocState = *state->tocState;
     }
     else {
         win.tocVisible = gGlobalPrefs.showToc;
@@ -6038,8 +6035,8 @@ static void RememberFavTreeExpansionState(WindowInfo *win)
 
         // add the ids of toggled items to tocState
         DocToCItem *tocItem = item.lParam ? (DocToCItem *)item.lParam : NULL;
-        bool wasExpanded = tocItem && !(item.state & TVIS_EXPANDED) == tocItem->open;
-        if (wasExpanded)
+        bool wasToggled = tocItem && !(item.state & TVIS_EXPANDED) == tocItem->open;
+        if (wasToggled)
             tocState.Append(tocItem->id);
 
         if (tocItem && tocItem->child)
@@ -6214,13 +6211,13 @@ static void CreateSidebar(WindowInfo* win)
     }
 }
 
-static HTREEITEM AddTocItemToView(HWND hwnd, DocToCItem *entry, HTREEITEM parent, bool expandItem)
+static HTREEITEM AddTocItemToView(HWND hwnd, DocToCItem *entry, HTREEITEM parent, bool toggleItem)
 {
     TV_INSERTSTRUCT tvinsert;
     tvinsert.hParent = parent;
     tvinsert.hInsertAfter = TVI_LAST;
     tvinsert.itemex.mask = TVIF_TEXT | TVIF_PARAM | TVIF_STATE;
-    tvinsert.itemex.state = entry->open != expandItem ? TVIS_EXPANDED : 0;
+    tvinsert.itemex.state = entry->open != toggleItem ? TVIS_EXPANDED : 0;
     tvinsert.itemex.stateMask = TVIS_EXPANDED;
     tvinsert.itemex.lParam = (LPARAM)entry;
     // Replace unprintable whitespace with regular spaces
@@ -6240,19 +6237,11 @@ static HTREEITEM AddTocItemToView(HWND hwnd, DocToCItem *entry, HTREEITEM parent
     return TreeView_InsertItem(hwnd, &tvinsert);
 }
 
-static bool WasTocItemExpanded(DocToCItem *entry, Vec<int>& tocState)
-{
-    for (size_t i = 0; i < tocState.Count(); i++)
-        if (tocState[i] == entry->id)
-            return true;
-    return false;
-}
-
 static void PopulateTocTreeView(HWND hwnd, DocToCItem *entry, Vec<int>& tocState, HTREEITEM parent = NULL)
 {
     for (; entry; entry = entry->next) {
-        bool expand = WasTocItemExpanded(entry, tocState);
-        HTREEITEM node = AddTocItemToView(hwnd, entry, parent, expand);
+        bool toggle = tocState.Find(entry->id) != -1;
+        HTREEITEM node = AddTocItemToView(hwnd, entry, parent, toggle);
         PopulateTocTreeView(hwnd, entry->child, tocState, node);
     }
 }
