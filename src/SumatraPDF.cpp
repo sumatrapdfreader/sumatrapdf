@@ -4709,7 +4709,8 @@ static void AdvanceFocus(WindowInfo* win)
 {
     // Tab order: Frame -> Page -> Find -> ToC -> Favorites -> Frame -> ...
 
-    bool hasToolbar = !win->fullScreen && !win->presentation && gGlobalPrefs.showToolbar;
+    bool hasToolbar = !win->fullScreen && !win->presentation &&
+                      gGlobalPrefs.showToolbar && win->IsDocLoaded();
     int direction = IsShiftPressed() ? -1 : 1;
 
     struct {
@@ -4856,15 +4857,15 @@ static void OnChar(WindowInfo& win, WPARAM key)
     case 'r':
         win.Reload();
         return;
+    case VK_TAB:
+        AdvanceFocus(&win);
+        break;
     }
 
     if (!win.IsDocLoaded())
         return;
 
     switch (key) {
-    case VK_TAB:
-        AdvanceFocus(&win);
-        break;
     case VK_SPACE:
     case VK_RETURN:
         OnKeydown(win, IsShiftPressed() ? VK_PRIOR : VK_NEXT, 0);
@@ -5966,23 +5967,35 @@ static LRESULT CALLBACK WndProcFavTree(HWND hwnd, UINT message, WPARAM wParam, L
     return CallWindowProc(DefWndProcFavTree, hwnd, message, wParam, lParam);
 }
 
+class GoToFavoriteWorkItem : public UIThreadWorkItem
+{
+    int pageNo;
+
+public:
+    GoToFavoriteWorkItem(WindowInfo *win, int pageNo) :
+        UIThreadWorkItem(win), pageNo(pageNo) {}
+
+    virtual void Execute() {
+        if (!WindowInfoStillValid(win))
+            return;
+        if (win->IsDocLoaded())
+            win->dm->goToPage(pageNo, 0);
+        SetForegroundWindow(win->hwndFrame);
+    }
+};
+
 // Going to a bookmark within current file scrolls to a given page.
 // Going to a bookmark in another file, loads the file and scrolls to a page
 // (similar to how invoking one of the recently opened files works)
 static void GoToFavorite(WindowInfo *win, FileFavs *f, FavName *fn)
 {
     WindowInfo *existingWin = FindWindowInfoByFile(f->filePath);
-    if (existingWin) {
-        existingWin->dm->goToPage(fn->pageNo, 0);
-        // TODO: BringWindowToTop() doesn't seem to work 
-        BringWindowToTop(win->hwndFrame);
-        return;
-    }
-    DisplayState *state = gFileHistory.Find(f->filePath);
-    win = LoadDocument(state->filePath, win);
-    if (!win || !win->IsDocLoaded())
-        return;
-    win->dm->goToPage(fn->pageNo, 0);
+    if (existingWin)
+        win = existingWin;
+    else
+        win = LoadDocument(f->filePath, win);
+    if (win)
+        QueueWorkItem(new GoToFavoriteWorkItem(win, fn->pageNo));
 }
 
 static void GoToFavoriteByMenuId(WindowInfo *win, int wmId)
@@ -6014,17 +6027,8 @@ static LRESULT OnFavTreeNotify(WindowInfo *win, LPNMTREEVIEW pnmtv)
 {
     switch (pnmtv->hdr.code) 
     {
-        case TVN_SELCHANGED: 
-            // When the focus is set to the fav window the first item in the treeview is automatically
-            // selected and a TVN_SELCHANGEDW notification message is sent with the special code pnmtv->action == 0x00001000.
-            // We have to ignore this message
-            if (TVC_BYKEYBOARD == pnmtv->action || TVC_BYMOUSE == pnmtv->action) {
-                GoToFavForTVItem(win, pnmtv->hdr.hwndFrom, pnmtv->itemNew.hItem);
-            }
-            // The case pnmtv->action==TVC_UNKNOWN is ignored because 
-            // it corresponds to a notification sent by
-            // the function TreeView_DeleteAllItems after deletion of the item.
-            break;
+        // TVN_SELCHANGED intentionally not implemented (mouse clicks are handled
+        // in NM_CLICK, and keyboard navigation in NM_RETURN and TVN_KEYDOWN)
 
         case TVN_KEYDOWN: {
             TV_KEYDOWN *ptvkd = (TV_KEYDOWN *)pnmtv;
@@ -6034,6 +6038,7 @@ static LRESULT OnFavTreeNotify(WindowInfo *win, LPNMTREEVIEW pnmtv)
             }
             break;
         }
+
         case NM_CLICK: {
             // Determine which item has been clicked (if any)
             TVHITTESTINFO ht = {0};
@@ -6043,9 +6048,7 @@ static LRESULT OnFavTreeNotify(WindowInfo *win, LPNMTREEVIEW pnmtv)
             MapWindowPoints(HWND_DESKTOP, pnmtv->hdr.hwndFrom, &ht.pt, 1);
             TreeView_HitTest(pnmtv->hdr.hwndFrom, &ht);
 
-            // let TVN_SELCHANGED handle the click, if it isn't on the already selected item
-            if ((ht.flags & TVHT_ONITEM) && TreeView_GetSelection(pnmtv->hdr.hwndFrom) == ht.hItem)
-                GoToFavForTVItem(win, pnmtv->hdr.hwndFrom, ht.hItem);
+            GoToFavForTVItem(win, pnmtv->hdr.hwndFrom, ht.hItem);
             break;
         }
 
