@@ -9,4 +9,4 @@ openjpeg        r777    2011-05-16   http://code.google.com/p/openjpeg/downloads
 synctex         1.9     2009-11-04   http://itexmac.sourceforge.net/SyncTeX.html
 unrar           4.0.7   2011-03-02   http://www.rarlab.com/rar_add.htm
 zlib            1.2.5   2010-04-19   http://www.zlib.net/
-../mupdf        trunk                http://git.ghostscript.com/?p=mupdf.git;a=summary
+../mupdf        trunk                http://git.ghostscript.com/?p=mupdf.git

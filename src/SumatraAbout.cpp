@@ -63,6 +63,8 @@ static AboutLayoutInfoEl gAboutLayoutInfo[] = {
     { _T("a note"),         _T("Debug version, for testing only!"), NULL },
 #endif
     { _T("pdf rendering"),  _T("MuPDF"),                _T("http://mupdf.com") },
+    // FreeType's license requires us to advertise that we use it
+    { _T("font rendering"), _T("FreeType"),             _T("http://www.freetype.org/") },
     { _T("program icon"),   _T("Zenon"),                _T("http://www.flashvidz.tk/") },
     { _T("toolbar icons"),  _T("Yusuke Kamiyamane"),    _T("http://p.yusukekamiyamane.com/") },
     { _T("translators"),    _T("The Translators"),      _T("http://blog.kowalczyk.info/software/sumatrapdf/translators.html") },

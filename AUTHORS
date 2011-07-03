@@ -16,6 +16,10 @@
 * Danilo Roascio
 * Simon Bünzli (zeniko at gmail.com)
 
+All code under src is licensed as GPL v3 (see COPYING) with the main
+exception of code in src/utils which is has a new BSD license (see
+src/utils/COPYING).
+
 Icons by Zenon, Sonke Tesch, George Georgiou, Robert Hegner,
 FAMFAMFAM and Yusuke Kamiyamane.
 
@@ -23,15 +27,17 @@ Translations by various translators (see src/strings/*.txt)
 
 External projects are by their various authors:
 
-* MuPDF         see http://mupdf.com/
-* FreeType      see http://www.freetype.org/
-* OpenJPEG      see http://www.openjpeg.org/
-* jbig2dec      see http://jbig2dec.sf.net/
-* libjpeg-turbo see http://libjpeg-turbo.virtualgl.org/
-* zlib          see http://www.zlib.net/
-* SyncTeX       see http://itexmac.sourceforge.net/SyncTeX.html
-* bzip2         see http://bzip.org/
-* UnRAR         see http://www.rarlab.com/
-* DjVuLibre     see http://djvu.sourceforge.net/
+Project        License                Website
+---------------------------------------------------------------------------------
+MuPDF          GPL v3                 http://mupdf.com/
+FreeType       ext/freetype2/FTL.txt  http://www.freetype.org/
+OpenJPEG       ext/openjpeg/LICENSE   http://www.openjpeg.org/
+jbig2dec       GPL v2 or later        http://jbig2dec.sf.net/
+libjpeg-turbo  GPL v2 or later        http://libjpeg-turbo.virtualgl.org/
+zlib           ext/zlib-1.2.5/zlib.h  http://www.zlib.net/
+SyncTeX        <unknown>              http://itexmac.sourceforge.net/SyncTeX.html
+bzip2          ext/bzip2/LICENSE      http://bzip.org/
+UnRAR          ext/unrar/license.txt  http://www.rarlab.com/
+DjVuLibre      GPL v2 or later        http://djvu.sourceforge.net/
 
-* Fugue Icons   see http://p.yusukekamiyamane.com/
+Fugue Icons    CC BY 3.0              http://p.yusukekamiyamane.com/
