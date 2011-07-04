@@ -2029,11 +2029,11 @@ void ShowUsage()
 
 void ShowUsage()
 {
-    MessageBox(NULL, TAPP _T("-install.exe [/s][/d <path>][/default][/opt plugin,...]\n\
+    MessageBox(NULL, TAPP _T("-install.exe [/s][/d <path>][/register][/opt plugin,...]\n\
     \n\
     /s\tinstalls ") TAPP _T(" silently (without user interaction).\n\
     /d\tchanges the directory where ") TAPP _T(" will be installed.\n\
-    /default\tinstalls ") TAPP _T(" as the default PDF viewer.\n\
+    /register\tregisters ") TAPP _T(" as the default PDF viewer.\n\
     /opt\tenables optional components (currently: plugin, pdffilter, pdfpreviewer)."), TAPP _T(" Installer Usage"), MB_OK | MB_ICONINFORMATION);
 }
 
@@ -2090,7 +2090,7 @@ void ParseCommandLine(TCHAR *cmdLine)
         else if (is_arg_with_param("opt")) {
             TCHAR *opts = argList[++i];
             str::ToLower(opts);
-            str::TransChars(opts, _T(" "), _T(","));
+            str::TransChars(opts, _T(" ;"), _T(",,"));
             StrVec optlist;
             optlist.Split(opts, _T(","), true);
             if (optlist.Find(_T("plugin")) != -1)
