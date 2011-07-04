@@ -33,7 +33,7 @@ MuPDF          GPL v3                 http://mupdf.com/
 FreeType       ext/freetype2/FTL.txt  http://www.freetype.org/
 OpenJPEG       ext/openjpeg/LICENSE   http://www.openjpeg.org/
 jbig2dec       GPL v2 or later        http://jbig2dec.sf.net/
-libjpeg-turbo  GPL v2 or later        http://libjpeg-turbo.virtualgl.org/
+libjpeg-turbo  BSD                    http://libjpeg-turbo.virtualgl.org/
 zlib           ext/zlib-1.2.5/zlib.h  http://www.zlib.net/
 SyncTeX        <unknown>              http://itexmac.sourceforge.net/SyncTeX.html
 bzip2          ext/bzip2/LICENSE      http://bzip.org/
