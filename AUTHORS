@@ -17,7 +17,7 @@
 * Simon Bünzli (zeniko at gmail.com)
 
 All code under src is licensed as GPL v3 (see COPYING) with the main
-exception of code in src/utils which is has a new BSD license (see
+exception of code in src/utils which has a BSD license (see
 src/utils/COPYING).
 
 Icons by Zenon, Sonke Tesch, George Georgiou, Robert Hegner,
@@ -27,17 +27,17 @@ Translations by various translators (see src/strings/*.txt)
 
 External projects are by their various authors:
 
-Project        License                Website
----------------------------------------------------------------------------------
-MuPDF          GPL v3                 http://mupdf.com/
-FreeType       ext/freetype2/FTL.txt  http://www.freetype.org/
-OpenJPEG       ext/openjpeg/LICENSE   http://www.openjpeg.org/
-jbig2dec       GPL v2 or later        http://jbig2dec.sf.net/
-libjpeg-turbo  BSD                    http://libjpeg-turbo.virtualgl.org/
-zlib           ext/zlib-1.2.5/zlib.h  http://www.zlib.net/
-SyncTeX        <unknown>              http://itexmac.sourceforge.net/SyncTeX.html
-bzip2          ext/bzip2/LICENSE      http://bzip.org/
-UnRAR          ext/unrar/license.txt  http://www.rarlab.com/
-DjVuLibre      GPL v2 or later        http://djvu.sourceforge.net/
+Project        License                        Website
+-----------------------------------------------------------------------------------------
+MuPDF          mupdf/COPYING           <GPL>  http://mupdf.com/
+FreeType       ext/freetype2/FTL.txt          http://www.freetype.org/
+OpenJPEG       ext/openjpeg/LICENSE    <BSD>  http://www.openjpeg.org/
+jbig2dec       ext/jbig2dec/COPYING    <GPL>  http://jbig2dec.sf.net/
+libjpeg-turbo  ext/libjpeg-turbo/LICENSE.txt  http://libjpeg-turbo.virtualgl.org/
+zlib           ext/zlib-1.2.5/zlib.h          http://www.zlib.net/
+SyncTeX        <unknown>                      http://itexmac.sourceforge.net/SyncTeX.html
+bzip2          ext/bzip2/LICENSE              http://bzip.org/
+UnRAR          ext/unrar/license.txt          http://www.rarlab.com/
+DjVuLibre      ext/libdjvu/COPYRIGHT   <GPL>  http://djvu.sourceforge.net/
 
-Fugue Icons    CC BY 3.0              http://p.yusukekamiyamane.com/
+Fugue Icons    CC BY 3.0                      http://p.yusukekamiyamane.com/
