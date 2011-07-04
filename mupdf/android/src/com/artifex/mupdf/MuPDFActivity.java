@@ -56,9 +56,12 @@ public class MuPDFActivity extends Activity
 	{
 		PixmapView pixmapView;
 
-		core = (MuPDFCore)getLastNonConfigurationInstance();
-		if (core == null)
+		if (core == null) {
+			core = (MuPDFCore)getLastNonConfigurationInstance();
+		}
+		if (core == null) {
 			core = openFile();
+		}
 		if (core == null)
 		{
 			/* FIXME: Error handling here! */
@@ -118,7 +121,17 @@ public class MuPDFActivity extends Activity
 
 	public Object onRetainNonConfigurationInstance()
 	{
-		return core;
+		MuPDFCore mycore = core;
+		core = null;
+		return mycore;
+	}
+
+	public void onDestroy()
+	{
+		if (core != null)
+			core.onDestroy();
+		core = null;
+		super.onDestroy();
 	}
 
 	private class MyButtonHandler implements OnClickListener

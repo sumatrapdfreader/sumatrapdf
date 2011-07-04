@@ -36,6 +36,7 @@ Java_com_artifex_mupdf_MuPDFCore_openFile(JNIEnv * env, jobject thiz, jstring jf
 	char *password = "";
 	int accelerate = 1;
 	fz_error error;
+	int pages;
 
 	filename = (*env)->GetStringUTFChars(env, jfilename, NULL);
 	if (filename == NULL)
@@ -64,9 +65,10 @@ Java_com_artifex_mupdf_MuPDFCore_openFile(JNIEnv * env, jobject thiz, jstring jf
 		LOGE("Cannot load page tree: '%s'\n", filename);
 		return 0;
 	}
-	LOGE("Done! %d pages", pdf_count_pages(xref));
+	pages = pdf_count_pages(xref);
+	LOGE("Done! %d pages", pages);
 
-	return pdf_count_pages(xref);
+	return pages;
 }
 
 JNIEXPORT void JNICALL
@@ -195,4 +197,15 @@ Java_com_artifex_mupdf_MuPDFCore_drawPage(JNIEnv *env, jobject thiz, jobject bit
 	AndroidBitmap_unlockPixels(env, bitmap);
 
 	return 1;
+}
+
+JNIEXPORT void JNICALL
+Java_com_artifex_mupdf_MuPDFCore_destroying(JNIEnv * env, jobject thiz)
+{
+	fz_free_display_list(currentPageList);
+	currentPageList = NULL;
+	pdf_free_xref(xref);
+	xref = NULL;
+	fz_free_glyph_cache(glyphcache);
+	glyphcache = NULL;
 }

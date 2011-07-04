@@ -52,12 +52,22 @@ you can exit the GUI.
 6) Now we are ready to build mupdf for Android. Check out a copy of MuPDF
 (but you've done that already, cos you're reading this, right?).
 
-7) Change into the android directory, and edit local.properties into your
+7) You will also need a copy of mupdf-thirdparty.zip (see the source code
+link on http://mupdf.com/). Unpack the contents of this into a 'thirdparty'
+directory created within the mupdf directory (i.e. at the same level as
+fitz, pdf, android etc).
+
+8) Finally, you will need a copy of a 'generated' directory. This is not
+currently available to download. The easiest way to obtain this is to do
+a standard windows or linux build of mupdf, which generates the required
+files as part of the build process.
+
+9) Change into the android directory, and edit local.properties into your
 favourite editor. Change the sdk path there as appropriate. This should be
 the only bit of localisation you need to do.
 
-8) Change into the android directory, and execute (in a Cygwin window on
-Windows!):
+10) Change into the android directory (note, the android directory, NOT
+the android/jni directory!), and execute (in a Cygwin window on Windows!):
 
        ndk-build
 
@@ -71,13 +81,13 @@ or on windows under cygwin:
 
 This should build the java wrapper.
 
-9) Now start the emulator by executing:
+11) Now start the emulator by executing:
 
        emulator -avd FroyoEm
 
 This will take a while to full start up (be patient).
 
-10) We now need to give the demo file something to chew on, so let's copy
+12) We now need to give the demo file something to chew on, so let's copy
 a file into the SD card image of the emulator (this should only need to be
 done once). With the emulator running type:
 
@@ -86,14 +96,14 @@ done once). With the emulator running type:
 (where obviously ../../MyTests/pdf_reference17.pdf is altered for your
 machine). (adb lives in <sdk>/platform-tools if it's not on your path).
 
-11) With the emulator running (see step 9), execute
+13) With the emulator running (see step 11), execute
 
        ant install
 
-and that will copy MuPDF into the emulator where you can run it from the
-launchpad screen.
+('ant.bat install' on Windows) and that will copy MuPDF into the emulator
+where you can run it from the launchpad screen.
 
-12) To see debug messages from the emulator (including stdout/stderr from
+14) To see debug messages from the emulator (including stdout/stderr from
 our app), execute:
 
        adb logcat

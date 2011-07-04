@@ -23,6 +23,7 @@ public class MuPDFCore
 			int pageW, int pageH,
 			int patchX, int patchY,
 			int patchW, int patchH);
+	public static native void destroying();
 
 	public MuPDFCore(String filename) throws Exception
 	{
@@ -45,5 +46,9 @@ public class MuPDFCore
 		this.pageNum = page;
 		this.pageWidth = getPageWidth();
 		this.pageHeight = getPageHeight();
+	}
+
+	public void onDestroy() {
+		destroying();
 	}
 }
