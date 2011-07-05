@@ -78,6 +78,10 @@ void WindowInfo::UpdateCanvasSize()
         // the display model needs to know the full size (including scroll bars)
         dm->ChangeViewPortSize(GetViewPortSize());
     }
+
+    // keep the notifications visible (only needed for right-to-left layouts)
+    if (IsUIRightToLeft())
+        messages->Relayout();
 }
 
 SizeI WindowInfo::GetViewPortSize()

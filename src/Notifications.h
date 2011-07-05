@@ -133,6 +133,7 @@ public:
         this->highlight = highlight;
         if (timeoutInMS)
             hasCancel = false;
+        ToggleWindowStyle(self, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, IsUIRightToLeft(), GWL_EXSTYLE);
         UpdateWindowPosition(message);
         InvalidateRect(self, NULL, TRUE);
         if (timeoutInMS)
@@ -298,5 +299,22 @@ public:
         for (size_t i = wnds.Count(); i > 0; i--)
             if (wnds[i-1]->groupId == groupId)
                 CleanUp(wnds[i-1]);
+    }
+
+    void Relayout() {
+        if (wnds.Count() == 0)
+            return;
+
+        HWND hwndCanvas = GetParent(wnds[0]->hwnd());
+        ClientRect frame(hwndCanvas);
+        for (size_t i = 0; i < wnds.Count(); i++) {
+            RectI rect = WindowRect(wnds[i]->hwnd());
+            rect = MapRectToWindow(rect, HWND_DESKTOP, hwndCanvas);
+            if (IsUIRightToLeft())
+                rect.x = frame.dx - rect.dx - MessageWnd::TL_MARGIN - GetSystemMetrics(SM_CXVSCROLL);
+            else
+                rect.x = MessageWnd::TL_MARGIN;
+            SetWindowPos(wnds[i]->hwnd(), NULL, rect.x, rect.y, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+        }
     }
 };

@@ -346,9 +346,10 @@ void OnMenuProperties(WindowInfo& win)
 
     str = FormatPageSize(engine, win.dm->currentPageNo(), win.dm->rotation());
 #ifdef UNICODE
-    if (IsUIRightToLeft()) {
+    if (IsUIRightToLeft() && WindowsVerVistaOrGreater()) {
         ScopedMem<TCHAR> tmp(str);
         // ensure that the size remains ungarbled left-to-right
+        // (note: XP doesn't know about \u202A...\u202C)
         str = str::Format(_T("\u202A%s\u202C"), tmp);
     }
 #endif

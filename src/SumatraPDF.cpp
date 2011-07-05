@@ -1163,6 +1163,8 @@ static void UpdateWindowRtlLayout(WindowInfo *win)
     ToggleWindowStyle(win->hwndFindText, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
     ToggleWindowStyle(win->hwndPageText, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
 
+    win->messages->Relayout();
+
     // TODO: also update the canvas scrollbars (?)
 
     // ensure that the ToC sidebar is on the correct side and that its
@@ -1844,7 +1846,7 @@ static bool LoadDocIntoWindow(
     if (IsUIRightToLeft()) {
         free(title);
         // explicitly revert the title, so that filenames aren't garbled
-        title = str::Format(_T("\u202A%s - %s\u202C"), SUMATRA_WINDOW_TITLE, baseName);
+        title = str::Format(_T("%s - %s"), SUMATRA_WINDOW_TITLE, baseName);
     }
 #endif
     if (needrefresh) {
