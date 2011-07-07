@@ -6986,8 +6986,16 @@ static void DelFavorite(WindowInfo *win)
     TCHAR *filePath = win->loadedFilePath;
     RememberFavTreeExpansionStateForAllWindows();
     gFavorites->Remove(filePath, pageNo);
-    // TODO: removing the last favorite should hide the sidebar
     UpdateFavoritesTreeForAllWindows();
+    if (!HasFavorites()) {
+        for (size_t i=0; i<gWindows.Count(); i++)
+        {
+            WindowInfo *win = gWindows.At(i);
+            if (win->favVisible) {
+                SetSidebarVisibility(win, win->tocVisible, false);
+            }
+        }
+    }
 }
 
 static void UpdateMenu(WindowInfo *win, HMENU m)
