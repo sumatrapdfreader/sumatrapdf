@@ -515,6 +515,13 @@ pdf_load_simple_font(pdf_font_desc **fontdescp, pdf_xref *xref, fz_obj *dict)
 	face = fontdesc->font->ft_face;
 	kind = ft_kind(face);
 
+	/* SumatraPDF: Check for DynaLab fonts that must use hinting */
+	if (kind == TRUETYPE)
+	{
+		if (FT_IS_TRICKY(face) || is_dynalab(fontdesc->font->name))
+			fontdesc->font->ft_hint = 1;
+	}
+
 	/* Encoding */
 
 	symbolic = fontdesc->flags & 4;

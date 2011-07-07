@@ -179,7 +179,7 @@ Java_com_artifex_mupdf_MuPDFCore_drawPage(JNIEnv *env, jobject thiz, jobject bit
 	fz_clear_pixmap_with_color(pix, 0xff);
 
 	zoom = resolution / 72;
-	ctm = fz_translate(0, -currentMediabox.y1);
+	ctm = fz_translate(-currentMediabox.x0, -currentMediabox.y1);
 	ctm = fz_concat(ctm, fz_scale(zoom, -zoom));
 	ctm = fz_concat(ctm, fz_rotate(currentRotate));
 	bbox = fz_round_rect(fz_transform_rect(ctm,currentMediabox));
@@ -188,8 +188,9 @@ Java_com_artifex_mupdf_MuPDFCore_drawPage(JNIEnv *env, jobject thiz, jobject bit
 	xscale = (float)pageW/(float)(bbox.x1-bbox.x0);
 	yscale = (float)pageH/(float)(bbox.y1-bbox.y0);
 	ctm = fz_concat(ctm, fz_scale(xscale, yscale));
+	bbox = fz_round_rect(fz_transform_rect(ctm,currentMediabox));
 	dev = fz_new_draw_device(glyphcache, pix);
-	fz_execute_display_list(currentPageList, dev, ctm, fz_infinite_bbox);
+	fz_execute_display_list(currentPageList, dev, ctm, bbox);
 	fz_free_device(dev);
 	fz_drop_pixmap(pix);
 	LOGE("Rendered");
