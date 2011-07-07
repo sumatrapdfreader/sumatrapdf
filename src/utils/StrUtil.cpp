@@ -307,6 +307,34 @@ WCHAR *Format(const WCHAR *fmt, ...)
     return res;
 }
 
+// Trim whitespace characters, in-place, inside s.
+// Returns number of trimmed characters.
+size_t TrimWS(TCHAR *s, TrimOpt opt)
+{
+    size_t sLen = str::Len(s);
+    TCHAR *ns = s;
+    TCHAR *e = s + sLen;
+    TCHAR *ne = e;
+    if ((TrimLeft == opt) || (TrimBoth == opt)) {
+        while (_istspace(*ns)) {
+            ++ns;
+        }
+    }
+
+    if ((TrimRight == opt) || (TrimBoth == opt)) {
+        while (((ne - 1) >= ns) && _istspace(ne[-1])) {
+            --ne;
+        }
+    }
+    *ne = 0;
+    size_t trimmed = (ns - s) + (e - ne);
+    if (ns != s) {
+        size_t toCopy = (sLen - trimmed + 1) * sizeof(TCHAR); // +1 for terminating 0
+        memmove(s, ns, toCopy);
+    }
+    return trimmed;
+}
+
 /* replace in <str> the chars from <oldChars> with their equivalents
    from <newChars> (similar to UNIX's tr command)
    Returns the number of replaced characters. */

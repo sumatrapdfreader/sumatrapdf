@@ -6,6 +6,12 @@
 
 namespace str {
 
+enum TrimOpt {
+    TrimLeft,
+    TrimRight,
+    TrimBoth
+};
+
 inline size_t Len(const char *s) { return strlen(s); }
 inline size_t Len(const WCHAR *s) { return wcslen(s); }
 
@@ -90,6 +96,8 @@ char *  FmtV(const char *fmt, va_list args);
 char *  Format(const char *fmt, ...);
 WCHAR * FmtV(const WCHAR *fmt, va_list args);
 WCHAR * Format(const WCHAR *fmt, ...);
+
+size_t  TrimWS(TCHAR *s, TrimOpt opt=TrimBoth);
 
 size_t  TransChars(char *str, const char *oldChars, const char *newChars);
 size_t  TransChars(WCHAR *str, const WCHAR *oldChars, const WCHAR *newChars);

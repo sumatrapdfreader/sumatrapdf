@@ -884,6 +884,7 @@ static INT_PTR CALLBACK Dialog_AddFav_Proc(HWND hDlg, UINT msg, WPARAM wParam,
         {
             w = GetDlgItem(hDlg, IDC_FAV_NAME_EDIT);
             TCHAR *s = win::GetText(w);
+            str::TrimWS(s);
             if (str::IsEmptyOrWs(s)) {
                 free(s);
             } else {

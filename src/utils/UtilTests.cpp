@@ -305,6 +305,68 @@ static void TStrTest()
         ScopedMem<TCHAR> tmp(str::FormatRomanNumeral(formatRomanData[i].number));
         assert(str::Eq(tmp, formatRomanData[i].result));
     }
+
+    {
+        size_t trimmed;
+        TCHAR *s = NULL;
+        s = str::Dup(_T(""));
+        trimmed = str::TrimWS(s);
+        assert(trimmed == 0);
+        assert(str::Eq(s, _T("")));
+        trimmed = str::TrimWS(s, str::TrimRight);
+        assert(trimmed == 0);
+        assert(str::Eq(s, _T("")));
+        trimmed = str::TrimWS(s, str::TrimLeft);
+        assert(trimmed == 0);
+        assert(str::Eq(s, _T("")));
+
+        free(s); s = str::Dup(_T("  \n\t  "));
+        trimmed = str::TrimWS(s);
+        assert(trimmed == 6);
+        assert(str::Eq(s, _T("")));
+
+        free(s); s = str::Dup(_T("  \n\t  "));
+        trimmed = str::TrimWS(s, str::TrimRight);
+        assert(trimmed == 6);
+        assert(str::Eq(s, _T("")));
+
+        free(s); s = str::Dup(_T("  \n\t  "));
+        trimmed = str::TrimWS(s, str::TrimLeft);
+        assert(trimmed == 6);
+        assert(str::Eq(s, _T("")));
+
+        free(s); s = str::Dup(_T("  lola"));
+        trimmed = str::TrimWS(s);
+        assert(trimmed == 2);
+        assert(str::Eq(s, _T("lola")));
+
+        free(s); s = str::Dup(_T("  lola"));
+        trimmed = str::TrimWS(s, str::TrimLeft);
+        assert(trimmed == 2);
+        assert(str::Eq(s, _T("lola")));
+
+        free(s); s = str::Dup(_T("  lola"));
+        trimmed = str::TrimWS(s, str::TrimRight);
+        assert(trimmed == 0);
+        assert(str::Eq(s, _T("  lola")));
+
+        free(s); s = str::Dup(_T("lola\r\t"));
+        trimmed = str::TrimWS(s);
+        assert(trimmed == 2);
+        assert(str::Eq(s, _T("lola")));
+
+        free(s); s = str::Dup(_T("lola\r\t"));
+        trimmed = str::TrimWS(s, str::TrimRight);
+        assert(trimmed == 2);
+        assert(str::Eq(s, _T("lola")));
+
+        free(s); s = str::Dup(_T("lola\r\t"));
+        trimmed = str::TrimWS(s, str::TrimLeft);
+        assert(trimmed == 0);
+        assert(str::Eq(s, _T("lola\r\t")));
+
+        free(s);
+    }
 }
 
 static void FileUtilTest()
