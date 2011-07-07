@@ -184,8 +184,10 @@ struct {
     char *filepath;
     bool install;
 } gPayloadData[] = {
-    { "SumatraPDF.exe",         true    },
+    // extract libmupdf.dll first, so that the installation fails as soon
+    // as possible, if SumatraPDF.exe or any DLL is currently in use
     { "libmupdf.dll",           true    },
+    { "SumatraPDF.exe",         true    },
     { "sumatrapdfprefs.dat",    false   },
     { "DroidSansFallback.ttf",  true    },
     { "npPdfViewer.dll",        true    },
@@ -610,7 +612,8 @@ BOOL InstallCopyFiles()
             success = TRUE;
         }
         else {
-            NotifyFailed(_T("Couldn't write extracted file to disk"));
+            ScopedMem<TCHAR> msg(str::Format(_T("Couldn't write %s to disk"), inpath));
+            NotifyFailed(msg);
             success = FALSE;
         }
 
