@@ -629,6 +629,7 @@ Stampa documento...
 
 # Untranslated:
 #Add page %d to favorites
+#Add page %d to favorites with (optional) name:
 #Add to favorites
 #F&avorites
 #Favorites

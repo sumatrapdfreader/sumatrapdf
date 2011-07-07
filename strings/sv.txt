@@ -539,6 +539,7 @@ skriver ut dokumentet
 #&Save As...
 #&Single Page\tCtrl-6
 #Add page %d to favorites
+#Add page %d to favorites with (optional) name:
 #Add to favorites
 #All supported documents
 #Bookmark Shortcuts

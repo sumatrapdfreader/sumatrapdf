@@ -244,6 +244,7 @@ Zoem Uit
 #&Yes
 #(of %d)
 #Add page %d to favorites
+#Add page %d to favorites with (optional) name:
 #Add to favorites
 #Advanced
 #All files

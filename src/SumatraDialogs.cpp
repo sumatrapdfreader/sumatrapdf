@@ -866,8 +866,7 @@ static INT_PTR CALLBACK Dialog_AddFav_Proc(HWND hDlg, UINT msg, WPARAM wParam,
         assert(data);
         SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
         // TODO: should I add a sizer for Ok/Cancel buttons?
-        // TODO: translate when finalized
-        ScopedMem<TCHAR> s(str::Format(_T("Add page %d to favorites with (optional) name:"), data->pageNo));
+        ScopedMem<TCHAR> s(str::Format(_TR("Add page %d to favorites with (optional) name:"), data->pageNo));
         SetDlgItemText(hDlg, IDC_ADD_PAGE_STATIC, s);
         SetDlgItemText(hDlg, IDOK, _TR("OK"));
         SetDlgItemText(hDlg, IDCANCEL, _TR("Cancel"));

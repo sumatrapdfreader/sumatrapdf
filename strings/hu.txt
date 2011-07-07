@@ -592,6 +592,7 @@ Nyomtatás
 #&Facing\tCtrl-7
 #&Single Page\tCtrl-6
 #Add page %d to favorites
+#Add page %d to favorites with (optional) name:
 #Add to favorites
 #Bookmark Shortcuts
 #Bookmark shortcut to page %d of %s

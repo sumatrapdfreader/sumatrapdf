@@ -597,6 +597,7 @@ printing document
 #&Remove Document
 #&Single Page\tCtrl-6
 #Add page %d to favorites
+#Add page %d to favorites with (optional) name:
 #Add to favorites
 #DjVu documents
 #F&avorites

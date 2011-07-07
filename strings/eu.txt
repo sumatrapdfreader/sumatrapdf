@@ -594,6 +594,7 @@ dokumentua imprimatzen
 #&Remove Document
 #&Single Page\tCtrl-6
 #Add page %d to favorites
+#Add page %d to favorites with (optional) name:
 #Add to favorites
 #Bookmark shortcut to page %d of %s
 #F&avorites
