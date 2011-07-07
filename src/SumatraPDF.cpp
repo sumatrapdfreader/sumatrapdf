@@ -249,7 +249,6 @@ static ToolbarButtonInfo gToolbarButtons[] = {
     { -1,  IDM_FIND_FIRST,        NULL,                   0 },
     { 8,   IDM_FIND_PREV,         _TRN("Find Previous"),  0 },
     { 9,   IDM_FIND_NEXT,         _TRN("Find Next"),      0 },
-    // TODO: is this button really used often enough?
     { 10,  IDM_FIND_MATCH,        _TRN("Match Case"),     0 },
 };
 
@@ -619,10 +618,9 @@ MenuDef menuDefZoom[] = {
 };
 
 MenuDef menuDefFavorites[] = {
-    // TODO: translate when finalized
-    { "Add to favorites",                  IDM_FAV_ADD,                MF_NO_TRANSLATE },
-    { "Remove from favorites",             IDM_FAV_DEL,                MF_NO_TRANSLATE },
-    { "Show Favorites",                    IDM_FAV_TOGGLE,             MF_NO_TRANSLATE },
+    { _TRN("Add to favorites"),            IDM_FAV_ADD,                0 },
+    { _TRN("Remove from favorites"),       IDM_FAV_DEL,                0 },
+    { _TRN("Show Favorites"),              IDM_FAV_TOGGLE,             0 },
 };
 
 MenuDef menuDefSettings[] = {
@@ -863,13 +861,11 @@ static void RebuildFavMenu(WindowInfo *win, HMENU menu)
         if (isBookmarked)
         {
             win::menu::SetEnabled(menu, IDM_FAV_ADD, false);
-            // TODO: translate when finalized
-            ScopedMem<TCHAR> s(str::Format(_T("Remove page %d from favorites"), pageNo));
+            ScopedMem<TCHAR> s(str::Format(_TR("Remove page %d from favorites"), pageNo));
             win::menu::SetText(menu, IDM_FAV_DEL, s);
         } else {
             win::menu::SetEnabled(menu, IDM_FAV_DEL, false);
-            // TODO: translate when finalized
-            ScopedMem<TCHAR> s(str::Format(_T("Add page %d to favorites"), pageNo));
+            ScopedMem<TCHAR> s(str::Format(_TR("Add page %d to favorites"), pageNo));
             win::menu::SetText(menu, IDM_FAV_ADD, s);
         }
         AppendFavMenus(menu, filePath);
@@ -915,8 +911,7 @@ static HMENU BuildMenu(WindowInfo *win)
         // because they wouldn't be persisted, anyway
         m = CreateMenu();
         RebuildFavMenu(win, m);
-        // TODO: translate when finalized
-        AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _T("F&avorites"));
+        AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("F&avorites"));
     }
 #endif
     m = BuildMenuFromMenuDef(menuDefSettings, dimof(menuDefSettings), CreateMenu());
@@ -5068,7 +5063,7 @@ static void UpdateSidebarTitles(WindowInfo& win)
     }
 
     HWND favTitle = GetDlgItem(win.hwndFavBox, IDC_FAV_TITLE);
-    win::SetText(favTitle, _T("Favorites")); // TODO: translate
+    win::SetText(favTitle, _TR("Favorites"));
     if (win.favVisible) {
         InvalidateRect(win.hwndFavBox, NULL, TRUE);
         UpdateWindow(win.hwndFavBox);
@@ -6204,7 +6199,7 @@ static void CreateSidebar(WindowInfo* win)
     title = CreateWindow(WC_STATIC, _T(""), WS_VISIBLE | WS_CHILD,
                          0,0,0,0, win->hwndFavBox, (HMENU)IDC_FAV_TITLE, ghinst, NULL);
     SetWindowFont(title, gDefaultGuiFont, FALSE);
-    win::SetText(title, _T("Favorites")); // TODO: translate
+    win::SetText(title, _TR("Favorites"));
 
     hwndClose = CreateWindow(WC_STATIC, _T(""),
                         SS_OWNERDRAW | SS_NOTIFY | WS_CHILD | WS_VISIBLE,
@@ -6451,10 +6446,6 @@ static void PopulateFavTreeIfNeeded(WindowInfo *win)
     RedrawWindow(hwndTree, NULL, NULL, fl);
 }
 
-// TODO: what to do if the last favorite is removed? Hide favorites?
-// TODO: if removing the last favorite hides the sidebar, make sure to
-//       disable the menu item in that case so that an empty sidebar
-//       can never be displayed
 static void UpdateFavoritesTreeIfNecessary(WindowInfo *win)
 {
     HWND hwndTree = win->hwndFavTree;
@@ -6983,11 +6974,9 @@ static void AddFavorite(WindowInfo *win)
     bool shouldAdd = Dialog_AddFavorite(win->hwndFrame, pageNo, &name);
     if (!shouldAdd)
         return;
-    // TODO: trim whitespace from name ?
     RememberFavTreeExpansionStateForAllWindows();
     gFavorites->AddOrReplace(filePath, pageNo, name);
     free(name);
-    // TODO: show notification that a favorite was deleted?
     UpdateFavoritesTreeForAllWindows();
 }
 
@@ -6997,7 +6986,7 @@ static void DelFavorite(WindowInfo *win)
     TCHAR *filePath = win->loadedFilePath;
     RememberFavTreeExpansionStateForAllWindows();
     gFavorites->Remove(filePath, pageNo);
-    // TODO: show notification that a favorite was deleted?
+    // TODO: removing the last favorite should hide the sidebar
     UpdateFavoritesTreeForAllWindows();
 }
 

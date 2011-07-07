@@ -622,3 +622,12 @@ copying text
 printing document
 تتم حالياً الطباعة
 
+# Untranslated:
+#Add page %d to favorites
+#Add to favorites
+#F&avorites
+#Favorites
+#Remove from favorites
+#Remove page %d from favorites
+#Show Favorites
+

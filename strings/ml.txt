@@ -195,6 +195,8 @@ Zoom Out
 #&Use original page sizes
 #&Yes
 #(of %d)
+#Add page %d to favorites
+#Add to favorites
 #Advanced
 #All files
 #All supported documents
@@ -236,7 +238,9 @@ Zoom Out
 #Enter password for %s
 #Enter the command-line to invoke when you double-click on the PDF document:
 #Error loading %s
+#F&avorites
 #F&orward\tAlt+Right Arrow
+#Favorites
 #File Size:
 #File:
 #Find
@@ -283,6 +287,8 @@ Zoom Out
 #Printing is still in progress. Abort and start over?
 #Printing page %d of %d...
 #Remember &opened files
+#Remove from favorites
+#Remove page %d from favorites
 #Save S&hortcut...\tCtrl-Shift-S
 #Searching %d of %d...
 #Select &All
@@ -291,6 +297,7 @@ Zoom Out
 #Send by &E-mail...
 #Set inverse search command-line
 #Show &pages continuously
+#Show Favorites
 #Show frequently read
 #Show the &bookmarks sidebar when available
 #Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.

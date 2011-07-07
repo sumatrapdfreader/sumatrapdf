@@ -457,6 +457,8 @@ Zoomfaktor
 #&Shrink pages to printable area (if necessary)
 #&Single Page\tCtrl-6
 #&Use original page sizes
+#Add page %d to favorites
+#Add to favorites
 #All supported documents
 #Attachment: %s
 #Bookmark Shortcuts
@@ -471,6 +473,8 @@ Zoomfaktor
 #DjVu documents
 #Enter the command-line to invoke when you double-click on the PDF document:
 #Error loading %s
+#F&avorites
+#Favorites
 #Fit &Content\tCtrl-3
 #Fit Content
 #Fit Width and Show Pages Continuously
@@ -489,9 +493,12 @@ Zoomfaktor
 #Print range
 #Printing is still in progress. Abort and start over?
 #Printing page %d of %d...
+#Remove from favorites
+#Remove page %d from favorites
 #Save S&hortcut...\tCtrl-Shift-S
 #Select &All
 #Select &All\tCtrl-A
+#Show Favorites
 #Show frequently read
 #Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
 #Subject:

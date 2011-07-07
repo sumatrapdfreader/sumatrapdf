@@ -596,8 +596,15 @@ printing document
 #&Pin Document
 #&Remove Document
 #&Single Page\tCtrl-6
+#Add page %d to favorites
+#Add to favorites
 #DjVu documents
+#F&avorites
+#Favorites
 #Postscript documents
 #Print
+#Remove from favorites
+#Remove page %d from favorites
+#Show Favorites
 #Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
 

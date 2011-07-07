@@ -531,6 +531,8 @@ s'està imprimint el document
 #&Remove Document
 #&Save As...
 #&Single Page\tCtrl-6
+#Add page %d to favorites
+#Add to favorites
 #All supported documents
 #Bookmark Shortcuts
 #Bookmark shortcut to page %d of %s
@@ -539,6 +541,8 @@ s'està imprimint el document
 #Copy Co&mment
 #DjVu documents
 #Error loading %s
+#F&avorites
+#Favorites
 #Found text at page %d (again)
 #Frequently Read
 #Hide frequently read
@@ -550,8 +554,11 @@ s'està imprimint el document
 #Print
 #Printing is still in progress. Abort and start over?
 #Printing page %d of %d...
+#Remove from favorites
+#Remove page %d from favorites
 #Save S&hortcut...\tCtrl-Shift-S
 #Select &All
+#Show Favorites
 #Show frequently read
 #Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
 #XPS documents

@@ -346,6 +346,8 @@ mencetak dokumen
 #&Single Page\tCtrl-6
 #&Use original page sizes
 #(of %d)
+#Add page %d to favorites
+#Add to favorites
 #Advanced
 #All supported documents
 #Associate with PDF files?
@@ -372,7 +374,9 @@ mencetak dokumen
 #Document Properties
 #Enter the command-line to invoke when you double-click on the PDF document:
 #Error loading %s
+#F&avorites
 #F&orward\tAlt+Right Arrow
+#Favorites
 #Fit &Content\tCtrl-3
 #Fit Content
 #Fit Width and Show Pages Continuously
@@ -406,6 +410,8 @@ mencetak dokumen
 #Printing is still in progress. Abort and start over?
 #Printing page %d of %d...
 #Remember &opened files
+#Remove from favorites
+#Remove page %d from favorites
 #Save S&hortcut...\tCtrl-Shift-S
 #Searching %d of %d...
 #Select &All
@@ -413,6 +419,7 @@ mencetak dokumen
 #Select content with Ctrl+left mouse button
 #Send by &E-mail...
 #Set inverse search command-line
+#Show Favorites
 #Show frequently read
 #Show the &bookmarks sidebar when available
 #Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.

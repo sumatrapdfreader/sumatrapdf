@@ -402,6 +402,8 @@ Faktor uvećanja
 #&Shrink pages to printable area (if necessary)
 #&Single Page\tCtrl-6
 #&Use original page sizes
+#Add page %d to favorites
+#Add to favorites
 #All supported documents
 #Application:
 #Attachment: %s
@@ -423,7 +425,9 @@ Faktor uvećanja
 #Document Properties
 #Enter the command-line to invoke when you double-click on the PDF document:
 #Error loading %s
+#F&avorites
 #F&orward\tAlt+Right Arrow
+#Favorites
 #File Size:
 #File:
 #Fit &Content\tCtrl-3
@@ -449,10 +453,13 @@ Faktor uvećanja
 #Print range
 #Printing is still in progress. Abort and start over?
 #Printing page %d of %d...
+#Remove from favorites
+#Remove page %d from favorites
 #Save S&hortcut...\tCtrl-Shift-S
 #Select &All
 #Select &All\tCtrl-A
 #Send by &E-mail...
+#Show Favorites
 #Show frequently read
 #Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
 #Source file %s has no synchronization point

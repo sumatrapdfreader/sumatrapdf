@@ -614,6 +614,13 @@ printing document
 փաստաթուղթը տպվում է
 
 # Untranslated:
+#Add page %d to favorites
+#Add to favorites
+#F&avorites
+#Favorites
 #No result found around line %u in file %s
 #Postscript documents
+#Remove from favorites
+#Remove page %d from favorites
+#Show Favorites
 

@@ -618,5 +618,12 @@ printing document
 imprimindo documento
 
 # Untranslated:
+#Add page %d to favorites
+#Add to favorites
+#F&avorites
+#Favorites
 #Postscript documents
+#Remove from favorites
+#Remove page %d from favorites
+#Show Favorites
 

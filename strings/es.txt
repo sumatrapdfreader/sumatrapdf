@@ -624,3 +624,12 @@ copiado de texto
 printing document
 imprimimendo documento
 
+# Untranslated:
+#Add page %d to favorites
+#Add to favorites
+#F&avorites
+#Favorites
+#Remove from favorites
+#Remove page %d from favorites
+#Show Favorites
+
