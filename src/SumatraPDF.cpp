@@ -203,7 +203,7 @@ SerializableGlobalPrefs             gGlobalPrefs = {
     DEFAULT_ZOOM, // float defaultZoom
     WIN_STATE_NORMAL, // int  windowState
     RectI(), // RectI windowPos
-    true, // bool showToc
+    true, // bool tocVisible
     0, // int  m_tocDx
     0, // int  fwdSearchOffset
     COL_FWDSEARCH_BG, // int  fwdSearchColor
@@ -1168,9 +1168,9 @@ static void UpdateWindowRtlLayout(WindowInfo *win)
     if (wasRTL == isRTL)
         return;
 
-    bool showToC = win->tocVisible;
-    bool showFav = win->favVisible;
-    if (showToC || showFav)
+    bool tocVisible = win->tocVisible;
+    bool favVisible = win->favVisible;
+    if (tocVisible || favVisible)
         SetSidebarVisibility(win, false, false);
 
     // cf. http://www.microsoft.com/middleeast/msdn/mirror.aspx
@@ -1193,11 +1193,11 @@ static void UpdateWindowRtlLayout(WindowInfo *win)
 
     // ensure that the ToC sidebar is on the correct side and that its
     // title and close button are also correctly laid out
-    if (showToC || showFav) {
-        SetSidebarVisibility(win, showToC, showFav);
-        if (showToC)
+    if (tocVisible || favVisible) {
+        SetSidebarVisibility(win, tocVisible, favVisible);
+        if (tocVisible)
             SendMessage(win->hwndTocBox, WM_SIZE, 0, 0);
-        if (showFav)
+        if (favVisible)
             SendMessage(win->hwndFavBox, WM_SIZE, 0, 0);
     }
 }
@@ -1578,7 +1578,7 @@ static void MenuUpdateStateForWindow(WindowInfo& win) {
     win::menu::SetEnabled(win.menu, IDM_VIEW_BOOKMARKS, enabled);
 
     bool documentSpecific = win.IsDocLoaded();
-    bool checked = documentSpecific ? win.tocVisible : gGlobalPrefs.showToc;
+    bool checked = documentSpecific ? win.tocVisible : gGlobalPrefs.tocVisible;
     win::menu::SetChecked(win.menu, IDM_VIEW_BOOKMARKS, checked);
 
     win::menu::SetChecked(win.menu, IDM_FAV_TOGGLE, win.favVisible);
@@ -1828,20 +1828,20 @@ static bool LoadDocIntoWindow(
         zoomVirtual = state->zoomVirtual;
         rotation = state->rotation;
 
-        win.tocVisible = state->showToc;
+        win.tocVisible = state->tocVisible;
         win.tocState.Reset();
         if (state->tocState)
             win.tocState = *state->tocState;
     }
     else {
-        win.tocVisible = gGlobalPrefs.showToc;
+        win.tocVisible = gGlobalPrefs.tocVisible;
     }
     //SidebarDxFromDisplayState(state);
 
     // Review needed: Is the following block really necessary?
     /*
-    // The WM_SIZE message must be sent *after* updating win.showToc
-    // otherwise the bookmark window reappear even if state->showToc=false.
+    // The WM_SIZE message must be sent *after* updating win.tocVisible
+    // otherwise the bookmark window reappear even if state->tocVisible=false.
     ClientRect rect(win.hwndFrame);
     SendMessage(win.hwndFrame, WM_SIZE, 0, MAKELONG(rect.dx, rect.dy));
     */
@@ -1913,8 +1913,8 @@ Error:
         win.UpdateToolbarState();
     }
 
-    bool showToc = win.IsDocLoaded() && win.tocVisible && win.dm->HasTocTree();
-    if (showToc) {
+    bool tocVisible = win.IsDocLoaded() && win.tocVisible && win.dm->HasTocTree();
+    if (tocVisible) {
         SetSidebarVisibility(&win, true, false);
     } else if (oldTocShow) {
         // Hide the now useless ToC sidebar and force an update afterwards
@@ -4354,10 +4354,10 @@ static void OnFrameSize(WindowInfo* win, int dx, int dy)
         rebBarDy = WindowRect(win->hwndReBar).dy;
     }
 
-    bool showToc = win->tocLoaded && win->tocVisible;
-    bool showFav = win->favVisible;
-    if (showToc || showFav)
-        SetSidebarVisibility(win, showToc, showFav);
+    bool tocVisible = win->tocLoaded && win->tocVisible;
+    bool favVisible = win->favVisible;
+    if (tocVisible || favVisible)
+        SetSidebarVisibility(win, tocVisible, favVisible);
     else
         SetWindowPos(win->hwndCanvas, NULL, 0, rebBarDy, dx, dy - rebBarDy, SWP_NOZORDER);
 }
@@ -4617,10 +4617,10 @@ static void ExitFullscreen(WindowInfo& win)
         SetCursor(gCursorArrow);
     }
 
-    bool showToc = win.IsDocLoaded() && win.tocBeforeFullScreen;
-    bool showFav = win.favBeforeFullScreen;
-    if (showToc || showFav)
-        SetSidebarVisibility(&win, showToc, showFav);
+    bool tocVisible = win.IsDocLoaded() && win.tocBeforeFullScreen;
+    bool favVisible = win.favBeforeFullScreen;
+    if (tocVisible || favVisible)
+        SetSidebarVisibility(&win, tocVisible, favVisible);
 
     if (gGlobalPrefs.showToolbar)
         ShowWindow(win.hwndReBar, SW_SHOW);

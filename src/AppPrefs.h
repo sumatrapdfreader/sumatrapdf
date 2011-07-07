@@ -64,7 +64,7 @@ struct SerializableGlobalPrefs {
     /* Default position (can be on any monitor) */
     RectI windowPos;
 
-    bool showToc;
+    bool tocVisible;
     int  sidebarDx;
 
     /* Forward search highlighting settings  */

@@ -203,7 +203,7 @@ void WindowInfo::UpdateToCExpansionState(HTREEITEM hItem)
 
 void WindowInfo::DisplayStateFromToC(DisplayState *ds)
 {
-    ds->showToc = tocVisible;
+    ds->tocVisible = tocVisible;
 
     if (tocLoaded) {
         tocState.Reset();

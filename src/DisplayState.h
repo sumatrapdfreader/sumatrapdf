@@ -35,7 +35,7 @@ public:
         filePath(NULL), useGlobalValues(false), openCount(0),
         displayMode(DM_AUTOMATIC), pageNo(1), zoomVirtual(100.0),
         rotation(0), windowState(0), thumbnail(NULL), isPinned(false),
-        decryptionKey(NULL), showToc(true), sidebarDx(0), tocState(NULL) { }
+        decryptionKey(NULL), tocVisible(true), sidebarDx(0), tocState(NULL) { }
 
     ~DisplayState() {
         free(filePath);
@@ -73,7 +73,7 @@ public:
     // followed by crypt key (64 chars) - only applies for PDF documents
     char *              decryptionKey;
 
-    bool                showToc;
+    bool                tocVisible;
     int                 sidebarDx;
     // tocState is an array of ids for ToC items that have been
     // toggled by the user (i.e. aren't in their default expansion state)

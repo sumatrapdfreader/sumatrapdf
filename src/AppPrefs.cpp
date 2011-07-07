@@ -32,9 +32,11 @@
 #define PDF_ASSOCIATE_DONT_ASK_STR  "PdfAssociateDontAskAgain"
 #define PDF_ASSOCIATE_ASSOCIATE_STR "PdfAssociateShouldAssociate"
 #define UI_LANGUAGE_STR             "UILanguage"
-#define SHOW_TOC_STR                "ShowToc"
+// for backwards compatibility the string is "ShowToc" and not 
+// (more appropriate now) "TocVisible"
+#define TOC_VISIBLE_STR             "ShowToc"
 // for backwards compatibility, the serialized name is "Toc DX" and not
-// (more apropriate now) "Panel DX".
+// (more apropriate now) "Sidebar DX".
 #define SIDEBAR_DX_STR                "Toc DX"
 #define TOC_STATE_STR               "TocToggles"
 #define BG_COLOR_STR                "BgColor"
@@ -85,7 +87,7 @@ static BencDict* SerializeGlobalPrefs(SerializableGlobalPrefs& globalPrefs)
         return NULL;
 
     prefs->Add(SHOW_TOOLBAR_STR, globalPrefs.showToolbar);
-    prefs->Add(SHOW_TOC_STR, globalPrefs.showToc);
+    prefs->Add(TOC_VISIBLE_STR, globalPrefs.tocVisible);
     prefs->Add(SIDEBAR_DX_STR, globalPrefs.sidebarDx);
     prefs->Add(PDF_ASSOCIATE_DONT_ASK_STR, globalPrefs.pdfAssociateDontAskAgain);
     prefs->Add(PDF_ASSOCIATE_ASSOCIATE_STR, globalPrefs.pdfAssociateShouldAssociate);
@@ -158,8 +160,7 @@ static BencDict *DisplayState_Serialize(DisplayState *ds, bool globalPrefsOnly)
     prefs->Add(WINDOW_DX_STR, ds->windowPos.dx);
     prefs->Add(WINDOW_DY_STR, ds->windowPos.dy);
 
-    prefs->Add(SHOW_TOC_STR, ds->showToc);
-    // for backwards compatibility, serialized name 
+    prefs->Add(TOC_VISIBLE_STR, ds->tocVisible);
     prefs->Add(SIDEBAR_DX_STR, ds->sidebarDx);
 
     ScopedMem<char> zoom(str::Format("%.4f", ds->zoomVirtual));
@@ -375,7 +376,7 @@ static DisplayState * DeserializeDisplayState(BencDict *dict, bool globalPrefsOn
     Retrieve(dict, WINDOW_Y_STR, ds->windowPos.y);
     Retrieve(dict, WINDOW_DX_STR, ds->windowPos.dx);
     Retrieve(dict, WINDOW_DY_STR, ds->windowPos.dy);
-    Retrieve(dict, SHOW_TOC_STR, ds->showToc);
+    Retrieve(dict, TOC_VISIBLE_STR, ds->tocVisible);
     Retrieve(dict, SIDEBAR_DX_STR, ds->sidebarDx);
     Retrieve(dict, ZOOM_VIRTUAL_STR, ds->zoomVirtual);
     Retrieve(dict, USE_GLOBAL_VALUES_STR, ds->useGlobalValues);
@@ -408,7 +409,7 @@ static void DeserializePrefs(const char *prefsTxt, SerializableGlobalPrefs& glob
         goto Exit;
 
     Retrieve(global, SHOW_TOOLBAR_STR, globalPrefs.showToolbar);
-    Retrieve(global, SHOW_TOC_STR, globalPrefs.showToc);
+    Retrieve(global, TOC_VISIBLE_STR, globalPrefs.tocVisible);
     Retrieve(global, SIDEBAR_DX_STR, globalPrefs.sidebarDx);
     Retrieve(global, PDF_ASSOCIATE_DONT_ASK_STR, globalPrefs.pdfAssociateDontAskAgain);
     Retrieve(global, PDF_ASSOCIATE_ASSOCIATE_STR, globalPrefs.pdfAssociateShouldAssociate);
