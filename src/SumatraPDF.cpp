@@ -732,7 +732,7 @@ static TCHAR *FavReadableName(FavName *fn)
     if (fn->name) {
         return str::Format(_T("%s (page %d)"), fn->name, fn->pageNo);
     } else {
-        return str::Format(_T("Page %d"), fn->pageNo);
+        return str::Format(_T("page %d"), fn->pageNo);
     }
 }
 
@@ -6150,22 +6150,20 @@ static LRESULT CALLBACK WndProcFavBox(HWND hwnd, UINT message, WPARAM wParam, LP
     return CallWindowProc(DefWndProcFavBox, hwnd, message, wParam, lParam);
 }
 
-static void CreateSidebar(WindowInfo* win)
+static void CreateToc(WindowInfo *win)
 {
-    HWND tmp, title, hwndClose;
-
     // toc windows
-    tmp = CreateWindow(SPLITER_CLASS_NAME, _T(""), WS_CHILDWINDOW, 0, 0, 0, 0,
+    HWND tmp = CreateWindow(SPLITER_CLASS_NAME, _T(""), WS_CHILDWINDOW, 0, 0, 0, 0,
                        win->hwndFrame, (HMENU)0, ghinst, NULL);
     win->hwndSidebarSpliter = tmp;
     win->hwndTocBox = CreateWindow(WC_STATIC, _T(""), WS_CHILD,
                         0,0,gGlobalPrefs.sidebarDx,0, win->hwndFrame, (HMENU)0, ghinst, NULL);
-    title = CreateWindow(WC_STATIC, _T(""), WS_VISIBLE | WS_CHILD,
+    HWND title = CreateWindow(WC_STATIC, _T(""), WS_VISIBLE | WS_CHILD,
                          0,0,0,0, win->hwndTocBox, (HMENU)IDC_TOC_TITLE, ghinst, NULL);
     SetWindowFont(title, gDefaultGuiFont, FALSE);
     win::SetText(title, _TR("Bookmarks"));
 
-    hwndClose = CreateWindow(WC_STATIC, _T(""),
+    HWND hwndClose = CreateWindow(WC_STATIC, _T(""),
                         SS_OWNERDRAW | SS_NOTIFY | WS_CHILD | WS_VISIBLE,
                         0, 0, 16, 16, win->hwndTocBox, (HMENU)IDC_TOC_CLOSE, ghinst, NULL);
     SetClassLongPtr(hwndClose, GCLP_HCURSOR, (LONG_PTR)gCursorHand);
@@ -6192,16 +6190,18 @@ static void CreateSidebar(WindowInfo* win)
     if (NULL == DefWndProcTocBox)
         DefWndProcTocBox = (WNDPROC)GetWindowLongPtr(win->hwndTocBox, GWLP_WNDPROC);
     SetWindowLongPtr(win->hwndTocBox, GWLP_WNDPROC, (LONG_PTR)WndProcTocBox);
+}
 
-    // favorites windows
+static void CreateFavorites(WindowInfo *win)
+{
     win->hwndFavBox = CreateWindow(WC_STATIC, _T(""), WS_CHILD,
                         0,0,gGlobalPrefs.sidebarDx,0, win->hwndFrame, (HMENU)0, ghinst, NULL);
-    title = CreateWindow(WC_STATIC, _T(""), WS_VISIBLE | WS_CHILD,
+    HWND title = CreateWindow(WC_STATIC, _T(""), WS_VISIBLE | WS_CHILD,
                          0,0,0,0, win->hwndFavBox, (HMENU)IDC_FAV_TITLE, ghinst, NULL);
     SetWindowFont(title, gDefaultGuiFont, FALSE);
     win::SetText(title, _TR("Favorites"));
 
-    hwndClose = CreateWindow(WC_STATIC, _T(""),
+    HWND hwndClose = CreateWindow(WC_STATIC, _T(""),
                         SS_OWNERDRAW | SS_NOTIFY | WS_CHILD | WS_VISIBLE,
                         0, 0, 16, 16, win->hwndFavBox, (HMENU)IDC_FAV_CLOSE, ghinst, NULL);
     SetClassLongPtr(hwndClose, GCLP_HCURSOR, (LONG_PTR)gCursorHand);
@@ -6228,6 +6228,12 @@ static void CreateSidebar(WindowInfo* win)
     if (NULL == DefWndProcFavBox)
         DefWndProcFavBox = (WNDPROC)GetWindowLongPtr(win->hwndFavBox, GWLP_WNDPROC);
     SetWindowLongPtr(win->hwndFavBox, GWLP_WNDPROC, (LONG_PTR)WndProcFavBox);
+}
+
+static void CreateSidebar(WindowInfo* win)
+{
+    CreateToc(win);
+    CreateFavorites(win);
 
     if (win->tocVisible) {
         InvalidateRect(win->hwndTocBox, NULL, TRUE);
