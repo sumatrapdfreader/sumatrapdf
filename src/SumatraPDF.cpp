@@ -5862,8 +5862,6 @@ static void LayoutTreeContainer(HWND hwndContainer, int id)
     MoveWindow(hwndTree, 0, size.cy, rc.dx, rc.dy - size.cy, true);
 }
 
-static WNDPROC DefWndProcTocBox = NULL;
-
 static LRESULT OnTocTreeNotify(WindowInfo *win, LPNMTREEVIEW pnmtv)
 {
     switch (pnmtv->hdr.code) 
@@ -5930,6 +5928,8 @@ static LRESULT OnTocTreeNotify(WindowInfo *win, LPNMTREEVIEW pnmtv)
     return -1;
 }
 
+#define BUTTON_HOVER_TEXT _T("1")
+
 // TODO: this color makes the 'x' invisible, if the background is too dark
 #define COL_CLOSE_X RGB(0xa0, 0xa0, 0xa0)
 #define COL_CLOSE_X_HOVER RGB(0xf9, 0xeb, 0xeb)  // white-ish
@@ -5938,21 +5938,26 @@ static LRESULT OnTocTreeNotify(WindowInfo *win, LPNMTREEVIEW pnmtv)
 // Draws the 'x' close button in regular state or onhover state
 // Tries to mimic style of Chrome tab close button
 // TODO:
-// * need to manually track onhover state of close button window by subclassing
-//   static control wnd proc and looking at WM_MOUSEMOVE and WM_MOUSELEAVE and
-//   force repainting
 // * to draw onhover style nicely we need gdi+, anti-alising and semi-transparency
 //   (or draw an icon/bitmap instead of using GDI painting)
-static void DrawCloseButton(HDC hdc, RectI rect, bool onHover)
+static void DrawCloseButton(DRAWITEMSTRUCT *dis)
 {
+    HDC hdc = dis->hDC;
+    RectI r(RectI::FromRECT(dis->rcItem));
+    ScopedMem<TCHAR> s(win::GetText(dis->hwndItem));
+    bool onHover = str::Eq(s, BUTTON_HOVER_TEXT);
     SetBkMode(hdc, TRANSPARENT);
+
+    HBRUSH br = GetSysColorBrush(COLOR_BTNFACE); // hoping this is always the right color
+    FillRect(hdc, &dis->rcItem, br);
+
     // in onhover state, background is a red-dish circle
     if (onHover) {
         HBRUSH br = CreateSolidBrush(COL_CLOSE_HOVER_BG);
         HPEN pen = CreatePen(PS_NULL, 0, 0);
         HGDIOBJ oldBr = SelectObject(hdc, br);
         HGDIOBJ oldPen = SelectObject(hdc, pen);
-        Ellipse(hdc, 0, 0, rect.dx, rect.dy);
+        Ellipse(hdc, 0, 0, r.dx, r.dy);
         SelectObject(hdc, oldPen);
         SelectObject(hdc, oldBr);
         DeleteObject(pen);
@@ -5965,26 +5970,61 @@ static void DrawCloseButton(HDC hdc, RectI rect, bool onHover)
     HGDIOBJ oldPen = SelectObject(hdc, pen);
     if (onHover) {
         MoveToEx(hdc, 4, 4, NULL);
-        LineTo(hdc, rect.dx - 6, rect.dy - 6);
-        MoveToEx(hdc, rect.dx - 6, 4, NULL);
-        LineTo(hdc, 4, rect.dy - 6);
+        LineTo(hdc, r.dx - 6, r.dy - 6);
+        MoveToEx(hdc, r.dx - 6, 4, NULL);
+        LineTo(hdc, 4, r.dy - 6);
     } else {
         MoveToEx(hdc, 4, 5, NULL);
-        LineTo(hdc, rect.dx - 6, rect.dy - 5);
-        MoveToEx(hdc, rect.dx - 6, 5, NULL);
-        LineTo(hdc, 4, rect.dy - 5);
+        LineTo(hdc, r.dx - 6, r.dy - 5);
+        MoveToEx(hdc, r.dx - 6, 5, NULL);
+        LineTo(hdc, 4, r.dy - 5);
     }
     SelectObject(hdc, oldPen);
-    // DrawFrameControl(hdc, &rect.ToRECT(), DFC_CAPTION, DFCS_CAPTIONCLOSE | DFCS_FLAT);
 }
 
-static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+static WNDPROC DefWndProcCloseButton = NULL;
+// logic needed to track on hover state of a close button by looking at
+// WM_MOUSEMOVE and WM_MOUSELEAVE messages.
+// We call it a button, but hwnd is really a static text.
+// We persist the state by setting hwnd's text: if cursor is over the hwnd,
+// text is "1", else it's something else.
+static  LRESULT CALLBACK WndProcCloseButton(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    bool stateChanged = false;
+    if (WM_MOUSEMOVE == msg) {
+        ScopedMem<TCHAR> s(win::GetText(hwnd));
+        if (!str::Eq(s, BUTTON_HOVER_TEXT)) {
+            win::SetText(hwnd, BUTTON_HOVER_TEXT);
+            stateChanged = true;
+            // ask for WM_MOUSELEAVE notifications
+            TRACKMOUSEEVENT tme = { 0 };
+            tme.cbSize = sizeof(tme);
+            tme.dwFlags = TME_LEAVE;
+            tme.hwndTrack = hwnd;
+            TrackMouseEvent(&tme);
+        }
+    } else if (WM_MOUSELEAVE == msg) {
+        win::SetText(hwnd, _T(""));
+        stateChanged = true;
+    }
+
+    if (stateChanged) {
+        InvalidateRect(hwnd, NULL, TRUE);
+        UpdateWindow(hwnd);
+    }
+
+    return CallWindowProc(DefWndProcCloseButton, hwnd, msg, wParam, lParam);
+}
+
+static WNDPROC DefWndProcTocBox = NULL;
+
+static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     WindowInfo *win = FindWindowInfoByHwnd(hwnd);
     if (!win)
-        return CallWindowProc(DefWndProcTocBox, hwnd, message, wParam, lParam);
+        return CallWindowProc(DefWndProcTocBox, hwnd, msg, wParam, lParam);
 
-    switch (message) {
+    switch (msg) {
         case WM_SIZE:
             LayoutTreeContainer(hwnd, IDC_TOC_BOX);
             break;
@@ -5992,7 +6032,7 @@ static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT message, WPARAM wParam, LP
         case WM_DRAWITEM:
             if (IDC_TOC_CLOSE == wParam) {
                 DRAWITEMSTRUCT *dis = (DRAWITEMSTRUCT *)lParam;
-                DrawCloseButton(dis->hDC, RectI::FromRECT(dis->rcItem), false);
+                DrawCloseButton(dis);
                 return TRUE;
             }
             break;
@@ -6011,29 +6051,31 @@ static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT message, WPARAM wParam, LP
             }
             break;
     }
-    return CallWindowProc(DefWndProcTocBox, hwnd, message, wParam, lParam);
+    return CallWindowProc(DefWndProcTocBox, hwnd, msg, wParam, lParam);
 }
 
 static WNDPROC DefWndProcFavTree = NULL;
-static LRESULT CALLBACK WndProcFavTree(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+static LRESULT CALLBACK WndProcFavTree(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     WindowInfo *win = FindWindowInfoByHwnd(hwnd);
     if (!win)
-        return CallWindowProc(DefWndProcFavTree, hwnd, message, wParam, lParam);
+        return CallWindowProc(DefWndProcFavTree, hwnd, msg, wParam, lParam);
 
-    switch (message) {
+    switch (msg) {
+
         case WM_CHAR:
             if (VK_ESCAPE == wParam && gGlobalPrefs.escToExit)
                 DestroyWindow(win->hwndFrame);
             break;
+
         case WM_MOUSEWHEEL:
             // scroll the canvas if the cursor isn't over the ToC tree
             if (!IsCursorOverWindow(win->hwndFavTree))
-                return SendMessage(win->hwndCanvas, message, wParam, lParam);
+                return SendMessage(win->hwndCanvas, msg, wParam, lParam);
             break;
     }
 
-    return CallWindowProc(DefWndProcFavTree, hwnd, message, wParam, lParam);
+    return CallWindowProc(DefWndProcFavTree, hwnd, msg, wParam, lParam);
 }
 
 class GoToFavoriteWorkItem : public UIThreadWorkItem
@@ -6174,7 +6216,7 @@ static LRESULT CALLBACK WndProcFavBox(HWND hwnd, UINT message, WPARAM wParam, LP
         case WM_DRAWITEM:
             if (IDC_FAV_CLOSE == wParam) {
                 DRAWITEMSTRUCT *dis = (DRAWITEMSTRUCT *)lParam;
-                DrawCloseButton(dis->hDC, RectI::FromRECT(dis->rcItem), false);
+                DrawCloseButton(dis);
                 return TRUE;
             }
             break;
@@ -6236,6 +6278,10 @@ static void CreateToc(WindowInfo *win)
     if (NULL == DefWndProcTocBox)
         DefWndProcTocBox = (WNDPROC)GetWindowLongPtr(win->hwndTocBox, GWLP_WNDPROC);
     SetWindowLongPtr(win->hwndTocBox, GWLP_WNDPROC, (LONG_PTR)WndProcTocBox);
+
+    if (NULL == DefWndProcCloseButton)
+        DefWndProcCloseButton = (WNDPROC)GetWindowLongPtr(hwndClose, GWLP_WNDPROC);
+    SetWindowLongPtr(hwndClose, GWLP_WNDPROC, (LONG_PTR)WndProcCloseButton);
 }
 
 static void CreateFavorites(WindowInfo *win)
@@ -6274,6 +6320,11 @@ static void CreateFavorites(WindowInfo *win)
     if (NULL == DefWndProcFavBox)
         DefWndProcFavBox = (WNDPROC)GetWindowLongPtr(win->hwndFavBox, GWLP_WNDPROC);
     SetWindowLongPtr(win->hwndFavBox, GWLP_WNDPROC, (LONG_PTR)WndProcFavBox);
+
+    if (NULL == DefWndProcCloseButton)
+        DefWndProcCloseButton = (WNDPROC)GetWindowLongPtr(hwndClose, GWLP_WNDPROC);
+    SetWindowLongPtr(hwndClose, GWLP_WNDPROC, (LONG_PTR)WndProcCloseButton);
+
 }
 
 static void CreateSidebar(WindowInfo* win)
