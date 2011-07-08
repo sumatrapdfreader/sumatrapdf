@@ -158,8 +158,23 @@ Thu-&Phóng
 (of %d)
 (trên %d)
 
+(page %d)
+(trang %d)
+
 About SumatraPDF
 Giới thiệu SumatraPDF
+
+Add Favorite
+Thêm Ưa thích
+
+Add page %d to favorites
+Thêm trang %d vào Ưa thích
+
+Add page %d to favorites with (optional) name:
+Thêm trang %d vào Ưa thích với tên (tùy chọn):
+
+Add to favorites
+Thêm vào Ưa thích
 
 Advanced
 Nâng cao
@@ -248,6 +263,9 @@ Chép chú thích
 Copying text was denied (copying as image only)
 Chép văn bản bị từ chối (chỉ được chép như hình ảnh)
 
+Could not obtain Printer properties
+Không thể có được thuộc tính Máy in
+
 Could not open Printer
 Không mở được máy in.
 
@@ -259,6 +277,9 @@ Không hiện được trang
 
 Created:
 Ngày tạo:
+
+Current file
+Tập tin hiện hành
 
 Custom &Zoom...\tCtrl-Y
 Thu phóng &tuỳ ý...\tCtrl-Y
@@ -299,6 +320,9 @@ Nhập dòng lệnh gọi khi bạn nhấp đúp vào tập tin PDF:
 Error loading %s
 Không mở %s được
 
+F&avorites
+Ưa thích
+
 F&orward\tAlt+Right Arrow
 Tiếp tục\tAlt+Mũi tên phải
 
@@ -310,6 +334,9 @@ Trang kép
 
 Failed to save a file
 Không lưu được tập tin.
+
+Favorites
+Ưa thích
 
 File Size:
 Kích thước:
@@ -458,6 +485,9 @@ Tập tin PDF
 Pa&ge...\tCtrl-G
 Trang...\tCtrl-G
 
+Page %d
+Trang %d
+
 Page Size:
 Kích thước trang:
 
@@ -488,6 +518,9 @@ In
 Print range
 Giới hạn vùng in
 
+Printer with given name doesn't exist
+Máy in với tên được cho không tồn tại
+
 Printing is still in progress. Abort and start over?
 Vẫn còn đang in. Thoát và bắt đầu lại?
 
@@ -499,6 +532,12 @@ Lỗi in.
 
 Remember &opened files
 Nhớ các tập tin đã mở
+
+Remove from favorites
+Xóa khỏi Ưa thích
+
+Remove page %d from favorites
+Xoá trang %d khỏi Ưa thích
 
 Rotate &Left\tCtrl-Shift--
 Quay trái\tCtrl-Shift--
@@ -535,6 +574,9 @@ Hiện thanh công cụ
 
 Show &pages continuously
 Xem trang liên tiếp
+
+Show Favorites
+Hiện Ưa thích
 
 Show frequently read
 Hiện Đọc thường xuyên
@@ -619,20 +661,4 @@ copying text
 
 printing document
 đang in tập tin
-
-# Untranslated:
-#(page %d)
-#Add Favorite
-#Add page %d to favorites
-#Add page %d to favorites with (optional) name:
-#Add to favorites
-#Could not obtain Printer properties
-#Current file
-#F&avorites
-#Favorites
-#Page %d
-#Printer with given name doesn't exist
-#Remove from favorites
-#Remove page %d from favorites
-#Show Favorites
 

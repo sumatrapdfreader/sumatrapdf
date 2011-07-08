@@ -159,8 +159,23 @@ Contributor: Victor Kozyakin
 (of %d)
 (из %d)
 
+(page %d)
+(стр. %d)
+
 About SumatraPDF
 О программе SumatraPDF
+
+Add Favorite
+Добавить "Избранное"
+
+Add page %d to favorites
+Добавить стр. %d к избранному
+
+Add page %d to favorites with (optional) name:
+Добавить стр. %d к избранному с (необязательным) именем:
+
+Add to favorites
+Добавить к избранному
 
 Advanced
 Дополнительно
@@ -249,6 +264,9 @@ Copy Co&mment
 Copying text was denied (copying as image only)
 Скопировать текст невозможно (копируется как изображение)
 
+Could not obtain Printer properties
+Не удалось определить свойства принтера
+
 Could not open Printer
 Принтер недоступен
 
@@ -260,6 +278,9 @@ Couldn't render the page
 
 Created:
 Создан:
+
+Current file
+Текущий файл
 
 Custom &Zoom...\tCtrl-Y
 &Указать масштаб...\tCtrl-Y
@@ -300,6 +321,9 @@ Enter the command-line to invoke when you double-click on the PDF document:
 Error loading %s
 Ошибка загрузки %s
 
+F&avorites
+&Избранное
+
 F&orward\tAlt+Right Arrow
 &Вперёд\tAlt+Стрелка вправо
 
@@ -311,6 +335,9 @@ Facing
 
 Failed to save a file
 Ошибка сохранения файла
+
+Favorites
+Избранное
 
 File Size:
 Размер файла:
@@ -459,6 +486,9 @@ PDF documents
 Pa&ge...\tCtrl-G
 &Указанная страница...\tCtrl-G
 
+Page %d
+Стр. %d
+
 Page Size:
 Формат страницы:
 
@@ -489,6 +519,9 @@ Print
 Print range
 Диапазон печати
 
+Printer with given name doesn't exist
+Принтер с данным именем не найден
+
 Printing is still in progress. Abort and start over?
 Печать ещё не завершена. Отменить и начать заново?
 
@@ -500,6 +533,12 @@ Printing problem.
 
 Remember &opened files
 Запоминать &открытые файлы
+
+Remove from favorites
+Удалить из избранного
+
+Remove page %d from favorites
+Удалить стр. %d из избранного
 
 Rotate &Left\tCtrl-Shift--
 Повернуть в&лево\tCtrl-Shift--
@@ -536,6 +575,9 @@ Show &Toolbar
 
 Show &pages continuously
 &Разрешить прокрутку
+
+Show Favorites
+Показать "Избранное"
 
 Show frequently read
 Показать часто используемые документы
@@ -620,20 +662,4 @@ copying text
 
 printing document
 печатается документ
-
-# Untranslated:
-#(page %d)
-#Add Favorite
-#Add page %d to favorites
-#Add page %d to favorites with (optional) name:
-#Add to favorites
-#Could not obtain Printer properties
-#Current file
-#F&avorites
-#Favorites
-#Page %d
-#Printer with given name doesn't exist
-#Remove from favorites
-#Remove page %d from favorites
-#Show Favorites
 
