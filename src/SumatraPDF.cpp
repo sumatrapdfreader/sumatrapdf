@@ -5930,56 +5930,55 @@ static LRESULT OnTocTreeNotify(WindowInfo *win, LPNMTREEVIEW pnmtv)
 
 #define BUTTON_HOVER_TEXT _T("1")
 
-// TODO: this color makes the 'x' invisible, if the background is too dark
 #define COL_CLOSE_X RGB(0xa0, 0xa0, 0xa0)
 #define COL_CLOSE_X_HOVER RGB(0xf9, 0xeb, 0xeb)  // white-ish
-#define COL_CLOSE_HOVER_BG RGB(0xC1, 0x35, 0x35) // red
+#define COL_CLOSE_HOVER_BG RGB(0xC1, 0x35, 0x35) // red-ish
 
 // Draws the 'x' close button in regular state or onhover state
-// Tries to mimic style of Chrome tab close button
-// TODO:
-// * to draw onhover style nicely we need gdi+, anti-alising and semi-transparency
-//   (or draw an icon/bitmap instead of using GDI painting)
+// Tries to mimic visual style of Chrome tab close button
 static void DrawCloseButton(DRAWITEMSTRUCT *dis)
 {
-    HDC hdc = dis->hDC;
+    using namespace Gdiplus;
+
     RectI r(RectI::FromRECT(dis->rcItem));
     ScopedMem<TCHAR> s(win::GetText(dis->hwndItem));
     bool onHover = str::Eq(s, BUTTON_HOVER_TEXT);
-    SetBkMode(hdc, TRANSPARENT);
 
-    HBRUSH br = GetSysColorBrush(COLOR_BTNFACE); // hoping this is always the right color
-    FillRect(hdc, &dis->rcItem, br);
+    Graphics g(dis->hDC);
+    g.SetCompositingQuality(CompositingQualityHighQuality);
+    g.SetSmoothingMode(SmoothingModeAntiAlias);
+    g.SetPageUnit(UnitPixel);
 
-    // in onhover state, background is a red-dish circle
+    Color c;
+    c.SetFromCOLORREF(GetSysColor(COLOR_BTNFACE)); // hoping this is always the right color
+    SolidBrush bgBrush(c); 
+    g.FillRectangle(&bgBrush, r.x, r.y, r.dx, r.dy);
+
+    // in onhover state, background is a red-ish circle
     if (onHover) {
-        HBRUSH br = CreateSolidBrush(COL_CLOSE_HOVER_BG);
-        HPEN pen = CreatePen(PS_NULL, 0, 0);
-        HGDIOBJ oldBr = SelectObject(hdc, br);
-        HGDIOBJ oldPen = SelectObject(hdc, pen);
-        Ellipse(hdc, 0, 0, r.dx, r.dy);
-        SelectObject(hdc, oldPen);
-        SelectObject(hdc, oldBr);
-        DeleteObject(pen);
-        DeleteObject(br);
+        c.SetFromCOLORREF(COL_CLOSE_HOVER_BG);
+        SolidBrush b(c);
+        g.FillEllipse(&b, r.x, r.y, r.dx-2, r.dy-2);
     }
 
     // draw 'x'
-    COLORREF xCol = onHover ? COL_CLOSE_X_HOVER : COL_CLOSE_X;
-    HPEN pen = CreatePen(PS_SOLID, 2, xCol);
-    HGDIOBJ oldPen = SelectObject(hdc, pen);
+    c.SetFromCOLORREF(onHover ? COL_CLOSE_X_HOVER : COL_CLOSE_X);
+    Pen p(c, 2);
     if (onHover) {
-        MoveToEx(hdc, 4, 4, NULL);
-        LineTo(hdc, r.dx - 6, r.dy - 6);
-        MoveToEx(hdc, r.dx - 6, 4, NULL);
-        LineTo(hdc, 4, r.dy - 6);
+        Gdiplus::Point p1(4,      4);
+        Gdiplus::Point p2(r.dx-6, r.dy-6);
+        Gdiplus::Point p3(r.dx-6, 4);
+        Gdiplus::Point p4(4,      r.dy-6);
+        g.DrawLine(&p, p1, p2);
+        g.DrawLine(&p, p3, p4);
     } else {
-        MoveToEx(hdc, 4, 5, NULL);
-        LineTo(hdc, r.dx - 6, r.dy - 5);
-        MoveToEx(hdc, r.dx - 6, 5, NULL);
-        LineTo(hdc, 4, r.dy - 5);
+        Gdiplus::Point p1(4,      5);
+        Gdiplus::Point p2(r.dx-6, r.dy-5);
+        Gdiplus::Point p3(r.dx-6, 5);
+        Gdiplus::Point p4(4,      r.dy-5);
+        g.DrawLine(&p, p1, p2);
+        g.DrawLine(&p, p3, p4);
     }
-    SelectObject(hdc, oldPen);
 }
 
 static WNDPROC DefWndProcCloseButton = NULL;
@@ -6254,7 +6253,6 @@ static void CreateToc(WindowInfo *win)
     HWND hwndClose = CreateWindow(WC_STATIC, _T(""),
                         SS_OWNERDRAW | SS_NOTIFY | WS_CHILD | WS_VISIBLE,
                         0, 0, 16, 16, win->hwndTocBox, (HMENU)IDC_TOC_CLOSE, ghinst, NULL);
-    SetClassLongPtr(hwndClose, GCLP_HCURSOR, (LONG_PTR)gCursorHand);
 
     win->hwndTocTree = CreateWindowEx(WS_EX_STATICEDGE, WC_TREEVIEW, _T("TOC"),
                         TVS_HASBUTTONS|TVS_HASLINES|TVS_LINESATROOT|TVS_SHOWSELALWAYS|
@@ -6296,7 +6294,6 @@ static void CreateFavorites(WindowInfo *win)
     HWND hwndClose = CreateWindow(WC_STATIC, _T(""),
                         SS_OWNERDRAW | SS_NOTIFY | WS_CHILD | WS_VISIBLE,
                         0, 0, 16, 16, win->hwndFavBox, (HMENU)IDC_FAV_CLOSE, ghinst, NULL);
-    SetClassLongPtr(hwndClose, GCLP_HCURSOR, (LONG_PTR)gCursorHand);
 
     win->hwndFavTree = CreateWindowEx(WS_EX_STATICEDGE, WC_TREEVIEW, _T("Fav"),
                         TVS_HASBUTTONS|TVS_HASLINES|TVS_LINESATROOT|TVS_SHOWSELALWAYS|
