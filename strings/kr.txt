@@ -461,6 +461,8 @@ printing document
 #&Save As...
 #&Single Page\tCtrl-6
 #&Use original page sizes
+#(page %d)
+#Add Favorite
 #Add page %d to favorites
 #Add page %d to favorites with (optional) name:
 #Add to favorites
@@ -472,6 +474,8 @@ printing document
 #Continuous Book View
 #Copy &Link Address
 #Copy Co&mment
+#Could not obtain Printer properties
+#Current file
 #Default PDF reader can't be changed in portable mode
 #Denied Permissions:
 #DjVu documents
@@ -494,9 +498,11 @@ printing document
 #No synchronization info at this position
 #Open a document...
 #P&roperties
+#Page %d
 #Postscript documents
 #Pr&esentation\tCtrl-L
 #Print
+#Printer with given name doesn't exist
 #Printing is still in progress. Abort and start over?
 #Printing page %d of %d...
 #Remove from favorites

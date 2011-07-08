@@ -235,6 +235,8 @@ Duputsa
 #&Use original page sizes
 #&Yes
 #(of %d)
+#(page %d)
+#Add Favorite
 #Add page %d to favorites
 #Add page %d to favorites with (optional) name:
 #Add to favorites
@@ -260,9 +262,11 @@ Duputsa
 #Copy &Link Address
 #Copy Co&mment
 #Copying text was denied (copying as image only)
+#Could not obtain Printer properties
 #Couldn't initialize printer
 #Couldn't render the page
 #Created:
+#Current file
 #Custom &Zoom...\tCtrl-Y
 #Default &Layout:
 #Default &Zoom:
@@ -307,6 +311,7 @@ Duputsa
 #PDF Producer:
 #PDF Version:
 #PDF documents
+#Page %d
 #Page Size:
 #Page number %u inexistant
 #Page scaling
@@ -315,6 +320,7 @@ Duputsa
 #Pr&esentation\tCtrl-L
 #Print
 #Print range
+#Printer with given name doesn't exist
 #Printing is still in progress. Abort and start over?
 #Printing page %d of %d...
 #Remember &opened files

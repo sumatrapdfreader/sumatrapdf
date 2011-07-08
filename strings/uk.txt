@@ -579,17 +579,23 @@ printing document
 #&Pin Document
 #&Remove Document
 #&Single Page\tCtrl-6
+#(page %d)
+#Add Favorite
 #Add page %d to favorites
 #Add page %d to favorites with (optional) name:
 #Add to favorites
+#Could not obtain Printer properties
+#Current file
 #DjVu documents
 #F&avorites
 #Favorites
 #Frequently Read
 #Hide frequently read
 #Open a document...
+#Page %d
 #Postscript documents
 #Print
+#Printer with given name doesn't exist
 #Printing is still in progress. Abort and start over?
 #Printing page %d of %d...
 #Remove from favorites

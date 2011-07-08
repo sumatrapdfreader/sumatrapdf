@@ -402,6 +402,8 @@ Faktor uvećanja
 #&Shrink pages to printable area (if necessary)
 #&Single Page\tCtrl-6
 #&Use original page sizes
+#(page %d)
+#Add Favorite
 #Add page %d to favorites
 #Add page %d to favorites with (optional) name:
 #Add to favorites
@@ -420,7 +422,9 @@ Faktor uvećanja
 #Copy &Link Address
 #Copy Co&mment
 #Copying text was denied (copying as image only)
+#Could not obtain Printer properties
 #Created:
+#Current file
 #Denied Permissions:
 #DjVu documents
 #Document Properties
@@ -446,12 +450,14 @@ Faktor uvećanja
 #P&roperties\tCtrl-D
 #PDF Producer:
 #PDF Version:
+#Page %d
 #Page Size:
 #Page scaling
 #Postscript documents
 #Pr&esentation\tCtrl-L
 #Print
 #Print range
+#Printer with given name doesn't exist
 #Printing is still in progress. Abort and start over?
 #Printing page %d of %d...
 #Remove from favorites

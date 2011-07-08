@@ -591,6 +591,8 @@ Nyomtatás
 #&Copy Selection
 #&Facing\tCtrl-7
 #&Single Page\tCtrl-6
+#(page %d)
+#Add Favorite
 #Add page %d to favorites
 #Add page %d to favorites with (optional) name:
 #Add to favorites
@@ -598,10 +600,14 @@ Nyomtatás
 #Bookmark shortcut to page %d of %s
 #Copy &Link Address
 #Copy Co&mment
+#Could not obtain Printer properties
+#Current file
 #Error loading %s
 #F&avorites
 #Favorites
 #Found text at page %d (again)
+#Page %d
+#Printer with given name doesn't exist
 #Printing page %d of %d...
 #Remove from favorites
 #Remove page %d from favorites

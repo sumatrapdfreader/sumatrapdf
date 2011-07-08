@@ -596,14 +596,20 @@ printing document
 #&Pin Document
 #&Remove Document
 #&Single Page\tCtrl-6
+#(page %d)
+#Add Favorite
 #Add page %d to favorites
 #Add page %d to favorites with (optional) name:
 #Add to favorites
+#Could not obtain Printer properties
+#Current file
 #DjVu documents
 #F&avorites
 #Favorites
+#Page %d
 #Postscript documents
 #Print
+#Printer with given name doesn't exist
 #Remove from favorites
 #Remove page %d from favorites
 #Show Favorites

@@ -509,6 +509,8 @@ printing document
 #&Remove Document
 #&Save As...
 #&Single Page\tCtrl-6
+#(page %d)
+#Add Favorite
 #Add page %d to favorites
 #Add page %d to favorites with (optional) name:
 #Add to favorites
@@ -518,6 +520,8 @@ printing document
 #Comic books
 #Copy &Link Address
 #Copy Co&mment
+#Could not obtain Printer properties
+#Current file
 #DjVu documents
 #Error loading %s
 #F&avorites
@@ -529,11 +533,13 @@ printing document
 #No result found around line %u in file %s
 #Open a document...
 #P&roperties
+#Page %d
 #Page scaling
 #Postscript documents
 #Pr&esentation\tCtrl-L
 #Print
 #Print range
+#Printer with given name doesn't exist
 #Printing is still in progress. Abort and start over?
 #Printing page %d of %d...
 #Remove from favorites

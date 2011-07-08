@@ -614,13 +614,19 @@ printing document
 փաստաթուղթը տպվում է
 
 # Untranslated:
+#(page %d)
+#Add Favorite
 #Add page %d to favorites
 #Add page %d to favorites with (optional) name:
 #Add to favorites
+#Could not obtain Printer properties
+#Current file
 #F&avorites
 #Favorites
 #No result found around line %u in file %s
+#Page %d
 #Postscript documents
+#Printer with given name doesn't exist
 #Remove from favorites
 #Remove page %d from favorites
 #Show Favorites

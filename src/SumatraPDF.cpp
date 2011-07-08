@@ -730,13 +730,14 @@ static void AppendRecentFilesToMenu(HMENU m)
 #define MAX_FAV_SUBMENUS 10
 #define MAX_FAV_MENUS 10
 
+// caller has to free() the result
 static TCHAR *FavReadableName(FavName *fn)
 {
     if (fn->name) {
-        return str::Format(_T("%s (page %d)"), fn->name, fn->pageNo);
-    } else {
-        return str::Format(_T("page %d"), fn->pageNo);
+        ScopedMem<TCHAR> pageNo(str::Format(_TR("(page %d)"), fn->pageNo));
+        return str::Join(fn->name, _T(" "), pageNo);
     }
+    return str::Format(_TR("Page %d"), fn->pageNo);
 }
 
 // caller has to free() the result
@@ -827,7 +828,7 @@ static void AppendFavMenus(HMENU m, const TCHAR *currFilePath)
         AppendFavMenuItems(sub, f, menuId, combined);
         if (!combined) {
             if (f == currFileFav)
-                AppendMenu(m, MF_POPUP | MF_STRING, (UINT_PTR)sub, _T("Current file"));
+                AppendMenu(m, MF_POPUP | MF_STRING, (UINT_PTR)sub, _TR("Current file"));
             else
                 AppendMenu(m, MF_POPUP | MF_STRING, (UINT_PTR)sub, fileName);
         }
@@ -7554,7 +7555,7 @@ static bool PrintFile(const TCHAR *fileName, const TCHAR *printerName, bool disp
     if (!str::Parse(devstring, _T("%S,%S,"), &driver, &port) &&
         !str::Parse(devstring, _T("%S,%S"), &driver, &port) || !driver || !port) {
         if (displayErrors)
-            MessageBox(NULL, _T("Printer with given name doesn't exist"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK | (IsUIRightToLeft() ? MB_RTLREADING : 0));
+            MessageBox(NULL, _TR("Printer with given name doesn't exist"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK | (IsUIRightToLeft() ? MB_RTLREADING : 0));
         return false;
     }
 
@@ -7586,7 +7587,7 @@ static bool PrintFile(const TCHAR *fileName, const TCHAR *printerName, bool disp
     if (IDOK != returnCode) {
         // If failure, inform the user, cleanup and return failure.
         if (displayErrors)
-            MessageBox(NULL, _T("Could not obtain Printer properties"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK | (IsUIRightToLeft() ? MB_RTLREADING : 0));
+            MessageBox(NULL, _TR("Could not obtain Printer properties"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK | (IsUIRightToLeft() ? MB_RTLREADING : 0));
         goto Exit;
     }
 

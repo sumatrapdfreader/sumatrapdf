@@ -623,11 +623,17 @@ printing document
 tisk dokumentu
 
 # Untranslated:
+#(page %d)
+#Add Favorite
 #Add page %d to favorites
 #Add page %d to favorites with (optional) name:
 #Add to favorites
+#Could not obtain Printer properties
+#Current file
 #F&avorites
 #Favorites
+#Page %d
+#Printer with given name doesn't exist
 #Remove from favorites
 #Remove page %d from favorites
 #Show Favorites

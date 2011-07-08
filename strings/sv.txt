@@ -538,6 +538,8 @@ skriver ut dokumentet
 #&Remove Document
 #&Save As...
 #&Single Page\tCtrl-6
+#(page %d)
+#Add Favorite
 #Add page %d to favorites
 #Add page %d to favorites with (optional) name:
 #Add to favorites
@@ -547,6 +549,8 @@ skriver ut dokumentet
 #Comic books
 #Copy &Link Address
 #Copy Co&mment
+#Could not obtain Printer properties
+#Current file
 #DjVu documents
 #Error loading %s
 #F&avorites
@@ -557,8 +561,10 @@ skriver ut dokumentet
 #Image files (*.%s)
 #Open a document...
 #P&roperties
+#Page %d
 #Postscript documents
 #Print
+#Printer with given name doesn't exist
 #Printing is still in progress. Abort and start over?
 #Printing page %d of %d...
 #Remove from favorites

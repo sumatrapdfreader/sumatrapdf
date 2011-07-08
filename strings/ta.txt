@@ -463,6 +463,8 @@ printing document
 #&Shrink pages to printable area (if necessary)
 #&Single Page\tCtrl-6
 #&Use original page sizes
+#(page %d)
+#Add Favorite
 #Add page %d to favorites
 #Add page %d to favorites with (optional) name:
 #Add to favorites
@@ -477,6 +479,8 @@ printing document
 #Copy &Link Address
 #Copy Co&mment
 #Copying text was denied (copying as image only)
+#Could not obtain Printer properties
+#Current file
 #DjVu documents
 #Enter the command-line to invoke when you double-click on the PDF document:
 #Error loading %s
@@ -493,11 +497,13 @@ printing document
 #No result found around line %u in file %s
 #Open a document...
 #P&roperties
+#Page %d
 #Page scaling
 #Postscript documents
 #Pr&esentation\tCtrl-L
 #Print
 #Print range
+#Printer with given name doesn't exist
 #Printing is still in progress. Abort and start over?
 #Printing page %d of %d...
 #Remove from favorites
