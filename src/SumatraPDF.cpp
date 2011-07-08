@@ -214,6 +214,9 @@ SerializableGlobalPrefs             gGlobalPrefs = {
     { 0, 0 }, // FILETIME lastPrefUpdate
 };
 
+// this is remembered within a session but not persisted
+static bool gFavVisibleInEmptyWindow = false;
+
 enum MenuToolbarFlags {
     MF_NO_TRANSLATE      = 1 << 0,
     MF_PLUGIN_MODE_ONLY  = 1 << 1,
@@ -3320,7 +3323,7 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
         /* last window - don't delete it */
         delete win->watcher;
         win->watcher = NULL;
-        SetSidebarVisibility(win, false, win->favVisible);
+        SetSidebarVisibility(win, false, gFavVisibleInEmptyWindow);
         ClearTocBox(win);
         win->AbortFinding(true);
         delete win->dm;
@@ -6594,6 +6597,9 @@ static void ToggleFavorites(WindowInfo *win)
     } else {
         SetSidebarVisibility(win, win->tocVisible, true);
         SetFocus(win->hwndFavTree);
+    }
+    if (!win->IsDocLoaded()) {
+        gFavVisibleInEmptyWindow = win->favVisible;
     }
 }
 
