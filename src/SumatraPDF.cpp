@@ -5930,6 +5930,7 @@ static LRESULT OnTocTreeNotify(WindowInfo *win, LPNMTREEVIEW pnmtv)
     return -1;
 }
 
+// TODO: this color makes the 'x' invisible, if the background is too dark
 #define COL_CLOSE_X RGB(0xa0, 0xa0, 0xa0)
 #define COL_CLOSE_X_HOVER RGB(0xf9, 0xeb, 0xeb)  // white-ish
 #define COL_CLOSE_HOVER_BG RGB(0xC1, 0x35, 0x35) // red
@@ -5941,10 +5942,9 @@ static LRESULT OnTocTreeNotify(WindowInfo *win, LPNMTREEVIEW pnmtv)
 //   static control wnd proc and looking at WM_MOUSEMOVE and WM_MOUSELEAVE and
 //   force repainting
 // * to draw onhover style nicely we need gdi+, anti-alising and semi-transparency
-static void DrawCloseButton(DRAWITEMSTRUCT *dis, bool onHover)
+//   (or draw an icon/bitmap instead of using GDI painting)
+static void DrawCloseButton(HDC hdc, RectI rect, bool onHover)
 {
-    HDC hdc = dis->hDC;
-    RECT r = dis->rcItem;
     SetBkMode(hdc, TRANSPARENT);
     // in onhover state, background is a red-dish circle
     if (onHover) {
@@ -5952,7 +5952,7 @@ static void DrawCloseButton(DRAWITEMSTRUCT *dis, bool onHover)
         HPEN pen = CreatePen(PS_NULL, 0, 0);
         HGDIOBJ oldBr = SelectObject(hdc, br);
         HGDIOBJ oldPen = SelectObject(hdc, pen);
-        Ellipse(hdc, 0, 0, RectDx(r), RectDy(r));
+        Ellipse(hdc, 0, 0, rect.dx, rect.dy);
         SelectObject(hdc, oldPen);
         SelectObject(hdc, oldBr);
         DeleteObject(pen);
@@ -5965,17 +5965,17 @@ static void DrawCloseButton(DRAWITEMSTRUCT *dis, bool onHover)
     HGDIOBJ oldPen = SelectObject(hdc, pen);
     if (onHover) {
         MoveToEx(hdc, 4, 4, NULL);
-        LineTo(hdc, RectDx(r)-6, RectDy(r)-6);
-        MoveToEx(hdc, RectDx(r)-6, 4, NULL);
-        LineTo(hdc, 4, RectDy(r)-6);
+        LineTo(hdc, rect.dx - 6, rect.dy - 6);
+        MoveToEx(hdc, rect.dx - 6, 4, NULL);
+        LineTo(hdc, 4, rect.dy - 6);
     } else {
         MoveToEx(hdc, 4, 5, NULL);
-        LineTo(hdc, RectDx(r)-6, RectDy(r)-5);
-        MoveToEx(hdc, RectDx(r)-6, 5, NULL);
-        LineTo(hdc, 4, RectDy(r)-5);
+        LineTo(hdc, rect.dx - 6, rect.dy - 5);
+        MoveToEx(hdc, rect.dx - 6, 5, NULL);
+        LineTo(hdc, 4, rect.dy - 5);
     }
     SelectObject(hdc, oldPen);
-    //DrawFrameControl(dis->hDC, &dis->rcItem, DFC_CAPTION, DFCS_CAPTIONCLOSE | DFCS_FLAT);
+    // DrawFrameControl(hdc, &rect.ToRECT(), DFC_CAPTION, DFCS_CAPTIONCLOSE | DFCS_FLAT);
 }
 
 static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -5992,7 +5992,7 @@ static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT message, WPARAM wParam, LP
         case WM_DRAWITEM:
             if (IDC_TOC_CLOSE == wParam) {
                 DRAWITEMSTRUCT *dis = (DRAWITEMSTRUCT *)lParam;
-                DrawCloseButton(dis, false);
+                DrawCloseButton(dis->hDC, RectI::FromRECT(dis->rcItem), false);
                 return TRUE;
             }
             break;
@@ -6174,7 +6174,7 @@ static LRESULT CALLBACK WndProcFavBox(HWND hwnd, UINT message, WPARAM wParam, LP
         case WM_DRAWITEM:
             if (IDC_FAV_CLOSE == wParam) {
                 DRAWITEMSTRUCT *dis = (DRAWITEMSTRUCT *)lParam;
-                DrawCloseButton(dis, false);
+                DrawCloseButton(dis->hDC, RectI::FromRECT(dis->rcItem), false);
                 return TRUE;
             }
             break;

@@ -135,16 +135,6 @@ inline bool IsShiftPressed() { return IsKeyPressed(VK_SHIFT); }
 inline bool IsAltPressed() { return IsKeyPressed(VK_MENU); }
 inline bool IsCtrlPressed() { return IsKeyPressed(VK_CONTROL); }
 
-int inline RectDx(RECT& r)
-{
-    return r.right - r.left;
-}
-
-int inline RectDy(RECT& r)
-{
-    return r.bottom - r.top;
-}
-
 namespace win {
 
 inline size_t GetTextLen(HWND hwnd)
