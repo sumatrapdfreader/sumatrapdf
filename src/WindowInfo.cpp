@@ -201,9 +201,10 @@ void WindowInfo::UpdateToCExpansionState(HTREEITEM hItem)
     }
 }
 
-void WindowInfo::DisplayStateFromToC(DisplayState *ds)
+void WindowInfo::UpdateSidebarDisplayState(DisplayState *ds)
 {
     ds->tocVisible = tocVisible;
+    ds->favVisible = favVisible;
 
     if (tocLoaded) {
         tocState.Reset();

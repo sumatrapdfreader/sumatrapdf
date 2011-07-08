@@ -214,7 +214,7 @@ public:
     HTREEITEM TreeItemForPageNo(HTREEITEM hItem, int pageNo);
     void UpdateTocSelection(int currPageNo);
     void UpdateToCExpansionState(HTREEITEM hItem);
-    void DisplayStateFromToC(DisplayState *ds);
+    void UpdateSidebarDisplayState(DisplayState *ds);
 
     void CreateInfotip(const TCHAR *text, RectI& rc);
     void DeleteInfotip();

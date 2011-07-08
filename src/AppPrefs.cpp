@@ -37,7 +37,8 @@
 #define TOC_VISIBLE_STR             "ShowToc"
 // for backwards compatibility, the serialized name is "Toc DX" and not
 // (more apropriate now) "Sidebar DX".
-#define SIDEBAR_DX_STR                "Toc DX"
+#define FAV_VISIBLE_STR             "FavVisible"
+#define SIDEBAR_DX_STR              "Toc DX"
 #define TOC_STATE_STR               "TocToggles"
 #define BG_COLOR_STR                "BgColor"
 #define ESC_TO_EXIT_STR             "EscToExit"
@@ -161,6 +162,7 @@ static BencDict *DisplayState_Serialize(DisplayState *ds, bool globalPrefsOnly)
     prefs->Add(WINDOW_DY_STR, ds->windowPos.dy);
 
     prefs->Add(TOC_VISIBLE_STR, ds->tocVisible);
+    prefs->Add(FAV_VISIBLE_STR, ds->favVisible);
     prefs->Add(SIDEBAR_DX_STR, ds->sidebarDx);
 
     ScopedMem<char> zoom(str::Format("%.4f", ds->zoomVirtual));
@@ -377,6 +379,7 @@ static DisplayState * DeserializeDisplayState(BencDict *dict, bool globalPrefsOn
     Retrieve(dict, WINDOW_DX_STR, ds->windowPos.dx);
     Retrieve(dict, WINDOW_DY_STR, ds->windowPos.dy);
     Retrieve(dict, TOC_VISIBLE_STR, ds->tocVisible);
+    Retrieve(dict, FAV_VISIBLE_STR, ds->favVisible);
     Retrieve(dict, SIDEBAR_DX_STR, ds->sidebarDx);
     Retrieve(dict, ZOOM_VIRTUAL_STR, ds->zoomVirtual);
     Retrieve(dict, USE_GLOBAL_VALUES_STR, ds->useGlobalValues);

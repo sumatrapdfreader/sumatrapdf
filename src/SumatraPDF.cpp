@@ -261,7 +261,7 @@ static void ClearTocBox(WindowInfo *win);
 static void ToggleFavorites(WindowInfo *win);
 static void UpdateToolbarFindText(WindowInfo& win);
 static void UpdateToolbarPageText(WindowInfo& win, int pageCount);
-static void UpdateToolbarToolText();
+static void UpdateUITextForLanguage();
 static void UpdateToolbarAndScrollbarsForAllWindows();
 static void RebuildMenuBar();
 static void OnMenuFindMatchCase(WindowInfo& win);
@@ -1133,7 +1133,7 @@ static void UpdateCurrentFileDisplayStateForWin(WindowInfo& win)
         return;
     state->useGlobalValues = gGlobalPrefs.globalPrefsOnly;
     UpdateDisplayStateWindowRect(win, *state, false);
-    win.DisplayStateFromToC(state);
+    win.UpdateSidebarDisplayState(state);
 }
 
 static void ShowOrHideToolbarGlobally()
@@ -1266,7 +1266,7 @@ static bool ReloadPrefs()
         CurrLangNameSet(gGlobalPrefs.currentLanguage);
         UpdateRtlLayoutForAllWindows();
         RebuildMenuBar();
-        UpdateToolbarToolText();
+        UpdateUITextForLanguage();
     }
     if (gGlobalPrefs.showToolbar != showToolbar)
         ShowOrHideToolbarGlobally();
@@ -1395,7 +1395,7 @@ void WindowInfo::Reload(bool autorefresh)
         return;
     }
     UpdateDisplayStateWindowRect(*this, ds);
-    this->DisplayStateFromToC(&ds);
+    UpdateSidebarDisplayState(&ds);
     // Set the windows state based on the actual window's placement
     ds.windowState =  this->fullScreen ? WIN_STATE_FULLSCREEN
                     : IsZoomed(this->hwndFrame) ? WIN_STATE_MAXIMIZED 
@@ -1785,7 +1785,6 @@ static bool LoadDocIntoWindow(
         startPage, win.GetViewPortSize());
     bool needrefresh = !win.dm;
 
-    bool oldTocShow = win.tocVisible;
     // ToC items might hold a reference to an Engine, so make sure to
     // delete them before destroying the whole DisplayModel
     if (win.dm || tryRepair)
@@ -1829,6 +1828,7 @@ static bool LoadDocIntoWindow(
         rotation = state->rotation;
 
         win.tocVisible = state->tocVisible;
+        win.favVisible = state->favVisible;
         win.tocState.Reset();
         if (state->tocState)
             win.tocState = *state->tocState;
@@ -1913,14 +1913,9 @@ Error:
         win.UpdateToolbarState();
     }
 
-    bool tocVisible = win.IsDocLoaded() && win.tocVisible && win.dm->HasTocTree();
-    if (tocVisible) {
-        SetSidebarVisibility(&win, true, false);
-    } else if (oldTocShow) {
-        // Hide the now useless ToC sidebar and force an update afterwards
-        SetSidebarVisibility(&win, false, false);
-        win.RedrawAll(true);
-    }
+    SetSidebarVisibility(&win, win.tocVisible, win.favVisible);
+    win.RedrawAll(true);
+
     UpdateToolbarAndScrollbarsForAllWindows();
     if (!win.IsDocLoaded()) {
         win.RedrawAll();
@@ -4376,7 +4371,7 @@ static void OnMenuChangeLanguage(WindowInfo& win)
         CurrLangNameSet(langName);
         UpdateRtlLayoutForAllWindows();
         RebuildMenuBar();
-        UpdateToolbarToolText();
+        UpdateUITextForLanguage();
         if (gWindows.Count() > 0 && gWindows[0]->IsAboutWindow())
             gWindows[0]->RedrawAll(true);
         SavePrefs();
@@ -5070,8 +5065,7 @@ static void UpdateSidebarTitles(WindowInfo& win)
     }
 }
 
-// TODO: rename function to UpdateUITextForLanguage ?
-static void UpdateToolbarToolText()
+static void UpdateUITextForLanguage()
 {
     for (size_t i = 0; i < gWindows.Count(); i++) {
         WindowInfo *win = gWindows[i];
@@ -6993,6 +6987,7 @@ static void DelFavorite(WindowInfo *win)
     RememberFavTreeExpansionStateForAllWindows();
     gFavorites->Remove(filePath, pageNo);
     UpdateFavoritesTreeForAllWindows();
+    // hide the favorites tree if we removed the last favorite
     if (!HasFavorites()) {
         for (size_t i=0; i<gWindows.Count(); i++)
         {
@@ -7877,7 +7872,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
             EnterFullscreen(*win);
     }
 
-    UpdateToolbarToolText(); // needed for RTL languages
+    UpdateUITextForLanguage(); // needed for RTL languages
     if (!firstIsDocLoaded)
         UpdateToolbarAndScrollbarsForAllWindows();
 
