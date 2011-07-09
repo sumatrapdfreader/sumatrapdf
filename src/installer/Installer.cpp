@@ -105,7 +105,7 @@ static StrVec           gProcessesToClose;
 
 static float            gUiDPIFactor = 1.0f;
 
-static TCHAR *          gMsg = NULL;
+static ScopedMem<TCHAR> gMsg;
 static TCHAR *          gMsgError = NULL;
 static Color            gMsgColor;
 
@@ -185,8 +185,8 @@ struct {
     char *filepath;
     bool install;
 } gPayloadData[] = {
-    // extract libmupdf.dll first, so that the installation fails as soon
-    // as possible, if SumatraPDF.exe or any DLL is currently in use
+    // TODO: extract libmupdf.dll first, so that the installation fails as soon
+    //       as possible, if SumatraPDF.exe or any DLL is currently in use
     { "libmupdf.dll",           true    },
     { "SumatraPDF.exe",         true    },
     { "sumatrapdfprefs.dat",    false   },
@@ -234,9 +234,10 @@ void NotifyFailed(TCHAR *msg)
     // MessageBox(gHwndFrame, msg, _T("Installation failed"),  MB_ICONEXCLAMATION | MB_OK);
 }
 
-static void SetMsg(TCHAR *msg)
+static void SetMsg(TCHAR *msg, Color color)
 {
-    str::ReplacePtr(&gMsg, msg);
+    gMsg.Set(str::Dup(msg));
+    gMsgColor = color;
 }
 
 #define TEN_SECONDS_IN_MS 10*1000
@@ -502,11 +503,10 @@ Exit:
 static void SetDefaultMsg()
 {
 #ifdef BUILD_UNINSTALLER
-    SetMsg(_T("Are you sure that you want to uninstall ") TAPP _T("?"));
+    SetMsg(_T("Are you sure that you want to uninstall ") TAPP _T("?"), COLOR_MSG_WELCOME);
 #else
-    SetMsg(_T("Thank you for choosing ") TAPP _T("!"));
+    SetMsg(_T("Thank you for choosing ") TAPP _T("!"), COLOR_MSG_WELCOME);
 #endif
-    gMsgColor = COLOR_MSG_WELCOME;
 }
 
 static const TCHAR *ReadableProcName(const TCHAR *procPath)
@@ -526,8 +526,7 @@ static void SetCloseProcessMsg()
     TCHAR *procPath = gProcessesToClose.At(0);
     const TCHAR *nameToShow = ReadableProcName(procPath);
     ScopedMem<TCHAR> s(str::Format(_T("Please close %s to proceed!"), nameToShow));
-    SetMsg(s);
-    gMsgColor = COLOR_MSG_FAILED;
+    SetMsg(s, COLOR_MSG_FAILED);
 }
 
 static void CheckInstallUninstallPossible()
@@ -1204,8 +1203,7 @@ void OnButtonInstall()
 
     EnableWindow(gHwndButtonInstUninst, FALSE);
 
-    SetMsg(_T("Installation in progress..."));
-    gMsgColor = COLOR_MSG_INSTALLATION;
+    SetMsg(_T("Installation in progress..."), COLOR_MSG_INSTALLATION);
     InvalidateFrame();
 
     gGlobalData.hThread = CreateThread(NULL, 0, InstallerThread, NULL, 0, 0);
@@ -1220,12 +1218,10 @@ void OnInstallationFinished()
 
     if (gGlobalData.success) {
         CreateButtonRunSumatra(gHwndFrame);
-        SetMsg(_T("Thank you! ") TAPP _T(" has been installed."));
-        gMsgColor = COLOR_MSG_OK;
+        SetMsg(_T("Thank you! ") TAPP _T(" has been installed."), COLOR_MSG_OK);
     } else {
         CreateButtonExit(gHwndFrame);
-        SetMsg(_T("Installation failed!"));
-        gMsgColor = COLOR_MSG_FAILED;
+        SetMsg(_T("Installation failed!"), COLOR_MSG_FAILED);
     }
     gMsgError = gGlobalData.firstError;
     InvalidateFrame();
@@ -1431,8 +1427,7 @@ void OnButtonUninstall()
 {
     // disable the button during uninstallation
     EnableWindow(gHwndButtonInstUninst, FALSE);
-    SetMsg(_T("Uninstallation in progress..."));
-    gMsgColor = COLOR_MSG_INSTALLATION;
+    SetMsg(_T("Uninstallation in progress..."), COLOR_MSG_INSTALLATION);
     InvalidateFrame();
 
     gGlobalData.hThread = CreateThread(NULL, 0, UninstallerThread, NULL, 0, 0);
@@ -1443,12 +1438,8 @@ void OnUninstallationFinished()
     DestroyWindow(gHwndButtonInstUninst);
     gHwndButtonInstUninst = NULL;
     CreateButtonExit(gHwndFrame);
-    SetMsg(TAPP _T(" has been uninstalled."));
+    SetMsg(TAPP _T(" has been uninstalled."), gMsgError ? COLOR_MSG_FAILED : COLOR_MSG_OK);
     gMsgError = gGlobalData.firstError;
-    if (!gMsgError)
-        gMsgColor = COLOR_MSG_OK;
-    else
-        gMsgColor = COLOR_MSG_FAILED;
     InvalidateFrame();
 
     CloseHandle(gGlobalData.hThread);
