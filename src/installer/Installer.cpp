@@ -46,8 +46,9 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 
 using namespace Gdiplus;
 
-// define for a shadow effect
-#define DRAW_TEXT_SHADOW
+// define to 1 to enable shadow effect, to 0 to disable
+#define DRAW_TEXT_SHADOW 1
+#define DRAW_MSG_TEXT_SHADOW 0
 
 #define INSTALLER_FRAME_CLASS_NAME    _T("SUMATRA_PDF_INSTALLER_FRAME")
 
@@ -84,8 +85,8 @@ using namespace Gdiplus;
 static HINSTANCE        ghinst;
 static HWND             gHwndFrame = NULL;
 static HWND             gHwndButtonExit = NULL;
+static HWND             gHwndButtonInstUninst = NULL;
 #ifndef BUILD_UNINSTALLER
-static HWND             gHwndButtonInstall = NULL;
 static HWND             gHwndButtonOptions = NULL;
 static HWND             gHwndButtonRunSumatra = NULL;
 static HWND             gHwndStaticInstDir = NULL;
@@ -96,15 +97,15 @@ static HWND             gHwndCheckboxRegisterBrowserPlugin = NULL;
 static HWND             gHwndCheckboxRegisterPdfFilter = NULL;
 static HWND             gHwndCheckboxRegisterPdfPreviewer = NULL;
 static HWND             gHwndProgressBar = NULL;
-#else
-static HWND             gHwndButtonUninstall = NULL;
 #endif
 static HFONT            gFontDefault;
 static bool             gShowOptions = false;
+static bool             gInstallUninstallPossible = true;
+static StrVec           gProcessesToClose;
 
 static float            gUiDPIFactor = 1.0f;
 
-static TCHAR *          gMsg;
+static TCHAR *          gMsg = NULL;
 static TCHAR *          gMsgError = NULL;
 static Color            gMsgColor;
 
@@ -231,6 +232,11 @@ void NotifyFailed(TCHAR *msg)
     if (!gGlobalData.firstError)
         gGlobalData.firstError = str::Dup(msg);
     // MessageBox(gHwndFrame, msg, _T("Installation failed"),  MB_ICONEXCLAMATION | MB_OK);
+}
+
+static void SetMsg(TCHAR *msg)
+{
+    str::ReplacePtr(&gMsg, msg);
 }
 
 #define TEN_SECONDS_IN_MS 10*1000
@@ -448,8 +454,6 @@ void bz_internal_error(int errcode)
 }
 #endif
 
-#ifndef BUILD_UNINSTALLER
-
 static bool IsRunningBrowserPlugin(DWORD procId)
 {
     HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, procId);
@@ -472,11 +476,11 @@ static bool IsRunningBrowserPlugin(DWORD procId)
 
 // return names of processes that are running browser plugin
 // (i.e. have npPdfViewer.dll loaded)
-static void ProcessesWithBrowserPlugin(Vec<TCHAR*>& names)
+static void ProcessesWithBrowserPlugin(StrVec& names)
 {
     PROCESSENTRY32 proc;
     BOOL ok;
-    names.Reset();
+    FreeVecMembers(names);
     HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     if (INVALID_HANDLE_VALUE == snap)
         goto Exit;
@@ -485,8 +489,7 @@ static void ProcessesWithBrowserPlugin(Vec<TCHAR*>& names)
     ok = Process32First(snap, &proc);
     while (ok) {
         if (IsRunningBrowserPlugin(proc.th32ProcessID)) {
-            const TCHAR *name = path::GetBaseName(proc.szExeFile);
-            names.Append(str::Dup(name));
+            names.Append(str::Dup(proc.szExeFile));
         }
         proc.dwSize = sizeof(proc);
         ok = Process32Next(snap, &proc);
@@ -496,6 +499,56 @@ Exit:
     CloseHandle(snap);
 }
 
+static void SetDefaultMsg()
+{
+#ifdef BUILD_UNINSTALLER
+    SetMsg(_T("Are you sure that you want to uninstall ") TAPP _T("?"));
+#else
+    SetMsg(_T("Thank you for choosing ") TAPP _T("!"));
+#endif
+    gMsgColor = COLOR_MSG_WELCOME;
+}
+
+static const TCHAR *ReadableProcName(const TCHAR *procPath)
+{
+    const TCHAR *procName = path::GetBaseName(procPath);
+    if (str::EqI(procName, _T("plugin-container.exe"))) {
+        return _T("FireFox");
+    }
+    if (str::EqI(procName, _T("chrome.exe"))) {
+        return _T("Chrome");
+    }
+    return procName;
+}
+
+static void SetCloseProcessMsg()
+{
+    TCHAR *procPath = gProcessesToClose.At(0);
+    const TCHAR *nameToShow = ReadableProcName(procPath);
+    ScopedMem<TCHAR> s(str::Format(_T("Please close %s to proceed!"), nameToShow));
+    SetMsg(s);
+    gMsgColor = COLOR_MSG_FAILED;
+}
+
+static void CheckInstallUninstallPossible()
+{
+    ProcessesWithBrowserPlugin(gProcessesToClose);
+
+    bool possible = gProcessesToClose.Count() == 0;
+    if (gInstallUninstallPossible != possible) {
+        gInstallUninstallPossible = possible;
+        InvalidateFrame();
+        if (gInstallUninstallPossible) {
+            SetDefaultMsg();
+            EnableWindow(gHwndButtonInstUninst, TRUE);
+        } else {
+            SetCloseProcessMsg();
+            EnableWindow(gHwndButtonInstUninst, FALSE);
+        }
+    }
+}
+
+#ifndef BUILD_UNINSTALLER
 int GetInstallationStepCount()
 {
     /* Installation steps
@@ -1149,9 +1202,9 @@ void OnButtonInstall()
     DestroyWindow(gHwndButtonOptions);
     gHwndButtonOptions = NULL;
 
-    EnableWindow(gHwndButtonInstall, FALSE);
+    EnableWindow(gHwndButtonInstUninst, FALSE);
 
-    gMsg = _T("Installation in progress...");
+    SetMsg(_T("Installation in progress..."));
     gMsgColor = COLOR_MSG_INSTALLATION;
     InvalidateFrame();
 
@@ -1160,18 +1213,18 @@ void OnButtonInstall()
 
 void OnInstallationFinished()
 {
-    DestroyWindow(gHwndButtonInstall);
-    gHwndButtonInstall = NULL;
+    DestroyWindow(gHwndButtonInstUninst);
+    gHwndButtonInstUninst = NULL;
     DestroyWindow(gHwndProgressBar);
     gHwndProgressBar = NULL;
 
     if (gGlobalData.success) {
         CreateButtonRunSumatra(gHwndFrame);
-        gMsg = _T("Thank you! ") TAPP _T(" has been installed.");
+        SetMsg(_T("Thank you! ") TAPP _T(" has been installed."));
         gMsgColor = COLOR_MSG_OK;
     } else {
         CreateButtonExit(gHwndFrame);
-        gMsg = _T("Installation failed!");
+        SetMsg(_T("Installation failed!"));
         gMsgColor = COLOR_MSG_FAILED;
     }
     gMsgError = gGlobalData.firstError;
@@ -1377,8 +1430,8 @@ static DWORD WINAPI UninstallerThread(LPVOID data)
 void OnButtonUninstall()
 {
     // disable the button during uninstallation
-    EnableWindow(gHwndButtonUninstall, FALSE);
-    gMsg = _T("Uninstallation in progress...");
+    EnableWindow(gHwndButtonInstUninst, FALSE);
+    SetMsg(_T("Uninstallation in progress..."));
     gMsgColor = COLOR_MSG_INSTALLATION;
     InvalidateFrame();
 
@@ -1387,10 +1440,10 @@ void OnButtonUninstall()
 
 void OnUninstallationFinished()
 {
-    DestroyWindow(gHwndButtonUninstall);
-    gHwndButtonUninstall = NULL;
+    DestroyWindow(gHwndButtonInstUninst);
+    gHwndButtonInstUninst = NULL;
     CreateButtonExit(gHwndFrame);
-    gMsg = TAPP _T(" has been uninstalled.");
+    SetMsg(TAPP _T(" has been uninstalled."));
     gMsgError = gGlobalData.firstError;
     if (!gMsgError)
         gMsgColor = COLOR_MSG_OK;
@@ -1599,7 +1652,7 @@ REAL DrawMessage(Graphics &g, TCHAR *msg, REAL y, REAL dx, Color color)
     bbox.X += (dx - bbox.Width) / 2.f;
     StringFormat sft;
     sft.SetAlignment(StringAlignmentCenter);
-#ifdef DRAW_TEXT_SHADOW
+#if DRAW_MSG_TEXT_SHADOW
     {
         bbox.X--; bbox.Y++;
         SolidBrush b(Color(255,255,255));
@@ -1624,7 +1677,7 @@ void DrawSumatraLetters(Graphics &g, Font *f, Font *fVer, REAL y)
             return;
 
         g.RotateTransform(li->rotation, MatrixOrderAppend);
-#ifdef DRAW_TEXT_SHADOW
+#if DRAW_TEXT_SHADOW
         // draw shadow first
         SolidBrush b2(li->colShadow);
         Gdiplus::PointF o2(li->x - 3.f, y + 4.f + li->dyOff);
@@ -1645,7 +1698,7 @@ void DrawSumatraLetters(Graphics &g, Font *f, Font *fVer, REAL y)
     REAL x2 = 15; REAL y2 = -34;
 
     ScopedMem<WCHAR> ver_s(str::conv::ToWStr(_T("v") CURR_VERSION_STR));
-#ifdef DRAW_TEXT_SHADOW
+#if DRAW_TEXT_SHADOW
     SolidBrush b1(Color(0,0,0));
     g.DrawString(ver_s, -1, fVer, Gdiplus::PointF(x2-2,y2-1), &b1);
 #endif
@@ -1720,7 +1773,7 @@ void OnPaintFrame(HWND hwnd)
 
 void OnCreateWindow(HWND hwnd)
 {
-    gHwndButtonInstall = CreateDefaultButton(hwnd, _T("Install ") TAPP, 140);
+    gHwndButtonInstUninst = CreateDefaultButton(hwnd, _T("Install ") TAPP, 140);
 
     RectI rc(WINDOW_MARGIN, 0, dpiAdjust(96), PUSH_BUTTON_DY);
     ClientRect r(hwnd);
@@ -1813,14 +1866,14 @@ void OnCreateWindow(HWND hwnd)
     gShowOptions = !gShowOptions;
     OnButtonOptions();
 
-    SetFocus(gHwndButtonInstall);
+    SetFocus(gHwndButtonInstUninst);
 }
 
 #else
 
 void OnCreateWindow(HWND hwnd)
 {
-    gHwndButtonUninstall = CreateDefaultButton(hwnd, _T("Uninstall ") TAPP, 150);
+    gHwndButtonInstUninst = CreateDefaultButton(hwnd, _T("Uninstall ") TAPP, 150);
 }
 
 #endif
@@ -1862,7 +1915,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
             {
 #ifndef BUILD_UNINSTALLER
                 case IDOK:
-                    if (gHwndButtonInstall)
+                    if (gHwndButtonInstUninst)
                         OnButtonInstall();
                     else if (gHwndButtonRunSumatra)
                         OnButtonStartSumatra();
@@ -1883,7 +1936,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                     break;
 #else
                 case IDOK:
-                    if (gHwndButtonUninstall)
+                    if (gHwndButtonInstUninst)
                         OnButtonUninstall();
                     else if (gHwndButtonExit)
                         OnButtonExit();
@@ -1946,7 +1999,6 @@ static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
             dpiAdjust(INSTALLER_WIN_DX), dpiAdjust(INSTALLER_WIN_DY),
             NULL, NULL,
             ghinst, NULL);
-    gMsg = _T("Are you sure that you want to uninstall ") TAPP _T("?");
 #else
     gHwndFrame = CreateWindow(
             INSTALLER_FRAME_CLASS_NAME, TAPP _T(" ") CURR_VERSION_STR _T(" Installer"),
@@ -1955,12 +2007,12 @@ static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
             dpiAdjust(INSTALLER_WIN_DX), dpiAdjust(INSTALLER_WIN_DY),
             NULL, NULL,
             ghinst, NULL);
-    gMsg = _T("Thank you for downloading ") TAPP _T("!");
 #endif
     if (!gHwndFrame)
         return FALSE;
 
-    gMsgColor = COLOR_MSG_WELCOME;
+    SetDefaultMsg();
+    CheckInstallUninstallPossible();
 
     CenterDialog(gHwndFrame);
     ShowWindow(gHwndFrame, SW_SHOW);
@@ -2036,6 +2088,8 @@ int RunApp()
 {
     MSG msg;
     FrameTimeoutCalculator ftc(60);
+    MillisecondTimer t;
+    t.Start();
     for (;;) {
         const DWORD timeout = ftc.GetTimeoutInMilliseconds();
         DWORD res = WAIT_TIMEOUT;
@@ -2055,6 +2109,12 @@ int RunApp()
                 TranslateMessage(&msg);
                 DispatchMessage(&msg);
             }
+        }
+        // check if there are processes that need to be closed but not more
+        // frequently than once per second.
+        if (t.GetCurrTimeInMs() > 1000.0) {
+            CheckInstallUninstallPossible();
+            t.Start();
         }
     }
 }
