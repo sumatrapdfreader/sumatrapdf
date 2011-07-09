@@ -100,7 +100,6 @@ static HWND             gHwndProgressBar = NULL;
 #endif
 static HFONT            gFontDefault;
 static bool             gShowOptions = false;
-static bool             gInstallUninstallPossible = true;
 static StrVec           gProcessesToClose;
 
 static float            gUiDPIFactor = 1.0f;
@@ -513,10 +512,10 @@ static const TCHAR *ReadableProcName(const TCHAR *procPath)
 {
     const TCHAR *procName = path::GetBaseName(procPath);
     if (str::EqI(procName, _T("plugin-container.exe"))) {
-        return _T("FireFox");
+        return _T("Mozilla Firefox");
     }
     if (str::EqI(procName, _T("chrome.exe"))) {
-        return _T("Chrome");
+        return _T("Google Chrome");
     }
     return procName;
 }
@@ -531,19 +530,19 @@ static void SetCloseProcessMsg()
 
 static void CheckInstallUninstallPossible()
 {
+    StrVec prevProcs(gProcessesToClose);
     ProcessesWithBrowserPlugin(gProcessesToClose);
 
+    bool wasPossible = prevProcs.Count() == 0;
     bool possible = gProcessesToClose.Count() == 0;
-    if (gInstallUninstallPossible != possible) {
-        gInstallUninstallPossible = possible;
-        InvalidateFrame();
-        if (gInstallUninstallPossible) {
+    if (!str::Eq(possible ? NULL : gProcessesToClose[0], wasPossible ? NULL : prevProcs[0])) {
+        if (possible) {
             SetDefaultMsg();
-            EnableWindow(gHwndButtonInstUninst, TRUE);
         } else {
             SetCloseProcessMsg();
-            EnableWindow(gHwndButtonInstUninst, FALSE);
         }
+        InvalidateFrame();
+        EnableWindow(gHwndButtonInstUninst, possible);
     }
 }
 
