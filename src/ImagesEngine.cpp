@@ -730,6 +730,9 @@ bool CCbxEngine::LoadCbzFile(const TCHAR *file)
                 pageFileNames.Append(fileName2.StealData());
             }
         }
+        // bail, if we accidentally try loading an XPS file
+        if (str::StartsWith(fileName, "_rels/.rels"))
+            return false;
         err = unzGoToNextFile(cbzData->uf);
         if (err != UNZ_OK)
             break;
@@ -901,7 +904,9 @@ bool CbxEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
     }
 
     return str::EndsWithI(fileName, _T(".cbz")) ||
-           str::EndsWithI(fileName, _T(".cbr"));
+           str::EndsWithI(fileName, _T(".cbr")) ||
+           str::EndsWithI(fileName, _T(".zip")) ||
+           str::EndsWithI(fileName, _T(".rar"));
 }
 
 CbxEngine *CbxEngine::CreateFromFileName(const TCHAR *fileName)
@@ -909,10 +914,12 @@ CbxEngine *CbxEngine::CreateFromFileName(const TCHAR *fileName)
     assert(IsSupportedFile(fileName) || IsSupportedFile(fileName, true));
     CCbxEngine *engine = new CCbxEngine();
     bool ok = false;
-    if (str::EndsWithI(fileName, _T(".cbz"))) {
+    if (str::EndsWithI(fileName, _T(".cbz")) ||
+        str::EndsWithI(fileName, _T(".zip"))) {
         ok = engine->LoadCbzFile(fileName);
     }
     else if (str::EndsWithI(fileName, _T(".cbr")) ||
+             str::EndsWithI(fileName, _T(".rar")) ||
              file::StartsWith(fileName, "Rar!\x1A\x07\x00", 7)) {
         ok = engine->LoadCbrFile(fileName);
     }
