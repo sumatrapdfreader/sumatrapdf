@@ -378,17 +378,6 @@ static HFONT CreateDefaultGuiFont()
     return font;
 }
 
-float GetWindowDPIFactor()
-{
-    HDC hdc = GetDC(NULL);
-    int dpi = GetDeviceCaps(hdc, LOGPIXELSY);
-    // round untypical resolutions up to the nearest quarter
-    float factor = ceil(dpi * 4.0f / USER_DEFAULT_SCREEN_DPI) / 4.0f;
-    ReleaseDC(NULL, hdc);
-
-    return factor;
-}
-
 inline int dpiAdjust(int value)
 {
     return (int)(value * gUiDPIFactor);
@@ -1947,7 +1936,7 @@ static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
 {
     ghinst = hInstance;
     gFontDefault = CreateDefaultGuiFont();
-    gUiDPIFactor = GetWindowDPIFactor();
+    win::GetHwndDpi(NULL, &gUiDPIFactor);
 
 #ifdef BUILD_UNINSTALLER
     gHwndFrame = CreateWindow(
