@@ -188,7 +188,8 @@ static StrVec                       gAllowedLinkProtocols;
 SerializableGlobalPrefs             gGlobalPrefs = {
     false, // bool globalPrefsOnly
     DEFAULT_LANGUAGE, // const char *currentLanguage
-    true, // bool showToolbar
+    true, // bool toolbarVisible
+    false, // bool favVisible
     false, // bool pdfAssociateDontAskAgain
     false, // bool pdfAssociateShouldAssociate
     true, // bool enableAutoUpdate
@@ -213,9 +214,6 @@ SerializableGlobalPrefs             gGlobalPrefs = {
     0, // int openCountWeek
     { 0, 0 }, // FILETIME lastPrefUpdate
 };
-
-// this is remembered within a session but not persisted
-static bool gFavVisibleInEmptyWindow = false;
 
 enum MenuToolbarFlags {
     MF_NO_TRANSLATE      = 1 << 0,
@@ -1155,7 +1153,7 @@ static void ShowOrHideToolbarGlobally()
 {
     for (size_t i = 0; i < gWindows.Count(); i++) {
         WindowInfo *win = gWindows[i];
-        if (gGlobalPrefs.showToolbar) {
+        if (gGlobalPrefs.toolbarVisible) {
             ShowWindow(win->hwndReBar, SW_SHOW);
         } else {
             // Move the focus out of the toolbar
@@ -1184,8 +1182,7 @@ static void UpdateWindowRtlLayout(WindowInfo *win)
         return;
 
     bool tocVisible = win->tocVisible;
-    bool favVisible = win->favVisible;
-    if (tocVisible || favVisible)
+    if (tocVisible || gGlobalPrefs.favVisible)
         SetSidebarVisibility(win, false, false);
 
     // cf. http://www.microsoft.com/middleeast/msdn/mirror.aspx
@@ -1208,11 +1205,11 @@ static void UpdateWindowRtlLayout(WindowInfo *win)
 
     // ensure that the ToC sidebar is on the correct side and that its
     // title and close button are also correctly laid out
-    if (tocVisible || favVisible) {
-        SetSidebarVisibility(win, tocVisible, favVisible);
+    if (tocVisible || gGlobalPrefs.favVisible) {
+        SetSidebarVisibility(win, tocVisible, gGlobalPrefs.favVisible);
         if (tocVisible)
             SendMessage(win->hwndTocBox, WM_SIZE, 0, 0);
-        if (favVisible)
+        if (gGlobalPrefs.favVisible)
             SendMessage(win->hwndFavBox, WM_SIZE, 0, 0);
     }
 }
@@ -1260,7 +1257,7 @@ static bool ReloadPrefs()
     }
 
     const char *currLang = gGlobalPrefs.currentLanguage;
-    bool showToolbar = gGlobalPrefs.showToolbar;
+    bool toolbarVisible = gGlobalPrefs.toolbarVisible;
 
     FileHistory fileHistory;
     Favorites *favs = NULL;
@@ -1283,7 +1280,7 @@ static bool ReloadPrefs()
         RebuildMenuBar();
         UpdateUITextForLanguage();
     }
-    if (gGlobalPrefs.showToolbar != showToolbar)
+    if (gGlobalPrefs.toolbarVisible != toolbarVisible)
         ShowOrHideToolbarGlobally();
     return true;
 }
@@ -1596,8 +1593,8 @@ static void MenuUpdateStateForWindow(WindowInfo& win) {
     bool checked = documentSpecific ? win.tocVisible : gGlobalPrefs.tocVisible;
     win::menu::SetChecked(win.menu, IDM_VIEW_BOOKMARKS, checked);
 
-    win::menu::SetChecked(win.menu, IDM_FAV_TOGGLE, win.favVisible);
-    win::menu::SetChecked(win.menu, IDM_VIEW_SHOW_HIDE_TOOLBAR, gGlobalPrefs.showToolbar);
+    win::menu::SetChecked(win.menu, IDM_FAV_TOGGLE, gGlobalPrefs.favVisible);
+    win::menu::SetChecked(win.menu, IDM_VIEW_SHOW_HIDE_TOOLBAR, gGlobalPrefs.toolbarVisible);
     MenuUpdateDisplayMode(win);
     MenuUpdateZoom(win);
 
@@ -1843,7 +1840,6 @@ static bool LoadDocIntoWindow(
         rotation = state->rotation;
 
         win.tocVisible = state->tocVisible;
-        win.favVisible = state->favVisible;
         win.tocState.Reset();
         if (state->tocState)
             win.tocState = *state->tocState;
@@ -1928,7 +1924,7 @@ Error:
         win.UpdateToolbarState();
     }
 
-    SetSidebarVisibility(&win, win.tocVisible, win.favVisible);
+    SetSidebarVisibility(&win, win.tocVisible, gGlobalPrefs.favVisible);
     win.RedrawAll(true);
 
     UpdateToolbarAndScrollbarsForAllWindows();
@@ -3333,7 +3329,7 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
         /* last window - don't delete it */
         delete win->watcher;
         win->watcher = NULL;
-        SetSidebarVisibility(win, false, gFavVisibleInEmptyWindow);
+        SetSidebarVisibility(win, false, gGlobalPrefs.favVisible);
         ClearTocBox(win);
         win->AbortFinding(true);
         delete win->dm;
@@ -4357,15 +4353,14 @@ static void AdjustWindowEdge(WindowInfo& win)
 static void OnFrameSize(WindowInfo* win, int dx, int dy)
 {
     int rebBarDy = 0;
-    if (gGlobalPrefs.showToolbar) {
+    if (gGlobalPrefs.toolbarVisible) {
         SetWindowPos(win->hwndReBar, NULL, 0, 0, dx, rebBarDy, SWP_NOZORDER);
         rebBarDy = WindowRect(win->hwndReBar).dy;
     }
 
     bool tocVisible = win->tocLoaded && win->tocVisible;
-    bool favVisible = win->favVisible;
-    if (tocVisible || favVisible)
-        SetSidebarVisibility(win, tocVisible, favVisible);
+    if (tocVisible || gGlobalPrefs.favVisible)
+        SetSidebarVisibility(win, tocVisible, gGlobalPrefs.favVisible);
     else
         SetWindowPos(win->hwndCanvas, NULL, 0, rebBarDy, dx, dy - rebBarDy, SWP_NOZORDER);
 }
@@ -4393,7 +4388,7 @@ static void OnMenuChangeLanguage(WindowInfo& win)
 
 static void OnMenuViewShowHideToolbar()
 {
-    gGlobalPrefs.showToolbar = !gGlobalPrefs.showToolbar;
+    gGlobalPrefs.toolbarVisible = !gGlobalPrefs.toolbarVisible;
     ShowOrHideToolbarGlobally();
 }
 
@@ -4487,7 +4482,7 @@ static void OnMenuGoToPage(WindowInfo& win)
         return;
 
     // Don't show a dialog if we don't have to - use the Toolbar instead
-    if (gGlobalPrefs.showToolbar && !win.fullScreen && PM_DISABLED == win.presentation) {
+    if (gGlobalPrefs.toolbarVisible && !win.fullScreen && PM_DISABLED == win.presentation) {
         FocusPageNoEdit(win.hwndPageBox);
         return;
     }
@@ -4514,7 +4509,7 @@ static void OnMenuFind(WindowInfo& win)
         return;
 
     // Don't show a dialog if we don't have to - use the Toolbar instead
-    if (gGlobalPrefs.showToolbar && !win.fullScreen && PM_DISABLED == win.presentation) {
+    if (gGlobalPrefs.toolbarVisible && !win.fullScreen && PM_DISABLED == win.presentation) {
         if (GetFocus() == win.hwndFindBox)
             SendMessage(win.hwndFindBox, WM_SETFOCUS, 0, 0);
         else
@@ -4564,19 +4559,21 @@ static void EnterFullscreen(WindowInfo& win, bool presentation)
             win.windowStateBeforePresentation = WIN_STATE_NORMAL;
         win.presentation = PM_ENABLED;
         win.tocBeforeFullScreen = win.tocVisible;
-        win.favBeforeFullScreen = win.favVisible;
 
         SetTimer(win.hwndCanvas, HIDE_CURSOR_TIMER_ID, HIDE_CURSOR_DELAY_IN_MS, NULL);
     }
     else {
         win.fullScreen = true;
         win.tocBeforeFullScreen = win.IsDocLoaded() ? win.tocVisible : false;
-        win.favBeforeFullScreen = win.favVisible;
     }
 
-    // Remove TOC from full screen, add back later on exit fullscreen
-    if (win.tocVisible || win.favVisible)
-        SetSidebarVisibility(&win, win.tocVisible, win.favVisible);
+    // Remove TOC and favorites from full screen, add back later on exit fullscreen
+    bool favVisibleTmp = gGlobalPrefs.favVisible;
+    if (win.tocVisible || gGlobalPrefs.favVisible) {
+        SetSidebarVisibility(&win, win.tocVisible, false);
+        // restore gGlobalPrefs.favVisible changed by SetSidebarVisibility()
+        gGlobalPrefs.favVisible = favVisibleTmp;
+    }
 
     RectI rect;
     MONITORINFOEX mi;
@@ -4626,11 +4623,10 @@ static void ExitFullscreen(WindowInfo& win)
     }
 
     bool tocVisible = win.IsDocLoaded() && win.tocBeforeFullScreen;
-    bool favVisible = win.favBeforeFullScreen;
-    if (tocVisible || favVisible)
-        SetSidebarVisibility(&win, tocVisible, favVisible);
+    if (tocVisible || gGlobalPrefs.favVisible)
+        SetSidebarVisibility(&win, tocVisible, gGlobalPrefs.favVisible);
 
-    if (gGlobalPrefs.showToolbar)
+    if (gGlobalPrefs.toolbarVisible)
         ShowWindow(win.hwndReBar, SW_SHOW);
     SetMenu(win.hwndFrame, win.menu);
     SetWindowLong(win.hwndFrame, GWL_STYLE, win.prevStyle);
@@ -4741,7 +4737,7 @@ static void AdvanceFocus(WindowInfo* win)
     // Tab order: Frame -> Page -> Find -> ToC -> Favorites -> Frame -> ...
 
     bool hasToolbar = !win->fullScreen && !win->presentation &&
-                      gGlobalPrefs.showToolbar && win->IsDocLoaded();
+                      gGlobalPrefs.toolbarVisible && win->IsDocLoaded();
     int direction = IsShiftPressed() ? -1 : 1;
 
     struct {
@@ -4752,7 +4748,7 @@ static void AdvanceFocus(WindowInfo* win)
         { win->hwndPageBox, hasToolbar                          },
         { win->hwndFindBox, hasToolbar && NeedsFindUI(*win)     },
         { win->hwndTocTree, win->tocLoaded && win->tocVisible   },
-        { win->hwndFavTree, win->favVisible                     },
+        { win->hwndFavTree, gGlobalPrefs.favVisible             },
     };
 
     /* // make sure that at least one element is available
@@ -4970,7 +4966,7 @@ static void OnChar(WindowInfo& win, WPARAM key)
     case 'i':
         // experimental "page info" tip: make figuring out current page and
         // total pages count a one-key action (unless they're already visible)
-        if (!gGlobalPrefs.showToolbar || win.fullScreen || PM_ENABLED == win.presentation) {
+        if (!gGlobalPrefs.toolbarVisible || win.fullScreen || PM_ENABLED == win.presentation) {
             int current = win.dm->currentPageNo(), total = win.dm->pageCount();
             ScopedMem<TCHAR> pageInfo(str::Format(_T("%s %d / %d"), _TR("Page:"), current, total));
             if (win.dm->engine && win.dm->engine->HasPageLabels()) {
@@ -5072,7 +5068,7 @@ static void UpdateSidebarTitles(WindowInfo& win)
 
     HWND favTitle = GetDlgItem(win.hwndFavBox, IDC_FAV_TITLE);
     win::SetText(favTitle, _TR("Favorites"));
-    if (win.favVisible) {
+    if (gGlobalPrefs.favVisible) {
         InvalidateRect(win.hwndFavBox, NULL, TRUE);
         UpdateWindow(win.hwndFavBox);
     }
@@ -5730,7 +5726,7 @@ static void ResizeSidebar(WindowInfo *win)
     int canvasDx = rFrame.dx - sidebarDx - SPLITTER_DX;
     int y = 0;
     int totalDy = rFrame.dy;
-    if (gGlobalPrefs.showToolbar && !win->fullScreen && !win->presentation) {
+    if (gGlobalPrefs.toolbarVisible && !win->fullScreen && !win->presentation) {
         y = WindowRect(win->hwndReBar).dy;
         totalDy -= y;
     }
@@ -6347,7 +6343,7 @@ static void CreateSidebar(WindowInfo* win)
         UpdateWindow(win->hwndTocBox);
     }
 
-    if (win->favVisible) {
+    if (gGlobalPrefs.favVisible) {
         InvalidateRect(win->hwndFavBox, NULL, TRUE);
         UpdateWindow(win->hwndFavBox);
     }
@@ -6622,11 +6618,11 @@ void SetSidebarVisibility(WindowInfo *win, bool tocVisible, bool favVisible)
         PopulateFavTreeIfNeeded(win);
 
     win->tocVisible = tocVisible;
-    win->favVisible = favVisible;
+    gGlobalPrefs.favVisible = favVisible;
 
     ClientRect rFrame(win->hwndFrame);
     int toolbarDy = 0;
-    if (gGlobalPrefs.showToolbar && !win->fullScreen && !win->presentation)
+    if (gGlobalPrefs.toolbarVisible && !win->fullScreen && !win->presentation)
         toolbarDy = WindowRect(win->hwndReBar).dy;
     int dy = rFrame.dy - toolbarDy;
 
@@ -6682,9 +6678,9 @@ static void ToggleTocBox(WindowInfo *win)
     if (!win->IsDocLoaded())
         return;
     if (win->tocVisible) {
-        SetSidebarVisibility(win, false, win->favVisible);
+        SetSidebarVisibility(win, false, gGlobalPrefs.favVisible);
     } else {
-        SetSidebarVisibility(win, true,  win->favVisible);
+        SetSidebarVisibility(win, true,  gGlobalPrefs.favVisible);
         SetFocus(win->hwndTocTree);
     }
 }
@@ -6707,14 +6703,11 @@ static void ClearTocBox(WindowInfo *win)
 
 static void ToggleFavorites(WindowInfo *win)
 {
-    if (win->favVisible) {
+    if (gGlobalPrefs.favVisible) {
         SetSidebarVisibility(win, win->tocVisible, false);
     } else {
         SetSidebarVisibility(win, win->tocVisible, true);
         SetFocus(win->hwndFavTree);
-    }
-    if (!win->IsDocLoaded()) {
-        gFavVisibleInEmptyWindow = win->favVisible;
     }
 }
 
@@ -7111,12 +7104,11 @@ static void DelFavorite(WindowInfo *win)
     UpdateFavoritesTreeForAllWindows();
     // hide the favorites tree if we removed the last favorite
     if (!HasFavorites()) {
+        gGlobalPrefs.favVisible = false;
         for (size_t i=0; i<gWindows.Count(); i++)
         {
             WindowInfo *win = gWindows.At(i);
-            if (win->favVisible) {
-                SetSidebarVisibility(win, win->tocVisible, false);
-            }
+            SetSidebarVisibility(win, win->tocVisible, gGlobalPrefs.favVisible);
         }
     }
     SavePrefs();
@@ -7888,7 +7880,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
             free(i.fileNames.Pop());
         i.reuseInstance = i.exitOnPrint = false;
         // always display the toolbar when embedded (as there's no menubar in that case)
-        gGlobalPrefs.showToolbar = true;
+        gGlobalPrefs.toolbarVisible = true;
         // never allow esc as a shortcut to quit
         gGlobalPrefs.escToExit = false;
     }

@@ -450,8 +450,8 @@ bool StressTest::OpenFile(const TCHAR *fileName)
     win->dm->changeDisplayMode(DM_CONTINUOUS);
     win->dm->zoomTo(ZOOM_FIT_PAGE);
     win->dm->goToFirstPage();
-    if (win->tocVisible || win->favVisible)
-        SetSidebarVisibility(win, win->tocVisible, win->favVisible);
+    if (win->tocVisible || gGlobalPrefs.favVisible)
+        SetSidebarVisibility(win, win->tocVisible, gGlobalPrefs.favVisible);
 
     currPage = pageRanges[0].start;
     win->dm->goToPage(currPage, 0);

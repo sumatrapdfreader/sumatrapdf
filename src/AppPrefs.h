@@ -28,7 +28,10 @@ struct SerializableGlobalPrefs {
     /* pointer to a static string returned by Trans::ConfirmLanguage, don't free */
     const char *currentLanguage;
 
-    bool showToolbar;
+    bool toolbarVisible;
+    
+    bool favVisible;
+
     /* If false, we won't ask the user if he wants Sumatra to handle PDF files */
     bool pdfAssociateDontAskAgain;
     /* If pdfAssociateDontAskAgain is TRUE, says whether we should 

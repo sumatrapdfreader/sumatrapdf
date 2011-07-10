@@ -27,7 +27,7 @@ WindowInfo::WindowInfo(HWND hwnd) :
     xScrollSpeed(0), yScrollSpeed(0), wheelAccumDelta(0),
     delayedRepaintTimer(0), sidebarBeingResized(false), watcher(NULL),
     pdfsync(NULL), stressTest(NULL), suppressPwdUI(false),
-    hwndFavBox(NULL), hwndFavTree(NULL), favVisible(false)
+    hwndFavBox(NULL), hwndFavTree(NULL)
 {
     ZeroMemory(&selectionRect, sizeof(selectionRect));
 
@@ -204,7 +204,6 @@ void WindowInfo::UpdateToCExpansionState(HTREEITEM hItem)
 void WindowInfo::UpdateSidebarDisplayState(DisplayState *ds)
 {
     ds->tocVisible = tocVisible;
-    ds->favVisible = favVisible;
 
     if (tocLoaded) {
         tocState.Reset();
