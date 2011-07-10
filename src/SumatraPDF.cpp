@@ -621,9 +621,9 @@ MenuDef menuDefZoom[] = {
 };
 
 MenuDef menuDefFavorites[] = {
-    { _TRN("Add to favorites"),            IDM_FAV_ADD,                0 },
-    { _TRN("Remove from favorites"),       IDM_FAV_DEL,                0 },
-    { _TRN("Show Favorites"),              IDM_FAV_TOGGLE,             0 },
+    { _TRN("Add to favorites"),             IDM_FAV_ADD,                0 },
+    { _TRN("Remove from favorites"),        IDM_FAV_DEL,                0 },
+    { _TRN("Show Favorites"),               IDM_FAV_TOGGLE,             MF_REQ_DISK_ACCESS },
 };
 
 MenuDef menuDefSettings[] = {
@@ -709,7 +709,7 @@ static HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuLen, HMENU menu)
 
 static void AppendRecentFilesToMenu(HMENU m)
 {
-    if (!HasPermission(Perm_SavePreferences)) return;
+    if (!HasPermission(Perm_DiskAccess)) return;
     if (gFileHistory.IsEmpty()) return;
 
     for (int index = 0; index < FILE_HISTORY_MAX_RECENT; index++) {
@@ -741,14 +741,16 @@ static TCHAR *FavReadableName(FavName *fn)
 }
 
 // caller has to free() the result
-static TCHAR *FavCompactReadableName(FileFavs *fav, FavName *fn)
+static TCHAR *FavCompactReadableName(FileFavs *fav, FavName *fn, bool isCurrent=false)
 {
     ScopedMem<TCHAR> rn(FavReadableName(fn));
-    TCHAR *fp = (TCHAR*)path::GetBaseName(fav->filePath);
-    return str::Format(_T("%s : %s"), fp, rn.Get());
+    if (isCurrent)
+        return str::Format(_T("%s : %s"), _TR("Current file"), rn);
+    const TCHAR *fp = path::GetBaseName(fav->filePath);
+    return str::Format(_T("%s : %s"), fp, rn);
 }
 
-static void AppendFavMenuItems(HMENU m, FileFavs *f, UINT& idx, bool combined=false)
+static void AppendFavMenuItems(HMENU m, FileFavs *f, UINT& idx, bool combined=false, bool isCurrent=false)
 {
     size_t items = f->favNames.Count();
     if (items > MAX_FAV_MENUS) {
@@ -759,7 +761,7 @@ static void AppendFavMenuItems(HMENU m, FileFavs *f, UINT& idx, bool combined=fa
         FavName *fn = f->favNames.At(i);
         fn->menuId = idx++;
         if (combined) {
-            ScopedMem<TCHAR> s(FavCompactReadableName(f, fn));
+            ScopedMem<TCHAR> s(FavCompactReadableName(f, fn, isCurrent));
             AppendMenu(m, MF_STRING, (UINT_PTR)fn->menuId, s);
         } else {
             ScopedMem<TCHAR> s(FavReadableName(fn));
@@ -796,14 +798,15 @@ static void AppendFavMenus(HMENU m, const TCHAR *currFilePath)
 
     // sort the files with favorites by base file name of file path
     Vec<TCHAR*> filePathsSorted;
-    for (size_t i = 0; i < gFavorites->favs.Count(); i++)
-    {
-        FileFavs *f = gFavorites->favs.At(i);
-        if (f == currFileFav)
-            continue;
-        filePathsSorted.Append(f->filePath);
+    if (HasPermission(Perm_DiskAccess)) {
+        // only show favorites for other files, if we're allowed to open them
+        for (size_t i = 0; i < gFavorites->favs.Count(); i++) {
+            FileFavs *f = gFavorites->favs.At(i);
+            if (f != currFileFav)
+                filePathsSorted.Append(f->filePath);
+        }
+        filePathsSorted.Sort(sortByBaseFileName);
     }
-    filePathsSorted.Sort(sortByBaseFileName);
     if (currFileFav)
         filePathsSorted.InsertAt(0, currFileFav->filePath);
 
@@ -815,8 +818,7 @@ static void AppendFavMenus(HMENU m, const TCHAR *currFilePath)
     size_t menusCount = filePathsSorted.Count();
     if (menusCount > MAX_FAV_MENUS)
         menusCount = MAX_FAV_MENUS;
-    for (size_t i=0; i<menusCount; i++)
-    {
+    for (size_t i = 0; i < menusCount; i++) {
         TCHAR *filePath = filePathsSorted.At(i);
         const TCHAR *fileName = path::GetBaseName(filePath);
         FileFavs *f = gFavorites->GetFavByFilePath(filePath);
@@ -825,7 +827,7 @@ static void AppendFavMenus(HMENU m, const TCHAR *currFilePath)
         bool combined = (f->favNames.Count() == 1);
         if (!combined)
             sub = CreateMenu();
-        AppendFavMenuItems(sub, f, menuId, combined);
+        AppendFavMenuItems(sub, f, menuId, combined, f == currFileFav);
         if (!combined) {
             if (f == currFileFav)
                 AppendMenu(m, MF_POPUP | MF_STRING, (UINT_PTR)sub, _TR("Current file"));
@@ -836,7 +838,7 @@ static void AppendFavMenus(HMENU m, const TCHAR *currFilePath)
         HMENU sub = CreateMenu();
         AppendFavMenuItems(sub, f, menuId);
         if (f == currFileFav)
-            AppendMenu(m, MF_POPUP | MF_STRING, (UINT_PTR)sub, _T("Current file"));
+            AppendMenu(m, MF_POPUP | MF_STRING, (UINT_PTR)sub, _TR("Current file"));
         else
             AppendMenu(m, MF_POPUP | MF_STRING, (UINT_PTR)sub, fileName);
 #endif
@@ -6102,8 +6104,10 @@ static void GoToFavorite(WindowInfo *win, FileFavs *f, FavName *fn)
     WindowInfo *existingWin = FindWindowInfoByFile(f->filePath);
     if (existingWin)
         win = existingWin;
-    else
+    else if (HasPermission(Perm_DiskAccess))
         win = LoadDocument(f->filePath, win);
+    else
+        win = NULL;
     if (win)
         QueueWorkItem(new GoToFavoriteWorkItem(win, fn->pageNo));
 }
@@ -6112,7 +6116,9 @@ static void GoToFavoriteByMenuId(WindowInfo *win, int wmId)
 {
     size_t idx;
     FileFavs *f = gFavorites->GetByMenuId(wmId, idx);
-    FavName *fn = f->favNames.At(idx);
+    if (!f)
+        return;
+    FavName *fn = f->favNames[idx];
     GoToFavorite(win, f, fn);
 }
 
@@ -6587,11 +6593,13 @@ static void SetWinPos(HWND hwnd, RectI r, bool isVisible)
 
 void SetSidebarVisibility(WindowInfo *win, bool tocVisible, bool favVisible)
 {
+    if (gPluginMode || !HasPermission(Perm_DiskAccess))
+        favVisible = false;
+
     if (!win->IsDocLoaded() || !win->dm->HasTocTree())
         tocVisible = false;
 
-    if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation)
-    {
+    if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation) {
         tocVisible = false;
         favVisible = false;
     }
@@ -7123,7 +7131,8 @@ static LRESULT OnCommand(WindowInfo *win, HWND hwnd, UINT message, WPARAM wParam
     {
         DisplayState *state = gFileHistory.Get(wmId - IDM_FILE_HISTORY_FIRST);
         if (state) {
-            LoadDocument(state->filePath, win);
+            if (HasPermission(Perm_DiskAccess))
+                LoadDocument(state->filePath, win);
             return 0;
         }
     }
