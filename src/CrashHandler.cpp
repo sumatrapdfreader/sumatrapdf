@@ -1058,9 +1058,7 @@ static DWORD WINAPI CrashDumpThread(LPVOID data)
     if (!LoadDbgHelpFuncs())
         return 0;
 
-#ifndef DONT_SUBMIT_CRASH_INFO
     SubmitCrashInfo();
-#endif
     // always write a MiniDump (for the latest crash only)
     WriteMiniDump();
 
