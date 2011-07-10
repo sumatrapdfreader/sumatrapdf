@@ -501,7 +501,7 @@ void DrawAboutPage(WindowInfo& win, HDC hdc)
     ClientRect rc(win.hwndCanvas);
     UpdateAboutLayoutInfo(win.hwndCanvas, hdc, &rc);
     DrawAbout(win.hwndCanvas, hdc, rc, win.staticLinks);
-    if (HasPermission(Perm_SavePreferences) && gGlobalPrefs.rememberOpenedFiles) {
+    if (HasPermission(Perm_SavePreferences | Perm_DiskAccess) && gGlobalPrefs.rememberOpenedFiles) {
         RectI rect = DrawBottomRightLink(win.hwndCanvas, hdc, _TR("Show frequently read"));
         win.staticLinks.Append(StaticLinkInfo(rect, SLINK_LIST_SHOW));
     }

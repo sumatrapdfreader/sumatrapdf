@@ -665,10 +665,10 @@ MenuDef menuDefContext[] = {
 };
 
 MenuDef menuDefContextStart[] = {
-    { _TRN("&Open Document"),               IDM_OPEN_SELECTED_DOCUMENT, 0 },
-    { _TRN("&Pin Document"),                IDM_PIN_SELECTED_DOCUMENT,  0 },
-    { SEP_ITEM,                             0,                          0 },
-    { _TRN("&Remove Document"),             IDM_FORGET_SELECTED_DOCUMENT, 0 },
+    { _TRN("&Open Document"),               IDM_OPEN_SELECTED_DOCUMENT, MF_REQ_DISK_ACCESS },
+    { _TRN("&Pin Document"),                IDM_PIN_SELECTED_DOCUMENT,  MF_REQ_DISK_ACCESS | MF_REQ_PREF_ACCESS },
+    { SEP_ITEM,                             0,                          MF_REQ_DISK_ACCESS | MF_REQ_PREF_ACCESS },
+    { _TRN("&Remove Document"),             IDM_FORGET_SELECTED_DOCUMENT, MF_REQ_DISK_ACCESS | MF_REQ_PREF_ACCESS },
 };
 
 static void AddFileMenuItem(HMENU menuFile, const TCHAR *filePath, UINT index)
@@ -2756,7 +2756,7 @@ static bool OnInverseSearch(WindowInfo& win, int x, int y)
 
 static void OnAboutContextMenu(WindowInfo& win, int x, int y)
 {
-    if (!HasPermission(Perm_SavePreferences) || !gGlobalPrefs.rememberOpenedFiles || !gGlobalPrefs.showStartPage)
+    if (!HasPermission(Perm_SavePreferences | Perm_DiskAccess) || !gGlobalPrefs.rememberOpenedFiles || !gGlobalPrefs.showStartPage)
         return;
 
     const TCHAR *filePath = GetStaticLink(win.staticLinks, x, y);
@@ -3223,7 +3223,7 @@ static void OnPaint(WindowInfo& win)
     HDC hdc = BeginPaint(win.hwndCanvas, &ps);
 
     if (win.IsAboutWindow()) {
-        if (HasPermission(Perm_SavePreferences) && gGlobalPrefs.rememberOpenedFiles && gGlobalPrefs.showStartPage)
+        if (HasPermission(Perm_SavePreferences | Perm_DiskAccess) && gGlobalPrefs.rememberOpenedFiles && gGlobalPrefs.showStartPage)
             DrawStartPage(win, win.buffer->GetDC(), gFileHistory);
         else
             DrawAboutPage(win, win.buffer->GetDC());
