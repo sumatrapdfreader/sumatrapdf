@@ -162,7 +162,7 @@ fz_bound_path(fz_path *path, fz_stroke_state *stroke, fz_matrix ctm)
 
 	if (stroke)
 	{
-		float miterlength = sinf(stroke->miterlimit * 0.5f);
+		float miterlength = stroke->miterlimit;
 		float linewidth = stroke->linewidth;
 		float expand = MAX(miterlength, linewidth) * 0.5f;
 		r.x0 -= expand;

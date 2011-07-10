@@ -35,17 +35,17 @@ fz_stroke_path(fz_device *dev, fz_path *path, fz_stroke_state *stroke, fz_matrix
 }
 
 void
-fz_clip_path(fz_device *dev, fz_path *path, int even_odd, fz_matrix ctm)
+fz_clip_path(fz_device *dev, fz_path *path, fz_rect *rect, int even_odd, fz_matrix ctm)
 {
 	if (dev->clip_path)
-		dev->clip_path(dev->user, path, even_odd, ctm);
+		dev->clip_path(dev->user, path, rect, even_odd, ctm);
 }
 
 void
-fz_clip_stroke_path(fz_device *dev, fz_path *path, fz_stroke_state *stroke, fz_matrix ctm)
+fz_clip_stroke_path(fz_device *dev, fz_path *path, fz_rect *rect, fz_stroke_state *stroke, fz_matrix ctm)
 {
 	if (dev->clip_stroke_path)
-		dev->clip_stroke_path(dev->user, path, stroke, ctm);
+		dev->clip_stroke_path(dev->user, path, rect, stroke, ctm);
 }
 
 void
@@ -115,10 +115,10 @@ fz_fill_image_mask(fz_device *dev, fz_pixmap *image, fz_matrix ctm,
 }
 
 void
-fz_clip_image_mask(fz_device *dev, fz_pixmap *image, fz_matrix ctm)
+fz_clip_image_mask(fz_device *dev, fz_pixmap *image, fz_rect *rect, fz_matrix ctm)
 {
 	if (dev->clip_image_mask)
-		dev->clip_image_mask(dev->user, image, ctm);
+		dev->clip_image_mask(dev->user, image, rect, ctm);
 }
 
 void

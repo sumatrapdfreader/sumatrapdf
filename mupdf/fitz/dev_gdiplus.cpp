@@ -843,7 +843,7 @@ fz_gdiplus_stroke_path(void *user, fz_path *path, fz_stroke_state *stroke, fz_ma
 }
 
 extern "C" static void
-fz_gdiplus_clip_path(void *user, fz_path *path, int evenodd, fz_matrix ctm)
+fz_gdiplus_clip_path(void *user, fz_path *path, fz_rect *rect, int evenodd, fz_matrix ctm)
 {
 	GraphicsPath *gpath = gdiplus_get_path(path, ctm, evenodd);
 	
@@ -857,7 +857,7 @@ fz_gdiplus_clip_path(void *user, fz_path *path, int evenodd, fz_matrix ctm)
 }
 
 extern "C" static void
-fz_gdiplus_clip_stroke_path(void *user, fz_path *path, fz_stroke_state *stroke, fz_matrix ctm)
+fz_gdiplus_clip_stroke_path(void *user, fz_path *path, fz_rect *rect, fz_stroke_state *stroke, fz_matrix ctm)
 {
 	GraphicsPath *gpath = gdiplus_get_path(path, ctm);
 	
@@ -1243,7 +1243,7 @@ fz_gdiplus_fill_image_mask(void *user, fz_pixmap *image, fz_matrix ctm,
 }
 
 extern "C" static void
-fz_gdiplus_clip_image_mask(void *user, fz_pixmap *image, fz_matrix ctm)
+fz_gdiplus_clip_image_mask(void *user, fz_pixmap *image, fz_rect *rect, fz_matrix ctm)
 {
 	((userData *)user)->pushClipMask(image, ctm);
 }

@@ -100,7 +100,7 @@ fz_draw_stroke_path(void *user, fz_path *path, fz_stroke_state *stroke, fz_matri
 }
 
 static void
-fz_draw_clip_path(void *user, fz_path *path, int even_odd, fz_matrix ctm)
+fz_draw_clip_path(void *user, fz_path *path, fz_rect *rect, int even_odd, fz_matrix ctm)
 {
 	fz_draw_device *dev = user;
 	fz_colorspace *model = dev->dest->colorspace;
@@ -121,6 +121,9 @@ fz_draw_clip_path(void *user, fz_path *path, int even_odd, fz_matrix ctm)
 
 	bbox = fz_bound_gel(dev->gel);
 	bbox = fz_intersect_bbox(bbox, dev->scissor);
+	if (rect) {
+		bbox = fz_intersect_bbox(bbox, fz_round_rect(*rect));
+	}
 
 	if (fz_is_empty_rect(bbox) || fz_is_rect_gel(dev->gel))
 	{
@@ -149,7 +152,7 @@ fz_draw_clip_path(void *user, fz_path *path, int even_odd, fz_matrix ctm)
 }
 
 static void
-fz_draw_clip_stroke_path(void *user, fz_path *path, fz_stroke_state *stroke, fz_matrix ctm)
+fz_draw_clip_stroke_path(void *user, fz_path *path, fz_rect *rect, fz_stroke_state *stroke, fz_matrix ctm)
 {
 	fz_draw_device *dev = user;
 	fz_colorspace *model = dev->dest->colorspace;
@@ -177,6 +180,8 @@ fz_draw_clip_stroke_path(void *user, fz_path *path, fz_stroke_state *stroke, fz_
 
 	bbox = fz_bound_gel(dev->gel);
 	bbox = fz_intersect_bbox(bbox, dev->scissor);
+	if (rect)
+		bbox = fz_intersect_bbox(bbox, fz_round_rect(*rect));
 
 	mask = fz_new_pixmap_with_rect(NULL, bbox);
 	dest = fz_new_pixmap_with_rect(model, bbox);
@@ -681,7 +686,7 @@ fz_draw_fill_image_mask(void *user, fz_pixmap *image, fz_matrix ctm,
 }
 
 static void
-fz_draw_clip_image_mask(void *user, fz_pixmap *image, fz_matrix ctm)
+fz_draw_clip_image_mask(void *user, fz_pixmap *image, fz_rect *rect, fz_matrix ctm)
 {
 	fz_draw_device *dev = user;
 	fz_colorspace *model = dev->dest->colorspace;
@@ -708,6 +713,8 @@ fz_draw_clip_image_mask(void *user, fz_pixmap *image, fz_matrix ctm)
 
 	bbox = fz_round_rect(fz_transform_rect(ctm, fz_unit_rect));
 	bbox = fz_intersect_bbox(bbox, dev->scissor);
+	if (rect)
+		bbox = fz_intersect_bbox(bbox, fz_round_rect(*rect));
 
 	mask = fz_new_pixmap_with_rect(NULL, bbox);
 	dest = fz_new_pixmap_with_rect(model, bbox);

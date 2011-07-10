@@ -105,7 +105,7 @@ fz_trace_stroke_path(void *user, fz_path *path, fz_stroke_state *stroke, fz_matr
 }
 
 static void
-fz_trace_clip_path(void *user, fz_path *path, int even_odd, fz_matrix ctm)
+fz_trace_clip_path(void *user, fz_path *path, fz_rect *rect, int even_odd, fz_matrix ctm)
 {
 	printf("<clip_path ");
 	if (even_odd)
@@ -119,7 +119,7 @@ fz_trace_clip_path(void *user, fz_path *path, int even_odd, fz_matrix ctm)
 }
 
 static void
-fz_trace_clip_stroke_path(void *user, fz_path *path, fz_stroke_state *stroke, fz_matrix ctm)
+fz_trace_clip_stroke_path(void *user, fz_path *path, fz_rect *rect, fz_stroke_state *stroke, fz_matrix ctm)
 {
 	printf("<clip_stroke_path ");
 	fz_trace_matrix(ctm);
@@ -210,7 +210,7 @@ fz_colorspace *colorspace, float *color, float alpha)
 }
 
 static void
-fz_trace_clip_image_mask(void *user, fz_pixmap *image, fz_matrix ctm)
+fz_trace_clip_image_mask(void *user, fz_pixmap *image, fz_rect *rect, fz_matrix ctm)
 {
 	printf("<clip_image_mask ");
 	fz_trace_matrix(ctm);

@@ -49,7 +49,9 @@ EXPORTS
 	fz_matrix_expansion
 	fz_round_rect
 	fz_intersect_bbox
+	fz_intersect_rect
 	fz_union_bbox
+	fz_union_rect
 	fz_transform_point
 	fz_transform_vector
 	fz_transform_rect

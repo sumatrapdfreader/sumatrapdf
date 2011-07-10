@@ -273,7 +273,9 @@ float fz_matrix_expansion(fz_matrix m);
 
 fz_bbox fz_round_rect(fz_rect r);
 fz_bbox fz_intersect_bbox(fz_bbox a, fz_bbox b);
+fz_rect fz_intersect_rect(fz_rect a, fz_rect b);
 fz_bbox fz_union_bbox(fz_bbox a, fz_bbox b);
+fz_rect fz_union_rect(fz_rect a, fz_rect b);
 
 fz_point fz_transform_point(fz_matrix m, fz_point p);
 fz_point fz_transform_vector(fz_matrix m, fz_point p);
@@ -963,8 +965,8 @@ struct fz_device_s
 
 	void (*fill_path)(void *, fz_path *, int even_odd, fz_matrix, fz_colorspace *, float *color, float alpha);
 	void (*stroke_path)(void *, fz_path *, fz_stroke_state *, fz_matrix, fz_colorspace *, float *color, float alpha);
-	void (*clip_path)(void *, fz_path *, int even_odd, fz_matrix);
-	void (*clip_stroke_path)(void *, fz_path *, fz_stroke_state *, fz_matrix);
+	void (*clip_path)(void *, fz_path *, fz_rect *rect, int even_odd, fz_matrix);
+	void (*clip_stroke_path)(void *, fz_path *, fz_rect *rect, fz_stroke_state *, fz_matrix);
 
 	void (*fill_text)(void *, fz_text *, fz_matrix, fz_colorspace *, float *color, float alpha);
 	void (*stroke_text)(void *, fz_text *, fz_stroke_state *, fz_matrix, fz_colorspace *, float *color, float alpha);
@@ -975,7 +977,7 @@ struct fz_device_s
 	void (*fill_shade)(void *, fz_shade *shd, fz_matrix ctm, float alpha);
 	void (*fill_image)(void *, fz_pixmap *img, fz_matrix ctm, float alpha);
 	void (*fill_image_mask)(void *, fz_pixmap *img, fz_matrix ctm, fz_colorspace *, float *color, float alpha);
-	void (*clip_image_mask)(void *, fz_pixmap *img, fz_matrix ctm);
+	void (*clip_image_mask)(void *, fz_pixmap *img, fz_rect *rect, fz_matrix ctm);
 
 	void (*pop_clip)(void *);
 
@@ -990,8 +992,8 @@ struct fz_device_s
 
 void fz_fill_path(fz_device *dev, fz_path *path, int even_odd, fz_matrix ctm, fz_colorspace *colorspace, float *color, float alpha);
 void fz_stroke_path(fz_device *dev, fz_path *path, fz_stroke_state *stroke, fz_matrix ctm, fz_colorspace *colorspace, float *color, float alpha);
-void fz_clip_path(fz_device *dev, fz_path *path, int even_odd, fz_matrix ctm);
-void fz_clip_stroke_path(fz_device *dev, fz_path *path, fz_stroke_state *stroke, fz_matrix ctm);
+void fz_clip_path(fz_device *dev, fz_path *path, fz_rect *rect, int even_odd, fz_matrix ctm);
+void fz_clip_stroke_path(fz_device *dev, fz_path *path, fz_rect *rect, fz_stroke_state *stroke, fz_matrix ctm);
 void fz_fill_text(fz_device *dev, fz_text *text, fz_matrix ctm, fz_colorspace *colorspace, float *color, float alpha);
 void fz_stroke_text(fz_device *dev, fz_text *text, fz_stroke_state *stroke, fz_matrix ctm, fz_colorspace *colorspace, float *color, float alpha);
 void fz_clip_text(fz_device *dev, fz_text *text, fz_matrix ctm, int accumulate);
@@ -1001,7 +1003,7 @@ void fz_pop_clip(fz_device *dev);
 void fz_fill_shade(fz_device *dev, fz_shade *shade, fz_matrix ctm, float alpha);
 void fz_fill_image(fz_device *dev, fz_pixmap *image, fz_matrix ctm, float alpha);
 void fz_fill_image_mask(fz_device *dev, fz_pixmap *image, fz_matrix ctm, fz_colorspace *colorspace, float *color, float alpha);
-void fz_clip_image_mask(fz_device *dev, fz_pixmap *image, fz_matrix ctm);
+void fz_clip_image_mask(fz_device *dev, fz_pixmap *image, fz_rect *rect, fz_matrix ctm);
 void fz_begin_mask(fz_device *dev, fz_rect area, int luminosity, fz_colorspace *colorspace, float *bc);
 void fz_end_mask(fz_device *dev);
 void fz_begin_group(fz_device *dev, fz_rect area, int isolated, int knockout, int blendmode, float alpha);

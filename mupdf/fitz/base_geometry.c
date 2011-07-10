@@ -166,6 +166,36 @@ fz_round_rect(fz_rect f)
 	return i;
 }
 
+fz_rect
+fz_intersect_rect(fz_rect a, fz_rect b)
+{
+	fz_rect r;
+	if (fz_is_infinite_rect(a)) return b;
+	if (fz_is_infinite_rect(b)) return a;
+	if (fz_is_empty_rect(a)) return fz_empty_rect;
+	if (fz_is_empty_rect(b)) return fz_empty_rect;
+	r.x0 = MAX(a.x0, b.x0);
+	r.y0 = MAX(a.y0, b.y0);
+	r.x1 = MIN(a.x1, b.x1);
+	r.y1 = MIN(a.y1, b.y1);
+	return (r.x1 < r.x0 || r.y1 < r.y0) ? fz_empty_rect : r;
+}
+
+fz_rect
+fz_union_rect(fz_rect a, fz_rect b)
+{
+	fz_rect r;
+	if (fz_is_infinite_rect(a)) return a;
+	if (fz_is_infinite_rect(b)) return b;
+	if (fz_is_empty_rect(a)) return b;
+	if (fz_is_empty_rect(b)) return a;
+	r.x0 = MIN(a.x0, b.x0);
+	r.y0 = MIN(a.y0, b.y0);
+	r.x1 = MAX(a.x1, b.x1);
+	r.y1 = MAX(a.y1, b.y1);
+	return r;
+}
+
 fz_bbox
 fz_intersect_bbox(fz_bbox a, fz_bbox b)
 {
