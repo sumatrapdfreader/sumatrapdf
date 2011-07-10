@@ -770,13 +770,23 @@ static void AppendFavMenuItems(HMENU m, FileFavs *f, UINT& idx, bool combined=fa
     }
 }
 
-static int sortByBaseFileName(const void *a, const void *b)
+static int SortByBaseFileName(const void *a, const void *b)
 {
     TCHAR *filePathA = *(TCHAR**)a;
     TCHAR *filePathB = *(TCHAR**)b;
     return str::CmpNatural(path::GetBaseName(filePathA), path::GetBaseName(filePathB));
 }
 
+static void GetSortedFilePaths(Favorites *favorites, Vec<TCHAR*>& filePathsSortedOut, FileFavs *toIgnore)
+{
+    for (size_t i = 0; i < favorites->favs.Count(); i++) {
+        FileFavs *f = favorites->favs.At(i);
+        if (f != toIgnore)
+            filePathsSortedOut.Append(f->filePath);
+    }
+    filePathsSortedOut.Sort(SortByBaseFileName);
+}
+    
 // For easy access, we try to show favorites in the menu, similar to a list of
 // recently opened files.
 // The first menu items are for currently opened file (up to MAX_FAV_MENUS), based
@@ -800,12 +810,7 @@ static void AppendFavMenus(HMENU m, const TCHAR *currFilePath)
     Vec<TCHAR*> filePathsSorted;
     if (HasPermission(Perm_DiskAccess)) {
         // only show favorites for other files, if we're allowed to open them
-        for (size_t i = 0; i < gFavorites->favs.Count(); i++) {
-            FileFavs *f = gFavorites->favs.At(i);
-            if (f != currFileFav)
-                filePathsSorted.Append(f->filePath);
-        }
-        filePathsSorted.Sort(sortByBaseFileName);
+        GetSortedFilePaths(gFavorites, filePathsSorted, currFileFav);
     }
     if (currFileFav)
         filePathsSorted.InsertAt(0, currFileFav->filePath);
@@ -6531,10 +6536,14 @@ static void PopulateFavTreeIfNeeded(WindowInfo *win)
     if (TreeView_GetCount(hwndTree) > 0)
         return;
 
+    Vec<TCHAR*> filePathsSorted;
+    // only show favorites for other files, if we're allowed to open them
+    GetSortedFilePaths(gFavorites, filePathsSorted, NULL);
+
     SendMessage(hwndTree, WM_SETREDRAW, FALSE, 0);
-    for (size_t i=0; i<gFavorites->Count(); i++)
+    for (size_t i=0; i<filePathsSorted.Count(); i++)
     {
-        FileFavs *f = gFavorites->favs.At(i);
+        FileFavs *f = gFavorites->GetFavByFilePath(filePathsSorted.At(i));
         bool isExpanded = (win->expandedFavorites.Find(f->filePath) != -1);
         HTREEITEM node = InsertFavTopLevelNode(hwndTree, f, isExpanded);
 #if COLLAPSE_SINGLE_PAGE_FAVS
