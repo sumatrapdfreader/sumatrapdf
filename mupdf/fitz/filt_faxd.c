@@ -559,6 +559,12 @@ loop:
 	{
 		fax->eolc = 0;
 		error = dec1d(fax);
+		/* SumatraPDF: let a partially broken image be padded */
+		if (error && p > buf)
+		{
+			fz_catch(error, "cannot decode part of 1d code");
+			goto rtc;
+		}
 		if (error)
 			return fz_rethrow(error, "cannot decode 1d code");
 	}
