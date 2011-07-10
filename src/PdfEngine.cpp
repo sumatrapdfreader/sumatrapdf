@@ -1749,6 +1749,14 @@ void CPdfEngine::RunGC()
     LeaveCriticalSection(&_xrefAccess);
 }
 
+static bool IsRelativeURI(const TCHAR *uri)
+{
+    const TCHAR *colon = str::FindChar(uri, ':');
+    const TCHAR *slash = str::FindChar(uri, '/');
+
+    return !colon || (slash && colon > slash);
+}
+
 TCHAR *PdfLink::GetValue() const
 {
     if (!link)
@@ -1762,6 +1770,16 @@ TCHAR *PdfLink::GetValue() const
     switch (link->kind) {
     case PDF_LINK_URI:
         path = str::conv::FromPdf(link->dest);
+        if (IsRelativeURI(path)) {
+            obj = fz_dict_gets(engine->_xref->trailer, "Root");
+            obj = fz_dict_gets(fz_dict_gets(obj, "URI"), "Base");
+            ScopedMem<TCHAR> base(obj ? str::conv::FromPdf(obj) : NULL);
+            if (!str::IsEmpty(base.Get())) {
+                ScopedMem<TCHAR> uri(str::Join(base, path));
+                free(path);
+                path = uri.StealData();
+            }
+        }
         break;
     case PDF_LINK_LAUNCH:
         obj = fz_dict_gets(link->dest, "Type");
