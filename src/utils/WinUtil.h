@@ -24,6 +24,14 @@ public:
     ~ScopedCom() { CoUninitialize(); }
 };
 
+class ScopedHandle {
+    HANDLE handle;
+public:
+    ScopedHandle(HANDLE handle) : handle(handle) { }
+    ~ScopedHandle() { CloseHandle(handle); }
+    operator HANDLE() const { return handle; }
+};
+
 class MillisecondTimer {
     LARGE_INTEGER   start;
     LARGE_INTEGER   end;

@@ -246,23 +246,21 @@ static void SetMsg(TCHAR *msg, Color color)
 // Returns TRUE if killed a process
 BOOL KillProcIdWithName(DWORD processId, TCHAR *processPath, BOOL waitUntilTerminated)
 {
-    BOOL killed = FALSE;
-
-    HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ | PROCESS_TERMINATE, FALSE, processId);
-    HANDLE hModSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, processId);
+    ScopedHandle hProcess(OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ | PROCESS_TERMINATE, FALSE, processId));
+    ScopedHandle hModSnapshot(CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, processId));
     if (!hProcess || INVALID_HANDLE_VALUE == hModSnapshot)
-        goto Exit;
+        return FALSE;
 
     MODULEENTRY32 me32;
     me32.dwSize = sizeof(me32);
     if (!Module32First(hModSnapshot, &me32))
-        goto Exit;
+        return FALSE;
     if (!path::IsSame(processPath, me32.szExePath))
-        goto Exit;
+        return FALSE;
 
-    killed = TerminateProcess(hProcess, 0);
+    BOOL killed = TerminateProcess(hProcess, 0);
     if (!killed)
-        goto Exit;
+        return FALSE;
 
     if (waitUntilTerminated)
         WaitForSingleObject(hProcess, TEN_SECONDS_IN_MS);
@@ -270,34 +268,28 @@ BOOL KillProcIdWithName(DWORD processId, TCHAR *processPath, BOOL waitUntilTermi
     UpdateWindow(FindWindow(NULL, _T("Shell_TrayWnd")));
     UpdateWindow(GetDesktopWindow());
 
-Exit:
-    CloseHandle(hModSnapshot);
-    CloseHandle(hProcess);
-    return killed;
+    return TRUE;
 }
 
 #define MAX_PROCESSES 1024
 
 static int KillProcess(TCHAR *processPath, BOOL waitUntilTerminated)
 {
-    int killCount = 0;
-
-    HANDLE hProcSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    ScopedHandle hProcSnapshot(CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0));
     if (INVALID_HANDLE_VALUE == hProcSnapshot)
-        goto Error;
+        return -1;
 
     PROCESSENTRY32 pe32;
     pe32.dwSize = sizeof(pe32);
     if (!Process32First(hProcSnapshot, &pe32))
-        goto Error;
+        return -1;
 
+    int killCount = 0;
     do {
         if (KillProcIdWithName(pe32.th32ProcessID, processPath, waitUntilTerminated))
             killCount++;
     } while (Process32Next(hProcSnapshot, &pe32));
 
-Error:
-    CloseHandle(hProcSnapshot);
     return killCount;
 }
 
@@ -402,8 +394,7 @@ void InvalidateFrame()
 bool CreateProcessHelper(const TCHAR *exe, const TCHAR *args=NULL)
 {
     ScopedMem<TCHAR> cmd(str::Format(_T("\"%s\" %s"), exe, args ? args : _T("")));
-    HANDLE process = LaunchProcess(cmd);
-    CloseHandle(process);
+    ScopedHandle process(LaunchProcess(cmd));
     return process != NULL;
 }
 
@@ -454,49 +445,48 @@ void bz_internal_error(int errcode)
 }
 #endif
 
-static bool IsRunningBrowserPlugin(DWORD procId)
+static bool IsUsingInstallation(DWORD procId)
 {
-    HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, procId);
-    if (snap == INVALID_HANDLE_VALUE) return false;
+    ScopedHandle snap(CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, procId));
+    if (snap == INVALID_HANDLE_VALUE)
+        return false;
+
+    ScopedMem<TCHAR> libmupdf(path::Join(gGlobalData.installDir, _T("libmupdf.dll")));
+    ScopedMem<TCHAR> browserPlugin(path::Join(gGlobalData.installDir, _T("npPdfViewer.dll")));
+
     MODULEENTRY32 mod;
     mod.dwSize = sizeof(mod);
     BOOL cont = Module32First(snap, &mod);
-    bool hasBrowserPlugin = false;
     while (cont) {
-        TCHAR *name = mod.szModule;
-        if (str::EqI(name, _T("npPdfViewer.dll"))) {
-            hasBrowserPlugin = true;
-            break;
+        if (path::IsSame(libmupdf, mod.szExePath) ||
+            path::IsSame(browserPlugin, mod.szExePath)) {
+            return true;
         }
         cont = Module32Next(snap, &mod);
     }
-    CloseHandle(snap);
-    return hasBrowserPlugin;
+
+    return false;
 }
 
-// return names of processes that are running browser plugin
-// (i.e. have npPdfViewer.dll loaded)
-static void ProcessesWithBrowserPlugin(StrVec& names)
+// return names of processes that are running part of the installation
+// (i.e. have libmupdf.dll or npPdfViewer.dll loaded)
+static void ProcessesUsingInstallation(StrVec& names)
 {
-    PROCESSENTRY32 proc;
-    BOOL ok;
     FreeVecMembers(names);
-    HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    ScopedHandle snap(CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0));
     if (INVALID_HANDLE_VALUE == snap)
-        goto Exit;
+        return;
 
+    PROCESSENTRY32 proc;
     proc.dwSize = sizeof(proc);
-    ok = Process32First(snap, &proc);
+    BOOL ok = Process32First(snap, &proc);
     while (ok) {
-        if (IsRunningBrowserPlugin(proc.th32ProcessID)) {
+        if (IsUsingInstallation(proc.th32ProcessID)) {
             names.Append(str::Dup(proc.szExeFile));
         }
         proc.dwSize = sizeof(proc);
         ok = Process32Next(snap, &proc);
     }
-
-Exit:
-    CloseHandle(snap);
 }
 
 static void SetDefaultMsg()
@@ -531,7 +521,7 @@ static void SetCloseProcessMsg()
 static void CheckInstallUninstallPossible()
 {
     StrVec prevProcs(gProcessesToClose);
-    ProcessesWithBrowserPlugin(gProcessesToClose);
+    ProcessesUsingInstallation(gProcessesToClose);
 
     bool wasPossible = prevProcs.Count() == 0;
     bool possible = gProcessesToClose.Count() == 0;
@@ -641,13 +631,12 @@ BOOL InstallCopyFiles()
         BOOL ok = file::WriteAll(extpath, data, (size_t)finfo.uncompressed_size);
         if (ok) {
             // set modification time to original value
-            HANDLE hFile = CreateFile(extpath, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
+            ScopedHandle hFile(CreateFile(extpath, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL));
             if (hFile != INVALID_HANDLE_VALUE) {
                 FILETIME ftModified, ftLocal;
                 DosDateTimeToFileTime(HIWORD(finfo.dosDate), LOWORD(finfo.dosDate), &ftLocal);
                 LocalFileTimeToFileTime(&ftLocal, &ftModified);
                 SetFileTime(hFile, NULL, NULL, &ftModified);
-                CloseHandle(hFile);
             }
             success = TRUE;
         }
@@ -1274,11 +1263,10 @@ void OnButtonStartSumatra()
 {
     ScopedMem<TCHAR> exePath(GetInstalledExePath());
     // try to create the process as a normal user
-    HANDLE h = CreateProcessAtLevel(exePath);
+    ScopedHandle h(CreateProcessAtLevel(exePath));
     // create the process as is (mainly for Windows 2000 compatibility)
     if (!h)
         CreateProcessHelper(exePath);
-    CloseHandle(h);
 
     OnButtonExit();
 }

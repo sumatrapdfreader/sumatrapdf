@@ -2741,10 +2741,8 @@ static bool OnInverseSearch(WindowInfo& win, int x, int y)
     if (inverseSearch)
         cmdline.Set(win.pdfsync->prepare_commandline(inverseSearch, srcfilepath, line, col));
     if (!str::IsEmpty(cmdline.Get())) {
-        HANDLE process = LaunchProcess(cmdline);
-        if (process)
-            CloseHandle(process);
-        else
+        ScopedHandle process(LaunchProcess(cmdline));
+        if (!process)
             win.ShowNotification(_TR("Cannot start inverse search command. Please check the command line in the settings."));
     }
     else if (gGlobalPrefs.enableTeXEnhancements)
