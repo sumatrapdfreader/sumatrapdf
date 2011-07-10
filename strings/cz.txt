@@ -160,8 +160,20 @@ Z&většení
 (of %d)
 (z %d)
 
+(page %d)
+(stránka %d)
+
 About SumatraPDF
 O programu SumatraPDF
+
+Add Favorite
+Přidat oblíbenou položku
+
+Add page %d to favorites
+Přidat stránku %d k oblíbeným...
+
+Add to favorites
+Přidat k oblíbeným
 
 Advanced
 Upřesnit
@@ -221,7 +233,7 @@ Cannot start inverse search command. Please check the command line in the settin
 Příkaz inverzní hledání nelze spustit. Zkontrolujte nastavení příkazového řádku.
 
 Change Language
-Změnit jazyk (Change Language)
+Změnit jazyk... (Change Language)
 
 Check for &Updates
 &Zkontrolovat aktualizace
@@ -250,6 +262,9 @@ Kopírovat ko&mentář
 Copying text was denied (copying as image only)
 Kopírování textu bylo odepřeno (zkopírováno jako obraz)
 
+Could not obtain Printer properties
+Nelze získat vlastnosti tiskárny
+
 Could not open Printer
 Tiskárnu nelze otevřít
 
@@ -261,6 +276,9 @@ Stránku nelze vykreslit
 
 Created:
 Vytvořeno:
+
+Current file
+Aktuální soubor
 
 Custom &Zoom...\tCtrl-Y
 Vlastní &měřítko...\tCtrl+Y
@@ -301,6 +319,9 @@ Dvojité kliknutí na PDF dokument vykoná zadaný příkazový řádek:
 Error loading %s
 Chyba při načítání %s
 
+F&avorites
+&Oblíbené položky
+
 F&orward\tAlt+Right Arrow
 V&před\tAlt+Šipka vpravo
 
@@ -312,6 +333,9 @@ Dvojstránky
 
 Failed to save a file
 Při ukládání došlo k chybě
+
+Favorites
+Oblíbené položky
 
 File Size:
 Velikost souboru:
@@ -425,7 +449,7 @@ OK
 OK
 
 Open
-Otevřít
+Otevřít...
 
 Open a document...
 Otevřít dokument...
@@ -460,6 +484,9 @@ PDF dokumenty
 Pa&ge...\tCtrl-G
 Strán&ka...\tCtrl+G
 
+Page %d
+Stránka %d
+
 Page Size:
 Velikost stránky:
 
@@ -485,10 +512,13 @@ Previous Page
 Předchozí stránka
 
 Print
-Tisk
+Tisk...
 
 Print range
 Rozsah tisku
+
+Printer with given name doesn't exist
+Tiskárna se zadaným názvem neexistuje
 
 Printing is still in progress. Abort and start over?
 Tisk je stále probíhá. Přerušit a začít znovu?
@@ -502,6 +532,12 @@ Potíže s tiskem
 Remember &opened files
 Pamatovat si &otevřené soubory
 
+Remove from favorites
+Odebrat z oblíbených
+
+Remove page %d from favorites
+Odebrat stránku %d z oblíbených
+
 Rotate &Left\tCtrl-Shift--
 Otočit do&leva\tCtrl+Shift+Num-
 
@@ -509,7 +545,7 @@ Rotate &Right\tCtrl-Shift-+
 Otočit dop&rava\tCtrl+Shift+Num+
 
 Save As
-Uložit jako
+Uložit jako...
 
 Save S&hortcut...\tCtrl-Shift-S
 U&ložit zástupce...\tCtrl+Shift+S
@@ -537,6 +573,9 @@ Zobrazit panel nás&trojů
 
 Show &pages continuously
 Zobrazit stránky &průběžně
+
+Show Favorites
+Zobrazit oblíbené položky
 
 Show frequently read
 Zobrazit často čtené dokumenty
@@ -623,18 +662,5 @@ printing document
 tisk dokumentu
 
 # Untranslated:
-#(page %d)
-#Add Favorite
-#Add page %d to favorites
 #Add page %d to favorites with (optional) name:
-#Add to favorites
-#Could not obtain Printer properties
-#Current file
-#F&avorites
-#Favorites
-#Page %d
-#Printer with given name doesn't exist
-#Remove from favorites
-#Remove page %d from favorites
-#Show Favorites
 
