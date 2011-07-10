@@ -800,11 +800,12 @@ static void GetSortedFilePaths(Favorites *favorites, Vec<TCHAR*>& filePathsSorte
 // or some such, to make it stand out from other submenus)
 static void AppendFavMenus(HMENU m, const TCHAR *currFilePath)
 {
-    UINT menuId = IDM_FAV_FIRST;
+    // To minimize mouse movement when navigating current file via favorites
+    // menu, put favorites for current file first
     FileFavs *currFileFav = NULL;
-    gFavorites->ResetMenuIds();
-    if (NULL != currFilePath)
+    if (NULL != currFilePath) {
         currFileFav = gFavorites->GetFavByFilePath(currFilePath);
+    }
 
     // sort the files with favorites by base file name of file path
     Vec<TCHAR*> filePathsSorted;
@@ -819,6 +820,9 @@ static void AppendFavMenus(HMENU m, const TCHAR *currFilePath)
         return;
 
     AppendMenu(m, MF_SEPARATOR, 0, NULL);
+
+    gFavorites->ResetMenuIds();
+    UINT menuId = IDM_FAV_FIRST;
 
     size_t menusCount = filePathsSorted.Count();
     if (menusCount > MAX_FAV_MENUS)
@@ -6537,7 +6541,6 @@ static void PopulateFavTreeIfNeeded(WindowInfo *win)
         return;
 
     Vec<TCHAR*> filePathsSorted;
-    // only show favorites for other files, if we're allowed to open them
     GetSortedFilePaths(gFavorites, filePathsSorted, NULL);
 
     SendMessage(hwndTree, WM_SETREDRAW, FALSE, 0);
@@ -7096,6 +7099,7 @@ static void AddFavorite(WindowInfo *win)
     gFavorites->AddOrReplace(filePath, pageNo, name);
     free(name);
     UpdateFavoritesTreeForAllWindows();
+    SavePrefs();
 }
 
 static void DelFavorite(WindowInfo *win)
@@ -7115,6 +7119,7 @@ static void DelFavorite(WindowInfo *win)
             }
         }
     }
+    SavePrefs();
 }
 
 static void UpdateMenu(WindowInfo *win, HMENU m)
