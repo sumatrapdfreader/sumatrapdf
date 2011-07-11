@@ -157,8 +157,23 @@ Contributor: WangKing (http://wkismet.spaces.live.com)
 (of %d)
 (%d中的)
 
+(page %d)
+(%d 页)
+
 About SumatraPDF
 关于 SumatraPDF
+
+Add Favorite
+添加收藏
+
+Add page %d to favorites
+收藏第%d页
+
+Add page %d to favorites with (optional) name:
+收藏%d页为:
+
+Add to favorites
+添加到收藏
 
 Advanced
 高级
@@ -247,6 +262,9 @@ Copy Co&mment
 Copying text was denied (copying as image only)
 无法复制文本 (只能作为图像复制)
 
+Could not obtain Printer properties
+无法获得打印属性
+
 Could not open Printer
 无法打开打印机
 
@@ -258,6 +276,9 @@ Couldn't render the page
 
 Created:
 创建时间:
+
+Current file
+当前文件
 
 Custom &Zoom...\tCtrl-Y
 自定义缩放(&Z)...\tCtrl-Y
@@ -298,6 +319,9 @@ Enter the command-line to invoke when you double-click on the PDF document:
 Error loading %s
 载入错误 %s
 
+F&avorites
+收藏(&A)
+
 F&orward\tAlt+Right Arrow
 下一视图(&O)\tAlt+Right Arrow
 
@@ -309,6 +333,9 @@ Facing
 
 Failed to save a file
 保存文件失败
+
+Favorites
+收藏
 
 File Size:
 文件大小:
@@ -457,6 +484,9 @@ PDF 文档
 Pa&ge...\tCtrl-G
 页面(&G))...\tCtrl-G
 
+Page %d
+第 %d 页
+
 Page Size:
 页面大小:
 
@@ -487,6 +517,9 @@ Print
 Print range
 打印范围
 
+Printer with given name doesn't exist
+这个打印机名字不存在
+
 Printing is still in progress. Abort and start over?
 仍然在打印.中断并重新开始?
 
@@ -498,6 +531,12 @@ Printing problem.
 
 Remember &opened files
 记住已打开的文件(&O)
+
+Remove from favorites
+删除收藏
+
+Remove page %d from favorites
+从收藏中删除第%d页
 
 Rotate &Left\tCtrl-Shift--
 向左旋转(&L)\tCtrl-Shift--
@@ -534,6 +573,9 @@ Show &Toolbar
 
 Show &pages continuously
 连续显示页面(&P)
+
+Show Favorites
+显示收藏
 
 Show frequently read
 显示最常阅读
@@ -618,20 +660,4 @@ copying text
 
 printing document
 正在打印文档
-
-# Untranslated:
-#(page %d)
-#Add Favorite
-#Add page %d to favorites
-#Add page %d to favorites with (optional) name:
-#Add to favorites
-#Could not obtain Printer properties
-#Current file
-#F&avorites
-#Favorites
-#Page %d
-#Printer with given name doesn't exist
-#Remove from favorites
-#Remove page %d from favorites
-#Show Favorites
 
