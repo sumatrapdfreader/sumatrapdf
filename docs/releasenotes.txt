@@ -10,7 +10,10 @@ Next version:
   http://code.google.com/p/sumatrapdf/source/browse/trunk/docs/sumatrapdfrestrict.ini
 * -named-dest also matches strings in table of contents
 * improved support for EPS files (requires Ghostscript)
-* improved support for right-to-left languages
+* improved support for right-to-left languages e.g. Arabic
+* more robust installer (requires to close programs, like a browser, that
+  are using Sumatra components, preventing them from being over-written
+  during installtion)
 
 1.6 (2011-05-30)
 
