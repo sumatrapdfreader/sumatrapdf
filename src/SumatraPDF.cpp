@@ -6246,23 +6246,40 @@ static LRESULT OnFavTreeNotify(WindowInfo *win, LPNMTREEVIEW pnmtv)
     return -1;
 }
 
-// TODO: doesn't handle WM_CONTEXTMENU triggered via Shift-F10 (xScreen==yScreen==-1) 
 static void OnFavTreeContextMenu(WindowInfo *win, int xScreen, int yScreen)
 {
-    TVHITTESTINFO ht = { 0 };
-    ht.pt.x = xScreen;
-    ht.pt.y = yScreen;
+    TVITEM item;
+    if (xScreen != -1 || yScreen != -1) {
+        TVHITTESTINFO ht = { 0 };
+        ht.pt.x = xScreen;
+        ht.pt.y = yScreen;
 
-    MapWindowPoints(HWND_DESKTOP, win->hwndFavTree, &ht.pt, 1);
-    TreeView_HitTest(win->hwndFavTree, &ht);
-    if ((ht.flags & TVHT_ONITEM) == 0)
-        return; // only display menu if over a node in tree
+        MapWindowPoints(HWND_DESKTOP, win->hwndFavTree, &ht.pt, 1);
+        TreeView_HitTest(win->hwndFavTree, &ht);
+        if ((ht.flags & TVHT_ONITEM) == 0)
+            return; // only display menu if over a node in tree
 
-    TreeView_SelectItem(win->hwndFavTree, ht.hItem);
+        TreeView_SelectItem(win->hwndFavTree, ht.hItem);
+        item.hItem = ht.hItem;
+    }
+    else {
+        item.hItem = TreeView_GetSelection(win->hwndFavTree);
+        if (!item.hItem)
+            return;
+        RECT rcItem;
+        if (TreeView_GetItemRect(win->hwndFavTree, item.hItem, &rcItem, TRUE)) {
+            MapWindowPoints(win->hwndFavTree, HWND_DESKTOP, (POINT *)&rcItem, 2);
+            xScreen = rcItem.left;
+            yScreen = rcItem.bottom;
+        }
+        else {
+            WindowRect rc(win->hwndFavTree);
+            xScreen = rc.x;
+            yScreen = rc.y;
+        }
+    }
 
     FavName *toDelete = NULL;
-    TVITEM item;
-    item.hItem = ht.hItem;
     item.mask = TVIF_PARAM;
     TreeView_GetItem(win->hwndFavTree, &item);
     toDelete = (FavName*)item.lParam;
@@ -6279,7 +6296,7 @@ static void OnFavTreeContextMenu(WindowInfo *win, int xScreen, int yScreen)
             gFavorites->Remove(f->filePath, toDelete->pageNo);
         } else {
             // toDelete == NULL => this is a parent node signifying all bookmarks in a file
-            item.hItem = TreeView_GetChild(win->hwndFavTree, ht.hItem);
+            item.hItem = TreeView_GetChild(win->hwndFavTree, item.hItem);
             item.mask = TVIF_PARAM;
             TreeView_GetItem(win->hwndFavTree, &item);
             toDelete = (FavName*)item.lParam;
