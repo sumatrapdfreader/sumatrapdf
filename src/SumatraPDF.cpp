@@ -261,6 +261,7 @@ static void ToggleTocBox(WindowInfo *win);
 static void ClearTocBox(WindowInfo *win);
 static void ToggleFavorites(WindowInfo *win);
 static void UpdateFavoritesTreeForAllWindows();
+static void RememberFavTreeExpansionState(WindowInfo *win);
 static void UpdateToolbarFindText(WindowInfo& win);
 static void UpdateToolbarPageText(WindowInfo& win, int pageCount);
 static void UpdateUITextForLanguage();
@@ -1916,11 +1917,7 @@ Error:
             // accidentally update gGlobalState with this window's dimensions
             MoveWindow(win.hwndFrame, rect.x, rect.y, rect.dx, rect.dy, TRUE);
         }
-#if 0 // not ready yet
-        else {
-            IntelligentWindowResize(win);
-        }
-#endif
+
         if (showWin) {
             ShowWindow(win.hwndFrame, showType);
         }
@@ -1991,12 +1988,16 @@ WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin, b
     bool isNewWindow = false;
     if (!win && 1 == gWindows.Count() && gWindows[0]->IsAboutWindow()) {
         win = gWindows[0];
-    }
-    else if (!win || win->IsDocLoaded() && !forceReuse) {
+    } else if (!win || win->IsDocLoaded() && !forceReuse) {
+        WindowInfo *currWin = win;
         win = CreateWindowInfo();
         if (!win)
             return NULL;
         isNewWindow = true;
+        if (currWin) {
+            RememberFavTreeExpansionState(currWin);
+            win->expandedFavorites = currWin->expandedFavorites;
+        }
     }
 
     DeleteOldSelectionInfo(*win, true);
