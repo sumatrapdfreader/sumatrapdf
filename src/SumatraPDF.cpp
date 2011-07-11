@@ -1829,9 +1829,6 @@ static bool LoadDocIntoWindow(
     }
 
     float zoomVirtual = gGlobalPrefs.defaultZoom;
-    if (gPluginMode && (Engine_PDF == win.dm->engineType))
-        zoomVirtual = ZOOM_FIT_WIDTH;
-
     int rotation = DEFAULT_ROTATION;
 
     if (state) {
@@ -7998,6 +7995,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         gGlobalPrefs.toolbarVisible = true;
         // never allow esc as a shortcut to quit
         gGlobalPrefs.escToExit = false;
+        // always display documents as single page/continuous/fit width
+        // (similar to Adobe Reader, Google Chrome and how browsers display most HTML)
+        gGlobalPrefs.defaultDisplayMode = DM_CONTINUOUS;
+        gGlobalPrefs.defaultZoom = ZOOM_FIT_WIDTH;
     }
 
     WindowInfo *win = NULL;
