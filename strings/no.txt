@@ -11,6 +11,7 @@ Lang: no Norwegian (Norsk)
 Contributor: Jon Ivar F. Omland
 Contributor: Kjell A. A. Holm
 Contributor: BJ Hill
+Contributor: Bjørn Aas
 Contributor: Tommy M. Stephansen
 
 &About
@@ -26,7 +27,7 @@ Fak&tisk størrelse\tCtrl+1
 Tilbake\tAlt+Pil venstre
 
 &Book View\tCtrl-8
-&Bokvisning\tCtrl-8
+&Bokvisning\tCtrl+8
 
 &Close\tCtrl-W
 &Lukk\tCtrl+W
@@ -38,13 +39,13 @@ Tilbake\tAlt+Pil venstre
 Kopier merket tekst\tCtrl+C
 
 &Don't ask me again
-&Ikke spør meg igjen.
+&Ikke spør meg igjen
 
 &Even pages only
 Bare &partallssider
 
 &Facing\tCtrl-7
-&Vendt\tCtrl-7
+&Vendt\tCtrl+7
 
 &File
 &Fil
@@ -140,7 +141,7 @@ Lagre &som...\tCtrl+S
 &Krymp sider til utskriftsområde (om nødvendig)
 
 &Single Page\tCtrl-6
-&Enkeltside\tCtrl-6
+&Enkeltside\tCtrl+6
 
 &Skip this version
 &Ignorer denne versjonen
@@ -160,8 +161,23 @@ Lagre &som...\tCtrl+S
 (of %d)
 (av %d)
 
+(page %d)
+(side %d)
+
 About SumatraPDF
 Om SumatraPDF
+
+Add Favorite
+Legg til i Favoritter
+
+Add page %d to favorites
+Legg til side %d i favoritter
+
+Add page %d to favorites with (optional) name:
+Legg til side %d i favoritter med (valgfritt) navn:
+
+Add to favorites
+Legg til i favoritter
 
 Advanced
 Avansert
@@ -218,13 +234,13 @@ Cannot print this file
 Kan ikke skrive ut filen
 
 Cannot start inverse search command. Please check the command line in the settings.
-Kan ikke starte inversert søke kommando. Vennligst sjekk kommandolinjen i innstillingene.
+Kan ikke starte invertert søke kommando. Vennligst sjekk kommandolinjen i innstillingene.
 
 Change Language
 Endre språk (Change Language)
 
 Check for &Updates
-&Se etter ny versjon...
+&Se etter oppdateringer...
 
 Comic books
 Tegneserier
@@ -250,8 +266,11 @@ Kopier ko&mmentar
 Copying text was denied (copying as image only)
 Mangler tillatelse til kopiering av tekst (kopierer kun som bilde)
 
+Could not obtain Printer properties
+Kunne ikke innhente skriveregenskaper
+
 Could not open Printer
-Kunne ikke åpne skriveren.
+Kunne ikke åpne skriveren
 
 Couldn't initialize printer
 Kunne ikke klargjøre skriveren
@@ -262,8 +281,11 @@ Kunne ikke vise siden
 Created:
 Opprettet:
 
+Current file
+Gjeldende fil
+
 Custom &Zoom...\tCtrl-Y
-&Egendefinert zoom...\tCtrl-Y
+&Egendefinert zoom...\tCtrl+Y
 
 Default &Layout:
 Standard sideoppsett:
@@ -301,6 +323,9 @@ Skriv inn kommandolinjen som skal kjøres når du dobbeltklikker på PDF-dokumen
 Error loading %s
 Feil under lasting %s
 
+F&avorites
+F&avoritter
+
 F&orward\tAlt+Right Arrow
 Fremover\tAlt+Pil høyre
 
@@ -311,7 +336,10 @@ Facing
 Motstående
 
 Failed to save a file
-Feil ved lagring av filen.
+Feil ved lagring av filen
+
+Favorites
+Favoritter
 
 File Size:
 Filstørrelse:
@@ -335,7 +363,7 @@ Find:
 Søk etter:
 
 Fit &Content\tCtrl-3
-Tilpass &innhold\tCtrl-3
+Tilpass &innhold\tCtrl+3
 
 Fit &Page\tCtrl-0
 Tilpass &side\tCtrl+0
@@ -443,7 +471,7 @@ P&roperties
 E&genskaper
 
 P&roperties\tCtrl-D
-E&genskaper...\tCtrl-D
+E&genskaper...\tCtrl+D
 
 PDF Document
 PDF-dokument
@@ -460,11 +488,14 @@ PDF-dokumenter (*.pdf)
 Pa&ge...\tCtrl-G
 Side...\tCtrl+G
 
+Page %d
+Side %d
+
 Page Size:
 Sidestørrelse:
 
 Page number %u inexistant
-Sidetallet '%u' finnes ikke i dokumentet.
+Sidetallet '%u' finnes ikke i dokumentet
 
 Page scaling
 Sideskalering
@@ -479,7 +510,7 @@ Postscript documents
 Postscript-dokumenter
 
 Pr&esentation\tCtrl-L
-Pr&esentasjon\tCtrl-L
+Pr&esentasjon\tCtrl+L
 
 Previous Page
 Forrige side
@@ -489,6 +520,9 @@ Skriv ut
 
 Print range
 Utskriftsområde
+
+Printer with given name doesn't exist
+Skriver med gjeldende navn eksisterer ikke
 
 Printing is still in progress. Abort and start over?
 Utskriften pågår fortsatt. Avbryte og starte på nytt?
@@ -502,6 +536,12 @@ Problem med utskrift.
 Remember &opened files
 Husk &åpnede filer
 
+Remove from favorites
+Fjern fra favoritter
+
+Remove page %d from favorites
+Fjern side %d fra favoritter
+
 Rotate &Left\tCtrl-Shift--
 Roter mot klokken\tCtrl+Shift+Minus
 
@@ -512,7 +552,7 @@ Save As
 Lagre som
 
 Save S&hortcut...\tCtrl-Shift-S
-Lagre s&narvei...\tCtrl-Shift-S
+Lagre s&narvei...\tCtrl+Shift+S
 
 Searching %d of %d...
 Søker %d av %d...
@@ -521,7 +561,7 @@ Select &All
 Merk &alt
 
 Select &All\tCtrl-A
-Merk &alle\tCtrl-A
+Merk &alle\tCtrl+A
 
 Select content with Ctrl+left mouse button
 Velg innhold med Ctrl+Venstre museknapp
@@ -537,6 +577,9 @@ Vis verktøylinje
 
 Show &pages continuously
 Vis sider kontinuerlig
+
+Show Favorites
+Vis Favoritter
 
 Show frequently read
 Vis ofte leste
@@ -621,20 +664,4 @@ kopierer tekst
 
 printing document
 skriver ut dokument
-
-# Untranslated:
-#(page %d)
-#Add Favorite
-#Add page %d to favorites
-#Add page %d to favorites with (optional) name:
-#Add to favorites
-#Could not obtain Printer properties
-#Current file
-#F&avorites
-#Favorites
-#Page %d
-#Printer with given name doesn't exist
-#Remove from favorites
-#Remove page %d from favorites
-#Show Favorites
 
