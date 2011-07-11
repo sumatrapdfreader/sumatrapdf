@@ -4580,7 +4580,6 @@ static void EnterFullscreen(WindowInfo& win, bool presentation)
     if (win.tocVisible || gGlobalPrefs.favVisible) {
         SetSidebarVisibility(&win, win.tocVisible, false);
         // restore gGlobalPrefs.favVisible changed by SetSidebarVisibility()
-        gGlobalPrefs.favVisible = favVisibleTmp;
     }
 
     RectI rect;
@@ -4610,6 +4609,7 @@ static void EnterFullscreen(WindowInfo& win, bool presentation)
 
     // Make sure that no toolbar/sidebar keeps the focus
     SetFocus(win.hwndFrame);
+    gGlobalPrefs.favVisible = favVisibleTmp;
 }
 
 static void ExitFullscreen(WindowInfo& win)
