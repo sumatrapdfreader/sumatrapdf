@@ -6096,7 +6096,7 @@ class GoToFavoriteWorkItem : public UIThreadWorkItem
     int pageNo;
 
 public:
-    GoToFavoriteWorkItem(WindowInfo *win, int pageNo) :
+    GoToFavoriteWorkItem(WindowInfo *win, int pageNo = -1) :
         UIThreadWorkItem(win), pageNo(pageNo) {}
 
     virtual void Execute() {
@@ -6104,7 +6104,8 @@ public:
             return;
         SetForegroundWindow(win->hwndFrame);
         if (win->IsDocLoaded()) {
-            win->dm->goToPage(pageNo, 0);
+            if (-1 != pageNo)
+                win->dm->goToPage(pageNo, 0);
             // we might have been invoked by clicking on a tree view
             // switch focus so that keyboard navigation works, which enables
             // a fluid experience
@@ -6133,11 +6134,22 @@ static void GoToFavorite(WindowInfo *win, FileFavs *f, FavName *fn)
         gFavorites->RemoveAllForFile(f->filePath);
         UpdateFavoritesTreeForAllWindows();
         return;
-    } 
+    }
+    
+    // When loading a new document, go directly to selected page instead
+    // first showing last seen page stored in file history
+    // This is a hack because I don't want to add even more parameters to
+    // LoadDocument() and LoadDocumentInto()
+    int pageNo = fn->pageNo;
+    DisplayState *ds = gFileHistory.Find(f->filePath);
+    if (ds) {
+        ds->pageNo = fn->pageNo;
+        pageNo = -1;
+    }
 
     win = LoadDocument(f->filePath, win);
     if (win)
-        QueueWorkItem(new GoToFavoriteWorkItem(win, fn->pageNo));
+        QueueWorkItem(new GoToFavoriteWorkItem(win, pageNo));
 }
 
 static void GoToFavoriteByMenuId(WindowInfo *win, int wmId)
