@@ -292,10 +292,18 @@ class Favorites {
     TCHAR *  filePathCache;
     size_t   idxCache;
 
+    void RemoveFav(FileFavs *fav, size_t idx)
+    {
+        favs.RemoveAt(idx);
+        delete fav;
+        filePathCache = NULL;
+        idxCache = (size_t)-1;
+    }
+
 public:
     Vec<FileFavs*> favs;
 
-    Favorites() : filePathCache(NULL) { }
+    Favorites() : filePathCache(NULL), idxCache((size_t)-1) { }
     ~Favorites() { DeleteVecMembers(favs); }
 
     FileFavs *GetByMenuId(int menuId, size_t& idx)
@@ -390,12 +398,16 @@ public:
         if (!fav)
             return;
         fav->Remove(pageNo);
-        if (fav->IsEmpty()) {
-            favs.RemoveAt(idx);
-            delete fav;
-            if (idx == idxCache)
-                filePathCache = NULL;
-        }
+        if (fav->IsEmpty())
+            RemoveFav(fav, idx);
+    }
+
+    void RemoveAllForFile(const TCHAR *filePath)
+    {
+        size_t idx;
+        FileFavs *fav = GetFavByFilePath(filePath, false, &idx);
+        if (fav)
+            RemoveFav(fav, idx);
     }
 };
 

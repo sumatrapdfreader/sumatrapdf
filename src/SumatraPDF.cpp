@@ -260,6 +260,7 @@ static void CreateSidebar(WindowInfo* win);
 static void ToggleTocBox(WindowInfo *win);
 static void ClearTocBox(WindowInfo *win);
 static void ToggleFavorites(WindowInfo *win);
+static void UpdateFavoritesTreeForAllWindows();
 static void UpdateToolbarFindText(WindowInfo& win);
 static void UpdateToolbarPageText(WindowInfo& win, int pageCount);
 static void UpdateUITextForLanguage();
@@ -6105,12 +6106,23 @@ public:
 static void GoToFavorite(WindowInfo *win, FileFavs *f, FavName *fn)
 {
     WindowInfo *existingWin = FindWindowInfoByFile(f->filePath);
-    if (existingWin)
+    if (existingWin) {
         win = existingWin;
-    else if (HasPermission(Perm_DiskAccess))
-        win = LoadDocument(f->filePath, win);
-    else
-        win = NULL;
+        QueueWorkItem(new GoToFavoriteWorkItem(win, fn->pageNo));
+        return;
+    }
+
+    if (!HasPermission(Perm_DiskAccess))
+        return;
+
+    if (!file::Exists(f->filePath)) {
+        // TODO: could show a notification
+        gFavorites->RemoveAllForFile(f->filePath);
+        UpdateFavoritesTreeForAllWindows();
+        return;
+    } 
+
+    win = LoadDocument(f->filePath, win);
     if (win)
         QueueWorkItem(new GoToFavoriteWorkItem(win, fn->pageNo));
 }
@@ -6132,12 +6144,15 @@ static void GoToFavForTVItem(WindowInfo* win, HWND hTV, HTREEITEM hItem=NULL)
 
     TVITEM item;
     item.hItem = hItem;
-    item.mask = TVIF_PARAM;
+    item.mask = TVIF_PARAM | TVIF_CHILDREN;
     TreeView_GetItem(hTV, &item);
 
     FavName *fn = (FavName*)item.lParam;
-    if (!fn)
+    if (!fn) {
+        // can happen for top-level node which is not associated with a favorite
+        // but only serves a parent node for favorites for a given file
         return;
+    }
     FileFavs *f = gFavorites->GetByFavName(fn);
     GoToFavorite(win, f, fn);
 }
@@ -6152,8 +6167,12 @@ static void RememberFavTreeExpansionState(WindowInfo *win)
         item.mask = TVIF_PARAM | TVIF_STATE;
         item.stateMask = TVIS_EXPANDED;
         TreeView_GetItem(win->hwndFavTree, &item);
-        FileFavs *f = (FileFavs*)item.lParam;
         if ((item.state & TVIS_EXPANDED) != 0) {
+            item.hItem = TreeView_GetChild(win->hwndFavTree, treeItem);
+            item.mask = TVIF_PARAM;
+            TreeView_GetItem(win->hwndFavTree, &item);
+            FavName *fn = (FavName*)item.lParam;
+            FileFavs *f = gFavorites->GetByFavName(fn);
             win->expandedFavorites.Append(str::Dup(f->filePath));
         }
 
@@ -6476,7 +6495,7 @@ void WindowInfo::LoadTocTree()
     RedrawWindow(hwndTocTree, NULL, NULL, fl);
 }
 
-static HTREEITEM InsertFavSecondLevelNode(HWND hwnd, HTREEITEM parent, FavName *f)
+static HTREEITEM InsertFavSecondLevelNode(HWND hwnd, HTREEITEM parent, FavName *fn)
 {
     TV_INSERTSTRUCT tvinsert;
     tvinsert.hParent = parent;
@@ -6484,8 +6503,8 @@ static HTREEITEM InsertFavSecondLevelNode(HWND hwnd, HTREEITEM parent, FavName *
     tvinsert.itemex.mask = TVIF_TEXT | TVIF_STATE | TVIF_PARAM;
     tvinsert.itemex.state = 0;
     tvinsert.itemex.stateMask = TVIS_EXPANDED;
-    tvinsert.itemex.lParam = (LPARAM)f;
-    ScopedMem<TCHAR> s(FavReadableName(f));
+    tvinsert.itemex.lParam = (LPARAM)fn;
+    ScopedMem<TCHAR> s(FavReadableName(fn));
     tvinsert.itemex.pszText = s;
     return TreeView_InsertItem(hwnd, &tvinsert);
 }
@@ -6512,13 +6531,13 @@ static HTREEITEM InsertFavTopLevelNode(HWND hwnd, FileFavs *fav, bool isExpanded
     tvinsert.itemex.mask = TVIF_TEXT | TVIF_STATE | TVIF_PARAM;
     tvinsert.itemex.state = isExpanded ? TVIS_EXPANDED : 0;
     tvinsert.itemex.stateMask = TVIS_EXPANDED;
-    tvinsert.itemex.lParam = (LPARAM)fav;
+    tvinsert.itemex.lParam = NULL;
 #if COLLAPSE_SINGLE_PAGE_FAVS
     if (collapsed) {
         FavName *fn = fav->favNames.At(0);
         tvinsert.itemex.lParam = (LPARAM)fn;
         s = FavCompactReadableName(fav, fn);
-        tvinsert.itemex.pszText = s;        
+        tvinsert.itemex.pszText = s;
     } else {
         tvinsert.itemex.pszText = (TCHAR*)path::GetBaseName(fav->filePath);
     }
@@ -6574,6 +6593,16 @@ static void UpdateFavoritesTreeForAllWindows()
     for (size_t i=0; i<gWindows.Count(); i++)
     {
         UpdateFavoritesTreeIfNecessary(gWindows.At(i));
+    }
+
+    // hide the favorites tree if we removed the last favorite
+    if (!HasFavorites()) {
+        gGlobalPrefs.favVisible = false;
+        for (size_t i=0; i<gWindows.Count(); i++)
+        {
+            WindowInfo *win = gWindows.At(i);
+            SetSidebarVisibility(win, win->tocVisible, gGlobalPrefs.favVisible);
+        }
     }
 }
 
@@ -7102,15 +7131,6 @@ static void DelFavorite(WindowInfo *win)
     RememberFavTreeExpansionStateForAllWindows();
     gFavorites->Remove(filePath, pageNo);
     UpdateFavoritesTreeForAllWindows();
-    // hide the favorites tree if we removed the last favorite
-    if (!HasFavorites()) {
-        gGlobalPrefs.favVisible = false;
-        for (size_t i=0; i<gWindows.Count(); i++)
-        {
-            WindowInfo *win = gWindows.At(i);
-            SetSidebarVisibility(win, win->tocVisible, gGlobalPrefs.favVisible);
-        }
-    }
     SavePrefs();
 }
 
