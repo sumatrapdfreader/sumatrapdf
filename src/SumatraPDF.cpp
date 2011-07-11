@@ -670,6 +670,10 @@ MenuDef menuDefContextStart[] = {
     { _TRN("&Remove Document"),             IDM_FORGET_SELECTED_DOCUMENT, MF_REQ_DISK_ACCESS | MF_REQ_PREF_ACCESS },
 };
 
+MenuDef menuDefFavContext[] = {
+    { _TRN("Remove from favorites"),        IDM_FAV_DEL,                0 }
+};
+
 static void AddFileMenuItem(HMENU menuFile, const TCHAR *filePath, UINT index)
 {
     assert(filePath && menuFile);
@@ -6147,7 +6151,7 @@ static void GoToFavForTVItem(WindowInfo* win, HWND hTV, HTREEITEM hItem=NULL)
 
     TVITEM item;
     item.hItem = hItem;
-    item.mask = TVIF_PARAM | TVIF_CHILDREN;
+    item.mask = TVIF_PARAM;
     TreeView_GetItem(hTV, &item);
 
     FavName *fn = (FavName*)item.lParam;
@@ -6231,6 +6235,56 @@ static LRESULT OnFavTreeNotify(WindowInfo *win, LPNMTREEVIEW pnmtv)
     return -1;
 }
 
+// TODO: doesn't handle WM_CONTEXTMENU triggered via Shift-F10 (xScreen==yScreen==-1) 
+static void OnFavTreeContextMenu(WindowInfo *win, int xScreen, int yScreen)
+{
+    TVHITTESTINFO ht = { 0 };
+    ht.pt.x = xScreen;
+    ht.pt.y = yScreen;
+
+    MapWindowPoints(HWND_DESKTOP, win->hwndFavTree, &ht.pt, 1);
+    TreeView_HitTest(win->hwndFavTree, &ht);
+    if ((ht.flags & TVHT_ONITEM) == 0)
+        return; // only display menu if over a node in tree
+
+    TreeView_SelectItem(win->hwndFavTree, ht.hItem);
+
+    FavName *toDelete = NULL;
+    TVITEM item;
+    item.hItem = ht.hItem;
+    item.mask = TVIF_PARAM;
+    TreeView_GetItem(win->hwndFavTree, &item);
+    toDelete = (FavName*)item.lParam;
+
+    HMENU popup = BuildMenuFromMenuDef(menuDefFavContext, dimof(menuDefFavContext), CreatePopupMenu());
+
+    INT cmd = TrackPopupMenu(popup, TPM_RETURNCMD | TPM_RIGHTBUTTON,
+                             xScreen, yScreen, 0, win->hwndFavTree, NULL);
+    DestroyMenu(popup);
+    if (IDM_FAV_DEL == cmd) {
+        RememberFavTreeExpansionStateForAllWindows();
+        if (toDelete) {
+            FileFavs *f = gFavorites->GetByFavName(toDelete);
+            gFavorites->Remove(f->filePath, toDelete->pageNo);
+        } else {
+            // toDelete == NULL => this is a parent node signifying all bookmarks in a file
+            item.hItem = TreeView_GetChild(win->hwndFavTree, ht.hItem);
+            item.mask = TVIF_PARAM;
+            TreeView_GetItem(win->hwndFavTree, &item);
+            toDelete = (FavName*)item.lParam;
+            FileFavs *f = gFavorites->GetByFavName(toDelete);
+            gFavorites->RemoveAllForFile(f->filePath);
+        }
+        UpdateFavoritesTreeForAllWindows();
+        SavePrefs();
+
+        // TODO: it would be nice to have a system for undo-ing things, like in Gmail,
+        // so that we can do destructive operations without asking for permission via
+        // invasive model dialog boxes but also allow reverting them if were done
+        // by mistake
+    }
+}
+
 static WNDPROC DefWndProcFavBox = NULL;
 static LRESULT CALLBACK WndProcFavBox(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -6264,6 +6318,14 @@ static LRESULT CALLBACK WndProcFavBox(HWND hwnd, UINT message, WPARAM wParam, LP
                     return res;
             }
             break;
+
+        case WM_CONTEXTMENU:
+            if (win->hwndFavTree == (HWND)wParam) {
+                OnFavTreeContextMenu(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+                return 0;
+            }
+            break;
+
     }
     return CallWindowProc(DefWndProcFavBox, hwnd, message, wParam, lParam);
 }
