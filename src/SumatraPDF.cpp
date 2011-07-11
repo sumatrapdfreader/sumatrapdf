@@ -3051,6 +3051,7 @@ static void OnMouseLeftButtonDown(WindowInfo& win, int x, int y, WPARAM key)
 static void OnMouseLeftButtonUp(WindowInfo& win, int x, int y, WPARAM key)
 {
     if (win.IsAboutWindow()) {
+        SetFocus(win.hwndFrame);
         const TCHAR *url = GetStaticLink(win.staticLinks, x, y);
         if (url && url == win.url) {
             if (str::Eq(url, SLINK_OPEN_FILE))
@@ -3164,6 +3165,7 @@ static void OnMouseRightButtonDown(WindowInfo& win, int x, int y, WPARAM key)
 {
     //DBG_OUT("Right button clicked on %d %d\n", x, y);
     if (!win.IsDocLoaded()) {
+        SetFocus(win.hwndFrame);
         win.dragStart = PointI(x, y);
         return;
     }
