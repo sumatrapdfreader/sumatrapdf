@@ -43,7 +43,7 @@ Como li&vro\tCtrl-8
 Apenas as páginas &pares
 
 &Facing\tCtrl-7
-Página d&upla\tCtrl-7
+D&uas páginas\tCtrl-7
 
 &File
 &Ficheiro
@@ -159,8 +159,23 @@ Ignorar &esta versão
 (of %d)
 (de %d)
 
+(page %d)
+(página %d)
+
 About SumatraPDF
 Sobre SumatraPDF
+
+Add Favorite
+Adicionar favorito
+
+Add page %d to favorites
+Adicionar página %d aos favoritos
+
+Add page %d to favorites with (optional) name:
+Adicionar página %d aos favoritos com nome (opcional):
+
+Add to favorites
+Adicionar aos favoritos
 
 Advanced
 Avançadas
@@ -235,7 +250,7 @@ Continuous Book View
 Livro contínuo
 
 Continuous Facing
-Página dupla contínua
+Duas páginas contínua
 
 Contribute Translation
 Ajudar na tradução
@@ -249,6 +264,9 @@ Copiar co&mentário
 Copying text was denied (copying as image only)
 A cópia do texto foi recusada (copie como imagem)
 
+Could not obtain Printer properties
+Não foi possível obter as propriedades da impressora
+
 Could not open Printer
 Não foi possível abrir a impressora
 
@@ -260,6 +278,9 @@ Não foi possível processar a página
 
 Created:
 Criado:
+
+Current file
+Ficheiro atual
 
 Custom &Zoom...\tCtrl-Y
 &Personalizar...\tCtrl-Y
@@ -300,6 +321,9 @@ Insira a linha de comandos a invocar ao fazer duplo clique no documento PDF:
 Error loading %s
 Erro ao carregar %s
 
+F&avorites
+Fav&oritos
+
 F&orward\tAlt+Right Arrow
 A&vançar\tAlt + ->
 
@@ -307,10 +331,13 @@ F&ullscreen\tCtrl-Shift-L
 Ecrã co&mpleto\tCtrl-Shift-L
 
 Facing
-Página dupla
+Duas páginas
 
 Failed to save a file
 Erro ao gravar o ficheiro
+
+Favorites
+Favoritos
 
 File Size:
 Tamanho do ficheiro:
@@ -459,6 +486,9 @@ Documentos PDF
 Pa&ge...\tCtrl-G
 Pági&na...\tCtrl-G
 
+Page %d
+Página %d
+
 Page Size:
 Tamanho da página:
 
@@ -489,6 +519,9 @@ Imprimir
 Print range
 Intervalo de impressão
 
+Printer with given name doesn't exist
+A impressora indicada não existe
+
 Printing is still in progress. Abort and start over?
 A impressão está a decorrer. Cancelar e reiniciar?
 
@@ -500,6 +533,12 @@ Erro de impressão.
 
 Remember &opened files
 Lembrar ficheiros abert&os
+
+Remove from favorites
+Remover dos favoritos
+
+Remove page %d from favorites
+Remover página %d dos favoritos
 
 Rotate &Left\tCtrl-Shift--
 Rodar à &esquerda\tCtrl-Shift--
@@ -536,6 +575,9 @@ Mostrar &barra de ferramentas
 
 Show &pages continuously
 M&ostrar páginas contínuas
+
+Show Favorites
+Mostrar favoritos
 
 Show frequently read
 Mostrar frequentes
@@ -620,20 +662,4 @@ cópia de texto
 
 printing document
 impressão de documento
-
-# Untranslated:
-#(page %d)
-#Add Favorite
-#Add page %d to favorites
-#Add page %d to favorites with (optional) name:
-#Add to favorites
-#Could not obtain Printer properties
-#Current file
-#F&avorites
-#Favorites
-#Page %d
-#Printer with given name doesn't exist
-#Remove from favorites
-#Remove page %d from favorites
-#Show Favorites
 
