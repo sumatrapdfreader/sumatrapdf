@@ -6136,9 +6136,9 @@ static void GoToFavorite(WindowInfo *win, FileFavs *f, FavName *fn)
         return;
     }
     
-    // When loading a new document, go directly to selected page instead
+    // When loading a new document, go directly to selected page instead of
     // first showing last seen page stored in file history
-    // This is a hack because I don't want to add even more parameters to
+    // A hacky solution because I don't want to add even more parameters to
     // LoadDocument() and LoadDocumentInto()
     int pageNo = fn->pageNo;
     DisplayState *ds = gFileHistory.Find(f->filePath);
