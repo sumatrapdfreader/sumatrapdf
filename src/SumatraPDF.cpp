@@ -6121,21 +6121,13 @@ static void GoToFavorite(WindowInfo *win, FileFavs *f, FavName *fn)
 {
     WindowInfo *existingWin = FindWindowInfoByFile(f->filePath);
     if (existingWin) {
-        win = existingWin;
-        QueueWorkItem(new GoToFavoriteWorkItem(win, fn->pageNo));
+        QueueWorkItem(new GoToFavoriteWorkItem(existingWin, fn->pageNo));
         return;
     }
 
     if (!HasPermission(Perm_DiskAccess))
         return;
 
-    if (!file::Exists(f->filePath)) {
-        // TODO: could show a notification
-        gFavorites->RemoveAllForFile(f->filePath);
-        UpdateFavoritesTreeForAllWindows();
-        return;
-    }
-    
     // When loading a new document, go directly to selected page instead of
     // first showing last seen page stored in file history
     // A hacky solution because I don't want to add even more parameters to
@@ -6144,6 +6136,7 @@ static void GoToFavorite(WindowInfo *win, FileFavs *f, FavName *fn)
     DisplayState *ds = gFileHistory.Find(f->filePath);
     if (ds) {
         ds->pageNo = fn->pageNo;
+        ds->scrollPos = PointI(-1, -1); // don't scroll the page
         pageNo = -1;
     }
 
