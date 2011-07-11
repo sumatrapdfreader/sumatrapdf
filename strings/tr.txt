@@ -9,6 +9,7 @@
 Lang: tr Turkish (Türkçe)
 
 Contributor: Hakan ATAÇ
+Contributor: H. Metin ÖZER
 
 &About
 &Hakkında
@@ -22,8 +23,14 @@ Tüm seçilen &sayfalar
 &Back\tAlt+Left Arrow
 &Geri\tAlt+Sol Ok
 
+&Book View\tCtrl-8
+&Kitap Görünümü
+
 &Close\tCtrl-W
 &Kapat\tCtrl-W
+
+&Copy Selection
+Seçimi &Kopyala
 
 &Copy Selection\tCtrl-C
 Seçileni &kopyala\tCtrl-C
@@ -33,6 +40,9 @@ Tekrar &sorma
 
 &Even pages only
 Sadece &çift sayfalar
+
+&Facing\tCtrl-7
+Çift sayfa\tCtrl-7
 
 &File
 &Dosya
@@ -82,14 +92,23 @@ Sadece &tek sayfalar
 &Open\tCtrl-O
 &Aç\tCtrl-O
 
+&Open Document
+Belgeyi &Aç
+
 &Options...
 &Seçenekler...
 
 &Password:
 &Şifre:
 
+&Pin Document
+Belgeye &Tuttur
+
 &Previous Page\tLeft Arrow
 &Önceki Sayfa\t<-
+
+&Print...
+&Yazdır...
 
 &Print...\tCtrl-P
 &Yazdır...\tCtrl-P
@@ -103,6 +122,12 @@ Bu belge için şifreyi &hatırla
 &Remember these settings for each document
 Bu ayarları her belge için &hatırla
 
+&Remove Document
+Belgeyi &Kaldır
+
+&Save As...
+&Farklı Kaydet...
+
 &Save As...\tCtrl-S
 &Farklı kaydet...\tCtrl-S
 
@@ -111,6 +136,9 @@ Bu ayarları her belge için &hatırla
 
 &Shrink pages to printable area (if necessary)
 Sayfaları baskı alanına &indirgele (gerekirse)
+
+&Single Page\tCtrl-6
+&Tek Sayfa\tCtrl-6
 
 &Skip this version
 Bu s&ürümü atla
@@ -130,14 +158,32 @@ Gös&ter
 (of %d)
 (toplam %d)
 
+(page %d)
+(sayfa %d)
+
 About SumatraPDF
 SumatraPDF hakkında
+
+Add Favorite
+Sık kullanılanı ekle
+
+Add page %d to favorites
+Sayfa %d sık kullanılanlara ekle
+
+Add page %d to favorites with (optional) name:
+Sayfa %d sık kullanılanlara (tercihe bağlı) isimle ekle:
+
+Add to favorites
+Sık kullanılanlara ekle
 
 Advanced
 Gelişmiş
 
 All files
 Tüm dosyalar
+
+All supported documents
+Bütün desteklenen belgeler
 
 Application:
 Uygulama:
@@ -158,10 +204,16 @@ Automatically check for &updates
 &Güncellemeleri otomatik olarak kontrol et
 
 Book View
-Kitap Gibi Görünüm
+Kitap Görünümü
 
 Book&marks\tF12
 &Yer imleri\tF12
+
+Bookmark Shortcuts
+Yer imi kısayolları
+
+Bookmark shortcut to page %d of %s
+%d. sayfasına %s yer imi kısayolu
 
 Bookmarks
 Yer imleri
@@ -187,6 +239,9 @@ Dil değiştir (Change Language)
 Check for &Updates
 &Güncellemeleri kontrol et
 
+Comic books
+Çizgi romanlar
+
 Continuous
 Devamlı
 
@@ -199,8 +254,17 @@ Devamlı çift sayfa
 Contribute Translation
 Çeviriye katkıda bulunun.
 
+Copy &Link Address
+&Bağlantı Adresini Kopyala
+
+Copy Co&mment
+&Açıklamayı Kopyala
+
 Copying text was denied (copying as image only)
 Metnin kopyalanması reddedildi (görüntü olarak kopyalandı)
+
+Could not obtain Printer properties
+Yazıcı özellikleri temin edilemedi
 
 Could not open Printer
 Yazıcıya erişilemiyor.
@@ -213,6 +277,9 @@ Sayfa oluşturulamadı
 
 Created:
 Yaratılış tarihi:
+
+Current file
+Yürürlükteki dosya
 
 Custom &Zoom...\tCtrl-Y
 Kişiselleştirilmiş &Yakınlaştırma... \tCtrl-Y
@@ -228,6 +295,9 @@ Varsayılan PDF okuyucu taşınabilir modunda değiştirilemez
 
 Denied Permissions:
 Reddedilen İzinler:
+
+DjVu documents
+DjVu belgeleri
 
 Document Properties
 Belge Özellikleri
@@ -247,6 +317,12 @@ Enter password for %s
 Enter the command-line to invoke when you double-click on the PDF document:
 PDF belgesine çift tıklanınca yürütülecek komutu giriniz:
 
+Error loading %s
+%s yükleme hatası
+
+F&avorites
+S&ık kullanılanlar
+
 F&orward\tAlt+Right Arrow
 İ&leri\tAlt+Sağ Ok
 
@@ -258,6 +334,9 @@ Facing
 
 Failed to save a file
 Dosya kaydedilirken hata çıktı.
+
+Favorites
+Sık kullanılanlar
 
 File Size:
 Dosya boyutu:
@@ -302,10 +381,16 @@ Fit Width and Show Pages Continuously
 Genişliğe ölçekle ve sayfaları devamlı göster
 
 Fit a Single Page
-Tek bir sayfaya ölçekle
+Tek sayfaya ölçekle
 
 Found text at page %d
 Metin %d numaralı sayfada bulundu
+
+Found text at page %d (again)
+Metin sayfa %d bulundu (tekrar)
+
+Frequently Read
+Sıkça okunan
 
 GB
 GB
@@ -313,8 +398,14 @@ GB
 Go to page
 Sayfaya git
 
+Hide frequently read
+Sıkça okunanı gizle
+
 Hint: Use the F3 key for finding again
 İpucu: yeniden bulmak için F3 tuşunu kullanın
+
+Image files (*.%s)
+Görüntü dosyaları (*.%s)
 
 KB
 KB
@@ -343,6 +434,9 @@ Sonraki Sayfa
 No matches were found
 Sonuç bulunamadı
 
+No result found around line %u in file %s
+%u satırı etrafında %s dosyasındaki sonuç bulunamadı
+
 No synchronization file found
 Herhangi bir senkronizasyon dosyası bulunamadı
 
@@ -358,6 +452,9 @@ Tamam
 Open
 &Aç
 
+Open a document...
+Belge aç...
+
 Open in &Adobe Reader
 &Adobe Reader ile aç
 
@@ -366,6 +463,9 @@ Open in &Foxit Reader
 
 Open in PDF-XChange
 PDF-XChange ile aç
+
+P&roperties
+Ö&zellikler
 
 P&roperties\tCtrl-D
 &Özellikleri\tCtrl-D
@@ -385,6 +485,9 @@ PDF belgeleri
 Pa&ge...\tCtrl-G
 &Sayfa...\tCtrl-G
 
+Page %d
+Sayfa %d
+
 Page Size:
 Sayfa Boyutu:
 
@@ -400,20 +503,41 @@ Sayfa:
 Please wait - rendering...
 Bekleyiniz - oluşturulmakta...
 
+Postscript documents
+Postscript belgeleri
+
 Pr&esentation\tCtrl-L
 Tan&ıtım\tCtrl-L
 
 Previous Page
 Önceki Sayfa
 
+Print
+Yazdır
+
 Print range
 Baskı aralığı
+
+Printer with given name doesn't exist
+Girilen isimli Yazıcı bulunamadı
+
+Printing is still in progress. Abort and start over?
+Yazıcı hala kullanımda. Durdurup yeniden başlatılsınmı?
+
+Printing page %d of %d...
+Sayfa %d %d yazdırılıyor...
 
 Printing problem.
 Yazdırma problemi.
 
 Remember &opened files
 &Açılan dosyaları hatırla
+
+Remove from favorites
+Sık kullanılanlardan çıkar
+
+Remove page %d from favorites
+Sayfa %d sık kullanılanlardan çıkar
 
 Rotate &Left\tCtrl-Shift--
 S&ola çevir\tCtrl-Shift--
@@ -424,8 +548,14 @@ Rotate &Right\tCtrl-Shift-+
 Save As
 Farklı kaydet
 
+Save S&hortcut...\tCtrl-Shift-S
+K&ısayolu kaydet...\tCtrl-Shift-S
+
 Searching %d of %d...
 %d sayfa (toplam %d sayfa) taranıyor...
+
+Select &All
+&Hepsini Seç
 
 Select &All\tCtrl-A
 T&ümünü Seç\tCtrl-A
@@ -445,11 +575,20 @@ Show &Toolbar
 Show &pages continuously
 &Sayfaları devamlı göster
 
+Show Favorites
+Sık kullanılanları göster
+
+Show frequently read
+Sık okunanları göster
+
 Show the &bookmarks sidebar when available
 Yer &imleri yan çubuğunu bulunduğunda göster
 
 Single Page
 Tek sayfa
+
+Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
+Üzgünüz, bu olmamalıydı!\n\nEğer hatayı düzeltmemize yardımcı olmak istiyorsanız lütfen 'Cancel' a basın.
 
 Source file %s has no synchronization point
 %s kaynak dosyasında senkronizasyon noktası yoktur
@@ -493,6 +632,9 @@ Visit &Website
 Warning
 Uyarı
 
+XPS documents
+XPS belgeleri
+
 You have the latest version.
 En güncel sürümü kullanmaktasınız.
 
@@ -518,54 +660,5 @@ copying text
 metin kopyalanıyor
 
 printing document
-belge baskılanyor
-
-# Untranslated:
-#&Book View\tCtrl-8
-#&Copy Selection
-#&Facing\tCtrl-7
-#&Open Document
-#&Pin Document
-#&Print...
-#&Remove Document
-#&Save As...
-#&Single Page\tCtrl-6
-#(page %d)
-#Add Favorite
-#Add page %d to favorites
-#Add page %d to favorites with (optional) name:
-#Add to favorites
-#All supported documents
-#Bookmark Shortcuts
-#Bookmark shortcut to page %d of %s
-#Comic books
-#Copy &Link Address
-#Copy Co&mment
-#Could not obtain Printer properties
-#Current file
-#DjVu documents
-#Error loading %s
-#F&avorites
-#Favorites
-#Found text at page %d (again)
-#Frequently Read
-#Hide frequently read
-#Image files (*.%s)
-#No result found around line %u in file %s
-#Open a document...
-#P&roperties
-#Page %d
-#Postscript documents
-#Print
-#Printer with given name doesn't exist
-#Printing is still in progress. Abort and start over?
-#Printing page %d of %d...
-#Remove from favorites
-#Remove page %d from favorites
-#Save S&hortcut...\tCtrl-Shift-S
-#Select &All
-#Show Favorites
-#Show frequently read
-#Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
-#XPS documents
+belge yazdırılıyor
 
