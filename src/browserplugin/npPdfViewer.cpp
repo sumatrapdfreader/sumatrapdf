@@ -155,6 +155,10 @@ DLLEXPORT STDAPI DllRegisterServer(VOID)
     EnsureRegKey(mimeType);
     mimeType.Set(str::Join(g_lpRegKey, _T("\\MimeTypes\\image/vnd.djvu")));
     EnsureRegKey(mimeType);
+    mimeType.Set(str::Join(g_lpRegKey, _T("\\MimeTypes\\image/x-djvu")));
+    EnsureRegKey(mimeType);
+    mimeType.Set(str::Join(g_lpRegKey, _T("\\MimeTypes\\image/x.djvu")));
+    EnsureRegKey(mimeType);
     
     // Work around Mozilla bug https://bugzilla.mozilla.org/show_bug.cgi?id=581848 which
     // makes Firefox up to version 3.6.* ignore all but the first plugin for a given MIME type
@@ -387,7 +391,7 @@ NPError NP_LOADDS NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, in
     gNPNFuncs.setvalue(instance, NPPVpluginWindowBool, (void *)true);
     
     if (GetExePath(data->exepath, dimof(data->exepath)))
-        data->message = _T("Opening PDF document in SumatraPDF...");
+        data->message = _T("Opening document in SumatraPDF...");
     else
         data->message = _T("Error: SumatraPDF hasn't been found!");
     
@@ -549,7 +553,7 @@ void NP_LOADDS NPP_StreamAsFile(NPP instance, NPStream* stream, const char* fnam
     if (!fname)
     {
         dbg("sp: NPP_StreamAsFile() error: fname is NULL");
-        data->message = _T("Error: The PDF document couldn't be downloaded!");
+        data->message = _T("Error: The document couldn't be downloaded!");
         goto Exit;
     }
 

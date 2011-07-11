@@ -23,7 +23,7 @@ BEGIN
       VALUE "ProductVersion",   VER_RESOURCE_STR
       VALUE "CompanyName",      "Simon Bünzli"
 
-      VALUE "MIMEType", "application/pdf|application/vnd.ms-xpsdocument|image/vnd.djvu"
+      VALUE "MIMEType", "application/pdf|application/vnd.ms-xpsdocument|image/vnd.djvu|image/x-djvu|image/x.djvu"
       VALUE "FileExtents", "pdf|xps|djvu"
       VALUE "FileOpenName", "PDF document|XPS document|DjVu document"
     END
