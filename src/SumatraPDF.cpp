@@ -1824,6 +1824,9 @@ static bool LoadDocIntoWindow(
     }
 
     float zoomVirtual = gGlobalPrefs.defaultZoom;
+    if (gPluginMode && (Engine_PDF == win.dm->engineType))
+        zoomVirtual = ZOOM_FIT_WIDTH;
+
     int rotation = DEFAULT_ROTATION;
 
     if (state) {
