@@ -165,8 +165,23 @@ Pagina &singola\t<Ctrl>+6
 (of %d)
 (di %d)
 
+(page %d)
+(pagina %d)
+
 About SumatraPDF
 Informazioni su SumatraPDF
+
+Add Favorite
+Aggiungi ai Preferiti
+
+Add page %d to favorites
+Aggiungi pagina %d ai Preferiti
+
+Add page %d to favorites with (optional) name:
+Aggiungi la pagina %d ai Preferiti con nome (opzionale):
+
+Add to favorites
+Aggiungi ai Preferiti
 
 Advanced
 Avanzate
@@ -255,6 +270,9 @@ Copia co&mmento
 Copying text was denied (copying as image only)
 Impossibile copiare il testo (copio solo come immagine)
 
+Could not obtain Printer properties
+Impossibile ottenere info proprietà stampante
+
 Could not open Printer
 Stampante non accessibile
 
@@ -266,6 +284,9 @@ Impossibile renderizzare la pagina
 
 Created:
 Data creazione:
+
+Current file
+File attuale
 
 Custom &Zoom...\tCtrl-Y
 Ingrandimento personali&zzato\t<Ctrl>+Y
@@ -306,6 +327,9 @@ Inserire la linea di comando da eseguire quando fai doppio clic su un documento 
 Error loading %s
 Errore nel caricamento di %s
 
+F&avorites
+&Preferiti
+
 F&orward\tAlt+Right Arrow
 A&vanti\t<Alt>+<Freccia destra>
 
@@ -317,6 +341,9 @@ Pagine affiancate
 
 Failed to save a file
 Salvataggio file non riuscito
+
+Favorites
+Preferiti
 
 File Size:
 Dimensione file:
@@ -465,6 +492,9 @@ Documenti PDF
 Pa&ge...\tCtrl-G
 Pa&gina...\t<Ctrl>+G
 
+Page %d
+Pagina %d
+
 Page Size:
 Formato pagina:
 
@@ -495,6 +525,9 @@ Stampa
 Print range
 Stampa intervallo
 
+Printer with given name doesn't exist
+La stampante con quel nome non esiste
+
 Printing is still in progress. Abort and start over?
 La stampa è in corso. Interrompere e ricominciare?
 
@@ -506,6 +539,12 @@ Problemi di stampa.
 
 Remember &opened files
 Ric&orda file aperti
+
+Remove from favorites
+Rimuovi dai Preferiti
+
+Remove page %d from favorites
+Rimuovi la pagina %d dai Preferiti
 
 Rotate &Left\tCtrl-Shift--
 Ruota a &sinistra\t<Ctrl> <Maiusc> -
@@ -543,6 +582,9 @@ Show &Toolbar
 Show &pages continuously
 &Pagine in modo continuo
 
+Show Favorites
+Visualizza Preferiti
+
 Show frequently read
 Visualizza letto frequentemente
 
@@ -565,7 +607,7 @@ SumatraPDF Options
 Opzioni di SumatraPDF
 
 SumatraPDF Update
-Aggiornamento di SumatraPDF
+Controllo aggiornamenti SumatraPDF
 
 SumatraPDF crashed
 SumatraPDF ha incontrato un errore irreparabile
@@ -626,20 +668,4 @@ Copia del testo...
 
 printing document
 Stampa documento...
-
-# Untranslated:
-#(page %d)
-#Add Favorite
-#Add page %d to favorites
-#Add page %d to favorites with (optional) name:
-#Add to favorites
-#Could not obtain Printer properties
-#Current file
-#F&avorites
-#Favorites
-#Page %d
-#Printer with given name doesn't exist
-#Remove from favorites
-#Remove page %d from favorites
-#Show Favorites
 
