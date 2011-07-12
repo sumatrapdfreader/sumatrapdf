@@ -162,8 +162,23 @@ Une &seule page\tCtrl-6
 (of %d)
 (de %d)
 
+(page %d)
+(page %d)
+
 About SumatraPDF
 À propos de SumatraPDF
+
+Add Favorite
+Ajouter des Favoris
+
+Add page %d to favorites
+Ajouter page %d aux favoris
+
+Add page %d to favorites with (optional) name:
+Ajouter page %d aux favoris avec un nom (optionnel):
+
+Add to favorites
+Ajouter aux favoris
 
 Advanced
 Avancé
@@ -252,6 +267,9 @@ Copier le co&mmentaire
 Copying text was denied (copying as image only)
 La copie en texte est refusée (seule une capture d’écran est faite)
 
+Could not obtain Printer properties
+Impossible d'obtenir les propriétés de l'imprimante
+
 Could not open Printer
 Impossible d'accéder à l'imprimante
 
@@ -263,6 +281,9 @@ Impossible de générer la page
 
 Created:
 Créé le :
+
+Current file
+Fichier actuel
 
 Custom &Zoom...\tCtrl-Y
 &Zoom personnalisé...\tCtrl-Y
@@ -303,6 +324,9 @@ Entrer la ligne de commande à exécuter lorsque vous double-cliquez sur le docu
 Error loading %s
 Erreur de chargement de %s
 
+F&avorites
+Fa&voris
+
 F&orward\tAlt+Right Arrow
 &Avancer\tAlt+->
 
@@ -314,6 +338,9 @@ Page double
 
 Failed to save a file
 Échec à l'enregistrement du fichier
+
+Favorites
+Favoris
 
 File Size:
 Taille du fichier :
@@ -462,6 +489,9 @@ Documents PDF
 Pa&ge...\tCtrl-G
 Pa&ge...\tCtrl-G
 
+Page %d
+Page %d
+
 Page Size:
 Dimensions de la page :
 
@@ -492,6 +522,9 @@ Imprimer
 Print range
 Plage d'impression
 
+Printer with given name doesn't exist
+l'immprimante avec le nom donné n'existe pas
+
 Printing is still in progress. Abort and start over?
 Une impression est déjà en cours. L'annuler et recommencer ?
 
@@ -503,6 +536,12 @@ Problème d'impression.
 
 Remember &opened files
 Se rappeler les fichiers &ouverts
+
+Remove from favorites
+Enlever des favoris
+
+Remove page %d from favorites
+Enlever page %d des favoris
 
 Rotate &Left\tCtrl-Shift--
 Rotation &antihoraire\tCtrl-Shift--
@@ -539,6 +578,9 @@ Afficher la &barre d'outils
 
 Show &pages continuously
 &Vue continue
+
+Show Favorites
+Voir Favoris
 
 Show frequently read
 Montrer les documents fréquemment lus
@@ -623,20 +665,4 @@ copie du texte
 
 printing document
 impression du document
-
-# Untranslated:
-#(page %d)
-#Add Favorite
-#Add page %d to favorites
-#Add page %d to favorites with (optional) name:
-#Add to favorites
-#Could not obtain Printer properties
-#Current file
-#F&avorites
-#Favorites
-#Page %d
-#Printer with given name doesn't exist
-#Remove from favorites
-#Remove page %d from favorites
-#Show Favorites
 

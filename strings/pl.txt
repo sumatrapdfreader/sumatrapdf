@@ -23,6 +23,9 @@ Rozmiar &rzeczywisty\tCtrl+1
 &Back\tAlt+Left Arrow
 &Wstecz\tAlt+W lewo
 
+&Book View\tCtrl-8
+Widok o&dczytu\tCtrl-8
+
 &Close\tCtrl-W
 &Zamknij\tCtrl+W
 
@@ -37,6 +40,9 @@ Kopiuj &zaznaczenie\tCtrl+C
 
 &Even pages only
 Strony &parzyste
+
+&Facing\tCtrl-7
+&Wiele stron\tCtrl-7
 
 &File
 &Plik
@@ -86,11 +92,17 @@ Strony &nieparzyste
 &Open\tCtrl-O
 &Otwórz…\tCtrl+O
 
+&Open Document
+&Otwórz dokument
+
 &Options...
 &Opcje...
 
 &Password:
 &Hasło:
+
+&Pin Document
+&Przypnij dokument
 
 &Previous Page\tLeft Arrow
 &Poprzednia strona\tW lewo
@@ -110,6 +122,9 @@ Pamiętaj &hasło dla tego dokumentu
 &Remember these settings for each document
 Pamiętaj ustawienia dla &każdego dokumentu
 
+&Remove Document
+&Usuń dokument
+
 &Save As...
 Zapisz jako...
 
@@ -122,8 +137,11 @@ Zapisz &jako…\tCtrl+S
 &Shrink pages to printable area (if necessary)
 &Zmniejsz strony do rozmiaru wydruku (w razie potrzeby)
 
+&Single Page\tCtrl-6
+&Pojedyncza strona\tCtrl-6
+
 &Skip this version
-&Pomiń tą wersję
+&Pomiń tę wersję
 
 &Use original page sizes
 Użyj &oryginalnego rozmiaru stron
@@ -140,8 +158,23 @@ Po&większenie
 (of %d)
 (z %d)
 
+(page %d)
+(strona %d)
+
 About SumatraPDF
 O SumatraPDF
+
+Add Favorite
+Dodaj do ulubionych
+
+Add page %d to favorites
+Dodaj stronę %d do ulubionych
+
+Add page %d to favorites with (optional) name:
+Dodaj stronę %d do ulubionych pod (opcjonalną) nazwą:
+
+Add to favorites
+Dodaj do ulubionych
 
 Advanced
 Zaawansowane
@@ -177,10 +210,10 @@ Book&marks\tF12
 &Zakładki\tF12
 
 Bookmark Shortcuts
-Zaznacz Skróty
+Zakładki
 
 Bookmark shortcut to page %d of %s
-Zaznacz skrót do strony %d z %s
+Wstaw zakładkę do strony %d z %s
 
 Bookmarks
 Zakładki
@@ -207,7 +240,7 @@ Check for &Updates
 Szukaj &aktualizacji
 
 Comic books
-Komiksy cbz, cbr
+Komiksy
 
 Continuous
 Pojedyncza strona - układ ciągły
@@ -222,13 +255,16 @@ Contribute Translation
 Dodaj swoje tłumaczenie
 
 Copy &Link Address
-Kopiuj adres z &Linku
+Kopiuj adres z &odnośnika
 
 Copy Co&mment
-Kopiuj komentarz
+Kopiuj ko&mentarz
 
 Copying text was denied (copying as image only)
 Nie można kopiować tekstu (można kopiować jako obrazy)
+
+Could not obtain Printer properties
+Nie można uzyskać właściwości drukarki
 
 Could not open Printer
 Nie można uzyskać dostępu do drukarki
@@ -241,6 +277,9 @@ Nie można wyświetlić strony
 
 Created:
 Utworzono:
+
+Current file
+Bieżący plik
 
 Custom &Zoom...\tCtrl-Y
 &Własne powiększenie...\tCtrl+Y
@@ -281,17 +320,23 @@ Podaj polecenie wykonywane po dwukrotnym kliknięciu pliku PDF:
 Error loading %s
 Błąd ładowania pliku %s
 
+F&avorites
+&ulubione
+
 F&orward\tAlt+Right Arrow
 &Dalej\tAlt+W prawo
 
 F&ullscreen\tCtrl-Shift-L
-Pełny Ekran\tCtrl+Shift+L
+Pełny ekran\tCtrl+Shift+L
 
 Facing
 Wiele stron
 
 Failed to save a file
 Błąd zapisywania pliku
+
+Favorites
+Ulubione
 
 File Size:
 Rozmiar pliku:
@@ -345,7 +390,7 @@ Found text at page %d (again)
 Znaleziono tekst na stronie %d (znowu)
 
 Frequently Read
-Często otwierane
+Ostatnio otwierane
 
 GB
 GB
@@ -354,7 +399,7 @@ Go to page
 Przejdź do strony
 
 Hide frequently read
-Ukryj często otwierane
+Ukryj ostanio otwierane
 
 Hint: Use the F3 key for finding again
 Wskazówka: użyj klawisza F3, aby szukać dalej
@@ -440,6 +485,9 @@ Dokumenty PDF
 Pa&ge...\tCtrl-G
 &Strona...\tCtrl+G
 
+Page %d
+Strona %d
+
 Page Size:
 Rozmiar strony:
 
@@ -455,6 +503,9 @@ Strona:
 Please wait - rendering...
 Proszę czekać - renderowanie...
 
+Postscript documents
+Dokumenty postscript
+
 Pr&esentation\tCtrl-L
 &Prezentacja\tCtrl+L
 
@@ -467,6 +518,9 @@ Drukuj
 Print range
 Zakres druku
 
+Printer with given name doesn't exist
+Drukarka o podanej nazwie nie istnieje
+
 Printing is still in progress. Abort and start over?
 Jeszcze trwa drukowanie. Przerwać i zacząć od nowa?
 
@@ -478,6 +532,12 @@ Problem z drukowaniem.
 
 Remember &opened files
 Pamiętaj &otwierane pliki
+
+Remove from favorites
+Usuń z ulubionych
+
+Remove page %d from favorites
+Usuń stronę %d z ulubionych
 
 Rotate &Left\tCtrl-Shift--
 Obróć w &lewo\tCtrl+Shift+Minus
@@ -515,6 +575,9 @@ Pokaż pasek &narzędzi
 Show &pages continuously
 Wyświetlaj strony w układzie &ciągłym
 
+Show Favorites
+Pokaż ulubione
+
 Show frequently read
 Pokaż często otwierane
 
@@ -523,6 +586,9 @@ Pokaż panel za&kładek, gdy są dostępne
 
 Single Page
 Pojedyncza strona
+
+Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
+Przepraszamy - to nie powinno się zdarzyć!\n\nProszę nacisnąć przycisk 'Anuluj', jeżeli chcesz pomóc nam w usunięciu tego problemu.
 
 Source file %s has no synchronization point
 Plik źródłowy %s nie posiada punktów synchronizacji
@@ -595,28 +661,4 @@ kopiowanie tekstu
 
 printing document
 drukowanie dokumentu
-
-# Untranslated:
-#&Book View\tCtrl-8
-#&Facing\tCtrl-7
-#&Open Document
-#&Pin Document
-#&Remove Document
-#&Single Page\tCtrl-6
-#(page %d)
-#Add Favorite
-#Add page %d to favorites
-#Add page %d to favorites with (optional) name:
-#Add to favorites
-#Could not obtain Printer properties
-#Current file
-#F&avorites
-#Favorites
-#Page %d
-#Postscript documents
-#Printer with given name doesn't exist
-#Remove from favorites
-#Remove page %d from favorites
-#Show Favorites
-#Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
 

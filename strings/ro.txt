@@ -15,13 +15,13 @@ Contributor: Gabriel Lazăr
 &Despre
 
 &Actual Size\tCtrl-1
-Mărime &actuală\tCtrl-1
+Mărime &efectivă\tCtrl-1
 
 &All selected pages
 Toate paginile selectate
 
 &Back\tAlt+Left Arrow
-Înapoi\tAlt+Left Arrow
+Înapoi\tAlt+<-
 
 &Book View\tCtrl-8
 Format carte\tCtrl-8
@@ -48,7 +48,7 @@ Două pagini\tCtrl-7
 &Fișier
 
 &Find what:
-Obiect căutare:
+Caută text:
 
 &First Page\tHome
 Prima pagină\tHome
@@ -57,7 +57,7 @@ Prima pagină\tHome
 Potrivire pagini cu aria de imprimare
 
 &Go To
-Sal&t la...
+Sal&t la
 
 &Go to page:
 Salt la pagina:
@@ -75,7 +75,7 @@ Factor mărire:
 Manual
 
 &Match case
-Diferențiază litere mari și mici
+Potrivire literele mari și mici
 
 &Next Page\tRight Arrow
 Pagina următoare\t->
@@ -102,7 +102,7 @@ Deschide d&ocument
 &Parola:
 
 &Pin Document
-Fixează document
+&țintuește document
 
 &Previous Page\tLeft Arrow
 Pagina anterioară\t<-
@@ -144,7 +144,7 @@ O &singură pagină\tCtrl-6
 &Sari peste această versiune
 
 &Use original page sizes
-&Utilizează mărimile originale de pagină
+&Utilizează mărimile originale ale paginii
 
 &View
 &Vizualizare
@@ -158,8 +158,23 @@ O &singură pagină\tCtrl-6
 (of %d)
 (de %d)
 
+(page %d)
+(pagina %d)
+
 About SumatraPDF
 Despre SumatraPDF
+
+Add Favorite
+Adaugă ca favorit
+
+Add page %d to favorites
+Adaugă pagina %d la favorite
+
+Add page %d to favorites with (optional) name:
+Adaugă pagina %d la favorite cu (opțional) numele:
+
+Add to favorites
+Adaugă la favorite
 
 Advanced
 Avansat
@@ -174,7 +189,7 @@ Application:
 Program:
 
 Associate with PDF files?
-Asociază cu fișiere PDF?
+Asociază cu fișierele PDF?
 
 Attachment: %s
 Fișier atașat: %s
@@ -189,7 +204,7 @@ Automatically check for &updates
 Urmărește automat versiuni noi
 
 Book View
-Vedere în format carte
+Vizualizare în format carte
 
 Book&marks\tF12
 Marcaje\tF12
@@ -248,6 +263,9 @@ Copiază co&mentariul
 Copying text was denied (copying as image only)
 Copierea textului interzisă (s-a copiat ca imagine)
 
+Could not obtain Printer properties
+Nu s-au putut obține proprietățile imprimantei
+
 Could not open Printer
 Imprimantă inaccesibilă
 
@@ -259,6 +277,9 @@ Nu s-a putut afișa pagina
 
 Created:
 Creat:
+
+Current file
+Fișier curent
 
 Custom &Zoom...\tCtrl-Y
 Factor de mărire... \tCtrl-Y
@@ -279,7 +300,7 @@ DjVu documents
 Documente DjVu
 
 Document Properties
-Proprietăti document
+Proprietăți document
 
 Download
 Descarcă
@@ -299,17 +320,23 @@ Introduceți comanda invocată la dublu click pe documentul PDF:
 Error loading %s
 Eroare la încărcarea %s
 
+F&avorites
+F&avorite
+
 F&orward\tAlt+Right Arrow
 Înainte\tAlt+Right Arrow
 
 F&ullscreen\tCtrl-Shift-L
-Ecran complet\tCtrl-Shift-L
+Tot ecranul\tCtrl-Shift-L
 
 Facing
 Două pagini
 
 Failed to save a file
 Eroare la salvarea unui fișier
+
+Favorites
+Favorite
 
 File Size:
 Mărime fișier:
@@ -339,7 +366,7 @@ Fit &Page\tCtrl-0
 &Pagină întreagă\tCtrl-0
 
 Fit &Width\tCtrl-2
-Lățime pagină
+Lățime pagină\tCtrl-2
 
 Fit Content
 Potrivire după conținut
@@ -357,7 +384,7 @@ Fit a Single Page
 Potrivire pentru o singură pagină
 
 Found text at page %d
-Am găsit text la pagina %d
+Am găsit textul la pagina %d
 
 Found text at page %d (again)
 Găsit textul la pagina %d (din nou)
@@ -387,13 +414,13 @@ MB
 MB
 
 Make SumatraPDF default application for PDF files?
-Faceți SumatraPDF programul implicit pentru fișiere PDF?
+Setați SumatraPDF ca program implicit pentru fișierele PDF?
 
 Make SumatraPDF my default PDF reader
-Faceți SumatraPDF cititorul implicit de PDF
+Setați SumatraPDF ca cititor implicit de PDF
 
 Match Case
-Potrivire litere mari și mici
+Potrivire literele mari și mici
 
 Modified:
 Modificat:
@@ -458,6 +485,9 @@ Documente PDF
 Pa&ge...\tCtrl-G
 Pagina...\tCtrl-G
 
+Page %d
+Pagina %d
+
 Page Size:
 Mărime pagină:
 
@@ -488,6 +518,9 @@ Imprimare
 Print range
 Interval imprimare
 
+Printer with given name doesn't exist
+Imprimanta cu numele respectiv nu există
+
 Printing is still in progress. Abort and start over?
 Tipărirea este încă în curs. Opresc și reiau ?
 
@@ -499,6 +532,12 @@ Problemă la imprimare.
 
 Remember &opened files
 ține minte fișierele deschise
+
+Remove from favorites
+Scoate de la favorite
+
+Remove page %d from favorites
+Scoate pagina %d de la favorite
 
 Rotate &Left\tCtrl-Shift--
 Rotește spre stânga\tCtrl-Shift--
@@ -516,10 +555,10 @@ Searching %d of %d...
 Caut %d din %d...
 
 Select &All
-Selecte&ază tot
+Selecte&ază Tot
 
 Select &All\tCtrl-A
-Selectează to&ate\tCtrl-A
+Selectează &Tot\tCtrl-A
 
 Select content with Ctrl+left mouse button
 Selectați conținut cu Ctrl+buton stânga maus
@@ -535,6 +574,9 @@ Arată bara de instrumente
 
 Show &pages continuously
 Arată &paginile continuu
+
+Show Favorites
+Arată Favoritele
 
 Show frequently read
 Arată documentele citite frecvent
@@ -615,24 +657,8 @@ Factor de mărire
 [Schimbări detectate; actualizare] %s
 
 copying text
-se copiază text
+se copiază textul
 
 printing document
 se imprimă documentul
-
-# Untranslated:
-#(page %d)
-#Add Favorite
-#Add page %d to favorites
-#Add page %d to favorites with (optional) name:
-#Add to favorites
-#Could not obtain Printer properties
-#Current file
-#F&avorites
-#Favorites
-#Page %d
-#Printer with given name doesn't exist
-#Remove from favorites
-#Remove page %d from favorites
-#Show Favorites
 
