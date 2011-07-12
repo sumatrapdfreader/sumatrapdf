@@ -11,11 +11,11 @@ Lang: pa Punjabi (ਪੰਜਾਬੀ)
 &About
 Sumatra ਬਾਰੇ(&A)
 
-&Actual Size\tCtrl-1
-ਸਹੀ ਅਕਾਰ(&u)\tCtrl-1
+&Actual Size\tCtrl+1
+ਸਹੀ ਅਕਾਰ(&u)\tCtrl+1
 
-&Close\tCtrl-W
-ਬੰਦ ਕਰੋ(&C)\tCtrl-W
+&Close\tCtrl+W
+ਬੰਦ ਕਰੋ(&C)\tCtrl+W
 
 &Don't ask me again
 ਮੈਥੌਂ ਮੁੜ ਨਾ ਪੁਛੋ
@@ -41,17 +41,17 @@ Sumatra ਬਾਰੇ(&A)
 &Next Page\tRight Arrow
 ਅਗਲੇ ਪੰਨੇ ਤੇ\t->
 
-&Open\tCtrl-O
-ਫਾਇਲ ਖੋਲੋ(&O)\tCtrl-O
+&Open\tCtrl+O
+ਫਾਇਲ ਖੋਲੋ(&O)\tCtrl+O
 
 &Previous Page\tLeft Arrow
 ਪਿਛਲੇ ਪੰਨੇ ਤੇ\t<-
 
-&Print...\tCtrl-P
-ਪਰਿੰਟ ਕਰੋ(&P)\tCtrl-P
+&Print...\tCtrl+P
+ਪਰਿੰਟ ਕਰੋ(&P)\tCtrl+P
 
-&Save As...\tCtrl-S
-ਇੰਝ ਸੰਬਾਲੋ(&S)\tCtrl-S
+&Save As...\tCtrl+S
+ਇੰਝ ਸੰਬਾਲੋ(&S)\tCtrl+S
 
 &Skip this version
 ਇਸ ਵਰਜਨ ਨੂੰ ਛਡੋ
@@ -89,8 +89,8 @@ Contribute Translation
 Could not open Printer
 ਪਰਿੰਟ ਖੋਲਿਆ ਨਹੀ ਜਾ ਸਕਿਆ
 
-E&xit\tCtrl-Q
-ਬੰਦ ਕਰੋ(&x)\tCtrl-Q
+E&xit\tCtrl+Q
+ਬੰਦ ਕਰੋ(&x)\tCtrl+Q
 
 Enter password
 ਪਾਸਵਰਡ ਭਰੋ
@@ -98,8 +98,8 @@ Enter password
 Enter password for %s
 %s ਲਈ ਪਾਸਵਰਡ ਭਰੋ
 
-F&ullscreen\tCtrl-Shift-L
-ਪੂਰੀ ਸਕਰੀਨ\tCtrl-Shift-L
+F&ullscreen\tCtrl+Shift+L
+ਪੂਰੀ ਸਕਰੀਨ\tCtrl+Shift+L
 
 Facing
 ਕਿਤਾਬ
@@ -107,8 +107,8 @@ Facing
 Failed to save a file
 ਫਾਈਲ ਸੰਭਾਲੀ ਨਹੀ ਜਾ ਸਕੀ
 
-Fin&d...\tCtrl-F
-ਲੱਭੋ...\tCtrl-F
+Fin&d...\tCtrl+F
+ਲੱਭੋ...\tCtrl+F
 
 Find Next
 ਅਗਲਾ ਲੱਭੋ
@@ -119,11 +119,11 @@ Find Previous
 Find:
 ਲੱਭੋ:
 
-Fit &Page\tCtrl-0
-ਫਿਟ ਕਰੋ(&P)\tCtrl-0
+Fit &Page\tCtrl+0
+ਫਿਟ ਕਰੋ(&P)\tCtrl+0
 
-Fit &Width\tCtrl-2
-ਚੋੜਾਈ ਦੇ ਮੁਤਾਬਕ(&h)\tCtrl-2
+Fit &Width\tCtrl+2
+ਚੋੜਾਈ ਦੇ ਮੁਤਾਬਕ(&h)\tCtrl+2
 
 Fit Page
 ਫਿਟ ਕਰੋ
@@ -161,8 +161,8 @@ Next Page
 Open
 ਖੋਲੋ
 
-Pa&ge...\tCtrl-G
-ਪੰਨਾ ਨੰਬਰ ਤੇ\tCtrl-G
+Pa&ge...\tCtrl+G
+ਪੰਨਾ ਨੰਬਰ ਤੇ\tCtrl+G
 
 Page:
 ਪੰਨਾ ਨੰਬਰ:
@@ -173,11 +173,11 @@ Previous Page
 Printing problem.
 ਪਰਿਨਟ ਕਰਨ ਵਿੱਚ ਗਲਤੀ
 
-Rotate &Left\tCtrl-Shift--
-ਸੱਜੇ ਪਾਸੇ ਘੁਮਾਓ\tCtrl-Shift--
+Rotate &Left\tCtrl+Shift+-
+ਸੱਜੇ ਪਾਸੇ ਘੁਮਾਓ\tCtrl+Shift+-
 
-Rotate &Right\tCtrl-Shift-+
-ਖੱਬੇ ਪਾਸੇ ਘੁਮਾਓ\tCtrl-Shift-+
+Rotate &Right\tCtrl+Shift++
+ਖੱਬੇ ਪਾਸੇ ਘੁਮਾਓ\tCtrl+Shift++
 
 Save As
 ਇੰਝ ਸੰਬਾਲੋ
@@ -212,11 +212,11 @@ Zoom Out
 # Untranslated:
 #&All selected pages
 #&Back\tAlt+Left Arrow
-#&Book View\tCtrl-8
+#&Book View\tCtrl+8
 #&Copy Selection
-#&Copy Selection\tCtrl-C
+#&Copy Selection\tCtrl+C
 #&Even pages only
-#&Facing\tCtrl-7
+#&Facing\tCtrl+7
 #&Find what:
 #&Fit pages to printable area
 #&Go to page:
@@ -237,7 +237,7 @@ Zoom Out
 #&Save As...
 #&Settings
 #&Shrink pages to printable area (if necessary)
-#&Single Page\tCtrl-6
+#&Single Page\tCtrl+6
 #&Use original page sizes
 #&Yes
 #(of %d)
@@ -273,7 +273,7 @@ Zoom Out
 #Couldn't render the page
 #Created:
 #Current file
-#Custom &Zoom...\tCtrl-Y
+#Custom &Zoom...\tCtrl+Y
 #Default &Layout:
 #Default &Zoom:
 #Default PDF reader can't be changed in portable mode
@@ -289,7 +289,7 @@ Zoom Out
 #File Size:
 #File:
 #Find
-#Fit &Content\tCtrl-3
+#Fit &Content\tCtrl+3
 #Fit Content
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
@@ -311,7 +311,7 @@ Zoom Out
 #Open in &Foxit Reader
 #Open in PDF-XChange
 #P&roperties
-#P&roperties\tCtrl-D
+#P&roperties\tCtrl+D
 #PDF Document
 #PDF Producer:
 #PDF Version:
@@ -322,7 +322,7 @@ Zoom Out
 #Page scaling
 #Please wait - rendering...
 #Postscript documents
-#Pr&esentation\tCtrl-L
+#Pr&esentation\tCtrl+L
 #Print
 #Print range
 #Printer with given name doesn't exist
@@ -331,10 +331,10 @@ Zoom Out
 #Remember &opened files
 #Remove from favorites
 #Remove page %d from favorites
-#Save S&hortcut...\tCtrl-Shift-S
+#Save S&hortcut...\tCtrl+Shift+S
 #Searching %d of %d...
 #Select &All
-#Select &All\tCtrl-A
+#Select &All\tCtrl+A
 #Select content with Ctrl+left mouse button
 #Send by &E-mail...
 #Show &pages continuously

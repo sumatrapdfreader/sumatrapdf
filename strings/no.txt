@@ -17,7 +17,7 @@ Contributor: Tommy M. Stephansen
 &About
 &Om
 
-&Actual Size\tCtrl-1
+&Actual Size\tCtrl+1
 Fak&tisk størrelse\tCtrl+1
 
 &All selected pages
@@ -26,16 +26,16 @@ Fak&tisk størrelse\tCtrl+1
 &Back\tAlt+Left Arrow
 Tilbake\tAlt+Pil venstre
 
-&Book View\tCtrl-8
+&Book View\tCtrl+8
 &Bokvisning\tCtrl+8
 
-&Close\tCtrl-W
+&Close\tCtrl+W
 &Lukk\tCtrl+W
 
 &Copy Selection
 &Kopier valgt område
 
-&Copy Selection\tCtrl-C
+&Copy Selection\tCtrl+C
 Kopier merket tekst\tCtrl+C
 
 &Don't ask me again
@@ -44,7 +44,7 @@ Kopier merket tekst\tCtrl+C
 &Even pages only
 Bare &partallssider
 
-&Facing\tCtrl-7
+&Facing\tCtrl+7
 &Vendt\tCtrl+7
 
 &File
@@ -92,7 +92,7 @@ Neste side\tPil høyre
 &Odd pages only
 Bare &oddetallssider
 
-&Open\tCtrl-O
+&Open\tCtrl+O
 &Åpne...\tCtrl+O
 
 &Open Document
@@ -113,7 +113,7 @@ Forrige side\tPil venstre
 &Print...
 &Skriv ut...
 
-&Print...\tCtrl-P
+&Print...\tCtrl+P
 &Skriv ut...\tCtrl+P
 
 &Print... (denied)
@@ -131,7 +131,7 @@ Forrige side\tPil venstre
 &Save As...
 &Lagre som...
 
-&Save As...\tCtrl-S
+&Save As...\tCtrl+S
 Lagre &som...\tCtrl+S
 
 &Settings
@@ -140,7 +140,7 @@ Lagre &som...\tCtrl+S
 &Shrink pages to printable area (if necessary)
 &Krymp sider til utskriftsområde (om nødvendig)
 
-&Single Page\tCtrl-6
+&Single Page\tCtrl+6
 &Enkeltside\tCtrl+6
 
 &Skip this version
@@ -284,7 +284,7 @@ Opprettet:
 Current file
 Gjeldende fil
 
-Custom &Zoom...\tCtrl-Y
+Custom &Zoom...\tCtrl+Y
 &Egendefinert zoom...\tCtrl+Y
 
 Default &Layout:
@@ -308,7 +308,7 @@ Dokumentegenskaper
 Download
 Nedlasting
 
-E&xit\tCtrl-Q
+E&xit\tCtrl+Q
 A&vslutt\tCtrl+Q
 
 Enter password
@@ -329,7 +329,7 @@ F&avoritter
 F&orward\tAlt+Right Arrow
 Fremover\tAlt+Pil høyre
 
-F&ullscreen\tCtrl-Shift-L
+F&ullscreen\tCtrl+Shift+L
 Fullskjerm\tCtrl+Shift+L
 
 Facing
@@ -347,7 +347,7 @@ Filstørrelse:
 File:
 Fil:
 
-Fin&d...\tCtrl-F
+Fin&d...\tCtrl+F
 Søk etter...\tCtrl+F
 
 Find
@@ -362,13 +362,13 @@ Forrige
 Find:
 Søk etter:
 
-Fit &Content\tCtrl-3
+Fit &Content\tCtrl+3
 Tilpass &innhold\tCtrl+3
 
-Fit &Page\tCtrl-0
+Fit &Page\tCtrl+0
 Tilpass &side\tCtrl+0
 
-Fit &Width\tCtrl-2
+Fit &Width\tCtrl+2
 Tilpass til bredd&e\tCtrl+2
 
 Fit Content
@@ -470,7 +470,7 @@ Open in PDF-XChange
 P&roperties
 E&genskaper
 
-P&roperties\tCtrl-D
+P&roperties\tCtrl+D
 E&genskaper...\tCtrl+D
 
 PDF Document
@@ -485,7 +485,7 @@ PDF-versjon:
 PDF documents
 PDF-dokumenter (*.pdf)
 
-Pa&ge...\tCtrl-G
+Pa&ge...\tCtrl+G
 Side...\tCtrl+G
 
 Page %d
@@ -509,7 +509,7 @@ Vennligst vent - arbeider...
 Postscript documents
 Postscript-dokumenter
 
-Pr&esentation\tCtrl-L
+Pr&esentation\tCtrl+L
 Pr&esentasjon\tCtrl+L
 
 Previous Page
@@ -542,16 +542,16 @@ Fjern fra favoritter
 Remove page %d from favorites
 Fjern side %d fra favoritter
 
-Rotate &Left\tCtrl-Shift--
+Rotate &Left\tCtrl+Shift+-
 Roter mot klokken\tCtrl+Shift+Minus
 
-Rotate &Right\tCtrl-Shift-+
+Rotate &Right\tCtrl+Shift++
 Roter med klokken\tCtrl+Shift+Pluss
 
 Save As
 Lagre som
 
-Save S&hortcut...\tCtrl-Shift-S
+Save S&hortcut...\tCtrl+Shift+S
 Lagre s&narvei...\tCtrl+Shift+S
 
 Searching %d of %d...
@@ -560,7 +560,7 @@ Søker %d av %d...
 Select &All
 Merk &alt
 
-Select &All\tCtrl-A
+Select &All\tCtrl+A
 Merk &alle\tCtrl+A
 
 Select content with Ctrl+left mouse button

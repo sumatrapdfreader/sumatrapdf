@@ -14,17 +14,17 @@ Contributor: Olli
 &About
 &Tietoja
 
-&Actual Size\tCtrl-1
-&Todellinen koko\tCtrl-1
+&Actual Size\tCtrl+1
+&Todellinen koko\tCtrl+1
 
 &Back\tAlt+Left Arrow
 Takaisin\tAlt+Vasen nuoli
 
-&Close\tCtrl-W
-&Sulje\tCtrl-W
+&Close\tCtrl+W
+&Sulje\tCtrl+W
 
-&Copy Selection\tCtrl-C
-Kopioi valinta\tCtrl-C
+&Copy Selection\tCtrl+C
+Kopioi valinta\tCtrl+C
 
 &Don't ask me again
 Älä kysy uudestaan
@@ -68,8 +68,8 @@ Seuraava sivu\t->
 &No, thanks
 &Ei, kiitos
 
-&Open\tCtrl-O
-&Avaa\tCtrl-O
+&Open\tCtrl+O
+&Avaa\tCtrl+O
 
 &Options...
 &Asetukset
@@ -80,8 +80,8 @@ Seuraava sivu\t->
 &Previous Page\tLeft Arrow
 Edellinen sivu\t<-
 
-&Print...\tCtrl-P
-&Tulosta\tCtrl-P
+&Print...\tCtrl+P
+&Tulosta\tCtrl+P
 
 &Print... (denied)
 &Tulosta... (kielletty)
@@ -89,8 +89,8 @@ Edellinen sivu\t<-
 &Remember these settings for each document
 &Muista nämä asetukset jokaiselle asiakirjalle
 
-&Save As...\tCtrl-S
-&Tallenna nimellä\tCtrl-S
+&Save As...\tCtrl+S
+&Tallenna nimellä\tCtrl+S
 
 &Settings
 &Asetukset
@@ -182,8 +182,8 @@ Sivun tulkinta epäonnistui
 Created:
 Tehty:
 
-Custom &Zoom...\tCtrl-Y
-&Mukautettu lähennys...\tCtrl-Y
+Custom &Zoom...\tCtrl+Y
+&Mukautettu lähennys...\tCtrl+Y
 
 Default &Layout:
 Oletus&tyyli:
@@ -203,8 +203,8 @@ Asiakirjan ominaisuudet
 Download
 Lataa
 
-E&xit\tCtrl-Q
-&Poistu\tCtrl-Q
+E&xit\tCtrl+Q
+&Poistu\tCtrl+Q
 
 Enter password
 Kirjoita salasana
@@ -215,8 +215,8 @@ Kirjoita tiedoston %s salasana
 F&orward\tAlt+Right Arrow
 Seuraava\tAlt+Oikea nuoli
 
-F&ullscreen\tCtrl-Shift-L
-Koko näyttö\tCtrl-Shift-L
+F&ullscreen\tCtrl+Shift+L
+Koko näyttö\tCtrl+Shift+L
 
 Facing
 Rinnakkain
@@ -230,8 +230,8 @@ Tiedoston koko:
 File:
 Tiedosto:
 
-Fin&d...\tCtrl-F
-Etsi...\tCtrl-F
+Fin&d...\tCtrl+F
+Etsi...\tCtrl+F
 
 Find
 Etsi
@@ -245,11 +245,11 @@ Etsi edellinen
 Find:
 Etsi:
 
-Fit &Page\tCtrl-0
-Sovita sivu pystysuunnassa\tCtrl-0
+Fit &Page\tCtrl+0
+Sovita sivu pystysuunnassa\tCtrl+0
 
-Fit &Width\tCtrl-2
-&Sovita sivu vaakasuunnassa\tCtrl-2
+Fit &Width\tCtrl+2
+&Sovita sivu vaakasuunnassa\tCtrl+2
 
 Fit Page
 Sovita sivu pystysuunnassa
@@ -323,8 +323,8 @@ Avaa &Foxit Readerissa
 Open in PDF-XChange
 Avaa PDF-XChange
 
-P&roperties\tCtrl-D
-O&minaisuudet...\tCtrl-D
+P&roperties\tCtrl+D
+O&minaisuudet...\tCtrl+D
 
 PDF Document
 PDF-asiakirja
@@ -338,8 +338,8 @@ PDF-versio:
 PDF documents
 PDF-asiakirjat
 
-Pa&ge...\tCtrl-G
-Sivulle...\tCtrl-G
+Pa&ge...\tCtrl+G
+Sivulle...\tCtrl+G
 
 Page Size:
 Sivun koko:
@@ -362,11 +362,11 @@ Tulostusongelma
 Remember &opened files
 Muista &avatut tiedostot
 
-Rotate &Left\tCtrl-Shift--
-Käännä vasemmalle\tCtrl-Shift--
+Rotate &Left\tCtrl+Shift+-
+Käännä vasemmalle\tCtrl+Shift+-
 
-Rotate &Right\tCtrl-Shift-+
-Käännä oikealle\tCtrl-Shift-+
+Rotate &Right\tCtrl+Shift++
+Käännä oikealle\tCtrl+Shift++
 
 Save As
 Tallenna nimellä
@@ -460,10 +460,10 @@ tulostetaan asiakirjaa
 
 # Untranslated:
 #&All selected pages
-#&Book View\tCtrl-8
+#&Book View\tCtrl+8
 #&Copy Selection
 #&Even pages only
-#&Facing\tCtrl-7
+#&Facing\tCtrl+7
 #&Fit pages to printable area
 #&Odd pages only
 #&Open Document
@@ -473,7 +473,7 @@ tulostetaan asiakirjaa
 #&Remove Document
 #&Save As...
 #&Shrink pages to printable area (if necessary)
-#&Single Page\tCtrl-6
+#&Single Page\tCtrl+6
 #&Use original page sizes
 #(page %d)
 #Add Favorite
@@ -497,7 +497,7 @@ tulostetaan asiakirjaa
 #Error loading %s
 #F&avorites
 #Favorites
-#Fit &Content\tCtrl-3
+#Fit &Content\tCtrl+3
 #Fit Content
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
@@ -510,7 +510,7 @@ tulostetaan asiakirjaa
 #Page %d
 #Page scaling
 #Postscript documents
-#Pr&esentation\tCtrl-L
+#Pr&esentation\tCtrl+L
 #Print
 #Print range
 #Printer with given name doesn't exist
@@ -518,9 +518,9 @@ tulostetaan asiakirjaa
 #Printing page %d of %d...
 #Remove from favorites
 #Remove page %d from favorites
-#Save S&hortcut...\tCtrl-Shift-S
+#Save S&hortcut...\tCtrl+Shift+S
 #Select &All
-#Select &All\tCtrl-A
+#Select &All\tCtrl+A
 #Show Favorites
 #Show frequently read
 #Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.

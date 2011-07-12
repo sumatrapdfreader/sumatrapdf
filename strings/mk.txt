@@ -13,8 +13,8 @@ Contributor: Гоце Митевски (http://www.nicer2.com)
 &About
 &За SumatraPDF...
 
-&Actual Size\tCtrl-1
-&Реална големина\tCtrl-1
+&Actual Size\tCtrl+1
+&Реална големина\tCtrl+1
 
 &All selected pages
 &Сите означени страници
@@ -22,14 +22,14 @@ Contributor: Гоце Митевски (http://www.nicer2.com)
 &Back\tAlt+Left Arrow
 Назад\tAlt+Left Arrow
 
-&Close\tCtrl-W
-&Затвори\tCtrl-W
+&Close\tCtrl+W
+&Затвори\tCtrl+W
 
 &Copy Selection
 &Копирај селекција
 
-&Copy Selection\tCtrl-C
-Копирај селекција\tCtrl-C
+&Copy Selection\tCtrl+C
+Копирај селекција\tCtrl+C
 
 &Don't ask me again
 Не ме прашувај повторно
@@ -82,8 +82,8 @@ Contributor: Гоце Митевски (http://www.nicer2.com)
 &Odd pages only
 Само &непарни страници
 
-&Open\tCtrl-O
-&Отвори\tCtrl-O
+&Open\tCtrl+O
+&Отвори\tCtrl+O
 
 &Options...
 &Опции...
@@ -97,8 +97,8 @@ Contributor: Гоце Митевски (http://www.nicer2.com)
 &Print...
 &Печати...
 
-&Print...\tCtrl-P
-&Печати\tCtrl-P
+&Print...\tCtrl+P
+&Печати\tCtrl+P
 
 &Print... (denied)
 &Печати... (denied)
@@ -112,8 +112,8 @@ Contributor: Гоце Митевски (http://www.nicer2.com)
 &Save As...
 &Зачувај како...
 
-&Save As...\tCtrl-S
-&Зачувај како...\tCtrl-S
+&Save As...\tCtrl+S
+&Зачувај како...\tCtrl+S
 
 &Settings
 &Поставувања
@@ -241,8 +241,8 @@ Couldn't render the page
 Created:
 Создадено на:
 
-Custom &Zoom...\tCtrl-Y
-&Зумирање по избор...\tCtrl-Y
+Custom &Zoom...\tCtrl+Y
+&Зумирање по избор...\tCtrl+Y
 
 Default &Layout:
 Основен &изглед:
@@ -262,8 +262,8 @@ Document Properties
 Download
 Преземи
 
-E&xit\tCtrl-Q
-&Излези\tCtrl-Q
+E&xit\tCtrl+Q
+&Излези\tCtrl+Q
 
 Enter password
 Внеси лозинка
@@ -280,8 +280,8 @@ Error loading %s
 F&orward\tAlt+Right Arrow
 Напред\tAlt+Right Arrow
 
-F&ullscreen\tCtrl-Shift-L
-На цел екран\tCtrl-Shift-L
+F&ullscreen\tCtrl+Shift+L
+На цел екран\tCtrl+Shift+L
 
 Facing
 Две страници
@@ -295,8 +295,8 @@ File Size:
 File:
 Датотека:
 
-Fin&d...\tCtrl-F
-Најди...\tCtrl-F
+Fin&d...\tCtrl+F
+Најди...\tCtrl+F
 
 Find
 Најди
@@ -310,14 +310,14 @@ Find Previous
 Find:
 Најди:
 
-Fit &Content\tCtrl-3
-Прилагоди на &содржина\tCtrl-3
+Fit &Content\tCtrl+3
+Прилагоди на &содржина\tCtrl+3
 
-Fit &Page\tCtrl-0
-Прилагоди на &страница\tCtrl-0
+Fit &Page\tCtrl+0
+Прилагоди на &страница\tCtrl+0
 
-Fit &Width\tCtrl-2
-Прилагоди на &ширина\tCtrl-2
+Fit &Width\tCtrl+2
+Прилагоди на &ширина\tCtrl+2
 
 Fit Content
 Прилагоди на содржина
@@ -418,8 +418,8 @@ Open in PDF-XChange
 P&roperties
 &Својства
 
-P&roperties\tCtrl-D
-С&војства...\tCtrl-D
+P&roperties\tCtrl+D
+С&војства...\tCtrl+D
 
 PDF Document
 PDF документ
@@ -433,8 +433,8 @@ PDF Version:
 PDF documents
 PDF документи
 
-Pa&ge...\tCtrl-G
-Страница...\tCtrl-G
+Pa&ge...\tCtrl+G
+Страница...\tCtrl+G
 
 Page Size:
 Големина на страница:
@@ -451,8 +451,8 @@ Page:
 Please wait - rendering...
 Ве молам почекајте - создавам приказ...
 
-Pr&esentation\tCtrl-L
-Презентација\tCtrl-L
+Pr&esentation\tCtrl+L
+Презентација\tCtrl+L
 
 Previous Page
 Претходна страница
@@ -472,17 +472,17 @@ Printing problem.
 Remember &opened files
 Запомни ги &отворените датотеки
 
-Rotate &Left\tCtrl-Shift--
-Ротирај на лево\tCtrl-Shift--
+Rotate &Left\tCtrl+Shift+-
+Ротирај на лево\tCtrl+Shift+-
 
-Rotate &Right\tCtrl-Shift-+
-Ротирај на десно\tCtrl-Shift-+
+Rotate &Right\tCtrl+Shift++
+Ротирај на десно\tCtrl+Shift++
 
 Save As
 Зачувај како
 
-Save S&hortcut...\tCtrl-Shift-S
-Зачувај &кратенка...\tCtrl-Shift-S
+Save S&hortcut...\tCtrl+Shift+S
+Зачувај &кратенка...\tCtrl+Shift+S
 
 Searching %d of %d...
 Пребарувам %d од %d страници...
@@ -490,8 +490,8 @@ Searching %d of %d...
 Select &All
 Избери сè
 
-Select &All\tCtrl-A
-Избери сè\tCtrl-A
+Select &All\tCtrl+A
+Избери сè\tCtrl+A
 
 Select content with Ctrl+left mouse button
 Селектирај со Ctrl и левото копче на глувчето
@@ -590,12 +590,12 @@ printing document
 печатам документ
 
 # Untranslated:
-#&Book View\tCtrl-8
-#&Facing\tCtrl-7
+#&Book View\tCtrl+8
+#&Facing\tCtrl+7
 #&Open Document
 #&Pin Document
 #&Remove Document
-#&Single Page\tCtrl-6
+#&Single Page\tCtrl+6
 #(page %d)
 #Add Favorite
 #Add page %d to favorites

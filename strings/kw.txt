@@ -15,17 +15,17 @@ Contributor: Ben Bruch
 &About
 &A-dro dhe...
 
-&Actual Size\tCtrl-1
-&Braster gwir\tCtrl-1
+&Actual Size\tCtrl+1
+&Braster gwir\tCtrl+1
 
 &Back\tAlt+Left Arrow
 War-lergh\tAlt+<-
 
-&Close\tCtrl-W
-&Degea\tCtrl-W
+&Close\tCtrl+W
+&Degea\tCtrl+W
 
-&Copy Selection\tCtrl-C
-Dasskrifa Dewis\tCtrl-C
+&Copy Selection\tCtrl+C
+Dasskrifa Dewis\tCtrl+C
 
 &Don't ask me again
 &Na wovyn orthiv arta
@@ -69,8 +69,8 @@ Nessa Folen\t->
 &No, thanks
 &Na, meur ras
 
-&Open\tCtrl-O
-&Ygor\tCtrl-O
+&Open\tCtrl+O
+&Ygor\tCtrl+O
 
 &Options...
 &Etholyow...
@@ -81,14 +81,14 @@ Nessa Folen\t->
 &Previous Page\tLeft Arrow
 Folen kyns\t<-
 
-&Print...\tCtrl-P
-&Pryntya\tCtrl-P
+&Print...\tCtrl+P
+&Pryntya\tCtrl+P
 
 &Remember these settings for each document
 Gwitha an etholy&ow ma rag pub restren
 
-&Save As...\tCtrl-S
-&Gwitha avel...\tCtrl-S
+&Save As...\tCtrl+S
+&Gwitha avel...\tCtrl+S
 
 &Settings
 &Settyansow
@@ -168,8 +168,8 @@ Ny yllys darbari pryntyer
 Couldn't render the page
 Ny yllys rendra folen
 
-Custom &Zoom...\tCtrl-Y
-&Zoum arbennik...\tCtrl-Y
+Custom &Zoom...\tCtrl+Y
+&Zoum arbennik...\tCtrl+Y
 
 Default &Layout:
 &Delinyans savonek:
@@ -183,8 +183,8 @@ Ny yll an pennredyer PDF bos chanjyes yn modh porthadow
 Download
 Iskarga
 
-E&xit\tCtrl-Q
-&Degea\tCtrl-Q
+E&xit\tCtrl+Q
+&Degea\tCtrl+Q
 
 Enter password
 Ri ger-tremena
@@ -195,8 +195,8 @@ Ri ger-tremena rag %s
 F&orward\tAlt+Right Arrow
 Yn-rag\tAlt+->
 
-F&ullscreen\tCtrl-Shift-L
-Skrin Leun\tCtrl-Shift-L
+F&ullscreen\tCtrl+Shift+L
+Skrin Leun\tCtrl+Shift+L
 
 Facing
 A-dal
@@ -204,8 +204,8 @@ A-dal
 Failed to save a file
 Gwithyans restren a fyllis
 
-Fin&d...\tCtrl-F
-Kavos...\tCtrl-F
+Fin&d...\tCtrl+F
+Kavos...\tCtrl+F
 
 Find
 Kavos
@@ -219,11 +219,11 @@ Kavos Kyns
 Find:
 Kavos:
 
-Fit &Page\tCtrl-0
-Desedha &Folen\tCtrl-0
+Fit &Page\tCtrl+0
+Desedha &Folen\tCtrl+0
 
-Fit &Width\tCtrl-2
-&Desedha Les\tCtrl-2
+Fit &Width\tCtrl+2
+&Desedha Les\tCtrl+2
 
 Fit Page
 Desedha Folen
@@ -297,8 +297,8 @@ Restren PDF
 PDF documents
 Restrennow PDF
 
-Pa&ge...\tCtrl-G
-Folen...\tCtrl-G
+Pa&ge...\tCtrl+G
+Folen...\tCtrl+G
 
 Page number %u inexistant
 Nyns eus folen %u
@@ -318,11 +318,11 @@ Kaletter ow pryntya
 Remember &opened files
 Kovhe restrennow ygerys
 
-Rotate &Left\tCtrl-Shift--
-Treylya a-gledh\tCtrl-Shift--
+Rotate &Left\tCtrl+Shift+-
+Treylya a-gledh\tCtrl+Shift+-
 
-Rotate &Right\tCtrl-Shift-+
-Treylya a-dhyhow\tCtrl-Shift-+
+Rotate &Right\tCtrl+Shift++
+Treylya a-dhyhow\tCtrl+Shift++
 
 Save As
 Gwitha avel
@@ -404,10 +404,10 @@ Faktor-zoum
 
 # Untranslated:
 #&All selected pages
-#&Book View\tCtrl-8
+#&Book View\tCtrl+8
 #&Copy Selection
 #&Even pages only
-#&Facing\tCtrl-7
+#&Facing\tCtrl+7
 #&Fit pages to printable area
 #&Odd pages only
 #&Open Document
@@ -418,7 +418,7 @@ Faktor-zoum
 #&Remove Document
 #&Save As...
 #&Shrink pages to printable area (if necessary)
-#&Single Page\tCtrl-6
+#&Single Page\tCtrl+6
 #&Use original page sizes
 #(page %d)
 #Add Favorite
@@ -450,7 +450,7 @@ Faktor-zoum
 #Favorites
 #File Size:
 #File:
-#Fit &Content\tCtrl-3
+#Fit &Content\tCtrl+3
 #Fit Content
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
@@ -462,14 +462,14 @@ Faktor-zoum
 #Number of Pages:
 #Open a document...
 #P&roperties
-#P&roperties\tCtrl-D
+#P&roperties\tCtrl+D
 #PDF Producer:
 #PDF Version:
 #Page %d
 #Page Size:
 #Page scaling
 #Postscript documents
-#Pr&esentation\tCtrl-L
+#Pr&esentation\tCtrl+L
 #Print
 #Print range
 #Printer with given name doesn't exist
@@ -477,9 +477,9 @@ Faktor-zoum
 #Printing page %d of %d...
 #Remove from favorites
 #Remove page %d from favorites
-#Save S&hortcut...\tCtrl-Shift-S
+#Save S&hortcut...\tCtrl+Shift+S
 #Select &All
-#Select &All\tCtrl-A
+#Select &All\tCtrl+A
 #Show Favorites
 #Show frequently read
 #Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.

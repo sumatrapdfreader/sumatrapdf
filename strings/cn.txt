@@ -13,8 +13,8 @@ Contributor: WangKing (http://wkismet.spaces.live.com)
 &About
 关于(&A)
 
-&Actual Size\tCtrl-1
-实际大小(&U)\tCtrl-1
+&Actual Size\tCtrl+1
+实际大小(&U)\tCtrl+1
 
 &All selected pages
 所有选择的页面(&A)
@@ -22,17 +22,17 @@ Contributor: WangKing (http://wkismet.spaces.live.com)
 &Back\tAlt+Left Arrow
 上一视图(&B)\tAlt+Left Arrow
 
-&Book View\tCtrl-8
-书籍视图(&B)\tCtrl-8
+&Book View\tCtrl+8
+书籍视图(&B)\tCtrl+8
 
-&Close\tCtrl-W
-关闭(&C)\tCtrl-W
+&Close\tCtrl+W
+关闭(&C)\tCtrl+W
 
 &Copy Selection
-复制选择内容(&C)\tCtrl-C
+复制选择内容(&C)\tCtrl+C
 
-&Copy Selection\tCtrl-C
-复制选择内容\tCtrl-C
+&Copy Selection\tCtrl+C
+复制选择内容\tCtrl+C
 
 &Don't ask me again
 以后不再询问
@@ -40,8 +40,8 @@ Contributor: WangKing (http://wkismet.spaces.live.com)
 &Even pages only
 仅偶数页(&E)
 
-&Facing\tCtrl-7
-双页视图(&F)\tCtrl-7
+&Facing\tCtrl+7
+双页视图(&F)\tCtrl+7
 
 &File
 文件(&F)
@@ -88,8 +88,8 @@ Contributor: WangKing (http://wkismet.spaces.live.com)
 &Odd pages only
 仅奇数页(&O)
 
-&Open\tCtrl-O
-打开(&O)\tCtrl-O
+&Open\tCtrl+O
+打开(&O)\tCtrl+O
 
 &Open Document
 打开文件(&O)
@@ -109,8 +109,8 @@ Contributor: WangKing (http://wkismet.spaces.live.com)
 &Print...
 打印(&P)...
 
-&Print...\tCtrl-P
-打印(&P)...\tCtrl-P
+&Print...\tCtrl+P
+打印(&P)...\tCtrl+P
 
 &Print... (denied)
 打印(&P)...(已中断)
@@ -127,8 +127,8 @@ Contributor: WangKing (http://wkismet.spaces.live.com)
 &Save As...
 另存为(&S)...
 
-&Save As...\tCtrl-S
-另存为(&S)...\tCtrl-S
+&Save As...\tCtrl+S
+另存为(&S)...\tCtrl+S
 
 &Settings
 设置(&S)
@@ -136,8 +136,8 @@ Contributor: WangKing (http://wkismet.spaces.live.com)
 &Shrink pages to printable area (if necessary)
 缩小页面到可打印区域 (如果需要) (&S)
 
-&Single Page\tCtrl-6
-单页视图(&S)\tCtrl-6
+&Single Page\tCtrl+6
+单页视图(&S)\tCtrl+6
 
 &Skip this version
 跳过此版本
@@ -280,8 +280,8 @@ Created:
 Current file
 当前文件
 
-Custom &Zoom...\tCtrl-Y
-自定义缩放(&Z)...\tCtrl-Y
+Custom &Zoom...\tCtrl+Y
+自定义缩放(&Z)...\tCtrl+Y
 
 Default &Layout:
 默认布局(&L)
@@ -304,8 +304,8 @@ Document Properties
 Download
 下载
 
-E&xit\tCtrl-Q
-退出(&X)\tCtrl-Q
+E&xit\tCtrl+Q
+退出(&X)\tCtrl+Q
 
 Enter password
 输入密码
@@ -325,8 +325,8 @@ F&avorites
 F&orward\tAlt+Right Arrow
 下一视图(&O)\tAlt+Right Arrow
 
-F&ullscreen\tCtrl-Shift-L
-全屏(&U)\tCtrl-Shift-L
+F&ullscreen\tCtrl+Shift+L
+全屏(&U)\tCtrl+Shift+L
 
 Facing
 平铺页面
@@ -343,8 +343,8 @@ File Size:
 File:
 文件:
 
-Fin&d...\tCtrl-F
-查找(&D)...\tCtrl-F
+Fin&d...\tCtrl+F
+查找(&D)...\tCtrl+F
 
 Find
 查找
@@ -358,14 +358,14 @@ Find Previous
 Find:
 查找：
 
-Fit &Content\tCtrl-3
-适应内容\tCtrl-3
+Fit &Content\tCtrl+3
+适应内容\tCtrl+3
 
-Fit &Page\tCtrl-0
-适合页面(&P)\tCtrl-0
+Fit &Page\tCtrl+0
+适合页面(&P)\tCtrl+0
 
-Fit &Width\tCtrl-2
-适合宽度(&H)\tCtrl-2
+Fit &Width\tCtrl+2
+适合宽度(&H)\tCtrl+2
 
 Fit Content
 适应内容
@@ -466,8 +466,8 @@ Open in PDF-XChange
 P&roperties
 属性(&R)
 
-P&roperties\tCtrl-D
-属性(&R)\tCtrl-D
+P&roperties\tCtrl+D
+属性(&R)\tCtrl+D
 
 PDF Document
 PDF 文档
@@ -481,8 +481,8 @@ PDF 版本:
 PDF documents
 PDF 文档
 
-Pa&ge...\tCtrl-G
-页面(&G))...\tCtrl-G
+Pa&ge...\tCtrl+G
+页面(&G))...\tCtrl+G
 
 Page %d
 第 %d 页
@@ -505,8 +505,8 @@ Please wait - rendering...
 Postscript documents
 Postscript 文件
 
-Pr&esentation\tCtrl-L
-幻灯片(&E)\tCtrl-L
+Pr&esentation\tCtrl+L
+幻灯片(&E)\tCtrl+L
 
 Previous Page
 上一页
@@ -538,17 +538,17 @@ Remove from favorites
 Remove page %d from favorites
 从收藏中删除第%d页
 
-Rotate &Left\tCtrl-Shift--
-向左旋转(&L)\tCtrl-Shift--
+Rotate &Left\tCtrl+Shift+-
+向左旋转(&L)\tCtrl+Shift+-
 
-Rotate &Right\tCtrl-Shift-+
-向右旋转(&R)\tCtrl-Shift-+
+Rotate &Right\tCtrl+Shift++
+向右旋转(&R)\tCtrl+Shift++
 
 Save As
 另存为
 
-Save S&hortcut...\tCtrl-Shift-S
-保存快捷方式(&H)...\tCtrl-Shift-S
+Save S&hortcut...\tCtrl+Shift+S
+保存快捷方式(&H)...\tCtrl+Shift+S
 
 Searching %d of %d...
 正在搜索第%d页/共%d页
@@ -556,8 +556,8 @@ Searching %d of %d...
 Select &All
 全选(&A)
 
-Select &All\tCtrl-A
-全选(&A)\tCtrl-A
+Select &All\tCtrl+A
+全选(&A)\tCtrl+A
 
 Select content with Ctrl+left mouse button
 使用Ctrl+鼠标左键选择内容

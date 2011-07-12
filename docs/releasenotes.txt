@@ -63,7 +63,7 @@ Next version:
 1.3 (2011-02-04):
 
 * improved text selection and copying. We now mimic the way a browser
-  or Adobe Reader works: just select text with mouse and use Ctrl-C
+  or Adobe Reader works: just select text with mouse and use Ctrl+C
   to copy it to a clipboard
 * Shift+Left Mouse now scrolls the document, Ctrl+Left mouse still
   creates a rectangular selection (for copying images)
@@ -91,8 +91,8 @@ Next version:
 1.2 (2010-11-26):
 
 * improved printing: faster and uses less resources
-* add Ctrl-Y as a shortcut for Custom Zoom
-* add Ctrl-A as a shortcut for Select All Text
+* add Ctrl+Y as a shortcut for Custom Zoom
+* add Ctrl+A as a shortcut for Select All Text
 * improved full screen mode
 * open embedded PDF documents
 * allow saving PDF document attachements to disk
@@ -156,7 +156,7 @@ misc fixes and translation updates
 
 0.9 (2008-08-10):
 
-* add Ctrl-P as print shortcut
+* add Ctrl+P as print shortcut
 * add F11 as full-screen shortcut
 * password dialog no longer shows the password
 * support for AES-encrypted PDF files

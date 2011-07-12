@@ -13,8 +13,8 @@ Contributor: Hasitha Jayasooriya (hasithakj@gmail.com)
 &About
 &පිළීබඳව
 
-&Actual Size\tCtrl-1
-&නියමිත ප්‍රමාණය\tCtrl-1
+&Actual Size\tCtrl+1
+&නියමිත ප්‍රමාණය\tCtrl+1
 
 &All selected pages
 &සියලු තේරූ පිටු
@@ -22,11 +22,11 @@ Contributor: Hasitha Jayasooriya (hasithakj@gmail.com)
 &Back\tAlt+Left Arrow
 &පසුපසට\tAlt+Left Arrow
 
-&Close\tCtrl-W
-&වසන්න\tCtrl-W
+&Close\tCtrl+W
+&වසන්න\tCtrl+W
 
-&Copy Selection\tCtrl-C
-තේරූ සියල්ල &පිටපත්කරන්න\tCtrl-C
+&Copy Selection\tCtrl+C
+තේරූ සියල්ල &පිටපත්කරන්න\tCtrl+C
 
 &Don't ask me again
 යළි විමසන්න &එපා
@@ -79,8 +79,8 @@ Contributor: Hasitha Jayasooriya (hasithakj@gmail.com)
 &Odd pages only
 &ඔත්තෙ පිටු පමණි
 
-&Open\tCtrl-O
-&විවෘත කරන්න (O)\tCtrl-O
+&Open\tCtrl+O
+&විවෘත කරන්න (O)\tCtrl+O
 
 &Options...
 &විකල්ප... (O)
@@ -91,8 +91,8 @@ Contributor: Hasitha Jayasooriya (hasithakj@gmail.com)
 &Previous Page\tLeft Arrow
 &පෙර පිටුව\tLeft Arrow
 
-&Print...\tCtrl-P
-&මුද්‍රණය... (P)\tCtrl-P
+&Print...\tCtrl+P
+&මුද්‍රණය... (P)\tCtrl+P
 
 &Print... (denied)
 &මුද්‍රණය... (නොහැක)
@@ -103,8 +103,8 @@ Contributor: Hasitha Jayasooriya (hasithakj@gmail.com)
 &Remember these settings for each document
 මෙම සැකසුම් සියලු ගොනු සදහා &මතක තබාගන්න
 
-&Save As...\tCtrl-S
-ලෙස &සුරකින්න... (A)\tCtrl-S
+&Save As...\tCtrl+S
+ලෙස &සුරකින්න... (A)\tCtrl+S
 
 &Settings
 සැකසුම් (E)
@@ -214,8 +214,8 @@ Couldn't render the page
 Created:
 නිර්මිත:
 
-Custom &Zoom...\tCtrl-Y
-අභිමත &විශාලනය\tCtrl-Y
+Custom &Zoom...\tCtrl+Y
+අභිමත &විශාලනය\tCtrl+Y
 
 Default &Layout:
 පෙරනිමි දැක්ම:
@@ -235,8 +235,8 @@ Document Properties
 Download
 භාගතකිරීම
 
-E&xit\tCtrl-Q
-වසන්න\tCtrl-Q
+E&xit\tCtrl+Q
+වසන්න\tCtrl+Q
 
 Enter password
 මුරපදය ඇතුලුකරන්න
@@ -250,8 +250,8 @@ PDF ගොනුව මත double-click කළ විට සිදුවන ක�
 F&orward\tAlt+Right Arrow
 ඉදිරියට\tAlt+Right Arrow
 
-F&ullscreen\tCtrl-Shift-L
-සම්පූර්ණ තිරය\tCtrl-Shift-L
+F&ullscreen\tCtrl+Shift+L
+සම්පූර්ණ තිරය\tCtrl+Shift+L
 
 Facing
 Facing
@@ -265,8 +265,8 @@ File Size:
 File:
 ගොනුව:
 
-Fin&d...\tCtrl-F
-සොයන්න... (F)\tCtrl-F
+Fin&d...\tCtrl+F
+සොයන්න... (F)\tCtrl+F
 
 Find
 සොයන්න (S)
@@ -280,14 +280,14 @@ Find Previous
 Find:
 සොයන්න (S):
 
-Fit &Content\tCtrl-3
-නිසිලෙස &අන්තර්ගතය සකසන්න\tCtrl-3
+Fit &Content\tCtrl+3
+නිසිලෙස &අන්තර්ගතය සකසන්න\tCtrl+3
 
-Fit &Page\tCtrl-0
-නිසිලෙස &පිටුව සකසන්න\tCtrl-0
+Fit &Page\tCtrl+0
+නිසිලෙස &පිටුව සකසන්න\tCtrl+0
 
-Fit &Width\tCtrl-2
-නිසිලෙස &පළල සකසන්න\tCtrl-2
+Fit &Width\tCtrl+2
+නිසිලෙස &පළල සකසන්න\tCtrl+2
 
 Fit Content
 නිසිලෙස අන්තර්ගතය සකසන්න
@@ -367,8 +367,8 @@ Open in &Foxit Reader
 Open in PDF-XChange
 PDF-XChange කියවනය මගින් විවෘතකරන්න
 
-P&roperties\tCtrl-D
-වත්කම් (P)\tCtrl-D
+P&roperties\tCtrl+D
+වත්කම් (P)\tCtrl+D
 
 PDF Document
 PDF ගොනුව
@@ -382,8 +382,8 @@ PDF වෙළුම:
 PDF documents
 PDF ගොනුව
 
-Pa&ge...\tCtrl-G
-Pa&ge...\tCtrl-G
+Pa&ge...\tCtrl+G
+Pa&ge...\tCtrl+G
 
 Page Size:
 පිටුවේ ප්‍රමාණය:
@@ -406,11 +406,11 @@ Printing problem.
 Remember &opened files
 &විවෘතකළ ගොනු මතකතබාගන්න
 
-Rotate &Left\tCtrl-Shift--
-&වමට හරවන්න\tCtrl-Shift--
+Rotate &Left\tCtrl+Shift+-
+&වමට හරවන්න\tCtrl+Shift+-
 
-Rotate &Right\tCtrl-Shift-+
-&දකුණට හරවන්න\tCtrl-Shift-+
+Rotate &Right\tCtrl+Shift++
+&දකුණට හරවන්න\tCtrl+Shift++
 
 Save As
 ලෙස සුරකින්න
@@ -500,15 +500,15 @@ printing document
 ලේඛනය මුද්‍රණය
 
 # Untranslated:
-#&Book View\tCtrl-8
+#&Book View\tCtrl+8
 #&Copy Selection
-#&Facing\tCtrl-7
+#&Facing\tCtrl+7
 #&Open Document
 #&Pin Document
 #&Print...
 #&Remove Document
 #&Save As...
-#&Single Page\tCtrl-6
+#&Single Page\tCtrl+6
 #(page %d)
 #Add Favorite
 #Add page %d to favorites
@@ -536,7 +536,7 @@ printing document
 #Page %d
 #Page scaling
 #Postscript documents
-#Pr&esentation\tCtrl-L
+#Pr&esentation\tCtrl+L
 #Print
 #Print range
 #Printer with given name doesn't exist
@@ -544,9 +544,9 @@ printing document
 #Printing page %d of %d...
 #Remove from favorites
 #Remove page %d from favorites
-#Save S&hortcut...\tCtrl-Shift-S
+#Save S&hortcut...\tCtrl+Shift+S
 #Select &All
-#Select &All\tCtrl-A
+#Select &All\tCtrl+A
 #Set inverse search command-line
 #Show Favorites
 #Show frequently read

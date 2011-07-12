@@ -13,11 +13,11 @@ Contributor: Jon Stødle
 &About
 &Om
 
-&Actual Size\tCtrl-1
-F&aktisk storleik\tCtrl-1
+&Actual Size\tCtrl+1
+F&aktisk storleik\tCtrl+1
 
-&Close\tCtrl-W
-&Lukk\tCtrl-W
+&Close\tCtrl+W
+&Lukk\tCtrl+W
 
 &Don't ask me again
 Ikkje spør meg igjen
@@ -40,17 +40,17 @@ Siste side\tEnd
 &Next Page\tRight Arrow
 Neste side\t->
 
-&Open\tCtrl-O
-&Opne\tCtrl-O
+&Open\tCtrl+O
+&Opne\tCtrl+O
 
 &Previous Page\tLeft Arrow
 Førre side\t<-
 
-&Print...\tCtrl-P
-Skriv &ut\tCtrl-P
+&Print...\tCtrl+P
+Skriv &ut\tCtrl+P
 
-&Save As...\tCtrl-S
-Lagre &som\tCtrl-S
+&Save As...\tCtrl+S
+Lagre &som\tCtrl+S
 
 &Skip this version
 Hopp over denne versjonen
@@ -88,8 +88,8 @@ Delta med omsetjing
 Could not open Printer
 Finn ikkje skrivaren
 
-E&xit\tCtrl-Q
-&Avslutt\tCtrl-Q
+E&xit\tCtrl+Q
+&Avslutt\tCtrl+Q
 
 Enter password
 Skriv inn passord
@@ -97,8 +97,8 @@ Skriv inn passord
 Enter password for %s
 Skriv inn passord for %s
 
-F&ullscreen\tCtrl-Shift-L
-Full skjerm\tCtrl-Shift-L
+F&ullscreen\tCtrl+Shift+L
+Full skjerm\tCtrl+Shift+L
 
 Facing
 Motståande
@@ -106,8 +106,8 @@ Motståande
 Failed to save a file
 Feil under lagring av fil
 
-Fin&d...\tCtrl-F
-Finn...\tCtrl-F
+Fin&d...\tCtrl+F
+Finn...\tCtrl+F
 
 Find Next
 Finn neste
@@ -118,11 +118,11 @@ Finn førre
 Find:
 Finn
 
-Fit &Page\tCtrl-0
-Tilpass &side\tCtrl-0
+Fit &Page\tCtrl+0
+Tilpass &side\tCtrl+0
 
-Fit &Width\tCtrl-2
-Tilpass &breidde\tCtrl-2
+Fit &Width\tCtrl+2
+Tilpass &breidde\tCtrl+2
 
 Fit Page
 Tilpass side
@@ -160,8 +160,8 @@ Neste side
 Open
 Opne
 
-Pa&ge...\tCtrl-G
-Side...\tCtrl-G
+Pa&ge...\tCtrl+G
+Side...\tCtrl+G
 
 Page:
 Side:
@@ -172,11 +172,11 @@ Førre side
 Printing problem.
 Skrivarfeil
 
-Rotate &Left\tCtrl-Shift--
-Roter til venstre\tCtrl-Shift--
+Rotate &Left\tCtrl+Shift+-
+Roter til venstre\tCtrl+Shift+-
 
-Rotate &Right\tCtrl-Shift-+
-Roter til høgre\tCtrl-Shift-+
+Rotate &Right\tCtrl+Shift++
+Roter til høgre\tCtrl+Shift++
 
 Save As
 Lagre som
@@ -211,11 +211,11 @@ Zoom ut
 # Untranslated:
 #&All selected pages
 #&Back\tAlt+Left Arrow
-#&Book View\tCtrl-8
+#&Book View\tCtrl+8
 #&Copy Selection
-#&Copy Selection\tCtrl-C
+#&Copy Selection\tCtrl+C
 #&Even pages only
-#&Facing\tCtrl-7
+#&Facing\tCtrl+7
 #&Find what:
 #&Fit pages to printable area
 #&Go to page:
@@ -237,7 +237,7 @@ Zoom ut
 #&Save As...
 #&Settings
 #&Shrink pages to printable area (if necessary)
-#&Single Page\tCtrl-6
+#&Single Page\tCtrl+6
 #&Use original page sizes
 #&Yes
 #(of %d)
@@ -273,7 +273,7 @@ Zoom ut
 #Couldn't render the page
 #Created:
 #Current file
-#Custom &Zoom...\tCtrl-Y
+#Custom &Zoom...\tCtrl+Y
 #Default &Layout:
 #Default &Zoom:
 #Default PDF reader can't be changed in portable mode
@@ -289,7 +289,7 @@ Zoom ut
 #File Size:
 #File:
 #Find
-#Fit &Content\tCtrl-3
+#Fit &Content\tCtrl+3
 #Fit Content
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
@@ -311,7 +311,7 @@ Zoom ut
 #Open in &Foxit Reader
 #Open in PDF-XChange
 #P&roperties
-#P&roperties\tCtrl-D
+#P&roperties\tCtrl+D
 #PDF Document
 #PDF Producer:
 #PDF Version:
@@ -322,7 +322,7 @@ Zoom ut
 #Page scaling
 #Please wait - rendering...
 #Postscript documents
-#Pr&esentation\tCtrl-L
+#Pr&esentation\tCtrl+L
 #Print
 #Print range
 #Printer with given name doesn't exist
@@ -331,10 +331,10 @@ Zoom ut
 #Remember &opened files
 #Remove from favorites
 #Remove page %d from favorites
-#Save S&hortcut...\tCtrl-Shift-S
+#Save S&hortcut...\tCtrl+Shift+S
 #Searching %d of %d...
 #Select &All
-#Select &All\tCtrl-A
+#Select &All\tCtrl+A
 #Select content with Ctrl+left mouse button
 #Send by &E-mail...
 #Show &pages continuously

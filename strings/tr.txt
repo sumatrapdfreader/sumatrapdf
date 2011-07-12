@@ -14,8 +14,8 @@ Contributor: H. Metin ÖZER
 &About
 &Hakkında
 
-&Actual Size\tCtrl-1
-Gerçek &Boyut\tCtrl-1
+&Actual Size\tCtrl+1
+Gerçek &Boyut\tCtrl+1
 
 &All selected pages
 Tüm seçilen &sayfalar
@@ -23,17 +23,17 @@ Tüm seçilen &sayfalar
 &Back\tAlt+Left Arrow
 &Geri\tAlt+Sol Ok
 
-&Book View\tCtrl-8
+&Book View\tCtrl+8
 &Kitap Görünümü
 
-&Close\tCtrl-W
-&Kapat\tCtrl-W
+&Close\tCtrl+W
+&Kapat\tCtrl+W
 
 &Copy Selection
 Seçimi &Kopyala
 
-&Copy Selection\tCtrl-C
-Seçileni &kopyala\tCtrl-C
+&Copy Selection\tCtrl+C
+Seçileni &kopyala\tCtrl+C
 
 &Don't ask me again
 Tekrar &sorma
@@ -41,8 +41,8 @@ Tekrar &sorma
 &Even pages only
 Sadece &çift sayfalar
 
-&Facing\tCtrl-7
-Çift sayfa\tCtrl-7
+&Facing\tCtrl+7
+Çift sayfa\tCtrl+7
 
 &File
 &Dosya
@@ -89,8 +89,8 @@ S&onraki Sayfa\t->
 &Odd pages only
 Sadece &tek sayfalar
 
-&Open\tCtrl-O
-&Aç\tCtrl-O
+&Open\tCtrl+O
+&Aç\tCtrl+O
 
 &Open Document
 Belgeyi &Aç
@@ -110,8 +110,8 @@ Belgeye &Tuttur
 &Print...
 &Yazdır...
 
-&Print...\tCtrl-P
-&Yazdır...\tCtrl-P
+&Print...\tCtrl+P
+&Yazdır...\tCtrl+P
 
 &Print... (denied)
 &Baskı... (reddedildi)
@@ -128,8 +128,8 @@ Belgeyi &Kaldır
 &Save As...
 &Farklı Kaydet...
 
-&Save As...\tCtrl-S
-&Farklı kaydet...\tCtrl-S
+&Save As...\tCtrl+S
+&Farklı kaydet...\tCtrl+S
 
 &Settings
 &Ayarlar
@@ -137,8 +137,8 @@ Belgeyi &Kaldır
 &Shrink pages to printable area (if necessary)
 Sayfaları baskı alanına &indirgele (gerekirse)
 
-&Single Page\tCtrl-6
-&Tek Sayfa\tCtrl-6
+&Single Page\tCtrl+6
+&Tek Sayfa\tCtrl+6
 
 &Skip this version
 Bu s&ürümü atla
@@ -281,8 +281,8 @@ Yaratılış tarihi:
 Current file
 Yürürlükteki dosya
 
-Custom &Zoom...\tCtrl-Y
-Kişiselleştirilmiş &Yakınlaştırma... \tCtrl-Y
+Custom &Zoom...\tCtrl+Y
+Kişiselleştirilmiş &Yakınlaştırma... \tCtrl+Y
 
 Default &Layout:
 Varsayılan &Düzen:
@@ -305,8 +305,8 @@ Belge Özellikleri
 Download
 İndir
 
-E&xit\tCtrl-Q
-Ç&ık\tCtrl-O
+E&xit\tCtrl+Q
+Ç&ık\tCtrl+O
 
 Enter password
 Şifrenizi giriniz
@@ -326,8 +326,8 @@ S&ık kullanılanlar
 F&orward\tAlt+Right Arrow
 İ&leri\tAlt+Sağ Ok
 
-F&ullscreen\tCtrl-Shift-L
-&Tam Ekran\tCtrl-Shift-L
+F&ullscreen\tCtrl+Shift+L
+&Tam Ekran\tCtrl+Shift+L
 
 Facing
 Çift sayfa
@@ -344,8 +344,8 @@ Dosya boyutu:
 File:
 Dosya:
 
-Fin&d...\tCtrl-F
-&Bul...\tCtrl-F
+Fin&d...\tCtrl+F
+&Bul...\tCtrl+F
 
 Find
 Bul
@@ -359,14 +359,14 @@ Find Previous
 Find:
 Bul:
 
-Fit &Content\tCtrl-3
-&İçeriğe ölçekle\tCtrl-3
+Fit &Content\tCtrl+3
+&İçeriğe ölçekle\tCtrl+3
 
-Fit &Page\tCtrl-0
-&Sayfaya sığdır\tCtrl-0
+Fit &Page\tCtrl+0
+&Sayfaya sığdır\tCtrl+0
 
-Fit &Width\tCtrl-2
-&Genişliğe sığdır\tCtrl-2
+Fit &Width\tCtrl+2
+&Genişliğe sığdır\tCtrl+2
 
 Fit Content
 İçeriğe ölçekle
@@ -467,8 +467,8 @@ PDF-XChange ile aç
 P&roperties
 Ö&zellikler
 
-P&roperties\tCtrl-D
-&Özellikleri\tCtrl-D
+P&roperties\tCtrl+D
+&Özellikleri\tCtrl+D
 
 PDF Document
 PDF Belge
@@ -482,8 +482,8 @@ PDF Sürümü:
 PDF documents
 PDF belgeleri
 
-Pa&ge...\tCtrl-G
-&Sayfa...\tCtrl-G
+Pa&ge...\tCtrl+G
+&Sayfa...\tCtrl+G
 
 Page %d
 Sayfa %d
@@ -506,8 +506,8 @@ Bekleyiniz - oluşturulmakta...
 Postscript documents
 Postscript belgeleri
 
-Pr&esentation\tCtrl-L
-Tan&ıtım\tCtrl-L
+Pr&esentation\tCtrl+L
+Tan&ıtım\tCtrl+L
 
 Previous Page
 Önceki Sayfa
@@ -539,17 +539,17 @@ Sık kullanılanlardan çıkar
 Remove page %d from favorites
 Sayfa %d sık kullanılanlardan çıkar
 
-Rotate &Left\tCtrl-Shift--
-S&ola çevir\tCtrl-Shift--
+Rotate &Left\tCtrl+Shift+-
+S&ola çevir\tCtrl+Shift+-
 
-Rotate &Right\tCtrl-Shift-+
-&Sağa çevir\tCtrl-Shift-+
+Rotate &Right\tCtrl+Shift++
+&Sağa çevir\tCtrl+Shift++
 
 Save As
 Farklı kaydet
 
-Save S&hortcut...\tCtrl-Shift-S
-K&ısayolu kaydet...\tCtrl-Shift-S
+Save S&hortcut...\tCtrl+Shift+S
+K&ısayolu kaydet...\tCtrl+Shift+S
 
 Searching %d of %d...
 %d sayfa (toplam %d sayfa) taranıyor...
@@ -557,8 +557,8 @@ Searching %d of %d...
 Select &All
 &Hepsini Seç
 
-Select &All\tCtrl-A
-T&ümünü Seç\tCtrl-A
+Select &All\tCtrl+A
+T&ümünü Seç\tCtrl+A
 
 Select content with Ctrl+left mouse button
 İçeriği Ctrl+sol fare butonu ile seç

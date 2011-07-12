@@ -16,8 +16,8 @@ Contributor: Brian S. Vangsgaard
 &About
 &Om
 
-&Actual Size\tCtrl-1
-&Aktuel størrelse\tCtrl-1
+&Actual Size\tCtrl+1
+&Aktuel størrelse\tCtrl+1
 
 &All selected pages
 &Alle valgte sider
@@ -25,11 +25,11 @@ Contributor: Brian S. Vangsgaard
 &Back\tAlt+Left Arrow
 &Tilbage\tAlt+<-
 
-&Close\tCtrl-W
-&Luk\tCtrl-W
+&Close\tCtrl+W
+&Luk\tCtrl+W
 
-&Copy Selection\tCtrl-C
-&Kopier markering\tCtrl-C
+&Copy Selection\tCtrl+C
+&Kopier markering\tCtrl+C
 
 &Don't ask me again
 &Spørg mig ikke igen
@@ -82,8 +82,8 @@ Contributor: Brian S. Vangsgaard
 &Odd pages only
 &Kun ulige sider
 
-&Open\tCtrl-O
-&Åbn\tCtrl-O
+&Open\tCtrl+O
+&Åbn\tCtrl+O
 
 &Options...
 &Valgmuligheder...
@@ -94,8 +94,8 @@ Contributor: Brian S. Vangsgaard
 &Previous Page\tLeft Arrow
 &Forrige side\t<-
 
-&Print...\tCtrl-P
-&Udskriv\tCtrl-P
+&Print...\tCtrl+P
+&Udskriv\tCtrl+P
 
 &Print... (denied)
 &Udskriv... (nægtet)
@@ -106,8 +106,8 @@ Contributor: Brian S. Vangsgaard
 &Remember these settings for each document
 &Husk disse indstillinger for hvert dokument
 
-&Save As...\tCtrl-S
-&Gem som...\tCtrl-S
+&Save As...\tCtrl+S
+&Gem som...\tCtrl+S
 
 &Settings
 &Indstillinger
@@ -217,8 +217,8 @@ Kunne ikke vise siden
 Created:
 Oprettet:
 
-Custom &Zoom...\tCtrl-Y
-Brugerdefineret &zoom...\tCtrl-Y
+Custom &Zoom...\tCtrl+Y
+Brugerdefineret &zoom...\tCtrl+Y
 
 Default &Layout:
 Standard &Layout:
@@ -238,8 +238,8 @@ dokumentegenskaber
 Download
 Hent
 
-E&xit\tCtrl-Q
-S&lut\tCtrl-Q
+E&xit\tCtrl+Q
+S&lut\tCtrl+Q
 
 Enter password
 Indtast kodeord
@@ -253,8 +253,8 @@ Indtast den kommandolinie du vil bruge når du dobbeltklikker på PDF-dokumentet
 F&orward\tAlt+Right Arrow
 F&remad\tAlt+->
 
-F&ullscreen\tCtrl-Shift-L
-F&uldskærmsvisning\tCtrl-Shift-L
+F&ullscreen\tCtrl+Shift+L
+F&uldskærmsvisning\tCtrl+Shift+L
 
 Facing
 Modstående
@@ -268,8 +268,8 @@ Filstørrelse:
 File:
 Fil:
 
-Fin&d...\tCtrl-F
-Fin&d...\tCtrl-F
+Fin&d...\tCtrl+F
+Fin&d...\tCtrl+F
 
 Find
 Find
@@ -283,14 +283,14 @@ Find forrige
 Find:
 Find:
 
-Fit &Content\tCtrl-3
+Fit &Content\tCtrl+3
 Tilpas &indhold\tCrtl-3
 
-Fit &Page\tCtrl-0
-Tilpas &side\tCtrl-0
+Fit &Page\tCtrl+0
+Tilpas &side\tCtrl+0
 
-Fit &Width\tCtrl-2
-Tilpas &bredde\tCtrl-2
+Fit &Width\tCtrl+2
+Tilpas &bredde\tCtrl+2
 
 Fit Content
 Tilpas indhold
@@ -373,8 +373,8 @@ Open in &Foxit Reader
 Open in PDF-XChange
 Åben i PDF-XChange
 
-P&roperties\tCtrl-D
-E&genskaber\tCtrl-D
+P&roperties\tCtrl+D
+E&genskaber\tCtrl+D
 
 PDF Document
 PDF-dokument
@@ -388,8 +388,8 @@ PDF-version:
 PDF documents
 PDF-dokumenter
 
-Pa&ge...\tCtrl-G
-Side...\tCtrl-G
+Pa&ge...\tCtrl+G
+Side...\tCtrl+G
 
 Page Size:
 Sidestørrelse:
@@ -406,7 +406,7 @@ Side:
 Please wait - rendering...
 Vent venligst - renderer...
 
-Pr&esentation\tCtrl-L
+Pr&esentation\tCtrl+L
 Fuldskærmstilstand
 
 Previous Page
@@ -421,11 +421,11 @@ Printer problem.
 Remember &opened files
 Husk &åbnede filer
 
-Rotate &Left\tCtrl-Shift--
-Roter mod &venstre\tCtrl-Shift--
+Rotate &Left\tCtrl+Shift+-
+Roter mod &venstre\tCtrl+Shift+-
 
-Rotate &Right\tCtrl-Shift-+
-Roter mod &højre\tCtrl-Shift-+
+Rotate &Right\tCtrl+Shift++
+Roter mod &højre\tCtrl+Shift++
 
 Save As
 Gem som
@@ -433,8 +433,8 @@ Gem som
 Searching %d of %d...
 Søgning %d af %d...
 
-Select &All\tCtrl-A
-Vælg &Alle\tCtrl-A
+Select &All\tCtrl+A
+Vælg &Alle\tCtrl+A
 
 Select content with Ctrl+left mouse button
 Vælg indhold med Ctrl+venstre museknap
@@ -527,15 +527,15 @@ printing document
 printer dokument
 
 # Untranslated:
-#&Book View\tCtrl-8
+#&Book View\tCtrl+8
 #&Copy Selection
-#&Facing\tCtrl-7
+#&Facing\tCtrl+7
 #&Open Document
 #&Pin Document
 #&Print...
 #&Remove Document
 #&Save As...
-#&Single Page\tCtrl-6
+#&Single Page\tCtrl+6
 #(page %d)
 #Add Favorite
 #Add page %d to favorites
@@ -567,7 +567,7 @@ printer dokument
 #Printing page %d of %d...
 #Remove from favorites
 #Remove page %d from favorites
-#Save S&hortcut...\tCtrl-Shift-S
+#Save S&hortcut...\tCtrl+Shift+S
 #Select &All
 #Show Favorites
 #Show frequently read

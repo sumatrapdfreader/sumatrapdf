@@ -14,11 +14,11 @@ Contributor: Shabab Mustafa (shabab.mustafa@gmail.com)
 &About
 &আমাদের সম্পর্কে
 
-&Actual Size\tCtrl-1
-বাস্তবিক আকার\tCtrl-1
+&Actual Size\tCtrl+1
+বাস্তবিক আকার\tCtrl+1
 
-&Close\tCtrl-W
-&বন্ধ\tCtrl-W
+&Close\tCtrl+W
+&বন্ধ\tCtrl+W
 
 &Don't ask me again
 আমাকে পুনরায় জিজ্ঞাসা করা হবে না
@@ -44,17 +44,17 @@ Contributor: Shabab Mustafa (shabab.mustafa@gmail.com)
 &Next Page\tRight Arrow
 পরবর্তী পৃষ্ঠা\t->
 
-&Open\tCtrl-O
-&উন্মীলন\tCtrl-O
+&Open\tCtrl+O
+&উন্মীলন\tCtrl+O
 
 &Previous Page\tLeft Arrow
 পূর্ববর্তী পৃষ্ঠা\t<-
 
-&Print...\tCtrl-P
-&মুদ্রন\tCtrl-P
+&Print...\tCtrl+P
+&মুদ্রন\tCtrl+P
 
-&Save As...\tCtrl-S
-&সংরক্ষণ এই রূপে...\tCtrl-S
+&Save As...\tCtrl+S
+&সংরক্ষণ এই রূপে...\tCtrl+S
 
 &Skip this version
 এই সংস্করণটি পরিহার করুন
@@ -92,8 +92,8 @@ Contribute Translation
 Could not open Printer
 মুদ্রক কার্যকরী করা যাচ্ছে না
 
-E&xit\tCtrl-Q
-&প্রস্থান\tCtrl-Q
+E&xit\tCtrl+Q
+&প্রস্থান\tCtrl+Q
 
 Enter password
 শব্দকূট প্রবেশ করুন
@@ -101,8 +101,8 @@ Enter password
 Enter password for %s
 %s-এর জন্য শব্দকূট প্রবেশ করুন
 
-F&ullscreen\tCtrl-Shift-L
-পূর্ণ পর্দা\tCtrl-Shift-L
+F&ullscreen\tCtrl+Shift+L
+পূর্ণ পর্দা\tCtrl+Shift+L
 
 Facing
 দুটি পৃষ্ঠায়
@@ -110,8 +110,8 @@ Facing
 Failed to save a file
 সঞ্চিকা সংরক্ষণে ব্যর্থ
 
-Fin&d...\tCtrl-F
-অনুসন্ধান...\tCtrl-F
+Fin&d...\tCtrl+F
+অনুসন্ধান...\tCtrl+F
 
 Find Next
 পরবর্তী অনুসন্ধান
@@ -122,11 +122,11 @@ Find Previous
 Find:
 অনুসন্ধান:
 
-Fit &Page\tCtrl-0
-পৃষ্ঠা অনুরূপ\tCtrl-0
+Fit &Page\tCtrl+0
+পৃষ্ঠা অনুরূপ\tCtrl+0
 
-Fit &Width\tCtrl-2
-প্রস্থ অনুরূপ\tCtrl-2
+Fit &Width\tCtrl+2
+প্রস্থ অনুরূপ\tCtrl+2
 
 Fit Page
 পৃষ্ঠা অনুরূপ
@@ -164,8 +164,8 @@ Next Page
 Open
 উন্মীলন
 
-Pa&ge...\tCtrl-G
-পৃষ্ঠা সংখ্যা...\tCtrl-G
+Pa&ge...\tCtrl+G
+পৃষ্ঠা সংখ্যা...\tCtrl+G
 
 Page:
 পৃষ্ঠা:
@@ -176,11 +176,11 @@ Previous Page
 Printing problem.
 মুদ্রণ করতে সমস্যা হয়েছে
 
-Rotate &Left\tCtrl-Shift--
-বামদিকে বিবর্তন\tCtrl-Shift--
+Rotate &Left\tCtrl+Shift+-
+বামদিকে বিবর্তন\tCtrl+Shift+-
 
-Rotate &Right\tCtrl-Shift-+
-ডানদিকে বিবর্তন\tCtrl-Shift-+
+Rotate &Right\tCtrl+Shift++
+ডানদিকে বিবর্তন\tCtrl+Shift++
 
 Save As
 সংরক্ষণ এই রূপে
@@ -215,11 +215,11 @@ Zoom Out
 # Untranslated:
 #&All selected pages
 #&Back\tAlt+Left Arrow
-#&Book View\tCtrl-8
+#&Book View\tCtrl+8
 #&Copy Selection
-#&Copy Selection\tCtrl-C
+#&Copy Selection\tCtrl+C
 #&Even pages only
-#&Facing\tCtrl-7
+#&Facing\tCtrl+7
 #&Find what:
 #&Fit pages to printable area
 #&Go to page:
@@ -240,7 +240,7 @@ Zoom Out
 #&Save As...
 #&Settings
 #&Shrink pages to printable area (if necessary)
-#&Single Page\tCtrl-6
+#&Single Page\tCtrl+6
 #&Use original page sizes
 #&Yes
 #(of %d)
@@ -276,7 +276,7 @@ Zoom Out
 #Couldn't render the page
 #Created:
 #Current file
-#Custom &Zoom...\tCtrl-Y
+#Custom &Zoom...\tCtrl+Y
 #Default &Layout:
 #Default &Zoom:
 #Default PDF reader can't be changed in portable mode
@@ -292,7 +292,7 @@ Zoom Out
 #File Size:
 #File:
 #Find
-#Fit &Content\tCtrl-3
+#Fit &Content\tCtrl+3
 #Fit Content
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
@@ -314,7 +314,7 @@ Zoom Out
 #Open in &Foxit Reader
 #Open in PDF-XChange
 #P&roperties
-#P&roperties\tCtrl-D
+#P&roperties\tCtrl+D
 #PDF Document
 #PDF Producer:
 #PDF Version:
@@ -325,7 +325,7 @@ Zoom Out
 #Page scaling
 #Please wait - rendering...
 #Postscript documents
-#Pr&esentation\tCtrl-L
+#Pr&esentation\tCtrl+L
 #Print
 #Print range
 #Printer with given name doesn't exist
@@ -334,10 +334,10 @@ Zoom Out
 #Remember &opened files
 #Remove from favorites
 #Remove page %d from favorites
-#Save S&hortcut...\tCtrl-Shift-S
+#Save S&hortcut...\tCtrl+Shift+S
 #Searching %d of %d...
 #Select &All
-#Select &All\tCtrl-A
+#Select &All\tCtrl+A
 #Select content with Ctrl+left mouse button
 #Send by &E-mail...
 #Show &pages continuously

@@ -14,8 +14,8 @@ Contributor: Glenn Wall
 &About
 &Ynghylch...
 
-&Actual Size\tCtrl-1
-&Gwir Faint\tCtrl-1
+&Actual Size\tCtrl+1
+&Gwir Faint\tCtrl+1
 
 &All selected pages
 &Pob tudalen dewiswyd
@@ -23,11 +23,11 @@ Contributor: Glenn Wall
 &Back\tAlt+Left Arrow
 Nôl\tAlt+Saeth Chwith
 
-&Close\tCtrl-W
-&Cau\tCtrl-W
+&Close\tCtrl+W
+&Cau\tCtrl+W
 
-&Copy Selection\tCtrl-C
-Copïo'r Dewis\tCtrl-C
+&Copy Selection\tCtrl+C
+Copïo'r Dewis\tCtrl+C
 
 &Don't ask me again
 &Peidio gofyn eto
@@ -80,8 +80,8 @@ Tudalen Nesaf\t->
 &Odd pages only
 Tudalennau &odrif yn unig
 
-&Open\tCtrl-O
-&Agor\tCtrl-O
+&Open\tCtrl+O
+&Agor\tCtrl+O
 
 &Options...
 &Dewisiadau...
@@ -92,8 +92,8 @@ Tudalennau &odrif yn unig
 &Previous Page\tLeft Arrow
 Tudalen Flaenorol\t<-
 
-&Print...\tCtrl-P
-&Argraffu\tCtrl-P
+&Print...\tCtrl+P
+&Argraffu\tCtrl+P
 
 &Print... (denied)
 &Argraffu... (gwrthodwyd)
@@ -104,8 +104,8 @@ Tudalen Flaenorol\t<-
 &Remember these settings for each document
 C&ofio'r gosodiadau hyn ar gyfer pob dogfen
 
-&Save As...\tCtrl-S
-&Cadw fel...\tCtrl-S
+&Save As...\tCtrl+S
+&Cadw fel...\tCtrl+S
 
 &Settings
 &Gosodiadau
@@ -215,8 +215,8 @@ Methu cyflwyno'r dudalen
 Created:
 Crëwyd:
 
-Custom &Zoom...\tCtrl-Y
-&Addasu Chwyddo...\tCtrl-Y
+Custom &Zoom...\tCtrl+Y
+&Addasu Chwyddo...\tCtrl+Y
 
 Default &Layout:
 &Cynllun Rhagosodedig:
@@ -236,8 +236,8 @@ Priodweddau Dogfen
 Download
 Llwytho i Lawr
 
-E&xit\tCtrl-Q
-&Gadael\tCtrl-Q
+E&xit\tCtrl+Q
+&Gadael\tCtrl+Q
 
 Enter password
 Rhoi cyfrinair
@@ -248,8 +248,8 @@ Rhoi cyfrinair ar gyfer %s
 F&orward\tAlt+Right Arrow
 Ymlaen\tAlt+Saeth Dde
 
-F&ullscreen\tCtrl-Shift-L
-Sgrin Lawn\tCtrl-Shift-L
+F&ullscreen\tCtrl+Shift+L
+Sgrin Lawn\tCtrl+Shift+L
 
 Facing
 Wynebu
@@ -263,8 +263,8 @@ Maint Ffeil:
 File:
 Ffeil:
 
-Fin&d...\tCtrl-F
-Canfod...\tCtrl-F
+Fin&d...\tCtrl+F
+Canfod...\tCtrl+F
 
 Find
 Canfod
@@ -278,14 +278,14 @@ Canfod y Blaenorol
 Find:
 Canfod:
 
-Fit &Content\tCtrl-3
-Ffitio'r &Cynnwys\tCtrl-3
+Fit &Content\tCtrl+3
+Ffitio'r &Cynnwys\tCtrl+3
 
-Fit &Page\tCtrl-0
-&Ffitio'r Dudalen\tCtrl-0
+Fit &Page\tCtrl+0
+&Ffitio'r Dudalen\tCtrl+0
 
-Fit &Width\tCtrl-2
-&Fitio'r Lled\tCtrl-2
+Fit &Width\tCtrl+2
+&Fitio'r Lled\tCtrl+2
 
 Fit Content
 Ffitio'r Cynnwys
@@ -368,8 +368,8 @@ Agor yn &Foxit Reader
 Open in PDF-XChange
 Agor yn PDF-XChange
 
-P&roperties\tCtrl-D
-P&riodweddau...\tCtrl-D
+P&roperties\tCtrl+D
+P&riodweddau...\tCtrl+D
 
 PDF Document
 Dogfen PDF
@@ -383,8 +383,8 @@ PDF Fersiwn:
 PDF documents
 Dogfennau PDF
 
-Pa&ge...\tCtrl-G
-Tudalen...\tCtrl-G
+Pa&ge...\tCtrl+G
+Tudalen...\tCtrl+G
 
 Page Size:
 Maint Tudalen:
@@ -401,8 +401,8 @@ Tudalen:
 Please wait - rendering...
 Arhoswch, wrthi'n cyflwyno...
 
-Pr&esentation\tCtrl-L
-Cyflwyniad\tCtrl-L
+Pr&esentation\tCtrl+L
+Cyflwyniad\tCtrl+L
 
 Previous Page
 Tudalen Flaenorol
@@ -416,11 +416,11 @@ Anhawster argraffu
 Remember &opened files
 Co&fio ffeiliau ar agor
 
-Rotate &Left\tCtrl-Shift--
-Troi i'r chwith\tCtrl-Shift--
+Rotate &Left\tCtrl+Shift+-
+Troi i'r chwith\tCtrl+Shift+-
 
-Rotate &Right\tCtrl-Shift-+
-Troi i'r dde\tCtrl-Shift-+
+Rotate &Right\tCtrl+Shift++
+Troi i'r dde\tCtrl+Shift++
 
 Save As
 Cadw fel
@@ -428,8 +428,8 @@ Cadw fel
 Searching %d of %d...
 Chwilio am %d o %d...
 
-Select &All\tCtrl-A
-Dewis &Popeth\tCtrl-A
+Select &All\tCtrl+A
+Dewis &Popeth\tCtrl+A
 
 Select content with Ctrl+left mouse button
 Dewis cynnwys drwy Ctrl a botwm chwith y llygoden
@@ -519,15 +519,15 @@ printing document
 argraffu dogfen
 
 # Untranslated:
-#&Book View\tCtrl-8
+#&Book View\tCtrl+8
 #&Copy Selection
-#&Facing\tCtrl-7
+#&Facing\tCtrl+7
 #&Open Document
 #&Pin Document
 #&Print...
 #&Remove Document
 #&Save As...
-#&Single Page\tCtrl-6
+#&Single Page\tCtrl+6
 #(page %d)
 #Add Favorite
 #Add page %d to favorites
@@ -560,7 +560,7 @@ argraffu dogfen
 #Printing page %d of %d...
 #Remove from favorites
 #Remove page %d from favorites
-#Save S&hortcut...\tCtrl-Shift-S
+#Save S&hortcut...\tCtrl+Shift+S
 #Select &All
 #Show Favorites
 #Show frequently read

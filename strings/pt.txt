@@ -15,8 +15,8 @@ Contributor: Sérgio Marques <smarquespt@gmail.com>, 2010-2011
 &About
 &Sobre
 
-&Actual Size\tCtrl-1
-&Tamanho real\tCtrl-1
+&Actual Size\tCtrl+1
+&Tamanho real\tCtrl+1
 
 &All selected pages
 &Todas as páginas selecionadas
@@ -24,17 +24,17 @@ Contributor: Sérgio Marques <smarquespt@gmail.com>, 2010-2011
 &Back\tAlt+Left Arrow
 V&oltar\tAlt + <-
 
-&Book View\tCtrl-8
-Como li&vro\tCtrl-8
+&Book View\tCtrl+8
+Como li&vro\tCtrl+8
 
-&Close\tCtrl-W
-&Fechar\tCtrl-W
+&Close\tCtrl+W
+&Fechar\tCtrl+W
 
 &Copy Selection
 &Copiar seleção
 
-&Copy Selection\tCtrl-C
-&Copiar seleção\tCtrl-C
+&Copy Selection\tCtrl+C
+&Copiar seleção\tCtrl+C
 
 &Don't ask me again
 &Não perguntar novamente
@@ -42,8 +42,8 @@ Como li&vro\tCtrl-8
 &Even pages only
 Apenas as páginas &pares
 
-&Facing\tCtrl-7
-D&uas páginas\tCtrl-7
+&Facing\tCtrl+7
+D&uas páginas\tCtrl+7
 
 &File
 &Ficheiro
@@ -90,8 +90,8 @@ Página &seguinte\t->
 &Odd pages only
 Apenas páginas í&mpares
 
-&Open\tCtrl-O
-&Abrir\tCtrl-O
+&Open\tCtrl+O
+&Abrir\tCtrl+O
 
 &Open Document
 &Abrir documento
@@ -111,8 +111,8 @@ Página &anterior\t<-
 &Print...
 &Imprimir...
 
-&Print...\tCtrl-P
-&Imprimir\tCtrl-P
+&Print...\tCtrl+P
+&Imprimir\tCtrl+P
 
 &Print... (denied)
 &Imprimir...(recusado)
@@ -129,8 +129,8 @@ Esq&uecer documento
 &Save As...
 &Gravar como...
 
-&Save As...\tCtrl-S
-&Gravar como\tCtrl-S
+&Save As...\tCtrl+S
+&Gravar como\tCtrl+S
 
 &Settings
 &Definições
@@ -138,8 +138,8 @@ Esq&uecer documento
 &Shrink pages to printable area (if necessary)
 &Reduzir páginas à área de impressão (se necessário)
 
-&Single Page\tCtrl-6
-&Página única\tCtrl-6
+&Single Page\tCtrl+6
+&Página única\tCtrl+6
 
 &Skip this version
 Ignorar &esta versão
@@ -282,8 +282,8 @@ Criado:
 Current file
 Ficheiro atual
 
-Custom &Zoom...\tCtrl-Y
-&Personalizar...\tCtrl-Y
+Custom &Zoom...\tCtrl+Y
+&Personalizar...\tCtrl+Y
 
 Default &Layout:
 &Exibição por omissão:
@@ -306,8 +306,8 @@ Propriedades do documento
 Download
 Transferir
 
-E&xit\tCtrl-Q
-&Sair\tCtrl-Q
+E&xit\tCtrl+Q
+&Sair\tCtrl+Q
 
 Enter password
 Indique a palavra passe
@@ -327,8 +327,8 @@ Fav&oritos
 F&orward\tAlt+Right Arrow
 A&vançar\tAlt + ->
 
-F&ullscreen\tCtrl-Shift-L
-Ecrã co&mpleto\tCtrl-Shift-L
+F&ullscreen\tCtrl+Shift+L
+Ecrã co&mpleto\tCtrl+Shift+L
 
 Facing
 Duas páginas
@@ -345,8 +345,8 @@ Tamanho do ficheiro:
 File:
 Ficheiro:
 
-Fin&d...\tCtrl-F
-&Localizar...\tCtrl-F
+Fin&d...\tCtrl+F
+&Localizar...\tCtrl+F
 
 Find
 Localizar
@@ -360,14 +360,14 @@ Localizar anterior
 Find:
 Localizar:
 
-Fit &Content\tCtrl-3
-Ajustar ao &conteúdo\tCtrl-3
+Fit &Content\tCtrl+3
+Ajustar ao &conteúdo\tCtrl+3
 
-Fit &Page\tCtrl-0
-&Ajustar à página\tCtrl-0
+Fit &Page\tCtrl+0
+&Ajustar à página\tCtrl+0
 
-Fit &Width\tCtrl-2
-Ajustar à &largura\tCtrl-2
+Fit &Width\tCtrl+2
+Ajustar à &largura\tCtrl+2
 
 Fit Content
 Ajustar ao conteúdo
@@ -468,8 +468,8 @@ Abrir no PDF-XChange
 P&roperties
 &Propriedades
 
-P&roperties\tCtrl-D
-&Propriedades...\tCtrl-D
+P&roperties\tCtrl+D
+&Propriedades...\tCtrl+D
 
 PDF Document
 Documento PDF
@@ -483,8 +483,8 @@ Versão PDF:
 PDF documents
 Documentos PDF
 
-Pa&ge...\tCtrl-G
-Pági&na...\tCtrl-G
+Pa&ge...\tCtrl+G
+Pági&na...\tCtrl+G
 
 Page %d
 Página %d
@@ -507,8 +507,8 @@ Por favor, aguarde - a processar...
 Postscript documents
 Documentos Postscript
 
-Pr&esentation\tCtrl-L
-Aprese&ntação\tCtrl-L
+Pr&esentation\tCtrl+L
+Aprese&ntação\tCtrl+L
 
 Previous Page
 Página anterior
@@ -540,17 +540,17 @@ Remover dos favoritos
 Remove page %d from favorites
 Remover página %d dos favoritos
 
-Rotate &Left\tCtrl-Shift--
-Rodar à &esquerda\tCtrl-Shift--
+Rotate &Left\tCtrl+Shift+-
+Rodar à &esquerda\tCtrl+Shift+-
 
-Rotate &Right\tCtrl-Shift-+
-Rodar à &direita\tCtrl-Shift-+
+Rotate &Right\tCtrl+Shift++
+Rodar à &direita\tCtrl+Shift++
 
 Save As
 Gravar como
 
-Save S&hortcut...\tCtrl-Shift-S
-Criar atal&ho...\tCtrl-Shift-S
+Save S&hortcut...\tCtrl+Shift+S
+Criar atal&ho...\tCtrl+Shift+S
 
 Searching %d of %d...
 Pesquisando %d de %d...
@@ -558,8 +558,8 @@ Pesquisando %d de %d...
 Select &All
 &Selecionar tudo
 
-Select &All\tCtrl-A
-&Selecionar tudo\tCtrl-A
+Select &All\tCtrl+A
+&Selecionar tudo\tCtrl+A
 
 Select content with Ctrl+left mouse button
 Selecione o conteúdo com Ctrl+botão esquerdo do rato

@@ -13,11 +13,11 @@ Contributor: Pieter Kotzé
 &About
 &Omtrent
 
-&Actual Size\tCtrl-1
-&Gewone Grootte\tCtrl-1
+&Actual Size\tCtrl+1
+&Gewone Grootte\tCtrl+1
 
-&Close\tCtrl-W
-Maak Toe\tCtrl-W
+&Close\tCtrl+W
+Maak Toe\tCtrl+W
 
 &Don't ask me again
 Moet My Nie Weer Vra Nie
@@ -43,17 +43,17 @@ Handleiding
 &Next Page\tRight Arrow
 Volgende Bladsy\t->
 
-&Open\tCtrl-O
-&Maak Oop\tCtrl-O
+&Open\tCtrl+O
+&Maak Oop\tCtrl+O
 
 &Previous Page\tLeft Arrow
 Vorige Bladsy\t<-
 
-&Print...\tCtrl-P
-&Druk\tCtrl-P
+&Print...\tCtrl+P
+&Druk\tCtrl+P
 
-&Save As...\tCtrl-S
-&Stoor As\tCtrl-S
+&Save As...\tCtrl+S
+&Stoor As\tCtrl+S
 
 &Skip this version
 Slaan Dié Weergawe Oor.
@@ -91,7 +91,7 @@ Dra By Tot Ñ Vertaling.
 Could not open Printer
 Kon nie drukker oopmaak nie.
 
-E&xit\tCtrl-Q
+E&xit\tCtrl+Q
 &Gaan Uit-Q
 
 Enter password
@@ -100,8 +100,8 @@ Tik Wagwoord In
 Enter password for %s
 Tik Wagwoord In Vir %s
 
-F&ullscreen\tCtrl-Shift-L
-Volskerm\tCtrl-Shift-L
+F&ullscreen\tCtrl+Shift+L
+Volskerm\tCtrl+Shift+L
 
 Facing
 Teenoor
@@ -109,8 +109,8 @@ Teenoor
 Failed to save a file
 Kon nie die lêer stoor nie!
 
-Fin&d...\tCtrl-F
-Soek...\tCtrl-F
+Fin&d...\tCtrl+F
+Soek...\tCtrl+F
 
 Find Next
 Soek Volgende
@@ -121,11 +121,11 @@ Soek Vorige
 Find:
 Soek:
 
-Fit &Page\tCtrl-0
-&Pas Blad In\tCtrl-0
+Fit &Page\tCtrl+0
+&Pas Blad In\tCtrl+0
 
-Fit &Width\tCtrl-2
-Pas In Breedte\tCtrl-2
+Fit &Width\tCtrl+2
+Pas In Breedte\tCtrl+2
 
 Fit Page
 Pas Blad In
@@ -163,8 +163,8 @@ Volgende Bladsy
 Open
 Maak Oop
 
-Pa&ge...\tCtrl-G
-Bladsy...\tCtrl-G
+Pa&ge...\tCtrl+G
+Bladsy...\tCtrl+G
 
 Page:
 Bladsy:
@@ -175,11 +175,11 @@ Vorige Bladsy
 Printing problem.
 Druk Probleem.
 
-Rotate &Left\tCtrl-Shift--
-Draai Links\tCtrl-Shift--
+Rotate &Left\tCtrl+Shift+-
+Draai Links\tCtrl+Shift+-
 
-Rotate &Right\tCtrl-Shift-+
-Draai Regs\tCtrl-Shift-+
+Rotate &Right\tCtrl+Shift++
+Draai Regs\tCtrl+Shift++
 
 Save As
 Stoor As
@@ -214,11 +214,11 @@ Zoem Uit
 # Untranslated:
 #&All selected pages
 #&Back\tAlt+Left Arrow
-#&Book View\tCtrl-8
+#&Book View\tCtrl+8
 #&Copy Selection
-#&Copy Selection\tCtrl-C
+#&Copy Selection\tCtrl+C
 #&Even pages only
-#&Facing\tCtrl-7
+#&Facing\tCtrl+7
 #&Find what:
 #&Fit pages to printable area
 #&Go to page:
@@ -239,7 +239,7 @@ Zoem Uit
 #&Save As...
 #&Settings
 #&Shrink pages to printable area (if necessary)
-#&Single Page\tCtrl-6
+#&Single Page\tCtrl+6
 #&Use original page sizes
 #&Yes
 #(of %d)
@@ -275,7 +275,7 @@ Zoem Uit
 #Couldn't render the page
 #Created:
 #Current file
-#Custom &Zoom...\tCtrl-Y
+#Custom &Zoom...\tCtrl+Y
 #Default &Layout:
 #Default &Zoom:
 #Default PDF reader can't be changed in portable mode
@@ -291,7 +291,7 @@ Zoem Uit
 #File Size:
 #File:
 #Find
-#Fit &Content\tCtrl-3
+#Fit &Content\tCtrl+3
 #Fit Content
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
@@ -313,7 +313,7 @@ Zoem Uit
 #Open in &Foxit Reader
 #Open in PDF-XChange
 #P&roperties
-#P&roperties\tCtrl-D
+#P&roperties\tCtrl+D
 #PDF Document
 #PDF Producer:
 #PDF Version:
@@ -324,7 +324,7 @@ Zoem Uit
 #Page scaling
 #Please wait - rendering...
 #Postscript documents
-#Pr&esentation\tCtrl-L
+#Pr&esentation\tCtrl+L
 #Print
 #Print range
 #Printer with given name doesn't exist
@@ -333,10 +333,10 @@ Zoem Uit
 #Remember &opened files
 #Remove from favorites
 #Remove page %d from favorites
-#Save S&hortcut...\tCtrl-Shift-S
+#Save S&hortcut...\tCtrl+Shift+S
 #Searching %d of %d...
 #Select &All
-#Select &All\tCtrl-A
+#Select &All\tCtrl+A
 #Select content with Ctrl+left mouse button
 #Send by &E-mail...
 #Show &pages continuously

@@ -14,13 +14,13 @@ Contributor: Slavko Majski (shobra@gmail.com)
 &About
 &O programu
 
-&Actual Size\tCtrl-1
-Stvarna veličina\tCtrl-1
+&Actual Size\tCtrl+1
+Stvarna veličina\tCtrl+1
 
-&Close\tCtrl-W
-&Zatvori\tCtrl-W
+&Close\tCtrl+W
+&Zatvori\tCtrl+W
 
-&Copy Selection\tCtrl-C
+&Copy Selection\tCtrl+C
 Kopiraj izabrano
 
 &Don't ask me again
@@ -65,8 +65,8 @@ Ne
 &No, thanks
 Ne, hvala
 
-&Open\tCtrl-O
-&Otvori\tCtrl-O
+&Open\tCtrl+O
+&Otvori\tCtrl+O
 
 &Options...
 Opcije
@@ -77,14 +77,14 @@ Lozinka
 &Previous Page\tLeft Arrow
 Prethodna strana\t<-
 
-&Print...\tCtrl-P
-&Štampaj\tCtrl-P
+&Print...\tCtrl+P
+&Štampaj\tCtrl+P
 
 &Remember these settings for each document
 Zapamti ova podešavanja za svaki pojedinačni dokument
 
-&Save As...\tCtrl-S
-&Sačuvaj kao...\tCtrl-S
+&Save As...\tCtrl+S
+&Sačuvaj kao...\tCtrl+S
 
 &Settings
 Podešavanja
@@ -158,8 +158,8 @@ Nije moguće pokrenuti štampač
 Couldn't render the page
 Nemoguće prikazivanje strane
 
-Custom &Zoom...\tCtrl-Y
-Izborno uvećanje...\tCtrl-Y
+Custom &Zoom...\tCtrl+Y
+Izborno uvećanje...\tCtrl+Y
 
 Default &Layout:
 Podrazumevani prikaz
@@ -173,8 +173,8 @@ Glavni PDF čitač ne može biti promenjen u prenosivnom môdu
 Download
 Preuzmi
 
-E&xit\tCtrl-Q
-&Izađi\tCtrl-Q
+E&xit\tCtrl+Q
+&Izađi\tCtrl+Q
 
 Enter password
 Unesite lozinku
@@ -182,8 +182,8 @@ Unesite lozinku
 Enter password for %s
 Unesite lozinku za %s
 
-F&ullscreen\tCtrl-Shift-L
-Ceo ekran\tCtrl-Shift-L
+F&ullscreen\tCtrl+Shift+L
+Ceo ekran\tCtrl+Shift+L
 
 Facing
 Dve strane
@@ -191,8 +191,8 @@ Dve strane
 Failed to save a file
 Greška pri snimanju PDF dokumenta
 
-Fin&d...\tCtrl-F
-Pronađi...\tCtrl-F
+Fin&d...\tCtrl+F
+Pronađi...\tCtrl+F
 
 Find
 Pronađi
@@ -206,11 +206,11 @@ Pronađi prethodno
 Find:
 Pronađi:
 
-Fit &Page\tCtrl-0
-Prilagodi &strani\tCtrl-0
+Fit &Page\tCtrl+0
+Prilagodi &strani\tCtrl+0
 
-Fit &Width\tCtrl-2
-&Prilagodi širini\tCtrl-2
+Fit &Width\tCtrl+2
+&Prilagodi širini\tCtrl+2
 
 Fit Page
 Prilagodi strani
@@ -284,8 +284,8 @@ PDF dokument
 PDF documents
 PDF dokumenti
 
-Pa&ge...\tCtrl-G
-Strana...\tCtrl-G
+Pa&ge...\tCtrl+G
+Strana...\tCtrl+G
 
 Page number %u inexistant
 Strana broj %u ne postoji
@@ -305,11 +305,11 @@ Problem pri štampanju
 Remember &opened files
 Zapamti otvorene datoteke
 
-Rotate &Left\tCtrl-Shift--
-Rotiraj ulevo\tCtrl-Shift--
+Rotate &Left\tCtrl+Shift+-
+Rotiraj ulevo\tCtrl+Shift+-
 
-Rotate &Right\tCtrl-Shift-+
-Rotiraj udesno\tCtrl-Shift-+
+Rotate &Right\tCtrl+Shift++
+Rotiraj udesno\tCtrl+Shift++
 
 Save As
 Sačuvaj kao
@@ -386,10 +386,10 @@ Faktor uvećanja
 # Untranslated:
 #&All selected pages
 #&Back\tAlt+Left Arrow
-#&Book View\tCtrl-8
+#&Book View\tCtrl+8
 #&Copy Selection
 #&Even pages only
-#&Facing\tCtrl-7
+#&Facing\tCtrl+7
 #&Fit pages to printable area
 #&Odd pages only
 #&Open Document
@@ -400,7 +400,7 @@ Faktor uvećanja
 #&Remove Document
 #&Save As...
 #&Shrink pages to printable area (if necessary)
-#&Single Page\tCtrl-6
+#&Single Page\tCtrl+6
 #&Use original page sizes
 #(page %d)
 #Add Favorite
@@ -435,7 +435,7 @@ Faktor uvećanja
 #Favorites
 #File Size:
 #File:
-#Fit &Content\tCtrl-3
+#Fit &Content\tCtrl+3
 #Fit Content
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
@@ -447,14 +447,14 @@ Faktor uvećanja
 #Number of Pages:
 #Open a document...
 #P&roperties
-#P&roperties\tCtrl-D
+#P&roperties\tCtrl+D
 #PDF Producer:
 #PDF Version:
 #Page %d
 #Page Size:
 #Page scaling
 #Postscript documents
-#Pr&esentation\tCtrl-L
+#Pr&esentation\tCtrl+L
 #Print
 #Print range
 #Printer with given name doesn't exist
@@ -462,9 +462,9 @@ Faktor uvećanja
 #Printing page %d of %d...
 #Remove from favorites
 #Remove page %d from favorites
-#Save S&hortcut...\tCtrl-Shift-S
+#Save S&hortcut...\tCtrl+Shift+S
 #Select &All
-#Select &All\tCtrl-A
+#Select &All\tCtrl+A
 #Send by &E-mail...
 #Show Favorites
 #Show frequently read

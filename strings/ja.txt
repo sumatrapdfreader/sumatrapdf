@@ -13,8 +13,8 @@ Contributor: Nardog (nardog.takoweb.com)
 &About
 バージョン情報(&A)
 
-&Actual Size\tCtrl-1
-実際のサイズ(&A)\tCtrl-1
+&Actual Size\tCtrl+1
+実際のサイズ(&A)\tCtrl+1
 
 &All selected pages
 すべての選択されたページ(&A)
@@ -22,11 +22,11 @@ Contributor: Nardog (nardog.takoweb.com)
 &Back\tAlt+Left Arrow
 前に戻る(&B)\tAlt+←
 
-&Close\tCtrl-W
-閉じる(&C)\tCtrl-W
+&Close\tCtrl+W
+閉じる(&C)\tCtrl+W
 
-&Copy Selection\tCtrl-C
-選択範囲のコピー(&C)\tCtrl-C
+&Copy Selection\tCtrl+C
+選択範囲のコピー(&C)\tCtrl+C
 
 &Don't ask me again
 再び質問しない(&D)
@@ -79,8 +79,8 @@ Contributor: Nardog (nardog.takoweb.com)
 &Odd pages only
 偶数ページのみ(&O)
 
-&Open\tCtrl-O
-開く(&O)\tCtrl-O
+&Open\tCtrl+O
+開く(&O)\tCtrl+O
 
 &Options...
 オプション(&O)...
@@ -91,8 +91,8 @@ Contributor: Nardog (nardog.takoweb.com)
 &Previous Page\tLeft Arrow
 前のページ(&P)\t←
 
-&Print...\tCtrl-P
-印刷(&P)...\tCtrl-P
+&Print...\tCtrl+P
+印刷(&P)...\tCtrl+P
 
 &Print... (denied)
 印刷... (拒否されました)(&P)
@@ -103,8 +103,8 @@ Contributor: Nardog (nardog.takoweb.com)
 &Remember these settings for each document
 ドキュメントごとにこれらの設定を記憶する(&R)
 
-&Save As...\tCtrl-S
-名前を付けて保存(&S)...\tCtrl-S
+&Save As...\tCtrl+S
+名前を付けて保存(&S)...\tCtrl+S
 
 &Settings
 設定(&S)
@@ -214,8 +214,8 @@ Couldn't render the page
 Created:
 作成日時:
 
-Custom &Zoom...\tCtrl-Y
-拡大率の指定(&Z)...\tCtrl-Y
+Custom &Zoom...\tCtrl+Y
+拡大率の指定(&Z)...\tCtrl+Y
 
 Default &Layout:
 既定のレイアウト(&L):
@@ -235,8 +235,8 @@ Document Properties
 Download
 ダウンロード
 
-E&xit\tCtrl-Q
-終了(&X)\tCtrl-Q
+E&xit\tCtrl+Q
+終了(&X)\tCtrl+Q
 
 Enter password
 パスワードの入力
@@ -250,8 +250,8 @@ PDF ドキュメント上でダブルクリックしたときに呼び出すコ�
 F&orward\tAlt+Right Arrow
 次に進む(&O)\tAlt+→
 
-F&ullscreen\tCtrl-Shift-L
-全画面表示(&U)\tCtrl-Shift-L
+F&ullscreen\tCtrl+Shift+L
+全画面表示(&U)\tCtrl+Shift+L
 
 Facing
 見返し
@@ -265,8 +265,8 @@ File Size:
 File:
 ファイル:
 
-Fin&d...\tCtrl-F
-検索(&D)...\tCtrl-F
+Fin&d...\tCtrl+F
+検索(&D)...\tCtrl+F
 
 Find
 検索
@@ -280,14 +280,14 @@ Find Previous
 Find:
 検索:
 
-Fit &Content\tCtrl-3
-内容に合わせる(&C)\tCtrl-3
+Fit &Content\tCtrl+3
+内容に合わせる(&C)\tCtrl+3
 
-Fit &Page\tCtrl-0
-ページに合わせる(&P)\tCtrl-0
+Fit &Page\tCtrl+0
+ページに合わせる(&P)\tCtrl+0
 
-Fit &Width\tCtrl-2
-幅に合わせる(&W)\tCtrl-2
+Fit &Width\tCtrl+2
+幅に合わせる(&W)\tCtrl+2
 
 Fit Content
 内容に合わせる
@@ -367,8 +367,8 @@ Foxit Reader で開く(&A)
 Open in PDF-XChange
 PDF-XChange で開く(&A)
 
-P&roperties\tCtrl-D
-プロパティ(&R)\tCtrl-D
+P&roperties\tCtrl+D
+プロパティ(&R)\tCtrl+D
 
 PDF Document
 PDF ドキュメント
@@ -382,8 +382,8 @@ PDF バージョン:
 PDF documents
 PDF ドキュメント
 
-Pa&ge...\tCtrl-G
-ページ指定(&G)...\tCtrl-G
+Pa&ge...\tCtrl+G
+ページ指定(&G)...\tCtrl+G
 
 Page Size:
 ページ サイズ:
@@ -400,8 +400,8 @@ Page:
 Please wait - rendering...
 お待ちください - 描画しています...
 
-Pr&esentation\tCtrl-L
-プレゼンテーション(&E)\tCtrl-L
+Pr&esentation\tCtrl+L
+プレゼンテーション(&E)\tCtrl+L
 
 Previous Page
 前のページ
@@ -415,11 +415,11 @@ Printing problem.
 Remember &opened files
 開かれたファイルを記憶する(&O)
 
-Rotate &Left\tCtrl-Shift--
-左に回転(&L)\tCtrl-Shift--
+Rotate &Left\tCtrl+Shift+-
+左に回転(&L)\tCtrl+Shift+-
 
-Rotate &Right\tCtrl-Shift-+
-右に回転(&R)\tCtrl-Shift-+
+Rotate &Right\tCtrl+Shift++
+右に回転(&R)\tCtrl+Shift++
 
 Save As
 名前を付けて保存
@@ -518,15 +518,15 @@ printing document
 印刷するドキュメント
 
 # Untranslated:
-#&Book View\tCtrl-8
+#&Book View\tCtrl+8
 #&Copy Selection
-#&Facing\tCtrl-7
+#&Facing\tCtrl+7
 #&Open Document
 #&Pin Document
 #&Print...
 #&Remove Document
 #&Save As...
-#&Single Page\tCtrl-6
+#&Single Page\tCtrl+6
 #(page %d)
 #Add Favorite
 #Add page %d to favorites
@@ -559,9 +559,9 @@ printing document
 #Printing page %d of %d...
 #Remove from favorites
 #Remove page %d from favorites
-#Save S&hortcut...\tCtrl-Shift-S
+#Save S&hortcut...\tCtrl+Shift+S
 #Select &All
-#Select &All\tCtrl-A
+#Select &All\tCtrl+A
 #Show Favorites
 #Show frequently read
 #Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.

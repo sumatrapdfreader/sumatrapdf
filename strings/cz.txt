@@ -16,7 +16,7 @@ Contributor: Martin Ruzicka (martin.ruzicka.cz(at)gmail(dot)com)
 &About
 &O programu
 
-&Actual Size\tCtrl-1
+&Actual Size\tCtrl+1
 Skutečná &velikost\tCtrl+1
 
 &All selected pages
@@ -25,16 +25,16 @@ Vše&chny vybrané stránky
 &Back\tAlt+Left Arrow
 Z&pět\tAlt+Šipka vlevo
 
-&Book View\tCtrl-8
+&Book View\tCtrl+8
 K&niha\tCtrl+8
 
-&Close\tCtrl-W
+&Close\tCtrl+W
 &Zavřít\tCtrl+W
 
 &Copy Selection
 &Kopírovat výběr
 
-&Copy Selection\tCtrl-C
+&Copy Selection\tCtrl+C
 &Kopírovat výběr\tCtrl+C
 
 &Don't ask me again
@@ -43,7 +43,7 @@ K&niha\tCtrl+8
 &Even pages only
 Pouz&e sudé stránky
 
-&Facing\tCtrl-7
+&Facing\tCtrl+7
 &Dvojstránky\tCtrl+7
 
 &File
@@ -91,7 +91,7 @@ Další strá&nka\tŠipka vpravo
 &Odd pages only
 &Pouze liché stránky
 
-&Open\tCtrl-O
+&Open\tCtrl+O
 &Otevřít...\tCtrl+O
 
 &Open Document
@@ -112,7 +112,7 @@ Další strá&nka\tŠipka vpravo
 &Print...
 &Tisk...
 
-&Print...\tCtrl-P
+&Print...\tCtrl+P
 &Tisk...\tCtrl+P
 
 &Print... (denied)
@@ -130,7 +130,7 @@ Odeb&rat dokument
 &Save As...
 &Uložit jako...
 
-&Save As...\tCtrl-S
+&Save As...\tCtrl+S
 &Uložit jako...\tCtrl+S
 
 &Settings
@@ -139,7 +139,7 @@ Odeb&rat dokument
 &Shrink pages to printable area (if necessary)
 &Zmenšit stránky na tisknutelnou plochu (v případě potřeby)
 
-&Single Page\tCtrl-6
+&Single Page\tCtrl+6
 &Jedna stránka\tCtrl+6
 
 &Skip this version
@@ -280,7 +280,7 @@ Vytvořeno:
 Current file
 Aktuální soubor
 
-Custom &Zoom...\tCtrl-Y
+Custom &Zoom...\tCtrl+Y
 Vlastní &měřítko...\tCtrl+Y
 
 Default &Layout:
@@ -304,7 +304,7 @@ Vlastnosti dokumentu
 Download
 Stáhnout
 
-E&xit\tCtrl-Q
+E&xit\tCtrl+Q
 &Konec\tCtrl+Q
 
 Enter password
@@ -325,7 +325,7 @@ F&avorites
 F&orward\tAlt+Right Arrow
 V&před\tAlt+Šipka vpravo
 
-F&ullscreen\tCtrl-Shift-L
+F&ullscreen\tCtrl+Shift+L
 &Celá obrazovka\tCtrl+Shift+L
 
 Facing
@@ -343,7 +343,7 @@ Velikost souboru:
 File:
 Soubor:
 
-Fin&d...\tCtrl-F
+Fin&d...\tCtrl+F
 Nají&t...\tCtrl+F
 
 Find
@@ -358,13 +358,13 @@ Najít předchozí
 Find:
 Najít:
 
-Fit &Content\tCtrl-3
+Fit &Content\tCtrl+3
 Přizpůsobit &obsah\tCtrl+3
 
-Fit &Page\tCtrl-0
+Fit &Page\tCtrl+0
 Podle &stránky\tCtrl+0
 
-Fit &Width\tCtrl-2
+Fit &Width\tCtrl+2
 &Podle šířky\tCtrl+2
 
 Fit Content
@@ -466,7 +466,7 @@ Otevřít v programu PDF-XChange
 P&roperties
 &Vlastnosti
 
-P&roperties\tCtrl-D
+P&roperties\tCtrl+D
 &Vlastnosti...\tCtrl+D
 
 PDF Document
@@ -481,7 +481,7 @@ Verze PDF:
 PDF documents
 PDF dokumenty
 
-Pa&ge...\tCtrl-G
+Pa&ge...\tCtrl+G
 Strán&ka...\tCtrl+G
 
 Page %d
@@ -505,7 +505,7 @@ Prosím čekejte, probíhá vykreslování...
 Postscript documents
 PostScript dokumenty
 
-Pr&esentation\tCtrl-L
+Pr&esentation\tCtrl+L
 Pr&ezentace\tCtrl+L
 
 Previous Page
@@ -538,16 +538,16 @@ Odebrat z oblíbených
 Remove page %d from favorites
 Odebrat stránku %d z oblíbených
 
-Rotate &Left\tCtrl-Shift--
+Rotate &Left\tCtrl+Shift+-
 Otočit do&leva\tCtrl+Shift+Num-
 
-Rotate &Right\tCtrl-Shift-+
+Rotate &Right\tCtrl+Shift++
 Otočit dop&rava\tCtrl+Shift+Num+
 
 Save As
 Uložit jako...
 
-Save S&hortcut...\tCtrl-Shift-S
+Save S&hortcut...\tCtrl+Shift+S
 U&ložit zástupce...\tCtrl+Shift+S
 
 Searching %d of %d...
@@ -556,7 +556,7 @@ Prohledává se %d z %d...
 Select &All
 Vybrat &vše
 
-Select &All\tCtrl-A
+Select &All\tCtrl+A
 Vybrat &vše\tCtrl+A
 
 Select content with Ctrl+left mouse button

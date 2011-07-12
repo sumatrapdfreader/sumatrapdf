@@ -13,17 +13,17 @@ Contributor: Wim Benes
 &About
 &Oer
 
-&Actual Size\tCtrl-1
-Wiere grutte\tCtrl-1
+&Actual Size\tCtrl+1
+Wiere grutte\tCtrl+1
 
 &Back\tAlt+Left Arrow
 Tebek\tAlt+<-
 
-&Close\tCtrl-W
-&Ofslute\tCtrl-W
+&Close\tCtrl+W
+&Ofslute\tCtrl+W
 
-&Copy Selection\tCtrl-C
-Kopiearje seleksje\tCtrl-C
+&Copy Selection\tCtrl+C
+Kopiearje seleksje\tCtrl+C
 
 &Don't ask me again
 Net mear freegje
@@ -67,8 +67,8 @@ Folgjende side\t->
 &No, thanks
 &Nee, tankewol
 
-&Open\tCtrl-O
-&Iepenje\tCtrl-O
+&Open\tCtrl+O
+&Iepenje\tCtrl+O
 
 &Options...
 &Opsjes...
@@ -79,14 +79,14 @@ Folgjende side\t->
 &Previous Page\tLeft Arrow
 Foarige side\t<-
 
-&Print...\tCtrl-P
-&Ofdrukke\tCtrl-P
+&Print...\tCtrl+P
+&Ofdrukke\tCtrl+P
 
 &Remember these settings for each document
 &Bewarje dizze ynstellingen foar elk dokumint
 
-&Save As...\tCtrl-S
-&Bewarje as...\tCtrl-S
+&Save As...\tCtrl+S
+&Bewarje as...\tCtrl+S
 
 &Settings
 &Ynstellingen
@@ -178,8 +178,8 @@ Dizze side kin net werjûn wurde
 Created:
 Makke:
 
-Custom &Zoom...\tCtrl-Y
-&Oanpaste Zoom...\tCtrl-Y
+Custom &Zoom...\tCtrl+Y
+&Oanpaste Zoom...\tCtrl+Y
 
 Default &Layout:
 Standert &Layout:
@@ -196,8 +196,8 @@ Dokuminteigenskippen
 Download
 Ynlade
 
-E&xit\tCtrl-Q
-&Ofslute\tCtrl-Q
+E&xit\tCtrl+Q
+&Ofslute\tCtrl+Q
 
 Enter password
 Wachtwurd ynfiere
@@ -208,8 +208,8 @@ Wachtwurd ynfiere foar %s
 F&orward\tAlt+Right Arrow
 Fierder\tAlt+->
 
-F&ullscreen\tCtrl-Shift-L
-Folslein skerm\tCtrl-Shift-L
+F&ullscreen\tCtrl+Shift+L
+Folslein skerm\tCtrl+Shift+L
 
 Facing
 Dûbele side
@@ -223,8 +223,8 @@ Bestânsgrutte
 File:
 Bestân:
 
-Fin&d...\tCtrl-F
-Sykje...\tCtrl-F
+Fin&d...\tCtrl+F
+Sykje...\tCtrl+F
 
 Find
 Sykje
@@ -238,11 +238,11 @@ Foarige
 Find:
 Sykje:
 
-Fit &Page\tCtrl-0
-Folsleine &side\tCtrl-0
+Fit &Page\tCtrl+0
+Folsleine &side\tCtrl+0
 
-Fit &Width\tCtrl-2
-Passend yn &breedte\tCtrl-2
+Fit &Width\tCtrl+2
+Passend yn &breedte\tCtrl+2
 
 Fit Page
 Folsleine side
@@ -313,8 +313,8 @@ Iepenje mei &Foxit Reader
 Open in PDF-XChange
 Iepenje mei PDF-XChange
 
-P&roperties\tCtrl-D
-E&igenskippen...\tCtrl-D
+P&roperties\tCtrl+D
+E&igenskippen...\tCtrl+D
 
 PDF Document
 PDF-bestân
@@ -328,8 +328,8 @@ PDF-ferzje:
 PDF documents
 PDF-bestannen
 
-Pa&ge...\tCtrl-G
-Side...\tCtrl-G
+Pa&ge...\tCtrl+G
+Side...\tCtrl+G
 
 Page Size:
 Sidegrutte:
@@ -352,11 +352,11 @@ Probleem by it ôfdrukken.
 Remember &opened files
 Unthâld &iepene bestannen
 
-Rotate &Left\tCtrl-Shift--
-Linksom draaie\tCtrl-Shift--
+Rotate &Left\tCtrl+Shift+-
+Linksom draaie\tCtrl+Shift+-
 
-Rotate &Right\tCtrl-Shift-+
-Rjochtsom draaie\tCtrl-Shift-+
+Rotate &Right\tCtrl+Shift++
+Rjochtsom draaie\tCtrl+Shift++
 
 Save As
 Bewarje as
@@ -441,10 +441,10 @@ Zoomfaktor
 
 # Untranslated:
 #&All selected pages
-#&Book View\tCtrl-8
+#&Book View\tCtrl+8
 #&Copy Selection
 #&Even pages only
-#&Facing\tCtrl-7
+#&Facing\tCtrl+7
 #&Fit pages to printable area
 #&Odd pages only
 #&Open Document
@@ -455,7 +455,7 @@ Zoomfaktor
 #&Remove Document
 #&Save As...
 #&Shrink pages to printable area (if necessary)
-#&Single Page\tCtrl-6
+#&Single Page\tCtrl+6
 #&Use original page sizes
 #(page %d)
 #Add Favorite
@@ -480,7 +480,7 @@ Zoomfaktor
 #Error loading %s
 #F&avorites
 #Favorites
-#Fit &Content\tCtrl-3
+#Fit &Content\tCtrl+3
 #Fit Content
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
@@ -494,7 +494,7 @@ Zoomfaktor
 #Page %d
 #Page scaling
 #Postscript documents
-#Pr&esentation\tCtrl-L
+#Pr&esentation\tCtrl+L
 #Print
 #Print range
 #Printer with given name doesn't exist
@@ -502,9 +502,9 @@ Zoomfaktor
 #Printing page %d of %d...
 #Remove from favorites
 #Remove page %d from favorites
-#Save S&hortcut...\tCtrl-Shift-S
+#Save S&hortcut...\tCtrl+Shift+S
 #Select &All
-#Select &All\tCtrl-A
+#Select &All\tCtrl+A
 #Show Favorites
 #Show frequently read
 #Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.

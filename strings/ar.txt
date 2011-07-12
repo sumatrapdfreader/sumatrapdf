@@ -16,8 +16,8 @@ Contributor: Abu Abdullah (falcon.sheep@gmail.com)
 &About
 حول البرنامج
 
-&Actual Size\tCtrl-1
-الحجم الحقيقي\tCtrl-1
+&Actual Size\tCtrl+1
+الحجم الحقيقي\tCtrl+1
 
 &All selected pages
 &كل الصفحات المحددة
@@ -25,17 +25,17 @@ Contributor: Abu Abdullah (falcon.sheep@gmail.com)
 &Back\tAlt+Left Arrow
 &الخلف\tAlt+السهم الأيسر
 
-&Book View\tCtrl-8
+&Book View\tCtrl+8
 &عرض الكتاب
 
-&Close\tCtrl-W
-&إنهاء\tCtrl-W
+&Close\tCtrl+W
+&إنهاء\tCtrl+W
 
 &Copy Selection
 &نسخ المحدد
 
-&Copy Selection\tCtrl-C
-&نسخ المحدد\tCtrl-C
+&Copy Selection\tCtrl+C
+&نسخ المحدد\tCtrl+C
 
 &Don't ask me again
 &لا تسألني مرةً أخرى
@@ -43,8 +43,8 @@ Contributor: Abu Abdullah (falcon.sheep@gmail.com)
 &Even pages only
 &الصفحات الزوجية فقط
 
-&Facing\tCtrl-7
-&متقابل\tCtrl-7
+&Facing\tCtrl+7
+&متقابل\tCtrl+7
 
 &File
 &ملف
@@ -91,8 +91,8 @@ Contributor: Abu Abdullah (falcon.sheep@gmail.com)
 &Odd pages only
 &الصفحات الفردية فقط
 
-&Open\tCtrl-O
-&فتح\tCtrl-O
+&Open\tCtrl+O
+&فتح\tCtrl+O
 
 &Open Document
 &فتح مستند
@@ -112,8 +112,8 @@ Contributor: Abu Abdullah (falcon.sheep@gmail.com)
 &Print...
 &طباعة...
 
-&Print...\tCtrl-P
-&طباعة...\tCtrl-P
+&Print...\tCtrl+P
+&طباعة...\tCtrl+P
 
 &Print... (denied)
 &تم رفض الطباعة
@@ -130,8 +130,8 @@ Contributor: Abu Abdullah (falcon.sheep@gmail.com)
 &Save As...
 &حفظ باسم...
 
-&Save As...\tCtrl-S
-&حفظ باسم...\tCtrl-S
+&Save As...\tCtrl+S
+&حفظ باسم...\tCtrl+S
 
 &Settings
 &الإعدادات
@@ -139,8 +139,8 @@ Contributor: Abu Abdullah (falcon.sheep@gmail.com)
 &Shrink pages to printable area (if necessary)
 &تعديل الصفحات لموافقة مساحة الطباعة (عند الضرورة)
 
-&Single Page\tCtrl-6
-&صفحة واحدة\tCtrl-6
+&Single Page\tCtrl+6
+&صفحة واحدة\tCtrl+6
 
 &Skip this version
 &تخطي هذا الإصدار
@@ -262,8 +262,8 @@ Couldn't render the page
 Created:
 الإنشاء
 
-Custom &Zoom...\tCtrl-Y
-تنسيق &التقريب\tCtrl-Y
+Custom &Zoom...\tCtrl+Y
+تنسيق &التقريب\tCtrl+Y
 
 Default &Layout:
 الشكل &الافتراضي
@@ -286,8 +286,8 @@ Document Properties
 Download
 تحميل
 
-E&xit\tCtrl-Q
-إغلاق البرنامج\tCtrl-Q
+E&xit\tCtrl+Q
+إغلاق البرنامج\tCtrl+Q
 
 Enter password
 ادخل كلمة المرور
@@ -304,8 +304,8 @@ Error loading %s
 F&orward\tAlt+Right Arrow
 الأمام\tAlt+السهم الأيمن
 
-F&ullscreen\tCtrl-Shift-L
-بحجم الشاشة\tCtrl-Shift-L
+F&ullscreen\tCtrl+Shift+L
+بحجم الشاشة\tCtrl+Shift+L
 
 Facing
 صفحتان متقابلتان
@@ -319,8 +319,8 @@ File Size:
 File:
 الملف
 
-Fin&d...\tCtrl-F
-بحث...\tCtrl-F
+Fin&d...\tCtrl+F
+بحث...\tCtrl+F
 
 Find
 بحث
@@ -334,14 +334,14 @@ Find Previous
 Find:
 بحث
 
-Fit &Content\tCtrl-3
-مناسبة المحتوى\tCtrl-3
+Fit &Content\tCtrl+3
+مناسبة المحتوى\tCtrl+3
 
-Fit &Page\tCtrl-0
-مناسب للشاشة\tCtrl-0
+Fit &Page\tCtrl+0
+مناسب للشاشة\tCtrl+0
 
-Fit &Width\tCtrl-2
-مناسب لعرض الشاشة\tCtrl-2
+Fit &Width\tCtrl+2
+مناسب لعرض الشاشة\tCtrl+2
 
 Fit Content
 مناسبة المحتوى
@@ -442,8 +442,8 @@ Open in PDF-XChange
 P&roperties
 الخصائص
 
-P&roperties\tCtrl-D
-الخصائص...\tCtrl-D
+P&roperties\tCtrl+D
+الخصائص...\tCtrl+D
 
 PDF Document
 مستند البي دي إف
@@ -457,8 +457,8 @@ PDF Version:
 PDF documents
 مستندات البي دي إف
 
-Pa&ge...\tCtrl-G
-صفحة محددة\tCtrl-G
+Pa&ge...\tCtrl+G
+صفحة محددة\tCtrl+G
 
 Page Size:
 حجم الصفحة
@@ -478,8 +478,8 @@ Please wait - rendering...
 Postscript documents
 ملفات Postscript
 
-Pr&esentation\tCtrl-L
-عرض ملء الشاشة \tCtrl-L
+Pr&esentation\tCtrl+L
+عرض ملء الشاشة \tCtrl+L
 
 Previous Page
 الصفحة السابقة
@@ -502,17 +502,17 @@ Printing problem.
 Remember &opened files
 تذكر الملفات المفتوحة
 
-Rotate &Left\tCtrl-Shift--
-دوران لليسار\tCtrl-Shift--
+Rotate &Left\tCtrl+Shift+-
+دوران لليسار\tCtrl+Shift+-
 
-Rotate &Right\tCtrl-Shift-+
-دوران لليمين\tCtrl-Shift-+
+Rotate &Right\tCtrl+Shift++
+دوران لليمين\tCtrl+Shift++
 
 Save As
 حفظ باسم
 
-Save S&hortcut...\tCtrl-Shift-S
-حفظ الاختصار...\tCtrl-Shift-S
+Save S&hortcut...\tCtrl+Shift+S
+حفظ الاختصار...\tCtrl+Shift+S
 
 Searching %d of %d...
 يتم البحث %d من %d...
@@ -520,8 +520,8 @@ Searching %d of %d...
 Select &All
 حدد الكل
 
-Select &All\tCtrl-A
-اختيار &الكل\tCtrl-A
+Select &All\tCtrl+A
+اختيار &الكل\tCtrl+A
 
 Select content with Ctrl+left mouse button
 اختر المحتوى بالضغط على زر الفأرة الأيسر و Ctrl

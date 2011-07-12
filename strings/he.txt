@@ -14,8 +14,8 @@ Contributor: Amos Kotter http://sites.google.com/site/hillasystem/
 &About
 אודות
 
-&Actual Size\tCtrl-1
-גודל מקור\tCtrl-1
+&Actual Size\tCtrl+1
+גודל מקור\tCtrl+1
 
 &All selected pages
 כל העמודים הנבחרים
@@ -23,17 +23,17 @@ Contributor: Amos Kotter http://sites.google.com/site/hillasystem/
 &Back\tAlt+Left Arrow
 חזור\tAlt+<-
 
-&Book View\tCtrl-8
-תצוגת ספר\tCtrl-8
+&Book View\tCtrl+8
+תצוגת ספר\tCtrl+8
 
-&Close\tCtrl-W
-&סגור\tCtrl-W
+&Close\tCtrl+W
+&סגור\tCtrl+W
 
 &Copy Selection
 העתק בחירה
 
-&Copy Selection\tCtrl-C
-העתק בחירה\tCtrl-C
+&Copy Selection\tCtrl+C
+העתק בחירה\tCtrl+C
 
 &Don't ask me again
 אל תשאל שנית
@@ -41,8 +41,8 @@ Contributor: Amos Kotter http://sites.google.com/site/hillasystem/
 &Even pages only
 עמודים זוגיים בלבד
 
-&Facing\tCtrl-7
-עמוד ממול\tCtrl-7
+&Facing\tCtrl+7
+עמוד ממול\tCtrl+7
 
 &File
 &קובץ
@@ -89,8 +89,8 @@ Contributor: Amos Kotter http://sites.google.com/site/hillasystem/
 &Odd pages only
 עמודים אי-זוגיים בלבד
 
-&Open\tCtrl-O
-&פתח\tCtrl-O
+&Open\tCtrl+O
+&פתח\tCtrl+O
 
 &Open Document
 פתח מסמך
@@ -110,8 +110,8 @@ Contributor: Amos Kotter http://sites.google.com/site/hillasystem/
 &Print...
 הדפס
 
-&Print...\tCtrl-P
-הדפס\tCtrl-P
+&Print...\tCtrl+P
+הדפס\tCtrl+P
 
 &Print... (denied)
 הדפס... (התקבל סירוב)
@@ -128,8 +128,8 @@ Contributor: Amos Kotter http://sites.google.com/site/hillasystem/
 &Save As...
 בשמור בשם
 
-&Save As...\tCtrl-S
-שמירה בשם\tCtrl-S
+&Save As...\tCtrl+S
+שמירה בשם\tCtrl+S
 
 &Settings
 הגדרות
@@ -137,8 +137,8 @@ Contributor: Amos Kotter http://sites.google.com/site/hillasystem/
 &Shrink pages to printable area (if necessary)
 כווץ עמודים עד גודל אזור ההדפסה
 
-&Single Page\tCtrl-6
-עמוד יחיד\tCtrl-6
+&Single Page\tCtrl+6
+עמוד יחיד\tCtrl+6
 
 &Skip this version
 דלג מהדורה זו
@@ -260,8 +260,8 @@ Couldn't render the page
 Created:
 נוצר:
 
-Custom &Zoom...\tCtrl-Y
-זום משתמש...\tCtrl-Y
+Custom &Zoom...\tCtrl+Y
+זום משתמש...\tCtrl+Y
 
 Default &Layout:
 סידור ברירת מחדל:
@@ -284,8 +284,8 @@ Document Properties
 Download
 הורדה
 
-E&xit\tCtrl-Q
-יציאה\tCtrl-Q
+E&xit\tCtrl+Q
+יציאה\tCtrl+Q
 
 Enter password
 הכנס סיסמה
@@ -302,8 +302,8 @@ Error loading %s
 F&orward\tAlt+Right Arrow
 קדימה\tAlt+ ?
 
-F&ullscreen\tCtrl-Shift-L
-מסך מלא\tCtrl-Shift-L
+F&ullscreen\tCtrl+Shift+L
+מסך מלא\tCtrl+Shift+L
 
 Facing
 דף כפול
@@ -317,8 +317,8 @@ File Size:
 File:
 קובץ:
 
-Fin&d...\tCtrl-F
-חפש...\tCtrl-F
+Fin&d...\tCtrl+F
+חפש...\tCtrl+F
 
 Find
 חפש
@@ -332,14 +332,14 @@ Find Previous
 Find:
 חפש:
 
-Fit &Content\tCtrl-3
-התאם לתוכן\tCtrl-3
+Fit &Content\tCtrl+3
+התאם לתוכן\tCtrl+3
 
-Fit &Page\tCtrl-0
-התאם דף\tCtrl-0
+Fit &Page\tCtrl+0
+התאם דף\tCtrl+0
 
-Fit &Width\tCtrl-2
-התאם רוחב\tCtrl-2
+Fit &Width\tCtrl+2
+התאם רוחב\tCtrl+2
 
 Fit Content
 התאם לתוכן
@@ -440,8 +440,8 @@ PDF-XChange פתח בקורא
 P&roperties
 תכונות
 
-P&roperties\tCtrl-D
-תכונות...\tCtrl-D
+P&roperties\tCtrl+D
+תכונות...\tCtrl+D
 
 PDF Document
 PDF מסמך
@@ -455,8 +455,8 @@ PDF מהדורת:
 PDF documents
 PDF מסמך
 
-Pa&ge...\tCtrl-G
-דף...\tCtrl-G
+Pa&ge...\tCtrl+G
+דף...\tCtrl+G
 
 Page Size:
 גודל עמוד:
@@ -476,8 +476,8 @@ Please wait - rendering...
 Postscript documents
 מסמכי פוסטקריפט
 
-Pr&esentation\tCtrl-L
-הצגה\tCtrl-L
+Pr&esentation\tCtrl+L
+הצגה\tCtrl+L
 
 Previous Page
 דף קודם
@@ -500,17 +500,17 @@ Printing problem.
 Remember &opened files
 זכור קבצים פתוחים
 
-Rotate &Left\tCtrl-Shift--
-סובב שמאלה\tCtrl-Shift--
+Rotate &Left\tCtrl+Shift+-
+סובב שמאלה\tCtrl+Shift+-
 
-Rotate &Right\tCtrl-Shift-+
-סובב ימינה\tCtrl-Shift-+
+Rotate &Right\tCtrl+Shift++
+סובב ימינה\tCtrl+Shift++
 
 Save As
 בשמור בשם
 
-Save S&hortcut...\tCtrl-Shift-S
-קיצור שמירה...\tCtrl-Shift-S
+Save S&hortcut...\tCtrl+Shift+S
+קיצור שמירה...\tCtrl+Shift+S
 
 Searching %d of %d...
 %d מ %d מחפש...
@@ -518,8 +518,8 @@ Searching %d of %d...
 Select &All
 בחר הכל
 
-Select &All\tCtrl-A
-בחר הכל\tCtrl-A
+Select &All\tCtrl+A
+בחר הכל\tCtrl+A
 
 Select content with Ctrl+left mouse button
 וכפתור עכבר שמאל Ctrl בחר תוכן עם

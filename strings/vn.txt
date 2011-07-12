@@ -14,8 +14,8 @@ Contributor: Tào Trần Vương Thắng
 &About
 Giới thiệu
 
-&Actual Size\tCtrl-1
-Kích thướ&c thật\tCtrl-1
+&Actual Size\tCtrl+1
+Kích thướ&c thật\tCtrl+1
 
 &All selected pages
 Tất cả các tr&ang được chọn
@@ -23,17 +23,17 @@ Tất cả các tr&ang được chọn
 &Back\tAlt+Left Arrow
 Trở về\tAlt+Mũi tên trái
 
-&Book View\tCtrl-8
-Xem dạng sách\tCtrl-8
+&Book View\tCtrl+8
+Xem dạng sách\tCtrl+8
 
-&Close\tCtrl-W
-Đóng tập tin\tCtrl-W
+&Close\tCtrl+W
+Đóng tập tin\tCtrl+W
 
 &Copy Selection
 &Chép phần đã chọn
 
-&Copy Selection\tCtrl-C
-&Chép phần đã chọn\tCtrl-C
+&Copy Selection\tCtrl+C
+&Chép phần đã chọn\tCtrl+C
 
 &Don't ask me again
 Không hỏi lại
@@ -41,8 +41,8 @@ Không hỏi lại
 &Even pages only
 Chỉ những trang lẻ
 
-&Facing\tCtrl-7
-Trang kép\tCtrl-7
+&Facing\tCtrl+7
+Trang kép\tCtrl+7
 
 &File
 Tập tin
@@ -89,8 +89,8 @@ Không, cảm ơn
 &Odd pages only
 Chỉ những trang chẵn
 
-&Open\tCtrl-O
-Mở tập tin\tCtrl-O
+&Open\tCtrl+O
+Mở tập tin\tCtrl+O
 
 &Open Document
 Mở tập tin
@@ -110,8 +110,8 @@ Trang trước\tMũi tên trái
 &Print...
 In...
 
-&Print...\tCtrl-P
-In\tCtrl-P
+&Print...\tCtrl+P
+In\tCtrl+P
 
 &Print... (denied)
 &In... (bị từ chối)
@@ -128,8 +128,8 @@ Xóa tập tin
 &Save As...
 Lưu thành...
 
-&Save As...\tCtrl-S
-Lưu thành\tCtrl-S
+&Save As...\tCtrl+S
+Lưu thành\tCtrl+S
 
 &Settings
 Cài đặt
@@ -137,8 +137,8 @@ Cài đặt
 &Shrink pages to printable area (if necessary)
 Nén vừa trang in (nếu cần thiết)
 
-&Single Page\tCtrl-6
-Trang đơn\tCtrl-6
+&Single Page\tCtrl+6
+Trang đơn\tCtrl+6
 
 &Skip this version
 Bỏ qua phiên bản này.
@@ -281,8 +281,8 @@ Ngày tạo:
 Current file
 Tập tin hiện hành
 
-Custom &Zoom...\tCtrl-Y
-Thu phóng &tuỳ ý...\tCtrl-Y
+Custom &Zoom...\tCtrl+Y
+Thu phóng &tuỳ ý...\tCtrl+Y
 
 Default &Layout:
 Khung nhìn mặc định
@@ -305,8 +305,8 @@ Thuộc tính tập tin
 Download
 Tải xuống
 
-E&xit\tCtrl-Q
-Th&oát\tCtrl-Q
+E&xit\tCtrl+Q
+Th&oát\tCtrl+Q
 
 Enter password
 Nhập mật khẩu
@@ -326,8 +326,8 @@ F&avorites
 F&orward\tAlt+Right Arrow
 Tiếp tục\tAlt+Mũi tên phải
 
-F&ullscreen\tCtrl-Shift-L
-Toàn màn hình\tCtrl-Shift-L
+F&ullscreen\tCtrl+Shift+L
+Toàn màn hình\tCtrl+Shift+L
 
 Facing
 Trang kép
@@ -344,8 +344,8 @@ Kích thước:
 File:
 Tập tin:
 
-Fin&d...\tCtrl-F
-Tìm kiếm...\tCtrl-F
+Fin&d...\tCtrl+F
+Tìm kiếm...\tCtrl+F
 
 Find
 Tìm kiếm
@@ -359,14 +359,14 @@ Tìm lên
 Find:
 Tìm kiếm:
 
-Fit &Content\tCtrl-3
-Vừa nội dung\tCtrl-3
+Fit &Content\tCtrl+3
+Vừa nội dung\tCtrl+3
 
-Fit &Page\tCtrl-0
-Vừa &trang\tCtrl-0
+Fit &Page\tCtrl+0
+Vừa &trang\tCtrl+0
 
-Fit &Width\tCtrl-2
-Vừa chiều &rộng\tCtrl-2
+Fit &Width\tCtrl+2
+Vừa chiều &rộng\tCtrl+2
 
 Fit Content
 Vừa nội dung
@@ -467,8 +467,8 @@ Mở bằng PDF-XChange
 P&roperties
 Thuộc tính
 
-P&roperties\tCtrl-D
-Thuộc tính\tCtrl-D
+P&roperties\tCtrl+D
+Thuộc tính\tCtrl+D
 
 PDF Document
 Tập tin PDF
@@ -482,8 +482,8 @@ Phiên bản PDF:
 PDF documents
 Tập tin PDF
 
-Pa&ge...\tCtrl-G
-Trang...\tCtrl-G
+Pa&ge...\tCtrl+G
+Trang...\tCtrl+G
 
 Page %d
 Trang %d
@@ -506,8 +506,8 @@ Xin chờ đợi, đang hiện...
 Postscript documents
 Tập tin Postscript
 
-Pr&esentation\tCtrl-L
-Trình chiếu\tCtrl-L
+Pr&esentation\tCtrl+L
+Trình chiếu\tCtrl+L
 
 Previous Page
 Trang trước
@@ -539,17 +539,17 @@ Xóa khỏi Ưa thích
 Remove page %d from favorites
 Xoá trang %d khỏi Ưa thích
 
-Rotate &Left\tCtrl-Shift--
-Quay trái\tCtrl-Shift--
+Rotate &Left\tCtrl+Shift+-
+Quay trái\tCtrl+Shift+-
 
-Rotate &Right\tCtrl-Shift-+
-Quay phải\tCtrl-Shift-+
+Rotate &Right\tCtrl+Shift++
+Quay phải\tCtrl+Shift++
 
 Save As
 Lưu thành
 
-Save S&hortcut...\tCtrl-Shift-S
-Lưu lối tắt...\tCtrl-Shift-S
+Save S&hortcut...\tCtrl+Shift+S
+Lưu lối tắt...\tCtrl+Shift+S
 
 Searching %d of %d...
 Đang tìm %d trên %d
@@ -557,8 +557,8 @@ Searching %d of %d...
 Select &All
 Chọn hết
 
-Select &All\tCtrl-A
-Chọn hết\tCtrl-A
+Select &All\tCtrl+A
+Chọn hết\tCtrl+A
 
 Select content with Ctrl+left mouse button
 Đánh dấu nội dung bằng Ctrl+phím chuột trái

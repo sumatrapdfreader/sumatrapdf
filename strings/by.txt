@@ -14,11 +14,11 @@ Contributor: Drive DRKA (drka2003@mail.ru)
 &About
 Аб праграме
 
-&Actual Size\tCtrl-1
-Рэальны памер\tCtrl-1
+&Actual Size\tCtrl+1
+Рэальны памер\tCtrl+1
 
-&Close\tCtrl-W
-Зачыніць\tCtrl-W
+&Close\tCtrl+W
+Зачыніць\tCtrl+W
 
 &Don't ask me again
 Больш не пытаць
@@ -56,8 +56,8 @@ Contributor: Drive DRKA (drka2003@mail.ru)
 &No, thanks
 Дзякуй, не
 
-&Open\tCtrl-O
-Адчыніць\tCtrl-O
+&Open\tCtrl+O
+Адчыніць\tCtrl+O
 
 &Options...
 &Параметры...
@@ -68,14 +68,14 @@ Contributor: Drive DRKA (drka2003@mail.ru)
 &Previous Page\tLeft Arrow
 Папярэдняя старонка\t<-
 
-&Print...\tCtrl-P
-Друкаваць\tCtrl-P
+&Print...\tCtrl+P
+Друкаваць\tCtrl+P
 
 &Remember these settings for each document
 Запомніць гэтыя параметры для &кожнага дакумента
 
-&Save As...\tCtrl-S
-Захаваць як\tCtrl-S
+&Save As...\tCtrl+S
+Захаваць як\tCtrl+S
 
 &Settings
 Налады
@@ -152,8 +152,8 @@ Default PDF reader can't be changed in portable mode
 Download
 Загрузка
 
-E&xit\tCtrl-Q
-Выйсце\tCtrl-Q
+E&xit\tCtrl+Q
+Выйсце\tCtrl+Q
 
 Enter password
 Увядзіце пароль
@@ -161,8 +161,8 @@ Enter password
 Enter password for %s
 Увядзіце пароль для %s
 
-F&ullscreen\tCtrl-Shift-L
-Поўны экран\tCtrl-Shift-L
+F&ullscreen\tCtrl+Shift+L
+Поўны экран\tCtrl+Shift+L
 
 Facing
 Дзьве старонкі
@@ -170,8 +170,8 @@ Facing
 Failed to save a file
 Немагчыма захаваць файл
 
-Fin&d...\tCtrl-F
-Знайсці...\tCtrl-F
+Fin&d...\tCtrl+F
+Знайсці...\tCtrl+F
 
 Find
 Знайсці
@@ -185,10 +185,10 @@ Find Previous
 Find:
 Знайсці:
 
-Fit &Page\tCtrl-0
-Змясціць старонку\tCtrl-0
+Fit &Page\tCtrl+0
+Змясціць старонку\tCtrl+0
 
-Fit &Width\tCtrl-2
+Fit &Width\tCtrl+2
 Змясціць па шырыне
 
 Fit Page
@@ -257,8 +257,8 @@ PDF-дaкумент
 PDF documents
 PDF-дакументы
 
-Pa&ge...\tCtrl-G
-Старонка...\tCtrl-G
+Pa&ge...\tCtrl+G
+Старонка...\tCtrl+G
 
 Page number %u inexistant
 Старонка %u не існуе
@@ -278,11 +278,11 @@ Printing problem.
 Remember &opened files
 &Запомніць адкрытыя файлы
 
-Rotate &Left\tCtrl-Shift--
-Павярнуць налева\tCtrl-Shift--
+Rotate &Left\tCtrl+Shift+-
+Павярнуць налева\tCtrl+Shift+-
 
-Rotate &Right\tCtrl-Shift-+
-Павярнуць направа\tCtrl-Shift-+
+Rotate &Right\tCtrl+Shift++
+Павярнуць направа\tCtrl+Shift++
 
 Save As
 Захаваць як
@@ -347,11 +347,11 @@ Zoom Out
 # Untranslated:
 #&All selected pages
 #&Back\tAlt+Left Arrow
-#&Book View\tCtrl-8
+#&Book View\tCtrl+8
 #&Copy Selection
-#&Copy Selection\tCtrl-C
+#&Copy Selection\tCtrl+C
 #&Even pages only
-#&Facing\tCtrl-7
+#&Facing\tCtrl+7
 #&Fit pages to printable area
 #&Magnification:
 #&Manual
@@ -364,7 +364,7 @@ Zoom Out
 #&Remove Document
 #&Save As...
 #&Shrink pages to printable area (if necessary)
-#&Single Page\tCtrl-6
+#&Single Page\tCtrl+6
 #&Use original page sizes
 #(page %d)
 #Add Favorite
@@ -392,7 +392,7 @@ Zoom Out
 #Couldn't initialize printer
 #Created:
 #Current file
-#Custom &Zoom...\tCtrl-Y
+#Custom &Zoom...\tCtrl+Y
 #Denied Permissions:
 #DjVu documents
 #Document Properties
@@ -403,7 +403,7 @@ Zoom Out
 #Favorites
 #File Size:
 #File:
-#Fit &Content\tCtrl-3
+#Fit &Content\tCtrl+3
 #Fit Content
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
@@ -417,14 +417,14 @@ Zoom Out
 #Number of Pages:
 #Open a document...
 #P&roperties
-#P&roperties\tCtrl-D
+#P&roperties\tCtrl+D
 #PDF Producer:
 #PDF Version:
 #Page %d
 #Page Size:
 #Page scaling
 #Postscript documents
-#Pr&esentation\tCtrl-L
+#Pr&esentation\tCtrl+L
 #Print
 #Print range
 #Printer with given name doesn't exist
@@ -432,9 +432,9 @@ Zoom Out
 #Printing page %d of %d...
 #Remove from favorites
 #Remove page %d from favorites
-#Save S&hortcut...\tCtrl-Shift-S
+#Save S&hortcut...\tCtrl+Shift+S
 #Select &All
-#Select &All\tCtrl-A
+#Select &All\tCtrl+A
 #Select content with Ctrl+left mouse button
 #Send by &E-mail...
 #Show &pages continuously

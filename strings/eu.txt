@@ -13,8 +13,8 @@ Contributor: Igor G. Olaizola
 &About
 Ho&Ni buruz...
 
-&Actual Size\tCtrl-1
-&Berezko neurria\tCtrl-1
+&Actual Size\tCtrl+1
+&Berezko neurria\tCtrl+1
 
 &All selected pages
 Aukeratutako orri guztuak
@@ -22,14 +22,14 @@ Aukeratutako orri guztuak
 &Back\tAlt+Left Arrow
 &Atzera\tAlt+Gezia Ezkerrerantz
 
-&Close\tCtrl-W
-&Itxi\tCtrl-W
+&Close\tCtrl+W
+&Itxi\tCtrl+W
 
 &Copy Selection
 &Aukeratua Kopiatu
 
-&Copy Selection\tCtrl-C
-Aukeratua kopiatu\tCtrl-C
+&Copy Selection\tCtrl+C
+Aukeratua kopiatu\tCtrl+C
 
 &Don't ask me again
 Ez berriz galdetu
@@ -82,8 +82,8 @@ Ez, Eskerrik Asko
 &Odd pages only
 &Orri bikoitiak soilik
 
-&Open\tCtrl-O
-Ireki\tCtrl-O
+&Open\tCtrl+O
+Ireki\tCtrl+O
 
 &Options...
 Aukerak...
@@ -97,8 +97,8 @@ Aurreko orria\t<-
 &Print...
 &Inprimatu...
 
-&Print...\tCtrl-P
-&Inprimatu\tCtrl-P
+&Print...\tCtrl+P
+&Inprimatu\tCtrl+P
 
 &Print... (denied)
 Imprimatu... (ezeztua)
@@ -112,8 +112,8 @@ Aldaketak hauek gogoratu dokumentu guztietarako
 &Save As...
 &... bezala gorde
 
-&Save As...\tCtrl-S
-... bezala &Gorde\tCtrl-S
+&Save As...\tCtrl+S
+... bezala &Gorde\tCtrl+S
 
 &Settings
 Aldaketak
@@ -238,8 +238,8 @@ Orriaren render-a ezin izan da osatu
 Created:
 Sortua:
 
-Custom &Zoom...\tCtrl-Y
-Zooma Aldatu...\tCtrl-Y
+Custom &Zoom...\tCtrl+Y
+Zooma Aldatu...\tCtrl+Y
 
 Default &Layout:
 Berezko &Egitura:
@@ -262,8 +262,8 @@ Dokumentuaren Propietateak
 Download
 Deskargatu
 
-E&xit\tCtrl-Q
-&Irten\tCtrl-Q
+E&xit\tCtrl+Q
+&Irten\tCtrl+Q
 
 Enter password
 Pasahitza sartu
@@ -280,8 +280,8 @@ Error loading %s
 F&orward\tAlt+Right Arrow
 A&urrera\tAlt+Gezia eskubiruntz
 
-F&ullscreen\tCtrl-Shift-L
-Pantaila osoan\tCtrl-Shift-L
+F&ullscreen\tCtrl+Shift+L
+Pantaila osoan\tCtrl+Shift+L
 
 Facing
 Bi aldetatik
@@ -295,8 +295,8 @@ Dokumentuaren neurria:
 File:
 Dokumentua:
 
-Fin&d...\tCtrl-F
-Bilatu...\tCtrl-F
+Fin&d...\tCtrl+F
+Bilatu...\tCtrl+F
 
 Find
 Bilatu
@@ -310,14 +310,14 @@ Aurrekoa bilatu
 Find:
 Bilatu:
 
-Fit &Content\tCtrl-3
-Edukia &Egokitu\tCtrl-3
+Fit &Content\tCtrl+3
+Edukia &Egokitu\tCtrl+3
 
-Fit &Page\tCtrl-0
-Orriaren neurria egokitu\tCtrl-O
+Fit &Page\tCtrl+0
+Orriaren neurria egokitu\tCtrl+O
 
-Fit &Width\tCtrl-2
-Orriaren zabalera egokitu\tCtrl-2
+Fit &Width\tCtrl+2
+Orriaren zabalera egokitu\tCtrl+2
 
 Fit Content
 Edukia Egokitu
@@ -415,8 +415,8 @@ PDF-XChange-ekin ireki
 P&roperties
 P&ropietateak
 
-P&roperties\tCtrl-D
-Propietateak\tCtrl-D
+P&roperties\tCtrl+D
+Propietateak\tCtrl+D
 
 PDF Document
 PDF Dokumentua
@@ -430,8 +430,8 @@ PDF Bertzioa:
 PDF documents
 PDF dokumentuak
 
-Pa&ge...\tCtrl-G
-...garren orria\tCtrl-G
+Pa&ge...\tCtrl+G
+...garren orria\tCtrl+G
 
 Page Size:
 Orri Tamaina:
@@ -448,8 +448,8 @@ Orria
 Please wait - rendering...
 Itxaron mesedez - renderizatzen oraindik
 
-Pr&esentation\tCtrl-L
-Aurk&ezpena\tCtrl-L
+Pr&esentation\tCtrl+L
+Aurk&ezpena\tCtrl+L
 
 Previous Page
 Aurreko orria
@@ -472,14 +472,14 @@ Arazoak inprimatze lanetan
 Remember &opened files
 Irekitako &orriak gogoratu
 
-Rotate &Left\tCtrl-Shift--
-Ezkerrerantz biratu\tCtrl-Shift--
+Rotate &Left\tCtrl+Shift+-
+Ezkerrerantz biratu\tCtrl+Shift+-
 
-Rotate &Right\tCtrl-Shift-+
-Eskubirantz biratu\tCtrl-Shift-+
+Rotate &Right\tCtrl+Shift++
+Eskubirantz biratu\tCtrl+Shift++
 
-Save S&hortcut...\tCtrl-Shift-S
-&Bide laburra gorde... \tCtrl-Shift-S
+Save S&hortcut...\tCtrl+Shift+S
+&Bide laburra gorde... \tCtrl+Shift+S
 
 Searching %d of %d...
 %d-tik %d Bilatzen...
@@ -487,8 +487,8 @@ Searching %d of %d...
 Select &All
 Guztia &Aukeratu
 
-Select &All\tCtrl-A
-Guztia &Aukeratu\tCtrl-A
+Select &All\tCtrl+A
+Guztia &Aukeratu\tCtrl+A
 
 Select content with Ctrl+left mouse button
 Edukia Ctrl+saguaren ezker botoiarekin aukeratu
@@ -587,12 +587,12 @@ printing document
 dokumentua imprimatzen
 
 # Untranslated:
-#&Book View\tCtrl-8
-#&Facing\tCtrl-7
+#&Book View\tCtrl+8
+#&Facing\tCtrl+7
 #&Open Document
 #&Pin Document
 #&Remove Document
-#&Single Page\tCtrl-6
+#&Single Page\tCtrl+6
 #(page %d)
 #Add Favorite
 #Add page %d to favorites

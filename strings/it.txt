@@ -21,7 +21,7 @@ Contributor: Roberto Boriotti
 &About
 &Informazioni su...
 
-&Actual Size\tCtrl-1
+&Actual Size\tCtrl+1
 Dimensioni re&ali\t<Ctrl>+1
 
 &All selected pages
@@ -30,16 +30,16 @@ Tutte le p&agine selezionate
 &Back\tAlt+Left Arrow
 &Indietro\t<Alt>+<Freccia sinistra>
 
-&Book View\tCtrl-8
+&Book View\tCtrl+8
 Vista &libro\t<Ctrl>+8
 
-&Close\tCtrl-W
-&Chiudi\tCtrl-W
+&Close\tCtrl+W
+&Chiudi\tCtrl+W
 
 &Copy Selection
 &Copia selezione
 
-&Copy Selection\tCtrl-C
+&Copy Selection\tCtrl+C
 &Copia selezione\t<Ctrl>+C
 
 &Don't ask me again
@@ -48,7 +48,7 @@ Non chie&dermelo più
 &Even pages only
 Solo pagin&e pari
 
-&Facing\tCtrl-7
+&Facing\tCtrl+7
 Pagine &affiancate\t<Ctrl>+7
 
 &File
@@ -96,8 +96,8 @@ Pagi&na successiva\t<Freccia destra>
 &Odd pages only
 S&olo pagine dispari
 
-&Open\tCtrl-O
-&Apri\tCtrl-O
+&Open\tCtrl+O
+&Apri\tCtrl+O
 
 &Open Document
 &Apri documento
@@ -117,8 +117,8 @@ S&olo pagine dispari
 &Print...
 &Stampa
 
-&Print...\tCtrl-P
-Stam&pa\tCtrl-P
+&Print...\tCtrl+P
+Stam&pa\tCtrl+P
 
 &Print... (denied)
 Stam&pa... (rifiutato)
@@ -135,7 +135,7 @@ Stam&pa... (rifiutato)
 &Save As...
 &Salva come...
 
-&Save As...\tCtrl-S
+&Save As...\tCtrl+S
 &Salva con nome...\t<Ctrl>+S
 
 &Settings
@@ -144,7 +144,7 @@ Impo&stazioni
 &Shrink pages to printable area (if necessary)
 Riduci pagine alla zona &stampabile (se necessario)
 
-&Single Page\tCtrl-6
+&Single Page\tCtrl+6
 Pagina &singola\t<Ctrl>+6
 
 &Skip this version
@@ -288,7 +288,7 @@ Data creazione:
 Current file
 File attuale
 
-Custom &Zoom...\tCtrl-Y
+Custom &Zoom...\tCtrl+Y
 Ingrandimento personali&zzato\t<Ctrl>+Y
 
 Default &Layout:
@@ -312,7 +312,7 @@ Proprietà del documento
 Download
 Scarica
 
-E&xit\tCtrl-Q
+E&xit\tCtrl+Q
 Es&ci\t<Ctrl>+Q
 
 Enter password
@@ -333,7 +333,7 @@ F&avorites
 F&orward\tAlt+Right Arrow
 A&vanti\t<Alt>+<Freccia destra>
 
-F&ullscreen\tCtrl-Shift-L
+F&ullscreen\tCtrl+Shift+L
 S&chermo intero\t<Ctrl>+<Maiusc>+L
 
 Facing
@@ -351,7 +351,7 @@ Dimensione file:
 File:
 File:
 
-Fin&d...\tCtrl-F
+Fin&d...\tCtrl+F
 Tro&va...\t<Ctrl>+F
 
 Find
@@ -366,13 +366,13 @@ Trova precedente
 Find:
 Trova:
 
-Fit &Content\tCtrl-3
+Fit &Content\tCtrl+3
 Adatta a &contenuto\t<Ctrl>+3
 
-Fit &Page\tCtrl-0
+Fit &Page\tCtrl+0
 &Pagina intera\t<Ctrl>+0
 
-Fit &Width\tCtrl-2
+Fit &Width\tCtrl+2
 Adatta a &larghezza pagina\t<Ctrl>+2
 
 Fit Content
@@ -474,7 +474,7 @@ Apri con PDF-XChange
 P&roperties
 Proprietà
 
-P&roperties\tCtrl-D
+P&roperties\tCtrl+D
 P&roprietà\t<Ctrl>+D
 
 PDF Document
@@ -489,7 +489,7 @@ Versione PDF:
 PDF documents
 Documenti PDF
 
-Pa&ge...\tCtrl-G
+Pa&ge...\tCtrl+G
 Pa&gina...\t<Ctrl>+G
 
 Page %d
@@ -513,7 +513,7 @@ Rendering in corso - attendere...
 Postscript documents
 Documenti PostScript
 
-Pr&esentation\tCtrl-L
+Pr&esentation\tCtrl+L
 Pr&esentazione\t<Ctrl>+L
 
 Previous Page
@@ -546,16 +546,16 @@ Rimuovi dai Preferiti
 Remove page %d from favorites
 Rimuovi la pagina %d dai Preferiti
 
-Rotate &Left\tCtrl-Shift--
+Rotate &Left\tCtrl+Shift+-
 Ruota a &sinistra\t<Ctrl> <Maiusc> -
 
-Rotate &Right\tCtrl-Shift-+
+Rotate &Right\tCtrl+Shift++
 Ruota a &destra\t<Ctrl> <Maiusc> +
 
 Save As
 Salva come
 
-Save S&hortcut...\tCtrl-Shift-S
+Save S&hortcut...\tCtrl+Shift+S
 Salva &collegamento\t<Ctrl>+<Maiusc>+S
 
 Searching %d of %d...
@@ -564,7 +564,7 @@ Ricerca: %d di %d...
 Select &All
 Seleziona &tutto
 
-Select &All\tCtrl-A
+Select &All\tCtrl+A
 Selezion&a tutto\t<Ctrl>+A
 
 Select content with Ctrl+left mouse button

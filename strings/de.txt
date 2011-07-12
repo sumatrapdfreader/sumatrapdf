@@ -17,7 +17,7 @@ Contributor: Michael (quelbs@gmail.com)
 &About
 &Über SumatraPDF
 
-&Actual Size\tCtrl-1
+&Actual Size\tCtrl+1
 &Tatsächliche Größe\tStrg+1
 
 &All selected pages
@@ -26,16 +26,16 @@ Contributor: Michael (quelbs@gmail.com)
 &Back\tAlt+Left Arrow
 &Zurück\tAlt+<-
 
-&Book View\tCtrl-8
+&Book View\tCtrl+8
 &Buchansicht\tStrg+8
 
-&Close\tCtrl-W
+&Close\tCtrl+W
 &Schließen\tStrg+W
 
 &Copy Selection
 Auswahl &kopieren
 
-&Copy Selection\tCtrl-C
+&Copy Selection\tCtrl+C
 Auswahl &kopieren\tStrg+C
 
 &Don't ask me again
@@ -44,7 +44,7 @@ Nicht &wieder fragen.
 &Even pages only
 Nur &gerade Seiten
 
-&Facing\tCtrl-7
+&Facing\tCtrl+7
 &Doppelseite\tStrg+7
 
 &File
@@ -92,7 +92,7 @@ Seiten in Druckbereich &einpassen
 &Odd pages only
 Nur &ungerade Seiten
 
-&Open\tCtrl-O
+&Open\tCtrl+O
 Ö&ffnen…\tStrg+O
 
 &Open Document
@@ -113,7 +113,7 @@ Auf dieser Seite &behalten
 &Print...
 &Drucken…
 
-&Print...\tCtrl-P
+&Print...\tCtrl+P
 &Drucken…\tStrg+P
 
 &Print... (denied)
@@ -131,7 +131,7 @@ Von dieser Seite &entfernen
 &Save As...
 &Speichern unter…
 
-&Save As...\tCtrl-S
+&Save As...\tCtrl+S
 Speichern &unter…\tStrg+S
 
 &Settings
@@ -140,7 +140,7 @@ Speichern &unter…\tStrg+S
 &Shrink pages to printable area (if necessary)
 Seiten auf Druckbereich &verkleinern (falls nötig)
 
-&Single Page\tCtrl-6
+&Single Page\tCtrl+6
 &Einzelne Seite\tStrg+6
 
 &Skip this version
@@ -284,7 +284,7 @@ Erstellt am:
 Current file
 Aktuelle Datei
 
-Custom &Zoom...\tCtrl-Y
+Custom &Zoom...\tCtrl+Y
 &Zoomfaktor…\tStrg+Y
 
 Default &Layout:
@@ -308,7 +308,7 @@ Dokumenteigenschaften
 Download
 Herunterladen
 
-E&xit\tCtrl-Q
+E&xit\tCtrl+Q
 &Beenden\tStrg+Q
 
 Enter password
@@ -329,7 +329,7 @@ F&avorites
 F&orward\tAlt+Right Arrow
 Vor&wärts\tAlt+->
 
-F&ullscreen\tCtrl-Shift-L
+F&ullscreen\tCtrl+Shift+L
 &Vollbild\tStrg+Umschalt+L
 
 Facing
@@ -347,7 +347,7 @@ Dateigröße:
 File:
 Datei:
 
-Fin&d...\tCtrl-F
+Fin&d...\tCtrl+F
 S&uchen…\tStrg+F
 
 Find
@@ -362,13 +362,13 @@ Rückwärts suchen
 Find:
 Suchen:
 
-Fit &Content\tCtrl-3
+Fit &Content\tCtrl+3
 An &Inhalt anpassen\tStrg+3
 
-Fit &Page\tCtrl-0
+Fit &Page\tCtrl+0
 An &Seite anpassen\tStrg+0
 
-Fit &Width\tCtrl-2
+Fit &Width\tCtrl+2
 An &Breite anpassen\tStrg+2
 
 Fit Content
@@ -470,7 +470,7 @@ Mit PDF-XChange öffnen
 P&roperties
 Ei&genschaften
 
-P&roperties\tCtrl-D
+P&roperties\tCtrl+D
 Ei&genschaften\tStrg+D
 
 PDF Document
@@ -485,7 +485,7 @@ PDF Version:
 PDF documents
 PDF-Dokumente
 
-Pa&ge...\tCtrl-G
+Pa&ge...\tCtrl+G
 &Seite…\tStrg+G
 
 Page %d
@@ -509,7 +509,7 @@ Bitte einen Moment Geduld…
 Postscript documents
 Postscript-Dokumente
 
-Pr&esentation\tCtrl-L
+Pr&esentation\tCtrl+L
 &Präsentation\tStrg+L
 
 Previous Page
@@ -542,16 +542,16 @@ Aus Favoriten entfernen
 Remove page %d from favorites
 Seite %d aus Favoriten entfernen
 
-Rotate &Left\tCtrl-Shift--
+Rotate &Left\tCtrl+Shift+-
 Drehung &links\tStrg+Umschalt+-
 
-Rotate &Right\tCtrl-Shift-+
+Rotate &Right\tCtrl+Shift++
 Drehung &rechts\tStrg+Umschalt++
 
 Save As
 Speichern unter…
 
-Save S&hortcut...\tCtrl-Shift-S
+Save S&hortcut...\tCtrl+Shift+S
 &Verknüpfung speichern…\tStrg+Umschalt+S
 
 Searching %d of %d...
@@ -560,7 +560,7 @@ Suche auf Seite %d von %d…
 Select &All
 Alles &markieren
 
-Select &All\tCtrl-A
+Select &All\tCtrl+A
 Alles &markieren\tStrg+A
 
 Select content with Ctrl+left mouse button

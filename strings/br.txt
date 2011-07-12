@@ -14,8 +14,8 @@ Contributor: Paulo R. M. Cereda (cereda AT users DOT sf DOT net)
 &About
 S&obre o SumatraPDF
 
-&Actual Size\tCtrl-1
-&Tamanho real\tCtrl-1
+&Actual Size\tCtrl+1
+&Tamanho real\tCtrl+1
 
 &All selected pages
 Tod&as as páginas selecionadas
@@ -23,17 +23,17 @@ Tod&as as páginas selecionadas
 &Back\tAlt+Left Arrow
 Voltar\tAlt+<-
 
-&Book View\tCtrl-8
-Visualizar como livro\tCtrl-8
+&Book View\tCtrl+8
+Visualizar como livro\tCtrl+8
 
-&Close\tCtrl-W
-&Fechar\tCtrl-W
+&Close\tCtrl+W
+&Fechar\tCtrl+W
 
 &Copy Selection
 &Copiar Seleção
 
-&Copy Selection\tCtrl-C
-Copiar seleção\tCtrl-C
+&Copy Selection\tCtrl+C
+Copiar seleção\tCtrl+C
 
 &Don't ask me again
 Não perguntar novamente
@@ -41,8 +41,8 @@ Não perguntar novamente
 &Even pages only
 Apenas as páginas par&es
 
-&Facing\tCtrl-7
-Página dupla\tCtrl-7
+&Facing\tCtrl+7
+Página dupla\tCtrl+7
 
 &File
 &Arquivo
@@ -89,8 +89,8 @@ Página seguinte\t->
 &Odd pages only
 Apenas as páginas ímpares
 
-&Open\tCtrl-O
-A&brir\tCtrl-O
+&Open\tCtrl+O
+A&brir\tCtrl+O
 
 &Open Document
 Abrir d&ocumento
@@ -110,8 +110,8 @@ Página anterior\t<-
 &Print...
 Im&primir...
 
-&Print...\tCtrl-P
-&Imprimir\tCtrl-P
+&Print...\tCtrl+P
+&Imprimir\tCtrl+P
 
 &Print... (denied)
 &Imprimir... (negado)
@@ -128,8 +128,8 @@ Lembrar estas preferências para cada documento
 &Save As...
 &Salvar como...
 
-&Save As...\tCtrl-S
-&Salvar como...\tCtrl-S
+&Save As...\tCtrl+S
+&Salvar como...\tCtrl+S
 
 &Settings
 &Preferências
@@ -137,8 +137,8 @@ Lembrar estas preferências para cada documento
 &Shrink pages to printable area (if necessary)
 Reduzir página&s à área de impressão (se necessário)
 
-&Single Page\tCtrl-6
-Página única\tCtrl-6
+&Single Page\tCtrl+6
+Página única\tCtrl+6
 
 &Skip this version
 Ignorar esta versão
@@ -260,8 +260,8 @@ Não foi possível renderizar a página
 Created:
 Criado:
 
-Custom &Zoom...\tCtrl-Y
-&Zoom personalizado...\tCtrl-Y
+Custom &Zoom...\tCtrl+Y
+&Zoom personalizado...\tCtrl+Y
 
 Default &Layout:
 &Visualização Padrão
@@ -284,8 +284,8 @@ Propriedades do Documento
 Download
 Baixar
 
-E&xit\tCtrl-Q
-Sai&r\tCtrl-Q
+E&xit\tCtrl+Q
+Sai&r\tCtrl+Q
 
 Enter password
 Digite a senha
@@ -302,8 +302,8 @@ Erro ao carregar %s
 F&orward\tAlt+Right Arrow
 Avançar\tAlt+->
 
-F&ullscreen\tCtrl-Shift-L
-Tela cheia\tCtrl-Shift-L
+F&ullscreen\tCtrl+Shift+L
+Tela cheia\tCtrl+Shift+L
 
 Facing
 Página dupla
@@ -317,8 +317,8 @@ Tamanho do arquivo:
 File:
 Arquivo:
 
-Fin&d...\tCtrl-F
-Localizar...\tCtrl-F
+Fin&d...\tCtrl+F
+Localizar...\tCtrl+F
 
 Find
 Localizar
@@ -332,14 +332,14 @@ Localizar anterior
 Find:
 Localizar:
 
-Fit &Content\tCtrl-3
-Ajustar ao &conteúdo\tCtrl-3
+Fit &Content\tCtrl+3
+Ajustar ao &conteúdo\tCtrl+3
 
-Fit &Page\tCtrl-0
-&Página inteira\tCtrl-0
+Fit &Page\tCtrl+0
+&Página inteira\tCtrl+0
 
-Fit &Width\tCtrl-2
-Ajustar pela l&argura\tCtrl-2
+Fit &Width\tCtrl+2
+Ajustar pela l&argura\tCtrl+2
 
 Fit Content
 Ajustar ao conteúdo
@@ -440,8 +440,8 @@ Abrir no PDF-XChange
 P&roperties
 P&ropriedades
 
-P&roperties\tCtrl-D
-Propriedades...\tCtrl-D
+P&roperties\tCtrl+D
+Propriedades...\tCtrl+D
 
 PDF Document
 Documento PDF
@@ -455,8 +455,8 @@ Versão do PDF:
 PDF documents
 Documentos PDF
 
-Pa&ge...\tCtrl-G
-Página...\tCtrl-G
+Pa&ge...\tCtrl+G
+Página...\tCtrl+G
 
 Page Size:
 Tamanho da página:
@@ -473,8 +473,8 @@ Página:
 Please wait - rendering...
 Por favor aguarde, renderizando...
 
-Pr&esentation\tCtrl-L
-Apr&esentação\tCtrl-L
+Pr&esentation\tCtrl+L
+Apr&esentação\tCtrl+L
 
 Previous Page
 Página anterior
@@ -497,17 +497,17 @@ Problema de impressão.
 Remember &opened files
 &Lembrar arquivos abertos
 
-Rotate &Left\tCtrl-Shift--
-Girar à esquerda\tCtrl-Shift--
+Rotate &Left\tCtrl+Shift+-
+Girar à esquerda\tCtrl+Shift+-
 
-Rotate &Right\tCtrl-Shift-+
-Girar à direita\tCtrl-Shift-+
+Rotate &Right\tCtrl+Shift++
+Girar à direita\tCtrl+Shift++
 
 Save As
 Salvar como
 
-Save S&hortcut...\tCtrl-Shift-S
-S&alvar atalho...\tCtrl-Shift-S
+Save S&hortcut...\tCtrl+Shift+S
+S&alvar atalho...\tCtrl+Shift+S
 
 Searching %d of %d...
 Localizando %d de %d...
@@ -515,8 +515,8 @@ Localizando %d de %d...
 Select &All
 Selecion&ar tudo
 
-Select &All\tCtrl-A
-Selecion&ar Tudo\tCtrl-A
+Select &All\tCtrl+A
+Selecion&ar Tudo\tCtrl+A
 
 Select content with Ctrl+left mouse button
 Selecionar com Ctrl+Botão esquerdo do mouse

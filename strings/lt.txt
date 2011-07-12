@@ -14,8 +14,8 @@ Contributor: Arnoldas Viburys
 &About
 Apie
 
-&Actual Size\tCtrl-1
-&Originalus\tCtrl-1
+&Actual Size\tCtrl+1
+&Originalus\tCtrl+1
 
 &All selected pages
 &Visi pažymėti puslapiai
@@ -23,10 +23,10 @@ Apie
 &Back\tAlt+Left Arrow
 Atgal
 
-&Close\tCtrl-W
-&Užverti\tCtrl-W
+&Close\tCtrl+W
+&Užverti\tCtrl+W
 
-&Copy Selection\tCtrl-C
+&Copy Selection\tCtrl+C
 &Kopijuoti pažymėtą sritį
 
 &Don't ask me again
@@ -80,8 +80,8 @@ Ačiū, &ne
 &Odd pages only
 &Tik nelyginiai puslapiai
 
-&Open\tCtrl-O
-&Atverti\tCtrl-O
+&Open\tCtrl+O
+&Atverti\tCtrl+O
 
 &Options...
 &Nuostatos
@@ -92,8 +92,8 @@ Ačiū, &ne
 &Previous Page\tLeft Arrow
 &Ankstesnis puslapis\t<-
 
-&Print...\tCtrl-P
-&Spausdinti...\tCtrl-P
+&Print...\tCtrl+P
+&Spausdinti...\tCtrl+P
 
 &Print... (denied)
 &Spausdinti... (neprieinama)
@@ -104,8 +104,8 @@ Ačiū, &ne
 &Remember these settings for each document
 Įsiminti šias &nuostatas kiekvienam dokumentui
 
-&Save As...\tCtrl-S
-Į&rašyti kaip...\tCtrl-S
+&Save As...\tCtrl+S
+Į&rašyti kaip...\tCtrl+S
 
 &Settings
 &Nuostatos
@@ -215,8 +215,8 @@ Nepavyko atvaizduoti puslapio
 Created:
 Sukurta
 
-Custom &Zoom...\tCtrl-Y
-Pasirinkti &mastelį...\tCtrl-Y
+Custom &Zoom...\tCtrl+Y
+Pasirinkti &mastelį...\tCtrl+Y
 
 Default &Layout:
 Numatytasis &išdėstymas:
@@ -236,8 +236,8 @@ Dokumento savybės
 Download
 Atsisiųsti
 
-E&xit\tCtrl-Q
-&Baigti darbą\tCtrl-Q
+E&xit\tCtrl+Q
+&Baigti darbą\tCtrl+Q
 
 Enter password
 Įveskite slaptažodį
@@ -251,8 +251,8 @@ Enter the command-line to invoke when you double-click on the PDF document:
 F&orward\tAlt+Right Arrow
 &Pirmyn\tAlt+Right Arrow
 
-F&ullscreen\tCtrl-Shift-L
-&Visas ekranas\tCtrl-Shift-L
+F&ullscreen\tCtrl+Shift+L
+&Visas ekranas\tCtrl+Shift+L
 
 Facing
 Puslapiavimas
@@ -278,14 +278,14 @@ Rasti ankstesnį
 Find:
 Ieškoti:
 
-Fit &Content\tCtrl-3
-Visas puslapio &turinys\tCtrl-3
+Fit &Content\tCtrl+3
+Visas puslapio &turinys\tCtrl+3
 
-Fit &Page\tCtrl-0
-Visas &puslapis\tCtrl-0
+Fit &Page\tCtrl+0
+Visas &puslapis\tCtrl+0
 
-Fit &Width\tCtrl-2
-Visas puslapio pl&otis\tCtrl-2
+Fit &Width\tCtrl+2
+Visas puslapio pl&otis\tCtrl+2
 
 Fit Content
 Visas puslapio turinys
@@ -359,7 +359,7 @@ Atverti su &Foxit Reader
 Open in PDF-XChange
 Atverti su PDF-XChange
 
-P&roperties\tCtrl-D
+P&roperties\tCtrl+D
 &Savybės
 
 PDF Document
@@ -374,8 +374,8 @@ PDF versija:
 PDF documents
 PDf dokumentai
 
-Pa&ge...\tCtrl-G
-P&uslapis...\tCtrl-G
+Pa&ge...\tCtrl+G
+P&uslapis...\tCtrl+G
 
 Page Size:
 Puslapio dydis:
@@ -404,11 +404,11 @@ Spausdinimo problema.
 Remember &opened files
 Įsiminti &atvertus failus
 
-Rotate &Left\tCtrl-Shift--
-Pasukti į &kairę\tCtrl-Shift--
+Rotate &Left\tCtrl+Shift+-
+Pasukti į &kairę\tCtrl+Shift+-
 
-Rotate &Right\tCtrl-Shift-+
-Pasukti į &dešinę\tCtrl-Shift-+
+Rotate &Right\tCtrl+Shift++
+Pasukti į &dešinę\tCtrl+Shift++
 
 Save As
 Įrašyti kaip
@@ -501,15 +501,15 @@ printing document
 spausdinamas dokumentas
 
 # Untranslated:
-#&Book View\tCtrl-8
+#&Book View\tCtrl+8
 #&Copy Selection
-#&Facing\tCtrl-7
+#&Facing\tCtrl+7
 #&Open Document
 #&Pin Document
 #&Print...
 #&Remove Document
 #&Save As...
-#&Single Page\tCtrl-6
+#&Single Page\tCtrl+6
 #(page %d)
 #Add Favorite
 #Add page %d to favorites
@@ -527,7 +527,7 @@ spausdinamas dokumentas
 #Error loading %s
 #F&avorites
 #Favorites
-#Fin&d...\tCtrl-F
+#Fin&d...\tCtrl+F
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
 #Found text at page %d (again)
@@ -539,16 +539,16 @@ spausdinamas dokumentas
 #P&roperties
 #Page %d
 #Postscript documents
-#Pr&esentation\tCtrl-L
+#Pr&esentation\tCtrl+L
 #Print
 #Printer with given name doesn't exist
 #Printing is still in progress. Abort and start over?
 #Printing page %d of %d...
 #Remove from favorites
 #Remove page %d from favorites
-#Save S&hortcut...\tCtrl-Shift-S
+#Save S&hortcut...\tCtrl+Shift+S
 #Select &All
-#Select &All\tCtrl-A
+#Select &All\tCtrl+A
 #Show Favorites
 #Show frequently read
 #Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.

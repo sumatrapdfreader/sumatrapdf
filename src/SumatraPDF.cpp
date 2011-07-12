@@ -550,39 +550,39 @@ struct MenuDef {
 };
 
 MenuDef menuDefFile[] = {
-    { _TRN("&Open\tCtrl-O"),                IDM_OPEN ,                  MF_REQ_DISK_ACCESS },
-    { _TRN("&Close\tCtrl-W"),               IDM_CLOSE,                  MF_REQ_DISK_ACCESS },
-    { _TRN("&Save As...\tCtrl-S"),          IDM_SAVEAS,                 MF_REQ_DISK_ACCESS },
-    { _TRN("&Print...\tCtrl-P"),            IDM_PRINT,                  MF_REQ_PRINTER_ACCESS },
+    { _TRN("&Open\tCtrl+O"),                IDM_OPEN ,                  MF_REQ_DISK_ACCESS },
+    { _TRN("&Close\tCtrl+W"),               IDM_CLOSE,                  MF_REQ_DISK_ACCESS },
+    { _TRN("&Save As...\tCtrl+S"),          IDM_SAVEAS,                 MF_REQ_DISK_ACCESS },
+    { _TRN("&Print...\tCtrl+P"),            IDM_PRINT,                  MF_REQ_PRINTER_ACCESS },
     { SEP_ITEM,                             0,                          MF_REQ_DISK_ACCESS },
-    { _TRN("Save S&hortcut...\tCtrl-Shift-S"), IDM_SAVEAS_BOOKMARK,     MF_REQ_DISK_ACCESS },
+    { _TRN("Save S&hortcut...\tCtrl+Shift+S"), IDM_SAVEAS_BOOKMARK,     MF_REQ_DISK_ACCESS },
     { _TRN("Open in &Adobe Reader"),        IDM_VIEW_WITH_ACROBAT,      MF_REQ_DISK_ACCESS },
     { _TRN("Open in &Foxit Reader"),        IDM_VIEW_WITH_FOXIT,        MF_REQ_DISK_ACCESS },
     { _TRN("Open in PDF-XChange"),          IDM_VIEW_WITH_PDF_XCHANGE,  MF_REQ_DISK_ACCESS },
     { _TRN("Send by &E-mail..."),           IDM_SEND_BY_EMAIL,          MF_REQ_DISK_ACCESS },
     { SEP_ITEM,                             0,                          MF_REQ_DISK_ACCESS },
-    { _TRN("P&roperties\tCtrl-D"),          IDM_PROPERTIES,             0 },
+    { _TRN("P&roperties\tCtrl+D"),          IDM_PROPERTIES,             0 },
     { SEP_ITEM,                             0,                          0 },
-    { _TRN("E&xit\tCtrl-Q"),                IDM_EXIT,                   0 }
+    { _TRN("E&xit\tCtrl+Q"),                IDM_EXIT,                   0 }
 };
 
 MenuDef menuDefView[] = {
-    { _TRN("&Single Page\tCtrl-6"),         IDM_VIEW_SINGLE_PAGE,       0  },
-    { _TRN("&Facing\tCtrl-7"),              IDM_VIEW_FACING,            0  },
-    { _TRN("&Book View\tCtrl-8"),           IDM_VIEW_BOOK,              0  },
+    { _TRN("&Single Page\tCtrl+6"),         IDM_VIEW_SINGLE_PAGE,       0  },
+    { _TRN("&Facing\tCtrl+7"),              IDM_VIEW_FACING,            0  },
+    { _TRN("&Book View\tCtrl+8"),           IDM_VIEW_BOOK,              0  },
     { _TRN("Show &pages continuously"),     IDM_VIEW_CONTINUOUS,        0  },
     { SEP_ITEM, 0, 0  },
-    { _TRN("Rotate &Left\tCtrl-Shift--"),   IDM_VIEW_ROTATE_LEFT,       0  },
-    { _TRN("Rotate &Right\tCtrl-Shift-+"),  IDM_VIEW_ROTATE_RIGHT,      0  },
+    { _TRN("Rotate &Left\tCtrl+Shift+-"),   IDM_VIEW_ROTATE_LEFT,       0  },
+    { _TRN("Rotate &Right\tCtrl+Shift++"),  IDM_VIEW_ROTATE_RIGHT,      0  },
     { SEP_ITEM, 0, 0  },
-    { _TRN("Pr&esentation\tCtrl-L"),        IDM_VIEW_PRESENTATION_MODE, 0  },
-    { _TRN("F&ullscreen\tCtrl-Shift-L"),    IDM_VIEW_FULLSCREEN,        0  },
+    { _TRN("Pr&esentation\tCtrl+L"),        IDM_VIEW_PRESENTATION_MODE, 0  },
+    { _TRN("F&ullscreen\tCtrl+Shift+L"),    IDM_VIEW_FULLSCREEN,        0  },
     { SEP_ITEM, 0, 0  },
     { _TRN("Book&marks\tF12"),              IDM_VIEW_BOOKMARKS,         0  },
     { _TRN("Show &Toolbar"),                IDM_VIEW_SHOW_HIDE_TOOLBAR, 0  },
     { SEP_ITEM,                             0,                          MF_REQ_ALLOW_COPY },
-    { _TRN("Select &All\tCtrl-A"),          IDM_SELECT_ALL,             MF_REQ_ALLOW_COPY },
-    { _TRN("&Copy Selection\tCtrl-C"),      IDM_COPY_SELECTION,         MF_REQ_ALLOW_COPY },
+    { _TRN("Select &All\tCtrl+A"),          IDM_SELECT_ALL,             MF_REQ_ALLOW_COPY },
+    { _TRN("&Copy Selection\tCtrl+C"),      IDM_COPY_SELECTION,         MF_REQ_ALLOW_COPY },
 };
 
 MenuDef menuDefGoTo[] = {
@@ -590,20 +590,20 @@ MenuDef menuDefGoTo[] = {
     { _TRN("&Previous Page\tLeft Arrow"),   IDM_GOTO_PREV_PAGE,         0  },
     { _TRN("&First Page\tHome"),            IDM_GOTO_FIRST_PAGE,        0  },
     { _TRN("&Last Page\tEnd"),              IDM_GOTO_LAST_PAGE,         0  },
-    { _TRN("Pa&ge...\tCtrl-G"),             IDM_GOTO_PAGE,              0  },
+    { _TRN("Pa&ge...\tCtrl+G"),             IDM_GOTO_PAGE,              0  },
     { SEP_ITEM,                             0,                          0  },
     { _TRN("&Back\tAlt+Left Arrow"),        IDM_GOTO_NAV_BACK,          0  },
     { _TRN("F&orward\tAlt+Right Arrow"),    IDM_GOTO_NAV_FORWARD,       0  },
     { SEP_ITEM,                             0,                          0  },
-    { _TRN("Fin&d...\tCtrl-F"),             IDM_FIND_FIRST,             0  },
+    { _TRN("Fin&d...\tCtrl+F"),             IDM_FIND_FIRST,             0  },
 };
 
 MenuDef menuDefZoom[] = {
-    { _TRN("Fit &Page\tCtrl-0"),            IDM_ZOOM_FIT_PAGE,          0  },
-    { _TRN("&Actual Size\tCtrl-1"),         IDM_ZOOM_ACTUAL_SIZE,       0  },
-    { _TRN("Fit &Width\tCtrl-2"),           IDM_ZOOM_FIT_WIDTH,         0  },
-    { _TRN("Fit &Content\tCtrl-3"),         IDM_ZOOM_FIT_CONTENT,       0  },
-    { _TRN("Custom &Zoom...\tCtrl-Y"),      IDM_ZOOM_CUSTOM,            0  },
+    { _TRN("Fit &Page\tCtrl+0"),            IDM_ZOOM_FIT_PAGE,          0  },
+    { _TRN("&Actual Size\tCtrl+1"),         IDM_ZOOM_ACTUAL_SIZE,       0  },
+    { _TRN("Fit &Width\tCtrl+2"),           IDM_ZOOM_FIT_WIDTH,         0  },
+    { _TRN("Fit &Content\tCtrl+3"),         IDM_ZOOM_FIT_CONTENT,       0  },
+    { _TRN("Custom &Zoom...\tCtrl+Y"),      IDM_ZOOM_CUSTOM,            0  },
     { SEP_ITEM },
     { "6400%",                              IDM_ZOOM_6400,              MF_NO_TRANSLATE  },
     { "3200%",                              IDM_ZOOM_3200,              MF_NO_TRANSLATE  },

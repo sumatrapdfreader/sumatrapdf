@@ -13,8 +13,8 @@ Contributor: Joan Montané
 &About
 &Quant a...
 
-&Actual Size\tCtrl-1
-Mida &real\tCtrl-1
+&Actual Size\tCtrl+1
+Mida &real\tCtrl+1
 
 &All selected pages
 &Totes les pàgines seleccionades
@@ -22,11 +22,11 @@ Mida &real\tCtrl-1
 &Back\tAlt+Left Arrow
 Arrere\tAlt+Left Arrow
 
-&Close\tCtrl-W
-&Tanca\tCtrl-W
+&Close\tCtrl+W
+&Tanca\tCtrl+W
 
-&Copy Selection\tCtrl-C
-&Copia la selecció\tCtrl-C
+&Copy Selection\tCtrl+C
+&Copia la selecció\tCtrl+C
 
 &Don't ask me again
 &No ho tornes a preguntar
@@ -79,8 +79,8 @@ Pàgina &següent\t->
 &Odd pages only
 Només les pàgines senars
 
-&Open\tCtrl-O
-&Obri\tCtrl-O
+&Open\tCtrl+O
+&Obri\tCtrl+O
 
 &Options...
 &Opcions...
@@ -91,8 +91,8 @@ Només les pàgines senars
 &Previous Page\tLeft Arrow
 Pàgina &anterior\t<-
 
-&Print...\tCtrl-P
-&Imprimeix...\tCtrl-P
+&Print...\tCtrl+P
+&Imprimeix...\tCtrl+P
 
 &Print... (denied)
 &Imprimeix... (denegat)
@@ -103,8 +103,8 @@ Pàgina &anterior\t<-
 &Remember these settings for each document
 Conserva estes &preferències per a cada document
 
-&Save As...\tCtrl-S
-Anomena i al&ça...\tCtrl-S
+&Save As...\tCtrl+S
+Anomena i al&ça...\tCtrl+S
 
 &Settings
 &Preferències
@@ -214,8 +214,8 @@ No es pot representar la pàgina
 Created:
 Creat:
 
-Custom &Zoom...\tCtrl-Y
-Zoom per defe&cte...\tCtrl-Y
+Custom &Zoom...\tCtrl+Y
+Zoom per defe&cte...\tCtrl+Y
 
 Default &Layout:
 &Vista per defecte:
@@ -235,8 +235,8 @@ Propietats del document
 Download
 Baixa
 
-E&xit\tCtrl-Q
-I&x\tCtrl-Q
+E&xit\tCtrl+Q
+I&x\tCtrl+Q
 
 Enter password
 Introduiu la contrasenya
@@ -250,8 +250,8 @@ Introduïu la línia d'ordes que voleu executar en fer doble clic al document PD
 F&orward\tAlt+Right Arrow
 Avan&t\tAlt+Right Arrow
 
-F&ullscreen\tCtrl-Shift-L
-Pantalla &completa\tCtrl-Shift-L
+F&ullscreen\tCtrl+Shift+L
+Pantalla &completa\tCtrl+Shift+L
 
 Facing
 Pàgina doble
@@ -265,8 +265,8 @@ Mida del fitxer:
 File:
 Fitxer:
 
-Fin&d...\tCtrl-F
-&Cerca...\tCtrl-F
+Fin&d...\tCtrl+F
+&Cerca...\tCtrl+F
 
 Find
 Cerca
@@ -280,14 +280,14 @@ Cerca anterior
 Find:
 Cerca:
 
-Fit &Content\tCtrl-3
-Ajusta el &contingut\tCtrl-3
+Fit &Content\tCtrl+3
+Ajusta el &contingut\tCtrl+3
 
-Fit &Page\tCtrl-0
-Ajusta a la &pàgina\tCtrl-0
+Fit &Page\tCtrl+0
+Ajusta a la &pàgina\tCtrl+0
 
-Fit &Width\tCtrl-2
-Ajusta a l'am&plada\tCtrl-2
+Fit &Width\tCtrl+2
+Ajusta a l'am&plada\tCtrl+2
 
 Fit Content
 Ajusta el contingut
@@ -367,8 +367,8 @@ Obri amb el &Foxit Reader
 Open in PDF-XChange
 Obri amb el PDF-XChange
 
-P&roperties\tCtrl-D
-P&ropietats...\tCtrl-D
+P&roperties\tCtrl+D
+P&ropietats...\tCtrl+D
 
 PDF Document
 Document PDF
@@ -382,8 +382,8 @@ Versió de PDF:
 PDF documents
 Documents PDF
 
-Pa&ge...\tCtrl-G
-Pà&gina...\tCtrl-G
+Pa&ge...\tCtrl+G
+Pà&gina...\tCtrl+G
 
 Page Size:
 Mida de la pàgina:
@@ -400,8 +400,8 @@ Pàgina:
 Please wait - rendering...
 S'està renderitzant...
 
-Pr&esentation\tCtrl-L
-Pr&esentació\tCtrl-L
+Pr&esentation\tCtrl+L
+Pr&esentació\tCtrl+L
 
 Previous Page
 Pàgina anterior
@@ -415,11 +415,11 @@ S'ha produït un problema en la impressió.
 Remember &opened files
 Recorda els fitxers &oberts
 
-Rotate &Left\tCtrl-Shift--
-Gira a l'esquerra\tCtrl-Shift--
+Rotate &Left\tCtrl+Shift+-
+Gira a l'esquerra\tCtrl+Shift+-
 
-Rotate &Right\tCtrl-Shift-+
-Gira a la dreta\tCtrl-Shift-+
+Rotate &Right\tCtrl+Shift++
+Gira a la dreta\tCtrl+Shift++
 
 Save As
 Anomena i alça
@@ -427,8 +427,8 @@ Anomena i alça
 Searching %d of %d...
 S'està cercant %d de %d...
 
-Select &All\tCtrl-A
-Seleccciona-ho &tot\tCtrl-A
+Select &All\tCtrl+A
+Seleccciona-ho &tot\tCtrl+A
 
 Select content with Ctrl+left mouse button
 Seleccioneu contigut amb la combinació Ctrl+botó secundari del ratolí
@@ -521,15 +521,15 @@ printing document
 s'està imprimint el document
 
 # Untranslated:
-#&Book View\tCtrl-8
+#&Book View\tCtrl+8
 #&Copy Selection
-#&Facing\tCtrl-7
+#&Facing\tCtrl+7
 #&Open Document
 #&Pin Document
 #&Print...
 #&Remove Document
 #&Save As...
-#&Single Page\tCtrl-6
+#&Single Page\tCtrl+6
 #(page %d)
 #Add Favorite
 #Add page %d to favorites
@@ -562,7 +562,7 @@ s'està imprimint el document
 #Printing page %d of %d...
 #Remove from favorites
 #Remove page %d from favorites
-#Save S&hortcut...\tCtrl-Shift-S
+#Save S&hortcut...\tCtrl+Shift+S
 #Select &All
 #Show Favorites
 #Show frequently read

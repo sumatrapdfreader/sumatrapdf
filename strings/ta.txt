@@ -14,16 +14,16 @@ Contributor: N. Ejaz Ahamed (ejaz_nasar@yahoo.co.in)
 &About
 பற்றி
 
-&Actual Size\tCtrl-1
-மெய் அளவு\tCtrl-1
+&Actual Size\tCtrl+1
+மெய் அளவு\tCtrl+1
 
 &Back\tAlt+Left Arrow
 பின்\tAlt+Left Arrow
 
-&Close\tCtrl-W
-மூடு\tCtrl-W
+&Close\tCtrl+W
+மூடு\tCtrl+W
 
-&Copy Selection\tCtrl-C
+&Copy Selection\tCtrl+C
 தேர்வுசெய்ததை நகல் செய்
 
 &Don't ask me again
@@ -68,8 +68,8 @@ Contributor: N. Ejaz Ahamed (ejaz_nasar@yahoo.co.in)
 &No, thanks
 இல்லை, நன்றி
 
-&Open\tCtrl-O
-திற\tCtrl-O
+&Open\tCtrl+O
+திற\tCtrl+O
 
 &Options...
 விருப்ப பேரம்
@@ -80,8 +80,8 @@ Contributor: N. Ejaz Ahamed (ejaz_nasar@yahoo.co.in)
 &Previous Page\tLeft Arrow
 முந்தைய பக்கம்\tLeft Arrow
 
-&Print...\tCtrl-P
-அச்சிடு\tCtrl-P
+&Print...\tCtrl+P
+அச்சிடு\tCtrl+P
 
 &Print... (denied)
 அகசிடல்... (நிராகரிக்கப்பட்டது)
@@ -89,8 +89,8 @@ Contributor: N. Ejaz Ahamed (ejaz_nasar@yahoo.co.in)
 &Remember these settings for each document
 அமைப்புகளை ஞாபகம் கொள்
 
-&Save As...\tCtrl-S
-எனச் சேமி\tCtrl-S
+&Save As...\tCtrl+S
+எனச் சேமி\tCtrl+S
 
 &Settings
 அமைப்புகள்
@@ -179,8 +179,8 @@ Couldn't render the page
 Created:
 உருவாக்கப்பட்டது
 
-Custom &Zoom...\tCtrl-Y
-விருப்பிற்கேற்ற பெருக்கம்\tCtrl-Y
+Custom &Zoom...\tCtrl+Y
+விருப்பிற்கேற்ற பெருக்கம்\tCtrl+Y
 
 Default &Layout:
 கோட நிலை வடிவமைப்பு
@@ -200,8 +200,8 @@ Document Properties
 Download
 பதிவிற்க்கம்
 
-E&xit\tCtrl-Q
-வெளியேறு\tCtrl-Q
+E&xit\tCtrl+Q
+வெளியேறு\tCtrl+Q
 
 Enter password
 கடவுச்சொல்லை வழங்கு
@@ -212,7 +212,7 @@ Enter password for %s
 F&orward\tAlt+Right Arrow
 முன்னோகி\tAlt+Right Arrow
 
-F&ullscreen\tCtrl-Shift-L
+F&ullscreen\tCtrl+Shift+L
 முழுத்திரை
 
 Facing
@@ -227,8 +227,8 @@ File Size:
 File:
 கோப்பு
 
-Fin&d...\tCtrl-F
-தேடு...\tCtrl-F
+Fin&d...\tCtrl+F
+தேடு...\tCtrl+F
 
 Find
 தேடு
@@ -242,11 +242,11 @@ Find Previous
 Find:
 தேடு:
 
-Fit &Page\tCtrl-0
-பக்கம் பொருந்தவை\tCtrl-0
+Fit &Page\tCtrl+0
+பக்கம் பொருந்தவை\tCtrl+0
 
-Fit &Width\tCtrl-2
-அகலம் பொருந்தவை\tCtrl-2
+Fit &Width\tCtrl+2
+அகலம் பொருந்தவை\tCtrl+2
 
 Fit Page
 பக்கம் பொருந்தவை
@@ -317,8 +317,8 @@ Open in &Foxit Reader
 Open in PDF-XChange
 PDF-XChange இல் திற
 
-P&roperties\tCtrl-D
-பண்புகள்...\tCtrl-D
+P&roperties\tCtrl+D
+பண்புகள்...\tCtrl+D
 
 PDF Document
 PDF கோப்பு
@@ -332,8 +332,8 @@ PDF பதிப்பு
 PDF documents
 PDF கோப்புகள்
 
-Pa&ge...\tCtrl-G
-பக்கம்...\tCtrl-G
+Pa&ge...\tCtrl+G
+பக்கம்...\tCtrl+G
 
 Page Size:
 பக்க அளவு
@@ -356,11 +356,11 @@ Printing problem.
 Remember &opened files
 திறந்த &கோப்புகளை நினைவுகொள்
 
-Rotate &Left\tCtrl-Shift--
-இடதுப்புறம் சுழற்று\tCtrl-Shift--
+Rotate &Left\tCtrl+Shift+-
+இடதுப்புறம் சுழற்று\tCtrl+Shift+-
 
-Rotate &Right\tCtrl-Shift-+
-வலப்புறம் சுழற்று\tCtrl-Shift-+
+Rotate &Right\tCtrl+Shift++
+வலப்புறம் சுழற்று\tCtrl+Shift++
 
 Save As
 எனச் சேமி
@@ -448,10 +448,10 @@ printing document
 
 # Untranslated:
 #&All selected pages
-#&Book View\tCtrl-8
+#&Book View\tCtrl+8
 #&Copy Selection
 #&Even pages only
-#&Facing\tCtrl-7
+#&Facing\tCtrl+7
 #&Fit pages to printable area
 #&Odd pages only
 #&Open Document
@@ -461,7 +461,7 @@ printing document
 #&Remove Document
 #&Save As...
 #&Shrink pages to printable area (if necessary)
-#&Single Page\tCtrl-6
+#&Single Page\tCtrl+6
 #&Use original page sizes
 #(page %d)
 #Add Favorite
@@ -486,7 +486,7 @@ printing document
 #Error loading %s
 #F&avorites
 #Favorites
-#Fit &Content\tCtrl-3
+#Fit &Content\tCtrl+3
 #Fit Content
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
@@ -500,7 +500,7 @@ printing document
 #Page %d
 #Page scaling
 #Postscript documents
-#Pr&esentation\tCtrl-L
+#Pr&esentation\tCtrl+L
 #Print
 #Print range
 #Printer with given name doesn't exist
@@ -508,9 +508,9 @@ printing document
 #Printing page %d of %d...
 #Remove from favorites
 #Remove page %d from favorites
-#Save S&hortcut...\tCtrl-Shift-S
+#Save S&hortcut...\tCtrl+Shift+S
 #Select &All
-#Select &All\tCtrl-A
+#Select &All\tCtrl+A
 #Set inverse search command-line
 #Show Favorites
 #Show frequently read

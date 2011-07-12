@@ -14,8 +14,8 @@ Contributor: Andriy Ilechko
 &About
 П&ро програму...
 
-&Actual Size\tCtrl-1
-Справжній розмір\tCtrl-1
+&Actual Size\tCtrl+1
+Справжній розмір\tCtrl+1
 
 &All selected pages
 Обрано всі сторінки
@@ -23,14 +23,14 @@ Contributor: Andriy Ilechko
 &Back\tAlt+Left Arrow
 Назад\tAlt+Ліва стрілка
 
-&Close\tCtrl-W
-&Закрити\tCtrl-W
+&Close\tCtrl+W
+&Закрити\tCtrl+W
 
 &Copy Selection
 Скопіювати вибране
 
-&Copy Selection\tCtrl-C
-Скопіювати вибране\tCtrl-C
+&Copy Selection\tCtrl+C
+Скопіювати вибране\tCtrl+C
 
 &Don't ask me again
 Не питати знову
@@ -83,8 +83,8 @@ Contributor: Andriy Ilechko
 &Odd pages only
 Тільки непарні сторінки
 
-&Open\tCtrl-O
-Відкрити\tCtrl-O
+&Open\tCtrl+O
+Відкрити\tCtrl+O
 
 &Options...
 Опції...
@@ -98,8 +98,8 @@ Contributor: Andriy Ilechko
 &Print...
 Друк...
 
-&Print...\tCtrl-P
-&Друкувати\tCtrl-P
+&Print...\tCtrl+P
+&Друкувати\tCtrl+P
 
 &Print... (denied)
 Друк... (відхилено)
@@ -113,8 +113,8 @@ Contributor: Andriy Ilechko
 &Save As...
 Зберегти як...
 
-&Save As...\tCtrl-S
-Зб&ерегти як...\tCtrl-S
+&Save As...\tCtrl+S
+Зб&ерегти як...\tCtrl+S
 
 &Settings
 Налаштування
@@ -242,8 +242,8 @@ Couldn't render the page
 Created:
 Створено:
 
-Custom &Zoom...\tCtrl-Y
-Вказати масштаб...\tCtrl-Y
+Custom &Zoom...\tCtrl+Y
+Вказати масштаб...\tCtrl+Y
 
 Default &Layout:
 Розташування за замовчуванням:
@@ -263,8 +263,8 @@ Document Properties
 Download
 Завантажити
 
-E&xit\tCtrl-Q
-&Вийти\tCtrl-Q
+E&xit\tCtrl+Q
+&Вийти\tCtrl+Q
 
 Enter password
 Введіть пароль
@@ -281,8 +281,8 @@ Error loading %s
 F&orward\tAlt+Right Arrow
 Вперед\tAlt+Права стрілка
 
-F&ullscreen\tCtrl-Shift-L
-На цілий екран\tCtrl-Shift-L
+F&ullscreen\tCtrl+Shift+L
+На цілий екран\tCtrl+Shift+L
 
 Facing
 Дві сторінки
@@ -296,8 +296,8 @@ File Size:
 File:
 Файл:
 
-Fin&d...\tCtrl-F
-Знайти...\tCtrl-F
+Fin&d...\tCtrl+F
+Знайти...\tCtrl+F
 
 Find
 Знайти
@@ -311,14 +311,14 @@ Find Previous
 Find:
 Знайти:
 
-Fit &Content\tCtrl-3
-Розмістити вміст \tCtrl-3
+Fit &Content\tCtrl+3
+Розмістити вміст \tCtrl+3
 
-Fit &Page\tCtrl-0
-Припа&сувати сторінку\tCtrl-0
+Fit &Page\tCtrl+0
+Припа&сувати сторінку\tCtrl+0
 
-Fit &Width\tCtrl-2
-Припасувати до &ширини\tCtrl-2
+Fit &Width\tCtrl+2
+Припасувати до &ширини\tCtrl+2
 
 Fit Content
 Розмістити вміст
@@ -410,8 +410,8 @@ Open in PDF-XChange
 P&roperties
 Властивості
 
-P&roperties\tCtrl-D
-Властивості\tCtrl-D
+P&roperties\tCtrl+D
+Властивості\tCtrl+D
 
 PDF Document
 PDF документ
@@ -425,8 +425,8 @@ PDF Version:
 PDF documents
 Документи PDF
 
-Pa&ge...\tCtrl-G
-До сторінки...\tCtrl-G
+Pa&ge...\tCtrl+G
+До сторінки...\tCtrl+G
 
 Page Size:
 Розмір сторінки:
@@ -443,8 +443,8 @@ Page:
 Please wait - rendering...
 Зачекайте - генерується...
 
-Pr&esentation\tCtrl-L
-Презентація\tCtrl-L
+Pr&esentation\tCtrl+L
+Презентація\tCtrl+L
 
 Previous Page
 Попередня сторінка
@@ -458,17 +458,17 @@ Printing problem.
 Remember &opened files
 Запам'ятати відкриті файли
 
-Rotate &Left\tCtrl-Shift--
-Повернути ліворуч\tCtrl-Shift--
+Rotate &Left\tCtrl+Shift+-
+Повернути ліворуч\tCtrl+Shift+-
 
-Rotate &Right\tCtrl-Shift-+
-Повернути праворуч\tCtrl-Shift-+
+Rotate &Right\tCtrl+Shift++
+Повернути праворуч\tCtrl+Shift++
 
 Save As
 Зберегти як
 
-Save S&hortcut...\tCtrl-Shift-S
-Зберегти ярлик...\tCtrl-Shift-S
+Save S&hortcut...\tCtrl+Shift+S
+Зберегти ярлик...\tCtrl+Shift+S
 
 Searching %d of %d...
 Пошук %d з %d...
@@ -476,8 +476,8 @@ Searching %d of %d...
 Select &All
 Вибрати всі
 
-Select &All\tCtrl-A
-Вибрати всі\tCtrl-A
+Select &All\tCtrl+A
+Вибрати всі\tCtrl+A
 
 Select content with Ctrl+left mouse button
 Виберіть вміст з допомогою Ctrl+ліва кнопка миші
@@ -573,12 +573,12 @@ printing document
 друк документа
 
 # Untranslated:
-#&Book View\tCtrl-8
-#&Facing\tCtrl-7
+#&Book View\tCtrl+8
+#&Facing\tCtrl+7
 #&Open Document
 #&Pin Document
 #&Remove Document
-#&Single Page\tCtrl-6
+#&Single Page\tCtrl+6
 #(page %d)
 #Add Favorite
 #Add page %d to favorites

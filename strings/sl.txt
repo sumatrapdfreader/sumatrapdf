@@ -15,8 +15,8 @@ Contributor: Damjan Gerl
 &About
 &O programu …
 
-&Actual Size\tCtrl-1
-&Dejanska velikost\tCtrl-1
+&Actual Size\tCtrl+1
+&Dejanska velikost\tCtrl+1
 
 &All selected pages
 &Vse izbrane strani
@@ -24,17 +24,17 @@ Contributor: Damjan Gerl
 &Back\tAlt+Left Arrow
 &Nazaj\tAlt+Leva puščica
 
-&Book View\tCtrl-8
-Knjižni pogled\tCtrl-8
+&Book View\tCtrl+8
+Knjižni pogled\tCtrl+8
 
-&Close\tCtrl-W
-&Zapri\tCtrl-W
+&Close\tCtrl+W
+&Zapri\tCtrl+W
 
 &Copy Selection
 Kopiraj izbor
 
-&Copy Selection\tCtrl-C
-Kopiraj izbor\tCtrl-C
+&Copy Selection\tCtrl+C
+Kopiraj izbor\tCtrl+C
 
 &Don't ask me again
 &Ne sprašuj več
@@ -42,8 +42,8 @@ Kopiraj izbor\tCtrl-C
 &Even pages only
 Samo &parne strani
 
-&Facing\tCtrl-7
-Dvostransko\tCtrl-7
+&Facing\tCtrl+7
+Dvostransko\tCtrl+7
 
 &File
 &Datoteka
@@ -90,8 +90,8 @@ Naslednja stran\tPuščica desno
 &Odd pages only
 Samo &lihe strani
 
-&Open\tCtrl-O
-&Odpri\tCtrl-O
+&Open\tCtrl+O
+&Odpri\tCtrl+O
 
 &Open Document
 &Odpri dokument
@@ -111,8 +111,8 @@ Predhodna stran\tPuščica levo
 &Print...
 &Natisni …
 
-&Print...\tCtrl-P
-&Natisni …\tCtrl-P
+&Print...\tCtrl+P
+&Natisni …\tCtrl+P
 
 &Print... (denied)
 &Natisni … (onemogočeno)
@@ -129,8 +129,8 @@ Odstrani dokument
 &Save As...
 Shrani &kot …
 
-&Save As...\tCtrl-S
-Shrani &kot …\tCtrl-S
+&Save As...\tCtrl+S
+Shrani &kot …\tCtrl+S
 
 &Settings
 &Nastavitve
@@ -138,8 +138,8 @@ Shrani &kot …\tCtrl-S
 &Shrink pages to printable area (if necessary)
 &Skrči strani na področje tiskanja (če potrebno)
 
-&Single Page\tCtrl-6
-&Enostransko\tCtrl-6
+&Single Page\tCtrl+6
+&Enostransko\tCtrl+6
 
 &Skip this version
 &Preskoči to različico
@@ -261,8 +261,8 @@ Strani ni mogoče upodobiti
 Created:
 Ustvarjeno:
 
-Custom &Zoom...\tCtrl-Y
-Povečava po &meri …\tCtrl-Y
+Custom &Zoom...\tCtrl+Y
+Povečava po &meri …\tCtrl+Y
 
 Default &Layout:
 &Privzeta postavitev:
@@ -285,8 +285,8 @@ Lastnosti dokumenta
 Download
 Prenesi
 
-E&xit\tCtrl-Q
-I&zhod\tCtrl-Q
+E&xit\tCtrl+Q
+I&zhod\tCtrl+Q
 
 Enter password
 Vnesite geslo
@@ -303,8 +303,8 @@ Napaka pri nalaganju %s
 F&orward\tAlt+Right Arrow
 Naprej\tAlt+Desna puščica
 
-F&ullscreen\tCtrl-Shift-L
-Celozaslonsko\tCtrl-Shift-L
+F&ullscreen\tCtrl+Shift+L
+Celozaslonsko\tCtrl+Shift+L
 
 Facing
 Dvostransko
@@ -318,8 +318,8 @@ Velikost datoteke:
 File:
 Datoteka:
 
-Fin&d...\tCtrl-F
-Najdi …\tCtrl-F
+Fin&d...\tCtrl+F
+Najdi …\tCtrl+F
 
 Find
 Išči
@@ -333,14 +333,14 @@ Najdi prejšnje
 Find:
 Najdi:
 
-Fit &Content\tCtrl-3
-&Prilagodi vsebino\tCtrl-3
+Fit &Content\tCtrl+3
+&Prilagodi vsebino\tCtrl+3
 
-Fit &Page\tCtrl-0
-&Prilagodi stran\tCtrl-0
+Fit &Page\tCtrl+0
+&Prilagodi stran\tCtrl+0
 
-Fit &Width\tCtrl-2
-P&rilagodi po širini\tCtrl-2
+Fit &Width\tCtrl+2
+P&rilagodi po širini\tCtrl+2
 
 Fit Content
 Prilagodi vsebino
@@ -441,8 +441,8 @@ Odpri s programom PDF-XChange
 P&roperties
 Lastnosti
 
-P&roperties\tCtrl-D
-Lastnosti\tCtrl-D
+P&roperties\tCtrl+D
+Lastnosti\tCtrl+D
 
 PDF Document
 Dokument PDF
@@ -456,8 +456,8 @@ Verzija PDF:
 PDF documents
 Dokumenti PDF
 
-Pa&ge...\tCtrl-G
-Stran …\tCtrl-G
+Pa&ge...\tCtrl+G
+Stran …\tCtrl+G
 
 Page Size:
 Velikost strani:
@@ -477,8 +477,8 @@ Počakajte trenutek, upodobitev poteka …
 Postscript documents
 Postscript dokument
 
-Pr&esentation\tCtrl-L
-Pr&edstavitev\tCtrl-L
+Pr&esentation\tCtrl+L
+Pr&edstavitev\tCtrl+L
 
 Previous Page
 Predhodna stran
@@ -501,17 +501,17 @@ Težave pri tiskanju.
 Remember &opened files
 &Zapomni si odprte datoteke
 
-Rotate &Left\tCtrl-Shift--
-Zasukaj v levo\tCtrl-Shift--
+Rotate &Left\tCtrl+Shift+-
+Zasukaj v levo\tCtrl+Shift+-
 
-Rotate &Right\tCtrl-Shift-+
-Zasukaj v desno\tCtrl-Shift-+
+Rotate &Right\tCtrl+Shift++
+Zasukaj v desno\tCtrl+Shift++
 
 Save As
 Shrani kot …
 
-Save S&hortcut...\tCtrl-Shift-S
-S&hrani bližnjico …\tCtrl-Shift-S
+Save S&hortcut...\tCtrl+Shift+S
+S&hrani bližnjico …\tCtrl+Shift+S
 
 Searching %d of %d...
 Preiskovanje strani %d od %d …
@@ -519,8 +519,8 @@ Preiskovanje strani %d od %d …
 Select &All
 Izberi vse
 
-Select &All\tCtrl-A
-Izberi vse\tCtrl-A
+Select &All\tCtrl+A
+Izberi vse\tCtrl+A
 
 Select content with Ctrl+left mouse button
 Izberite vsebino s pritisnjeno tipko Ctrl in levim gumbom miške

@@ -15,8 +15,8 @@ Contributor: Victor Kozyakin
 &About
 &О программе...
 
-&Actual Size\tCtrl-1
-&Настоящий размер\tCtrl-1
+&Actual Size\tCtrl+1
+&Настоящий размер\tCtrl+1
 
 &All selected pages
 &Все выбранные страницы
@@ -24,17 +24,17 @@ Contributor: Victor Kozyakin
 &Back\tAlt+Left Arrow
 &Назад\tAlt+Стрелка влево
 
-&Book View\tCtrl-8
-В &разворот\tCtrl-8
+&Book View\tCtrl+8
+В &разворот\tCtrl+8
 
-&Close\tCtrl-W
-&Закрыть\tCtrl-W
+&Close\tCtrl+W
+&Закрыть\tCtrl+W
 
 &Copy Selection
 С&копировать выделенное
 
-&Copy Selection\tCtrl-C
-С&копировать выделенное\tCtrl-C
+&Copy Selection\tCtrl+C
+С&копировать выделенное\tCtrl+C
 
 &Don't ask me again
 &Больше не спрашивать
@@ -42,8 +42,8 @@ Contributor: Victor Kozyakin
 &Even pages only
 Только ч&ётные страницы
 
-&Facing\tCtrl-7
-По &две страницы\tCtrl-7
+&Facing\tCtrl+7
+По &две страницы\tCtrl+7
 
 &File
 &Файл
@@ -90,8 +90,8 @@ Contributor: Victor Kozyakin
 &Odd pages only
 Только нечётн&ые страницы
 
-&Open\tCtrl-O
-&Открыть\tCtrl-O
+&Open\tCtrl+O
+&Открыть\tCtrl+O
 
 &Open Document
 &Открыть документ
@@ -111,8 +111,8 @@ Contributor: Victor Kozyakin
 &Print...
 Пе&чать...
 
-&Print...\tCtrl-P
-Пе&чать\tCtrl-P
+&Print...\tCtrl+P
+Пе&чать\tCtrl+P
 
 &Print... (denied)
 Пе&чать... (отмена)
@@ -129,8 +129,8 @@ Contributor: Victor Kozyakin
 &Save As...
 Сохранить &как...
 
-&Save As...\tCtrl-S
-Сохранить &как...\tCtrl-S
+&Save As...\tCtrl+S
+Сохранить &как...\tCtrl+S
 
 &Settings
 &Настройки
@@ -138,8 +138,8 @@ Contributor: Victor Kozyakin
 &Shrink pages to printable area (if necessary)
 Уменьшить страницы до области печати (если нужно)
 
-&Single Page\tCtrl-6
-&Постранично\tCtrl-6
+&Single Page\tCtrl+6
+&Постранично\tCtrl+6
 
 &Skip this version
 Пропустить эту версию
@@ -282,8 +282,8 @@ Created:
 Current file
 Текущий файл
 
-Custom &Zoom...\tCtrl-Y
-&Указать масштаб...\tCtrl-Y
+Custom &Zoom...\tCtrl+Y
+&Указать масштаб...\tCtrl+Y
 
 Default &Layout:
 &Компоновка по умолчанию
@@ -306,8 +306,8 @@ Document Properties
 Download
 Загрузка
 
-E&xit\tCtrl-Q
-В&ыход\tCtrl-Q
+E&xit\tCtrl+Q
+В&ыход\tCtrl+Q
 
 Enter password
 Введите пароль
@@ -327,8 +327,8 @@ F&avorites
 F&orward\tAlt+Right Arrow
 &Вперёд\tAlt+Стрелка вправо
 
-F&ullscreen\tCtrl-Shift-L
-Полный &экран\tCtrl-Shift-L
+F&ullscreen\tCtrl+Shift+L
+Полный &экран\tCtrl+Shift+L
 
 Facing
 По две страницы
@@ -345,8 +345,8 @@ File Size:
 File:
 Файл:
 
-Fin&d...\tCtrl-F
-На&йти...\tCtrl-F
+Fin&d...\tCtrl+F
+На&йти...\tCtrl+F
 
 Find
 Поиск
@@ -360,14 +360,14 @@ Find Previous
 Find:
 Найти:
 
-Fit &Content\tCtrl-3
-По содер&жимому\tCtrl-3
+Fit &Content\tCtrl+3
+По содер&жимому\tCtrl+3
 
-Fit &Page\tCtrl-0
-По &размеру страницы\tCtrl-0
+Fit &Page\tCtrl+0
+По &размеру страницы\tCtrl+0
 
-Fit &Width\tCtrl-2
-По &ширине\tCtrl-2
+Fit &Width\tCtrl+2
+По &ширине\tCtrl+2
 
 Fit Content
 По содержимому
@@ -468,8 +468,8 @@ Open in PDF-XChange
 P&roperties
 Сво&йства...
 
-P&roperties\tCtrl-D
-Сво&йства...\tCtrl-D
+P&roperties\tCtrl+D
+Сво&йства...\tCtrl+D
 
 PDF Document
 Документ PDF
@@ -483,8 +483,8 @@ PDF Version:
 PDF documents
 Документы PDF
 
-Pa&ge...\tCtrl-G
-&Указанная страница...\tCtrl-G
+Pa&ge...\tCtrl+G
+&Указанная страница...\tCtrl+G
 
 Page %d
 Стр. %d
@@ -507,8 +507,8 @@ Please wait - rendering...
 Postscript documents
 Документы Postscript
 
-Pr&esentation\tCtrl-L
-Пр&езентация\tCtrl-L
+Pr&esentation\tCtrl+L
+Пр&езентация\tCtrl+L
 
 Previous Page
 Предыдущая страница
@@ -540,17 +540,17 @@ Remove from favorites
 Remove page %d from favorites
 Удалить стр. %d из избранного
 
-Rotate &Left\tCtrl-Shift--
-Повернуть в&лево\tCtrl-Shift--
+Rotate &Left\tCtrl+Shift+-
+Повернуть в&лево\tCtrl+Shift+-
 
-Rotate &Right\tCtrl-Shift-+
-Повернуть в&право\tCtrl-Shift-+
+Rotate &Right\tCtrl+Shift++
+Повернуть в&право\tCtrl+Shift++
 
 Save As
 Сохранить как
 
-Save S&hortcut...\tCtrl-Shift-S
-Сохранить &ярлык…\tCtrl-Shift-S
+Save S&hortcut...\tCtrl+Shift+S
+Сохранить &ярлык…\tCtrl+Shift+S
 
 Searching %d of %d...
 Обработка страницы %d из %d...
@@ -558,8 +558,8 @@ Searching %d of %d...
 Select &All
 В&ыделить все
 
-Select &All\tCtrl-A
-В&ыделить все\tCtrl-A
+Select &All\tCtrl+A
+В&ыделить все\tCtrl+A
 
 Select content with Ctrl+left mouse button
 Выберите содержимое, нажав <Ctrl> и левую кнопку мыши

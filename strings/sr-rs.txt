@@ -15,8 +15,8 @@ Contributor: Милан Гашић
 &About
 О програму
 
-&Actual Size\tCtrl-1
-Стварна величина\tCtrl-1
+&Actual Size\tCtrl+1
+Стварна величина\tCtrl+1
 
 &All selected pages
 Све одабране странице
@@ -24,16 +24,16 @@ Contributor: Милан Гашић
 &Back\tAlt+Left Arrow
 Назад\tAlt+<-
 
-&Book View\tCtrl-8
-Изглед књиге\tCtrl-8
+&Book View\tCtrl+8
+Изглед књиге\tCtrl+8
 
-&Close\tCtrl-W
-Затвори\tCtrl-W
+&Close\tCtrl+W
+Затвори\tCtrl+W
 
 &Copy Selection
 Копирај изабрано
 
-&Copy Selection\tCtrl-C
+&Copy Selection\tCtrl+C
 Копирај изабрано
 
 &Don't ask me again
@@ -42,8 +42,8 @@ Contributor: Милан Гашић
 &Even pages only
 Само лица страница
 
-&Facing\tCtrl-7
-Две странице\tCtrl-7
+&Facing\tCtrl+7
+Две странице\tCtrl+7
 
 &File
 Датотека
@@ -90,8 +90,8 @@ Contributor: Милан Гашић
 &Odd pages only
 Само полеђине страница
 
-&Open\tCtrl-O
-Отвори\tCtrl-O
+&Open\tCtrl+O
+Отвори\tCtrl+O
 
 &Open Document
 Отвори документ
@@ -111,8 +111,8 @@ Contributor: Милан Гашић
 &Print...
 Штампај...
 
-&Print...\tCtrl-P
-Штампај\tCtrl-P
+&Print...\tCtrl+P
+Штампај\tCtrl+P
 
 &Print... (denied)
 Штампај... (одбијено)
@@ -129,8 +129,8 @@ Contributor: Милан Гашић
 &Save As...
 Сачувај као...
 
-&Save As...\tCtrl-S
-Сачувај као...\tCtrl-S
+&Save As...\tCtrl+S
+Сачувај као...\tCtrl+S
 
 &Settings
 Подешавања
@@ -138,8 +138,8 @@ Contributor: Милан Гашић
 &Shrink pages to printable area (if necessary)
 Скупи странице на област штампања (уколико је неопходно)
 
-&Single Page\tCtrl-6
-Појединачна страница\tCtrl-6
+&Single Page\tCtrl+6
+Појединачна страница\tCtrl+6
 
 &Skip this version
 Прескочи ову верзију
@@ -261,8 +261,8 @@ Couldn't render the page
 Created:
 Израђено:
 
-Custom &Zoom...\tCtrl-Y
-Изборно увећање...\tCtrl-Y
+Custom &Zoom...\tCtrl+Y
+Изборно увећање...\tCtrl+Y
 
 Default &Layout:
 Подразумевани приказ
@@ -285,8 +285,8 @@ Document Properties
 Download
 Преузми
 
-E&xit\tCtrl-Q
-Изађи\tCtrl-Q
+E&xit\tCtrl+Q
+Изађи\tCtrl+Q
 
 Enter password
 Унесите лозинку
@@ -303,8 +303,8 @@ Error loading %s
 F&orward\tAlt+Right Arrow
 Напред\tAlt+->
 
-F&ullscreen\tCtrl-Shift-L
-Цео екран\tCtrl-Shift-L
+F&ullscreen\tCtrl+Shift+L
+Цео екран\tCtrl+Shift+L
 
 Facing
 Две странице
@@ -318,8 +318,8 @@ File Size:
 File:
 Датотека:
 
-Fin&d...\tCtrl-F
-Пронађи...\tCtrl-F
+Fin&d...\tCtrl+F
+Пронађи...\tCtrl+F
 
 Find
 Пронађи
@@ -333,14 +333,14 @@ Find Previous
 Find:
 Пронађи:
 
-Fit &Content\tCtrl-3
-Прилагоди садржају\tCtrl-3
+Fit &Content\tCtrl+3
+Прилагоди садржају\tCtrl+3
 
-Fit &Page\tCtrl-0
-Прилагоди страници\tCtrl-0
+Fit &Page\tCtrl+0
+Прилагоди страници\tCtrl+0
 
-Fit &Width\tCtrl-2
-Прилагоди ширини\tCtrl-2
+Fit &Width\tCtrl+2
+Прилагоди ширини\tCtrl+2
 
 Fit Content
 Прилагоди садржају
@@ -441,8 +441,8 @@ Open in PDF-XChange
 P&roperties
 Особине
 
-P&roperties\tCtrl-D
-Особине\tCtrl-D
+P&roperties\tCtrl+D
+Особине\tCtrl+D
 
 PDF Document
 PDF документ
@@ -456,8 +456,8 @@ PDF верзија:
 PDF documents
 PDF документи
 
-Pa&ge...\tCtrl-G
-Страница...\tCtrl-G
+Pa&ge...\tCtrl+G
+Страница...\tCtrl+G
 
 Page Size:
 Величина странице
@@ -477,8 +477,8 @@ Please wait - rendering...
 Postscript documents
 Postscript документи
 
-Pr&esentation\tCtrl-L
-Презентација\tCtrl-L
+Pr&esentation\tCtrl+L
+Презентација\tCtrl+L
 
 Previous Page
 Претходна страница
@@ -501,17 +501,17 @@ Printing problem.
 Remember &opened files
 Запамти отворене датотеке
 
-Rotate &Left\tCtrl-Shift--
-Ротирај улево\tCtrl-Shift--
+Rotate &Left\tCtrl+Shift+-
+Ротирај улево\tCtrl+Shift+-
 
-Rotate &Right\tCtrl-Shift-+
-Ротирај удесно\tCtrl-Shift-+
+Rotate &Right\tCtrl+Shift++
+Ротирај удесно\tCtrl+Shift++
 
 Save As
 Сачувај као
 
-Save S&hortcut...\tCtrl-Shift-S
-Сачувај пречицу...\tCtrl-Shift-S
+Save S&hortcut...\tCtrl+Shift+S
+Сачувај пречицу...\tCtrl+Shift+S
 
 Searching %d of %d...
 Претражујем страницу %d од %d...
@@ -519,8 +519,8 @@ Searching %d of %d...
 Select &All
 Изабери све
 
-Select &All\tCtrl-A
-Изабери све\tCtrl-A
+Select &All\tCtrl+A
+Изабери све\tCtrl+A
 
 Select content with Ctrl+left mouse button
 Да изаберете садржај, користите Ctrl и лево дугме миша

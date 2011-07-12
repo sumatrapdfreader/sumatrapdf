@@ -16,8 +16,8 @@ Contributor: Tri R.A. Wibowo
 &About
 &Tentang
 
-&Actual Size\tCtrl-1
-&Ukuran Sebenarnya\tCtrl-1
+&Actual Size\tCtrl+1
+&Ukuran Sebenarnya\tCtrl+1
 
 &All selected pages
 &Semua halaman yang dipilih
@@ -25,17 +25,17 @@ Contributor: Tri R.A. Wibowo
 &Back\tAlt+Left Arrow
 Kembali\tAlt+<-
 
-&Book View\tCtrl-8
-Tampilan &Buku\tCtrl-8
+&Book View\tCtrl+8
+Tampilan &Buku\tCtrl+8
 
-&Close\tCtrl-W
-&Tutup\tCtrl-W
+&Close\tCtrl+W
+&Tutup\tCtrl+W
 
 &Copy Selection
 &Salin Seleksi
 
-&Copy Selection\tCtrl-C
-Salin Hasil Seleksi\tCtrl-C
+&Copy Selection\tCtrl+C
+Salin Hasil Seleksi\tCtrl+C
 
 &Don't ask me again
 &Jangan ulangi pertanyaan ini
@@ -43,8 +43,8 @@ Salin Hasil Seleksi\tCtrl-C
 &Even pages only
 Hanya halaman gena&p
 
-&Facing\tCtrl-7
-Meng&hadap\tCtrl-7
+&Facing\tCtrl+7
+Meng&hadap\tCtrl+7
 
 &File
 &Berkas
@@ -91,8 +91,8 @@ Halaman Berikutnya\t->
 &Odd pages only
 Hanya halaman ganji&l
 
-&Open\tCtrl-O
-&Buka\tCtrl-O
+&Open\tCtrl+O
+&Buka\tCtrl+O
 
 &Open Document
 Buka D&okumen
@@ -112,8 +112,8 @@ Halaman Sebelumnya\t<-
 &Print...
 &Cetak...
 
-&Print...\tCtrl-P
-&Cetak...\tCtrl-P
+&Print...\tCtrl+P
+&Cetak...\tCtrl+P
 
 &Print... (denied)
 &Cetak... (ditolak)
@@ -130,8 +130,8 @@ Halaman Sebelumnya\t<-
 &Save As...
 Si&mpan Sebagai...
 
-&Save As...\tCtrl-S
-&Simpan Sebagai\tCtrl-S
+&Save As...\tCtrl+S
+&Simpan Sebagai\tCtrl+S
 
 &Settings
 &Pengaturan
@@ -139,8 +139,8 @@ Si&mpan Sebagai...
 &Shrink pages to printable area (if necessary)
 &Perkecil halaman ke area cetakan (jika dibutuhkan)
 
-&Single Page\tCtrl-6
-Halaman &Tunggal\tCtrl-6
+&Single Page\tCtrl+6
+Halaman &Tunggal\tCtrl+6
 
 &Skip this version
 &Lewatkan versi ini
@@ -262,8 +262,8 @@ Tidak dapat menampilkan halaman
 Created:
 Dibuat:
 
-Custom &Zoom...\tCtrl-Y
-&Pembesaran Buatan\tCtrl-Y
+Custom &Zoom...\tCtrl+Y
+&Pembesaran Buatan\tCtrl+Y
 
 Default &Layout:
 Tampilan &Standar
@@ -286,8 +286,8 @@ Properti Dokumen
 Download
 Unduh
 
-E&xit\tCtrl-Q
-&Keluar\tCtrl-Q
+E&xit\tCtrl+Q
+&Keluar\tCtrl+Q
 
 Enter password
 Masukkan kata kunci
@@ -304,8 +304,8 @@ Kesalahan memuat %s
 F&orward\tAlt+Right Arrow
 Berikutnya\tAlt+->
 
-F&ullscreen\tCtrl-Shift-L
-Selayar Penuh\tCtrl-Shift-L
+F&ullscreen\tCtrl+Shift+L
+Selayar Penuh\tCtrl+Shift+L
 
 Facing
 Dua Halaman
@@ -319,8 +319,8 @@ Ukuran Berkas:
 File:
 Berkas:
 
-Fin&d...\tCtrl-F
-Temukan...\tCtrl-F
+Fin&d...\tCtrl+F
+Temukan...\tCtrl+F
 
 Find
 Cari
@@ -334,14 +334,14 @@ Temukan Sebelumnya
 Find:
 Temukan:
 
-Fit &Content\tCtrl-3
-Sesuaikan Dengan &Konten\tCtrl-3 
+Fit &Content\tCtrl+3
+Sesuaikan Dengan &Konten\tCtrl+3 
 
-Fit &Page\tCtrl-0
-Sesuaikan Dengan &Halaman\tCtrl-0
+Fit &Page\tCtrl+0
+Sesuaikan Dengan &Halaman\tCtrl+0
 
-Fit &Width\tCtrl-2
-Sesuaikan Dengan &Lebar\tCtrl-2
+Fit &Width\tCtrl+2
+Sesuaikan Dengan &Lebar\tCtrl+2
 
 Fit Content
 Sesuaikan Dengan Konten
@@ -442,8 +442,8 @@ Buka di PDF-&XChange
 P&roperties
 P&roperti
 
-P&roperties\tCtrl-D
-P&roperti\tCtrl-D
+P&roperties\tCtrl+D
+P&roperti\tCtrl+D
 
 PDF Document
 Dokumen PDF
@@ -457,8 +457,8 @@ Versi PDF:
 PDF documents
 Dokumen PDF
 
-Pa&ge...\tCtrl-G
-Halaman...\tCtrl-G
+Pa&ge...\tCtrl+G
+Halaman...\tCtrl+G
 
 Page Size:
 Ukuran Halaman:
@@ -478,8 +478,8 @@ Harap tunggu - sedang proses rendering...
 Postscript documents
 Dokumen Postscript
 
-Pr&esentation\tCtrl-L
-Presentasi\tCtrl-L
+Pr&esentation\tCtrl+L
+Presentasi\tCtrl+L
 
 Previous Page
 Halaman Sebelumnya
@@ -502,17 +502,17 @@ Masalah pencetakan.
 Remember &opened files
 Ingat &berkas yang pernah dibuka
 
-Rotate &Left\tCtrl-Shift--
-Putar Ke Kiri\tCtrl-Shift--
+Rotate &Left\tCtrl+Shift+-
+Putar Ke Kiri\tCtrl+Shift+-
 
-Rotate &Right\tCtrl-Shift-+
-Putar Ke Kanan\tCtrl-Shift-+
+Rotate &Right\tCtrl+Shift++
+Putar Ke Kanan\tCtrl+Shift++
 
 Save As
 Simpan Sebagai
 
-Save S&hortcut...\tCtrl-Shift-S
-Simpan &Jalan Pintas...\tCtrl-Shift-S
+Save S&hortcut...\tCtrl+Shift+S
+Simpan &Jalan Pintas...\tCtrl+Shift+S
 
 Searching %d of %d...
 Sedang mencari %d dari %d
@@ -520,8 +520,8 @@ Sedang mencari %d dari %d
 Select &All
 Pilih Semu&a
 
-Select &All\tCtrl-A
-Pilih Semu&a\tCtrl-A
+Select &All\tCtrl+A
+Pilih Semu&a\tCtrl+A
 
 Select content with Ctrl+left mouse button
 Pilih konten dengan tombol Ctrl+tombol kiri mouse 

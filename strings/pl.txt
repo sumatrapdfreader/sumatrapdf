@@ -14,7 +14,7 @@ Contributor: Begina
 &About
 &O SumatraPDF
 
-&Actual Size\tCtrl-1
+&Actual Size\tCtrl+1
 Rozmiar &rzeczywisty\tCtrl+1
 
 &All selected pages
@@ -23,16 +23,16 @@ Rozmiar &rzeczywisty\tCtrl+1
 &Back\tAlt+Left Arrow
 &Wstecz\tAlt+W lewo
 
-&Book View\tCtrl-8
-Widok o&dczytu\tCtrl-8
+&Book View\tCtrl+8
+Widok o&dczytu\tCtrl+8
 
-&Close\tCtrl-W
+&Close\tCtrl+W
 &Zamknij\tCtrl+W
 
 &Copy Selection
 Kopiuj &zaznaczenie
 
-&Copy Selection\tCtrl-C
+&Copy Selection\tCtrl+C
 Kopiuj &zaznaczenie\tCtrl+C
 
 &Don't ask me again
@@ -41,8 +41,8 @@ Kopiuj &zaznaczenie\tCtrl+C
 &Even pages only
 Strony &parzyste
 
-&Facing\tCtrl-7
-&Wiele stron\tCtrl-7
+&Facing\tCtrl+7
+&Wiele stron\tCtrl+7
 
 &File
 &Plik
@@ -89,7 +89,7 @@ Nie, &dziękuję
 &Odd pages only
 Strony &nieparzyste
 
-&Open\tCtrl-O
+&Open\tCtrl+O
 &Otwórz…\tCtrl+O
 
 &Open Document
@@ -110,7 +110,7 @@ Strony &nieparzyste
 &Print...
 &Drukuj...
 
-&Print...\tCtrl-P
+&Print...\tCtrl+P
 &Drukuj\tCtrl+P
 
 &Print... (denied)
@@ -128,7 +128,7 @@ Pamiętaj ustawienia dla &każdego dokumentu
 &Save As...
 Zapisz jako...
 
-&Save As...\tCtrl-S
+&Save As...\tCtrl+S
 Zapisz &jako…\tCtrl+S
 
 &Settings
@@ -137,8 +137,8 @@ Zapisz &jako…\tCtrl+S
 &Shrink pages to printable area (if necessary)
 &Zmniejsz strony do rozmiaru wydruku (w razie potrzeby)
 
-&Single Page\tCtrl-6
-&Pojedyncza strona\tCtrl-6
+&Single Page\tCtrl+6
+&Pojedyncza strona\tCtrl+6
 
 &Skip this version
 &Pomiń tę wersję
@@ -281,7 +281,7 @@ Utworzono:
 Current file
 Bieżący plik
 
-Custom &Zoom...\tCtrl-Y
+Custom &Zoom...\tCtrl+Y
 &Własne powiększenie...\tCtrl+Y
 
 Default &Layout:
@@ -305,7 +305,7 @@ Właściwości dokumentu
 Download
 Pobierz
 
-E&xit\tCtrl-Q
+E&xit\tCtrl+Q
 &Wyjście\tCtrl+Q
 
 Enter password
@@ -326,7 +326,7 @@ F&avorites
 F&orward\tAlt+Right Arrow
 &Dalej\tAlt+W prawo
 
-F&ullscreen\tCtrl-Shift-L
+F&ullscreen\tCtrl+Shift+L
 Pełny ekran\tCtrl+Shift+L
 
 Facing
@@ -344,7 +344,7 @@ Rozmiar pliku:
 File:
 Plik:
 
-Fin&d...\tCtrl-F
+Fin&d...\tCtrl+F
 &Znajdź...\tCtrl+F
 
 Find
@@ -359,13 +359,13 @@ Znajdź poprzedni
 Find:
 Znajdź:
 
-Fit &Content\tCtrl-3
+Fit &Content\tCtrl+3
 Dopasuj do &zawartości\tCtrl+3
 
-Fit &Page\tCtrl-0
+Fit &Page\tCtrl+0
 Dopasuj do s&trony\tCtrl+0
 
-Fit &Width\tCtrl-2
+Fit &Width\tCtrl+2
 Dopasuj do sz&erokości\tCtrl+2
 
 Fit Content
@@ -467,7 +467,7 @@ Otwórz w PDF-XChange
 P&roperties
 Właściwości
 
-P&roperties\tCtrl-D
+P&roperties\tCtrl+D
 &Właściwości\tCtrl+D
 
 PDF Document
@@ -482,7 +482,7 @@ Wersja PDF:
 PDF documents
 Dokumenty PDF
 
-Pa&ge...\tCtrl-G
+Pa&ge...\tCtrl+G
 &Strona...\tCtrl+G
 
 Page %d
@@ -506,7 +506,7 @@ Proszę czekać - renderowanie...
 Postscript documents
 Dokumenty postscript
 
-Pr&esentation\tCtrl-L
+Pr&esentation\tCtrl+L
 &Prezentacja\tCtrl+L
 
 Previous Page
@@ -539,17 +539,17 @@ Usuń z ulubionych
 Remove page %d from favorites
 Usuń stronę %d z ulubionych
 
-Rotate &Left\tCtrl-Shift--
+Rotate &Left\tCtrl+Shift+-
 Obróć w &lewo\tCtrl+Shift+Minus
 
-Rotate &Right\tCtrl-Shift-+
+Rotate &Right\tCtrl+Shift++
 Obróć w &prawo\tCtrl+Shift+Plus
 
 Save As
 Zapisz jako
 
-Save S&hortcut...\tCtrl-Shift-S
-Utwórz skrót do dokumentu\tCtrl-Shift-S
+Save S&hortcut...\tCtrl+Shift+S
+Utwórz skrót do dokumentu\tCtrl+Shift+S
 
 Searching %d of %d...
 Szukanie %d z %d...
@@ -557,7 +557,7 @@ Szukanie %d z %d...
 Select &All
 Zaznacz wszystko
 
-Select &All\tCtrl-A
+Select &All\tCtrl+A
 Zaznacz &wszystko\tCtrl+A
 
 Select content with Ctrl+left mouse button

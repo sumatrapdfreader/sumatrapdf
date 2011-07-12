@@ -16,8 +16,8 @@ Contributor: Gábor Zsótér
 &About
 Név&jegy
 
-&Actual Size\tCtrl-1
-&Eredeti méret\tCtrl-1
+&Actual Size\tCtrl+1
+&Eredeti méret\tCtrl+1
 
 &All selected pages
 Az összes kiválasztott oldal
@@ -25,11 +25,11 @@ Az összes kiválasztott oldal
 &Back\tAlt+Left Arrow
 Ugrás vissza\tAlt+<-
 
-&Close\tCtrl-W
-Be&zárás\tCtrl-W
+&Close\tCtrl+W
+Be&zárás\tCtrl+W
 
-&Copy Selection\tCtrl-C
-Kép/Szöveg másolása\tCtrl-C
+&Copy Selection\tCtrl+C
+Kép/Szöveg másolása\tCtrl+C
 
 &Don't ask me again
 Ne kérdezze meg többé
@@ -82,8 +82,8 @@ Köszönöm,&nem
 &Odd pages only
 Csak a páratlan oldalak
 
-&Open\tCtrl-O
-Megny&itás\tCtrl-O
+&Open\tCtrl+O
+Megny&itás\tCtrl+O
 
 &Open Document
 &Fájl Megnyitása
@@ -103,8 +103,8 @@ Előző oldal\t<-
 &Print...
 &Nyomtatás
 
-&Print...\tCtrl-P
-Nyomt&atás\tCtrl-P
+&Print...\tCtrl+P
+Nyomt&atás\tCtrl+P
 
 &Print... (denied)
 Nyomtatás... (tiltott)
@@ -121,8 +121,8 @@ Eltérő nézet-beállítások megjegyzése dokumentumonként
 &Save As...
 &Mentés másként...
 
-&Save As...\tCtrl-S
-Ment&és másként...\tCtrl-S
+&Save As...\tCtrl+S
+Ment&és másként...\tCtrl+S
 
 &Settings
 &Beállítások
@@ -238,8 +238,8 @@ Oldalfeldolgozási hiba
 Created:
 Készült:
 
-Custom &Zoom...\tCtrl-Y
-... Egyéni méret\tCtrl-Y
+Custom &Zoom...\tCtrl+Y
+... Egyéni méret\tCtrl+Y
 
 Default &Layout:
 Oldalmegjelenítési mód:
@@ -262,8 +262,8 @@ A dokumentum tulajdonságai
 Download
 Letöltés
 
-E&xit\tCtrl-Q
-&Kilépés\tCtrl-Q
+E&xit\tCtrl+Q
+&Kilépés\tCtrl+Q
 
 Enter password
 Írja be a jelszót
@@ -277,7 +277,7 @@ Enter the command-line to invoke when you double-click on the PDF document:
 F&orward\tAlt+Right Arrow
 Ugrás előre\tAlt+->
 
-F&ullscreen\tCtrl-Shift-L
+F&ullscreen\tCtrl+Shift+L
 Teljes képernyő\tCtrl+Shift+L
 
 Facing
@@ -292,8 +292,8 @@ Méret:
 File:
 Fájl:
 
-Fin&d...\tCtrl-F
-Keresés...\tCtrl-F
+Fin&d...\tCtrl+F
+Keresés...\tCtrl+F
 
 Find
 Keresés
@@ -307,14 +307,14 @@ Előző keresése
 Find:
 Keresés:
 
-Fit &Content\tCtrl-3
-&Tartalom\tCtrl-3
+Fit &Content\tCtrl+3
+&Tartalom\tCtrl+3
 
-Fit &Page\tCtrl-0
-&Teljes oldal\tCtrl-0
+Fit &Page\tCtrl+0
+&Teljes oldal\tCtrl+0
 
-Fit &Width\tCtrl-2
-Oldal&szélesség\tCtrl-2
+Fit &Width\tCtrl+2
+Oldal&szélesség\tCtrl+2
 
 Fit Content
 Tartalom
@@ -412,8 +412,8 @@ Megnyitás PDF-XChangeben
 P&roperties
 &Tulajdonságok
 
-P&roperties\tCtrl-D
-&Tulajdonságok\tCtrl-D
+P&roperties\tCtrl+D
+&Tulajdonságok\tCtrl+D
 
 PDF Document
 PDF dokumentum
@@ -427,8 +427,8 @@ PDF verzió:
 PDF documents
 PDF fájlok
 
-Pa&ge...\tCtrl-G
-Megadott oldal...\tCtrl-G
+Pa&ge...\tCtrl+G
+Megadott oldal...\tCtrl+G
 
 Page Size:
 Oldalméret
@@ -448,8 +448,8 @@ Feldolgozás, kérem várjon
 Postscript documents
 Postscript fájlok
 
-Pr&esentation\tCtrl-L
-Bemutató\tCtrl-L
+Pr&esentation\tCtrl+L
+Bemutató\tCtrl+L
 
 Previous Page
 Előző oldal
@@ -469,17 +469,17 @@ Nyomtatási probléma.
 Remember &opened files
 Korábban megnyitott file-ok listájának tárolása
 
-Rotate &Left\tCtrl-Shift--
-Forgatás balra\tCtrl-Shift--
+Rotate &Left\tCtrl+Shift+-
+Forgatás balra\tCtrl+Shift+-
 
-Rotate &Right\tCtrl-Shift-+
-Forgatás jobbra\tCtrl-Shift-+
+Rotate &Right\tCtrl+Shift++
+Forgatás jobbra\tCtrl+Shift++
 
 Save As
 Mentés másként
 
-Save S&hortcut...\tCtrl-Shift-S
-Parancsikon készítése...\tCtrl-Shift-S
+Save S&hortcut...\tCtrl+Shift+S
+Parancsikon készítése...\tCtrl+Shift+S
 
 Searching %d of %d...
 Keresés a(z) %d./%d oldalon
@@ -487,8 +487,8 @@ Keresés a(z) %d./%d oldalon
 Select &All
 &Összes kijelölése
 
-Select &All\tCtrl-A
-Összes &kijelölése\tCtrl-A
+Select &All\tCtrl+A
+Összes &kijelölése\tCtrl+A
 
 Select content with Ctrl+left mouse button
 Először jelölje ki a másolandó részt Ctrl+Bal egérgomb -bal
@@ -587,10 +587,10 @@ printing document
 Nyomtatás
 
 # Untranslated:
-#&Book View\tCtrl-8
+#&Book View\tCtrl+8
 #&Copy Selection
-#&Facing\tCtrl-7
-#&Single Page\tCtrl-6
+#&Facing\tCtrl+7
+#&Single Page\tCtrl+6
 #(page %d)
 #Add Favorite
 #Add page %d to favorites

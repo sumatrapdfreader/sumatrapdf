@@ -13,11 +13,11 @@ Contributor: Uthen Phutneam
 &About
 เกี่ยวกับ
 
-&Actual Size\tCtrl-1
-ขนาดจริง\tCtrl-1
+&Actual Size\tCtrl+1
+ขนาดจริง\tCtrl+1
 
-&Close\tCtrl-W
-ปิด\tCtrl-W
+&Close\tCtrl+W
+ปิด\tCtrl+W
 
 &Don't ask me again
 ไม่ต้องถามอีกครั้ง
@@ -43,17 +43,17 @@ Contributor: Uthen Phutneam
 &Next Page\tRight Arrow
 หน้าถัดไป\t->
 
-&Open\tCtrl-O
-เปิด\tCtrl-O
+&Open\tCtrl+O
+เปิด\tCtrl+O
 
 &Previous Page\tLeft Arrow
 หน้าก่อนหน้า\t<-
 
-&Print...\tCtrl-P
-พิมพ์\tCtrl-P
+&Print...\tCtrl+P
+พิมพ์\tCtrl+P
 
-&Save As...\tCtrl-S
-บันทึกเป็น\tCtrl-S
+&Save As...\tCtrl+S
+บันทึกเป็น\tCtrl+S
 
 &Skip this version
 ช้ามเวอร์ชั่นนี้ไป
@@ -91,8 +91,8 @@ Contribute Translation
 Could not open Printer
 ไม่สามารถเปิดเครื่องพิมพ์ได้
 
-E&xit\tCtrl-Q
-ออก\tCtrl-Q
+E&xit\tCtrl+Q
+ออก\tCtrl+Q
 
 Enter password
 ป้อนรหัสผ่าน
@@ -100,8 +100,8 @@ Enter password
 Enter password for %s
 ป้อนรหัสผ่านสำหรับ %s
 
-F&ullscreen\tCtrl-Shift-L
-เต็มจอภาพ\tCtrl-Shift-L
+F&ullscreen\tCtrl+Shift+L
+เต็มจอภาพ\tCtrl+Shift+L
 
 Facing
 เป็นหน้า
@@ -109,11 +109,11 @@ Facing
 Failed to save a file
 การบันทึกไฟล์ล้มเหลว
 
-Fit &Page\tCtrl-0
-พอดีหน้า\tCtrl-0
+Fit &Page\tCtrl+0
+พอดีหน้า\tCtrl+0
 
-Fit &Width\tCtrl-2
-พอดีความกว้าง\tCtrl-2
+Fit &Width\tCtrl+2
+พอดีความกว้าง\tCtrl+2
 
 Fit Page
 พอดีหน้า
@@ -148,8 +148,8 @@ Next Page
 Open
 เปิด
 
-Pa&ge...\tCtrl-G
-หน้า...\tCtrl-G
+Pa&ge...\tCtrl+G
+หน้า...\tCtrl+G
 
 Previous Page
 หน้าก่อนหน้า
@@ -157,11 +157,11 @@ Previous Page
 Printing problem.
 การพิมพ์เกิดปัญหา
 
-Rotate &Left\tCtrl-Shift--
-หมุนซ้าย\tCtrl-Shift--
+Rotate &Left\tCtrl+Shift+-
+หมุนซ้าย\tCtrl+Shift+-
 
-Rotate &Right\tCtrl-Shift-+
-หมุนขวา\tCtrl-Shift-+
+Rotate &Right\tCtrl+Shift++
+หมุนขวา\tCtrl+Shift++
 
 Save As
 บันทึกเป็น
@@ -193,11 +193,11 @@ Zoom Out
 # Untranslated:
 #&All selected pages
 #&Back\tAlt+Left Arrow
-#&Book View\tCtrl-8
+#&Book View\tCtrl+8
 #&Copy Selection
-#&Copy Selection\tCtrl-C
+#&Copy Selection\tCtrl+C
 #&Even pages only
-#&Facing\tCtrl-7
+#&Facing\tCtrl+7
 #&Find what:
 #&Fit pages to printable area
 #&Go to page:
@@ -218,7 +218,7 @@ Zoom Out
 #&Save As...
 #&Settings
 #&Shrink pages to printable area (if necessary)
-#&Single Page\tCtrl-6
+#&Single Page\tCtrl+6
 #&Use original page sizes
 #&Yes
 #(of %d)
@@ -254,7 +254,7 @@ Zoom Out
 #Couldn't render the page
 #Created:
 #Current file
-#Custom &Zoom...\tCtrl-Y
+#Custom &Zoom...\tCtrl+Y
 #Default &Layout:
 #Default &Zoom:
 #Default PDF reader can't be changed in portable mode
@@ -269,12 +269,12 @@ Zoom Out
 #Favorites
 #File Size:
 #File:
-#Fin&d...\tCtrl-F
+#Fin&d...\tCtrl+F
 #Find
 #Find Next
 #Find Previous
 #Find:
-#Fit &Content\tCtrl-3
+#Fit &Content\tCtrl+3
 #Fit Content
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
@@ -297,7 +297,7 @@ Zoom Out
 #Open in &Foxit Reader
 #Open in PDF-XChange
 #P&roperties
-#P&roperties\tCtrl-D
+#P&roperties\tCtrl+D
 #PDF Document
 #PDF Producer:
 #PDF Version:
@@ -309,7 +309,7 @@ Zoom Out
 #Page:
 #Please wait - rendering...
 #Postscript documents
-#Pr&esentation\tCtrl-L
+#Pr&esentation\tCtrl+L
 #Print
 #Print range
 #Printer with given name doesn't exist
@@ -318,10 +318,10 @@ Zoom Out
 #Remember &opened files
 #Remove from favorites
 #Remove page %d from favorites
-#Save S&hortcut...\tCtrl-Shift-S
+#Save S&hortcut...\tCtrl+Shift+S
 #Searching %d of %d...
 #Select &All
-#Select &All\tCtrl-A
+#Select &All\tCtrl+A
 #Select content with Ctrl+left mouse button
 #Send by &E-mail...
 #Show &pages continuously

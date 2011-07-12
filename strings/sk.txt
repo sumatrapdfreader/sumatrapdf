@@ -15,17 +15,17 @@ Contributor: Dalibor
 &About
 &O programe...
 
-&Actual Size\tCtrl-1
-Skutočná veľkosť\tCtrl-1
+&Actual Size\tCtrl+1
+Skutočná veľkosť\tCtrl+1
 
 &Back\tAlt+Left Arrow
 Naspäť\tAlt+Left Arrow
 
-&Close\tCtrl-W
-Zatvoriť\tCtrl-W
+&Close\tCtrl+W
+Zatvoriť\tCtrl+W
 
-&Copy Selection\tCtrl-C
-Kopírovať vybrané\tCtrl-C
+&Copy Selection\tCtrl+C
+Kopírovať vybrané\tCtrl+C
 
 &Don't ask me again
 Nepýtať sa znova
@@ -66,8 +66,8 @@ Nie
 &No, thanks
 Nie, ďakujem
 
-&Open\tCtrl-O
-Otvoriť\tCtrl-O
+&Open\tCtrl+O
+Otvoriť\tCtrl+O
 
 &Options...
 Možnosti...
@@ -78,8 +78,8 @@ Heslo:
 &Previous Page\tLeft Arrow
 Predchádzajúca strana\t<-
 
-&Print...\tCtrl-P
-Tlačiť\tCtrl-P
+&Print...\tCtrl+P
+Tlačiť\tCtrl+P
 
 &Print... (denied)
 &Tlač... (odmietnutá)
@@ -87,8 +87,8 @@ Tlačiť\tCtrl-P
 &Remember these settings for each document
 Zapamätať si tieto nastavenia pre každý dokument
 
-&Save As...\tCtrl-S
-Uložiť ako...\tCtrl-S
+&Save As...\tCtrl+S
+Uložiť ako...\tCtrl+S
 
 &Settings
 Nastavenia
@@ -174,8 +174,8 @@ Nepodarilo sa načítať stranu
 Created:
 Vytvorený:
 
-Custom &Zoom...\tCtrl-Y
-Vlastná zmena veľkosti...\tCtrl-Y
+Custom &Zoom...\tCtrl+Y
+Vlastná zmena veľkosti...\tCtrl+Y
 
 Default &Layout:
 Predvolené umiestnenie:
@@ -195,8 +195,8 @@ Vlastnosti dokumentu
 Download
 Stiahnuť
 
-E&xit\tCtrl-Q
-&Ukončiť\tCtrl-Q
+E&xit\tCtrl+Q
+&Ukončiť\tCtrl+Q
 
 Enter password
 Zadať heslo
@@ -207,8 +207,8 @@ Zadať heslo pre %s
 F&orward\tAlt+Right Arrow
 Dopredu\tAlt+Right Arrow
 
-F&ullscreen\tCtrl-Shift-L
-Na celú obrazovku\tCtrl-Shift-L
+F&ullscreen\tCtrl+Shift+L
+Na celú obrazovku\tCtrl+Shift+L
 
 Facing
 Dve strany
@@ -222,8 +222,8 @@ Veľksoť súboru:
 File:
 Súbor:
 
-Fin&d...\tCtrl-F
-Hľadať...\tCtrl-F
+Fin&d...\tCtrl+F
+Hľadať...\tCtrl+F
 
 Find
 Hľadať
@@ -237,11 +237,11 @@ Hľadať predchádzajúce
 Find:
 Hľadať:
 
-Fit &Page\tCtrl-0
-Prispôsobiť strane\tCtrl-0
+Fit &Page\tCtrl+0
+Prispôsobiť strane\tCtrl+0
 
-Fit &Width\tCtrl-2
-Na šírku obrazovky\tCtrl-2
+Fit &Width\tCtrl+2
+Na šírku obrazovky\tCtrl+2
 
 Fit Page
 Prispôsobiť strane
@@ -309,8 +309,8 @@ Otvoriť v programe Foxit Reader
 Open in PDF-XChange
 Otvoriť v programe PDF-XChange
 
-P&roperties\tCtrl-D
-Vlastnosti...\tCtrl-D
+P&roperties\tCtrl+D
+Vlastnosti...\tCtrl+D
 
 PDF Document
 PDF Dokument
@@ -324,8 +324,8 @@ PDF Verzia:
 PDF documents
 PDF dokumenty
 
-Pa&ge...\tCtrl-G
-Strana...\tCtrl-G
+Pa&ge...\tCtrl+G
+Strana...\tCtrl+G
 
 Page Size:
 Veľkosť strany:
@@ -348,11 +348,11 @@ Problém pri tlači.
 Remember &opened files
 Zapamätaťsi &otvorené súbory
 
-Rotate &Left\tCtrl-Shift--
-Otočiť vľavo\tCtrl-Shift--
+Rotate &Left\tCtrl+Shift+-
+Otočiť vľavo\tCtrl+Shift+-
 
-Rotate &Right\tCtrl-Shift-+
-Otočiť vpravo\tCtrl-Shift-+
+Rotate &Right\tCtrl+Shift++
+Otočiť vpravo\tCtrl+Shift++
 
 Save As
 Uložiť ako
@@ -440,10 +440,10 @@ prebieha tlač dokumentu
 
 # Untranslated:
 #&All selected pages
-#&Book View\tCtrl-8
+#&Book View\tCtrl+8
 #&Copy Selection
 #&Even pages only
-#&Facing\tCtrl-7
+#&Facing\tCtrl+7
 #&Fit pages to printable area
 #&Go to page:
 #&Odd pages only
@@ -454,7 +454,7 @@ prebieha tlač dokumentu
 #&Remove Document
 #&Save As...
 #&Shrink pages to printable area (if necessary)
-#&Single Page\tCtrl-6
+#&Single Page\tCtrl+6
 #&Use original page sizes
 #(page %d)
 #Add Favorite
@@ -480,7 +480,7 @@ prebieha tlač dokumentu
 #Error loading %s
 #F&avorites
 #Favorites
-#Fit &Content\tCtrl-3
+#Fit &Content\tCtrl+3
 #Fit Content
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
@@ -495,7 +495,7 @@ prebieha tlač dokumentu
 #Page %d
 #Page scaling
 #Postscript documents
-#Pr&esentation\tCtrl-L
+#Pr&esentation\tCtrl+L
 #Print
 #Print range
 #Printer with given name doesn't exist
@@ -503,9 +503,9 @@ prebieha tlač dokumentu
 #Printing page %d of %d...
 #Remove from favorites
 #Remove page %d from favorites
-#Save S&hortcut...\tCtrl-Shift-S
+#Save S&hortcut...\tCtrl+Shift+S
 #Select &All
-#Select &All\tCtrl-A
+#Select &All\tCtrl+A
 #Show Favorites
 #Show frequently read
 #Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.

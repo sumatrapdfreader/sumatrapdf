@@ -16,8 +16,8 @@ Contributor: XhmikosR
 &About
 &Σχετικά...
 
-&Actual Size\tCtrl-1
-Πραγματικό &Μέγεθος\tCtrl-1
+&Actual Size\tCtrl+1
+Πραγματικό &Μέγεθος\tCtrl+1
 
 &All selected pages
 Ό&λες οι επιλεγμένες
@@ -25,17 +25,17 @@ Contributor: XhmikosR
 &Back\tAlt+Left Arrow
 &Πίσω\tAlt+<-
 
-&Book View\tCtrl-8
-&Προβολή Βιβλίου\tCtrl-8
+&Book View\tCtrl+8
+&Προβολή Βιβλίου\tCtrl+8
 
-&Close\tCtrl-W
-&Κλείσιμο\tCtrl-W
+&Close\tCtrl+W
+&Κλείσιμο\tCtrl+W
 
 &Copy Selection
 &Αντιγραφή Επιλογής
 
-&Copy Selection\tCtrl-C
-Αντιγραφή Επι&λεγμένων\tCtrl-C
+&Copy Selection\tCtrl+C
+Αντιγραφή Επι&λεγμένων\tCtrl+C
 
 &Don't ask me again
 &Να μην ερωτηθώ ξανά
@@ -43,8 +43,8 @@ Contributor: XhmikosR
 &Even pages only
 &Μόνο οι μονές σελίδες
 
-&Facing\tCtrl-7
-&Αντικριστές σελίδες\tCtrl-7
+&Facing\tCtrl+7
+&Αντικριστές σελίδες\tCtrl+7
 
 &File
 &Αρχείο
@@ -91,8 +91,8 @@ Contributor: XhmikosR
 &Odd pages only
 &Μόνο οι ζυγές
 
-&Open\tCtrl-O
-Ά&νοιγμα\tCtrl-O
+&Open\tCtrl+O
+Ά&νοιγμα\tCtrl+O
 
 &Open Document
 Ά&νοιγμα Εγγράφου
@@ -112,8 +112,8 @@ Contributor: XhmikosR
 &Print...
 &Εκτύπωση
 
-&Print...\tCtrl-P
-&Εκτύπωση\tCtrl-P
+&Print...\tCtrl+P
+&Εκτύπωση\tCtrl+P
 
 &Print... (denied)
 &Εκτύπωση... (απαγορεύεται)
@@ -130,8 +130,8 @@ Contributor: XhmikosR
 &Save As...
 &Αποθήκευση ως...
 
-&Save As...\tCtrl-S
-&Αποθήκευση ως\tCtrl-S
+&Save As...\tCtrl+S
+&Αποθήκευση ως\tCtrl+S
 
 &Settings
 &Ρυθμίσεις
@@ -139,8 +139,8 @@ Contributor: XhmikosR
 &Shrink pages to printable area (if necessary)
 Σμίκρυνση σελίδων σε &εκτυπώσιμη περιοχή (αν χρειάζεται)
 
-&Single Page\tCtrl-6
-&Μονή Σελίδα\tCtrl-6
+&Single Page\tCtrl+6
+&Μονή Σελίδα\tCtrl+6
 
 &Skip this version
 &Παράβλεψη αυτής της έκδοσης
@@ -262,8 +262,8 @@ Couldn't render the page
 Created:
 Δημιουργήθηκε:
 
-Custom &Zoom...\tCtrl-Y
-&Προσαρμοσμένο Ζουμ...\tCtrl-Y
+Custom &Zoom...\tCtrl+Y
+&Προσαρμοσμένο Ζουμ...\tCtrl+Y
 
 Default &Layout:
 Προκαθορισμένη &Διαμόρφωση:
@@ -286,8 +286,8 @@ Document Properties
 Download
 Λήψη
 
-E&xit\tCtrl-Q
-Έ&ξοδος\tCtrl-Q
+E&xit\tCtrl+Q
+Έ&ξοδος\tCtrl+Q
 
 Enter password
 Εισάγετε κωδικό
@@ -304,8 +304,8 @@ Error loading %s
 F&orward\tAlt+Right Arrow
 Εμπ&ρός\tAlt+->
 
-F&ullscreen\tCtrl-Shift-L
-&Πλήρης Οθόνη\tCtrl-Shift-L
+F&ullscreen\tCtrl+Shift+L
+&Πλήρης Οθόνη\tCtrl+Shift+L
 
 Facing
 Δύο σελίδες
@@ -319,8 +319,8 @@ File Size:
 File:
 Αρχείο:
 
-Fin&d...\tCtrl-F
-Εύ&ρεση...\tCtrl-F
+Fin&d...\tCtrl+F
+Εύ&ρεση...\tCtrl+F
 
 Find
 Εύρεση
@@ -334,14 +334,14 @@ Find Previous
 Find:
 Εύρεση:
 
-Fit &Content\tCtrl-3
-&Προσαρμογή στα περιεχόμενα\tCtrl-3
+Fit &Content\tCtrl+3
+&Προσαρμογή στα περιεχόμενα\tCtrl+3
 
-Fit &Page\tCtrl-0
-&Προσαρμογή στη σελίδα\tCtrl-0
+Fit &Page\tCtrl+0
+&Προσαρμογή στη σελίδα\tCtrl+0
 
-Fit &Width\tCtrl-2
-&Προσαρμογή στο πλάτος παραθύρου\tCtrl-2
+Fit &Width\tCtrl+2
+&Προσαρμογή στο πλάτος παραθύρου\tCtrl+2
 
 Fit Content
 Προσαρμογή στα περιεχόμενα
@@ -442,8 +442,8 @@ Open in PDF-XChange
 P&roperties
 &Ιδιότητες
 
-P&roperties\tCtrl-D
-&Ιδιότητες\tCtrl-D
+P&roperties\tCtrl+D
+&Ιδιότητες\tCtrl+D
 
 PDF Document
 Αρχείο PDF
@@ -457,8 +457,8 @@ PDF Version:
 PDF documents
 Αρχεία PDF
 
-Pa&ge...\tCtrl-G
-&Σελίδα...\tCtrl-G
+Pa&ge...\tCtrl+G
+&Σελίδα...\tCtrl+G
 
 Page Size:
 Μέγεθος Σελίδας:
@@ -478,8 +478,8 @@ Please wait - rendering...
 Postscript documents
 Έγγραφα Postscript
 
-Pr&esentation\tCtrl-L
-&Παρουσίαση\tCtrl-L
+Pr&esentation\tCtrl+L
+&Παρουσίαση\tCtrl+L
 
 Previous Page
 Προηγούμενη Σελίδα
@@ -502,17 +502,17 @@ Printing problem.
 Remember &opened files
 Απο&μνημόνευση προσφάτων αρχείων
 
-Rotate &Left\tCtrl-Shift--
-Περιστροφή Αριστερά\tCtrl-Shift--
+Rotate &Left\tCtrl+Shift+-
+Περιστροφή Αριστερά\tCtrl+Shift+-
 
-Rotate &Right\tCtrl-Shift-+
-Περιστροφή Δεξιά\tCtrl-Shift-+
+Rotate &Right\tCtrl+Shift++
+Περιστροφή Δεξιά\tCtrl+Shift++
 
 Save As
 Αποθήκευση ως
 
-Save S&hortcut...\tCtrl-Shift-S
-Αποθήκευση &Συντόμευσης...\tCtrl-Shift-S
+Save S&hortcut...\tCtrl+Shift+S
+Αποθήκευση &Συντόμευσης...\tCtrl+Shift+S
 
 Searching %d of %d...
 Αναζήτηση %d από %d...
@@ -520,8 +520,8 @@ Searching %d of %d...
 Select &All
 Επιλογή Ό&λων
 
-Select &All\tCtrl-A
-Επιλογή Όλων\tCtrl-A
+Select &All\tCtrl+A
+Επιλογή Όλων\tCtrl+A
 
 Select content with Ctrl+left mouse button
 Επιλέξτε περιεχόμενο με Ctrl+αριστερό πλήκτρο ποντικιού

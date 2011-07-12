@@ -14,8 +14,8 @@ Contributor: Gabriel Lazăr
 &About
 &Despre
 
-&Actual Size\tCtrl-1
-Mărime &efectivă\tCtrl-1
+&Actual Size\tCtrl+1
+Mărime &efectivă\tCtrl+1
 
 &All selected pages
 Toate paginile selectate
@@ -23,17 +23,17 @@ Toate paginile selectate
 &Back\tAlt+Left Arrow
 Înapoi\tAlt+<-
 
-&Book View\tCtrl-8
-Format carte\tCtrl-8
+&Book View\tCtrl+8
+Format carte\tCtrl+8
 
-&Close\tCtrl-W
-Înc&hidere\tCtrl-W
+&Close\tCtrl+W
+Înc&hidere\tCtrl+W
 
 &Copy Selection
 &Copiază selecția
 
-&Copy Selection\tCtrl-C
-&Copiere selecție\tCtrl-C
+&Copy Selection\tCtrl+C
+&Copiere selecție\tCtrl+C
 
 &Don't ask me again
 Nu mă întreba din nou
@@ -41,8 +41,8 @@ Nu mă întreba din nou
 &Even pages only
 Doar paginile pare
 
-&Facing\tCtrl-7
-Două pagini\tCtrl-7
+&Facing\tCtrl+7
+Două pagini\tCtrl+7
 
 &File
 &Fișier
@@ -89,8 +89,8 @@ Pagina următoare\t->
 &Odd pages only
 Doar paginile impare
 
-&Open\tCtrl-O
-&Deschidere\tCtrl-O
+&Open\tCtrl+O
+&Deschidere\tCtrl+O
 
 &Open Document
 Deschide d&ocument
@@ -110,8 +110,8 @@ Pagina anterioară\t<-
 &Print...
 &Tipărește...
 
-&Print...\tCtrl-P
-I&mprimare\tCtrl-P
+&Print...\tCtrl+P
+I&mprimare\tCtrl+P
 
 &Print... (denied)
 &Imprimare... (interzisă)
@@ -128,8 +128,8 @@ I&mprimare\tCtrl-P
 &Save As...
 &Salvează ca...
 
-&Save As...\tCtrl-S
-Salvare c&a...\tCtrl-S
+&Save As...\tCtrl+S
+Salvare c&a...\tCtrl+S
 
 &Settings
 &Opțiuni
@@ -137,8 +137,8 @@ Salvare c&a...\tCtrl-S
 &Shrink pages to printable area (if necessary)
 &Micșorează paginile la aria de imprimare (dacă e necesar)
 
-&Single Page\tCtrl-6
-O &singură pagină\tCtrl-6
+&Single Page\tCtrl+6
+O &singură pagină\tCtrl+6
 
 &Skip this version
 &Sari peste această versiune
@@ -281,8 +281,8 @@ Creat:
 Current file
 Fișier curent
 
-Custom &Zoom...\tCtrl-Y
-Factor de mărire... \tCtrl-Y
+Custom &Zoom...\tCtrl+Y
+Factor de mărire... \tCtrl+Y
 
 Default &Layout:
 Design implicit:
@@ -305,8 +305,8 @@ Proprietăți document
 Download
 Descarcă
 
-E&xit\tCtrl-Q
-&Ieșire\tCtrl-Q
+E&xit\tCtrl+Q
+&Ieșire\tCtrl+Q
 
 Enter password
 Introduceți parola
@@ -326,8 +326,8 @@ F&avorite
 F&orward\tAlt+Right Arrow
 Înainte\tAlt+Right Arrow
 
-F&ullscreen\tCtrl-Shift-L
-Tot ecranul\tCtrl-Shift-L
+F&ullscreen\tCtrl+Shift+L
+Tot ecranul\tCtrl+Shift+L
 
 Facing
 Două pagini
@@ -344,8 +344,8 @@ Mărime fișier:
 File:
 Fișier:
 
-Fin&d...\tCtrl-F
-Caută...\tCtrl-F
+Fin&d...\tCtrl+F
+Caută...\tCtrl+F
 
 Find
 Caută
@@ -359,14 +359,14 @@ Caută înapoi
 Find:
 Caută:
 
-Fit &Content\tCtrl-3
-Potrivire după conținut\tCtrl-3
+Fit &Content\tCtrl+3
+Potrivire după conținut\tCtrl+3
 
-Fit &Page\tCtrl-0
-&Pagină întreagă\tCtrl-0
+Fit &Page\tCtrl+0
+&Pagină întreagă\tCtrl+0
 
-Fit &Width\tCtrl-2
-Lățime pagină\tCtrl-2
+Fit &Width\tCtrl+2
+Lățime pagină\tCtrl+2
 
 Fit Content
 Potrivire după conținut
@@ -467,8 +467,8 @@ Deschide în PDF-XChange
 P&roperties
 P&roprietăți
 
-P&roperties\tCtrl-D
-P&roprietăți\tCtrl-D
+P&roperties\tCtrl+D
+P&roprietăți\tCtrl+D
 
 PDF Document
 Document PDF
@@ -482,8 +482,8 @@ Versiune PDF:
 PDF documents
 Documente PDF
 
-Pa&ge...\tCtrl-G
-Pagina...\tCtrl-G
+Pa&ge...\tCtrl+G
+Pagina...\tCtrl+G
 
 Page %d
 Pagina %d
@@ -506,8 +506,8 @@ Vă rugăm așteptați - afișare...
 Postscript documents
 Documente Postscript
 
-Pr&esentation\tCtrl-L
-Pr&ezentare\tCtrl-L
+Pr&esentation\tCtrl+L
+Pr&ezentare\tCtrl+L
 
 Previous Page
 Pagina anterioară
@@ -539,17 +539,17 @@ Scoate de la favorite
 Remove page %d from favorites
 Scoate pagina %d de la favorite
 
-Rotate &Left\tCtrl-Shift--
-Rotește spre stânga\tCtrl-Shift--
+Rotate &Left\tCtrl+Shift+-
+Rotește spre stânga\tCtrl+Shift+-
 
-Rotate &Right\tCtrl-Shift-+
-Rotește spre dreapta\tCtrl-Shift-+
+Rotate &Right\tCtrl+Shift++
+Rotește spre dreapta\tCtrl+Shift++
 
 Save As
 Salvează ca
 
-Save S&hortcut...\tCtrl-Shift-S
-Salvează legătura...\tCtrl-Shift-S
+Save S&hortcut...\tCtrl+Shift+S
+Salvează legătura...\tCtrl+Shift+S
 
 Searching %d of %d...
 Caut %d din %d...
@@ -557,8 +557,8 @@ Caut %d din %d...
 Select &All
 Selecte&ază Tot
 
-Select &All\tCtrl-A
-Selectează &Tot\tCtrl-A
+Select &All\tCtrl+A
+Selectează &Tot\tCtrl+A
 
 Select content with Ctrl+left mouse button
 Selectați conținut cu Ctrl+buton stânga maus

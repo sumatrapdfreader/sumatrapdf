@@ -15,16 +15,16 @@ Contributor: Ali Nayeri
 &About
 درباره
 
-&Actual Size\tCtrl-1
-ابعاد اصلی‌\tCtrl-1
+&Actual Size\tCtrl+1
+ابعاد اصلی‌\tCtrl+1
 
 &Back\tAlt+Left Arrow
 عقب\tAlt+Left Arrow
 
-&Close\tCtrl-W
-بستن\tCtrl-W
+&Close\tCtrl+W
+بستن\tCtrl+W
 
-&Copy Selection\tCtrl-C
+&Copy Selection\tCtrl+C
 رونوشت مورد منتخب
 
 &Don't ask me again
@@ -69,8 +69,8 @@ Contributor: Ali Nayeri
 &No, thanks
 نه، متشکرم
 
-&Open\tCtrl-O
-باز کردن\tCtrl-O
+&Open\tCtrl+O
+باز کردن\tCtrl+O
 
 &Options...
 گزینه ها
@@ -81,8 +81,8 @@ Contributor: Ali Nayeri
 &Previous Page\tLeft Arrow
 صفحه قبلی\t<-
 
-&Print...\tCtrl-P
-چاپ\tCtrl-P
+&Print...\tCtrl+P
+چاپ\tCtrl+P
 
 &Print... (denied)
 (چاپ ... (رد شد
@@ -90,8 +90,8 @@ Contributor: Ali Nayeri
 &Remember these settings for each document
 این تنظیمات را برای هر سند بخاطر بسپار
 
-&Save As...\tCtrl-S
-...ذخیره بعنوان\tCtrl-S
+&Save As...\tCtrl+S
+...ذخیره بعنوان\tCtrl+S
 
 &Settings
 تنظیمات
@@ -183,8 +183,8 @@ Couldn't render the page
 Created:
 :بوجود آمده
 
-Custom &Zoom...\tCtrl-Y
-ابعاد نمایش مخصوص\tCtrl-Y
+Custom &Zoom...\tCtrl+Y
+ابعاد نمایش مخصوص\tCtrl+Y
 
 Default &Layout:
 :نحوه نمایش
@@ -204,8 +204,8 @@ Document Properties
 Download
 بارگیری
 
-E&xit\tCtrl-Q
-خروج\tCtrl-Q
+E&xit\tCtrl+Q
+خروج\tCtrl+Q
 
 Enter password
 کلمه عبور را وارد کنید
@@ -216,8 +216,8 @@ Enter password for %s
 F&orward\tAlt+Right Arrow
 جلو\tAlt+Right Arrow
 
-F&ullscreen\tCtrl-Shift-L
-تمام‌صفحه\tCtrl-Shift-L
+F&ullscreen\tCtrl+Shift+L
+تمام‌صفحه\tCtrl+Shift+L
 
 Facing
 نمایش دو صفحه‌ای
@@ -231,8 +231,8 @@ File Size:
 File:
 :فايل
 
-Fin&d...\tCtrl-F
-...جستجو\tCtrl-F
+Fin&d...\tCtrl+F
+...جستجو\tCtrl+F
 
 Find
 جستجو
@@ -246,11 +246,11 @@ Find Previous
 Find:
 جستجو:
 
-Fit &Page\tCtrl-0
-به بزرگی پنجره\tCtrl-0
+Fit &Page\tCtrl+0
+به بزرگی پنجره\tCtrl+0
 
-Fit &Width\tCtrl-2
-به بزرگی پهنای پنجره\tCtrl-2
+Fit &Width\tCtrl+2
+به بزرگی پهنای پنجره\tCtrl+2
 
 Fit Page
 به بزرگی پنجره
@@ -315,8 +315,8 @@ Foxit Reader باز کردن در
 Open in PDF-XChange
 PDF-XChange باز کردن در
 
-P&roperties\tCtrl-D
-...ویزگیها\tCtrl-D
+P&roperties\tCtrl+D
+...ویزگیها\tCtrl+D
 
 PDF Document
 PDF سند
@@ -330,8 +330,8 @@ PDF Version:
 PDF documents
 PDF اسناد
 
-Pa&ge...\tCtrl-G
-...صفحه\tCtrl-G
+Pa&ge...\tCtrl+G
+...صفحه\tCtrl+G
 
 Page Size:
 :ابعاد صفحه
@@ -354,11 +354,11 @@ Printing problem.
 Remember &opened files
 فایلهای باز شده را بخاطر بسپار
 
-Rotate &Left\tCtrl-Shift--
-چرخاندن به چپ\tCtrl-Shift--
+Rotate &Left\tCtrl+Shift+-
+چرخاندن به چپ\tCtrl+Shift+-
 
-Rotate &Right\tCtrl-Shift-+
-چرخاندن به راست\tCtrl-Shift-+
+Rotate &Right\tCtrl+Shift++
+چرخاندن به راست\tCtrl+Shift++
 
 Searching %d of %d...
 ... %d از %d در حال جستجو
@@ -446,10 +446,10 @@ printing document
 
 # Untranslated:
 #&All selected pages
-#&Book View\tCtrl-8
+#&Book View\tCtrl+8
 #&Copy Selection
 #&Even pages only
-#&Facing\tCtrl-7
+#&Facing\tCtrl+7
 #&Fit pages to printable area
 #&Odd pages only
 #&Open Document
@@ -459,7 +459,7 @@ printing document
 #&Remove Document
 #&Save As...
 #&Shrink pages to printable area (if necessary)
-#&Single Page\tCtrl-6
+#&Single Page\tCtrl+6
 #&Use original page sizes
 #(page %d)
 #Add Favorite
@@ -483,7 +483,7 @@ printing document
 #Error loading %s
 #F&avorites
 #Favorites
-#Fit &Content\tCtrl-3
+#Fit &Content\tCtrl+3
 #Fit Content
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
@@ -499,7 +499,7 @@ printing document
 #Page %d
 #Page scaling
 #Postscript documents
-#Pr&esentation\tCtrl-L
+#Pr&esentation\tCtrl+L
 #Print
 #Print range
 #Printer with given name doesn't exist
@@ -508,9 +508,9 @@ printing document
 #Remove from favorites
 #Remove page %d from favorites
 #Save As
-#Save S&hortcut...\tCtrl-Shift-S
+#Save S&hortcut...\tCtrl+Shift+S
 #Select &All
-#Select &All\tCtrl-A
+#Select &All\tCtrl+A
 #Show Favorites
 #Show frequently read
 #Show the &bookmarks sidebar when available

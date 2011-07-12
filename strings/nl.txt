@@ -20,8 +20,8 @@ Contributor: Robbert Feunekes
 &About
 &Over
 
-&Actual Size\tCtrl-1
-W&are grootte\tCtrl-1
+&Actual Size\tCtrl+1
+W&are grootte\tCtrl+1
 
 &All selected pages
 &Alle geselecteerde pagina's
@@ -29,17 +29,17 @@ W&are grootte\tCtrl-1
 &Back\tAlt+Left Arrow
 Terug\tAlt+<-
 
-&Book View\tCtrl-8
-&Boekweergave\tCtrl-8
+&Book View\tCtrl+8
+&Boekweergave\tCtrl+8
 
-&Close\tCtrl-W
-&Sluiten\tCtrl-W
+&Close\tCtrl+W
+&Sluiten\tCtrl+W
 
 &Copy Selection
 Selectie kopiëren
 
-&Copy Selection\tCtrl-C
-Kopieer selectie\tCtrl-C
+&Copy Selection\tCtrl+C
+Kopieer selectie\tCtrl+C
 
 &Don't ask me again
 Niet opnieuw vragen
@@ -47,8 +47,8 @@ Niet opnieuw vragen
 &Even pages only
 Alleen &Even pagina's
 
-&Facing\tCtrl-7
-&Dubbele pagina\tCtrl-7
+&Facing\tCtrl+7
+&Dubbele pagina\tCtrl+7
 
 &File
 &Bestand
@@ -95,8 +95,8 @@ Volgende pagina\t->
 &Odd pages only
 Alleen &Oneven pagina's
 
-&Open\tCtrl-O
-&Openen\tCtrl-O
+&Open\tCtrl+O
+&Openen\tCtrl+O
 
 &Open Document
 Bestand &Openen
@@ -116,8 +116,8 @@ Vorige pagina\t<-
 &Print...
 Afdrukken...
 
-&Print...\tCtrl-P
-Afdrukken...\tCtrl-P
+&Print...\tCtrl+P
+Afdrukken...\tCtrl+P
 
 &Print... (denied)
 Afdrukken... (niet toegestaan)
@@ -134,8 +134,8 @@ Bestand ve&rwijderen
 &Save As...
 Op&slaan als...
 
-&Save As...\tCtrl-S
-&Opslaan als...\tCtrl-S
+&Save As...\tCtrl+S
+&Opslaan als...\tCtrl+S
 
 &Settings
 &Instellingen
@@ -143,8 +143,8 @@ Op&slaan als...
 &Shrink pages to printable area (if necessary)
 Pagina's verkleinen tot afdrukgebied (indien nodig)
 
-&Single Page\tCtrl-6
-&Enkele pagina\tCtrl-6
+&Single Page\tCtrl+6
+&Enkele pagina\tCtrl+6
 
 &Skip this version
 Deze versie overslaan
@@ -266,8 +266,8 @@ Kan deze pagina niet weergegeven
 Created:
 Gemaakt:
 
-Custom &Zoom...\tCtrl-Y
-&Aangepaste Zoom...\tCtrl-Y
+Custom &Zoom...\tCtrl+Y
+&Aangepaste Zoom...\tCtrl+Y
 
 Default &Layout:
 Standaard opmaak:
@@ -290,8 +290,8 @@ Bestandseigenschappen
 Download
 Downloaden
 
-E&xit\tCtrl-Q
-&Afsluiten\tCtrl-Q
+E&xit\tCtrl+Q
+&Afsluiten\tCtrl+Q
 
 Enter password
 Wachtwoord invoeren
@@ -308,8 +308,8 @@ Fout bij het laden van %s
 F&orward\tAlt+Right Arrow
 Verder\tAlt+->
 
-F&ullscreen\tCtrl-Shift-L
-Volledig scherm\tCtrl-Shift-L
+F&ullscreen\tCtrl+Shift+L
+Volledig scherm\tCtrl+Shift+L
 
 Facing
 Dubbele pagina
@@ -323,8 +323,8 @@ Bestandsgrootte
 File:
 Bestand:
 
-Fin&d...\tCtrl-F
-Zoeken...\tCtrl-F
+Fin&d...\tCtrl+F
+Zoeken...\tCtrl+F
 
 Find
 Zoeken
@@ -338,14 +338,14 @@ Vorige
 Find:
 Zoeken:
 
-Fit &Content\tCtrl-3
-Passend maken\tCtrl-3
+Fit &Content\tCtrl+3
+Passend maken\tCtrl+3
 
-Fit &Page\tCtrl-0
-Hele &pagina\tCtrl-0
+Fit &Page\tCtrl+0
+Hele &pagina\tCtrl+0
 
-Fit &Width\tCtrl-2
-Passend in &breedte\tCtrl-2
+Fit &Width\tCtrl+2
+Passend in &breedte\tCtrl+2
 
 Fit Content
 Passend maken
@@ -446,8 +446,8 @@ Openen met PDF-XChange
 P&roperties
 Eigenschappen
 
-P&roperties\tCtrl-D
-E&igenschappen...\tCtrl-D
+P&roperties\tCtrl+D
+E&igenschappen...\tCtrl+D
 
 PDF Document
 PDF-bestand
@@ -461,8 +461,8 @@ PDF-versie:
 PDF documents
 PDF-bestanden
 
-Pa&ge...\tCtrl-G
-Pa&gina...\tCtrl-G
+Pa&ge...\tCtrl+G
+Pa&gina...\tCtrl+G
 
 Page Size:
 Paginagrootte:
@@ -482,8 +482,8 @@ Een ogenblik - weergeven...
 Postscript documents
 Postscript bestanden
 
-Pr&esentation\tCtrl-L
-Pr&esentatie\tCtrl-L
+Pr&esentation\tCtrl+L
+Pr&esentatie\tCtrl+L
 
 Previous Page
 Vorige pagina
@@ -506,17 +506,17 @@ Probleem bij het afdrukken
 Remember &opened files
 Onthoud ge&opende bestanden
 
-Rotate &Left\tCtrl-Shift--
-Linksom draaien\tCtrl-Shift--
+Rotate &Left\tCtrl+Shift+-
+Linksom draaien\tCtrl+Shift+-
 
-Rotate &Right\tCtrl-Shift-+
-Rechtsom draaien\tCtrl-Shift-+
+Rotate &Right\tCtrl+Shift++
+Rechtsom draaien\tCtrl+Shift++
 
 Save As
 Opslaan als
 
-Save S&hortcut...\tCtrl-Shift-S
-Snelkoppeling opslaan...\tCtrl-Shift-S
+Save S&hortcut...\tCtrl+Shift+S
+Snelkoppeling opslaan...\tCtrl+Shift+S
 
 Searching %d of %d...
 Zoek %d van %d...
@@ -524,8 +524,8 @@ Zoek %d van %d...
 Select &All
 &Alles selecteren
 
-Select &All\tCtrl-A
-Selecteer &alles\tCtrl-A
+Select &All\tCtrl+A
+Selecteer &alles\tCtrl+A
 
 Select content with Ctrl+left mouse button
 Selecteer inhoud met Ctrl+linker muisknop

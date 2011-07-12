@@ -13,8 +13,8 @@ Contributor: Hrant Ohanyan »»» http://haysoft.org (hrantohanyan@mail.am)
 &About
 &Ծրագրի մասին
 
-&Actual Size\tCtrl-1
-Իրական &չափը\tCtrl-1
+&Actual Size\tCtrl+1
+Իրական &չափը\tCtrl+1
 
 &All selected pages
 &Ընտրված բոլոր էջերը
@@ -22,17 +22,17 @@ Contributor: Hrant Ohanyan »»» http://haysoft.org (hrantohanyan@mail.am)
 &Back\tAlt+Left Arrow
 Հետ\tAlt+<-
 
-&Book View\tCtrl-8
-&Գրքի տեսքով\tCtrl-8
+&Book View\tCtrl+8
+&Գրքի տեսքով\tCtrl+8
 
-&Close\tCtrl-W
-&Փակել\tCtrl-W
+&Close\tCtrl+W
+&Փակել\tCtrl+W
 
 &Copy Selection
 &Պատճենել ընտրվածը
 
-&Copy Selection\tCtrl-C
-Պատճենել ընտրվածը\tCtrl-C
+&Copy Selection\tCtrl+C
+Պատճենել ընտրվածը\tCtrl+C
 
 &Don't ask me again
 &Այլևս չհարցնել
@@ -40,8 +40,8 @@ Contributor: Hrant Ohanyan »»» http://haysoft.org (hrantohanyan@mail.am)
 &Even pages only
 &Միայն զույգ էջերը
 
-&Facing\tCtrl-7
-&Երկու էջով\tCtrl-7
+&Facing\tCtrl+7
+&Երկու էջով\tCtrl+7
 
 &File
 &Ֆայլ
@@ -88,8 +88,8 @@ Contributor: Hrant Ohanyan »»» http://haysoft.org (hrantohanyan@mail.am)
 &Odd pages only
 &Միայն կենտ էջերը
 
-&Open\tCtrl-O
-Բացել\tCtrl-O
+&Open\tCtrl+O
+Բացել\tCtrl+O
 
 &Open Document
 &Բացել էջը
@@ -109,8 +109,8 @@ Contributor: Hrant Ohanyan »»» http://haysoft.org (hrantohanyan@mail.am)
 &Print...
 &Տպել...
 
-&Print...\tCtrl-P
-&Տպել\tCtrl-P
+&Print...\tCtrl+P
+&Տպել\tCtrl+P
 
 &Print... (denied)
 &Տպել... (մերժված)
@@ -127,8 +127,8 @@ Contributor: Hrant Ohanyan »»» http://haysoft.org (hrantohanyan@mail.am)
 &Save As...
 &Պահպանել որպես
 
-&Save As...\tCtrl-S
-&Պահպանել որպես\tCtrl-S
+&Save As...\tCtrl+S
+&Պահպանել որպես\tCtrl+S
 
 &Settings
 &Կարգավորումներ
@@ -136,8 +136,8 @@ Contributor: Hrant Ohanyan »»» http://haysoft.org (hrantohanyan@mail.am)
 &Shrink pages to printable area (if necessary)
 &Հարմարեցնել էջը տպելու համար (եթե պահանջվում է)
 
-&Single Page\tCtrl-6
-&Մեկ էջով\tCtrl-6
+&Single Page\tCtrl+6
+&Մեկ էջով\tCtrl+6
 
 &Skip this version
 &Բաց թողնել այս տարբերակը
@@ -259,8 +259,8 @@ Couldn't render the page
 Created:
 Ստեղծված է.
 
-Custom &Zoom...\tCtrl-Y
-&Ընտրված չափը\tCtrl-Y
+Custom &Zoom...\tCtrl+Y
+&Ընտրված չափը\tCtrl+Y
 
 Default &Layout:
 Ծրագրային &լայնքը.
@@ -283,8 +283,8 @@ Document Properties
 Download
 Բեռնել
 
-E&xit\tCtrl-Q
-Փա&կել\tCtrl-Q
+E&xit\tCtrl+Q
+Փա&կել\tCtrl+Q
 
 Enter password
 Գրել ծածկագիրը
@@ -301,8 +301,8 @@ Error loading %s
 F&orward\tAlt+Right Arrow
 Առաջ\tAlt+->
 
-F&ullscreen\tCtrl-Shift-L
-Ամ&բողջ էկրանով\tCtrl-Shift-L
+F&ullscreen\tCtrl+Shift+L
+Ամ&բողջ էկրանով\tCtrl+Shift+L
 
 Facing
 Երկու էջ
@@ -316,8 +316,8 @@ File Size:
 File:
 Ֆայլ.
 
-Fin&d...\tCtrl-F
-Փնտրել...\tCtrl-F
+Fin&d...\tCtrl+F
+Փնտրել...\tCtrl+F
 
 Find
 Փնտրել
@@ -331,14 +331,14 @@ Find Previous
 Find:
 Փնտրել.
 
-Fit &Content\tCtrl-3
-Հարմարեցնել &բովանդակությունը\tCtrl-3
+Fit &Content\tCtrl+3
+Հարմարեցնել &բովանդակությունը\tCtrl+3
 
-Fit &Page\tCtrl-0
-Էջի &չափով\tCtrl-0
+Fit &Page\tCtrl+0
+Էջի &չափով\tCtrl+0
 
-Fit &Width\tCtrl-2
-Հավասարեցնել &լայնությամբ\tCtrl-2
+Fit &Width\tCtrl+2
+Հավասարեցնել &լայնությամբ\tCtrl+2
 
 Fit Content
 Հարմարեցնել բովանդակությունը
@@ -436,8 +436,8 @@ Open in PDF-XChange
 P&roperties
 Հ&ատկությունները
 
-P&roperties\tCtrl-D
-Հ&ատկություններ...\tCtrl-D
+P&roperties\tCtrl+D
+Հ&ատկություններ...\tCtrl+D
 
 PDF Document
 PDF փաստաթուղթ
@@ -451,8 +451,8 @@ PDF-ի տարբերակը.
 PDF documents
 PDF փաստաթղթեր
 
-Pa&ge...\tCtrl-G
-Էջը...\tCtrl-G
+Pa&ge...\tCtrl+G
+Էջը...\tCtrl+G
 
 Page Size:
 Էջի չափը.
@@ -469,8 +469,8 @@ Page:
 Please wait - rendering...
 Խնդրում ենք սպասել...
 
-Pr&esentation\tCtrl-L
-Ներ&կայացումը\tCtrl-L
+Pr&esentation\tCtrl+L
+Ներ&կայացումը\tCtrl+L
 
 Previous Page
 Նախորդ էջը
@@ -493,17 +493,17 @@ Printing problem.
 Remember &opened files
 Հիշել &բացված ֆայլերը
 
-Rotate &Left\tCtrl-Shift--
-Շրջել ձախ\tCtrl-Shift--
+Rotate &Left\tCtrl+Shift+-
+Շրջել ձախ\tCtrl+Shift+-
 
-Rotate &Right\tCtrl-Shift-+
-Շրջել աջ\tCtrl-Shift-+
+Rotate &Right\tCtrl+Shift++
+Շրջել աջ\tCtrl+Shift++
 
 Save As
 Պահպանել որպես
 
-Save S&hortcut...\tCtrl-Shift-S
-Պահպանել պ&իտակը...\tCtrl-Shift-S
+Save S&hortcut...\tCtrl+Shift+S
+Պահպանել պ&իտակը...\tCtrl+Shift+S
 
 Searching %d of %d...
 Փնտրվում է %d-ից %d
@@ -511,8 +511,8 @@ Searching %d of %d...
 Select &All
 Ընտրել &բոլորը
 
-Select &All\tCtrl-A
-Ընտրել &բոլորը\tCtrl-A
+Select &All\tCtrl+A
+Ընտրել &բոլորը\tCtrl+A
 
 Select content with Ctrl+left mouse button
 Նշել ընտրվածը Ctrl+մկնիկի ձախ կոճակով

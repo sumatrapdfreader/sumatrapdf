@@ -18,8 +18,8 @@ Contributor: Mattias D.
 &About
 &Om
 
-&Actual Size\tCtrl-1
-&Verklig storlek\tCtrl-1
+&Actual Size\tCtrl+1
+&Verklig storlek\tCtrl+1
 
 &All selected pages
 &Alla valda sidor
@@ -27,11 +27,11 @@ Contributor: Mattias D.
 &Back\tAlt+Left Arrow
 Tillbaka\tAlt+Pil vänster
 
-&Close\tCtrl-W
-&Stäng\tCtrl-W
+&Close\tCtrl+W
+&Stäng\tCtrl+W
 
-&Copy Selection\tCtrl-C
-Kopiera markering\tCtrl-C
+&Copy Selection\tCtrl+C
+Kopiera markering\tCtrl+C
 
 &Don't ask me again
 Fråga mig inte igen
@@ -84,8 +84,8 @@ Nästa sida\t->
 &Odd pages only
 Endast &udda sidor
 
-&Open\tCtrl-O
-&Öppna...\tCtrl-O
+&Open\tCtrl+O
+&Öppna...\tCtrl+O
 
 &Options...
 &Inställningar...
@@ -96,8 +96,8 @@ Endast &udda sidor
 &Previous Page\tLeft Arrow
 Föregående sida\t<-
 
-&Print...\tCtrl-P
-Skriv &ut...\tCtrl-P
+&Print...\tCtrl+P
+Skriv &ut...\tCtrl+P
 
 &Print... (denied)
 &Utskrift... (nekad)
@@ -108,8 +108,8 @@ Skriv &ut...\tCtrl-P
 &Remember these settings for each document
 Kom ihåg dessa inställningar för &varje dokument
 
-&Save As...\tCtrl-S
-Spara so&m...\tCtrl-S
+&Save As...\tCtrl+S
+Spara so&m...\tCtrl+S
 
 &Settings
 Alternati&v
@@ -219,8 +219,8 @@ Kunde ej visa sidan
 Created:
 Skapad:
 
-Custom &Zoom...\tCtrl-Y
-&Anpassad zoom...\tCtrl-Y
+Custom &Zoom...\tCtrl+Y
+&Anpassad zoom...\tCtrl+Y
 
 Default &Layout:
 Förvalt &utseende
@@ -240,8 +240,8 @@ Dokumentegenskaper
 Download
 Ladda &ned
 
-E&xit\tCtrl-Q
-&Avsluta\tCtrl-Q
+E&xit\tCtrl+Q
+&Avsluta\tCtrl+Q
 
 Enter password
 Ange lösenord
@@ -255,8 +255,8 @@ Ange kommandorad att aktivera när du dubbelklickar på PDF-dokumentet:
 F&orward\tAlt+Right Arrow
 Framåt\tAlt+Pil höger
 
-F&ullscreen\tCtrl-Shift-L
-Fullskärm\tCtrl-Shift-L
+F&ullscreen\tCtrl+Shift+L
+Fullskärm\tCtrl+Shift+L
 
 Facing
 Uppslag
@@ -270,8 +270,8 @@ Filstorlek:
 File:
 Fil:
 
-Fin&d...\tCtrl-F
-Sök...\tCtrl-F
+Fin&d...\tCtrl+F
+Sök...\tCtrl+F
 
 Find
 Sök
@@ -285,14 +285,14 @@ Sök föregående
 Find:
 Sök
 
-Fit &Content\tCtrl-3
-Passa &innehåll\tCtrl-3
+Fit &Content\tCtrl+3
+Passa &innehåll\tCtrl+3
 
-Fit &Page\tCtrl-0
-Anpassa efter &helsida\tCtrl-0
+Fit &Page\tCtrl+0
+Anpassa efter &helsida\tCtrl+0
 
-Fit &Width\tCtrl-2
-Anpassa efter &bredd\tCtrl-2
+Fit &Width\tCtrl+2
+Anpassa efter &bredd\tCtrl+2
 
 Fit Content
 Passa innehåll
@@ -375,8 +375,8 @@ Open in &Foxit Reader
 Open in PDF-XChange
 Öppna i PDF-XChange
 
-P&roperties\tCtrl-D
-&Egenskaper...\tCtrl-D
+P&roperties\tCtrl+D
+&Egenskaper...\tCtrl+D
 
 PDF Document
 PDF-dokument
@@ -390,8 +390,8 @@ PDF-version:
 PDF documents
 PDF-dokument
 
-Pa&ge...\tCtrl-G
-Sida...\tCtrl-G
+Pa&ge...\tCtrl+G
+Sida...\tCtrl+G
 
 Page Size:
 Sidstorlek:
@@ -408,8 +408,8 @@ Sida:
 Please wait - rendering...
 Ett ögonblick - förbereder...
 
-Pr&esentation\tCtrl-L
-Pr&esentation\tCtrl-L
+Pr&esentation\tCtrl+L
+Pr&esentation\tCtrl+L
 
 Previous Page
 Föregående sida
@@ -423,11 +423,11 @@ Utskriftsproblem.
 Remember &opened files
 Kom ihåg öppnade &filer
 
-Rotate &Left\tCtrl-Shift--
-Rotera åt vänster\tCtrl-Shift--
+Rotate &Left\tCtrl+Shift+-
+Rotera åt vänster\tCtrl+Shift+-
 
-Rotate &Right\tCtrl-Shift-+
-Rotera åt höger\tCtrl-Shift-+
+Rotate &Right\tCtrl+Shift++
+Rotera åt höger\tCtrl+Shift++
 
 Save As
 Spara som
@@ -435,8 +435,8 @@ Spara som
 Searching %d of %d...
 Söker %d av %d...
 
-Select &All\tCtrl-A
-Välj &Allt\tCtrl-A
+Select &All\tCtrl+A
+Välj &Allt\tCtrl+A
 
 Select content with Ctrl+left mouse button
 Markera med Ctrl + vänster musknapp
@@ -529,15 +529,15 @@ printing document
 skriver ut dokumentet
 
 # Untranslated:
-#&Book View\tCtrl-8
+#&Book View\tCtrl+8
 #&Copy Selection
-#&Facing\tCtrl-7
+#&Facing\tCtrl+7
 #&Open Document
 #&Pin Document
 #&Print...
 #&Remove Document
 #&Save As...
-#&Single Page\tCtrl-6
+#&Single Page\tCtrl+6
 #(page %d)
 #Add Favorite
 #Add page %d to favorites
@@ -569,7 +569,7 @@ skriver ut dokumentet
 #Printing page %d of %d...
 #Remove from favorites
 #Remove page %d from favorites
-#Save S&hortcut...\tCtrl-Shift-S
+#Save S&hortcut...\tCtrl+Shift+S
 #Select &All
 #Show Favorites
 #Show frequently read

@@ -14,8 +14,8 @@ Contributor: Nikolay Ikonomov
 &About
 &За програмата...
 
-&Actual Size\tCtrl-1
-&Оригинален размер\tCtrl-1
+&Actual Size\tCtrl+1
+&Оригинален размер\tCtrl+1
 
 &All selected pages
 &Всички избрани страници
@@ -23,17 +23,17 @@ Contributor: Nikolay Ikonomov
 &Back\tAlt+Left Arrow
 На&зад\tAlt+Лява стрелка
 
-&Book View\tCtrl-8
-&Изглед като книга\tCtrl-8
+&Book View\tCtrl+8
+&Изглед като книга\tCtrl+8
 
-&Close\tCtrl-W
-&Затвори\tCtrl-W
+&Close\tCtrl+W
+&Затвори\tCtrl+W
 
 &Copy Selection
 &Копирай избраното
 
-&Copy Selection\tCtrl-C
-&Копирай избраното\tCtrl-C
+&Copy Selection\tCtrl+C
+&Копирай избраното\tCtrl+C
 
 &Don't ask me again
 &Не питай отново
@@ -41,8 +41,8 @@ Contributor: Nikolay Ikonomov
 &Even pages only
 Само &четни страници
 
-&Facing\tCtrl-7
-&Срещуположни страници\tCtrl-7
+&Facing\tCtrl+7
+&Срещуположни страници\tCtrl+7
 
 &File
 &Файл
@@ -89,8 +89,8 @@ Contributor: Nikolay Ikonomov
 &Odd pages only
 Само &нечетни страници
 
-&Open\tCtrl-O
-&Отвори\tCtrl-O
+&Open\tCtrl+O
+&Отвори\tCtrl+O
 
 &Open Document
 &Отвори документ
@@ -110,8 +110,8 @@ Contributor: Nikolay Ikonomov
 &Print...
 &Отпечатване...
 
-&Print...\tCtrl-P
-От&печатай\tCtrl-P
+&Print...\tCtrl+P
+От&печатай\tCtrl+P
 
 &Print... (denied)
 От&печатване... (отказано)
@@ -128,8 +128,8 @@ Contributor: Nikolay Ikonomov
 &Save As...
 &Запамети като...
 
-&Save As...\tCtrl-S
-&Запамети като...\tCtrl-S
+&Save As...\tCtrl+S
+&Запамети като...\tCtrl+S
 
 &Settings
 &Настройки
@@ -137,8 +137,8 @@ Contributor: Nikolay Ikonomov
 &Shrink pages to printable area (if necessary)
 &Намали страниците в мястото за отпечатване (при необходимост)
 
-&Single Page\tCtrl-6
-&Една страница\tCtrl-6
+&Single Page\tCtrl+6
+&Една страница\tCtrl+6
 
 &Skip this version
 &Пропусни тази версия
@@ -260,8 +260,8 @@ Couldn't render the page
 Created:
 Създаден:
 
-Custom &Zoom...\tCtrl-Y
-Увеличение по &избор...\tCtrl-Y
+Custom &Zoom...\tCtrl+Y
+Увеличение по &избор...\tCtrl+Y
 
 Default &Layout:
 &Разположение по подразбиране:
@@ -284,8 +284,8 @@ Document Properties
 Download
 Свали
 
-E&xit\tCtrl-Q
-&Изход\tCtrl-Q
+E&xit\tCtrl+Q
+&Изход\tCtrl+Q
 
 Enter password
 Въведете парола
@@ -302,8 +302,8 @@ Error loading %s
 F&orward\tAlt+Right Arrow
 На&пред\tAlt+Дясна стрелка
 
-F&ullscreen\tCtrl-Shift-L
-&Цял Екран\tCtrl-Shift-L
+F&ullscreen\tCtrl+Shift+L
+&Цял Екран\tCtrl+Shift+L
 
 Facing
 Срещуположни страници
@@ -317,8 +317,8 @@ File Size:
 File:
 Файл:
 
-Fin&d...\tCtrl-F
-&Търси...\tCtrl-F
+Fin&d...\tCtrl+F
+&Търси...\tCtrl+F
 
 Find
 Търси
@@ -332,14 +332,14 @@ Find Previous
 Find:
 Търси:
 
-Fit &Content\tCtrl-3
-Оразмери по &съдържание\tCtrl-3
+Fit &Content\tCtrl+3
+Оразмери по &съдържание\tCtrl+3
 
-Fit &Page\tCtrl-0
-Оразмери по &височина\tCtrl-0
+Fit &Page\tCtrl+0
+Оразмери по &височина\tCtrl+0
 
-Fit &Width\tCtrl-2
-Оразмери по &ширина\tCtrl-2
+Fit &Width\tCtrl+2
+Оразмери по &ширина\tCtrl+2
 
 Fit Content
 Оразмери по съдържание
@@ -440,7 +440,7 @@ Open in PDF-XChange
 P&roperties
 &Свойства
 
-P&roperties\tCtrl-D
+P&roperties\tCtrl+D
 &Свойства
 
 PDF Document
@@ -455,8 +455,8 @@ PDF версия:
 PDF documents
 PDF документи
 
-Pa&ge...\tCtrl-G
-&Страница...\tCtrl-G
+Pa&ge...\tCtrl+G
+&Страница...\tCtrl+G
 
 Page Size:
 Размер на страницата:
@@ -476,8 +476,8 @@ Please wait - rendering...
 Postscript documents
 Postscript документи
 
-Pr&esentation\tCtrl-L
-&Презентация\tCtrl-L
+Pr&esentation\tCtrl+L
+&Презентация\tCtrl+L
 
 Previous Page
 Предишна страница
@@ -500,17 +500,17 @@ Printing problem.
 Remember &opened files
 &Запомни отворените файлове
 
-Rotate &Left\tCtrl-Shift--
-Завърти на&ляво\tCtrl-Shift--
+Rotate &Left\tCtrl+Shift+-
+Завърти на&ляво\tCtrl+Shift+-
 
-Rotate &Right\tCtrl-Shift-+
-Завърти на&дясно\tCtrl-Shift-+
+Rotate &Right\tCtrl+Shift++
+Завърти на&дясно\tCtrl+Shift++
 
 Save As
 Запамети като
 
-Save S&hortcut...\tCtrl-Shift-S
-Запамети кратък път към файла...\tCtrl-Shift-S
+Save S&hortcut...\tCtrl+Shift+S
+Запамети кратък път към файла...\tCtrl+Shift+S
 
 Searching %d of %d...
 Търсене в страница %d от %d...
@@ -518,8 +518,8 @@ Searching %d of %d...
 Select &All
 Избери всичко
 
-Select &All\tCtrl-A
-Избери &всичко\tCtrl-A
+Select &All\tCtrl+A
+Избери &всичко\tCtrl+A
 
 Select content with Ctrl+left mouse button
 Изберете съдържание с Ctrl и левия бутон на мишката

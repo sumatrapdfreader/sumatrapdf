@@ -18,8 +18,8 @@ Contributor: bernard
 &About
 &À propos
 
-&Actual Size\tCtrl-1
-&Taille réelle\tCtrl-1
+&Actual Size\tCtrl+1
+&Taille réelle\tCtrl+1
 
 &All selected pages
 &Toutes les pages sélectionnées
@@ -27,16 +27,16 @@ Contributor: bernard
 &Back\tAlt+Left Arrow
 &Retour\tAlt+<-
 
-&Book View\tCtrl-8
-Comme un livre\tCtrl-8
+&Book View\tCtrl+8
+Comme un livre\tCtrl+8
 
-&Close\tCtrl-W
-&Fermer\tCtrl-W
+&Close\tCtrl+W
+&Fermer\tCtrl+W
 
 &Copy Selection
 &Copier la sélection
 
-&Copy Selection\tCtrl-C
+&Copy Selection\tCtrl+C
 &Copier la sélection
 
 &Don't ask me again
@@ -45,8 +45,8 @@ Comme un livre\tCtrl-8
 &Even pages only
 Seulement les pages &paires
 
-&Facing\tCtrl-7
-Double page\tCtrl-7
+&Facing\tCtrl+7
+Double page\tCtrl+7
 
 &File
 &Fichier
@@ -93,8 +93,8 @@ Page &suivante\t->
 &Odd pages only
 Seulement les pages &impaires
 
-&Open\tCtrl-O
-&Ouvrir\tCtrl-O
+&Open\tCtrl+O
+&Ouvrir\tCtrl+O
 
 &Open Document
 &Ouvrir le document
@@ -114,8 +114,8 @@ Page &précédente\t<-
 &Print...
 Im&primer...
 
-&Print...\tCtrl-P
-&Imprimer...\tCtrl-P
+&Print...\tCtrl+P
+&Imprimer...\tCtrl+P
 
 &Print... (denied)
 &Imprimer... (Interdit)
@@ -132,8 +132,8 @@ Im&primer...
 &Save As...
 &Enregistrer sous...
 
-&Save As...\tCtrl-S
-&Enregistrer sous...\tCtrl-S
+&Save As...\tCtrl+S
+&Enregistrer sous...\tCtrl+S
 
 &Settings
 &Préférences
@@ -141,8 +141,8 @@ Im&primer...
 &Shrink pages to printable area (if necessary)
 &Réduire les pages à la zone d'impression (si nécessaire)
 
-&Single Page\tCtrl-6
-Une &seule page\tCtrl-6
+&Single Page\tCtrl+6
+Une &seule page\tCtrl+6
 
 &Skip this version
 &Ignorer cette version
@@ -285,8 +285,8 @@ Créé le :
 Current file
 Fichier actuel
 
-Custom &Zoom...\tCtrl-Y
-&Zoom personnalisé...\tCtrl-Y
+Custom &Zoom...\tCtrl+Y
+&Zoom personnalisé...\tCtrl+Y
 
 Default &Layout:
 Mise en &page par défaut :
@@ -309,8 +309,8 @@ Propriétés du document
 Download
 Télécharger
 
-E&xit\tCtrl-Q
-&Quitter\tCtrl-Q
+E&xit\tCtrl+Q
+&Quitter\tCtrl+Q
 
 Enter password
 Entrer le mot de passe
@@ -330,8 +330,8 @@ Fa&voris
 F&orward\tAlt+Right Arrow
 &Avancer\tAlt+->
 
-F&ullscreen\tCtrl-Shift-L
-&Plein écran\tCtrl-Shift-L
+F&ullscreen\tCtrl+Shift+L
+&Plein écran\tCtrl+Shift+L
 
 Facing
 Page double
@@ -348,8 +348,8 @@ Taille du fichier :
 File:
 Fichier :
 
-Fin&d...\tCtrl-F
-&Rechercher...\tCtrl-F
+Fin&d...\tCtrl+F
+&Rechercher...\tCtrl+F
 
 Find
 Rechercher
@@ -363,13 +363,13 @@ Occurrence précédente
 Find:
 Rechercher :
 
-Fit &Content\tCtrl-3
-&Ajuster au contenu\tCtrl-3
+Fit &Content\tCtrl+3
+&Ajuster au contenu\tCtrl+3
 
-Fit &Page\tCtrl-0
-&Page entière\tCtrl-0
+Fit &Page\tCtrl+0
+&Page entière\tCtrl+0
 
-Fit &Width\tCtrl-2
+Fit &Width\tCtrl+2
 Pleine &largeur
 
 Fit Content
@@ -471,8 +471,8 @@ Ouvrir dans PDF-XChange
 P&roperties
 P&ropriétés
 
-P&roperties\tCtrl-D
-&Propriétés\tCtrl-D
+P&roperties\tCtrl+D
+&Propriétés\tCtrl+D
 
 PDF Document
 Document PDF
@@ -486,8 +486,8 @@ Version du PDF :
 PDF documents
 Documents PDF
 
-Pa&ge...\tCtrl-G
-Pa&ge...\tCtrl-G
+Pa&ge...\tCtrl+G
+Pa&ge...\tCtrl+G
 
 Page %d
 Page %d
@@ -510,8 +510,8 @@ Patientez s'il vous plaît (génération...)
 Postscript documents
 Documents Posrscript
 
-Pr&esentation\tCtrl-L
-P&résentation\tCtrl-L
+Pr&esentation\tCtrl+L
+P&résentation\tCtrl+L
 
 Previous Page
 Page précédente
@@ -543,17 +543,17 @@ Enlever des favoris
 Remove page %d from favorites
 Enlever page %d des favoris
 
-Rotate &Left\tCtrl-Shift--
-Rotation &antihoraire\tCtrl-Shift--
+Rotate &Left\tCtrl+Shift+-
+Rotation &antihoraire\tCtrl+Shift+-
 
-Rotate &Right\tCtrl-Shift-+
-Rotation &horaire\tCtrl-Shift-+
+Rotate &Right\tCtrl+Shift++
+Rotation &horaire\tCtrl+Shift++
 
 Save As
 Enregistrer sous
 
-Save S&hortcut...\tCtrl-Shift-S
-Enregistrer le raccourci... \tCtrl-Maj-S
+Save S&hortcut...\tCtrl+Shift+S
+Enregistrer le raccourci... \tCtrl+Maj-S
 
 Searching %d of %d...
 Recherche de %d à %d...
@@ -561,8 +561,8 @@ Recherche de %d à %d...
 Select &All
 &Tout sélectionner
 
-Select &All\tCtrl-A
-&Tout sélectionner\tCtrl-A
+Select &All\tCtrl+A
+&Tout sélectionner\tCtrl+A
 
 Select content with Ctrl+left mouse button
 Sélectionner avec Ctrl+bouton gauche de la souris

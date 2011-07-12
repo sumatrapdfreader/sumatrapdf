@@ -13,8 +13,8 @@ Contributor: Krunoslav Tomorad (cygnus77@gmail.com)
 &About
 &O programu...
 
-&Actual Size\tCtrl-1
-Stvarna veličina\tCtrl-1
+&Actual Size\tCtrl+1
+Stvarna veličina\tCtrl+1
 
 &All selected pages
 Sve obilježene str&anice
@@ -22,17 +22,17 @@ Sve obilježene str&anice
 &Back\tAlt+Left Arrow
 Natrag\tAlt+<-
 
-&Book View\tCtrl-8
-&Knjiški pregled\tCtrl-8
+&Book View\tCtrl+8
+&Knjiški pregled\tCtrl+8
 
-&Close\tCtrl-W
-&Zatvori\tCtrl-W
+&Close\tCtrl+W
+&Zatvori\tCtrl+W
 
 &Copy Selection
 &Kopiraj obilježeno
 
-&Copy Selection\tCtrl-C
-Kopiraj odabir\tCtrl-C
+&Copy Selection\tCtrl+C
+Kopiraj odabir\tCtrl+C
 
 &Don't ask me again
 Ubuduće nemoj pitati
@@ -40,8 +40,8 @@ Ubuduće nemoj pitati
 &Even pages only
 Samo &parne stranice
 
-&Facing\tCtrl-7
-&Dvije stranice\tCtrl-7
+&Facing\tCtrl+7
+&Dvije stranice\tCtrl+7
 
 &File
 &Datoteka
@@ -88,8 +88,8 @@ Sljedeća stranica\t->
 &Odd pages only
 Samo &neparne stranice
 
-&Open\tCtrl-O
-&Otvori\tCtrl-O
+&Open\tCtrl+O
+&Otvori\tCtrl+O
 
 &Open Document
 &Otvori dokument
@@ -109,8 +109,8 @@ Prethodna stranica\t<-
 &Print...
 Is&pis...
 
-&Print...\tCtrl-P
-&Ispiši...\tCtrl-P
+&Print...\tCtrl+P
+&Ispiši...\tCtrl+P
 
 &Print... (denied)
 &Ispis... (nije dopušteno)
@@ -127,8 +127,8 @@ Is&pis...
 &Save As...
 &Spremi kao...
 
-&Save As...\tCtrl-S
-&Spremi kao...\tCtrl-S
+&Save As...\tCtrl+S
+&Spremi kao...\tCtrl+S
 
 &Settings
 &Postavke
@@ -136,8 +136,8 @@ Is&pis...
 &Shrink pages to printable area (if necessary)
 Smanji stranice do područja za ispis (ako je potrebno)
 
-&Single Page\tCtrl-6
-&Jedna stranica\tCtrl-6
+&Single Page\tCtrl+6
+&Jedna stranica\tCtrl+6
 
 &Skip this version
 &Propusti ovu inačicu.
@@ -259,8 +259,8 @@ Nije moguće iscrtati stranicu
 Created:
 Stvoreno:
 
-Custom &Zoom...\tCtrl-Y
-&Prilagođeno uvećanje...\tCtrl-Y
+Custom &Zoom...\tCtrl+Y
+&Prilagođeno uvećanje...\tCtrl+Y
 
 Default &Layout:
 Pretpostavljeni &izgled:
@@ -283,8 +283,8 @@ Svojstva dokumenta
 Download
 Preuzmi
 
-E&xit\tCtrl-Q
-&Izađi\tCtrl-Q
+E&xit\tCtrl+Q
+&Izađi\tCtrl+Q
 
 Enter password
 Unesi lozinku
@@ -301,8 +301,8 @@ Greška kod pokretanja %s
 F&orward\tAlt+Right Arrow
 Naprijed\tAlt+->
 
-F&ullscreen\tCtrl-Shift-L
-Cijeli zaslon\tCtrl-Shift-L
+F&ullscreen\tCtrl+Shift+L
+Cijeli zaslon\tCtrl+Shift+L
 
 Facing
 Dvije stranice
@@ -316,8 +316,8 @@ Veličina datoteke:
 File:
 Datoteka:
 
-Fin&d...\tCtrl-F
-Pronađi...\tCtrl-F
+Fin&d...\tCtrl+F
+Pronađi...\tCtrl+F
 
 Find
 Pronađi
@@ -331,14 +331,14 @@ Pronađi prethodno
 Find:
 Pronađi:
 
-Fit &Content\tCtrl-3
-Namjesti po &sadržaju\tCtrl-3
+Fit &Content\tCtrl+3
+Namjesti po &sadržaju\tCtrl+3
 
-Fit &Page\tCtrl-0
-Prilagodi &stranici\tCtrl-0
+Fit &Page\tCtrl+0
+Prilagodi &stranici\tCtrl+0
 
-Fit &Width\tCtrl-2
-&Namjesti po širini\tCtrl-2
+Fit &Width\tCtrl+2
+&Namjesti po širini\tCtrl+2
 
 Fit Content
 Namjesti po sadržaju
@@ -439,8 +439,8 @@ Otvori u programu PDF-XChange
 P&roperties
 &Svojstva
 
-P&roperties\tCtrl-D
-S&vojstva...\tCtrl-D
+P&roperties\tCtrl+D
+S&vojstva...\tCtrl+D
 
 PDF Document
 PDF dokument
@@ -454,8 +454,8 @@ Inačica PDF-a:
 PDF documents
 PDF dokumenti
 
-Pa&ge...\tCtrl-G
-Stranica...\tCtrl-G
+Pa&ge...\tCtrl+G
+Stranica...\tCtrl+G
 
 Page Size:
 Veličina stranice:
@@ -475,8 +475,8 @@ Molim pričekajte, iscrtavam...
 Postscript documents
 Postscript dokumenti
 
-Pr&esentation\tCtrl-L
-Pr&ezentacija\tCtrl-L
+Pr&esentation\tCtrl+L
+Pr&ezentacija\tCtrl+L
 
 Previous Page
 Prethodna stranica
@@ -499,17 +499,17 @@ Problem prilikom ispisivanja.
 Remember &opened files
 Upamti &otvorene datoteke
 
-Rotate &Left\tCtrl-Shift--
-Zaokreni nalijevo\tCtrl-Shift--
+Rotate &Left\tCtrl+Shift+-
+Zaokreni nalijevo\tCtrl+Shift+-
 
-Rotate &Right\tCtrl-Shift-+
-Zaokreni nadesno\tCtrl-Shift-+
+Rotate &Right\tCtrl+Shift++
+Zaokreni nadesno\tCtrl+Shift++
 
 Save As
 Spremi kao
 
-Save S&hortcut...\tCtrl-Shift-S
-Spremi p&rečac...\tCtrl-Shift-S
+Save S&hortcut...\tCtrl+Shift+S
+Spremi p&rečac...\tCtrl+Shift+S
 
 Searching %d of %d...
 Pretražujem %d. stranicu (od %d)...
@@ -517,8 +517,8 @@ Pretražujem %d. stranicu (od %d)...
 Select &All
 Obilježi &sve
 
-Select &All\tCtrl-A
-Obilježi &sve\tCtrl-A
+Select &All\tCtrl+A
+Obilježi &sve\tCtrl+A
 
 Select content with Ctrl+left mouse button
 Odaberi sadržaj pomoću Ctrl+lijeva tipka miša

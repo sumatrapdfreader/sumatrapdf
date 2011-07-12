@@ -14,8 +14,8 @@ Contributor: Muhammad Syawal bin Halimun www.sabily.org (syawal@sabily.org)
 &About
 &Mengenai
 
-&Actual Size\tCtrl-1
-&Saiz sebenar\tCtrl-1
+&Actual Size\tCtrl+1
+&Saiz sebenar\tCtrl+1
 
 &All selected pages
 &Semua mukasurat pilihan
@@ -23,11 +23,11 @@ Contributor: Muhammad Syawal bin Halimun www.sabily.org (syawal@sabily.org)
 &Back\tAlt+Left Arrow
 &Kembali\tAlt+Left Arrow
 
-&Close\tCtrl-W
-&Tutup\tCtrl-W
+&Close\tCtrl+W
+&Tutup\tCtrl+W
 
-&Copy Selection\tCtrl-C
-&Salin pilihan\tCtrl-C
+&Copy Selection\tCtrl+C
+&Salin pilihan\tCtrl+C
 
 &Don't ask me again
 &Jangan tanya saya lagi
@@ -77,8 +77,8 @@ Contributor: Muhammad Syawal bin Halimun www.sabily.org (syawal@sabily.org)
 &Odd pages only
 &Mukasurat ganjil sahaja
 
-&Open\tCtrl-O
-&Buka\tCtrl-O
+&Open\tCtrl+O
+&Buka\tCtrl+O
 
 &Options...
 &Pilihan...
@@ -89,8 +89,8 @@ Contributor: Muhammad Syawal bin Halimun www.sabily.org (syawal@sabily.org)
 &Previous Page\tLeft Arrow
 &Halaman sebelumnya\t<-
 
-&Print...\tCtrl-P
-&Cetak\tCtrl-P
+&Print...\tCtrl+P
+&Cetak\tCtrl+P
 
 &Print... (denied)
 &Cetak... (dinafikan)
@@ -101,8 +101,8 @@ Contributor: Muhammad Syawal bin Halimun www.sabily.org (syawal@sabily.org)
 &Remember these settings for each document
 &Ingat tetapan-tetapan ini untuk setiap dokumen
 
-&Save As...\tCtrl-S
-&Simpan sebagai\tCtrl-S
+&Save As...\tCtrl+S
+&Simpan sebagai\tCtrl+S
 
 &Settings
 &Tetapan
@@ -173,8 +173,8 @@ Pembaca utama PDF tidak boleh ditukar ketika mod mudah alih
 Download
 Muat turun
 
-E&xit\tCtrl-Q
-&Keluar\tCtrl-Q
+E&xit\tCtrl+Q
+&Keluar\tCtrl+Q
 
 Enter password
 Masukkan kata laluan
@@ -182,8 +182,8 @@ Masukkan kata laluan
 Enter password for %s
 Masukkan kata laluan untuk %s
 
-F&ullscreen\tCtrl-Shift-L
-Mukasurat Penuh\tCtrl-Shift-L
+F&ullscreen\tCtrl+Shift+L
+Mukasurat Penuh\tCtrl+Shift+L
 
 Facing
 Dua belah mukasurat
@@ -197,8 +197,8 @@ Saiz fail:
 File:
 Fail:
 
-Fin&d...\tCtrl-F
-Cari...\tCtrl-F
+Fin&d...\tCtrl+F
+Cari...\tCtrl+F
 
 Find
 Cari
@@ -212,11 +212,11 @@ Cari sebelumnya
 Find:
 Cari:
 
-Fit &Page\tCtrl-0
-&Muatkan mukasurat\tCtrl-0
+Fit &Page\tCtrl+0
+&Muatkan mukasurat\tCtrl+0
 
-Fit &Width\tCtrl-2
-&Muatkan lebar\tCtrl-2
+Fit &Width\tCtrl+2
+&Muatkan lebar\tCtrl+2
 
 Fit Page
 Muatkan mukasurat
@@ -266,8 +266,8 @@ Versi PDF:
 PDF documents
 Dokumen-dokumen PDF
 
-Pa&ge...\tCtrl-G
-Mukasurat...\tCtrl-G
+Pa&ge...\tCtrl+G
+Mukasurat...\tCtrl+G
 
 Page Size:
 Saiz mukasurat
@@ -281,11 +281,11 @@ Mukasurat sebelumnya
 Printing problem.
 Masalah mencetak
 
-Rotate &Left\tCtrl-Shift--
-Ubah ke kiri\tCtrl-Shift--
+Rotate &Left\tCtrl+Shift+-
+Ubah ke kiri\tCtrl+Shift+-
 
-Rotate &Right\tCtrl-Shift-+
-Ubah ke kanan\tCtrl-Shift-+
+Rotate &Right\tCtrl+Shift++
+Ubah ke kanan\tCtrl+Shift++
 
 Save As
 Simpan sebagai
@@ -333,9 +333,9 @@ printing document
 mencetak dokumen
 
 # Untranslated:
-#&Book View\tCtrl-8
+#&Book View\tCtrl+8
 #&Copy Selection
-#&Facing\tCtrl-7
+#&Facing\tCtrl+7
 #&Match case
 #&Open Document
 #&Pin Document
@@ -343,7 +343,7 @@ mencetak dokumen
 #&Remove Document
 #&Save As...
 #&Shrink pages to printable area (if necessary)
-#&Single Page\tCtrl-6
+#&Single Page\tCtrl+6
 #&Use original page sizes
 #(of %d)
 #(page %d)
@@ -371,7 +371,7 @@ mencetak dokumen
 #Couldn't render the page
 #Created:
 #Current file
-#Custom &Zoom...\tCtrl-Y
+#Custom &Zoom...\tCtrl+Y
 #Default &Layout:
 #Default &Zoom:
 #Denied Permissions:
@@ -382,7 +382,7 @@ mencetak dokumen
 #F&avorites
 #F&orward\tAlt+Right Arrow
 #Favorites
-#Fit &Content\tCtrl-3
+#Fit &Content\tCtrl+3
 #Fit Content
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
@@ -403,14 +403,14 @@ mencetak dokumen
 #Open in &Foxit Reader
 #Open in PDF-XChange
 #P&roperties
-#P&roperties\tCtrl-D
+#P&roperties\tCtrl+D
 #PDF Producer:
 #Page %d
 #Page number %u inexistant
 #Page scaling
 #Please wait - rendering...
 #Postscript documents
-#Pr&esentation\tCtrl-L
+#Pr&esentation\tCtrl+L
 #Print
 #Print range
 #Printer with given name doesn't exist
@@ -419,10 +419,10 @@ mencetak dokumen
 #Remember &opened files
 #Remove from favorites
 #Remove page %d from favorites
-#Save S&hortcut...\tCtrl-Shift-S
+#Save S&hortcut...\tCtrl+Shift+S
 #Searching %d of %d...
 #Select &All
-#Select &All\tCtrl-A
+#Select &All\tCtrl+A
 #Select content with Ctrl+left mouse button
 #Send by &E-mail...
 #Set inverse search command-line

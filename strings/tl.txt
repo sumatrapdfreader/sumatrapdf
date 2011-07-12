@@ -14,8 +14,8 @@ Contributor: Mark Angelo F. Racca
 &About
 Tungkol S&a...
 
-&Actual Size\tCtrl-1
-Tunay na Laki\tCtrl-1
+&Actual Size\tCtrl+1
+Tunay na Laki\tCtrl+1
 
 &All selected pages
 &Lahat ng napiling pahina
@@ -23,14 +23,14 @@ Tunay na Laki\tCtrl-1
 &Back\tAlt+Left Arrow
 Bumalik\tAlt+Left Arrow
 
-&Close\tCtrl-W
-Isara\tCtrl-W
+&Close\tCtrl+W
+Isara\tCtrl+W
 
 &Copy Selection
 Kopyahin ang napili
 
-&Copy Selection\tCtrl-C
-&Kopyahin ang Napili\tCtrl-C
+&Copy Selection\tCtrl+C
+&Kopyahin ang Napili\tCtrl+C
 
 &Don't ask me again
 Huwag na akong tanunging muli
@@ -83,8 +83,8 @@ Hindi
 &Odd pages only
 Mga odd na pahina lamang
 
-&Open\tCtrl-O
-Buksan\tCtrl-O
+&Open\tCtrl+O
+Buksan\tCtrl+O
 
 &Options...
 Mga Pagpipilian
@@ -98,8 +98,8 @@ Naunang Pahina\t<-
 &Print...
 I-&print
 
-&Print...\tCtrl-P
-I-&print\tCtrl-P
+&Print...\tCtrl+P
+I-&print\tCtrl+P
 
 &Print... (denied)
 &I-print... (hindi maaari)
@@ -113,8 +113,8 @@ Tandaan ang settings ng bawat dokumento
 &Save As...
 I-&save bilang...
 
-&Save As...\tCtrl-S
-I-save Bilang...\tCtrl-S
+&Save As...\tCtrl+S
+I-save Bilang...\tCtrl+S
 
 &Settings
 Mga Setting
@@ -230,8 +230,8 @@ Hindi maipakita ang pahina
 Created:
 Ginawa noong:
 
-Custom &Zoom...\tCtrl-Y
-Custom na laki...\tCtrl-Y
+Custom &Zoom...\tCtrl+Y
+Custom na laki...\tCtrl+Y
 
 Default &Layout:
 Default na Ayos:
@@ -251,8 +251,8 @@ Mga katangian ng dokumento
 Download
 I-download
 
-E&xit\tCtrl-Q
-Isara\tCtrl-Q
+E&xit\tCtrl+Q
+Isara\tCtrl+Q
 
 Enter password
 Ipasok ang password
@@ -266,8 +266,8 @@ Pakisulat ang command na gagawin kapag dalawang beses na kli-nik ang dokumentong
 F&orward\tAlt+Right Arrow
 Susunod\tAlt+Right Arrow
 
-F&ullscreen\tCtrl-Shift-L
-Pagkasyahin sa buong screen\tCtrl-Shift-L
+F&ullscreen\tCtrl+Shift+L
+Pagkasyahin sa buong screen\tCtrl+Shift+L
 
 Facing
 Magkaharap
@@ -281,8 +281,8 @@ Laki ng file:
 File:
 File:
 
-Fin&d...\tCtrl-F
-Hanapin...\tCtrl-F
+Fin&d...\tCtrl+F
+Hanapin...\tCtrl+F
 
 Find
 Hanapin
@@ -296,14 +296,14 @@ Hanapin ang Nauna
 Find:
 Hanapin:
 
-Fit &Content\tCtrl-3
-Pagkasyahin ang laman\tCtrl-3
+Fit &Content\tCtrl+3
+Pagkasyahin ang laman\tCtrl+3
 
-Fit &Page\tCtrl-0
-Ipagkasya ang &Pahina\tCtrl-0
+Fit &Page\tCtrl+0
+Ipagkasya ang &Pahina\tCtrl+0
 
-Fit &Width\tCtrl-2
-&Ipagkasya ang Lapad\tCtrl-2
+Fit &Width\tCtrl+2
+&Ipagkasya ang Lapad\tCtrl+2
 
 Fit Content
 Pagkasyahin ang laman
@@ -389,8 +389,8 @@ Buksan sa PDF-XChange
 P&roperties
 Mga katangian
 
-P&roperties\tCtrl-D
-Mga Katangian\tCtrl-D
+P&roperties\tCtrl+D
+Mga Katangian\tCtrl+D
 
 PDF Document
 PDF Document
@@ -404,8 +404,8 @@ Bersyon ng PDF:
 PDF documents
 Mga PDF na dokumento
 
-Pa&ge...\tCtrl-G
-Pahina...\tCtrl-G
+Pa&ge...\tCtrl+G
+Pahina...\tCtrl+G
 
 Page Size:
 Laki ng Page
@@ -422,8 +422,8 @@ Pahina:
 Please wait - rendering...
 Maghintay - pinapakita...
 
-Pr&esentation\tCtrl-L
-Pr&esentasyon\tCtrl-L
+Pr&esentation\tCtrl+L
+Pr&esentasyon\tCtrl+L
 
 Previous Page
 Naunang Pahina
@@ -437,11 +437,11 @@ May Problema sa Pagpi-print.
 Remember &opened files
 Alalahanin ang mga binuksang files
 
-Rotate &Left\tCtrl-Shift--
-Iikot Pakaliwa\tCtrl-Shift--
+Rotate &Left\tCtrl+Shift+-
+Iikot Pakaliwa\tCtrl+Shift+-
 
-Rotate &Right\tCtrl-Shift-+
-Iikot Pakanan\tCtrl-Shift-+
+Rotate &Right\tCtrl+Shift++
+Iikot Pakanan\tCtrl+Shift++
 
 Save As
 I-save bilang
@@ -452,8 +452,8 @@ Hinahanap ang %d ng %dâ€¦
 Select &All
 Piliin lahat
 
-Select &All\tCtrl-A
-Piliin L&ahat\tCtrl-A
+Select &All\tCtrl+A
+Piliin L&ahat\tCtrl+A
 
 Select content with Ctrl+left mouse button
 Mamili ng content gamit ang Ctrl+left mouse button
@@ -546,12 +546,12 @@ printing document
 ipini-print ang dokumento
 
 # Untranslated:
-#&Book View\tCtrl-8
-#&Facing\tCtrl-7
+#&Book View\tCtrl+8
+#&Facing\tCtrl+7
 #&Open Document
 #&Pin Document
 #&Remove Document
-#&Single Page\tCtrl-6
+#&Single Page\tCtrl+6
 #(page %d)
 #Add Favorite
 #Add page %d to favorites
@@ -580,7 +580,7 @@ ipini-print ang dokumento
 #Printing page %d of %d...
 #Remove from favorites
 #Remove page %d from favorites
-#Save S&hortcut...\tCtrl-Shift-S
+#Save S&hortcut...\tCtrl+Shift+S
 #Show Favorites
 #Show frequently read
 #Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
