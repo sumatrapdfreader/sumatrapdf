@@ -8,6 +8,7 @@
 #include "AppPrefs.h"
 #include "DisplayState.h"
 #include "FileHistory.h"
+#include "Favorites.h"
 #include "translations.h"
 
 #define MAX_REMEMBERED_FILES 1000

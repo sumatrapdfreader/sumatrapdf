@@ -17,6 +17,7 @@
 #include "SumatraProperties.h"
 #include "SumatraAbout.h"
 #include "FileHistory.h"
+#include "Favorites.h"
 #include "FileWatch.h"
 #include "AppTools.h"
 #include "Notifications.h"
