@@ -16,7 +16,7 @@
 #include "Notifications.h"
 #include "SumatraDialogs.h"
 
-static bool CheckPrinterStretchDibSupport(HWND hwndForMsgBox, HDC hdc)
+static bool PrinterSupportsStretchDib(HWND hwndForMsgBox, HDC hdc)
 {
 #ifdef USE_GDI_FOR_PRINTING
     // assume the printer supports enough of GDI(+) for reasonable results
@@ -362,10 +362,10 @@ static LRESULT CALLBACK DisableApplyBtnWndProc(HWND hWnd, UINT uiMsg, WPARAM wPa
 }
 
 /* minimal IPrintDialogCallback implementation for hiding the useless Apply button */
-class ApplyButtonDiablingCallback : public IPrintDialogCallback
+class ApplyButtonDisblingCallback : public IPrintDialogCallback
 {
 public:
-    ApplyButtonDiablingCallback() : m_cRef(0) { };
+    ApplyButtonDisblingCallback() : m_cRef(0) { };
     STDMETHODIMP QueryInterface(REFIID riid, void **ppv) {
         if (riid == IID_IUnknown || riid == IID_IPrintDialogCallback) {
             *ppv = this;
@@ -407,12 +407,15 @@ So far have tested printing from XP to
  - HP Laserjet 2300d
  - HP Deskjet D4160
  - Lexmark Z515 inkjet, which should cover most bases.
+
+In order to print with Adobe Reader instead: ViewWithAcrobat(win, _T("/P"));
 */
 #define MAXPAGERANGES 10
 void OnMenuPrint(WindowInfo *win)
 {
-    // In order to print with Adobe Reader instead:
-    // ViewWithAcrobat(win, _T("/P"));
+    bool printSelection = false;
+    Vec<PRINTPAGERANGE> ranges;
+    ApplyButtonDisblingCallback *applyCb = NULL;
 
     if (!HasPermission(Perm_PrinterAccess)) return;
 
@@ -447,7 +450,8 @@ void OnMenuPrint(WindowInfo *win)
     pd.nMinPage = 1;
     pd.nMaxPage = dm->pageCount();
     pd.nStartPage = START_PAGE_GENERAL;
-    pd.lpCallback = new ApplyButtonDiablingCallback();
+    applyCb = new ApplyButtonDisblingCallback();
+    pd.lpCallback = applyCb;
 
     // TODO: remember these (and maybe all of PRINTDLGEX) at least for this document/WindowInfo?
     Print_Advanced_Data advanced = { PrintRangeAll, PrintScaleShrink };
@@ -456,48 +460,51 @@ void OnMenuPrint(WindowInfo *win)
     pd.lphPropertyPages = &hPsp;
     pd.nPropertyPages = 1;
 
-    if (PrintDlgEx(&pd) == S_OK) {
-        if (pd.dwResultAction == PD_RESULT_PRINT) {
-            if (CheckPrinterStretchDibSupport(win->hwndFrame, pd.hDC)) {
-                bool printSelection = false;
-                Vec<PRINTPAGERANGE> ranges;
-                if (pd.Flags & PD_CURRENTPAGE) {
-                    PRINTPAGERANGE pr = { dm->currentPageNo(), dm->currentPageNo() };
-                    ranges.Append(pr);
-                } else if (win->selectionOnPage && (pd.Flags & PD_SELECTION)) {
-                    printSelection = true;
-                } else if (!(pd.Flags & PD_PAGENUMS)) {
-                    PRINTPAGERANGE pr = { 1, dm->pageCount() };
-                    ranges.Append(pr);
-                } else {
-                    assert(pd.nPageRanges > 0);
-                    for (DWORD i = 0; i < pd.nPageRanges; i++)
-                        ranges.Append(pd.lpPageRanges[i]);
-                }
-
-                LPDEVMODE devMode = (LPDEVMODE)GlobalLock(pd.hDevMode);
-                PrintData *data = new PrintData(dm->engine, pd.hDC, devMode, ranges,
-                                                dm->rotation(), advanced.range, advanced.scale,
-                                                printSelection ? win->selectionOnPage : NULL);
-                pd.hDC = NULL; // deleted by PrintData
-                if (devMode)
-                    GlobalUnlock(pd.hDevMode);
-
-                PrintToDeviceOnThread(*win, data);
-            }
+    if (PrintDlgEx(&pd) != S_OK) {
+        if (CommDlgExtendedError() != 0) { 
+            /* if PrintDlg was cancelled then
+               CommDlgExtendedError is zero, otherwise it returns the
+               error code, which we could look at here if we wanted.
+               for now just warn the user that printing has stopped
+               becasue of an error */
+            MessageBox(win->hwndFrame, _TR("Couldn't initialize printer"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK | (IsUIRightToLeft() ? MB_RTLREADING : 0));
         }
-    }
-    else if (CommDlgExtendedError() != 0) { 
-        /* if PrintDlg was cancelled then
-           CommDlgExtendedError is zero, otherwise it returns the
-           error code, which we could look at here if we wanted.
-           for now just warn the user that printing has stopped
-           becasue of an error */
-        MessageBox(win->hwndFrame, _TR("Couldn't initialize printer"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK | (IsUIRightToLeft() ? MB_RTLREADING : 0));
+        goto Exit;
     }
 
+    if (pd.dwResultAction != PD_RESULT_PRINT)
+        goto Exit;
+
+    if (!PrinterSupportsStretchDib(win->hwndFrame, pd.hDC))
+        goto Exit;
+
+    if (pd.Flags & PD_CURRENTPAGE) {
+        PRINTPAGERANGE pr = { dm->currentPageNo(), dm->currentPageNo() };
+        ranges.Append(pr);
+    } else if (win->selectionOnPage && (pd.Flags & PD_SELECTION)) {
+        printSelection = true;
+    } else if (!(pd.Flags & PD_PAGENUMS)) {
+        PRINTPAGERANGE pr = { 1, dm->pageCount() };
+        ranges.Append(pr);
+    } else {
+        assert(pd.nPageRanges > 0);
+        for (DWORD i = 0; i < pd.nPageRanges; i++)
+            ranges.Append(pd.lpPageRanges[i]);
+    }
+
+    LPDEVMODE devMode = (LPDEVMODE)GlobalLock(pd.hDevMode);
+    PrintData *data = new PrintData(dm->engine, pd.hDC, devMode, ranges,
+                                    dm->rotation(), advanced.range, advanced.scale,
+                                    printSelection ? win->selectionOnPage : NULL);
+    pd.hDC = NULL; // deleted by PrintData
+    if (devMode)
+        GlobalUnlock(pd.hDevMode);
+
+    PrintToDeviceOnThread(*win, data);
+
+Exit:
     free(ppr);
-    free(pd.lpCallback);
+    delete applyCb;
     DeleteDC(pd.hDC);
     GlobalFree(pd.hDevNames);
     GlobalFree(pd.hDevMode);
@@ -584,7 +591,7 @@ bool PrintFile(const TCHAR *fileName, const TCHAR *printerName, bool displayErro
             MessageBox(NULL, _TR("Couldn't initialize printer"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK | (IsUIRightToLeft() ? MB_RTLREADING : 0));
         goto Exit;
     }
-    if (CheckPrinterStretchDibSupport(NULL, hdcPrint)) {
+    if (PrinterSupportsStretchDib(NULL, hdcPrint)) {
         PRINTPAGERANGE pr = { 1, engine->PageCount() };
         Vec<PRINTPAGERANGE> ranges;
         ranges.Append(pr);
