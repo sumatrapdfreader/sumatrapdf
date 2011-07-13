@@ -105,5 +105,5 @@ public:
 
 void ShowNotification(WindowInfo *win, const TCHAR *message, bool autoDismiss=true, bool highlight=false, NotificationGroup groupId=NG_RESPONSE_TO_ACTION);
 bool RegisterNotificationsWndClass(HINSTANCE inst);
-#endif
 
+#endif

@@ -207,6 +207,14 @@
 					>
 				</File>
 				<File
+					RelativePath=".\src\Search.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\Search.h"
+					>
+				</File>
+				<File
 					RelativePath=".\src\SumatraAbout.cpp"
 					>
 				</File>

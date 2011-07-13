@@ -15,5 +15,5 @@ void ToggleTocBox(WindowInfo *win);
 void LoadTocTree(WindowInfo *win);
 void UpdateTocSelection(WindowInfo *win, int currPageNo);
 void UpdateTocExpansionState(WindowInfo *win, HTREEITEM hItem);
-#endif
 
+#endif

@@ -14,4 +14,3 @@ void OnMenuPrint(WindowInfo *win);
 void AbortPrinting(WindowInfo *win);
 
 #endif
-

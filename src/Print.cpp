@@ -610,4 +610,3 @@ Exit:
     DeleteDC(hdcPrint);
     return ok;
 }
-

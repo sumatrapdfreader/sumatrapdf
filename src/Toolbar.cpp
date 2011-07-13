@@ -647,4 +647,3 @@ void CreateToolbar(WindowInfo *win)
     CreatePageBox(*win);
     CreateFindBox(*win);
 }
-

@@ -825,6 +825,4 @@ void CreateFavorites(WindowInfo *win)
     if (NULL == DefWndProcCloseButton)
         DefWndProcCloseButton = (WNDPROC)GetWindowLongPtr(hwndClose, GWLP_WNDPROC);
     SetWindowLongPtr(hwndClose, GWLP_WNDPROC, (LONG_PTR)WndProcCloseButton);
-
 }
-

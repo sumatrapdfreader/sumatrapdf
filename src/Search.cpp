@@ -6,7 +6,8 @@
 * DDE commands, including search
 */
 
-#include "BaseUtil.h"
+#include "BaseUtil.h"
+
 #include "StrUtil.h"
 #include "WinUtil.h"
 
@@ -683,4 +684,3 @@ LRESULT OnDDETerminate(HWND hwnd, WPARAM wparam, LPARAM lparam)
     PostMessage((HWND)wparam, WM_DDE_TERMINATE, (WPARAM)hwnd, 0L);
     return 0;
 }
-
