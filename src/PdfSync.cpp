@@ -670,7 +670,7 @@ static const TCHAR *HandleSyncCmd(const TCHAR *cmd, DDEACK& ack)
         if (newWindow || !win)
             win = LoadDocument(pdfFile, !newWindow ? win : NULL);
         else if (win && !win->IsDocLoaded())
-            win->Reload();
+            ReloadDocument(win);
     }
     else {
         // check if any opened PDF has sync information for the source file
@@ -717,7 +717,7 @@ static const TCHAR *HandleOpenCmd(const TCHAR *cmd, DDEACK& ack)
     if (newWindow || !win)
         win = LoadDocument(pdfFile, !newWindow ? win : NULL);
     else if (win && !win->IsDocLoaded()) {
-        win->Reload();
+        ReloadDocument(win);
         forceRefresh = 0;
     }
     
@@ -727,7 +727,7 @@ static const TCHAR *HandleOpenCmd(const TCHAR *cmd, DDEACK& ack)
 
     ack.fAck = 1;
     if (forceRefresh)
-        win->Reload(true);
+        ReloadDocument(win, true);
     if (setFocus)
         SetFocusHelper(win->hwndFrame);
 
@@ -748,7 +748,7 @@ static const TCHAR *HandleGotoCmd(const TCHAR *cmd, DDEACK& ack)
     if (!win)
         return next;
     if (!win->IsDocLoaded()) {
-        win->Reload();
+        ReloadDocument(win);
         if (!win->IsDocLoaded())
             return next;
     }
@@ -775,7 +775,7 @@ static const TCHAR *HandlePageCmd(const TCHAR *cmd, DDEACK& ack)
     if (!win)
         return next;
     if (!win->IsDocLoaded()) {
-        win->Reload();
+        ReloadDocument(win);
         if (!win->IsDocLoaded())
             return next;
     }
@@ -808,7 +808,7 @@ static const TCHAR *HandleSetViewCmd(const TCHAR *cmd, DDEACK& ack)
     if (!win)
         return next;
     if (!win->IsDocLoaded()) {
-        win->Reload();
+        ReloadDocument(win);
         if (!win->IsDocLoaded())
             return next;
     }

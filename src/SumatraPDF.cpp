@@ -1083,21 +1083,21 @@ void CreateThumbnailForFile(WindowInfo& win, DisplayState& state)
     gRenderCache.Render(win.dm, 1, 0, zoom, pageRect, *callback);
 }
 
-void WindowInfo::Reload(bool autorefresh)
+void ReloadDocument(WindowInfo *win, bool autorefresh)
 {
     DisplayState ds;
     ds.useGlobalValues = gGlobalPrefs.globalPrefsOnly;
-    if (!this->IsDocLoaded() || !this->dm->displayStateFromModel(&ds)) {
-        if (!autorefresh && !this->IsDocLoaded() && !this->IsAboutWindow())
-            LoadDocument(this->loadedFilePath, this);
+    if (!win->IsDocLoaded() || !win->dm->displayStateFromModel(&ds)) {
+        if (!autorefresh && !win->IsDocLoaded() && !win->IsAboutWindow())
+            LoadDocument(win->loadedFilePath, win);
         return;
     }
-    UpdateDisplayStateWindowRect(*this, ds);
-    UpdateSidebarDisplayState(this, &ds);
+    UpdateDisplayStateWindowRect(*win, ds);
+    UpdateSidebarDisplayState(win, &ds);
     // Set the windows state based on the actual window's placement
-    ds.windowState =  this->fullScreen ? WIN_STATE_FULLSCREEN
-                    : IsZoomed(this->hwndFrame) ? WIN_STATE_MAXIMIZED 
-                    : IsIconic(this->hwndFrame) ? WIN_STATE_MINIMIZED
+    ds.windowState =  win->fullScreen ? WIN_STATE_FULLSCREEN
+                    : IsZoomed(win->hwndFrame) ? WIN_STATE_MAXIMIZED 
+                    : IsIconic(win->hwndFrame) ? WIN_STATE_MINIMIZED
                     : WIN_STATE_NORMAL ;
 
     // We don't allow PDF-repair if it is an autorefresh because
@@ -1105,20 +1105,20 @@ void WindowInfo::Reload(bool autorefresh)
     // in which case the repair could fail. Instead, if the file is broken, 
     // we postpone the reload until the next autorefresh event
     bool tryRepair = !autorefresh;
-    ScopedMem<TCHAR> path(str::Dup(this->loadedFilePath));
-    if (!LoadDocIntoWindow(path, *this, &ds, false, tryRepair, true, false))
+    ScopedMem<TCHAR> path(str::Dup(win->loadedFilePath));
+    if (!LoadDocIntoWindow(path, *win, &ds, false, tryRepair, true, false))
         return;
 
     if (gGlobalPrefs.showStartPage) {
         // refresh the thumbnail for this file
         DisplayState *state = gFileHistory.Find(ds.filePath);
         if (state)
-            CreateThumbnailForFile(*this, *state);
+            CreateThumbnailForFile(*win, *state);
     }
 
     // save a newly remembered password into file history so that
     // we don't ask again at the next refresh
-    ScopedMem<char> decryptionKey(this->dm->engine->GetDecryptionKey());
+    ScopedMem<char> decryptionKey(win->dm->engine->GetDecryptionKey());
     if (decryptionKey) {
         DisplayState *state = gFileHistory.Find(ds.filePath);
         if (state && !str::Eq(state->decryptionKey, decryptionKey))
@@ -4047,7 +4047,7 @@ static void OnChar(WindowInfo& win, WPARAM key)
             DestroyWindow(win.hwndFrame);
         return;
     case 'r':
-        win.Reload();
+        ReloadDocument(&win);
         return;
     case VK_TAB:
         AdvanceFocus(&win);
@@ -4789,7 +4789,7 @@ static void OnTimer(WindowInfo& win, HWND hwnd, WPARAM timerId)
 
     case AUTO_RELOAD_TIMER_ID:
         KillTimer(hwnd, AUTO_RELOAD_TIMER_ID);
-        win.Reload(true);
+        ReloadDocument(&win, true);
         break;
 
     case DIR_STRESS_TIMER_ID:
@@ -5073,7 +5073,7 @@ static LRESULT OnCommand(WindowInfo *win, HWND hwnd, UINT message, WPARAM wParam
             break;
     
         case IDM_REFRESH:
-            win->Reload();
+            ReloadDocument(win);
             break;
     
         case IDM_SAVEAS_BOOKMARK:
