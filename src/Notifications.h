@@ -6,8 +6,6 @@
 
 #include "TextSearch.h"
 
-#define MESSAGE_WND_CLASS_NAME _T("SUMATRA_PDF_MESSAGE_WINDOW")
-
 class WindowInfo;
 class NotificationWnd;
 

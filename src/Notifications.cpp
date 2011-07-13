@@ -11,6 +11,8 @@
 #include "SumatraPDF.h"
 #include "WindowInfo.h"
 
+#define NOTIFICATION_WND_CLASS_NAME _T("SUMATRA_PDF_NOTIFICATION_WINDOW")
+
 void NotificationWnd::CreatePopup(HWND parent, const TCHAR *message)
 {
     NONCLIENTMETRICS ncm = { 0 };
@@ -22,7 +24,7 @@ void NotificationWnd::CreatePopup(HWND parent, const TCHAR *message)
     progressWidth = MulDiv(PROGRESS_WIDTH, GetDeviceCaps(hdc, LOGPIXELSX), USER_DEFAULT_SCREEN_DPI);
     ReleaseDC(parent, hdc);
 
-    self = CreateWindowEx(WS_EX_TOPMOST, MESSAGE_WND_CLASS_NAME, message, WS_CHILD | SS_CENTER,
+    self = CreateWindowEx(WS_EX_TOPMOST, NOTIFICATION_WND_CLASS_NAME, message, WS_CHILD | SS_CENTER,
                           TL_MARGIN, TL_MARGIN, 0, 0,
                           parent, (HMENU)0, ghinst, NULL);
     SetWindowLongPtr(self, GWLP_USERDATA, (LONG_PTR)this);
@@ -286,7 +288,7 @@ bool RegisterNotificationsWndClass(HINSTANCE inst)
     wcex.lpfnWndProc    = NotificationWnd::WndProc;
     wcex.hCursor        = LoadCursor(NULL, IDC_APPSTARTING);
     wcex.hbrBackground  = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
-    wcex.lpszClassName  = MESSAGE_WND_CLASS_NAME;
+    wcex.lpszClassName  = NOTIFICATION_WND_CLASS_NAME;
     ATOM atom = RegisterClassEx(&wcex);
     return atom != 0;
 }
