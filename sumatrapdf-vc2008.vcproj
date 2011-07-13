@@ -68,66 +68,6 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\src\AppPrefs.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\AppPrefs.h"
-				>
-			</File>
-			<File
-				RelativePath=".\src\AppTools.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\AppTools.h"
-				>
-			</File>
-			<File
-				RelativePath=".\src\CrashHandler.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\CrashHandler.h"
-				>
-			</File>
-			<File
-				RelativePath=".\src\DisplayModel.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\DisplayModel.h"
-				>
-			</File>
-			<File
-				RelativePath=".\src\DisplayState.h"
-				>
-			</File>
-			<File
-				RelativePath=".\src\FileHistory.h"
-				>
-			</File>
-			<File
-				RelativePath=".\src\FileWatch.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\FileWatch.h"
-				>
-			</File>
-			<File
-				RelativePath=".\src\Notifications.h"
-				>
-			</File>
-			<File
-				RelativePath=".\src\ParseCommandLine.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\ParseCommandLine.h"
-				>
-			</File>
-			<File
 				RelativePath=".\src\PdfSync.cpp"
 				>
 			</File>
@@ -136,39 +76,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\RenderCache.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\RenderCache.h"
-				>
-			</File>
-			<File
 				RelativePath=".\src\resource.h"
-				>
-			</File>
-			<File
-				RelativePath=".\src\StressTesting.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\StressTesting.h"
-				>
-			</File>
-			<File
-				RelativePath=".\src\SumatraAbout.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\SumatraAbout.h"
-				>
-			</File>
-			<File
-				RelativePath=".\src\SumatraDialogs.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\SumatraDialogs.h"
 				>
 			</File>
 			<File
@@ -180,55 +88,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\SumatraProperties.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\SumatraProperties.h"
-				>
-			</File>
-			<File
-				RelativePath=".\src\TextSearch.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\TextSearch.h"
-				>
-			</File>
-			<File
-				RelativePath=".\src\TextSelection.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\TextSelection.h"
-				>
-			</File>
-			<File
-				RelativePath=".\src\translations.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\translations.h"
-				>
-			</File>
-			<File
-				RelativePath=".\src\translations_txt.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\src\UnitTests.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\src\Version.h"
-				>
-			</File>
-			<File
-				RelativePath=".\src\WindowInfo.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\WindowInfo.h"
 				>
 			</File>
 			<Filter
@@ -272,6 +136,186 @@
 				</File>
 				<File
 					RelativePath=".\src\PsEngine.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="Model"
+				>
+				<File
+					RelativePath=".\src\DisplayModel.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\DisplayModel.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\DisplayState.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\FileHistory.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\RenderCache.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\RenderCache.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\TextSearch.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\TextSearch.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\TextSelection.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\TextSelection.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="User Interface"
+				>
+				<File
+					RelativePath=".\src\Favorites.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\Favorites.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\Notifications.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\Print.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\Print.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\SumatraAbout.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\SumatraAbout.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\SumatraDialogs.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\SumatraDialogs.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\SumatraProperties.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\SumatraProperties.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\TableOfContents.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\TableOfContents.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\Toolbar.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\Toolbar.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\translations.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\translations.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\translations_txt.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\WindowInfo.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\WindowInfo.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="Helpers"
+				>
+				<File
+					RelativePath=".\src\AppPrefs.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\AppPrefs.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\AppTools.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\AppTools.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\CrashHandler.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\CrashHandler.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\FileWatch.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\FileWatch.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\ParseCommandLine.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\ParseCommandLine.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\StressTesting.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\StressTesting.h"
 					>
 				</File>
 			</Filter>
@@ -823,60 +867,76 @@
 			</Filter>
 		</Filter>
 		<Filter
-			Name="IFilter DLL"
+			Name="Integration DLLs"
 			>
-			<File
-				RelativePath=".\src\ifilter\CPdfFilter.cpp"
+			<Filter
+				Name="IFilter"
 				>
-			</File>
-			<File
-				RelativePath=".\src\ifilter\CPdfFilter.h"
+				<File
+					RelativePath=".\src\ifilter\CPdfFilter.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\ifilter\CPdfFilter.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\ifilter\CTeXFilter.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\ifilter\CTeXFilter.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\ifilter\FilterBase.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\ifilter\PdfFilter.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\ifilter\PdfFilter.rc"
+					>
+				</File>
+				<File
+					RelativePath=".\src\ifilter\PdfFilterDll.cpp"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="Previewer"
 				>
-			</File>
-			<File
-				RelativePath=".\src\ifilter\CTeXFilter.cpp"
+				<File
+					RelativePath=".\src\previewer\PdfPreview.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\previewer\PdfPreview.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\previewer\PdfPreview.rc"
+					>
+				</File>
+				<File
+					RelativePath=".\src\previewer\PdfPreviewDll.cpp"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="Browser Plugin"
 				>
-			</File>
-			<File
-				RelativePath=".\src\ifilter\CTeXFilter.h"
-				>
-			</File>
-			<File
-				RelativePath=".\src\ifilter\FilterBase.h"
-				>
-			</File>
-			<File
-				RelativePath=".\src\ifilter\PdfFilter.h"
-				>
-			</File>
-			<File
-				RelativePath=".\src\ifilter\PdfFilter.rc"
-				>
-			</File>
-			<File
-				RelativePath=".\src\ifilter\PdfFilterDll.cpp"
-				>
-			</File>
-		</Filter>
-		<Filter
-			Name="Preview DLL"
-			>
-			<File
-				RelativePath=".\src\previewer\PdfPreview.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\previewer\PdfPreview.h"
-				>
-			</File>
-			<File
-				RelativePath=".\src\previewer\PdfPreview.rc"
-				>
-			</File>
-			<File
-				RelativePath=".\src\previewer\PdfPreviewDll.cpp"
-				>
-			</File>
+				<File
+					RelativePath=".\src\browserplugin\npPdfViewer.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\browserplugin\npPdfViewer.rc"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<File
 			RelativePath=".\docs\releasenotes.txt"
