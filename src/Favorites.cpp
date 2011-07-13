@@ -300,7 +300,6 @@ static void AppendFavMenus(HMENU m, const TCHAR *currFilePath)
         TCHAR *filePath = filePathsSorted.At(i);
         const TCHAR *fileName = path::GetBaseName(filePath);
         FileFavs *f = gFavorites->GetFavByFilePath(filePath);
-#if COLLAPSE_SINGLE_PAGE_FAVS
         HMENU sub = m;
         bool combined = (f->favNames.Count() == 1);
         if (!combined)
@@ -312,14 +311,6 @@ static void AppendFavMenus(HMENU m, const TCHAR *currFilePath)
             else
                 AppendMenu(m, MF_POPUP | MF_STRING, (UINT_PTR)sub, fileName);
         }
-#else
-        HMENU sub = CreateMenu();
-        AppendFavMenuItems(sub, f, menuId);
-        if (f == currFileFav)
-            AppendMenu(m, MF_POPUP | MF_STRING, (UINT_PTR)sub, _TR("Current file"));
-        else
-            AppendMenu(m, MF_POPUP | MF_STRING, (UINT_PTR)sub, fileName);
-#endif
     }
 }
 
@@ -476,11 +467,9 @@ static void InsertFavSecondLevelNodes(HWND hwnd, HTREEITEM parent, FileFavs *f)
 static HTREEITEM InsertFavTopLevelNode(HWND hwnd, FileFavs *fav, bool isExpanded)
 {
     TCHAR *s = NULL;
-#if COLLAPSE_SINGLE_PAGE_FAVS
     bool collapsed = fav->favNames.Count() == 1;
     if (collapsed)
         isExpanded = false;
-#endif
     TV_INSERTSTRUCT tvinsert;
     tvinsert.hParent = NULL;
     tvinsert.hInsertAfter = TVI_LAST;
@@ -488,7 +477,6 @@ static HTREEITEM InsertFavTopLevelNode(HWND hwnd, FileFavs *fav, bool isExpanded
     tvinsert.itemex.state = isExpanded ? TVIS_EXPANDED : 0;
     tvinsert.itemex.stateMask = TVIS_EXPANDED;
     tvinsert.itemex.lParam = NULL;
-#if COLLAPSE_SINGLE_PAGE_FAVS
     if (collapsed) {
         FavName *fn = fav->favNames.At(0);
         tvinsert.itemex.lParam = (LPARAM)fn;
@@ -497,9 +485,6 @@ static HTREEITEM InsertFavTopLevelNode(HWND hwnd, FileFavs *fav, bool isExpanded
     } else {
         tvinsert.itemex.pszText = (TCHAR*)path::GetBaseName(fav->filePath);
     }
-#else
-    tvinsert.itemex.pszText = (TCHAR*)path::GetBaseName(fav->filePath);
-#endif
     HTREEITEM ret = TreeView_InsertItem(hwnd, &tvinsert);
     free(s);
     return ret;
@@ -520,12 +505,8 @@ void PopulateFavTreeIfNeeded(WindowInfo *win)
         FileFavs *f = gFavorites->GetFavByFilePath(filePathsSorted.At(i));
         bool isExpanded = (win->expandedFavorites.Find(f->filePath) != -1);
         HTREEITEM node = InsertFavTopLevelNode(hwndTree, f, isExpanded);
-#if COLLAPSE_SINGLE_PAGE_FAVS
         if (f->favNames.Count() > 1)
             InsertFavSecondLevelNodes(hwndTree, node, f);
-#else
-        InsertFavSecondLevelNodes(hwndTree, node, f);
-#endif
     }
 
     SendMessage(hwndTree, WM_SETREDRAW, TRUE, 0);

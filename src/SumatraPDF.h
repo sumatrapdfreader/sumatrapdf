@@ -8,12 +8,6 @@
 #include "AppPrefs.h"
 #include "TextSearch.h"
 
-
-// experimental: if 1, if there is only one favorite
-// for a given file, it'll be displayed as a final node, not
-// a tree, in menu and tree view
-#define COLLAPSE_SINGLE_PAGE_FAVS 1
-
 #define FRAME_CLASS_NAME        _T("SUMATRA_PDF_FRAME")
 
 // permissions that can be revoked (or explicitly set) through Group Policies
