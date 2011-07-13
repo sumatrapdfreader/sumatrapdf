@@ -276,42 +276,11 @@ public:
     }
 };
 
-class PrintThreadWorkItem : public ProgressUpdateUI, public UIThreadWorkItem, public NotificationWndCallback {
-    NotificationWnd *wnd;
-    bool isCanceled;
-
+class ClosePrintThreadWorkItem : public UIThreadWorkItem {
 public:
-    // owned and deleted by PrintThreadWorkItem
-    PrintData *data;
-
-    PrintThreadWorkItem(WindowInfo *win, PrintData *data) :
-        UIThreadWorkItem(win), data(data), isCanceled(false) { 
-        wnd = new NotificationWnd(win->hwndCanvas, _T(""), _TR("Printing page %d of %d..."), this);
-        win->notifications->Add(wnd);
-    }
-
-    ~PrintThreadWorkItem() {
-        delete data;
-        RemoveNotification(wnd);
-    }
-
-    virtual bool UpdateProgress(int current, int total) {
-        QueueWorkItem(new PrintThreadUpdateWorkItem(win, wnd, current, total));
-        return WindowInfoStillValid(win) && !win->printCanceled && !isCanceled;
-    }
-
-    void CleanUp() {
-        QueueWorkItem(this);
-    }
-
-    // called when printing has been canceled
-    virtual void RemoveNotification(NotificationWnd *wnd) {
-        isCanceled = true;
-        this->wnd = NULL;
-        if (WindowInfoStillValid(win))
-            win->notifications->RemoveNotification(wnd);
-    }
-
+    ClosePrintThreadWorkItem(WindowInfo *win)
+        : UIThreadWorkItem(win) { }
+    
     virtual void Execute() {
         if (!WindowInfoStillValid(win))
             return;
@@ -322,21 +291,59 @@ public:
     }
 };
 
+static void ClosePrintThreadFromUiThread(WindowInfo *win) {
+}
+
+class PrintThreadData : public ProgressUpdateUI, public NotificationWndCallback {
+    NotificationWnd *wnd;
+    bool isCanceled;
+
+public:
+    PrintData *data;
+    WindowInfo *win;
+
+    PrintThreadData(WindowInfo *win, PrintData *data) :
+        win(win), data(data), isCanceled(false) { 
+        wnd = new NotificationWnd(win->hwndCanvas, _T(""), _TR("Printing page %d of %d..."), this);
+        win->notifications->Add(wnd);
+    }
+
+    ~PrintThreadData() {
+        delete data;
+        RemoveNotification(wnd);
+    }
+
+    virtual bool UpdateProgress(int current, int total) {
+        QueueWorkItem(new PrintThreadUpdateWorkItem(win, wnd, current, total));
+        return WindowInfoStillValid(win) && !win->printCanceled && !isCanceled;
+    }
+
+    // called when printing has been canceled
+    virtual void RemoveNotification(NotificationWnd *wnd) {
+        isCanceled = true;
+        this->wnd = NULL;
+        if (WindowInfoStillValid(win))
+            win->notifications->RemoveNotification(wnd);
+    }
+
+};
+
 static DWORD WINAPI PrintThread(LPVOID data)
 {
-    PrintThreadWorkItem *progressUI = (PrintThreadWorkItem *)data;
-    assert(progressUI && progressUI->data);
-    if (progressUI->data)
-        PrintToDevice(*progressUI->data, progressUI);
-    progressUI->CleanUp();
+    PrintThreadData *threadData = (PrintThreadData *)data;
+    assert(threadData && threadData->data);
+    if (threadData->data)
+        PrintToDevice(*threadData->data, threadData);
 
+    QueueWorkItem(new ClosePrintThreadWorkItem(threadData->win));
+    delete threadData;
     return 0;
 }
 
-static void PrintToDeviceOnThread(WindowInfo& win, PrintData *data)
+static void PrintToDeviceOnThread(WindowInfo *win, PrintData *data)
 {
-    PrintThreadWorkItem *progressUI = new PrintThreadWorkItem(&win, data);
-    win.printThread = CreateThread(NULL, 0, PrintThread, progressUI, 0, NULL);
+    PrintThreadData *threadData = new PrintThreadData(win, data);
+    win->printThread = CreateThread(NULL, 0, PrintThread, threadData, 0, NULL);
 }
 
 void AbortPrinting(WindowInfo *win)
@@ -500,7 +507,7 @@ void OnMenuPrint(WindowInfo *win)
     if (devMode)
         GlobalUnlock(pd.hDevMode);
 
-    PrintToDeviceOnThread(*win, data);
+    PrintToDeviceOnThread(win, data);
 
 Exit:
     free(ppr);
