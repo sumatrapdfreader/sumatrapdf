@@ -206,13 +206,6 @@ public:
     void AbortPrinting();
     void AbortFinding(bool hideMessage=false);
 
-    void LoadTocTree();
-
-    HTREEITEM TreeItemForPageNo(HTREEITEM hItem, int pageNo);
-    void UpdateTocSelection(int currPageNo);
-    void UpdateToCExpansionState(HTREEITEM hItem);
-    void UpdateSidebarDisplayState(DisplayState *ds);
-
     void CreateInfotip(const TCHAR *text, RectI& rc);
     void DeleteInfotip();
 

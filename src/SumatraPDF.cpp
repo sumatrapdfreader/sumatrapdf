@@ -938,6 +938,23 @@ static void UpdateDisplayStateWindowRect(WindowInfo& win, DisplayState& ds, bool
     ds.sidebarDx = gGlobalPrefs.sidebarDx;
 }
 
+static void UpdateSidebarDisplayState(WindowInfo *win, DisplayState *ds)
+{
+    ds->tocVisible = win->tocVisible;
+
+    if (win->tocLoaded) {
+        win->tocState.Reset();
+        HTREEITEM hRoot = TreeView_GetRoot(win->hwndTocTree);
+        if (hRoot)
+            UpdateTocExpansionState(win, hRoot);
+    }
+
+    delete ds->tocState;
+    ds->tocState = NULL;
+    if (win->tocState.Count() > 0)
+        ds->tocState = new Vec<int>(win->tocState);
+}
+
 static void UpdateCurrentFileDisplayStateForWin(WindowInfo& win)
 {
     RememberWindowPosition(win);
@@ -958,7 +975,7 @@ static void UpdateCurrentFileDisplayStateForWin(WindowInfo& win)
         return;
     state->useGlobalValues = gGlobalPrefs.globalPrefsOnly;
     UpdateDisplayStateWindowRect(win, *state, false);
-    win.UpdateSidebarDisplayState(state);
+    UpdateSidebarDisplayState(&win, state);
 }
 
 static void ShowOrHideToolbarGlobally()
@@ -1219,7 +1236,7 @@ void WindowInfo::Reload(bool autorefresh)
         return;
     }
     UpdateDisplayStateWindowRect(*this, ds);
-    UpdateSidebarDisplayState(&ds);
+    UpdateSidebarDisplayState(this, &ds);
     // Set the windows state based on the actual window's placement
     ds.windowState =  this->fullScreen ? WIN_STATE_FULLSCREEN
                     : IsZoomed(this->hwndFrame) ? WIN_STATE_MAXIMIZED 
@@ -1862,7 +1879,7 @@ void WindowInfo::PageNoChanged(int pageNo)
             UpdateToolbarPageText(*this, dm->pageCount());
     }
     if (pageNo != currPageNo) {
-        UpdateTocSelection(pageNo);
+        UpdateTocSelection(this, pageNo);
         currPageNo = pageNo;
 
         MessageWnd *wnd = messages->GetFirst(NG_PAGE_INFO_HELPER);
@@ -5721,7 +5738,7 @@ void SetSidebarVisibility(WindowInfo *win, bool tocVisible, bool favVisible)
     bool sidebarVisible = tocVisible || favVisible;
 
     if (tocVisible)
-        win->LoadTocTree();
+        LoadTocTree(win);
     if (favVisible)
         PopulateFavTreeIfNeeded(win);
 
@@ -5748,7 +5765,7 @@ void SetSidebarVisibility(WindowInfo *win, bool tocVisible, bool favVisible)
     if (rFrame.IsEmpty()) {
         // don't adjust the ToC sidebar size while the window is minimized
         if (win->tocVisible)
-            win->UpdateTocSelection(win->dm->currentPageNo());
+            UpdateTocSelection(win, win->dm->currentPageNo());
         return;
     }
 
@@ -5778,7 +5795,7 @@ void SetSidebarVisibility(WindowInfo *win, bool tocVisible, bool favVisible)
     SetWinPos(win->hwndCanvas, rCanvas, true);
 
     if (tocVisible)
-        win->UpdateTocSelection(win->dm->currentPageNo());
+        UpdateTocSelection(win, win->dm->currentPageNo());
 }
 
 static LRESULT OnSetCursor(WindowInfo& win, HWND hwnd)

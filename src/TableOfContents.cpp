@@ -224,27 +224,96 @@ static void PopulateTocTreeView(HWND hwnd, DocToCItem *entry, Vec<int>& tocState
     }
 }
 
-void WindowInfo::LoadTocTree()
+static HTREEITEM TreeItemForPageNo(WindowInfo *win, HTREEITEM hItem, int pageNo)
 {
-    if (tocLoaded)
-        return;
-    tocLoaded = true;
+    HTREEITEM hCurrItem = NULL;
 
-    tocRoot = NULL;
-    if (dm->engine)
-        tocRoot = dm->engine->GetToCTree();
-    if (!tocRoot)
-        return;
+    while (hItem) {
+        TVITEM item;
+        item.hItem = hItem;
+        item.mask = TVIF_PARAM | TVIF_STATE;
+        item.stateMask = TVIS_EXPANDED;
+        TreeView_GetItem(win->hwndTocTree, &item);
 
-    SendMessage(hwndTocTree, WM_SETREDRAW, FALSE, 0);
-    bool enable = dm->engine->PreferredLayout() & Layout_R2L;
-    ToggleWindowStyle(hwndTocTree, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, enable, GWL_EXSTYLE);
-    PopulateTocTreeView(hwndTocTree, tocRoot, tocState);
-    SendMessage(hwndTocTree, WM_SETREDRAW, TRUE, 0);
-    UINT fl = RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN;
-    RedrawWindow(hwndTocTree, NULL, NULL, fl);
+        // return if this item is on the specified page (or on a latter page)
+        if (item.lParam) {
+            int page = ((DocToCItem *)item.lParam)->pageNo;
+            if (1 <= page && page <= pageNo)
+                hCurrItem = hItem;
+            if (page >= pageNo)
+                break;
+        }
+
+        // find any child item closer to the specified page
+        HTREEITEM hSubItem = NULL;
+        if ((item.state & TVIS_EXPANDED))
+            hSubItem = TreeItemForPageNo(win, TreeView_GetChild(win->hwndTocTree, hItem), pageNo);
+        if (hSubItem)
+            hCurrItem = hSubItem;
+
+        hItem = TreeView_GetNextSibling(win->hwndTocTree, hItem);
+    }
+
+    return hCurrItem;
 }
 
+void UpdateTocSelection(WindowInfo *win, int currPageNo)
+{
+    if (!win->tocLoaded || !win->tocVisible)
+        return;
+    if (GetFocus() == win->hwndTocTree)
+        return;
+
+    HTREEITEM hRoot = TreeView_GetRoot(win->hwndTocTree);
+    if (!hRoot)
+        return;
+    // select the item closest to but not after the current page
+    // (or the root item, if there's no such item)
+    HTREEITEM hCurrItem = TreeItemForPageNo(win, hRoot, currPageNo);
+    TreeView_SelectItem(win->hwndTocTree, hCurrItem ? hCurrItem : hRoot);
+}
+
+void UpdateTocExpansionState(WindowInfo *win, HTREEITEM hItem)
+{
+    while (hItem) {
+        TVITEM item;
+        item.hItem = hItem;
+        item.mask = TVIF_PARAM | TVIF_STATE;
+        item.stateMask = TVIS_EXPANDED;
+        TreeView_GetItem(win->hwndTocTree, &item);
+
+        // add the ids of toggled items to tocState
+        DocToCItem *tocItem = item.lParam ? (DocToCItem *)item.lParam : NULL;
+        bool wasToggled = tocItem && !(item.state & TVIS_EXPANDED) == tocItem->open;
+        if (wasToggled)
+            win->tocState.Append(tocItem->id);
+
+        if (tocItem && tocItem->child)
+            UpdateTocExpansionState(win, TreeView_GetChild(win->hwndTocTree, hItem));
+        hItem = TreeView_GetNextSibling(win->hwndTocTree, hItem);
+    }
+}
+
+void LoadTocTree(WindowInfo *win)
+{
+    if (win->tocLoaded)
+        return;
+    win->tocLoaded = true;
+
+    win->tocRoot = NULL;
+    if (win->dm->engine)
+        win->tocRoot = win->dm->engine->GetToCTree();
+    if (!win->tocRoot)
+        return;
+
+    SendMessage(win->hwndTocTree, WM_SETREDRAW, FALSE, 0);
+    bool enable = win->dm->engine->PreferredLayout() & Layout_R2L;
+    ToggleWindowStyle(win->hwndTocTree, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, enable, GWL_EXSTYLE);
+    PopulateTocTreeView(win->hwndTocTree, win->tocRoot, win->tocState);
+    SendMessage(win->hwndTocTree, WM_SETREDRAW, TRUE, 0);
+    UINT fl = RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN;
+    RedrawWindow(win->hwndTocTree, NULL, NULL, fl);
+}
 
 static LRESULT OnTocTreeNotify(WindowInfo *win, LPNMTREEVIEW pnmtv)
 {
