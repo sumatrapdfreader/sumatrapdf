@@ -353,10 +353,11 @@ $(OS)\SumatraPDF.obj: src\Notifications.h src\ParseCommandLine.h src\PdfEngine.h
 $(OS)\SumatraPDF.obj: src\PdfSync.h src\PsEngine.h src\RenderCache.h
 $(OS)\SumatraPDF.obj: src\Resource.h src\StressTesting.h src\SumatraAbout.h
 $(OS)\SumatraPDF.obj: src\SumatraDialogs.h src\SumatraPDF.h src\SumatraProperties.h
-$(OS)\SumatraPDF.obj: src\TextSearch.h src\TextSelection.h src\translations.h
-$(OS)\SumatraPDF.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
-$(OS)\SumatraPDF.obj: src\utils\Http.h src\utils\StrUtil.h src\utils\Vec.h
-$(OS)\SumatraPDF.obj: src\utils\WinUtil.h src\Version.h src\WindowInfo.h
+$(OS)\SumatraPDF.obj: src\TableOfContents.h src\TextSearch.h src\TextSelection.h
+$(OS)\SumatraPDF.obj: src\translations.h src\utils\BaseUtil.h src\utils\FileUtil.h
+$(OS)\SumatraPDF.obj: src\utils\GeomUtil.h src\utils\Http.h src\utils\StrUtil.h
+$(OS)\SumatraPDF.obj: src\utils\Vec.h src\utils\WinUtil.h src\Version.h
+$(OS)\SumatraPDF.obj: src\WindowInfo.h
 $(OS)\SumatraProperties.obj: src\AppPrefs.h src\BaseEngine.h src\DisplayModel.h
 $(OS)\SumatraProperties.obj: src\DisplayState.h src\DjVuEngine.h src\EngineManager.h
 $(OS)\SumatraProperties.obj: src\ImagesEngine.h src\PdfEngine.h src\PsEngine.h
@@ -364,6 +365,14 @@ $(OS)\SumatraProperties.obj: src\SumatraPDF.h src\SumatraProperties.h src\TextSe
 $(OS)\SumatraProperties.obj: src\TextSelection.h src\translations.h src\utils\BaseUtil.h
 $(OS)\SumatraProperties.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\StrUtil.h
 $(OS)\SumatraProperties.obj: src\utils\Vec.h src\utils\WinUtil.h src\WindowInfo.h
+$(OS)\TableOfContents.obj: src\AppPrefs.h src\AppTools.h src\BaseEngine.h
+$(OS)\TableOfContents.obj: src\DisplayModel.h src\DisplayState.h src\DjVuEngine.h
+$(OS)\TableOfContents.obj: src\EngineManager.h src\ImagesEngine.h src\PdfEngine.h
+$(OS)\TableOfContents.obj: src\PsEngine.h src\resource.h src\SumatraPDF.h
+$(OS)\TableOfContents.obj: src\TableOfContents.h src\TextSearch.h src\TextSelection.h
+$(OS)\TableOfContents.obj: src\translations.h src\utils\BaseUtil.h src\utils\GeomUtil.h
+$(OS)\TableOfContents.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
+$(OS)\TableOfContents.obj: src\WindowInfo.h
 $(OS)\TextSearch.obj: src\BaseEngine.h src\TextSearch.h src\TextSelection.h
 $(OS)\TextSearch.obj: src\utils\BaseUtil.h src\utils\GeomUtil.h src\utils\StrUtil.h
 $(OS)\TextSearch.obj: src\utils\Vec.h

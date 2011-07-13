@@ -527,8 +527,8 @@ static TCHAR *NormalizeFuzzy(const TCHAR *str)
 {
     TCHAR *dup = str::Dup(str);
     CharLower(dup);
-    // cf. AddTocItemToView in SumatraPDF.cpp
     str::NormalizeWS(dup);
+    // cf. AddTocItemToView
     return dup;
 }
 
