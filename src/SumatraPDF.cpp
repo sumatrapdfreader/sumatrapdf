@@ -46,11 +46,6 @@
 CASSERT(IDM_VIEW_LAYOUT_LAST - IDM_VIEW_LAYOUT_FIRST == 3, view_layout_range);
 CASSERT(IDM_ZOOM_LAST - IDM_ZOOM_FIRST == 17, zoom_range);
 
-// Undefine any of these two, if you prefer MuPDF/Fitz to render the whole page
-// (using FreeType for fonts) at the expense of higher memory/spooler requirements.
-// #define USE_GDI_FOR_RENDERING
-#define USE_GDI_FOR_PRINTING
-
 /* Define THREAD_BASED_FILEWATCH to use the thread-based implementation of file change detection. */
 #define THREAD_BASED_FILEWATCH
 
@@ -71,13 +66,9 @@ static bool             gDebugShowLinks = false;
 #endif
 
 /* if true, we're rendering everything with the GDI+ back-end,
-   otherwise Fitz is used at least for screen rendering.
-   In Debug builds, you can switch between the two by hitting the '$' key */
-#ifdef USE_GDI_FOR_RENDERING
-static bool             gUseGdiRenderer = true;
-#else
+   otherwise Fitz/MuPDF is used at least for screen rendering.
+   In Debug builds, you can switch between the two through the Debug menu */
 static bool             gUseGdiRenderer = false;
-#endif
 
 // in plugin mode, the window's frame isn't drawn and closing and
 // fullscreen are disabled, so that SumatraPDF can be displayed
