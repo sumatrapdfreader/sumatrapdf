@@ -93,11 +93,14 @@ void  ChangeLanguage(const char *langName);
 void  ShowOrHideToolbarGlobally();
 void  UpdateCurrentFileDisplayStateForWin(WindowInfo* win);
 bool  OnFrameKeydown(WindowInfo* win, WPARAM key, LPARAM lparam, bool inTextfield=false);
-bool  NeedsFindUI(WindowInfo *win);
 SIZE  TextSizeInHwnd(HWND hwnd, const TCHAR *txt);
 void  ZoomToSelection(WindowInfo *win, float factor, bool relative);
 void  SwitchToDisplayMode(WindowInfo *win, DisplayMode displayMode, bool keepContinuous=false);
 HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuLen, HMENU menu);
 void  ReloadDocument(WindowInfo *win, bool autorefresh=false);
+void  PaintTransparentRectangle(HDC hdc, RectI screenRc, RectI *rect, COLORREF selectionColor, BYTE alpha = 0x5f, int margin = 1);
+
+void  DeleteOldSelectionInfo(WindowInfo& win, bool alsoTextSel=false);
+void  UpdateTextSelection(WindowInfo& win, bool select=true);
 
 #endif
