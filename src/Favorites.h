@@ -8,6 +8,8 @@
 #include "StrUtil.h"
 #include "Vec.h"
 
+class WindowInfo;
+
 /*
 A favorite is a bookmark (we call it a favorite, like Internet Explorer, to
 differentiate from bookmarks inside a PDF file (which really are
@@ -109,5 +111,15 @@ public:
    void Remove(const TCHAR *filePath, int pageNo);
    void RemoveAllForFile(const TCHAR *filePath);
 };
+
+void AddFavorite(WindowInfo *win);
+void DelFavorite(WindowInfo *win);
+void RebuildFavMenu(WindowInfo *win, HMENU menu);
+void CreateFavorites(WindowInfo *win);
+void ToggleFavorites(WindowInfo *win);
+void PopulateFavTreeIfNeeded(WindowInfo *win);
+void RememberFavTreeExpansionStateForAllWindows();
+void GoToFavoriteByMenuId(WindowInfo *win, int wmId);
+bool HasFavorites();
 
 #endif

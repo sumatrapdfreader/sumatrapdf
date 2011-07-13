@@ -11,7 +11,10 @@ about untranslated strings to stdout and adds untranslated strings as
 comments at the end of strings file for each language.
 """
 
-C_FILES_TO_PROCESS = ["SumatraPDF.cpp", "SumatraAbout.cpp", "SumatraProperties.cpp", "SumatraDialogs.cpp", "CrashHandler.cpp", "AppTools.cpp"]
+C_FILES_TO_PROCESS = [
+  "SumatraPDF.cpp", "SumatraAbout.cpp", "SumatraProperties.cpp", 
+  "SumatraDialogs.cpp", "CrashHandler.cpp", "AppTools.cpp", "Favorites.cpp"
+]
 C_FILES_TO_PROCESS = [os.path.join("..", "src", f) for f in C_FILES_TO_PROCESS]
 STRINGS_PATH = os.path.join("..", "strings")
 TRANSLATION_PATTERN = r'\b_TRN?\("(.*?)"\)'

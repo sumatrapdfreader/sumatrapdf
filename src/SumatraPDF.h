@@ -8,6 +8,12 @@
 #include "AppPrefs.h"
 #include "TextSearch.h"
 
+
+// experimental: if 1, if there is only one favorite
+// for a given file, it'll be displayed as a final node, not
+// a tree, in menu and tree view
+#define COLLAPSE_SINGLE_PAGE_FAVS 1
+
 #define FRAME_CLASS_NAME        _T("SUMATRA_PDF_FRAME")
 
 // permissions that can be revoked (or explicitly set) through Group Policies
@@ -30,12 +36,21 @@ enum {
     Perm_RestrictedUse      = 0x1000000,
 };
 
+struct MenuDef {
+    const char *title;
+    int         id;
+    int         flags;
+};
+
 /* styling for About/Properties windows */
 
 #define LEFT_TXT_FONT           _T("Arial")
 #define LEFT_TXT_FONT_SIZE      12
 #define RIGHT_TXT_FONT          _T("Arial Black")
 #define RIGHT_TXT_FONT_SIZE     12
+
+class WindowInfo;
+class Favorites;
 
 // all defined in SumatraPDF.cpp
 extern HINSTANCE                ghinst;
@@ -45,15 +60,26 @@ extern HBRUSH                   gBrushNoDocBg;
 extern HBRUSH                   gBrushAboutBg;
 extern bool                     gPluginMode;
 extern TCHAR *                  gPluginURL;
+extern Vec<WindowInfo*>         gWindows;
+extern Favorites *              gFavorites;
+extern FileHistory              gFileHistory;
+extern HFONT                    gDefaultGuiFont;
+extern WNDPROC                  DefWndProcCloseButton;
+extern MenuDef                  menuDefFavorites[];
 
-class WindowInfo;
-
-bool HasPermission(int permission);
-bool IsUIRightToLeft();
-bool LaunchBrowser(const TCHAR *url);
-void AssociateExeWithPdfExtension();
-void FindTextOnThread(WindowInfo* win, TextSearchDirection direction=FIND_FORWARD);
-void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose=false);
-void SetSidebarVisibility(WindowInfo *win, bool tocVisible, bool favVisible);
-
+LRESULT CALLBACK WndProcCloseButton(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+bool  HasPermission(int permission);
+bool  IsUIRightToLeft();
+bool  LaunchBrowser(const TCHAR *url);
+void  AssociateExeWithPdfExtension();
+void  FindTextOnThread(WindowInfo* win, TextSearchDirection direction=FIND_FORWARD);
+void  CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose=false);
+void  SetSidebarVisibility(WindowInfo *win, bool tocVisible, bool favVisible);
+void  RememberFavTreeExpansionState(WindowInfo *win);
+void  LayoutTreeContainer(HWND hwndContainer, int id);
+void  DrawCloseButton(DRAWITEMSTRUCT *dis);
+void  AdvanceFocus(WindowInfo* win);
+bool  WindowInfoStillValid(WindowInfo *win);
+bool  SavePrefs();
+HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuLen, HMENU menu);
 #endif
