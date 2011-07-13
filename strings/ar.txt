@@ -160,8 +160,23 @@ Contributor: Abu Abdullah (falcon.sheep@gmail.com)
 (of %d)
 (من %d)
 
+(page %d)
+(الصفحة %d)
+
 About SumatraPDF
 SumatraPDF حول برنامج
+
+Add Favorite
+أضف للمفضلة
+
+Add page %d to favorites
+أضف الصفحة %d للمفضلة
+
+Add page %d to favorites with (optional) name:
+أضف الصفحة %d للمفضلة باسم (اختياري):
+
+Add to favorites
+أضف للمفضلة
 
 Advanced
 متقدم
@@ -194,13 +209,13 @@ Book View
 عرض الكتاب
 
 Book&marks\tF12
-المفضلة\tF12
+العلامات\tF12
 
 Bookmark Shortcuts
-اختصارات المفضلة
+اختصارات مرجعية
 
 Bookmark shortcut to page %d of %s
-اختصار المفضلة للصفحة %d من %s
+اختصار مرجعية للصفحة %d من %s
 
 Bookmarks
 العلامات
@@ -250,6 +265,9 @@ Copy Co&mment
 Copying text was denied (copying as image only)
 تعذر نسخ النص (النسخ كصورة فقط)
 
+Could not obtain Printer properties
+لم يمكن الحصول على خصائص الطابعة
+
 Could not open Printer
 تعذر فتح الطابعة
 
@@ -261,6 +279,9 @@ Couldn't render the page
 
 Created:
 الإنشاء
+
+Current file
+الملف الحالي
 
 Custom &Zoom...\tCtrl+Y
 تنسيق &التقريب\tCtrl+Y
@@ -301,6 +322,9 @@ Enter the command-line to invoke when you double-click on the PDF document:
 Error loading %s
 خطأ في تحميل %s
 
+F&avorites
+المفضلة
+
 F&orward\tAlt+Right Arrow
 الأمام\tAlt+السهم الأيمن
 
@@ -312,6 +336,9 @@ Facing
 
 Failed to save a file
 فشل في حفظ الملف
+
+Favorites
+المفضلة
 
 File Size:
 حجم الملف
@@ -460,6 +487,9 @@ PDF documents
 Pa&ge...\tCtrl+G
 صفحة محددة\tCtrl+G
 
+Page %d
+الصفحة %d
+
 Page Size:
 حجم الصفحة
 
@@ -490,6 +520,9 @@ Print
 Print range
 نطاق الطباعة
 
+Printer with given name doesn't exist
+الطابعة بهذا الاسم غير موجودة
+
 Printing is still in progress. Abort and start over?
 الطباعة جارية. أوقفها وأعدها مرة أخرى؟
 
@@ -501,6 +534,12 @@ Printing problem.
 
 Remember &opened files
 تذكر الملفات المفتوحة
+
+Remove from favorites
+احذف من المفضلة
+
+Remove page %d from favorites
+احذف الصفحة %d من المفضلة
 
 Rotate &Left\tCtrl+Shift+-
 دوران لليسار\tCtrl+Shift+-
@@ -538,11 +577,14 @@ Show &Toolbar
 Show &pages continuously
 عرض الصفحات باستمرار
 
+Show Favorites
+إظهار المفضلة
+
 Show frequently read
 إظهار الأكثر قراءة
 
 Show the &bookmarks sidebar when available
-عرض المفضلة في الشريط الجانبي عند وجودها
+عرض الاختصارات المرجعية في الشريط الجانبي عند وجودها
 
 Single Page
 صفحة واحدة
@@ -621,20 +663,4 @@ copying text
 
 printing document
 تتم حالياً الطباعة
-
-# Untranslated:
-#(page %d)
-#Add Favorite
-#Add page %d to favorites
-#Add page %d to favorites with (optional) name:
-#Add to favorites
-#Could not obtain Printer properties
-#Current file
-#F&avorites
-#Favorites
-#Page %d
-#Printer with given name doesn't exist
-#Remove from favorites
-#Remove page %d from favorites
-#Show Favorites
 
