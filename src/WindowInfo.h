@@ -194,8 +194,6 @@ public:
     void CreateInfotip(const TCHAR *text, RectI& rc);
     void DeleteInfotip();
 
-    void ShowForwardSearchResult(const TCHAR *fileName, UINT line, UINT col, UINT ret, UINT page, Vec<RectI>& rects);
-
     // DisplayModelCallback implementation (incl. PasswordUI)
     virtual TCHAR * GetPassword(const TCHAR *fileName, unsigned char *fileDigest,
                                 unsigned char decryptionKeyOut[32], bool *saveKey);

@@ -1462,7 +1462,7 @@ static bool LoadDocIntoWindow(
 
     if (!isNewWindow) {
         win.RedrawAll();
-        OnMenuFindMatchCase(win);
+        OnMenuFindMatchCase(&win);
     }
     UpdateFindbox(&win);
 
@@ -1588,7 +1588,7 @@ WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin, b
         }
     }
 
-    DeleteOldSelectionInfo(*win, true);
+    DeleteOldSelectionInfo(win, true);
     win->fwdSearchMark.show = false;
     win->notifications->RemoveAllInGroup(NG_RESPONSE_TO_ACTION);
     win->notifications->RemoveAllInGroup(NG_PAGE_INFO_HELPER);
@@ -1930,22 +1930,22 @@ void PaintTransparentRectangle(HDC hdc, RectI screenRc, RectI *rect, COLORREF se
     DeleteDC(rectDC);
 }
 
-void UpdateTextSelection(WindowInfo& win, bool select)
+void UpdateTextSelection(WindowInfo *win, bool select)
 {
-    assert(win.IsDocLoaded());
-    if (!win.IsDocLoaded()) return;
+    assert(win->IsDocLoaded());
+    if (!win->IsDocLoaded()) return;
 
     if (select) {
-        int pageNo = win.dm->GetPageNoByPoint(win.selectionRect.BR());
-        if (win.dm->validPageNo(pageNo)) {
-            PointD pt = win.dm->CvtFromScreen(win.selectionRect.BR(), pageNo);
-            win.dm->textSelection->SelectUpTo(pageNo, pt.x, pt.y);
+        int pageNo = win->dm->GetPageNoByPoint(win->selectionRect.BR());
+        if (win->dm->validPageNo(pageNo)) {
+            PointD pt = win->dm->CvtFromScreen(win->selectionRect.BR(), pageNo);
+            win->dm->textSelection->SelectUpTo(pageNo, pt.x, pt.y);
         }
     }
 
     DeleteOldSelectionInfo(win);
-    win.selectionOnPage = SelectionOnPage::FromTextSelect(&win.dm->textSelection->result);
-    win.showSelection = true;
+    win->selectionOnPage = SelectionOnPage::FromTextSelect(&win->dm->textSelection->result);
+    win->showSelection = true;
 }
 
 void ZoomToSelection(WindowInfo *win, float factor, bool relative)
@@ -2012,7 +2012,7 @@ static void PaintSelection(WindowInfo& win, HDC hdc) {
         PaintTransparentRectangle(hdc, win.canvasRc, &selRect, COL_SELECTION_RECT);
     } else {
         if (MA_SELECTING_TEXT == win.mouseAction)
-            UpdateTextSelection(win);
+            UpdateTextSelection(&win);
 
         // after selection is done
         for (size_t i = 0; i < win.selectionOnPage->Count(); i++)
@@ -2190,7 +2190,7 @@ static void DrawDocument(WindowInfo& win, HDC hdc, RECT *rcArea)
         PaintSelection(win, hdc);
     
     if (win.fwdSearchMark.show)
-        PaintForwardSearchMark(win, hdc);
+        PaintForwardSearchMark(&win, hdc);
 
     DBG_OUT("\n");
     if (!rendering)
@@ -2248,14 +2248,14 @@ static void CopySelectionToClipboard(WindowInfo& win)
     CloseClipboard();
 }
 
-void DeleteOldSelectionInfo(WindowInfo& win, bool alsoTextSel)
+void DeleteOldSelectionInfo(WindowInfo *win, bool alsoTextSel)
 {
-    delete win.selectionOnPage;
-    win.selectionOnPage = NULL;
-    win.showSelection = false;
+    delete win->selectionOnPage;
+    win->selectionOnPage = NULL;
+    win->showSelection = false;
 
-    if (alsoTextSel && win.IsDocLoaded())
-        win.dm->textSelection->Reset();
+    if (alsoTextSel && win->IsDocLoaded())
+        win->dm->textSelection->Reset();
 }
 
 // for testing only
@@ -2303,10 +2303,10 @@ static void OnSelectAll(WindowInfo& win, bool textOnly=false)
         for (pageNo = win.dm->pageCount(); !win.dm->getPageInfo(pageNo)->shown; pageNo--);
         win.dm->textSelection->SelectUpTo(pageNo, -1);
         win.selectionRect = RectI::FromXY(INT_MIN / 2, INT_MIN / 2, INT_MAX, INT_MAX);
-        UpdateTextSelection(win);
+        UpdateTextSelection(&win);
     }
     else {
-        DeleteOldSelectionInfo(win, true);
+        DeleteOldSelectionInfo(&win, true);
         win.selectionRect = RectI::FromXY(INT_MIN / 2, INT_MIN / 2, INT_MAX, INT_MAX);
         win.selectionOnPage = SelectionOnPage::FromRectangle(win.dm, win.selectionRect);
     }
@@ -2512,7 +2512,7 @@ static void OnMouseMove(WindowInfo& win, int x, int y, WPARAM flags)
 
 static void OnSelectionStart(WindowInfo& win, int x, int y, WPARAM key)
 {
-    DeleteOldSelectionInfo(win, true);
+    DeleteOldSelectionInfo(&win, true);
 
     win.selectionRect = RectI(x, y, 0, 0);
     win.showSelection = true;
@@ -2542,11 +2542,11 @@ static void OnSelectionStop(WindowInfo& win, int x, int y, bool aborted)
 
     // update the text selection before changing the selectionRect
     if (MA_SELECTING_TEXT == win.mouseAction)
-        UpdateTextSelection(win);
+        UpdateTextSelection(&win);
 
     win.selectionRect = RectI::FromXY(win.selectionRect.x, win.selectionRect.y, x, y);
     if (aborted || (MA_SELECTING == win.mouseAction ? win.selectionRect.IsEmpty() : !win.selectionOnPage))
-        DeleteOldSelectionInfo(win, true);
+        DeleteOldSelectionInfo(&win, true);
     else if (win.mouseAction == MA_SELECTING)
         win.selectionOnPage = SelectionOnPage::FromRectangle(win.dm, win.selectionRect);
     win.RepaintAsync();
@@ -2644,7 +2644,7 @@ static void OnMouseLeftButtonUp(WindowInfo& win, int x, int y, WPARAM key)
     }
     /* if we had a selection and this was just a click, hide the selection */
     else if (win.showSelection)
-        ClearSearchResult(win);
+        ClearSearchResult(&win);
     /* in presentation mode, change pages on left/right-clicks */
     else if (win.fullScreen || PM_ENABLED == win.presentation) {
         if ((key & MK_SHIFT))
@@ -2673,7 +2673,7 @@ static void OnMouseLeftButtonDblClk(WindowInfo& win, int x, int y, WPARAM key)
 
     bool dontSelect = false;
     if (gGlobalPrefs.enableTeXEnhancements && !(key & ~MK_LBUTTON))
-        dontSelect = OnInverseSearch(win, x, y);
+        dontSelect = OnInverseSearch(&win, x, y);
 
     if (dontSelect || !win.IsDocLoaded() || !win.dm->IsOverText(PointI(x, y)))
         return;
@@ -2684,7 +2684,7 @@ static void OnMouseLeftButtonDblClk(WindowInfo& win, int x, int y, WPARAM key)
         win.dm->textSelection->SelectWordAt(pageNo, pt.x, pt.y);
     }
 
-    UpdateTextSelection(win, false);
+    UpdateTextSelection(&win, false);
     win.RepaintAsync();
 }
 
@@ -2904,7 +2904,7 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
         }
         UpdateToolbarPageText(win, 0);
         UpdateToolbarFindText(win);
-        DeleteOldSelectionInfo(*win, true);
+        DeleteOldSelectionInfo(win, true);
         win->RedrawAll();
         UpdateFindbox(win);
         SetFocus(win->hwndFrame);
@@ -3841,7 +3841,7 @@ static void OnChar(WindowInfo& win, WPARAM key)
         else if (win.fullScreen)
             OnMenuViewFullscreen(win);
         else if (win.showSelection)
-            ClearSearchResult(win);
+            ClearSearchResult(&win);
         return;
     case 'q':
         if (!gPluginMode)
@@ -3895,7 +3895,7 @@ static void OnChar(WindowInfo& win, WPARAM key)
         break;
     case '/':
         if (!gIsDivideKeyDown)
-            OnMenuFind(win);
+            OnMenuFind(&win);
         gIsDivideKeyDown = false;
         break;
     case 'c':
@@ -4804,19 +4804,19 @@ static LRESULT OnCommand(WindowInfo *win, HWND hwnd, UINT message, WPARAM wParam
             break;
     
         case IDM_FIND_FIRST:
-            OnMenuFind(*win);
+            OnMenuFind(win);
             break;
     
         case IDM_FIND_NEXT:
-            OnMenuFindNext(*win);
+            OnMenuFindNext(win);
             break;
     
         case IDM_FIND_PREV:
-            OnMenuFindPrev(*win);
+            OnMenuFindPrev(win);
             break;
     
         case IDM_FIND_MATCH:
-            OnMenuFindMatchCase(*win);
+            OnMenuFindMatchCase(win);
             break;
     
         case IDM_VISIT_WEBSITE:
