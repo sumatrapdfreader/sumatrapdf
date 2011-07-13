@@ -164,8 +164,23 @@ Originele paginagrootte gebruiken
 (of %d)
 (van %d)
 
+(page %d)
+(pagina %d)
+
 About SumatraPDF
 Over SumatraPDF
+
+Add Favorite
+Voeg Favoriet toe
+
+Add page %d to favorites
+Voeg pagina %d toe aan favorieten
+
+Add page %d to favorites with (optional) name:
+Voeg pagina %d toe aan favorieten met (optionele) naam:
+
+Add to favorites
+Voeg toe aan favorieten
 
 Advanced
 Geavanceerd
@@ -254,6 +269,9 @@ Notitie kopiëren
 Copying text was denied (copying as image only)
 Tekst kopiëren niet toegestaan (kopieer als afbeelding)
 
+Could not obtain Printer properties
+Kon geen Printer eigenschappen verkrijgen
+
 Could not open Printer
 Printer niet gevonden
 
@@ -265,6 +283,9 @@ Kan deze pagina niet weergegeven
 
 Created:
 Gemaakt:
+
+Current file
+Huidig bestand
 
 Custom &Zoom...\tCtrl+Y
 &Aangepaste Zoom...\tCtrl+Y
@@ -305,6 +326,9 @@ Opdracht-regel die gestart moet worden bij het dubbelklikken van een PDF-bestand
 Error loading %s
 Fout bij het laden van %s
 
+F&avorites
+F&avorieten
+
 F&orward\tAlt+Right Arrow
 Verder\tAlt+->
 
@@ -316,6 +340,9 @@ Dubbele pagina
 
 Failed to save a file
 Fout bij opslaan bestand
+
+Favorites
+Favorieten
 
 File Size:
 Bestandsgrootte
@@ -464,6 +491,9 @@ PDF-bestanden
 Pa&ge...\tCtrl+G
 Pa&gina...\tCtrl+G
 
+Page %d
+Pagina %d
+
 Page Size:
 Paginagrootte:
 
@@ -494,6 +524,9 @@ Afdrukken
 Print range
 Bereik afdrukken
 
+Printer with given name doesn't exist
+Printer met de opgegeven naam bestaat niet
+
 Printing is still in progress. Abort and start over?
 Afdrukken is nog niet voltooid. Afbreken en opnieuw beginnen?
 
@@ -505,6 +538,12 @@ Probleem bij het afdrukken
 
 Remember &opened files
 Onthoud ge&opende bestanden
+
+Remove from favorites
+Verwijder uit favorieten
+
+Remove page %d from favorites
+Verwijder pagina %d uit favorieten
 
 Rotate &Left\tCtrl+Shift+-
 Linksom draaien\tCtrl+Shift+-
@@ -541,6 +580,9 @@ Werkbalk tonen
 
 Show &pages continuously
 Toon pagina's doorlopend
+
+Show Favorites
+Toon Favorieten
 
 Show frequently read
 'Vaak gelezen' weergeven
@@ -625,20 +667,4 @@ tekst kopieren
 
 printing document
 bestand afdrukken
-
-# Untranslated:
-#(page %d)
-#Add Favorite
-#Add page %d to favorites
-#Add page %d to favorites with (optional) name:
-#Add to favorites
-#Could not obtain Printer properties
-#Current file
-#F&avorites
-#Favorites
-#Page %d
-#Printer with given name doesn't exist
-#Remove from favorites
-#Remove page %d from favorites
-#Show Favorites
 
