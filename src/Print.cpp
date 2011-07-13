@@ -291,9 +291,6 @@ public:
     }
 };
 
-static void ClosePrintThreadFromUiThread(WindowInfo *win) {
-}
-
 class PrintThreadData : public ProgressUpdateUI, public NotificationWndCallback {
     NotificationWnd *wnd;
     bool isCanceled;
