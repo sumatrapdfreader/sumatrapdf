@@ -596,6 +596,9 @@
     <ClCompile Include="src\Print.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Search.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ext\jbig2dec\config_win32.h">
@@ -830,6 +833,9 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Print.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Search.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

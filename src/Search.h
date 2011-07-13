@@ -57,5 +57,6 @@ void OnMenuFindPrev(WindowInfo *win);
 void OnMenuFindNext(WindowInfo *win);
 void OnMenuFind(WindowInfo *win);
 void OnMenuFindMatchCase(WindowInfo *win);
+void AbortFinding(WindowInfo *win, bool hideMessage=false);
 
 #endif

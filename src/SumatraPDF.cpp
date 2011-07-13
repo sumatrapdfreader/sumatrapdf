@@ -1353,6 +1353,9 @@ static void DeleteWindowInfo(WindowInfo *win)
     ImageList_Destroy((HIMAGELIST)SendMessage(win->hwndToolbar, TB_GETIMAGELIST, 0, 0));
     DragAcceptFiles(win->hwndCanvas, FALSE);
 
+    AbortFinding(win);
+    AbortPrinting(win);
+
     delete win;
 }
 
@@ -1389,7 +1392,7 @@ static bool LoadDocIntoWindow(
     }
 
     DisplayModel *prevModel = win.dm;
-    win.AbortFinding();
+    AbortFinding(&win);
     delete win.pdfsync;
     win.pdfsync = NULL;
 
@@ -2826,8 +2829,9 @@ static void OnMenuExit()
         return;
 
     for (size_t i = 0; i < gWindows.Count(); i++) {
-        gWindows[i]->AbortFinding();
-        AbortPrinting(gWindows[i]);
+        WindowInfo *win = gWindows[i];
+        AbortFinding(win);
+        AbortPrinting(win);
     }
 
     SavePrefs();
@@ -2893,7 +2897,7 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
         win->watcher = NULL;
         SetSidebarVisibility(win, false, gGlobalPrefs.favVisible);
         ClearTocBox(win);
-        win->AbortFinding(true);
+        AbortFinding(win, true);
         delete win->dm;
         win->dm = NULL;
         str::ReplacePtr(&win->loadedFilePath, NULL);
@@ -3835,7 +3839,7 @@ static void OnChar(WindowInfo& win, WPARAM key)
     switch (key) {
     case VK_ESCAPE:
         if (win.findThread)
-            win.AbortFinding();
+            AbortFinding(&win);
         else if (win.notifications->GetFirstInGroup(NG_PAGE_INFO_HELPER))
             win.notifications->RemoveAllInGroup(NG_PAGE_INFO_HELPER);
         else if (win.presentation)

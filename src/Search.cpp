@@ -243,9 +243,21 @@ static DWORD WINAPI FindThread(LPVOID data)
    return 0;
 }
 
+void AbortFinding(WindowInfo *win, bool hideMessage)
+{
+    if (win->findThread) {
+        win->findCanceled = true;
+        WaitForSingleObject(win->findThread, INFINITE);
+    }
+    win->findCanceled = false;
+
+    if (hideMessage)
+        win->notifications->RemoveAllInGroup(NG_FIND_PROGRESS);
+}
+
 void FindTextOnThread(WindowInfo* win, TextSearchDirection direction)
 {
-   win->AbortFinding(true);
+   AbortFinding(win, true);
 
    FindThreadData *ftd = new FindThreadData(*win, direction, win->hwndFindBox);
    Edit_SetModify(win->hwndFindBox, FALSE);

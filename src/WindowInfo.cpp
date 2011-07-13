@@ -42,8 +42,6 @@ WindowInfo::WindowInfo(HWND hwnd) :
 
 WindowInfo::~WindowInfo() 
 {
-    AbortFinding();
-    AbortPrinting(this);
     delete stressTest;
 
     delete dm;
@@ -96,18 +94,6 @@ SizeI WindowInfo::GetViewPortSize()
         size.dy += GetSystemMetrics(SM_CYHSCROLL);
 
     return size;
-}
-
-void WindowInfo::AbortFinding(bool hideMessage)
-{
-    if (this->findThread) {
-        this->findCanceled = true;
-        WaitForSingleObject(this->findThread, INFINITE);
-    }
-    this->findCanceled = false;
-
-    if (hideMessage)
-        this->notifications->RemoveAllInGroup(NG_FIND_PROGRESS);
 }
 
 void WindowInfo::RedrawAll(bool update)
