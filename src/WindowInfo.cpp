@@ -98,12 +98,6 @@ SizeI WindowInfo::GetViewPortSize()
     return size;
 }
 
-void WindowInfo::ShowNotification(const TCHAR *message, bool autoDismiss, bool highlight, NotificationGroup groupId)
-{
-    MessageWnd *wnd = new MessageWnd(this->hwndCanvas, message, autoDismiss ? 3000 : 0, highlight, this->messages);
-    this->messages->Add(wnd, groupId);
-}
-
 void WindowInfo::AbortFinding(bool hideMessage)
 {
     if (this->findThread) {

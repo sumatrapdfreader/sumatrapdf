@@ -2214,7 +2214,7 @@ static void CopySelectionToClipboard(WindowInfo& win)
     EmptyClipboard();
 
     if (!win.dm->engine->IsCopyingTextAllowed())
-        win.ShowNotification(_TR("Copying text was denied (copying as image only)"));
+        ShowNotification(&win, _TR("Copying text was denied (copying as image only)"));
     else if (!win.dm->engine->IsImageCollection()) {
         ScopedMem<TCHAR> selText;
         bool isTextSelection = win.dm->textSelection->result.len > 0;
@@ -2346,12 +2346,12 @@ static bool OnInverseSearch(WindowInfo& win, int x, int y)
             // In order to avoid confusion for non-LaTeX users, we do not show
             // any error message if the SyncTeX enhancements are hidden from UI
             if (gGlobalPrefs.enableTeXEnhancements)
-                win.ShowNotification(_TR("No synchronization file found"));
+                ShowNotification(&win, _TR("No synchronization file found"));
             return true;
         }
         if (err != PDFSYNCERR_SUCCESS) {
             DBG_OUT("Pdfsync: Sync file cannot be loaded!\n");
-            win.ShowNotification(_TR("Synchronization file cannot be opened"));
+            ShowNotification(&win, _TR("Synchronization file cannot be opened"));
             return true;
         }
         gGlobalPrefs.enableTeXEnhancements = true;
@@ -2367,7 +2367,7 @@ static bool OnInverseSearch(WindowInfo& win, int x, int y)
     int err = win.pdfsync->pdf_to_source(pageNo, pt, srcfilepath, &line, &col);
     if (err != PDFSYNCERR_SUCCESS) {
         DBG_OUT("cannot sync from pdf to source!\n");
-        win.ShowNotification(_TR("No synchronization info at this position"));
+        ShowNotification(&win, _TR("No synchronization info at this position"));
         return true;
     }
 
@@ -2382,10 +2382,10 @@ static bool OnInverseSearch(WindowInfo& win, int x, int y)
     if (!str::IsEmpty(cmdline.Get())) {
         ScopedHandle process(LaunchProcess(cmdline));
         if (!process)
-            win.ShowNotification(_TR("Cannot start inverse search command. Please check the command line in the settings."));
+            ShowNotification(&win, _TR("Cannot start inverse search command. Please check the command line in the settings."));
     }
     else if (gGlobalPrefs.enableTeXEnhancements)
-        win.ShowNotification(_TR("Cannot start inverse search command. Please check the command line in the settings."));
+        ShowNotification(&win, _TR("Cannot start inverse search command. Please check the command line in the settings."));
 
     if (inverseSearch != gGlobalPrefs.inverseSearchCmdLine)
         free(inverseSearch);
@@ -3853,13 +3853,13 @@ void WindowInfo::ShowForwardSearchResult(const TCHAR *fileName, UINT line, UINT 
 
     ScopedMem<TCHAR> buf;
     if (ret == PDFSYNCERR_SYNCFILE_NOTFOUND )
-        ShowNotification(_TR("No synchronization file found"));
+        ShowNotification(this, _TR("No synchronization file found"));
     else if (ret == PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED)
-        ShowNotification(_TR("Synchronization file cannot be opened"));
+        ShowNotification(this, _TR("Synchronization file cannot be opened"));
     else if (ret == PDFSYNCERR_INVALID_PAGE_NUMBER)
         buf.Set(str::Format(_TR("Page number %u inexistant"), page));
     else if (ret == PDFSYNCERR_NO_SYNC_AT_LOCATION)
-        ShowNotification(_TR("No synchronization info at this position"));
+        ShowNotification(this, _TR("No synchronization info at this position"));
     else if (ret == PDFSYNCERR_UNKNOWN_SOURCEFILE)
         buf.Set(str::Format(_TR("Unknown source file (%s)"), fileName));
     else if (ret == PDFSYNCERR_NORECORD_IN_SOURCEFILE)
@@ -3869,7 +3869,7 @@ void WindowInfo::ShowForwardSearchResult(const TCHAR *fileName, UINT line, UINT 
     else if (ret == PDFSYNCERR_NOSYNCPOINT_FOR_LINERECORD)
         buf.Set(str::Format(_TR("No result found around line %u in file %s"), line, fileName));
     if (buf)
-        ShowNotification(buf);
+        ShowNotification(this, buf);
 }
 
 static void OnMenuFindNext(WindowInfo& win)
@@ -4139,7 +4139,7 @@ static void OnChar(WindowInfo& win, WPARAM key)
                 pageInfo.Set(str::Format(_T("%s %s (%d / %d)"), _TR("Page:"), label, current, total));
             }
             bool autoDismiss = !IsShiftPressed();
-            win.ShowNotification(pageInfo, autoDismiss, false, NG_PAGE_INFO_HELPER);
+            ShowNotification(&win, pageInfo, autoDismiss, false, NG_PAGE_INFO_HELPER);
         }
         break;
 #ifdef DEBUG
@@ -5278,7 +5278,7 @@ static LRESULT OnCommand(WindowInfo *win, HWND hwnd, UINT message, WPARAM wParam
             else if (win->selectionOnPage)
                 CopySelectionToClipboard(*win);
             else
-                win->ShowNotification(_TR("Select content with Ctrl+left mouse button"));
+                ShowNotification(win, _TR("Select content with Ctrl+left mouse button"));
             break;
     
         case IDM_SELECT_ALL:
@@ -5491,13 +5491,7 @@ static bool RegisterWinClass(HINSTANCE hInstance)
     if (!atom)
         return false;
 
-    FillWndClassEx(wcex, hInstance);
-    wcex.lpfnWndProc    = MessageWnd::WndProc;
-    wcex.hCursor        = LoadCursor(NULL, IDC_APPSTARTING);
-    wcex.hbrBackground  = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
-    wcex.lpszClassName  = MESSAGE_WND_CLASS_NAME;
-    atom = RegisterClassEx(&wcex);
-    if (!atom)
+    if (!RegisterNotificationsWndClass(hInstance))
         return false;
 
     return true;

@@ -13,6 +13,7 @@
 #include "AppTools.h"
 #include "RenderCache.h"
 #include "SumatraPDF.h"
+#include "Notifications.h"
 
 static bool gStressTestDisableDjvu = false;
 static bool gStressTestDisablePdf = false;
@@ -342,7 +343,7 @@ void StressTest::Start(const TCHAR *path, const TCHAR *ranges, int cycles)
     else {
         // Note: dev only, don't translate
         ScopedMem<TCHAR> s(str::Format(_T("Path '%s' doesn't exist"), path));
-        win->ShowNotification(s, false /* autoDismiss */, true, NG_STRESS_TEST_SUMMARY);
+        ShowNotification(win, s, false /* autoDismiss */, true, NG_STRESS_TEST_SUMMARY);
         Finished(false);
         return;
     }
@@ -368,7 +369,7 @@ void StressTest::Finished(bool success)
         int secs = SecsSinceSystemTime(stressStartTime);
         ScopedMem<TCHAR> tm(FormatTime(secs));
         ScopedMem<TCHAR> s(str::Format(_T("Stress test complete, rendered %d files in %s"), filesCount, tm));
-        win->ShowNotification(s, false, false, NG_STRESS_TEST_SUMMARY);
+        ShowNotification(win, s, false, false, NG_STRESS_TEST_SUMMARY);
     }
 
     CloseWindow(win, false);
@@ -463,7 +464,7 @@ bool StressTest::OpenFile(const TCHAR *fileName)
     int secs = SecsSinceSystemTime(stressStartTime);
     ScopedMem<TCHAR> tm(FormatTime(secs));
     ScopedMem<TCHAR> s(str::Format(_T("File %d: %s, time: %s"), filesCount, fileName, tm));
-    win->ShowNotification(s, false, false, NG_STRESS_TEST_SUMMARY);
+    ShowNotification(win, s, false, false, NG_STRESS_TEST_SUMMARY);
 
     return true;
 }
@@ -472,7 +473,7 @@ bool StressTest::GoToNextPage()
 {
     double pageRenderTime = currPageRenderTime.GetCurrTimeInMs();
     ScopedMem<TCHAR> s(str::Format(_T("Page %d rendered in %d milliseconds"), currPage, (int)pageRenderTime));
-    win->ShowNotification(s, true, false, NG_STRESS_TEST_BENCHMARK);
+    ShowNotification(win, s, true, false, NG_STRESS_TEST_BENCHMARK);
 
     ++currPage;
     while (!IsInRange(pageRanges, currPage) && currPage <= win->dm->pageCount())

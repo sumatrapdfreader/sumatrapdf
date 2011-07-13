@@ -107,6 +107,7 @@ SUMATRA_OBJS = \
 	$(OS)\StressTesting.obj $(OS)\UnitTests.obj $(OS)\AppTools.obj $(SUMATRA_RES) \
 	$(OS)\ImagesEngine.obj $(OS)\PsEngine.obj $(OS)\Favorites.obj \
 	$(OS)\TableOfContents.obj $(OS)\Toolbar.obj $(OS)\Print.obj \
+	$(OS)\Notifications.obj \
 	$(UTILS_OBJS) $(OS)\ZipUtil.obj \
 	$(BZIP2_OBJS) $(MINIZIP_OBJS) $(UNRAR_OBJS) $(SYNCTEX_OBJS) \
 	$(OS)\DjVuEngine.obj $(DJVU_OBJS)
@@ -289,6 +290,13 @@ $(OS)\Installer.obj: src\utils\CmdLineParser.h src\utils\FileUtil.h src\utils\Ge
 $(OS)\Installer.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
 $(OS)\Installer.obj: src\Version.h
 $(OS)\MuPDF_Exports.obj: mupdf\fitz\fitz.h
+$(OS)\Notifications.obj: src\AppPrefs.h src\BaseEngine.h src\DisplayModel.h
+$(OS)\Notifications.obj: src\DisplayState.h src\DjVuEngine.h src\EngineManager.h
+$(OS)\Notifications.obj: src\ImagesEngine.h src\Notifications.h src\PdfEngine.h
+$(OS)\Notifications.obj: src\PsEngine.h src\SumatraPDF.h src\TextSearch.h
+$(OS)\Notifications.obj: src\TextSelection.h src\utils\BaseUtil.h src\utils\GeomUtil.h
+$(OS)\Notifications.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
+$(OS)\Notifications.obj: src\WindowInfo.h
 $(OS)\npPdfViewer.obj: src\browserplugin\npapi\npapi.h src\browserplugin\npapi\npfunctions.h src\browserplugin\npapi\npruntime.h
 $(OS)\npPdfViewer.obj: src\browserplugin\npapi\nptypes.h src\utils\BaseUtil.h src\utils\CmdLineParser.h
 $(OS)\npPdfViewer.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\SimpleLog.h
@@ -338,12 +346,12 @@ $(OS)\SimpleLog.obj: src\utils\BaseUtil.h src\utils\SimpleLog.h src\utils\StrUti
 $(OS)\SimpleLog.obj: src\utils\Vec.h
 $(OS)\StressTesting.obj: src\AppPrefs.h src\AppTools.h src\BaseEngine.h
 $(OS)\StressTesting.obj: src\DisplayModel.h src\DisplayState.h src\DjVuEngine.h
-$(OS)\StressTesting.obj: src\EngineManager.h src\ImagesEngine.h src\PdfEngine.h
-$(OS)\StressTesting.obj: src\PsEngine.h src\RenderCache.h src\StressTesting.h
-$(OS)\StressTesting.obj: src\SumatraPDF.h src\TextSearch.h src\TextSelection.h
-$(OS)\StressTesting.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
-$(OS)\StressTesting.obj: src\utils\SimpleLog.h src\utils\StrUtil.h src\utils\Vec.h
-$(OS)\StressTesting.obj: src\utils\WinUtil.h src\WindowInfo.h
+$(OS)\StressTesting.obj: src\EngineManager.h src\ImagesEngine.h src\Notifications.h
+$(OS)\StressTesting.obj: src\PdfEngine.h src\PsEngine.h src\RenderCache.h
+$(OS)\StressTesting.obj: src\StressTesting.h src\SumatraPDF.h src\TextSearch.h
+$(OS)\StressTesting.obj: src\TextSelection.h src\utils\BaseUtil.h src\utils\FileUtil.h
+$(OS)\StressTesting.obj: src\utils\GeomUtil.h src\utils\SimpleLog.h src\utils\StrUtil.h
+$(OS)\StressTesting.obj: src\utils\Vec.h src\utils\WinUtil.h src\WindowInfo.h
 $(OS)\StrUtil.obj: src\utils\BaseUtil.h src\utils\StrUtil.h
 $(OS)\SumatraAbout.obj: src\AppPrefs.h src\AppTools.h src\BaseEngine.h
 $(OS)\SumatraAbout.obj: src\DisplayModel.h src\DisplayState.h src\DjVuEngine.h

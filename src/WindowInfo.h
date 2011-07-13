@@ -32,15 +32,6 @@ enum PresentationMode {
     PM_WHITE_SCREEN
 };
 
-enum NotificationGroup {
-    NG_RESPONSE_TO_ACTION = 1,
-    NG_FIND_PROGRESS,
-    NG_PRINT_PROGRESS,
-    NG_PAGE_INFO_HELPER,
-    NG_STRESS_TEST_BENCHMARK,
-    NG_STRESS_TEST_SUMMARY,
-};
-
 /* Describes position, the target (URL or file path) and infotip of a "hyperlink" */
 struct StaticLinkInfo {
     StaticLinkInfo() : target(NULL), infotip(NULL) { }
@@ -203,7 +194,6 @@ public:
     void CreateInfotip(const TCHAR *text, RectI& rc);
     void DeleteInfotip();
 
-    void ShowNotification(const TCHAR *message, bool autoDismiss=true, bool highlight=false, NotificationGroup groupId=NG_RESPONSE_TO_ACTION);
     void ShowForwardSearchResult(const TCHAR *fileName, UINT line, UINT col, UINT ret, UINT page, Vec<RectI>& rects);
 
     // DisplayModelCallback implementation (incl. PasswordUI)
