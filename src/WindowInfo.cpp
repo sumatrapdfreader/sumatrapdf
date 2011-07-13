@@ -36,7 +36,7 @@ WindowInfo::WindowInfo(HWND hwnd) :
 
     buffer = new DoubleBuffer(hwndCanvas, canvasRc);
     linkHandler = new LinkHandler(*this);
-    notifications = new NotificationWndList();
+    notifications = new Notifications();
     fwdSearchMark.show = false;
 }
 
@@ -107,7 +107,7 @@ void WindowInfo::AbortFinding(bool hideMessage)
     this->findCanceled = false;
 
     if (hideMessage)
-        this->notifications->CleanUp(NG_FIND_PROGRESS);
+        this->notifications->RemoveAllInGroup(NG_FIND_PROGRESS);
 }
 
 void WindowInfo::RedrawAll(bool update)

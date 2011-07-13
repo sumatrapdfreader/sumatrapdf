@@ -289,9 +289,10 @@ public:
         wnd = new NotificationWnd(win->hwndCanvas, _T(""), _TR("Printing page %d of %d..."), this);
         win->notifications->Add(wnd);
     }
+
     ~PrintThreadWorkItem() {
         delete data;
-        CleanUp(wnd);
+        RemoveNotification(wnd);
     }
 
     virtual bool ProgressUpdate(int current, int total) {
@@ -304,11 +305,11 @@ public:
     }
 
     // called when printing has been canceled
-    virtual void CleanUp(NotificationWnd *wnd) {
+    virtual void RemoveNotification(NotificationWnd *wnd) {
         isCanceled = true;
         this->wnd = NULL;
         if (WindowInfoStillValid(win))
-            win->notifications->CleanUp(wnd);
+            win->notifications->RemoveNotification(wnd);
     }
 
     virtual void Execute() {

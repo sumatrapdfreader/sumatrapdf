@@ -1579,8 +1579,8 @@ WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin, b
 
     DeleteOldSelectionInfo(*win, true);
     win->fwdSearchMark.show = false;
-    win->notifications->CleanUp(NG_RESPONSE_TO_ACTION);
-    win->notifications->CleanUp(NG_PAGE_INFO_HELPER);
+    win->notifications->RemoveAllInGroup(NG_RESPONSE_TO_ACTION);
+    win->notifications->RemoveAllInGroup(NG_PAGE_INFO_HELPER);
 
     DisplayState *ds = gFileHistory.Find(fullpath);
     if (ds) {
@@ -1639,7 +1639,7 @@ void WindowInfo::PageNoChanged(int pageNo)
         UpdateTocSelection(this, pageNo);
         currPageNo = pageNo;
 
-        NotificationWnd *wnd = notifications->GetFirst(NG_PAGE_INFO_HELPER);
+        NotificationWnd *wnd = notifications->GetFirstInGroup(NG_PAGE_INFO_HELPER);
         if (wnd) {
             ScopedMem<TCHAR> pageInfo(str::Format(_T("%s %d / %d"), _TR("Page:"), pageNo, dm->pageCount()));
             if (dm->engine && dm->engine->HasPageLabels()) {
@@ -2973,8 +2973,8 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
         str::ReplacePtr(&win->loadedFilePath, NULL);
         delete win->pdfsync;
         win->pdfsync = NULL;
-        win->notifications->CleanUp(NG_RESPONSE_TO_ACTION);
-        win->notifications->CleanUp(NG_PAGE_INFO_HELPER);
+        win->notifications->RemoveAllInGroup(NG_RESPONSE_TO_ACTION);
+        win->notifications->RemoveAllInGroup(NG_PAGE_INFO_HELPER);
 
         if (win->hwndProperties) {
             DestroyWindow(win->hwndProperties);
@@ -4031,8 +4031,8 @@ static void OnChar(WindowInfo& win, WPARAM key)
     case VK_ESCAPE:
         if (win.findThread)
             win.AbortFinding();
-        else if (win.notifications->GetFirst(NG_PAGE_INFO_HELPER))
-            win.notifications->CleanUp(NG_PAGE_INFO_HELPER);
+        else if (win.notifications->GetFirstInGroup(NG_PAGE_INFO_HELPER))
+            win.notifications->RemoveAllInGroup(NG_PAGE_INFO_HELPER);
         else if (win.presentation)
             OnMenuViewPresentation(win);
         else if (gGlobalPrefs.escToExit)
@@ -4256,7 +4256,7 @@ struct FindThreadData : public ProgressUpdateUI {
         SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_MATCH, enable);
 
         if (!success && !loopedAround || !wnd) // i.e. canceled
-            win->notifications->CleanUp(wnd);
+            win->notifications->RemoveNotification(wnd);
         else if (!success && loopedAround)
             wnd->MessageUpdate(_TR("No matches were found"), 3000);
         else if (!loopedAround) {
@@ -4269,9 +4269,9 @@ struct FindThreadData : public ProgressUpdateUI {
     }
 
     virtual bool ProgressUpdate(int current, int total) {
-        if (!WindowInfoStillValid(win) || !win->notifications->GetFirst(NG_FIND_PROGRESS) || win->findCanceled)
+        if (!WindowInfoStillValid(win) || !win->notifications->GetFirstInGroup(NG_FIND_PROGRESS) || win->findCanceled)
             return false;
-        QueueWorkItem(new UpdateFindStatusWorkItem(win, win->notifications->GetFirst(NG_FIND_PROGRESS), current, total));
+        QueueWorkItem(new UpdateFindStatusWorkItem(win, win->notifications->GetFirstInGroup(NG_FIND_PROGRESS), current, total));
         return true;
     }
 };
@@ -4296,11 +4296,11 @@ public:
             // the UI has already been disabled and hidden
         } else if (textSel) {
             ShowSearchResult(*win, textSel, wasModifiedCanceled);
-            ftd->HideUI(win->notifications->GetFirst(NG_FIND_PROGRESS), true, loopedAround);
+            ftd->HideUI(win->notifications->GetFirstInGroup(NG_FIND_PROGRESS), true, loopedAround);
         } else {
             // nothing found or search canceled
             ClearSearchResult(*win);
-            ftd->HideUI(win->notifications->GetFirst(NG_FIND_PROGRESS), false, !wasModifiedCanceled);
+            ftd->HideUI(win->notifications->GetFirstInGroup(NG_FIND_PROGRESS), false, !wasModifiedCanceled);
         }
 
         HANDLE hThread = win->findThread;

@@ -104,7 +104,7 @@ LRESULT CALLBACK NotificationWnd::WndProc(HWND hwnd, UINT message, WPARAM wParam
     }
     if (WM_TIMER == message && TIMEOUT_TIMER_ID == wParam) {
         if (wnd->callback)
-            wnd->callback->CleanUp(wnd);
+            wnd->callback->RemoveNotification(wnd);
         else
             delete wnd;
         return 0;
@@ -174,7 +174,7 @@ LRESULT CALLBACK NotificationWnd::WndProc(HWND hwnd, UINT message, WPARAM wParam
     if (WM_LBUTTONUP == message && wnd->hasCancel) {
         if (GetCancelRect(hwnd).Inside(PointI(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)))) {
             if (wnd->callback)
-                wnd->callback->CleanUp(wnd);
+                wnd->callback->RemoveNotification(wnd);
             else
                 delete wnd;
             return 0;
@@ -184,14 +184,14 @@ LRESULT CALLBACK NotificationWnd::WndProc(HWND hwnd, UINT message, WPARAM wParam
 }
 
 
-int NotificationWndList::GetWndX(NotificationWnd *wnd)
+int Notifications::GetWndX(NotificationWnd *wnd)
 {
     RectI rect = WindowRect(wnd->hwnd());
     rect = MapRectToWindow(rect, HWND_DESKTOP, GetParent(wnd->hwnd()));
     return rect.x;
 }
 
-void NotificationWndList::MoveBelow(NotificationWnd *fix, NotificationWnd *move)
+void Notifications::MoveBelow(NotificationWnd *fix, NotificationWnd *move)
 {
     RectI rect = WindowRect(fix->hwnd());
     rect = MapRectToWindow(rect, HWND_DESKTOP, GetParent(fix->hwnd()));
@@ -200,7 +200,7 @@ void NotificationWndList::MoveBelow(NotificationWnd *fix, NotificationWnd *move)
                  0, 0, SWP_NOSIZE | SWP_NOZORDER);
 }
 
-void NotificationWndList::Remove(NotificationWnd *wnd)
+void Notifications::Remove(NotificationWnd *wnd)
 {
     int ix = wnds.Find(wnd);
     if (ix == -1)
@@ -217,12 +217,12 @@ void NotificationWndList::Remove(NotificationWnd *wnd)
     }
 }
 
-void NotificationWndList::Add(NotificationWnd *wnd, int groupId)
+void Notifications::Add(NotificationWnd *wnd, int groupId)
 {
     // use groupId to classify notifications and make a notification
     // replace any other notification of the same class
     if (groupId != 0)
-        CleanUp(groupId);
+        RemoveAllInGroup(groupId);
     wnd->groupId = groupId;
 
     if (wnds.Count() > 0)
@@ -230,7 +230,7 @@ void NotificationWndList::Add(NotificationWnd *wnd, int groupId)
     wnds.Append(wnd);
 }
 
-NotificationWnd *NotificationWndList::GetFirst(int groupId)
+NotificationWnd *Notifications::GetFirstInGroup(int groupId)
 {
     for (size_t i = 0; i < wnds.Count(); i++) {
         if (wnds[i]->groupId == groupId)
@@ -239,7 +239,7 @@ NotificationWnd *NotificationWndList::GetFirst(int groupId)
     return NULL;
 }
 
-void NotificationWndList::CleanUp(NotificationWnd *wnd)
+void Notifications::RemoveNotification(NotificationWnd *wnd)
 {
     if (Contains(wnd)) {
         Remove(wnd);
@@ -247,15 +247,15 @@ void NotificationWndList::CleanUp(NotificationWnd *wnd)
     }
 }
 
-void NotificationWndList::CleanUp(int groupId)
+void Notifications::RemoveAllInGroup(int groupId)
 {
     for (size_t i = wnds.Count(); i > 0; i--) {
         if (wnds[i-1]->groupId == groupId)
-            CleanUp(wnds[i-1]);
+            RemoveNotification(wnds[i-1]);
     }
 }
 
-void NotificationWndList::Relayout()
+void Notifications::Relayout()
 {
     if (wnds.Count() == 0)
         return;

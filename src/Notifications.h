@@ -23,7 +23,7 @@ enum NotificationGroup {
 class NotificationWndCallback {
 public:
     // called after a message has timed out or been canceled
-    virtual void CleanUp(NotificationWnd *wnd) = 0;
+    virtual void RemoveNotification(NotificationWnd *wnd) = 0;
 };
 
 class NotificationWnd : public ProgressUpdateUI {
@@ -51,7 +51,7 @@ class NotificationWnd : public ProgressUpdateUI {
 
 public:
     static const int TL_MARGIN = 8;
-    int groupId; // for use by NotificationWndList
+    int groupId; // for use by Notifications
 
     NotificationWnd(HWND parent, const TCHAR *message, int timeoutInMS=0, bool highlight=false, NotificationWndCallback *callback=NULL) :
         hasProgress(false), hasCancel(!timeoutInMS), callback(callback), highlight(highlight), progressMsg(NULL) {
@@ -84,7 +84,7 @@ public:
 
 };
 
-class NotificationWndList : public NotificationWndCallback {
+class Notifications : public NotificationWndCallback {
     Vec<NotificationWnd *> wnds;
 
     int  GetWndX(NotificationWnd *wnd);
@@ -92,17 +92,17 @@ class NotificationWndList : public NotificationWndCallback {
     void Remove(NotificationWnd *wnd);
 
 public:
-    ~NotificationWndList() { DeleteVecMembers(wnds); }
+    ~Notifications() { DeleteVecMembers(wnds); }
 
     bool Contains(NotificationWnd *wnd) { return wnds.Find(wnd) != -1; }
 
     void         Add(NotificationWnd *wnd, int groupId=0);
-    NotificationWnd * GetFirst(int groupId);
-    void         CleanUp(int groupId);
+    NotificationWnd * GetFirstInGroup(int groupId);
+    void         RemoveAllInGroup(int groupId);
     void         Relayout();
 
     // NotificationWndCallback methods
-    virtual void CleanUp(NotificationWnd *wnd);
+    virtual void RemoveNotification(NotificationWnd *wnd);
 };
 
 void ShowNotification(WindowInfo *win, const TCHAR *message, bool autoDismiss=true, bool highlight=false, NotificationGroup groupId=NG_RESPONSE_TO_ACTION);
