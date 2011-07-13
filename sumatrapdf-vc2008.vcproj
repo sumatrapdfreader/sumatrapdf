@@ -68,14 +68,6 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\src\PdfSync.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\PdfSync.h"
-				>
-			</File>
-			<File
 				RelativePath=".\src\resource.h"
 				>
 			</File>
@@ -156,6 +148,14 @@
 				</File>
 				<File
 					RelativePath=".\src\FileHistory.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\PdfSync.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\PdfSync.h"
 					>
 				</File>
 				<File

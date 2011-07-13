@@ -11,6 +11,8 @@
 #include "FileUtil.h"
 #include "DisplayModel.h"
 
+#include <synctex_parser.h>
+
 // size of the mark highlighting the location calculated by forward-search
 #define MARK_SIZE               10 
 // maximum error in the source file line number when doing forward-search
@@ -21,6 +23,9 @@
 #define PDFSYNC_EPSILON_Y       20
 
 #define PDFSYNC_EXTENSION       _T(".pdfsync")
+
+#define SYNCTEX_EXTENSION       _T(".synctex")
+#define SYNCTEXGZ_EXTENSION     _T(".synctex.gz")
 
 struct PdfsyncFileIndex {
     size_t start, end; // first and one-after-last index of lines associated with a file
@@ -58,12 +63,6 @@ private:
     Vec<size_t> sheet_index;    // start of entries for a sheet in <points>
 };
 
-#ifdef SYNCTEX_FEATURE
-#include <synctex_parser.h>
-
-#define SYNCTEX_EXTENSION       _T(".synctex")
-#define SYNCTEXGZ_EXTENSION     _T(".synctex.gz")
-
 // Synchronizer based on .synctex file generated with SyncTex
 class SyncTex : public Synchronizer
 {
@@ -87,7 +86,6 @@ private:
 
     synctex_scanner_t scanner;
 };
-#endif
 
 Synchronizer::Synchronizer(const TCHAR* _syncfilepath, DisplayModel *dm) :
     index_discarded(true), dm(dm), syncfilepath(str::Dup(_syncfilepath)),
@@ -146,7 +144,6 @@ int Synchronizer::Create(const TCHAR *pdffilename, DisplayModel *dm, Synchronize
         return *sync ? PDFSYNCERR_SUCCESS : PDFSYNCERR_OUTOFMEMORY;
     }
 
-#ifdef SYNCTEX_FEATURE
     // check if SYNCTEX or compressed SYNCTEX file is present
     ScopedMem<TCHAR> texGzFile(str::Join(baseName, SYNCTEXGZ_EXTENSION));
     ScopedMem<TCHAR> texFile(str::Join(baseName, SYNCTEX_EXTENSION));
@@ -157,7 +154,6 @@ int Synchronizer::Create(const TCHAR *pdffilename, DisplayModel *dm, Synchronize
         *sync = new SyncTex(texFile, dm);
         return *sync ? PDFSYNCERR_SUCCESS : PDFSYNCERR_OUTOFMEMORY;
     }
-#endif
 
     return PDFSYNCERR_SYNCFILE_NOTFOUND;
 }
@@ -488,8 +484,6 @@ int Pdfsync::source_to_pdf(const TCHAR* srcfilename, UINT line, UINT col, UINT *
 
 // SYNCTEX synchronizer
 
-#ifdef SYNCTEX_FEATURE
-
 int SyncTex::rebuild_index() {
     synctex_scanner_free(this->scanner);
     this->scanner = NULL;
@@ -601,5 +595,3 @@ int SyncTex::source_to_pdf(const TCHAR* srcfilename, UINT line, UINT col, UINT *
             return firstpage > 0 ? PDFSYNCERR_SUCCESS : PDFSYNCERR_NOSYNCPOINT_FOR_LINERECORD;
     }
 }
-#endif
-

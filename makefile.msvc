@@ -54,7 +54,7 @@ CFLAGS = $(CFLAGS) /D "WINVER=0x0500" /D "_WIN32_WINNT=0x0500"
 SUMATRA_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
 	/wd4800 \
 	/Isrc/utils /Isrc/utils/msvc /I$(MUPDF_DIR)\fitz /I$(MUPDF_DIR)\pdf /I$(MUPDF_DIR)\xps \
-	/Isrc /I$(EXTLIBSDIR)/synctex /D "SYNCTEX_FEATURE" /I$(ZLIB_DIR) /I$(ZLIB_DIR)/minizip \
+	/Isrc /I$(EXTLIBSDIR)/synctex /I$(ZLIB_DIR) /I$(ZLIB_DIR)/minizip \
 	/I$(EXTLIBSDIR)/libdjvu
 
 INSTALLER_CFLAGS = $(CFLAGS) $(EXTCFLAGS) /wd4800 \
@@ -319,8 +319,12 @@ $(OS)\PdfPreview.obj: src\utils\Vec.h src\utils\WinUtil.h
 $(OS)\PdfPreviewDll.obj: src\BaseEngine.h src\PdfEngine.h src\previewer\PdfPreview.h
 $(OS)\PdfPreviewDll.obj: src\utils\BaseUtil.h src\utils\GeomUtil.h src\utils\StrUtil.h
 $(OS)\PdfPreviewDll.obj: src\utils\Vec.h src\utils\WinUtil.h
-$(OS)\PdfSync.obj: src\PdfSync.h src\utils\BaseUtil.h src\utils\FileUtil.h
-$(OS)\PdfSync.obj: src\utils\GeomUtil.h src\utils\StrUtil.h src\utils\Vec.h
+$(OS)\PdfSync.obj: src\BaseEngine.h src\DisplayModel.h src\DisplayState.h
+$(OS)\PdfSync.obj: src\DjVuEngine.h src\EngineManager.h src\ImagesEngine.h
+$(OS)\PdfSync.obj: src\PdfEngine.h src\PdfSync.h src\PsEngine.h
+$(OS)\PdfSync.obj: src\TextSearch.h src\TextSelection.h src\utils\BaseUtil.h
+$(OS)\PdfSync.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\StrUtil.h
+$(OS)\PdfSync.obj: src\utils\Vec.h
 $(OS)\Print.obj: src\AppPrefs.h src\AppTools.h src\BaseEngine.h
 $(OS)\Print.obj: src\DisplayModel.h src\DisplayState.h src\DjVuEngine.h
 $(OS)\Print.obj: src\EngineManager.h src\ImagesEngine.h src\Notifications.h
