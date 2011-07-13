@@ -22,6 +22,7 @@
 #include "AppTools.h"
 #include "Notifications.h"
 #include "TableOfContents.h"
+#include "Toolbar.h"
 
 #include "WinUtil.h"
 #include "Http.h"
@@ -141,15 +142,12 @@ TCHAR *                 gPluginURL = NULL; // owned by CommandLineInfo in WinMai
 #define FILEWATCH_DELAY_IN_MS       1000
 #endif
 
-#define WS_REBAR (WS_CHILD | WS_CLIPCHILDREN | WS_BORDER | RBS_VARHEIGHT | \
-                  RBS_BANDBORDERS | CCS_NODIVIDER | CCS_NOPARENTALIGN)
-
        HINSTANCE                    ghinst = NULL;
 
-static HCURSOR                      gCursorArrow;
+       HCURSOR                      gCursorArrow;
        HCURSOR                      gCursorHand;
 static HCURSOR                      gCursorDrag;
-static HCURSOR                      gCursorIBeam;
+       HCURSOR                      gCursorIBeam;
 static HCURSOR                      gCursorScroll;
 static HCURSOR                      gCursorSizeWE;
 static HCURSOR                      gCursorNo;
@@ -206,50 +204,7 @@ SerializableGlobalPrefs             gGlobalPrefs = {
     { 0, 0 }, // FILETIME lastPrefUpdate
 };
 
-enum MenuToolbarFlags {
-    MF_NO_TRANSLATE      = 1 << 0,
-    MF_PLUGIN_MODE_ONLY  = 1 << 1,
-#define PERM_FLAG_OFFSET 2
-    MF_REQ_INET_ACCESS   = Perm_InternetAccess << PERM_FLAG_OFFSET,
-    MF_REQ_DISK_ACCESS   = Perm_DiskAccess << PERM_FLAG_OFFSET,
-    MF_REQ_PREF_ACCESS   = Perm_SavePreferences << PERM_FLAG_OFFSET,
-    MF_REQ_PRINTER_ACCESS= Perm_PrinterAccess << PERM_FLAG_OFFSET,
-    MF_REQ_ALLOW_COPY    = Perm_CopySelection << PERM_FLAG_OFFSET,
-};
-
-struct ToolbarButtonInfo {
-    /* index in the toolbar bitmap (-1 for separators) */
-    int           bmpIndex;
-    int           cmdId;
-    const char *  toolTip;
-    int           flags;
-};
-
-static ToolbarButtonInfo gToolbarButtons[] = {
-    { 0,   IDM_OPEN,              _TRN("Open"),           MF_REQ_DISK_ACCESS },
-// the Open button is replaced with a Save As button in Plugin mode:
-//  { 12,  IDM_SAVEAS,            _TRN("Save As"),        MF_REQ_DISK_ACCESS },
-    { 1,   IDM_PRINT,             _TRN("Print"),          MF_REQ_PRINTER_ACCESS },
-    { -1,  IDM_GOTO_PAGE,         NULL,                   0 },
-    { 2,   IDM_GOTO_PREV_PAGE,    _TRN("Previous Page"),  0 },
-    { 3,   IDM_GOTO_NEXT_PAGE,    _TRN("Next Page"),      0 },
-    { -1,  0,                     NULL,                   0 },
-    { 4,   IDT_VIEW_FIT_WIDTH,    _TRN("Fit Width and Show Pages Continuously"), 0 },
-    { 5,   IDT_VIEW_FIT_PAGE,     _TRN("Fit a Single Page"), 0 },
-    { 6,   IDT_VIEW_ZOOMOUT,      _TRN("Zoom Out"),       0 },
-    { 7,   IDT_VIEW_ZOOMIN,       _TRN("Zoom In"),        0 },
-    { -1,  IDM_FIND_FIRST,        NULL,                   0 },
-    { 8,   IDM_FIND_PREV,         _TRN("Find Previous"),  0 },
-    { 9,   IDM_FIND_NEXT,         _TRN("Find Next"),      0 },
-    { 10,  IDM_FIND_MATCH,        _TRN("Match Case"),     0 },
-};
-
-#define TOOLBAR_BUTTONS_COUNT dimof(gToolbarButtons)
-
-static void CreateToolbar(WindowInfo& win);
 static void CreateSidebar(WindowInfo* win);
-static void UpdateToolbarFindText(WindowInfo& win);
-static void UpdateToolbarPageText(WindowInfo& win, int pageCount);
 static void UpdateUITextForLanguage();
 static void UpdateToolbarAndScrollbarsForAllWindows();
 static void RebuildMenuBar();
@@ -969,23 +924,6 @@ void UpdateCurrentFileDisplayStateForWin(WindowInfo* win)
     UpdateSidebarDisplayState(win, state);
 }
 
-void ShowOrHideToolbarGlobally()
-{
-    for (size_t i = 0; i < gWindows.Count(); i++) {
-        WindowInfo *win = gWindows[i];
-        if (gGlobalPrefs.toolbarVisible) {
-            ShowWindow(win->hwndReBar, SW_SHOW);
-        } else {
-            // Move the focus out of the toolbar
-            if (win->hwndFindBox == GetFocus() || win->hwndPageBox == GetFocus())
-                SetFocus(win->hwndFrame);
-            ShowWindow(win->hwndReBar, SW_HIDE);
-        }
-        ClientRect rect(win->hwndFrame);
-        SendMessage(win->hwndFrame, WM_SIZE, 0, MAKELONG(rect.dx, rect.dy));
-    }
-}
-
 bool IsUIRightToLeft()
 {
     int langIx = Trans::GetLanguageIndex(gGlobalPrefs.currentLanguage);
@@ -1196,112 +1134,12 @@ void WindowInfo::Reload(bool autorefresh)
     }
 }
 
-static void UpdateToolbarBg(HWND hwnd, bool enabled)
-{
-    ToggleWindowStyle(hwnd, SS_WHITERECT, enabled);
-}
-
-static void UpdateFindbox(WindowInfo* win)
-{
-    UpdateToolbarBg(win->hwndFindBg, win->IsDocLoaded());
-    UpdateToolbarBg(win->hwndPageBg, win->IsDocLoaded());
-
-    InvalidateRect(win->hwndToolbar, NULL, TRUE);
-    UpdateWindow(win->hwndToolbar);
-
-    if (!win->IsDocLoaded()) {  // Avoid focus on Find box
-        SetClassLongPtr(win->hwndFindBox, GCLP_HCURSOR, (LONG_PTR)gCursorArrow);
-        HideCaret(NULL);
-    } else {
-        SetClassLongPtr(win->hwndFindBox, GCLP_HCURSOR, (LONG_PTR)gCursorIBeam);
-        ShowCaret(NULL);
-    }
-}
-
 static bool FileCloseMenuEnabled()
 {
     for (size_t i = 0; i < gWindows.Count(); i++)
         if (!gWindows[i]->IsAboutWindow())
             return true;
     return false;
-}
-
-bool TbIsSeparator(ToolbarButtonInfo& tbi)
-{
-    return tbi.bmpIndex < 0;
-}
-
-static BOOL IsVisibleToolbarButton(WindowInfo& win, int buttonNo)
-{
-    if (!win.dm || !win.dm->engine || !win.dm->engine->IsImageCollection())
-        return TRUE;
-
-    int cmdId = gToolbarButtons[buttonNo].cmdId;
-    switch (cmdId) {
-        case IDM_FIND_FIRST:
-        case IDM_FIND_NEXT:
-        case IDM_FIND_PREV:
-        case IDM_FIND_MATCH:
-            return FALSE;
-    }
-    return TRUE;
-}
-
-static LPARAM ToolbarButtonEnabledState(WindowInfo& win, int buttonNo)
-{
-    const LPARAM enabled = (LPARAM)MAKELONG(1,0);
-    const LPARAM disabled = (LPARAM)MAKELONG(0,0);
-
-    int cmdId = gToolbarButtons[buttonNo].cmdId;
-
-    // If restricted, disable
-    if (!HasPermission(gToolbarButtons[buttonNo].flags >> PERM_FLAG_OFFSET))
-        return disabled;
-
-    // If no file open, only enable open button
-    if (!win.IsDocLoaded())
-        return IDM_OPEN == cmdId ? enabled : disabled;
-
-    switch (cmdId)
-    {
-        case IDM_OPEN:
-            // opening different files isn't allowed in plugin mode
-            if (gPluginMode)
-                return disabled;
-            break;
-
-        case IDM_FIND_NEXT:
-        case IDM_FIND_PREV:
-            // TODO: Update on whether there's more to find, not just on whether there is text.
-            if (win::GetTextLen(win.hwndFindBox) == 0)
-                return disabled;
-            break;
-
-        case IDM_GOTO_NEXT_PAGE:
-            if (win.dm->currentPageNo() == win.dm->pageCount())
-                return disabled;
-            break;
-        case IDM_GOTO_PREV_PAGE:
-            if (win.dm->currentPageNo() == 1)
-                return disabled;
-            break;
-    }
-
-    return enabled;
-}
-
-static void ToolbarUpdateStateForWindow(WindowInfo& win) {
-
-    for (int i = 0; i < TOOLBAR_BUTTONS_COUNT; i++) {
-        BOOL hide = !IsVisibleToolbarButton(win, i);
-        SendMessage(win.hwndToolbar, TB_HIDEBUTTON, gToolbarButtons[i].cmdId, hide);
-
-        if (TbIsSeparator(gToolbarButtons[i]))
-            continue;
-
-        LPARAM buttonState = ToolbarButtonEnabledState(win, i);
-        SendMessage(win.hwndToolbar, TB_ENABLEBUTTON, gToolbarButtons[i].cmdId, buttonState);
-    }
 }
 
 static void MenuUpdatePrintItem(WindowInfo& win, HMENU menu, bool disableOnly=false) {
@@ -4197,38 +4035,38 @@ static void OnMenuViewContinuous(WindowInfo& win)
     win.SwitchToDisplayMode(newMode);
 }
 
-static void ToggleToolbarViewButton(WindowInfo& win, float newZoom, bool pagesContinuously)
+static void ChangeZoomLevel(WindowInfo *win, float newZoom, bool pagesContinuously)
 {
-    if (!win.IsDocLoaded())
+    if (!win->IsDocLoaded())
         return;
 
-    float zoom = win.dm->zoomVirtual();
-    DisplayMode mode = win.dm->displayMode();
+    float zoom = win->dm->zoomVirtual();
+    DisplayMode mode = win->dm->displayMode();
     DisplayMode newMode = pagesContinuously ? DM_CONTINUOUS : DM_SINGLE_PAGE;
 
     if (mode != newMode || zoom != newZoom) {
-        DisplayMode prevMode = win.prevDisplayMode;
-        float prevZoom = win.prevZoomVirtual;
+        DisplayMode prevMode = win->prevDisplayMode;
+        float prevZoom = win->prevZoomVirtual;
 
         if (mode != newMode)
-            win.SwitchToDisplayMode(newMode);
-        OnMenuZoom(win, MenuIdFromVirtualZoom(newZoom));
+            win->SwitchToDisplayMode(newMode);
+        OnMenuZoom(*win, MenuIdFromVirtualZoom(newZoom));
 
         // remember the previous values for when the toolbar button is unchecked
         if (INVALID_ZOOM == prevZoom) {
-            win.prevZoomVirtual = zoom;
-            win.prevDisplayMode = mode;
+            win->prevZoomVirtual = zoom;
+            win->prevDisplayMode = mode;
         }
         // keep the rememberd values when toggling between the two toolbar buttons
         else {
-            win.prevZoomVirtual = prevZoom;
-            win.prevDisplayMode = prevMode;
+            win->prevZoomVirtual = prevZoom;
+            win->prevDisplayMode = prevMode;
         }
     }
-    else if (win.prevZoomVirtual != INVALID_ZOOM) {
-        float prevZoom = win.prevZoomVirtual;
-        win.SwitchToDisplayMode(win.prevDisplayMode);
-        win.ZoomToSelection(prevZoom, false);
+    else if (win->prevZoomVirtual != INVALID_ZOOM) {
+        float prevZoom = win->prevZoomVirtual;
+        win->SwitchToDisplayMode(win->prevDisplayMode);
+        win->ZoomToSelection(prevZoom, false);
     }
 }
 
@@ -4262,14 +4100,14 @@ static void OnMenuGoToPage(WindowInfo& win)
         win.dm->goToPage(newPageNo, 0, true);
 }
 
-static bool NeedsFindUI(WindowInfo& win)
+bool NeedsFindUI(WindowInfo *win)
 {
-    return !win.IsDocLoaded() || win.dm->engine && !win.dm->engine->IsImageCollection();
+    return !win->IsDocLoaded() || win->dm->engine && !win->dm->engine->IsImageCollection();
 }
 
 static void OnMenuFind(WindowInfo& win)
 {
-    if (!win.IsDocLoaded() || !NeedsFindUI(win))
+    if (!win.IsDocLoaded() || !NeedsFindUI(&win))
         return;
 
     // Don't show a dialog if we don't have to - use the Toolbar instead
@@ -4473,7 +4311,7 @@ void WindowInfo::ShowForwardSearchResult(const TCHAR *fileName, UINT line, UINT 
 
 static void OnMenuFindNext(WindowInfo& win)
 {
-    if (!NeedsFindUI(win))
+    if (!NeedsFindUI(&win))
         return;
     if (SendMessage(win.hwndToolbar, TB_ISBUTTONENABLED, IDM_FIND_NEXT, 0))
         FindTextOnThread(&win, FIND_FORWARD);
@@ -4481,7 +4319,7 @@ static void OnMenuFindNext(WindowInfo& win)
 
 static void OnMenuFindPrev(WindowInfo& win)
 {
-    if (!NeedsFindUI(win))
+    if (!NeedsFindUI(&win))
         return;
     if (SendMessage(win.hwndToolbar, TB_ISBUTTONENABLED, IDM_FIND_PREV, 0))
         FindTextOnThread(&win, FIND_BACKWARD);
@@ -4489,7 +4327,7 @@ static void OnMenuFindPrev(WindowInfo& win)
 
 static void OnMenuFindMatchCase(WindowInfo& win)
 {
-    if (!NeedsFindUI(win))
+    if (!NeedsFindUI(&win))
         return;
     WORD state = (WORD)SendMessage(win.hwndToolbar, TB_GETSTATE, IDM_FIND_MATCH, 0);
     win.dm->textSearch->SetSensitive((state & TBSTATE_CHECKED) != 0);
@@ -4510,7 +4348,7 @@ void AdvanceFocus(WindowInfo* win)
     } tabOrder[] = {
         { win->hwndFrame,   true                                },
         { win->hwndPageBox, hasToolbar                          },
-        { win->hwndFindBox, hasToolbar && NeedsFindUI(*win)     },
+        { win->hwndFindBox, hasToolbar && NeedsFindUI(win)     },
         { win->hwndTocTree, win->tocLoaded && win->tocVisible   },
         { win->hwndFavTree, gGlobalPrefs.favVisible             },
     };
@@ -4544,68 +4382,68 @@ void AdvanceFocus(WindowInfo* win)
 // from one typed on the main keyboard (focuses the find textbox)
 static bool gIsDivideKeyDown = false;
 
-static bool OnKeydown(WindowInfo& win, WPARAM key, LPARAM lparam, bool inTextfield=false)
+bool OnFrameKeydown(WindowInfo *win, WPARAM key, LPARAM lparam, bool inTextfield)
 {
     if ((VK_LEFT == key || VK_RIGHT == key) &&
         IsShiftPressed() && IsCtrlPressed() &&
-        win.loadedFilePath && !inTextfield) {
+        win->loadedFilePath && !inTextfield) {
         // folder browsing should also work when an error page is displayed,
         // so special-case it before the win.IsDocLoaded() check
-        BrowseFolder(win, VK_RIGHT == key);
+        BrowseFolder(*win, VK_RIGHT == key);
         return true;
     }
 
-    if (!win.IsDocLoaded())
+    if (!win->IsDocLoaded())
         return false;
     
     //DBG_OUT("key=%d,%c,shift=%d\n", key, (char)key, (int)WasKeyDown(VK_SHIFT));
 
-    if (PM_BLACK_SCREEN == win.presentation || PM_WHITE_SCREEN == win.presentation)
+    if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation)
         return false;
 
     if (VK_PRIOR == key) {
-        int currentPos = GetScrollPos(win.hwndCanvas, SB_VERT);
-        if (win.dm->zoomVirtual() != ZOOM_FIT_CONTENT)
-            SendMessage(win.hwndCanvas, WM_VSCROLL, SB_PAGEUP, 0);
-        if (GetScrollPos(win.hwndCanvas, SB_VERT) == currentPos)
-            win.dm->goToPrevPage(-1);
+        int currentPos = GetScrollPos(win->hwndCanvas, SB_VERT);
+        if (win->dm->zoomVirtual() != ZOOM_FIT_CONTENT)
+            SendMessage(win->hwndCanvas, WM_VSCROLL, SB_PAGEUP, 0);
+        if (GetScrollPos(win->hwndCanvas, SB_VERT) == currentPos)
+            win->dm->goToPrevPage(-1);
     } else if (VK_NEXT == key) {
-        int currentPos = GetScrollPos(win.hwndCanvas, SB_VERT);
-        if (win.dm->zoomVirtual() != ZOOM_FIT_CONTENT)
-            SendMessage(win.hwndCanvas, WM_VSCROLL, SB_PAGEDOWN, 0);
-        if (GetScrollPos(win.hwndCanvas, SB_VERT) == currentPos)
-            win.dm->goToNextPage(0);
+        int currentPos = GetScrollPos(win->hwndCanvas, SB_VERT);
+        if (win->dm->zoomVirtual() != ZOOM_FIT_CONTENT)
+            SendMessage(win->hwndCanvas, WM_VSCROLL, SB_PAGEDOWN, 0);
+        if (GetScrollPos(win->hwndCanvas, SB_VERT) == currentPos)
+            win->dm->goToNextPage(0);
     } else if (VK_UP == key) {
-        if (win.dm->needVScroll())
-            SendMessage(win.hwndCanvas, WM_VSCROLL, SB_LINEUP, 0);
+        if (win->dm->needVScroll())
+            SendMessage(win->hwndCanvas, WM_VSCROLL, SB_LINEUP, 0);
         else
-            win.dm->goToPrevPage(-1);
+            win->dm->goToPrevPage(-1);
     } else if (VK_DOWN == key) {
-        if (win.dm->needVScroll())
-            SendMessage(win.hwndCanvas, WM_VSCROLL, SB_LINEDOWN, 0);
+        if (win->dm->needVScroll())
+            SendMessage(win->hwndCanvas, WM_VSCROLL, SB_LINEDOWN, 0);
         else
-            win.dm->goToNextPage(0);
+            win->dm->goToNextPage(0);
     } else if (inTextfield) {
         // The remaining keys have a different meaning
         return false;
     } else if (VK_LEFT == key) {
-        if (win.dm->needHScroll())
-            SendMessage(win.hwndCanvas, WM_HSCROLL, IsShiftPressed() ? SB_PAGELEFT : SB_LINELEFT, 0);
+        if (win->dm->needHScroll())
+            SendMessage(win->hwndCanvas, WM_HSCROLL, IsShiftPressed() ? SB_PAGELEFT : SB_LINELEFT, 0);
         else
-            win.dm->goToPrevPage(0);
+            win->dm->goToPrevPage(0);
     } else if (VK_RIGHT == key) {
-        if (win.dm->needHScroll())
-            SendMessage(win.hwndCanvas, WM_HSCROLL, IsShiftPressed() ? SB_PAGERIGHT : SB_LINERIGHT, 0);
+        if (win->dm->needHScroll())
+            SendMessage(win->hwndCanvas, WM_HSCROLL, IsShiftPressed() ? SB_PAGERIGHT : SB_LINERIGHT, 0);
         else
-            win.dm->goToNextPage(0);
+            win->dm->goToNextPage(0);
     } else if (VK_HOME == key) {
-        win.dm->goToFirstPage();
+        win->dm->goToFirstPage();
     } else if (VK_END == key) {
-        win.dm->goToLastPage();
+        win->dm->goToLastPage();
     } else if (VK_MULTIPLY == key) {
-        win.dm->rotateBy(90);
+        win->dm->rotateBy(90);
     } else if (VK_DIVIDE == key) {
-        win.dm->rotateBy(-90);
+        win->dm->rotateBy(-90);
         gIsDivideKeyDown = true;
     } else {
         return false;
@@ -4659,7 +4497,7 @@ static void OnChar(WindowInfo& win, WPARAM key)
     switch (key) {
     case VK_SPACE:
     case VK_RETURN:
-        OnKeydown(win, IsShiftPressed() ? VK_PRIOR : VK_NEXT, 0);
+        OnFrameKeydown(&win, IsShiftPressed() ? VK_PRIOR : VK_NEXT, 0);
         break;
     case VK_BACK:
         {
@@ -4749,48 +4587,6 @@ static void OnChar(WindowInfo& win, WPARAM key)
     }
 }
 
-static TBBUTTON TbButtonFromButtonInfo(int i) {
-    TBBUTTON tbButton = {0};
-    tbButton.idCommand = gToolbarButtons[i].cmdId;
-    if (TbIsSeparator(gToolbarButtons[i])) {
-        tbButton.fsStyle = TBSTYLE_SEP;
-    } else {
-        tbButton.iBitmap = gToolbarButtons[i].bmpIndex;
-        tbButton.fsState = TBSTATE_ENABLED;
-        tbButton.fsStyle = TBSTYLE_BUTTON;
-        tbButton.iString = (INT_PTR)Trans::GetTranslation(gToolbarButtons[i].toolTip);
-    }
-    return tbButton;
-}
-
-#define WS_TOOLBAR (WS_CHILD | WS_CLIPSIBLINGS | \
-                    TBSTYLE_TOOLTIPS | TBSTYLE_FLAT | \
-                    TBSTYLE_LIST | CCS_NODIVIDER | CCS_NOPARENTALIGN)
-
-static void BuildTBBUTTONINFO(TBBUTTONINFO& info, TCHAR *txt) {
-    info.cbSize = sizeof(TBBUTTONINFO);
-    info.dwMask = TBIF_TEXT | TBIF_BYINDEX;
-    info.pszText = txt;
-}
-
-// Set toolbar button tooltips taking current language into account.
-static void UpdateToolbarButtonsToolTipsForWindow(WindowInfo& win)
-{
-    TBBUTTONINFO buttonInfo;
-    HWND hwnd = win.hwndToolbar;
-    LRESULT res;
-    for (int i = 0; i < TOOLBAR_BUTTONS_COUNT; i++) {
-        WPARAM buttonId = (WPARAM)i;
-        const char *txt = gToolbarButtons[i].toolTip;
-        if (NULL == txt)
-            continue;
-        const TCHAR *translation = Trans::GetTranslation(txt);
-        BuildTBBUTTONINFO(buttonInfo, (TCHAR *)translation);
-        res = SendMessage(hwnd, TB_SETBUTTONINFO, buttonId, (LPARAM)&buttonInfo);
-        assert(0 != res);
-    }
-}
-
 static void UpdateSidebarTitles(WindowInfo& win)
 {
     HWND tocTitle = GetDlgItem(win.hwndTocBox, IDC_TOC_TITLE);
@@ -4828,98 +4624,6 @@ static void RebuildMenuBar()
         win->menu = BuildMenu(win);
         DestroyMenu(oldMenu);
     }
-}
-
-#define UWM_DELAYED_SET_FOCUS (WM_APP + 1)
-
-// selects all text in an edit box if it's selected either
-// through a keyboard shortcut or a non-selecting mouse click
-static bool FocusUnselectedWndProc(HWND hwnd, UINT message)
-{
-    static bool delayFocus = false;
-
-    switch (message) {
-    case WM_LBUTTONDOWN:
-        delayFocus = GetFocus() != hwnd;
-        return true;
-
-    case WM_LBUTTONUP:
-        if (delayFocus) {
-            DWORD sel = Edit_GetSel(hwnd);
-            if (LOWORD(sel) == HIWORD(sel))
-                PostMessage(hwnd, UWM_DELAYED_SET_FOCUS, 0, 0);
-            delayFocus = false;
-        }
-        return true;
-
-    case WM_SETFOCUS:
-        if (!delayFocus)
-            PostMessage(hwnd, UWM_DELAYED_SET_FOCUS, 0, 0);
-        return true;
-
-    case UWM_DELAYED_SET_FOCUS:
-        Edit_SelectAll(hwnd);
-        return true;
-
-    default:
-        return false;
-    }
-}
-
-static WNDPROC DefWndProcFindBox = NULL;
-static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-    WindowInfo *win = FindWindowInfoByHwnd(hwnd);
-    if (!win || !win->IsDocLoaded())
-        return DefWindowProc(hwnd, message, wParam, lParam);
-
-    if (FocusUnselectedWndProc(hwnd, message)) {
-        // select the whole find box on a non-selecting click
-    } else if (WM_CHAR == message) {
-        switch (wParam) {
-        case VK_ESCAPE:
-            if (win->findThread)
-                win->AbortFinding();
-            else
-                SetFocus(win->hwndFrame);
-            return 1;
-
-        case VK_RETURN:
-            FindTextOnThread(win);
-            return 1;
-
-        case VK_TAB:
-            AdvanceFocus(win);
-            return 1;
-        }
-    }
-    else if (WM_ERASEBKGND == message) {
-        RECT r;
-        Edit_GetRect(hwnd, &r);
-        if (r.left == 0 && r.top == 0) { // virgin box
-            r.left += 4;
-            r.top += 3;
-            r.bottom += 3;
-            r.right -= 2;
-            Edit_SetRectNoPaint(hwnd, &r);
-        }
-    }
-    else if (WM_KEYDOWN == message) {
-        if (OnKeydown(*win, wParam, lParam, true))
-            return 0;
-    }
-
-    LRESULT ret = CallWindowProc(DefWndProcFindBox, hwnd, message, wParam, lParam);
-
-    if (WM_CHAR  == message ||
-        WM_PASTE == message ||
-        WM_CUT   == message ||
-        WM_CLEAR == message ||
-        WM_UNDO  == message) {
-        ToolbarUpdateStateForWindow(*win);
-    }
-
-    return ret;
 }
 
 static void ShowSearchResult(WindowInfo& win, TextSel *result, bool addNavPt)
@@ -5091,17 +4795,6 @@ void FindTextOnThread(WindowInfo* win, TextSearchDirection direction)
     win->findThread = CreateThread(NULL, 0, FindThread, ftd, 0, 0);
 }
 
-static WNDPROC DefWndProcToolbar = NULL;
-static LRESULT CALLBACK WndProcToolbar(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-    if (WM_CTLCOLORSTATIC == message) {
-        SetBkMode((HDC)wParam, TRANSPARENT);
-        SelectBrush((HDC)wParam, GetStockBrush(NULL_BRUSH));
-        return 0;
-    }
-    return CallWindowProc(DefWndProcToolbar, hwnd, message, wParam, lParam);
-}
-
 /* Return size of a text <txt> in a given <hwnd>, taking into account its font */
 SIZE TextSizeInHwnd(HWND hwnd, const TCHAR *txt)
 {
@@ -5116,320 +4809,6 @@ SIZE TextSizeInHwnd(HWND hwnd, const TCHAR *txt)
     SelectObject(dc, prev);
     ReleaseDC(hwnd, dc);
     return sz;
-}
-
-#define TOOLBAR_MIN_ICON_SIZE 16
-#define FIND_BOX_WIDTH 160
-
-// Note: a bit of a hack, but doing just ShowWindow(..., SW_HIDE | SW_SHOW)
-// didn't work for me
-static void MoveOffScreen(HWND hwnd)
-{
-    WindowRect r(hwnd);
-    MoveWindow(hwnd, -200, -100, r.dx, r.dy, FALSE);
-    ShowWindow(hwnd, SW_HIDE);
-}
-
-static void HideToolbarFindUI(WindowInfo& win)
-{
-    MoveOffScreen(win.hwndFindText);
-    MoveOffScreen(win.hwndFindBg);
-    MoveOffScreen(win.hwndFindBox);
-}
-
-static void UpdateToolbarFindText(WindowInfo& win)
-{
-    if (!NeedsFindUI(win)) {
-        HideToolbarFindUI(win);
-        return;
-    }
-
-    ShowWindow(win.hwndFindText, SW_SHOW);
-    ShowWindow(win.hwndFindBg, SW_SHOW);
-    ShowWindow(win.hwndFindBox, SW_SHOW);
-
-    const TCHAR *text = _TR("Find:");
-    win::SetText(win.hwndFindText, text);
-
-    WindowRect findWndRect(win.hwndFindBg);
-
-    RECT r;
-    SendMessage(win.hwndToolbar, TB_GETRECT, IDT_VIEW_ZOOMIN, (LPARAM)&r);
-    int pos_x = r.right + 10;
-    int pos_y = (r.bottom - findWndRect.dy) / 2;
-
-    SIZE size = TextSizeInHwnd(win.hwndFindText, text);
-    size.cx += 6;
-
-    int padding = GetSystemMetrics(SM_CXEDGE);
-    MoveWindow(win.hwndFindText, pos_x, (findWndRect.dy - size.cy + 1) / 2 + pos_y, size.cx, size.cy, TRUE);
-    MoveWindow(win.hwndFindBg, pos_x + size.cx, pos_y, findWndRect.dx, findWndRect.dy, FALSE);
-    MoveWindow(win.hwndFindBox, pos_x + size.cx + padding, (findWndRect.dy - size.cy + 1) / 2 + pos_y,
-        findWndRect.dx - 2 * padding, size.cy, FALSE);
-
-    TBBUTTONINFO bi;
-    bi.cbSize = sizeof(bi);
-    bi.dwMask = TBIF_SIZE;
-    bi.cx = (WORD)(size.cx + findWndRect.dx + 12);
-    SendMessage(win.hwndToolbar, TB_SETBUTTONINFO, IDM_FIND_FIRST, (LPARAM)&bi);
-}
-
-static void CreateFindBox(WindowInfo& win)
-{
-    HWND findBg = CreateWindowEx(WS_EX_STATICEDGE, WC_STATIC, _T(""), WS_VISIBLE | WS_CHILD,
-                            0, 1, (int)(FIND_BOX_WIDTH * win.uiDPIFactor), (int)(TOOLBAR_MIN_ICON_SIZE * win.uiDPIFactor + 4),
-                            win.hwndToolbar, (HMENU)0, ghinst, NULL);
-
-    HWND find = CreateWindowEx(0, WC_EDIT, _T(""), WS_VISIBLE | WS_CHILD | ES_AUTOHSCROLL,
-                            0, 1, (int)(FIND_BOX_WIDTH * win.uiDPIFactor - 2 * GetSystemMetrics(SM_CXEDGE)), (int)(TOOLBAR_MIN_ICON_SIZE * win.uiDPIFactor + 2),
-                            win.hwndToolbar, (HMENU)0, ghinst, NULL);
-
-    HWND label = CreateWindowEx(0, WC_STATIC, _T(""), WS_VISIBLE | WS_CHILD,
-                            0, 1, 0, 0, win.hwndToolbar, (HMENU)0, ghinst, NULL);
-
-    SetWindowFont(label, gDefaultGuiFont, FALSE);
-    SetWindowFont(find, gDefaultGuiFont, FALSE);
-
-    if (!DefWndProcToolbar)
-        DefWndProcToolbar = (WNDPROC)GetWindowLongPtr(win.hwndToolbar, GWLP_WNDPROC);
-    SetWindowLongPtr(win.hwndToolbar, GWLP_WNDPROC, (LONG_PTR)WndProcToolbar);
-
-    if (!DefWndProcFindBox)
-        DefWndProcFindBox = (WNDPROC)GetWindowLongPtr(find, GWLP_WNDPROC);
-    SetWindowLongPtr(find, GWLP_WNDPROC, (LONG_PTR)WndProcFindBox);
-
-    win.hwndFindText = label;
-    win.hwndFindBox = find;
-    win.hwndFindBg = findBg;
-
-    UpdateToolbarFindText(win);
-}
-
-static WNDPROC DefWndProcPageBox = NULL;
-static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-    WindowInfo *win = FindWindowInfoByHwnd(hwnd);
-    if (!win || !win->IsDocLoaded())
-        return DefWindowProc(hwnd, message, wParam, lParam);
-
-    if (FocusUnselectedWndProc(hwnd, message)) {
-        // select the whole page box on a non-selecting click
-    } else if (WM_CHAR == message) {
-        switch (wParam) {
-        case VK_RETURN: {
-            ScopedMem<TCHAR> buf(win::GetText(win->hwndPageBox));
-            int newPageNo = win->dm->engine->GetPageByLabel(buf);
-            if (win->dm->validPageNo(newPageNo)) {
-                win->dm->goToPage(newPageNo, 0, true);
-                SetFocus(win->hwndFrame);
-            }
-            return 1;
-        }
-        case VK_ESCAPE:
-            SetFocus(win->hwndFrame);
-            return 1;
-
-        case VK_TAB:
-            AdvanceFocus(win);
-            return 1;
-        }
-    } else if (WM_ERASEBKGND == message) {
-        RECT r;
-        Edit_GetRect(hwnd, &r);
-        if (r.left == 0 && r.top == 0) { // virgin box
-            r.left += 4;
-            r.top += 3;
-            r.bottom += 3;
-            r.right -= 2;
-            Edit_SetRectNoPaint(hwnd, &r);
-        }
-    } else if (WM_KEYDOWN == message) {
-        if (OnKeydown(*win, wParam, lParam, true))
-            return 0;
-    }
-
-    return CallWindowProc(DefWndProcPageBox, hwnd, message, wParam, lParam);
-}
-
-#define PAGE_BOX_WIDTH 40
-void UpdateToolbarPageText(WindowInfo& win, int pageCount)
-{
-    const TCHAR *text = _TR("Page:");
-    win::SetText(win.hwndPageText, text);
-    SIZE size = TextSizeInHwnd(win.hwndPageText, text);
-    size.cx += 6;
-
-    WindowRect pageWndRect(win.hwndPageBg);
-
-    RECT r;
-    SendMessage(win.hwndToolbar, TB_GETRECT, IDM_PRINT, (LPARAM)&r);
-    int pos_x = r.right + 10;
-    int pos_y = (r.bottom - pageWndRect.dy) / 2;
-
-    TCHAR *buf;
-    SIZE size2 = { 0 };
-    if (-1 == pageCount)
-        buf = win::GetText(win.hwndPageTotal);
-    else if (!pageCount)
-        buf = str::Dup(_T(""));
-    else if (!win.dm || !win.dm->engine || !win.dm->engine->HasPageLabels())
-        buf = str::Format(_T(" / %d"), pageCount);
-    else {
-        buf = str::Format(_T(" (%d / %d)"), win.dm->currentPageNo(), pageCount);
-        ScopedMem<TCHAR> buf2(str::Format(_T(" (%d / %d)"), pageCount, pageCount));
-        size2 = TextSizeInHwnd(win.hwndPageTotal, buf2);
-    }
-
-    win::SetText(win.hwndPageTotal, buf);
-    if (0 == size2.cx)
-        size2 = TextSizeInHwnd(win.hwndPageTotal, buf);
-    size2.cx += 6;
-    free(buf);
-
-    int padding = GetSystemMetrics(SM_CXEDGE);
-    MoveWindow(win.hwndPageText, pos_x, (pageWndRect.dy - size.cy + 1) / 2 + pos_y, size.cx, size.cy, true);
-    if (IsUIRightToLeft())
-        pos_x += size2.cx - 6;
-    MoveWindow(win.hwndPageBg, pos_x + size.cx, pos_y, pageWndRect.dx, pageWndRect.dy, false);
-    MoveWindow(win.hwndPageBox, pos_x + size.cx + padding, (pageWndRect.dy - size.cy + 1) / 2 + pos_y,
-        pageWndRect.dx - 2 * padding, size.cy, false);
-    // in right-to-left layout, the total comes "before" the current page number
-    if (IsUIRightToLeft()) {
-        pos_x -= size2.cx;
-        MoveWindow(win.hwndPageTotal, pos_x + size.cx, (pageWndRect.dy - size.cy + 1) / 2 + pos_y, size2.cx, size.cy, false);
-    }
-    else
-        MoveWindow(win.hwndPageTotal, pos_x + size.cx + pageWndRect.dx, (pageWndRect.dy - size.cy + 1) / 2 + pos_y, size2.cx, size.cy, false);
-
-    TBBUTTONINFO bi;
-    bi.cbSize = sizeof(bi);
-    bi.dwMask = TBIF_SIZE;
-    bi.cx = (WORD)(size.cx + pageWndRect.dx + size2.cx + 12);
-    SendMessage(win.hwndToolbar, TB_SETBUTTONINFO, IDM_GOTO_PAGE, (LPARAM)&bi);
-}
-
-static void CreatePageBox(WindowInfo& win)
-{
-    HWND pageBg = CreateWindowEx(WS_EX_STATICEDGE, WC_STATIC, _T(""), WS_VISIBLE | WS_CHILD,
-                            0, 1, (int)(PAGE_BOX_WIDTH * win.uiDPIFactor), (int)(TOOLBAR_MIN_ICON_SIZE * win.uiDPIFactor + 4),
-                            win.hwndToolbar, (HMENU)0, ghinst, NULL);
-
-    HWND page = CreateWindowEx(0, WC_EDIT, _T("0"), WS_VISIBLE | WS_CHILD | ES_AUTOHSCROLL | ES_NUMBER | ES_RIGHT,
-                            0, 1, (int)(PAGE_BOX_WIDTH * win.uiDPIFactor - 2 * GetSystemMetrics(SM_CXEDGE)), (int)(TOOLBAR_MIN_ICON_SIZE * win.uiDPIFactor + 2),
-                            win.hwndToolbar, (HMENU)0, ghinst, NULL);
-
-    HWND label = CreateWindowEx(0, WC_STATIC, _T(""), WS_VISIBLE | WS_CHILD,
-                            0, 1, 0, 0, win.hwndToolbar, (HMENU)0, ghinst, NULL);
-
-    HWND total = CreateWindowEx(0, WC_STATIC, _T(""), WS_VISIBLE | WS_CHILD,
-                            0, 1, 0, 0, win.hwndToolbar, (HMENU)0, ghinst, NULL);
-
-    SetWindowFont(label, gDefaultGuiFont, FALSE);
-    SetWindowFont(page, gDefaultGuiFont, FALSE);
-    SetWindowFont(total, gDefaultGuiFont, FALSE);
-
-    if (!DefWndProcPageBox)
-        DefWndProcPageBox = (WNDPROC)GetWindowLongPtr(page, GWLP_WNDPROC);
-    SetWindowLongPtr(page, GWLP_WNDPROC, (LONG_PTR)WndProcPageBox);
-
-    win.hwndPageText = label;
-    win.hwndPageBox = page;
-    win.hwndPageBg = pageBg;
-    win.hwndPageTotal = total;
-
-    UpdateToolbarPageText(win, -1);
-}
-
-static HBITMAP LoadExternalBitmap(HINSTANCE hInst, TCHAR * filename, INT resourceId)
-{
-    ScopedMem<TCHAR> path(AppGenDataFilename(filename));
-    
-    HBITMAP hBmp = (HBITMAP)LoadImage(NULL, path, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-    if (!hBmp)
-        hBmp = LoadBitmap(hInst, MAKEINTRESOURCE(resourceId));
-    return hBmp;
-}
-
-static void CreateToolbar(WindowInfo& win) {
-    HWND hwndToolbar = CreateWindowEx(0, TOOLBARCLASSNAME, NULL, WS_TOOLBAR,
-                                 0,0,0,0, win.hwndFrame,(HMENU)IDC_TOOLBAR, ghinst, NULL);
-    win.hwndToolbar = hwndToolbar;
-    LRESULT lres = SendMessage(hwndToolbar, TB_BUTTONSTRUCTSIZE, (WPARAM)sizeof(TBBUTTON), 0);
-
-    ShowWindow(hwndToolbar, SW_SHOW);
-    TBBUTTON tbButtons[TOOLBAR_BUTTONS_COUNT];
-
-    // the name of the bitmap contains the number of icons so that after adding/removing
-    // icons a complete default toolbar is used rather than an incomplete customized one
-    HBITMAP hbmp = LoadExternalBitmap(ghinst, _T("toolbar_11.bmp"), IDB_TOOLBAR);
-    BITMAP bmp;
-    GetObject(hbmp, sizeof(BITMAP), &bmp);
-    // stretch the toolbar bitmaps for higher DPI settings
-    // TODO: get nicely interpolated versions of the toolbar icons for higher resolutions
-    if (bmp.bmHeight < TOOLBAR_MIN_ICON_SIZE * win.uiDPIFactor) {
-        bmp.bmWidth *= (LONG)(win.uiDPIFactor + 0.5f);
-        bmp.bmHeight *= (LONG)(win.uiDPIFactor + 0.5f);
-        hbmp = (HBITMAP)CopyImage(hbmp, IMAGE_BITMAP, bmp.bmWidth, bmp.bmHeight, LR_COPYDELETEORG);
-    }
-    // Assume square icons
-    HIMAGELIST himl = ImageList_Create(bmp.bmHeight, bmp.bmHeight, ILC_COLORDDB | ILC_MASK, 0, 0);
-    ImageList_AddMasked(himl, hbmp, RGB(255, 0, 255));
-    DeleteObject(hbmp);
-
-    // in Plugin mode, replace the Open with a Save As button
-    if (gPluginMode && bmp.bmWidth / bmp.bmHeight == 13) {
-        gToolbarButtons[0].bmpIndex = 12;
-        gToolbarButtons[0].cmdId = IDM_SAVEAS;
-        gToolbarButtons[0].toolTip = _TRN("Save As");
-        gToolbarButtons[0].flags = MF_REQ_DISK_ACCESS;
-    }
-    for (int i = 0; i < TOOLBAR_BUTTONS_COUNT; i++) {
-        tbButtons[i] = TbButtonFromButtonInfo(i);
-        if (gToolbarButtons[i].cmdId == IDM_FIND_MATCH)
-            tbButtons[i].fsStyle = BTNS_CHECK;
-    }
-    lres = SendMessage(hwndToolbar, TB_SETIMAGELIST, 0, (LPARAM)himl);
-
-    LRESULT exstyle = SendMessage(hwndToolbar, TB_GETEXTENDEDSTYLE, 0, 0);
-    exstyle |= TBSTYLE_EX_MIXEDBUTTONS;
-    lres = SendMessage(hwndToolbar, TB_SETEXTENDEDSTYLE, 0, exstyle);
-
-    lres = SendMessage(hwndToolbar, TB_ADDBUTTONS, TOOLBAR_BUTTONS_COUNT, (LPARAM)tbButtons);
-
-    RECT rc;
-    lres = SendMessage(hwndToolbar, TB_GETITEMRECT, 0, (LPARAM)&rc);
-
-    DWORD  reBarStyle = WS_REBAR | WS_VISIBLE;
-    win.hwndReBar = CreateWindowEx(WS_EX_TOOLWINDOW, REBARCLASSNAME, NULL, reBarStyle,
-                             0,0,0,0, win.hwndFrame, (HMENU)IDC_REBAR, ghinst, NULL);
-    if (!win.hwndReBar)
-        SeeLastError();
-
-    REBARINFO rbi;
-    rbi.cbSize = sizeof(REBARINFO);
-    rbi.fMask  = 0;
-    rbi.himl   = (HIMAGELIST)NULL;
-    lres = SendMessage(win.hwndReBar, RB_SETBARINFO, 0, (LPARAM)&rbi);
-
-    REBARBANDINFO rbBand;
-    rbBand.cbSize  = sizeof(REBARBANDINFO);
-    rbBand.fMask   = /*RBBIM_COLORS | RBBIM_TEXT | RBBIM_BACKGROUND | */
-                   RBBIM_STYLE | RBBIM_CHILD | RBBIM_CHILDSIZE /*| RBBIM_SIZE*/;
-    rbBand.fStyle  = /*RBBS_CHILDEDGE |*//* RBBS_BREAK |*/ RBBS_FIXEDSIZE /*| RBBS_GRIPPERALWAYS*/;
-    if (IsAppThemed())
-        rbBand.fStyle |= RBBS_CHILDEDGE;
-    rbBand.hbmBack = NULL;
-    rbBand.lpText     = _T("Toolbar");
-    rbBand.hwndChild  = hwndToolbar;
-    rbBand.cxMinChild = (rc.right - rc.left) * TOOLBAR_BUTTONS_COUNT;
-    rbBand.cyMinChild = (rc.bottom - rc.top) + 2 * rc.top;
-    rbBand.cx         = 0;
-    lres = SendMessage(win.hwndReBar, RB_INSERTBAND, (WPARAM)-1, (LPARAM)&rbBand);
-
-    SetWindowPos(win.hwndReBar, NULL, 0, 0, 0, 0, SWP_NOZORDER);
-    
-    CreatePageBox(win);
-    CreateFindBox(win);
 }
 
 // TODO: the layout logic here is similar to what we do in SetSidebarVisibility()
@@ -6139,11 +5518,11 @@ static LRESULT OnCommand(WindowInfo *win, HWND hwnd, UINT message, WPARAM wParam
             break;
     
         case IDT_VIEW_FIT_WIDTH:
-            ToggleToolbarViewButton(*win, ZOOM_FIT_WIDTH, true);
+            ChangeZoomLevel(win, ZOOM_FIT_WIDTH, true);
             break;
     
         case IDT_VIEW_FIT_PAGE:
-            ToggleToolbarViewButton(*win, ZOOM_FIT_PAGE, false);
+            ChangeZoomLevel(win, ZOOM_FIT_PAGE, false);
             break;
     
         case IDT_VIEW_ZOOMIN:
@@ -6444,7 +5823,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
 
         case WM_KEYDOWN:
             if (win)
-                OnKeydown(*win, wParam, lParam);
+                OnFrameKeydown(win, wParam, lParam);
             break;
 
         case WM_CONTEXTMENU:

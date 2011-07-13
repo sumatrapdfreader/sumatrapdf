@@ -1,0 +1,18 @@
+/* Copyright 2006-2011 the SumatraPDF project authors (see AUTHORS file).
+   License: GPLv3 */
+
+#ifndef Toolbar_h
+#define Toolbar_h
+
+class WindowInfo;
+
+#include "WindowInfo.h"
+
+void CreateToolbar(WindowInfo& win);
+void ToolbarUpdateStateForWindow(WindowInfo& win);
+void UpdateToolbarButtonsToolTipsForWindow(WindowInfo& win);
+void UpdateToolbarFindText(WindowInfo& win);
+void UpdateToolbarPageText(WindowInfo& win, int pageCount);
+void UpdateFindbox(WindowInfo* win);
+void ShowOrHideToolbarGlobally();
+#endif

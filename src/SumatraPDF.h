@@ -32,6 +32,17 @@ enum {
     Perm_RestrictedUse      = 0x1000000,
 };
 
+enum MenuToolbarFlags {
+    MF_NO_TRANSLATE      = 1 << 0,
+    MF_PLUGIN_MODE_ONLY  = 1 << 1,
+#define PERM_FLAG_OFFSET 2
+    MF_REQ_INET_ACCESS   = Perm_InternetAccess << PERM_FLAG_OFFSET,
+    MF_REQ_DISK_ACCESS   = Perm_DiskAccess << PERM_FLAG_OFFSET,
+    MF_REQ_PREF_ACCESS   = Perm_SavePreferences << PERM_FLAG_OFFSET,
+    MF_REQ_PRINTER_ACCESS= Perm_PrinterAccess << PERM_FLAG_OFFSET,
+    MF_REQ_ALLOW_COPY    = Perm_CopySelection << PERM_FLAG_OFFSET,
+};
+
 struct MenuDef {
     const char *title;
     int         id;
@@ -50,16 +61,18 @@ class Favorites;
 
 // all defined in SumatraPDF.cpp
 extern HINSTANCE                ghinst;
-extern SerializableGlobalPrefs  gGlobalPrefs;
 extern HCURSOR                  gCursorHand;
+extern HCURSOR                  gCursorArrow;
+extern HCURSOR                  gCursorIBeam;
 extern HBRUSH                   gBrushNoDocBg;
 extern HBRUSH                   gBrushAboutBg;
+extern HFONT                    gDefaultGuiFont;
 extern bool                     gPluginMode;
 extern TCHAR *                  gPluginURL;
+extern SerializableGlobalPrefs  gGlobalPrefs;
 extern Vec<WindowInfo*>         gWindows;
 extern Favorites *              gFavorites;
 extern FileHistory              gFileHistory;
-extern HFONT                    gDefaultGuiFont;
 extern WNDPROC                  DefWndProcCloseButton;
 extern MenuDef                  menuDefFavorites[];
 
@@ -79,6 +92,9 @@ bool  WindowInfoStillValid(WindowInfo *win);
 void  ChangeLanguage(const char *langName);
 void  ShowOrHideToolbarGlobally();
 void  UpdateCurrentFileDisplayStateForWin(WindowInfo* win);
+bool  OnFrameKeydown(WindowInfo* win, WPARAM key, LPARAM lparam, bool inTextfield=false);
+bool  NeedsFindUI(WindowInfo *win);
+SIZE  TextSizeInHwnd(HWND hwnd, const TCHAR *txt);
 HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuLen, HMENU menu);
 
 #endif

@@ -191,32 +191,6 @@ void WindowInfo::ZoomToSelection(float factor, bool relative)
     this->UpdateToolbarState();
 }
 
-void WindowInfo::UpdateToolbarState()
-{
-    if (!this->IsDocLoaded())
-        return;
-
-    WORD state = (WORD)SendMessage(this->hwndToolbar, TB_GETSTATE, IDT_VIEW_FIT_WIDTH, 0);
-    if (this->dm->displayMode() == DM_CONTINUOUS && this->dm->zoomVirtual() == ZOOM_FIT_WIDTH)
-        state |= TBSTATE_CHECKED;
-    else
-        state &= ~TBSTATE_CHECKED;
-    SendMessage(this->hwndToolbar, TB_SETSTATE, IDT_VIEW_FIT_WIDTH, state);
-
-    bool isChecked = (state & TBSTATE_CHECKED);
-
-    state = (WORD)SendMessage(this->hwndToolbar, TB_GETSTATE, IDT_VIEW_FIT_PAGE, 0);
-    if (this->dm->displayMode() == DM_SINGLE_PAGE && this->dm->zoomVirtual() == ZOOM_FIT_PAGE)
-        state |= TBSTATE_CHECKED;
-    else
-        state &= ~TBSTATE_CHECKED;
-    SendMessage(this->hwndToolbar, TB_SETSTATE, IDT_VIEW_FIT_PAGE, state);
-
-    isChecked &= (state & TBSTATE_CHECKED);
-    if (!isChecked)
-        prevZoomVirtual = INVALID_ZOOM;
-}
-
 void WindowInfo::MoveDocBy(int dx, int dy)
 {
     assert(this->dm);
