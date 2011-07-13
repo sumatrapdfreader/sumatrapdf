@@ -9,6 +9,7 @@
 #include "Resource.h"
 #include "FileWatch.h"
 #include "Notifications.h"
+#include "Print.h"
 
 WindowInfo::WindowInfo(HWND hwnd) :
     dm(NULL), menu(NULL), hwndFrame(hwnd),
@@ -42,7 +43,7 @@ WindowInfo::WindowInfo(HWND hwnd) :
 WindowInfo::~WindowInfo() 
 {
     AbortFinding();
-    AbortPrinting();
+    AbortPrinting(this);
     delete stressTest;
 
     delete dm;
@@ -113,15 +114,6 @@ void WindowInfo::AbortFinding(bool hideMessage)
 
     if (hideMessage)
         this->messages->CleanUp(NG_FIND_PROGRESS);
-}
-
-void WindowInfo::AbortPrinting()
-{
-    if (this->printThread) {
-        this->printCanceled = true;
-        WaitForSingleObject(this->printThread, INFINITE);
-    }
-    this->printCanceled = false;
 }
 
 void WindowInfo::RedrawAll(bool update)

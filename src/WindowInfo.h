@@ -199,7 +199,6 @@ public:
 
     void ToggleZoom();
     void MoveDocBy(int dx, int dy);
-    void AbortPrinting();
     void AbortFinding(bool hideMessage=false);
 
     void CreateInfotip(const TCHAR *text, RectI& rc);
