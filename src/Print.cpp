@@ -93,7 +93,7 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL)
     }
     total += (int)pd.sel.Count();
     if (progressUI)
-        progressUI->ProgressUpdate(current, total);
+        progressUI->UpdateProgress(current, total);
 
     if (StartDoc(hdc, &di) <= 0)
         return;
@@ -156,7 +156,7 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL)
             }
 
             current++;
-            if (progressUI && !progressUI->ProgressUpdate(current, total)) {
+            if (progressUI && !progressUI->UpdateProgress(current, total)) {
                 AbortDoc(hdc);
                 return;
             }
@@ -252,7 +252,7 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL)
             }
 
             current++;
-            if (progressUI && !progressUI->ProgressUpdate(current, total)) {
+            if (progressUI && !progressUI->UpdateProgress(current, total)) {
                 AbortDoc(hdc);
                 return;
             }
@@ -272,7 +272,7 @@ public:
 
     virtual void Execute() {
         if (WindowInfoStillValid(win) && win->notifications->Contains(wnd))
-            wnd->ProgressUpdate(current, total);
+            wnd->UpdateProgress(current, total);
     }
 };
 
@@ -295,7 +295,7 @@ public:
         RemoveNotification(wnd);
     }
 
-    virtual bool ProgressUpdate(int current, int total) {
+    virtual bool UpdateProgress(int current, int total) {
         QueueWorkItem(new PrintThreadUpdateWorkItem(win, wnd, current, total));
         return WindowInfoStillValid(win) && !win->printCanceled && !isCanceled;
     }

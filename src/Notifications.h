@@ -74,11 +74,11 @@ public:
         return RectI(ClientRect(hwnd).dx - 16 - PADDING, PADDING, 16, 16);
     }
 
-    void MessageUpdate(const TCHAR *message, int timeoutInMS=0, bool highlight=false);
+    void UpdateMessage(const TCHAR *message, int timeoutInMS=0, bool highlight=false);
     static LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 
     // ProgressUpdateUI methods
-    virtual bool ProgressUpdate(int current, int total);
+    virtual bool UpdateProgress(int current, int total);
 
 };
 

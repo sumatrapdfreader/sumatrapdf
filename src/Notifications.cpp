@@ -71,7 +71,7 @@ void NotificationWnd::UpdateWindowPosition(const TCHAR *message, bool init)
     }
 }
 
-bool NotificationWnd::ProgressUpdate(int current, int total)
+bool NotificationWnd::UpdateProgress(int current, int total)
 {
     assert(total > 0);
     if (total <= 0)
@@ -79,12 +79,12 @@ bool NotificationWnd::ProgressUpdate(int current, int total)
     progress = limitValue(100 * current / total, 0, 100);
     if (hasProgress && progressMsg) {
         ScopedMem<TCHAR> message(str::Format(progressMsg, current, total));
-        MessageUpdate(message);
+        UpdateMessage(message);
     }
     return isCanceled;
 }
 
-void NotificationWnd::MessageUpdate(const TCHAR *message, int timeoutInMS, bool highlight)
+void NotificationWnd::UpdateMessage(const TCHAR *message, int timeoutInMS, bool highlight)
 {
     win::SetText(self, message);
     this->highlight = highlight;

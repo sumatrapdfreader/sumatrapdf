@@ -1646,7 +1646,7 @@ void WindowInfo::PageNoChanged(int pageNo)
                 ScopedMem<TCHAR> label(dm->engine->GetPageLabel(pageNo));
                 pageInfo.Set(str::Format(_T("%s %s (%d / %d)"), _TR("Page:"), label, pageNo, dm->pageCount()));
             }
-            wnd->MessageUpdate(pageInfo);
+            wnd->UpdateMessage(pageInfo);
         }
     }
 }
@@ -4219,7 +4219,7 @@ public:
 
     virtual void Execute() {
         if (WindowInfoStillValid(win) && !win->findCanceled && win->notifications->Contains(wnd))
-            wnd->ProgressUpdate(current, total);
+            wnd->UpdateProgress(current, total);
     }
 };
 
@@ -4258,17 +4258,17 @@ struct FindThreadData : public ProgressUpdateUI {
         if (!success && !loopedAround || !wnd) // i.e. canceled
             win->notifications->RemoveNotification(wnd);
         else if (!success && loopedAround)
-            wnd->MessageUpdate(_TR("No matches were found"), 3000);
+            wnd->UpdateMessage(_TR("No matches were found"), 3000);
         else if (!loopedAround) {
             ScopedMem<TCHAR> buf(str::Format(_TR("Found text at page %d"), win->dm->currentPageNo()));
-            wnd->MessageUpdate(buf, 3000);
+            wnd->UpdateMessage(buf, 3000);
         } else {
             ScopedMem<TCHAR> buf(str::Format(_TR("Found text at page %d (again)"), win->dm->currentPageNo()));
-            wnd->MessageUpdate(buf, 3000, true);
+            wnd->UpdateMessage(buf, 3000, true);
         }    
     }
 
-    virtual bool ProgressUpdate(int current, int total) {
+    virtual bool UpdateProgress(int current, int total) {
         if (!WindowInfoStillValid(win) || !win->notifications->GetFirstInGroup(NG_FIND_PROGRESS) || win->findCanceled)
             return false;
         QueueWorkItem(new UpdateFindStatusWorkItem(win, win->notifications->GetFirstInGroup(NG_FIND_PROGRESS), current, total));

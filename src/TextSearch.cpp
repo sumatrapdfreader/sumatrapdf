@@ -156,7 +156,7 @@ bool TextSearch::FindStartingAtPage(int pageNo, ProgressUpdateUI *tracker)
 
     int total = engine->PageCount();
     while (1 <= pageNo && pageNo <= total &&
-           (!tracker || tracker->ProgressUpdate(pageNo, total))) {
+           (!tracker || tracker->UpdateProgress(pageNo, total))) {
         if (SKIP_PAGE == findCache[pageNo - 1]) {
             pageNo += forward ? 1 : -1;
             continue;
@@ -200,7 +200,7 @@ TextSel *TextSearch::FindNext(ProgressUpdateUI *tracker)
     assert(findText);
     if (!findText)
         return NULL;
-    if (tracker && !tracker->ProgressUpdate(findPage, engine->PageCount()))
+    if (tracker && !tracker->UpdateProgress(findPage, engine->PageCount()))
         return NULL;
 
     if (FindTextInPage())

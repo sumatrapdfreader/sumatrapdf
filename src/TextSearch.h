@@ -16,7 +16,7 @@ enum TextSearchDirection {
 class ProgressUpdateUI
 {
 public:
-    virtual bool ProgressUpdate(int current, int total) = 0;
+    virtual bool UpdateProgress(int current, int total) = 0;
 };
 
 class TextSearch : public TextSelection
