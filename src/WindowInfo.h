@@ -186,8 +186,6 @@ public:
     CallbackFunc *  stressTest;
     bool            suppressPwdUI;
 
-    void UpdateToolbarState();
-
     void UpdateCanvasSize();
     SizeI GetViewPortSize();
     void RedrawAll(bool update=false);
@@ -200,8 +198,6 @@ public:
     }
 
     void ToggleZoom();
-    void ZoomToSelection(float factor, bool relative);
-    void SwitchToDisplayMode(DisplayMode displayMode, bool keepContinuous=false);
     void MoveDocBy(int dx, int dy);
     void AbortPrinting();
     void AbortFinding(bool hideMessage=false);

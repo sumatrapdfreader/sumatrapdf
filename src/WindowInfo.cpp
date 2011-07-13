@@ -144,53 +144,6 @@ void WindowInfo::ToggleZoom()
         this->dm->zoomTo(ZOOM_FIT_PAGE);
 }
 
-void WindowInfo::ZoomToSelection(float factor, bool relative)
-{
-    if (!this->IsDocLoaded())
-        return;
-
-    PointI pt;
-    bool zoomToPt = this->showSelection && this->selectionOnPage;
-
-    // either scroll towards the center of the current selection
-    if (zoomToPt) {
-        RectI selRect;
-        for (size_t i = 0; i < this->selectionOnPage->Count(); i++)
-            selRect = selRect.Union(this->selectionOnPage->At(i).GetRect(this->dm));
-
-        ClientRect rc(this->hwndCanvas);
-        pt.x = 2 * selRect.x + selRect.dx - rc.dx / 2;
-        pt.y = 2 * selRect.y + selRect.dy - rc.dy / 2;
-
-        pt.x = limitValue(pt.x, selRect.x, selRect.x + selRect.dx);
-        pt.y = limitValue(pt.y, selRect.y, selRect.y + selRect.dy);
-
-        int pageNo = this->dm->GetPageNoByPoint(pt);
-        if (!this->dm->validPageNo(pageNo) || !this->dm->pageVisible(pageNo))
-            zoomToPt = false;
-    }
-    // or towards the top-left-most part of the first visible page
-    else {
-        int page = this->dm->firstVisiblePageNo();
-        PageInfo *pageInfo = this->dm->getPageInfo(page);
-        if (pageInfo) {
-            RectI visible = pageInfo->pageOnScreen.Intersect(this->canvasRc);
-            pt = visible.TL();
-
-            int pageNo = this->dm->GetPageNoByPoint(pt);
-            if (!visible.IsEmpty() && this->dm->validPageNo(pageNo) && this->dm->pageVisible(pageNo))
-                zoomToPt = true;
-        }
-    }
-
-    if (relative)
-        this->dm->zoomBy(factor, zoomToPt ? &pt : NULL);
-    else
-        this->dm->zoomTo(factor, zoomToPt ? &pt : NULL);
-
-    this->UpdateToolbarState();
-}
-
 void WindowInfo::MoveDocBy(int dx, int dy)
 {
     assert(this->dm);
@@ -402,7 +355,7 @@ void LinkHandler::ScrollTo(PageDestination *dest)
     if (zoom != INVALID_ZOOM) {
         // TODO: adjust the zoom level before calculating the scrolling coordinates
         dm->zoomTo(zoom);
-        owner->UpdateToolbarState();
+        UpdateToolbarState(owner);
     }
     // */
     dm->goToPage(pageNo, scroll.y, true, scroll.x);

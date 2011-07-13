@@ -95,6 +95,8 @@ void  UpdateCurrentFileDisplayStateForWin(WindowInfo* win);
 bool  OnFrameKeydown(WindowInfo* win, WPARAM key, LPARAM lparam, bool inTextfield=false);
 bool  NeedsFindUI(WindowInfo *win);
 SIZE  TextSizeInHwnd(HWND hwnd, const TCHAR *txt);
+void  ZoomToSelection(WindowInfo *win, float factor, bool relative);
+void  SwitchToDisplayMode(WindowInfo *win, DisplayMode displayMode, bool keepContinuous=false);
 HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuLen, HMENU menu);
 
 #endif

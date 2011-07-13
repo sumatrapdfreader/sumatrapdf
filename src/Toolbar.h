@@ -6,13 +6,13 @@
 
 class WindowInfo;
 
-#include "WindowInfo.h"
-
-void CreateToolbar(WindowInfo& win);
-void ToolbarUpdateStateForWindow(WindowInfo& win);
-void UpdateToolbarButtonsToolTipsForWindow(WindowInfo& win);
-void UpdateToolbarFindText(WindowInfo& win);
-void UpdateToolbarPageText(WindowInfo& win, int pageCount);
+void CreateToolbar(WindowInfo *win);
+void ToolbarUpdateStateForWindow(WindowInfo *win);
+void UpdateToolbarButtonsToolTipsForWindow(WindowInfo *win);
+void UpdateToolbarFindText(WindowInfo *win);
+void UpdateToolbarPageText(WindowInfo *win, int pageCount);
 void UpdateFindbox(WindowInfo* win);
 void ShowOrHideToolbarGlobally();
+void UpdateToolbarState(WindowInfo *win);
+
 #endif

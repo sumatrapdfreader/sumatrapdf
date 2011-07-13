@@ -3,12 +3,15 @@
 // PDF-source synchronizer based on .pdfsync file
 
 #include "PdfSync.h"
+
+#include <shlwapi.h>
+#include <time.h>
+
 #include "StrUtil.h"
 #include "FileUtil.h"
 #include "WindowInfo.h"
 #include "AppPrefs.h"
-#include <shlwapi.h>
-#include <time.h>
+#include "SumatraPDF.h"
 
 // size of the mark highlighting the location calculated by forward-search
 #define MARK_SIZE               10 
@@ -812,10 +815,10 @@ static const TCHAR *HandleSetViewCmd(const TCHAR *cmd, DDEACK& ack)
 
     DisplayMode mode;
     if (DisplayModeConv::EnumFromName(viewMode, &mode) && mode != DM_AUTOMATIC)
-        win->SwitchToDisplayMode(mode);
+        SwitchToDisplayMode(win, mode);
 
     if (zoom != INVALID_ZOOM)
-        win->ZoomToSelection(zoom, false);
+        ZoomToSelection(win, zoom, false);
 
     if (scroll.x != -1 || scroll.y != -1) {
         ScrollState ss = win->dm->GetScrollState();

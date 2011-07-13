@@ -454,12 +454,12 @@ static void MenuUpdateDisplayMode(WindowInfo& win)
         win::menu::SetChecked(win.menu, IDM_VIEW_CONTINUOUS, true);
 }
 
-void WindowInfo::SwitchToDisplayMode(DisplayMode displayMode, bool keepContinuous)
+void SwitchToDisplayMode(WindowInfo *win, DisplayMode displayMode, bool keepContinuous)
 {
-    if (!this->IsDocLoaded())
+    if (!win->IsDocLoaded())
         return;
 
-    if (keepContinuous && displayModeContinuous(this->dm->displayMode())) {
+    if (keepContinuous && displayModeContinuous(win->dm->displayMode())) {
         switch (displayMode) {
             case DM_SINGLE_PAGE: displayMode = DM_CONTINUOUS; break;
             case DM_FACING: displayMode = DM_CONTINUOUS_FACING; break;
@@ -467,8 +467,8 @@ void WindowInfo::SwitchToDisplayMode(DisplayMode displayMode, bool keepContinuou
         }
     }
 
-    this->dm->changeDisplayMode(displayMode);
-    UpdateToolbarState();
+    win->dm->changeDisplayMode(displayMode);
+    UpdateToolbarState(win);
 }
 
 #define SEP_ITEM "-----"
@@ -1229,7 +1229,7 @@ static void UpdateToolbarAndScrollbarsForAllWindows()
 {
     for (size_t i = 0; i < gWindows.Count(); i++) {
         WindowInfo *win = gWindows[i];
-        ToolbarUpdateStateForWindow(*win);
+        ToolbarUpdateStateForWindow(win);
 
         if (!win->IsDocLoaded()) {
             ShowScrollBar(win->hwndCanvas, SB_BOTH, FALSE);
@@ -1319,7 +1319,7 @@ static WindowInfo* CreateWindowInfo()
         CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
         win->hwndCanvas, NULL, ghinst, NULL);
 
-    CreateToolbar(*win);
+    CreateToolbar(win);
     CreateSidebar(win);
     UpdateFindbox(win);
     DragAcceptFiles(win->hwndCanvas, TRUE);
@@ -1465,8 +1465,8 @@ static bool LoadDocIntoWindow(
 
     int pageCount = win.dm->pageCount();
     if (pageCount > 0) {
-        UpdateToolbarPageText(win, pageCount);
-        UpdateToolbarFindText(win);
+        UpdateToolbarPageText(&win, pageCount);
+        UpdateToolbarFindText(&win);
     }
 
     const TCHAR *baseName = path::GetBaseName(win.dm->fileName());
@@ -1511,7 +1511,7 @@ Error:
     if (win.IsDocLoaded()) {
         ToggleWindowStyle(win.hwndPageBox, ES_NUMBER, !win.dm->engine || !win.dm->engine->HasPageLabels());
         win.dm->SetScrollState(ss);
-        win.UpdateToolbarState();
+        UpdateToolbarState(&win);
     }
 
     SetSidebarVisibility(&win, win.tocVisible, gGlobalPrefs.favVisible);
@@ -1639,9 +1639,9 @@ void WindowInfo::PageNoChanged(int pageNo)
     if (INVALID_PAGE_NO != pageNo) {
         ScopedMem<TCHAR> buf(dm->engine->GetPageLabel(pageNo));
         win::SetText(hwndPageBox, buf);
-        ToolbarUpdateStateForWindow(*this);
+        ToolbarUpdateStateForWindow(this);
         if (dm->engine && dm->engine->HasPageLabels())
-            UpdateToolbarPageText(*this, dm->pageCount());
+            UpdateToolbarPageText(this, dm->pageCount());
     }
     if (pageNo != currPageNo) {
         UpdateTocSelection(this, pageNo);
@@ -1942,6 +1942,54 @@ static void UpdateTextSelection(WindowInfo& win, bool select=true)
     DeleteOldSelectionInfo(win);
     win.selectionOnPage = SelectionOnPage::FromTextSelect(&win.dm->textSelection->result);
     win.showSelection = true;
+}
+
+void ZoomToSelection(WindowInfo *win, float factor, bool relative)
+{
+    if (!win->IsDocLoaded())
+        return;
+
+    PointI pt;
+    bool zoomToPt = win->showSelection && win->selectionOnPage;
+
+    // either scroll towards the center of the current selection
+    if (zoomToPt) {
+        RectI selRect;
+        for (size_t i = 0; i < win->selectionOnPage->Count(); i++) {
+            selRect = selRect.Union(win->selectionOnPage->At(i).GetRect(win->dm));
+        }
+
+        ClientRect rc(win->hwndCanvas);
+        pt.x = 2 * selRect.x + selRect.dx - rc.dx / 2;
+        pt.y = 2 * selRect.y + selRect.dy - rc.dy / 2;
+
+        pt.x = limitValue(pt.x, selRect.x, selRect.x + selRect.dx);
+        pt.y = limitValue(pt.y, selRect.y, selRect.y + selRect.dy);
+
+        int pageNo = win->dm->GetPageNoByPoint(pt);
+        if (!win->dm->validPageNo(pageNo) || !win->dm->pageVisible(pageNo))
+            zoomToPt = false;
+    }
+    // or towards the top-left-most part of the first visible page
+    else {
+        int page = win->dm->firstVisiblePageNo();
+        PageInfo *pageInfo = win->dm->getPageInfo(page);
+        if (pageInfo) {
+            RectI visible = pageInfo->pageOnScreen.Intersect(win->canvasRc);
+            pt = visible.TL();
+
+            int pageNo = win->dm->GetPageNoByPoint(pt);
+            if (!visible.IsEmpty() && win->dm->validPageNo(pageNo) && win->dm->pageVisible(pageNo))
+                zoomToPt = true;
+        }
+    }
+
+    if (relative)
+        win->dm->zoomBy(factor, zoomToPt ? &pt : NULL);
+    else
+        win->dm->zoomTo(factor, zoomToPt ? &pt : NULL);
+
+    UpdateToolbarState(win);
 }
 
 static void PaintSelection(WindowInfo& win, HDC hdc) {
@@ -2940,8 +2988,8 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
             DestroyWindow(win->hwndProperties);
             assert(!win->hwndProperties);
         }
-        UpdateToolbarPageText(*win, 0);
-        UpdateToolbarFindText(*win);
+        UpdateToolbarPageText(win, 0);
+        UpdateToolbarFindText(win);
         DeleteOldSelectionInfo(*win, true);
         win->RedrawAll();
         UpdateFindbox(win);
@@ -2969,7 +3017,7 @@ static void OnMenuZoom(WindowInfo& win, UINT menuId)
         return;
 
     float zoom = ZoomMenuItemToZoom(menuId);
-    win.ZoomToSelection(zoom, false);
+    ZoomToSelection(&win, zoom, false);
 }
 
 static void OnMenuCustomZoom(WindowInfo& win)
@@ -2980,7 +3028,7 @@ static void OnMenuCustomZoom(WindowInfo& win)
     float zoom = win.dm->zoomVirtual();
     if (IDCANCEL == Dialog_CustomZoom(win.hwndFrame, &zoom))
         return;
-    win.ZoomToSelection(zoom, false);
+    ZoomToSelection(&win, zoom, false);
 }
 
 static bool CheckPrinterStretchDibSupport(HWND hwndForMsgBox, HDC hdc)
@@ -4032,7 +4080,7 @@ static void OnMenuViewContinuous(WindowInfo& win)
             newMode = displayModeContinuous(newMode) ? DM_BOOK_VIEW : DM_CONTINUOUS_BOOK_VIEW;
             break;
     }
-    win.SwitchToDisplayMode(newMode);
+    SwitchToDisplayMode(&win, newMode);
 }
 
 static void ChangeZoomLevel(WindowInfo *win, float newZoom, bool pagesContinuously)
@@ -4049,7 +4097,7 @@ static void ChangeZoomLevel(WindowInfo *win, float newZoom, bool pagesContinuous
         float prevZoom = win->prevZoomVirtual;
 
         if (mode != newMode)
-            win->SwitchToDisplayMode(newMode);
+            SwitchToDisplayMode(win, newMode);
         OnMenuZoom(*win, MenuIdFromVirtualZoom(newZoom));
 
         // remember the previous values for when the toolbar button is unchecked
@@ -4065,8 +4113,8 @@ static void ChangeZoomLevel(WindowInfo *win, float newZoom, bool pagesContinuous
     }
     else if (win->prevZoomVirtual != INVALID_ZOOM) {
         float prevZoom = win->prevZoomVirtual;
-        win->SwitchToDisplayMode(win->prevDisplayMode);
-        win->ZoomToSelection(prevZoom, false);
+        SwitchToDisplayMode(win, win->prevDisplayMode);
+        ZoomToSelection(win, prevZoom, false);
     }
 }
 
@@ -4524,10 +4572,10 @@ static void OnChar(WindowInfo& win, WPARAM key)
         win.ToggleZoom();
         break;
     case '+':
-        win.ZoomToSelection(ZOOM_IN_FACTOR, true);
+        ZoomToSelection(&win, ZOOM_IN_FACTOR, true);
         break;
     case '-':
-        win.ZoomToSelection(ZOOM_OUT_FACTOR, true);
+        ZoomToSelection(&win, ZOOM_OUT_FACTOR, true);
         break;
     case '/':
         if (!gIsDivideKeyDown)
@@ -4548,7 +4596,7 @@ static void OnChar(WindowInfo& win, WPARAM key)
             DisplayMode newMode = DM_BOOK_VIEW;
             if (displayModeShowCover(win.dm->displayMode()))
                 newMode = DM_FACING;
-            win.SwitchToDisplayMode(newMode, true);
+            SwitchToDisplayMode(&win, newMode, true);
 
             if (forward && currPage >= win.dm->currentPageNo() && (currPage > 1 || newMode == DM_BOOK_VIEW))
                 win.dm->goToNextPage(0);
@@ -4608,9 +4656,9 @@ static void UpdateUITextForLanguage()
 {
     for (size_t i = 0; i < gWindows.Count(); i++) {
         WindowInfo *win = gWindows[i];
-        UpdateToolbarPageText(*win, -1);
-        UpdateToolbarFindText(*win);
-        UpdateToolbarButtonsToolTipsForWindow(*win);
+        UpdateToolbarPageText(win, -1);
+        UpdateToolbarFindText(win);
+        UpdateToolbarButtonsToolTipsForWindow(win);
         // also update the sidebar title at this point
         UpdateSidebarTitles(*win);
     }        
@@ -5265,7 +5313,7 @@ static LRESULT OnMouseWheel(WindowInfo& win, UINT message, WPARAM wParam, LPARAM
 
         float factor = delta < 0 ? ZOOM_OUT_FACTOR : ZOOM_IN_FACTOR;
         win.dm->zoomBy(factor, &PointI(pt.x, pt.y));
-        win.UpdateToolbarState();
+        UpdateToolbarState(&win);
 
         // don't show the context menu when zooming with the right mouse-button down
         if ((LOWORD(wParam) & MK_RBUTTON))
@@ -5526,11 +5574,11 @@ static LRESULT OnCommand(WindowInfo *win, HWND hwnd, UINT message, WPARAM wParam
             break;
     
         case IDT_VIEW_ZOOMIN:
-            win->ZoomToSelection(ZOOM_IN_FACTOR, true);
+            ZoomToSelection(win, ZOOM_IN_FACTOR, true);
             break;
     
         case IDT_VIEW_ZOOMOUT:
-            win->ZoomToSelection(ZOOM_OUT_FACTOR, true);
+            ZoomToSelection(win, ZOOM_OUT_FACTOR, true);
             break;
     
         case IDM_ZOOM_6400:
@@ -5558,15 +5606,15 @@ static LRESULT OnCommand(WindowInfo *win, HWND hwnd, UINT message, WPARAM wParam
             break;
     
         case IDM_VIEW_SINGLE_PAGE:
-            win->SwitchToDisplayMode(DM_SINGLE_PAGE, true);
+            SwitchToDisplayMode(win, DM_SINGLE_PAGE, true);
             break;
     
         case IDM_VIEW_FACING:
-            win->SwitchToDisplayMode(DM_FACING, true);
+            SwitchToDisplayMode(win, DM_FACING, true);
             break;
     
         case IDM_VIEW_BOOK:
-            win->SwitchToDisplayMode(DM_BOOK_VIEW, true);
+            SwitchToDisplayMode(win, DM_BOOK_VIEW, true);
             break;
     
         case IDM_VIEW_CONTINUOUS:
@@ -6286,9 +6334,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
                 if (i.enterPresentation || i.enterFullscreen)
                     EnterFullscreen(*win, i.enterPresentation);
                 if (i.startView != DM_AUTOMATIC)
-                    win->SwitchToDisplayMode(i.startView);
+                    SwitchToDisplayMode(win, i.startView);
                 if (i.startZoom != INVALID_ZOOM)
-                    win->ZoomToSelection(i.startZoom, false);
+                    ZoomToSelection(win, i.startZoom, false);
                 if (i.startScroll.x != -1 || i.startScroll.y != -1) {
                     ScrollState ss = win->dm->GetScrollState();
                     ss.x = i.startScroll.x;
