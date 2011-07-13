@@ -102,7 +102,7 @@ Deschide d&ocument
 &Parola:
 
 &Pin Document
-&țintuește document
+&Fixează document
 
 &Previous Page\tLeft Arrow
 Pagina anterioară\t<-
@@ -324,7 +324,7 @@ F&avorites
 F&avorite
 
 F&orward\tAlt+Right Arrow
-Înainte\tAlt+Right Arrow
+Înainte\tAlt+->
 
 F&ullscreen\tCtrl+Shift+L
 Tot ecranul\tCtrl+Shift+L
@@ -366,7 +366,7 @@ Fit &Page\tCtrl+0
 &Pagină întreagă\tCtrl+0
 
 Fit &Width\tCtrl+2
-Lățime pagină\tCtrl+2
+Potrivire după lățime pagină\tCtrl+2
 
 Fit Content
 Potrivire după conținut
@@ -375,7 +375,7 @@ Fit Page
 Pagină întreagă
 
 Fit Width
-Lățime pagină
+Potrivire după lățime pagină
 
 Fit Width and Show Pages Continuously
 Potrivire după lățime și afișare continuă a paginilor
@@ -558,7 +558,7 @@ Select &All
 Selecte&ază Tot
 
 Select &All\tCtrl+A
-Selectează &Tot\tCtrl+A
+Selectează &tot\tCtrl+A
 
 Select content with Ctrl+left mouse button
 Selectați conținut cu Ctrl+buton stânga maus
@@ -576,7 +576,7 @@ Show &pages continuously
 Arată &paginile continuu
 
 Show Favorites
-Arată Favoritele
+Arată favoritele
 
 Show frequently read
 Arată documentele citite frecvent
