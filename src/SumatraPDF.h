@@ -8,6 +8,8 @@
 #include "AppPrefs.h"
 #include "TextSearch.h"
 
+#define UWM_PREFS_FILE_UPDATED  (WM_USER + 1)
+
 #define FRAME_CLASS_NAME        _T("SUMATRA_PDF_FRAME")
 
 // permissions that can be revoked (or explicitly set) through Group Policies
@@ -74,6 +76,9 @@ void  LayoutTreeContainer(HWND hwndContainer, int id);
 void  DrawCloseButton(DRAWITEMSTRUCT *dis);
 void  AdvanceFocus(WindowInfo* win);
 bool  WindowInfoStillValid(WindowInfo *win);
-bool  SavePrefs();
+void  ChangeLanguage(const char *langName);
+void  ShowOrHideToolbarGlobally();
+void  UpdateCurrentFileDisplayStateForWin(WindowInfo* win);
 HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuLen, HMENU menu);
+
 #endif

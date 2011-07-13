@@ -11,6 +11,12 @@
 #include "Favorites.h"
 #include "translations.h"
 
+#include "SumatraPDF.h"
+#include "WindowInfo.h"
+#include "AppTools.h"
+
+#define PREFS_FILE_NAME         _T("sumatrapdfprefs.dat")
+
 #define MAX_REMEMBERED_FILES 1000
 
 #define GLOBAL_PREFS_STR            "gp"
@@ -619,3 +625,70 @@ bool EnumFromName(const TCHAR *txt, DisplayMode *mode)
 #undef IS_STR_ENUM
 
 }
+
+/* Caller needs to free() the result. */
+TCHAR *GetPrefsFileName()
+{
+    return AppGenDataFilename(PREFS_FILE_NAME);
+}
+
+// called whenever global preferences change or a file is
+// added or removed from gFileHistory (in order to keep
+// the list of recently opened documents in sync)
+bool SavePrefs()
+{
+    // don't save preferences for plugin windows
+    if (gPluginMode)
+        return false;
+
+    /* mark currently shown files as visible */
+    for (size_t i = 0; i < gWindows.Count(); i++)
+        UpdateCurrentFileDisplayStateForWin(gWindows[i]);
+
+    ScopedMem<TCHAR> path(GetPrefsFileName());
+    bool ok = Prefs::Save(path, gGlobalPrefs, gFileHistory, gFavorites);
+    if (ok) {
+        // notify all SumatraPDF instances about the updated prefs file
+        HWND hwnd = NULL;
+        while ((hwnd = FindWindowEx(HWND_DESKTOP, hwnd, FRAME_CLASS_NAME, NULL)))
+            PostMessage(hwnd, UWM_PREFS_FILE_UPDATED, 0, 0);
+    }
+    return ok;
+}
+
+// refresh the preferences when a different SumatraPDF process saves them
+bool ReloadPrefs()
+{
+    ScopedMem<TCHAR> path(GetPrefsFileName());
+
+    FILETIME time = file::GetModificationTime(path);
+    if (time.dwLowDateTime == gGlobalPrefs.lastPrefUpdate.dwLowDateTime &&
+        time.dwHighDateTime == gGlobalPrefs.lastPrefUpdate.dwHighDateTime) {
+        return true;
+    }
+
+    const char *currLang = gGlobalPrefs.currentLanguage;
+    bool toolbarVisible = gGlobalPrefs.toolbarVisible;
+
+    FileHistory fileHistory;
+    Favorites *favs = NULL;
+    Prefs::Load(path, gGlobalPrefs, fileHistory, &favs);
+
+    gFileHistory.Clear();
+    gFileHistory.ExtendWith(fileHistory);
+    delete gFavorites;
+    gFavorites = favs;
+
+    if (gWindows.Count() > 0 && gWindows[0]->IsAboutWindow()) {
+        gWindows[0]->DeleteInfotip();
+        gWindows[0]->RedrawAll(true);
+    }
+
+    if (!str::Eq(currLang, gGlobalPrefs.currentLanguage)) {
+        ChangeLanguage(gGlobalPrefs.currentLanguage);
+    }
+    if (gGlobalPrefs.toolbarVisible != toolbarVisible)
+        ShowOrHideToolbarGlobally();
+    return true;
+}
+

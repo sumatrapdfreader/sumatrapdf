@@ -111,7 +111,6 @@ TCHAR *                 gPluginURL = NULL; // owned by CommandLineInfo in WinMai
 
 #define CANVAS_CLASS_NAME       _T("SUMATRA_PDF_CANVAS")
 #define SPLITER_CLASS_NAME      _T("Spliter")
-#define PREFS_FILE_NAME         _T("sumatrapdfprefs.dat")
 #define RESTRICTIONS_FILE_NAME  _T("sumatrapdfrestrict.ini")
 #define CRASH_DUMP_FILE_NAME    _T("sumatrapdfcrash.dmp")
 
@@ -141,8 +140,6 @@ TCHAR *                 gPluginURL = NULL; // owned by CommandLineInfo in WinMai
 #if !defined(THREAD_BASED_FILEWATCH)
 #define FILEWATCH_DELAY_IN_MS       1000
 #endif
-
-#define UWM_PREFS_FILE_UPDATED  (WM_USER + 1)
 
 #define WS_REBAR (WS_CHILD | WS_CLIPCHILDREN | WS_BORDER | RBS_VARHEIGHT | \
                   RBS_BANDBORDERS | CCS_NODIVIDER | CCS_NOPARENTALIGN)
@@ -271,7 +268,7 @@ bool HasPermission(int permission)
     return (permission & gPolicyRestrictions) == permission;
 }
 
-static bool CurrLangNameSet(const char *langName)
+bool CurrLangNameSet(const char *langName)
 {
     const char *langCode = Trans::ConfirmLanguage(langName);
     if (!langCode)
@@ -832,12 +829,6 @@ TCHAR *WindowInfo::GetPassword(const TCHAR *fileName, unsigned char *fileDigest,
     return Dialog_GetPassword(this->hwndFrame, fileName, gGlobalPrefs.rememberOpenedFiles ? saveKey : NULL);
 }
 
-/* Caller needs to free() the result. */
-static TCHAR *GetPrefsFileName()
-{
-    return AppGenDataFilename(PREFS_FILE_NAME);
-}
-
 static struct {
     unsigned short itemId;
     float zoom;
@@ -955,13 +946,13 @@ static void UpdateSidebarDisplayState(WindowInfo *win, DisplayState *ds)
         ds->tocState = new Vec<int>(win->tocState);
 }
 
-static void UpdateCurrentFileDisplayStateForWin(WindowInfo& win)
+void UpdateCurrentFileDisplayStateForWin(WindowInfo* win)
 {
-    RememberWindowPosition(win);
-    if (!win.IsDocLoaded())
+    RememberWindowPosition(*win);
+    if (!win->IsDocLoaded())
         return;
 
-    const TCHAR *fileName = win.dm->fileName();
+    const TCHAR *fileName = win->dm->fileName();
     assert(fileName);
     if (!fileName)
         return;
@@ -971,14 +962,14 @@ static void UpdateCurrentFileDisplayStateForWin(WindowInfo& win)
     if (!state)
         return;
 
-    if (!win.dm->displayStateFromModel(state))
+    if (!win->dm->displayStateFromModel(state))
         return;
     state->useGlobalValues = gGlobalPrefs.globalPrefsOnly;
-    UpdateDisplayStateWindowRect(win, *state, false);
-    UpdateSidebarDisplayState(&win, state);
+    UpdateDisplayStateWindowRect(*win, *state, false);
+    UpdateSidebarDisplayState(win, state);
 }
 
-static void ShowOrHideToolbarGlobally()
+void ShowOrHideToolbarGlobally()
 {
     for (size_t i = 0; i < gWindows.Count(); i++) {
         WindowInfo *win = gWindows[i];
@@ -1043,75 +1034,11 @@ static void UpdateWindowRtlLayout(WindowInfo *win)
     }
 }
 
-static void UpdateRtlLayoutForAllWindows()
+void UpdateRtlLayoutForAllWindows()
 {
     for (size_t i = 0; i < gWindows.Count(); i++) {
         UpdateWindowRtlLayout(gWindows[i]);
     }
-}
-
-// called whenever global preferences change or a file is
-// added or removed from gFileHistory (in order to keep
-// the list of recently opened documents in sync)
-bool SavePrefs()
-{
-    // don't save preferences for plugin windows
-    if (gPluginMode)
-        return false;
-
-    /* mark currently shown files as visible */
-    for (size_t i = 0; i < gWindows.Count(); i++)
-        UpdateCurrentFileDisplayStateForWin(*gWindows[i]);
-
-    ScopedMem<TCHAR> path(GetPrefsFileName());
-    bool ok = Prefs::Save(path, gGlobalPrefs, gFileHistory, gFavorites);
-    if (ok) {
-        // notify all SumatraPDF instances about the updated prefs file
-        HWND hwnd = NULL;
-        while ((hwnd = FindWindowEx(HWND_DESKTOP, hwnd, FRAME_CLASS_NAME, NULL)))
-            PostMessage(hwnd, UWM_PREFS_FILE_UPDATED, 0, 0);
-    }
-    return ok;
-}
-
-// refresh the preferences when a different SumatraPDF process saves them
-static bool ReloadPrefs()
-{
-    ScopedMem<TCHAR> path(GetPrefsFileName());
-
-    FILETIME time = file::GetModificationTime(path);
-    if (time.dwLowDateTime == gGlobalPrefs.lastPrefUpdate.dwLowDateTime &&
-        time.dwHighDateTime == gGlobalPrefs.lastPrefUpdate.dwHighDateTime) {
-        return true;
-    }
-
-    const char *currLang = gGlobalPrefs.currentLanguage;
-    bool toolbarVisible = gGlobalPrefs.toolbarVisible;
-
-    FileHistory fileHistory;
-    Favorites *favs = NULL;
-    Prefs::Load(path, gGlobalPrefs, fileHistory, &favs);
-
-    gFileHistory.Clear();
-    gFileHistory.ExtendWith(fileHistory);
-    delete gFavorites;
-    gFavorites = favs;
-
-    if (gWindows.Count() > 0 && gWindows[0]->IsAboutWindow()) {
-        gWindows[0]->DeleteInfotip();
-        gWindows[0]->RedrawAll(true);
-    }
-
-    // update the current language
-    if (!str::Eq(currLang, gGlobalPrefs.currentLanguage)) {
-        CurrLangNameSet(gGlobalPrefs.currentLanguage);
-        UpdateRtlLayoutForAllWindows();
-        RebuildMenuBar();
-        UpdateUITextForLanguage();
-    }
-    if (gGlobalPrefs.toolbarVisible != toolbarVisible)
-        ShowOrHideToolbarGlobally();
-    return true;
 }
 
 static int GetPolicies(bool isRestricted)
@@ -3154,7 +3081,7 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
     if (lastWindow)
         SavePrefs();
     else
-        UpdateCurrentFileDisplayStateForWin(*win);
+        UpdateCurrentFileDisplayStateForWin(win);
 
     if (lastWindow && !quitIfLast) {
         /* last window - don't delete it */
@@ -4088,7 +4015,7 @@ static void BrowseFolder(WindowInfo& win, bool forward)
     else
         index = (int)(index + files.Count() - 1) % files.Count();
 
-    UpdateCurrentFileDisplayStateForWin(win);
+    UpdateCurrentFileDisplayStateForWin(&win);
     LoadDocument(files[index], &win, true, true);
 }
 
@@ -4196,6 +4123,14 @@ static void OnFrameSize(WindowInfo* win, int dx, int dy)
         SetWindowPos(win->hwndCanvas, NULL, 0, rebBarDy, dx, dy - rebBarDy, SWP_NOZORDER);
 }
 
+void ChangeLanguage(const char *langName)
+{
+    CurrLangNameSet(langName);
+    UpdateRtlLayoutForAllWindows();
+    RebuildMenuBar();
+    UpdateUITextForLanguage();
+}
+
 static void OnMenuChangeLanguage(WindowInfo& win)
 {
     int langId = Trans::GetLanguageIndex(gGlobalPrefs.currentLanguage);
@@ -4207,10 +4142,8 @@ static void OnMenuChangeLanguage(WindowInfo& win)
         if (!langName)
             return;
 
-        CurrLangNameSet(langName);
-        UpdateRtlLayoutForAllWindows();
-        RebuildMenuBar();
-        UpdateUITextForLanguage();
+        ChangeLanguage(langName);
+
         if (gWindows.Count() > 0 && gWindows[0]->IsAboutWindow())
             gWindows[0]->RedrawAll(true);
         SavePrefs();
