@@ -36,7 +36,7 @@ WindowInfo::WindowInfo(HWND hwnd) :
 
     buffer = new DoubleBuffer(hwndCanvas, canvasRc);
     linkHandler = new LinkHandler(*this);
-    messages = new MessageWndList();
+    notifications = new NotificationWndList();
     fwdSearchMark.show = false;
 }
 
@@ -54,7 +54,7 @@ WindowInfo::~WindowInfo()
     delete buffer;
     delete selectionOnPage;
     delete linkOnLastButtonDown;
-    delete messages;
+    delete notifications;
 
     free(loadedFilePath);
 
@@ -82,7 +82,7 @@ void WindowInfo::UpdateCanvasSize()
 
     // keep the notifications visible (only needed for right-to-left layouts)
     if (IsUIRightToLeft())
-        messages->Relayout();
+        notifications->Relayout();
 }
 
 SizeI WindowInfo::GetViewPortSize()
@@ -107,7 +107,7 @@ void WindowInfo::AbortFinding(bool hideMessage)
     this->findCanceled = false;
 
     if (hideMessage)
-        this->messages->CleanUp(NG_FIND_PROGRESS);
+        this->notifications->CleanUp(NG_FIND_PROGRESS);
 }
 
 void WindowInfo::RedrawAll(bool update)

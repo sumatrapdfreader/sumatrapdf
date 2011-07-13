@@ -949,7 +949,7 @@ static void UpdateWindowRtlLayout(WindowInfo *win)
     ToggleWindowStyle(win->hwndFindText, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
     ToggleWindowStyle(win->hwndPageText, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
 
-    win->messages->Relayout();
+    win->notifications->Relayout();
 
     // TODO: also update the canvas scrollbars (?)
 
@@ -1579,8 +1579,8 @@ WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin, b
 
     DeleteOldSelectionInfo(*win, true);
     win->fwdSearchMark.show = false;
-    win->messages->CleanUp(NG_RESPONSE_TO_ACTION);
-    win->messages->CleanUp(NG_PAGE_INFO_HELPER);
+    win->notifications->CleanUp(NG_RESPONSE_TO_ACTION);
+    win->notifications->CleanUp(NG_PAGE_INFO_HELPER);
 
     DisplayState *ds = gFileHistory.Find(fullpath);
     if (ds) {
@@ -1639,7 +1639,7 @@ void WindowInfo::PageNoChanged(int pageNo)
         UpdateTocSelection(this, pageNo);
         currPageNo = pageNo;
 
-        MessageWnd *wnd = messages->GetFirst(NG_PAGE_INFO_HELPER);
+        NotificationWnd *wnd = notifications->GetFirst(NG_PAGE_INFO_HELPER);
         if (wnd) {
             ScopedMem<TCHAR> pageInfo(str::Format(_T("%s %d / %d"), _TR("Page:"), pageNo, dm->pageCount()));
             if (dm->engine && dm->engine->HasPageLabels()) {
@@ -2973,8 +2973,8 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
         str::ReplacePtr(&win->loadedFilePath, NULL);
         delete win->pdfsync;
         win->pdfsync = NULL;
-        win->messages->CleanUp(NG_RESPONSE_TO_ACTION);
-        win->messages->CleanUp(NG_PAGE_INFO_HELPER);
+        win->notifications->CleanUp(NG_RESPONSE_TO_ACTION);
+        win->notifications->CleanUp(NG_PAGE_INFO_HELPER);
 
         if (win->hwndProperties) {
             DestroyWindow(win->hwndProperties);
@@ -4031,8 +4031,8 @@ static void OnChar(WindowInfo& win, WPARAM key)
     case VK_ESCAPE:
         if (win.findThread)
             win.AbortFinding();
-        else if (win.messages->GetFirst(NG_PAGE_INFO_HELPER))
-            win.messages->CleanUp(NG_PAGE_INFO_HELPER);
+        else if (win.notifications->GetFirst(NG_PAGE_INFO_HELPER))
+            win.notifications->CleanUp(NG_PAGE_INFO_HELPER);
         else if (win.presentation)
             OnMenuViewPresentation(win);
         else if (gGlobalPrefs.escToExit)
@@ -4210,15 +4210,15 @@ static void ClearSearchResult(WindowInfo& win)
 }
 
 class UpdateFindStatusWorkItem : public UIThreadWorkItem {
-    MessageWnd *wnd;
+    NotificationWnd *wnd;
     int current, total;
 
 public:
-    UpdateFindStatusWorkItem(WindowInfo *win, MessageWnd *wnd, int current, int total)
+    UpdateFindStatusWorkItem(WindowInfo *win, NotificationWnd *wnd, int current, int total)
         : UIThreadWorkItem(win), wnd(wnd), current(current), total(total) { }
 
     virtual void Execute() {
-        if (WindowInfoStillValid(win) && !win->findCanceled && win->messages->Contains(wnd))
+        if (WindowInfoStillValid(win) && !win->findCanceled && win->notifications->Contains(wnd))
             wnd->ProgressUpdate(current, total);
     }
 };
@@ -4239,16 +4239,16 @@ struct FindThreadData : public ProgressUpdateUI {
     void ShowUI() const {
         const LPARAM disable = (LPARAM)MAKELONG(0, 0);
 
-        MessageWnd *wnd = new MessageWnd(win->hwndCanvas, _T(""), _TR("Searching %d of %d..."), win->messages);
-        // let win->messages own the MessageWnd (FindThreadData might get deleted before)
-        win->messages->Add(wnd, NG_FIND_PROGRESS);
+        NotificationWnd *wnd = new NotificationWnd(win->hwndCanvas, _T(""), _TR("Searching %d of %d..."), win->notifications);
+        // let win->messages own the NotificationWnd (FindThreadData might get deleted before)
+        win->notifications->Add(wnd, NG_FIND_PROGRESS);
 
         SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_PREV, disable);
         SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_NEXT, disable);
         SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_MATCH, disable);
     }
 
-    void HideUI(MessageWnd *wnd, bool success, bool loopedAround) const {
+    void HideUI(NotificationWnd *wnd, bool success, bool loopedAround) const {
         LPARAM enable = (LPARAM)MAKELONG(1, 0);
 
         SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_PREV, enable);
@@ -4256,7 +4256,7 @@ struct FindThreadData : public ProgressUpdateUI {
         SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_MATCH, enable);
 
         if (!success && !loopedAround || !wnd) // i.e. canceled
-            win->messages->CleanUp(wnd);
+            win->notifications->CleanUp(wnd);
         else if (!success && loopedAround)
             wnd->MessageUpdate(_TR("No matches were found"), 3000);
         else if (!loopedAround) {
@@ -4269,9 +4269,9 @@ struct FindThreadData : public ProgressUpdateUI {
     }
 
     virtual bool ProgressUpdate(int current, int total) {
-        if (!WindowInfoStillValid(win) || !win->messages->GetFirst(NG_FIND_PROGRESS) || win->findCanceled)
+        if (!WindowInfoStillValid(win) || !win->notifications->GetFirst(NG_FIND_PROGRESS) || win->findCanceled)
             return false;
-        QueueWorkItem(new UpdateFindStatusWorkItem(win, win->messages->GetFirst(NG_FIND_PROGRESS), current, total));
+        QueueWorkItem(new UpdateFindStatusWorkItem(win, win->notifications->GetFirst(NG_FIND_PROGRESS), current, total));
         return true;
     }
 };
@@ -4296,11 +4296,11 @@ public:
             // the UI has already been disabled and hidden
         } else if (textSel) {
             ShowSearchResult(*win, textSel, wasModifiedCanceled);
-            ftd->HideUI(win->messages->GetFirst(NG_FIND_PROGRESS), true, loopedAround);
+            ftd->HideUI(win->notifications->GetFirst(NG_FIND_PROGRESS), true, loopedAround);
         } else {
             // nothing found or search canceled
             ClearSearchResult(*win);
-            ftd->HideUI(win->messages->GetFirst(NG_FIND_PROGRESS), false, !wasModifiedCanceled);
+            ftd->HideUI(win->notifications->GetFirst(NG_FIND_PROGRESS), false, !wasModifiedCanceled);
         }
 
         HANDLE hThread = win->findThread;

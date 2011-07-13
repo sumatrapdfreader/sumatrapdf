@@ -263,21 +263,21 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL)
 }
 
 class PrintThreadUpdateWorkItem : public UIThreadWorkItem {
-    MessageWnd *wnd;
+    NotificationWnd *wnd;
     int current, total;
 
 public:
-    PrintThreadUpdateWorkItem(WindowInfo *win, MessageWnd *wnd, int current, int total)
+    PrintThreadUpdateWorkItem(WindowInfo *win, NotificationWnd *wnd, int current, int total)
         : UIThreadWorkItem(win), wnd(wnd), current(current), total(total) { }
 
     virtual void Execute() {
-        if (WindowInfoStillValid(win) && win->messages->Contains(wnd))
+        if (WindowInfoStillValid(win) && win->notifications->Contains(wnd))
             wnd->ProgressUpdate(current, total);
     }
 };
 
-class PrintThreadWorkItem : public ProgressUpdateUI, public UIThreadWorkItem, public MessageWndCallback {
-    MessageWnd *wnd;
+class PrintThreadWorkItem : public ProgressUpdateUI, public UIThreadWorkItem, public NotificationWndCallback {
+    NotificationWnd *wnd;
     bool isCanceled;
 
 public:
@@ -286,8 +286,8 @@ public:
 
     PrintThreadWorkItem(WindowInfo *win, PrintData *data) :
         UIThreadWorkItem(win), data(data), isCanceled(false) { 
-        wnd = new MessageWnd(win->hwndCanvas, _T(""), _TR("Printing page %d of %d..."), this);
-        win->messages->Add(wnd);
+        wnd = new NotificationWnd(win->hwndCanvas, _T(""), _TR("Printing page %d of %d..."), this);
+        win->notifications->Add(wnd);
     }
     ~PrintThreadWorkItem() {
         delete data;
@@ -304,11 +304,11 @@ public:
     }
 
     // called when printing has been canceled
-    virtual void CleanUp(MessageWnd *wnd) {
+    virtual void CleanUp(NotificationWnd *wnd) {
         isCanceled = true;
         this->wnd = NULL;
         if (WindowInfoStillValid(win))
-            win->messages->CleanUp(wnd);
+            win->notifications->CleanUp(wnd);
     }
 
     virtual void Execute() {

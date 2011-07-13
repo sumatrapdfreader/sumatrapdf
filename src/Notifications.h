@@ -9,7 +9,7 @@
 #define MESSAGE_WND_CLASS_NAME _T("SUMATRA_PDF_MESSAGE_WINDOW")
 
 class WindowInfo;
-class MessageWnd;
+class NotificationWnd;
 
 enum NotificationGroup {
     NG_RESPONSE_TO_ACTION = 1,
@@ -20,13 +20,13 @@ enum NotificationGroup {
     NG_STRESS_TEST_SUMMARY,
 };
 
-class MessageWndCallback {
+class NotificationWndCallback {
 public:
     // called after a message has timed out or been canceled
-    virtual void CleanUp(MessageWnd *wnd) = 0;
+    virtual void CleanUp(NotificationWnd *wnd) = 0;
 };
 
-class MessageWnd : public ProgressUpdateUI {
+class NotificationWnd : public ProgressUpdateUI {
     static const int TIMEOUT_TIMER_ID = 1;
     static const int PROGRESS_WIDTH = 188;
     static const int PROGRESS_HEIGHT = 5;
@@ -38,7 +38,7 @@ class MessageWnd : public ProgressUpdateUI {
 
     HFONT font;
     bool  highlight;
-    MessageWndCallback *callback;
+    NotificationWndCallback *callback;
 
     // only used for progress notifications
     bool isCanceled;
@@ -51,20 +51,20 @@ class MessageWnd : public ProgressUpdateUI {
 
 public:
     static const int TL_MARGIN = 8;
-    int groupId; // for use by MessageWndList
+    int groupId; // for use by NotificationWndList
 
-    MessageWnd(HWND parent, const TCHAR *message, int timeoutInMS=0, bool highlight=false, MessageWndCallback *callback=NULL) :
+    NotificationWnd(HWND parent, const TCHAR *message, int timeoutInMS=0, bool highlight=false, NotificationWndCallback *callback=NULL) :
         hasProgress(false), hasCancel(!timeoutInMS), callback(callback), highlight(highlight), progressMsg(NULL) {
         CreatePopup(parent, message);
         if (timeoutInMS)
             SetTimer(self, TIMEOUT_TIMER_ID, timeoutInMS, NULL);
     }
-    MessageWnd(HWND parent, const TCHAR *message, const TCHAR *progressMsg, MessageWndCallback *callback=NULL) :
+    NotificationWnd(HWND parent, const TCHAR *message, const TCHAR *progressMsg, NotificationWndCallback *callback=NULL) :
         hasProgress(true), hasCancel(true), callback(callback), highlight(false), isCanceled(false), progress(0) {
         this->progressMsg = progressMsg ? str::Dup(progressMsg) : NULL;
         CreatePopup(parent, message);
     }
-    ~MessageWnd() {
+    ~NotificationWnd() {
         DestroyWindow(self);
         DeleteObject(font);
         free(progressMsg);
@@ -84,25 +84,25 @@ public:
 
 };
 
-class MessageWndList : public MessageWndCallback {
-    Vec<MessageWnd *> wnds;
+class NotificationWndList : public NotificationWndCallback {
+    Vec<NotificationWnd *> wnds;
 
-    int  GetWndX(MessageWnd *wnd);
-    void MoveBelow(MessageWnd *fix, MessageWnd *move);
-    void Remove(MessageWnd *wnd);
+    int  GetWndX(NotificationWnd *wnd);
+    void MoveBelow(NotificationWnd *fix, NotificationWnd *move);
+    void Remove(NotificationWnd *wnd);
 
 public:
-    ~MessageWndList() { DeleteVecMembers(wnds); }
+    ~NotificationWndList() { DeleteVecMembers(wnds); }
 
-    bool Contains(MessageWnd *wnd) { return wnds.Find(wnd) != -1; }
+    bool Contains(NotificationWnd *wnd) { return wnds.Find(wnd) != -1; }
 
-    void         Add(MessageWnd *wnd, int groupId=0);
-    MessageWnd * GetFirst(int groupId);
+    void         Add(NotificationWnd *wnd, int groupId=0);
+    NotificationWnd * GetFirst(int groupId);
     void         CleanUp(int groupId);
     void         Relayout();
 
-    // MessageWndCallback methods
-    virtual void CleanUp(MessageWnd *wnd);
+    // NotificationWndCallback methods
+    virtual void CleanUp(NotificationWnd *wnd);
 };
 
 void ShowNotification(WindowInfo *win, const TCHAR *message, bool autoDismiss=true, bool highlight=false, NotificationGroup groupId=NG_RESPONSE_TO_ACTION);

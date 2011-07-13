@@ -13,7 +13,7 @@ class Synchronizer;
 class DoubleBuffer;
 class SelectionOnPage;
 class LinkHandler;
-class MessageWndList;
+class NotificationWndList;
 
 /* Describes actions which can be performed by mouse */
 enum MouseAction {
@@ -149,7 +149,7 @@ public:
     int             wheelAccumDelta;
     UINT_PTR        delayedRepaintTimer;
 
-    MessageWndList *messages;
+    NotificationWndList *notifications;
 
     HANDLE          printThread;
     bool            printCanceled;

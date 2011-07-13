@@ -11,7 +11,7 @@
 #include "SumatraPDF.h"
 #include "WindowInfo.h"
 
-void MessageWnd::CreatePopup(HWND parent, const TCHAR *message)
+void NotificationWnd::CreatePopup(HWND parent, const TCHAR *message)
 {
     NONCLIENTMETRICS ncm = { 0 };
     ncm.cbSize = sizeof(ncm);
@@ -31,7 +31,7 @@ void MessageWnd::CreatePopup(HWND parent, const TCHAR *message)
     ShowWindow(self, SW_SHOW);
 }
 
-void MessageWnd::UpdateWindowPosition(const TCHAR *message, bool init)
+void NotificationWnd::UpdateWindowPosition(const TCHAR *message, bool init)
 {
     // compute the length of the message
     RECT rc = ClientRect(self).ToRECT();
@@ -69,7 +69,7 @@ void MessageWnd::UpdateWindowPosition(const TCHAR *message, bool init)
     }
 }
 
-bool MessageWnd::ProgressUpdate(int current, int total)
+bool NotificationWnd::ProgressUpdate(int current, int total)
 {
     assert(total > 0);
     if (total <= 0)
@@ -82,7 +82,7 @@ bool MessageWnd::ProgressUpdate(int current, int total)
     return isCanceled;
 }
 
-void MessageWnd::MessageUpdate(const TCHAR *message, int timeoutInMS, bool highlight)
+void NotificationWnd::MessageUpdate(const TCHAR *message, int timeoutInMS, bool highlight)
 {
     win::SetText(self, message);
     this->highlight = highlight;
@@ -95,9 +95,9 @@ void MessageWnd::MessageUpdate(const TCHAR *message, int timeoutInMS, bool highl
         SetTimer(self, TIMEOUT_TIMER_ID, timeoutInMS, NULL);
 }
 
-LRESULT CALLBACK MessageWnd::WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)\
+LRESULT CALLBACK NotificationWnd::WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)\
 {
-    MessageWnd *wnd = (MessageWnd *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+    NotificationWnd *wnd = (NotificationWnd *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
     if (WM_ERASEBKGND == message) {
         // do nothing, helps to avoid flicker
         return TRUE;
@@ -184,23 +184,23 @@ LRESULT CALLBACK MessageWnd::WndProc(HWND hwnd, UINT message, WPARAM wParam, LPA
 }
 
 
-int MessageWndList::GetWndX(MessageWnd *wnd)
+int NotificationWndList::GetWndX(NotificationWnd *wnd)
 {
     RectI rect = WindowRect(wnd->hwnd());
     rect = MapRectToWindow(rect, HWND_DESKTOP, GetParent(wnd->hwnd()));
     return rect.x;
 }
 
-void MessageWndList::MoveBelow(MessageWnd *fix, MessageWnd *move)
+void NotificationWndList::MoveBelow(NotificationWnd *fix, NotificationWnd *move)
 {
     RectI rect = WindowRect(fix->hwnd());
     rect = MapRectToWindow(rect, HWND_DESKTOP, GetParent(fix->hwnd()));
     SetWindowPos(move->hwnd(), NULL,
-                 GetWndX(move), rect.y + rect.dy + MessageWnd::TL_MARGIN,
+                 GetWndX(move), rect.y + rect.dy + NotificationWnd::TL_MARGIN,
                  0, 0, SWP_NOSIZE | SWP_NOZORDER);
 }
 
-void MessageWndList::Remove(MessageWnd *wnd)
+void NotificationWndList::Remove(NotificationWnd *wnd)
 {
     int ix = wnds.Find(wnd);
     if (ix == -1)
@@ -208,7 +208,7 @@ void MessageWndList::Remove(MessageWnd *wnd)
     wnds.Remove(wnd);
     if (ix == 0 && wnds.Count() > 0) {
         SetWindowPos(wnds[0]->hwnd(), NULL,
-                     GetWndX(wnds[0]), MessageWnd::TL_MARGIN,
+                     GetWndX(wnds[0]), NotificationWnd::TL_MARGIN,
                      0, 0, SWP_NOSIZE | SWP_NOZORDER);
         ix = 1;
     }
@@ -217,7 +217,7 @@ void MessageWndList::Remove(MessageWnd *wnd)
     }
 }
 
-void MessageWndList::Add(MessageWnd *wnd, int groupId)
+void NotificationWndList::Add(NotificationWnd *wnd, int groupId)
 {
     // use groupId to classify notifications and make a notification
     // replace any other notification of the same class
@@ -230,7 +230,7 @@ void MessageWndList::Add(MessageWnd *wnd, int groupId)
     wnds.Append(wnd);
 }
 
-MessageWnd *MessageWndList::GetFirst(int groupId)
+NotificationWnd *NotificationWndList::GetFirst(int groupId)
 {
     for (size_t i = 0; i < wnds.Count(); i++) {
         if (wnds[i]->groupId == groupId)
@@ -239,7 +239,7 @@ MessageWnd *MessageWndList::GetFirst(int groupId)
     return NULL;
 }
 
-void MessageWndList::CleanUp(MessageWnd *wnd)
+void NotificationWndList::CleanUp(NotificationWnd *wnd)
 {
     if (Contains(wnd)) {
         Remove(wnd);
@@ -247,7 +247,7 @@ void MessageWndList::CleanUp(MessageWnd *wnd)
     }
 }
 
-void MessageWndList::CleanUp(int groupId)
+void NotificationWndList::CleanUp(int groupId)
 {
     for (size_t i = wnds.Count(); i > 0; i--) {
         if (wnds[i-1]->groupId == groupId)
@@ -255,7 +255,7 @@ void MessageWndList::CleanUp(int groupId)
     }
 }
 
-void MessageWndList::Relayout()
+void NotificationWndList::Relayout()
 {
     if (wnds.Count() == 0)
         return;
@@ -266,24 +266,24 @@ void MessageWndList::Relayout()
         RectI rect = WindowRect(wnds[i]->hwnd());
         rect = MapRectToWindow(rect, HWND_DESKTOP, hwndCanvas);
         if (IsUIRightToLeft())
-            rect.x = frame.dx - rect.dx - MessageWnd::TL_MARGIN - GetSystemMetrics(SM_CXVSCROLL);
+            rect.x = frame.dx - rect.dx - NotificationWnd::TL_MARGIN - GetSystemMetrics(SM_CXVSCROLL);
         else
-            rect.x = MessageWnd::TL_MARGIN;
+            rect.x = NotificationWnd::TL_MARGIN;
         SetWindowPos(wnds[i]->hwnd(), NULL, rect.x, rect.y, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
     }
 }
 
 void ShowNotification(WindowInfo *win, const TCHAR *message, bool autoDismiss, bool highlight, NotificationGroup groupId)
 {
-    MessageWnd *wnd = new MessageWnd(win->hwndCanvas, message, autoDismiss ? 3000 : 0, highlight, win->messages);
-    win->messages->Add(wnd, groupId);
+    NotificationWnd *wnd = new NotificationWnd(win->hwndCanvas, message, autoDismiss ? 3000 : 0, highlight, win->notifications);
+    win->notifications->Add(wnd, groupId);
 }
 
 bool RegisterNotificationsWndClass(HINSTANCE inst)
 {
     WNDCLASSEX  wcex;
     FillWndClassEx(wcex, inst);
-    wcex.lpfnWndProc    = MessageWnd::WndProc;
+    wcex.lpfnWndProc    = NotificationWnd::WndProc;
     wcex.hCursor        = LoadCursor(NULL, IDC_APPSTARTING);
     wcex.hbrBackground  = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
     wcex.lpszClassName  = MESSAGE_WND_CLASS_NAME;
