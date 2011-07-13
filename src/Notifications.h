@@ -36,7 +36,7 @@ class NotificationWnd : public ProgressUpdateUI {
 
     HFONT font;
     bool  highlight;
-    NotificationWndCallback *callback;
+    NotificationWndCallback *notificationCb;
 
     // only used for progress notifications
     bool isCanceled;
@@ -51,14 +51,14 @@ public:
     static const int TL_MARGIN = 8;
     int groupId; // for use by Notifications
 
-    NotificationWnd(HWND parent, const TCHAR *message, int timeoutInMS=0, bool highlight=false, NotificationWndCallback *callback=NULL) :
-        hasProgress(false), hasCancel(!timeoutInMS), callback(callback), highlight(highlight), progressMsg(NULL) {
+    NotificationWnd(HWND parent, const TCHAR *message, int timeoutInMS=0, bool highlight=false, NotificationWndCallback *cb=NULL) :
+        hasProgress(false), hasCancel(!timeoutInMS), notificationCb(cb), highlight(highlight), progressMsg(NULL) {
         CreatePopup(parent, message);
         if (timeoutInMS)
             SetTimer(self, TIMEOUT_TIMER_ID, timeoutInMS, NULL);
     }
-    NotificationWnd(HWND parent, const TCHAR *message, const TCHAR *progressMsg, NotificationWndCallback *callback=NULL) :
-        hasProgress(true), hasCancel(true), callback(callback), highlight(false), isCanceled(false), progress(0) {
+    NotificationWnd(HWND parent, const TCHAR *message, const TCHAR *progressMsg, NotificationWndCallback *cb=NULL) :
+        hasProgress(true), hasCancel(true), notificationCb(cb), highlight(false), isCanceled(false), progress(0) {
         this->progressMsg = progressMsg ? str::Dup(progressMsg) : NULL;
         CreatePopup(parent, message);
     }

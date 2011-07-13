@@ -105,8 +105,8 @@ LRESULT CALLBACK NotificationWnd::WndProc(HWND hwnd, UINT message, WPARAM wParam
         return TRUE;
     }
     if (WM_TIMER == message && TIMEOUT_TIMER_ID == wParam) {
-        if (wnd->callback)
-            wnd->callback->RemoveNotification(wnd);
+        if (wnd->notificationCb)
+            wnd->notificationCb->RemoveNotification(wnd);
         else
             delete wnd;
         return 0;
@@ -175,8 +175,8 @@ LRESULT CALLBACK NotificationWnd::WndProc(HWND hwnd, UINT message, WPARAM wParam
     }
     if (WM_LBUTTONUP == message && wnd->hasCancel) {
         if (GetCancelRect(hwnd).Inside(PointI(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)))) {
-            if (wnd->callback)
-                wnd->callback->RemoveNotification(wnd);
+            if (wnd->notificationCb)
+                wnd->notificationCb->RemoveNotification(wnd);
             else
                 delete wnd;
             return 0;
