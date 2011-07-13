@@ -105,7 +105,7 @@ SUMATRA_OBJS = \
 	$(OS)\SumatraPDF.obj $(OS)\translations.obj $(OS)\FileWatch.obj $(OS)\PdfSync.obj \
 	$(OS)\RenderCache.obj $(OS)\TextSelection.obj $(OS)\WindowInfo.obj $(OS)\ParseCommandLine.obj \
 	$(OS)\StressTesting.obj $(OS)\UnitTests.obj $(OS)\AppTools.obj $(SUMATRA_RES) \
-	$(OS)\ImagesEngine.obj $(OS)\PsEngine.obj $(OS)\Favorites.obj \
+	$(OS)\ImagesEngine.obj $(OS)\PsEngine.obj $(OS)\Favorites.obj $(OS)\TableOfContents.obj \
 	$(UTILS_OBJS) $(OS)\ZipUtil.obj \
 	$(BZIP2_OBJS) $(MINIZIP_OBJS) $(UNRAR_OBJS) $(SYNCTEX_OBJS) \
 	$(OS)\DjVuEngine.obj $(DJVU_OBJS)

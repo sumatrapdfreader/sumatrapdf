@@ -189,6 +189,7 @@
     <ClCompile Include="src\SumatraDialogs.cpp" />
     <ClCompile Include="src\SumatraPDF.cpp" />
     <ClCompile Include="src\SumatraProperties.cpp" />
+    <ClCompile Include="src\TableOfContents.cpp" />
     <ClCompile Include="src\TextSearch.cpp" />
     <ClCompile Include="src\TextSelection.cpp" />
     <ClCompile Include="src\translations.cpp" />
@@ -289,6 +290,7 @@
     <ClInclude Include="src\StressTesting.h" />
     <ClInclude Include="src\SumatraDialogs.h" />
     <ClInclude Include="src\SumatraPDF.h" />
+    <ClInclude Include="src\TableOfContents.h" />
     <ClInclude Include="src\TextSearch.h" />
     <ClInclude Include="src\TextSelection.h" />
     <ClInclude Include="src\translations.h" />
