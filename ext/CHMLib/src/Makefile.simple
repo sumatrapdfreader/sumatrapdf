@@ -1,0 +1,50 @@
+## Available defines for building chm_lib with particular options
+# CHM_MT:        build thread-safe version of chm_lib
+# CHM_USE_PREAD: build chm_lib to use pread/pread64 for all I/O
+# CHM_USE_IO64:  build chm_lib to support 64-bit file I/O
+#
+# Note: LDFLAGS must contain -lpthread if you are using -DCHM_MT.
+#
+#CFLAGS=-DCHM_MT -DCHM_USE_PREAD -DCHM_USE_IO64
+CFLAGS=-DCHM_MT -DCHM_USE_PREAD -DCHM_USE_IO64 -g -DDMALLOC_DISABLE
+LDFLAGS=-lpthread
+INSTALLPREFIX=/usr/local
+CC=gcc
+LD=gcc
+LIBTOOL=libtool
+CP=/bin/cp
+EXAMPLES=test_chmLib enum_chmLib enumdir_chmLib chm_http extract_chmLib
+
+all: libchm.la
+
+examples: ${EXAMPLES}
+
+%.lo: %.c
+	${LIBTOOL} --mode=compile ${CC} -c -o $@ $^ ${CFLAGS}
+
+libchm.la: chm_lib.lo lzx.lo
+	${LIBTOOL} --mode=link ${LD} -o $@ $^ ${LDFLAGS} -rpath ${INSTALLPREFIX}/lib
+
+install: libchm.la
+	chmod a+r libchm.la
+	${LIBTOOL} --mode=install ${CP} libchm.la ${INSTALLPREFIX}/lib
+	${CP} chm_lib.h ${INSTALLPREFIX}/include
+
+clean:
+	rm -fr libchm.la *.o *.lo .libs ${EXAMPLES}
+
+test_chmLib: test_chmLib.c
+	${CC} -o $@ $^ -I${INSTALLPREFIX}/include -L${INSTALLPREFIX}/lib -lchm ${CFLAGS}
+
+enum_chmLib: enum_chmLib.c
+	${CC} -o $@ $^ -I${INSTALLPREFIX}/include -L${INSTALLPREFIX}/lib -lchm ${CFLAGS}
+
+enumdir_chmLib: enumdir_chmLib.c
+	${CC} -o $@ $^ -I${INSTALLPREFIX}/include -L${INSTALLPREFIX}/lib -lchm ${CFLAGS}
+
+extract_chmLib: extract_chmLib.c
+	${CC} -o $@ $^ -I${INSTALLPREFIX}/include -L${INSTALLPREFIX}/lib -lchm ${CFLAGS}
+
+chm_http: chm_http.c
+	${CC} -o $@ $^ -I${INSTALLPREFIX}/include -L${INSTALLPREFIX}/lib -lchm -lpthread ${CFLAGS}
+

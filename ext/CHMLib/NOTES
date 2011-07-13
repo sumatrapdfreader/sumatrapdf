@@ -1,0 +1,124 @@
+CHMLIB 0.40 Installation
+=======================
+
+-----
+Linux/Unix and Windows (Cygwin)
+-----
+
+I. Relevant options:
+
+   CHM_MT:              build library with synchronization for thread-safety
+   CHM_USE_PREAD:       use pread instead of lseek/read
+   CHM_USE_IO64:        support 64-bit file I/O
+
+   Modify the INSTALLPREFIX to change the installation location.
+
+    Except on platforms where they need to be disabled, I recommend leaving all
+    three options enabled.  OS X, however, in particular, seems to need pread
+    and io64 disabled.
+
+II. autoconf/automake-style build
+
+    ./configure [options]
+    make
+    su
+    make install
+
+III. old-style (plain Makefile) build
+
+    cd src
+    <edit Makefile.simple if necessary>
+    make -f Makefile.old
+    su
+    make install
+
+To use the library, see chm_lib.h, and the included example programs:
+
+    test_chmLib.c
+    enum_chmLib.c
+    chm_http.c
+
+-------
+Windows (MSVC++, Win CE SDK)
+-------
+
+I. Relevant options:
+
+   CHM_MT:              build library with synchronization for thread-safety
+
+II. Windows Standard Build
+
+    Unzip ChmLib-vs6.zip in the src directory, and open the ChmLib.dsw file in
+    Developer Studio.  (This was developed on Developer Studio 6.  I don't know
+    if that matters.)  You may wish to enable or disable certain features by
+    adding preprocessor defines under the project settings dialog:
+
+   CHM_MT:              build library with synchronization for thread-safety
+
+   CHM_MT is enabled by default in the Windows build.
+
+   The resultant library is called chmlib.lib.
+
+   To use the library, see chm_lib.h, and the included example programs:
+
+    test_chmLib.c
+    enum_chmLib.c
+    chm_http.c
+
+  The example programs should also show up in the Visual Studio workspace,
+  except for chm_http.  I don't know enough about Windows network programming
+  to try to get that one working.  Other than that one, all the other examples
+  run without any problems.
+
+III. Windows CE Build
+
+    Unzip ChmLib-ce.zip in the src directory.  I don't know much beyond that,
+    as I have no familiarity with Windows CE, but this should be a good
+    starting point.  These project files are from Rich Erwin, who also supplied
+    the necessary code changes to get it running.
+
+Sparc (Solaris)
+---------------
+    Andrew Hodgetts has gotten the library compilable and working on Sparc
+Solaris machines, with CPUs ranging from a Sun4m (Sparc5) up through an
+UltraSparcIII (SunFireV880).  He has managed the compilation using both GCC and
+SunProC, although, he notes, some modification to the Makefile was required,
+since SunProC does not understand the -fPIC flag, which GCC uses for Position
+Independent Code.
+
+MIPS (SGI Irix)
+---------------
+    Andrew Hodgetts has gotten the library compilable and working on SGI MIPS
+machines running Irix; this was using only the standard MIPS compiler, not GCC.
+He reported that the -n32 flag was required in the Makefile.  He also reported
+that the MIPS compiler was fairly verbose with the warning messages, but that
+the simple examples that came with the library seemed to work.
+
+OS X
+----
+    Apparently, various people have gotten the library compiled for OS X.  From
+what I've heard, the secret is to disable pread and io64, and possibly to use
+the 'libtool' from fink, instead of the one included with the standard
+developers kit.
+
+BSD variants
+----
+    I've heard that the library has been compiled on BSD variants.  I haven't
+heard of any particular difficulties.
+
+Other Unix variants
+-------------------
+    The code has been written with an eye on portability.  Presently, I've only
+personally compiled on Linux and Windows, albeit on a variety of Linux
+configurations, but, as reported above, Andrew Hodgetts has reported successful
+use of the library on both Solaris machines and MIPS machines..  After I get
+version 0.3 out, I may try to get it compiling on some of the machines I have
+at work.  This code may or may not compile out of the box with, for instance,
+*BSD or other Unix variants.  I welcome any patches that increase the
+portability of this code.
+
+    Platforms that I have access to at work, and may attempt to support after
+version 0.3:
+
+        - AIX
+        - maybe Tru64

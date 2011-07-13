@@ -1,0 +1,81 @@
+Changes from 0.39 to 0.40
+    - chm_http bug fixed (chm_http begins to refuse connections)
+    - bashism in contrib/mozilla_helper.sh
+    - patch to use stdint.h (from Goswin von Brederlow)
+    - patch to fix soname (from Julien Lemoine, via Kartik Mistry)
+    - fix for extract_chmLib with empty files (from Paul Wise)
+
+Changes from 0.38 to 0.39
+    - Security fix: eliminated all uses of alloca and similar, in favor of
+      malloc/free.  This was in response to an iDefense security advisory.
+    - Added autoconf/automake support (patch from Antony Dovgal)
+    - Added contrib/mozilla_helper.sh from Kyle Davenport
+
+Changes from 0.37 to 0.38
+    - Fix for reading some chm files.  Running over a large directory of chm
+      files, about 1% of them turned out to be unreadable.  This resulted from
+      an incomplete understanding of one of the header fields (index_root).
+      Apparently, this can take negative values other than -1.
+
+    - Security fix for extract_chmLib.  Pathnames containing a ".." element
+      will not be extracted.  There doesn't seem to be a legitimate reason to
+      use ".." as a path element in a chm file.
+
+Changes from 0.36 to 0.37
+    - Major security fix for stack overflow vulnerability:
+        http://www.sven-tantau.de/public_files/chmlib/chmlib_20051126.txt
+    - Corrected the broken Makefile.in.
+
+Changes from 0.35 to 0.36
+    - Major security fix (iDEFENSE Security Advisory IDEF1099 - Stack Overflow
+      Vulnerability)
+    - Major security fix from Palasik Sandor (LZX decompression buffer overrun)
+    - Bugfix/enhancement from David Huseby to make the "what" flags to
+      chm_enumerate work correctly, and to pass the flags along to the callback
+      function (via the chmUnitInfo structure) so that the callback doesn't
+      need to re-parse the filename.
+    - Compilation fixes for x86-64 from Vitaly V. Bursov.
+    - Miscellaneous fixes to the configure script, including some significant
+      cleanup by Vadim Zeitlin.  The changes from Vadim should also allow the
+      configure script to correctly configure the build on OS X, where it was
+      previously failing to note that pread64 doesn't work.
+    - Minor update to the Makefile.in to do a mkdir before the install, in case
+      the specified INSTALLPREFIX directory is non-existent
+
+Changes from 0.32 to 0.35
+    - UTF-8 filenames, while still not handled correctly, are handled a little
+      more gracefully.  That is to say, the library doesn't fail to open files
+      with filenames using characters outside the ASCII subset.  I'm very
+      interested in any information as to the "right" way to handle filenames
+      of this sort.
+    - Files not containing a compressed section are handled properly, such as
+      .chw files.  These files seem to contain information about compression,
+      but the information is invalid or empty.  The library deals gracefully
+      with this now.
+    - Files compressed with different options were not being decompressed
+      properly.  In particular, if the "reset interval" for the compressed
+      section was other than 2 block sizes, it could fail to read some of the
+      files.
+    - The caching system was improved slightly, in conjunction with this
+      previous bugfix.
+
+Changes from 0.3 to 0.32:
+    - [Rich Erwin] Minor portability fixes for Windows CE.
+    - [Pabs] Minor bugfix regarding detecting directory entries versus empty files.
+    - [Antony Dovgal] autoconf-based build process
+    - [Ragnar Hojland Espinosa] Feature additions for chm_http:
+        * Use SO_REUSEADDR
+        * Allow --bind= and --port= command line arguments
+    - Simple makefile has been fixed (finally) to use gcc instead of gcc-3.2.  (Sorry, everybody!)
+
+Changes from 0.2 to 0.3:
+
+    - initial attempt at portability to Win32.
+    - bugfixes from Stan Tobias:
+        * memory corruption error with caching system
+        * case insensitivity, to match with the Windows semantics
+    - modification to chm_http by Stan Tobias:
+        * when the user requests the page '/', they get a page with links to
+          all of the files in the archive
+    - Andrew Hodgetts has ported the library to Solaris and Irix.  See README for details.
+    - Stuart Caie has granted permission to relicense under the LGPL.

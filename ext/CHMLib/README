@@ -1,0 +1,140 @@
+CHMLIB 0.40a
+===========
+
+-------
+SUMMARY
+-------
+chmlib is a small library designed for accessing MS ITSS files.  The ITSS file
+format is used for Microsoft Html Help files (.chm), which have been the
+predominant medium for software documentation from Microsoft during the past
+several years, having superceded the previously used .hlp file format.
+
+Note that this is NOT the same as the OLE structured storage file format used
+by MS Excel, Word, and so on.  Instead, it is a different file format which
+fulfills a similar purpose.  Both file formats may be accessed via instances
+of the IStorage COM interface, which is essentially an "acts like a
+filesystem" interface.
+
+-------
+FILE FORMAT SUPPORT
+-------
+
+Lookup of files in the archive is supported, and should be relatively quick.
+Reading of files in the archive is also supported.
+Writing is not supported, but may be added in the future.
+
+In terms of support for the ITSS file format, there are a few places in which
+the support provided by this library is not fully general:
+
+1. ITSS files whose names contain UTF-8 characters which are not part of the
+   ASCII subset will not currently be dealt with gracefully.  Currently, the
+   filenames are not converted from UTF-8, but are instead returned as-is.  I'm
+   very interested in hearing any suggestions as to the "right" way to handle
+   this.
+
+2. Only version 3 ITSS files are supported at present, though some work has
+   gone towards divining the differences between different versions of the
+   file format.  It is possible that version 2 ITSS files might work properly
+   with this library, but unconfirmed.
+
+3. Archives larger than 4 GB should be supported just fine, but if they
+   contain files larger than 4GB, this library may break.  Fortunately, this
+   seems somewhat unlikely.
+
+If you run into .chm files (or files you suspect are ITSS files) that this
+library doesn't work with, please contact me so I can fix the library.
+
+-------
+PORTABILITY
+-------
+
+This software is maintained on an x86-64 Debian GNU/Linux machine using gcc
+4.x.  It has been compiled on various other Linux distributions, using versions
+of gcc from 2.95 through 4.4.  Win32 support is provided.
+
+Chmlib apparently works on OS X, with some tweaks.  In particular, disabling
+pread and io64 apparently works.
+
+Finally, Andrew Hodgetts has ported to Solaris and IRIX:
+
+On Monday, 7 Oct 2002, Andrew Hodgetts wrote:
+> Solaris(Sun):
+> 
+> I used both SunProC and GCC on the solaris machines to compile. They
+> both worked ok.
+> However, both required -lsocket on the link line of the Makefile or you
+> recieve linking errors.
+> 
+> I have this working on CPUs ranging from Sun4m (Sparc5) through to
+> UltraSparcIII (SunFireV880).
+> 
+> Irix (SGI):
+> 
+> I only testing with the MIPS compiler (not GCC). All worked ok - lots of
+> warning messages, but it always does that.
+
+He further noted that:
+
+> ... for NON GCC compilers, a little tweaking may be required, but nothing too
+> complex.  ie SunProC doesn't understand -fPIC for library building.  Irix
+> required -n32 (new 32bit libraries) etc.  These are things that someone who
+> uses the OS and compiler should be used to dealing with.
+
+-------
+CREDITS
+-------
+
+* Stuart Caie: the LZX decompression code, and for granting permission to
+  re-license under the LGPL.
+
+* Sven Tantau: identification of a stack-overflow security flaw and a quick fix
+  for the problem; identification of a possible security danger in the example
+  program "extract_chmLib"
+
+* iDEFENSE Labs: identification of a nasty stack-overflow security flaw
+
+* Palasik Sandor: identification of a potential security flaw in lzx.c as well
+  as a quick fix for the problem
+
+* David Huseby: An excellent patch to the chm_enumerate functionality, relating
+  to the "what" flags, which didn't work entirely correctly before
+
+* Vadim Zeitlin: Configure script cleanup, including an important update to
+  allow detection of platforms where pread64 doesn't work.  (OS X)
+
+* Vitaly V. Bursov: Compilation on x86-64.
+
+* mc: A suggestion to add a "mkdir" to the install step.
+
+* Stan Tobias: bugfixes and the added 'index page' feature of chm_http.
+
+* Andrew Hodgetts: porting to Solaris and IRIX, as well as fixing some
+  little-endian biases in the code.
+
+* Rich Erwin: Windows CE support.
+
+* Pabs: bug fixes and suggestions.
+
+* Kartik Mistry: Debian package maintainer
+
+* Antony Dovgal: setting up autoconf/automake based build process.
+
+* Ragnar Hojland Espinosa: patches to make chm_http more useful.
+
+* Razvan Cojocaru: forwarding along information regarding building on OS X.
+
+* Julien Lemoine: creating and maintaining the Debian package of chmlib.
+
+* Prarit Bhargava: Compilation on ia64
+
+* Jean-Marc Vanel: elimination of compilation warnings in extract_chmLib
+
+* Sisyphus & Matej Spiller-Muys: Compilation under MinGW32
+
+* Kyle Davenport: helper script for using chm_http with mozilla
+
+* Matthew Daniel & Mark Rosenstand: help to sort out issues with the build
+  system.
+
+* Anyone else I've forgotten. (?)
+

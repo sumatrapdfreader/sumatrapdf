@@ -1,0 +1,18 @@
+Jed Wing <jedwin@ugcs.caltech.edu>
+includes modified LZX code from cabextract-0.5 by Stuart Caie.
+
+Thanks to:
+   iDEFENSE for reporting the stack overflow vulnerability.
+   Palasik Sandor for reporting and fixing the LZX buffer overrun vulnerability.
+   David Huseby for enhancements to the chm_enumerate functionality.
+   Vitaly Bursov for compilation fixes for x86-64.
+   Vadim Zeitlin for a patch to clean up and fix some deficiencies in the
+            configure script.
+   Stan Tobias for bugfixes and index-page improvement to chm_http.
+   Andrew Hodgetts for major portability improvement.
+   Rich Erwin for his work towards Windows CE support.
+   Pabs for bug fixes and suggestions.
+   Antony Dovgal for setting up autoconf/automake based build process.
+   Ragnar Hojland Espinosa for patches to make chm_http more useful.
+   Razvan Cojocaru for forwarding along information regarding building on OS X.
+   Anyone else I've forgotten.
