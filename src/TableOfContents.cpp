@@ -294,6 +294,26 @@ void UpdateTocExpansionState(WindowInfo *win, HTREEITEM hItem)
     }
 }
 
+// copied from mupdf/fitz/dev_text.c
+#define ISLEFTTORIGHTCHAR(c) ((0x0041 <= (c) && (c) <= 0x005A) || (0x0061 <= (c) && (c) <= 0x007A) || (0xFB00 <= (c) && (c) <= 0xFB06))
+#define ISRIGHTTOLEFTCHAR(c) ((0x0590 <= (c) && (c) <= 0x05FF) || (0x0600 <= (c) && (c) <= 0x06FF) || (0x0750 <= (c) && (c) <= 0x077F) || (0xFB50 <= (c) && (c) <= 0xFDFF) || (0xFE70 <= (c) && (c) <= 0xFEFF))
+
+static void GetLeftRightCounts(DocToCItem *node, int& l2r, int& r2l)
+{
+    if (!node)
+        return;
+    if (node->title) {
+        for (const TCHAR *c = node->title; *c; c++) {
+            if (ISLEFTTORIGHTCHAR(*c))
+                l2r++;
+            else if (ISRIGHTTOLEFTCHAR(*c))
+                r2l++;
+        }
+    }
+    GetLeftRightCounts(node->child, l2r, r2l);
+    GetLeftRightCounts(node->next, l2r, r2l);
+}
+
 void LoadTocTree(WindowInfo *win)
 {
     if (win->tocLoaded)
@@ -306,9 +326,14 @@ void LoadTocTree(WindowInfo *win)
     if (!win->tocRoot)
         return;
 
+    // consider a ToC tree right-to-left if a more than half of the
+    // alphabetic characters are in a right-to-left script
+    int l2r = 0, r2l = 0;
+    GetLeftRightCounts(win->tocRoot, l2r, r2l);
+    bool isRTL = r2l > l2r;
+
     SendMessage(win->hwndTocTree, WM_SETREDRAW, FALSE, 0);
-    bool enable = win->dm->engine->PreferredLayout() & Layout_R2L;
-    ToggleWindowStyle(win->hwndTocTree, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, enable, GWL_EXSTYLE);
+    ToggleWindowStyle(win->hwndTocTree, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
     PopulateTocTreeView(win->hwndTocTree, win->tocRoot, win->tocState);
     SendMessage(win->hwndTocTree, WM_SETREDRAW, TRUE, 0);
     UINT fl = RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN;
