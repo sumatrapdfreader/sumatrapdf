@@ -125,7 +125,7 @@ Halaman Sebelumnya\t<-
 &Ingat pengaturan ini untuk setiap dokumen
 
 &Remove Document
-&Singkirkan Dokumen
+&Hapus Dokumen
 
 &Save As...
 Si&mpan Sebagai...
@@ -160,8 +160,23 @@ Halaman &Tunggal\tCtrl+6
 (of %d)
 (atau %d)
 
+(page %d)
+(halaman %d)
+
 About SumatraPDF
 Tentang SumatraPDF
+
+Add Favorite
+Tambah Favorit
+
+Add page %d to favorites
+Tambah halaman %d ke favorit
+
+Add page %d to favorites with (optional) name:
+Tambah halaman %d ke favorit dengan nama:
+
+Add to favorites
+Tambah ke favorit
 
 Advanced
 Lanjutan
@@ -250,6 +265,9 @@ Salin &Komentar
 Copying text was denied (copying as image only)
 Menyalin teks ditolak (menyalin sebagai gambar saja)
 
+Could not obtain Printer properties
+Tidak bsa mendapatkan sifat Pencetak
+
 Could not open Printer
 Tidak dapat membuka printer
 
@@ -261,6 +279,9 @@ Tidak dapat menampilkan halaman
 
 Created:
 Dibuat:
+
+Current file
+Berkas sekarang
 
 Custom &Zoom...\tCtrl+Y
 &Pembesaran Buatan\tCtrl+Y
@@ -301,6 +322,9 @@ Masukkan baris perintah untuk dijalankan ketika Anda mengklik dua kali pada doku
 Error loading %s
 Kesalahan memuat %s
 
+F&avorites
+F&avorit
+
 F&orward\tAlt+Right Arrow
 Berikutnya\tAlt+->
 
@@ -312,6 +336,9 @@ Dua Halaman
 
 Failed to save a file
 Gagal menyimpan berkas
+
+Favorites
+Favorit
 
 File Size:
 Ukuran Berkas:
@@ -460,6 +487,9 @@ Dokumen PDF
 Pa&ge...\tCtrl+G
 Halaman...\tCtrl+G
 
+Page %d
+Halaman %d
+
 Page Size:
 Ukuran Halaman:
 
@@ -490,6 +520,9 @@ Cetak
 Print range
 Kisaran cetakan
 
+Printer with given name doesn't exist
+Pencetak dengan nama tersebut tidak ada
+
 Printing is still in progress. Abort and start over?
 Proses pencetakan sedang dilaksanakan. Gagalkan dan ulangi lagi?
 
@@ -501,6 +534,12 @@ Masalah pencetakan.
 
 Remember &opened files
 Ingat &berkas yang pernah dibuka
+
+Remove from favorites
+Hapus dari favorit
+
+Remove page %d from favorites
+Hapus halaman %d dari favorit
 
 Rotate &Left\tCtrl+Shift+-
 Putar Ke Kiri\tCtrl+Shift+-
@@ -537,6 +576,9 @@ Tampilkan &Toolbar
 
 Show &pages continuously
 Tampilkan Halaman Secara &Kontinu
+
+Show Favorites
+Tampilkan Favorit
 
 Show frequently read
 Tampilkan Yang Sering Dibaca
@@ -621,20 +663,4 @@ menyalin teks
 
 printing document
 mencetak dokumen
-
-# Untranslated:
-#(page %d)
-#Add Favorite
-#Add page %d to favorites
-#Add page %d to favorites with (optional) name:
-#Add to favorites
-#Could not obtain Printer properties
-#Current file
-#F&avorites
-#Favorites
-#Page %d
-#Printer with given name doesn't exist
-#Remove from favorites
-#Remove page %d from favorites
-#Show Favorites
 
