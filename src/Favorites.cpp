@@ -114,7 +114,7 @@ void Favorites::ResetMenuIds()
     }
 }
 
-FileFavs *Favorites::GetFavByFilePath(const TCHAR *filePath, bool createIfNotExist=false, size_t *idx)
+FileFavs *Favorites::GetFavByFilePath(const TCHAR *filePath, bool createIfNotExist, size_t *idx)
 {
     // it's likely that we'll ask about the info for the same
     // file as in previous call, so use one element cache
