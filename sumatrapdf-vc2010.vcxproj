@@ -173,9 +173,11 @@
     <ClCompile Include="src\AppPrefs.cpp" />
     <ClCompile Include="src\AppTools.cpp" />
     <ClCompile Include="src\Benchmark.cpp" />
+    <ClCompile Include="src\ChmEngine.cpp" />
     <ClCompile Include="src\CrashHandler.cpp" />
     <ClCompile Include="src\DisplayModel.cpp" />
     <ClCompile Include="src\DisplayState.cpp" />
+    <ClCompile Include="src\ExternalPdfViewer.cpp" />
     <ClCompile Include="src\Favorites.cpp" />
     <ClCompile Include="src\FileWatch.cpp" />
     <ClCompile Include="src\ImagesEngine.cpp" />
@@ -274,9 +276,11 @@
     <ClInclude Include="src\AppTools.h" />
     <ClInclude Include="src\BaseEngine.h" />
     <ClInclude Include="src\Benchmark.h" />
+    <ClInclude Include="src\ChmEngine.h" />
     <ClInclude Include="src\CrashHandler.h" />
     <ClInclude Include="src\DisplayModel.h" />
     <ClInclude Include="src\DisplayState.h" />
+    <ClInclude Include="src\ExternalPdfViewer.h" />
     <ClInclude Include="src\Favorites.h" />
     <ClInclude Include="src\FileHistory.h" />
     <ClInclude Include="src\FileWatch.h" />

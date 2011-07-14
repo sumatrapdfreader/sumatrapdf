@@ -599,6 +599,12 @@
     <ClCompile Include="src\Search.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\ChmEngine.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ExternalPdfViewer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ext\jbig2dec\config_win32.h">
@@ -836,6 +842,12 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Search.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ChmEngine.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ExternalPdfViewer.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

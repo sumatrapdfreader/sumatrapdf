@@ -321,38 +321,6 @@ bool IsExeAssociatedWithPdfExtension()
     return path::IsSame(exePath, argList[0]);
 }
 
-TCHAR *GetAcrobatPath()
-{
-    // Try Adobe Acrobat as a fall-back, if the Reader isn't installed
-    ScopedMem<TCHAR> path(ReadRegStr(HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\AcroRd32.exe"), NULL));
-    if (!path)
-        path.Set(ReadRegStr(HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\Acrobat.exe"), NULL));
-    if (path && file::Exists(path))
-        return path.StealData();
-    return NULL;
-}
-
-TCHAR *GetFoxitPath()
-{
-    ScopedMem<TCHAR> path(ReadRegStr(HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Foxit Reader"), _T("DisplayIcon")));
-    if (path && file::Exists(path))
-        return path.StealData();
-    return NULL;
-}
-
-TCHAR *GetPDFXChangePath()
-{
-    ScopedMem<TCHAR> path(ReadRegStr(HKEY_LOCAL_MACHINE, _T("Software\\Tracker Software\\PDFViewer"), _T("InstallPath")));
-    if (!path)
-        path.Set(ReadRegStr(HKEY_CURRENT_USER,  _T("Software\\Tracker Software\\PDFViewer"), _T("InstallPath")));
-    if (!path)
-        return false;
-    ScopedMem<TCHAR> exePath(path::Join(path, _T("PDFXCview.exe")));
-    if (file::Exists(exePath))
-        return exePath.StealData();
-    return NULL;
-}
-
 // List of rules used to detect TeX editors.
 
 // type of path information retrieved from the registy
