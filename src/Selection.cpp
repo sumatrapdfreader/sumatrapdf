@@ -29,7 +29,7 @@ Vec<SelectionOnPage> *SelectionOnPage::FromRectangle(DisplayModel *dm, RectI rec
 {
     Vec<SelectionOnPage> *sel = new Vec<SelectionOnPage>();
 
-    for (int pageNo = dm->pageCount(); pageNo >= 1; --pageNo) {
+    for (int pageNo = dm->PageCount(); pageNo >= 1; --pageNo) {
         PageInfo *pageInfo = dm->getPageInfo(pageNo);
         assert(0.0 == pageInfo->visibleRatio || pageInfo->shown);
         if (!pageInfo->shown)
@@ -228,7 +228,7 @@ void OnSelectAll(WindowInfo *win, bool textOnly)
         int pageNo;
         for (pageNo = 1; !win->dm->getPageInfo(pageNo)->shown; pageNo++);
         win->dm->textSelection->StartAt(pageNo, 0);
-        for (pageNo = win->dm->pageCount(); !win->dm->getPageInfo(pageNo)->shown; pageNo--);
+        for (pageNo = win->dm->PageCount(); !win->dm->getPageInfo(pageNo)->shown; pageNo--);
         win->dm->textSelection->SelectUpTo(pageNo, -1);
         win->selectionRect = RectI::FromXY(INT_MIN / 2, INT_MIN / 2, INT_MAX, INT_MAX);
         UpdateTextSelection(win);

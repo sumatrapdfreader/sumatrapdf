@@ -93,7 +93,7 @@ static LPARAM ToolbarButtonEnabledState(WindowInfo *win, int buttonNo)
             break;
 
         case IDM_GOTO_NEXT_PAGE:
-            if (win->dm->currentPageNo() == win->dm->pageCount())
+            if (win->dm->currentPageNo() == win->dm->PageCount())
                 return disabled;
             break;
         case IDM_GOTO_PREV_PAGE:

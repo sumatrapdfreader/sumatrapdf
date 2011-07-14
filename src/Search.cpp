@@ -228,7 +228,7 @@ static DWORD WINAPI FindThread(LPVOID data)
    bool loopedAround = false;
    if (!win->findCanceled && !rect) {
        // With no further findings, start over (unless this was a new search from the beginning)
-       int startPage = (FIND_FORWARD == ftd->direction) ? 1 : win->dm->pageCount();
+       int startPage = (FIND_FORWARD == ftd->direction) ? 1 : win->dm->PageCount();
        if (!ftd->wasModified || win->dm->currentPageNo() != startPage) {
            loopedAround = true;
            MessageBeep(MB_ICONINFORMATION);

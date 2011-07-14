@@ -145,7 +145,7 @@ bool ViewWithAcrobat(WindowInfo *win, TCHAR *args)
     // see http://www.adobe.com/devnet/acrobat/pdfs/Acrobat_SDK_developer_faq.pdf#page=24
     // TODO: Also set zoom factor and scroll to current position?
     if (win->dm && HIWORD(GetFileVersion(exePath)) >= 6)
-        params.Set(str::Format(_T("/A \"page=%d\" %s \"%s\""), win->dm->currentPageNo(), args, win->dm->fileName()));
+        params.Set(str::Format(_T("/A \"page=%d\" %s \"%s\""), win->dm->currentPageNo(), args, win->dm->FileName()));
     else
         params.Set(str::Format(_T("%s \"%s\""), args, win->loadedFilePath));
     LaunchFile(exePath, params);

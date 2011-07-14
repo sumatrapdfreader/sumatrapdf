@@ -459,7 +459,7 @@ bool StressTest::OpenFile(const TCHAR *fileName)
     currPageRenderTime.Start();
     ++filesCount;
 
-    pageForSearchStart = (rand() % win->dm->pageCount()) + 1;
+    pageForSearchStart = (rand() % win->dm->PageCount()) + 1;
 
     int secs = SecsSinceSystemTime(stressStartTime);
     ScopedMem<TCHAR> tm(FormatTime(secs));
@@ -476,10 +476,10 @@ bool StressTest::GoToNextPage()
     ShowNotification(win, s, true, false, NG_STRESS_TEST_BENCHMARK);
 
     ++currPage;
-    while (!IsInRange(pageRanges, currPage) && currPage <= win->dm->pageCount())
+    while (!IsInRange(pageRanges, currPage) && currPage <= win->dm->PageCount())
         currPage++;
 
-    if (currPage > win->dm->pageCount()) {
+    if (currPage > win->dm->PageCount()) {
         if (GoToNextFile())
             return true;
         Finished(true);

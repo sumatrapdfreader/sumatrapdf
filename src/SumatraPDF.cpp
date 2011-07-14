@@ -280,7 +280,7 @@ static bool SendAsEmailAttachment(WindowInfo *win)
     // We use the SendTo drop target provided by SendMail.dll, which should ship with all
     // commonly used Windows versions, instead of MAPISendMail, which doesn't support
     // Unicode paths and might not be set up on systems not having Microsoft Outlook installed.
-    IDataObject *pDataObject = GetDataObjectForFile(win->dm->fileName(), win->hwndFrame);
+    IDataObject *pDataObject = GetDataObjectForFile(win->dm->FileName(), win->hwndFrame);
     if (!pDataObject)
         return false;
 
@@ -779,7 +779,7 @@ void UpdateCurrentFileDisplayStateForWin(WindowInfo* win)
     if (!win->IsDocLoaded())
         return;
 
-    const TCHAR *fileName = win->dm->fileName();
+    const TCHAR *fileName = win->dm->FileName();
     assert(fileName);
     if (!fileName)
         return;
@@ -1297,7 +1297,7 @@ static bool LoadDocIntoWindow(
 
     assert(!win.IsAboutWindow() && win.IsDocLoaded() == (win.dm != NULL));
     if (win.dm) {
-        if (prevModel && str::Eq(win.dm->fileName(), prevModel->fileName()))
+        if (prevModel && str::Eq(win.dm->FileName(), prevModel->FileName()))
             gRenderCache.KeepForDisplayModel(prevModel, win.dm);
         delete prevModel;
     }
@@ -1327,8 +1327,8 @@ static bool LoadDocIntoWindow(
             }
             // else let win.dm->Relayout() scroll to fit the page (again)
         }
-        else if (startPage > win.dm->pageCount())
-            ss.page = win.dm->pageCount();
+        else if (startPage > win.dm->PageCount())
+            ss.page = win.dm->PageCount();
         zoomVirtual = state->zoomVirtual;
         rotation = state->rotation;
 
@@ -1362,13 +1362,13 @@ static bool LoadDocIntoWindow(
     }
     UpdateFindbox(&win);
 
-    int pageCount = win.dm->pageCount();
+    int pageCount = win.dm->PageCount();
     if (pageCount > 0) {
         UpdateToolbarPageText(&win, pageCount);
         UpdateToolbarFindText(&win);
     }
 
-    const TCHAR *baseName = path::GetBaseName(win.dm->fileName());
+    const TCHAR *baseName = path::GetBaseName(win.dm->FileName());
     TCHAR *title = str::Format(_T("%s - %s"), baseName, SUMATRA_WINDOW_TITLE);
 #ifdef UNICODE
     if (IsUIRightToLeft()) {
@@ -1531,8 +1531,8 @@ WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin, b
 // The current page edit box is updated with the current page number
 void WindowInfo::PageNoChanged(int pageNo)
 {
-    assert(dm && dm->pageCount() > 0);
-    if (!dm || dm->pageCount() == 0)
+    assert(dm && dm->PageCount() > 0);
+    if (!dm || dm->PageCount() == 0)
         return;
 
     if (INVALID_PAGE_NO != pageNo) {
@@ -1540,7 +1540,7 @@ void WindowInfo::PageNoChanged(int pageNo)
         win::SetText(hwndPageBox, buf);
         ToolbarUpdateStateForWindow(this);
         if (dm->engine && dm->engine->HasPageLabels())
-            UpdateToolbarPageText(this, dm->pageCount());
+            UpdateToolbarPageText(this, dm->PageCount());
     }
     if (pageNo == currPageNo)
         return;
@@ -1552,10 +1552,10 @@ void WindowInfo::PageNoChanged(int pageNo)
     if (NULL == wnd)
         return;
 
-    ScopedMem<TCHAR> pageInfo(str::Format(_T("%s %d / %d"), _TR("Page:"), pageNo, dm->pageCount()));
+    ScopedMem<TCHAR> pageInfo(str::Format(_T("%s %d / %d"), _TR("Page:"), pageNo, dm->PageCount()));
     if (dm->engine && dm->engine->HasPageLabels()) {
         ScopedMem<TCHAR> label(dm->engine->GetPageLabel(pageNo));
-        pageInfo.Set(str::Format(_T("%s %s (%d / %d)"), _TR("Page:"), label, pageNo, dm->pageCount()));
+        pageInfo.Set(str::Format(_T("%s %s (%d / %d)"), _TR("Page:"), label, pageNo, dm->PageCount()));
     }
     wnd->UpdateMessage(pageInfo);
 }
@@ -1885,7 +1885,7 @@ static void DebugShowLinks(DisplayModel& dm, HDC hdc)
     HPEN pen = CreatePen(PS_SOLID, 1, RGB(0x00, 0xff, 0xff));
     HGDIOBJ oldPen = SelectObject(hdc, pen);
 
-    for (int pageNo = dm.pageCount(); pageNo >= 1; --pageNo) {
+    for (int pageNo = dm.PageCount(); pageNo >= 1; --pageNo) {
         PageInfo *pageInfo = dm.getPageInfo(pageNo);
         if (!pageInfo->shown || 0.0 == pageInfo->visibleRatio)
             continue;
@@ -1910,7 +1910,7 @@ static void DebugShowLinks(DisplayModel& dm, HDC hdc)
         pen = CreatePen(PS_SOLID, 1, RGB(0xff, 0x00, 0xff));
         oldPen = SelectObject(hdc, pen);
 
-        for (int pageNo = dm.pageCount(); pageNo >= 1; --pageNo) {
+        for (int pageNo = dm.PageCount(); pageNo >= 1; --pageNo) {
             PageInfo *pageInfo = dm.getPageInfo(pageNo);
             if (!pageInfo->shown || 0.0 == pageInfo->visibleRatio)
                 continue;
@@ -1941,7 +1941,7 @@ static void DrawDocument(WindowInfo& win, HDC hdc, RECT *rcArea)
     RectI screen(PointI(), dm->viewPort.Size());
 
     DBG_OUT("DrawDocument() ");
-    for (int pageNo = 1; pageNo <= dm->pageCount(); ++pageNo) {
+    for (int pageNo = 1; pageNo <= dm->PageCount(); ++pageNo) {
         PageInfo *pageInfo = dm->getPageInfo(pageNo);
         if (0.0 == pageInfo->visibleRatio)
             continue;
@@ -2625,7 +2625,7 @@ static void OnMenuSaveAs(WindowInfo& win)
     assert(win.dm);
     if (!win.IsDocLoaded()) return;
 
-    const TCHAR *srcFileName = win.dm->fileName();
+    const TCHAR *srcFileName = win.dm->FileName();
     ScopedMem<TCHAR> urlName;
     if (gPluginMode) {
         urlName.Set(ExtractFilenameFromURL(gPluginURL));
@@ -2705,7 +2705,7 @@ static void OnMenuSaveAs(WindowInfo& win)
     // Extract all text when saving as a plain text file
     if (hasCopyPerm && str::EndsWithI(realDstFileName, _T(".txt"))) {
         str::Str<TCHAR> text(1024);
-        for (int pageNo = 1; pageNo <= win.dm->pageCount(); pageNo++)
+        for (int pageNo = 1; pageNo <= win.dm->PageCount(); pageNo++)
             text.AppendAndFree(win.dm->engine->ExtractPageText(pageNo, _T("\r\n"), NULL, Target_Export));
 
         ScopedMem<char> textUTF8(str::conv::ToUtf8(text.LendData()));
@@ -2793,7 +2793,7 @@ static void OnMenuSaveBookmark(WindowInfo& win)
 
     TCHAR dstFileName[MAX_PATH];
     // Remove the extension so that it can be re-added depending on the chosen filter
-    str::BufSet(dstFileName, dimof(dstFileName), path::GetBaseName(win.dm->fileName()));
+    str::BufSet(dstFileName, dimof(dstFileName), path::GetBaseName(win.dm->FileName()));
     str::TransChars(dstFileName, _T(":"), _T("_"));
     if (str::EndsWithI(dstFileName, defExt))
         dstFileName[str::Len(dstFileName) - str::Len(defExt)] = '\0';
@@ -2833,9 +2833,9 @@ static void OnMenuSaveBookmark(WindowInfo& win)
 
     ScopedMem<TCHAR> exePath(GetExePath());
     ScopedMem<TCHAR> args(str::Format(_T("\"%s\" -page %d -view \"%s\" -zoom %s -scroll %d,%d -reuse-instance"),
-                          win.dm->fileName(), ss.page, viewMode, zoomVirtual, (int)ss.x, (int)ss.y));
+                          win.dm->FileName(), ss.page, viewMode, zoomVirtual, (int)ss.x, (int)ss.y));
     ScopedMem<TCHAR> desc(str::Format(_TR("Bookmark shortcut to page %d of %s"),
-                          ss.page, path::GetBaseName(win.dm->fileName())));
+                          ss.page, path::GetBaseName(win.dm->FileName())));
 
     CreateShortcut(filename, exePath, args, desc, 1);
 }
@@ -3220,7 +3220,7 @@ static void OnMenuGoToPage(WindowInfo& win)
     }
 
     ScopedMem<TCHAR> label(win.dm->engine->GetPageLabel(win.dm->currentPageNo()));
-    ScopedMem<TCHAR> newPageLabel(Dialog_GoToPage(win.hwndFrame, label, win.dm->pageCount(),
+    ScopedMem<TCHAR> newPageLabel(Dialog_GoToPage(win.hwndFrame, label, win.dm->PageCount(),
                                                   !win.dm->engine->HasPageLabels()));
     if (!newPageLabel)
         return;
@@ -3578,7 +3578,7 @@ static void OnFrameChar(WindowInfo& win, WPARAM key)
         // experimental "page info" tip: make figuring out current page and
         // total pages count a one-key action (unless they're already visible)
         if (!gGlobalPrefs.toolbarVisible || win.fullScreen || PM_ENABLED == win.presentation) {
-            int current = win.dm->currentPageNo(), total = win.dm->pageCount();
+            int current = win.dm->currentPageNo(), total = win.dm->PageCount();
             ScopedMem<TCHAR> pageInfo(str::Format(_T("%s %d / %d"), _TR("Page:"), current, total));
             if (win.dm->engine && win.dm->engine->HasPageLabels()) {
                 ScopedMem<TCHAR> label(win.dm->engine->GetPageLabel(current));

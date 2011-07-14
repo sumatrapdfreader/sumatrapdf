@@ -451,9 +451,9 @@ void OnMenuPrint(WindowInfo *win)
     PRINTPAGERANGE *ppr = SAZA(PRINTPAGERANGE, MAXPAGERANGES);
     pd.lpPageRanges = ppr;
     ppr->nFromPage = 1;
-    ppr->nToPage = dm->pageCount();
+    ppr->nToPage = dm->PageCount();
     pd.nMinPage = 1;
-    pd.nMaxPage = dm->pageCount();
+    pd.nMaxPage = dm->PageCount();
     pd.nStartPage = START_PAGE_GENERAL;
     applyCb = new ApplyButtonDisblingCallback();
     pd.lpCallback = applyCb;
@@ -489,7 +489,7 @@ void OnMenuPrint(WindowInfo *win)
     } else if (win->selectionOnPage && (pd.Flags & PD_SELECTION)) {
         printSelection = true;
     } else if (!(pd.Flags & PD_PAGENUMS)) {
-        PRINTPAGERANGE pr = { 1, dm->pageCount() };
+        PRINTPAGERANGE pr = { 1, dm->PageCount() };
         ranges.Append(pr);
     } else {
         assert(pd.nPageRanges > 0);
