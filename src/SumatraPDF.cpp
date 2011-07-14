@@ -1541,20 +1541,22 @@ void WindowInfo::PageNoChanged(int pageNo)
         if (dm->engine && dm->engine->HasPageLabels())
             UpdateToolbarPageText(this, dm->pageCount());
     }
-    if (pageNo != currPageNo) {
-        UpdateTocSelection(this, pageNo);
-        currPageNo = pageNo;
+    if (pageNo == currPageNo)
+        return;
 
-        NotificationWnd *wnd = notifications->GetFirstInGroup(NG_PAGE_INFO_HELPER);
-        if (wnd) {
-            ScopedMem<TCHAR> pageInfo(str::Format(_T("%s %d / %d"), _TR("Page:"), pageNo, dm->pageCount()));
-            if (dm->engine && dm->engine->HasPageLabels()) {
-                ScopedMem<TCHAR> label(dm->engine->GetPageLabel(pageNo));
-                pageInfo.Set(str::Format(_T("%s %s (%d / %d)"), _TR("Page:"), label, pageNo, dm->pageCount()));
-            }
-            wnd->UpdateMessage(pageInfo);
-        }
+    UpdateTocSelection(this, pageNo);
+    currPageNo = pageNo;
+
+    NotificationWnd *wnd = notifications->GetFirstInGroup(NG_PAGE_INFO_HELPER);
+    if (NULL == wnd)
+        return;
+
+    ScopedMem<TCHAR> pageInfo(str::Format(_T("%s %d / %d"), _TR("Page:"), pageNo, dm->pageCount()));
+    if (dm->engine && dm->engine->HasPageLabels()) {
+        ScopedMem<TCHAR> label(dm->engine->GetPageLabel(pageNo));
+        pageInfo.Set(str::Format(_T("%s %s (%d / %d)"), _TR("Page:"), label, pageNo, dm->pageCount()));
     }
+    wnd->UpdateMessage(pageInfo);
 }
 
 /* Send the request to render a given page to a rendering thread */
