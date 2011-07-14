@@ -1010,11 +1010,12 @@ void ReloadDocument(WindowInfo *win, bool autorefresh)
     }
 }
 
-static bool FileCloseMenuEnabled()
+static bool IsFileCloseMenuEnabled()
 {
-    for (size_t i = 0; i < gWindows.Count(); i++)
+    for (size_t i = 0; i < gWindows.Count(); i++) {
         if (!gWindows[i]->IsAboutWindow())
             return true;
+    }
     return false;
 }
 
@@ -1051,8 +1052,8 @@ static void MenuUpdateStateForWindow(WindowInfo& win) {
         IDM_SAVEAS, IDM_SEND_BY_EMAIL
     };
 
-    assert(FileCloseMenuEnabled() == !win.IsAboutWindow()); // TODO: ???
-    win::menu::SetEnabled(win.menu, IDM_CLOSE, FileCloseMenuEnabled());
+    assert(IsFileCloseMenuEnabled() == !win.IsAboutWindow());
+    win::menu::SetEnabled(win.menu, IDM_CLOSE, IsFileCloseMenuEnabled());
 
     MenuUpdatePrintItem(win, win.menu);
 
