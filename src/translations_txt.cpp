@@ -5961,7 +5961,7 @@ const char *gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "Tip\304\203rirea este \303\256nc\304\203 \303\256n curs. Opresc \310\231i reiau ?",
   "Tip\304\203re\310\231te pagina %d din %d...",
   "Problem\304\203 la imprimare.",
-  "\310\233ine minte fi\310\231ierele deschise",
+  "\310\232ine minte fi\310\231ierele deschise",
   "Scoate de la favorite",
   "Scoate pagina %d de la favorite",
   "Rote\310\231te spre st\303\242nga\tCtrl+Shift+-",

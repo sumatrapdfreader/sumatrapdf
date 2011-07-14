@@ -531,7 +531,7 @@ Printing problem.
 Problemă la imprimare.
 
 Remember &opened files
-ține minte fișierele deschise
+Ține minte fișierele deschise
 
 Remove from favorites
 Scoate de la favorite
