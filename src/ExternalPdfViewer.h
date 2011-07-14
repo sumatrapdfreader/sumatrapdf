@@ -16,4 +16,3 @@ bool CanViewWithAcrobat(WindowInfo *win=NULL);
 bool ViewWithAcrobat(WindowInfo *win, TCHAR *args=NULL);
 
 #endif
-

@@ -10,7 +10,7 @@ enum EngineType {
     Engine_Image, Engine_ImageDir, Engine_ComicBook,
     Engine_PDF, Engine_XPS,
     Engine_PS,
-    Engine_Chm
+    Engine_Chm,
 };
 
 #include "BaseEngine.h"
@@ -53,7 +53,7 @@ RetrySniffing:
             engineType = Engine_PS;
         } else if (ChmEngine::IsSupportedFile(filePath, sniff) && engineType != Engine_Chm) {
             engine = ChmEngine::CreateFromFileName(filePath);
-            engineType = Engine_Chm;
+            engineType = Engine_Chm;
         }
 
         if (!engine && !sniff) {

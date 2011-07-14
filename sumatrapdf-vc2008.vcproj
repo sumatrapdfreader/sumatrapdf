@@ -95,6 +95,14 @@
 					>
 				</File>
 				<File
+					RelativePath=".\src\ChmEngine.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\ChmEngine.h"
+					>
+				</File>
+				<File
 					RelativePath=".\src\DjVuEngine.cpp"
 					>
 				</File>
@@ -187,6 +195,14 @@
 				Name="User Interface"
 				>
 				<File
+					RelativePath=".\src\ExternalPdfViewer.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\ExternalPdfViewer.h"
+					>
+				</File>
+				<File
 					RelativePath=".\src\Favorites.cpp"
 					>
 				</File>
@@ -212,6 +228,14 @@
 				</File>
 				<File
 					RelativePath=".\src\Search.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\Selection.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\Selection.h"
 					>
 				</File>
 				<File

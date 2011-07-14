@@ -1,6 +1,7 @@
 Project         Version Date         Download URL
 ----------------------------------------------------------------------------------------------
 bzip2           1.0.6   2010-09-06   http://bzip.org/downloads.html
+CHMLib          0.40a   2009-07-02   https://github.com/jedwing/CHMLib
 freetype2       2.4.5   2011-06-25   http://sourceforge.net/projects/freetype/files/freetype2/
 jbig2dec        0.11    2010-02-02   http://jbig2dec.sourceforge.net/
 libjpeg-turbo   1.1.1   2011-05-18   http://sourceforge.net/projects/libjpeg-turbo/files/
@@ -10,4 +11,3 @@ synctex         1.9     2009-11-04   http://itexmac.sourceforge.net/SyncTeX.html
 unrar           4.0.7   2011-03-02   http://www.rarlab.com/rar_add.htm
 zlib            1.2.5   2010-04-19   http://www.zlib.net/
 ../mupdf        trunk                http://git.ghostscript.com/?p=mupdf.git
-CHMLib          trunk   2009-07-02   https://github.com/jedwing/CHMLib, http://www.jedrea.com/chmlib/

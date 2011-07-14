@@ -24,7 +24,6 @@ public:
     virtual RectD PageContentBox(int pageNo, RenderTarget target=Target_View) {
         RectD r; return r;
     }
-        
 
     virtual RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
                          RectD *pageRect=NULL, /* if NULL: defaults to the page's mediabox */
@@ -93,8 +92,6 @@ unsigned char *CChmEngine::GetFileData(size_t *cbCount)
     return (unsigned char *)file::ReadAll(fileName, cbCount);
 }
 
-// returns a numeric DjVu link to a named page (if the name resolves)
-// caller needs to free() the result
 bool ChmEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
 {
     return str::EndsWithI(fileName, _T(".chm"));
@@ -109,4 +106,3 @@ ChmEngine *ChmEngine::CreateFromFileName(const TCHAR *fileName)
     }
     return engine;
 }
-

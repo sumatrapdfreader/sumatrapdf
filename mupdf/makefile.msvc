@@ -104,7 +104,7 @@ CFLAGSB = $(CFLAGSB) /MTd
 # /RTCs : stack frame runtime checking
 # /RTCu : ununitialized local usage checks
 CFLAGS = $(CFLAGSB) /Od /RTCs /RTCu
-CFLAGSOPT    = $(CFLAGSB) /Os /Ox /D "NDEBUG"
+CFLAGSOPT = $(CFLAGSB) /Os /Ox /D "NDEBUG"
 !endif
 
 ZLIB_CFLAGS = $(CFLAGSOPT)

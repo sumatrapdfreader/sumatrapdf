@@ -42,6 +42,9 @@ all_sumatrapdf: SumatraPDF Uninstaller PDFFilter PdfPreview BrowserPlugin
 
 ##### add configuration changes that should NOT affect MuPDF after this line #####
 
+# some libraries require stdint.h
+CFLAGSOPT = $(CFLAGSOPT) /Isrc/utils/msvc
+
 # include build data for the remaining third-party libraries
 !INCLUDE $(EXTLIBSDIR)\makefile.msvc
 
@@ -340,11 +343,11 @@ $(OS)\Print.obj: src\AppPrefs.h src\AppTools.h src\BaseEngine.h
 $(OS)\Print.obj: src\ChmEngine.h src\DisplayModel.h src\DisplayState.h
 $(OS)\Print.obj: src\DjVuEngine.h src\EngineManager.h src\ImagesEngine.h
 $(OS)\Print.obj: src\Notifications.h src\PdfEngine.h src\Print.h
-$(OS)\Print.obj: src\PsEngine.h src\SumatraDialogs.h src\SumatraPDF.h
-$(OS)\Print.obj: src\TextSearch.h src\TextSelection.h src\translations.h
-$(OS)\Print.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
-$(OS)\Print.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
-$(OS)\Print.obj: src\WindowInfo.h
+$(OS)\Print.obj: src\PsEngine.h src\Selection.h src\SumatraDialogs.h
+$(OS)\Print.obj: src\SumatraPDF.h src\TextSearch.h src\TextSelection.h
+$(OS)\Print.obj: src\translations.h src\utils\BaseUtil.h src\utils\FileUtil.h
+$(OS)\Print.obj: src\utils\GeomUtil.h src\utils\StrUtil.h src\utils\Vec.h
+$(OS)\Print.obj: src\utils\WinUtil.h src\WindowInfo.h
 $(OS)\PsEngine.obj: src\BaseEngine.h src\PdfEngine.h src\PsEngine.h
 $(OS)\PsEngine.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
 $(OS)\PsEngine.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
@@ -359,10 +362,18 @@ $(OS)\Search.obj: src\ChmEngine.h src\DisplayModel.h src\DisplayState.h
 $(OS)\Search.obj: src\DjVuEngine.h src\EngineManager.h src\ImagesEngine.h
 $(OS)\Search.obj: src\Notifications.h src\PdfEngine.h src\PdfSync.h
 $(OS)\Search.obj: src\PsEngine.h src\resource.h src\Search.h
-$(OS)\Search.obj: src\SumatraDialogs.h src\SumatraPDF.h src\TextSearch.h
-$(OS)\Search.obj: src\TextSelection.h src\translations.h src\utils\BaseUtil.h
-$(OS)\Search.obj: src\utils\GeomUtil.h src\utils\StrUtil.h src\utils\Vec.h
-$(OS)\Search.obj: src\utils\WinUtil.h src\WindowInfo.h
+$(OS)\Search.obj: src\Selection.h src\SumatraDialogs.h src\SumatraPDF.h
+$(OS)\Search.obj: src\TextSearch.h src\TextSelection.h src\translations.h
+$(OS)\Search.obj: src\utils\BaseUtil.h src\utils\GeomUtil.h src\utils\StrUtil.h
+$(OS)\Search.obj: src\utils\Vec.h src\utils\WinUtil.h src\WindowInfo.h
+$(OS)\Selection.obj: src\AppPrefs.h src\BaseEngine.h src\ChmEngine.h
+$(OS)\Selection.obj: src\DisplayModel.h src\DisplayState.h src\DjVuEngine.h
+$(OS)\Selection.obj: src\EngineManager.h src\ImagesEngine.h src\Notifications.h
+$(OS)\Selection.obj: src\PdfEngine.h src\PsEngine.h src\Selection.h
+$(OS)\Selection.obj: src\SumatraPDF.h src\TextSearch.h src\TextSelection.h
+$(OS)\Selection.obj: src\Toolbar.h src\translations.h src\utils\BaseUtil.h
+$(OS)\Selection.obj: src\utils\GeomUtil.h src\utils\StrUtil.h src\utils\Vec.h
+$(OS)\Selection.obj: src\utils\WinUtil.h src\WindowInfo.h
 $(OS)\SimpleLog.obj: src\utils\BaseUtil.h src\utils\SimpleLog.h src\utils\StrUtil.h
 $(OS)\SimpleLog.obj: src\utils\Vec.h
 $(OS)\StressTesting.obj: src\AppPrefs.h src\AppTools.h src\BaseEngine.h
@@ -397,13 +408,14 @@ $(OS)\SumatraPDF.obj: src\ExternalPdfViewer.h src\Favorites.h src\FileHistory.h
 $(OS)\SumatraPDF.obj: src\FileWatch.h src\ImagesEngine.h src\Notifications.h
 $(OS)\SumatraPDF.obj: src\ParseCommandLine.h src\PdfEngine.h src\PdfSync.h
 $(OS)\SumatraPDF.obj: src\Print.h src\PsEngine.h src\RenderCache.h
-$(OS)\SumatraPDF.obj: src\Resource.h src\Search.h src\StressTesting.h
-$(OS)\SumatraPDF.obj: src\SumatraAbout.h src\SumatraDialogs.h src\SumatraPDF.h
-$(OS)\SumatraPDF.obj: src\SumatraProperties.h src\TableOfContents.h src\TextSearch.h
-$(OS)\SumatraPDF.obj: src\TextSelection.h src\Toolbar.h src\translations.h
-$(OS)\SumatraPDF.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
-$(OS)\SumatraPDF.obj: src\utils\Http.h src\utils\StrUtil.h src\utils\Vec.h
-$(OS)\SumatraPDF.obj: src\utils\WinUtil.h src\Version.h src\WindowInfo.h
+$(OS)\SumatraPDF.obj: src\Resource.h src\Search.h src\Selection.h
+$(OS)\SumatraPDF.obj: src\StressTesting.h src\SumatraAbout.h src\SumatraDialogs.h
+$(OS)\SumatraPDF.obj: src\SumatraPDF.h src\SumatraProperties.h src\TableOfContents.h
+$(OS)\SumatraPDF.obj: src\TextSearch.h src\TextSelection.h src\Toolbar.h
+$(OS)\SumatraPDF.obj: src\translations.h src\utils\BaseUtil.h src\utils\FileUtil.h
+$(OS)\SumatraPDF.obj: src\utils\GeomUtil.h src\utils\Http.h src\utils\StrUtil.h
+$(OS)\SumatraPDF.obj: src\utils\Vec.h src\utils\WinUtil.h src\Version.h
+$(OS)\SumatraPDF.obj: src\WindowInfo.h
 $(OS)\SumatraProperties.obj: src\AppPrefs.h src\BaseEngine.h src\ChmEngine.h
 $(OS)\SumatraProperties.obj: src\DisplayModel.h src\DisplayState.h src\DjVuEngine.h
 $(OS)\SumatraProperties.obj: src\EngineManager.h src\ImagesEngine.h src\PdfEngine.h
@@ -446,10 +458,10 @@ $(OS)\WindowInfo.obj: src\DisplayModel.h src\DisplayState.h src\DjVuEngine.h
 $(OS)\WindowInfo.obj: src\EngineManager.h src\FileWatch.h src\ImagesEngine.h
 $(OS)\WindowInfo.obj: src\Notifications.h src\PdfEngine.h src\PdfSync.h
 $(OS)\WindowInfo.obj: src\Print.h src\PsEngine.h src\Resource.h
-$(OS)\WindowInfo.obj: src\SumatraPDF.h src\TextSearch.h src\TextSelection.h
-$(OS)\WindowInfo.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
-$(OS)\WindowInfo.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
-$(OS)\WindowInfo.obj: src\WindowInfo.h
+$(OS)\WindowInfo.obj: src\Selection.h src\SumatraPDF.h src\TextSearch.h
+$(OS)\WindowInfo.obj: src\TextSelection.h src\utils\BaseUtil.h src\utils\FileUtil.h
+$(OS)\WindowInfo.obj: src\utils\GeomUtil.h src\utils\StrUtil.h src\utils\Vec.h
+$(OS)\WindowInfo.obj: src\utils\WinUtil.h src\WindowInfo.h
 $(OS)\WinUtil.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
 $(OS)\WinUtil.obj: src\utils\StrUtil.h src\utils\WinUtil.h
 $(OS)\ZipUtil.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\StrUtil.h

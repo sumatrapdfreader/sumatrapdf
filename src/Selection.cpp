@@ -313,4 +313,3 @@ void OnSelectionStop(WindowInfo *win, int x, int y, bool aborted)
         win->selectionOnPage = SelectionOnPage::FromRectangle(win->dm, win->selectionRect);
     win->RepaintAsync();
 }
-

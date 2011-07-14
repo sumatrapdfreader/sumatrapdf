@@ -152,4 +152,3 @@ bool ViewWithAcrobat(WindowInfo *win, TCHAR *args)
 
     return true;
 }
-
