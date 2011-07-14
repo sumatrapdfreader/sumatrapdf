@@ -56,14 +56,12 @@ public:
     virtual bool IsImagePage(int pageNo) { return false; }
     virtual PageLayoutType PreferredLayout() { return Layout_Single; }
 
-    // DPI isn't constant for all pages and thus premultiplied
-    virtual float GetFileDPI() const { return 300.0f; }
     virtual const TCHAR *GetDefaultFileExt() const { return _T(".chm"); }
 
     // we currently don't load pages lazily, so there's nothing to do here
     virtual bool BenchLoadPage(int pageNo) { return true; }
 
-    // TODO: for now, it obviously has toc tree
+    // TODO: for now, it obviously has no toc tree
     virtual bool HasToCTree() const { return false; }
 
 protected:
@@ -86,55 +84,54 @@ CChmEngine::~CChmEngine()
     free((void *)fileName);
 }
 
-static bool GetChmDataForFile(struct chmFile *chmHandle, const char *fileNameIn, str::Str<char>& dataOut)
+static bool GetChmDataForFile(struct chmFile *chmHandle, const char *fileName, str::Str<char>& dataOut)
 {
-    bool ok = false;
-    const char *fileNameTmp = NULL;
-    if (str::StartsWith(fileNameIn, "/")) {
-        if (str::StartsWith(fileNameIn, "///")) {
-            fileNameIn = fileNameIn + 2;
-        }
-    } else {
-        fileNameTmp = str::Join("/", fileNameIn);
+    ScopedMem<const char> fileNameTmp;
+    if (!str::StartsWith(fileName, "/")) {
+        fileNameTmp.Set(str::Join("/", fileName));
+        fileName = fileNameTmp;
+    } else if (str::StartsWith(fileName, "///")) {
+        fileName += 2;
     }
-    const char *fileName = fileNameTmp ? fileNameTmp : fileNameIn;
 
     struct chmUnitInfo info;
     int res = chm_resolve_object(chmHandle, fileName, &info);
     if (CHM_RESOLVE_SUCCESS != res) {
-        goto Exit;
+        return false;
     }
 
     if (info.length > 128*1024*1024) {
         // don't allow anything above 128 MB
-        goto Exit;
+        return false;
     }
 
     dataOut.Reset();
     unsigned char *buf = (unsigned char*)dataOut.MakeSpaceAt(0, (size_t)info.length);
     if (!buf)
-        goto Exit;
+        return false;
 
     if (!chm_retrieve_object(chmHandle, &info, buf, 0, info.length) ) {
-        goto Exit;
+        return false;
     }
 
-Exit:
-    free((void*)fileNameTmp);
-    return ok;
+    return true;
 }
 
 bool CChmEngine::Load(const TCHAR *fileName)
 {
     this->fileName = str::Dup(fileName);
     CASSERT(2 == sizeof(OLECHAR), OLECHAR_must_be_WCHAR);
-    chmHandle = chm_open((BSTR)fileName);
+#ifdef UNICODE
+    chmHandle = chm_open((TCHAR *)fileName);
+#else
+    chmHandle = chm_open(ScopedMem<WCHAR>(str::conv::FromAnsi(fileName)));
+#endif
     if (!chmHandle)
         return false;
     str::Str<char> windowsData;
     str::Str<char> stringsData;
     bool hasWindows = GetChmDataForFile(chmHandle, "/#WINDOWS", windowsData);
-    bool hasStrings = GetChmDataForFile(chmHandle, "/#STRINGS", windowsData);
+    bool hasStrings = GetChmDataForFile(chmHandle, "/#STRINGS", stringsData);
     if (hasWindows && hasStrings) {
         // TODO: write me
 
@@ -150,6 +147,9 @@ unsigned char *CChmEngine::GetFileData(size_t *cbCount)
 
 bool ChmEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
 {
+    if (sniff)
+        return file::StartsWith(fileName, "ITSF");
+
     return str::EndsWithI(fileName, _T(".chm"));
 }
 
