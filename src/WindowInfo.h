@@ -204,22 +204,6 @@ public:
     virtual void CleanUp(DisplayModel *dm);
 };
 
-/* Represents selected area on given page */
-class SelectionOnPage {
-public:
-    SelectionOnPage(int pageNo=0, RectD *rect=NULL) :
-        pageNo(pageNo), rect(rect ? *rect : RectD()) { }
-
-    int     pageNo; // page this selection is on
-    RectD   rect;   // position of selection rectangle on page (in page coordinates)
-
-    // position of selection rectangle in the view port
-    RectI   GetRect(DisplayModel *dm);
-
-    static Vec<SelectionOnPage> *FromRectangle(DisplayModel *dm, RectI rect);
-    static Vec<SelectionOnPage> *FromTextSelect(TextSel *textSel);
-};
-
 class LinkHandler {
     WindowInfo *owner;
     BaseEngine *engine() const;

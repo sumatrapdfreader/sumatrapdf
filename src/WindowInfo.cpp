@@ -10,6 +10,7 @@
 #include "FileWatch.h"
 #include "Notifications.h"
 #include "Print.h"
+#include "Selection.h"
 
 WindowInfo::WindowInfo(HWND hwnd) :
     dm(NULL), menu(NULL), hwndFrame(hwnd),
@@ -144,7 +145,7 @@ void WindowInfo::CreateInfotip(const TCHAR *text, RectI& rc)
     ti.lpszText = (TCHAR *)text;
     ti.rect = rc.ToRECT();
 
-    if (str::FindChar(text, '\n'))
+    if (str::FindChar(text, _T('\n')))
         SendMessage(this->hwndInfotip, TTM_SETMAXTIPWIDTH, 0, MULTILINE_INFOTIP_WIDTH_PX);
     else
         SendMessage(this->hwndInfotip, TTM_SETMAXTIPWIDTH, 0, -1);
@@ -164,50 +165,6 @@ void WindowInfo::DeleteInfotip()
 
     SendMessage(hwndInfotip, TTM_DELTOOL, 0, (LPARAM)&ti);
     infotipVisible = false;
-}
-
-RectI SelectionOnPage::GetRect(DisplayModel *dm)
-{
-    // if the page is not visible, we return an empty rectangle
-    PageInfo *pageInfo = dm->getPageInfo(pageNo);
-    if (!pageInfo || pageInfo->visibleRatio <= 0.0)
-        return RectI();
-
-    return dm->CvtToScreen(pageNo, rect);
-}
-
-Vec<SelectionOnPage> *SelectionOnPage::FromRectangle(DisplayModel *dm, RectI rect)
-{
-    Vec<SelectionOnPage> *sel = new Vec<SelectionOnPage>();
-
-    for (int pageNo = dm->pageCount(); pageNo >= 1; --pageNo) {
-        PageInfo *pageInfo = dm->getPageInfo(pageNo);
-        assert(0.0 == pageInfo->visibleRatio || pageInfo->shown);
-        if (!pageInfo->shown)
-            continue;
-
-        RectI intersect = rect.Intersect(pageInfo->pageOnScreen);
-        if (intersect.IsEmpty())
-            continue;
-
-        /* selection intersects with a page <pageNo> on the screen */
-        RectD isectD = dm->CvtFromScreen(intersect, pageNo);
-        sel->Append(SelectionOnPage(pageNo, &isectD));
-    }
-    sel->Reverse();
-
-    return sel;
-}
-
-Vec<SelectionOnPage> *SelectionOnPage::FromTextSelect(TextSel *textSel)
-{
-    Vec<SelectionOnPage> *sel = new Vec<SelectionOnPage>(textSel->len);
-
-    for (int i = textSel->len - 1; i >= 0; i--)
-        sel->Append(SelectionOnPage(textSel->pages[i], &textSel->rects[i].Convert<double>()));
-    sel->Reverse();
-
-    return sel;
 }
 
 BaseEngine *LinkHandler::engine() const

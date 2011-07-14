@@ -15,6 +15,7 @@
 #include "SumatraPDF.h" // TODO: SumatraPDF.h must be included before Notifications.h
 #include "Notifications.h"
 #include "SumatraDialogs.h"
+#include "Selection.h"
 
 static bool PrinterSupportsStretchDib(HWND hwndForMsgBox, HDC hdc)
 {

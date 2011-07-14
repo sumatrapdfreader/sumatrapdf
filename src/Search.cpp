@@ -18,6 +18,7 @@
 #include "WindowInfo.h"
 #include "Notifications.h"
 #include "PdfSync.h"
+#include "Selection.h"
 
 #include "SumatraDialogs.h"
 #include "AppTools.h"

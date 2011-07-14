@@ -188,6 +188,7 @@
     <ClCompile Include="src\Print.cpp" />
     <ClCompile Include="src\RenderCache.cpp" />
     <ClCompile Include="src\Search.cpp" />
+    <ClCompile Include="src\Selection.cpp" />
     <ClCompile Include="src\StressTesting.cpp" />
     <ClCompile Include="src\SumatraAbout.cpp" />
     <ClCompile Include="src\SumatraDialogs.cpp" />
@@ -295,6 +296,7 @@
     <ClInclude Include="src\RenderCache.h" />
     <ClInclude Include="src\Resource.h" />
     <ClInclude Include="src\Search.h" />
+    <ClInclude Include="src\Selection.h" />
     <ClInclude Include="src\StressTesting.h" />
     <ClInclude Include="src\SumatraDialogs.h" />
     <ClInclude Include="src\SumatraPDF.h" />

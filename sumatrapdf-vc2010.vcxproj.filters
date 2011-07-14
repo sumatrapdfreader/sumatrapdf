@@ -605,6 +605,9 @@
     <ClCompile Include="src\ExternalPdfViewer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Selection.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ext\jbig2dec\config_win32.h">
@@ -848,6 +851,9 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="src\ExternalPdfViewer.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Selection.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

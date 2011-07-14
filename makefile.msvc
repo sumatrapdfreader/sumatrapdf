@@ -108,7 +108,7 @@ SUMATRA_OBJS = \
 	$(OS)\ImagesEngine.obj $(OS)\PsEngine.obj $(OS)\Favorites.obj \
 	$(OS)\TableOfContents.obj $(OS)\Toolbar.obj $(OS)\Print.obj \
 	$(OS)\Notifications.obj $(OS)\Search.obj $(OS)\ChmEngine.obj \
-	$(OS)\ExternalPdfViewer.obj \
+	$(OS)\ExternalPdfViewer.obj $(OS)\Selection.obj \
 	$(UTILS_OBJS) $(OS)\ZipUtil.obj \
 	$(BZIP2_OBJS) $(MINIZIP_OBJS) $(UNRAR_OBJS) $(SYNCTEX_OBJS) \
 	$(OS)\DjVuEngine.obj $(DJVU_OBJS) $(CHMLIB_OBJS)
