@@ -445,6 +445,22 @@ void DrawCenteredText(HDC hdc, RectI& r, const TCHAR *txt, bool isRTL)
     DrawText(hdc, txt, -1, &r.ToRECT(), DT_CENTER | DT_VCENTER | DT_SINGLELINE | (isRTL ? DT_RTLREADING : 0));
 }
 
+/* Return size of a text <txt> in a given <hwnd>, taking into account its font */
+SIZE TextSizeInHwnd(HWND hwnd, const TCHAR *txt)
+{
+    SIZE sz;
+    size_t txtLen = str::Len(txt);
+    HDC dc = GetWindowDC(hwnd);
+    /* GetWindowDC() returns dc with default state, so we have to first set
+       window's current font into dc */
+    HFONT f = (HFONT)SendMessage(hwnd, WM_GETFONT, 0, 0);
+    HGDIOBJ prev = SelectObject(dc, f);
+    GetTextExtentPoint32(dc, txt, (int)txtLen, &sz);
+    SelectObject(dc, prev);
+    ReleaseDC(hwnd, dc);
+    return sz;
+}
+
 bool IsCursorOverWindow(HWND hwnd)
 {
     POINT pt;

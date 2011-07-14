@@ -3461,7 +3461,7 @@ bool OnFrameKeydown(WindowInfo *win, WPARAM key, LPARAM lparam, bool inTextfield
     return true;
 }
 
-static void OnChar(WindowInfo& win, WPARAM key)
+static void OnFrameChar(WindowInfo& win, WPARAM key)
 {
 //    DBG_OUT("char=%d,%c\n", key, (char)key);
 
@@ -3633,22 +3633,6 @@ static void RebuildMenuBar()
         win->menu = BuildMenu(win);
         DestroyMenu(oldMenu);
     }
-}
-
-/* Return size of a text <txt> in a given <hwnd>, taking into account its font */
-SIZE TextSizeInHwnd(HWND hwnd, const TCHAR *txt)
-{
-    SIZE sz;
-    size_t txtLen = str::Len(txt);
-    HDC dc = GetWindowDC(hwnd);
-    /* GetWindowDC() returns dc with default state, so we have to first set
-       window's current font into dc */
-    HFONT f = (HFONT)SendMessage(hwnd, WM_GETFONT, 0, 0);
-    HGDIOBJ prev = SelectObject(dc, f);
-    GetTextExtentPoint32(dc, txt, (int)txtLen, &sz);
-    SelectObject(dc, prev);
-    ReleaseDC(hwnd, dc);
-    return sz;
 }
 
 // TODO: the layout logic here is similar to what we do in SetSidebarVisibility()
@@ -4639,7 +4623,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
 
         case WM_CHAR:
             if (win)
-                OnChar(*win, wParam);
+                OnFrameChar(*win, wParam);
             break;
 
         case WM_KEYDOWN:

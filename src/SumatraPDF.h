@@ -93,7 +93,6 @@ void  ChangeLanguage(const char *langName);
 void  ShowOrHideToolbarGlobally();
 void  UpdateCurrentFileDisplayStateForWin(WindowInfo* win);
 bool  OnFrameKeydown(WindowInfo* win, WPARAM key, LPARAM lparam, bool inTextfield=false);
-SIZE  TextSizeInHwnd(HWND hwnd, const TCHAR *txt);
 void  SwitchToDisplayMode(WindowInfo *win, DisplayMode displayMode, bool keepContinuous=false);
 HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuLen, HMENU menu);
 void  ReloadDocument(WindowInfo *win, bool autorefresh=false);
