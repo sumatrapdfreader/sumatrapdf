@@ -39,7 +39,7 @@ DJVU_CFLAGS = $(DJVU_CFLAGS:UNICODE=IGNORE_THIS)
 DJVU_CFLAGS = $(DJVU_CFLAGS) /D "WIN32" /wd4244 /wd4267
 !endif
 
-CHMLIB_CFLAGS = $(CFLAGSOPT) /wd4244 /wd4018
+CHMLIB_CFLAGS = $(CFLAGSOPT) /D "WIN32" /D "CHM_MT" /D "PPC_BSTR" /wd4244 /wd4018
 
 SYNCTEX_OBJS = \
 	$(OE)\synctex_parser.obj $(OE)\synctex_parser_utils.obj

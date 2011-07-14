@@ -30,6 +30,9 @@
     <Filter Include="mupdf\xps">
       <UniqueIdentifier>{29dc662e-3fee-4c3b-8186-205cf82221c0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="chm">
+      <UniqueIdentifier>{87c09434-b151-4582-b0b3-eab39e5a51ef}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ext\jbig2dec\jbig2.c">
@@ -608,6 +611,12 @@
     <ClCompile Include="src\Selection.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ext\CHMLib\src\chm_lib.c">
+      <Filter>chm</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\CHMLib\src\lzx.c">
+      <Filter>chm</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ext\jbig2dec\config_win32.h">
@@ -855,6 +864,12 @@
     </ClInclude>
     <ClInclude Include="src\Selection.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\CHMLib\src\chm_lib.h">
+      <Filter>chm</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\CHMLib\src\lzx.h">
+      <Filter>chm</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

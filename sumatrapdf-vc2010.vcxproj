@@ -62,6 +62,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="baseutils\UtilTests.cpp" />
+    <ClCompile Include="ext\CHMLib\src\chm_lib.c" />
+    <ClCompile Include="ext\CHMLib\src\lzx.c" />
     <ClCompile Include="ext\libjpeg-turbo\jaricom.c" />
     <ClCompile Include="ext\libjpeg-turbo\jcapimin.c" />
     <ClCompile Include="ext\libjpeg-turbo\jcapistd.c" />
@@ -254,6 +256,8 @@
     <ClCompile Include="src\WindowInfo.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ext\CHMLib\src\chm_lib.h" />
+    <ClInclude Include="ext\CHMLib\src\lzx.h" />
     <ClInclude Include="ext\libjpeg-turbo\jchuff.h" />
     <ClInclude Include="ext\libjpeg-turbo\jconfig.h" />
     <ClInclude Include="ext\libjpeg-turbo\jdct.h" />

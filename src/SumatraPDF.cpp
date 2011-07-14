@@ -2887,6 +2887,8 @@ static void OnMenuOpen(WindowInfo& win)
         { _TR("DjVu documents"),        _T("*.djvu"),       true },
         { _TR("Postscript documents"),  _T("*.ps;*.eps"),   PsEngine::IsAvailable() },
         { _TR("Comic books"),           _T("*.cbz;*.cbr"),  true },
+        // TODO: translate after 1.7 is released
+        { _T("CHM documents"),          _T("*.chm"),        true },
     };
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling

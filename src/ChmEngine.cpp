@@ -5,6 +5,8 @@
 #include "FileUtil.h"
 #include "Vec.h"
 
+#include "chm_lib.h"
+
 class CChmEngine : public ChmEngine {
     friend ChmEngine;
 
@@ -66,23 +68,77 @@ public:
 
 protected:
     const TCHAR *fileName;
+    struct chmFile *chmHandle;
+
     int pageCount;
 
     bool Load(const TCHAR *fileName);
 };
 
-CChmEngine::CChmEngine() : fileName(NULL), pageCount(0)
+CChmEngine::CChmEngine() :
+    fileName(NULL), chmHandle(NULL), pageCount(0)
 {
 }
 
 CChmEngine::~CChmEngine()
 {
+    chm_close(chmHandle);
     free((void *)fileName);
+}
+
+static bool GetChmDataForFile(struct chmFile *chmHandle, const char *fileNameIn, str::Str<char>& dataOut)
+{
+    bool ok = false;
+    const char *fileNameTmp = NULL;
+    if (str::StartsWith(fileNameIn, "/")) {
+        if (str::StartsWith(fileNameIn, "///")) {
+            fileNameIn = fileNameIn + 2;
+        }
+    } else {
+        fileNameTmp = str::Join("/", fileNameIn);
+    }
+    const char *fileName = fileNameTmp ? fileNameTmp : fileNameIn;
+
+    struct chmUnitInfo info;
+    int res = chm_resolve_object(chmHandle, fileName, &info);
+    if (CHM_RESOLVE_SUCCESS != res) {
+        goto Exit;
+    }
+
+    if (info.length > 128*1024*1024) {
+        // don't allow anything above 128 MB
+        goto Exit;
+    }
+
+    dataOut.Reset();
+    unsigned char *buf = (unsigned char*)dataOut.MakeSpaceAt(0, (size_t)info.length);
+    if (!buf)
+        goto Exit;
+
+    if (!chm_retrieve_object(chmHandle, &info, buf, 0, info.length) ) {
+        goto Exit;
+    }
+
+Exit:
+    free((void*)fileNameTmp);
+    return ok;
 }
 
 bool CChmEngine::Load(const TCHAR *fileName)
 {
     this->fileName = str::Dup(fileName);
+    CASSERT(2 == sizeof(OLECHAR), OLECHAR_must_be_WCHAR);
+    chmHandle = chm_open((BSTR)fileName);
+    if (!chmHandle)
+        return false;
+    str::Str<char> windowsData;
+    str::Str<char> stringsData;
+    bool hasWindows = GetChmDataForFile(chmHandle, "/#WINDOWS", windowsData);
+    bool hasStrings = GetChmDataForFile(chmHandle, "/#STRINGS", windowsData);
+    if (hasWindows && hasStrings) {
+        // TODO: write me
+
+    }
     // TODO: write me
     return false;
 }
