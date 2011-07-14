@@ -3357,7 +3357,7 @@ void AdvanceFocus(WindowInfo* win)
     } tabOrder[] = {
         { win->hwndFrame,   true                                },
         { win->hwndPageBox, hasToolbar                          },
-        { win->hwndFindBox, hasToolbar && NeedsFindUI(win)     },
+        { win->hwndFindBox, hasToolbar && NeedsFindUI(win)      },
         { win->hwndTocTree, win->tocLoaded && win->tocVisible   },
         { win->hwndFavTree, gGlobalPrefs.favVisible             },
     };
