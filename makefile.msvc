@@ -107,10 +107,10 @@ SUMATRA_OBJS = \
 	$(OS)\StressTesting.obj $(OS)\UnitTests.obj $(OS)\AppTools.obj $(SUMATRA_RES) \
 	$(OS)\ImagesEngine.obj $(OS)\PsEngine.obj $(OS)\Favorites.obj \
 	$(OS)\TableOfContents.obj $(OS)\Toolbar.obj $(OS)\Print.obj \
-	$(OS)\Notifications.obj $(OS)\Search.obj \
+	$(OS)\Notifications.obj $(OS)\Search.obj $(OS)\ChmEngine.obj \
 	$(UTILS_OBJS) $(OS)\ZipUtil.obj \
 	$(BZIP2_OBJS) $(MINIZIP_OBJS) $(UNRAR_OBJS) $(SYNCTEX_OBJS) \
-	$(OS)\DjVuEngine.obj $(DJVU_OBJS)
+	$(OS)\DjVuEngine.obj $(DJVU_OBJS) $(CHMLIB_OBJS)
 
 INSTALLER_OBJS = \
 	$(OS)\Installer.obj $(INSTALLER_RES)

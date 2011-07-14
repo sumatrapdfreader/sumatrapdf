@@ -8,6 +8,7 @@ OE = $(O)\ext
 OBZ= $(O)\bzip2
 OR = $(O)\unrar
 ODV= $(O)\djvu
+OC = $(O)\chmlib
 
 SYNCTEX_CFLAGS = $(CFLAGS) /I$(EXTLIBSDIR)/synctex /I$(ZLIB_DIR) /TC
 !if "$(PLATFORM)"=="X64"
@@ -37,6 +38,8 @@ DJVU_CFLAGS = $(DJVU_CFLAGS:UNICODE=IGNORE_THIS)
 # libdjvu doesn't know about WIN64 and expects WIN32 at least in GString.h
 DJVU_CFLAGS = $(DJVU_CFLAGS) /D "WIN32" /wd4244 /wd4267
 !endif
+
+CHMLIB_CFLAGS = $(CFLAGSOPT) /wd4244 /wd4018
 
 SYNCTEX_OBJS = \
 	$(OE)\synctex_parser.obj $(OE)\synctex_parser_utils.obj
@@ -83,11 +86,15 @@ DJVU_OBJS = \
 	$(ODV)\XMLParser.obj $(ODV)\XMLTags.obj $(ODV)\ZPCodec.obj \
 	$(ODV)\ddjvuapi.obj $(ODV)\debug.obj $(ODV)\miniexp.obj
 
+CHMLIB_OBJS = \
+	$(OC)\chm_lib.obj $(OC)\lzx.obj
+
 $(OE): force
 	@if not exist $(OE) mkdir $(OE)
 	@if not exist $(OBZ) mkdir $(OBZ)
 	@if not exist $(OR) mkdir $(OR)
 	@if not exist $(ODV) mkdir $(ODV)
+	@if not exist $(OC) mkdir $(OC)
 
 {baseutils}.cpp{$(OS)}.obj::
 	$(CC) $(SUMATRA_CFLAGS) /Fo$(OS)\ /Fd$(O)\vc80.pdb $<
@@ -106,3 +113,7 @@ $(OE): force
 
 {$(EXTLIBSDIR)\libdjvu}.cpp{$(ODV)}.obj::
 	$(CC) $(DJVU_CFLAGS) /Fo$(ODV)\ /Fd$(O)\vc80.pdb $<
+
+{$(EXTLIBSDIR)\CHMLib\src}.c{$(OC)}.obj::
+	$(CC) $(CHMLIB_CFLAGS) /Fo$(OC)\ /Fd$(O)\vc80.pdb $<
+
