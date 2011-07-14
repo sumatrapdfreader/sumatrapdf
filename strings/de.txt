@@ -543,10 +543,10 @@ Remove page %d from favorites
 Seite %d aus Favoriten entfernen
 
 Rotate &Left\tCtrl+Shift+-
-Drehung &links\tStrg+Umschalt+-
+&Gegen UZS drehen\tStrg+Umschalt+-
 
 Rotate &Right\tCtrl+Shift++
-Drehung &rechts\tStrg+Umschalt++
+Im &UZS drehen\tStrg+Umschalt++
 
 Save As
 Speichern unter…
