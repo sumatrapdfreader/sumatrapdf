@@ -88,10 +88,9 @@ CFLAGSB = $(CFLAGSB) /D "UNICODE" /D "_UNICODE"
 CFLAGSB = $(CFLAGSB) /EHs-c- 
 
 !if "$(CFG)"=="rel"
-# /Os  : favor code space
 # /Ox  : maximum optimizations
 # /GL  : enable link-time code generation
-CFLAGS = $(CFLAGSB) /Os /Ox /GL /D "NDEBUG"
+CFLAGS = $(CFLAGSB) /Ox /GL /D "NDEBUG"
 CFLAGSOPT = $(CFLAGSB)
 LDFLAGS = $(LDFLAGS) /LTCG
 # /DYNAMICBASE and /NXCOMPAT for better protection against stack overflows
@@ -104,7 +103,7 @@ CFLAGSB = $(CFLAGSB) /MTd
 # /RTCs : stack frame runtime checking
 # /RTCu : ununitialized local usage checks
 CFLAGS = $(CFLAGSB) /Od /RTCs /RTCu
-CFLAGSOPT = $(CFLAGSB) /Os /Ox /D "NDEBUG"
+CFLAGSOPT = $(CFLAGSB) /Ox /D "NDEBUG"
 !endif
 
 ZLIB_CFLAGS = $(CFLAGSOPT)
