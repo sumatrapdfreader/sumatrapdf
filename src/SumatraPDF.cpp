@@ -1305,13 +1305,13 @@ static bool LoadDocIntoWindow(
     //   informs that reloading the document has failed)
     // * the user wanted to display the next/previous document in the folder
     //   through BrowseFolder
-    //   (what should happen: a fullscreen error message is displayed, so that
+    //   (what should happen: a full-canvas error message is displayed, so that
     //   folder browsing isn't broken on the first unrenderable document)
     // * a user clicks on a link to an inexistent external document in a PDF
     //   (what should happen: no new window opens at all, the error notification
     //   is displayed in the original window)
     // * a broken document is loaded through a double-click
-    //   (what should happen: a fullscreen error message is displayed, so that
+    //   (what should happen: a full-canvas error message is displayed, so that
     //   the user doesn't get distracted too much and has to hunt for the error
     //   notification - also, (manually) refreshing that document remains enabled
     //   as does opening it in Adobe Reader, if it's a PDF)
@@ -1322,6 +1322,9 @@ static bool LoadDocIntoWindow(
     //   (what should happen: all the error notifications are displayed in a single
     //   window - maybe even with a longer or no timeout, so that the user gets
     //   a chance to read them)
+    // * a broken document is loaded with -plugin
+    //   (what should happen: a full-canvas error message is displayed, as the plugin
+    //   is document-specific so there must always be a document "loaded")
     if (!win.dm) {
         // TODO: this should be "Error opening %s". Change after 1.7 is released
         ScopedMem<TCHAR> msg(str::Format(_TR("Error loading %s"), win.loadedFilePath));
