@@ -1296,19 +1296,24 @@ static bool LoadDocIntoWindow(
         ClearTocBox(&win);
 
     assert(!win.IsAboutWindow() && win.IsDocLoaded() == (win.dm != NULL));
+    if (!win.dm) {
+        // TODO: this should be "Error opening %s". Change after 1.7 is released
+        ScopedMem<TCHAR> msg(str::Format(_TR("Error loading %s"), win.loadedFilePath));
+        NotificationWnd *n = new NotificationWnd(win.hwndCanvas, msg, 5000);
+        win.notifications->Add(n);
+    }
+
     if (win.dm) {
         if (prevModel && str::Eq(win.dm->FileName(), prevModel->FileName()))
             gRenderCache.KeepForDisplayModel(prevModel, win.dm);
         delete prevModel;
-    }
-    else if (tryRepair) {
+    } else if (tryRepair) {
         DBG_OUT("failed to load file %s\n", fileName);
         delete prevModel;
         ScopedMem<TCHAR> title(str::Format(_T("%s - %s"), path::GetBaseName(fileName), SUMATRA_WINDOW_TITLE));
         win::SetText(win.hwndFrame, title);
         goto Error;
-    }
-    else {
+    } else {
         // if there is an error while reading the document and a repair is not requested
         // then fallback to the previous state
         DBG_OUT("failed to load file %s, falling back to previous DisplayModel\n", fileName);
@@ -1326,9 +1331,9 @@ static bool LoadDocIntoWindow(
                 ss.y = state->scrollPos.y;
             }
             // else let win.dm->Relayout() scroll to fit the page (again)
-        }
-        else if (startPage > win.dm->PageCount())
+        } else if (startPage > win.dm->PageCount()) {
             ss.page = win.dm->PageCount();
+        }
         zoomVirtual = state->zoomVirtual;
         rotation = state->rotation;
 
@@ -1336,8 +1341,7 @@ static bool LoadDocIntoWindow(
         win.tocState.Reset();
         if (state->tocState)
             win.tocState = *state->tocState;
-    }
-    else {
+    } else {
         win.tocVisible = gGlobalPrefs.tocVisible;
     }
     //SidebarDxFromDisplayState(state);
@@ -2429,20 +2433,12 @@ static void OnPaint(WindowInfo& win)
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(win.hwndCanvas, &ps);
 
-    if (win.IsAboutWindow()) {
+    if (win.IsAboutWindow() || !win.IsDocLoaded()) {
         if (HasPermission(Perm_SavePreferences | Perm_DiskAccess) && gGlobalPrefs.rememberOpenedFiles && gGlobalPrefs.showStartPage)
             DrawStartPage(win, win.buffer->GetDC(), gFileHistory);
         else
             DrawAboutPage(win, win.buffer->GetDC());
         win.buffer->Flush(hdc);
-    }
-    else if (!win.IsDocLoaded()) {
-        win::font::ScopedFont fontRightTxt(hdc, _T("MS Shell Dlg"), 14);
-        win::HdcScopedSelectFont scope(hdc, fontRightTxt);
-        SetBkMode(hdc, TRANSPARENT);
-        FillRect(hdc, &ps.rcPaint, gBrushNoDocBg);
-        ScopedMem<TCHAR> msg(str::Format(_TR("Error loading %s"), win.loadedFilePath));
-        DrawCenteredText(hdc, ClientRect(win.hwndCanvas), msg, IsUIRightToLeft());
     } else {
         switch (win.presentation) {
         case PM_BLACK_SCREEN:
