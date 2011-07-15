@@ -1299,8 +1299,8 @@ static bool LoadDocIntoWindow(
     if (!win.dm) {
         // TODO: this should be "Error opening %s". Change after 1.7 is released
         ScopedMem<TCHAR> msg(str::Format(_TR("Error loading %s"), win.loadedFilePath));
-        NotificationWnd *n = new NotificationWnd(win.hwndCanvas, msg, 5000);
-        win.notifications->Add(n);
+        ShowNotification(&win, msg, true, false, NG_RESPONSE_TO_ACTION);
+        str::ReplacePtr(&win.loadedFilePath, NULL);
     }
 
     if (win.dm) {
@@ -2433,7 +2433,7 @@ static void OnPaint(WindowInfo& win)
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(win.hwndCanvas, &ps);
 
-    if (win.IsAboutWindow() || !win.IsDocLoaded()) {
+    if (win.IsAboutWindow()) {
         if (HasPermission(Perm_SavePreferences | Perm_DiskAccess) && gGlobalPrefs.rememberOpenedFiles && gGlobalPrefs.showStartPage)
             DrawStartPage(win, win.buffer->GetDC(), gFileHistory);
         else

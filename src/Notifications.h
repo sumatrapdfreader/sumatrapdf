@@ -51,6 +51,7 @@ public:
     static const int TL_MARGIN = 8;
     int groupId; // for use by Notifications
 
+    // Note: in most cases use ShowNotification() and not assemble them manually
     NotificationWnd(HWND parent, const TCHAR *message, int timeoutInMS=0, bool highlight=false, NotificationWndCallback *cb=NULL) :
         hasProgress(false), hasCancel(!timeoutInMS), notificationCb(cb), highlight(highlight), progressMsg(NULL) {
         CreatePopup(parent, message);
