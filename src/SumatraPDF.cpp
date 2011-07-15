@@ -193,7 +193,7 @@ static void UpdateUITextForLanguage();
 static void UpdateToolbarAndScrollbarsForAllWindows();
 static void RebuildMenuBar();
 static bool LoadDocIntoWindow(const TCHAR *fileName, WindowInfo& win, 
-    const DisplayState *state, bool isNewWindow, bool tryRepair, 
+    const DisplayState *state, bool isNewWindow, bool allowFailure, 
     bool showWin, bool placeWindow);
 
 static void EnterFullscreen(WindowInfo& win, bool presentation=false);
@@ -988,9 +988,9 @@ void ReloadDocument(WindowInfo *win, bool autorefresh)
     // a refresh event can occur before the file is finished being written,
     // in which case the repair could fail. Instead, if the file is broken, 
     // we postpone the reload until the next autorefresh event
-    bool tryRepair = !autorefresh;
+    bool allowFailure = !autorefresh;
     ScopedMem<TCHAR> path(str::Dup(win->loadedFilePath));
-    if (!LoadDocIntoWindow(path, *win, &ds, false, tryRepair, true, false))
+    if (!LoadDocIntoWindow(path, *win, &ds, false /* isNewWindow */, allowFailure, true /* showWin */, false /* placeWindow */))
         return;
 
     if (gGlobalPrefs.showStartPage) {
@@ -1253,7 +1253,7 @@ static bool LoadDocIntoWindow(
     WindowInfo& win,       // destination window
     const DisplayState *state,   // state
     bool isNewWindow,      // if true then 'win' refers to a newly created window that needs to be resized and placed
-    bool tryRepair,        // if true then try to repair the document if it is broken
+    bool allowFailure,     // if false then keep displaying the previously loaded document if the new one is broken
     bool showWin,          // window visible or not
     bool placeWindow)      // if true then the Window will be moved/sized according to the 'state' information even if the window was already placed before (isNewWindow=false)
 {
@@ -1292,22 +1292,51 @@ static bool LoadDocIntoWindow(
 
     // ToC items might hold a reference to an Engine, so make sure to
     // delete them before destroying the whole DisplayModel
-    if (win.dm || tryRepair)
+    if (win.dm || allowFailure)
         ClearTocBox(&win);
 
     assert(!win.IsAboutWindow() && win.IsDocLoaded() == (win.dm != NULL));
+    /* TODO: this doesn't handle well several use cases:
+    // * a document gets refreshed too early during a recompilation
+    //   (what should happen: title bar changes to "[Changes detected; refreshing] ...",
+    //   previous document remains loaded)
+    // * a document is intentionally refreshed intentionally
+    //   (what should happen: the previous document remains loaded, a notification
+    //   informs that reloading the document has failed)
+    // * the user wanted to display the next/previous document in the folder
+    //   through BrowseFolder
+    //   (what should happen: a fullscreen error message is displayed, so that
+    //   folder browsing isn't broken on the first unrenderable document)
+    // * a user clicks on a link to an inexistent external document in a PDF
+    //   (what should happen: no new window opens at all, the error notification
+    //   is displayed in the original window)
+    // * a broken document is loaded through a double-click
+    //   (what should happen: a fullscreen error message is displayed, so that
+    //   the user doesn't get distracted too much and has to hunt for the error
+    //   notification - also, (manually) refreshing that document remains enabled
+    //   as does opening it in Adobe Reader, if it's a PDF)
+    // * a user fails to enter the correct password three times
+    //   (what should happen: display an error notification if isNewWindow == false,
+    //   else don't display any window at all but instead an error message box)
+    // * a user passes several invalid paths on the command line
+    //   (what should happen: all the error notifications are displayed in a single
+    //   window - maybe even with a longer or no timeout, so that the user gets
+    //   a chance to read them)
     if (!win.dm) {
         // TODO: this should be "Error opening %s". Change after 1.7 is released
         ScopedMem<TCHAR> msg(str::Format(_TR("Error loading %s"), win.loadedFilePath));
         ShowNotification(&win, msg, true, false, NG_RESPONSE_TO_ACTION);
+        // TODO: CloseWindow() does slightly more than this
+        //       (also, some code presumes that there is at least one window with
+        //        IsAboutWindow() == true and that that window is gWindows[0])
         str::ReplacePtr(&win.loadedFilePath, NULL);
     }
-
+    */
     if (win.dm) {
         if (prevModel && str::Eq(win.dm->FileName(), prevModel->FileName()))
             gRenderCache.KeepForDisplayModel(prevModel, win.dm);
         delete prevModel;
-    } else if (tryRepair) {
+    } else if (allowFailure) {
         DBG_OUT("failed to load file %s\n", fileName);
         delete prevModel;
         ScopedMem<TCHAR> title(str::Format(_T("%s - %s"), path::GetBaseName(fileName), SUMATRA_WINDOW_TITLE));
@@ -1502,7 +1531,7 @@ WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin, b
     }
 
     win->suppressPwdUI = suppressPwdUI;
-    if (!LoadDocIntoWindow(fullpath, *win, ds, isNewWindow, true, showWin, true)) {
+    if (!LoadDocIntoWindow(fullpath, *win, ds, isNewWindow, true /* allowFailure */, showWin, true /* placeWindow */)) {
         /* failed to open */
         if (gFileHistory.MarkFileInexistent(fullpath))
             SavePrefs();
@@ -2439,6 +2468,14 @@ static void OnPaint(WindowInfo& win)
         else
             DrawAboutPage(win, win.buffer->GetDC());
         win.buffer->Flush(hdc);
+    } else if (!win.IsDocLoaded()) {
+        // TODO: replace with notifications as far as reasonably possible
+        win::font::ScopedFont fontRightTxt(hdc, _T("MS Shell Dlg"), 14);
+        win::HdcScopedSelectFont scope(hdc, fontRightTxt);
+        SetBkMode(hdc, TRANSPARENT);
+        FillRect(hdc, &ps.rcPaint, gBrushNoDocBg);
+        ScopedMem<TCHAR> msg(str::Format(_TR("Error loading %s"), win.loadedFilePath));
+        DrawCenteredText(hdc, ClientRect(win.hwndCanvas), msg, IsUIRightToLeft());
     } else {
         switch (win.presentation) {
         case PM_BLACK_SCREEN:
