@@ -211,7 +211,8 @@ find_changing_color(const unsigned char *line, int x, int w, int color)
 	if (!line)
 		return w;
 
-	x = find_changing(line, x, w);
+	/* SumatraPDF: x (== fax->a) is 0 when it should be of -1 at the start of a line */
+	x = find_changing(line, x > 0 || !color ? x : -1, w);
 
 	if (x < w && getbit(line, x) != color)
 		x = find_changing(line, x, w);
@@ -559,12 +560,6 @@ loop:
 	{
 		fax->eolc = 0;
 		error = dec1d(fax);
-		/* SumatraPDF: let a partially broken image be padded */
-		if (error && p > buf)
-		{
-			fz_catch(error, "cannot decode part of 1d code");
-			goto rtc;
-		}
 		if (error)
 			return fz_rethrow(error, "cannot decode 1d code");
 	}
