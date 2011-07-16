@@ -159,6 +159,16 @@ fz_append_display_node(fz_display_list *list, fz_display_node *node)
 			list->top--;
 			update = list->stack[list->top].update;
 			if (list->tiled == 0) {
+				/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692346 */
+				if (!fz_is_infinite_rect(list->stack[list->top].rect))
+				{
+					/* add some fuzz at the edges, as especially glyph rects
+					 * are sometimes not actually completely bounding the glyph */
+					list->stack[list->top].rect.x0 -= 20;
+					list->stack[list->top].rect.y0 -= 20;
+					list->stack[list->top].rect.x1 += 20;
+					list->stack[list->top].rect.y1 += 20;
+				}
 				if (update != NULL) {
 					*update = fz_intersect_rect(*update, list->stack[list->top].rect);
 					node->rect = *update;
