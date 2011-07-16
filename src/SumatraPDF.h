@@ -98,4 +98,10 @@ HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuLen, HMENU menu);
 void  ReloadDocument(WindowInfo *win, bool autorefresh=false);
 void  PaintTransparentRectangle(HDC hdc, RectI screenRc, RectI *rect, COLORREF selectionColor, BYTE alpha = 0x5f, int margin = 1);
 
+WindowInfo* FindWindowInfoByFile(TCHAR *file);
+WindowInfo* FindWindowInfoByHwnd(HWND hwnd);
+WindowInfo* FindWindowInfoBySyncFile(TCHAR *file);
+WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win=NULL,
+                         bool showWin=true, bool forceReuse=false, bool suppressPwdUI=false);
+
 #endif

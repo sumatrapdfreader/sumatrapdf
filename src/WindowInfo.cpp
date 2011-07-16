@@ -195,7 +195,7 @@ void LinkHandler::GotoLink(PageDestination *link)
     else if (str::Eq(type, "LaunchEmbedded")) {
         // open embedded PDF documents in a new window
         if (path && str::StartsWith(path.Get(), dm->FileName()))
-            LoadDocument(path);
+            LoadDocument(path, owner);
         // offer to save other attachments to a file
         else
             link->SaveEmbedded(LinkSaver(owner->hwndFrame, path));
@@ -207,7 +207,7 @@ void LinkHandler::GotoLink(PageDestination *link)
             ScopedMem<TCHAR> basePath(path::GetDir(dm->FileName()));
             ScopedMem<TCHAR> combinedPath(path::Join(basePath, path));
             // TODO: respect fz_to_bool(fz_dict_gets(link->dest, "NewWindow")) for ScrollToEx
-            WindowInfo *newWin = LoadDocument(combinedPath);
+            WindowInfo *newWin = LoadDocument(combinedPath, owner);
 
             if (str::Eq(type, "ScrollToEx") && newWin && newWin->IsDocLoaded())
                 newWin->linkHandler->ScrollTo(link);

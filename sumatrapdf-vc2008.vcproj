@@ -211,6 +211,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\src\Notifications.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\src\Notifications.h"
 					>
 				</File>

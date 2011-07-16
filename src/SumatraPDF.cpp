@@ -1503,7 +1503,25 @@ WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin, b
 
     ScopedMem<TCHAR> fullpath(path::Normalize(fileName));
     if (!fullpath)
-        return win;
+        return NULL;
+
+    // fail with a notification if the file doesn't exist and
+    // there is a window the user has just been interacting with
+    if (win && !forceReuse && !file::Exists(fullpath)) {
+        // TODO: reword to "File %s not found!" after 1.7 is released
+        ScopedMem<TCHAR> msg(str::Format(_TR("Error loading %s"), fullpath));
+        ShowNotification(win, msg, true /* autoDismiss */, true /* highlight */);
+        // display the notification ASAP (SavePrefs() can introduce a notable delay)
+        win->RedrawAll(true);
+
+        if (gFileHistory.MarkFileInexistent(fullpath)) {
+            SavePrefs();
+            // update the Frequently Read list
+            if (1 == gWindows.Count() && gWindows[0]->IsAboutWindow())
+                gWindows[0]->RedrawAll(true);
+        }
+        return NULL;
+    }
 
     bool isNewWindow = false;
     if (!win && 1 == gWindows.Count() && gWindows[0]->IsAboutWindow()) {
@@ -2291,9 +2309,9 @@ static void OnMouseLeftButtonUp(WindowInfo& win, int x, int y, WPARAM key)
                 win.RedrawAll(true);
             } else if (!str::StartsWithI(url, _T("http:")) &&
                        !str::StartsWithI(url, _T("https:")) &&
-                       !str::StartsWithI(url, _T("mailto:")))
+                       !str::StartsWithI(url, _T("mailto:"))) {
                 LoadDocument(url, &win);
-            else
+            } else
                 LaunchBrowser(url);
         }
         win.url = NULL;
