@@ -22,6 +22,9 @@ Contributor: Гоце Митевски (http://www.nicer2.com)
 &Back\tAlt+Left Arrow
 Назад\tAlt+Left Arrow
 
+&Book View\tCtrl+8
+Книга\tCtrl+8
+
 &Close\tCtrl+W
 &Затвори\tCtrl+W
 
@@ -36,6 +39,9 @@ Contributor: Гоце Митевски (http://www.nicer2.com)
 
 &Even pages only
 Само &парни страници
+
+&Facing\tCtrl+7
+Две страници\tCtrl+7
 
 &File
 &Датотека
@@ -85,11 +91,17 @@ Contributor: Гоце Митевски (http://www.nicer2.com)
 &Open\tCtrl+O
 &Отвори\tCtrl+O
 
+&Open Document
+Отвори документ
+
 &Options...
 &Опции...
 
 &Password:
 &Лозинка:
+
+&Pin Document
+Закачи документ
 
 &Previous Page\tLeft Arrow
 Претходна страница\t<-
@@ -109,6 +121,9 @@ Contributor: Гоце Митевски (http://www.nicer2.com)
 &Remember these settings for each document
 &Запомни ги овие поставувања за секој документ
 
+&Remove Document
+Отстрани документ
+
 &Save As...
 &Зачувај како...
 
@@ -120,6 +135,9 @@ Contributor: Гоце Митевски (http://www.nicer2.com)
 
 &Shrink pages to printable area (if necessary)
 &Намали страници според зона за печатење (ако е потребно)
+
+&Single Page\tCtrl+6
+Единечна страница\tCtrl+6
 
 &Skip this version
 &Прескокни ја оваа верзија
@@ -139,8 +157,23 @@ Contributor: Гоце Митевски (http://www.nicer2.com)
 (of %d)
 (од %d)
 
+(page %d)
+(страница %d)
+
 About SumatraPDF
 За SumatraPDF
+
+Add Favorite
+Додади омилен
+
+Add page %d to favorites
+Додади страница %d во омилени
+
+Add page %d to favorites with (optional) name:
+Додади страница %d во омилени со име по избор:
+
+Add to favorites
+Додади во омилени
 
 Advanced
 Напредни
@@ -209,13 +242,13 @@ Comic books
 Стрипови
 
 Continuous
-Непрекинат приказ
+Непрекинат поглед
 
 Continuous Book View
-Книга со непрекинат приказ
+Книга со непрекинат поглед
 
 Continuous Facing
-Непрекинат приказ со две страници
+Непрекинат поглед со две страници
 
 Contribute Translation
 Учествувај во преведувањето на оваа апликација
@@ -229,6 +262,9 @@ Copy Co&mment
 Copying text was denied (copying as image only)
 Копирањето на текстот беше одбиено (копирање само во вид на слика)
 
+Could not obtain Printer properties
+Не можам да дојдам до својствата на печатачот
+
 Could not open Printer
 Не можам да пристапам до печатачот
 
@@ -241,20 +277,26 @@ Couldn't render the page
 Created:
 Создадено на:
 
+Current file
+Активна датотека
+
 Custom &Zoom...\tCtrl+Y
 &Зумирање по избор...\tCtrl+Y
 
 Default &Layout:
-Основен &изглед:
+Основен поглед:
 
 Default &Zoom:
 Основно &зумирање:
 
 Default PDF reader can't be changed in portable mode
-Основниот PDF читач не може да се промени во мобилен режим на работа
+Основниот читач на PDF не може да работи во мобилен режим
 
 Denied Permissions:
 Одбиени привилегии:
+
+DjVu documents
+DjVu документи
 
 Document Properties
 Својства на документ
@@ -277,6 +319,9 @@ Enter the command-line to invoke when you double-click on the PDF document:
 Error loading %s
 Грешка при вчитување %s
 
+F&avorites
+Омилени
+
 F&orward\tAlt+Right Arrow
 Напред\tAlt+Right Arrow
 
@@ -288,6 +333,9 @@ Facing
 
 Failed to save a file
 Зачувување на PDF документот не успеа
+
+Favorites
+Омилени
 
 File Size:
 Големина на датотека:
@@ -368,7 +416,7 @@ Make SumatraPDF default application for PDF files?
 Дали да ја направам SumatraPDF основна апликација за PDF датотеки?
 
 Make SumatraPDF my default PDF reader
-Направи ја SumatraPDF основен PDF читач
+Направи ја SumatraPDF основен читач на PDF
 
 Match Case
 Разликувај мали и големи букви
@@ -436,6 +484,9 @@ PDF документи
 Pa&ge...\tCtrl+G
 Страница...\tCtrl+G
 
+Page %d
+страница %d
+
 Page Size:
 Големина на страница:
 
@@ -451,14 +502,23 @@ Page:
 Please wait - rendering...
 Ве молам почекајте - создавам приказ...
 
+Postscript documents
+Postscript документи
+
 Pr&esentation\tCtrl+L
 Презентација\tCtrl+L
 
 Previous Page
 Претходна страница
 
+Print
+Печати
+
 Print range
 Опсег за печатење
+
+Printer with given name doesn't exist
+Не постои печатач со зададеното име
 
 Printing is still in progress. Abort and start over?
 Печатењето трае сè уште. Да го запрам и да почнам одново?
@@ -471,6 +531,12 @@ Printing problem.
 
 Remember &opened files
 Запомни ги &отворените датотеки
+
+Remove from favorites
+Отстрани од омилени
+
+Remove page %d from favorites
+Отстрани страница %d од омилени
 
 Rotate &Left\tCtrl+Shift+-
 Ротирај на лево\tCtrl+Shift+-
@@ -508,6 +574,9 @@ Show &Toolbar
 Show &pages continuously
 Прикажувај страници непрекинато
 
+Show Favorites
+Прикажи омилени
+
 Show frequently read
 Прикажи често читани
 
@@ -516,6 +585,9 @@ Show the &bookmarks sidebar when available
 
 Single Page
 Една страница
+
+Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
+Извинете, ова не требаше да се случи!\n\nДоколку сакате да ни помогнете да го отстраниме овој проблем, Ве молам изберете 'Откажи'.
 
 Source file %s has no synchronization point
 Изворната датотека %s нема синхронизациска точка
@@ -533,10 +605,10 @@ SumatraPDF crashed
 SumatraPDF се сруши
 
 SumatraPDF is your default PDF reader
-SumatraPDF е Ваш основен PDF читач
+SumatraPDF е Вашиот основен читач на PDF
 
 SumatraPDF should now be your default PDF reader
-Сега SumatraPDF би требало да е Ваш основен PDF читач
+Сега SumatraPDF би требало да е Вашиот основен читач на PDF
 
 Synchronization file cannot be opened
 Синхронизациската датотека не може да се отвори
@@ -588,30 +660,4 @@ copying text
 
 printing document
 печатам документ
-
-# Untranslated:
-#&Book View\tCtrl+8
-#&Facing\tCtrl+7
-#&Open Document
-#&Pin Document
-#&Remove Document
-#&Single Page\tCtrl+6
-#(page %d)
-#Add Favorite
-#Add page %d to favorites
-#Add page %d to favorites with (optional) name:
-#Add to favorites
-#Could not obtain Printer properties
-#Current file
-#DjVu documents
-#F&avorites
-#Favorites
-#Page %d
-#Postscript documents
-#Print
-#Printer with given name doesn't exist
-#Remove from favorites
-#Remove page %d from favorites
-#Show Favorites
-#Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
 
