@@ -225,17 +225,16 @@ static void AppendFavMenuItems(HMENU m, FileFavs *f, UINT& idx, bool combined, b
     if (items > MAX_FAV_MENUS) {
         items = MAX_FAV_MENUS;
     }
-    for (size_t i=0; i<items; i++)
-    {
+    for (size_t i = 0; i < items; i++) {
         FavName *fn = f->favNames.At(i);
         fn->menuId = idx++;
-        if (combined) {
-            ScopedMem<TCHAR> s(FavCompactReadableName(f, fn, isCurrent));
-            AppendMenu(m, MF_STRING, (UINT_PTR)fn->menuId, s);
-        } else {
-            ScopedMem<TCHAR> s(FavReadableName(fn));
-            AppendMenu(m, MF_STRING, (UINT_PTR)fn->menuId, s);
-        }
+        ScopedMem<TCHAR> s;
+        if (combined)
+            s.Set(FavCompactReadableName(f, fn, isCurrent));
+        else
+            s.Set(FavReadableName(fn));
+        s.Set(MenuSafeString(s));
+        AppendMenu(m, MF_STRING, (UINT_PTR)fn->menuId, s);
     }
 }
 
@@ -306,10 +305,12 @@ static void AppendFavMenus(HMENU m, const TCHAR *currFilePath)
             sub = CreateMenu();
         AppendFavMenuItems(sub, f, menuId, combined, f == currFileFav);
         if (!combined) {
-            if (f == currFileFav)
+            if (f == currFileFav) {
                 AppendMenu(m, MF_POPUP | MF_STRING, (UINT_PTR)sub, _TR("Current file"));
-            else
-                AppendMenu(m, MF_POPUP | MF_STRING, (UINT_PTR)sub, fileName);
+            } else {
+                ScopedMem<TCHAR> s(MenuSafeString(fileName));
+                AppendMenu(m, MF_POPUP | MF_STRING, (UINT_PTR)sub, s);
+            }
         }
     }
 }

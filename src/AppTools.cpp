@@ -81,6 +81,19 @@ int FileTimeDiffInSecs(FILETIME& ft1, FILETIME& ft2)
     return (int)diff;
 }
 
+/* Make a string safe to be displayed as a menu item
+   (preserving all & so that they don't get swallowed)
+   Caller needs to free() the result. */
+TCHAR *MenuSafeString(const TCHAR *str)
+{
+    if (!str::FindChar(str, '&'))
+        return str::Dup(str);
+
+    StrVec ampSplitter;
+    ampSplitter.Split(str, _T("&"));
+    return ampSplitter.Join(_T("&&"));
+}
+
 
 /* Return the full exe path of my own executable.
    Caller needs to free() the result. */

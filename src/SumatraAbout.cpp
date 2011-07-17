@@ -582,7 +582,7 @@ void DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory)
     RectI headerRect(offset.x, rc.y + (DOCLIST_MARGIN_TOP - txtSize.cy) / 2, txtSize.cx, txtSize.cy);
     if (isRtl)
         headerRect.x = rc.dx - offset.x - headerRect.dx;
-    DrawText(hdc, txt, -1, &headerRect.ToRECT(), isRtl ? DT_RTLREADING : DT_LEFT);
+    DrawText(hdc, txt, -1, &headerRect.ToRECT(), (isRtl ? DT_RTLREADING : DT_LEFT) | DT_NOPREFIX);
 
     SelectObject(hdc, fontLeftTxt);
     SelectObject(hdc, GetStockObject(NULL_BRUSH));
@@ -617,7 +617,7 @@ void DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory)
             RectI rect(page.x + iconSpace, page.y + THUMBNAIL_DY + 3, THUMBNAIL_DX - iconSpace, iconSpace);
             if (isRtl)
                 rect.x -= iconSpace;
-            DrawText(hdc, path::GetBaseName(state->filePath), -1, &rect.ToRECT(), DT_SINGLELINE | DT_END_ELLIPSIS | (isRtl ? DT_RIGHT : DT_LEFT));
+            DrawText(hdc, path::GetBaseName(state->filePath), -1, &rect.ToRECT(), DT_SINGLELINE | DT_END_ELLIPSIS | DT_NOPREFIX | (isRtl ? DT_RIGHT : DT_LEFT));
 
             SHFILEINFO sfi;
             HIMAGELIST himl = (HIMAGELIST)SHGetFileInfo(state->filePath, 0, &sfi, sizeof(sfi), SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES);

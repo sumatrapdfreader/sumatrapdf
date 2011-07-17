@@ -58,6 +58,7 @@ public:
 bool IsValidProgramVersion(char *txt);
 int CompareVersion(TCHAR *txt1, TCHAR *txt2);
 int FileTimeDiffInSecs(FILETIME& ft1, FILETIME& ft2);
+TCHAR *MenuSafeString(const TCHAR *str);
 
 TCHAR *GetExePath();
 bool IsRunningInPortableMode();

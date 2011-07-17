@@ -442,7 +442,7 @@ void PaintLine(HDC hdc, RectI& rect)
 void DrawCenteredText(HDC hdc, RectI& r, const TCHAR *txt, bool isRTL)
 {    
     SetBkMode(hdc, TRANSPARENT);
-    DrawText(hdc, txt, -1, &r.ToRECT(), DT_CENTER | DT_VCENTER | DT_SINGLELINE | (isRTL ? DT_RTLREADING : 0));
+    DrawText(hdc, txt, -1, &r.ToRECT(), DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | (isRTL ? DT_RTLREADING : 0));
 }
 
 /* Return size of a text <txt> in a given <hwnd>, taking into account its font */

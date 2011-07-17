@@ -39,7 +39,7 @@ void NotificationWnd::UpdateWindowPosition(const TCHAR *message, bool init)
     RECT rc = ClientRect(self).ToRECT();
     HDC hdc = GetDC(self);
     HFONT oldfnt = SelectFont(hdc, font);
-    DrawText(hdc, message, -1, &rc, DT_CALCRECT | DT_SINGLELINE);
+    DrawText(hdc, message, -1, &rc, DT_CALCRECT | DT_SINGLELINE | DT_NOPREFIX);
     SelectFont(hdc, oldfnt);
     ReleaseDC(self, hdc);
 
@@ -138,7 +138,7 @@ LRESULT CALLBACK NotificationWnd::WndProc(HWND hwnd, UINT message, WPARAM wParam
         if (wnd->hasCancel)
             rectMsg.dx -= 20;
         ScopedMem<TCHAR> text(win::GetText(hwnd));
-        DrawText(hdc, text, -1, &rectMsg.ToRECT(), DT_SINGLELINE);
+        DrawText(hdc, text, -1, &rectMsg.ToRECT(), DT_SINGLELINE | DT_NOPREFIX);
 
         if (wnd->hasCancel)
             DrawFrameControl(hdc, &GetCancelRect(hwnd).ToRECT(), DFC_CAPTION, DFCS_CAPTIONCLOSE | DFCS_FLAT);

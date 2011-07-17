@@ -109,7 +109,7 @@ static void RelayoutTocItem(LPNMTVCUSTOMDRAW ntvcd)
 
         SetTextColor(ncd->hdc, GetSysColor(COLOR_WINDOWTEXT));
         SetBkColor(ncd->hdc, GetSysColor(COLOR_WINDOW));
-        DrawText(ncd->hdc, label, -1, &rcPageNo, DT_SINGLELINE | DT_VCENTER);
+        DrawText(ncd->hdc, label, -1, &rcPageNo, DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX);
 
         // Reduce the size of the label and cut off the page number
         rcItem.right = max(rcItem.right - txtSize.cx, 0);

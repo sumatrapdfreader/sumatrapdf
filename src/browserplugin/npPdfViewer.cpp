@@ -311,35 +311,35 @@ LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lPar
         hFont = (HFONT)SelectObject(hDCBuffer, hFont);
         SetTextColor(hDCBuffer, RGB(0, 0, 0));
         SetBkMode(hDCBuffer, TRANSPARENT);
-        DrawText(hDCBuffer, data->message, -1, &rcClient.ToRECT(), DT_CENTER | DT_SINGLELINE | DT_VCENTER);
+        DrawCenteredText(hDCBuffer, rcClient, data->message);
         
         // draw a progress bar, if a download is in progress
         if (0 < data->progress && data->progress <= 1)
         {
             SIZE msgSize;
-            RECT rcProgress = rcClient.ToRECT();
+            RectI rcProgress = rcClient;
             
             HBRUSH brushProgress = CreateSolidBrush(RGB(0x80, 0x80, 0xff));
             GetTextExtentPoint32(hDCBuffer, data->message, (int)str::Len(data->message), &msgSize);
-            InflateRect(&rcProgress, -(rcProgress.right - rcProgress.left - msgSize.cx) / 2, (-(rcProgress.bottom - rcProgress.top - msgSize.cy) / 2) + 2);
-            OffsetRect(&rcProgress, 0, msgSize.cy + 4 + 2);
-            FillRect(hDCBuffer, &rcProgress, (HBRUSH)GetStockObject(WHITE_BRUSH));
-            RECT rcProgressAll = rcProgress;
-            rcProgress.right = (LONG)(rcProgress.left + data->progress * (rcProgress.right - rcProgress.left));
-            FillRect(hDCBuffer, &rcProgress, brushProgress);
+            rcProgress.Inflate(-(rcProgress.dx - msgSize.cx) / 2, -(rcProgress.dy - msgSize.cy) / 2 + 2);
+            rcProgress.Offset(0, msgSize.cy + 4 + 2);
+            FillRect(hDCBuffer, &rcProgress.ToRECT(), (HBRUSH)GetStockObject(WHITE_BRUSH));
+            RectI rcProgressAll = rcProgress;
+            rcProgress.dx = (int)(data->progress * rcProgress.dx);
+            FillRect(hDCBuffer, &rcProgress.ToRECT(), brushProgress);
             DeleteObject(brushProgress);
             
             ScopedMem<TCHAR> currSize(FormatSizeSuccint(data->currSize));
             if (0 == data->totalSize || data->currSize > data->totalSize)
             {
                 // total size unknown or bogus => show just the current size
-                DrawText(hDCBuffer, currSize, -1, &rcProgressAll, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
+                DrawCenteredText(hDCBuffer, rcProgressAll, currSize);
             }
             else
             {
                 ScopedMem<TCHAR> totalSize(FormatSizeSuccint(data->totalSize));
                 ScopedMem<TCHAR> s(str::Format(_T("%s of %s"), currSize, totalSize));
-                DrawText(hDCBuffer, s, -1, &rcProgressAll, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
+                DrawCenteredText(hDCBuffer, rcProgressAll, s);
             }
         }
         
