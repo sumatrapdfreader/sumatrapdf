@@ -12,7 +12,7 @@ Contributor: Христо Бенев (http://hbcom.info)
 Contributor: Nikolay Ikonomov
 
 &About
-&За програмата...
+За &програмата
 
 &Actual Size\tCtrl+1
 &Оригинален размер\tCtrl+1
@@ -78,7 +78,7 @@ Contributor: Nikolay Ikonomov
 &Същия текст
 
 &Next Page\tRight Arrow
-&Следваща страница\tДясна стрелка
+Следва&ща страница\tДясна стрелка
 
 &No
 &Не
@@ -105,7 +105,7 @@ Contributor: Nikolay Ikonomov
 &Закачи документ
 
 &Previous Page\tLeft Arrow
-&Предишна страница\tЛява стрелка
+Преди&шна страница\tЛява стрелка
 
 &Print...
 &Отпечатване...
@@ -126,10 +126,10 @@ Contributor: Nikolay Ikonomov
 &Премахни документ
 
 &Save As...
-&Запамети като...
+Запа&мети като...
 
 &Save As...\tCtrl+S
-&Запамети като...\tCtrl+S
+Запа&мети като...\tCtrl+S
 
 &Settings
 &Настройки
@@ -153,13 +153,28 @@ Contributor: Nikolay Ikonomov
 &Да
 
 &Zoom
-&Мащаб
+&Увеличение
 
 (of %d)
 (от %d)
 
+(page %d)
+(страница %d)
+
 About SumatraPDF
 За SumatraPDF
+
+Add Favorite
+Добави Любими
+
+Add page %d to favorites
+Добави страница %d към любимите
+
+Add page %d to favorites with (optional) name:
+Добави страница %d към любимите с име (по избор):
+
+Add to favorites
+Добави към любимите
 
 Advanced
 Допълнителни
@@ -210,7 +225,7 @@ Can't connect to the Internet (error %#x).
 Няма връзка с Интернет (грешка %#x).
 
 Cancel
-Откажи
+Отказ
 
 Cannot print this file
 Файлът не може да бъде отпечатан
@@ -248,6 +263,9 @@ Copy Co&mment
 Copying text was denied (copying as image only)
 Текстът не може да бъде копиран (копиране само като картинка)
 
+Could not obtain Printer properties
+Настройките на принтера не са намерени
+
 Could not open Printer
 Принтерът не е достъпен
 
@@ -259,6 +277,9 @@ Couldn't render the page
 
 Created:
 Създаден:
+
+Current file
+Сегашен файл
 
 Custom &Zoom...\tCtrl+Y
 Увеличение по &избор...\tCtrl+Y
@@ -285,7 +306,7 @@ Download
 Свали
 
 E&xit\tCtrl+Q
-&Изход\tCtrl+Q
+Из&ход\tCtrl+Q
 
 Enter password
 Въведете парола
@@ -299,8 +320,11 @@ Enter the command-line to invoke when you double-click on the PDF document:
 Error loading %s
 Грешка при зареждане на %s
 
+F&avorites
+&Любими
+
 F&orward\tAlt+Right Arrow
-На&пред\tAlt+Дясна стрелка
+Нап&ред\tAlt+Дясна стрелка
 
 F&ullscreen\tCtrl+Shift+L
 &Цял Екран\tCtrl+Shift+L
@@ -310,6 +334,9 @@ Facing
 
 Failed to save a file
 Грешка при запаметяване на файла
+
+Favorites
+Любими
 
 File Size:
 Размер на файла:
@@ -345,10 +372,10 @@ Fit Content
 Оразмери по съдържание
 
 Fit Page
-Оразмери по &височина
+Оразмери по височина
 
 Fit Width
-Оразмери по &ширина
+Оразмери по ширина
 
 Fit Width and Show Pages Continuously
 Оразмери по широчина и покажи страниците непрекъснато
@@ -420,7 +447,7 @@ Number of Pages:
 Брой страници:
 
 OK
-Приеми
+OK
 
 Open
 Отвори
@@ -458,6 +485,9 @@ PDF документи
 Pa&ge...\tCtrl+G
 &Страница...\tCtrl+G
 
+Page %d
+Страница %d
+
 Page Size:
 Размер на страницата:
 
@@ -465,7 +495,7 @@ Page number %u inexistant
 Страница с номер %u не съществува
 
 Page scaling
-Мащабиране на страницата
+Оразмеряване на страницата
 
 Page:
 Страница:
@@ -488,6 +518,9 @@ Print
 Print range
 Отпечатване на някои страници
 
+Printer with given name doesn't exist
+Принтер с това име не съществува
+
 Printing is still in progress. Abort and start over?
 Отпечатването се извършва. Прекъсни и започни отначало?
 
@@ -500,6 +533,12 @@ Printing problem.
 Remember &opened files
 &Запомни отворените файлове
 
+Remove from favorites
+Премахни от любимите
+
+Remove page %d from favorites
+Премахни страница %d от любимите
+
 Rotate &Left\tCtrl+Shift+-
 Завърти на&ляво\tCtrl+Shift+-
 
@@ -510,7 +549,7 @@ Save As
 Запамети като
 
 Save S&hortcut...\tCtrl+Shift+S
-Запамети кратък път към файла...\tCtrl+Shift+S
+Запамети &кратък път към файла...\tCtrl+Shift+S
 
 Searching %d of %d...
 Търсене в страница %d от %d...
@@ -525,16 +564,19 @@ Select content with Ctrl+left mouse button
 Изберете съдържание с Ctrl и левия бутон на мишката
 
 Send by &E-mail...
-Изпрати по емайл
+Изпрати по &имейл
 
 Set inverse search command-line
 Въведи параметри за обратно търсене
 
 Show &Toolbar
-Покажи лентата с &инструменти
+Лен&та с инструменти
 
 Show &pages continuously
 &Непрекъснати страници
+
+Show Favorites
+Покажи Любими
 
 Show frequently read
 Покажи често четените
@@ -546,7 +588,7 @@ Single Page
 Една страница
 
 Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
-Извинете, това не би трябвало да се случва!\n\nНатиснете 'Откажи', ако искате да ни помогнете да поправим причината за това спиране.
+Извинете, това не би трябвало да се случва!\n\nНатиснете 'Отказ', ако искате да ни помогнете да поправим причината за това спиране.
 
 Source file %s has no synchronization point
 Източникът %s няма точка на синхронизация
@@ -619,20 +661,4 @@ copying text
 
 printing document
 отпечатване на документ
-
-# Untranslated:
-#(page %d)
-#Add Favorite
-#Add page %d to favorites
-#Add page %d to favorites with (optional) name:
-#Add to favorites
-#Could not obtain Printer properties
-#Current file
-#F&avorites
-#Favorites
-#Page %d
-#Printer with given name doesn't exist
-#Remove from favorites
-#Remove page %d from favorites
-#Show Favorites
 

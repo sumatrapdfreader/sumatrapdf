@@ -172,6 +172,9 @@ Přidat oblíbenou položku
 Add page %d to favorites
 Přidat stránku %d k oblíbeným...
 
+Add page %d to favorites with (optional) name:
+Přidat stránku %d k oblíbeným s (volitelným) názvem:
+
 Add to favorites
 Přidat k oblíbeným
 
@@ -660,7 +663,4 @@ kopírování textu
 
 printing document
 tisk dokumentu
-
-# Untranslated:
-#Add page %d to favorites with (optional) name:
 
