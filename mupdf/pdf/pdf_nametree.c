@@ -59,6 +59,11 @@ pdf_lookup_name_imp(fz_obj *node, fz_obj *needle)
 			else
 				return val;
 		}
+
+		/* SumatraPDF: Adobe Reader seems to handle unsorted /Names, as long as the /Limits are correct */
+		for (l = 0; l < fz_array_len(names) / 2; l++)
+			if (!fz_objcmp(needle, fz_array_get(names, l * 2)))
+				return fz_array_get(names, l * 2 + 1);
 	}
 
 	return NULL;
