@@ -13,7 +13,7 @@ Next version:
 * improved support for right-to-left languages e.g. Arabic
 * more robust installer (requires to close programs, like a browser, that
   are using Sumatra components, preventing them from being over-written
-  during installtion)
+  during installation)
 
 1.6 (2011-05-30)
 

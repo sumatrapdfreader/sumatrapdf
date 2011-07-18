@@ -617,6 +617,9 @@
     <ClCompile Include="ext\CHMLib\src\lzx.c">
       <Filter>chm</Filter>
     </ClCompile>
+    <ClCompile Include="src\PsEngine.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ext\jbig2dec\config_win32.h">
@@ -870,6 +873,9 @@
     </ClInclude>
     <ClInclude Include="ext\CHMLib\src\lzx.h">
       <Filter>chm</Filter>
+    </ClInclude>
+    <ClInclude Include="src\PsEngine.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
