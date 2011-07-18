@@ -1,7 +1,7 @@
 # nmake -f makefile.msvc
 # Arguments:
 # CFG=dbg|rel (default: dbg)
-# EXTLIBSDIR=<directory where zlib/freetype/jpeg lib live> (default: ..\ext)
+# EXTDIR=<directory where zlib/freetype/jpeg lib live> (default: ..\ext)
 #  e.g. ..\sumatrapdf\ext
 # NASM=<path to nasm.exe> (default: nasm.exe)
 # PLATFORM=X86
@@ -39,15 +39,15 @@ OA  = $(O)\muapps
 MUPDF_DIR=.
 !endif
 
-!if "$(EXTLIBSDIR)"==""
-EXTLIBSDIR=..\ext
+!if "$(EXTDIR)"==""
+EXTDIR=..\ext
 !endif
 
-ZLIB_DIR=$(EXTLIBSDIR)\zlib-1.2.5
-FREETYPE_DIR=$(EXTLIBSDIR)\freetype2
-JPEG_TURBO_DIR=$(EXTLIBSDIR)\libjpeg-turbo
-OPENJPEG_DIR=$(EXTLIBSDIR)\openjpeg
-JBIG2_DIR=$(EXTLIBSDIR)\jbig2dec
+ZLIB_DIR=$(EXTDIR)\zlib-1.2.5
+FREETYPE_DIR=$(EXTDIR)\freetype2
+JPEG_TURBO_DIR=$(EXTDIR)\libjpeg-turbo
+OPENJPEG_DIR=$(EXTDIR)\openjpeg
+JBIG2_DIR=$(EXTDIR)\jbig2dec
 
 # full path to NASM can be passed in or we'll assume it's in PATH
 !if "$(NASM)"==""

@@ -114,9 +114,8 @@ SUMATRA_OBJS = \
 	$(OS)\TableOfContents.obj $(OS)\Toolbar.obj $(OS)\Print.obj \
 	$(OS)\Notifications.obj $(OS)\Search.obj $(OS)\ChmEngine.obj \
 	$(OS)\ExternalPdfViewer.obj $(OS)\Selection.obj $(OS)\ZipUtil.obj \
-	$(OS)\pugixml.obj $(UTILS_OBJS) \
-	$(BZIP2_OBJS) $(MINIZIP_OBJS) $(UNRAR_OBJS) $(SYNCTEX_OBJS) \
-	$(OS)\DjVuEngine.obj $(DJVU_OBJS) $(CHMLIB_OBJS)
+	$(UTILS_OBJS) $(BZIP2_OBJS) $(MINIZIP_OBJS) $(UNRAR_OBJS) $(SYNCTEX_OBJS) \
+	$(OS)\DjVuEngine.obj $(DJVU_OBJS) $(CHMLIB_OBJS) $(PUGIXML_OBJS)
 
 INSTALLER_OBJS = \
 	$(OS)\Installer.obj $(INSTALLER_RES)
@@ -212,10 +211,6 @@ $(BROWSER_PLUGIN): $(BROWSER_PLUGIN_OBJS)
 
 # SumatraPDF app directory
 {src}.cpp{$(OS)}.obj::
-	$(CC) $(SUMATRA_CFLAGS) /Fo$(OS)\ /Fd$(O)\vc80.pdb $<
-
-# pugixml directory
-{$(EXTDIR)/pugixml}.cpp{$(OS)}.obj::
 	$(CC) $(SUMATRA_CFLAGS) /Fo$(OS)\ /Fd$(O)\vc80.pdb $<
 
 # browserplugin directory

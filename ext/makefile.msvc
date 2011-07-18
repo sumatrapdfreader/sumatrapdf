@@ -10,7 +10,7 @@ OR = $(O)\unrar
 ODV= $(O)\djvu
 OC = $(O)\chmlib
 
-SYNCTEX_CFLAGS = $(CFLAGS) /I$(EXTLIBSDIR)/synctex /I$(ZLIB_DIR) /TC
+SYNCTEX_CFLAGS = $(CFLAGS) /I$(EXTDIR)/synctex /I$(ZLIB_DIR) /TC
 !if "$(PLATFORM)"=="X64"
 SYNCTEX_CFLAGS = $(SYNCTEX_CFLAGS) /wd4244 /wd4267
 !endif
@@ -19,7 +19,7 @@ BZIP2_CFLAGS = $(CFLAGSOPT) /D "BZ_NO_STDIO" /D "BZ_DEBUG=0"
 !if "$(PLATFORM)"=="X64"
 BZIP2_CFLAGS = $(BZIP2_CFLAGS) /wd4244
 !endif
-MINIZIP_CFLAGS = $(ZLIB_CFLAGS) /D "HAVE_BZIP2" /I$(ZLIB_DIR) /I$(EXTLIBSDIR)\bzip2
+MINIZIP_CFLAGS = $(ZLIB_CFLAGS) /D "HAVE_BZIP2" /I$(ZLIB_DIR) /I$(EXTDIR)\bzip2
 
 UNRAR_CFLAGS = $(CFLAGSOPT) /D "UNRAR" /D "RARDLL"
 # a hack to enable C++ exception handling for UnRAR (without triggering a warning)
@@ -89,6 +89,9 @@ DJVU_OBJS = \
 CHMLIB_OBJS = \
 	$(OC)\chm_lib.obj $(OC)\lzx.obj
 
+PUGIXML_OBJS = \
+	$(OE)\pugixml.obj
+
 $(OE): force
 	@if not exist $(OE) mkdir $(OE)
 	@if not exist $(OBZ) mkdir $(OBZ)
@@ -99,21 +102,23 @@ $(OE): force
 {baseutils}.cpp{$(OS)}.obj::
 	$(CC) $(SUMATRA_CFLAGS) /Fo$(OS)\ /Fd$(O)\vc80.pdb $<
 
-{$(EXTLIBSDIR)\bzip2}.c{$(OBZ)}.obj::
+{$(EXTDIR)\bzip2}.c{$(OBZ)}.obj::
 	$(CC) $(BZIP2_CFLAGS) /Fo$(OBZ)\ /Fd$(O)\vc80.pdb $<
 
-{$(EXTLIBSDIR)\unrar}.cpp{$(OR)}.obj::
+{$(EXTDIR)\unrar}.cpp{$(OR)}.obj::
 	$(CC) $(UNRAR_CFLAGS) /Fo$(OR)\ /Fd$(O)\vc80.pdb $<
 
 {$(ZLIB_DIR)\minizip}.c{$(OZ)}.obj::
 	$(CC) $(MINIZIP_CFLAGS) /Fo$(OZ)\ /Fd$(O)\vc80.pdb $<
 
-{$(EXTLIBSDIR)\synctex}.c{$(OE)}.obj::
+{$(EXTDIR)\synctex}.c{$(OE)}.obj::
 	$(CC) $(SYNCTEX_CFLAGS) /Fo$(OE)\ /Fd$(O)\vc80.pdb $<
 
-{$(EXTLIBSDIR)\libdjvu}.cpp{$(ODV)}.obj::
+{$(EXTDIR)\libdjvu}.cpp{$(ODV)}.obj::
 	$(CC) $(DJVU_CFLAGS) /Fo$(ODV)\ /Fd$(O)\vc80.pdb $<
 
-{$(EXTLIBSDIR)\CHMLib\src}.c{$(OC)}.obj::
+{$(EXTDIR)\CHMLib\src}.c{$(OC)}.obj::
 	$(CC) $(CHMLIB_CFLAGS) /Fo$(OC)\ /Fd$(O)\vc80.pdb $<
 
+{$(EXTDIR)\pugixml}.cpp{$(OE)}.obj::
+	$(CC) $(CFLAGSOPT) /Fo$(OE)\ /Fd$(O)\vc80.pdb $<

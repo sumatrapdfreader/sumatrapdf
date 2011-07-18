@@ -7,6 +7,7 @@ jbig2dec        0.11    2010-02-02   http://jbig2dec.sourceforge.net/
 libjpeg-turbo   1.1.1   2011-05-18   http://sourceforge.net/projects/libjpeg-turbo/files/
 libdjvu         3.5.24  2011-03-06   http://djvu.sourceforge.net/
 openjpeg        r777    2011-05-16   http://code.google.com/p/openjpeg/downloads
+pugixml         1.0     2010-10-31   http://code.google.com/p/pugixml/downloads
 synctex         1.9     2009-11-04   http://itexmac.sourceforge.net/SyncTeX.html
 unrar           4.0.7   2011-03-02   http://www.rarlab.com/rar_add.htm
 zlib            1.2.5   2010-04-19   http://www.zlib.net/
