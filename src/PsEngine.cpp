@@ -56,6 +56,9 @@ TryAgain64Bit:
             ScopedMem<TCHAR> exe(path::Join(dir, _T("gswin32c.exe")));
             if (file::Exists(exe))
                 return exe.StealData();
+            exe.Set(path::Join(dir, _T("gswin64c.exe")));
+            if (file::Exists(exe))
+                return exe.StealData();
         }
     }
 
@@ -68,6 +71,9 @@ TryAgain64Bit:
         paths.Split(envpath, _T(";"), true);
         for (size_t ix = 0; ix < paths.Count(); ix++) {
             ScopedMem<TCHAR> exe(path::Join(paths[ix], _T("gswin32c.exe")));
+            if (file::Exists(exe))
+                return exe.StealData();
+            exe.Set(path::Join(paths[ix], _T("gswin64c.exe")));
             if (file::Exists(exe))
                 return exe.StealData();
         }
