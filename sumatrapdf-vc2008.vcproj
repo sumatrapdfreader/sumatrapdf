@@ -438,10 +438,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\utils\SimpleLog.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\src\utils\SimpleLog.h"
 				>
 			</File>

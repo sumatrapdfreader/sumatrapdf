@@ -396,6 +396,16 @@ static void FileUtilTest()
     path2 = path::Join(_T("C:\\"), _T("\\Windows"));
     assert(str::Eq(path2, _T("C:\\Windows")));
     free(path2);
+
+    assert(path::Match(_T("C:\\file.pdf"), _T("*.pdf")));
+    assert(path::Match(_T("C:\\file.pdf"), _T("file.*")));
+    assert(path::Match(_T("C:\\file.pdf"), _T("*.xps;*.pdf")));
+    assert(path::Match(_T("C:\\file.pdf"), _T("*.xps;*.pdf;*.djvu")));
+    assert(path::Match(_T("C:\\file.pdf"), _T("f??e.p?f")));
+    assert(!path::Match(_T("C:\\file.pdf"), _T("*.xps;*.djvu")));
+    assert(!path::Match(_T("C:\\dir.xps\\file.pdf"), _T("*.xps;*.djvu")));
+    assert(!path::Match(_T("C:\\file.pdf"), _T("f??f.p?f")));
+    assert(!path::Match(_T("C:\\.pdf"), _T("?.pdf")));
 }
 
 static void StrVecTest()

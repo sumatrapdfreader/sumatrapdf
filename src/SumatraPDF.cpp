@@ -4924,8 +4924,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
     if (i.showConsole)
         RedirectIOToConsole();
-    else if (i.consoleFile)
-        RedirectIOToFile(i.consoleFile, true);
     if (i.makeDefault)
         AssociateExeWithPdfExtension();
     if (i.filesToBenchmark.Count() > 0) {
@@ -5102,8 +5100,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 #endif
 
     if (i.stressTestPath) {
-        StartStressTest(win, i.stressTestPath, i.stressTestRanges, i.stressTestCycles, &gRenderCache,
-                        i.disableDjvu, i.disablePdf, i.disableCbx);
+        StartStressTest(win, i.stressTestPath, i.stressTestFilter,
+                        i.stressTestRanges, i.stressTestCycles, &gRenderCache);
     }
 
     while (GetMessage(&msg, NULL, 0, 0) > 0) {

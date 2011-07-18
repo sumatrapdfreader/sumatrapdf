@@ -194,11 +194,6 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
         }
         else if (is_arg("-console")) {
             showConsole = true;
-            str::ReplacePtr(&consoleFile, NULL);
-        }
-        else if (is_arg_with_param("-console-file")) {
-            showConsole = false;
-            str::ReplacePtr(&consoleFile, argList[++n]);
         }
         else if (is_arg_with_param("-plugin")) {
             // -plugin [<URL>] <parent HWND>
@@ -210,12 +205,17 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
             hwndPluginParent = (HWND)_ttol(argList[++n]);
         }
         else if (is_arg_with_param("-stress-test")) {
-            // -stress-test <file or dir path> [<page/file range(s)>] [<cycle count>x]
+            // -stress-test <file or dir path> [<file filter>] [<page/file range(s)>] [<cycle count>x]
             // e.g. -stress-test file.pdf 25x  for rendering file.pdf 25 times
             //      -stress-test file.pdf 1-3  render only pages 1, 2 and 3 of file.pdf
             //      -stress-test dir 301- 2x   render all files in dir twice, skipping first 300
+            //      -stress-test dir *.pdf;*.xps  render all files in dir that are either PDF or XPS
             str::ReplacePtr(&stressTestPath, argList[++n]);
             int num;
+            if (has_additional_param() && str::FindChar(additional_param(), '*')) {
+                str::ReplacePtr(&stressTestFilter, additional_param());
+                n++;
+            }
             if (has_additional_param() && IsValidPageRange(additional_param())) {
                 str::ReplacePtr(&stressTestRanges, additional_param());
                 n++;
@@ -224,15 +224,6 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
                 stressTestCycles = num;
                 n++;
             }
-        }
-        else if (is_arg("-no-djvu")) {
-            disableDjvu = true;
-        }
-        else if (is_arg("-no-pdf")) {
-            disablePdf = true;
-        }
-        else if (is_arg("-no-cbx")) {
-            disableCbx = true;
         }
         else if (is_arg_with_param("-bench")) {
             TCHAR *s = str::Dup(argList[++n]);

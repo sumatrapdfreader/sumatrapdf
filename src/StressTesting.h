@@ -18,9 +18,8 @@ class DisplayModel;
 class StressTest;
 
 bool CollectPathsFromDirectory(const TCHAR *pattern, StrVec& paths, bool dirsInsteadOfFiles=false);
-void StartStressTest(WindowInfo *win, const TCHAR *path, const TCHAR *ranges,
-    int cycles, RenderCache *renderCache, bool disableDjvu, bool disablePdf,
-    bool disableCbx);
+void StartStressTest(WindowInfo *win, const TCHAR *path, const TCHAR *filter,
+                     const TCHAR *ranges, int cycles, RenderCache *renderCache);
 char *GetStressTestInfo(StressTest *);
 
 #endif

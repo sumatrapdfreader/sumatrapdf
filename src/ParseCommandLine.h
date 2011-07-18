@@ -39,7 +39,6 @@ public:
     float       startZoom;
     PointI      startScroll;
     bool        showConsole;
-    TCHAR *     consoleFile;
     HWND        hwndPluginParent;
     TCHAR *     pluginURL;
     bool        exitImmediately;
@@ -47,11 +46,9 @@ public:
 
     // stress-testing related
     TCHAR *     stressTestPath;
+    TCHAR *     stressTestFilter; // NULL is equivalent to "*" (i.e. all files)
     TCHAR *     stressTestRanges;
     int         stressTestCycles;
-    bool        disableDjvu;
-    bool        disablePdf;
-    bool        disableCbx;
 
     CommandLineInfo() : makeDefault(false), exitOnPrint(false), printDialog(false),
         printerName(NULL), bgColor(-1), inverseSearchCmdLine(NULL),
@@ -62,8 +59,8 @@ public:
         enterPresentation(false), enterFullscreen(false), hwndPluginParent(NULL),
         startView(DM_AUTOMATIC), startZoom(INVALID_ZOOM), startScroll(PointI(-1, -1)),
         showConsole(false), exitImmediately(false), silent(false),
-        stressTestPath(NULL), stressTestRanges(NULL), stressTestCycles(1),
-        consoleFile(NULL), disableDjvu(false), disablePdf(false), disableCbx(false)
+        stressTestPath(NULL), stressTestFilter(NULL),
+        stressTestRanges(NULL), stressTestCycles(1)
     { }
 
     ~CommandLineInfo() {
@@ -73,7 +70,7 @@ public:
         free(destName);
         free(stressTestPath);
         free(stressTestRanges);
-        free(consoleFile);
+        free(stressTestFilter);
         free(pluginURL);
     }
 

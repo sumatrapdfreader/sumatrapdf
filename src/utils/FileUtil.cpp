@@ -158,6 +158,42 @@ bool IsOnRemovableDrive(const TCHAR *path)
            DRIVE_NO_ROOT_DIR == driveType;
 }
 
+static bool MatchWildcardsRec(const TCHAR *filename, const TCHAR *filter)
+{
+#define AtEndOf(str) (*(str) == '\0')
+    switch (*filter) {
+    case '\0': case ';':
+        return AtEndOf(filename);
+    case '*':
+        filter++;
+        while (!AtEndOf(filename) && !MatchWildcardsRec(filename, filter))
+            filename++;
+        return !AtEndOf(filename) || AtEndOf(filter) || *filter == ';';
+    case '?':
+        return !AtEndOf(filename) && MatchWildcardsRec(filename + 1, filter + 1);
+    default:
+        return _totlower(*filename) == _totlower(*filter) &&
+               MatchWildcardsRec(filename + 1, filter + 1);
+    }
+#undef AtEndOf
+}
+
+/* matches the filename of a path against a list of semicolon
+   separated filters as used by the common file dialogs
+   (e.g. "*.pdf;*.xps;?.*" will match all PDF and XPS files and
+   all filenames consisting of only a single character and
+   having any extension) */
+bool Match(const TCHAR *path, const TCHAR *filter)
+{
+    path = GetBaseName(path);
+    while (str::FindChar(filter, ';')) {
+        if (MatchWildcardsRec(path, filter))
+            return true;
+        filter = str::FindChar(filter, ';') + 1;
+    }
+    return MatchWildcardsRec(path, filter);
+}
+
 }
 
 namespace file {

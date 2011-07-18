@@ -216,19 +216,6 @@ void RedirectIOToConsole()
     setvbuf(stdin, NULL, _IONBF, 0);
 }
 
-void RedirectIOToFile(const TCHAR *path, bool append)
-{
-    FILE *file = _tfopen(path, append ? _T("a") : _T("w"));
-    if (!file)
-        return;
-
-    *stdout = *file;
-    setvbuf(stdout, NULL, _IONBF, 0);
-
-    *stderr = *file;
-    setvbuf(stderr, NULL, _IONBF, 0);
-}
-
 TCHAR *ResolveLnk(const TCHAR * path)
 {
     IShellLink *lnk = NULL;

@@ -126,7 +126,6 @@ bool DeleteRegKey(HKEY keySub, const TCHAR *keyName, bool resetACLFirst=false);
 
 void EnableNx();
 void RedirectIOToConsole();
-void RedirectIOToFile(const TCHAR *path, bool append=false);
 
 TCHAR *ResolveLnk(const TCHAR *path);
 bool CreateShortcut(const TCHAR *shortcutPath, const TCHAR *exePath,
