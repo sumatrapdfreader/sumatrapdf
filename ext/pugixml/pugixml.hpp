@@ -44,14 +44,9 @@
 
 #include <stddef.h>
 
-// Character interface macros
-#ifdef PUGIXML_WCHAR_MODE
-#	define PUGIXML_TEXT(t) L ## t
-#	define PUGIXML_CHAR wchar_t
-#else
+
 #	define PUGIXML_TEXT(t) t
 #	define PUGIXML_CHAR char
-#endif
 
 namespace pugi
 {
@@ -616,10 +611,6 @@ namespace pugi
 		// Load document from zero-terminated string. No encoding conversions are applied.
 		xml_parse_result load(const char_t* contents, unsigned int options = parse_default);
 
-		// Load document from file
-		xml_parse_result load_file(const char* path, unsigned int options = parse_default, xml_encoding encoding = encoding_auto);
-		xml_parse_result load_file(const wchar_t* path, unsigned int options = parse_default, xml_encoding encoding = encoding_auto);
-
 		// Load document from buffer. Copies/converts the buffer, so it may be deleted or changed after the function returns.
 		xml_parse_result load_buffer(const void* contents, size_t size, unsigned int options = parse_default, xml_encoding encoding = encoding_auto);
 
@@ -634,7 +625,6 @@ namespace pugi
         // Get document element
         xml_node document_element() const;
 	};
-
 
 	// Memory allocation function interface; returns pointer to allocated memory or NULL on failure
 	typedef void* (*allocation_function)(size_t size);

@@ -14,9 +14,6 @@
 #ifndef HEADER_PUGICONFIG_HPP
 #define HEADER_PUGICONFIG_HPP
 
-// Uncomment this to enable wchar_t mode
-// #define PUGIXML_WCHAR_MODE
-
 // Set this to control attributes for public classes/functions, i.e.:
 // #define PUGIXML_API __declspec(dllexport) // to export all public symbols from DLL
 // #define PUGIXML_CLASS __declspec(dllimport) // to import all classes from DLL

@@ -90,24 +90,14 @@ namespace
 	size_t strlength(const char_t* s)
 	{
 		assert(s);
-
-	#ifdef PUGIXML_WCHAR_MODE
-		return wcslen(s);
-	#else
 		return strlen(s);
-	#endif
 	}
 
 	// Compare two strings
 	bool strequal(const char_t* src, const char_t* dst)
 	{
 		assert(src && dst);
-
-	#ifdef PUGIXML_WCHAR_MODE
-		return wcscmp(src, dst) == 0;
-	#else
 		return strcmp(src, dst) == 0;
-	#endif
 	}
 
 	// Compare lhs with [rhs_begin, rhs_end)
@@ -119,15 +109,6 @@ namespace
 	
 		return lhs[count] == 0;
 	}
-	
-#ifdef PUGIXML_WCHAR_MODE
-	// Convert string to wide string, assuming all symbols are ASCII
-	void widen_ascii(wchar_t* dest, const char* source)
-	{
-		for (const char* i = source; *i; ++i) *dest++ = *i;
-		*dest = 0;
-	}
-#endif
 }
 
 namespace
@@ -921,11 +902,7 @@ namespace
 		20, 20, 20, 20, 20, 20, 20, 20,    20, 20, 20, 20, 20, 20, 20, 20
 	};
 	
-#ifdef PUGIXML_WCHAR_MODE
-	#define IS_CHARTYPE_IMPL(c, ct, table) ((static_cast<unsigned int>(c) < 128 ? table[static_cast<unsigned int>(c)] : table[128]) & (ct))
-#else
 	#define IS_CHARTYPE_IMPL(c, ct, table) (table[static_cast<unsigned char>(c)] & (ct))
-#endif
 
 	#define IS_CHARTYPE(c, ct) IS_CHARTYPE_IMPL(c, ct, chartype_table)
 	#define IS_CHARTYPEX(c, ct) IS_CHARTYPE_IMPL(c, ct, chartypex_table)
@@ -1017,137 +994,6 @@ namespace
 		return true;
 	}
 
-#ifdef PUGIXML_WCHAR_MODE
-	inline bool need_endian_swap_utf(xml_encoding le, xml_encoding re)
-	{
-		return (le == encoding_utf16_be && re == encoding_utf16_le) || (le == encoding_utf16_le && re == encoding_utf16_be) ||
-		       (le == encoding_utf32_be && re == encoding_utf32_le) || (le == encoding_utf32_le && re == encoding_utf32_be);
-	}
-
-	bool convert_buffer_endian_swap(char_t*& out_buffer, size_t& out_length, const void* contents, size_t size, bool is_mutable)
-	{
-		const char_t* data = static_cast<const char_t*>(contents);
-	
-		if (is_mutable)
-		{
-			out_buffer = const_cast<char_t*>(data);
-		}
-		else
-		{
-			out_buffer = static_cast<char_t*>(global_allocate(size > 0 ? size : 1));
-			if (!out_buffer) return false;
-		}
-
-		out_length = size / sizeof(char_t);
-
-		convert_wchar_endian_swap(out_buffer, data, out_length);
-
-		return true;
-	}
-
-	bool convert_buffer_utf8(char_t*& out_buffer, size_t& out_length, const void* contents, size_t size)
-	{
-		const uint8_t* data = static_cast<const uint8_t*>(contents);
-
-		// first pass: get length in wchar_t units
-		out_length = utf_decoder<wchar_counter>::decode_utf8_block(data, size, 0);
-
-		// allocate buffer of suitable length
-		out_buffer = static_cast<char_t*>(global_allocate((out_length > 0 ? out_length : 1) * sizeof(char_t)));
-		if (!out_buffer) return false;
-
-		// second pass: convert utf8 input to wchar_t
-		wchar_writer::value_type out_begin = reinterpret_cast<wchar_writer::value_type>(out_buffer);
-		wchar_writer::value_type out_end = utf_decoder<wchar_writer>::decode_utf8_block(data, size, out_begin);
-
-		assert(out_end == out_begin + out_length);
-		(void)!out_end;
-
-		return true;
-	}
-
-	template <typename opt_swap> bool convert_buffer_utf16(char_t*& out_buffer, size_t& out_length, const void* contents, size_t size, opt_swap)
-	{
-		const uint16_t* data = static_cast<const uint16_t*>(contents);
-		size_t length = size / sizeof(uint16_t);
-
-		// first pass: get length in wchar_t units
-		out_length = utf_decoder<wchar_counter, opt_swap>::decode_utf16_block(data, length, 0);
-
-		// allocate buffer of suitable length
-		out_buffer = static_cast<char_t*>(global_allocate((out_length > 0 ? out_length : 1) * sizeof(char_t)));
-		if (!out_buffer) return false;
-
-		// second pass: convert utf16 input to wchar_t
-		wchar_writer::value_type out_begin = reinterpret_cast<wchar_writer::value_type>(out_buffer);
-		wchar_writer::value_type out_end = utf_decoder<wchar_writer, opt_swap>::decode_utf16_block(data, length, out_begin);
-
-		assert(out_end == out_begin + out_length);
-		(void)!out_end;
-
-		return true;
-	}
-
-	template <typename opt_swap> bool convert_buffer_utf32(char_t*& out_buffer, size_t& out_length, const void* contents, size_t size, opt_swap)
-	{
-		const uint32_t* data = static_cast<const uint32_t*>(contents);
-		size_t length = size / sizeof(uint32_t);
-
-		// first pass: get length in wchar_t units
-		out_length = utf_decoder<wchar_counter, opt_swap>::decode_utf32_block(data, length, 0);
-
-		// allocate buffer of suitable length
-		out_buffer = static_cast<char_t*>(global_allocate((out_length > 0 ? out_length : 1) * sizeof(char_t)));
-		if (!out_buffer) return false;
-
-		// second pass: convert utf32 input to wchar_t
-		wchar_writer::value_type out_begin = reinterpret_cast<wchar_writer::value_type>(out_buffer);
-		wchar_writer::value_type out_end = utf_decoder<wchar_writer, opt_swap>::decode_utf32_block(data, length, out_begin);
-
-		assert(out_end == out_begin + out_length);
-		(void)!out_end;
-
-		return true;
-	}
-
-	bool convert_buffer(char_t*& out_buffer, size_t& out_length, xml_encoding encoding, const void* contents, size_t size, bool is_mutable)
-	{
-		// get native encoding
-		xml_encoding wchar_encoding = get_wchar_encoding();
-
-		// fast path: no conversion required
-		if (encoding == wchar_encoding) return get_mutable_buffer(out_buffer, out_length, contents, size, is_mutable);
-
-		// only endian-swapping is required
-		if (need_endian_swap_utf(encoding, wchar_encoding)) return convert_buffer_endian_swap(out_buffer, out_length, contents, size, is_mutable);
-
-		// source encoding is utf8
-		if (encoding == encoding_utf8) return convert_buffer_utf8(out_buffer, out_length, contents, size);
-
-		// source encoding is utf16
-		if (encoding == encoding_utf16_be || encoding == encoding_utf16_le)
-		{
-			xml_encoding native_encoding = is_little_endian() ? encoding_utf16_le : encoding_utf16_be;
-
-			return (native_encoding == encoding) ?
-				convert_buffer_utf16(out_buffer, out_length, contents, size, opt_false()) :
-				convert_buffer_utf16(out_buffer, out_length, contents, size, opt_true());
-		}
-
-		// source encoding is utf32
-		if (encoding == encoding_utf32_be || encoding == encoding_utf32_le)
-		{
-			xml_encoding native_encoding = is_little_endian() ? encoding_utf32_le : encoding_utf32_be;
-
-			return (native_encoding == encoding) ?
-				convert_buffer_utf32(out_buffer, out_length, contents, size, opt_false()) :
-				convert_buffer_utf32(out_buffer, out_length, contents, size, opt_true());
-		}
-
-		assert(!"Invalid encoding");
-		return false;
-	}
-#else
 	template <typename opt_swap> bool convert_buffer_utf16(char_t*& out_buffer, size_t& out_length, const void* contents, size_t size, opt_swap)
 	{
 		const uint16_t* data = static_cast<const uint16_t*>(contents);
@@ -1220,7 +1066,6 @@ namespace
 		assert(!"Invalid encoding");
 		return false;
 	}
-#endif
 
 	size_t as_utf8_begin(const wchar_t* str, size_t length)
 	{
@@ -1406,12 +1251,8 @@ namespace
 					++stre;
 				}
 
-			#ifdef PUGIXML_WCHAR_MODE
-				s = reinterpret_cast<char_t*>(wchar_writer::any(reinterpret_cast<wchar_writer::value_type>(s), ucsc));
-			#else
-				s = reinterpret_cast<char_t*>(utf8_writer::any(reinterpret_cast<uint8_t*>(s), ucsc));
-			#endif
-					
+    			s = reinterpret_cast<char_t*>(utf8_writer::any(reinterpret_cast<uint8_t*>(s), ucsc));
+
 				g.push(s, stre - s);
 				return stre;
 			}
@@ -2372,11 +2213,7 @@ namespace
 	// Output facilities
 	xml_encoding get_write_native_encoding()
 	{
-	#ifdef PUGIXML_WCHAR_MODE
-		return get_wchar_encoding();
-	#else
 		return encoding_utf8;
-	#endif
 	}
 
 	xml_encoding get_write_encoding(xml_encoding encoding)
@@ -2397,73 +2234,6 @@ namespace
 		return encoding_utf8;
 	}
 
-#ifdef PUGIXML_WCHAR_MODE
-	size_t get_valid_length(const char_t* data, size_t length)
-	{
-		assert(length > 0);
-
-		// discard last character if it's the lead of a surrogate pair 
-		return (sizeof(wchar_t) == 2 && (unsigned)(static_cast<uint16_t>(data[length - 1]) - 0xD800) < 0x400) ? length - 1 : length;
-	}
-
-	size_t convert_buffer(char* result, const char_t* data, size_t length, xml_encoding encoding)
-	{
-		// only endian-swapping is required
-		if (need_endian_swap_utf(encoding, get_wchar_encoding()))
-		{
-			convert_wchar_endian_swap(reinterpret_cast<char_t*>(result), data, length);
-
-			return length * sizeof(char_t);
-		}
-	
-		// convert to utf8
-		if (encoding == encoding_utf8)
-		{
-			uint8_t* dest = reinterpret_cast<uint8_t*>(result);
-
-			uint8_t* end = sizeof(wchar_t) == 2 ?
-				utf_decoder<utf8_writer>::decode_utf16_block(reinterpret_cast<const uint16_t*>(data), length, dest) :
-				utf_decoder<utf8_writer>::decode_utf32_block(reinterpret_cast<const uint32_t*>(data), length, dest);
-
-			return static_cast<size_t>(end - dest);
-		}
-
-		// convert to utf16
-		if (encoding == encoding_utf16_be || encoding == encoding_utf16_le)
-		{
-			uint16_t* dest = reinterpret_cast<uint16_t*>(result);
-
-			// convert to native utf16
-			uint16_t* end = utf_decoder<utf16_writer>::decode_utf32_block(reinterpret_cast<const uint32_t*>(data), length, dest);
-
-			// swap if necessary
-			xml_encoding native_encoding = is_little_endian() ? encoding_utf16_le : encoding_utf16_be;
-
-			if (native_encoding != encoding) convert_utf_endian_swap(dest, dest, static_cast<size_t>(end - dest));
-
-			return static_cast<size_t>(end - dest) * sizeof(uint16_t);
-		}
-
-		// convert to utf32
-		if (encoding == encoding_utf32_be || encoding == encoding_utf32_le)
-		{
-			uint32_t* dest = reinterpret_cast<uint32_t*>(result);
-
-			// convert to native utf32
-			uint32_t* end = utf_decoder<utf32_writer>::decode_utf16_block(reinterpret_cast<const uint16_t*>(data), length, dest);
-
-			// swap if necessary
-			xml_encoding native_encoding = is_little_endian() ? encoding_utf32_le : encoding_utf32_be;
-
-			if (native_encoding != encoding) convert_utf_endian_swap(dest, dest, static_cast<size_t>(end - dest));
-
-			return static_cast<size_t>(end - dest) * sizeof(uint32_t);
-		}
-
-		assert(!"Invalid encoding");
-		return 0;
-	}
-#else
 	size_t get_valid_length(const char_t* data, size_t length)
 	{
 		assert(length > 4);
@@ -2515,7 +2285,6 @@ namespace
 		assert(!"Invalid encoding");
 		return 0;
 	}
-#endif
 
 	inline bool has_declaration(const xml_node& node)
 	{
@@ -2590,87 +2359,6 @@ namespace
 		default:
 			assert(!"Invalid node type");
 		}
-	}
-
-	// we need to get length of entire file to load it in memory; the only (relatively) sane way to do it is via seek/tell trick
-	xml_parse_status get_file_size(FILE* file, size_t& out_result)
-	{
-	#if defined(_MSC_VER) && _MSC_VER >= 1400
-		// there are 64-bit versions of fseek/ftell, let's use them
-		typedef __int64 length_type;
-
-		_fseeki64(file, 0, SEEK_END);
-		length_type length = _ftelli64(file);
-		_fseeki64(file, 0, SEEK_SET);
-	#elif defined(__MINGW32__) && !defined(__NO_MINGW_LFS) && !defined(__STRICT_ANSI__)
-		// there are 64-bit versions of fseek/ftell, let's use them
-		typedef off64_t length_type;
-
-		fseeko64(file, 0, SEEK_END);
-		length_type length = ftello64(file);
-		fseeko64(file, 0, SEEK_SET);
-	#else
-		// if this is a 32-bit OS, long is enough; if this is a unix system, long is 64-bit, which is enough; otherwise we can't do anything anyway.
-		typedef long length_type;
-
-		fseek(file, 0, SEEK_END);
-		length_type length = ftell(file);
-		fseek(file, 0, SEEK_SET);
-	#endif
-
-		// check for I/O errors
-		if (length < 0) return status_io_error;
-		
-		// check for overflow
-		size_t result = static_cast<size_t>(length);
-
-		if (static_cast<length_type>(result) != length) return status_out_of_memory;
-
-		// finalize
-		out_result = result;
-
-		return status_ok;
-	}
-
-	xml_parse_result load_file_impl(xml_document& doc, FILE* file, unsigned int options, xml_encoding encoding)
-	{
-		if (!file) return make_parse_result(status_file_not_found);
-
-		// get file size (can result in I/O errors)
-		size_t size = 0;
-		xml_parse_status size_status = get_file_size(file, size);
-
-		if (size_status != status_ok)
-		{
-			fclose(file);
-			return make_parse_result(size_status);
-		}
-		
-		// allocate buffer for the whole file
-		char* contents = static_cast<char*>(global_allocate(size > 0 ? size : 1));
-
-		if (!contents)
-		{
-			fclose(file);
-			return make_parse_result(status_out_of_memory);
-		}
-
-		// read file in memory
-		size_t read_size = fread(contents, 1, size, file);
-		fclose(file);
-
-		if (read_size != size)
-		{
-			global_deallocate(contents);
-			return make_parse_result(status_io_error);
-		}
-		
-		return doc.load_buffer_inplace_own(contents, size, options, encoding);
-	}
-
-	FILE* open_file_wide(const wchar_t* path, const wchar_t* mode)
-	{
-		return _wfopen(path, mode);
 	}
 }
 
@@ -2886,45 +2574,21 @@ namespace pugi
 	{
 		char buf[128];
 		sprintf(buf, "%d", rhs);
-	
-	#ifdef PUGIXML_WCHAR_MODE
-		char_t wbuf[128];
-		widen_ascii(wbuf, buf);
-
-		return set_value(wbuf);
-	#else
 		return set_value(buf);
-	#endif
 	}
 
 	bool xml_attribute::set_value(unsigned int rhs)
 	{
 		char buf[128];
 		sprintf(buf, "%u", rhs);
-
-	#ifdef PUGIXML_WCHAR_MODE
-		char_t wbuf[128];
-		widen_ascii(wbuf, buf);
-
-		return set_value(wbuf);
-	#else
 		return set_value(buf);
-	#endif
 	}
 
 	bool xml_attribute::set_value(double rhs)
 	{
 		char buf[128];
 		sprintf(buf, "%g", rhs);
-
-	#ifdef PUGIXML_WCHAR_MODE
-		char_t wbuf[128];
-		widen_ascii(wbuf, buf);
-
-		return set_value(wbuf);
-	#else
 		return set_value(buf);
-	#endif
 	}
 	
 	bool xml_attribute::set_value(bool rhs)
@@ -3907,24 +3571,6 @@ namespace pugi
 	#endif
 
 		return load_buffer(contents, strlength(contents) * sizeof(char_t), options, encoding);
-	}
-
-	xml_parse_result xml_document::load_file(const char* path, unsigned int options, xml_encoding encoding)
-	{
-		reset();
-
-		FILE* file = fopen(path, "rb");
-
-		return load_file_impl(*this, file, options, encoding);
-	}
-
-	xml_parse_result xml_document::load_file(const wchar_t* path, unsigned int options, xml_encoding encoding)
-	{
-		reset();
-
-		FILE* file = open_file_wide(path, L"rb");
-
-		return load_file_impl(*this, file, options, encoding);
 	}
 
 	xml_parse_result xml_document::load_buffer_impl(void* contents, size_t size, unsigned int options, xml_encoding encoding, bool is_mutable, bool own)
