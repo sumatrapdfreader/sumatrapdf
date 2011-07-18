@@ -33,6 +33,9 @@
     <Filter Include="chm">
       <UniqueIdentifier>{87c09434-b151-4582-b0b3-eab39e5a51ef}</UniqueIdentifier>
     </Filter>
+    <Filter Include="pugixml">
+      <UniqueIdentifier>{5cdc416d-06c0-4619-8dec-d1d72a8b92f5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ext\jbig2dec\jbig2.c">
@@ -620,6 +623,9 @@
     <ClCompile Include="src\PsEngine.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ext\pugixml\pugixml.cpp">
+      <Filter>pugixml</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ext\jbig2dec\config_win32.h">
@@ -876,6 +882,12 @@
     </ClInclude>
     <ClInclude Include="src\PsEngine.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\pugixml\pugiconfig.hpp">
+      <Filter>pugixml</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\pugixml\pugixml.hpp">
+      <Filter>pugixml</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

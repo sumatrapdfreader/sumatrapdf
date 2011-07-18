@@ -92,6 +92,8 @@ inline const WCHAR * Find(const WCHAR *str, const WCHAR *find) {
     return wcsstr(str, find);
 }
 
+const char * FindI(const char *s, const char *find);
+
 char *  FmtV(const char *fmt, va_list args);
 char *  Format(const char *fmt, ...);
 WCHAR * FmtV(const WCHAR *fmt, va_list args);

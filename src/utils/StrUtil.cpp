@@ -232,6 +232,18 @@ WCHAR *ToWideChar(const char *src, UINT CodePage)
     return res;
 }
 
+const char *FindI(const char *s, const char *find)
+{
+    char c = tolower(*find);
+    while (*s) {
+        char c2 = *s;
+        if (StartsWithI(s, find))
+            return s;
+        s++;
+    }
+    return NULL;
+}
+
 char *FmtV(const char *fmt, va_list args)
 {
     char    message[256];

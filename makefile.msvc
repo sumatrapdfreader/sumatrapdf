@@ -1,7 +1,7 @@
 # nmake -f makefile.msvc
 # Arguments:
 # CFG=dbg|rel (default: dbg)
-# EXTLIBSDIR=<directory where zlib/freetype/jpeg lib live> (default: ext)
+# EXTDIR=<directory where zlib/freetype/jpeg lib live> (default: ext)
 #  e.g. ..\sumatrapdf\ext
 # EXTCFLAGS=$CFLAGS
 # MUPDF_DIR=mupdf
@@ -26,8 +26,8 @@ O = $(O)64
 MUPDF_DIR=mupdf
 !endif
 
-!if "$(EXTLIBSDIR)"==""
-EXTLIBSDIR=ext
+!if "$(EXTDIR)"==""
+EXTDIR=ext
 !endif
 
 # include SumatraPDF's version number in libmupdf.dll
@@ -46,7 +46,7 @@ all_sumatrapdf: SumatraPDF Uninstaller PDFFilter PdfPreview BrowserPlugin
 CFLAGSOPT = $(CFLAGSOPT) /Isrc/utils/msvc
 
 # include build data for the remaining third-party libraries
-!INCLUDE $(EXTLIBSDIR)\makefile.msvc
+!INCLUDE $(EXTDIR)\makefile.msvc
 
 # Modify the following defines if you have to target a platform prior to the ones specified below.
 # Their meaning: http://msdn.microsoft.com/en-us/library/aa383745(VS.85).aspx
@@ -56,9 +56,10 @@ CFLAGS = $(CFLAGS) /D "WINVER=0x0500" /D "_WIN32_WINNT=0x0500"
 
 SUMATRA_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
 	/wd4800 \
-	/Isrc/utils /Isrc/utils/msvc /I$(MUPDF_DIR)\fitz /I$(MUPDF_DIR)\pdf /I$(MUPDF_DIR)\xps \
-	/Isrc /I$(EXTLIBSDIR)/synctex /I$(ZLIB_DIR) /I$(ZLIB_DIR)/minizip \
-	/I$(EXTLIBSDIR)/libdjvu /I$(EXTLIBSDIR)/CHMLib/src \
+	/Isrc/utils /Isrc/utils/msvc /I$(MUPDF_DIR)\fitz /I$(MUPDF_DIR)\pdf \
+	/I$(MUPDF_DIR)\xps /Isrc /I$(EXTDIR)/synctex /I$(ZLIB_DIR) \
+	/I$(ZLIB_DIR)/minizip /I$(EXTDIR)/libdjvu /I$(EXTDIR)/CHMLib/src \
+	/I$(EXTDIR)/pugixml \
 	/D "CHM_MT" /D "PPC_BSTR"
 
 INSTALLER_CFLAGS = $(CFLAGS) $(EXTCFLAGS) /wd4800 \
@@ -112,8 +113,8 @@ SUMATRA_OBJS = \
 	$(OS)\ImagesEngine.obj $(OS)\PsEngine.obj $(OS)\Favorites.obj \
 	$(OS)\TableOfContents.obj $(OS)\Toolbar.obj $(OS)\Print.obj \
 	$(OS)\Notifications.obj $(OS)\Search.obj $(OS)\ChmEngine.obj \
-	$(OS)\ExternalPdfViewer.obj $(OS)\Selection.obj \
-	$(UTILS_OBJS) $(OS)\ZipUtil.obj \
+	$(OS)\ExternalPdfViewer.obj $(OS)\Selection.obj $(OS)\ZipUtil.obj \
+	$(OS)\pugixml.obj $(UTILS_OBJS) \
 	$(BZIP2_OBJS) $(MINIZIP_OBJS) $(UNRAR_OBJS) $(SYNCTEX_OBJS) \
 	$(OS)\DjVuEngine.obj $(DJVU_OBJS) $(CHMLIB_OBJS)
 
@@ -211,6 +212,10 @@ $(BROWSER_PLUGIN): $(BROWSER_PLUGIN_OBJS)
 
 # SumatraPDF app directory
 {src}.cpp{$(OS)}.obj::
+	$(CC) $(SUMATRA_CFLAGS) /Fo$(OS)\ /Fd$(O)\vc80.pdb $<
+
+# pugixml directory
+{$(EXTDIR)/pugixml}.cpp{$(OS)}.obj::
 	$(CC) $(SUMATRA_CFLAGS) /Fo$(OS)\ /Fd$(O)\vc80.pdb $<
 
 # browserplugin directory

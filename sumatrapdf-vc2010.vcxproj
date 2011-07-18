@@ -115,6 +115,7 @@
     <ClCompile Include="ext\libjpeg-turbo\jsimd_none.c" />
     <ClCompile Include="ext\libjpeg-turbo\jutils.c" />
     <ClCompile Include="ext\libjpeg-turbo\simd\jsimd_i386.c" />
+    <ClCompile Include="ext\pugixml\pugixml.cpp" />
     <ClCompile Include="mupdf\fitz\base_geometry.c" />
     <ClCompile Include="mupdf\fitz\base_getopt.c" />
     <ClCompile Include="mupdf\fitz\base_time.c" />
@@ -274,6 +275,8 @@
     <ClInclude Include="ext\libjpeg-turbo\jsimddct.h" />
     <ClInclude Include="ext\libjpeg-turbo\jversion.h" />
     <ClInclude Include="ext\libjpeg-turbo\simd\jsimd.h" />
+    <ClInclude Include="ext\pugixml\pugiconfig.hpp" />
+    <ClInclude Include="ext\pugixml\pugixml.hpp" />
     <ClInclude Include="mupdf\pdf\data_encodings.h" />
     <ClInclude Include="mupdf\pdf\data_glyphlist.h" />
     <ClInclude Include="mupdf\pdf\mupdf.h" />

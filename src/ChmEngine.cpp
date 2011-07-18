@@ -1,6 +1,7 @@
 /* Copyright 2006-2011 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+#include "pugixml.hpp"
 #include "ChmEngine.h"
 #include "StrUtil.h"
 #include "FileUtil.h"
@@ -85,20 +86,23 @@ public:
 protected:
     const TCHAR *fileName;
     struct chmFile *chmHandle;
+    ChmInfo *chmInfo;
 
     int pageCount;
 
     bool Load(const TCHAR *fileName);
+    bool LoadAndParseTocXml();
 };
 
 CChmEngine::CChmEngine() :
-    fileName(NULL), chmHandle(NULL), pageCount(0)
+    fileName(NULL), chmHandle(NULL), chmInfo(NULL), pageCount(0)
 {
 }
 
 CChmEngine::~CChmEngine()
 {
     chm_close(chmHandle);
+    delete chmInfo;
     free((void *)fileName);
 }
 
@@ -187,7 +191,8 @@ static bool GetChmDataForFile(struct chmFile *chmHandle, const char *fileName, B
         return false;
     }
 
-    dataOut.d = (u8*)malloc((size_t)info.length);
+    // +1 for 0 terminator for C string compatibility
+    dataOut.d = (u8*)malloc((size_t)info.length+1);
     if (!dataOut.d)
         return false;
     dataOut.size = (u32)info.length;
@@ -195,7 +200,7 @@ static bool GetChmDataForFile(struct chmFile *chmHandle, const char *fileName, B
     if (!chm_retrieve_object(chmHandle, &info, dataOut.d, 0, info.length) ) {
         return false;
     }
-
+    dataOut.d[info.length] = 0;
     return true;
 }
 
@@ -339,9 +344,48 @@ static bool ParseSystemChmData(chmFile *chmHandle, ChmInfo *chmInfo)
     return true;
 }
 
+using namespace pugi;
+
+static bool ParseChmToc(xml_document& xmldoc)
+{
+    return false;
+}
+
+// fix up the toc xml to make it more palatable to xml parsing
+// we fish out everying inside <body> ... </body>
+static char *FixTocXml(char *s)
+{
+    char *bodyStart = (char*)str::FindI(s, "<body>");
+    if (!bodyStart)
+        return s;
+    char *bodyEnd = (char*)str::FindI(s, "</body>");
+    if (!bodyEnd)
+        return s;
+    bodyEnd[7] = 0; // end string after "</body>"
+    return bodyStart;
+}
+
+// TODO: need to change pugixml to make it ignore some xml errors
+bool CChmEngine::LoadAndParseTocXml()
+{
+    Bytes b;
+    bool ok = GetChmDataForFile(chmHandle, chmInfo->tocPath, b);
+    if (!ok)
+        return ok;
+    char *s = FixTocXml((char*)b.d);
+    size_t size_diff = s - (char*)b.d;
+    assert((size_diff >= 0) && (size_diff < b.size));
+    xml_document xmldoc;
+    xml_parse_result res = xmldoc.load(s);
+    if (res.status != status_ok)
+        return false;
+    ok = ParseChmToc(xmldoc);
+    return ok;
+}
+
 bool CChmEngine::Load(const TCHAR *fileName)
 {
-    ChmInfo *chmInfo = NULL;
+    assert(NULL == chmHandle);
     this->fileName = str::Dup(fileName);
     CASSERT(2 == sizeof(OLECHAR), OLECHAR_must_be_WCHAR);
 #ifdef UNICODE
@@ -358,9 +402,13 @@ bool CChmEngine::Load(const TCHAR *fileName)
     if (!chmInfo->homePath) {
         chmInfo->homePath = FindHomeForPath(chmHandle, "/");
     }
+    if (!chmInfo->tocPath || !chmInfo->homePath) {
+        goto Error;
+    }
+    if (!LoadAndParseTocXml())
+        goto Error;
     // TODO: finish me
 Error:
-    delete chmInfo;
     return false;
 }
 
