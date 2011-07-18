@@ -102,7 +102,8 @@ BROWSER_PLUGIN_CFLAGS = $(CFLAGS) /Isrc/utils /Isrc/utils/msvc /wd4819
 
 UTILS_OBJS = \
 	$(OS)\BencUtil.obj $(OS)\FileUtil.obj $(OS)\Http.obj \
-	$(OS)\StrUtil.obj $(OS)\UtilTests.obj $(OS)\WinUtil.obj $(OS)\DialogSizer.obj
+	$(OS)\StrUtil.obj $(OS)\UtilTests.obj $(OS)\WinUtil.obj \
+	$(OS)\DialogSizer.obj
 
 SUMATRA_OBJS = \
 	$(OS)\AppPrefs.obj $(OS)\DisplayModel.obj $(OS)\CrashHandler.obj $(OS)\PdfEngine.obj \
@@ -112,10 +113,11 @@ SUMATRA_OBJS = \
 	$(OS)\StressTesting.obj $(OS)\UnitTests.obj $(OS)\AppTools.obj $(SUMATRA_RES) \
 	$(OS)\ImagesEngine.obj $(OS)\PsEngine.obj $(OS)\Favorites.obj \
 	$(OS)\TableOfContents.obj $(OS)\Toolbar.obj $(OS)\Print.obj \
-	$(OS)\Notifications.obj $(OS)\Search.obj $(OS)\ChmEngine.obj \
+	$(OS)\Notifications.obj $(OS)\Search.obj  \
 	$(OS)\ExternalPdfViewer.obj $(OS)\Selection.obj $(OS)\ZipUtil.obj \
 	$(UTILS_OBJS) $(BZIP2_OBJS) $(MINIZIP_OBJS) $(UNRAR_OBJS) $(SYNCTEX_OBJS) \
-	$(OS)\DjVuEngine.obj $(DJVU_OBJS) $(CHMLIB_OBJS) $(PUGIXML_OBJS)
+	$(OS)\DjVuEngine.obj $(DJVU_OBJS) \
+	$(OS)\TrivialHtmlParser.obj $(OS)\ChmEngine.obj $(CHMLIB_OBJS)
 
 INSTALLER_OBJS = \
 	$(OS)\Installer.obj $(INSTALLER_RES)
@@ -446,6 +448,8 @@ $(OS)\Toolbar.obj: src\utils\BaseUtil.h src\utils\GeomUtil.h src\utils\StrUtil.h
 $(OS)\Toolbar.obj: src\utils\Vec.h src\utils\WinUtil.h src\WindowInfo.h
 $(OS)\translations.obj: src\translations.h src\translations_txt.cpp src\utils\BaseUtil.h
 $(OS)\translations.obj: src\utils\StrUtil.h
+$(OS)\TrivialHtmlParser.obj: src\AppTools.h src\utils\BaseUtil.h src\utils\FileUtil.h
+$(OS)\TrivialHtmlParser.obj: src\utils\StrUtil.h src\utils\TrivialHtmlParser.h src\utils\Vec.h
 $(OS)\UnitTests.obj: src\AppTools.h src\BaseEngine.h src\DisplayState.h
 $(OS)\UnitTests.obj: src\ParseCommandLine.h src\StressTesting.h src\utils\BaseUtil.h
 $(OS)\UnitTests.obj: src\utils\GeomUtil.h src\utils\StrUtil.h src\utils\Vec.h

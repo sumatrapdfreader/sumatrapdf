@@ -440,9 +440,6 @@
     <ClCompile Include="src\utils\Http.cpp">
       <Filter>utils</Filter>
     </ClCompile>
-    <ClCompile Include="src\utils\SimpleLog.cpp">
-      <Filter>utils</Filter>
-    </ClCompile>
     <ClCompile Include="src\utils\StrUtil.cpp">
       <Filter>utils</Filter>
     </ClCompile>
@@ -625,6 +622,9 @@
     </ClCompile>
     <ClCompile Include="ext\pugixml\pugixml.cpp">
       <Filter>pugixml</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\TrivialHtmlParser.cpp">
+      <Filter>utils</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -888,6 +888,9 @@
     </ClInclude>
     <ClInclude Include="ext\pugixml\pugixml.hpp">
       <Filter>pugixml</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\TrivialHtmlParser.h">
+      <Filter>utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

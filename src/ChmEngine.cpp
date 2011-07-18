@@ -1,7 +1,7 @@
 /* Copyright 2006-2011 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "pugixml.hpp"
+//#include "pugixml.hpp"
 #include "ChmEngine.h"
 #include "StrUtil.h"
 #include "FileUtil.h"
@@ -344,6 +344,7 @@ static bool ParseSystemChmData(chmFile *chmHandle, ChmInfo *chmInfo)
     return true;
 }
 
+#if 0
 using namespace pugi;
 
 static bool ParseChmToc(xml_document& xmldoc)
@@ -364,23 +365,20 @@ static char *FixTocXml(char *s)
     bodyEnd[7] = 0; // end string after "</body>"
     return bodyStart;
 }
+#endif
 
-// TODO: need to change pugixml to make it ignore some xml errors
 bool CChmEngine::LoadAndParseTocXml()
 {
     Bytes b;
     bool ok = GetChmDataForFile(chmHandle, chmInfo->tocPath, b);
     if (!ok)
         return ok;
+#if 0
     char *s = FixTocXml((char*)b.d);
     size_t size_diff = s - (char*)b.d;
     assert((size_diff >= 0) && (size_diff < b.size));
-    xml_document xmldoc;
-    xml_parse_result res = xmldoc.load(s);
-    if (res.status != status_ok)
-        return false;
-    ok = ParseChmToc(xmldoc);
-    return ok;
+#endif
+    return false;
 }
 
 bool CChmEngine::Load(const TCHAR *fileName)
