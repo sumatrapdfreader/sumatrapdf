@@ -2,6 +2,9 @@ The idea is to record here changes that deserve mentioning in
 the release notes, as we make them, to make the release process easier.
 
 Next version:
+* ???
+
+1.7 (2011-07-18)
 
 * favorites
 * logical page numbers are displayed and used, if a document
