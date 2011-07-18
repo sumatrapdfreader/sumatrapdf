@@ -106,12 +106,24 @@ public:
         return res;
     }
 
+    // useful when T is a struct
+    // Kind of like Append() but let's the caller initialize
+    // memory of the newly allocated value
+    T* MakeSpaceAtEnd() {
+        return MakeSpaceAt(Count());
+    }
+
     T& operator[](size_t idx) const {
         return els[idx];
     }
 
     T& At(size_t idx) const {
         return els[idx];
+    }
+
+    // useful when T is a struct
+    T* AtPtr(size_t idx) const {
+        return &els[idx];
     }
 
     size_t Count() const {
