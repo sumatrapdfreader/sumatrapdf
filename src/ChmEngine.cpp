@@ -199,6 +199,32 @@ static bool GetChmDataForFile(struct chmFile *chmHandle, const char *fileName, B
     return true;
 }
 
+static bool ChmFileExists(struct chmFile *chmHandle, const char *path)
+{
+    struct chmUnitInfo info;
+    if (chm_resolve_object(chmHandle, path, &info ) != CHM_RESOLVE_SUCCESS ) {
+        return false;
+    }
+    return true;
+}
+
+static char *FindHomeForPath(struct chmFile *chmHandle, const char *basePath)
+{
+    const char *pathsToTest[] = {
+        "index.htm", "index.html",
+        "default.htm", "default.html"
+    };
+    const char *sep = str::EndsWith(basePath, "/") ? "" : "/";
+    for (int i=0; i<dimof(pathsToTest); i++) {
+        char *testPath = str::Format("%s%s%s", basePath, sep, pathsToTest[i]);
+        if (ChmFileExists(chmHandle, testPath)) {
+            return testPath;
+        }
+        free(testPath);
+    }
+    return NULL;
+}
+
 // http://www.nongnu.org/chmspec/latest/Internal.html#WINDOWS
 static void ParseWindowsChmData(chmFile *chmHandle, ChmInfo *chmInfo)
 {
@@ -329,8 +355,10 @@ bool CChmEngine::Load(const TCHAR *fileName)
     ParseWindowsChmData(chmHandle, chmInfo);
     if (!ParseSystemChmData(chmHandle, chmInfo))
         goto Error;
-
-    return true;
+    if (!chmInfo->homePath) {
+        chmInfo->homePath = FindHomeForPath(chmHandle, "/");
+    }
+    // TODO: finish me
 Error:
     delete chmInfo;
     return false;
