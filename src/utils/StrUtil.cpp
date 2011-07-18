@@ -396,12 +396,12 @@ size_t NormalizeWS(TCHAR *str)
 
 // Remove all characters in "toRemove" from "str", in place.
 // Returns number of removed characters.
-size_t RemoveChars(TCHAR *str, const TCHAR *toRemove)
+size_t RemoveChars(char *str, const char *toRemove)
 {
     size_t removed = 0;
-    TCHAR *dst = str;
+    char *dst = str;
     while (*str) {
-        TCHAR c = *str++;
+        char c = *str++;
         if (!str::FindChar(toRemove, c))
             *dst++ = c;
         else
@@ -410,6 +410,22 @@ size_t RemoveChars(TCHAR *str, const TCHAR *toRemove)
     *dst = '\0';
     return removed;
 }
+
+size_t RemoveChars(WCHAR *str, const WCHAR *toRemove)
+{
+    size_t removed = 0;
+    WCHAR *dst = str;
+    while (*str) {
+        WCHAR c = *str++;
+        if (!str::FindChar(toRemove, c))
+            *dst++ = c;
+        else
+            ++removed;
+    }
+    *dst = '\0';
+    return removed;
+}
+
 
 // Note: BufSet() should only be used when absolutely necessary (e.g. when
 // handling buffers in OS-defined structures)

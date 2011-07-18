@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 #include "ChmEngine.h"
+#include "StrUtil.h"
 #include "FileUtil.h"
 #include "Vec.h"
 
@@ -84,6 +85,124 @@ CChmEngine::~CChmEngine()
     free((void *)fileName);
 }
 
+typedef unsigned char u8;
+typedef unsigned short u16;
+typedef unsigned long u32;
+
+CASSERT(2 == sizeof(u16), u16_is_2_bytes);
+CASSERT(4 == sizeof(u32), u32_is_4_bytes);
+
+struct Bytes {
+    u8 *d;
+    size_t size;
+};
+
+// The numbers in CHM format are little-endian
+static bool ReadU16(const Bytes& b, size_t off, u16& valOut)
+{
+    if (off + sizeof(u16) > b.size)
+        return false;
+    valOut = b.d[off] | ((u32)b.d[off+1] >> 8);
+    return true;
+}
+
+static bool ReadU32(const Bytes& b, size_t off, u32& valOut)
+{
+    if (off + sizeof(u32) > b.size)
+        return false;
+    valOut = b.d[off] | ((u32)b.d[off+1] >> 8) | ((u32)b.d[off+2] >> 16) | ((u32)b.d[off+3] >> 24);
+    return true;
+}
+
+static char *ReadString(const Bytes& b, size_t off)
+{
+    if (off >= b.size)
+        return NULL;
+    u8 *strStart = b.d + off;
+    u8 *strEnd = strStart;
+    u8 *dataEnd = b.d + b.size;
+    while (*strEnd && strEnd < dataEnd) {
+        ++strEnd;
+    }
+    // didn't find terminating 0 - assume it's corrupted
+    if (*strEnd)
+        return NULL;
+    size_t len = strEnd - strStart;
+    if (0 == len)
+        return NULL;
+    return (char*)memdup(strStart, len);
+}
+
+static char *ReadWsTrimmedString(const Bytes& b, size_t off)
+{
+    char *s = ReadString(b, off);
+    if (s) {
+        str::RemoveChars(s, "\n\r\t");
+    }
+    return s;
+}
+
+// Data parsed from /#WINDOWS and /#STRINGS files inside CHM
+class WindowsChmData {
+public:
+    WindowsChmData() : title(NULL), tocPath(NULL), indexPath(NULL), homePath(NULL)
+    {}
+    ~WindowsChmData() {
+        free(title);
+        free(tocPath);
+        free(indexPath);
+        free(homePath);
+    }
+    char *title;
+    char *tocPath;
+    char *indexPath;
+    char *homePath;
+};
+
+// http://www.nongnu.org/chmspec/latest/Internal.html#WINDOWS
+static WindowsChmData* ParseWindowsChmData(str::Str<char>& windowsData, str::Str<char>& stringsData)
+{
+    Bytes windowsBytes = { (u8*)windowsData.LendData(), windowsData.Count() };
+    Bytes stringsBytes = { (u8*)stringsData.LendData(), stringsData.Count() };
+    u32 entries, entrySize, strOff;
+    bool ok = ReadU32(windowsBytes, 0, entries);
+    if (!ok)
+        return NULL;
+    ok = ReadU32(windowsBytes, 4, entrySize);
+    if (!ok)
+        return NULL;
+
+    WindowsChmData *wd = new WindowsChmData();
+    for (u32 i = 0; i < entries; ++i ) {
+        u32 off = 8 + (i * entrySize);
+        if (!wd->title) {
+            ok = ReadU32(windowsBytes, off + 0x14, strOff);
+            if (ok) {
+                wd->title = ReadWsTrimmedString(stringsBytes, strOff);
+            }
+        }
+        if (!wd->tocPath) {
+            ok = ReadU32(windowsBytes, off + 0x60, strOff);
+            if (ok) {
+                wd->tocPath = ReadString(stringsBytes, strOff);
+            }
+        }
+        if (!wd->indexPath) {
+            ok = ReadU32(windowsBytes, off + 0x64, strOff);
+            if (ok) {
+                wd->indexPath = ReadString(stringsBytes, strOff);
+            }
+        }
+        if (!wd->homePath) {
+            ok = ReadU32(windowsBytes, off+0x68, strOff);
+            if (ok) {
+                wd->homePath = ReadString(stringsBytes, strOff);
+            }
+        }
+    }
+    return wd;
+}
+
 static bool GetChmDataForFile(struct chmFile *chmHandle, const char *fileName, str::Str<char>& dataOut)
 {
     ScopedMem<const char> fileNameTmp;
@@ -119,6 +238,7 @@ static bool GetChmDataForFile(struct chmFile *chmHandle, const char *fileName, s
 
 bool CChmEngine::Load(const TCHAR *fileName)
 {
+    WindowsChmData *wd = NULL;
     this->fileName = str::Dup(fileName);
     CASSERT(2 == sizeof(OLECHAR), OLECHAR_must_be_WCHAR);
 #ifdef UNICODE
@@ -133,10 +253,10 @@ bool CChmEngine::Load(const TCHAR *fileName)
     bool hasWindows = GetChmDataForFile(chmHandle, "/#WINDOWS", windowsData);
     bool hasStrings = GetChmDataForFile(chmHandle, "/#STRINGS", stringsData);
     if (hasWindows && hasStrings) {
-        // TODO: write me
-
+        wd = ParseWindowsChmData(windowsData, stringsData);
     }
     // TODO: write me
+    delete wd; // temporary
     return false;
 }
 
