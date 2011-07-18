@@ -11366,7 +11366,7 @@ const char *gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "Podaj has\305\202o dla %s",
   "Podaj polecenie wykonywane po dwukrotnym klikni\304\231ciu pliku PDF:",
   "B\305\202\304\205d \305\202adowania pliku %s",
-  "&ulubione",
+  "&Ulubione",
   "&Dalej\tAlt+W prawo",
   "Pe\305\202ny ekran\tCtrl+Shift+L",
   "Wiele stron",

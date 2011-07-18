@@ -321,7 +321,7 @@ Error loading %s
 Błąd ładowania pliku %s
 
 F&avorites
-&ulubione
+&Ulubione
 
 F&orward\tAlt+Right Arrow
 &Dalej\tAlt+W prawo
