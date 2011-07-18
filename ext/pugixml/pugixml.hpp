@@ -166,29 +166,6 @@ namespace pugi
 	
 	class xml_node;
 
-	// Writer interface for node printing (see xml_node::print)
-	class PUGIXML_CLASS xml_writer
-	{
-	public:
-		virtual ~xml_writer() {}
-
-		// Write memory chunk into stream/file/whatever
-		virtual void write(const void* data, size_t size) = 0;
-	};
-
-	// xml_writer implementation for FILE*
-	class PUGIXML_CLASS xml_writer_file: public xml_writer
-	{
-	public:
-        // Construct writer from a FILE* object; void* is used to avoid header dependencies on stdio
-		xml_writer_file(void* file);
-
-		virtual void write(const void* data, size_t size);
-
-	private:
-		void* file;
-	};
-
 	// A light-weight handle for manipulating attributes in DOM tree
 	class PUGIXML_CLASS xml_attribute
 	{
@@ -436,9 +413,6 @@ namespace pugi
 
 		// Recursively traverse subtree with xml_tree_walker
 		bool traverse(xml_tree_walker& walker);
-			
-		// Print subtree using a writer object
-		void print(xml_writer& writer, const char_t* indent = PUGIXML_TEXT("\t"), unsigned int flags = format_default, xml_encoding encoding = encoding_auto, unsigned int depth = 0) const;
 
 		// Child nodes iterators
 		typedef xml_node_iterator iterator;
@@ -656,13 +630,6 @@ namespace pugi
 		// Load document from buffer, using the buffer for in-place parsing (the buffer is modified and used for storage of document data).
         // You should allocate the buffer with pugixml allocation function; document will free the buffer when it is no longer needed (you can't use it anymore).
 		xml_parse_result load_buffer_inplace_own(void* contents, size_t size, unsigned int options = parse_default, xml_encoding encoding = encoding_auto);
-
-		// Save XML document to writer (semantics is slightly different from xml_node::print, see documentation for details).
-		void save(xml_writer& writer, const char_t* indent = PUGIXML_TEXT("\t"), unsigned int flags = format_default, xml_encoding encoding = encoding_auto) const;
-
-		// Save XML to file
-		bool save_file(const char* path, const char_t* indent = PUGIXML_TEXT("\t"), unsigned int flags = format_default, xml_encoding encoding = encoding_auto) const;
-		bool save_file(const wchar_t* path, const char_t* indent = PUGIXML_TEXT("\t"), unsigned int flags = format_default, xml_encoding encoding = encoding_auto) const;
 
         // Get document element
         xml_node document_element() const;
