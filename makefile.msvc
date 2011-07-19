@@ -448,11 +448,13 @@ $(OS)\Toolbar.obj: src\utils\BaseUtil.h src\utils\GeomUtil.h src\utils\StrUtil.h
 $(OS)\Toolbar.obj: src\utils\Vec.h src\utils\WinUtil.h src\WindowInfo.h
 $(OS)\translations.obj: src\translations.h src\translations_txt.cpp src\utils\BaseUtil.h
 $(OS)\translations.obj: src\utils\StrUtil.h
-$(OS)\TrivialHtmlParser.obj: src\AppTools.h src\utils\BaseUtil.h src\utils\FileUtil.h
+$(OS)\TrivialHtmlParser.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
 $(OS)\TrivialHtmlParser.obj: src\utils\StrUtil.h src\utils\TrivialHtmlParser.h src\utils\Vec.h
+$(OS)\TrivialHtmlParser.obj: src\utils\WinUtil.h
 $(OS)\UnitTests.obj: src\AppTools.h src\BaseEngine.h src\DisplayState.h
 $(OS)\UnitTests.obj: src\ParseCommandLine.h src\StressTesting.h src\utils\BaseUtil.h
 $(OS)\UnitTests.obj: src\utils\GeomUtil.h src\utils\StrUtil.h src\utils\Vec.h
+$(OS)\UnitTests.obj: src\utils\WinUtil.h
 $(OS)\UtilTests.obj: src\utils\BaseUtil.h src\utils\BencUtil.h src\utils\FileUtil.h
 $(OS)\UtilTests.obj: src\utils\GeomUtil.h src\utils\SimpleLog.h src\utils\StrUtil.h
 $(OS)\UtilTests.obj: src\utils\Vec.h src\utils\WinUtil.h
@@ -466,6 +468,6 @@ $(OS)\WindowInfo.obj: src\TextSelection.h src\utils\BaseUtil.h src\utils\FileUti
 $(OS)\WindowInfo.obj: src\utils\GeomUtil.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\WindowInfo.obj: src\utils\WinUtil.h src\WindowInfo.h
 $(OS)\WinUtil.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
-$(OS)\WinUtil.obj: src\utils\StrUtil.h src\utils\WinUtil.h
+$(OS)\WinUtil.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
 $(OS)\ZipUtil.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\StrUtil.h
 $(OS)\ZipUtil.obj: src\utils\ZipUtil.h

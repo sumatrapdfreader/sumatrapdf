@@ -79,7 +79,8 @@ fz_draw_stroke_path(void *user, fz_path *path, fz_stroke_state *stroke, fz_matri
 		linewidth = 1 / expansion;
 
 	fz_reset_gel(dev->gel, dev->scissor);
-	if (stroke->dash_len > 0)
+	/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692356 */
+	if (stroke->dash_len > 0 && (stroke->dash_len != 2 || stroke->dash_list[1] != 0))
 		fz_flatten_dash_path(dev->gel, path, stroke, ctm, flatness, linewidth);
 	else
 		fz_flatten_stroke_path(dev->gel, path, stroke, ctm, flatness, linewidth);
