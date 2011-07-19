@@ -41,7 +41,6 @@ enum HtmlParseError {
     ErrParsingAttributeValue2,
 };
 
-
 struct HtmlElement {
     char *name;
     char *val;
@@ -85,8 +84,6 @@ class HtmlParser {
     HtmlElementId AllocElement(HtmlElementId parentId, char *name, HtmlElement **elOut);
     HtmlAttrId AllocAttr(HtmlAttr **attrOut);
 
-    HtmlAttr *GetAttr(HtmlAttrId id);
-
     void CloseTag(char *tagName);
     void StartTag(char *tagName);
     void StartAttr(char *attrName);
@@ -106,9 +103,18 @@ public:
     bool Parse(const char *s);
     bool ParseInPlace(char *s);
 
+    HtmlElement *GetRootElement() const {
+        return GetElement(RootElementId);
+    }
     HtmlElement *GetElement(HtmlElementId id) const;
-    size_t ElementsCount() const { return elAllocator.Count(); }
-    size_t AttrCount() const { return attrAllocator.Count(); }
+    size_t ElementsCount() const {
+        return elAllocator.Count();
+    }
+    HtmlAttr *GetAttr(HtmlAttrId id) const;
+
+    size_t TotalAttrCount() const {
+        return attrAllocator.Count();
+    }
     char *GetElementName(HtmlElementId id) const;
     char *GetAttrName(HtmlAttrId id) const;
     HtmlElementId GetParent(HtmlElementId id) const;
@@ -170,9 +176,10 @@ HtmlAttrId HtmlParser::AllocAttr(HtmlAttr **attrOut)
 }
 
 // only valid until next AllocAttr()
-HtmlAttr *HtmlParser::GetAttr(HtmlAttrId id)
+HtmlAttr *HtmlParser::GetAttr(HtmlAttrId id) const
 {
-    assert(NO_ID != id);
+    if ((NO_ID == id) || (attrAllocator.Count() <= id))
+        return NULL;
     return attrAllocator.AtPtr(id);
 }
 
@@ -226,7 +233,7 @@ static bool SkipUntil(char **sPtr, char c)
 // only valid until next AllocElement()
 HtmlElement *HtmlParser::GetElement(HtmlElementId id) const
 {
-    if (NO_ID == id)
+    if ((NO_ID == id) || (elAllocator.Count() <= id))
         return NULL;
     return elAllocator.AtPtr(id);
 }
@@ -459,10 +466,45 @@ static void HtmlParser01()
     assert(NO_ID == el->up);
     assert(NO_ID == el->next);
     el = p->GetElement(el->down);
+    assert(NO_ID == el->firstAttrId);
     assert(str::Eq("bah", el->name));
     assert(el->up == RootElementId);
     assert(NO_ID == el->down);
     assert(NO_ID == el->next);
+    delete p;
+}
+
+static void HtmlParser02()
+{
+    HtmlParser *p = ParseString("<a><b/><  c></c  ><d at1=\"quoted\" at2='also quoted'   att3=notquoted att4=\"partially quoted/></a>");
+    assert(4 == p->ElementsCount());
+    assert(4 == p->TotalAttrCount());
+    HtmlElement *el = p->GetRootElement();
+    assert(str::Eq("a", el->name));
+    assert(NO_ID == el->next);
+    el = p->GetElement(el->down);
+    assert(str::Eq("b", el->name));
+    assert(RootElementId == el->up);
+    el = p->GetElement(el->next);
+    assert(str::Eq("c", el->name));
+    assert(RootElementId == el->up);
+    el = p->GetElement(el->next);
+    assert(str::Eq("d", el->name));
+    assert(NO_ID == el->next);
+    assert(RootElementId == el->up);
+    HtmlAttr *a = p->GetAttr(el->firstAttrId);
+    assert(str::Eq("at1", a->name));
+    assert(str::Eq("quoted", a->val));
+    a = p->GetAttr(a->nextAttrId);
+    assert(str::Eq("at2", a->name));
+    assert(str::Eq("also quoted", a->val));
+    a = p->GetAttr(a->nextAttrId);
+    assert(str::Eq("att3", a->name));
+    assert(str::Eq("notquoted", a->val));
+    a = p->GetAttr(a->nextAttrId);
+    assert(str::Eq("att4", a->name));
+    assert(str::Eq("partially quoted", a->val));
+    assert(NO_ID == a->nextAttrId);
     delete p;
 }
 
@@ -489,6 +531,7 @@ static void HtmlParserFile()
 
 void TrivialHtmlParser_UnitTests()
 {
+    //unittests::HtmlParser02();
     unittests::HtmlParser00();
     unittests::HtmlParser01();
     //unittests::HtmlParserFile();
