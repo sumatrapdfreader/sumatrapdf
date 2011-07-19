@@ -29,12 +29,7 @@ typedef size_t HtmlAttrId;
 enum HtmlParseError {
     ErrParsingNoError,
     ErrParsingElement, // syntax error parsing element
-    ErrParsingComment1, // syntax error parsing comment (<! not followed by --)
-    ErrParsingComment2, // syntax error parsing comment (<!- not followed by -)
-    ErrParsingComment3, // end of data in comment
-    ErrParsingCData1, // syntax error in CDATA section
-    ErrParsingCData2, // end of data in CDATA section
-    ErrParsingPI, // end of data in processing instruction
+    ErrParsingExclOrPI,
     ErrParsingClosingElement, // syntax error in closing element
     ErrParsingElementName, // syntax error after element name
     ErrParsingAttributes, // syntax error in attributes
@@ -161,12 +156,12 @@ bool HtmlParser::Parse(char *s)
     return ParseInPlace(str::Dup(s));
 }
 
-static inline bool IsWs(int c)
+static bool IsWs(int c)
 {
     return c == ' ' || c == '\r' || c == '\n' || c == '\t';
 }
 
-static inline int IsName(int c)
+static int IsName(int c)
 {
     return c == '.' || c == '-' || c == '_' || c == ':' ||
         (c >= '0' && c <= '9') ||
@@ -190,6 +185,16 @@ static void SkipName(char **sPtr)
         s++;
     }
     *sPtr = s;
+}
+
+static bool SkipUntil(char **sPtr, char c)
+{
+    char *s = *sPtr;
+    while (*s && (*s != c)) {
+        ++s;
+    }
+    *sPtr = s;
+    return *s == c;
 }
 
 void HtmlParser::CloseTag(char *tagName)
@@ -216,10 +221,11 @@ void HtmlParser::SetAttrVal(char *attrVal)
 // The caller owns the memory for s.
 bool HtmlParser::ParseInPlace(char *s)
 {
-    char *mark, *tmp;
+    char *mark, *tagName, *tmp;
     char quoteChar;
-    html = s;
+    bool ok;
 
+    html = s;
 ParseText:
     mark = s;
     while (*s != '<') {
@@ -236,59 +242,25 @@ ParseElement:
         ++s;
         goto ParseClosingElement;
     }
-    if (*s == '!') {
+    if (*s == '!' || *s == '?') {
         ++s;
-        goto ParseComment;
-    }
-    if (*s == '?') {
-        ++s;
-        goto ParsePi;
+        goto ParseExclOrPi;
     }
     SkipWs(&s);
     if (IsName(*s))
         goto ParseElementName;
     return ParseError(ErrParsingElement, s);
 
-ParseComment:
-    if (*s == '[')
-        goto ParseCdata;
-    if (*s++ != '-')
-        return ParseError(ErrParsingComment1, s);
-    if (*s++ != '-')
-        return ParseError(ErrParsingComment2, s);
-    mark = s;
-    while (*s) {
-        if (str::StartsWith(s, "-->")) {
-            s += 3;
-            goto ParseText;
-        }
-        ++s;
-    }
-    return ParseError(ErrParsingComment3, s);
-
-ParseCdata:
-    if (!str::StartsWith(s, "CDATA["))
-        return ParseError(ErrParsingCData1, s);
-    s += 7;
-    mark = s;
-    while (*s) {
-        if (*s == ']' && s[1] == ']' && s[2] == '>') {
-            s += 3;
-            goto ParseText;
-        }
-        ++s;
-    }
-    return ParseError(ErrParsingCData2, s);
-
-ParsePi:
-    while (*s) {
-        if (str::StartsWith(s, "?>")) {
-            s += 2;
-            goto ParseText;
-        }
-        ++s;
-    }
-    return ParseError(ErrParsingPI, s);
+ParseExclOrPi:
+    // Parse anything that starts with <!, or <?
+    // this might be a <!DOCTYPE ..>, a <!-- comment ->, a <? processing instruction >
+    // or really anything. We're very lenient and consider it a success if we
+    // find a terminating '>'
+    ok = SkipUntil(&s, '>');
+    if (!ok)
+        return ParseError(ErrParsingExclOrPI, s);
+    ++s;
+    goto ParseText;
 
 ParseClosingElement:
     SkipWs(&s);
@@ -304,18 +276,18 @@ ParseClosingElement:
     goto ParseText;
 
 ParseElementName:
-    mark = s;
+    tagName = s;
     SkipName(&s);
     if (*s == '>') {
         *s = 0; // terminate tag name
-        StartTag(mark);
+        StartTag(tagName);
         ++s;
         goto ParseText;
     }
     if (*s == '/' && s[1] == '>') {
         *s = 0;
-        StartTag(mark);
-        CloseTag(mark);
+        StartTag(tagName);
+        CloseTag(tagName);
         s += 2;
         goto ParseText;
     }
@@ -335,7 +307,7 @@ ParseAttributes:
         goto ParseText;
     }
     if (*s == '/' && s[1] == '>') {
-        CloseTag(mark);
+        CloseTag(tagName);
         s += 2;
         goto ParseText;
     }
