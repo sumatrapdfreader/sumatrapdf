@@ -203,11 +203,13 @@ void UpdateFindbox(WindowInfo* win)
 static HBITMAP LoadExternalBitmap(HINSTANCE hInst, TCHAR * filename, INT resourceId)
 {
     ScopedMem<TCHAR> path(AppGenDataFilename(filename));
-    
-    HBITMAP hBmp = (HBITMAP)LoadImage(NULL, path, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-    if (!hBmp)
-        hBmp = LoadBitmap(hInst, MAKEINTRESOURCE(resourceId));
-    return hBmp;
+
+    if (path) {
+        HBITMAP hBmp = (HBITMAP)LoadImage(NULL, path, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+        if (hBmp)
+            return hBmp;
+    }
+    return LoadBitmap(hInst, MAKEINTRESOURCE(resourceId));
 }
 
 #define UWM_DELAYED_SET_FOCUS (WM_APP + 1)

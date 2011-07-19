@@ -685,6 +685,8 @@ static TCHAR *GetThumbnailPath(const TCHAR *filePath)
     ScopedMem<char> fingerPrint(str::MemToHex(digest, 16));
 
     ScopedMem<TCHAR> thumbsPath(AppGenDataFilename(THUMBNAILS_DIR_NAME));
+    if (!thumbsPath)
+        return NULL;
     ScopedMem<TCHAR> fname(str::conv::FromAnsi(fingerPrint));
 
     return str::Format(_T("%s\\%s.png"), thumbsPath, fname);
@@ -694,6 +696,8 @@ static TCHAR *GetThumbnailPath(const TCHAR *filePath)
 void CleanUpThumbnailCache(FileHistory& fileHistory)
 {
     ScopedMem<TCHAR> thumbsPath(AppGenDataFilename(THUMBNAILS_DIR_NAME));
+    if (!thumbsPath)
+        return;
     ScopedMem<TCHAR> pattern(path::Join(thumbsPath, _T("*.png")));
 
     StrVec files;

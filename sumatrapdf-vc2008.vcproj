@@ -450,6 +450,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\utils\TrivialHtmlParser.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\utils\TrivialHtmlParser.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\utils\UtilTests.cpp"
 				>
 			</File>
