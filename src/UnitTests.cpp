@@ -6,6 +6,7 @@
 #include "BaseUtil.h"
 #include "StrUtil.h"
 #include "ParseCommandLine.h"
+#include "WinUtil.h"
 #include "AppTools.h"
 #include "StressTesting.h"
 

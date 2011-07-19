@@ -9,6 +9,7 @@
 #include "BaseUtil.h"
 #include "FileUtil.h"
 #include "StrUtil.h"
+#include "Vec.h"
 #include "WinUtil.h"
 
 // Loads a DLL explicitly from the system's library collection
@@ -214,6 +215,49 @@ void RedirectIOToConsole()
     hConHandle = _open_osfhandle((intptr_t)GetStdHandle(STD_INPUT_HANDLE), _O_TEXT);
     *stdin = *(FILE *)_fdopen(hConHandle, "r");
     setvbuf(stdin, NULL, _IONBF, 0);
+}
+
+/* Make a string safe to be displayed as a menu item
+   (preserving all & so that they don't get swallowed)
+   Caller needs to free() the result. */
+TCHAR *MenuSafeString(const TCHAR *str)
+{
+    if (!str::FindChar(str, '&'))
+        return str::Dup(str);
+
+    StrVec ampSplitter;
+    ampSplitter.Split(str, _T("&"));
+    return ampSplitter.Join(_T("&&"));
+}
+
+
+/* Return the full exe path of my own executable.
+   Caller needs to free() the result. */
+TCHAR *GetExePath()
+{
+    TCHAR buf[MAX_PATH];
+    buf[0] = 0;
+    GetModuleFileName(NULL, buf, dimof(buf));
+    return path::Normalize(buf);
+}
+
+static ULARGE_INTEGER FileTimeToLargeInteger(FILETIME& ft)
+{
+    ULARGE_INTEGER res;
+    res.LowPart = ft.dwLowDateTime;
+    res.HighPart = ft.dwHighDateTime;
+    return res;
+}
+
+/* Return <ft1> - <ft2> in seconds */
+int FileTimeDiffInSecs(FILETIME& ft1, FILETIME& ft2)
+{
+    ULARGE_INTEGER t1 = FileTimeToLargeInteger(ft1);
+    ULARGE_INTEGER t2 = FileTimeToLargeInteger(ft2);
+    // diff is in 100 nanoseconds
+    LONGLONG diff = t1.QuadPart - t2.QuadPart;
+    diff = diff / (LONGLONG)10000000L;
+    return (int)diff;
 }
 
 TCHAR *ResolveLnk(const TCHAR * path)

@@ -8,8 +8,8 @@
 #include "WinUtil.h"
 #include "resource.h"
 #include "WindowInfo.h"
-#include "AppTools.h"
 #include "FileHistory.h"
+#include "AppTools.h"
 #include "SumatraDialogs.h"
 
 int FileFavs::FindByPage(int pageNo) const

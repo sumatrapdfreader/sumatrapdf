@@ -57,10 +57,7 @@ public:
 
 bool IsValidProgramVersion(char *txt);
 int CompareVersion(TCHAR *txt1, TCHAR *txt2);
-int FileTimeDiffInSecs(FILETIME& ft1, FILETIME& ft2);
-TCHAR *MenuSafeString(const TCHAR *str);
 
-TCHAR *GetExePath();
 bool IsRunningInPortableMode();
 TCHAR *AppGenDataFilename(TCHAR *pFilename);
 void AdjustRemovableDriveLetter(TCHAR *path);

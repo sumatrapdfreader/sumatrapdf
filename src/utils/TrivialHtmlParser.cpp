@@ -7,7 +7,7 @@
 #include "TrivialHtmlParser.h"
 #include "Vec.h"
 #include "FileUtil.h"
-#include "AppTools.h"
+#include "WinUtil.h"
 
 /*
 Html parser that is good enough for parsing html files

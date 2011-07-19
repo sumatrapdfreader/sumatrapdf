@@ -62,49 +62,6 @@ int CompareVersion(TCHAR *txt1, TCHAR *txt2)
     return 0;
 }
 
-static ULARGE_INTEGER FileTimeToLargeInteger(FILETIME& ft)
-{
-    ULARGE_INTEGER res;
-    res.LowPart = ft.dwLowDateTime;
-    res.HighPart = ft.dwHighDateTime;
-    return res;
-}
-
-/* Return <ft1> - <ft2> in seconds */
-int FileTimeDiffInSecs(FILETIME& ft1, FILETIME& ft2)
-{
-    ULARGE_INTEGER t1 = FileTimeToLargeInteger(ft1);
-    ULARGE_INTEGER t2 = FileTimeToLargeInteger(ft2);
-    // diff is in 100 nanoseconds
-    LONGLONG diff = t1.QuadPart - t2.QuadPart;
-    diff = diff / (LONGLONG)10000000L;
-    return (int)diff;
-}
-
-/* Make a string safe to be displayed as a menu item
-   (preserving all & so that they don't get swallowed)
-   Caller needs to free() the result. */
-TCHAR *MenuSafeString(const TCHAR *str)
-{
-    if (!str::FindChar(str, '&'))
-        return str::Dup(str);
-
-    StrVec ampSplitter;
-    ampSplitter.Split(str, _T("&"));
-    return ampSplitter.Join(_T("&&"));
-}
-
-
-/* Return the full exe path of my own executable.
-   Caller needs to free() the result. */
-TCHAR *GetExePath()
-{
-    TCHAR buf[MAX_PATH];
-    buf[0] = 0;
-    GetModuleFileName(NULL, buf, dimof(buf));
-    return path::Normalize(buf);
-}
-
 /* Return false if this program has been started from "Program Files" directory
    (which is an indicator that it has been installed) or from the last known
    location of a SumatraPDF installation (HKLM\Software\SumatraPDF\Install_Dir) */
