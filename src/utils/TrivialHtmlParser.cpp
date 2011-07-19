@@ -74,12 +74,13 @@ class HtmlParser {
 
     // text to parse. It can be changed.
     char *html;
-
     // true if s was allocated by ourselves, false if managed
     // by the caller
     bool freeHtml;
 
-    HtmlElementId AllocElement(HtmlElement **elOut);
+    HtmlElementId currElementId;
+
+    HtmlElementId AllocElement(HtmlElementId parentId, char *name, HtmlElement **elOut);
     HtmlAttrId AllocAttr(HtmlAttr **attrOut);
 
     HtmlElement *GetElement(HtmlElementId id);
@@ -105,7 +106,9 @@ public:
     }
 };
 
-HtmlParser::HtmlParser() : html(NULL), freeHtml(false), error(ErrParsingNoError), errorContext(NULL)
+HtmlParser::HtmlParser() : 
+    html(NULL), freeHtml(false), currElementId(NO_ID),
+    error(ErrParsingNoError), errorContext(NULL)
 {
 }
 
@@ -113,16 +116,6 @@ HtmlParser::~HtmlParser()
 {
     if (freeHtml)
         free(html);
-}
-
-// elOut is only valid until next AllocElement()
-HtmlElementId HtmlParser::AllocElement(HtmlElement **elOut)
-{
-    HtmlElement *el = elAllocator.MakeSpaceAtEnd();
-    InitHtmlElement(el);
-    if (elOut)
-        *elOut = el;
-    return elAllocator.Count() - 1;
 }
 
 // attrOut is only valid until next AllocAttr()
@@ -133,13 +126,6 @@ HtmlAttrId HtmlParser::AllocAttr(HtmlAttr **attrOut)
     if (attrOut)
         *attrOut = attr;
     return attrAllocator.Count() - 1;
-}
-
-// only valid until next AllocElement()
-HtmlElement *HtmlParser::GetElement(HtmlElementId id)
-{
-    assert(NO_ID != id);
-    return elAllocator.AtPtr(id);
 }
 
 // only valid until next AllocAttr()
@@ -196,18 +182,68 @@ static bool SkipUntil(char **sPtr, char c)
     return *s == c;
 }
 
-void HtmlParser::CloseTag(char *tagName)
+// only valid until next AllocElement()
+HtmlElement *HtmlParser::GetElement(HtmlElementId id)
 {
-    // TODO: write me
+    assert(NO_ID != id);
+    return elAllocator.AtPtr(id);
+}
+
+// elOut is only valid until next AllocElement()
+// TODO: move the code from AllocElement() to StartTag()
+HtmlElementId HtmlParser::AllocElement(HtmlElementId parentId, char *name, HtmlElement **elOut)
+{
+    HtmlElementId id = elAllocator.Count();
+    HtmlElement *el = elAllocator.MakeSpaceAtEnd();
+    InitHtmlElement(el);
+    el->up = parentId;
+    if (parentId != NO_ID) {
+        HtmlElement *parentEl = GetElement(parentId);
+        if (parentEl->down == NO_ID) {
+            // parent has no children => set as a first child
+            parentEl->down = id;
+        } else {
+            // parent has children => set as a sibling
+            el = GetElement(parentEl->down);
+            while (el->next != NO_ID) {
+                el = GetElement(el->next);
+            }
+            el->next = id;
+        }
+    }
+    el->name = name;
+    if (elOut)
+        *elOut = el;
+    return id;
 }
 
 void HtmlParser::StartTag(char *tagName)
 {
-    // TODO: write me
+    str::ToLower(tagName);
+    currElementId = AllocElement(currElementId, tagName, NULL);
+}
+
+void HtmlParser::CloseTag(char *tagName)
+{
+    str::ToLower(tagName);
+    HtmlElementId id = currElementId;
+    // to allow for lack of closing tags, e.g. in case like
+    // <a><b><c></a>, we look for the first parent with matching name
+    while (id != NO_ID) {
+        HtmlElement *el = GetElement(id);
+        if (str::Eq(el->name, tagName)) {
+            // TODO: what if el->up is NO_ID?
+            currElementId = el->up;
+            return;
+        }
+        id = el->up;
+    }
+    // TODO: should we do sth. here?
 }
 
 void HtmlParser::StartAttr(char *attrName)
 {
+    str::ToLower(attrName);
     // TODO: write me
 }
 
