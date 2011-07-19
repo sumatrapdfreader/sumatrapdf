@@ -26,6 +26,23 @@ memory inside HtmlParser::s, so they don't need to be freed.
 typedef size_t HtmlElementId;
 typedef size_t HtmlAttrId;
 
+enum HtmlParseError {
+    ErrParsingNoError,
+    ErrParsingElement, // syntax error parsing element
+    ErrParsingComment1, // syntax error parsing comment (<! not followed by --)
+    ErrParsingComment2, // syntax error parsing comment (<!- not followed by -)
+    ErrParsingComment3, // end of data in comment
+    ErrParsingCData1, // syntax error in CDATA section
+    ErrParsingCData2, // end of data in CDATA section
+    ErrParsingPI, // end of data in processing instruction
+    ErrParsingClosingElement, // syntax error in closing element
+    ErrParsingElementName, // syntax error after element name
+    ErrParsingAttributes, // syntax error in attributes
+    ErrParsingAttributeName, // syntax error after attribute name
+    ErrParsingAttributeValue1,
+    ErrParsingAttributeValue2,
+};
+
 #define NO_ID (size_t)-1
 
 struct HtmlElement {
@@ -79,7 +96,7 @@ class HtmlParser {
     void SetAttrVal(char *attrVal);
 
 public:
-    char *error;  // parsing error, a static string
+    HtmlParseError error;  // parsing error, a static string
     char *errorPos;
 
     HtmlParser();
@@ -87,14 +104,14 @@ public:
 
     bool Parse(char *s);
     bool ParseInPlace(char *s);
-    bool ParseError(char *err, char *pos) {
+    bool ParseError(HtmlParseError err, char *pos) {
         error = err;
         errorPos = pos;
         return false;
     }
 };
 
-HtmlParser::HtmlParser() : html(NULL), freeHtml(false), error(NULL)
+HtmlParser::HtmlParser() : html(NULL), freeHtml(false), error(ErrParsingNoError)
 {
 }
 
@@ -230,15 +247,15 @@ ParseElement:
     SkipWs(&s);
     if (IsName(*s))
         goto ParseElementName;
-    return ParseError("syntax error in element", s);
+    return ParseError(ErrParsingElement, s);
 
 ParseComment:
     if (*s == '[')
         goto ParseCdata;
     if (*s++ != '-')
-        return ParseError("syntax error in comment (<! not followed by --)", s);
+        return ParseError(ErrParsingComment1, s);
     if (*s++ != '-')
-        return ParseError("syntax error in comment (<!- not followed by -),", s);
+        return ParseError(ErrParsingComment2, s);
     mark = s;
     while (*s) {
         if (str::StartsWith(s, "-->")) {
@@ -247,11 +264,11 @@ ParseComment:
         }
         ++s;
     }
-    return ParseError("end of data in comment", s);
+    return ParseError(ErrParsingComment3, s);
 
 ParseCdata:
     if (!str::StartsWith(s, "CDATA["))
-        return ParseError("syntax error in CDATA section", s);
+        return ParseError(ErrParsingCData1, s);
     s += 7;
     mark = s;
     while (*s) {
@@ -261,7 +278,7 @@ ParseCdata:
         }
         ++s;
     }
-    return ParseError("end of data in CDATA section", s);
+    return ParseError(ErrParsingCData2, s);
 
 ParsePi:
     while (*s) {
@@ -271,7 +288,7 @@ ParsePi:
         }
         ++s;
     }
-    return ParseError("end of data in processing instruction", s);
+    return ParseError(ErrParsingPI, s);
 
 ParseClosingElement:
     SkipWs(&s);
@@ -280,7 +297,7 @@ ParseClosingElement:
     tmp = s;
     SkipWs(&s);
     if (*s != '>')
-        return ParseError("syntax error in closing element", s);
+        return ParseError(ErrParsingClosingElement, s);
     *tmp = 0; // terminate tag name
     CloseTag(mark);
     ++s;
@@ -307,7 +324,7 @@ ParseElementName:
         s++;
         goto ParseAttributes;
     }
-    return ParseError("syntax error after element name", s);
+    return ParseError(ErrParsingElementName, s);
 
 ParseAttributes:
     SkipWs(&s);
@@ -322,7 +339,7 @@ ParseAttributes:
         s += 2;
         goto ParseText;
     }
-    return ParseError("syntax error in attributes", s);
+    return ParseError(ErrParsingAttributes, s);
 
 ParseAttributeName:
     mark = s;
@@ -335,14 +352,14 @@ ParseAttributeName:
         ++s;
         goto ParseAttributeValue;
     }
-    return ParseError("syntax error after attribute name", s);
+    return ParseError(ErrParsingAttributeName, s);
 
 ParseAttributeValue:
     SkipWs(&s);
     quoteChar = *s++;
     // TODO: relax quoting rules
     if (quoteChar != '"' && quoteChar != '\'')
-        return ParseError("missing quote character", s);
+        return ParseError(ErrParsingAttributeValue1, s);
     mark = s;
     while (*s && *s != quoteChar) {
         ++s;
@@ -352,7 +369,7 @@ ParseAttributeValue:
         SetAttrVal(mark);
         goto ParseAttributes;
     }
-    return ParseError("end of data in attribute value", s);
+    return ParseError(ErrParsingAttributeValue2, s);
 }
 
 #ifdef DEBUG
