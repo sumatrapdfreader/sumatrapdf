@@ -25,6 +25,9 @@ memory inside HtmlParser::s, so they don't need to be freed.
 
 typedef size_t HtmlElementId;
 typedef size_t HtmlAttrId;
+#define NO_ID (size_t)-1
+
+static const HtmlElementId RootElementId = 0;
 
 enum HtmlParseError {
     ErrParsingNoError,
@@ -38,7 +41,6 @@ enum HtmlParseError {
     ErrParsingAttributeValue2,
 };
 
-#define NO_ID (size_t)-1
 
 struct HtmlElement {
     char *name;
@@ -83,13 +85,16 @@ class HtmlParser {
     HtmlElementId AllocElement(HtmlElementId parentId, char *name, HtmlElement **elOut);
     HtmlAttrId AllocAttr(HtmlAttr **attrOut);
 
-    HtmlElement *GetElement(HtmlElementId id);
     HtmlAttr *GetAttr(HtmlAttrId id);
 
     void CloseTag(char *tagName);
     void StartTag(char *tagName);
     void StartAttr(char *attrName);
     void SetAttrVal(char *attrVal);
+    bool ParseError(HtmlParseError err) {
+        error = err;
+        return false;
+    }
 
 public:
     HtmlParseError error;  // parsing error, a static string
@@ -98,13 +103,49 @@ public:
     HtmlParser();
     ~HtmlParser();
 
-    bool Parse(char *s);
+    bool Parse(const char *s);
     bool ParseInPlace(char *s);
-    bool ParseError(HtmlParseError err) {
-        error = err;
-        return false;
-    }
+
+    HtmlElement *GetElement(HtmlElementId id) const;
+    size_t ElementsCount() const { return elAllocator.Count(); }
+    size_t AttrCount() const { return attrAllocator.Count(); }
+    char *GetElementName(HtmlElementId id) const;
+    char *GetAttrName(HtmlAttrId id) const;
+    HtmlElementId GetParent(HtmlElementId id) const;
+    size_t GetSiblingCount(HtmlElementId id) const;
+    HtmlElementId GetSibling(HtmlElementId id, size_t siblingNo) const;
 };
+
+char *HtmlParser::GetElementName(HtmlElementId id) const
+{
+    HtmlElement *el = elAllocator.AtPtr(id);
+    return el->name;
+}
+
+char *HtmlParser::GetAttrName(HtmlAttrId id) const
+{
+    HtmlAttr *attr = attrAllocator.AtPtr(id);
+    return attr->name;
+}
+
+HtmlElementId HtmlParser::GetParent(HtmlElementId id) const
+{
+    HtmlElement *el = elAllocator.AtPtr(id);
+    return el->up;
+}
+
+size_t HtmlParser::GetSiblingCount(HtmlElementId id) const
+{
+    assert(0); // TODO: write me
+    return 0;
+}
+
+HtmlElementId HtmlParser::GetSibling(HtmlElementId id, size_t siblingNo) const
+{
+    assert(0); // TODO: write me
+    return NO_ID;
+}
+
 
 HtmlParser::HtmlParser() : 
     html(NULL), freeHtml(false), currElementId(NO_ID),
@@ -135,7 +176,7 @@ HtmlAttr *HtmlParser::GetAttr(HtmlAttrId id)
     return attrAllocator.AtPtr(id);
 }
 
-bool HtmlParser::Parse(char *s)
+bool HtmlParser::Parse(const char *s)
 {
     freeHtml = true;
     return ParseInPlace(str::Dup(s));
@@ -183,9 +224,10 @@ static bool SkipUntil(char **sPtr, char c)
 }
 
 // only valid until next AllocElement()
-HtmlElement *HtmlParser::GetElement(HtmlElementId id)
+HtmlElement *HtmlParser::GetElement(HtmlElementId id) const
 {
-    assert(NO_ID != id);
+    if (NO_ID == id)
+        return NULL;
     return elAllocator.AtPtr(id);
 }
 
@@ -386,7 +428,46 @@ ParseAttributeValue:
 }
 
 #ifdef DEBUG
-void TrivialHtmlParser_UnitTests()
+#include <assert.h>
+
+namespace unittests {
+static HtmlParser *ParseString(const char *s)
+{
+    HtmlParser *p = new HtmlParser();
+    bool ok = p->Parse(s);
+    if (!ok) {
+        delete p;
+        return NULL;
+    }
+    return p;
+}
+
+static void HtmlParser00()
+{
+    HtmlParser *p = ParseString("<a></A>");
+    assert(p);
+    assert(p->ElementsCount() == 1);
+    assert(str::Eq("a", p->GetElementName(RootElementId)));
+    delete p;
+}
+
+static void HtmlParser01()
+{
+    HtmlParser *p = ParseString("<A><bAh></a>");
+    assert(p->ElementsCount() == 2);
+    HtmlElement *el = p->GetElement(RootElementId);
+    assert(str::Eq("a", el->name));
+    assert(NO_ID == el->up);
+    assert(NO_ID == el->next);
+    el = p->GetElement(el->down);
+    assert(str::Eq("bah", el->name));
+    assert(el->up == RootElementId);
+    assert(NO_ID == el->down);
+    assert(NO_ID == el->next);
+    delete p;
+}
+
+static void HtmlParserFile()
 {
     TCHAR *fileName = _T("HtmlParseTest00.html");
     // We assume we're being run from obj-[dbg|rel], so the test
@@ -404,5 +485,13 @@ void TrivialHtmlParser_UnitTests()
     bool ok = p.ParseInPlace(d);
     // assert(ok);
     free(d);
+}
+}
+
+void TrivialHtmlParser_UnitTests()
+{
+    unittests::HtmlParser00();
+    unittests::HtmlParser01();
+    //unittests::HtmlParserFile();
 }
 #endif
