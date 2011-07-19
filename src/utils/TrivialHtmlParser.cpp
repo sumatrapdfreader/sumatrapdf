@@ -23,8 +23,6 @@ name/val pointers inside Element/Attr structs refer to
 memory inside HtmlParser::s, so they don't need to be freed.
 */
 
-#define NO_LEN (size_t)-1
-
 typedef size_t HtmlElementId;
 typedef size_t HtmlAttrId;
 
@@ -63,34 +61,47 @@ class HtmlParser {
     Vec<HtmlAttr> attrAllocator;
 
     // text to parse. It can be changed.
-    char *s;
-    size_t slen;
+    char *html;
 
     // true if s was allocated by ourselves, false if managed
     // by the caller
-    bool freeText;
+    bool freeHtml;
 
     HtmlElementId AllocElement(HtmlElement **elOut);
     HtmlAttrId AllocAttr(HtmlAttr **attrOut);
 
     HtmlElement *GetElement(HtmlElementId id);
     HtmlAttr *GetAttr(HtmlAttrId id);
+
+    void CloseTag(char *tagName);
+    void StartTag(char *tagName);
+    void StartAttr(char *attrName);
+    void SetAttrVal(char *attrVal);
+
 public:
+    char *error;  // parsing error, a static string
+    char *errorPos;
+
     HtmlParser();
     ~HtmlParser();
 
-    bool Parse(char *s, size_t len=NO_LEN);
-    bool ParseInPlace(char *s, size_t len=NO_LEN);
+    bool Parse(char *s);
+    bool ParseInPlace(char *s);
+    bool ParseError(char *err, char *pos) {
+        error = err;
+        errorPos = pos;
+        return false;
+    }
 };
 
-HtmlParser::HtmlParser() : s(NULL), slen(0), freeText(false)
+HtmlParser::HtmlParser() : html(NULL), freeHtml(false), error(NULL)
 {
 }
 
 HtmlParser::~HtmlParser()
 {
-    if (freeText)
-        free(s);
+    if (freeHtml)
+        free(html);
 }
 
 // elOut is only valid until next AllocElement()
@@ -127,24 +138,221 @@ HtmlAttr *HtmlParser::GetAttr(HtmlAttrId id)
     return attrAllocator.AtPtr(id);
 }
 
-bool HtmlParser::Parse(char *txt, size_t len)
+bool HtmlParser::Parse(char *s)
 {
-    if (NO_LEN == len)
-        len = strlen(txt);
-    freeText = true;
-    return ParseInPlace(str::DupN(txt, len), len);
+    freeHtml = true;
+    return ParseInPlace(str::Dup(s));
 }
 
-// Parse txt in place i.e. we assume we can modify txt
-// The caller owns the memory for txt.
-bool HtmlParser::ParseInPlace(char *txt, size_t len)
+static inline bool IsWs(int c)
 {
-    if (NO_LEN == len)
-        len = strlen(txt);
-    s = txt;
-    slen = len;
+    return c == ' ' || c == '\r' || c == '\n' || c == '\t';
+}
 
-    return false;
+static inline int IsName(int c)
+{
+    return c == '.' || c == '-' || c == '_' || c == ':' ||
+        (c >= '0' && c <= '9') ||
+        (c >= 'A' && c <= 'Z') ||
+        (c >= 'a' && c <= 'z');
+}
+
+static void SkipWs(char **sPtr)
+{
+    char *s = *sPtr;
+    while (IsWs(*s)) {
+        s++;
+    }
+    *sPtr = s;
+}
+
+static void SkipName(char **sPtr)
+{
+    char *s = *sPtr;
+    while (IsName(*s)) {
+        s++;
+    }
+    *sPtr = s;
+}
+
+void HtmlParser::CloseTag(char *tagName)
+{
+    // TODO: write me
+}
+
+void HtmlParser::StartTag(char *tagName)
+{
+    // TODO: write me
+}
+
+void HtmlParser::StartAttr(char *attrName)
+{
+    // TODO: write me
+}
+
+void HtmlParser::SetAttrVal(char *attrVal)
+{
+    // TODO: write me
+}
+
+// Parse s in place i.e. we assume we can modify it. Must be 0-terminated.
+// The caller owns the memory for s.
+bool HtmlParser::ParseInPlace(char *s)
+{
+    char *mark, *tmp;
+    char quoteChar;
+    html = s;
+
+ParseText:
+    mark = s;
+    while (*s != '<') {
+        ++s;
+    }
+    if (*s == '<') {
+        ++s;
+        goto ParseElement;
+    }
+    return true;
+
+ParseElement:
+    if (*s == '/') {
+        ++s;
+        goto ParseClosingElement;
+    }
+    if (*s == '!') {
+        ++s;
+        goto ParseComment;
+    }
+    if (*s == '?') {
+        ++s;
+        goto ParsePi;
+    }
+    SkipWs(&s);
+    if (IsName(*s))
+        goto ParseElementName;
+    return ParseError("syntax error in element", s);
+
+ParseComment:
+    if (*s == '[')
+        goto ParseCdata;
+    if (*s++ != '-')
+        return ParseError("syntax error in comment (<! not followed by --)", s);
+    if (*s++ != '-')
+        return ParseError("syntax error in comment (<!- not followed by -),", s);
+    mark = s;
+    while (*s) {
+        if (str::StartsWith(s, "-->")) {
+            s += 3;
+            goto ParseText;
+        }
+        ++s;
+    }
+    return ParseError("end of data in comment", s);
+
+ParseCdata:
+    if (!str::StartsWith(s, "CDATA["))
+        return ParseError("syntax error in CDATA section", s);
+    s += 7;
+    mark = s;
+    while (*s) {
+        if (*s == ']' && s[1] == ']' && s[2] == '>') {
+            s += 3;
+            goto ParseText;
+        }
+        ++s;
+    }
+    return ParseError("end of data in CDATA section", s);
+
+ParsePi:
+    while (*s) {
+        if (str::StartsWith(s, "?>")) {
+            s += 2;
+            goto ParseText;
+        }
+        ++s;
+    }
+    return ParseError("end of data in processing instruction", s);
+
+ParseClosingElement:
+    SkipWs(&s);
+    mark = s;
+    SkipName(&s);
+    tmp = s;
+    SkipWs(&s);
+    if (*s != '>')
+        return ParseError("syntax error in closing element", s);
+    *tmp = 0; // terminate tag name
+    CloseTag(mark);
+    ++s;
+    goto ParseText;
+
+ParseElementName:
+    mark = s;
+    SkipName(&s);
+    if (*s == '>') {
+        *s = 0; // terminate tag name
+        StartTag(mark);
+        ++s;
+        goto ParseText;
+    }
+    if (*s == '/' && s[1] == '>') {
+        *s = 0;
+        StartTag(mark);
+        CloseTag(mark);
+        s += 2;
+        goto ParseText;
+    }
+    if (IsWs(*s)) {
+        *s = 0; // terminate tag name
+        s++;
+        goto ParseAttributes;
+    }
+    return ParseError("syntax error after element name", s);
+
+ParseAttributes:
+    SkipWs(&s);
+    if (IsName(*s))
+        goto ParseAttributeName;
+    if (*s == '>') {
+        ++s;
+        goto ParseText;
+    }
+    if (*s == '/' && s[1] == '>') {
+        CloseTag(mark);
+        s += 2;
+        goto ParseText;
+    }
+    return ParseError("syntax error in attributes", s);
+
+ParseAttributeName:
+    mark = s;
+    SkipName(&s);
+    tmp = s;
+    SkipWs(&s);
+    if (*s == '=') {
+        *tmp = 0; // terminate attribute name
+        StartAttr(mark);
+        ++s;
+        goto ParseAttributeValue;
+    }
+    return ParseError("syntax error after attribute name", s);
+
+ParseAttributeValue:
+    SkipWs(&s);
+    quoteChar = *s++;
+    // TODO: relax quoting rules
+    if (quoteChar != '"' && quoteChar != '\'')
+        return ParseError("missing quote character", s);
+    mark = s;
+    while (*s && *s != quoteChar) {
+        ++s;
+    }
+    if (*s == quoteChar) {
+        *s++ = 0; // terminate attribute value
+        SetAttrVal(mark);
+        goto ParseAttributes;
+    }
+    return ParseError("end of data in attribute value", s);
 }
 
 #ifdef DEBUG
@@ -157,14 +365,13 @@ void TrivialHtmlParser_UnitTests()
     const TCHAR *exeDir = path::GetBaseName(exePath);
     ScopedMem<TCHAR> p1(path::Join(exeDir, _T("..\\src\\utils")));
     ScopedMem<TCHAR> p2(path::Join(p1, fileName));
-    size_t fileSize;
-    char *d = file::ReadAll(p2, &fileSize);
+    char *d = file::ReadAll(p2, NULL);
     // it's ok if we fail - we assume we were not run from the
     // right location
     if (!d)
         return;
     HtmlParser p;
-    bool ok = p.ParseInPlace(d, fileSize);
+    bool ok = p.ParseInPlace(d);
     // assert(ok);
     free(d);
 }
