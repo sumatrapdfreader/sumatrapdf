@@ -92,21 +92,20 @@ class HtmlParser {
 
 public:
     HtmlParseError error;  // parsing error, a static string
-    char *errorPos;
+    char *errorContext; // pointer within html showing which part we failed to parse
 
     HtmlParser();
     ~HtmlParser();
 
     bool Parse(char *s);
     bool ParseInPlace(char *s);
-    bool ParseError(HtmlParseError err, char *pos) {
+    bool ParseError(HtmlParseError err) {
         error = err;
-        errorPos = pos;
         return false;
     }
 };
 
-HtmlParser::HtmlParser() : html(NULL), freeHtml(false), error(ErrParsingNoError)
+HtmlParser::HtmlParser() : html(NULL), freeHtml(false), error(ErrParsingNoError), errorContext(NULL)
 {
 }
 
@@ -228,16 +227,15 @@ bool HtmlParser::ParseInPlace(char *s)
     html = s;
 ParseText:
     mark = s;
-    while (*s != '<') {
-        ++s;
+    ok = SkipUntil(&s, '<');
+    if (!ok) {
+        // TODO: I think we can be in an inconsistent state here (unclosed tags)
+        // but not sure if we should care
+        return true;
     }
-    if (*s == '<') {
-        ++s;
-        goto ParseElement;
-    }
-    return true;
+    ++s;
 
-ParseElement:
+    // parsing element
     if (*s == '/') {
         ++s;
         goto ParseClosingElement;
@@ -246,30 +244,33 @@ ParseElement:
         ++s;
         goto ParseExclOrPi;
     }
+    errorContext = s;
     SkipWs(&s);
     if (IsName(*s))
         goto ParseElementName;
-    return ParseError(ErrParsingElement, s);
+    return ParseError(ErrParsingElement);
 
 ParseExclOrPi:
     // Parse anything that starts with <!, or <?
     // this might be a <!DOCTYPE ..>, a <!-- comment ->, a <? processing instruction >
     // or really anything. We're very lenient and consider it a success if we
     // find a terminating '>'
+    errorContext = s;
     ok = SkipUntil(&s, '>');
     if (!ok)
-        return ParseError(ErrParsingExclOrPI, s);
+        return ParseError(ErrParsingExclOrPI);
     ++s;
     goto ParseText;
 
 ParseClosingElement:
+    errorContext = s;
     SkipWs(&s);
     mark = s;
     SkipName(&s);
     tmp = s;
     SkipWs(&s);
     if (*s != '>')
-        return ParseError(ErrParsingClosingElement, s);
+        return ParseError(ErrParsingClosingElement);
     *tmp = 0; // terminate tag name
     CloseTag(mark);
     ++s;
@@ -277,6 +278,7 @@ ParseClosingElement:
 
 ParseElementName:
     tagName = s;
+    errorContext = s;
     SkipName(&s);
     if (*s == '>') {
         *s = 0; // terminate tag name
@@ -296,9 +298,10 @@ ParseElementName:
         s++;
         goto ParseAttributes;
     }
-    return ParseError(ErrParsingElementName, s);
+    return ParseError(ErrParsingElementName);
 
 ParseAttributes:
+    errorContext = s;
     SkipWs(&s);
     if (IsName(*s))
         goto ParseAttributeName;
@@ -311,10 +314,11 @@ ParseAttributes:
         s += 2;
         goto ParseText;
     }
-    return ParseError(ErrParsingAttributes, s);
+    return ParseError(ErrParsingAttributes);
 
 ParseAttributeName:
     mark = s;
+    errorContext = s;
     SkipName(&s);
     tmp = s;
     SkipWs(&s);
@@ -324,14 +328,15 @@ ParseAttributeName:
         ++s;
         goto ParseAttributeValue;
     }
-    return ParseError(ErrParsingAttributeName, s);
+    return ParseError(ErrParsingAttributeName);
 
 ParseAttributeValue:
+    errorContext = s;
     SkipWs(&s);
     quoteChar = *s++;
     // TODO: relax quoting rules
     if (quoteChar != '"' && quoteChar != '\'')
-        return ParseError(ErrParsingAttributeValue1, s);
+        return ParseError(ErrParsingAttributeValue1);
     mark = s;
     while (*s && *s != quoteChar) {
         ++s;
@@ -341,7 +346,7 @@ ParseAttributeValue:
         SetAttrVal(mark);
         goto ParseAttributes;
     }
-    return ParseError(ErrParsingAttributeValue2, s);
+    return ParseError(ErrParsingAttributeValue2);
 }
 
 #ifdef DEBUG
