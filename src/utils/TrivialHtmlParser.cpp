@@ -298,13 +298,12 @@ void HtmlParser::SetAttrVal(char *attrVal)
 // The caller owns the memory for s.
 bool HtmlParser::ParseInPlace(char *s)
 {
-    char *mark, *tagName, *tmp;
+    char *tagName, *attrName, *attrVal, *tmp;
     char quoteChar;
     bool ok;
 
     html = s;
 ParseText:
-    mark = s;
     ok = SkipUntil(&s, '<');
     if (!ok) {
         // TODO: I think we can be in an inconsistent state here (unclosed tags)
@@ -343,14 +342,14 @@ ParseExclOrPi:
 ParseClosingElement:
     errorContext = s;
     SkipWs(&s);
-    mark = s;
+    tagName = s;
     SkipName(&s);
     tmp = s;
     SkipWs(&s);
     if (*s != '>')
         return ParseError(ErrParsingClosingElement);
     *tmp = 0; // terminate tag name
-    CloseTag(mark);
+    CloseTag(tagName);
     ++s;
     goto ParseText;
 
@@ -395,14 +394,14 @@ ParseAttributes:
     return ParseError(ErrParsingAttributes);
 
 ParseAttributeName:
-    mark = s;
+    attrName = s;
     errorContext = s;
     SkipName(&s);
     tmp = s;
     SkipWs(&s);
     if (*s == '=') {
         *tmp = 0; // terminate attribute name
-        StartAttr(mark);
+        StartAttr(attrName);
         ++s;
         goto ParseAttributeValue;
     }
@@ -415,13 +414,13 @@ ParseAttributeValue:
     // TODO: relax quoting rules
     if (quoteChar != '"' && quoteChar != '\'')
         return ParseError(ErrParsingAttributeValue1);
-    mark = s;
+    attrVal = s;
     while (*s && *s != quoteChar) {
         ++s;
     }
     if (*s == quoteChar) {
         *s++ = 0; // terminate attribute value
-        SetAttrVal(mark);
+        SetAttrVal(attrVal);
         goto ParseAttributes;
     }
     return ParseError(ErrParsingAttributeValue2);
