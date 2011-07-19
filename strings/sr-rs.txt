@@ -159,8 +159,23 @@ Contributor: Милан Гашић
 (of %d)
 (од %d)
 
+(page %d)
+(страница %d)
+
 About SumatraPDF
 О програму SumatraPDF
+
+Add Favorite
+Додај у одабир
+
+Add page %d to favorites
+Додај страницу %d у одабир
+
+Add page %d to favorites with (optional) name:
+Додај страницу %d у одабир под (опционо) именом:
+
+Add to favorites
+Додај у одабир
 
 Advanced
 Додатно
@@ -249,6 +264,9 @@ Copy Co&mment
 Copying text was denied (copying as image only)
 Копирање текста је одбијено (може се копирати само као слика)
 
+Could not obtain Printer properties
+Није могуће приказати особине штампача
+
 Could not open Printer
 Штампач није пронађен
 
@@ -260,6 +278,9 @@ Couldn't render the page
 
 Created:
 Израђено:
+
+Current file
+Текућа датотека
 
 Custom &Zoom...\tCtrl+Y
 Изборно увећање...\tCtrl+Y
@@ -300,6 +321,9 @@ Enter the command-line to invoke when you double-click on the PDF document:
 Error loading %s
 Грешка у учитавању %s
 
+F&avorites
+&Одабир
+
 F&orward\tAlt+Right Arrow
 Напред\tAlt+->
 
@@ -311,6 +335,9 @@ Facing
 
 Failed to save a file
 Грешка при снимању PDF документа
+
+Favorites
+Одабир
 
 File Size:
 Величина датотеке:
@@ -459,6 +486,9 @@ PDF документи
 Pa&ge...\tCtrl+G
 Страница...\tCtrl+G
 
+Page %d
+Страница %d
+
 Page Size:
 Величина странице
 
@@ -489,6 +519,9 @@ Print
 Print range
 Опсег штампања
 
+Printer with given name doesn't exist
+Штампач са наведеним именом не постоји
+
 Printing is still in progress. Abort and start over?
 Штампање је још увек у току. Прекини и поново почни?
 
@@ -500,6 +533,12 @@ Printing problem.
 
 Remember &opened files
 Запамти отворене датотеке
+
+Remove from favorites
+Уклони из одабира
+
+Remove page %d from favorites
+Уклони страницу %d из одабира
 
 Rotate &Left\tCtrl+Shift+-
 Ротирај улево\tCtrl+Shift+-
@@ -536,6 +575,9 @@ Show &Toolbar
 
 Show &pages continuously
 Непрекидни приказ страница
+
+Show Favorites
+Прикажи одабир
 
 Show frequently read
 Прикажи често читано
@@ -620,20 +662,4 @@ copying text
 
 printing document
 штампање документа
-
-# Untranslated:
-#(page %d)
-#Add Favorite
-#Add page %d to favorites
-#Add page %d to favorites with (optional) name:
-#Add to favorites
-#Could not obtain Printer properties
-#Current file
-#F&avorites
-#Favorites
-#Page %d
-#Printer with given name doesn't exist
-#Remove from favorites
-#Remove page %d from favorites
-#Show Favorites
 
