@@ -5,7 +5,6 @@
 #include "StrUtil.h"
 
 #include "TrivialHtmlParser.h"
-#include "Vec.h"
 #include "FileUtil.h"
 #include "WinUtil.h"
 
@@ -23,30 +22,7 @@ name/val pointers inside Element/Attr structs refer to
 memory inside HtmlParser::s, so they don't need to be freed.
 */
 
-typedef size_t HtmlElementId;
-typedef size_t HtmlAttrId;
 #define NO_ID (size_t)-1
-
-static const HtmlElementId RootElementId = 0;
-
-enum HtmlParseError {
-    ErrParsingNoError,
-    ErrParsingElement, // syntax error parsing element
-    ErrParsingExclOrPI,
-    ErrParsingClosingElement, // syntax error in closing element
-    ErrParsingElementName, // syntax error after element name
-    ErrParsingAttributes, // syntax error in attributes
-    ErrParsingAttributeName, // syntax error after attribute name
-    ErrParsingAttributeValue1,
-    ErrParsingAttributeValue2,
-};
-
-struct HtmlElement {
-    char *name;
-    char *val;
-    HtmlAttrId firstAttrId;
-    HtmlElementId up, down, next;
-};
 
 static void InitHtmlElement(HtmlElement *el)
 {
@@ -56,71 +32,12 @@ static void InitHtmlElement(HtmlElement *el)
     el->up = el->down = el->next = NO_ID;
 }
 
-struct HtmlAttr {
-    char *name;
-    char *val;
-    HtmlAttrId nextAttrId;
-};
-
 static void InitHtmlAttr(HtmlAttr *attr)
 {
     attr->name = NULL;
     attr->val = NULL;
     attr->nextAttrId = NO_ID;
 }
-
-class HtmlParser {
-    Vec<HtmlElement> elAllocator;
-    Vec<HtmlAttr> attrAllocator;
-
-    // text to parse. It can be changed.
-    char *html;
-    // true if s was allocated by ourselves, false if managed
-    // by the caller
-    bool freeHtml;
-
-    HtmlElementId currElementId;
-
-    HtmlElementId AllocElement(HtmlElementId parentId, char *name, HtmlElement **elOut);
-    HtmlAttrId AllocAttr(HtmlAttr **attrOut);
-
-    void CloseTag(char *tagName);
-    void StartTag(char *tagName);
-    void StartAttr(char *attrName);
-    void SetAttrVal(char *attrVal);
-    bool ParseError(HtmlParseError err) {
-        error = err;
-        return false;
-    }
-
-public:
-    HtmlParseError error;  // parsing error, a static string
-    char *errorContext; // pointer within html showing which part we failed to parse
-
-    HtmlParser();
-    ~HtmlParser();
-
-    bool Parse(const char *s);
-    bool ParseInPlace(char *s);
-
-    HtmlElement *GetRootElement() const {
-        return GetElement(RootElementId);
-    }
-    HtmlElement *GetElement(HtmlElementId id) const;
-    size_t ElementsCount() const {
-        return elAllocator.Count();
-    }
-    HtmlAttr *GetAttr(HtmlAttrId id) const;
-
-    size_t TotalAttrCount() const {
-        return attrAllocator.Count();
-    }
-    char *GetElementName(HtmlElementId id) const;
-    char *GetAttrName(HtmlAttrId id) const;
-    HtmlElementId GetParent(HtmlElementId id) const;
-    size_t GetSiblingCount(HtmlElementId id) const;
-    HtmlElementId GetSibling(HtmlElementId id, size_t siblingNo) const;
-};
 
 char *HtmlParser::GetElementName(HtmlElementId id) const
 {
@@ -293,52 +210,119 @@ void HtmlParser::CloseTag(char *tagName)
 void HtmlParser::StartAttr(char *attrName)
 {
     str::ToLower(attrName);
-    // TODO: write me
+    HtmlAttr *attr;
+    HtmlAttrId id = AllocAttr(&attr);
+    InitHtmlAttr(attr);
+    attr->name = attrName;
+    HtmlElement *currEl = GetElement(currElementId);
+    // the order of attributes doesn't matter so it's
+    // ok they're stored in a reverse order
+    attr->nextAttrId = currEl->firstAttrId;
+    currEl->firstAttrId = id;
 }
 
 void HtmlParser::SetAttrVal(char *attrVal)
 {
-    // TODO: write me
+    HtmlElement *currEl = GetElement(currElementId);
+    assert(NO_ID != currEl->firstAttrId);
+    HtmlAttr *currAttr = GetAttr(currEl->firstAttrId);
+    currAttr->val = attrVal;
+}
+
+// 0 if not tag end, 1 if ends with '>' and 2 if ends with "/>"
+static int TagEndLen(char *s) {
+    if ('>' == *s)
+        return 1;
+    if ('/' == s[0] && '>' == s[1])
+        return 2;
+    return 0;
+}
+
+static bool IsUnquotedAttrValEnd(char c) {
+    return !c || IsWs(c) || c == '/' || c == '>';
+}
+
+static char *ParseAttrValue(char **sPtr)
+{
+    char *attrVal = NULL;
+    char *s = *sPtr;
+    SkipWs(&s);
+    char quoteChar = *s;
+    if (quoteChar == '"' || quoteChar == '\'') {
+        ++s; attrVal = s;
+        SkipUntil(&s, quoteChar);
+        if (*s != quoteChar)
+            return NULL;
+        *s++ = 0;
+        goto Exit;
+    } else {
+        attrVal = s;
+        while (!IsUnquotedAttrValEnd(*s)) {
+            ++s;
+        }
+        if (IsWs(*s) || TagEndLen(s) > 0) {
+            if (IsWs(*s))
+                *s = 0;
+            goto Exit;
+        }
+        return NULL;
+    }
+Exit:
+    *sPtr = s;
+    return attrVal;
+}
+
+static char *ParseAttrName(char **sPtr)
+{
+    char *s = *sPtr;
+    char *attrName = s;
+    SkipName(&s);
+    char *attrNameEnd = s;
+    SkipWs(&s);
+    if (*s != '=')
+        return NULL;
+    *attrNameEnd = 0; // terminate attribute name
+    *sPtr = ++s;
+    return attrName;
 }
 
 // Parse s in place i.e. we assume we can modify it. Must be 0-terminated.
 // The caller owns the memory for s.
 bool HtmlParser::ParseInPlace(char *s)
 {
-    char *tagName, *attrName, *attrVal, *tmp;
-    char quoteChar;
+    char *tagName, *attrName, *attrVal, *tagEnd;
+    int tagEndLen;
     bool ok;
 
     html = s;
 ParseText:
     ok = SkipUntil(&s, '<');
     if (!ok) {
-        // TODO: I think we can be in an inconsistent state here (unclosed tags)
-        // but not sure if we should care
+        // Note: I think we can be in an inconsistent state here 
+        // (unclosed tags) but not sure if we should care
         return true;
     }
+    // TODO: if within a tag, set this as tag value
+    // Note: even then it won't handle cases where value
+    // spans multiple parts as in:
+    // "<a>foo<b/>bar</a>", where value of tag a should be "foobar"
     ++s;
 
-    // parsing element
-    if (*s == '/') {
-        ++s;
-        goto ParseClosingElement;
-    }
     if (*s == '!' || *s == '?') {
         ++s;
         goto ParseExclOrPi;
     }
-    errorContext = s;
-    SkipWs(&s);
-    if (IsName(*s))
-        goto ParseElementName;
-    return ParseError(ErrParsingElement);
 
-ParseExclOrPi:
-    // Parse anything that starts with <!, or <?
-    // this might be a <!DOCTYPE ..>, a <!-- comment ->, a <? processing instruction >
-    // or really anything. We're very lenient and consider it a success if we
-    // find a terminating '>'
+    if (*s == '/') {
+        ++s;
+        goto ParseClosingElement;
+    }
+    goto ParseElementName;
+
+ParseExclOrPi: // "<!" or "<?"
+    // might be a <!DOCTYPE ..>, a <!-- comment ->, a <? processing instruction >
+    // or really anything. We're very lenient and consider it a success 
+    // if we find a terminating '>'
     errorContext = s;
     ok = SkipUntil(&s, '>');
     if (!ok)
@@ -346,40 +330,43 @@ ParseExclOrPi:
     ++s;
     goto ParseText;
 
-ParseClosingElement:
+ParseClosingElement: // "</"
     errorContext = s;
     SkipWs(&s);
+    if (!IsName(*s))
+        return ParseError(ErrParsingClosingElement);
     tagName = s;
     SkipName(&s);
-    tmp = s;
+    tagEnd = s;
     SkipWs(&s);
     if (*s != '>')
         return ParseError(ErrParsingClosingElement);
-    *tmp = 0; // terminate tag name
+    *tagEnd = 0;
     CloseTag(tagName);
     ++s;
     goto ParseText;
 
 ParseElementName:
-    tagName = s;
     errorContext = s;
+    SkipWs(&s);
+    if (!IsName(*s))
+        return ParseError(ErrParsingElement);
+    tagName = s;
     SkipName(&s);
-    if (*s == '>') {
-        *s = 0; // terminate tag name
+    tagEnd = s;
+    SkipWs(&s);
+    tagEndLen = TagEndLen(s);
+    if (tagEndLen > 0) {
+        *tagEnd = 0;
         StartTag(tagName);
-        ++s;
+        if (tagEndLen == 2)
+            CloseTag(tagName);
+        s += tagEndLen;
         goto ParseText;
     }
-    if (*s == '/' && s[1] == '>') {
-        *s = 0;
+    if (IsWs(*tagEnd)) {
+        *tagEnd = 0;
         StartTag(tagName);
-        CloseTag(tagName);
-        s += 2;
-        goto ParseText;
-    }
-    if (IsWs(*s)) {
-        *s = 0; // terminate tag name
-        s++;
         goto ParseAttributes;
     }
     return ParseError(ErrParsingElementName);
@@ -389,48 +376,37 @@ ParseAttributes:
     SkipWs(&s);
     if (IsName(*s))
         goto ParseAttributeName;
-    if (*s == '>') {
-        ++s;
-        goto ParseText;
-    }
-    if (*s == '/' && s[1] == '>') {
-        CloseTag(tagName);
-        s += 2;
+    tagEndLen = TagEndLen(s);
+FoundElementEnd:
+    if (tagEndLen > 0) {
+        if (tagEndLen == 2)
+            CloseTag(tagName);
+        s += tagEndLen;
         goto ParseText;
     }
     return ParseError(ErrParsingAttributes);
 
 ParseAttributeName:
-    attrName = s;
     errorContext = s;
-    SkipName(&s);
-    tmp = s;
-    SkipWs(&s);
-    if (*s == '=') {
-        *tmp = 0; // terminate attribute name
-        StartAttr(attrName);
-        ++s;
-        goto ParseAttributeValue;
-    }
-    return ParseError(ErrParsingAttributeName);
+    attrName = ParseAttrName(&s);
+    if (!attrName)
+        return ParseError(ErrParsingAttributeName);
+    StartAttr(attrName);
+    goto ParseAttributeValue;
 
 ParseAttributeValue:
     errorContext = s;
-    SkipWs(&s);
-    quoteChar = *s++;
-    // TODO: relax quoting rules
-    if (quoteChar != '"' && quoteChar != '\'')
-        return ParseError(ErrParsingAttributeValue1);
-    attrVal = s;
-    while (*s && *s != quoteChar) {
-        ++s;
-    }
-    if (*s == quoteChar) {
-        *s++ = 0; // terminate attribute value
+    attrVal = ParseAttrValue(&s);
+    if (!attrVal)
+        return ParseError(ErrParsingAttributeValue);
+    tagEndLen = TagEndLen(s);
+    if (tagEndLen > 0) {
+        *s = 0;
         SetAttrVal(attrVal);
-        goto ParseAttributes;
+        goto FoundElementEnd;
     }
-    return ParseError(ErrParsingAttributeValue2);
+    SetAttrVal(attrVal);
+    goto ParseAttributes;
 }
 
 #ifdef DEBUG
@@ -474,9 +450,41 @@ static void HtmlParser01()
     delete p;
 }
 
+static void HtmlParser04()
+{
+    HtmlParser *p = ParseString("<el att=  val></ el >");
+    assert(1 == p->ElementsCount());
+    assert(1 == p->TotalAttrCount());
+    HtmlElement *el = p->GetRootElement();
+    assert(str::Eq("el", el->name));
+    assert(NO_ID == el->next);
+    assert(NO_ID == el->up);
+    assert(NO_ID == el->down);
+    HtmlAttr *a = p->GetAttr(el->firstAttrId);
+    assert(str::Eq("att", a->name));
+    assert(str::Eq("val", a->val));
+    assert(NO_ID == a->nextAttrId);
+}
+
+static void HtmlParser03()
+{
+    HtmlParser *p = ParseString("<el   att  =val/>");
+    assert(1 == p->ElementsCount());
+    assert(1 == p->TotalAttrCount());
+    HtmlElement *el = p->GetRootElement();
+    assert(str::Eq("el", el->name));
+    assert(NO_ID == el->next);
+    assert(NO_ID == el->up);
+    assert(NO_ID == el->down);
+    HtmlAttr *a = p->GetAttr(el->firstAttrId);
+    assert(str::Eq("att", a->name));
+    assert(str::Eq("val", a->val));
+    assert(NO_ID == a->nextAttrId);
+}
+
 static void HtmlParser02()
 {
-    HtmlParser *p = ParseString("<a><b/><  c></c  ><d at1=\"quoted\" at2='also quoted'   att3=notquoted att4=\"partially quoted/></a>");
+    HtmlParser *p = ParseString("<a><b/><  c></c  ><d at1=\"quoted\" at2='also quoted'   att3=notquoted att4=end/></a>");
     assert(4 == p->ElementsCount());
     assert(4 == p->TotalAttrCount());
     HtmlElement *el = p->GetRootElement();
@@ -493,17 +501,18 @@ static void HtmlParser02()
     assert(NO_ID == el->next);
     assert(RootElementId == el->up);
     HtmlAttr *a = p->GetAttr(el->firstAttrId);
-    assert(str::Eq("at1", a->name));
-    assert(str::Eq("quoted", a->val));
-    a = p->GetAttr(a->nextAttrId);
-    assert(str::Eq("at2", a->name));
-    assert(str::Eq("also quoted", a->val));
+    // Note: using implementation detail: attributes are stored in reverse order
+    assert(str::Eq("att4", a->name));
+    assert(str::Eq("end", a->val));
     a = p->GetAttr(a->nextAttrId);
     assert(str::Eq("att3", a->name));
     assert(str::Eq("notquoted", a->val));
     a = p->GetAttr(a->nextAttrId);
-    assert(str::Eq("att4", a->name));
-    assert(str::Eq("partially quoted", a->val));
+    assert(str::Eq("at2", a->name));
+    assert(str::Eq("also quoted", a->val));
+    a = p->GetAttr(a->nextAttrId);
+    assert(str::Eq("at1", a->name));
+    assert(str::Eq("quoted", a->val));
     assert(NO_ID == a->nextAttrId);
     delete p;
 }
@@ -531,9 +540,11 @@ static void HtmlParserFile()
 
 void TrivialHtmlParser_UnitTests()
 {
+    unittests::HtmlParser04();
+    unittests::HtmlParser03();
     //unittests::HtmlParser02();
-    unittests::HtmlParser00();
-    unittests::HtmlParser01();
+    //unittests::HtmlParser00();
+    //unittests::HtmlParser01();
     //unittests::HtmlParserFile();
 }
 #endif
