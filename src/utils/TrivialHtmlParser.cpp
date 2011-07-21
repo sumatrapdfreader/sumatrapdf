@@ -12,99 +12,9 @@
 Html parser that is good enough for parsing html files
 inside CHM archives. Not meant for general use.
 
-Element and Attr nodes are allocated from a corresponding
-Vec so we refer to other Element and Attr nodes by their
-index within Vec and not by pointer (we can't use a pointer
-because reallocating underlying Vec storage might change
-where data lives in memory).
-
 name/val pointers inside Element/Attr structs refer to
 memory inside HtmlParser::s, so they don't need to be freed.
 */
-
-#define NO_ID (size_t)-1
-
-static void InitHtmlElement(HtmlElement *el)
-{
-    el->name = NULL;
-    el->val = NULL;
-    el->firstAttrId = NO_ID;
-    el->up = el->down = el->next = NO_ID;
-}
-
-static void InitHtmlAttr(HtmlAttr *attr)
-{
-    attr->name = NULL;
-    attr->val = NULL;
-    attr->nextAttrId = NO_ID;
-}
-
-char *HtmlParser::GetElementName(HtmlElementId id) const
-{
-    HtmlElement *el = elAllocator.AtPtr(id);
-    return el->name;
-}
-
-char *HtmlParser::GetAttrName(HtmlAttrId id) const
-{
-    HtmlAttr *attr = attrAllocator.AtPtr(id);
-    return attr->name;
-}
-
-HtmlElementId HtmlParser::GetParent(HtmlElementId id) const
-{
-    HtmlElement *el = elAllocator.AtPtr(id);
-    return el->up;
-}
-
-size_t HtmlParser::GetSiblingCount(HtmlElementId id) const
-{
-    assert(0); // TODO: write me
-    return 0;
-}
-
-HtmlElementId HtmlParser::GetSibling(HtmlElementId id, size_t siblingNo) const
-{
-    assert(0); // TODO: write me
-    return NO_ID;
-}
-
-
-HtmlParser::HtmlParser() : 
-    html(NULL), freeHtml(false), currElementId(NO_ID),
-    error(ErrParsingNoError), errorContext(NULL)
-{
-}
-
-HtmlParser::~HtmlParser()
-{
-    if (freeHtml)
-        free(html);
-}
-
-// attrOut is only valid until next AllocAttr()
-HtmlAttrId HtmlParser::AllocAttr(HtmlAttr **attrOut)
-{
-    HtmlAttr *attr = attrAllocator.MakeSpaceAtEnd();
-    InitHtmlAttr(attr);
-    if (attrOut)
-        *attrOut = attr;
-    return attrAllocator.Count() - 1;
-}
-
-// only valid until next AllocAttr()
-HtmlAttr *HtmlParser::GetAttr(HtmlAttrId id) const
-{
-    if ((NO_ID == id) || (attrAllocator.Count() <= id))
-        return NULL;
-    return attrAllocator.AtPtr(id);
-}
-
-bool HtmlParser::Parse(const char *s)
-{
-    freeHtml = true;
-    return ParseInPlace(str::Dup(s));
-}
 
 static bool IsWs(int c)
 {
@@ -187,57 +97,85 @@ static void CollapseEntitiesInPlace(char *s)
     *out = 0;
 }
 
-// only valid until next AllocElement()
-HtmlElement *HtmlParser::GetElement(HtmlElementId id) const
+HtmlParser::HtmlParser()
 {
-    if ((NO_ID == id) || (elAllocator.Count() <= id))
-        return NULL;
-    return elAllocator.AtPtr(id);
+    html = NULL;
+    freeHtml = false;
+    rootElement = NULL;
+    currElement = NULL;
+    elementsCount = 0;
+    attributesCount = 0;
+    error = ErrParsingNoError;
+    errorContext= NULL;
+}
+
+HtmlParser::~HtmlParser()
+{
+    if (freeHtml)
+        free(html);
+}
+
+HtmlAttr *HtmlParser::AllocAttr(char *name)
+{
+    HtmlAttr *attr = AllocStruct<HtmlAttr>(allocator);
+    attr->name = name;
+    attr->val = NULL;
+    attr->next = NULL;
+    ++attributesCount;
+    return attr;
+}
+
+bool HtmlParser::Parse(const char *s)
+{
+    freeHtml = true;
+    return ParseInPlace(str::Dup(s));
 }
 
 HtmlAttr *HtmlParser::GetAttrByName(HtmlElement *el, const char *name) const
 {
-    HtmlAttr *a = GetAttr(el->firstAttrId);
+    HtmlAttr *a = el->firstAttr;
     while (NULL != a) {
         if (str::EqI(name, a->name))
             return a;
-        a = GetAttr(a->nextAttrId);
+        a = a->next;
     }
     return NULL;
 }
 
 // elOut is only valid until next AllocElement()
 // TODO: move the code from AllocElement() to StartTag()
-HtmlElementId HtmlParser::AllocElement(HtmlElementId parentId, char *name, HtmlElement **elOut)
+HtmlElement *HtmlParser::AllocElement(HtmlElement *parent, char *name)
 {
-    HtmlElementId id = elAllocator.Count();
-    HtmlElement *el = elAllocator.MakeSpaceAtEnd();
-    InitHtmlElement(el);
+    HtmlElement *el = AllocStruct<HtmlElement>(allocator);
     el->name = name;
-    el->up = parentId;
-    if (parentId != NO_ID) {
-        HtmlElement *parentEl = GetElement(parentId);
-        if (parentEl->down == NO_ID) {
+    el->up = parent;
+    el->val = NULL;
+    el->firstAttr = NULL;
+    el->down = el->next = NULL;
+    ++elementsCount;
+
+    if (parent) {
+        if (NULL == parent->down) {
             // parent has no children => set as a first child
-            parentEl->down = id;
+            parent->down = el;
         } else {
             // parent has children => set as a sibling
-            el = GetElement(parentEl->down);
-            while (el->next != NO_ID) {
-                el = GetElement(el->next);
+           HtmlElement *tmp = parent->down;
+            while (tmp->next) {
+                tmp = tmp->next;
             }
-            el->next = id;
+            tmp->next = el;
         }
     }
-    if (elOut)
-        *elOut = el;
-    return id;
+    return el;
 }
 
 void HtmlParser::StartTag(char *tagName)
 {
     str::ToLower(tagName);
-    currElementId = AllocElement(currElementId, tagName, NULL);
+    currElement = AllocElement(currElement, tagName);
+    if (NULL == rootElement)
+        rootElement = currElement;
 }
 
 void HtmlParser::CloseTag(char *tagName)
@@ -245,47 +183,40 @@ void HtmlParser::CloseTag(char *tagName)
     str::ToLower(tagName);
     // to allow for lack of closing tags, e.g. in case like
     // <a><b><c></a>, we look for the first parent with matching name
-    HtmlElementId elId = currElementId;
-    HtmlElement *el = GetElement(elId);
+    HtmlElement *el = currElement;
     while (el) {
         if (str::Eq(el->name, tagName)) {
-            currElementId = el->up;
+            currElement = el->up;
             return;
         }
-        elId = el->up;
-        el = GetElement(elId);
+        el = el->up;
     }
     // TODO: should we do sth. here?
 }
 
-void HtmlParser::StartAttr(char *attrName)
+void HtmlParser::StartAttr(char *name)
 {
-    str::ToLower(attrName);
-    HtmlAttr *attr;
-    HtmlAttrId id = AllocAttr(&attr);
-    InitHtmlAttr(attr);
-    attr->name = attrName;
-    HtmlElement *currEl = GetElement(currElementId);
-    if (NO_ID == currEl->firstAttrId) {
-        currEl->firstAttrId = id;
+    str::ToLower(name);
+    HtmlAttr *a = AllocAttr(name);
+    if (NULL == currElement->firstAttr) {
+        currElement->firstAttr = a;
         return;
     }
-    attr = GetAttr(currEl->firstAttrId);
-    while (NO_ID != attr->nextAttrId) {
-        attr = GetAttr(attr->nextAttrId);
+    HtmlAttr *tmp = currElement->firstAttr;
+    while (NULL != tmp->next) {
+        tmp = tmp->next;
     }
-    attr->nextAttrId = id;
+    tmp->next = a;
 }
 
-void HtmlParser::SetAttrVal(char *attrVal)
+void HtmlParser::SetAttrVal(char *val)
 {
-    HtmlElement *currEl = GetElement(currElementId);
-    CollapseEntitiesInPlace(attrVal);
-    HtmlAttr *a = GetAttr(currEl->firstAttrId);
-    while (NO_ID != a->nextAttrId) {
-        a = GetAttr(a->nextAttrId);
+    CollapseEntitiesInPlace(val);
+    HtmlAttr *a = currElement->firstAttr;
+    while (NULL != a->next) {
+        a = a->next;
     }
-    a->val = attrVal;
+    a->val = val;
 }
 
 static char *ParseAttrValue(char **sPtr)
@@ -474,7 +405,8 @@ static void HtmlParser00()
     HtmlParser *p = ParseString("<a></A>");
     assert(p);
     assert(p->ElementsCount() == 1);
-    assert(str::Eq("a", p->GetElementName(HtmlParser::RootElementId)));
+    HtmlElement *el = p->GetRootElement();
+    assert(str::Eq("a", el->name));
     delete p;
 }
 
@@ -484,14 +416,14 @@ static void HtmlParser01()
     assert(p->ElementsCount() == 2);
     HtmlElement *el = p->GetRootElement();
     assert(str::Eq("a", el->name));
-    assert(NO_ID == el->up);
-    assert(NO_ID == el->next);
-    el = p->GetElement(el->down);
-    assert(NO_ID == el->firstAttrId);
+    assert(NULL == el->up);
+    assert(NULL == el->next);
+    el = el->down;
+    assert(NULL == el->firstAttr);
     assert(str::Eq("bah", el->name));
-    assert(el->up == HtmlParser::RootElementId);
-    assert(NO_ID == el->down);
-    assert(NO_ID == el->next);
+    assert(el->up == p->GetRootElement());
+    assert(NULL == el->down);
+    assert(NULL == el->next);
     delete p;
 }
 
@@ -502,18 +434,18 @@ static void HtmlParser05()
     assert(4 == p->TotalAttrCount());
     HtmlElement *el = p->GetRootElement();
     assert(str::Eq("html", el->name));
-    assert(NO_ID == el->up);
-    assert(NO_ID == el->next);
-    el = p->GetElement(el->down);
+    assert(NULL == el->up);
+    assert(NULL == el->next);
+    el = el->down;
     assert(str::Eq("head", el->name));
-    HtmlElement *el2 = p->GetElement(el->down);
+    HtmlElement *el2 = el->down;
     assert(str::Eq("meta", el2->name));
-    assert(NO_ID == el2->next);
-    assert(NO_ID == el2->down);
-    el2 = p->GetElement(el->next);
+    assert(NULL == el2->next);
+    assert(NULL == el2->down);
+    el2 = el->next;
     assert(str::Eq("body", el2->name));
-    assert(NO_ID == el2->next);
-    el2 = p->GetElement(el2->down);
+    assert(NULL == el2->next);
+    el2 = el2->down;
     assert(str::Eq("object", el2->name));
 }
 
@@ -524,13 +456,13 @@ static void HtmlParser04()
     assert(1 == p->TotalAttrCount());
     HtmlElement *el = p->GetRootElement();
     assert(str::Eq("el", el->name));
-    assert(NO_ID == el->next);
-    assert(NO_ID == el->up);
-    assert(NO_ID == el->down);
-    HtmlAttr *a = p->GetAttr(el->firstAttrId);
+    assert(NULL == el->next);
+    assert(NULL == el->up);
+    assert(NULL == el->down);
+    HtmlAttr *a = el->firstAttr;
     assert(str::Eq("att", a->name));
     assert(str::Eq("va'l", a->val));
-    assert(NO_ID == a->nextAttrId);
+    assert(NULL == a->next);
 }
 
 static void HtmlParser03()
@@ -540,13 +472,13 @@ static void HtmlParser03()
     assert(1 == p->TotalAttrCount());
     HtmlElement *el = p->GetRootElement();
     assert(str::Eq("el", el->name));
-    assert(NO_ID == el->next);
-    assert(NO_ID == el->up);
-    assert(NO_ID == el->down);
-    HtmlAttr *a = p->GetAttr(el->firstAttrId);
+    assert(NULL == el->next);
+    assert(NULL == el->up);
+    assert(NULL == el->down);
+    HtmlAttr *a = el->firstAttr;
     assert(str::Eq("att", a->name));
     assert(str::Eq("v\"al", a->val));
-    assert(NO_ID == a->nextAttrId);
+    assert(NULL == a->next);
 }
 
 static void HtmlParser02()
@@ -556,30 +488,30 @@ static void HtmlParser02()
     assert(4 == p->TotalAttrCount());
     HtmlElement *el = p->GetRootElement();
     assert(str::Eq("a", el->name));
-    assert(NO_ID == el->next);
-    el = p->GetElement(el->down);
+    assert(NULL == el->next);
+    el = el->down;
     assert(str::Eq("b", el->name));
-    assert(HtmlParser::RootElementId == el->up);
-    el = p->GetElement(el->next);
+    assert(p->GetRootElement() == el->up);
+    el = el->next;
     assert(str::Eq("c", el->name));
-    assert(HtmlParser::RootElementId == el->up);
-    el = p->GetElement(el->next);
+    assert(p->GetRootElement() == el->up);
+    el = el->next;
     assert(str::Eq("d", el->name));
-    assert(NO_ID == el->next);
-    assert(HtmlParser::RootElementId == el->up);
-    HtmlAttr *a = p->GetAttr(el->firstAttrId);
+    assert(NULL == el->next);
+    assert(p->GetRootElement() == el->up);
+    HtmlAttr *a = el->firstAttr;
     assert(str::Eq("at1", a->name));
     assert(str::Eq("<quo&ted>", a->val));
-    a = p->GetAttr(a->nextAttrId);
+    a = a->next;
     assert(str::Eq("at2", a->name));
     assert(str::Eq("also quoted", a->val));
-    a = p->GetAttr(a->nextAttrId);
+    a = a->next;
     assert(str::Eq("att3", a->name));
     assert(str::Eq("notquoted", a->val));
-    a = p->GetAttr(a->nextAttrId);
+    a = a->next;
     assert(str::Eq("att4", a->name));
     assert(str::Eq("end", a->val));
-    assert(NO_ID == a->nextAttrId);
+    assert(NULL == a->next);
     delete p;
 }
 
@@ -604,17 +536,17 @@ static void HtmlParserFile()
     assert(955 == p.TotalAttrCount());
     HtmlElement *el = p.GetRootElement();
     assert(str::Eq(el->name, "html"));
-    el = p.GetElement(el->down);
+    el = el->down;
     assert(str::Eq(el->name, "head"));
-    el = p.GetElement(el->next);
+    el = el->next;
     assert(str::Eq(el->name, "body"));
-    el = p.GetElement(el->down);
+    el = el->down;
     assert(str::Eq(el->name, "object"));
-    el = p.GetElement(el->next);
+    el = el->next;
     assert(str::Eq(el->name, "ul"));
-    el = p.GetElement(el->down);
+    el = el->down;
     assert(str::Eq(el->name, "li"));
-    el = p.GetElement(el->down);
+    el = el->down;
     assert(str::Eq(el->name, "object"));
     HtmlAttr *a = p.GetAttrByName(el, "type");
     assert(str::Eq(a->name, "type"));
