@@ -142,8 +142,6 @@ HtmlAttr *HtmlParser::GetAttrByName(HtmlElement *el, const char *name) const
     return NULL;
 }
 
-// elOut is only valid until next AllocElement()
-// TODO: move the code from AllocElement() to StartTag()
 HtmlElement *HtmlParser::AllocElement(HtmlElement *parent, char *name)
 {
     HtmlElement *el = AllocStruct<HtmlElement>(allocator);
@@ -153,29 +151,30 @@ HtmlElement *HtmlParser::AllocElement(HtmlElement *parent, char *name)
     el->firstAttr = NULL;
     el->down = el->next = NULL;
     ++elementsCount;
-
-    if (parent) {
-        if (NULL == parent->down) {
-            // parent has no children => set as a first child
-            parent->down = el;
-        } else {
-            // parent has children => set as a sibling
-           HtmlElement *tmp = parent->down;
-            while (tmp->next) {
-                tmp = tmp->next;
-            }
-            tmp->next = el;
-        }
-    }
     return el;
 }
 
 void HtmlParser::StartTag(char *tagName)
 {
     str::ToLower(tagName);
+    HtmlElement *parent = currElement;
     currElement = AllocElement(currElement, tagName);
     if (NULL == rootElement)
         rootElement = currElement;
+
+    if (!parent)
+        return;
+    if (NULL == parent->down) {
+        // parent has no children => set as a first child
+        parent->down = currElement;
+    } else {
+        // parent has children => set as a sibling
+        HtmlElement *tmp = parent->down;
+        while (tmp->next) {
+            tmp = tmp->next;
+        }
+        tmp->next = currElement;
+    }
 }
 
 void HtmlParser::CloseTag(char *tagName)
