@@ -733,6 +733,9 @@ pdf_load_windows_font(pdf_font_desc *font, char *fontname)
 			found = pdf_find_windows_font_path(fontname);
 	}
 
+	if (found && (!strcmp(fontname, "Symbol") || !strcmp(fontname, "ZapfDingbats")))
+		font->flags |= PDF_FD_SYMBOLIC;
+
 	fz_free(fontname);
 	if (!found)
 		return !fz_okay;
