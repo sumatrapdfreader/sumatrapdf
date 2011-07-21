@@ -664,7 +664,7 @@ struct PdfPageRun {
     int refs;
 };
 
-class CPdfToCItem;
+class PdfToCItem;
 class PdfLink;
 
 class CPdfEngine : public PdfEngine {
@@ -760,7 +760,7 @@ protected:
                             fz_bbox clipbox=fz_infinite_bbox, bool cacheRun=true);
     void            dropPageRun(PdfPageRun *run, bool forceRemove=false);
 
-    CPdfToCItem   * BuildToCTree(pdf_outline *entry, int& idCounter);
+    PdfToCItem   *  BuildToCTree(pdf_outline *entry, int& idCounter);
     void            linkifyPageText(pdf_page *page);
     bool            hasPermission(int permission);
 
@@ -821,18 +821,11 @@ public:
     virtual TCHAR *GetValue() const { return str::Dup(content); }
 };
 
-class CPdfToCItem : public DocToCItem {
+class PdfToCItem : public DocToCItem {
     PdfLink link;
 
 public:
-    CPdfToCItem(TCHAR *title, PdfLink link) : DocToCItem(title), link(link) { }
-
-    void AddSibling(DocToCItem *sibling)
-    {
-        DocToCItem *item;
-        for (item = this; item->next; item = item->next);
-        item->next = sibling;
-    }
+    PdfToCItem(TCHAR *title, PdfLink link) : DocToCItem(title), link(link) { }
 
     virtual PageDestination *GetLink() { return &link; }
 };
@@ -1094,10 +1087,10 @@ bool CPdfEngine::finishLoading()
     return true;
 }
 
-CPdfToCItem *CPdfEngine::BuildToCTree(pdf_outline *entry, int& idCounter)
+PdfToCItem *CPdfEngine::BuildToCTree(pdf_outline *entry, int& idCounter)
 {
     TCHAR *name = entry->title ? str::conv::FromUtf8(entry->title) : str::Dup(_T(""));
-    CPdfToCItem *node = new CPdfToCItem(name, PdfLink(this, entry->link));
+    PdfToCItem *node = new PdfToCItem(name, PdfLink(this, entry->link));
     node->open = entry->count >= 0;
     node->id = ++idCounter;
 
@@ -1113,7 +1106,7 @@ CPdfToCItem *CPdfEngine::BuildToCTree(pdf_outline *entry, int& idCounter)
 
 DocToCItem *CPdfEngine::GetToCTree()
 {
-    CPdfToCItem *node = NULL;
+    PdfToCItem *node = NULL;
     int idCounter = 0;
 
     if (_outline) {
@@ -1956,7 +1949,7 @@ struct XpsPageRun {
     int refs;
 };
 
-class CXpsToCItem;
+class XpsToCItem;
 
 class CXpsEngine : public XpsEngine {
     friend XpsEngine;
@@ -2042,7 +2035,7 @@ protected:
                             fz_bbox clipbox=fz_infinite_bbox, bool cacheRun=true);
     void            dropPageRun(XpsPageRun *run, bool forceRemove=false);
 
-    CXpsToCItem   * BuildToCTree(xps_outline *entry, int& idCounter);
+    XpsToCItem   *  BuildToCTree(xps_outline *entry, int& idCounter);
     void            linkifyPageText(xps_page *page, int pageNo);
 
     RectD         * _mediaboxes;
@@ -2100,18 +2093,11 @@ public:
     virtual TCHAR *GetDestValue() const { return GetValue(); }
 };
 
-class CXpsToCItem : public DocToCItem {
+class XpsToCItem : public DocToCItem {
     XpsLink link;
 
 public:
-    CXpsToCItem(TCHAR *title, XpsLink link) : DocToCItem(title), link(link) { }
-
-    void AddSibling(DocToCItem *sibling)
-    {
-        DocToCItem *item;
-        for (item = this; item->next; item = item->next);
-        item->next = sibling;
-    }
+    XpsToCItem(TCHAR *title, XpsLink link) : DocToCItem(title), link(link) { }
 
     virtual PageDestination *GetLink() { return &link; }
 };
@@ -2754,10 +2740,10 @@ PageDestination *CXpsEngine::GetNamedDest(const TCHAR *name)
     return NULL;
 }
 
-CXpsToCItem *CXpsEngine::BuildToCTree(xps_outline *entry, int& idCounter)
+XpsToCItem *CXpsEngine::BuildToCTree(xps_outline *entry, int& idCounter)
 {
     TCHAR *name = entry->title ? str::conv::FromUtf8(entry->title) : str::Dup(_T(""));
-    CXpsToCItem *node = new CXpsToCItem(name, XpsLink(this, entry->target, fz_empty_rect));
+    XpsToCItem *node = new XpsToCItem(name, XpsLink(this, entry->target, fz_empty_rect));
     node->open = false;
     node->id = ++idCounter;
 

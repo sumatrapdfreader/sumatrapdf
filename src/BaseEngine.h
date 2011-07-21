@@ -178,6 +178,13 @@ public:
         free(title);
     }
 
+    void AddSibling(DocToCItem *sibling)
+    {
+        DocToCItem *item;
+        for (item = this; item->next; item = item->next);
+        item->next = sibling;
+    }
+
     // returns the destination this ToC item points to
     // (the result is owned by the DocToCItem and MUST NOT be deleted)
     virtual PageDestination *GetLink() = 0;

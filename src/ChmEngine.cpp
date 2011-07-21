@@ -25,6 +25,14 @@ public:
     char *homePath;
 };
 
+class ChmToCItem : public DocToCItem {
+public:
+    ChmToCItem(TCHAR *title) : DocToCItem(title)
+    {}
+
+    virtual PageDestination *GetLink() { return NULL; }
+};
+
 class CChmEngine : public ChmEngine {
     friend ChmEngine;
 
