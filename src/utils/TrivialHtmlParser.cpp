@@ -341,14 +341,14 @@ ParseAttributes:
     if (IsName(*s))
         goto ParseAttributeName;
     tagEndLen = TagEndLen(s);
+    if (0 == tagEndLen)
+        return ParseError(ErrParsingAttributes);
+
 FoundElementEnd:
-    if (tagEndLen > 0) {
-        if (tagEndLen == 2)
-            CloseTag(tagName);
-        s += tagEndLen;
-        goto ParseText;
-    }
-    return ParseError(ErrParsingAttributes);
+    if (tagEndLen == 2)
+        CloseTag(tagName);
+    s += tagEndLen;
+    goto ParseText;
 
 ParseAttributeName:
     errorContext = s;
