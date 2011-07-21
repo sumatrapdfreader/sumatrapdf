@@ -52,7 +52,7 @@ public:
         size_t size = blockSize;
         if (minSize > size)
             size = minSize;
-        MemBlockNode *node = (MemBlockNode*)malloc(sizeof(MemBlockNode) + size);
+        MemBlockNode *node = (MemBlockNode*)calloc(1, sizeof(MemBlockNode) + size);
         currMem = (char*)node + sizeof(MemBlockNode);
         remainsInBlock = size;
         node->next = currBlock;
@@ -69,14 +69,14 @@ public:
         remainsInBlock -= size;
         return mem;
     }
-};
 
-// only valid for structs, could alloc objects with
-// placement new()
-template <typename T>
-inline T *AllocStruct(BlockAllocator& a) {
-    return (T*)a.Alloc(sizeof(T));
-}
+    // only valid for structs, could alloc objects with
+    // placement new()
+    template <typename T>
+    T *AllocStruct() {
+        return (T *)Alloc(sizeof(T));
+    }
+};
 
 enum HtmlParseError {
     ErrParsingNoError,
@@ -89,17 +89,14 @@ enum HtmlParseError {
     ErrParsingAttributeValue,
 };
 
-struct HtmlAttr {
-    char *name;
-    char *val;
-    HtmlAttr *next;
-};
+struct HtmlAttr;
 
 struct HtmlElement {
     char *name;
-    char *val;
     HtmlAttr *firstAttr;
     HtmlElement *up, *down, *next;
+
+    TCHAR *GetAttribute(const char *name) const;
 };
 
 class HtmlParser {
@@ -124,9 +121,9 @@ class HtmlParser {
     void StartTag(char *tagName);
     void StartAttr(char *name);
     void SetAttrVal(char *val);
-    bool ParseError(HtmlParseError err) {
+    HtmlElement *ParseError(HtmlParseError err) {
         error = err;
-        return false;
+        return NULL;
     }
 
 public:
@@ -136,12 +133,8 @@ public:
     HtmlParser();
     ~HtmlParser();
 
-    bool Parse(const char *s);
-    bool ParseInPlace(char *s);
-
-    HtmlElement *GetRootElement() const {
-        return rootElement;
-    }
+    HtmlElement *Parse(const char *s);
+    HtmlElement *ParseInPlace(char *s);
 
     size_t ElementsCount() const {
         return elementsCount;
@@ -150,7 +143,6 @@ public:
     size_t TotalAttrCount() const {
         return attributesCount;
     }
-    HtmlAttr *GetAttrByName(HtmlElement *el, const char *name) const;
 };
 
 #endif
