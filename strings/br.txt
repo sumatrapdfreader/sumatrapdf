@@ -158,8 +158,23 @@ Ignorar esta versão
 (of %d)
 (de %d)
 
+(page %d)
+(página %d)
+
 About SumatraPDF
 Sobre o SumatraPDF
+
+Add Favorite
+Adicionar Favorito
+
+Add page %d to favorites
+Adicionar página %d aos Favoritos
+
+Add page %d to favorites with (optional) name:
+Adicionar página %d aos Favoritos com outro nome (opcional):
+
+Add to favorites
+Adicionar aos Favoritos
 
 Advanced
 Avançado
@@ -248,6 +263,9 @@ Copiar Co&mentário
 Copying text was denied (copying as image only)
 Cópia de texto negada (copiando somente como imagem)
 
+Could not obtain Printer properties
+Não foi possível obter as propriedades da Impressora
+
 Could not open Printer
 Erro ao acessar a impressora.
 
@@ -259,6 +277,9 @@ Não foi possível renderizar a página
 
 Created:
 Criado:
+
+Current file
+Arquivo atual
 
 Custom &Zoom...\tCtrl+Y
 &Zoom personalizado...\tCtrl+Y
@@ -299,6 +320,9 @@ Digite a linha de comando a ser invocada com um duplo clique sobre o documento P
 Error loading %s
 Erro ao carregar %s 
 
+F&avorites
+F&avoritos
+
 F&orward\tAlt+Right Arrow
 Avançar\tAlt+->
 
@@ -310,6 +334,9 @@ Página dupla
 
 Failed to save a file
 Erro ao salvar o arquivo.
+
+Favorites
+Favoritos
 
 File Size:
 Tamanho do arquivo:
@@ -458,6 +485,9 @@ Documentos PDF
 Pa&ge...\tCtrl+G
 Página...\tCtrl+G
 
+Page %d
+Página %d
+
 Page Size:
 Tamanho da página:
 
@@ -473,6 +503,9 @@ Página:
 Please wait - rendering...
 Por favor aguarde, renderizando...
 
+Postscript documents
+Documentos Postscript
+
 Pr&esentation\tCtrl+L
 Apr&esentação\tCtrl+L
 
@@ -485,6 +518,9 @@ Imprimir
 Print range
 Intervalo de impressão
 
+Printer with given name doesn't exist
+Nâo existe uma impressora com esse nome
+
 Printing is still in progress. Abort and start over?
 A impressão está em andamento. Interromper e começar de novo?
 
@@ -496,6 +532,12 @@ Problema de impressão.
 
 Remember &opened files
 &Lembrar arquivos abertos
+
+Remove from favorites
+Remover dos Favoritos
+
+Remove page %d from favorites
+Remover página %d dos Favoritos
 
 Rotate &Left\tCtrl+Shift+-
 Girar à esquerda\tCtrl+Shift+-
@@ -532,6 +574,9 @@ Mostrar barra de ferramentas
 
 Show &pages continuously
 Exibir páginas de modo contínuo
+
+Show Favorites
+Mostrar Favoritos
 
 Show frequently read
 Mostrar Lidos com frequência
@@ -616,21 +661,4 @@ copiando texto
 
 printing document
 imprimindo documento
-
-# Untranslated:
-#(page %d)
-#Add Favorite
-#Add page %d to favorites
-#Add page %d to favorites with (optional) name:
-#Add to favorites
-#Could not obtain Printer properties
-#Current file
-#F&avorites
-#Favorites
-#Page %d
-#Postscript documents
-#Printer with given name doesn't exist
-#Remove from favorites
-#Remove page %d from favorites
-#Show Favorites
 
