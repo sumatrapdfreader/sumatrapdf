@@ -59,7 +59,6 @@ SUMATRA_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
 	/Isrc/utils /Isrc/utils/msvc /I$(MUPDF_DIR)\fitz /I$(MUPDF_DIR)\pdf \
 	/I$(MUPDF_DIR)\xps /Isrc /I$(EXTDIR)/synctex /I$(ZLIB_DIR) \
 	/I$(ZLIB_DIR)/minizip /I$(EXTDIR)/libdjvu /I$(EXTDIR)/CHMLib/src \
-	/I$(EXTDIR)/pugixml \
 	/D "CHM_MT" /D "PPC_BSTR"
 
 INSTALLER_CFLAGS = $(CFLAGS) $(EXTCFLAGS) /wd4800 \

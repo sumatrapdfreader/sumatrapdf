@@ -40,6 +40,5 @@ bzip2          ext/bzip2/LICENSE              http://bzip.org/
 UnRAR          ext/unrar/license.txt          http://www.rarlab.com/
 DjVuLibre      ext/libdjvu/COPYRIGHT   <GPL>  http://djvu.sourceforge.net/
 CHMLIB         ext/CHMLib/COPYING     <LGPL>  http://www.jedrea.com/chmlib/
-pugixml        ext/pugixml/pugixml.hpp <MIT>  http://code.google.com/p/pugixml/
 
 Fugue Icons    CC BY 3.0                      http://p.yusukekamiyamane.com/
