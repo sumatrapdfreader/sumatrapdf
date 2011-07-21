@@ -9,8 +9,6 @@
 typedef size_t HtmlElementId;
 typedef size_t HtmlAttrId;
 
-#define RootElementId  0
-
 enum HtmlParseError {
     ErrParsingNoError,
     ErrParsingElement, // syntax error parsing element
@@ -60,6 +58,8 @@ class HtmlParser {
     }
 
 public:
+    static const HtmlElementId RootElementId = 0;
+
     HtmlParseError error;  // parsing error, a static string
     char *errorContext; // pointer within html showing which part we failed to parse
 
@@ -86,7 +86,7 @@ public:
     HtmlElementId GetParent(HtmlElementId id) const;
     size_t GetSiblingCount(HtmlElementId id) const;
     HtmlElementId GetSibling(HtmlElementId id, size_t siblingNo) const;
+    HtmlAttr *GetAttrByName(HtmlElement *el, const char *name) const;
 };
-
 
 #endif

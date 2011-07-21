@@ -147,12 +147,63 @@ static bool SkipUntil(char **sPtr, char c)
     return *s == c;
 }
 
+// 0 if not tag end, 1 if ends with '>' and 2 if ends with "/>"
+static int TagEndLen(char *s) {
+    if ('>' == *s)
+        return 1;
+    if ('/' == s[0] && '>' == s[1])
+        return 2;
+    return 0;
+}
+
+static bool IsUnquotedAttrValEnd(char c) {
+    return !c || IsWs(c) || c == '/' || c == '>';
+}
+
+// TODO: support #x...; hex notation
+static void CollapseEntitiesInPlace(char *s)
+{
+    char *out = s;
+    while (*s) {
+        if (*s =='&') {
+            ++s;
+            if (str::StartsWithI(s, "lt;")) {
+                s += 3; *out++ = '<';
+            } else if (str::StartsWithI(s, "gt;")) {
+                s += 3; *out++ = '>';
+            } else if (str::StartsWithI(s, "amp;")) {
+                s += 4; *out++ = '&';
+            } else if (str::StartsWithI(s, "apos;")) {
+                s += 5; *out++ = '\'';
+            } else  if (str::StartsWithI(s, "quot;")) {
+                s += 5; *out++ = '"';
+            } else {
+                *out++ = s[-1];
+            }
+        } else {
+            *out++ = *s++;
+        }
+    }
+    *out = 0;
+}
+
 // only valid until next AllocElement()
 HtmlElement *HtmlParser::GetElement(HtmlElementId id) const
 {
     if ((NO_ID == id) || (elAllocator.Count() <= id))
         return NULL;
     return elAllocator.AtPtr(id);
+}
+
+HtmlAttr *HtmlParser::GetAttrByName(HtmlElement *el, const char *name) const
+{
+    HtmlAttr *a = GetAttr(el->firstAttrId);
+    while (NULL != a) {
+        if (str::EqI(name, a->name))
+            return a;
+        a = GetAttr(a->nextAttrId);
+    }
+    return NULL;
 }
 
 // elOut is only valid until next AllocElement()
@@ -162,6 +213,7 @@ HtmlElementId HtmlParser::AllocElement(HtmlElementId parentId, char *name, HtmlE
     HtmlElementId id = elAllocator.Count();
     HtmlElement *el = elAllocator.MakeSpaceAtEnd();
     InitHtmlElement(el);
+    el->name = name;
     el->up = parentId;
     if (parentId != NO_ID) {
         HtmlElement *parentEl = GetElement(parentId);
@@ -177,7 +229,6 @@ HtmlElementId HtmlParser::AllocElement(HtmlElementId parentId, char *name, HtmlE
             el->next = id;
         }
     }
-    el->name = name;
     if (elOut)
         *elOut = el;
     return id;
@@ -192,17 +243,17 @@ void HtmlParser::StartTag(char *tagName)
 void HtmlParser::CloseTag(char *tagName)
 {
     str::ToLower(tagName);
-    HtmlElementId id = currElementId;
     // to allow for lack of closing tags, e.g. in case like
     // <a><b><c></a>, we look for the first parent with matching name
-    while (id != NO_ID) {
-        HtmlElement *el = GetElement(id);
+    HtmlElementId elId = currElementId;
+    HtmlElement *el = GetElement(elId);
+    while (el) {
         if (str::Eq(el->name, tagName)) {
-            // TODO: what if el->up is NO_ID?
             currElementId = el->up;
             return;
         }
-        id = el->up;
+        elId = el->up;
+        el = GetElement(elId);
     }
     // TODO: should we do sth. here?
 }
@@ -215,31 +266,26 @@ void HtmlParser::StartAttr(char *attrName)
     InitHtmlAttr(attr);
     attr->name = attrName;
     HtmlElement *currEl = GetElement(currElementId);
-    // the order of attributes doesn't matter so it's
-    // ok they're stored in a reverse order
-    attr->nextAttrId = currEl->firstAttrId;
-    currEl->firstAttrId = id;
+    if (NO_ID == currEl->firstAttrId) {
+        currEl->firstAttrId = id;
+        return;
+    }
+    attr = GetAttr(currEl->firstAttrId);
+    while (NO_ID != attr->nextAttrId) {
+        attr = GetAttr(attr->nextAttrId);
+    }
+    attr->nextAttrId = id;
 }
 
 void HtmlParser::SetAttrVal(char *attrVal)
 {
     HtmlElement *currEl = GetElement(currElementId);
-    assert(NO_ID != currEl->firstAttrId);
-    HtmlAttr *currAttr = GetAttr(currEl->firstAttrId);
-    currAttr->val = attrVal;
-}
-
-// 0 if not tag end, 1 if ends with '>' and 2 if ends with "/>"
-static int TagEndLen(char *s) {
-    if ('>' == *s)
-        return 1;
-    if ('/' == s[0] && '>' == s[1])
-        return 2;
-    return 0;
-}
-
-static bool IsUnquotedAttrValEnd(char c) {
-    return !c || IsWs(c) || c == '/' || c == '>';
+    CollapseEntitiesInPlace(attrVal);
+    HtmlAttr *a = GetAttr(currEl->firstAttrId);
+    while (NO_ID != a->nextAttrId) {
+        a = GetAttr(a->nextAttrId);
+    }
+    a->val = attrVal;
 }
 
 static char *ParseAttrValue(char **sPtr)
@@ -317,36 +363,8 @@ ParseText:
         ++s;
         goto ParseClosingElement;
     }
-    goto ParseElementName;
 
-ParseExclOrPi: // "<!" or "<?"
-    // might be a <!DOCTYPE ..>, a <!-- comment ->, a <? processing instruction >
-    // or really anything. We're very lenient and consider it a success 
-    // if we find a terminating '>'
-    errorContext = s;
-    ok = SkipUntil(&s, '>');
-    if (!ok)
-        return ParseError(ErrParsingExclOrPI);
-    ++s;
-    goto ParseText;
-
-ParseClosingElement: // "</"
-    errorContext = s;
-    SkipWs(&s);
-    if (!IsName(*s))
-        return ParseError(ErrParsingClosingElement);
-    tagName = s;
-    SkipName(&s);
-    tagEnd = s;
-    SkipWs(&s);
-    if (*s != '>')
-        return ParseError(ErrParsingClosingElement);
-    *tagEnd = 0;
-    CloseTag(tagName);
-    ++s;
-    goto ParseText;
-
-ParseElementName:
+    // parse element name
     errorContext = s;
     SkipWs(&s);
     if (!IsName(*s))
@@ -371,6 +389,22 @@ ParseElementName:
     }
     return ParseError(ErrParsingElementName);
 
+ParseClosingElement: // "</"
+    errorContext = s;
+    SkipWs(&s);
+    if (!IsName(*s))
+        return ParseError(ErrParsingClosingElement);
+    tagName = s;
+    SkipName(&s);
+    tagEnd = s;
+    SkipWs(&s);
+    if (*s != '>')
+        return ParseError(ErrParsingClosingElement);
+    *tagEnd = 0;
+    CloseTag(tagName);
+    ++s;
+    goto ParseText;
+
 ParseAttributes:
     errorContext = s;
     SkipWs(&s);
@@ -392,9 +426,8 @@ ParseAttributeName:
     if (!attrName)
         return ParseError(ErrParsingAttributeName);
     StartAttr(attrName);
-    goto ParseAttributeValue;
 
-ParseAttributeValue:
+    // parse attribute value
     errorContext = s;
     attrVal = ParseAttrValue(&s);
     if (!attrVal)
@@ -406,7 +439,19 @@ ParseAttributeValue:
         goto FoundElementEnd;
     }
     SetAttrVal(attrVal);
+    s++;
     goto ParseAttributes;
+
+ParseExclOrPi: // "<!" or "<?"
+    // might be a <!DOCTYPE ..>, a <!-- comment ->, a <? processing instruction >
+    // or really anything. We're very lenient and consider it a success 
+    // if we find a terminating '>'
+    errorContext = s;
+    ok = SkipUntil(&s, '>');
+    if (!ok)
+        return ParseError(ErrParsingExclOrPI);
+    ++s;
+    goto ParseText;
 }
 
 #ifdef DEBUG
@@ -429,7 +474,7 @@ static void HtmlParser00()
     HtmlParser *p = ParseString("<a></A>");
     assert(p);
     assert(p->ElementsCount() == 1);
-    assert(str::Eq("a", p->GetElementName(RootElementId)));
+    assert(str::Eq("a", p->GetElementName(HtmlParser::RootElementId)));
     delete p;
 }
 
@@ -437,22 +482,44 @@ static void HtmlParser01()
 {
     HtmlParser *p = ParseString("<A><bAh></a>");
     assert(p->ElementsCount() == 2);
-    HtmlElement *el = p->GetElement(RootElementId);
+    HtmlElement *el = p->GetRootElement();
     assert(str::Eq("a", el->name));
     assert(NO_ID == el->up);
     assert(NO_ID == el->next);
     el = p->GetElement(el->down);
     assert(NO_ID == el->firstAttrId);
     assert(str::Eq("bah", el->name));
-    assert(el->up == RootElementId);
+    assert(el->up == HtmlParser::RootElementId);
     assert(NO_ID == el->down);
     assert(NO_ID == el->next);
     delete p;
 }
 
+static void HtmlParser05()
+{
+    HtmlParser *p = ParseString("<!doctype><html><HEAD><meta name=foo></head><body><object t=la><param name=foo val=bar></object><ul><li></ul></object></body></Html>");
+    assert(8 == p->ElementsCount());
+    assert(4 == p->TotalAttrCount());
+    HtmlElement *el = p->GetRootElement();
+    assert(str::Eq("html", el->name));
+    assert(NO_ID == el->up);
+    assert(NO_ID == el->next);
+    el = p->GetElement(el->down);
+    assert(str::Eq("head", el->name));
+    HtmlElement *el2 = p->GetElement(el->down);
+    assert(str::Eq("meta", el2->name));
+    assert(NO_ID == el2->next);
+    assert(NO_ID == el2->down);
+    el2 = p->GetElement(el->next);
+    assert(str::Eq("body", el2->name));
+    assert(NO_ID == el2->next);
+    el2 = p->GetElement(el2->down);
+    assert(str::Eq("object", el2->name));
+}
+
 static void HtmlParser04()
 {
-    HtmlParser *p = ParseString("<el att=  val></ el >");
+    HtmlParser *p = ParseString("<el att=  va&apos;l></ el >");
     assert(1 == p->ElementsCount());
     assert(1 == p->TotalAttrCount());
     HtmlElement *el = p->GetRootElement();
@@ -462,13 +529,13 @@ static void HtmlParser04()
     assert(NO_ID == el->down);
     HtmlAttr *a = p->GetAttr(el->firstAttrId);
     assert(str::Eq("att", a->name));
-    assert(str::Eq("val", a->val));
+    assert(str::Eq("va'l", a->val));
     assert(NO_ID == a->nextAttrId);
 }
 
 static void HtmlParser03()
 {
-    HtmlParser *p = ParseString("<el   att  =val/>");
+    HtmlParser *p = ParseString("<el   att  =v&quot;al/>");
     assert(1 == p->ElementsCount());
     assert(1 == p->TotalAttrCount());
     HtmlElement *el = p->GetRootElement();
@@ -478,13 +545,13 @@ static void HtmlParser03()
     assert(NO_ID == el->down);
     HtmlAttr *a = p->GetAttr(el->firstAttrId);
     assert(str::Eq("att", a->name));
-    assert(str::Eq("val", a->val));
+    assert(str::Eq("v\"al", a->val));
     assert(NO_ID == a->nextAttrId);
 }
 
 static void HtmlParser02()
 {
-    HtmlParser *p = ParseString("<a><b/><  c></c  ><d at1=\"quoted\" at2='also quoted'   att3=notquoted att4=end/></a>");
+    HtmlParser *p = ParseString("<a><b/><  c></c  ><d at1=\"&lt;quo&amp;ted&gt;\" at2='also quoted'   att3=notquoted att4=end/></a>");
     assert(4 == p->ElementsCount());
     assert(4 == p->TotalAttrCount());
     HtmlElement *el = p->GetRootElement();
@@ -492,27 +559,26 @@ static void HtmlParser02()
     assert(NO_ID == el->next);
     el = p->GetElement(el->down);
     assert(str::Eq("b", el->name));
-    assert(RootElementId == el->up);
+    assert(HtmlParser::RootElementId == el->up);
     el = p->GetElement(el->next);
     assert(str::Eq("c", el->name));
-    assert(RootElementId == el->up);
+    assert(HtmlParser::RootElementId == el->up);
     el = p->GetElement(el->next);
     assert(str::Eq("d", el->name));
     assert(NO_ID == el->next);
-    assert(RootElementId == el->up);
+    assert(HtmlParser::RootElementId == el->up);
     HtmlAttr *a = p->GetAttr(el->firstAttrId);
-    // Note: using implementation detail: attributes are stored in reverse order
-    assert(str::Eq("att4", a->name));
-    assert(str::Eq("end", a->val));
-    a = p->GetAttr(a->nextAttrId);
-    assert(str::Eq("att3", a->name));
-    assert(str::Eq("notquoted", a->val));
+    assert(str::Eq("at1", a->name));
+    assert(str::Eq("<quo&ted>", a->val));
     a = p->GetAttr(a->nextAttrId);
     assert(str::Eq("at2", a->name));
     assert(str::Eq("also quoted", a->val));
     a = p->GetAttr(a->nextAttrId);
-    assert(str::Eq("at1", a->name));
-    assert(str::Eq("quoted", a->val));
+    assert(str::Eq("att3", a->name));
+    assert(str::Eq("notquoted", a->val));
+    a = p->GetAttr(a->nextAttrId);
+    assert(str::Eq("att4", a->name));
+    assert(str::Eq("end", a->val));
     assert(NO_ID == a->nextAttrId);
     delete p;
 }
@@ -533,18 +599,38 @@ static void HtmlParserFile()
         return;
     HtmlParser p;
     bool ok = p.ParseInPlace(d);
-    // assert(ok);
+    assert(ok);
+    assert(709 == p.ElementsCount());
+    assert(955 == p.TotalAttrCount());
+    HtmlElement *el = p.GetRootElement();
+    assert(str::Eq(el->name, "html"));
+    el = p.GetElement(el->down);
+    assert(str::Eq(el->name, "head"));
+    el = p.GetElement(el->next);
+    assert(str::Eq(el->name, "body"));
+    el = p.GetElement(el->down);
+    assert(str::Eq(el->name, "object"));
+    el = p.GetElement(el->next);
+    assert(str::Eq(el->name, "ul"));
+    el = p.GetElement(el->down);
+    assert(str::Eq(el->name, "li"));
+    el = p.GetElement(el->down);
+    assert(str::Eq(el->name, "object"));
+    HtmlAttr *a = p.GetAttrByName(el, "type");
+    assert(str::Eq(a->name, "type"));
+    assert(str::Eq(a->val, "text/sitemap"));
     free(d);
 }
 }
 
 void TrivialHtmlParser_UnitTests()
 {
+    unittests::HtmlParserFile();
+    unittests::HtmlParser05();
     unittests::HtmlParser04();
     unittests::HtmlParser03();
-    //unittests::HtmlParser02();
-    //unittests::HtmlParser00();
-    //unittests::HtmlParser01();
-    //unittests::HtmlParserFile();
+    unittests::HtmlParser02();
+    unittests::HtmlParser00();
+    unittests::HtmlParser01();
 }
 #endif
