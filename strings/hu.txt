@@ -25,8 +25,14 @@ Az összes kiválasztott oldal
 &Back\tAlt+Left Arrow
 Ugrás vissza\tAlt+<-
 
+&Book View\tCtrl+8
+&Könyv-mód(oldalpár címlappal)\tCtrl+8
+
 &Close\tCtrl+W
 Be&zárás\tCtrl+W
+
+&Copy Selection
+Kijelöltek &másolása
 
 &Copy Selection\tCtrl+C
 Kép/Szöveg másolása\tCtrl+C
@@ -36,6 +42,9 @@ Ne kérdezze meg többé
 
 &Even pages only
 Csak a páros oldalak
+
+&Facing\tCtrl+7
+&Oldalpár\tCtrl+7
 
 &File
 &Fájl
@@ -130,6 +139,9 @@ Ment&és másként...\tCtrl+S
 &Shrink pages to printable area (if necessary)
 Oldalak széleinek levágása a nyomtatható méretre
 
+&Single Page\tCtrl+6
+&Egyoldalas\tCtrl+6
+
 &Skip this version
 Verzió kihagyása
 
@@ -148,8 +160,23 @@ Ne igazítson a lapmérethez(eredeti oldalméret használata)
 (of %d)
 (a %d-ból)
 
+(page %d)
+(%d. oldal)
+
 About SumatraPDF
 SumatraPDF névjegye
+
+Add Favorite
+Hozzáadás a kedvencekhez
+
+Add page %d to favorites
+%d. oldal hozzáadása a kedvencekhez
+
+Add page %d to favorites with (optional) name:
+%d. oldal hozzáadása a kedvencekhez, megnevezéssel(opcionális):
+
+Add to favorites
+Hozzáadás a kedvencekhez
 
 Advanced
 További programbeállítások
@@ -183,6 +210,12 @@ Könyv(Oldalpár címlappal)
 
 Book&marks\tF12
 Könyvjelzők\tF12
+
+Bookmark Shortcuts
+Könyvjelző parancsikonok
+
+Bookmark shortcut to page %d of %s
+Könyvjelző parancsikon a(z) %d/%s oldalhoz
 
 Bookmarks
 Könyvjelzők
@@ -223,8 +256,17 @@ Folyamatos oldalpár
 Contribute Translation
 &Járulj hozzá a fordításhoz
 
+Copy &Link Address
+&Hivatkozás címének másolása
+
+Copy Co&mment
+Me&gjegyzés másolása
+
 Copying text was denied (copying as image only)
 Szöveg másolása tiltott(csak képként másolva)
+
+Could not obtain Printer properties
+A nyomtató tulajdonságai nem érhetőek el
 
 Could not open Printer
 Nem lehet megnyitni a nyomtatót.
@@ -237,6 +279,9 @@ Oldalfeldolgozási hiba
 
 Created:
 Készült:
+
+Current file
+Jelenlegi fájl
 
 Custom &Zoom...\tCtrl+Y
 ... Egyéni méret\tCtrl+Y
@@ -274,6 +319,12 @@ Enter password for %s
 Enter the command-line to invoke when you double-click on the PDF document:
 Írja be a parancsot, ami a PDF dokumentumra való dupla kattintáskor fut le:
 
+Error loading %s
+Hiba %s dokumentum betöltésekor
+
+F&avorites
+&Kedvencek
+
 F&orward\tAlt+Right Arrow
 Ugrás előre\tAlt+->
 
@@ -285,6 +336,9 @@ Oldalpár
 
 Failed to save a file
 A fájl mentése sikertelen
+
+Favorites
+Kedvencek
 
 File Size:
 Méret:
@@ -333,6 +387,9 @@ Teljes oldalankénti nézet
 
 Found text at page %d
 Találat a(z) %d. oldalon
+
+Found text at page %d (again)
+Találat a(z) %d. oldalon (ismét)
 
 Frequently Read
 Leggyakrabban olvasott fájlok
@@ -430,6 +487,9 @@ PDF fájlok
 Pa&ge...\tCtrl+G
 Megadott oldal...\tCtrl+G
 
+Page %d
+%d. oldal
+
 Page Size:
 Oldalméret
 
@@ -460,14 +520,26 @@ Nyomtatás
 Print range
 Nyomtatási tartomány
 
+Printer with given name doesn't exist
+Nem található nyomtató a megadott néven
+
 Printing is still in progress. Abort and start over?
 A nyomtatás még folyamatban van. Megszakítás vagy újrakezdés?
+
+Printing page %d of %d...
+%d. oldal nyomtatása a(z) %d-ből...
 
 Printing problem.
 Nyomtatási probléma.
 
 Remember &opened files
 Korábban megnyitott file-ok listájának tárolása
+
+Remove from favorites
+Eltávolítás a kedvencek közül
+
+Remove page %d from favorites
+%d. oldal eltávolítása a kedvencek közül
 
 Rotate &Left\tCtrl+Shift+-
 Forgatás balra\tCtrl+Shift+-
@@ -505,6 +577,9 @@ Eszköztár
 Show &pages continuously
 Folyamatos nézet
 
+Show Favorites
+Mutasd a kedvenceket
+
 Show frequently read
 Leggyakrabban olvasott fájlok mutatása
 
@@ -513,6 +588,9 @@ Dokumentumba ágyazott könyvjelzők mutatása
 
 Single Page
 Egy oldalas
+
+Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
+Sajnáljuk, váratlan hiba történt!\n\nKérjük nyomja meg a 'Mégse' gombot, ha segíteni szeretne nekünk a hiba kijavításában.
 
 Source file %s has no synchronization point
 A '%s' forrásfájlban nincs szinkronizációs hely
@@ -585,32 +663,4 @@ Szöveg vágólapra
 
 printing document
 Nyomtatás
-
-# Untranslated:
-#&Book View\tCtrl+8
-#&Copy Selection
-#&Facing\tCtrl+7
-#&Single Page\tCtrl+6
-#(page %d)
-#Add Favorite
-#Add page %d to favorites
-#Add page %d to favorites with (optional) name:
-#Add to favorites
-#Bookmark Shortcuts
-#Bookmark shortcut to page %d of %s
-#Copy &Link Address
-#Copy Co&mment
-#Could not obtain Printer properties
-#Current file
-#Error loading %s
-#F&avorites
-#Favorites
-#Found text at page %d (again)
-#Page %d
-#Printer with given name doesn't exist
-#Printing page %d of %d...
-#Remove from favorites
-#Remove page %d from favorites
-#Show Favorites
-#Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
 
