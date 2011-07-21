@@ -71,6 +71,7 @@ static bool IsUnquotedAttrValEnd(char c) {
 }
 
 // TODO: support #x...; hex notation
+// TODO: support other HTML entities (such as &uuml; or &ocirc;)?
 static void CollapseEntitiesInPlace(char *s)
 {
     char *out = s;
@@ -446,6 +447,7 @@ static void HtmlParser05()
     assert(NULL == el2->next);
     el2 = el2->down;
     assert(str::Eq("object", el2->name));
+    delete p;
 }
 
 static void HtmlParser04()
@@ -462,6 +464,7 @@ static void HtmlParser04()
     assert(str::Eq("att", a->name));
     assert(str::Eq("va'l", a->val));
     assert(NULL == a->next);
+    delete p;
 }
 
 static void HtmlParser03()
@@ -478,6 +481,7 @@ static void HtmlParser03()
     assert(str::Eq("att", a->name));
     assert(str::Eq("v\"al", a->val));
     assert(NULL == a->next);
+    delete p;
 }
 
 static void HtmlParser02()
