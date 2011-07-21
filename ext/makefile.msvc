@@ -89,9 +89,6 @@ DJVU_OBJS = \
 CHMLIB_OBJS = \
 	$(OC)\chm_lib.obj $(OC)\lzx.obj
 
-PUGIXML_OBJS = \
-	$(OE)\pugixml.obj
-
 $(OE): force
 	@if not exist $(OE) mkdir $(OE)
 	@if not exist $(OBZ) mkdir $(OBZ)
@@ -119,6 +116,3 @@ $(OE): force
 
 {$(EXTDIR)\CHMLib\src}.c{$(OC)}.obj::
 	$(CC) $(CHMLIB_CFLAGS) /Fo$(OC)\ /Fd$(O)\vc80.pdb $<
-
-{$(EXTDIR)\pugixml}.cpp{$(OE)}.obj::
-	$(CC) $(CFLAGSOPT) /Fo$(OE)\ /Fd$(O)\vc80.pdb $<
