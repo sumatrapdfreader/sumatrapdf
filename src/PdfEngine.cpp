@@ -716,7 +716,7 @@ public:
 
     virtual PageDestination *GetNamedDest(const TCHAR *name);
     virtual bool HasToCTree() const {
-        return _outline != NULL || _attachments != NULL;
+        return outline != NULL || attachments != NULL;
     }
     virtual DocToCItem *GetToCTree();
 
@@ -768,8 +768,8 @@ protected:
     bool            SaveEmbedded(fz_obj *obj, LinkSaverUI& saveUI);
 
     RectD         * _mediaboxes;
-    pdf_outline   * _outline;
-    pdf_outline   * _attachments;
+    pdf_outline   * outline;
+    pdf_outline   * attachments;
     fz_obj        * _info;
     fz_glyph_cache* _drawcache;
     StrVec        * _pagelabels;
@@ -831,7 +831,7 @@ public:
 };
 
 CPdfEngine::CPdfEngine() : _fileName(NULL), _xref(NULL), _mediaboxes(NULL),
-    _outline(NULL), _attachments(NULL), _info(NULL), _pages(NULL),
+    outline(NULL), attachments(NULL), _info(NULL), _pages(NULL),
     _drawcache(NULL), _pagelabels(NULL), _decryptionKey(NULL)
 {
     InitializeCriticalSection(&_pagesAccess);
@@ -852,10 +852,10 @@ CPdfEngine::~CPdfEngine()
         free(_pages);
     }
 
-    if (_outline)
-        pdf_free_outline(_outline);
-    if (_attachments)
-        pdf_free_outline(_attachments);
+    if (outline)
+        pdf_free_outline(outline);
+    if (attachments)
+        pdf_free_outline(attachments);
     if (_info)
         fz_drop_obj(_info);
 
@@ -1067,12 +1067,12 @@ bool CPdfEngine::finishLoading()
     _mediaboxes = new RectD[PageCount()];
 
     EnterCriticalSection(&_xrefAccess);
-    _outline = pdf_load_outline(_xref);
+    outline = pdf_load_outline(_xref);
     // silently ignore errors from pdf_loadoutline()
     // this information is not critical and checking the
     // error might prevent loading some pdfs that would
     // otherwise get displayed
-    _attachments = pdf_loadattachments(_xref);
+    attachments = pdf_loadattachments(_xref);
     // keep a copy of the Info dictionary, as accessing the original
     // isn't thread safe and we don't want to block for this when
     // displaying document properties
@@ -1109,13 +1109,12 @@ DocToCItem *CPdfEngine::GetToCTree()
     PdfToCItem *node = NULL;
     int idCounter = 0;
 
-    if (_outline) {
-        node = BuildToCTree(_outline, idCounter);
-        if (_attachments)
-            node->AddSibling(BuildToCTree(_attachments, idCounter));
-    }
-    else if (_attachments)
-        node = BuildToCTree(_attachments, idCounter);
+    if (outline) {
+        node = BuildToCTree(outline, idCounter);
+        if (attachments)
+            node->AddSibling(BuildToCTree(attachments, idCounter));
+    } else if (attachments)
+        node = BuildToCTree(attachments, idCounter);
 
     return node;
 }
