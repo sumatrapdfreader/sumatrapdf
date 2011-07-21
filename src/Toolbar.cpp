@@ -212,42 +212,6 @@ static HBITMAP LoadExternalBitmap(HINSTANCE hInst, TCHAR * filename, INT resourc
     return LoadBitmap(hInst, MAKEINTRESOURCE(resourceId));
 }
 
-#define UWM_DELAYED_SET_FOCUS (WM_APP + 1)
-
-// selects all text in an edit box if it's selected either
-// through a keyboard shortcut or a non-selecting mouse click
-static bool FocusUnselectedWndProc(HWND hwnd, UINT message)
-{
-    static bool delayFocus = false;
-
-    switch (message) {
-    case WM_LBUTTONDOWN:
-        delayFocus = GetFocus() != hwnd;
-        return true;
-
-    case WM_LBUTTONUP:
-        if (delayFocus) {
-            DWORD sel = Edit_GetSel(hwnd);
-            if (LOWORD(sel) == HIWORD(sel))
-                PostMessage(hwnd, UWM_DELAYED_SET_FOCUS, 0, 0);
-            delayFocus = false;
-        }
-        return true;
-
-    case WM_SETFOCUS:
-        if (!delayFocus)
-            PostMessage(hwnd, UWM_DELAYED_SET_FOCUS, 0, 0);
-        return true;
-
-    case UWM_DELAYED_SET_FOCUS:
-        Edit_SelectAll(hwnd);
-        return true;
-
-    default:
-        return false;
-    }
-}
-
 static WNDPROC DefWndProcToolbar = NULL;
 static LRESULT CALLBACK WndProcToolbar(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -266,7 +230,7 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, L
     if (!win || !win->IsDocLoaded())
         return DefWindowProc(hwnd, message, wParam, lParam);
 
-    if (FocusUnselectedWndProc(hwnd, message)) {
+    if (ExtendedEditWndProc(hwnd, message, wParam, lParam)) {
         // select the whole find box on a non-selecting click
     } else if (WM_CHAR == message) {
         switch (wParam) {
@@ -436,7 +400,7 @@ static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT message, WPARAM wParam, L
     if (!win || !win->IsDocLoaded())
         return DefWindowProc(hwnd, message, wParam, lParam);
 
-    if (FocusUnselectedWndProc(hwnd, message)) {
+    if (ExtendedEditWndProc(hwnd, message, wParam, lParam)) {
         // select the whole page box on a non-selecting click
     } else if (WM_CHAR == message) {
         switch (wParam) {

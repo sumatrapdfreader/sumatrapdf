@@ -212,7 +212,16 @@ TCHAR *Dialog_GoToPage(HWND hwnd, const TCHAR *currentPageLabel, int pageCount, 
 struct Dialog_Find_Data {
     TCHAR * searchTerm;
     bool    matchCase;
+    WNDPROC editWndProc;
 };
+
+static LRESULT CALLBACK Dialog_Find_Edit_Proc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    ExtendedEditWndProc(hwnd, message, wParam, lParam);
+
+    Dialog_Find_Data *data = (Dialog_Find_Data *)GetWindowLongPtr(GetParent(hwnd), GWLP_USERDATA);
+    return CallWindowProc(data->editWndProc, hwnd, message, wParam, lParam);
+}
 
 static INT_PTR CALLBACK Dialog_Find_Proc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -234,6 +243,7 @@ static INT_PTR CALLBACK Dialog_Find_Proc(HWND hDlg, UINT msg, WPARAM wParam, LPA
         if (data->searchTerm)
             SetDlgItemText(hDlg, IDC_FIND_EDIT, data->searchTerm);
         CheckDlgButton(hDlg, IDC_MATCH_CASE, data->matchCase ? BST_CHECKED : BST_UNCHECKED);
+        data->editWndProc = (WNDPROC)SetWindowLongPtr(GetDlgItem(hDlg, IDC_FIND_EDIT), GWLP_WNDPROC, (LONG_PTR)Dialog_Find_Edit_Proc);
         Edit_SelectAll(GetDlgItem(hDlg, IDC_FIND_EDIT));
 
         CenterDialog(hDlg);

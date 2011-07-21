@@ -68,4 +68,6 @@ bool IsExeAssociatedWithPdfExtension();
 LPTSTR AutoDetectInverseSearchCommands(HWND hwndCombo=NULL);
 void   DDEExecute(LPCTSTR server, LPCTSTR topic, LPCTSTR command);
 
+bool ExtendedEditWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
+
 #endif

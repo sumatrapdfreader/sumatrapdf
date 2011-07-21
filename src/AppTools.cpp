@@ -462,3 +462,66 @@ exit:
     DdeFreeStringHandle(inst, hszServer);
     DdeUninitialize(inst);
 }
+
+
+#define UWM_DELAYED_SET_FOCUS (WM_APP + 1)
+#define UWM_DELAYED_CTRL_BACK (WM_APP + 2)
+
+// selects all text in an edit box if it's selected either
+// through a keyboard shortcut or a non-selecting mouse click
+// (or responds to Ctrl+Backspace as nowadays expected)
+bool ExtendedEditWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    static bool delayFocus = false;
+
+    switch (message) {
+    case WM_LBUTTONDOWN:
+        delayFocus = GetFocus() != hwnd;
+        return true;
+
+    case WM_LBUTTONUP:
+        if (delayFocus) {
+            DWORD sel = Edit_GetSel(hwnd);
+            if (LOWORD(sel) == HIWORD(sel))
+                PostMessage(hwnd, UWM_DELAYED_SET_FOCUS, 0, 0);
+            delayFocus = false;
+        }
+        return true;
+
+    case WM_SETFOCUS:
+        if (!delayFocus)
+            PostMessage(hwnd, UWM_DELAYED_SET_FOCUS, 0, 0);
+        return true;
+
+    case UWM_DELAYED_SET_FOCUS:
+        Edit_SelectAll(hwnd);
+        return true;
+
+    case WM_KEYDOWN:
+        if (VK_BACK != wParam || !IsCtrlPressed() || IsShiftPressed())
+            return false;
+        PostMessage(hwnd, UWM_DELAYED_CTRL_BACK, 0, 0);
+        return true;
+
+    case UWM_DELAYED_CTRL_BACK:
+        {
+            ScopedMem<TCHAR> text(win::GetText(hwnd));
+            int selStart = LOWORD(Edit_GetSel(hwnd)), selEnd = selStart;
+            // remove the rectangle produced by Ctrl+Backspace
+            if (selStart > 0 && text[selStart - 1] == '\x7F') {
+                memmove(text + selStart - 1, text + selStart, str::Len(text + selStart - 1) * sizeof(WCHAR));
+                win::SetText(hwnd, text);
+                selStart = selEnd = selStart - 1;
+            }
+            // remove the previous word (and any spacing after it)
+            for (; selStart > 0 && _istspace(text[selStart - 1]); selStart--);
+            for (; selStart > 0 && !_istspace(text[selStart - 1]); selStart--);
+            Edit_SetSel(hwnd, selStart, selEnd);
+            SendMessage(hwnd, WM_CLEAR, 0, 0);
+        }
+        return true;
+
+    default:
+        return false;
+    }
+}
