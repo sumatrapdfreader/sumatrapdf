@@ -3316,7 +3316,7 @@ static void EnterFullscreen(WindowInfo& win, bool presentation)
     // Remove TOC and favorites from full screen, add back later on exit fullscreen
     bool favVisibleTmp = gGlobalPrefs.favVisible;
     if (win.tocVisible || gGlobalPrefs.favVisible) {
-        SetSidebarVisibility(&win, win.tocVisible, false);
+        SetSidebarVisibility(&win, false, false);
         // restore gGlobalPrefs.favVisible changed by SetSidebarVisibility()
     }
 
