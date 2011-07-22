@@ -143,6 +143,8 @@ public:
     size_t TotalAttrCount() const {
         return attributesCount;
     }
+
+    HtmlElement *FindElementByName(const char *name, HtmlElement *from=NULL);
 };
 
 #endif

@@ -388,6 +388,46 @@ HtmlElement *HtmlParser::Parse(const char *s)
     return ParseInPlace(str::Dup(s));
 }
 
+// Does a depth-first search of element tree, looking for an element with
+// a given name. If from is NULL, it starts from rootElement otherwise
+// it starts from *next* element in traversal order, which allows for
+// easy iteration over elements.
+// Note: name must be lower-case
+HtmlElement *HtmlParser::FindElementByName(const char *name, HtmlElement *from)
+{
+    HtmlElement *el = from;
+    if (!from) {
+        if (!rootElement)
+            return NULL;
+        if (str::Eq(name, rootElement->name))
+            return rootElement;
+        el = rootElement;
+    }
+Next:
+    if (el->down) {
+        el = el->down;
+        goto FoundNext;
+    }
+    if (el->next) {
+        el = el->next;
+        goto FoundNext;
+    }
+    // backup in the tree
+    HtmlElement *parent = el->up;
+    while (parent) {
+        if (parent->next) {
+            el = parent->next;
+            goto FoundNext;
+        }
+        parent = parent->up;
+    }
+    return NULL;
+FoundNext:
+    if (str::Eq(el->name, name))
+        return el;
+    goto Next;
+}
+
 #ifdef DEBUG
 #include <assert.h>
 
@@ -438,6 +478,13 @@ static void HtmlParser05()
     assert(NULL == el2->next);
     el2 = el2->down;
     assert(str::Eq("object", el2->name));
+    el = p.FindElementByName("html");
+    assert(el);
+    el = p.FindElementByName("head", el);
+    assert(el);
+    assert(str::Eq("head", el->name));
+    el = p.FindElementByName("ul", el);
+    assert(el);
 }
 
 static void HtmlParser04()
@@ -532,6 +579,16 @@ static void HtmlParserFile()
     assert(str::Eq(el->name, "object"));
     ScopedMem<TCHAR> val(el->GetAttribute("type"));
     assert(str::Eq(val, _T("text/sitemap")));
+    el = p.FindElementByName("body");
+    assert(el);
+    el = p.FindElementByName("ul", el);
+    assert(el);
+    int count = 0;
+    while (el) {
+        ++count;
+        el = p.FindElementByName("ul", el);
+    }
+    assert(18 == count);
     free(d);
 }
 }
