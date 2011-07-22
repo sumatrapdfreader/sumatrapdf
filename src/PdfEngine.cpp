@@ -613,6 +613,9 @@ StrVec *BuildPageLabelVec(fz_obj *root, int pageCount)
     BuildPageLabelRec(root, pageCount, data);
     data.Sort(CmpPageLabelInfo);
 
+    if (data.Count() == 0)
+        return NULL;
+
     if (data.Count() == 1 && data[0].startAt == 1 && data[0].countFrom == 1 &&
         !data[0].prefix && str::Eq(data[0].type, "D")) {
         // this is the default case, no need for special treatment
