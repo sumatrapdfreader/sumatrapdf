@@ -56,7 +56,7 @@ public:
     }
 
     virtual const TCHAR *FileName() const { return fileName; };
-    virtual int PageCount() const { return 1 /* TODO: pageCount */; }
+    virtual int PageCount() const { return pages.Count(); }
 
     virtual RectD PageMediabox(int pageNo) {
         RectD r; return r;
@@ -108,7 +108,7 @@ protected:
     ChmInfo *chmInfo;
     ChmToCItem *tocRoot;
 
-    int pageCount;
+    Vec<ChmToCItem*> pages; // point to one of the items within tocRoot
 
     bool Load(const TCHAR *fileName);
     bool LoadAndParseHtmlToc();
@@ -116,7 +116,7 @@ protected:
 };
 
 CChmEngine::CChmEngine() :
-    fileName(NULL), chmHandle(NULL), chmInfo(NULL), tocRoot(NULL), pageCount(0)
+    fileName(NULL), chmHandle(NULL), chmInfo(NULL), tocRoot(NULL)
 {
 }
 
@@ -446,6 +446,53 @@ ChmToCItem *BuildChmToc(HtmlElement *el)
     return node;
 }
 
+static bool ChmFileExists(struct chmFile *chmHandle, TCHAR *fileName)
+{
+    char *tmp = str::conv::ToAnsi(fileName);
+    char *fileNameTmp = NULL;
+    if (!str::StartsWith(tmp, "/")) {
+        fileNameTmp = str::Join("/", tmp);
+    } else if (str::StartsWith(tmp, "///")) {
+        tmp += 2;
+    }
+    struct chmUnitInfo info;
+    char *toCheck = fileNameTmp;
+    if (!toCheck)
+        toCheck = tmp;
+    int res = chm_resolve_object(chmHandle, toCheck, &info);
+    free(tmp);
+    free(fileNameTmp);
+    if (CHM_RESOLVE_SUCCESS != res)
+        return false;
+   return true;
+}
+
+static void AddPageIfUnique(Vec<ChmToCItem*>& pages, ChmToCItem *item, struct chmFile *chmHandle)
+{
+    TCHAR *url = item->url;
+    size_t len = pages.Count();
+    for (size_t i=0; i<len; i++) {
+        ChmToCItem *tmp = pages.At(len-i-1);
+        if (str::Eq(tmp->url, url))
+            return;
+    }
+    if (!ChmFileExists(chmHandle, item->url))
+        return;
+    pages.Append(item);
+}
+
+// We fake page numbers by doing a depth-first traversal of
+// toc tree and considering each unique html page in toc tree
+// as a page
+static void BuildPagesInfo(Vec<ChmToCItem*>& pages, ChmToCItem *curr, struct chmFile *chmHandle)
+{
+    AddPageIfUnique(pages, curr, chmHandle);
+    if (curr->child)
+        BuildPagesInfo(pages, (ChmToCItem*)(curr->child), chmHandle);
+    if (curr->next)
+        BuildPagesInfo(pages, (ChmToCItem*)(curr->next), chmHandle);
+}
+
 bool CChmEngine::ParseChmHtmlToc(char *html)
 {
     HtmlParser p;
@@ -468,10 +515,13 @@ bool CChmEngine::ParseChmHtmlToc(char *html)
 bool CChmEngine::LoadAndParseHtmlToc()
 {
     Bytes b;
-    bool ok = GetChmDataForFile(chmHandle, chmInfo->tocPath, b);
-    if (ok)
-        ok = ParseChmHtmlToc((char*)b.d);
-    return ok;
+    if (!GetChmDataForFile(chmHandle, chmInfo->tocPath, b))
+        return false;
+    if (!ParseChmHtmlToc((char*)b.d))
+        return false;
+    assert(0 == pages.Count());
+    BuildPagesInfo(pages, tocRoot, chmHandle);
+    return 0 != pages.Count();
 }
 
 bool CChmEngine::Load(const TCHAR *fileName)
@@ -501,11 +551,6 @@ bool CChmEngine::Load(const TCHAR *fileName)
     if (!LoadAndParseHtmlToc())
         return false;
 
-    // TODO: build pages information. Really, we have to fake the pages
-    // as they are not a native concept to chm document.
-    // We'll construct pages information by traversing toc tree
-    // depth-first, assigning each unique, existing html page a 
-    // consequitive page number
     return true;
 }
 
