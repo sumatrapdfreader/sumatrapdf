@@ -97,6 +97,7 @@ struct HtmlElement {
     HtmlElement *up, *down, *next;
 
     TCHAR *GetAttribute(const char *name) const;
+    HtmlElement *GetChildIfNamed(int idx, const char *name) const;
 };
 
 class HtmlParser {

@@ -5,6 +5,7 @@
 #include "StrUtil.h"
 #include "FileUtil.h"
 #include "Vec.h"
+#include "TrivialHtmlParser.h"
 
 #include "chm_lib.h"
 
@@ -27,8 +28,19 @@ public:
 
 class ChmToCItem : public DocToCItem {
 public:
-    ChmToCItem(TCHAR *title) : DocToCItem(title)
-    {}
+    TCHAR *url;
+    TCHAR *imageNumber;
+
+    ChmToCItem(TCHAR *title, TCHAR *url, TCHAR *imageNumber) : DocToCItem(title)
+    {
+        this->url = url;
+        this->imageNumber = imageNumber;
+    }
+
+    ~ChmToCItem() {
+        free(url);
+        free(imageNumber);
+    }
 
     virtual PageDestination *GetLink() { return NULL; }
 };
@@ -44,7 +56,7 @@ public:
     }
 
     virtual const TCHAR *FileName() const { return fileName; };
-    virtual int PageCount() const { return pageCount; }
+    virtual int PageCount() const { return 1 /* TODO: pageCount */; }
 
     virtual RectD PageMediabox(int pageNo) {
         RectD r; return r;
@@ -56,13 +68,13 @@ public:
     virtual RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
                          RectD *pageRect=NULL, /* if NULL: defaults to the page's mediabox */
                          RenderTarget target=Target_View) {
-         assert(0);
+         // TOOD: assert(0);
          return NULL;
     }
 
     virtual bool RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, int rotation=0,
                          RectD *pageRect=NULL, RenderTarget target=Target_View) {
-        assert(0);
+        // TODO: assert(0);
         return false;
     }
 
@@ -84,25 +96,27 @@ public:
 
     virtual const TCHAR *GetDefaultFileExt() const { return _T(".chm"); }
 
-    // we currently don't load pages lazily, so there's nothing to do here
     virtual bool BenchLoadPage(int pageNo) { return true; }
 
-    // TODO: for now, it obviously has no toc tree
-    virtual bool HasToCTree() const { return false; }
+    // we always have toc tree
+    virtual bool HasToCTree() const { return true; }
+    virtual DocToCItem *GetToCTree() { return tocRoot; }
 
 protected:
     const TCHAR *fileName;
     struct chmFile *chmHandle;
     ChmInfo *chmInfo;
+    ChmToCItem *tocRoot;
 
     int pageCount;
 
     bool Load(const TCHAR *fileName);
-    bool LoadAndParseTocXml();
+    bool LoadAndParseHtmlToc();
+    bool ParseChmHtmlToc(char *html);
 };
 
 CChmEngine::CChmEngine() :
-    fileName(NULL), chmHandle(NULL), chmInfo(NULL), pageCount(0)
+    fileName(NULL), chmHandle(NULL), chmInfo(NULL), tocRoot(NULL), pageCount(0)
 {
 }
 
@@ -351,41 +365,113 @@ static bool ParseSystemChmData(chmFile *chmHandle, ChmInfo *chmInfo)
     return true;
 }
 
-#if 0
-using namespace pugi;
+/* The html looks like:
+<li>
+ <object type="text/sitemap">
+   <param name="Name" value="Main Page">
+     <param name="Local" value="0789729717_main.html">
+       <param name="ImageNumber" value="12">
+ </object>
+ <li>
+  ...
 
-static bool ParseChmToc(xml_document& xmldoc)
+A good html parser would treat param elements as siblings,
+but our simplistic parser treats them as children.
+*/
+ChmToCItem *TocItemFromLi(HtmlElement *el)
 {
-    return false;
+    el = el->GetChildIfNamed(0, "object");
+    if (!el)
+        return NULL;
+    el = el->GetChildIfNamed(0, "param");
+    TCHAR *name = NULL;
+    TCHAR *local = NULL;
+    TCHAR *imageNumber = NULL;
+    while (el && str::Eq("param", el->name)) {
+        ScopedMem<TCHAR> attrName(el->GetAttribute("name"));
+        TCHAR *attrVal = el->GetAttribute("value");
+        el = el->down;
+        if (!attrName || !attrVal)
+            continue;
+        if (str::EqI(attrName, _T("name"))) {
+            name = attrVal;
+        } else if (str::EqI(attrName, _T("local"))) {
+            local = attrVal;
+        } else if (str::EqI(attrName, _T("ImageNumber"))) {
+            imageNumber = attrVal;
+        } else {
+            free(attrVal);
+        }
+    }
+    if (!name || !local) {
+        free(name);
+        free(local);
+        free(imageNumber);
+        return NULL;
+    }
+    return new ChmToCItem(name, local, imageNumber);
 }
 
-// fix up the toc xml to make it more palatable to xml parsing
-// we fish out everying inside <body> ... </body>
-static char *FixTocXml(char *s)
+ChmToCItem *BuildChmToc(HtmlElement *el)
 {
-    char *bodyStart = (char*)str::FindI(s, "<body>");
-    if (!bodyStart)
-        return s;
-    char *bodyEnd = (char*)str::FindI(s, "</body>");
-    if (!bodyEnd)
-        return s;
-    bodyEnd[7] = 0; // end string after "</body>"
-    return bodyStart;
-}
-#endif
+    assert(str::Eq("li", el->name));
+    ChmToCItem *node = TocItemFromLi(el);
+    if (!node)
+        return NULL;
+    /* <li>
+         <object>...</object>
+         <ul>...</ul>
+         <li>
+           ...
+    */
+    el = el->GetChildIfNamed(0, "object");
+    if (!el)
+        return node;
+    el = el->next;
+    if (!el)
+        return node;
 
-bool CChmEngine::LoadAndParseTocXml()
+    if (str::Eq(el->name, "ul")) {
+        HtmlElement *child = el->GetChildIfNamed(0, "li");
+        if (child)
+            node->child = BuildChmToc(child);
+        if (el->next && str::Eq(el->next->name, "li"))
+            el = el->next;
+    }
+
+    if (str::Eq(el->name, "li")) {
+        node->next = BuildChmToc(el);
+    }
+
+    return node;
+}
+
+bool CChmEngine::ParseChmHtmlToc(char *html)
+{
+    HtmlParser p;
+    HtmlElement *el = p.Parse(html);
+    if (!el)
+        return false;
+    el = p.FindElementByName("body");
+    if (!el)
+        return false;
+    el = p.FindElementByName("ul", el);
+    if (!el)
+        return false;
+    el = p.FindElementByName("li", el);
+    if (!el)
+        return false;
+    tocRoot = BuildChmToc(el);
+    return tocRoot != NULL;
+}
+
+bool CChmEngine::LoadAndParseHtmlToc()
 {
     Bytes b;
     bool ok = GetChmDataForFile(chmHandle, chmInfo->tocPath, b);
-    if (!ok)
-        return ok;
-#if 0
-    char *s = FixTocXml((char*)b.d);
-    size_t size_diff = s - (char*)b.d;
-    assert((size_diff >= 0) && (size_diff < b.size));
-#endif
-    return false;
+    if (ok)
+        ok = ParseChmHtmlToc((char*)b.d);
+    return ok;
 }
 
 bool CChmEngine::Load(const TCHAR *fileName)
@@ -403,18 +489,24 @@ bool CChmEngine::Load(const TCHAR *fileName)
     chmInfo = new ChmInfo();
     ParseWindowsChmData(chmHandle, chmInfo);
     if (!ParseSystemChmData(chmHandle, chmInfo))
-        goto Error;
+        return false;
+
     if (!chmInfo->homePath) {
         chmInfo->homePath = FindHomeForPath(chmHandle, "/");
     }
+
     if (!chmInfo->tocPath || !chmInfo->homePath) {
-        goto Error;
+        return false;
     }
-    if (!LoadAndParseTocXml())
-        goto Error;
-    // TODO: finish me
-Error:
-    return false;
+    if (!LoadAndParseHtmlToc())
+        return false;
+
+    // TODO: build pages information. Really, we have to fake the pages
+    // as they are not a native concept to chm document.
+    // We'll construct pages information by traversing toc tree
+    // depth-first, assigning each unique, existing html page a 
+    // consequitive page number
+    return true;
 }
 
 unsigned char *CChmEngine::GetFileData(size_t *cbCount)

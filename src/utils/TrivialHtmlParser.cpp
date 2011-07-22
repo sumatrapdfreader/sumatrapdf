@@ -76,6 +76,18 @@ static bool IsUnquotedAttrValEnd(char c) {
     return !c || IsWs(c) || c == '/' || c == '>';
 }
 
+HtmlElement *HtmlElement::GetChildIfNamed(int idx, const char *name) const
+{
+    HtmlElement *el = down;
+    while (idx > 0 && el) {
+        el = el->next;
+        idx--;
+    }
+    if (el && str::Eq(name, el->name))
+        return el;
+    return NULL;
+}
+
 struct HtmlEntity {
     const TCHAR *name;
     int unicode;
