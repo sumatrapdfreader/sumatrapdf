@@ -36,7 +36,7 @@ public:
     {
     }
 
-    ~ChmToCItem() {
+    virtual ~ChmToCItem() {
         free(url);
         free(imageNumber);
     }
@@ -376,63 +376,55 @@ static bool ParseSystemChmData(chmFile *chmHandle, ChmInfo *chmInfo)
 */
 ChmToCItem *TocItemFromLi(HtmlElement *el)
 {
+    assert(str::Eq("li", el->name));
     el = el->GetChildByName("object");
     if (!el)
         return NULL;
-    el = el->GetChildByName("param");
     ScopedMem<TCHAR> name, local, imageNumber;
-    while (el && str::Eq("param", el->name)) {
-        ScopedMem<TCHAR> attrName(el->GetAttribute("name"));
-        TCHAR *attrVal = el->GetAttribute("value");
-        el = el->next;
-        if (!attrName || !attrVal) {
-            free(attrVal);
+    for (el = el->GetChildByName("param"); el; el = el->next) {
+        if (!str::Eq("param", el->name))
             continue;
-        }
-        if (str::EqI(attrName, _T("name"))) {
-            name.Set(attrVal);
-        } else if (str::EqI(attrName, _T("local"))) {
-            local.Set(attrVal);
-        } else if (str::EqI(attrName, _T("ImageNumber"))) {
-            imageNumber.Set(attrVal);
-        } else {
-            free(attrVal);
-        }
+        ScopedMem<TCHAR> attrName(el->GetAttribute("name"));
+        ScopedMem<TCHAR> attrVal(el->GetAttribute("value"));
+        if (!attrName || !attrVal)
+            /* ignore incomplete/unneeded <param> */;
+        else if (str::EqI(attrName, _T("name")))
+            name.Set(attrVal.StealData());
+        else if (str::EqI(attrName, _T("local")))
+            local.Set(attrVal.StealData());
+        else if (str::EqI(attrName, _T("ImageNumber")))
+            imageNumber.Set(attrVal.StealData());
     }
     if (!name || !local)
         return NULL;
     return new ChmToCItem(name.StealData(), local.StealData(), imageNumber.StealData());
 }
 
-ChmToCItem *BuildChmToc(HtmlElement *el)
+ChmToCItem *BuildChmToc(HtmlElement *list)
 {
-    assert(str::Eq("li", el->name));
-    ChmToCItem *node = TocItemFromLi(el);
-    if (!node)
-        return NULL;
-    /* <li>
-         <object>...</object>
-         <ul>...</ul>
-         <li>
-           ...
-    */
-    el = el->GetChildByName("object");
-    if (!el)
-        return node;
-    el = el->next;
-    if (!el)
-        return node;
+    assert(str::Eq("ul", list->name));
+    ChmToCItem *node = NULL;
 
-    if (str::Eq(el->name, "ul")) {
-        HtmlElement *child = el->GetChildByName("li");
-        if (child)
-            node->child = BuildChmToc(child);
-        if (el->next && str::Eq(el->next->name, "li"))
-            el = el->next;
-    }
+    for (HtmlElement *el = list->down; el; el = el->next) {
+        if (!str::Eq(el->name, "li"))
+            continue; // ignore unexpected elements
+        /* <li>
+             <object>...</object>
+             <ul>...</ul>
+           <li>
+             ...
+        */
+        ChmToCItem *item = TocItemFromLi(el);
+        if (!item)
+            continue; // skip incomplete elements and all their children
+        HtmlElement *nested = el->GetChildByName("ul");
+        if (nested)
+            item->child = BuildChmToc(nested);
 
-    if (str::Eq(el->name, "li")) {
-        node->next = BuildChmToc(el);
+        if (!node)
+            node = item;
+        else
+            node->AddSibling(item);
     }
 
     return node;
@@ -495,9 +487,6 @@ bool CChmEngine::ParseChmHtmlToc(char *html)
     if (!el)
         return false;
     el = p.FindElementByName("ul", el);
-    if (!el)
-        return false;
-    el = p.FindElementByName("li", el);
     if (!el)
         return false;
     tocRoot = BuildChmToc(el);

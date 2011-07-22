@@ -715,7 +715,6 @@ PageDestination *CDjVuEngine::GetNamedDest(const TCHAR *name)
 DjVuToCItem *CDjVuEngine::BuildToCTree(miniexp_t entry, int& idCounter)
 {
     DjVuToCItem *node = NULL;
-    DocToCItem *last = node;
 
     for (miniexp_t rest = miniexp_cdr(entry); miniexp_consp(rest); rest = miniexp_cdr(rest)) {
         miniexp_t item = miniexp_car(rest);
@@ -750,9 +749,9 @@ DjVuToCItem *CDjVuEngine::BuildToCTree(miniexp_t entry, int& idCounter)
         }
 
         if (!node)
-            last = node = tocItem;
+            node = tocItem;
         else
-            last = last->next = tocItem;
+            node->AddSibling(tocItem);
     }
 
     return node;

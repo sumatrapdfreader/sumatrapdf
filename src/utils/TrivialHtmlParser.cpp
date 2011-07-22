@@ -133,7 +133,10 @@ static TCHAR *DecodeHtmlEntitites(const char *string)
         int unicode;
         if (str::Parse(src, _T("%d;"), &unicode) ||
             str::Parse(src, _T("#%x;"), &unicode)) {
-            *dst++ = (TCHAR)unicode;
+            if (unicode < (1 << (8 * sizeof(TCHAR))))
+                *dst++ = (TCHAR)unicode;
+            else
+                *dst++ = '?';
             src = str::FindChar(src, ';') + 1;
             continue;
         }
@@ -141,7 +144,10 @@ static TCHAR *DecodeHtmlEntitites(const char *string)
         HtmlEntity cmp = { src };
         HtmlEntity *entity = (HtmlEntity *)bsearch(&cmp, gHtmlEntities, dimof(gHtmlEntities), sizeof(HtmlEntity), entityComparator);
         if (entity) {
-            *dst++ = (TCHAR)entity->unicode;
+            if (entity->unicode < (1 << (8 * sizeof(TCHAR))))
+                *dst++ = (TCHAR)entity->unicode;
+            else
+                *dst++ = '?';
             src += str::Len(entity->name);
             if (*src == ';')
                 src++;
@@ -193,11 +199,24 @@ HtmlElement *HtmlParser::AllocElement(HtmlElement *parent, char *name)
     return el;
 }
 
+HtmlElement *HtmlParser::FindParent(char *tagName)
+{
+    if (str::Eq(tagName, "li")) {
+        // make a list item the child of the closest list
+        for (HtmlElement *el = currElement; el; el = el->up) {
+            if (str::Eq(el->name, "ul") || str::Eq(el->name, "ol"))
+                return el;
+        }
+    }
+
+    return currElement;
+}
+
 void HtmlParser::StartTag(char *tagName)
 {
     str::ToLower(tagName);
-    HtmlElement *parent = currElement;
-    currElement = AllocElement(currElement, tagName);
+    HtmlElement *parent = FindParent(tagName);
+    currElement = AllocElement(parent, tagName);
     if (NULL == rootElement)
         rootElement = currElement;
 
@@ -568,6 +587,28 @@ static void HtmlParser02()
     assert(str::Eq(val, _T("end")));
 }
 
+static void HtmlParser06()
+{
+    HtmlParser p;
+    HtmlElement *root = p.Parse("<ul><p>ignore<li><br><meta><li><ol><li></ul><dropme>");
+    assert(9 == p.ElementsCount());
+    assert(0 == p.TotalAttrCount());
+    assert(str::Eq("ul", root->name));
+    assert(!root->next);
+    HtmlElement *el = root->GetChildByName("li");
+    assert(el);
+    assert(str::Eq(el->down->name, "br"));
+    assert(str::Eq(el->down->next->name, "meta"));
+    assert(!el->down->next->next);
+    el = root->GetChildByName("li", 1);
+    assert(el);
+    assert(!el->next);
+    el = el->GetChildByName("ol");
+    assert(!el->next);
+    assert(str::Eq(el->down->name, "li"));
+    assert(!el->down->down);
+}
+
 static void HtmlParserFile()
 {
     TCHAR *fileName = _T("HtmlParseTest00.html");
@@ -623,6 +664,7 @@ static void HtmlParserFile()
 void TrivialHtmlParser_UnitTests()
 {
     unittests::HtmlParserFile();
+    unittests::HtmlParser06();
     unittests::HtmlParser05();
     unittests::HtmlParser04();
     unittests::HtmlParser03();

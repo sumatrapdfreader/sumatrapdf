@@ -122,6 +122,7 @@ class HtmlParser {
     void StartTag(char *tagName);
     void StartAttr(char *name);
     void SetAttrVal(char *val);
+    HtmlElement *FindParent(char *tagName);
     HtmlElement *ParseError(HtmlParseError err) {
         error = err;
         return NULL;
