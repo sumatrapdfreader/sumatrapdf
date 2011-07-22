@@ -323,7 +323,7 @@ struct LinkRectList {
     Vec<fz_rect> coords;
 };
 
-static bool linkifyCheckMultiline(TCHAR *pageText, TCHAR *pos, RectI *coords)
+static bool LinkifyCheckMultiline(TCHAR *pageText, TCHAR *pos, RectI *coords)
 {
     // multiline links end in a non-alphanumeric character and continue on a line
     // that starts left and only slightly below where the current line ended
@@ -337,7 +337,7 @@ static bool linkifyCheckMultiline(TCHAR *pageText, TCHAR *pos, RectI *coords)
         !str::StartsWith(pos + 1, _T("http"));
 }
 
-static TCHAR *linkifyFindEnd(TCHAR *start)
+static TCHAR *LinkifyFindEnd(TCHAR *start)
 {
     TCHAR *end;
 
@@ -352,7 +352,7 @@ static TCHAR *linkifyFindEnd(TCHAR *start)
     return end;
 }
 
-static TCHAR *linkifyMultilineText(LinkRectList *list, TCHAR *pageText, TCHAR *start, RectI *coords)
+static TCHAR *LinkifyMultilineText(LinkRectList *list, TCHAR *pageText, TCHAR *start, RectI *coords)
 {
     size_t lastIx = list->coords.Count() - 1;
     ScopedMem<TCHAR> uri(list->links[lastIx]);
@@ -360,8 +360,8 @@ static TCHAR *linkifyMultilineText(LinkRectList *list, TCHAR *pageText, TCHAR *s
     bool multiline = false;
 
     do {
-        end = linkifyFindEnd(start);
-        multiline = linkifyCheckMultiline(pageText, end, coords);
+        end = LinkifyFindEnd(start);
+        multiline = LinkifyCheckMultiline(pageText, end, coords);
         *end = 0;
 
         uri.Set(str::Join(uri, start));
@@ -380,36 +380,36 @@ static TCHAR *linkifyMultilineText(LinkRectList *list, TCHAR *pageText, TCHAR *s
 }
 
 // cf. http://weblogs.mozillazine.org/gerv/archives/2011/05/html5_email_address_regexp.html
-inline bool isEmailUsernameChar(TCHAR c)
+inline bool IsEmailUsernameChar(TCHAR c)
 {
     return _istalnum(c) || str::FindChar(_T(".!#$%&'*+-/=?^`{|}~"), c);
 }
-inline bool isEmailDomainChar(TCHAR c)
+inline bool IsEmailDomainChar(TCHAR c)
 {
     return _istalnum(c) || '-' == c;
 }
 
-static TCHAR *linkifyFindEmail(TCHAR *pageText, TCHAR *at)
+static TCHAR *LinkifyFindEmail(TCHAR *pageText, TCHAR *at)
 {
     TCHAR *start;
-    for (start = at; start > pageText && isEmailUsernameChar(*(start - 1)); start--);
+    for (start = at; start > pageText && IsEmailUsernameChar(*(start - 1)); start--);
     return start != at ? start : NULL;
 }
 
-static TCHAR *linkifyEmailAddress(TCHAR *start)
+static TCHAR *LinkifyEmailAddress(TCHAR *start)
 {
     TCHAR *end;
-    for (end = start; isEmailUsernameChar(*end); end++);
-    if (end == start || *end != '@' || !isEmailDomainChar(*(end + 1)))
+    for (end = start; IsEmailUsernameChar(*end); end++);
+    if (end == start || *end != '@' || !IsEmailDomainChar(*(end + 1)))
         return NULL;
     do {
-        for (end++; isEmailDomainChar(*end); end++);
-    } while ('.' == *end && isEmailDomainChar(*(end + 1)));
+        for (end++; IsEmailDomainChar(*end); end++);
+    } while ('.' == *end && IsEmailDomainChar(*(end + 1)));
     return end;
 }
 
 // caller needs to delete the result
-static LinkRectList *linkifyText(TCHAR *pageText, RectI *coords)
+static LinkRectList *LinkifyText(TCHAR *pageText, RectI *coords)
 {
     LinkRectList *list = new LinkRectList;
 
@@ -420,8 +420,8 @@ static LinkRectList *linkifyText(TCHAR *pageText, RectI *coords)
 
         if ('@' == *start) {
             // potential email address without mailto:
-            TCHAR *email = linkifyFindEmail(pageText, start);
-            end = email ? linkifyEmailAddress(email) : NULL;
+            TCHAR *email = LinkifyFindEmail(pageText, start);
+            end = email ? LinkifyEmailAddress(email) : NULL;
             protocol = _T("mailto:");
             if (end != NULL)
                 start = email;
@@ -431,19 +431,19 @@ static LinkRectList *linkifyText(TCHAR *pageText, RectI *coords)
             // or an alphanumeric character (indicates part of a different protocol)
         }
         else if ('h' == *start && str::Parse(start, _T("http%?s://"))) {
-            end = linkifyFindEnd(start);
-            multiline = linkifyCheckMultiline(pageText, end, coords);
+            end = LinkifyFindEnd(start);
+            multiline = LinkifyCheckMultiline(pageText, end, coords);
         }
         else if ('w' == *start && str::StartsWith(start, _T("www."))) {
-            end = linkifyFindEnd(start);
-            multiline = linkifyCheckMultiline(pageText, end, coords);
+            end = LinkifyFindEnd(start);
+            multiline = LinkifyCheckMultiline(pageText, end, coords);
             protocol = _T("http://");
             // ignore www. links without a top-level domain
             if (end - start <= 4 || !multiline && (!_tcschr(start + 5, '.') || _tcschr(start + 5, '.') > end))
                 end = NULL;
         }
         else if ('m' == *start && str::StartsWith(start, _T("mailto:"))) {
-            end = linkifyEmailAddress(start + 7);
+            end = LinkifyEmailAddress(start + 7);
         }
         if (!end)
             continue;
@@ -454,7 +454,7 @@ static LinkRectList *linkifyText(TCHAR *pageText, RectI *coords)
         RectI bbox = coords[start - pageText].Union(coords[end - pageText - 1]);
         list->coords.Append(fz_RectD_to_rect(bbox.Convert<double>()));
         if (multiline)
-            end = linkifyMultilineText(list, pageText, end + 1, coords);
+            end = LinkifyMultilineText(list, pageText, end + 1, coords);
 
         start = end;
     }
@@ -548,7 +548,7 @@ struct PageLabelInfo {
     fz_obj *prefix;
 };
 
-int cmpPageLabelInfo(const void *a, const void *b)
+int CmpPageLabelInfo(const void *a, const void *b)
 {
     return ((PageLabelInfo *)a)->startAt - ((PageLabelInfo *)b)->startAt;
 }
@@ -611,7 +611,7 @@ StrVec *BuildPageLabelVec(fz_obj *root, int pageCount)
 {
     Vec<PageLabelInfo> data;
     BuildPageLabelRec(root, pageCount, data);
-    data.Sort(cmpPageLabelInfo);
+    data.Sort(CmpPageLabelInfo);
 
     if (data.Count() == 1 && data[0].startAt == 1 && data[0].countFrom == 1 &&
         !data[0].prefix && str::Eq(data[0].type, "D")) {
@@ -690,7 +690,7 @@ public:
                          RenderTarget target=Target_View);
     virtual bool RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, int rotation,
                          RectD *pageRect=NULL, RenderTarget target=Target_View) {
-        return renderPage(hDC, getPdfPage(pageNo), screenRect, NULL, zoom, rotation, pageRect, target);
+        return RenderPage(hDC, GetPdfPage(pageNo), screenRect, NULL, zoom, rotation, pageRect, target);
     }
 
     virtual PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse=false);
@@ -703,13 +703,13 @@ public:
     virtual PageLayoutType PreferredLayout();
     virtual TCHAR *GetProperty(char *name);
 
-    virtual bool IsPrintingAllowed() { return hasPermission(PDF_PERM_PRINT); }
-    virtual bool IsCopyingTextAllowed() { return hasPermission(PDF_PERM_COPY); }
+    virtual bool IsPrintingAllowed() { return HasPermission(PDF_PERM_PRINT); }
+    virtual bool IsCopyingTextAllowed() { return HasPermission(PDF_PERM_COPY); }
 
     virtual float GetFileDPI() const { return 72.0f; }
     virtual const TCHAR *GetDefaultFileExt() const { return _T(".pdf"); }
 
-    virtual bool BenchLoadPage(int pageNo) { return getPdfPage(pageNo) != NULL; }
+    virtual bool BenchLoadPage(int pageNo) { return GetPdfPage(pageNo) != NULL; }
 
     virtual Vec<PageElement *> *GetElements(int pageNo);
     virtual PageElement *GetElementAtPos(int pageNo, PointD pt);
@@ -733,36 +733,36 @@ protected:
 
     // make sure to never ask for _pagesAccess in an _xrefAccess
     // protected critical section in order to avoid deadlocks
-    CRITICAL_SECTION _xrefAccess;
+    CRITICAL_SECTION xrefAccess;
     pdf_xref *      _xref;
 
-    CRITICAL_SECTION _pagesAccess;
+    CRITICAL_SECTION pagesAccess;
     pdf_page **     _pages;
 
-    virtual bool    load(const TCHAR *fileName, PasswordUI *pwdUI=NULL);
-    virtual bool    load(IStream *stream, PasswordUI *pwdUI=NULL);
-    bool            load(fz_stream *stm, PasswordUI *pwdUI=NULL);
-    bool            load_from_stream(fz_stream *stm, PasswordUI *pwdUI=NULL);
-    bool            finishLoading();
-    pdf_page      * getPdfPage(int pageNo, bool failIfBusy=false);
+    virtual bool    Load(const TCHAR *fileName, PasswordUI *pwdUI=NULL);
+    virtual bool    Load(IStream *stream, PasswordUI *pwdUI=NULL);
+    bool            Load(fz_stream *stm, PasswordUI *pwdUI=NULL);
+    bool            LoadFromStream(fz_stream *stm, PasswordUI *pwdUI=NULL);
+    bool            FinishLoading();
+    pdf_page      * GetPdfPage(int pageNo, bool failIfBusy=false);
     fz_matrix       viewctm(int pageNo, float zoom, int rotation);
     fz_matrix       viewctm(pdf_page *page, float zoom, int rotation);
-    bool            renderPage(HDC hDC, pdf_page *page, RectI screenRect,
+    bool            RenderPage(HDC hDC, pdf_page *page, RectI screenRect,
                                fz_matrix *ctm=NULL, float zoom=0, int rotation=0,
                                RectD *pageRect=NULL, RenderTarget target=Target_View);
     TCHAR         * ExtractPageText(pdf_page *page, TCHAR *lineSep, RectI **coords_out=NULL,
                                     RenderTarget target=Target_View, bool cacheRun=false);
 
-    PdfPageRun    * _runCache[MAX_PAGE_RUN_CACHE];
-    PdfPageRun    * getPageRun(pdf_page *page, bool tryOnly=false);
-    fz_error        runPage(pdf_page *page, fz_device *dev, fz_matrix ctm,
+    PdfPageRun    * runCache[MAX_PAGE_RUN_CACHE];
+    PdfPageRun    * GetPageRun(pdf_page *page, bool tryOnly=false);
+    fz_error        RunPage(pdf_page *page, fz_device *dev, fz_matrix ctm,
                             RenderTarget target=Target_View,
                             fz_bbox clipbox=fz_infinite_bbox, bool cacheRun=true);
-    void            dropPageRun(PdfPageRun *run, bool forceRemove=false);
+    void            DropPageRun(PdfPageRun *run, bool forceRemove=false);
 
     PdfToCItem   *  BuildToCTree(pdf_outline *entry, int& idCounter);
-    void            linkifyPageText(pdf_page *page);
-    bool            hasPermission(int permission);
+    void            LinkifyPageText(pdf_page *page);
+    bool            HasPermission(int permission);
 
     int             FindPageNo(fz_obj *dest);
     bool            SaveEmbedded(fz_obj *obj, LinkSaverUI& saveUI);
@@ -834,15 +834,15 @@ CPdfEngine::CPdfEngine() : _fileName(NULL), _xref(NULL), _mediaboxes(NULL),
     outline(NULL), attachments(NULL), _info(NULL), _pages(NULL),
     _drawcache(NULL), _pagelabels(NULL), _decryptionKey(NULL)
 {
-    InitializeCriticalSection(&_pagesAccess);
-    InitializeCriticalSection(&_xrefAccess);
-    ZeroMemory(&_runCache, sizeof(_runCache));
+    InitializeCriticalSection(&pagesAccess);
+    InitializeCriticalSection(&xrefAccess);
+    ZeroMemory(&runCache, sizeof(runCache));
 }
 
 CPdfEngine::~CPdfEngine()
 {
-    EnterCriticalSection(&_pagesAccess);
-    EnterCriticalSection(&_xrefAccess);
+    EnterCriticalSection(&pagesAccess);
+    EnterCriticalSection(&xrefAccess);
 
     if (_pages) {
         for (int i = 0; i < PageCount(); i++) {
@@ -866,9 +866,9 @@ CPdfEngine::~CPdfEngine()
 
     if (_drawcache)
         fz_free_glyph_cache(_drawcache);
-    while (_runCache[0]) {
-        assert(_runCache[0]->refs == 1);
-        dropPageRun(_runCache[0], true);
+    while (runCache[0]) {
+        assert(runCache[0]->refs == 1);
+        DropPageRun(runCache[0], true);
     }
 
     delete[] _mediaboxes;
@@ -876,10 +876,10 @@ CPdfEngine::~CPdfEngine()
     free((void*)_fileName);
     free(_decryptionKey);
 
-    LeaveCriticalSection(&_xrefAccess);
-    DeleteCriticalSection(&_xrefAccess);
-    LeaveCriticalSection(&_pagesAccess);
-    DeleteCriticalSection(&_pagesAccess);
+    LeaveCriticalSection(&xrefAccess);
+    DeleteCriticalSection(&xrefAccess);
+    LeaveCriticalSection(&pagesAccess);
+    DeleteCriticalSection(&pagesAccess);
 }
 
 class PasswordCloner : public PasswordUI {
@@ -907,7 +907,7 @@ CPdfEngine *CPdfEngine::Clone()
     PasswordCloner *pwdUI = NULL;
     if (_xref->crypt)
         pwdUI = new PasswordCloner(pdf_get_crypt_key(_xref));
-    bool ok = clone->load(_xref->file, pwdUI);
+    bool ok = clone->Load(_xref->file, pwdUI);
     delete pwdUI;
 
     if (!ok) {
@@ -944,7 +944,7 @@ static const TCHAR *findEmbedMarks(const TCHAR *fileName)
     return embedMarks;
 }
 
-bool CPdfEngine::load(const TCHAR *fileName, PasswordUI *pwdUI)
+bool CPdfEngine::Load(const TCHAR *fileName, PasswordUI *pwdUI)
 {
     assert(!_fileName && !_xref);
     _fileName = str::Dup(fileName);
@@ -961,11 +961,11 @@ bool CPdfEngine::load(const TCHAR *fileName, PasswordUI *pwdUI)
         *embedMarks = ':';
 
 OpenEmbeddedFile:
-    if (!load_from_stream(file, pwdUI))
+    if (!LoadFromStream(file, pwdUI))
         return false;
 
     if (str::IsEmpty(embedMarks))
-        return finishLoading();
+        return FinishLoading();
 
     int num, gen;
     embedMarks = (TCHAR *)str::Parse(embedMarks, _T(":%d:%d"), &num, &gen);
@@ -986,23 +986,23 @@ OpenEmbeddedFile:
     goto OpenEmbeddedFile;
 }
 
-bool CPdfEngine::load(IStream *stream, PasswordUI *pwdUI)
+bool CPdfEngine::Load(IStream *stream, PasswordUI *pwdUI)
 {
     assert(!_fileName && !_xref);
-    if (!load_from_stream(fz_open_istream(stream), pwdUI))
+    if (!LoadFromStream(fz_open_istream(stream), pwdUI))
         return false;
-    return finishLoading();
+    return FinishLoading();
 }
 
-bool CPdfEngine::load(fz_stream *stm, PasswordUI *pwdUI)
+bool CPdfEngine::Load(fz_stream *stm, PasswordUI *pwdUI)
 {
     assert(!_fileName && !_xref);
-    if (!load_from_stream(fz_keep_stream(stm), pwdUI))
+    if (!LoadFromStream(fz_keep_stream(stm), pwdUI))
         return false;
-    return finishLoading();
+    return FinishLoading();
 }
 
-bool CPdfEngine::load_from_stream(fz_stream *stm, PasswordUI *pwdUI)
+bool CPdfEngine::LoadFromStream(fz_stream *stm, PasswordUI *pwdUI)
 {
     if (!stm)
         return false;
@@ -1055,7 +1055,7 @@ bool CPdfEngine::load_from_stream(fz_stream *stm, PasswordUI *pwdUI)
     return true;
 }
 
-bool CPdfEngine::finishLoading()
+bool CPdfEngine::FinishLoading()
 {
     fz_error error = pdf_load_page_tree(_xref);
     if (error)
@@ -1066,7 +1066,7 @@ bool CPdfEngine::finishLoading()
     _pages = SAZA(pdf_page *, PageCount());
     _mediaboxes = new RectD[PageCount()];
 
-    EnterCriticalSection(&_xrefAccess);
+    EnterCriticalSection(&xrefAccess);
     outline = pdf_load_outline(_xref);
     // silently ignore errors from pdf_loadoutline()
     // this information is not critical and checking the
@@ -1082,7 +1082,7 @@ bool CPdfEngine::finishLoading()
     fz_obj *pagelabels = fz_dict_gets(fz_dict_gets(_xref->trailer, "Root"), "PageLabels");
     if (pagelabels)
         _pagelabels = BuildPageLabelVec(pagelabels, PageCount());
-    LeaveCriticalSection(&_xrefAccess);
+    LeaveCriticalSection(&xrefAccess);
 
     return true;
 }
@@ -1121,7 +1121,7 @@ DocToCItem *CPdfEngine::GetToCTree()
 
 int CPdfEngine::FindPageNo(fz_obj *dest)
 {
-    ScopedCritSec scope(&_xrefAccess);
+    ScopedCritSec scope(&xrefAccess);
 
     if (fz_is_dict(dest)) {
         // The destination is linked from a Go-To action's D array
@@ -1139,7 +1139,7 @@ int CPdfEngine::FindPageNo(fz_obj *dest)
 
 PageDestination *CPdfEngine::GetNamedDest(const TCHAR *name)
 {
-    ScopedCritSec scope(&_xrefAccess);
+    ScopedCritSec scope(&xrefAccess);
 
     ScopedMem<char> name_utf8(str::conv::ToUtf8(name));
     fz_obj *nameobj = fz_new_string((char *)name_utf8, (int)str::Len(name_utf8));
@@ -1158,119 +1158,119 @@ PageDestination *CPdfEngine::GetNamedDest(const TCHAR *name)
     return new SimpleDest(tmp.GetDestPageNo(), tmp.GetDestRect());
 }
 
-pdf_page *CPdfEngine::getPdfPage(int pageNo, bool failIfBusy)
+pdf_page *CPdfEngine::GetPdfPage(int pageNo, bool failIfBusy)
 {
     if (!_pages)
         return NULL;
     if (failIfBusy)
         return _pages[pageNo-1];
 
-    EnterCriticalSection(&_pagesAccess);
+    EnterCriticalSection(&pagesAccess);
 
     pdf_page *page = _pages[pageNo-1];
     if (!page) {
-        EnterCriticalSection(&_xrefAccess);
+        EnterCriticalSection(&xrefAccess);
         fz_error error = pdf_load_page(&page, _xref, pageNo - 1);
-        LeaveCriticalSection(&_xrefAccess);
+        LeaveCriticalSection(&xrefAccess);
         if (!error) {
-            linkifyPageText(page);
+            LinkifyPageText(page);
             _pages[pageNo-1] = page;
         }
     }
 
-    LeaveCriticalSection(&_pagesAccess);
+    LeaveCriticalSection(&pagesAccess);
 
     return page;
 }
 
-PdfPageRun *CPdfEngine::getPageRun(pdf_page *page, bool tryOnly)
+PdfPageRun *CPdfEngine::GetPageRun(pdf_page *page, bool tryOnly)
 {
     PdfPageRun *result = NULL;
     int i;
 
-    EnterCriticalSection(&_pagesAccess);
-    for (i = 0; i < MAX_PAGE_RUN_CACHE && _runCache[i] && !result; i++)
-        if (_runCache[i]->page == page)
-            result = _runCache[i];
+    EnterCriticalSection(&pagesAccess);
+    for (i = 0; i < MAX_PAGE_RUN_CACHE && runCache[i] && !result; i++)
+        if (runCache[i]->page == page)
+            result = runCache[i];
     if (!result && !tryOnly) {
         if (MAX_PAGE_RUN_CACHE == i) {
-            dropPageRun(_runCache[0], true);
+            DropPageRun(runCache[0], true);
             i--;
         }
 
         fz_display_list *list = fz_new_display_list();
 
         fz_device *dev = fz_new_list_device(list);
-        EnterCriticalSection(&_xrefAccess);
+        EnterCriticalSection(&xrefAccess);
         fz_error error = pdf_run_page(_xref, page, dev, fz_identity);
         fz_free_device(dev);
         if (error)
             fz_free_display_list(list);
-        LeaveCriticalSection(&_xrefAccess);
+        LeaveCriticalSection(&xrefAccess);
 
         if (!error) {
             PdfPageRun newRun = { page, list, 1 };
-            result = _runCache[i] = (PdfPageRun *)_memdup(&newRun);
+            result = runCache[i] = (PdfPageRun *)_memdup(&newRun);
         }
     }
     else {
         // keep the list Least Recently Used first
-        for (; i < MAX_PAGE_RUN_CACHE && _runCache[i]; i++) {
-            _runCache[i-1] = _runCache[i];
-            _runCache[i] = result;
+        for (; i < MAX_PAGE_RUN_CACHE && runCache[i]; i++) {
+            runCache[i-1] = runCache[i];
+            runCache[i] = result;
         }
     }
 
     if (result)
         result->refs++;
-    LeaveCriticalSection(&_pagesAccess);
+    LeaveCriticalSection(&pagesAccess);
     return result;
 }
 
-fz_error CPdfEngine::runPage(pdf_page *page, fz_device *dev, fz_matrix ctm, RenderTarget target, fz_bbox clipbox, bool cacheRun)
+fz_error CPdfEngine::RunPage(pdf_page *page, fz_device *dev, fz_matrix ctm, RenderTarget target, fz_bbox clipbox, bool cacheRun)
 {
     fz_error error = fz_okay;
     PdfPageRun *run;
 
-    if (Target_View == target && (run = getPageRun(page, !cacheRun))) {
-        EnterCriticalSection(&_xrefAccess);
+    if (Target_View == target && (run = GetPageRun(page, !cacheRun))) {
+        EnterCriticalSection(&xrefAccess);
         fz_execute_display_list(run->list, dev, ctm, clipbox);
-        LeaveCriticalSection(&_xrefAccess);
-        dropPageRun(run);
+        LeaveCriticalSection(&xrefAccess);
+        DropPageRun(run);
     }
     else {
         char *targetName = target == Target_Print ? "Print" :
                            target == Target_Export ? "Export" : "View";
-        EnterCriticalSection(&_xrefAccess);
+        EnterCriticalSection(&xrefAccess);
         error = pdf_run_page_with_usage(_xref, page, dev, ctm, targetName);
-        LeaveCriticalSection(&_xrefAccess);
+        LeaveCriticalSection(&xrefAccess);
     }
     fz_free_device(dev);
 
     return error;
 }
 
-void CPdfEngine::dropPageRun(PdfPageRun *run, bool forceRemove)
+void CPdfEngine::DropPageRun(PdfPageRun *run, bool forceRemove)
 {
-    EnterCriticalSection(&_pagesAccess);
+    EnterCriticalSection(&pagesAccess);
     run->refs--;
 
     if (0 == run->refs || forceRemove) {
         int i;
-        for (i = 0; i < MAX_PAGE_RUN_CACHE && _runCache[i] != run; i++);
+        for (i = 0; i < MAX_PAGE_RUN_CACHE && runCache[i] != run; i++);
         if (i < MAX_PAGE_RUN_CACHE) {
-            memmove(&_runCache[i], &_runCache[i+1], (MAX_PAGE_RUN_CACHE - i - 1) * sizeof(PdfPageRun *));
-            _runCache[MAX_PAGE_RUN_CACHE-1] = NULL;
+            memmove(&runCache[i], &runCache[i+1], (MAX_PAGE_RUN_CACHE - i - 1) * sizeof(PdfPageRun *));
+            runCache[MAX_PAGE_RUN_CACHE-1] = NULL;
         }
         if (0 == run->refs) {
-            EnterCriticalSection(&_xrefAccess);
+            EnterCriticalSection(&xrefAccess);
             fz_free_display_list(run->list);
-            LeaveCriticalSection(&_xrefAccess);
+            LeaveCriticalSection(&xrefAccess);
             free(run);
         }
     }
 
-    LeaveCriticalSection(&_pagesAccess);
+    LeaveCriticalSection(&pagesAccess);
 }
 
 int CPdfEngine::PageRotation(int pageNo)
@@ -1283,7 +1283,7 @@ int CPdfEngine::PageRotation(int pageNo)
     int rotation;
     // use a lock, if indirect references are involved, else don't block for speed
     if (fz_is_indirect(page) || fz_is_indirect(fz_dict_gets(page, "Rotate"))) {
-        ScopedCritSec scope(&_xrefAccess);
+        ScopedCritSec scope(&xrefAccess);
         rotation = fz_to_int(fz_dict_gets(page, "Rotate"));
     }
     else
@@ -1304,7 +1304,7 @@ RectD CPdfEngine::PageMediabox(int pageNo)
     if (!page)
         return RectD();
 
-    ScopedCritSec scope(&_xrefAccess);
+    ScopedCritSec scope(&xrefAccess);
 
     // cf. pdf_page.c's pdf_load_page_info
     fz_obj *obj = fz_dict_gets(page, "MediaBox");
@@ -1330,12 +1330,12 @@ RectD CPdfEngine::PageMediabox(int pageNo)
 RectD CPdfEngine::PageContentBox(int pageNo, RenderTarget target)
 {
     assert(1 <= pageNo && pageNo <= PageCount());
-    pdf_page *page = getPdfPage(pageNo);
+    pdf_page *page = GetPdfPage(pageNo);
     if (!page)
         return RectD();
 
     fz_bbox bbox;
-    fz_error error = runPage(page, fz_new_bbox_device(&bbox), fz_identity, target, fz_round_rect(page->mediabox), false);
+    fz_error error = RunPage(page, fz_new_bbox_device(&bbox), fz_identity, target, fz_round_rect(page->mediabox), false);
     if (error != fz_okay)
         return PageMediabox(pageNo);
     if (fz_is_infinite_bbox(bbox))
@@ -1345,7 +1345,7 @@ RectD CPdfEngine::PageContentBox(int pageNo, RenderTarget target)
     return bbox2.Intersect(PageMediabox(pageNo));
 }
 
-bool CPdfEngine::hasPermission(int permission)
+bool CPdfEngine::HasPermission(int permission)
 {
     return (bool)pdf_has_permission(_xref, permission);
 }
@@ -1406,7 +1406,7 @@ RectD CPdfEngine::Transform(RectD rect, int pageNo, float zoom, int rotation, bo
     return fz_rect_to_RectD(rect2);
 }
 
-bool CPdfEngine::renderPage(HDC hDC, pdf_page *page, RectI screenRect, fz_matrix *ctm, float zoom, int rotation, RectD *pageRect, RenderTarget target)
+bool CPdfEngine::RenderPage(HDC hDC, pdf_page *page, RectI screenRect, fz_matrix *ctm, float zoom, int rotation, RectD *pageRect, RenderTarget target)
 {
     if (!page)
         return false;
@@ -1428,14 +1428,14 @@ bool CPdfEngine::renderPage(HDC hDC, pdf_page *page, RectI screenRect, fz_matrix
     DeleteObject(bgBrush);
 
     fz_bbox clipbox = fz_RectI_to_bbox(screenRect);
-    fz_error error = runPage(page, fz_new_gdiplus_device(hDC, clipbox), *ctm, target, clipbox);
+    fz_error error = RunPage(page, fz_new_gdiplus_device(hDC, clipbox), *ctm, target, clipbox);
 
     return fz_okay == error;
 }
 
 RenderedBitmap *CPdfEngine::RenderBitmap(int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target)
 {    
-    pdf_page* page = getPdfPage(pageNo);
+    pdf_page* page = GetPdfPage(pageNo);
     if (!page)
         return NULL;
 
@@ -1456,7 +1456,7 @@ RenderedBitmap *CPdfEngine::RenderBitmap(int pageNo, float zoom, int rotation, R
 
         RectI rc(0, 0, w, h);
         RectD pageRect2 = fz_rect_to_RectD(pRect);
-        bool ok = renderPage(hDCMem, page, rc, &ctm, 0, 0, &pageRect2, target);
+        bool ok = RenderPage(hDCMem, page, rc, &ctm, 0, 0, &pageRect2, target);
         DeleteDC(hDCMem);
         ReleaseDC(NULL, hDC);
         if (!ok) {
@@ -1476,7 +1476,7 @@ RenderedBitmap *CPdfEngine::RenderBitmap(int pageNo, float zoom, int rotation, R
     if (!_drawcache)
         _drawcache = fz_new_glyph_cache();
 
-    fz_error error = runPage(page, fz_new_draw_device(_drawcache, image), ctm, target, bbox);
+    fz_error error = RunPage(page, fz_new_draw_device(_drawcache, image), ctm, target, bbox);
     RenderedBitmap *bitmap = NULL;
     if (!error) {
         HDC hDC = GetDC(NULL);
@@ -1489,7 +1489,7 @@ RenderedBitmap *CPdfEngine::RenderBitmap(int pageNo, float zoom, int rotation, R
 
 PageElement *CPdfEngine::GetElementAtPos(int pageNo, PointD pt)
 {
-    pdf_page *page = getPdfPage(pageNo, true);
+    pdf_page *page = GetPdfPage(pageNo, true);
     if (!page)
         return NULL;
 
@@ -1498,7 +1498,7 @@ PageElement *CPdfEngine::GetElementAtPos(int pageNo, PointD pt)
         if (fz_is_pt_in_rect(link->rect, p))
             return new PdfLink(this, link, pageNo);
 
-    ScopedCritSec scope(&_xrefAccess);
+    ScopedCritSec scope(&xrefAccess);
 
     for (pdf_annot *annot = page->annots; annot; annot = annot->next)
         if (fz_is_pt_in_rect(annot->rect, p) &&
@@ -1514,14 +1514,14 @@ Vec<PageElement *> *CPdfEngine::GetElements(int pageNo)
 {
     Vec<PageElement *> *els = new Vec<PageElement *>();
 
-    pdf_page *page = getPdfPage(pageNo, true);
+    pdf_page *page = GetPdfPage(pageNo, true);
     if (!page)
         return els;
 
     for (pdf_link *link = page->links; link; link = link->next)
         els->Append(new PdfLink(this, link, pageNo));
 
-    ScopedCritSec scope(&_xrefAccess);
+    ScopedCritSec scope(&xrefAccess);
 
     for (pdf_annot *annot = page->annots; annot; annot = annot->next)
         if (!str::IsEmpty(fz_to_str_buf(fz_dict_gets(annot->obj, "Contents")))) {
@@ -1558,7 +1558,7 @@ static pdf_link *FixupPageLinks(pdf_link *root)
     return newRoot;
 }
 
-void CPdfEngine::linkifyPageText(pdf_page *page)
+void CPdfEngine::LinkifyPageText(pdf_page *page)
 {
     RectI *coords;
     TCHAR *pageText = ExtractPageText(page, _T("\n"), &coords, Target_View, true);
@@ -1567,7 +1567,7 @@ void CPdfEngine::linkifyPageText(pdf_page *page)
         return;
     }
 
-    LinkRectList *list = linkifyText(pageText, coords);
+    LinkRectList *list = LinkifyText(pageText, coords);
     for (size_t i = 0; i < list->links.Count(); i++) {
         bool overlaps = false;
         for (pdf_link *next = page->links; next && !overlaps; next = next->next)
@@ -1596,36 +1596,36 @@ TCHAR *CPdfEngine::ExtractPageText(pdf_page *page, TCHAR *lineSep, RectI **coord
     // use an infinite rectangle as bounds (instead of page->mediabox) to ensure that
     // the extracted text is consistent between cached runs using a list device and
     // fresh runs (otherwise the list device omits text outside the mediabox bounds)
-    fz_error error = runPage(page, fz_new_text_device(text), fz_identity, target, fz_infinite_bbox, cacheRun);
+    fz_error error = RunPage(page, fz_new_text_device(text), fz_identity, target, fz_infinite_bbox, cacheRun);
 
     WCHAR *content = NULL;
     if (!error)
         content = fz_span_to_wchar(text, lineSep, coords_out);
 
-    EnterCriticalSection(&_xrefAccess);
+    EnterCriticalSection(&xrefAccess);
     fz_free_text_span(text);
-    LeaveCriticalSection(&_xrefAccess);
+    LeaveCriticalSection(&xrefAccess);
 
     return str::conv::FromWStrQ(content);
 }
 
 TCHAR *CPdfEngine::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_out, RenderTarget target)
 {
-    pdf_page *page = getPdfPage(pageNo, true);
+    pdf_page *page = GetPdfPage(pageNo, true);
     if (page)
         return ExtractPageText(page, lineSep, coords_out, target);
 
-    EnterCriticalSection(&_xrefAccess);
+    EnterCriticalSection(&xrefAccess);
     fz_error error = pdf_load_page(&page, _xref, pageNo - 1);
-    LeaveCriticalSection(&_xrefAccess);
+    LeaveCriticalSection(&xrefAccess);
     if (error)
         return NULL;
 
     TCHAR *result = ExtractPageText(page, lineSep, coords_out, target);
 
-    EnterCriticalSection(&_xrefAccess);
+    EnterCriticalSection(&xrefAccess);
     pdf_free_page(page);
-    LeaveCriticalSection(&_xrefAccess);
+    LeaveCriticalSection(&xrefAccess);
 
     return result;
 }
@@ -1661,7 +1661,7 @@ PageLayoutType CPdfEngine::PreferredLayout()
 {
     PageLayoutType layout = Layout_Single;
 
-    ScopedCritSec scope(&_xrefAccess);
+    ScopedCritSec scope(&xrefAccess);
     fz_obj *root = fz_dict_gets(_xref->trailer, "Root");
 
     char *name = fz_to_name(fz_dict_gets(root, "PageLayout"));
@@ -1680,13 +1680,13 @@ PageLayoutType CPdfEngine::PreferredLayout()
 
 unsigned char *CPdfEngine::GetFileData(size_t *cbCount)
 {
-    ScopedCritSec scope(&_xrefAccess);
+    ScopedCritSec scope(&xrefAccess);
     return fz_extract_stream_data(_xref->file, cbCount);
 }
 
 bool CPdfEngine::SaveEmbedded(fz_obj *obj, LinkSaverUI& saveUI)
 {
-    ScopedCritSec scope(&_xrefAccess);
+    ScopedCritSec scope(&xrefAccess);
 
     fz_buffer *data = NULL;
     fz_error error = pdf_load_stream(&data, _xref, fz_to_num(obj), fz_to_gen(obj));
@@ -1699,19 +1699,19 @@ bool CPdfEngine::SaveEmbedded(fz_obj *obj, LinkSaverUI& saveUI)
 
 bool CPdfEngine::IsImagePage(int pageNo)
 {
-    pdf_page *page = getPdfPage(pageNo, true);
+    pdf_page *page = GetPdfPage(pageNo, true);
     // pages containing a single image usually contain about 50
     // characters worth of instructions, so don't bother checking
     // more instruction-heavy pages
     if (!page || !page->contents || page->contents->len > 100)
         return false;
 
-    PdfPageRun *run = getPageRun(page);
+    PdfPageRun *run = GetPageRun(page);
     if (!run)
         return false;
 
     bool hasSingleImage = fz_list_is_single_image(run->list);
-    dropPageRun(run);
+    DropPageRun(run);
 
     return hasSingleImage;
 }
@@ -1735,10 +1735,10 @@ int CPdfEngine::GetPageByLabel(const TCHAR *label)
 
 void CPdfEngine::RunGC()
 {
-    EnterCriticalSection(&_xrefAccess);
+    EnterCriticalSection(&xrefAccess);
     if (_xref && _xref->store)
         pdf_age_store(_xref->store, 3);
-    LeaveCriticalSection(&_xrefAccess);
+    LeaveCriticalSection(&xrefAccess);
 }
 
 static bool IsRelativeURI(const TCHAR *uri)
@@ -1754,7 +1754,7 @@ TCHAR *PdfLink::GetValue() const
     if (!link)
         return NULL;
 
-    ScopedCritSec scope(&engine->_xrefAccess);
+    ScopedCritSec scope(&engine->xrefAccess);
 
     TCHAR *path = NULL;
     fz_obj *obj;
@@ -1818,7 +1818,7 @@ const char *PdfLink::GetType() const
     if (!link)
         return NULL;
 
-    ScopedCritSec scope(&engine->_xrefAccess);
+    ScopedCritSec scope(&engine->xrefAccess);
 
     switch (link->kind) {
     case PDF_LINK_URI: return "LaunchURL";
@@ -1860,7 +1860,7 @@ int PdfLink::GetDestPageNo() const
 
 RectD PdfLink::GetDestRect() const
 {
-    ScopedCritSec scope(&engine->_xrefAccess);
+    ScopedCritSec scope(&engine->xrefAccess);
 
     RectD result(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
     fz_obj *dest = this->dest();
@@ -1896,7 +1896,7 @@ RectD PdfLink::GetDestRect() const
 
 bool PdfLink::SaveEmbedded(LinkSaverUI& saveUI)
 {
-    ScopedCritSec scope(&engine->_xrefAccess);
+    ScopedCritSec scope(&engine->xrefAccess);
     return engine->SaveEmbedded(dest(), saveUI);
 }
 
@@ -1919,7 +1919,7 @@ bool PdfEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
 PdfEngine *PdfEngine::CreateFromFileName(const TCHAR *fileName, PasswordUI *pwdUI)
 {
     CPdfEngine *engine = new CPdfEngine();
-    if (!engine || !fileName || !engine->load(fileName, pwdUI)) {
+    if (!engine || !fileName || !engine->Load(fileName, pwdUI)) {
         delete engine;
         return NULL;
     }
@@ -1929,7 +1929,7 @@ PdfEngine *PdfEngine::CreateFromFileName(const TCHAR *fileName, PasswordUI *pwdU
 PdfEngine *PdfEngine::CreateFromStream(IStream *stream, PasswordUI *pwdUI)
 {
     CPdfEngine *engine = new CPdfEngine();
-    if (!engine->load(stream, pwdUI)) {
+    if (!engine->Load(stream, pwdUI)) {
         delete engine;
         return NULL;
     }
@@ -2686,7 +2686,7 @@ void CXpsEngine::linkifyPageText(xps_page *page, int pageNo)
 
     xps_link *last;
     for (last = &root; last->next; last = last->next);
-    LinkRectList *list = linkifyText(pageText, coords);
+    LinkRectList *list = LinkifyText(pageText, coords);
 
     for (size_t i = 0; i < list->links.Count(); i++) {
         bool overlaps = false;
