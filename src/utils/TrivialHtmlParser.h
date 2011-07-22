@@ -115,8 +115,8 @@ class HtmlParser {
     HtmlElement *rootElement;
     HtmlElement *currElement;
 
-    HtmlElement *AllocElement(HtmlElement *parent, char *name);
-    HtmlAttr *AllocAttr(char *name);
+    HtmlElement *AllocElement(char *name, HtmlElement *parent);
+    HtmlAttr *AllocAttr(char *name, HtmlAttr *next);
 
     void CloseTag(char *tagName);
     void StartTag(char *tagName);

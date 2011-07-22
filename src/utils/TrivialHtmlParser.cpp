@@ -101,7 +101,7 @@ HtmlElement *HtmlElement::GetChildByName(const char *name, int idx) const
 
 struct HtmlEntity {
     const TCHAR *name;
-    int unicode;
+    wchar_t unicode;
 };
 static HtmlEntity gHtmlEntities[] = { { _T("AElig"), 0xc6 }, { _T("Aacute"), 0xc1 }, { _T("Acirc"), 0xc2 }, { _T("Agrave"), 0xc0 }, { _T("Alpha"), 0x391 }, { _T("Aring"), 0xc5 }, { _T("Atilde"), 0xc3 }, { _T("Auml"), 0xc4 }, { _T("Beta"), 0x392 }, { _T("Ccedil"), 0xc7 }, { _T("Chi"), 0x3a7 }, { _T("Dagger"), 0x2021 }, { _T("Delta"), 0x394 }, { _T("ETH"), 0xd0 }, { _T("Eacute"), 0xc9 }, { _T("Ecirc"), 0xca }, { _T("Egrave"), 0xc8 }, { _T("Epsilon"), 0x395 }, { _T("Eta"), 0x397 }, { _T("Euml"), 0xcb }, { _T("Gamma"), 0x393 }, { _T("Iacute"), 0xcd }, { _T("Icirc"), 0xce }, { _T("Igrave"), 0xcc }, { _T("Iota"), 0x399 }, { _T("Iuml"), 0xcf }, { _T("Kappa"), 0x39a }, { _T("Lambda"), 0x39b }, { _T("Mu"), 0x39c }, { _T("Ntilde"), 0xd1 }, { _T("Nu"), 0x39d }, { _T("OElig"), 0x152 }, { _T("Oacute"), 0xd3 }, { _T("Ocirc"), 0xd4 }, { _T("Ograve"), 0xd2 }, { _T("Omega"), 0x3a9 }, { _T("Omicron"), 0x39f }, { _T("Oslash"), 0xd8 }, { _T("Otilde"), 0xd5 }, { _T("Ouml"), 0xd6 }, { _T("Phi"), 0x3a6 }, { _T("Pi"), 0x3a0 }, { _T("Prime"), 0x2033 }, { _T("Psi"), 0x3a8 }, { _T("Rho"), 0x3a1 }, { _T("Scaron"), 0x160 }, { _T("Sigma"), 0x3a3 }, { _T("THORN"), 0xde }, { _T("Tau"), 0x3a4 }, { _T("Theta"), 0x398 }, { _T("Uacute"), 0xda }, { _T("Ucirc"), 0xdb }, { _T("Ugrave"), 0xd9 }, { _T("Upsilon"), 0x3a5 }, { _T("Uuml"), 0xdc }, { _T("Xi"), 0x39e }, { _T("Yacute"), 0xdd }, { _T("Yuml"), 0x178 }, { _T("Zeta"), 0x396 }, { _T("aacute"), 0xe1 }, { _T("acirc"), 0xe2 }, { _T("acute"), 0xb4 }, { _T("aelig"), 0xe6 }, { _T("agrave"), 0xe0 }, { _T("alefsym"), 0x2135 }, { _T("alpha"), 0x3b1 }, { _T("amp"), 0x26 }, { _T("and"), 0x2227 }, { _T("ang"), 0x2220 }, { _T("apos"), 0x27 }, { _T("aring"), 0xe5 }, { _T("asymp"), 0x2248 }, { _T("atilde"), 0xe3 }, { _T("auml"), 0xe4 }, { _T("bdquo"), 0x201e }, { _T("beta"), 0x3b2 }, { _T("brvbar"), 0xa6 }, { _T("bull"), 0x2022 }, { _T("cap"), 0x2229 }, { _T("ccedil"), 0xe7 }, { _T("cedil"), 0xb8 }, { _T("cent"), 0xa2 }, { _T("chi"), 0x3c7 }, { _T("circ"), 0x2c6 }, { _T("clubs"), 0x2663 }, { _T("cong"), 0x2245 }, { _T("copy"), 0xa9 }, { _T("crarr"), 0x21b5 }, { _T("cup"), 0x222a }, { _T("curren"), 0xa4 }, { _T("dArr"), 0x21d3 }, { _T("dagger"), 0x2020 }, { _T("darr"), 0x2193 }, { _T("deg"), 0xb0 }, { _T("delta"), 0x3b4 }, { _T("diams"), 0x2666 }, { _T("divide"), 0xf7 }, { _T("eacute"), 0xe9 }, { _T("ecirc"), 0xea }, { _T("egrave"), 0xe8 }, { _T("empty"), 0x2205 }, { _T("emsp"), 0x2003 }, { _T("ensp"), 0x2002 }, { _T("epsilon"), 0x3b5 }, { _T("equiv"), 0x2261 }, { _T("eta"), 0x3b7 }, { _T("eth"), 0xf0 }, { _T("euml"), 0xeb }, { _T("euro"), 0x20ac }, { _T("exist"), 0x2203 }, { _T("fnof"), 0x192 }, { _T("forall"), 0x2200 }, { _T("frac12"), 0xbd }, { _T("frac14"), 0xbc }, { _T("frac34"), 0xbe }, { _T("frasl"), 0x2044 }, { _T("gamma"), 0x3b3 }, { _T("ge"), 0x2265 }, { _T("gt"), 0x3e }, { _T("hArr"), 0x21d4 }, { _T("harr"), 0x2194 }, { _T("hearts"), 0x2665 }, { _T("hellip"), 0x2026 }, { _T("iacute"), 0xed }, { _T("icirc"), 0xee }, { _T("iexcl"), 0xa1 }, { _T("igrave"), 0xec }, { _T("image"), 0x2111 }, { _T("infin"), 0x221e }, { _T("int"), 0x222b }, { _T("iota"), 0x3b9 }, { _T("iquest"), 0xbf }, { _T("isin"), 0x2208 }, { _T("iuml"), 0xef }, { _T("kappa"), 0x3ba }, { _T("lArr"), 0x21d0 }, { _T("lambda"), 0x3bb }, { _T("lang"), 0x2329 }, { _T("laquo"), 0xab }, { _T("larr"), 0x2190 }, { _T("lceil"), 0x2308 }, { _T("ldquo"), 0x201c }, { _T("le"), 0x2264 }, { _T("lfloor"), 0x230a }, { _T("lowast"), 0x2217 }, { _T("loz"), 0x25ca }, { _T("lrm"), 0x200e }, { _T("lsaquo"), 0x2039 }, { _T("lsquo"), 0x2018 }, { _T("lt"), 0x3c }, { _T("macr"), 0xaf }, { _T("mdash"), 0x2014 }, { _T("micro"), 0xb5 }, { _T("middot"), 0xb7 }, { _T("minus"), 0x2212 }, { _T("mu"), 0x3bc }, { _T("nabla"), 0x2207 }, { _T("nbsp"), 0xa0 }, { _T("ndash"), 0x2013 }, { _T("ne"), 0x2260 }, { _T("ni"), 0x220b }, { _T("not"), 0xac }, { _T("notin"), 0x2209 }, { _T("nsub"), 0x2284 }, { _T("ntilde"), 0xf1 }, { _T("nu"), 0x3bd }, { _T("oacute"), 0xf3 }, { _T("ocirc"), 0xf4 }, { _T("oelig"), 0x153 }, { _T("ograve"), 0xf2 }, { _T("oline"), 0x203e }, { _T("omega"), 0x3c9 }, { _T("omicron"), 0x3bf }, { _T("oplus"), 0x2295 }, { _T("or"), 0x2228 }, { _T("ordf"), 0xaa }, { _T("ordm"), 0xba }, { _T("oslash"), 0xf8 }, { _T("otilde"), 0xf5 }, { _T("otimes"), 0x2297 }, { _T("ouml"), 0xf6 }, { _T("para"), 0xb6 }, { _T("part"), 0x2202 }, { _T("permil"), 0x2030 }, { _T("perp"), 0x22a5 }, { _T("phi"), 0x3c6 }, { _T("pi"), 0x3c0 }, { _T("piv"), 0x3d6 }, { _T("plusmn"), 0xb1 }, { _T("pound"), 0xa3 }, { _T("prime"), 0x2032 }, { _T("prod"), 0x220f }, { _T("prop"), 0x221d }, { _T("psi"), 0x3c8 }, { _T("quot"), 0x22 }, { _T("rArr"), 0x21d2 }, { _T("radic"), 0x221a }, { _T("rang"), 0x232a }, { _T("raquo"), 0xbb }, { _T("rarr"), 0x2192 }, { _T("rceil"), 0x2309 }, { _T("rdquo"), 0x201d }, { _T("real"), 0x211c }, { _T("reg"), 0xae }, { _T("rfloor"), 0x230b }, { _T("rho"), 0x3c1 }, { _T("rlm"), 0x200f }, { _T("rsaquo"), 0x203a }, { _T("rsquo"), 0x2019 }, { _T("sbquo"), 0x201a }, { _T("scaron"), 0x161 }, { _T("sdot"), 0x22c5 }, { _T("sect"), 0xa7 }, { _T("shy"), 0xad }, { _T("sigma"), 0x3c3 }, { _T("sigmaf"), 0x3c2 }, { _T("sim"), 0x223c }, { _T("spades"), 0x2660 }, { _T("sub"), 0x2282 }, { _T("sube"), 0x2286 }, { _T("sum"), 0x2211 }, { _T("sup"), 0x2283 }, { _T("sup1"), 0xb9 }, { _T("sup2"), 0xb2 }, { _T("sup3"), 0xb3 }, { _T("supe"), 0x2287 }, { _T("szlig"), 0xdf }, { _T("tau"), 0x3c4 }, { _T("there4"), 0x2234 }, { _T("theta"), 0x3b8 }, { _T("thetasym"), 0x3d1 }, { _T("thinsp"), 0x2009 }, { _T("thorn"), 0xfe }, { _T("tilde"), 0x2dc }, { _T("times"), 0xd7 }, { _T("trade"), 0x2122 }, { _T("uArr"), 0x21d1 }, { _T("uacute"), 0xfa }, { _T("uarr"), 0x2191 }, { _T("ucirc"), 0xfb }, { _T("ugrave"), 0xf9 }, { _T("uml"), 0xa8 }, { _T("upsih"), 0x3d2 }, { _T("upsilon"), 0x3c5 }, { _T("uuml"), 0xfc }, { _T("weierp"), 0x2118 }, { _T("xi"), 0x3be }, { _T("yacute"), 0xfd }, { _T("yen"), 0xa5 }, { _T("yuml"), 0xff }, { _T("zeta"), 0x3b6 }, { _T("zwj"), 0x200d }, { _T("zwnj"), 0x200c } };
 
@@ -172,10 +172,11 @@ HtmlParser::~HtmlParser()
         free(html);
 }
 
-HtmlAttr *HtmlParser::AllocAttr(char *name)
+HtmlAttr *HtmlParser::AllocAttr(char *name, HtmlAttr *next)
 {
     HtmlAttr *attr = allocator.AllocStruct<HtmlAttr>();
     attr->name = name;
+    attr->next = next;
     ++attributesCount;
     return attr;
 }
@@ -190,7 +191,7 @@ TCHAR *HtmlElement::GetAttribute(const char *name) const
     return NULL;
 }
 
-HtmlElement *HtmlParser::AllocElement(HtmlElement *parent, char *name)
+HtmlElement *HtmlParser::AllocElement(char *name, HtmlElement *parent)
 {
     HtmlElement *el = allocator.AllocStruct<HtmlElement>();
     el->name = name;
@@ -216,13 +217,14 @@ void HtmlParser::StartTag(char *tagName)
 {
     str::ToLower(tagName);
     HtmlElement *parent = FindParent(tagName);
-    currElement = AllocElement(parent, tagName);
+    currElement = AllocElement(tagName, parent);
     if (NULL == rootElement)
         rootElement = currElement;
 
-    if (!parent)
-        return;
-    if (NULL == parent->down) {
+    if (!parent) {
+        // if this isn't the root tag, this tag
+        // and all its children will be ignored
+    } else if (NULL == parent->down) {
         // parent has no children => set as a first child
         parent->down = currElement;
     } else {
@@ -252,9 +254,7 @@ void HtmlParser::CloseTag(char *tagName)
 void HtmlParser::StartAttr(char *name)
 {
     str::ToLower(name);
-    HtmlAttr *a = AllocAttr(name);
-    a->next = currElement->firstAttr;
-    currElement->firstAttr = a;
+    currElement->firstAttr = AllocAttr(name, currElement->firstAttr);
 }
 
 void HtmlParser::SetAttrVal(char *val)
@@ -271,8 +271,7 @@ static char *ParseAttrValue(char **sPtr)
     if (quoteChar == '"' || quoteChar == '\'') {
         ++s;
         attrVal = s;
-        SkipUntil(&s, quoteChar);
-        if (*s != quoteChar)
+        if (!SkipUntil(&s, quoteChar))
             return NULL;
         *s++ = 0;
     } else {

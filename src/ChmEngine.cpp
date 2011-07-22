@@ -7,7 +7,8 @@
 #include "Vec.h"
 #include "TrivialHtmlParser.h"
 
-#include "chm_lib.h"
+#include <inttypes.h>
+#include <chm_lib.h>
 
 // Data parsed from /#WINDOWS, /#STRINGS, /#SYSTEM files inside CHM file
 class ChmInfo {
@@ -126,12 +127,9 @@ CChmEngine::~CChmEngine()
     free((void *)fileName);
 }
 
-typedef unsigned char u8;
-typedef unsigned short u16;
-typedef unsigned long u32;
-
-CASSERT(2 == sizeof(u16), u16_is_2_bytes);
-CASSERT(4 == sizeof(u32), u32_is_4_bytes);
+CASSERT(1 == sizeof(uint8_t), uint8_is_1_byte);
+CASSERT(2 == sizeof(uint16_t), uint16_is_2_bytes);
+CASSERT(4 == sizeof(uint32_t), uint32_is_4_bytes);
 
 class Bytes {
 public:
@@ -140,25 +138,25 @@ public:
     ~Bytes() {
         free(d);
     }
-    u8 *d;
+    uint8_t *d;
     size_t size;
 };
 
 // The numbers in CHM format are little-endian
-static bool ReadU16(const Bytes& b, size_t off, u16& valOut)
+static bool ReadU16(const Bytes& b, size_t off, uint16_t& valOut)
 {
-    if (off + sizeof(u16) > b.size)
+    if (off + sizeof(uint16_t) > b.size)
         return false;
-    valOut = b.d[off] | ((u32)b.d[off+1] >> 8);
+    valOut = b.d[off] | (b.d[off+1] << 8);
     return true;
 }
 
 // The numbers in CHM format are little-endian
-static bool ReadU32(const Bytes& b, size_t off, u32& valOut)
+static bool ReadU32(const Bytes& b, size_t off, uint32_t& valOut)
 {
-    if (off + sizeof(u32) > b.size)
+    if (off + sizeof(uint32_t) > b.size)
         return false;
-    valOut = b.d[off] | ((u32)b.d[off+1] >> 8) | ((u32)b.d[off+2] >> 16) | ((u32)b.d[off+3] >> 24);
+    valOut = b.d[off] | (b.d[off+1] << 8) | (b.d[off+2] << 16) | (b.d[off+3] << 24);
     return true;
 }
 
@@ -166,19 +164,12 @@ static char *ReadString(const Bytes& b, size_t off)
 {
     if (off >= b.size)
         return NULL;
-    u8 *strStart = b.d + off;
-    u8 *strEnd = strStart;
-    u8 *dataEnd = b.d + b.size;
-    while (*strEnd && strEnd < dataEnd) {
-        ++strEnd;
-    }
+    char *strStart = (char *)b.d + off;
+    char *strEnd = (char *)memchr(strStart, 0, b.size);
     // didn't find terminating 0 - assume it's corrupted
-    if (*strEnd)
+    if (!strEnd || !*strStart)
         return NULL;
-    size_t len = strEnd - strStart;
-    if (0 == len)
-        return NULL;
-    return (char*)memdup(strStart, len+1);
+    return str::Dup(strStart);
 }
 
 static char *ReadWsTrimmedString(const Bytes& b, size_t off)
@@ -206,28 +197,28 @@ static bool GetChmDataForFile(struct chmFile *chmHandle, const char *fileName, B
         return false;
     }
 
-    if (info.length > 128*1024*1024) {
+    dataOut.size = (size_t)info.length;
+    if (dataOut.size > 128*1024*1024) {
         // don't allow anything above 128 MB
         return false;
     }
 
     // +1 for 0 terminator for C string compatibility
-    dataOut.d = (u8*)malloc((size_t)info.length+1);
+    dataOut.d = (uint8_t *)malloc(dataOut.size + 1);
     if (!dataOut.d)
         return false;
-    dataOut.size = (u32)info.length;
 
-    if (!chm_retrieve_object(chmHandle, &info, dataOut.d, 0, info.length) ) {
+    if (!chm_retrieve_object(chmHandle, &info, dataOut.d, 0, dataOut.size)) {
         return false;
     }
-    dataOut.d[info.length] = 0;
+    dataOut.d[dataOut.size] = 0;
     return true;
 }
 
 static bool ChmFileExists(struct chmFile *chmHandle, const char *path)
 {
     struct chmUnitInfo info;
-    if (chm_resolve_object(chmHandle, path, &info ) != CHM_RESOLVE_SUCCESS ) {
+    if (chm_resolve_object(chmHandle, path, &info ) != CHM_RESOLVE_SUCCESS) {
         return false;
     }
     return true;
@@ -240,7 +231,7 @@ static char *FindHomeForPath(struct chmFile *chmHandle, const char *basePath)
         "default.htm", "default.html"
     };
     const char *sep = str::EndsWith(basePath, "/") ? "" : "/";
-    for (int i=0; i<dimof(pathsToTest); i++) {
+    for (int i = 0; i < dimof(pathsToTest); i++) {
         char *testPath = str::Format("%s%s%s", basePath, sep, pathsToTest[i]);
         if (ChmFileExists(chmHandle, testPath)) {
             return testPath;
@@ -260,7 +251,7 @@ static void ParseWindowsChmData(chmFile *chmHandle, ChmInfo *chmInfo)
     if (!hasWindows || !hasStrings)
         return;
 
-    u32 entries, entrySize, strOff;
+    uint32_t entries, entrySize, strOff;
     bool ok = ReadU32(windowsBytes, 0, entries);
     if (!ok)
         return;
@@ -268,8 +259,8 @@ static void ParseWindowsChmData(chmFile *chmHandle, ChmInfo *chmInfo)
     if (!ok)
         return;
 
-    for (u32 i = 0; i < entries; ++i ) {
-        u32 off = 8 + (i * entrySize);
+    for (uint32_t i = 0; i < entries; ++i) {
+        uint32_t off = 8 + (i * entrySize);
         if (!chmInfo->title) {
             ok = ReadU32(windowsBytes, off + 0x14, strOff);
             if (ok) {
@@ -301,12 +292,12 @@ static void ParseWindowsChmData(chmFile *chmHandle, ChmInfo *chmInfo)
 static bool ParseSystemChmData(chmFile *chmHandle, ChmInfo *chmInfo)
 {
     Bytes b;
-    u16 type, len;
+    uint16_t type, len;
     bool ok = GetChmDataForFile(chmHandle, "/#SYSTEM", b);
     if (!ok)
         return false;
-    u16 off = 4;
-    // Note: skipping u32 version at offset 0. It's supposed to be 2 or 3.
+    uint16_t off = 4;
+    // Note: skipping uint32_t version at offset 0. It's supposed to be 2 or 3.
     while (off < b.size) {
         // Note: at some point we seem to get off-sync i.e. I'm seeing many entries
         // with type==0 and len==0. Seems harmless.
@@ -432,23 +423,15 @@ ChmToCItem *BuildChmToc(HtmlElement *list)
 
 static bool ChmFileExists(struct chmFile *chmHandle, TCHAR *fileName)
 {
-    char *tmp = str::conv::ToAnsi(fileName);
-    char *fileNameTmp = NULL;
-    if (!str::StartsWith(tmp, "/")) {
-        fileNameTmp = str::Join("/", tmp);
-    } else if (str::StartsWith(tmp, "///")) {
-        tmp += 2;
+    ScopedMem<char> chmPath(str::conv::ToAnsi(fileName));
+    if (!str::StartsWith(chmPath.Get(), "/")) {
+        chmPath.Set(str::Join("/", chmPath));
+    } else if (str::StartsWith(chmPath.Get(), "///")) {
+        chmPath.Set(str::Dup(chmPath + 2));
     }
     struct chmUnitInfo info;
-    char *toCheck = fileNameTmp;
-    if (!toCheck)
-        toCheck = tmp;
-    int res = chm_resolve_object(chmHandle, toCheck, &info);
-    free(tmp);
-    free(fileNameTmp);
-    if (CHM_RESOLVE_SUCCESS != res)
-        return false;
-   return true;
+    int res = chm_resolve_object(chmHandle, chmPath, &info);
+    return CHM_RESOLVE_SUCCESS == res;
 }
 
 static void AddPageIfUnique(Vec<ChmToCItem*>& pages, ChmToCItem *item, struct chmFile *chmHandle)
@@ -468,13 +451,13 @@ static void AddPageIfUnique(Vec<ChmToCItem*>& pages, ChmToCItem *item, struct ch
 // We fake page numbers by doing a depth-first traversal of
 // toc tree and considering each unique html page in toc tree
 // as a page
-static void BuildPagesInfo(Vec<ChmToCItem*>& pages, ChmToCItem *curr, struct chmFile *chmHandle)
+static void BuildPagesInfo(Vec<ChmToCItem*>& pages, DocToCItem *curr, struct chmFile *chmHandle)
 {
-    AddPageIfUnique(pages, curr, chmHandle);
+    AddPageIfUnique(pages, static_cast<ChmToCItem *>(curr), chmHandle);
     if (curr->child)
-        BuildPagesInfo(pages, (ChmToCItem*)(curr->child), chmHandle);
+        BuildPagesInfo(pages, curr->child, chmHandle);
     if (curr->next)
-        BuildPagesInfo(pages, (ChmToCItem*)(curr->next), chmHandle);
+        BuildPagesInfo(pages, curr->next, chmHandle);
 }
 
 bool CChmEngine::ParseChmHtmlToc(char *html)
