@@ -73,6 +73,10 @@ inline void *memdup(void *data, size_t len)
 }
 #define _memdup(ptr) memdup(ptr, sizeof(*(ptr)))
 
+inline bool memeq(const void *d1, const void *d2, size_t len) {
+    return 0 == memcmp(d1, d2, len);
+}
+
 class ScopedCritSec
 {
     CRITICAL_SECTION *cs;
