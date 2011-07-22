@@ -250,7 +250,7 @@ $(OS)\BencUtil.obj: src\utils\BaseUtil.h src\utils\BencUtil.h src\utils\StrUtil.
 $(OS)\BencUtil.obj: src\utils\Vec.h
 $(OS)\ChmEngine.obj: src\BaseEngine.h src\ChmEngine.h src\utils\BaseUtil.h
 $(OS)\ChmEngine.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\StrUtil.h
-$(OS)\ChmEngine.obj: src\utils\Vec.h
+$(OS)\ChmEngine.obj: src\utils\TrivialHtmlParser.h src\utils\Vec.h
 $(OS)\CPdfFilter.obj: src\BaseEngine.h src\ifilter\CPdfFilter.h src\ifilter\FilterBase.h
 $(OS)\CPdfFilter.obj: src\ifilter\PdfFilter.h src\PdfEngine.h src\utils\BaseUtil.h
 $(OS)\CPdfFilter.obj: src\utils\GeomUtil.h src\utils\StrUtil.h src\utils\Vec.h
@@ -294,6 +294,7 @@ $(OS)\Favorites.obj: src\utils\WinUtil.h src\WindowInfo.h
 $(OS)\FileUtil.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\StrUtil.h
 $(OS)\FileWatch.obj: src\FileWatch.h src\utils\BaseUtil.h src\utils\FileUtil.h
 $(OS)\FileWatch.obj: src\utils\StrUtil.h
+$(OS)\HtmlWindow.obj: src\utils\BaseUtil.h src\utils\HtmlWindow.h
 $(OS)\Http.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
 $(OS)\Http.obj: src\utils\Http.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\Http.obj: src\utils\WinUtil.h

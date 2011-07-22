@@ -3,10 +3,7 @@
 
 #include "BaseUtil.h"
 #include "StrUtil.h"
-
 #include "TrivialHtmlParser.h"
-#include "FileUtil.h"
-#include "WinUtil.h"
 
 /*
 Html parser that is good enough for parsing html files
@@ -76,15 +73,29 @@ static bool IsUnquotedAttrValEnd(char c) {
     return !c || IsWs(c) || c == '/' || c == '>';
 }
 
-HtmlElement *HtmlElement::GetChildIfNamed(int idx, const char *name) const
+static int cmpCharPtrs(const void *a, const void *b)
 {
-    HtmlElement *el = down;
-    while (idx > 0 && el) {
-        el = el->next;
-        idx--;
+    return strcmp(*(const char **)a, *(const char **)b);
+}
+
+static bool IsTagSelfclosing(const char *name)
+{
+    static const char *tagList[] = {
+        "area", "base", "basefont", "br", "col", "frame",
+        "hr", "img", "input", "link", "meta", "param"
+    };
+    return bsearch(&name, tagList, dimof(tagList), sizeof(const char *), cmpCharPtrs) != NULL;
+}
+
+HtmlElement *HtmlElement::GetChildByName(const char *name, int idx) const
+{
+    for (HtmlElement *el = down; el; el = el->next) {
+        if (str::Eq(name, el->name)) {
+            if (0 == idx)
+                return el;
+            idx--;
+        }
     }
-    if (el && str::Eq(name, el->name))
-        return el;
     return NULL;
 }
 
@@ -100,8 +111,8 @@ static int entityComparator(const void *a, const void *b)
     const TCHAR *nameB = ((HtmlEntity *)b)->name;
     // skip identical characters (case sensitively)
     for (; *nameA && *nameA == *nameB; nameA++, nameB++);
-    // if both names are identical in all alphabetical characters, the entitites are the same
-    if (!_istalpha(*nameA) && !_istalpha(*nameB))
+    // if both names are identical in all alpha-numeric characters, the entitites are the same
+    if (!_istalnum(*nameA) && !_istalnum(*nameB))
         return 0;
     return *nameA - *nameB;
 }
@@ -210,15 +221,13 @@ void HtmlParser::CloseTag(char *tagName)
     str::ToLower(tagName);
     // to allow for lack of closing tags, e.g. in case like
     // <a><b><c></a>, we look for the first parent with matching name
-    HtmlElement *el = currElement;
-    while (el) {
+    for (HtmlElement *el = currElement; el; el = el->up) {
         if (str::Eq(el->name, tagName)) {
             currElement = el->up;
             return;
         }
-        el = el->up;
     }
-    // TODO: should we do sth. here?
+    // ignore the unexpected closing tag
 }
 
 void HtmlParser::StartAttr(char *name)
@@ -318,7 +327,7 @@ ParseText:
     if (tagEndLen > 0) {
         *tagEnd = 0;
         StartTag(tagName);
-        if (tagEndLen == 2)
+        if (tagEndLen == 2 || IsTagSelfclosing(tagName))
             CloseTag(tagName);
         s += tagEndLen;
         goto ParseText;
@@ -356,7 +365,7 @@ ParseAttributes:
         return ParseError(ErrParsingAttributes);
 
 FoundElementEnd:
-    if (tagEndLen == 2)
+    if (tagEndLen == 2 || IsTagSelfclosing(tagName))
         CloseTag(tagName);
     s += tagEndLen;
     goto ParseText;
@@ -442,6 +451,8 @@ FoundNext:
 
 #ifdef DEBUG
 #include <assert.h>
+#include "FileUtil.h"
+#include "WinUtil.h"
 
 namespace unittests {
 
@@ -591,6 +602,10 @@ static void HtmlParserFile()
     assert(str::Eq(el->name, "object"));
     ScopedMem<TCHAR> val(el->GetAttribute("type"));
     assert(str::Eq(val, _T("text/sitemap")));
+    el = el->down;
+    assert(str::Eq(el->name, "param"));
+    assert(!el->down);
+    assert(str::Eq(el->next->name, "param"));
     el = p.FindElementByName("body");
     assert(el);
     el = p.FindElementByName("ul", el);

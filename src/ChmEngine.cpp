@@ -31,10 +31,9 @@ public:
     TCHAR *url;
     TCHAR *imageNumber;
 
-    ChmToCItem(TCHAR *title, TCHAR *url, TCHAR *imageNumber) : DocToCItem(title)
+    ChmToCItem(TCHAR *title, TCHAR *url, TCHAR *imageNumber) :
+        DocToCItem(title), url(url), imageNumber(imageNumber)
     {
-        this->url = url;
-        this->imageNumber = imageNumber;
     }
 
     ~ChmToCItem() {
@@ -367,49 +366,42 @@ static bool ParseSystemChmData(chmFile *chmHandle, ChmInfo *chmInfo)
 
 /* The html looks like:
 <li>
- <object type="text/sitemap">
-   <param name="Name" value="Main Page">
-     <param name="Local" value="0789729717_main.html">
-       <param name="ImageNumber" value="12">
- </object>
- <li>
+  <object type="text/sitemap">
+    <param name="Name" value="Main Page">
+    <param name="Local" value="0789729717_main.html">
+    <param name="ImageNumber" value="12">
+  </object>
+<li>
   ...
-
-A good html parser would treat param elements as siblings,
-but our simplistic parser treats them as children.
 */
 ChmToCItem *TocItemFromLi(HtmlElement *el)
 {
-    el = el->GetChildIfNamed(0, "object");
+    el = el->GetChildByName("object");
     if (!el)
         return NULL;
-    el = el->GetChildIfNamed(0, "param");
-    TCHAR *name = NULL;
-    TCHAR *local = NULL;
-    TCHAR *imageNumber = NULL;
+    el = el->GetChildByName("param");
+    ScopedMem<TCHAR> name, local, imageNumber;
     while (el && str::Eq("param", el->name)) {
         ScopedMem<TCHAR> attrName(el->GetAttribute("name"));
         TCHAR *attrVal = el->GetAttribute("value");
-        el = el->down;
-        if (!attrName || !attrVal)
+        el = el->next;
+        if (!attrName || !attrVal) {
+            free(attrVal);
             continue;
+        }
         if (str::EqI(attrName, _T("name"))) {
-            name = attrVal;
+            name.Set(attrVal);
         } else if (str::EqI(attrName, _T("local"))) {
-            local = attrVal;
+            local.Set(attrVal);
         } else if (str::EqI(attrName, _T("ImageNumber"))) {
-            imageNumber = attrVal;
+            imageNumber.Set(attrVal);
         } else {
             free(attrVal);
         }
     }
-    if (!name || !local) {
-        free(name);
-        free(local);
-        free(imageNumber);
+    if (!name || !local)
         return NULL;
-    }
-    return new ChmToCItem(name, local, imageNumber);
+    return new ChmToCItem(name.StealData(), local.StealData(), imageNumber.StealData());
 }
 
 ChmToCItem *BuildChmToc(HtmlElement *el)
@@ -424,7 +416,7 @@ ChmToCItem *BuildChmToc(HtmlElement *el)
          <li>
            ...
     */
-    el = el->GetChildIfNamed(0, "object");
+    el = el->GetChildByName("object");
     if (!el)
         return node;
     el = el->next;
@@ -432,7 +424,7 @@ ChmToCItem *BuildChmToc(HtmlElement *el)
         return node;
 
     if (str::Eq(el->name, "ul")) {
-        HtmlElement *child = el->GetChildIfNamed(0, "li");
+        HtmlElement *child = el->GetChildByName("li");
         if (child)
             node->child = BuildChmToc(child);
         if (el->next && str::Eq(el->next->name, "li"))
