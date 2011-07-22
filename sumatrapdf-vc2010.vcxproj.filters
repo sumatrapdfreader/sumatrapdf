@@ -620,6 +620,9 @@
     <ClCompile Include="src\utils\TrivialHtmlParser.cpp">
       <Filter>utils</Filter>
     </ClCompile>
+    <ClCompile Include="src\utils\HtmlWindow.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ext\jbig2dec\config_win32.h">
@@ -878,6 +881,9 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="src\utils\TrivialHtmlParser.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\HtmlWindow.h">
       <Filter>utils</Filter>
     </ClInclude>
   </ItemGroup>
