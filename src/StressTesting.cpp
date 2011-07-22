@@ -447,7 +447,7 @@ bool StressTest::OpenFile(const TCHAR *fileName)
         SetSidebarVisibility(win, win->tocVisible, gGlobalPrefs.favVisible);
 
     currPage = pageRanges[0].start;
-    win->dm->goToPage(currPage, 0);
+    win->dm->GoToPage(currPage, 0);
     currPageRenderTime.Start();
     ++filesCount;
 
@@ -478,7 +478,7 @@ bool StressTest::GoToNextPage()
         return false;
     }
 
-    win->dm->goToPage(currPage, 0);
+    win->dm->GoToPage(currPage, 0);
     currPageRenderTime.Start();
 
     // start text search when we're in the middle of the document, so that

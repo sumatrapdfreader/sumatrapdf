@@ -287,7 +287,7 @@ void LinkHandler::ScrollTo(PageDestination *dest)
         UpdateToolbarState(owner);
     }
     // */
-    dm->goToPage(pageNo, scroll.y, true, scroll.x);
+    dm->GoToPage(pageNo, scroll.y, true, scroll.x);
 }
 
 // normalizes case and whitespace in the string

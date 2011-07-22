@@ -908,11 +908,11 @@ void DisplayModel::ChangeViewPortSize(SizeI newViewPortSize)
     Relayout(_zoomVirtual, _rotation);
 
     if (isDocReady) {
-        // when fitting to content, let goToPage do the necessary scrolling
+        // when fitting to content, let GoToPage do the necessary scrolling
         if (_zoomVirtual != ZOOM_FIT_CONTENT)
             SetScrollState(ss);
         else
-            goToPage(ss.page, 0);
+            GoToPage(ss.page, 0);
     } else {
         RecalcVisibleParts();
         RenderVisibleParts();
@@ -946,7 +946,7 @@ PointI DisplayModel::getContentStart(int pageNo)
     return contentBox.TL().Convert<int>();
 }
 
-void DisplayModel::goToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
+void DisplayModel::GoToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
 {
     assert(validPageNo(pageNo));
     if (!validPageNo(pageNo))
@@ -970,7 +970,7 @@ void DisplayModel::goToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
             getPageInfo(i)->visibleRatio = (i == pageNo ? 1.0f : 0);
         Relayout(_zoomVirtual, _rotation);
     }
-    //DBG_OUT("DisplayModel::goToPage(pageNo=%d, scrollY=%d)\n", pageNo, scrollY);
+    //DBG_OUT("DisplayModel::GoToPage(pageNo=%d, scrollY=%d)\n", pageNo, scrollY);
     PageInfo * pageInfo = getPageInfo(pageNo);
 
     if (-1 == scrollX && 0 == scrollY && ZOOM_FIT_CONTENT == _zoomVirtual) {
@@ -1022,7 +1022,7 @@ void DisplayModel::changeDisplayMode(DisplayMode displayMode)
     if (displayModeContinuous(displayMode)) {
         /* mark all pages as shown but not yet visible. The equivalent code
            for non-continuous mode is in DisplayModel::changeStartPage() called
-           from DisplayModel::goToPage() */
+           from DisplayModel::GoToPage() */
         for (int pageNo = 1; pageNo <= PageCount(); pageNo++) {
             PageInfo *pageInfo = &(_pagesInfo[pageNo-1]);
             pageInfo->shown = true;
@@ -1030,7 +1030,7 @@ void DisplayModel::changeDisplayMode(DisplayMode displayMode)
         }
         Relayout(_zoomVirtual, _rotation);
     }
-    goToPage(currPageNo, 0);
+    GoToPage(currPageNo, 0);
 }
 
 void DisplayModel::setPresentationMode(bool enable)
@@ -1064,7 +1064,7 @@ bool DisplayModel::goToNextPage(int scrollY)
     int currPageNo = currentPageNo();
     // Fully display the current page, if the previous page is still visible
     if (validPageNo(currPageNo - columns) && pageVisible(currPageNo - columns) && getPageInfo(currPageNo)->visibleRatio < 1.0) {
-        goToPage(currPageNo, scrollY);
+        GoToPage(currPageNo, scrollY);
         return true;
     }
     int firstPageInNewRow = FirstPageInARowNo(currPageNo + columns, columns, displayModeShowCover(displayMode()));
@@ -1073,7 +1073,7 @@ bool DisplayModel::goToNextPage(int scrollY)
         /* we're on a last row or after it, can't go any further */
         return false;
     }
-    goToPage(firstPageInNewRow, scrollY);
+    GoToPage(firstPageInNewRow, scrollY);
     return true;
 }
 
@@ -1094,7 +1094,7 @@ bool DisplayModel::goToPrevPage(int scrollY)
         scrollY = 0; // continue, even though the current page isn't fully visible
     else if (max(-pageInfo->pageOnScreen.y, 0) > scrollY && displayModeContinuous(displayMode())) {
         /* the current page isn't fully visible, so show it first */
-        goToPage(currPageNo, scrollY);
+        GoToPage(currPageNo, scrollY);
         return true;
     }
     int firstPageInNewRow = FirstPageInARowNo(currPageNo - columns, columns, displayModeShowCover(displayMode()));
@@ -1107,7 +1107,7 @@ bool DisplayModel::goToPrevPage(int scrollY)
     if (-1 == scrollY)
         scrollY = getPageInfo(firstPageInNewRow)->pageOnScreen.dy;
 
-    goToPage(firstPageInNewRow, scrollY);
+    GoToPage(firstPageInNewRow, scrollY);
     return true;
 }
 
@@ -1122,7 +1122,7 @@ bool DisplayModel::goToLastPage()
 
     if (currPageNo == firstPageInLastRow) /* are we on the last page already ? */
         return FALSE;
-    goToPage(firstPageInLastRow, 0, true);
+    GoToPage(firstPageInLastRow, 0, true);
     return TRUE;
 }
 
@@ -1141,7 +1141,7 @@ bool DisplayModel::goToFirstPage()
             return FALSE;
         }
     }
-    goToPage(1, 0, true);
+    GoToPage(1, 0, true);
     return TRUE;
 }
 
@@ -1256,7 +1256,7 @@ void DisplayModel::zoomTo(float zoomVirtual, PointI *fixPt)
     }
 
     if (ZOOM_FIT_CONTENT == zoomVirtual || ZOOM_FIT_PAGE == zoomVirtual) {
-        // SetScrollState's first call to goToPage will already scroll to fit
+        // SetScrollState's first call to GoToPage will already scroll to fit
         ss.x = ss.y = -1;
         fixPt = NULL;
     }
@@ -1294,7 +1294,7 @@ void DisplayModel::rotateBy(int newRotation)
 
     int currPageNo = currentPageNo();
     Relayout(_zoomVirtual, newRotation);
-    goToPage(currPageNo, 0);
+    GoToPage(currPageNo, 0);
 }
 
 /* Given <region> (in user coordinates ) on page <pageNo>, copies text in that region
@@ -1404,7 +1404,7 @@ ScrollState DisplayModel::GetScrollState()
 void DisplayModel::SetScrollState(ScrollState state)
 {
     // Update the internal metrics first
-    goToPage(state.page, 0);
+    GoToPage(state.page, 0);
     // Bail out, if the page wasn't scrolled
     if (state.x < 0 && state.y < 0)
         return;
@@ -1419,7 +1419,7 @@ void DisplayModel::SetScrollState(ScrollState state)
         newPt.x += viewPort.x;
     if (state.y < 0)
         newPt.y = 0;
-    goToPage(state.page, newPt.y, false, newPt.x);
+    GoToPage(state.page, newPt.y, false, newPt.x);
 }
 
 /* Records the current scroll state for later navigating back to. */

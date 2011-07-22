@@ -373,7 +373,7 @@ public:
         SetForegroundWindow(win->hwndFrame);
         if (win->IsDocLoaded()) {
             if (-1 != pageNo)
-                win->dm->goToPage(pageNo, 0);
+                win->dm->GoToPage(pageNo, 0);
             // we might have been invoked by clicking on a tree view
             // switch focus so that keyboard navigation works, which enables
             // a fluid experience

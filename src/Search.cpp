@@ -96,7 +96,7 @@ static void ShowSearchResult(WindowInfo& win, TextSel *result, bool addNavPt)
    assert(result->len > 0);
    if (addNavPt || !win.dm->pageShown(result->pages[0]) ||
        (win.dm->zoomVirtual() == ZOOM_FIT_PAGE || win.dm->zoomVirtual() == ZOOM_FIT_CONTENT))
-       win.dm->goToPage(result->pages[0], 0, addNavPt);
+       win.dm->GoToPage(result->pages[0], 0, addNavPt);
 
    win.dm->textSelection->CopySelection(win.dm->textSearch);
 
@@ -385,7 +385,7 @@ static void ShowForwardSearchResult(WindowInfo *win, const TCHAR *fileName, UINT
             overallrc = overallrc.Union(rects[i]);
         TextSel res = { 1, &pageNo, &overallrc };
         if (!win->dm->pageVisible(page))
-            win->dm->goToPage(page, 0, true);
+            win->dm->GoToPage(page, 0, true);
         if (!win->dm->ShowResultRectToScreen(&res))
             win->RepaintAsync();
         if (IsIconic(win->hwndFrame))
@@ -591,7 +591,7 @@ static const TCHAR *HandlePageCmd(const TCHAR *cmd, DDEACK& ack)
     if (!win->dm->validPageNo(page))
         return next;
 
-    win->dm->goToPage(page, 0, true);
+    win->dm->GoToPage(page, 0, true);
     ack.fAck = 1;
     SetFocusHelper(win->hwndFrame);
     return next;

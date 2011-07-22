@@ -3284,7 +3284,7 @@ static void OnMenuGoToPage(WindowInfo& win)
 
     int newPageNo = win.dm->engine->GetPageByLabel(newPageLabel);
     if (win.dm->validPageNo(newPageNo))
-        win.dm->goToPage(newPageNo, 0, true);
+        win.dm->GoToPage(newPageNo, 0, true);
 }
 
 static void EnterFullscreen(WindowInfo& win, bool presentation)
@@ -5037,7 +5037,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
             }
             else if (win->IsDocLoaded() && i.pageNumber > 0 && !firstIsDocLoaded) {
                 if (win->dm->validPageNo(i.pageNumber))
-                    win->dm->goToPage(i.pageNumber, 0);
+                    win->dm->GoToPage(i.pageNumber, 0);
             }
             if (i.hwndPluginParent)
                 MakePluginWindow(*win, i.hwndPluginParent);

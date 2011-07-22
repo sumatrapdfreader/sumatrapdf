@@ -408,7 +408,7 @@ static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT message, WPARAM wParam, L
             ScopedMem<TCHAR> buf(win::GetText(win->hwndPageBox));
             int newPageNo = win->dm->engine->GetPageByLabel(buf);
             if (win->dm->validPageNo(newPageNo)) {
-                win->dm->goToPage(newPageNo, 0, true);
+                win->dm->GoToPage(newPageNo, 0, true);
                 SetFocus(win->hwndFrame);
             }
             return 1;
