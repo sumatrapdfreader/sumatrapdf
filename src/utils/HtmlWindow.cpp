@@ -346,15 +346,25 @@ protected:
     FrameSite * fs;
 };
 
+HtmlWindow::HtmlWindow(HWND hwnd) :
+    hwnd(hwnd), webBrowser(NULL), oleObject(NULL),
+    oleInPlaceObject(NULL), viewObject(NULL),
+    connectionPoint(NULL), oleObjectHwnd(NULL),
+    adviseCookie(0), aboutBlankShown(false)
+{
+    // TODO: subclass hwnd
+    CreateBrowser();
+}
+
 void HtmlWindow::CreateBrowser()
 {
     IUnknown *p;
     HRESULT hr = CoCreateInstance(CLSID_WebBrowser, NULL,
-                    CLSCTX_ALL, IID_IUnknown, (void**)(&p));
+                    CLSCTX_ALL, IID_IUnknown, (void**)&p);
     assert(SUCCEEDED(hr));
-    hr = p->QueryInterface(IID_IViewObject, (void**)(&viewObject));
+    hr = p->QueryInterface(IID_IViewObject, (void**)&viewObject);
     assert(SUCCEEDED(hr));
-    hr = p->QueryInterface(IID_IOleObject, (void**)(&oleObject));
+    hr = p->QueryInterface(IID_IOleObject, (void**)&oleObject);
     assert(SUCCEEDED(hr));
 
     FrameSite *fs = new FrameSite(this);
@@ -369,7 +379,7 @@ void HtmlWindow::CreateBrowser()
         oleObject->SetClientSite(fs->oleClientSite);
 
     IPersistStreamInit * psInit = NULL;
-    hr = p->QueryInterface(IID_IPersistStreamInit, (void**)(&psInit));
+    hr = p->QueryInterface(IID_IPersistStreamInit, (void**)&psInit);
     if (SUCCEEDED(hr) && psInit != NULL) {
         hr = psInit->InitNew();
         assert(SUCCEEDED(hr));
@@ -398,11 +408,11 @@ void HtmlWindow::CreateBrowser()
     if (!setClientSiteFirst)
         oleObject->SetClientSite(fs->oleClientSite);
 
-    hr = p->QueryInterface(IID_IWebBrowser2, (void**)(&webBrowser));
+    hr = p->QueryInterface(IID_IWebBrowser2, (void**)&webBrowser);
     assert(SUCCEEDED(hr));
 
     IConnectionPointContainer * cpContainer;
-    hr = p->QueryInterface(IID_IConnectionPointContainer, (void**)(&cpContainer));
+    hr = p->QueryInterface(IID_IConnectionPointContainer, (void**)&cpContainer);
     assert(SUCCEEDED(hr));
     hr = cpContainer->FindConnectionPoint(DIID_DWebBrowserEvents2, &connectionPoint);
     assert(SUCCEEDED(hr));
@@ -640,6 +650,83 @@ void IEHtmlWin::Open(const wxString& url)
                 &navFlag, &targetFrame, &postData, &headers);
 }
 #endif
+
+void HtmlWindow::NavigateToUrl(const TCHAR *urlStr)
+{
+    VARIANT url;
+    VariantInit(&url);
+    url.vt = VT_BSTR;
+    url.bstrVal = SysAllocString(urlStr);
+    if (!url.bstrVal)
+        return;
+    webBrowser->Navigate2(&url, 0, 0, 0, 0);
+    VariantClear(&url);
+}
+
+void HtmlWindow::EnsureAboutBlankShown()
+{
+    if (aboutBlankShown)
+        return;
+    aboutBlankShown = true;
+
+    NavigateToUrl(_T("about:blank"));
+    IHTMLDocument2 *doc = NULL;
+    HRESULT hr = S_OK;
+    // wait until shown
+    while ((doc == NULL) && (hr == S_OK)) {
+        Sleep(0);
+        IDispatch *docDispatch = NULL;
+        hr = webBrowser->get_Document(&docDispatch);
+        if (SUCCEEDED(hr) && (docDispatch != NULL)) {
+            hr = docDispatch->QueryInterface(IID_IHTMLDocument2,(void **)&doc);
+            docDispatch->Release();
+        }
+    }
+
+    if (doc != NULL)
+        doc->Release();
+}
+
+void HtmlWindow::DisplayHtml(const TCHAR *html)
+{
+    LPDISPATCH       docDispatch = NULL;
+    IHTMLDocument2 * doc = NULL;
+    SAFEARRAY *      arr = NULL;
+    VARIANT *        var = NULL;
+    SAFEARRAYBOUND   arrayBound = {1, 0};
+
+    // don't know why, but that's what other people do
+    EnsureAboutBlankShown();
+    HRESULT hr = webBrowser->get_Document(&docDispatch);
+    if (FAILED(hr))
+        goto Exit;
+    hr = docDispatch->QueryInterface(IID_IHTMLDocument2, (void**)&doc);
+    if (FAILED(hr))
+        goto Exit;
+
+    arr = SafeArrayCreate(VT_VARIANT, 1, (SAFEARRAYBOUND *)&arrayBound);
+    if (!arr)
+        goto Exit;
+    hr = SafeArrayAccessData(arr, (void**)&var);
+    if (FAILED(hr))
+        goto Exit;
+    var->vt = VT_BSTR;
+    var->bstrVal = SysAllocString(html);
+    if (!var->bstrVal)
+        goto Exit;
+    hr = doc->write(arr);
+    doc->close();
+    if (FAILED(hr))
+        goto Exit;
+
+Exit:
+    if (arr)
+        SafeArrayDestroy(arr);
+    if (doc)
+        doc->Release();
+    if (docDispatch)
+        docDispatch->Release();
+}
 
 FrameSite::FrameSite(HtmlWindow * win)
 {

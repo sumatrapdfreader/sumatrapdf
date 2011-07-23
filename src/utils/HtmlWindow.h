@@ -24,9 +24,14 @@ protected:
 
     DWORD               adviseCookie;
 
+    bool                aboutBlankShown;
+
+    void NavigateToUrl(const TCHAR *url);
+    void EnsureAboutBlankShown();
     void CreateBrowser();
 public:
     HtmlWindow(HWND hwnd);
     ~HtmlWindow();
+    void DisplayHtml(const TCHAR *html);
 };
 #endif
