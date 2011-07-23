@@ -410,6 +410,9 @@ void HtmlWindow::CreateBrowser()
     cpContainer->Release();
     fs->Release();
 
+    // TODO: disallow accessing any random url?
+    //webBrowser->put_Offline(VARIANT_TRUE);
+
     webBrowser->put_MenuBar(VARIANT_FALSE);
     webBrowser->put_AddressBar(VARIANT_FALSE);
     webBrowser->put_StatusBar(VARIANT_FALSE);
