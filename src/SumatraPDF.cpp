@@ -4975,10 +4975,13 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         gGlobalPrefs.toolbarVisible = true;
         // never allow esc as a shortcut to quit
         gGlobalPrefs.escToExit = false;
-        // always display documents as single page/continuous/fit width
-        // (similar to Adobe Reader, Google Chrome and how browsers display most HTML)
-        gGlobalPrefs.defaultDisplayMode = DM_CONTINUOUS;
-        gGlobalPrefs.defaultZoom = ZOOM_FIT_WIDTH;
+        if (DM_AUTOMATIC == gGlobalPrefs.defaultDisplayMode) {
+            // if the user hasn't changed the default display mode,
+            // display documents as single page/continuous/fit width
+            // (similar to Adobe Reader, Google Chrome and how browsers display HTML)
+            gGlobalPrefs.defaultDisplayMode = DM_CONTINUOUS;
+            gGlobalPrefs.defaultZoom = ZOOM_FIT_WIDTH;
+        }
     }
 
     WindowInfo *win = NULL;
