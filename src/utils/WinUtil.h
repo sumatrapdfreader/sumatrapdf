@@ -24,6 +24,12 @@ public:
     ~ScopedCom() { CoUninitialize(); }
 };
 
+class ScopedOle {
+public:
+    ScopedOle() { OleInitialize(NULL); }
+    ~ScopedOle() { OleUninitialize(); }
+};
+
 class ScopedHandle {
     HANDLE handle;
 public:

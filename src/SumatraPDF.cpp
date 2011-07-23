@@ -4897,7 +4897,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     ScopedMem<TCHAR> crashDumpPath(AppGenDataFilename(CRASH_DUMP_FILE_NAME));
     InstallCrashHandler(crashDumpPath);
 
-    ScopedCom com;
+    ScopedOle ole;
     InitAllCommonControls();
     ScopedGdiPlus gdiPlus(true);
 

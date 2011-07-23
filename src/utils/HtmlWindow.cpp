@@ -18,6 +18,8 @@
 // http://codesearch.google.com/#cbxlbgWFJ4U/wxCode/components/iehtmlwin/src/IEHtmlWin.h
 // http://codesearch.google.com/#cbxlbgWFJ4U/wxCode/components/iehtmlwin/src/IEHtmlWin.cpp
 
+// To show a page within chm file use url in the form:
+// "its:MyChmFile.chm::mywebpage.htm"
 
 class HW_IOleInPlaceFrame;
 class HW_IOleInPlaceSiteWindowless;
@@ -346,13 +348,39 @@ protected:
     FrameSite * fs;
 };
 
+static LRESULT CALLBACK WndProcHtml(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    HtmlWindow *win = (HtmlWindow*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+    if (!win)
+        return DefWindowProc(hwnd, msg, wParam, lParam);
+
+    switch (msg) {
+        case WM_SIZE:
+            if (SIZE_MINIMIZED != wParam) {
+                int dx = LOWORD(lParam);
+                int dy = HIWORD(lParam);
+                win->OnSize(dx, dy);
+            }
+
+        break;
+    }
+    return DefWindowProc(hwnd, msg, wParam, lParam);
+}
+
+void SubclassHtmlHwnd(HWND hwnd, HtmlWindow *htmlWin)
+{
+    // Note: assuming hwnd is plain hwnd, with no special hwnd proc
+    SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)WndProcHtml);
+    SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)htmlWin);
+}
+
 HtmlWindow::HtmlWindow(HWND hwnd) :
     hwnd(hwnd), webBrowser(NULL), oleObject(NULL),
     oleInPlaceObject(NULL), viewObject(NULL),
     connectionPoint(NULL), oleObjectHwnd(NULL),
     adviseCookie(0), aboutBlankShown(false)
 {
-    // TODO: subclass hwnd
+    SubclassHtmlHwnd(hwnd, this);
     CreateBrowser();
 }
 
@@ -456,56 +484,38 @@ HtmlWindow::~HtmlWindow()
     }
 }
 
-#if 0
-void IEHtmlWin::OnSize(wxSizeEvent& event)
+void HtmlWindow::OnSize(int dx, int dy)
 {
-        int w, h;
-        GetSize(&w, &h);
+    if (webBrowser) {
+        webBrowser->put_Height(dy);
+        webBrowser->put_Width(dx);
+    }
 
-        if (m_webBrowser) {
-                m_webBrowser->put_Height(h);
-                m_webBrowser->put_Width(w);
-        }
+    RECT r = { 0, 0, dx, dy };
+    if (oleInPlaceObject)
+        oleInPlaceObject->SetObjectRects(&r, &r);
 
-        RECT posRect;
-        posRect.left = 0;
-        posRect.top = 0;
-        posRect.right = w;
-        posRect.bottom = h;
+}
 
-        //::SetWindowPos((HWND)GetHWND(), m_oleObjectHWND, 0, 0, w, h, SWP_NOMOVE | SWP_NOACTIVATE | SWP_HIDEWINDOW);
-        if (m_oleInPlaceObject) {
-                m_oleInPlaceObject->SetObjectRects(&posRect, &posRect);
-        }
-
+#if 0
+void HtmlWindow::OnMove(int x, int y)
+{
+    if (webBrowser) {
+        webBrowser->put_Left(x);
+        webBrowser->put_Top(y);
+    }
 }
 #endif
 
-#if 0
-void IEHtmlWin::OnMove(wxMoveEvent& event)
+void HtmlWindow::SetVisible(bool visible)
 {
-        int x, y;
-        GetPosition(&x, &y);
-
-        if (m_webBrowser) {
-                m_webBrowser->put_Left(0/*x*/);
-                m_webBrowser->put_Top(0/*y*/);
-        }
+    if (visible)
+        ShowWindow(hwnd, SW_SHOW);
+    else
+        ShowWindow(hwnd, SW_HIDE);
+    if (webBrowser)
+        webBrowser->put_Visible(visible ? TRUE : FALSE);
 }
-#endif
-
-#if 0
-bool IEHtmlWin::Show(bool shown)
-{
-        bool ret;
-        ret = wxWindow::Show(shown);
-        //ret = ::ShowWindow(m_oleObjectHWND, (shown) ? SW_SHOW : SW_HIDE);
-        if (m_webBrowser) {
-                m_webBrowser->put_Visible(shown);
-        }
-        return ret;
-}
-#endif
 
 #if 0
 void IEHtmlWin::OnSetFocus(wxFocusEvent& event)
@@ -590,12 +600,6 @@ void IEHtmlWin::OnMouse(wxMouseEvent& event)
 #endif
 
 #if 0
-void IEHtmlWin::OnChar(wxKeyEvent& event)
-{
-}
-#endif
-
-#if 0
 bool HtmlWindow::OnStartURL(wxString& url)
 {
         wxLogTrace("loading url:");
@@ -622,32 +626,6 @@ void IEHtmlWin::OnFinishURL(wxString& url)
         wxLogTrace(url.c_str());
 
         m_currentUrl = url;
-}
-#endif
-
-#if 0
-void IEHtmlWin::LoadPage(const wxString& url)
-{
-        Open(url);
-}
-#endif
-
-#if 0
-void IEHtmlWin::Open(const wxString& url)
-{
-        VARIANTARG navFlag, targetFrame, postData, headers;
-        navFlag.vt = VT_EMPTY;
-        //navFlag.vt = VT_I2;
-        //navFlag.iVal = navNoReadFromCache;
-        targetFrame.vt = VT_EMPTY;
-        postData.vt = VT_EMPTY;
-        headers.vt = VT_EMPTY;
-
-        m_specificallyOpened = true;
-
-        HRESULT hret;
-        hret = m_webBrowser->Navigate((BSTR)(const wchar_t*)url.wc_str(wxConvLibc),
-                &navFlag, &targetFrame, &postData, &headers);
 }
 #endif
 

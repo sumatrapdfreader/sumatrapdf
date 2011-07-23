@@ -29,9 +29,13 @@ protected:
     void NavigateToUrl(const TCHAR *url);
     void EnsureAboutBlankShown();
     void CreateBrowser();
+
 public:
     HtmlWindow(HWND hwnd);
     ~HtmlWindow();
+
+    void OnSize(int dx, int dy);
+    void SetVisible(bool visible);
     void DisplayHtml(const TCHAR *html);
 };
 #endif
