@@ -402,7 +402,7 @@ void HtmlWindow::CreateBrowser()
     DWORD status;
     oleObject->GetMiscStatus(DVASPECT_CONTENT, &status);
     bool setClientSiteFirst = 0 != (status & OLEMISC_SETCLIENTSITEFIRST);
-    bool visibleAtRuntime = 0 != (status & OLEMISC_INVISIBLEATRUNTIME);
+    bool invisibleAtRuntime = 0 != (status & OLEMISC_INVISIBLEATRUNTIME);
 
     if (setClientSiteFirst)
         oleObject->SetClientSite(fs->oleClientSite);
@@ -414,7 +414,7 @@ void HtmlWindow::CreateBrowser()
         assert(SUCCEEDED(hr));
     }
 
-    hr = p->QueryInterface(IID_IOleInPlaceObject, (void**)(&oleInPlaceObject));
+    hr = p->QueryInterface(IID_IOleInPlaceObject, (void**)&oleInPlaceObject);
     assert(SUCCEEDED(hr));
 
     hr = oleInPlaceObject->GetWindow(&oleObjectHwnd);
@@ -422,16 +422,16 @@ void HtmlWindow::CreateBrowser()
 
     ::SetActiveWindow(oleObjectHwnd);
     ClientRect r(hwnd);
-    RECT posRect;
-    posRect.left = 0;
-    posRect.top = 0;
-    posRect.right = r.dx;
-    posRect.bottom = r.dy;
+    RECT rc = { 0, 0, r.dx, r.dy };
 
-    oleInPlaceObject->SetObjectRects(&posRect, &posRect);
-    if (visibleAtRuntime) {
+    oleInPlaceObject->SetObjectRects(&rc, &rc);
+    if (!invisibleAtRuntime) {
         hr = oleObject->DoVerb(OLEIVERB_INPLACEACTIVATE, NULL,
-                fs->oleClientSite, 0, hwnd, &posRect);
+                fs->oleClientSite, 0, hwnd, &rc);
+#if 0 // is this necessary?
+        hr = oleObject->DoVerb(OLEIVERB_SHOW, 0, fs->oleClientSite, 0,
+                hwnd, &rc);
+#endif
     }
 
     if (!setClientSiteFirst)
@@ -440,7 +440,7 @@ void HtmlWindow::CreateBrowser()
     hr = p->QueryInterface(IID_IWebBrowser2, (void**)&webBrowser);
     assert(SUCCEEDED(hr));
 
-    IConnectionPointContainer * cpContainer;
+    IConnectionPointContainer *cpContainer;
     hr = p->QueryInterface(IID_IConnectionPointContainer, (void**)&cpContainer);
     assert(SUCCEEDED(hr));
     hr = cpContainer->FindConnectionPoint(DIID_DWebBrowserEvents2, &connectionPoint);
@@ -672,7 +672,6 @@ void HtmlWindow::DisplayHtml(const TCHAR *html)
     IHTMLDocument2 * doc = NULL;
     SAFEARRAY *      arr = NULL;
     VARIANT *        var = NULL;
-    SAFEARRAYBOUND   arrayBound = {1, 0};
 
     // don't know why, but that's what other people do
     EnsureAboutBlankShown();
@@ -683,7 +682,7 @@ void HtmlWindow::DisplayHtml(const TCHAR *html)
     if (FAILED(hr))
         goto Exit;
 
-    arr = SafeArrayCreate(VT_VARIANT, 1, &arrayBound);
+    arr = SafeArrayCreateVector(VT_VARIANT, 0, 1);
     if (!arr)
         goto Exit;
     hr = SafeArrayAccessData(arr, (void**)&var);
@@ -693,6 +692,8 @@ void HtmlWindow::DisplayHtml(const TCHAR *html)
     var->bstrVal = SysAllocString(html);
     if (!var->bstrVal)
         goto Exit;
+    SafeArrayUnaccessData(arr);
+
     hr = doc->write(arr);
     doc->close();
     if (FAILED(hr))
