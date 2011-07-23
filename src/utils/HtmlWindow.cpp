@@ -421,8 +421,7 @@ void HtmlWindow::CreateBrowser()
     assert(SUCCEEDED(hr));
 
     ::SetActiveWindow(oleObjectHwnd);
-    ClientRect r(hwnd);
-    RECT rc = { 0, 0, r.dx, r.dy };
+    RECT rc = ClientRect(hwnd).ToRECT();
 
     oleInPlaceObject->SetObjectRects(&rc, &rc);
     if (!invisibleAtRuntime) {

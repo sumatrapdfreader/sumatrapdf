@@ -296,7 +296,7 @@ $(OS)\Favorites.obj: src\utils\WinUtil.h src\WindowInfo.h
 $(OS)\FileUtil.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\StrUtil.h
 $(OS)\FileWatch.obj: src\FileWatch.h src\utils\BaseUtil.h src\utils\FileUtil.h
 $(OS)\FileWatch.obj: src\utils\StrUtil.h
-$(OS)\HtmlWindow.obj: src\utils\BaseUtil.h src\utils\HtmlWindow.h
+$(OS)\HtmlWindow.obj: src\utils\BaseUtil.h src\utils\GeomUtil.h src\utils\HtmlWindow.h
 $(OS)\Http.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
 $(OS)\Http.obj: src\utils\Http.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\Http.obj: src\utils\WinUtil.h

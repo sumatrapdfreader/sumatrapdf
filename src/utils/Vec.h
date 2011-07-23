@@ -44,6 +44,18 @@ protected:
         els = newEls;
     }
 
+    T* MakeSpaceAt(size_t idx, size_t count) {
+        EnsureCap(len + count);
+        T* res = &(els[idx]);
+        if (len > idx) {
+            T* src = els + idx;
+            T* dst = els + idx + count;
+            memmove(dst, src, (len - idx) * sizeof(T));
+        }
+        LenIncrease(count);
+        return res;
+    }
+
     void FreeEls() {
         if (els != buf)
             free(els);
@@ -85,25 +97,18 @@ public:
         memset(buf, 0, sizeof(buf));
     }
 
-    T *MakeSpaceAtNoLenIncrease(size_t idx, size_t count=1) {
+    // ensures empty space at the end of the list where items can
+    // be appended through ReadFile or memcpy (don't forget to call
+    // LenIncrease once you know how many items have been added)
+    // and returns a pointer to the first empty spot
+    // Note: use AppendBlanks if you know the number of items in advance
+    T *EnsureEndPadding(size_t count) {
         EnsureCap(len + count);
-        T* res = &(els[idx]);
-        if (len > idx) {
-            T* src = els + idx;
-            T* dst = els + idx + count;
-            memmove(dst, src, (len - idx) * sizeof(T));
-        }
-        return res;
+        return &els[len];
     }
 
     void LenIncrease(size_t count) {
         len += count;
-    }
-
-    T* MakeSpaceAt(size_t idx, size_t count=1) {
-        T *res = MakeSpaceAtNoLenIncrease(idx, count);
-        LenIncrease(count);
-        return res;
     }
 
     T& operator[](size_t idx) const {
@@ -128,8 +133,12 @@ public:
     }
 
     void Append(T* src, size_t count) {
-        T* dst = MakeSpaceAt(len, count);
+        T* dst = AppendBlanks(count);
         memcpy(dst, src, count * sizeof(T));
+    }
+
+    T* AppendBlanks(size_t count) {
+        return MakeSpaceAt(len, count);
     }
 
     void RemoveAt(size_t idx, size_t count=1) {
@@ -228,15 +237,14 @@ public:
 
     void Append(T c)
     {
-        MakeSpaceAt(len, 1)[0] = c;
+        AppendBlanks(1)[0] = c;
     }
 
     void Append(const T* src, size_t size=-1)
     {
         if ((size_t)-1 == size)
             size = Len(src);
-        T* dst = MakeSpaceAt(len, size);
-        memcpy(dst, src, size * sizeof(T));
+        Vec::Append((T *)src, size);
     }
 
     void AppendFmt(const T* fmt, ...)
@@ -248,11 +256,11 @@ public:
         va_end(args);
     }
 
-    void AppendAndFree(const T* s)
+    void AppendAndFree(T* s)
     {
         if (s)
             Append(s, Len(s));
-        free((void*)s);
+        free(s);
     }
 
     void Set(const T* s)

@@ -532,8 +532,8 @@ bool CImageDirEngine::LoadImageDir(const TCHAR *dirName)
         return false;
     pageFileNames.SortNatural();
 
-    pages.MakeSpaceAt(0, pageFileNames.Count());
-    mediaboxes.MakeSpaceAt(0, pageFileNames.Count());
+    pages.AppendBlanks(pageFileNames.Count());
+    mediaboxes.AppendBlanks(pageFileNames.Count());
 
     return true;
 }
@@ -744,8 +744,8 @@ bool CCbxEngine::LoadCbzFile(const TCHAR *file)
         return false;
     pageFileNames.Sort();
 
-    pages.MakeSpaceAt(0, pageFileNames.Count());
-    mediaboxes.MakeSpaceAt(0, pageFileNames.Count());
+    pages.AppendBlanks(pageFileNames.Count());
+    mediaboxes.AppendBlanks(pageFileNames.Count());
 
     return true;
 }

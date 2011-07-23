@@ -623,7 +623,7 @@ StrVec *BuildPageLabelVec(fz_obj *root, int pageCount)
     }
 
     StrVec *labels = new StrVec();
-    labels->MakeSpaceAt(0, pageCount);
+    labels->AppendBlanks(pageCount);
 
     for (size_t i = 0; i < data.Count() && data[i].startAt <= pageCount; i++) {
         int secLen = pageCount + 1 - data[i].startAt;
