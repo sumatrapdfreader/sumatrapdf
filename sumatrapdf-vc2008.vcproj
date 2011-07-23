@@ -430,6 +430,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\utils\HtmlWindow.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\utils\HtmlWindow.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\utils\Http.cpp"
 				>
 			</File>

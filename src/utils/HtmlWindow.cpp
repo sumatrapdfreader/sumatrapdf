@@ -683,7 +683,7 @@ void HtmlWindow::DisplayHtml(const TCHAR *html)
     if (FAILED(hr))
         goto Exit;
 
-    arr = SafeArrayCreate(VT_VARIANT, 1, (SAFEARRAYBOUND *)&arrayBound);
+    arr = SafeArrayCreate(VT_VARIANT, 1, &arrayBound);
     if (!arr)
         goto Exit;
     hr = SafeArrayAccessData(arr, (void**)&var);
