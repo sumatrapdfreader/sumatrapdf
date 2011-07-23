@@ -4,15 +4,29 @@
 #define HtmlWindow_h
 
 #include "BaseUtil.h"
-
 #include <exdisp.h>
-#include <mshtml.h>
-#include <mshtmhst.h>
-#include <oaidl.h>
 
-class HtmlWindow {
-public:
+class FrameSite;
+
+class HtmlWindow
+{
+protected:
+    friend class FrameSite;
+
     HWND hwnd;
-};
 
+    IWebBrowser2 *      webBrowser;
+    IOleObject *        oleObject;
+    IOleInPlaceObject * oleInPlaceObject;
+    IViewObject *       viewObject;
+    IConnectionPoint *  connectionPoint;
+    HWND                oleObjectHwnd;
+
+    DWORD               adviseCookie;
+
+    void CreateBrowser();
+public:
+    HtmlWindow(HWND hwnd);
+    ~HtmlWindow();
+};
 #endif

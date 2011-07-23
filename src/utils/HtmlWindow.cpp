@@ -1,307 +1,1348 @@
 /* Copyright 2006-2011 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING) */
 
-// http://www.codeproject.com/KB/COM/cwebpage.aspx
 #include "HtmlWindow.h"
 
-// IOleClientSite functions are called by the browser object
-// to interact with the window that contains the browser object
-// IOleInPlaceFrame and IOleInPlaceSite are considered to be
-// sub-objects of IOleClientSite so IOleClientSite::QueryInterface
-// returns them.
+#include <mshtml.h>
+#include <mshtmhst.h>
+#include <oaidl.h>
+#include <exdispid.h>
 
-// http://msdn.microsoft.com/en-us/library/ms693706(v=vs.85).aspx
-class OleClientSite : public IOleClientSite
+#include "GeomUtil.h"
+
+// Info about implementing web browser control
+// http://www.codeproject.com/KB/COM/cwebpage.aspx
+
+// The code is structured in a similar way as wxWindows'
+// browser wrapper
+// http://codesearch.google.com/#cbxlbgWFJ4U/wxCode/components/iehtmlwin/src/IEHtmlWin.h
+// http://codesearch.google.com/#cbxlbgWFJ4U/wxCode/components/iehtmlwin/src/IEHtmlWin.cpp
+
+
+class HW_IOleInPlaceFrame;
+class HW_IOleInPlaceSiteWindowless;
+class HW_IOleClientSite;
+class HW_IOleControlSite;
+class HW_IOleCommandTarget;
+class HW_IOleItemContainer;
+class HW_IDispatch;
+class HW_DWebBrowserEvents2;
+class HW_IAdviseSink2;
+class HW_IAdviseSinkEx;
+
+// HW stands for HtmlWindow
+class FrameSite : public IUnknown
 {
-    IOleInPlaceSite       *oleInPlaceSite;
-    IDocHostUIHandler     *docHostUIHandler;
-    DWebBrowserEvents2    *browserEvents;
+    friend class HtmlWindow;
+    friend class HW_IOleInPlaceFrame;
+    friend class HW_IOleInPlaceSiteWindowless;
+    friend class HW_IOleClientSite;
+    friend class HW_IOleControlSite;
+    friend class HW_IOleCommandTarget;
+    friend class HW_IOleItemContainer;
+    friend class HW_IDispatch;
+    friend class HW_DWebBrowserEvents2;
+    friend class HW_IAdviseSink2;
+    friend class HW_IAdviseSinkEx;
+
 public:
-    OleClientSite(IOleInPlaceSite *oleInPlaceSite, IDocHostUIHandler *docHostUIHandler, DWebBrowserEvents2* browserEvents) :
-        oleInPlaceSite(oleInPlaceSite),
-        docHostUIHandler(docHostUIHandler),
-        browserEvents(browserEvents)
-    {
-    }
+    FrameSite(HtmlWindow * win);
+    ~FrameSite();
 
-    HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void **ppvObject);
+    //IUnknown
+    STDMETHODIMP QueryInterface(REFIID iid, void **ppvObject);
+    ULONG STDMETHODCALLTYPE AddRef();
+    ULONG STDMETHODCALLTYPE Release();
 
-    ULONG STDMETHODCALLTYPE AddRef() {
-        return 1;
-    }
+protected:
+    int m_cRef;
 
-    ULONG STDMETHODCALLTYPE Release() {
-        return 1;
-    }
+    HW_IOleInPlaceFrame *           oleInPlaceFrame;
+    HW_IOleInPlaceSiteWindowless *  oleInPlaceSiteWindowless;
+    HW_IOleClientSite *             oleClientSite;
+    HW_IOleControlSite *            oleControlSite;
+    HW_IOleCommandTarget *          oleCommandTarget;
+    HW_IOleItemContainer *          oleItemContainer;
+    HW_IDispatch *                  hwIDispatch;
+    HW_DWebBrowserEvents2 *         hwDWebBrowserEvents2;
+    HW_IAdviseSink2 *               adviseSink2;
+    HW_IAdviseSinkEx *              adviseSinkEx;
 
-    HRESULT STDMETHODCALLTYPE SaveObject() {
-        assert(0);
-        return S_OK;
-    }
+    HtmlWindow * htmlWindow;
 
-    HRESULT STDMETHODCALLTYPE GetMoniker(DWORD dwAssign, DWORD dwWhichMoniker, IMoniker **ppmk)
-    {
-        assert(0);
-        return S_OK;
-    }
-  
-    HRESULT STDMETHODCALLTYPE GetContainer(LPOLECONTAINER *ppContainer)
-    {
-        *ppContainer = NULL;
-        return E_NOINTERFACE;
-    }
+    //HDC m_hDCBuffer;
+    HWND hwndParent;
 
-    HRESULT STDMETHODCALLTYPE ShowObject() {
-        return NOERROR;
-    }
+    bool supportsWindowlessActivation;
+    bool inPlaceLocked;
+    bool inPlaceActive;
+    bool uiActive;
+    bool isWindowless;
 
-    HRESULT STDMETHODCALLTYPE OnShowWindow(BOOL show) {
-        assert(0);
-        return S_OK;
-    }
-
-    HRESULT STDMETHODCALLTYPE RequestNewObjectLayout() {
-        assert(0);
-        return S_OK;
-    }
+    LCID        ambientLocale;
+    COLORREF    ambientForeColor;
+    COLORREF    ambientBackColor;
+    bool        ambientShowHatching;
+    bool        ambientShowGrabHandles;
+    bool        ambientUserMode;
+    bool        ambientAppearance;
 };
 
-HRESULT OleClientSite::QueryInterface(REFIID riid, void **ppvObject)
+class HW_IOleInPlaceFrame : public IOleInPlaceFrame
 {
-    if (IID_IUnknown == riid || IID_IOleClientSite == riid) {
-        *ppvObject = this;
-        return S_OK;
-    }
-
-    // TODO: use == instead of memeq
-    if (memeq(&riid, &IID_IUnknown, sizeof(GUID)) || 
-        memeq(&riid, &IID_IOleClientSite, sizeof(GUID)))
+public:
+    HW_IOleInPlaceFrame(FrameSite* fs) : fs(fs)
     {
-        *ppvObject = this;
-        return S_OK;
+    }
+    ~HW_IOleInPlaceFrame() {}
+
+    //IUnknown
+    STDMETHODIMP QueryInterface(REFIID iid, void ** ppvObject) { return fs->QueryInterface(iid, ppvObject); }
+    ULONG STDMETHODCALLTYPE AddRef() { return fs->AddRef(); }
+    ULONG STDMETHODCALLTYPE Release() { return fs->Release(); }
+    //IOleWindow
+    STDMETHODIMP GetWindow(HWND*);
+    STDMETHODIMP ContextSensitiveHelp(BOOL);
+    //IOleInPlaceUIWindow
+    STDMETHODIMP GetBorder(LPRECT);
+    STDMETHODIMP RequestBorderSpace(LPCBORDERWIDTHS);
+    STDMETHODIMP SetBorderSpace(LPCBORDERWIDTHS);
+    STDMETHODIMP SetActiveObject(IOleInPlaceActiveObject*, LPCOLESTR);
+    //IOleInPlaceFrame
+    STDMETHODIMP InsertMenus(HMENU, LPOLEMENUGROUPWIDTHS);
+    STDMETHODIMP SetMenu(HMENU, HOLEMENU, HWND);
+    STDMETHODIMP RemoveMenus(HMENU);
+    STDMETHODIMP SetStatusText(LPCOLESTR);
+    STDMETHODIMP EnableModeless(BOOL);
+    STDMETHODIMP TranslateAccelerator(LPMSG, WORD);
+protected:
+    FrameSite * fs;
+};
+
+class HW_IOleInPlaceSiteWindowless : public IOleInPlaceSiteWindowless
+{
+public:
+    HW_IOleInPlaceSiteWindowless(FrameSite* fs) { fs = fs; }
+    ~HW_IOleInPlaceSiteWindowless() {}
+
+    //IUnknown
+    STDMETHODIMP QueryInterface(REFIID iid, void ** ppvObject) { return fs->QueryInterface(iid, ppvObject); }
+    ULONG STDMETHODCALLTYPE AddRef() { return fs->AddRef(); }
+    ULONG STDMETHODCALLTYPE Release() { return fs->Release(); }
+    //IOleWindow
+    STDMETHODIMP GetWindow(HWND* h)
+    { return fs->oleInPlaceFrame->GetWindow(h); }
+    STDMETHODIMP ContextSensitiveHelp(BOOL b)
+    { return fs->oleInPlaceFrame->ContextSensitiveHelp(b); }
+    //IOleInPlaceSite
+    STDMETHODIMP CanInPlaceActivate();
+    STDMETHODIMP OnInPlaceActivate();
+    STDMETHODIMP OnUIActivate();
+    STDMETHODIMP GetWindowContext(IOleInPlaceFrame**, IOleInPlaceUIWindow**,
+            LPRECT, LPRECT, LPOLEINPLACEFRAMEINFO);
+    STDMETHODIMP Scroll(SIZE);
+    STDMETHODIMP OnUIDeactivate(BOOL);
+    STDMETHODIMP OnInPlaceDeactivate();
+    STDMETHODIMP DiscardUndoState();
+    STDMETHODIMP DeactivateAndUndo();
+    STDMETHODIMP OnPosRectChange(LPCRECT);
+    //IOleInPlaceSiteEx
+    STDMETHODIMP OnInPlaceActivateEx(BOOL*, DWORD);
+    STDMETHODIMP OnInPlaceDeactivateEx(BOOL);
+    STDMETHODIMP RequestUIActivate();
+    //IOleInPlaceSiteWindowless
+    STDMETHODIMP CanWindowlessActivate();
+    STDMETHODIMP GetCapture();
+    STDMETHODIMP SetCapture(BOOL);
+    STDMETHODIMP GetFocus();
+    STDMETHODIMP SetFocus(BOOL);
+    STDMETHODIMP GetDC(LPCRECT, DWORD, HDC*);
+    STDMETHODIMP ReleaseDC(HDC);
+    STDMETHODIMP InvalidateRect(LPCRECT, BOOL);
+    STDMETHODIMP InvalidateRgn(HRGN, BOOL);
+    STDMETHODIMP ScrollRect(INT, INT, LPCRECT, LPCRECT);
+    STDMETHODIMP AdjustRect(LPRECT);
+    STDMETHODIMP OnDefWindowMessage(UINT, WPARAM, LPARAM, LRESULT*);
+protected:
+    FrameSite * fs;
+};
+
+class HW_IOleClientSite : public IOleClientSite
+{
+public:
+    HW_IOleClientSite(FrameSite* fs) { fs = fs; }
+    ~HW_IOleClientSite() {}
+
+    //IUnknown
+    STDMETHODIMP QueryInterface(REFIID iid, void ** ppvObject) { return fs->QueryInterface(iid, ppvObject); }
+    ULONG STDMETHODCALLTYPE AddRef() { return fs->AddRef(); }
+    ULONG STDMETHODCALLTYPE Release() { return fs->Release(); }
+    //IOleClientSite
+    STDMETHODIMP SaveObject();
+    STDMETHODIMP GetMoniker(DWORD, DWORD, IMoniker**);
+    STDMETHODIMP GetContainer(LPOLECONTAINER FAR*);
+    STDMETHODIMP ShowObject();
+    STDMETHODIMP OnShowWindow(BOOL);
+    STDMETHODIMP RequestNewObjectLayout();
+protected:
+    FrameSite * fs;
+};
+
+class HW_IOleControlSite : public IOleControlSite
+{
+public:
+    HW_IOleControlSite(FrameSite* fs) { fs = fs; }
+    ~HW_IOleControlSite() {}
+
+    //IUnknown
+    STDMETHODIMP QueryInterface(REFIID iid, void ** ppvObject) { return fs->QueryInterface(iid, ppvObject); }
+    ULONG STDMETHODCALLTYPE AddRef() { return fs->AddRef(); }
+    ULONG STDMETHODCALLTYPE Release() { return fs->Release(); }
+    //IOleControlSite
+    STDMETHODIMP OnControlInfoChanged();
+    STDMETHODIMP LockInPlaceActive(BOOL);
+    STDMETHODIMP GetExtendedControl(IDispatch**);
+    STDMETHODIMP TransformCoords(POINTL*, POINTF*, DWORD);
+    STDMETHODIMP TranslateAccelerator(LPMSG, DWORD);
+    STDMETHODIMP OnFocus(BOOL);
+    STDMETHODIMP ShowPropertyFrame();
+protected:
+    FrameSite * fs;
+};
+
+class HW_IOleCommandTarget : public IOleCommandTarget
+{
+public:
+    HW_IOleCommandTarget(FrameSite* fs) { fs = fs; }
+    ~HW_IOleCommandTarget() {}
+
+    //IUnknown
+    STDMETHODIMP QueryInterface(REFIID iid, void ** ppvObject) { return fs->QueryInterface(iid, ppvObject); }
+    ULONG STDMETHODCALLTYPE AddRef() { return fs->AddRef(); }
+    ULONG STDMETHODCALLTYPE Release() { return fs->Release(); }
+    //IOleCommandTarget
+    STDMETHODIMP QueryStatus(const GUID*, ULONG, OLECMD[], OLECMDTEXT*);
+    STDMETHODIMP Exec(const GUID*, DWORD, DWORD, VARIANTARG*, VARIANTARG*);
+protected:
+    FrameSite * fs;
+};
+
+class HW_IOleItemContainer : public IOleItemContainer
+{
+public:
+    HW_IOleItemContainer(FrameSite* fs) { fs = fs; }
+    ~HW_IOleItemContainer() {}
+
+    //IUnknown
+    STDMETHODIMP QueryInterface(REFIID iid, void ** ppvObject) { return fs->QueryInterface(iid, ppvObject); }
+    ULONG STDMETHODCALLTYPE AddRef() { return fs->AddRef(); }
+    ULONG STDMETHODCALLTYPE Release() { return fs->Release(); }
+    //IParseDisplayName
+    STDMETHODIMP ParseDisplayName(IBindCtx*, LPOLESTR, ULONG*, IMoniker**);
+    //IOleContainer
+    STDMETHODIMP EnumObjects(DWORD, IEnumUnknown**);
+    STDMETHODIMP LockContainer(BOOL);
+    //IOleItemContainer
+    STDMETHODIMP GetObject(LPOLESTR, DWORD, IBindCtx*, REFIID, void**);
+    STDMETHODIMP GetObjectStorage(LPOLESTR, IBindCtx*, REFIID, void**);
+    STDMETHODIMP IsRunning(LPOLESTR);
+protected:
+    FrameSite * fs;
+};
+
+class HW_IDispatch : public IDispatch
+{
+public:
+    HW_IDispatch(FrameSite* fs) { fs = fs; }
+    ~HW_IDispatch() {}
+
+    //IUnknown
+    STDMETHODIMP QueryInterface(REFIID iid, void ** ppvObject) { return fs->QueryInterface(iid, ppvObject); }
+    ULONG STDMETHODCALLTYPE AddRef() { return fs->AddRef(); }
+    ULONG STDMETHODCALLTYPE Release() { return fs->Release(); }
+    //IDispatch
+    STDMETHODIMP GetIDsOfNames(REFIID, OLECHAR**, unsigned int, LCID, DISPID*);
+    STDMETHODIMP GetTypeInfo(unsigned int, LCID, ITypeInfo**);
+    STDMETHODIMP GetTypeInfoCount(unsigned int*);
+    STDMETHODIMP Invoke(DISPID, REFIID, LCID, WORD, DISPPARAMS*, VARIANT*, EXCEPINFO*, UINT*);
+
+    // helper
+    HRESULT DispatchPropGet(DISPID dispIdMember, VARIANT *res);
+
+protected:
+    FrameSite * fs;
+};
+
+class HW_DWebBrowserEvents2 : public DWebBrowserEvents2
+{
+public:
+    HW_DWebBrowserEvents2(FrameSite* fs) { fs = fs; }
+    ~HW_DWebBrowserEvents2() {}
+
+    //IUnknown
+    STDMETHODIMP QueryInterface(REFIID iid, void ** ppvObject) { return fs->QueryInterface(iid, ppvObject); }
+    ULONG STDMETHODCALLTYPE AddRef() { return fs->AddRef(); }
+    ULONG STDMETHODCALLTYPE Release() { return fs->Release(); }
+    //IDispatch
+    STDMETHODIMP GetIDsOfNames(REFIID r, OLECHAR** o, unsigned int i, LCID l, DISPID* d)
+    { return fs->hwIDispatch->GetIDsOfNames(r, o, i, l, d); }
+    STDMETHODIMP GetTypeInfo(unsigned int i, LCID l, ITypeInfo** t)
+    { return fs->hwIDispatch->GetTypeInfo(i, l, t); }
+    STDMETHODIMP GetTypeInfoCount(unsigned int* i)
+    { return fs->hwIDispatch->GetTypeInfoCount(i); }
+    STDMETHODIMP Invoke(DISPID d, REFIID r, LCID l, WORD w, DISPPARAMS* dp,
+            VARIANT* v, EXCEPINFO* e, UINT* u)
+    { return fs->hwIDispatch->Invoke(d, r, l, w, dp, v, e, u); }
+protected:
+    FrameSite * fs;
+};
+
+class HW_IAdviseSink2 : public IAdviseSink2
+{
+public:
+    HW_IAdviseSink2(FrameSite* fs) { fs = fs; }
+    ~HW_IAdviseSink2() {}
+
+    //IUnknown
+    STDMETHODIMP QueryInterface(REFIID iid, void ** ppvObject) { return fs->QueryInterface(iid, ppvObject); }
+    ULONG STDMETHODCALLTYPE AddRef() { return fs->AddRef(); }
+    ULONG STDMETHODCALLTYPE Release() { return fs->Release(); }
+    //IAdviseSink
+    void STDMETHODCALLTYPE OnDataChange(FORMATETC*, STGMEDIUM*);
+    void STDMETHODCALLTYPE OnViewChange(DWORD, LONG);
+    void STDMETHODCALLTYPE OnRename(IMoniker*);
+    void STDMETHODCALLTYPE OnSave();
+    void STDMETHODCALLTYPE OnClose();
+    //IAdviseSink2
+    void STDMETHODCALLTYPE OnLinkSrcChange(IMoniker*);
+protected:
+    FrameSite * fs;
+};
+
+class HW_IAdviseSinkEx : public IAdviseSinkEx
+{
+public:
+    HW_IAdviseSinkEx(FrameSite* fs) { fs = fs; }
+    ~HW_IAdviseSinkEx() {}
+
+    //IUnknown
+    STDMETHODIMP QueryInterface(REFIID iid, void ** ppvObject) { return fs->QueryInterface(iid, ppvObject); }
+    ULONG STDMETHODCALLTYPE AddRef() { return fs->AddRef(); }
+    ULONG STDMETHODCALLTYPE Release() { return fs->Release(); }
+    //IAdviseSink
+    void STDMETHODCALLTYPE OnDataChange(FORMATETC* f, STGMEDIUM* s)
+    { fs->adviseSink2->OnDataChange(f, s); }
+    void STDMETHODCALLTYPE OnViewChange(DWORD d, LONG l)
+    { fs->adviseSink2->OnViewChange(d, l); }
+    void STDMETHODCALLTYPE OnRename(IMoniker* i)
+    { fs->adviseSink2->OnRename(i); }
+    void STDMETHODCALLTYPE OnSave()
+    { fs->adviseSink2->OnSave(); }
+    void STDMETHODCALLTYPE OnClose()
+    { fs->adviseSink2->OnClose(); }
+    //IAdviseSinkEx
+    void STDMETHODCALLTYPE OnViewStatusChange(DWORD);
+protected:
+    FrameSite * fs;
+};
+
+void HtmlWindow::CreateBrowser()
+{
+    IUnknown *p;
+    HRESULT hr = CoCreateInstance(CLSID_WebBrowser, NULL,
+                    CLSCTX_ALL, IID_IUnknown, (void**)(&p));
+    assert(SUCCEEDED(hr));
+    hr = p->QueryInterface(IID_IViewObject, (void**)(&viewObject));
+    assert(SUCCEEDED(hr));
+    hr = p->QueryInterface(IID_IOleObject, (void**)(&oleObject));
+    assert(SUCCEEDED(hr));
+
+    FrameSite *fs = new FrameSite(this);
+    fs->AddRef();
+
+    DWORD status;
+    oleObject->GetMiscStatus(DVASPECT_CONTENT, &status);
+    bool setClientSiteFirst = 0 != (status & OLEMISC_SETCLIENTSITEFIRST);
+    bool visibleAtRuntime = 0 != (status & OLEMISC_INVISIBLEATRUNTIME);
+
+    if (setClientSiteFirst)
+        oleObject->SetClientSite(fs->oleClientSite);
+
+    IPersistStreamInit * psInit = NULL;
+    hr = p->QueryInterface(IID_IPersistStreamInit, (void**)(&psInit));
+    if (SUCCEEDED(hr) && psInit != NULL) {
+        hr = psInit->InitNew();
+        assert(SUCCEEDED(hr));
     }
 
-    if (memeq(&riid, &IID_IOleInPlaceSite, sizeof(GUID))) {
-        *ppvObject = oleInPlaceSite;
-        return S_OK;
+    hr = p->QueryInterface(IID_IOleInPlaceObject, (void**)(&oleInPlaceObject));
+    assert(SUCCEEDED(hr));
+
+    hr = oleInPlaceObject->GetWindow(&oleObjectHwnd);
+    assert(SUCCEEDED(hr));
+
+    ::SetActiveWindow(oleObjectHwnd);
+    ClientRect r(hwnd);
+    RECT posRect;
+    posRect.left = 0;
+    posRect.top = 0;
+    posRect.right = r.dx;
+    posRect.bottom = r.dy;
+
+    oleInPlaceObject->SetObjectRects(&posRect, &posRect);
+    if (visibleAtRuntime) {
+        hr = oleObject->DoVerb(OLEIVERB_INPLACEACTIVATE, NULL,
+                fs->oleClientSite, 0, hwnd, &posRect);
     }
 
-    if (memeq(&riid, &IID_IDocHostUIHandler, sizeof(GUID))) {
-        *ppvObject = docHostUIHandler;
-        return S_OK;
-    }
+    if (!setClientSiteFirst)
+        oleObject->SetClientSite(fs->oleClientSite);
 
-    if (riid == DIID_DWebBrowserEvents2) {
-      *ppvObject = browserEvents;
-      return S_OK;
-    }
+    hr = p->QueryInterface(IID_IWebBrowser2, (void**)(&webBrowser));
+    assert(SUCCEEDED(hr));
 
-    if (riid == IID_IDispatch) {
-      *ppvObject = browserEvents;
-      return S_OK;
-    }
+    IConnectionPointContainer * cpContainer;
+    hr = p->QueryInterface(IID_IConnectionPointContainer, (void**)(&cpContainer));
+    assert(SUCCEEDED(hr));
+    hr = cpContainer->FindConnectionPoint(DIID_DWebBrowserEvents2, &connectionPoint);
+    assert(SUCCEEDED(hr));
+    connectionPoint->Advise(fs->hwDWebBrowserEvents2, &adviseCookie);
+    cpContainer->Release();
+    fs->Release();
 
-    *ppvObject = 0;
-    return E_NOINTERFACE;
+    webBrowser->put_MenuBar(VARIANT_FALSE);
+    webBrowser->put_AddressBar(VARIANT_FALSE);
+    webBrowser->put_StatusBar(VARIANT_FALSE);
+    webBrowser->put_ToolBar(VARIANT_FALSE);
+
+    webBrowser->put_RegisterAsBrowser(VARIANT_TRUE);
+    webBrowser->put_RegisterAsDropTarget(VARIANT_TRUE);
 }
 
-// http://msdn.microsoft.com/en-us/library/ms692770(VS.85).aspx
-class OleInPlaceFrame : public IOleInPlaceFrame
+HtmlWindow::~HtmlWindow()
 {
-    HWND hwnd;
-public:
-    OleInPlaceFrame(HWND hwnd) : hwnd(hwnd)
-    {
+    if (oleInPlaceObject) {
+        oleInPlaceObject->InPlaceDeactivate();
+        oleInPlaceObject->UIDeactivate();
+        oleInPlaceObject->Release();
     }
+    if (connectionPoint) {
+        connectionPoint->Unadvise(adviseCookie);
+        connectionPoint->Release();
+    }
+    if (oleObject) {
+        oleObject->Close(OLECLOSE_NOSAVE);
+        oleObject->SetClientSite(NULL);
+        oleObject->Release();
+    }
+    if (viewObject) {
+        viewObject->Release();
+    }
+    if (webBrowser) {
+        webBrowser->Release();
+    }
+}
 
-    HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, LPVOID *ppvObj)
-    {
-        assert(0);
-        return E_NOINTERFACE;
-    }
+#if 0
+void IEHtmlWin::OnSize(wxSizeEvent& event)
+{
+        int w, h;
+        GetSize(&w, &h);
 
-    ULONG STDMETHODCALLTYPE AddRef() { 
-        return 1;
-    }
-
-    ULONG STDMETHODCALLTYPE Release() {
-        return 1;
-    }
-
-    HRESULT STDMETHODCALLTYPE GetWindow(HWND *lphwnd) {
-        *lphwnd = hwnd;
-        return S_OK;
-    }
-  
-    HRESULT STDMETHODCALLTYPE ContextSensitiveHelp(BOOL enterMode)
-    {
-        assert(0);
-        return S_OK;
-    }
-
-    HRESULT STDMETHODCALLTYPE GetBorder(RECT *rectBorder) 
-    {
-        assert(0);
-        return S_OK;
-    }
-
-    HRESULT STDMETHODCALLTYPE RequestBorderSpace(LPCBORDERWIDTHS pborderwidths)
-    {
-        assert(0);
-        return S_OK;
-    }
-
-    HRESULT STDMETHODCALLTYPE SetBorderSpace(LPCBORDERWIDTHS pborderwidths)
-    {
-        assert(0);
-        return S_OK;
-    }
-
-    HRESULT STDMETHODCALLTYPE SetActiveObject(IOleInPlaceActiveObject *pActiveObject, LPCOLESTR pszObjName)
-    {
-        return S_OK;
-    }
-  
-    HRESULT STDMETHODCALLTYPE InsertMenus(HMENU hmenuShared, LPOLEMENUGROUPWIDTHS lpMenuWidths)
-    {
-        assert(0);
-        return S_OK;
-    }
-  
-    HRESULT STDMETHODCALLTYPE SetMenu(HMENU hmenuShared, HOLEMENU holemenu, HWND hwndActiveObject)
-    {
-        return S_OK;
-    }
-
-    HRESULT STDMETHODCALLTYPE RemoveMenus(HMENU hmenuShared) 
-    {
-        assert(0);
-        return S_OK;
-    }
-  
-    HRESULT STDMETHODCALLTYPE SetStatusText(LPCOLESTR pszStatusText)
-    {
-        return S_OK;
-    }
-  
-    HRESULT STDMETHODCALLTYPE EnableModeless(BOOL fEnable)
-    {
-        return S_OK;
-    }
-  
-    HRESULT STDMETHODCALLTYPE TranslateAccelerator(LPMSG lpmsg, WORD wID)
-    {
-        assert(0);
-        return S_OK;
-    }
-};
-
-// http://msdn.microsoft.com/en-us/library/ms686586(VS.85).aspx
-class OleInPlaceSite : public IOleInPlaceSite {
-private:
-    IOleClientSite    *clientSite;
-    IOleInPlaceFrame  *inPlaceFrame;
-    IOleObject        *browserObject;
-    HWND               hwnd;
-
-  public:
-     OleInPlaceSite(IOleInPlaceFrame* inPlaceFrame, HWND hwnd) :
-        clientSite(NULL), inPlaceFrame(inPlaceFrame),
-        browserObject(NULL), hwnd(hwnd)
-    {
-    }
-
-    HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, LPVOID *ppvObj) {
-      return clientSite->QueryInterface(riid, ppvObj);
-    }
-
-    ULONG STDMETHODCALLTYPE AddRef() {
-        return 1;
-    }
-  
-    ULONG STDMETHODCALLTYPE Release() {
-        return 1;
-    }
-  
-    HRESULT STDMETHODCALLTYPE GetWindow(HWND *lphwnd) {
-        *lphwnd = hwnd;
-        return S_OK;
-    }
-
-    HRESULT STDMETHODCALLTYPE ContextSensitiveHelp(BOOL fEnterMode) {
-        assert(0);
-        return S_OK;
-    }
-  
-    HRESULT STDMETHODCALLTYPE CanInPlaceActivate() {
-        return S_OK;
-    }
-
-    HRESULT STDMETHODCALLTYPE OnInPlaceActivate() {
-        return S_OK;
-    }
-
-    HRESULT STDMETHODCALLTYPE OnUIActivate() {
-        return S_OK;
-    }
-  
-    HRESULT STDMETHODCALLTYPE GetWindowContext(LPOLEINPLACEFRAME *lplpFrame,
-        LPOLEINPLACEUIWINDOW *lplpDoc, LPRECT lprcPosRect, 
-        LPRECT lprcClipRect, OLEINPLACEFRAMEINFO *frameInfo)
-    {
-        *lplpFrame = inPlaceFrame;
-        *lplpDoc = NULL;
-        frameInfo->fMDIApp = FALSE;
-        frameInfo->hwndFrame = hwnd;
-        frameInfo->haccel = 0;
-        frameInfo->cAccelEntries = 0;
-        return S_OK;
-    }
-
-    HRESULT STDMETHODCALLTYPE Scroll(SIZE scrollExtent) {
-        assert(0);
-        return S_OK;
-    }
-
-    HRESULT STDMETHODCALLTYPE OnUIDeactivate(BOOL fUndoable) {
-        return S_OK;
-    }
-
-    HRESULT STDMETHODCALLTYPE OnInPlaceDeactivate() {
-        return S_OK;
-    }
-
-    HRESULT STDMETHODCALLTYPE DiscardUndoState() {
-        assert(0);
-        return S_OK;
-    }
-
-    HRESULT STDMETHODCALLTYPE DeactivateAndUndo() {
-        assert(0);
-        return S_OK;
-    }
-  
-    // Called when the position of the browser object is changed, 
-    // e.g. after IWebBrowser2::put_Width() etc.
-    HRESULT STDMETHODCALLTYPE OnPosRectChange(LPCRECT lprcPosRect)
-    {
-        IOleInPlaceObject *inPlace;
-        HRESULT res = browserObject->QueryInterface(IID_IOleInPlaceObject, (void**)&inPlace);
-        if (S_OK == res) {
-            inPlace->SetObjectRects(lprcPosRect, lprcPosRect);
+        if (m_webBrowser) {
+                m_webBrowser->put_Height(h);
+                m_webBrowser->put_Width(w);
         }
+
+        RECT posRect;
+        posRect.left = 0;
+        posRect.top = 0;
+        posRect.right = w;
+        posRect.bottom = h;
+
+        //::SetWindowPos((HWND)GetHWND(), m_oleObjectHWND, 0, 0, w, h, SWP_NOMOVE | SWP_NOACTIVATE | SWP_HIDEWINDOW);
+        if (m_oleInPlaceObject) {
+                m_oleInPlaceObject->SetObjectRects(&posRect, &posRect);
+        }
+
+}
+#endif
+
+#if 0
+void IEHtmlWin::OnMove(wxMoveEvent& event)
+{
+        int x, y;
+        GetPosition(&x, &y);
+
+        if (m_webBrowser) {
+                m_webBrowser->put_Left(0/*x*/);
+                m_webBrowser->put_Top(0/*y*/);
+        }
+}
+#endif
+
+#if 0
+bool IEHtmlWin::Show(bool shown)
+{
+        bool ret;
+        ret = wxWindow::Show(shown);
+        //ret = ::ShowWindow(m_oleObjectHWND, (shown) ? SW_SHOW : SW_HIDE);
+        if (m_webBrowser) {
+                m_webBrowser->put_Visible(shown);
+        }
+        return ret;
+}
+#endif
+
+#if 0
+void IEHtmlWin::OnSetFocus(wxFocusEvent& event)
+{
+        if (m_webBrowser) {
+                m_webBrowser->put_Visible(TRUE);
+        }
+        if (m_oleInPlaceObject) {
+                //::PostMessage(m_oleObjectHWND, WM_SETFOCUS, (WPARAM)GetHWND(), NULL);
+        }
+}
+#endif
+
+#if 0
+void IEHtmlWin::OnPaint(wxPaintEvent& event)
+{
+        wxLogTrace("repainting html win");
+        wxPaintDC dc(this);
+        dc.BeginDrawing();
+        int w, h;
+        GetSize(&w, &h);
+        RECT posRect;
+        posRect.left = 0;
+        posRect.top = 0;
+        posRect.right = w;
+        posRect.bottom = h;
+
+        // Draw only when control is windowless or deactivated
+        if (m_viewObject)
+        {
+                ::RedrawWindow(m_oleObjectHWND, NULL, NULL, RDW_INTERNALPAINT);
+                {
+                        RECTL *prcBounds = (RECTL *) &posRect;
+                        m_viewObject->Draw(DVASPECT_CONTENT, -1, NULL, NULL, NULL,
+                                (HDC)dc.GetHDC(), prcBounds, NULL, NULL, 0);
+                }
+        }
+        else
+        {
+                dc.SetBrush(*wxRED_BRUSH);
+                dc.DrawRectangle(0, 0, w, h);
+                dc.SetBrush(wxNullBrush);
+        }
+        dc.EndDrawing();
+}
+#endif
+
+#if 0
+void IEHtmlWin::OnMouse(wxMouseEvent& event)
+{
+        wxLogTrace("mouse event");
+        UINT msg = 0;
+        WPARAM wParam = 0;
+        LPARAM lParam = 0;
+        LRESULT lResult = 0;
+
+        if (event.m_metaDown) wParam |= MK_CONTROL;
+        if (event.m_shiftDown) wParam |= MK_SHIFT;
+        if (event.m_leftDown) wParam |= MK_LBUTTON;
+        if (event.m_middleDown) wParam |= MK_MBUTTON;
+        if (event.m_rightDown) wParam |= MK_RBUTTON;
+        lParam = event.m_x << 16;
+        lParam |= event.m_y;
+
+        if (event.LeftDown()) msg = WM_LBUTTONDOWN;
+        else if (event.LeftDClick()) msg = WM_LBUTTONDBLCLK;
+        else if (event.LeftUp()) msg = WM_LBUTTONUP;
+        else if (event.MiddleDown()) msg = WM_MBUTTONDOWN;
+        else if (event.MiddleDClick()) msg = WM_MBUTTONDBLCLK;
+        else if (event.MiddleUp()) msg = WM_MBUTTONUP;
+        else if (event.RightDown()) msg = WM_RBUTTONDOWN;
+        else if (event.RightDClick()) msg = WM_RBUTTONDBLCLK;
+        else if (event.RightUp()) msg = WM_RBUTTONUP;
+        else if (event.Moving() || event.Dragging()) msg = WM_MOUSEMOVE;
+
+        wxString log;
+        if (msg == 0) { wxLogTrace("no message"); event.Skip(); return; }
+        if (m_oleInPlaceObject == NULL) { wxLogTrace("no oleInPlaceObject"); event.Skip(); return; }
+        if (!::SendMessage(m_oleObjectHWND, msg, wParam, lParam)) { wxLogTrace("msg not delivered"); event.Skip(); return; }
+        wxLogTrace("msg sent");
+}
+#endif
+
+#if 0
+void IEHtmlWin::OnChar(wxKeyEvent& event)
+{
+}
+#endif
+
+#if 0
+bool HtmlWindow::OnStartURL(wxString& url)
+{
+        wxLogTrace("loading url:");
+        wxLogTrace(url.c_str());
+
+        m_currentUrl = url;
+        if (m_specificallyOpened) {
+                m_specificallyOpened = false;
+                return true;
+        }
+
+        // should we open this url?
+        // you should subclass IEHtmlWin and provide your own
+        // implementation of when to load the specificed url
+
+        return true;
+}
+#endif
+
+#if 0
+void IEHtmlWin::OnFinishURL(wxString& url)
+{
+        wxLogTrace("loaded url:");
+        wxLogTrace(url.c_str());
+
+        m_currentUrl = url;
+}
+#endif
+
+#if 0
+void IEHtmlWin::LoadPage(const wxString& url)
+{
+        Open(url);
+}
+#endif
+
+#if 0
+void IEHtmlWin::Open(const wxString& url)
+{
+        VARIANTARG navFlag, targetFrame, postData, headers;
+        navFlag.vt = VT_EMPTY;
+        //navFlag.vt = VT_I2;
+        //navFlag.iVal = navNoReadFromCache;
+        targetFrame.vt = VT_EMPTY;
+        postData.vt = VT_EMPTY;
+        headers.vt = VT_EMPTY;
+
+        m_specificallyOpened = true;
+
+        HRESULT hret;
+        hret = m_webBrowser->Navigate((BSTR)(const wchar_t*)url.wc_str(wxConvLibc),
+                &navFlag, &targetFrame, &postData, &headers);
+}
+#endif
+
+FrameSite::FrameSite(HtmlWindow * win)
+{
+    m_cRef = 0;
+
+    htmlWindow = win;
+    supportsWindowlessActivation = true;
+    inPlaceLocked = false;
+    uiActive = false;
+    inPlaceActive = false;
+    isWindowless = false;
+
+    ambientLocale = 0;
+    ambientForeColor = ::GetSysColor(COLOR_WINDOWTEXT);
+    ambientBackColor = ::GetSysColor(COLOR_WINDOW);
+    ambientUserMode = true;
+    ambientShowHatching = true;
+    ambientShowGrabHandles = true;
+    ambientAppearance = true;
+
+    //m_hDCBuffer = NULL;
+    hwndParent = htmlWindow->hwnd;
+
+    oleInPlaceFrame = new HW_IOleInPlaceFrame(this);
+    oleInPlaceSiteWindowless = new HW_IOleInPlaceSiteWindowless(this);
+    oleClientSite = new HW_IOleClientSite(this);
+    oleControlSite = new HW_IOleControlSite(this);
+    oleCommandTarget = new HW_IOleCommandTarget(this);
+    oleItemContainer = new HW_IOleItemContainer(this);
+    hwIDispatch = new HW_IDispatch(this);
+    hwDWebBrowserEvents2 = new HW_DWebBrowserEvents2(this);
+    adviseSink2 = new HW_IAdviseSink2(this);
+    adviseSinkEx = new HW_IAdviseSinkEx(this);
+}
+
+FrameSite::~FrameSite()
+{
+    delete adviseSinkEx;
+    delete adviseSink2;
+    delete hwDWebBrowserEvents2;
+    delete hwIDispatch;
+    delete oleItemContainer;
+    delete oleCommandTarget;
+    delete oleControlSite;
+    delete oleClientSite;
+    delete oleInPlaceSiteWindowless;
+    delete oleInPlaceFrame;
+}
+
+//IUnknown
+STDMETHODIMP FrameSite::QueryInterface(REFIID riid, void **ppv)
+{
+    if (ppv == NULL)
+        return E_INVALIDARG;
+
+    *ppv = NULL;
+    if (riid == IID_IUnknown)
+        *ppv = this;
+    else if (riid == IID_IOleWindow ||
+        riid == IID_IOleInPlaceUIWindow ||
+        riid == IID_IOleInPlaceFrame)
+        *ppv = oleInPlaceFrame;
+    else if (riid == IID_IOleInPlaceSite ||
+        riid == IID_IOleInPlaceSiteEx ||
+        riid == IID_IOleInPlaceSiteWindowless)
+        *ppv = oleInPlaceSiteWindowless;
+    else if (riid == IID_IOleClientSite)
+        *ppv = oleClientSite;
+    else if (riid == IID_IOleControlSite)
+        *ppv = oleControlSite;
+    else if (riid == IID_IOleCommandTarget)
+        *ppv = oleCommandTarget;
+    else if (riid == IID_IOleItemContainer ||
+        riid == IID_IOleContainer ||
+        riid == IID_IParseDisplayName)
+        *ppv = oleItemContainer;
+    else if (riid == IID_IDispatch)
+        *ppv = hwIDispatch;
+    else if (riid == DIID_DWebBrowserEvents2)
+        *ppv = hwDWebBrowserEvents2;
+    else if (riid == IID_IAdviseSink ||
+        riid == IID_IAdviseSink2)
+        *ppv = adviseSink2;
+    else if (riid == IID_IAdviseSinkEx)
+        *ppv = adviseSinkEx;
+
+    if (*ppv == NULL)
+        return E_NOINTERFACE;
+    AddRef();
+    return S_OK;
+}
+
+STDMETHODIMP_(ULONG) FrameSite::AddRef()
+{
+    return ++m_cRef;
+}
+
+STDMETHODIMP_(ULONG) FrameSite::Release()
+{
+    assert(m_cRef > 0);
+    if (--m_cRef == 0) {
+        delete this;
+        return 0;
+    }
+    else
+        return m_cRef;
+}
+
+//IDispatch
+HRESULT HW_IDispatch::GetIDsOfNames(REFIID riid, OLECHAR ** rgszNames,
+    unsigned int cNames, LCID lcid, DISPID * rgDispId)
+{
+    return E_NOTIMPL;
+}
+
+HRESULT HW_IDispatch::GetTypeInfo(unsigned int iTInfo, LCID lcid, ITypeInfo ** ppTInfo)
+{
+    return E_NOTIMPL;
+}
+
+HRESULT HW_IDispatch::GetTypeInfoCount(unsigned int * pcTInfo)
+{
+    return E_NOTIMPL;
+}
+
+HRESULT HW_IDispatch::DispatchPropGet(DISPID dispIdMember, VARIANT *res)
+{
+    if (res == NULL)
+        return E_INVALIDARG;
+    switch (dispIdMember)
+    {
+        case DISPID_AMBIENT_APPEARANCE:
+            res->vt = VT_BOOL;
+            res->boolVal = fs->ambientAppearance;
+            break;
+
+        case DISPID_AMBIENT_FORECOLOR:
+            res->vt = VT_I4;
+            res->lVal = (long)fs->ambientForeColor;
+            break;
+
+        case DISPID_AMBIENT_BACKCOLOR:
+            res->vt = VT_I4;
+            res->lVal = (long)fs->ambientBackColor;
+            break;
+
+        case DISPID_AMBIENT_LOCALEID:
+            res->vt = VT_I4;
+            res->lVal = (long)fs->ambientLocale;
+            break;
+
+        case DISPID_AMBIENT_USERMODE:
+            res->vt = VT_BOOL;
+            res->boolVal = fs->ambientUserMode;
+            break;
+
+        case DISPID_AMBIENT_SHOWGRABHANDLES:
+            res->vt = VT_BOOL;
+            res->boolVal = fs->ambientShowGrabHandles;
+            break;
+
+        case DISPID_AMBIENT_SHOWHATCHING:
+            res->vt = VT_BOOL;
+            res->boolVal = fs->ambientShowHatching;
+            break;
+
+        default:
+            return DISP_E_MEMBERNOTFOUND;
+    }
+    return S_OK;
+}
+
+HRESULT HW_IDispatch::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid,
+    WORD flags, DISPPARAMS * pDispParams, VARIANT * pVarResult,
+    EXCEPINFO * pExcepInfo, unsigned int * puArgErr)
+{
+    if (flags & DISPATCH_PROPERTYGET)
+        return DispatchPropGet(dispIdMember, pVarResult);
+
+    switch (dispIdMember)
+    {
+        case DISPID_BEFORENAVIGATE2:
+        {
+#if 0
+            VARIANT * vurl = pDispParams->rgvarg[5].pvarVal;
+            if (vurl->vt & VT_BYREF) url = *vurl->pbstrVal;
+            else url = vurl->bstrVal;
+            if (fs->htmlWindow->OnStartURL(url)) {
+                *pDispParams->rgvarg->pboolVal = VARIANT_FALSE;
+            } else {
+                *pDispParams->rgvarg->pboolVal = VARIANT_TRUE;
+            }
+#endif
+            break;
+        }
+
+#if 0
+        case DISPID_PROGRESSCHANGE:
+        {
+            long current = pDispParams->rgvarg[1].lVal;
+            long maximum = pDispParams->rgvarg[0].lVal;
+            fs->htmlWindow->OnProgressURL(current, maximum);
+            break;
+        }
+#endif
+
+#if 0
+        case DISPID_DOCUMENTCOMPLETE:
+        {
+            VARIANT * vurl = pDispParams->rgvarg[0].pvarVal;
+            if (vurl->vt & VT_BYREF) url = *vurl->pbstrVal;
+            else url = vurl->bstrVal;
+            fs->htmlWwindow->OnFinishURL(url);
+            break;
+        }
+#endif
+        default:
+            return S_OK;
+    }
+    return S_OK;
+}
+
+//IOleWindow
+HRESULT HW_IOleInPlaceFrame::GetWindow(HWND *phwnd)
+{
+    if (phwnd == NULL)
+        return E_INVALIDARG;
+    *phwnd = fs->hwndParent;
+    return S_OK;
+}
+
+HRESULT HW_IOleInPlaceFrame::ContextSensitiveHelp(BOOL fEnterMode)
+{
+    return S_OK;
+}
+
+//IOleInPlaceUIWindow
+HRESULT HW_IOleInPlaceFrame::GetBorder(LPRECT lprectBorder)
+{
+    if (lprectBorder == NULL)
+        return E_INVALIDARG;
+    return INPLACE_E_NOTOOLSPACE;
+}
+
+HRESULT HW_IOleInPlaceFrame::RequestBorderSpace(LPCBORDERWIDTHS pborderwidths)
+{
+    if (pborderwidths == NULL)
+        return E_INVALIDARG;
+    return INPLACE_E_NOTOOLSPACE;
+}
+
+HRESULT HW_IOleInPlaceFrame::SetBorderSpace(LPCBORDERWIDTHS pborderwidths)
+{
+    return S_OK;
+}
+
+HRESULT HW_IOleInPlaceFrame::SetActiveObject(IOleInPlaceActiveObject *pActiveObject, LPCOLESTR pszObjName)
+{
+    return S_OK;
+}
+
+//IOleInPlaceFrame
+HRESULT HW_IOleInPlaceFrame::InsertMenus(HMENU hmenuShared, LPOLEMENUGROUPWIDTHS lpMenuWidths)
+{
+    return S_OK;
+}
+
+HRESULT HW_IOleInPlaceFrame::SetMenu(HMENU hmenuShared, HOLEMENU holemenu, HWND hwndActiveObject)
+{
+    return S_OK;
+}
+
+HRESULT HW_IOleInPlaceFrame::RemoveMenus(HMENU hmenuShared)
+{
+    return S_OK;
+}
+
+HRESULT HW_IOleInPlaceFrame::SetStatusText(LPCOLESTR pszStatusText)
+{
+    return S_OK;
+}
+
+HRESULT HW_IOleInPlaceFrame::EnableModeless(BOOL fEnable)
+{
+    return S_OK;
+}
+
+HRESULT HW_IOleInPlaceFrame::TranslateAccelerator(LPMSG lpmsg, WORD wID)
+{
+    return E_NOTIMPL;
+}
+
+//IOleInPlaceSite
+HRESULT HW_IOleInPlaceSiteWindowless::CanInPlaceActivate()
+{
+    return S_OK;
+}
+
+HRESULT HW_IOleInPlaceSiteWindowless::OnInPlaceActivate()
+{
+    fs->inPlaceActive = true;
+    return S_OK;
+}
+
+HRESULT HW_IOleInPlaceSiteWindowless::OnUIActivate()
+{
+    fs->uiActive = true;
+    return S_OK;
+}
+
+HRESULT HW_IOleInPlaceSiteWindowless::GetWindowContext(
+    IOleInPlaceFrame **ppFrame, IOleInPlaceUIWindow **ppDoc,
+    LPRECT lprcPosRect, LPRECT lprcClipRect,
+    LPOLEINPLACEFRAMEINFO lpFrameInfo)
+{
+    if (ppFrame == NULL || ppDoc == NULL || lprcPosRect == NULL ||
+            lprcClipRect == NULL || lpFrameInfo == NULL)
+    {
+        if (ppFrame != NULL)
+            *ppFrame = NULL;
+        if (ppDoc != NULL)
+            *ppDoc = NULL;
+        return E_INVALIDARG;
+    }
+
+    *ppDoc = *ppFrame = fs->oleInPlaceFrame;
+    (*ppDoc)->AddRef();
+    (*ppFrame)->AddRef();
+
+#if 0
+    int w, h;
+    fs->htmlWindow->GetSize(&w, &h);
+    lprcPosRect->left = lprcPosRect->top = 0;
+    lprcPosRect->right = w;
+    lprcPosRect->bottom = h;
+    lprcClipRect->left = lprcClipRect->top = 0;
+    lprcClipRect->right = w;
+    lprcClipRect->bottom = h;
+#endif
+
+    lpFrameInfo->fMDIApp = FALSE;
+    lpFrameInfo->hwndFrame = fs->hwndParent;
+    lpFrameInfo->haccel = NULL;
+    lpFrameInfo->cAccelEntries = 0;
+
+    return S_OK;
+}
+
+HRESULT HW_IOleInPlaceSiteWindowless::Scroll(SIZE scrollExtent)
+{
+    return S_OK;
+}
+
+HRESULT HW_IOleInPlaceSiteWindowless::OnUIDeactivate(BOOL fUndoable)
+{
+    fs->uiActive = false;
+    return S_OK;
+}
+
+HRESULT HW_IOleInPlaceSiteWindowless::OnInPlaceDeactivate()
+{
+    fs->inPlaceActive = false;
+    return S_OK;
+}
+
+HRESULT HW_IOleInPlaceSiteWindowless::DiscardUndoState()
+{
+    return S_OK;
+}
+
+HRESULT HW_IOleInPlaceSiteWindowless::DeactivateAndUndo()
+{
+    return S_OK;
+}
+
+HRESULT HW_IOleInPlaceSiteWindowless::OnPosRectChange(LPCRECT lprcPosRect)
+{
+    return S_OK;
+}
+
+//IOleInPlaceSiteEx
+HRESULT HW_IOleInPlaceSiteWindowless::OnInPlaceActivateEx(BOOL * pfNoRedraw, DWORD dwFlags)
+{
+    if (pfNoRedraw)
+        *pfNoRedraw = FALSE;
+    return S_OK;
+}
+
+HRESULT HW_IOleInPlaceSiteWindowless::OnInPlaceDeactivateEx(BOOL fNoRedraw)
+{
+    return S_OK;
+}
+
+HRESULT HW_IOleInPlaceSiteWindowless::RequestUIActivate()
+{
+    return S_FALSE;
+}
+
+//IOleInPlaceSiteWindowless
+HRESULT HW_IOleInPlaceSiteWindowless::CanWindowlessActivate()
+{
+    return fs->supportsWindowlessActivation ? S_OK : S_FALSE;
+}
+
+HRESULT HW_IOleInPlaceSiteWindowless::GetCapture()
+{
+    return S_FALSE;
+}
+
+HRESULT HW_IOleInPlaceSiteWindowless::SetCapture(BOOL fCapture)
+{
+    return S_FALSE;
+}
+
+HRESULT HW_IOleInPlaceSiteWindowless::GetFocus()
+{
+    return S_OK;
+}
+
+HRESULT HW_IOleInPlaceSiteWindowless::SetFocus(BOOL fFocus)
+{
+    return S_OK;
+}
+
+HRESULT HW_IOleInPlaceSiteWindowless::GetDC(LPCRECT pRect, DWORD grfFlags, HDC* phDC)
+{
+    if (phDC == NULL)
+        return E_INVALIDARG;
+
+#if 0
+    if (grfFlags & OLEDC_NODRAW)
+    {
+        *phDC = mfs->hDCBuffer;
         return S_OK;
     }
 
-    void BrowserObject(IOleObject* o) {
-        browserObject = o;
-    }
+    if (fs->hDCBuffer != NULL)
+        return E_UNEXPECTED;
+#endif
+    return E_NOTIMPL;
+}
 
-    void ClientSite(IOleClientSite* client) {
-        clientSite = client;
-    }
-};
+HRESULT HW_IOleInPlaceSiteWindowless::ReleaseDC(HDC hDC)
+{
+    return E_NOTIMPL;
+}
 
-// TODO: implement IDocHostUIHandler
+HRESULT HW_IOleInPlaceSiteWindowless::InvalidateRect(LPCRECT pRect, BOOL fErase)
+{
+#if 0
+    // Clip the rectangle against the object's size and invalidate it
+    RECT rcI = { 0, 0, 0, 0 };
+    RECT posRect;
+    int w, h;
+    fs->htmlWindow->GetSize(&w, &h);
+    posRect.left = 0;
+    posRect.top = 0;
+    posRect.right = w;
+    posRect.bottom = h;
+    if (pRect == NULL)
+        rcI = posRect;
+    else
+        IntersectRect(&rcI, &posRect, pRect);
+    ::InvalidateRect(fs->hwndParent, &rcI, fErase);
+#else
+    ::InvalidateRect(fs->hwndParent, NULL, fErase);
+#endif
+    return S_OK;
+}
 
+HRESULT HW_IOleInPlaceSiteWindowless::InvalidateRgn(HRGN, BOOL)
+{
+    return E_NOTIMPL;
+}
 
+HRESULT HW_IOleInPlaceSiteWindowless::ScrollRect(INT, INT, LPCRECT, LPCRECT)
+{
+    return E_NOTIMPL;
+}
+
+HRESULT HW_IOleInPlaceSiteWindowless::AdjustRect(LPRECT)
+{
+    return E_NOTIMPL;
+}
+
+HRESULT HW_IOleInPlaceSiteWindowless::OnDefWindowMessage(UINT, WPARAM, LPARAM, LRESULT*)
+{
+    return E_NOTIMPL;
+}
+
+//IOleClientSite
+HRESULT HW_IOleClientSite::SaveObject()
+{
+    return S_OK;
+}
+
+HRESULT HW_IOleClientSite::GetMoniker(DWORD dwAssign, DWORD dwWhichMoniker,
+                                      IMoniker ** ppmk)
+{
+    return E_NOTIMPL;
+}
+
+HRESULT HW_IOleClientSite::GetContainer(LPOLECONTAINER * ppContainer)
+{
+    if (ppContainer == NULL)
+        return E_INVALIDARG;
+    this->QueryInterface(IID_IOleContainer, (void**)ppContainer);
+    return S_OK;
+}
+
+HRESULT HW_IOleClientSite::ShowObject()
+{
+    return S_OK;
+}
+
+HRESULT HW_IOleClientSite::OnShowWindow(BOOL fShow)
+{
+    return S_OK;
+}
+
+HRESULT HW_IOleClientSite::RequestNewObjectLayout()
+{
+    return E_NOTIMPL;
+}
+
+//IParseDisplayName
+HRESULT HW_IOleItemContainer::ParseDisplayName(IBindCtx *pbc,
+    LPOLESTR pszDisplayName, ULONG *pchEaten, IMoniker **ppmkOut)
+{
+    return E_NOTIMPL;
+}
+
+//IOleContainer
+HRESULT HW_IOleItemContainer::EnumObjects(DWORD grfFlags, IEnumUnknown **ppenum)
+{
+    return E_NOTIMPL;
+}
+
+HRESULT HW_IOleItemContainer::LockContainer(BOOL fLock)
+{
+    return S_OK;
+}
+
+//IOleItemContainer
+HRESULT HW_IOleItemContainer::GetObject(LPOLESTR pszItem,
+    DWORD dwSpeedNeeded, IBindCtx * pbc, REFIID riid, void ** ppvObject)
+{
+    if (pszItem == NULL)
+        return E_INVALIDARG;
+    if (ppvObject == NULL)
+        return E_INVALIDARG;
+    *ppvObject = NULL;
+    return MK_E_NOOBJECT;
+}
+
+HRESULT HW_IOleItemContainer::GetObjectStorage(LPOLESTR pszItem,
+    IBindCtx * pbc, REFIID riid, void ** ppvStorage)
+{
+    if (pszItem == NULL)
+        return E_INVALIDARG;
+    if (ppvStorage == NULL)
+        return E_INVALIDARG;
+    *ppvStorage = NULL;
+    return MK_E_NOOBJECT;
+}
+
+HRESULT HW_IOleItemContainer::IsRunning(LPOLESTR pszItem)
+{
+    if (pszItem == NULL)
+        return E_INVALIDARG;
+    return MK_E_NOOBJECT;
+}
+
+//IOleControlSite
+HRESULT HW_IOleControlSite::OnControlInfoChanged()
+{
+    return S_OK;
+}
+
+HRESULT HW_IOleControlSite::LockInPlaceActive(BOOL fLock)
+{
+    fs->inPlaceLocked = (fLock == TRUE);
+    return S_OK;
+}
+
+HRESULT HW_IOleControlSite::GetExtendedControl(IDispatch ** ppDisp)
+{
+    return E_NOTIMPL;
+}
+
+HRESULT HW_IOleControlSite::TransformCoords(POINTL *pPtlHimetric,
+    POINTF *pPtfContainer, DWORD dwFlags)
+{
+    HRESULT hr = S_OK;
+    if (pPtlHimetric == NULL)
+            return E_INVALIDARG;
+    if (pPtfContainer == NULL)
+            return E_INVALIDARG;
+#if 0
+    HDC hdc = ::GetDC(fs->hwndParent);
+    ::SetMapMode(hdc, MM_HIMETRIC);
+    POINT rgptConvert[2];
+    rgptConvert[0].x = 0;
+    rgptConvert[0].y = 0;
+
+    if (dwFlags & XFORMCOORDS_HIMETRICTOCONTAINER)
+    {
+        rgptConvert[1].x = pPtlHimetric->x;
+        rgptConvert[1].y = pPtlHimetric->y;
+        ::LPtoDP(hdc, rgptConvert, 2);
+        if (dwFlags & XFORMCOORDS_SIZE)
+        {
+            pPtfContainer->x = (float)(rgptConvert[1].x - rgptConvert[0].x);
+            pPtfContainer->y = (float)(rgptConvert[0].y - rgptConvert[1].y);
+        }
+        else if (dwFlags & XFORMCOORDS_POSITION)
+        {
+            pPtfContainer->x = (float)rgptConvert[1].x;
+            pPtfContainer->y = (float)rgptConvert[1].y;
+        }
+        else
+            hr = E_INVALIDARG;
+    } else if (dwFlags & XFORMCOORDS_CONTAINERTOHIMETRIC)
+    {
+        rgptConvert[1].x = (int)(pPtfContainer->x);
+        rgptConvert[1].y = (int)(pPtfContainer->y);
+        ::DPtoLP(hdc, rgptConvert, 2);
+        if (dwFlags & XFORMCOORDS_SIZE)
+        {
+            pPtlHimetric->x = rgptConvert[1].x - rgptConvert[0].x;
+            pPtlHimetric->y = rgptConvert[0].y - rgptConvert[1].y;
+        }
+        else if (dwFlags & XFORMCOORDS_POSITION)
+        {
+            pPtlHimetric->x = rgptConvert[1].x;
+            pPtlHimetric->y = rgptConvert[1].y;
+        }
+        else
+            hr = E_INVALIDARG;
+    } else
+        hr = E_INVALIDARG;
+
+    ::ReleaseDC(fs->hwndParent, hdc);
+#endif
+    return hr;
+}
+
+HRESULT HW_IOleControlSite::TranslateAccelerator(LPMSG pMsg, DWORD grfModifiers)
+{
+    return E_NOTIMPL;
+}
+
+HRESULT HW_IOleControlSite::OnFocus(BOOL fGotFocus)
+{
+    return S_OK;
+}
+
+HRESULT HW_IOleControlSite::ShowPropertyFrame()
+{
+    return E_NOTIMPL;
+}
+
+//IOleCommandTarget
+HRESULT HW_IOleCommandTarget::QueryStatus(const GUID *pguidCmdGroup, 
+    ULONG cCmds, OLECMD *prgCmds, OLECMDTEXT *pCmdTet)
+{
+    if (prgCmds == NULL)
+        return E_INVALIDARG;
+    return OLECMDERR_E_UNKNOWNGROUP;
+}
+
+HRESULT HW_IOleCommandTarget::Exec(const GUID *pguidCmdGroup, DWORD nCmdID,
+    DWORD nCmdExecOpt, VARIANTARG *pVaIn, VARIANTARG *pVaOut)
+{
+    return OLECMDERR_E_NOTSUPPORTED;
+}
+
+//IAdviseSink
+void STDMETHODCALLTYPE HW_IAdviseSink2::OnDataChange(FORMATETC * pFormatEtc, STGMEDIUM * pgStgMed)
+{
+}
+
+void STDMETHODCALLTYPE HW_IAdviseSink2::OnViewChange(DWORD dwAspect, LONG lIndex)
+{
+    // redraw the control
+    fs->oleInPlaceSiteWindowless->InvalidateRect(NULL, FALSE);
+}
+
+void STDMETHODCALLTYPE HW_IAdviseSink2::OnRename(IMoniker * pmk)
+{
+}
+
+void STDMETHODCALLTYPE HW_IAdviseSink2::OnSave()
+{
+}
+
+void STDMETHODCALLTYPE HW_IAdviseSink2::OnClose()
+{
+}
+
+//IAdviseSink2
+void STDMETHODCALLTYPE HW_IAdviseSink2::OnLinkSrcChange(IMoniker * pmk)
+{
+}
+
+//IAdviseSinkEx
+void STDMETHODCALLTYPE HW_IAdviseSinkEx::OnViewStatusChange(DWORD dwViewStatus)
+{
+}
