@@ -267,24 +267,9 @@ public:
 
 /* constant to make it easier to return proper LRESULT values when handling
    various windows messages */
-#define WM_KILLFOCUS_HANDLED 0
-#define WM_SETFOCUS_HANDLED 0
-#define WM_KEYDOWN_HANDLED 0
-#define WM_KEYUP_HANDLED 0
-#define WM_LBUTTONDOWN_HANDLED 0
-#define WM_LBUTTONUP_HANDLED 0
 #define WM_PAINT_HANDLED 0
-#define WM_DRAWITEM_HANDLED TRUE
-#define WM_MEASUREITEM_HANDLED TRUE
-#define WM_SIZE_HANDLED 0
-#define LVN_ITEMACTIVATE_HANDLED 0
-#define WM_VKEYTOITEM_HANDLED_FULLY -2
-#define WM_VKEYTOITEM_NOT_HANDLED -1
-#define WM_NCPAINT_HANDLED 0
 #define WM_VSCROLL_HANDLED 0
 #define WM_HSCROLL_HANDLED 0
-#define WM_CREATE_FAILED -1
-#define WM_CREATE_OK 0
 
 #define WIN_COL_RED     RGB(255,0,0)
 #define WIN_COL_WHITE   RGB(255,255,255)
