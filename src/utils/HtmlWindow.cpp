@@ -18,6 +18,7 @@
 // http://codesearch.google.com/#cbxlbgWFJ4U/wxCode/components/iehtmlwin/src/IEHtmlWin.h
 // http://codesearch.google.com/#cbxlbgWFJ4U/wxCode/components/iehtmlwin/src/IEHtmlWin.cpp
 
+// Another code to get inspired: http://code.google.com/p/fidolook/source/browse/trunk/Qm/ui/messageviewwindow.cpp
 // To show a page within chm file use url in the form:
 // "its:MyChmFile.chm::mywebpage.htm"
 
