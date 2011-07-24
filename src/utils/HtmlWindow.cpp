@@ -7,8 +7,9 @@
 #include <mshtmhst.h>
 #include <oaidl.h>
 #include <exdispid.h>
-
 #include "GeomUtil.h"
+
+// TODO: use CComPtr from <atlbase.h>
 
 // Info about implementing web browser control
 // http://www.codeproject.com/KB/COM/cwebpage.aspx
@@ -639,6 +640,19 @@ void HtmlWindow::NavigateToUrl(const TCHAR *urlStr)
         return;
     webBrowser->Navigate2(&url, 0, 0, 0, 0);
     VariantClear(&url);
+}
+
+void HtmlWindow::GoBack()
+{
+    aboutBlankShown = false; // TODO: is this necessary?
+    if (webBrowser)
+        webBrowser->GoBack();
+}
+
+void HtmlWindow::GoForward()
+{
+    if (webBrowser)
+        webBrowser->GoForward();
 }
 
 void HtmlWindow::EnsureAboutBlankShown()

@@ -37,5 +37,7 @@ public:
     void OnSize(int dx, int dy);
     void SetVisible(bool visible);
     void DisplayHtml(const TCHAR *html);
+    void GoBack();
+    void GoForward();
 };
 #endif
