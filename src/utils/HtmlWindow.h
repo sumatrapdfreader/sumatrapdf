@@ -26,7 +26,6 @@ protected:
 
     bool                aboutBlankShown;
 
-    void NavigateToUrl(const TCHAR *url);
     void EnsureAboutBlankShown();
     void CreateBrowser();
 
@@ -36,7 +35,9 @@ public:
 
     void OnSize(int dx, int dy);
     void SetVisible(bool visible);
+    void NavigateToUrl(const TCHAR *url);
     void DisplayHtml(const TCHAR *html);
+    void DisplayChmPage(const TCHAR *chmFilePath, const TCHAR *chmPage);
     void GoBack();
     void GoForward();
 };

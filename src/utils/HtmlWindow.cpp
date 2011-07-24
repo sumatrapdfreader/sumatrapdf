@@ -7,6 +7,8 @@
 #include <mshtmhst.h>
 #include <oaidl.h>
 #include <exdispid.h>
+
+#include "StrUtil.h"
 #include "GeomUtil.h"
 
 // TODO: use CComPtr from <atlbase.h>
@@ -721,6 +723,13 @@ Exit:
         docDispatch->Release();
 }
 
+// the format for chm page is: "its:MyChmFile.chm::mywebpage.htm"
+void HtmlWindow::DisplayChmPage(const TCHAR *chmFilePath, const TCHAR *chmPage)
+{
+    ScopedMem<TCHAR> url(str::Format(_T("its::%s::%s"), chmFilePath, chmPage));
+    NavigateToUrl(url);
+}
+
 FrameSite::FrameSite(HtmlWindow * win)
 {
     m_cRef = 0;
@@ -904,15 +913,20 @@ HRESULT HW_IDispatch::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid,
         case DISPID_BEFORENAVIGATE2:
         {
 #if 0
+            BSTR url;
             VARIANT * vurl = pDispParams->rgvarg[5].pvarVal;
-            if (vurl->vt & VT_BYREF) url = *vurl->pbstrVal;
-            else url = vurl->bstrVal;
+            if (vurl->vt & VT_BYREF)
+                url = *vurl->pbstrVal;
+            else
+                url = vurl->bstrVal;
             if (fs->htmlWindow->OnStartURL(url)) {
                 *pDispParams->rgvarg->pboolVal = VARIANT_FALSE;
             } else {
                 *pDispParams->rgvarg->pboolVal = VARIANT_TRUE;
             }
 #endif
+            // don't cancel
+            *pDispParams->rgvarg->pboolVal = VARIANT_FALSE;
             break;
         }
 
