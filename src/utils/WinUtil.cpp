@@ -262,67 +262,58 @@ int FileTimeDiffInSecs(FILETIME& ft1, FILETIME& ft2)
 
 TCHAR *ResolveLnk(const TCHAR * path)
 {
-    IShellLink *lnk = NULL;
-    IPersistFile *file = NULL;
-    TCHAR *resolvedPath = NULL;
-
     ScopedMem<OLECHAR> olePath(str::conv::ToWStr(path));
     if (!olePath)
         return NULL;
 
+    ScopedComPtr<IShellLink> lnk;
     HRESULT hRes = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER,
                                     IID_IShellLink, (LPVOID *)&lnk);
     if (FAILED(hRes))
-        goto Exit;
+        return NULL;
 
+    ScopedComPtr<IPersistFile> file;
     hRes = lnk->QueryInterface(IID_IPersistFile, (LPVOID *)&file);
     if (FAILED(hRes))
-        goto Exit;
+        return NULL;
 
     hRes = file->Load(olePath, STGM_READ);
     if (FAILED(hRes))
-        goto Exit;
+        return NULL;
 
     hRes = lnk->Resolve(NULL, SLR_UPDATE);
     if (FAILED(hRes))
-        goto Exit;
+        return NULL;
 
     TCHAR newPath[MAX_PATH];
     hRes = lnk->GetPath(newPath, MAX_PATH, NULL, 0);
     if (FAILED(hRes))
-        goto Exit;
+        return NULL;
 
-    resolvedPath = str::Dup(newPath);
-
-Exit:
-    if (file)
-        file->Release();
-    if (lnk)
-        lnk->Release();
-
-    return resolvedPath;
+    return str::Dup(newPath);
 }
 
 bool CreateShortcut(const TCHAR *shortcutPath, const TCHAR *exePath,
                     const TCHAR *args, const TCHAR *description, int iconIndex)
 {
-    IShellLink *lnk = NULL;
-    IPersistFile *file = NULL;
     bool ok = false;
 
     ScopedCom com;
+    ScopedComPtr<IShellLink> lnk;
+    ScopedComPtr<IPersistFile> file;
+
     HRESULT hr = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER,
                                   IID_IShellLink, (LPVOID *)&lnk);
     if (FAILED(hr)) 
-        goto Exit;
+        goto Error;
 
     hr = lnk->QueryInterface(IID_IPersistFile, (LPVOID *)&file);
     if (FAILED(hr))
-        goto Exit;
+        goto Error;
 
     hr = lnk->SetPath(exePath);
     if (FAILED(hr))
-        goto Exit;
+        goto Error;
 
     lnk->SetWorkingDirectory(ScopedMem<TCHAR>(path::GetDir(exePath)));
     // lnk->SetShowCmd(SW_SHOWNORMAL);
@@ -338,44 +329,37 @@ bool CreateShortcut(const TCHAR *shortcutPath, const TCHAR *exePath,
 #else
     hr = file->Save(shortcutPath, TRUE);
 #endif
-    ok = SUCCEEDED(hr);
-
-Exit:
-    if (file)
-        file->Release();
-    if (lnk)
-        lnk->Release();
     if (FAILED(hr))
-        SeeLastError();
+        goto Error;
 
-    return ok;
+    return true;
+
+Error:
+    SeeLastError();
+    return false;
 }
 
 /* adapted from http://blogs.msdn.com/oldnewthing/archive/2004/09/20/231739.aspx */
 IDataObject* GetDataObjectForFile(LPCTSTR filePath, HWND hwnd)
 {
-    IDataObject* pDataObject = NULL;
-    IShellFolder *pDesktopFolder;
+    ScopedComPtr<IShellFolder> pDesktopFolder;
     HRESULT hr = SHGetDesktopFolder(&pDesktopFolder);
     if (FAILED(hr))
         return NULL;
 
-    LPWSTR lpWPath = str::conv::ToWStr(filePath);
+    IDataObject* pDataObject = NULL;
+    ScopedMem<WCHAR> lpWPath(str::conv::ToWStr(filePath));
     LPITEMIDLIST pidl;
     hr = pDesktopFolder->ParseDisplayName(NULL, NULL, lpWPath, NULL, &pidl, NULL);
     if (SUCCEEDED(hr)) {
-        IShellFolder *pShellFolder;
+        ScopedComPtr<IShellFolder> pShellFolder;
         LPCITEMIDLIST pidlChild;
         hr = SHBindToParent(pidl, IID_IShellFolder, (void**)&pShellFolder, &pidlChild);
-        if (SUCCEEDED(hr)) {
+        if (SUCCEEDED(hr))
             pShellFolder->GetUIObjectOf(hwnd, 1, &pidlChild, IID_IDataObject, NULL, (void **)&pDataObject);
-            pShellFolder->Release();
-        }
         CoTaskMemFree(pidl);
     }
-    pDesktopFolder->Release();
 
-    free(lpWPath);
     return pDataObject;
 }
 

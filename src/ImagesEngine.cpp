@@ -30,13 +30,11 @@ using namespace Gdiplus;
 // cf. http://stackoverflow.com/questions/4598872/creating-hbitmap-from-memory-buffer/4616394#4616394
 Bitmap *BitmapFromData(void *data, size_t len)
 {
-    IStream *stream = CreateStreamFromData(data, len);
+    ScopedComPtr<IStream> stream(CreateStreamFromData(data, len));
     if (!stream)
         return NULL;
 
     Bitmap *bmp = Bitmap::FromStream(stream);
-    stream->Release();
-
     if (bmp && bmp->GetLastStatus() != Ok) {
         delete bmp;
         bmp = NULL;

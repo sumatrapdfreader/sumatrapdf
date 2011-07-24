@@ -30,6 +30,21 @@ public:
     ~ScopedOle() { OleUninitialize(); }
 };
 
+template <typename T>
+class ScopedComPtr {
+    T *ptr;
+public:
+    ScopedComPtr() : ptr(NULL) { }
+    explicit ScopedComPtr(T *ptr) : ptr(ptr) { }
+    ~ScopedComPtr() {
+        if (ptr)
+            ptr->Release();
+    }
+    operator T*() const { return ptr; }
+    T** operator&() { return &ptr; }
+    T* operator->() const { return ptr; }
+};
+
 class ScopedHandle {
     HANDLE handle;
 public:

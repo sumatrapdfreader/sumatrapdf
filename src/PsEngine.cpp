@@ -136,14 +136,11 @@ static PdfEngine *ps2pdf(const TCHAR *fileName)
     if (!pdfData)
         return NULL;
 
-    IStream *stream = CreateStreamFromData(pdfData, len);
+    ScopedComPtr<IStream> stream(CreateStreamFromData(pdfData, len));
     if (!stream)
         return NULL;
 
-    PdfEngine *engine = PdfEngine::CreateFromStream(stream);
-    stream->Release();
-
-    return engine;
+    return PdfEngine::CreateFromStream(stream);
 }
 
 inline bool isgzipped(const TCHAR *fileName)

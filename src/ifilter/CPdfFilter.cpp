@@ -32,13 +32,12 @@ HRESULT CPdfFilter::OnInit()
     if (FAILED(res))
         return res;
 
-    IStream *stream = CreateStreamFromData(data, len);
+    ScopedComPtr<IStream> stream(CreateStreamFromData(data, len));
     free(data);
     if (!stream)
         return E_FAIL;
 
     m_pdfEngine = PdfEngine::CreateFromStream(stream);
-    stream->Release();
     if (!m_pdfEngine)
         return E_FAIL;
 

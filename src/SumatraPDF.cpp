@@ -265,11 +265,10 @@ static bool CanSendAsEmailAttachment(WindowInfo *win=NULL)
     if (!CanViewExternally(win))
         return false;
 
-    IDropTarget *pDropTarget = NULL;
-    if (FAILED(CoCreateInstance(CLSID_SendMail, NULL, CLSCTX_ALL, IID_IDropTarget, (void **)&pDropTarget)))
-        return false;
-    pDropTarget->Release();
-    return true;
+    ScopedComPtr<IDropTarget> pDropTarget;
+    HRESULT hr = CoCreateInstance(CLSID_SendMail, NULL, CLSCTX_ALL,
+                                  IID_IDropTarget, (void **)&pDropTarget);
+    return SUCCEEDED(hr);
 }
 
 static bool SendAsEmailAttachment(WindowInfo *win)
@@ -280,21 +279,20 @@ static bool SendAsEmailAttachment(WindowInfo *win)
     // We use the SendTo drop target provided by SendMail.dll, which should ship with all
     // commonly used Windows versions, instead of MAPISendMail, which doesn't support
     // Unicode paths and might not be set up on systems not having Microsoft Outlook installed.
-    IDataObject *pDataObject = GetDataObjectForFile(win->dm->FileName(), win->hwndFrame);
+    ScopedComPtr<IDataObject> pDataObject(GetDataObjectForFile(win->dm->FileName(), win->hwndFrame));
     if (!pDataObject)
         return false;
 
-    IDropTarget *pDropTarget = NULL;
-    HRESULT hr = CoCreateInstance(CLSID_SendMail, NULL, CLSCTX_ALL, IID_IDropTarget, (void **)&pDropTarget);
-    if (SUCCEEDED(hr)) {
-        POINTL pt = { 0, 0 };
-        DWORD dwEffect = 0;
-        pDropTarget->DragEnter(pDataObject, MK_LBUTTON, pt, &dwEffect);
-        hr = pDropTarget->Drop(pDataObject, MK_LBUTTON, pt, &dwEffect);
-        pDropTarget->Release();
-    }
+    ScopedComPtr<IDropTarget> pDropTarget;
+    HRESULT hr = CoCreateInstance(CLSID_SendMail, NULL, CLSCTX_ALL,
+                                  IID_IDropTarget, (void **)&pDropTarget);
+    if (FAILED(hr))
+        return false;
 
-    pDataObject->Release();
+    POINTL pt = { 0, 0 };
+    DWORD dwEffect = 0;
+    pDropTarget->DragEnter(pDataObject, MK_LBUTTON, pt, &dwEffect);
+    hr = pDropTarget->Drop(pDataObject, MK_LBUTTON, pt, &dwEffect);
     return SUCCEEDED(hr);
 }
 

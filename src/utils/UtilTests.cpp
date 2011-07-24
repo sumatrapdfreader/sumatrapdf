@@ -613,25 +613,23 @@ static void WinUtilTest()
     {
         char *string = "abcde", *data;
         size_t stringSize = 5, len;
-        IStream *stream = CreateStreamFromData(string, stringSize);
+        ScopedComPtr<IStream> stream(CreateStreamFromData(string, stringSize));
         assert(stream);
         HRESULT res = GetDataFromStream(stream, (void **)&data, &len);
         assert(SUCCEEDED(res));
         assert(stringSize == len && str::Eq(data, string));
         free(data);
-        stream->Release();
     }
 
     {
         WCHAR *string = L"abcde", *data;
         size_t stringSize = 10, len;
-        IStream *stream = CreateStreamFromData(string, stringSize);
+        ScopedComPtr<IStream> stream(CreateStreamFromData(string, stringSize));
         assert(stream);
         HRESULT res = GetDataFromStream(stream, (void **)&data, &len);
         assert(SUCCEEDED(res));
         assert(stringSize == len && str::Eq(data, string));
         free(data);
-        stream->Release();
     }
 }
 

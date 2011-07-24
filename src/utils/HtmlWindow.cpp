@@ -11,8 +11,6 @@
 #include "StrUtil.h"
 #include "GeomUtil.h"
 
-// TODO: use CComPtr from <atlbase.h>
-
 // Info about implementing web browser control
 // http://www.codeproject.com/KB/COM/cwebpage.aspx
 
@@ -400,7 +398,6 @@ void HtmlWindow::CreateBrowser()
     assert(SUCCEEDED(hr));
 
     FrameSite *fs = new FrameSite(this);
-    fs->AddRef();
 
     DWORD status;
     oleObject->GetMiscStatus(DVASPECT_CONTENT, &status);
@@ -732,7 +729,7 @@ void HtmlWindow::DisplayChmPage(const TCHAR *chmFilePath, const TCHAR *chmPage)
 
 FrameSite::FrameSite(HtmlWindow * win)
 {
-    m_cRef = 0;
+    m_cRef = 1;
 
     htmlWindow = win;
     supportsWindowlessActivation = true;
