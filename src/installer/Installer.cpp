@@ -879,14 +879,12 @@ void UnregisterFromBeingDefaultViewer(HKEY hkey)
 {
     ScopedMem<TCHAR> curr(ReadRegStr(hkey, REG_CLASSES_PDF, NULL));
     ScopedMem<TCHAR> prev(ReadRegStr(hkey, REG_CLASSES_APP, _T("previous.pdf")));
-    if (!curr || !str::Eq(curr, REG_CLASSES_APP)) {
+    if (!curr || !str::Eq(curr, TAPP)) {
         // not the default, do nothing
     } else if (prev) {
         WriteRegStr(hkey, REG_CLASSES_PDF, NULL, prev);
     } else {
-        prev.Set(ReadRegStr(hkey, REG_CLASSES_PDF, NULL));
-        if (str::Eq(TAPP, prev))
-            DeleteRegKey(hkey, REG_CLASSES_PDF);
+        SHDeleteValue(hkey, REG_CLASSES_PDF, NULL);
     }
 
     // the following settings overrule HKEY_CLASSES_ROOT\.pdf
