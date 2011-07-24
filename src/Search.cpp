@@ -220,7 +220,7 @@ static DWORD WINAPI FindThread(LPVOID data)
    TextSel *rect;
    win->dm->textSearch->SetDirection(ftd->direction);
    if (ftd->wasModified || !win->dm->ValidPageNo(win->dm->textSearch->GetCurrentPageNo()) ||
-       !win->dm->getPageInfo(win->dm->textSearch->GetCurrentPageNo())->visibleRatio)
+       !win->dm->GetPageInfo(win->dm->textSearch->GetCurrentPageNo())->visibleRatio)
        rect = win->dm->textSearch->FindFirst(win->dm->CurrentPageNo(), ftd->text, ftd);
    else
        rect = win->dm->textSearch->FindNext(ftd);
@@ -274,7 +274,7 @@ void FindTextOnThread(WindowInfo* win, TextSearchDirection direction)
 
 void PaintForwardSearchMark(WindowInfo *win, HDC hdc)
 {
-    PageInfo *pageInfo = win->dm->getPageInfo(win->fwdSearchMark.page);
+    PageInfo *pageInfo = win->dm->GetPageInfo(win->fwdSearchMark.page);
     if (!pageInfo || 0.0 == pageInfo->visibleRatio)
         return;
     
@@ -367,7 +367,7 @@ bool OnInverseSearch(WindowInfo *win, int x, int y)
 static void ShowForwardSearchResult(WindowInfo *win, const TCHAR *fileName, UINT line, UINT col, UINT ret, UINT page, Vec<RectI> &rects)
 {
     win->fwdSearchMark.rects.Reset();
-    const PageInfo *pi = win->dm->getPageInfo(page);
+    const PageInfo *pi = win->dm->GetPageInfo(page);
     if ((ret == PDFSYNCERR_SUCCESS) && (rects.Count() > 0) && (NULL != pi)) {
         // remember the position of the search result for drawing the rect later on
         win->fwdSearchMark.rects = rects;

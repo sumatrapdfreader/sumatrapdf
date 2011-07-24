@@ -1941,7 +1941,7 @@ static void DebugShowLinks(DisplayModel& dm, HDC hdc)
     HGDIOBJ oldPen = SelectObject(hdc, pen);
 
     for (int pageNo = dm.PageCount(); pageNo >= 1; --pageNo) {
-        PageInfo *pageInfo = dm.getPageInfo(pageNo);
+        PageInfo *pageInfo = dm.GetPageInfo(pageNo);
         if (!pageInfo->shown || 0.0 == pageInfo->visibleRatio)
             continue;
 
@@ -1966,7 +1966,7 @@ static void DebugShowLinks(DisplayModel& dm, HDC hdc)
         oldPen = SelectObject(hdc, pen);
 
         for (int pageNo = dm.PageCount(); pageNo >= 1; --pageNo) {
-            PageInfo *pageInfo = dm.getPageInfo(pageNo);
+            PageInfo *pageInfo = dm.GetPageInfo(pageNo);
             if (!pageInfo->shown || 0.0 == pageInfo->visibleRatio)
                 continue;
 
@@ -1997,7 +1997,7 @@ static void DrawDocument(WindowInfo& win, HDC hdc, RECT *rcArea)
 
     DBG_OUT("DrawDocument() ");
     for (int pageNo = 1; pageNo <= dm->PageCount(); ++pageNo) {
-        PageInfo *pageInfo = dm->getPageInfo(pageNo);
+        PageInfo *pageInfo = dm->GetPageInfo(pageNo);
         if (0.0 == pageInfo->visibleRatio)
             continue;
         assert(pageInfo->shown);
@@ -2347,9 +2347,9 @@ static void OnMouseLeftButtonUp(WindowInfo& win, int x, int y, WPARAM key)
     /* in presentation mode, change pages on left/right-clicks */
     else if (win.fullScreen || PM_ENABLED == win.presentation) {
         if ((key & MK_SHIFT))
-            win.dm->goToPrevPage(0);
+            win.dm->GoToPrevPage(0);
         else
-            win.dm->goToNextPage(0);
+            win.dm->GoToNextPage(0);
     }
     /* return from white/black screens in presentation mode */
     else if (PM_BLACK_SCREEN == win.presentation || PM_WHITE_SCREEN == win.presentation)
@@ -2456,9 +2456,9 @@ static void OnMouseRightButtonUp(WindowInfo& win, int x, int y, WPARAM key)
         if ((key & MK_CONTROL))
             OnContextMenu(win, x, y);
         else if ((key & MK_SHIFT))
-            win.dm->goToNextPage(0);
+            win.dm->GoToNextPage(0);
         else
-            win.dm->goToPrevPage(0);
+            win.dm->GoToPrevPage(0);
     }
     /* return from white/black screens in presentation mode */
     else if (PM_BLACK_SCREEN == win.presentation || PM_WHITE_SCREEN == win.presentation)
@@ -3472,23 +3472,23 @@ bool OnFrameKeydown(WindowInfo *win, WPARAM key, LPARAM lparam, bool inTextfield
         if (win->dm->ZoomVirtual() != ZOOM_FIT_CONTENT)
             SendMessage(win->hwndCanvas, WM_VSCROLL, SB_PAGEUP, 0);
         if (GetScrollPos(win->hwndCanvas, SB_VERT) == currentPos)
-            win->dm->goToPrevPage(-1);
+            win->dm->GoToPrevPage(-1);
     } else if (VK_NEXT == key) {
         int currentPos = GetScrollPos(win->hwndCanvas, SB_VERT);
         if (win->dm->ZoomVirtual() != ZOOM_FIT_CONTENT)
             SendMessage(win->hwndCanvas, WM_VSCROLL, SB_PAGEDOWN, 0);
         if (GetScrollPos(win->hwndCanvas, SB_VERT) == currentPos)
-            win->dm->goToNextPage(0);
+            win->dm->GoToNextPage(0);
     } else if (VK_UP == key) {
         if (win->dm->needVScroll())
             SendMessage(win->hwndCanvas, WM_VSCROLL, SB_LINEUP, 0);
         else
-            win->dm->goToPrevPage(-1);
+            win->dm->GoToPrevPage(-1);
     } else if (VK_DOWN == key) {
         if (win->dm->needVScroll())
             SendMessage(win->hwndCanvas, WM_VSCROLL, SB_LINEDOWN, 0);
         else
-            win->dm->goToNextPage(0);
+            win->dm->GoToNextPage(0);
     } else if (inTextfield) {
         // The remaining keys have a different meaning
         return false;
@@ -3496,16 +3496,16 @@ bool OnFrameKeydown(WindowInfo *win, WPARAM key, LPARAM lparam, bool inTextfield
         if (win->dm->needHScroll())
             SendMessage(win->hwndCanvas, WM_HSCROLL, IsShiftPressed() ? SB_PAGELEFT : SB_LINELEFT, 0);
         else
-            win->dm->goToPrevPage(0);
+            win->dm->GoToPrevPage(0);
     } else if (VK_RIGHT == key) {
         if (win->dm->needHScroll())
             SendMessage(win->hwndCanvas, WM_HSCROLL, IsShiftPressed() ? SB_PAGERIGHT : SB_LINERIGHT, 0);
         else
-            win->dm->goToNextPage(0);
+            win->dm->GoToNextPage(0);
     } else if (VK_HOME == key) {
-        win->dm->goToFirstPage();
+        win->dm->GoToFirstPage();
     } else if (VK_END == key) {
-        win->dm->goToLastPage();
+        win->dm->GoToLastPage();
     } else if (VK_MULTIPLY == key) {
         win->dm->RotateBy(90);
     } else if (VK_DIVIDE == key) {
@@ -3581,10 +3581,10 @@ static void OnFrameChar(WindowInfo& win, WPARAM key)
         SendMessage(win.hwndCanvas, WM_VSCROLL, SB_LINEUP, 0);
         break;
     case 'n':
-        win.dm->goToNextPage(0);
+        win.dm->GoToNextPage(0);
         break;
     case 'p':
-        win.dm->goToPrevPage(0);
+        win.dm->GoToPrevPage(0);
         break;
     case 'z':
         win.ToggleZoom();
@@ -3617,9 +3617,9 @@ static void OnFrameChar(WindowInfo& win, WPARAM key)
             SwitchToDisplayMode(&win, newMode, true);
 
             if (forward && currPage >= win.dm->CurrentPageNo() && (currPage > 1 || newMode == DM_BOOK_VIEW))
-                win.dm->goToNextPage(0);
+                win.dm->GoToNextPage(0);
             else if (!forward && currPage <= win.dm->CurrentPageNo())
-                win.dm->goToPrevPage(0);
+                win.dm->GoToPrevPage(0);
         }
         break;
     case '.':
@@ -4140,9 +4140,9 @@ static LRESULT OnMouseWheel(WindowInfo& win, UINT message, WPARAM wParam, LPARAM
     if (!displayModeContinuous(win.dm->displayMode()) &&
         ZOOM_FIT_CONTENT == win.dm->ZoomVirtual()) {
         if (delta > 0)
-            win.dm->goToPrevPage(0);
+            win.dm->GoToPrevPage(0);
         else
-            win.dm->goToNextPage(0);
+            win.dm->GoToNextPage(0);
         return 0;
     }
 
@@ -4174,9 +4174,9 @@ static LRESULT OnMouseWheel(WindowInfo& win, UINT message, WPARAM wParam, LPARAM
     if (!displayModeContinuous(win.dm->displayMode()) &&
         GetScrollPos(win.hwndCanvas, SB_VERT) == currentScrollPos) {
         if (delta > 0)
-            win.dm->goToPrevPage(-1);
+            win.dm->GoToPrevPage(-1);
         else
-            win.dm->goToNextPage(0);
+            win.dm->GoToNextPage(0);
     }
 
     return 0;
@@ -4449,22 +4449,22 @@ static LRESULT OnCommand(WindowInfo *win, HWND hwnd, UINT message, WPARAM wParam
     
         case IDM_GOTO_NEXT_PAGE:
             if (win->IsDocLoaded())
-                win->dm->goToNextPage(0);
+                win->dm->GoToNextPage(0);
             break;
     
         case IDM_GOTO_PREV_PAGE:
             if (win->IsDocLoaded())
-                win->dm->goToPrevPage(0);
+                win->dm->GoToPrevPage(0);
             break;
     
         case IDM_GOTO_FIRST_PAGE:
             if (win->IsDocLoaded())
-                win->dm->goToFirstPage();
+                win->dm->GoToFirstPage();
             break;
     
         case IDM_GOTO_LAST_PAGE:
             if (win->IsDocLoaded())
-                win->dm->goToLastPage();
+                win->dm->GoToLastPage();
             break;
     
         case IDM_GOTO_PAGE:

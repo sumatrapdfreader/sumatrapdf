@@ -215,13 +215,13 @@ void LinkHandler::GotoLink(PageDestination *link)
     }
     // predefined named actions
     else if (str::Eq(type, "NextPage"))
-        dm->goToNextPage(0);
+        dm->GoToNextPage(0);
     else if (str::Eq(type, "PrevPage"))
-        dm->goToPrevPage(0);
+        dm->GoToPrevPage(0);
     else if (str::Eq(type, "FirstPage"))
-        dm->goToFirstPage();
+        dm->GoToFirstPage();
     else if (str::Eq(type, "LastPage"))
-        dm->goToLastPage();
+        dm->GoToLastPage();
     // Adobe Reader extensions to the spec, cf. http://www.tug.org/applications/hyperref/manual.html
     else if (str::Eq(type, "FullScreen"))
         PostMessage(owner->hwndFrame, WM_COMMAND, IDM_VIEW_PRESENTATION_MODE, 0);
@@ -258,7 +258,7 @@ void LinkHandler::ScrollTo(PageDestination *dest)
         if (DEST_USE_DEFAULT == rect.x)
             scroll.x = -1;
         if (DEST_USE_DEFAULT == rect.y) {
-            PageInfo *pageInfo = dm->getPageInfo(dm->CurrentPageNo());
+            PageInfo *pageInfo = dm->GetPageInfo(dm->CurrentPageNo());
             scroll.y = -(pageInfo->pageOnScreen.y - dm->getPadding()->top);
             scroll.y = max(scroll.y, 0); // Adobe Reader never shows the previous page
         }

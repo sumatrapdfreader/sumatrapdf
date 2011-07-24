@@ -139,7 +139,7 @@ public:
     TextSelection * textSelection;
     TextSearch *    textSearch;
 
-    PageInfo *      getPageInfo(int pageNo) const;
+    PageInfo *      GetPageInfo(int pageNo) const;
 
     /* size and position of the viewport on the canvas (resp size of the visible
        part of the canvase available for content (totalViewPortSize minus scroll bars)
@@ -164,10 +164,10 @@ public:
     void            Relayout(float zoomVirtual, int rotation);
 
     void            GoToPage(int pageNo, int scrollY, bool addNavPt=false, int scrollX=-1);
-    bool            goToPrevPage(int scrollY);
-    bool            goToNextPage(int scrollY);
-    bool            goToFirstPage();
-    bool            goToLastPage();
+    bool            GoToPrevPage(int scrollY);
+    bool            GoToNextPage(int scrollY);
+    bool            GoToFirstPage();
+    bool            GoToLastPage();
 
     void            scrollXTo(int xOff);
     void            scrollXBy(int dx);
@@ -179,7 +179,7 @@ public:
     void            ZoomBy(float zoomFactor, PointI *fixPt=NULL);
     void            RotateBy(int rotation);
 
-    TCHAR *         getTextInRegion(int pageNo, RectD region);
+    TCHAR *         GetTextInRegion(int pageNo, RectD region);
     bool            IsOverText(PointI pt);
     PageElement *   GetElementAtPos(PointI pt);
 
@@ -207,9 +207,9 @@ public:
 
 protected:
 
-    bool            load(const TCHAR *fileName, int startPage, SizeI viewPort);
+    bool            Load(const TCHAR *fileName, int startPage, SizeI viewPort);
 
-    bool            buildPagesInfo();
+    bool            BuildPagesInfo();
     float           ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo);
     SizeD           PageSizeAfterRotation(int pageNo, bool fitToContent=false);
     void            changeStartPage(int startPage);

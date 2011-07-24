@@ -18,7 +18,7 @@
 RectI SelectionOnPage::GetRect(DisplayModel *dm)
 {
     // if the page is not visible, we return an empty rectangle
-    PageInfo *pageInfo = dm->getPageInfo(pageNo);
+    PageInfo *pageInfo = dm->GetPageInfo(pageNo);
     if (!pageInfo || pageInfo->visibleRatio <= 0.0)
         return RectI();
 
@@ -30,7 +30,7 @@ Vec<SelectionOnPage> *SelectionOnPage::FromRectangle(DisplayModel *dm, RectI rec
     Vec<SelectionOnPage> *sel = new Vec<SelectionOnPage>();
 
     for (int pageNo = dm->PageCount(); pageNo >= 1; --pageNo) {
-        PageInfo *pageInfo = dm->getPageInfo(pageNo);
+        PageInfo *pageInfo = dm->GetPageInfo(pageNo);
         assert(0.0 == pageInfo->visibleRatio || pageInfo->shown);
         if (!pageInfo->shown)
             continue;
@@ -142,7 +142,7 @@ void ZoomToSelection(WindowInfo *win, float factor, bool relative)
     // or towards the top-left-most part of the first visible page
     else {
         int page = win->dm->firstVisiblePageNo();
-        PageInfo *pageInfo = win->dm->getPageInfo(page);
+        PageInfo *pageInfo = win->dm->GetPageInfo(page);
         if (pageInfo) {
             RectI visible = pageInfo->pageOnScreen.Intersect(win->canvasRc);
             pt = visible.TL();
@@ -181,7 +181,7 @@ void CopySelectionToClipboard(WindowInfo *win)
             StrVec selections;
             for (size_t i = 0; i < win->selectionOnPage->Count(); i++) {
                 SelectionOnPage *selOnPage = &win->selectionOnPage->At(i);
-                TCHAR *text = win->dm->getTextInRegion(selOnPage->pageNo, selOnPage->rect);
+                TCHAR *text = win->dm->GetTextInRegion(selOnPage->pageNo, selOnPage->rect);
                 if (text)
                     selections.Push(text);
             }
@@ -226,9 +226,9 @@ void OnSelectAll(WindowInfo *win, bool textOnly)
 
     if (textOnly) {
         int pageNo;
-        for (pageNo = 1; !win->dm->getPageInfo(pageNo)->shown; pageNo++);
+        for (pageNo = 1; !win->dm->GetPageInfo(pageNo)->shown; pageNo++);
         win->dm->textSelection->StartAt(pageNo, 0);
-        for (pageNo = win->dm->PageCount(); !win->dm->getPageInfo(pageNo)->shown; pageNo--);
+        for (pageNo = win->dm->PageCount(); !win->dm->GetPageInfo(pageNo)->shown; pageNo--);
         win->dm->textSelection->SelectUpTo(pageNo, -1);
         win->selectionRect = RectI::FromXY(INT_MIN / 2, INT_MIN / 2, INT_MAX, INT_MAX);
         UpdateTextSelection(win);

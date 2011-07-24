@@ -442,7 +442,7 @@ bool StressTest::OpenFile(const TCHAR *fileName)
 
     win->dm->ChangeDisplayMode(DM_CONTINUOUS);
     win->dm->ZoomTo(ZOOM_FIT_PAGE);
-    win->dm->goToFirstPage();
+    win->dm->GoToFirstPage();
     if (win->tocVisible || gGlobalPrefs.favVisible)
         SetSidebarVisibility(win, win->tocVisible, gGlobalPrefs.favVisible);
 
