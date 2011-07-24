@@ -93,11 +93,11 @@ static LPARAM ToolbarButtonEnabledState(WindowInfo *win, int buttonNo)
             break;
 
         case IDM_GOTO_NEXT_PAGE:
-            if (win->dm->currentPageNo() == win->dm->PageCount())
+            if (win->dm->CurrentPageNo() == win->dm->PageCount())
                 return disabled;
             break;
         case IDM_GOTO_PREV_PAGE:
-            if (win->dm->currentPageNo() == 1)
+            if (win->dm->CurrentPageNo() == 1)
                 return disabled;
             break;
     }
@@ -338,7 +338,7 @@ void UpdateToolbarState(WindowInfo *win)
         return;
 
     WORD state = (WORD)SendMessage(win->hwndToolbar, TB_GETSTATE, IDT_VIEW_FIT_WIDTH, 0);
-    if (win->dm->displayMode() == DM_CONTINUOUS && win->dm->zoomVirtual() == ZOOM_FIT_WIDTH)
+    if (win->dm->displayMode() == DM_CONTINUOUS && win->dm->ZoomVirtual() == ZOOM_FIT_WIDTH)
         state |= TBSTATE_CHECKED;
     else
         state &= ~TBSTATE_CHECKED;
@@ -347,7 +347,7 @@ void UpdateToolbarState(WindowInfo *win)
     bool isChecked = (state & TBSTATE_CHECKED);
 
     state = (WORD)SendMessage(win->hwndToolbar, TB_GETSTATE, IDT_VIEW_FIT_PAGE, 0);
-    if (win->dm->displayMode() == DM_SINGLE_PAGE && win->dm->zoomVirtual() == ZOOM_FIT_PAGE)
+    if (win->dm->displayMode() == DM_SINGLE_PAGE && win->dm->ZoomVirtual() == ZOOM_FIT_PAGE)
         state |= TBSTATE_CHECKED;
     else
         state &= ~TBSTATE_CHECKED;
@@ -407,7 +407,7 @@ static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT message, WPARAM wParam, L
         case VK_RETURN: {
             ScopedMem<TCHAR> buf(win::GetText(win->hwndPageBox));
             int newPageNo = win->dm->engine->GetPageByLabel(buf);
-            if (win->dm->validPageNo(newPageNo)) {
+            if (win->dm->ValidPageNo(newPageNo)) {
                 win->dm->GoToPage(newPageNo, 0, true);
                 SetFocus(win->hwndFrame);
             }
@@ -463,7 +463,7 @@ void UpdateToolbarPageText(WindowInfo *win, int pageCount)
     else if (!win->dm || !win->dm->engine || !win->dm->engine->HasPageLabels())
         buf = str::Format(_T(" / %d"), pageCount);
     else {
-        buf = str::Format(_T(" (%d / %d)"), win->dm->currentPageNo(), pageCount);
+        buf = str::Format(_T(" (%d / %d)"), win->dm->CurrentPageNo(), pageCount);
         ScopedMem<TCHAR> buf2(str::Format(_T(" (%d / %d)"), pageCount, pageCount));
         size2 = TextSizeInHwnd(win->hwndPageTotal, buf2);
     }

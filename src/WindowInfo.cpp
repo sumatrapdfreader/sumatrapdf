@@ -109,12 +109,12 @@ void WindowInfo::ToggleZoom()
     assert(this->dm);
     if (!this->IsDocLoaded()) return;
 
-    if (ZOOM_FIT_PAGE == this->dm->zoomVirtual())
-        this->dm->zoomTo(ZOOM_FIT_WIDTH);
-    else if (ZOOM_FIT_WIDTH == this->dm->zoomVirtual())
-        this->dm->zoomTo(ZOOM_FIT_CONTENT);
-    else if (ZOOM_FIT_CONTENT == this->dm->zoomVirtual())
-        this->dm->zoomTo(ZOOM_FIT_PAGE);
+    if (ZOOM_FIT_PAGE == this->dm->ZoomVirtual())
+        this->dm->ZoomTo(ZOOM_FIT_WIDTH);
+    else if (ZOOM_FIT_WIDTH == this->dm->ZoomVirtual())
+        this->dm->ZoomTo(ZOOM_FIT_CONTENT);
+    else if (ZOOM_FIT_CONTENT == this->dm->ZoomVirtual())
+        this->dm->ZoomTo(ZOOM_FIT_PAGE);
 }
 
 void WindowInfo::MoveDocBy(int dx, int dy)
@@ -251,21 +251,21 @@ void LinkHandler::ScrollTo(PageDestination *dest)
     if (rect.IsEmpty()) {
         // PDF: /XYZ top left
         // scroll to rect.TL()
-        PointD scrollD = dm->engine->Transform(rect.TL(), pageNo, dm->zoomReal(), dm->rotation());
+        PointD scrollD = dm->engine->Transform(rect.TL(), pageNo, dm->ZoomReal(), dm->Rotation());
         scroll = scrollD.Convert<int>();
 
         // default values for the coordinates mean: keep the current position
         if (DEST_USE_DEFAULT == rect.x)
             scroll.x = -1;
         if (DEST_USE_DEFAULT == rect.y) {
-            PageInfo *pageInfo = dm->getPageInfo(dm->currentPageNo());
+            PageInfo *pageInfo = dm->getPageInfo(dm->CurrentPageNo());
             scroll.y = -(pageInfo->pageOnScreen.y - dm->getPadding()->top);
             scroll.y = max(scroll.y, 0); // Adobe Reader never shows the previous page
         }
     }
     else if (rect.dx != DEST_USE_DEFAULT && rect.dy != DEST_USE_DEFAULT) {
         // PDF: /FitR left bottom right top
-        RectD rectD = dm->engine->Transform(rect, pageNo, dm->zoomReal(), dm->rotation());
+        RectD rectD = dm->engine->Transform(rect, pageNo, dm->ZoomReal(), dm->Rotation());
         scroll = rectD.TL().Convert<int>();
 
         // Rect<float> rectF = dm->engine->Transform(rect, pageNo, 1.0, dm->rotation()).Convert<float>();
@@ -273,7 +273,7 @@ void LinkHandler::ScrollTo(PageDestination *dest)
     }
     else if (rect.y != DEST_USE_DEFAULT) {
         // PDF: /FitH top  or  /FitBH top
-        PointD scrollD = dm->engine->Transform(rect.TL(), pageNo, dm->zoomReal(), dm->rotation());
+        PointD scrollD = dm->engine->Transform(rect.TL(), pageNo, dm->ZoomReal(), dm->Rotation());
         scroll.y = max(scrollD.Convert<int>().y, 0); // Adobe Reader never shows the previous page
 
         // zoom = FitBH ? ZOOM_FIT_CONTENT : ZOOM_FIT_WIDTH

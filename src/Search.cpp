@@ -95,7 +95,7 @@ static void ShowSearchResult(WindowInfo& win, TextSel *result, bool addNavPt)
 {
    assert(result->len > 0);
    if (addNavPt || !win.dm->pageShown(result->pages[0]) ||
-       (win.dm->zoomVirtual() == ZOOM_FIT_PAGE || win.dm->zoomVirtual() == ZOOM_FIT_CONTENT))
+       (win.dm->ZoomVirtual() == ZOOM_FIT_PAGE || win.dm->ZoomVirtual() == ZOOM_FIT_CONTENT))
        win.dm->GoToPage(result->pages[0], 0, addNavPt);
 
    win.dm->textSelection->CopySelection(win.dm->textSearch);
@@ -162,10 +162,10 @@ struct FindThreadData : public ProgressUpdateUI {
        else if (!success && loopedAround)
            wnd->UpdateMessage(_TR("No matches were found"), 3000);
        else if (!loopedAround) {
-           ScopedMem<TCHAR> buf(str::Format(_TR("Found text at page %d"), win->dm->currentPageNo()));
+           ScopedMem<TCHAR> buf(str::Format(_TR("Found text at page %d"), win->dm->CurrentPageNo()));
            wnd->UpdateMessage(buf, 3000);
        } else {
-           ScopedMem<TCHAR> buf(str::Format(_TR("Found text at page %d (again)"), win->dm->currentPageNo()));
+           ScopedMem<TCHAR> buf(str::Format(_TR("Found text at page %d (again)"), win->dm->CurrentPageNo()));
            wnd->UpdateMessage(buf, 3000, true);
        }    
    }
@@ -219,9 +219,9 @@ static DWORD WINAPI FindThread(LPVOID data)
 
    TextSel *rect;
    win->dm->textSearch->SetDirection(ftd->direction);
-   if (ftd->wasModified || !win->dm->validPageNo(win->dm->textSearch->GetCurrentPageNo()) ||
+   if (ftd->wasModified || !win->dm->ValidPageNo(win->dm->textSearch->GetCurrentPageNo()) ||
        !win->dm->getPageInfo(win->dm->textSearch->GetCurrentPageNo())->visibleRatio)
-       rect = win->dm->textSearch->FindFirst(win->dm->currentPageNo(), ftd->text, ftd);
+       rect = win->dm->textSearch->FindFirst(win->dm->CurrentPageNo(), ftd->text, ftd);
    else
        rect = win->dm->textSearch->FindNext(ftd);
 
@@ -229,7 +229,7 @@ static DWORD WINAPI FindThread(LPVOID data)
    if (!win->findCanceled && !rect) {
        // With no further findings, start over (unless this was a new search from the beginning)
        int startPage = (FIND_FORWARD == ftd->direction) ? 1 : win->dm->PageCount();
-       if (!ftd->wasModified || win->dm->currentPageNo() != startPage) {
+       if (!ftd->wasModified || win->dm->CurrentPageNo() != startPage) {
            loopedAround = true;
            MessageBeep(MB_ICONINFORMATION);
            rect = win->dm->textSearch->FindFirst(startPage, ftd->text, ftd);
@@ -283,8 +283,8 @@ void PaintForwardSearchMark(WindowInfo *win, HDC hdc)
         RectD recD = win->fwdSearchMark.rects[i].Convert<double>();
         RectI recI = win->dm->CvtToScreen(win->fwdSearchMark.page, recD);
         if (gGlobalPrefs.fwdSearchOffset > 0) {
-            recI.x = max(pageInfo->pageOnScreen.x, 0) + (int)(gGlobalPrefs.fwdSearchOffset * win->dm->zoomReal());
-            recI.dx = (int)((gGlobalPrefs.fwdSearchWidth > 0 ? gGlobalPrefs.fwdSearchWidth : 15.0) * win->dm->zoomReal());
+            recI.x = max(pageInfo->pageOnScreen.x, 0) + (int)(gGlobalPrefs.fwdSearchOffset * win->dm->ZoomReal());
+            recI.dx = (int)((gGlobalPrefs.fwdSearchWidth > 0 ? gGlobalPrefs.fwdSearchWidth : 15.0) * win->dm->ZoomReal());
             recI.y -= 4;
             recI.dy += 8;
         }
@@ -328,7 +328,7 @@ bool OnInverseSearch(WindowInfo *win, int x, int y)
     }
 
     int pageNo = win->dm->GetPageNoByPoint(PointI(x, y));
-    if (!win->dm->validPageNo(pageNo))
+    if (!win->dm->ValidPageNo(pageNo))
         return false;
 
     PointI pt = win->dm->CvtFromScreen(PointI(x, y), pageNo).Convert<int>();
@@ -588,7 +588,7 @@ static const TCHAR *HandlePageCmd(const TCHAR *cmd, DDEACK& ack)
             return next;
     }
 
-    if (!win->dm->validPageNo(page))
+    if (!win->dm->ValidPageNo(page))
         return next;
 
     win->dm->GoToPage(page, 0, true);

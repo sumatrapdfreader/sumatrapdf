@@ -248,7 +248,7 @@ bool RenderCache::FreeNotVisible()
 USHORT RenderCache::GetTileRes(DisplayModel *dm, int pageNo)
 {
     RectD mediabox = dm->engine->PageMediabox(pageNo);
-    RectD pixelbox = dm->engine->Transform(mediabox, pageNo, dm->zoomReal(), dm->rotation());
+    RectD pixelbox = dm->engine->Transform(mediabox, pageNo, dm->ZoomReal(), dm->Rotation());
 
     float factorW = (float)pixelbox.dx / (maxTileSize.dx + 1);
     float factorH = (float)pixelbox.dy / (maxTileSize.dy + 1);
@@ -258,7 +258,7 @@ USHORT RenderCache::GetTileRes(DisplayModel *dm, int pageNo)
     // than the visible canvas width/height or when rendering pages
     // containing a single image (MuPDF isn't that much faster for rendering
     // individual tiles than for rendering the whole image in a single pass)
-    if (dm->zoomVirtual() == ZOOM_FIT_PAGE || dm->zoomVirtual() == ZOOM_FIT_WIDTH ||
+    if (dm->ZoomVirtual() == ZOOM_FIT_PAGE || dm->ZoomVirtual() == ZOOM_FIT_WIDTH ||
         pixelbox.dx <= dm->viewPort.dx || pixelbox.dy < dm->viewPort.dy ||
         dm->engine->IsImagePage(pageNo)) {
         factorMax /= 2.0;
@@ -318,8 +318,8 @@ void RenderCache::Render(DisplayModel *dm, int pageNo, TilePosition tile, bool c
     bool ok = false;
     if (!dm || dm->_dontRenderFlag) goto Exit;
 
-    int rotation = normalizeRotation(dm->rotation());
-    float zoom = dm->zoomReal(pageNo);
+    int rotation = normalizeRotation(dm->Rotation());
+    float zoom = dm->ZoomReal(pageNo);
 
     if (_curReq && (_curReq->pageNo == pageNo) && (_curReq->dm == dm) && (_curReq->tile == tile)) {
         if ((_curReq->zoom != zoom) || (_curReq->rotation != rotation)) {
@@ -590,13 +590,13 @@ UINT RenderCache::PaintTile(HDC hdc, RectI *bounds, DisplayModel *dm, int pageNo
                             TilePosition tile, RectI *tileOnScreen, bool renderMissing,
                             bool *renderOutOfDateCue, bool *renderedReplacement)
 {
-    BitmapCacheEntry *entry = Find(dm, pageNo, dm->rotation(), dm->zoomReal(), &tile);
+    BitmapCacheEntry *entry = Find(dm, pageNo, dm->Rotation(), dm->ZoomReal(), &tile);
     UINT renderDelay = 0;
 
     if (!entry) {
         if (renderedReplacement)
             *renderedReplacement = true;
-        entry = Find(dm, pageNo, dm->rotation(), INVALID_ZOOM, &tile);
+        entry = Find(dm, pageNo, dm->Rotation(), INVALID_ZOOM, &tile);
         renderDelay = GetRenderDelay(dm, pageNo, tile);
         if (renderMissing && RENDER_DELAY_UNDEFINED == renderDelay && !IsRenderQueueFull())
             Render(dm, pageNo, tile);
@@ -646,8 +646,8 @@ UINT RenderCache::PaintTiles(HDC hdc, RectI *bounds, DisplayModel *dm, int pageN
                              RectI *pageOnScreen, USHORT tileRes, bool renderMissing,
                              bool *renderOutOfDateCue, bool *renderedReplacement)
 {
-    int rotation = dm->rotation();
-    float zoom = dm->zoomReal();
+    int rotation = dm->Rotation();
+    float zoom = dm->ZoomReal();
     int tileCount = 1 << tileRes;
 
     TilePosition tile = { tileRes, 0, 0 };

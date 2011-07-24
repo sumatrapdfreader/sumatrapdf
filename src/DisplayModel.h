@@ -109,29 +109,29 @@ public:
     const TCHAR *FileName() const { return engine->FileName(); }
     /* number of pages in the document */
     int  PageCount() const { return engine->PageCount(); }
-    bool validPageNo(int pageNo) const {
+    bool ValidPageNo(int pageNo) const {
         return 1 <= pageNo && pageNo <= engine->PageCount();
     }
 
     /* current rotation selected by user */
-    int rotation() const { return _rotation; }
-    void setRotation(int rotation) { _rotation = rotation; }
+    int Rotation() const { return _rotation; }
+    void SetRotation(int rotation) { _rotation = rotation; }
 
     DisplayMode displayMode() const { return _displayMode; }
-    void changeDisplayMode(DisplayMode displayMode);
-    void setPresentationMode(bool enable);
+    void ChangeDisplayMode(DisplayMode displayMode);
+    void SetPresentationMode(bool enable);
 
     /* a "virtual" zoom level. Can be either a real zoom level in percent
        (i.e. 100.0 is original size) or one of virtual values ZOOM_FIT_PAGE,
        ZOOM_FIT_WIDTH or ZOOM_FIT_CONTENT, whose real value depends on draw area size */
-    float zoomVirtual() const { return _zoomVirtual; }
-    float zoomReal() const { return _zoomReal; }
-    float zoomReal(int pageNo);
+    float ZoomVirtual() const { return _zoomVirtual; }
+    float ZoomReal() const { return _zoomReal; }
+    float ZoomReal(int pageNo);
 
     bool HasTocTree() const {
         return engine && engine->HasToCTree();
     }
-    int currentPageNo() const;
+    int CurrentPageNo() const;
 
     BaseEngine *    engine;
     EngineType      engineType;
@@ -175,9 +175,9 @@ public:
     void            scrollYTo(int yOff);
     void            scrollYBy(int dy, bool changePage);
 
-    void            zoomTo(float zoomVirtual, PointI *fixPt=NULL);
-    void            zoomBy(float zoomFactor, PointI *fixPt=NULL);
-    void            rotateBy(int rotation);
+    void            ZoomTo(float zoomVirtual, PointI *fixPt=NULL);
+    void            ZoomBy(float zoomFactor, PointI *fixPt=NULL);
+    void            RotateBy(int rotation);
 
     TCHAR *         getTextInRegion(int pageNo, RectD region);
     bool            IsOverText(PointI pt);
@@ -210,7 +210,7 @@ protected:
     bool            load(const TCHAR *fileName, int startPage, SizeI viewPort);
 
     bool            buildPagesInfo();
-    float           zoomRealFromVirtualForPage(float zoomVirtual, int pageNo);
+    float           ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo);
     SizeD           PageSizeAfterRotation(int pageNo, bool fitToContent=false);
     void            changeStartPage(int startPage);
     PointI          getContentStart(int pageNo);

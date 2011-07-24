@@ -339,7 +339,7 @@ void SwitchToDisplayMode(WindowInfo *win, DisplayMode displayMode, bool keepCont
         }
     }
 
-    win->dm->changeDisplayMode(displayMode);
+    win->dm->ChangeDisplayMode(displayMode);
     UpdateToolbarState(win);
 }
 
@@ -718,7 +718,7 @@ static void MenuUpdateZoom(WindowInfo& win)
 {
     float zoomVirtual = gGlobalPrefs.defaultZoom;
     if (win.IsDocLoaded())
-        zoomVirtual = win.dm->zoomVirtual();
+        zoomVirtual = win.dm->ZoomVirtual();
     UINT menuId = MenuIdFromVirtualZoom(zoomVirtual);
     ZoomMenuItemCheck(win.menu, menuId, win.IsDocLoaded());
 }
@@ -1357,7 +1357,7 @@ static bool LoadDocIntoWindow(
     int rotation = DEFAULT_ROTATION;
 
     if (state) {
-        if (win.dm->validPageNo(startPage)) {
+        if (win.dm->ValidPageNo(startPage)) {
             ss.page = startPage;
             if (ZOOM_FIT_CONTENT != state->zoomVirtual) {
                 ss.x = state->scrollPos.x;
@@ -1462,7 +1462,7 @@ Error:
     if ((isNewWindow || placeWindow) && showWin && showAsFullScreen)
         EnterFullscreen(win);
     if (!isNewWindow && win.presentation && win.dm)
-        win.dm->setPresentationMode(true);
+        win.dm->SetPresentationMode(true);
 
     return true;
 }
@@ -1677,7 +1677,7 @@ void WindowInfo::UpdateScrollbars(SizeI canvas)
         si.nMax = canvas.dy - 1;
         si.nPage = viewPort.dy;
 
-        if (ZOOM_FIT_PAGE != dm->zoomVirtual()) {
+        if (ZOOM_FIT_PAGE != dm->ZoomVirtual()) {
             // keep the top/bottom 5% of the previous page visible after paging down/up
             si.nPage = (UINT)(si.nPage * 0.95);
             si.nMax -= viewPort.dy - si.nPage;
@@ -1960,7 +1960,7 @@ static void DebugShowLinks(DisplayModel& dm, HDC hdc)
 
     DeletePen(SelectObject(hdc, oldPen));
 
-    if (dm.zoomVirtual() == ZOOM_FIT_CONTENT) {
+    if (dm.ZoomVirtual() == ZOOM_FIT_CONTENT) {
         // also display the content box when fitting content
         pen = CreatePen(PS_SOLID, 1, RGB(0xff, 0x00, 0xff));
         oldPen = SelectObject(hdc, pen);
@@ -2010,7 +2010,7 @@ static void DrawDocument(WindowInfo& win, HDC hdc, RECT *rcArea)
         bool renderOutOfDateCue = false;
         UINT renderDelay = 0;
         if (dm->engine && dm->engine->IsImageCollection())
-            dm->engine->RenderPage(hdc, pageInfo->pageOnScreen, pageNo, dm->zoomReal(pageNo), dm->rotation());
+            dm->engine->RenderPage(hdc, pageInfo->pageOnScreen, pageNo, dm->ZoomReal(pageNo), dm->Rotation());
         else
             renderDelay = gRenderCache.Paint(hdc, &bounds, dm, pageNo, pageInfo, &renderOutOfDateCue);
 
@@ -2378,7 +2378,7 @@ static void OnMouseLeftButtonDblClk(WindowInfo& win, int x, int y, WPARAM key)
         return;
 
     int pageNo = win.dm->GetPageNoByPoint(PointI(x, y));
-    if (win.dm->validPageNo(pageNo)) {
+    if (win.dm->ValidPageNo(pageNo)) {
         PointD pt = win.dm->CvtFromScreen(PointI(x, y), pageNo);
         win.dm->textSelection->SelectWordAt(pageNo, pt.x, pt.y);
     }
@@ -2639,7 +2639,7 @@ static void OnMenuCustomZoom(WindowInfo& win)
     if (!win.IsDocLoaded())
         return;
 
-    float zoom = win.dm->zoomVirtual();
+    float zoom = win.dm->ZoomVirtual();
     if (IDCANCEL == Dialog_CustomZoom(win.hwndFrame, &zoom))
         return;
     ZoomToSelection(&win, zoom, false);
@@ -2878,17 +2878,17 @@ static void OnMenuSaveBookmark(WindowInfo& win)
 
     ScrollState ss = win.dm->GetScrollState();
     const TCHAR *viewMode = DisplayModeConv::NameFromEnum(win.dm->displayMode());
-    ScopedMem<TCHAR> zoomVirtual(str::Format(_T("%.2f"), win.dm->zoomVirtual()));
-    if (ZOOM_FIT_PAGE == win.dm->zoomVirtual())
-        zoomVirtual.Set(str::Dup(_T("fitpage")));
-    else if (ZOOM_FIT_WIDTH == win.dm->zoomVirtual())
-        zoomVirtual.Set(str::Dup(_T("fitwidth")));
-    else if (ZOOM_FIT_CONTENT == win.dm->zoomVirtual())
-        zoomVirtual.Set(str::Dup(_T("fitcontent")));
+    ScopedMem<TCHAR> ZoomVirtual(str::Format(_T("%.2f"), win.dm->ZoomVirtual()));
+    if (ZOOM_FIT_PAGE == win.dm->ZoomVirtual())
+        ZoomVirtual.Set(str::Dup(_T("fitpage")));
+    else if (ZOOM_FIT_WIDTH == win.dm->ZoomVirtual())
+        ZoomVirtual.Set(str::Dup(_T("fitwidth")));
+    else if (ZOOM_FIT_CONTENT == win.dm->ZoomVirtual())
+        ZoomVirtual.Set(str::Dup(_T("fitcontent")));
 
     ScopedMem<TCHAR> exePath(GetExePath());
     ScopedMem<TCHAR> args(str::Format(_T("\"%s\" -page %d -view \"%s\" -zoom %s -scroll %d,%d -reuse-instance"),
-                          win.dm->FileName(), ss.page, viewMode, zoomVirtual, (int)ss.x, (int)ss.y));
+                          win.dm->FileName(), ss.page, viewMode, ZoomVirtual, (int)ss.x, (int)ss.y));
     ScopedMem<TCHAR> desc(str::Format(_TR("Bookmark shortcut to page %d of %s"),
                           ss.page, path::GetBaseName(win.dm->FileName())));
 
@@ -3057,7 +3057,7 @@ static void OnVScroll(WindowInfo& win, WPARAM wParam)
 
     int iVertPos = si.nPos;
     int lineHeight = 16;
-    if (!displayModeContinuous(win.dm->displayMode()) && ZOOM_FIT_PAGE == win.dm->zoomVirtual())
+    if (!displayModeContinuous(win.dm->displayMode()) && ZOOM_FIT_PAGE == win.dm->ZoomVirtual())
         lineHeight = 1;
 
     switch (LOWORD(wParam)) {
@@ -3227,7 +3227,7 @@ static void ChangeZoomLevel(WindowInfo *win, float newZoom, bool pagesContinuous
     if (!win->IsDocLoaded())
         return;
 
-    float zoom = win->dm->zoomVirtual();
+    float zoom = win->dm->ZoomVirtual();
     DisplayMode mode = win->dm->displayMode();
     DisplayMode newMode = pagesContinuously ? DM_CONTINUOUS : DM_SINGLE_PAGE;
 
@@ -3276,14 +3276,14 @@ static void OnMenuGoToPage(WindowInfo& win)
         return;
     }
 
-    ScopedMem<TCHAR> label(win.dm->engine->GetPageLabel(win.dm->currentPageNo()));
+    ScopedMem<TCHAR> label(win.dm->engine->GetPageLabel(win.dm->CurrentPageNo()));
     ScopedMem<TCHAR> newPageLabel(Dialog_GoToPage(win.hwndFrame, label, win.dm->PageCount(),
                                                   !win.dm->engine->HasPageLabels()));
     if (!newPageLabel)
         return;
 
     int newPageNo = win.dm->engine->GetPageByLabel(newPageLabel);
-    if (win.dm->validPageNo(newPageNo))
+    if (win.dm->ValidPageNo(newPageNo))
         win.dm->GoToPage(newPageNo, 0, true);
 }
 
@@ -3343,7 +3343,7 @@ static void EnterFullscreen(WindowInfo& win, bool presentation)
     SetWindowPos(win.hwndCanvas, NULL, 0, 0, rect.dx, rect.dy, SWP_NOZORDER);
 
     if (presentation)
-        win.dm->setPresentationMode(true);
+        win.dm->SetPresentationMode(true);
 
     // Make sure that no toolbar/sidebar keeps the focus
     SetFocus(win.hwndFrame);
@@ -3357,7 +3357,7 @@ static void ExitFullscreen(WindowInfo& win)
 
     bool wasPresentation = PM_DISABLED != win.presentation;
     if (wasPresentation && win.dm) {
-        win.dm->setPresentationMode(false);
+        win.dm->SetPresentationMode(false);
         win.presentation = PM_DISABLED;
     }
     else
@@ -3469,13 +3469,13 @@ bool OnFrameKeydown(WindowInfo *win, WPARAM key, LPARAM lparam, bool inTextfield
 
     if (VK_PRIOR == key) {
         int currentPos = GetScrollPos(win->hwndCanvas, SB_VERT);
-        if (win->dm->zoomVirtual() != ZOOM_FIT_CONTENT)
+        if (win->dm->ZoomVirtual() != ZOOM_FIT_CONTENT)
             SendMessage(win->hwndCanvas, WM_VSCROLL, SB_PAGEUP, 0);
         if (GetScrollPos(win->hwndCanvas, SB_VERT) == currentPos)
             win->dm->goToPrevPage(-1);
     } else if (VK_NEXT == key) {
         int currentPos = GetScrollPos(win->hwndCanvas, SB_VERT);
-        if (win->dm->zoomVirtual() != ZOOM_FIT_CONTENT)
+        if (win->dm->ZoomVirtual() != ZOOM_FIT_CONTENT)
             SendMessage(win->hwndCanvas, WM_VSCROLL, SB_PAGEDOWN, 0);
         if (GetScrollPos(win->hwndCanvas, SB_VERT) == currentPos)
             win->dm->goToNextPage(0);
@@ -3507,9 +3507,9 @@ bool OnFrameKeydown(WindowInfo *win, WPARAM key, LPARAM lparam, bool inTextfield
     } else if (VK_END == key) {
         win->dm->goToLastPage();
     } else if (VK_MULTIPLY == key) {
-        win->dm->rotateBy(90);
+        win->dm->RotateBy(90);
     } else if (VK_DIVIDE == key) {
-        win->dm->rotateBy(-90);
+        win->dm->RotateBy(-90);
         gIsDivideKeyDown = true;
     } else {
         return false;
@@ -3607,7 +3607,7 @@ static void OnFrameChar(WindowInfo& win, WPARAM key)
         if (!displayModeSingle(win.dm->displayMode())) {
             // "e-book view": flip a single page
             bool forward = !IsShiftPressed();
-            int currPage = win.dm->currentPageNo();
+            int currPage = win.dm->CurrentPageNo();
             if (forward ? win.dm->lastBookPageVisible() : win.dm->firstBookPageVisible())
                 break;
 
@@ -3616,9 +3616,9 @@ static void OnFrameChar(WindowInfo& win, WPARAM key)
                 newMode = DM_FACING;
             SwitchToDisplayMode(&win, newMode, true);
 
-            if (forward && currPage >= win.dm->currentPageNo() && (currPage > 1 || newMode == DM_BOOK_VIEW))
+            if (forward && currPage >= win.dm->CurrentPageNo() && (currPage > 1 || newMode == DM_BOOK_VIEW))
                 win.dm->goToNextPage(0);
-            else if (!forward && currPage <= win.dm->currentPageNo())
+            else if (!forward && currPage <= win.dm->CurrentPageNo())
                 win.dm->goToPrevPage(0);
         }
         break;
@@ -3635,7 +3635,7 @@ static void OnFrameChar(WindowInfo& win, WPARAM key)
         // experimental "page info" tip: make figuring out current page and
         // total pages count a one-key action (unless they're already visible)
         if (!gGlobalPrefs.toolbarVisible || win.fullScreen || PM_ENABLED == win.presentation) {
-            int current = win.dm->currentPageNo(), total = win.dm->PageCount();
+            int current = win.dm->CurrentPageNo(), total = win.dm->PageCount();
             ScopedMem<TCHAR> pageInfo(str::Format(_T("%s %d / %d"), _TR("Page:"), current, total));
             if (win.dm->engine && win.dm->engine->HasPageLabels()) {
                 ScopedMem<TCHAR> label(win.dm->engine->GetPageLabel(current));
@@ -3939,7 +3939,7 @@ void SetSidebarVisibility(WindowInfo *win, bool tocVisible, bool favVisible)
     if (rFrame.IsEmpty()) {
         // don't adjust the ToC sidebar size while the window is minimized
         if (win->tocVisible)
-            UpdateTocSelection(win, win->dm->currentPageNo());
+            UpdateTocSelection(win, win->dm->CurrentPageNo());
         return;
     }
 
@@ -3969,7 +3969,7 @@ void SetSidebarVisibility(WindowInfo *win, bool tocVisible, bool favVisible)
     SetWinPos(win->hwndCanvas, rCanvas, true);
 
     if (tocVisible)
-        UpdateTocSelection(win, win->dm->currentPageNo());
+        UpdateTocSelection(win, win->dm->CurrentPageNo());
 }
 
 static LRESULT OnSetCursor(WindowInfo& win, HWND hwnd)
@@ -4126,7 +4126,7 @@ static LRESULT OnMouseWheel(WindowInfo& win, UINT message, WPARAM wParam, LPARAM
         ScreenToClient(win.hwndCanvas, &pt);
 
         float factor = delta < 0 ? ZOOM_OUT_FACTOR : ZOOM_IN_FACTOR;
-        win.dm->zoomBy(factor, &PointI(pt.x, pt.y));
+        win.dm->ZoomBy(factor, &PointI(pt.x, pt.y));
         UpdateToolbarState(&win);
 
         // don't show the context menu when zooming with the right mouse-button down
@@ -4138,7 +4138,7 @@ static LRESULT OnMouseWheel(WindowInfo& win, UINT message, WPARAM wParam, LPARAM
     
     // make sure to scroll whole pages in non-continuous Fit Content mode
     if (!displayModeContinuous(win.dm->displayMode()) &&
-        ZOOM_FIT_CONTENT == win.dm->zoomVirtual()) {
+        ZOOM_FIT_CONTENT == win.dm->ZoomVirtual()) {
         if (delta > 0)
             win.dm->goToPrevPage(0);
         else
@@ -4481,12 +4481,12 @@ static LRESULT OnCommand(WindowInfo *win, HWND hwnd, UINT message, WPARAM wParam
     
         case IDM_VIEW_ROTATE_LEFT:
             if (win->IsDocLoaded())
-                win->dm->rotateBy(-90);
+                win->dm->RotateBy(-90);
             break;
     
         case IDM_VIEW_ROTATE_RIGHT:
             if (win->IsDocLoaded())
-                win->dm->rotateBy(90);
+                win->dm->RotateBy(90);
             break;
     
         case IDM_FIND_FIRST:
@@ -5039,7 +5039,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
                 win->linkHandler->GotoNamedDest(i.destName);
             }
             else if (win->IsDocLoaded() && i.pageNumber > 0 && !firstIsDocLoaded) {
-                if (win->dm->validPageNo(i.pageNumber))
+                if (win->dm->ValidPageNo(i.pageNumber))
                     win->dm->GoToPage(i.pageNumber, 0);
             }
             if (i.hwndPluginParent)

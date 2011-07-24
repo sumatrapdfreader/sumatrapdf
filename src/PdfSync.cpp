@@ -506,7 +506,7 @@ int SyncTex::pdf_to_source(UINT pageNo, PointI pt, ScopedMem<TCHAR>& filename, U
             return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
     assert(this->scanner);
 
-    if (!dm->validPageNo(pageNo))
+    if (!dm->ValidPageNo(pageNo))
         return PDFSYNCERR_INVALID_PAGE_NUMBER;
     PageInfo *pageInfo = dm->getPageInfo(pageNo);
     if (!pageInfo)
@@ -574,7 +574,7 @@ int SyncTex::source_to_pdf(const TCHAR* srcfilename, UINT line, UINT col, UINT *
                 if (firstpage == -1) {
                     firstpage = synctex_node_page(node);
                     *page = (UINT)firstpage;
-                    if (dm->validPageNo(firstpage))
+                    if (dm->ValidPageNo(firstpage))
                         pageInfo = dm->getPageInfo(firstpage);
                     if (!pageInfo)
                         continue;

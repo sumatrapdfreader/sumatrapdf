@@ -253,9 +253,9 @@ static TCHAR *FormatTime(int totalSecs)
 
 static void MakeRandomSelection(DisplayModel *dm, int pageNo)
 {
-    if (!dm->validPageNo(pageNo))
+    if (!dm->ValidPageNo(pageNo))
         pageNo = 1;
-    if (!dm->validPageNo(pageNo))
+    if (!dm->ValidPageNo(pageNo))
         return;
 
     // try a random position in the page
@@ -440,8 +440,8 @@ bool StressTest::OpenFile(const TCHAR *fileName)
     if (!win->dm)
         return false;
 
-    win->dm->changeDisplayMode(DM_CONTINUOUS);
-    win->dm->zoomTo(ZOOM_FIT_PAGE);
+    win->dm->ChangeDisplayMode(DM_CONTINUOUS);
+    win->dm->ZoomTo(ZOOM_FIT_PAGE);
     win->dm->goToFirstPage();
     if (win->tocVisible || gGlobalPrefs.favVisible)
         SetSidebarVisibility(win, win->tocVisible, gGlobalPrefs.favVisible);
@@ -522,7 +522,7 @@ void StressTest::OnTimer()
     // (but we don't wait more than 3 seconds).
     // Image files are always fully rendered in WM_PAINT, so we know the page
     // has already been rendered.
-    bool didRender = renderCache->Exists(win->dm, currPage, win->dm->rotation());
+    bool didRender = renderCache->Exists(win->dm, currPage, win->dm->Rotation());
     if (!didRender && !win->dm->engine->IsImageCollection()) {
         double timeInMs = currPageRenderTime.GetCurrTimeInMs();
         if (timeInMs > (double)3 * 1000) {

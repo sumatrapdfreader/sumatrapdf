@@ -484,7 +484,7 @@ void OnMenuPrint(WindowInfo *win)
         goto Exit;
 
     if (pd.Flags & PD_CURRENTPAGE) {
-        PRINTPAGERANGE pr = { dm->currentPageNo(), dm->currentPageNo() };
+        PRINTPAGERANGE pr = { dm->CurrentPageNo(), dm->CurrentPageNo() };
         ranges.Append(pr);
     } else if (win->selectionOnPage && (pd.Flags & PD_SELECTION)) {
         printSelection = true;
@@ -499,7 +499,7 @@ void OnMenuPrint(WindowInfo *win)
 
     LPDEVMODE devMode = (LPDEVMODE)GlobalLock(pd.hDevMode);
     PrintData *data = new PrintData(dm->engine, pd.hDC, devMode, ranges,
-                                    dm->rotation(), advanced.range, advanced.scale,
+                                    dm->Rotation(), advanced.range, advanced.scale,
                                     printSelection ? win->selectionOnPage : NULL);
     pd.hDC = NULL; // deleted by PrintData
     if (devMode)

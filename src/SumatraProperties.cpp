@@ -344,7 +344,7 @@ void OnMenuProperties(WindowInfo& win)
     str = str::Format(_T("%d"), engine->PageCount());
     layoutData->AddProperty(_TR("Number of Pages:"), str);
 
-    str = FormatPageSize(engine, win.dm->currentPageNo(), win.dm->rotation());
+    str = FormatPageSize(engine, win.dm->CurrentPageNo(), win.dm->Rotation());
 #ifdef UNICODE
     if (IsUIRightToLeft() && WindowsVerVistaOrGreater()) {
         ScopedMem<TCHAR> tmp(str);

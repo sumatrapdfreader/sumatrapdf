@@ -102,7 +102,7 @@ void UpdateTextSelection(WindowInfo *win, bool select)
 
     if (select) {
         int pageNo = win->dm->GetPageNoByPoint(win->selectionRect.BR());
-        if (win->dm->validPageNo(pageNo)) {
+        if (win->dm->ValidPageNo(pageNo)) {
             PointD pt = win->dm->CvtFromScreen(win->selectionRect.BR(), pageNo);
             win->dm->textSelection->SelectUpTo(pageNo, pt.x, pt.y);
         }
@@ -136,7 +136,7 @@ void ZoomToSelection(WindowInfo *win, float factor, bool relative)
         pt.y = limitValue(pt.y, selRect.y, selRect.y + selRect.dy);
 
         int pageNo = win->dm->GetPageNoByPoint(pt);
-        if (!win->dm->validPageNo(pageNo) || !win->dm->pageVisible(pageNo))
+        if (!win->dm->ValidPageNo(pageNo) || !win->dm->pageVisible(pageNo))
             zoomToPt = false;
     }
     // or towards the top-left-most part of the first visible page
@@ -148,15 +148,15 @@ void ZoomToSelection(WindowInfo *win, float factor, bool relative)
             pt = visible.TL();
 
             int pageNo = win->dm->GetPageNoByPoint(pt);
-            if (!visible.IsEmpty() && win->dm->validPageNo(pageNo) && win->dm->pageVisible(pageNo))
+            if (!visible.IsEmpty() && win->dm->ValidPageNo(pageNo) && win->dm->pageVisible(pageNo))
                 zoomToPt = true;
         }
     }
 
     if (relative)
-        win->dm->zoomBy(factor, zoomToPt ? &pt : NULL);
+        win->dm->ZoomBy(factor, zoomToPt ? &pt : NULL);
     else
-        win->dm->zoomTo(factor, zoomToPt ? &pt : NULL);
+        win->dm->ZoomTo(factor, zoomToPt ? &pt : NULL);
 
     UpdateToolbarState(win);
 }
@@ -202,7 +202,7 @@ void CopySelectionToClipboard(WindowInfo *win)
     /* also copy a screenshot of the current selection to the clipboard */
     SelectionOnPage *selOnPage = &win->selectionOnPage->At(0);
     RenderedBitmap * bmp = win->dm->engine->RenderBitmap(selOnPage->pageNo,
-        win->dm->zoomReal(), win->dm->rotation(), &selOnPage->rect, Target_Export);
+        win->dm->ZoomReal(), win->dm->Rotation(), &selOnPage->rect, Target_Export);
     if (bmp) {
         if (!SetClipboardData(CF_BITMAP, bmp->GetBitmap()))
             SeeLastError();
@@ -283,7 +283,7 @@ void OnSelectionStart(WindowInfo *win, int x, int y, WPARAM key)
     // Ctrl+drag forces a rectangular selection
     if (!(key & MK_CONTROL) || (key & MK_SHIFT)) {
         int pageNo = win->dm->GetPageNoByPoint(PointI(x, y));
-        if (win->dm->validPageNo(pageNo)) {
+        if (win->dm->ValidPageNo(pageNo)) {
             PointD pt = win->dm->CvtFromScreen(PointI(x, y), pageNo);
             win->dm->textSelection->StartAt(pageNo, pt.x, pt.y);
             win->mouseAction = MA_SELECTING_TEXT;
