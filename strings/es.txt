@@ -14,6 +14,7 @@ Contributor: pragmart [http://putolinux.wordpress.com]
 Contributor: Pedro Sanchez
 Contributor: Carlos Luna
 Contributor: Juan Vílchez [http://www.juanvilchez.es]
+Contributor: Javier Gutiérrez [http://guti.isgreat.org]
 
 &About
 &Acerca de...
@@ -162,8 +163,23 @@ Página única\tCtrl+6
 (of %d)
 (de %d)
 
+(page %d)
+(página %d)
+
 About SumatraPDF
 Acerca de SumatraPDF
+
+Add Favorite
+Añadir favorito
+
+Add page %d to favorites
+Añadir página %d a favoritos
+
+Add page %d to favorites with (optional) name:
+Añadir página %d a favoritos con nombre (opcional):
+
+Add to favorites
+Añadir a favoritos
 
 Advanced
 Avanzado
@@ -252,6 +268,9 @@ Copiar co&mentario
 Copying text was denied (copying as image only)
 Copiado de texto no permitido (copiando como imagen)
 
+Could not obtain Printer properties
+Imposible obtener propierades de la impresiora
+
 Could not open Printer
 Impresora no disponible
 
@@ -263,6 +282,9 @@ No se pudo renderizar la página
 
 Created:
 Creado:
+
+Current file
+Archivo actual
 
 Custom &Zoom...\tCtrl+Y
 &Zoom personalizado...\tCtrl+Y
@@ -303,6 +325,9 @@ Introduzca los modificadores de línea de comando que se ejecutarán al hacer do
 Error loading %s
 Error de carga %s
 
+F&avorites
+F&avoritos
+
 F&orward\tAlt+Right Arrow
 Adelante\tAlt+->
 
@@ -314,6 +339,9 @@ Página doble
 
 Failed to save a file
 Error al Guardar el Archivo
+
+Favorites
+Favoritos
 
 File Size:
 Tamaño del Archivo:
@@ -462,6 +490,9 @@ Documentos PDF
 Pa&ge...\tCtrl+G
 Página...\tCtrl+G
 
+Page %d
+Página %d
+
 Page Size:
 Tamaño de Página:
 
@@ -492,6 +523,9 @@ Imprimir
 Print range
 Rango de impresión
 
+Printer with given name doesn't exist
+La impresorna con el nombre especificado no existe
+
 Printing is still in progress. Abort and start over?
 Se esta imprimiendo. ¿Abortar y empezar de nuevo?
 
@@ -503,6 +537,12 @@ Problema de impresión.
 
 Remember &opened files
 Recordar archiv&os abiertos
+
+Remove from favorites
+Eliminar de favoritos
+
+Remove page %d from favorites
+Eliminar página %d de favoritos
 
 Rotate &Left\tCtrl+Shift+-
 Girar a la izquierda\tCtrl+Mayus--
@@ -539,6 +579,9 @@ Mostrar barra de herramientas
 
 Show &pages continuously
 Mostrar páginas de forma continua
+
+Show Favorites
+Mostrar favoritos
 
 Show frequently read
 Mostrar "lo más leído"
@@ -623,20 +666,4 @@ copiado de texto
 
 printing document
 imprimimendo documento
-
-# Untranslated:
-#(page %d)
-#Add Favorite
-#Add page %d to favorites
-#Add page %d to favorites with (optional) name:
-#Add to favorites
-#Could not obtain Printer properties
-#Current file
-#F&avorites
-#Favorites
-#Page %d
-#Printer with given name doesn't exist
-#Remove from favorites
-#Remove page %d from favorites
-#Show Favorites
 
