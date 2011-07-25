@@ -119,7 +119,7 @@ static bool ValidZoomVirtual(float zoomVirtual)
     return true;
 }
 
-bool DisplayModel::displayStateFromModel(DisplayState *ds)
+bool DisplayModel::DisplayStateFromModel(DisplayState *ds)
 {
     if (!ds->filePath || !str::Eq(ds->filePath, FileName()))
         str::ReplacePtr(&ds->filePath, FileName());
@@ -1441,15 +1441,15 @@ void DisplayModel::addNavPoint(bool keepForward)
         _navHistoryEnd = _navHistoryIx;
 }
 
-bool DisplayModel::canNavigate(int dir) const
+bool DisplayModel::CanNavigate(int dir) const
 {
     return _navHistoryIx + dir >= 0 && _navHistoryIx + dir < _navHistoryEnd && (_navHistoryIx != NAV_HISTORY_LEN || _navHistoryIx + dir != 0);
 }
 
 /* Navigates |dir| steps forward or backwards. */
-void DisplayModel::navigate(int dir)
+void DisplayModel::Navigate(int dir)
 {
-    if (!canNavigate(dir))
+    if (!CanNavigate(dir))
         return;
     addNavPoint(true);
     _navHistoryIx += dir - 1; // -1 because adding a nav point increases the index

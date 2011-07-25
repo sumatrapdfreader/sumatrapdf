@@ -226,9 +226,9 @@ void LinkHandler::GotoLink(PageDestination *link)
     else if (str::Eq(type, "FullScreen"))
         PostMessage(owner->hwndFrame, WM_COMMAND, IDM_VIEW_PRESENTATION_MODE, 0);
     else if (str::Eq(type, "GoBack"))
-        dm->navigate(-1);
+        dm->Navigate(-1);
     else if (str::Eq(type, "GoForward"))
-        dm->navigate(1);
+        dm->Navigate(1);
     else if (str::Eq(type, "Print"))
         PostMessage(owner->hwndFrame, WM_COMMAND, IDM_PRINT, 0);
     else if (str::Eq(type, "SaveAs"))

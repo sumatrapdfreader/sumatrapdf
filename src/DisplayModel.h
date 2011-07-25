@@ -197,10 +197,10 @@ public:
     ScrollState     GetScrollState();
     void            SetScrollState(ScrollState state);
 
-    bool            canNavigate(int dir) const;
-    void            navigate(int dir);
+    bool            CanNavigate(int dir) const;
+    void            Navigate(int dir);
 
-    bool            displayStateFromModel(DisplayState *ds);
+    bool            DisplayStateFromModel(DisplayState *ds);
 
     // called when we decide that the display needs to be redrawn
     void            RepaintDisplay() { if (_callback) _callback->Repaint(); }

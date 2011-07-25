@@ -405,8 +405,8 @@ void MenuUpdateStateForWindow(WindowInfo* win) {
     MenuUpdateZoom(win);
 
     if (win->IsDocLoaded()) {
-        win::menu::SetEnabled(win->menu, IDM_GOTO_NAV_BACK, win->dm->canNavigate(-1));
-        win::menu::SetEnabled(win->menu, IDM_GOTO_NAV_FORWARD, win->dm->canNavigate(1));
+        win::menu::SetEnabled(win->menu, IDM_GOTO_NAV_BACK, win->dm->CanNavigate(-1));
+        win::menu::SetEnabled(win->menu, IDM_GOTO_NAV_FORWARD, win->dm->CanNavigate(1));
     }
 
     for (int i = 0; i < dimof(menusToDisableIfNoDocument); i++) {

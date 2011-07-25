@@ -287,16 +287,17 @@ $(OS)\ExternalPdfViewer.obj: src\utils\Vec.h src\utils\WinUtil.h src\WindowInfo.
 $(OS)\Favorites.obj: src\AppPrefs.h src\AppTools.h src\BaseEngine.h
 $(OS)\Favorites.obj: src\ChmEngine.h src\DisplayModel.h src\DisplayState.h
 $(OS)\Favorites.obj: src\DjVuEngine.h src\EngineManager.h src\Favorites.h
-$(OS)\Favorites.obj: src\FileHistory.h src\ImagesEngine.h src\PdfEngine.h
-$(OS)\Favorites.obj: src\PsEngine.h src\resource.h src\SumatraDialogs.h
-$(OS)\Favorites.obj: src\SumatraPDF.h src\TextSearch.h src\TextSelection.h
-$(OS)\Favorites.obj: src\translations.h src\utils\BaseUtil.h src\utils\FileUtil.h
-$(OS)\Favorites.obj: src\utils\GeomUtil.h src\utils\StrUtil.h src\utils\Vec.h
-$(OS)\Favorites.obj: src\utils\WinUtil.h src\WindowInfo.h
+$(OS)\Favorites.obj: src\FileHistory.h src\ImagesEngine.h src\Menu.h
+$(OS)\Favorites.obj: src\PdfEngine.h src\PsEngine.h src\resource.h
+$(OS)\Favorites.obj: src\SumatraDialogs.h src\SumatraPDF.h src\TextSearch.h
+$(OS)\Favorites.obj: src\TextSelection.h src\translations.h src\utils\BaseUtil.h
+$(OS)\Favorites.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\StrUtil.h
+$(OS)\Favorites.obj: src\utils\Vec.h src\utils\WinUtil.h src\WindowInfo.h
 $(OS)\FileUtil.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\StrUtil.h
 $(OS)\FileWatch.obj: src\FileWatch.h src\utils\BaseUtil.h src\utils\FileUtil.h
 $(OS)\FileWatch.obj: src\utils\StrUtil.h
 $(OS)\HtmlWindow.obj: src\utils\BaseUtil.h src\utils\GeomUtil.h src\utils\HtmlWindow.h
+$(OS)\HtmlWindow.obj: src\utils\StrUtil.h src\utils\WinUtil.h
 $(OS)\Http.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
 $(OS)\Http.obj: src\utils\Http.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\Http.obj: src\utils\WinUtil.h
@@ -308,6 +309,16 @@ $(OS)\Installer.obj: src\installer\Resource.h src\PdfEngine.h src\utils\BaseUtil
 $(OS)\Installer.obj: src\utils\CmdLineParser.h src\utils\FileUtil.h src\utils\GeomUtil.h
 $(OS)\Installer.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
 $(OS)\Installer.obj: src\Version.h
+$(OS)\Menu.obj: src\AppPrefs.h src\BaseEngine.h src\ChmEngine.h
+$(OS)\Menu.obj: src\DisplayModel.h src\DisplayState.h src\DjVuEngine.h
+$(OS)\Menu.obj: src\EngineManager.h src\ExternalPdfViewer.h src\Favorites.h
+$(OS)\Menu.obj: src\FileHistory.h src\ImagesEngine.h src\Menu.h
+$(OS)\Menu.obj: src\PdfEngine.h src\PsEngine.h src\resource.h
+$(OS)\Menu.obj: src\Selection.h src\SumatraAbout.h src\SumatraDialogs.h
+$(OS)\Menu.obj: src\SumatraPDF.h src\TextSearch.h src\TextSelection.h
+$(OS)\Menu.obj: src\translations.h src\utils\BaseUtil.h src\utils\FileUtil.h
+$(OS)\Menu.obj: src\utils\GeomUtil.h src\utils\StrUtil.h src\utils\Vec.h
+$(OS)\Menu.obj: src\utils\WinUtil.h src\WindowInfo.h
 $(OS)\MuPDF_Exports.obj: mupdf\fitz\fitz.h
 $(OS)\Notifications.obj: src\AppPrefs.h src\BaseEngine.h src\ChmEngine.h
 $(OS)\Notifications.obj: src\DisplayModel.h src\DisplayState.h src\DjVuEngine.h
@@ -408,17 +419,17 @@ $(OS)\SumatraPDF.obj: src\AppPrefs.h src\AppTools.h src\BaseEngine.h
 $(OS)\SumatraPDF.obj: src\ChmEngine.h src\CrashHandler.h src\DisplayModel.h
 $(OS)\SumatraPDF.obj: src\DisplayState.h src\DjVuEngine.h src\EngineManager.h
 $(OS)\SumatraPDF.obj: src\ExternalPdfViewer.h src\Favorites.h src\FileHistory.h
-$(OS)\SumatraPDF.obj: src\FileWatch.h src\ImagesEngine.h src\Notifications.h
-$(OS)\SumatraPDF.obj: src\ParseCommandLine.h src\PdfEngine.h src\PdfSync.h
-$(OS)\SumatraPDF.obj: src\Print.h src\PsEngine.h src\RenderCache.h
-$(OS)\SumatraPDF.obj: src\Resource.h src\Search.h src\Selection.h
-$(OS)\SumatraPDF.obj: src\StressTesting.h src\SumatraAbout.h src\SumatraDialogs.h
-$(OS)\SumatraPDF.obj: src\SumatraPDF.h src\SumatraProperties.h src\TableOfContents.h
-$(OS)\SumatraPDF.obj: src\TextSearch.h src\TextSelection.h src\Toolbar.h
-$(OS)\SumatraPDF.obj: src\translations.h src\utils\BaseUtil.h src\utils\FileUtil.h
-$(OS)\SumatraPDF.obj: src\utils\GeomUtil.h src\utils\Http.h src\utils\StrUtil.h
-$(OS)\SumatraPDF.obj: src\utils\Vec.h src\utils\WinUtil.h src\Version.h
-$(OS)\SumatraPDF.obj: src\WindowInfo.h
+$(OS)\SumatraPDF.obj: src\FileWatch.h src\ImagesEngine.h src\Menu.h
+$(OS)\SumatraPDF.obj: src\Notifications.h src\ParseCommandLine.h src\PdfEngine.h
+$(OS)\SumatraPDF.obj: src\PdfSync.h src\Print.h src\PsEngine.h
+$(OS)\SumatraPDF.obj: src\RenderCache.h src\resource.h src\Resource.h
+$(OS)\SumatraPDF.obj: src\Search.h src\Selection.h src\StressTesting.h
+$(OS)\SumatraPDF.obj: src\SumatraAbout.h src\SumatraDialogs.h src\SumatraPDF.h
+$(OS)\SumatraPDF.obj: src\SumatraProperties.h src\TableOfContents.h src\TextSearch.h
+$(OS)\SumatraPDF.obj: src\TextSelection.h src\Toolbar.h src\translations.h
+$(OS)\SumatraPDF.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
+$(OS)\SumatraPDF.obj: src\utils\Http.h src\utils\StrUtil.h src\utils\Vec.h
+$(OS)\SumatraPDF.obj: src\utils\WinUtil.h src\Version.h src\WindowInfo.h
 $(OS)\SumatraProperties.obj: src\AppPrefs.h src\BaseEngine.h src\ChmEngine.h
 $(OS)\SumatraProperties.obj: src\DisplayModel.h src\DisplayState.h src\DjVuEngine.h
 $(OS)\SumatraProperties.obj: src\EngineManager.h src\ImagesEngine.h src\PdfEngine.h
@@ -443,11 +454,12 @@ $(OS)\TextSelection.obj: src\utils\GeomUtil.h src\utils\StrUtil.h src\utils\Vec.
 $(OS)\Toolbar.obj: src\AppPrefs.h src\AppTools.h src\BaseEngine.h
 $(OS)\Toolbar.obj: src\ChmEngine.h src\DisplayModel.h src\DisplayState.h
 $(OS)\Toolbar.obj: src\DjVuEngine.h src\EngineManager.h src\ImagesEngine.h
-$(OS)\Toolbar.obj: src\PdfEngine.h src\PsEngine.h src\resource.h
-$(OS)\Toolbar.obj: src\Search.h src\SumatraPDF.h src\TextSearch.h
-$(OS)\Toolbar.obj: src\TextSelection.h src\Toolbar.h src\translations.h
-$(OS)\Toolbar.obj: src\utils\BaseUtil.h src\utils\GeomUtil.h src\utils\StrUtil.h
-$(OS)\Toolbar.obj: src\utils\Vec.h src\utils\WinUtil.h src\WindowInfo.h
+$(OS)\Toolbar.obj: src\Menu.h src\PdfEngine.h src\PsEngine.h
+$(OS)\Toolbar.obj: src\resource.h src\Search.h src\SumatraPDF.h
+$(OS)\Toolbar.obj: src\TextSearch.h src\TextSelection.h src\Toolbar.h
+$(OS)\Toolbar.obj: src\translations.h src\utils\BaseUtil.h src\utils\GeomUtil.h
+$(OS)\Toolbar.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
+$(OS)\Toolbar.obj: src\WindowInfo.h
 $(OS)\translations.obj: src\translations.h src\translations_txt.cpp src\utils\BaseUtil.h
 $(OS)\translations.obj: src\utils\StrUtil.h
 $(OS)\TrivialHtmlParser.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h

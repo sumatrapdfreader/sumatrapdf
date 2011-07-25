@@ -405,7 +405,7 @@ void UpdateCurrentFileDisplayStateForWin(WindowInfo* win)
     if (!state)
         return;
 
-    if (!win->dm->displayStateFromModel(state))
+    if (!win->dm->DisplayStateFromModel(state))
         return;
     state->useGlobalValues = gGlobalPrefs.globalPrefsOnly;
     UpdateDisplayStateWindowRect(*win, *state, false);
@@ -587,7 +587,7 @@ void ReloadDocument(WindowInfo *win, bool autorefresh)
 {
     DisplayState ds;
     ds.useGlobalValues = gGlobalPrefs.globalPrefsOnly;
-    if (!win->IsDocLoaded() || !win->dm->displayStateFromModel(&ds)) {
+    if (!win->IsDocLoaded() || !win->dm->DisplayStateFromModel(&ds)) {
         if (!autorefresh && !win->IsDocLoaded() && !win->IsAboutWindow())
             LoadDocument(win->loadedFilePath, win);
         return;
@@ -2984,7 +2984,7 @@ static void OnFrameChar(WindowInfo& win, WPARAM key)
     case VK_BACK:
         {
             bool forward = IsShiftPressed();
-            win.dm->navigate(forward ? 1 : -1);
+            win.dm->Navigate(forward ? 1 : -1);
         }
         break;
     case 'g':
@@ -3963,12 +3963,12 @@ static LRESULT OnCommand(WindowInfo *win, HWND hwnd, UINT message, WPARAM wParam
     
         case IDM_GOTO_NAV_BACK:
             if (win->IsDocLoaded())
-                win->dm->navigate(-1);
+                win->dm->Navigate(-1);
             break;
             
         case IDM_GOTO_NAV_FORWARD:
             if (win->IsDocLoaded())
-                win->dm->navigate(1);
+                win->dm->Navigate(1);
             break;
     
         case IDM_COPY_SELECTION:
