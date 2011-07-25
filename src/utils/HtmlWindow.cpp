@@ -128,7 +128,7 @@ protected:
 class HW_IOleInPlaceSiteWindowless : public IOleInPlaceSiteWindowless
 {
 public:
-    HW_IOleInPlaceSiteWindowless(FrameSite* fs) { this->fs = fs; }
+    HW_IOleInPlaceSiteWindowless(FrameSite* fs) : fs(fs) { }
     ~HW_IOleInPlaceSiteWindowless() {}
 
     //IUnknown
@@ -176,7 +176,7 @@ protected:
 class HW_IOleClientSite : public IOleClientSite
 {
 public:
-    HW_IOleClientSite(FrameSite* fs) { this->fs = fs; }
+    HW_IOleClientSite(FrameSite* fs) : fs(fs) { }
     ~HW_IOleClientSite() {}
 
     //IUnknown
@@ -197,7 +197,7 @@ protected:
 class HW_IOleControlSite : public IOleControlSite
 {
 public:
-    HW_IOleControlSite(FrameSite* fs) { this->fs = fs; }
+    HW_IOleControlSite(FrameSite* fs) : fs(fs) { }
     ~HW_IOleControlSite() {}
 
     //IUnknown
@@ -219,7 +219,7 @@ protected:
 class HW_IOleCommandTarget : public IOleCommandTarget
 {
 public:
-    HW_IOleCommandTarget(FrameSite* fs) { this->fs = fs; }
+    HW_IOleCommandTarget(FrameSite* fs) : fs(fs) { }
     ~HW_IOleCommandTarget() {}
 
     //IUnknown
@@ -236,7 +236,7 @@ protected:
 class HW_IOleItemContainer : public IOleItemContainer
 {
 public:
-    HW_IOleItemContainer(FrameSite* fs) { this->fs = fs; }
+    HW_IOleItemContainer(FrameSite* fs) : fs(fs) { }
     ~HW_IOleItemContainer() {}
 
     //IUnknown
@@ -259,7 +259,7 @@ protected:
 class HW_IDispatch : public IDispatch
 {
 public:
-    HW_IDispatch(FrameSite* fs) { this->fs = fs; }
+    HW_IDispatch(FrameSite* fs) : fs(fs) { }
     ~HW_IDispatch() {}
 
     //IUnknown
@@ -282,7 +282,7 @@ protected:
 class HW_DWebBrowserEvents2 : public DWebBrowserEvents2
 {
 public:
-    HW_DWebBrowserEvents2(FrameSite* fs) { this->fs = fs; }
+    HW_DWebBrowserEvents2(FrameSite* fs) : fs(fs) { }
     ~HW_DWebBrowserEvents2() {}
 
     //IUnknown
@@ -306,7 +306,7 @@ protected:
 class HW_IAdviseSink2 : public IAdviseSink2
 {
 public:
-    HW_IAdviseSink2(FrameSite* fs) { this->fs = fs; }
+    HW_IAdviseSink2(FrameSite* fs) : fs(fs) { }
     ~HW_IAdviseSink2() {}
 
     //IUnknown
@@ -328,7 +328,7 @@ protected:
 class HW_IAdviseSinkEx : public IAdviseSinkEx
 {
 public:
-    HW_IAdviseSinkEx(FrameSite* fs) { this->fs = fs; }
+    HW_IAdviseSinkEx(FrameSite* fs) : fs(fs) { }
     ~HW_IAdviseSinkEx() {}
 
     //IUnknown
@@ -1237,8 +1237,7 @@ HRESULT HW_IOleClientSite::GetContainer(LPOLECONTAINER * ppContainer)
 {
     if (ppContainer == NULL)
         return E_INVALIDARG;
-    this->QueryInterface(IID_IOleContainer, (void**)ppContainer);
-    return S_OK;
+    return QueryInterface(IID_IOleContainer, (void**)ppContainer);
 }
 
 HRESULT HW_IOleClientSite::ShowObject()

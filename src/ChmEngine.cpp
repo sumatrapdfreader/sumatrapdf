@@ -103,7 +103,7 @@ public:
     virtual bool HasToCTree() const { return true; }
     virtual DocToCItem *GetToCTree() { return tocRoot; }
 
-    void HookToHwndAndDisplayIndex2(HWND hwnd);
+    virtual void HookToHwndAndDisplayIndex(HWND hwnd);
 
 protected:
     const TCHAR *fileName;
@@ -126,13 +126,7 @@ CChmEngine::CChmEngine() :
 }
 
 // TODO: this is hacky
-void ChmEngine::HookToHwndAndDisplayIndex(HWND hwnd)
-{
-    CChmEngine *eng = (CChmEngine*)this;
-    eng->HookToHwndAndDisplayIndex2(hwnd);
-}
-
-void CChmEngine::HookToHwndAndDisplayIndex2(HWND hwnd)
+void CChmEngine::HookToHwndAndDisplayIndex(HWND hwnd)
 {
     assert(!htmlWindow);
     htmlWindow = new HtmlWindow(hwnd);
@@ -145,6 +139,7 @@ CChmEngine::~CChmEngine()
 {
     chm_close(chmHandle);
     delete chmInfo;
+    delete htmlWindow;
     free((void *)fileName);
 }
 

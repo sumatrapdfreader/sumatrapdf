@@ -864,7 +864,7 @@ static bool LoadDocIntoWindow(
             gRenderCache.KeepForDisplayModel(prevModel, win.dm);
         delete prevModel;
         if (win.dm->engineType == Engine_Chm) {
-            ChmEngine *chmEngine = (ChmEngine*) win.dm->engine;
+            ChmEngine *chmEngine = static_cast<ChmEngine *>(win.dm->engine);
             // TODO: temporary hack, we'll probably need a spearate
             // hwnd just for html browser
             chmEngine->HookToHwndAndDisplayIndex(win.hwndCanvas);
@@ -4122,6 +4122,9 @@ InitMouseWheelInfo:
 
         case WM_MOUSEWHEEL:
             if (!win)
+                break;
+            // TODO: for HTMLWindows inside hwndCanvas, fix the infinite recursion
+            if (win->IsDocLoaded() && Engine_Chm == win->dm->engineType)
                 break;
             // Pass the message to the canvas' window procedure
             // (required since the canvas itself never has the focus and thus
