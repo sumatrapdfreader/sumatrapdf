@@ -79,13 +79,6 @@ static bool             gUseGdiRenderer = false;
 bool                    gPluginMode = false;
 TCHAR *                 gPluginURL = NULL; // owned by CommandLineInfo in WinMain
 
-/* default UI settings */
-
-#define DEFAULT_DISPLAY_MODE    DM_AUTOMATIC
-#define DEFAULT_ZOOM            ZOOM_FIT_PAGE
-#define DEFAULT_ROTATION        0
-#define DEFAULT_LANGUAGE        "en"
-
 /* Default size for the window, happens to be american A4 size (I think) */
 #define DEF_PAGE_RATIO          (612.0/792.0)
 
@@ -94,13 +87,10 @@ TCHAR *                 gPluginURL = NULL; // owned by CommandLineInfo in WinMai
 #else
 #define ABOUT_BG_COLOR          RGB(255,242,0)
 #endif
-// for backward compatibility use a value that older versions will render as yellow
-#define ABOUT_BG_COLOR_DEFAULT  (RGB(255,242,0) - 0x80000000)
 
 #define COL_WINDOW_BG           RGB(0xcc, 0xcc, 0xcc)
 #define COL_WINDOW_SHADOW       RGB(0x40, 0x40, 0x40)
 #define COL_PAGE_FRAME          RGB(0x88, 0x88, 0x88)
-#define COL_FWDSEARCH_BG        RGB(0x65, 0x81 ,0xff)
 
 #define SUMATRA_WINDOW_TITLE    _T("SumatraPDF")
 
@@ -158,36 +148,6 @@ static int                          gPolicyRestrictions = Perm_All;
 // opening in e.g. a browser or an email client (ignored,
 // if gPolicyRestrictions doesn't contain Perm_DiskAccess)
 static StrVec                       gAllowedLinkProtocols;
-
-SerializableGlobalPrefs             gGlobalPrefs = {
-    false, // bool globalPrefsOnly
-    DEFAULT_LANGUAGE, // const char *currentLanguage
-    true, // bool toolbarVisible
-    false, // bool favVisible
-    false, // bool pdfAssociateDontAskAgain
-    false, // bool pdfAssociateShouldAssociate
-    true, // bool enableAutoUpdate
-    true, // bool rememberOpenedFiles
-    ABOUT_BG_COLOR_DEFAULT, // int bgColor
-    false, // bool escToExit
-    NULL, // TCHAR *inverseSearchCmdLine
-    false, // bool enableTeXEnhancements
-    NULL, // TCHAR *versionToSkip
-    NULL, // char *lastUpdateTime
-    DEFAULT_DISPLAY_MODE, // DisplayMode defaultDisplayMode
-    DEFAULT_ZOOM, // float defaultZoom
-    WIN_STATE_NORMAL, // int  windowState
-    RectI(), // RectI windowPos
-    true, // bool tocVisible
-    0, // int  m_tocDx
-    0, // int  fwdSearchOffset
-    COL_FWDSEARCH_BG, // int  fwdSearchColor
-    15, // int  fwdSearchWidth
-    0, // bool fwdSearchPermanent
-    true, // bool showStartPage
-    0, // int openCountWeek
-    { 0, 0 }, // FILETIME lastPrefUpdate
-};
 
 static void UpdateUITextForLanguage();
 static void UpdateToolbarAndScrollbarsForAllWindows();

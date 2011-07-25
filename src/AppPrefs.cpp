@@ -78,6 +78,42 @@
 #define DM_CONTINUOUS_FACING_STR    "continuous facing"
 #define DM_CONTINUOUS_BOOK_VIEW_STR "continuous book view"
 
+/* default UI settings */
+#define DEFAULT_DISPLAY_MODE    DM_AUTOMATIC
+#define DEFAULT_ZOOM            ZOOM_FIT_PAGE
+#define DEFAULT_LANGUAGE        "en"
+#define COL_FWDSEARCH_BG        RGB(0x65, 0x81 ,0xff)
+
+SerializableGlobalPrefs gGlobalPrefs = {
+    false, // bool globalPrefsOnly
+    DEFAULT_LANGUAGE, // const char *currentLanguage
+    true, // bool toolbarVisible
+    false, // bool favVisible
+    false, // bool pdfAssociateDontAskAgain
+    false, // bool pdfAssociateShouldAssociate
+    true, // bool enableAutoUpdate
+    true, // bool rememberOpenedFiles
+    ABOUT_BG_COLOR_DEFAULT, // int bgColor
+    false, // bool escToExit
+    NULL, // TCHAR *inverseSearchCmdLine
+    false, // bool enableTeXEnhancements
+    NULL, // TCHAR *versionToSkip
+    NULL, // char *lastUpdateTime
+    DEFAULT_DISPLAY_MODE, // DisplayMode defaultDisplayMode
+    DEFAULT_ZOOM, // float defaultZoom
+    WIN_STATE_NORMAL, // int  windowState
+    RectI(), // RectI windowPos
+    true, // bool tocVisible
+    0, // int  m_tocDx
+    0, // int  fwdSearchOffset
+    COL_FWDSEARCH_BG, // int  fwdSearchColor
+    15, // int  fwdSearchWidth
+    0, // bool fwdSearchPermanent
+    true, // bool showStartPage
+    0, // int openCountWeek
+    { 0, 0 }, // FILETIME lastPrefUpdate
+};
+
 // number of weeks past since 2011-01-01
 static int GetWeekCount()
 {

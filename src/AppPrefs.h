@@ -6,6 +6,10 @@
 
 #include "DisplayState.h"
 
+// for backward compatibility use a value that older versions will render as yellow
+#define ABOUT_BG_COLOR_DEFAULT  (RGB(255,242,0) - 0x80000000)
+#define DEFAULT_ROTATION        0
+
 bool ParseViewMode(DisplayMode *mode, const TCHAR *txt);
 
 /* enum from windowState */
@@ -82,6 +86,8 @@ struct SerializableGlobalPrefs {
 
     FILETIME lastPrefUpdate; /* modification time of the preferences file when it was last read */
 };
+
+extern SerializableGlobalPrefs gGlobalPrefs;
 
 class FileHistory;
 class Favorites;
