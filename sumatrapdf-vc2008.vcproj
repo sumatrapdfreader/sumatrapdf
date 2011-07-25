@@ -501,6 +501,10 @@
 		<Filter
 			Name="mupdf"
 			>
+			<File
+				RelativePath=".\src\MuPDF_Exports.cpp"
+				>
+			</File>
 			<Filter
 				Name="fitz"
 				>

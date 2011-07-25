@@ -2128,7 +2128,9 @@ static void OnMenuSaveAs(WindowInfo& win)
     case Engine_DjVu:   fileFilter.Append(_TR("DjVu documents")); break;
     case Engine_ComicBook: fileFilter.Append(_TR("Comic books")); break;
     case Engine_Image:  fileFilter.AppendFmt(_TR("Image files (*.%s)"), defExt + 1); break;
-    case Engine_PS:     fileFilter.AppendFmt(_TR("Postscript documents")); break;
+    case Engine_PS:     fileFilter.Append(_TR("Postscript documents")); break;
+    // TODO: translate after 1.7 is released
+    case Engine_Chm:    fileFilter.Append(_T("CHM documents")); break;
     default:            fileFilter.Append(_TR("PDF documents")); break;
     }
     fileFilter.AppendFmt(_T("\1*%s\1"), defExt);
@@ -2198,7 +2200,7 @@ static void OnMenuSaveAs(WindowInfo& win)
         else
             MessageBox(win.hwndFrame, _TR("Failed to save a file"), _TR("Warning"), MB_OK | MB_ICONEXCLAMATION | (IsUIRightToLeft() ? MB_RTLREADING : 0));
     }
-    // Recreate inexistant PDF files from memory...
+    // Recreate inexistant files from memory...
     else if (!file::Exists(srcFileName)) {
         size_t dataLen;
         ScopedMem<unsigned char> data(win.dm->engine->GetFileData(&dataLen));

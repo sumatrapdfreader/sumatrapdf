@@ -5,7 +5,7 @@
 // as exporting/importing them prevents sharing of .obj
 // files for all files using them - instead we can just
 // link this file along libmupdf.lib and omit it when
-// building SumatraPDF-static.exe.
+// building a static SumatraPDF.exe.
 
 extern "C" {
 #include <fitz.h>
