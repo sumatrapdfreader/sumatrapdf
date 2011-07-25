@@ -85,6 +85,7 @@ public:
 };
 
 class DisplayModel;
+class ChmEngine;
 
 class DisplayModelCallback : public PasswordUI {
 public:
@@ -205,6 +206,7 @@ public:
     // called when we decide that the display needs to be redrawn
     void            RepaintDisplay() { if (_callback) _callback->Repaint(); }
 
+	ChmEngine *		GetChmEngine() const;
 protected:
 
     bool            Load(const TCHAR *fileName, int startPage, SizeI viewPort);
