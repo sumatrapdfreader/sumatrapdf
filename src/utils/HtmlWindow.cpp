@@ -23,6 +23,7 @@
 // Another code to get inspired: http://code.google.com/p/fidolook/source/browse/trunk/Qm/ui/messageviewwindow.cpp
 // To show a page within chm file use url in the form:
 // "its:MyChmFile.chm::mywebpage.htm"
+// http://msdn.microsoft.com/en-us/library/aa164814(v=office.10).aspx
 
 class HW_IOleInPlaceFrame;
 class HW_IOleInPlaceSiteWindowless;
@@ -127,7 +128,7 @@ protected:
 class HW_IOleInPlaceSiteWindowless : public IOleInPlaceSiteWindowless
 {
 public:
-    HW_IOleInPlaceSiteWindowless(FrameSite* fs) { fs = fs; }
+    HW_IOleInPlaceSiteWindowless(FrameSite* fs) { this->fs = fs; }
     ~HW_IOleInPlaceSiteWindowless() {}
 
     //IUnknown
@@ -169,13 +170,13 @@ public:
     STDMETHODIMP AdjustRect(LPRECT);
     STDMETHODIMP OnDefWindowMessage(UINT, WPARAM, LPARAM, LRESULT*);
 protected:
-    FrameSite * fs;
+    FrameSite *fs;
 };
 
 class HW_IOleClientSite : public IOleClientSite
 {
 public:
-    HW_IOleClientSite(FrameSite* fs) { fs = fs; }
+    HW_IOleClientSite(FrameSite* fs) { this->fs = fs; }
     ~HW_IOleClientSite() {}
 
     //IUnknown
@@ -196,7 +197,7 @@ protected:
 class HW_IOleControlSite : public IOleControlSite
 {
 public:
-    HW_IOleControlSite(FrameSite* fs) { fs = fs; }
+    HW_IOleControlSite(FrameSite* fs) { this->fs = fs; }
     ~HW_IOleControlSite() {}
 
     //IUnknown
@@ -218,7 +219,7 @@ protected:
 class HW_IOleCommandTarget : public IOleCommandTarget
 {
 public:
-    HW_IOleCommandTarget(FrameSite* fs) { fs = fs; }
+    HW_IOleCommandTarget(FrameSite* fs) { this->fs = fs; }
     ~HW_IOleCommandTarget() {}
 
     //IUnknown
@@ -235,7 +236,7 @@ protected:
 class HW_IOleItemContainer : public IOleItemContainer
 {
 public:
-    HW_IOleItemContainer(FrameSite* fs) { fs = fs; }
+    HW_IOleItemContainer(FrameSite* fs) { this->fs = fs; }
     ~HW_IOleItemContainer() {}
 
     //IUnknown
@@ -258,7 +259,7 @@ protected:
 class HW_IDispatch : public IDispatch
 {
 public:
-    HW_IDispatch(FrameSite* fs) { fs = fs; }
+    HW_IDispatch(FrameSite* fs) { this->fs = fs; }
     ~HW_IDispatch() {}
 
     //IUnknown
@@ -281,7 +282,7 @@ protected:
 class HW_DWebBrowserEvents2 : public DWebBrowserEvents2
 {
 public:
-    HW_DWebBrowserEvents2(FrameSite* fs) { fs = fs; }
+    HW_DWebBrowserEvents2(FrameSite* fs) { this->fs = fs; }
     ~HW_DWebBrowserEvents2() {}
 
     //IUnknown
@@ -305,7 +306,7 @@ protected:
 class HW_IAdviseSink2 : public IAdviseSink2
 {
 public:
-    HW_IAdviseSink2(FrameSite* fs) { fs = fs; }
+    HW_IAdviseSink2(FrameSite* fs) { this->fs = fs; }
     ~HW_IAdviseSink2() {}
 
     //IUnknown
@@ -327,7 +328,7 @@ protected:
 class HW_IAdviseSinkEx : public IAdviseSinkEx
 {
 public:
-    HW_IAdviseSinkEx(FrameSite* fs) { fs = fs; }
+    HW_IAdviseSinkEx(FrameSite* fs) { this->fs = fs; }
     ~HW_IAdviseSinkEx() {}
 
     //IUnknown
@@ -364,7 +365,6 @@ static LRESULT CALLBACK WndProcHtml(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
                 int dy = HIWORD(lParam);
                 win->OnSize(dx, dy);
             }
-
         break;
     }
     return DefWindowProc(hwnd, msg, wParam, lParam);
@@ -377,12 +377,18 @@ void SubclassHtmlHwnd(HWND hwnd, HtmlWindow *htmlWin)
     SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)htmlWin);
 }
 
+void UnsubclassHtmlHwnd(HWND hwnd)
+{
+    SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)0);
+}
+
 HtmlWindow::HtmlWindow(HWND hwnd) :
     hwnd(hwnd), webBrowser(NULL), oleObject(NULL),
     oleInPlaceObject(NULL), viewObject(NULL),
     connectionPoint(NULL), oleObjectHwnd(NULL),
     adviseCookie(0), aboutBlankShown(false)
 {
+    assert(hwnd);
     SubclassHtmlHwnd(hwnd, this);
     CreateBrowser();
 }
@@ -463,6 +469,7 @@ void HtmlWindow::CreateBrowser()
 
 HtmlWindow::~HtmlWindow()
 {
+    UnsubclassHtmlHwnd(hwnd);
     if (oleInPlaceObject) {
         oleInPlaceObject->InPlaceDeactivate();
         oleInPlaceObject->UIDeactivate();
@@ -488,14 +495,13 @@ HtmlWindow::~HtmlWindow()
 void HtmlWindow::OnSize(int dx, int dy)
 {
     if (webBrowser) {
-        webBrowser->put_Height(dy);
         webBrowser->put_Width(dx);
+        webBrowser->put_Height(dy);
     }
 
     RECT r = { 0, 0, dx, dy };
     if (oleInPlaceObject)
         oleInPlaceObject->SetObjectRects(&r, &r);
-
 }
 
 #if 0
@@ -725,7 +731,7 @@ Exit:
 // the format for chm page is: "its:MyChmFile.chm::mywebpage.htm"
 void HtmlWindow::DisplayChmPage(const TCHAR *chmFilePath, const TCHAR *chmPage)
 {
-    ScopedMem<TCHAR> url(str::Format(_T("its::%s::%s"), chmFilePath, chmPage));
+    ScopedMem<TCHAR> url(str::Format(_T("its:%s::/%s"), chmFilePath, chmPage));
     NavigateToUrl(url);
 }
 
@@ -831,8 +837,7 @@ STDMETHODIMP_(ULONG) FrameSite::Release()
     if (--m_cRef == 0) {
         delete this;
         return 0;
-    }
-    else
+    } else
         return m_cRef;
 }
 
@@ -904,13 +909,13 @@ HRESULT HW_IDispatch::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid,
     {
         case DISPID_BEFORENAVIGATE2:
         {
-#if 0
             BSTR url;
             VARIANT * vurl = pDispParams->rgvarg[5].pvarVal;
             if (vurl->vt & VT_BYREF)
                 url = *vurl->pbstrVal;
             else
                 url = vurl->bstrVal;
+#if 0
             if (fs->htmlWindow->OnStartURL(url)) {
                 *pDispParams->rgvarg->pboolVal = VARIANT_FALSE;
             } else {

@@ -6,6 +6,7 @@
 #include "FileUtil.h"
 #include "Vec.h"
 #include "TrivialHtmlParser.h"
+#include "HtmlWindow.h"
 
 #include <inttypes.h>
 #include <chm_lib.h>
@@ -102,6 +103,8 @@ public:
     virtual bool HasToCTree() const { return true; }
     virtual DocToCItem *GetToCTree() { return tocRoot; }
 
+    void HookToHwndAndDisplayIndex2(HWND hwnd);
+
 protected:
     const TCHAR *fileName;
     struct chmFile *chmHandle;
@@ -109,6 +112,7 @@ protected:
     ChmToCItem *tocRoot;
 
     Vec<ChmToCItem*> pages; // point to one of the items within tocRoot
+    HtmlWindow *htmlWindow;
 
     bool Load(const TCHAR *fileName);
     bool LoadAndParseHtmlToc();
@@ -116,8 +120,25 @@ protected:
 };
 
 CChmEngine::CChmEngine() :
-    fileName(NULL), chmHandle(NULL), chmInfo(NULL), tocRoot(NULL)
+    fileName(NULL), chmHandle(NULL), chmInfo(NULL), tocRoot(NULL),
+        htmlWindow(NULL)
 {
+}
+
+// TODO: this is hacky
+void ChmEngine::HookToHwndAndDisplayIndex(HWND hwnd)
+{
+    CChmEngine *eng = (CChmEngine*)this;
+    eng->HookToHwndAndDisplayIndex2(hwnd);
+}
+
+void CChmEngine::HookToHwndAndDisplayIndex2(HWND hwnd)
+{
+    assert(!htmlWindow);
+    htmlWindow = new HtmlWindow(hwnd);
+    ScopedMem<TCHAR> homePath(str::conv::FromAnsi(chmInfo->homePath));
+    htmlWindow->DisplayChmPage(fileName, homePath);
+    //htmlWindow->DisplayHtml(_T("<html><body>Hello!</body></html>"));
 }
 
 CChmEngine::~CChmEngine()

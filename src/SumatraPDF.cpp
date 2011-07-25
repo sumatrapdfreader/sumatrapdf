@@ -863,6 +863,12 @@ static bool LoadDocIntoWindow(
         if (prevModel && str::Eq(win.dm->FileName(), prevModel->FileName()))
             gRenderCache.KeepForDisplayModel(prevModel, win.dm);
         delete prevModel;
+        if (win.dm->engineType == Engine_Chm) {
+            ChmEngine *chmEngine = (ChmEngine*) win.dm->engine;
+            // TODO: temporary hack, we'll probably need a spearate
+            // hwnd just for html browser
+            chmEngine->HookToHwndAndDisplayIndex(win.hwndCanvas);
+        }
     } else if (allowFailure) {
         DBG_OUT("failed to load file %s\n", fileName);
         delete prevModel;
