@@ -722,11 +722,13 @@ bool ReloadPrefs()
         gWindows[0]->RedrawAll(true);
     }
 
-    if (!str::Eq(currLang, gGlobalPrefs.currentLanguage)) {
+    if (!str::Eq(currLang, gGlobalPrefs.currentLanguage))
         ChangeLanguage(gGlobalPrefs.currentLanguage);
-    }
+
     if (gGlobalPrefs.toolbarVisible != toolbarVisible)
         ShowOrHideToolbarGlobally();
+    UpdateFavoritesTreeForAllWindows();
+
     return true;
 }
 

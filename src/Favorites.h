@@ -121,5 +121,6 @@ void PopulateFavTreeIfNeeded(WindowInfo *win);
 void RememberFavTreeExpansionStateForAllWindows();
 void GoToFavoriteByMenuId(WindowInfo *win, int wmId);
 bool HasFavorites();
+void UpdateFavoritesTreeForAllWindows();
 
 #endif
