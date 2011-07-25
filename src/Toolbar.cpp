@@ -11,6 +11,7 @@
 #include "WindowInfo.h"
 #include "AppTools.h"
 #include "Search.h"
+#include "Menu.h"
 
 struct ToolbarButtonInfo {
     /* index in the toolbar bitmap (-1 for separators) */

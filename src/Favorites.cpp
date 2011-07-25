@@ -11,6 +11,7 @@
 #include "FileHistory.h"
 #include "AppTools.h"
 #include "SumatraDialogs.h"
+#include "Menu.h"
 
 int FileFavs::FindByPage(int pageNo) const
 {

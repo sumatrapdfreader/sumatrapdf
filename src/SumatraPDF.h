@@ -43,12 +43,6 @@ enum MenuToolbarFlags {
     MF_REQ_ALLOW_COPY    = Perm_CopySelection << PERM_FLAG_OFFSET,
 };
 
-struct MenuDef {
-    const char *title;
-    int         id;
-    int         flags;
-};
-
 /* styling for About/Properties windows */
 
 #define LEFT_TXT_FONT           _T("Arial")
@@ -61,6 +55,8 @@ class Favorites;
 
 // all defined in SumatraPDF.cpp
 extern HINSTANCE                ghinst;
+extern bool                     gDebugShowLinks;
+extern bool                     gUseGdiRenderer;
 extern HCURSOR                  gCursorHand;
 extern HCURSOR                  gCursorArrow;
 extern HCURSOR                  gCursorIBeam;
@@ -74,7 +70,6 @@ extern Vec<WindowInfo*>         gWindows;
 extern Favorites *              gFavorites;
 extern FileHistory              gFileHistory;
 extern WNDPROC                  DefWndProcCloseButton;
-extern MenuDef                  menuDefFavorites[];
 
 LRESULT CALLBACK WndProcCloseButton(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 bool  HasPermission(int permission);
@@ -94,9 +89,9 @@ void  ShowOrHideToolbarGlobally();
 void  UpdateCurrentFileDisplayStateForWin(WindowInfo* win);
 bool  OnFrameKeydown(WindowInfo* win, WPARAM key, LPARAM lparam, bool inTextfield=false);
 void  SwitchToDisplayMode(WindowInfo *win, DisplayMode displayMode, bool keepContinuous=false);
-HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuLen, HMENU menu);
 void  ReloadDocument(WindowInfo *win, bool autorefresh=false);
 void  PaintTransparentRectangle(HDC hdc, RectI screenRc, RectI *rect, COLORREF selectionColor, BYTE alpha = 0x5f, int margin = 1);
+bool CanSendAsEmailAttachment(WindowInfo *win=NULL);
 
 WindowInfo* FindWindowInfoByFile(TCHAR *file);
 WindowInfo* FindWindowInfoByHwnd(HWND hwnd);
