@@ -30,8 +30,9 @@ public:
     ~ScopedOle() { OleUninitialize(); }
 };
 
-template <typename T>
+template <class T>
 class ScopedComPtr {
+protected:
     T *ptr;
 public:
     ScopedComPtr() : ptr(NULL) { }
@@ -45,24 +46,15 @@ public:
     T* operator->() const { return ptr; }
 };
 
-template <class T, const IID* piid = &__uuidof(T)>
-class ScopedComQIPtr {
-    T *ptr;
+template <class T>
+class ScopedComQIPtr : public ScopedComPtr<T> {
 public:
-    bool ok;
     HRESULT hr;
 
-    ScopedComQIPtr() : ptr(NULL), ok(true), hr(S_OK) { }
-    explicit ScopedComQIPtr(IDispatch *disp) {
-        hr = disp->QueryInterface(piid, (void**)ptr);
-        ok = SUCCEEDED(hr);
-    }
-    operator T*() const { return ptr; }
-    T** operator&() { return &ptr; }
-    T* operator->() const { return ptr; }
-    ~ScopedComQIPtr() {
-        if (ptr)
-            ptr->Release();
+    explicit ScopedComQIPtr(IUnknown *unk) {
+        hr = unk->QueryInterface(__uuidof(T), (void **)ptr);
+        if (FAILED(hr))
+            ptr = NULL;
     }
 };
 

@@ -272,9 +272,8 @@ TCHAR *ResolveLnk(const TCHAR * path)
     if (FAILED(hRes))
         return NULL;
 
-    ScopedComPtr<IPersistFile> file;
-    hRes = lnk->QueryInterface(IID_IPersistFile, (LPVOID *)&file);
-    if (FAILED(hRes))
+    ScopedComQIPtr<IPersistFile> file(lnk);
+    if (FAILED(file.hr))
         return NULL;
 
     hRes = file->Load(olePath, STGM_READ);
@@ -296,24 +295,21 @@ TCHAR *ResolveLnk(const TCHAR * path)
 bool CreateShortcut(const TCHAR *shortcutPath, const TCHAR *exePath,
                     const TCHAR *args, const TCHAR *description, int iconIndex)
 {
-    bool ok = false;
-
     ScopedCom com;
     ScopedComPtr<IShellLink> lnk;
-    ScopedComPtr<IPersistFile> file;
 
     HRESULT hr = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER,
                                   IID_IShellLink, (LPVOID *)&lnk);
-    if (FAILED(hr)) 
-        goto Error;
-
-    hr = lnk->QueryInterface(IID_IPersistFile, (LPVOID *)&file);
     if (FAILED(hr))
-        goto Error;
+        return false;
+
+    ScopedComQIPtr<IPersistFile> file(lnk);
+    if (FAILED(file.hr))
+        return false;
 
     hr = lnk->SetPath(exePath);
     if (FAILED(hr))
-        goto Error;
+        return false;
 
     lnk->SetWorkingDirectory(ScopedMem<TCHAR>(path::GetDir(exePath)));
     // lnk->SetShowCmd(SW_SHOWNORMAL);
@@ -329,14 +325,7 @@ bool CreateShortcut(const TCHAR *shortcutPath, const TCHAR *exePath,
 #else
     hr = file->Save(shortcutPath, TRUE);
 #endif
-    if (FAILED(hr))
-        goto Error;
-
-    return true;
-
-Error:
-    SeeLastError();
-    return false;
+    return SUCCEEDED(hr);
 }
 
 /* adapted from http://blogs.msdn.com/oldnewthing/archive/2004/09/20/231739.aspx */

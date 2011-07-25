@@ -195,19 +195,19 @@
 				Name="User Interface"
 				>
 				<File
-					RelativePath=".\src\ExternalPdfViewer.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\src\ExternalPdfViewer.h"
-					>
-				</File>
-				<File
 					RelativePath=".\src\Favorites.cpp"
 					>
 				</File>
 				<File
 					RelativePath=".\src\Favorites.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\Menu.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\Menu.h"
 					>
 				</File>
 				<File
@@ -328,6 +328,14 @@
 				</File>
 				<File
 					RelativePath=".\src\CrashHandler.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\ExternalPdfViewer.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\ExternalPdfViewer.h"
 					>
 				</File>
 				<File
