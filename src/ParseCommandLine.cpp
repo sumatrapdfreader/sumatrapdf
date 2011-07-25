@@ -135,16 +135,16 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
             str::ReplacePtr(&inverseSearchCmdLine, argList[++n]);
         }
         else if (is_arg_with_param("-fwdsearch-offset")) {
-            fwdsearchOffset = _ttoi(argList[++n]);
+            fwdSearch.offset = _ttoi(argList[++n]);
         }
         else if (is_arg_with_param("-fwdsearch-width")) {
-            fwdsearchWidth = _ttoi(argList[++n]);
+            fwdSearch.width = _ttoi(argList[++n]);
         }
         else if (is_arg_with_param("-fwdsearch-color")) {
-            ParseColor(&fwdsearchColor, argList[++n]);
+            ParseColor(&fwdSearch.color, argList[++n]);
         }
         else if (is_arg_with_param("-fwdsearch-permanent")) {
-            fwdsearchPermanent = _ttoi(argList[++n]);
+            fwdSearch.permanent = _ttoi(argList[++n]);
         }
         else if (is_arg("-esc-to-exit")) {
             escToExit = true;

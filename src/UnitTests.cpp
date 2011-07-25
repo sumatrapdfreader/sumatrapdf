@@ -45,7 +45,7 @@ static void ParseCommandLineTest()
     {
         CommandLineInfo i;
         i.ParseCommandLine(_T("SumatraPDF.exe -bench foo.pdf -fwdsearch-width 5"));
-        assert(i.fwdsearchWidth == 5);
+        assert(i.fwdSearch.width == 5);
         assert(2 == i.filesToBenchmark.Count());
         assert(str::Eq(_T("foo.pdf"), i.filesToBenchmark.At(0)));
         assert(NULL == i.filesToBenchmark.At(1));

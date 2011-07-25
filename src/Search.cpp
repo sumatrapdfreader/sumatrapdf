@@ -279,17 +279,17 @@ void PaintForwardSearchMark(WindowInfo *win, HDC hdc)
         return;
     
     // Draw the rectangles highlighting the forward search results
-    for (UINT i = 0; i < win->fwdSearchMark.rects.Count(); i++) {
-        RectD recD = win->fwdSearchMark.rects[i].Convert<double>();
-        RectI recI = win->dm->CvtToScreen(win->fwdSearchMark.page, recD);
-        if (gGlobalPrefs.fwdSearchOffset > 0) {
-            recI.x = max(pageInfo->pageOnScreen.x, 0) + (int)(gGlobalPrefs.fwdSearchOffset * win->dm->ZoomReal());
-            recI.dx = (int)((gGlobalPrefs.fwdSearchWidth > 0 ? gGlobalPrefs.fwdSearchWidth : 15.0) * win->dm->ZoomReal());
-            recI.y -= 4;
-            recI.dy += 8;
+    for (size_t i = 0; i < win->fwdSearchMark.rects.Count(); i++) {
+        RectI rect = win->fwdSearchMark.rects[i];
+        rect = win->dm->CvtToScreen(win->fwdSearchMark.page, rect.Convert<double>());
+        if (gGlobalPrefs.fwdSearch.offset > 0) {
+            rect.x = max(pageInfo->pageOnScreen.x, 0) + (int)(gGlobalPrefs.fwdSearch.offset * win->dm->ZoomReal());
+            rect.dx = (int)((gGlobalPrefs.fwdSearch.width > 0 ? gGlobalPrefs.fwdSearch.width : 15.0) * win->dm->ZoomReal());
+            rect.y -= 4;
+            rect.dy += 8;
         }
         BYTE alpha = (BYTE)(0x5f * 1.0f * (HIDE_FWDSRCHMARK_STEPS - win->fwdSearchMark.hideStep) / HIDE_FWDSRCHMARK_STEPS);
-        PaintTransparentRectangle(hdc, win->canvasRc, &recI, gGlobalPrefs.fwdSearchColor, alpha, 0);
+        PaintTransparentRectangle(hdc, win->canvasRc, &rect, gGlobalPrefs.fwdSearch.color, alpha, 0);
     }
 }
 
@@ -373,7 +373,7 @@ static void ShowForwardSearchResult(WindowInfo *win, const TCHAR *fileName, UINT
         win->fwdSearchMark.rects = rects;
         win->fwdSearchMark.page = page;
         win->fwdSearchMark.show = true;
-        if (!gGlobalPrefs.fwdSearchPermanent)  {
+        if (!gGlobalPrefs.fwdSearch.permanent) {
             win->fwdSearchMark.hideStep = 0;
             SetTimer(win->hwndCanvas, HIDE_FWDSRCHMARK_TIMER_ID, HIDE_FWDSRCHMARK_DELAY_IN_MS, NULL);
         }

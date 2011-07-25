@@ -49,6 +49,8 @@ enum MenuToolbarFlags {
 #define LEFT_TXT_FONT_SIZE      12
 #define RIGHT_TXT_FONT          _T("Arial Black")
 #define RIGHT_TXT_FONT_SIZE     12
+// for backward compatibility use a value that older versions will render as yellow
+#define ABOUT_BG_COLOR_DEFAULT  (RGB(255,242,0) - 0x80000000)
 
 class WindowInfo;
 class Favorites;
@@ -65,7 +67,6 @@ extern HBRUSH                   gBrushAboutBg;
 extern HFONT                    gDefaultGuiFont;
 extern bool                     gPluginMode;
 extern TCHAR *                  gPluginURL;
-extern SerializableGlobalPrefs  gGlobalPrefs;
 extern Vec<WindowInfo*>         gWindows;
 extern Favorites *              gFavorites;
 extern FileHistory              gFileHistory;

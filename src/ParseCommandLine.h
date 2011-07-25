@@ -22,10 +22,12 @@ public:
     TCHAR *     printerName;
     int         bgColor;
     TCHAR *     inverseSearchCmdLine;
-    int         fwdsearchOffset;
-    int         fwdsearchWidth;
-    int         fwdsearchColor;
-    bool        fwdsearchPermanent;
+    struct {
+        int     offset;
+        int     width;
+        int     color;
+        bool    permanent;
+    } fwdSearch;
     bool        escToExit;
     bool        reuseInstance;
     char *      lang;
@@ -52,10 +54,9 @@ public:
 
     CommandLineInfo() : makeDefault(false), exitOnPrint(false), printDialog(false),
         printerName(NULL), bgColor(-1), inverseSearchCmdLine(NULL),
-        fwdsearchOffset(-1), fwdsearchWidth(-1), fwdsearchColor(-1),
-        fwdsearchPermanent(FALSE), escToExit(FALSE),
-        reuseInstance(false), lang(NULL), destName(NULL), pageNumber(-1),
-        restrictedUse(false), invertColors(FALSE), pluginURL(NULL),
+        escToExit(false), reuseInstance(false), lang(NULL),
+        destName(NULL), pageNumber(-1),
+        restrictedUse(false), invertColors(false), pluginURL(NULL),
         enterPresentation(false), enterFullscreen(false), hwndPluginParent(NULL),
         startView(DM_AUTOMATIC), startZoom(INVALID_ZOOM), startScroll(PointI(-1, -1)),
         showConsole(false), exitImmediately(false), silent(false),

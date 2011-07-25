@@ -877,7 +877,7 @@ static bool LoadDocIntoWindow(
     }
 
     float zoomVirtual = gGlobalPrefs.defaultZoom;
-    int rotation = DEFAULT_ROTATION;
+    int rotation = 0;
 
     if (state) {
         if (win.dm->ValidPageNo(startPage)) {
@@ -4321,10 +4321,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
     CommandLineInfo i;
     i.bgColor = gGlobalPrefs.bgColor;
-    i.fwdsearchOffset = gGlobalPrefs.fwdSearchOffset;
-    i.fwdsearchWidth = gGlobalPrefs.fwdSearchWidth;
-    i.fwdsearchColor = gGlobalPrefs.fwdSearchColor;
-    i.fwdsearchPermanent = gGlobalPrefs.fwdSearchPermanent;
+    i.fwdSearch.offset = gGlobalPrefs.fwdSearch.offset;
+    i.fwdSearch.width = gGlobalPrefs.fwdSearch.width;
+    i.fwdSearch.color = gGlobalPrefs.fwdSearch.color;
+    i.fwdSearch.permanent = gGlobalPrefs.fwdSearch.permanent;
     i.escToExit = gGlobalPrefs.escToExit;
 
     i.ParseCommandLine(GetCommandLine());
@@ -4342,10 +4342,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         goto Exit;
 
     gGlobalPrefs.bgColor = i.bgColor;
-    gGlobalPrefs.fwdSearchOffset = i.fwdsearchOffset;
-    gGlobalPrefs.fwdSearchWidth = i.fwdsearchWidth;
-    gGlobalPrefs.fwdSearchColor = i.fwdsearchColor;
-    gGlobalPrefs.fwdSearchPermanent = i.fwdsearchPermanent;
+    gGlobalPrefs.fwdSearch.offset = i.fwdSearch.offset;
+    gGlobalPrefs.fwdSearch.width = i.fwdSearch.width;
+    gGlobalPrefs.fwdSearch.color = i.fwdSearch.color;
+    gGlobalPrefs.fwdSearch.permanent = i.fwdSearch.permanent;
     gGlobalPrefs.escToExit = i.escToExit;
     gPolicyRestrictions = GetPolicies(i.restrictedUse);
     gRenderCache.invertColors = i.invertColors;

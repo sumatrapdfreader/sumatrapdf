@@ -104,11 +104,13 @@ SerializableGlobalPrefs gGlobalPrefs = {
     WIN_STATE_NORMAL, // int  windowState
     RectI(), // RectI windowPos
     true, // bool tocVisible
-    0, // int  m_tocDx
-    0, // int  fwdSearchOffset
-    COL_FWDSEARCH_BG, // int  fwdSearchColor
-    15, // int  fwdSearchWidth
-    0, // bool fwdSearchPermanent
+    0, // int  sidebarDx
+    {
+        0, // int  fwdSearch.offset
+        COL_FWDSEARCH_BG, // int  fwdSearch.color
+        15, // int  fwdSearch.width
+        false, // bool fwdSearch.permanent
+    },
     true, // bool showStartPage
     0, // int openCountWeek
     { 0, 0 }, // FILETIME lastPrefUpdate
@@ -171,10 +173,10 @@ static BencDict* SerializeGlobalPrefs(SerializableGlobalPrefs& globalPrefs)
         globalPrefs.openCountWeek = GetWeekCount();
     prefs->Add(OPEN_COUNT_WEEK_STR, globalPrefs.openCountWeek);
 
-    prefs->Add(FWDSEARCH_OFFSET, globalPrefs.fwdSearchOffset);
-    prefs->Add(FWDSEARCH_COLOR, globalPrefs.fwdSearchColor);
-    prefs->Add(FWDSEARCH_WIDTH, globalPrefs.fwdSearchWidth);
-    prefs->Add(FWDSEARCH_PERMANENT, globalPrefs.fwdSearchPermanent);
+    prefs->Add(FWDSEARCH_OFFSET, globalPrefs.fwdSearch.offset);
+    prefs->Add(FWDSEARCH_COLOR, globalPrefs.fwdSearch.color);
+    prefs->Add(FWDSEARCH_WIDTH, globalPrefs.fwdSearch.width);
+    prefs->Add(FWDSEARCH_PERMANENT, globalPrefs.fwdSearch.permanent);
 
     return prefs;
 }
@@ -489,10 +491,10 @@ static void DeserializePrefs(const char *prefsTxt, SerializableGlobalPrefs& glob
     if (langCode)
         globalPrefs.currentLanguage = langCode;
 
-    Retrieve(global, FWDSEARCH_OFFSET, globalPrefs.fwdSearchOffset);
-    Retrieve(global, FWDSEARCH_COLOR, globalPrefs.fwdSearchColor);
-    Retrieve(global, FWDSEARCH_WIDTH, globalPrefs.fwdSearchWidth);
-    Retrieve(global, FWDSEARCH_PERMANENT, globalPrefs.fwdSearchPermanent);
+    Retrieve(global, FWDSEARCH_OFFSET, globalPrefs.fwdSearch.offset);
+    Retrieve(global, FWDSEARCH_COLOR, globalPrefs.fwdSearch.color);
+    Retrieve(global, FWDSEARCH_WIDTH, globalPrefs.fwdSearch.width);
+    Retrieve(global, FWDSEARCH_PERMANENT, globalPrefs.fwdSearch.permanent);
 
     Retrieve(global, OPEN_COUNT_WEEK_STR, globalPrefs.openCountWeek);
     int weekDiff = GetWeekCount() - globalPrefs.openCountWeek;
