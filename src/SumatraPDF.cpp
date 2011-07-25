@@ -3024,7 +3024,7 @@ static void OnFrameChar(WindowInfo& win, WPARAM key)
             // "e-book view": flip a single page
             bool forward = !IsShiftPressed();
             int currPage = win.dm->CurrentPageNo();
-            if (forward ? win.dm->lastBookPageVisible() : win.dm->firstBookPageVisible())
+            if (forward ? win.dm->LastBookPageVisible() : win.dm->FirstBookPageVisible())
                 break;
 
             DisplayMode newMode = DM_BOOK_VIEW;

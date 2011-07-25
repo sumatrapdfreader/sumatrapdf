@@ -340,7 +340,7 @@ bool DisplayModel::pageVisibleNearby(int pageNo)
 
 /* Return true if the first page is fully visible and alone on a line in
    show cover mode (i.e. it's not possible to flip to a previous page) */
-bool DisplayModel::firstBookPageVisible()
+bool DisplayModel::FirstBookPageVisible()
 {
     if (!displayModeShowCover(displayMode()))
         return false;
@@ -351,7 +351,7 @@ bool DisplayModel::firstBookPageVisible()
 
 /* Return true if the last page is fully visible and alone on a line in
    facing or show cover mode (i.e. it's not possible to flip to a next page) */
-bool DisplayModel::lastBookPageVisible()
+bool DisplayModel::LastBookPageVisible()
 {
     int count = PageCount();
     DisplayMode mode = displayMode();
@@ -423,7 +423,7 @@ float DisplayModel::ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo)
     return zoomY;
 }
 
-int DisplayModel::firstVisiblePageNo() const
+int DisplayModel::FirstVisiblePageNo() const
 {
     assert(_pagesInfo);
     if (!_pagesInfo) return INVALID_PAGE_NO;
@@ -471,7 +471,7 @@ int DisplayModel::CurrentPageNo() const
     return mostVisiblePage;
 }
 
-void DisplayModel::setZoomVirtual(float zoomVirtual)
+void DisplayModel::SetZoomVirtual(float zoomVirtual)
 {
     assert(ValidZoomVirtual(zoomVirtual));
     _zoomVirtual = zoomVirtual;
@@ -537,7 +537,7 @@ void DisplayModel::Relayout(float zoomVirtual, int rotation)
 RestartLayout:
     int currPosY = padding->top;
     float currZoomReal = _zoomReal;
-    setZoomVirtual(zoomVirtual);
+    SetZoomVirtual(zoomVirtual);
 
 //    DBG_OUT("DisplayModel::Relayout(), pageCount=%d, zoomReal=%.6f, zoomVirtual=%.2f\n", pageCount, dm->zoomReal, dm->zoomVirtual);
 
@@ -920,7 +920,7 @@ void DisplayModel::ChangeViewPortSize(SizeI newViewPortSize)
     }
 }
 
-RectD DisplayModel::getContentBox(int pageNo, RenderTarget target)
+RectD DisplayModel::GetContentBox(int pageNo, RenderTarget target)
 {
     RectD cbox;
     // we cache the contentBox for the View target
@@ -938,9 +938,9 @@ RectD DisplayModel::getContentBox(int pageNo, RenderTarget target)
 
 /* get the (screen) coordinates of the point where a page's actual
    content begins (relative to the page's top left corner) */
-PointI DisplayModel::getContentStart(int pageNo)
+PointI DisplayModel::GetContentStart(int pageNo)
 {
-    RectD contentBox = getContentBox(pageNo);
+    RectD contentBox = GetContentBox(pageNo);
     if (contentBox.IsEmpty())
         return PointI(0, 0);
     return contentBox.TL().Convert<int>();
@@ -952,7 +952,7 @@ void DisplayModel::GoToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
     if (!ValidPageNo(pageNo))
         return;
     if (addNavPt)
-        addNavPoint();
+        AddNavPoint();
 
     /* in facing mode only start at odd pages (odd because page
        numbering starts with 1, so odd is really an even page) */
@@ -975,12 +975,12 @@ void DisplayModel::GoToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
 
     if (-1 == scrollX && 0 == scrollY && ZOOM_FIT_CONTENT == _zoomVirtual) {
         // scroll down to where the actual content starts
-        PointI start = getContentStart(pageNo);
+        PointI start = GetContentStart(pageNo);
         scrollX = start.x;
         scrollY = start.y;
         if (columnsFromDisplayMode(displayMode()) > 1) {
             int lastPageNo = LastPageInARowNo(pageNo, columnsFromDisplayMode(displayMode()), displayModeShowCover(displayMode()), PageCount());
-            PointI second = getContentStart(lastPageNo);
+            PointI second = GetContentStart(lastPageNo);
             scrollY = min(scrollY, second.y);
         }
         viewPort.x = scrollX + pageInfo->pos.x - padding->left;
@@ -1085,8 +1085,8 @@ bool DisplayModel::GoToPrevPage(int scrollY)
 
     PointI top;
     if ((0 == scrollY || -1 == scrollY) && _zoomVirtual == ZOOM_FIT_CONTENT) {
-        currPageNo = firstVisiblePageNo();
-        top = getContentStart(currPageNo);
+        currPageNo = FirstVisiblePageNo();
+        top = GetContentStart(currPageNo);
     }
 
     PageInfo * pageInfo = GetPageInfo(currPageNo);
@@ -1377,7 +1377,7 @@ bool DisplayModel::ShowResultRectToScreen(TextSel *res)
 
 ScrollState DisplayModel::GetScrollState()
 {
-    ScrollState state(firstVisiblePageNo(), -1, -1);
+    ScrollState state(FirstVisiblePageNo(), -1, -1);
     if (!ValidPageNo(state.page))
         state.page = CurrentPageNo();
 
@@ -1423,7 +1423,7 @@ void DisplayModel::SetScrollState(ScrollState state)
 }
 
 /* Records the current scroll state for later navigating back to. */
-void DisplayModel::addNavPoint(bool keepForward)
+void DisplayModel::AddNavPoint(bool keepForward)
 {
     ScrollState ss = GetScrollState();
 
@@ -1451,7 +1451,7 @@ void DisplayModel::Navigate(int dir)
 {
     if (!CanNavigate(dir))
         return;
-    addNavPoint(true);
+    AddNavPoint(true);
     _navHistoryIx += dir - 1; // -1 because adding a nav point increases the index
     if (dir != 0 && _navHistory[_navHistoryIx].page != 0)
         SetScrollState(_navHistory[_navHistoryIx]);

@@ -141,7 +141,7 @@ void ZoomToSelection(WindowInfo *win, float factor, bool relative)
     }
     // or towards the top-left-most part of the first visible page
     else {
-        int page = win->dm->firstVisiblePageNo();
+        int page = win->dm->FirstVisiblePageNo();
         PageInfo *pageInfo = win->dm->GetPageInfo(page);
         if (pageInfo) {
             RectI visible = pageInfo->pageOnScreen.Intersect(win->canvasRc);

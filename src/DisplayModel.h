@@ -158,9 +158,9 @@ public:
     bool            pageShown(int pageNo);
     bool            pageVisible(int pageNo);
     bool            pageVisibleNearby(int pageNo);
-    int             firstVisiblePageNo() const;
-    bool            firstBookPageVisible();
-    bool            lastBookPageVisible();
+    int             FirstVisiblePageNo() const;
+    bool            FirstBookPageVisible();
+    bool            LastBookPageVisible();
     void            Relayout(float zoomVirtual, int rotation);
 
     void            GoToPage(int pageNo, int scrollY, bool addNavPt=false, int scrollX=-1);
@@ -183,7 +183,7 @@ public:
     bool            IsOverText(PointI pt);
     PageElement *   GetElementAtPos(PointI pt);
 
-    ScreenPagePadding *getPadding() { return padding; }
+    ScreenPagePadding *GetPadding() { return padding; }
 
     int             GetPageNoByPoint(PointI pt);
     int             GetPageNextToPoint(PointI pt);
@@ -213,13 +213,13 @@ protected:
     float           ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo);
     SizeD           PageSizeAfterRotation(int pageNo, bool fitToContent=false);
     void            changeStartPage(int startPage);
-    PointI          getContentStart(int pageNo);
-    void            setZoomVirtual(float zoomVirtual);
+    PointI          GetContentStart(int pageNo);
+    void            SetZoomVirtual(float zoomVirtual);
     void            RecalcVisibleParts();
     void            RenderVisibleParts();
 
-    void            addNavPoint(bool keepForward=false);
-    RectD           getContentBox(int pageNo, RenderTarget target=Target_View);
+    void            AddNavPoint(bool keepForward=false);
+    RectD           GetContentBox(int pageNo, RenderTarget target=Target_View);
 
     /* an array of PageInfo, len of array is pageCount */
     PageInfo *      _pagesInfo;
