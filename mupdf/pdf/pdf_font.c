@@ -854,7 +854,8 @@ load_cid_font(pdf_font_desc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj *e
 
 	pdf_set_font_wmode(fontdesc, pdf_get_wmode(fontdesc->encoding));
 
-	if (kind == TRUETYPE)
+	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1565 */
+	if (kind == TRUETYPE || !strcmp(fz_to_name(fz_dict_gets(dict, "Subtype")), "CIDFontType2"))
 	{
 		fz_obj *cidtogidmap;
 
