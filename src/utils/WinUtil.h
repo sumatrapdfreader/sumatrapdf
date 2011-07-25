@@ -45,6 +45,39 @@ public:
     T* operator->() const { return ptr; }
 };
 
+template <class T, const IID* piid = &__uuidof(T)>
+class ScopedComQIPtr {
+    T *ptr;
+public:
+    bool ok;
+    HRESULT hr;
+
+    ScopedComQIPtr() : ptr(NULL), ok(true), hr(S_OK) { }
+    explicit ScopedComQIPtr(IDispatch *disp) {
+        hr = disp->QueryInterface(piid, (void**)ptr);
+        ok = SUCCEEDED(hr);
+    }
+    operator T*() const { return ptr; }
+    T** operator&() { return &ptr; }
+    T* operator->() const { return ptr; }
+    ~ScopedComQIPtr() {
+        if (ptr)
+            ptr->Release();
+    }
+};
+
+inline void VariantSetBool(VARIANT *res, bool val)
+{
+    res->vt = VT_BOOL;
+    res->boolVal = val;
+}
+
+inline void VariantSetLong(VARIANT *res, long val)
+{
+    res->vt = VT_I4;
+    res->lVal = val;
+}
+
 class ScopedHandle {
     HANDLE handle;
 public:

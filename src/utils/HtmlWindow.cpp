@@ -10,6 +10,7 @@
 
 #include "StrUtil.h"
 #include "GeomUtil.h"
+#include "WinUtil.h"
 
 // Info about implementing web browser control
 // http://www.codeproject.com/KB/COM/cwebpage.aspx
@@ -690,6 +691,7 @@ void HtmlWindow::DisplayHtml(const TCHAR *html)
     HRESULT hr = webBrowser->get_Document(&docDispatch);
     if (FAILED(hr))
         goto Exit;
+
     hr = docDispatch->QueryInterface(IID_IHTMLDocument2, (void**)&doc);
     if (FAILED(hr))
         goto Exit;
@@ -858,38 +860,31 @@ HRESULT HW_IDispatch::DispatchPropGet(DISPID dispIdMember, VARIANT *res)
     switch (dispIdMember)
     {
         case DISPID_AMBIENT_APPEARANCE:
-            res->vt = VT_BOOL;
-            res->boolVal = fs->ambientAppearance;
+            VariantSetBool(res, fs->ambientAppearance);
             break;
 
         case DISPID_AMBIENT_FORECOLOR:
-            res->vt = VT_I4;
-            res->lVal = (long)fs->ambientForeColor;
+            VariantSetLong(res, (long)fs->ambientForeColor);
             break;
 
         case DISPID_AMBIENT_BACKCOLOR:
-            res->vt = VT_I4;
-            res->lVal = (long)fs->ambientBackColor;
+            VariantSetLong(res, (long)fs->ambientBackColor);
             break;
 
         case DISPID_AMBIENT_LOCALEID:
-            res->vt = VT_I4;
-            res->lVal = (long)fs->ambientLocale;
+            VariantSetLong(res, (long)fs->ambientLocale);
             break;
 
         case DISPID_AMBIENT_USERMODE:
-            res->vt = VT_BOOL;
-            res->boolVal = fs->ambientUserMode;
+            VariantSetBool(res, fs->ambientUserMode);
             break;
 
         case DISPID_AMBIENT_SHOWGRABHANDLES:
-            res->vt = VT_BOOL;
-            res->boolVal = fs->ambientShowGrabHandles;
+            VariantSetBool(res, fs->ambientShowGrabHandles);
             break;
 
         case DISPID_AMBIENT_SHOWHATCHING:
-            res->vt = VT_BOOL;
-            res->boolVal = fs->ambientShowHatching;
+            VariantSetBool(res, fs->ambientShowHatching);
             break;
 
         default:
