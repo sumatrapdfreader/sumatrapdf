@@ -251,8 +251,8 @@ $(OS)\AppTools.obj: src\Version.h
 $(OS)\BencUtil.obj: src\utils\BaseUtil.h src\utils\BencUtil.h src\utils\StrUtil.h
 $(OS)\BencUtil.obj: src\utils\Vec.h
 $(OS)\ChmEngine.obj: src\BaseEngine.h src\ChmEngine.h src\utils\BaseUtil.h
-$(OS)\ChmEngine.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\StrUtil.h
-$(OS)\ChmEngine.obj: src\utils\TrivialHtmlParser.h src\utils\Vec.h
+$(OS)\ChmEngine.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\HtmlWindow.h
+$(OS)\ChmEngine.obj: src\utils\StrUtil.h src\utils\TrivialHtmlParser.h src\utils\Vec.h
 $(OS)\CPdfFilter.obj: src\BaseEngine.h src\ifilter\CPdfFilter.h src\ifilter\FilterBase.h
 $(OS)\CPdfFilter.obj: src\ifilter\PdfFilter.h src\PdfEngine.h src\utils\BaseUtil.h
 $(OS)\CPdfFilter.obj: src\utils\GeomUtil.h src\utils\StrUtil.h src\utils\Vec.h

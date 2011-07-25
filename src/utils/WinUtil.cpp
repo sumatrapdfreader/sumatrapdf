@@ -273,7 +273,7 @@ TCHAR *ResolveLnk(const TCHAR * path)
         return NULL;
 
     ScopedComQIPtr<IPersistFile> file(lnk);
-    if (FAILED(file.hr))
+    if (!file)
         return NULL;
 
     hRes = file->Load(olePath, STGM_READ);
@@ -304,7 +304,7 @@ bool CreateShortcut(const TCHAR *shortcutPath, const TCHAR *exePath,
         return false;
 
     ScopedComQIPtr<IPersistFile> file(lnk);
-    if (FAILED(file.hr))
+    if (!file)
         return false;
 
     hr = lnk->SetPath(exePath);

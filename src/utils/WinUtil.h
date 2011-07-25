@@ -49,10 +49,8 @@ public:
 template <class T>
 class ScopedComQIPtr : public ScopedComPtr<T> {
 public:
-    HRESULT hr;
-
     explicit ScopedComQIPtr(IUnknown *unk) {
-        hr = unk->QueryInterface(__uuidof(T), (void **)ptr);
+        HRESULT hr = unk->QueryInterface(__uuidof(T), (void **)&ptr);
         if (FAILED(hr))
             ptr = NULL;
     }
