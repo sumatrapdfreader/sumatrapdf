@@ -257,9 +257,9 @@ protected:
     float           _presZoomVirtual;
     DisplayMode     _presDisplayMode;
 
-    ScrollState     _navHistory[NAV_HISTORY_LEN];
-    int             _navHistoryIx;
-    int             _navHistoryEnd;
+    ScrollState     navHistory[NAV_HISTORY_LEN];
+    int             navHistoryIx;
+    int             navHistoryEnd;
 
 public:
     /* allow resizing a window without triggering a new rendering (needed for window destruction) */

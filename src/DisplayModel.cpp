@@ -205,8 +205,8 @@ DisplayModel::DisplayModel(DisplayModelCallback *callback, DisplayMode displayMo
     textSearch = NULL;
     pagesInfo = NULL;
 
-    _navHistoryIx = 0;
-    _navHistoryEnd = 0;
+    navHistoryIx = 0;
+    navHistoryEnd = 0;
     
     dontRenderFlag = false;
 }
@@ -1457,23 +1457,23 @@ void DisplayModel::AddNavPoint(bool keepForward)
 {
     ScrollState ss = GetScrollState();
 
-    if (!keepForward && _navHistoryIx > 0 && !memcmp(&ss, &_navHistory[_navHistoryIx - 1], sizeof(ss))) {
+    if (!keepForward && navHistoryIx > 0 && !memcmp(&ss, &navHistory[navHistoryIx - 1], sizeof(ss))) {
         // don't add another point to exact the same position (so overwrite instead of append)
-        _navHistoryIx--;
+        navHistoryIx--;
     }
-    else if (NAV_HISTORY_LEN == _navHistoryIx) {
-        memmove(_navHistory, _navHistory + 1, (NAV_HISTORY_LEN - 1) * sizeof(ScrollState));
-        _navHistoryIx--;
+    else if (NAV_HISTORY_LEN == navHistoryIx) {
+        memmove(navHistory, navHistory + 1, (NAV_HISTORY_LEN - 1) * sizeof(ScrollState));
+        navHistoryIx--;
     }
-    _navHistory[_navHistoryIx] = ss;
-    _navHistoryIx++;
-    if (!keepForward || _navHistoryIx > _navHistoryEnd)
-        _navHistoryEnd = _navHistoryIx;
+    navHistory[navHistoryIx] = ss;
+    navHistoryIx++;
+    if (!keepForward || navHistoryIx > navHistoryEnd)
+        navHistoryEnd = navHistoryIx;
 }
 
 bool DisplayModel::CanNavigate(int dir) const
 {
-    return _navHistoryIx + dir >= 0 && _navHistoryIx + dir < _navHistoryEnd && (_navHistoryIx != NAV_HISTORY_LEN || _navHistoryIx + dir != 0);
+    return navHistoryIx + dir >= 0 && navHistoryIx + dir < navHistoryEnd && (navHistoryIx != NAV_HISTORY_LEN || navHistoryIx + dir != 0);
 }
 
 /* Navigates |dir| steps forward or backwards. */
@@ -1482,9 +1482,9 @@ void DisplayModel::Navigate(int dir)
     if (!CanNavigate(dir))
         return;
     AddNavPoint(true);
-    _navHistoryIx += dir - 1; // -1 because adding a nav point increases the index
-    if (dir != 0 && _navHistory[_navHistoryIx].page != 0)
-        SetScrollState(_navHistory[_navHistoryIx]);
+    navHistoryIx += dir - 1; // -1 because adding a nav point increases the index
+    if (dir != 0 && navHistory[navHistoryIx].page != 0)
+        SetScrollState(navHistory[navHistoryIx]);
 }
 
 DisplayModel *DisplayModel::CreateFromFileName(DisplayModelCallback *callback,
