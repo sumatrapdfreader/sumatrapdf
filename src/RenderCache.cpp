@@ -89,7 +89,7 @@ void RenderCache::Add(PageRenderRequest &req, RenderedBitmap *bitmap)
     if (_cacheCount >= MAX_BITMAPS_CACHED) {
         // free an invisible page of the same DisplayModel ...
         for (int i = 0; i < _cacheCount; i++) {
-            if (_cache[i]->dm == req.dm && !req.dm->pageVisibleNearby(_cache[i]->pageNo)) {
+            if (_cache[i]->dm == req.dm && !req.dm->PageVisibleNearby(_cache[i]->pageNo)) {
                 DropCacheEntry(_cache[i]);
                 _cacheCount--;
                 memmove(&_cache[i], &_cache[i + 1], (_cacheCount - i) * sizeof(_cache[0]));
@@ -187,7 +187,7 @@ bool RenderCache::FreePage(DisplayModel *dm, int pageNo, TilePosition *tile)
             shouldFree = (_cache[i]->dm == dm);
         } else {
             // all invisible pages resp. page tiles
-            shouldFree = !entry->dm->pageVisibleNearby(entry->pageNo);
+            shouldFree = !entry->dm->PageVisibleNearby(entry->pageNo);
             if (!shouldFree && entry->tile.res > 1)
                 shouldFree = !IsTileVisible(entry->dm, entry->pageNo, entry->rotation,
                                             entry->zoom, entry->tile, 2.0);
@@ -221,7 +221,7 @@ void RenderCache::KeepForDisplayModel(DisplayModel *oldDm, DisplayModel *newDm)
         // keep the cached bitmaps for visible pages to avoid flickering during a reload
         // (mark invisible pages as out-of-date as well, to prevent inconsistencies)
         if (_cache[i]->dm == oldDm && _cache[i]->bitmap) {
-            if (oldDm->pageVisible(_cache[i]->pageNo))
+            if (oldDm->PageVisible(_cache[i]->pageNo))
                 _cache[i]->dm = newDm;
             // make sure that the page is rerendered eventually
             _cache[i]->zoom = INVALID_ZOOM;
@@ -316,7 +316,7 @@ void RenderCache::Render(DisplayModel *dm, int pageNo, TilePosition tile, bool c
 
     ScopedCritSec scope(&_requestAccess);
     bool ok = false;
-    if (!dm || dm->_dontRenderFlag) goto Exit;
+    if (!dm || dm->dontRenderFlag) goto Exit;
 
     int rotation = normalizeRotation(dm->Rotation());
     float zoom = dm->ZoomReal(pageNo);
@@ -387,7 +387,7 @@ bool RenderCache::Render(DisplayModel *dm, int pageNo, int rotation, float zoom,
                          TilePosition *tile, RectD *pageRect, RenderingCallback *renderCb)
 {
     assert(dm);
-    if (!dm || dm->_dontRenderFlag)
+    if (!dm || dm->dontRenderFlag)
         return false;
 
     assert(tile || pageRect && renderCb);
@@ -541,11 +541,11 @@ DWORD WINAPI RenderCache::RenderCacheThread(LPVOID data)
         if (!cache->GetNextRequest(&req))
             continue;
         DBG_OUT("RenderCacheThread(): dequeued %d\n", req.pageNo);
-        if (!req.dm->pageVisibleNearby(req.pageNo) && !req.renderCb) {
+        if (!req.dm->PageVisibleNearby(req.pageNo) && !req.renderCb) {
             DBG_OUT("RenderCacheThread(): not rendering because not visible\n");
             continue;
         }
-        if (req.dm->_dontRenderFlag) {
+        if (req.dm->dontRenderFlag) {
             DBG_OUT("RenderCacheThread(): not rendering because of _dontRenderFlag\n");
             if (req.renderCb)
                 req.renderCb->Callback();

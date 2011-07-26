@@ -136,7 +136,7 @@ void ZoomToSelection(WindowInfo *win, float factor, bool relative)
         pt.y = limitValue(pt.y, selRect.y, selRect.y + selRect.dy);
 
         int pageNo = win->dm->GetPageNoByPoint(pt);
-        if (!win->dm->ValidPageNo(pageNo) || !win->dm->pageVisible(pageNo))
+        if (!win->dm->ValidPageNo(pageNo) || !win->dm->PageVisible(pageNo))
             zoomToPt = false;
     }
     // or towards the top-left-most part of the first visible page
@@ -148,7 +148,7 @@ void ZoomToSelection(WindowInfo *win, float factor, bool relative)
             pt = visible.TL();
 
             int pageNo = win->dm->GetPageNoByPoint(pt);
-            if (!visible.IsEmpty() && win->dm->ValidPageNo(pageNo) && win->dm->pageVisible(pageNo))
+            if (!visible.IsEmpty() && win->dm->ValidPageNo(pageNo) && win->dm->PageVisible(pageNo))
                 zoomToPt = true;
         }
     }

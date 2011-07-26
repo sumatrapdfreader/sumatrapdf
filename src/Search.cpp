@@ -94,7 +94,7 @@ void OnMenuFindMatchCase(WindowInfo *win)
 static void ShowSearchResult(WindowInfo& win, TextSel *result, bool addNavPt)
 {
    assert(result->len > 0);
-   if (addNavPt || !win.dm->pageShown(result->pages[0]) ||
+   if (addNavPt || !win.dm->PageShown(result->pages[0]) ||
        (win.dm->ZoomVirtual() == ZOOM_FIT_PAGE || win.dm->ZoomVirtual() == ZOOM_FIT_CONTENT))
        win.dm->GoToPage(result->pages[0], 0, addNavPt);
 
@@ -384,7 +384,7 @@ static void ShowForwardSearchResult(WindowInfo *win, const TCHAR *fileName, UINT
         for (size_t i = 1; i < rects.Count(); i++)
             overallrc = overallrc.Union(rects[i]);
         TextSel res = { 1, &pageNo, &overallrc };
-        if (!win->dm->pageVisible(page))
+        if (!win->dm->PageVisible(page))
             win->dm->GoToPage(page, 0, true);
         if (!win->dm->ShowResultRectToScreen(&res))
             win->RepaintAsync();

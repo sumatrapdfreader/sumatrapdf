@@ -124,9 +124,9 @@ void WindowInfo::MoveDocBy(int dx, int dy)
     assert(!this->linkOnLastButtonDown);
     if (this->linkOnLastButtonDown) return;
     if (0 != dx)
-        this->dm->scrollXBy(dx);
+        this->dm->ScrollXBy(dx);
     if (0 != dy)
-        this->dm->scrollYBy(dy, FALSE);
+        this->dm->ScrollYBy(dy, FALSE);
 }
 
 #define MULTILINE_INFOTIP_WIDTH_PX 300

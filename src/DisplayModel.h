@@ -151,14 +151,14 @@ protected:
     SizeI           totalViewPortSize;
 
 public:
-    bool            needHScroll() const { return viewPort.dy < totalViewPortSize.dy; }
-    bool            needVScroll() const { return viewPort.dx < totalViewPortSize.dx; }
+    bool            NeedHScroll() const { return viewPort.dy < totalViewPortSize.dy; }
+    bool            NeedVScroll() const { return viewPort.dx < totalViewPortSize.dx; }
 
     void            ChangeViewPortSize(SizeI newViewPortSize);
 
-    bool            pageShown(int pageNo);
-    bool            pageVisible(int pageNo);
-    bool            pageVisibleNearby(int pageNo);
+    bool            PageShown(int pageNo);
+    bool            PageVisible(int pageNo);
+    bool            PageVisibleNearby(int pageNo);
     int             FirstVisiblePageNo() const;
     bool            FirstBookPageVisible();
     bool            LastBookPageVisible();
@@ -170,11 +170,11 @@ public:
     bool            GoToFirstPage();
     bool            GoToLastPage();
 
-    void            scrollXTo(int xOff);
-    void            scrollXBy(int dx);
+    void            ScrollXTo(int xOff);
+    void            ScrollXBy(int dx);
 
-    void            scrollYTo(int yOff);
-    void            scrollYBy(int dy, bool changePage);
+    void            ScrollYTo(int yOff);
+    void            ScrollYBy(int dy, bool changePage);
 
     void            ZoomTo(float zoomVirtual, PointI *fixPt=NULL);
     void            ZoomBy(float zoomFactor, PointI *fixPt=NULL);
@@ -206,7 +206,7 @@ public:
     // called when we decide that the display needs to be redrawn
     void            RepaintDisplay() { if (_callback) _callback->Repaint(); }
 
-	ChmEngine *		GetChmEngine() const;
+    ChmEngine *     GetChmEngine() const;
 protected:
 
     bool            Load(const TCHAR *fileName, int startPage, SizeI viewPort);
@@ -224,7 +224,7 @@ protected:
     RectD           GetContentBox(int pageNo, RenderTarget target=Target_View);
 
     /* an array of PageInfo, len of array is pageCount */
-    PageInfo *      _pagesInfo;
+    PageInfo *      pagesInfo;
 
     DisplayMode     _displayMode;
     /* In non-continuous mode is the first page from a file that we're
@@ -263,7 +263,7 @@ protected:
 
 public:
     /* allow resizing a window without triggering a new rendering (needed for window destruction) */
-    bool            _dontRenderFlag;
+    bool            dontRenderFlag;
 
     static DisplayModel *CreateFromFileName(DisplayModelCallback *callback,
                                             const TCHAR *fileName,

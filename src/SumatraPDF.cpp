@@ -2015,7 +2015,7 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
         return;
 
     if (win->IsDocLoaded())
-        win->dm->_dontRenderFlag = true;
+        win->dm->dontRenderFlag = true;
     if (win->presentation)
         ExitFullscreen(*win);
 
@@ -2502,7 +2502,7 @@ static void OnVScroll(WindowInfo& win, WPARAM wParam)
 
     // If the position has changed, scroll the window and update it
     if (win.IsDocLoaded() && (si.nPos != iVertPos))
-        win.dm->scrollYTo(si.nPos);
+        win.dm->ScrollYTo(si.nPos);
 }
 
 static void OnHScroll(WindowInfo& win, WPARAM wParam)
@@ -2535,7 +2535,7 @@ static void OnHScroll(WindowInfo& win, WPARAM wParam)
 
     // If the position has changed, scroll the window and update it
     if (win.IsDocLoaded() && (si.nPos != iVertPos))
-        win.dm->scrollXTo(si.nPos);
+        win.dm->ScrollXTo(si.nPos);
 }
 
 static void AdjustWindowEdge(WindowInfo& win)
@@ -2904,12 +2904,12 @@ bool OnFrameKeydown(WindowInfo *win, WPARAM key, LPARAM lparam, bool inTextfield
         if (GetScrollPos(win->hwndCanvas, SB_VERT) == currentPos)
             win->dm->GoToNextPage(0);
     } else if (VK_UP == key) {
-        if (win->dm->needVScroll())
+        if (win->dm->NeedVScroll())
             SendMessage(win->hwndCanvas, WM_VSCROLL, SB_LINEUP, 0);
         else
             win->dm->GoToPrevPage(-1);
     } else if (VK_DOWN == key) {
-        if (win->dm->needVScroll())
+        if (win->dm->NeedVScroll())
             SendMessage(win->hwndCanvas, WM_VSCROLL, SB_LINEDOWN, 0);
         else
             win->dm->GoToNextPage(0);
@@ -2917,12 +2917,12 @@ bool OnFrameKeydown(WindowInfo *win, WPARAM key, LPARAM lparam, bool inTextfield
         // The remaining keys have a different meaning
         return false;
     } else if (VK_LEFT == key) {
-        if (win->dm->needHScroll())
+        if (win->dm->NeedHScroll())
             SendMessage(win->hwndCanvas, WM_HSCROLL, IsShiftPressed() ? SB_PAGELEFT : SB_LINELEFT, 0);
         else
             win->dm->GoToPrevPage(0);
     } else if (VK_RIGHT == key) {
-        if (win->dm->needHScroll())
+        if (win->dm->NeedHScroll())
             SendMessage(win->hwndCanvas, WM_HSCROLL, IsShiftPressed() ? SB_PAGERIGHT : SB_LINERIGHT, 0);
         else
             win->dm->GoToNextPage(0);
@@ -3579,7 +3579,7 @@ static LRESULT OnMouseWheel(WindowInfo& win, UINT message, WPARAM wParam, LPARAM
         si.cbSize = sizeof(si);
         si.fMask  = SIF_PAGE;
         GetScrollInfo(win.hwndCanvas, SB_VERT, &si);
-        win.dm->scrollYBy(-MulDiv(si.nPage, delta, WHEEL_DELTA), true);
+        win.dm->ScrollYBy(-MulDiv(si.nPage, delta, WHEEL_DELTA), true);
         return 0;
     }
 
