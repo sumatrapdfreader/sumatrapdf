@@ -163,6 +163,91 @@ fz_clear_pixmap_with_color(fz_pixmap *pix, int value)
 }
 
 void
+fz_copy_pixmap_rect(fz_pixmap *dest, const fz_pixmap *src, fz_bbox r)
+{
+	const char *srcp;
+	char *destp;
+	int y, w, destspan, srcspan;
+
+	if (r.x0 < dest->x)
+		r.x0 = dest->x;
+	if (r.x1 > dest->x+dest->w)
+		r.x1 = dest->x+dest->w;
+	if (r.y0 < dest->y)
+		r.y0 = dest->y;
+	if (r.y1 > dest->y+dest->h)
+		r.y1 = dest->y+dest->h;
+	if (r.x0 < src->x)
+		r.x0 = src->x;
+	if (r.x1 > src->x+src->w)
+		r.x1 = src->x+src->w;
+	if (r.y0 < src->y)
+		r.y0 = src->y;
+	if (r.y1 > src->y+src->h)
+		r.y1 = src->y+src->h;
+	w = r.x1 - r.x0;
+	y = r.y1 - r.y0;
+	if ((w <= 0) || (y <= 0))
+		return;
+	w *= src->n;
+	srcspan = src->w * src->n;
+	srcp = src->samples + srcspan * (r.y0 - src->y) + src->n * (r.x0 - src->x);
+	destspan = dest->w * dest->n;
+	destp = dest->samples + destspan * (r.y0-dest->y) + dest->n * (r.x0 - dest->x);
+	do
+	{
+		memcpy(destp, srcp, w);
+		srcp += srcspan;
+		destp += destspan;
+	}
+	while (--y);
+}
+
+void
+fz_clear_pixmap_rect_with_color(fz_pixmap *dest, int value, fz_bbox r)
+{
+	char *destp;
+	int x, y, w, k, destspan;
+
+	if (r.x0 < dest->x)
+		r.x0 = dest->x;
+	if (r.x1 > dest->x+dest->w)
+		r.x1 = dest->x+dest->w;
+	if (r.y0 < dest->y)
+		r.y0 = dest->y;
+	if (r.y1 > dest->y+dest->h)
+		r.y1 = dest->y+dest->h;
+	w = r.x1 - r.x0;
+	y = r.y1 - r.y0;
+	if ((w <= 0) || (y <= 0))
+		return;
+	destspan = dest->w * dest->n;
+	destp = dest->samples + destspan * (r.y0-dest->y) + dest->n * (r.x0 - dest->x);
+	if (value == 255)
+		do
+		{
+			memset(destp, 255, w * dest->n);
+			destp += destspan;
+		}
+		while (--y);
+	else
+	{
+		do
+		{
+			char *s = destp;
+			for (x = 0; x < w; x++)
+			{
+				for (k = 0; k < dest->n - 1; k++)
+					*s++ = value;
+				*s++ = 255;
+			}
+			destp += destspan;
+		}
+		while (--y);
+	}
+}
+
+void
 fz_premultiply_pixmap(fz_pixmap *pix)
 {
 	unsigned char *s = pix->samples;

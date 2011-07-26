@@ -629,11 +629,14 @@ fz_pixmap *fz_keep_pixmap(fz_pixmap *pix);
 void fz_drop_pixmap(fz_pixmap *pix);
 void fz_clear_pixmap(fz_pixmap *pix);
 void fz_clear_pixmap_with_color(fz_pixmap *pix, int value);
+void fz_clear_pixmap_rect_with_color(fz_pixmap *pix, int value, fz_bbox r);
+void fz_copy_pixmap_rect(fz_pixmap *dest, const fz_pixmap *src, fz_bbox r);
 void fz_premultiply_pixmap(fz_pixmap *pix);
 fz_pixmap *fz_alpha_from_gray(fz_pixmap *gray, int luminosity);
 fz_bbox fz_bound_pixmap(fz_pixmap *pix);
 
 fz_pixmap *fz_scale_pixmap(fz_pixmap *src, float x, float y, float w, float h);
+fz_pixmap *fz_scale_pixmap_gridfit(fz_pixmap *src, float x, float y, float w, float h, int gridfit);
 
 fz_error fz_write_pnm(fz_pixmap *pixmap, char *filename);
 fz_error fz_write_pam(fz_pixmap *pixmap, char *filename, int savealpha);
@@ -1017,6 +1020,7 @@ void fz_free_device(fz_device *dev);
 fz_device *fz_new_trace_device(void);
 fz_device *fz_new_bbox_device(fz_bbox *bboxp);
 fz_device *fz_new_draw_device(fz_glyph_cache *cache, fz_pixmap *dest);
+fz_device *fz_new_draw_device_type3(fz_glyph_cache *cache, fz_pixmap *dest);
 
 /* SumatraPDF: GDI+ draw device */
 fz_device *fz_new_gdiplus_device(void *hDC, fz_bbox baseClip);
@@ -1082,13 +1086,41 @@ void fz_paint_solid_color(unsigned char * restrict dp, int n, int w, unsigned ch
 void fz_paint_span(unsigned char * restrict dp, unsigned char * restrict sp, int n, int w, int alpha);
 void fz_paint_span_with_color(unsigned char * restrict dp, unsigned char * restrict mp, int n, int w, unsigned char *color);
 
-void fz_paint_image(fz_pixmap *dst, fz_bbox scissor, fz_pixmap *img, fz_matrix ctm, int alpha);
-void fz_paint_image_with_color(fz_pixmap *dst, fz_bbox scissor, fz_pixmap *img, fz_matrix ctm, unsigned char *colorbv);
+void fz_paint_image(fz_pixmap *dst, fz_bbox scissor, fz_pixmap *shape, fz_pixmap *img, fz_matrix ctm, int alpha);
+void fz_paint_image_with_color(fz_pixmap *dst, fz_bbox scissor, fz_pixmap *shape, fz_pixmap *img, fz_matrix ctm, unsigned char *colorbv);
 
 void fz_paint_pixmap(fz_pixmap *dst, fz_pixmap *src, int alpha);
 void fz_paint_pixmap_with_mask(fz_pixmap *dst, fz_pixmap *src, fz_pixmap *msk);
 void fz_paint_pixmap_with_rect(fz_pixmap *dst, fz_pixmap *src, int alpha, fz_bbox bbox);
 
-void fz_blend_pixmap(fz_pixmap *dst, fz_pixmap *src, int alpha, int blendmode);
+void fz_blend_pixmap(fz_pixmap *dst, fz_pixmap *src, int alpha, int blendmode, int isolated, fz_pixmap *shape);
+
+enum
+{
+	/* PDF 1.4 -- standard separable */
+	FZ_BLEND_NORMAL,
+	FZ_BLEND_MULTIPLY,
+	FZ_BLEND_SCREEN,
+	FZ_BLEND_OVERLAY,
+	FZ_BLEND_DARKEN,
+	FZ_BLEND_LIGHTEN,
+	FZ_BLEND_COLOR_DODGE,
+	FZ_BLEND_COLOR_BURN,
+	FZ_BLEND_HARD_LIGHT,
+	FZ_BLEND_SOFT_LIGHT,
+	FZ_BLEND_DIFFERENCE,
+	FZ_BLEND_EXCLUSION,
+
+	/* PDF 1.4 -- standard non-separable */
+	FZ_BLEND_HUE,
+	FZ_BLEND_SATURATION,
+	FZ_BLEND_COLOR,
+	FZ_BLEND_LUMINOSITY,
+
+	/* For packing purposes */
+	FZ_BLEND_MODEMASK = 15,
+	FZ_BLEND_ISOLATED = 16,
+	FZ_BLEND_KNOCKOUT = 32
+};
 
 #endif

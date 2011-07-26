@@ -111,33 +111,27 @@ fz_append_display_node(fz_display_list *list, fz_display_node *node)
 	case FZ_CMD_CLIP_PATH:
 	case FZ_CMD_CLIP_STROKE_PATH:
 	case FZ_CMD_CLIP_IMAGE_MASK:
-		/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692336 */
-		if (list->top >= STACK_SIZE)
+		if (list->top < STACK_SIZE)
 		{
-			list->top++;
-			break;
+			list->stack[list->top].update = &node->rect;
+			list->stack[list->top].rect = fz_empty_rect;
 		}
-		list->stack[list->top].update = &node->rect;
-		list->stack[list->top].rect = fz_empty_rect;
 		list->top++;
 		break;
-	case FZ_CMD_END_MASK: /* SumatraPDF: masks clip as well */
+	case FZ_CMD_END_MASK:
 	case FZ_CMD_CLIP_TEXT:
 	case FZ_CMD_CLIP_STROKE_TEXT:
-		/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692336 */
-		if (list->top >= STACK_SIZE)
+		if (list->top < STACK_SIZE)
 		{
-			list->top++;
-			break;
+			list->stack[list->top].update = NULL;
+			list->stack[list->top].rect = fz_empty_rect;
 		}
-		list->stack[list->top].update = NULL;
-		list->stack[list->top].rect = fz_empty_rect;
 		list->top++;
 		break;
 	case FZ_CMD_BEGIN_TILE:
 		list->tiled++;
-		/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692336 */
-		if (list->top > 0 && list->top <= STACK_SIZE) {
+		if ((list->top > 0) && (list->top <= STACK_SIZE))
+		{
 			list->stack[list->top-1].rect = fz_infinite_rect;
 		}
 		break;
@@ -147,18 +141,19 @@ fz_append_display_node(fz_display_list *list, fz_display_node *node)
 	case FZ_CMD_END_GROUP:
 		break;
 	case FZ_CMD_POP_CLIP:
-		/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692336 */
 		if (list->top > STACK_SIZE)
 		{
 			list->top--;
 			node->rect = fz_infinite_rect;
 		}
 		else
-		if (list->top > 0) {
+		if (list->top > 0)
+		{
 			fz_rect *update;
 			list->top--;
 			update = list->stack[list->top].update;
-			if (list->tiled == 0) {
+			if (list->tiled == 0)
+			{
 				/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692346 */
 				if (!fz_is_infinite_rect(list->stack[list->top].rect))
 				{
@@ -169,20 +164,20 @@ fz_append_display_node(fz_display_list *list, fz_display_node *node)
 					list->stack[list->top].rect.x1 += 20;
 					list->stack[list->top].rect.y1 += 20;
 				}
-				if (update != NULL) {
+				if (update != NULL)
+				{
 					*update = fz_intersect_rect(*update, list->stack[list->top].rect);
 					node->rect = *update;
-				} else {
-					node->rect = list->stack[list->top].rect;
 				}
-			} else {
-				node->rect = fz_infinite_rect;
+				else
+					node->rect = list->stack[list->top].rect;
 			}
+			else
+				node->rect = fz_infinite_rect;
 		}
 		/*@fallthrough@*/
 	default:
-		/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692336 */
-		if ((list->top > 0) && (list->tiled == 0) && list->top <= STACK_SIZE) {
+		if ((list->top > 0) && (list->tiled == 0) && (list->top <= STACK_SIZE)) {
 			list->stack[list->top-1].rect = fz_union_rect(list->stack[list->top-1].rect, node->rect);
 		}
 		break;

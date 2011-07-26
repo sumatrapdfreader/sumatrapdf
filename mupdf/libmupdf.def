@@ -162,10 +162,13 @@ EXPORTS
 	fz_drop_pixmap
 	fz_clear_pixmap
 	fz_clear_pixmap_with_color
+	fz_clear_pixmap_rect_with_color
+	fz_copy_pixmap_rect
 	fz_premultiply_pixmap
 	fz_alpha_from_gray
 	fz_bound_pixmap
 	fz_scale_pixmap
+	fz_scale_pixmap_gridfit
 	fz_write_pnm
 	fz_write_pam
 	fz_write_png
@@ -262,6 +265,7 @@ EXPORTS
 	fz_new_trace_device
 	fz_new_bbox_device
 	fz_new_draw_device
+	fz_new_draw_device_type3
 	fz_new_gdiplus_device
 	fz_new_text_span
 	fz_free_text_span

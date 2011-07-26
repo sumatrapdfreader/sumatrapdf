@@ -4,29 +4,6 @@
 
 typedef unsigned char byte;
 
-enum
-{
-	/* PDF 1.4 -- standard separable */
-	FZ_BLEND_NORMAL,
-	FZ_BLEND_MULTIPLY,
-	FZ_BLEND_SCREEN,
-	FZ_BLEND_OVERLAY,
-	FZ_BLEND_DARKEN,
-	FZ_BLEND_LIGHTEN,
-	FZ_BLEND_COLOR_DODGE,
-	FZ_BLEND_COLOR_BURN,
-	FZ_BLEND_HARD_LIGHT,
-	FZ_BLEND_SOFT_LIGHT,
-	FZ_BLEND_DIFFERENCE,
-	FZ_BLEND_EXCLUSION,
-
-	/* PDF 1.4 -- standard non-separable */
-	FZ_BLEND_HUE,
-	FZ_BLEND_SATURATION,
-	FZ_BLEND_COLOR,
-	FZ_BLEND_LUMINOSITY,
-};
-
 static const char *fz_blendmode_names[] =
 {
 	"Normal",
@@ -354,7 +331,124 @@ fz_blend_nonseparable(byte * restrict bp, byte * restrict sp, int w, int blendmo
 }
 
 void
-fz_blend_pixmap(fz_pixmap *dst, fz_pixmap *src, int alpha, int blendmode)
+fz_blend_separable_isolated(byte * restrict bp, byte * restrict sp, int n, int w, int blendmode, byte * restrict hp)
+{
+	int k;
+	int n1 = n - 1;
+	while (w--)
+	{
+		int ha = *hp++; /* ha = shape_alpha */
+		/* If ha == 0 then leave everything unchanged */
+		if (ha != 0)
+		{
+			int sa = sp[n1];
+			int ba = bp[n1];
+			int baha = fz_mul255(ba, ha);
+
+			/* ugh, division to get non-premul components */
+			int invsa = sa ? 255 * 256 / sa : 0;
+			int invba = ba ? 255 * 256 / ba : 0;
+
+			/* Calculate result_alpha */
+			int ra = bp[n1] = ba - baha + ha;
+
+			if (ra != 0) for (k = 0; k < n1; k++)
+			{
+				int sc = (sp[k] * invsa) >> 8;
+				int bc = (bp[k] * invba) >> 8;
+				int rc;
+
+				switch (blendmode)
+				{
+				default:
+				case FZ_BLEND_NORMAL: rc = sc; break;
+				case FZ_BLEND_MULTIPLY: rc = fz_mul255(bc, sc); break;
+				case FZ_BLEND_SCREEN: rc = fz_screen_byte(bc, sc); break;
+				case FZ_BLEND_OVERLAY: rc = fz_overlay_byte(bc, sc); break;
+				case FZ_BLEND_DARKEN: rc = fz_darken_byte(bc, sc); break;
+				case FZ_BLEND_LIGHTEN: rc = fz_lighten_byte(bc, sc); break;
+				case FZ_BLEND_COLOR_DODGE: rc = fz_color_dodge_byte(bc, sc); break;
+				case FZ_BLEND_COLOR_BURN: rc = fz_color_burn_byte(bc, sc); break;
+				case FZ_BLEND_HARD_LIGHT: rc = fz_hard_light_byte(bc, sc); break;
+				case FZ_BLEND_SOFT_LIGHT: rc = fz_soft_light_byte(bc, sc); break;
+				case FZ_BLEND_DIFFERENCE: rc = fz_difference_byte(bc, sc); break;
+				case FZ_BLEND_EXCLUSION: rc = fz_exclusion_byte(bc, sc); break;
+				}
+
+				rc = fz_mul255(255 - ha, bc) + fz_mul255(255 - ba, sc) + fz_mul255(baha, rc);
+				bp[k] = fz_mul255(rc, ra);
+			}
+		}
+
+		sp += n;
+		bp += n;
+	}
+}
+
+void
+fz_blend_nonseparable_isolated(byte * restrict bp, byte * restrict sp, int w, int blendmode, byte * restrict hp)
+{
+	while (w--)
+	{
+		int ha = *hp++;
+		if (ha != 0)
+		{
+			int sa = sp[3];
+			int ba = bp[3];
+			int baha = fz_mul255(ba, ha);
+
+			/* Calculate result_alpha */
+			int ra = bp[3] = ba - baha + ha;
+
+			if (ra != 0)
+			{
+				int rr, rg, rb;
+
+				/* ugh, division to get non-premul components */
+				int invsa = sa ? 255 * 256 / sa : 0;
+				int invba = ba ? 255 * 256 / ba : 0;
+
+				int sr = (sp[0] * invsa) >> 8;
+				int sg = (sp[1] * invsa) >> 8;
+				int sb = (sp[2] * invsa) >> 8;
+
+				int br = (bp[0] * invba) >> 8;
+				int bg = (bp[1] * invba) >> 8;
+				int bb = (bp[2] * invba) >> 8;
+
+				switch (blendmode)
+				{
+				default:
+				case FZ_BLEND_HUE:
+					fz_hue_rgb(&rr, &rg, &rb, br, bg, bb, sr, sg, sb);
+					break;
+				case FZ_BLEND_SATURATION:
+					fz_saturation_rgb(&rr, &rg, &rb, br, bg, bb, sr, sg, sb);
+					break;
+				case FZ_BLEND_COLOR:
+					fz_color_rgb(&rr, &rg, &rb, br, bg, bb, sr, sg, sb);
+					break;
+				case FZ_BLEND_LUMINOSITY:
+					fz_luminosity_rgb(&rr, &rg, &rb, br, bg, bb, sr, sg, sb);
+					break;
+				}
+
+				rr = fz_mul255(255 - ha, bp[0]) + fz_mul255(255 - ba, sp[0]) + fz_mul255(baha, rr);
+				rg = fz_mul255(255 - ha, bp[1]) + fz_mul255(255 - ba, sp[1]) + fz_mul255(baha, rg);
+				rb = fz_mul255(255 - ha, bp[2]) + fz_mul255(255 - ba, sp[2]) + fz_mul255(baha, rb);
+				bp[0] = fz_mul255(ra, rr);
+				bp[1] = fz_mul255(ra, rg);
+				bp[2] = fz_mul255(ra, rb);
+			}
+		}
+
+		sp += 4;
+		bp += 4;
+	}
+}
+
+void
+fz_blend_pixmap(fz_pixmap *dst, fz_pixmap *src, int alpha, int blendmode, int isolated, fz_pixmap *shape)
 {
 	unsigned char *sp, *dp;
 	fz_bbox bbox;
@@ -386,13 +480,31 @@ fz_blend_pixmap(fz_pixmap *dst, fz_pixmap *src, int alpha, int blendmode)
 
 	assert(src->n == dst->n);
 
-	while (h--)
+	if (isolated)
 	{
-		if (n == 4 && blendmode >= FZ_BLEND_HUE)
-			fz_blend_nonseparable(dp, sp, w, blendmode);
-		else
-			fz_blend_separable(dp, sp, n, w, blendmode);
-		sp += src->w * n;
-		dp += dst->w * n;
+		unsigned char *hp = shape->samples + (y - shape->y) * shape->w + (x - shape->x);
+
+		while (h--)
+		{
+			if (n == 4 && blendmode >= FZ_BLEND_HUE)
+				fz_blend_nonseparable_isolated(dp, sp, w, blendmode, hp);
+			else
+				fz_blend_separable_isolated(dp, sp, n, w, blendmode, hp);
+			sp += src->w * n;
+			dp += dst->w * n;
+			hp += shape->w;
+		}
+	}
+	else
+	{
+		while (h--)
+		{
+			if (n == 4 && blendmode >= FZ_BLEND_HUE)
+				fz_blend_nonseparable(dp, sp, w, blendmode);
+			else
+				fz_blend_separable(dp, sp, n, w, blendmode);
+			sp += src->w * n;
+			dp += dst->w * n;
+		}
 	}
 }

@@ -989,6 +989,65 @@ scale_single_col(unsigned char *dst, unsigned char *src, fz_weights *weights, in
 #endif /* SINGLE_PIXEL_SPECIALS */
 
 fz_pixmap *
+fz_scale_pixmap_gridfit(fz_pixmap *src, float x, float y, float w, float h, int gridfit)
+{
+	if (gridfit) {
+		float n;
+		if (w > 0) {
+			/* Adjust the left hand edge, leftwards to a pixel boundary */
+			n = (float)(int)x;   /* n is now on a pixel boundary */
+			if (n > x)           /* Ensure it's the pixel boundary BELOW x */
+				n -= 1.0f;
+			w += x-n;            /* width gets wider as x >= n */
+			x = n;
+			/* Adjust the right hand edge rightwards to a pixel boundary */
+			n = (float)(int)w;   /* n is now the integer width <= w */
+			if (n != w)          /* If w isn't an integer already, bump it */
+				w = 1.0f + n;/* up to the next integer. */
+		} else {
+			/* Adjust the right hand edge, rightwards to a pixel boundary */
+			n = (float)(int)x;   /* n is now on a pixel boundary */
+			if (n > x)           /* Ensure it's the pixel boundary <= x */
+				n -= 1.0f;
+			if (n != x)          /* If x isn't on a pixel boundary already, */
+				n += 1.0f;   /* make n be the pixel boundary above x. */
+			w -= n-x;            /* Expand width (more negative!) as n >= x */
+			x = n;
+			/* Adjust the left hand edge leftwards to a pixel boundary */
+			n = (float)(int)w;
+			if (n != w)
+				w = n - 1.0f;
+		}
+		if (h > 0) {
+			/* Adjust the bottom edge, downwards to a pixel boundary */
+			n = (float)(int)y;   /* n is now on a pixel boundary */
+			if (n > y)           /* Ensure it's the pixel boundary BELOW y */
+				n -= 1.0f;
+			h += y-n;            /* height gets larger as y >= n */
+			y = n;
+			/* Adjust the top edge upwards to a pixel boundary */
+			n = (float)(int)h;   /* n is now the integer height <= h */
+			if (n != h)          /* If h isn't an integer already, bump it */
+				h = 1.0f + n;/* up to the next integer. */
+		} else {
+			/* Adjust the top edge, upwards to a pixel boundary */
+			n = (float)(int)y;   /* n is now on a pixel boundary */
+			if (n > y)           /* Ensure it's the pixel boundary <= y */
+			n -= 1.0f;
+			if (n != y)          /* If y isn't on a pixel boundary already, */
+				n += 1.0f;   /* make n be the pixel boundary above y. */
+			h -= n-y;            /* Expand height (more negative!) as n >= y */
+			y = n;
+			/* Adjust the bottom edge downwards to a pixel boundary */
+			n = (float)(int)h;
+			if (n != h)
+				h = n - 1.0f;
+		}
+	}
+	return fz_scale_pixmap(src, x, y, w, h);
+}
+
+fz_pixmap *
 fz_scale_pixmap(fz_pixmap *src, float x, float y, float w, float h)
 {
 	fz_scale_filter *filter = &fz_scale_filter_simple;
