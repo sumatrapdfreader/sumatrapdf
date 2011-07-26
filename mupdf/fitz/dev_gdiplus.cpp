@@ -75,8 +75,6 @@ struct userDataStackItem
 	Rect bounds;
 	bool luminosity;
 	int blendmode;
-	bool isolated;
-	bool knockout;
 	float xstep, ystep;
 	fz_rect tileArea;
 	fz_matrix tileCtm;
@@ -84,8 +82,7 @@ struct userDataStackItem
 
 	userDataStackItem(float _alpha=1.0, userDataStackItem *_prev=NULL) :
 		alpha(_alpha), prev(_prev), saveG(NULL), layer(NULL), mask(NULL),
-		luminosity(false), blendmode(0), isolated(false), knockout(false),
-		xstep(0), ystep(0), layerAlpha(1.0) { }
+		luminosity(false), blendmode(0), xstep(0), ystep(0), layerAlpha(1.0) { }
 };
 
 class TempFile
@@ -232,9 +229,7 @@ public:
 	{
 		recordClipMask(rect, false, NULL);
 		stack->layerAlpha *= alpha;
-		stack->blendmode = blendmode;
-		stack->isolated = isolated;
-		stack->knockout = knockout;
+        stack->blendmode = blendmode | (isolated ? FZ_BLEND_ISOLATED : 0) | (knockout ? FZ_BLEND_KNOCKOUT : 0);
 	}
 
 	void applyClipMask()
@@ -313,8 +308,8 @@ public:
 				_applyMask(stack->layer, stack->mask, stack->luminosity);
 				delete stack->mask;
 			}
-			if (stack->blendmode != 0 && !stack->isolated)
-				_applyBlend(stack->layer, stack->bounds, stack->blendmode);
+			if ((stack->blendmode & FZ_BLEND_MODEMASK) != 0 && !(stack->blendmode & FZ_BLEND_ISOLATED))
+				_applyBlend(stack->layer, stack->bounds, (stack->blendmode & FZ_BLEND_MODEMASK));
 			
 			ImageAttributes imgAttrs;
 			_setDrawAttributes(imgAttrs, stack->layerAlpha);
@@ -500,9 +495,9 @@ protected:
 		while (bgStack && !bgStack->layer)
 			bgStack = bgStack->prev;
 		
-		if (!bgStack || group->isolated)
+		if (!bgStack || (group->blendmode & FZ_BLEND_ISOLATED))
 		{
-			if (group->knockout)
+			if ((group->blendmode & FZ_BLEND_KNOCKOUT))
 				return new Bitmap(clipBounds.Width, clipBounds.Height, PixelFormat32bppARGB);
 			
 			clipBounds.Offset(-group->bounds.X, -group->bounds.Y);
@@ -517,9 +512,9 @@ protected:
 		bounds.Offset(-group->bounds.X, -group->bounds.Y);
 		clipBounds.Offset(-clipBounds.X, -clipBounds.Y);
 		
-		if (group->knockout)
+		if ((group->blendmode & FZ_BLEND_KNOCKOUT))
 			fz_warn("non-isolated knockout groups not implemented for GDI+");
-		_compositeWithBackground(group->layer, bounds, backdrop, clipBounds, group->blendmode, true);
+		_compositeWithBackground(group->layer, bounds, backdrop, clipBounds, (group->blendmode & FZ_BLEND_MODEMASK), true);
 		
 		return backdrop;
 	}
