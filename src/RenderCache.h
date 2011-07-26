@@ -67,17 +67,17 @@ struct PageRenderRequest {
 class RenderCache
 {
 private:
-    BitmapCacheEntry *  _cache[MAX_BITMAPS_CACHED];
-    int                 _cacheCount;
+    BitmapCacheEntry *  cache[MAX_BITMAPS_CACHED];
+    int                 cacheCount;
     // make sure to never ask for _requestAccess in a _cacheAccess
     // protected critical section in order to avoid deadlocks
-    CRITICAL_SECTION    _cacheAccess;
+    CRITICAL_SECTION    cacheAccess;
 
-    PageRenderRequest   _requests[MAX_PAGE_REQUESTS];
-    int                 _requestCount;
-    PageRenderRequest * _curReq;
-    CRITICAL_SECTION    _requestAccess;
-    HANDLE              _renderThread;
+    PageRenderRequest   requests[MAX_PAGE_REQUESTS];
+    int                 requestCount;
+    PageRenderRequest * curReq;
+    CRITICAL_SECTION    requestAccess;
+    HANDLE              renderThread;
 
     const SizeI         maxTileSize;
 
@@ -113,7 +113,7 @@ private:
     bool    ReduceTileSize();
 
     bool    IsRenderQueueFull() const {
-                return _requestCount == MAX_PAGE_REQUESTS;
+                return requestCount == MAX_PAGE_REQUESTS;
             }
     UINT    GetRenderDelay(DisplayModel *dm, int pageNo, TilePosition tile);
     void    Render(DisplayModel *dm, int pageNo, TilePosition tile,
