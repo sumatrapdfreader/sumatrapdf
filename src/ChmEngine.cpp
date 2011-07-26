@@ -104,7 +104,7 @@ public:
     virtual DocToCItem *GetToCTree() { return tocRoot; }
 
     virtual void HookToHwndAndDisplayIndex(HWND hwnd);
-	virtual void DisplayPage(int pageNo);
+    virtual void DisplayPage(int pageNo);
 
 protected:
     const TCHAR *fileName;
@@ -135,10 +135,10 @@ void CChmEngine::HookToHwndAndDisplayIndex(HWND hwnd)
     //htmlWindow->DisplayHtml(_T("<html><body>Hello!</body></html>"));
 }
 
-void CChmEngine:: DisplayPage(int pageNo)
+void CChmEngine::DisplayPage(int pageNo)
 {
-	ChmToCItem *tocItem = pages.At(pageNo-1);
-	htmlWindow->DisplayChmPage(fileName, tocItem->url);
+    ChmToCItem *tocItem = pages.At(pageNo-1);
+    htmlWindow->DisplayChmPage(fileName, tocItem->url);
 }
 
 CChmEngine::~CChmEngine()

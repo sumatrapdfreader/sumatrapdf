@@ -731,7 +731,8 @@ Exit:
 // the format for chm page is: "its:MyChmFile.chm::mywebpage.htm"
 void HtmlWindow::DisplayChmPage(const TCHAR *chmFilePath, const TCHAR *chmPage)
 {
-	// TODO: should only append / if chmPage doesn't already start with it
+    if (str::StartsWith(chmPage, _T("/")))
+        chmPage++;
     ScopedMem<TCHAR> url(str::Format(_T("its:%s::/%s"), chmFilePath, chmPage));
     NavigateToUrl(url);
 }

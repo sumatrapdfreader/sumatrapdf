@@ -954,16 +954,16 @@ void DisplayModel::GoToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
     if (!ValidPageNo(pageNo))
         return;
 
-	ChmEngine *chmEngine = GetChmEngine();
-	if (chmEngine) {
-		chmEngine->DisplayPage(pageNo);
-		_callback->PageNoChanged(pageNo);
-		_startPage = pageNo;
-		RepaintDisplay();
-		return;
-	}
+    ChmEngine *chmEngine = GetChmEngine();
+    if (chmEngine) {
+        chmEngine->DisplayPage(pageNo);
+        _callback->PageNoChanged(pageNo);
+        _startPage = pageNo;
+        RepaintDisplay();
+        return;
+    }
 
-	if (addNavPt)
+    if (addNavPt)
         AddNavPoint();
 
     /* in facing mode only start at odd pages (odd because page
@@ -1072,16 +1072,16 @@ void DisplayModel::SetPresentationMode(bool enable)
    (e.g. because already was at the last page) */
 bool DisplayModel::GoToNextPage(int scrollY)
 {
-	ChmEngine *chmEngine = GetChmEngine();
-	if (chmEngine) {
-	    int pageNo = _startPage + 1;
-		if (!ValidPageNo(pageNo))
-			return false;
-		GoToPage(pageNo, 0);
-		return true;
-	}
+    ChmEngine *chmEngine = GetChmEngine();
+    if (chmEngine) {
+        int pageNo = _startPage + 1;
+        if (!ValidPageNo(pageNo))
+            return false;
+        GoToPage(pageNo, 0);
+        return true;
+    }
 
-	int columns = columnsFromDisplayMode(displayMode());
+    int columns = columnsFromDisplayMode(displayMode());
     int currPageNo = CurrentPageNo();
     // Fully display the current page, if the previous page is still visible
     if (ValidPageNo(currPageNo - columns) && PageVisible(currPageNo - columns) && GetPageInfo(currPageNo)->visibleRatio < 1.0) {
@@ -1100,16 +1100,16 @@ bool DisplayModel::GoToNextPage(int scrollY)
 
 bool DisplayModel::GoToPrevPage(int scrollY)
 {
-	ChmEngine *chmEngine = GetChmEngine();
-	if (chmEngine) {
-	    int pageNo = _startPage - 1;
-		if (!ValidPageNo(pageNo))
-			return false;
-		GoToPage(pageNo, 0);
-		return true;
-	}
+    ChmEngine *chmEngine = GetChmEngine();
+    if (chmEngine) {
+        int pageNo = _startPage - 1;
+        if (!ValidPageNo(pageNo))
+            return false;
+        GoToPage(pageNo, 0);
+        return true;
+    }
 
-	int columns = columnsFromDisplayMode(displayMode());
+    int columns = columnsFromDisplayMode(displayMode());
     int currPageNo = CurrentPageNo();
     DBG_OUT("DisplayModel::goToPrevPage(scrollY=%d), currPageNo=%d\n", scrollY, currPageNo);
 
@@ -1503,8 +1503,8 @@ DisplayModel *DisplayModel::CreateFromFileName(DisplayModelCallback *callback,
 
 ChmEngine *DisplayModel::GetChmEngine() const
 {
-	if (Engine_Chm != engineType)
-		return NULL;
+    if (Engine_Chm != engineType)
+        return NULL;
 
-	return static_cast<ChmEngine*>(engine);
+    return static_cast<ChmEngine*>(engine);
 }
