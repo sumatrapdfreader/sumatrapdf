@@ -229,7 +229,7 @@ public:
 	{
 		recordClipMask(rect, false, NULL);
 		stack->layerAlpha *= alpha;
-        stack->blendmode = blendmode | (isolated ? FZ_BLEND_ISOLATED : 0) | (knockout ? FZ_BLEND_KNOCKOUT : 0);
+		stack->blendmode = blendmode | (isolated ? FZ_BLEND_ISOLATED : 0) | (knockout ? FZ_BLEND_KNOCKOUT : 0);
 	}
 
 	void applyClipMask()

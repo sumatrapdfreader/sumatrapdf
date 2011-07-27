@@ -163,6 +163,9 @@ pdf_repair_obj_stm(pdf_xref *xref, int num, int gen)
 		xref->table[n].ofs = num;
 		xref->table[n].gen = i;
 		xref->table[n].stm_ofs = 0;
+		/* SumatraPDF: fix memory leak */
+		if (xref->table[n].obj)
+			fz_drop_obj(xref->table[n].obj);
 		xref->table[n].obj = NULL;
 		xref->table[n].type = 'o';
 
@@ -470,6 +473,11 @@ pdf_repair_obj_stms(pdf_xref *xref)
 			fz_drop_obj(dict);
 		}
 	}
+
+	/* SumatraPDF: ensure that streamed objects reside insided a known non-streamed object */
+	for (i = 0; i < xref->len; i++)
+		if (xref->table[i].type == 'o' && xref->table[xref->table[i].ofs].type != 'n')
+			return fz_throw("invalid reference to non-object-stream: %d (%d 0 R)", xref->table[i].ofs, i);
 
 	return fz_okay;
 }
