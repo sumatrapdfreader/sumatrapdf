@@ -138,10 +138,6 @@ static StrVec                       gAllowedLinkProtocols;
 static void UpdateUITextForLanguage();
 static void UpdateToolbarAndScrollbarsForAllWindows();
 static void RebuildMenuBar();
-static bool LoadDocIntoWindow(const TCHAR *fileName, WindowInfo& win, 
-    const DisplayState *state, bool isNewWindow, bool allowFailure, 
-    bool showWin, bool placeWindow);
-
 static void EnterFullscreen(WindowInfo& win, bool presentation=false);
 static void ExitFullscreen(WindowInfo& win);
 
@@ -584,203 +580,16 @@ void CreateThumbnailForFile(WindowInfo& win, DisplayState& state)
     gRenderCache.Render(win.dm, 1, 0, zoom, pageRect, *callback);
 }
 
-void ReloadDocument(WindowInfo *win, bool autorefresh)
-{
-    DisplayState ds;
-    ds.useGlobalValues = gGlobalPrefs.globalPrefsOnly;
-    if (!win->IsDocLoaded() || !win->dm->DisplayStateFromModel(&ds)) {
-        if (!autorefresh && !win->IsDocLoaded() && !win->IsAboutWindow())
-            LoadDocument(win->loadedFilePath, win);
-        return;
-    }
-    UpdateDisplayStateWindowRect(*win, ds);
-    UpdateSidebarDisplayState(win, &ds);
-    // Set the windows state based on the actual window's placement
-    ds.windowState =  win->fullScreen ? WIN_STATE_FULLSCREEN
-                    : IsZoomed(win->hwndFrame) ? WIN_STATE_MAXIMIZED 
-                    : IsIconic(win->hwndFrame) ? WIN_STATE_MINIMIZED
-                    : WIN_STATE_NORMAL ;
-
-    // We don't allow PDF-repair if it is an autorefresh because
-    // a refresh event can occur before the file is finished being written,
-    // in which case the repair could fail. Instead, if the file is broken, 
-    // we postpone the reload until the next autorefresh event
-    bool allowFailure = !autorefresh;
-    ScopedMem<TCHAR> path(str::Dup(win->loadedFilePath));
-    if (!LoadDocIntoWindow(path, *win, &ds, false /* isNewWindow */, allowFailure, true /* showWin */, false /* placeWindow */))
-        return;
-
-    if (gGlobalPrefs.showStartPage) {
-        // refresh the thumbnail for this file
-        DisplayState *state = gFileHistory.Find(ds.filePath);
-        if (state)
-            CreateThumbnailForFile(*win, *state);
-    }
-
-    // save a newly remembered password into file history so that
-    // we don't ask again at the next refresh
-    ScopedMem<char> decryptionKey(win->dm->engine->GetDecryptionKey());
-    if (decryptionKey) {
-        DisplayState *state = gFileHistory.Find(ds.filePath);
-        if (state && !str::Eq(state->decryptionKey, decryptionKey))
-            str::ReplacePtr(&state->decryptionKey, decryptionKey);
-    }
-}
-
-static void UpdateToolbarAndScrollbarsForAllWindows()
-{
-    for (size_t i = 0; i < gWindows.Count(); i++) {
-        WindowInfo *win = gWindows[i];
-        ToolbarUpdateStateForWindow(win);
-
-        if (!win->IsDocLoaded()) {
-            ShowScrollBar(win->hwndCanvas, SB_BOTH, FALSE);
-            if (win->IsAboutWindow())
-                win::SetText(win->hwndFrame, SUMATRA_WINDOW_TITLE);
-        }
-    }
-}
-
-#define MIN_WIN_DX 50
-#define MIN_WIN_DY 50
-
-void EnsureWindowVisibility(RectI& rect)
-{
-    // adjust to the work-area of the current monitor (not necessarily the primary one)
-    MONITORINFO mi = { 0 };
-    mi.cbSize = sizeof(mi);
-    if (!GetMonitorInfo(MonitorFromRect(&rect.ToRECT(), MONITOR_DEFAULTTONEAREST), &mi))
-        SystemParametersInfo(SPI_GETWORKAREA, 0, &mi.rcWork, 0);
-
-    RectI work = RectI::FromRECT(mi.rcWork);
-    // make sure that the window is neither too small nor bigger than the monitor
-    if (rect.dx < MIN_WIN_DX || rect.dx > work.dx)
-        rect.dx = (int)min(work.dy * DEF_PAGE_RATIO, work.dx);
-    if (rect.dy < MIN_WIN_DY || rect.dy > work.dy)
-        rect.dy = work.dy;
-
-    // check whether the lower half of the window's title bar is
-    // inside a visible working area
-    int captionDy = GetSystemMetrics(SM_CYCAPTION);
-    RectI halfCaption(rect.x, rect.y + captionDy / 2, rect.dx, captionDy / 2);
-    if (halfCaption.Intersect(work).IsEmpty())
-        rect = RectI(work.TL(), rect.Size());
-}
-
-static void CreateSidebar(WindowInfo* win)
-{
-    win->hwndSidebarSpliter = CreateWindow(SPLITER_CLASS_NAME, _T(""), 
-        WS_CHILDWINDOW, 0, 0, 0, 0, win->hwndFrame, (HMENU)0, ghinst, NULL);
-
-    CreateToc(win);
-    CreateFavorites(win);
-
-    if (win->tocVisible) {
-        InvalidateRect(win->hwndTocBox, NULL, TRUE);
-        UpdateWindow(win->hwndTocBox);
-    }
-
-    if (gGlobalPrefs.favVisible) {
-        InvalidateRect(win->hwndFavBox, NULL, TRUE);
-        UpdateWindow(win->hwndFavBox);
-    }
-}
-
-static WindowInfo* CreateWindowInfo()
-{
-    RectI windowPos;
-    if (gGlobalPrefs.windowPos.IsEmpty()) {
-        // center the window on the primary monitor
-        RECT workArea;
-        SystemParametersInfo(SPI_GETWORKAREA, 0, &workArea, 0);
-        RectI work = RectI::FromRECT(workArea);
-        windowPos.y = work.x;
-        windowPos.dy = work.dy;
-        windowPos.dx = (int)min(windowPos.dy * DEF_PAGE_RATIO, work.dx);
-        windowPos.x = (work.dx - windowPos.dx) / 2;
-    }
-    else {
-        windowPos = gGlobalPrefs.windowPos;
-        EnsureWindowVisibility(windowPos);
-    }
-
-    HWND hwndFrame = CreateWindow(
-            FRAME_CLASS_NAME, SUMATRA_WINDOW_TITLE,
-            WS_OVERLAPPEDWINDOW,
-            windowPos.x, windowPos.y, windowPos.dx, windowPos.dy,
-            NULL, NULL,
-            ghinst, NULL);
-    if (!hwndFrame)
-        return NULL;
-
-    assert(NULL == FindWindowInfoByHwnd(hwndFrame));
-    WindowInfo *win = new WindowInfo(hwndFrame);
-
-    HWND hwndCanvas = CreateWindowEx(
-            WS_EX_STATICEDGE, 
-            CANVAS_CLASS_NAME, NULL,
-            WS_CHILD | WS_HSCROLL | WS_VSCROLL,
-            0, 0, 0, 0, /* position and size determined in OnSize */
-            hwndFrame, NULL,
-            ghinst, NULL);
-    if (!hwndCanvas)
-        return NULL;
-    // hide scrollbars to avoid showing/hiding on empty window
-    ShowScrollBar(hwndCanvas, SB_BOTH, FALSE);
-
-    assert(NULL == win->menu);
-    win->menu = BuildMenu(win);
-
-    win->hwndCanvas = hwndCanvas;
-    ShowWindow(win->hwndCanvas, SW_SHOW);
-    UpdateWindow(win->hwndCanvas);
-
-    win->hwndInfotip = CreateWindowEx(WS_EX_TOPMOST,
-        TOOLTIPS_CLASS, NULL, WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP,
-        CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
-        win->hwndCanvas, NULL, ghinst, NULL);
-
-    CreateToolbar(win);
-    CreateSidebar(win);
-    UpdateFindbox(win);
-    DragAcceptFiles(win->hwndCanvas, TRUE);
-
-    gWindows.Append(win);
-    UpdateWindowRtlLayout(win);
-    return win;
-}
-
-static void DeleteWindowInfo(WindowInfo *win)
-{
-    assert(win);
-    if (!win) return;
-
-    // must DestroyWindow(win->hwndProperties) before removing win from
-    // the list of properties beacuse WM_DESTROY handler needs to find
-    // WindowInfo for its HWND
-    if (win->hwndProperties) {
-        DestroyWindow(win->hwndProperties);
-        assert(NULL == win->hwndProperties);
-    }
-    gWindows.Remove(win);
-
-    ImageList_Destroy((HIMAGELIST)SendMessage(win->hwndToolbar, TB_GETIMAGELIST, 0, 0));
-    DragAcceptFiles(win->hwndCanvas, FALSE);
-
-    AbortFinding(win);
-    AbortPrinting(win);
-
-    delete win;
-}
-
-static bool LoadDocIntoWindow(
-    const TCHAR *fileName, // path to the document
-    WindowInfo& win,       // destination window
-    const DisplayState *state,   // state
-    bool isNewWindow,      // if true then 'win' refers to a newly created window that needs to be resized and placed
-    bool allowFailure,     // if false then keep displaying the previously loaded document if the new one is broken
-    bool showWin,          // window visible or not
-    bool placeWindow)      // if true then the Window will be moved/sized according to the 'state' information even if the window was already placed before (isNewWindow=false)
+// isNewWindow : if true then 'win' refers to a newly created window that needs 
+//   to be resized and placed
+// allowFailure : if false then keep displaying the previously loaded document
+//   if the new one is broken
+// placeWindow : if true then the Window will be moved/sized according
+//   to the 'state' information even if the window was already placed
+//   before (isNewWindow=false)
+static bool LoadDocIntoWindow(const TCHAR *fileName, WindowInfo& win,
+    const DisplayState *state, bool isNewWindow, bool allowFailure, 
+    bool showWin, bool placeWindow)
 {
     // Never load settings from a preexisting state if the user doesn't wish to
     // (unless we're just refreshing the document, i.e. only if placeWindow == true)
@@ -791,7 +600,9 @@ static bool LoadDocIntoWindow(
     int startPage = 1;
     ScrollState ss(1, -1, -1);
     bool showAsFullScreen = WIN_STATE_FULLSCREEN == gGlobalPrefs.windowState;
-    int showType = gGlobalPrefs.windowState == WIN_STATE_MAXIMIZED || showAsFullScreen ? SW_MAXIMIZE : SW_NORMAL;
+    int showType = SW_NORMAL;
+    if (gGlobalPrefs.windowState == WIN_STATE_MAXIMIZED || showAsFullScreen)
+        showType = SW_MAXIMIZE;
 
     if (state) {
         startPage = state->pageNo;
@@ -967,6 +778,198 @@ Error:
         win.dm->SetPresentationMode(true);
 
     return true;
+}
+
+void ReloadDocument(WindowInfo *win, bool autorefresh)
+{
+    DisplayState ds;
+    ds.useGlobalValues = gGlobalPrefs.globalPrefsOnly;
+    if (!win->IsDocLoaded() || !win->dm->DisplayStateFromModel(&ds)) {
+        if (!autorefresh && !win->IsDocLoaded() && !win->IsAboutWindow())
+            LoadDocument(win->loadedFilePath, win);
+        return;
+    }
+    UpdateDisplayStateWindowRect(*win, ds);
+    UpdateSidebarDisplayState(win, &ds);
+    // Set the windows state based on the actual window's placement
+    ds.windowState =  win->fullScreen ? WIN_STATE_FULLSCREEN
+                    : IsZoomed(win->hwndFrame) ? WIN_STATE_MAXIMIZED 
+                    : IsIconic(win->hwndFrame) ? WIN_STATE_MINIMIZED
+                    : WIN_STATE_NORMAL ;
+
+    // We don't allow PDF-repair if it is an autorefresh because
+    // a refresh event can occur before the file is finished being written,
+    // in which case the repair could fail. Instead, if the file is broken, 
+    // we postpone the reload until the next autorefresh event
+    bool allowFailure = !autorefresh;
+    bool isNewWindow = false;
+    bool showWin = true;
+    bool placeWindow = false;
+    ScopedMem<TCHAR> path(str::Dup(win->loadedFilePath));
+    if (!LoadDocIntoWindow(path, *win, &ds, isNewWindow, allowFailure, showWin, placeWindow))
+        return;
+
+    if (gGlobalPrefs.showStartPage) {
+        // refresh the thumbnail for this file
+        DisplayState *state = gFileHistory.Find(ds.filePath);
+        if (state)
+            CreateThumbnailForFile(*win, *state);
+    }
+
+    // save a newly remembered password into file history so that
+    // we don't ask again at the next refresh
+    ScopedMem<char> decryptionKey(win->dm->engine->GetDecryptionKey());
+    if (decryptionKey) {
+        DisplayState *state = gFileHistory.Find(ds.filePath);
+        if (state && !str::Eq(state->decryptionKey, decryptionKey))
+            str::ReplacePtr(&state->decryptionKey, decryptionKey);
+    }
+}
+
+static void UpdateToolbarAndScrollbarsForAllWindows()
+{
+    for (size_t i = 0; i < gWindows.Count(); i++) {
+        WindowInfo *win = gWindows[i];
+        ToolbarUpdateStateForWindow(win);
+
+        if (!win->IsDocLoaded()) {
+            ShowScrollBar(win->hwndCanvas, SB_BOTH, FALSE);
+            if (win->IsAboutWindow())
+                win::SetText(win->hwndFrame, SUMATRA_WINDOW_TITLE);
+        }
+    }
+}
+
+#define MIN_WIN_DX 50
+#define MIN_WIN_DY 50
+
+void EnsureWindowVisibility(RectI& rect)
+{
+    // adjust to the work-area of the current monitor (not necessarily the primary one)
+    MONITORINFO mi = { 0 };
+    mi.cbSize = sizeof(mi);
+    if (!GetMonitorInfo(MonitorFromRect(&rect.ToRECT(), MONITOR_DEFAULTTONEAREST), &mi))
+        SystemParametersInfo(SPI_GETWORKAREA, 0, &mi.rcWork, 0);
+
+    RectI work = RectI::FromRECT(mi.rcWork);
+    // make sure that the window is neither too small nor bigger than the monitor
+    if (rect.dx < MIN_WIN_DX || rect.dx > work.dx)
+        rect.dx = (int)min(work.dy * DEF_PAGE_RATIO, work.dx);
+    if (rect.dy < MIN_WIN_DY || rect.dy > work.dy)
+        rect.dy = work.dy;
+
+    // check whether the lower half of the window's title bar is
+    // inside a visible working area
+    int captionDy = GetSystemMetrics(SM_CYCAPTION);
+    RectI halfCaption(rect.x, rect.y + captionDy / 2, rect.dx, captionDy / 2);
+    if (halfCaption.Intersect(work).IsEmpty())
+        rect = RectI(work.TL(), rect.Size());
+}
+
+static void CreateSidebar(WindowInfo* win)
+{
+    win->hwndSidebarSpliter = CreateWindow(SPLITER_CLASS_NAME, _T(""), 
+        WS_CHILDWINDOW, 0, 0, 0, 0, win->hwndFrame, (HMENU)0, ghinst, NULL);
+
+    CreateToc(win);
+    CreateFavorites(win);
+
+    if (win->tocVisible) {
+        InvalidateRect(win->hwndTocBox, NULL, TRUE);
+        UpdateWindow(win->hwndTocBox);
+    }
+
+    if (gGlobalPrefs.favVisible) {
+        InvalidateRect(win->hwndFavBox, NULL, TRUE);
+        UpdateWindow(win->hwndFavBox);
+    }
+}
+
+static WindowInfo* CreateWindowInfo()
+{
+    RectI windowPos;
+    if (gGlobalPrefs.windowPos.IsEmpty()) {
+        // center the window on the primary monitor
+        RECT workArea;
+        SystemParametersInfo(SPI_GETWORKAREA, 0, &workArea, 0);
+        RectI work = RectI::FromRECT(workArea);
+        windowPos.y = work.x;
+        windowPos.dy = work.dy;
+        windowPos.dx = (int)min(windowPos.dy * DEF_PAGE_RATIO, work.dx);
+        windowPos.x = (work.dx - windowPos.dx) / 2;
+    }
+    else {
+        windowPos = gGlobalPrefs.windowPos;
+        EnsureWindowVisibility(windowPos);
+    }
+
+    HWND hwndFrame = CreateWindow(
+            FRAME_CLASS_NAME, SUMATRA_WINDOW_TITLE,
+            WS_OVERLAPPEDWINDOW,
+            windowPos.x, windowPos.y, windowPos.dx, windowPos.dy,
+            NULL, NULL,
+            ghinst, NULL);
+    if (!hwndFrame)
+        return NULL;
+
+    assert(NULL == FindWindowInfoByHwnd(hwndFrame));
+    WindowInfo *win = new WindowInfo(hwndFrame);
+
+    HWND hwndCanvas = CreateWindowEx(
+            WS_EX_STATICEDGE, 
+            CANVAS_CLASS_NAME, NULL,
+            WS_CHILD | WS_HSCROLL | WS_VSCROLL,
+            0, 0, 0, 0, /* position and size determined in OnSize */
+            hwndFrame, NULL,
+            ghinst, NULL);
+    if (!hwndCanvas)
+        return NULL;
+    // hide scrollbars to avoid showing/hiding on empty window
+    ShowScrollBar(hwndCanvas, SB_BOTH, FALSE);
+
+    assert(NULL == win->menu);
+    win->menu = BuildMenu(win);
+
+    win->hwndCanvas = hwndCanvas;
+    ShowWindow(win->hwndCanvas, SW_SHOW);
+    UpdateWindow(win->hwndCanvas);
+
+    win->hwndInfotip = CreateWindowEx(WS_EX_TOPMOST,
+        TOOLTIPS_CLASS, NULL, WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP,
+        CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+        win->hwndCanvas, NULL, ghinst, NULL);
+
+    CreateToolbar(win);
+    CreateSidebar(win);
+    UpdateFindbox(win);
+    DragAcceptFiles(win->hwndCanvas, TRUE);
+
+    gWindows.Append(win);
+    UpdateWindowRtlLayout(win);
+    return win;
+}
+
+static void DeleteWindowInfo(WindowInfo *win)
+{
+    assert(win);
+    if (!win) return;
+
+    // must DestroyWindow(win->hwndProperties) before removing win from
+    // the list of properties beacuse WM_DESTROY handler needs to find
+    // WindowInfo for its HWND
+    if (win->hwndProperties) {
+        DestroyWindow(win->hwndProperties);
+        assert(NULL == win->hwndProperties);
+    }
+    gWindows.Remove(win);
+
+    ImageList_Destroy((HIMAGELIST)SendMessage(win->hwndToolbar, TB_GETIMAGELIST, 0, 0));
+    DragAcceptFiles(win->hwndCanvas, FALSE);
+
+    AbortFinding(win);
+    AbortPrinting(win);
+
+    delete win;
 }
 
 class FileChangeCallback : public UIThreadWorkItem, public CallbackFunc

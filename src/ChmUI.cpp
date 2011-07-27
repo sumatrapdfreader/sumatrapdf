@@ -24,16 +24,14 @@ bool RegisterChmWinClass(HINSTANCE hinst)
     WNDCLASSEX  wcex;
     ATOM        atom;
 
-    /* TODO: can't register FRAME_CLASS_NAME twice
     FillWndClassEx(wcex, hinst);
     wcex.lpfnWndProc    = WndProcChmFrame;
-    wcex.lpszClassName  = FRAME_CLASS_NAME;
+    wcex.lpszClassName  = FRAME_CHM_CLASS_NAME;
     wcex.hIcon          = LoadIcon(hinst, MAKEINTRESOURCE(IDI_SUMATRAPDF));
     wcex.hIconSm        = LoadIcon(hinst, MAKEINTRESOURCE(IDI_SMALL));
     atom = RegisterClassEx(&wcex);
     if (!atom)
         return false;
-    */
 
     FillWndClassEx(wcex, hinst);
     wcex.style          = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
