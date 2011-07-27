@@ -11,13 +11,16 @@ about untranslated strings to stdout and adds untranslated strings as
 comments at the end of strings file for each language.
 """
 
-C_FILES_TO_PROCESS = [
-  "SumatraPDF.cpp", "SumatraAbout.cpp", "SumatraProperties.cpp", 
-  "SumatraDialogs.cpp", "CrashHandler.cpp", "AppTools.cpp", "Favorites.cpp",
-  "TableOfContents.cpp", "Toolbar.cpp", "Print.cpp", "Search.cpp",
-  "Selection.cpp", "Menu.cpp"
-]
-C_FILES_TO_PROCESS = [os.path.join("..", "src", f) for f in C_FILES_TO_PROCESS]
+# whitelist some files as an optimization
+C_FILES_TO_EXCLUDE = ["translations_txt.cpp"]
+def should_translate(file_name):
+    file_name = file_name.lower()
+    if not file_name.endswith(".cpp"):
+        return False
+    return file_name not in C_FILES_TO_EXCLUDE
+
+SRC_DIR = os.path.join("..", "src")
+C_FILES_TO_PROCESS = [os.path.join(SRC_DIR, f) for f in os.listdir(SRC_DIR) if should_translate(f)]
 STRINGS_PATH = os.path.join("..", "strings")
 TRANSLATION_PATTERN = r'\b_TRN?\("(.*?)"\)'
 
