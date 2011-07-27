@@ -4,5 +4,8 @@
 #ifndef ChmUI_h
 #define ChmUI_h
 
+#include "BaseUtil.h"
+
+bool RegisterChmWinClass(HINSTANCE hinst);
 
 #endif

@@ -34,6 +34,7 @@
 #include "ExternalPdfViewer.h"
 #include "Selection.h"
 #include "Menu.h"
+#include "ChmUI.h"
 
 #include "CrashHandler.h"
 #include "ParseCommandLine.h"
@@ -3606,10 +3607,10 @@ static LRESULT OnMouseWheel(WindowInfo& win, UINT message, WPARAM wParam, LPARAM
     return 0;
 }
 
-static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     // messages that don't require win
-    switch (message) {
+    switch (msg) {
         case WM_DROPFILES:
             OnDropFiles((HDROP)wParam);
             break;
@@ -3621,10 +3622,10 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
 
     WindowInfo *win = FindWindowInfoByHwnd(hwnd);
     if (!win)
-        return DefWindowProc(hwnd, message, wParam, lParam);
+        return DefWindowProc(hwnd, msg, wParam, lParam);
 
     // messages that require win
-    switch (message) {
+    switch (msg) {
         case WM_VSCROLL:
             OnVScroll(*win, wParam);
             return WM_VSCROLL_HANDLED;
@@ -3679,7 +3680,7 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
         case WM_SETCURSOR:
             if (OnSetCursor(*win, hwnd))
                 return TRUE;
-            return DefWindowProc(hwnd, message, wParam, lParam);
+            return DefWindowProc(hwnd, msg, wParam, lParam);
 
         case WM_TIMER:
             OnTimer(*win, hwnd, wParam);
@@ -3695,13 +3696,13 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
             break;
 
         case WM_MOUSEWHEEL:
-            return OnMouseWheel(*win, message, wParam, lParam);
+            return OnMouseWheel(*win, msg, wParam, lParam);
 
         default:
             // process thread queue events happening during an inner message loop
             // (else the scrolling position isn't updated until the scroll bar is released)
             gUIThreadMarshaller.Execute();
-            return DefWindowProc(hwnd, message, wParam, lParam);
+            return DefWindowProc(hwnd, msg, wParam, lParam);
     }
     return 0;
 }
@@ -3733,7 +3734,7 @@ void WindowInfo::RepaintAsync(UINT delay)
     QueueWorkItem(new RepaintCanvasWorkItem(this, delay));
 }
 
-static LRESULT OnCommand(WindowInfo *win, HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+static LRESULT OnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     int wmId = LOWORD(wParam);
 
@@ -3757,7 +3758,7 @@ static LRESULT OnCommand(WindowInfo *win, HWND hwnd, UINT message, WPARAM wParam
     }
     
     if (!win)
-        return DefWindowProc(hwnd, message, wParam, lParam);
+        return DefWindowProc(hwnd, msg, wParam, lParam);
     
     // most of them require a win, the few exceptions are no-ops without
     switch (wmId)
@@ -4024,20 +4025,20 @@ static LRESULT OnCommand(WindowInfo *win, HWND hwnd, UINT message, WPARAM wParam
             break;
 
         default:
-            return DefWindowProc(hwnd, message, wParam, lParam);
+            return DefWindowProc(hwnd, msg, wParam, lParam);
     }
 
     return 0;
 }
 
-static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     WindowInfo *    win;
     ULONG           ulScrollLines;                   // for mouse wheel logic
 
     win = FindWindowInfoByHwnd(hwnd);
 
-    switch (message)
+    switch (msg)
     {
         case WM_CREATE:
             // do nothing
@@ -4066,7 +4067,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
             break;
 
         case WM_COMMAND:
-            return OnCommand(win, hwnd, message, wParam, lParam);
+            return OnCommand(win, hwnd, msg, wParam, lParam);
 
         case WM_APPCOMMAND:
             // both keyboard and mouse drivers should produce WM_APPCOMMAND
@@ -4089,7 +4090,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                 SendMessage(hwnd, WM_COMMAND, IDM_VIEW_BOOKMARKS, 0);
                 return TRUE;
             }
-            return DefWindowProc(hwnd, message, wParam, lParam);
+            return DefWindowProc(hwnd, msg, wParam, lParam);
 
         case WM_CHAR:
             if (win)
@@ -4107,7 +4108,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
             // handled as expected)
             if (win && GET_X_LPARAM(lParam) == -1 && GET_Y_LPARAM(lParam) == -1 && GetFocus() != win->hwndTocTree)
                 return SendMessage(win->hwndCanvas, WM_CONTEXTMENU, wParam, lParam);
-            return DefWindowProc(hwnd, message, wParam, lParam);
+            return DefWindowProc(hwnd, msg, wParam, lParam);
 
         case WM_SETTINGCHANGE:
 InitMouseWheelInfo:
@@ -4131,12 +4132,12 @@ InitMouseWheelInfo:
             // Pass the message to the canvas' window procedure
             // (required since the canvas itself never has the focus and thus
             // never receives WM_MOUSEWHEEL messages)
-            return SendMessage(win->hwndCanvas, message, wParam, lParam);
+            return SendMessage(win->hwndCanvas, msg, wParam, lParam);
 
         case WM_DESTROY:
             /* WM_DESTROY might be sent as a result of File\Close, in which case CloseWindow() has already been called */
             if (win)
-                CloseWindow(win, TRUE, true);
+                CloseWindow(win, true, true);
             break;
 
         case WM_DDE_INITIATE:
@@ -4153,26 +4154,26 @@ InitMouseWheelInfo:
             break;
 
         default:
-            return DefWindowProc(hwnd, message, wParam, lParam);
+            return DefWindowProc(hwnd, msg, wParam, lParam);
     }
     return 0;
 }
 
-static bool RegisterWinClass(HINSTANCE hInstance)
+static bool RegisterWinClass(HINSTANCE hinst)
 {
     WNDCLASSEX  wcex;
     ATOM        atom;
 
-    FillWndClassEx(wcex, hInstance);
+    FillWndClassEx(wcex, hinst);
     wcex.lpfnWndProc    = WndProcFrame;
     wcex.lpszClassName  = FRAME_CLASS_NAME;
-    wcex.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_SUMATRAPDF));
-    wcex.hIconSm        = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
+    wcex.hIcon          = LoadIcon(hinst, MAKEINTRESOURCE(IDI_SUMATRAPDF));
+    wcex.hIconSm        = LoadIcon(hinst, MAKEINTRESOURCE(IDI_SMALL));
     atom = RegisterClassEx(&wcex);
     if (!atom)
         return false;
 
-    FillWndClassEx(wcex, hInstance);
+    FillWndClassEx(wcex, hinst);
     wcex.style          = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
     wcex.lpfnWndProc    = WndProcCanvas;
     wcex.hCursor        = LoadCursor(NULL, IDC_ARROW);
@@ -4181,23 +4182,23 @@ static bool RegisterWinClass(HINSTANCE hInstance)
     if (!atom)
         return false;
 
-    FillWndClassEx(wcex, hInstance);
+    FillWndClassEx(wcex, hinst);
     wcex.lpfnWndProc    = WndProcAbout;
-    wcex.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_SUMATRAPDF));
+    wcex.hIcon          = LoadIcon(hinst, MAKEINTRESOURCE(IDI_SUMATRAPDF));
     wcex.lpszClassName  = ABOUT_CLASS_NAME;
     atom = RegisterClassEx(&wcex);
     if (!atom)
         return false;
 
-    FillWndClassEx(wcex, hInstance);
+    FillWndClassEx(wcex, hinst);
     wcex.lpfnWndProc    = WndProcProperties;
-    wcex.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_SUMATRAPDF));
+    wcex.hIcon          = LoadIcon(hinst, MAKEINTRESOURCE(IDI_SUMATRAPDF));
     wcex.lpszClassName  = PROPERTIES_CLASS_NAME;
     atom = RegisterClassEx(&wcex);
     if (!atom)
         return false;
 
-    FillWndClassEx(wcex, hInstance);
+    FillWndClassEx(wcex, hinst);
     wcex.lpfnWndProc    = WndProcSpliter;
     wcex.hCursor        = LoadCursor(NULL, IDC_SIZEWE);
     wcex.hbrBackground  = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
@@ -4206,7 +4207,10 @@ static bool RegisterWinClass(HINSTANCE hInstance)
     if (!atom)
         return false;
 
-    if (!RegisterNotificationsWndClass(hInstance))
+    if (!RegisterNotificationsWndClass(hinst))
+        return false;
+
+    if (!RegisterChmWinClass(hinst))
         return false;
 
     return true;
