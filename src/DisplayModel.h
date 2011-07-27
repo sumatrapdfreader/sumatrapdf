@@ -204,7 +204,7 @@ public:
     bool            DisplayStateFromModel(DisplayState *ds);
 
     // called when we decide that the display needs to be redrawn
-    void            RepaintDisplay() { if (_callback) _callback->Repaint(); }
+    void            RepaintDisplay() { if (dmCb) dmCb->Repaint(); }
 
     ChmEngine *     GetChmEngine() const;
 protected:
@@ -233,7 +233,7 @@ protected:
     int             _startPage;
 
     /* A callback to notify UI about required changes */
-    DisplayModelCallback *_callback;
+    DisplayModelCallback *dmCb;
 
     /* size of virtual canvas containing all rendered pages. */
     SizeI           canvasSize;

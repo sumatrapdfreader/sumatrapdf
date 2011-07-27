@@ -196,7 +196,7 @@ DisplayModel::DisplayModel(DisplayModelCallback *callback, DisplayMode displayMo
     _zoomReal = INVALID_ZOOM;
     _dpiFactor = 1.0f;
     _startPage = INVALID_PAGE_NO;
-    _callback = callback;
+    dmCb = callback;
 
     engine = NULL;
     engineType = Engine_None;
@@ -214,7 +214,7 @@ DisplayModel::DisplayModel(DisplayModelCallback *callback, DisplayMode displayMo
 DisplayModel::~DisplayModel()
 {
     dontRenderFlag = true;
-    _callback->CleanUp(this);
+    dmCb->CleanUp(this);
 
     free(pagesInfo);
     delete textSearch;
@@ -234,14 +234,14 @@ PageInfo *DisplayModel::GetPageInfo(int pageNo) const
 bool DisplayModel::Load(const TCHAR *fileName, int startPage, SizeI viewPort)
 { 
     assert(fileName);
-    engine = EngineManager::CreateEngine(fileName, _callback, &engineType);
+    engine = EngineManager::CreateEngine(fileName, dmCb, &engineType);
     if (!engine)
         return false;
 
     if (engine->IsImageCollection())
         padding = &gImagePadding;
 
-    _dpiFactor = 1.0f * _callback->GetScreenDPI() / engine->GetFileDPI();
+    _dpiFactor = 1.0f * dmCb->GetScreenDPI() / engine->GetFileDPI();
     totalViewPortSize = viewPort;
 
     assert(engine->PageCount() > 0);
@@ -881,7 +881,7 @@ void DisplayModel::RenderVisibleParts()
         PageInfo *pageInfo = GetPageInfo(pageNo);
         if (pageInfo->visibleRatio > 0.0) {
             assert(pageInfo->shown);
-            _callback->RenderPage(pageNo);
+            dmCb->RenderPage(pageNo);
             if (0 == firstVisible)
                 firstVisible = pageNo;
             lastVisible = pageNo;
@@ -892,9 +892,9 @@ void DisplayModel::RenderVisibleParts()
         // as a trade-off, we don't prerender two pages each in Facing
         // and Book View modes (else 4 of 8 potential request slots would be taken)
         if (lastVisible < PageCount())
-            _callback->RenderPage(lastVisible + 1);
+            dmCb->RenderPage(lastVisible + 1);
         if (firstVisible > 1)
-            _callback->RenderPage(firstVisible - 1);
+            dmCb->RenderPage(firstVisible - 1);
     }
 }
 
@@ -918,7 +918,7 @@ void DisplayModel::ChangeViewPortSize(SizeI newViewPortSize)
     } else {
         RecalcVisibleParts();
         RenderVisibleParts();
-        _callback->UpdateScrollbars(canvasSize);
+        dmCb->UpdateScrollbars(canvasSize);
     }
 }
 
@@ -957,7 +957,7 @@ void DisplayModel::GoToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
     ChmEngine *chmEngine = GetChmEngine();
     if (chmEngine) {
         chmEngine->DisplayPage(pageNo);
-        _callback->PageNoChanged(pageNo);
+        dmCb->PageNoChanged(pageNo);
         _startPage = pageNo;
         RepaintDisplay();
         return;
@@ -1017,8 +1017,8 @@ void DisplayModel::GoToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
 
     RecalcVisibleParts();
     RenderVisibleParts();
-    _callback->UpdateScrollbars(canvasSize);
-    _callback->PageNoChanged(pageNo);
+    dmCb->UpdateScrollbars(canvasSize);
+    dmCb->PageNoChanged(pageNo);
     RepaintDisplay();
 }
 
@@ -1182,10 +1182,10 @@ void DisplayModel::ScrollXTo(int xOff)
     int currPageNo = CurrentPageNo();
     viewPort.x = xOff;
     RecalcVisibleParts();
-    _callback->UpdateScrollbars(canvasSize);
+    dmCb->UpdateScrollbars(canvasSize);
     
     if (CurrentPageNo() != currPageNo)
-        _callback->PageNoChanged(CurrentPageNo());
+        dmCb->PageNoChanged(CurrentPageNo());
     RepaintDisplay();
 }
 
@@ -1209,7 +1209,7 @@ void DisplayModel::ScrollYTo(int yOff)
 
     int newPageNo = CurrentPageNo();
     if (newPageNo != currPageNo)
-        _callback->PageNoChanged(newPageNo);
+        dmCb->PageNoChanged(newPageNo);
     RepaintDisplay();
 }
 
@@ -1261,10 +1261,10 @@ void DisplayModel::ScrollYBy(int dy, bool changePage)
     viewPort.y = newYOff;
     RecalcVisibleParts();
     RenderVisibleParts();
-    _callback->UpdateScrollbars(canvasSize);
+    dmCb->UpdateScrollbars(canvasSize);
     newPageNo = CurrentPageNo();
     if (newPageNo != currPageNo)
-        _callback->PageNoChanged(newPageNo);
+        dmCb->PageNoChanged(newPageNo);
     RepaintDisplay();
 }
 
