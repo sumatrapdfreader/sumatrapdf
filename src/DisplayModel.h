@@ -214,7 +214,7 @@ protected:
     bool            BuildPagesInfo();
     float           ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo);
     SizeD           PageSizeAfterRotation(int pageNo, bool fitToContent=false);
-    void            changeStartPage(int startPage);
+    void            ChangeStartPage(int startPage);
     PointI          GetContentStart(int pageNo);
     void            SetZoomVirtual(float zoomVirtual);
     void            RecalcVisibleParts();
@@ -247,10 +247,10 @@ protected:
     int             _rotation;
     /* dpi correction factor by which _zoomVirtual has to be multiplied in
        order to get _zoomReal */
-    float           _dpiFactor;
+    float           dpiFactor;
     /* whether to display pages Left-to-Right or Right-to-Left.
        this value is extracted from the PDF document */
-    bool            _displayR2L;
+    bool            displayR2L;
 
     /* when we're in presentation mode, _pres* contains the pre-presentation values */
     bool            _presentationMode;

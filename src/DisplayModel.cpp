@@ -194,7 +194,7 @@ DisplayModel::DisplayModel(DisplayModelCallback *callback, DisplayMode displayMo
     padding = &gPagePadding;
     _presentationMode = false;
     _zoomReal = INVALID_ZOOM;
-    _dpiFactor = 1.0f;
+    dpiFactor = 1.0f;
     _startPage = INVALID_PAGE_NO;
     dmCb = callback;
 
@@ -241,7 +241,7 @@ bool DisplayModel::Load(const TCHAR *fileName, int startPage, SizeI viewPort)
     if (engine->IsImageCollection())
         padding = &gImagePadding;
 
-    _dpiFactor = 1.0f * dmCb->GetScreenDPI() / engine->GetFileDPI();
+    dpiFactor = 1.0f * dmCb->GetScreenDPI() / engine->GetFileDPI();
     totalViewPortSize = viewPort;
 
     assert(engine->PageCount() > 0);
@@ -261,7 +261,7 @@ bool DisplayModel::Load(const TCHAR *fileName, int startPage, SizeI viewPort)
         case Layout_Book | Layout_NonContinuous: _displayMode = DM_BOOK_VIEW; break;
         }
     }
-    _displayR2L = (layout & Layout_R2L) != 0;
+    displayR2L = (layout & Layout_R2L) != 0;
 
     if (!BuildPagesInfo())
         return false;
@@ -374,7 +374,7 @@ bool DisplayModel::LastBookPageVisible()
 float DisplayModel::ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo)
 {
     if (zoomVirtual != ZOOM_FIT_WIDTH && zoomVirtual != ZOOM_FIT_PAGE && zoomVirtual != ZOOM_FIT_CONTENT)
-        return zoomVirtual * 0.01f * this->_dpiFactor;
+        return zoomVirtual * 0.01f * dpiFactor;
 
     SizeD row;
     PageInfo *pageInfo = GetPageInfo(pageNo);
@@ -502,7 +502,7 @@ void DisplayModel::SetZoomVirtual(float zoomVirtual)
             this->_zoomReal < ZoomRealFromVirtualForPage(ZOOM_FIT_PAGE, CurrentPageNo()))
             this->_zoomReal = newZoom;
     } else
-        this->_zoomReal = zoomVirtual * 0.01f * this->_dpiFactor;
+        this->_zoomReal = zoomVirtual * 0.01f * dpiFactor;
 }
 
 float DisplayModel::ZoomReal(int pageNo)
@@ -658,7 +658,7 @@ RestartLayout:
         if (displayModeShowCover(displayMode()) && pageNo == 1 && !displayModeContinuous(displayMode()))
             pageInfo->pos.x = offX + padding->left + (columnMaxWidth[0] + padding->inBetweenX + columnMaxWidth[1] - pageInfo->pos.dx) / 2;
         // mirror the page layout when displaying a Right-to-Left document
-        if (_displayR2L && columns > 1)
+        if (displayR2L && columns > 1)
             pageInfo->pos.x = canvasDx - pageInfo->pos.x - pageInfo->pos.dx;
         pageOffX += columnMaxWidth[pageInARow++] + padding->inBetweenX;
         assert(pageOffX >= 0 && pageInfo->pos.x >= 0);
@@ -695,7 +695,7 @@ RestartLayout:
     canvasSize = SizeI(max(canvasDx, viewPort.dx), max(canvasDy, viewPort.dy));
 }
 
-void DisplayModel::changeStartPage(int startPage)
+void DisplayModel::ChangeStartPage(int startPage)
 {
     assert(ValidPageNo(startPage));
     assert(!displayModeContinuous(displayMode()));
@@ -974,7 +974,7 @@ void DisplayModel::GoToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
     if (!displayModeContinuous(displayMode())) {
         /* in single page mode going to another page involves recalculating
            the size of canvas */
-        changeStartPage(pageNo);
+        ChangeStartPage(pageNo);
     } else if (ZOOM_FIT_CONTENT == _zoomVirtual) {
         // make sure that setZoomVirtual uses the correct page to calculate
         // the zoom level for (visibility will be recalculated below anyway)
@@ -1308,7 +1308,7 @@ void DisplayModel::ZoomTo(float zoomVirtual, PointI *fixPt)
 void DisplayModel::ZoomBy(float zoomFactor, PointI *fixPt)
 {
     // zoomTo expects a zoomVirtual, so undo the _dpiFactor here
-    float newZoom = 100.0f * _zoomReal / _dpiFactor * zoomFactor;
+    float newZoom = 100.0f * _zoomReal / dpiFactor * zoomFactor;
     newZoom = limitValue(newZoom, ZOOM_MIN, ZOOM_MAX);
     //DBG_OUT("DisplayModel::zoomBy() zoomReal=%.6f, zoomFactor=%.2f, newZoom=%.2f\n", dm->zoomReal, zoomFactor, newZoom);
     ZoomTo(newZoom, fixPt);
