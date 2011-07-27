@@ -24,6 +24,7 @@ bool RegisterChmWinClass(HINSTANCE hinst)
     WNDCLASSEX  wcex;
     ATOM        atom;
 
+    /* TODO: can't register FRAME_CLASS_NAME twice
     FillWndClassEx(wcex, hinst);
     wcex.lpfnWndProc    = WndProcChmFrame;
     wcex.lpszClassName  = FRAME_CLASS_NAME;
@@ -32,6 +33,7 @@ bool RegisterChmWinClass(HINSTANCE hinst)
     atom = RegisterClassEx(&wcex);
     if (!atom)
         return false;
+    */
 
     FillWndClassEx(wcex, hinst);
     wcex.style          = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
@@ -44,4 +46,3 @@ bool RegisterChmWinClass(HINSTANCE hinst)
 
     return true;
 }
-

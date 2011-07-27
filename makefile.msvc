@@ -253,7 +253,11 @@ $(OS)\BencUtil.obj: src\utils\Vec.h
 $(OS)\ChmEngine.obj: src\BaseEngine.h src\ChmEngine.h src\utils\BaseUtil.h
 $(OS)\ChmEngine.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\HtmlWindow.h
 $(OS)\ChmEngine.obj: src\utils\StrUtil.h src\utils\TrivialHtmlParser.h src\utils\Vec.h
-$(OS)\ChmUI.obj: src\ChmUI.h
+$(OS)\ChmUI.obj: src\AppPrefs.h src\BaseEngine.h src\ChmUI.h
+$(OS)\ChmUI.obj: src\DisplayState.h src\resource.h src\SumatraPDF.h
+$(OS)\ChmUI.obj: src\TextSearch.h src\TextSelection.h src\utils\BaseUtil.h
+$(OS)\ChmUI.obj: src\utils\GeomUtil.h src\utils\StrUtil.h src\utils\Vec.h
+$(OS)\ChmUI.obj: src\utils\WinUtil.h
 $(OS)\CPdfFilter.obj: src\BaseEngine.h src\ifilter\CPdfFilter.h src\ifilter\FilterBase.h
 $(OS)\CPdfFilter.obj: src\ifilter\PdfFilter.h src\PdfEngine.h src\utils\BaseUtil.h
 $(OS)\CPdfFilter.obj: src\utils\GeomUtil.h src\utils\StrUtil.h src\utils\Vec.h
@@ -417,20 +421,21 @@ $(OS)\SumatraDialogs.obj: src\translations.h src\utils\BaseUtil.h src\utils\Dial
 $(OS)\SumatraDialogs.obj: src\utils\GeomUtil.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\SumatraDialogs.obj: src\utils\WinUtil.h
 $(OS)\SumatraPDF.obj: src\AppPrefs.h src\AppTools.h src\BaseEngine.h
-$(OS)\SumatraPDF.obj: src\ChmEngine.h src\CrashHandler.h src\DisplayModel.h
-$(OS)\SumatraPDF.obj: src\DisplayState.h src\DjVuEngine.h src\EngineManager.h
-$(OS)\SumatraPDF.obj: src\ExternalPdfViewer.h src\Favorites.h src\FileHistory.h
-$(OS)\SumatraPDF.obj: src\FileWatch.h src\ImagesEngine.h src\Menu.h
-$(OS)\SumatraPDF.obj: src\Notifications.h src\ParseCommandLine.h src\PdfEngine.h
-$(OS)\SumatraPDF.obj: src\PdfSync.h src\Print.h src\PsEngine.h
-$(OS)\SumatraPDF.obj: src\RenderCache.h src\resource.h src\Resource.h
-$(OS)\SumatraPDF.obj: src\Search.h src\Selection.h src\StressTesting.h
-$(OS)\SumatraPDF.obj: src\SumatraAbout.h src\SumatraDialogs.h src\SumatraPDF.h
-$(OS)\SumatraPDF.obj: src\SumatraProperties.h src\TableOfContents.h src\TextSearch.h
-$(OS)\SumatraPDF.obj: src\TextSelection.h src\Toolbar.h src\translations.h
-$(OS)\SumatraPDF.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
-$(OS)\SumatraPDF.obj: src\utils\Http.h src\utils\StrUtil.h src\utils\Vec.h
-$(OS)\SumatraPDF.obj: src\utils\WinUtil.h src\Version.h src\WindowInfo.h
+$(OS)\SumatraPDF.obj: src\ChmEngine.h src\ChmUI.h src\CrashHandler.h
+$(OS)\SumatraPDF.obj: src\DisplayModel.h src\DisplayState.h src\DjVuEngine.h
+$(OS)\SumatraPDF.obj: src\EngineManager.h src\ExternalPdfViewer.h src\Favorites.h
+$(OS)\SumatraPDF.obj: src\FileHistory.h src\FileWatch.h src\ImagesEngine.h
+$(OS)\SumatraPDF.obj: src\Menu.h src\Notifications.h src\ParseCommandLine.h
+$(OS)\SumatraPDF.obj: src\PdfEngine.h src\PdfSync.h src\Print.h
+$(OS)\SumatraPDF.obj: src\PsEngine.h src\RenderCache.h src\resource.h
+$(OS)\SumatraPDF.obj: src\Resource.h src\Search.h src\Selection.h
+$(OS)\SumatraPDF.obj: src\StressTesting.h src\SumatraAbout.h src\SumatraDialogs.h
+$(OS)\SumatraPDF.obj: src\SumatraPDF.h src\SumatraProperties.h src\TableOfContents.h
+$(OS)\SumatraPDF.obj: src\TextSearch.h src\TextSelection.h src\Toolbar.h
+$(OS)\SumatraPDF.obj: src\translations.h src\utils\BaseUtil.h src\utils\FileUtil.h
+$(OS)\SumatraPDF.obj: src\utils\GeomUtil.h src\utils\Http.h src\utils\StrUtil.h
+$(OS)\SumatraPDF.obj: src\utils\Vec.h src\utils\WinUtil.h src\Version.h
+$(OS)\SumatraPDF.obj: src\WindowInfo.h
 $(OS)\SumatraProperties.obj: src\AppPrefs.h src\BaseEngine.h src\ChmEngine.h
 $(OS)\SumatraProperties.obj: src\DisplayModel.h src\DisplayState.h src\DjVuEngine.h
 $(OS)\SumatraProperties.obj: src\EngineManager.h src\ImagesEngine.h src\PdfEngine.h
