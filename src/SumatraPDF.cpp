@@ -622,8 +622,8 @@ static bool LoadDocIntoWindow(const TCHAR *fileName, WindowInfo& win,
     win.pdfsync = NULL;
 
     str::ReplacePtr(&win.loadedFilePath, fileName);
-    win.dm = DisplayModel::CreateFromFileName(&win, fileName, displayMode,
-        startPage, win.GetViewPortSize());
+    win.dm = DisplayModel::CreateFromFileName(fileName, &win);
+    
     bool needrefresh = !win.dm;
 
     // ToC items might hold a reference to an Engine, so make sure to
@@ -644,6 +644,7 @@ static bool LoadDocIntoWindow(const TCHAR *fileName, WindowInfo& win,
     }
     */
     if (win.dm) {
+        win.dm->SetInitialViewSettings(displayMode, startPage, win.GetViewPortSize());
         if (prevModel && str::Eq(win.dm->FileName(), prevModel->FileName()))
             gRenderCache.KeepForDisplayModel(prevModel, win.dm);
         delete prevModel;
@@ -690,21 +691,8 @@ static bool LoadDocIntoWindow(const TCHAR *fileName, WindowInfo& win,
     } else {
         win.tocVisible = gGlobalPrefs.tocVisible;
     }
-    //SidebarDxFromDisplayState(state);
-
-    // Review needed: Is the following block really necessary?
-    /*
-    // The WM_SIZE message must be sent *after* updating win.tocVisible
-    // otherwise the bookmark window reappear even if state->tocVisible=false.
-    ClientRect rect(win.hwndFrame);
-    SendMessage(win.hwndFrame, WM_SIZE, 0, MAKELONG(rect.dx, rect.dy));
-    */
 
     win.dm->Relayout(zoomVirtual, rotation);
-    // Only restore the scroll state when everything is visible
-    // (otherwise we might have to relayout twice, which can take
-    //  a while for longer documents)
-    // win.dm->SetScrollState(ss);
 
     if (!isNewWindow) {
         win.RedrawAll();
@@ -1004,9 +992,6 @@ static void RefreshUpdatedFiles() {
 
 WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin, bool forceReuse, bool suppressPwdUI)
 {
-    assert(fileName);
-    if (!fileName) return NULL;
-
     ScopedMem<TCHAR> fullpath(path::Normalize(fileName));
     if (!fullpath)
         return NULL;

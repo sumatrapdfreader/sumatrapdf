@@ -184,10 +184,10 @@ static int LastPageInARowNo(int pageNo, int columns, bool showCover, int pageCou
     return min(lastPageNo, pageCount);
 }
 
-DisplayModel::DisplayModel(DisplayModelCallback *callback, DisplayMode displayMode)
+DisplayModel::DisplayModel(DisplayModelCallback *cb)
 {
-    _displayMode = displayMode;
-    _presDisplayMode = displayMode;
+    _displayMode = DM_AUTOMATIC;
+    _presDisplayMode = DM_AUTOMATIC;
     _presZoomVirtual = INVALID_ZOOM;
     _rotation = INVALID_ROTATION;
     _zoomVirtual = INVALID_ZOOM;
@@ -196,7 +196,7 @@ DisplayModel::DisplayModel(DisplayModelCallback *callback, DisplayMode displayMo
     _zoomReal = INVALID_ZOOM;
     dpiFactor = 1.0f;
     _startPage = INVALID_PAGE_NO;
-    dmCb = callback;
+    dmCb = cb;
 
     engine = NULL;
     engineType = Engine_None;
@@ -231,25 +231,15 @@ PageInfo *DisplayModel::GetPageInfo(int pageNo) const
     return &(pagesInfo[pageNo-1]);
 }
 
-bool DisplayModel::Load(const TCHAR *fileName, int startPage, SizeI viewPort)
-{ 
-    assert(fileName);
-    engine = EngineManager::CreateEngine(fileName, dmCb, &engineType);
-    if (!engine)
-        return false;
-
-    if (engine->IsImageCollection())
-        padding = &gImagePadding;
-
-    dpiFactor = 1.0f * dmCb->GetScreenDPI() / engine->GetFileDPI();
+// Call this after Load() but before the first Relayout
+void DisplayModel::SetInitialViewSettings(DisplayMode displayMode, int newStartPage, SizeI viewPort)
+{
     totalViewPortSize = viewPort;
+    if (ValidPageNo(newStartPage))
+        _startPage = newStartPage;
 
-    assert(engine->PageCount() > 0);
-    if (ValidPageNo(startPage))
-        _startPage = startPage;
-    else
-        _startPage = 1;
-
+    _displayMode = displayMode;
+    _presDisplayMode = displayMode;
     PageLayoutType layout = engine->PreferredLayout();
     if (DM_AUTOMATIC == _displayMode) {
         switch (layout & ~Layout_R2L) {
@@ -262,23 +252,32 @@ bool DisplayModel::Load(const TCHAR *fileName, int startPage, SizeI viewPort)
         }
     }
     displayR2L = (layout & Layout_R2L) != 0;
+    BuildPagesInfo();
+}
 
-    if (!BuildPagesInfo())
+// must call SetInitialViewSettings() after Load()
+bool DisplayModel::Load(const TCHAR *fileName)
+{ 
+    assert(fileName);
+    engine = EngineManager::CreateEngine(fileName, dmCb, &engineType);
+    if (!engine)
         return false;
+    assert(engine->PageCount() > 0);
+    _startPage = 1;
+    if (engine->IsImageCollection())
+        padding = &gImagePadding;
 
+    dpiFactor = 1.0f * dmCb->GetScreenDPI() / engine->GetFileDPI();
     textSelection = new TextSelection(engine);
     textSearch = new TextSearch(engine);
     return true;
 }
 
-bool DisplayModel::BuildPagesInfo()
+void DisplayModel::BuildPagesInfo()
 {
     assert(!pagesInfo);
     int pageCount = PageCount();
-
     pagesInfo = SAZA(PageInfo, pageCount);
-    if (!pagesInfo)
-        return false;
 
     TCHAR unitSystem[2];
     GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_IMEASURE, unitSystem, dimof(unitSystem));
@@ -305,7 +304,6 @@ bool DisplayModel::BuildPagesInfo()
         else if (startPage <= pageNo && pageNo < startPage + columns)
             pageInfo->shown = true;
     }
-    return true;
 }
 
 // TODO: a better name e.g. ShouldShow() to better distinguish between
@@ -1487,11 +1485,10 @@ void DisplayModel::Navigate(int dir)
         SetScrollState(navHistory[navHistoryIx]);
 }
 
-DisplayModel *DisplayModel::CreateFromFileName(DisplayModelCallback *callback,
-    const TCHAR *fileName, DisplayMode displayMode, int startPage, SizeI viewPort)
+DisplayModel *DisplayModel::CreateFromFileName(const TCHAR *fileName, DisplayModelCallback *cb)
 {
-    DisplayModel *dm = new DisplayModel(callback, displayMode);
-    if (!dm || !dm->Load(fileName, startPage, viewPort)) {
+    DisplayModel *dm = new DisplayModel(cb);
+    if (!dm || !dm->Load(fileName)) {
         delete dm;
         return NULL;
     }

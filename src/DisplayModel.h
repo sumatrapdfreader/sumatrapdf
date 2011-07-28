@@ -104,7 +104,7 @@ public:
 class DisplayModel
 {
 public:
-    DisplayModel(DisplayModelCallback *callback, DisplayMode displayMode);
+    DisplayModel(DisplayModelCallback *dmCb);
     ~DisplayModel();
 
     const TCHAR *FileName() const { return engine->FileName(); }
@@ -202,16 +202,17 @@ public:
     void            Navigate(int dir);
 
     bool            DisplayStateFromModel(DisplayState *ds);
+    void            SetInitialViewSettings(DisplayMode displayMode, int newStartPage, SizeI viewPort);
 
     // called when we decide that the display needs to be redrawn
     void            RepaintDisplay() { if (dmCb) dmCb->Repaint(); }
 
     ChmEngine *     GetChmEngine() const;
+
 protected:
 
-    bool            Load(const TCHAR *fileName, int startPage, SizeI viewPort);
-
-    bool            BuildPagesInfo();
+    bool            Load(const TCHAR *fileName);
+    void            BuildPagesInfo();
     float           ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo);
     SizeD           PageSizeAfterRotation(int pageNo, bool fitToContent=false);
     void            ChangeStartPage(int startPage);
@@ -265,11 +266,8 @@ public:
     /* allow resizing a window without triggering a new rendering (needed for window destruction) */
     bool            dontRenderFlag;
 
-    static DisplayModel *CreateFromFileName(DisplayModelCallback *callback,
-                                            const TCHAR *fileName,
-                                            DisplayMode displayMode,
-                                            int startPage,
-                                            SizeI viewPort);
+    static DisplayModel *CreateFromFileName(const TCHAR *fileName,
+        DisplayModelCallback *dmCb);
 };
 
 bool    displayModeContinuous(DisplayMode displayMode);
