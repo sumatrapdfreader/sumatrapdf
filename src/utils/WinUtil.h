@@ -82,6 +82,15 @@ public:
 class MillisecondTimer {
     LARGE_INTEGER   start;
     LARGE_INTEGER   end;
+
+    double TimeSince(LARGE_INTEGER t) const
+    {
+        LARGE_INTEGER freq;
+        QueryPerformanceFrequency(&freq);
+        double timeInSecs = (double)(t.QuadPart-start.QuadPart)/(double)freq.QuadPart;
+        return timeInSecs * 1000.0;
+    }
+
 public:
     void Start() { QueryPerformanceCounter(&start); }
     void Stop() { QueryPerformanceCounter(&end); }
@@ -89,19 +98,13 @@ public:
     double GetCurrTimeInMs()
     {
         LARGE_INTEGER curr;
-        LARGE_INTEGER freq;
-        QueryPerformanceFrequency(&freq);
         QueryPerformanceCounter(&curr);
-        double timeInSecs = (double)(curr.QuadPart-start.QuadPart)/(double)freq.QuadPart;
-        return timeInSecs * 1000.0;
+        return TimeSince(curr);
     }
 
     double GetTimeInMs()
     {
-        LARGE_INTEGER   freq;
-        QueryPerformanceFrequency(&freq);
-        double timeInSecs = (double)(end.QuadPart-start.QuadPart)/(double)freq.QuadPart;
-        return timeInSecs * 1000.0;
+        return TimeSince(end);
     }
 };
 
