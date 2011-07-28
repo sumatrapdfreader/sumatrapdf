@@ -214,12 +214,12 @@ bool RenderCache::FreePage(DisplayModel *dm, int pageNo, TilePosition *tile)
     return freedSomething;
 }
 
+// keep the cached bitmaps for visible pages to avoid flickering during a reload.
+// mark invisible pages as out-of-date to prevent inconsistencies
 void RenderCache::KeepForDisplayModel(DisplayModel *oldDm, DisplayModel *newDm)
 {
     ScopedCritSec scope(&cacheAccess);
     for (int i = 0; i < cacheCount; i++) {
-        // keep the cached bitmaps for visible pages to avoid flickering during a reload
-        // (mark invisible pages as out-of-date as well, to prevent inconsistencies)
         if (cache[i]->dm == oldDm && cache[i]->bitmap) {
             if (oldDm->PageVisible(cache[i]->pageNo))
                 cache[i]->dm = newDm;

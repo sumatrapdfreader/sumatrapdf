@@ -65,9 +65,6 @@ bool             gUseGdiRenderer = false;
 bool                    gPluginMode = false;
 TCHAR *                 gPluginURL = NULL; // owned by CommandLineInfo in WinMain
 
-/* Default size for the window, happens to be american A4 size (I think) */
-#define DEF_PAGE_RATIO          (612.0/792.0)
-
 #if defined(SVN_PRE_RELEASE_VER) && !defined(BLACK_ON_YELLOW)
 #define ABOUT_BG_COLOR          RGB(255,0,0)
 #else
@@ -587,15 +584,23 @@ void CreateThumbnailForFile(WindowInfo& win, DisplayState& state)
 // placeWindow : if true then the Window will be moved/sized according
 //   to the 'state' information even if the window was already placed
 //   before (isNewWindow=false)
-static bool LoadDocIntoWindow(const TCHAR *fileName, WindowInfo& win,
-    const DisplayState *state, bool isNewWindow, bool allowFailure, 
+static bool LoadDocIntoWindow(TCHAR *fileName, WindowInfo& win,
+    DisplayState *state, bool isNewWindow, bool allowFailure, 
     bool showWin, bool placeWindow)
 {
     // Never load settings from a preexisting state if the user doesn't wish to
     // (unless we're just refreshing the document, i.e. only if placeWindow == true)
-    if (placeWindow && (gGlobalPrefs.globalPrefsOnly || state && state->useGlobalValues))
+    if (placeWindow && (gGlobalPrefs.globalPrefsOnly || state && state->useGlobalValues)) {
         state = NULL;
-
+    } else if (NULL == state) {
+        state = gFileHistory.Find(fileName);
+        if (state) {
+            AdjustRemovableDriveLetter(fileName);
+            if (state->windowPos.IsEmpty())
+                state->windowPos = gGlobalPrefs.windowPos;
+            EnsureWindowVisibility(state->windowPos);
+        }
+    }
     DisplayMode displayMode = gGlobalPrefs.defaultDisplayMode;
     int startPage = 1;
     ScrollState ss(1, -1, -1);
@@ -828,32 +833,6 @@ static void UpdateToolbarAndScrollbarsForAllWindows()
     }
 }
 
-#define MIN_WIN_DX 50
-#define MIN_WIN_DY 50
-
-void EnsureWindowVisibility(RectI& rect)
-{
-    // adjust to the work-area of the current monitor (not necessarily the primary one)
-    MONITORINFO mi = { 0 };
-    mi.cbSize = sizeof(mi);
-    if (!GetMonitorInfo(MonitorFromRect(&rect.ToRECT(), MONITOR_DEFAULTTONEAREST), &mi))
-        SystemParametersInfo(SPI_GETWORKAREA, 0, &mi.rcWork, 0);
-
-    RectI work = RectI::FromRECT(mi.rcWork);
-    // make sure that the window is neither too small nor bigger than the monitor
-    if (rect.dx < MIN_WIN_DX || rect.dx > work.dx)
-        rect.dx = (int)min(work.dy * DEF_PAGE_RATIO, work.dx);
-    if (rect.dy < MIN_WIN_DY || rect.dy > work.dy)
-        rect.dy = work.dy;
-
-    // check whether the lower half of the window's title bar is
-    // inside a visible working area
-    int captionDy = GetSystemMetrics(SM_CYCAPTION);
-    RectI halfCaption(rect.x, rect.y + captionDy / 2, rect.dx, captionDy / 2);
-    if (halfCaption.Intersect(work).IsEmpty())
-        rect = RectI(work.TL(), rect.Size());
-}
-
 static void CreateSidebar(WindowInfo* win)
 {
     win->hwndSidebarSpliter = CreateWindow(SPLITER_CLASS_NAME, _T(""), 
@@ -1034,16 +1013,10 @@ WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin, b
     win->notifications->RemoveAllInGroup(NG_RESPONSE_TO_ACTION);
     win->notifications->RemoveAllInGroup(NG_PAGE_INFO_HELPER);
 
-    DisplayState *ds = gFileHistory.Find(fullpath);
-    if (ds) {
-        AdjustRemovableDriveLetter(fullpath);
-        if (ds->windowPos.IsEmpty())
-            ds->windowPos = gGlobalPrefs.windowPos;
-        EnsureWindowVisibility(ds->windowPos);
-    }
-
     win->suppressPwdUI = suppressPwdUI;
-    if (!LoadDocIntoWindow(fullpath, *win, ds, isNewWindow, true /* allowFailure */, showWin, true /* placeWindow */)) {
+    bool allowFailure = true;
+    bool placeWindow = true;
+    if (!LoadDocIntoWindow(fullpath, *win, NULL, isNewWindow, allowFailure, showWin, placeWindow)) {
         /* failed to open */
         if (gFileHistory.MarkFileInexistent(fullpath))
             SavePrefs();

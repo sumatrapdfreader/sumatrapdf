@@ -428,6 +428,32 @@ RectI ShiftRectToWorkArea(RectI rect, bool bFully)
     return rect;
 }
 
+#define MIN_WIN_DX 50
+#define MIN_WIN_DY 50
+
+void EnsureWindowVisibility(RectI& rect)
+{
+    // adjust to the work-area of the current monitor (not necessarily the primary one)
+    MONITORINFO mi = { 0 };
+    mi.cbSize = sizeof(mi);
+    if (!GetMonitorInfo(MonitorFromRect(&rect.ToRECT(), MONITOR_DEFAULTTONEAREST), &mi))
+        SystemParametersInfo(SPI_GETWORKAREA, 0, &mi.rcWork, 0);
+
+    RectI work = RectI::FromRECT(mi.rcWork);
+    // make sure that the window is neither too small nor bigger than the monitor
+    if (rect.dx < MIN_WIN_DX || rect.dx > work.dx)
+        rect.dx = (int)min(work.dy * DEF_PAGE_RATIO, work.dx);
+    if (rect.dy < MIN_WIN_DY || rect.dy > work.dy)
+        rect.dy = work.dy;
+
+    // check whether the lower half of the window's title bar is
+    // inside a visible working area
+    int captionDy = GetSystemMetrics(SM_CYCAPTION);
+    RectI halfCaption(rect.x, rect.y + captionDy / 2, rect.dx, captionDy / 2);
+    if (halfCaption.Intersect(work).IsEmpty())
+        rect = RectI(work.TL(), rect.Size());
+}
+
 void PaintRect(HDC hdc, RectI& rect)
 {
     MoveToEx(hdc, rect.x, rect.y, NULL);

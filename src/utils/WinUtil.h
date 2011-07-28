@@ -15,6 +15,9 @@
 #define USER_DEFAULT_SCREEN_DPI 96
 #endif
 
+/* Default size for the window, happens to be american A4 size (I think) */
+#define DEF_PAGE_RATIO          (612.0/792.0)
+
 HMODULE SafeLoadLibrary(const TCHAR *dllName);
 FARPROC LoadDllFunc(TCHAR *dllName, const char *funcName);
 
@@ -322,6 +325,7 @@ public:
 #define ListBox_AppendString_NoSort(hwnd, txt) ListBox_InsertString(hwnd, -1, txt)
 
 RectI   ShiftRectToWorkArea(RectI rect, bool bFully=false);
+void    EnsureWindowVisibility(RectI& rect);
 
 void    LaunchFile(const TCHAR *path, const TCHAR *params=NULL, const TCHAR *verb=NULL, bool hidden=false);
 HANDLE  LaunchProcess(TCHAR *cmdLine, DWORD flags=0);
