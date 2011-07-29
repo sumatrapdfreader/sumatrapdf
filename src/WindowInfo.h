@@ -72,7 +72,7 @@ public:
     HWND            hwndPageBg;
     HWND            hwndPageTotal;
 
-    // state related to PDF bookmarks (aka. table of contents)
+    // state related to table of contents (PDF bookmarks etc.)
     HWND            hwndTocBox;
     HWND            hwndTocTree;
     bool            tocLoaded;

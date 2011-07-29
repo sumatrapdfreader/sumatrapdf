@@ -5,9 +5,10 @@
 #include "SumatraPDF.h"
 #include "resource.h"
 #include "WinUtil.h"
+#include "ChmEngine.h"
 
-#define FRAME_CHM_CLASS_NAME        _T("SUMATRA_PDF_CHM_FRAME")
-#define CANVAS_CHM_CLASS_NAME       _T("SUMATRA_PDF_CHM_CANVAS")
+#define FRAME_CHM_CLASS_NAME        _T("SUMATRA_CHM_FRAME")
+#define CANVAS_CHM_CLASS_NAME       _T("SUMATRA_CHM_CANVAS")
 
 static LRESULT CALLBACK WndProcChmFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -17,6 +18,41 @@ static LRESULT CALLBACK WndProcChmFrame(HWND hwnd, UINT msg, WPARAM wParam, LPAR
 static LRESULT CALLBACK WndProcChmCanvas(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     return DefWindowProc(hwnd, msg, wParam, lParam);
+}
+
+ChmWindowInfo::ChmWindowInfo(HWND hwndFrame) :
+    loadedFilePath(NULL), chmEngine(NULL), hwndFrame(NULL),
+    hwndCanvas(NULL), hwndToolbar(NULL), hwndReBar(NULL)
+{
+}
+
+ChmWindowInfo::~ChmWindowInfo()
+{
+    delete chmEngine;
+    free(loadedFilePath);
+}
+
+ChmWindowInfo *CreateChmWindowInfo()
+{
+    RectI windowPos;
+    if (gGlobalPrefs.windowPos.IsEmpty()) {
+        CenterAreaInPrimaryMonitor(windowPos);
+    } else {
+        windowPos = gGlobalPrefs.windowPos;
+        EnsureAreaVisibility(windowPos);
+    }
+
+    HWND hwndFrame = CreateWindow(
+            FRAME_CHM_CLASS_NAME, SUMATRA_WINDOW_TITLE,
+            WS_OVERLAPPEDWINDOW,
+            windowPos.x, windowPos.y, windowPos.dx, windowPos.dy,
+            NULL, NULL,
+            ghinst, NULL);
+    if (!hwndFrame)
+        return NULL;
+
+    // TODO: write me
+    return NULL;
 }
 
 bool RegisterChmWinClass(HINSTANCE hinst)

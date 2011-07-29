@@ -75,8 +75,6 @@ TCHAR *                 gPluginURL = NULL; // owned by CommandLineInfo in WinMai
 #define COL_WINDOW_SHADOW       RGB(0x40, 0x40, 0x40)
 #define COL_PAGE_FRAME          RGB(0x88, 0x88, 0x88)
 
-#define SUMATRA_WINDOW_TITLE    _T("SumatraPDF")
-
 #define CANVAS_CLASS_NAME       _T("SUMATRA_PDF_CANVAS")
 #define SPLITER_CLASS_NAME      _T("Spliter")
 #define RESTRICTIONS_FILE_NAME  _T("sumatrapdfrestrict.ini")

@@ -11,6 +11,7 @@
 #define UWM_PREFS_FILE_UPDATED  (WM_USER + 1)
 
 #define FRAME_CLASS_NAME        _T("SUMATRA_PDF_FRAME")
+#define SUMATRA_WINDOW_TITLE    _T("SumatraPDF")
 
 // permissions that can be revoked (or explicitly set) through Group Policies
 enum {
