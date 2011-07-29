@@ -577,6 +577,21 @@ void CreateThumbnailForFile(WindowInfo& win, DisplayState& state)
     gRenderCache.Render(win.dm, 1, 0, zoom, pageRect, *callback);
 }
 
+static bool IsChmFile(TCHAR *fileName)
+{
+    return str::EndsWithI(fileName, _T(".chm"));
+}
+
+// for now only used for loading CHM files
+// for now al
+static bool LoadDoc2(TCHAR *fileName)
+{
+    DisplayModel *dm = DisplayModel::CreateFromFileName(fileName, NULL);
+    if (!dm)
+        return false;
+    return true;
+}
+
 // isNewWindow : if true then 'win' refers to a newly created window that needs 
 //   to be resized and placed
 // allowFailure : if false then keep displaying the previously loaded document
@@ -588,6 +603,10 @@ static bool LoadDocIntoWindow(TCHAR *fileName, WindowInfo& win,
     DisplayState *state, bool isNewWindow, bool allowFailure, 
     bool showWin, bool placeWindow)
 {
+#if 0
+    if (IsChmFile(fileName))
+        return LoadDoc2(fileName);
+#endif
     // Never load settings from a preexisting state if the user doesn't wish to
     // (unless we're just refreshing the document, i.e. only if placeWindow == true)
     if (placeWindow && (gGlobalPrefs.globalPrefsOnly || state && state->useGlobalValues)) {
@@ -598,7 +617,7 @@ static bool LoadDocIntoWindow(TCHAR *fileName, WindowInfo& win,
             AdjustRemovableDriveLetter(fileName);
             if (state->windowPos.IsEmpty())
                 state->windowPos = gGlobalPrefs.windowPos;
-            EnsureWindowVisibility(state->windowPos);
+            EnsureAreaVisibility(state->windowPos);
         }
     }
     DisplayMode displayMode = gGlobalPrefs.defaultDisplayMode;
@@ -856,18 +875,10 @@ static WindowInfo* CreateWindowInfo()
 {
     RectI windowPos;
     if (gGlobalPrefs.windowPos.IsEmpty()) {
-        // center the window on the primary monitor
-        RECT workArea;
-        SystemParametersInfo(SPI_GETWORKAREA, 0, &workArea, 0);
-        RectI work = RectI::FromRECT(workArea);
-        windowPos.y = work.x;
-        windowPos.dy = work.dy;
-        windowPos.dx = (int)min(windowPos.dy * DEF_PAGE_RATIO, work.dx);
-        windowPos.x = (work.dx - windowPos.dx) / 2;
-    }
-    else {
+        CenterAreaInPrimaryMonitor(windowPos);
+    } else {
         windowPos = gGlobalPrefs.windowPos;
-        EnsureWindowVisibility(windowPos);
+        EnsureAreaVisibility(windowPos);
     }
 
     HWND hwndFrame = CreateWindow(

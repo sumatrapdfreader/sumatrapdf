@@ -328,7 +328,8 @@ public:
 #define ListBox_AppendString_NoSort(hwnd, txt) ListBox_InsertString(hwnd, -1, txt)
 
 RectI   ShiftRectToWorkArea(RectI rect, bool bFully=false);
-void    EnsureWindowVisibility(RectI& rect);
+void    EnsureAreaVisibility(RectI& rect);
+void    CenterAreaInPrimaryMonitor(RectI &r);
 
 void    LaunchFile(const TCHAR *path, const TCHAR *params=NULL, const TCHAR *verb=NULL, bool hidden=false);
 HANDLE  LaunchProcess(TCHAR *cmdLine, DWORD flags=0);
