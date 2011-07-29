@@ -160,8 +160,23 @@ Contributor: XhmikosR
 (of %d)
 (από %d)
 
+(page %d)
+(σελίδα %d)
+
 About SumatraPDF
 Σχετικά με το SumatraPDF
+
+Add Favorite
+Προσθήκη Αγαπημένου
+
+Add page %d to favorites
+Προσθήκη της σελίδας %d στα αγαπημένα
+
+Add page %d to favorites with (optional) name:
+Προσθήκη σελίδας %d στα αγαπημένα με (προαιρετικό) όνομα:
+
+Add to favorites
+Προσθήκη στα αγαπημένα
 
 Advanced
 Προχωρημένα
@@ -250,6 +265,9 @@ Copy Co&mment
 Copying text was denied (copying as image only)
 Η αντιγραφή κειμένου δεν επετράπη (μόνο ως εικόνα)
 
+Could not obtain Printer properties
+Δεν ήταν δυνατή η ανάκτηση των ιδιοτήτων του εκτυπωτή
+
 Could not open Printer
 Απέτυχε το άνοιγμα του εκτυπωτή
 
@@ -261,6 +279,9 @@ Couldn't render the page
 
 Created:
 Δημιουργήθηκε:
+
+Current file
+Τρέχον αρχείο
 
 Custom &Zoom...\tCtrl+Y
 &Προσαρμοσμένο Ζουμ...\tCtrl+Y
@@ -301,6 +322,9 @@ Enter the command-line to invoke when you double-click on the PDF document:
 Error loading %s
 Σφάλμα φόρτωσης του %s
 
+F&avorites
+Α&γαπημένα
+
 F&orward\tAlt+Right Arrow
 Εμπ&ρός\tAlt+->
 
@@ -312,6 +336,9 @@ Facing
 
 Failed to save a file
 Αποτυχία αποθήκευσης αρχείου
+
+Favorites
+Αγαπημένα
 
 File Size:
 Μέγεθος Αρχείου:
@@ -460,6 +487,9 @@ PDF documents
 Pa&ge...\tCtrl+G
 &Σελίδα...\tCtrl+G
 
+Page %d
+Σελίδα %d
+
 Page Size:
 Μέγεθος Σελίδας:
 
@@ -490,6 +520,9 @@ Print
 Print range
 Εύρος εκτύπωσης
 
+Printer with given name doesn't exist
+Ο εκτυπωτής με αυτό το όνομα δεν υπάρχει
+
 Printing is still in progress. Abort and start over?
 Η εκτύπωση βρίσκεται σε εξέλιξη. Να ακυρωθεί και να ξεκινήσει πάλι;
 
@@ -501,6 +534,12 @@ Printing problem.
 
 Remember &opened files
 Απο&μνημόνευση προσφάτων αρχείων
+
+Remove from favorites
+Αφαίρεση από τα αγαπημένα
+
+Remove page %d from favorites
+Αφαίρεση σελίδας %d από τα αγαπημένα
 
 Rotate &Left\tCtrl+Shift+-
 Περιστροφή Αριστερά\tCtrl+Shift+-
@@ -537,6 +576,9 @@ Show &Toolbar
 
 Show &pages continuously
 &Συνεχής εμφάνιση σελίδων
+
+Show Favorites
+Εμφάνιση Αγαπημένων
 
 Show frequently read
 Εμφάνιση συχνά αναγνωσμένων αρχείων
@@ -621,20 +663,4 @@ copying text
 
 printing document
 εκτύπωση εγγράφου
-
-# Untranslated:
-#(page %d)
-#Add Favorite
-#Add page %d to favorites
-#Add page %d to favorites with (optional) name:
-#Add to favorites
-#Could not obtain Printer properties
-#Current file
-#F&avorites
-#Favorites
-#Page %d
-#Printer with given name doesn't exist
-#Remove from favorites
-#Remove page %d from favorites
-#Show Favorites
 
