@@ -716,7 +716,7 @@ DjVuToCItem *CDjVuEngine::BuildToCTree(miniexp_t entry, int& idCounter)
 {
     DjVuToCItem *node = NULL;
 
-    for (miniexp_t rest = miniexp_cdr(entry); miniexp_consp(rest); rest = miniexp_cdr(rest)) {
+    for (miniexp_t rest = entry; miniexp_consp(rest); rest = miniexp_cdr(rest)) {
         miniexp_t item = miniexp_car(rest);
         if (!miniexp_consp(item) || !miniexp_consp(miniexp_cdr(item)) ||
             !miniexp_stringp(miniexp_car(item)) || !miniexp_stringp(miniexp_cadr(item)))
