@@ -525,3 +525,46 @@ bool ExtendedEditWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
         return false;
     }
 }
+
+
+/* Default size for the window, happens to be american A4 size (I think) */
+#define DEF_PAGE_RATIO          (612.0/792.0)
+
+#define MIN_WIN_DX 50
+#define MIN_WIN_DY 50
+
+void EnsureAreaVisibility(RectI& r)
+{
+    // adjust to the work-area of the current monitor (not necessarily the primary one)
+    MONITORINFO mi = { 0 };
+    mi.cbSize = sizeof(mi);
+    if (!GetMonitorInfo(MonitorFromRect(&r.ToRECT(), MONITOR_DEFAULTTONEAREST), &mi))
+        SystemParametersInfo(SPI_GETWORKAREA, 0, &mi.rcWork, 0);
+
+    RectI work = RectI::FromRECT(mi.rcWork);
+    // make sure that the window is neither too small nor bigger than the monitor
+    if (r.dx < MIN_WIN_DX || r.dx > work.dx)
+        r.dx = (int)min(work.dy * DEF_PAGE_RATIO, work.dx);
+    if (r.dy < MIN_WIN_DY || r.dy > work.dy)
+        r.dy = work.dy;
+
+    // check whether the lower half of the window's title bar is
+    // inside a visible working area
+    int captionDy = GetSystemMetrics(SM_CYCAPTION);
+    RectI halfCaption(r.x, r.y + captionDy / 2, r.dx, captionDy / 2);
+    if (halfCaption.Intersect(work).IsEmpty())
+        r = RectI(work.TL(), r.Size());
+}
+
+RectI GetDefaultWindowPos()
+{
+    RECT workArea;
+    SystemParametersInfo(SPI_GETWORKAREA, 0, &workArea, 0);
+    RectI work = RectI::FromRECT(workArea);
+
+    RectI r = work;
+    r.dx = (int)min(r.dy * DEF_PAGE_RATIO, work.dx);
+    r.x = (work.dx - r.dx) / 2;
+
+    return r;
+}

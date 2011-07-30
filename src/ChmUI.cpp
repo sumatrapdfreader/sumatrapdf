@@ -6,6 +6,7 @@
 #include "resource.h"
 #include "WinUtil.h"
 #include "ChmEngine.h"
+#include "AppTools.h"
 #include "Menu.h"
 
 #define FRAME_CHM_CLASS_NAME        _T("SUMATRA_CHM_FRAME")
@@ -35,13 +36,11 @@ ChmWindowInfo::~ChmWindowInfo()
 
 ChmWindowInfo *CreateChmWindowInfo()
 {
-    RectI windowPos;
-    if (gGlobalPrefs.windowPos.IsEmpty()) {
-        CenterAreaInPrimaryMonitor(windowPos);
-    } else {
-        windowPos = gGlobalPrefs.windowPos;
+    RectI windowPos = gGlobalPrefs.windowPos;
+    if (!windowPos.IsEmpty())
         EnsureAreaVisibility(windowPos);
-    }
+    else
+        windowPos = GetDefaultWindowPos();
 
     HWND hwndFrame = CreateWindow(
             FRAME_CHM_CLASS_NAME, SUMATRA_WINDOW_TITLE,

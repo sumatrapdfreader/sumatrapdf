@@ -253,8 +253,9 @@ $(OS)\BencUtil.obj: src\utils\Vec.h
 $(OS)\ChmEngine.obj: src\BaseEngine.h src\ChmEngine.h src\utils\BaseUtil.h
 $(OS)\ChmEngine.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\HtmlWindow.h
 $(OS)\ChmEngine.obj: src\utils\StrUtil.h src\utils\TrivialHtmlParser.h src\utils\Vec.h
-$(OS)\ChmUI.obj: src\AppPrefs.h src\BaseEngine.h src\ChmUI.h
-$(OS)\ChmUI.obj: src\DisplayState.h src\resource.h src\SumatraPDF.h
+$(OS)\ChmUI.obj: src\AppPrefs.h src\AppTools.h src\BaseEngine.h
+$(OS)\ChmUI.obj: src\ChmEngine.h src\ChmUI.h src\DisplayState.h
+$(OS)\ChmUI.obj: src\Menu.h src\resource.h src\SumatraPDF.h
 $(OS)\ChmUI.obj: src\TextSearch.h src\TextSelection.h src\utils\BaseUtil.h
 $(OS)\ChmUI.obj: src\utils\GeomUtil.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\ChmUI.obj: src\utils\WinUtil.h
@@ -315,15 +316,15 @@ $(OS)\Installer.obj: src\utils\CmdLineParser.h src\utils\FileUtil.h src\utils\Ge
 $(OS)\Installer.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
 $(OS)\Installer.obj: src\Version.h
 $(OS)\Menu.obj: src\AppPrefs.h src\BaseEngine.h src\ChmEngine.h
-$(OS)\Menu.obj: src\DisplayModel.h src\DisplayState.h src\DjVuEngine.h
-$(OS)\Menu.obj: src\EngineManager.h src\ExternalPdfViewer.h src\Favorites.h
-$(OS)\Menu.obj: src\FileHistory.h src\ImagesEngine.h src\Menu.h
-$(OS)\Menu.obj: src\PdfEngine.h src\PsEngine.h src\resource.h
-$(OS)\Menu.obj: src\Selection.h src\SumatraAbout.h src\SumatraDialogs.h
-$(OS)\Menu.obj: src\SumatraPDF.h src\TextSearch.h src\TextSelection.h
-$(OS)\Menu.obj: src\translations.h src\utils\BaseUtil.h src\utils\FileUtil.h
-$(OS)\Menu.obj: src\utils\GeomUtil.h src\utils\StrUtil.h src\utils\Vec.h
-$(OS)\Menu.obj: src\utils\WinUtil.h src\WindowInfo.h
+$(OS)\Menu.obj: src\ChmUI.h src\DisplayModel.h src\DisplayState.h
+$(OS)\Menu.obj: src\DjVuEngine.h src\EngineManager.h src\ExternalPdfViewer.h
+$(OS)\Menu.obj: src\Favorites.h src\FileHistory.h src\ImagesEngine.h
+$(OS)\Menu.obj: src\Menu.h src\PdfEngine.h src\PsEngine.h
+$(OS)\Menu.obj: src\resource.h src\Selection.h src\SumatraAbout.h
+$(OS)\Menu.obj: src\SumatraDialogs.h src\SumatraPDF.h src\TextSearch.h
+$(OS)\Menu.obj: src\TextSelection.h src\translations.h src\utils\BaseUtil.h
+$(OS)\Menu.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\StrUtil.h
+$(OS)\Menu.obj: src\utils\Vec.h src\utils\WinUtil.h src\WindowInfo.h
 $(OS)\MuPDF_Exports.obj: mupdf\fitz\fitz.h
 $(OS)\Notifications.obj: src\AppPrefs.h src\BaseEngine.h src\ChmEngine.h
 $(OS)\Notifications.obj: src\DisplayModel.h src\DisplayState.h src\DjVuEngine.h

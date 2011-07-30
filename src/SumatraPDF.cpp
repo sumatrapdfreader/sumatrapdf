@@ -871,13 +871,11 @@ static void CreateSidebar(WindowInfo* win)
 
 static WindowInfo* CreateWindowInfo()
 {
-    RectI windowPos;
-    if (gGlobalPrefs.windowPos.IsEmpty()) {
-        CenterAreaInPrimaryMonitor(windowPos);
-    } else {
-        windowPos = gGlobalPrefs.windowPos;
+    RectI windowPos = gGlobalPrefs.windowPos;
+    if (!windowPos.IsEmpty())
         EnsureAreaVisibility(windowPos);
-    }
+    else
+        windowPos = GetDefaultWindowPos();
 
     HWND hwndFrame = CreateWindow(
             FRAME_CLASS_NAME, SUMATRA_WINDOW_TITLE,

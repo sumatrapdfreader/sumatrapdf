@@ -1,6 +1,9 @@
 /* Copyright 2006-2011 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+// TODO: rename to HtmlUI or similar, as the same code should
+//       be reusable for other HTML based formats such as EPUB
+
 #ifndef ChmUI_h
 #define ChmUI_h
 
