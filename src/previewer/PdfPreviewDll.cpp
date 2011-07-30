@@ -54,9 +54,9 @@ public:
         *ppv = NULL;
         if (punkOuter)
             return CLASS_E_NOAGGREGATION;
-        
+
         IInitializeWithStream *pObject = NULL;
-        
+
         CLSID clsid;
 #ifdef UNICODE
         HRESULT hr = CLSIDFromString(SZ_PDF_PREVIEW_CLSID, &clsid);
@@ -69,7 +69,7 @@ public:
             return CLASS_E_CLASSNOTAVAILABLE;
         if (!pObject)
             return E_OUTOFMEMORY;
-        
+
         hr = pObject->QueryInterface(riid, ppv);
         pObject->Release();
         return hr;

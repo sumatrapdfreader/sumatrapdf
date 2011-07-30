@@ -281,7 +281,7 @@ class ClosePrintThreadWorkItem : public UIThreadWorkItem {
 public:
     ClosePrintThreadWorkItem(WindowInfo *win)
         : UIThreadWorkItem(win) { }
-    
+
     virtual void Execute() {
         if (!WindowInfoStillValid(win))
             return;

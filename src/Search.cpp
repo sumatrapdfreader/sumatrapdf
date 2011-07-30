@@ -277,7 +277,7 @@ void PaintForwardSearchMark(WindowInfo *win, HDC hdc)
     PageInfo *pageInfo = win->dm->GetPageInfo(win->fwdSearchMark.page);
     if (!pageInfo || 0.0 == pageInfo->visibleRatio)
         return;
-    
+
     // Draw the rectangles highlighting the forward search results
     for (size_t i = 0; i < win->fwdSearchMark.rects.Count(); i++) {
         RectI rect = win->fwdSearchMark.rects[i];
@@ -488,7 +488,7 @@ static const TCHAR *HandleSyncCmd(const TCHAR *cmd, DDEACK& ack)
         else if (newWindow)
             win = LoadDocument(win->loadedFilePath);
     }
-    
+
     if (!win || !win->IsDocLoaded())
         return next;
     if (!win->pdfsync) {
@@ -520,7 +520,7 @@ static const TCHAR *HandleOpenCmd(const TCHAR *cmd, DDEACK& ack)
                           &pdfFile, &newWindow, &setFocus, &forceRefresh);
     if (!next)
         return NULL;
-    
+
     WindowInfo *win = FindWindowInfoByFile(pdfFile);
     if (newWindow || !win)
         win = LoadDocument(pdfFile, !newWindow ? win : NULL);
@@ -528,7 +528,7 @@ static const TCHAR *HandleOpenCmd(const TCHAR *cmd, DDEACK& ack)
         ReloadDocument(win);
         forceRefresh = 0;
     }
-    
+
     assert(!win || !win->IsAboutWindow());
     if (!win)
         return next;

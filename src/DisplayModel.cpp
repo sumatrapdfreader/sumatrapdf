@@ -207,7 +207,7 @@ DisplayModel::DisplayModel(DisplayModelCallback *cb)
 
     navHistoryIx = 0;
     navHistoryEnd = 0;
-    
+
     dontRenderFlag = false;
 }
 
@@ -433,7 +433,7 @@ int DisplayModel::FirstVisiblePageNo() const
         if (pageInfo->visibleRatio > 0.0)
             return pageNo;
     }
-    
+
     /* If no pages are visible */
     return INVALID_PAGE_NO;
 }
@@ -1176,12 +1176,12 @@ bool DisplayModel::GoToFirstPage()
 void DisplayModel::ScrollXTo(int xOff)
 {
     DBG_OUT("DisplayModel::scrollXTo(xOff=%d)\n", xOff);
-    
+
     int currPageNo = CurrentPageNo();
     viewPort.x = xOff;
     RecalcVisibleParts();
     dmCb->UpdateScrollbars(canvasSize);
-    
+
     if (CurrentPageNo() != currPageNo)
         dmCb->PageNoChanged(CurrentPageNo());
     RepaintDisplay();

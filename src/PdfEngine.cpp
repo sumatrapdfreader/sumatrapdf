@@ -90,40 +90,40 @@ RenderedFitzBitmap::RenderedFitzBitmap(fz_pixmap *pixmap, HDC hDC) :
 {
     int paletteSize = 0;
     bool hasPalette = false;
-    
+
     int w = pixmap->w;
     int h = pixmap->h;
     int rows8 = ((w + 3) / 4) * 4;
-    
+
     /* abgr is a GDI compatible format */
     fz_pixmap *bgrPixmap = fz_new_pixmap_with_limit(fz_find_device_colorspace("DeviceBGR"), w, h);
     if (!bgrPixmap)
         return;
     bgrPixmap->x = pixmap->x; bgrPixmap->y = pixmap->y;
     fz_convert_pixmap(pixmap, bgrPixmap);
-    
+
     assert(bgrPixmap->n == 4);
-    
+
     BITMAPINFO *bmi = (BITMAPINFO *)calloc(1, sizeof(BITMAPINFOHEADER) + 256 * sizeof(RGBQUAD));
-    
+
     // always try to produce an 8-bit palette for saving some memory
     unsigned char *bmpData = (unsigned char *)calloc(rows8, h);
     if (bmpData)
     {
         unsigned char *dest = bmpData;
         unsigned char *source = bgrPixmap->samples;
-        
+
         for (int j = 0; j < h; j++)
         {
             for (int i = 0; i < w; i++)
             {
                 RGBQUAD c = { 0 };
-                
+
                 c.rgbBlue = *source++;
                 c.rgbGreen = *source++;
                 c.rgbRed = *source++;
                 source++;
-                
+
                 /* find this color in the palette */
                 int k;
                 for (k = 0; k < paletteSize; k++)
@@ -145,7 +145,7 @@ RenderedFitzBitmap::RenderedFitzBitmap(fz_pixmap *pixmap, HDC hDC) :
 ProducingPaletteDone:
         hasPalette = paletteSize < 256;
     }
-    
+
     bmi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
     bmi->bmiHeader.biWidth = w;
     bmi->bmiHeader.biHeight = -h;
@@ -154,10 +154,10 @@ ProducingPaletteDone:
     bmi->bmiHeader.biBitCount = hasPalette ? 8 : 32;
     bmi->bmiHeader.biSizeImage = h * (hasPalette ? rows8 : w * 4);
     bmi->bmiHeader.biClrUsed = hasPalette ? paletteSize : 0;
-    
+
     _hbmp = CreateDIBitmap(hDC, &bmi->bmiHeader, CBM_INIT,
         hasPalette ? bmpData : bgrPixmap->samples, bmi, DIB_RGB_COLORS);
-    
+
     fz_drop_pixmap(bgrPixmap);
     free(bmi);
     free(bmpData);
@@ -2763,7 +2763,7 @@ DocToCItem *CXpsEngine::GetToCTree()
 {
     if (!HasToCTree())
         return NULL;
-    
+
     int idCounter = 0;
     return BuildToCTree(_outline, idCounter);
 }

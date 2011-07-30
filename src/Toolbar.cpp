@@ -610,7 +610,7 @@ void CreateToolbar(WindowInfo *win)
     lres = SendMessage(win->hwndReBar, RB_INSERTBAND, (WPARAM)-1, (LPARAM)&rbBand);
 
     SetWindowPos(win->hwndReBar, NULL, 0, 0, 0, 0, SWP_NOZORDER);
-    
+
     CreatePageBox(*win);
     CreateFindBox(*win);
 }

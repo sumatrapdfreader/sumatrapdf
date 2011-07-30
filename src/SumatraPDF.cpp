@@ -536,7 +536,7 @@ public:
         free((void *)filePath);
         delete bmp;
     }
-    
+
     virtual void Callback(RenderedBitmap *bmp) {
         this->bmp = bmp;
         QueueWorkItem(this);
@@ -649,7 +649,7 @@ static bool LoadDocIntoWindow(TCHAR *fileName, WindowInfo& win,
 
     str::ReplacePtr(&win.loadedFilePath, fileName);
     win.dm = DisplayModel::CreateFromFileName(fileName, &win);
-    
+
     bool needrefresh = !win.dm;
 
     // ToC items might hold a reference to an Engine, so make sure to
@@ -1526,7 +1526,7 @@ static void DrawDocument(WindowInfo& win, HDC hdc, RECT *rcArea)
 
     if (win.showSelection)
         PaintSelection(&win, hdc);
-    
+
     if (win.fwdSearchMark.show)
         PaintForwardSearchMark(&win, hdc);
 
@@ -2824,7 +2824,7 @@ bool OnFrameKeydown(WindowInfo *win, WPARAM key, LPARAM lparam, bool inTextfield
 
     if (!win->IsDocLoaded())
         return false;
-    
+
     //DBG_OUT("key=%d,%c,shift=%d\n", key, (char)key, (int)WasKeyDown(VK_SHIFT));
 
     if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation)
@@ -3277,7 +3277,7 @@ void SetSidebarVisibility(WindowInfo *win, bool tocVisible, bool favVisible)
     if (!sidebarVisible) {
         if (GetFocus() == win->hwndTocTree || GetFocus() == win->hwndFavTree)
             SetFocus(win->hwndFrame);
-        
+
         SetWindowPos(win->hwndCanvas, NULL, 0, toolbarDy, rFrame.dx, dy, SWP_NOZORDER);
         ShowWindow(win->hwndSidebarSpliter, SW_HIDE);
         ShowWindow(win->hwndTocBox, SW_HIDE);
@@ -3311,7 +3311,7 @@ void SetSidebarVisibility(WindowInfo *win, bool tocVisible, bool favVisible)
     RectI rFav(0, y + tocDy, tocDx, dy - tocDy);
     RectI rSplitter(tocDx, y, SPLITTER_DX, dy);
     RectI rCanvas(canvasX, y, rFrame.dx - canvasX, dy);
-    
+
     SetWinPos(win->hwndTocBox, rToc, tocVisible);
     SetWinPos(win->hwndFavBox, rFav, favVisible);
     SetWinPos(win->hwndSidebarSpliter, rSplitter, true);
@@ -3484,7 +3484,7 @@ static LRESULT OnMouseWheel(WindowInfo& win, UINT message, WPARAM wParam, LPARAM
 
         return 0;
     }
-    
+
     // make sure to scroll whole pages in non-continuous Fit Content mode
     if (!displayModeContinuous(win.dm->displayMode()) &&
         ZOOM_FIT_CONTENT == win.dm->ZoomVirtual()) {
@@ -3680,10 +3680,10 @@ static LRESULT OnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wParam, LP
     {
         GoToFavoriteByMenuId(win, wmId);
     }
-    
+
     if (!win)
         return DefWindowProc(hwnd, msg, wParam, lParam);
-    
+
     // most of them require a win, the few exceptions are no-ops without
     switch (wmId)
     {
@@ -3694,45 +3694,45 @@ static LRESULT OnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wParam, LP
         case IDM_SAVEAS:
             OnMenuSaveAs(*win);
             break;
-    
+
         case IDT_FILE_PRINT:
         case IDM_PRINT:
             OnMenuPrint(win);
             break;
-    
+
         case IDT_FILE_EXIT:
         case IDM_CLOSE:
             CloseWindow(win, false);
             break;
-    
+
         case IDM_EXIT:
             OnMenuExit();
             break;
-    
+
         case IDM_REFRESH:
             ReloadDocument(win);
             break;
-    
+
         case IDM_SAVEAS_BOOKMARK:
             OnMenuSaveBookmark(*win);
             break;
-    
+
         case IDT_VIEW_FIT_WIDTH:
             ChangeZoomLevel(win, ZOOM_FIT_WIDTH, true);
             break;
-    
+
         case IDT_VIEW_FIT_PAGE:
             ChangeZoomLevel(win, ZOOM_FIT_PAGE, false);
             break;
-    
+
         case IDT_VIEW_ZOOMIN:
             ZoomToSelection(win, ZOOM_IN_FACTOR, true);
             break;
-    
+
         case IDT_VIEW_ZOOMOUT:
             ZoomToSelection(win, ZOOM_OUT_FACTOR, true);
             break;
-    
+
         case IDM_ZOOM_6400:
         case IDM_ZOOM_3200:
         case IDM_ZOOM_1600:
@@ -3752,158 +3752,158 @@ static LRESULT OnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wParam, LP
         case IDM_ZOOM_ACTUAL_SIZE:
             OnMenuZoom(win, wmId);
             break;
-    
+
         case IDM_ZOOM_CUSTOM:
             OnMenuCustomZoom(win);
             break;
-    
+
         case IDM_VIEW_SINGLE_PAGE:
             SwitchToDisplayMode(win, DM_SINGLE_PAGE, true);
             break;
-    
+
         case IDM_VIEW_FACING:
             SwitchToDisplayMode(win, DM_FACING, true);
             break;
-    
+
         case IDM_VIEW_BOOK:
             SwitchToDisplayMode(win, DM_BOOK_VIEW, true);
             break;
-    
+
         case IDM_VIEW_CONTINUOUS:
             OnMenuViewContinuous(*win);
             break;
-    
+
         case IDM_VIEW_SHOW_HIDE_TOOLBAR:
             OnMenuViewShowHideToolbar();
             break;
-    
+
         case IDM_CHANGE_LANGUAGE:
             OnMenuChangeLanguage(*win);
             break;
-    
+
         case IDM_VIEW_BOOKMARKS:
             ToggleTocBox(win);
             break;
-    
+
         case IDM_GOTO_NEXT_PAGE:
             if (win->IsDocLoaded())
                 win->dm->GoToNextPage(0);
             break;
-    
+
         case IDM_GOTO_PREV_PAGE:
             if (win->IsDocLoaded())
                 win->dm->GoToPrevPage(0);
             break;
-    
+
         case IDM_GOTO_FIRST_PAGE:
             if (win->IsDocLoaded())
                 win->dm->GoToFirstPage();
             break;
-    
+
         case IDM_GOTO_LAST_PAGE:
             if (win->IsDocLoaded())
                 win->dm->GoToLastPage();
             break;
-    
+
         case IDM_GOTO_PAGE:
             OnMenuGoToPage(*win);
             break;
-    
+
         case IDM_VIEW_PRESENTATION_MODE:
             OnMenuViewPresentation(*win);
             break;
-    
+
         case IDM_VIEW_FULLSCREEN:
             OnMenuViewFullscreen(*win);
             break;
-    
+
         case IDM_VIEW_ROTATE_LEFT:
             if (win->IsDocLoaded())
                 win->dm->RotateBy(-90);
             break;
-    
+
         case IDM_VIEW_ROTATE_RIGHT:
             if (win->IsDocLoaded())
                 win->dm->RotateBy(90);
             break;
-    
+
         case IDM_FIND_FIRST:
             OnMenuFind(win);
             break;
-    
+
         case IDM_FIND_NEXT:
             OnMenuFindNext(win);
             break;
-    
+
         case IDM_FIND_PREV:
             OnMenuFindPrev(win);
             break;
-    
+
         case IDM_FIND_MATCH:
             OnMenuFindMatchCase(win);
             break;
-    
+
         case IDM_VISIT_WEBSITE:
             LaunchBrowser(_T("http://blog.kowalczyk.info/software/sumatrapdf/"));
             break;
-    
+
         case IDM_MANUAL:
             LaunchBrowser(_T("http://blog.kowalczyk.info/software/sumatrapdf/manual.html"));
             break;
-            
+
         case IDM_CONTRIBUTE_TRANSLATION:
             LaunchBrowser(_T("http://blog.kowalczyk.info/software/sumatrapdf/translations.html"));
             break;
-    
+
         case IDM_ABOUT:
             OnMenuAbout();
             break;
-    
+
         case IDM_CHECK_UPDATE:
             DownloadSumatraUpdateInfo(*win, false);
             break;
-    
+
         case IDM_SETTINGS:
             OnMenuSettings(*win);
             break;
-    
+
         case IDM_VIEW_WITH_ACROBAT:
             ViewWithAcrobat(win);
             break;
-    
+
         case IDM_VIEW_WITH_FOXIT:
             ViewWithFoxit(win);
             break;
-    
+
         case IDM_VIEW_WITH_PDF_XCHANGE:
             ViewWithPDFXChange(win);
             break;
-    
+
         case IDM_SEND_BY_EMAIL:
             SendAsEmailAttachment(win);
             break;
-    
+
         case IDM_PROPERTIES:
             OnMenuProperties(*win);
             break;
-    
+
         case IDM_MOVE_FRAME_FOCUS:
             if (win->hwndFrame != GetFocus())
                 SetFocus(win->hwndFrame);
             else if (win->tocVisible)
                 SetFocus(win->hwndTocTree);
             break;
-    
+
         case IDM_GOTO_NAV_BACK:
             if (win->IsDocLoaded())
                 win->dm->Navigate(-1);
             break;
-            
+
         case IDM_GOTO_NAV_FORWARD:
             if (win->IsDocLoaded())
                 win->dm->Navigate(1);
             break;
-    
+
         case IDM_COPY_SELECTION:
             // Don't break the shortcut for text boxes
             if (win->hwndFindBox == GetFocus() || win->hwndPageBox == GetFocus())
@@ -3917,25 +3917,25 @@ static LRESULT OnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wParam, LP
             else
                 ShowNotification(win, _TR("Select content with Ctrl+left mouse button"));
             break;
-    
+
         case IDM_SELECT_ALL:
             OnSelectAll(win);
             break;
-    
+
         case IDM_DEBUG_SHOW_LINKS:
             gDebugShowLinks = !gDebugShowLinks;
             for (size_t i = 0; i < gWindows.Count(); i++)
                 gWindows[i]->RedrawAll(true);
             break;
-    
+
         case IDM_DEBUG_GDI_RENDERER:
             ToggleGdiDebugging();
             break;
-    
+
         case IDM_DEBUG_CRASH_ME:
             CrashMe();
             break;
-    
+
         case IDM_FAV_ADD:
             AddFavorite(win);
             break;
@@ -4169,7 +4169,7 @@ static bool InstanceInit(HINSTANCE hInstance, int nCmdShow)
     SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
     gDefaultGuiFont = CreateFontIndirect(&ncm.lfMessageFont);
     gBitmapReloadingCue = LoadBitmap(ghinst, MAKEINTRESOURCE(IDB_RELOADING_CUE));
-    
+
     return true;
 }
 
@@ -4410,7 +4410,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
     if (i.reuseInstance || i.printDialog && i.exitOnPrint)
         goto Exit;
- 
+
     if (!firstIsDocLoaded) {
         bool enterFullscreen = (WIN_STATE_FULLSCREEN == gGlobalPrefs.windowState);
         win = CreateWindowInfo();

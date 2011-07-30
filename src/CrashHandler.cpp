@@ -502,7 +502,7 @@ static bool GetAddrInfo(void *addr, char *module, DWORD moduleLen, DWORD& sectio
     PIMAGE_DOS_HEADER dosHeader = (PIMAGE_DOS_HEADER)hMod;
     PIMAGE_NT_HEADERS pNtHeader = (PIMAGE_NT_HEADERS)(hMod + dosHeader->e_lfanew);
     PIMAGE_SECTION_HEADER section = IMAGE_FIRST_SECTION(pNtHeader);
-    
+
     DWORD lAddr = (DWORD)addr - hMod;
     for (unsigned int i = 0; i < pNtHeader->FileHeader.NumberOfSections; i++) {
         DWORD startAddr = section->VirtualAddress;
@@ -532,7 +532,7 @@ static bool HasSymbolsForAddress(DWORD64 addr)
     memset(buf, 0, sizeof(buf));
     symInfo->SizeOfStruct = sizeof(SYMBOL_INFO);
     symInfo->MaxNameLen = MAX_SYM_LEN;
-        
+
     DWORD64 symDisp = 0;
     char *symName = NULL;
     BOOL ok = _SymFromAddr(GetCurrentProcess(), addr, &symDisp, symInfo);
@@ -566,13 +566,13 @@ static void GetAddressInfo(str::Str<char>& s, DWORD64 addr)
     memset(buf, 0, sizeof(buf));
     symInfo->SizeOfStruct = sizeof(SYMBOL_INFO);
     symInfo->MaxNameLen = MAX_SYM_LEN;
-        
+
     DWORD64 symDisp = 0;
     char *symName = NULL;
     BOOL ok = _SymFromAddr(GetCurrentProcess(), addr, &symDisp, symInfo);
     if (ok)
         symName = &(symInfo->Name[0]);
-    
+
     char module[MAX_PATH] = { 0 };
     DWORD section, offset;
     if (GetAddrInfo((void*)addr, module, sizeof(module), section, offset)) {
@@ -696,7 +696,7 @@ static void GetThreadCallstack(str::Str<char>& s, DWORD threadId)
             GetCallstack(s, ctx, hThread);
         else
             s.Append("Failed to GetThreadContext()\r\n");
-            
+
         ResumeThread(hThread);
     }
     CloseHandle(hThread);
@@ -1005,7 +1005,7 @@ void SubmitCrashInfo()
             LogDbg("SubmitCrashInfo(): failed to download symbols");
             goto Exit;
         }
-        
+
         _SymCleanup(GetCurrentProcess());
         if (!InitializeDbgHelp()) {
             LogDbg("SubmitCrashInfo(): InitializeDbgHelp() failed");

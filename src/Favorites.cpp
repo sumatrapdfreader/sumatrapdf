@@ -806,7 +806,7 @@ void CreateFavorites(WindowInfo *win)
                         TVS_TRACKSELECT|TVS_DISABLEDRAGDROP|TVS_NOHSCROLL|TVS_INFOTIP|
                         WS_TABSTOP|WS_VISIBLE|WS_CHILD,
                         0,0,0,0, win->hwndFavBox, (HMENU)IDC_FAV_TREE, ghinst, NULL);
-    
+
     // Note: those must be consecutive numbers and in title/close/tree order
     CASSERT(IDC_FAV_BOX + 1 == IDC_FAV_TITLE &&
             IDC_FAV_BOX + 2 == IDC_FAV_CLOSE &&

@@ -435,7 +435,7 @@ bool CImageEngine::LoadFromStream(IStream *stream)
 {
     if (!stream)
         return false;
-    
+
     pages.Append(Bitmap::FromStream(stream));
     // could sniff instead, but GDI+ allows us to convert the image format anyway
     fileExt = _T(".png");

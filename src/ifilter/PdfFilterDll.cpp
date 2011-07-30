@@ -58,9 +58,9 @@ public:
         *ppv = NULL;
         if (punkOuter)
             return CLASS_E_NOAGGREGATION;
-        
+
         IFilter *pFilter = NULL;
-        
+
         CLSID clsid;
         if (SUCCEEDED(CLSIDFromTString(SZ_PDF_FILTER_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid))
             pFilter = new NOTHROW CPdfFilter(&g_lRefCount);
@@ -72,7 +72,7 @@ public:
             return CLASS_E_CLASSNOTAVAILABLE;
         if (!pFilter)
             return E_OUTOFMEMORY;
-        
+
         HRESULT hr = pFilter->QueryInterface(riid, ppv);
         pFilter->Release();
         return hr;

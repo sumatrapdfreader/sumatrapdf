@@ -54,7 +54,7 @@ void FileWatcher::Init(LPCTSTR filefullpath)
     free(szFilepath);
     szFilepath = str::Dup(filefullpath);
     TCHAR *dirPath = path::GetDir(szFilepath);
-    
+
     hDir = CreateFile(
         dirPath, // pointer to the directory containing the tex files
         FILE_LIST_DIRECTORY,                // access (read-write) mode
@@ -86,7 +86,7 @@ void FileWatcher::Init(LPCTSTR filefullpath)
 DWORD WINAPI FileWatcher::WatchingThread(void *param)
 {
     FileWatcher *fw = (FileWatcher *)param;
- 
+
     HANDLE hp[2] = { fw->hEvtStopWatching, fw->overl.hEvent };
     for (;;) {
         DWORD dwObj = WaitForMultipleObjects(dimof(hp), hp, FALSE, INFINITE);

@@ -29,7 +29,6 @@ struct SerializableGlobalPrefs {
     const char *currentLanguage;
 
     bool toolbarVisible;
-    
     bool favVisible;
 
     /* If false, we won't ask the user if he wants Sumatra to handle PDF files */

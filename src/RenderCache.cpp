@@ -357,7 +357,7 @@ void RenderCache::Render(DisplayModel *dm, int pageNo, TilePosition tile, bool c
                 DBG_OUT("Replacing request for page %d with new request\n", req->pageNo);
                 req->zoom = zoom;
                 req->rotation = rotation;
-                
+
                 goto Exit;
             }
         }

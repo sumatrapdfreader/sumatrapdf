@@ -280,7 +280,7 @@ inline void SetText(HMENU m, UINT id, TCHAR *s)
 } // namespace Menu
 
 namespace font {
-    
+
 HFONT GetSimple(HDC hdc, TCHAR *fontName, int fontSize);
 
 inline void Delete(HFONT font)

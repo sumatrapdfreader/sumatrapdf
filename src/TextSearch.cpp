@@ -179,7 +179,7 @@ bool TextSearch::FindStartingAtPage(int pageNo, ProgressUpdateUI *tracker)
 
         pageNo += forward ? 1 : -1;
     }
-    
+
     // allow for the first/last page to be included in the next search
     findPage = forward ? total + 1 : 0;
 
