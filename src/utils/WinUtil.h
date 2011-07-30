@@ -325,6 +325,7 @@ public:
 #define ListBox_AppendString_NoSort(hwnd, txt) ListBox_InsertString(hwnd, -1, txt)
 
 RectI   ShiftRectToWorkArea(RectI rect, bool bFully=false);
+RectI   GetFullscreenRect(HWND hwnd);
 
 void    LaunchFile(const TCHAR *path, const TCHAR *params=NULL, const TCHAR *verb=NULL, bool hidden=false);
 HANDLE  LaunchProcess(TCHAR *cmdLine, DWORD flags=0);

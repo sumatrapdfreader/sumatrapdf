@@ -21,7 +21,7 @@ static void GeomTest()
     assert(ptI.x == 12 && ptI.y == -14);
     ptD = ptI.Convert<double>();
     assert(PointD(12, -14) == ptD);
-    assert(!(PointD(12.4, -13.6) == ptD));
+    assert(PointD(12.4, -13.6) != ptD);
 
     SizeD szD(7.7, -3.3);
     assert(szD.dx == 7.7 && szD.dy == -3.3);

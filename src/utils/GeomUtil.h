@@ -28,6 +28,9 @@ public:
     bool operator==(Point<T>& other) {
         return this->x == other.x && this->y == other.y;
     }
+    bool operator!=(Point<T>& other) {
+        return !this->operator==(other);
+    }
 };
 
 typedef Point<int> PointI;
@@ -53,6 +56,9 @@ public :
 
     bool operator==(Size<T>& other) {
         return this->dx == other.dx && this->dy == other.dy;
+    }
+    bool operator!=(Size<T>& other) {
+        return !this->operator==(other);
     }
 };
 
@@ -171,6 +177,9 @@ public:
     bool operator==(Rect<T>& other) {
         return this->x == other.x && this->y == other.y &&
                this->dx == other.dx && this->dy == other.dy;
+    }
+    bool operator!=(Rect<T>& other) {
+        return !this->operator==(other);
     }
 };
 

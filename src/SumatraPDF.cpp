@@ -1592,7 +1592,7 @@ static void OnMouseMove(WindowInfo& win, int x, int y, WPARAM flags)
 
     if (win.presentation) {
         // shortly display the cursor if the mouse has moved and the cursor is hidden
-        if (!(PointI(x, y) == win.dragPrevPos) && !GetCursor()) {
+        if (PointI(x, y) != win.dragPrevPos && !GetCursor()) {
             if (win.mouseAction == MA_IDLE)
                 SetCursor(gCursorArrow);
             else
@@ -2499,8 +2499,8 @@ static void AdjustWindowEdge(WindowInfo& win)
 static void OnFrameSize(WindowInfo* win, int dx, int dy)
 {
     int rebBarDy = 0;
-    if (gGlobalPrefs.toolbarVisible) {
-        SetWindowPos(win->hwndReBar, NULL, 0, 0, dx, rebBarDy, SWP_NOZORDER);
+    if (gGlobalPrefs.toolbarVisible && !(win->presentation || win->fullScreen)) {
+        SetWindowPos(win->hwndReBar, NULL, 0, 0, dx, 0, SWP_NOZORDER);
         rebBarDy = WindowRect(win->hwndReBar).dy;
     }
 
@@ -2509,6 +2509,13 @@ static void OnFrameSize(WindowInfo* win, int dx, int dy)
         SetSidebarVisibility(win, tocVisible, gGlobalPrefs.favVisible);
     else
         SetWindowPos(win->hwndCanvas, NULL, 0, rebBarDy, dx, dy - rebBarDy, SWP_NOZORDER);
+
+    if (win->presentation || win->fullScreen) {
+        RectI rect = GetFullscreenRect(win->hwndFrame);
+        // Windows XP sometimes seems to change the window size on it's own
+        if (rect != WindowRect(win->hwndFrame))
+            MoveWindow(win->hwndFrame, rect.x, rect.y, rect.dx, rect.dy, TRUE);
+    }
 }
 
 void ChangeLanguage(const char *langName)
@@ -2683,14 +2690,6 @@ static void EnterFullscreen(WindowInfo& win, bool presentation)
         // restore gGlobalPrefs.favVisible changed by SetSidebarVisibility()
     }
 
-    RectI rect;
-    MONITORINFOEX mi;
-    mi.cbSize = sizeof(mi);
-    HMONITOR m = MonitorFromWindow(win.hwndFrame, MONITOR_DEFAULTTONEAREST);
-    if (!GetMonitorInfo(m, (LPMONITORINFOEX)&mi))
-        rect = RectI(0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
-    else
-        rect = RectI::FromRECT(mi.rcMonitor);
     long ws = GetWindowLong(win.hwndFrame, GWL_STYLE);
     if (!presentation || !win.fullScreen)
         win.prevStyle = ws;
@@ -2698,6 +2697,7 @@ static void EnterFullscreen(WindowInfo& win, bool presentation)
     ws |= WS_MAXIMIZE;
 
     win.frameRc = WindowRect(win.hwndFrame);
+    RectI rect = GetFullscreenRect(win.hwndFrame);
 
     SetMenu(win.hwndFrame, NULL);
     ShowWindow(win.hwndReBar, SW_HIDE);

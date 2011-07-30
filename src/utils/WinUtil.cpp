@@ -428,6 +428,17 @@ RectI ShiftRectToWorkArea(RectI rect, bool bFully)
     return rect;
 }
 
+// returns the dimensions the given window has to have in order to be a fullscreen window
+RectI GetFullscreenRect(HWND hwnd)
+{
+    MONITORINFO mi = { 0 };
+    mi.cbSize = sizeof(mi);
+    if (GetMonitorInfo(MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST), &mi))
+        return RectI::FromRECT(mi.rcMonitor);
+    // fall back to the primary monitor
+    return RectI(0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
+}
+
 void PaintRect(HDC hdc, RectI& rect)
 {
     MoveToEx(hdc, rect.x, rect.y, NULL);
