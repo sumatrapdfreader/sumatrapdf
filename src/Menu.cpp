@@ -11,6 +11,7 @@
 #include "Selection.h"
 #include "SumatraAbout.h"
 #include "SumatraDialogs.h"
+#include "ChmUI.h"
 
 /* Define if you want to display an additional debug menu */
 #ifdef DEBUG
@@ -277,6 +278,12 @@ HMENU BuildMenu(WindowInfo *win)
 
     SetMenu(win->hwndFrame, mainMenu);
     return mainMenu;
+}
+
+HMENU BuildChmMenu(ChmWindowInfo *win)
+{
+    // TODO: write me
+    return NULL;
 }
 
 static struct {

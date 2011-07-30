@@ -16,9 +16,11 @@ public:
     ChmEngine * chmEngine;
 
     HWND        hwndFrame;
-    HWND        hwndCanvas;
+    HWND        hwndHtml;
     HWND        hwndToolbar;
     HWND        hwndReBar;
+
+    HMENU       menu;
 };
 
 ChmWindowInfo *CreateChmWindowInfo();

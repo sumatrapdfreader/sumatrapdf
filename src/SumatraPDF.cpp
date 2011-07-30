@@ -891,22 +891,24 @@ static WindowInfo* CreateWindowInfo()
     assert(NULL == FindWindowInfoByHwnd(hwndFrame));
     WindowInfo *win = new WindowInfo(hwndFrame);
 
-    HWND hwndCanvas = CreateWindowEx(
+    win->hwndCanvas = CreateWindowEx(
             WS_EX_STATICEDGE, 
             CANVAS_CLASS_NAME, NULL,
             WS_CHILD | WS_HSCROLL | WS_VSCROLL,
             0, 0, 0, 0, /* position and size determined in OnSize */
             hwndFrame, NULL,
             ghinst, NULL);
-    if (!hwndCanvas)
+    if (!win->hwndCanvas) {
+        delete win;
         return NULL;
+    }
+
     // hide scrollbars to avoid showing/hiding on empty window
-    ShowScrollBar(hwndCanvas, SB_BOTH, FALSE);
+    ShowScrollBar(win->hwndCanvas, SB_BOTH, FALSE);
 
     assert(NULL == win->menu);
     win->menu = BuildMenu(win);
 
-    win->hwndCanvas = hwndCanvas;
     ShowWindow(win->hwndCanvas, SW_SHOW);
     UpdateWindow(win->hwndCanvas);
 

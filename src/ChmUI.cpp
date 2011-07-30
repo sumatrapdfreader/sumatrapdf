@@ -6,23 +6,24 @@
 #include "resource.h"
 #include "WinUtil.h"
 #include "ChmEngine.h"
+#include "Menu.h"
 
 #define FRAME_CHM_CLASS_NAME        _T("SUMATRA_CHM_FRAME")
-#define CANVAS_CHM_CLASS_NAME       _T("SUMATRA_CHM_CANVAS")
+#define HTML_CHM_CLASS_NAME         _T("SUMATRA_CHM_HTML")
 
 static LRESULT CALLBACK WndProcChmFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     return DefWindowProc(hwnd, msg, wParam, lParam);
 }
 
-static LRESULT CALLBACK WndProcChmCanvas(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+static LRESULT CALLBACK WndProcChmHtml(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     return DefWindowProc(hwnd, msg, wParam, lParam);
 }
 
 ChmWindowInfo::ChmWindowInfo(HWND hwndFrame) :
     loadedFilePath(NULL), chmEngine(NULL), hwndFrame(NULL),
-    hwndCanvas(NULL), hwndToolbar(NULL), hwndReBar(NULL)
+    hwndHtml(NULL), hwndToolbar(NULL), hwndReBar(NULL), menu(NULL)
 {
 }
 
@@ -50,9 +51,26 @@ ChmWindowInfo *CreateChmWindowInfo()
             ghinst, NULL);
     if (!hwndFrame)
         return NULL;
+    ChmWindowInfo *win = new ChmWindowInfo(hwndFrame);
+    win->hwndHtml = CreateWindowEx(
+            WS_EX_STATICEDGE, 
+            HTML_CHM_CLASS_NAME, NULL,
+            WS_CHILD | WS_HSCROLL | WS_VSCROLL,
+            0, 0, 0, 0, /* position and size determined in OnSize */
+            hwndFrame, NULL,
+            ghinst, NULL);
+    if (!win->hwndHtml) {
+        delete win;
+        return NULL;
+    }
 
-    // TODO: write me
-    return NULL;
+    win->menu = BuildChmMenu(win);
+
+    ShowWindow(win->hwndHtml, SW_SHOW);
+    UpdateWindow(win->hwndHtml);
+
+    // TODO: finish me
+    return win;
 }
 
 bool RegisterChmWinClass(HINSTANCE hinst)
@@ -71,9 +89,9 @@ bool RegisterChmWinClass(HINSTANCE hinst)
 
     FillWndClassEx(wcex, hinst);
     wcex.style          = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
-    wcex.lpfnWndProc    = WndProcChmCanvas;
+    wcex.lpfnWndProc    = WndProcChmHtml;
     wcex.hCursor        = LoadCursor(NULL, IDC_ARROW);
-    wcex.lpszClassName  = CANVAS_CHM_CLASS_NAME;
+    wcex.lpszClassName  = HTML_CHM_CLASS_NAME;
     atom = RegisterClassEx(&wcex);
     if (!atom)
         return false;
