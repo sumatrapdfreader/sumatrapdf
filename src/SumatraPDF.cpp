@@ -233,6 +233,11 @@ static bool SendAsEmailAttachment(WindowInfo *win)
     return SUCCEEDED(hr);
 }
 
+static void MoveWindow(HWND hwnd, RectI rect)
+{
+    MoveWindow(hwnd, rect.x, rect.y, rect.dx, rect.dy, TRUE);
+}
+
 void SwitchToDisplayMode(WindowInfo *win, DisplayMode displayMode, bool keepContinuous)
 {
     if (!win->IsDocLoaded())
@@ -581,7 +586,6 @@ static bool IsChmFile(TCHAR *fileName)
 }
 
 // for now only used for loading CHM files
-// for now al
 static bool LoadDoc2(TCHAR *fileName)
 {
     DisplayModel *dm = DisplayModel::CreateFromFileName(fileName, NULL);
@@ -759,7 +763,7 @@ Error:
             RectI rect = ShiftRectToWorkArea(state->windowPos);
             // This shouldn't happen until !win.IsAboutWindow(), so that we don't
             // accidentally update gGlobalState with this window's dimensions
-            MoveWindow(win.hwndFrame, rect.x, rect.y, rect.dx, rect.dy, TRUE);
+            MoveWindow(win.hwndFrame, rect);
         }
 
         if (showWin) {
@@ -1958,10 +1962,7 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
     if (win->presentation)
         ExitFullscreen(*win);
 
-    bool lastWindow = false;
-    if (1 == gWindows.Count())
-        lastWindow = true;
-
+    bool lastWindow = (1 == gWindows.Count());
     if (lastWindow)
         SavePrefs();
     else
@@ -2514,7 +2515,7 @@ static void OnFrameSize(WindowInfo* win, int dx, int dy)
         RectI rect = GetFullscreenRect(win->hwndFrame);
         // Windows XP sometimes seems to change the window size on it's own
         if (rect != WindowRect(win->hwndFrame))
-            MoveWindow(win->hwndFrame, rect.x, rect.y, rect.dx, rect.dy, TRUE);
+            MoveWindow(win->hwndFrame, rect);
     }
 }
 
@@ -2702,7 +2703,7 @@ static void EnterFullscreen(WindowInfo& win, bool presentation)
     SetMenu(win.hwndFrame, NULL);
     ShowWindow(win.hwndReBar, SW_HIDE);
     SetWindowLong(win.hwndFrame, GWL_STYLE, ws);
-    SetWindowPos(win.hwndFrame, HWND_NOTOPMOST, rect.x, rect.y, rect.dx, rect.dy, SWP_FRAMECHANGED|SWP_NOZORDER);
+    SetWindowPos(win.hwndFrame, NULL, rect.x, rect.y, rect.dx, rect.dy, SWP_FRAMECHANGED | SWP_NOZORDER);
     SetWindowPos(win.hwndCanvas, NULL, 0, 0, rect.dx, rect.dy, SWP_NOZORDER);
 
     if (presentation)
@@ -2739,10 +2740,9 @@ static void ExitFullscreen(WindowInfo& win)
         ShowWindow(win.hwndReBar, SW_SHOW);
     SetMenu(win.hwndFrame, win.menu);
     SetWindowLong(win.hwndFrame, GWL_STYLE, win.prevStyle);
-    SetWindowPos(win.hwndFrame, HWND_NOTOPMOST,
-                 win.frameRc.x, win.frameRc.y,
-                 win.frameRc.dx, win.frameRc.dy,
-                 SWP_FRAMECHANGED | SWP_NOZORDER);
+    SetWindowPos(win.hwndFrame, NULL, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOSIZE | SWP_NOMOVE);
+    MoveWindow(win.hwndFrame, win.frameRc);
+    assert(WindowRect(win.hwndFrame) == win.frameRc);
 }
 
 static void OnMenuViewFullscreen(WindowInfo& win, bool presentation=false)
@@ -3092,10 +3092,10 @@ static void ResizeSidebar(WindowInfo *win)
     assert(MapRectToWindow(rToc, win->hwndTocBox, win->hwndFrame).y == y);
     //assert(totalDy == (rToc.dy + rFav.dy));
 
-    MoveWindow(win->hwndTocBox, 0, y,           sidebarDx, rToc.dy, true);
-    MoveWindow(win->hwndFavBox, 0, y + rToc.dy, sidebarDx, rFav.dy, true);
-    MoveWindow(win->hwndSidebarSpliter, sidebarDx, y, SPLITTER_DX, totalDy, true);
-    MoveWindow(win->hwndCanvas, sidebarDx + SPLITTER_DX, y, canvasDx, totalDy, true);
+    MoveWindow(win->hwndTocBox, 0, y,           sidebarDx, rToc.dy, TRUE);
+    MoveWindow(win->hwndFavBox, 0, y + rToc.dy, sidebarDx, rFav.dy, TRUE);
+    MoveWindow(win->hwndSidebarSpliter, sidebarDx, y, SPLITTER_DX, totalDy, TRUE);
+    MoveWindow(win->hwndCanvas, sidebarDx + SPLITTER_DX, y, canvasDx, totalDy, TRUE);
 }
 
 static LRESULT CALLBACK WndProcSpliter(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -3147,9 +3147,9 @@ void LayoutTreeContainer(HWND hwndContainer, int id)
     size.cy += 2 * offset;
 
     WindowRect rc(hwndContainer);   
-    MoveWindow(hwndTitle, offset, offset, rc.dx - 2 * offset - 16, size.cy - 2 * offset, true);
-    MoveWindow(hwndClose, rc.dx - 16, (size.cy - 16) / 2, 16, 16, true);
-    MoveWindow(hwndTree, 0, size.cy, rc.dx, rc.dy - size.cy, true);
+    MoveWindow(hwndTitle, offset, offset, rc.dx - 2 * offset - 16, size.cy - 2 * offset, TRUE);
+    MoveWindow(hwndClose, rc.dx - 16, (size.cy - 16) / 2, 16, 16, TRUE);
+    MoveWindow(hwndTree, 0, size.cy, rc.dx, rc.dy - size.cy, TRUE);
 }
 
 #define BUTTON_HOVER_TEXT _T("1")
@@ -3239,23 +3239,9 @@ LRESULT CALLBACK WndProcCloseButton(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
     return CallWindowProc(DefWndProcCloseButton, hwnd, msg, wParam, lParam);
 }
 
-/*
-static int SidebarDxFromDisplayState(const DisplayState *ds=NULL, int defaultDx=0)
-{
-    if (ds && !gGlobalPrefs.globalPrefsOnly)
-        return ds->sidebarDx;
-    if (!defaultDx)
-        return gGlobalPrefs.sidebarDx;
-    return defaultDx;
-}*/
-
 static void SetWinPos(HWND hwnd, RectI r, bool isVisible)
 {
-    UINT flags = SWP_NOZORDER;
-    if (isVisible)
-        flags |= SWP_SHOWWINDOW;
-    else
-        flags |= SWP_HIDEWINDOW;
+    UINT flags = SWP_NOZORDER | (isVisible ? SWP_SHOWWINDOW : SWP_HIDEWINDOW);
     SetWindowPos(hwnd, NULL, r.x, r.y, r.dx, r.dy, flags);
 }
 
@@ -4213,8 +4199,7 @@ static void MakePluginWindow(WindowInfo& win, HWND hwndParent)
     SetWindowLong(win.hwndFrame, GWL_STYLE, ws);
 
     SetParent(win.hwndFrame, hwndParent);
-    ClientRect rc(hwndParent);
-    MoveWindow(win.hwndFrame, 0, 0, rc.dx, rc.dy, FALSE);
+    MoveWindow(win.hwndFrame, ClientRect(hwndParent));
     ShowWindow(win.hwndFrame, SW_SHOW);
 
     // from here on, we depend on the plugin's host to resize us
