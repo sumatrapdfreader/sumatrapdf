@@ -16,6 +16,13 @@ and then positioning it at (frac(x),frac(y)).
  */
 #define SINGLE_PIXEL_SPECIALS
 
+/* It's important that we count contributions carefully as they approach the
+ * edges, otherwise we end up with weights in the outside pixels of
+ * grid-fitted images that don't sum to 256, and hence get lines across the
+ * page. See bug #691629. */
+// SumatraPDF: enabling WRAP regresses Type 3 glyph rendering
+// #define WRAP
+
 #ifdef DEBUG_SCALING
 #ifdef WIN32
 #include <windows.h>
@@ -357,6 +364,8 @@ add_weight(fz_weights *weights, int j, int i, fz_scale_filter *filter,
 		i = src_w-1;
 		weight = 0;
 	}
+	if (weight == 0)
+		return;
 #endif
 
 	DBUG(("add_weight[%d][%d] = %d(%g) dist=%g\n",j,i,weight,f,dist));

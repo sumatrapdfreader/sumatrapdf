@@ -427,12 +427,20 @@ fz_draw_fill_text(void *user, fz_text *text, fz_matrix ctm,
 		trm.e = QUANT(trm.e - floorf(trm.e), HSUBPIX);
 		trm.f = QUANT(trm.f - floorf(trm.f), VSUBPIX);
 
-		glyph = fz_render_glyph(dev->cache, text->font, gid, trm);
+		glyph = fz_render_glyph(dev->cache, text->font, gid, trm, model);
 		if (glyph)
 		{
-			draw_glyph(colorbv, dev->dest, glyph, x, y, dev->scissor);
-			if (dev->shape)
-				draw_glyph(&shapebv, dev->shape, glyph, x, y, dev->scissor);
+			if (glyph->n == 1)
+			{
+				draw_glyph(colorbv, dev->dest, glyph, x, y, dev->scissor);
+				if (dev->shape)
+					draw_glyph(&shapebv, dev->shape, glyph, x, y, dev->scissor);
+			}
+			else
+			{
+				fz_matrix ctm = {glyph->w, 0.0, 0.0, glyph->h, x, y};
+				fz_paint_image(dev->dest, dev->scissor, dev->shape, glyph, ctm, alpha * 255);
+			}
 			fz_drop_pixmap(glyph);
 		}
 	}
@@ -571,7 +579,7 @@ fz_draw_clip_text(void *user, fz_text *text, fz_matrix ctm, int accumulate)
 			trm.e = QUANT(trm.e - floorf(trm.e), HSUBPIX);
 			trm.f = QUANT(trm.f - floorf(trm.f), VSUBPIX);
 
-			glyph = fz_render_glyph(dev->cache, text->font, gid, trm);
+			glyph = fz_render_glyph(dev->cache, text->font, gid, trm, model);
 			if (glyph)
 			{
 				draw_glyph(NULL, mask, glyph, x, y, bbox);

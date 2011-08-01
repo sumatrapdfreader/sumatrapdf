@@ -918,9 +918,9 @@ typedef struct fz_glyph_cache_s fz_glyph_cache;
 
 fz_glyph_cache *fz_new_glyph_cache(void);
 fz_pixmap *fz_render_ft_glyph(fz_font *font, int cid, fz_matrix trm);
-fz_pixmap *fz_render_t3_glyph(fz_font *font, int cid, fz_matrix trm);
+fz_pixmap *fz_render_t3_glyph(fz_font *font, int cid, fz_matrix trm, fz_colorspace *model);
 fz_pixmap *fz_render_ft_stroked_glyph(fz_font *font, int gid, fz_matrix trm, fz_matrix ctm, fz_stroke_state *state);
-fz_pixmap *fz_render_glyph(fz_glyph_cache*, fz_font*, int, fz_matrix);
+fz_pixmap *fz_render_glyph(fz_glyph_cache*, fz_font*, int, fz_matrix, fz_colorspace *model);
 fz_pixmap *fz_render_stroked_glyph(fz_glyph_cache*, fz_font*, int, fz_matrix, fz_matrix, fz_stroke_state *stroke);
 void fz_free_glyph_cache(fz_glyph_cache *);
 
@@ -953,8 +953,13 @@ void fz_flatten_dash_path(fz_gel *gel, fz_path *path, fz_stroke_state *stroke, f
 
 enum
 {
+	/* Hints */
 	FZ_IGNORE_IMAGE = 1,
 	FZ_IGNORE_SHADE = 2,
+
+	/* Flags */
+	FZ_CHARPROC_MASK = 1,
+	FZ_CHARPROC_COLOR = 2,
 };
 
 typedef struct fz_device_s fz_device;
@@ -962,6 +967,7 @@ typedef struct fz_device_s fz_device;
 struct fz_device_s
 {
 	int hints;
+	int flags;
 
 	void *user;
 	void (*free_user)(void *);

@@ -6,6 +6,7 @@ fz_new_device(void *user)
 	fz_device *dev = fz_malloc(sizeof(fz_device));
 	memset(dev, 0, sizeof(fz_device));
 	dev->hints = 0;
+	dev->flags = 0;
 	dev->user = user;
 	return dev;
 }

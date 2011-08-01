@@ -528,7 +528,7 @@ fz_new_type3_font(char *name, fz_matrix matrix)
 }
 
 fz_pixmap *
-fz_render_t3_glyph(fz_font *font, int gid, fz_matrix trm)
+fz_render_t3_glyph(fz_font *font, int gid, fz_matrix trm, fz_colorspace *model)
 {
 	fz_error error;
 	fz_matrix ctm;
@@ -551,6 +551,24 @@ fz_render_t3_glyph(fz_font *font, int gid, fz_matrix trm)
 	error = font->t3run(font->t3xref, font->t3resources, contents, dev, ctm);
 	if (error)
 		fz_catch(error, "cannot draw type3 glyph");
+	if (dev->flags & FZ_CHARPROC_MASK)
+	{
+		if (dev->flags & FZ_CHARPROC_COLOR)
+			fz_warn("type3 glyph claims to be both masked and colored");
+		model = NULL;
+	}
+	else if (dev->flags & FZ_CHARPROC_COLOR)
+	{
+		if (model == NULL)
+			fz_warn("colored type3 glyph wanted in masked context");
+	}
+	else
+	{
+		fz_warn("type3 glyph doesn't specify masked or colored");
+		model = NULL; /* Treat as masked */
+	}
+	/* SumatraPDF: don't draw color glyphs as long as fz_draw_fill_text fails to take the transformation matrix into account */
+	model = NULL;
 	fz_free_device(dev);
 
 	bbox.x0--;
@@ -558,7 +576,7 @@ fz_render_t3_glyph(fz_font *font, int gid, fz_matrix trm)
 	bbox.x1++;
 	bbox.y1++;
 
-	glyph = fz_new_pixmap_with_rect(fz_device_gray, bbox);
+	glyph = fz_new_pixmap_with_rect((model ? model : fz_device_gray), bbox);
 	fz_clear_pixmap(glyph);
 
 	cache = fz_new_glyph_cache();
@@ -569,8 +587,13 @@ fz_render_t3_glyph(fz_font *font, int gid, fz_matrix trm)
 	fz_free_device(dev);
 	fz_free_glyph_cache(cache);
 
-	result = fz_alpha_from_gray(glyph, 0);
-	fz_drop_pixmap(glyph);
+	if (model == NULL)
+	{
+		result = fz_alpha_from_gray(glyph, 0);
+		fz_drop_pixmap(glyph);
+	}
+	else
+		result = glyph;
 
 	return result;
 }

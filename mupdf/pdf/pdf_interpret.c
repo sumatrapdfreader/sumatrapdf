@@ -1875,10 +1875,12 @@ static void pdf_run_d(pdf_csi *csi)
 
 static void pdf_run_d0(pdf_csi *csi)
 {
+	csi->dev->flags |= FZ_CHARPROC_COLOR;
 }
 
 static void pdf_run_d1(pdf_csi *csi)
 {
+	csi->dev->flags |= FZ_CHARPROC_MASK;
 }
 
 static void pdf_run_f(pdf_csi *csi)

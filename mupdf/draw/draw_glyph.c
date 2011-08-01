@@ -69,11 +69,11 @@ fz_render_stroked_glyph(fz_glyph_cache *cache, fz_font *font, int gid, fz_matrix
 {
 	if (font->ft_face)
 		return fz_render_ft_stroked_glyph(font, gid, trm, ctm, stroke);
-	return fz_render_glyph(cache, font, gid, trm);
+	return fz_render_glyph(cache, font, gid, trm, NULL);
 }
 
 fz_pixmap *
-fz_render_glyph(fz_glyph_cache *cache, fz_font *font, int gid, fz_matrix ctm)
+fz_render_glyph(fz_glyph_cache *cache, fz_font *font, int gid, fz_matrix ctm, fz_colorspace *model)
 {
 	fz_glyph_key key;
 	fz_pixmap *val;
@@ -109,7 +109,7 @@ fz_render_glyph(fz_glyph_cache *cache, fz_font *font, int gid, fz_matrix ctm)
 	}
 	else if (font->t3procs)
 	{
-		val = fz_render_t3_glyph(font, gid, ctm);
+		val = fz_render_t3_glyph(font, gid, ctm, model);
 	}
 	else
 	{
