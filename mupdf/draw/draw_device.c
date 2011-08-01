@@ -1147,7 +1147,8 @@ fz_draw_begin_group(void *user, fz_rect rect, int isolated, int knockout, int bl
 	bbox = fz_intersect_bbox(bbox, dev->scissor);
 	dest = fz_new_pixmap_with_rect(model, bbox);
 
-	if (isolated)
+	/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692377 */
+	if (isolated || 1)
 	{
 		fz_clear_pixmap(dest);
 		shape = dev->shape;
@@ -1196,7 +1197,8 @@ fz_draw_end_group(void *user)
 		if ((blendmode == 0) && (shape == NULL))
 			fz_paint_pixmap(dev->dest, group, alpha * 255);
 		else
-			fz_blend_pixmap(dev->dest, group, alpha * 255, blendmode, isolated, shape);
+			/* SumatraPDF: TODO: assert(!isolated == !shape) ? */
+			fz_blend_pixmap(dev->dest, group, alpha * 255, blendmode, shape ? isolated : 0, shape);
 
 		fz_drop_pixmap(group);
 		if (shape != dev->shape)
