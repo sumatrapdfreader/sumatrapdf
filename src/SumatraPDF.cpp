@@ -1116,12 +1116,8 @@ void WindowInfo::CleanUp(DisplayModel *dm)
     gRenderCache.FreeForDisplayModel(dm);
 }
 
-void WindowInfo::UpdateScrollbars(SizeI canvas)
+static void UpdateCanvasScrollbars(DisplayModel *dm, HWND hwndCanvas, SizeI canvas)
 {
-    assert(dm);
-    if (!dm)
-        return;
-
     SCROLLINFO si = { 0 };
     si.cbSize = sizeof(si);
     si.fMask = SIF_ALL;
@@ -1161,6 +1157,11 @@ void WindowInfo::UpdateScrollbars(SizeI canvas)
     }
     ShowScrollBar(hwndCanvas, SB_VERT, viewPort.dy < canvas.dy);
     SetScrollInfo(hwndCanvas, SB_VERT, &si, TRUE);
+}
+
+void WindowInfo::UpdateScrollbars(SizeI canvas)
+{
+    UpdateCanvasScrollbars(dm, hwndCanvas, canvas);
 }
 
 void AssociateExeWithPdfExtension()
