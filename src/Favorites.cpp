@@ -323,17 +323,15 @@ static void AppendFavMenus(HMENU m, const TCHAR *currFilePath)
 //   disable "add" menu item and enable "remove" menu item
 // - if a document is opened and the page is not bookmarked,
 //   enable "add" menu item and disable "remove" menu item
-void RebuildFavMenu(WindowInfo *win, HMENU menu)
+static void RebuildFavMenu(TCHAR *filePath, int pageNo, HMENU menu)
 {
     win::menu::Empty(menu);
     BuildMenuFromMenuDef(menuDefFavorites, 3, menu);
-    if (!win->IsDocLoaded()) {
+    if (!filePath) {
         win::menu::SetEnabled(menu, IDM_FAV_ADD, false);
         win::menu::SetEnabled(menu, IDM_FAV_DEL, false);
         AppendFavMenus(menu, NULL);
     } else {
-        int pageNo = win->currPageNo;
-        TCHAR *filePath = win->loadedFilePath;
         bool isBookmarked = gFavorites->IsPageInFavorites(filePath, pageNo);
         if (isBookmarked)
         {
@@ -348,6 +346,21 @@ void RebuildFavMenu(WindowInfo *win, HMENU menu)
         AppendFavMenus(menu, filePath);
     }
     win::menu::SetEnabled(menu, IDM_FAV_TOGGLE, HasFavorites());
+}
+
+void RebuildFavMenu(WindowInfo *win, HMENU menu)
+{
+    if (win->IsDocLoaded()) {
+        RebuildFavMenu(win->loadedFilePath, win->currPageNo, menu);
+    } else {
+        RebuildFavMenu(NULL, 0, menu);
+    }
+}
+
+void RebuildFavMenu(ChmWindowInfo *win, HMENU menu)
+{
+    // TODO: pass loadedFilePath and pageNo correctly
+    RebuildFavMenu(NULL, 0, menu);
 }
 
 void ToggleFavorites(WindowInfo *win)

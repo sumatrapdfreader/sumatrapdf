@@ -9,6 +9,7 @@
 #include "Vec.h"
 
 class WindowInfo;
+class ChmWindowInfo;
 
 /*
 A favorite is a bookmark (we call it a favorite, like Internet Explorer, to
@@ -115,6 +116,7 @@ public:
 void AddFavorite(WindowInfo *win);
 void DelFavorite(WindowInfo *win);
 void RebuildFavMenu(WindowInfo *win, HMENU menu);
+void RebuildFavMenu(ChmWindowInfo *win, HMENU menu);
 void CreateFavorites(WindowInfo *win);
 void ToggleFavorites(WindowInfo *win);
 void PopulateFavTreeIfNeeded(WindowInfo *win);

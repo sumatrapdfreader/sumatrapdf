@@ -12,6 +12,8 @@
 #define FRAME_CHM_CLASS_NAME        _T("SUMATRA_CHM_FRAME")
 #define HTML_CHM_CLASS_NAME         _T("SUMATRA_CHM_HTML")
 
+       Vec<ChmWindowInfo*>             gChmWindows;
+
 static LRESULT CALLBACK WndProcChmFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     return DefWindowProc(hwnd, msg, wParam, lParam);
@@ -68,7 +70,15 @@ ChmWindowInfo *CreateChmWindowInfo()
     ShowWindow(win->hwndHtml, SW_SHOW);
     UpdateWindow(win->hwndHtml);
 
-    // TODO: finish me
+    // TODO:
+    //CreateToolbar(win);
+    //CreateSidebar(win);
+
+    DragAcceptFiles(win->hwndHtml, TRUE);
+    gChmWindows.Append(win);
+
+    // TODO:
+    //UpdateWindowRtlLayout(win);
     return win;
 }
 

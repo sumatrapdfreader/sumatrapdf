@@ -260,7 +260,6 @@ HMENU BuildMenu(WindowInfo *win)
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Go To"));
     m = BuildMenuFromMenuDef(menuDefZoom, dimof(menuDefZoom), CreateMenu());
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Zoom"));
-#ifndef HIDE_FAVORITES_MENU
     if (HasPermission(Perm_SavePreferences)) {
         // I think it makes sense to disable favorites in restricted mode
         // because they wouldn't be persisted, anyway
@@ -268,7 +267,6 @@ HMENU BuildMenu(WindowInfo *win)
         RebuildFavMenu(win, m);
         AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("F&avorites"));
     }
-#endif
     m = BuildMenuFromMenuDef(menuDefSettings, dimof(menuDefSettings), CreateMenu());
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Settings"));
     m = BuildMenuFromMenuDef(menuDefHelp, dimof(menuDefHelp), CreateMenu());
@@ -280,12 +278,6 @@ HMENU BuildMenu(WindowInfo *win)
 
     SetMenu(win->hwndFrame, mainMenu);
     return mainMenu;
-}
-
-HMENU BuildChmMenu(ChmWindowInfo *win)
-{
-    // TODO: write me
-    return NULL;
 }
 
 static struct {
@@ -562,4 +554,71 @@ void UpdateMenu(WindowInfo *win, HMENU m)
         RebuildFavMenu(win, m);
     if (win)
         MenuUpdateStateForWindow(win);
+}
+
+// Menus in CHM UI
+
+MenuDef menuDefFileChm[] = {
+    { _TRN("&Open\tCtrl+O"),                IDM_OPEN ,                  MF_REQ_DISK_ACCESS },
+    { _TRN("&Close\tCtrl+W"),               IDM_CLOSE,                  MF_REQ_DISK_ACCESS },
+    { SEP_ITEM,                             0,                          0 },
+    { _TRN("E&xit\tCtrl+Q"),                IDM_EXIT,                   0 }
+};
+
+MenuDef menuDefViewChm[] = {
+    { _TRN("Pr&esentation\tCtrl+L"),        IDM_VIEW_PRESENTATION_MODE, 0  },
+    { _TRN("F&ullscreen\tCtrl+Shift+L"),    IDM_VIEW_FULLSCREEN,        0  },
+    { SEP_ITEM,                             0,                          0  },
+    { _TRN("Book&marks\tF12"),              IDM_VIEW_BOOKMARKS,         0  },
+    { _TRN("Show &Toolbar"),                IDM_VIEW_SHOW_HIDE_TOOLBAR, 0  },
+};
+
+MenuDef menuDefGoToChm[] = {
+    { _TRN("&Next Page\tRight Arrow"),      IDM_GOTO_NEXT_PAGE,         0  },
+    { _TRN("&Previous Page\tLeft Arrow"),   IDM_GOTO_PREV_PAGE,         0  },
+    { _TRN("&First Page\tHome"),            IDM_GOTO_FIRST_PAGE,        0  },
+    { _TRN("&Last Page\tEnd"),              IDM_GOTO_LAST_PAGE,         0  },
+    { _TRN("Pa&ge...\tCtrl+G"),             IDM_GOTO_PAGE,              0  },
+    { SEP_ITEM,                             0,                          0  },
+    { _TRN("&Back\tAlt+Left Arrow"),        IDM_GOTO_NAV_BACK,          0  },
+    { _TRN("F&orward\tAlt+Right Arrow"),    IDM_GOTO_NAV_FORWARD,       0  },
+};
+
+MenuDef menuDefZoomChm[] = {
+    { _TRN("Custom &Zoom...\tCtrl+Y"),      IDM_ZOOM_CUSTOM,            0  },
+    { SEP_ITEM },
+    { "400%",                               IDM_ZOOM_400,               MF_NO_TRANSLATE  },
+    { "200%",                               IDM_ZOOM_200,               MF_NO_TRANSLATE  },
+    { "150%",                               IDM_ZOOM_150,               MF_NO_TRANSLATE  },
+    { "125%",                               IDM_ZOOM_125,               MF_NO_TRANSLATE  },
+    { "100%",                               IDM_ZOOM_100,               MF_NO_TRANSLATE  },
+    { "50%",                                IDM_ZOOM_50,                MF_NO_TRANSLATE  },
+    { "25%",                                IDM_ZOOM_25,                MF_NO_TRANSLATE  },
+};
+
+HMENU BuildChmMenu(ChmWindowInfo *win)
+{
+    HMENU mainMenu = CreateMenu();
+    HMENU m = CreateMenu();
+    RebuildFileMenu(m);
+    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&File"));
+    m = BuildMenuFromMenuDef(menuDefViewChm, dimof(menuDefView), CreateMenu());
+    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&View"));
+    m = BuildMenuFromMenuDef(menuDefGoToChm, dimof(menuDefGoTo), CreateMenu());
+    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Go To"));
+    m = BuildMenuFromMenuDef(menuDefZoomChm, dimof(menuDefZoom), CreateMenu());
+    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Zoom"));
+    if (HasPermission(Perm_SavePreferences)) {
+        // I think it makes sense to disable favorites in restricted mode
+        // because they wouldn't be persisted, anyway
+        m = CreateMenu();
+        RebuildFavMenu(win, m);
+        AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("F&avorites"));
+    }
+    m = BuildMenuFromMenuDef(menuDefSettings, dimof(menuDefSettings), CreateMenu());
+    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Settings"));
+    m = BuildMenuFromMenuDef(menuDefHelp, dimof(menuDefHelp), CreateMenu());
+    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Help"));
+    SetMenu(win->hwndFrame, mainMenu);
+    return mainMenu;
 }
