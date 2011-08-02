@@ -308,8 +308,9 @@ public:
 				_applyMask(stack->layer, stack->mask, stack->luminosity);
 				delete stack->mask;
 			}
-			if ((stack->blendmode & FZ_BLEND_MODEMASK) != 0 && !(stack->blendmode & FZ_BLEND_ISOLATED))
-				_applyBlend(stack->layer, stack->bounds, (stack->blendmode & FZ_BLEND_MODEMASK));
+			int blendmode = stack->blendmode & FZ_BLEND_MODEMASK;
+			if (blendmode != 0)
+				_applyBlend(stack->layer, stack->bounds, blendmode);
 			
 			ImageAttributes imgAttrs;
 			_setDrawAttributes(imgAttrs, stack->layerAlpha);
@@ -512,9 +513,8 @@ protected:
 		bounds.Offset(-group->bounds.X, -group->bounds.Y);
 		clipBounds.Offset(-clipBounds.X, -clipBounds.Y);
 		
-		if ((group->blendmode & FZ_BLEND_KNOCKOUT))
-			fz_warn("non-isolated knockout groups not implemented for GDI+");
-		_compositeWithBackground(group->layer, bounds, backdrop, clipBounds, (group->blendmode & FZ_BLEND_MODEMASK), true);
+		if (!(group->blendmode & FZ_BLEND_KNOCKOUT))
+			_compositeWithBackground(group->layer, bounds, backdrop, clipBounds, (group->blendmode & FZ_BLEND_MODEMASK), true);
 		
 		return backdrop;
 	}
@@ -561,20 +561,24 @@ protected:
 				{
 					BYTE alpha = Scan0[row * data.Stride + col * 4 + 3];
 					BYTE bgAlpha = bgScan0[row * dataBg.Stride + col * 4 + 3];
-					// if (isolated) bgAlpha = 0;
 					BYTE newAlpha = BlendScreen(alpha, bgAlpha);
-					
-					for (int i = 0; i < 3; i++)
+					// don't add background to the bitmap beyond its shape
+					if (!modifyBackdrop && alpha < newAlpha)
+						newAlpha = alpha;
+					if (newAlpha != 0)
 					{
-						BYTE color = Scan0[row * data.Stride + col * 4 + i];
-						BYTE bgColor = bgScan0[row * dataBg.Stride + col * 4 + i];
-						// basic compositing formula
-						BYTE newColor = (1 - 1.0 * alpha / newAlpha) * bgColor + 1.0 * alpha / newAlpha * ((255 - bgAlpha) * color + bgAlpha * funcs[blendmode](color, bgColor)) / 255;
-						
-						if (modifyBackdrop)
-							bgScan0[row * dataBg.Stride + col * 4 + i] = newColor;
-						else
-							Scan0[row * data.Stride + col * 4 + i] = newColor;
+						for (int i = 0; i < 3; i++)
+						{
+							BYTE color = Scan0[row * data.Stride + col * 4 + i];
+							BYTE bgColor = bgScan0[row * dataBg.Stride + col * 4 + i];
+							// basic compositing formula
+							BYTE newColor = (1 - 1.0 * alpha / newAlpha) * bgColor + 1.0 * alpha / newAlpha * ((255 - bgAlpha) * color + bgAlpha * funcs[blendmode](color, bgColor)) / 255;
+							
+							if (modifyBackdrop)
+								bgScan0[row * dataBg.Stride + col * 4 + i] = newColor;
+							else
+								Scan0[row * data.Stride + col * 4 + i] = newColor;
+						}
 					}
 					if (modifyBackdrop)
 						bgScan0[row * dataBg.Stride + col * 4 + 3] = newAlpha;

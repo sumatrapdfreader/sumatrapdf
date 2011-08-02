@@ -202,8 +202,7 @@ pdf_begin_group(pdf_csi *csi, fz_rect bbox)
 	}
 
 	if (gstate->blendmode)
-		/* SumatraPDF: TODO: why isolate the group at this point? */
-		fz_begin_group(csi->dev, bbox, 0, 0, gstate->blendmode, 1);
+		fz_begin_group(csi->dev, bbox, 1, 0, gstate->blendmode, 1);
 }
 
 static void
