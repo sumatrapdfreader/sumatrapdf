@@ -785,8 +785,10 @@ class PdfLink : public PageElement, public PageDestination {
 
     fz_obj *dest() const;
 
+    // there should be no PdfLink without an CPdfEngine or a pdf_link
+    PdfLink() { assert(0); }
+
 public:
-    PdfLink() : engine(NULL), link(NULL), pageNo(-1) { }
     PdfLink(CPdfEngine *engine, pdf_link *link, int pageNo=-1) :
         engine(engine), link(link), pageNo(pageNo) { }
 
@@ -1754,7 +1756,7 @@ static bool IsRelativeURI(const TCHAR *uri)
 
 TCHAR *PdfLink::GetValue() const
 {
-    if (!link)
+    if (!link || !engine)
         return NULL;
 
     ScopedCritSec scope(&engine->xrefAccess);
@@ -1818,7 +1820,7 @@ TCHAR *PdfLink::GetValue() const
 
 const char *PdfLink::GetType() const
 {
-    if (!link)
+    if (!link || !engine)
         return NULL;
 
     ScopedCritSec scope(&engine->xrefAccess);
