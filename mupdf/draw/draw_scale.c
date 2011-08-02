@@ -16,13 +16,6 @@ and then positioning it at (frac(x),frac(y)).
  */
 #define SINGLE_PIXEL_SPECIALS
 
-/* It's important that we count contributions carefully as they approach the
- * edges, otherwise we end up with weights in the outside pixels of
- * grid-fitted images that don't sum to 256, and hence get lines across the
- * page. See bug #691629. */
-// SumatraPDF: enabling WRAP regresses Type 3 glyph rendering
-// #define WRAP
-
 #ifdef DEBUG_SCALING
 #ifdef WIN32
 #include <windows.h>
@@ -454,8 +447,12 @@ reorder_weights(fz_weights *weights, int j, int src_w)
 	}
 }
 
+/* Due to rounding and edge effects, the sums for the weights sometimes don't
+ * add up to 256. This causes visible rendering effects. Therefore, we take
+ * pains to ensure that they 1) never exceed 256, and 2) add up to exactly
+ * 256 for all pixels that are completely covered. See bug #691629. */
 static void
-check_weights(fz_weights *weights, int j, int w)
+check_weights(fz_weights *weights, int j, int w, float x, float wf)
 {
 	int idx, len;
 	int sum = 0;
@@ -477,7 +474,17 @@ check_weights(fz_weights *weights, int j, int w)
 			maxidx = idx;
 		}
 	}
+	/* If we aren't the first or last pixel, OR if the sum is too big
+	 * then adjust it. */
 	if (((j != 0) && (j != w-1)) || (sum > 256))
+		weights->index[maxidx-1] += 256-sum;
+	/* Otherwise, if we are the first pixel, and it's fully covered, then
+	 * adjust it. */
+	else if ((j == 0) && (x < 0.0001F) && (sum != 256))
+		weights->index[maxidx-1] += 256-sum;
+	/* Finally, if we are the last pixel, and it's fully covered, then
+	 * adjust it. */
+	else if ((j == w-1) && ((float)w-wf < 0.0001F) && (sum != 256))
 		weights->index[maxidx-1] += 256-sum;
 	DBUG(("total weight %d = %d\n", j, sum));
 }
@@ -520,7 +527,7 @@ make_weights(int src_w, float x, float dst_w, fz_scale_filter *filter, int verti
 		{
 			add_weight(weights, j, l, filter, x, F, G, src_w, dst_w);
 		}
-		check_weights(weights, j, dst_w_int);
+		check_weights(weights, j, dst_w_int, x, dst_w);
 		if (vertical)
 		{
 			reorder_weights(weights, j, src_w);

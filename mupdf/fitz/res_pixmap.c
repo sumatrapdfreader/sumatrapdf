@@ -165,8 +165,8 @@ fz_clear_pixmap_with_color(fz_pixmap *pix, int value)
 void
 fz_copy_pixmap_rect(fz_pixmap *dest, const fz_pixmap *src, fz_bbox r)
 {
-	const char *srcp;
-	char *destp;
+	const unsigned char *srcp;
+	unsigned char *destp;
 	int y, w, destspan, srcspan;
 
 	if (r.x0 < dest->x)
@@ -206,7 +206,7 @@ fz_copy_pixmap_rect(fz_pixmap *dest, const fz_pixmap *src, fz_bbox r)
 void
 fz_clear_pixmap_rect_with_color(fz_pixmap *dest, int value, fz_bbox r)
 {
-	char *destp;
+	unsigned char *destp;
 	int x, y, w, k, destspan;
 
 	if (r.x0 < dest->x)
@@ -234,7 +234,7 @@ fz_clear_pixmap_rect_with_color(fz_pixmap *dest, int value, fz_bbox r)
 	{
 		do
 		{
-			char *s = destp;
+			unsigned char *s = destp;
 			for (x = 0; x < w; x++)
 			{
 				for (k = 0; k < dest->n - 1; k++)
