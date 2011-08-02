@@ -43,6 +43,7 @@ static void fz_knockout_begin(void *user)
 	fz_draw_device *dev = user;
 	fz_bbox bbox;
 	fz_pixmap *dest, *shape;
+	int isolated = dev->blendmode & FZ_BLEND_ISOLATED;
 
 	if ((dev->blendmode & FZ_BLEND_KNOCKOUT) == 0)
 		return;
@@ -57,10 +58,9 @@ static void fz_knockout_begin(void *user)
 	bbox = fz_intersect_bbox(bbox, dev->scissor);
 	dest = fz_new_pixmap_with_rect(dev->dest->colorspace, bbox);
 
-	if (dev->blendmode & FZ_BLEND_ISOLATED)
+	if (isolated)
 	{
 		fz_clear_pixmap(dest);
-		shape = dev->shape;
 	}
 	else
 	{
@@ -69,9 +69,19 @@ static void fz_knockout_begin(void *user)
 		do {
 			prev = dev->stack[--i].dest;
 		} while (prev == NULL);
+		fz_copy_pixmap_rect(dest, prev, bbox);
+	}
+
+	if (dev->blendmode == 0 && isolated)
+	{
+		/* We can render direct to any existing shape plane. If there
+		 * isn't one, we don't need to make one. */
+		shape = dev->shape;
+	}
+	else
+	{
 		shape = fz_new_pixmap_with_rect(NULL, bbox);
 		fz_clear_pixmap(shape);
-		fz_copy_pixmap_rect(dest, prev, bbox);
 	}
 	dev->stack[dev->top].blendmode = dev->blendmode;
 	dev->stack[dev->top].scissor = dev->scissor;
@@ -1147,17 +1157,26 @@ fz_draw_begin_group(void *user, fz_rect rect, int isolated, int knockout, int bl
 	bbox = fz_intersect_bbox(bbox, dev->scissor);
 	dest = fz_new_pixmap_with_rect(model, bbox);
 
-	/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692377 */
-	if (isolated || 1)
+	isolated = 1; /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692377 */
+	if (isolated)
 	{
 		fz_clear_pixmap(dest);
+	}
+	else
+	{
+		fz_copy_pixmap_rect(dest, dev->dest, bbox);
+	}
+
+	if (blendmode == 0 && alpha == 1.0 && isolated)
+	{
+		/* We can render direct to any existing shape plane. If there
+		 * isn't one, we don't need to make one. */
 		shape = dev->shape;
 	}
 	else
 	{
 		shape = fz_new_pixmap_with_rect(NULL, bbox);
 		fz_clear_pixmap(shape);
-		fz_copy_pixmap_rect(dest, dev->dest, bbox);
 	}
 
 	dev->stack[dev->top].alpha = alpha;
@@ -1197,15 +1216,14 @@ fz_draw_end_group(void *user)
 		if ((blendmode == 0) && (shape == NULL))
 			fz_paint_pixmap(dev->dest, group, alpha * 255);
 		else
-			/* SumatraPDF: TODO: assert(!isolated == !shape) ? */
-			fz_blend_pixmap(dev->dest, group, alpha * 255, blendmode, shape ? isolated : 0, shape);
+			fz_blend_pixmap(dev->dest, group, alpha * 255, blendmode, isolated, shape);
 
 		fz_drop_pixmap(group);
 		if (shape != dev->shape)
 		{
 			if (dev->shape)
 			{
-				fz_paint_pixmap(dev->shape, shape, 255);
+				fz_paint_pixmap(dev->shape, shape, alpha * 255);
 			}
 			fz_drop_pixmap(shape);
 		}

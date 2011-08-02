@@ -330,14 +330,14 @@ fz_blend_nonseparable(byte * restrict bp, byte * restrict sp, int w, int blendmo
 	}
 }
 
-void
-fz_blend_separable_isolated(byte * restrict bp, byte * restrict sp, int n, int w, int blendmode, byte * restrict hp)
+static void
+fz_blend_separable_nonisolated(byte * restrict bp, byte * restrict sp, int n, int w, int blendmode, byte * restrict hp, int alpha)
 {
 	int k;
 	int n1 = n - 1;
 	while (w--)
 	{
-		int ha = *hp++; /* ha = shape_alpha */
+		int ha = fz_mul255(*hp++, alpha); /* ha = shape_alpha */
 		/* If ha == 0 then leave everything unchanged */
 		if (ha != 0)
 		{
@@ -374,8 +374,9 @@ fz_blend_separable_isolated(byte * restrict bp, byte * restrict sp, int n, int w
 				case FZ_BLEND_DIFFERENCE: rc = fz_difference_byte(bc, sc); break;
 				case FZ_BLEND_EXCLUSION: rc = fz_exclusion_byte(bc, sc); break;
 				}
-
 				rc = fz_mul255(255 - ha, bc) + fz_mul255(255 - ba, sc) + fz_mul255(baha, rc);
+				if (rc < 0) rc = 0;
+				if (rc > 255) rc = 255;
 				bp[k] = fz_mul255(rc, ra);
 			}
 		}
@@ -385,12 +386,12 @@ fz_blend_separable_isolated(byte * restrict bp, byte * restrict sp, int n, int w
 	}
 }
 
-void
-fz_blend_nonseparable_isolated(byte * restrict bp, byte * restrict sp, int w, int blendmode, byte * restrict hp)
+static void
+fz_blend_nonseparable_nonisolated(byte * restrict bp, byte * restrict sp, int w, int blendmode, byte * restrict hp, int alpha)
 {
 	while (w--)
 	{
-		int ha = *hp++;
+		int ha = fz_mul255(*hp++, alpha);
 		if (ha != 0)
 		{
 			int sa = sp[3];
@@ -455,7 +456,7 @@ fz_blend_pixmap(fz_pixmap *dst, fz_pixmap *src, int alpha, int blendmode, int is
 	int x, y, w, h, n;
 
 	/* TODO: fix this hack! */
-	if (alpha < 255)
+	if (isolated && alpha < 255)
 	{
 		sp = src->samples;
 		n = src->w * src->h * src->n;
@@ -480,16 +481,16 @@ fz_blend_pixmap(fz_pixmap *dst, fz_pixmap *src, int alpha, int blendmode, int is
 
 	assert(src->n == dst->n);
 
-	if (isolated)
+	if (!isolated)
 	{
 		unsigned char *hp = shape->samples + (y - shape->y) * shape->w + (x - shape->x);
 
 		while (h--)
 		{
 			if (n == 4 && blendmode >= FZ_BLEND_HUE)
-				fz_blend_nonseparable_isolated(dp, sp, w, blendmode, hp);
+				fz_blend_nonseparable_nonisolated(dp, sp, w, blendmode, hp, alpha);
 			else
-				fz_blend_separable_isolated(dp, sp, n, w, blendmode, hp);
+				fz_blend_separable_nonisolated(dp, sp, n, w, blendmode, hp, alpha);
 			sp += src->w * n;
 			dp += dst->w * n;
 			hp += shape->w;
