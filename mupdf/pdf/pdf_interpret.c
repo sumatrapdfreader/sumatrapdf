@@ -84,6 +84,8 @@ struct pdf_csi_s
 
 	/* path object state */
 	fz_path *path;
+	/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692391 */
+	int clip; /* 0: none, 1: winding, 2: even-odd */
 
 	/* text object state */
 	fz_text *text;
@@ -326,6 +328,13 @@ pdf_show_path(pdf_csi *csi, int doclose, int dofill, int dostroke, int even_odd)
 		bbox = fz_bound_path(path, &gstate->stroke_state, gstate->ctm);
 	else
 		bbox = fz_bound_path(path, NULL, gstate->ctm);
+	/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692391 */
+	if (csi->clip)
+	{
+		gstate->clip_depth++;
+		fz_clip_path(csi->dev, path, NULL, csi->clip == 2, gstate->ctm);
+		csi->clip = 0;
+	}
 
 	/* SumatraPDF: support inline OCGs */
 	if (csi->in_hidden_ocg > 0)
@@ -743,6 +752,7 @@ pdf_new_csi(pdf_xref *xref, fz_device *dev, fz_matrix ctm, char *target)
 	csi->in_hidden_ocg = 0; /* SumatraPDF: support inline OCGs */
 
 	csi->path = fz_new_path();
+	csi->clip = 0; /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692391 */
 
 	csi->text = NULL;
 	csi->tlm = fz_identity;
@@ -1153,7 +1163,7 @@ pdf_run_xobject(pdf_csi *csi, fz_obj *resources, pdf_xobject *xobj, fz_matrix tr
 	fz_lineto(csi->path, xobj->bbox.x1, xobj->bbox.y1);
 	fz_lineto(csi->path, xobj->bbox.x0, xobj->bbox.y1);
 	fz_closepath(csi->path);
-	pdf_show_clip(csi, 0);
+	csi->clip = 1; /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692391 */
 	pdf_show_path(csi, 0, 0, 0, 0);
 
 	/* run contents */
@@ -1815,12 +1825,12 @@ static void pdf_run_TJ(pdf_csi *csi)
 
 static void pdf_run_W(pdf_csi *csi)
 {
-	pdf_show_clip(csi, 0);
+	csi->clip = 1; /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692391 */
 }
 
 static void pdf_run_Wstar(pdf_csi *csi)
 {
-	pdf_show_clip(csi, 1);
+	csi->clip = 2; /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692391 */
 }
 
 static void pdf_run_b(pdf_csi *csi)
@@ -1958,7 +1968,7 @@ static void pdf_run_m(pdf_csi *csi)
 
 static void pdf_run_n(pdf_csi *csi)
 {
-	pdf_show_path(csi, 0, 0, 0, 0);
+	pdf_show_path(csi, 0, 0, 0, csi->clip == 2); /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692391 */
 }
 
 static void pdf_run_q(pdf_csi *csi)
