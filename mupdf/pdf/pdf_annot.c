@@ -171,6 +171,58 @@ pdf_transform_annot(pdf_annot *annot)
 	annot->matrix = fz_concat(fz_scale(w, h), fz_translate(x, y));
 }
 
+/* SumatraPDF: partial support for link borders */
+static pdf_annot *
+pdf_annot_for_link_border(pdf_xref *xref, fz_obj *obj)
+{
+	pdf_annot *annot;
+	pdf_xobject *form;
+	unsigned char *string;
+	fz_stream *stream;
+	fz_obj *border, *color, *rect;
+
+	if (strcmp(fz_to_name(fz_dict_gets(obj, "Subtype")), "Link") != 0)
+		return NULL;
+	border = fz_dict_gets(obj, "Border");
+	if (fz_to_real(fz_array_get(border, 2)) <= 0)
+		return NULL;
+	color = fz_dict_gets(obj, "C");
+	rect = fz_dict_gets(obj, "Rect");
+
+	// manually construct an XObject for the link border
+	form = fz_malloc(sizeof(pdf_xobject));
+	memset(form, 0, sizeof(pdf_xobject));
+	form->refs = 1;
+	form->matrix = fz_identity;
+	form->bbox = pdf_to_rect(rect);
+	form->bbox.x1 -= form->bbox.x0; form->bbox.y1 -= form->bbox.y0;
+	form->bbox.x0 = form->bbox.y0 = 0;
+	form->isolated = 1;
+
+	form->contents = fz_new_buffer(256);
+	// TODO: draw rounded rectangles if the first two /Border values are non-zero
+	// TODO: dash border, if the fourth /Border value is an array
+	sprintf(form->contents->data, "q %.4f w %.4f %.4f %.4f RG 0 0 %.4f %.4f re S Q",
+		fz_to_real(fz_array_get(border, 2)), fz_to_real(fz_array_get(color, 0)),
+		fz_to_real(fz_array_get(color, 1)), fz_to_real(fz_array_get(color, 2)),
+		form->bbox.x1, form->bbox.y1);
+	form->contents->len = strlen(form->contents->data);
+
+	annot = fz_malloc(sizeof(pdf_annot));
+	annot->rect = pdf_to_rect(rect);
+	annot->ap = form;
+	annot->next = NULL;
+	// display the borders only for the View target
+	string = "<< /OC << /OCGs << /Usage << /Print << /PrintState /OFF >> /Export << /ExportState /OFF >> >> >> >> >>";
+	stream = fz_open_memory(string, strlen(string));
+	pdf_parse_stm_obj(&annot->obj, NULL, stream, xref->scratch, sizeof(xref->scratch));
+	fz_close(stream);
+
+	pdf_transform_annot(annot);
+
+	return annot;
+}
+
 void
 pdf_load_annots(pdf_annot **annotp, pdf_xref *xref, fz_obj *annots)
 {
@@ -225,6 +277,17 @@ pdf_load_annots(pdf_annot **annotp, pdf_xref *xref, fz_obj *annots)
 						tail = annot;
 					}
 				}
+			}
+		}
+		/* SumatraPDF: partial support for link borders */
+		else if ((annot = pdf_annot_for_link_border(xref, obj)))
+		{
+			if (!head)
+				head = tail = annot;
+			else
+			{
+				tail->next = annot;
+				tail = annot;
 			}
 		}
 	}
