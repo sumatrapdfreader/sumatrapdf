@@ -567,8 +567,6 @@ fz_render_t3_glyph(fz_font *font, int gid, fz_matrix trm, fz_colorspace *model)
 		fz_warn("type3 glyph doesn't specify masked or colored");
 		model = NULL; /* Treat as masked */
 	}
-	/* SumatraPDF: don't draw color glyphs as long as fz_draw_fill_text fails to take the transformation matrix into account */
-	model = NULL;
 	fz_free_device(dev);
 
 	bbox.x0--;

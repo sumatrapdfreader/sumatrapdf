@@ -6,6 +6,9 @@
 
 #define STACK_SIZE 96
 
+/* Enable the following to help debug group blending. */
+#undef DUMP_GROUP_BLENDS
+
 typedef struct fz_draw_device_s fz_draw_device;
 
 enum {
@@ -37,6 +40,25 @@ struct fz_draw_device_s
 		fz_rect area;
 	} stack[STACK_SIZE];
 };
+
+#ifdef DUMP_GROUP_BLENDS
+static int group_dump_count = 0;
+
+static void fz_dump_blend(fz_pixmap *pix, const char *s)
+{
+	char name[80];
+
+	if (pix == NULL)
+		return;
+
+	sprintf(name, "dump%02d.png", group_dump_count);
+	if (s)
+		printf("%s%02d", s, group_dump_count);
+	group_dump_count++;
+
+	fz_write_png(pix, name, (pix->n > 1));
+}
+#endif
 
 static void fz_knockout_begin(void *user)
 {
@@ -448,7 +470,7 @@ fz_draw_fill_text(void *user, fz_text *text, fz_matrix ctm,
 			}
 			else
 			{
-				fz_matrix ctm = {glyph->w, 0.0, 0.0, glyph->h, x, y};
+				fz_matrix ctm = {glyph->w, 0.0, 0.0, -glyph->h, x + glyph->x, y + glyph->y + glyph->h};
 				fz_paint_image(dev->dest, dev->scissor, dev->shape, glyph, ctm, alpha * 255);
 			}
 			fz_drop_pixmap(glyph);
@@ -1213,6 +1235,22 @@ fz_draw_end_group(void *user)
 		dev->dest = dev->stack[dev->top].dest;
 		dev->scissor = dev->stack[dev->top].scissor;
 
+#ifdef DUMP_GROUP_BLENDS
+		fz_dump_blend(group, "Blending ");
+		if (shape)
+			fz_dump_blend(shape, "/");
+		fz_dump_blend(dev->dest, " onto ");
+		if (dev->shape)
+			fz_dump_blend(dev->shape, "/");
+		if (alpha != 1.0f)
+			printf(" (alpha %g)", alpha);
+		if (blendmode != 0)
+			printf(" (blend %d)", blendmode);
+		if (isolated != 0)
+			printf(" (isolated)");
+		if (blendmode != 0)
+			printf(" (knockout)");
+#endif
 		if ((blendmode == 0) && (shape == NULL))
 			fz_paint_pixmap(dev->dest, group, alpha * 255);
 		else
@@ -1227,6 +1265,12 @@ fz_draw_end_group(void *user)
 			}
 			fz_drop_pixmap(shape);
 		}
+#ifdef DUMP_GROUP_BLENDS
+		fz_dump_blend(dev->dest, " to get ");
+		if (dev->shape)
+			fz_dump_blend(dev->shape, "/");
+		printf("\n");
+#endif
 	}
 
 	if (dev->blendmode & FZ_BLEND_KNOCKOUT)

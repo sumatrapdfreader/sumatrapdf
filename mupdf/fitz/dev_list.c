@@ -651,7 +651,7 @@ visible:
 		case FZ_CMD_BEGIN_GROUP:
 			rect = fz_transform_rect(top_ctm, node->rect);
 			fz_begin_group(dev, rect,
-				node->flag & ISOLATED, node->flag & KNOCKOUT,
+				(node->flag & ISOLATED) != 0, (node->flag & KNOCKOUT) != 0,
 				node->item.blendmode, node->alpha);
 			break;
 		case FZ_CMD_END_GROUP:
