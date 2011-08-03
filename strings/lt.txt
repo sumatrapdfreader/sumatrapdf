@@ -10,6 +10,7 @@ Lang: lt Lithuanian (Lietuvių)
 
 Contributor: Viktoras Jakovlevas
 Contributor: Arnoldas Viburys
+Contributor: Rimas Kudelis
 
 &About
 Apie
@@ -21,19 +22,28 @@ Apie
 &Visi pažymėti puslapiai
 
 &Back\tAlt+Left Arrow
-Atgal
+At&gal\tAlt+Kairėn
+
+&Book View\tCtrl+8
+Knyga\tCtrl+8
 
 &Close\tCtrl+W
 &Užverti\tCtrl+W
 
-&Copy Selection\tCtrl+C
+&Copy Selection
 &Kopijuoti pažymėtą sritį
+
+&Copy Selection\tCtrl+C
+&Kopijuoti pažymėtą sritį\tCtrl+C
 
 &Don't ask me again
 &Daugiau nebeklausti
 
 &Even pages only
 Tik &lyginiai puslapiai
+
+&Facing\tCtrl+7
+&Du puslapiai\tCtrl+7
 
 &File
 &Failas
@@ -63,13 +73,13 @@ Pa&skutinįjį puslapį\tEnd
 &Mastelis
 
 &Manual
-&Rankinis
+Naudotojo &vadovas
 
 &Match case
 &Skirti didžiąsias ir mažąsias raides
 
 &Next Page\tRight Arrow
-&Kitas puslapis\t->
+&Kitas puslapis\tDešinėn
 
 &No
 &Ne
@@ -83,14 +93,23 @@ Ačiū, &ne
 &Open\tCtrl+O
 &Atverti\tCtrl+O
 
+&Open Document
+&Atverti dokumentą
+
 &Options...
-&Nuostatos
+&Nuostatos...
 
 &Password:
 &Slaptažodis:
 
+&Pin Document
+Pasi&žymėti dokumentą
+
 &Previous Page\tLeft Arrow
-&Ankstesnis puslapis\t<-
+&Ankstesnis puslapis\tKairėn
+
+&Print...
+&Spausdinti...
 
 &Print...\tCtrl+P
 &Spausdinti...\tCtrl+P
@@ -104,6 +123,12 @@ Ačiū, &ne
 &Remember these settings for each document
 Įsiminti šias &nuostatas kiekvienam dokumentui
 
+&Remove Document
+Pa&šalinti dokumentą
+
+&Save As...
+Į&rašyti kaip...
+
 &Save As...\tCtrl+S
 Į&rašyti kaip...\tCtrl+S
 
@@ -112,6 +137,9 @@ Ačiū, &ne
 
 &Shrink pages to printable area (if necessary)
 &Sumažinti puslapių dydį iki spausdinamo ploto (jei reikia)
+
+&Single Page\tCtrl+6
+&Vienas puslapis\tCtrl+6
 
 &Skip this version
 Pralei&sti šią versiją
@@ -126,19 +154,37 @@ Na&udoti originalius puslapių dydžius
 &Taip
 
 &Zoom
-Artinimas
+&Mastelis
 
 (of %d)
 (iš %d)
 
+(page %d)
+(%d psl.)
+
 About SumatraPDF
-Apie SumatraPDF
+Apie „SumatraPDF“
+
+Add Favorite
+Sukurti žymą
+
+Add page %d to favorites
+Sukurti žymą į %d puslapį
+
+Add page %d to favorites with (optional) name:
+Sukurti žymą į %d puslapį, suteikiant jai šį pavadinimą (neprivalomas):
+
+Add to favorites
+Sukurti žymą
 
 Advanced
-Išsamiai
+Kitos
 
 All files
 Visi failai
+
+All supported documents
+Visų palaikomų tipų dokumentai
 
 Application:
 Programa:
@@ -147,7 +193,7 @@ Associate with PDF files?
 Susieti su PDF failais?
 
 Attachment: %s
-Priedai: %s
+Priedas: %s
 
 Author:
 Autorius:
@@ -156,10 +202,10 @@ Automatic
 Automatinis
 
 Automatically check for &updates
-Automatiškai tikrinti, ar yra na&ujinimų
+Automatiškai &tikrinti, ar yra naujinimų
 
 Book View
-Kaip knygos
+Knyga
 
 Book&marks\tF12
 Žymės\tF12
@@ -174,7 +220,7 @@ Can't connect to the Internet (error %#x).
 Ryšys su internetu nutrūko (klaida %#x).
 
 Cancel
-Atšaukti
+Atsisakyti
 
 Cannot print this file
 Nepavyko išspausdinti failo
@@ -183,10 +229,13 @@ Cannot start inverse search command. Please check the command line in the settin
 Nepavyko pradėti atvirkščios paieškos komandos. Patikrinkite kompandinę eilutę nuostatose.
 
 Change Language
-Keisti kalbą (Change Language)
+Keisti kalbą
 
 Check for &Updates
-Tikrinti, ar yra na&ujinimų
+Tikrinti, ar yra &naujinimų
+
+Comic books
+Komiksų knygelės
 
 Continuous
 Nenutrūkstama
@@ -200,8 +249,17 @@ Nenutrūkstama dviejų puslapių
 Contribute Translation
 Prisidėti prie vertimo
 
+Copy &Link Address
+Kopijuoti &saito adresą
+
+Copy Co&mment
+Kopijuoti ko&mentarą
+
 Copying text was denied (copying as image only)
-Teksto kopijavimas neprieinamas (kopijuojamas tik ekrano vaizdas)
+Teksto kopijavimas uždraustas (kopijuojamas tik ekrano vaizdas)
+
+Could not obtain Printer properties
+Spausdintuvo savybių sužinoti nepavyko
 
 Could not open Printer
 Nepavyko atverti spausdintuvo
@@ -213,22 +271,28 @@ Couldn't render the page
 Nepavyko atvaizduoti puslapio
 
 Created:
-Sukurta
+Sukurtas:
+
+Current file
+Esamasis failas
 
 Custom &Zoom...\tCtrl+Y
 Pasirinkti &mastelį...\tCtrl+Y
 
 Default &Layout:
-Numatytasis &išdėstymas:
+Numatytasis iš&dėstymas:
 
 Default &Zoom:
 Numatytasis &mastelis
 
 Default PDF reader can't be changed in portable mode
-Naudojant portatyvią programą negalima pakeisti numatytosios PDF skaityklės
+Naudojant programą kaip portatyvią, numatytosios PDF žiūryklės keisti negalima
 
 Denied Permissions:
-Neprieinami leidimai:
+Nesuteikti leidimai:
+
+DjVu documents
+DjVu dokumentai
 
 Document Properties
 Dokumento savybės
@@ -248,23 +312,35 @@ Enter password for %s
 Enter the command-line to invoke when you double-click on the PDF document:
 Įveskite komandinę eilutę, vykdomą atverčiant PDF dokumentą:
 
+Error loading %s
+Nepavyko įkelti %s
+
+F&avorites
+&Parankiniai
+
 F&orward\tAlt+Right Arrow
-&Pirmyn\tAlt+Right Arrow
+&Pirmyn\tAlt+Dešinėn
 
 F&ullscreen\tCtrl+Shift+L
 &Visas ekranas\tCtrl+Shift+L
 
 Facing
-Puslapiavimas
+Du puslapiai
 
 Failed to save a file
 Failo įrašyti nepavyko
+
+Favorites
+Parankiniai
 
 File Size:
 Failo dydis:
 
 File:
 Failas:
+
+Fin&d...\tCtrl+F
+&Ieškoti...\tCtrl+F
 
 Find
 Ieškoti
@@ -296,8 +372,20 @@ Visas puslapis
 Fit Width
 Visas puslapio plotis
 
+Fit Width and Show Pages Continuously
+Visas puslapio plotis, nenutrūkstama peržiūra
+
+Fit a Single Page
+Visas puslapis
+
 Found text at page %d
 Ieškoti teksto %d puslapyje
+
+Found text at page %d (again)
+Rastas tekstas %d puslapyje (vėl)
+
+Frequently Read
+Dažniausiai skaitomi
 
 GB
 GB
@@ -305,8 +393,14 @@ GB
 Go to page
 Eiti į puslapį
 
+Hide frequently read
+Nerodyti dažniausiai skaitomų
+
 Hint: Use the F3 key for finding again
 Patarimas: ieškodami kito atitikmens naudokite klavišą F3
+
+Image files (*.%s)
+Grafiniai failai (*.%s)
 
 KB
 KB
@@ -315,16 +409,16 @@ MB
 MB
 
 Make SumatraPDF default application for PDF files?
-Nustatyti SumatraPDF kaip numatytąją PDF skaityklę?
+Ar nustatyti „SumatraPDF“ kaip numatytąją PDF žiūryklę?
 
 Make SumatraPDF my default PDF reader
-Nustatyti SumatraPDF kaip numatytąją PDF skaityklę
+„SumatraPDF“ nustatymas numatytąja PDF žiūrykle
 
 Match Case
 Skirti didžiąsias ir mažąsias raides
 
 Modified:
-Keista:
+Keistas:
 
 New version %s is available. Download new version?
 Yra nauja %s versija. Atsiųsti naują versiją?
@@ -334,6 +428,9 @@ Kitas puslapis
 
 No matches were found
 Nerasta atitikmenų
+
+No result found around line %u in file %s
+Aplink eilutę %u faile %s nerasta jokių rezultatų
 
 No synchronization file found
 Sinchronizacijos failas nerastas
@@ -350,17 +447,23 @@ Gerai
 Open
 Atverti
 
+Open a document...
+Atverti dokumentą...
+
 Open in &Adobe Reader
-Atverti su &Adobe Reader
+Atverti naudojant „&Adobe Reader“
 
 Open in &Foxit Reader
-Atverti su &Foxit Reader
+Atverti naudojant „&Foxit Reader“
 
 Open in PDF-XChange
-Atverti su PDF-XChange
+Atverti naudojant „PDF-&XChange“
+
+P&roperties
+&Savybės
 
 P&roperties\tCtrl+D
-&Savybės
+&Savybės\tCtrl+D
 
 PDF Document
 PDF dokumentas
@@ -372,10 +475,13 @@ PDF Version:
 PDF versija:
 
 PDF documents
-PDf dokumentai
+PDF dokumentai
 
 Pa&ge...\tCtrl+G
 P&uslapis...\tCtrl+G
+
+Page %d
+%d puslapis
 
 Page Size:
 Puslapio dydis:
@@ -392,17 +498,41 @@ Puslapis:
 Please wait - rendering...
 Prašome palaukti – atvaizduojama...
 
+Postscript documents
+„PostScript“ dokumentai
+
+Pr&esentation\tCtrl+L
+&Pateiktis\tCtrl+L
+
 Previous Page
 Ankstesnis puslapis
 
+Print
+Spausdinti
+
 Print range
 Spausdinimo intervalas
+
+Printer with given name doesn't exist
+Spausdintuvo tokiu vardu nėra
+
+Printing is still in progress. Abort and start over?
+Spausdinimas dar nebaigtas. Ar norite jį nutraukti ir pradėti iš naujo?
+
+Printing page %d of %d...
+Spausdinamas %d puslapis iš %d...
 
 Printing problem.
 Spausdinimo problema.
 
 Remember &opened files
 Įsiminti &atvertus failus
+
+Remove from favorites
+Pašalinti iš parankinių
+
+Remove page %d from favorites
+Pašalinti %d puslapį iš parankinių
 
 Rotate &Left\tCtrl+Shift+-
 Pasukti į &kairę\tCtrl+Shift+-
@@ -415,6 +545,12 @@ Save As
 
 Searching %d of %d...
 Ieškoma %d iš %d...
+
+Select &All
+Pažymėti &viską
+
+Select &All\tCtrl+A
+Pažymėti &viską\tCtrl+A
 
 Select content with Ctrl+left mouse button
 Turinį žymėkite su Ctrl+kairiuoju pelės klavišu
@@ -431,11 +567,20 @@ Rodyti &priemonių juostą
 Show &pages continuously
 &Puslapius rodyti nenutrūkstamai
 
+Show Favorites
+Rodyti parankinius
+
+Show frequently read
+Rodyti dažniausiai skaitomus
+
 Show the &bookmarks sidebar when available
 Rodyti &žymų parankinę, kai yra žymų
 
 Single Page
 Atskirais puslapiais
+
+Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
+Apgailestaujame, taip neturėjo nutikti!\n\nSpustelėkite „Atsisakyti“, jeigu norite mums padėti pašalinti šios strigties priežastį.
 
 Source file %s has no synchronization point
 Pradinis failas %s  neturi sinchronizacijos taško
@@ -444,13 +589,19 @@ Subject:
 Tema:
 
 SumatraPDF Options
-SumatraPDF nuostatos
+„SumatraPDF“ nuostatos
+
+SumatraPDF Update
+„SumatraPDF“ naujinimas
+
+SumatraPDF crashed
+„SumatraPDF“ strigo
 
 SumatraPDF is your default PDF reader
-SumatraPDF yra numatytoji PDF skaityklė
+„SumatraPDF“ yra numatytoji PDF žiūryklė
 
 SumatraPDF should now be your default PDF reader
-Dabar SumatraPDF bus numatytoji PDF skaityklė
+Dabar „SumatraPDF“ bus numatytoji PDF žiūryklė
 
 Synchronization file cannot be opened
 Sinchronizacijos failas negali būti atvertas
@@ -468,16 +619,19 @@ View
 Rodymas
 
 Visit &Website
-&Interneto svetainė
+Interneto &svetainė
 
 Warning
 Įspėjimas
 
+XPS documents
+XPS dokumentai
+
 You have the latest version.
-Turite naujausią versiją
+Jūs naudojatės naujausia programos laida.
 
 You have version %s
-Turite %s versiją
+Jūsų naudojama laida: %s
 
 Zoom
 Mastelis
@@ -501,58 +655,7 @@ printing document
 spausdinamas dokumentas
 
 # Untranslated:
-#&Book View\tCtrl+8
-#&Copy Selection
-#&Facing\tCtrl+7
-#&Open Document
-#&Pin Document
-#&Print...
-#&Remove Document
-#&Save As...
-#&Single Page\tCtrl+6
-#(page %d)
-#Add Favorite
-#Add page %d to favorites
-#Add page %d to favorites with (optional) name:
-#Add to favorites
-#All supported documents
 #Bookmark Shortcuts
 #Bookmark shortcut to page %d of %s
-#Comic books
-#Copy &Link Address
-#Copy Co&mment
-#Could not obtain Printer properties
-#Current file
-#DjVu documents
-#Error loading %s
-#F&avorites
-#Favorites
-#Fin&d...\tCtrl+F
-#Fit Width and Show Pages Continuously
-#Fit a Single Page
-#Found text at page %d (again)
-#Frequently Read
-#Hide frequently read
-#Image files (*.%s)
-#No result found around line %u in file %s
-#Open a document...
-#P&roperties
-#Page %d
-#Postscript documents
-#Pr&esentation\tCtrl+L
-#Print
-#Printer with given name doesn't exist
-#Printing is still in progress. Abort and start over?
-#Printing page %d of %d...
-#Remove from favorites
-#Remove page %d from favorites
 #Save S&hortcut...\tCtrl+Shift+S
-#Select &All
-#Select &All\tCtrl+A
-#Show Favorites
-#Show frequently read
-#Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
-#SumatraPDF Update
-#SumatraPDF crashed
-#XPS documents
 
