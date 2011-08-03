@@ -155,6 +155,9 @@
                             (const FT_Byte*)args->memory_base,
                             args->memory_size );
     }
+
+#ifndef FT_CONFIG_OPTION_DISABLE_STREAM_SUPPORT
+
     else if ( args->flags & FT_OPEN_PATHNAME )
     {
       /* create a normal system stream */
@@ -170,6 +173,9 @@
       FT_FREE( stream );
       stream = args->stream;
     }
+
+#endif
+
     else
       error = FT_Err_Invalid_Argument;
 

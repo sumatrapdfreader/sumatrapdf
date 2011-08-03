@@ -582,12 +582,12 @@
 
     /* do we have outlines in there? */
 #ifdef FT_CONFIG_OPTION_INCREMENTAL
-    has_outline   = FT_BOOL( face->root.internal->incremental_interface != 0 ||
-                             tt_face_lookup_table( face, TTAG_glyf )    != 0 ||
-                             tt_face_lookup_table( face, TTAG_CFF )     != 0 );
+    has_outline = FT_BOOL( face->root.internal->incremental_interface != 0 ||
+                           tt_face_lookup_table( face, TTAG_glyf )    != 0 ||
+                           tt_face_lookup_table( face, TTAG_CFF )     != 0 );
 #else
-    has_outline   = FT_BOOL( tt_face_lookup_table( face, TTAG_glyf ) != 0 ||
-                             tt_face_lookup_table( face, TTAG_CFF )  != 0 );
+    has_outline = FT_BOOL( tt_face_lookup_table( face, TTAG_glyf ) != 0 ||
+                           tt_face_lookup_table( face, TTAG_CFF )  != 0 );
 #endif
 
     is_apple_sbit = 0;
@@ -662,8 +662,9 @@
         if ( face->format_tag == TTAG_true )
         {
           FT_TRACE2(( "This is an SFNT Mac font.\n" ));
+
           has_outline = 0;
-          error = SFNT_Err_Ok;
+          error       = SFNT_Err_Ok;
         }
         else
         {
@@ -998,40 +999,36 @@
         /*      table cannot be used to compute the text height reliably! */
         /*                                                                */
 
-        /* The ascender/descender/height are computed from the OS/2 table */
-        /* when found.  Otherwise, they're taken from the horizontal      */
-        /* header.                                                        */
-        /*                                                                */
+        /* The ascender and descender are taken from the `hhea' table. */
+        /* If zero, they are taken from the `OS/2' table.              */
 
         root->ascender  = face->horizontal.Ascender;
         root->descender = face->horizontal.Descender;
 
-        root->height    = (FT_Short)( root->ascender - root->descender +
-                                      face->horizontal.Line_Gap );
+        root->height = (FT_Short)( root->ascender - root->descender +
+                                   face->horizontal.Line_Gap );
 
-#if 0
-        /* if the line_gap is 0, we add an extra 15% to the text height --  */
-        /* this computation is based on various versions of Times New Roman */
-        if ( face->horizontal.Line_Gap == 0 )
-          root->height = (FT_Short)( ( root->height * 115 + 50 ) / 100 );
-#endif /* 0 */
-
-#if 0
-        /* some fonts have the OS/2 "sTypoAscender", "sTypoDescender" & */
-        /* "sTypoLineGap" fields set to 0, like ARIALNB.TTF             */
-        if ( face->os2.version != 0xFFFFU && root->ascender )
+        if ( !( root->ascender || root->descender ) )
         {
-          FT_Int  height;
+          if ( face->os2.version != 0xFFFFU )
+          {
+            if ( face->os2.sTypoAscender || face->os2.sTypoDescender )
+            {
+              root->ascender  = face->os2.sTypoAscender;
+              root->descender = face->os2.sTypoDescender;
 
+              root->height = (FT_Short)( root->ascender - root->descender +
+                                         face->os2.sTypoLineGap );
+            }
+            else
+            {
+              root->ascender  =  (FT_Short)face->os2.usWinAscent;
+              root->descender = -(FT_Short)face->os2.usWinDescent;
 
-          root->ascender  =  face->os2.sTypoAscender;
-          root->descender = -face->os2.sTypoDescender;
-
-          height = root->ascender + root->descender + face->os2.sTypoLineGap;
-          if ( height > root->height )
-            root->height = height;
+              root->height = (FT_UShort)( root->ascender - root->descender );
+            }
+          }
         }
-#endif /* 0 */
 
         root->max_advance_width  = face->horizontal.advance_Width_Max;
         root->max_advance_height = (FT_Short)( face->vertical_info

@@ -1,3 +1,252 @@
+2011-07-29  Werner Lemberg  <wl@gnu.org>
+
+	* Version 2.4.6 released.
+	=========================
+
+
+	Tag sources with `VER-2-4-6'.
+
+	* docs/CHANGES: Updated.
+
+	* docs/VERSION.DLL: Update documentation and bump version number to
+	2.4.6.
+
+	* README, Jamfile (RefDoc),
+	builds/win32/vc2005/freetype.vcproj, builds/win32/vc2005/index.html,
+	builds/win32/vc2008/freetype.vcproj, builds/win32/vc2008/index.html,
+	builds/win32/vc2010/freetype.vcxproj, builds/win32/vc2010/index.html,
+	builds/win32/visualc/freetype.dsp,
+	builds/win32/visualc/freetype.vcproj,
+	builds/win32/visualc/index.html, builds/win32/visualce/freetype.dsp,
+	builds/win32/visualce/freetype.vcproj,
+	builds/win32/visualce/index.html,
+	builds/wince/vc2005-ce/freetype.vcproj,
+	builds/wince/vc2005-ce/index.html,
+	builds/wince/vc2008-ce/freetype.vcproj,
+	builds/wince/vc2008-ce/index.html: s/2.4.5/2.4.6/, s/245/246/.
+
+	* include/freetype/freetype.h (FREETYPE_PATCH): Set to 6.
+
+	* builds/unix/configure.raw (version_info): Set to 13:1:7.
+
+2011-07-29  Werner Lemberg  <wl@gnu.org>
+
+	[cff] Add some more tracing infos.
+
+	* src/cff/cffparse.c (cff_parse_font_matrix, cff_parse_font_bbox,
+	cff_parse_cid_ros): Add tracing.
+
+2011-07-22  Dirk Müller  <dmueller@suse.de>
+
+	[psaux, type1] Fix null pointer dereferences.
+
+	Found with font fuzzying.
+
+	* src/psaux/t1decode.c (t1_decoder_parse_charstrings): Check
+	`decoder->buildchar'.
+
+	* src/type1/t1load.c (t1_load_keyword): Check `blend->num_designs'.
+
+2011-07-20  Chris Morgan  <cmorgan@cybexintl.com>
+
+	Add FT_CONFIG_OPTION_DISABLE_STREAM_SUPPORT.
+
+	Useful for embedded systems which don't need file stream support.
+
+	* src/base/ftsystem.c, src/base/ftobjs.c (FT_Stream_New): Implement
+	it.
+
+2011-07-20  Elton Chung  <elton328@gmail.com>
+
+	* src/base/ftpatent.c (FT_Face_SetUnpatentedHinting): Fix typo.
+
+2011-07-16  Steven Chu  <steven.f.chu@gmail.com>
+
+	[truetype] Fix metrics on size request for scalable fonts.
+
+	* src/truetype/ttdriver.c (tt_size_request): Fix copying metrics
+	from TT_Size to FT_Size if scalable font.
+
+	See
+
+	  http://lists.gnu.org/archive/html/freetype-devel/2011-07/msg00049.html
+
+	for some comparison images.
+
+2011-07-14  Matthias Drochner  <M.Drochner@fz-juelich.de>.
+
+	[psaux] Fix potential sign extension problems.
+
+	When shifting right a signed value, it is not defined by the
+	C standard whether one gets a sign extension or not.  Use a macro to
+	do an explicit cast from a signed short (assuming that this is
+	16bit) to an int.
+
+	* src/psaux/t1decode.c (Fix2Int): New macro.
+	Use it where appropriate.
+
+2011-07-14  Werner Lemberg  <wl@gnu.org>
+
+	* src/psaux/t1decode.c (t1_decoder_parse_charstrings)
+	<op_callothersubr>: Better handling of subroutine index 0.
+	From Matthias Drochner <M.Drochner@fz-juelich.de>.
+
+2011-07-10  Алексей Подтележников  <apodtele@gmail.com>
+
+	[psaux] Optimize previous commit.
+
+	* src/psaux/t1decode.c (t1_decoder_parse_charstrings)
+	<op_callothersubr>: Move error check down to avoid testing twice for
+	good cases.
+
+2011-07-08  Werner Lemberg  <wl@gnu.org>
+
+	[psaux] Add better argument check for `callothersubr'.
+
+	* src/psaux/t1decode.c (t1_decoder_parse_charstrings)
+	<op_callothersubr>: Reject negative arguments.
+
+2011-07-07  Werner Lemberg  <wl@gnu.org>
+
+	[sfnt] Try harder to find non-zero values for ascender and descender.
+
+	* src/sfnt/sfobjs.c (sfnt_load_face): Consult `OS/2' table in case
+	the `hhea' table's values are zero.
+
+2011-07-03  Werner Lemberg  <wl@gnu.org>
+
+	Fix previous commit.
+
+	We want to unset FT_FACE_FLAG_SCALABLE only if there are bitmap
+	strikes in the font.
+
+	* src/truetype/ttobjs.c (tt_face_init): Implement it.
+
+	* docs/CHANGES: Updated.
+
+2011-07-02  Just Fill Bugs  <mozbugbox@yahoo.com.au>
+
+	Fix Savannah bug #33246.
+
+	* src/truetype/ttobjs.c (tt_check_single_notdef): New function.
+	(tt_face_init): Use it to test FT_FACE_FLAG_SCALABLE.
+
+2011-07-02  Werner Lemberg  <wl@gnu.org>
+
+	* docs/CHANGES: Updated.
+
+2011-07-02  David Bevan  <david.bevan@pb.com>
+
+	[ftstroke] Major revision.
+
+	The main problems
+	-----------------
+
+	  o If FT_STROKER_LINEJOIN_BEVEL was specified, unlimited miter
+	    joins (not bevel joins) were generated.  Indeed, the meanings of
+	    `miter' and `bevel' were incorrectly reversed (consistently) in
+	    both the code and comments.
+
+	  o The way bevel joins were constructed (whether specified
+	    explicitly, or created as a result of exceeding the miter limit)
+	    did not match what is required for stroked text in PostScript or
+	    PDF.
+
+	The main fixes
+	--------------
+
+	  o The behaviour of FT_STROKER_LINEJOIN_BEVEL has been corrected.
+
+	  o A new line join style, FT_STROKER_LINEJOIN_MITER_FIXED, has been
+	    introduced to support PostScript and PDF miter joins.
+
+	  o FT_STROKER_LINEJOIN_MITER_VARIABLE has been introduced as an
+	    alias for FT_STROKER_LINEJOIN_MITER.
+
+	Additionally, a variety of stroking errors have been fixed.  These
+	would cause various artifacts (including points `at infinity'),
+	especially when stroking poor quality fonts.
+
+	See
+
+	  http://lists.gnu.org/archive/html/freetype-devel/2011-07/msg00001.html
+
+	for example documents.  The FreeType stroker now produces results
+	very similar to that produced by GhostScript and Distiller for these
+	fonts.
+
+	Other problems
+	--------------
+
+	The following problems have been resolved:
+
+	  o Inside corners could be generated incorrectly.  Intersecting the
+	    inside corner could cause a missing triangular area and other
+	    effects.
+
+	    The intersection point can only be used if the join is between
+	    two lines and both lines are long enough.  The `optimization'
+	    condition in `ft_stroker_inside' has been corrected; this
+	    requires the line length to be passed into various functions and
+	    stored in `FT_StrokerRec'.
+
+	  o Incorrect cubic curves could be generated.  The angle
+	    calculations in `FT_Stroker_CubicTo' have been corrected to
+	    handle the case of the curve crossing the +/-PI direction.
+
+	  o If the border radius was greater than the radius of curvature of
+	    a curve, then the negative sector would end up outside (not
+	    inside) the border.  This situation is now recognized and the
+	    negative sector is circumnavigated in the opposite direction.
+	    (If round line joins are being used, this code is disabled
+	    because the line join will always cover the negative sector.)
+
+	  o When a curve is split, the arcs may not join smoothly (especially
+	    if the curve turns sharply back on itself).  Changes in
+	    direction between adjacent arcs were not handled.  A round
+	    corner is now added if the deviation from one arc to the next is
+	    greater than a suitable threshold.
+
+	  o The current direction wasn't retained if a the outline contained
+	    a zero length lineto or a curve that was determined to be
+	    `basically a point'.  This could cause a spurious join to be
+	    added.
+
+	  o Cubics with close control points could be mishandled.  All eight
+	    cases are now distinguished correctly.
+
+	Other improvements
+	------------------
+
+	o Borders for cubic curves could be too `flat'.
+	  FT_SMALL_CUBIC_THRESHOLD has been reduced a little to prevent
+	  this.
+
+	o The handling and use of movable points has been simplified a
+	  little.
+
+	o Various values are now computed only if the results are actually
+	  needed.
+
+	o The directions of the outer and inner borders have been swapped,
+	  as recommended by Graham Asher.
+
+	* src/base/ftstroke.c: Revised.
+	* include/freetype/ftstroke.h: Updated.
+
+2011-06-30  İsmail Dönmez <ismail@namtrac.org>
+
+	* builds/toplevel.mk: We use git, not CVS, thus skip `.gitignore'.
+
+2011-06-29  Werner Lemberg  <wl@gnu.org>
+
+	Fix Savannah bug #33663.
+
+	* src/bdf/bdflib.c (_bdf_parse_glyphs): Handle negative values for
+	ENCODING correctly.
+
+	* docs/CHANGES: Document it.
+
 2011-06-24  Werner Lemberg  <wl@gnu.org>
 
 	* Version 2.4.5 released.
@@ -286,7 +535,7 @@
 
 	[autofit] Remove unused structure member.
 
-	* src/autofit/afhints.h (AF_SegmentRec): Remove `contour'. 
+	* src/autofit/afhints.h (AF_SegmentRec): Remove `contour'.
 	* src/autofit/aflatin.c (af_latin_hints_compute_segments),
 	src/autofit/aflatin2.c (af_latin2_hints_compute_segments): Updated.
 
@@ -312,7 +561,7 @@
 
 	[mac] Conditionalize the inclusion of `AvailabilityMacros.h'.
 
-	The native SDK on earliest Mac OS X (10.0-10.1) did not have 
+	The native SDK on earliest Mac OS X (10.0-10.1) did not have
 	`AvailabilityMacros.h'.  To prevent the inclusion of missing
 	header file, ECANCELED (introduced in 10.2) in POSIX header
 	file <errno.h> is checked to detect the system version.
@@ -388,7 +637,7 @@
 	(af_cjk_metrics_init_widths): Duplicate af_latin_metrics_init_widths.
 	(af_cjk_metrics_check_digits): Duplicate af_latin_metrics_check_digits.
 	(af_cjk_metrics_init): Call CJK bluezone initializer.
-	(af_cjk_metrics_scale_dim): Add code to scale bluezones.  
+	(af_cjk_metrics_scale_dim): Add code to scale bluezones.
 	(af_cjk_hints_compute_blue_edges): New function, CJK version of
 	af_latin_hints_compute_blue_edges.
 	(af_cjk_metrics_init_blues): New function, CJK version of
@@ -426,7 +675,7 @@
 
 	Add new option `--disable-mmap' to configure script.
 
-	* builds/unix/configure.raw: New option `--disable-mmap' 
+	* builds/unix/configure.raw: New option `--disable-mmap'
 	is added.  It is for the developers to simulate the systems
 	without mmap() (like 4.3BSD, minix etc) on POSIX systems.
 

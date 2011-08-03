@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    CFF token stream parser (body)                                       */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2007, 2008, 2009, 2010 by       */
+/*  Copyright 1996-2004, 2007-2011 by                                      */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -33,8 +33,6 @@
   /*                                                                       */
 #undef  FT_COMPONENT
 #define FT_COMPONENT  trace_cffparse
-
-
 
 
   FT_LOCAL_DEF( void )
@@ -475,6 +473,12 @@
       if ( scaling < 0 || scaling > 9 )
       {
         /* Return default matrix in case of unlikely values. */
+
+        FT_TRACE1(( "cff_parse_font_matrix:"
+                    " strange scaling value for xx element (%d),\n"
+                    "                      "
+                    " using default matrix\n", scaling ));
+
         matrix->xx = 0x10000L;
         matrix->yx = 0;
         matrix->yx = 0;
@@ -493,6 +497,12 @@
       offset->y  = cff_parse_fixed_scaled( data,   scaling );
 
       *upm = power_tens[scaling];
+
+      FT_TRACE4(( " font matrix: [%f %f %f %f]\n",
+                  (double)matrix->xx / *upm / 65536,
+                  (double)matrix->xy / *upm / 65536,
+                  (double)matrix->yx / *upm / 65536,
+                  (double)matrix->yy / *upm / 65536 ));
     }
 
   Exit:
@@ -518,6 +528,12 @@
       bbox->xMax = FT_RoundFix( cff_parse_fixed( data++ ) );
       bbox->yMax = FT_RoundFix( cff_parse_fixed( data   ) );
       error = CFF_Err_Ok;
+
+      FT_TRACE4(( " bbox: [%d %d %d %d]\n",
+                  bbox->xMin / 65536,
+                  bbox->yMin / 65536,
+                  bbox->xMax / 65536,
+                  bbox->yMax / 65536 ));
     }
 
     return error;
@@ -557,8 +573,8 @@
 
     if ( parser->top >= parser->stack + 3 )
     {
-      dict->cid_registry   = (FT_UInt)cff_parse_num ( data++ );
-      dict->cid_ordering   = (FT_UInt)cff_parse_num ( data++ );
+      dict->cid_registry   = (FT_UInt)cff_parse_num( data++ );
+      dict->cid_ordering   = (FT_UInt)cff_parse_num( data++ );
       if ( **data == 30 )
         FT_TRACE1(( "cff_parse_cid_ros: real supplement is rounded\n" ));
       dict->cid_supplement = cff_parse_num( data );
@@ -566,6 +582,11 @@
         FT_TRACE1(( "cff_parse_cid_ros: negative supplement %d is found\n",
                    dict->cid_supplement ));
       error = CFF_Err_Ok;
+
+      FT_TRACE4(( " ROS: registry sid %d, ordering sid %d, supplement %d\n",
+                  dict->cid_registry,
+                  dict->cid_ordering,
+                  dict->cid_supplement ));
     }
 
     return error;

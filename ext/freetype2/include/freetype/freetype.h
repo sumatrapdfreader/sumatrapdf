@@ -1063,8 +1063,8 @@ FT_BEGIN_HEADER
   /*      and @FT_LOAD_NO_AUTOHINT to really disable hinting; however, you */
   /*      probably never want this except for demonstration purposes.      */
   /*                                                                       */
-  /*      Currently, there are six TrueType fonts in the list of tricky    */
-  /*      fonts; they are hard-coded in file `ttobjs.c'.                   */
+  /*      Currently, there are about a dozen TrueType fonts in the list of */
+  /*      tricky fonts; they are hard-coded in file `ttobjs.c'.            */
   /*                                                                       */
 #define FT_FACE_FLAG_SCALABLE          ( 1L <<  0 )
 #define FT_FACE_FLAG_FIXED_SIZES       ( 1L <<  1 )
@@ -2107,8 +2107,8 @@ FT_BEGIN_HEADER
   /*      used to determine both scaling values.                           */
   /*                                                                       */
   /*    FT_SIZE_REQUEST_TYPE_REAL_DIM ::                                   */
-  /*      The real dimension.  The sum of the the `Ascender' and (minus    */
-  /*      of) the `Descender' fields of @FT_FaceRec are used to determine  */
+  /*      The real dimension.  The sum of the the `ascender' and (minus    */
+  /*      of) the `descender' fields of @FT_FaceRec are used to determine  */
   /*      both scaling values.                                             */
   /*                                                                       */
   /*    FT_SIZE_REQUEST_TYPE_BBOX ::                                       */
@@ -2916,6 +2916,10 @@ FT_BEGIN_HEADER
   /*    The glyph name is truncated to fit within the buffer if it is too  */
   /*    long.  The returned string is always zero-terminated.              */
   /*                                                                       */
+  /*    Be aware that FreeType reorders glyph indices internally so that   */
+  /*    glyph index~0 always corresponds to the `missing glyph' (called    */
+  /*    `.notdef').                                                        */
+  /*                                                                       */
   /*    This function is not compiled within the library if the config     */
   /*    macro `FT_CONFIG_OPTION_NO_GLYPH_NAMES' is defined in              */
   /*    `include/freetype/config/ftoptions.h'.                             */
@@ -3325,6 +3329,9 @@ FT_BEGIN_HEADER
   /*    Use this function rather than directly reading the `fs_type' field */
   /*    in the @PS_FontInfoRec structure which is only guaranteed to       */
   /*    return the correct results for Type~1 fonts.                       */
+  /*                                                                       */
+  /* <Since>                                                               */
+  /*    2.3.8                                                              */
   /*                                                                       */
   FT_EXPORT( FT_UShort )
   FT_Get_FSType_Flags( FT_Face  face );
@@ -3803,7 +3810,7 @@ FT_BEGIN_HEADER
    */
 #define FREETYPE_MAJOR  2
 #define FREETYPE_MINOR  4
-#define FREETYPE_PATCH  5
+#define FREETYPE_PATCH  6
 
 
   /*************************************************************************/

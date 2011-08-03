@@ -1,6 +1,6 @@
 /*
  * Copyright 2000 Computing Research Labs, New Mexico State University
- * Copyright 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2009, 2010
+ * Copyright 2001-2011
  *   Francesco Zappa Nardelli
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -983,7 +983,7 @@
     FT_Error         error = BDF_Err_Ok;
 
 
-    /* First check to see if the property has      */
+    /* First check whether the property has        */
     /* already been added or not.  If it has, then */
     /* simply ignore it.                           */
     if ( hash_lookup( name, &(font->proptbl) ) )
@@ -1276,7 +1276,7 @@
     FT_Error        error = BDF_Err_Ok;
 
 
-    /* First, check to see if the property already exists in the font. */
+    /* First, check whether the property already exists in the font. */
     if ( ( hn = hash_lookup( name, (hashtable *)font->internal ) ) != 0 )
     {
       /* The property already exists in the font, so simply replace */
@@ -1530,8 +1530,8 @@
       goto Exit;
     }
 
-    /* Check to see whether a glyph is being scanned but should be */
-    /* ignored because it is an unencoded glyph.                   */
+    /* Check whether a glyph is being scanned but should be */
+    /* ignored because it is an unencoded glyph.            */
     if ( ( p->flags & _BDF_GLYPH )     &&
          p->glyph_enc            == -1 &&
          p->opts->keep_unencoded == 0  )
@@ -1585,17 +1585,18 @@
 
       p->glyph_enc = _bdf_atol( p->list.field[1], 0, 10 );
 
-      /* Check that the encoding is in the range [0,65536] because        */
-      /* otherwise p->have (a bitmap with static size) overflows.         */
-      if ( (size_t)p->glyph_enc >= sizeof ( p->have ) * 8 )
+      /* Check that the encoding is in the range [0,65536] because */
+      /* otherwise p->have (a bitmap with static size) overflows.  */
+      if ( p->glyph_enc > 0                               &&
+           (size_t)p->glyph_enc >= sizeof ( p->have ) * 8 )
       {
         error = BDF_Err_Invalid_File_Format;
         goto Exit;
       }
 
-      /* Check to see whether this encoding has already been encountered. */
-      /* If it has then change it to unencoded so it gets added if        */
-      /* indicated.                                                       */
+      /* Check whether this encoding has already been encountered. */
+      /* If it has then change it to unencoded so it gets added if */
+      /* indicated.                                                */
       if ( p->glyph_enc >= 0 )
       {
         if ( _bdf_glyph_modified( p->have, p->glyph_enc ) )
@@ -1634,8 +1635,8 @@
       }
       else
       {
-        /* Unencoded glyph.  Check to see whether it should */
-        /* be added or not.                                 */
+        /* Unencoded glyph.  Check whether it should */
+        /* be added or not.                          */
         if ( p->opts->keep_unencoded != 0 )
         {
           /* Allocate the next unencoded glyph. */
@@ -1676,7 +1677,7 @@
     else
       glyph = font->glyphs + ( font->glyphs_used - 1 );
 
-    /* Check to see whether a bitmap is being constructed. */
+    /* Check whether a bitmap is being constructed. */
     if ( p->flags & _BDF_BITMAP )
     {
       /* If there are more rows than are specified in the glyph metrics, */
