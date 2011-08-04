@@ -385,7 +385,7 @@ pdf_show_path(pdf_csi *csi, int doclose, int dofill, int dostroke, int even_odd)
 			if (gstate->stroke.pattern)
 			{
 				fz_clip_stroke_path(csi->dev, path, &bbox, &gstate->stroke_state, gstate->ctm);
-				pdf_show_pattern(csi, gstate->stroke.pattern, bbox, PDF_FILL);
+				pdf_show_pattern(csi, gstate->stroke.pattern, bbox, PDF_STROKE);
 				fz_pop_clip(csi->dev);
 			}
 			break;
@@ -501,7 +501,7 @@ pdf_flush_text(pdf_csi *csi)
 			if (gstate->stroke.pattern)
 			{
 				fz_clip_stroke_text(csi->dev, text, &gstate->stroke_state, gstate->ctm);
-				pdf_show_pattern(csi, gstate->stroke.pattern, bbox, PDF_FILL);
+				pdf_show_pattern(csi, gstate->stroke.pattern, bbox, PDF_STROKE);
 				fz_pop_clip(csi->dev);
 			}
 			break;
