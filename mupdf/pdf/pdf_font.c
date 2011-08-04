@@ -314,6 +314,10 @@ pdf_load_system_font(pdf_font_desc *fontdesc, char *fontname, char *collection)
 		return fz_throw("unknown cid collection: %s", collection);
 	}
 
+	/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=691690 */
+	if (fontdesc->flags & PDF_FD_SYMBOLIC)
+		return fz_throw("symbolic font '%s' is missing", fontname);
+
 	error = pdf_load_substitute_font(fontdesc, mono, serif, bold, italic);
 	if (error)
 		return fz_rethrow(error, "cannot load substitute font");
@@ -473,6 +477,26 @@ pdf_load_simple_font(pdf_font_desc **fontdescp, pdf_xref *xref, fz_obj *dict)
 		error = pdf_load_font_descriptor(fontdesc, xref, descriptor, NULL, basefont);
 	else
 		error = pdf_load_builtin_font(fontdesc, fontname);
+	/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=691690 */
+	if (error && (fontdesc->flags & PDF_FD_SYMBOLIC))
+	{
+		fz_catch(error, "using bullet-substitute font for '%s' (%d %d R)", fontname, fz_to_num(dict), fz_to_gen(dict));
+		pdf_drop_font(fontdesc);
+		fontdesc = pdf_new_font_desc();
+		error = pdf_load_builtin_font(fontdesc, "Symbol");
+		if (!error)
+		{
+			face = fontdesc->font->ft_face;
+			kind = ft_kind(face);
+			fontdesc->encoding = pdf_new_identity_cmap(0, 1);
+			fontdesc->cid_to_gid_len = 256;
+			fontdesc->cid_to_gid = fz_calloc(256, sizeof(unsigned short));
+			k = FT_Get_Name_Index(face, "bullet");
+			for (i = 0; i < 256; i++)
+				fontdesc->cid_to_gid[i] = k;
+			goto skip_encoding;
+		}
+	}
 	if (error)
 		goto cleanup;
 
