@@ -171,7 +171,7 @@ pdf_transform_annot(pdf_annot *annot)
 	annot->matrix = fz_concat(fz_scale(w, h), fz_translate(x, y));
 }
 
-/* SumatraPDF: partial support for link borders */
+/* SumatraPDF: synthesize appearance streams for a few more annotations */
 static pdf_annot *
 pdf_create_annot(fz_rect rect, fz_obj *base_obj, unsigned char *content, int transparent)
 {
@@ -202,17 +202,31 @@ pdf_create_annot(fz_rect rect, fz_obj *base_obj, unsigned char *content, int tra
 	return annot;
 }
 
+static fz_obj *
+pdf_clone_for_view_only(pdf_xref *xref, fz_obj *obj)
+{
+	char *string = "<< /OCGs << /Usage << /Print << /PrintState /OFF >> /Export << /ExportState /OFF >> >> >> >>";
+	fz_stream *stream = fz_open_memory(string, strlen(string));
+	fz_obj *tmp = NULL;
+	pdf_parse_stm_obj(&tmp, NULL, stream, xref->scratch, sizeof(xref->scratch));
+	fz_close(stream);
+
+	obj = fz_copy_dict(obj);
+	fz_dict_puts(obj, "OC", tmp);
+	fz_drop_obj(tmp);
+
+	return obj;
+}
+
+/* SumatraPDF: partial support for link borders */
 static pdf_annot *
-pdf_annot_for_link_border(pdf_xref *xref, fz_obj *obj)
+pdf_create_link_annot(pdf_xref *xref, fz_obj *obj)
 {
 	fz_obj *border, *color, *dashes;
 	fz_rect rect;
-	unsigned char *string;
-	fz_stream *stream;
+	char *string;
 	int i;
 
-	if (strcmp(fz_to_name(fz_dict_gets(obj, "Subtype")), "Link") != 0)
-		return NULL;
 	border = fz_dict_gets(obj, "Border");
 	if (fz_to_real(fz_array_get(border, 2)) <= 0)
 		return NULL;
@@ -221,13 +235,7 @@ pdf_annot_for_link_border(pdf_xref *xref, fz_obj *obj)
 	dashes = fz_array_get(border, 3);
 	rect = pdf_to_rect(fz_dict_gets(obj, "Rect"));
 
-	// manually construct an XObject for the link border
-
-	// display the borders only for the View target
-	string = "<< /OC << /OCGs << /Usage << /Print << /PrintState /OFF >> /Export << /ExportState /OFF >> >> >> >> >>";
-	stream = fz_open_memory(string, strlen(string));
-	pdf_parse_stm_obj(&obj, NULL, stream, xref->scratch, sizeof(xref->scratch));
-	fz_close(stream);
+	obj = pdf_clone_for_view_only(xref, obj);
 
 	// TODO: draw rounded rectangles if the first two /Border values are non-zero
 	sprintf(xref->scratch, "q %.4f w [", fz_to_real(fz_array_get(border, 2)));
@@ -242,6 +250,52 @@ pdf_annot_for_link_border(pdf_xref *xref, fz_obj *obj)
 		fz_to_real(fz_array_get(color, 2)), rect.x1 - rect.x0, rect.y1 - rect.y0);
 
 	return pdf_create_annot(rect, obj, xref->scratch, 0);
+}
+
+// content stream copied from Poppler's Annot.cc, licensed under GPLv2 and later
+#define ANNOT_TEXT_AP_COMMENT \
+	"4.301 23 m 19.699 23 l 21.523 23 23 21.523 23 19.699 c 23 4.301 l 23\n"      \
+	"2.477 21.523 1 19.699 1 c 4.301 1 l 2.477 1 1 2.477 1 4.301 c 1 19.699\n"    \
+	"l 1 21.523 2.477 23 4.301 23 c h\n"                                          \
+	"4.301 23 m f\n"                                                              \
+	"0.533333 0.541176 0.521569 RG 2 w\n"                                         \
+	"0 J\n"                                                                       \
+	"1 j\n"                                                                       \
+	"[] 0.0 d\n"                                                                  \
+	"4 M 8 20 m 16 20 l 18.363 20 20 18.215 20 16 c 20 13 l 20 10.785 18.363 9\n" \
+	"16 9 c 13 9 l 8 3 l 8 9 l 8 9 l 5.637 9 4 10.785 4 13 c 4 16 l 4 18.215\n"   \
+	"5.637 20 8 20 c h\n"                                                         \
+	"8 20 m S\n"                                                                  \
+	"0.729412 0.741176 0.713725 RG 8 21 m 16 21 l 18.363 21 20 19.215 20 17\n"    \
+	"c 20 14 l 20 11.785 18.363 10\n"                                             \
+	"16 10 c 13 10 l 8 4 l 8 10 l 8 10 l 5.637 10 4 11.785 4 14 c 4 17 l 4\n"     \
+	"19.215 5.637 21 8 21 c h\n"                                                  \
+	"8 21 m S\n"
+
+/* SumatraPDF: partial support for text icons */
+static pdf_annot *
+pdf_create_text_annot(pdf_xref *xref, fz_obj *obj)
+{
+	unsigned char *comment = "q 1 1 1 rg\n" ANNOT_TEXT_AP_COMMENT "Q";
+	fz_rect rect = pdf_to_rect(fz_dict_gets(obj, "Rect"));
+	rect.x1 = rect.x0 + 24;
+	rect.y1 = rect.y0 + 24;
+
+	obj = pdf_clone_for_view_only(xref, obj);
+
+	// TODO: support other icons by /Name: Note, Key, Help, Paragraph, NewParagraph, Insert
+	// TODO: make icon semi-transparent
+	return pdf_create_annot(rect, obj, comment, 1);
+}
+
+static pdf_annot *
+pdf_create_annot_with_appearance(pdf_xref *xref, fz_obj *obj)
+{
+	if (!strcmp(fz_to_name(fz_dict_gets(obj, "Subtype")), "Link"))
+		return pdf_create_link_annot(xref, obj);
+	if (!strcmp(fz_to_name(fz_dict_gets(obj, "Subtype")), "Text"))
+		return pdf_create_text_annot(xref, obj);
+	return NULL;
 }
 
 void
@@ -300,8 +354,8 @@ pdf_load_annots(pdf_annot **annotp, pdf_xref *xref, fz_obj *annots)
 				}
 			}
 		}
-		/* SumatraPDF: partial support for link borders */
-		else if ((annot = pdf_annot_for_link_border(xref, obj)))
+		/* SumatraPDF: synthesize appearance streams for a few more annotations */
+		else if ((annot = pdf_create_annot_with_appearance(xref, obj)))
 		{
 			if (!head)
 				head = tail = annot;
