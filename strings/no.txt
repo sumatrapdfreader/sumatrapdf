@@ -161,8 +161,8 @@ Lagre &som...\tCtrl+S
 (of %d)
 (av %d)
 
-(page %d)
-(side %d)
+(page %s)
+(side %s)
 
 About SumatraPDF
 Om SumatraPDF
@@ -170,11 +170,11 @@ Om SumatraPDF
 Add Favorite
 Legg til i Favoritter
 
-Add page %d to favorites
-Legg til side %d i favoritter
+Add page %s to favorites
+Legg til side %s i favoritter
 
-Add page %d to favorites with (optional) name:
-Legg til side %d i favoritter med (valgfritt) navn:
+Add page %s to favorites with (optional) name:
+Legg til side %s i favoritter med (valgfritt) navn:
 
 Add to favorites
 Legg til i favoritter
@@ -215,8 +215,8 @@ Bokmerker\tF12
 Bookmark Shortcuts
 Bokmerk snarveier
 
-Bookmark shortcut to page %d of %s
-Bokmerk snarvei til side %d av %s
+Bookmark shortcut to page %s of %s
+Bokmerk snarvei til side %s av %s
 
 Bookmarks
 Bokmerker
@@ -386,11 +386,11 @@ Tilpass bredde og vis sider kontinuerlig
 Fit a Single Page
 Tilpass til enkeltside
 
-Found text at page %d
-Fant tekst på side %d
+Found text at page %s
+Fant tekst på side %s
 
-Found text at page %d (again)
-Fant tekst på side %d (igjen)
+Found text at page %s (again)
+Fant tekst på side %s (igjen)
 
 Frequently Read
 Ofte leste
@@ -488,8 +488,8 @@ PDF-dokumenter (*.pdf)
 Pa&ge...\tCtrl+G
 Side...\tCtrl+G
 
-Page %d
-Side %d
+Page %s
+Side %s
 
 Page Size:
 Sidestørrelse:
@@ -539,8 +539,8 @@ Husk &åpnede filer
 Remove from favorites
 Fjern fra favoritter
 
-Remove page %d from favorites
-Fjern side %d fra favoritter
+Remove page %s from favorites
+Fjern side %s fra favoritter
 
 Rotate &Left\tCtrl+Shift+-
 Roter mot klokken\tCtrl+Shift+Minus

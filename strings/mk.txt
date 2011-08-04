@@ -157,8 +157,8 @@ Contributor: Гоце Митевски (http://www.nicer2.com)
 (of %d)
 (од %d)
 
-(page %d)
-(страница %d)
+(page %s)
+(страница %s)
 
 About SumatraPDF
 За SumatraPDF
@@ -166,11 +166,11 @@ About SumatraPDF
 Add Favorite
 Додади омилен
 
-Add page %d to favorites
-Додади страница %d во омилени
+Add page %s to favorites
+Додади страница %s во омилени
 
-Add page %d to favorites with (optional) name:
-Додади страница %d во омилени со име по избор:
+Add page %s to favorites with (optional) name:
+Додади страница %s во омилени со име по избор:
 
 Add to favorites
 Додади во омилени
@@ -211,8 +211,8 @@ Book&marks\tF12
 Bookmark Shortcuts
 Кратенки од обележувачи
 
-Bookmark shortcut to page %d of %s
-Кратенки од обележувачи за страница %d од %s
+Bookmark shortcut to page %s of %s
+Кратенки од обележувачи за страница %s од %s
 
 Bookmarks
 Обележувачи
@@ -382,11 +382,11 @@ Fit Width and Show Pages Continuously
 Fit a Single Page
 Прилагоди на поединечна страница
 
-Found text at page %d
-Пронајдов текст на страница %d
+Found text at page %s
+Пронајдов текст на страница %s
 
-Found text at page %d (again)
-Пронајдов текст на страница %d (повторно)
+Found text at page %s (again)
+Пронајдов текст на страница %s (повторно)
 
 Frequently Read
 Често читани
@@ -484,8 +484,8 @@ PDF документи
 Pa&ge...\tCtrl+G
 Страница...\tCtrl+G
 
-Page %d
-страница %d
+Page %s
+страница %s
 
 Page Size:
 Големина на страница:
@@ -535,8 +535,8 @@ Remember &opened files
 Remove from favorites
 Отстрани од омилени
 
-Remove page %d from favorites
-Отстрани страница %d од омилени
+Remove page %s from favorites
+Отстрани страница %s од омилени
 
 Rotate &Left\tCtrl+Shift+-
 Ротирај на лево\tCtrl+Shift+-

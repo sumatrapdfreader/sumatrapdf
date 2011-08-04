@@ -197,8 +197,8 @@ Book&marks\tF12
 Bookmark Shortcuts
 書籤捷徑
 
-Bookmark shortcut to page %d of %s
-書籤捷徑指向第 %d 頁（檔案 %s）
+Bookmark shortcut to page %s of %s
+書籤捷徑指向第 %s 頁（檔案 %s）
 
 Bookmarks
 書籤
@@ -356,11 +356,11 @@ Fit Width and Show Pages Continuously
 Fit a Single Page
 合適單頁
 
-Found text at page %d
-於第 %d 頁找到目標
+Found text at page %s
+於第 %s 頁找到目標
 
-Found text at page %d (again)
-於第 %d 頁找到目標（已從頭尋找）
+Found text at page %s (again)
+於第 %s 頁找到目標（已從頭尋找）
 
 Frequently Read
 經常開啟的檔案
@@ -621,18 +621,18 @@ printing document
 文件列印中
 
 # Untranslated:
-#(page %d)
+#(page %s)
 #Add Favorite
-#Add page %d to favorites
-#Add page %d to favorites with (optional) name:
+#Add page %s to favorites
+#Add page %s to favorites with (optional) name:
 #Add to favorites
 #Could not obtain Printer properties
 #Current file
 #F&avorites
 #Favorites
-#Page %d
+#Page %s
 #Printer with given name doesn't exist
 #Remove from favorites
-#Remove page %d from favorites
+#Remove page %s from favorites
 #Show Favorites
 

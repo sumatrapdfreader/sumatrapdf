@@ -196,8 +196,8 @@ Straničnik\tF12
 Bookmark Shortcuts
 Prečaci oznaka
 
-Bookmark shortcut to page %d of %s
-Prečac oznake do stranice %d of %s
+Bookmark shortcut to page %s of %s
+Prečac oznake do stranice %s of %s
 
 Bookmarks
 Oznake
@@ -355,11 +355,11 @@ Namjesti po širini i prikaži stranice slijedno
 Fit a Single Page
 Namjesti po jednoj stranici
 
-Found text at page %d
-Tekst je pronađen na %d. stranici
+Found text at page %s
+Tekst je pronađen na %s. stranici
 
-Found text at page %d (again)
-Tekst pronađen na stranici %d (opet)
+Found text at page %s (again)
+Tekst pronađen na stranici %s (opet)
 
 Frequently Read
 Najčešće čitano
@@ -620,18 +620,18 @@ printing document
 ispisujem dokument
 
 # Untranslated:
-#(page %d)
+#(page %s)
 #Add Favorite
-#Add page %d to favorites
-#Add page %d to favorites with (optional) name:
+#Add page %s to favorites
+#Add page %s to favorites with (optional) name:
 #Add to favorites
 #Could not obtain Printer properties
 #Current file
 #F&avorites
 #Favorites
-#Page %d
+#Page %s
 #Printer with given name doesn't exist
 #Remove from favorites
-#Remove page %d from favorites
+#Remove page %s from favorites
 #Show Favorites
 

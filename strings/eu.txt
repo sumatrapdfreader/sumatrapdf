@@ -334,11 +334,11 @@ Zabalera egokitu eta orriak jarraian azaldu
 Fit a Single Page
 Orri bakar bat egokitu
 
-Found text at page %d
-Textua aurkito %d orrian
+Found text at page %s
+Textua aurkito %s orrian
 
-Found text at page %d (again)
-%d orrian bilatu (berriz) testua
+Found text at page %s (again)
+%s orrian bilatu (berriz) testua
 
 Frequently Read
 Sarritan irakurriak
@@ -593,22 +593,22 @@ dokumentua imprimatzen
 #&Pin Document
 #&Remove Document
 #&Single Page\tCtrl+6
-#(page %d)
+#(page %s)
 #Add Favorite
-#Add page %d to favorites
-#Add page %d to favorites with (optional) name:
+#Add page %s to favorites
+#Add page %s to favorites with (optional) name:
 #Add to favorites
-#Bookmark shortcut to page %d of %s
+#Bookmark shortcut to page %s of %s
 #Could not obtain Printer properties
 #Current file
 #F&avorites
 #Favorites
 #No result found around line %u in file %s
-#Page %d
+#Page %s
 #Postscript documents
 #Printer with given name doesn't exist
 #Remove from favorites
-#Remove page %d from favorites
+#Remove page %s from favorites
 #Save As
 #Show Favorites
 #Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.

@@ -158,8 +158,8 @@ Gös&ter
 (of %d)
 (toplam %d)
 
-(page %d)
-(sayfa %d)
+(page %s)
+(sayfa %s)
 
 About SumatraPDF
 SumatraPDF hakkında
@@ -167,11 +167,11 @@ SumatraPDF hakkında
 Add Favorite
 Sık kullanılanı ekle
 
-Add page %d to favorites
-Sayfa %d sık kullanılanlara ekle
+Add page %s to favorites
+Sayfa %s sık kullanılanlara ekle
 
-Add page %d to favorites with (optional) name:
-Sayfa %d sık kullanılanlara (tercihe bağlı) isimle ekle:
+Add page %s to favorites with (optional) name:
+Sayfa %s sık kullanılanlara (tercihe bağlı) isimle ekle:
 
 Add to favorites
 Sık kullanılanlara ekle
@@ -212,8 +212,8 @@ Book&marks\tF12
 Bookmark Shortcuts
 Yer imi kısayolları
 
-Bookmark shortcut to page %d of %s
-%d. sayfasına %s yer imi kısayolu
+Bookmark shortcut to page %s of %s
+%s. sayfasına %s yer imi kısayolu
 
 Bookmarks
 Yer imleri
@@ -383,11 +383,11 @@ Genişliğe ölçekle ve sayfaları devamlı göster
 Fit a Single Page
 Tek sayfaya ölçekle
 
-Found text at page %d
-Metin %d numaralı sayfada bulundu
+Found text at page %s
+Metin %s numaralı sayfada bulundu
 
-Found text at page %d (again)
-Metin sayfa %d bulundu (tekrar)
+Found text at page %s (again)
+Metin sayfa %s bulundu (tekrar)
 
 Frequently Read
 Sıkça okunan
@@ -485,8 +485,8 @@ PDF belgeleri
 Pa&ge...\tCtrl+G
 &Sayfa...\tCtrl+G
 
-Page %d
-Sayfa %d
+Page %s
+Sayfa %s
 
 Page Size:
 Sayfa Boyutu:
@@ -536,8 +536,8 @@ Remember &opened files
 Remove from favorites
 Sık kullanılanlardan çıkar
 
-Remove page %d from favorites
-Sayfa %d sık kullanılanlardan çıkar
+Remove page %s from favorites
+Sayfa %s sık kullanılanlardan çıkar
 
 Rotate &Left\tCtrl+Shift+-
 S&ola çevir\tCtrl+Shift+-

@@ -160,8 +160,8 @@ Contributor: XhmikosR
 (of %d)
 (από %d)
 
-(page %d)
-(σελίδα %d)
+(page %s)
+(σελίδα %s)
 
 About SumatraPDF
 Σχετικά με το SumatraPDF
@@ -169,11 +169,11 @@ About SumatraPDF
 Add Favorite
 Προσθήκη Αγαπημένου
 
-Add page %d to favorites
-Προσθήκη της σελίδας %d στα αγαπημένα
+Add page %s to favorites
+Προσθήκη της σελίδας %s στα αγαπημένα
 
-Add page %d to favorites with (optional) name:
-Προσθήκη σελίδας %d στα αγαπημένα με (προαιρετικό) όνομα:
+Add page %s to favorites with (optional) name:
+Προσθήκη σελίδας %s στα αγαπημένα με (προαιρετικό) όνομα:
 
 Add to favorites
 Προσθήκη στα αγαπημένα
@@ -214,8 +214,8 @@ Book&marks\tF12
 Bookmark Shortcuts
 Συντομεύσεις Σελιδοδεικτών
 
-Bookmark shortcut to page %d of %s
-Συντόμευση σελιδοδείκτη στη σελίδα %d του %s
+Bookmark shortcut to page %s of %s
+Συντόμευση σελιδοδείκτη στη σελίδα %s του %s
 
 Bookmarks
 Σελιδοδείκτες
@@ -385,11 +385,11 @@ Fit Width and Show Pages Continuously
 Fit a Single Page
 Προσαρμογή μιας Σελίδας
 
-Found text at page %d
-Το κείμενο βρέθηκε στη σελίδα %d
+Found text at page %s
+Το κείμενο βρέθηκε στη σελίδα %s
 
-Found text at page %d (again)
-Το κείμενο βρέθηκε στη σελίδα %d (πάλι)
+Found text at page %s (again)
+Το κείμενο βρέθηκε στη σελίδα %s (πάλι)
 
 Frequently Read
 Συχνά Αναγνωσμένα Αρχεία
@@ -487,8 +487,8 @@ PDF documents
 Pa&ge...\tCtrl+G
 &Σελίδα...\tCtrl+G
 
-Page %d
-Σελίδα %d
+Page %s
+Σελίδα %s
 
 Page Size:
 Μέγεθος Σελίδας:
@@ -538,8 +538,8 @@ Remember &opened files
 Remove from favorites
 Αφαίρεση από τα αγαπημένα
 
-Remove page %d from favorites
-Αφαίρεση σελίδας %d από τα αγαπημένα
+Remove page %s from favorites
+Αφαίρεση σελίδας %s από τα αγαπημένα
 
 Rotate &Left\tCtrl+Shift+-
 Περιστροφή Αριστερά\tCtrl+Shift+-

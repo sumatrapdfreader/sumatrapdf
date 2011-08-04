@@ -197,8 +197,8 @@ Book&marks\tF12
 Bookmark Shortcuts
 קיצורי דרך סימניה
 
-Bookmark shortcut to page %d of %s
-קיצור דרך לסימנה %d מתוך %s
+Bookmark shortcut to page %s of %s
+קיצור דרך לסימנה %s מתוך %s
 
 Bookmarks
 מועדפים
@@ -356,11 +356,11 @@ Fit Width and Show Pages Continuously
 Fit a Single Page
 התאם עמוד אחד
 
-Found text at page %d
-%d חפש מלל בעמוד
+Found text at page %s
+%s חפש מלל בעמוד
 
-Found text at page %d (again)
-טקסט נמצא בעמוד %d (שוב)
+Found text at page %s (again)
+טקסט נמצא בעמוד %s (שוב)
 
 Frequently Read
 נקרא תכופות
@@ -621,18 +621,18 @@ printing document
 מדפיס מסמך
 
 # Untranslated:
-#(page %d)
+#(page %s)
 #Add Favorite
-#Add page %d to favorites
-#Add page %d to favorites with (optional) name:
+#Add page %s to favorites
+#Add page %s to favorites with (optional) name:
 #Add to favorites
 #Could not obtain Printer properties
 #Current file
 #F&avorites
 #Favorites
-#Page %d
+#Page %s
 #Printer with given name doesn't exist
 #Remove from favorites
-#Remove page %d from favorites
+#Remove page %s from favorites
 #Show Favorites
 

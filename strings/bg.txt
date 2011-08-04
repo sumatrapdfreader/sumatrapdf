@@ -158,8 +158,8 @@ Contributor: Nikolay Ikonomov
 (of %d)
 (от %d)
 
-(page %d)
-(страница %d)
+(page %s)
+(страница %s)
 
 About SumatraPDF
 За SumatraPDF
@@ -167,11 +167,11 @@ About SumatraPDF
 Add Favorite
 Добави Любими
 
-Add page %d to favorites
-Добави страница %d към любимите
+Add page %s to favorites
+Добави страница %s към любимите
 
-Add page %d to favorites with (optional) name:
-Добави страница %d към любимите с име (по избор):
+Add page %s to favorites with (optional) name:
+Добави страница %s към любимите с име (по избор):
 
 Add to favorites
 Добави към любимите
@@ -212,8 +212,8 @@ Book&marks\tF12
 Bookmark Shortcuts
 Кратък път към отметки
 
-Bookmark shortcut to page %d of %s
-Кратък път към отметка на страница %d от %s
+Bookmark shortcut to page %s of %s
+Кратък път към отметка на страница %s от %s
 
 Bookmarks
 Отметки
@@ -383,11 +383,11 @@ Fit Width and Show Pages Continuously
 Fit a Single Page
 Оразмери една страница
 
-Found text at page %d
-Текстът е намерен на страница %d
+Found text at page %s
+Текстът е намерен на страница %s
 
-Found text at page %d (again)
-Текстът е намерен на страница %d (отново)
+Found text at page %s (again)
+Текстът е намерен на страница %s (отново)
 
 Frequently Read
 Често четени
@@ -485,8 +485,8 @@ PDF документи
 Pa&ge...\tCtrl+G
 &Страница...\tCtrl+G
 
-Page %d
-Страница %d
+Page %s
+Страница %s
 
 Page Size:
 Размер на страницата:
@@ -536,8 +536,8 @@ Remember &opened files
 Remove from favorites
 Премахни от любимите
 
-Remove page %d from favorites
-Премахни страница %d от любимите
+Remove page %s from favorites
+Премахни страница %s от любимите
 
 Rotate &Left\tCtrl+Shift+-
 Завърти на&ляво\tCtrl+Shift+-

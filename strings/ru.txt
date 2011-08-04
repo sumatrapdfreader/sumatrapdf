@@ -159,8 +159,8 @@ Contributor: Victor Kozyakin
 (of %d)
 (из %d)
 
-(page %d)
-(стр. %d)
+(page %s)
+(стр. %s)
 
 About SumatraPDF
 О программе SumatraPDF
@@ -168,11 +168,11 @@ About SumatraPDF
 Add Favorite
 Добавить "Избранное"
 
-Add page %d to favorites
-Добавить стр. %d к избранному
+Add page %s to favorites
+Добавить стр. %s к избранному
 
-Add page %d to favorites with (optional) name:
-Добавить стр. %d к избранному с (необязательным) именем:
+Add page %s to favorites with (optional) name:
+Добавить стр. %s к избранному с (необязательным) именем:
 
 Add to favorites
 Добавить к избранному
@@ -213,8 +213,8 @@ Book&marks\tF12
 Bookmark Shortcuts
 Ярлыки закладок
 
-Bookmark shortcut to page %d of %s
-Ярлык закладки на стр. %d из %s
+Bookmark shortcut to page %s of %s
+Ярлык закладки на стр. %s из %s
 
 Bookmarks
 Закладки
@@ -384,11 +384,11 @@ Fit Width and Show Pages Continuously
 Fit a Single Page
 Подогнать страницу по размеру окна
 
-Found text at page %d
-Текст найден на стр. %d
+Found text at page %s
+Текст найден на стр. %s
 
-Found text at page %d (again)
-Текст найден на стр. %d (повторно)
+Found text at page %s (again)
+Текст найден на стр. %s (повторно)
 
 Frequently Read
 Часто используемые документы
@@ -486,8 +486,8 @@ PDF documents
 Pa&ge...\tCtrl+G
 &Указанная страница...\tCtrl+G
 
-Page %d
-Стр. %d
+Page %s
+Стр. %s
 
 Page Size:
 Формат страницы:
@@ -537,8 +537,8 @@ Remember &opened files
 Remove from favorites
 Удалить из избранного
 
-Remove page %d from favorites
-Удалить стр. %d из избранного
+Remove page %s from favorites
+Удалить стр. %s из избранного
 
 Rotate &Left\tCtrl+Shift+-
 Повернуть в&лево\tCtrl+Shift+-

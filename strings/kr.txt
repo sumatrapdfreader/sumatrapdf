@@ -273,8 +273,8 @@ Fit Page
 Fit Width
 꽉 찬 화면
 
-Found text at page %d
-%d 페이지에서 찾았습니다
+Found text at page %s
+%s 페이지에서 찾았습니다
 
 GB
 GB
@@ -461,14 +461,14 @@ printing document
 #&Save As...
 #&Single Page\tCtrl+6
 #&Use original page sizes
-#(page %d)
+#(page %s)
 #Add Favorite
-#Add page %d to favorites
-#Add page %d to favorites with (optional) name:
+#Add page %s to favorites
+#Add page %s to favorites with (optional) name:
 #Add to favorites
 #All supported documents
 #Bookmark Shortcuts
-#Bookmark shortcut to page %d of %s
+#Bookmark shortcut to page %s of %s
 #Cannot start inverse search command. Please check the command line in the settings.
 #Comic books
 #Continuous Book View
@@ -488,7 +488,7 @@ printing document
 #Fit Content
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
-#Found text at page %d (again)
+#Found text at page %s (again)
 #Frequently Read
 #Hide frequently read
 #Image files (*.%s)
@@ -498,7 +498,7 @@ printing document
 #No synchronization info at this position
 #Open a document...
 #P&roperties
-#Page %d
+#Page %s
 #Postscript documents
 #Pr&esentation\tCtrl+L
 #Print
@@ -506,7 +506,7 @@ printing document
 #Printing is still in progress. Abort and start over?
 #Printing page %d of %d...
 #Remove from favorites
-#Remove page %d from favorites
+#Remove page %s from favorites
 #Save S&hortcut...\tCtrl+Shift+S
 #Select &All
 #Select &All\tCtrl+A

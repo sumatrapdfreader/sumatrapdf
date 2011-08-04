@@ -161,13 +161,13 @@ struct FindThreadData : public ProgressUpdateUI {
            win->notifications->RemoveNotification(wnd);
        else if (!success && loopedAround)
            wnd->UpdateMessage(_TR("No matches were found"), 3000);
-       else if (!loopedAround) {
-           ScopedMem<TCHAR> buf(str::Format(_TR("Found text at page %d"), win->dm->CurrentPageNo()));
-           wnd->UpdateMessage(buf, 3000);
-       } else {
-           ScopedMem<TCHAR> buf(str::Format(_TR("Found text at page %d (again)"), win->dm->CurrentPageNo()));
-           wnd->UpdateMessage(buf, 3000, true);
-       }    
+       else {
+           ScopedMem<TCHAR> label(win->dm->engine->GetPageLabel(win->dm->CurrentPageNo()));
+           ScopedMem<TCHAR> buf(str::Format(_TR("Found text at page %s"), label));
+           if (loopedAround)
+               ScopedMem<TCHAR> buf(str::Format(_TR("Found text at page %s (again)"), label));
+           wnd->UpdateMessage(buf, 3000, loopedAround);
+       }
    }
 
    virtual bool UpdateProgress(int current, int total) {

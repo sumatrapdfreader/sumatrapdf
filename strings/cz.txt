@@ -160,8 +160,8 @@ Z&většení
 (of %d)
 (z %d)
 
-(page %d)
-(stránka %d)
+(page %s)
+(stránka %s)
 
 About SumatraPDF
 O programu SumatraPDF
@@ -169,11 +169,11 @@ O programu SumatraPDF
 Add Favorite
 Přidat oblíbenou položku
 
-Add page %d to favorites
-Přidat stránku %d k oblíbeným...
+Add page %s to favorites
+Přidat stránku %s k oblíbeným...
 
-Add page %d to favorites with (optional) name:
-Přidat stránku %d k oblíbeným s (volitelným) názvem:
+Add page %s to favorites with (optional) name:
+Přidat stránku %s k oblíbeným s (volitelným) názvem:
 
 Add to favorites
 Přidat k oblíbeným
@@ -214,8 +214,8 @@ Zál&ožky\tF12
 Bookmark Shortcuts
 Zástupce záložky
 
-Bookmark shortcut to page %d of %s
-Zástupce záložky na straně %d souboru %s
+Bookmark shortcut to page %s of %s
+Zástupce záložky na straně %s souboru %s
 
 Bookmarks
 Záložky
@@ -385,11 +385,11 @@ Přizpůsobit šířce okna a zobrazit stránky průběžně
 Fit a Single Page
 Přizpůsobit pro jednu celou stránku v okně
 
-Found text at page %d
-Položka nalezena na stránce %d
+Found text at page %s
+Položka nalezena na stránce %s
 
-Found text at page %d (again)
-Položka nalezena na stránce %d (znovu)
+Found text at page %s (again)
+Položka nalezena na stránce %s (znovu)
 
 Frequently Read
 Často čtené dokumenty
@@ -487,8 +487,8 @@ PDF dokumenty
 Pa&ge...\tCtrl+G
 Strán&ka...\tCtrl+G
 
-Page %d
-Stránka %d
+Page %s
+Stránka %s
 
 Page Size:
 Velikost stránky:
@@ -538,8 +538,8 @@ Pamatovat si &otevřené soubory
 Remove from favorites
 Odebrat z oblíbených
 
-Remove page %d from favorites
-Odebrat stránku %d z oblíbených
+Remove page %s from favorites
+Odebrat stránku %s z oblíbených
 
 Rotate &Left\tCtrl+Shift+-
 Otočit do&leva\tCtrl+Shift+Num-

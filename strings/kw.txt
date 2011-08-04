@@ -231,8 +231,8 @@ Desedha Folen
 Fit Width
 Desedha Les
 
-Found text at page %d
-Tekst kevys war folen %d
+Found text at page %s
+Tekst kevys war folen %s
 
 GB
 GB
@@ -420,17 +420,17 @@ Faktor-zoum
 #&Shrink pages to printable area (if necessary)
 #&Single Page\tCtrl+6
 #&Use original page sizes
-#(page %d)
+#(page %s)
 #Add Favorite
-#Add page %d to favorites
-#Add page %d to favorites with (optional) name:
+#Add page %s to favorites
+#Add page %s to favorites with (optional) name:
 #Add to favorites
 #All supported documents
 #Application:
 #Attachment: %s
 #Author:
 #Bookmark Shortcuts
-#Bookmark shortcut to page %d of %s
+#Bookmark shortcut to page %s of %s
 #Bookmarks
 #Bytes
 #Can't connect to the Internet (error %#x).
@@ -454,7 +454,7 @@ Faktor-zoum
 #Fit Content
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
-#Found text at page %d (again)
+#Found text at page %s (again)
 #Frequently Read
 #Hide frequently read
 #Image files (*.%s)
@@ -465,7 +465,7 @@ Faktor-zoum
 #P&roperties\tCtrl+D
 #PDF Producer:
 #PDF Version:
-#Page %d
+#Page %s
 #Page Size:
 #Page scaling
 #Postscript documents
@@ -476,7 +476,7 @@ Faktor-zoum
 #Printing is still in progress. Abort and start over?
 #Printing page %d of %d...
 #Remove from favorites
-#Remove page %d from favorites
+#Remove page %s from favorites
 #Save S&hortcut...\tCtrl+Shift+S
 #Select &All
 #Select &All\tCtrl+A

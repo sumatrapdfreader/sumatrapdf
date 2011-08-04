@@ -198,8 +198,8 @@ Zaznamki\tF12
 Bookmark Shortcuts
 Zaznamki bližnjic
 
-Bookmark shortcut to page %d of %s
-Zaznamek bližnjice na stran %d od %s
+Bookmark shortcut to page %s of %s
+Zaznamek bližnjice na stran %s od %s
 
 Bookmarks
 Zaznamki
@@ -357,11 +357,11 @@ Prilagodi po širini in prikaži strani nepretrgano
 Fit a Single Page
 Prilagodi enostransko
 
-Found text at page %d
-Besedilo najdeno na strani %d
+Found text at page %s
+Besedilo najdeno na strani %s
 
-Found text at page %d (again)
-Besedilo najdeno na strani %d (ponovno)
+Found text at page %s (again)
+Besedilo najdeno na strani %s (ponovno)
 
 Frequently Read
 Pogosto brani
@@ -622,18 +622,18 @@ printing document
 tiskanje dokumenta
 
 # Untranslated:
-#(page %d)
+#(page %s)
 #Add Favorite
-#Add page %d to favorites
-#Add page %d to favorites with (optional) name:
+#Add page %s to favorites
+#Add page %s to favorites with (optional) name:
 #Add to favorites
 #Could not obtain Printer properties
 #Current file
 #F&avorites
 #Favorites
-#Page %d
+#Page %s
 #Printer with given name doesn't exist
 #Remove from favorites
-#Remove page %d from favorites
+#Remove page %s from favorites
 #Show Favorites
 

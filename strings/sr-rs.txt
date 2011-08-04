@@ -159,8 +159,8 @@ Contributor: Милан Гашић
 (of %d)
 (од %d)
 
-(page %d)
-(страница %d)
+(page %s)
+(страница %s)
 
 About SumatraPDF
 О програму SumatraPDF
@@ -168,11 +168,11 @@ About SumatraPDF
 Add Favorite
 Додај у одабир
 
-Add page %d to favorites
-Додај страницу %d у одабир
+Add page %s to favorites
+Додај страницу %s у одабир
 
-Add page %d to favorites with (optional) name:
-Додај страницу %d у одабир под (опционо) именом:
+Add page %s to favorites with (optional) name:
+Додај страницу %s у одабир под (опционо) именом:
 
 Add to favorites
 Додај у одабир
@@ -213,8 +213,8 @@ Book&marks\tF12
 Bookmark Shortcuts
 Запамти пречице
 
-Bookmark shortcut to page %d of %s
-Запамти пречицу на страни %d од %s
+Bookmark shortcut to page %s of %s
+Запамти пречицу на страни %s од %s
 
 Bookmarks
 Одабир
@@ -384,11 +384,11 @@ Fit Width and Show Pages Continuously
 Fit a Single Page
 Прилагоди појединачној страници
 
-Found text at page %d
-Текст је пронађен на страни %d
+Found text at page %s
+Текст је пронађен на страни %s
 
-Found text at page %d (again)
-Пронађи текст на страни %d (поново)
+Found text at page %s (again)
+Пронађи текст на страни %s (поново)
 
 Frequently Read
 Често читано
@@ -486,8 +486,8 @@ PDF документи
 Pa&ge...\tCtrl+G
 Страница...\tCtrl+G
 
-Page %d
-Страница %d
+Page %s
+Страница %s
 
 Page Size:
 Величина странице
@@ -537,8 +537,8 @@ Remember &opened files
 Remove from favorites
 Уклони из одабира
 
-Remove page %d from favorites
-Уклони страницу %d из одабира
+Remove page %s from favorites
+Уклони страницу %s из одабира
 
 Rotate &Left\tCtrl+Shift+-
 Ротирај улево\tCtrl+Shift+-

@@ -203,11 +203,13 @@ MenuDef menuDefFavContext[] = {
 // caller has to free() the result
 static TCHAR *FavReadableName(FavName *fn)
 {
+    // TODO: save non-default page labels (cf. BaseEngine::GetPageLabel)
+    ScopedMem<TCHAR> label(str::Format(_T("%d"), fn->pageNo));
     if (fn->name) {
-        ScopedMem<TCHAR> pageNo(str::Format(_TR("(page %d)"), fn->pageNo));
+        ScopedMem<TCHAR> pageNo(str::Format(_TR("(page %s)"), label));
         return str::Join(fn->name, _T(" "), pageNo);
     }
-    return str::Format(_TR("Page %d"), fn->pageNo);
+    return str::Format(_TR("Page %s"), label);
 }
 
 // caller has to free() the result
@@ -323,7 +325,7 @@ static void AppendFavMenus(HMENU m, const TCHAR *currFilePath)
 //   disable "add" menu item and enable "remove" menu item
 // - if a document is opened and the page is not bookmarked,
 //   enable "add" menu item and disable "remove" menu item
-static void RebuildFavMenu(TCHAR *filePath, int pageNo, HMENU menu)
+static void RebuildFavMenu(TCHAR *filePath, int pageNo, HMENU menu, BaseEngine *engine=NULL)
 {
     win::menu::Empty(menu);
     BuildMenuFromMenuDef(menuDefFavorites, 3, menu);
@@ -332,15 +334,15 @@ static void RebuildFavMenu(TCHAR *filePath, int pageNo, HMENU menu)
         win::menu::SetEnabled(menu, IDM_FAV_DEL, false);
         AppendFavMenus(menu, NULL);
     } else {
+        ScopedMem<TCHAR> label(engine ? engine->GetPageLabel(pageNo) : str::Format(_T("%d"), pageNo));
         bool isBookmarked = gFavorites->IsPageInFavorites(filePath, pageNo);
-        if (isBookmarked)
-        {
+        if (isBookmarked) {
             win::menu::SetEnabled(menu, IDM_FAV_ADD, false);
-            ScopedMem<TCHAR> s(str::Format(_TR("Remove page %d from favorites"), pageNo));
+            ScopedMem<TCHAR> s(str::Format(_TR("Remove page %s from favorites"), label));
             win::menu::SetText(menu, IDM_FAV_DEL, s);
         } else {
             win::menu::SetEnabled(menu, IDM_FAV_DEL, false);
-            ScopedMem<TCHAR> s(str::Format(_TR("Add page %d to favorites"), pageNo));
+            ScopedMem<TCHAR> s(str::Format(_TR("Add page %s to favorites"), label));
             win::menu::SetText(menu, IDM_FAV_ADD, s);
         }
         AppendFavMenus(menu, filePath);
@@ -351,7 +353,7 @@ static void RebuildFavMenu(TCHAR *filePath, int pageNo, HMENU menu)
 void RebuildFavMenu(WindowInfo *win, HMENU menu)
 {
     if (win->IsDocLoaded()) {
-        RebuildFavMenu(win->loadedFilePath, win->currPageNo, menu);
+        RebuildFavMenu(win->loadedFilePath, win->currPageNo, menu, win->dm->engine);
     } else {
         RebuildFavMenu(NULL, 0, menu);
     }
@@ -592,15 +594,16 @@ void AddFavorite(WindowInfo *win)
 {
     int pageNo = win->currPageNo;
     ScopedMem<TCHAR> name;
-    if (win->IsDocLoaded() && win->dm->HasTocTree()) {
+    if (win->dm->HasTocTree()) {
         // use the current ToC heading as default name
         DocToCItem *root = win->dm->engine->GetToCTree();
         DocToCItem *item = ToCItemForPageNo(root, pageNo);
         name.Set(str::Dup(item->title));
         delete root;
     }
+    ScopedMem<TCHAR> pageLabel(win->dm->engine->GetPageLabel(pageNo));
 
-    bool shouldAdd = Dialog_AddFavorite(win->hwndFrame, pageNo, name);
+    bool shouldAdd = Dialog_AddFavorite(win->hwndFrame, pageLabel, name);
     if (!shouldAdd)
         return;
 

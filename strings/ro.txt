@@ -158,8 +158,8 @@ O &singură pagină\tCtrl+6
 (of %d)
 (de %d)
 
-(page %d)
-(pagina %d)
+(page %s)
+(pagina %s)
 
 About SumatraPDF
 Despre SumatraPDF
@@ -167,11 +167,11 @@ Despre SumatraPDF
 Add Favorite
 Adaugă ca favorit
 
-Add page %d to favorites
-Adaugă pagina %d la favorite
+Add page %s to favorites
+Adaugă pagina %s la favorite
 
-Add page %d to favorites with (optional) name:
-Adaugă pagina %d la favorite cu (opțional) numele:
+Add page %s to favorites with (optional) name:
+Adaugă pagina %s la favorite cu (opțional) numele:
 
 Add to favorites
 Adaugă la favorite
@@ -212,8 +212,8 @@ Marcaje\tF12
 Bookmark Shortcuts
 Legături rapide - semne de carte
 
-Bookmark shortcut to page %d of %s
-Legătură rapidă către pagina %d din %s
+Bookmark shortcut to page %s of %s
+Legătură rapidă către pagina %s din %s
 
 Bookmarks
 Marcaje
@@ -383,11 +383,11 @@ Potrivire după lățime și afișare continuă a paginilor
 Fit a Single Page
 Potrivire pentru o singură pagină
 
-Found text at page %d
-Am găsit textul la pagina %d
+Found text at page %s
+Am găsit textul la pagina %s
 
-Found text at page %d (again)
-Găsit textul la pagina %d (din nou)
+Found text at page %s (again)
+Găsit textul la pagina %s (din nou)
 
 Frequently Read
 Citite frecvent
@@ -485,8 +485,8 @@ Documente PDF
 Pa&ge...\tCtrl+G
 Pagina...\tCtrl+G
 
-Page %d
-Pagina %d
+Page %s
+Pagina %s
 
 Page Size:
 Mărime pagină:
@@ -536,8 +536,8 @@ Remember &opened files
 Remove from favorites
 Scoate de la favorite
 
-Remove page %d from favorites
-Scoate pagina %d de la favorite
+Remove page %s from favorites
+Scoate pagina %s de la favorite
 
 Rotate &Left\tCtrl+Shift+-
 Rotește spre stânga\tCtrl+Shift+-

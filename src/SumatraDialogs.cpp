@@ -858,7 +858,7 @@ HPROPSHEETPAGE CreatePrintAdvancedPropSheet(Print_Advanced_Data *data, ScopedMem
 }
 
 struct Dialog_AddFav_Data {
-    int pageNo;
+    const TCHAR *pageNo;
     TCHAR *favName;
 };
 
@@ -870,7 +870,7 @@ static INT_PTR CALLBACK Dialog_AddFav_Proc(HWND hDlg, UINT msg, WPARAM wParam,
         assert(data);
         SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
         win::SetText(hDlg, _TR("Add Favorite"));
-        ScopedMem<TCHAR> s(str::Format(_TR("Add page %d to favorites with (optional) name:"), data->pageNo));
+        ScopedMem<TCHAR> s(str::Format(_TR("Add page %s to favorites with (optional) name:"), data->pageNo));
         SetDlgItemText(hDlg, IDC_ADD_PAGE_STATIC, s);
         SetDlgItemText(hDlg, IDOK, _TR("OK"));
         SetDlgItemText(hDlg, IDCANCEL, _TR("Cancel"));
@@ -909,7 +909,7 @@ static INT_PTR CALLBACK Dialog_AddFav_Proc(HWND hDlg, UINT msg, WPARAM wParam,
 // returns true if the user wants to add a favorite.
 // favName is the name the user wants the favorite to have
 // (passing in a non-NULL favName will use it as default name)
-bool Dialog_AddFavorite(HWND hwnd, int pageNo, ScopedMem<TCHAR>& favName)
+bool Dialog_AddFavorite(HWND hwnd, const TCHAR *pageNo, ScopedMem<TCHAR>& favName)
 {
     Dialog_AddFav_Data data;
     data.pageNo = pageNo;

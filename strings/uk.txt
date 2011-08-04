@@ -179,8 +179,8 @@ Book&marks\tF12
 Bookmark Shortcuts
 Закладка ярликів
 
-Bookmark shortcut to page %d of %s
-Закладка ярлика на сторінку %d з %s
+Bookmark shortcut to page %s of %s
+Закладка ярлика на сторінку %s з %s
 
 Bookmarks
 Закладки
@@ -335,11 +335,11 @@ Fit Width and Show Pages Continuously
 Fit a Single Page
 Вмістити на сторінку
 
-Found text at page %d
-Знайти текст на %d сторінці
+Found text at page %s
+Знайти текст на %s сторінці
 
-Found text at page %d (again)
-Знайти текст на сторінці %d (знову)
+Found text at page %s (again)
+Знайти текст на сторінці %s (знову)
 
 GB
 GB
@@ -579,10 +579,10 @@ printing document
 #&Pin Document
 #&Remove Document
 #&Single Page\tCtrl+6
-#(page %d)
+#(page %s)
 #Add Favorite
-#Add page %d to favorites
-#Add page %d to favorites with (optional) name:
+#Add page %s to favorites
+#Add page %s to favorites with (optional) name:
 #Add to favorites
 #Could not obtain Printer properties
 #Current file
@@ -592,14 +592,14 @@ printing document
 #Frequently Read
 #Hide frequently read
 #Open a document...
-#Page %d
+#Page %s
 #Postscript documents
 #Print
 #Printer with given name doesn't exist
 #Printing is still in progress. Abort and start over?
 #Printing page %d of %d...
 #Remove from favorites
-#Remove page %d from favorites
+#Remove page %s from favorites
 #Show Favorites
 #Show frequently read
 #Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.

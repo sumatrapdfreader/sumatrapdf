@@ -161,8 +161,8 @@ Seitengröße &nicht anpassen
 (of %d)
 (von %d)
 
-(page %d)
-(Seite %d)
+(page %s)
+(Seite %s)
 
 About SumatraPDF
 Über SumatraPDF
@@ -170,11 +170,11 @@ About SumatraPDF
 Add Favorite
 Favoriten hinzufügen
 
-Add page %d to favorites
-Seite %d hinzufügen…
+Add page %s to favorites
+Seite %s hinzufügen…
 
-Add page %d to favorites with (optional) name:
-Bezeichnung des Favoriten für Seite %d (optional):
+Add page %s to favorites with (optional) name:
+Bezeichnung des Favoriten für Seite %s (optional):
 
 Add to favorites
 Zu Favoriten hinzufügen
@@ -215,8 +215,8 @@ Lese&zeichen\tF12
 Bookmark Shortcuts
 Lesezeichen-Verknüpfungen
 
-Bookmark shortcut to page %d of %s
-Lesezeichen-Verknüpfung zu Seite %d von %s
+Bookmark shortcut to page %s of %s
+Lesezeichen-Verknüpfung zu Seite %s von %s
 
 Bookmarks
 Lesezeichen
@@ -386,11 +386,11 @@ An Breite anpassen und Seiten fortlaufend anzeigen
 Fit a Single Page
 An eine einzelne Seite anpassen
 
-Found text at page %d
-Text auf Seite %d gefunden
+Found text at page %s
+Text auf Seite %s gefunden
 
-Found text at page %d (again)
-Text auf Seite %d gefunden (erneut)
+Found text at page %s (again)
+Text auf Seite %s gefunden (erneut)
 
 Frequently Read
 Oft gelesenene Dokumente
@@ -488,8 +488,8 @@ PDF-Dokumente
 Pa&ge...\tCtrl+G
 &Seite…\tStrg+G
 
-Page %d
-Seite %d
+Page %s
+Seite %s
 
 Page Size:
 Seitengröße:
@@ -539,8 +539,8 @@ Liste der &zuletzt geöffneten Dokumente anlegen
 Remove from favorites
 Aus Favoriten entfernen
 
-Remove page %d from favorites
-Seite %d aus Favoriten entfernen
+Remove page %s from favorites
+Seite %s aus Favoriten entfernen
 
 Rotate &Left\tCtrl+Shift+-
 &Gegen UZS drehen\tStrg+Umschalt+-

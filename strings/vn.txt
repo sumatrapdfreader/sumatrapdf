@@ -158,8 +158,8 @@ Thu-&Phóng
 (of %d)
 (trên %d)
 
-(page %d)
-(trang %d)
+(page %s)
+(trang %s)
 
 About SumatraPDF
 Giới thiệu SumatraPDF
@@ -167,11 +167,11 @@ Giới thiệu SumatraPDF
 Add Favorite
 Thêm Ưa thích
 
-Add page %d to favorites
-Thêm trang %d vào Ưa thích
+Add page %s to favorites
+Thêm trang %s vào Ưa thích
 
-Add page %d to favorites with (optional) name:
-Thêm trang %d vào Ưa thích với tên (tùy chọn):
+Add page %s to favorites with (optional) name:
+Thêm trang %s vào Ưa thích với tên (tùy chọn):
 
 Add to favorites
 Thêm vào Ưa thích
@@ -212,8 +212,8 @@ Chỉ dấu sách\tF12
 Bookmark Shortcuts
 Lối tắt chỉ dấu sách
 
-Bookmark shortcut to page %d of %s
-Lối tắt chỉ dấu sách đến trang %d của %s
+Bookmark shortcut to page %s of %s
+Lối tắt chỉ dấu sách đến trang %s của %s
 
 Bookmarks
 Chỉ dấu sách
@@ -383,11 +383,11 @@ Vừa chiều rộng và Xem trang liên tiếp
 Fit a Single Page
 Vừa một trang đơn
 
-Found text at page %d
-Tìm thấy từ ở trang %d
+Found text at page %s
+Tìm thấy từ ở trang %s
 
-Found text at page %d (again)
-Tìm thấy đoạn văn bản tại trang %d (lần nữa)
+Found text at page %s (again)
+Tìm thấy đoạn văn bản tại trang %s (lần nữa)
 
 Frequently Read
 Đọc thường xuyên
@@ -485,8 +485,8 @@ Tập tin PDF
 Pa&ge...\tCtrl+G
 Trang...\tCtrl+G
 
-Page %d
-Trang %d
+Page %s
+Trang %s
 
 Page Size:
 Kích thước trang:
@@ -536,8 +536,8 @@ Nhớ các tập tin đã mở
 Remove from favorites
 Xóa khỏi Ưa thích
 
-Remove page %d from favorites
-Xoá trang %d khỏi Ưa thích
+Remove page %s from favorites
+Xoá trang %s khỏi Ưa thích
 
 Rotate &Left\tCtrl+Shift+-
 Quay trái\tCtrl+Shift+-

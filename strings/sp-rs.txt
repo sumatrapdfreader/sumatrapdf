@@ -218,8 +218,8 @@ Prilagodi strani
 Fit Width
 Prilagodi širini
 
-Found text at page %d
-Tekst je pronađen na strani %d
+Found text at page %s
+Tekst je pronađen na strani %s
 
 GB
 GB
@@ -402,10 +402,10 @@ Faktor uvećanja
 #&Shrink pages to printable area (if necessary)
 #&Single Page\tCtrl+6
 #&Use original page sizes
-#(page %d)
+#(page %s)
 #Add Favorite
-#Add page %d to favorites
-#Add page %d to favorites with (optional) name:
+#Add page %s to favorites
+#Add page %s to favorites with (optional) name:
 #Add to favorites
 #All supported documents
 #Application:
@@ -413,7 +413,7 @@ Faktor uvećanja
 #Author:
 #Book View
 #Bookmark Shortcuts
-#Bookmark shortcut to page %d of %s
+#Bookmark shortcut to page %s of %s
 #Bookmarks
 #Bytes
 #Can't connect to the Internet (error %#x).
@@ -439,7 +439,7 @@ Faktor uvećanja
 #Fit Content
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
-#Found text at page %d (again)
+#Found text at page %s (again)
 #Frequently Read
 #Hide frequently read
 #Image files (*.%s)
@@ -450,7 +450,7 @@ Faktor uvećanja
 #P&roperties\tCtrl+D
 #PDF Producer:
 #PDF Version:
-#Page %d
+#Page %s
 #Page Size:
 #Page scaling
 #Postscript documents
@@ -461,7 +461,7 @@ Faktor uvećanja
 #Printing is still in progress. Abort and start over?
 #Printing page %d of %d...
 #Remove from favorites
-#Remove page %d from favorites
+#Remove page %s from favorites
 #Save S&hortcut...\tCtrl+Shift+S
 #Select &All
 #Select &All\tCtrl+A

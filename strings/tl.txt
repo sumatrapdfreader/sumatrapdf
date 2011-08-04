@@ -320,8 +320,8 @@ Pagkasyahin ang lapad at ipakita nang tuluy-tuloy ang mga pahina
 Fit a Single Page
 Pagkasyahin ang isang pahina
 
-Found text at page %d
-Nakita ang salita sa pahina %d
+Found text at page %s
+Nakita ang salita sa pahina %s
 
 GB
 GB
@@ -552,14 +552,14 @@ ipini-print ang dokumento
 #&Pin Document
 #&Remove Document
 #&Single Page\tCtrl+6
-#(page %d)
+#(page %s)
 #Add Favorite
-#Add page %d to favorites
-#Add page %d to favorites with (optional) name:
+#Add page %s to favorites
+#Add page %s to favorites with (optional) name:
 #Add to favorites
 #All supported documents
 #Bookmark Shortcuts
-#Bookmark shortcut to page %d of %s
+#Bookmark shortcut to page %s of %s
 #Comic books
 #Could not obtain Printer properties
 #Current file
@@ -567,19 +567,19 @@ ipini-print ang dokumento
 #Error loading %s
 #F&avorites
 #Favorites
-#Found text at page %d (again)
+#Found text at page %s (again)
 #Frequently Read
 #Hide frequently read
 #Image files (*.%s)
 #Open a document...
-#Page %d
+#Page %s
 #Postscript documents
 #Print
 #Printer with given name doesn't exist
 #Printing is still in progress. Abort and start over?
 #Printing page %d of %d...
 #Remove from favorites
-#Remove page %d from favorites
+#Remove page %s from favorites
 #Save S&hortcut...\tCtrl+Shift+S
 #Show Favorites
 #Show frequently read

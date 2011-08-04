@@ -164,8 +164,8 @@ Originele paginagrootte gebruiken
 (of %d)
 (van %d)
 
-(page %d)
-(pagina %d)
+(page %s)
+(pagina %s)
 
 About SumatraPDF
 Over SumatraPDF
@@ -173,11 +173,11 @@ Over SumatraPDF
 Add Favorite
 Voeg Favoriet toe
 
-Add page %d to favorites
-Voeg pagina %d toe aan favorieten
+Add page %s to favorites
+Voeg pagina %s toe aan favorieten
 
-Add page %d to favorites with (optional) name:
-Voeg pagina %d toe aan favorieten met (optionele) naam:
+Add page %s to favorites with (optional) name:
+Voeg pagina %s toe aan favorieten met (optionele) naam:
 
 Add to favorites
 Voeg toe aan favorieten
@@ -218,8 +218,8 @@ Bladwijzers\tF12
 Bookmark Shortcuts
 Bladwijzer maken
 
-Bookmark shortcut to page %d of %s
-Bladwijzer maken naar pagina %d van %s
+Bookmark shortcut to page %s of %s
+Bladwijzer maken naar pagina %s van %s
 
 Bookmarks
 Bladwijzers
@@ -389,11 +389,11 @@ Passend in breedte en pagina's doorlopend
 Fit a Single Page
 Hele pagina passend maken
 
-Found text at page %d
-Tekst gevonden op pagina %d
+Found text at page %s
+Tekst gevonden op pagina %s
 
-Found text at page %d (again)
-Tekst gevonden op pagina %d (opnieuw)
+Found text at page %s (again)
+Tekst gevonden op pagina %s (opnieuw)
 
 Frequently Read
 Vaak gelezen
@@ -491,8 +491,8 @@ PDF-bestanden
 Pa&ge...\tCtrl+G
 Pa&gina...\tCtrl+G
 
-Page %d
-Pagina %d
+Page %s
+Pagina %s
 
 Page Size:
 Paginagrootte:
@@ -542,8 +542,8 @@ Onthoud ge&opende bestanden
 Remove from favorites
 Verwijder uit favorieten
 
-Remove page %d from favorites
-Verwijder pagina %d uit favorieten
+Remove page %s from favorites
+Verwijder pagina %s uit favorieten
 
 Rotate &Left\tCtrl+Shift+-
 Linksom draaien\tCtrl+Shift+-

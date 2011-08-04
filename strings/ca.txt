@@ -305,8 +305,8 @@ ajusta l'amplada i mostra les pàgines de forma contínua
 Fit a Single Page
 Ajusta una única pàgina
 
-Found text at page %d
-S'ha trobat el text a la pagina %d
+Found text at page %s
+S'ha trobat el text a la pagina %s
 
 GB
 GB
@@ -531,14 +531,14 @@ s'està imprimint el document
 #&Remove Document
 #&Save As...
 #&Single Page\tCtrl+6
-#(page %d)
+#(page %s)
 #Add Favorite
-#Add page %d to favorites
-#Add page %d to favorites with (optional) name:
+#Add page %s to favorites
+#Add page %s to favorites with (optional) name:
 #Add to favorites
 #All supported documents
 #Bookmark Shortcuts
-#Bookmark shortcut to page %d of %s
+#Bookmark shortcut to page %s of %s
 #Comic books
 #Copy &Link Address
 #Copy Co&mment
@@ -548,21 +548,21 @@ s'està imprimint el document
 #Error loading %s
 #F&avorites
 #Favorites
-#Found text at page %d (again)
+#Found text at page %s (again)
 #Frequently Read
 #Hide frequently read
 #Image files (*.%s)
 #New version %s is available. Download new version?
 #Open a document...
 #P&roperties
-#Page %d
+#Page %s
 #Postscript documents
 #Print
 #Printer with given name doesn't exist
 #Printing is still in progress. Abort and start over?
 #Printing page %d of %d...
 #Remove from favorites
-#Remove page %d from favorites
+#Remove page %s from favorites
 #Save S&hortcut...\tCtrl+Shift+S
 #Select &All
 #Show Favorites

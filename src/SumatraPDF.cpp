@@ -2254,8 +2254,9 @@ static void OnMenuSaveBookmark(WindowInfo& win)
     ScopedMem<TCHAR> exePath(GetExePath());
     ScopedMem<TCHAR> args(str::Format(_T("\"%s\" -page %d -view \"%s\" -zoom %s -scroll %d,%d -reuse-instance"),
                           win.dm->FileName(), ss.page, viewMode, ZoomVirtual, (int)ss.x, (int)ss.y));
-    ScopedMem<TCHAR> desc(str::Format(_TR("Bookmark shortcut to page %d of %s"),
-                          ss.page, path::GetBaseName(win.dm->FileName())));
+    ScopedMem<TCHAR> label(win.dm->engine->GetPageLabel(ss.page));
+    ScopedMem<TCHAR> desc(str::Format(_TR("Bookmark shortcut to page %s of %s"),
+                          label, path::GetBaseName(win.dm->FileName())));
 
     CreateShortcut(filename, exePath, args, desc, 1);
 }

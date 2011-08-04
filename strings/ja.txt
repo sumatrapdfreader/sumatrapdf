@@ -304,8 +304,8 @@ Fit Width and Show Pages Continuously
 Fit a Single Page
 単一のページに合わせる
 
-Found text at page %d
-ページ %d でテキストが見つかりました
+Found text at page %s
+ページ %s でテキストが見つかりました
 
 GB
 GB
@@ -527,14 +527,14 @@ printing document
 #&Remove Document
 #&Save As...
 #&Single Page\tCtrl+6
-#(page %d)
+#(page %s)
 #Add Favorite
-#Add page %d to favorites
-#Add page %d to favorites with (optional) name:
+#Add page %s to favorites
+#Add page %s to favorites with (optional) name:
 #Add to favorites
 #All supported documents
 #Bookmark Shortcuts
-#Bookmark shortcut to page %d of %s
+#Bookmark shortcut to page %s of %s
 #Comic books
 #Copy &Link Address
 #Copy Co&mment
@@ -544,21 +544,21 @@ printing document
 #Error loading %s
 #F&avorites
 #Favorites
-#Found text at page %d (again)
+#Found text at page %s (again)
 #Frequently Read
 #Hide frequently read
 #Image files (*.%s)
 #No result found around line %u in file %s
 #Open a document...
 #P&roperties
-#Page %d
+#Page %s
 #Postscript documents
 #Print
 #Printer with given name doesn't exist
 #Printing is still in progress. Abort and start over?
 #Printing page %d of %d...
 #Remove from favorites
-#Remove page %d from favorites
+#Remove page %s from favorites
 #Save S&hortcut...\tCtrl+Shift+S
 #Select &All
 #Select &All\tCtrl+A

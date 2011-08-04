@@ -160,8 +160,8 @@ Halaman &Tunggal\tCtrl+6
 (of %d)
 (atau %d)
 
-(page %d)
-(halaman %d)
+(page %s)
+(halaman %s)
 
 About SumatraPDF
 Tentang SumatraPDF
@@ -169,11 +169,11 @@ Tentang SumatraPDF
 Add Favorite
 Tambah Favorit
 
-Add page %d to favorites
-Tambah halaman %d ke favorit
+Add page %s to favorites
+Tambah halaman %s ke favorit
 
-Add page %d to favorites with (optional) name:
-Tambah halaman %d ke favorit dengan nama:
+Add page %s to favorites with (optional) name:
+Tambah halaman %s ke favorit dengan nama:
 
 Add to favorites
 Tambah ke favorit
@@ -214,8 +214,8 @@ Book&marks\tF12
 Bookmark Shortcuts
 Jalan Pintas Markah
 
-Bookmark shortcut to page %d of %s
-Jalan pintas markah ke halaman %d dari %s
+Bookmark shortcut to page %s of %s
+Jalan pintas markah ke halaman %s dari %s
 
 Bookmarks
 Markah
@@ -385,11 +385,11 @@ Sesuaikan Lebar Dan Tampilkan Halaman Secara Kontinu
 Fit a Single Page
 Sesuaikan Halaman Tunggal
 
-Found text at page %d
-Teks ditemukan pada halaman %d
+Found text at page %s
+Teks ditemukan pada halaman %s
 
-Found text at page %d (again)
-Teks ditemukan pada halaman %d (lagi)
+Found text at page %s (again)
+Teks ditemukan pada halaman %s (lagi)
 
 Frequently Read
 Yang Sering Dibaca
@@ -487,8 +487,8 @@ Dokumen PDF
 Pa&ge...\tCtrl+G
 Halaman...\tCtrl+G
 
-Page %d
-Halaman %d
+Page %s
+Halaman %s
 
 Page Size:
 Ukuran Halaman:
@@ -538,8 +538,8 @@ Ingat &berkas yang pernah dibuka
 Remove from favorites
 Hapus dari favorit
 
-Remove page %d from favorites
-Hapus halaman %d dari favorit
+Remove page %s from favorites
+Hapus halaman %s dari favorit
 
 Rotate &Left\tCtrl+Shift+-
 Putar Ke Kiri\tCtrl+Shift+-

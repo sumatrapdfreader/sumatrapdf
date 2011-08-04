@@ -159,8 +159,8 @@ Na&udoti originalius puslapių dydžius
 (of %d)
 (iš %d)
 
-(page %d)
-(%d psl.)
+(page %s)
+(%s psl.)
 
 About SumatraPDF
 Apie „SumatraPDF“
@@ -168,11 +168,11 @@ Apie „SumatraPDF“
 Add Favorite
 Sukurti žymą
 
-Add page %d to favorites
-Sukurti žymą į %d puslapį
+Add page %s to favorites
+Sukurti žymą į %s puslapį
 
-Add page %d to favorites with (optional) name:
-Sukurti žymą į %d puslapį, suteikiant jai šį pavadinimą (neprivalomas):
+Add page %s to favorites with (optional) name:
+Sukurti žymą į %s puslapį, suteikiant jai šį pavadinimą (neprivalomas):
 
 Add to favorites
 Sukurti žymą
@@ -378,11 +378,11 @@ Visas puslapio plotis, nenutrūkstama peržiūra
 Fit a Single Page
 Visas puslapis
 
-Found text at page %d
-Ieškoti teksto %d puslapyje
+Found text at page %s
+Ieškoti teksto %s puslapyje
 
-Found text at page %d (again)
-Rastas tekstas %d puslapyje (vėl)
+Found text at page %s (again)
+Rastas tekstas %s puslapyje (vėl)
 
 Frequently Read
 Dažniausiai skaitomi
@@ -480,8 +480,8 @@ PDF dokumentai
 Pa&ge...\tCtrl+G
 P&uslapis...\tCtrl+G
 
-Page %d
-%d puslapis
+Page %s
+%s puslapis
 
 Page Size:
 Puslapio dydis:
@@ -531,8 +531,8 @@ Remember &opened files
 Remove from favorites
 Pašalinti iš parankinių
 
-Remove page %d from favorites
-Pašalinti %d puslapį iš parankinių
+Remove page %s from favorites
+Pašalinti %s puslapį iš parankinių
 
 Rotate &Left\tCtrl+Shift+-
 Pasukti į &kairę\tCtrl+Shift+-
@@ -656,6 +656,6 @@ spausdinamas dokumentas
 
 # Untranslated:
 #Bookmark Shortcuts
-#Bookmark shortcut to page %d of %s
+#Bookmark shortcut to page %s of %s
 #Save S&hortcut...\tCtrl+Shift+S
 

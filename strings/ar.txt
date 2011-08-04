@@ -160,8 +160,8 @@ Contributor: Abu Abdullah (falcon.sheep@gmail.com)
 (of %d)
 (من %d)
 
-(page %d)
-(الصفحة %d)
+(page %s)
+(الصفحة %s)
 
 About SumatraPDF
 SumatraPDF حول برنامج
@@ -169,11 +169,11 @@ SumatraPDF حول برنامج
 Add Favorite
 أضف للمفضلة
 
-Add page %d to favorites
-أضف الصفحة %d للمفضلة
+Add page %s to favorites
+أضف الصفحة %s للمفضلة
 
-Add page %d to favorites with (optional) name:
-أضف الصفحة %d للمفضلة باسم (اختياري):
+Add page %s to favorites with (optional) name:
+أضف الصفحة %s للمفضلة باسم (اختياري):
 
 Add to favorites
 أضف للمفضلة
@@ -214,8 +214,8 @@ Book&marks\tF12
 Bookmark Shortcuts
 اختصارات مرجعية
 
-Bookmark shortcut to page %d of %s
-اختصار مرجعية للصفحة %d من %s
+Bookmark shortcut to page %s of %s
+اختصار مرجعية للصفحة %s من %s
 
 Bookmarks
 العلامات
@@ -385,11 +385,11 @@ Fit Width and Show Pages Continuously
 Fit a Single Page
 احتواء صفحة مفردة
 
-Found text at page %d
-تم العثور على النص في صفحة %d
+Found text at page %s
+تم العثور على النص في صفحة %s
 
-Found text at page %d (again)
-وُجد النص في الصفحة %d (مرة أخرى)
+Found text at page %s (again)
+وُجد النص في الصفحة %s (مرة أخرى)
 
 Frequently Read
 قُرأ تكرارا
@@ -487,8 +487,8 @@ PDF documents
 Pa&ge...\tCtrl+G
 صفحة محددة\tCtrl+G
 
-Page %d
-الصفحة %d
+Page %s
+الصفحة %s
 
 Page Size:
 حجم الصفحة
@@ -538,8 +538,8 @@ Remember &opened files
 Remove from favorites
 احذف من المفضلة
 
-Remove page %d from favorites
-احذف الصفحة %d من المفضلة
+Remove page %s from favorites
+احذف الصفحة %s من المفضلة
 
 Rotate &Left\tCtrl+Shift+-
 دوران لليسار\tCtrl+Shift+-

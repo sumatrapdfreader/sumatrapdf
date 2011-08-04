@@ -249,8 +249,8 @@ Prispôsobiť strane
 Fit Width
 Na šírku obrazovky
 
-Found text at page %d
-Text bol nájdený na strane %d
+Found text at page %s
+Text bol nájdený na strane %s
 
 GB
 GB
@@ -456,15 +456,15 @@ prebieha tlač dokumentu
 #&Shrink pages to printable area (if necessary)
 #&Single Page\tCtrl+6
 #&Use original page sizes
-#(page %d)
+#(page %s)
 #Add Favorite
-#Add page %d to favorites
-#Add page %d to favorites with (optional) name:
+#Add page %s to favorites
+#Add page %s to favorites with (optional) name:
 #Add to favorites
 #All supported documents
 #Attachment: %s
 #Bookmark Shortcuts
-#Bookmark shortcut to page %d of %s
+#Bookmark shortcut to page %s of %s
 #Bookmarks
 #Can't connect to the Internet (error %#x).
 #Cannot start inverse search command. Please check the command line in the settings.
@@ -484,7 +484,7 @@ prebieha tlač dokumentu
 #Fit Content
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
-#Found text at page %d (again)
+#Found text at page %s (again)
 #Frequently Read
 #Hide frequently read
 #Image files (*.%s)
@@ -492,7 +492,7 @@ prebieha tlač dokumentu
 #No synchronization info at this position
 #Open a document...
 #P&roperties
-#Page %d
+#Page %s
 #Page scaling
 #Postscript documents
 #Pr&esentation\tCtrl+L
@@ -502,7 +502,7 @@ prebieha tlač dokumentu
 #Printing is still in progress. Abort and start over?
 #Printing page %d of %d...
 #Remove from favorites
-#Remove page %d from favorites
+#Remove page %s from favorites
 #Save S&hortcut...\tCtrl+Shift+S
 #Select &All
 #Select &All\tCtrl+A

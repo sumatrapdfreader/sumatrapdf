@@ -165,8 +165,8 @@ Pagina &singola\t<Ctrl>+6
 (of %d)
 (di %d)
 
-(page %d)
-(pagina %d)
+(page %s)
+(pagina %s)
 
 About SumatraPDF
 Informazioni su SumatraPDF
@@ -174,11 +174,11 @@ Informazioni su SumatraPDF
 Add Favorite
 Aggiungi ai Preferiti
 
-Add page %d to favorites
-Aggiungi pagina %d ai Preferiti
+Add page %s to favorites
+Aggiungi pagina %s ai Preferiti
 
-Add page %d to favorites with (optional) name:
-Aggiungi la pagina %d ai Preferiti con nome (opzionale):
+Add page %s to favorites with (optional) name:
+Aggiungi la pagina %s ai Preferiti con nome (opzionale):
 
 Add to favorites
 Aggiungi ai Preferiti
@@ -219,8 +219,8 @@ Segna&libri\t<F12>
 Bookmark Shortcuts
 Scorciatoie segnalibro
 
-Bookmark shortcut to page %d of %s
-Segnalibro alla pagina %d di %s
+Bookmark shortcut to page %s of %s
+Segnalibro alla pagina %s di %s
 
 Bookmarks
 Segnalibri
@@ -390,11 +390,11 @@ Adatta alla larghezza e visualizza le pagine in modo continuo
 Fit a Single Page
 Visualizza una pagina singola
 
-Found text at page %d
-Testo trovato a pagina %d
+Found text at page %s
+Testo trovato a pagina %s
 
-Found text at page %d (again)
-Trovato testo alla pagina %d (ancora)
+Found text at page %s (again)
+Trovato testo alla pagina %s (ancora)
 
 Frequently Read
 Aperti recentemente
@@ -492,8 +492,8 @@ Documenti PDF
 Pa&ge...\tCtrl+G
 Pa&gina...\t<Ctrl>+G
 
-Page %d
-Pagina %d
+Page %s
+Pagina %s
 
 Page Size:
 Formato pagina:
@@ -543,8 +543,8 @@ Ric&orda file aperti
 Remove from favorites
 Rimuovi dai Preferiti
 
-Remove page %d from favorites
-Rimuovi la pagina %d dai Preferiti
+Remove page %s from favorites
+Rimuovi la pagina %s dai Preferiti
 
 Rotate &Left\tCtrl+Shift+-
 Ruota a &sinistra\t<Ctrl> <Maiusc> -

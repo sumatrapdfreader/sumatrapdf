@@ -346,10 +346,10 @@ mencetak dokumen
 #&Single Page\tCtrl+6
 #&Use original page sizes
 #(of %d)
-#(page %d)
+#(page %s)
 #Add Favorite
-#Add page %d to favorites
-#Add page %d to favorites with (optional) name:
+#Add page %s to favorites
+#Add page %s to favorites with (optional) name:
 #Add to favorites
 #Advanced
 #All supported documents
@@ -357,7 +357,7 @@ mencetak dokumen
 #Attachment: %s
 #Author:
 #Bookmark Shortcuts
-#Bookmark shortcut to page %d of %s
+#Bookmark shortcut to page %s of %s
 #Bookmarks
 #Can't connect to the Internet (error %#x).
 #Cannot start inverse search command. Please check the command line in the settings.
@@ -386,8 +386,8 @@ mencetak dokumen
 #Fit Content
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
-#Found text at page %d
-#Found text at page %d (again)
+#Found text at page %s
+#Found text at page %s (again)
 #Frequently Read
 #Hide frequently read
 #Hint: Use the F3 key for finding again
@@ -405,7 +405,7 @@ mencetak dokumen
 #P&roperties
 #P&roperties\tCtrl+D
 #PDF Producer:
-#Page %d
+#Page %s
 #Page number %u inexistant
 #Page scaling
 #Please wait - rendering...
@@ -418,7 +418,7 @@ mencetak dokumen
 #Printing page %d of %d...
 #Remember &opened files
 #Remove from favorites
-#Remove page %d from favorites
+#Remove page %s from favorites
 #Save S&hortcut...\tCtrl+Shift+S
 #Searching %d of %d...
 #Select &All

@@ -160,8 +160,8 @@ Ne igazítson a lapmérethez(eredeti oldalméret használata)
 (of %d)
 (a %d-ból)
 
-(page %d)
-(%d. oldal)
+(page %s)
+(%s. oldal)
 
 About SumatraPDF
 SumatraPDF névjegye
@@ -169,11 +169,11 @@ SumatraPDF névjegye
 Add Favorite
 Hozzáadás a kedvencekhez
 
-Add page %d to favorites
-%d. oldal hozzáadása a kedvencekhez
+Add page %s to favorites
+%s. oldal hozzáadása a kedvencekhez
 
-Add page %d to favorites with (optional) name:
-%d. oldal hozzáadása a kedvencekhez, megnevezéssel(opcionális):
+Add page %s to favorites with (optional) name:
+%s. oldal hozzáadása a kedvencekhez, megnevezéssel(opcionális):
 
 Add to favorites
 Hozzáadás a kedvencekhez
@@ -214,8 +214,8 @@ Könyvjelzők\tF12
 Bookmark Shortcuts
 Könyvjelző parancsikonok
 
-Bookmark shortcut to page %d of %s
-Könyvjelző parancsikon a(z) %d/%s oldalhoz
+Bookmark shortcut to page %s of %s
+Könyvjelző parancsikon a(z) %s/%s oldalhoz
 
 Bookmarks
 Könyvjelzők
@@ -385,11 +385,11 @@ Oldalszélességhez igazítás + folyamatos nézet
 Fit a Single Page
 Teljes oldalankénti nézet
 
-Found text at page %d
-Találat a(z) %d. oldalon
+Found text at page %s
+Találat a(z) %s. oldalon
 
-Found text at page %d (again)
-Találat a(z) %d. oldalon (ismét)
+Found text at page %s (again)
+Találat a(z) %s. oldalon (ismét)
 
 Frequently Read
 Leggyakrabban olvasott fájlok
@@ -487,8 +487,8 @@ PDF fájlok
 Pa&ge...\tCtrl+G
 Megadott oldal...\tCtrl+G
 
-Page %d
-%d. oldal
+Page %s
+%s. oldal
 
 Page Size:
 Oldalméret
@@ -538,8 +538,8 @@ Korábban megnyitott file-ok listájának tárolása
 Remove from favorites
 Eltávolítás a kedvencek közül
 
-Remove page %d from favorites
-%d. oldal eltávolítása a kedvencek közül
+Remove page %s from favorites
+%s. oldal eltávolítása a kedvencek közül
 
 Rotate &Left\tCtrl+Shift+-
 Forgatás balra\tCtrl+Shift+-

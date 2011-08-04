@@ -273,7 +273,7 @@ FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,123,50,50,14
     PUSHBUTTON      "Cancel",IDCANCEL,179,50,50,14
-    LTEXT           "Add page %d to favorites with (optional) name:",IDC_ADD_PAGE_STATIC,7,8,222,8
+    LTEXT           "Add page %s to favorites with (optional) name:",IDC_ADD_PAGE_STATIC,7,8,222,8
     EDITTEXT        IDC_FAV_NAME_EDIT,7,20,222,14,ES_AUTOHSCROLL
 END
 

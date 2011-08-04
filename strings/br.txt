@@ -158,8 +158,8 @@ Ignorar esta versão
 (of %d)
 (de %d)
 
-(page %d)
-(página %d)
+(page %s)
+(página %s)
 
 About SumatraPDF
 Sobre o SumatraPDF
@@ -167,11 +167,11 @@ Sobre o SumatraPDF
 Add Favorite
 Adicionar Favorito
 
-Add page %d to favorites
-Adicionar página %d aos Favoritos
+Add page %s to favorites
+Adicionar página %s aos Favoritos
 
-Add page %d to favorites with (optional) name:
-Adicionar página %d aos Favoritos com outro nome (opcional):
+Add page %s to favorites with (optional) name:
+Adicionar página %s aos Favoritos com outro nome (opcional):
 
 Add to favorites
 Adicionar aos Favoritos
@@ -212,8 +212,8 @@ Marcadores\tF12
 Bookmark Shortcuts
 Atalhos de Favoritos
 
-Bookmark shortcut to page %d of %s
-Atalho para a página %d de %s
+Bookmark shortcut to page %s of %s
+Atalho para a página %s de %s
 
 Bookmarks
 Marcadores
@@ -383,11 +383,11 @@ Ajustar pela largura e exibir páginas de modo contínuo
 Fit a Single Page
 Ajustar em uma única página
 
-Found text at page %d
-Texto encontrado na página %d
+Found text at page %s
+Texto encontrado na página %s
 
-Found text at page %d (again)
-Texto encontrado (de novo) na página %d
+Found text at page %s (again)
+Texto encontrado (de novo) na página %s
 
 Frequently Read
 Lidos com frequência
@@ -485,8 +485,8 @@ Documentos PDF
 Pa&ge...\tCtrl+G
 Página...\tCtrl+G
 
-Page %d
-Página %d
+Page %s
+Página %s
 
 Page Size:
 Tamanho da página:
@@ -536,8 +536,8 @@ Remember &opened files
 Remove from favorites
 Remover dos Favoritos
 
-Remove page %d from favorites
-Remover página %d dos Favoritos
+Remove page %s from favorites
+Remover página %s dos Favoritos
 
 Rotate &Left\tCtrl+Shift+-
 Girar à esquerda\tCtrl+Shift+-

@@ -197,8 +197,8 @@ Fit Page
 Fit Width
 Змясціць па шырыне
 
-Found text at page %d
-Тэкст знойдзены на стар. %d
+Found text at page %s
+Тэкст знойдзены на стар. %s
 
 GB
 GB
@@ -366,10 +366,10 @@ Zoom Out
 #&Shrink pages to printable area (if necessary)
 #&Single Page\tCtrl+6
 #&Use original page sizes
-#(page %d)
+#(page %s)
 #Add Favorite
-#Add page %d to favorites
-#Add page %d to favorites with (optional) name:
+#Add page %s to favorites
+#Add page %s to favorites with (optional) name:
 #Add to favorites
 #All supported documents
 #Application:
@@ -378,7 +378,7 @@ Zoom Out
 #Automatic
 #Book View
 #Bookmark Shortcuts
-#Bookmark shortcut to page %d of %s
+#Bookmark shortcut to page %s of %s
 #Bookmarks
 #Bytes
 #Can't connect to the Internet (error %#x).
@@ -407,7 +407,7 @@ Zoom Out
 #Fit Content
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
-#Found text at page %d (again)
+#Found text at page %s (again)
 #Frequently Read
 #Hide frequently read
 #Hint: Use the F3 key for finding again
@@ -420,7 +420,7 @@ Zoom Out
 #P&roperties\tCtrl+D
 #PDF Producer:
 #PDF Version:
-#Page %d
+#Page %s
 #Page Size:
 #Page scaling
 #Postscript documents
@@ -431,7 +431,7 @@ Zoom Out
 #Printing is still in progress. Abort and start over?
 #Printing page %d of %d...
 #Remove from favorites
-#Remove page %d from favorites
+#Remove page %s from favorites
 #Save S&hortcut...\tCtrl+Shift+S
 #Select &All
 #Select &All\tCtrl+A

@@ -237,10 +237,10 @@ Zoom Out
 #&Use original page sizes
 #&Yes
 #(of %d)
-#(page %d)
+#(page %s)
 #Add Favorite
-#Add page %d to favorites
-#Add page %d to favorites with (optional) name:
+#Add page %s to favorites
+#Add page %s to favorites with (optional) name:
 #Add to favorites
 #Advanced
 #All files
@@ -252,7 +252,7 @@ Zoom Out
 #Automatically check for &updates
 #Book View
 #Bookmark Shortcuts
-#Bookmark shortcut to page %d of %s
+#Bookmark shortcut to page %s of %s
 #Bookmarks
 #Bytes
 #Can't connect to the Internet (error %#x).
@@ -290,8 +290,8 @@ Zoom Out
 #Fit Content
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
-#Found text at page %d
-#Found text at page %d (again)
+#Found text at page %s
+#Found text at page %s (again)
 #Frequently Read
 #Hide frequently read
 #Hint: Use the F3 key for finding again
@@ -314,7 +314,7 @@ Zoom Out
 #PDF Producer:
 #PDF Version:
 #PDF documents
-#Page %d
+#Page %s
 #Page Size:
 #Page number %u inexistant
 #Page scaling
@@ -328,7 +328,7 @@ Zoom Out
 #Printing page %d of %d...
 #Remember &opened files
 #Remove from favorites
-#Remove page %d from favorites
+#Remove page %s from favorites
 #Save S&hortcut...\tCtrl+Shift+S
 #Searching %d of %d...
 #Select &All
