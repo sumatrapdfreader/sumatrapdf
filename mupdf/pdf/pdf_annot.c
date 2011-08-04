@@ -211,7 +211,7 @@ pdf_clone_for_view_only(pdf_xref *xref, fz_obj *obj)
 	pdf_parse_stm_obj(&tmp, NULL, stream, xref->scratch, sizeof(xref->scratch));
 	fz_close(stream);
 
-	obj = fz_copy_dict(obj);
+	obj = fz_copy_dict(pdf_resolve_indirect(obj));
 	fz_dict_puts(obj, "OC", tmp);
 	fz_drop_obj(tmp);
 

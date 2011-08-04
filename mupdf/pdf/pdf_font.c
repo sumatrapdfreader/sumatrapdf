@@ -315,7 +315,8 @@ pdf_load_system_font(pdf_font_desc *fontdesc, char *fontname, char *collection)
 	}
 
 	/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=691690 */
-	if (fontdesc->flags & PDF_FD_SYMBOLIC)
+	// TODO: don't throw, if a non-symbolic encoding is available
+	if ((fontdesc->flags & PDF_FD_SYMBOLIC) && *fontname)
 		return fz_throw("symbolic font '%s' is missing", fontname);
 
 	error = pdf_load_substitute_font(fontdesc, mono, serif, bold, italic);
