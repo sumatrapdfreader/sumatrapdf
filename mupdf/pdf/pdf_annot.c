@@ -252,16 +252,10 @@ pdf_create_link_annot(pdf_xref *xref, fz_obj *obj)
 	return pdf_create_annot(rect, obj, xref->scratch, 0);
 }
 
-// content stream copied from Poppler's Annot.cc, licensed under GPLv2 and later
+// content stream adapted from Poppler's Annot.cc, licensed under GPLv2 and later
 #define ANNOT_TEXT_AP_COMMENT \
-	"4.301 23 m 19.699 23 l 21.523 23 23 21.523 23 19.699 c 23 4.301 l 23\n"      \
-	"2.477 21.523 1 19.699 1 c 4.301 1 l 2.477 1 1 2.477 1 4.301 c 1 19.699\n"    \
-	"l 1 21.523 2.477 23 4.301 23 c h\n"                                          \
-	"4.301 23 m f\n"                                                              \
 	"0.533333 0.541176 0.521569 RG 2 w\n"                                         \
-	"0 J\n"                                                                       \
-	"1 j\n"                                                                       \
-	"[] 0.0 d\n"                                                                  \
+	"0 J 1 j [] 0 d\n"                                                            \
 	"4 M 8 20 m 16 20 l 18.363 20 20 18.215 20 16 c 20 13 l 20 10.785 18.363 9\n" \
 	"16 9 c 13 9 l 8 3 l 8 9 l 8 9 l 5.637 9 4 10.785 4 13 c 4 16 l 4 18.215\n"   \
 	"5.637 20 8 20 c h\n"                                                         \
@@ -276,7 +270,7 @@ pdf_create_link_annot(pdf_xref *xref, fz_obj *obj)
 static pdf_annot *
 pdf_create_text_annot(pdf_xref *xref, fz_obj *obj)
 {
-	unsigned char *comment = "q 1 1 1 rg\n" ANNOT_TEXT_AP_COMMENT "Q";
+	unsigned char *comment = "q " ANNOT_TEXT_AP_COMMENT " Q";
 	fz_rect rect = pdf_to_rect(fz_dict_gets(obj, "Rect"));
 	rect.x1 = rect.x0 + 24;
 	rect.y1 = rect.y0 + 24;
@@ -284,7 +278,7 @@ pdf_create_text_annot(pdf_xref *xref, fz_obj *obj)
 	obj = pdf_clone_for_view_only(xref, obj);
 
 	// TODO: support other icons by /Name: Note, Key, Help, Paragraph, NewParagraph, Insert
-	// TODO: make icon semi-transparent
+	// TODO: make icon semi-transparent(?)
 	return pdf_create_annot(rect, obj, comment, 1);
 }
 
