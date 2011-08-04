@@ -173,7 +173,7 @@ pdf_transform_annot(pdf_annot *annot)
 
 /* SumatraPDF: synthesize appearance streams for a few more annotations */
 static pdf_annot *
-pdf_create_annot(fz_rect rect, fz_obj *base_obj, unsigned char *content, int transparent)
+pdf_create_annot(fz_rect rect, fz_obj *base_obj, fz_buffer *content, int transparent)
 {
 	pdf_annot *annot;
 	pdf_xobject *form;
@@ -186,10 +186,7 @@ pdf_create_annot(fz_rect rect, fz_obj *base_obj, unsigned char *content, int tra
 	form->bbox.y1 = rect.y1 - rect.y0;
 	form->transparency = transparent;
 	form->isolated = !transparent;
-
-	form->contents = fz_new_buffer(strlen(content));
-	form->contents->len = form->contents->cap;
-	memcpy(form->contents->data, content, form->contents->len);
+	form->contents = content;
 
 	annot = fz_malloc(sizeof(pdf_annot));
 	annot->obj = base_obj;
@@ -218,13 +215,30 @@ pdf_clone_for_view_only(pdf_xref *xref, fz_obj *obj)
 	return obj;
 }
 
+static void
+fz_buffer_printf(fz_buffer *buffer, char *fmt, ...)
+{
+	int count;
+	va_list args;
+	va_start(args, fmt);
+retry_larger_buffer:
+	count = _vsnprintf(buffer->data + buffer->len, buffer->cap - buffer->len, fmt, args);
+	if (count < 0 || count >= buffer->cap - buffer->len)
+	{
+		fz_grow_buffer(buffer);
+		goto retry_larger_buffer;
+	}
+	buffer->len += count;
+	va_end(args);
+}
+
 /* SumatraPDF: partial support for link borders */
 static pdf_annot *
 pdf_create_link_annot(pdf_xref *xref, fz_obj *obj)
 {
 	fz_obj *border, *color, *dashes;
 	fz_rect rect;
-	char *string;
+	fz_buffer *content;
 	int i;
 
 	border = fz_dict_gets(obj, "Border");
@@ -238,18 +252,15 @@ pdf_create_link_annot(pdf_xref *xref, fz_obj *obj)
 	obj = pdf_clone_for_view_only(xref, obj);
 
 	// TODO: draw rounded rectangles if the first two /Border values are non-zero
-	sprintf(xref->scratch, "q %.4f w [", fz_to_real(fz_array_get(border, 2)));
-	string = xref->scratch + strlen(xref->scratch);
+	content = fz_new_buffer(128);
+	fz_buffer_printf(content, "q %.4f w [", fz_to_real(fz_array_get(border, 2)));
 	for (i = 0; i < fz_array_len(dashes); i++)
-	{
-		sprintf(string, "%.4f ", fz_to_real(fz_array_get(dashes, i)));
-		string += strlen(string);
-	}
-	sprintf(string, "] 0 d %.4f %.4f %.4f RG 0 0 %.4f %.4f re S Q",
+		fz_buffer_printf(content, "%.4f ", fz_to_real(fz_array_get(dashes, i)));
+	fz_buffer_printf(content, "] 0 d %.4f %.4f %.4f RG 0 0 %.4f %.4f re S Q",
 		fz_to_real(fz_array_get(color, 0)), fz_to_real(fz_array_get(color, 1)),
 		fz_to_real(fz_array_get(color, 2)), rect.x1 - rect.x0, rect.y1 - rect.y0);
 
-	return pdf_create_annot(rect, obj, xref->scratch, 0);
+	return pdf_create_annot(rect, obj, content, 0);
 }
 
 // content stream adapted from Poppler's Annot.cc, licensed under GPLv2 and later
@@ -270,16 +281,17 @@ pdf_create_link_annot(pdf_xref *xref, fz_obj *obj)
 static pdf_annot *
 pdf_create_text_annot(pdf_xref *xref, fz_obj *obj)
 {
-	unsigned char *comment = "q " ANNOT_TEXT_AP_COMMENT " Q";
+	fz_buffer *content = fz_new_buffer(512);
 	fz_rect rect = pdf_to_rect(fz_dict_gets(obj, "Rect"));
 	rect.x1 = rect.x0 + 24;
 	rect.y1 = rect.y0 + 24;
 
 	obj = pdf_clone_for_view_only(xref, obj);
-
 	// TODO: support other icons by /Name: Note, Key, Help, Paragraph, NewParagraph, Insert
 	// TODO: make icon semi-transparent(?)
-	return pdf_create_annot(rect, obj, comment, 1);
+	fz_buffer_printf(content, "q " ANNOT_TEXT_AP_COMMENT " Q");
+
+	return pdf_create_annot(rect, obj, content, 1);
 }
 
 static pdf_annot *
