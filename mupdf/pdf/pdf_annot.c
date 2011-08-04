@@ -173,54 +173,75 @@ pdf_transform_annot(pdf_annot *annot)
 
 /* SumatraPDF: partial support for link borders */
 static pdf_annot *
-pdf_annot_for_link_border(pdf_xref *xref, fz_obj *obj)
+pdf_create_annot(fz_rect rect, fz_obj *base_obj, unsigned char *content, int transparent)
 {
 	pdf_annot *annot;
 	pdf_xobject *form;
+
+	form = fz_malloc(sizeof(pdf_xobject));
+	memset(form, 0, sizeof(pdf_xobject));
+	form->refs = 1;
+	form->matrix = fz_identity;
+	form->bbox.x1 = rect.x1 - rect.x0;
+	form->bbox.y1 = rect.y1 - rect.y0;
+	form->transparency = transparent;
+	form->isolated = !transparent;
+
+	form->contents = fz_new_buffer(strlen(content));
+	form->contents->len = form->contents->cap;
+	memcpy(form->contents->data, content, form->contents->len);
+
+	annot = fz_malloc(sizeof(pdf_annot));
+	annot->obj = base_obj;
+	annot->rect = rect;
+	annot->ap = form;
+	annot->next = NULL;
+
+	pdf_transform_annot(annot);
+
+	return annot;
+}
+
+static pdf_annot *
+pdf_annot_for_link_border(pdf_xref *xref, fz_obj *obj)
+{
+	fz_obj *border, *color, *dashes;
+	fz_rect rect;
 	unsigned char *string;
 	fz_stream *stream;
-	fz_obj *border, *color, *rect;
+	int i;
 
 	if (strcmp(fz_to_name(fz_dict_gets(obj, "Subtype")), "Link") != 0)
 		return NULL;
 	border = fz_dict_gets(obj, "Border");
 	if (fz_to_real(fz_array_get(border, 2)) <= 0)
 		return NULL;
+
 	color = fz_dict_gets(obj, "C");
-	rect = fz_dict_gets(obj, "Rect");
+	dashes = fz_array_get(border, 3);
+	rect = pdf_to_rect(fz_dict_gets(obj, "Rect"));
 
 	// manually construct an XObject for the link border
-	form = fz_malloc(sizeof(pdf_xobject));
-	memset(form, 0, sizeof(pdf_xobject));
-	form->refs = 1;
-	form->matrix = fz_identity;
-	form->bbox = pdf_to_rect(rect);
-	form->bbox.x1 -= form->bbox.x0; form->bbox.y1 -= form->bbox.y0;
-	form->bbox.x0 = form->bbox.y0 = 0;
-	form->isolated = 1;
 
-	form->contents = fz_new_buffer(256);
-	// TODO: draw rounded rectangles if the first two /Border values are non-zero
-	// TODO: dash border, if the fourth /Border value is an array
-	sprintf(form->contents->data, "q %.4f w %.4f %.4f %.4f RG 0 0 %.4f %.4f re S Q",
-		fz_to_real(fz_array_get(border, 2)), fz_to_real(fz_array_get(color, 0)),
-		fz_to_real(fz_array_get(color, 1)), fz_to_real(fz_array_get(color, 2)),
-		form->bbox.x1, form->bbox.y1);
-	form->contents->len = strlen(form->contents->data);
-
-	annot = fz_malloc(sizeof(pdf_annot));
-	annot->rect = pdf_to_rect(rect);
-	annot->ap = form;
-	annot->next = NULL;
 	// display the borders only for the View target
 	string = "<< /OC << /OCGs << /Usage << /Print << /PrintState /OFF >> /Export << /ExportState /OFF >> >> >> >> >>";
 	stream = fz_open_memory(string, strlen(string));
-	pdf_parse_stm_obj(&annot->obj, NULL, stream, xref->scratch, sizeof(xref->scratch));
+	pdf_parse_stm_obj(&obj, NULL, stream, xref->scratch, sizeof(xref->scratch));
 	fz_close(stream);
 
-	pdf_transform_annot(annot);
+	// TODO: draw rounded rectangles if the first two /Border values are non-zero
+	sprintf(xref->scratch, "q %.4f w [", fz_to_real(fz_array_get(border, 2)));
+	string = xref->scratch + strlen(xref->scratch);
+	for (i = 0; i < fz_array_len(dashes); i++)
+	{
+		sprintf(string, "%.4f ", fz_to_real(fz_array_get(dashes, i)));
+		string += strlen(string);
+	}
+	sprintf(string, "] 0 d %.4f %.4f %.4f RG 0 0 %.4f %.4f re S Q",
+		fz_to_real(fz_array_get(color, 0)), fz_to_real(fz_array_get(color, 1)),
+		fz_to_real(fz_array_get(color, 2)), rect.x1 - rect.x0, rect.y1 - rect.y0);
 
-	return annot;
+	return pdf_create_annot(rect, obj, xref->scratch, 0);
 }
 
 void
