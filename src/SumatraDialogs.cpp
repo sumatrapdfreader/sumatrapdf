@@ -858,21 +858,15 @@ HPROPSHEETPAGE CreatePrintAdvancedPropSheet(Print_Advanced_Data *data, ScopedMem
 }
 
 struct Dialog_AddFav_Data {
-    // in
     int pageNo;
-    // out
     TCHAR *favName;
 };
 
 static INT_PTR CALLBACK Dialog_AddFav_Proc(HWND hDlg, UINT msg, WPARAM wParam,
     LPARAM lParam)
 {
-    Dialog_AddFav_Data *  data;
-    HWND w;
-
-    if (WM_INITDIALOG == msg)
-    {
-        data = (Dialog_AddFav_Data*)lParam;
+    if (WM_INITDIALOG == msg) {
+        Dialog_AddFav_Data *data = (Dialog_AddFav_Data *)lParam;
         assert(data);
         SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
         win::SetText(hDlg, _TR("Add Favorite"));
@@ -880,31 +874,31 @@ static INT_PTR CALLBACK Dialog_AddFav_Proc(HWND hDlg, UINT msg, WPARAM wParam,
         SetDlgItemText(hDlg, IDC_ADD_PAGE_STATIC, s);
         SetDlgItemText(hDlg, IDOK, _TR("OK"));
         SetDlgItemText(hDlg, IDCANCEL, _TR("Cancel"));
+        if (data->favName) {
+            SetDlgItemText(hDlg, IDC_FAV_NAME_EDIT, data->favName);
+            Edit_SelectAll(GetDlgItem(hDlg, IDC_FAV_NAME_EDIT));
+        }
         CenterDialog(hDlg);
         SetFocus(GetDlgItem(hDlg, IDC_FAV_NAME_EDIT));
         return FALSE;
     }
 
-    if (WM_COMMAND == msg)
-    {
-        data = (Dialog_AddFav_Data*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
+    if (WM_COMMAND == msg) {
+        Dialog_AddFav_Data *data = (Dialog_AddFav_Data *)GetWindowLongPtr(hDlg, GWLP_USERDATA);
         assert(data);
         WORD cmd = LOWORD(wParam);
-        if (IDOK == cmd)
-        {
-            w = GetDlgItem(hDlg, IDC_FAV_NAME_EDIT);
-            TCHAR *s = win::GetText(w);
-            str::TrimWS(s);
-            if (str::IsEmptyOrWs(s)) {
-                free(s);
-            } else {
-                data->favName = s;
-            }
+        if (IDOK == cmd) {
+            ScopedMem<TCHAR> name(win::GetText(GetDlgItem(hDlg, IDC_FAV_NAME_EDIT)));
+            str::TrimWS(name);
+            if (!str::IsEmpty(name.Get()))
+                data->favName = name.StealData();
+            else
+                data->favName = NULL;
             EndDialog(hDlg, IDOK);
             return TRUE;
         } else if (IDCANCEL == cmd) {
-                EndDialog(hDlg, IDCANCEL);
-                return TRUE;
+            EndDialog(hDlg, IDCANCEL);
+            return TRUE;
         }
     }
 
@@ -913,20 +907,22 @@ static INT_PTR CALLBACK Dialog_AddFav_Proc(HWND hDlg, UINT msg, WPARAM wParam,
 
 // pageNo is the page we're adding to favorites
 // returns true if the user wants to add a favorite.
-// favNameOut, if not NULL, is the name the user wants the favorite to have
-// (must be free()d by the caller)
-bool Dialog_AddFavorite(HWND hwnd, int pageNo, TCHAR **favNameOut)
+// favName is the name the user wants the favorite to have
+// (passing in a non-NULL favName will use it as default name)
+bool Dialog_AddFavorite(HWND hwnd, int pageNo, ScopedMem<TCHAR>& favName)
 {
     Dialog_AddFav_Data data;
     data.pageNo = pageNo;
-    data.favName = NULL;
+    data.favName = favName;
 
     INT_PTR res = CreateDialogBox(IDD_DIALOG_FAV_ADD, hwnd,
                                   Dialog_AddFav_Proc, (LPARAM)&data);
     if (IDCANCEL == res) {
-        assert(data.favName == NULL);
+        assert(data.favName == favName);
         return false;
     }
-    *favNameOut = data.favName;
+
+    assert(data.favName != favName || !data.favName);
+    favName.Set(data.favName);
     return true;
 }

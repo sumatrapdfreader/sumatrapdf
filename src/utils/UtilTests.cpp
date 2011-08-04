@@ -104,11 +104,6 @@ static void TStrTest()
     len = str::BufSet(buf, 6, str);
     assert(len == 5 && str::Eq(buf, _T("a str")));
 
-    assert(str::IsEmptyOrWs(NULL));
-    assert(str::IsEmptyOrWs(_T("")));
-    assert(str::IsEmptyOrWs(_T(" \t\r\n  ")));
-    assert(!str::IsEmptyOrWs(_T(" \t\ra\n  ")));
-
     str = str::Dup(buf);
     assert(str::Eq(str, buf));
     free(str);

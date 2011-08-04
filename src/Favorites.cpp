@@ -569,17 +569,43 @@ void UpdateFavoritesTreeForAllWindows()
     }
 }
 
+static DocToCItem *ToCItemForPageNo(DocToCItem *item, int pageNo)
+{
+    DocToCItem *currItem = NULL;
+
+    for (; item; item = item->next) {
+        if (1 <= item->pageNo && item->pageNo <= pageNo)
+            currItem = item;
+        if (item->pageNo >= pageNo)
+            break;
+
+        // find any child item closer to the specified page
+        DocToCItem *subItem = ToCItemForPageNo(item->child, pageNo);
+        if (subItem)
+            currItem = subItem;
+    }
+
+    return currItem;
+}
+
 void AddFavorite(WindowInfo *win)
 {
     int pageNo = win->currPageNo;
-    TCHAR *filePath = win->loadedFilePath;
-    TCHAR *name = NULL;
-    bool shouldAdd = Dialog_AddFavorite(win->hwndFrame, pageNo, &name);
+    ScopedMem<TCHAR> name;
+    if (win->IsDocLoaded() && win->dm->HasTocTree()) {
+        // use the current ToC heading as default name
+        DocToCItem *root = win->dm->engine->GetToCTree();
+        DocToCItem *item = ToCItemForPageNo(root, pageNo);
+        name.Set(str::Dup(item->title));
+        delete root;
+    }
+
+    bool shouldAdd = Dialog_AddFavorite(win->hwndFrame, pageNo, name);
     if (!shouldAdd)
         return;
+
     RememberFavTreeExpansionStateForAllWindows();
-    gFavorites->AddOrReplace(filePath, pageNo, name);
-    free(name);
+    gFavorites->AddOrReplace(win->loadedFilePath, pageNo, name);
     UpdateFavoritesTreeForAllWindows();
     SavePrefs();
 }

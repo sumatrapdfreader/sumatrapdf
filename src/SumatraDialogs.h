@@ -14,7 +14,7 @@ int     Dialog_ChangeLanguge(HWND hwnd, int currLangId);
 INT_PTR Dialog_NewVersionAvailable(HWND hwnd, const TCHAR *currentVersion, const TCHAR *newVersion, bool *skipThisVersion);
 INT_PTR Dialog_CustomZoom(HWND hwnd, float *currZoom);
 INT_PTR Dialog_Settings(HWND hwnd, SerializableGlobalPrefs *prefs);
-bool    Dialog_AddFavorite(HWND hwnd, int pageNo, TCHAR **favNameOut);
+bool    Dialog_AddFavorite(HWND hwnd, int pageNo, ScopedMem<TCHAR>& favName);
 
 enum PrintRangeAdv { PrintRangeAll = 0, PrintRangeEven, PrintRangeOdd };
 enum PrintScaleAdv { PrintScaleNone = 0, PrintScaleShrink, PrintScaleFit };
