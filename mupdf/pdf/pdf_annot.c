@@ -289,7 +289,7 @@ pdf_create_text_annot(pdf_xref *xref, fz_obj *obj)
 	obj = pdf_clone_for_view_only(xref, obj);
 	// TODO: support other icons by /Name: Note, Key, Help, Paragraph, NewParagraph, Insert
 	// TODO: make icon semi-transparent(?)
-	fz_buffer_printf(content, "q " ANNOT_TEXT_AP_COMMENT " Q");
+	fz_buffer_printf(content, "q %s Q", ANNOT_TEXT_AP_COMMENT);
 
 	return pdf_create_annot(rect, obj, content, NULL);
 }
@@ -308,34 +308,70 @@ pdf_dict_get_inheritable(pdf_xref *xref, fz_obj *obj, char *key)
 	return fz_dict_gets(fz_dict_gets(fz_dict_gets(xref->trailer, "Root"), "AcroForm"), key);
 }
 
-static int
-pdf_extract_font_size(pdf_xref *xref, char *appearance, float *fontSize, char **fontName)
+static float
+pdf_extract_font_size(pdf_xref *xref, char *appearance, char **fontName)
 {
 	fz_stream *stream = fz_open_memory(appearance, strlen(appearance));
+	int tok, len;
+	float fontSize = 0;
 	*fontName = NULL;
-	*fontSize = 0;
-	for (;;)
+	do
 	{
-		int tok, len;
 		fz_error error = pdf_lex(&tok, stream, xref->scratch, sizeof(xref->scratch), &len);
 		if (error || tok == PDF_TOK_EOF)
+		{
+			fz_free(*fontName);
+			*fontName = NULL;
 			break;
+		}
 		if (tok == PDF_TOK_NAME)
 		{
 			fz_free(*fontName);
 			*fontName = fz_strdup(xref->scratch);
 		}
 		else if (tok == PDF_TOK_REAL || tok == PDF_TOK_INT)
-			*fontSize = fz_atof(xref->scratch);
-		else if (tok == PDF_TOK_KEYWORD && !strcmp(xref->scratch, "Tf"))
-		{
-			fz_close(stream);
-			return fontName != NULL;
-		}
-	}
+			fontSize = fz_atof(xref->scratch);
+	} while (tok != PDF_TOK_KEYWORD || strcmp(xref->scratch, "Tf") != 0);
 	fz_close(stream);
-	fz_free(fontName);
-	return 0;
+	return fontSize;
+}
+
+static fz_obj *
+pdf_get_ap_stream(pdf_xref *xref, fz_obj *obj)
+{
+	fz_obj *ap = fz_dict_gets(obj, "AP");
+	if (!fz_is_dict(ap))
+		return NULL;
+
+	ap = fz_dict_gets(ap, "N");
+	if (!pdf_is_stream(xref, fz_to_num(ap), fz_to_gen(ap)))
+		ap = fz_dict_get(ap, fz_dict_gets(obj, "AS"));
+	if (!pdf_is_stream(xref, fz_to_num(ap), fz_to_gen(ap)))
+		return NULL;
+
+	return ap;
+}
+
+static void
+pdf_prepend_ap_background(fz_buffer *content, pdf_xref *xref, fz_obj *obj)
+{
+	pdf_xobject *form;
+	int i;
+	fz_obj *ap = pdf_get_ap_stream(xref, obj);
+	if (!ap)
+		return;
+	if (pdf_load_xobject(&form, xref, ap) != fz_okay)
+		return;
+
+	for (i = 0; i < form->contents->len - 3 && memcmp(form->contents->data + i, "/Tx", 3) != 0; i++);
+	if (i == form->contents->len - 3)
+		i = form->contents->len;
+	if (content->cap < content->len + i)
+		fz_resize_buffer(content, content->len + i);
+	memcpy(content->data + content->len, form->contents->data, i);
+	content->len += i;
+
+	pdf_drop_xobject(form);
 }
 
 static void
@@ -369,6 +405,7 @@ pdf_update_tx_widget_annot(pdf_xref *xref, fz_obj *obj)
 	int flags, align;
 	float fontSize;
 	char *fontName;
+	int tmpLen;
 
 	if (strcmp(fz_to_name(fz_dict_gets(obj, "Subtype")), "Widget") != 0)
 		return NULL;
@@ -385,29 +422,49 @@ pdf_update_tx_widget_annot(pdf_xref *xref, fz_obj *obj)
 	rect = pdf_to_rect(fz_dict_gets(obj, "Rect"));
 
 	flags = fz_to_int(fz_dict_gets(obj, "Ff"));
+	if ((flags & (1 << 12) /* multiline */) && pdf_get_ap_stream(xref, obj))
+	{
+		fz_warn("not refreshing multiline fields with appearance stream");
+		return NULL;
+	}
 	if (flags & ((1 << 12) /* multiline */ | (1 << 24) /* comb */ | (1 << 25) /* richtext */))
 		fz_warn("missing support for multiline, combed and richtext fields");
-	align = fz_to_int(fz_dict_gets(obj, "Q"));
-	if (align != 0)
-		fz_warn("missing support for centered/right justification");
+
+	fontSize = pdf_extract_font_size(xref, fz_to_str_buf(ap), &fontName);
+	if (!fontSize || !fontName)
+		fontSize = floor(rect.y1 - rect.y0 - 2);
 
 	content = fz_new_buffer(256);
+	pdf_prepend_ap_background(content, xref, obj);
 	fz_buffer_printf(content, "/Tx BMC q ");
 	fz_buffer_printf(content, " BT ");
 	fz_buffer_printf(content, "%s ", fz_to_str_buf(ap));
-	if (pdf_extract_font_size(xref, fz_to_str_buf(ap), &fontSize, &fontName))
-	{
-		if (!fontSize)
-			fontSize = rect.y1 - rect.y0;
+	if (fontName)
 		fz_buffer_printf(content, "/%s %.4f Tf ", fontName, fontSize);
-		fz_free(fontName);
-	}
-	else
-		fontSize = rect.y1 - rect.y0;
-	// TODO: determine correct translation
-	fz_buffer_printf(content, "1 0 0 1 %.4f %.4f Tm", 0, fontSize);
+	fz_free(fontName);
+	tmpLen = content->len;
+	fz_buffer_printf(content, "1 0 0 1 %.4f %.4f Tm", 2.0f, 0.5f * (rect.y1 - rect.y0) - 0.4f * fontSize);
 	pdf_string_to_Tj(content, value, (flags & (1 << 13) /* password */));
 	fz_buffer_printf(content, " ET Q EMC");
+
+	align = fz_to_int(fz_dict_gets(obj, "Q"));
+	if (align != 0)
+	{
+		fz_bbox bbox;
+		fz_device *dev = fz_new_bbox_device(&bbox);
+		fz_error error = pdf_run_glyph(xref, res, content, dev, fz_identity);
+		if (!error)
+		{
+			float x = rect.x1 - rect.x0 - 4.0f - (bbox.x1 - bbox.x0);
+			if (align == 1 /* centered */)
+				x *= 0.5f;
+			content->len = tmpLen;
+			fz_buffer_printf(content, "1 0 0 1 %.4f %.4f Tm", 2.0f + x, 0.5f * (rect.y1 - rect.y0) - 0.4f * fontSize);
+			pdf_string_to_Tj(content, value, (flags & (1 << 13) /* password */));
+			fz_buffer_printf(content, " ET Q EMC");
+		}
+		fz_free_device(dev);
+	}
 
 	return pdf_create_annot(rect, fz_keep_obj(obj), content, res ? fz_keep_obj(res) : NULL);
 }
