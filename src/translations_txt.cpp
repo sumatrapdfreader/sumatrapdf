@@ -1588,7 +1588,7 @@ const char *gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "Im &UZS drehen\tStrg+Umschalt++",
   "Speichern unter\342\200\246",
   "&Verkn\303\274pfung speichern\342\200\246\tStrg+Umschalt+S",
-  "Suche auf Seite %d von %d\342\200\246",
+  "Durchsuche Seite %d von %d\342\200\246",
   "Alles &markieren",
   "Alles &markieren\tStrg+A",
   "Inhalte mit Strg+linker Maustaste ausw\303\244hlen",
