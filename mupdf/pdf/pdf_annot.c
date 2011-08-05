@@ -437,6 +437,7 @@ pdf_update_tx_widget_annot(pdf_xref *xref, fz_obj *obj)
 	content = fz_new_buffer(256);
 	pdf_prepend_ap_background(content, xref, obj);
 	fz_buffer_printf(content, "/Tx BMC q ");
+	fz_buffer_printf(content, "1 1 %.4f %.4f re W n", rect.x1 - rect.x0 - 2.0f, rect.y1 - rect.y0 - 2.0f);
 	fz_buffer_printf(content, " BT ");
 	fz_buffer_printf(content, "%s ", fz_to_str_buf(ap));
 	if (fontName)
