@@ -173,7 +173,7 @@ pdf_transform_annot(pdf_annot *annot)
 
 /* SumatraPDF: synthesize appearance streams for a few more annotations */
 static pdf_annot *
-pdf_create_annot(fz_rect rect, fz_obj *base_obj, fz_buffer *content, int transparent)
+pdf_create_annot(fz_rect rect, fz_obj *base_obj, fz_buffer *content, fz_obj *resources)
 {
 	pdf_annot *annot;
 	pdf_xobject *form;
@@ -184,9 +184,9 @@ pdf_create_annot(fz_rect rect, fz_obj *base_obj, fz_buffer *content, int transpa
 	form->matrix = fz_identity;
 	form->bbox.x1 = rect.x1 - rect.x0;
 	form->bbox.y1 = rect.y1 - rect.y0;
-	form->transparency = transparent;
-	form->isolated = !transparent;
+	form->isolated = 1;
 	form->contents = content;
+	form->resources = resources;
 
 	annot = fz_malloc(sizeof(pdf_annot));
 	annot->obj = base_obj;
@@ -260,7 +260,7 @@ pdf_create_link_annot(pdf_xref *xref, fz_obj *obj)
 		fz_to_real(fz_array_get(color, 0)), fz_to_real(fz_array_get(color, 1)),
 		fz_to_real(fz_array_get(color, 2)), rect.x1 - rect.x0, rect.y1 - rect.y0);
 
-	return pdf_create_annot(rect, obj, content, 0);
+	return pdf_create_annot(rect, obj, content, NULL);
 }
 
 // content stream adapted from Poppler's Annot.cc, licensed under GPLv2 and later
@@ -291,7 +291,125 @@ pdf_create_text_annot(pdf_xref *xref, fz_obj *obj)
 	// TODO: make icon semi-transparent(?)
 	fz_buffer_printf(content, "q " ANNOT_TEXT_AP_COMMENT " Q");
 
-	return pdf_create_annot(rect, obj, content, 1);
+	return pdf_create_annot(rect, obj, content, NULL);
+}
+
+/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692078 */
+static fz_obj *
+pdf_dict_get_inheritable(pdf_xref *xref, fz_obj *obj, char *key)
+{
+	do
+	{
+		fz_obj *val = fz_dict_gets(obj, key);
+		if (val)
+			return val;
+		obj = fz_dict_gets(obj, "Parent");
+	} while (obj);
+	return fz_dict_gets(fz_dict_gets(fz_dict_gets(xref->trailer, "Root"), "AcroForm"), key);
+}
+
+static int
+pdf_extract_font_size(pdf_xref *xref, char *appearance, float *fontSize, char **fontName)
+{
+	fz_stream *stream = fz_open_memory(appearance, strlen(appearance));
+	*fontName = NULL;
+	*fontSize = 0;
+	for (;;)
+	{
+		int tok, len;
+		fz_error error = pdf_lex(&tok, stream, xref->scratch, sizeof(xref->scratch), &len);
+		if (error || tok == PDF_TOK_EOF)
+			break;
+		if (tok == PDF_TOK_NAME)
+		{
+			fz_free(*fontName);
+			*fontName = fz_strdup(xref->scratch);
+		}
+		else if (tok == PDF_TOK_REAL || tok == PDF_TOK_INT)
+			*fontSize = fz_atof(xref->scratch);
+		else if (tok == PDF_TOK_KEYWORD && !strcmp(xref->scratch, "Tf"))
+		{
+			fz_close(stream);
+			return fontName != NULL;
+		}
+	}
+	fz_close(stream);
+	fz_free(fontName);
+	return 0;
+}
+
+static void
+pdf_string_to_Tj(fz_buffer *content, fz_obj *value, int is_password)
+{
+	unsigned short *ucs2 = pdf_to_ucs2(value);
+	unsigned short *uc;
+	fz_buffer_printf(content, " (");
+	for (uc = ucs2; *uc; uc++)
+	{
+		if (is_password)
+			*uc = '*';
+		else if (*uc > 0xFF)
+			*uc = '?';
+		// TODO: convert to CID
+		if (*uc < 0x20 || *uc == ')' || *uc == '\\')
+			fz_buffer_printf(content, "\\%03o", *uc);
+		else
+			fz_buffer_printf(content, "%c", *uc);
+	}
+	fz_buffer_printf(content, ") Tj");
+	fz_free(ucs2);
+}
+
+static pdf_annot *
+pdf_update_tx_widget_annot(pdf_xref *xref, fz_obj *obj)
+{
+	fz_obj *ap, *res, *value;
+	fz_rect rect;
+	fz_buffer *content;
+	int flags, align;
+	float fontSize;
+	char *fontName;
+
+	if (strcmp(fz_to_name(fz_dict_gets(obj, "Subtype")), "Widget") != 0)
+		return NULL;
+	value = pdf_dict_get_inheritable(xref, obj, "FT");
+	if (strcmp(fz_to_name(value), "Tx") != 0)
+		return NULL;
+
+	ap = pdf_dict_get_inheritable(xref, obj, "DA");
+	value = pdf_dict_get_inheritable(xref, obj, "V");
+	if (!ap || !value)
+		return NULL;
+
+	res = pdf_dict_get_inheritable(xref, obj, "DR");
+	rect = pdf_to_rect(fz_dict_gets(obj, "Rect"));
+
+	flags = fz_to_int(fz_dict_gets(obj, "Ff"));
+	if (flags & ((1 << 12) /* multiline */ | (1 << 24) /* comb */ | (1 << 25) /* richtext */))
+		fz_warn("missing support for multiline, combed and richtext fields");
+	align = fz_to_int(fz_dict_gets(obj, "Q"));
+	if (align != 0)
+		fz_warn("missing support for centered/right justification");
+
+	content = fz_new_buffer(256);
+	fz_buffer_printf(content, "/Tx BMC q ");
+	fz_buffer_printf(content, " BT ");
+	fz_buffer_printf(content, "%s ", fz_to_str_buf(ap));
+	if (pdf_extract_font_size(xref, fz_to_str_buf(ap), &fontSize, &fontName))
+	{
+		if (!fontSize)
+			fontSize = rect.y1 - rect.y0;
+		fz_buffer_printf(content, "/%s %.4f Tf ", fontName, fontSize);
+		fz_free(fontName);
+	}
+	else
+		fontSize = rect.y1 - rect.y0;
+	// TODO: determine correct translation
+	fz_buffer_printf(content, "1 0 0 1 %.4f %.4f Tm", 0, fontSize);
+	pdf_string_to_Tj(content, value, (flags & (1 << 13) /* password */));
+	fz_buffer_printf(content, " ET Q EMC");
+
+	return pdf_create_annot(rect, fz_keep_obj(obj), content, res ? fz_keep_obj(res) : NULL);
 }
 
 static pdf_annot *
@@ -319,6 +437,19 @@ pdf_load_annots(pdf_annot **annotp, pdf_xref *xref, fz_obj *annots)
 	for (i = 0; i < fz_array_len(annots); i++)
 	{
 		obj = fz_array_get(annots, i);
+
+		/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692078 */
+		if ((annot = pdf_update_tx_widget_annot(xref, obj)))
+		{
+			if (!head)
+				head = tail = annot;
+			else
+			{
+				tail->next = annot;
+				tail = annot;
+			}
+			continue;
+		}
 
 		rect = fz_dict_gets(obj, "Rect");
 		ap = fz_dict_gets(obj, "AP");
