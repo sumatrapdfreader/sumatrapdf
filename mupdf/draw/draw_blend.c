@@ -335,28 +335,68 @@ fz_blend_separable_nonisolated(byte * restrict bp, byte * restrict sp, int n, in
 {
 	int k;
 	int n1 = n - 1;
+
+	if (alpha == 255 && blendmode == 0)
+	{
+		/* In this case, the uncompositing and the recompositing
+		 * cancel one another out, and it's just a simple copy. */
+		/* FIXME: Maybe we can avoid using the shape plane entirely
+		 * and just copy? */
+		while (w--)
+		{
+			int ha = fz_mul255(*hp++, alpha); /* ha = shape_alpha */
+			/* If ha == 0 then leave everything unchanged */
+			if (ha != 0)
+			{
+				for (k = 0; k < n; k++)
+				{
+					bp[k] = sp[k];
+				}
+			}
+
+			sp += n;
+			bp += n;
+		}
+		return;
+	}
 	while (w--)
 	{
-		int ha = fz_mul255(*hp++, alpha); /* ha = shape_alpha */
-		/* If ha == 0 then leave everything unchanged */
-		if (ha != 0)
+		int ha = *hp++;
+		int haa = fz_mul255(ha, alpha); /* ha = shape_alpha */
+		/* If haa == 0 then leave everything unchanged */
+		if (haa != 0)
 		{
 			int sa = sp[n1];
 			int ba = bp[n1];
-			int baha = fz_mul255(ba, ha);
+			int baha = fz_mul255(ba, haa);
 
 			/* ugh, division to get non-premul components */
 			int invsa = sa ? 255 * 256 / sa : 0;
 			int invba = ba ? 255 * 256 / ba : 0;
 
 			/* Calculate result_alpha */
-			int ra = bp[n1] = ba - baha + ha;
+			int ra = bp[n1] = ba - baha + haa;
+
+			/* Because we are a non-isolated group, we need to
+			 * 'uncomposite' before we blend (recomposite).
+			 * We assume that normal blending has been done inside
+			 * the group, so:   ra.rc = (1-ha).bc + ha.sc
+			 * A bit of rearrangement, and that gives us that:
+			 *  sc = (ra.rc - bc)/ha + bc
+			 * Now, the result of the blend was stored in src, so:
+			 */
+			int invha = ha ? 255 * 256 / ha : 0;
 
 			if (ra != 0) for (k = 0; k < n1; k++)
 			{
 				int sc = (sp[k] * invsa) >> 8;
 				int bc = (bp[k] * invba) >> 8;
 				int rc;
+
+				/* Uncomposite */
+				sc = (((sc-bc)*invha)>>8) + bc;
+				if (sc < 0) sc = 0;
+				if (sc > 255) sc = 255;
 
 				switch (blendmode)
 				{
@@ -374,7 +414,7 @@ fz_blend_separable_nonisolated(byte * restrict bp, byte * restrict sp, int n, in
 				case FZ_BLEND_DIFFERENCE: rc = fz_difference_byte(bc, sc); break;
 				case FZ_BLEND_EXCLUSION: rc = fz_exclusion_byte(bc, sc); break;
 				}
-				rc = fz_mul255(255 - ha, bc) + fz_mul255(255 - ba, sc) + fz_mul255(baha, rc);
+				rc = fz_mul255(255 - haa, bc) + fz_mul255(fz_mul255(255 - ba, sc), haa) + fz_mul255(baha, rc);
 				if (rc < 0) rc = 0;
 				if (rc > 255) rc = 255;
 				bp[k] = fz_mul255(rc, ra);
@@ -391,18 +431,29 @@ fz_blend_nonseparable_nonisolated(byte * restrict bp, byte * restrict sp, int w,
 {
 	while (w--)
 	{
-		int ha = fz_mul255(*hp++, alpha);
-		if (ha != 0)
+		int ha = *hp++;
+		int haa = fz_mul255(ha, alpha);
+		if (haa != 0)
 		{
 			int sa = sp[3];
 			int ba = bp[3];
-			int baha = fz_mul255(ba, ha);
+			int baha = fz_mul255(ba, haa);
 
 			/* Calculate result_alpha */
-			int ra = bp[3] = ba - baha + ha;
-
+			int ra = bp[3] = ba - baha + haa;
 			if (ra != 0)
 			{
+				/* Because we are a non-isolated group, we
+				 * need to 'uncomposite' before we blend
+				 * (recomposite). We assume that normal
+				 * blending has been done inside the group,
+				 * so:     ra.rc = (1-ha).bc + ha.sc
+				 * A bit of rearrangement, and that gives us
+				 * that:   sc = (ra.rc - bc)/ha + bc
+				 * Now, the result of the blend was stored in
+				 * src, so: */
+				int invha = ha ? 255 * 256 / ha : 0;
+
 				int rr, rg, rb;
 
 				/* ugh, division to get non-premul components */
@@ -416,6 +467,11 @@ fz_blend_nonseparable_nonisolated(byte * restrict bp, byte * restrict sp, int w,
 				int br = (bp[0] * invba) >> 8;
 				int bg = (bp[1] * invba) >> 8;
 				int bb = (bp[2] * invba) >> 8;
+
+				/* Uncomposite */
+				sr = (((sr-br)*invha)>>8) + br;
+				sg = (((sg-bg)*invha)>>8) + bg;
+				sb = (((sb-bb)*invha)>>8) + bb;
 
 				switch (blendmode)
 				{
@@ -434,9 +490,9 @@ fz_blend_nonseparable_nonisolated(byte * restrict bp, byte * restrict sp, int w,
 					break;
 				}
 
-				rr = fz_mul255(255 - ha, bp[0]) + fz_mul255(255 - ba, sp[0]) + fz_mul255(baha, rr);
-				rg = fz_mul255(255 - ha, bp[1]) + fz_mul255(255 - ba, sp[1]) + fz_mul255(baha, rg);
-				rb = fz_mul255(255 - ha, bp[2]) + fz_mul255(255 - ba, sp[2]) + fz_mul255(baha, rb);
+				rr = fz_mul255(255 - haa, bp[0]) + fz_mul255(fz_mul255(255 - ba, sr), haa) + fz_mul255(baha, rr);
+				rg = fz_mul255(255 - haa, bp[1]) + fz_mul255(fz_mul255(255 - ba, sg), haa) + fz_mul255(baha, rg);
+				rb = fz_mul255(255 - haa, bp[2]) + fz_mul255(fz_mul255(255 - ba, sb), haa) + fz_mul255(baha, rb);
 				bp[0] = fz_mul255(ra, rr);
 				bp[1] = fz_mul255(ra, rg);
 				bp[2] = fz_mul255(ra, rb);

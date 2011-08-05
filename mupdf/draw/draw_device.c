@@ -134,7 +134,7 @@ static void fz_knockout_begin(void *user)
 	dev->stack[dev->top].dest = dev->dest;
 	dev->stack[dev->top].shape = dev->shape;
 #ifdef DUMP_GROUP_BLENDS
-	dump_spaces(dev->top, "Knockout begin");
+	dump_spaces(dev->top, "Knockout begin\n");
 #endif
 	dev->top++;
 
