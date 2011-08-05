@@ -387,7 +387,7 @@ pdf_string_to_Tj(fz_buffer *content, fz_obj *value, int is_password)
 		else if (*uc > 0xFF)
 			*uc = '?';
 		// TODO: convert to CID
-		if (*uc < 0x20 || *uc == ')' || *uc == '\\')
+		if (*uc < 0x20 || *uc == '(' || *uc == ')' || *uc == '\\')
 			fz_buffer_printf(content, "\\%03o", *uc);
 		else
 			fz_buffer_printf(content, "%c", *uc);
