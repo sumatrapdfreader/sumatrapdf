@@ -1115,6 +1115,10 @@ pdf_run_xobject(pdf_csi *csi, fz_obj *resources, pdf_xobject *xobj, fz_matrix tr
 	int oldtop;
 	int popmask;
 
+	/* SumatraPDF: prevent a potentially infinite recursion */
+	if (csi->gtop > 512)
+		return fz_throw("aborting potential infinite recursion (csi->gtop == %d)", csi->gtop);
+
 	pdf_gsave(csi);
 
 	gstate = csi->gstate + csi->gtop;
@@ -1521,7 +1525,12 @@ static fz_error pdf_run_Do(pdf_csi *csi, fz_obj *rdb)
 
 		error = pdf_run_xobject(csi, xobj->resources, xobj, fz_identity);
 		if (error)
-			return fz_rethrow(error, "cannot draw xobject (%d %d R)", fz_to_num(obj), fz_to_gen(obj));
+		{
+			/* SumatraPDF: fix memory leak */
+			error = fz_rethrow(error, "cannot draw xobject (%d %d R)", fz_to_num(obj), fz_to_gen(obj));
+			pdf_drop_xobject(xobj);
+			return error;
+		}
 
 		pdf_drop_xobject(xobj);
 	}
