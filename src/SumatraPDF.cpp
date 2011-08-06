@@ -990,7 +990,9 @@ WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin, b
 
     // fail with a notification if the file doesn't exist and
     // there is a window the user has just been interacting with
-    if (win && !forceReuse && !file::Exists(fullpath)) {
+    // Note: embedded documents are referred to by an invalid path
+    //       containing more information after a colon (e.g. "C:\file.pdf:3:0")
+    if (win && !forceReuse && !file::Exists(fullpath) && !str::FindChar(fullpath + 2, ':')) {
         // TODO: reword to "File %s not found!" after 1.7 is released
         ScopedMem<TCHAR> msg(str::Format(_TR("Error loading %s"), fullpath));
         ShowNotification(win, msg, true /* autoDismiss */, true /* highlight */);
