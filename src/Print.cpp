@@ -12,7 +12,7 @@
 #include "WindowInfo.h"
 #include "AppTools.h"
 
-#include "SumatraPDF.h" // TODO: SumatraPDF.h must be included before Notifications.h
+#include "SumatraPDF.h"
 #include "Notifications.h"
 #include "SumatraDialogs.h"
 #include "Selection.h"
@@ -277,21 +277,6 @@ public:
     }
 };
 
-class ClosePrintThreadWorkItem : public UIThreadWorkItem {
-public:
-    ClosePrintThreadWorkItem(WindowInfo *win)
-        : UIThreadWorkItem(win) { }
-
-    virtual void Execute() {
-        if (!WindowInfoStillValid(win))
-            return;
-
-        HANDLE thread = win->printThread;
-        win->printThread = NULL;
-        CloseHandle(thread);
-    }
-};
-
 class PrintThreadData : public ProgressUpdateUI, public NotificationWndCallback {
     NotificationWnd *wnd;
     bool isCanceled;
@@ -323,7 +308,24 @@ public:
         if (WindowInfoStillValid(win))
             win->notifications->RemoveNotification(wnd);
     }
+};
 
+class ClosePrintThreadWorkItem : public UIThreadWorkItem {
+    PrintThreadData *data;
+
+public:
+    ClosePrintThreadWorkItem(PrintThreadData *data)
+        : UIThreadWorkItem(data->win), data(data) { }
+
+    virtual void Execute() {
+        delete data;
+        if (!WindowInfoStillValid(win))
+            return;
+
+        HANDLE thread = win->printThread;
+        win->printThread = NULL;
+        CloseHandle(thread);
+    }
 };
 
 static DWORD WINAPI PrintThread(LPVOID data)
@@ -332,9 +334,7 @@ static DWORD WINAPI PrintThread(LPVOID data)
     assert(threadData && threadData->data);
     if (threadData->data)
         PrintToDevice(*threadData->data, threadData);
-
-    QueueWorkItem(new ClosePrintThreadWorkItem(threadData->win));
-    delete threadData;
+    QueueWorkItem(new ClosePrintThreadWorkItem(threadData));
     return 0;
 }
 

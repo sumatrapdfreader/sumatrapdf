@@ -292,4 +292,3 @@ bool RegisterNotificationsWndClass(HINSTANCE inst)
     ATOM atom = RegisterClassEx(&wcex);
     return atom != 0;
 }
-
