@@ -183,6 +183,10 @@ fz_finalize_freetype(void)
 static void
 fz_check_font_dimensions(FT_Face face)
 {
+	/* prevent broken fonts from causing a division by zero */
+	if (face->units_per_EM == 0)
+		face->units_per_EM = 1000;
+
 	if (face->bbox.xMin == 0 && face->bbox.yMin == 0 &&
 		face->bbox.xMax == 1 && face->bbox.yMax == 1 &&
 		face->ascender == 1 && face->descender == 0)

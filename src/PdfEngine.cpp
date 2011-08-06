@@ -196,15 +196,14 @@ unsigned char *fz_extract_stream_data(fz_stream *stream, size_t *cbCount)
 
     fz_buffer *buffer;
     fz_seek(stream, 0, 0);
-    fz_read_all(&buffer, stream, fileLen);
+    fz_error error = fz_read_all(&buffer, stream, fileLen);
+    if (error)
+        return NULL;
     assert(fileLen == buffer->len);
 
-    unsigned char *data = (unsigned char *)malloc(buffer->len);
-    if (data) {
-        memcpy(data, buffer->data, buffer->len);
-        if (cbCount)
-            *cbCount = buffer->len;
-    }
+    unsigned char *data = (unsigned char *)memdup(buffer->data, buffer->len);
+    if (cbCount)
+        *cbCount = buffer->len;
 
     fz_drop_buffer(buffer);
 
@@ -1686,7 +1685,8 @@ PageLayoutType CPdfEngine::PreferredLayout()
 unsigned char *CPdfEngine::GetFileData(size_t *cbCount)
 {
     ScopedCritSec scope(&xrefAccess);
-    return fz_extract_stream_data(_xref->file, cbCount);
+    unsigned char *data = fz_extract_stream_data(_xref->file, cbCount);
+    return data ? data : (unsigned char *)file::ReadAll(_fileName, cbCount);
 }
 
 bool CPdfEngine::SaveEmbedded(fz_obj *obj, LinkSaverUI& saveUI)
@@ -2601,7 +2601,8 @@ TCHAR *CXpsEngine::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_ou
 unsigned char *CXpsEngine::GetFileData(size_t *cbCount)
 {
     ScopedCritSec scope(&_ctxAccess);
-    return fz_extract_stream_data(_ctx->file, cbCount);
+    unsigned char *data = fz_extract_stream_data(_ctx->file, cbCount);
+    return data ? data : (unsigned char *)file::ReadAll(_fileName, cbCount);
 }
 
 TCHAR *CXpsEngine::GetProperty(char *name)
