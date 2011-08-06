@@ -1116,8 +1116,8 @@ pdf_run_xobject(pdf_csi *csi, fz_obj *resources, pdf_xobject *xobj, fz_matrix tr
 	int popmask;
 
 	/* SumatraPDF: prevent a potentially infinite recursion */
-	if (csi->gtop > 512)
-		return fz_throw("aborting potential infinite recursion (csi->gtop == %d)", csi->gtop);
+	if (csi->gtop >= 96)
+		return fz_throw("aborting potentially infinite recursion (csi->gtop == %d)", csi->gtop);
 
 	pdf_gsave(csi);
 
