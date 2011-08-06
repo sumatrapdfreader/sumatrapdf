@@ -533,7 +533,7 @@ pdf_outline *pdf_loadattachments(pdf_xref *xref)
         fz_obj *type = fz_dict_gets(dest, "Type");
 
         node->title = fz_strdup(fz_to_name(name));
-        if (fz_is_name(type) && str::Eq(fz_to_name(type), "Filespec"))
+        if (fz_is_name(type) && str::EqI(fz_to_name(type), "Filespec"))
             node->link = pdf_new_link(fz_keep_obj(dest), PDF_LINK_LAUNCH);
     }
     fz_drop_obj(dict);
@@ -1780,7 +1780,7 @@ TCHAR *PdfLink::GetValue() const
         break;
     case PDF_LINK_LAUNCH:
         obj = fz_dict_gets(link->dest, "Type");
-        if (!fz_is_name(obj) || !str::Eq(fz_to_name(obj), "Filespec"))
+        if (!fz_is_name(obj) || !str::EqI(fz_to_name(obj), "Filespec"))
             break;
         obj = fz_dict_gets(link->dest, "UF"); 
         if (!fz_is_string(obj))
