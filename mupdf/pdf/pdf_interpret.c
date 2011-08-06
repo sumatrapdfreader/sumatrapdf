@@ -2246,14 +2246,10 @@ pdf_run_stream(pdf_csi *csi, fz_obj *rdb, fz_stream *file, char *buf, int buflen
 			}
 			else if (tok == PDF_TOK_STRING)
 			{
-				/* SumatraPDF: the scratch buffer can be overwritten by Type 3 glyphs */
-				unsigned char *string = fz_malloc(len);
-				memcpy(string, buf, len);
 				/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692312 */
 				csi->in_array = 0;
-				pdf_show_string(csi, string, len);
+				pdf_show_string(csi, (unsigned char *)buf, len);
 				csi->in_array = 1;
-				fz_free(string);
 			}
 			else if (tok == PDF_TOK_KEYWORD)
 			{
@@ -2339,17 +2335,22 @@ pdf_run_stream(pdf_csi *csi, fz_obj *rdb, fz_stream *file, char *buf, int buflen
 static fz_error
 pdf_run_buffer(pdf_csi *csi, fz_obj *rdb, fz_buffer *contents)
 {
-	fz_stream *file;
-	fz_error error;
 	/* SumatraPDF: be slightly more defensive */
-	if (!contents)
-		return fz_throw("cannot run NULL content stream");
-	file = fz_open_buffer(contents);
-	error = pdf_run_stream(csi, rdb, file, csi->xref->scratch, sizeof csi->xref->scratch);
+	if (contents)
+	{
+	fz_error error;
+	int len = sizeof csi->xref->scratch;
+	char *buf = fz_malloc(len); /* we must be re-entrant for type3 fonts */
+	fz_stream *file = fz_open_buffer(contents);
+	error = pdf_run_stream(csi, rdb, file, buf, len);
 	fz_close(file);
+	fz_free(buf);
 	if (error)
 		return fz_rethrow(error, "cannot parse content stream");
 	return fz_okay;
+	/* SumatraPDF: be slightly more defensive */
+	}
+	return fz_throw("cannot run NULL content stream");
 }
 
 fz_error

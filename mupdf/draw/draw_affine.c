@@ -516,8 +516,8 @@ fz_paint_image_imp(fz_pixmap *dst, fz_bbox scissor, fz_pixmap *shape, fz_pixmap 
 	fd = inv.d * 65536;
 
 	/* Calculate initial texture positions. Do a half step to start. */
-	u = (fa * x) + (fc * y) + inv.e * 65536 + ((fa+fc)>>1);
-	v = (fb * x) + (fd * y) + inv.f * 65536 + ((fb+fd)>>1);
+	u = (fa * x) + (fc * y) + inv.e * 65536 + ((fa + fc) >> 1);
+	v = (fb * x) + (fd * y) + inv.f * 65536 + ((fb + fd) >> 1);
 
 	dp = dst->samples + ((y - dst->y) * dst->w + (x - dst->x)) * dst->n;
 	n = dst->n;

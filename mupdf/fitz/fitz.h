@@ -630,7 +630,7 @@ void fz_drop_pixmap(fz_pixmap *pix);
 void fz_clear_pixmap(fz_pixmap *pix);
 void fz_clear_pixmap_with_color(fz_pixmap *pix, int value);
 void fz_clear_pixmap_rect_with_color(fz_pixmap *pix, int value, fz_bbox r);
-void fz_copy_pixmap_rect(fz_pixmap *dest, const fz_pixmap *src, fz_bbox r);
+void fz_copy_pixmap_rect(fz_pixmap *dest, fz_pixmap *src, fz_bbox r);
 void fz_premultiply_pixmap(fz_pixmap *pix);
 fz_pixmap *fz_alpha_from_gray(fz_pixmap *gray, int luminosity);
 fz_bbox fz_bound_pixmap(fz_pixmap *pix);

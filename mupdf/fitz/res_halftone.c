@@ -9,7 +9,7 @@ fz_new_halftone(int comps)
 	ht = fz_malloc(sizeof(fz_halftone) + (comps-1)*sizeof(fz_pixmap *));
 	ht->refs = 1;
 	ht->n = comps;
-	for (i=0; i < comps; i++)
+	for (i = 0; i < comps; i++)
 		ht->comp[i] = NULL;
 
 	return ht;
@@ -29,10 +29,8 @@ fz_drop_halftone(fz_halftone *ht)
 
 	if (!ht || --ht->refs != 0)
 		return;
-	for (i=0; i < ht->n; i++)
-	{
+	for (i = 0; i < ht->n; i++)
 		fz_drop_pixmap(ht->comp[i]);
-	}
 	fz_free(ht);
 }
 
@@ -60,19 +58,8 @@ static unsigned char mono_ht[] =
 fz_halftone *fz_get_default_halftone(int num_comps)
 {
 	fz_halftone *ht = fz_new_halftone(num_comps);
-
-	if (ht == NULL)
-		return NULL;
-
-	/* Only support 1 component for now */
-	assert(num_comps == 1);
-
+	assert(num_comps == 1); /* Only support 1 component for now */
 	ht->comp[0] = fz_new_pixmap_with_data(NULL, 16, 16, mono_ht);
-	if (ht->comp[0] == NULL)
-	{
-		fz_drop_halftone(ht);
-		return NULL;
-	}
 	return ht;
 }
 
@@ -85,7 +72,7 @@ static void make_ht_line(unsigned char *buf, fz_halftone *ht, int x, int y, int 
 	 */
 	int k, n;
 	n = ht->n;
-	for (k=0; k < n; k++)
+	for (k = 0; k < n; k++)
 	{
 		fz_pixmap *tile = ht->comp[k];
 		unsigned char *b = buf++;

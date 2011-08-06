@@ -107,7 +107,8 @@ fz_clone_stroke_state(fz_stroke_state *stroke)
 static void
 fz_append_display_node(fz_display_list *list, fz_display_node *node)
 {
-	switch (node->cmd) {
+	switch (node->cmd)
+	{
 	case FZ_CMD_CLIP_PATH:
 	case FZ_CMD_CLIP_STROKE_PATH:
 	case FZ_CMD_CLIP_IMAGE_MASK:
@@ -130,7 +131,7 @@ fz_append_display_node(fz_display_list *list, fz_display_node *node)
 		break;
 	case FZ_CMD_BEGIN_TILE:
 		list->tiled++;
-		if ((list->top > 0) && (list->top <= STACK_SIZE))
+		if (list->top > 0 && list->top <= STACK_SIZE)
 		{
 			list->stack[list->top-1].rect = fz_infinite_rect;
 		}
@@ -146,8 +147,7 @@ fz_append_display_node(fz_display_list *list, fz_display_node *node)
 			list->top--;
 			node->rect = fz_infinite_rect;
 		}
-		else
-		if (list->top > 0)
+		else if (list->top > 0)
 		{
 			fz_rect *update;
 			list->top--;
@@ -175,11 +175,10 @@ fz_append_display_node(fz_display_list *list, fz_display_node *node)
 			else
 				node->rect = fz_infinite_rect;
 		}
-		/*@fallthrough@*/
+		/* fallthrough */
 	default:
-		if ((list->top > 0) && (list->tiled == 0) && (list->top <= STACK_SIZE)) {
+		if (list->top > 0 && list->tiled == 0 && list->top <= STACK_SIZE)
 			list->stack[list->top-1].rect = fz_union_rect(list->stack[list->top-1].rect, node->rect);
-		}
 		break;
 	}
 	if (!list->first)

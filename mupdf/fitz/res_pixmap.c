@@ -135,6 +135,17 @@ fz_drop_pixmap(fz_pixmap *pix)
 	}
 }
 
+fz_bbox
+fz_bound_pixmap(fz_pixmap *pix)
+{
+	fz_bbox bbox;
+	bbox.x0 = pix->x;
+	bbox.y0 = pix->y;
+	bbox.x1 = pix->x + pix->w;
+	bbox.y1 = pix->y + pix->h;
+	return bbox;
+}
+
 void
 fz_clear_pixmap(fz_pixmap *pix)
 {
@@ -163,37 +174,24 @@ fz_clear_pixmap_with_color(fz_pixmap *pix, int value)
 }
 
 void
-fz_copy_pixmap_rect(fz_pixmap *dest, const fz_pixmap *src, fz_bbox r)
+fz_copy_pixmap_rect(fz_pixmap *dest, fz_pixmap *src, fz_bbox r)
 {
 	const unsigned char *srcp;
 	unsigned char *destp;
 	int y, w, destspan, srcspan;
 
-	if (r.x0 < dest->x)
-		r.x0 = dest->x;
-	if (r.x1 > dest->x+dest->w)
-		r.x1 = dest->x+dest->w;
-	if (r.y0 < dest->y)
-		r.y0 = dest->y;
-	if (r.y1 > dest->y+dest->h)
-		r.y1 = dest->y+dest->h;
-	if (r.x0 < src->x)
-		r.x0 = src->x;
-	if (r.x1 > src->x+src->w)
-		r.x1 = src->x+src->w;
-	if (r.y0 < src->y)
-		r.y0 = src->y;
-	if (r.y1 > src->y+src->h)
-		r.y1 = src->y+src->h;
+	r = fz_intersect_bbox(r, fz_bound_pixmap(dest));
+	r = fz_intersect_bbox(r, fz_bound_pixmap(src));
 	w = r.x1 - r.x0;
 	y = r.y1 - r.y0;
-	if ((w <= 0) || (y <= 0))
+	if (w <= 0 || y <= 0)
 		return;
+
 	w *= src->n;
 	srcspan = src->w * src->n;
 	srcp = src->samples + srcspan * (r.y0 - src->y) + src->n * (r.x0 - src->x);
 	destspan = dest->w * dest->n;
-	destp = dest->samples + destspan * (r.y0-dest->y) + dest->n * (r.x0 - dest->x);
+	destp = dest->samples + destspan * (r.y0 - dest->y) + dest->n * (r.x0 - dest->x);
 	do
 	{
 		memcpy(destp, srcp, w);
@@ -209,20 +207,14 @@ fz_clear_pixmap_rect_with_color(fz_pixmap *dest, int value, fz_bbox r)
 	unsigned char *destp;
 	int x, y, w, k, destspan;
 
-	if (r.x0 < dest->x)
-		r.x0 = dest->x;
-	if (r.x1 > dest->x+dest->w)
-		r.x1 = dest->x+dest->w;
-	if (r.y0 < dest->y)
-		r.y0 = dest->y;
-	if (r.y1 > dest->y+dest->h)
-		r.y1 = dest->y+dest->h;
+	r = fz_intersect_bbox(r, fz_bound_pixmap(dest));
 	w = r.x1 - r.x0;
 	y = r.y1 - r.y0;
-	if ((w <= 0) || (y <= 0))
+	if (w <= 0 || y <= 0)
 		return;
+
 	destspan = dest->w * dest->n;
-	destp = dest->samples + destspan * (r.y0-dest->y) + dest->n * (r.x0 - dest->x);
+	destp = dest->samples + destspan * (r.y0 - dest->y) + dest->n * (r.x0 - dest->x);
 	if (value == 255)
 		do
 		{
@@ -231,7 +223,6 @@ fz_clear_pixmap_rect_with_color(fz_pixmap *dest, int value, fz_bbox r)
 		}
 		while (--y);
 	else
-	{
 		do
 		{
 			unsigned char *s = destp;
@@ -244,7 +235,6 @@ fz_clear_pixmap_rect_with_color(fz_pixmap *dest, int value, fz_bbox r)
 			destp += destspan;
 		}
 		while (--y);
-	}
 }
 
 void
@@ -264,17 +254,6 @@ fz_premultiply_pixmap(fz_pixmap *pix)
 			s += pix->n;
 		}
 	}
-}
-
-fz_bbox
-fz_bound_pixmap(fz_pixmap *pix)
-{
-	fz_bbox bbox;
-	bbox.x0 = pix->x;
-	bbox.y0 = pix->y;
-	bbox.x1 = pix->x + pix->w;
-	bbox.y1 = pix->y + pix->h;
-	return bbox;
 }
 
 fz_pixmap *

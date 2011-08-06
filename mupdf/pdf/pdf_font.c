@@ -540,13 +540,6 @@ pdf_load_simple_font(pdf_font_desc **fontdescp, pdf_xref *xref, fz_obj *dict)
 	face = fontdesc->font->ft_face;
 	kind = ft_kind(face);
 
-	/* SumatraPDF: Check for DynaLab fonts that must use hinting */
-	if (kind == TRUETYPE)
-	{
-		if (FT_IS_TRICKY(face) || is_dynalab(fontdesc->font->name))
-			fontdesc->font->ft_hint = 1;
-	}
-
 	/* Encoding */
 
 	symbolic = fontdesc->flags & 4;
@@ -847,13 +840,6 @@ load_cid_font(pdf_font_desc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj *e
 	face = fontdesc->font->ft_face;
 	kind = ft_kind(face);
 
-	/* Check for DynaLab fonts that must use hinting */
-	if (kind == TRUETYPE)
-	{
-		if (FT_IS_TRICKY(face) || is_dynalab(fontdesc->font->name))
-			fontdesc->font->ft_hint = 1;
-	}
-
 	/* Encoding */
 
 	error = fz_okay;
@@ -1078,6 +1064,7 @@ pdf_load_font_descriptor(pdf_font_desc *fontdesc, pdf_xref *xref, fz_obj *dict, 
 	fz_obj *obj1, *obj2, *obj3, *obj;
 	char *fontname;
 	char *origname;
+	FT_Face face;
 
 	if (!strchr(basefont, ',') || strchr(basefont, '+'))
 		origname = fz_to_name(fz_dict_gets(dict, "FontName"));
@@ -1123,6 +1110,14 @@ pdf_load_font_descriptor(pdf_font_desc *fontdesc, pdf_xref *xref, fz_obj *dict, 
 	}
 
 	fz_strlcpy(fontdesc->font->name, fontname, sizeof fontdesc->font->name);
+
+	/* Check for DynaLab fonts that must use hinting */
+	face = fontdesc->font->ft_face;
+	if (ft_kind(face) == TRUETYPE)
+	{
+		if (FT_IS_TRICKY(face) || is_dynalab(fontdesc->font->name))
+			fontdesc->font->ft_hint = 1;
+	}
 
 	return fz_okay;
 

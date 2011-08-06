@@ -76,8 +76,7 @@ static void fz_dump_blend(fz_pixmap *pix, const char *s)
 static void dump_spaces(int x, const char *s)
 {
 	int i;
-
-	for (i=0; i < x; i++)
+	for (i = 0; i < x; i++)
 		printf(" ");
 	printf("%s", s);
 }
@@ -112,9 +111,9 @@ static void fz_knockout_begin(void *user)
 	{
 		fz_pixmap *prev;
 		int i  = dev->top;
-		do {
+		do
 			prev = dev->stack[--i].dest;
-		} while (prev == NULL);
+		while (prev == NULL);
 		fz_copy_pixmap_rect(dest, prev, bbox);
 	}
 
@@ -333,9 +332,8 @@ fz_draw_clip_path(void *user, fz_path *path, fz_rect *rect, int even_odd, fz_mat
 
 	bbox = fz_bound_gel(dev->gel);
 	bbox = fz_intersect_bbox(bbox, dev->scissor);
-	if (rect) {
+	if (rect)
 		bbox = fz_intersect_bbox(bbox, fz_round_rect(*rect));
-	}
 
 	if (fz_is_empty_rect(bbox) || fz_is_rect_gel(dev->gel))
 	{
@@ -859,7 +857,7 @@ fz_transform_pixmap(fz_pixmap *image, fz_matrix *ctm, int x, int y, int dx, int 
 
 	if (ctm->a != 0 && ctm->b == 0 && ctm->c == 0 && ctm->d != 0)
 	{
-		/* Unrotated or X flip or Yflip or XYflip */
+		/* Unrotated or X-flip or Y-flip or XY-flip */
 		scaled = fz_scale_pixmap_gridfit(image, ctm->e, ctm->f, ctm->a, ctm->d, gridfit);
 		if (scaled == NULL)
 			return NULL;
@@ -869,6 +867,7 @@ fz_transform_pixmap(fz_pixmap *image, fz_matrix *ctm, int x, int y, int dx, int 
 		ctm->f = scaled->y;
 		return scaled;
 	}
+
 	if (ctm->a == 0 && ctm->b != 0 && ctm->c != 0 && ctm->d == 0)
 	{
 		/* Other orthogonal flip/rotation cases */
@@ -881,12 +880,14 @@ fz_transform_pixmap(fz_pixmap *image, fz_matrix *ctm, int x, int y, int dx, int 
 		ctm->e = scaled->y;
 		return scaled;
 	}
+
 	/* Downscale, non rectilinear case */
 	if (dx > 0 && dy > 0)
 	{
 		scaled = fz_scale_pixmap(image, 0, 0, (float)dx, (float)dy);
 		return scaled;
 	}
+
 	return NULL;
 }
 
@@ -931,7 +932,8 @@ fz_draw_fill_image(void *user, fz_pixmap *image, fz_matrix ctm, float alpha)
 	dy = sqrtf(ctm.c * ctm.c + ctm.d * ctm.d);
 	if (dx < image->w && dy < image->h)
 	{
-		scaled = fz_transform_pixmap(image, &ctm, dev->dest->x, dev->dest->y, dx, dy, (alpha == 1.0f) && ((dev->flags & FZ_DRAWDEV_FLAGS_TYPE3) == 0));
+		int gridfit = alpha == 1.0f && !(dev->flags & FZ_DRAWDEV_FLAGS_TYPE3);
+		scaled = fz_transform_pixmap(image, &ctm, dev->dest->x, dev->dest->y, dx, dy, gridfit);
 		if (scaled == NULL)
 		{
 			if (dx < 1)
@@ -992,7 +994,8 @@ fz_draw_fill_image_mask(void *user, fz_pixmap *image, fz_matrix ctm,
 	dy = sqrtf(ctm.c * ctm.c + ctm.d * ctm.d);
 	if (dx < image->w && dy < image->h)
 	{
-		scaled = fz_transform_pixmap(image, &ctm, dev->dest->x, dev->dest->y, dx, dy, (alpha == 1.0f) && ((dev->flags & FZ_DRAWDEV_FLAGS_TYPE3) == 0));
+		int gridfit = alpha == 1.0f && !(dev->flags & FZ_DRAWDEV_FLAGS_TYPE3);
+		scaled = fz_transform_pixmap(image, &ctm, dev->dest->x, dev->dest->y, dx, dy, gridfit);
 		if (scaled == NULL)
 		{
 			if (dx < 1)
@@ -1072,7 +1075,8 @@ fz_draw_clip_image_mask(void *user, fz_pixmap *image, fz_rect *rect, fz_matrix c
 	dy = sqrtf(ctm.c * ctm.c + ctm.d * ctm.d);
 	if (dx < image->w && dy < image->h)
 	{
-		scaled = fz_transform_pixmap(image, &ctm, dev->dest->x, dev->dest->y, dx, dy, (dev->flags & FZ_DRAWDEV_FLAGS_TYPE3) == 0);
+		int gridfit = !(dev->flags & FZ_DRAWDEV_FLAGS_TYPE3);
+		scaled = fz_transform_pixmap(image, &ctm, dev->dest->x, dev->dest->y, dx, dy, gridfit);
 		if (scaled == NULL)
 		{
 			if (dx < 1)
@@ -1563,12 +1567,7 @@ fz_device *
 fz_new_draw_device_type3(fz_glyph_cache *cache, fz_pixmap *dest)
 {
 	fz_device *dev = fz_new_draw_device(cache, dest);
-
-	if (dev)
-	{
-		fz_draw_device *ddev = (fz_draw_device *)dev->user;
-
-		ddev->flags |= FZ_DRAWDEV_FLAGS_TYPE3;
-	}
+	fz_draw_device *ddev = dev->user;
+	ddev->flags |= FZ_DRAWDEV_FLAGS_TYPE3;
 	return dev;
 }
