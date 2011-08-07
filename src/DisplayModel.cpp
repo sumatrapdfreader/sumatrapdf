@@ -1486,6 +1486,23 @@ void DisplayModel::Navigate(int dir)
         SetScrollState(navHistory[navHistoryIx]);
 }
 
+void DisplayModel::CopyNavHistory(DisplayModel& orig)
+{
+    navHistoryIx = orig.navHistoryIx;
+    navHistoryEnd = orig.navHistoryEnd;
+    // copy navigation history for all (still valid) pages over
+    for (int i = 0; i < navHistoryEnd; i++) {
+        if (ValidPageNo(orig.navHistory[i].page))
+            navHistory[i] = orig.navHistory[i];
+        else {
+            if (i <= navHistoryIx)
+                navHistoryIx--;
+            navHistoryEnd--;
+            i--;
+        }
+    }
+}
+
 DisplayModel *DisplayModel::CreateFromFileName(const TCHAR *fileName, DisplayModelCallback *cb)
 {
     DisplayModel *dm = new DisplayModel(cb);

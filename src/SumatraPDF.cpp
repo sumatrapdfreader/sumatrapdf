@@ -671,8 +671,10 @@ static bool LoadDocIntoWindow(TCHAR *fileName, WindowInfo& win,
     */
     if (win.dm) {
         win.dm->SetInitialViewSettings(displayMode, startPage, win.GetViewPortSize());
-        if (prevModel && str::Eq(win.dm->FileName(), prevModel->FileName()))
+        if (prevModel && str::Eq(win.dm->FileName(), prevModel->FileName())) {
             gRenderCache.KeepForDisplayModel(prevModel, win.dm);
+            win.dm->CopyNavHistory(*prevModel);
+        }
         delete prevModel;
         ChmEngine *chmEngine = win.dm->GetChmEngine();
         if (chmEngine) {
@@ -1029,9 +1031,8 @@ WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin, b
     win->notifications->RemoveAllInGroup(NG_PAGE_INFO_HELPER);
 
     win->suppressPwdUI = suppressPwdUI;
-    bool allowFailure = true;
-    bool placeWindow = true;
-    if (!LoadDocIntoWindow(fullpath, *win, NULL, isNewWindow, allowFailure, showWin, placeWindow)) {
+    if (!LoadDocIntoWindow(fullpath, *win, NULL, isNewWindow,
+                           true /* allowFailure */, showWin, true /* placeWindow */ )) {
         /* failed to open */
         if (gFileHistory.MarkFileInexistent(fullpath))
             SavePrefs();

@@ -74,11 +74,8 @@ struct PageInfo {
 
 /* The current scroll state (needed for saving/restoring the scroll position) */
 /* coordinates are in user space units (per page) */
-class ScrollState
-{
-public:
-    ScrollState() : page(0), x(0), y(0) { }
-    ScrollState(int page, double x, double y) : page(page), x(x), y(y) { }
+struct ScrollState {
+    ScrollState(int page=0, double x=0, double y=0) : page(page), x(x), y(y) { }
 
     int page;
     double x, y;
@@ -200,6 +197,7 @@ public:
 
     bool            CanNavigate(int dir) const;
     void            Navigate(int dir);
+    void            CopyNavHistory(DisplayModel& orig);
 
     bool            DisplayStateFromModel(DisplayState *ds);
     void            SetInitialViewSettings(DisplayMode displayMode, int newStartPage, SizeI viewPort);
