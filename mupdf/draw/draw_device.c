@@ -1089,7 +1089,7 @@ fz_draw_clip_image_mask(void *user, fz_pixmap *image, fz_rect *rect, fz_matrix c
 			image = scaled;
 	}
 
-	fz_paint_image(mask, bbox, dev->shape, image, ctm, 255);
+	fz_paint_image(mask, bbox, shape, image, ctm, 255);
 
 	if (scaled)
 		fz_drop_pixmap(scaled);
