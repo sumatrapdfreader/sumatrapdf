@@ -560,18 +560,18 @@ DWORD WINAPI RenderCache::RenderCacheThread(LPVOID data)
             continue;
         }
 
-        if (bmp && cache->invertColors)
-            bmp->InvertColors();
         if (bmp)
             DBG_OUT("RenderCacheThread(): finished rendering %d\n", req.pageNo);
         else
-            DBG_OUT("renderCb(): failed to render a bitmap of page %d\n", req.pageNo);
+            DBG_OUT("RenderCacheThread(): failed to render a bitmap of page %d\n", req.pageNo);
         if (req.renderCb) {
             // the callback must free the RenderedBitmap
             req.renderCb->Callback(bmp);
             req.renderCb = (RenderingCallback *)1; // will crash if accessed again, which should not happen
         }
         else {
+            if (bmp && cache->invertColors)
+                bmp->InvertColors();
             cache->Add(req, bmp);
 #ifdef CONSERVE_MEMORY
             cache->FreeNotVisible();

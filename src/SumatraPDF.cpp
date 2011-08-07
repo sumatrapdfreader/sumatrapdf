@@ -1882,7 +1882,7 @@ static void OnPaint(WindowInfo& win)
 
     if (win.IsAboutWindow()) {
         if (HasPermission(Perm_SavePreferences | Perm_DiskAccess) && gGlobalPrefs.rememberOpenedFiles && gGlobalPrefs.showStartPage)
-            DrawStartPage(win, win.buffer->GetDC(), gFileHistory);
+            DrawStartPage(win, win.buffer->GetDC(), gFileHistory, gRenderCache.invertColors);
         else
             DrawAboutPage(win, win.buffer->GetDC());
         win.buffer->Flush(hdc);
