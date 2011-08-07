@@ -565,6 +565,12 @@ fz_paint_image_imp(fz_pixmap *dst, fz_bbox scissor, fz_pixmap *shape, fz_pixmap 
 
 	while (h--)
 	{
+		/* SumatraPDF: TODO: why is there (still) a potential heap overflow? */
+		if (shape && hp > shape->samples + (shape->h - 1) * hw)
+		{
+			hp = NULL;
+			hw = 0;
+		}
 		paintfn(dp, sp, sw, sh, u, v, fa, fb, w, n, alpha, color, hp);
 		dp += dst->w * n;
 		hp += hw;
