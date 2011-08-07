@@ -983,7 +983,8 @@ void DisplayModel::GoToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
     //DBG_OUT("DisplayModel::GoToPage(pageNo=%d, scrollY=%d)\n", pageNo, scrollY);
     PageInfo * pageInfo = GetPageInfo(pageNo);
 
-    if (-1 == scrollX && 0 == scrollY && ZOOM_FIT_CONTENT == _zoomVirtual) {
+    // intentionally ignore scrollX and scrollY when fitting to content
+    if (ZOOM_FIT_CONTENT == _zoomVirtual) {
         // scroll down to where the actual content starts
         PointI start = GetContentStart(pageNo);
         scrollX = start.x;
