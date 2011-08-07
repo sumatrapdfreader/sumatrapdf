@@ -57,7 +57,7 @@ fz_paint_affine_alpha_N_lerp(byte *dp, byte *sp, int sw, int sh, int u, int v, i
 			}
 			dp[n1] = xa + fz_mul255(dp[n1], t);
 			if (hp)
-				hp[0] = xa + fz_mul255(hp[n1], t);
+				hp[0] = xa + fz_mul255(hp[0], t);
 		}
 		dp += n;
 		if (hp)
@@ -123,7 +123,7 @@ fz_paint_affine_alpha_N_near(byte *dp, byte *sp, int sw, int sh, int u, int v, i
 				dp[k] = fz_mul255(sample[k], alpha) + fz_mul255(dp[k], t);
 			dp[n1] = a + fz_mul255(dp[n1], t);
 			if (hp)
-				hp[0] = a + fz_mul255(hp[n1], t);
+				hp[0] = a + fz_mul255(hp[0], t);
 		}
 		dp += n;
 		if (hp)
@@ -346,7 +346,7 @@ fz_paint_affine_color_N_near(byte *dp, byte *sp, int sw, int sh, int u, int v, i
 				dp[k] = FZ_BLEND(color[k], dp[k], masa);
 			dp[n1] = FZ_BLEND(255, dp[n1], masa);
 			if (hp)
-				hp[n1] = FZ_BLEND(255, hp[n1], masa);
+				hp[0] = FZ_BLEND(255, hp[0], masa);
 		}
 		dp += n;
 		if (hp)
@@ -524,8 +524,7 @@ fz_paint_image_imp(fz_pixmap *dst, fz_bbox scissor, fz_pixmap *shape, fz_pixmap 
 	sp = img->samples;
 	sw = img->w;
 	sh = img->h;
-	/* SumatraPDF: TODO: why is there a potential heap overflow (triggered since r4312)? */
-	if (shape && 0)
+	if (shape)
 	{
 		hw = shape->w;
 		hp = shape->samples + ((y - shape->y) * hw) + x - dst->x;
