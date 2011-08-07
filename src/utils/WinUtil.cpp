@@ -411,7 +411,7 @@ RectI ShiftRectToWorkArea(RectI rect, bool bFully)
     GetMonitorInfo(MonitorFromRect(&rect.ToRECT(), MONITOR_DEFAULTTONEAREST), &mi);
     RectI monitor = RectI::FromRECT(mi.rcWork);
 
-    if (rect.y + rect.dy <= monitor.x || bFully && rect.y < monitor.y)
+    if (rect.y + rect.dy <= monitor.y || bFully && rect.y < monitor.y)
         /* Rectangle is too far above work area */
         rect.Offset(0, monitor.y - rect.y);
     else if (rect.y >= monitor.y + monitor.dy || bFully && rect.y + rect.dy > monitor.y + monitor.dy)

@@ -149,14 +149,8 @@ static INT_PTR CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT msg, WPARAM wParam,
         editPageNo = GetDlgItem(hDlg, IDC_GOTO_PAGE_EDIT);
         if (!data->onlyNumeric)
             SetWindowLong(editPageNo, GWL_STYLE, GetWindowLong(editPageNo, GWL_STYLE) & ~ES_NUMBER);
-        if (data->currPageLabel) {
-            assert(!data->onlyNumeric);
-            SetDlgItemText(hDlg, IDC_GOTO_PAGE_EDIT, data->currPageLabel);
-        }
-        else {
-            ScopedMem<TCHAR> pageNo(str::Format(_T("%d")));
-            SetDlgItemText(hDlg, IDC_GOTO_PAGE_EDIT, pageNo);
-        }
+        assert(data->currPageLabel);
+        SetDlgItemText(hDlg, IDC_GOTO_PAGE_EDIT, data->currPageLabel);
         ScopedMem<TCHAR> totalCount(str::Format(_TR("(of %d)"), data->pageCount));
         SetDlgItemText(hDlg, IDC_GOTO_PAGE_LABEL_OF, totalCount);
 
