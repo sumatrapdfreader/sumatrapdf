@@ -16,6 +16,7 @@ Contributor: Marco La Fors
 Contributor: Stephan Paternotte
 Contributor: Ricki Yani Setiawan
 Contributor: Robbert Feunekes
+Contributor: Jeroen Baert
 
 &About
 &Over
@@ -228,7 +229,7 @@ Bytes
 Bytes
 
 Can't connect to the Internet (error %#x).
-Geen verbinding maken met internet (fout %#x).
+Kan geen verbinding maken met internet (fout %#x).
 
 Cancel
 Annuleren
@@ -237,7 +238,7 @@ Cannot print this file
 Dit bestand kan niet worden afgedrukt
 
 Cannot start inverse search command. Please check the command line in the settings.
-Kan de omgekeerde zoekrichting niet starten. Controleer de opdrachtregel in de instellingen.
+Kan de omgekeerde zoekopdracht niet starten. Controleer de opdrachtregel in de instellingen.
 
 Change Language
 Taal wijzigen (Change Language)
@@ -408,7 +409,7 @@ Hide frequently read
 'Vaak gelezen' verbergen
 
 Hint: Use the F3 key for finding again
-Tip: Gebruik de funtietoets F3 om verder te zoeken
+Tip: Gebruik de functietoets F3 om verder te zoeken
 
 Image files (*.%s)
 Afbeeldingen (*.%s)
@@ -663,7 +664,7 @@ Zoomniveau
 [Bestand gewijzigd; verversen] %s
 
 copying text
-tekst kopieren
+tekst kopiëren
 
 printing document
 bestand afdrukken
