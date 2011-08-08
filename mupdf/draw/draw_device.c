@@ -1089,7 +1089,7 @@ fz_draw_clip_image_mask(void *user, fz_pixmap *image, fz_rect *rect, fz_matrix c
 			image = scaled;
 	}
 
-	fz_paint_image(mask, bbox, shape, image, ctm, 255);
+	fz_paint_image(mask, bbox, dev->shape, image, ctm, 255);
 
 	if (scaled)
 		fz_drop_pixmap(scaled);
@@ -1307,6 +1307,7 @@ fz_draw_begin_group(void *user, fz_rect rect, int isolated, int knockout, int bl
 	bbox = fz_intersect_bbox(bbox, dev->scissor);
 	dest = fz_new_pixmap_with_rect(model, bbox);
 
+	isolated = 1; /* SumatraPDF: disable buggy non-isolated blending for now */
 	if (isolated)
 	{
 		fz_clear_pixmap(dest);

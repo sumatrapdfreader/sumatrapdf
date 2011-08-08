@@ -565,7 +565,8 @@ fz_paint_image_imp(fz_pixmap *dst, fz_bbox scissor, fz_pixmap *shape, fz_pixmap 
 
 	while (h--)
 	{
-		paintfn(dp, sp, sw, sh, u, v, fa, fb, w, n, alpha, color, hp);
+		/* SumatraPDF: TODO: shape doesn't always completely cover dst */
+		paintfn(dp, sp, sw, sh, u, v, fa, fb, w, n, alpha, color, shape && hp >= shape->samples && hp <= shape->samples + shape->h * hw - w ? hp : NULL);
 		dp += dst->w * n;
 		hp += hw;
 		u += fc;
