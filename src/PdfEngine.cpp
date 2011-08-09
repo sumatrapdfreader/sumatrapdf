@@ -750,8 +750,8 @@ protected:
     fz_matrix       viewctm(int pageNo, float zoom, int rotation);
     fz_matrix       viewctm(pdf_page *page, float zoom, int rotation);
     bool            RenderPage(HDC hDC, pdf_page *page, RectI screenRect,
-                               fz_matrix *ctm=NULL, float zoom=0, int rotation=0,
-                               RectD *pageRect=NULL, RenderTarget target=Target_View);
+                               fz_matrix *ctm, float zoom, int rotation,
+                               RectD *pageRect, RenderTarget target);
     TCHAR         * ExtractPageText(pdf_page *page, TCHAR *lineSep, RectI **coords_out=NULL,
                                     RenderTarget target=Target_View, bool cacheRun=false);
 
@@ -1417,9 +1417,6 @@ bool CPdfEngine::RenderPage(HDC hDC, pdf_page *page, RectI screenRect, fz_matrix
 
     fz_matrix ctm2;
     if (!ctm) {
-        if (!zoom)
-            zoom = min(1.0f * screenRect.dx / (page->mediabox.x1 - page->mediabox.x0),
-                       1.0f * screenRect.dy / (page->mediabox.y1 - page->mediabox.y0));
         ctm2 = viewctm(page, zoom, rotation);
         fz_rect pRect = pageRect ? fz_RectD_to_rect(*pageRect) : page->mediabox;
         fz_bbox bbox = fz_round_rect(fz_transform_rect(ctm2, pRect));
@@ -2028,8 +2025,8 @@ protected:
     }
     fz_matrix       viewctm(RectD mediabox, float zoom, int rotation);
     bool            renderPage(HDC hDC, xps_page *page, RectI screenRect,
-                               fz_matrix *ctm=NULL, float zoom=0, int rotation=0,
-                               RectD *pageRect=NULL);
+                               fz_matrix *ctm, float zoom, int rotation,
+                               RectD *pageRect);
     TCHAR         * ExtractPageText(xps_page *page, TCHAR *lineSep,
                                     RectI **coords_out=NULL, bool cacheRun=false);
 
@@ -2485,9 +2482,6 @@ bool CXpsEngine::renderPage(HDC hDC, xps_page *page, RectI screenRect, fz_matrix
     fz_matrix ctm2;
     if (!ctm) {
         fz_bbox mediabox = { 0, 0, page->width, page->height };
-        if (!zoom)
-            zoom = min(1.0f * screenRect.dx / (mediabox.x1 - mediabox.x0),
-                       1.0f * screenRect.dy / (mediabox.y1 - mediabox.y0));
         ctm2 = viewctm(page, zoom, rotation);
         fz_rect pRect = pageRect ? fz_RectD_to_rect(*pageRect) : fz_bbox_to_rect(mediabox);
         fz_bbox bbox = fz_round_rect(fz_transform_rect(ctm2, pRect));

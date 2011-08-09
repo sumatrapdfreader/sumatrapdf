@@ -752,7 +752,7 @@ void DisplayModel::RecalcVisibleParts()
 int DisplayModel::GetPageNoByPoint(PointI pt) 
 {
     // no reasonable answer possible, if zoom hasn't been set yet
-    if (!_zoomReal)
+    if (_zoomReal <= 0)
         return -1;
 
     for (int pageNo = 1; pageNo <= PageCount(); ++pageNo) {
@@ -770,7 +770,7 @@ int DisplayModel::GetPageNoByPoint(PointI pt)
 
 int DisplayModel::GetPageNextToPoint(PointI pt)
 {
-    if (!_zoomReal)
+    if (_zoomReal <= 0)
         return _startPage;
 
     double maxDist = -1;

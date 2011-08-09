@@ -1450,6 +1450,11 @@ bool tcd_decode_tile(opj_tcd_t *tcd, unsigned char *src, int len, int tileno, op
 		int i, j;
 		if(!imagec->data){
 			imagec->data = (int*) opj_malloc(imagec->w * imagec->h * sizeof(int));
+			/* SumatraPDF: prevent a potential NULL dereference */
+			if (!imagec->data) {
+				opj_aligned_free(tilec->data);
+				return false;
+			}
 		}
 		if(tcd->tcp->tccps[compno].qmfbid == 1) {
 			for(j = res->y0; j < res->y1; ++j) {
