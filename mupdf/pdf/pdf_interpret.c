@@ -2355,7 +2355,8 @@ pdf_run_buffer(pdf_csi *csi, fz_obj *rdb, fz_buffer *contents)
 	fz_close(file);
 	fz_free(buf);
 	if (error)
-		return fz_rethrow(error, "cannot parse content stream");
+		/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692260 */
+		fz_catch(error, "couldn't parse the whole content stream, rendering anyway");
 	return fz_okay;
 	/* SumatraPDF: be slightly more defensive */
 	}

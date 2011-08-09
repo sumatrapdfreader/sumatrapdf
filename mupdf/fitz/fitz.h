@@ -490,6 +490,8 @@ void fz_seek(fz_stream *stm, int offset, int whence);
 int fz_read(fz_stream *stm, unsigned char *buf, int len);
 void fz_read_line(fz_stream *stm, char *buf, int max);
 fz_error fz_read_all(fz_buffer **bufp, fz_stream *stm, int initial);
+/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692260 */
+fz_error fz_read_all2(fz_buffer **bufp, fz_stream *stm, int initial, int fail_on_error);
 
 static inline int fz_read_byte(fz_stream *stm)
 {

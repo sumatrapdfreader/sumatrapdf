@@ -373,7 +373,8 @@ pdf_load_stream(fz_buffer **bufp, pdf_xref *xref, int num, int gen)
 
 	fz_drop_obj(dict);
 
-	error = fz_read_all(bufp, stm, len);
+	/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692260 */
+	error = fz_read_all2(bufp, stm, len, 0);
 	if (error)
 	{
 		fz_close(stm);
