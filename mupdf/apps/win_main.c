@@ -173,7 +173,7 @@ dlogpassproc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 char *winpassword(pdfapp_t *app, char *filename)
 {
-	char buf[124], *s;
+	char buf[1024], *s;
 	int code;
 	strcpy(buf, filename);
 	s = buf;
