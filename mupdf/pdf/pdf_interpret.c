@@ -183,12 +183,11 @@ pdf_begin_group(pdf_csi *csi, fz_rect bbox)
 	if (gstate->softmask)
 	{
 		pdf_xobject *softmask = gstate->softmask;
-		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1485 */
 		fz_rect bbox = fz_transform_rect(gstate->softmask_ctm, softmask->bbox);
-		fz_matrix prevCtm = gstate->ctm;
+		fz_matrix save_ctm = gstate->ctm;
 
-		gstate->ctm = gstate->softmask_ctm; /* SumatraPDF: don't use an image's ctm for softmasks */
 		gstate->softmask = NULL;
+		gstate->ctm = gstate->softmask_ctm;
 
 		fz_begin_mask(csi->dev, bbox, gstate->luminosity,
 			softmask->colorspace, gstate->softmask_bc);
@@ -197,8 +196,8 @@ pdf_begin_group(pdf_csi *csi, fz_rect bbox)
 			fz_catch(error, "cannot run softmask");
 		fz_end_mask(csi->dev);
 
-		gstate->ctm = prevCtm; /* SumatraPDF: don't use an image's ctm for softmasks */
 		gstate->softmask = softmask;
+		gstate->ctm = save_ctm;
 	}
 
 	if (gstate->blendmode)
@@ -1178,6 +1177,8 @@ pdf_run_xobject(pdf_csi *csi, fz_obj *resources, pdf_xobject *xobj, fz_matrix tr
 		resources = xobj->resources;
 
 	error = pdf_run_buffer(csi, resources, xobj->contents);
+	if (error)
+		fz_catch(error, "cannot interpret XObject stream");
 
 	csi->top_ctm = oldtopctm;
 
@@ -1195,9 +1196,6 @@ pdf_run_xobject(pdf_csi *csi, fz_obj *resources, pdf_xobject *xobj, fz_matrix tr
 			fz_pop_clip(csi->dev);
 	}
 
-	/* SumatraPDF: wrap up all stacks before throwing an error */
-	if (error)
-		return fz_rethrow(error, "cannot interpret XObject stream");
 	return fz_okay;
 }
 
@@ -2230,8 +2228,15 @@ pdf_run_stream(pdf_csi *csi, fz_obj *rdb, fz_stream *file, char *buf, int buflen
 	fz_error error;
 	int tok;
 	int len;
+	int save_in_array;
+	int save_in_text;
 
+	/* make sure we have a clean slate if we come here from flush_text */
 	pdf_clear_stack(csi);
+	save_in_array = csi->in_array;
+	save_in_text = csi->in_text;
+	csi->in_array = 0;
+	csi->in_text = 0;
 
 	while (1)
 	{
@@ -2255,10 +2260,8 @@ pdf_run_stream(pdf_csi *csi, fz_obj *rdb, fz_stream *file, char *buf, int buflen
 			}
 			else if (tok == PDF_TOK_STRING)
 			{
-				/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692312 */
-				csi->in_array = 0;
 				pdf_show_string(csi, (unsigned char *)buf, len);
-				csi->in_array = 1;
+				csi->in_array = 1; /* SumatraPDF: TODO: make in_array local */
 			}
 			else if (tok == PDF_TOK_KEYWORD)
 			{
@@ -2268,7 +2271,7 @@ pdf_run_stream(pdf_csi *csi, fz_obj *rdb, fz_stream *file, char *buf, int buflen
 					return fz_throw("syntax error in array");
 			}
 			else if (tok == PDF_TOK_EOF)
-				return fz_okay;
+				goto end;
 			else
 				return fz_throw("syntax error in array");
 		}
@@ -2277,7 +2280,7 @@ pdf_run_stream(pdf_csi *csi, fz_obj *rdb, fz_stream *file, char *buf, int buflen
 		{
 		case PDF_TOK_ENDSTREAM:
 		case PDF_TOK_EOF:
-			return fz_okay;
+			goto end;
 
 		case PDF_TOK_OPEN_ARRAY:
 			if (!csi->in_text)
@@ -2329,12 +2332,18 @@ pdf_run_stream(pdf_csi *csi, fz_obj *rdb, fz_stream *file, char *buf, int buflen
 			if (error)
 				return fz_rethrow(error, "cannot run keyword");
 			pdf_clear_stack(csi);
+			csi->in_array = 0;  /* SumatraPDF: TODO: make in_array local */
 			break;
 
 		default:
 			return fz_throw("syntax error in content stream");
 		}
 	}
+
+end:
+	csi->in_array = save_in_array;
+	csi->in_text = save_in_text;
+	return fz_okay;
 }
 
 /*
