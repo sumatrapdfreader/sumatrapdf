@@ -160,6 +160,18 @@ Koristi &originalne veličine stranica
 About SumatraPDF
 O SumatraPDF
 
+Add Favorite
+Dodaj favorit
+
+Add page %s to favorites
+Dodaj stranicu %s u favorite
+
+Add page %s to favorites with (optional) name:
+Dodaj stranicu %s u favorite sa (opcionalnim) nazivom:
+
+Add to favorites
+Dodaj u favorite
+
 Advanced
 Napredno
 
@@ -185,7 +197,7 @@ Automatic
 Automatsko
 
 Automatically check for &updates
-Automatski provjeravaj za %nadogradnje
+Automatski provjeravaj za &nadogradnju
 
 Book View
 Knjiški pregled
@@ -247,6 +259,9 @@ Kopiraj ko&mentar
 Copying text was denied (copying as image only)
 Kopiranje teksta je nemoguće (kopirano kao slika)
 
+Could not obtain Printer properties
+Ne mogu dobaviti postavke štampača
+
 Could not open Printer
 Ne mogu pristupiti štampaču
 
@@ -258,6 +273,9 @@ Nije moguće iscrtati stranicu
 
 Created:
 Kreirano:
+
+Current file
+Trenutni fajl
 
 Custom &Zoom...\tCtrl+Y
 &Prilagođeno uvećanje...\tCtrl+Y
@@ -298,6 +316,9 @@ Unesite komandnu liniju za izvršavanje prilikom dvostrukog klika na PDF dokumen
 Error loading %s
 Greška pri učitavanju %s
 
+F&avorites
+F&avoriti
+
 F&orward\tAlt+Right Arrow
 Naprijed\tAlt+->
 
@@ -309,6 +330,9 @@ Dvije stranice
 
 Failed to save a file
 Neuspješno spašavanje fajla
+
+Favorites
+Favoriti
 
 File Size:
 Veličina fajla:
@@ -455,7 +479,10 @@ PDF documents
 PDF dokumenti
 
 Pa&ge...\tCtrl+G
-Stranica...\tCtrl+G
+Stranicu...\tCtrl+G
+
+Page %s
+Stranica %s
 
 Page Size:
 Veličina stranice:
@@ -487,6 +514,9 @@ Print
 Print range
 Štampaj raspon
 
+Printer with given name doesn't exist
+Štampač sa datim nazivom ne postoji
+
 Printing is still in progress. Abort and start over?
 Štampa je još u toku. Prekini i započni ispočetka?
 
@@ -498,6 +528,12 @@ Problem prilikom štampe.
 
 Remember &opened files
 Zapamti &otvorene fajlove
+
+Remove from favorites
+Ukloni iz favorita
+
+Remove page %s from favorites
+Ukloni stranicu %s iz favorita
 
 Rotate &Left\tCtrl+Shift+-
 Rotiraj nalijevo\tCtrl+Shift+-
@@ -534,6 +570,9 @@ Prikaži alatnu traku
 
 Show &pages continuously
 Prikaži stranice slijedno
+
+Show Favorites
+Prikaži favorite
 
 Show frequently read
 Prikaži najčešće čitano
@@ -593,7 +632,7 @@ XPS documents
 XPS dokumenti
 
 You have the latest version.
-Imate najnoviju verziju.
+Koristite najnoviju verziju.
 
 You have version %s
 Imate verziju %s
@@ -621,17 +660,4 @@ printing document
 
 # Untranslated:
 #(page %s)
-#Add Favorite
-#Add page %s to favorites
-#Add page %s to favorites with (optional) name:
-#Add to favorites
-#Could not obtain Printer properties
-#Current file
-#F&avorites
-#Favorites
-#Page %s
-#Printer with given name doesn't exist
-#Remove from favorites
-#Remove page %s from favorites
-#Show Favorites
 
