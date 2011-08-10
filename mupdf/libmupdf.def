@@ -138,6 +138,7 @@ EXPORTS
 	fz_read
 	fz_read_line
 	fz_read_all
+	fz_read_all2
 	fz_open_copy
 	fz_open_null
 	fz_open_arc4

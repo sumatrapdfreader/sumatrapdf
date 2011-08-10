@@ -13310,7 +13310,7 @@ const char *gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "Otka\305\276i",
   "Ne mogu od\305\241tampati ovaj fajl",
   "Ne mogu pokrenuti komandu pretra\305\276ivanja unazad. Molimo da provjerite komandnu liniju u postavkama.",
-  "Promijeni jezik",
+  "Promijeni jezik (Change Language)",
   "Provjeri za &nadogradnju",
   "Stripovi",
   "Slijedno",
