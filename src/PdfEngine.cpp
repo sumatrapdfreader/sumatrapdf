@@ -1093,17 +1093,24 @@ bool CPdfEngine::FinishLoading()
 
 PdfToCItem *CPdfEngine::BuildToCTree(pdf_outline *entry, int& idCounter)
 {
-    TCHAR *name = entry->title ? str::conv::FromUtf8(entry->title) : str::Dup(_T(""));
-    PdfToCItem *node = new PdfToCItem(name, PdfLink(this, entry->link));
-    node->open = entry->count >= 0;
-    node->id = ++idCounter;
+    PdfToCItem *node = NULL;
 
-    if (entry->link && PDF_LINK_GOTO == entry->link->kind)
-        node->pageNo = FindPageNo(entry->link->dest);
-    if (entry->child)
-        node->child = BuildToCTree(entry->child, idCounter);
-    if (entry->next)
-        node->next = BuildToCTree(entry->next, idCounter);
+    for (; entry; entry = entry->next) {
+        TCHAR *name = entry->title ? str::conv::FromUtf8(entry->title) : str::Dup(_T(""));
+        PdfToCItem *item = new PdfToCItem(name, PdfLink(this, entry->link));
+        item->open = entry->count >= 0;
+        item->id = ++idCounter;
+
+        if (entry->link && PDF_LINK_GOTO == entry->link->kind)
+            item->pageNo = FindPageNo(entry->link->dest);
+        if (entry->child)
+            item->child = BuildToCTree(entry->child, idCounter);
+
+        if (!node)
+            node = item;
+        else
+            node->AddSibling(item);
+    }
 
     return node;
 }
@@ -2741,17 +2748,24 @@ PageDestination *CXpsEngine::GetNamedDest(const TCHAR *name)
 
 XpsToCItem *CXpsEngine::BuildToCTree(xps_outline *entry, int& idCounter)
 {
-    TCHAR *name = entry->title ? str::conv::FromUtf8(entry->title) : str::Dup(_T(""));
-    XpsToCItem *node = new XpsToCItem(name, XpsLink(this, entry->target, fz_empty_rect));
-    node->open = false;
-    node->id = ++idCounter;
+    XpsToCItem *node = NULL;
 
-    if (node->GetLink() && str::Eq(node->GetLink()->GetType(), "ScrollTo"))
-        node->pageNo = FindPageNo(entry->target);
-    if (entry->child)
-        node->child = BuildToCTree(entry->child, idCounter);
-    if (entry->next)
-        node->next = BuildToCTree(entry->next, idCounter);
+    for (; entry; entry = entry->next) {
+        TCHAR *name = entry->title ? str::conv::FromUtf8(entry->title) : str::Dup(_T(""));
+        XpsToCItem *item = new XpsToCItem(name, XpsLink(this, entry->target, fz_empty_rect));
+        item->open = false;
+        item->id = ++idCounter;
+
+        if (item->GetLink() && str::Eq(node->GetLink()->GetType(), "ScrollTo"))
+            item->pageNo = FindPageNo(entry->target);
+        if (entry->child)
+            item->child = BuildToCTree(entry->child, idCounter);
+
+        if (!node)
+            node = item;
+        else
+            node->AddSibling(item);
+    }
 
     return node;
 }

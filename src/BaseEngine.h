@@ -153,6 +153,8 @@ public:
 
 // an item in a document's Table of Content
 class DocToCItem {
+    DocToCItem *last; // only updated by AddSibling
+
 public:
     // the item's visible label
     TCHAR *title;
@@ -170,19 +172,24 @@ public:
     DocToCItem *next;
 
     DocToCItem(TCHAR *title) :
-        title(title), open(true), pageNo(0), id(0), child(NULL), next(NULL) { }
+        title(title), open(true), pageNo(0), id(0), child(NULL), next(NULL), last(NULL) { }
 
     virtual ~DocToCItem() {
         delete child;
-        delete next;
+        while (next) {
+            DocToCItem *tmp = next->next;
+            next->next = NULL;
+            delete next;
+            next = tmp;
+        }
         free(title);
     }
 
     void AddSibling(DocToCItem *sibling)
     {
         DocToCItem *item;
-        for (item = this; item->next; item = item->next);
-        item->next = sibling;
+        for (item = last ? last : this; item->next; item = item->next);
+        last = item->next = sibling;
     }
 
     // returns the destination this ToC item points to
