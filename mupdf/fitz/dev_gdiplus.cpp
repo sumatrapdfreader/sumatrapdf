@@ -45,9 +45,12 @@ public:
 			pix = fz_keep_pixmap(pixmap);
 		
 		BitmapData data;
-		LockBits(&Rect(0, 0, pix->w, pix->h), ImageLockModeWrite, PixelFormat32bppARGB, &data);
-		memcpy(data.Scan0, pix->samples, pix->w * pix->h * pix->n);
-		UnlockBits(&data);
+		Status status = LockBits(&Rect(0, 0, pix->w, pix->h), ImageLockModeWrite, PixelFormat32bppARGB, &data);
+		if (status == Ok)
+		{
+			memcpy(data.Scan0, pix->samples, pix->w * pix->h * pix->n);
+			UnlockBits(&data);
+		}
 		
 		fz_drop_pixmap(pix);
 	}
@@ -429,8 +432,15 @@ protected:
 		assert(bounds.Width == mask->GetWidth() && bounds.Height == mask->GetHeight());
 		
 		BitmapData data, dataMask;
-		bitmap->LockBits(&bounds, ImageLockModeRead | ImageLockModeWrite, PixelFormat32bppARGB, &data);
-		mask->LockBits(&bounds, ImageLockModeRead, PixelFormat32bppARGB, &dataMask);
+		Status status = bitmap->LockBits(&bounds, ImageLockModeRead | ImageLockModeWrite, PixelFormat32bppARGB, &data);
+		if (status != Ok)
+			return;
+		status = mask->LockBits(&bounds, ImageLockModeRead, PixelFormat32bppARGB, &dataMask);
+		if (status != Ok)
+		{
+			bitmap->UnlockBits(&data);
+			return;
+		}
 		
 		for (int row = 0; row < bounds.Height; row++)
 		{
@@ -549,8 +559,15 @@ protected:
 		assert(boundsBg.Width == backdrop->GetWidth() && boundsBg.Height == backdrop->GetHeight());
 		
 		BitmapData data, dataBg;
-		bitmap->LockBits(&bounds, ImageLockModeRead | (modifyBackdrop ? 0 : ImageLockModeWrite), PixelFormat32bppARGB, &data);
-		backdrop->LockBits(&boundsBg, ImageLockModeRead | (modifyBackdrop ? ImageLockModeWrite : 0), PixelFormat32bppARGB, &dataBg);
+		Status status = bitmap->LockBits(&bounds, ImageLockModeRead | (modifyBackdrop ? 0 : ImageLockModeWrite), PixelFormat32bppARGB, &data);
+		if (status != Ok)
+			return;
+		status = backdrop->LockBits(&boundsBg, ImageLockModeRead | (modifyBackdrop ? ImageLockModeWrite : 0), PixelFormat32bppARGB, &dataBg);
+		if (status != Ok)
+		{
+			bitmap->UnlockBits(&data);
+			return;
+		}
 		
 		LPBYTE Scan0 = (LPBYTE)data.Scan0, bgScan0 = (LPBYTE)dataBg.Scan0;
 		for (int row = 0; row < bounds.Height; row++)
