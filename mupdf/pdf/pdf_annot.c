@@ -298,13 +298,13 @@ pdf_create_text_annot(pdf_xref *xref, fz_obj *obj)
 static fz_obj *
 pdf_dict_get_inheritable(pdf_xref *xref, fz_obj *obj, char *key)
 {
-	do
+	while (obj)
 	{
 		fz_obj *val = fz_dict_gets(obj, key);
 		if (val)
 			return val;
 		obj = fz_dict_gets(obj, "Parent");
-	} while (obj);
+	}
 	return fz_dict_gets(fz_dict_gets(fz_dict_gets(xref->trailer, "Root"), "AcroForm"), key);
 }
 
@@ -409,6 +409,8 @@ pdf_update_tx_widget_annot(pdf_xref *xref, fz_obj *obj)
 
 	if (strcmp(fz_to_name(fz_dict_gets(obj, "Subtype")), "Widget") != 0)
 		return NULL;
+	if (!fz_to_bool(pdf_dict_get_inheritable(xref, NULL, "NeedAppearances")) && pdf_get_ap_stream(xref, obj))
+		return NULL;
 	value = pdf_dict_get_inheritable(xref, obj, "FT");
 	if (strcmp(fz_to_name(value), "Tx") != 0)
 		return NULL;
@@ -422,11 +424,6 @@ pdf_update_tx_widget_annot(pdf_xref *xref, fz_obj *obj)
 	rect = pdf_to_rect(fz_dict_gets(obj, "Rect"));
 
 	flags = fz_to_int(fz_dict_gets(obj, "Ff"));
-	if ((flags & (1 << 12) /* multiline */) && pdf_get_ap_stream(xref, obj))
-	{
-		fz_warn("not refreshing multiline fields with appearance stream");
-		return NULL;
-	}
 	if (flags & ((1 << 12) /* multiline */ | (1 << 24) /* comb */ | (1 << 25) /* richtext */))
 		fz_warn("missing support for multiline, combed and richtext fields");
 
