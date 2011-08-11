@@ -452,7 +452,7 @@ static bool IsUsingInstallation(DWORD procId)
         return false;
 
     ScopedMem<TCHAR> libmupdf(path::Join(gGlobalData.installDir, _T("libmupdf.dll")));
-    ScopedMem<TCHAR> browserPlugin(path::Join(gGlobalData.installDir, _T("npPdfViewer.dll")));
+    ScopedMem<TCHAR> browserPlugin(GetBrowserPluginPath());
 
     MODULEENTRY32 mod;
     mod.dwSize = sizeof(mod);
@@ -500,40 +500,49 @@ static void SetDefaultMsg()
 
 static const TCHAR *ReadableProcName(const TCHAR *procPath)
 {
+    const TCHAR *nameList[] = {
+        EXENAME, TAPP,
+        _T("plugin-container.exe"), _T("Mozilla Firefox"),
+        _T("chrome.exe"), _T("Google Chrome"),
+        _T("prevhost.exe"), _T("Windows Explorer"),
+        _T("dllhost.exe"), _T("Windows Explorer"),
+    };
     const TCHAR *procName = path::GetBaseName(procPath);
-    if (str::EqI(procName, _T("plugin-container.exe"))) {
-        return _T("Mozilla Firefox");
-    }
-    if (str::EqI(procName, _T("chrome.exe"))) {
-        return _T("Google Chrome");
-    }
+    for (size_t i = 0; i < dimof(nameList); i += 2)
+        if (str::EqI(procName, nameList[i]))
+            return nameList[i + 1];
     return procName;
 }
 
 static void SetCloseProcessMsg()
 {
-    TCHAR *procPath = gProcessesToClose.At(0);
-    const TCHAR *nameToShow = ReadableProcName(procPath);
-    ScopedMem<TCHAR> s(str::Format(_T("Please close %s to proceed!"), nameToShow));
+    ScopedMem<TCHAR> procNames(str::Dup(ReadableProcName(gProcessesToClose[0])));
+    for (size_t i = 1; i < gProcessesToClose.Count(); i++) {
+        const TCHAR *name = ReadableProcName(gProcessesToClose[i]);
+        if (i < gProcessesToClose.Count() - 1)
+            procNames.Set(str::Join(procNames, _T(", "), name));
+        else
+            procNames.Set(str::Join(procNames, _T(" and "), name));
+    }
+    ScopedMem<TCHAR> s(str::Format(_T("Please close %s to proceed!"), procNames));
     SetMsg(s, COLOR_MSG_FAILED);
 }
 
-static void CheckInstallUninstallPossible()
+static bool CheckInstallUninstallPossible(bool silent=false)
 {
-    StrVec prevProcs(gProcessesToClose);
     ProcessesUsingInstallation(gProcessesToClose);
 
-    bool wasPossible = prevProcs.Count() == 0;
     bool possible = gProcessesToClose.Count() == 0;
-    if (!str::Eq(possible ? NULL : gProcessesToClose[0], wasPossible ? NULL : prevProcs[0])) {
-        if (possible) {
-            SetDefaultMsg();
-        } else {
-            SetCloseProcessMsg();
-        }
-        InvalidateFrame();
-        EnableWindow(gHwndButtonInstUninst, possible);
+    if (possible) {
+        SetDefaultMsg();
+    } else {
+        SetCloseProcessMsg();
+        if (!silent)
+            MessageBeep(MB_ICONEXCLAMATION);
     }
+    InvalidateFrame();
+
+    return possible;
 }
 
 #ifndef BUILD_UNINSTALLER
@@ -1139,6 +1148,9 @@ bool IsCheckboxChecked(HWND hwnd)
 
 void OnButtonInstall()
 {
+    if (!CheckInstallUninstallPossible())
+        return;
+
     TCHAR *userInstallDir = win::GetText(gHwndTextboxInstDir);
     if (!str::IsEmpty(userInstallDir))
         str::ReplacePtr(&gGlobalData.installDir, userInstallDir);
@@ -1410,6 +1422,9 @@ static DWORD WINAPI UninstallerThread(LPVOID data)
 
 void OnButtonUninstall()
 {
+    if (!CheckInstallUninstallPossible())
+        return;
+
     // disable the button during uninstallation
     EnableWindow(gHwndButtonInstUninst, FALSE);
     SetMsg(_T("Uninstallation in progress..."), COLOR_MSG_INSTALLATION);
@@ -1988,7 +2003,6 @@ static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
         return FALSE;
 
     SetDefaultMsg();
-    CheckInstallUninstallPossible();
 
     CenterDialog(gHwndFrame);
     ShowWindow(gHwndFrame, SW_SHOW);
@@ -2086,10 +2100,12 @@ int RunApp()
                 DispatchMessage(&msg);
             }
         }
-        // check if there are processes that need to be closed but not more
-        // frequently than once per second.
-        if (t.GetCurrTimeInMs() > 1000.0) {
-            CheckInstallUninstallPossible();
+        // check if there are processes that need to be closed but
+        // not more frequently than once per ten seconds and
+        // only before (un)installation starts.
+        if (t.GetCurrTimeInMs() > 10000 &&
+            gHwndButtonInstUninst && IsWindowEnabled(gHwndButtonInstUninst)) {
+            CheckInstallUninstallPossible(true);
             t.Start();
         }
     }
