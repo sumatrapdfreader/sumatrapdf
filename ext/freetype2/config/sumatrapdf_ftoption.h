@@ -21,6 +21,10 @@ FT_BEGIN_HEADER
 
 #undef FT_CONFIG_OPTION_OLD_INTERNALS
 
+#ifdef _DEBUG
+#define FT_DEBUG_LEVEL_ERROR
+#endif
+
 FT_END_HEADER
 
 #endif

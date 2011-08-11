@@ -1887,7 +1887,7 @@
       /* rewind and doesn't need further processing.             */
       ft_stroke_border_close( right, FALSE );
     }
-    else
+    else if (!stroker->first_point) /* SumatraPDF: prevent a heap overflow */
     {
       FT_Angle  turn;
       FT_Int    inside_side;

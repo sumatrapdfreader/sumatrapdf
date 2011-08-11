@@ -156,6 +156,9 @@ FT_OBJS = \
 	$(OFT)\type1cid.obj $(OFT)\psaux.obj $(OFT)\psnames.obj $(OFT)\smooth.obj \
 	$(OFT)\sfnt.obj $(OFT)\truetype.obj $(OFT)\type1.obj $(OFT)\raster.obj \
 	$(OFT)\otvalid.obj $(OFT)\ftotval.obj $(OFT)\pshinter.obj
+!if "$(CFG)"!="rel"
+FT_OBJS = $(FT_OBJS) $(OFT)\ftdebug.obj
+!endif
 
 ZLIB_OBJS = \
 	$(OZ)\adler32.obj $(OZ)\compress.obj $(OZ)\crc32.obj $(OZ)\deflate.obj \
