@@ -312,8 +312,9 @@ static float
 pdf_extract_font_size(pdf_xref *xref, char *appearance, char **fontName)
 {
 	fz_stream *stream = fz_open_memory(appearance, strlen(appearance));
-	int tok, len;
 	float fontSize = 0;
+	int tok, len;
+
 	*fontName = NULL;
 	do
 	{
@@ -330,7 +331,9 @@ pdf_extract_font_size(pdf_xref *xref, char *appearance, char **fontName)
 			*fontName = fz_strdup(xref->scratch);
 		}
 		else if (tok == PDF_TOK_REAL || tok == PDF_TOK_INT)
+		{
 			fontSize = fz_atof(xref->scratch);
+		}
 	} while (tok != PDF_TOK_KEYWORD || strcmp(xref->scratch, "Tf") != 0);
 	fz_close(stream);
 	return fontSize;
@@ -375,25 +378,80 @@ pdf_prepend_ap_background(fz_buffer *content, pdf_xref *xref, fz_obj *obj)
 }
 
 static void
-pdf_string_to_Tj(fz_buffer *content, fz_obj *value, int is_password)
+pdf_string_to_Tj(fz_buffer *content, unsigned short *ucs2, unsigned short *end)
 {
-	unsigned short *ucs2 = pdf_to_ucs2(value);
-	unsigned short *uc;
-	fz_buffer_printf(content, " (");
-	for (uc = ucs2; *uc; uc++)
+	fz_buffer_printf(content, "(");
+	for (; ucs2 < end; ucs2++)
 	{
-		if (is_password)
-			*uc = '*';
-		else if (*uc > 0xFF)
-			*uc = '?';
-		// TODO: convert to CID
-		if (*uc < 0x20 || *uc == '(' || *uc == ')' || *uc == '\\')
-			fz_buffer_printf(content, "\\%03o", *uc);
+		// TODO: convert to CID(?)
+		if (*ucs2 < 0x20 || *ucs2 == '(' || *ucs2 == ')' || *ucs2 == '\\')
+			fz_buffer_printf(content, "\\%03o", *ucs2);
 		else
-			fz_buffer_printf(content, "%c", *uc);
+			fz_buffer_printf(content, "%c", *ucs2);
 	}
-	fz_buffer_printf(content, ") Tj");
-	fz_free(ucs2);
+	fz_buffer_printf(content, ") Tj ");
+}
+
+static int
+pdf_get_string_width(pdf_xref *xref, fz_obj *res, fz_buffer *base, unsigned short *string, unsigned short *end)
+{
+	fz_bbox bbox;
+	fz_error error;
+	int width, old_len = base->len;
+	fz_device *dev = fz_new_bbox_device(&bbox);
+
+	pdf_string_to_Tj(base, string, end);
+	fz_buffer_printf(base, "ET Q EMC");
+	error = pdf_run_glyph(xref, res, base, dev, fz_identity);
+	width = error ? -1 : bbox.x1 - bbox.x0;
+	base->len = old_len;
+	fz_free_device(dev);
+
+	return width;
+}
+
+#define iswspace(c) ((c) == 32 || 9 <= (c) && (c) <= 13)
+
+static unsigned short *
+pdf_append_line(pdf_xref *xref, fz_obj *res, fz_buffer *content, fz_buffer *base_ap,
+	unsigned short *ucs2, float fontSize, int align, float width, int is_multiline, float *x)
+{
+	unsigned short *end, *keep;
+	float x1 = 0;
+	int w;
+
+	if (is_multiline)
+	{
+		end = ucs2;
+		do
+		{
+			for (keep = end + 1; *keep && !iswspace(*keep); keep++);
+			w = pdf_get_string_width(xref, res, base_ap, ucs2, keep);
+			if (w <= width || end == ucs2)
+				end = keep;
+		} while (w <= width && *end);
+	}
+	else
+		end = ucs2 + wcslen(ucs2);
+
+	if (align != 0)
+	{
+		w = pdf_get_string_width(xref, res, base_ap, ucs2, end);
+		if (w < 0)
+			fz_catch(-1, "can't change the text's alignment");
+		else if (align == 1 /* centered */)
+			x1 = (width - w - 4.0f) / 2;
+		else if (align == 2 /* right-aligned */)
+			x1 = width - w - 4.0f;
+		else
+			fz_warn("ignoring unknown quadding value %d", align);
+	}
+
+	fz_buffer_printf(content, "%.4f %.4f Td ", x1 - *x, -fontSize);
+	pdf_string_to_Tj(content, ucs2, end);
+	*x = x1;
+
+	return end + (*end ? 1 : 0);
 }
 
 static pdf_annot *
@@ -401,11 +459,11 @@ pdf_update_tx_widget_annot(pdf_xref *xref, fz_obj *obj)
 {
 	fz_obj *ap, *res, *value;
 	fz_rect rect;
-	fz_buffer *content;
-	int flags, align;
-	float fontSize;
+	fz_buffer *content, *base_ap;
+	int flags, align, is_multiline;
+	float fontSize, x, y;
 	char *fontName;
-	int tmpLen;
+	unsigned short *ucs2, *rest;
 
 	if (strcmp(fz_to_name(fz_dict_gets(obj, "Subtype")), "Widget") != 0)
 		return NULL;
@@ -424,45 +482,47 @@ pdf_update_tx_widget_annot(pdf_xref *xref, fz_obj *obj)
 	rect = pdf_to_rect(fz_dict_gets(obj, "Rect"));
 
 	flags = fz_to_int(fz_dict_gets(obj, "Ff"));
-	if (flags & ((1 << 12) /* multiline */ | (1 << 24) /* comb */ | (1 << 25) /* richtext */))
-		fz_warn("missing support for multiline, combed and richtext fields");
+	is_multiline = (flags & (1 << 12)) != 0;
+	if ((flags & ((1 << 24) /* comb */ | (1 << 25) /* richtext */)))
+		fz_warn("missing support for combed and richtext fields");
+	align = fz_to_int(fz_dict_gets(obj, "Q"));
 
 	fontSize = pdf_extract_font_size(xref, fz_to_str_buf(ap), &fontName);
 	if (!fontSize || !fontName)
-		fontSize = floor(rect.y1 - rect.y0 - 2);
+		fontSize = is_multiline ? 10 /* FIXME */ : floor(rect.y1 - rect.y0 - 2);
 
 	content = fz_new_buffer(256);
+	base_ap = fz_new_buffer(256);
 	pdf_prepend_ap_background(content, xref, obj);
-	fz_buffer_printf(content, "/Tx BMC q ");
-	fz_buffer_printf(content, "1 1 %.4f %.4f re W n", rect.x1 - rect.x0 - 2.0f, rect.y1 - rect.y0 - 2.0f);
-	fz_buffer_printf(content, " BT ");
-	fz_buffer_printf(content, "%s ", fz_to_str_buf(ap));
+	fz_buffer_printf(content, "/Tx BMC q 1 1 %.4f %.4f re W n BT %s ",
+		rect.x1 - rect.x0 - 2.0f, rect.y1 - rect.y0 - 2.0f, fz_to_str_buf(ap));
+	fz_buffer_printf(base_ap, "/Tx BMC q BT %s ", fz_to_str_buf(ap));
 	if (fontName)
-		fz_buffer_printf(content, "/%s %.4f Tf ", fontName, fontSize);
-	fz_free(fontName);
-	tmpLen = content->len;
-	fz_buffer_printf(content, "1 0 0 1 %.4f %.4f Tm", 2.0f, 0.5f * (rect.y1 - rect.y0) - 0.4f * fontSize);
-	pdf_string_to_Tj(content, value, (flags & (1 << 13) /* password */));
-	fz_buffer_printf(content, " ET Q EMC");
-
-	align = fz_to_int(fz_dict_gets(obj, "Q"));
-	if (align != 0)
 	{
-		fz_bbox bbox;
-		fz_device *dev = fz_new_bbox_device(&bbox);
-		fz_error error = pdf_run_glyph(xref, res, content, dev, fz_identity);
-		if (!error)
-		{
-			float x = rect.x1 - rect.x0 - 4.0f - (bbox.x1 - bbox.x0);
-			if (align == 1 /* centered */)
-				x *= 0.5f;
-			content->len = tmpLen;
-			fz_buffer_printf(content, "1 0 0 1 %.4f %.4f Tm", 2.0f + x, 0.5f * (rect.y1 - rect.y0) - 0.4f * fontSize);
-			pdf_string_to_Tj(content, value, (flags & (1 << 13) /* password */));
-			fz_buffer_printf(content, " ET Q EMC");
-		}
-		fz_free_device(dev);
+		fz_buffer_printf(content, "/%s %.4f Tf ", fontName, fontSize);
+		fz_buffer_printf(base_ap, "/%s %.4f Tf ", fontName, fontSize);
+		fz_free(fontName);
 	}
+	y = 0.5f * (rect.y1 - rect.y0) + 0.6f * fontSize;
+	if (is_multiline)
+		y = rect.y1 - rect.y0 - 2;
+	fz_buffer_printf(content, "1 0 0 1 2 %.4f Tm ", y);
+
+	ucs2 = pdf_to_ucs2(value);
+	for (rest = ucs2; *rest; rest++)
+		if (*rest > 0xFF)
+			*rest = '?';
+	if ((flags & (1 << 13) /* password */))
+		for (rest = ucs2; *rest; rest++)
+			*rest = '*';
+
+	x = 0;
+	rest = ucs2;
+	while (*rest)
+		rest = pdf_append_line(xref, res, content, base_ap, rest, fontSize, align, rect.x1 - rect.x0, is_multiline, &x);
+
+	fz_free(ucs2);
+	fz_buffer_printf(content, "ET Q EMC");
 
 	return pdf_create_annot(rect, fz_keep_obj(obj), content, res ? fz_keep_obj(res) : NULL);
 }
