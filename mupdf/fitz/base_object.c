@@ -17,6 +17,7 @@ struct keyval
 {
 	fz_obj *k;
 	fz_obj *v;
+	int hash; /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692416 */
 };
 
 struct fz_obj_s
@@ -584,7 +585,7 @@ fz_dict_get_val(fz_obj *obj, int i)
 }
 
 static int
-fz_dict_finds(fz_obj *obj, char *key)
+fz_dict_finds(fz_obj *obj, char *key, int hash)
 {
 	if (obj->u.d.sorted)
 	{
@@ -607,11 +608,30 @@ fz_dict_finds(fz_obj *obj, char *key)
 	{
 		int i;
 		for (i = 0; i < obj->u.d.len; i++)
-			if (strcmp(fz_to_name(obj->u.d.items[i].k), key) == 0)
+			/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692416 */
+			if (hash == obj->u.d.items[i].hash && strcmp(fz_to_name(obj->u.d.items[i].k), key) == 0)
 				return i;
 	}
 
 	return -1;
+}
+
+/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692416 */
+// adapted from base_hash.c
+static unsigned hash_str(unsigned char *s)
+{
+	unsigned val = 0;
+	int i, len = strlen(s);
+	for (i = 0; i < len; i++)
+	{
+		val += s[i];
+		val += (val << 10);
+		val ^= (val >> 6);
+	}
+	val += (val << 3);
+	val ^= (val >> 11);
+	val += (val << 15);
+	return val;
 }
 
 fz_obj *
@@ -624,7 +644,7 @@ fz_dict_gets(fz_obj *obj, char *key)
 	if (!fz_is_dict(obj))
 		return NULL;
 
-	i = fz_dict_finds(obj, key);
+	i = fz_dict_finds(obj, key, hash_str(key)); /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692416 */
 	if (i >= 0)
 		return obj->u.d.items[i].v;
 
@@ -654,6 +674,7 @@ fz_dict_put(fz_obj *obj, fz_obj *key, fz_obj *val)
 {
 	char *s;
 	int i;
+	int hash; /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692416 */
 
 	obj = fz_resolve_indirect(obj);
 
@@ -677,7 +698,10 @@ fz_dict_put(fz_obj *obj, fz_obj *key, fz_obj *val)
 		return;
 	}
 
-	i = fz_dict_finds(obj, s);
+	/* SumatraPDF: TODO: turn dict into a real hash and merge with base_hash.c(?) */
+	/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692416 */
+	hash = hash_str(fz_to_name(key));
+	i = fz_dict_finds(obj, s, hash);
 	if (i >= 0)
 	{
 		fz_drop_obj(obj->u.d.items[i].v);
@@ -703,6 +727,7 @@ fz_dict_put(fz_obj *obj, fz_obj *key, fz_obj *val)
 
 	obj->u.d.items[obj->u.d.len].k = fz_keep_obj(key);
 	obj->u.d.items[obj->u.d.len].v = fz_keep_obj(val);
+	obj->u.d.items[obj->u.d.len].hash = hash; /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692416 */
 	obj->u.d.len ++;
 }
 
@@ -723,7 +748,7 @@ fz_dict_dels(fz_obj *obj, char *key)
 		fz_warn("assert: not a dict (%s)", fz_objkindstr(obj));
 	else
 	{
-		int i = fz_dict_finds(obj, key);
+		int i = fz_dict_finds(obj, key, hash_str(key)); /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692416 */
 		if (i >= 0)
 		{
 			fz_drop_obj(obj->u.d.items[i].k);
