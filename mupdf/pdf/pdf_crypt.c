@@ -20,8 +20,7 @@ struct pdf_crypt_filter_s
 
 struct pdf_crypt_s
 {
-	unsigned char id_string[36]; /* SumatraPDF: encountered a 36 character ID */
-	int id_length;
+	fz_obj *id; /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692428 */
 
 	int v;
 	int length;
@@ -231,18 +230,13 @@ pdf_new_crypt(pdf_crypt **cryptp, fz_obj *dict, fz_obj *id)
 
 	/* Extract file identifier string */
 
-	crypt->id_length = 0;
-
 	if (fz_is_array(id) && fz_array_len(id) == 2)
 	{
 		obj = fz_array_get(id, 0);
 		if (fz_is_string(obj))
 		{
-			if (fz_to_str_len(obj) <= sizeof(crypt->id_string))
-			{
-				memcpy(crypt->id_string, fz_to_str_buf(obj), fz_to_str_len(obj));
-				crypt->id_length = fz_to_str_len(obj);
-			}
+			/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692428 */
+			crypt->id = fz_keep_obj(obj);
 		}
 	}
 	else
@@ -255,6 +249,7 @@ pdf_new_crypt(pdf_crypt **cryptp, fz_obj *dict, fz_obj *id)
 void
 pdf_free_crypt(pdf_crypt *crypt)
 {
+	if (crypt->id) fz_drop_obj(crypt->id); /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692428 */
 	if (crypt->cf) fz_drop_obj(crypt->cf);
 	fz_free(crypt);
 }
@@ -362,7 +357,7 @@ pdf_compute_encryption_key(pdf_crypt *crypt, unsigned char *password, int pwlen,
 	fz_md5_update(&md5, buf, 4);
 
 	/* Step 5 - pass first element of ID array */
-	fz_md5_update(&md5, crypt->id_string, crypt->id_length);
+	fz_md5_update(&md5, fz_to_str_buf(crypt->id), fz_to_str_len(crypt->id)); /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692428 */
 
 	/* Step 6 (revision 4 or greater) - if metadata is not encrypted pass 0xFFFFFFFF */
 	if (crypt->r >= 4)
@@ -471,7 +466,7 @@ pdf_compute_user_password(pdf_crypt *crypt, unsigned char *password, int pwlen, 
 
 		fz_md5_init(&md5);
 		fz_md5_update(&md5, padding, 32);
-		fz_md5_update(&md5, crypt->id_string, crypt->id_length);
+		fz_md5_update(&md5, fz_to_str_buf(crypt->id), fz_to_str_len(crypt->id)); /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692428 */
 		fz_md5_final(&md5, digest);
 
 		fz_arc4_init(&arc4, crypt->key, n);
