@@ -20,7 +20,7 @@ struct pdf_crypt_filter_s
 
 struct pdf_crypt_s
 {
-	unsigned char id_string[32];
+	unsigned char id_string[36]; /* SumatraPDF: encountered a 36 character ID */
 	int id_length;
 
 	int v;
