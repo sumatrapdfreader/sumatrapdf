@@ -523,7 +523,9 @@ int SyncTex::pdf_to_source(UINT pageNo, PointI pt, ScopedMem<TCHAR>& filename, U
         return PDFSYNCERR_NO_SYNC_AT_LOCATION;
 
     const char *name = synctex_scanner_get_name(this->scanner, synctex_node_tag(node));
-    filename.Set(str::conv::FromAnsi(name));
+    bool isUtf8 = true;
+    filename.Set(str::conv::FromUtf8(name));
+TryAgainAnsi:
     if (!filename)
         return PDFSYNCERR_OUTOFMEMORY;
 
@@ -532,6 +534,13 @@ int SyncTex::pdf_to_source(UINT pageNo, PointI pt, ScopedMem<TCHAR>& filename, U
     // Convert the source filepath to an absolute path
     if (PathIsRelative(filename))
         filename.Set(path::Join(this->dir, filename));
+
+    // recent SyncTeX versions encode in UTF-8 instead of ANSI
+    if (isUtf8 && !file::Exists(filename)) {
+        isUtf8 = false;
+        filename.Set(str::conv::FromAnsi(name));
+        goto TryAgainAnsi;
+    }
 
     *line = synctex_node_line(node);
     *col = synctex_node_column(node);
@@ -555,43 +564,54 @@ int SyncTex::source_to_pdf(const TCHAR* srcfilename, UINT line, UINT col, UINT *
     if (!srcfilepath)
         return PDFSYNCERR_OUTOFMEMORY;
 
-    char *mb_srcfilepath = str::conv::ToAnsi(srcfilepath);
+    bool isUtf8 = true;
+    char *mb_srcfilepath = str::conv::ToUtf8(srcfilepath);
+TryAgainAnsi:
     if (!mb_srcfilepath)
         return PDFSYNCERR_OUTOFMEMORY;
     int ret = synctex_display_query(this->scanner,mb_srcfilepath,line,col);
     free(mb_srcfilepath);
-    switch (ret) {
-        case -1:
-            return PDFSYNCERR_UNKNOWN_SOURCEFILE;    
-        case 0:
-            return PDFSYNCERR_NOSYNCPOINT_FOR_LINERECORD;
-        default:
-            synctex_node_t node;
-            PageInfo *pageInfo = NULL;
-            int firstpage = -1;
-            rects.Reset();
-            while (node = synctex_next_result(this->scanner)) {
-                if (firstpage == -1) {
-                    firstpage = synctex_node_page(node);
-                    *page = (UINT)firstpage;
-                    if (dm->ValidPageNo(firstpage))
-                        pageInfo = dm->GetPageInfo(firstpage);
-                    if (!pageInfo)
-                        continue;
-                }
-                if (synctex_node_page(node) != firstpage)
-                    continue;
-
-                RectI rc;
-                rc.x  = (int)synctex_node_box_visible_h(node);
-                rc.y  = (int)(synctex_node_box_visible_v(node) - synctex_node_box_visible_height(node));
-                rc.dx = (int)synctex_node_box_visible_width(node),
-                rc.dy = (int)(synctex_node_box_visible_height(node) + synctex_node_box_visible_depth(node));
-                // convert from TopLeft to BottomLeft coordinates
-                if (pageInfo)
-                    rc.y = pageInfo->page.Convert<int>().dy - (rc.y + rc.dy);
-                rects.Push(rc);
-            }
-            return firstpage > 0 ? PDFSYNCERR_SUCCESS : PDFSYNCERR_NOSYNCPOINT_FOR_LINERECORD;
+    // recent SyncTeX versions encode in UTF-8 instead of ANSI
+    if (isUtf8 && -1 == ret) {
+        isUtf8 = false;
+        mb_srcfilepath = str::conv::ToAnsi(srcfilepath);
+        goto TryAgainAnsi;
     }
+
+    if (-1 == ret)
+        return PDFSYNCERR_UNKNOWN_SOURCEFILE;    
+    if (0 == ret)
+        return PDFSYNCERR_NOSYNCPOINT_FOR_LINERECORD;
+
+    synctex_node_t node;
+    PageInfo *pageInfo = NULL;
+    int firstpage = -1;
+    rects.Reset();
+
+    while (node = synctex_next_result(this->scanner)) {
+        if (firstpage == -1) {
+            firstpage = synctex_node_page(node);
+            *page = (UINT)firstpage;
+            if (dm->ValidPageNo(firstpage))
+                pageInfo = dm->GetPageInfo(firstpage);
+            if (!pageInfo)
+                continue;
+        }
+        if (synctex_node_page(node) != firstpage)
+            continue;
+
+        RectI rc;
+        rc.x  = (int)synctex_node_box_visible_h(node);
+        rc.y  = (int)(synctex_node_box_visible_v(node) - synctex_node_box_visible_height(node));
+        rc.dx = (int)synctex_node_box_visible_width(node),
+        rc.dy = (int)(synctex_node_box_visible_height(node) + synctex_node_box_visible_depth(node));
+        // convert from TopLeft to BottomLeft coordinates
+        if (pageInfo)
+            rc.y = pageInfo->page.Convert<int>().dy - (rc.y + rc.dy);
+        rects.Push(rc);
+    }
+
+    if (firstpage <= 0)
+        return PDFSYNCERR_NOSYNCPOINT_FOR_LINERECORD;
+    return PDFSYNCERR_SUCCESS;
 }
