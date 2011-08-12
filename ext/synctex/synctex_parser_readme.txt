@@ -99,6 +99,33 @@ Note that version 1.7 was delivered privately.
 - Various typo fixed
 - OutputDebugString replaced by OutputDebugStringA to deliberately disable unicode preprocessing
 - New conditional created because OutputDebugStringA is only available since Windows 2K professional
+1.10: Sun Jan  10 10:12:32 UTC 2010 
+- Bug fix in synctex_parser.c to solve a synchronization problem with amsmath's gather environment.
+  Concerns the synctex tool.
+1.11: Sun Jan  17 09:12:31 UTC 2010
+- Bug fix in synctex_parser.c, function synctex_node_box_visible_v: 'x' replaced by 'y'.
+  Only 3rd party tools are concerned.
+1.12: Mon Jul 19 21:52:10 UTC 2010
+- Bug fix in synctex_parser.c, function __synctex_open: the io_mode was modified even in case of a non zero return,
+causing a void .synctex.gz file to be created even if it was not expected. Reported by Marek Kasik concerning a bug on evince.
+1.13: Fri Mar 11 07:39:12 UTC 2011
+- Bug fix in synctex_parser.c, better synchronization as suggested by Jan Sundermeyer (near line 3388).
+- Stronger code design in synctex_parser_utils.c, function _synctex_get_name (really neutral behavior).
+  Only 3rd party tools are concerned.
+1.14: Fri Apr 15 19:10:57 UTC 2011
+- taking output_directory into account
+- Replaced FOPEN_WBIN_MODE by FOPEN_W_MODE when opening the text version of the .synctex file.
+- Merging with LuaTeX's version of synctex.c
+1.15: Fri Jun 10 14:10:17 UTC 2011
+This concerns the synctex command line tool and 3rd party developers.
+TeX and friends are not concerned by these changes.
+- Bug fixed in _synctex_get_io_mode_name, sometimes the wrong mode was returned
+- Support for LuaTeX convention of './' file prefixing
+1.16: Tue Jun 14 08:23:30 UTC 2011
+This concerns the synctex command line tool and 3rd party developers.
+TeX and friends are not concerned by these changes.
+- Better forward search (thanks Jose Alliste)
+- Support for LuaTeX convention of './' file prefixing now for everyone, not only for Windows
 
 Acknowledgments:
 ----------------
@@ -110,5 +137,5 @@ Nota Bene:
 If you include or use a significant part of the synctex package into a software,
 I would appreciate to be listed as contributor and see "SyncTeX" highlighted.
 
-Copyright (c) 2008-2009 jerome DOT laurens AT u-bourgogne DOT fr
+Copyright (c) 2008-2011 jerome DOT laurens AT u-bourgogne DOT fr
 

@@ -1,11 +1,12 @@
 /* 
-Copyright (c) 2008, 2009 jerome DOT laurens AT u-bourgogne DOT fr
+Copyright (c) 2008, 2009, 2010 , 2011 jerome DOT laurens AT u-bourgogne DOT fr
 
 This file is part of the SyncTeX package.
 
-Latest Revision: Wed Jul  1 11:16:51 UTC 2009
+Latest Revision: Tue Jun 14 08:23:30 UTC 2011
 
-Version: 1.8
+Version: 1.16
+
 See synctex_parser_readme.txt for more details
 
 License:
@@ -89,7 +90,7 @@ typedef _synctex_scanner_t *  synctex_scanner_t;
  *	It is the directory where all the auxiliary stuff is created.
  *	Sometimes, the synctex output file and the pdf, dvi or xdv files are not created in the same directory.
  *	This is the case in MikTeX (I will include this into TeX Live).
- *	This directory path can be nil, it will be ignored.
+ *	This directory path can be nil, it will be ignored then.
  *	It can be either absolute or relative to the directory of the output pdf (dvi or xdv) file.
  *	If no synctex file is found in the same directory as the output file, then we try to find one in the build directory.
  *  Please note that this new "build_directory" is provided as a convenient argument but should not be used.
