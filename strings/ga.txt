@@ -27,7 +27,7 @@ Ná fiafraigh dom arís
 An Chéad Leathanach\tHome
 
 &Go To
-Téigh Chuig...
+Téigh Chuig
 
 &Help
 C&abhair
@@ -54,13 +54,13 @@ Clóbhuail\tCtrl+P
 Cuir i dtaisce mar...\tCtrl+S
 
 &Skip this version
-Ná bac leis an leagan seo.
+Ná bac leis an leagan seo
 
 &View
 Amharc
 
 &Zoom
-Féithigh
+Formhéadú
 
 About SumatraPDF
 Maidir le SumatraPDF
@@ -69,25 +69,25 @@ Associate with PDF files?
 Comhthiomsaigh le comhaid PDF?
 
 Book&marks\tF12
-Astail\tF12
+Ceanáin\tF12
 
 Change Language
-Athraigh an Teanga (Change Language)
+Athraigh an Teanga
 
 Check for &Updates
-Téigh ar thóir leagan nua
+Lorg Nuashonruithe
 
 Continuous
 Ar Leanúint
 
 Continuous Facing
-Dhá Leathanach Ar Leanúint
+Dháeathanach Ar Leanúint
 
 Contribute Translation
-Aistrigh É Seo
+Aistrigh é seo
 
 Could not open Printer
-Níorbh fhéidir an Clóire a oscailt
+Níorbh fhéidir an clóire a oscailt
 
 E&xit\tCtrl+Q
 Scoir\tCtrl+Q
@@ -105,7 +105,7 @@ Facing
 Dhá Leathanach
 
 Failed to save a file
-Theip air comhad a chur i dtaisce
+Theip air comhad a chuir i dtaisce
 
 Fin&d...\tCtrl+F
 Aimsigh...\tCtrl+F
@@ -144,7 +144,7 @@ MB
 MB
 
 Make SumatraPDF default application for PDF files?
-Bíodh SumatraPDF mar an léitheoir PDF réamhshocruithe agat?
+Bíodh SumatraPDF mar an léitheoir PDF réamhshocruithe?
 
 Make SumatraPDF my default PDF reader
 Bíodh SumatraPDF mar an léitheoir PDF réamhshocruithe
@@ -171,7 +171,7 @@ Previous Page
 Leathanach Roimhe
 
 Printing problem.
-Botún Clóbhuailte
+Fadhb chlóbhuailte
 
 Rotate &Left\tCtrl+Shift+-
 Rothlaigh Tuathalach\tCtrl+Shift+-
@@ -183,7 +183,7 @@ Save As
 Cuir i dtaisce mar
 
 Set inverse search command-line
-Socruigh líne na n-orduithe cuardaigh inbhéarta
+Socruigh líne na n-orduithe cuardaigh aisiompaithe
 
 Show &Toolbar
 Taispeáin an Barra Uirlisí
@@ -195,19 +195,19 @@ View
 Amharc
 
 Visit &Website
-Tabhair cuairt ar an suíomh idirlín
+Tabhair cuairt ar an suíomh idirlíon
 
 You have the latest version.
-Tá an leagan is úire agat
+Tá an leagan is úire agat.
 
 You have version %s
 Tá leagan %s agat.
 
 Zoom In
-Féithigh Isteach
+Gluais Isteach
 
 Zoom Out
-Féithigh Amach
+Gluais Amach
 
 # Untranslated:
 #&All selected pages
