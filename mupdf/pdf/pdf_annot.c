@@ -309,34 +309,34 @@ pdf_dict_get_inheritable(pdf_xref *xref, fz_obj *obj, char *key)
 }
 
 static float
-pdf_extract_font_size(pdf_xref *xref, char *appearance, char **fontName)
+pdf_extract_font_size(pdf_xref *xref, char *appearance, char **font_name)
 {
 	fz_stream *stream = fz_open_memory(appearance, strlen(appearance));
-	float fontSize = 0;
+	float font_size = 0;
 	int tok, len;
 
-	*fontName = NULL;
+	*font_name = NULL;
 	do
 	{
 		fz_error error = pdf_lex(&tok, stream, xref->scratch, sizeof(xref->scratch), &len);
 		if (error || tok == PDF_TOK_EOF)
 		{
-			fz_free(*fontName);
-			*fontName = NULL;
+			fz_free(*font_name);
+			*font_name = NULL;
 			break;
 		}
 		if (tok == PDF_TOK_NAME)
 		{
-			fz_free(*fontName);
-			*fontName = fz_strdup(xref->scratch);
+			fz_free(*font_name);
+			*font_name = fz_strdup(xref->scratch);
 		}
 		else if (tok == PDF_TOK_REAL || tok == PDF_TOK_INT)
 		{
-			fontSize = fz_atof(xref->scratch);
+			font_size = fz_atof(xref->scratch);
 		}
 	} while (tok != PDF_TOK_KEYWORD || strcmp(xref->scratch, "Tf") != 0);
 	fz_close(stream);
-	return fontSize;
+	return font_size;
 }
 
 static fz_obj *
@@ -414,7 +414,7 @@ pdf_get_string_width(pdf_xref *xref, fz_obj *res, fz_buffer *base, unsigned shor
 
 static unsigned short *
 pdf_append_line(pdf_xref *xref, fz_obj *res, fz_buffer *content, fz_buffer *base_ap,
-	unsigned short *ucs2, float fontSize, int align, float width, int is_multiline, float *x)
+	unsigned short *ucs2, float font_size, int align, float width, int is_multiline, float *x)
 {
 	unsigned short *end, *keep;
 	float x1 = 0;
@@ -440,18 +440,36 @@ pdf_append_line(pdf_xref *xref, fz_obj *res, fz_buffer *content, fz_buffer *base
 		if (w < 0)
 			fz_catch(-1, "can't change the text's alignment");
 		else if (align == 1 /* centered */)
-			x1 = (width - w - 4.0f) / 2;
+			x1 = (width - w) / 2;
 		else if (align == 2 /* right-aligned */)
-			x1 = width - w - 4.0f;
+			x1 = width - w;
 		else
 			fz_warn("ignoring unknown quadding value %d", align);
 	}
 
-	fz_buffer_printf(content, "%.4f %.4f Td ", x1 - *x, -fontSize);
+	fz_buffer_printf(content, "%.4f %.4f Td ", x1 - *x, -font_size);
 	pdf_string_to_Tj(content, ucs2, end);
 	*x = x1;
 
 	return end + (*end ? 1 : 0);
+}
+
+static void
+pdf_append_combed_line(pdf_xref *xref, fz_obj *res, fz_buffer *content, fz_buffer *base_ap,
+	unsigned short *ucs2, float font_size, float width, int max_len)
+{
+	float comb_width = max_len > 0 ? width / max_len : 0;
+	unsigned short c[2] = { 0 };
+	float x = -2.0f;
+	int i;
+
+	fz_buffer_printf(content, "0 %.4f Td ", -font_size);
+	for (i = 0; i < max_len && ucs2[i]; i++)
+	{
+		*c = ucs2[i];
+		pdf_append_line(xref, res, content, base_ap, c, 0, 1 /* centered */, comb_width, 0, &x);
+		x -= comb_width;
+	}
 }
 
 static pdf_annot *
@@ -461,8 +479,8 @@ pdf_update_tx_widget_annot(pdf_xref *xref, fz_obj *obj)
 	fz_rect rect;
 	fz_buffer *content, *base_ap;
 	int flags, align, is_multiline;
-	float fontSize, x, y;
-	char *fontName;
+	float font_size, x, y;
+	char *font_name;
 	unsigned short *ucs2, *rest;
 
 	if (strcmp(fz_to_name(fz_dict_gets(obj, "Subtype")), "Widget") != 0)
@@ -483,13 +501,13 @@ pdf_update_tx_widget_annot(pdf_xref *xref, fz_obj *obj)
 
 	flags = fz_to_int(fz_dict_gets(obj, "Ff"));
 	is_multiline = (flags & (1 << 12)) != 0;
-	if ((flags & ((1 << 24) /* comb */ | (1 << 25) /* richtext */)))
-		fz_warn("missing support for combed and richtext fields");
+	if ((flags & (1 << 25) /* richtext */))
+		fz_warn("missing support for richtext fields");
 	align = fz_to_int(fz_dict_gets(obj, "Q"));
 
-	fontSize = pdf_extract_font_size(xref, fz_to_str_buf(ap), &fontName);
-	if (!fontSize || !fontName)
-		fontSize = is_multiline ? 10 /* FIXME */ : floor(rect.y1 - rect.y0 - 2);
+	font_size = pdf_extract_font_size(xref, fz_to_str_buf(ap), &font_name);
+	if (!font_size || !font_name)
+		font_size = is_multiline ? 10 /* FIXME */ : floor(rect.y1 - rect.y0 - 2);
 
 	content = fz_new_buffer(256);
 	base_ap = fz_new_buffer(256);
@@ -497,13 +515,13 @@ pdf_update_tx_widget_annot(pdf_xref *xref, fz_obj *obj)
 	fz_buffer_printf(content, "/Tx BMC q 1 1 %.4f %.4f re W n BT %s ",
 		rect.x1 - rect.x0 - 2.0f, rect.y1 - rect.y0 - 2.0f, fz_to_str_buf(ap));
 	fz_buffer_printf(base_ap, "/Tx BMC q BT %s ", fz_to_str_buf(ap));
-	if (fontName)
+	if (font_name)
 	{
-		fz_buffer_printf(content, "/%s %.4f Tf ", fontName, fontSize);
-		fz_buffer_printf(base_ap, "/%s %.4f Tf ", fontName, fontSize);
-		fz_free(fontName);
+		fz_buffer_printf(content, "/%s %.4f Tf ", font_name, font_size);
+		fz_buffer_printf(base_ap, "/%s %.4f Tf ", font_name, font_size);
+		fz_free(font_name);
 	}
-	y = 0.5f * (rect.y1 - rect.y0) + 0.6f * fontSize;
+	y = 0.5f * (rect.y1 - rect.y0) + 0.6f * font_size;
 	if (is_multiline)
 		y = rect.y1 - rect.y0 - 2;
 	fz_buffer_printf(content, "1 0 0 1 2 %.4f Tm ", y);
@@ -518,8 +536,13 @@ pdf_update_tx_widget_annot(pdf_xref *xref, fz_obj *obj)
 
 	x = 0;
 	rest = ucs2;
+	if ((flags & (1 << 24) /* comb */))
+	{
+		pdf_append_combed_line(xref, res, content, base_ap, ucs2, font_size, rect.x1 - rect.x0, fz_to_int(pdf_dict_get_inheritable(xref, obj, "MaxLen")));
+		rest = L"";
+	}
 	while (*rest)
-		rest = pdf_append_line(xref, res, content, base_ap, rest, fontSize, align, rect.x1 - rect.x0, is_multiline, &x);
+		rest = pdf_append_line(xref, res, content, base_ap, rest, font_size, align, rect.x1 - rect.x0 - 4.0f, is_multiline, &x);
 
 	fz_free(ucs2);
 	fz_buffer_printf(content, "ET Q EMC");
