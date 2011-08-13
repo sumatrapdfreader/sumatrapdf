@@ -12,64 +12,211 @@ Lang: ga Irish (Gaeilge)
 Maidir le
 
 &Actual Size\tCtrl+1
-Fíormhéid\tCtrl+1
+&Fíormhéid\tCtrl+1
+
+&All selected pages
+&Gach leathanach roghnaithe
+
+&Back\tAlt+Left Arrow
+&Siar\tAlt+Saighead Ar Clé
+
+&Book View\tCtrl+8
+&Leabhar-amharc\tCtrl+8
 
 &Close\tCtrl+W
 &Dún\tCtrl+W
 
+&Copy Selection
+&Macasamhlaigh an Roghnúchán
+
+&Copy Selection\tCtrl+C
+&Macasamhlaigh an Roghnúchán\tCtrl+C
+
 &Don't ask me again
-Ná fiafraigh dom arís
+&Ná fiafraigh dom arís
+
+&Even pages only
+&Leathanaigh cothromacha amháin
+
+&Facing\tCtrl+7
+&Dhá Leathanach\tCtrl+7
 
 &File
 &Comhad
 
+&Find what:
+&Aimsigh céard:
+
 &First Page\tHome
 An Chéad Leathanach\tHome
 
+&Fit pages to printable area
+&Oiriúnaigh leathanaigh go limistéar inchlóbhuailte
+
 &Go To
-Téigh Chuig
+&Téigh Chuig
+
+&Go to page:
+&Téigh chuig lch:
 
 &Help
-C&abhair
+&Cabhair
 
 &Last Page\tEnd
-An Leathanach Deiridh\tEnd
+&An Leathanach Deiridh\tEnd
+
+&Magnification:
+For&mhéadú:
 
 &Manual
-Lámhleabhar
+&Lámhleabhar
 
 &Next Page\tRight Arrow
-Leathanach Ar Aghaidh\t->
+&Leathanach Ar Aghaidh\tSaighead ar deis
+
+&No
+&Ná déan
+
+&No, thanks
+&Níl, go raibh maith agat
+
+&Odd pages only
+&Corr-leathanaigh amháin
 
 &Open\tCtrl+O
 &Oscail\tCtrl+O
 
+&Open Document
+&Oscail Cáipéis
+
+&Options...
+&Roghanna...
+
+&Password:
+&Focal faire:
+
+&Pin Document
+&Greamaigh an cháipéis le biorrán
+
 &Previous Page\tLeft Arrow
-Leathanach Roimhe\t<-
+Leathanach Roimhe\tSaighead ar clé
+
+&Print...
+&Clóbhuail...
 
 &Print...\tCtrl+P
 Clóbhuail\tCtrl+P
 
+&Print... (denied)
+&Clóbhualadh... (diúltaithe)
+
+&Remember the password for this document
+&Cuimhnigh ar an bhfocal faire don cháipéis seo
+
+&Remember these settings for each document
+Cuimhnigh ar na socruithe seo do gach cáipéis
+
+&Remove Document
+&Bain cáipéis
+
 &Save As...\tCtrl+S
 Cuir i dtaisce mar...\tCtrl+S
 
+&Settings
+&Socruithe
+
+&Shrink pages to printable area (if necessary)
+&Crap na leathanaigh go limistéar inchlóbhuailte (más gá)
+
 &Skip this version
-Ná bac leis an leagan seo
+&Ná bac leis an leagan seo
+
+&Use original page sizes
+&Bain feidhm as méideanna bunaidh an leathanaigh
 
 &View
-Amharc
+&Amharc
+
+&Yes
+&Déan sin
 
 &Zoom
-Formhéadú
+&Formhéadú
+
+(of %d)
+(as %d)
+
+(page %s)
+(leathanach a %s)
 
 About SumatraPDF
 Maidir le SumatraPDF
 
+Add Favorite
+Cuir ceanán leis
+
+Add page %s to favorites
+Cuir leathanach a %s le na ceanáin
+
+Add page %s to favorites with (optional) name:
+Cuir leathanach a %s le na ceanáin le ainm (roghnach):
+
+Add to favorites
+Cuir le na ceanáin
+
+Advanced
+Ardroghanna
+
+All files
+Gach comhad
+
+All supported documents
+Gach cáipéis inléite
+
+Application:
+Feidhmchlár:
+
 Associate with PDF files?
 Comhthiomsaigh le comhaid PDF?
 
+Attachment: %s
+Ceangaltán: %s
+
+Author:
+Údar:
+
+Automatic
+Uathoibríoch
+
+Automatically check for &updates
+Lorg nuashonruithe go huathoibríoch
+
+Book View
+Leabhar-amharc
+
 Book&marks\tF12
 Ceanáin\tF12
+
+Bookmark Shortcuts
+Déan ceanáin d'aicearraí
+
+Bookmarks
+Ceanáin
+
+Bytes
+Bearta
+
+Can't connect to the Internet (error %#x).
+Ní féidir ceangailt leis an idirlíon (botún %#x).
+
+Cancel
+Cealaigh
+
+Cannot print this file
+Ní féidir an comhad seo a chlóbhualadh
+
+Cannot start inverse search command. Please check the command line in the settings.
+Ní féidir ordú cuardaigh aisiompaithe a thosú. Dearbháil líne na n-orduithe sna socruithe.
 
 Change Language
 Athraigh an Teanga
@@ -77,17 +224,71 @@ Athraigh an Teanga
 Check for &Updates
 Lorg Nuashonruithe
 
+Comic books
+Greannáin
+
 Continuous
-Ar Leanúint
+Amharc leanúnach
+
+Continuous Book View
+Leabhar-amharc leanúnach
 
 Continuous Facing
-Dháeathanach Ar Leanúint
+Dhá leathanach ar leanúint
 
 Contribute Translation
 Aistrigh é seo
 
+Copy &Link Address
+Macasamhlaigh seoladh an naisc
+
+Copy Co&mment
+Macasamhlaigh an nóta tráchta
+
+Copying text was denied (copying as image only)
+Níorbh fhéidir téacs a mhacasamhlú (macasamhlú mar íomhá amháin)
+
+Could not obtain Printer properties
+Níorbh fhéidir airíonna an chlóire a fháil
+
 Could not open Printer
 Níorbh fhéidir an clóire a oscailt
+
+Couldn't initialize printer
+Níorbh fhéidir an clóire a thúsú
+
+Couldn't render the page
+Níorbh fhéidir an leathanach a chóiriú
+
+Created:
+Cruthaithe:
+
+Current file
+Comhad reatha
+
+Custom &Zoom...\tCtrl+Y
+Formhéadú saincheaptha...\tCtrl+Y
+
+Default &Layout:
+&Leagan amach réamhshocraithe:
+
+Default &Zoom:
+Formhéadú réamhshocraithe:
+
+Default PDF reader can't be changed in portable mode
+Ní féidir an léitheoir PDF réamhshocraithe a athrú sa mhodh soghluaiste
+
+Denied Permissions:
+Ceadanna diúltaithe:
+
+DjVu documents
+Cáipéisí DjVu
+
+Document Properties
+Airíonna na cáipéise
+
+Download
+Íosluchtaigh
 
 E&xit\tCtrl+Q
 Scoir\tCtrl+Q
@@ -98,6 +299,15 @@ Cuir isteach focal faire
 Enter password for %s
 Cuir isteach focal faire le haghaidh %s
 
+Enter the command-line to invoke when you double-click on the PDF document:
+Cuir isteach líne na n-orduithe atá le gairm nuair a bhrúann tú faoi dhó ar cháipéis PDF:
+
+Error loading %s
+Tharla botún ag luchtú %s
+
+F&orward\tAlt+Right Arrow
+Ar aghaidh\tAlt+Saighead Ar Deis
+
 F&ullscreen\tCtrl+Shift+L
 Lánscáileán\tCtrl+Shift+L
 
@@ -107,8 +317,17 @@ Dhá Leathanach
 Failed to save a file
 Theip air comhad a chuir i dtaisce
 
+File Size:
+Méid an chomhaid:
+
+File:
+Comhad:
+
 Fin&d...\tCtrl+F
 Aimsigh...\tCtrl+F
+
+Find
+Aimsigh
 
 Find Next
 Aimsigh Ar Aghaidh
@@ -119,11 +338,17 @@ Aimsigh Roimhe
 Find:
 Aimsigh:
 
+Fit &Content\tCtrl+3
+Oiriúnaigh an t-inneachar\tCtrl+3
+
 Fit &Page\tCtrl+0
 Oiriúnaigh don Lch\tCtrl+0
 
 Fit &Width\tCtrl+2
 Oiriúnaigh don Leithead\tCtrl+2
+
+Fit Content
+Oiriúnaigh an t-inneachar
 
 Fit Page
 Oiriúnaigh don Lch
@@ -131,11 +356,29 @@ Oiriúnaigh don Lch
 Fit Width
 Oiriúnaigh don Leithead
 
+Fit Width and Show Pages Continuously
+Oiriúnaigh don leithead & taispeáin leathanaigh go leanúnach
+
+Fit a Single Page
+Oiriúnaigh leathanach amháin
+
+Frequently Read
+Léite Go Minic
+
 GB
 GB
 
 Go to page
 Téigh chuig lch
+
+Hide frequently read
+Folaigh cinn léite go minic
+
+Hint: Use the F3 key for finding again
+Leid: Bain feidhm as an gcnaipe F3 chun nithe a aimsiú arís
+
+Image files (*.%s)
+Comhaid íomhánna (*.%s)
 
 KB
 KB
@@ -149,8 +392,8 @@ Bíodh SumatraPDF mar an léitheoir PDF réamhshocruithe?
 Make SumatraPDF my default PDF reader
 Bíodh SumatraPDF mar an léitheoir PDF réamhshocruithe
 
-Match Case
-Comhoiriúnaigh an cás
+Modified:
+Mionathraithe:
 
 New version %s is available. Download new version?
 Tá an leagan nua %s ar fáil. Íosluchtaigh an leagan nua?
@@ -158,29 +401,131 @@ Tá an leagan nua %s ar fáil. Íosluchtaigh an leagan nua?
 Next Page
 Leathanach Ar Aghaidh
 
+No matches were found
+Níor aimsíodh comhionanna
+
+No result found around line %u in file %s
+Níor aimsíodh toradh idir líne %u sa chomhad %s
+
+No synchronization file found
+Níor aimsíodh comhad comhaimseartha
+
+No synchronization info at this position
+Níl faisnéis chomhaimseartha ag an suíomh seo
+
+Number of Pages:
+Líon na leathanaigh:
+
+OK
+Tá go maith
+
 Open
 Oscail
+
+Open a document...
+Oscail cáipéis...
+
+Open in &Adobe Reader
+Oscail in Adobe Reader
+
+Open in &Foxit Reader
+Oscail i bhFoxit Reader
+
+Open in PDF-XChange
+Oscail i bPDF-XChange
+
+P&roperties
+Ai&ríonna
+
+P&roperties\tCtrl+D
+Ai&ríonna\tCtrl+D
+
+PDF Document
+Cáipéis PDF
+
+PDF Producer:
+Déantasóir PDF:
+
+PDF Version:
+Leagan PDF:
+
+PDF documents
+Cáipéisí PDF
 
 Pa&ge...\tCtrl+G
 Leathanach...\tCtrl+G
 
+Page %s
+Leathanach %s
+
+Page Size:
+Méid an leathanaigh:
+
+Page number %u inexistant
+Níl an uimhir leathanaigh %u ann
+
+Page scaling
+Scálú leathanaigh
+
 Page:
 Leathanach:
+
+Please wait - rendering...
+Fan le do thoil - tá sé á chóiriú...
+
+Postscript documents
+Cáipéisí Postscript
+
+Pr&esentation\tCtrl+L
+Cur i láthair\tCtrl+L
 
 Previous Page
 Leathanach Roimhe
 
+Print
+Clóbhuail
+
+Print range
+Raon clóbhuailte
+
+Printer with given name doesn't exist
+Níl clóire leis an ainm sin ann
+
+Printing is still in progress. Abort and start over?
+Tá sé fós ag clóbhualadh. Tobscoir agus tosaigh arís?
+
+Printing page %d of %d...
+Ag clóbhualadh leathanach a %d as %d...
+
 Printing problem.
-Fadhb chlóbhuailte
+Fadhb chlóbhuailte.
 
-Rotate &Left\tCtrl+Shift+-
-Rothlaigh Tuathalach\tCtrl+Shift+-
+Remember &opened files
+Cuimhnigh ar chomhaid &oscailte
 
-Rotate &Right\tCtrl+Shift++
-Rothlaigh Deiseal\tCtrl+Shift++
+Remove from favorites
+Bain ó na ceanáin
+
+Remove page %s from favorites
+Bain leathanach a %s ó na ceanáin
 
 Save As
 Cuir i dtaisce mar
+
+Searching %d of %d...
+Ag cuardach %d as %d...
+
+Select &All
+Roghnaigh Uile
+
+Select &All\tCtrl+A
+Roghnaigh Uile\tCtrl+A
+
+Select content with Ctrl+left mouse button
+Roghnaigh inneachar le Ctrl+an cnaipe luchóige ar chlé
+
+Send by &E-mail...
+Seol i ríomhphost...
 
 Set inverse search command-line
 Socruigh líne na n-orduithe cuardaigh aisiompaithe
@@ -188,8 +533,53 @@ Socruigh líne na n-orduithe cuardaigh aisiompaithe
 Show &Toolbar
 Taispeáin an Barra Uirlisí
 
+Show &pages continuously
+Teaspáin na leathanaigh go leanúnach
+
+Show frequently read
+Taispeáin cinn léite go minic
+
+Show the &bookmarks sidebar when available
+Taispeáin taobh-bharra na gceanán nuair atá sé ar fáil
+
 Single Page
 Leathanach Amháin
+
+Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
+Faraor, níor chóir go dtarlódh sin!\n\nBrúigh 'Cealaigh' le do thoil, más mian leat cuidiú linn údar an chliste seo a dheisiú.
+
+Source file %s has no synchronization point
+Níl láthair comhaimsearatha ag an gcomhad foinse %s
+
+Subject:
+Ábhar:
+
+SumatraPDF Options
+Roghanna SumatraPDF
+
+SumatraPDF Update
+Nuashonrú do ShumatraPDF
+
+SumatraPDF crashed
+Chlis SumatraPDF
+
+SumatraPDF is your default PDF reader
+Is é SumatraPDF do léitheoir PDF réamhshocraithe
+
+SumatraPDF should now be your default PDF reader
+Ba chóir go mbeadh SumatraPDF mar an léitheoir PDF réamhshocraithe agat
+
+Synchronization file cannot be opened
+Ní féidir an comhad comhaimseartha a oscailt
+
+Text documents
+Cáipéisí téacs
+
+Title:
+Teideal:
+
+Unknown source file (%s)
+Comhad foinse anaithnid (%s)
 
 View
 Amharc
@@ -197,167 +587,51 @@ Amharc
 Visit &Website
 Tabhair cuairt ar an suíomh idirlíon
 
+Warning
+Rabhadh
+
+XPS documents
+Cáipéisí XPS
+
 You have the latest version.
 Tá an leagan is úire agat.
 
 You have version %s
-Tá leagan %s agat.
+Tá leagan %s agat
+
+Zoom
+Formhéadú
 
 Zoom In
-Gluais Isteach
+Gluais isteach
 
 Zoom Out
-Gluais Amach
+Gluais amach
+
+Zoom factor
+Fachtóir formhéadaithe
+
+[Changes detected; refreshing] %s
+[Athruithe braite; ag athnuachan] %s
+
+copying text
+ag macasamhlú an téacs
+
+printing document
+ag clóbhualadh an cháipéis
 
 # Untranslated:
-#&All selected pages
-#&Back\tAlt+Left Arrow
-#&Book View\tCtrl+8
-#&Copy Selection
-#&Copy Selection\tCtrl+C
-#&Even pages only
-#&Facing\tCtrl+7
-#&Find what:
-#&Fit pages to printable area
-#&Go to page:
-#&Magnification:
 #&Match case
-#&No
-#&No, thanks
-#&Odd pages only
-#&Open Document
-#&Options...
-#&Password:
-#&Pin Document
-#&Print...
-#&Print... (denied)
-#&Remember the password for this document
-#&Remember these settings for each document
-#&Remove Document
 #&Save As...
-#&Settings
-#&Shrink pages to printable area (if necessary)
 #&Single Page\tCtrl+6
-#&Use original page sizes
-#&Yes
-#(of %d)
-#(page %s)
-#Add Favorite
-#Add page %s to favorites
-#Add page %s to favorites with (optional) name:
-#Add to favorites
-#Advanced
-#All files
-#All supported documents
-#Application:
-#Attachment: %s
-#Author:
-#Automatic
-#Automatically check for &updates
-#Book View
-#Bookmark Shortcuts
 #Bookmark shortcut to page %s of %s
-#Bookmarks
-#Bytes
-#Can't connect to the Internet (error %#x).
-#Cancel
-#Cannot print this file
-#Cannot start inverse search command. Please check the command line in the settings.
-#Comic books
-#Continuous Book View
-#Copy &Link Address
-#Copy Co&mment
-#Copying text was denied (copying as image only)
-#Could not obtain Printer properties
-#Couldn't initialize printer
-#Couldn't render the page
-#Created:
-#Current file
-#Custom &Zoom...\tCtrl+Y
-#Default &Layout:
-#Default &Zoom:
-#Default PDF reader can't be changed in portable mode
-#Denied Permissions:
-#DjVu documents
-#Document Properties
-#Download
-#Enter the command-line to invoke when you double-click on the PDF document:
-#Error loading %s
 #F&avorites
-#F&orward\tAlt+Right Arrow
 #Favorites
-#File Size:
-#File:
-#Find
-#Fit &Content\tCtrl+3
-#Fit Content
-#Fit Width and Show Pages Continuously
-#Fit a Single Page
 #Found text at page %s
 #Found text at page %s (again)
-#Frequently Read
-#Hide frequently read
-#Hint: Use the F3 key for finding again
-#Image files (*.%s)
-#Modified:
-#No matches were found
-#No result found around line %u in file %s
-#No synchronization file found
-#No synchronization info at this position
-#Number of Pages:
-#OK
-#Open a document...
-#Open in &Adobe Reader
-#Open in &Foxit Reader
-#Open in PDF-XChange
-#P&roperties
-#P&roperties\tCtrl+D
-#PDF Document
-#PDF Producer:
-#PDF Version:
-#PDF documents
-#Page %s
-#Page Size:
-#Page number %u inexistant
-#Page scaling
-#Please wait - rendering...
-#Postscript documents
-#Pr&esentation\tCtrl+L
-#Print
-#Print range
-#Printer with given name doesn't exist
-#Printing is still in progress. Abort and start over?
-#Printing page %d of %d...
-#Remember &opened files
-#Remove from favorites
-#Remove page %s from favorites
+#Match Case
+#Rotate &Left\tCtrl+Shift+-
+#Rotate &Right\tCtrl+Shift++
 #Save S&hortcut...\tCtrl+Shift+S
-#Searching %d of %d...
-#Select &All
-#Select &All\tCtrl+A
-#Select content with Ctrl+left mouse button
-#Send by &E-mail...
-#Show &pages continuously
 #Show Favorites
-#Show frequently read
-#Show the &bookmarks sidebar when available
-#Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
-#Source file %s has no synchronization point
-#Subject:
-#SumatraPDF Options
-#SumatraPDF Update
-#SumatraPDF crashed
-#SumatraPDF is your default PDF reader
-#SumatraPDF should now be your default PDF reader
-#Synchronization file cannot be opened
-#Text documents
-#Title:
-#Unknown source file (%s)
-#Warning
-#XPS documents
-#Zoom
-#Zoom factor
-#[Changes detected; refreshing] %s
-#copying text
-#printing document
 
