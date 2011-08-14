@@ -220,8 +220,8 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL)
                 if (PrintScaleShrink == pd.scaleAdv && dpiFactor < zoom)
                     zoom = dpiFactor;
                 // make sure that no content lies in the non-printable paper margins
-                Rect<float> onPaper((paperWidth - pSize.dx * zoom) / 2 + cbox.x * zoom,
-                                    (paperHeight - pSize.dy * zoom) / 2 + cbox.y * zoom,
+                Rect<float> onPaper((paperWidth - pSize.dx * zoom) / 2 + cbox.x * zoom + horizOffset,
+                                    (paperHeight - pSize.dy * zoom) / 2 + cbox.y * zoom + vertOffset,
                                     cbox.dx * zoom, cbox.dy * zoom);
                 if (leftMargin > onPaper.x)
                     horizOffset = (int)(horizOffset + leftMargin - onPaper.x);
