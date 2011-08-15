@@ -58,9 +58,10 @@ public:
 
 typedef BYTE (* separableBlend)(BYTE s, BYTE bg);
 static BYTE BlendNormal(BYTE s, BYTE bg)     { return s; }
-static BYTE BlendMultiply(BYTE s, BYTE bg)   { return s / 255.0 * bg; }
-static BYTE BlendScreen(BYTE s, BYTE bg)     { return 255 - (255 - s) / 255.0 * (255 - bg); }
+static BYTE BlendMultiply(BYTE s, BYTE bg)   { return s / 255.0f * bg; }
+static BYTE BlendScreen(BYTE s, BYTE bg)     { return 255 - (255 - s) / 255.0f * (255 - bg); }
 static BYTE BlendHardLight(BYTE s, BYTE bg)  { return s <= 127 ? s * 2.0 / 255 * bg : BlendScreen((s - 128) * 2 + 1, bg); }
+static BYTE BlendSoftLight(BYTE s, BYTE bg);
 static BYTE BlendOverlay(BYTE s, BYTE bg)    { return BlendHardLight(bg, s); }
 static BYTE BlendDarken(BYTE s, BYTE bg)     { return MIN(s, bg); }
 static BYTE BlendLighten(BYTE s, BYTE bg)    { return MAX(s, bg); }
@@ -453,13 +454,13 @@ protected:
 				if (luminosity)
 				{
 					float color[3], gray;
-					color[0] = maskScan0[col * 4] / 255.0;
-					color[1] = maskScan0[col * 4 + 1] / 255.0;
-					color[2] = maskScan0[col * 4 + 2] / 255.0;
+					color[0] = maskScan0[col * 4] / 255.0f;
+					color[1] = maskScan0[col * 4 + 1] / 255.0f;
+					color[2] = maskScan0[col * 4 + 2] / 255.0f;
 					fz_convert_color(fz_device_rgb, color, fz_device_gray, &gray);
 					alpha = gray * 255;
 				}
-				Scan0[col * 4 + 3] *= alpha / 255.0;
+				Scan0[col * 4 + 3] *= alpha / 255.0f;
 			}
 		}
 		
@@ -541,7 +542,7 @@ protected:
 			BlendColorDodge,
 			BlendColorBurn,
 			BlendHardLight,
-			NULL, // FZ_BLEND_SOFTLIGHT
+			BlendSoftLight,
 			BlendDifference,
 			BlendExclusion,
 			NULL // FZ_BLEND_HUE, FZ_BLEND_SATURATION, FZ_BLEND_COLOR, FZ_BLEND_LUMINOSITY
@@ -1285,6 +1286,19 @@ extern "C" static void
 fz_gdiplus_end_mask(void *user)
 {
 	((userData *)user)->applyClipMask();
+}
+
+static BYTE BlendSoftLight(BYTE s, BYTE bg)
+{
+	if (s < 128)
+		return bg - ((255 - 2 * s) / 255.0f * bg) / 255.0f * (255 - bg);
+
+	int dbd;
+	if (bg < 64)
+		dbd = (((bg * 16 - 12) / 255.0f * bg) + 4) / 255.0f * bg;
+	else
+		dbd = (int)sqrtf(255.0f * bg);
+	return bg + ((2 * s - 255) / 255.0f * (dbd - bg));
 }
 
 extern "C" static void
