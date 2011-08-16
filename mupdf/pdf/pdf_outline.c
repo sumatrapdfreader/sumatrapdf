@@ -14,12 +14,13 @@ pdf_load_outline_imp(pdf_xref *xref, fz_obj *dict)
 		return NULL;
 
 	/* SumatraPDF: prevent cyclic outlines */
-load_next_sibling_outline:
-	if (fz_dict_gets(dict, ".seen"))
-		goto remove_temp_markers;
-	obj = fz_new_null();
-	fz_dict_puts(dict, ".seen", obj);
-	fz_drop_obj(obj);
+	do
+	{
+		if (fz_dict_gets(dict, ".seen"))
+			break;
+		obj = fz_new_null();
+		fz_dict_puts(dict, ".seen", obj);
+		fz_drop_obj(obj);
 
 	node = fz_malloc(sizeof(pdf_outline));
 	node->title = NULL;
@@ -43,20 +44,18 @@ load_next_sibling_outline:
 	if (obj)
 		node->child = pdf_load_outline_imp(xref, obj);
 
-	/* SumatraPDF: prevent potential stack overflow */
-	if (!root)
-		prev = root = node;
-	else
-		prev = prev->next = node;
+		/* SumatraPDF: prevent potential stack overflow */
+		if (!root)
+			prev = root = node;
+		else
+			prev = prev->next = node;
+	
+		dict = fz_dict_gets(dict, "Next");
+	} while (dict && !fz_is_null(dict));
 	node = root;
 
-	dict = fz_dict_gets(dict, "Next");
-	if (dict && !fz_is_null(dict))
-		goto load_next_sibling_outline;
-
 	/* SumatraPDF: prevent cyclic outlines */
-remove_temp_markers:
-	for (dict = origDict; dict; dict = fz_dict_gets(dict, "Next"))
+	for (dict = origDict; dict && fz_dict_gets(dict, ".seen"); dict = fz_dict_gets(dict, "Next"))
 		fz_dict_dels(dict, ".seen");
 
 	return node;
