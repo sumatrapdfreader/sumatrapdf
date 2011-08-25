@@ -157,8 +157,23 @@ Contributor: Hrant Ohanyan »»» http://haysoft.org (hrantohanyan@mail.am)
 (of %d)
 (%d-ը)
 
+(page %s)
+(էջ %s)
+
 About SumatraPDF
 SumatraPDF-ի մասին
+
+Add Favorite
+Ավելացնել ընտրյալներին
+
+Add page %s to favorites
+Ավելացնել %s էջը ընտրյալներին
+
+Add page %s to favorites with (optional) name:
+Ավելացնել %s էջը ընտրյալներին հետևյալ անվամբ`
+
+Add to favorites
+Ավելացնել ընտրյալներին
 
 Advanced
 Ընդլայնված
@@ -247,6 +262,9 @@ Copy Co&mment
 Copying text was denied (copying as image only)
 Տեքստի պատճենումը թույլատրված չէ (պատճենում է որպես պատկեր)
 
+Could not obtain Printer properties
+Տպիչի հատկությունները հասանելի չեն
+
 Could not open Printer
 Տպիչը հասանելի չէ
 
@@ -258,6 +276,9 @@ Couldn't render the page
 
 Created:
 Ստեղծված է.
+
+Current file
+Ընթացիկ ֆայլը
 
 Custom &Zoom...\tCtrl+Y
 &Ընտրված չափը\tCtrl+Y
@@ -298,6 +319,9 @@ Enter the command-line to invoke when you double-click on the PDF document:
 Error loading %s
 Բացման սխալ %s
 
+F&avorites
+Ը&նտրյալներ
+
 F&orward\tAlt+Right Arrow
 Առաջ\tAlt+->
 
@@ -310,6 +334,9 @@ Facing
 Failed to save a file
 Հնարավոր չէ պահպանել ֆայլում
 
+Favorites
+Ընտրյալներ
+
 File Size:
 Ֆայլի չափը.
 
@@ -317,7 +344,7 @@ File:
 Ֆայլ.
 
 Fin&d...\tCtrl+F
-Փնտրել...\tCtrl+F
+Փնտ&րել...\tCtrl+F
 
 Find
 Փնտրել
@@ -368,13 +395,13 @@ GB
 ԳԲ
 
 Go to page
-Անցնել էջին
+Անցնել էջի
 
 Hide frequently read
-Թաքցնել հաճախակի կարդացումը
+Թաքցնել հաճախակի կարդացածը
 
 Hint: Use the F3 key for finding again
-Փնտրումը կրկնելու համար օգտագործեք F3 կոճակը
+Որոնումը կրկնելու համար օգտագործեք F3 կոճակը
 
 Image files (*.%s)
 Նկարի ֆայլեր (*.%s)
@@ -386,10 +413,10 @@ MB
 ՄԲ
 
 Make SumatraPDF default application for PDF files?
-Դարձնե՞լ SumatraPDF-ն PDF ֆայլերը բացող հիմնական ծրագիր։
+Հաստատե՞լ SumatraPDF-ն PDF ֆայլերը բացող հիմնական ծրագիր։
 
 Make SumatraPDF my default PDF reader
-Ասոցացնել PDF ֆայլերը SumatraPDF-ի հետ
+Ասոցիացնել PDF ֆայլերը SumatraPDF-ի հետ
 
 Match Case
 Հաշվի առնել մեծատառ/փոքրատառը
@@ -410,7 +437,7 @@ No synchronization file found
 Չեն գտնվել համանման ֆայլեր
 
 No synchronization info at this position
-Այստեղ չկա սինխրոնիզացնելու համար տեղեկություն
+Այստեղ չկա համաժամեցնելու համար տեղեկություն
 
 Number of Pages:
 Էջերի քանակը.
@@ -452,7 +479,10 @@ PDF documents
 PDF փաստաթղթեր
 
 Pa&ge...\tCtrl+G
-Էջը...\tCtrl+G
+Էջ&ը...\tCtrl+G
+
+Page %s
+Էջ %s
 
 Page Size:
 Էջի չափը.
@@ -469,6 +499,9 @@ Page:
 Please wait - rendering...
 Խնդրում ենք սպասել...
 
+Postscript documents
+Հետգրվածքային փաստաթղթեր
+
 Pr&esentation\tCtrl+L
 Ներ&կայացումը\tCtrl+L
 
@@ -481,6 +514,9 @@ Print
 Print range
 Տպելու կարգը
 
+Printer with given name doesn't exist
+Այս անվամբ տպիչ գոյություն չունի
+
 Printing is still in progress. Abort and start over?
 Տպվում է։ Կանգնեցնե՞լ։
 
@@ -492,6 +528,12 @@ Printing problem.
 
 Remember &opened files
 Հիշել &բացված ֆայլերը
+
+Remove from favorites
+Հեռացնել ընտրյալներից
+
+Remove page %s from favorites
+Հեռացնել %s  էջը ընտրյալներից
 
 Rotate &Left\tCtrl+Shift+-
 Շրջել ձախ\tCtrl+Shift+-
@@ -529,8 +571,11 @@ Show &Toolbar
 Show &pages continuously
 Էջերը &ցույց տալ շարունակական
 
+Show Favorites
+Ցուցադրել ընտրյալները
+
 Show frequently read
-Ցուցադրել հաճախակի կարդալը
+Ցուցադրել հաճախակի կարդացվածը
 
 Show the &bookmarks sidebar when available
 Հնարավորության դեպքում ցույց տալ &Էջերը
@@ -542,7 +587,7 @@ Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to he
 Կներեք, սա չպետք է տեղի ունենար։\n\nՍեղմեք 'Մերժել'՝եթե ցանկանում եք օգնել մեզ վերացնելու այս սխալը։
 
 Source file %s has no synchronization point
-%s ֆայլը չունի սինխրոնիզացման կետ
+%s ֆայլը չունի համաժամեցման կետ
 
 Subject:
 Ֆայլը.
@@ -554,7 +599,7 @@ SumatraPDF Update
 SumatraPDF-ի թարմացումները
 
 SumatraPDF crashed
-SumatraPDF-ն ձախողվեց
+SumatraPDF-ի ձախողում
 
 SumatraPDF is your default PDF reader
 PDF ֆայլերը ասոցիացվել են SumatraPDF-ի հետ
@@ -563,7 +608,7 @@ SumatraPDF should now be your default PDF reader
 PDF ֆայլերը ասոցիացվեցին SumatraPDF-ի հետ
 
 Synchronization file cannot be opened
-Հնարավոր չէ բացել սինխրոնիզացման ֆայլը
+Հնարավոր չէ բացել համաժամեցման ֆայլը
 
 Text documents
 Տեքստային փաստաթղթեր
@@ -614,20 +659,5 @@ printing document
 փաստաթուղթը տպվում է
 
 # Untranslated:
-#(page %s)
-#Add Favorite
-#Add page %s to favorites
-#Add page %s to favorites with (optional) name:
-#Add to favorites
-#Could not obtain Printer properties
-#Current file
-#F&avorites
-#Favorites
 #No result found around line %u in file %s
-#Page %s
-#Postscript documents
-#Printer with given name doesn't exist
-#Remove from favorites
-#Remove page %s from favorites
-#Show Favorites
 
