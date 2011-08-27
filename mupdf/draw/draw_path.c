@@ -413,6 +413,7 @@ fz_stroke_lineto(struct sctx *s, fz_point cur)
 
 	if (dx * dx + dy * dy < FLT_EPSILON)
 	{
+		if (s->dash_list) /* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1604 */
 		s->dot = 1;
 		return;
 	}
@@ -528,6 +529,7 @@ fz_flatten_stroke_path(fz_gel *gel, fz_path *path, fz_stroke_state *stroke, fz_m
 	s.sn = 0;
 	s.bn = 0;
 	s.dot = 0;
+	s.dash_list = NULL; /* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1604 */
 
 	i = 0;
 
