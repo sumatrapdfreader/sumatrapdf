@@ -93,7 +93,8 @@ bool  OnFrameKeydown(WindowInfo* win, WPARAM key, LPARAM lparam, bool inTextfiel
 void  SwitchToDisplayMode(WindowInfo *win, DisplayMode displayMode, bool keepContinuous=false);
 void  ReloadDocument(WindowInfo *win, bool autorefresh=false);
 void  PaintTransparentRectangle(HDC hdc, RectI screenRc, RectI *rect, COLORREF selectionColor, BYTE alpha = 0x5f, int margin = 1);
-bool CanSendAsEmailAttachment(WindowInfo *win=NULL);
+bool  CanSendAsEmailAttachment(WindowInfo *win=NULL);
+bool  DoCachePageRendering(WindowInfo *win, int pageNo);
 
 WindowInfo* FindWindowInfoByFile(TCHAR *file);
 WindowInfo* FindWindowInfoByHwnd(HWND hwnd);

@@ -1094,6 +1094,19 @@ void WindowInfo::PageNoChanged(int pageNo)
     wnd->UpdateMessage(pageInfo);
 }
 
+bool DoCachePageRendering(WindowInfo *win, int pageNo)
+{
+    assert(win->dm && win->dm->engine);
+    if (!win->dm || !win->dm->engine || !win->dm->engine->IsImageCollection())
+        return true;
+
+    // cache large images (mainly photos), as shrinking them
+    // for every UI update (WM_PAINT) can cause notable lags
+    // TODO: stretching small images also causes minor lags
+    RectD page = win->dm->engine->PageMediabox(pageNo);
+    return page.dx * page.dy > 1024 * 1024;
+}
+
 /* Send the request to render a given page to a rendering thread */
 void WindowInfo::RenderPage(int pageNo)
 {
@@ -1103,7 +1116,7 @@ void WindowInfo::RenderPage(int pageNo)
     // don't render any plain images on the rendering thread,
     // they'll be rendered directly in DrawDocument during
     // WM_PAINT on the UI thread
-    if (dm->engine && dm->engine->IsImageCollection())
+    if (!DoCachePageRendering(this, pageNo))
         return;
 
     gRenderCache.Render(dm, pageNo, NULL);
@@ -1485,11 +1498,13 @@ static void DrawDocument(WindowInfo& win, HDC hdc, RECT *rcArea)
             continue;
 
         RectI bounds = pageInfo->pageOnScreen.Intersect(screen);
-        PaintPageFrameAndShadow(hdc, bounds, pageInfo->pageOnScreen, paintOnBlackWithoutShadow);
+        // don't paint the frame background for cached images
+        if (!(dm->engine && dm->engine->IsImageCollection()) || !DoCachePageRendering(&win, pageNo))
+            PaintPageFrameAndShadow(hdc, bounds, pageInfo->pageOnScreen, win.presentation);
 
         bool renderOutOfDateCue = false;
         UINT renderDelay = 0;
-        if (dm->engine && dm->engine->IsImageCollection())
+        if (!DoCachePageRendering(&win, pageNo))
             dm->engine->RenderPage(hdc, pageInfo->pageOnScreen, pageNo, dm->ZoomReal(pageNo), dm->Rotation());
         else
             renderDelay = gRenderCache.Paint(hdc, &bounds, dm, pageNo, pageInfo, &renderOutOfDateCue);

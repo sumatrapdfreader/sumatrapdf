@@ -137,6 +137,11 @@ SizeI SizeFromData(char *data, size_t len)
     // TIFF
     else if (!memcmp(data, "MM\x00\x2A", 4) || !memcmp(data, "II\x2A\x00", 4)) {
         // TODO: speed this up (if necessary)
+    }
+
+    if (0 == result.dx || 0 == result.dy) {
+        // let GDI+ extract the image size if we've failed
+        // (currently happens for animated GIFs and for all TIFFs)
         Bitmap *bmp = BitmapFromData(data, len);
         if (bmp)
             result = SizeI(bmp->GetWidth(), bmp->GetHeight());
@@ -341,6 +346,9 @@ bool ImagesEngine::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom,
     if (scaleX != 1.0f || scaleY != 1.0f)
         m.Scale(scaleX, scaleY, MatrixOrderPrepend);
     g.SetTransform(&m);
+
+    Color white(255, 255, 255);
+    g.FillRectangle(&SolidBrush(white), screenRect.x, screenRect.y, screenRect.dx, screenRect.dy);
 
     Status ok = g.DrawImage(bmp, 0, 0);
     return ok == Ok;
