@@ -498,6 +498,11 @@ public:
 
     virtual unsigned char *GetFileData(size_t *cbCount) { return NULL; }
 
+    // TODO: is there a better place to expose pageFileNames than through page labels?
+    virtual bool HasPageLabels() { return true; }
+    virtual TCHAR *GetPageLabel(int pageNo);
+    virtual int GetPageByLabel(const TCHAR *label);
+
 protected:
     bool LoadImageDir(const TCHAR *dirName);
 
@@ -549,6 +554,28 @@ RectD CImageDirEngine::PageMediabox(int pageNo)
         mediaboxes[pageNo-1] = RectI(PointI(), size).Convert<double>();
     }
     return mediaboxes[pageNo-1];
+}
+
+TCHAR *CImageDirEngine::GetPageLabel(int pageNo)
+{
+    if (pageNo < 1 || PageCount() < pageNo)
+        return BaseEngine::GetPageLabel(pageNo);
+
+    const TCHAR *fileName = path::GetBaseName(pageFileNames[pageNo - 1]);
+    return str::DupN(fileName, path::GetExt(fileName) - fileName);
+}
+
+int CImageDirEngine::GetPageByLabel(const TCHAR *label)
+{
+    for (size_t i = 0; i < pageFileNames.Count(); i++) {
+        const TCHAR *fileName = path::GetBaseName(pageFileNames[i]);
+        const TCHAR *fileExt = path::GetExt(fileName);
+        if (str::StartsWithI(fileName, label) &&
+            (fileName + str::Len(label) == fileExt || fileName[str::Len(label)] == '\0'))
+            return (int)i + 1;
+    }
+
+    return BaseEngine::GetPageByLabel(label);
 }
 
 Bitmap *CImageDirEngine::LoadImage(int pageNo)
