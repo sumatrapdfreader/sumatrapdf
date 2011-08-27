@@ -433,6 +433,9 @@ Next Page
 No matches were found
 Օրինակներ չի գտնվել
 
+No result found around line %u in file %s
+Ոչինչ չի գտնվել %u տողում %s ֆայլի
+
 No synchronization file found
 Չեն գտնվել համանման ֆայլեր
 
@@ -657,7 +660,4 @@ copying text
 
 printing document
 փաստաթուղթը տպվում է
-
-# Untranslated:
-#No result found around line %u in file %s
 
