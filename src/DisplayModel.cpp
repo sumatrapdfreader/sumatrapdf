@@ -560,8 +560,9 @@ RestartLayout:
         }
         SizeD pageSize = PageSizeAfterRotation(pageNo);
         RectI pos;
-        pos.dx = (int)(pageSize.dx * _zoomReal + 0.5);
-        pos.dy = (int)(pageSize.dy * _zoomReal + 0.5);
+        // don't add the full 0.5 for rounding to account for precision errors
+        pos.dx = (int)(pageSize.dx * _zoomReal + 0.499);
+        pos.dy = (int)(pageSize.dy * _zoomReal + 0.499);
 
         if (rowMaxPageDy < pos.dy)
             rowMaxPageDy = pos.dy;
