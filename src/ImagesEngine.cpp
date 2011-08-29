@@ -332,7 +332,11 @@ bool ImagesEngine::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom,
     g.SetCompositingQuality(CompositingQualityHighQuality);
     g.SetSmoothingMode(SmoothingModeAntiAlias);
     g.SetPageUnit(UnitPixel);
-    g.SetClip(Gdiplus::Rect(screenRect.x, screenRect.y, screenRect.dx, screenRect.dy));
+
+    Color white(255, 255, 255);
+    Gdiplus::Rect screenR(screenRect.x, screenRect.y, screenRect.dx, screenRect.dy);
+    g.SetClip(screenR);
+    g.FillRectangle(&SolidBrush(white), screenR);
 
     REAL scaleX = 1.0f, scaleY = 1.0f;
     if (bmp->GetHorizontalResolution() != 0.f)
@@ -346,9 +350,6 @@ bool ImagesEngine::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom,
     if (scaleX != 1.0f || scaleY != 1.0f)
         m.Scale(scaleX, scaleY, MatrixOrderPrepend);
     g.SetTransform(&m);
-
-    Color white(255, 255, 255);
-    g.FillRectangle(&SolidBrush(white), screenRect.x, screenRect.y, screenRect.dx, screenRect.dy);
 
     Status ok = g.DrawImage(bmp, 0, 0);
     return ok == Ok;

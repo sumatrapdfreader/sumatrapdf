@@ -1498,8 +1498,8 @@ static void DrawDocument(WindowInfo& win, HDC hdc, RECT *rcArea)
             continue;
 
         RectI bounds = pageInfo->pageOnScreen.Intersect(screen);
-        // don't paint the frame background for cached images
-        if (!(dm->engine && dm->engine->IsImageCollection()) || !DoCachePageRendering(&win, pageNo))
+        // don't paint the frame background for images
+        if (!(dm->engine && dm->engine->IsImageCollection()))
             PaintPageFrameAndShadow(hdc, bounds, pageInfo->pageOnScreen, win.presentation);
 
         bool renderOutOfDateCue = false;

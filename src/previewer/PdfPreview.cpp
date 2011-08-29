@@ -204,6 +204,11 @@ static LRESULT CALLBACK PreviewWndProc(HWND hwnd, UINT message, WPARAM wParam, L
         return OnVScroll(hwnd, wParam);
     case WM_KEYDOWN:
         return OnKeydown(hwnd, wParam);
+    case WM_LBUTTONDOWN:
+        SetFocus(hwnd);
+        return 0;
+    case WM_MOUSEWHEEL:
+        return OnVScroll(hwnd, GET_WHEEL_DELTA_WPARAM(wParam) > 0 ? SB_LINEUP : SB_LINEDOWN);
     case WM_DESTROY:
         return OnDestroy(hwnd);
     case UWM_PAINT_AGAIN:
