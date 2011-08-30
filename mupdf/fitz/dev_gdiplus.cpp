@@ -743,9 +743,12 @@ gdiplus_get_path(fz_path *path, fz_matrix ctm, int evenodd=1)
 static Pen *
 gdiplus_get_pen(Brush *brush, fz_matrix ctm, fz_stroke_state *stroke)
 {
-	Pen *pen = new Pen(brush, stroke->linewidth * fz_matrix_expansion(ctm));
+	// TODO: pens are too narrow at low zoom levels
+	float me = fz_matrix_expansion(ctm);
+	Pen *pen = new Pen(brush, stroke->linewidth * me);
+	pen->SetTransform(&Matrix(ctm.a / me, ctm.b / me, ctm.c / me, ctm.d / me, 0, 0));
 	
-	pen->SetMiterLimit(stroke->miterlimit);
+	pen->SetMiterLimit(stroke->miterlimit * me);
 	pen->SetLineCap(stroke->start_cap == 1 ? LineCapRound : stroke->start_cap == 2 ? LineCapSquare : LineCapFlat,
 		stroke->end_cap == 1 ? LineCapRound : stroke->end_cap == 2 ? LineCapSquare : LineCapFlat,
 		stroke->dash_cap == 1 ? DashCapRound : DashCapFlat);
