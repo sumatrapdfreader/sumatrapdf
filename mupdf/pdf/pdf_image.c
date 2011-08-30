@@ -318,6 +318,18 @@ pdf_load_jpx_image(fz_pixmap **imgp, pdf_xref *xref, fz_obj *dict)
 		fz_drop_colorspace(colorspace);
 	fz_drop_buffer(buf);
 
+	/* http://code.google.com/p/sumatrapdf/issues/detail?id=1610 */
+	obj = fz_dict_getsa(dict, "Decode", "D");
+	/* TODO: also decode images with Indexed colorspace */
+	if (obj && (!colorspace || strcmp(colorspace->name, "Indexed") != 0))
+	{
+		float decode[FZ_MAX_COLORS * 2];
+		int i;
+		for (i = 0; i < img->n * 2; i++)
+			decode[i] = fz_to_real(fz_array_get(obj, i));
+		fz_decode_tile(img, decode);
+	}
+
 	obj = fz_dict_getsa(dict, "SMask", "Mask");
 	if (fz_is_dict(obj))
 	{
