@@ -24,6 +24,8 @@ int showmd5 = 0;
 int savealpha = 0;
 int uselist = 1;
 int alphabits = 8;
+float gamma_value = 1;
+int invert = 0;
 
 fz_colorspace *colorspace;
 fz_glyph_cache *glyphcache;
@@ -63,6 +65,8 @@ static void usage(void)
 		"\t-d\tdisable use of display list\n"
 		"\t-5\tshow md5 checksums\n"
 		"\t-R -\trotate clockwise by given number of degrees\n"
+		"\t-G gamma\tgamma correct output\n"
+		"\t-I\tinvert output\n"
 		"\tpages\tcomma separated list of ranges\n");
 	exit(1);
 }
@@ -293,6 +297,11 @@ static void drawpage(pdf_xref *xref, int pagenum)
 			pdf_run_page(xref, page, dev, ctm);
 		fz_free_device(dev);
 
+		if (invert)
+			fz_invert_pixmap(pix);
+		if (gamma_value != 1)
+			fz_gamma_pixmap(pix, gamma_value);
+
 		if (output)
 		{
 			char buf[512];
@@ -410,7 +419,7 @@ int main(int argc, char **argv)
 	fz_error error;
 	int c;
 
-	while ((c = fz_getopt(argc, argv, "o:p:r:R:Aab:dgmtx5")) != -1)
+	while ((c = fz_getopt(argc, argv, "o:p:r:R:Aab:dgmtx5G:I")) != -1)
 	{
 		switch (c)
 		{
@@ -427,6 +436,8 @@ int main(int argc, char **argv)
 		case '5': showmd5++; break;
 		case 'g': grayscale++; break;
 		case 'd': uselist = 0; break;
+		case 'G': gamma_value = atof(fz_optarg); break;
+		case 'I': invert++; break;
 		default: usage(); break;
 		}
 	}

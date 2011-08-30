@@ -168,6 +168,8 @@ EXPORTS
 	fz_premultiply_pixmap
 	fz_alpha_from_gray
 	fz_bound_pixmap
+	fz_invert_pixmap
+	fz_gamma_pixmap
 	fz_scale_pixmap
 	fz_scale_pixmap_gridfit
 	fz_write_pnm

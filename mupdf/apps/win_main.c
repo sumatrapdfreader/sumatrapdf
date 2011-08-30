@@ -607,7 +607,7 @@ void winreloadfile(pdfapp_t *app)
 	if (fd < 0)
 		winerror(&gapp, fz_throw("cannot reload file '%s'", filename));
 
-	pdfapp_open(app, filename, fd);
+	pdfapp_open(app, filename, fd, 1);
 }
 
 void winopenuri(pdfapp_t *app, char *buf)
@@ -689,6 +689,8 @@ frameproc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 			info();
 			return 0;
 		}
+		if (wParam == SC_MAXIMIZE)
+			gapp.shrinkwrap = 0;
 		break;
 
 	case WM_SIZE:
@@ -867,7 +869,7 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShow
 	if (code == 0)
 		win32error("cannot convert filename to utf-8");
 
-	pdfapp_open(&gapp, filename, fd);
+	pdfapp_open(&gapp, filename, fd, 0);
 
 	while (GetMessage(&msg, NULL, 0, 0))
 	{

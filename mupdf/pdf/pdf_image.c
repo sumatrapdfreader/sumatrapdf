@@ -90,9 +90,8 @@ pdf_load_image_imp(fz_pixmap **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict, 
 		return fz_throw("image height is zero");
 	if (bpc == 0)
 		return fz_throw("image depth is zero");
-	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1432 */
 	if (bpc > 16)
-		return fz_throw("image depth is too large");
+		return fz_throw("image depth is too large: %d", bpc);
 	if (w > (1 << 16))
 		return fz_throw("image is too wide");
 	if (h > (1 << 16))

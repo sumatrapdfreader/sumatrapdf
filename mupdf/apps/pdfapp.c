@@ -179,7 +179,7 @@ static void pdfapp_open_xps(pdfapp_t *app, char *filename, int fd)
 	app->pagecount = xps_count_pages(app->xps);
 }
 
-void pdfapp_open(pdfapp_t *app, char *filename, int fd)
+void pdfapp_open(pdfapp_t *app, char *filename, int fd, int reload)
 {
 	if (strstr(filename, ".xps") || strstr(filename, ".XPS") || strstr(filename, ".rels"))
 		pdfapp_open_xps(app, filename, fd);
@@ -188,7 +188,6 @@ void pdfapp_open(pdfapp_t *app, char *filename, int fd)
 
 	app->cache = fz_new_glyph_cache();
 
-	app->shrinkwrap = 1;
 	if (app->pageno < 1)
 		app->pageno = 1;
 	if (app->pageno > app->pagecount)
@@ -197,9 +196,14 @@ void pdfapp_open(pdfapp_t *app, char *filename, int fd)
 		app->resolution = MINRES;
 	if (app->resolution > MAXRES)
 		app->resolution = MAXRES;
-	app->rotate = 0;
-	app->panx = 0;
-	app->pany = 0;
+
+	if (!reload)
+	{
+		app->shrinkwrap = 1;
+		app->rotate = 0;
+		app->panx = 0;
+		app->pany = 0;
+	}
 
 	pdfapp_showpage(app, 1, 1, 1);
 }
@@ -889,6 +893,7 @@ void pdfapp_onkey(pdfapp_t *app, int c)
 	 */
 
 	case 'r':
+		panto = DONT_PAN;
 		oldpage = -1;
 		winreloadfile(app);
 		break;

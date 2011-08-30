@@ -636,6 +636,8 @@ void fz_copy_pixmap_rect(fz_pixmap *dest, fz_pixmap *src, fz_bbox r);
 void fz_premultiply_pixmap(fz_pixmap *pix);
 fz_pixmap *fz_alpha_from_gray(fz_pixmap *gray, int luminosity);
 fz_bbox fz_bound_pixmap(fz_pixmap *pix);
+void fz_invert_pixmap(fz_pixmap *pix);
+void fz_gamma_pixmap(fz_pixmap *pix, float gamma);
 
 fz_pixmap *fz_scale_pixmap(fz_pixmap *src, float x, float y, float w, float h);
 fz_pixmap *fz_scale_pixmap_gridfit(fz_pixmap *src, float x, float y, float w, float h, int gridfit);

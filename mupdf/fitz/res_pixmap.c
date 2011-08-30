@@ -281,6 +281,44 @@ fz_alpha_from_gray(fz_pixmap *gray, int luminosity)
 	return alpha;
 }
 
+void
+fz_invert_pixmap(fz_pixmap *pix)
+{
+	unsigned char *s = pix->samples;
+	int k, x, y;
+
+	for (y = 0; y < pix->h; y++)
+	{
+		for (x = 0; x < pix->w; x++)
+		{
+			for (k = 0; k < pix->n - 1; k++)
+				s[k] = 255 - s[k];
+			s += pix->n;
+		}
+	}
+}
+
+void
+fz_gamma_pixmap(fz_pixmap *pix, float gamma)
+{
+	unsigned char gamma_map[256];
+	unsigned char *s = pix->samples;
+	int k, x, y;
+
+	for (k = 0; k < 256; k++)
+		gamma_map[k] = pow(k / 255.0f, gamma) * 255;
+
+	for (y = 0; y < pix->h; y++)
+	{
+		for (x = 0; x < pix->w; x++)
+		{
+			for (k = 0; k < pix->n - 1; k++)
+				s[k] = gamma_map[s[k]];
+			s += pix->n;
+		}
+	}
+}
+
 /*
  * Write pixmap to PNM file (without alpha channel)
  */
