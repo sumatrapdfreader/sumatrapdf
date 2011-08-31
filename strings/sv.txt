@@ -14,6 +14,7 @@ Contributor: Sebastian Rasmussen
 Contributor: Simon B.
 Contributor: Tommy G.
 Contributor: Mattias D.
+Contributor: alex
 
 &About
 &Om
@@ -27,8 +28,14 @@ Contributor: Mattias D.
 &Back\tAlt+Left Arrow
 Tillbaka\tAlt+Pil vänster
 
+&Book View\tCtrl+8
+&Bokvy\tCtrl+8
+
 &Close\tCtrl+W
 &Stäng\tCtrl+W
+
+&Copy Selection
+&Kopiera markering
 
 &Copy Selection\tCtrl+C
 Kopiera markering\tCtrl+C
@@ -38,6 +45,9 @@ Fråga mig inte igen
 
 &Even pages only
 Endast &jämna sidor
+
+&Facing\tCtrl+7
+&Sida vid sida\tCtrl+7
 
 &File
 &Arkiv
@@ -87,6 +97,9 @@ Endast &udda sidor
 &Open\tCtrl+O
 &Öppna...\tCtrl+O
 
+&Open Document
+&Öppna dokument
+
 &Options...
 &Inställningar...
 
@@ -95,6 +108,9 @@ Endast &udda sidor
 
 &Previous Page\tLeft Arrow
 Föregående sida\t<-
+
+&Print...
+&Skriv ut...
 
 &Print...\tCtrl+P
 Skriv &ut...\tCtrl+P
@@ -108,6 +124,12 @@ Skriv &ut...\tCtrl+P
 &Remember these settings for each document
 Kom ihåg dessa inställningar för &varje dokument
 
+&Remove Document
+&Ta bort dokument
+
+&Save As...
+&Spara som...
+
 &Save As...\tCtrl+S
 Spara so&m...\tCtrl+S
 
@@ -116,6 +138,9 @@ Alternati&v
 
 &Shrink pages to printable area (if necessary)
 &Krymp sidor (om nödvändigt) så de ryms
+
+&Single Page\tCtrl+6
+&Enkel sida\tCtrl+6
 
 &Skip this version
 Hoppa över denna version
@@ -135,8 +160,23 @@ Vi&sa
 (of %d)
 (av %d)
 
+(page %s)
+(sida %s)
+
 About SumatraPDF
 Om SumatraPDF
+
+Add Favorite
+Lägg till favorit
+
+Add page %s to favorites
+Lägg till sida %s i favoriter
+
+Add page %s to favorites with (optional) name:
+Lägg till sida %s i favoriter med (valfritt) namn:
+
+Add to favorites
+Lägg till i favoriter
 
 Advanced
 Avancerad
@@ -204,6 +244,12 @@ Fortlöpande uppslag
 Contribute Translation
 Bidra med översättning
 
+Copy &Link Address
+Kopiera länkadress
+
+Copy Co&mment
+Kopiera kommentar
+
 Copying text was denied (copying as image only)
 Textkopiering tilläts ej (kopierar som bild)
 
@@ -219,6 +265,9 @@ Kunde ej visa sidan
 Created:
 Skapad:
 
+Current file
+Aktuell fil
+
 Custom &Zoom...\tCtrl+Y
 &Anpassad zoom...\tCtrl+Y
 
@@ -233,6 +282,9 @@ SumatraPDF kan ej göras förvald i portabelt läge
 
 Denied Permissions:
 Saknade Tillstånd:
+
+DjVu documents
+DjVu-dokument
 
 Document Properties
 Dokumentegenskaper
@@ -252,6 +304,12 @@ Ange lösenord för %s
 Enter the command-line to invoke when you double-click on the PDF document:
 Ange kommandorad att aktivera när du dubbelklickar på PDF-dokumentet:
 
+Error loading %s
+Fel vid öppning av %s
+
+F&avorites
+F&avoriter
+
 F&orward\tAlt+Right Arrow
 Framåt\tAlt+Pil höger
 
@@ -263,6 +321,9 @@ Uppslag
 
 Failed to save a file
 Kan inte spara filen.
+
+Favorites
+Favoriter
 
 File Size:
 Filstorlek:
@@ -312,14 +373,26 @@ Anpassa till helsida
 Found text at page %s
 Hittade text på sidan %s
 
+Found text at page %s (again)
+Hittade text på sida %s (igen)
+
+Frequently Read
+Mest lästa
+
 GB
 GB
 
 Go to page
 Gå till sida
 
+Hide frequently read
+Dölj mest lästa
+
 Hint: Use the F3 key for finding again
 Tips: Tryck F3 för att söka vidare
+
+Image files (*.%s)
+Bildfiler (*.%s)
 
 KB
 KB
@@ -366,6 +439,9 @@ OK
 Open
 Öppna
 
+Open a document...
+Öppna ett dokument...
+
 Open in &Adobe Reader
 Öppna i Adobe &Reader
 
@@ -374,6 +450,9 @@ Open in &Foxit Reader
 
 Open in PDF-XChange
 Öppna i PDF-XChange
+
+P&roperties
+E&genskaper
 
 P&roperties\tCtrl+D
 &Egenskaper...\tCtrl+D
@@ -393,6 +472,9 @@ PDF-dokument
 Pa&ge...\tCtrl+G
 Sida...\tCtrl+G
 
+Page %s
+Sida %s
+
 Page Size:
 Sidstorlek:
 
@@ -408,20 +490,41 @@ Sida:
 Please wait - rendering...
 Ett ögonblick - förbereder...
 
+Postscript documents
+Postscript-dokument
+
 Pr&esentation\tCtrl+L
 Pr&esentation\tCtrl+L
 
 Previous Page
 Föregående sida
 
+Print
+Skriv ut
+
 Print range
 Skriv ut urval
+
+Printer with given name doesn't exist
+Det finns ingen skrivade med angivet namn
+
+Printing is still in progress. Abort and start over?
+Utskriften pågår fortfarande. Avbryt och börja om?
+
+Printing page %d of %d...
+Skriver ut sida %d av %d...
 
 Printing problem.
 Utskriftsproblem.
 
 Remember &opened files
 Kom ihåg öppnade &filer
+
+Remove from favorites
+Ta bort från favoriter
+
+Remove page %s from favorites
+Ta bort sida %s från favoriter
 
 Rotate &Left\tCtrl+Shift+-
 Rotera åt vänster\tCtrl+Shift+-
@@ -432,8 +535,14 @@ Rotera åt höger\tCtrl+Shift++
 Save As
 Spara som
 
+Save S&hortcut...\tCtrl+Shift+S
+Spara g&enväg...\tCtrl+Shift+S
+
 Searching %d of %d...
 Söker %d av %d...
+
+Select &All
+Markera &alla
 
 Select &All\tCtrl+A
 Välj &Allt\tCtrl+A
@@ -453,11 +562,20 @@ Visa verktygsfält
 Show &pages continuously
 Visa sidor fortlöpande
 
+Show Favorites
+Visa favoriter
+
+Show frequently read
+Visa mest lästa
+
 Show the &bookmarks sidebar when available
 Visa &bokmärken när de finns
 
 Single Page
 Enkel sida
+
+Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
+Ledsen, det där borde inte ha hänt!\n\nVar god tryck 'Avbryt', om du vill hjälpa oss att korrigera orsaken till denna krash.
 
 Source file %s has no synchronization point
 Källfilen %s har ingen synkroniseringspunkt
@@ -501,6 +619,9 @@ Besök webbplats
 Warning
 Varning
 
+XPS documents
+XPS-dokument
+
 You have the latest version.
 Du har den senaste versionen.
 
@@ -529,50 +650,10 @@ printing document
 skriver ut dokumentet
 
 # Untranslated:
-#&Book View\tCtrl+8
-#&Copy Selection
-#&Facing\tCtrl+7
-#&Open Document
 #&Pin Document
-#&Print...
-#&Remove Document
-#&Save As...
-#&Single Page\tCtrl+6
-#(page %s)
-#Add Favorite
-#Add page %s to favorites
-#Add page %s to favorites with (optional) name:
-#Add to favorites
 #All supported documents
 #Bookmark Shortcuts
 #Bookmark shortcut to page %s of %s
 #Comic books
-#Copy &Link Address
-#Copy Co&mment
 #Could not obtain Printer properties
-#Current file
-#DjVu documents
-#Error loading %s
-#F&avorites
-#Favorites
-#Found text at page %s (again)
-#Frequently Read
-#Hide frequently read
-#Image files (*.%s)
-#Open a document...
-#P&roperties
-#Page %s
-#Postscript documents
-#Print
-#Printer with given name doesn't exist
-#Printing is still in progress. Abort and start over?
-#Printing page %d of %d...
-#Remove from favorites
-#Remove page %s from favorites
-#Save S&hortcut...\tCtrl+Shift+S
-#Select &All
-#Show Favorites
-#Show frequently read
-#Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
-#XPS documents
 
