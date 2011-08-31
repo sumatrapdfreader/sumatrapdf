@@ -79,7 +79,6 @@ struct pdf_csi_s
 
 	int xbalance;
 	int in_text;
-	int in_array;
 	int in_hidden_ocg; /* SumatraPDF: support inline OCGs */
 
 	/* path object state */
@@ -746,7 +745,6 @@ pdf_new_csi(pdf_xref *xref, fz_device *dev, fz_matrix ctm, char *target)
 
 	csi->xbalance = 0;
 	csi->in_text = 0;
-	csi->in_array = 0;
 	csi->in_hidden_ocg = 0; /* SumatraPDF: support inline OCGs */
 
 	csi->path = fz_new_path();
@@ -2226,17 +2224,11 @@ static fz_error
 pdf_run_stream(pdf_csi *csi, fz_obj *rdb, fz_stream *file, char *buf, int buflen)
 {
 	fz_error error;
-	int tok;
-	int len;
-	int save_in_array;
-	int save_in_text;
+	int tok, len, in_array;
 
 	/* make sure we have a clean slate if we come here from flush_text */
 	pdf_clear_stack(csi);
-	save_in_array = csi->in_array;
-	save_in_text = csi->in_text;
-	csi->in_array = 0;
-	csi->in_text = 0;
+	in_array = 0;
 
 	while (1)
 	{
@@ -2247,11 +2239,11 @@ pdf_run_stream(pdf_csi *csi, fz_obj *rdb, fz_stream *file, char *buf, int buflen
 		if (error)
 			return fz_rethrow(error, "lexical error in content stream");
 
-		if (csi->in_array)
+		if (in_array)
 		{
 			if (tok == PDF_TOK_CLOSE_ARRAY)
 			{
-				csi->in_array = 0;
+				in_array = 0;
 			}
 			else if (tok == PDF_TOK_INT || tok == PDF_TOK_REAL)
 			{
@@ -2261,7 +2253,6 @@ pdf_run_stream(pdf_csi *csi, fz_obj *rdb, fz_stream *file, char *buf, int buflen
 			else if (tok == PDF_TOK_STRING)
 			{
 				pdf_show_string(csi, (unsigned char *)buf, len);
-				csi->in_array = 1; /* SumatraPDF: TODO: make in_array local */
 			}
 			else if (tok == PDF_TOK_KEYWORD)
 			{
@@ -2271,7 +2262,7 @@ pdf_run_stream(pdf_csi *csi, fz_obj *rdb, fz_stream *file, char *buf, int buflen
 					return fz_throw("syntax error in array");
 			}
 			else if (tok == PDF_TOK_EOF)
-				goto end;
+				return fz_okay;
 			else
 				return fz_throw("syntax error in array");
 		}
@@ -2280,7 +2271,7 @@ pdf_run_stream(pdf_csi *csi, fz_obj *rdb, fz_stream *file, char *buf, int buflen
 		{
 		case PDF_TOK_ENDSTREAM:
 		case PDF_TOK_EOF:
-			goto end;
+			return fz_okay;
 
 		case PDF_TOK_OPEN_ARRAY:
 			if (!csi->in_text)
@@ -2291,7 +2282,7 @@ pdf_run_stream(pdf_csi *csi, fz_obj *rdb, fz_stream *file, char *buf, int buflen
 			}
 			else
 			{
-				csi->in_array = 1;
+				in_array = 1;
 			}
 			break;
 
@@ -2332,18 +2323,12 @@ pdf_run_stream(pdf_csi *csi, fz_obj *rdb, fz_stream *file, char *buf, int buflen
 			if (error)
 				return fz_rethrow(error, "cannot run keyword");
 			pdf_clear_stack(csi);
-			csi->in_array = 0;  /* SumatraPDF: TODO: make in_array local */
 			break;
 
 		default:
 			return fz_throw("syntax error in content stream");
 		}
 	}
-
-end:
-	csi->in_array = save_in_array;
-	csi->in_text = save_in_text;
-	return fz_okay;
 }
 
 /*
@@ -2360,7 +2345,10 @@ pdf_run_buffer(pdf_csi *csi, fz_obj *rdb, fz_buffer *contents)
 	int len = sizeof csi->xref->scratch;
 	char *buf = fz_malloc(len); /* we must be re-entrant for type3 fonts */
 	fz_stream *file = fz_open_buffer(contents);
+	int save_in_text = csi->in_text;
+	csi->in_text = 0;
 	error = pdf_run_stream(csi, rdb, file, buf, len);
+	csi->in_text = save_in_text;
 	fz_close(file);
 	fz_free(buf);
 	if (error)

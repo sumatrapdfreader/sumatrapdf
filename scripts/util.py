@@ -155,7 +155,7 @@ def build_installer_data(dir):
   zf.write(exe, "SumatraPDF.exe")
   for f in ["libmupdf.dll", "npPdfViewer.dll", "PdfFilter.dll", "PdfPreview.dll", "uninstall.exe"]:
     zf.write(os.path.join(dir, f), f)
-  font_path = os.path.join("mupdf", "fonts", "droid", "DroidSansFallback.ttf")
+  font_path = os.path.join("mupdf", "fonts", "DroidSansFallback.ttf")
   zf.write(font_path, "DroidSansFallback.ttf")
   zf.close()
 

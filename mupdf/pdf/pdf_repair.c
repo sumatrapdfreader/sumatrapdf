@@ -271,7 +271,7 @@ pdf_repair_xref(pdf_xref *xref, char *buf, int bufsize)
 			gen = atoi(buf);
 		}
 
-		if (tok == PDF_TOK_OBJ)
+		else if (tok == PDF_TOK_OBJ)
 		{
 			error = pdf_repair_obj(xref->file, buf, bufsize, &stm_ofs, &stm_len, &encrypt, &id);
 			if (error)
@@ -304,7 +304,7 @@ pdf_repair_xref(pdf_xref *xref, char *buf, int bufsize)
 		}
 
 		/* trailer dictionary */
-		if (tok == PDF_TOK_OPEN_DICT)
+		else if (tok == PDF_TOK_OPEN_DICT)
 		{
 			error = pdf_parse_dict(&dict, xref, xref->file, buf, bufsize);
 			if (error)
@@ -354,10 +354,10 @@ pdf_repair_xref(pdf_xref *xref, char *buf, int bufsize)
 			fz_drop_obj(dict);
 		}
 
-		if (tok == PDF_TOK_ERROR)
+		else if (tok == PDF_TOK_ERROR)
 			fz_read_byte(xref->file);
 
-		if (tok == PDF_TOK_EOF)
+		else if (tok == PDF_TOK_EOF)
 			break;
 	}
 
