@@ -80,10 +80,17 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL)
 
     HDC hdc = pd.hdc;
     BaseEngine& engine = *pd.engine;
+    ScopedMem<TCHAR> fileName;
 
     DOCINFO di = { 0 };
     di.cbSize = sizeof (DOCINFO);
-    di.lpszDocName = engine.FileName();
+    if (gPluginMode) {
+        fileName.Set(ExtractFilenameFromURL(gPluginURL));
+        // fall back to a generic "filename" instead of the more confusing temporary filename
+        di.lpszDocName = fileName ? fileName : _T("filename");
+    }
+    else
+        di.lpszDocName = engine.FileName();
 
     int current = 0, total = 0;
     for (size_t i = 0; i < pd.ranges.Count(); i++) {

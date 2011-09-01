@@ -291,6 +291,34 @@ bool IsExeAssociatedWithPdfExtension()
     return path::IsSame(exePath, argList[0]);
 }
 
+// caller needs to free() the result
+TCHAR *ExtractFilenameFromURL(const TCHAR *url)
+{
+    ScopedMem<TCHAR> urlName(str::Dup(url));
+    // try to extract the file name from the URL (last path component before query or hash)
+    str::TransChars(urlName, _T("/?#"), _T("\\\0\0"));
+    urlName.Set(str::Dup(path::GetBaseName(urlName)));
+    // unescape hex-escapes (these are usually UTF-8)
+    if (str::FindChar(urlName, '%')) {
+        ScopedMem<char> utf8Name(str::conv::ToUtf8(urlName));
+        char *src = utf8Name, *dst = utf8Name;
+        while (*src) {
+            if (*src == '%' && isxdigit(*(src + 1)) && isxdigit(*(src + 2))) {
+                char hex[3] = { *(src + 1), *(src + 2), '\0' };
+                *dst++ = (char)strtoul(hex, NULL, 16);
+                src += 3;
+            }
+            else
+                *dst++ = *src++;
+        }
+        *dst = '\0';
+        urlName.Set(str::conv::FromUtf8(utf8Name));
+    }
+    if (str::IsEmpty(urlName.Get()))
+        return NULL;
+    return urlName.StealData();
+}
+
 // List of rules used to detect TeX editors.
 
 // type of path information retrieved from the registy

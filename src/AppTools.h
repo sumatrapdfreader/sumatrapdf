@@ -65,6 +65,8 @@ void AdjustRemovableDriveLetter(TCHAR *path);
 void DoAssociateExeWithPdfExtension(HKEY hkey);
 bool IsExeAssociatedWithPdfExtension();
 
+TCHAR *ExtractFilenameFromURL(const TCHAR *url);
+
 LPTSTR AutoDetectInverseSearchCommands(HWND hwndCombo=NULL);
 void   DDEExecute(LPCTSTR server, LPCTSTR topic, LPCTSTR command);
 

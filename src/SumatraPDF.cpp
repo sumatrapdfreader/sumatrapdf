@@ -2028,35 +2028,6 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
     }
 }
 
-// caller needs to free() the result
-static TCHAR *ExtractFilenameFromURL(const TCHAR *url)
-{
-    ScopedMem<TCHAR> urlName(str::Dup(url));
-    // try to extract the file name from the URL (last path component before query or hash)
-    str::TransChars(urlName, _T("/?#"), _T("\\\0\0"));
-    urlName.Set(str::Dup(path::GetBaseName(urlName)));
-    // unescape hex-escapes (these are usually UTF-8)
-    if (str::FindChar(urlName, '%')) {
-        ScopedMem<char> utf8Name(str::conv::ToUtf8(urlName));
-        char *src = utf8Name, *dst = utf8Name;
-        while (*src) {
-            if (*src == '%' && isxdigit(*(src + 1)) && isxdigit(*(src + 2))) {
-                char hex[3] = { *(src + 1), *(src + 2), '\0' };
-                *dst++ = (char)strtoul(hex, NULL, 16);
-                src += 3;
-            }
-            else
-                *dst++ = *src++;
-        }
-        *dst = '\0';
-        urlName.Set(str::conv::FromUtf8(utf8Name));
-    }
-    // fall back to a generic "filename" instead of the more confusing temporary filename
-    if (str::IsEmpty(urlName.Get()))
-        return str::Dup(_T("filename"));
-    return urlName.StealData();
-}
-
 static void OnMenuSaveAs(WindowInfo& win)
 {
     if (!HasPermission(Perm_DiskAccess)) return;
@@ -2067,7 +2038,8 @@ static void OnMenuSaveAs(WindowInfo& win)
     ScopedMem<TCHAR> urlName;
     if (gPluginMode) {
         urlName.Set(ExtractFilenameFromURL(gPluginURL));
-        srcFileName = urlName;
+        // fall back to a generic "filename" instead of the more confusing temporary filename
+        srcFileName = urlName ? urlName : _T("filename");
     }
 
     assert(srcFileName);
