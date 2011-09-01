@@ -82,7 +82,9 @@ struct ScrollState {
 };
 
 class DisplayModel;
+#ifdef BUILD_CHM_SUPPORT
 class ChmEngine;
+#endif
 
 class DisplayModelCallback : public PasswordUI {
 public:
@@ -205,7 +207,9 @@ public:
     // called when we decide that the display needs to be redrawn
     void            RepaintDisplay() { if (dmCb) dmCb->Repaint(); }
 
+#ifdef BUILD_CHM_SUPPORT
     ChmEngine *     GetChmEngine() const;
+#endif
 
 protected:
 

@@ -10,7 +10,9 @@ enum EngineType {
     Engine_Image, Engine_ImageDir, Engine_ComicBook,
     Engine_PDF, Engine_XPS,
     Engine_PS,
+#ifdef BUILD_CHM_SUPPORT
     Engine_Chm,
+#endif
 };
 
 #include "BaseEngine.h"
@@ -18,7 +20,9 @@ enum EngineType {
 #include "ImagesEngine.h"
 #include "PdfEngine.h"
 #include "PsEngine.h"
+#ifdef BUILD_CHM_SUPPORT
 #include "ChmEngine.h"
+#endif
 
 class EngineManager {
 public:
@@ -51,9 +55,11 @@ RetrySniffing:
         } else if (PsEngine::IsSupportedFile(filePath, sniff) && engineType != Engine_PS) {
             engine = PsEngine::CreateFromFileName(filePath);
             engineType = Engine_PS;
+#ifdef BUILD_CHM_SUPPORT
         } else if (ChmEngine::IsSupportedFile(filePath, sniff) && engineType != Engine_Chm) {
             engine = ChmEngine::CreateFromFileName(filePath);
             engineType = Engine_Chm;
+#endif
         }
 
         if (!engine && !sniff) {

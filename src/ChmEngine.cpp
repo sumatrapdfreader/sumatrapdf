@@ -8,6 +8,9 @@
 #include "TrivialHtmlParser.h"
 #include "HtmlWindow.h"
 
+#define CHM_MT
+#define PPC_BSTR
+
 #include <inttypes.h>
 #include <chm_lib.h>
 

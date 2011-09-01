@@ -676,12 +676,14 @@ static bool LoadDocIntoWindow(TCHAR *fileName, WindowInfo& win,
             win.dm->CopyNavHistory(*prevModel);
         }
         delete prevModel;
+#ifdef BUILD_CHM_SUPPORT
         ChmEngine *chmEngine = win.dm->GetChmEngine();
         if (chmEngine) {
             // TODO: temporary hack, we'll probably need a spearate
             // hwnd just for html browser
             chmEngine->HookToHwndAndDisplayIndex(win.hwndCanvas);
         }
+#endif
     } else if (allowFailure) {
         DBG_OUT("failed to load file %s\n", fileName);
         delete prevModel;
@@ -2088,8 +2090,10 @@ static void OnMenuSaveAs(WindowInfo& win)
     case Engine_ComicBook: fileFilter.Append(_TR("Comic books")); break;
     case Engine_Image:  fileFilter.AppendFmt(_TR("Image files (*.%s)"), defExt + 1); break;
     case Engine_PS:     fileFilter.Append(_TR("Postscript documents")); break;
+#ifdef BUILD_CHM_SUPPORT
     // TODO: translate after 1.7 is released
     case Engine_Chm:    fileFilter.Append(_T("CHM documents")); break;
+#endif
     default:            fileFilter.Append(_TR("PDF documents")); break;
     }
     fileFilter.AppendFmt(_T("\1*%s\1"), defExt);
@@ -2326,8 +2330,10 @@ static void OnMenuOpen(WindowInfo& win)
         { _TR("DjVu documents"),        _T("*.djvu"),       true },
         { _TR("Postscript documents"),  _T("*.ps;*.eps"),   PsEngine::IsAvailable() },
         { _TR("Comic books"),           _T("*.cbz;*.cbr"),  true },
+#ifdef BUILD_CHM_SUPPORT
         // TODO: translate after 1.7 is released
         { _T("CHM documents"),          _T("*.chm"),        true },
+#endif
     };
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling
@@ -4070,9 +4076,11 @@ InitMouseWheelInfo:
         case WM_MOUSEWHEEL:
             if (!win)
                 break;
+#ifdef BUILD_CHM_SUPPORT
             // TODO: for HTMLWindows inside hwndCanvas, fix the infinite recursion
             if (win->IsDocLoaded() && Engine_Chm == win->dm->engineType)
                 break;
+#endif
             // Pass the message to the canvas' window procedure
             // (required since the canvas itself never has the focus and thus
             // never receives WM_MOUSEWHEEL messages)
@@ -4154,8 +4162,10 @@ static bool RegisterWinClass(HINSTANCE hinst)
     if (!RegisterNotificationsWndClass(hinst))
         return false;
 
+#ifdef BUILD_CHM_SUPPORT
     if (!RegisterChmWinClass(hinst))
         return false;
+#endif
 
     return true;
 }

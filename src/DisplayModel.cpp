@@ -953,6 +953,7 @@ void DisplayModel::GoToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
     if (!ValidPageNo(pageNo))
         return;
 
+#ifdef BUILD_CHM_SUPPORT
     ChmEngine *chmEngine = GetChmEngine();
     if (chmEngine) {
         chmEngine->DisplayPage(pageNo);
@@ -961,6 +962,7 @@ void DisplayModel::GoToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
         RepaintDisplay();
         return;
     }
+#endif
 
     if (addNavPt)
         AddNavPoint();
@@ -1072,6 +1074,7 @@ void DisplayModel::SetPresentationMode(bool enable)
    (e.g. because already was at the last page) */
 bool DisplayModel::GoToNextPage(int scrollY)
 {
+#ifdef BUILD_CHM_SUPPORT
     ChmEngine *chmEngine = GetChmEngine();
     if (chmEngine) {
         int pageNo = _startPage + 1;
@@ -1080,6 +1083,7 @@ bool DisplayModel::GoToNextPage(int scrollY)
         GoToPage(pageNo, 0);
         return true;
     }
+#endif
 
     int columns = columnsFromDisplayMode(displayMode());
     int currPageNo = CurrentPageNo();
@@ -1100,6 +1104,7 @@ bool DisplayModel::GoToNextPage(int scrollY)
 
 bool DisplayModel::GoToPrevPage(int scrollY)
 {
+#ifdef BUILD_CHM_SUPPORT
     ChmEngine *chmEngine = GetChmEngine();
     if (chmEngine) {
         int pageNo = _startPage - 1;
@@ -1108,6 +1113,7 @@ bool DisplayModel::GoToPrevPage(int scrollY)
         GoToPage(pageNo, 0);
         return true;
     }
+#endif
 
     int columns = columnsFromDisplayMode(displayMode());
     int currPageNo = CurrentPageNo();
@@ -1517,6 +1523,7 @@ DisplayModel *DisplayModel::CreateFromFileName(const TCHAR *fileName, DisplayMod
     return dm;
 }
 
+#ifdef BUILD_CHM_SUPPORT
 ChmEngine *DisplayModel::GetChmEngine() const
 {
     if (Engine_Chm != engineType)
@@ -1524,3 +1531,4 @@ ChmEngine *DisplayModel::GetChmEngine() const
 
     return static_cast<ChmEngine*>(engine);
 }
+#endif
