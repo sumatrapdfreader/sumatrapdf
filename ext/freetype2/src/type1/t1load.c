@@ -2140,6 +2140,7 @@
         }
       }
     }
+    else face->len_buildchar = 0; /* SumatraPDF: fix assertion */
 
 #endif /* T1_CONFIG_OPTION_NO_MM_SUPPORT */
 
