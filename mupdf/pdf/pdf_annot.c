@@ -177,13 +177,14 @@ pdf_create_annot(fz_rect rect, fz_obj *base_obj, fz_buffer *content, fz_obj *res
 {
 	pdf_annot *annot;
 	pdf_xobject *form;
+	int rotate = fz_to_int(fz_dict_gets(fz_dict_gets(base_obj, "MK"), "R")); 
 
 	form = fz_malloc(sizeof(pdf_xobject));
 	memset(form, 0, sizeof(pdf_xobject));
 	form->refs = 1;
-	form->matrix = fz_identity;
-	form->bbox.x1 = rect.x1 - rect.x0;
-	form->bbox.y1 = rect.y1 - rect.y0;
+	form->matrix = fz_rotate(rotate);
+	form->bbox.x1 = (rotate % 180 == 0) ? rect.x1 - rect.x0 : rect.y1 - rect.y0;
+	form->bbox.y1 = (rotate % 180 == 0) ? rect.y1 - rect.y0 : rect.x1 - rect.x0;
 	form->isolated = 1;
 	form->contents = content;
 	form->resources = resources;
@@ -478,7 +479,7 @@ pdf_update_tx_widget_annot(pdf_xref *xref, fz_obj *obj)
 	fz_obj *ap, *res, *value;
 	fz_rect rect;
 	fz_buffer *content, *base_ap;
-	int flags, align, is_multiline;
+	int flags, align, rotate, is_multiline;
 	float font_size, x, y;
 	char *font_name;
 	unsigned short *ucs2, *rest;
@@ -498,6 +499,8 @@ pdf_update_tx_widget_annot(pdf_xref *xref, fz_obj *obj)
 
 	res = pdf_dict_get_inheritable(xref, obj, "DR");
 	rect = pdf_to_rect(fz_dict_gets(obj, "Rect"));
+	rotate = fz_to_int(fz_dict_gets(fz_dict_gets(obj, "MK"), "R"));
+	rect = fz_transform_rect(fz_rotate(rotate), rect);
 
 	flags = fz_to_int(fz_dict_gets(obj, "Ff"));
 	is_multiline = (flags & (1 << 12)) != 0;
@@ -547,6 +550,7 @@ pdf_update_tx_widget_annot(pdf_xref *xref, fz_obj *obj)
 	fz_free(ucs2);
 	fz_buffer_printf(content, "ET Q EMC");
 
+	rect = fz_transform_rect(fz_rotate(-rotate), rect);
 	return pdf_create_annot(rect, fz_keep_obj(obj), content, res ? fz_keep_obj(res) : NULL);
 }
 
