@@ -1331,7 +1331,7 @@ pdf_run_extgstate(pdf_csi *csi, fz_obj *rdb, fz_obj *extgstate)
 
 		else if (!strcmp(s, "TR"))
 		{
-			if (fz_is_name(val) && strcmp(fz_to_name(val), "Identity"))
+			if (!fz_is_name(val) || strcmp(fz_to_name(val), "Identity"))
 				fz_warn("ignoring transfer function");
 		}
 	}

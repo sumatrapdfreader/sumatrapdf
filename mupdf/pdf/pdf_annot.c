@@ -168,6 +168,7 @@ pdf_transform_annot(pdf_annot *annot)
 	h = (rect.y1 - rect.y0) / (bbox.y1 - bbox.y0);
 	x = rect.x0 - bbox.x0;
 	y = rect.y0 - bbox.y0;
+
 	annot->matrix = fz_concat(fz_scale(w, h), fz_translate(x, y));
 }
 
