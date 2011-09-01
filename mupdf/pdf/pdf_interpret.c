@@ -1123,7 +1123,7 @@ pdf_run_xobject(pdf_csi *csi, fz_obj *resources, pdf_xobject *xobj, fz_matrix tr
 	popmask = 0;
 
 	/* apply xobject's transform matrix */
-	transform = fz_concat(transform, xobj->matrix);
+	transform = fz_concat(xobj->matrix, transform);
 	gstate->ctm = fz_concat(transform, gstate->ctm);
 
 	/* apply soft mask, create transparency group and reset state */
