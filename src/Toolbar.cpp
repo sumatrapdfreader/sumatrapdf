@@ -63,47 +63,40 @@ static BOOL IsVisibleToolbarButton(WindowInfo *win, int buttonNo)
     return TRUE;
 }
 
-static LPARAM ToolbarButtonEnabledState(WindowInfo *win, int buttonNo)
+static bool IsToolbarButtonEnabled(WindowInfo *win, int buttonNo)
 {
-    const LPARAM enabled = (LPARAM)MAKELONG(1,0);
-    const LPARAM disabled = (LPARAM)MAKELONG(0,0);
-
     int cmdId = gToolbarButtons[buttonNo].cmdId;
 
     // If restricted, disable
     if (!HasPermission(gToolbarButtons[buttonNo].flags >> PERM_FLAG_OFFSET))
-        return disabled;
+        return false;
 
     // If no file open, only enable open button
     if (!win->IsDocLoaded())
-        return IDM_OPEN == cmdId ? enabled : disabled;
+        return IDM_OPEN == cmdId;
 
     switch (cmdId)
     {
-        case IDM_OPEN:
-            // opening different files isn't allowed in plugin mode
-            if (gPluginMode)
-                return disabled;
-            break;
+    case IDM_OPEN:
+        // opening different files isn't allowed in plugin mode
+        return !gPluginMode;
 
-        case IDM_FIND_NEXT:
-        case IDM_FIND_PREV:
-            // TODO: Update on whether there's more to find, not just on whether there is text.
-            if (win::GetTextLen(win->hwndFindBox) == 0)
-                return disabled;
-            break;
+    case IDM_PRINT:
+        return win->dm->engine && win->dm->engine->IsPrintingAllowed();
 
-        case IDM_GOTO_NEXT_PAGE:
-            if (win->dm->CurrentPageNo() == win->dm->PageCount())
-                return disabled;
-            break;
-        case IDM_GOTO_PREV_PAGE:
-            if (win->dm->CurrentPageNo() == 1)
-                return disabled;
-            break;
+    case IDM_FIND_NEXT:
+    case IDM_FIND_PREV:
+        // TODO: Update on whether there's more to find, not just on whether there is text.
+        return win::GetTextLen(win->hwndFindBox) > 0;
+
+    case IDM_GOTO_NEXT_PAGE:
+        return win->dm->CurrentPageNo() < win->dm->PageCount();
+    case IDM_GOTO_PREV_PAGE:
+        return win->dm->CurrentPageNo() > 1;
+
+    default:
+        return true;
     }
-
-    return enabled;
 }
 
 static TBBUTTON TbButtonFromButtonInfo(int i) {
@@ -150,6 +143,9 @@ void UpdateToolbarButtonsToolTipsForWindow(WindowInfo *win)
 
 void ToolbarUpdateStateForWindow(WindowInfo *win) 
 {
+    const LPARAM enabled = (LPARAM)MAKELONG(1,0);
+    const LPARAM disabled = (LPARAM)MAKELONG(0,0);
+
     for (int i = 0; i < TOOLBAR_BUTTONS_COUNT; i++) {
         BOOL hide = !IsVisibleToolbarButton(win, i);
         SendMessage(win->hwndToolbar, TB_HIDEBUTTON, gToolbarButtons[i].cmdId, hide);
@@ -157,7 +153,7 @@ void ToolbarUpdateStateForWindow(WindowInfo *win)
         if (TbIsSeparator(gToolbarButtons[i]))
             continue;
 
-        LPARAM buttonState = ToolbarButtonEnabledState(win, i);
+        LPARAM buttonState = IsToolbarButtonEnabled(win, i) ? enabled : disabled;
         SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, gToolbarButtons[i].cmdId, buttonState);
     }
 }

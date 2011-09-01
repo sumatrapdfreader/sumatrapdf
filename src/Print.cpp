@@ -428,6 +428,9 @@ void OnMenuPrint(WindowInfo *win)
     assert(dm);
     if (!dm) return;
 
+    if (!dm->engine || !dm->engine->IsPrintingAllowed())
+        return;
+
     if (win->printThread) {
         int res = MessageBox(win->hwndFrame, _TR("Printing is still in progress. Abort and start over?"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_YESNO | (IsUIRightToLeft() ? MB_RTLREADING : 0));
         if (res == IDNO)
