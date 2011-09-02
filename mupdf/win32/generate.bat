@@ -11,7 +11,7 @@ if not exist cmapdump.exe goto usage
 
 if not exist generated/font_base14.h fontdump.exe generated/font_base14.h fonts/Dingbats.cff fonts/NimbusMonL-Bold.cff fonts/NimbusMonL-BoldObli.cff fonts/NimbusMonL-Regu.cff fonts/NimbusMonL-ReguObli.cff fonts/NimbusRomNo9L-Medi.cff fonts/NimbusRomNo9L-MediItal.cff fonts/NimbusRomNo9L-Regu.cff fonts/NimbusRomNo9L-ReguItal.cff fonts/NimbusSanL-Bold.cff fonts/NimbusSanL-BoldItal.cff fonts/NimbusSanL-Regu.cff fonts/NimbusSanL-ReguItal.cff fonts/StandardSymL.cff
 
-if not exist generated/font_droid.h fontdump.exe generated/font_droid.h fonts/droid/DroidSans.ttf
+if not exist generated/font_droid.h fontdump.exe generated/font_droid.h fonts/droid/DroidSans.ttf fonts/droid/DroidSansMono.ttf
 
 if not exist generated/font_cjk.h fontdump.exe generated/font_cjk.h fonts/droid/DroidSansFallback.ttf
 

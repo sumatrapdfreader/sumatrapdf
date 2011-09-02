@@ -242,9 +242,12 @@ MUXPS_OBJS = \
 	$(OX)\xps_png.obj $(OX)\xps_resource.obj $(OX)\xps_tiff.obj $(OX)\xps_tile.obj \
 	$(OX)\xps_util.obj $(OX)\xps_xml.obj $(OX)\xps_zip.obj $(OX)\xps_outline.obj
 
-# Make it easy to compile a CJK font in
+# Make it easy to compile in a CJK fallback font and/or the Droid substitution fonts
 !if "$(WITHCJKFONT)"==""
-MUPDF_CFLAGS = $(MUPDF_CFLAGS) /D "NOCJKFONT" /D "NODROIDFONT"
+MUPDF_CFLAGS = $(MUPDF_CFLAGS) /D "NOCJKFONT"
+!endif
+!if "$(WITHDROIDFONT)"==""
+MUPDF_CFLAGS = $(MUPDF_CFLAGS) /D "NODROIDFONT"
 !endif
 
 LIBS_OBJS = \

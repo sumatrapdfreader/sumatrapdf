@@ -116,8 +116,13 @@ pdf_find_substitute_font(int mono, int serif, int bold, int italic, unsigned int
 		}
 	}
 #else
-	*len = sizeof pdf_font_DroidSans;
-	return (unsigned char*) pdf_font_DroidSans;
+	if (mono) {
+		*len = sizeof pdf_font_DroidSansMono;
+		return (unsigned char*) pdf_font_DroidSansMono;
+	} else {
+		*len = sizeof pdf_font_DroidSans;
+		return (unsigned char*) pdf_font_DroidSans;
+	}
 #endif
 }
 

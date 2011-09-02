@@ -500,10 +500,9 @@ pdf_load_xref(pdf_xref *xref, char *buf, int bufsize)
 		if (xref->table[i].type == 'n')
 			if (xref->table[i].ofs <= 0 || xref->table[i].ofs >= xref->file_size)
 				return fz_throw("object offset out of range: %d (%d 0 R)", xref->table[i].ofs, i);
-		/* SumatraPDF: ensure that streamed objects reside insided a known non-streamed object */
 		if (xref->table[i].type == 'o')
 			if (xref->table[i].ofs <= 0 || xref->table[i].ofs >= xref->len || xref->table[xref->table[i].ofs].type != 'n')
-				return fz_throw("invalid reference to non-object-stream: %d (%d 0 R)", xref->table[i].ofs, i);
+				return fz_throw("invalid reference to an objstm that does not exist: %d (%d 0 R)", xref->table[i].ofs, i);
 	}
 
 	return fz_okay;
