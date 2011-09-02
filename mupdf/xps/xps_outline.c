@@ -1,4 +1,7 @@
-/* SumatraPDF: support links and outlines */
+﻿/* SumatraPDF: support links and outlines */
+// Copyright (C) 2011  Simon Bünzli <zeniko@gmail.com>
+
+// This file is licensed under GPLv3 (see ../COPYING)
 
 #include "fitz.h"
 #include "muxps.h"
