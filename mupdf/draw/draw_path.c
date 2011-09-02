@@ -537,6 +537,8 @@ fz_flatten_stroke_path(fz_gel *gel, fz_path *path, fz_stroke_state *stroke, fz_m
 	s.offset = 0;
 	s.phase = 0;
 
+	s.cap = stroke->start_cap;
+
 	i = 0;
 
 	if (path->len > 0 && path->items[0].k != FZ_MOVETO)
