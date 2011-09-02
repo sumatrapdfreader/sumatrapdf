@@ -1793,7 +1793,6 @@ static void pdf_run_TD(pdf_csi *csi)
 
 static void pdf_run_Tm(pdf_csi *csi)
 {
-	pdf_flush_text(csi);
 	csi->tm.a = csi->stack[0];
 	csi->tm.b = csi->stack[1];
 	csi->tm.c = csi->stack[2];
@@ -2050,6 +2049,7 @@ static void pdf_run_v(pdf_csi *csi)
 static void pdf_run_w(pdf_csi *csi)
 {
 	pdf_gstate *gstate = csi->gstate + csi->gtop;
+	pdf_flush_text(csi); /* linewidth affects stroked text rendering mode */
 	gstate->stroke_state.linewidth = csi->stack[0];
 }
 

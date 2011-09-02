@@ -1148,6 +1148,9 @@ bool IsCheckboxChecked(HWND hwnd)
 
 void OnButtonInstall()
 {
+    if (gShowOptions)
+        OnButtonOptions();
+
     if (!CheckInstallUninstallPossible())
         return;
 
@@ -1168,9 +1171,6 @@ void OnButtonInstall()
     // note: this checkbox isn't created on Windows 2000 and XP
     gGlobalData.installPdfPreviewer = gHwndCheckboxRegisterPdfPreviewer != NULL &&
                                       IsCheckboxChecked(gHwndCheckboxRegisterPdfPreviewer);
-
-    if (gShowOptions)
-        OnButtonOptions();
 
     // create a progress bar in place of the Options button
     RectI rc(0, 0, dpiAdjust(INSTALLER_WIN_DX / 2), PUSH_BUTTON_DY);
