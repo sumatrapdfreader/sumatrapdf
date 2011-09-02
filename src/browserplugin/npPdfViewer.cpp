@@ -153,6 +153,8 @@ DLLEXPORT STDAPI DllRegisterServer(VOID)
     EnsureRegKey(mimeType);
     mimeType.Set(str::Join(g_lpRegKey, _T("\\MimeTypes\\application/vnd.ms-xpsdocument")));
     EnsureRegKey(mimeType);
+    mimeType.Set(str::Join(g_lpRegKey, _T("\\MimeTypes\\application/oxps")));
+    EnsureRegKey(mimeType);
     mimeType.Set(str::Join(g_lpRegKey, _T("\\MimeTypes\\image/vnd.djvu")));
     EnsureRegKey(mimeType);
     mimeType.Set(str::Join(g_lpRegKey, _T("\\MimeTypes\\image/x-djvu")));
