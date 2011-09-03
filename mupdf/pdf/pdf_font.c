@@ -5,7 +5,7 @@
 #include FT_FREETYPE_H
 #include FT_XFREE86_H
 
-static fz_error pdf_load_font_descriptor(pdf_font_desc *fontdesc, pdf_xref *xref, fz_obj *dict, char *collection, char *basefont);
+static fz_error pdf_load_font_descriptor(pdf_font_desc *fontdesc, pdf_xref *xref, fz_obj *dict, char *collection, char *basefont, int has_encoding);
 
 static char *base_font_names[14][7] =
 {
@@ -263,7 +263,7 @@ pdf_load_substitute_cjk_font(pdf_font_desc *fontdesc, int ros, int serif)
 }
 
 static fz_error
-pdf_load_system_font(pdf_font_desc *fontdesc, char *fontname, char *collection)
+pdf_load_system_font(pdf_font_desc *fontdesc, char *fontname, char *collection, int has_encoding)
 {
 	fz_error error;
 	int bold = 0;
@@ -315,9 +315,8 @@ pdf_load_system_font(pdf_font_desc *fontdesc, char *fontname, char *collection)
 	}
 
 	/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=691690 */
-	// TODO: don't throw, if a non-symbolic encoding is available
-	if ((fontdesc->flags & PDF_FD_SYMBOLIC) && *fontname)
-		return fz_throw("symbolic font '%s' is missing", fontname);
+	if ((fontdesc->flags & PDF_FD_SYMBOLIC) && !has_encoding)
+		return fz_throw("encoding-less symbolic font '%s' is missing", fontname);
 
 	error = pdf_load_substitute_font(fontdesc, mono, serif, bold, italic);
 	if (error)
@@ -475,7 +474,7 @@ pdf_load_simple_font(pdf_font_desc **fontdescp, pdf_xref *xref, fz_obj *dict)
 
 	descriptor = fz_dict_gets(dict, "FontDescriptor");
 	if (descriptor)
-		error = pdf_load_font_descriptor(fontdesc, xref, descriptor, NULL, basefont);
+		error = pdf_load_font_descriptor(fontdesc, xref, descriptor, NULL, basefont, fz_dict_gets(dict, "Encoding") != NULL);
 	else
 		error = pdf_load_builtin_font(fontdesc, fontname);
 	/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=691690 */
@@ -524,7 +523,7 @@ pdf_load_simple_font(pdf_font_desc **fontdescp, pdf_xref *xref, fz_obj *dict)
 			fz_warn("workaround for S22PDF lying about chinese font encodings");
 			pdf_drop_font(fontdesc);
 			fontdesc = pdf_new_font_desc();
-			error = pdf_load_font_descriptor(fontdesc, xref, descriptor, "Adobe-GB1", cp936fonts[i+1]);
+			error = pdf_load_font_descriptor(fontdesc, xref, descriptor, "Adobe-GB1", cp936fonts[i+1], 1);
 			error |= pdf_load_system_cmap(&fontdesc->encoding, "GBK-EUC-H");
 			error |= pdf_load_system_cmap(&fontdesc->to_unicode, "Adobe-GB1-UCS2");
 			error |= pdf_load_system_cmap(&fontdesc->to_ttf_cmap, "Adobe-GB1-UCS2");
@@ -831,7 +830,7 @@ load_cid_font(pdf_font_desc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj *e
 
 	descriptor = fz_dict_gets(dict, "FontDescriptor");
 	if (descriptor)
-		error = pdf_load_font_descriptor(fontdesc, xref, descriptor, collection, basefont);
+		error = pdf_load_font_descriptor(fontdesc, xref, descriptor, collection, basefont, 1);
 	else
 		error = fz_throw("syntaxerror: missing font descriptor");
 	if (error)
@@ -1058,7 +1057,7 @@ pdf_load_type0_font(pdf_font_desc **fontdescp, pdf_xref *xref, fz_obj *dict)
  */
 
 static fz_error
-pdf_load_font_descriptor(pdf_font_desc *fontdesc, pdf_xref *xref, fz_obj *dict, char *collection, char *basefont)
+pdf_load_font_descriptor(pdf_font_desc *fontdesc, pdf_xref *xref, fz_obj *dict, char *collection, char *basefont, int has_encoding)
 {
 	fz_error error;
 	fz_obj *obj1, *obj2, *obj3, *obj;
@@ -1094,7 +1093,7 @@ pdf_load_font_descriptor(pdf_font_desc *fontdesc, pdf_xref *xref, fz_obj *dict, 
 			if (origname != fontname)
 				error = pdf_load_builtin_font(fontdesc, fontname);
 			else
-				error = pdf_load_system_font(fontdesc, fontname, collection);
+				error = pdf_load_system_font(fontdesc, fontname, collection, has_encoding);
 			if (error)
 				return fz_rethrow(error, "cannot load font descriptor (%d %d R)", fz_to_num(dict), fz_to_gen(dict));
 		}
@@ -1104,7 +1103,7 @@ pdf_load_font_descriptor(pdf_font_desc *fontdesc, pdf_xref *xref, fz_obj *dict, 
 		if (origname != fontname && 0 /* SumatraPDF: prefer system fonts to the built-in ones */)
 			error = pdf_load_builtin_font(fontdesc, fontname);
 		else
-			error = pdf_load_system_font(fontdesc, fontname, collection);
+			error = pdf_load_system_font(fontdesc, fontname, collection, has_encoding);
 		if (error)
 			return fz_rethrow(error, "cannot load font descriptor (%d %d R)", fz_to_num(dict), fz_to_gen(dict));
 	}
