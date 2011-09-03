@@ -43,6 +43,9 @@ pdf_to_utf8(fz_obj *src)
 	/* SumatraPDF: correctly handle empty UTF-16 strings */
 	if (srclen >= 2 && srcptr[0] == 254 && srcptr[1] == 255)
 	{
+		/* SumatraPDF: prevent a heap overflow, if srclen is odd */
+		if (srclen % 2 != 0) srclen--;
+
 		for (i = 2; i < srclen; i += 2)
 		{
 			ucs = (srcptr[i] << 8) | srcptr[i+1];
@@ -61,6 +64,9 @@ pdf_to_utf8(fz_obj *src)
 	/* SumatraPDF: also handle little-endian UTF-16 strings */
 	else if (srclen >= 2 && srcptr[0] == 0xFF && srcptr[1] == 0xFE)
 	{
+		/* SumatraPDF: prevent a heap overflow, if srclen is odd */
+		if (srclen % 2 != 0) srclen--;
+
 		for (i = 2; i < srclen; i += 2)
 		{
 			ucs = srcptr[i] | (srcptr[i+1] << 8);
@@ -106,6 +112,9 @@ pdf_to_ucs2(fz_obj *src)
 	/* SumatraPDF: correctly handle empty UTF-16 strings */
 	if (srclen >= 2 && srcptr[0] == 254 && srcptr[1] == 255)
 	{
+		/* SumatraPDF: prevent a heap overflow, if srclen is odd */
+		if (srclen % 2 != 0) srclen--;
+
 		dstptr = dst = fz_calloc((srclen - 2) / 2 + 1, sizeof(short));
 		for (i = 2; i < srclen; i += 2)
 			*dstptr++ = (srcptr[i] << 8) | srcptr[i+1];
@@ -114,6 +123,9 @@ pdf_to_ucs2(fz_obj *src)
 	/* SumatraPDF: also handle little-endian UTF-16 strings */
 	else if (srclen >= 2 && srcptr[0] == 0xFF && srcptr[1] == 0xFE)
 	{
+		/* SumatraPDF: prevent a heap overflow, if srclen is odd */
+		if (srclen % 2 != 0) srclen--;
+
 		dstptr = dst = fz_calloc((srclen - 2) / 2 + 1, sizeof(short));
 		for (i = 2; i < srclen; i += 2)
 			*dstptr++ = srcptr[i] | (srcptr[i+1] << 8);
