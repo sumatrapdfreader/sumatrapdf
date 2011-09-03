@@ -103,6 +103,7 @@ EXPORTS
 	fz_array_put
 	fz_array_push
 	fz_array_insert
+	fz_is_in_array
 	fz_dict_len
 	fz_dict_get_key
 	fz_dict_get_val

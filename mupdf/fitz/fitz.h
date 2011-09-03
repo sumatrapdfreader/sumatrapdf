@@ -410,6 +410,8 @@ fz_obj *fz_array_get(fz_obj *array, int i);
 void fz_array_put(fz_obj *array, int i, fz_obj *obj);
 void fz_array_push(fz_obj *array, fz_obj *obj);
 void fz_array_insert(fz_obj *array, fz_obj *obj);
+/* SumatraPDF: helper method */
+int fz_is_in_array(fz_obj *arr, fz_obj *obj);
 
 int fz_dict_len(fz_obj *dict);
 fz_obj *fz_dict_get_key(fz_obj *dict, int idx);

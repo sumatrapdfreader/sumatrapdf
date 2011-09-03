@@ -108,18 +108,6 @@ static void pdf_show_pattern(pdf_csi *csi, pdf_pattern *pat, fz_rect area, int w
 
 /* SumatraPDF: support inline OCGs */
 static int
-fz_is_in_array(fz_obj *arr, fz_obj *obj)
-{
-	int i;
-
-	for (i = 0; i < fz_array_len(arr); i++)
-		if (!fz_objcmp(fz_array_get(arr, i), obj))
-			return 1;
-
-	return 0;
-}
-
-static int
 pdf_is_ocg_hidden(fz_obj *ocg, pdf_xref *xref, char *target)
 {
 	char target_state[16];

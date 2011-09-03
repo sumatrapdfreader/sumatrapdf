@@ -279,6 +279,8 @@ static void retainpages(int argc, char **argv)
 {
 	fz_error error;
 	fz_obj *oldroot, *root, *pages, *kids, *countobj, *parent;
+	/* SumatraPDF: also preserve the (partial) Dests name tree */
+	fz_obj *oldDests = pdf_load_name_tree(xref, "Dests");
 
 	/* Load the old page tree */
 	error = pdf_load_page_tree(xref);
@@ -359,6 +361,41 @@ static void retainpages(int argc, char **argv)
 	fz_drop_obj(countobj);
 	fz_dict_puts(pages, "Kids", kids);
 	fz_drop_obj(kids);
+
+	/* SumatraPDF: also preserve the (partial) Dests name tree */
+	if (oldDests)
+	{
+		int i;
+		fz_obj *names = fz_new_dict(1);
+		fz_obj *dests = fz_new_dict(1);
+		fz_obj *names_list = fz_new_array(32);
+
+		for (i = 0; i < fz_dict_len(oldDests); i++)
+		{
+			fz_obj *key = fz_dict_get_key(oldDests, i);
+			fz_obj *val = fz_dict_get_val(oldDests, i);
+			fz_obj *key_str = fz_new_string(fz_to_name(key), strlen(fz_to_name(key)));
+
+			fz_obj *dest = fz_dict_gets(val, "D");
+			dest = fz_array_get(dest ? dest : val, 0);
+			if (fz_is_in_array(fz_dict_gets(pages, "Kids"), dest))
+			{
+				fz_array_push(names_list, key_str);
+				fz_array_push(names_list, val);
+			}
+			fz_drop_obj(key_str);
+		}
+
+		root = fz_dict_gets(xref->trailer, "Root");
+		fz_dict_puts(dests, "Names", names_list);
+		fz_dict_puts(names, "Dests", dests);
+		fz_dict_puts(root, "Names", names);
+
+		fz_drop_obj(names);
+		fz_drop_obj(dests);
+		fz_drop_obj(names_list);
+		fz_drop_obj(oldDests);
+	}
 }
 
 /*
