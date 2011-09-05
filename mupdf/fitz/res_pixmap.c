@@ -80,7 +80,7 @@ fz_new_pixmap_with_limit(fz_colorspace *colorspace, int w, int h)
 	if (fz_memory_used + size > fz_get_memory_limit() || h != 0 && INT_MAX / h / n < w)
 	{
 		fz_warn("pixmap memory exceeds soft limit %dM + %dM > %dM",
-			fz_memory_used/(1<<20), size/(1<<20), fz_get_memory_limit()/(1<<20));
+			(int)(fz_memory_used/(1<<20)), (int)(size/(1<<20)), (int)(fz_get_memory_limit()/(1<<20)));
 		return NULL;
 	}
 	return fz_new_pixmap_with_data(colorspace, w, h, NULL);
