@@ -6,6 +6,11 @@
 
 #define STACK_SIZE 96
 
+/* Enable the following to attempt to support knockout and/or isolated
+ * blending groups. This code is known to give incorrect results currently
+ * so disabled by default. See bug 692377. */
+#undef ATTEMPT_KNOCKOUT_AND_ISOLATED
+
 /* Enable the following to help debug group blending. */
 #undef DUMP_GROUP_BLENDS
 
@@ -1306,7 +1311,11 @@ fz_draw_begin_group(void *user, fz_rect rect, int isolated, int knockout, int bl
 	bbox = fz_intersect_bbox(bbox, dev->scissor);
 	dest = fz_new_pixmap_with_rect(model, bbox);
 
-	isolated = 1; /* SumatraPDF: disable buggy non-isolated blending for now */
+#ifndef ATTEMPT_KNOCKOUT_AND_ISOLATED
+	knockout = 0;
+	isolated = 1;
+#endif
+
 	if (isolated)
 	{
 		fz_clear_pixmap(dest);

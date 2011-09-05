@@ -1,4 +1,4 @@
-.TH PDFCLEAN 1 "July 19, 2010"
+.TH PDFCLEAN 1 "September  4, 2011"
 .\" Please adjust this date whenever revising the manpage.
 .SH NAME
 pdfclean \- pretty print, decompress and garbage collect PDF files
@@ -7,6 +7,7 @@ pdfclean \- pretty print, decompress and garbage collect PDF files
 .RI [ options ]
 .RI input.pdf
 .RI [ output.pdf ]
+.RI [ pages ]
 .SH DESCRIPTION
 .B pdfclean
 pretty prints and rewrites the contents of a PDF file.
@@ -26,6 +27,9 @@ Give it three times to merge and reuse duplicate objects.
 .B \-d
 Decompress streams. This will make the output file larger, but provides
 easy access for reading and editing the contents with a text editor.
+.TP
+.B pages
+Comma separated list of ranges to clean.
 .SH SEE ALSO
 .BR mupdf (1),
 .BR pdfdraw (1).

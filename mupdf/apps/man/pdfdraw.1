@@ -1,12 +1,12 @@
-.TH PDFDRAW 1 "July 19, 2010"
+.TH PDFDRAW 1 "September  4, 2011"
 .\" Please adjust this date whenever revising the manpage.
 .SH NAME
 pdfdraw \- render PDF documents
 .SH SYNOPSIS
 .B pdfdraw
 .RI [ options ]
-.RI [ file.pdf\ [ pages ] ]
-.B ...
+.RI input.pdf
+.RI [ pages]
 .SH DESCRIPTION
 .B pdfdraw
 will render a PDF document to image files.
@@ -66,6 +66,9 @@ Some typical values are 0.7 or 1.4 to thin or darken text rendering.
 .TP
 .B \-I
 Invert the output image colors.
+.TP
+.B pages
+Comma separated list of ranges to render.
 .SH SEE ALSO
 .BR mupdf (1),
 .BR pdfclean (1).

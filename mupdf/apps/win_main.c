@@ -463,6 +463,17 @@ void windrawstring(pdfapp_t *app, int x, int y, char *s)
 	TextOutA(hdc, x, y - 12, s, strlen(s));
 }
 
+void winblitsearch()
+{
+	if (gapp.isediting)
+	{
+		char buf[sizeof(gapp.search) + 50];
+		sprintf(buf, "Search: %s", gapp.search);
+		windrawrect(&gapp, 0, 0, gapp.winw, 30);
+		windrawstring(&gapp, 10, 20, buf);
+	}
+}
+
 void winblit()
 {
 	int x0 = gapp.panx;
@@ -544,13 +555,7 @@ void winblit()
 	r.bottom = y1;
 	FillRect(hdc, &r, shbrush);
 
-	if (gapp.isediting)
-	{
-		char buf[sizeof(gapp.search) + 50];
-		sprintf(buf, "Search: %s", gapp.search);
-		windrawrect(&gapp, 0, 0, gapp.winw, 30);
-		windrawstring(&gapp, 10, 20, buf);
-	}
+	winblitsearch();
 }
 
 void winresize(pdfapp_t *app, int w, int h)
@@ -564,6 +569,13 @@ void winresize(pdfapp_t *app, int w, int h)
 
 void winrepaint(pdfapp_t *app)
 {
+	InvalidateRect(hwndview, NULL, 0);
+}
+
+void winrepaintsearch(pdfapp_t *app)
+{
+	// TODO: invalidate only search area and
+	// call only search redraw routine.
 	InvalidateRect(hwndview, NULL, 0);
 }
 

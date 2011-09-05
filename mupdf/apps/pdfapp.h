@@ -16,6 +16,7 @@ extern void winerror(pdfapp_t*, fz_error error);
 extern void wintitle(pdfapp_t*, char *title);
 extern void winresize(pdfapp_t*, int w, int h);
 extern void winrepaint(pdfapp_t*);
+extern void winrepaintsearch(pdfapp_t*);
 extern char *winpassword(pdfapp_t*, char *filename);
 extern void winopenuri(pdfapp_t*, char *s);
 extern void wincursor(pdfapp_t*, int curs);

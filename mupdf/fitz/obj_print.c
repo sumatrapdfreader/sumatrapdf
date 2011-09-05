@@ -100,10 +100,10 @@ static void fmt_str(struct fmt *fmt, fz_obj *obj)
 			fmt_puts(fmt, "\\(");
 		else if (c == ')')
 			fmt_puts(fmt, "\\)");
-		else if (c < 32 || c > 126) {
+		else if (c < 32 || c >= 127) {
 			char buf[16];
 			fmt_putc(fmt, '\\');
-			sprintf(buf, "%03o", c); /* SumatraPDF: fix octal escaping */
+			sprintf(buf, "%03o", c);
 			fmt_puts(fmt, buf);
 		}
 		else
@@ -139,7 +139,7 @@ static void fmt_name(struct fmt *fmt, fz_obj *obj)
 	for (i = 0; s[i]; i++)
 	{
 		if (isdelim(s[i]) || iswhite(s[i]) ||
-			s[i] == '#' || s[i] < 32 || s[i] > 127)
+			s[i] == '#' || s[i] < 32 || s[i] >= 127)
 		{
 			fmt_putc(fmt, '#');
 			c = (s[i] >> 4) & 0xf;
@@ -255,8 +255,7 @@ static void fmt_obj(struct fmt *fmt, fz_obj *obj)
 			c = (unsigned char)str[i];
 			if (strchr("()\\\n\r\t\b\f", c))
 				added ++;
-			/* SumatraPDF: fix octal escaping */
-			else if (c < 32 || c > 126)
+			else if (c < 32 || c >= 127)
 				added += 3;
 		}
 		if (added < len)
