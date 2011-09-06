@@ -187,6 +187,12 @@ public:
         RedrawAll();
     }
 
+    void Focus() {
+        if (IsIconic(hwndFrame))
+            ShowWindow(hwndFrame, SW_RESTORE);
+        SetFocus(hwndFrame);
+    }
+
     void ToggleZoom();
     void MoveDocBy(int dx, int dy);
 

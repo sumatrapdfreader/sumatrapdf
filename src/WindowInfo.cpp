@@ -195,20 +195,26 @@ void LinkHandler::GotoLink(PageDestination *link)
     }
     else if (str::Eq(type, "LaunchEmbedded")) {
         // open embedded PDF documents in a new window
-        if (path && str::StartsWith(path.Get(), dm->FileName()))
-            LoadDocument(path, owner);
+        if (path && str::StartsWith(path.Get(), dm->FileName())) {
+            WindowInfo *newWin = FindWindowInfoByFile(path);
+            if (!newWin)
+                newWin = LoadDocument(path, owner);
+            newWin->Focus();
+        }
         // offer to save other attachments to a file
         else
             link->SaveEmbedded(LinkSaver(owner->hwndFrame, path));
     }
     else if ((str::Eq(type, "LaunchFile") || str::Eq(type, "ScrollToEx")) && path) {
-        /* for safety, only handle relative PDF paths and only open them in SumatraPDF */
-        if (!str::StartsWith(path.Get(), _T("\\")) &&
-            str::EndsWithI(path.Get(), _T(".pdf"))) {
+        /* for safety, only handle relative paths and only open them in SumatraPDF */
+        if (!str::StartsWith(path.Get(), _T("\\")) && !str::Find(path.Get(), _T("..\\"))) {
             ScopedMem<TCHAR> basePath(path::GetDir(dm->FileName()));
             ScopedMem<TCHAR> combinedPath(path::Join(basePath, path));
             // TODO: respect fz_to_bool(fz_dict_gets(link->dest, "NewWindow")) for ScrollToEx
-            WindowInfo *newWin = LoadDocument(combinedPath, owner);
+            WindowInfo *newWin = FindWindowInfoByFile(combinedPath);
+            if (!newWin)
+                newWin = LoadDocument(combinedPath, owner);
+            newWin->Focus();
 
             if (str::Eq(type, "ScrollToEx") && newWin && newWin->IsDocLoaded())
                 newWin->linkHandler->ScrollTo(link);

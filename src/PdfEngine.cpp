@@ -1838,11 +1838,9 @@ const char *PdfLink::GetType() const
             return "LaunchEmbedded";
         return "LaunchFile";
     case PDF_LINK_ACTION:
-        if (str::Eq(fz_to_name(fz_dict_gets(link->dest, "S")), "GoToR") &&
-            fz_dict_gets(link->dest, "D")) {
+        if (str::Eq(fz_to_name(fz_dict_gets(link->dest, "S")), "GoToR"))
             return "ScrollToEx";
-        }
-        // fall through (unsupported action)
+        return NULL; // unsupported action
     default:
         return NULL;
     }
@@ -2756,12 +2754,12 @@ XpsToCItem *CXpsEngine::BuildToCTree(xps_outline *entry, int& idCounter)
         item->open = false;
         item->id = ++idCounter;
 
-        if (str::Eq(node->GetLink()->GetType(), "ScrollTo"))
+        if (str::Eq(item->GetLink()->GetType(), "ScrollTo"))
             item->pageNo = FindPageNo(entry->target);
         if (entry->child)
             item->child = BuildToCTree(entry->child, idCounter);
 
-        if (!node) // TODO: if this is possible then we have crash above in node->GetLink()
+        if (!node)
             node = item;
         else
             node->AddSibling(item);

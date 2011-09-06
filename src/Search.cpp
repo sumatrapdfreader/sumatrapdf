@@ -438,13 +438,6 @@ LRESULT OnDDEInitiate(HWND hwnd, WPARAM wparam, LPARAM lparam)
 
 // DDE commands
 
-static void SetFocusHelper(HWND hwnd)
-{
-    if (IsIconic(hwnd))
-        ShowWindow(hwnd, SW_RESTORE);
-    SetFocus(hwnd);
-}
-
 // Synchronization command format:
 // [<DDECOMMAND_SYNC>(["<pdffile>",]"<srcfile>",<line>,<col>[,<newwindow>,<setfocus>])]
 static const TCHAR *HandleSyncCmd(const TCHAR *cmd, DDEACK& ack)
@@ -503,7 +496,7 @@ static const TCHAR *HandleSyncCmd(const TCHAR *cmd, DDEACK& ack)
     int ret = win->pdfsync->source_to_pdf(srcFile, line, col, &page, rects);
     ShowForwardSearchResult(win, srcFile, line, col, ret, page, rects);
     if (setFocus)
-        SetFocusHelper(win->hwndFrame);
+        win->Focus();
 
     return next;
 }
@@ -537,7 +530,7 @@ static const TCHAR *HandleOpenCmd(const TCHAR *cmd, DDEACK& ack)
     if (forceRefresh)
         ReloadDocument(win, true);
     if (setFocus)
-        SetFocusHelper(win->hwndFrame);
+        win->Focus();
 
     return next;
 }
@@ -563,7 +556,7 @@ static const TCHAR *HandleGotoCmd(const TCHAR *cmd, DDEACK& ack)
 
     win->linkHandler->GotoNamedDest(destName);
     ack.fAck = 1;
-    SetFocusHelper(win->hwndFrame);
+    win->Focus();
     return next;
 }
 
@@ -593,7 +586,7 @@ static const TCHAR *HandlePageCmd(const TCHAR *cmd, DDEACK& ack)
 
     win->dm->GoToPage(page, 0, true);
     ack.fAck = 1;
-    SetFocusHelper(win->hwndFrame);
+    win->Focus();
     return next;
 }
 
