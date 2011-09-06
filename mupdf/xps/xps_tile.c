@@ -176,19 +176,19 @@ xps_parse_tiling_brush(xps_context *ctx, fz_matrix ctm, fz_rect area,
 		y1 = ceilf(area.y1 / ystep);
 
 #ifdef TILE
+		if ((x1 - x0) * (y1 - y0) > 1)
+#else
+		if (0)
+#endif
 		{
-			int n = (x1 - x0) * (y1 - y0);
 			fz_rect bigview = viewbox;
 			bigview.x1 = bigview.x0 + xstep;
 			bigview.y1 = bigview.y0 + ystep;
-			if (n > 1)
-				fz_begin_tile(ctx->dev, area, bigview, xstep, ystep, ctm);
-			if (n > 0)
-				xps_paint_tiling_brush(ctx, ctm, viewbox, tile_mode, &c);
-			if (n > 1)
-				fz_end_tile(ctx->dev);
+			fz_begin_tile(ctx->dev, area, bigview, xstep, ystep, ctm);
+			xps_paint_tiling_brush(ctx, ctm, viewbox, tile_mode, &c);
+			fz_end_tile(ctx->dev);
 		}
-#else
+		else
 		{
 			int x, y;
 			for (y = y0; y < y1; y++)
@@ -200,7 +200,6 @@ xps_parse_tiling_brush(xps_context *ctx, fz_matrix ctm, fz_rect area,
 				}
 			}
 		}
-#endif
 	}
 	else
 	{
