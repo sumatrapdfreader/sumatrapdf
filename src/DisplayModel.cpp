@@ -209,6 +209,8 @@ DisplayModel::DisplayModel(DisplayModelCallback *cb)
     navHistoryEnd = 0;
 
     dontRenderFlag = false;
+
+    displayR2L = false;
 }
 
 DisplayModel::~DisplayModel()
@@ -375,7 +377,6 @@ float DisplayModel::ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo)
         return zoomVirtual * 0.01f * dpiFactor;
 
     SizeD row;
-    PageInfo *pageInfo = GetPageInfo(pageNo);
     int columns = columnsFromDisplayMode(displayMode());
 
     bool fitToContent = (ZOOM_FIT_CONTENT == zoomVirtual);
@@ -389,7 +390,6 @@ float DisplayModel::ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo)
             RectD pageBox = engine->Transform(pageInfo->page, i, 1.0, _rotation);
             row.dx += pageBox.dx;
 
-            pageInfo = GetPageInfo(i);
             if (pageInfo->contentBox.IsEmpty())
                 pageInfo->contentBox = engine->PageContentBox(i);
             RectD rotatedContent = engine->Transform(pageInfo->contentBox, i, 1.0, _rotation);

@@ -10,7 +10,8 @@ class CTeXFilter : public CFilterBase
 {
 public:
     CTeXFilter(long *plRefCount) : CFilterBase(plRefCount),
-        m_state(STATE_TEX_END), m_pData(NULL) { }
+        m_state(STATE_TEX_END), m_pData(NULL), m_pPtr(NULL),
+        m_pBuffer(NULL), m_iDepth(0) { }
     virtual ~CTeXFilter() { CleanUp(); }
 
     virtual HRESULT OnInit();

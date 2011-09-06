@@ -248,7 +248,7 @@ protected:
 };
 
 CDjVuEngine::CDjVuEngine() : fileName(NULL), pageCount(0), mediaboxes(NULL),
-    outline(miniexp_nil), annos(NULL)
+    doc(NULL), outline(miniexp_nil), annos(NULL)
 {
 }
 

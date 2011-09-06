@@ -16,7 +16,9 @@ TextSelection::TextSelection(BaseEngine *engine) : engine(engine)
     result.rects = NULL;
 
     startPage = -1;
+    endPage = -1;
     startGlyph = -1;
+    endGlyph = -1;
 }
 
 TextSelection::~TextSelection()

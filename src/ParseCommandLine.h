@@ -62,7 +62,12 @@ public:
         showConsole(false), exitImmediately(false), silent(false),
         stressTestPath(NULL), stressTestFilter(NULL),
         stressTestRanges(NULL), stressTestCycles(1)
-    { }
+    {
+        fwdSearch.offset = 0;
+        fwdSearch.width = 0;
+        fwdSearch.color = 0;
+        fwdSearch.permanent = false;
+    }
 
     ~CommandLineInfo() {
         free(printerName);

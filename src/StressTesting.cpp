@@ -304,8 +304,8 @@ class StressTest : public CallbackFunc {
 
 public:
     StressTest(WindowInfo *win, RenderCache *renderCache) :
-        win(win), renderCache(renderCache), filesCount(0), 
-        cycles(1), fileIndex(0)
+        win(win), renderCache(renderCache), currPage(0), pageForSearchStart(0),
+        filesCount(0), cycles(1), fileIndex(0)
         { }
 
     char *GetLogInfo();
