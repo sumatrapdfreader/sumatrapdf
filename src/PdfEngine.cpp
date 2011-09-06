@@ -2756,12 +2756,12 @@ XpsToCItem *CXpsEngine::BuildToCTree(xps_outline *entry, int& idCounter)
         item->open = false;
         item->id = ++idCounter;
 
-        if (item->GetLink() && str::Eq(node->GetLink()->GetType(), "ScrollTo"))
+        if (str::Eq(node->GetLink()->GetType(), "ScrollTo"))
             item->pageNo = FindPageNo(entry->target);
         if (entry->child)
             item->child = BuildToCTree(entry->child, idCounter);
 
-        if (!node)
+        if (!node) // TODO: if this is possible then we have crash above in node->GetLink()
             node = item;
         else
             node->AddSibling(item);
