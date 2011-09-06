@@ -76,6 +76,7 @@ pdf_repair_obj(fz_stream *file, char *buf, int cap, int *stmofsp, int *stmlenp, 
 			return fz_rethrow(error, "cannot scan for endobj or stream token");
 	}
 	*/
+	len = 0;
 	error = pdf_lex(&tok, file, buf, cap, &len);
 	if (error)
 		return fz_rethrow(error, "cannot scan for endobj or stream token");
