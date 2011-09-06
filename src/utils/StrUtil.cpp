@@ -234,9 +234,7 @@ WCHAR *ToWideChar(const char *src, UINT CodePage)
 
 const char *FindI(const char *s, const char *find)
 {
-    char c = tolower(*find);
     while (*s) {
-        char c2 = *s;
         if (StartsWithI(s, find))
             return s;
         s++;

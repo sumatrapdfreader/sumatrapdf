@@ -68,7 +68,7 @@ class PageRenderer {
 
 public:
     PageRenderer(BaseEngine *engine, HWND hwnd) : engine(engine), hwnd(hwnd),
-        currPage(0), currBmp(NULL), thread(NULL) {
+        currPage(0), currBmp(NULL), reqPage(0), reqZoom(0), thread(NULL) {
         InitializeCriticalSection(&currAccess);
     }
     ~PageRenderer() {

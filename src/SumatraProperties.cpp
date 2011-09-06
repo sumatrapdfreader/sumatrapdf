@@ -165,7 +165,6 @@ static void UpdatePropertiesLayout(HWND hwnd, HDC hdc, RectI *rect)
     SIZE            txtSize;
     int             totalDx, totalDy;
     int             leftMaxDx, rightMaxDx;
-    WindowInfo *    win = FindWindowInfoByHwnd(hwnd);
 
     PropertiesLayout *layoutData = (PropertiesLayout *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
     HFONT fontLeftTxt = win::font::GetSimple(hdc, LEFT_TXT_FONT, LEFT_TXT_FONT_SIZE);
@@ -373,7 +372,6 @@ void OnMenuProperties(WindowInfo& win)
 
 static void DrawProperties(HWND hwnd, HDC hdc)
 {
-    WindowInfo * win = FindWindowInfoByHwnd(hwnd);
     PropertiesLayout *layoutData = (PropertiesLayout *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
 #if 0
     HPEN penBorder = CreatePen(PS_SOLID, ABOUT_LINE_OUTER_SIZE, COL_BLACK);

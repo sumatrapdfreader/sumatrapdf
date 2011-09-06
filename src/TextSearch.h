@@ -35,7 +35,7 @@ public:
     TextSel *FindNext(ProgressUpdateUI *tracker=NULL);
 
     // note: the result might not be a valid page number!
-    int GetCurrentPageNo() { return findPage; }
+    int GetCurrentPageNo() const { return findPage; }
 
 protected:
     TCHAR *findText;

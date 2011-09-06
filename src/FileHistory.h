@@ -57,7 +57,7 @@ class FileHistory {
         if (dsA->openCount != dsB->openCount)
             return dsB->openCount - dsA->openCount;
         // use recency as the criterion in case of equal open counts
-        return dsA->_index < dsB->_index ? -1 : 1;
+        return dsA->index < dsB->index ? -1 : 1;
     }
 
 public:
@@ -140,7 +140,7 @@ public:
     Vec<DisplayState *> *GetFrequencyOrder() {
         Vec<DisplayState *> *list = new Vec<DisplayState *>(states);
         for (size_t i = 0; i < list->Count(); i++)
-            list->At(i)->_index = i;
+            list->At(i)->index = i;
         list->Sort(cmpOpenCount);
         return list;
     }

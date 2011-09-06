@@ -534,7 +534,6 @@ static bool HasSymbolsForAddress(DWORD64 addr)
     symInfo->MaxNameLen = MAX_SYM_LEN;
 
     DWORD64 symDisp = 0;
-    char *symName = NULL;
     BOOL ok = _SymFromAddr(GetCurrentProcess(), addr, &symDisp, symInfo);
     return ok && symInfo->Name[0];
 }
