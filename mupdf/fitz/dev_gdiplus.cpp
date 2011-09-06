@@ -411,7 +411,7 @@ public:
 			graphics->DrawImage(&PixmapBitmap(image), corners, 3, 0, 0, image->w, image->h, UnitPixel, &imgAttrs);
 	}
 
-	float getAlpha(float alpha=1.0) { return stack->alpha * alpha; }
+	float getAlpha(float alpha=1.0) const { return stack->alpha * alpha; }
 
 protected:
 	Graphics *_setup(Graphics *graphics)
@@ -734,8 +734,8 @@ gdiplus_get_path(fz_path *path, fz_matrix ctm, int evenodd=1)
 	GraphicsPath *gpath = new GraphicsPath(points, types, len, evenodd ? FillModeAlternate : FillModeWinding);
 	gdiplus_apply_transform(gpath, ctm);
 	
-	delete points;
-	delete types;
+	delete [] points;
+	delete [] types;
 	
 	return gpath;
 }
