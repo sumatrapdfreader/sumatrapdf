@@ -754,6 +754,7 @@ skip_encoding:
 			/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1616 */
 			if (!wid && i >= fz_array_len(widths))
 			{
+				fz_warn("font width missing for glyph %d (%d %d R)", i + first, fz_to_num(dict), fz_to_gen(dict));
 				FT_Set_Char_Size(face, 1000, 1000, 72, 72);
 				wid = ft_width(fontdesc, i + first);
 			}
