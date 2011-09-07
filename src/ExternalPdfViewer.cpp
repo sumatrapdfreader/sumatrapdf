@@ -28,6 +28,10 @@ static TCHAR *GetFoxitPath()
     ScopedMem<TCHAR> path(ReadRegStr(HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Foxit Reader"), _T("DisplayIcon")));
     if (path && file::Exists(path))
         return path.StealData();
+    // Registry value for Foxit 5 (and maybe later)
+    path.Set(ReadRegStr(HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Foxit Reader_is1"), _T("DisplayIcon")));
+    if (path && file::Exists(path))
+        return path.StealData();
     return NULL;
 }
 
