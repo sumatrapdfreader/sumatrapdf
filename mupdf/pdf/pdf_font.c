@@ -751,6 +751,12 @@ skip_encoding:
 		for (i = 0; i < last - first + 1; i++)
 		{
 			int wid = fz_to_int(fz_array_get(widths, i));
+			/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1616 */
+			if (!wid && i >= fz_array_len(widths))
+			{
+				FT_Set_Char_Size(face, 1000, 1000, 72, 72);
+				wid = ft_width(fontdesc, i + first);
+			}
 			pdf_add_hmtx(fontdesc, i + first, i + first, wid);
 		}
 	}
@@ -1090,6 +1096,10 @@ pdf_load_font_descriptor(pdf_font_desc *fontdesc, pdf_xref *xref, fz_obj *dict, 
 		if (error)
 		{
 			fz_catch(error, "ignored error when loading embedded font, attempting to load system font");
+			/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1616 */
+			if (strlen(fontname) > 7 && fontname[6] == '+')
+				error = pdf_load_system_font(fontdesc, fontname + 7, collection, has_encoding);
+			if (error)
 			if (origname != fontname)
 				error = pdf_load_builtin_font(fontdesc, fontname);
 			else

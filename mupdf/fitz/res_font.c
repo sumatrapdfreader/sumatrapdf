@@ -211,7 +211,10 @@ fz_new_font_from_file(fz_font **fontp, char *path, int index)
 
 	fterr = FT_New_Face(fz_ftlib, path, index, &face);
 	if (fterr)
+	{
+		fz_finalize_freetype(); /* SumatraPDF: fix memory leak */
 		return fz_throw("freetype: cannot load font: %s", ft_error_string(fterr));
+	}
 	fz_check_font_dimensions(face);
 
 	font = fz_new_font(face->family_name);
@@ -239,7 +242,10 @@ fz_new_font_from_memory(fz_font **fontp, unsigned char *data, int len, int index
 
 	fterr = FT_New_Memory_Face(fz_ftlib, data, len, index, &face);
 	if (fterr)
+	{
+		fz_finalize_freetype(); /* SumatraPDF: fix memory leak */
 		return fz_throw("freetype: cannot load font: %s", ft_error_string(fterr));
+	}
 	fz_check_font_dimensions(face);
 
 	font = fz_new_font(face->family_name);
