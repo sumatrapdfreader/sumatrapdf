@@ -41,7 +41,7 @@ Contributor: XhmikosR
 &Να μην ερωτηθώ ξανά
 
 &Even pages only
-&Μόνο οι μονές σελίδες
+&Μόνο οι ζυγές σελίδες
 
 &Facing\tCtrl+7
 &Αντικριστές σελίδες\tCtrl+7
@@ -89,7 +89,7 @@ Contributor: XhmikosR
 &Όχι, ευχαριστώ
 
 &Odd pages only
-&Μόνο οι ζυγές
+&Μόνο οι μονές σελίδες
 
 &Open\tCtrl+O
 Ά&νοιγμα\tCtrl+O
