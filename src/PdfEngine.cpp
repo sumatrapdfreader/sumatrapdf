@@ -1506,14 +1506,16 @@ PageElement *CPdfEngine::GetElementAtPos(int pageNo, PointD pt)
         if (fz_is_pt_in_rect(link->rect, p))
             return new PdfLink(this, link, pageNo);
 
-    ScopedCritSec scope(&xrefAccess);
+    if (page->annots) {
+        ScopedCritSec scope(&xrefAccess);
 
-    for (pdf_annot *annot = page->annots; annot; annot = annot->next)
-        if (fz_is_pt_in_rect(annot->rect, p) &&
-            !str::IsEmpty(fz_to_str_buf(fz_dict_gets(annot->obj, "Contents")))) {
-            ScopedMem<TCHAR> contents(str::conv::FromPdf(fz_dict_gets(annot->obj, "Contents")));
-            return new PdfComment(contents, fz_rect_to_RectD(annot->rect), pageNo);
-        }
+        for (pdf_annot *annot = page->annots; annot; annot = annot->next)
+            if (fz_is_pt_in_rect(annot->rect, p) &&
+                !str::IsEmpty(fz_to_str_buf(fz_dict_gets(annot->obj, "Contents")))) {
+                ScopedMem<TCHAR> contents(str::conv::FromPdf(fz_dict_gets(annot->obj, "Contents")));
+                return new PdfComment(contents, fz_rect_to_RectD(annot->rect), pageNo);
+            }
+    }
 
     return NULL;
 }
@@ -1529,13 +1531,15 @@ Vec<PageElement *> *CPdfEngine::GetElements(int pageNo)
     for (pdf_link *link = page->links; link; link = link->next)
         els->Append(new PdfLink(this, link, pageNo));
 
-    ScopedCritSec scope(&xrefAccess);
+    if (page->annots) {
+        ScopedCritSec scope(&xrefAccess);
 
-    for (pdf_annot *annot = page->annots; annot; annot = annot->next)
-        if (!str::IsEmpty(fz_to_str_buf(fz_dict_gets(annot->obj, "Contents")))) {
-            ScopedMem<TCHAR> contents(str::conv::FromPdf(fz_dict_gets(annot->obj, "Contents")));
-            els->Append(new PdfComment(contents, fz_rect_to_RectD(annot->rect), pageNo));
-        }
+        for (pdf_annot *annot = page->annots; annot; annot = annot->next)
+            if (!str::IsEmpty(fz_to_str_buf(fz_dict_gets(annot->obj, "Contents")))) {
+                ScopedMem<TCHAR> contents(str::conv::FromPdf(fz_dict_gets(annot->obj, "Contents")));
+                els->Append(new PdfComment(contents, fz_rect_to_RectD(annot->rect), pageNo));
+            }
+    }
 
     return els;
 }
