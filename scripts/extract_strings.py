@@ -43,7 +43,7 @@ def parse_contrib_line(l):
 # Extract language code (e.g. "br") from language translation file name
 # (e.g. "br.txt" or "sr-sr.txt"). Returns None if file name doesn't fit expected pattern
 def lang_code_from_file_name(file_name):
-    match = re.match(r"(\w{2}(?:-\w{2})?)\.txt", file_name)
+    match = re.match(r"(\w{2}(?:-\w{2})?)\.txt$", file_name)
     return match and match.group(1)
 
 # The structure of strings file should be: comments section at the beginning of the file,
@@ -89,7 +89,7 @@ def load_one_strings_file(file_path, lang_code, strings_dict, langs_dict, contri
             assert not contributors
             (lang_iso, lang_name) = parse_lang_line(l)
             assert lang_iso == lang_code, "lang code ('%s') in file '%s' must match code in file name ('%s')" % (lang_iso, file_path, lang_code)
-            assert lang_iso not in langs_dict
+            assert lang_iso not in langs_dict, "lang_iso ('%s') in langs_dict ('%s')" % (lang_iso, langs_dict)
             langs_dict[lang_iso] = lang_name
             seen_lang = True
         elif is_contributor_line(l):

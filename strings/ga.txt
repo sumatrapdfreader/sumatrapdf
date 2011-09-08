@@ -71,6 +71,9 @@ For&mhéadú:
 &Manual
 &Lámhleabhar
 
+&Match case
+&Comhoiriúnaigh an cás
+
 &Next Page\tRight Arrow
 &Leathanach Ar Aghaidh\tSaighead ar deis
 
@@ -119,6 +122,9 @@ Cuimhnigh ar na socruithe seo do gach cáipéis
 &Remove Document
 &Bain cáipéis
 
+&Save As...
+&Cuir i dtaisce mar...
+
 &Save As...\tCtrl+S
 Cuir i dtaisce mar...\tCtrl+S
 
@@ -127,6 +133,9 @@ Cuir i dtaisce mar...\tCtrl+S
 
 &Shrink pages to printable area (if necessary)
 &Crap na leathanaigh go limistéar inchlóbhuailte (más gá)
+
+&Single Page\tCtrl+6
+&Leathanach amháin\tCtrl+6
 
 &Skip this version
 &Ná bac leis an leagan seo
@@ -199,6 +208,9 @@ Ceanáin\tF12
 
 Bookmark Shortcuts
 Déan ceanáin d'aicearraí
+
+Bookmark shortcut to page %s of %s
+Cruthaigh aicearra chuig lch %s as %s
 
 Bookmarks
 Ceanáin
@@ -305,6 +317,9 @@ Cuir isteach líne na n-orduithe atá le gairm nuair a bhrúann tú faoi dhó ar
 Error loading %s
 Tharla botún ag luchtú %s
 
+F&avorites
+Ce&anáin
+
 F&orward\tAlt+Right Arrow
 Ar aghaidh\tAlt+Saighead Ar Deis
 
@@ -316,6 +331,9 @@ Dhá Leathanach
 
 Failed to save a file
 Theip air comhad a chuir i dtaisce
+
+Favorites
+Ceanáin
 
 File Size:
 Méid an chomhaid:
@@ -362,6 +380,12 @@ Oiriúnaigh don leithead & taispeáin leathanaigh go leanúnach
 Fit a Single Page
 Oiriúnaigh leathanach amháin
 
+Found text at page %s
+Aimsíodh téacs ag lch a %s
+
+Found text at page %s (again)
+Aimsíodh téacs ag lch a %s (arís)
+
 Frequently Read
 Léite Go Minic
 
@@ -391,6 +415,9 @@ Bíodh SumatraPDF mar an léitheoir PDF réamhshocruithe?
 
 Make SumatraPDF my default PDF reader
 Bíodh SumatraPDF mar an léitheoir PDF réamhshocruithe
+
+Match Case
+Comhoiriúnaigh an cás
 
 Modified:
 Mionathraithe:
@@ -509,8 +536,17 @@ Bain ó na ceanáin
 Remove page %s from favorites
 Bain leathanach a %s ó na ceanáin
 
+Rotate &Left\tCtrl+Shift+-
+Rothlaigh tuathalach\tCtrl+Shift+-
+
+Rotate &Right\tCtrl+Shift++
+Rothlaigh deiseal\tCtrl+Shift++
+
 Save As
 Cuir i dtaisce mar
+
+Save S&hortcut...\tCtrl+Shift+S
+Cuir an t-aicearra i dtaisce...\tCtrl+Shift+S
 
 Searching %d of %d...
 Ag cuardach %d as %d...
@@ -535,6 +571,9 @@ Taispeáin an Barra Uirlisí
 
 Show &pages continuously
 Teaspáin na leathanaigh go leanúnach
+
+Show Favorites
+Taispeáin Ceanáin
 
 Show frequently read
 Taispeáin cinn léite go minic
@@ -619,19 +658,4 @@ ag macasamhlú an téacs
 
 printing document
 ag clóbhualadh an cháipéis
-
-# Untranslated:
-#&Match case
-#&Save As...
-#&Single Page\tCtrl+6
-#Bookmark shortcut to page %s of %s
-#F&avorites
-#Favorites
-#Found text at page %s
-#Found text at page %s (again)
-#Match Case
-#Rotate &Left\tCtrl+Shift+-
-#Rotate &Right\tCtrl+Shift++
-#Save S&hortcut...\tCtrl+Shift+S
-#Show Favorites
 
