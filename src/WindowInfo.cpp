@@ -130,9 +130,9 @@ void WindowInfo::MoveDocBy(int dx, int dy)
         this->dm->ScrollYBy(dy, FALSE);
 }
 
-#define MULTILINE_INFOTIP_WIDTH_PX 300
+#define MULTILINE_INFOTIP_WIDTH_PX 500
 
-void WindowInfo::CreateInfotip(const TCHAR *text, RectI& rc)
+void WindowInfo::CreateInfotip(const TCHAR *text, RectI& rc, bool multiline)
 {
     if (str::IsEmpty(text)) {
         this->DeleteInfotip();
@@ -146,7 +146,7 @@ void WindowInfo::CreateInfotip(const TCHAR *text, RectI& rc)
     ti.lpszText = (TCHAR *)text;
     ti.rect = rc.ToRECT();
 
-    if (str::FindChar(text, _T('\n')) || str::FindChar(text, _T('\r')))
+    if (multiline || str::FindChar(text, _T('\n')))
         SendMessage(this->hwndInfotip, TTM_SETMAXTIPWIDTH, 0, MULTILINE_INFOTIP_WIDTH_PX);
     else
         SendMessage(this->hwndInfotip, TTM_SETMAXTIPWIDTH, 0, -1);

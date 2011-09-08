@@ -196,7 +196,7 @@ public:
     void ToggleZoom();
     void MoveDocBy(int dx, int dy);
 
-    void CreateInfotip(const TCHAR *text, RectI& rc);
+    void CreateInfotip(const TCHAR *text, RectI& rc, bool multiline=false);
     void DeleteInfotip();
 
     // DisplayModelCallback implementation (incl. PasswordUI)

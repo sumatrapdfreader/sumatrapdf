@@ -3361,7 +3361,7 @@ static LRESULT OnSetCursor(WindowInfo& win, HWND hwnd)
                 if (pageEl) {
                     ScopedMem<TCHAR> text(pageEl->GetValue());
                     RectI rc = win.dm->CvtToScreen(pageEl->GetPageNo(), pageEl->GetRect());
-                    win.CreateInfotip(text, rc);
+                    win.CreateInfotip(text, rc, true);
 
                     bool isLink = pageEl->AsLink() != NULL;
                     delete pageEl;
