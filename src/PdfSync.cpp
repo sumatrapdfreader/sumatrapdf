@@ -171,7 +171,7 @@ TCHAR * Synchronizer::prepare_commandline(const TCHAR* pattern, const TCHAR* fil
         perc++;
 
         if (*perc == 'f')
-            cmdline.Append(filename);
+            cmdline.AppendAndFree(path::Normalize(filename));
         else if (*perc == 'l')
             cmdline.AppendFmt(_T("%u"), line);
         else if (*perc == 'c')
