@@ -87,6 +87,10 @@ void PaintSelection(WindowInfo *win, HDC hdc)
         if (MA_SELECTING_TEXT == win->mouseAction)
             UpdateTextSelection(win);
 
+        assert(win->selectionOnPage);
+        if (!win->selectionOnPage)
+            return;
+
         // after selection is done
         for (size_t i = 0; i < win->selectionOnPage->Count(); i++)
             PaintTransparentRectangle(hdc, win->canvasRc,
