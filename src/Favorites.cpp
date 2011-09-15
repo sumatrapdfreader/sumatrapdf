@@ -403,6 +403,9 @@ public:
 // (similar to how invoking one of the recently opened files works)
 static void GoToFavorite(WindowInfo *win, FileFavs *f, FavName *fn)
 {
+    assert(f && fn);
+    if (!f || !fn) return;
+
     WindowInfo *existingWin = FindWindowInfoByFile(f->filePath);
     if (existingWin) {
         QueueWorkItem(new GoToFavoriteWorkItem(existingWin, fn->pageNo));

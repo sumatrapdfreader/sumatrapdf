@@ -777,7 +777,10 @@ Error:
     }
     if (win.IsDocLoaded()) {
         ToggleWindowStyle(win.hwndPageBox, ES_NUMBER, !win.dm->engine || !win.dm->engine->HasPageLabels());
-        win.dm->SetScrollState(ss);
+        // if the window isn't shown and win.canvasRc is still empty, zoom has not been determined yet
+        assert(!showWin || !win.canvasRc.IsEmpty());
+        if (showWin || ss.page != 1)
+            win.dm->SetScrollState(ss);
         UpdateToolbarState(&win);
     }
 
