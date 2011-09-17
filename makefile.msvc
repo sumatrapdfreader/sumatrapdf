@@ -499,4 +499,4 @@ $(OS)\WindowInfo.obj: src\utils\WinUtil.h src\WindowInfo.h
 $(OS)\WinUtil.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
 $(OS)\WinUtil.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
 $(OS)\ZipUtil.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\StrUtil.h
-$(OS)\ZipUtil.obj: src\utils\ZipUtil.h
+$(OS)\ZipUtil.obj: src\utils\Vec.h src\utils\ZipUtil.h

@@ -4,7 +4,6 @@
 #include <windows.h>
 #include <dbghelp.h>
 #include <tlhelp32.h>
-#include "CrashHandler.h"
 
 #include "Version.h"
 
@@ -14,16 +13,29 @@
 #include "WinUtil.h"
 #include "FileUtil.h"
 #include "Http.h"
-#include "AppTools.h"
 #include "ZipUtil.h"
 #include "SimpleLog.h"
 
+#include "AppTools.h"
+#include "CrashHandler.h"
 #include "SumatraPDF.h"
-
 #include "translations.h"
 
 #ifndef CRASH_REPORT_URL
 #define CRASH_REPORT_URL _T("http://blog.kowalczyk.info/software/sumatrapdf/develop.html")
+#endif
+
+#ifndef SYMBOL_DOWNLOAD_URL
+#ifdef SVN_PRE_RELEASE_VER
+#define SYMBOL_DOWNLOAD_URL _T("http://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-") _T(QM(SVN_PRE_RELEASE_VER)) _T(".pdb.zip")
+#else
+#define SYMBOL_DOWNLOAD_URL _T("http://kjkpub.s3.amazonaws.com/sumatrapdf/rel/SumatraPDF-") _T(QM(CURR_VERSION)) _T(".pdb.zip")
+#endif
+#endif
+
+#if !defined(CRASH_SUBMIT_SERVER) || !defined(CRASH_SUBMIT_URL)
+#define CRASH_SUBMIT_SERVER _T("blog.kowalczyk.info")
+#define CRASH_SUBMIT_URL    _T("/app/crashsubmit?appname=SumatraPDF")
 #endif
 
 //#define DEBUG_CRASH_INFO 1
@@ -132,7 +144,7 @@ static HANDLE gDumpThread = NULL;
 static MINIDUMP_EXCEPTION_INFORMATION gMei = { 0 };
 static BOOL gSymInitializeOk = FALSE;
 
-#if defined(DEBUG_CRASH_INFO)
+#ifdef DEBUG_CRASH_INFO
 static Log::MemoryLogger gDbgLog;
 #define LogDbg(msg, ...) gDbgLog.LogFmt(_T(msg), __VA_ARGS__)
 #else
@@ -850,9 +862,6 @@ static char *BuildCrashInfoText()
     return s.StealData();
 }
 
-#define CRASH_SUBMIT_SERVER _T("blog.kowalczyk.info")
-#define CRASH_SUBMIT_URL    _T("/app/crashsubmit?appname=SumatraPDF")
-
 static void SendCrashInfo(char *s)
 {
     if (str::IsEmpty(s))
@@ -884,28 +893,21 @@ static bool DeleteSymbolsIfExist(const TCHAR *symDir)
     return file::Delete(path);
 }
 
-// In static (single executable) pre-release build, the pdb file inside 
-// symbolsZipPath is named SumatraPDF-prelease-${buildno}.pdb and must be
-// extracted as "SumatraPDF.pdb"
-static bool UnpackStaticPreReleaseSymbols(const TCHAR *symbolsZipPath, const TCHAR *symDir)
+// In static (single executable) builds, the pdf file inside
+// symbolsZipPath are named SumatraPDF-${ver}.pdb (release) resp.
+// SumatraPDF-prelease-${buildno}.pdb (pre-release) and must be
+// extracted as SumatraPDF.pdf to match the executable name
+static bool UnpackStaticSymbols(const TCHAR *symbolsZipPath, const TCHAR *symDir)
 {
     FileToUnzip filesToUnnpack[] = {
-        { "SumatraPDF-prerelease", _T("SumatraPDF.pdb"), false },
-        { NULL, false }
+#ifdef SVN_PRE_RELEASE_VER
+        { "SumatraPDF-prerelease-" QM(SVN_PRE_RELEASE_VER) ".pdb", _T("SumatraPDF.pdb") },
+#else
+        { "SumatraPDF-" QM(CURR_VERSION) ".pdb", _T("SumatraPDF.pdb") },
+#endif
+        { NULL }
     };
-    return UnzipFilesStartingWith(symbolsZipPath, filesToUnnpack, symDir);
-}
-
-// In static (single executable) release build, the pdb file inside
-// symbolsZipPath is named SumatraPDF-${ver}.pdb and must be extracted as
-// SumatraPDF.pdb, to match executable name
-static bool UnpackStaticReleaseSymbols(const TCHAR *symbolsZipPath, const TCHAR *symDir)
-{
-    FileToUnzip filesToUnnpack[] = {
-        { "SumatraPDF-" QM(CURR_VERSION) ".pdb", _T("SumatraPDF.pdb"), false },
-        { NULL, false }
-    };
-    return UnzipFilesStartingWith(symbolsZipPath, filesToUnnpack, symDir);
+    return UnzipFiles(symbolsZipPath, filesToUnnpack, symDir);
 }
 
 // In lib (.exe + libmupdf.dll) release and pre-release builds, the pdb files
@@ -915,73 +917,47 @@ static bool UnpackStaticReleaseSymbols(const TCHAR *symbolsZipPath, const TCHAR 
 static bool UnpackLibSymbols(const TCHAR *symbolsZipPath, const TCHAR *symDir)
 {
     FileToUnzip filesToUnnpack[] = {
-        { "libmupdf.pdb", NULL, false },
-        { "SumatraPDF-no-MuPDF.pdb", NULL, false },
-        { NULL, false }
+        { "libmupdf.pdb", NULL },
+        { "SumatraPDF-no-MuPDF.pdb", _T("SumatraPDF.pdf") },
+        { NULL }
     };
-    return UnzipFilesStartingWith(symbolsZipPath, filesToUnnpack, symDir);
-}
-
-static bool DownloadPreReleaseSymbols(const TCHAR *symDir)
-{
-    TCHAR *url = _T("http://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-") _T(QM(SVN_PRE_RELEASE_VER)) _T(".pdb.zip");
-    ScopedMem<TCHAR> symbolsZipPath(path::Join(symDir, _T("symbols_tmp.zip")));
-    if (!HttpGetToFile(url, symbolsZipPath))
-        return false;
-    bool ok = false;
-    if (IsStaticBuild()) {
-        ok = UnpackStaticPreReleaseSymbols(symbolsZipPath, symDir);
-        if (!ok)
-            LogDbg("Couldn't unpack pre-release symbols for static build");
-    } else {
-        ok = UnpackLibSymbols(symbolsZipPath, symDir);
-        if (!ok)
-            LogDbg("Couldn't unpack pre-release symbols for lib build");
-    }
-    file::Delete(symbolsZipPath);
-    return ok;
-}
-
-static bool DownloadReleaseSymbols(const TCHAR *symDir)
-{
-    TCHAR *url = _T("http://kjkpub.s3.amazonaws.com/sumatrapdf/rel/SumatraPDF-") _T(QM(CURR_VERSION)) _T(".pdb.zip");
-    ScopedMem<TCHAR> symbolsZipPath(path::Join(symDir, _T("symbols_tmp.zip")));
-    if (!HttpGetToFile(url, symbolsZipPath)) {
-        LogDbg("Couldn't download release symbols");
-        return false;
-    }
-    bool ok = false;
-    if (IsStaticBuild()) {
-        ok = UnpackStaticReleaseSymbols(symbolsZipPath, symDir);
-        if (!ok)
-            LogDbg("Couldn't unpack release symbols for static build");
-    } else {
-        ok = UnpackLibSymbols(symbolsZipPath, symDir);
-        if (!ok)
-            LogDbg("Couldn't unpack release symbols for lib build");
-    }
-    file::Delete(symbolsZipPath);
-    return ok;
+    return UnzipFiles(symbolsZipPath, filesToUnnpack, symDir);
 }
 
 // *.pdb files are on S3 with a known name. Try to download them here to a directory
 // in symbol path to get meaningful callstacks 
 static bool DownloadSymbols(const TCHAR *symDir)
 {
-    if (!symDir || !dir::Exists(symDir)) return false;
+    if (!symDir || !dir::Exists(symDir))
+        return false;
     if (!DeleteSymbolsIfExist(symDir))
         return false;
 
-#if defined(DEBUG)
+#ifdef DEBUG
     // don't care about debug builds because we don't release them
     return false;
 #endif
 
-#if defined(SVN_PRE_RELEASE_VER)
-    return DownloadPreReleaseSymbols(symDir);
-#else
-    return DownloadReleaseSymbols(symDir);
+    ScopedMem<TCHAR> symbolsZipPath(path::Join(symDir, _T("symbols_tmp.zip")));
+    if (!HttpGetToFile(SYMBOL_DOWNLOAD_URL, symbolsZipPath)) {
+#ifndef SVN_PRE_RELEASE_VER
+        LogDbg("Couldn't download release symbols");
 #endif
+        return false;
+    }
+
+    bool ok = false;
+    if (IsStaticBuild()) {
+        ok = UnpackStaticSymbols(symbolsZipPath, symDir);
+        if (!ok)
+            LogDbg("Couldn't unpack symbols for static build");
+    } else {
+        ok = UnpackLibSymbols(symbolsZipPath, symDir);
+        if (!ok)
+            LogDbg("Couldn't unpack symbols for lib build");
+    }
+    file::Delete(symbolsZipPath);
+    return ok;
 }
 
 // If we can't resolve the symbols, we assume it's because we don't have symbols
@@ -1025,7 +1001,7 @@ void SubmitCrashInfo()
     SendCrashInfo(s);
 Exit:
     free(s);
-#if defined(DEBUG_CRASH_INFO)
+#ifdef DEBUG_CRASH_INFO
     ScopedMem<char> log_utf8(str::conv::ToUtf8(gDbgLog.GetData()));
     SendCrashInfo(log_utf8);
 #endif
