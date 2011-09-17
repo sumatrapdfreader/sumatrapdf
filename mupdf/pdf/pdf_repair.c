@@ -36,11 +36,14 @@ pdf_repair_obj(fz_stream *file, char *buf, int cap, int *stmofsp, int *stmlenp, 
 		/* Send NULL xref so we don't try to resolve references */
 		error = pdf_parse_dict(&dict, NULL, file, buf, cap);
 		/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692506 */
-		if (error)
+		if (error && !file->eof)
 		{
 			fz_catch(error, "cannot parse object, proceeding anyway");
 			dict = fz_new_dict(2);
 		}
+		else
+		if (error)
+			return fz_rethrow(error, "cannot parse object");
 
 		obj = fz_dict_gets(dict, "Type");
 		if (fz_is_name(obj) && !strcmp(fz_to_name(obj), "XRef"))
