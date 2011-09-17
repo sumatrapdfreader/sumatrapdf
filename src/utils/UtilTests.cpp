@@ -371,17 +371,23 @@ static void FileUtilTest()
     const TCHAR *baseName = path::GetBaseName(path1);
     assert(str::Eq(baseName, _T("SumatraPDF.exe")));
 
-    TCHAR *dirName = path::GetDir(path1);
+    ScopedMem<TCHAR> dirName(path::GetDir(path1));
     assert(str::Eq(dirName, _T("C:\\Program Files\\SumatraPDF")));
     baseName = path::GetBaseName(dirName);
     assert(str::Eq(baseName, _T("SumatraPDF")));
-    free(dirName);
+
+    dirName.Set(path::GetDir(_T("C:\\Program Files")));
+    assert(str::Eq(dirName, _T("C:\\")));
+    dirName.Set(path::GetDir(dirName));
+    assert(str::Eq(dirName, _T("C:\\")));
+    dirName.Set(path::GetDir(_T("\\\\server")));
+    assert(str::Eq(dirName, _T("\\\\server")));
+    dirName.Set(path::GetDir(_T("file.exe")));
+    assert(str::Eq(dirName, _T(".")));
+    dirName.Set(path::GetDir(_T("/etc")));
+    assert(str::Eq(dirName, _T("/")));
 
     path1 = _T("C:\\Program Files");
-    dirName = path::GetDir(path1);
-    assert(str::Eq(dirName, _T("C:\\")));
-    free(dirName);
-
     TCHAR *path2 = path::Join(_T("C:\\"), _T("Program Files"));
     assert(str::Eq(path1, path2));
     free(path2);

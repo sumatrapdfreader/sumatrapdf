@@ -118,11 +118,10 @@ TCHAR *AppGenDataFilename(TCHAR *pFilename)
     ScopedMem<TCHAR> path;
     if (IsRunningInPortableMode()) {
         /* Use the same path as the binary */
-        TCHAR *exePath = GetExePath();
+        ScopedMem<TCHAR> exePath(GetExePath());
         if (exePath) {
             assert(exePath[0]);
             path.Set(path::GetDir(exePath));
-            free(exePath);
         }
     } else {
         /* Use %APPDATA% */

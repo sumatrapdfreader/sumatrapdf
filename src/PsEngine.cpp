@@ -51,8 +51,6 @@ TryAgain64Bit:
             if (!GS_DLL)
                 continue;
             ScopedMem<TCHAR> dir(path::GetDir(GS_DLL));
-            if (str::IsEmpty(dir.Get()))
-                continue;
             ScopedMem<TCHAR> exe(path::Join(dir, _T("gswin32c.exe")));
             if (file::Exists(exe))
                 return exe.StealData();

@@ -829,13 +829,12 @@ bool WriteExtendedFileExtensionInfo(HKEY hkey)
 
 bool CreateInstallationDirectory()
 {
-    bool ok = CreateDirectory(gGlobalData.installDir, NULL);
-    if (!ok && (GetLastError() != ERROR_ALREADY_EXISTS)) {
+    bool ok = dir::CreateAll(gGlobalData.installDir);
+    if (!ok) {
         SeeLastError();
-        NotifyFailed(_T("Couldn't create installation directory"));
-        return false;
+        NotifyFailed(_T("Couldn't create the installation directory"));
     }
-    return true;
+    return ok;
 }
 
 #else

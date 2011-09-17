@@ -36,6 +36,7 @@ namespace dir {
 
 bool         Exists(const TCHAR *dir);
 bool         Create(const TCHAR *dir);
+bool         CreateAll(const TCHAR *dir);
 
 }
 

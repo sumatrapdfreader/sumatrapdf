@@ -50,14 +50,16 @@ const TCHAR *GetExt(const TCHAR *path)
 TCHAR *GetDir(const TCHAR *path)
 {
     const TCHAR *baseName = GetBaseName(path);
-    size_t dirLen;
-    if (baseName <= path + 1)
-        dirLen = str::Len(path);
-    else if (baseName[-2] == ':')
-        dirLen = baseName - path;
-    else
-        dirLen = baseName - path - 1;
-    return str::DupN(path, dirLen);
+    if (baseName == path) // relative directory
+        return str::Dup(_T("."));
+    if (baseName == path + 1) // relative root
+        return str::DupN(path, 1);
+    if (baseName == path + 3 && path[1] == ':') // local drive root
+        return str::DupN(path, 3);
+    if (baseName == path + 2 && str::StartsWith(path, _T("\\\\"))) // server root
+        return str::Dup(path);
+    // any subdirectory
+    return str::DupN(path, baseName - path - 1);
 }
 
 TCHAR *Join(const TCHAR *path, const TCHAR *filename)
@@ -348,6 +350,15 @@ bool Create(const TCHAR *dir)
     if (ok)
         return true;
     return ERROR_ALREADY_EXISTS == GetLastError();
+}
+
+// creates a directory and all its parent directories that don't exist yet
+bool CreateAll(const TCHAR *dir)
+{
+    ScopedMem<TCHAR> parent(path::GetDir(dir));
+    if (!str::Eq(parent, dir) && !Exists(parent))
+        CreateAll(parent);
+    return Create(dir);
 }
 
 }
