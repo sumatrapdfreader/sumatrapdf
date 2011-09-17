@@ -64,7 +64,9 @@ fz_new_pixmap_with_data(fz_colorspace *colorspace, int w, int h, unsigned char *
 	{
 		/* SumatraPDF: abort on integer overflow */
 		if (pix->w > INT_MAX / pix->n) abort();
+		fz_synchronize_begin();
 		fz_memory_used += pix->w * pix->h * pix->n;
+		fz_synchronize_end();
 		pix->samples = fz_calloc(pix->h, pix->w * pix->n);
 		pix->free_samples = 1;
 	}
@@ -124,7 +126,9 @@ fz_drop_pixmap(fz_pixmap *pix)
 {
 	if (pix && --pix->refs == 0)
 	{
+		fz_synchronize_begin();
 		fz_memory_used -= pix->w * pix->h * pix->n;
+		fz_synchronize_end();
 		if (pix->mask)
 			fz_drop_pixmap(pix->mask);
 		if (pix->colorspace)
