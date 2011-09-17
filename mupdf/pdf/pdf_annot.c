@@ -550,6 +550,7 @@ pdf_update_tx_widget_annot(pdf_xref *xref, fz_obj *obj)
 
 	fz_free(ucs2);
 	fz_buffer_printf(content, "ET Q EMC");
+	fz_drop_buffer(base_ap);
 
 	rect = fz_transform_rect(fz_rotate(-rotate), rect);
 	return pdf_create_annot(rect, fz_keep_obj(obj), content, res ? fz_keep_obj(res) : NULL);
