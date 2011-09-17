@@ -1379,3 +1379,29 @@ fz_new_gdiplus_device(void *hDC, fz_bbox baseClip)
 	
 	return dev;
 }
+
+/* TODO: move concurrency related code to another file(?) */
+
+class NativeLock
+{
+	CRITICAL_SECTION cs;
+
+public:
+	NativeLock() { InitializeCriticalSection(&cs); }
+	~NativeLock() { DeleteCriticalSection(&cs); }
+
+	void Acquire() { EnterCriticalSection(&cs); }
+	void Release() { LeaveCriticalSection(&cs); }
+};
+
+static NativeLock globalLock;
+
+extern "C" void fz_synchronize_begin()
+{
+	globalLock.Acquire();
+}
+
+extern "C" void fz_synchronize_end()
+{
+	globalLock.Release();
+}

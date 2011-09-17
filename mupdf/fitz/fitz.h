@@ -1135,4 +1135,8 @@ enum
 	FZ_BLEND_KNOCKOUT = 32
 };
 
+/* SumatraPDF: basic global synchronizing */
+void fz_synchronize_begin();
+void fz_synchronize_end();
+
 #endif
