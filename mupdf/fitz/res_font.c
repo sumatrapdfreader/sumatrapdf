@@ -208,6 +208,17 @@ fz_check_font_dimensions(FT_Face face)
 		face->bbox.yMax = face->units_per_EM;
 		face->ascender = face->units_per_EM;
 	}
+
+	/* use default values for fonts with an empty glyph bbox */
+	if (face->bbox.xMin == 0 && face->bbox.yMin == 0 &&
+		face->bbox.xMax == 0 && face->bbox.yMax == 0 &&
+		face->ascender == 0 && face->descender == 0)
+	{
+		face->bbox.xMax = face->units_per_EM;
+		face->bbox.yMax = face->units_per_EM;
+		face->ascender = 0.8f * face->units_per_EM;
+		face->descender = -0.2f * face->units_per_EM;
+	}
 }
 
 fz_error
