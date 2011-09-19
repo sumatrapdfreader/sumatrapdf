@@ -9,7 +9,7 @@
 Lang: sr-rs Serbian (Cyrillic)
 
 Contributor: Горан Обрадовић
-Contributor: Slavko Majski (shobra@gmail.com)
+Contributor: Славко Мајски
 Contributor: Милан Гашић
 
 &About
@@ -19,7 +19,7 @@ Contributor: Милан Гашић
 Стварна величина\tCtrl+1
 
 &All selected pages
-Све одабране странице
+Све изабране странице
 
 &Back\tAlt+Left Arrow
 Назад\tAlt+<-
@@ -43,7 +43,7 @@ Contributor: Милан Гашић
 Само лица страница
 
 &Facing\tCtrl+7
-Две странице\tCtrl+7
+Наспрамно\tCtrl+7
 
 &File
 Датотека
@@ -55,13 +55,13 @@ Contributor: Милан Гашић
 Прва страница\tHome
 
 &Fit pages to printable area
-Подеси странице на област штампања
+Подеси странице према области штампања
 
 &Go To
-Иди на
+Иди
 
 &Go to page:
-Иди на страну:
+Иди на страницу:
 
 &Help
 Помоћ
@@ -160,22 +160,22 @@ Contributor: Милан Гашић
 (од %d)
 
 (page %s)
-(страница %s)
+(%s. страница)
 
 About SumatraPDF
 О програму SumatraPDF
 
 Add Favorite
-Додај у одабир
+Додавање у одабир
 
 Add page %s to favorites
-Додај страницу %s у одабир
+Додај страницу %s међу одабране
 
 Add page %s to favorites with (optional) name:
-Додај страницу %s у одабир под (опционо) именом:
+Додај страницу %s међу одабране под (опционо) именом:
 
 Add to favorites
-Додај у одабир
+Додај међу одабране
 
 Advanced
 Додатно
@@ -190,7 +190,7 @@ Application:
 Апликација:
 
 Associate with PDF files?
-Повезати са PDF датотекама?
+Придружити PDF датотекама?
 
 Attachment: %s
 Прилог : %s
@@ -208,31 +208,31 @@ Book View
 Изглед књиге
 
 Book&marks\tF12
-Белешке\tF12
+Обележивачи\tF12
 
 Bookmark Shortcuts
-Запамти пречице
+Пречица ка обележивачу
 
 Bookmark shortcut to page %s of %s
-Запамти пречицу на страни %s од %s
+Обележи пречицу на страни %s од %s
 
 Bookmarks
-Одабир
+Обележивачи
 
 Bytes
-Бајтова
+бајтова
 
 Can't connect to the Internet (error %#x).
-Повезивање на интернет није могуће (error %#x).
+Повезивање на интернет није могуће (грешка %#x).
 
 Cancel
-Одустани
+Откажи
 
 Cannot print this file
 Штампање ове датотеке није могуће
 
 Cannot start inverse search command. Please check the command line in the settings.
-Не могу да започнем команду инверзне претраге. Проверите командну линију у опцијама.
+Није могуће покренути инверзну претрагу. Проверите командну линију у подешавањима.
 
 Change Language
 Промени језик (Change Language)
@@ -247,13 +247,13 @@ Continuous
 Непрекидно
 
 Continuous Book View
-Нерекидни изглед књиге
+Непрекидно, изглед књиге
 
 Continuous Facing
-Непрекидно, две странице
+Непрекидно, наспрамно
 
 Contribute Translation
-Помози у превођењу овог програма
+Учествуј у превођењу
 
 Copy &Link Address
 Копирај адресу везе
@@ -274,16 +274,16 @@ Couldn't initialize printer
 Није могуће покренути штампач
 
 Couldn't render the page
-Немогуће приказивање странице
+Није могуће приказати страницу
 
 Created:
-Израђено:
+Израђена:
 
 Current file
 Текућа датотека
 
 Custom &Zoom...\tCtrl+Y
-Изборно увећање...\tCtrl+Y
+Прилагођено увећање...\tCtrl+Y
 
 Default &Layout:
 Подразумевани приказ
@@ -292,7 +292,7 @@ Default &Zoom:
 Подразумевано увећање
 
 Default PDF reader can't be changed in portable mode
-Главни PDF читач не може бити промењен у преносивном моду
+Подразумевани PDF читач не може бити промењен у преносивном режиму
 
 Denied Permissions:
 Није допуштено:
@@ -316,13 +316,13 @@ Enter password for %s
 Унесите лозинку за %s
 
 Enter the command-line to invoke when you double-click on the PDF document:
-Искористи двоструки клик на документ као позив командне линије:
+Унесите параметре командне линије који ће се извршити приликом двоклика на PDF документ:
 
 Error loading %s
-Грешка у учитавању %s
+Дошло је до грешке приликом учитавања датотеке %s
 
 F&avorites
-&Одабир
+Одабир
 
 F&orward\tAlt+Right Arrow
 Напред\tAlt+->
@@ -331,16 +331,16 @@ F&ullscreen\tCtrl+Shift+L
 Цео екран\tCtrl+Shift+L
 
 Facing
-Две странице
+Наспрамно
 
 Failed to save a file
-Грешка при снимању PDF документа
+Чување датотеке није успело
 
 Favorites
 Одабир
 
 File Size:
-Величина датотеке:
+Величина:
 
 File:
 Датотека:
@@ -361,37 +361,37 @@ Find:
 Пронађи:
 
 Fit &Content\tCtrl+3
-Прилагоди садржају\tCtrl+3
+Подеси према садржају\tCtrl+3
 
 Fit &Page\tCtrl+0
-Прилагоди страници\tCtrl+0
+Подеси према страници\tCtrl+0
 
 Fit &Width\tCtrl+2
-Прилагоди ширини\tCtrl+2
+Подеси према ширини\tCtrl+2
 
 Fit Content
-Прилагоди садржају
+Подеси према садржају
 
 Fit Page
-Прилагоди страници
+Подеси према страници
 
 Fit Width
-Прилагоди ширини
+Подеси према ширини
 
 Fit Width and Show Pages Continuously
-Прилагоди ширини и прикажи непрекинуте странице
+Подеси према ширини и прикажи странице без прекида
 
 Fit a Single Page
-Прилагоди појединачној страници
+Подеси према појединачној страници
 
 Found text at page %s
-Текст је пронађен на страни %s
+Текст је пронађен на %s страници
 
 Found text at page %s (again)
-Пронађи текст на страни %s (поново)
+Пронађи текст на %s страници (поново)
 
 Frequently Read
-Често читано
+Недавно читано
 
 GB
 GB
@@ -400,16 +400,16 @@ Go to page
 Иди на страницу
 
 Hide frequently read
-Сакриј често читано
+Сакриј „недавно читано”
 
 Hint: Use the F3 key for finding again
-Савет: Користите тастер F3 за наставак претраге
+Савет: Употребите тастер F3 за наставак претраге
 
 Image files (*.%s)
 Датотеке слика (*.%s)
 
 KB
-KB
+kB
 
 MB
 MB
@@ -418,16 +418,16 @@ Make SumatraPDF default application for PDF files?
 Поставити SumatraPDF као подразумевану апликацију за PDF датотеке?
 
 Make SumatraPDF my default PDF reader
-Нека SumatraPFD буде главни PDF читач
+Нека SumatraPFD буде подразумевани PDF читач
 
 Match Case
 Разликуј мала и велика слова
 
 Modified:
-Измењено:
+Измењена:
 
 New version %s is available. Download new version?
-Доступна је верзија %s. Преузети нову верзију?
+Доступна је верзија %s. Желите ли да преузмете нову верзију?
 
 Next Page
 Следећа страница
@@ -490,19 +490,19 @@ Page %s
 Страница %s
 
 Page Size:
-Величина странице
+Димензије странице:
 
 Page number %u inexistant
-Страна број %u не постоји
+Страница број %u не постоји
 
 Page scaling
-Размеравање странице
+Подешавање величине странице
 
 Page:
 Страница:
 
 Please wait - rendering...
-Молимо сачекајте - спремам приказ...
+Спремање приказа...
 
 Postscript documents
 Postscript документи
@@ -523,22 +523,22 @@ Printer with given name doesn't exist
 Штампач са наведеним именом не постоји
 
 Printing is still in progress. Abort and start over?
-Штампање је још увек у току. Прекини и поново почни?
+Штампање је још увек у току. Желите ли да прекинете штампање и почнете поново?
 
 Printing page %d of %d...
-Штампање стране %d од %d...
+Штампање %d. страмоце од укупно %d...
 
 Printing problem.
-Проблем при штампању
+Проблем приликом штампања.
 
 Remember &opened files
-Запамти отворене датотеке
+Запамти отваране датотеке
 
 Remove from favorites
-Уклони из одабира
+Уклони из одабраних
 
 Remove page %s from favorites
-Уклони страницу %s из одабира
+Уклони страницу %s из одабраних
 
 Rotate &Left\tCtrl+Shift+-
 Ротирај улево\tCtrl+Shift+-
@@ -553,7 +553,7 @@ Save S&hortcut...\tCtrl+Shift+S
 Сачувај пречицу...\tCtrl+Shift+S
 
 Searching %d of %d...
-Претражујем страницу %d од %d...
+Претраживање %d странице од укупно %d...
 
 Select &All
 Изабери све
@@ -562,37 +562,37 @@ Select &All\tCtrl+A
 Изабери све\tCtrl+A
 
 Select content with Ctrl+left mouse button
-Да изаберете садржај, користите Ctrl и лево дугме миша
+Изаберите садржај користећи Ctrl + лево дугме миша
 
 Send by &E-mail...
-Пошаљи е-поштом...
+Пошаљи путем е-поштое...
 
 Set inverse search command-line
 Омогући инверзну претрагу
 
 Show &Toolbar
-Прикажи траку са алатима
+Трака са алаткама
 
 Show &pages continuously
-Непрекидни приказ страница
+Прикажи странице без прекида
 
 Show Favorites
-Прикажи одабир
+Прикажи одабране странице
 
 Show frequently read
-Прикажи често читано
+Прикажи недавно читане
 
 Show the &bookmarks sidebar when available
-Прикажи траку са белешкама када је доступна
+Прикажи бочну траку са обележивачима кад год су доступни
 
 Single Page
 Појединачна страница
 
 Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
-Извини, ово се није требало догодити!\n\nмолим притисни 'Одустани', уколико желиш да нам помогнеш да решимо узрок овог рушења.
+Опростите, ово није требало да се догоди!\n\nПритисните дугме 'Откажи' ако желите да нам помогнете у решавању овог проблема.
 
 Source file %s has no synchronization point
-Изворна датотека %s нема тачку синхронизације
+Изворна датотека %s нема тачку усклађивања
 
 Subject:
 Предмет:
@@ -601,16 +601,16 @@ SumatraPDF Options
 Подешавања програма SumatraPDF
 
 SumatraPDF Update
-Ажурирање SumatraPDF
+Ажурирање програма SumatraPDF
 
 SumatraPDF crashed
-SumatraPDF се срушила
+Програм SumatraPDF је крахирао
 
 SumatraPDF is your default PDF reader
-SumatraPDF је ваш главни PDF читач
+SumatraPDF је ваш подразумевани PDF читач
 
 SumatraPDF should now be your default PDF reader
-SumatraPDF би сада требао да буде ваш главни PDF читач
+SumatraPDF је постављен као подразумевани PDF читач
 
 Synchronization file cannot be opened
 Није могуће отворити усклађивачку датотеку
@@ -628,7 +628,7 @@ View
 Приказ
 
 Visit &Website
-Посети Интернет страницу
+Посети веб-сајт
 
 Warning
 Упозорење
@@ -637,10 +637,10 @@ XPS documents
 XPS документи
 
 You have the latest version.
-Имате најновију верзију.
+Ваша верзија је ажурна.
 
 You have version %s
-Имате верзију %s.
+Имате верзију %s
 
 Zoom
 Увећај
@@ -652,10 +652,10 @@ Zoom Out
 Умањи
 
 Zoom factor
-Фактор увећања
+Проценат увећања
 
 [Changes detected; refreshing] %s
-[Промене су примећене; освежавам] %s
+[Промене су примећене; освежавање] %s
 
 copying text
 копирање текста
