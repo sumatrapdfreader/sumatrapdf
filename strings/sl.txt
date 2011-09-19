@@ -159,8 +159,23 @@ Po&večava
 (of %d)
 (od %d)
 
+(page %s)
+(stran %s)
+
 About SumatraPDF
 O programu SumatraPDF
+
+Add Favorite
+Dodaj Priljubljene
+
+Add page %s to favorites
+Dodaj stran %s med priljubljene
+
+Add page %s to favorites with (optional) name:
+Dodaj stran %s med priljubljene z (neobveznim) imenom:
+
+Add to favorites
+Dodaj med priljubljene
 
 Advanced
 Napredno
@@ -249,6 +264,9 @@ Kopiraj ko&mentar
 Copying text was denied (copying as image only)
 Kopiranje besedila je bilo zavrnjeno (kopiranje samo kot slika)
 
+Could not obtain Printer properties
+Ne morem dobiti Lastnosti tiskalnika
+
 Could not open Printer
 Do tiskalnika ni mogoče dostopati
 
@@ -260,6 +278,9 @@ Strani ni mogoče upodobiti
 
 Created:
 Ustvarjeno:
+
+Current file
+Trenutna datoteka
 
 Custom &Zoom...\tCtrl+Y
 Povečava po &meri …\tCtrl+Y
@@ -300,6 +321,9 @@ Vnesite ukazno vrstico, ki se bo izvedla, ko boste dvokliknili na PDF dokument:
 Error loading %s
 Napaka pri nalaganju %s
 
+F&avorites
+Priljubljeni
+
 F&orward\tAlt+Right Arrow
 Naprej\tAlt+Desna puščica
 
@@ -311,6 +335,9 @@ Dvostransko
 
 Failed to save a file
 Shranjevanje datoteke ni uspelo.
+
+Favorites
+Priljubljeni
 
 File Size:
 Velikost datoteke:
@@ -459,6 +486,9 @@ Dokumenti PDF
 Pa&ge...\tCtrl+G
 Stran …\tCtrl+G
 
+Page %s
+Stran %s
+
 Page Size:
 Velikost strani:
 
@@ -489,6 +519,9 @@ Natisni
 Print range
 Natisni razpon
 
+Printer with given name doesn't exist
+Tiskalnik z navedenim imenom ne obstaja
+
 Printing is still in progress. Abort and start over?
 Tiskanje je še vedno v teku. Prekinem in začnem znova?
 
@@ -500,6 +533,12 @@ Težave pri tiskanju.
 
 Remember &opened files
 &Zapomni si odprte datoteke
+
+Remove from favorites
+Odstrani iz priljubljenih
+
+Remove page %s from favorites
+Odstrani stran %s iz priljubljenih
 
 Rotate &Left\tCtrl+Shift+-
 Zasukaj v levo\tCtrl+Shift+-
@@ -536,6 +575,9 @@ Pokaži orodno vrstico
 
 Show &pages continuously
 &Prikaži strani nepretrgano
+
+Show Favorites
+Prikaži Priljubljene
 
 Show frequently read
 Prikaži pogosto brane
@@ -620,20 +662,4 @@ kopiranje besedila
 
 printing document
 tiskanje dokumenta
-
-# Untranslated:
-#(page %s)
-#Add Favorite
-#Add page %s to favorites
-#Add page %s to favorites with (optional) name:
-#Add to favorites
-#Could not obtain Printer properties
-#Current file
-#F&avorites
-#Favorites
-#Page %s
-#Printer with given name doesn't exist
-#Remove from favorites
-#Remove page %s from favorites
-#Show Favorites
 
