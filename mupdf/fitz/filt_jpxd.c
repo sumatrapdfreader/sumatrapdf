@@ -5,17 +5,17 @@
 
 static void fz_opj_error_callback(const char *msg, void *client_data)
 {
-	fprintf(stderr, "openjpeg error: %s", msg);
+	fz_warn("openjpeg error: %s", msg);
 }
 
 static void fz_opj_warning_callback(const char *msg, void *client_data)
 {
-	fprintf(stderr, "openjpeg warning: %s", msg);
+	fz_warn("openjpeg warning: %s", msg);
 }
 
 static void fz_opj_info_callback(const char *msg, void *client_data)
 {
-	/* fprintf(stderr, "openjpeg info: %s", msg); */
+	/* fz_warn("openjpeg info: %s", msg); */
 }
 
 fz_error

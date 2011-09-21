@@ -61,6 +61,8 @@ extern void ximage_blit(Drawable d, GC gc, int dstx, int dsty,
 	unsigned char *srcdata,
 	int srcx, int srcy, int srcw, int srch, int srcstride);
 
+void windrawstringxor(pdfapp_t *app, int x, int y, char *s);
+
 static Display *xdpy;
 static Atom XA_TARGETS;
 static Atom XA_TIMESTAMP;
@@ -90,6 +92,7 @@ static char *filename;
 static pdfapp_t gapp;
 static int closing = 0;
 static int reloading = 0;
+static int showingpage = 0;
 
 /*
  * Dialog boxes
@@ -358,6 +361,13 @@ static void winblit(pdfapp_t *app)
 	}
 
 	winblitsearch(app);
+
+	if (showingpage)
+	{
+		char buf[42];
+		snprintf(buf, sizeof buf, "Page %d/%d", gapp.pageno, gapp.pagecount);
+		windrawstringxor(&gapp, 10, 20, buf);
+	}
 }
 
 void winrepaint(pdfapp_t *app)
@@ -388,8 +398,6 @@ void windrawstringxor(pdfapp_t *app, int x, int y, char *s)
 	XGetGCValues(xdpy, xgc, GCFunction, &xgcv);
 	xgcv.function = prevfunction;
 	XChangeGC(xdpy, xgc, GCFunction, &xgcv);
-
-	printf("drawstring '%s'\n", s);
 }
 
 void windrawstring(pdfapp_t *app, int x, int y, char *s)
@@ -509,6 +517,13 @@ static void onkey(int c)
 		winrepaint(&gapp);
 	}
 
+	if (c == 'P')
+	{
+		showingpage = 1;
+		winrepaint(&gapp);
+		return;
+	}
+
 	pdfapp_onkey(&gapp, c);
 }
 
@@ -554,6 +569,10 @@ int main(int argc, char **argv)
 	fd_set fds;
 	int width = -1;
 	int height = -1;
+	struct timeval tmo_at;
+	struct timeval now;
+	struct timeval tmo;
+	struct timeval *timeout;
 
 	while ((c = fz_getopt(argc, argv, "p:r:b:A")) != -1)
 	{
@@ -598,13 +617,15 @@ int main(int argc, char **argv)
 	pdfapp_open(&gapp, filename, fd, 0);
 
 	FD_ZERO(&fds);
-	FD_SET(x11fd, &fds);
 
 	signal(SIGHUP, signal_handler);
 
+	tmo_at.tv_sec = 0;
+	tmo_at.tv_usec = 0;
+
 	while (!closing)
 	{
-		do
+		while (!closing && XPending(xdpy))
 		{
 			XNextEvent(xdpy, &xevt);
 
@@ -693,7 +714,6 @@ int main(int argc, char **argv)
 				break;
 			}
 		}
-		while (!closing && XPending(xdpy));
 
 		if (closing)
 			continue;
@@ -715,16 +735,52 @@ int main(int argc, char **argv)
 			dirtysearch = 0;
 		}
 
+		if (showingpage && !tmo_at.tv_sec && !tmo_at.tv_usec)
+		{
+			tmo.tv_sec = 2;
+			tmo.tv_usec = 0;
+
+			gettimeofday(&now, NULL);
+			timeradd(&now, &tmo, &tmo_at);
+		}
+
 		if (XPending(xdpy))
 			continue;
 
-		if (select(x11fd + 1, &fds, NULL, NULL, NULL) < 0)
+		timeout = NULL;
+
+		if (tmo_at.tv_sec || tmo_at.tv_usec)
+		{
+			gettimeofday(&now, NULL);
+			timersub(&tmo_at, &now, &tmo);
+			if (tmo.tv_sec <= 0)
+			{
+				tmo_at.tv_sec = 0;
+				tmo_at.tv_usec = 0;
+				timeout = NULL;
+				showingpage = 0;
+				winrepaint(&gapp);
+			}
+			else
+				timeout = &tmo;
+		}
+
+		FD_SET(x11fd, &fds);
+		if (select(x11fd + 1, &fds, NULL, NULL, timeout) < 0)
 		{
 			if (reloading)
 			{
 				winreloadfile(&gapp);
 				reloading = 0;
 			}
+		}
+		if (!FD_ISSET(x11fd, &fds))
+		{
+			tmo_at.tv_sec = 0;
+			tmo_at.tv_usec = 0;
+			timeout = NULL;
+			showingpage = 0;
+			winrepaint(&gapp);
 		}
 	}
 

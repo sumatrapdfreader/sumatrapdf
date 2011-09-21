@@ -81,6 +81,7 @@ struct pdfapp_s
 
 	/* search state */
 	int isediting;
+	int searchdir;
 	char search[512];
 	int hit;
 	int hitlen;
