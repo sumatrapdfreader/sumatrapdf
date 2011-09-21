@@ -3,7 +3,7 @@ the release notes, as we make them, to make the release process easier.
 
 Next version:
 
-1.8 (2011-09-??)
+1.8 (2011-09-18)
 
 * improved support for PDF form text fields
 * various minor improvements and crash fixes

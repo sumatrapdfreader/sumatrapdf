@@ -58,17 +58,17 @@ public:
 
 typedef BYTE (* separableBlend)(BYTE s, BYTE bg);
 static BYTE BlendNormal(BYTE s, BYTE bg)     { return s; }
-static BYTE BlendMultiply(BYTE s, BYTE bg)   { return s / 255.0f * bg; }
-static BYTE BlendScreen(BYTE s, BYTE bg)     { return 255 - (255 - s) / 255.0f * (255 - bg); }
-static BYTE BlendHardLight(BYTE s, BYTE bg)  { return s <= 127 ? s * 2.0 / 255 * bg : BlendScreen((s - 128) * 2 + 1, bg); }
+static BYTE BlendMultiply(BYTE s, BYTE bg)   { return s * bg / 255; }
+static BYTE BlendScreen(BYTE s, BYTE bg)     { return 255 - (255 - s) * (255 - bg) / 255; }
+static BYTE BlendHardLight(BYTE s, BYTE bg)  { return s <= 127 ? s * bg * 2 / 255 : BlendScreen((s - 128) * 2 + 1, bg); }
 static BYTE BlendSoftLight(BYTE s, BYTE bg);
 static BYTE BlendOverlay(BYTE s, BYTE bg)    { return BlendHardLight(bg, s); }
 static BYTE BlendDarken(BYTE s, BYTE bg)     { return MIN(s, bg); }
 static BYTE BlendLighten(BYTE s, BYTE bg)    { return MAX(s, bg); }
-static BYTE BlendColorDodge(BYTE s, BYTE bg) { return bg == 0 ? 0 : bg >= 255 - s ? 255 : (510 * bg + 255 - s) / 2.0 / (255 - s); }
-static BYTE BlendColorBurn(BYTE s, BYTE bg)  { return bg == 255 ? 255 : 255 - bg >= s ? 0 : 255 - (510 * (255 - bg) + s) / 2.0 / s; }
+static BYTE BlendColorDodge(BYTE s, BYTE bg) { return bg == 0 ? 0 : bg >= 255 - s ? 255 : (510 * bg + 255 - s) / 2 / (255 - s); }
+static BYTE BlendColorBurn(BYTE s, BYTE bg)  { return bg == 255 ? 255 : 255 - bg >= s ? 0 : 255 - (510 * (255 - bg) + s) / 2 / s; }
 static BYTE BlendDifference(BYTE s, BYTE bg) { return ABS(s - bg); }
-static BYTE BlendExclusion(BYTE s, BYTE bg)  { return s + bg - s * bg * 2.0 / 255; }
+static BYTE BlendExclusion(BYTE s, BYTE bg)  { return s + bg - s * bg * 2 / 255; }
 
 struct userDataStackItem
 {
@@ -227,6 +227,7 @@ public:
 		if (luminosity)
 			graphics->FillRectangle(&SolidBrush(Color(255, color[0] * 255, color[1] * 255, color[2] * 255)), rectf);
 		stack->luminosity = luminosity;
+		stack->blendmode = FZ_BLEND_ISOLATED | FZ_BLEND_KNOCKOUT;
 	}
 
 	void pushClipBlend(fz_rect rect, int blendmode, float alpha, bool isolated, bool knockout)
@@ -1282,7 +1283,7 @@ fz_gdiplus_begin_mask(void *user, fz_rect rect, int luminosity,
 	if (luminosity && colorspace && colorfv)
 		fz_convert_color(colorspace, colorfv, fz_device_rgb, rgb);
 	
-	((userData *)user)->recordClipMask(rect, luminosity == 1, rgb);
+	((userData *)user)->recordClipMask(rect, !!luminosity, rgb);
 }
 
 extern "C" static void
