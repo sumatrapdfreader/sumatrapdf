@@ -615,6 +615,8 @@ static bool LoadDocIntoWindow(TCHAR *fileName, WindowInfo& win,
     if (IsChmFile(fileName))
         return LoadDoc2(fileName);
 #endif
+    ScopedMem<TCHAR> title;
+
     // Never load settings from a preexisting state if the user doesn't wish to
     // (unless we're just refreshing the document, i.e. only if placeWindow == true)
     if (placeWindow && (gGlobalPrefs.globalPrefsOnly || state && state->useGlobalValues)) {
@@ -743,21 +745,23 @@ static bool LoadDocIntoWindow(TCHAR *fileName, WindowInfo& win,
     }
 
     const TCHAR *baseName = path::GetBaseName(win.dm->FileName());
-    TCHAR *title = str::Format(_T("%s - %s"), baseName, SUMATRA_WINDOW_TITLE);
+    TCHAR *docTitle = win.dm->engine ? win.dm->engine->GetProperty("Title") : NULL;
+    if (!str::IsEmpty(docTitle)) {
+        ScopedMem<TCHAR> docTitleBit(str::Format(_T("- [%s] "), docTitle));
+        free(docTitle);
+        docTitle = docTitleBit.StealData();
+    }
+    title.Set(str::Format(_T("%s %s- %s"), baseName, docTitle ? docTitle : _T(""), SUMATRA_WINDOW_TITLE));
 #ifdef UNICODE
     if (IsUIRightToLeft()) {
-        free(title);
         // explicitly revert the title, so that filenames aren't garbled
-        title = str::Format(_T("%s - %s"), SUMATRA_WINDOW_TITLE, baseName);
+        title.Set(str::Format(_T("%s %s- %s"), SUMATRA_WINDOW_TITLE, docTitle ? docTitle : _T(""), baseName));
     }
 #endif
-    if (needrefresh) {
-        TCHAR *msg = str::Format(_TR("[Changes detected; refreshing] %s"), title);
-        free(title);
-        title = msg;
-    }
+    free(docTitle);
+    if (needrefresh)
+        title.Set(str::Format(_TR("[Changes detected; refreshing] %s"), title));
     win::SetText(win.hwndFrame, title);
-    free(title);
 
     if (HasPermission(Perm_DiskAccess) && Engine_PDF == win.dm->engineType) {
         int res = Synchronizer::Create(fileName, win.dm, &win.pdfsync);
