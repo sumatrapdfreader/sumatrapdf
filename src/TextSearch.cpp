@@ -14,7 +14,8 @@ enum { SEARCH_PAGE, SKIP_PAGE };
 
 TextSearch::TextSearch(BaseEngine *engine) : TextSelection(engine),
     findText(NULL), anchor(NULL), pageText(NULL),
-    caseSensitive(false), wholeWords(false), forward(true),
+    caseSensitive(false), forward(true),
+    matchWordStart(false), matchWordEnd(false),
     findPage(0), findIndex(0), lastText(NULL)
 {
     findCache = SAZA(BYTE, this->engine->PageCount());
@@ -34,9 +35,15 @@ void TextSearch::Reset()
 
 void TextSearch::SetText(TCHAR *text)
 {
-    // all whitespace characters before the first word will be ignored
-    // (we're similarly fuzzy about whitespace as Adobe Reader in this regard)
-    SkipWhitespace(text);
+    // search text starting with a single space enables the 'Match word start'
+    // and search text ending in a single space enables the 'Match word end' option
+    // (that behavior already "kind of" exists without special treatment, but
+    // usually is not quite what a user expects, so let's try to be cleverer)
+    this->matchWordStart = text[0] == ' ' && text[1] != ' ';
+    this->matchWordEnd = str::EndsWith(text, _T(" ")) && !str::EndsWith(text, _T("  "));
+
+    if (text[0] == ' ')
+        text++;
 
     // don't reset anything if the search text hasn't changed at all
     if (str::Eq(this->lastText, text))
@@ -56,14 +63,8 @@ void TextSearch::SetText(TCHAR *text)
     else
         anchor = str::DupN(text, 1);
 
-    // search text ending in a single space enables the 'Whole words' option
-    // (that behavior already "kind of" exists without special treatment, but
-    // usually is not quite what a user expects, so let's try to be cleverer)
-    this->wholeWords = false;
-    if (str::EndsWith(text, _T(" "))) {
-        this->wholeWords = !str::EndsWith(text, _T("  "));
+    if (str::EndsWith(this->findText, _T(" ")))
         this->findText[str::Len(this->findText) - 1] = '\0';
-    }
 
     memset(this->findCache, SEARCH_PAGE, this->engine->PageCount());
 }
@@ -94,7 +95,7 @@ int TextSearch::MatchLen(TCHAR *start)
     TCHAR *match = findText, *end = start;
     assert(!_istspace(*end));
 
-    if (wholeWords && start > pageText && iswordchar(start[-1]) && iswordchar(start[0]))
+    if (matchWordStart && start > pageText && iswordchar(start[-1]) && iswordchar(start[0]))
         return -1;
 
     while (*match) {
@@ -112,7 +113,7 @@ int TextSearch::MatchLen(TCHAR *start)
         }
     }
 
-    if (wholeWords && end > pageText && iswordchar(end[-1]) && iswordchar(end[0]))
+    if (matchWordEnd && end > pageText && iswordchar(end[-1]) && iswordchar(end[0]))
         return -1;
 
     return (int)(end - start);

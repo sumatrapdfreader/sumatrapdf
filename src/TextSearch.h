@@ -43,9 +43,11 @@ protected:
     int findPage;
     bool forward;
     bool caseSensitive;
-    // the 'Whole words' option is implicitly set when the search text
-    // ends in a single space (many users already search that way)
-    bool wholeWords;
+    // these two options are implicitly set when the search text begins
+    // resp. ends in a single space (many users already search that way),
+    // combining them yields a 'Whole words' search
+    bool matchWordStart;
+    bool matchWordEnd;
 
     void SetText(TCHAR *text);
     bool FindTextInPage(int pageNo = 0);
