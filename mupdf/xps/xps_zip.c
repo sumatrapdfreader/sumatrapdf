@@ -200,7 +200,7 @@ xps_read_zip_dir(xps_context *ctx, int start_offset)
 
 		(void) getlong(ctx->file); /* start disk */
 		offset = getlong64(ctx->file); /* offset to end of central directory record */
-		if (offset == -1)
+		if (offset < 0)
 			return fz_throw("zip64 files larger than 2 GB aren't supported");
 
 		fz_seek(ctx->file, offset, 0);
@@ -219,7 +219,7 @@ xps_read_zip_dir(xps_context *ctx, int start_offset)
 		(void) getlong64(ctx->file); /* size of central directory */
 		offset = getlong64(ctx->file); /* offset to central directory */
 
-		if (count == -1 || offset == -1)
+		if (count < 0 || offset < 0)
 			return fz_throw("zip64 files larger than 2 GB aren't supported");
 	}
 
@@ -271,7 +271,7 @@ xps_read_zip_dir(xps_context *ctx, int start_offset)
 			fz_seek(ctx->file, size, 1);
 			metasize -= 4 + size;
 		}
-		if (ctx->zip_table[i].usize == -1 || ctx->zip_table[i].csize == -1 || ctx->zip_table[i].offset == -1)
+		if (ctx->zip_table[i].usize < 0 || ctx->zip_table[i].csize < 0 || ctx->zip_table[i].offset < 0)
 			return fz_throw("zip64 files larger than 2 GB aren't supported");
 
 		fz_seek(ctx->file, commentsize, 1);

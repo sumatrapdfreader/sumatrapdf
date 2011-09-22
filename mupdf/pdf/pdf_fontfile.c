@@ -349,8 +349,8 @@ decodeplatformstring(int platform, int enctype, char* source, int sourcelen, cha
 	}
 }
 
-static fz_error
-growfontlist(pdf_fontlistMS *fl)
+static void
+grow_system_font_list(pdf_fontlistMS *fl)
 {
 	int newcap;
 	pdf_fontmapMS *newitems;
@@ -361,25 +361,17 @@ growfontlist(pdf_fontlistMS *fl)
 		newcap = fl->cap * 2;
 
 	newitems = fz_realloc(fl->fontmap, newcap, sizeof(pdf_fontmapMS));
-	if (!newitems)
-		return fz_rethrow(-1, "out of memory");;
-
 	memset(newitems + fl->cap, 0, sizeof(pdf_fontmapMS) * (newcap - fl->cap));
 
 	fl->fontmap = newitems;
 	fl->cap = newcap;
-
-	return fz_okay;
 }
 
 static fz_error
-insertmapping(pdf_fontlistMS *fl, char *facename, char *path, int index)
+insert_mapping(pdf_fontlistMS *fl, char *facename, char *path, int index)
 {
 	if (fl->len == fl->cap)
-	{
-		fz_error err = growfontlist(fl);
-		if (err) return err;
-	}
+		grow_system_font_list(fl);
 
 	if (fl->len >= fl->cap)
 		return fz_throw("fonterror : fontlist overflow");
@@ -439,9 +431,7 @@ parseTTF(fz_stream *file, int offset, int index, char *path)
 
 	// check if this is a TrueType font of version 1.0 or an OpenType font
 	if (SWAPLONG(ttOffsetTable.uVersion) != TTC_VERSION1 && ttOffsetTable.uVersion != TTAG_OTTO)
-	{
 		return fz_throw("fonterror : invalid font version");
-	}
 
 	// determine the name table's offset by iterating through the offset table
 	count = SWAPWORD(ttOffsetTable.uNumOfTables);
@@ -494,7 +484,7 @@ parseTTF(fz_stream *file, int offset, int index, char *path)
 
 	if (szPSName[0])
 	{
-		err = insertmapping(&fontlistMS, szPSName, path, index);
+		err = insert_mapping(&fontlistMS, szPSName, path, index);
 		if (err) return err;
 	}
 	if (szTTName[0])
@@ -512,7 +502,7 @@ parseTTF(fz_stream *file, int offset, int index, char *path)
 		// compare the two names before adding this one
 		if (lookupcompare(szTTName, szPSName))
 		{
-			err = insertmapping(&fontlistMS, szTTName, path, index);
+			err = insert_mapping(&fontlistMS, szTTName, path, index);
 			if (err) return err;
 		}
 	}
@@ -553,7 +543,6 @@ parseTTCs(char *path)
 		err = fz_throw("fonterror : wrong format");
 		goto cleanup;
 	}
-
 	if (SWAPLONG(fontcollection.Version) != TTC_VERSION1 && SWAPLONG(fontcollection.Version) != TTC_VERSION2)
 	{
 		err = fz_throw("fonterror : invalid version");
@@ -562,21 +551,13 @@ parseTTCs(char *path)
 
 	numFonts = SWAPLONG(fontcollection.NumFonts);
 	offsettable = fz_calloc(numFonts, sizeof(ULONG));
-	if (offsettable == NULL)
-	{
-		err = fz_throw("out of memory");
-		goto cleanup;
-	}
 
 	err = safe_read(file, (char *)offsettable, numFonts * sizeof(ULONG));
 	for (i = 0; i < numFonts && !err; i++)
-	{
 		err = parseTTF(file, SWAPLONG(offsettable[i]), i, path);
-	}
 
 cleanup:
-	if (offsettable)
-		fz_free(offsettable);
+	fz_free(offsettable);
 	if (file)
 		fz_close(file);
 
@@ -584,46 +565,39 @@ cleanup:
 }
 
 static fz_error
-pdf_createfontlistMS()
+extend_system_font_list(const TCHAR *path)
 {
-	TCHAR szFontDir[MAX_PATH], szFile[MAX_PATH];
-	char szPathAnsi[MAX_PATH], *fileExt;
-	HANDLE hList;
+	TCHAR szPath[MAX_PATH], *lpFileName;
 	WIN32_FIND_DATA FileData;
+	HANDLE hList;
 
-	// Get the proper directory path
-	GetWindowsDirectory(szFontDir, _countof(szFontDir));
-	_tcscat_s(szFontDir, MAX_PATH, _T("\\Fonts\\*.?t?"));
+	GetFullPathName(path, _countof(szPath), szPath, &lpFileName);
 
-	hList = FindFirstFile(szFontDir, &FileData);
+	hList = FindFirstFile(szPath, &FileData);
 	if (hList == INVALID_HANDLE_VALUE)
 	{
-		/* Don't complain about missing directories */
-		if (errno == ENOENT)
-			return fz_throw("fonterror : can't find system fonts dir");
-		return fz_throw("ioerror");
+		// Don't complain about missing directories
+		if (GetLastError() == ERROR_FILE_NOT_FOUND)
+			return fz_okay;
+		return fz_throw("extend_system_font_list: unknown error %d", GetLastError());
 	}
-	// drop the wildcards
-	szFontDir[lstrlen(szFontDir) - 5] = 0;
-	// Traverse through the directory structure
 	do
 	{
 		if (!(FileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
 		{
+			char szPathAnsi[MAX_PATH], *fileExt;
 			BOOL isNonAnsiPath = FALSE;
-			// Get the full path for sub directory
-			_sntprintf(szFile, MAX_PATH, _T("%s%s"), szFontDir, FileData.cFileName);
-			szFile[MAX_PATH - 1] = '\0';
+			lstrcpyn(lpFileName, FileData.cFileName, szPath + MAX_PATH - lpFileName);
 #ifdef _UNICODE
 			// FreeType uses fopen and thus requires the path to be in the ANSI code page
-			WideCharToMultiByte(CP_ACP, 0, szFile, -1, szPathAnsi, sizeof(szPathAnsi), NULL, &isNonAnsiPath);
+			WideCharToMultiByte(CP_ACP, 0, szPath, -1, szPathAnsi, sizeof(szPathAnsi), NULL, &isNonAnsiPath);
 #else
-			strcpy(szPathAnsi, szFile);
+			strcpy(szPathAnsi, szPath);
 			isNonAnsiPath = strchr(szPathAnsi, '?') != NULL;
 #endif
 			fileExt = szPathAnsi + strlen(szPathAnsi) - 4;
 			if (isNonAnsiPath)
-				fz_warn("ignoring font with non-ANSI filename: %s", szFile);
+				fz_warn("ignoring font with non-ANSI filename: %s", szPathAnsi);
 			else if (!_stricmp(fileExt, ".ttc"))
 				parseTTCs(szPathAnsi);
 			else if (!_stricmp(fileExt, ".ttf") || !_stricmp(fileExt, ".otf"))
@@ -633,54 +607,50 @@ pdf_createfontlistMS()
 	} while (FindNextFile(hList, &FileData));
 	FindClose(hList);
 
-#ifdef NOCJKFONT
-	{
-		// If no CJK fallback font is builtin but one has been shipped separately (in the same
-		// directory as the main executable), add it to the list of loadable system fonts
-		TCHAR *lpFileName;
-		HANDLE hFile;
-
-		GetModuleFileName(0, szFontDir, MAX_PATH);
-		GetFullPathName(szFontDir, MAX_PATH, szFile, &lpFileName);
-		lstrcpyn(lpFileName, _T("DroidSansFallback.ttf"), MAX_PATH - (lpFileName - szFile));
-
-		hFile = CreateFile(szFile, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
-		if (hFile != INVALID_HANDLE_VALUE)
-		{
-			BOOL isNonAnsiPath = FALSE;
-#ifdef _UNICODE
-			WideCharToMultiByte(CP_ACP, 0, szFile, -1, szPathAnsi, sizeof(szPathAnsi), NULL, &isNonAnsiPath);
-#else
-			strcpy(szPathAnsi, szFile);
-			isNonAnsiPath = strchr(szPathAnsi, '?') != NULL;
-#endif
-			if (!isNonAnsiPath)
-				insertmapping(&fontlistMS, "DroidSansFallback", szPathAnsi, 0);
-			else
-				fz_warn("ignoring font with non-ANSI filename: %s", szPathAnsi);
-			CloseHandle(hFile);
-		}
-	}
-#endif
-
-	// sort the font list, so that it can be searched binarily
-	qsort(fontlistMS.fontmap, fontlistMS.len, sizeof(pdf_fontmapMS), _stricmp);
-	// TODO: make "TimesNewRomanPSMT" default substitute font?
-
 	return fz_okay;
 }
 
 static int
-pdf_destroyfontlistMS(void)
+destroy_system_font_list(void)
 {
-	if (fontlistMS.fontmap != NULL)
-		fz_free(fontlistMS.fontmap);
-
-	fontlistMS.fontmap = NULL;
-	fontlistMS.len = 0;
-	fontlistMS.cap = 0;
-
+	fz_free(fontlistMS.fontmap);
+	memset(&fontlistMS, 0, sizeof(fontlistMS));
 	return 0;
+}
+
+static fz_error
+create_system_font_list()
+{
+	TCHAR szFontDir[MAX_PATH];
+
+	GetWindowsDirectory(szFontDir, _countof(szFontDir) - 12);
+	_tcscat_s(szFontDir, MAX_PATH, _T("\\Fonts\\*.?t?"));
+	extend_system_font_list(szFontDir);
+
+	if (fontlistMS.len == 0)
+		fz_warn("couldn't find any usable system fonts");
+
+#ifdef NOCJKFONT
+	{
+		// If no CJK fallback font is builtin but one has been shipped separately (in the same
+		// directory as the main executable), add it to the list of loadable system fonts
+		TCHAR szFile[MAX_PATH], *lpFileName;
+		GetModuleFileName(0, szFontDir, MAX_PATH);
+		GetFullPathName(szFontDir, MAX_PATH, szFile, &lpFileName);
+		lstrcpyn(lpFileName, _T("DroidSansFallback.ttf"), szFile + MAX_PATH - lpFileName);
+		extend_system_font_list(szFile);
+	}
+#endif
+
+	// TODO: add fonts from Adobe Reader (when installed)?
+
+	// sort the font list, so that it can be searched binarily
+	qsort(fontlistMS.fontmap, fontlistMS.len, sizeof(pdf_fontmapMS), _stricmp);
+
+	// make sure to clean up after ourselves
+	_onexit(destroy_system_font_list);
+
+	return fz_okay;
 }
 
 fz_error
@@ -690,13 +660,12 @@ pdf_load_windows_font(pdf_font_desc *font, char *fontname)
 	pdf_fontmapMS *found = NULL;
 	char *comma;
 
+	fz_synchronize_begin();
 	if (fontlistMS.len == 0)
-	{
-		pdf_createfontlistMS();
-		if (fontlistMS.len == 0)
-			return fz_throw("fonterror : no fonts in the system");
-		_onexit(pdf_destroyfontlistMS);
-	}
+		create_system_font_list();
+	fz_synchronize_end();
+	if (fontlistMS.len == 0)
+		return !fz_okay;
 
 	if (getenv("MULOG"))
 		printf("pdf_load_windows_font: looking for font '%s'\n", fontname);
@@ -745,7 +714,6 @@ pdf_load_windows_font(pdf_font_desc *font, char *fontname)
 	if (!found)
 		return !fz_okay;
 
-	// TODO: use fz_new_font_from_buffer so that fontpath can be a proper TCHAR[]
 	error = fz_new_font_from_file(&font->font, found->fontpath, found->index);
 	if (error)
 		return fz_rethrow(error, "cannot load freetype font from a file %s", found->fontpath);
