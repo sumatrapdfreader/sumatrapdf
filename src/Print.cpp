@@ -423,7 +423,7 @@ So far have tested printing from XP to
 In order to print with Adobe Reader instead: ViewWithAcrobat(win, _T("/P"));
 */
 #define MAXPAGERANGES 10
-void OnMenuPrint(WindowInfo *win)
+void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
 {
     bool printSelection = false;
     Vec<PRINTPAGERANGE> ranges;
@@ -515,7 +515,12 @@ void OnMenuPrint(WindowInfo *win)
     if (devMode)
         GlobalUnlock(pd.hDevMode);
 
-    PrintToDeviceOnThread(win, data);
+    if (!waitForCompletion)
+        PrintToDeviceOnThread(win, data);
+    else {
+        PrintToDevice(*data);
+        delete data;
+    }
 
 Exit:
     free(ppr);

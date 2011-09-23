@@ -11,7 +11,7 @@
 class WindowInfo;
 
 bool PrintFile(const TCHAR *fileName, const TCHAR *printerName, bool displayErrors=true);
-void OnMenuPrint(WindowInfo *win);
+void OnMenuPrint(WindowInfo *win, bool waitForCompletion=false);
 void AbortPrinting(WindowInfo *win);
 
 #endif

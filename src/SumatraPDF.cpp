@@ -4420,7 +4420,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         }
 
         if (i.printDialog)
-            OnMenuPrint(win);
+            OnMenuPrint(win, i.exitOnPrint);
         firstIsDocLoaded = true;
     }
 
