@@ -361,7 +361,17 @@ skip:
 			error = pdf_parse_array(&val, xref, file, buf, cap);
 			if (error)
 			{
+				/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1643 */
+				fz_catch(error, "ignoring broken array for '%s'", fz_to_name(key));
 				fz_drop_obj(key);
+				do
+				{
+					error = pdf_lex(&tok, file, buf, cap, &len);
+					if (!error && tok == PDF_TOK_CLOSE_DICT)
+						goto skip;
+				} while (!error && tok != PDF_TOK_CLOSE_ARRAY && tok != PDF_TOK_EOF && tok != PDF_TOK_OPEN_ARRAY && tok != PDF_TOK_OPEN_DICT);
+				if (!error && tok == PDF_TOK_CLOSE_ARRAY)
+					continue;
 				fz_drop_obj(dict);
 				return fz_rethrow(error, "cannot parse dict");
 			}
