@@ -791,7 +791,7 @@ int main(int argc, char **argv)
 		compactxref();
 
 	/* Make renumbering affect all indirect references and update xref */
-	if (dogarbage >= 2)
+	if (dogarbage >= 2 && !xref->crypt /* SumatraPDF: don't break encrypted streams */)
 		renumberobjs();
 
 	writepdf();
