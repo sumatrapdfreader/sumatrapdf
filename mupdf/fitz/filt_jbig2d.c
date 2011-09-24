@@ -80,6 +80,17 @@ read_jbig2d(fz_stream *stm, unsigned char *buf, int len)
 	return p - buf;
 }
 
+/* SumatraPDF: warn about jbig2dec issues */
+static int
+error_callback(void *data, const char *msg, Jbig2Severity severity, int32_t seg_idx)
+{
+	if (severity == JBIG2_SEVERITY_FATAL)
+		fz_warn("jbig2dec error: %s (segment %d)", msg, seg_idx);
+	else if (severity == JBIG2_SEVERITY_WARNING)
+		fz_warn("jbig2dec warning: %s (segment %d)", msg, seg_idx);
+	return 0;
+}
+
 fz_stream *
 fz_open_jbig2d(fz_stream *chain, fz_buffer *globals)
 {
@@ -87,7 +98,7 @@ fz_open_jbig2d(fz_stream *chain, fz_buffer *globals)
 
 	state = fz_malloc(sizeof(fz_jbig2d));
 	state->chain = chain;
-	state->ctx = jbig2_ctx_new(NULL, JBIG2_OPTIONS_EMBEDDED, NULL, NULL, NULL);
+	state->ctx = jbig2_ctx_new(NULL, JBIG2_OPTIONS_EMBEDDED, NULL, error_callback, NULL);
 	state->gctx = NULL;
 	state->page = NULL;
 	state->idx = 0;
@@ -96,7 +107,7 @@ fz_open_jbig2d(fz_stream *chain, fz_buffer *globals)
 	{
 		jbig2_data_in(state->ctx, globals->data, globals->len);
 		state->gctx = jbig2_make_global_ctx(state->ctx);
-		state->ctx = jbig2_ctx_new(NULL, JBIG2_OPTIONS_EMBEDDED, state->gctx, NULL, NULL);
+		state->ctx = jbig2_ctx_new(NULL, JBIG2_OPTIONS_EMBEDDED, state->gctx, error_callback, NULL);
 	}
 
 	return fz_new_stream(state, read_jbig2d, close_jbig2d);
