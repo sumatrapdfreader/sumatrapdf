@@ -326,6 +326,12 @@ get_sos (j_decompress_ptr cinfo)
     INPUT_BYTE(cinfo, cc, return FALSE);
     INPUT_BYTE(cinfo, c, return FALSE);
     
+    /* SumatraPDF: handle duplicate IDs by index */
+    if (i < cinfo->num_components && cinfo->comp_info[i].component_id == cc) {
+      compptr = cinfo->comp_info + i;
+      goto id_found;
+    }
+    
     for (ci = 0, compptr = cinfo->comp_info; ci < cinfo->num_components;
 	 ci++, compptr++) {
       if (cc == compptr->component_id)
