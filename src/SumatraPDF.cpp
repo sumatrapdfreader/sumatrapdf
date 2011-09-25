@@ -271,7 +271,7 @@ WindowInfo *FindWindowInfoByHwnd(HWND hwnd)
             // page and find labels and boxes
             parent == win->hwndToolbar  ||
             // ToC tree, sidebar title and close button
-            parent == win->hwndTocBox ||
+            parent == win->hwndTocBox   ||
             // Favorites tree, title, and close button
             parent == win->hwndFavBox)
         {
