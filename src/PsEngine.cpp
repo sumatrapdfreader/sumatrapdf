@@ -116,6 +116,11 @@ static PdfEngine *ps2pdf(const TCHAR *fileName)
         return NULL;
     ScopedMem<TCHAR> cmdLine(str::Format(_T("\"%s\" -q -dSAFER -dNOPAUSE -dBATCH -dEPSCrop -sOutputFile=\"%s\" -sDEVICE=pdfwrite -c .setpdfwrite -f \"%s\""), gswin32c, tmpFile, fileName));
 
+    if (getenv("MULOG")) {
+        _tprintf(_T("ps2pdf: using Ghostscript from '%s'\n"), gswin32c);
+        _tprintf(_T("ps2pdf: for creating '%s'\n"), tmpFile);
+    }
+
     // TODO: the PS-to-PDF conversion can hang the UI for several seconds
     HANDLE process = LaunchProcess(cmdLine, CREATE_NO_WINDOW);
     if (!process)
@@ -137,6 +142,9 @@ static PdfEngine *ps2pdf(const TCHAR *fileName)
     ScopedComPtr<IStream> stream(CreateStreamFromData(pdfData, len));
     if (!stream)
         return NULL;
+
+    if (getenv("MULOG"))
+        _tprintf(_T("ps2pdf: PDF conversion successful\n"));
 
     return PdfEngine::CreateFromStream(stream);
 }
@@ -327,7 +335,7 @@ bool PsEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
         if (str::StartsWith(header, "\xC5\xD0\xD3\xC6")) {
             // Windows-format EPS file - cf. http://partners.adobe.com/public/developer/en/ps/5002.EPSF_Spec.pdf
             DWORD psStart = *(DWORD *)(header + 4);
-            return psStart >= sizeof(header) || str::StartsWith(header + psStart, "%!PS-Adobe-");
+            return psStart >= sizeof(header) - 12 || str::StartsWith(header + psStart, "%!PS-Adobe-");
         }
         return str::StartsWith(header, "%!") ||
                // also sniff PJL (Printer Job Language) files containing Postscript data
