@@ -17,6 +17,7 @@ Contributor: Stephan Paternotte
 Contributor: Ricki Yani Setiawan
 Contributor: Robbert Feunekes
 Contributor: Jeroen Baert
+Contributor: Ruud Kok
 
 &About
 &Over
@@ -532,7 +533,7 @@ Printing is still in progress. Abort and start over?
 Afdrukken is nog niet voltooid. Afbreken en opnieuw beginnen?
 
 Printing page %d of %d...
-Paguna %d van %d afdrukken...
+Pagina %d van %d afdrukken...
 
 Printing problem.
 Probleem bij het afdrukken

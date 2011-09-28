@@ -10,6 +10,7 @@ Lang: ta Tamil (தமிழ்)
 
 Contributor: R. Rajesh Jeba Anbiah (rajeshanbiah.blogspot.com)
 Contributor: N. Ejaz Ahamed (ejaz_nasar@yahoo.co.in)
+Contributor: Jegatheesan Veeramalai (vjegatheesh@gmail.com)
 
 &About
 பற்றி
@@ -17,17 +18,29 @@ Contributor: N. Ejaz Ahamed (ejaz_nasar@yahoo.co.in)
 &Actual Size\tCtrl+1
 மெய் அளவு\tCtrl+1
 
+&All selected pages
+எல்லா தேர்ந்தெடுத்த பக்கங்களும்
+
 &Back\tAlt+Left Arrow
 பின்\tAlt+Left Arrow
 
 &Close\tCtrl+W
 மூடு\tCtrl+W
 
+&Copy Selection
+தேர்ந்தெடுத்தவற்றை நகலெடு
+
 &Copy Selection\tCtrl+C
 தேர்வுசெய்ததை நகல் செய்
 
 &Don't ask me again
 மரு படியும் கேட்காதே
+
+&Even pages only
+இரட்டைபடை எண்கள்  மட்டும்
+
+&Facing\tCtrl+7
+பார்வையில்\tCtrl+7
 
 &File
 கோப்பு
@@ -37,6 +50,9 @@ Contributor: N. Ejaz Ahamed (ejaz_nasar@yahoo.co.in)
 
 &First Page\tHome
 முதல் பக்கம்\tHome
+
+&Fit pages to printable area
+அச்சிடும் அளவில் பக்கத்தை காட்டு
 
 &Go To
 அங்கு செல்
@@ -68,8 +84,14 @@ Contributor: N. Ejaz Ahamed (ejaz_nasar@yahoo.co.in)
 &No, thanks
 இல்லை, நன்றி
 
+&Odd pages only
+ஒற்றைபடை பக்கங்கள் மட்டும்
+
 &Open\tCtrl+O
 திற\tCtrl+O
+
+&Open Document
+கோப்பை திற
 
 &Options...
 விருப்ப பேரம்
@@ -77,8 +99,14 @@ Contributor: N. Ejaz Ahamed (ejaz_nasar@yahoo.co.in)
 &Password:
 கடவுச்சொல்
 
+&Pin Document
+கோப்பை குத்திவை
+
 &Previous Page\tLeft Arrow
 முந்தைய பக்கம்\tLeft Arrow
+
+&Print...
+அச்சிடு...
 
 &Print...\tCtrl+P
 அச்சிடு\tCtrl+P
@@ -86,8 +114,17 @@ Contributor: N. Ejaz Ahamed (ejaz_nasar@yahoo.co.in)
 &Print... (denied)
 அகசிடல்... (நிராகரிக்கப்பட்டது)
 
+&Remember the password for this document
+கடவுச்சொல்லை நினைவில் வை
+
 &Remember these settings for each document
 அமைப்புகளை ஞாபகம் கொள்
+
+&Remove Document
+கோப்பை நீக்கு
+
+&Save As...
+எனச் சேமி...
 
 &Save As...\tCtrl+S
 எனச் சேமி\tCtrl+S
@@ -95,8 +132,17 @@ Contributor: N. Ejaz Ahamed (ejaz_nasar@yahoo.co.in)
 &Settings
 அமைப்புகள்
 
+&Shrink pages to printable area (if necessary)
+கோப்பை அச்சிடும் அளவிற்கு சுருக்கு (தேவைபட்டால்)      
+
+&Single Page\tCtrl+6
+ஒற்றைப் பக்கம்\tCtrl+6
+
 &Skip this version
 இப்பதிப்பை தவிர்
+
+&Use original page sizes
+மூல பக்க அளவுகளை உபயோகி 
 
 &View
 நோக்கு
@@ -110,8 +156,23 @@ Contributor: N. Ejaz Ahamed (ejaz_nasar@yahoo.co.in)
 (of %d)
 (இன் %d)
 
+(page %s)
+(பக்கம் %s)
+
 About SumatraPDF
 SumatraPDF பற்றி
+
+Add Favorite
+விருப்பகளில்  சேர் 
+
+Add page %s to favorites
+விருப்பகளில்  பக்கம் %s ஐ சேர்
+
+Add page %s to favorites with (optional) name:
+விருப்பகளில்  பக்கம் %s ஐ பெயருடன் சேர் 
+
+Add to favorites
+விருப்பகளில் சேர்
 
 Advanced
 மேம்பட்ட அமைப்புகள்
@@ -119,11 +180,17 @@ Advanced
 All files
 எல்லா கோப்புகள்
 
+All supported documents
+எல்லா ஆதரிக்கப்பட்ட கோப்புகள்
+
 Application:
 செயலி
 
 Associate with PDF files?
 PDF கோப்புகளுடன் இணை
+
+Attachment: %s
+இணைப்பு %s
 
 Author:
 ஆசிரியர்
@@ -447,29 +514,7 @@ printing document
 கோப்பு அக்சிடப்படுகிறது
 
 # Untranslated:
-#&All selected pages
 #&Book View\tCtrl+8
-#&Copy Selection
-#&Even pages only
-#&Facing\tCtrl+7
-#&Fit pages to printable area
-#&Odd pages only
-#&Open Document
-#&Pin Document
-#&Print...
-#&Remember the password for this document
-#&Remove Document
-#&Save As...
-#&Shrink pages to printable area (if necessary)
-#&Single Page\tCtrl+6
-#&Use original page sizes
-#(page %s)
-#Add Favorite
-#Add page %s to favorites
-#Add page %s to favorites with (optional) name:
-#Add to favorites
-#All supported documents
-#Attachment: %s
 #Bookmark Shortcuts
 #Bookmark shortcut to page %s of %s
 #Bookmarks
