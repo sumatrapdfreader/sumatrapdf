@@ -21,9 +21,34 @@ static LONG m_gdiplusUsage = 0;
 
 class PixmapBitmap : public Bitmap
 {
+	ColorPalette *pal8bit;
+
 public:
-	PixmapBitmap(fz_pixmap *pixmap) : Bitmap(pixmap->w, pixmap->h, PixelFormat32bppARGB)
+	PixmapBitmap(fz_pixmap *pixmap) : Bitmap(pixmap->w, pixmap->h,
+		pixmap->colorspace != fz_device_gray ? PixelFormat32bppARGB : PixelFormat8bppIndexed),
+		pal8bit(NULL)
 	{
+		if (pixmap->colorspace == fz_device_gray)
+		{
+			pal8bit = (ColorPalette *)fz_malloc(sizeof(ColorPalette) + 255 * sizeof(ARGB));
+			pal8bit->Flags = PaletteFlagsGrayScale;
+			pal8bit->Count = 256;
+			for (int i = 0; i < 256; i++)
+				pal8bit->Entries[i] = Color::MakeARGB(255, i, i, i);
+			SetPalette(pal8bit);
+			
+			BitmapData data;
+			Status status = LockBits(&Rect(0, 0, pixmap->w, pixmap->h), ImageLockModeWrite, PixelFormat8bppIndexed, &data);
+			if (status == Ok)
+			{
+				for (int y = 0; y < pixmap->h; y++)
+					for (int x = 0; x < pixmap->w; x++)
+						((unsigned char *)data.Scan0)[y * data.Stride + x] = pixmap->samples[(y * pixmap->w + x) * 2];
+				UnlockBits(&data);
+			}
+			return;
+		}
+		
 		fz_pixmap *pix;
 		if (pixmap->colorspace != fz_device_bgr)
 		{
@@ -53,6 +78,10 @@ public:
 		}
 		
 		fz_drop_pixmap(pix);
+	}
+	virtual ~PixmapBitmap()
+	{
+		fz_free(pal8bit);
 	}
 };
 
@@ -400,7 +429,16 @@ public:
 			int w = round(image->w * scale);
 			int h = round(image->h * scale);
 			
-			Bitmap *scaled = new Bitmap(w, h);
+			Bitmap *scaled;
+			if (image->colorspace == fz_device_gray && w * h > (1 << 18))
+			{
+				fz_pixmap *grayBase = fz_new_pixmap(fz_device_gray, w, h);
+				scaled = new PixmapBitmap(grayBase);
+				fz_drop_pixmap(grayBase);
+			}
+			else
+				scaled = new Bitmap(w, h, PixelFormat32bppARGB);
+			
 			Graphics g2(scaled);
 			_setup(&g2);
 			g2.DrawImage(&PixmapBitmap(image), 0, 0, w, h);

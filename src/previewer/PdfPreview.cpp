@@ -97,6 +97,7 @@ protected:
 
         PageRenderer *pr = (PageRenderer *)data;
         RenderedBitmap *bmp = pr->engine->RenderBitmap(pr->reqPage, pr->reqZoom, 0);
+        pr->engine->RunGC();
 
         ScopedCritSec scope(&pr->currAccess);
 
