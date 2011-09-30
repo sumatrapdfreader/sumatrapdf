@@ -372,6 +372,7 @@ skip:
 				} while (!error && tok != PDF_TOK_CLOSE_ARRAY && tok != PDF_TOK_EOF && tok != PDF_TOK_OPEN_ARRAY && tok != PDF_TOK_OPEN_DICT);
 				if (!error && tok == PDF_TOK_CLOSE_ARRAY)
 					continue;
+				error = fz_throw("cannot make sense of broken array after all");
 				fz_drop_obj(dict);
 				return fz_rethrow(error, "cannot parse dict");
 			}
