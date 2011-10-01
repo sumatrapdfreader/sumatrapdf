@@ -48,6 +48,7 @@ fz_new_pixmap_with_data(fz_colorspace *colorspace, int w, int h, unsigned char *
 	pix->yres = 96;
 	pix->colorspace = NULL;
 	pix->n = 1;
+	pix->has_alpha = 1; /* SumatraPDF: allow optimizing non-alpha pixmaps */
 
 	if (colorspace)
 	{

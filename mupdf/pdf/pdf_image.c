@@ -23,6 +23,7 @@ pdf_mask_color_key(fz_pixmap *pix, int n, int *colorkey)
 				p[k] = 0;
 		p += pix->n;
 	}
+	pix->has_alpha = pix->n > n; /* SumatraPDF: allow optimizing non-alpha pixmaps */
 }
 
 static fz_error

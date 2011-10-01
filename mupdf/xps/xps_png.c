@@ -529,6 +529,8 @@ png_mask_transparency(struct info *info, fz_pixmap *dst)
 				dp[x * dst->n + dst->n - 1] = 0;
 		}
 	}
+
+	dst->has_alpha = 1; /* SumatraPDF: allow optimizing non-alpha pixmaps */
 }
 
 int

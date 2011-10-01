@@ -620,6 +620,7 @@ struct fz_pixmap_s
 	fz_colorspace *colorspace;
 	unsigned char *samples;
 	int free_samples;
+	int has_alpha; /* SumatraPDF: allow optimizing non-alpha pixmaps */
 };
 
 /* will return NULL if soft limit is exceeded */

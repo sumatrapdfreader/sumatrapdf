@@ -133,6 +133,8 @@ xps_decode_jpeg(fz_pixmap **imagep, byte *rbuf, int rlen)
 	jpeg_finish_decompress(&cinfo);
 	jpeg_destroy_decompress(&cinfo);
 
+	image->has_alpha = 0; /* SumatraPDF: allow optimizing non-alpha pixmaps */
+
 	*imagep = image;
 	return fz_okay;
 }

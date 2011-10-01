@@ -54,6 +54,7 @@ fz_unpack_tile(fz_pixmap *dst, unsigned char * restrict src, int n, int depth, i
 	pad = 0;
 	if (dst->n > n)
 		pad = 255;
+	dst->has_alpha = !pad; /* SumatraPDF: allow optimizing non-alpha pixmaps */
 
 	if (depth == 1)
 		init_get1_tables();

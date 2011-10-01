@@ -25,10 +25,11 @@ class PixmapBitmap : public Bitmap
 
 public:
 	PixmapBitmap(fz_pixmap *pixmap) : Bitmap(pixmap->w, pixmap->h,
-		pixmap->colorspace != fz_device_gray ? PixelFormat32bppARGB : PixelFormat8bppIndexed),
+		pixmap->has_alpha ? PixelFormat32bppARGB : pixmap->colorspace != fz_device_gray ? PixelFormat24bppRGB : PixelFormat8bppIndexed),
 		pal8bit(NULL)
 	{
-		if (pixmap->colorspace == fz_device_gray)
+		BitmapData data;
+		if (pixmap->colorspace == fz_device_gray && !pixmap->has_alpha)
 		{
 			pal8bit = (ColorPalette *)fz_malloc(sizeof(ColorPalette) + 255 * sizeof(ARGB));
 			pal8bit->Flags = PaletteFlagsGrayScale;
@@ -37,7 +38,6 @@ public:
 				pal8bit->Entries[i] = Color::MakeARGB(255, i, i, i);
 			SetPalette(pal8bit);
 			
-			BitmapData data;
 			Status status = LockBits(&Rect(0, 0, pixmap->w, pixmap->h), ImageLockModeWrite, PixelFormat8bppIndexed, &data);
 			if (status == Ok)
 			{
@@ -69,12 +69,26 @@ public:
 		else
 			pix = fz_keep_pixmap(pixmap);
 		
-		BitmapData data;
-		Status status = LockBits(&Rect(0, 0, pix->w, pix->h), ImageLockModeWrite, PixelFormat32bppARGB, &data);
-		if (status == Ok)
+		if (pixmap->has_alpha)
 		{
-			memcpy(data.Scan0, pix->samples, pix->w * pix->h * pix->n);
-			UnlockBits(&data);
+			Status status = LockBits(&Rect(0, 0, pix->w, pix->h), ImageLockModeWrite, PixelFormat32bppARGB, &data);
+			if (status == Ok)
+			{
+				memcpy(data.Scan0, pix->samples, pix->w * pix->h * pix->n);
+				UnlockBits(&data);
+			}
+		}
+		else
+		{
+			Status status = LockBits(&Rect(0, 0, pix->w, pix->h), ImageLockModeWrite, PixelFormat24bppRGB, &data);
+			if (status == Ok)
+			{
+				for (int y = 0; y < pix->h; y++)
+					for (int x = 0; x < pix->w; x++)
+						for (int n = 0; n < 3; n++)
+							((unsigned char *)data.Scan0)[y * data.Stride + x * 3 + n] = pix->samples[(y * pix->w + x) * 4 + n];
+				UnlockBits(&data);
+			}
 		}
 		
 		fz_drop_pixmap(pix);
@@ -127,12 +141,12 @@ public:
 	TempFile(UCHAR *data, UINT size, TempFile *next=NULL) : next(next)
 	{
 		path[0] = L'\0';
-
+		
 		WCHAR tempPath[MAX_PATH - 14];
 		DWORD res = GetTempPathW(MAX_PATH - 14, tempPath);
 		if (!res || res >= MAX_PATH - 14 || !GetTempFileNameW(tempPath, L"DG+", 0, path))
 			return;
-
+		
 		HANDLE hFile = CreateFileW(path, GENERIC_WRITE, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 		if (hFile != INVALID_HANDLE_VALUE)
 			WriteFile(hFile, data, size, &res, NULL);
@@ -429,16 +443,7 @@ public:
 			int w = round(image->w * scale);
 			int h = round(image->h * scale);
 			
-			Bitmap *scaled;
-			if (image->colorspace == fz_device_gray && w * h > (1 << 18))
-			{
-				fz_pixmap *grayBase = fz_new_pixmap(fz_device_gray, w, h);
-				scaled = new PixmapBitmap(grayBase);
-				fz_drop_pixmap(grayBase);
-			}
-			else
-				scaled = new Bitmap(w, h, PixelFormat32bppARGB);
-			
+			Bitmap *scaled = new Bitmap(w, h, PixelFormat32bppARGB);
 			Graphics g2(scaled);
 			_setup(&g2);
 			g2.DrawImage(&PixmapBitmap(image), 0, 0, w, h);
@@ -1334,7 +1339,7 @@ static BYTE BlendSoftLight(BYTE s, BYTE bg)
 {
 	if (s < 128)
 		return bg - ((255 - 2 * s) / 255.0f * bg) / 255.0f * (255 - bg);
-
+	
 	int dbd;
 	if (bg < 64)
 		dbd = (((bg * 16 - 12) / 255.0f * bg) + 4) / 255.0f * bg;
@@ -1373,18 +1378,19 @@ fz_gdiplus_free_user(void *user)
 {
 	delete (userData *)user;
 	
-	if (InterlockedDecrement(&m_gdiplusUsage) == 0)
+	fz_synchronize_begin();
+	if (--m_gdiplusUsage == 0)
 		GdiplusShutdown(m_gdiplusToken);
+	fz_synchronize_end();
 }
 
 fz_device *
 fz_new_gdiplus_device(void *hDC, fz_bbox baseClip)
 {
-	if (InterlockedIncrement(&m_gdiplusUsage) == 1)
-	{
-		GdiplusStartupInput gdiplusStartupInput;
-		GdiplusStartup(&m_gdiplusToken, &gdiplusStartupInput, NULL);
-	}
+	fz_synchronize_begin();
+	if (++m_gdiplusUsage == 1)
+		GdiplusStartup(&m_gdiplusToken, &GdiplusStartupInput(), NULL);
+	fz_synchronize_end();
 	
 	fz_device *dev = fz_new_device(new userData((HDC)hDC, baseClip));
 	((userData *)dev->user)->dev = dev;
