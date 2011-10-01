@@ -19,6 +19,19 @@ using namespace Gdiplus;
 static ULONG_PTR m_gdiplusToken;
 static LONG m_gdiplusUsage = 0;
 
+static ColorPalette *
+gdiplus_create_grayscale_palette()
+{
+	ColorPalette * pal8bit = (ColorPalette *)fz_malloc(sizeof(ColorPalette) + 255 * sizeof(ARGB));
+	
+	pal8bit->Flags = PaletteFlagsGrayScale;
+	pal8bit->Count = 256;
+	for (int i = 0; i < 256; i++)
+		pal8bit->Entries[i] = Color::MakeARGB(255, i, i, i);
+	
+	return pal8bit;
+}
+
 class PixmapBitmap : public Bitmap
 {
 	ColorPalette *pal8bit;
@@ -31,12 +44,7 @@ public:
 		BitmapData data;
 		if (pixmap->colorspace == fz_device_gray && !pixmap->has_alpha)
 		{
-			pal8bit = (ColorPalette *)fz_malloc(sizeof(ColorPalette) + 255 * sizeof(ARGB));
-			pal8bit->Flags = PaletteFlagsGrayScale;
-			pal8bit->Count = 256;
-			for (int i = 0; i < 256; i++)
-				pal8bit->Entries[i] = Color::MakeARGB(255, i, i, i);
-			SetPalette(pal8bit);
+			SetPalette((pal8bit = gdiplus_create_grayscale_palette()));
 			
 			Status status = LockBits(&Rect(0, 0, pixmap->w, pixmap->h), ImageLockModeWrite, PixelFormat8bppIndexed, &data);
 			if (status == Ok)
@@ -158,6 +166,24 @@ public:
 		if (path[0])
 			DeleteFileW(path);
 		delete next;
+	}
+};
+
+class DrawImageAttributes : public ImageAttributes
+{
+public:
+	DrawImageAttributes(float alpha) : ImageAttributes()
+	{
+		ColorMatrix matrix = { 
+			1.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+			0.0f, 1.0f, 0.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, alpha, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f, 1.0f
+		};
+		if (alpha != 1.0f)
+			SetColorMatrix(&matrix, ColorMatrixFlagsDefault, ColorAdjustTypeBitmap);
+		SetWrapMode(WrapModeTileFlipXY);
 	}
 };
 
@@ -360,9 +386,7 @@ public:
 			if (blendmode != 0)
 				_applyBlend(stack->layer, stack->bounds, blendmode);
 			
-			ImageAttributes imgAttrs;
-			_setDrawAttributes(imgAttrs, stack->layerAlpha);
-			graphics->DrawImage(stack->layer, stack->bounds, 0, 0, stack->layer->GetWidth(), stack->layer->GetHeight(), UnitPixel, &imgAttrs);
+			graphics->DrawImage(stack->layer, stack->bounds, 0, 0, stack->layer->GetWidth(), stack->layer->GetHeight(), UnitPixel, &DrawImageAttributes(stack->layerAlpha));
 			delete stack->layer;
 		}
 		
@@ -372,7 +396,7 @@ public:
 		stack = prev;
 	}
 
-	void drawPixmap(fz_pixmap *image, fz_matrix ctm, float alpha=1.0, Graphics *graphics=NULL)
+	void drawPixmap(fz_pixmap *image, fz_matrix ctm, float alpha=1.0, Graphics *graphics=NULL) const
 	{
 		if (!image->samples)
 			return;
@@ -421,9 +445,6 @@ public:
 			gdiplus_transform_point(ctm, 0, 0)
 		};
 		
-		ImageAttributes imgAttrs;
-		_setDrawAttributes(imgAttrs, alpha);
-		
 		float scale = _hypotf(_hypotf(ctm.a, ctm.b), _hypotf(ctm.c, ctm.d)) / _hypotf(image->w, image->h);
 		/* cf. fz_paint_image_imp in draw/imagedraw.c for when (not) to interpolate */
 		bool downscale = _hypotf(ctm.a, ctm.b) < image->w && _hypotf(ctm.c, ctm.d) < image->h;
@@ -435,7 +456,7 @@ public:
 		{
 			GraphicsState state = graphics->Save();
 			graphics->SetInterpolationMode(InterpolationModeNearestNeighbor);
-			graphics->DrawImage(&PixmapBitmap(image), corners, 3, 0, 0, image->w, image->h, UnitPixel, &imgAttrs);
+			graphics->DrawImage(&PixmapBitmap(image), corners, 3, 0, 0, image->w, image->h, UnitPixel, &DrawImageAttributes(alpha));
 			graphics->Restore(state);
 		}
 		else if (scale < 1.0 && MIN(image->w, image->h) > 10)
@@ -443,22 +464,30 @@ public:
 			int w = round(image->w * scale);
 			int h = round(image->h * scale);
 			
-			Bitmap *scaled = new Bitmap(w, h, PixelFormat32bppARGB);
+			Bitmap *scaled = new Bitmap(w, h, image->has_alpha ? PixelFormat32bppARGB : PixelFormat24bppRGB);
+			ColorPalette *pal8bit = NULL;
+			if (!image->has_alpha && image->colorspace == fz_device_gray && w * h > (1 << 18))
+			{
+				delete scaled;
+				scaled = new Bitmap(w, h, PixelFormat8bppIndexed);
+				scaled->SetPalette((pal8bit = gdiplus_create_grayscale_palette()));
+			}
 			Graphics g2(scaled);
 			_setup(&g2);
-			g2.DrawImage(&PixmapBitmap(image), 0, 0, w, h);
+			g2.DrawImage(&PixmapBitmap(image), Rect(0, 0, w, h), 0, 0, image->w, image->h, UnitPixel, &DrawImageAttributes(1.0f));
 			
-			graphics->DrawImage(scaled, corners, 3, 0, 0, w, h, UnitPixel, &imgAttrs);
+			graphics->DrawImage(scaled, corners, _countof(corners), 0, 0, w, h, UnitPixel, &DrawImageAttributes(alpha));
 			delete scaled;
+			fz_free(pal8bit);
 		}
 		else
-			graphics->DrawImage(&PixmapBitmap(image), corners, 3, 0, 0, image->w, image->h, UnitPixel, &imgAttrs);
+			graphics->DrawImage(&PixmapBitmap(image), corners, 3, 0, 0, image->w, image->h, UnitPixel, &DrawImageAttributes(alpha));
 	}
 
 	float getAlpha(float alpha=1.0) const { return stack->alpha * alpha; }
 
 protected:
-	Graphics *_setup(Graphics *graphics)
+	Graphics *_setup(Graphics *graphics) const
 	{
 		graphics->SetPageUnit(UnitPoint);
 		graphics->SetPageScale(72.0 / graphics->GetDpiY());
@@ -471,7 +500,7 @@ protected:
 		return graphics;
 	}
 
-	void _applyMask(Bitmap *bitmap, Bitmap *mask, bool luminosity=false)
+	void _applyMask(Bitmap *bitmap, Bitmap *mask, bool luminosity=false) const
 	{
 		Rect bounds(0, 0, bitmap->GetWidth(), bitmap->GetHeight());
 		assert(bounds.Width == mask->GetWidth() && bounds.Height == mask->GetHeight());
@@ -512,7 +541,7 @@ protected:
 		bitmap->UnlockBits(&data);
 	}
 
-	void _applyBlend(Bitmap *bitmap, Rect clipBounds, int blendmode)
+	void _applyBlend(Bitmap *bitmap, Rect clipBounds, int blendmode) const
 	{
 		userDataStackItem *bgStack = stack->prev;
 		while (bgStack && !bgStack->layer)
@@ -545,7 +574,7 @@ protected:
 		delete backdrop;
 	}
 
-	Bitmap *_flattenBlendBackdrop(userDataStackItem *group, Rect clipBounds)
+	Bitmap *_flattenBlendBackdrop(userDataStackItem *group, Rect clipBounds) const
 	{
 		userDataStackItem *bgStack = group->prev;
 		while (bgStack && !bgStack->layer)
@@ -574,7 +603,7 @@ protected:
 		return backdrop;
 	}
 
-	void _compositeWithBackground(Bitmap *bitmap, Rect bounds, Bitmap *backdrop, Rect boundsBg, int blendmode, bool modifyBackdrop)
+	void _compositeWithBackground(Bitmap *bitmap, Rect bounds, Bitmap *backdrop, Rect boundsBg, int blendmode, bool modifyBackdrop) const
 	{
 		separableBlend funcs[] = {
 			BlendNormal,
@@ -654,7 +683,7 @@ protected:
 		bitmap->UnlockBits(&data);
 	}
 
-	bool _hasSingleColor(fz_pixmap *image)
+	bool _hasSingleColor(fz_pixmap *image) const
 	{
 		if (image->w > 2 || image->h > 2 || !image->colorspace)
 			return false;
@@ -664,20 +693,6 @@ protected:
 				return false;
 		
 		return true;
-	}
-
-	void _setDrawAttributes(ImageAttributes& imgAttrs, float alpha)
-	{
-		ColorMatrix matrix = { 
-			1.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-			0.0f, 1.0f, 0.0f, 0.0f, 0.0f,
-			0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
-			0.0f, 0.0f, 0.0f, alpha, 0.0f,
-			0.0f, 0.0f, 0.0f, 0.0f, 1.0f
-		};
-		if (alpha != 1.0f)
-			imgAttrs.SetColorMatrix(&matrix, ColorMatrixFlagsDefault, ColorAdjustTypeBitmap);
-		// imgAttrs.SetWrapMode(WrapModeClamp);
 	}
 };
 
