@@ -114,7 +114,7 @@ void WindowInfo::ToggleZoom()
         this->dm->ZoomTo(ZOOM_FIT_WIDTH);
     else if (ZOOM_FIT_WIDTH == this->dm->ZoomVirtual())
         this->dm->ZoomTo(ZOOM_FIT_CONTENT);
-    else if (ZOOM_FIT_CONTENT == this->dm->ZoomVirtual())
+    else
         this->dm->ZoomTo(ZOOM_FIT_PAGE);
 }
 

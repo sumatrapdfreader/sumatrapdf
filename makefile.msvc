@@ -114,7 +114,7 @@ SUMATRA_OBJS = \
 	$(OS)\TableOfContents.obj $(OS)\Toolbar.obj $(OS)\Print.obj \
 	$(OS)\Notifications.obj $(OS)\Search.obj $(OS)\Menu.obj \
 	$(OS)\ExternalPdfViewer.obj $(OS)\Selection.obj $(OS)\ZipUtil.obj \
-    $(OS)\Touch.obj \
+	$(OS)\Touch.obj \
 	$(UTILS_OBJS) $(BZIP2_OBJS) $(MINIZIP_OBJS) $(UNRAR_OBJS) $(SYNCTEX_OBJS) \
 	$(OS)\DjVuEngine.obj $(DJVU_OBJS)
 
@@ -442,10 +442,10 @@ $(OS)\SumatraPDF.obj: src\Resource.h src\Search.h src\Selection.h
 $(OS)\SumatraPDF.obj: src\StressTesting.h src\SumatraAbout.h src\SumatraDialogs.h
 $(OS)\SumatraPDF.obj: src\SumatraPDF.h src\SumatraProperties.h src\TableOfContents.h
 $(OS)\SumatraPDF.obj: src\TextSearch.h src\TextSelection.h src\Toolbar.h
-$(OS)\SumatraPDF.obj: src\translations.h src\utils\BaseUtil.h src\utils\FileUtil.h
-$(OS)\SumatraPDF.obj: src\utils\GeomUtil.h src\utils\Http.h src\utils\StrUtil.h
-$(OS)\SumatraPDF.obj: src\utils\Vec.h src\utils\WinUtil.h src\Version.h
-$(OS)\SumatraPDF.obj: src\WindowInfo.h src\Touch.h
+$(OS)\SumatraPDF.obj: src\Touch.h src\translations.h src\utils\BaseUtil.h
+$(OS)\SumatraPDF.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\Http.h
+$(OS)\SumatraPDF.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
+$(OS)\SumatraPDF.obj: src\Version.h src\WindowInfo.h
 $(OS)\SumatraProperties.obj: src\AppPrefs.h src\BaseEngine.h src\ChmEngine.h
 $(OS)\SumatraProperties.obj: src\DisplayModel.h src\DisplayState.h src\DjVuEngine.h
 $(OS)\SumatraProperties.obj: src\EngineManager.h src\ImagesEngine.h src\PdfEngine.h
@@ -476,7 +476,8 @@ $(OS)\Toolbar.obj: src\TextSearch.h src\TextSelection.h src\Toolbar.h
 $(OS)\Toolbar.obj: src\translations.h src\utils\BaseUtil.h src\utils\GeomUtil.h
 $(OS)\Toolbar.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
 $(OS)\Toolbar.obj: src\WindowInfo.h
-$(OS)\Touch.obj: src\Touch.h
+$(OS)\Touch.obj: src\Touch.h src\utils\BaseUtil.h src\utils\GeomUtil.h
+$(OS)\Touch.obj: src\utils\StrUtil.h src\utils\WinUtil.h
 $(OS)\translations.obj: src\translations.h src\translations_txt.cpp src\utils\BaseUtil.h
 $(OS)\translations.obj: src\utils\StrUtil.h
 $(OS)\TrivialHtmlParser.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h

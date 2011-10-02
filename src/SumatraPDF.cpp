@@ -945,11 +945,11 @@ static WindowInfo* CreateWindowInfo()
     gWindows.Append(win);
     UpdateWindowRtlLayout(win);
 
-    if (Touch::SupportsGestures())
-    {
-        GESTURECONFIG gc = {0,GC_ALLGESTURES,0};
+    if (Touch::SupportsGestures()) {
+        GESTURECONFIG gc = { 0, GC_ALLGESTURES, 0 };
         Touch::SetGestureConfig(hwndFrame, 0, 1, &gc, sizeof(GESTURECONFIG));
     }
+
     return win;
 }
 
@@ -3552,6 +3552,9 @@ static LRESULT OnMouseWheel(WindowInfo& win, UINT message, WPARAM wParam, LPARAM
 
 static LRESULT OnGesture(WindowInfo& win, UINT message, WPARAM wParam, LPARAM lParam)
 {
+    if (!Touch::SupportsGestures())
+        return DefWindowProc(win.hwndFrame, message, wParam, lParam);
+
     if (!win.IsDocLoaded())
         return 0;
 
@@ -3566,34 +3569,24 @@ static LRESULT OnGesture(WindowInfo& win, UINT message, WPARAM wParam, LPARAM lP
         return 0;
     }
 
-    switch (gi.dwID)
-    {
-
+    switch (gi.dwID) {
         case GID_ZOOM:
-            // Code for zooming goes here
-            if (gi.dwFlags == GF_BEGIN)
-                win.startArg = LODWORD(gi.ullArguments);
-            else
-            {
-                // Calculate the zoom factor
-                float k = (float)(LODWORD(gi.ullArguments))/(float)(win.startArg);
-                ZoomToSelection(&win, k, true);
-                win.startArg = LODWORD(gi.ullArguments);
+            if (gi.dwFlags != GF_BEGIN) {
+                float zoom = (float)LODWORD(gi.ullArguments) / (float)win.startArg;
+                ZoomToSelection(&win, zoom, true);
             }
+            win.startArg = LODWORD(gi.ullArguments);
             break;
 
         case GID_PAN:
             // Panning left or right changes the page
-            if (gi.dwFlags == GF_BEGIN)
-            {
+            if (gi.dwFlags == GF_BEGIN) {
                 win.panPos = gi.ptsLocation;
                 win.panStarted = true;
             }
-            else if ((gi.dwFlags & GF_INERTIA) != 0)
-            {
+            else if ((gi.dwFlags & GF_INERTIA)) {
                 // Switch pages once we hit inertia
-                if (win.panStarted)
-                {
+                if (win.panStarted) {
                     win.panStarted = false;
                     int deltaX = win.panPos.x - gi.ptsLocation.x; 
                     if (deltaX < 0)
@@ -3606,12 +3599,11 @@ static LRESULT OnGesture(WindowInfo& win, UINT message, WPARAM wParam, LPARAM lP
 
         case GID_ROTATE:
             // Rotate the PDF 90 degrees in one direction
-            if (gi.dwFlags == GF_END)
-            {
+            if (gi.dwFlags == GF_END) {
                 // This is in radians
                 double rads = GID_ROTATE_ANGLE_FROM_ARGUMENT(LODWORD(gi.ullArguments));
                 // The angle from the rotate is the opposite of the Sumatra rotate, thus the negative
-                double degrees = -rads*(180/M_PI);
+                double degrees = -rads * 180 / M_PI;
 
                 // Playing with the app, I found that I often didn't go quit a full 90 or 180
                 // degrees. Allowing rotate without a full finger rotate seemed more natural.
@@ -3630,16 +3622,9 @@ static LRESULT OnGesture(WindowInfo& win, UINT message, WPARAM wParam, LPARAM lP
             break;
 
         case GID_PRESSANDTAP:
-            // Toggle between display modes single page, facing and book
+            // Toggle between Fit Page, Fit Width and Fit Content (same as 'z')
             if (gi.dwFlags == GF_BEGIN)
-            {
-                if (win.dm->displayMode() == DM_SINGLE_PAGE)
-                    SwitchToDisplayMode(&win, DM_FACING, true);
-                else if (win.dm->displayMode() == DM_FACING)
-                    SwitchToDisplayMode(&win, DM_BOOK_VIEW, true);
-                else
-                    SwitchToDisplayMode(&win, DM_SINGLE_PAGE, true);
-            }
+                win.ToggleZoom();
             break;
 
         default:
@@ -3743,9 +3728,7 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
             return OnMouseWheel(*win, msg, wParam, lParam);
 
 		case WM_GESTURE:
-			if (Touch::SupportsGestures())
-				return OnGesture(*win, msg, wParam, lParam);
-			break;
+			return OnGesture(*win, msg, wParam, lParam);
 
         default:
             // process thread queue events happening during an inner message loop
@@ -4455,8 +4438,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
             gGlobalPrefs.defaultZoom = ZOOM_FIT_WIDTH;
         }
     }	
-
-    Touch::InitializeGestures();
 
     WindowInfo *win = NULL;
     bool firstIsDocLoaded = false;

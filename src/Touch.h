@@ -9,16 +9,13 @@
 
 #ifndef _QWORD_DEFINED
 #define _QWORD_DEFINED
-typedef __int64 QWORD, *LPQWORD;
+typedef unsigned __int64 QWORD, *LPQWORD;
 #endif
  
 #ifndef MAKEQWORD
-#define MAKEQWORD(a, b)	\
-	((QWORD)( ((QWORD) ((DWORD) (a))) << 32 | ((DWORD) (b))))
-#define LODWORD(l) \
-	((DWORD)(l))
-#define HIDWORD(l) \
-	((DWORD)(((QWORD)(l) >> 32) & 0xFFFFFFFF))
+#define MAKEQWORD(a, b)	    ((QWORD)( ((QWORD) ((DWORD) (a))) << 32 | ((DWORD) (b))))
+#define LODWORD(l)          ((DWORD)(l))
+#define HIDWORD(l)          ((DWORD)(((QWORD)(l) >> 32) & 0xFFFFFFFF))
 #endif
 
 // Define the Gesture structures here because they
@@ -74,8 +71,8 @@ typedef GESTUREINFO const * PCGESTUREINFO;
  *   - Angle should be a double in the range of -2pi to +2pi
  *   - Argument should be an unsigned 16-bit value
  */
-#define GID_ROTATE_ANGLE_TO_ARGUMENT(_arg_)     ((USHORT)((((_arg_) + 2.0 * 3.14159265) / (4.0 * 3.14159265)) * 65535.0))
-#define GID_ROTATE_ANGLE_FROM_ARGUMENT(_arg_)   ((((double)(_arg_) / 65535.0) * 4.0 * 3.14159265) - 2.0 * 3.14159265)
+#define GID_ROTATE_ANGLE_TO_ARGUMENT(_arg_)     ((USHORT)((((_arg_) + 2.0 * M_PI) / (4.0 * M_PI)) * 65535.0))
+#define GID_ROTATE_ANGLE_FROM_ARGUMENT(_arg_)   ((((double)(_arg_) / 65535.0) * 4.0 * M_PI) - 2.0 * M_PI)
 
 /*
  * Gesture configuration flags
@@ -109,16 +106,14 @@ typedef GESTUREINFO const * PCGESTUREINFO;
 
 // Touch Gesture API, only available in Windows 7 so those are wrappers for
 // dynamically resolved dll APIs.
-namespace Touch
-{
-    void InitializeGestures();
+namespace Touch {
 
-    // Only valid after calling InitializeGestures()
-    bool SupportsGestures();
+bool SupportsGestures();
 
-    BOOL GetGestureInfo(HGESTUREINFO hGestureInfo, PGESTUREINFO pGestureInfo);
-    BOOL CloseGestureInfoHandle(HGESTUREINFO hGestureInfo);
-    BOOL SetGestureConfig(HWND hwnd, DWORD dwReserved, UINT cIDs, PGESTURECONFIG pGestureConfig, UINT cbSize);
+BOOL GetGestureInfo(HGESTUREINFO hGestureInfo, PGESTUREINFO pGestureInfo);
+BOOL CloseGestureInfoHandle(HGESTUREINFO hGestureInfo);
+BOOL SetGestureConfig(HWND hwnd, DWORD dwReserved, UINT cIDs, PGESTURECONFIG pGestureConfig, UINT cbSize);
+
 }
 
 #endif // Touch_h

@@ -1,11 +1,9 @@
 /* Copyright 2006-2011 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include <windows.h>
-
-#include "Touch.h"
+#include "BaseUtil.h"
 #include "WinUtil.h"
-#include <assert.h>
+#include "Touch.h"
 
 namespace Touch {
 
@@ -17,27 +15,28 @@ static GetGestureInfoPtr         g_pGetGestureInfo;
 static CloseGestureInfoHandlePtr g_pCloseGestureInfoHandle;
 static SetGestureConfigPtr       g_pSetGestureConfig;
 
-static HMODULE g_hLib = NULL;
-
-void InitializeGestures()
+static void InitializeGestures()
 {
-    assert(NULL == g_pGetGestureInfo && NULL == g_hLib); // don't call twice
+    static bool initialized = false;
+    if (initialized)
+        return;
+    initialized = true;
 
-    if (g_pGetGestureInfo || g_hLib) 
+    HMODULE hLib = SafeLoadLibrary(_T("user32.dll"));
+    if (!hLib)
         return;
 
-    g_hLib = SafeLoadLibrary(_T("user32.dll"));
-    if (!g_hLib)
-        return;
-
-    g_pGetGestureInfo = (GetGestureInfoPtr)GetProcAddress(g_hLib, "GetGestureInfo");
-    g_pCloseGestureInfoHandle = (CloseGestureInfoHandlePtr)GetProcAddress(g_hLib, "CloseGestureInfoHandle");
-    g_pSetGestureConfig = (SetGestureConfigPtr)GetProcAddress(g_hLib, "SetGestureConfig");
+#define Load(func) g_p ## func = (func ## Ptr)GetProcAddress(hLib, #func)
+    Load(GetGestureInfo);
+    Load(CloseGestureInfoHandle);
+    Load(SetGestureConfig);
+#undef Load
 }
 
 bool SupportsGestures()
 {
-    return g_pGetGestureInfo != NULL;
+    InitializeGestures();
+    return g_pGetGestureInfo && g_pCloseGestureInfoHandle;
 }
 
 BOOL GetGestureInfo(HGESTUREINFO hGestureInfo, PGESTUREINFO pGestureInfo)    
@@ -62,4 +61,3 @@ BOOL SetGestureConfig(HWND hwnd, DWORD dwReserved, UINT cIDs, PGESTURECONFIG pGe
 }
 
 }
-
