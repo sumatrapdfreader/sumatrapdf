@@ -47,8 +47,8 @@ bool IsAppThemed()
 
 WORD GetWindowsVersion()
 {
-    DWORD version = GetVersion();
-    return MAKEWORD(HIBYTE(version), LOBYTE(version));
+    DWORD ver = GetVersion();
+    return MAKEWORD(HIBYTE(ver), LOBYTE(ver));
 }
 
 bool WindowsVerVistaOrGreater()

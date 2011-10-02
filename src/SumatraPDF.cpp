@@ -4456,8 +4456,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         }
     }	
 
-    if (Touch::SupportsGestures())
-        Touch::InitializeGestures();
+    Touch::InitializeGestures();
 
     WindowInfo *win = NULL;
     bool firstIsDocLoaded = false;

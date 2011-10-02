@@ -5,32 +5,21 @@
 
 #include "Touch.h"
 
-// Static initializers
 Touch::GetGestureInfoPtr Touch::g_pGetGestureInfo;
 Touch::CloseGestureInfoHandlePtr Touch::g_pCloseGestureInfoHandle;
 Touch::SetGestureConfigPtr Touch::g_pSetGestureConfig;
 
 bool Touch::SupportsGestures()
 {
-    OSVERSIONINFOEX ver;
-    ZeroMemory(&ver, sizeof(ver));
-    ver.dwOSVersionInfoSize = sizeof(ver);
-    BOOL ok = GetVersionEx((OSVERSIONINFO*)&ver);
-    if (!ok)
-        return false;
-
-    // For future versions of Windows
-    if (ver.dwMajorVersion > 6)
-        return true;
-
-    // Greater than or equal to Windows 7 (0x0601)
-    return ver.dwMajorVersion >= 6 && ver.dwMinorVersion >= 1;
+    return g_pGetGestureInfo != NULL;
 }
 
 static HMODULE s_hLib = NULL;
 
 void Touch::InitializeGestures()
 {
+    assert(NULL == g_pGetGestureInfo && NULL == s_hLib); // don't call twice
+
     if (g_pGetGestureInfo || s_hLib) 
         return;
 

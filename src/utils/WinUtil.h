@@ -160,25 +160,25 @@ inline void FillWndClassEx(WNDCLASSEX &wcex, HINSTANCE hInstance)
     wcex.hCursor    = LoadCursor(NULL, IDC_ARROW);
 }
 
-bool IsAppThemed();
-bool WindowsVerVistaOrGreater();
-bool IsRunningInWow64();
+bool   IsAppThemed();
+bool   WindowsVerVistaOrGreater();
+bool   IsRunningInWow64();
 
-void SeeLastError(DWORD err=0);
+void   SeeLastError(DWORD err=0);
 TCHAR *ReadRegStr(HKEY keySub, const TCHAR *keyName, const TCHAR *valName);
-bool WriteRegStr(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, const TCHAR *value);
-bool WriteRegDWORD(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, DWORD value);
-bool CreateRegKey(HKEY keySub, const TCHAR *keyName);
-bool DeleteRegKey(HKEY keySub, const TCHAR *keyName, bool resetACLFirst=false);
+bool   WriteRegStr(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, const TCHAR *value);
+bool   WriteRegDWORD(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, DWORD value);
+bool   CreateRegKey(HKEY keySub, const TCHAR *keyName);
+bool   DeleteRegKey(HKEY keySub, const TCHAR *keyName, bool resetACLFirst=false);
 
-void EnableNx();
-void RedirectIOToConsole();
+void   EnableNx();
+void   RedirectIOToConsole();
 TCHAR *GetExePath();
-int FileTimeDiffInSecs(FILETIME& ft1, FILETIME& ft2);
+int    FileTimeDiffInSecs(FILETIME& ft1, FILETIME& ft2);
 TCHAR *MenuSafeString(const TCHAR *str);
 
 TCHAR *ResolveLnk(const TCHAR *path);
-bool CreateShortcut(const TCHAR *shortcutPath, const TCHAR *exePath,
+bool   CreateShortcut(const TCHAR *shortcutPath, const TCHAR *exePath,
                     const TCHAR *args=NULL, const TCHAR *description=NULL,
                     int iconIndex=0);
 IDataObject* GetDataObjectForFile(LPCTSTR filePath, HWND hwnd=NULL);

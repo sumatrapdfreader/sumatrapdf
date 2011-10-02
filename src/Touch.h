@@ -113,37 +113,37 @@ typedef GESTUREINFO const * PCGESTUREINFO;
 class Touch
 {
 private:
-	// Function prototypes
-	typedef BOOL (WINAPI * GetGestureInfoPtr)(HGESTUREINFO hGestureInfo, PGESTUREINFO pGestureInfo);
-	typedef BOOL (WINAPI * CloseGestureInfoHandlePtr)(HGESTUREINFO hGestureInfo);
-	typedef BOOL (WINAPI * SetGestureConfigPtr)(HWND hwnd, DWORD dwReserved, UINT cIDs, PGESTURECONFIG pGestureConfig, UINT cbSize);
+    // Function prototypes
+    typedef BOOL (WINAPI * GetGestureInfoPtr)(HGESTUREINFO hGestureInfo, PGESTUREINFO pGestureInfo);
+    typedef BOOL (WINAPI * CloseGestureInfoHandlePtr)(HGESTUREINFO hGestureInfo);
+    typedef BOOL (WINAPI * SetGestureConfigPtr)(HWND hwnd, DWORD dwReserved, UINT cIDs, PGESTURECONFIG pGestureConfig, UINT cbSize);
 
-	// function pointers
-	static GetGestureInfoPtr g_pGetGestureInfo;
-	static CloseGestureInfoHandlePtr g_pCloseGestureInfoHandle;
-	static SetGestureConfigPtr g_pSetGestureConfig;
+    // function pointers
+    static GetGestureInfoPtr g_pGetGestureInfo;
+    static CloseGestureInfoHandlePtr g_pCloseGestureInfoHandle;
+    static SetGestureConfigPtr g_pSetGestureConfig;
 
 public:
-	// Gestures were first supported in Windows 7.
-	// This method ensures we are running at least
-	// that version of Windows.
-	static bool SupportsGestures();
+    // Gestures were first supported in Windows 7.
+    // This method ensures we are running at least
+    // that version of Windows.
+    static bool SupportsGestures();
 
-	// Loads the function pointers for the gestures.
-	static void InitializeGestures();
+    // Loads the function pointers for the gestures.
+    static void InitializeGestures();
 
-	static BOOL GetGestureInfo(HGESTUREINFO hGestureInfo, PGESTUREINFO pGestureInfo)	
-	{
-		return g_pGetGestureInfo!= NULL ? g_pGetGestureInfo(hGestureInfo, pGestureInfo) : false;
-	}
-	static BOOL CloseGestureInfoHandle(HGESTUREINFO hGestureInfo)	
-	{
-		return g_pCloseGestureInfoHandle != NULL ? g_pCloseGestureInfoHandle(hGestureInfo) : false;
-	}
-	static BOOL SetGestureConfig(HWND hwnd, DWORD dwReserved, UINT cIDs, PGESTURECONFIG pGestureConfig, UINT cbSize)
-	{
-		return g_pSetGestureConfig != NULL ? g_pSetGestureConfig(hwnd, dwReserved, cIDs, pGestureConfig, cbSize) : false;
-	}
+    static BOOL GetGestureInfo(HGESTUREINFO hGestureInfo, PGESTUREINFO pGestureInfo)	
+    {
+        return g_pGetGestureInfo!= NULL ? g_pGetGestureInfo(hGestureInfo, pGestureInfo) : false;
+    }
+    static BOOL CloseGestureInfoHandle(HGESTUREINFO hGestureInfo)	
+    {
+        return g_pCloseGestureInfoHandle != NULL ? g_pCloseGestureInfoHandle(hGestureInfo) : false;
+    }
+    static BOOL SetGestureConfig(HWND hwnd, DWORD dwReserved, UINT cIDs, PGESTURECONFIG pGestureConfig, UINT cbSize)
+    {
+        return g_pSetGestureConfig != NULL ? g_pSetGestureConfig(hwnd, dwReserved, cIDs, pGestureConfig, cbSize) : false;
+    }
 };
 
 #endif // Touch_h
