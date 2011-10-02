@@ -486,7 +486,7 @@ static int GetPolicies(bool isRestricted)
     };
 
     // allow to restrict SumatraPDF's functionality from an INI file in the
-    // same directory as SumatraPDF.exe (cf. ../docs/sumatrapdfrestrict.ini )
+    // same directory as SumatraPDF.exe (cf. ../docs/sumatrapdfrestrict.ini)
     ScopedMem<TCHAR> restrictPath(GetExePath());
     if (restrictPath) {
         restrictPath.Set(path::GetDir(restrictPath));
@@ -944,12 +944,12 @@ static WindowInfo* CreateWindowInfo()
 
     gWindows.Append(win);
     UpdateWindowRtlLayout(win);
-	
-	if ( Touch::SupportsGestures() )
-	{
-		GESTURECONFIG gc = {0,GC_ALLGESTURES,0};
-		Touch::SetGestureConfig(hwndFrame, 0, 1, &gc, sizeof(GESTURECONFIG));
-	}
+
+    if (Touch::SupportsGestures())
+    {
+        GESTURECONFIG gc = {0,GC_ALLGESTURES,0};
+        Touch::SetGestureConfig(hwndFrame, 0, 1, &gc, sizeof(GESTURECONFIG));
+    }
     return win;
 }
 
@@ -1054,7 +1054,7 @@ WindowInfo* LoadDocument(const TCHAR *fileName, WindowInfo *win, bool showWin, b
 
     win->suppressPwdUI = suppressPwdUI;
     if (!LoadDocIntoWindow(fullpath, *win, NULL, isNewWindow,
-                           true /* allowFailure */, showWin, true /* placeWindow */ )) {
+                           true /* allowFailure */, showWin, true /* placeWindow */)) {
         /* failed to open */
         if (gFileHistory.MarkFileInexistent(fullpath))
             SavePrefs();
@@ -3551,111 +3551,101 @@ static LRESULT OnMouseWheel(WindowInfo& win, UINT message, WPARAM wParam, LPARAM
 }
 
 static LRESULT OnGesture(WindowInfo& win, UINT message, WPARAM wParam, LPARAM lParam)
-{	
-	if (!win.IsDocLoaded() ) 
-		return 0;
+{
+    if (!win.IsDocLoaded())
+        return 0;
 
-	// Create a structure to populate and retrieve the extra message info.
-	GESTUREINFO gi;  
+    // Create a structure to populate and retrieve the extra message info.
+    GESTUREINFO gi;  
 
-	ZeroMemory(&gi, sizeof(GESTUREINFO));
+    ZeroMemory(&gi, sizeof(GESTUREINFO));
 
-	gi.cbSize = sizeof(GESTUREINFO);
+    gi.cbSize = sizeof(GESTUREINFO);
 
-	BOOL bResult  = Touch::GetGestureInfo((HGESTUREINFO)lParam, &gi);
+    BOOL bResult  = Touch::GetGestureInfo((HGESTUREINFO)lParam, &gi);
 
-	static bool panStarted = false;
-	static POINTS panPos;
-	static double startArg;
+    static bool panStarted = false;
+    static POINTS panPos;
+    static double startArg;
 
-	if (bResult){
-		// now interpret the gesture
-		switch (gi.dwID){
-		case GID_ZOOM:
-			// Code for zooming goes here     
-			if ( gi.dwFlags == GF_BEGIN )
-			{
-				startArg = LODWORD(gi.ullArguments);
-			}
-			else
-			{
-				// Calculate the zoom factor
-				float k = (float)(LODWORD(gi.ullArguments))/(float)(startArg);
+    if (bResult) {
+        // now interpret the gesture
+        switch (gi.dwID){
+        case GID_ZOOM:
+            // Code for zooming goes here     
+            if (gi.dwFlags == GF_BEGIN)
+                startArg = LODWORD(gi.ullArguments);
+            else
+            {
+                // Calculate the zoom factor
+                float k = (float)(LODWORD(gi.ullArguments))/(float)(startArg);
+                ZoomToSelection(&win, k, true);
+                startArg = LODWORD(gi.ullArguments);
+            }
+            break;
+        case GID_PAN:
+            // Panning left or right changes the page
+            if (gi.dwFlags == GF_BEGIN)
+            {
+                panPos = gi.ptsLocation;
+                panStarted = true;
+            }
+            else if (gi.dwFlags && GF_INERTIA == GF_INERTIA)
+            {
+                // Switch pages once we hit inertia
+                if (panStarted)
+                {
+                    panStarted = false;
+                    int deltaX = panPos.x - gi.ptsLocation.x; 
+                    if (deltaX < 0)
+                        win.dm->GoToPrevPage(0);
+                    else if (deltaX > 0)
+                        win.dm->GoToNextPage(0);
+                }
+            }
+            break;
+        case GID_ROTATE:
+            // Rotate the PDF 90 degrees in one direction
+            if (gi.dwFlags == GF_END)
+            {
+                // This is in radians
+                double rads = GID_ROTATE_ANGLE_FROM_ARGUMENT(LODWORD(gi.ullArguments));
+                // The angle from the rotate is the opposite of the Sumatra rotate, thus the negative
+                double degrees = -rads*(180/M_PI);
 
-				ZoomToSelection(&win, k, true);
-
-				startArg = LODWORD(gi.ullArguments);
-			}
-			break;
-		case GID_PAN:
-			// Panning left or right changes the page
-			if( gi.dwFlags == GF_BEGIN )
-			{
-				panPos = gi.ptsLocation;
-				panStarted = true;
-			}
-			else if( gi.dwFlags && GF_INERTIA == GF_INERTIA )
-			{
-				// Switch pages once we hit inertia
-				if ( panStarted )
-				{
-					panStarted = false;
-					int deltaX = panPos.x - gi.ptsLocation.x; 
-					if (deltaX < 0)
-						win.dm->GoToPrevPage(0);
-					else if (deltaX > 0)
-						win.dm->GoToNextPage(0);
-				}
-			}
-			break;
-		case GID_ROTATE:
-			// Rotate the PDF 90 degrees in one direction
-			if ( gi.dwFlags == GF_END )
-			{
-				// This is in radians
-				double rads = GID_ROTATE_ANGLE_FROM_ARGUMENT(LODWORD(gi.ullArguments));
-				// The angle from the rotate is the opposite of the Sumatra rotate, thus the negative
-				double degrees = -rads*(180/M_PI);
-
-				// Playing with the app, I found that I often didn't go quit a full 90 or 180
-				// degrees. Allowing rotate without a full finger rotate seemed more natural.
-				if ( degrees < -120 || degrees > 120 )					
-					win.dm->RotateBy(180);
-				else if ( degrees < -45 )
-					win.dm->RotateBy(-90);
-				else if ( degrees > 45 )
-					win.dm->RotateBy(90);
-			}
-			break;
-		case GID_TWOFINGERTAP:
-			// Two-finger tap toggles presentation mode
-			OnMenuViewPresentation(win);
-			break;
-		case GID_PRESSANDTAP:
-			// Toggle between display modes single page, facing and book
-			if (  gi.dwFlags == GF_BEGIN )
-			{
-				if ( win.dm->displayMode() == DM_SINGLE_PAGE )
-				{
-					SwitchToDisplayMode(&win, DM_FACING, true);
-				}
-				else if ( win.dm->displayMode() == DM_FACING )
-				{
-					SwitchToDisplayMode(&win, DM_BOOK_VIEW, true);
-				}
-				else
-				{
-					SwitchToDisplayMode(&win, DM_SINGLE_PAGE, true);
-				}
-			}
-			break;
-		default:
-			// A gesture was not recognized
-			break;
-		}
-	}
-	Touch::CloseGestureInfoHandle((HGESTUREINFO)lParam);
-	return 0;
+                // Playing with the app, I found that I often didn't go quit a full 90 or 180
+                // degrees. Allowing rotate without a full finger rotate seemed more natural.
+                if (degrees < -120 || degrees > 120)
+                    win.dm->RotateBy(180);
+                else if (degrees < -45)
+                    win.dm->RotateBy(-90);
+                else if (degrees > 45)
+                    win.dm->RotateBy(90);
+            }
+            break;
+        case GID_TWOFINGERTAP:
+            // Two-finger tap toggles presentation mode
+            OnMenuViewPresentation(win);
+            break;
+        case GID_PRESSANDTAP:
+            // Toggle between display modes single page, facing and book
+            if (gi.dwFlags == GF_BEGIN)
+            {
+                if (win.dm->displayMode() == DM_SINGLE_PAGE)
+                    SwitchToDisplayMode(&win, DM_FACING, true);
+                else if (win.dm->displayMode() == DM_FACING)
+                    SwitchToDisplayMode(&win, DM_BOOK_VIEW, true);
+                else
+                    SwitchToDisplayMode(&win, DM_SINGLE_PAGE, true);
+            }
+            break;
+        default:
+            // A gesture was not recognized
+            break;
+        }
+    }
+    Touch::CloseGestureInfoHandle((HGESTUREINFO)lParam);
+    return 0;
 }
 
 static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -4348,7 +4338,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
 #ifdef DEBUG
     // Memory leak detection
-    _CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
+    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
     //_CrtSetBreakAlloc(421);
 #endif
 
@@ -4463,10 +4453,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         }
     }	
 
-	if ( Touch::SupportsGestures() )
-	{
-		Touch::InitializeGestures();
-	}
+    if (Touch::SupportsGestures())
+        Touch::InitializeGestures();
 
     WindowInfo *win = NULL;
     bool firstIsDocLoaded = false;

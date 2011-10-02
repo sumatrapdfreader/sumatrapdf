@@ -394,7 +394,7 @@ static void ShowForwardSearchResult(WindowInfo *win, const TCHAR *fileName, UINT
     }
 
     ScopedMem<TCHAR> buf;
-    if (ret == PDFSYNCERR_SYNCFILE_NOTFOUND )
+    if (ret == PDFSYNCERR_SYNCFILE_NOTFOUND)
         ShowNotification(win, _TR("No synchronization file found"));
     else if (ret == PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED)
         ShowNotification(win, _TR("Synchronization file cannot be opened"));

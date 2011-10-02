@@ -243,7 +243,7 @@ static bool GetChmDataForFile(struct chmFile *chmHandle, const char *fileName, B
 static bool ChmFileExists(struct chmFile *chmHandle, const char *path)
 {
     struct chmUnitInfo info;
-    if (chm_resolve_object(chmHandle, path, &info ) != CHM_RESOLVE_SUCCESS) {
+    if (chm_resolve_object(chmHandle, path, &info) != CHM_RESOLVE_SUCCESS) {
         return false;
     }
     return true;
