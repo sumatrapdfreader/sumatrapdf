@@ -3727,8 +3727,8 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
         case WM_MOUSEWHEEL:
             return OnMouseWheel(*win, msg, wParam, lParam);
 
-		case WM_GESTURE:
-			return OnGesture(*win, msg, wParam, lParam);
+        case WM_GESTURE:
+            return OnGesture(*win, msg, wParam, lParam);
 
         default:
             // process thread queue events happening during an inner message loop
@@ -4437,7 +4437,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
             gGlobalPrefs.defaultDisplayMode = DM_CONTINUOUS;
             gGlobalPrefs.defaultZoom = ZOOM_FIT_WIDTH;
         }
-    }	
+    }
 
     WindowInfo *win = NULL;
     bool firstIsDocLoaded = false;
