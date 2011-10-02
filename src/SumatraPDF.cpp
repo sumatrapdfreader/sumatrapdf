@@ -3555,24 +3555,25 @@ static LRESULT OnGesture(WindowInfo& win, UINT message, WPARAM wParam, LPARAM lP
     if (!win.IsDocLoaded())
         return 0;
 
-    // Create a structure to populate and retrieve the extra message info.
-    GESTUREINFO gi;  
+    HGESTUREINFO hgi = (HGESTUREINFO)lParam;
 
-    ZeroMemory(&gi, sizeof(GESTUREINFO));
-
+    GESTUREINFO gi = { 0 };
     gi.cbSize = sizeof(GESTUREINFO);
 
-    BOOL bResult  = Touch::GetGestureInfo((HGESTUREINFO)lParam, &gi);
-
+    BOOL ok = Touch::GetGestureInfo(hgi, &gi);
+    if (!ok) {
+        Touch::CloseGestureInfoHandle(hgi);
+        return 0;
+    }
     static bool panStarted = false;
     static POINTS panPos;
     static double startArg;
 
-    if (bResult) {
-        // now interpret the gesture
-        switch (gi.dwID){
+    switch (gi.dwID)
+    {
+
         case GID_ZOOM:
-            // Code for zooming goes here     
+            // Code for zooming goes here
             if (gi.dwFlags == GF_BEGIN)
                 startArg = LODWORD(gi.ullArguments);
             else
@@ -3583,6 +3584,7 @@ static LRESULT OnGesture(WindowInfo& win, UINT message, WPARAM wParam, LPARAM lP
                 startArg = LODWORD(gi.ullArguments);
             }
             break;
+
         case GID_PAN:
             // Panning left or right changes the page
             if (gi.dwFlags == GF_BEGIN)
@@ -3590,7 +3592,7 @@ static LRESULT OnGesture(WindowInfo& win, UINT message, WPARAM wParam, LPARAM lP
                 panPos = gi.ptsLocation;
                 panStarted = true;
             }
-            else if (gi.dwFlags && GF_INERTIA == GF_INERTIA)
+            else if ((gi.dwFlags & GF_INERTIA) != 0)
             {
                 // Switch pages once we hit inertia
                 if (panStarted)
@@ -3604,6 +3606,7 @@ static LRESULT OnGesture(WindowInfo& win, UINT message, WPARAM wParam, LPARAM lP
                 }
             }
             break;
+
         case GID_ROTATE:
             // Rotate the PDF 90 degrees in one direction
             if (gi.dwFlags == GF_END)
@@ -3623,10 +3626,12 @@ static LRESULT OnGesture(WindowInfo& win, UINT message, WPARAM wParam, LPARAM lP
                     win.dm->RotateBy(90);
             }
             break;
+
         case GID_TWOFINGERTAP:
             // Two-finger tap toggles presentation mode
             OnMenuViewPresentation(win);
             break;
+
         case GID_PRESSANDTAP:
             // Toggle between display modes single page, facing and book
             if (gi.dwFlags == GF_BEGIN)
@@ -3639,12 +3644,13 @@ static LRESULT OnGesture(WindowInfo& win, UINT message, WPARAM wParam, LPARAM lP
                     SwitchToDisplayMode(&win, DM_SINGLE_PAGE, true);
             }
             break;
+
         default:
             // A gesture was not recognized
             break;
-        }
     }
-    Touch::CloseGestureInfoHandle((HGESTUREINFO)lParam);
+
+    Touch::CloseGestureInfoHandle(hgi);
     return 0;
 }
 
