@@ -189,46 +189,46 @@ void ToLower(WCHAR *s)
 }
 
 /* Caller needs to free() the result */
-char *ToMultiByte(const WCHAR *txt, UINT CodePage)
+char *ToMultiByte(const WCHAR *txt, UINT codePage)
 {
     assert(txt);
     if (!txt) return NULL;
 
-    int requiredBufSize = WideCharToMultiByte(CodePage, 0, txt, -1, NULL, 0, NULL, NULL);
+    int requiredBufSize = WideCharToMultiByte(codePage, 0, txt, -1, NULL, 0, NULL, NULL);
     char *res = SAZA(char, requiredBufSize);
     if (!res)
         return NULL;
-    WideCharToMultiByte(CodePage, 0, txt, -1, res, requiredBufSize, NULL, NULL);
+    WideCharToMultiByte(codePage, 0, txt, -1, res, requiredBufSize, NULL, NULL);
     return res;
 }
 
 /* Caller needs to free() the result */
-char *ToMultiByte(const char *src, UINT CodePageSrc, UINT CodePageDest)
+char *ToMultiByte(const char *src, UINT codePageSrc, UINT codePageDest)
 {
     assert(src);
     if (!src) return NULL;
 
-    if (CodePageSrc == CodePageDest)
+    if (codePageSrc == codePageDest)
         return str::Dup(src);
 
-    ScopedMem<WCHAR> tmp(ToWideChar(src, CodePageSrc));
+    ScopedMem<WCHAR> tmp(ToWideChar(src, codePageSrc));
     if (!tmp)
         return NULL;
 
-    return ToMultiByte(tmp.Get(), CodePageDest);
+    return ToMultiByte(tmp.Get(), codePageDest);
 }
 
 /* Caller needs to free() the result */
-WCHAR *ToWideChar(const char *src, UINT CodePage)
+WCHAR *ToWideChar(const char *src, UINT codePage)
 {
     assert(src);
     if (!src) return NULL;
 
-    int requiredBufSize = MultiByteToWideChar(CodePage, 0, src, -1, NULL, 0);
+    int requiredBufSize = MultiByteToWideChar(codePage, 0, src, -1, NULL, 0);
     WCHAR *res = SAZA(WCHAR, requiredBufSize);
     if (!res)
         return NULL;
-    MultiByteToWideChar(CodePage, 0, src, -1, res, requiredBufSize);
+    MultiByteToWideChar(codePage, 0, src, -1, res, requiredBufSize);
     return res;
 }
 
