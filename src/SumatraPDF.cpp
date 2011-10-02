@@ -3565,9 +3565,6 @@ static LRESULT OnGesture(WindowInfo& win, UINT message, WPARAM wParam, LPARAM lP
         Touch::CloseGestureInfoHandle(hgi);
         return 0;
     }
-    static bool panStarted = false;
-    static POINTS panPos;
-    static double startArg;
 
     switch (gi.dwID)
     {
@@ -3575,13 +3572,13 @@ static LRESULT OnGesture(WindowInfo& win, UINT message, WPARAM wParam, LPARAM lP
         case GID_ZOOM:
             // Code for zooming goes here
             if (gi.dwFlags == GF_BEGIN)
-                startArg = LODWORD(gi.ullArguments);
+                win.startArg = LODWORD(gi.ullArguments);
             else
             {
                 // Calculate the zoom factor
-                float k = (float)(LODWORD(gi.ullArguments))/(float)(startArg);
+                float k = (float)(LODWORD(gi.ullArguments))/(float)(win.startArg);
                 ZoomToSelection(&win, k, true);
-                startArg = LODWORD(gi.ullArguments);
+                win.startArg = LODWORD(gi.ullArguments);
             }
             break;
 
@@ -3589,16 +3586,16 @@ static LRESULT OnGesture(WindowInfo& win, UINT message, WPARAM wParam, LPARAM lP
             // Panning left or right changes the page
             if (gi.dwFlags == GF_BEGIN)
             {
-                panPos = gi.ptsLocation;
-                panStarted = true;
+                win.panPos = gi.ptsLocation;
+                win.panStarted = true;
             }
             else if ((gi.dwFlags & GF_INERTIA) != 0)
             {
                 // Switch pages once we hit inertia
-                if (panStarted)
+                if (win.panStarted)
                 {
-                    panStarted = false;
-                    int deltaX = panPos.x - gi.ptsLocation.x; 
+                    win.panStarted = false;
+                    int deltaX = win.panPos.x - gi.ptsLocation.x; 
                     if (deltaX < 0)
                         win.dm->GoToPrevPage(0);
                     else if (deltaX > 0)

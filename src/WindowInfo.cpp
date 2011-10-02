@@ -30,7 +30,7 @@ WindowInfo::WindowInfo(HWND hwnd) :
     xScrollSpeed(0), yScrollSpeed(0), wheelAccumDelta(0),
     delayedRepaintTimer(0), sidebarBeingResized(false), watcher(NULL),
     pdfsync(NULL), stressTest(NULL), suppressPwdUI(false),
-    hwndFavBox(NULL), hwndFavTree(NULL)
+    hwndFavBox(NULL), hwndFavTree(NULL), panStarted(false)
 {
     ZeroMemory(&selectionRect, sizeof(selectionRect));
 

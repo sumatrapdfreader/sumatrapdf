@@ -177,10 +177,15 @@ public:
     CallbackFunc *  stressTest;
     bool            suppressPwdUI;
 
-    void UpdateCanvasSize();
+    // WM_GESTURE handling 
+    bool    panStarted;
+    POINTS  panPos;
+    double  startArg;
+
+    void  UpdateCanvasSize();
     SizeI GetViewPortSize();
-    void RedrawAll(bool update=false);
-    void RepaintAsync(UINT delay=0);
+    void  RedrawAll(bool update=false);
+    void  RepaintAsync(UINT delay=0);
 
     void ChangePresentationMode(PresentationMode mode) {
         presentation = mode;
