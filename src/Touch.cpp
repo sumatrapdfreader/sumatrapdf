@@ -4,30 +4,62 @@
 #include <windows.h>
 
 #include "Touch.h"
+#include "WinUtil.h"
+#include <assert.h>
 
-Touch::GetGestureInfoPtr Touch::g_pGetGestureInfo;
-Touch::CloseGestureInfoHandlePtr Touch::g_pCloseGestureInfoHandle;
-Touch::SetGestureConfigPtr Touch::g_pSetGestureConfig;
+namespace Touch {
 
-bool Touch::SupportsGestures()
+typedef BOOL (WINAPI * GetGestureInfoPtr)(HGESTUREINFO hGestureInfo, PGESTUREINFO pGestureInfo);
+typedef BOOL (WINAPI * CloseGestureInfoHandlePtr)(HGESTUREINFO hGestureInfo);
+typedef BOOL (WINAPI * SetGestureConfigPtr)(HWND hwnd, DWORD dwReserved, UINT cIDs, PGESTURECONFIG pGestureConfig, UINT cbSize);
+
+static GetGestureInfoPtr         g_pGetGestureInfo;
+static CloseGestureInfoHandlePtr g_pCloseGestureInfoHandle;
+static SetGestureConfigPtr       g_pSetGestureConfig;
+
+static HMODULE g_hLib = NULL;
+
+void InitializeGestures()
+{
+    assert(NULL == g_pGetGestureInfo && NULL == g_hLib); // don't call twice
+
+    if (g_pGetGestureInfo || g_hLib) 
+        return;
+
+    g_hLib = SafeLoadLibrary(_T("user32.dll"));
+    if (!g_hLib)
+        return;
+
+    g_pGetGestureInfo = (GetGestureInfoPtr)GetProcAddress(g_hLib, "GetGestureInfo");
+    g_pCloseGestureInfoHandle = (CloseGestureInfoHandlePtr)GetProcAddress(g_hLib, "CloseGestureInfoHandle");
+    g_pSetGestureConfig = (SetGestureConfigPtr)GetProcAddress(g_hLib, "SetGestureConfig");
+}
+
+bool SupportsGestures()
 {
     return g_pGetGestureInfo != NULL;
 }
 
-static HMODULE s_hLib = NULL;
-
-void Touch::InitializeGestures()
+BOOL GetGestureInfo(HGESTUREINFO hGestureInfo, PGESTUREINFO pGestureInfo)    
 {
-    assert(NULL == g_pGetGestureInfo && NULL == s_hLib); // don't call twice
-
-    if (g_pGetGestureInfo || s_hLib) 
-        return;
-
-    s_hLib = ::LoadLibrary(L"user32.dll");
-    if (!s_hLib)
-        return;
-
-    g_pGetGestureInfo = (GetGestureInfoPtr)GetProcAddress(s_hLib, "GetGestureInfo");
-    g_pCloseGestureInfoHandle = (CloseGestureInfoHandlePtr)GetProcAddress(s_hLib, "CloseGestureInfoHandle");
-    g_pSetGestureConfig = (SetGestureConfigPtr)GetProcAddress(s_hLib, "SetGestureConfig");
+    if (!g_pGetGestureInfo)
+        return FALSE;
+    return g_pGetGestureInfo(hGestureInfo, pGestureInfo);
 }
+
+BOOL CloseGestureInfoHandle(HGESTUREINFO hGestureInfo)   
+{
+    if (!g_pCloseGestureInfoHandle)
+        return FALSE;
+    return g_pCloseGestureInfoHandle(hGestureInfo);
+}
+
+BOOL SetGestureConfig(HWND hwnd, DWORD dwReserved, UINT cIDs, PGESTURECONFIG pGestureConfig, UINT cbSize)
+{
+    if (!g_pSetGestureConfig)
+        return FALSE;
+    return g_pSetGestureConfig(hwnd, dwReserved, cIDs, pGestureConfig, cbSize);
+}
+
+}
+
