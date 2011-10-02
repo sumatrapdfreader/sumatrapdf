@@ -6,6 +6,7 @@ Next version:
 1.9 (????-??-??)
 
 * support touch gestures (available on Windows 7 or later)
+  (contributed by ...)
 
 1.8 (2011-09-18)
 
