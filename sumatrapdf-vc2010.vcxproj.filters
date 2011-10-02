@@ -629,6 +629,9 @@
     <ClCompile Include="src\ChmUI.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Touch.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ext\jbig2dec\config_win32.h">
@@ -896,6 +899,9 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="src\ChmUI.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Touch.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
