@@ -17,11 +17,20 @@ Contributor: Olli
 &Actual Size\tCtrl+1
 &Todellinen koko\tCtrl+1
 
+&All selected pages
+Kaikki valitut sivut
+
 &Back\tAlt+Left Arrow
 Takaisin\tAlt+Vasen nuoli
 
+&Book View\tCtrl+8
+Kirjanäkymä\tCtrl+8
+
 &Close\tCtrl+W
 &Sulje\tCtrl+W
+
+&Copy Selection
+Kopioi valinta
 
 &Copy Selection\tCtrl+C
 Kopioi valinta\tCtrl+C
@@ -29,14 +38,23 @@ Kopioi valinta\tCtrl+C
 &Don't ask me again
 Älä kysy uudestaan
 
+&Even pages only
+Vain parilliset sivut
+
+&Facing\tCtrl+7
+Rinnakkain\tCtrl+7
+
 &File
 &Tiedosto
 
 &Find what:
-&Etsittävä
+&Etsittävä:
 
 &First Page\tHome
 Ensimmäinen sivu\tHome
+
+&Fit pages to printable area
+Sovita sivut tulostettavalle alueelle
 
 &Go To
 &Siirry
@@ -66,37 +84,67 @@ Seuraava sivu\t->
 &Ei
 
 &No, thanks
-&Ei, kiitos
+&Ei kiitos
+
+&Odd pages only
+Vain parittomat sivut
 
 &Open\tCtrl+O
 &Avaa\tCtrl+O
 
+&Open Document
+Avaa asiakirja
+
 &Options...
-&Asetukset
+&Asetukset...
 
 &Password:
 &Salasana
 
+&Pin Document
+Kiinnitä asiakirja
+
 &Previous Page\tLeft Arrow
 Edellinen sivu\t<-
 
+&Print...
+Tulosta...
+
 &Print...\tCtrl+P
-&Tulosta\tCtrl+P
+&Tulosta...\tCtrl+P
 
 &Print... (denied)
 &Tulosta... (kielletty)
 
+&Remember the password for this document
+Muista tämän asiakirjan salasana
+
 &Remember these settings for each document
 &Muista nämä asetukset jokaiselle asiakirjalle
 
+&Remove Document
+Poista asiakirja
+
+&Save As...
+Tallenna nimellä...
+
 &Save As...\tCtrl+S
-&Tallenna nimellä\tCtrl+S
+&Tallenna nimellä...\tCtrl+S
 
 &Settings
 &Asetukset
 
+&Shrink pages to printable area (if necessary)
+Pienennä sivut tulostettavalle alueelle (jos tarpeellista)
+
+&Single Page\tCtrl+6
+Yksittäinen sivu\tCtrl+6
+
 &Skip this version
 Ohita tämä versio
+
+&Use original page sizes
+Käytä alkuperäisiä sivukokoja
 
 &View
 &Näytä
@@ -110,8 +158,23 @@ Ohita tämä versio
 (of %d)
 (%d:stä)
 
+(page %s)
+(sivu %s)
+
 About SumatraPDF
 Tietoja SumatraPDF:stä
+
+Add Favorite
+Lisää suosikki
+
+Add page %s to favorites
+Lisää sivu %s suosikkeihin
+
+Add page %s to favorites with (optional) name:
+Lisää sivu %s suosikkeihin (valinnaisella) nimellä:
+
+Add to favorites
+Lisää suosikkeihin
 
 Advanced
 Kehittynyt
@@ -119,11 +182,17 @@ Kehittynyt
 All files
 Kaikki tiedostot
 
+All supported documents
+Kaikki tuetut asiakirjat
+
 Application:
 Ohjelma:
 
 Associate with PDF files?
 Tiedostosidos PDF-tiedostoihin?
+
+Attachment: %s
+Liite: %s
 
 Author:
 Tekijä:
@@ -140,8 +209,20 @@ Kirjanäkymä
 Book&marks\tF12
 Kirjanmerkit\tF12
 
+Bookmark Shortcuts
+Tallenna pikakuvake
+
+Bookmark shortcut to page %s of %s
+Tee pikakuvake sivulle %s/%s
+
+Bookmarks
+Kirjanmerkit
+
 Bytes
 tavua
+
+Can't connect to the Internet (error %#x).
+Internetiin yhdistäminen epäonnistui (virhe %#x).
 
 Cancel
 Peruuta
@@ -158,6 +239,9 @@ Valitse kieli (Change Language)
 Check for &Updates
 Tarkista, onko päivityksiä saatavilla
 
+Comic books
+Sarjakuvat
+
 Continuous
 Peräkkäin
 
@@ -170,6 +254,18 @@ Peräkkäin ja rinnakkain
 Contribute Translation
 Osallistu suomennosprojektiin
 
+Copy &Link Address
+Kopioi linkin osoite
+
+Copy Co&mment
+Kopioi kommentti
+
+Copying text was denied (copying as image only)
+Tekstin kopioiminen kiellettiin (kopioidaan vain kuvana)
+
+Could not obtain Printer properties
+Tulostimen ominaisuuksia ei voinut lukea
+
 Could not open Printer
 Tulostinta ei löydy
 
@@ -181,6 +277,9 @@ Sivun tulkinta epäonnistui
 
 Created:
 Tehty:
+
+Current file
+Nykyinen tiedosto
 
 Custom &Zoom...\tCtrl+Y
 &Mukautettu lähennys...\tCtrl+Y
@@ -197,6 +296,9 @@ Pää-PDF-lukijaa ei voida muuttaa kannettavassa tilassa
 Denied Permissions:
 Kielletyt oikeudet:
 
+DjVu documents
+DjVu-asiakirjat
+
 Document Properties
 Asiakirjan ominaisuudet
 
@@ -212,6 +314,15 @@ Kirjoita salasana
 Enter password for %s
 Kirjoita tiedoston %s salasana
 
+Enter the command-line to invoke when you double-click on the PDF document:
+Anna komentorivin komento joka ajetaan PDF-asiakirjaa kaksoisnapsautettaessa:
+
+Error loading %s
+Virhe ladattaessa: %s
+
+F&avorites
+Suosikit
+
 F&orward\tAlt+Right Arrow
 Seuraava\tAlt+Oikea nuoli
 
@@ -223,6 +334,9 @@ Rinnakkain
 
 Failed to save a file
 Tiedoston tallennus epäonnistui
+
+Favorites
+suosikit
 
 File Size:
 Tiedoston koko:
@@ -245,11 +359,17 @@ Etsi edellinen
 Find:
 Etsi:
 
+Fit &Content\tCtrl+3
+Sovita sisältö\tCtrl+3
+
 Fit &Page\tCtrl+0
 Sovita sivu pystysuunnassa\tCtrl+0
 
 Fit &Width\tCtrl+2
 &Sovita sivu vaakasuunnassa\tCtrl+2
+
+Fit Content
+Sovita sisältö
 
 Fit Page
 Sovita sivu pystysuunnassa
@@ -257,8 +377,20 @@ Sovita sivu pystysuunnassa
 Fit Width
 Sovita sivu vaakasuunnassa
 
+Fit Width and Show Pages Continuously
+Sovita leveys ja näytä sivut peräkkäin
+
+Fit a Single Page
+Sovita yksittäinen sivu
+
 Found text at page %s
 Tekstiä löytyi sivulta %s
+
+Found text at page %s (again)
+Teksti löytyi sivulta %s (uudelleen)
+
+Frequently Read
+Usein luetut
 
 GB
 Gt
@@ -266,8 +398,14 @@ Gt
 Go to page
 Siirry sivulle
 
+Hide frequently read
+Piilota usein luetut
+
 Hint: Use the F3 key for finding again
 Vihje: Käytä F3-näppäintä etsiäksesi uudestaan
+
+Image files (*.%s)
+Kuvatiedostot (*.%s)
 
 KB
 Kt
@@ -314,6 +452,9 @@ OK
 Open
 Avaa
 
+Open a document...
+Avaa asiakirja...
+
 Open in &Adobe Reader
 Avaa &Adobe Readerissa
 
@@ -323,8 +464,11 @@ Avaa &Foxit Readerissa
 Open in PDF-XChange
 Avaa PDF-XChange
 
+P&roperties
+Ominaisuudet
+
 P&roperties\tCtrl+D
-O&minaisuudet...\tCtrl+D
+O&minaisuudet\tCtrl+D
 
 PDF Document
 PDF-asiakirja
@@ -341,11 +485,17 @@ PDF-asiakirjat
 Pa&ge...\tCtrl+G
 Sivulle...\tCtrl+G
 
+Page %s
+Sivu %s
+
 Page Size:
 Sivun koko:
 
 Page number %u inexistant
 Sivunumeroa %u ei ole olemassa
+
+Page scaling
+Sivun skaalaus
 
 Page:
 Sivu:
@@ -353,14 +503,41 @@ Sivu:
 Please wait - rendering...
 Odota - tulkitaan...
 
+Postscript documents
+Postscript-asiakirjat
+
+Pr&esentation\tCtrl+L
+Esitys\tCtrl+L
+
 Previous Page
 Edellinen sivu
+
+Print
+Tulosta
+
+Print range
+Tulostusalue
+
+Printer with given name doesn't exist
+Annetun nimistä tulostinta ei ole
+
+Printing is still in progress. Abort and start over?
+Tulostaminen on vielä käynnissä. Keskeytetäänkö ja aloitetaan uudelleen?
+
+Printing page %d of %d...
+Tulostetaan sivua %d/%d...
 
 Printing problem.
 Tulostusongelma
 
 Remember &opened files
 Muista &avatut tiedostot
+
+Remove from favorites
+Poista suosikeista
+
+Remove page %s from favorites
+Poista sivu %s suosikeista
 
 Rotate &Left\tCtrl+Shift+-
 Käännä vasemmalle\tCtrl+Shift+-
@@ -371,8 +548,17 @@ Käännä oikealle\tCtrl+Shift++
 Save As
 Tallenna nimellä
 
+Save S&hortcut...\tCtrl+Shift+S
+Tallenna pikakuvake...\tCtrl+Shift+S
+
 Searching %d of %d...
 Etsitään %d/%d...
+
+Select &All
+Valitse kaikki
+
+Select &All\tCtrl+A
+Valitse kaikki\tCtrl+A
 
 Select content with Ctrl+left mouse button
 Valitse sisältöä Ctrl+vasemmanpuoleinen hiiren painike
@@ -389,11 +575,20 @@ Näytä työkalupalkki
 Show &pages continuously
 Näytä sivut jatkuvasti
 
+Show Favorites
+Näytä suosikit
+
+Show frequently read
+Näytä usein luetut
+
 Show the &bookmarks sidebar when available
 Näytä &kirjanmerkit sivupalkissa, kun saatavilla
 
 Single Page
 Yksittäinen sivu
+
+Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
+Pahoittelut, jotain odottamatonta tapahtui!\n\nPaina 'Peruuta' jos haluat auttaa tekijöitä korjaamaan tämän virheen.
 
 Source file %s has no synchronization point
 Lähdetiedostolla %s ei ole synkronisaatiopistettä
@@ -403,6 +598,12 @@ Otsikko:
 
 SumatraPDF Options
 SumatraPDF:n asetukset
+
+SumatraPDF Update
+SumatraPDF:n päivitys
+
+SumatraPDF crashed
+SumatraPDF kaatui
 
 SumatraPDF is your default PDF reader
 SumatraPDF on pää-PDF-lukijasi
@@ -431,6 +632,9 @@ Vieraile ohjelman kotisivuilla
 Warning
 Varoitus
 
+XPS documents
+XPS-asiakirjat
+
 You have the latest version.
 Sinulla on uusin versio.
 
@@ -457,74 +661,4 @@ Kopioidaan tekstiä
 
 printing document
 tulostetaan asiakirjaa
-
-# Untranslated:
-#&All selected pages
-#&Book View\tCtrl+8
-#&Copy Selection
-#&Even pages only
-#&Facing\tCtrl+7
-#&Fit pages to printable area
-#&Odd pages only
-#&Open Document
-#&Pin Document
-#&Print...
-#&Remember the password for this document
-#&Remove Document
-#&Save As...
-#&Shrink pages to printable area (if necessary)
-#&Single Page\tCtrl+6
-#&Use original page sizes
-#(page %s)
-#Add Favorite
-#Add page %s to favorites
-#Add page %s to favorites with (optional) name:
-#Add to favorites
-#All supported documents
-#Attachment: %s
-#Bookmark Shortcuts
-#Bookmark shortcut to page %s of %s
-#Bookmarks
-#Can't connect to the Internet (error %#x).
-#Comic books
-#Copy &Link Address
-#Copy Co&mment
-#Copying text was denied (copying as image only)
-#Could not obtain Printer properties
-#Current file
-#DjVu documents
-#Enter the command-line to invoke when you double-click on the PDF document:
-#Error loading %s
-#F&avorites
-#Favorites
-#Fit &Content\tCtrl+3
-#Fit Content
-#Fit Width and Show Pages Continuously
-#Fit a Single Page
-#Found text at page %s (again)
-#Frequently Read
-#Hide frequently read
-#Image files (*.%s)
-#Open a document...
-#P&roperties
-#Page %s
-#Page scaling
-#Postscript documents
-#Pr&esentation\tCtrl+L
-#Print
-#Print range
-#Printer with given name doesn't exist
-#Printing is still in progress. Abort and start over?
-#Printing page %d of %d...
-#Remove from favorites
-#Remove page %s from favorites
-#Save S&hortcut...\tCtrl+Shift+S
-#Select &All
-#Select &All\tCtrl+A
-#Show Favorites
-#Show frequently read
-#Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
-#SumatraPDF Update
-#SumatraPDF crashed
-#XPS documents
 
