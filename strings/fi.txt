@@ -10,6 +10,7 @@ Lang: fi Finnish (Suomi)
 
 Contributor: Pekka Halmela
 Contributor: Olli
+Contributor: Joonas
 
 &About
 &Tietoja
@@ -18,31 +19,31 @@ Contributor: Olli
 &Todellinen koko\tCtrl+1
 
 &All selected pages
-Kaikki valitut sivut
+K&aikki valitut sivut
 
 &Back\tAlt+Left Arrow
-Takaisin\tAlt+Vasen nuoli
+&Takaisin\tAlt+Vasen nuoli
 
 &Book View\tCtrl+8
-Kirjanäkymä\tCtrl+8
+&Kirjanäkymä\tCtrl+8
 
 &Close\tCtrl+W
 &Sulje\tCtrl+W
 
 &Copy Selection
-Kopioi valinta
+Kopioi &valinta
 
 &Copy Selection\tCtrl+C
 Kopioi valinta\tCtrl+C
 
 &Don't ask me again
-Älä kysy uudestaan
+Ä&lä kysy uudestaan
 
 &Even pages only
-Vain parilliset sivut
+Vain p&arilliset sivut
 
 &Facing\tCtrl+7
-Rinnakkain\tCtrl+7
+&Rinnakkain\tCtrl+7
 
 &File
 &Tiedosto
@@ -51,10 +52,10 @@ Rinnakkain\tCtrl+7
 &Etsittävä:
 
 &First Page\tHome
-Ensimmäinen sivu\tHome
+E&nsimmäinen sivu\tHome
 
 &Fit pages to printable area
-Sovita sivut tulostettavalle alueelle
+&Sovita sivut tulostettavalle alueelle
 
 &Go To
 &Siirry
@@ -66,19 +67,19 @@ Sovita sivut tulostettavalle alueelle
 &Ohje
 
 &Last Page\tEnd
-Viimeinen sivu\tEnd
+&Viimeinen sivu\tEnd
 
 &Magnification:
 &Suurennus:
 
 &Manual
-Käyttöohje
+&Käyttöohje
 
 &Match case
 Sama kirjainkoko
 
 &Next Page\tRight Arrow
-Seuraava sivu\t->
+&Seuraava sivu\tOikea nuoli
 
 &No
 &Ei
@@ -87,13 +88,13 @@ Seuraava sivu\t->
 &Ei kiitos
 
 &Odd pages only
-Vain parittomat sivut
+Vain &parittomat sivut
 
 &Open\tCtrl+O
 &Avaa\tCtrl+O
 
 &Open Document
-Avaa asiakirja
+&Avaa asiakirja
 
 &Options...
 &Asetukset...
@@ -102,13 +103,13 @@ Avaa asiakirja
 &Salasana
 
 &Pin Document
-Kiinnitä asiakirja
+&Kiinnitä asiakirja
 
 &Previous Page\tLeft Arrow
-Edellinen sivu\t<-
+&Edellinen sivu\tVasen nuoli
 
 &Print...
-Tulosta...
+&Tulosta...
 
 &Print...\tCtrl+P
 &Tulosta...\tCtrl+P
@@ -117,34 +118,34 @@ Tulosta...
 &Tulosta... (kielletty)
 
 &Remember the password for this document
-Muista tämän asiakirjan salasana
+&Muista tämän asiakirjan salasana
 
 &Remember these settings for each document
 &Muista nämä asetukset jokaiselle asiakirjalle
 
 &Remove Document
-Poista asiakirja
+&Poista asiakirja
 
 &Save As...
-Tallenna nimellä...
+Tallenna &nimellä...
 
 &Save As...\tCtrl+S
-&Tallenna nimellä...\tCtrl+S
+Tallenna &nimellä...\tCtrl+S
 
 &Settings
 &Asetukset
 
 &Shrink pages to printable area (if necessary)
-Pienennä sivut tulostettavalle alueelle (jos tarpeellista)
+&Pienennä sivut tulostettavalle alueelle (jos tarpeellista)
 
 &Single Page\tCtrl+6
-Yksittäinen sivu\tCtrl+6
+&Yksittäinen sivu\tCtrl+6
 
 &Skip this version
-Ohita tämä versio
+&Ohita tämä versio
 
 &Use original page sizes
-Käytä alkuperäisiä sivukokoja
+&Käytä alkuperäisiä sivukokoja
 
 &View
 &Näytä
@@ -210,7 +211,7 @@ Book&marks\tF12
 Kirjanmerkit\tF12
 
 Bookmark Shortcuts
-Tallenna pikakuvake
+Pikakuvakkeet
 
 Bookmark shortcut to page %s of %s
 Tee pikakuvake sivulle %s/%s
@@ -237,7 +238,7 @@ Change Language
 Valitse kieli (Change Language)
 
 Check for &Updates
-Tarkista, onko päivityksiä saatavilla
+Tarkista, onko &päivityksiä saatavilla
 
 Comic books
 Sarjakuvat
@@ -255,7 +256,7 @@ Contribute Translation
 Osallistu suomennosprojektiin
 
 Copy &Link Address
-Kopioi linkin osoite
+Kopioi &linkin osoite
 
 Copy Co&mment
 Kopioi kommentti
@@ -321,7 +322,7 @@ Error loading %s
 Virhe ladattaessa: %s
 
 F&avorites
-Suosikit
+S&uosikit
 
 F&orward\tAlt+Right Arrow
 Seuraava\tAlt+Oikea nuoli
@@ -360,13 +361,13 @@ Find:
 Etsi:
 
 Fit &Content\tCtrl+3
-Sovita sisältö\tCtrl+3
+&Sovita sisältö\tCtrl+3
 
 Fit &Page\tCtrl+0
-Sovita sivu pystysuunnassa\tCtrl+0
+Sovita sivu &pystysuunnassa\tCtrl+0
 
 Fit &Width\tCtrl+2
-&Sovita sivu vaakasuunnassa\tCtrl+2
+Sovita sivu &vaakasuunnassa\tCtrl+2
 
 Fit Content
 Sovita sisältö
@@ -507,7 +508,7 @@ Postscript documents
 Postscript-asiakirjat
 
 Pr&esentation\tCtrl+L
-Esitys\tCtrl+L
+&Esitys\tCtrl+L
 
 Previous Page
 Edellinen sivu
@@ -549,31 +550,31 @@ Save As
 Tallenna nimellä
 
 Save S&hortcut...\tCtrl+Shift+S
-Tallenna pikakuvake...\tCtrl+Shift+S
+Tallenna p&ikakuvake...\tCtrl+Shift+S
 
 Searching %d of %d...
 Etsitään %d/%d...
 
 Select &All
-Valitse kaikki
+V&alitse kaikki
 
 Select &All\tCtrl+A
-Valitse kaikki\tCtrl+A
+V&alitse kaikki\tCtrl+A
 
 Select content with Ctrl+left mouse button
 Valitse sisältöä Ctrl+vasemmanpuoleinen hiiren painike
 
 Send by &E-mail...
-Lähetä &sähköpostilla
+Lä&hetä sähköpostilla
 
 Set inverse search command-line
 Aseta käänteinen haku komentorivillä
 
 Show &Toolbar
-Näytä työkalupalkki
+Näytä &työkalupalkki
 
 Show &pages continuously
-Näytä sivut jatkuvasti
+Näytä &sivut jatkuvasti
 
 Show Favorites
 Näytä suosikit
@@ -627,7 +628,7 @@ View
 Näytä
 
 Visit &Website
-Vieraile ohjelman kotisivuilla
+&Vieraile ohjelman kotisivuilla
 
 Warning
 Varoitus
