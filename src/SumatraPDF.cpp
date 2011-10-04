@@ -3617,8 +3617,8 @@ static LRESULT OnGesture(WindowInfo& win, UINT message, WPARAM wParam, LPARAM lP
             break;
 
         case GID_TWOFINGERTAP:
-            // Two-finger tap toggles presentation mode
-            OnMenuViewPresentation(win);
+            // Two-finger tap toggles fullscreen mode
+            OnMenuViewFullscreen(win);
             break;
 
         case GID_PRESSANDTAP:
