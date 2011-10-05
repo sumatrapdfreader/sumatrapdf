@@ -40,7 +40,7 @@ Kopioi valinta\tCtrl+C
 Ä&lä kysy uudestaan
 
 &Even pages only
-Vain p&arilliset sivut
+Vain pa&rilliset sivut
 
 &Facing\tCtrl+7
 &Rinnakkain\tCtrl+7
@@ -136,7 +136,7 @@ Tallenna &nimellä...\tCtrl+S
 &Asetukset
 
 &Shrink pages to printable area (if necessary)
-&Pienennä sivut tulostettavalle alueelle (jos tarpeellista)
+P&ienennä sivut tulostettavalle alueelle (jos tarpeellista)
 
 &Single Page\tCtrl+6
 &Yksittäinen sivu\tCtrl+6
@@ -325,10 +325,10 @@ F&avorites
 S&uosikit
 
 F&orward\tAlt+Right Arrow
-Seuraava\tAlt+Oikea nuoli
+Se&uraava\tAlt+Oikea nuoli
 
 F&ullscreen\tCtrl+Shift+L
-Koko näyttö\tCtrl+Shift+L
+Koko &näyttö\tCtrl+Shift+L
 
 Facing
 Rinnakkain
@@ -346,7 +346,7 @@ File:
 Tiedosto:
 
 Fin&d...\tCtrl+F
-Etsi...\tCtrl+F
+Ets&i...\tCtrl+F
 
 Find
 Etsi
@@ -484,7 +484,7 @@ PDF documents
 PDF-asiakirjat
 
 Pa&ge...\tCtrl+G
-Sivulle...\tCtrl+G
+S&ivulle...\tCtrl+G
 
 Page %s
 Sivu %s
@@ -541,10 +541,10 @@ Remove page %s from favorites
 Poista sivu %s suosikeista
 
 Rotate &Left\tCtrl+Shift+-
-Käännä vasemmalle\tCtrl+Shift+-
+Käännä &vasemmalle\tCtrl+Shift+-
 
 Rotate &Right\tCtrl+Shift++
-Käännä oikealle\tCtrl+Shift++
+Käännä &oikealle\tCtrl+Shift++
 
 Save As
 Tallenna nimellä
