@@ -66,12 +66,13 @@ extern HCURSOR                  gCursorIBeam;
 extern HBRUSH                   gBrushNoDocBg;
 extern HBRUSH                   gBrushAboutBg;
 extern HFONT                    gDefaultGuiFont;
-extern bool                     gPluginMode;
 extern TCHAR *                  gPluginURL;
 extern Vec<WindowInfo*>         gWindows;
 extern Favorites *              gFavorites;
 extern FileHistory              gFileHistory;
 extern WNDPROC                  DefWndProcCloseButton;
+
+#define gPluginMode             (gPluginURL != NULL)
 
 LRESULT CALLBACK WndProcCloseButton(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 bool  HasPermission(int permission);

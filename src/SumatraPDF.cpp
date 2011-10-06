@@ -63,8 +63,7 @@ bool             gUseGdiRenderer = false;
 // in plugin mode, the window's frame isn't drawn and closing and
 // fullscreen are disabled, so that SumatraPDF can be displayed
 // embedded (e.g. in a web browser)
-bool                    gPluginMode = false;
-TCHAR *                 gPluginURL = NULL; // owned by CommandLineInfo in WinMain
+TCHAR *          gPluginURL = NULL; // owned by CommandLineInfo in WinMain
 
 #if defined(SVN_PRE_RELEASE_VER) && !defined(BLACK_ON_YELLOW)
 #define ABOUT_BG_COLOR          RGB(255,0,0)
@@ -2505,7 +2504,8 @@ static void AdjustWindowEdge(WindowInfo& win)
     // Remove the canvas' edge in the cases where the vertical scrollbar
     // would otherwise touch the screen's edge, making the scrollbar much
     // easier to hit with the mouse (cf. Fitts' law)
-    if (IsZoomed(win.hwndFrame) || win.fullScreen || win.presentation)
+    // TODO: should we just always remove the canvas' edge?
+    if (IsZoomed(win.hwndFrame) || win.fullScreen || win.presentation || gPluginMode)
         newStyle &= ~WS_EX_STATICEDGE;
     else
         newStyle |= WS_EX_STATICEDGE;
@@ -4417,7 +4417,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         if (!IsWindow(i.hwndPluginParent) || i.fileNames.Count() == 0)
             goto Exit;
 
-        gPluginMode = true;
         gPluginURL = i.pluginURL;
         if (!gPluginURL)
             gPluginURL = i.fileNames[0];
