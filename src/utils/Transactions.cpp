@@ -12,6 +12,10 @@ typedef BOOL (WINAPI * RollbackTransactionPtr)(HANDLE TransactionHandle);
 // from WinBase.h
 typedef HANDLE (WINAPI * CreateFileTransactedPtr)(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile, HANDLE hTransaction, PUSHORT pusMiniVersion, PVOID pExtendedParameter);
 typedef BOOL (WINAPI * DeleteFileTransactedPtr)(LPCTSTR lpFileName, HANDLE hTransaction);
+// from WinError.h
+#ifndef ERROR_TRANSACTIONAL_OPEN_NOT_ALLOWED
+#define ERROR_TRANSACTIONAL_OPEN_NOT_ALLOWED 6832L
+#endif
 
 static CreateTransactionPtr     _CreateTransaction = NULL;
 static CommitTransactionPtr     _CommitTransaction = NULL;
@@ -67,9 +71,13 @@ bool FileTransaction::Commit()
 
 HANDLE FileTransaction::CreateFile(const TCHAR *filePath, DWORD dwDesiredAccess, DWORD dwCreationDisposition)
 {
-    if (!hTrans)
-        return ::CreateFile(filePath, dwDesiredAccess, 0, NULL, dwCreationDisposition, FILE_ATTRIBUTE_NORMAL, NULL);
-    return _CreateFileTransacted(filePath, dwDesiredAccess, 0, NULL, dwCreationDisposition, FILE_ATTRIBUTE_NORMAL, NULL, hTrans, NULL, NULL);
+    if (hTrans) {
+        HANDLE hFile = _CreateFileTransacted(filePath, dwDesiredAccess, 0, NULL, dwCreationDisposition, FILE_ATTRIBUTE_NORMAL, NULL, hTrans, NULL, NULL);
+        if (INVALID_HANDLE_VALUE != hFile || ERROR_TRANSACTIONAL_OPEN_NOT_ALLOWED != GetLastError())
+            return hFile;
+        // fall back to untransacted file I/O, if transactions aren't supported
+    }
+    return ::CreateFile(filePath, dwDesiredAccess, 0, NULL, dwCreationDisposition, FILE_ATTRIBUTE_NORMAL, NULL);
 }
 
 bool FileTransaction::WriteAll(const TCHAR *filePath, void *data, size_t dataLen)
@@ -90,11 +98,13 @@ bool FileTransaction::WriteAll(const TCHAR *filePath, void *data, size_t dataLen
 
 bool FileTransaction::Delete(const TCHAR *filePath)
 {
-    if (!hTrans)
-        return file::Delete(filePath);
-
-    BOOL ok = _DeleteFileTransacted(filePath, hTrans);
-    return ok || GetLastError() == ERROR_FILE_NOT_FOUND;
+    if (hTrans) {
+        BOOL ok = _DeleteFileTransacted(filePath, hTrans);
+        if (ok || GetLastError() != ERROR_TRANSACTIONAL_OPEN_NOT_ALLOWED)
+            return ok || GetLastError() == ERROR_FILE_NOT_FOUND;
+        // fall back to an untransacted operation, if transactions aren't supported
+    }
+    return file::Delete(filePath);
 }
 
 bool FileTransaction::SetModificationTime(const TCHAR *filePath, FILETIME lastMod)
