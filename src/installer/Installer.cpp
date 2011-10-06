@@ -33,6 +33,7 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include "Vec.h"
 #include "CmdLineParser.h"
 #include "Transactions.h"
+#include "Scopes.h"
 
 #ifndef BUILD_UNINSTALLER
 #include <WinSafer.h>
@@ -372,7 +373,7 @@ TCHAR *GetShortcutPath(bool allUsers)
 static HFONT CreateDefaultGuiFont()
 {
     HDC hdc = GetDC(NULL);
-    HFONT font = win::font::GetSimple(hdc, _T("MS Shell Dlg"), 14);
+    HFONT font = GetSimpleFont(hdc, _T("MS Shell Dlg"), 14);
     ReleaseDC(NULL, hdc);
     return font;
 }

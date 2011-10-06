@@ -106,14 +106,11 @@ STDAPI DllCanUnloadNow(VOID)
 
 STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 {
-    HRESULT hr = E_OUTOFMEMORY;
     *ppv = NULL;
-    CClassFactory *pClassFactory = new NOTHROW CClassFactory(rclsid);
-    if (pClassFactory) {
-        hr = pClassFactory->QueryInterface(riid, ppv);
-        pClassFactory->Release();
-    }
-    return hr;
+    ScopedComPtr<CClassFactory> pClassFactory(new NOTHROW CClassFactory(rclsid));
+    if (!pClassFactory)
+        return E_OUTOFMEMORY;
+    return pClassFactory->QueryInterface(riid, ppv);
 }
 
 STDAPI DllRegisterServer()

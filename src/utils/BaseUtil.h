@@ -73,23 +73,6 @@ inline void *memdup(void *data, size_t len)
 }
 #define _memdup(ptr) memdup(ptr, sizeof(*(ptr)))
 
-inline bool memeq(const void *d1, const void *d2, size_t len) {
-    return 0 == memcmp(d1, d2, len);
-}
-
-class ScopedCritSec
-{
-    CRITICAL_SECTION *cs;
-public:
-    explicit ScopedCritSec(CRITICAL_SECTION *cs) {
-        this->cs = cs;
-        EnterCriticalSection(this->cs);
-    }
-    ~ScopedCritSec() {
-        LeaveCriticalSection(this->cs);
-    }
-};
-
 // auto-free memory for arbitrary malloc()ed memory of type T*
 template <typename T>
 class ScopedMem
@@ -109,23 +92,6 @@ public:
         obj = NULL;
         return tmp;
     }
-    operator T*() const { return obj; }
-};
-
-// auto-delete arbitrary object of class T*
-template <class T>
-class ScopedPtr
-{
-    T *obj;
-public:
-    ScopedPtr() : obj(NULL) {}
-    explicit ScopedPtr(T* obj) : obj(obj) {}
-    ~ScopedPtr() { delete obj; }
-    void Set(T *o) {
-        delete obj;
-        obj = o;
-    }
-    T *Get() const { return obj; }
     operator T*() const { return obj; }
 };
 

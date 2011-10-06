@@ -4,6 +4,7 @@
 #include "BaseUtil.h"
 #include "StrUtil.h"
 #include "WinUtil.h"
+#include "Scopes.h"
 #include "CPdfFilter.h"
 #include "PdfEngine.h"
 

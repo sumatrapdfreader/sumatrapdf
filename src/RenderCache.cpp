@@ -3,6 +3,7 @@
 
 #include "BaseUtil.h"
 #include "RenderCache.h"
+#include "Scopes.h"
 
 /* Define if you want to conserve memory by always freeing cached bitmaps
    for pages not visible. Disabling this might lead to pages not rendering

@@ -11,6 +11,7 @@
 #include "StrUtil.h"
 #include "Vec.h"
 #include "WinUtil.h"
+#include "Scopes.h"
 
 // Loads a DLL explicitly from the system's library collection
 HMODULE SafeLoadLibrary(const TCHAR *dllName)
@@ -49,11 +50,6 @@ WORD GetWindowsVersion()
 {
     DWORD ver = GetVersion();
     return MAKEWORD(HIBYTE(ver), LOBYTE(ver));
-}
-
-bool WindowsVerVistaOrGreater()
-{
-    return GetWindowsVersion() >= 0x0600;
 }
 
 bool IsRunningInWow64()
@@ -215,19 +211,6 @@ void RedirectIOToConsole()
     hConHandle = _open_osfhandle((intptr_t)GetStdHandle(STD_INPUT_HANDLE), _O_TEXT);
     *stdin = *(FILE *)_fdopen(hConHandle, "r");
     setvbuf(stdin, NULL, _IONBF, 0);
-}
-
-/* Make a string safe to be displayed as a menu item
-   (preserving all & so that they don't get swallowed)
-   Caller needs to free() the result. */
-TCHAR *MenuSafeString(const TCHAR *str)
-{
-    if (!str::FindChar(str, '&'))
-        return str::Dup(str);
-
-    StrVec ampSplitter;
-    ampSplitter.Split(str, _T("&"));
-    return ampSplitter.Join(_T("&&"));
 }
 
 
@@ -591,9 +574,36 @@ void DoubleBuffer::Flush(HDC hdc)
 }
 
 namespace win {
-    namespace font {
+    namespace menu {
 
-HFONT GetSimple(HDC hdc, TCHAR *fontName, int fontSize)
+void SetText(HMENU m, UINT id, TCHAR *s)
+{
+    MENUITEMINFO mii = { 0 };
+    mii.cbSize = sizeof(mii);
+    mii.fMask = MIIM_STRING;
+    mii.fType = MFT_STRING;
+    mii.dwTypeData = s;
+    mii.cch = (UINT)str::Len(s);
+    SetMenuItemInfo(m, id, FALSE, &mii);
+}
+
+/* Make a string safe to be displayed as a menu item
+   (preserving all & so that they don't get swallowed)
+   Caller needs to free() the result. */
+TCHAR *ToSafeString(const TCHAR *str)
+{
+    if (!str::FindChar(str, '&'))
+        return str::Dup(str);
+
+    StrVec ampSplitter;
+    ampSplitter.Split(str, _T("&"));
+    return ampSplitter.Join(_T("&&"));
+}
+
+    }
+}
+
+HFONT GetSimpleFont(HDC hdc, TCHAR *fontName, int fontSize)
 {
     LOGFONT lf = { 0 };
 
@@ -613,9 +623,6 @@ HFONT GetSimple(HDC hdc, TCHAR *fontName, int fontSize)
     lf.lfOrientation = 0;
 
     return CreateFontIndirect(&lf);
-}
-
-    }
 }
 
 IStream *CreateStreamFromData(void *data, size_t len)

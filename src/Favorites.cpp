@@ -236,7 +236,7 @@ static void AppendFavMenuItems(HMENU m, FileFavs *f, UINT& idx, bool combined, b
             s.Set(FavCompactReadableName(f, fn, isCurrent));
         else
             s.Set(FavReadableName(fn));
-        s.Set(MenuSafeString(s));
+        s.Set(win::menu::ToSafeString(s));
         AppendMenu(m, MF_STRING, (UINT_PTR)fn->menuId, s);
     }
 }
@@ -311,7 +311,7 @@ static void AppendFavMenus(HMENU m, const TCHAR *currFilePath)
             if (f == currFileFav) {
                 AppendMenu(m, MF_POPUP | MF_STRING, (UINT_PTR)sub, _TR("Current file"));
             } else {
-                ScopedMem<TCHAR> s(MenuSafeString(fileName));
+                ScopedMem<TCHAR> s(win::menu::ToSafeString(fileName));
                 AppendMenu(m, MF_POPUP | MF_STRING, (UINT_PTR)sub, s);
             }
         }

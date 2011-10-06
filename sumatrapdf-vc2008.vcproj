@@ -470,6 +470,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\utils\Scopes.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\utils\SimpleLog.h"
 				>
 			</File>

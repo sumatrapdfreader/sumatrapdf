@@ -6,6 +6,7 @@
 #include "FileUtil.h"
 #include "WinUtil.h"
 #include "Vec.h"
+#include "Scopes.h"
 
 // mini(un)zip
 #include <ioapi.h>

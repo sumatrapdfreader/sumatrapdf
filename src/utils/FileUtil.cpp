@@ -4,6 +4,7 @@
 #include "BaseUtil.h"
 #include "StrUtil.h"
 #include "FileUtil.h"
+#include "Scopes.h"
 
 namespace path {
 
@@ -217,8 +218,8 @@ bool Exists(const TCHAR *filePath)
 
 size_t GetSize(const TCHAR *filePath)
 {
-    HANDLE h = CreateFile(filePath, GENERIC_READ, FILE_SHARE_READ, NULL,  
-                          OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL,  NULL); 
+    ScopedHandle h(CreateFile(filePath, GENERIC_READ, FILE_SHARE_READ, NULL,  
+                              OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL));
     if (h == INVALID_HANDLE_VALUE)
         return INVALID_FILE_SIZE;
 
@@ -226,7 +227,6 @@ size_t GetSize(const TCHAR *filePath)
     // that function doesn't interact well with symlinks, etc.
     LARGE_INTEGER lsize;
     BOOL ok = GetFileSizeEx(h, &lsize);
-    CloseHandle(h);
     if (!ok)
         return INVALID_FILE_SIZE;
 
@@ -264,30 +264,26 @@ char *ReadAll(const TCHAR *filePath, size_t *fileSizeOut)
 
 bool ReadAll(const TCHAR *filePath, char *buffer, size_t bufferLen)
 {
-    HANDLE h = CreateFile(filePath, GENERIC_READ, FILE_SHARE_READ, NULL,  
-                          OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL,  NULL); 
+    ScopedHandle h(CreateFile(filePath, GENERIC_READ, FILE_SHARE_READ, NULL,  
+                              OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL));
     if (h == INVALID_HANDLE_VALUE)
         return false;
 
     DWORD sizeRead;
     BOOL ok = ReadFile(h, buffer, (DWORD)bufferLen, &sizeRead, NULL);
-    CloseHandle(h);
-
     return ok && sizeRead == bufferLen;
 }
 
 bool WriteAll(const TCHAR *filePath, void *data, size_t dataLen)
 {
-    HANDLE h = CreateFile(filePath, GENERIC_WRITE, FILE_SHARE_READ, NULL,  
-                          CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL,  NULL); 
+    ScopedHandle h(CreateFile(filePath, GENERIC_WRITE, FILE_SHARE_READ, NULL,  
+                              CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL));
     if (INVALID_HANDLE_VALUE == h)
         return false;
 
     DWORD size;
     BOOL ok = WriteFile(h, data, (DWORD)dataLen, &size, NULL);
     assert(!ok || (dataLen == (size_t)size));
-    CloseHandle(h);
-
     return ok && dataLen == (size_t)size;
 }
 
@@ -301,23 +297,20 @@ bool Delete(const TCHAR *filePath)
 FILETIME GetModificationTime(const TCHAR *filePath)
 {
     FILETIME lastMod = { 0 };
-    HANDLE h = CreateFile(filePath, GENERIC_READ, FILE_SHARE_READ, NULL,  
-                          OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL,  NULL); 
+    ScopedHandle h(CreateFile(filePath, GENERIC_READ, FILE_SHARE_READ, NULL,  
+                              OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL));
     if (h != INVALID_HANDLE_VALUE)
         GetFileTime(h, NULL, NULL, &lastMod);
-    CloseHandle(h);
     return lastMod;
 }
 
 bool SetModificationTime(const TCHAR *filePath, FILETIME lastMod)
 {
-    HANDLE h = CreateFile(filePath, GENERIC_READ | GENERIC_WRITE, 0, NULL,
-                          OPEN_EXISTING, 0, NULL);
+    ScopedHandle h(CreateFile(filePath, GENERIC_READ | GENERIC_WRITE, 0, NULL,
+                              OPEN_EXISTING, 0, NULL));
     if (INVALID_HANDLE_VALUE == h)
         return false;
-    bool ok = SetFileTime(h, NULL, NULL, &lastMod);
-    CloseHandle(h);
-    return ok;
+    return SetFileTime(h, NULL, NULL, &lastMod);
 }
 
 bool StartsWith(const TCHAR *filePath, const char *magicNumber, size_t len)

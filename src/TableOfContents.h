@@ -4,6 +4,8 @@
 #ifndef TableOfContents_h
 #define TableOfContents_h
 
+#include <CommCtrl.h>
+
 /* Define if you want page numbers to be displayed in the ToC sidebar */
 // #define DISPLAY_TOC_PAGE_NUMBERS
 

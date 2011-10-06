@@ -451,10 +451,10 @@ static DisplayState * DeserializeDisplayState(BencDict *dict, bool globalPrefsOn
 static void DeserializePrefs(const char *prefsTxt, SerializableGlobalPrefs& globalPrefs, 
     FileHistory& fh, Favorites **favsOut)
 {
-    ScopedPtr<BencObj> obj(BencObj::Decode(prefsTxt));
-    if (!obj || obj.Get()->Type() != BT_DICT)
+    BencObj *obj = BencObj::Decode(prefsTxt);
+    if (!obj || obj->Type() != BT_DICT)
         goto Exit;
-    BencDict *prefs = static_cast<BencDict *>(obj.Get());
+    BencDict *prefs = static_cast<BencDict *>(obj);
     BencDict *global = prefs->GetDict(GLOBAL_PREFS_STR);
     if (!global)
         goto Exit;
@@ -523,34 +523,26 @@ static void DeserializePrefs(const char *prefsTxt, SerializableGlobalPrefs& glob
     BencArray *favsArr = prefs->GetArray(FAVS_STR);
     if (!favsArr)
         goto Exit;
-    for (size_t i=0; i<favsArr->Length(); i+=2)
-    {
+    for (size_t i = 0; i < favsArr->Length(); i += 2) {
         BencString *filePathBenc = favsArr->GetString(i);
-        if (!filePathBenc)
-            break;
         BencArray *favData = favsArr->GetArray(i+1);
-        if (!favData)
+        if (!filePathBenc || !favData)
             break;
-        const TCHAR *filePath = filePathBenc->Value();
-        for (size_t j=0; j<favData->Length(); j+=2)
-        {
+        ScopedMem<TCHAR> filePath(filePathBenc->Value());
+        for (size_t j = 0; j < favData->Length(); j += 2) {
             // we're lenient about errors
             BencInt *pageNoBenc = favData->GetInt(j);
-            if (!pageNoBenc)
-                break;
-            BencString *nameBenc = favData->GetString(j+1);
-            if (!nameBenc)
+            BencString *nameBenc = favData->GetString(j + 1);
+            if (!pageNoBenc || !nameBenc)
                 break;
             int pageNo = (int)pageNoBenc->Value();
-            const TCHAR *name = nameBenc->Value();
+            ScopedMem<TCHAR> name(nameBenc->Value());
             favs->AddOrReplace(filePath, pageNo, EmptyToNull(name));
-            free((void*)name);
         }
-        free((void*)filePath);
     }
 
 Exit:
-    return;
+    delete obj;
 }
 
 namespace Prefs {

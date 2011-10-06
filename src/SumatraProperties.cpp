@@ -7,6 +7,7 @@
 #include "translations.h"
 #include "WinUtil.h"
 #include "FileUtil.h"
+#include "Scopes.h"
 
 #define PROPERTIES_LEFT_RIGHT_SPACE_DX 8
 #define PROPERTIES_RECT_PADDING     8
@@ -167,8 +168,8 @@ static void UpdatePropertiesLayout(HWND hwnd, HDC hdc, RectI *rect)
     int             leftMaxDx, rightMaxDx;
 
     PropertiesLayout *layoutData = (PropertiesLayout *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
-    HFONT fontLeftTxt = win::font::GetSimple(hdc, LEFT_TXT_FONT, LEFT_TXT_FONT_SIZE);
-    HFONT fontRightTxt = win::font::GetSimple(hdc, RIGHT_TXT_FONT, RIGHT_TXT_FONT_SIZE);
+    ScopedFont fontLeftTxt(GetSimpleFont(hdc, LEFT_TXT_FONT, LEFT_TXT_FONT_SIZE));
+    ScopedFont fontRightTxt(GetSimpleFont(hdc, RIGHT_TXT_FONT, RIGHT_TXT_FONT_SIZE));
     HGDIOBJ origFont = SelectObject(hdc, fontLeftTxt);
 
     /* calculate text dimensions for the left side */
@@ -223,8 +224,6 @@ static void UpdatePropertiesLayout(HWND hwnd, HDC hdc, RectI *rect)
     }
 
     SelectObject(hdc, origFont);
-    win::font::Delete(fontLeftTxt);
-    win::font::Delete(fontRightTxt);
 }
 
 static HWND CreatePropertiesWindow(HWND hParent, PropertiesLayout& layoutData)
@@ -377,8 +376,8 @@ static void DrawProperties(HWND hwnd, HDC hdc)
     HPEN penBorder = CreatePen(PS_SOLID, ABOUT_LINE_OUTER_SIZE, COL_BLACK);
 #endif
 
-    HFONT fontLeftTxt = win::font::GetSimple(hdc, LEFT_TXT_FONT, LEFT_TXT_FONT_SIZE);
-    HFONT fontRightTxt = win::font::GetSimple(hdc, RIGHT_TXT_FONT, RIGHT_TXT_FONT_SIZE);
+    ScopedFont fontLeftTxt(GetSimpleFont(hdc, LEFT_TXT_FONT, LEFT_TXT_FONT_SIZE));
+    ScopedFont fontRightTxt(GetSimpleFont(hdc, RIGHT_TXT_FONT, RIGHT_TXT_FONT_SIZE));
 
     HGDIOBJ origFont = SelectObject(hdc, fontLeftTxt); /* Just to remember the orig font */
 
@@ -412,8 +411,6 @@ static void DrawProperties(HWND hwnd, HDC hdc)
     }
 
     SelectObject(hdc, origFont);
-    win::font::Delete(fontLeftTxt);
-    win::font::Delete(fontRightTxt);
 
 #if 0
     DeleteObject(penBorder);

@@ -301,7 +301,7 @@ LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lPar
         PAINTSTRUCT ps;
         HDC hDC = BeginPaint(hWnd, &ps);
         HBRUSH brushBg = CreateSolidBrush(COL_WINDOW_BG);
-        HFONT hFont = win::font::GetSimple(hDC, _T("MS Shell Dlg"), 14);
+        HFONT hFont = GetSimpleFont(hDC, _T("MS Shell Dlg"), 14);
         
         // set up double buffering
         RectI rcClient = ClientRect(hWnd);
@@ -325,7 +325,7 @@ LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lPar
             GetTextExtentPoint32(hDCBuffer, data->message, (int)str::Len(data->message), &msgSize);
             rcProgress.Inflate(-(rcProgress.dx - msgSize.cx) / 2, -(rcProgress.dy - msgSize.cy) / 2 + 2);
             rcProgress.Offset(0, msgSize.cy + 4 + 2);
-            FillRect(hDCBuffer, &rcProgress.ToRECT(), (HBRUSH)GetStockObject(WHITE_BRUSH));
+            FillRect(hDCBuffer, &rcProgress.ToRECT(), GetStockBrush(WHITE_BRUSH));
             RectI rcProgressAll = rcProgress;
             rcProgress.dx = (int)(data->progress * rcProgress.dx);
             FillRect(hDCBuffer, &rcProgress.ToRECT(), brushProgress);

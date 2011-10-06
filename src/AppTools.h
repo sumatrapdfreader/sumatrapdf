@@ -5,6 +5,7 @@
 #define AppTools_h
 
 #include "Vec.h"
+#include "Scopes.h"
 
 class WindowInfo;
 

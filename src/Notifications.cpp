@@ -154,7 +154,7 @@ LRESULT CALLBACK NotificationWnd::WndProc(HWND hwnd, UINT message, WPARAM wParam
             rect.y += 2;
             rect.dy -= 3;
 
-            HBRUSH brush = CreateSolidBrush(WIN_COL_BLACK);
+            HBRUSH brush = GetStockBrush(BLACK_BRUSH);
             FillRect(hdc, &rect.ToRECT(), brush);
             DeleteObject(brush);
         }
@@ -163,7 +163,7 @@ LRESULT CALLBACK NotificationWnd::WndProc(HWND hwnd, UINT message, WPARAM wParam
 
         buffer.Flush(hdcWnd);
         EndPaint(hwnd, &ps);
-        return WM_PAINT_HANDLED;
+        return 0;
     }
     if (WM_SETCURSOR == message && wnd->hasCancel) {
         POINT pt;

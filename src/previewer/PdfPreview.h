@@ -7,6 +7,7 @@
 #define SZ_PDF_PREVIEW_CLSID    _T("{3D3B1846-CC43-42ae-BFF9-D914083C2BA3}")
 
 #include "BaseUtil.h"
+#include "Scopes.h"
 #include "PdfEngine.h"
 
 #include <shlwapi.h>
@@ -101,12 +102,12 @@ public:
         return S_OK;
     }
     IFACEMETHODIMP TranslateAccelerator(MSG *pmsg) {
-        IPreviewHandlerFrame *frame;
-        if (!m_site || FAILED(m_site->QueryInterface(&frame)))
+        if (!m_site)
             return S_FALSE;
-        HRESULT hr = frame->TranslateAccelerator(pmsg);
-        frame->Release();
-        return hr;
+        ScopedComQIPtr<IPreviewHandlerFrame> frame(m_site);
+        if (!frame)
+            return S_FALSE;
+        return frame->TranslateAccelerator(pmsg);
     }
     IFACEMETHODIMP SetRect(const RECT *prc) {
         if (!prc) return E_INVALIDARG;

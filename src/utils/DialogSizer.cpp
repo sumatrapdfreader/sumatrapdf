@@ -108,8 +108,7 @@ extern "C" BOOL DialogSizer_Set(HWND hwnd, const DialogSizerSizingItem *psd, BOO
 {
     DialogData *pdd = (DialogData *)GetProp(hwnd, DIALOG_DATA_PROPERTY);
     // Overwrite previous settings (if there are any)
-    if (pdd)
-        delete pdd;
+    delete pdd;
 
     pdd = new DialogData(hwnd, psd, bShowSizingGrip);
     if (!pdd || !pdd->psd) {

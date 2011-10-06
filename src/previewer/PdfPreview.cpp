@@ -3,6 +3,7 @@
 
 #include "PdfPreview.h"
 #include "WinUtil.h"
+#include "Scopes.h"
 
 IFACEMETHODIMP PreviewBase::GetThumbnail(UINT cx, HBITMAP *phbmp, WTS_ALPHATYPE *pdwAlpha)
 {
@@ -120,7 +121,7 @@ static LRESULT OnPaint(HWND hwnd)
     DoubleBuffer buffer(hwnd, rect);
     HDC hdc = buffer.GetDC();
     HBRUSH brushBg = CreateSolidBrush(COL_WINDOW_BG);
-    HBRUSH brushWhite = CreateSolidBrush(WIN_COL_WHITE);
+    HBRUSH brushWhite = GetStockBrush(WHITE_BRUSH);
     FillRect(hdc, &rect.ToRECT(), brushBg);
 
     PreviewBase *preview = (PreviewBase *)GetWindowLongPtr(hwnd, GWLP_USERDATA);

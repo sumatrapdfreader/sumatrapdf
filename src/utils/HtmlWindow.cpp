@@ -860,6 +860,18 @@ HRESULT HW_IDispatch::GetTypeInfoCount(unsigned int * pcTInfo)
     return E_NOTIMPL;
 }
 
+inline void VariantSetBool(VARIANT *res, bool val)
+{
+    res->vt = VT_BOOL;
+    res->boolVal = val;
+}
+
+inline void VariantSetLong(VARIANT *res, long val)
+{
+    res->vt = VT_I4;
+    res->lVal = val;
+}
+
 HRESULT HW_IDispatch::DispatchPropGet(DISPID dispIdMember, VARIANT *res)
 {
     if (res == NULL)

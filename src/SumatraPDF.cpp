@@ -1531,8 +1531,8 @@ static void DrawDocument(WindowInfo& win, HDC hdc, RECT *rcArea)
             renderDelay = gRenderCache.Paint(hdc, &bounds, dm, pageNo, pageInfo, &renderOutOfDateCue);
 
         if (renderDelay) {
-            win::font::ScopedFont fontRightTxt(hdc, _T("MS Shell Dlg"), 14);
-            win::HdcScopedSelectFont scope(hdc, fontRightTxt);
+            ScopedFont fontRightTxt(GetSimpleFont(hdc, _T("MS Shell Dlg"), 14));
+            HGDIOBJ hPrevFont = SelectObject(hdc, fontRightTxt);
             SetTextColor(hdc, gRenderCache.invertColors ? WIN_COL_WHITE : WIN_COL_BLACK);
             if (renderDelay != RENDER_DELAY_FAILED) {
                 if (renderDelay < REPAINT_MESSAGE_DELAY_IN_MS)
@@ -1545,6 +1545,7 @@ static void DrawDocument(WindowInfo& win, HDC hdc, RECT *rcArea)
                 DrawCenteredText(hdc, bounds, _TR("Couldn't render the page"), IsUIRightToLeft());
                 DBG_OUT("   missing bitmap on visible page %d\n", pageNo);
             }
+            SelectObject(hdc, hPrevFont);
             continue;
         }
 
@@ -1924,12 +1925,13 @@ static void OnPaint(WindowInfo& win)
         win.buffer->Flush(hdc);
     } else if (!win.IsDocLoaded()) {
         // TODO: replace with notifications as far as reasonably possible
-        win::font::ScopedFont fontRightTxt(hdc, _T("MS Shell Dlg"), 14);
-        win::HdcScopedSelectFont scope(hdc, fontRightTxt);
+        ScopedFont fontRightTxt(GetSimpleFont(hdc, _T("MS Shell Dlg"), 14));
+        HGDIOBJ hPrevFont = SelectObject(hdc, fontRightTxt);
         SetBkMode(hdc, TRANSPARENT);
         FillRect(hdc, &ps.rcPaint, gBrushNoDocBg);
         ScopedMem<TCHAR> msg(str::Format(_TR("Error loading %s"), win.loadedFilePath));
         DrawCenteredText(hdc, ClientRect(win.hwndCanvas), msg, IsUIRightToLeft());
+        SelectObject(hdc, hPrevFont);
     } else {
         switch (win.presentation) {
         case PM_BLACK_SCREEN:
@@ -3657,11 +3659,11 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
     switch (msg) {
         case WM_VSCROLL:
             OnVScroll(*win, wParam);
-            return WM_VSCROLL_HANDLED;
+            break;
 
         case WM_HSCROLL:
             OnHScroll(*win, wParam);
-            return WM_HSCROLL_HANDLED;
+            break;
 
         case WM_MOUSEMOVE:
             OnMouseMove(*win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
@@ -3685,7 +3687,7 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
                 // TODO: Create window that shows location of initial click for reference
                 OnMouseMiddleButtonDown(*win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
             }
-            return 0;
+            break;
 
         case WM_RBUTTONDBLCLK:
             OnMouseRightButtonDblClick(*win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
@@ -4272,8 +4274,8 @@ static bool InstanceInit(HINSTANCE hInstance, int nCmdShow)
         gBrushAboutBg = CreateSolidBrush(gGlobalPrefs.bgColor);
     else
         gBrushAboutBg = CreateSolidBrush(ABOUT_BG_COLOR);
-    gBrushWhite     = CreateSolidBrush(WIN_COL_WHITE);
-    gBrushBlack     = CreateSolidBrush(WIN_COL_BLACK);
+    gBrushWhite     = GetStockBrush(WHITE_BRUSH);
+    gBrushBlack     = GetStockBrush(BLACK_BRUSH);
     gBrushShadow    = CreateSolidBrush(COL_WINDOW_SHADOW);
 
     NONCLIENTMETRICS ncm = {0};
