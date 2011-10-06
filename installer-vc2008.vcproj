@@ -130,6 +130,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\utils\Transactions.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\utils\Transactions.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\utils\TrivialHtmlParser.cpp"
 				>
 			</File>

@@ -32,6 +32,7 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include "Version.h"
 #include "Vec.h"
 #include "CmdLineParser.h"
+#include "Transactions.h"
 
 #ifndef BUILD_UNINSTALLER
 #include <WinSafer.h>
@@ -586,16 +587,17 @@ BOOL IsValidInstaller()
     return err == UNZ_OK && ginfo.number_entry > 0;
 }
 
-BOOL InstallCopyFiles()
+bool InstallCopyFiles()
 {
     zlib_filefunc64_def ffunc;
     fill_win32_filefunc64(&ffunc);
     unzFile uf = unzOpen2_64(GetOwnPath(), &ffunc);
     if (!uf) {
         NotifyFailed(_T("Invalid payload format"));
-        goto Error;
+        return false;
     }
 
+    FileTransaction trans;
     unz_global_info64 ginfo;
     int err = unzGetGlobalInfo64(uf, &ginfo);
     if (err != UNZ_OK) {
@@ -603,9 +605,7 @@ BOOL InstallCopyFiles()
         goto Error;
     }
 
-    // TODO: try to extract files transacted (cf. http://www.codeproject.com/KB/vista/VistaKTM.aspx)?
-
-    // extract all contained files one by one
+    // extract all contained files one by one (transacted, if possible)
     for (int count = 0; count < ginfo.number_entry; count++) {
         char filename[MAX_PATH];
         unz_file_info64 finfo;
@@ -621,7 +621,6 @@ BOOL InstallCopyFiles()
             goto Error;
         }
 
-        // TODO: extract block by block instead of everything at once
         char *data = SAZA(char, (size_t)finfo.uncompressed_size);
         if (!data) {
             NotifyFailed(_T("Not enough memory to extract all files"));
@@ -638,13 +637,13 @@ BOOL InstallCopyFiles()
         TCHAR *inpath = str::conv::FromAnsi(filename);
         TCHAR *extpath = path::Join(gGlobalData.installDir, path::GetBaseName(inpath));
 
-        bool success = file::WriteAll(extpath, data, (size_t)finfo.uncompressed_size);
+        bool success = trans.WriteAll(extpath, data, (size_t)finfo.uncompressed_size);
         if (success) {
             // set modification time to original value
             FILETIME ftModified, ftLocal;
             DosDateTimeToFileTime(HIWORD(finfo.dosDate), LOWORD(finfo.dosDate), &ftLocal);
             LocalFileTimeToFileTime(&ftLocal, &ftModified);
-            file::SetModificationTime(extpath, ftModified);
+            trans.SetModificationTime(extpath, ftModified);
         }
         else {
             ScopedMem<TCHAR> msg(str::Format(_T("Couldn't write %s to disk"), inpath));
@@ -679,17 +678,17 @@ BOOL InstallCopyFiles()
     for (int i = 0; i < dimof(gPayloadData); i++) {
         if (gPayloadData[i].install) {
             NotifyFailed(_T("Some files to be installed are missing"));
-            return FALSE;
+            return false;
         }
     }
-    return TRUE;
+    return trans.Commit();
 
 Error:
     if (uf) {
         unzCloseCurrentFile(uf);
         unzClose(uf);
     }
-    return FALSE;
+    return false;
 }
 
 /* Caller needs to free() the result. */

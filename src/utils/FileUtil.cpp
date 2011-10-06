@@ -280,8 +280,8 @@ bool WriteAll(const TCHAR *filePath, void *data, size_t dataLen)
 {
     HANDLE h = CreateFile(filePath, GENERIC_WRITE, FILE_SHARE_READ, NULL,  
                           CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL,  NULL); 
-    if (h == INVALID_HANDLE_VALUE)
-        return FALSE;
+    if (INVALID_HANDLE_VALUE == h)
+        return false;
 
     DWORD size;
     BOOL ok = WriteFile(h, data, (DWORD)dataLen, &size, NULL);
@@ -295,10 +295,7 @@ bool WriteAll(const TCHAR *filePath, void *data, size_t dataLen)
 bool Delete(const TCHAR *filePath)
 {
     BOOL ok = DeleteFile(filePath);
-    if (ok)
-        return true;
-    DWORD err = GetLastError();
-    return ((ERROR_PATH_NOT_FOUND == err) || (ERROR_FILE_NOT_FOUND == err));
+    return ok || GetLastError() == ERROR_FILE_NOT_FOUND;
 }
 
 FILETIME GetModificationTime(const TCHAR *filePath)

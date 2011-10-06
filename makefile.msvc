@@ -102,7 +102,7 @@ BROWSER_PLUGIN_CFLAGS = $(CFLAGS) /Isrc/utils /Isrc/utils/msvc /wd4819
 UTILS_OBJS = \
 	$(OS)\BencUtil.obj $(OS)\FileUtil.obj $(OS)\Http.obj \
 	$(OS)\StrUtil.obj $(OS)\UtilTests.obj $(OS)\WinUtil.obj \
-	$(OS)\DialogSizer.obj
+	$(OS)\DialogSizer.obj $(OS)\Transactions.obj
 
 SUMATRA_OBJS = \
 	$(OS)\AppPrefs.obj $(OS)\DisplayModel.obj $(OS)\CrashHandler.obj $(OS)\PdfEngine.obj \
@@ -252,7 +252,8 @@ $(OS)\AppPrefs.obj: src\FileHistory.h src\ImagesEngine.h src\PdfEngine.h
 $(OS)\AppPrefs.obj: src\PsEngine.h src\SumatraPDF.h src\TextSearch.h
 $(OS)\AppPrefs.obj: src\TextSelection.h src\translations.h src\utils\BaseUtil.h
 $(OS)\AppPrefs.obj: src\utils\BencUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
-$(OS)\AppPrefs.obj: src\utils\StrUtil.h src\utils\Vec.h src\WindowInfo.h
+$(OS)\AppPrefs.obj: src\utils\StrUtil.h src\utils\Transactions.h src\utils\Vec.h
+$(OS)\AppPrefs.obj: src\WindowInfo.h
 $(OS)\AppTools.obj: src\AppTools.h src\translations.h src\utils\BaseUtil.h
 $(OS)\AppTools.obj: src\utils\CmdLineParser.h src\utils\FileUtil.h src\utils\GeomUtil.h
 $(OS)\AppTools.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
@@ -322,8 +323,8 @@ $(OS)\ImagesEngine.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
 $(OS)\Installer.obj: src\BaseEngine.h src\ifilter\PdfFilter.h src\previewer\PdfPreview.h
 $(OS)\Installer.obj: src\installer\Resource.h src\PdfEngine.h src\utils\BaseUtil.h
 $(OS)\Installer.obj: src\utils\CmdLineParser.h src\utils\FileUtil.h src\utils\GeomUtil.h
-$(OS)\Installer.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
-$(OS)\Installer.obj: src\Version.h
+$(OS)\Installer.obj: src\utils\StrUtil.h src\utils\Transactions.h src\utils\Vec.h
+$(OS)\Installer.obj: src\utils\WinUtil.h src\Version.h
 $(OS)\Menu.obj: src\AppPrefs.h src\BaseEngine.h src\ChmEngine.h
 $(OS)\Menu.obj: src\ChmUI.h src\DisplayModel.h src\DisplayState.h
 $(OS)\Menu.obj: src\DjVuEngine.h src\EngineManager.h src\ExternalPdfViewer.h
@@ -478,6 +479,8 @@ $(OS)\Toolbar.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
 $(OS)\Toolbar.obj: src\WindowInfo.h
 $(OS)\Touch.obj: src\Touch.h src\utils\BaseUtil.h src\utils\GeomUtil.h
 $(OS)\Touch.obj: src\utils\StrUtil.h src\utils\WinUtil.h
+$(OS)\Transactions.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
+$(OS)\Transactions.obj: src\utils\StrUtil.h src\utils\Transactions.h src\utils\WinUtil.h
 $(OS)\translations.obj: src\translations.h src\translations_txt.cpp src\utils\BaseUtil.h
 $(OS)\translations.obj: src\utils\StrUtil.h
 $(OS)\TrivialHtmlParser.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h

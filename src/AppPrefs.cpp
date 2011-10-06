@@ -4,6 +4,7 @@
 #include "BencUtil.h"
 #include "StrUtil.h"
 #include "FileUtil.h"
+#include "Transactions.h"
 
 #include "AppPrefs.h"
 #include "DisplayState.h"
@@ -596,10 +597,8 @@ bool Save(TCHAR *filepath, SerializableGlobalPrefs& globalPrefs, FileHistory& fi
         return false;
 
     assert(dataLen > 0);
-    /* TODO: consider 2-step process:
-        * write to a temp file
-        * rename temp file to final file */
-    bool ok = file::WriteAll(filepath, (void*)data.Get(), dataLen);
+    FileTransaction trans;
+    bool ok = trans.WriteAll(filepath, (void *)data.Get(), dataLen) && trans.Commit();
     if (ok)
         globalPrefs.lastPrefUpdate = file::GetModificationTime(filepath);
     return ok;
