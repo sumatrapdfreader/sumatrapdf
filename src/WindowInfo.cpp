@@ -199,7 +199,8 @@ void LinkHandler::GotoLink(PageDestination *link)
             WindowInfo *newWin = FindWindowInfoByFile(path);
             if (!newWin)
                 newWin = LoadDocument(path, owner);
-            newWin->Focus();
+            if (newWin)
+                newWin->Focus();
         }
         // offer to save other attachments to a file
         else
@@ -214,7 +215,8 @@ void LinkHandler::GotoLink(PageDestination *link)
             WindowInfo *newWin = FindWindowInfoByFile(combinedPath);
             if (!newWin)
                 newWin = LoadDocument(combinedPath, owner);
-            newWin->Focus();
+            if (newWin)
+                newWin->Focus();
 
             if (str::Eq(type, "ScrollToEx") && newWin && newWin->IsDocLoaded())
                 newWin->linkHandler->ScrollTo(link);

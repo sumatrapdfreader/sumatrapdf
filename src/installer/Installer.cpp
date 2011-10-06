@@ -603,9 +603,10 @@ BOOL InstallCopyFiles()
         goto Error;
     }
 
+    // TODO: try to extract files transacted (cf. http://www.codeproject.com/KB/vista/VistaKTM.aspx)?
+
     // extract all contained files one by one
     for (int count = 0; count < ginfo.number_entry; count++) {
-        BOOL success = FALSE;
         char filename[MAX_PATH];
         unz_file_info64 finfo;
         err = unzGetCurrentFileInfo64(uf, &finfo, filename, dimof(filename), NULL, 0, NULL, 0);
@@ -637,22 +638,17 @@ BOOL InstallCopyFiles()
         TCHAR *inpath = str::conv::FromAnsi(filename);
         TCHAR *extpath = path::Join(gGlobalData.installDir, path::GetBaseName(inpath));
 
-        BOOL ok = file::WriteAll(extpath, data, (size_t)finfo.uncompressed_size);
-        if (ok) {
+        bool success = file::WriteAll(extpath, data, (size_t)finfo.uncompressed_size);
+        if (success) {
             // set modification time to original value
-            ScopedHandle hFile(CreateFile(extpath, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL));
-            if (hFile != INVALID_HANDLE_VALUE) {
-                FILETIME ftModified, ftLocal;
-                DosDateTimeToFileTime(HIWORD(finfo.dosDate), LOWORD(finfo.dosDate), &ftLocal);
-                LocalFileTimeToFileTime(&ftLocal, &ftModified);
-                SetFileTime(hFile, NULL, NULL, &ftModified);
-            }
-            success = TRUE;
+            FILETIME ftModified, ftLocal;
+            DosDateTimeToFileTime(HIWORD(finfo.dosDate), LOWORD(finfo.dosDate), &ftLocal);
+            LocalFileTimeToFileTime(&ftLocal, &ftModified);
+            file::SetModificationTime(extpath, ftModified);
         }
         else {
             ScopedMem<TCHAR> msg(str::Format(_T("Couldn't write %s to disk"), inpath));
             NotifyFailed(msg);
-            success = FALSE;
         }
 
         free(inpath);

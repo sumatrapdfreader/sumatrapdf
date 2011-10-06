@@ -312,6 +312,17 @@ FILETIME GetModificationTime(const TCHAR *filePath)
     return lastMod;
 }
 
+bool SetModificationTime(const TCHAR *filePath, FILETIME lastMod)
+{
+    HANDLE h = CreateFile(filePath, GENERIC_READ | GENERIC_WRITE, 0, NULL,
+                          OPEN_EXISTING, 0, NULL);
+    if (INVALID_HANDLE_VALUE == h)
+        return false;
+    bool ok = SetFileTime(h, NULL, NULL, &lastMod);
+    CloseHandle(h);
+    return ok;
+}
+
 bool StartsWith(const TCHAR *filePath, const char *magicNumber, size_t len)
 {
     if (len == (size_t)-1)
