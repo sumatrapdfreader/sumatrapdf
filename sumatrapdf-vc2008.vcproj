@@ -370,14 +370,6 @@
 					RelativePath=".\src\StressTesting.h"
 					>
 				</File>
-				<File
-					RelativePath=".\src\Touch.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\src\Touch.h"
-					>
-				</File>
 			</Filter>
 		</Filter>
 		<Filter
@@ -483,6 +475,14 @@
 			</File>
 			<File
 				RelativePath=".\src\utils\StrUtil.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\utils\Touch.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\utils\Touch.h"
 				>
 			</File>
 			<File

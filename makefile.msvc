@@ -102,7 +102,7 @@ BROWSER_PLUGIN_CFLAGS = $(CFLAGS) /Isrc/utils /Isrc/utils/msvc /wd4819
 UTILS_OBJS = \
 	$(OS)\BencUtil.obj $(OS)\FileUtil.obj $(OS)\Http.obj \
 	$(OS)\StrUtil.obj $(OS)\UtilTests.obj $(OS)\WinUtil.obj \
-	$(OS)\DialogSizer.obj $(OS)\Transactions.obj
+	$(OS)\DialogSizer.obj $(OS)\Transactions.obj $(OS)\Touch.obj
 
 SUMATRA_OBJS = \
 	$(OS)\AppPrefs.obj $(OS)\DisplayModel.obj $(OS)\CrashHandler.obj $(OS)\PdfEngine.obj \
@@ -114,7 +114,6 @@ SUMATRA_OBJS = \
 	$(OS)\TableOfContents.obj $(OS)\Toolbar.obj $(OS)\Print.obj \
 	$(OS)\Notifications.obj $(OS)\Search.obj $(OS)\Menu.obj \
 	$(OS)\ExternalPdfViewer.obj $(OS)\Selection.obj $(OS)\ZipUtil.obj \
-	$(OS)\Touch.obj \
 	$(UTILS_OBJS) $(BZIP2_OBJS) $(MINIZIP_OBJS) $(UNRAR_OBJS) $(SYNCTEX_OBJS) \
 	$(OS)\DjVuEngine.obj $(DJVU_OBJS)
 
@@ -449,9 +448,9 @@ $(OS)\SumatraPDF.obj: src\Resource.h src\Search.h src\Selection.h
 $(OS)\SumatraPDF.obj: src\StressTesting.h src\SumatraAbout.h src\SumatraDialogs.h
 $(OS)\SumatraPDF.obj: src\SumatraPDF.h src\SumatraProperties.h src\TableOfContents.h
 $(OS)\SumatraPDF.obj: src\TextSearch.h src\TextSelection.h src\Toolbar.h
-$(OS)\SumatraPDF.obj: src\Touch.h src\translations.h src\utils\BaseUtil.h
-$(OS)\SumatraPDF.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\Http.h
-$(OS)\SumatraPDF.obj: src\utils\Scopes.h src\utils\StrUtil.h src\utils\Vec.h
+$(OS)\SumatraPDF.obj: src\translations.h src\utils\BaseUtil.h src\utils\FileUtil.h
+$(OS)\SumatraPDF.obj: src\utils\GeomUtil.h src\utils\Http.h src\utils\Scopes.h
+$(OS)\SumatraPDF.obj: src\utils\StrUtil.h src\utils\Touch.h src\utils\Vec.h
 $(OS)\SumatraPDF.obj: src\utils\WinUtil.h src\Version.h src\WindowInfo.h
 $(OS)\SumatraProperties.obj: src\AppPrefs.h src\BaseEngine.h src\ChmEngine.h
 $(OS)\SumatraProperties.obj: src\DisplayModel.h src\DisplayState.h src\DjVuEngine.h
@@ -483,7 +482,7 @@ $(OS)\Toolbar.obj: src\TextSearch.h src\TextSelection.h src\Toolbar.h
 $(OS)\Toolbar.obj: src\translations.h src\utils\BaseUtil.h src\utils\GeomUtil.h
 $(OS)\Toolbar.obj: src\utils\Scopes.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\Toolbar.obj: src\utils\WinUtil.h src\WindowInfo.h
-$(OS)\Touch.obj: src\Touch.h src\utils\BaseUtil.h src\utils\GeomUtil.h
+$(OS)\Touch.obj: src\utils\BaseUtil.h src\utils\GeomUtil.h src\utils\Touch.h
 $(OS)\Touch.obj: src\utils\WinUtil.h
 $(OS)\Transactions.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
 $(OS)\Transactions.obj: src\utils\Scopes.h src\utils\Transactions.h src\utils\WinUtil.h

@@ -202,7 +202,7 @@
     <ClCompile Include="src\TableOfContents.cpp" />
     <ClCompile Include="src\TextSearch.cpp" />
     <ClCompile Include="src\TextSelection.cpp" />
-    <ClCompile Include="src\Touch.cpp" />
+    <ClCompile Include="src\utils\Touch.cpp" />
     <ClCompile Include="src\translations.cpp" />
     <ClCompile Include="src\translations_txt.cpp" />
     <ClCompile Include="mupdf\fitz\base_error.c" />
@@ -315,7 +315,7 @@
     <ClInclude Include="src\TableOfContents.h" />
     <ClInclude Include="src\TextSearch.h" />
     <ClInclude Include="src\TextSelection.h" />
-    <ClInclude Include="src\Touch.h" />
+    <ClInclude Include="src\utils\Touch.h" />
     <ClInclude Include="src\translations.h" />
     <ClInclude Include="src\translations_txt.h" />
     <ClInclude Include="src\utils\BaseUtil.h" />
@@ -329,6 +329,8 @@
     <ClInclude Include="src\utils\SimpleLog.h" />
     <ClInclude Include="src\utils\StrUtil.h" />
     <ClInclude Include="src\utils\TrivialHtmlParser.h" />
+    <ClInclude Include="src\utils\Scopes.h" />
+    <ClInclude Include="src\utils\Transactions.h" />
     <ClInclude Include="src\utils\Vec.h" />
     <ClInclude Include="src\utils\WinUtil.h" />
     <ClInclude Include="src\utils\ZipUtil.h" />

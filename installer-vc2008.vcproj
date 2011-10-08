@@ -134,6 +134,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\utils\Touch.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\utils\Touch.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\utils\Transactions.cpp"
 				>
 			</File>
