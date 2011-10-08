@@ -3557,16 +3557,12 @@ static LRESULT OnGesture(WindowInfo& win, UINT message, WPARAM wParam, LPARAM lP
     if (!Touch::SupportsGestures())
         return DefWindowProc(win.hwndFrame, message, wParam, lParam);
 
-    if (!win.IsDocLoaded())
-        return 0;
-
     HGESTUREINFO hgi = (HGESTUREINFO)lParam;
-
     GESTUREINFO gi = { 0 };
     gi.cbSize = sizeof(GESTUREINFO);
 
     BOOL ok = Touch::GetGestureInfo(hgi, &gi);
-    if (!ok) {
+    if (!ok || !win.IsDocLoaded()) {
         Touch::CloseGestureInfoHandle(hgi);
         return 0;
     }

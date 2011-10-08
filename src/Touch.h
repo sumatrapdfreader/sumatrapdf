@@ -13,8 +13,8 @@ typedef unsigned __int64 QWORD, *LPQWORD;
 #endif
  
 #ifndef MAKEQWORD
-#define MAKEQWORD(a, b)     ((QWORD)( ((QWORD) ((DWORD) (a))) << 32 | ((DWORD) (b))))
-#define LODWORD(l)          ((DWORD)(l))
+#define MAKEQWORD(a, b)     ((QWORD)(((QWORD)((DWORD)(a))) << 32 | ((DWORD)(b))))
+#define LODWORD(l)          ((DWORD)((l) & 0xFFFFFFFF))
 #define HIDWORD(l)          ((DWORD)(((QWORD)(l) >> 32) & 0xFFFFFFFF))
 #endif
 
