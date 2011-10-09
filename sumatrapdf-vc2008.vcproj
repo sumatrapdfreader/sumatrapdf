@@ -235,6 +235,14 @@
 					>
 				</File>
 				<File
+					RelativePath=".\src\Ribbon.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\Ribbon.h"
+					>
+				</File>
+				<File
 					RelativePath=".\src\Search.cpp"
 					>
 				</File>
@@ -499,6 +507,10 @@
 			</File>
 			<File
 				RelativePath=".\src\utils\TrivialHtmlParser.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\utils\UIRibbon.h"
 				>
 			</File>
 			<File

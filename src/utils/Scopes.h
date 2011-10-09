@@ -40,15 +40,29 @@ public:
     operator T*() const { return ptr; }
     T** operator&() { return &ptr; }
     T* operator->() const { return ptr; }
+    T* operator=(T* newPtr) {
+        if (ptr)
+            ptr->Release();
+        return (ptr = newPtr);
+    }
 };
 
 template <class T>
 class ScopedComQIPtr : public ScopedComPtr<T> {
 public:
+    ScopedComQIPtr() : ScopedComPtr() { }
     explicit ScopedComQIPtr(IUnknown *unk) {
         HRESULT hr = unk->QueryInterface(__uuidof(T), (void **)&ptr);
         if (FAILED(hr))
             ptr = NULL;
+    }
+    T* operator=(IUnknown *newUnk) {
+        if (ptr)
+            ptr->Release();
+        HRESULT hr = newUnk->QueryInterface(__uuidof(T), (void **)&ptr);
+        if (FAILED(hr))
+            ptr = NULL;
+        return ptr;
     }
 };
 

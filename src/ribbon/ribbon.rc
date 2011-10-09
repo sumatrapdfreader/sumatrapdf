@@ -1,0 +1,4 @@
+#include <windows.h>
+
+LANGUAGE LANG_ENGLISH, SUBLANG_NEUTRAL
+#include "ribbon-en.rc"

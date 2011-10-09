@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Application xmlns="http://schemas.microsoft.com/windows/2009/Ribbon">
+	<Application.Commands>
+		<Command Name="tabFileMenu" />
+		<Command Name="cmdOpen" LabelTitle="&amp;Open..." Symbol="IDM_OPEN" Id="400" />
+		<Command Name="cmdClose" LabelTitle="&amp;Close" Symbol="IDM_CLOSE" Id="401" />
+		<Command Name="cmdSaveAs" LabelTitle="&amp;Save As..." Symbol="IDM_SAVEAS" Id="402" />
+		<Command Name="cmdPrint" LabelTitle="&amp;Print..." Symbol="IDM_Print" Id="403" />
+		<Command Name="cmdExit" LabelTitle="E&amp;xit" Symbol="IDM_EXIT" Id="405" />
+		<Command Name="cmdRefresh" LabelTitle="&amp;Reload" Symbol="IDM_REFRESH" Id="406" />
+		<Command Name="cmdSaveAsLink" LabelTitle="Save &amp;Bookmark..." Symbol="IDM_SAVEAS_BOOKMARK" Id="407" />
+		<Command Name="cmdSendByEmail" LabelTitle="Send As &amp;Email" Symbol="IDM_SEND_BY_EMAIL" Id="408" />
+		<Command Name="cmdProperties" LabelTitle="P&amp;roperties" Symbol="IDM_PROPERTIES" Id="409" />
+		<Command Name="cmdAbout" LabelTitle="&amp;About" Symbol="IDM_ABOUT" Id="551" />
+		<Command Name="cmdMRUList" LabelTitle="(MRU history goes here)" />
+		
+		<Command Name="tabStart" LabelTitle="Start" Keytip="S" />
+		<Command Name="grpNav" LabelTitle="Navigation" />
+		<Command Name="cmdNavNext" LabelTitle="Next Page" Symbol="IDM_GOTO_NEXT_PAGE" Id="430" Keytip="N" />
+		<Command Name="cmdNavPrev" LabelTitle="Previous Page" Symbol="IDM_GOTO_PREV_PAGE" Id="431" Keytip="P" />
+		
+		<Command Name="tabQuickAccess" />
+	</Application.Commands>
+	<Application.Views>
+		<Ribbon>
+			<Ribbon.ApplicationMenu>
+				<ApplicationMenu CommandName="tabFileMenu">
+					<ApplicationMenu.RecentItems>
+						<RecentItems CommandName="cmdMRUList" />
+					</ApplicationMenu.RecentItems>
+					<MenuGroup>
+						<Button CommandName="cmdOpen" />
+						<Button CommandName="cmdClose" />
+						<Button CommandName="cmdSaveAs" />
+						<Button CommandName="cmdPrint" />
+					</MenuGroup>
+					<MenuGroup>
+						<Button CommandName="cmdRefresh" />
+						<Button CommandName="cmdSaveAsLink" />
+						<Button CommandName="cmdSendByEmail" />
+					</MenuGroup>
+					<MenuGroup>
+						<Button CommandName="cmdProperties" />
+					</MenuGroup>
+					<MenuGroup>
+						<Button CommandName="cmdAbout" />
+						<Button CommandName="cmdExit" />
+					</MenuGroup>
+				</ApplicationMenu>
+			</Ribbon.ApplicationMenu>
+			<Ribbon.Tabs>
+				<Tab CommandName="tabStart">
+					<Group CommandName="grpNav" SizeDefinition="TwoButtons">
+						<Button CommandName="cmdNavPrev" />
+						<Button CommandName="cmdNavNext" />
+					</Group>
+				</Tab>
+			</Ribbon.Tabs>
+			<Ribbon.QuickAccessToolbar>
+				<QuickAccessToolbar CommandName="tabQuickAccess" />
+			</Ribbon.QuickAccessToolbar>
+		</Ribbon>
+	</Application.Views>
+</Application>

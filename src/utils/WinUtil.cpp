@@ -637,6 +637,9 @@ IStream *CreateStreamFromData(void *data, size_t len)
         return NULL;
     }
 
+    LARGE_INTEGER zero = { 0 };
+    stream->Seek(zero, STREAM_SEEK_SET, NULL);
+
     return stream;
 }
 

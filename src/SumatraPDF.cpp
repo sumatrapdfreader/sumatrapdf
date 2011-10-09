@@ -37,6 +37,15 @@
 #include "ChmUI.h"
 #include "Touch.h"
 
+#ifndef BUILD_RIBBON
+#define BUILD_RIBBON
+#endif
+#ifdef BUILD_RIBBON
+#include "Ribbon.h"
+// uncomment to actually use the (incomplete) ribbon
+// #define USE_RIBBON
+#endif
+
 #include "CrashHandler.h"
 #include "ParseCommandLine.h"
 #include "StressTesting.h"
@@ -235,7 +244,7 @@ static bool SendAsEmailAttachment(WindowInfo *win)
     return SUCCEEDED(hr);
 }
 
-static void MoveWindow(HWND hwnd, RectI rect)
+inline void MoveWindow(HWND hwnd, RectI rect)
 {
     MoveWindow(hwnd, rect.x, rect.y, rect.dx, rect.dy, TRUE);
 }
@@ -925,8 +934,22 @@ static WindowInfo* CreateWindowInfo()
     // hide scrollbars to avoid showing/hiding on empty window
     ShowScrollBar(win->hwndCanvas, SB_BOTH, FALSE);
 
-    assert(NULL == win->menu);
-    win->menu = BuildMenu(win);
+#if defined(BUILD_RIBBON) && defined(USE_RIBBON)
+    if (gGlobalPrefs.useRibbon) {
+        win->ribbonSupport = new RibbonSupport(win);
+        if (!win->ribbonSupport->Initialize(ghinst, L"EN_RIBBON")) {
+            delete win->ribbonSupport;
+            win->ribbonSupport = NULL;
+        }
+        else if (gGlobalPrefs.ribbonState)
+            win->ribbonSupport->SetState(gGlobalPrefs.ribbonState);
+    }
+    if (!win->ribbonSupport)
+#endif
+    {
+        assert(!win->menu);
+        win->menu = BuildMenu(win);
+    }
 
     ShowWindow(win->hwndCanvas, SW_SHOW);
     UpdateWindow(win->hwndCanvas);
@@ -972,6 +995,13 @@ static void DeleteWindowInfo(WindowInfo *win)
     AbortFinding(win);
     AbortPrinting(win);
 
+#ifdef BUILD_RIBBON
+    if (win->ribbonSupport) {
+        free(gGlobalPrefs.ribbonState);
+        gGlobalPrefs.ribbonState = win->ribbonSupport->GetState();
+    }
+    delete win->ribbonSupport;
+#endif
     delete win;
 }
 
@@ -2006,9 +2036,15 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
         ExitFullscreen(*win);
 
     bool lastWindow = (1 == gWindows.Count());
-    if (lastWindow)
+    if (lastWindow) {
+#ifdef BUILD_RIBBON
+        if (gWindows[0]->ribbonSupport) {
+            free(gGlobalPrefs.ribbonState);
+            gGlobalPrefs.ribbonState = gWindows[0]->ribbonSupport->GetState();
+        }
+#endif
         SavePrefs();
-    else
+    } else
         UpdateCurrentFileDisplayStateForWin(win);
 
     if (lastWindow && !quitIfLast) {
@@ -2523,6 +2559,11 @@ static void OnFrameSize(WindowInfo* win, int dx, int dy)
     int rebBarDy = 0;
     if (gGlobalPrefs.toolbarVisible && !(win->presentation || win->fullScreen)) {
         SetWindowPos(win->hwndReBar, NULL, 0, 0, dx, 0, SWP_NOZORDER);
+#ifdef BUILD_RIBBON
+        if (win->ribbonSupport)
+            rebBarDy = win->ribbonSupport->ribbonDy;
+        else
+#endif
         rebBarDy = WindowRect(win->hwndReBar).dy;
     }
 
@@ -3104,10 +3145,15 @@ static void ResizeSidebar(WindowInfo *win)
     int canvasDx = rFrame.dx - sidebarDx - SPLITTER_DX;
     int y = 0;
     int totalDy = rFrame.dy;
-    if (gGlobalPrefs.toolbarVisible && !win->fullScreen && !win->presentation) {
+#ifdef BUILD_RIBBON
+    if (win->ribbonSupport && !win->fullScreen && !win->presentation)
+        y = win->ribbonSupport->ribbonDy;
+    else
+#endif
+    if (gGlobalPrefs.toolbarVisible && !win->fullScreen && !win->presentation)
         y = WindowRect(win->hwndReBar).dy;
-        totalDy -= y;
-    }
+    totalDy -= y;
+
     // rToc.y is always 0, as rToc is a ClientRect, so we first have
     // to convert it into coordinates relative to hwndFrame:
     assert(MapRectToWindow(rToc, win->hwndTocBox, win->hwndFrame).y == y);
@@ -3291,6 +3337,11 @@ void SetSidebarVisibility(WindowInfo *win, bool tocVisible, bool favVisible)
 
     ClientRect rFrame(win->hwndFrame);
     int toolbarDy = 0;
+#ifdef BUILD_RIBBON
+    if (win->ribbonSupport && !win->fullScreen && !win->presentation)
+        toolbarDy = win->ribbonSupport->ribbonDy;
+    else
+#endif
     if (gGlobalPrefs.toolbarVisible && !win->fullScreen && !win->presentation)
         toolbarDy = WindowRect(win->hwndReBar).dy;
     int dy = rFrame.dy - toolbarDy;
